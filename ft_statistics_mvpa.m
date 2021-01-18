@@ -182,26 +182,26 @@ cfg.mvpa            = ft_getopt(cfg, 'mvpa',         []);
 cfg.mvpa.neighbours = ft_getopt(cfg.mvpa, 'neighbours', []);
 cfg.mvpa.model      = ft_getopt(cfg.mvpa, 'model', []);
 if isempty(cfg.mvpa.model)
-    cfg.mvpa.classifier = ft_getopt(cfg.mvpa, 'classifier', 'lda');
-    if strcmp(cfg.mvpa.classifier, 'naive_bayes')
-        cfg.mvpa.append = ft_getopt(cfg.mvpa, 'append', 1);
-    end
-    cfg.mvpa.metric     = ft_getopt(cfg.mvpa, 'metric', 'accuracy');
+  cfg.mvpa.classifier = ft_getopt(cfg.mvpa, 'classifier', 'lda');
+  if strcmp(cfg.mvpa.classifier, 'naive_bayes')
+    cfg.mvpa.append = ft_getopt(cfg.mvpa, 'append', 1);
+  end
+  cfg.mvpa.metric     = ft_getopt(cfg.mvpa, 'metric', 'accuracy');
 else
-    cfg.mvpa.metric     = ft_getopt(cfg.mvpa, 'metric', 'mae');
+  cfg.mvpa.metric     = ft_getopt(cfg.mvpa, 'metric', 'mae');
 end
 cfg.mvpa.feedback   = ft_getopt(cfg.mvpa, 'feedback',   'yes');
 
 if isfield(cfg, 'dimord')
-    cfg.mvpa.dimension_names = ft_getopt(cfg.mvpa, 'dimension_names', [{'samples'} tokenize(cfg.dimord, '_')]);
+  cfg.mvpa.dimension_names = ft_getopt(cfg.mvpa, 'dimension_names', [{'samples'} tokenize(cfg.dimord, '_')]);
 end
 
 % flip dimensions such that the number of trials comes first
 dat = dat.';
 
 if isfield(cfg, 'dim')
-    % MVPA-Light expects the original multi-dimensional array
-    dat = reshape(dat, [size(dat,1) cfg.dim]);
+  % MVPA-Light expects the original multi-dimensional array
+  dat = reshape(dat, [size(dat,1) cfg.dim]);
 end
 
 %% backward compatibility
@@ -210,91 +210,91 @@ ft_checkconfig(cfg, 'deprecated', {'timextime' 'searchlight'});
 ft_checkconfig(cfg.mvpa, 'deprecated', {'balance' 'normalise' 'replace'});
 
 if isfield(cfg,'timextime') && strcmp(cfg.timextime, 'yes')
-    cfg.generalize = 'time';
+  cfg.generalize = 'time';
 end
 if isfield(cfg,'searchlight') && strcmp(cfg.searchlight, 'yes')
-    cfg.features = 3;
+  cfg.features = 3;
 end
 if isfield(cfg,'normalise') && ~isfield(cfg.mvpa,'preprocess')
-    add_to_preprocess(cfg.normalise);
+  cfg = add_to_preprocess(cfg, cfg.normalise);
 end
 if isfield(cfg,'balance') && ~isempty(cfg.balance)
-    add_to_preprocess(cfg.balance);
+  cfg = add_to_preprocess(cfg, cfg.balance);
 end
 
 %% convert features and generalize from char to dimension numbers
 if ischar(cfg.features)
-    assert(isfield(cfg, 'dimord'), 'if cfg.features is a string then cfg.dimord must exist')
-    cfg.features = find(ismember(cfg.mvpa.dimension_names, cfg.features));
-    if isempty(cfg.features)
-        ft_error(sprintf('cfg.features = ''%s'' is not contained in cfg.dimord', cfg.features))
-    end
+  assert(isfield(cfg, 'dimord'), 'if cfg.features is a string then cfg.dimord must exist')
+  cfg.features = find(ismember(cfg.mvpa.dimension_names, cfg.features));
+  if isempty(cfg.features)
+    ft_error(sprintf('cfg.features = ''%s'' is not contained in cfg.dimord', cfg.features))
+  end
 end
 
 if ischar(cfg.generalize)
-    assert(isfield(cfg, 'dimord'), 'if cfg.generalize is a string then cfg.dimord must exist')
-    cfg.generalize = find(ismember(cfg.mvpa.dimension_names, cfg.generalize));
-    if isempty(cfg.generalize)
-        ft_error(sprintf('cfg.generalize = ''%s'' is not contained in cfg.dimord', cfg.generalize))
-    end
+  assert(isfield(cfg, 'dimord'), 'if cfg.generalize is a string then cfg.dimord must exist')
+  cfg.generalize = find(ismember(cfg.mvpa.dimension_names, cfg.generalize));
+  if isempty(cfg.generalize)
+    ft_error(sprintf('cfg.generalize = ''%s'' is not contained in cfg.dimord', cfg.generalize))
+  end
 end
 
 cfg.mvpa.feature_dimension          = cfg.features;
 cfg.mvpa.generalization_dimension   = cfg.generalize;
 
 if any(strcmp('chan', cfg.mvpa.dimension_names(cfg.features)))
-    label = sprintf('combined(%s)', sprintf('%s',cfg.channel{:})); % combine labels when chan is used as features
+  label = sprintf('combined(%s)', sprintf('%s',cfg.channel{:})); % combine labels when chan is used as features
 end
 
 %% transform neighbours into connectivity matrix
 if ~isfield(cfg.mvpa,'neighbours')
-    if ~isempty(cfg.connectivity)
-        cfg.mvpa.neighbours = cfg.connectivity;
-    else
-        cfg.mvpa.neighbours = [];
-    end
+  if ~isempty(cfg.connectivity)
+    cfg.mvpa.neighbours = cfg.connectivity;
+  else
+    cfg.mvpa.neighbours = [];
+  end
 end
 
 if isstruct(cfg.mvpa.neighbours)
-    tmp_cfg = cfg;
-    tmp_cfg.neighbours = cfg.mvpa.neighbours;
-    cfg.mvpa.neighbours = channelconnectivity(tmp_cfg);
+  tmp_cfg = cfg;
+  tmp_cfg.neighbours = cfg.mvpa.neighbours;
+  cfg.mvpa.neighbours = channelconnectivity(tmp_cfg);
 elseif iscell(cfg.mvpa.neighbours)
-    tmp_cfg = cfg;
-    for ix = 1:numel(cfg.mvpa.neighbours)
-        tmp_cfg.neighbours{ix} = cfg.mvpa.neighbours{ix};
-        cfg.mvpa.neighbours{ix} = channelconnectivity(tmp_cfg);
-    end
+  tmp_cfg = cfg;
+  for ix = 1:numel(cfg.mvpa.neighbours)
+    tmp_cfg.neighbours{ix} = cfg.mvpa.neighbours{ix};
+    cfg.mvpa.neighbours{ix} = channelconnectivity(tmp_cfg);
+  end
 end
 
 %% Call MVPA-Light
 if isempty(cfg.mvpa.model)
-    % -------- Classification --------
-    if ndims(dat)==3 && cfg.mvpa.feature_dimension==2 && cfg.mvpa.generalization_dimension==3
-        [perf, result] = mv_classify_timextime(cfg.mvpa, dat, design);
-    else
-        [perf, result] = mv_classify(cfg.mvpa, dat, design);
-    end
+  % -------- Classification --------
+  if ndims(dat)==3 && cfg.mvpa.feature_dimension==2 && cfg.mvpa.generalization_dimension==3
+    [perf, result] = mv_classify_timextime(cfg.mvpa, dat, design);
+  else
+    [perf, result] = mv_classify(cfg.mvpa, dat, design);
+  end
 else
-    % -------- Regression --------
-    [perf, result] = mv_regress(cfg.mvpa, dat, design);
+  % -------- Regression --------
+  [perf, result] = mv_regress(cfg.mvpa, dat, design);
 end
 
 % build dimord from result struct
 if isfield(cfg, 'dimord')
-    dimord = strrep(result.perf_dimension_names, ' ', '');
-    if iscell(dimord), dimord = strjoin(dimord, '_'); end
+  dimord = strrep(result.perf_dimension_names, ' ', '');
+  if iscell(dimord), dimord = strjoin(dimord, '_'); end
 end
 
 if ~iscell(cfg.mvpa.metric), cfg.mvpa.metric = {cfg.mvpa.metric}; end
 if ~iscell(perf),            perf            = {perf};            end
 
-%% check which data dim descriptors need to be updated 
+%% check which data dim descriptors need to be updated
 if isfield(cfg, 'latency')
-    time = mean(cfg.latency);
+  time = mean(cfg.latency);
 end
 if isfield(cfg, 'frequency')
-    frequency = mean(cfg.frequency);
+  frequency = mean(cfg.frequency);
 end
 
 %% setup stat struct
@@ -310,13 +310,13 @@ if exist('frequency', 'var'), stat.freq   = frequency; end
 if exist('time', 'var'),      stat.time   = time; end
 
 % helper functions
-    function add_to_preprocess(item)
-        if ~isfield(cfg.mvpa,'preprocess')
-            cfg.mvpa.preprocess = item;
-        elseif ~iscell(cfg.mvpa.preprocess)
-            cfg.mvpa.preprocess = {item cfg.mvpa.preprocess};
-        else
-            cfg.mvpa.preprocess = [{item} cfg.mvpa.preprocess];
-        end
+  function cfg = add_to_preprocess(cfg, item)
+    if ~isfield(cfg.mvpa,'preprocess')
+      cfg.mvpa.preprocess = item;
+    elseif ~iscell(cfg.mvpa.preprocess)
+      cfg.mvpa.preprocess = {item cfg.mvpa.preprocess};
+    else
+      cfg.mvpa.preprocess = [{item} cfg.mvpa.preprocess];
     end
+  end
 end
