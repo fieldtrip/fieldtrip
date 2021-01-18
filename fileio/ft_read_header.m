@@ -16,7 +16,7 @@ function [hdr] = ft_read_header(filename, varargin)
 %   'coordsys'       = string, 'head' or 'dewar' (default = 'head')
 %   'headerformat'   = name of a MATLAB function that takes the filename as input (default is automatic)
 %   'password'       = password structure for encrypted data set (only for mayo_mef30 and mayo_mef21)
-%   'readbids'       = 'yes', no', or 'ifmakessense', whether to read information from the BIDS sidecar files (default = 'ifmakessense')
+%   'readbids'       = string, 'yes', no', or 'ifmakessense', whether to read information from the BIDS sidecar files (default = 'ifmakessense')
 %
 % This returns a header structure with the following fields
 %   hdr.Fs          = sampling frequency
@@ -302,7 +302,7 @@ if strcmp(readbids, 'yes') || strcmp(readbids, 'ifmakessense')
   [p, f, x] = fileparts(filename);
   isbids = startsWith(f, 'sub-') && ~strcmp(x, '.tsv');
   if isbids
-    % try to read the BIDS sidecar files
+    % try to read the metadata from the BIDS sidecar files
     sidecar = bids_sidecar(filename);
     if ~isempty(sidecar)
       data_json = read_json(sidecar);
@@ -2828,17 +2828,19 @@ if isfield(hdr, 'opto')
 end
 
 if (strcmp(readbids, 'yes') || strcmp(readbids, 'ifmakessense')) && isbids
-  % the BIDS sidecar files overrule the information that ios present in the file header itself
+  % the BIDS sidecar files overrule the information that is present in the file header itself
   try
-    assert(length(channels_tsv.name)  == hdr.nChans, 'number of channels is not consistent with the BIDS channels.tsv');
-    assert(length(channels_tsv.type)  == hdr.nChans, 'number of channels is not consistent with the BIDS channels.tsv');
-    assert(length(channels_tsv.units) == hdr.nChans, 'number of channels is not consistent with the BIDS channels.tsv');
-
-    hdr.label     = channels_tsv.name;
-    hdr.chantype  = channels_tsv.type;
-    hdr.chanunit  = channels_tsv.units;
-    hdr.Fs        = data_json.SamplingFrequency;
-    
+    if exist('data_json', 'var')
+      hdr.Fs = data_json.SamplingFrequency;
+    end
+    if exist('channels_tsv', 'var')
+      assert(length(channels_tsv.name)  == hdr.nChans, 'number of channels is not consistent with the BIDS channels.tsv');
+      assert(length(channels_tsv.type)  == hdr.nChans, 'number of channels is not consistent with the BIDS channels.tsv');
+      assert(length(channels_tsv.units) == hdr.nChans, 'number of channels is not consistent with the BIDS channels.tsv');
+      hdr.label     = channels_tsv.name;
+      hdr.chantype  = channels_tsv.type;
+      hdr.chanunit  = channels_tsv.units;
+    end
     if exist('electrodes_tsv', 'var')
       hdr.elec         = [];
       hdr.elec.label   = electrodes_tsv.name;
