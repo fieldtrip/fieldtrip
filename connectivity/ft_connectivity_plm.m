@@ -18,7 +18,7 @@ function [p] = ft_connectivity_plm(input, varargin)
 %   fsample     =       sampling frequency, needed to convert bandwidth to number of bins
 %
 % The output p contains the phase linearity measurement in the [0, 1] interval.
-% The output p is organized as a 3D matrix of nchan x  nchan x nepoch dimensions.
+% The output p is organized as a 3D matrix of nepoch x nchan x  nchan dimensions.
 %
 % See also FT_CONNECTIVITYANALYSIS
 
@@ -50,43 +50,47 @@ function [p] = ft_connectivity_plm(input, varargin)
 %  - integrate over bandwidth
 
 
-% NOTE BY JM: if the user inputs data with different length trials, the fft per trial is going 
-% to have different frequency resolutions, which is not good. Better to throw an error in that 
+% NOTE BY JM: if the user inputs data with different length trials, the fft per trial is going
+% to have different frequency resolutions, which is not good. Better to throw an error in that
 % case.
 fs = ft_getopt(varargin, 'fsample');
 B = ft_getopt(varargin, 'bandwidth');
 if isempty(fs)
-error('sampling rate is not defined');
+  error('sampling rate is not defined');
 end
 if isempty(B)
-warning('bandwidth parameter is not defined, assumed 1Hz');
-B=1;
+  warning('bandwidth parameter is not defined, assumed 1Hz');
+  B=1;
 end
 
 nsmp = cellfun('size', input, 2);
-assert(all(nsmp==nsmp(1)), 'currently there is no support for input, where the trials are of different length'); 
+assert(all(nsmp==nsmp(1)), 'currently there is no support for input, where the trials are of different length');
 
-ntime=numel(input);
+nrpt=numel(input);
 for k = 1:numel(input)
   input{k} = hilbert(input{k}')';
 end
+% NOTE by JM: Is it expected that the data has been bandpassfiltered at
+% this point? How would this be checked? 
 
 nchan=size(input{1},1);
 trial_length=size(input{1},2);
 ph_min=0.1;        % Eps of Eq.(17) of the manuscript
 f=(fs/trial_length)*(0:(trial_length-1));
 f_integr=(abs(f)<B) | (abs(f-fs)<B);
-p=zeros(nchan, nchan, ntime);
+p=zeros(nchan, nchan, nrpt);
 
-for ktime=1:ntime
-    for kchan1=1:(nchan-1)
-        for kchan2=(kchan1+1):nchan
-            temp=fft(input{ktime}(kchan1,:).*conj(input{ktime}(kchan2,:)));    % NOTE BY FB: The inner cycle can be vectorized
-            temp(1)=temp(1).*(abs(angle(temp(1)))>ph_min);  % Volume conduction suppression
-            temp=(abs(temp)).^2;
-            p_temp=sum(temp(f_integr))./sum(temp);
-            p(kchan1, kchan2, ktime)=p_temp;
-            p(kchan2, kchan1, ktime)=p_temp;
-        end
+for ktime=1:nrpt
+  for kchan1=1:(nchan-1)
+    for kchan2=(kchan1+1):nchan
+      temp=fft(input{ktime}(kchan1,:).*conj(input{ktime}(kchan2,:)));    % NOTE BY FB: The inner cycle can be vectorized
+      temp(1)=temp(1).*(abs(angle(temp(1)))>ph_min);  % Volume conduction suppression
+      temp=(abs(temp)).^2;
+      p_temp=sum(temp(f_integr))./sum(temp);
+      p(kchan1, kchan2, ktime)=p_temp;
+      p(kchan2, kchan1, ktime)=p_temp;
     end
+  end
 end
+
+p = permute(p, [3 1 2]); % permute to adhere to the conventional matrix shape of the ft_connectivity_* codebase
