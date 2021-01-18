@@ -68,7 +68,6 @@ function [stat] = ft_connectivityanalysis(cfg, data)
 %   cfg.bandwidth   = scalar, needed for 'psi', half-bandwidth of the integration
 %                     across frequencies (in Hz, default is the Rayleigh frequency)
 %                     needed for 'plm', half-bandwidth of the integration window (in Hz)
-%   cfg.fsample     = scalar, needed for 'plm', sampling frequency of the data in [Hz]
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
@@ -397,7 +396,10 @@ switch cfg.method
     
    case {'plm'}
     data = ft_checkdata(data, 'datatype', 'raw');
-    inparam = 'trial';
+    if ~isfield(data, 'fsample')
+      data.fsample = 1./mean(diff(data.time{1}));
+    end
+    inparam  = 'trial';
     outparam = 'plm';
   
     cfg.bandwidth = ft_getopt(cfg, 'bandwidth', 0.5);
@@ -1049,7 +1051,7 @@ switch cfg.method
     
   case 'plm'
     % phase linearity measurement.
-    optarg = {'bandwidth', cfg.bandwidth, 'fsample', cfg.fsample};
+    optarg = {'bandwidth', cfg.bandwidth, 'fsample', data.fsample};
     [datout] = ft_connectivity_plm(data.(inparam), optarg{:});
     varout = [];
     
