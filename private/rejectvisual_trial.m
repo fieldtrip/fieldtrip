@@ -321,7 +321,7 @@ heights   = info.layout.height;
 
 for chanindx = find(info.chansel)
   % Shift the vertical axis to zero
-  vdat = info.data.trial{info.trlop}(chanindx, :) - v_centers(chanindx);
+  vdat = info.data.trial{info.trlop}(chanindx, :); 
   % Scale to length 1 of the new data
   vdat = vdat ./ (ymax - ymin);
   % Scale by availabe plot area
@@ -361,7 +361,7 @@ for chanindx = 1:info.nchan
   hdat = hdat + h_centers(chanindx);
 
   % Shift the vertical axis to zero
-  vdat = info.data.trial{info.trlop}(chanindx, :) - v_centers(chanindx);
+  vdat = info.data.trial{info.trlop}(chanindx, :); 
   % Scale to length 1 of the new data
   vdat = vdat ./ (ymax - ymin);
   % Scale by availabe plot area
