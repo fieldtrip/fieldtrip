@@ -38,6 +38,8 @@ fid = fopen_or_error(filename,'rt');
 event = [];
 line  = [];
 
+readTime = ft_platform_supports('datetime');
+
 while ischar(line) || isempty(line)
   line = fgetl(fid);
   if ~isempty(line) && ~(isnumeric(line) && line==-1)
@@ -60,11 +62,12 @@ while ischar(line) || isempty(line)
         event(end  ).value    = tok{2};
         event(end  ).sample   = str2double(tok{3});
         event(end  ).duration = str2double(tok{4});
-        if numel(tok)>5 && ft_platform_supports('datetime')
+        if numel(tok)>5 && readTime
           try
             event(end).timestamp = datetime(tok{6}, 'InputFormat', 'yyyyMMddHHmmssSSSSSS');
           catch
             ft_warning('skipping invalid datetime in BrainVision marker file');
+            readTime = false;
           end
         end
       end
