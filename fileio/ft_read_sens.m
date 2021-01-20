@@ -27,7 +27,7 @@ function [sens] = ft_read_sens(filename, varargin)
 %
 % See also FT_READ_HEADER, FT_DATATYPE_SENS, FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD,
 
-% Copyright (C) 2005-2018 Robert Oostenveld
+% Copyright (C) 2005-2021 Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -67,6 +67,44 @@ else
     ft_error('file ''%s'' does not exist', filename);
   end
 end
+
+% start with an empty electrode, gradiometer or optode definition
+sens = [];
+
+% deal with data that is organized according to BIDS
+if strcmp(readbids, 'yes') || strcmp(readbids, 'ifmakessense')
+  [p, f, x] = fileparts(filename);
+  % check whether it a BIDS dataset
+  isbids = startsWith(f, 'sub-');
+  if isbids
+    tsvfile = bids_sidecar(filename, 'electrodes');
+    if ~isempty(tsvfile) && (isempty(senstype) || strcmp(senstype, 'eeg'))
+      % read the electrodes.tsv file
+      electrodes_tsv = read_tsv(tsvfile);
+      sens         = [];
+      sens.label   = electrodes_tsv.name;
+      sens.elecpos = [electrodes_tsv.x electrodes_tsv.y electrodes_tsv.z];
+      
+      % also read the electrodes.json file
+      [p, f] = fileparts(tsvfile);
+      jsonfile = fullfile(p, [f '.json']);
+      if exist(jsonfile, 'file')
+        electrodes_json = read_json(jsonfile);
+        ft_warning('the content of the electrodes.json is not used')
+        % FIXME do something with the content
+      end
+      
+      % also read the coordsystem.json file
+      coordsysfile = bids_sidecar(filename, 'coordsystem');
+      if exist(coordsysfile, 'file')
+        coordsys_json = read_json(coordsysfile);
+        ft_warning('the content of the coordsystem.json is not used')
+        % FIXME do something with the content
+      end
+    end
+  end
+end
+
 
 switch fileformat
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -488,39 +526,9 @@ switch fileformat
     sens.elecpos = [txtData.Loc_X txtData.Loc_Y txtData.Loc_Z];
     
   otherwise
-    % start with an empty array
-    sens = [];
-    
-    % check whether it is a BIDS dataset with an electrodes.tsv
-    [p, f, x] = fileparts(filename);
-    isbids = startsWith(f, 'sub-');
-    if isbids && readbids
-      tsvfile = bids_sidecar(filename, 'electrodes');
-      if ~isempty(tsvfile) && (isempty(senstype) || strcmp(senstype, 'eeg'))
-        % read the electrodes.tsv file
-        electrodes_tsv = read_tsv(tsvfile);
-        sens         = [];
-        sens.label   = electrodes_tsv.name;
-        sens.elecpos = [electrodes_tsv.x electrodes_tsv.y electrodes_tsv.z];
-        % also read the electrodes.json file
-        [p, f, x] = fileparts(tsvfile);
-        jsonfile = fullfile(p, [f '.json']);
-        if exist(jsonfile, 'file')
-          electrodes_json = read_json(jsonfile);
-          ft_warning('the content of the electrodes.json is not used')
-          % FIXME do something with the content
-        end
-        % also read the coordsystem.json file
-        coordsysfile = bids_sidecar(filename, 'coordsystem');
-        if exist(coordsysfile, 'file')
-          coordsys_json = read_json(coordsysfile);
-          ft_warning('the content of the coordsystem.json is not used')
-          % FIXME do something with the content
-        end
-      end
-    end
-    
-    if isempty(sens)
+    if ~isempty(sens)
+      % the electrode or optode information has been read from the BIDS sidecar file
+    else
       ft_error('unknown fileformat for electrodes or gradiometers');
     end
     
