@@ -499,7 +499,12 @@ switch eventformat
     event = read_ah5_markers(hdr, filename);
     
   case 'brainvision_vmrk'
-    event = read_brainvision_vmrk(filename);
+    if ~isempty(filename)
+      event = read_brainvision_vmrk(filename);
+    else
+      % the user specified a BrainVision dataset without a marker file
+      event = [];
+    end
     
   case 'bucn_nirs'
     event = read_bucn_nirsevent(filename);

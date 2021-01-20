@@ -6,13 +6,10 @@ function event = read_brainvision_vmrk(filename)
 % Use as
 %   event = read_brainvision_vmrk(filename)
 %
-% This function needs to read the header from a separate file and
-% assumes that it is located at the same location.
-%
 % See also READ_BRAINVISION_VHDR, READ_BRAINVISION_EEG
 
-% original M. Schulte 31.07.2003
-% modifications R. Oostenveld 14.08.2003
+% Copyright (C) 2003, Michael Schulte
+% Copyright (C) 2003-2021 Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -33,7 +30,7 @@ function event = read_brainvision_vmrk(filename)
 % $Id$
 
 
-fid = fopen_or_error(filename,'rt');
+fid = fopen_or_error(filename, 'rt');
 
 event = [];
 line  = [];
