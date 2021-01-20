@@ -296,10 +296,11 @@ if strcmp(coordsys, 'dewar') && ~any(strcmp(headerformat, {'fcdc_buffer', 'ctf_d
   ft_error('dewar coordinates are not supported for %s', headerformat);
 end
 
+% deal with data that is organized according to BIDS
 if strcmp(readbids, 'yes') || strcmp(readbids, 'ifmakessense')
-  % deal with data that is organized according to BIDS
-  % data in a BIDS tsv file (like physio and stim) will be explicitly dealt with in BIDS_TSV
   [p, f, x] = fileparts(filename);
+  % check whether it is a BIDS dataset with json and tsv sidecar files
+  % data in a BIDS tsv file (like physio and stim) will be explicitly dealt with in BIDS_TSV
   isbids = startsWith(f, 'sub-') && ~strcmp(x, '.tsv');
   if isbids
     % try to read the metadata from the BIDS sidecar files
