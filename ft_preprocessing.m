@@ -104,7 +104,14 @@ function [data] = ft_preprocessing(cfg, data)
 %   cfg.refmethod     = 'avg', 'median', 'rest' or 'bipolar' (for bipolar derivation of sequential channels)
 %                     or 'laplace'(for Laplacian re-referencing of neighboring channels; 
 %                     recommended for iEEG data)(default = 'avg')
-%   cfg.leadfield      = leadfield
+%   cfg.groupchans    = 'yes' or 'no' (defualt = 'no')
+%                     Allows to decide whether channels should be
+%                     rereferenced in separate groups (this feature applies 
+%                     only to bipolar and Laplacian rereferencing and requires 
+%                     channnels to be named using an alphanumeric code, where 
+%                     letters represent the group and numbers represent the 
+%                     order of the channel whithin its group) 
+%   cfg.leadfield     = leadfield
 %                     if select 'rest','leadfield' is required.
 %                     The leadfield can be a matrix (channels X sources)
 %                     which is calculated by using the forward theory, based on
@@ -231,6 +238,7 @@ cfg.padtype        = ft_getopt(cfg, 'padtype', 'data');
 cfg.reref          = ft_getopt(cfg, 'reref', 'no');
 cfg.refchannel     = ft_getopt(cfg, 'refchannel', {});
 cfg.refmethod      = ft_getopt(cfg, 'refmethod', 'avg');
+cfg.groupchans     = ft_getopt(cfg, 'groupchans', 'no');
 cfg.implicitref    = ft_getopt(cfg, 'implicitref');
 
 % construct the low-level options as key-value pairs, these are passed to FT_READ_HEADER and FT_READ_DATA
