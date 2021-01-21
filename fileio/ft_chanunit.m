@@ -67,7 +67,7 @@ if isheader
 end
 
 current_argin = {input, desired};
-if isequal(current_argin, previous_argin)
+if false % isequal(current_argin, previous_argin)
   % don't do the type detection again, but return the previous output from cache
   chanunit = previous_argout{1};
   return
