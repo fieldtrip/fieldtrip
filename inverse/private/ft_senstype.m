@@ -151,6 +151,18 @@ if isequal(current_argin, previous_argin)
   return
 end
 
+% in some cases these are easy to determine, no need to continue with the elaborate checks
+if strcmp(desired, 'meg') && isfield(input, 'coilpos')
+  type = true;
+  return
+elseif strcmp(desired, 'eeg') && isfield(input, 'elecpos')
+  type = true;
+  return
+elseif strcmp(desired, 'nirs') && isfield(input, 'optopos')
+  type = true;
+  return
+end
+
 isdata   = isa(input, 'struct')  && (isfield(input, 'hdr') || isfield(input, 'time') || isfield(input, 'freq') || isfield(input, 'grad') || isfield(input, 'elec') || isfield(input, 'opto'));
 isheader = isa(input, 'struct')  && isfield(input, 'label') && isfield(input, 'Fs');
 isgrad   = isa(input, 'struct')  && isfield(input, 'label') && isfield(input, 'pnt')  &&  isfield(input, 'ori'); % old style
