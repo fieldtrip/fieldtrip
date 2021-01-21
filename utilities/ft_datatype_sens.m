@@ -121,7 +121,7 @@ function [sens] = ft_datatype_sens(sens, varargin)
 persistent previous_argin previous_argout
 
 current_argin = [{sens} varargin];
-if isequal(current_argin, previous_argin)
+if false %% isequal(current_argin, previous_argin)
   % don't do the whole cheking again, but return the previous output from cache
   sens = previous_argout{1};
   return
@@ -152,10 +152,25 @@ end
 % this is needed further down
 nchan = length(sens.label);
 
-% there are many cases which are MEG, EEG or NIRS specific
-ismeg  = ft_senstype(sens, 'meg');
-iseeg  = ft_senstype(sens, 'eeg');
-isnirs = ft_senstype(sens, 'nirs');
+% these are used at multiple places, therefore we determine them only once
+if isfield(sens, 'coilpos')
+  ismeg = true;
+  iseeg = true;
+  isnirs = false;
+elseif isfield(sens, 'elecpos')
+  ismeg = false;
+  iseeg = true;
+  isnirs = false;
+elseif isfield(sens, 'optopos')
+  ismeg = false;
+  iseeg = false;
+  isnirs = true;
+else
+  % doing it this way takes a lot more CPU time
+  ismeg  = ft_senstype(sens, 'meg');
+  iseeg  = ft_senstype(sens, 'eeg');
+  isnirs = ft_senstype(sens, 'nirs');
+end
 
 switch version
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
