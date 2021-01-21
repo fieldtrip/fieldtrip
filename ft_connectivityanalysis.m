@@ -895,7 +895,7 @@ switch cfg.method
       [nrpttap, nchan, nfreq] = size(data.fourierspctrm);
       datout = cell(1, nfreq);
       for i=1:length(data.freq)
-        dat       = reshape(data.fourierspctrm(:,:,i), nrpttap, nchan).';
+        dat       = data.fourierspctrm(:,:,i).';
         datout{i} = ft_connectivity_powcorr_ortho(dat, optarg{:});
       end
       datout = cat(3, datout{:});
