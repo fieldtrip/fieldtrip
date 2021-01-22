@@ -77,6 +77,7 @@ function [stat, cfg] = ft_statistics_montecarlo(cfg, dat, design, varargin)
 %   cfg.voxelstatistic   deprecated
 %   cfg.voxelthreshold   deprecated
 %   cfg.precondition     before|after|[], for the statfun
+%   cfg.precision        single|double (default)
 
 % Copyright (C) 2005-2015, Robert Oostenveld
 %
@@ -128,6 +129,7 @@ cfg.cvar         = ft_getopt(cfg, 'cvar',       []);
 cfg.wvar         = ft_getopt(cfg, 'wvar',       []);
 cfg.correcttail  = ft_getopt(cfg, 'correcttail',  'no');
 cfg.precondition = ft_getopt(cfg, 'precondition', []);
+cfg.precision    = ft_getopt(cfg, 'precision', 'double');
 
 % explicit check for option 'yes' in cfg.correctail.
 if strcmp(cfg.correcttail, 'yes')
@@ -288,7 +290,7 @@ ft_info('estimated time per randomization is %.2f seconds\n', time_eval);
 
 % pre-allocate some memory
 if strcmp(cfg.correctm, 'cluster')
-  statrand = zeros(size(statobs,1), size(resample,1));
+  statrand = zeros(size(statobs,1), size(resample,1),cfg.precision);
 else
   prb_pos   = zeros(size(statobs));
   prb_neg   = zeros(size(statobs));
