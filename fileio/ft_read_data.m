@@ -1009,7 +1009,7 @@ switch dataformat
     dat = dat(chanindx, :);
     
   case 'matlab'
-    % read the header structure from a MATLAB file
+    % read the data structure from a MATLAB file
     % it should either contain a numerical "dat" array, or a FieldTrip data structure according to FT_DATATYPE_RAW
     w = whos(matfile(filename));
     if any(strcmp({w.name}, 'dat'))
