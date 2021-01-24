@@ -1362,9 +1362,15 @@ switch eventformat
     end
     
   case 'matlab'
-    % read the events from a normal MATLAB file
-    tmp   = load(filename, 'event');
-    event = tmp.event;
+    % read the event structure from a MATLAB file
+    % it should either contain an "event" structure, or a FieldTrip data structure according to FT_DATATYPE_RAW
+    w = whos(matfile(filename));
+    if any(strcmp({w.name}, 'event'))
+      event = loadvar(filename, 'event');
+    elseif any(strcmp({w.name}, 'data')) || length(w)==1
+      data = loadvar(filename, 'data');
+      event = ft_fetch_event(data);
+    end
     
   case {'manscan_mbi', 'manscan_mb2'}
     if isempty(hdr)
