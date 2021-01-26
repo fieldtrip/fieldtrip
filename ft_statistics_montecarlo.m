@@ -288,7 +288,7 @@ ft_info('estimated time per randomization is %.2f seconds\n', time_eval);
 
 % pre-allocate some memory
 if strcmp(cfg.correctm, 'cluster')
-  statrand = zeros(size(statobs,1), size(resample,1));
+  statrand = zeros(size(statobs,1), size(resample,1), class(dat)); % this reduces the memory footprint, requires the user to use ft_struct2single on the input data
 else
   prb_pos   = zeros(size(statobs));
   prb_neg   = zeros(size(statobs));
