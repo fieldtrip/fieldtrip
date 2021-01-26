@@ -278,8 +278,12 @@ switch cfg.method
       % it looks like a timelock with a cov, which is perfectly valid as input
       data = ft_checkdata(data, 'datatype', 'timelock');
     else
-      % it does not have a cov, the covariance will be computed on the fly further down
+      % it does not have a cov
       data = ft_checkdata(data, 'datatype', 'raw');
+      
+      tmpcfg = [];
+      tmpcfg.covariance = 'yes';
+      data = ft_timelockanalysis(tmpcfg, data);
     end
     inparam = 'cov';
     outparam = cfg.method;
