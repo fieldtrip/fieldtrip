@@ -294,6 +294,13 @@ for i=1:length(chanindx)
           event(end  ).value  = trig(j-1-trigshift);    % assign the trigger value just _before_ going down
         end
       end
+    case 'any'
+      % convert the trigger into an event with a value at a specific sample
+      for j=find(diff([begpad trig endpad])~=0)
+        event(end+1).type   = channel;
+        event(end  ).sample = j + begsample - 1;            % assign the sample at which the trigger has gone up or down
+        event(end  ).value  = trig(j+trigshift);            % assign the trigger value just _after_ going up
+      end
     case {'bit', 'biton'}
       trig = uint32([begpad trig]);
       for k=1:32
