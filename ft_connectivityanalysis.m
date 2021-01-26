@@ -1034,7 +1034,7 @@ switch cfg.method
     nrpt     = [];    
   case 'corr'
     % pearson's correlation coefficient
-    optarg = {'dimord', getdimord(data, inparam), 'feedback', cfg.feedback, 'hasjack', hasjack};
+    optarg = {'dimord', getdimord(data, inparam), 'feedback', cfg.feedback, 'hasjack', hasjack, 'pownorm', true, 'complex', 'complex'};
     if ~isempty(cfg.pchanindx), optarg = cat(2, optarg, {'pchanindx', cfg.pchanindx, 'allchanindx', cfg.allchanindx}); end
     [datout, varout, nrpt] = ft_connectivity_corr(data.(inparam), optarg{:});
     
