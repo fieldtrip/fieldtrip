@@ -74,7 +74,7 @@ if ft_abort
 end
 
 % select channels and trials of interest, by default this will select all channels and trials
-tmpcfg = keepfields(cfg, {'trials', 'channel', 'showcallinfo'});
+tmpcfg = keepfields(cfg, {'trials', 'channel', 'tolerance', 'showcallinfo'});
 datain = ft_selectdata(tmpcfg, datain);
 % restore the provenance information
 [cfg, datain] = rollback_provenance(cfg, datain);
@@ -97,7 +97,7 @@ switch cfg.method
     dataout.avg = std(dataout.avg,1);
   case 'power'
     dataout.avg = std(dataout.avg,1).^2;
-end;
+end
 
 dataout.label = {'gmfp'};
 

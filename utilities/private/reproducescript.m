@@ -30,10 +30,10 @@ else
 end
 
 tmpcfg = copyfields(cfg, tmpcfg, {'inputfile', 'outputfile'});
-if isempty(tmpcfg.inputfile)
+if isfield(tmpcfg, 'inputfile') && isempty(tmpcfg.inputfile)
   tmpcfg = removefields(tmpcfg, 'inputfile');
 end
-if isempty(cfg.outputfile)
+if isfield(tmpcfg, 'outputfile') && isempty(tmpcfg.outputfile)
   tmpcfg = removefields(tmpcfg, 'outputfile');
 end
 if isfield(cfg, 'randomseed') && ~isempty(cfg.randomseed)
@@ -53,7 +53,14 @@ tmpcfg = printstruct('cfg', tmpcfg);
 % pipeline is identical to an output variable at an earlier step, the
 % output variable will automatically be used thanks to the hashing
 % mechanism (see make_or_fetch_inputfile).
-re = ['(?<=' regexptranslate('escape', reproducescript_dir) '[/\\]{1})(\w+_input_\w+(\.mat){1})'];
+% handle path separators in reproducescript_dir: either / or \ should match
+thedir = regexprep(reproducescript_dir, '[/\\]', '[/\\\\]');
+% make sure thedir does not end with a path separator (we will explicitly
+% add it later)
+if strcmp(thedir(end-4:end), '[/\\]')
+  thedir = thedir(1:end-5);
+end
+re = ['(?<=' thedir '[/\\])(\w+_input_\w+(\.mat))'];
 if exist(filename, 'file')
   script = fileread(filename);
   existing_infiles = regexp(script, re, 'match');
@@ -81,6 +88,9 @@ if outputcfg
   % this is for ft_definetrial, ft_artifact_zvalue, etc.
   fprintf(fid, 'cfg = %s(cfg);\n\n', highest_ft);
 else
+  if isplottingfunction(highest_ft)
+    fprintf(fid, 'figure; \n');
+  end
   fprintf(fid, '%s(cfg);\n\n', highest_ft);
 end
 

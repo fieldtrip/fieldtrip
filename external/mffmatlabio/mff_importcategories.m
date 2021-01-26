@@ -75,6 +75,9 @@ if ~isempty(catsResource)
                     cat(iCat).trials(iSeg).eventbegin = segment.getEventBegin()/divider;
                     cat(iCat).trials(iSeg).eventend = segment.getEventEnd()/divider;
                     
+                    keylist  = segment.getKeys();
+                    cat(iCat).trials = mff_importkeys(cat(iCat).trials, iSeg, keylist, true);
+                    
                     if segment.getClockStartTimePresent()
                         cat(iCat).trials(iSeg).clockstarttime = char(segment.getClockStartTime());
                     end

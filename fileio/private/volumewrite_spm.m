@@ -1,4 +1,4 @@
-function [Va] = volumewrite_spm(filename, data, transform, spmversion)
+function [Va] = volumewrite_spm(filename, data, transform, spmversion, scl_slope, scl_inter)
 
 % VOLUMEWRITE_SPM writes anatomical or functional MRI volume data to analyze or nifti format
 % using the SPM toolbox.
@@ -10,7 +10,13 @@ function [Va] = volumewrite_spm(filename, data, transform, spmversion)
 % Copyright (C) 2011, Jan-Mathijs Schoffelen
 
 if nargin<4 || isempty(spmversion)
-  spmversion = 'spm8';
+  spmversion = 'spm12';
+end
+spmversion = lower(spmversion);
+
+if nargin<5
+  scl_slope = 1;
+  scl_inter = 0;
 end
 
 % check whether the required SPM toolbox is available
@@ -34,15 +40,26 @@ if 0
   spm_type('uint64')  %           -- 64-bit unsigned integer array
 end
 
-typ       = spm_type(class(data));
+datatype  = class(data);
 dim       = size(data);
+
+% different spm version have different names for double/single
+if isequal(datatype, 'single') && isequal(spmversion, 'spm2'),   datatype = 'float';   end
+if isequal(datatype, 'single') && ~isequal(spmversion, 'spm2'),  datatype = 'float32'; end
+if isequal(datatype, 'double') && ~isequal(spmversion, 'spm2'),  datatype = 'float64'; end
+
+typ       = spm_type(datatype);
 if isnan(typ)
   % convert every unsupported data type into double
   data      = double(data);
-  typ       = spm_type(class(data));
+  if isequal(spmversion, 'spm2')
+    typ = spm_type('double');
+  else
+    typ = spm_type('float64');
+  end
 end
 
-switch lower(spmversion)
+switch spmversion
   case 'spm2'
     %see spm_vol
     Va         = [];
@@ -67,7 +84,7 @@ switch lower(spmversion)
       Va.n       = 1;
     end
     Va.pinfo   = [1 0 0]';
-    %Va.dt      = [typ 1]; % this is not necessary because assigned in spm_create_vol
+    Va.dt      = [typ 0]; % this is not necessary because assigned in spm_create_vol
     Va         = spm_create_vol(Va);
     Va         = spm_write_vol(Va,data);
     
@@ -75,7 +92,8 @@ switch lower(spmversion)
     N     = nifti;
     N.mat = transform;
     N.mat_intent = 'Aligned';
-    N.dat = file_array(filename, dim, 'FLOAT32-LE');
+    %N.dat = file_array(filename, dim, 'FLOAT32-LE');
+    N.dat = file_array(filename, dim, [typ 0], 0, [],[]);%scl_slope, scl_inter);
     create(N);
     switch length(N.dat.dim)
       case 2

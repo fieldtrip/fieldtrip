@@ -2,7 +2,6 @@ function test_ft_read_and_plot_atlas
 
 % WALLTIME 00:15:00
 % MEM 3gb
-
 % DEPENDENCY ft_read_atlas ft_sourceplot
 
 % spm8 might have mexfile issues
@@ -77,6 +76,17 @@ ft_sourceplot(cfg, atlas, pial.mesh)
 
 % read and plot Brainnetome
 atlas = ft_read_atlas(fullfile(ftpath, '/template/atlas/brainnetome/BNA_MPM_thr25_1.25mm.nii'));
+
+cfg = [];
+cfg.atlas = atlas;
+cfg.funparameter = 'tissue';
+ft_sourceplot(cfg, atlas);
+
+cfg.method = 'surface';
+ft_sourceplot(cfg, atlas, pial.mesh)
+
+% Plot Melbourne Subcortical Atlas
+atlas = ft_read_atlas(fullfile(ftpath, '/template/atlas/melb_subcortical/melb_sub.mat'));
 
 cfg = [];
 cfg.atlas = atlas;

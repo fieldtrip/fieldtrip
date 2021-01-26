@@ -76,7 +76,7 @@ object = ft_determine_units(object);
 % compute the scaling factor from the input units to the desired ones
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-if isequal(object.unit, target)
+if isempty(object) || isfield(object, 'unit') && isequal(object.unit, target)
   % there is nothing to do
   return
 end
@@ -175,8 +175,7 @@ if isfield(object, 'params') && ~strcmp(target, 'mm')
   object = rmfield(object, 'params');
 end
 
-% sourcemodel obtained through mne also has a orig-field with the high
-% number of vertices
+% sourcemodel obtained through mne also has a orig-field with the high number of vertices
 if isfield(object, 'orig')
   if isfield(object.orig, 'pnt')
     object.orig.pnt = scale * object.orig.pnt;

@@ -2,7 +2,6 @@ function test_ft_freqgrandaverage
 
 % MEM 2gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_freqgrandaverage
 
 % this functions tests the new implementation of ft_freqgrandaverage. the

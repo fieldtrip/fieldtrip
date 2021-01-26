@@ -1,5 +1,4 @@
 function test_bug2746
-
 % DEPENDENCY loadcnt
 
 % MEM 2gb

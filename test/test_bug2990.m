@@ -2,7 +2,6 @@ function test_bug2990
 
 % WALLTIME 00:10:00
 % MEM 2gb
-
 % DEPENDENCY ft_prepare_sourcemodel ft_volumereslice
 
 load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2990/4roboos_part1'));

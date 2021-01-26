@@ -138,7 +138,7 @@ end
 cfg.interactive = 'no';
 
 % prepare the layout, this should be done only once
-tmpcfg = keepfields(cfg, {'layout', 'rows', 'columns', 'commentpos', 'scalepos', 'projection', 'viewpoint', 'rotate', 'width', 'height', 'elec', 'grad', 'opto', 'showcallinfo'});
+tmpcfg = keepfields(cfg, {'layout', 'rows', 'columns', 'commentpos', 'skipcomnt', 'scalepos', 'skipscale', 'projection', 'viewpoint', 'rotate', 'width', 'height', 'elec', 'grad', 'opto', 'showcallinfo'});
 cfg.layout = ft_prepare_layout(tmpcfg);
 
 % this is needed for the figure title
@@ -200,11 +200,6 @@ cfg = removefields(cfg, 'funcname');
 
 % show the callinfo for all components together
 cfg.showcallinfo = tmpshowcallinfo;
-
-% set renderer if specified
-if ~isempty(cfg.renderer)
-  set(gcf, 'renderer', cfg.renderer)
-end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug

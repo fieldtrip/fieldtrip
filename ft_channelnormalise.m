@@ -65,17 +65,12 @@ if ft_abort
   return
 end
 
-cfg = ft_checkconfig(cfg, 'allowedval', {'method', 'perchannel', 'acrosschannel'});
-
 % set the defaults
 cfg.channel   = ft_getopt(cfg, 'channel', 'all');
 cfg.trials    = ft_getopt(cfg, 'trials', 'all', 1);
 cfg.scale     = ft_getopt(cfg, 'scale', 1);
 cfg.demean    = ft_getopt(cfg, 'demean', 'yes');
 cfg.method    = ft_getopt(cfg, 'method', 'perchannel'); % or acrosschannel
-
-dodemean      = istrue(cfg.demean);
-doperchannel  = strcmp(cfg.method, 'perchannel');
 
 % store original datatype
 dtype = ft_datatype(data);
@@ -85,7 +80,7 @@ data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes');
 
 if ~strcmp(cfg.channel, 'all') || ~strcmp(cfg.trials, 'all')
   % select channels and trials of interest
-  tmpcfg = keepfields(cfg, {'channel', 'trials', 'showcallinfo'});
+  tmpcfg = keepfields(cfg, {'trials', 'channel', 'tolerance', 'showcallinfo'});
   data   = ft_selectdata(tmpcfg, data);
   % restore the provenance information
   [cfg, data] = rollback_provenance(cfg, data);
@@ -111,24 +106,33 @@ for i=1:length(copyfield)
   end
 end
 
-% compute the mean and std
+% compute the sum and sum-of-squares
 n = zeros(numel(data.label), numel(data.trial));
 for k = 1:ntrl
   n(:,k) = sum(~isnan(data.trial{k}),2);
   datsum = datsum + nansum(data.trial{k},2);
   datssq = datssq + nansum(data.trial{k}.^2,2);
 end
-datmean = datsum./nansum(n, 2); % apply the mean per channel always
-if ~doperchannel
-  % update the intermediate variables in order to compute std across channels
+
+% compute the mean always per channel
+datmean = datsum./nansum(n, 2);
+
+if strcmp(cfg.method, 'perchannel')
+  % keep the intermediate sum and sum-of-squares as they are
+elseif strcmp(cfg.method, 'acrosschannel')
+  % update the intermediate sum and sum-of-squares in order to compute std across channels
   datsum(:) = nansum(datsum);
   datssq(:) = nansum(datssq);
   n         = repmat(nansum(n, 1), size(n, 1), 1);
+else
+  ft_error('unsupported method "%s"', cfg.method);
 end
-datstd = sqrt( (datssq - (datsum.^2)./nansum(n, 2))./nansum(n, 2)); %quick way to compute std from sum and sum-of-squared values
+
+% this is a quick way to compute the std from the sum and sum-of-squared values
+datstd = sqrt( (datssq - (datsum.^2)./nansum(n, 2))./nansum(n, 2));
 
 % keep mean and std in output cfg
-if dodemean
+if istrue(cfg.demean)
   cfg.mu    = datmean;
 else
   cfg.mu    = [];
@@ -138,7 +142,7 @@ cfg.sigma = datstd;
 % demean and normalise
 for k = 1:ntrl
   onesvec = ones(1,size(data.trial{k},2));
-  if dodemean
+  if istrue(cfg.demean)
     dataout.trial{k} = cfg.scale * (data.trial{k}-datmean(:,onesvec))./datstd(:,onesvec);
   else
     dataout.trial{k} = cfg.scale * data.trial{k}./datstd(:,onesvec);

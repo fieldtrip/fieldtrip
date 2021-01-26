@@ -17,27 +17,27 @@ function [pipeline] = ft_analysispipeline(cfg, data)
 % of the processed data (i.e. "data.cfg") instead of the full data.
 %
 % The configuration options that apply to the behavior of this function are
-%   cfg.filename   = string, filename without the extension
-%   cfg.filetype   = string, can be 'matlab', 'html' or 'dot'
-%   cfg.feedback   = string, 'no', 'text', 'gui' or 'yes', whether text and/or
-%                    graphical feedback should be presented (default = 'yes')
-%   cfg.showinfo   = string or cell-array of strings, information to display
-%                    in the gui boxes, can be any combination of
-%                    'functionname', 'revision', 'matlabversion',
-%                    'computername', 'username', 'calltime', 'timeused',
-%                    'memused', 'workingdir', 'scriptpath' (default =
-%                    'functionname', only display function name). Can also
-%                    be 'all', show all pipeline. Please note that if you want
-%                    to show a lot of information, this will require a lot
-%                    of screen real estate.
-%   cfg.remove     = cell-array with strings, determines which objects will
-%                    be removed from the configuration prior to writing it to
-%                    file. For readibility of the script, you may want to
-%                    remove the large objectssuch as event structure, trial
-%                    definition, source positions
-%  cfg.keepremoved = 'yes' or 'no', determines whether removed fields are
-%                    completely removed, or only replaced by a short textual
-%                    description (default = 'no')
+%   cfg.filename    = string, filename without the extension
+%   cfg.filetype    = string, can be 'matlab', 'html' or 'dot'
+%   cfg.feedback    = string, 'no', 'text', 'gui' or 'yes', whether text and/or
+%                     graphical feedback should be presented (default = 'yes')
+%   cfg.showinfo    = string or cell-array of strings, information to display
+%                     in the gui boxes, can be any combination of
+%                     'functionname', 'revision', 'matlabversion',
+%                     'computername', 'username', 'calltime', 'timeused',
+%                     'memused', 'workingdir', 'scriptpath' (default =
+%                     'functionname', only display function name). Can also
+%                     be 'all', show all pipeline. Please note that if you want
+%                     to show a lot of information, this will require a lot
+%                     of screen real estate.
+%   cfg.remove      = cell-array with strings, determines which objects will
+%                     be removed from the configuration prior to writing it to
+%                     file. For readibility of the script, you may want to
+%                     remove the large objectssuch as event structure, trial
+%                     definition, source positions
+%   cfg.keepremoved = 'yes' or 'no', determines whether removed fields are
+%                     completely removed, or only replaced by a short textual
+%                     description (default = 'no')
 %
 % This function uses the nested cfg and cfg.previous that are present in
 % the data structure. It will use the configuration and the nested previous
@@ -473,7 +473,6 @@ for i=1:numel(pipeline)
     end
     arrow(base, tip, 'length', 8, 'lineWidth', 1);
   end
-
 
 end % for numel(info)
 

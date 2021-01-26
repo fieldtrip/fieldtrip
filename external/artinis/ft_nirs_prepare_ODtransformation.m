@@ -16,16 +16,16 @@ function [montage, cfg] = ft_nirs_prepare_ODtransformation(cfg, data)
 % in transformation.
 %
 % The configuration should contain
-%  cfg.channel            = Nx1 cell-array with selection of channels
-%                           (default = 'nirs'), see FT_CHANNELSELECTION for
-%                           more details
+%   cfg.channel            = Nx1 cell-array with selection of channels
+%                            (default = 'nirs'), see FT_CHANNELSELECTION for
+%                            more details
 %
 % Optional configuration settings are
-%  cfg.age                = scalar, age of the subject (necessary to
-%                           automatically select the appropriate DPF, or
-%  cfg.dpf                = scalar, differential path length factor
-%  cfg.dpffile            = string, location to a lookup table for the
-%                           relation between participant age and DPF
+%   cfg.age                = scalar, age of the subject (necessary to
+%                            automatically select the appropriate DPF, or
+%   cfg.dpf                = scalar, differential path length factor
+%   cfg.dpffile            = string, location to a lookup table for the
+%                            relation between participant age and DPF
 %
 % Note that the DPF might be different across channels, and is usually
 % contained in the optode structure contained in the data.
@@ -157,8 +157,7 @@ illegalidx = cellfun(@isempty, typeidx);
 cfg.channel(illegalidx) = [];
 
 if isempty(cfg.channel)
-  warning('no valid NIRS channels found')
-  return;
+  ft_error('no valid NIRS channels found')
 end
 
 % channel indices wrt optode structure
@@ -185,14 +184,14 @@ chromophoreName = {'O2Hb' 'HHb'};
 fid = fopen(fullfile(fileparts(mfilename('fullpath')), 'private', 'Cope_ext_coeff_table.txt'));
 coefs = cell2mat(textscan(fid, '%f %f %f %f %f'));
 
-% extract all transmit combinations that are relevant here
-transmits      = sens.transmits(chanidx, :);
-transmitteridx = transmits>0;
-receiveridx    = transmits<0;
-optodeidx      = transmitteridx | receiveridx;
+% extract all optode combinations that are relevant here
+tratra         = sens.tra(chanidx, :)';
+transmitteridx = tratra>0;
+receiveridx    = tratra<0;
+optodeidx      = (transmitteridx | receiveridx)'; % transpose to get back to tra order
 
 % extract the wavelengths
-wavelengths  = sens.wavelength(transmits(transmitteridx));
+wavelengths  = sens.wavelength(tratra(transmitteridx));
 wlidx = bsxfun(@minus, coefs(:, 1), wavelengths);
 
 % find the relevant channel combinations
@@ -206,7 +205,7 @@ for c=1:numel(chanidx)
   % compute the channel combinations
   tupletidx = sum(bsxfun(@minus, optodeidx, optodeidx(c, :))~=0, 2)==0;
   chanUsed = chanUsed|tupletidx;
-  chancmb(:, end+1) = tupletidx;
+  chancmb(:, end+1) = tupletidx;  
 end
 
 % do the transformation
@@ -214,18 +213,20 @@ tra      = zeros(size(chancmb, 2)*numel(chromophoreIdx), size(cfg.channel, 1));
 labelnew = cell(1, size(chancmb, 2)*numel(chromophoreIdx));
 
 % transformation has to be done per channel combination
-chanidx = []; % we will use this variable here
+chanidx = []; % we will use this variable here for indexing channels (Rx-Tx cmbs)
+optoidx = []; % we will use this variable here for indexing optodes (individual Rx and Tx)
 for c=1:size(chancmb, 2)
 
-  % find all other channels of the same transmitter / receiver pair
+  % find all other channels of the exact same transmitter / receiver pair
   chanidx = chancmb(:, c);
 
   % extract coefficient idx of these channels
   [coefidx, colidx] = find(wlidx(:, chanidx)==0);
 
   % compute the transmitter/receiver distance in cm
-  dist = sqrt(sum(diff(sens.optopos(optodeidx(c, :), :)).^2));
-
+  optoidx = find(chanidx, 1, 'first'); % we can take 'first' because the transmitter-optodes have to be physically in the exact same spot to form "one" channel
+  dist = sqrt(sum(diff(sens.optopos(optodeidx(optoidx, :), :)).^2));
+    
   % select dpf
   dpf = mean(dpfs(chanidx));
 

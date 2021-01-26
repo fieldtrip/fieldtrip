@@ -2,7 +2,6 @@ function test_headmodel_singleshell_new_old
 
 % MEM 2gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_headmodel_singleshell ft_prepare_headmodel ft_headmodel_singleshell
 
 % generate a unit sphere

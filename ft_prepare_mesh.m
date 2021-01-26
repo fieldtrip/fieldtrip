@@ -11,16 +11,19 @@ function [mesh, cfg] = ft_prepare_mesh(cfg, data)
 %   mesh = ft_prepare_mesh(cfg)
 %   mesh = ft_prepare_mesh(cfg, mri)
 %   mesh = ft_prepare_mesh(cfg, seg)
+% where the mri input argument is the result from FT_READ_MRI, FT_VOLUMEREALIGN or
+% FT_VOLUMERESLICE and the seg input argument is from FT_VOLUMESEGMENT. If you
+% specify an anatomical MRI, it will be segmented on the fly.
 %
-% Configuration options:
+% The cfg argument is a structure that can contain:
 %   cfg.method      = string, can be 'interactive', 'projectmesh', 'iso2mesh', 'isosurface',
-%                     'headshape', 'hexahedral', 'tetrahedral','cortexhull', 'fittemplate'
+%                     'headshape', 'hexahedral', 'tetrahedral', 'cortexhull' or 'fittemplate'
 %   cfg.tissue      = cell-array with strings representing the tissue types, or numeric vector with integer values
 %   cfg.numvertices = numeric vector, should have same number of elements as the number of tissues
 %
 % When providing an anatomical MRI or a segmentation, you should specify
 %   cfg.downsample  = integer number (default = 1, i.e. no downsampling), see FT_VOLUMEDOWNSAMPLE
-%   cfg.spmversion  = string, 'spm2', 'spm8', 'spm12' (default = 'spm8')
+%   cfg.spmversion  = string, 'spm2', 'spm8', 'spm12' (default = 'spm12')
 %
 % For method 'headshape' you should specify
 %   cfg.headshape   = a filename containing headshape, a Nx3 matrix with surface
@@ -35,7 +38,6 @@ function [mesh, cfg] = ft_prepare_mesh(cfg, data)
 % With this method you are fitting the headshape from the configuration to the template;
 % the resulting affine transformation is applied to the input mesh (or set of meshes),
 % which is subsequently returned as output variable.
-%
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
@@ -124,7 +126,7 @@ cfg = ft_checkconfig(cfg, 'forbidden', {'numcompartments', 'outputfile', 'source
 cfg.downsample  = ft_getopt(cfg, 'downsample', 1);      % default is no downsampling
 cfg.numvertices = ft_getopt(cfg, 'numvertices', 3000);  % set the default
 cfg.smooth      = ft_getopt(cfg, 'smooth');             % no default
-cfg.spmversion  = ft_getopt(cfg, 'spmversion', 'spm8');
+cfg.spmversion  = ft_getopt(cfg, 'spmversion', 'spm12');
 
 % Translate the input options in the appropriate default for cfg.method
 if isfield(cfg, 'headshape') && ~isempty(cfg.headshape)

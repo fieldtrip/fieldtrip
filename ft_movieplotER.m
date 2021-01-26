@@ -10,15 +10,15 @@ function [cfg] = ft_movieplotER(cfg, data)
 %   cfg.parameter    = string, parameter that is color coded (default = 'avg')
 %   cfg.xlim         = 'maxmin' or [xmin xmax] (default = 'maxmin')
 %   cfg.zlim         = plotting limits for color dimension, 'maxmin',
-%                          'maxabs', 'zeromax', 'minzero', or [zmin zmax] (default = 'maxmin')
-%   cfg.samperframe  = number, samples per fram (default = 1)
+%                      'maxabs', 'zeromax', 'minzero', or [zmin zmax] (default = 'maxmin')
+%   cfg.samperframe  = number, samples per frame (default = 1)
 %   cfg.framespersec = number, frames per second (default = 5)
 %   cfg.framesfile   = [], no file saved, or 'string', filename of saved frames.mat (default = []);
 %   cfg.layout       = specification of the layout, see below
 %   cfg.baseline     = 'yes','no' or [time1 time2] (default = 'no'), see FT_TIMELOCKBASELINE
 %   cfg.baselinetype = 'absolute' or 'relative' (default = 'absolute')
 %   cfg.colorbar     = 'yes', 'no' (default = 'no')
-%   cfg.colorbartext =  string indicating the text next to colorbar
+%   cfg.colorbartext = string indicating the text next to colorbar
 %
 % The layout defines how the channels are arranged. You can specify the
 % layout in a variety of ways:
@@ -86,6 +86,7 @@ data = ft_checkdata(data, 'datatype', 'timelock');
 cfg.parameter   = ft_getopt(cfg, 'parameter', 'avg');
 cfg.interactive = ft_getopt(cfg, 'interactive', 'yes');
 cfg.baseline    = ft_getopt(cfg, 'baseline', 'no');
+cfg.visible     = ft_getopt(cfg, 'visible', 'on');
 cfg.renderer    = ft_getopt(cfg, 'renderer'); % let MATLAB decide on the default
 
 % apply optional baseline correction

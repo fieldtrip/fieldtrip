@@ -150,25 +150,26 @@ if trlnum>1
   
   % check if all samples are present and are not present twice or more
   if any(count>1)
-    if ~allowoverlap
-      % ft_error('some of the requested samples occur twice in the data');
-      % this  can be considered OK if the overlap has exactly identical values
-      sel = find(count>1); % must be row vector
-      for smplop=sel
-        % find in which trials the sample occurs
-        seltrl = find(smplop>=trl(:,1) + 1 - begsample & ... 
-                      smplop<=trl(:,2) + 1 - begsample);  % which trials, requires the adjustment with begsample, if different from 1, JM 20180116
-        selsmp = smplop - trl(seltrl,1) + begsample; % which sample in each of the trials, requires the adjustment with begsample, rather than 1
-        for i=2:length(seltrl)
-          % compare all occurences to the first one
-          % consider also mutual occurring NaNs as equal values
-          if ~all(isequaln(data.trial{seltrl(i)}(:,selsmp(i)), data.trial{seltrl(1)}(:,selsmp(1))))
+    % Lists the repeated (overlapped) samples.
+    sel = find(count>1);
+    for smplop=sel
+      % find in which trials the sample occurs
+      seltrl = find(smplop>=trl(:,1) + 1 - begsample & ... 
+                    smplop<=trl(:,2) + 1 - begsample);  % which trials, requires the adjustment with begsample, if different from 1, JM 20180116
+      selsmp = smplop - trl(seltrl,1) + begsample; % which sample in each of the trials, requires the adjustment with begsample, rather than 1
+      for i=2:length(seltrl)
+        eqsamp = all(isequaln(data.trial{seltrl(i)}(:,selsmp(i)), data.trial{seltrl(1)}(:,selsmp(1))));
+        if ~eqsamp
+          % If overlap is not allowed, rises an error.
+          if ~allowoverlap
             ft_error('some of the requested samples occur twice in the data and have conflicting values');
           end
+          % Otherwise rises a warning and exits the loop.
+          ft_warning('some of the requested samples occur twice in the data and have conflicting values, using only the last occurence of each sample');
+          break
         end
       end
-    else
-      ft_warning('samples present in multiple trials, using only the last occurence of each sample')
+      if ~eqsamp, break, end
     end
   end
   

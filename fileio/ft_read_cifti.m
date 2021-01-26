@@ -65,9 +65,6 @@ debug            = ft_getopt(varargin, 'debug', false);
 mapname          = ft_getopt(varargin, 'mapname', 'field');
 dataformat       = ft_getopt(varargin, 'dataformat', []);
 
-% convert 'yes'/'no' into boolean
-readdata = istrue(readdata);
-
 if ft_filetype(filename, 'compressed')
   % the file is compressed, unzip on the fly
   inflated = true;
@@ -91,14 +88,17 @@ fseek(fid, 0, 'eof');
 filesize = ftell(fid);
 fseek(fid, 0, 'bof');
 
-% set the default for readdata
 if isempty(readdata)
+  % set the default for readdata
   if filesize>1e9
     ft_warning('Not reading data by default in case filesize>1GB. Please specify the ''readdata'' option.');
     readdata = false;
   else
     readdata = true;
   end
+else
+  % convert 'yes'/'no' into boolean
+  readdata = istrue(readdata);
 end
 
 fseek(fid, 540, 'bof');

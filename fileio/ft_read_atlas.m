@@ -138,7 +138,7 @@ switch fileformat
     % important to keep the original numbers or to make the list with
     % labels compact. This could be made optional.
     compact = true;
-    if compact
+    if compact && ~isempty(atlas.tissuelabel)
       [a, i, j] = unique(atlas.tissue);
       atlas.tissue = reshape(j-1, atlas.dim);
       atlas.tissuelabel = atlas.tissuelabel(a(a~=0));
@@ -163,7 +163,7 @@ switch fileformat
     % important to keep the original numbers or to make the list with
     % labels compact. This could be made optional.
     compact = true;
-    if compact
+    if compact && ~isempty(atlas.tissuelabel)
       [a, i, j] = unique(atlas.tissue);
       atlas.tissue = reshape(j-1, atlas.dim);
       atlas.tissuelabel = atlas.tissuelabel(a(a~=0));
@@ -680,10 +680,12 @@ switch fileformat
       
     else
       % the file does not exist
-      ft_warning('cannot locate %s, making fake tissue labels', filename2);
+      ft_warning('cannot locate %s, making default tissue labels', filename2);
+      
       value = [];
       label = {};
       for i=1:max(brick0(:))
+        % this is consistent with FIXSEGMENTATION
         value(i) = i;
         label{i} = sprintf('tissue %d', i);
       end
@@ -1991,8 +1993,18 @@ switch fileformat
           fn = strrep(fn, ')', '');
           
           atlas.(fn) = tmp.anatomy(:,:,:,m);
+          if ~isa(atlas.(fn), 'double') && ~isa(atlas.(fn), 'single')
+            % ensure that the probabilistic values are either double or
+            % single precision, do single precision to save memory
+            atlas.(fn) = single(atlas.(fn));
+          end
+          if any(atlas.(fn)(:)>1) & all(atlas.(fn)(:)<=100)
+            % convert to probability values, assuming 100 to be max
+            atlas.(fn) = atlas.(fn)./100;
+          end
         end
         atlas.coordsys = 'mni';
+        atlas.dim      = atlas.dim(1:3);
     end
     
     

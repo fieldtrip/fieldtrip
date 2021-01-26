@@ -2,6 +2,7 @@ function test_warp
 
 % MEM 2gb
 % WALLTIME 00:10:00
+% DEPENDENCY
 
 % function to test the warp functionality and its robustness
 

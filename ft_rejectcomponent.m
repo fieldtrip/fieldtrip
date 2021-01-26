@@ -127,11 +127,7 @@ end
 
 % set the rejected component amplitudes to zero
 ft_info('removing %d components\n', length(reject));
-if ~hasdata
-  ft_info('keeping %d components\n',  ncomps-length(reject));
-else
-  ft_info('keeping %d components\n',  nchans-length(reject));
-end
+ft_info('keeping %d components\n',  ncomps-length(reject));
 
 % create a projection matrix by subtracting the subspace spanned by the
 % topographies of the to-be-removed components from identity
@@ -169,7 +165,7 @@ else
   
   keepunused = 'no'; % don't need to keep the original rejected components
   bname = 'invcomp';
-
+  
   % create the initial data structure, remove all component details
   data = keepfields(comp, {'trial', 'time', 'label', 'fsample', 'grad', 'elec', 'opto', 'trialinfo', 'sampleinfo'});
 end % if hasdata
@@ -191,6 +187,7 @@ end
 % apply the linear projection also to the sensor description
 if ~isempty(sensfield)
   if  strcmp(cfg.updatesens, 'yes')
+
     for m = 1:numel(sensfield)
       ft_info('also applying the backprojection matrix to the %s structure\n', sensfield{m});
       
@@ -223,6 +220,7 @@ if ~isempty(sensfield)
             invcompfield = [invcompfield num2str(k)];
             break;
           end
+
         end
       end
       

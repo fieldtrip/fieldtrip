@@ -223,7 +223,7 @@ cfg = ft_checkconfig(cfg, 'forbidden',   {'latency'}); % see bug 1376 and 1076
 cfg = ft_checkconfig(cfg, 'renamedval',  {'method', 'wltconvol', 'wavelet'});
 
 % select channels and trials of interest, by default this will select all channels and trials
-tmpcfg = keepfields(cfg, {'trials', 'channel', 'showcallinfo'});
+tmpcfg = keepfields(cfg, {'trials', 'channel', 'tolerance', 'showcallinfo'});
 data = ft_selectdata(tmpcfg, data);
 % restore the provenance information
 [cfg, data] = rollback_provenance(cfg, data);
@@ -288,11 +288,10 @@ switch cfg.method
     
   case 'irasa'
     cfg.taper       = ft_getopt(cfg, 'taper', 'hanning');
+    cfg.output      = ft_getopt(cfg, 'output', 'fractal');
+    cfg.pad         = ft_getopt(cfg, 'pad', 'nextpow2');
     if ~isequal(cfg.taper, 'hanning')
       ft_error('the irasa method supports hanning tapers only');
-    end
-    if isfield(cfg, 'output') && ~isequal(cfg.output, 'pow')
-      ft_error('the irasa method outputs power only');
     end
     if ~isequal(cfg.pad, 'nextpow2')
       ft_warning('consider using cfg.pad=''nextpow2'' for the irasa method');
@@ -343,7 +342,7 @@ if isempty(cfg.pad)
   cfg.pad = 'maxperlen';
 end
 cfg.padtype   = ft_getopt(cfg, 'padtype',   'zero');
-cfg.output    = ft_getopt(cfg, 'output',    'pow');
+cfg.output    = ft_getopt(cfg, 'output',    'pow'); % the default for irasa is set earlier
 cfg.calcdof   = ft_getopt(cfg, 'calcdof',   'no');
 cfg.channel   = ft_getopt(cfg, 'channel',   'all');
 cfg.precision = ft_getopt(cfg, 'precision', 'double');
@@ -382,7 +381,7 @@ if strcmp(cfg.keeptrials, 'yes') && strcmp(cfg.keeptapers, 'yes')
 end
 
 % Set flags for output
-if strcmp(cfg.output, 'pow')
+if ismember(cfg.output, {'pow','fractal','original'})
   powflg = 1;
   csdflg = 0;
   fftflg = 0;
@@ -480,9 +479,9 @@ end
 
 % options that don't change over trials
 if isfield(cfg, 'tapsmofrq')
-  options = {'pad', cfg.pad, 'padtype', cfg.padtype, 'freqoi', cfg.foi, 'tapsmofrq', cfg.tapsmofrq, 'polyorder', cfg.polyremoval};
+  options = {'pad', cfg.pad, 'padtype', cfg.padtype, 'freqoi', cfg.foi, 'tapsmofrq', cfg.tapsmofrq, 'polyorder', cfg.polyremoval, 'output', cfg.output};
 else
-  options = {'pad', cfg.pad, 'padtype', cfg.padtype, 'freqoi', cfg.foi, 'polyorder', cfg.polyremoval};
+  options = {'pad', cfg.pad, 'padtype', cfg.padtype, 'freqoi', cfg.foi, 'polyorder', cfg.polyremoval, 'output', cfg.output};
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -491,17 +490,18 @@ end
 % this is done on trial basis to save memory
 
 ft_progress('init', cfg.feedback, 'processing trials');
+trlcnt = []; % only some methods need this variable, but it needs to be defined outside the trial loop
 for itrial = 1:ntrials
   
-  %disp(['processing trial ' num2str(itrial) ': ' num2str(size(data.trial{itrial},2)) ' samples']);
   fbopt.i = itrial;
   fbopt.n = ntrials;
   
   dat = data.trial{itrial}; % chansel has already been performed
   time = data.time{itrial};
   
-  % Perform specest call and set some specifics
   clear spectrum % in case of very large trials, this lowers peak mem usage a bit
+  
+  % Perform specest call and set some specifics
   switch cfg.method
     
     case 'mtmconvol'
@@ -528,11 +528,11 @@ for itrial = 1:ntrials
     case 'mtmfft'
       [spectrum,ntaper,foi] = ft_specest_mtmfft(dat, time, 'taper', cfg.taper, options{:}, 'feedback', fbopt);
       hastime = false;
-      
+    
     case 'irasa'
-      [spectrum,ntaper,foi] = ft_specest_irasa(dat, time, 'taper', cfg.taper, options{:}, 'feedback', fbopt);
+      [spectrum,ntaper,foi] = ft_specest_irasa(dat, time, options{:}, 'feedback', fbopt);
       hastime = false;
-      
+
     case 'wavelet'
       [spectrum,foi,toi] = ft_specest_wavelet(dat, time, 'timeoi', cfg.toi, 'width', cfg.width, 'gwidth', cfg.gwidth,options{:}, 'feedback', fbopt);
       
@@ -705,7 +705,7 @@ for itrial = 1:ntrials
       switch keeprpt
         
         case 1 % cfg.keeptrials, 'no' &&  cfg.keeptapers, 'no'
-          if exist('trlcnt', 'var')
+          if ~isempty(trlcnt)
             trlcnt(1, ifoi, :) = trlcnt(1, ifoi, :) + shiftdim(double(acttboi(:)'),-1);
           end
           

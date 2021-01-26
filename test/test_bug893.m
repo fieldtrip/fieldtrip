@@ -2,7 +2,6 @@ function test_bug893
 
 % MEM 2gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_freqstatistics statfun_indepsamplesZcoh
 
 % function to confirm the bug and to test the fix.

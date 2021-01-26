@@ -17,7 +17,7 @@ function header = read_spike6mat_header(filename)
 if nargin < 1
   help read_spike6mat_header;
   return;
-end;
+end
 
 try
     vars = struct2cell(load(filename));

@@ -10,13 +10,13 @@ function [grandavg] = ft_timelockgrandaverage(cfg, varargin)
 %   avg1..N are the ERF/ERP averages as obtained from FT_TIMELOCKANALYSIS
 %
 % and cfg is a configuration structure with
-%  cfg.channel        = Nx1 cell-array with selection of channels (default = 'all'),
-%                       see FT_CHANNELSELECTION for details
-%  cfg.latency        = [begin end] in seconds or 'all' (default = 'all')
-%  cfg.keepindividual = 'yes' or 'no' (default = 'no')
-%  cfg.normalizevar   = 'N' or 'N-1' (default = 'N-1')
-%  cfg.method         = 'across' (default) or 'within', see below.
-%  cfg.parameter      = string or cell-array indicating which
+%   cfg.channel        = Nx1 cell-array with selection of channels (default = 'all'),
+%                        see FT_CHANNELSELECTION for details
+%   cfg.latency        = [begin end] in seconds or 'all' (default = 'all')
+%   cfg.keepindividual = 'yes' or 'no' (default = 'no')
+%   cfg.normalizevar   = 'N' or 'N-1' (default = 'N-1')
+%   cfg.method         = 'across' (default) or 'within', see below.
+%   cfg.parameter      = string or cell-array indicating which
 %                        parameter to average. default is set to
 %                        'avg', if it is present in the data.
 %

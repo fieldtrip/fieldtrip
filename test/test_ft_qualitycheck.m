@@ -2,7 +2,6 @@ function test_ft_qualitycheck
 
 % MEM 2gb
 % WALLTIME 00:30:00
-
 % DEPENDENCY ft_qualitycheck
 
 cfg           = [];

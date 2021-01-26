@@ -1,14 +1,17 @@
 function [channel] = ft_channelselection(desired, datachannel, senstype)
 
-% FT_CHANNELSELECTION makes a selection of EEG and/or MEG channel labels.
-% This function translates the user-specified list of channels into channel
-% labels as they occur in the data. This channel selection procedure can be
-% used throughout FieldTrip.
+% FT_CHANNELSELECTION makes a selection of EEG and/or MEG channel labels. This
+% function translates the user-specified list of channels into channel labels as they
+% occur in the data. This channel selection procedure can be used throughout
+% FieldTrip.
 %
-% You can specify a mixture of real channel labels and of special strings,
-% or index numbers that will be replaced by the corresponding channel
-% labels. Channels that are not present in the raw datafile are
-% automatically removed from the channel list.
+% You can specify a mixture of real channel labels and of special strings, or index
+% numbers that will be replaced by the corresponding channel labels. Channels that
+% are not present in the raw datafile are automatically removed from the channel
+% list.
+%
+% The order of the channels in the list that is returned corresponds to the order in
+% the data.
 %
 % E.g. the desired input specification can be:
 %   'all'        is replaced by all channels in the datafile
@@ -46,9 +49,6 @@ function [channel] = ft_channelselection(desired, datachannel, senstype)
 %
 % See also FT_PREPROCESSING, FT_SENSLABEL, FT_MULTIPLOTER, FT_MULTIPLOTTFR,
 % FT_SINGLEPLOTER, FT_SINGLEPLOTTFR
-
-% Note that the order of channels that is returned should correspond with
-% the order of the channels in the data.
 
 % Copyright (C) 2003-2016, Robert Oostenveld
 %
@@ -216,7 +216,12 @@ labelemg    = datachannel(strncmp('EMG', datachannel, length('EMG')));
 labellfp    = datachannel(strncmp('lfp', datachannel, length('lfp')));
 labelmua    = datachannel(strncmp('mua', datachannel, length('mua')));
 labelspike  = datachannel(strncmp('spike', datachannel, length('spike')));
-labelnirs   = datachannel(~cellfun(@isempty, regexp(datachannel, sprintf('%s%s', regexptranslate('wildcard','Rx*-Tx*[*]'), '$'))));
+% for NIRS there are multiple options, either using the terminology transmitter/receiver versus source/detector, and then with either order of the two
+option1 = ~cellfun(@isempty, regexp(datachannel, sprintf('%s%s', regexptranslate('wildcard','Rx*-Tx*[*]'), '$')));
+option2 = ~cellfun(@isempty, regexp(datachannel, sprintf('%s%s', regexptranslate('wildcard','Tx*-Rx*[*]'), '$')));
+option3 = ~cellfun(@isempty, regexp(datachannel, sprintf('%s%s', regexptranslate('wildcard','D*-S*[*]'), '$')));
+option4 = ~cellfun(@isempty, regexp(datachannel, sprintf('%s%s', regexptranslate('wildcard','S*-D*[*]'), '$')));
+labelnirs = datachannel(option1 | option2 | option3 | option4);
 
 % use regular expressions to deal with the wildcards
 labelreg = false(size(datachannel));

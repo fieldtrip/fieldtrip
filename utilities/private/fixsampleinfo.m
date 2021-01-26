@@ -13,7 +13,7 @@ if isfield(data, 'sampleinfo')
 end
 
 if ~isfield(data, 'cfg')
-  % FieldTrip raw data structures are expected to have a cfg
+  % FieldTrip data structures are expected to have a cfg
   data.cfg = [];
 end
 
@@ -43,7 +43,15 @@ if hastrial
   if israw
     ntrial = numel(data.trial);
   elseif istimelock
-    ntrial = size(data.trial,1);
+    dimord = getdimord(data, 'trial');
+    switch dimord
+      case {'rpt_chan_time', 'subj_chan_time'}
+        ntrial = size(data.trial, 1);
+      case {'chan_time'}
+        ntrial = 1;
+      otherwise
+        ft_error('unexpected dimord')
+    end % switcch
   end
 else
   ntrial = dimlength(data, 'rpt');
@@ -71,7 +79,7 @@ if israw
     nsmp = trl(:,2) - trl(:,1) + 1;
   end
 elseif istimelock
-  nsmp = ones(ntrial,1) .* size(data.trial,3);
+  nsmp = ones(ntrial,1) .* size(data.trial, ndims(data.trial));
 elseif hastime
   nsmp = ones(ntrial,1) .* length(data.time);
 end

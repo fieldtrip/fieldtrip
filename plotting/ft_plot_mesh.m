@@ -1,9 +1,10 @@
 function [hs] = ft_plot_mesh(mesh, varargin)
 
-% FT_PLOT_MESH visualizes a surface or volumetric mesh, for example describing the
-% realistic shape of the head. Surface meshes should be described by triangles and
-% contain the fields "pos" and "tri". Volumetric meshes should be described with
-% tetraheders or hexaheders and have the fields "pos" and "tet" or "hex".
+% FT_PLOT_MESH visualizes a surface or volumetric mesh, for example with the cortical
+% folding of the brain, or the scalp surface of the head. Surface meshes are
+% described by triangles and consist of a structure with the fields "pos" and "tri".
+% Volumetric meshes are described with tetraheders or hexaheders and have the fields
+% "pos" and "tet" or "hex".
 %
 % Use as
 %   ft_plot_mesh(mesh, ...)
@@ -120,17 +121,19 @@ hastri   = isfield(mesh, 'tri');   % triangles   as a Mx3 matrix with vertex ind
 hastet   = isfield(mesh, 'tet');   % tetraheders as a Mx4 matrix with vertex indices
 hashex   = isfield(mesh, 'hex');   % hexaheders  as a Mx8 matrix with vertex indices
 hasline  = isfield(mesh, 'line');  % line segments in 3-D
-haspoly  = isfield(mesh, 'poly');  % polynomial surfaces in 3-D
+haspoly  = isfield(mesh, 'poly');  % polygons describing a surface in 3-D
 hascolor = isfield(mesh, 'color'); % color code for vertices
 
-if hastet && isempty(surfaceonly)
-  ft_warning('only visualizing the outer surface of the tetrahedral mesh, see the "surfaceonly" option')
-  surfaceonly = true;
-elseif hashex && isempty(surfaceonly)
-  ft_warning('only visualizing the outer surface of the hexahedral mesh, see the "surfaceonly" option')
-  surfaceonly = true;
-else
-  surfaceonly = false;
+if isempty(surfaceonly)
+  if hastet
+    ft_warning('only visualizing the outer surface of the tetrahedral mesh, see the "surfaceonly" option')
+    surfaceonly = true;
+  elseif hashex
+    ft_warning('only visualizing the outer surface of the hexahedral mesh, see the "surfaceonly" option')
+    surfaceonly = true;
+  else
+    surfaceonly = false;
+  end
 end
 
 if ~isempty(unit)
@@ -143,6 +146,7 @@ if surfaceonly
   hastri   = isfield(mesh, 'tri');  % triangles   as a Mx3 matrix with vertex indices
   hastet   = isfield(mesh, 'tet');  % tetraheders as a Mx4 matrix with vertex indices
   hashex   = isfield(mesh, 'hex');  % hexaheders  as a Mx8 matrix with vertex indices
+  haspoly  = isfield(mesh, 'poly'); % polygons
 end
 
 % convert string into boolean values
@@ -286,13 +290,13 @@ switch maskstyle
       set(hs, 'FaceVertexCData', vertexcolor, 'FaceColor', 'interp');
       if numel(vertexcolor)==size(pos,1)
         if ~isempty(clim), set(gca, 'clim', clim); end
-        if ~isempty(cmap), colormap(cmap); end
+        if ~isempty(cmap), ft_colormap(cmap); end
       end
     elseif facepotential
       set(hs, 'FaceVertexCData', facecolor, 'FaceColor', 'flat');
       if numel(facecolor)==size(tri,1)
         if ~isempty(clim), set(gca, 'clim', clim); end
-        if ~isempty(cmap), colormap(cmap); end
+        if ~isempty(cmap), ft_colormap(cmap); end
       end
     else
       % the color is indicated as a single character or as a single RGB triplet

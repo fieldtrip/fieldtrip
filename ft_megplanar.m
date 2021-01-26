@@ -29,14 +29,20 @@ function [data] = ft_megplanar(cfg, data)
 %   cfg.inwardshift = depth of the source layer relative to the head model surface ,
 %                     (default = 2.5 cm, which is appropriate for a skin-based head model)
 %   cfg.spheremesh  = number of dipoles in the source layer (default = 642)
-%   cfg.tolerance   = tolerance ratio for leadfield matrix inverse based on a truncated svd, 
+%   cfg.tolerance   = tolerance ratio for leadfield matrix inverse based on a truncated svd,
 %                     reflects the relative magnitude of the largest singular value
-%                     to retain (default =s 1e-3)
+%                     to retain (default = 1e-3)
 %   cfg.headshape   = a filename containing headshape, a structure containing a
 %                     single triangulated boundary, or a Nx3 matrix with surface
 %                     points
 % If no headshape is specified, the dipole layer will be based on the inner compartment
 % of the volume conduction model.
+%
+% Optionally, you can modify the leadfields by reducing the rank, i.e. remove the weakest orientation
+%   cfg.reducerank    = 'no', or number (default = 3 for EEG, 2 for MEG)
+%   cfg.backproject   = 'yes' or 'no',  determines when reducerank is applied whether the 
+%                       lower rank leadfield is projected back onto the original linear 
+%                       subspace, or not (default = 'yes')
 %
 % The volume conduction model of the head should be specified as
 %   cfg.headmodel     = structure with volume conduction model, see FT_PREPARE_HEADMODEL
@@ -146,7 +152,7 @@ cfg = ft_checkconfig(cfg, 'createsubcfg', {'sourcemodel'});
 cfg = ft_checkconfig(cfg, 'createtopcfg', {'sourcemodel'});
 
 % select trials of interest
-tmpcfg = keepfields(cfg, {'trials', 'channel', 'showcallinfo'});
+tmpcfg = keepfields(cfg, {'trials', 'channel', 'showcallinfo'}); % don't keep tolerance, it is used differently here
 data = ft_selectdata(tmpcfg, data);
 % restore the provenance information
 [cfg, data] = rollback_provenance(cfg, data);
@@ -173,6 +179,14 @@ if strcmp(cfg.planarmethod, 'sourceproject')
   % definition that only contains the gradiometers that are present in the data.
   [headmodel, axial.grad, cfg] = prepare_headmodel(cfg, data);
   
+  % construct the low-level options for the leadfield computation as key-value pairs, these are passed to FT_COMPUTE_LEADFIELD
+  leadfieldopt = {};
+  leadfieldopt = ft_setopt(leadfieldopt, 'reducerank',     ft_getopt(cfg, 'reducerank'));
+  leadfieldopt = ft_setopt(leadfieldopt, 'backproject',    ft_getopt(cfg, 'backproject'));
+  leadfieldopt = ft_setopt(leadfieldopt, 'normalize',      ft_getopt(cfg, 'normalize'));
+  leadfieldopt = ft_setopt(leadfieldopt, 'normalizeparam', ft_getopt(cfg, 'normalizeparam'));
+  leadfieldopt = ft_setopt(leadfieldopt, 'weight',         ft_getopt(cfg, 'weight'));
+
   % copy all options that are potentially used in FT_PREPARE_SOURCEMODEL
   tmpcfg           = keepfields(cfg, {'sourcemodel', 'mri', 'headshape', 'symmetry', 'smooth', 'threshold', 'spheremesh', 'inwardshift', 'xgrid' 'ygrid', 'zgrid', 'resolution', 'tight', 'warpmni', 'template', 'showcallinfo'});
   tmpcfg.headmodel = headmodel;
@@ -181,14 +195,14 @@ if strcmp(cfg.planarmethod, 'sourceproject')
   sourcemodel = ft_prepare_sourcemodel(tmpcfg);
   
   % compute the forward model for the axial gradiometers
-  fprintf('computing forward model for %d dipoles\n', size(sourcemodel.pos,1));
-  lfold = ft_compute_leadfield(sourcemodel.pos, axial.grad, headmodel);
+  ft_info('computing forward model for %d dipoles\n', size(sourcemodel.pos,1));
+  lfold = ft_compute_leadfield(sourcemodel.pos, axial.grad, headmodel, leadfieldopt{:});
   
   % construct the planar gradient definition and compute its forward model
   % this will not work for a localspheres model, compute_leadfield will catch
   % the error
   planar.grad = constructplanargrad([], axial.grad);
-  lfnew = ft_compute_leadfield(sourcemodel.pos, planar.grad, headmodel);
+  lfnew = ft_compute_leadfield(sourcemodel.pos, planar.grad, headmodel, leadfieldopt{:});
   
   % compute the interpolation matrix
   transform = lfnew * ft_inv(lfold, 'method', 'tsvd', 'tolerance', cfg.tolerance);
@@ -213,7 +227,7 @@ if strcmp(cfg.planarmethod, 'sourceproject')
   
   %   % interpolate the data towards the planar gradiometers
   %   for i=1:Ntrials
-  %     fprintf('interpolating trial %d to planar gradiometer\n', i);
+  %     ft_info('interpolating trial %d to planar gradiometer\n', i);
   %     interp.trial{i} = transform * data.trial{i}(dataindx,:);
   %   end % for Ntrials
   %
@@ -256,8 +270,8 @@ else
   cfg.neighbours = cfg.neighbours(neighbsel);
   cfg.neighbsel = channelconnectivity(cfg);
   
-  % determine
-  fprintf('average number of neighbours is %.2f\n', mean(sum(cfg.neighbsel)));
+  assert(any(cfg.neighbsel(:)), 'no neighbours found')
+  ft_info('average number of neighbours is %.2f\n', mean(sum(cfg.neighbsel)));
   
   Ngrad = length(sens.label);
   distance = zeros(Ngrad,Ngrad);
@@ -269,8 +283,8 @@ else
     distance(j,i) = d;
   end
   
-  fprintf('minimum distance between neighbours is %6.2f %s\n', min(distance(distance~=0)), sens.unit);
-  fprintf('maximum distance between gradiometers is %6.2f %s\n', max(distance(distance~=0)), sens.unit);
+  ft_info('minimum distance between neighbours is %6.2f %s\n', min(distance(distance~=0)), sens.unit);
+  ft_info('maximum distance between gradiometers is %6.2f %s\n', max(distance(distance~=0)), sens.unit);
   
   % The following does not work when running in deployed mode because the
   % private functions that compute the planar montage are not recognized as

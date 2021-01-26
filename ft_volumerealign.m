@@ -138,7 +138,7 @@ function [realign, snap] = ft_volumerealign(cfg, mri, target)
 % When cfg.method = 'spm', a third input argument is required. The input volume is
 % coregistered to this target volume, using SPM. You can specify the version of
 % the SPM toolbox to use with
-%   cfg.spmversion       = string, 'spm2', 'spm8', 'spm12' (default = 'spm8')
+%   cfg.spmversion       = string, 'spm2', 'spm8', 'spm12' (default = 'spm12')
 % Additional options pertaining to SPM2 and SPM8 should be defined in the
 % sub-structure cfg.spm and can include:
 %   cfg.spm.regtype      = 'subj', 'rigid'
@@ -244,7 +244,7 @@ cfg.clim          = ft_getopt(cfg, 'clim',      []);
 cfg.viewmode      = ft_getopt(cfg, 'viewmode',  'ortho'); % for method=interactive
 cfg.snapshot      = ft_getopt(cfg, 'snapshot',  false);
 cfg.snapshotfile  = ft_getopt(cfg, 'snapshotfile', fullfile(pwd, 'ft_volumerealign_snapshot'));
-cfg.spmversion    = ft_getopt(cfg, 'spmversion', 'spm8');
+cfg.spmversion    = ft_getopt(cfg, 'spmversion', 'spm12');
 cfg.voxelratio    = ft_getopt(cfg, 'voxelratio', 'data'); % display size of the voxel, 'data' or 'square'
 cfg.axisratio     = ft_getopt(cfg, 'axisratio',  'data'); % size of the axes of the three orthoplots, 'square', 'voxel', or 'data'
 cfg.viewresult    = ft_getopt(cfg, 'viewresult', 'no');
@@ -876,7 +876,7 @@ switch cfg.method
       % flirtmat2worldmat code
       % src = inv(flirtmat) * trg
       % srcvox = src.mat \ inv(flirtmat) * trg.mat * trgvox
-      % BUT, flirt doesn't use src.mat, only absolute values of the 
+      % BUT, flirt doesn't use src.mat, only absolute values of the
       % scaling elements from it,
       % AND, if images are not radiological, the x-axis is flipped, see:
       %  https://www.jiscmail.ac.uk/cgi-bin/webadmin?A2=ind0810&L=FSL&P=185638
@@ -904,7 +904,7 @@ switch cfg.method
       fslvoxmat  = inv(scl_mri) * inv(flirtmat) * scl_target;
       spmvoxmat  = addone * (fslvoxmat / addone);
       target2mri = mri.transform * (spmvoxmat / target.transform);
-      transform  = inv(target2mri); 
+      transform  = inv(target2mri);
 
       if isfield(target, 'coordsys')
         coordsys = target.coordsys;

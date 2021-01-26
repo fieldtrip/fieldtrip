@@ -189,10 +189,10 @@ try
   headmodel.mat = inv(om_load_sym(hmfile,'binary'));
   
   rmdir(workdir,'s'); % remove workdir with intermediate files
-catch
-  disp(lasterr);
+
+catch me
   rmdir(workdir,'s'); % remove workdir with intermediate files
-  ft_error('an error occurred while running OpenMEEG');
+  rethrow(me);
 end
 
 % remember the type of volume conduction model

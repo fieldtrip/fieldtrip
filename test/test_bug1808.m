@@ -2,7 +2,6 @@ function test_bug1808
 
 % MEM 2gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_read_header ft_read_sens mne2grad
 
 dataset = dccnpath('/home/common/matlab/fieldtrip/data/test/bug1808/reduced.fif');

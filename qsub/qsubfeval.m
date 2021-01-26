@@ -378,13 +378,11 @@ switch backend
     end
 
     if ~isempty(timreq) && ~isnan(timreq) && ~isinf(timreq)
-      % TESTME this is experimental and needs more testing!
-      % submitoptions = [submitoptions sprintf('--time=%d ', timreq+timoverhead)];
+      submitoptions = [submitoptions sprintf(' --time=%d ', round((timreq+timoverhead)/60))];
     end
 
     if ~isempty(memreq) && ~isnan(memreq) && ~isinf(memreq)
-      % TESTME this is experimental and needs more testing!
-      % submitoptions = [submitoptions sprintf('--mem-per-cpu=%.0f ', round((memreq+memoverhead)./1024^2))];
+      submitoptions = [submitoptions sprintf(' --mem=%.0f ', round((memreq+memoverhead)./1024^2))];
     end
 
     % specifying the o and e names might be useful for the others as well
@@ -395,15 +393,10 @@ switch backend
       % create the command line for the compiled application
       cmdline = sprintf('%s %s %s', compiledfun, matlabroot, jobid);
     else
-      % create the shell commands to execute matlab
-      % we decided to use srun instead of sbatch since handling job paramters is easier this way
-      %
-      % nohup was found to signficantly speed up the submission. Due to the existing error handling its safe to detach to the init, but debugging
-      % gets harder since output will be redirected to nohpu.out and thus overwritten everytime qsubfeval is launched. Using nohup only makes sense
-      % if you intend to sumbit jobs which compute in less than a minute since the difference in submit time is about 3-4 seconds per job only!
-      % cmdline = sprintf('nohup srun --job-name=%s %s --output=%s --error=%s %s -r "%s" & ', jobid, submitoptions, logout, logerr, matlabcmd, matlabscript);
-      cmdline = sprintf('srun --job-name=%s %s --output=%s --error=%s %s -r "%s" ', jobid, submitoptions, logout, logerr, matlabcmd, matlabscript);
+      cmdline = sprintf('%s -r \\"%s\\"', matlabcmd, matlabscript);
     end
+    cmdline = sprintf('sbatch --parsable --job-name=%s %s --output=%s --error=%s --wrap "%s"', ...
+                       jobid, submitoptions, logout, logerr, cmdline);
 
   case 'condor'
     % this is highly experimental and contains some first ideas following the discussion with Rhodri
@@ -491,10 +484,6 @@ else
 end
 
 switch backend
-  case 'slurm'
-    % srun will not return a jobid (besides in verbose mode) we decided to use jobname=jobid instead to identify processes
-    % since the jobid is a uniq identifier for every job!
-    result = jobid;
   case 'local'
     % the job was executed by a local feval call, but the results will still be written in a job file
     result = jobid;

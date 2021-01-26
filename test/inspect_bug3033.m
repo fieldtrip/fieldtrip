@@ -1,5 +1,4 @@
 function inspect_bug3033
-
 % DEPENDENCY ft_plot_topo ft_databrowser ft_topoplotER
 
 cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug3033'));
@@ -58,7 +57,7 @@ cfg.method = 'wavelet';
 ctf_meg_planar_freq = ft_timelockanalysis(cfg, ctf_meg_planar);
 
 
-%% make some derived data from the original Neuromag/Elekta file
+%% make some derived data from the original Neuromag/Elekta/Megin file
 
 cfg = [];
 cfg.channel = 'EEG';

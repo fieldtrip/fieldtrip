@@ -2,6 +2,7 @@ function test_bug1149
 
 % MEM 2gb
 % WALLTIME 00:10:00
+% DEPENDENCY
 
 
 % generate a unit sphere

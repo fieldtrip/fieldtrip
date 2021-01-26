@@ -1,5 +1,9 @@
 function inspect_issue509
 
+% WALLTIME 00:10:00
+% MEM 1gb
+% DEPENDENCY
+
 %%
 % all defaults, should resemble design from Stefan
 

@@ -2,7 +2,6 @@ function test_ft_crossfrequencyanalysis
 
 % MEM 2gb
 % WALLTIME 00:15:00
-
 % DEPENDENCY ft_crossfrequencyanalysis
 
 clear all
@@ -83,8 +82,9 @@ HFsig            = ft_freqanalysis(cfg, data);
 %%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% do the actual testing
+% do the actual testing - within-channel
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+figure('Name','Within-channel CFC')
 
 cfg              = [];
 cfg.method       = 'coh';
@@ -132,6 +132,79 @@ title('mean vector length')
 axis xy; colorbar
 
 cfg              = [];
+cfg.method       = 'mi';
+cfg.keeptrials   = 'no';
+CFC              = ft_crossfrequencyanalysis(cfg,LFsig,HFsig);
+
+subplot(414)
+MI = squeeze(CFC.crsspctrm(1,:,:));
+imagesc(f1, f2, MI');
+% set(gca, 'Fontsize',20)
+axis xy;
+xlabel('Low frequency  (Hz)');
+ylabel('High frequency (Hz)');
+title('Modulation index')
+axis xy; colorbar
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% do the actual testing - cross-channel
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+figure('Name','Cross-channel CFC')
+
+cfg              = [];
+cfg.chanlow      = {'chan1'};
+cfg.chanhigh      = {'chan2'};
+cfg.method       = 'coh';
+cfg.keeptrials   = 'no';
+CFC              = ft_crossfrequencyanalysis(cfg, LFsig, HFsig);
+
+subplot(411)
+MI = squeeze(CFC.crsspctrm(1,:,:));
+imagesc(f1, f2, MI');
+% set(gca, 'Fontsize',20)
+axis xy;
+xlabel('Low frequency  (Hz)');
+ylabel('High frequency (Hz)');
+title('Coherence')
+axis xy; colorbar
+
+cfg              = [];
+cfg.chanlow      = {'chan1'};
+cfg.chanhigh      = {'chan2'};
+cfg.method       = 'plv';
+cfg.keeptrials   = 'no';
+CFC              = ft_crossfrequencyanalysis(cfg, LFsig, HFsig);
+
+subplot(412)
+MI = squeeze(CFC.crsspctrm(1,:,:));
+imagesc(f1, f2, MI');
+% set(gca, 'Fontsize',20)
+axis xy;
+xlabel('Low frequency  (Hz)');
+ylabel('High frequency (Hz)');
+title('Phase locking value')
+axis xy; colorbar
+
+cfg              = [];
+cfg.chanlow      = {'chan1'};
+cfg.chanhigh      = {'chan2'};
+cfg.method       = 'mvl';
+cfg.keeptrials   = 'no';
+CFC              = ft_crossfrequencyanalysis(cfg,LFsig,HFsig);
+
+subplot(413)
+MI = squeeze(CFC.crsspctrm(1,:,:));
+imagesc(f1, f2, MI');
+% set(gca, 'Fontsize',20)
+axis xy;
+xlabel('Low frequency  (Hz)');
+ylabel('High frequency (Hz)');
+title('mean vector length')
+axis xy; colorbar
+
+cfg              = [];
+cfg.chanlow      = {'chan1'};
+cfg.chanhigh      = {'chan2'};
 cfg.method       = 'mi';
 cfg.keeptrials   = 'no';
 CFC              = ft_crossfrequencyanalysis(cfg,LFsig,HFsig);

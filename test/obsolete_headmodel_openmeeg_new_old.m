@@ -2,7 +2,6 @@ function test_headmodel_openmeeg_new_old
 
 % MEM 2gb
 % WALLTIME 01:45:00
-
 % DEPENDENCY ft_prepare_headmodel ft_headmodel_openmeeg ft_prepare_bemmodel ft_headmodel_openmeeg
 
 % generate a unit sphere

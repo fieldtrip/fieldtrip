@@ -113,9 +113,11 @@ if strcmp(cfg.analyze,'yes')
   % trial definition
   cfgdef                      = [];
   cfgdef.dataset              = cfg.dataset;
+  cfgdef.trialfun             = 'ft_trialfun_general';
   cfgdef.trialdef.triallength = 10;
   cfgdef.continuous           = 'yes';
   cfgdef                      = ft_definetrial(cfgdef);
+
   ntrials                     = size(cfgdef.trl,1)-1; % remove last trial
   timeunit                    = cfgdef.trialdef.triallength;
   
@@ -206,7 +208,6 @@ if strcmp(cfg.analyze,'yes')
     summary.grad  = info.hdr.grad;
   end
   
-  
   % process trial by trial
   for t = 1:ntrials
     fprintf('analyzing trial %s of %s \n', num2str(t), num2str(ntrials));
@@ -241,13 +242,16 @@ if strcmp(cfg.analyze,'yes')
       timelock.jumps(c,t) = length(find(diff(data.trial{1,1}(allchanindx(c),:)) > jumpthreshold));
     end
     
+    % remove the grad and elec to make the subsequent code faster. See https://github.com/fieldtrip/fieldtrip/issues/1551
+    data = removefields(data, {'grad', 'elec'});
+    
     % FFT and noise estimation
     redef                 = ft_redefinetrial(cfgredef, data); clear data;
     FFT                   = ft_freqanalysis(cfgfreq, redef); clear redef;
     freq.powspctrm(:,:,t) = FFT.powspctrm;
     summary.avg(9,t)      = mean(mean(findpower(0,  2,  FFT, chanindx))); % Low Freq Power
     summary.avg(10,t)     = mean(mean(findpower(cfg.linefreq-1, cfg.linefreq+1, FFT, chanindx))); clear FFT; % Line Freq Power
-    
+   
     toc
   end % end of trial loop
   

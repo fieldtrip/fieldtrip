@@ -42,6 +42,7 @@ function [stat] = ft_connectivityanalysis(cfg, data)
 %     'wppc'       weighted pairwise phase consistency
 %     'corr'       Pearson correlation, support for timelock or raw data
 %     'laggedcoherence', lagged coherence estimate
+%     'plm'        phase linearity measurement
 %
 % Additional configuration options are
 %   cfg.channel    = Nx1 cell-array containing a list of channels which are
@@ -66,6 +67,7 @@ function [stat] = ft_connectivityanalysis(cfg, data)
 %                     method 'powcorr' and 'amplcorr'.
 %   cfg.bandwidth   = scalar, needed for 'psi', half-bandwidth of the integration
 %                     across frequencies (in Hz, default is the Rayleigh frequency)
+%                     needed for 'plm', half-bandwidth of the integration window (in Hz)
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
@@ -85,7 +87,7 @@ function [stat] = ft_connectivityanalysis(cfg, data)
 % Undocumented options:
 %   cfg.refindx             =
 %   cfg.jackknife           =
-%   cfg.method              = 'mi';
+%   cfg.method              = 'mi'/'di'/'dfi';
 %   cfg.granger.block       =
 %   cfg.granger.conditional =
 %
@@ -96,7 +98,7 @@ function [stat] = ft_connectivityanalysis(cfg, data)
 
 % Copyright (C) 2009, Jan-Mathijs Schoffelen, Andre Bastos, Martin Vinck, Robert Oostenveld
 % Copyright (C) 2010-2011, Jan-Mathijs Schoffelen, Martin Vinck
-% Copyright (C) 2012-2013, Jan-Mathijs Schoffelen
+% Copyright (C) 2012-2019, Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -139,16 +141,16 @@ end
 % data = ft_checkdata(data, 'datatype', {'raw', 'timelock', 'freq', 'source'});
 
 % set the defaults
-cfg.feedback    = ft_getopt(cfg, 'feedback', 'none');
-cfg.channel     = ft_getopt(cfg, 'channel', 'all');
+cfg.feedback    = ft_getopt(cfg, 'feedback',   'none');
+cfg.channel     = ft_getopt(cfg, 'channel',    'all');
 cfg.channelcmb  = ft_getopt(cfg, 'channelcmb', {'all' 'all'});
-cfg.refindx     = ft_getopt(cfg, 'refindx', 'all');
-cfg.trials      = ft_getopt(cfg, 'trials', 'all', 1);
-cfg.complex     = ft_getopt(cfg, 'complex', 'abs');
-cfg.jackknife   = ft_getopt(cfg, 'jackknife', 'no');
+cfg.refindx     = ft_getopt(cfg, 'refindx',    'all', 1);
+cfg.trials      = ft_getopt(cfg, 'trials',     'all', 1);
+cfg.complex     = ft_getopt(cfg, 'complex',    'abs');
+cfg.jackknife   = ft_getopt(cfg, 'jackknife',  'no');
 cfg.removemean  = ft_getopt(cfg, 'removemean', 'yes');
-cfg.partchannel = ft_getopt(cfg, 'partchannel', '');
-cfg.parameter   = ft_getopt(cfg, 'parameter', []);
+cfg.partchannel = ft_getopt(cfg, 'partchannel','');
+cfg.parameter   = ft_getopt(cfg, 'parameter',  []);
 
 hasjack = (isfield(data, 'method') && strcmp(data.method, 'jackknife')) || (isfield(data, 'dimord') && strcmp(data.dimord(1:6), 'rptjck'));
 hasrpt  = (isfield(data, 'dimord') && ~isempty(strfind(data.dimord, 'rpt'))) || (isfield(data, 'avg') && isfield(data.avg, 'mom')) || (isfield(data, 'trial') && isfield(data.trial, 'mom')); % FIXME old-fashioned pcc data
@@ -158,8 +160,7 @@ normpow = 1; % default, has to be overruled e.g. in csd
 
 % select trials of interest
 if ~strcmp(cfg.trials, 'all')
-  tmpcfg = [];
-  tmpcfg.trials = cfg.trials;
+  tmpcfg = keepfields(cfg, {'trials', 'tolerance', 'showcallinfo'});
   data = ft_selectdata(tmpcfg, data);
   [cfg, data] = rollback_provenance(cfg, data);
 end
@@ -342,14 +343,20 @@ switch cfg.method
     % inparam = 'avg.mom';
     inparam  = 'mom';
     outparam = 'powcorrspctrm';
-  case {'mi'}
+  case {'mi' 'di' 'dfi'}
     % create the subcfg for the mutual information
-    if ~isfield(cfg, 'mi'), cfg.mi = []; end
-    cfg.mi.numbin = ft_getopt(cfg.mi, 'numbin', 10);
-    cfg.mi.lags   = ft_getopt(cfg.mi, 'lags',   0);
+    if ~isfield(cfg, cfg.method), cfg.(cfg.method) = []; end
+    cfg.(cfg.method).method  = ft_getopt(cfg.(cfg.method), 'method',  'gcmi'); % default to the Gaussian Copula based method
+    cfg.(cfg.method).numbin  = ft_getopt(cfg.(cfg.method), 'numbin',  10);
+    cfg.(cfg.method).lags    = ft_getopt(cfg.(cfg.method), 'lags',    0);
+    cfg.(cfg.method).montage = ft_getopt(cfg.(cfg.method), 'montage', []);
+    cfg.(cfg.method).complex = ft_getopt(cfg.(cfg.method), 'complex', 'complex');
+    cfg.(cfg.method).combinelags = ft_getopt(cfg.(cfg.method), 'combinelags', false);
+    cfg.(cfg.method).feature     = ft_getopt(cfg.(cfg.method), 'feature',     []);
+    cfg.(cfg.method).precondition = ft_getopt(cfg.(cfg.method), 'precondition', false);
     
     % what are the input requirements?
-    data = ft_checkdata(data, 'datatype', {'raw' 'timelock' 'freq' 'source'});
+    data  = ft_checkdata(data, 'datatype', {'raw' 'timelock' 'freq' 'source'});
     dtype = ft_datatype(data);
     if strcmp(dtype, 'timelock')
       if ~isfield(data, 'trial')
@@ -358,18 +365,22 @@ switch cfg.method
         inparam = 'trial';
       end
       hasrpt = (isfield(data, 'dimord') && ~isempty(strfind(data.dimord, 'rpt')));
+      
+      cfg.refchannel = ft_getopt(cfg, 'refchannel', []);
+      cfg.refindx    = ft_getopt(cfg, 'refindx',    []);
     elseif strcmp(dtype, 'raw')
       inparam = 'trial';
       hasrpt  = 1;
+    
+      cfg.refchannel = ft_getopt(cfg, 'refchannel', []);
+      cfg.refindx    = ft_getopt(cfg, 'refindx',    []);
     elseif strcmp(dtype, 'freq')
       inparam = 'something';
     else
       inparam = 'something else';
     end
-    outparam = 'mi';
+    outparam = cfg.method;
     needrpt  = 1;
-  case 'di'
-    % wat eigenlijk?
   case 'laggedcoherence'
     data = ft_checkdata(data, 'datatype', {'freq'});
     if ~isfield(data, 'fourierspctrm')
@@ -382,6 +393,16 @@ switch cfg.method
     if ~isfield(cfg, 'laggedcoherence'), cfg.laggedcoherence = []; end
     cfg.laggedcoherence.lags = ft_getopt(cfg.laggedcoherence, 'lags', []);
     cfg.laggedcoherence.timeresolved = false;
+    
+   case {'plm'}
+    data = ft_checkdata(data, 'datatype', 'raw');
+    if ~isfield(data, 'fsample')
+      data.fsample = 1./mean(diff(data.time{1}));
+    end
+    inparam  = 'trial';
+    outparam = 'plm';
+  
+    cfg.bandwidth = ft_getopt(cfg, 'bandwidth', 0.5);
     
   otherwise
     ft_error('unknown method % s', cfg.method);
@@ -557,7 +578,7 @@ elseif hasrpt && dojack && ~ismember(cfg.method, {'wpli','wpli_debiased','ppc','
     clear sumdat;
   end
   hasjack = 1;
-elseif hasrpt && ~ismember(cfg.method, {'wpli','wpli_debiased','ppc','wppc','powcorr_ortho','mi'})% || needrpt)
+elseif hasrpt && ~ismember(cfg.method, {'wpli','wpli_debiased','ppc','wppc','powcorr_ortho','mi','di','dfi'})% || needrpt)
   % create dof variable
   if isfield(data, 'dof')
     dof = data.dof;
@@ -874,7 +895,7 @@ switch cfg.method
       [nrpttap, nchan, nfreq] = size(data.fourierspctrm);
       datout = cell(1, nfreq);
       for i=1:length(data.freq)
-        dat       = reshape(data.fourierspctrm(:,:,i), nrpttap, nchan).';
+        dat       = data.fourierspctrm(:,:,i).';
         datout{i} = ft_connectivity_powcorr_ortho(dat, optarg{:});
       end
       datout = cat(3, datout{:});
@@ -886,34 +907,86 @@ switch cfg.method
     varout = [];
     nrpt = numel(data.cumtapcnt);
     
-  case 'mi'
-    % mutual information using the information breakdown toolbox
-    % presence of the toolbox is checked in the low-level function
+  case {'mi' 'di' 'dfi'}
+    % mutual information using the information breakdown toolbox, or gcmi
+    % presence of the toolbox is checked in the low-level function.
+    % directed information using the gcmi toolbox, requires a lag to be
+    % specified
+    if (strcmp(cfg.method, 'di') || strcmp(cfg.method, 'dfi')) && any(cfg.(cfg.method).lags<=0)
+      error('directed information requires cfg.di.lags to be > 0');
+    end
     
-    if ~strcmp(dtype, 'raw') && (numel(cfg.mi.lags)>1 || cfg.mi.lags~=0)
+    if ~strcmp(dtype, 'raw') && (numel(cfg.(cfg.method).lags)>1 || cfg.(cfg.method).lags~=0)
       ft_error('computation of lagged mutual information is only possible with ''raw'' data in the input');
     end
     
+    % if not specified prior to the call, make sure empty 'opts' field exists
+    if ~isfield(cfg.(cfg.method), 'opts')
+      cfg.(cfg.method).opts = [];
+    end
+ 
     switch dtype
       case 'raw'
         % ensure the lags to be in samples, not in seconds.
-        cfg.mi.lags = round(cfg.mi.lags.*data.fsample);
+        cfg.(cfg.method).lags = round(cfg.(cfg.method).lags.*data.fsample);
         
-        dat = catnan(data.trial, max(abs(cfg.mi.lags)));
+        % check which row(s) in the data are the reference
+        if isempty(cfg.refchannel) && isempty(cfg.refindx)
+          error('either ''cfg.refchannel'', or ''cfg.refindx'' should be specified');
+        elseif ~isempty(cfg.refchannel)
+          cfg.refindx = match_str(data.label, cfg.refchannel);
+        elseif ischar(cfg.refindx) && strcmp(cfg.refindx, 'all')
+          %error('this is yet not possible and should be fixed elegantly'); %FIXME now we should decide whether we allow for multivariate reference channels, or we treat the refindx as a per-element vector, i.e. allow for all-to-all
+        end
         
+        if strcmp(cfg.method, 'dfi') || strcmp(cfg.method, 'mi')
+          cfg.(cfg.method).feature = ft_getopt(cfg.(cfg.method), 'feature', []);
+          if strcmp(cfg.method, 'dfi') && isempty(cfg.dfi.feature)
+            error('dfi requires a feature to be specified');
+          end
+          cfg.(cfg.method).featureindx = match_str(data.label, cfg.(cfg.method).feature);
+          cfg.(cfg.method).featurelags = ft_getopt(cfg.(cfg.method), 'featurelags');
+          if ~isempty(cfg.(cfg.method).featurelags), cfg.(cfg.method).featurelags = round(cfg.(cfg.method).featurelags.*data.fsample); end
+        end
+        
+        dat = catnan(data.trial, max(abs(cfg.(cfg.method).lags)));
+               
+        % deal with cfg.mi.montage, which allows for multivariate stuff
+        if ~isempty(cfg.(cfg.method).montage)
+          [i1, i2]  = match_str(data.label, cfg.(cfg.method).montage.labelorg);
+          i3        = setdiff((1:numel(data.label))',i1);
+          tra       = cfg.(cfg.method).montage.tra(:,i2);
+          tra(end+(1:numel(i3)),end+(1:numel(i3))) = eye(numel(i3));
+          newlabel  = [cfg.(cfg.method).montage.labelnew;data.label(i3)];
+          
+          % update the refindx
+          cfg.refindx = match_str(newlabel, cfg.refchannel);
+          
+          dat       = dat([i1; i3], :);
+          refindx   = cfg.refindx; 
+        else
+          tra      = [];
+          newlabel = [];
+          refindx  = cfg.refindx;
+        end
         
         if ischar(cfg.refindx) && strcmp(cfg.refindx, 'all')
           outdimord = 'chan_chan';
-        elseif numel(cfg.refindx)==1
+        elseif numel(cfg.refindx)==1 || numel(cfg.refchannel)==1,
           outdimord = 'chan';
         else
-          ft_error('at present cfg.refindx should be either ''all'', or scalar');
+          outdimord = 'chan';
+          %ft_error('at present cfg.refindx should be either ''all'', or scalar');
         end
-        if numel(cfg.mi.lags)>1
-          data.time = cfg.mi.lags./data.fsample;
+        if numel(cfg.(cfg.method).lags)>1 && ~istrue(cfg.(cfg.method).combinelags)
+          data.time = cfg.(cfg.method).lags./data.fsample;
           outdimord = [outdimord, '_time'];
         else
           data = rmfield(data, 'time');
+        end
+        
+        if ~isempty(newlabel)
+          data.label = newlabel;
         end
         
       case 'timelock'
@@ -938,11 +1011,23 @@ switch cfg.method
         dat = cat(1, data.mom{data.inside});
         % dat = abs(dat);
     end
-    optarg = {'numbin', cfg.mi.numbin, 'lags', cfg.mi.lags, 'refindx', cfg.refindx};
+    optarg = {'numbin', cfg.(cfg.method).numbin, 'lags',    cfg.(cfg.method).lags,    'refindx', refindx, ...
+              'method', cfg.(cfg.method).method, 'complex', cfg.(cfg.method).complex, 'precondition', cfg.(cfg.method).precondition, ...
+              'opts',   cfg.(cfg.method).opts};
+    if ~isempty(tra),             optarg = cat(2, optarg, {'tra' tra});                                   end
+    if strcmp(cfg.method, 'mi'),  optarg = cat(2, optarg, {'conditional', false});                        end
+    if strcmp(cfg.method, 'mi'),  optarg = cat(2, optarg, {'featureindx', cfg.(cfg.method).featureindx}); end
+    if strcmp(cfg.method, 'mi'),  optarg = cat(2, optarg, {'featurelags', cfg.(cfg.method).featurelags}); end
+    if strcmp(cfg.method, 'mi'),  optarg = cat(2, optarg, {'combinelags', cfg.(cfg.method).combinelags}); end
+    if strcmp(cfg.method, 'di'),  optarg = cat(2, optarg, {'conditional', true});                         end
+    if strcmp(cfg.method, 'di'),  optarg = cat(2, optarg, {'combinelags', cfg.(cfg.method).combinelags}); end
+    if strcmp(cfg.method, 'dfi'), optarg = cat(2, optarg, {'conditional', true});                         end
+    if strcmp(cfg.method, 'dfi'), optarg = cat(2, optarg, {'featureindx', cfg.(cfg.method).featureindx}); end
+    if strcmp(cfg.method, 'dfi'), optarg = cat(2, optarg, {'featurelags', cfg.(cfg.method).featurelags}); end
+    if strcmp(cfg.method, 'dfi'), optarg = cat(2, optarg, {'combinelags', cfg.(cfg.method).combinelags}); end
     [datout] = ft_connectivity_mutualinformation(dat, optarg{:});
-    varout = [];
-    nrpt = [];
-    
+    varout   = [];
+    nrpt     = [];    
   case 'corr'
     % pearson's correlation coefficient
     optarg = {'dimord', getdimord(data, inparam), 'feedback', cfg.feedback, 'hasjack', hasjack};
@@ -957,17 +1042,21 @@ switch cfg.method
     % spearman's rank correlation
     ft_error('method %s is not yet implemented', cfg.method);
     
-  case 'di'
-    % directionality index
-    ft_error('method %s is not yet implemented', cfg.method);
-    
   case 'laggedcoherence'
     % lagged coherence estimate
     optarg = {'complex', cfg.complex, 'dimord', data.dimord, 'feedback', cfg.feedback, 'pownorm', normpow, 'hasjack', hasjack};
     optarg = cat(2, optarg, {'powindx', powindx});
     [datout, varout, nrpt] = ft_connectivity_corr(data.(inparam), optarg{:});
     data = removefields(data, 'dof'); % the dof is not to be trusted
-  
+    
+  case 'plm'
+    % phase linearity measurement.
+    optarg   = {'bandwidth', cfg.bandwidth, 'fsample', data.fsample};
+    [datout] = ft_connectivity_plm(data.(inparam), optarg{:});
+    varout   = [];
+    
+    outdimord = 'rpt_chan_chan';
+    
   otherwise
     ft_error('unknown method %s', cfg.method);
     
@@ -1015,12 +1104,13 @@ if exist('powindx', 'var') && ~isempty(powindx)
       if ~isempty(varout)
         varout = varout(keepchn, :, :, :, :);
       end
-      inside = false(zeros(1, size(data.pos, 1)));
+      inside = false(size(data.pos, 1),1);
       inside(data.inside) = true;
       inside = inside(keepchn);
       %       data.inside = find(inside)';
       %       data.outside = find(inside==0)';
       data.pos = data.pos(keepchn, :);
+      data.inside = data.inside(keepchn);
   end % switch dtype
 end
 

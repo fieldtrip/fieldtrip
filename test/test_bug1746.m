@@ -2,7 +2,6 @@ function test_bug1746
 
 % MEM 3gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_sourceanalysis test_bug1746 ft_prepare_leadfield
 
 load(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/vol/Subject01vol_singleshell.mat'));
