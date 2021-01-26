@@ -1341,9 +1341,6 @@ switch eventformat
     end
     
   case {'itab_raw' 'itab_mhd'}
-    if isempty(hdr)
-      hdr = ft_read_header(filename);
-    end
     for i=1:hdr.orig.nsmpl
       event(end+1).type = 'trigger';
       event(end  ).value    = hdr.orig.smpl(i).type;
@@ -1368,8 +1365,18 @@ switch eventformat
     if any(strcmp({w.name}, 'event'))
       event = loadvar(filename, 'event');
     elseif any(strcmp({w.name}, 'data')) || length(w)==1
-      data = loadvar(filename, 'data');
-      event = ft_fetch_event(data);
+      % assume that the matlab file contains a raw data structure according to FT_DATATYPE_RAW that includes trigger channels
+      if isempty(hdr)
+        hdr = ft_read_header(filename);
+      end
+      if isempty(chanindx)
+        % try to determine the trigger channels from the header
+        chanindx = find(ft_chantype(hdr, 'trigger'));
+      else
+        % use the user-supplied list of trigger channels
+      end
+      trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', chanindx, 'detectflank', detectflank, 'denoise', denoise, 'trigshift', trigshift, 'trigpadding', trigpadding, 'threshold', threshold, 'denoise', denoise);
+      event = appendstruct(event, trigger);
     end
     
   case {'manscan_mbi', 'manscan_mb2'}
