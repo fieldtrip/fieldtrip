@@ -734,7 +734,11 @@ if nargin>1
   if isequal(desired, 'meg') || isequal(desired, 'ref')
     % only compare the first three characters, i.e. meggrad or megmag should match
     chantype = strncmp(desired, chantype, 3);
+  elseif isequal(desired, 'trigger')
+    % search for the different types of trigger channels
+    chantype = contains(chantype, desired);
   else
+    % search for an exact match
     chantype = strcmp(desired, chantype);
   end
 end
