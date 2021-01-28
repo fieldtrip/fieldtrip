@@ -1341,6 +1341,9 @@ switch eventformat
     end
     
   case {'itab_raw' 'itab_mhd'}
+    if isempty(hdr)
+      hdr = ft_read_header(filename);
+    end
     for i=1:hdr.orig.nsmpl
       event(end+1).type = 'trigger';
       event(end  ).value    = hdr.orig.smpl(i).type;
