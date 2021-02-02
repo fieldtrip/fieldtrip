@@ -9,7 +9,8 @@ function data = xdf2fieldtrip(filename, varargin)
 %   data = xdf2fieldtrip(filename, ...)
 %
 % Optional arguments should come in key-value pairs and can include
-%   streamindx = list, indices of the streams to read (default is all)
+%   streamindx  = list, indices of the streams to read (default is all)
+%   sraterange  = range of sampling rate in Hz in data streams to read [lowerbound, upperbound] 
 %
 % You can also use the standard procedure with FT_DEFINETRIAL and FT_PREPROCESSING
 % for XDF files. This will return (only) the continuously sampled stream with the
@@ -43,6 +44,7 @@ function data = xdf2fieldtrip(filename, varargin)
 
 % process the options
 streamindx = ft_getopt(varargin, 'streamindx');
+sraterange = ft_getopt(varargin, 'sraterange');
 
 % ensure this is on the path
 ft_hastoolbox('xdf', 1);
@@ -73,8 +75,23 @@ else
   selected(streamindx) = true;
 end
 
+% select the streams to continue working with by srate
+if isempty(sraterange)
+  inrange = true(size(streams));
+else
+  inrange = false(size(streams));  
+  for i = 1:numel(streams)
+      if isfield(streams{i}.info, 'effective_srate')
+          if streams{i}.info.effective_srate >= sraterange(1) && streams{i}.info.effective_srate <= sraterange(2)
+              inrange(i) = true;
+          end
+      end
+  end
+end
+
+
 % discard the non-continuous streams
-streams = streams(iscontinuous & selected);
+streams = streams(iscontinuous & selected & inrange);
 
 if isempty(streams)
   ft_error('no continuous streams were selected');
@@ -146,22 +163,41 @@ for i=1:numel(streams)
 end
 [~, indx] = max(srate);
 
+
+% copy the header from the stream with max srate
+keephdr         = data{indx}.hdr;
+keephdr.nChans  = 0; 
+keephdr.label   = {};
+keephdr.chantype = {};
+keephdr.chanunit = {}; 
+
 if numel(data)>1
-  % resample all data structures, except the one with the max sampling rate
-  % this will also align the time axes
-  for i=1:numel(data)
-    if i==indx
-      continue
+    % resample all data structures, except the one with the max sampling rate
+    % this will also align the time axes
+    for i=1:numel(data)   
+        
+        % append channel information to the header
+        keephdr.nChans      = keephdr.nChans + data{i}.hdr.nChans;
+        keephdr.label       = [keephdr.label;       data{i}.hdr.label];
+        keephdr.chantype    = [keephdr.chantype;    data{i}.hdr.chantype];
+        keephdr.chanunit    = [keephdr.chanunit;    data{i}.hdr.chanunit];
+                
+        if i==indx
+            continue
+        end
+
+        ft_notice('resampling %s', streams{i}.info.name);
+        cfg = [];
+        cfg.time = data{indx}.time;
+        data{i} = ft_resampledata(cfg, data{i});
+        
     end
     
-    ft_notice('resampling %s', streams{i}.info.name);
-    cfg = [];
-    cfg.time = data{indx}.time;
-    data{i} = ft_resampledata(cfg, data{i});
-  end
-  
-  % append all data structures
-  data = ft_appenddata([], data{:});
+    % append all data structures
+    data = ft_appenddata([], data{:});
+    
+    % modify some fields in the header
+    data.hdr = keephdr; 
 else
   % simply return the first and only one
   data = data{1};
