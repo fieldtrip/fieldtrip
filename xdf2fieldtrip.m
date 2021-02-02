@@ -52,10 +52,40 @@ ft_hastoolbox('xdf', 1);
 % read all streams
 streams = load_xdf(filename);
 
+% initialize an array of booleans indicating whether the streams are continuous
 iscontinuous = false(size(streams));
+ 
 % figure out which streams contain continuous/regular and discrete/irregular data
 for i=1:numel(streams)
-  iscontinuous(i) = isfield(streams{i}.info, 'effective_srate');
+    
+    % if the nominal srate is non-zero, the stream is considered continuous
+    if ~strcmpi(streams{i}.info.nominal_srate, '0')
+        
+       iscontinuous(i) =  true;  
+       
+       if ~isfield(streams{i}.info, 'effective_srate') 
+          
+           % in case effective srate field value is missing, add one
+           num_samples  = numel(streams{i}.time_stamps);
+           t_begin      = streams{i}.time_stamps(1);
+           t_end        = streams{i}.time_stamps(end);
+           duration     = t_end - t_begin;
+           streams{i}.info.effective_srate = (num_samples - 1) / duration;
+           
+           
+       elseif isempty(streams{i}.info.effective_srate)
+           
+           % in case effective srate field value is missing, add one
+           num_samples  = numel(streams{i}.time_stamps);
+           t_begin      = streams{i}.time_stamps(1);
+           t_end        = streams{i}.time_stamps(end);
+           duration     = t_end - t_begin;
+           streams{i}.info.effective_srate = (num_samples - 1) / duration;
+           
+       end 
+       
+    end
+
 end
 
 % give some feedback
