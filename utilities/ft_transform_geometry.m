@@ -105,13 +105,22 @@ end
 dtype = ft_datatype(input);
 switch dtype
   case 'grad'
-    if globalrescale || axesrescale
+    if globalrescale || axesrescale, ft_error('only a rigid body transformation without rescaling is allowed'); end
+  otherwise
+    % could be a volume conductor model with constrained transformation possibilities
+    if ft_headmodeltype(input, 'singleshell') && isfield(input, 'forwpar') && (globalrescale || axesrescale)
       ft_error('only a rigid body transformation without rescaling is allowed');
     end
-  otherwise
-    % could be a volume conductor model with constrained transformation
-    % possibilities
-    if isfield(input, 'forwpar'
+    if ft_headmodeltype(input, 'bem') && isfield(input, 'mat') && (globalrescale || axesrescale)
+      ft_error('only a rigid body transformation without rescaling is allowed');
+    end
+    if ft_headmodeltype(input, 'localspheres') && isfield(input, 'mat') && (globalrescale || axesrescale)
+      ft_error('only a rigid body transformation without rescaling is allowed');
+    end
+    if (isfield(input, 'tetra') || isfield(input, 'hex')) && (globalrescale || axesrescale)
+      ft_error('only a rigid body transformation without rescaling is allowed');
+    end
+        
 end
 
 
