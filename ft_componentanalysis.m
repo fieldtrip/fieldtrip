@@ -12,16 +12,21 @@ function [comp] = ft_componentanalysis(cfg, data)
 % FT_PREPROCESSING or from FT_TIMELOCKANALYSIS.
 %
 % The configuration should contain
-%   cfg.method       = 'runica', 'fastica', 'binica', 'pca', 'svd', 'jader', 'varimax', 'dss', 'cca', 'sobi', 'white' or 'csp' (default = 'runica')
-%   cfg.channel      = cell-array with channel selection (default = 'all'), see FT_CHANNELSELECTION for details
+%   cfg.method       = 'runica', 'fastica', 'binica', 'pca', 'svd', 'jader',
+%                      'varimax', 'dss', 'cca', 'sobi', 'white' or 'csp' 
+%                      (default = 'runica')
+%   cfg.channel      = cell-array with channel selection (default = 'all'),
+%                      see FT_CHANNELSELECTION for details
+%   cfg.split        = cell-array of channel types between which covariance
+%                      is split, it can also be 'all' or 'no' (default = 'no')
 %   cfg.trials       = 'all' or a selection given as a 1xN vector (default = 'all')
 %   cfg.numcomponent = 'all' or number (default = 'all')
 %   cfg.demean       = 'no' or 'yes', whether to demean the input data (default = 'yes')
 %   cfg.updatesens   = 'no' or 'yes' (default = 'yes')
 %   cfg.feedback     = 'no', 'text', 'textbar', 'gui' (default = 'text')
 %
-% The runica method supports the following method-specific options. The values that
-% these options can take can be found with HELP RUNICA.
+% The runica method supports the following method-specific options. The
+% values that these options can take can be found with HELP RUNICA.
 %   cfg.runica.extended
 %   cfg.runica.pca
 %   cfg.runica.sphering
@@ -40,8 +45,8 @@ function [comp] = ft_componentanalysis(cfg, data)
 %   cfg.runica.logfile
 %   cfg.runica.interput
 %
-% The fastica method supports the following method-specific options. The values that
-% these options can take can be found with HELP FASTICA.
+% The fastica method supports the following method-specific options. The 
+% values that these options can take can be found with HELP FASTICA.
 %   cfg.fastica.approach
 %   cfg.fastica.numOfIC
 %   cfg.fastica.g
@@ -68,8 +73,8 @@ function [comp] = ft_componentanalysis(cfg, data)
 %   cfg.fastica.dewhiteMat
 %   cfg.fastica.only
 %
-% The binica method supports the following method-specific options. The values that
-% these options can take can be found with HELP BINICA.
+% The binica method supports the following method-specific options. The
+% values that these options can take can be found with HELP BINICA.
 %   cfg.binica.extended
 %   cfg.binica.pca
 %   cfg.binica.sphering
@@ -87,13 +92,13 @@ function [comp] = ft_componentanalysis(cfg, data)
 %   cfg.binica.momentum
 %
 % The dss method requires the following method-specific option and supports
-% a whole lot of other options. The values that these options can take can be
-% found with HELP DSS_CREATE_STATE.
+% a whole lot of other options. The values that these options can take can 
+% be found with HELP DSS_CREATE_STATE.
 %   cfg.dss.denf.function
 %   cfg.dss.denf.params
 %
-% The sobi method supports the following method-specific options. The values that
-% these options can take can be found with HELP SOBI.
+% The sobi method supports the following method-specific options. The 
+% values that these options can take can be found with HELP SOBI.
 %   cfg.sobi.n_sources
 %   cfg.sobi.p_correlations
 %
@@ -190,6 +195,7 @@ cfg.method          = ft_getopt(cfg, 'method',       'runica');
 cfg.demean          = ft_getopt(cfg, 'demean',       'yes');
 cfg.trials          = ft_getopt(cfg, 'trials',       'all', 1);
 cfg.channel         = ft_getopt(cfg, 'channel',      'all');
+cfg.split           = ft_getopt(cfg, 'split',        'no');
 cfg.numcomponent    = ft_getopt(cfg, 'numcomponent', 'all');
 cfg.normalisesphere = ft_getopt(cfg, 'normalisesphere', 'yes');
 cfg.cellmode        = ft_getopt(cfg, 'cellmode',     'no');
@@ -283,6 +289,31 @@ tmpcfg = keepfields(cfg, {'trials', 'channel', 'tolerance', 'showcallinfo'});
 data   = ft_selectdata(tmpcfg, data);
 % restore the provenance information
 [cfg, data] = rollback_provenance(cfg, data);
+
+% deal with different chantypes if requested
+if isequal(cfg.split, 'no')
+  chantype = {};
+elseif isequal(cfg.split, 'all')
+  chantype = unique(ft_chantype(data.label));
+else
+  chantype = cfg.split;
+end
+
+if numel(chantype)>0
+  % recurse per specified chantype
+  tmpdata = cell(1, numel(chantype));
+  for k = 1:numel(chantype)
+    tmpcfg         = cfg;
+    tmpcfg.channel = data.label(ft_chantype(data.label, lower(chantype{k})));
+    tmpcfg.split   = 'no';
+    tmpcfg.chantype = lower(chantype{k}); % makes the output labels unique, to allow appending later on
+    tmpdata{1,k}   = ft_componentanalysis(tmpcfg, data);
+  end    
+  comp = ft_appenddata([], tmpdata{:});
+  return;
+else
+  %   
+end
 
 Ntrials  = length(data.trial);
 Nchans   = length(data.label);
@@ -813,9 +844,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % collect the results and construct data structure
 
-comp = [];
-if isfield(data, 'fsample'), comp.fsample = data.fsample; end
-if isfield(data, 'time'),    comp.time    = data.time;    end
+comp = keepfields(data, {'time' 'fsample'});
 
 % make sure we don't return more components than were requested
 % (some methods respect the maxcomponent parameters, others just always
@@ -849,42 +878,56 @@ else
   prefix = cfg.method;
 end
 
+st = dbstack;
+if numel(st)>1 && isequal(st(2).name, 'ft_componentanalysis')
+  % this is a recursive call, as per the cfg.split option, add something
+  % extra to the prefix
+  chantype = ft_getopt(cfg, 'chantype', '');
+  prefix   = [prefix chantype];
+end
+
 for k = 1:size(comp.topo,2)
   comp.label{k,1} = sprintf('%s%03d', prefix, k);
 end
 comp.topolabel = data.label(:);
 
+sensfield = cell(0,1);
 if isfield(data, 'grad')
-  sensfield = 'grad';
-elseif isfield(data, 'elec')
-  sensfield = 'elec';
-elseif isfield(data, 'opto')
-  sensfield = 'opto';
-else
-  sensfield = [];
+  sensfield{end+1} = 'grad';
+end
+if isfield(data, 'elec')
+  sensfield{end+1} = 'elec';
+end
+if isfield(data, 'opto')
+  sensfield{end+1} = 'opto';
 end
 
 % apply the linear projection also to the sensor description
 if ~isempty(sensfield)
   if  strcmp(cfg.updatesens, 'yes')
-    ft_info('also applying the unmixing matrix to the %s structure\n', sensfield);
     % construct a montage and apply it to the sensor description
     montage          = [];
     montage.labelold = data.label;
     montage.labelnew = comp.label;
     montage.tra      = unmixing;
-    comp.(sensfield) = ft_apply_montage(data.(sensfield), montage, 'balancename', 'comp', 'keepunused', 'yes');
     
-    % The output sensor array cannot simply be interpreted as the input
-    % sensor array, hence the type should be removed to allow autodetection
-    % See also http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1806
-    if isfield(comp.(sensfield), 'type')
-      comp.(sensfield) = rmfield(comp.(sensfield), 'type');
+    for m = 1:numel(sensfield)
+      ft_info('also applying the unmixing matrix to the %s structure\n', sensfield{m});
+      comp.(sensfield{m}) = ft_apply_montage(data.(sensfield{m}), montage, 'balancename', 'comp', 'keepunused', 'yes');
+      
+      % The output sensor array cannot simply be interpreted as the input
+      % sensor array, hence the type should be removed to allow autodetection
+      % See also http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1806
+      if isfield(comp.(sensfield{m}), 'type')
+        comp.(sensfield{m}) = rmfield(comp.(sensfield{m}), 'type');
+      end
     end
   else
-    ft_info('not applying the unmixing matrix to the %s structure\n', sensfield);
-    % simply copy it over
-    comp.(sensfield) = data.(sensfield);
+    for m = 1:numel(sensfield)
+      ft_info('not applying the unmixing matrix to the %s structure\n', sensfield{m});
+      % simply copy it over
+      comp.(sensfield{m}) = data.(sensfield{m});
+    end
   end
 end % if sensfield
 
