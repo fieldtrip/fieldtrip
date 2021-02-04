@@ -61,7 +61,7 @@ function [lf] = ft_compute_leadfield(dippos, sens, headmodel, varargin)
 % FT_HEADMODEL_CONCENTRICSPHERES, FT_HEADMODEL_DIPOLI, FT_HEADMODEL_HALFSPACE,
 % FT_HEADMODEL_INFINITE, FT_HEADMODEL_LOCALSPHERES, FT_HEADMODEL_OPENMEEG,
 % FT_HEADMODEL_SINGLESHELL, FT_HEADMODEL_SINGLESPHERE,
-% FT_HEADMODEL_HALFSPACE
+% FT_HEADMODEL_HALFSPACE, FT_HEADMODEL_DUNEURO
 
 % Copyright (C) 2004-2020, Robert Oostenveld
 %
@@ -340,7 +340,7 @@ elseif ismeg
       %TODO: involve unit checking
 
       % compute secondary leadfield numerically
-      lf = leadfield_duneuro(dippos, headmodel);
+      lf = leadfield_duneuro(dippos, headmodel, 'meg');
 
       % compute primary B-field analytically
       mu = 4*pi*1e-4; %unit: Tmm/A
@@ -497,7 +497,7 @@ elseif iseeg
 
     case 'duneuro'
       % note that the electrode information is contained in the headmodel
-      lf = leadfield_duneuro(dippos, headmodel);
+      lf = leadfield_duneuro(dippos, headmodel, 'eeg');
 
     case 'metufem'
       p3 = zeros(Ndipoles * 3, 6);
