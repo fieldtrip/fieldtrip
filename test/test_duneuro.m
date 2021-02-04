@@ -16,24 +16,17 @@ function test_duneuro
 %   c. compute leadfield (ft_prepare_leadfield)
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% In general, variables in one function workspace are not available to other
-% functions. However, nested functions can access and modify variables in the
-% workspaces of the functions that contain them.
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 % adapted to be ft compliant from script by Sophie Schrader, 16.11.20
+
+% % prevent errors from cfg.mne.keepleadfield, etc
+% global ft_default
+% ft_default.checkconfig = 'loose';
 
 addpath /home/neurophys/marpia/fieldtrip/
 ft_defaults
 
-% prevent errors from cfg.mne.keepleadfield, etc
-global ft_default
-ft_default.checkconfig = 'loose';
-
 % addpath(('/home/common/matlab/fieldtrip/external/duneuro/'))
 addpath(genpath('/home/neurophys/marpia/fieldtrip/external/duneuro')) %should be moved somewhere
-% addpath /home/neurophys/marpia/Dune2.6/build-release6/duneuro-matlab/src
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % 1. create input data
@@ -60,7 +53,7 @@ segprob.transform(1,4) = -0.5;
 segprob.transform(2,4) = -0.5;
 segprob.transform(3,4) = -0.5;
 
-% visualize the segmentation %%%%%%%%%%%%%%%%%%%%
+% visualize the segmentation 
 
 % it is more difficult to visualize a probabilistic segmentation than an indexed one
 segindx = ft_datatype_segmentation(segprob, 'segmentationstyle', 'indexed');
@@ -71,70 +64,74 @@ cfg.method = 'ortho';
 cfg.location = [5 5 5]; % this is the center of the volume, in this plot it will be rounded off to the nearest voxel
 ft_sourceplot(cfg, segindx);
 
-% determine the range of the bounding box
-[X, Y, Z] = ndgrid(1:segprob.dim(1), 1:segprob.dim(2), 1:segprob.dim(3));
-voxpos = ft_warp_apply(segprob.transform, [X(:) Y(:) Z(:)]);
-minmaxpos(:,1) = min(voxpos) - 0.5;
-minmaxpos(:,2) = max(voxpos) + 0.5;
-
-% visualize the segmentation %%%%%%%%%%%%%%%%%%%%
-
-% hexa
+% hexa mesh
 cfg = [];
 cfg.shift = 0.3;
 cfg.method = 'hexahedral';
 mesh_vol_hex = ft_prepare_mesh(cfg, segprob);
 
-% tetra
+figure
+ft_plot_ortho(segindx.seg, 'transform', segindx.transform, 'location', [5 5 5], 'style', 'intersect');
+hold on
+ft_plot_mesh(mesh_vol_hex, 'surfaceonly', false, 'facecolor', 'none', 'edgecolor', 'm');
+view(120, 30)
+
+
+% tetra mesh
 cfg = [];
 cfg.method = 'tetrahedral';
 mesh_vol_tet = ft_prepare_mesh(cfg, segprob);
 
-% plot the meshes?
+
+figure
+ft_plot_ortho(segindx.seg, 'transform', segindx.transform, 'location', [5 5 5], 'style', 'intersect');
+hold on
+ft_plot_mesh(mesh_vol_tet, 'surfaceonly', false, 'facecolor', 'none', 'edgecolor', 'm');
+view(120, 30)
 
 %% define sensors
 
-% i will manually pass 5 coils and fixed projections or maybe take some
-% from a ctf file? something like this (from test_pull1377.m)
+% i manually passed 5 coils and fixed projections 
+% or maybe take some from a ctf file? something like this (from test_pull1377.m)
 
 % for MEG data + sensor info
-
+% 
 % load(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/preproc_ctf151.mat'), 'data');
 % datameg = data;
 % clear data
 
-% but i want to extract only sensor info and not the data at this point
+coils = [5 5 12; 5 12 5; -2 5 5; 12 5 5; 5 -2 5];
+projections = [0 0 1 ; 0 1 0; -1 0 0; 1 0 0; 0 -1 0 ];
 
-% coils = [8 5 -2; 12 5 -2; 8 5 2; 12 5 2; 5 12 5];
+figure
+ft_plot_ortho(segindx.seg, 'transform', segindx.transform, 'location', [5 5 5], 'style', 'intersect');
+hold on
+quiver3(coils(:,1),coils(:,2),coils(:,3),projections(:,1),projections(:,2),projections(:,3),'bo')
 
-coils = table2array(readtable(filename_coils))';
-projections = table2array(readtable(filename_projections))';
-
-% why this? fieldtrip wants only one projection per coil, i guess
-index = repmat(1:size(coils,2),3,1);
-coils_singleprojection = coils(:,index);
-singleprojections = reshape(projections(:),[3 size(coils_singleprojection,2)]);
-
-meg_labels = cellstr(strings(1,size(coils_singleprojection,2)));
-for i=1:size(coils_singleprojection,2)
+meg_labels = cellstr(strings(1,size(coils,1)));
+for i=1:size(coils,1)
   meg_labels(i) = cellstr(strcat('meg',num2str(i)));
 end
 
 sens = [];
-sens.coilpos = coils_singleprojection';
-sens.coilori = singleprojections';
-sens.chanpos = coils_singleprojection';
-sens.chanori = singleprojections';
+sens.coilpos = coils;
+sens.coilori = projections;
+sens.chanpos = coils;
+sens.chanori = projections;
 sens.label = meg_labels;
 sens.type = 'meg';
 sens.unit = 'mm';
 sens = ft_convert_units(sens,'mm');
 
 %% define dipoles
+dip_pos = [5.5 6.5 6.5; 5.5 5.5 3.5; 3.5 5.5 5.5];
+dip_mom = [0 1 0; 0 0 -1; -1 0 0 ];
 
-dipoles = table2array(readtable(filename_dipoles))';
-dip_pos = dipoles(1:3,:);
-dip_mom = dipoles(4:6,:);
+figure
+ft_plot_ortho(segindx.seg, 'transform', segindx.transform, 'location', [5 5 5], 'style', 'intersect');
+hold on
+quiver3(dip_pos(:,1),dip_pos(:,2),dip_pos(:,3),dip_mom(:,1),dip_mom(:,2),dip_mom(:,3),'bo')
+view(-200, 15)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % 2. compute the leadfield
@@ -151,41 +148,47 @@ vol_duneuro_tet  = ft_prepare_headmodel(cfg, mesh_vol_tet);
 
 %% prepare sourcemodel
 
-% this section has to be checked again
-
+% hex
 cfg = [];
 cfg.sourcemodel.pos = dip_pos';
-cfg.sourcemodel.inside = ones(size(dipoles,2),1); %check what is considered inside, error?
+cfg.sourcemodel.inside = ones(size(dip_pos,2),1); %check what is considered inside, error?
 cfg.grad = sens;
 cfg.headmodel = vol_duneuro_hex;
-[sm_duneuro_hex] = ft_prepare_sourcemodel(cfg);
+sm_duneuro_hex = ft_prepare_sourcemodel(cfg);
 
+% tet
 cfg = [];
 cfg.sourcemodel.pos = dip_pos';
-cfg.sourcemodel.inside = ones(size(dipoles,2),1); %check what is considered inside, error?
+cfg.sourcemodel.inside = ones(size(dip_pos,2),1); %check what is considered inside, error?
 cfg.grad = sens;
 cfg.headmodel = vol_duneuro_tet;
 [sm_duneuro_tet] = ft_prepare_sourcemodel(cfg);
 
 
 %% prepare leadfield
-avg_meg = []; %not sure that is necessary
 
+% hex
 cfg                 = [];
 cfg.sourcemodel     = sm_duneuro_hex;
 cfg.sourcemodel.mom = dip_mom; %here the dipole moments are passed, ft computes the lf for all 3 directions and then multiplies with moment
 cfg.headmodel       = vol_duneuro_hex;
 cfg.grad            = sens;
 cfg.reducerank      = 3;
-ft_prepare_leadfield(cfg, avg_meg);
+out_hex = ft_prepare_leadfield(cfg);
+lf_hex = cell2mat(out_hex.leadfield);
 
+% tet
 cfg                 = [];
 cfg.sourcemodel     = sm_duneuro_tet;
 cfg.sourcemodel.mom = dip_mom; %here the dipole moments are passed, ft computes the lf for all 3 directions and then multiplies with moment
 cfg.headmodel       = vol_duneuro_tet;
 cfg.grad            = sens;
 cfg.reducerank      = 3;
-ft_prepare_leadfield(cfg, avg_meg);
+out_tet = ft_prepare_leadfield(cfg);
+lf_tet = cell2mat(out_tet.leadfield);
+
+figure, plot(lf_hex,'r'), hold on, plot(lf_tet,'b')
+% set a limit for an error?
 
 end % main function
 
