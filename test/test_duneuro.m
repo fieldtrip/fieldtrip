@@ -26,7 +26,7 @@ addpath /home/neurophys/marpia/fieldtrip/
 ft_defaults
 
 % addpath(('/home/common/matlab/fieldtrip/external/duneuro/'))
-addpath(genpath('/home/neurophys/marpia/fieldtrip/external/duneuro')) %should be moved somewhere
+addpath '/home/neurophys/marpia/fieldtrip/external/duneuro' %should be moved somewhere
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % 1. create input data
