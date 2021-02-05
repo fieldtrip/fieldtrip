@@ -275,6 +275,7 @@ end
 
 data.fsample = cfg.fsample;
 data.label   = sens.label;
+data.rms = rms;
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
