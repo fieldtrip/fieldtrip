@@ -201,7 +201,7 @@ switch cfg.appenddim
         if hasunmixing && isfield(varargin{i}, 'unmixing')
           unmixing = blkdiag(unmixing, varargin{i}.unmixing);
         else
-          unmixing = blkdiag(unmixing, varargin{i}.label(:));
+          unmixing = blkdiag(unmixing, eye(numel(varargin{i}.label)));
         end
         
       end
