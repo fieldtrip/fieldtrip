@@ -1,23 +1,20 @@
 function test_duneuro
 
 % MEM 12gb %%%check
-% WALLTIME 1:30:00 %%%check
+% WALLTIME 00:00:18 
 % DEPENDENCY ft_prepare_sourcemodel headsurface ft_prepare_leadfield ft_freqanalysis ft_sourceanalysis
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % This function creates a set of input-structures to be used for testing
-% the duneuro MEG forward solution.
+% the DUNEuro MEG forward solution.
 % The structure of this script is more or less
 % 1. create input data (dull segmentation, hex and tet meshes, dipoles, sensors)
-% 2. compute MEG leadfield for hex and tet meshes
+% 2. compute and compare MEG leadfield for hex and tet meshes
 %   a. create volume conductor (ft_prepare_headmodel) 
 %   b. create source grid (ft_prepare_sourcemodel)
 %   c. compute leadfield (ft_prepare_leadfield)
-
-
-% adapted to be ft compliant from script by Sophie Schrader, 16.11.20
-
+%   d. compare hex leadfield with tet leadfield
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % 1. create input data
@@ -45,7 +42,6 @@ segprob.transform(2,4) = -0.5;
 segprob.transform(3,4) = -0.5;
 
 % visualize the segmentation 
-
 % it is more difficult to visualize a probabilistic segmentation than an indexed one
 segindx = ft_datatype_segmentation(segprob, 'segmentationstyle', 'indexed');
 
@@ -142,7 +138,7 @@ vol_duneuro_tet  = ft_prepare_headmodel(cfg, mesh_vol_tet);
 % hex
 cfg = [];
 cfg.sourcemodel.pos = dip_pos';
-cfg.sourcemodel.inside = ones(size(dip_pos,2),1); %check what is considered inside, error?
+cfg.sourcemodel.inside = ones(size(dip_pos,2),1);
 cfg.grad = sens;
 cfg.headmodel = vol_duneuro_hex;
 sm_duneuro_hex = ft_prepare_sourcemodel(cfg);
@@ -150,7 +146,7 @@ sm_duneuro_hex = ft_prepare_sourcemodel(cfg);
 % tet
 cfg = [];
 cfg.sourcemodel.pos = dip_pos';
-cfg.sourcemodel.inside = ones(size(dip_pos,2),1); %check what is considered inside, error?
+cfg.sourcemodel.inside = ones(size(dip_pos,2),1);
 cfg.grad = sens;
 cfg.headmodel = vol_duneuro_tet;
 sm_duneuro_tet = ft_prepare_sourcemodel(cfg);
@@ -161,7 +157,7 @@ sm_duneuro_tet = ft_prepare_sourcemodel(cfg);
 % hex
 cfg                 = [];
 cfg.sourcemodel     = sm_duneuro_hex;
-cfg.sourcemodel.mom = dip_mom; %here the dipole moments are passed, ft computes the lf for all 3 directions and then multiplies with moment
+cfg.sourcemodel.mom = dip_mom;
 cfg.headmodel       = vol_duneuro_hex;
 cfg.grad            = sens;
 cfg.reducerank      = 3;
@@ -171,15 +167,17 @@ lf_hex = cell2mat(out_hex.leadfield);
 % tet
 cfg                 = [];
 cfg.sourcemodel     = sm_duneuro_tet;
-cfg.sourcemodel.mom = dip_mom; %here the dipole moments are passed, ft computes the lf for all 3 directions and then multiplies with moment
+cfg.sourcemodel.mom = dip_mom;
 cfg.headmodel       = vol_duneuro_tet;
 cfg.grad            = sens;
 cfg.reducerank      = 3;
 out_tet = ft_prepare_leadfield(cfg);
 lf_tet = cell2mat(out_tet.leadfield);
 
+%% compare leadfields
+
 figure, plot(lf_hex,'r'), hold on, plot(lf_tet,'b')
-% set instead a limit for an error?
+% set a limit for an error
 rel_err_perc = 100*(abs(lf_hex-lf_tet)./norm(lf_hex));
 assert(max(max(rel_err_perc))<10)
 
