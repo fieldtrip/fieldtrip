@@ -153,7 +153,7 @@ cfg.sourcemodel.pos = dip_pos';
 cfg.sourcemodel.inside = ones(size(dip_pos,2),1); %check what is considered inside, error?
 cfg.grad = sens;
 cfg.headmodel = vol_duneuro_tet;
-[sm_duneuro_tet] = ft_prepare_sourcemodel(cfg);
+sm_duneuro_tet = ft_prepare_sourcemodel(cfg);
 
 
 %% prepare leadfield
@@ -179,7 +179,9 @@ out_tet = ft_prepare_leadfield(cfg);
 lf_tet = cell2mat(out_tet.leadfield);
 
 figure, plot(lf_hex,'r'), hold on, plot(lf_tet,'b')
-% set a limit for an error?
+% set instead a limit for an error?
+rel_err_perc = 100*(abs(lf_hex-lf_tet)./norm(lf_hex));
+assert(max(max(rel_err_perc))<10)
 
 end % main function
 

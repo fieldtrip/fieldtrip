@@ -346,7 +346,14 @@ elseif ismeg
       lf = leadfield_duneuro(dippos, headmodel, 'meg');
 
       % compute primary B-field analytically
-      mu = 4*pi*1e-4; %unit: Tmm/A
+      % check unit of permeability constant mu
+      mu = 4*pi*1e-7; %unit: Tm/A
+      if strcmp(headmodel.unit, 'mm') 
+         mu = mu * 1e3; %unit: Tmm/A
+      elseif strcmp(headmodel.unit, 'cm')
+         mu = mu * 1e2;
+      end
+      
       index = repmat(1:size(dippos,1),3,1);
       index = index(:);
       dipoles = [dippos(index,:) repmat(eye(3),size(dippos,1),1)];
@@ -358,6 +365,13 @@ elseif ismeg
       if isfield(sens, 'tra')
         % construct the channels from a linear combination of all magnetometer coils
         lf = sens.tra * lf;
+      end
+      
+      % convert lf into siunits: Tm/A
+      if strcmp(headmodel.unit, 'mm') 
+         lf = lf * 1e-3; %unit: Tmm/A
+      elseif strcmp(headmodel.unit, 'cm')
+         lf = lf * 1e-2;
       end
 
     otherwise
