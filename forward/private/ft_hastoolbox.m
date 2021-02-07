@@ -483,7 +483,7 @@ if ~status && autoadd>0
     status = myaddpath(fullfile(prefix, lower(toolbox)), silent);
     licensefile = [lower(toolbox) '_license'];
     if status && exist(licensefile, 'file')
-      % this will execute openmeeg_license and mne_license
+      % this will execute openmeeg_license, mne_license and duneuro_license
       % which display the license on screen for three seconds
       feval(licensefile);
     end

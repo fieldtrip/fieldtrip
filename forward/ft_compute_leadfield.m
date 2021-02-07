@@ -336,7 +336,10 @@ elseif ismeg
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       % finite element method as implemented in software duneuro
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+      
+      % show the license (only once)
+      duneuro_license; 
+      
       %TODO: involve unit checking
 
       % compute secondary leadfield numerically
@@ -497,6 +500,7 @@ elseif iseeg
 
     case 'duneuro'
       ft_hastoolbox('duneuro', 1);
+      duneuro_license; % show the license (only once)
       % note that the electrode information is contained in the headmodel
       lf = leadfield_duneuro(dippos, headmodel, 'eeg');
 
