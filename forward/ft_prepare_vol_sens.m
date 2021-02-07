@@ -534,6 +534,7 @@ elseif iseeg
       end
 
     case 'duneuro'
+      ft_hastoolbox('duneuro', 1);
       if(~isfield(headmodel,'eeg_transfer'))
         %set electrodes
         cfg = [];

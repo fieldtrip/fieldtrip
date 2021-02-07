@@ -18,15 +18,6 @@ function test_duneuro
 
 % adapted to be ft compliant from script by Sophie Schrader, 16.11.20
 
-% % prevent errors from cfg.mne.keepleadfield, etc
-% global ft_default
-% ft_default.checkconfig = 'loose';
-
-addpath /home/neurophys/marpia/fieldtrip/
-ft_defaults
-
-% addpath(('/home/common/matlab/fieldtrip/external/duneuro/'))
-addpath '/home/neurophys/marpia/fieldtrip/external/duneuro' %should be moved somewhere
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % 1. create input data

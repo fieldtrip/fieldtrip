@@ -44,6 +44,7 @@ function headmodel = ft_headmodel_duneuro(mesh, varargin)
 %   meg_type        = string, e.g. 'physical' (default)
 %   meg_eneablecache= logical, e.g. 'false (default)
 
+ft_hastoolbox('duneuro', 1);
 
 grid_filename   = ft_getopt(varargin, 'grid_filename');
 tensors_filename= ft_getopt(varargin, 'tensors_filename');

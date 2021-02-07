@@ -289,6 +289,7 @@ elseif ft_headmodeltype(headmodel, 'singleshell')
   ft_progress('close');
   
 elseif ft_headmodeltype(headmodel, 'duneuro')
+%   ft_hastoolbox('duneuro', 1); %does not look necessary here? check
   % repeated system calls to the duneuro executable makes it rather slow
   % calling it once for all dipoles is much more efficient
   

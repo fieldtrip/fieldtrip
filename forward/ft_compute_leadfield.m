@@ -496,6 +496,7 @@ elseif iseeg
 
 
     case 'duneuro'
+      ft_hastoolbox('duneuro', 1);
       % note that the electrode information is contained in the headmodel
       lf = leadfield_duneuro(dippos, headmodel, 'eeg');
 
