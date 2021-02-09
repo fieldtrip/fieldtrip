@@ -45,8 +45,9 @@ function crossfreq = ft_crossfrequencyanalysis(cfg, freqlow, freqhigh)
 %                     'plv' - phase locking value
 %                     'mvl' - mean vector length
 %                     'mi'  - modulation index
+%                     'pac' - phase amplitude coupling
 %
-% The modulation index implements
+% The modulation index and phase amplitude coupling implement
 %   Tort A. B. L., Komorowski R., Eichenbaum H., Kopell N. (2010). Measuring Phase-Amplitude
 %   Coupling Between Neuronal Oscillations of Different Frequencies. J Neurophysiol 104:
 %   1195?1210. doi:10.1152/jn.00106.2010
@@ -126,6 +127,7 @@ end
 
 cfg.freqlow    = ft_getopt(cfg, 'freqlow',  'all');
 cfg.freqhigh   = ft_getopt(cfg, 'freqhigh', 'all');
+cfg.nphase   = ft_getopt(cfg, 'nphase', 20);
 cfg.keeptrials = ft_getopt(cfg, 'keeptrials');
 
 % make selection of frequencies and channels
@@ -190,15 +192,14 @@ switch cfg.method
     end
     cfcdata = mvldatas;
 
-  case  'mi'
+  case  {'mi','pac'}
     % modulation index
-    nbin       = 20; % number of phase bin
-    pacdatas   = zeros(ntrial,nchan,numel(LF),numel(HF),nbin);
+    pacdatas   = zeros(ntrial,nchan,numel(LF),numel(HF),cfg.nphase);
     for  i =1:nchan
       chandataLF = freqlow.fourierspctrm(:,strcmp(freqlow.label,labelcmb{i,1}),:,:);
       chandataHF = freqhigh.fourierspctrm(:,strcmp(freqhigh.label,labelcmb{i,2}),:,:);
       for j = 1:ntrial
-        pacdatas(j,i,:,:,:) = data2pac(squeeze(chandataLF(j,:,:,:)),squeeze(chandataHF(j,:,:,:)),nbin);
+        [pacdatas(j,i,:,:,:), phasebins] = data2pac(squeeze(chandataLF(j,:,:,:)),squeeze(chandataHF(j,:,:,:)),cfg.nphase);
       end
     end
     cfcdata = pacdatas;
@@ -255,9 +256,9 @@ switch cfg.method
 
           for i=1:nlf
             for j=1:nhf
-              P = squeeze(pac(i,j,:))/ nansum(pac(i,j,:));  % normalized distribution
+              P = squeeze(pac(i,j,:))/ sum(pac(i,j,:));  % normalized distribution
               % KL distance
-              mi(i,j) = nansum(P.* log2(P./Q))./log2(nbin);
+              mi(i,j) = sum(P.* log2(P./Q))./log2(nbin);
             end
           end
           crsspctrm(k,n,:,:) = mi;
@@ -277,9 +278,9 @@ switch cfg.method
 
         for i=1:nlf
           for j=1:nhf
-            P = squeeze(pac(i,j,:))/ nansum(pac(i,j,:));  % normalized distribution
+            P = squeeze(pac(i,j,:))/ sum(pac(i,j,:));  % normalized distribution
             % KL distance
-            mi(i,j) = nansum(P.* log2(P./Q))./log2(nbin);
+            mi(i,j) = sum(P.* log2(P./Q))./log2(nbin);
           end
         end
         crsspctrm(k,:,:) = mi;
@@ -287,12 +288,29 @@ switch cfg.method
 
     end % if keeptrials
 
+  case 'pac'
+    [ntrial,nchan,nlf,nhf,nbin] = size(cfcdata);
+    
+    if strcmp(cfg.keeptrials, 'yes')
+      dimord = 'rpt_chan_freqlow_freqhigh_phase' ;
+      crsspctrm = cfcdata;
+      
+    else
+      dimord = 'chan_freqlow_freqhigh_phase' ;
+      crsspctrm = reshape(mean(cfcdata,1),[nchan nlf nhf nbin 1]);
+
+    end % if keeptrials
+    
 end % switch method for actual computation
 
 crossfreq.crsspctrm  = crsspctrm;
 crossfreq.dimord     = dimord;
 crossfreq.freqlow    = LF;
 crossfreq.freqhigh   = HF;
+
+if any(strcmp(strsplit(dimord,'_'),'phase'))
+  crossfreq.phase = phasebins;
+end
 
 if docrosschan
   crossfreq.labelcmb = labelcmb;
@@ -382,7 +400,7 @@ end % function
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function pacdata = data2pac(LFsigtemp,HFsigtemp,nbin)
+function [pacdata, phasebins] = data2pac(LFsigtemp,HFsigtemp,nbin)
 % calculate phase amplitude distribution per trial
 % pacdata dim: LF*HF*Phasebin
 
@@ -390,7 +408,13 @@ pacdata = zeros(size(LFsigtemp,1),size(HFsigtemp,1),nbin);
 
 Ang  = angle(LFsigtemp);
 Amp  = abs(HFsigtemp);
-[dum,bin] = histc(Ang, linspace(-pi,pi,nbin));  % binned low frequency phase
+phasebins = linspace(-pi,pi,nbin);
+
+% histc takes the edges rather than the centres of the bins
+phasebinedges = (2*pi)/(nbin-1)/2;
+phasebinedges = linspace(-pi-phasebinedges,pi+phasebinedges,nbin+1);
+
+[dum,bin] = histc(Ang, phasebinedges);  % binned low frequency phase
 binamp = zeros (size(HFsigtemp,1),nbin);      % binned amplitude
 
 for i = 1:size(Ang,1)
