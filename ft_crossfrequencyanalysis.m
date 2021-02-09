@@ -256,9 +256,9 @@ switch cfg.method
 
           for i=1:nlf
             for j=1:nhf
-              P = squeeze(pac(i,j,:))/ sum(pac(i,j,:));  % normalized distribution
+              P = squeeze(pac(i,j,:))/ nansum(pac(i,j,:));  % normalized distribution
               % KL distance
-              mi(i,j) = sum(P.* log2(P./Q))./log2(nbin);
+              mi(i,j) = nansum(P.* log2(P./Q))./log2(nbin);
             end
           end
           crsspctrm(k,n,:,:) = mi;
@@ -278,9 +278,9 @@ switch cfg.method
 
         for i=1:nlf
           for j=1:nhf
-            P = squeeze(pac(i,j,:))/ sum(pac(i,j,:));  % normalized distribution
+            P = squeeze(pac(i,j,:))/ nansum(pac(i,j,:));  % normalized distribution
             % KL distance
-            mi(i,j) = sum(P.* log2(P./Q))./log2(nbin);
+            mi(i,j) = nansum(P.* log2(P./Q))./log2(nbin);
           end
         end
         crsspctrm(k,:,:) = mi;
@@ -298,6 +298,7 @@ switch cfg.method
     else
       dimord = 'chan_freqlow_freqhigh_phase' ;
       crsspctrm = reshape(mean(cfcdata,1),[nchan nlf nhf nbin 1]);
+      crsspctrm(isnan(crsspctrm)) = 0;
 
     end % if keeptrials
     
