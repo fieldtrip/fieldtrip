@@ -38,6 +38,9 @@ end
 
 if ~isstruct(filename)
   load('-mat', filename, 'EEG');
+  if strcmp(lastwarn,'Variable ''EEG'' not found.') % EEGLAB > 2021.0 saves content of EEG as default
+      EEG = load('-mat', filename);
+  end
 else
   EEG = filename;
 end
