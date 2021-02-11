@@ -14,8 +14,8 @@ function headmodel = ft_headmodel_duneuro(mesh, varargin)
 %
 % Required input arguments should be specified in key-value pairs and have
 % to include either
-%   grid_filename   = string, filename for grid
-%   tensors_filename= string, filename for conductivities
+%   grid_filename   = string, filename for grid in "msh" fileformat (see here: https://gmsh.info/doc/texinfo/gmsh.html#File-formats)
+%   tensors_filename= string, filename for conductivities, txt file with conductivity values
 %
 % or
 %   conductivity    = vector, conductivity values for tissues
