@@ -45,7 +45,6 @@ function headmodel = ft_headmodel_duneuro(mesh, varargin)
 %   meg_eneablecache= logical, e.g. 'false (default)
 
 ft_hastoolbox('duneuro', 1);
-duneuro_license; % show the license (only once)
 
 grid_filename   = ft_getopt(varargin, 'grid_filename');
 tensors_filename= ft_getopt(varargin, 'tensors_filename');

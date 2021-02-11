@@ -302,10 +302,7 @@ elseif ismeg
       % don't do anything, h2em or h2mm generated later in ft_prepare_leadfield
 
     case 'duneuro'
-      
-      % show the license (only once)
-      duneuro_license;              
-      
+           
       %compute transfer matrix
       if(~isfield(headmodel,'meg_transfer'))
 
@@ -538,7 +535,7 @@ elseif iseeg
 
     case 'duneuro'
       ft_hastoolbox('duneuro', 1);
-      duneuro_license; % show the license (only once)
+
       if(~isfield(headmodel,'eeg_transfer'))
         %set electrodes
         cfg = [];
