@@ -108,6 +108,7 @@ sens.chanori = projections;
 sens.label = meg_labels;
 sens.type = 'meg';
 sens.unit = 'mm';
+sens.tra = eye(5);
 sens = ft_convert_units(sens,'mm');
 
 %% define dipoles
