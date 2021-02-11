@@ -83,7 +83,7 @@ end
 
 % check whether the transformation includes a scaling operation
 s = svd(rotation);
-if abs(abs(det(rotation))-1)>1e-6
+if abs(abs(det(rotation))-1)>1e-4
   % the transformation increases or decreases the overall volume, allow for
   % some numerical imprecision
   if any(abs(s./s(1)-1)>1e-3)
