@@ -97,7 +97,7 @@ if abs(abs(det(rotation))-1)>1e-6
   end
 else
   globalrescale = false;
-  axesresecale  = false;
+  axesrescale   = false;
 end
 
 % check whether the input data combines well with the requested
@@ -119,10 +119,8 @@ switch dtype
     end
     if (isfield(input, 'tetra') || isfield(input, 'hex')) && (globalrescale || axesrescale)
       ft_error('only a rigid body transformation without rescaling is allowed');
-    end
-        
+    end        
 end
-
 
 % tfields must be rotated, translated and scaled
 % rfields must only be rotated
