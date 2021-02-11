@@ -7,21 +7,53 @@ function [output] = ft_transform_geometry(transform, input)
 %
 % Use as
 %   [output] = ft_transform_geometry(transform, input)
-% where the transform should be a 4x4 homogenous transformation matrix and the
+% where the transform should be a 4x4 homogeneous transformation matrix and the
 % input data structure can be any of the FieldTrip data structures that
 % describes geometrical data.
 %
 % The units of the transformation matrix must be the same as the units in which the
 % geometric object is expressed.
 %
-% Depending on the input object, the homogeneous transformation matrix should be
-% limited to a rigid-body translation plus rotation (MEG-gradiometer array), or to a
-% rigid-body translation plus rotation plus a global rescaling (volume conductor
-% geometry).
+% The type of geometric object constrains the type of allowed
+% transformations.
+%
+% For sensor arrays:
+% If the input is an MEG gradiometer array, only a rigid-body translation
+% plus rotation are allowed. If the input is an EEG electrode or fNIRS
+% optodes array, global rescaling and individual axis rescaling is also
+% allowed.
+%
+% For volume conduction models:
+% If the input is a volume conductor model of the following type:
+%   multi sphere model
+%   BEM model with system matrix already computed
+%   FEM model with volumetric elements
+%   single shell mesh with the spherical harmonic coefficients already
+%   computed
+% only a rigid-body translation plus rotation are allowed.
+%
+% If the input is a volume conductor model of the following type:
+%   BEM model with the system matrix not yet computed
+%   single shell mesh with the spherical harmonic coefficients not yet
+%   computed
+% global rescaling and individual axis rescaling is allowed, in addition to
+% rotation and translation.
+%
+% If the input is a volume conductor model of the following type:
+%   single sphere
+%   concentric spheres
+% global rescaling is allowed, in addition to rotation and translation.
+%
+% For source dipole models, either defined as a 3D regular grid, a 2D mesh
+% or unstructred point cloud, global rescaling and individual axis
+% rescaling is allowed, in addition to rotation and translation.
+%
+% For volumes rotation, translation, global rescaling and individual axis
+% rescaling are allowed.
 %
 % See also FT_WARP_APPLY, FT_HEADCOORDINATES, FT_SCALINGFACTOR
 
-% Copyright (C) 2011, Jan-Mathijs Schoffelen
+% Copyright (C) 2011-2020, Jan-Mathijs Schoffelen and Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -49,26 +81,51 @@ if any(abs(transform(4,:)-[0 0 0 1])>100*eps)
   ft_error('invalid transformation matrix');
 end
 
-% allow global rescaling for everything except MEG
-if ft_senstype(input, 'meg')
-  % allow for some numerical imprecision
-  if (abs(det(rotation))-1)>1e-6
-    ft_error('only a rigid body transformation without rescaling is allowed');
+% check whether the transformation includes a scaling operation
+s = svd(rotation);
+if abs(abs(det(rotation))-1)>1e-4
+  % the transformation increases or decreases the overall volume, allow for
+  % some numerical imprecision
+  if any(abs(s./s(1)-1)>1e-3)
+    % axes scale differently
+    globalrescale = false;
+    axesrescale   = true;
+  else
+    % global rescaling
+    globalrescale = true;
+    axesrescale   = true;
   end
+else
+  globalrescale = false;
+  axesrescale   = false;
 end
 
-% allow individual axis rescaling only for electrode positions and MRI-like geometries
-if ~ft_senstype(input, 'eeg') && ~ft_datatype(input, 'volume')
-  s = svd(transform(1:3,1:3));
-  % allow for some numerical imprecision
-  if any(abs(s./s(1)-1)>1e-3)
-    ft_error('only a global rescaling is allowed');
-  end
+% check whether the input data combines well with the requested
+% transformation
+dtype = ft_datatype(input);
+switch dtype
+  case 'grad'
+    if globalrescale || axesrescale, ft_error('only a rigid body transformation without rescaling is allowed'); end
+  otherwise
+    % could be a volume conductor model with constrained transformation possibilities
+    if ft_headmodeltype(input, 'singleshell') && isfield(input, 'forwpar') && (globalrescale || axesrescale)
+      ft_error('only a rigid body transformation without rescaling is allowed');
+    end
+    if ft_headmodeltype(input, 'bem') && isfield(input, 'mat') && (globalrescale || axesrescale)
+      ft_error('only a rigid body transformation without rescaling is allowed');
+    end
+    if ft_headmodeltype(input, 'localspheres') && isfield(input, 'mat') && (globalrescale || axesrescale)
+      ft_error('only a rigid body transformation without rescaling is allowed');
+    end
+    if (isfield(input, 'tetra') || isfield(input, 'hex')) && (globalrescale || axesrescale)
+      ft_error('only a rigid body transformation without rescaling is allowed');
+    end        
 end
 
 % tfields must be rotated, translated and scaled
 % rfields must only be rotated
 % mfields must be simply multipied
+% recfields must be recursed into
 tfields   = {'pos' 'pnt' 'o' 'coilpos' 'elecpos' 'optopos' 'chanpos' 'chanposold' 'nas' 'lpa' 'rpa' 'zpoint'}; % apply rotation plus translation
 rfields   = {'ori' 'nrm'     'coilori' 'elecori' 'optoori' 'chanori' 'chanoriold'                           }; % only apply rotation
 mfields   = {'transform'};           % plain matrix multiplication
