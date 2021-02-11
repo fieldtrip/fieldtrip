@@ -117,6 +117,30 @@ function [freq] = ft_freqanalysis(cfg, data)
 % defined as: st = 1/(2*pi*sf)
 %
 %
+% SUPERLET performs time-frequency analysis on any time series trial data using the
+% 'wavelet method' based on a frequency-wise combination of Morlet wavelets of varying cycle 
+% widths (see Moca et al. 2019, https://doi.org/10.1101/583732).
+%   cfg.foi                 = vector 1 x numfoi, frequencies of interest
+%       OR
+%   cfg.foilim              = [begin end], frequency band of interest
+%   cfg.toi                 = vector 1 x numtoi, the times on which the analysis
+%                             windows should be centered (in seconds)
+%   cfg.superlet.basewidth  = 'width', or number of cycles, of the base wavelet (default = 3)
+%   cfg.superlet.gwidth     = determines the length of the used wavelets in standard
+%                             deviations of the implicit Gaussian kernel and should
+%                             be choosen >= 3; (default = 3)
+%   cfg.superlet.combine    = 'additive', 'multiplicative' (default = 'additive')
+%                             determines if cycle numbers of wavelets comprising a superlet 
+%                             are chosen additively or multiplicatively
+%   cfg.superlet.order      = vector 1 x numfoi, superlet order, i.e. number of combined 
+%                             wavelets, for individual frequencies of interest.
+%
+% The standard deviation in the frequency domain (sf) at frequency f0 is
+% defined as: sf = f0/width
+% The standard deviation in the temporal domain (st) at frequency f0 is
+% defined as: st = 1/(2*pi*sf)
+%
+%
 % TFR performs time-frequency analysis on any time series trial data using the
 % 'wavelet method' based on Morlet wavelets. Using convolution in the time domain
 % instead of multiplication in the frequency domain.
@@ -306,6 +330,15 @@ switch cfg.method
   case 'wavelet'
     cfg.width  = ft_getopt(cfg, 'width',  7);
     cfg.gwidth = ft_getopt(cfg, 'gwidth', 3);
+
+  case 'superlet'
+    cfg.superlet.basewidth = ft_getopt(cfg.superlet, 'basewidth', 3);
+    cfg.superlet.gwidth = ft_getopt(cfg.superlet, 'gwidth', 3);
+    cfg.superlet.combine = ft_getopt(cfg.superlet, 'combine', 'additive');
+    cfg.superlet.order = ft_getopt(cfg.superlet, 'order', ones(1, numel(cfg.foi)));
+    if size(cfg.superlet.order) ~= size(cfg.foi)
+      ft_error('cfg.foi and cfg.superlet.order must be the same size');
+    end
     
   case 'tfr'
     cfg = ft_checkconfig(cfg, 'renamed', {'waveletwidth', 'width'});
@@ -535,6 +568,56 @@ for itrial = 1:ntrials
 
     case 'wavelet'
       [spectrum,foi,toi] = ft_specest_wavelet(dat, time, 'timeoi', cfg.toi, 'width', cfg.width, 'gwidth', cfg.gwidth,options{:}, 'feedback', fbopt);
+      
+      % the following variable is created to keep track of the number of
+      % trials per time bin and is needed for proper normalization if
+      % keeprpt==1 and the triallength is variable
+      if itrial==1, trlcnt = zeros(1, numel(foi), numel(toi)); end
+      
+      hastime = true;
+      % create FAKE ntaper (this requires very minimal code change below for compatibility with the other specest functions)
+      ntaper = ones(1,numel(foi));
+      % modify spectrum for same reason as fake ntaper
+      spectrum = reshape(spectrum,[1 nchan numel(foi) numel(toi)]);
+
+    case 'superlet'
+      % calculate number of wavelets and respective cycle width dependent on superlet order
+      % equivalent one-liners: 
+      %   multiplicative: cycles = arrayfun(@(order) arrayfun(@(wl_num) cfg.superlet.basewidth*wl_num, 1:order), cfg.superlet.order,'uni',0)
+      %   additive: cycles = arrayfun(@(order) arrayfun(@(wl_num) cfg.superlet.basewidth+wl_num-1, 1:order), cfg.superlet.order,'uni',0)
+      cycles = cell(length(cfg.foi),1);
+      for i_f = 1:length(cfg.foi)
+        frq_cyc = NaN(1,cfg.superlet.order(i_f));
+        if strcmp(cfg.superlet.combine, 'multiplicative')
+          for i_wl = 1:cfg.superlet.order(i_f)
+            frq_cyc(i_wl) = cfg.superlet.basewidth*i_wl;
+          end
+        elseif strcmp(cfg.superlet.combine, 'additive')
+          for i_wl = 1:cfg.superlet.order(i_f)
+            frq_cyc(i_wl) = cfg.superlet.basewidth+i_wl-1;
+          end
+        end
+        cycles{i_f} = frq_cyc;
+      end
+
+      % compute superlets
+      spectrum = NaN(nchan,length(cfg.foi),length(cfg.toi));
+      % index of 'freqoi' value in 'options'
+      idx_freqoi = find(ismember(options(1:2:end), 'freqoi'))*2;
+      foi = options{idx_freqoi};
+      for i_f = 1:length(cfg.foi)
+        % collext individual wavelets' responses per frequency
+        spec_f = NaN(cfg.superlet.order(i_f), nchan, length(cfg.toi));
+        opt = options;
+        opt{idx_freqoi} = cfg.foi(i_f);
+        % compute responses for individual wavelets
+        for i_wl = 1:cfg.superlet.order(i_f)
+          [spec_f(i_wl,:,:),~,toi] = ft_specest_wavelet(dat, time, 'timeoi', cfg.toi, 'width', cycles{i_f}(i_wl), 'gwidth', cfg.superlet.gwidth, opt{:}, 'feedback', fbopt);
+        end
+        % geometric mean across individual wavelets
+        spectrum(:,i_f,:) = prod(spec_f, 1).^(1/cfg.superlet.order(i_f));
+      end
+      clear spec_f
       
       % the following variable is created to keep track of the number of
       % trials per time bin and is needed for proper normalization if
