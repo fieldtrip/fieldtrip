@@ -27,7 +27,7 @@ function headmodel = ft_headmodel_duneuro(mesh, varargin)
 %   solver_type     = string, 'cg' (default)
 %   electrodes      = string, 'closest_subentity_center' (default)
 %   subentities     = string, e.g. '1 2 3' (default) or '3'
-%   forward         = string, 'venant' (default), 'partial_integration' or 'subtraction'
+%   forward         = string, 'venant' (default), 'partial_integration'
 %   intorderadd     = string, e.g. '2' (default)
 %   intorderadd_lb  = string, e.g. '2' (default)
 %   initialization  = string, e.g. 'closest_vertex' (default)
@@ -40,7 +40,7 @@ function headmodel = ft_headmodel_duneuro(mesh, varargin)
 %   subtract_mean   = string, e.g. 'true' (default)
 %   reduction       = string, e.g. '1e-10' (default)
 %   intorderadd_meg = integer, e.g.'0' (default)
-%   mixedMoments    = logical, e.g. 'false' (default)
+%   mixedMoments    = logical, e.g. 'true' (default)
 %   meg_type        = string, e.g. 'physical' (default)
 %   meg_eneablecache= logical, e.g. 'false (default)
 
