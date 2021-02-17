@@ -194,6 +194,8 @@ switch ft_senstype(sens)
     % find the matching channel-duplets
     ind = [];
     lab = {};
+    pnt = zeros(0,3);
+    ori = zeros(0,3);
     for i=1:2:140
       % first try MEG channel labels with a space
       ch1 = sprintf('MEG %03d', i);
@@ -225,6 +227,8 @@ switch ft_senstype(sens)
     % find the matching channel-triplets
     ind = [];
     lab = {};
+    pnt = zeros(0,3);
+    ori = zeros(0,3);
     for i=1:300
       % first try MEG channel labels with a space
       ch1 = sprintf('MEG %03d1', i);
