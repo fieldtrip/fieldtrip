@@ -59,12 +59,10 @@ for j=find(diff([0 trig])>0)
     event(end  ).value  = trig(j);    % assign the trigger value just _after_ going up
 end
    
-%%
+%
 value  = [event.value]';
 sample = [event.sample]';
-
-
-%%      
+    
 % determine the number of samples before and after the trigger
 pretrig  = -round(cfg.trialdef.prestim  * hdr.Fs);
 posttrig =  round(cfg.trialdef.poststim * hdr.Fs);
@@ -78,7 +76,7 @@ trl = [];
 for j = 1:length(value)
     if strcmp(cfg.trialdef.eventtype, event(j).type)
         trg = value(j);
-        if any(cfg.trialdef.eventvalue, trg)
+        if any(cfg.trialdef.eventvalue==trg)
             trlbegin = sample(j) + pretrig;       
             trlend   = sample(j) + posttrig;       
             offset   = pretrig;
