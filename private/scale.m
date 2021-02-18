@@ -8,6 +8,8 @@ function [H] = scale(f)
 % where
 %   S       [sx, sy, sz] scaling along each of the axes
 %   H   corresponding homogenous transformation matrix
+%
+% See also TRANSLATE, ROTATE, QUATERNION
 
 % Copyright (C) 2000-2005, Robert Oostenveld
 %
