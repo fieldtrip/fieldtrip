@@ -1,8 +1,8 @@
-function bnd = prepare_mesh_segmentation(cfg, mri)
+function mesh = prepare_mesh_segmentation(cfg, mri)
 
 % PREPARE_MESH_SEGMENTATION
 %
-% The following configuration options can be specified if cfg.method = iso2mesh:
+% The following configuration options can be specified for the iso2mesh method
 %   cfg.maxsurf     = 1 = only use the largest disjointed surface
 %                     0 = use all surfaces for that levelset
 %   cfg.radbound    = a scalar indicating the radius of the target surface
@@ -11,7 +11,7 @@ function bnd = prepare_mesh_segmentation(cfg, mri)
 % See also PREPARE_MESH_MANUAL, PREPARE_MESH_HEADSHAPE,
 % PREPARE_MESH_HEXAHEDRAL, PREPARE_MESH_TETRAHEDRAL
 
-% Copyrights (C) 2009, Robert Oostenveld
+% Copyrights (C) 2009-2021, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -143,11 +143,17 @@ for i =1:numel(cfg.tissue)
   
   % add a layer on all sides to ensure that the tissue can be meshed all the way up to the edges
   % this also ensures that the mesh at the bottom of the neck will be closed
-  dim = size(seg);
-  pad = false(dim+2);
-  pad(2:(dim(1)+1),2:(dim(2)+1),2:(dim(3)+1)) = seg;
-  % replace the segmentation with the padded version, the shift needs to be compensated later
-  seg = pad;
+  seg = volumepad(seg);
+  
+  % update the dimensions of the segmented volume to accomodate the padding
+  dim = mri.dim+2;
+  
+  % update the homogenous transformation matrix to accomodate the shift that is due to the padding
+  transform = mri.transform;
+  shift = ft_warp_apply(transform, [1 1 1]) - ft_warp_apply(transform, [0 0 0]);
+  transform(1,4) = transform(1,4) - shift(1);
+  transform(2,4) = transform(2,4) - shift(2);
+  transform(3,4) = transform(3,4) - shift(3);
   
   % the function that generates the mesh will fail if there is a hole in the middle
   seg = volumefillholes(seg);
@@ -168,8 +174,8 @@ for i =1:numel(cfg.tissue)
       
       opt = [];
       opt.radbound = cfg.radbound; % set the target surface mesh element bounding sphere be <3 pixels in radius
-      opt.maxnode = cfg.numvertices(i);
-      opt.maxsurf = cfg.maxsurf;
+      opt.maxnode  = cfg.numvertices(i);
+      opt.maxsurf  = cfg.maxsurf;
       
       method = 'cgalsurf';
       isovalues = 0.5;
@@ -180,7 +186,7 @@ for i =1:numel(cfg.tissue)
       tri = tri(:,1:3);
       
     case 'projectmesh'
-      [mrix, mriy, mriz] = ndgrid(1:mri.dim(1), 1:mri.dim(2), 1:mri.dim(3));
+      [mrix, mriy, mriz] = ndgrid(1:dim(1), 1:dim(2), 1:dim(3));
       ori(1) = mean(mrix(seg(:)));
       ori(2) = mean(mriy(seg(:)));
       ori(3) = mean(mriz(seg(:)));
@@ -193,24 +199,21 @@ for i =1:numel(cfg.tissue)
   
   numvoxels(i) = sum(find(seg(:))); % the number of voxels in this tissue
   
-  % compensate for the shift that is due to the padding
-  pos = pos - 1;
-  
-  bnd(i).pos = ft_warp_apply(mri.transform, pos);
-  bnd(i).tri = tri;
-  bnd(i).unit = mri.unit;
+  mesh(i).pos  = ft_warp_apply(transform, pos);
+  mesh(i).tri  = tri;
+  mesh(i).unit = mri.unit;
   
 end % for each tissue
 
 if strcmp(cfg.method, 'iso2surf')
   % order outside in (trying to be smart here)
   [dum, order] = sort(numvoxels, 'descend');
-  bnd = bnd(order);
+  mesh = mesh(order);
   % clean up the triangulated meshes
-  bnd = decouplesurf(bnd);
+  mesh = decouplesurf(mesh);
   % put them back in the original order
   [dum, order] = sort(order);
-  bnd = bnd(order);
+  mesh = mesh(order);
 end
 
 end % function
@@ -219,11 +222,11 @@ end % function
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function bnd = decouplesurf(bnd)
-for ii = 1:length(bnd)-1
+function mesh = decouplesurf(mesh)
+for ii = 1:length(mesh)-1
   % Despite what the instructions for surfboolean says, surfaces should be ordered from inside-out!!
-  [newnode, newelem] = surfboolean(bnd(ii+1).pos,bnd(ii+1).tri,'decouple',bnd(ii).pos,bnd(ii).tri);
-  bnd(ii+1).tri = newelem(newelem(:,4)==2,1:3) - size(bnd(ii+1).pos,1);
-  bnd(ii+1).pos = newnode(newnode(:,4)==2,1:3);
+  [newnode, newelem] = surfboolean(mesh(ii+1).pos,mesh(ii+1).tri,'decouple',mesh(ii).pos,mesh(ii).tri);
+  mesh(ii+1).tri = newelem(newelem(:,4)==2,1:3) - size(mesh(ii+1).pos,1);
+  mesh(ii+1).pos = newnode(newnode(:,4)==2,1:3);
 end % for
 end % function
