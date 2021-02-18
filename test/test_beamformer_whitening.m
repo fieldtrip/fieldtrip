@@ -135,6 +135,9 @@ cfg.preproc.baselinewindow = [-0.1 0];
 cfg.covariance = 'yes';
 tlck_white = ft_timelockanalysis(cfg, data_white);
 
+[u,s,v] = svd(tlck_white.cov, 'econ');
+keyboard
+
 cfg             = [];
 cfg.headmodel   = headmodel;
 cfg.grad        = sens;
