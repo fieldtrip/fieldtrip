@@ -7,12 +7,13 @@ function [data] = ft_channelrepair(cfg, data)
 %
 % Use as
 %   [interp] = ft_channelrepair(cfg, data)
+% where the input data corresponds to the output from FT_PREPROCESSING.
 %
-% The configuration must contain
+% The configuration should contain
 %   cfg.method         = 'weighted', 'average', 'spline', 'slap' or 'nan' (default = 'weighted')
 %   cfg.badchannel     = cell-array, see FT_CHANNELSELECTION for details
 %   cfg.missingchannel = cell-array, see FT_CHANNELSELECTION for details
-%   cfg.neighbours     = neighbourhood structure, see also FT_PREPARE_NEIGHBOURS
+%   cfg.neighbours     = neighbourhood structure, see FT_PREPARE_NEIGHBOURS for details
 %   cfg.trials         = 'all' or a selection given as a 1xN vector (default = 'all')
 %   cfg.lambda         = regularisation parameter (default = 1e-5, not for method 'distance')
 %   cfg.order          = order of the polynomial interpolation (default = 4, not for method 'distance')
