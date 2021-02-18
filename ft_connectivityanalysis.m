@@ -42,6 +42,7 @@ function [stat] = ft_connectivityanalysis(cfg, data)
 %     'wppc'       weighted pairwise phase consistency
 %     'corr'       Pearson correlation, support for timelock or raw data
 %     'laggedcoherence', lagged coherence estimate
+%     'plm'        phase linearity measurement
 %
 % Additional configuration options are
 %   cfg.channel    = Nx1 cell-array containing a list of channels which are
@@ -66,6 +67,7 @@ function [stat] = ft_connectivityanalysis(cfg, data)
 %                     method 'powcorr' and 'amplcorr'.
 %   cfg.bandwidth   = scalar, needed for 'psi', half-bandwidth of the integration
 %                     across frequencies (in Hz, default is the Rayleigh frequency)
+%                     needed for 'plm', half-bandwidth of the integration window (in Hz)
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
@@ -276,8 +278,12 @@ switch cfg.method
       % it looks like a timelock with a cov, which is perfectly valid as input
       data = ft_checkdata(data, 'datatype', 'timelock');
     else
-      % it does not have a cov, the covariance will be computed on the fly further down
+      % it does not have a cov
       data = ft_checkdata(data, 'datatype', 'raw');
+      
+      tmpcfg = [];
+      tmpcfg.covariance = 'yes';
+      data = ft_timelockanalysis(tmpcfg, data);
     end
     inparam = 'cov';
     outparam = cfg.method;
@@ -391,6 +397,16 @@ switch cfg.method
     if ~isfield(cfg, 'laggedcoherence'), cfg.laggedcoherence = []; end
     cfg.laggedcoherence.lags = ft_getopt(cfg.laggedcoherence, 'lags', []);
     cfg.laggedcoherence.timeresolved = false;
+    
+   case {'plm'}
+    data = ft_checkdata(data, 'datatype', 'raw');
+    if ~isfield(data, 'fsample')
+      data.fsample = 1./mean(diff(data.time{1}));
+    end
+    inparam  = 'trial';
+    outparam = 'plm';
+  
+    cfg.bandwidth = ft_getopt(cfg, 'bandwidth', 0.5);
     
   otherwise
     ft_error('unknown method % s', cfg.method);
@@ -883,7 +899,7 @@ switch cfg.method
       [nrpttap, nchan, nfreq] = size(data.fourierspctrm);
       datout = cell(1, nfreq);
       for i=1:length(data.freq)
-        dat       = reshape(data.fourierspctrm(:,:,i), nrpttap, nchan).';
+        dat       = data.fourierspctrm(:,:,i).';
         datout{i} = ft_connectivity_powcorr_ortho(dat, optarg{:});
       end
       datout = cat(3, datout{:});
@@ -1018,7 +1034,7 @@ switch cfg.method
     nrpt     = [];    
   case 'corr'
     % pearson's correlation coefficient
-    optarg = {'dimord', getdimord(data, inparam), 'feedback', cfg.feedback, 'hasjack', hasjack};
+    optarg = {'dimord', getdimord(data, inparam), 'feedback', cfg.feedback, 'hasjack', hasjack, 'pownorm', true, 'complex', 'complex'};
     if ~isempty(cfg.pchanindx), optarg = cat(2, optarg, {'pchanindx', cfg.pchanindx, 'allchanindx', cfg.allchanindx}); end
     [datout, varout, nrpt] = ft_connectivity_corr(data.(inparam), optarg{:});
     
@@ -1036,7 +1052,15 @@ switch cfg.method
     optarg = cat(2, optarg, {'powindx', powindx});
     [datout, varout, nrpt] = ft_connectivity_corr(data.(inparam), optarg{:});
     data = removefields(data, 'dof'); % the dof is not to be trusted
-  
+    
+  case 'plm'
+    % phase linearity measurement.
+    optarg   = {'bandwidth', cfg.bandwidth, 'fsample', data.fsample};
+    [datout] = ft_connectivity_plm(data.(inparam), optarg{:});
+    varout   = [];
+    
+    outdimord = 'rpt_chan_chan';
+    
   otherwise
     ft_error('unknown method %s', cfg.method);
     

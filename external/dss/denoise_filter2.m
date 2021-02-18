@@ -116,19 +116,26 @@ elseif isfield(params, 'filter_lowpass')
     s_new(:,indx) = tmp;
   end
 elseif isfield(params, 'filter_boxcar')
-  tr_begin = params.tr_begin(:);
-  tr_end   = params.tr_end(:);
-  s_new    = zeros(size(s));
-  nbox     = params.filter_boxcar;
-  krn      = ones(1,nbox)./nbox;
-  for k = 1:numel(tr_begin)
-    indx = tr_begin(k):tr_end(k);
-    tmp  = s(:,indx);
-    mtmp = mean(tmp,2);
-    tmp  = tmp - mtmp*ones(1,numel(indx));
-    tmp  = convn(tmp,krn,'same') + mtmp*ones(1,numel(indx));
-    tmp(:,[1:round(nbox/2) (end-round(nbox/2)):end]) = mtmp;
-    s_new(:,indx) = tmp;
+  if iscell(s)
+    s_new = cell(size(s));
+    for k = 1:numel(s)
+      s_new{k} = ft_preproc_smooth(s{k}, params.filter_boxcar);
+    end
+  else
+    tr_begin = params.tr_begin(:);
+    tr_end   = params.tr_end(:);
+    s_new    = zeros(size(s));
+    nbox     = params.filter_boxcar;
+    krn      = ones(1,nbox)./nbox;
+    for k = 1:numel(tr_begin)
+      indx = tr_begin(k):tr_end(k);
+      tmp  = s(:,indx);
+      mtmp = mean(tmp,2);
+      tmp  = tmp - mtmp*ones(1,numel(indx));
+      tmp  = convn(tmp,krn,'same') + mtmp*ones(1,numel(indx));
+      tmp(:,[1:round(nbox/2) (end-round(nbox/2)):end]) = mtmp;
+      s_new(:,indx) = tmp;
+    end
   end
 else 
   % -- No filtering

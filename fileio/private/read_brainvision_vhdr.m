@@ -62,13 +62,19 @@ vhdr.nSamples = Inf;
 % confirm the names of the .vmrk and .eeg files as specified in the .vhdr file
 [p, f, x] = fileparts(filename);
 dataFile = fullfile(p, vhdr.DataFile);
-markerFile = fullfile(p, vhdr.MarkerFile);
 [dum, dum, dataExt] = fileparts(vhdr.DataFile);
+
 if ~isempty(vhdr.MarkerFile)
-    [dum, dum, markerExt] = fileparts(vhdr.MarkerFile);
+  markerFile = fullfile(p, vhdr.MarkerFile);
+  [dum, dum, markerExt] = fileparts(vhdr.MarkerFile);
 else
-    markerExt=dataExt;
+  % it is allowed to have a BrainVision dataset with only header and data, but no marker file
+  markerFile = '';
+  markerExt = '';
 end
+
+% in case they cannot be found, we can try whether they exist with the same name as the vhdr file
+% this can happen if the researcher renamed the three files but not the header information
 dataFileSameName = fullfile(p,[f dataExt]);
 markerFileSameName = fullfile(p,[f markerExt]);
 
@@ -88,19 +94,21 @@ else
   end
 end
 
-info = dir(markerFile);
-if isempty(info)
-  info = dir(markerFileSameName);
-  if ~isempty(info)
-    ft_notice('Could not find "%s" as specified in the .vhdr file, using "%s" instead', markerFile, markerFileSameName);
-    vhdr.MarkerFile = [f markerExt]; % without full path
-    markerFile = markerFileSameName; % with full path
+if ~isempty(markerFile)
+  info = dir(markerFile);
+  if isempty(info)
+    info = dir(markerFileSameName);
+    if ~isempty(info)
+      ft_notice('Could not find "%s" as specified in the .vhdr file, using "%s" instead', markerFile, markerFileSameName);
+      vhdr.MarkerFile = [f markerExt]; % without full path
+      markerFile = markerFileSameName; % with full path
+    else
+      ft_error('cannot determine the location of the marker file %s', markerFile);
+    end
   else
-    ft_error('cannot determine the location of the marker file %s', markerFile);
-  end
-else
-  if ~strcmp(markerFile, markerFileSameName)
-    ft_notice('Could not find "%s" as specified in the .vhdr file, using "%s" instead', markerFile, markerFileSameName);
+    if ~strcmp(markerFile, markerFileSameName)
+      ft_notice('Could not find "%s" as specified in the .vhdr file, using "%s" instead', markerFile, markerFileSameName);
+    end
   end
 end
 

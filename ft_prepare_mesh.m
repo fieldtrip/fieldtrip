@@ -123,9 +123,9 @@ hasdata = exist('data', 'var');
 cfg = ft_checkconfig(cfg, 'forbidden', {'numcompartments', 'outputfile', 'sourceunits', 'mriunits'});
 
 % get the options
-cfg.downsample  = ft_getopt(cfg, 'downsample', 1);      % default is no downsampling
-cfg.numvertices = ft_getopt(cfg, 'numvertices', 3000);  % set the default
-cfg.smooth      = ft_getopt(cfg, 'smooth');             % no default
+cfg.downsample  = ft_getopt(cfg, 'downsample', 1);            % default is no downsampling
+cfg.numvertices = ft_getopt(cfg, 'numvertices', 3000, true);  % set the default, [] is also a meaningful value
+cfg.smooth      = ft_getopt(cfg, 'smooth');                   % no default
 cfg.spmversion  = ft_getopt(cfg, 'spmversion', 'spm12');
 
 % Translate the input options in the appropriate default for cfg.method

@@ -11,6 +11,9 @@ function [mri] = ft_read_mri(filename, varargin)
 %   'dataformat' = string specifying the file format, determining the low-
 %                  level reading routine to be used. If no explicit format
 %                  is given, it is determined automatically from the filename.
+%   'outputfield' = string specifying the name of the field in the
+%                  structure in which the numeric data is stored. The
+%                  default is 'anatomy'
 %
 % The following values apply for the dataformat
 %   'afni_head'/'afni_brik'      uses AFNI code
@@ -84,7 +87,8 @@ function [mri] = ft_read_mri(filename, varargin)
 filename = fetch_url(filename);
 
 % get the options
-dataformat = ft_getopt(varargin, 'dataformat');
+dataformat  = ft_getopt(varargin, 'dataformat');
+outputfield = ft_getopt(varargin, 'outputfield', 'anatomy');
 
 % the following is added for backward compatibility of using 'format' rather than 'dataformat'
 format    = ft_getopt(varargin, 'format');
@@ -447,7 +451,7 @@ switch dataformat
       
     if ~isfixel
       mri.hdr     = removefields(tmp, {'data'});
-      mri.anatomy = tmp.data;
+      mri.(outputfield) = tmp.data;
       mri.dim     = tmp.dim(1:length(size(tmp.data)));
       mri.transform = tmp.transform;
       mri.transform(1:3,1:3) = diag(tmp.vox(1:3))*mri.transform(1:3,1:3);
@@ -477,20 +481,27 @@ switch dataformat
       tmpdata(isfinite(tmpdata)) = tmp.data(tmpdata(isfinite(tmpdata)));
       
       switch fix2vox_fun
+        case 'magmax'
+          tmpx    = nanmin(tmpdata,[],1).';
+          tmpdata = nanmax(tmpdata,[],1).';
+          tmpdata(abs(tmpx)>tmpdata) = tmpx(abs(tmpx)>tmpdata);
         case 'max'
-          tmpdata = nanmax(tmpdata,[],1);
+          tmpdata = nanmax(tmpdata,[],1).';
         case 'min'
-          tmpdata = nanmin(tmpdata,[],1);
+          tmpdata = nanmin(tmpdata,[],1).';
         case 'mean'
-          tmpdata = nanmean(tmpdata,1);
+          tmpdata = nanmean(tmpdata,1).';
+        case 'none'
+          tmpdata = tmpdata.';
         otherwise
           ft_error('unsupported fixel2voxel operation requested');
       end
       
       mri.hdr  = removefields(tmp, {'data'});
-      mri.anatomy = zeros([index.dim(1:3) tmp.dim(2)]);
-      mri.anatomy(vox_index) = tmpdata;
-      mri.dim       = index.dim(1:length(size(tmp.data)));
+      mri.(outputfield) = zeros([prod(index.dim(1:3)) size(tmpdata,2)]);
+      mri.(outputfield)(vox_index,:) = tmpdata;
+      mri.(outputfield)   = reshape(mri.(outputfield), [index.dim(1:3) size(tmpdata,2)]);
+      mri.dim       = size(mri.(outputfield)) ;%index.dim(1:length(size(tmp.data)));
       mri.transform = tmp.transform;
       mri.transform(1:3,1:3) = diag(tmp.vox(1:3))*mri.transform(1:3,1:3);
     end
@@ -506,7 +517,7 @@ if exist('img', 'var')
   %nz = size(img,3);
   mri.dim = size(img); %[nx ny nz];
   % store the anatomical data
-  mri.anatomy = img;
+  mri.(outputfield) = img;
 end
 
 if exist('seg', 'var')

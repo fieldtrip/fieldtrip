@@ -555,8 +555,8 @@ cfg.motion.RecordingDuration              = ft_getopt(cfg.motion, 'RecordingDura
 cfg.coordsystem.MEGCoordinateSystem                             = ft_getopt(cfg.coordsystem, 'MEGCoordinateSystem'                            ); % REQUIRED. Defines the coordinate system for the MEG sensors. See Appendix VIII: preferred names of Coordinate systems. If "Other", provide definition of the coordinate system in [MEGCoordinateSystemDescription].
 cfg.coordsystem.MEGCoordinateUnits                              = ft_getopt(cfg.coordsystem, 'MEGCoordinateUnits'                             ); % REQUIRED. Units of the coordinates of MEGCoordinateSystem. MUST be ???m???, ???cm???, or ???mm???.
 cfg.coordsystem.MEGCoordinateSystemDescription                  = ft_getopt(cfg.coordsystem, 'MEGCoordinateSystemDescription'                 ); % OPTIONAL. Freeform text description or link to document describing the MEG coordinate system system in detail.
-cfg.coordsystem.HeadCoilCoordinates                             = ft_getopt(cfg.coordsystem, 'HeadCoilCoordinateSystem'                       ); % OPTIONAL. Key:value pairs describing head localization coil labels and their coordinates, interpreted following the HeadCoilCoordinateSystem, e.g., {"NAS": [12.7,21.3,13.9], "LPA": [5.2,11.3,9.6], "RPA": [20.2,11.3,9.1]}. Note that coils are not always placed at locations that have a known anatomical name (e.g. for Neuromag/Elekta, Yokogawa systems); in that case generic labels can be used (e.g. {"coil1": [122,213,123], "coil2": [67,123,86], "coil3": [219,110,81]} ).
-cfg.coordsystem.HeadCoilCoordinateSystem                        = ft_getopt(cfg.coordsystem, 'HeadCoilCoordinates'                            ); % OPTIONAL. Defines the coordinate system for the coils. See Appendix VIII: preferred names of Coordinate systems. If "Other", provide definition of the coordinate system in HeadCoilCoordinateSystemDescription.
+cfg.coordsystem.HeadCoilCoordinates                             = ft_getopt(cfg.coordsystem, 'HeadCoilCoordinates'                     ); % OPTIONAL. Key:value pairs describing head localization coil labels and their coordinates, interpreted following the HeadCoilCoordinateSystem, e.g., {"NAS": [12.7,21.3,13.9], "LPA": [5.2,11.3,9.6], "RPA": [20.2,11.3,9.1]}. Note that coils are not always placed at locations that have a known anatomical name (e.g. for Neuromag/Elekta, Yokogawa systems); in that case generic labels can be used (e.g. {"coil1": [122,213,123], "coil2": [67,123,86], "coil3": [219,110,81]} ).
+cfg.coordsystem.HeadCoilCoordinateSystem                        = ft_getopt(cfg.coordsystem, 'HeadCoilCoordinateSystem'                           ); % OPTIONAL. Defines the coordinate system for the coils. See Appendix VIII: preferred names of Coordinate systems. If "Other", provide definition of the coordinate system in HeadCoilCoordinateSystemDescription.
 cfg.coordsystem.HeadCoilCoordinateUnits                         = ft_getopt(cfg.coordsystem, 'HeadCoilCoordinateUnits'                        ); % OPTIONAL. Units of the coordinates of HeadCoilCoordinateSystem. MUST be ???m???, ???cm???, or ???mm???.
 cfg.coordsystem.HeadCoilCoordinateSystemDescription             = ft_getopt(cfg.coordsystem, 'HeadCoilCoordinateSystemDescription'            ); % OPTIONAL. Freeform text description or link to document describing the Head Coil coordinate system system in detail.
 cfg.coordsystem.DigitizedHeadPoints                             = ft_getopt(cfg.coordsystem, 'DigitizedHeadPoints'                            ); % OPTIONAL. Relative path to the file containing the locations of digitized head points collected during the session (e.g., "sub-01_headshape.pos"). RECOMMENDED for all MEG systems, especially for CTF and 4D/BTi. For Neuromag/Elekta/Megin the head points will be stored in the fif file.
@@ -936,12 +936,27 @@ switch typ
       ft_error('cannot determine the type of the data, please specify cfg.datatype');
     end
     
+    % construct the low-level options as key-value pairs, these are passed to FT_READ_HEADER, FT_READ_DATA and FT_READ_EVENT
+    headeropt = {};
+    headeropt = ft_setopt(headeropt, 'headerformat',   ft_getopt(cfg, 'headerformat'));        % is passed to low-level function, empty implies autodetection
+    headeropt = ft_setopt(headeropt, 'chantype',       ft_getopt(cfg, 'chantype', {}));        % 2017.10.10 AB required for NeuroOmega files
+    headeropt = ft_setopt(headeropt, 'checkmaxfilter', false);
+    headeropt = ft_setopt(headeropt, 'readbids',       false);
+    
+    dataopt   = {};
+    dataopt   = ft_setopt(dataopt, 'checkboundary',    false);
+    dataopt   = ft_setopt(dataopt, 'dataformat',       ft_getopt(cfg, 'dataformat'));          % is passed to low-level function, empty implies autodetection
+    
+    eventopt  = {};
+    eventopt  = ft_setopt(eventopt, 'readbids',        false);
+    eventopt  = ft_setopt(eventopt, 'eventformat',     ft_getopt(cfg, 'eventformat'));         % is passed to low-level function, empty implies autodetection
+    
     if ~isempty(cfg.dataset)
-      hdr = ft_read_header(cfg.headerfile, 'checkmaxfilter', false, 'readbids', false);
+      hdr = ft_read_header(cfg.headerfile, headeropt{:});
       if strcmp(cfg.method, 'convert')
         % the data should be converted and written to disk
-        dat = ft_read_data(cfg.datafile, 'header', hdr, 'checkboundary', false, 'begsample', 1, 'endsample', hdr.nSamples*hdr.nTrials);
-        trigger = ft_read_event(cfg.datafile, 'header', hdr, 'readbids', false);
+        dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', 1, 'endsample', hdr.nSamples*hdr.nTrials, dataopt{:});
+        trigger = ft_read_event(cfg.datafile, 'header', hdr, eventopt{:});
       end
       % FIXME try to get the electrode definition, either from the data or from the configuration
     end
@@ -1542,10 +1557,10 @@ if need_events_tsv
     begsample                   = table2array(events_tsv(:,{'begsample'}));
     endsample                   = table2array(events_tsv(:,{'endsample'}));
     onset                       = (begsample-1)./hdr.Fs;
-    duration                    = (endsample-begsample+1)./hdr.Fs; 
+    duration                    = (endsample-begsample+1)./hdr.Fs;
     table_onset_duration        = table(onset, duration);
     events_tsv                  = [table_onset_duration events_tsv];
-
+    
   elseif isstruct(cfg.events) && ~isempty(cfg.events) && numel(fieldnames(cfg.events))>0
     % it is the output from FT_READ_EVENT
     if exist('hdr', 'var')
@@ -1557,7 +1572,7 @@ if need_events_tsv
     % it is a "trl" matrix formatted as numeric array, convert it to an events table
     begsample = cfg.events(:,1);
     endsample = cfg.events(:,2);
-    offset    = cfg.events(:,3); % this is not used for the events.tsv    
+    offset    = cfg.events(:,3); % this is not used for the events.tsv
     if size(cfg.events, 2)>3
       ft_warning('additional columns in the trl matrix are ignored');
     end
@@ -1583,7 +1598,7 @@ if need_events_tsv
     begsample               = [];
     endsample               = [];
     offset                  = [];
-
+    
     events_tsv = table(onset, duration, begsample, endsample, offset);
   end
   
@@ -2116,9 +2131,9 @@ else
   name = opto.optolabel(:);
   if all(opto.optopos(:,3)==0) % these are probably template positions
     ft_info('assuming the optode positions are template positions');
-    x=nan(length(name,1));
-    y=nan(length(name,1));
-    z=nan(length(name,1));
+    x=nan(length(name),1);
+    y=nan(length(name),1);
+    z=nan(length(name),1);
     template_x=opto.optopos(:,1);
     template_y=opto.optopos(:,2);
     template_z=opto.optopos(:,3);

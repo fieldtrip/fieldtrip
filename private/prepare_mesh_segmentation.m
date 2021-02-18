@@ -11,7 +11,6 @@ function bnd = prepare_mesh_segmentation(cfg, mri)
 % See also PREPARE_MESH_MANUAL, PREPARE_MESH_HEADSHAPE,
 % PREPARE_MESH_HEXAHEDRAL, PREPARE_MESH_TETRAHEDRAL
 
-
 % Copyrights (C) 2009, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
@@ -142,6 +141,14 @@ for i =1:numel(cfg.tissue)
   % ensure that the segmentation is binary and that there is a single contiguous region
   seg = volumethreshold(seg, 0.5, tissue);
   
+  % add a layer on all sides to ensure that the tissue can be meshed all the way up to the edges
+  % this also ensures that the mesh at the bottom of the neck will be closed
+  dim = size(seg);
+  pad = false(dim+2);
+  pad(2:(dim(1)+1),2:(dim(2)+1),2:(dim(3)+1)) = seg;
+  % replace the segmentation with the padded version, the shift needs to be compensated later
+  seg = pad;
+  
   % the function that generates the mesh will fail if there is a hole in the middle
   seg = volumefillholes(seg);
   
@@ -159,10 +166,10 @@ for i =1:numel(cfg.tissue)
       % this requires the external iso2mesh toolbox
       ft_hastoolbox('iso2mesh', 1);
       
-       opt = [];
-       opt.radbound = cfg.radbound; % set the target surface mesh element bounding sphere be <3 pixels in radius
-       opt.maxnode = cfg.numvertices(i);
-       opt.maxsurf = cfg.maxsurf;
+      opt = [];
+      opt.radbound = cfg.radbound; % set the target surface mesh element bounding sphere be <3 pixels in radius
+      opt.maxnode = cfg.numvertices(i);
+      opt.maxsurf = cfg.maxsurf;
       
       method = 'cgalsurf';
       isovalues = 0.5;
@@ -186,6 +193,9 @@ for i =1:numel(cfg.tissue)
   
   numvoxels(i) = sum(find(seg(:))); % the number of voxels in this tissue
   
+  % compensate for the shift that is due to the padding
+  pos = pos - 1;
+  
   bnd(i).pos = ft_warp_apply(mri.transform, pos);
   bnd(i).tri = tri;
   bnd(i).unit = mri.unit;
@@ -194,7 +204,7 @@ end % for each tissue
 
 if strcmp(cfg.method, 'iso2surf')
   % order outside in (trying to be smart here)
-  [dum, order] = sort(numvoxels,'descend');
+  [dum, order] = sort(numvoxels, 'descend');
   bnd = bnd(order);
   % clean up the triangulated meshes
   bnd = decouplesurf(bnd);
