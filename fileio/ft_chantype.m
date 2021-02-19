@@ -677,6 +677,16 @@ elseif ft_senstype(input, 'nex5') && isheader
   
 end % ft_senstype
 
+if isdata
+  % the input was replaced by one of hdr, grad, elec, opto
+  [sel1, sel2] = match_str(origlabel, input.label);
+  origtype = repmat({'unknown'}, size(origlabel));
+  origtype(sel1) = chantype(sel2);
+  % the hdr, grad, elec or opto structure might have a different set of channels
+  chantype = origtype;
+  label = origlabel;
+end
+
 % if possible, set additional types based on channel labels
 label2type = {
   {'ecg', 'ekg'};
@@ -690,15 +700,6 @@ for i = 1:numel(label2type)
   for j = 1:numel(label2type{i})
     chantype(intersect(strmatch(label2type{i}{j}, lower(label)), find(strcmp(chantype, 'unknown')))) = label2type{i}(1);
   end
-end
-
-if isdata
-  % the input was replaced by one of hdr, grad, elec, opto
-  [sel1, sel2] = match_str(origlabel, input.label);
-  origtype = repmat({'unknown'}, size(origlabel));
-  origtype(sel1) = chantype(sel2);
-  % the hdr, grad, elec or opto structure might have a different set of channels
-  chantype = origtype;
 end
 
 if all(strcmp(chantype, 'unknown')) && ~recursion
