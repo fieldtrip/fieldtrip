@@ -190,7 +190,7 @@ cfg.smooth          = ft_getopt(cfg, 'smooth');
 cfg.threshold       = ft_getopt(cfg, 'threshold');
 
 % other options
-cfg.numvertices     = ft_getopt(cfg, 'numvertices');
+cfg.numvertices     = ft_getopt(cfg, 'numvertices', 3000, true);  % set the default, [] is also a meaningful value
 cfg.isolatedsource  = ft_getopt(cfg, 'isolatedsource');   % used for dipoli and openmeeg
 cfg.point           = ft_getopt(cfg, 'point');            % used for halfspace
 cfg.submethod       = ft_getopt(cfg, 'submethod');        % used for halfspace
