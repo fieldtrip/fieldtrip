@@ -12,7 +12,7 @@ function [data] = ft_megplanar(cfg, data)
 %
 % The configuration should contain
 %   cfg.planarmethod   = string, can be 'sincos', 'orig', 'fitplane', 'sourceproject' (default = 'sincos')
-%   cfg.channel        =  Nx1 cell-array with selection of channels (default = 'MEG'), see FT_CHANNELSELECTION for details
+%   cfg.channel        =  Nx1 cell-array with selection of channels (default = 'all'), see FT_CHANNELSELECTION for details
 %   cfg.trials         = 'all' or a selection given as a 1xN vector (default = 'all')
 %
 % The methods orig, sincos and fitplane are all based on a neighbourhood interpolation.
