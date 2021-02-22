@@ -116,7 +116,7 @@ cfg = ft_checkconfig(cfg, 'renamed', {'grid',    'sourcemodel'});
 cfg = ft_checkconfig(cfg, 'renamed', {'pruneratio', 'tolerance'});
 
 % set the default configuration
-cfg.channel      = ft_getopt(cfg, 'channel',      'MEG');
+cfg.channel      = ft_getopt(cfg, 'channel',      'all');
 cfg.tolerance    = ft_getopt(cfg, 'tolerance',    1e-3);
 cfg.trials       = ft_getopt(cfg, 'trials',       'all', 1);
 cfg.planarmethod = ft_getopt(cfg, 'planarmethod', 'sincos');
