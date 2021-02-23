@@ -1272,20 +1272,14 @@ end
 ft_info('creating layout for %s system\n', ft_senstype(sens));
 
 % apply rotation, but only if viewpoint is not used specifically
-if isempty(viewpoint)
-  if isempty(rotatez)
-    switch ft_senstype(sens)
-      case {'ctf151', 'ctf275', 'bti148', 'bti248', 'ctf151_planar', 'ctf275_planar', 'bti148_planar', 'bti248_planar', 'yokogawa160', 'yokogawa160_planar', 'yokogawa64', 'yokogawa64_planar', 'yokogawa440', 'yokogawa440_planar', 'magnetometer', 'meg'}
-        rotatez = 90;
-      case {'neuromag122', 'neuromag306'}
-        rotatez = 0;
-      case 'electrode'
-        rotatez = 90;
-      otherwise
-        rotatez = 0;
-    end
+if isempty(viewpoint) && isempty(rotatez)
+  if isfield(sens, 'coordsys')
+    % the x-axis to the right of the screen and the y-axis is to the top of the screen
+    % the nose is usually plotted toward the top of the screen
+    sens = ft_convert_coordsys(sens, 'ras', 0);
+  else
+    ft_warning('use cfg.rotate to specify the correct rotation of the sensors');
   end
-  sens.chanpos = ft_warp_apply(rotate([0 0 rotatez]), sens.chanpos, 'homogenous');
 end
 
 % determine the 3D channel positions
