@@ -525,6 +525,6 @@ flip = 2.*(0.5-double(from(order_in)~=to(order_out)));
 
 T = zeros(4);
 for k = 1:3
-  T(order_out(k),order_in(k)) = flip(k);
+  T(order_in(k),order_out(k)) = flip(k);
 end
 T(4,4) = 1;
