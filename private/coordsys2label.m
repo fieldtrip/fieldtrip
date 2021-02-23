@@ -78,7 +78,7 @@ if ~isempty(coordsys) && ~strcmp(coordsys, 'unknown')
         labelx = {'-X (left)'      '+X (right)'   };
         labely = {'-Y (posterior)' '+Y (anterior)'};
         labelz = {'-Z (inferior)'  '+Z (superior)'};
-      case {'als' 'ctf' '4d' 'bti'}
+      case {'als' 'ctf' '4d' 'bti' 'eeglab'}
         labelx = {'-X (posterior)' '+X (anterior)'};
         labely = {'-Y (right)'     '+Y (left)'};
         labelz = {'-Z (inferior)'  '+Z (superior)'};
