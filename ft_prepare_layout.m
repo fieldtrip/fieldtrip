@@ -1541,7 +1541,7 @@ end
 
 % create view(az,el) transformation matrix
 switch coordsys
-  case {'ras' 'itab' 'neuromag' 'acpc' 'spm' 'mni' 'tal'}
+  case {'ras' 'neuromag' 'itab' 'acpc' 'spm' 'mni' 'tal'}
     switch viewpoint
       case 'left'
         transmat = viewmtx(-90, 0);

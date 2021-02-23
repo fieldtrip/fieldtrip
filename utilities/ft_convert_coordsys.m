@@ -25,7 +25,7 @@ function [object] = ft_convert_coordsys(object, target, varargin)
 %   segmented mri, see FT_DATATYPE_SEGMENTATION
 %   anatomical or functional atlas, see FT_READ_ATLAS
 %
-% Possible input coordinate systems are 'ctf', 'bti', '4d', 'neuromag' and 'itab'.
+% Possible input coordinate systems are 'ctf', '4d', 'bti', 'eeglab', 'neuromag' and 'itab'.
 % Possible target coordinate systems are 'acpc'.
 %
 % Note that the conversion will be an automatic and approximate conversion, not
@@ -37,7 +37,7 @@ function [object] = ft_convert_coordsys(object, target, varargin)
 % Undocumented options
 %   feedback  = string, 'yes' or 'no' (default = 'no')
 
-% Copyright (C) 2005-2020, Robert Oostenveld & Jan-Mathijs Schoffelen
+% Copyright (C) 2005-2021, Robert Oostenveld & Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -138,7 +138,7 @@ generic = {
   'lsa'; 'lia'; 'rsa'; 'ria';...
   'lsp'; 'lip'; 'rsp'; 'rip'}';
 
-specific = {'ctf', 'bti', 'fourd', 'neuromag', 'itab', 'acpc', 'mni', 'spm', 'fsaverage', 'tal'};
+specific = {'ctf', 'bti', 'fourd', 'eeglab', 'neuromag', 'itab', 'acpc', 'spm', 'mni', 'fsaverage', 'tal'};
 
 % generic orientation triplets (like RAS and ALS) are not specific with regard to the origin
 if ismember(object.coordsys, generic) && strcmp(target, 'acpc')
@@ -213,16 +213,19 @@ mni2tal = [
 % the CTF and BTI coordinate system are the same, see http://www.fieldtriptoolbox.org/faq/how_are_the_different_head_and_mri_coordinate_systems_defined/
 ctf2bti = eye(4);
 
+% the CTF and EEGLAB coordinate system are the same, see http://www.fieldtriptoolbox.org/faq/how_are_the_different_head_and_mri_coordinate_systems_defined/
+ctf2eeglab = eye(4);
+
 % the Neuromag and Itab coordinate system are the same, see http://www.fieldtriptoolbox.org/faq/how_are_the_different_head_and_mri_coordinate_systems_defined/#details-of-the-ctf-coordinate-system
 neuromag2itab = eye(4);
 
-% BTI and 4D are different names for the same system
+% BTI and 4D are different names for exactly the same system
 bti2fourd = eye(4);
 
 % the SPM and MNI coordinate system are the same, see http://www.fieldtriptoolbox.org/faq/acpc/
 spm2mni = eye(4);
 
-% the SPM (aka MNI) and ACPC coordinate system are not the same but similar enough, see http://www.fieldtriptoolbox.org/faq/acpc/
+% the SPM (aka MNI) and ACPC coordinate system are not the same, but similar enough, see http://www.fieldtriptoolbox.org/faq/acpc/
 spm2acpc = eye(4);
 mni2acpc = eye(4);
 
