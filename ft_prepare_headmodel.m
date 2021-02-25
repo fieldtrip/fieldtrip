@@ -190,7 +190,6 @@ cfg.smooth          = ft_getopt(cfg, 'smooth');
 cfg.threshold       = ft_getopt(cfg, 'threshold');
 
 % other options
-cfg.numvertices     = ft_getopt(cfg, 'numvertices', 3000, true);  % set the default, [] is also a meaningful value
 cfg.isolatedsource  = ft_getopt(cfg, 'isolatedsource');   % used for dipoli and openmeeg
 cfg.point           = ft_getopt(cfg, 'point');            % used for halfspace
 cfg.submethod       = ft_getopt(cfg, 'submethod');        % used for halfspace
@@ -287,11 +286,11 @@ switch cfg.method
   case {'bemcp' 'dipoli' 'openmeeg'}
     % the low-level functions all need a mesh
     if isfield(data, 'pos') && isfield(data, 'tri')
-      if isempty(cfg.numvertices) || isequal(cfg.numvertices, arrayfun(@(x) size(x.pos, 1), data))
+      if ~isfield(cfg, 'numvertices') || isempty(cfg.numvertices) || isequal(cfg.numvertices, arrayfun(@(x) size(x.pos, 1), data))
         % copy the input data
         geometry = data;
       else
-        % retriangulate the input data
+        % retriangulate the input to the user-specified number of vertices
         tmpcfg.method = 'headshape';
         tmpcfg.headshape = data;
         tmpcfg.numvertices = cfg.numvertices;
