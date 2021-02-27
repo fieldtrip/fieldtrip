@@ -188,7 +188,7 @@ if needpos
     numdims = length(cfg.dim);
     if numdims == 2 || numdims == 3 % if 2D or 3D data
       % use spm_bwlabel for 2D/3D data to avoid usage of image processing toolbox
-      [posclusobs, posnum] = spm_bwlabel(tmp, 2*numdims);
+      [posclusobs, posnum] = spm_bwlabel(tmp, 6);
     else
       % use bwlabeln from the image processing toolbox
       posclusobs = bwlabeln(tmp, conndef(length(cfg.dim), 'min'));
@@ -219,7 +219,7 @@ if needneg
     numdims = length(cfg.dim);
     if numdims == 2 || numdims == 3 % if 2D or 3D data
       % use spm_bwlabel for 2D/3D data to avoid usage of image processing toolbox
-      [negclusobs, negnum] = spm_bwlabel(tmp, 2*numdims);
+      [negclusobs, negnum] = spm_bwlabel(tmp, 6);
     else
       % use bwlabeln from the image processing toolbox
       negclusobs = bwlabeln(tmp, conndef(length(cfg.dim),'min'));
@@ -272,7 +272,7 @@ for i=1:Nrand
       
       numdims = length(cfg.dim);
       if numdims == 2 || numdims == 3 % if 2D or 3D data
-        [posclusrnd, posrndnum] = spm_bwlabel(tmp, 2*numdims); % use spm_bwlabel for 2D/3D data to avoid usage of image toolbox
+        [posclusrnd, posrndnum] = spm_bwlabel(tmp, 6); % use spm_bwlabel for 2D/3D data to avoid usage of image toolbox
       else
         posclusrnd = bwlabeln(tmp, conndef(length(cfg.dim),'min')); % spm_bwlabel yet (feb 2011) supports only 2D/3D data
       end
@@ -326,7 +326,7 @@ for i=1:Nrand
       
       numdims = length(cfg.dim);
       if numdims == 2 || numdims == 3 % if 2D or 3D data
-        [negclusrnd, negrndnum] = spm_bwlabel(tmp, 2*numdims); % use spm_bwlabel for 2D/3D to avoid usage of image toolbox
+        [negclusrnd, negrndnum] = spm_bwlabel(tmp, 6); % use spm_bwlabel for 2D/3D to avoid usage of image toolbox
       else
         negclusrnd = bwlabeln(tmp, conndef(length(cfg.dim),'min')); % spm_bwlabel yet (feb 2011) supports only 2D/3D data
       end
