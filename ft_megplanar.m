@@ -176,8 +176,12 @@ if strcmp(cfg.planarmethod, 'sourceproject')
   
   % PREPARE_HEADMODEL will match the data labels, the gradiometer labels and the
   % volume model labels (in case of a localspheres model) and result in a gradiometer
-  % definition that only contains the gradiometers that are present in the data.
-  [headmodel, axial.grad, cfg] = prepare_headmodel(cfg, data);
+  % definition that only contains the gradiometers that are present in the
+  % data. This should exclude the non-MEG channels, so the user-defined
+  % cfg.channel should be overruled
+  tmpcfg = cfg;
+  tmpcfg.channel = ft_channelselection('MEG', cfg.channel);
+  [headmodel, axial.grad, tmpcfg] = prepare_headmodel(tmpcfg, data);
   
   % construct the low-level options for the leadfield computation as key-value pairs, these are passed to FT_COMPUTE_LEADFIELD
   leadfieldopt = {};
