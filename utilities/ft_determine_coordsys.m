@@ -25,8 +25,8 @@ function [data] = ft_determine_coordsys(data, varargin)
 % see the figure from all angles. To change the anatomical labels of the
 % coordinate system, you should press the corresponding keyboard button.
 %
-% Recognized and supported coordinate systems are 'ctf', '4d', 'bti', 'itab',
-% 'neuromag', 'spm', 'mni', 'tal', 'acpc', 'als', 'ras', 'paxinos'.
+% Recognized and supported coordinate systems are 'ctf', '4d', 'bti', 'eeglab',
+% 'neuromag', 'itab', 'acpc', 'spm', 'mni', 'tal', 'als', 'ras', 'paxinos'.
 %
 % See also FT_CONVERT_COORDSYS, FT_DETERMINE_UNITS, FT_CONVERT_UNITS, FT_PLOT_AXES, FT_PLOT_XXX
 
@@ -173,6 +173,8 @@ switch dtype
       ft_plot_sens(data.grad);
     elseif isfield(data, 'elec')
       ft_plot_sens(data.elec, 'label', 'label');
+    elseif isfield(data, 'opto')
+      ft_plot_sens(data.opto, 'label', 'label');
     end
 
   case 'unknown'
@@ -222,7 +224,7 @@ if istrue(dointeractive)
   if origin=='a' && strcmp(orientation, 'ras')
     coordsys = 'acpc'; % also used for spm, mni, tal
   elseif origin=='i' && strcmp(orientation, 'als')
-    coordsys = 'ctf'; % also used for 4d, bti
+    coordsys = 'ctf'; % also used for 4d, bti, eeglab
   elseif origin=='i' && strcmp(orientation, 'ras')
     coordsys = 'neuromag'; % also used for itab
   else

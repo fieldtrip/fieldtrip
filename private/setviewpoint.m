@@ -26,7 +26,7 @@ switch viewpoint
 end
 
 switch lower(coordsys)
-  case {'ras' 'itab' 'neuromag' 'acpc' 'spm' 'mni' 'tal'}
+  case {'ras' 'neuromag' 'itab' 'acpc' 'spm' 'mni' 'tal'}
     switch viewpoint
       case 'superior'
         view(ax, [0 0 1]); % the nose is pointing up
@@ -41,7 +41,7 @@ switch lower(coordsys)
       case 'posterior'
         view(ax, [0 -1 0]);
     end % switch viewpoint
-  case {'als' 'ctf' '4d' 'bti'}
+  case {'als' 'ctf' '4d' 'bti' 'eeglab'}
     switch viewpoint
       case 'superior'
         view(ax, [-90 90]); % not exactly the same as [0 0 1], this causes the nose pointing up

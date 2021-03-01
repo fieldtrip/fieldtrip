@@ -40,6 +40,8 @@ cfg.method        = ft_getopt(cfg, 'method', 'projectmesh');
 cfg.maxsurf       = ft_getopt(cfg, 'maxsurf', 1);
 cfg.radbound      = ft_getopt(cfg, 'radbound', 3);
 if all(isfield(mri, {'gray', 'white', 'csf'}))
+  % the default in this case is to combine gray, white and csf into brain
+  % and segment that with 3000 vertices
   cfg.tissue      = ft_getopt(cfg, 'tissue', 'brain');    % set the default
   cfg.numvertices = ft_getopt(cfg, 'numvertices', 3000);  % set the default
 else

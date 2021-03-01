@@ -2210,6 +2210,8 @@ switch headerformat
       % FIXME this assumes only 1 such file, or at least it only takes the
       % first one.
       lfpfile = filenames{lfpfile_idx(1)};
+    else
+      lfpfile = {};
     end
     if ~isempty(rawfile_idx)
       rawfile = filenames{rawfile_idx(1)};

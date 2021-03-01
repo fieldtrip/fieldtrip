@@ -12,7 +12,7 @@ function [data] = ft_megplanar(cfg, data)
 %
 % The configuration should contain
 %   cfg.planarmethod   = string, can be 'sincos', 'orig', 'fitplane', 'sourceproject' (default = 'sincos')
-%   cfg.channel        =  Nx1 cell-array with selection of channels (default = 'MEG'), see FT_CHANNELSELECTION for details
+%   cfg.channel        =  Nx1 cell-array with selection of channels (default = 'all'), see FT_CHANNELSELECTION for details
 %   cfg.trials         = 'all' or a selection given as a 1xN vector (default = 'all')
 %
 % The methods orig, sincos and fitplane are all based on a neighbourhood interpolation.
@@ -116,7 +116,7 @@ cfg = ft_checkconfig(cfg, 'renamed', {'grid',    'sourcemodel'});
 cfg = ft_checkconfig(cfg, 'renamed', {'pruneratio', 'tolerance'});
 
 % set the default configuration
-cfg.channel      = ft_getopt(cfg, 'channel',      'MEG');
+cfg.channel      = ft_getopt(cfg, 'channel',      'all');
 cfg.tolerance    = ft_getopt(cfg, 'tolerance',    1e-3);
 cfg.trials       = ft_getopt(cfg, 'trials',       'all', 1);
 cfg.planarmethod = ft_getopt(cfg, 'planarmethod', 'sincos');
@@ -176,8 +176,12 @@ if strcmp(cfg.planarmethod, 'sourceproject')
   
   % PREPARE_HEADMODEL will match the data labels, the gradiometer labels and the
   % volume model labels (in case of a localspheres model) and result in a gradiometer
-  % definition that only contains the gradiometers that are present in the data.
-  [headmodel, axial.grad, cfg] = prepare_headmodel(cfg, data);
+  % definition that only contains the gradiometers that are present in the
+  % data. This should exclude the non-MEG channels, so the user-defined
+  % cfg.channel should be overruled
+  tmpcfg = cfg;
+  tmpcfg.channel = ft_channelselection('MEG', cfg.channel);
+  [headmodel, axial.grad, tmpcfg] = prepare_headmodel(tmpcfg, data);
   
   % construct the low-level options for the leadfield computation as key-value pairs, these are passed to FT_COMPUTE_LEADFIELD
   leadfieldopt = {};
