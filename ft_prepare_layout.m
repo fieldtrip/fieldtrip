@@ -1277,6 +1277,24 @@ if isempty(viewpoint) && isempty(rotatez)
     % the x-axis to the right of the screen and the y-axis is to the top of the screen
     % the nose is usually plotted toward the top of the screen
     sens = ft_convert_coordsys(sens, 'ras', 0);
+  elseif isfield(sens, 'type') && startsWith(sens.type, 'ctf')
+    sens.coordsys = 'ctf';
+    sens = ft_convert_coordsys(sens, 'ras', 0);
+  elseif isfield(sens, 'type') && startsWith(sens.type, 'bti')
+    sens.coordsys = 'bti';
+    sens = ft_convert_coordsys(sens, 'ras', 0);
+  elseif isfield(sens, 'type') && startsWith(sens.type, '4d')
+    sens.coordsys = '4d';
+    sens = ft_convert_coordsys(sens, 'ras', 0);
+  elseif isfield(sens, 'type') && startsWith(sens.type, 'yokogawa')
+    sens.coordsys = 'yokogawa';
+    sens = ft_convert_coordsys(sens, 'ras', 0);
+  elseif isfield(sens, 'type') && startsWith(sens.type, 'neuromag')
+    sens.coordsys = 'neuromag';
+    sens = ft_convert_coordsys(sens, 'ras', 0);
+  elseif isfield(sens, 'type') && startsWith(sens.type, 'itab')
+    sens.coordsys = 'itab';
+    sens = ft_convert_coordsys(sens, 'ras', 0);
   else
     ft_warning('use cfg.rotate to specify the correct rotation of the sensors');
   end
