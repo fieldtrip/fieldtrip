@@ -25,8 +25,8 @@ function [object] = ft_convert_coordsys(object, target, varargin)
 %   segmented mri, see FT_DATATYPE_SEGMENTATION
 %   anatomical or functional atlas, see FT_READ_ATLAS
 %
-% Possible input coordinate systems are 'ctf', '4d', 'bti', 'eeglab', 'neuromag' and 'itab'.
-% Possible target coordinate systems are 'acpc'.
+% Possible input coordinate systems are 'ctf', '4d', 'bti', 'yokogawa', 'eeglab', 'neuromag' and 'itab'.
+% Possible target coordinate systems are 'acpc', 'ras', 'als', etc.
 %
 % Note that the conversion will be an automatic and approximate conversion, not
 % taking into account differences in individual anatomies/differences in conventions
@@ -138,7 +138,7 @@ generic = {
   'lsa'; 'lia'; 'rsa'; 'ria';...
   'lsp'; 'lip'; 'rsp'; 'rip'}';
 
-specific = {'ctf', 'bti', 'fourd', 'eeglab', 'neuromag', 'itab', 'acpc', 'spm', 'mni', 'fsaverage', 'tal'};
+specific = {'ctf', 'bti', 'fourd', 'yokogawa', 'eeglab', 'neuromag', 'itab', 'acpc', 'spm', 'mni', 'fsaverage', 'tal'};
 
 % generic orientation triplets (like RAS and ALS) are not specific with regard to the origin
 if ismember(object.coordsys, generic) && strcmp(target, 'acpc')
@@ -221,6 +221,10 @@ neuromag2itab = eye(4);
 
 % BTI and 4D are different names for exactly the same system
 bti2fourd = eye(4);
+
+% the Yokogawa system expresses positions relative to the dewar, not relative to the head
+% see https://www.fieldtriptoolbox.org/faq/how_are_the_different_head_and_mri_coordinate_systems_defined/#details-of-the-yokogawa-coordinate-system
+yokogawa2als = eye(4);
 
 % the SPM and MNI coordinate system are the same, see http://www.fieldtriptoolbox.org/faq/acpc/
 spm2mni = eye(4);
