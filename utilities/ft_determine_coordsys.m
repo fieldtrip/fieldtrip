@@ -173,6 +173,8 @@ switch dtype
       ft_plot_sens(data.grad);
     elseif isfield(data, 'elec')
       ft_plot_sens(data.elec, 'label', 'label');
+    elseif isfield(data, 'opto')
+      ft_plot_sens(data.opto, 'label', 'label');
     end
 
   case 'unknown'
