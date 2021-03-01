@@ -87,7 +87,7 @@ function [data] = ft_rejectvisual(cfg, data)
 % See also FT_REJECTARTIFACT, FT_REJECTCOMPONENT
 
 % Copyright (C) 2005-2006, Markus Bauer, Robert Oostenveld
-% Copyright (C) 2006-2020, Robert Oostenveld
+% Copyright (C) 2006-2021, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
