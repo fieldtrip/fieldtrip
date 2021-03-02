@@ -207,7 +207,7 @@ elseif islogical(cfg.trials)
   ntrl_keep = sum(cfg.trials);
 end
 nchan_all = numel(data.label);
-nchan_keep=  numel(ft_channelselection(cfg.channel, data.label));
+nchan_keep = numel(ft_channelselection(cfg.channel, data.label));
 fprintf('before GUI interaction: %d trials marked to INCLUDE, %d trials marked to EXCLUDE\n', ntrl_keep, ntrl_all-ntrl_keep);
 fprintf('before GUI interaction: %d channels marked to INCLUDE, %d channels marked to EXCLUDE\n', nchan_keep, nchan_all-nchan_keep);
 

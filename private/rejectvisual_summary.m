@@ -103,25 +103,28 @@ info.axes(3) = axes('position', [0.100 0.250 0.375 0.300]);  % trials
 % the user cannot try to toggle trials while nothing is present on the
 % plots
 
-% instructions
-instructions = sprintf('Drag the mouse over the channels or trials you wish to exclude');
-uicontrol(h, 'Units', 'normalized', 'position', [0.63 0.520 0.400 0.050], 'Style', 'text', 'HorizontalAlignment', 'left', 'backgroundcolor', get(h, 'color'), 'string', instructions, 'FontWeight', 'bold', 'ForegroundColor', 'r');
 
 % set up radio buttons for choosing metric
 bgcolor = get(h, 'color');
 g = uibuttongroup('Position', [0.520 0.150 0.375 0.45], 'bordertype', 'none', 'backgroundcolor', bgcolor);
-r        = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0  11/12 0.40 0.12 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'string', 'var',       'HandleVisibility', 'off');
-r(end+1) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0  10/12 0.40 0.12 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'string', 'std',       'HandleVisibility', 'off');
-r(end+1) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0   9/12 0.40 0.12 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'string', 'db',        'HandleVisibility', 'off');
-r(end+1) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0   8/12 0.40 0.12 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', 'min',       'HandleVisibility', 'off');
-r(end+1) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0   7/12 0.40 0.12 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', 'max',       'HandleVisibility', 'off');
-r(end+1) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0   6/12 0.40 0.12 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', 'maxabs',    'HandleVisibility', 'off');
-r(end+1) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0   5/12 0.40 0.12 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', 'range',     'HandleVisibility', 'off');
-r(end+1) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0   4/12 0.40 0.12 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', 'kurtosis',  'HandleVisibility', 'off');
-r(end+1) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0   3/12 0.40 0.12 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', '1/var',     'HandleVisibility', 'off');
-r(end+1) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0   2/12 0.40 0.12 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', 'zvalue',    'HandleVisibility', 'off');
-r(end+1) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0   1/12 0.40 0.12 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', 'maxzvalue', 'HandleVisibility', 'off');
-r(end+1) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0   0/12 0.40 0.12 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', 'neighbexpvar', 'HandleVisibility', 'off');
+r        = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0 10/11 0.40 0.12 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'string', 'var',       'HandleVisibility', 'off');
+r(end+1) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0  9/11 0.40 0.12 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'string', 'std',       'HandleVisibility', 'off');
+r(end+1) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0  8/11 0.40 0.12 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', 'min',       'HandleVisibility', 'off');
+r(end+1) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0  7/11 0.40 0.12 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', 'max',       'HandleVisibility', 'off');
+r(end+1) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0  6/11 0.40 0.12 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', 'maxabs',    'HandleVisibility', 'off');
+r(end+1) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0  5/11 0.40 0.12 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', 'range',     'HandleVisibility', 'off');
+r(end+1) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0  4/11 0.40 0.12 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', 'kurtosis',  'HandleVisibility', 'off');
+r(end+1) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0  3/11 0.40 0.12 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', '1/var',     'HandleVisibility', 'off');
+r(end+1) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0  2/11 0.40 0.12 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', 'zvalue',    'HandleVisibility', 'off');
+r(end+1) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0  1/11 0.40 0.12 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', 'maxzvalue', 'HandleVisibility', 'off');
+r(end+1) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0  0/11 0.40 0.12 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', 'neighbexpvar',   'HandleVisibility', 'off');
+% r(end+1) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0  nan/12 0.40 0.12 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'string', 'db',        'HandleVisibility', 'off');
+% r(end+1) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0  nan/12 0.40 0.12 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', 'neighbcorr',     'HandleVisibility', 'off');
+% r(end+1) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0  nan/12 0.40 0.12 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', 'neighbstdratio', 'HandleVisibility', 'off');
+
+% instructions
+instructions = sprintf('Drag the mouse over the channels or trials you wish to exclude');
+uicontrol(h, 'Units', 'normalized', 'position', [0.63 0.520 0.400 0.050], 'Style', 'text', 'HorizontalAlignment', 'left', 'backgroundcolor', get(h, 'color'), 'string', instructions, 'FontWeight', 'bold', 'ForegroundColor', 'r');
 
 % pre-select appropriate metric, if defined
 set(g, 'SelectionChangeFcn', @change_metric);
@@ -189,8 +192,8 @@ if isequal(info.metric, info.previousmetric) && all(~isnan(tmp(:)))
   return
 end
 
-if strcmp(info.metric, 'zvalue') || strcmp(info.metric, 'maxzvalue')
-  % cellmean and cellstd (see ft_denoise_pca) would work instead of for-loops, but they are too memory-intensive
+if contains(info.metric, 'zvalue')
+  % cellmean and cellstd (see FT_DENOISE_PCA) would work instead of for-loops, but they are too memory-intensive
   runsum = zeros(info.nchan, 1);
   runss  = zeros(info.nchan, 1);
   runnum = 0;
@@ -215,7 +218,12 @@ for i=1:info.ntrl
   ft_progress(i/info.ntrl, 'computing metric %d of %d\n', i, info.ntrl);
   % not entirely sure whether info.data.time{i} is correct, so I am constructing it here on the fly
   dat = preproc(info.data.trial{i}, info.data.label, offset2time(info.offset(i), info.fsample, size(info.data.trial{i}, 2)), info.cfg.preproc);
-  level(:,i) = artifact_level(dat, info.metric, mval, sd, info.cfg.connectivity);
+  val = artifact_level(dat, info.metric, mval, sd, info.cfg.connectivity);
+  if isvector(val)
+    level(:,i) = val;
+  else
+    level(:,i) = nanmedian(val);
+  end
 end
 
 ft_progress('close');
@@ -596,24 +604,21 @@ drawnow;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 function [maxperchan, maxpertrl, maxperchan_all, maxpertrl_all] = set_maxper(level, chansel, trlsel, metric)
-if strcmp(metric, 'min') || strcmp(metric, 'neighbcorr')
-  % take the negative maximum, i.e. the minimum
-  level = -1 * level;
+if ismember(metric, {'var', 'std', 'max', 'maxabs', 'range', 'kurtosis', '1/var', 'zvalue', 'maxzvalue', 'neighbstdratio'})
+  % take the maximum
+  extreme = @max;
+elseif ismember(metric, {'min', 'neighbexpvar', 'neighbcorr'})
+  % take the minimum
+  extreme = @min;
 end
-% determine the maximum value
-maxperchan_all = max(level, [], 2);
-maxpertrl_all  = max(level, [], 1);
-% determine the maximum value over the remaining selection
+% determine the extreme value
+maxperchan_all = extreme(level, [], 2);
+maxpertrl_all  = extreme(level, [], 1);
+% determine the extreme value over the remaining selection
 level(~chansel, :) = nan;
 level(:, ~trlsel)  = nan;
-maxperchan     = max(level, [], 2);
-maxpertrl      = max(level, [], 1);
-if any(strcmp(metric, {'min', 'neighbcorr'}))
-  maxperchan     = -1 * maxperchan;
-  maxpertrl      = -1 * maxpertrl;
-  maxperchan_all = -1 * maxperchan_all;
-  maxpertrl_all  = -1 * maxpertrl_all;
-end
+maxperchan = extreme(level, [], 2);
+maxpertrl  = extreme(level, [], 1);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION

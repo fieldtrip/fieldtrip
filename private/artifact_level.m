@@ -82,41 +82,12 @@ switch metric
   case 'maxzvalue'
     level = nanmax( ( dat-repmat(mval, 1, size(dat, 2)) )./repmat(sd, 1, size(dat, 2)) , [], 2);
     
-  case 'neighbstdratio'
-    % this results in a NxN matrix
-    level = nan(nchan, nchan);
-    
-    % compute the standard deviation for each channel
-    chanstd = nan(nchan,1);
-    for i=1:nchan
-      chanstd(i) = std(dat(i,:));
-    end
-    
-    % compute the ratio between the standard deviation of channel and that of each of its neighbours
-    for i=1:nchan
-      nb = find(connectivity(i,:));
-      for j=nb(:)'
-        level(i,j) = abs(chanstd(i)-chanstd(j)) / chanstd(j);
-      end
-    end
-    
-  case 'neighbcorr'
-    % this results in a NxN matrix
-    level = nan(nchan, nchan);
-    
-    % compute the correlation between each channel and each of its neighbours
-    for i=1:nchan
-      nb = find(connectivity(i,:));
-      for j=nb(:)'
-        level(i,j) = corr(dat(i,:)', dat(j,:)');
-      end
-    end
-    
   case 'neighbexpvar'
     % this results in a Nx1 vector
     level = nan(nchan, 1);
     
     % compute for each channel the amount of variance that can be explained by its neighbours
+    % values close to 1 are good
     for i=1:nchan
       nb = find(connectivity(i,:));
       if isempty(nb)
@@ -136,6 +107,38 @@ switch metric
           residual = y - y / x * x;
           level(i) = 1 - sum(residual.^2) / sum(y.^2);
         end
+      end
+    end
+    
+  case 'neighbcorr'
+    % this results in a NxN matrix
+    level = nan(nchan, nchan);
+    
+    % compute the correlation between each channel and each of its neighbours
+    % values close to 1 are good
+    for i=1:nchan
+      nb = find(connectivity(i,:));
+      for j=nb(:)'
+        level(i,j) = corr(dat(i,:)', dat(j,:)');
+      end
+    end
+    
+  case 'neighbstdratio'
+    % this results in a NxN matrix
+    level = nan(nchan, nchan);
+    
+    % compute the standard deviation for each channel
+    chanstd = nan(nchan,1);
+    for i=1:nchan
+      chanstd(i) = std(dat(i,:));
+    end
+    
+    % compute the relative difference in standard deviation of each channel with that of each of its neighbours
+    % values close to 0 are good
+    for i=1:nchan
+      nb = find(connectivity(i,:));
+      for j=nb(:)'
+        level(i,j) = abs(chanstd(i)-chanstd(j)) / chanstd(j);
       end
     end
     
