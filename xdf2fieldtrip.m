@@ -9,8 +9,9 @@ function data = xdf2fieldtrip(filename, varargin)
 %   data = xdf2fieldtrip(filename, ...)
 %
 % Optional arguments should come in key-value pairs and can include
-%   streamindx  = list, indices of the streams to read (default is all)
-%   sraterange  = range of sampling rate in Hz in data streams to read [lowerbound, upperbound] 
+%   streamindx      = list, indices of the streams to read (default is all)
+%   sraterange      = range of sampling rate in Hz in data streams to read [lowerbound, upperbound] 
+%   streamkeywords  = cell array of keywords in stream names to index streams to read {keyword1, keyword2}
 %
 % You can also use the standard procedure with FT_DEFINETRIAL and FT_PREPROCESSING
 % for XDF files. This will return (only) the continuously sampled stream with the
@@ -43,8 +44,9 @@ function data = xdf2fieldtrip(filename, varargin)
 % $Id$
 
 % process the options
-streamindx = ft_getopt(varargin, 'streamindx');
-sraterange = ft_getopt(varargin, 'sraterange');
+streamindx      = ft_getopt(varargin, 'streamindx');
+streamkeywords  = ft_getopt(varargin, 'streamnames');
+sraterange      = ft_getopt(varargin, 'sraterange');
 
 % ensure this is on the path
 ft_hastoolbox('xdf', 1);
@@ -98,11 +100,20 @@ for i=1:numel(streams)
 end
 
 % select the streams to continue working with
-if isempty(streamindx)
+if isempty(streamindx) && isempty(streamkeywords)
   selected = true(size(streams));
 else
   selected = false(size(streams));
-  selected(streamindx) = true;
+  if ~isempty(streamindx)
+      selected(streamindx) = true;
+  end
+  if ~isempty(streamkeywords)
+      for si = size(streams)
+          if contains(streams{si}.info.name, streamkeywords)
+               selected(si) = true;
+          end
+      end
+  end
 end
 
 % select the streams to continue working with by srate
