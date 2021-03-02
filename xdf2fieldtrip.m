@@ -45,7 +45,7 @@ function data = xdf2fieldtrip(filename, varargin)
 
 % process the options
 streamindx      = ft_getopt(varargin, 'streamindx');
-streamkeywords  = ft_getopt(varargin, 'streamnames');
+streamkeywords  = ft_getopt(varargin, 'streamkeywords');
 sraterange      = ft_getopt(varargin, 'sraterange');
 
 % ensure this is on the path
@@ -108,7 +108,7 @@ else
       selected(streamindx) = true;
   end
   if ~isempty(streamkeywords)
-      for si = size(streams)
+      for si = 1:size(streams)
           if contains(streams{si}.info.name, streamkeywords)
                selected(si) = true;
           end
