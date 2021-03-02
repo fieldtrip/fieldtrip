@@ -2145,9 +2145,9 @@ else
   name = opto.optolabel(:);
   if all(opto.optopos(:,3)==0) % these are probably template positions
     ft_info('assuming the optode positions are template positions');
-    x=nan(length(name,1));
-    y=nan(length(name,1));
-    z=nan(length(name,1));
+    x=nan(length(name),1);
+    y=nan(length(name),1);
+    z=nan(length(name),1);
     template_x=opto.optopos(:,1);
     template_y=opto.optopos(:,2);
     template_z=opto.optopos(:,3);

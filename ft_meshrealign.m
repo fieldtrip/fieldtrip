@@ -20,10 +20,13 @@ function [mesh_realigned] = ft_meshrealign(cfg, mesh)
 %   cfg.method          = string, can be 'interactive' or fiducial' (default = 'interactive')
 %
 % The configuration can furthermore contain
-%   cfg.coordsys        = string, can be 'ctf', 'neuromag', '4d', 'bti', 'itab'
-%   cfg.fiducial.nas    = [x y z], position of nasion
-%   cfg.fiducial.lpa    = [x y z], position of LPA
-%   cfg.fiducial.rpa    = [x y z], position of RPA
+%   cfg.coordsys       = string specifying the origin and the axes of the coordinate
+%                        system. Supported coordinate systems are 'ctf', '4d', 'bti', 
+%                        'eeglab', 'neuromag', 'itab', 'yokogawa', 'asa', 'acpc',
+%                        and 'paxinos'. See http://tinyurl.com/ojkuhqz
+%   cfg.fiducial.nas   = [x y z], position of nasion
+%   cfg.fiducial.lpa   = [x y z], position of LPA
+%   cfg.fiducial.rpa   = [x y z], position of RPA
 %
 % The fiducials should be expressed in the coordinates and units of the input mesh.
 %
@@ -37,7 +40,7 @@ function [mesh_realigned] = ft_meshrealign(cfg, mesh)
 %
 % See also FT_READ_HEADSHAPE, FT_PREPARE_MESH, FT_ELECTRODEREALIGN, FT_VOLUMEREALIGN
 
-% Copyrights (C) 2017, Robert Oostenveld
+% Copyrights (C) 2017-2021, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -136,7 +139,7 @@ switch cfg.method
       mri = [];
       
       switch cfg.coordsys
-        case {'ctf' '4d' 'bti' 'yokogawa' 'asa' 'itab' 'neuromag'}
+        case {'ctf', '4d', 'bti', 'eeglab', 'neuromag', 'itab', 'yokogawa', 'asa'}
           fidlabel  = {'nas', 'lpa', 'rpa', 'zpoint'};
           fidletter = {'n', 'l', 'r', 'z'};
           fidexplanation1 = '      press n for nas, l for lpa, r for rpa\n';

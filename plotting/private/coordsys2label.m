@@ -17,7 +17,7 @@ function [labelx, labely, labelz] = coordsys2label(coordsys, format, both)
 %
 % See also FT_DETERMINE_COORDSYS, FT_PLOT_AXES, FT_HEADCOORDINATES, SETVIEWPOINT
 
-% Copyright (C) 2017, Robert Oostenveld
+% Copyright (C) 2017-2021, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -74,11 +74,11 @@ if ~isempty(coordsys) && ~strcmp(coordsys, 'unknown')
     
   else
     switch lower(coordsys)
-      case {'ras' 'itab' 'neuromag' 'acpc' 'spm' 'mni' 'tal'}
+      case {'ras' 'neuromag' 'itab' 'acpc' 'spm' 'mni' 'tal'}
         labelx = {'-X (left)'      '+X (right)'   };
         labely = {'-Y (posterior)' '+Y (anterior)'};
         labelz = {'-Z (inferior)'  '+Z (superior)'};
-      case {'als' 'ctf' '4d' 'bti'}
+      case {'als' 'ctf' '4d' 'bti' 'eeglab'}
         labelx = {'-X (posterior)' '+X (anterior)'};
         labely = {'-Y (right)'     '+Y (left)'};
         labelz = {'-Z (inferior)'  '+Z (superior)'};

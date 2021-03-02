@@ -24,7 +24,7 @@ function [hs] = ft_plot_mesh(mesh, varargin)
 %   'vertexsize'   = scalar or vector with the size for each vertex (default = 10)
 %   'unit'         = string, convert to the specified geometrical units (default = [])
 %   'maskstyle',   = 'opacity' or 'colormix', if the latter is specified, opacity masked color values
-%                    are converted (in combination with a background color) to rgb. This bypasses
+%                    are converted (in combination with a background color) to RGB. This bypasses
 %                    openGL functionality, which behaves unpredictably on some platforms (e.g. when
 %                    using software opengl)
 %
@@ -94,23 +94,23 @@ else
   facecolor    = ft_getopt(varargin, 'facecolor',   'white');
   edgecolor    = ft_getopt(varargin, 'edgecolor',   'k');
 end
-faceindex    = ft_getopt(varargin, 'faceindex',   false);
-vertexindex  = ft_getopt(varargin, 'vertexindex', false);
-vertexsize   = ft_getopt(varargin, 'vertexsize',  10);
-vertexmarker = ft_getopt(varargin, 'vertexmarker', '.');
-facealpha    = ft_getopt(varargin, 'facealpha',   1);
-edgealpha    = ft_getopt(varargin, 'edgealpha',   1);
+faceindex     = ft_getopt(varargin, 'faceindex',   false);
+vertexindex   = ft_getopt(varargin, 'vertexindex', false);
+vertexsize    = ft_getopt(varargin, 'vertexsize',  10);
+vertexmarker  = ft_getopt(varargin, 'vertexmarker', '.');
+facealpha     = ft_getopt(varargin, 'facealpha',   1);
+edgealpha     = ft_getopt(varargin, 'edgealpha',   1);
 edgelinewidth = ft_getopt(varargin, 'edgelinewidth', .5);
-material_    = ft_getopt(varargin, 'material');
-tag          = ft_getopt(varargin, 'tag',         '');
-surfaceonly  = ft_getopt(varargin, 'surfaceonly');  % default is handled below
-unit         = ft_getopt(varargin, 'unit');
-clim         = ft_getopt(varargin, 'clim');
-alphalim     = ft_getopt(varargin, 'alphalim');
-alphamapping = ft_getopt(varargin, 'alphamap', 'rampup');
-cmap         = ft_getopt(varargin, 'colormap');
-maskstyle    = ft_getopt(varargin, 'maskstyle', 'opacity');
-contour      = ft_getopt(varargin, 'contour',   []);
+material_     = ft_getopt(varargin, 'material');        % note the underscore, there is also a material function
+tag           = ft_getopt(varargin, 'tag',         '');
+surfaceonly   = ft_getopt(varargin, 'surfaceonly');     % default is handled below
+unit          = ft_getopt(varargin, 'unit');
+clim          = ft_getopt(varargin, 'clim');
+alphalim      = ft_getopt(varargin, 'alphalim');
+alphamapping  = ft_getopt(varargin, 'alphamap', 'rampup');
+cmap          = ft_getopt(varargin, 'colormap');
+maskstyle     = ft_getopt(varargin, 'maskstyle', 'opacity');
+contour       = ft_getopt(varargin, 'contour',   []);
 
 contourcolor      = ft_getopt(varargin, 'contourcolor',     'k');
 contourlinewidth  = ft_getopt(varargin, 'contourlinewidth', 3);
@@ -177,6 +177,8 @@ end
 % color management
 if ischar(vertexcolor) && exist([vertexcolor '.m'], 'file')
   vertexcolor = eval(vertexcolor);
+elseif ischar(vertexcolor) && ismember(vertexcolor, htmlcolors)
+  vertexcolor = htmlcolors(vertexcolor);
 elseif ischar(vertexcolor) && isequal(vertexcolor, 'curv') % default of ft_sourceplot method surface
   if isfield(mesh, 'curv')
     cortex_light = eval('cortex_light');
@@ -189,11 +191,17 @@ elseif ischar(vertexcolor) && isequal(vertexcolor, 'curv') % default of ft_sourc
     ft_warning('no curv field present in the mesh structure, using cortex_light as vertexcolor')
   end
 end
+
 if ischar(facecolor) && exist([facecolor '.m'], 'file')
   facecolor = eval(facecolor);
+elseif ischar(facecolor) && ismember(facecolor, htmlcolors)
+  facecolor = htmlcolors(facecolor);
 end
+
 if ischar(edgecolor) && exist([edgecolor '.m'], 'file')
   edgecolor = eval(edgecolor);
+elseif ischar(edgecolor) && ismember(edgecolor, htmlcolors)
+  edgecolor = htmlcolors(edgecolor);
 end
 
 % everything is added to the current figure

@@ -126,9 +126,9 @@ end
 if ft_senstype(input, 'unknown')
   % don't bother doing all subsequent checks to determine the type of sensor array
 
-elseif isheader && ft_senstype(input, 'eeg')
+elseif isheader && ft_senstype(input, 'eeg') && isfield(input, 'chantype')
   % until now in all stand-alone EEG systems examined the data was in uV
-  chanunit(strcmp('eeg',              input.chantype)) = {'uV'};
+  chanunit(strcmp('eeg', input.chantype)) = {'uV'};
 
 elseif isheader && (ft_senstype(input, 'neuromag') || ft_senstype(input, 'babysquid74')) && issubfield(input, 'orig.chs')
   for i = 1:numchan % make a cell-array of units for each channel
