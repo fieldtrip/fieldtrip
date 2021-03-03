@@ -108,7 +108,7 @@ else
       selected(streamindx) = true;
   end
   if ~isempty(streamkeywords)
-      for si = 1:size(streams)
+      for si = 1:numel(streams)
           if contains(streams{si}.info.name, streamkeywords)
                selected(si) = true;
           end
