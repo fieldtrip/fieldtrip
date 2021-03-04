@@ -48,6 +48,9 @@ streamindx      = ft_getopt(varargin, 'streamindx');
 streamkeywords  = ft_getopt(varargin, 'streamkeywords');
 sraterange      = ft_getopt(varargin, 'sraterange');
 
+% for choosing streams, not more than one method can be selected
+assert(sum(~cellfun(@isempty, {streamindx, streamkeywords, sraterange}))<=1, 'More than one method entered for stream selection: please use only one');
+
 % ensure this is on the path
 ft_hastoolbox('xdf', 1);
 

@@ -545,7 +545,7 @@ cfg.eyetracker.StartTime                  = ft_getopt(cfg.eyetracker, 'StartTime
 cfg.eyetracker.SamplingFrequency          = ft_getopt(cfg.eyetracker, 'SamplingFrequency'    );
 
 %% motion is not part of the official BIDS specification
-% this follows (Link to BEP)
+% this follows extension proposal 029 (https://bids.neuroimaging.io/bep029)
 cfg.motion.DeviceSerialNumber             = ft_getopt(cfg.motion, 'DeviceSerialNumber'      );
 cfg.motion.EpochLength                    = ft_getopt(cfg.motion, 'EpochLength'             );
 cfg.motion.Manufacturer                   = ft_getopt(cfg.motion, 'Manufacturer'            );
@@ -1338,7 +1338,7 @@ if need_motion_json
   motion_json.SamplingFrequency     = hdr.Fs;
   motion_json.StartTime             = nan;
   motion_json.MotionChannelCount    = hdr.nChans; 
-  motion_json.RecordingDuration     = hdr.nSamples/hdr.Fs; 
+  motion_json.RecordingDuration     = (hdr.nSamples*hdr.nTrials)/hdr.Fs; 
   
   % merge the information specified by the user with that from the data
   % in case fields appear in both, the first input overrules the second
