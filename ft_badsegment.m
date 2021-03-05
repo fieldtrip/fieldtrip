@@ -1,9 +1,8 @@
-function cfg = ft_badchannel(cfg, data)
+function [cfg, artifact] = ft_badsegment(cfg, data)
 
-% FT_BADCHANNEL tries to identify bad channels in a MEG or EEG dataset. Different
-% methods are implemented to identify bad channels, these are largely shared with
-% those implemented in FT_REJECTVISUAL with the summary method. The methods are
-% shortly described in detail below.
+% FT_BADSEGMENT tries to identify bad segments or trials in a MEG or EEG dataset.
+% Different methods are implemented to identify bad channels, these are largely
+% shared with those implemented in FT_REJECTVISUAL with the summary method.
 %
 % VAR, STD, MIN, MAX, MAXABS, RANGE, KURTOSIS, ZVALUE - compute the specified metric
 % for each channel in each trial and check whether it exceeds the threshold.
@@ -23,7 +22,7 @@ function cfg = ft_badchannel(cfg, data)
 % of the neighbours.
 %
 % Use as
-%   cfg = ft_badchannel(cfg, data)
+%   [cfg, artifact] = ft_badchannel(cfg, data)
 % where the input data corresponds to the output from FT_PREPROCESSING.
 %
 % The configuration should contain
@@ -58,7 +57,7 @@ function cfg = ft_badchannel(cfg, data)
 % You can also specify 'median', in which case the threshold is applied to the median
 % value over neighbours.
 %
-% See also FT_BADSEGMENT, FT_REJECTVISUAL, FT_CHANNELREPAIR
+% See also FT_BADCHANNEL, FT_REJECTVISUAL, FT_REJECTARTIFACT
 
 % Undocumented options
 %   cfg.thresholdside = above or below
@@ -139,7 +138,7 @@ data   = ft_selectdata(tmpcfg, data);
 
 ntrl  = length(data.trial);
 nchan = length(data.label);
-badchannel = false(nchan,1);
+badsegment = false(1, ntrl);
 
 if contains(cfg.metric, 'zvalue')
   % cellmean and cellstd (see FT_DENOISE_PCA) would work instead of for-loops, but they are too memory-intensive
@@ -175,9 +174,9 @@ for trl=1:ntrl
     % find channels with a value that exceeds the threshold
     switch cfg.thresholdside
       case 'below'
-        badchannel = badchannel | level<cfg.threshold;
+        badsegment(trl) = any(level<cfg.threshold);
       case 'above'
-        badchannel = badchannel | level>cfg.threshold;
+        badsegment(trl) = any(level>cfg.threshold);
     end
     
   else
@@ -189,30 +188,30 @@ for trl=1:ntrl
         case 'all'
           switch cfg.thresholdside
             case 'below'
-              badchannel(chan) = badchannel(chan) | all(nblevel<cfg.threshold);
+              badsegment(trl) = badsegment(trl) | all(nblevel<cfg.threshold);
             case 'above'
-              badchannel(chan) = badchannel(chan) | all(nblevel>cfg.threshold);
+              badsegment(trl) = badsegment(trl) | all(nblevel>cfg.threshold);
           end % switch
         case 'most'
           switch cfg.thresholdside
             case 'below'
-              badchannel(chan) = badchannel(chan) | most(nblevel<cfg.threshold);
+              badsegment(trl) = badsegment(trl) | most(nblevel<cfg.threshold);
             case 'above'
-              badchannel(chan) = badchannel(chan) | most(nblevel>cfg.threshold);
+              badsegment(trl) = badsegment(trl) | most(nblevel>cfg.threshold);
           end % switch
         case 'any'
           switch cfg.thresholdside
             case 'below'
-              badchannel(chan) = badchannel(chan) | any(nblevel<cfg.threshold);
+              badsegment(trl) = badsegment(trl) | any(nblevel<cfg.threshold);
             case 'above'
-              badchannel(chan) = badchannel(chan) | any(nblevel>cfg.threshold);
+              badsegment(trl) = badsegment(trl) | any(nblevel>cfg.threshold);
           end % switch
         case 'median'
           switch cfg.thresholdside
             case 'below'
-              badchannel(chan) = badchannel(chan) | nanmedian(nblevel,2)<cfg.threshold;
+              badsegment(trl) = badsegment(trl) | nanmedian(nblevel,2)<cfg.threshold;
             case 'above'
-              badchannel(chan) = badchannel(chan) | nanmedian(nblevel,2)>cfg.threshold;
+              badsegment(trl) = badsegment(trl) | nanmedian(nblevel,2)>cfg.threshold;
           end % switch
         otherwise
           ft_error('incorrect specification of cfg.nbdetect');
@@ -222,9 +221,11 @@ for trl=1:ntrl
   end % if isvector
 end % for each trial
 
-ft_info('identified %d out of %d channels as bad\n', sum(badchannel), length(badchannel));
+ft_info('identified %d out of %d trials as bad\n', sum(badsegment), length(badsegment));
 
-cfg.badchannel = data.label(badchannel);
+% the output is consistent with that of other artifact detection functions
+artifact = data.sampleinfo(badsegment,:);
+cfg.artfctdef.badsegment.artifact = artifact;
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
@@ -238,4 +239,3 @@ ft_postamble hastoolbox
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function tf = most(x)
 tf = sum(x(:)==true)>(numel(x)/2);
-

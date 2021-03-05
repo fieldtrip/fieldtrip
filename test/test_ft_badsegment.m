@@ -1,4 +1,4 @@
-function test_ft_badchannel
+function test_ft_badsegment
 
 % WALLTIME 00:10:00
 % MEM 2gb
@@ -64,7 +64,7 @@ cfg.threshold = 1.5e-25;
 % 
 % cfg.metric = 'neighbexpvar';
 % cfg.threshold = 0.5;
-% 
+%
 % cfg.metric = 'neighbstdratio';
 % cfg.threshold = 0.5;
 %
@@ -77,27 +77,21 @@ cfg.threshold = 1.5e-25;
 % cfg.nbdetect = 'most';
 % cfg.nbdetect = 'all';
 
-outcfg = ft_badchannel(cfg, datatrl);
+outcfg = ft_badsegment(cfg, datatrl);
 
 %%
 
 cfg = [];
-cfg.layout = 'CTF151.lay';
-cfg.colorgroups = ismember(datatrl.label, outcfg.badchannel) + 1;
+cfg.artfctdef.badsegment.artifact = outcfg.artfctdef.badsegment.artifact;
+cfg.continuous = 'yes';
+cfg.blocksize = 21;
+cfg.colorgroups = ones(size(datatrl.label));
 cfg.linecolor = 'br';
+cfg.layout = 'CTF151.lay';
 ft_databrowser(cfg, datatrl);
 
 %%
 
 cfg = [];
-cfg.metric = 'weighted';
-cfg.neighbours = struct([]); % neighbours;
-cfg.senstype = 'meg';
-cfg.badchannel = outcfg.badchannel;
-data_repaired = ft_channelrepair(cfg, datatrl);
-
-%%
-
-cfg = [];
-cfg.channel = setdiff(datatrl.label, outcfg.badchannel);
-data_rejected = ft_selectdata(cfg, datatrl);
+cfg.artfctdef.badsegment.artifact = outcfg.artfctdef.badsegment.artifact;
+data_rejected = ft_rejectartifact(cfg, datatrl);
