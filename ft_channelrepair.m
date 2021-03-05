@@ -188,7 +188,8 @@ if strcmp(cfg.method, 'weighted') || strcmp(cfg.method, 'average')
 
     repair  = eye(nchans, nchans);
     badindx = match_str(data.label, cfg.badchannel);
-
+    unable  = [];
+    
     for k=badindx'
       fprintf('repairing channel %s\n', data.label{k});
       repair(k, k) = 0;
@@ -200,27 +201,34 @@ if strcmp(cfg.method, 'weighted') || strcmp(cfg.method, 'average')
       % get corresponding ids for sens structure
       [a, b] = match_str(sens.label, data.label(l));
       goodsensindx = a(b);
-      [a, b] = match_str(sens.label, data.label(k));
-      badsensindx = a(b);
-      fprintf('\tusing neighbour %s\n', sens.label{goodsensindx});
-      if strcmp(cfg.method, 'weighted')
-        distance = sqrt(sum((sens.chanpos(goodsensindx, :) - repmat(sens.chanpos(badsensindx, :), numel(goodsensindx), 1)).^2, 2));
-      elseif strcmp(cfg.method, 'average')
-        distance = 1;
+      if isempty(goodsensindx)
+        fprintf('\tcannot reconstruct channel - no neighbours in the original data or in the sensor position\n');
+        unable = [unable k];
+      else
+        
+        [a, b] = match_str(sens.label, data.label(k));
+        badsensindx = a(b);
+        fprintf('\tusing neighbour %s\n', sens.label{goodsensindx});
+        if strcmp(cfg.method, 'weighted')
+          distance = sqrt(sum((sens.chanpos(goodsensindx, :) - repmat(sens.chanpos(badsensindx, :), numel(goodsensindx), 1)).^2, 2));
+        elseif strcmp(cfg.method, 'average')
+          distance = 1;
+        end
+        repair(k, l) = (1./distance);
+        repair(k, l) = repair(k, l) ./ sum(repair(k, l));
       end
-      repair(k, l) = (1./distance);
-      repair(k, l) = repair(k, l) ./ sum(repair(k, l));
     end
 
     % use sparse matrix to speed up computations
     repair = sparse(repair);
 
-    % compute the repaired data for each trial
+    % compute the missing data for each trial and set the ones that could not be reconstructed to nan
     fprintf('\n');
-    fprintf('repairing bad channels for %i trials %d', ntrials);
+    fprintf('interpolating bad channels for %i trials %d', ntrials);
     for i=1:ntrials
       fprintf('.');
       interp.trial{i} = repair * data.trial{i};
+      interp.trial{i}(unable, :) = nan;
     end
     fprintf('\n');
   else
@@ -246,9 +254,10 @@ if strcmp(cfg.method, 'weighted') || strcmp(cfg.method, 'average')
     connectivityMatrix = channelconnectivity(cfg, interp);
     connectivityMatrix = connectivityMatrix(:, goodchanindcs); % all chans x good chans
 
-    repair  = eye(nchans, nchans);
+    repair      = eye(nchans, nchans);
     missingindx = match_str(interp.label, cfg.missingchannel);
-    unable = [];
+    unable      = [];
+
     for k=missingindx'
       fprintf('trying to reconstruct missing channel %s\n', interp.label{k});
       repair(k, k) = 0;
@@ -281,17 +290,14 @@ if strcmp(cfg.method, 'weighted') || strcmp(cfg.method, 'average')
     repair = sparse(repair);
 
     fprintf('\n');
-    % compute the missing data for each trial and remove those could not be
-    % reconstructed
+    % compute the missing data for each trial and set the ones that could not be reconstructed to nan
     fprintf('\n');
     fprintf('interpolating missing channel for %i trials %d', ntrials);
     for i=1:ntrials
       fprintf('.');
       interp.trial{i} = repair * interp.trial{i};
-      interp.trial{i}(unable, :) = [];
+      interp.trial{i}(unable, :) = nan;
     end
-
-    interp.label(unable) = [];
     fprintf('\n');
   end
 
@@ -367,7 +373,7 @@ elseif strcmp(cfg.method, 'spline') || strcmp(cfg.method, 'slap')
     interp.trial{i} = repair * data.trial{i}(dataidx, :);
   end
   fprintf('\n');
-  % update channels labels due to reordering by
+  % update channels labels due to reordering
   interp.label = label;
 
 elseif strcmp(cfg.method, 'nan')
