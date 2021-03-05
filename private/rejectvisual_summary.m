@@ -120,9 +120,10 @@ r(end+1) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0  3/11
 r(end+1) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0  2/11 0.40 0.12 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', 'zvalue',    'HandleVisibility', 'off');
 r(end+1) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0  1/11 0.40 0.12 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', 'maxzvalue', 'HandleVisibility', 'off');
 r(end+1) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0  0/11 0.40 0.12 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', 'neighbexpvar',   'HandleVisibility', 'off');
-% r(end+1) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0  nan/12 0.40 0.12 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'string', 'db',        'HandleVisibility', 'off');
-% r(end+1) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0  nan/12 0.40 0.12 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', 'neighbcorr',     'HandleVisibility', 'off');
-% r(end+1) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0  nan/12 0.40 0.12 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', 'neighbstdratio', 'HandleVisibility', 'off');
+% these cannot be seen but are technically present, they can be selected with cfg.metric
+r(end+1) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0  -10/12 0.40 0.12 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'string', 'db',        'HandleVisibility', 'off');
+r(end+1) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0  -10/12 0.40 0.12 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', 'neighbcorr',     'HandleVisibility', 'off');
+r(end+1) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0  -10/12 0.40 0.12 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', 'neighbstdratio', 'HandleVisibility', 'off');
 
 % instructions
 instructions = sprintf('Drag the mouse over the channels or trials you wish to exclude');
