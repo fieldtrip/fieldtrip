@@ -34,15 +34,10 @@ function [cfg, artifact] = ft_artifact_threshold(cfg, data)
 %
 % The detection of artifacts is done according to the following settings,
 % you should specify at least one of these thresholds
-%   cfg.artfctdef.threshold.range     = value in uV or T, default  inf
 %   cfg.artfctdef.threshold.min       = value in uV or T, default -inf
 %   cfg.artfctdef.threshold.max       = value in uV or T, default  inf
 %   cfg.artfctdef.threshold.onset     = value in uV or T, default  inf
 %   cfg.artfctdef.threshold.offset    = value in uV or T, default  inf
-%
-% When cfg.artfctdef.threshold.range is used, the within-channel peak-to-peak range
-% is checked against the specified maximum range (so not the overall range across
-% channels). In this case the whole trial will be marked as an artifact.
 %
 % When cfg.artfctdef.threshold.onset and offset are used, the rising and falling
 % flank are thresholded with different values. In case onset and offset are both
