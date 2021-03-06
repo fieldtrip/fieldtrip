@@ -59,6 +59,9 @@ elseif isfield(data, 'hdr') && isfield(data.hdr, 'chantype')
   [datindx, hdrindx] = match_str(data.label, data.hdr.label);
   hdr.chantype = repmat({'unknown'}, hdr.nChans, 1);
   hdr.chantype(datindx) = data.hdr.chantype(hdrindx);
+else
+  % try to determine them on the basis of heuristics
+  hdr.chantype = ft_chantype(data);
 end
 
 % fill in the channel unit
@@ -69,11 +72,10 @@ elseif isfield(data, 'hdr') && isfield(data.hdr, 'chanunit')
   [datindx, hdrindx] = match_str(data.label, data.hdr.label);
   hdr.chanunit = repmat({'unknown'}, hdr.nChans, 1);
   hdr.chanunit(datindx) = data.hdr.chanunit(hdrindx);
+else
+  % try to determine them on the basis of heuristics
+  hdr.chanunit = ft_chanunit(data);
 end
-
-% try to determine them on the basis of heuristics, when already present they will stay the same
-hdr.chantype = ft_chantype(hdr);
-hdr.chanunit = ft_chanunit(hdr);
 
 % determine hdr.nSamples, hdr.nSamplesPre, hdr.nTrials
 % always pretend that it is continuous data

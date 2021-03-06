@@ -321,7 +321,7 @@ heights   = info.layout.height;
 
 for trlindx = find(info.trlsel)
   % Shift the vertical axis to zero
-  vdat = info.data.trial{trlindx}(info.chanlop, :) - v_centers(trlindx);
+  vdat = info.data.trial{trlindx}(info.chanlop, :);
   % Scale to length 1 of the new data
   vdat = vdat ./ (ymax - ymin);
   % Scale by availabe plot area
@@ -348,7 +348,7 @@ heights   = info.layout.height;
 % Update data of ALL trials, also excluded trials
 for trlindx = 1:info.ntrl
   % Shift the vertical axis to zero
-  vdat = info.data.trial{trlindx}(info.chanlop, :) - v_centers(trlindx);
+  vdat = info.data.trial{trlindx}(info.chanlop, :);
   % Scale to length 1 of the new data
   vdat = vdat ./ (ymax - ymin);
   % Scale by availabe plot area

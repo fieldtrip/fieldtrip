@@ -42,7 +42,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     if (nrhs > 3) {
         mexErrMsgTxt("Too many input arguments.");
     } else if (nrhs == 3) {
-        if (~mxIsEmpty(prhs[2]) && (mxGetM(prhs[2])!=1 || mxGetN(prhs[2])!=1)) {
+        if (!mxIsEmpty(prhs[2]) && (mxGetM(prhs[2])!=1 || mxGetN(prhs[2])!=1)) {
             mexErrMsgTxt("Invalid dimension for input argument 2, must be scalar. Weights vector is not supported in this implementation of nanvar.");
         }
         if (mxGetScalar(prhs[2]) <= 0) {

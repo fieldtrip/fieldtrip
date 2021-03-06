@@ -653,8 +653,8 @@ ft_notice('detected %d artifacts\n', size(artifact,1));
 delete(h);
 
 % do the general cleanup and bookkeeping at the end of the function
-ft_postamble provenance
 ft_postamble previous data
+ft_postamble provenance
 ft_postamble savevar
 
 

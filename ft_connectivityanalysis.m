@@ -278,8 +278,12 @@ switch cfg.method
       % it looks like a timelock with a cov, which is perfectly valid as input
       data = ft_checkdata(data, 'datatype', 'timelock');
     else
-      % it does not have a cov, the covariance will be computed on the fly further down
+      % it does not have a cov
       data = ft_checkdata(data, 'datatype', 'raw');
+      
+      tmpcfg = [];
+      tmpcfg.covariance = 'yes';
+      data = ft_timelockanalysis(tmpcfg, data);
     end
     inparam = 'cov';
     outparam = cfg.method;
@@ -895,7 +899,7 @@ switch cfg.method
       [nrpttap, nchan, nfreq] = size(data.fourierspctrm);
       datout = cell(1, nfreq);
       for i=1:length(data.freq)
-        dat       = reshape(data.fourierspctrm(:,:,i), nrpttap, nchan).';
+        dat       = data.fourierspctrm(:,:,i).';
         datout{i} = ft_connectivity_powcorr_ortho(dat, optarg{:});
       end
       datout = cat(3, datout{:});
@@ -1030,7 +1034,7 @@ switch cfg.method
     nrpt     = [];    
   case 'corr'
     % pearson's correlation coefficient
-    optarg = {'dimord', getdimord(data, inparam), 'feedback', cfg.feedback, 'hasjack', hasjack};
+    optarg = {'dimord', getdimord(data, inparam), 'feedback', cfg.feedback, 'hasjack', hasjack, 'pownorm', true, 'complex', 'complex'};
     if ~isempty(cfg.pchanindx), optarg = cat(2, optarg, {'pchanindx', cfg.pchanindx, 'allchanindx', cfg.allchanindx}); end
     [datout, varout, nrpt] = ft_connectivity_corr(data.(inparam), optarg{:});
     

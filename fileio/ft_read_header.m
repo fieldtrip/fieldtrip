@@ -296,10 +296,11 @@ if strcmp(coordsys, 'dewar') && ~any(strcmp(headerformat, {'fcdc_buffer', 'ctf_d
   ft_error('dewar coordinates are not supported for %s', headerformat);
 end
 
+% deal with data that is organized according to BIDS
 if strcmp(readbids, 'yes') || strcmp(readbids, 'ifmakessense')
-  % deal with data that is organized according to BIDS
-  % data in a BIDS tsv file (like physio and stim) will be explicitly dealt with in BIDS_TSV
   [p, f, x] = fileparts(filename);
+  % check whether it is a BIDS dataset with json and tsv sidecar files
+  % data in a BIDS tsv file (like physio and stim) will be explicitly dealt with in BIDS_TSV
   isbids = startsWith(f, 'sub-') && ~strcmp(x, '.tsv');
   if isbids
     % try to read the metadata from the BIDS sidecar files
@@ -1664,6 +1665,17 @@ switch headerformat
     end
     hdr.orig = orig;
     
+  case 'matlab'
+    % read the header structure from a MATLAB file
+    % it should either contain a "hdr" structure, or a FieldTrip data structure according to FT_DATATYPE_RAW
+    w = whos(matfile(filename));
+    if any(strcmp({w.name}, 'hdr'))
+      hdr = loadvar(filename, 'hdr');
+    elseif any(strcmp({w.name}, 'data')) || length(w)==1
+      data = loadvar(filename, 'data');
+      hdr = ft_fetch_header(data);
+    end
+
   case 'mayo_mef30'
     ft_hastoolbox('mayo_mef', 1); % make sure mayo_mef exists
     hdr = read_mayo_mef30(filename, password, sortchannel);
@@ -2198,6 +2210,8 @@ switch headerformat
       % FIXME this assumes only 1 such file, or at least it only takes the
       % first one.
       lfpfile = filenames{lfpfile_idx(1)};
+    else
+      lfpfile = {};
     end
     if ~isempty(rawfile_idx)
       rawfile = filenames{rawfile_idx(1)};
@@ -2408,6 +2422,7 @@ switch headerformat
         hdr.orig.(fn{iFn}) = tmp.(fn{iFn});
       end
     end
+    
   case 'artinis_oxy3'
     ft_hastoolbox('artinis', 1);
     hdr = read_artinis_oxy3(filename);

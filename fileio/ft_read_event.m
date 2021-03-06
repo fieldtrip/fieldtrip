@@ -500,38 +500,10 @@ switch eventformat
     
   case 'brainvision_vmrk'
     if ~isempty(filename)
-      fid = fopen_or_error(filename,'rt');
-      line = [];
-      while ischar(line) || isempty(line)
-        line = fgetl(fid);
-        if ~isempty(line) && ~(isnumeric(line) && line==-1)
-          if strncmpi(line, 'Mk', 2)
-            % this line contains a marker
-            tok = tokenize(line, '=', 0);    % do not squeeze repetitions of the separator
-            if length(tok)~=2
-              ft_warning('skipping unexpected formatted line in BrainVision marker file');
-            else
-              % the line looks like "MkXXX=YYY", which is ok
-              % the interesting part now is in the YYY, i.e. the second token
-              tok = tokenize(tok{2}, ',', 0);    % do not squeeze repetitions of the separator
-              if isempty(tok{1})
-                tok{1}  = [];
-              end
-              if isempty(tok{2})
-                tok{2}  = [];
-              end
-              event(end+1).type     = tok{1};
-              event(end  ).value    = tok{2};
-              event(end  ).sample   = str2num(tok{3});
-              event(end  ).duration = str2num(tok{4});
-              if size(tok, 2) >= 6 && ft_platform_supports('datetime')
-                event(end).timestamp = datetime(tok{6}, 'InputFormat', 'yyyyMMddHHmmssSSSSSS');
-              end
-            end
-          end
-        end
-      end
-      fclose(fid);
+      event = read_brainvision_vmrk(filename);
+    else
+      % the user specified a BrainVision dataset without a marker file
+      event = [];
     end
     
   case 'bucn_nirs'
@@ -1390,9 +1362,25 @@ switch eventformat
     end
     
   case 'matlab'
-    % read the events from a normal MATLAB file
-    tmp   = load(filename, 'event');
-    event = tmp.event;
+    % read the event structure from a MATLAB file
+    % it should either contain an "event" structure, or a FieldTrip data structure according to FT_DATATYPE_RAW
+    w = whos(matfile(filename));
+    if any(strcmp({w.name}, 'event'))
+      event = loadvar(filename, 'event');
+    elseif any(strcmp({w.name}, 'data')) || length(w)==1
+      % assume that the matlab file contains a raw data structure according to FT_DATATYPE_RAW that includes trigger channels
+      if isempty(hdr)
+        hdr = ft_read_header(filename);
+      end
+      if isempty(chanindx)
+        % try to determine the trigger channels from the header
+        chanindx = find(ft_chantype(hdr, 'trigger'));
+      else
+        % use the user-supplied list of trigger channels
+      end
+      trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', chanindx, 'detectflank', detectflank, 'denoise', denoise, 'trigshift', trigshift, 'trigpadding', trigpadding, 'threshold', threshold, 'denoise', denoise);
+      event = appendstruct(event, trigger);
+    end
     
   case {'manscan_mbi', 'manscan_mb2'}
     if isempty(hdr)

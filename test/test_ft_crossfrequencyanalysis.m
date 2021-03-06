@@ -91,7 +91,7 @@ cfg.method       = 'coh';
 cfg.keeptrials   = 'no';
 CFC              = ft_crossfrequencyanalysis(cfg, LFsig, HFsig);
 
-subplot(411)
+subplot(5,5,[1:5])
 MI = squeeze(CFC.crsspctrm(1,:,:));
 imagesc(f1, f2, MI');
 % set(gca, 'Fontsize',20)
@@ -106,7 +106,7 @@ cfg.method       = 'plv';
 cfg.keeptrials   = 'no';
 CFC              = ft_crossfrequencyanalysis(cfg, LFsig, HFsig);
 
-subplot(412)
+subplot(5,5,[6:10])
 MI = squeeze(CFC.crsspctrm(1,:,:));
 imagesc(f1, f2, MI');
 % set(gca, 'Fontsize',20)
@@ -121,7 +121,7 @@ cfg.method       = 'mvl';
 cfg.keeptrials   = 'no';
 CFC              = ft_crossfrequencyanalysis(cfg,LFsig,HFsig);
 
-subplot(413)
+subplot(5,5,[11:15])
 MI = squeeze(CFC.crsspctrm(1,:,:));
 imagesc(f1, f2, MI');
 % set(gca, 'Fontsize',20)
@@ -136,7 +136,7 @@ cfg.method       = 'mi';
 cfg.keeptrials   = 'no';
 CFC              = ft_crossfrequencyanalysis(cfg,LFsig,HFsig);
 
-subplot(414)
+subplot(5,5,[16:20])
 MI = squeeze(CFC.crsspctrm(1,:,:));
 imagesc(f1, f2, MI');
 % set(gca, 'Fontsize',20)
@@ -145,6 +145,26 @@ xlabel('Low frequency  (Hz)');
 ylabel('High frequency (Hz)');
 title('Modulation index')
 axis xy; colorbar
+
+cfg              = [];
+cfg.method       = 'pac';
+cfg.nphase       = 5;
+cfg.keeptrials   = 'no';
+CFC              = ft_crossfrequencyanalysis(cfg,LFsig,HFsig);
+
+for p = 1:5
+  subplot(5,5,20+p)
+  MI = squeeze(CFC.crsspctrm(1,:,:,p));
+  imagesc(f1, f2, MI');
+  % set(gca, 'Fontsize',20)
+  axis xy;
+  xlabel('Low frequency  (Hz)');
+  ylabel('High frequency (Hz)');
+  title(sprintf('Phase-amplitude coupling - %d deg',CFC.phase(p)/pi*180))
+  axis xy; colorbar
+end
+
+set(gcf,'position',[0,0,1820 960]);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % do the actual testing - cross-channel
@@ -158,7 +178,7 @@ cfg.method       = 'coh';
 cfg.keeptrials   = 'no';
 CFC              = ft_crossfrequencyanalysis(cfg, LFsig, HFsig);
 
-subplot(411)
+subplot(5,5,[1:5])
 MI = squeeze(CFC.crsspctrm(1,:,:));
 imagesc(f1, f2, MI');
 % set(gca, 'Fontsize',20)
@@ -175,7 +195,7 @@ cfg.method       = 'plv';
 cfg.keeptrials   = 'no';
 CFC              = ft_crossfrequencyanalysis(cfg, LFsig, HFsig);
 
-subplot(412)
+subplot(5,5,[6:10])
 MI = squeeze(CFC.crsspctrm(1,:,:));
 imagesc(f1, f2, MI');
 % set(gca, 'Fontsize',20)
@@ -192,7 +212,7 @@ cfg.method       = 'mvl';
 cfg.keeptrials   = 'no';
 CFC              = ft_crossfrequencyanalysis(cfg,LFsig,HFsig);
 
-subplot(413)
+subplot(5,5,[11:15])
 MI = squeeze(CFC.crsspctrm(1,:,:));
 imagesc(f1, f2, MI');
 % set(gca, 'Fontsize',20)
@@ -209,7 +229,7 @@ cfg.method       = 'mi';
 cfg.keeptrials   = 'no';
 CFC              = ft_crossfrequencyanalysis(cfg,LFsig,HFsig);
 
-subplot(414)
+subplot(5,5,[16:20])
 MI = squeeze(CFC.crsspctrm(1,:,:));
 imagesc(f1, f2, MI');
 % set(gca, 'Fontsize',20)
@@ -218,6 +238,28 @@ xlabel('Low frequency  (Hz)');
 ylabel('High frequency (Hz)');
 title('Modulation index')
 axis xy; colorbar
+
+cfg              = [];
+cfg.chanlow      = {'chan1'};
+cfg.chanhigh      = {'chan2'};
+cfg.method       = 'pac';
+cfg.nphase       = 5;
+cfg.keeptrials   = 'no';
+CFC              = ft_crossfrequencyanalysis(cfg,LFsig,HFsig);
+
+for p = 1:5
+  subplot(5,5,20+p)
+  MI = squeeze(CFC.crsspctrm(1,:,:,p));
+  imagesc(f1, f2, MI');
+  % set(gca, 'Fontsize',20)
+  axis xy;
+  xlabel('Low frequency  (Hz)');
+  ylabel('High frequency (Hz)');
+  title(sprintf('Phase-amplitude coupling - %d deg',CFC.phase(p)/pi*180))
+  axis xy; colorbar
+end
+
+set(gcf,'position',[0,0,1820 960]);
 
 end % main function
 
