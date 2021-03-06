@@ -1,8 +1,8 @@
-function [varargout] = contains(varargin)
+function [varargout] = startsWith(varargin)
 
-% CONTAINS True if text contains a pattern.
-%   TF = contains(S,PATTERN) returns true if any element of string array S
-%   contains PATTERN. TF is the same size as S.
+% STARTSWITH True if text starts with pattern.
+%   TF = startsWith(S,PATTERN) returns true if any element of string array S
+%   starts with PATTERN. TF is the same size as S.
 %
 % This is a compatibility function that should only be added to the path on
 % MATLAB versions prior to R2016b.
@@ -44,7 +44,7 @@ end % automatic cleanup of compat directories
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % this is where the actual replacement code starts
-% function tf = contains(s, pattern, str, boolean)
+% function tf = startsWith(s, pattern, str, boolean)
 
 % deal with the input arguments
 if nargin==1
@@ -62,7 +62,6 @@ end
 if ~ischar(s) && ~iscellstr(s)
   error('the input should be either a char-array or a cell-array with chars');
 end
-
 if nargin<4
   boolean = false;
 end
@@ -76,16 +75,11 @@ if ~islogical(boolean)
   error('fourth input argument should be a logical scalar');
 end
 
-if ~iscellstr(s)
-  s = {s};
-end
-
 if boolean
-  s       = lower(s);
-  pattern = lower(pattern);
+  tf = strncmpi(s, pattern, numel(pattern));
+else
+  tf = strncmp(s, pattern, numel(pattern));
 end
-
-tf = ~cellfun(@isempty, strfind(s, pattern));
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % deal with the output arguments
