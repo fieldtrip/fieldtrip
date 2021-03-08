@@ -17,9 +17,8 @@ function hdr = read_ricoh_header(filename)
 %%
 %% See also READ_RICOH_DATA, READ_RICOH_EVENT
 
-if ~ft_hastoolbox('ricoh_meg_reader')
-    ft_error('cannot determine whether Ricoh toolbox is present');
-end
+% ensure that the required toolbox is on the path
+ft_hastoolbox('ricoh_meg_reader', 1);
 
 % define several constants listed below
 handles = definehandles;
@@ -55,7 +54,7 @@ switch acq_type
     end
     pretrigger_length = 0;
     averaged_count = 1;
-
+    
   case handles.AcqTypeEvokedAve
     sample_rate = acq_cond.sample_rate;
     sample_count = acq_cond.frame_length;
@@ -65,7 +64,7 @@ switch acq_type
       ft_error('invalid sample rate or sample count or pre-trigger length or average count in ', filename);
       return;
     end
-
+    
   otherwise
     ft_error('unknown data type');
 end
@@ -134,14 +133,14 @@ for i=1:hdr.nChans
     prefix = 'ETC';
   end
   hdr.label{i} = sprintf('%s%03d', prefix, i);
-
+  
   % overwrite EEG-channel labels
   if hdr.orig.channel_info.channel(i).type == handles.EegChannel
     if ~isempty(hdr.orig.channel_info.channel(i).data.name)
       hdr.label{i} = hdr.orig.channel_info.channel(i).data.name;
     end
   end
-
+  
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
