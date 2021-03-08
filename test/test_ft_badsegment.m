@@ -3,9 +3,10 @@ function test_ft_badsegment
 % WALLTIME 00:10:00
 % MEM 2gb
 
-dataset = dccnpath('/home/common/matlab/fieldtrip/datatrl/Subject01.ds');
+dataset = dccnpath('/home/common/matlab/fieldtrip/data/Subject01.ds');
 
 ft_debug off
+interactive = false;
 
 %%
 
@@ -29,12 +30,14 @@ neighbours = ft_prepare_neighbours(cfg, datatrl);
 
 %%
 
-% this can be used to determine the thresholds
-cfg = [];
-cfg.method = 'summary';
-cfg.neighbours = neighbours;
-cfg.metric = 'var';
-data_rejected = ft_rejectvisual(cfg, datatrl);
+if interactive
+  % this can be used to determine the thresholds
+  cfg = [];
+  cfg.method = 'summary';
+  cfg.neighbours = neighbours;
+  cfg.metric = 'var';
+  data_rejected = ft_rejectvisual(cfg, datatrl);
+end
 
 %%
 % each method has its own optimal threshold
