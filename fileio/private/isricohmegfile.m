@@ -14,6 +14,6 @@ if ft_hastoolbox('yokogawa_meg_reader', 3)
 		val = false;
 	end
 else
-	msg = 'Error occurred; yokogawa_meg_reader is not installed.';
+	msg = 'yokogawa_meg_reader toolbox is not installed.';
 	error(msg)
 end
