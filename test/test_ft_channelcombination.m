@@ -23,7 +23,12 @@ assert(isequal(x,y));
 
 x = ft_channelcombination({{'MLC12' 'MLC13'} {'MRO11' 'MRO12' 'MRO21'}}, label);
 y = ft_channelcombination_old({{'MLC12' 'MLC13'} {'MRO11' 'MRO12' 'MRO21'}}, label);
-assert(isequal(x,y));
+assert(~isequal(x,y)); % the correct behavior has changed since the update 
+% PR 1664 to ft_channelcombination.
+% the default behavior should be not to return the auto-combinations, yet
+% the old behavior in this case was to actually return the
+% auto-combinations, which is incorrect, resulting in a y of 11x2, rather
+% then a 6x2
 
 % test the new functionality
 x = ft_channelcombination({'MLT' 'MRC'}, label, 0, 0);
@@ -32,6 +37,11 @@ z = ft_channelcombination({'MLT' 'MRC'}, label, 0, 2);
 assert(isequal(x, y(:,[2 1]))); % the columns should be swapped
 assert(numel(z)==2*numel(x));
 
+x = ft_channelcombination({{'a';'b';'c'},{'b';'c'}}, {'a';'b';'c'}, 1, 0);
+y = ft_channelcombination({{'a';'b';'c'},{'b';'c'}}, {'a';'b';'c'}, 1, 1);
+z = ft_channelcombination({{'a';'b';'c'},{'b';'c'}}, {'a';'b';'c'}, 0, 2);
+
+ft_error('there is something not working as expected at the moment, see the discussion in PR1664');
 
 %%%%%%%%%%
 % Below is the old code
