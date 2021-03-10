@@ -119,6 +119,10 @@ else
     list2 = match_str(datachannel, channelcmb2);
     
     selmat(list1,list2) = true;
+    if dirflag==2
+      % also fill the other 'direction'
+      selmat(list2,list1) = true;
+    end
     
     if ~includeauto
       % exclude the auto-combinations
@@ -130,10 +134,6 @@ else
       selmat = selmat | diag(autovec);
     end
     
-    if dirflag==2
-      % also fill the other 'direction'
-      selmat(list2,list1) = true;
-    end
   end
   
   if dirflag<2
