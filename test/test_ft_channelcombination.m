@@ -230,82 +230,51 @@ lab{3,1} = {'d';'e'};
 opts1 = [0 1]; %includeauto
 opts2 = [0 1 2]; %dirflag
 
+labx{1} = [1 2 3];
+labx{2} = [2 3 4];
+labx{3} = [4 5];
+cmb     = false(5,5);
+dat = zeros(0,5);
 for k = 1:numel(lab)
   for m = 1:numel(opts1)
     for p = 1:numel(opts2)
+      
+      % this implements what I think should be the behavior of
+      % ft_channelcombination
+      cmb(:) = false;
+      cmb(labx{1},labx{k}) = true;
+      if opts2(p)<2
+        ix = intersect(labx{1},labx{k});
+        cmb(ix,ix) = cmb(ix,ix) & tril(ones(numel(ix)),-1)>0;
+      end
+
+      if opts2(p)==2
+        cmb(labx{k},labx{1}) = true;
+      elseif opts2(p)==1
+        cmb = cmb';
+      end
+
+      if opts1(m)==0
+        cmb = cmb & (ones(5)-eye(5))>0;
+      elseif opts1(m)==1
+        tmp = zeros(5,1);
+        tmp(union(labx{1},labx{k})) = 1;
+        cmb = cmb | diag(tmp)>0;
+      end
+      %imagesc(cmb);pause;
+
       X{k,m,p} = ft_channelcombination({lab{1},lab{k}},union(lab{1},lab{k}), opts1(m), opts2(p));
-      if k==1 && m==1 && p==1
-        assert(isequal(size(X{k,m,p},1),0.5*numel(lab{1})*(numel(lab{k})-1)));
-        assert(isequal(unique(X{k,m,p}(:,1)),lab{1}(2:end)));
-        assert(isequal(unique(X{k,m,p}(:,2)),lab{k}(1:end-1)));
-      elseif k==1 && m==1 && p==2
-        assert(isequal(size(X{k,m,p},1),0.5*numel(lab{1})*(numel(lab{k})-1)));
-        assert(isequal(unique(X{k,m,p}(:,1)),lab{k}(1:end-1)));
-        assert(isequal(unique(X{k,m,p}(:,2)),lab{1}(2:end)));
-      elseif k==1 && m==1 && p==3
-        assert(isequal(size(X{k,m,p},1),numel(lab{1})*numel(lab{k})-numel(union(lab{1},lab{k})))); % this one fails
-        assert(isequal(unique(X{k,m,p}(:,1)),lab{1}(1:end)));
-        assert(isequal(unique(X{k,m,p}(:,2)),lab{k}(1:end)));
-      elseif k==1 && m==2 && p==1
-        assert(isequal(size(X{k,m,p},1),0.5*numel(lab{1})*(numel(lab{k})+1)));
-        assert(isequal(unique(X{k,m,p}(:,1)),lab{1}(1:end)));
-        assert(isequal(unique(X{k,m,p}(:,2)),lab{k}(1:end)));
-      elseif k==1 && m==2 && p==2
-        assert(isequal(size(X{k,m,p},1),0.5*numel(lab{1})*(numel(lab{k})+1)));
-        assert(isequal(unique(X{k,m,p}(:,1)),lab{k}(1:end)));
-        assert(isequal(unique(X{k,m,p}(:,2)),lab{1}(1:end)));
-      elseif k==1 && m==2 && p==3
-        assert(isequal(size(X{k,m,p},1),numel(lab{1})*numel(lab{k})));
-        assert(isequal(unique(X{k,m,p}(:,1)),lab{1}(1:end)));
-        assert(isequal(unique(X{k,m,p}(:,2)),lab{k}(1:end)));
-      elseif k==2 && m==1 && p==1
-        %assert(isequal(size(X{k,m,p},1),0.5*numel(lab{1})*(numel(lab{k})-1))); % don't know yet what this should be
-        assert(isequal(unique(X{k,m,p}(:,1)),lab{1}(1:end)));
-        assert(isequal(unique(X{k,m,p}(:,2)),lab{k}(1:end)));
-      elseif k==2 && m==1 && p==2
-        %assert(isequal(size(X{k,m,p},1),0.5*numel(lab{1})*(numel(lab{k})-1))); % don't know yet what this should be
-        assert(isequal(unique(X{k,m,p}(:,1)),lab{k}(1:end)));
-        assert(isequal(unique(X{k,m,p}(:,2)),lab{1}(1:end)));
-      elseif k==2 && m==1 && p==3
-        %assert(isequal(size(X{k,m,p},1),numel(lab{1})*numel(lab{k})-numel(intersect(lab{1},lab{k})))); % this one fails
-        assert(isequal(unique(X{k,m,p}(:,1)),union(lab{1},lab{k})));
-        assert(isequal(unique(X{k,m,p}(:,2)),union(lab{1},lab{k})));
-      elseif k==2 && m==2 && p==1
-        %assert(isequal(size(X{k,m,p},1),0.5*numel(lab{1})*(numel(lab{k})+1))); % no idea yet
-        %assert(isequal(unique(X{k,m,p}(:,1)),lab{1}(1:end))); % no idea yet
-        %assert(isequal(unique(X{k,m,p}(:,2)),lab{k}(1:end))); % no idea yet
-      elseif k==2 && m==2 && p==2
-        %assert(isequal(size(X{k,m,p},1),0.5*numel(lab{1})*(numel(lab{k})+1))); % no idea yet
-        %assert(isequal(unique(X{k,m,p}(:,1)),lab{k}(1:end))); % no idea yet
-        %assert(isequal(unique(X{k,m,p}(:,2)),lab{1}(1:end))); % no idea yet
-      elseif k==2 && m==2 && p==3
-        %assert(isequal(size(X{k,m,p},1),numel(lab{1})*numel(lab{k})+setxor(lab{1},lab{k}))); % this one fails
-        assert(isequal(unique(X{k,m,p}(:,1)),union(lab{1},lab{k})));
-        assert(isequal(unique(X{k,m,p}(:,2)),union(lab{1},lab{k})));
-      elseif k==3 && m==1 && p==1
-        assert(isequal(size(X{k,m,p},1),numel(lab{1})*numel(lab{k})));
-        assert(isequal(unique(X{k,m,p}(:,1)),lab{1}(1:end)));
-        assert(isequal(unique(X{k,m,p}(:,2)),lab{k}(1:end)));
-      elseif k==3 && m==1 && p==2
-        assert(isequal(size(X{k,m,p},1),numel(lab{1})*numel(lab{k})));
-        assert(isequal(unique(X{k,m,p}(:,1)),lab{k}(1:end)));
-        assert(isequal(unique(X{k,m,p}(:,2)),lab{1}(1:end)));
-      elseif k==3 && m==1 && p==3
-        assert(isequal(size(X{k,m,p},1),2*numel(lab{1})*numel(lab{k})));
-        assert(isequal(unique(X{k,m,p}(:,1)),union(lab{1},lab{k})));
-        assert(isequal(unique(X{k,m,p}(:,2)),union(lab{1},lab{k})));
-      elseif k==3 && m==2 && p==1
-        assert(isequal(size(X{k,m,p},1),numel(lab{1})*numel(lab{k})+numel(lab{1})+numel(lab{k})));
-        assert(isequal(unique(X{k,m,p}(:,1)),union(lab{1},lab{k})));
-        assert(isequal(unique(X{k,m,p}(:,2)),union(lab{1},lab{k})));
-      elseif k==3 && m==2 && p==2
-        assert(isequal(size(X{k,m,p},1),numel(lab{1})*numel(lab{k})+numel(lab{1})+numel(lab{k})));
-        assert(isequal(unique(X{k,m,p}(:,1)),union(lab{1},lab{k})));
-        assert(isequal(unique(X{k,m,p}(:,2)),union(lab{1},lab{k})));
-      elseif k==3 && m==2 && p==3
-        assert(isequal(size(X{k,m,p},1),2*numel(lab{1})*numel(lab{k})+numel(lab{1})+numel(lab{k})));
-        assert(isequal(unique(X{k,m,p}(:,1)),union(lab{1},lab{k})));
-        assert(isequal(unique(X{k,m,p}(:,2)),union(lab{1},lab{k})));
+      
+      dat(end+1,:) = [k m p size(X{k,m,p},1) sum(cmb(:))];
+    
+      if k==1
+        % with fully overlapping lists of labels, ft_channelcombination
+        % behaves as expected
+        assert(isequal(sum(cmb(:)),size(X{k,m,p},1)));
+      elseif k==2
+        assert(isequal(sum(cmb(:)),size(X{k,m,p},1)));
+      elseif k==3
+        assert(isequal(sum(cmb(:)),size(X{k,m,p},1)));
       end
       
     end
