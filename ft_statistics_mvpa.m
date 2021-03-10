@@ -333,7 +333,15 @@ if any(strcmp('chan', cfg.mvpa.dimension_names(cfg.features)))
   label = sprintf('combined(%s)', sprintf('%s',cfg.channel{:})); 
 elseif ~isempty(cfg.neighbours)
   % merge neighbours into combined channels
-  label = cellfun( @(chans) sprintf('combined(%s)', chans), arrayfun(@(ix) strjoin(cfg.channel(cfg.neighbours(ix,:)), ','), 1:size(cfg.neighbours,1), 'Un', 0) , 'Un', 0);
+  label = cell(size(cfg.neighbours,2), 1);
+  for ix = 1:numel(label)
+    chan_ix = cfg.neighbours(ix,:);
+    if sum(chan_ix)>1
+      label{ix} = sprintf('combined(%s)', strjoin(cfg.channel(chan_ix), ','));
+    else
+      label{ix} = cfg.channel{chan_ix};
+    end
+  end
 end
 
 %% Call MVPA-Light
