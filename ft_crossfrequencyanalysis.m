@@ -111,8 +111,8 @@ if isfield(cfg, 'chanlow') && isfield(cfg, 'chanhigh')
   docrosschan   = true;
   cfg.chanlow   = ft_channelselection(cfg.chanlow, freqlow.label);
   cfg.chanhigh  = ft_channelselection(cfg.chanhigh, freqhigh.label);
-  labelcmb = ft_channelcombination({cfg.chanlow,cfg.chanhigh},union(freqlow.label, freqhigh.label),1,0);
-  labelcmb(ismember(labelcmb(:,1),cfg.chanhigh)&strcmp(labelcmb(:,1),labelcmb(:,2)),:) = [];
+  labelcmb = ft_channelcombination({cfg.chanlow,cfg.chanhigh},union(freqlow.label, freqhigh.label),1,2);
+  %labelcmb(ismember(labelcmb(:,1),cfg.chanhigh)&strcmp(labelcmb(:,1),labelcmb(:,2)),:) = [];
 elseif ~isfield(cfg, 'chanlow') && ~isfield(cfg, 'chanhigh')  % within-channel analysis (default)
   docrosschan = false;
   % ensure that we are working on the intersection of the channels
