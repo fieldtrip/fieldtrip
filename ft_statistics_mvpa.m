@@ -170,7 +170,6 @@ assert(isnumeric(dat),    'this function requires numeric data as input, you pro
 assert(isnumeric(design), 'this function requires numeric data as input, you probably want to use FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS instead');
 
 %% cfg: set defaults 
-cfg.features        = ft_getopt(cfg, 'features',    2, true);
 cfg.generalize      = ft_getopt(cfg, 'generalize',  []);
 cfg.timwin          = ft_getopt(cfg, 'timwin',  []);
 cfg.freqwin         = ft_getopt(cfg, 'freqwin', []);
@@ -193,13 +192,8 @@ cfg.mvpa.feedback   = ft_getopt(cfg.mvpa, 'feedback',   'yes');
 
 has_dimord = isfield(cfg, 'dimord');
 has_dim    = isfield(cfg, 'dim');
-
-if has_dimord
-  dimtok = tokenize(cfg.dimord, '_');
-  cfg.mvpa.dimension_names = ft_getopt(cfg.mvpa, 'dimension_names', [{'samples'} dimtok]);
-  if ischar(cfg.features), dimtok_search = setdiff(dimtok, cfg.features);
-  else, dimtok_search = dimtok;
-  end
+if ~has_dimord || ~has_dim
+  ft_warning('fields dim or dimord are missing, MVPA may not work correctly')
 end
 
 % flip dimensions such that the number of trials comes first
@@ -209,6 +203,17 @@ if has_dim
   % reshape because MVPA-Light expects the original multi-dimensional array
   dat = reshape(dat, [size(dat,1) cfg.dim]);
 end
+
+%% defaults for cfg.features
+if ~isfield(cfg, 'features')
+  % no features provided, we have to guess
+  if ~isempty(cfg.neighbours) || ~isempty(cfg.connectivity)
+    cfg.features = 3; % dimension 3 = time (usually)
+  elseif ~isempty(cfg.timwin) || ~isempty(cfg.freqwin)
+    cfg.features = 2; % dimension 2 = chan (usually)
+  end
+end
+cfg.features = ft_getopt(cfg, 'features', []);
 
 %% backward compatibility
 cfg.mvpa = ft_checkconfig(cfg.mvpa, 'renamed', {'param', 'hyperparameter'});
@@ -226,6 +231,12 @@ if isfield(cfg,'normalise') && ~isfield(cfg.mvpa,'preprocess')
 end
 if isfield(cfg,'balance') && ~isempty(cfg.balance)
   cfg = add_to_preprocess(cfg, cfg.balance);
+end
+
+%% get dimension names
+if has_dimord
+  dimtok = tokenize(cfg.dimord, '_');
+  cfg.mvpa.dimension_names = ft_getopt(cfg.mvpa, 'dimension_names', [{'samples'} dimtok]);
 end
 
 %% convert features and generalize from char to integers
@@ -253,8 +264,10 @@ end
 cfg.mvpa.feature_dimension          = cfg.features;
 cfg.mvpa.generalization_dimension   = cfg.generalize;
 
-if any(strcmp('chan', cfg.mvpa.dimension_names(cfg.features)))
-  label = sprintf('combined(%s)', sprintf('%s',cfg.channel{:})); % combine labels when chan is used as features
+% names of search dimensions
+dimtok_search = dimtok;
+if ~isempty(cfg.features)
+  dimtok_search(cfg.features-1) = [];
 end
 
 %% transform neighbours into boolean matrix if necessary
@@ -312,6 +325,15 @@ if isempty(cfg.mvpa.neighbours) && has_dim && has_dimord
   end
 elseif ~isempty(cfg.neighbours) || ~isempty(cfg.connectivity) || ~isempty(cfg.timwin) || ~isempty(cfg.freqwin)
     ft_warning('cfg.mvpa.neighbours has been set, ignoring cfg.neighbours/cfg.connectivity/cfg.timwin/cfg.freqwin')
+end
+
+%% adapt channel labels
+if any(strcmp('chan', cfg.mvpa.dimension_names(cfg.features)))
+  % combine all labels when chan is used as features
+  label = sprintf('combined(%s)', sprintf('%s',cfg.channel{:})); 
+elseif ~isempty(cfg.neighbours)
+  % merge neighbours into combined channels
+  label = cellfun( @(chans) sprintf('combined(%s)', chans), arrayfun(@(ix) strjoin(cfg.channel(cfg.neighbours(ix,:)), ','), 1:size(cfg.neighbours,1), 'Un', 0) , 'Un', 0);
 end
 
 %% Call MVPA-Light
