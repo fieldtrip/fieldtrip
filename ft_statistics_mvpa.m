@@ -333,7 +333,7 @@ if any(strcmp('chan', cfg.mvpa.dimension_names(cfg.features)))
   label = sprintf('combined(%s)', sprintf('%s',cfg.channel{:})); 
 elseif ~isempty(cfg.neighbours)
   % merge neighbours into combined channels
-  label = cell(size(cfg.neighbours,2), 1);
+  label = cell(size(cfg.neighbours,1), 1);
   for ix = 1:numel(label)
     chan_ix = cfg.neighbours(ix,:);
     if sum(chan_ix)>1
