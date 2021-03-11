@@ -207,8 +207,10 @@ end
 %% defaults for cfg.features
 if ~isfield(cfg, 'features')
   % no features provided, we have to guess
-  if ~isempty(cfg.neighbours) || ~isempty(cfg.connectivity)
-    cfg.features = 3; % dimension 3 = time (usually)
+  if ~isempty(cfg.neighbours) || ~isempty(cfg.connectivity) 
+    if isempty(cfg.timwin)
+      cfg.features = 3; % dimension 3 = time (usually)
+    end
   elseif ~isempty(cfg.timwin) || ~isempty(cfg.freqwin)
     cfg.features = 2; % dimension 2 = chan (usually)
   end
@@ -298,6 +300,7 @@ if isempty(cfg.mvpa.neighbours) && has_dim && has_dimord
             tmp_cfg = cfg;
             tmp_cfg.neighbours = cfg.neighbours;
             cfg.neighbours = channelconnectivity(tmp_cfg);
+            cfg.neighbours = logical(double(cfg.neighbours) + eye(size(cfg.neighbours))); % include source channel
           end
           cfg.mvpa.neighbours{ix} = cfg.neighbours;
         case 'time'
