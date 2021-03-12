@@ -86,8 +86,7 @@ else
   V.descrip = 'dummy volume';
   create(V);
   V.dat(:) = 0;
-  P.image(1).private = V;
-  P.image(1).fname   = fname;
+  P.image(1) = spm_vol(fname);
   
   spm_preproc_write8(P, zeros(6,4), [0 0], [0 1], 1, 1, nan(2,3), nan);
   
