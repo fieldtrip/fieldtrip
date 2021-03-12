@@ -83,7 +83,7 @@ end
 % for each channel (combination), find the connected time-frequency clusters
 labelmat = zeros(size(onoff));
 total = 0;
-if prod(ndatadim)>1
+if numel(ndatadim)>1
   for spatdimlev=1:spatdimlength
     if numel(ndatadim) == 2 || numel(ndatadim) == 3 % if 2D or 3D data (without channel)
       % use spm_bwlabel for 2D/3D data to avoid usage of image processing toolbox
