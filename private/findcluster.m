@@ -42,9 +42,10 @@ function [cluster, total] = findcluster(onoff, spatdimneighbstructmat, varargin)
 %
 % $Id$
 
-spatdimlength = size(onoff, 1);
-nfreq = size(onoff, 2);
-ntime = size(onoff, 3);
+ndatadim = size(onoff);
+spatdimlength = ndatadim(1);
+ndatadim = ndatadim(2:end);
+celldims = num2cell(ndatadim);
 
 if length(size(spatdimneighbstructmat))~=2 || ~all(size(spatdimneighbstructmat)==spatdimlength)
   ft_error('invalid dimension of spatdimneighbstructmat');
@@ -72,7 +73,7 @@ if minnbchan>0
     end
     nremoved=1;
     while nremoved>0
-        nsigneighb=reshape(selectmat*reshape(single(onoff),[spatdimlength (nfreq*ntime)]),[spatdimlength nfreq ntime]);
+        nsigneighb=reshape(selectmat*reshape(single(onoff),[spatdimlength prod(ndatadim)]),[spatdimlength ndatadim]);
         remove=(onoff.*nsigneighb)<minnbchan;
         nremoved=length(find(remove.*onoff));
         onoff(remove)=0;
@@ -82,10 +83,17 @@ end
 % for each channel (combination), find the connected time-frequency clusters
 labelmat = zeros(size(onoff));
 total = 0;
-if nfreq*ntime>1
+if numel(ndatadim)>1
   for spatdimlev=1:spatdimlength
-    [labelmat(spatdimlev, :, :), num] = spm_bwlabel(double(reshape(onoff(spatdimlev, :, :), nfreq, ntime)), 6); % the previous code contained a '4' for input
-    labelmat(spatdimlev, :, :) = labelmat(spatdimlev, :, :) + (labelmat(spatdimlev, :, :)~=0)*total;
+    if numel(ndatadim) == 2 || numel(ndatadim) == 3 % if 2D or 3D data (without channel)
+      % use spm_bwlabel for 2D/3D data to avoid usage of image processing toolbox
+      [labelmat(spatdimlev, :, :,:), num] = spm_bwlabel(double(reshape(onoff(spatdimlev, :, :), celldims{:})), 6); % the previous code contained a '4' for input
+    else
+      ft_error('cluster-based stats for data >4D is NYI')
+    end
+      
+    
+    labelmat(spatdimlev, :, :, :) = labelmat(spatdimlev, :, :, :) + (labelmat(spatdimlev, :, :, :)~=0)*total;
     total = total + num;
   end
 else
@@ -93,7 +101,7 @@ else
   total = sum(onoff(:));
 end
 % combine the time and frequency dimension for simplicity
-labelmat = reshape(labelmat, spatdimlength, nfreq*ntime);
+labelmat = reshape(labelmat, spatdimlength, prod(ndatadim));
 
 % combine clusters that are connected in neighbouring channel(s)
 % (combinations). Convert inputs to uint32 as that is required by the mex
@@ -101,7 +109,7 @@ labelmat = reshape(labelmat, spatdimlength, nfreq*ntime);
 cluster = combineClusters(uint32(labelmat), logical(spatdimneighbstructmat), uint32(total));
 
 % reshape the output to the original format of the data
-cluster = reshape(cluster, spatdimlength, nfreq, ntime);
+cluster = reshape(cluster, spatdimlength, celldims{:});
 
 % update the total number
 total = numel(unique(cluster(:)))-1; % the value of 0 does not count
