@@ -54,13 +54,10 @@ persistent isgit
 persistent ftver
 persistent ftpath
 
-if nargin<1
-  % this is only supported for git
-  command='revision';
+if isempty(ftpath)
+  ftpath = fileparts(mfilename('fullpath'));
+  ftpath = ftpath(1:end-10); % strip away '/utilities' where this function is located
 end
-
-ftpath = fileparts(mfilename('fullpath'));
-ftpath = ftpath(1:end-10); % strip away '/utilities' where this function is located
 
 % set the defaults
 clean = 'no';
@@ -94,7 +91,12 @@ if isempty(isgit)
   end
 end
 
-if ~isempty(ftver) && ~isempty(ftpath) && strcmp(command, 'revision')
+if nargin<1
+  % this is only supported for git
+  command = 'revision';
+end
+
+if ~isempty(ftver) && ~isempty(ftpath) && nargin<1
   % use the previously determined values
   
 elseif issvn
@@ -150,10 +152,10 @@ elseif isequal(regexp(ftpath, ['.*\' filesep '[fF]ieldtrip-lite20[0-9]{6}']), 1)
 else
   % get it from the Contents.m file in the FieldTrip directory
   if ~isdeployed
-       tmp = ver(ftpath);
-       ftver = tmp.Version;
+    tmp = ver(ftpath);
+    ftver = tmp.Version;
   else
-       ftver = 'deployed';
+    ftver = 'deployed';
   end
 end % if issvn, isgit or otherwise
 

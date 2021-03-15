@@ -6,7 +6,7 @@ function [status] = isplottingfunction(function_name)
 % returns 1 if it is a plotting function, and 0 otherwise.
 
 % determine FieldTrip path
-ftpath = fileparts(which('ft_defaults'));
+[ftver, ftpath = ft_version;
 
 functionlist = [];
 % browse the main FieldTrip directory
