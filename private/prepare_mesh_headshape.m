@@ -3,11 +3,11 @@ function mesh = prepare_mesh_headshape(cfg)
 % PREPARE_MESH_HEADSHAPE
 %
 % Configuration options should include
-%   cfg.headshape   = a filename containing headshape, a Nx3 matrix with surface 
+%   cfg.headshape   = a filename containing headshape, a Nx3 matrix with surface
 %                     points, or a structure with a single or multiple boundaries
-%   cfg.smooth      = a scalar indicating the number of non-shrinking 
+%   cfg.smooth      = a scalar indicating the number of non-shrinking
 %                     smoothing iterations (default = no smoothing)
-%   cfg.numvertices = numeric vector, should have same number of elements as the 
+%   cfg.numvertices = numeric vector, should have same number of elements as the
 %                     number of tissues
 %
 % See also PREPARE_MESH_MANUAL, PREPARE_MESH_SEGMENTATION
@@ -214,8 +214,8 @@ XYZmm = ts.XYZmm;
 %--------------------------------------------------------------------------
 for j=1:N
   
-  XYZmm_o = zeros(3,ts.nr(1)) ;
-  XYZmm_o2 = zeros(3,ts.nr(1)) ;
+  XYZmm_o = zeros(3,ts.nr(1));
+  XYZmm_o2 = zeros(3,ts.nr(1));
   
   for i=1:ts.nr(1)
     ln = find(M_con(:,i));

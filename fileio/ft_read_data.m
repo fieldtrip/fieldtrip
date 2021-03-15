@@ -103,20 +103,20 @@ if iscell(filename)
   else
     % each file has the same channels, concatenate along the time dimension
     % this requires careful bookkeeping of the sample indices
-    nsmp = nan(size(filename));
+    offset = 0;
     for i=1:numel(filename)
-      nsmp(i) = hdr{i}.nSamples*hdr{i}.nTrials;
-    end
-    offset = [0 cumsum(nsmp(1:end-1))];
-    thisbegsample = begsample - offset(i);
-    thisendsample = endsample - offset(i);
-    if thisbegsample<=nsmp(i) && thisendsample>=1
-      varargin = ft_setopt(varargin, 'header', hdr{i});
-      varargin = ft_setopt(varargin, 'begsample', max(thisbegsample,1));
-      varargin = ft_setopt(varargin, 'endsample', min(thisendsample,nsmp(i)));
-      dat{i} = ft_read_data(filename{i}, varargin{:});
-    else
-      dat{i} = [];
+      thisbegsample = begsample - offset;
+      thisendsample = endsample - offset;
+      nsmp = hdr{i}.nSamples*hdr{i}.nTrials;
+      offset = offset + nsmp; % this is for the next file
+      if thisbegsample<=nsmp && thisendsample>=1
+        varargin = ft_setopt(varargin, 'header', hdr{i});
+        varargin = ft_setopt(varargin, 'begsample', max(thisbegsample,1));
+        varargin = ft_setopt(varargin, 'endsample', min(thisendsample,nsmp));
+        dat{i} = ft_read_data(filename{i}, varargin{:});
+      else
+        dat{i} = [];
+      end
     end
     dat = cat(2, dat{:}); % along the 2nd dimension
   end
@@ -140,7 +140,7 @@ fallback        = ft_getopt(varargin, 'fallback');
 cache           = ft_getopt(varargin, 'cache', false);
 dataformat      = ft_getopt(varargin, 'dataformat');
 chanunit        = ft_getopt(varargin, 'chanunit');
-timestamp       = ft_getopt(varargin, 'timestamp');
+timestamp       = ft_getopt(varargin, 'timestamp', false); % return Neuralynx NSC timestamps instead of actual data
 password        = ft_getopt(varargin, 'password', struct([]));
 
 % this allows blocking reads to avoid having to poll many times for online processing
@@ -187,6 +187,12 @@ end
 if ~isempty(endtrial) && mod(endtrial, 1)
   ft_warning('rounding "endtrial" to the nearest integer');
   endtrial = round(endtrial);
+end
+
+if endsample<begsample
+  ft_warning('endsample is before begsample, returning empty data');
+  dat = zeros(length(chanindx), 0);
+  return
 end
 
 if strcmp(dataformat, 'compressed')
@@ -462,13 +468,13 @@ switch dataformat
     if isempty(p)
       filename = which(filename);
     end
-    % 2017.10.17 AB - Allowing partial load
-    chan_sel=ismember(hdr.label,deblank({hdr.orig.ElectrodesInfo.Label})); % matlab 2015a
+    
+    chan_sel=ismember(deblank({hdr.orig.ElectrodesInfo.Label}),hdr.label); % matlab 2015a
     %chan_sel=contains({hdr.orig.ElectrodesInfo.Label},hdr.label); %matlab 2017a
     
     orig = openNSx(filename, 'channels',find(chan_sel),...
-      'duration', [(begsample-1)*hdr.skipfactor+1 endsample*hdr.skipfactor],...
-      'skipfactor', hdr.skipfactor);
+      'duration', [(begsample-1)*hdr.orig.skipfactor+1, endsample*hdr.orig.skipfactor],...
+      'skipfactor', hdr.orig.skipfactor);
     
     d_min=[orig.ElectrodesInfo.MinDigiValue];
     d_max=[orig.ElectrodesInfo.MaxDigiValue];
@@ -913,10 +919,14 @@ switch dataformat
     
   case {'homer_nirs'}
     % Homer files are MATLAB files in disguise
-    orig = load(filename, '-mat');
-    dat = orig.d(begsample:endsample, chanindx);
-    dimord = 'samples_chans';
-    
+    % see https://www.nitrc.org/plugins/mwiki/index.php/homer2:Homer_Input_Files#NIRS_data_file_format
+    nirs = load(filename, '-mat');
+    % convert it to a raw data structure according to FT_DATATYPE_RAW
+    data = homer2fieldtrip(nirs);
+    % get the data as a nchan*nsamples matrix
+    dat = ft_fetch_data(data, 'begsample', begsample, 'endsample', endsample, 'chanindx', chanindx);
+    dimord = 'chans_samples';
+
   case 'itab_raw'
     if any(hdr.orig.data_type==[0 1 2])
       % big endian
@@ -998,6 +1008,18 @@ switch dataformat
     end
     dat = dat(chanindx, :);
     
+  case 'matlab'
+    % read the data structure from a MATLAB file
+    % it should either contain a numerical "dat" array, or a FieldTrip data structure according to FT_DATATYPE_RAW
+    w = whos(matfile(filename));
+    if any(strcmp({w.name}, 'dat'))
+      dat = loadvar(filename, 'dat');
+      dat = dat(chanindx, begsample:endsample);
+    elseif any(strcmp({w.name}, 'data')) || length(w)==1
+      data = loadvar(filename, 'data');
+      dat = ft_fetch_data(data, 'begsample', begsample, 'endsample', endsample, 'chanindx', chanindx);
+    end
+    
   case 'mayo_mef30'
     hdr.sampleunit = 'index';
     dat = read_mayo_mef30(filename, password, [], hdr, begsample, endsample, chanindx);
@@ -1042,7 +1064,7 @@ switch dataformat
     
     %Fieldtrip can't handle multiple sampling rates in a data block
     %We will get only the data with the most frequent sampling rate
-            
+    
     targetNumberOfChannels = hdr.orig.targetNumberOfChannels;
     targetSampleCount = hdr.orig.targetSampleCount;
     
@@ -1278,8 +1300,8 @@ switch dataformat
     % Converter' from the original .mpx files recorded by NeuroOmega
     dat=zeros(hdr.nChans,endsample - begsample + 1);
     for i=1:hdr.nChans
-      v=double(hdr.orig.(hdr.label{i}));
-      v=v*hdr.orig.(char(strcat(hdr.label{i},'_BitResolution')));
+      v=double(hdr.orig.orig.(hdr.label{i}));
+      v=v*hdr.orig.orig.(char(strcat(hdr.label{i},'_BitResolution')));
       dat(i,:)=v(begsample:endsample); %channels sometimes have small differences in samples
     end
     

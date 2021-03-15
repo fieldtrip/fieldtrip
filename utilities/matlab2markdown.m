@@ -206,7 +206,7 @@ while ~feof(infid)
       fprintf(outfid, '![%s](%s)\n', f, image);
     elseif strcmp(imagestyle, 'jekyll')
       % include an image as a Jekyll include
-      fprintf(outfid, '{%% include image %s %%}\n', image);
+      fprintf(outfid, '{%% include image src="%s" %%}\n', image);
     end
     
   elseif ~match(line, '^%')

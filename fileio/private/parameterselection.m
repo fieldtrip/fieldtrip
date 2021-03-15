@@ -11,7 +11,7 @@ function [select] = parameterselection(param, data)
 %   data     structure with anatomical or functional data
 %   select   returns the selected parameters as a cell-array
 
-% Copyright (C) 2005-2008, Robert oostenveld
+% Copyright (C) 2005-2008, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.

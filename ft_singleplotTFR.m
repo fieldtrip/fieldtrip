@@ -144,6 +144,7 @@ cfg = ft_checkconfig(cfg, 'renamed',     {'channelindex',   'channel'});
 cfg = ft_checkconfig(cfg, 'renamed',     {'channelname',    'channel'});
 cfg = ft_checkconfig(cfg, 'renamed',     {'cohrefchannel',  'refchannel'});
 cfg = ft_checkconfig(cfg, 'renamed',	   {'zparam',         'parameter'});
+cfg = ft_checkconfig(cfg, 'renamed',     {'newfigure',      'figure'});
 
 % Set the defaults
 cfg.baseline       = ft_getopt(cfg, 'baseline',      'no');
@@ -157,7 +158,6 @@ cfg.colorbar       = ft_getopt(cfg, 'colorbar',      'yes');
 cfg.colorbartext   = ft_getopt(cfg, 'colorbartext',   '');
 cfg.interactive    = ft_getopt(cfg, 'interactive',   'yes');
 cfg.hotkeys        = ft_getopt(cfg, 'hotkeys',       'yes');
-cfg.renderer       = ft_getopt(cfg, 'renderer',       []); % let MATLAB decide on the default
 cfg.maskalpha      = ft_getopt(cfg, 'maskalpha',      1);
 cfg.maskparameter  = ft_getopt(cfg, 'maskparameter',  []);
 cfg.maskstyle      = ft_getopt(cfg, 'maskstyle',     'opacity');
@@ -167,6 +167,7 @@ cfg.masknans       = ft_getopt(cfg, 'masknans',      'yes');
 cfg.directionality = ft_getopt(cfg, 'directionality', []);
 cfg.figurename     = ft_getopt(cfg, 'figurename',     []);
 cfg.parameter      = ft_getopt(cfg, 'parameter',     'powspctrm');
+cfg.renderer       = ft_getopt(cfg, 'renderer',       []); % let MATLAB decide on the default
 
 % this is needed for the figure title
 if isfield(cfg, 'dataname') && ~isempty(cfg.dataname)
@@ -273,11 +274,20 @@ if startsWith(dimord, 'chan_chan_') || startsWith(dimord, 'chancmb_')
   return
 end
 
+
 % Apply channel-type specific scaling
 fn = fieldnames(cfg);
-tmpcfg = keepfields(cfg, fn(endsWith(fn, 'scale') | startsWith(fn, 'mychan') | strcmp(fn, 'channel') | strcmp(fn, 'parameter')));
-[data] = chanscale_common(tmpcfg, data);
-
+fn = setdiff(fn, {'skipscale', 'showscale', 'gridscale'}); % these are for the layout and plotting, not for CHANSCALE_COMMON
+fn = fn(endsWith(fn, 'scale') | startsWith(fn, 'mychan') | strcmp(fn, 'channel') | strcmp(fn, 'parameter'));
+tmpcfg = keepfields(cfg, fn);
+if ~isempty(tmpcfg)
+  data = chanscale_common(tmpcfg, data);
+  % remove the scaling fields from the configuration, to prevent them from being called again in interactive mode
+  % but keep the parameter and channel field
+  cfg = removefields(cfg, setdiff(fn, {'parameter', 'channel'}));
+else
+  % do nothing
+end
 
 %% Section 3: select the data to be plotted and determine min/max range
 
@@ -365,8 +375,9 @@ end
 
 %% Section 4: do the actual plotting
 
-cla
-hold on
+% open a new figure, or add it to the existing one
+% note that in general adding a TFR to an existing one does not make sense, since they will overlap
+open_figure(keepfields(cfg, {'figure', 'clearfigure', 'position', 'visible', 'renderer', 'figurename', 'title'}));
 
 zval = mean(datamatrix, 1); % over channels
 zval = reshape(zval, size(zval,2), size(zval,3));
@@ -421,11 +432,6 @@ if isfield(cfg, 'colormap')
   end
 end
 
-% Set renderer if specified
-if ~isempty(cfg.renderer)
-  set(gcf, 'renderer', cfg.renderer)
-end
-
 axis xy
 
 if isequal(cfg.colorbar, 'yes')
@@ -471,7 +477,6 @@ if isempty(get(gcf, 'Name'))
 end
 
 axis tight
-hold off
 
 % Make the figure interactive
 if strcmp(cfg.interactive, 'yes')

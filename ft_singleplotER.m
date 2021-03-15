@@ -158,8 +158,9 @@ cfg = ft_checkconfig(cfg, 'renamed',    {'channelindex',   'channel'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'channelname',    'channel'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'cohrefchannel',  'refchannel'});
 cfg = ft_checkconfig(cfg, 'renamed',	  {'zparam',         'parameter'});
-cfg = ft_checkconfig(cfg, 'renamed',    {'graphcolor', 'linecolor'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'graphcolor',     'linecolor'});
 cfg = ft_checkconfig(cfg, 'deprecated', {'xparam'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'newfigure',      'figure'});
 
 % set the defaults
 cfg.viewmode        = ft_getopt(cfg, 'viewmode',      'average'); % average or butterfly
@@ -174,7 +175,6 @@ cfg.fontsize        = ft_getopt(cfg, 'fontsize',       8);
 cfg.interpreter     = ft_getopt(cfg, 'interpreter', 'none');  % none, tex or latex
 cfg.hotkeys         = ft_getopt(cfg, 'hotkeys',       'yes');
 cfg.interactive     = ft_getopt(cfg, 'interactive',   'yes');
-cfg.renderer        = ft_getopt(cfg, 'renderer',       []); % let MATLAB decide on the default
 cfg.maskparameter   = ft_getopt(cfg, 'maskparameter',  []);
 cfg.colorgroups     = ft_getopt(cfg, 'colorgroups',   'condition'); % this is the only supported option
 cfg.linecolor       = ft_getopt(cfg, 'linecolor',     'brgkywrgbkywrgbkywrgbkyw');
@@ -190,6 +190,7 @@ cfg.preproc         = ft_getopt(cfg, 'preproc',        []);
 cfg.frequency       = ft_getopt(cfg, 'frequency',     'all'); % needed for frequency selection with TFR data
 cfg.latency         = ft_getopt(cfg, 'latency',       'all'); % needed for latency selection with TFR data, FIXME, probably not used
 cfg.showlegend      = ft_getopt(cfg, 'showlegend',    'no');
+cfg.renderer        = ft_getopt(cfg, 'renderer',       []); % let MATLAB decide on the default
 
 % check for linestyle being a cell-array
 if ischar(cfg.linestyle)
@@ -360,17 +361,19 @@ end
 
 % Apply channel-type specific scaling
 fn = fieldnames(cfg);
-tmpcfg = keepfields(cfg, fn(endsWith(fn, 'scale') | startsWith(fn, 'mychan') | strcmp(fn, 'channel') | strcmp(fn, 'parameter')));
+fn = setdiff(fn, {'skipscale', 'showscale', 'gridscale'}); % these are for the layout and plotting, not for CHANSCALE_COMMON
+fn = fn(endsWith(fn, 'scale') | startsWith(fn, 'mychan') | strcmp(fn, 'channel') | strcmp(fn, 'parameter'));
+tmpcfg = keepfields(cfg, fn);
 if ~isempty(tmpcfg)
   for i=1:Ndata
     varargin{i} = chanscale_common(tmpcfg, varargin{i});
   end
-  % remove the scaling fields from the, to prevent them from being called
-  % again
-  cfg = removefields(cfg, setdiff(fn(endsWith(fn, 'scale') | startsWith(fn, 'mychan')), {'gridscale' 'showscale'}));
+  % remove the scaling fields from the configuration, to prevent them from being called again in interactive mode
+  % but keep the parameter and channel field
+  cfg = removefields(cfg, setdiff(fn, {'parameter', 'channel'}));
 else
   % do nothing
-end  
+end
 
 
 %% Section 3: select the data to be plotted and determine min/max range
@@ -453,19 +456,19 @@ end
 % determine the coloring of channels/conditions
 linecolor = linecolor_common(cfg, varargin{:});
 
-cla
-hold on
+% open a new figure, or add it to the existing one
+open_figure(keepfields(cfg, {'figure', 'clearfigure', 'position', 'visible', 'renderer', 'figurename', 'title'}));
 
 yval = datamatrix;
 mask = maskmatrix;
 
 if strcmp(cfg.maskstyle, 'difference')
   % combine the conditions in a single plot, highlight the difference
-  ft_plot_vector(xval, yval, 'color', linecolor, 'linewidth', cfg.linewidth, 'style', cfg.linestyle{1}, 'linewidth', cfg.linewidth, 'highlight', mask, 'highlightstyle', cfg.maskstyle, 'hlim', [xmin xmax], 'vlim', [ymin ymax], 'facealpha', cfg.maskfacealpha);
+  ft_plot_vector(xval, yval, 'color', linecolor, 'style', cfg.linestyle{1}, 'linewidth', cfg.linewidth, 'highlight', mask, 'highlightstyle', cfg.maskstyle, 'hlim', [xmin xmax], 'vlim', [ymin ymax], 'facealpha', cfg.maskfacealpha);
 else
   % loop over the conditions, plot them on top of each other
   for i=1:Ndata
-    ft_plot_vector(xval, yval(i,:), 'color', linecolor(i,:), 'linewidth', cfg.linewidth, 'style', cfg.linestyle{i}, 'highlight', mask, 'highlightstyle', cfg.maskstyle, 'linewidth', cfg.linewidth, 'hlim', [xmin xmax], 'vlim', [ymin ymax], 'facealpha', cfg.maskfacealpha);
+    ft_plot_vector(xval, yval(i,:), 'color', linecolor(i,:), 'style', cfg.linestyle{i}, 'linewidth', cfg.linewidth, 'highlight', mask, 'highlightstyle', cfg.maskstyle, 'hlim', [xmin xmax], 'vlim', [ymin ymax], 'facealpha', cfg.maskfacealpha);
   end
 end
 
@@ -562,13 +565,6 @@ if strcmp(cfg.interactive, 'yes')
   set(gcf, 'windowbuttondownfcn',   {@ft_select_range, 'multiple', false, 'yrange', false, 'callback', {@select_topoplotER}, 'event', 'windowbuttondownfcn'});
   set(gcf, 'windowbuttonmotionfcn', {@ft_select_range, 'multiple', false, 'yrange', false, 'callback', {@select_topoplotER}, 'event', 'windowbuttonmotionfcn'});
 end
-
-% set renderer if specified
-if ~isempty(cfg.renderer)
-  set(gcf, 'renderer', cfg.renderer)
-end
-
-hold off
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug

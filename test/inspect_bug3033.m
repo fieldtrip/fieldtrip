@@ -57,7 +57,7 @@ cfg.method = 'wavelet';
 ctf_meg_planar_freq = ft_timelockanalysis(cfg, ctf_meg_planar);
 
 
-%% make some derived data from the original Neuromag/Elekta file
+%% make some derived data from the original Neuromag/Elekta/Megin file
 
 cfg = [];
 cfg.channel = 'EEG';

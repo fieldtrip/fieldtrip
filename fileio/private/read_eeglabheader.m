@@ -37,7 +37,12 @@ if nargin < 1
 end
 
 if ~isstruct(filename)
-  load('-mat', filename, 'EEG');
+  s = whos('-file', filename);
+  if any(strcmp({s.name}', 'EEG'))
+    load('-mat', filename, 'EEG');
+  else % EEGLAB > 2021.0 saves content of EEG as default
+    EEG = load('-mat', filename);
+  end
 else
   EEG = filename;
 end
@@ -72,7 +77,7 @@ end
 %if isfield(EEG, 'datfile')
 %    if ~isempty(EEG.datfile)
 %        EEG.data = EEG.datfile;
-%    end;
+%    end
 %else
 %    EEG.data = 'in set file';
 %end;

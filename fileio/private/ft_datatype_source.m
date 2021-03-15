@@ -162,8 +162,8 @@ switch version
       
       for i=1:length(fn)
         % some fields are descriptive and hence identical over trials
-        if strcmp(fn{i}, 'csdlabel')
-          source.csdlabel = dat;
+        if any(strcmp(fn{i}, {'csdlabel' 'label' 'filterdimord' 'leadfielddimord'}))
+          source.(fn{i}) = source.trial(1).(fn{i});
           continue
         end
         

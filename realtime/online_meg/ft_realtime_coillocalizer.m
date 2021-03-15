@@ -192,7 +192,7 @@ while true
             endsample  = hdr.nSamples*hdr.nTrials;
         elseif strcmp(cfg.bufferdata, 'first')
             begsample  = prevSample+1;
-            endsample  = prevSample+blocksize ;
+            endsample  = prevSample+blocksize;
         else
             ft_error('unsupported value for cfg.bufferdata');
         end
@@ -259,7 +259,7 @@ while true
             end
             dipall = [];
             dipall.pos = pos;
-            dipall = dipole_fit(dipall, sens, vol, topo, 'constr', constr);
+            dipall = ft_inverse_dipolefit(dipall, sens, vol, topo, 'constr', constr);
             for i=1:ncoil
                 sel = (1:3) + 3*(i-1);
                 dip(i).pos = dipall.pos(i,:);
@@ -268,7 +268,7 @@ while true
         else
             % fit the coils sequentially
             for i=1:ncoil
-                dip(i) = dipole_fit(dip(i), sens, vol, topo(:,i));
+                dip(i) = ft_inverse_dipolefit(dip(i), sens, vol, topo(:,i));
             end
         end
         

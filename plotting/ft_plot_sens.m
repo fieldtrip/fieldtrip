@@ -358,17 +358,32 @@ if isempty(ori)
   end
 end % if empty(ori)
 
-if any(isnan(ori(:)))
+if mean(isnan(ori(:)))>0.25
+  % more than a quarter of the sensor orientations cannot be determined
+  % the ones that have been determined probably don't make sense either
   if iseeg
-    ft_notice('orienting EEG electrodes along the z-axis')
+    ft_notice('orienting all EEG electrodes along the z-axis')
   elseif ismeg
-    ft_notice('orienting MEG sensors along the z-axis')
+    ft_notice('orienting all MEG sensors along the z-axis')
   elseif isnirs
-    ft_notice('orienting NIRS optodes along the z-axis')
+    ft_notice('orienting all NIRS optodes along the z-axis')
   end
   ori(:,1) = 0;
   ori(:,2) = 0;
   ori(:,3) = 1;
+elseif any(isnan(ori(:)))
+  % only some of the sensor positions cannot be determined
+  % the others probably do make sense
+  if iseeg
+    ft_notice('orienting some EEG electrodes along the z-axis')
+  elseif ismeg
+    ft_notice('orienting some MEG sensors along the z-axis')
+  elseif isnirs
+    ft_notice('orienting some NIRS optodes along the z-axis')
+  end
+  ori(isnan(ori(:,1)),1) = 0;
+  ori(isnan(ori(:,2)),2) = 0;
+  ori(isnan(ori(:,3)),3) = 1;
 end
 
 if istrue(orientation)
@@ -464,21 +479,35 @@ if ~isempty(label) && ~any(strcmp(label, {'off', 'no'}))
     offset = ft_scalingfactor('mm', sens.unit)*10; % displace the label by 10 mm
   end
   
-  for i=1:length(sens.label)
+  for i=1:size(pos,1)
     switch label
-      case {'on', 'yes'}
-        str = sens.label{i};
-      case {'label' 'labels'}
-        str = sens.label{i};
+      case {'on', 'yes', 'label', 'labels'}
+        if ~individual
+          str = sens.label{i};
+        elseif ismeg
+          % individual MEG coils never have a label
+          str = '';
+        elseif iseeg
+          if isequal(sens.chanpos, sens.elecpos)
+            % the names of the electrodes and channels can be interchanged
+            str = sens.label{i};
+          else
+            % the names of the individual electrodes are not known
+            str = '';
+          end
+        elseif isnirs
+          % optodes have individual names
+          str = sens.optolabel{i};
+        end
       case {'number' 'numbers'}
         str = num2str(i);
       otherwise
         ft_error('unsupported value for option ''label''');
     end % switch
     % shift the label with a certain offset
-    x = sens.chanpos(i,1) + offset * ori(i,1);
-    y = sens.chanpos(i,2) + offset * ori(i,2);
-    z = sens.chanpos(i,3) + offset * ori(i,3);
+    x = pos(i,1) + offset * ori(i,1);
+    y = pos(i,2) + offset * ori(i,2);
+    z = pos(i,3) + offset * ori(i,3);
     text(x, y, z, str, 'color', fontcolor, 'fontunits', fontunits, 'fontsize', fontsize, 'fontname', fontname, 'fontweight', fontweight, 'horizontalalignment', 'center', 'verticalalignment', 'middle');
   end % for each channel
 end % if label

@@ -186,6 +186,7 @@ cfg = ft_checkconfig(cfg, 'renamedval', {'directionality', 'feedback', 'inflow'}
 cfg = ft_checkconfig(cfg, 'renamedval', {'directionality', 'feedforward', 'outflow'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'zlim', 'absmax', 'maxabs'});
 cfg = ft_checkconfig(cfg, 'unused', {'cohtargetchannel'});
+cfg = ft_checkconfig(cfg, 'renamed', {'newfigure', 'figure'});
 
 % set the defaults
 cfg.parameter      = ft_getopt(cfg, 'parameter', 'powspctrm');
@@ -208,7 +209,6 @@ cfg.fontsize       = ft_getopt(cfg, 'fontsize', 8);
 cfg.fontweight     = ft_getopt(cfg, 'fontweight');
 cfg.interactive    = ft_getopt(cfg, 'interactive', 'yes');
 cfg.hotkeys        = ft_getopt(cfg, 'hotkeys', 'yes');
-cfg.renderer       = ft_getopt(cfg, 'renderer'); % let MATLAB decide on the default
 cfg.orient         = ft_getopt(cfg, 'orient', 'landscape');
 cfg.maskalpha      = ft_getopt(cfg, 'maskalpha', 1);
 cfg.masknans       = ft_getopt(cfg, 'masknans', 'yes');
@@ -218,6 +218,7 @@ cfg.directionality = ft_getopt(cfg, 'directionality', '');
 cfg.figurename     = ft_getopt(cfg, 'figurename');
 cfg.commentpos     = ft_getopt(cfg, 'commentpos', 'layout');
 cfg.scalepos       = ft_getopt(cfg, 'scalepos', 'layout');
+cfg.renderer       = ft_getopt(cfg, 'renderer'); % let MATLAB decide on the default
 
 if ~isfield(cfg, 'box')
   if ~isempty(cfg.maskparameter)
@@ -346,14 +347,23 @@ end
 
 % Apply channel-type specific scaling
 fn = fieldnames(cfg);
-tmpcfg = keepfields(cfg, fn(endsWith(fn, 'scale') | startsWith(fn, 'mychan') | strcmp(fn, 'channel') | strcmp(fn, 'parameter')));
-data = chanscale_common(tmpcfg, data);
+fn = setdiff(fn, {'skipscale', 'showscale', 'gridscale'}); % these are for the layout and plotting, not for CHANSCALE_COMMON
+fn = fn(endsWith(fn, 'scale') | startsWith(fn, 'mychan') | strcmp(fn, 'channel') | strcmp(fn, 'parameter'));
+tmpcfg = keepfields(cfg, fn);
+if ~isempty(tmpcfg)
+  data = chanscale_common(tmpcfg, data);
+  % remove the scaling fields from the configuration, to prevent them from being called again in interactive mode
+  % but keep the parameter and channel field
+  cfg = removefields(cfg, setdiff(fn, {'parameter', 'channel'}));
+else
+  % do nothing
+end
 
 
 %% Section 3: select the data to be plotted and determine min/max range
 
 % Read or create the layout that will be used for plotting
-tmpcfg = keepfields(cfg, {'layout', 'rows', 'columns', 'commentpos', 'scalepos', 'projection', 'viewpoint', 'rotate', 'width', 'height', 'elec', 'grad', 'opto', 'showcallinfo'});
+tmpcfg = keepfields(cfg, {'layout', 'channel', 'rows', 'columns', 'commentpos', 'skipcomnt', 'scalepos', 'skipscale', 'projection', 'viewpoint', 'rotate', 'width', 'height', 'elec', 'grad', 'opto', 'showcallinfo'});
 cfg.layout = ft_prepare_layout(tmpcfg, data);
 
 % Take the subselection of channels that is contained in the layout, this is the same in all datasets
@@ -446,7 +456,9 @@ chanHeight = cfg.layout.height(sellay);
 
 %% Section 4: do the actual plotting
 
-cla
+% open a new figure, or add it to the existing one
+% note that in general adding a TFR to an existing one does not make sense, since they will overlap
+open_figure(keepfields(cfg, {'figure', 'clearfigure', 'position', 'visible', 'renderer', 'figurename', 'title'}));
 hold on
 
 % Get physical z-axis range (color axis):
@@ -497,7 +509,7 @@ for k=1:length(selchan)
 end % plot channels
 
 % plot the layout, labels and outline
-ft_plot_layout(cfg.layout, 'box', istrue(cfg.box), 'label', istrue(cfg.showlabels), 'outline', istrue(cfg.showoutline), 'point', 'no', 'mask', 'no', 'fontsize', cfg.fontsize, 'labelyoffset', 1.4*median(cfg.layout.height/2), 'labelalignh', 'center', 'chanindx', find(~ismember(cfg.layout.label, {'COMNT', 'SCALE'})) );
+ft_plot_layout(cfg.layout, 'box', cfg.box, 'label', cfg.showlabels, 'outline', cfg.showoutline, 'point', 'no', 'mask', 'no', 'fontsize', cfg.fontsize, 'labelyoffset', 1.4*median(cfg.layout.height/2), 'labelalignh', 'center', 'chanindx', find(~ismember(cfg.layout.label, {'COMNT', 'SCALE'})) );
 
 % show colormap
 if isfield(cfg, 'colormap')
@@ -573,7 +585,6 @@ end
 
 axis tight
 axis off
-hold off
 
 % Make the axis a little wider when boxes are shown
 if strcmp(cfg.box, 'yes')
@@ -593,11 +604,6 @@ else
   set(gcf, 'Name', sprintf('%d: %s', double(gcf), mfilename));
 end
 set(gcf, 'NumberTitle', 'off');
-
-% Set renderer if specified
-if ~isempty(cfg.renderer)
-  set(gcf, 'renderer', cfg.renderer)
-end
 
 % Make the figure interactive:
 if strcmp(cfg.interactive, 'yes')

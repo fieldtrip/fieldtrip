@@ -50,7 +50,9 @@ function ft_sourceplot(cfg, functional, anatomical)
 %   cfg.downsample    = downsampling for resolution reduction, integer value (default = 1) (orig: from surface)
 %   cfg.atlas         = string, filename of atlas to use (default = []) see FT_READ_ATLAS
 %                        for ROI masking (see 'masking' below) or for orthogonal plots (see method='ortho' below)
-%   cfg.visible       = string, 'on' or 'off', whether figure will be visible (default = 'on')
+%   cfg.visible       = string, 'on' or 'off' whether figure will be visible (default = 'on')
+%   cfg.position      = location and size of the figure, specified as a vector of the form [left bottom width height]
+%   cfg.renderer      = string, 'opengl', 'zbuffer', 'painters', see MATLAB Figure Properties. If this function crashes, you should try 'painters'.
 %
 % The following parameters can be used for the functional data:
 %   cfg.funcolormap   = colormap for functional data, see COLORMAP (default = 'auto')
@@ -272,6 +274,7 @@ cfg = ft_checkconfig(cfg, 'renamedval', {'location', 'interactive', 'auto'});
 cfg = ft_checkconfig(cfg, 'forbidden', {'units', 'coordsys', 'inputcoord', 'inputcoordsys', 'coordinates'});
 % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2837
 cfg = ft_checkconfig(cfg, 'renamed', {'viewdim', 'axisratio'});
+cfg = ft_checkconfig(cfg, 'renamed', {'newfigure', 'figure'});
 
 if isfield(cfg, 'atlas') && ~isempty(cfg.atlas)
   % the atlas lookup requires the specification of the coordsys
@@ -293,7 +296,6 @@ cfg.atlas         = ft_getopt(cfg, 'atlas',         []);
 cfg.marker        = ft_getopt(cfg, 'marker',        []);
 cfg.markersize    = ft_getopt(cfg, 'markersize',    5);
 cfg.markercolor   = ft_getopt(cfg, 'markercolor',   [1 1 1]);
-cfg.renderer      = ft_getopt(cfg, 'renderer',      'opengl');
 cfg.colorbar      = ft_getopt(cfg, 'colorbar',      'yes');
 cfg.colorbartext  = ft_getopt(cfg, 'colorbartext',  '');
 cfg.voxelratio    = ft_getopt(cfg, 'voxelratio',    'data'); % display size of the voxel, 'data' or 'square'
@@ -301,6 +303,7 @@ cfg.axisratio     = ft_getopt(cfg, 'axisratio',     'data'); % size of the axes 
 cfg.visible       = ft_getopt(cfg, 'visible',       'on');
 cfg.clim          = ft_getopt(cfg, 'clim',          [0 1]); % this is used to scale the orthoplot
 cfg.intersectmesh = ft_getopt(cfg, 'intersectmesh');
+cfg.renderer      = ft_getopt(cfg, 'renderer',      'opengl');
 
 if ~isfield(cfg, 'anaparameter')
   if isfield(functional, 'anatomy')
@@ -708,17 +711,10 @@ if ~hasroi
 end
 
 %% start building the figure
-h = figure('visible', cfg.visible);
+
+% open a new figure with the specified settings
+h = open_figure(keepfields(cfg, {'figure', 'position', 'visible', 'renderer', 'figurename', 'title'}));
 set(h, 'color', [1 1 1]);
-set(h, 'renderer', cfg.renderer);
-if ~isempty(cfg.figurename)
-  % this appears as the name of the window
-  set(h, 'name', cfg.figurename);
-end
-if ~isempty(cfg.title)
-  % this appears above the axes
-  title(cfg.title);
-end
 
 %% set color and opacity mapping for this figure
 if hasfun
@@ -981,6 +977,10 @@ switch cfg.method
       zi = nearest(1:dim(3), loc(3));
     end
     
+    if numel(dim)<3
+      ft_error('the input source structure cannot be reshaped into a volumetric 3D representation');
+    end
+    
     xi = round(xi); xi = max(xi, 1); xi = min(xi, dim(1));
     yi = round(yi); yi = max(yi, 1); yi = min(yi, dim(2));
     zi = round(zi); zi = max(zi, 1); zi = min(zi, dim(3));
@@ -1029,9 +1029,6 @@ switch cfg.method
     set(h, 'windowbuttonupfcn',   @cb_buttonrelease);
     set(h, 'windowkeypressfcn',   @cb_keyboard);
     set(h, 'CloseRequestFcn',     @cb_quit);
-    
-    % ensure that this is done in interactive mode
-    set(h, 'renderer', cfg.renderer);
     
     %% create figure handles
     

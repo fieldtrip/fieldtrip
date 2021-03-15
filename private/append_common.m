@@ -93,8 +93,9 @@ switch cfg.appenddim
     tmpcfg.select = 'union';
     [varargin{:}] = ft_selectdata(tmpcfg, varargin{:});
     for i=1:numel(varargin)
-      [cfg, varargin{i}] = rollback_provenance(cfg, varargin{i});
+      [cfg_rolledback, varargin{i}] = rollback_provenance(cfg, varargin{i});
     end
+    cfg = cfg_rolledback;
     
     % start with the union of all input data
     data = keepfields(varargin{1}, {'label', 'time', 'freq', 'dimord'});
@@ -130,12 +131,12 @@ switch cfg.appenddim
             chansel = match_str(varargin{j}.label, oldlabel{j});
             data.(cfg.parameter{i})(:,chansel,chansel) = varargin{j}.(cfg.parameter{i})(:,chansel,chansel);
           end
-          
-        case {'chan' 'chan_time' 'chan_freq'}
+           
+        case {'chan' 'chan_time' 'chan_freq' 'chan_freq_time'}
           data.(cfg.parameter{i}) = nan(dimsiz);
           for j=1:numel(varargin)
             chansel = match_str(varargin{j}.label, oldlabel{j});
-            data.(cfg.parameter{i})(chansel,:) = varargin{j}.(cfg.parameter{i})(chansel,:);
+            data.(cfg.parameter{i})(chansel,:,:) = varargin{j}.(cfg.parameter{i})(chansel,:,:);
           end
           
         case {'rpt_chan_time' 'subj_chan_time' 'rpt_chan_freq' 'rpttap_chan_freq' 'subj_chan_freq'}
@@ -331,19 +332,20 @@ if hasgrad || haselec || hasopto
       opto{j} = varargin{j}.opto;
     end
   end
-  % see test_pull393.m for a description of the expected behavior
+  % see TEST_PULL393 for a description of the expected behavior
   if strcmp(cfg.appendsens, 'yes')
-    fprintf('concatenating sensor information across input arguments\n');
+    ft_notice('concatenating sensor information across input arguments\n');
     % append the sensor descriptions, skip the empty ones
     if hasgrad, data.grad = ft_appendsens([], grad{~cellfun(@isempty, grad)}); end
     if haselec, data.elec = ft_appendsens([], elec{~cellfun(@isempty, elec)}); end
     if hasopto, data.opto = ft_appendsens([], opto{~cellfun(@isempty, opto)}); end
   else
-    % discard sensor information when it is inconsistent across the input arguments
+    % discard sensor information when any of the input arguments does not have it
     removegrad = any(cellfun(@isempty, grad));
     removeelec = any(cellfun(@isempty, elec));
     removeopto = any(cellfun(@isempty, opto));
     for j=2:length(varargin)
+      % discard sensor information when it is inconsistent across the input arguments
       removegrad = removegrad || ~isequaln(grad{j}, grad{1});
       removeelec = removeelec || ~isequaln(elec{j}, elec{1});
       removeopto = removeopto || ~isequaln(opto{j}, opto{1});
@@ -351,5 +353,8 @@ if hasgrad || haselec || hasopto
     if hasgrad && ~removegrad, data.grad = grad{1}; end
     if haselec && ~removeelec, data.elec = elec{1}; end
     if hasopto && ~removeopto, data.opto = opto{1}; end
+    if hasgrad && removegrad, ft_notice('discarding inconsistent grad structure\n'); end
+    if haselec && removeelec, ft_notice('discarding inconsistent elec structure\n'); end
+    if hasopto && removeopto, ft_notice('discarding inconsistent opto structure\n'); end
   end
 end

@@ -1,11 +1,11 @@
 function [pnt, ori, lab] = channelposition(sens)
 
 % CHANNELPOSITION computes the channel positions and orientations from the
-% coils or electrodes
+% MEG coils, EEG electrodes or NIRS optodes
 %
 % Use as
 %   [pos, ori, lab] = channelposition(sens)
-% where sens is an electrode,  gradiometer or optode array.
+% where sens is an gradiometer, electrode, or optode array.
 %
 % See also FT_DATATYPE_SENS
 
@@ -194,6 +194,8 @@ switch ft_senstype(sens)
     % find the matching channel-duplets
     ind = [];
     lab = {};
+    pnt = zeros(0,3);
+    ori = zeros(0,3);
     for i=1:2:140
       % first try MEG channel labels with a space
       ch1 = sprintf('MEG %03d', i);
@@ -225,6 +227,8 @@ switch ft_senstype(sens)
     % find the matching channel-triplets
     ind = [];
     lab = {};
+    pnt = zeros(0,3);
+    ori = zeros(0,3);
     for i=1:300
       % first try MEG channel labels with a space
       ch1 = sprintf('MEG %03d1', i);

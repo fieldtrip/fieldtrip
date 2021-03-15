@@ -237,7 +237,7 @@ end
 X = dat(orderAR+1:end,:);
 for k = 1:orderAR
     X = X + coeffAR(k)*dat(orderAR+1-k:end-k,:);
-end;
+end
 sigma = sum(X.*conj(X),1)./(nsmp-orderAR);
 
 % calculate the power spectrum
@@ -380,7 +380,7 @@ fprintf('the number of trials for which no max was found = %d\n',cnt);
 % Estimate the ERP amplitudes using Least-Squares in the frequency domain
 for trialNo = 1:ntrl
   A     = exp(-1i*freqSeq* lat_est(trialNo,:) ).*erp_est; 
-  A_tmp = A.*(inv_noise(:,trialNo) * ones(1, Ncomp)) ;
+  A_tmp = A.*(inv_noise(:,trialNo) * ones(1, Ncomp));
   x     = data(:,trialNo);
   amp_estTmp = real(A'*A_tmp)\real(A_tmp'*x);
   

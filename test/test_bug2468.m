@@ -11,7 +11,7 @@ filename = dccnpath('/home/common/matlab/fieldtrip/data/test/bug2468.mat');
 load(filename);
 
 % this is a dirty fix which is intended to be fixed upstream in the
-% analysis pipeline, i.e. in beamformer_pcc
+% analysis pipeline, i.e. in ft_inverse_pcc
 for k = 1:numel(sdata.avg.mom)
   csdlabel{k,1} = repmat({'scandip'}, [1 size(sdata.avg.mom{k},1)]);
 end

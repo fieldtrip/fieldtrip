@@ -87,7 +87,6 @@ for i=1:length(channel)
 
     case 3
       % Waveform variables
-      % only wave timestamps are used, waveform values are not actually used. see ft_read_data
       buf.ts = Nex5ReadTimestamps(fid, vh);
       if ~tsonly
         if vh.ContDataType == 0

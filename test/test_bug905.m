@@ -57,7 +57,7 @@ for freqbinindx=1:nfreqbins
     freqindx1=find(freqs==freqbins{freqbinindx}(1));
     freqindx2=find(freqs==freqbins{freqbinindx}(2));
     freqbinindcs(freqindx1:freqindx2)=freqbinindx;
-end;
+end
 
 % perform a frequency analysis
 allfreqs=[];
@@ -73,7 +73,7 @@ for freqbinindx=1:nfreqbins
   freqcfg.pad='maxperlen';
   freqout_mtmfft{freqbinindx}=ft_freqanalysis(freqcfg,datapart);
   allfreqs=[allfreqs,freqout_mtmfft{freqbinindx}.freq];
-end;
+end
 
 ntrials=length(datapart.trial);
 trialindcs=1:ntrials;
@@ -83,4 +83,4 @@ for freqbinindx=1:nfreqbins
   freqdescrcfg=[];
   freqdescrcfg.trials=trialindcs;
   freqdescrout_mtmfft{freqbinindx}=ft_freqdescriptives(freqdescrcfg,freqout_mtmfft{freqbinindx});
-end;
+end

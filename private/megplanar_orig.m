@@ -23,15 +23,24 @@ function montage = megplanar_orig(cfg, grad)
 %
 % $Id$
 
-neighbsel = cfg.neighbsel;
-distance  = cfg.distance;
-
 lab   = grad.label;
-tmp   = ft_channelselection('MEG', lab);
-sel   = match_str(lab, tmp);
-pnt   = grad.chanpos(sel,:);
-ori   = grad.chanori(sel,:);
-lab   = lab(sel);
+type  = grad.chantype;
+
+% ensure correct order
+% cfg.channel       = ft_channelselection(cfg.channel, lab);
+[chansel, labsel] = match_str(cfg.channel, lab);
+lab               = lab(labsel);
+type              = type(labsel);
+
+% we need to ensure that this one is in cfg.channel order - this is done in
+% ft_megplanar!
+neighbsel = cfg.neighbsel(chansel, chansel);
+distance  = cfg.distance(chansel, chansel);
+
+% sel   = match_str(lab, tmp);
+pnt   = grad.chanpos(labsel,:);
+ori   = grad.chanori(labsel,:);
+
 Ngrad = length(lab);
 
 gradH = zeros(Ngrad, Ngrad);

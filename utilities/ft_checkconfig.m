@@ -31,7 +31,8 @@ function [cfg] = ft_checkconfig(cfg, varargin)
 % Optional input arguments should be specified as key-value pairs and can include
 %   renamed         = {'old',  'new'}        % list the old and new option
 %   renamedval      = {'opt',  'old', 'new'} % list option and old and new value
-%   allowedval      = {'opt', 'allowed1'...} % list of allowed values for a particular option, anything else will throw an error
+%   allowedtype     = {'opt', 'allowed1', ...} % list of allowed data type classes for a particular option, anything else will throw an error
+%   allowedval      = {'opt', 'allowed1', ...} % list of allowed values for a particular option, anything else will throw an error
 %   required        = {'opt1', 'opt2', etc.} % list the required options
 %   allowed         = {'opt1', 'opt2', etc.} % list the allowed options, all other options are forbidden
 %   forbidden       = {'opt1', 'opt2', etc.} % list the forbidden options, these result in an error
@@ -44,7 +45,7 @@ function [cfg] = ft_checkconfig(cfg, varargin)
 %   checksize       = 'yes', 'no'            % remove large fields from the cfg
 %   trackconfig     = 'on', 'off'            % start/end config tracking
 %
-% See also FT_CHECKDATA, FT_DEFAULTS
+% See also FT_CHECKDATA, FT_CHECKOPT, FT_DEFAULTS
 
 % Copyright (C) 2007-2020, Robert Oostenveld, Saskia Haegens
 %
@@ -73,12 +74,13 @@ deprecated      = ft_getopt(varargin, 'deprecated');
 unused          = ft_getopt(varargin, 'unused');
 forbidden       = ft_getopt(varargin, 'forbidden');
 renamedval      = ft_getopt(varargin, 'renamedval');
+allowedtype     = ft_getopt(varargin, 'allowedtype');
 allowedval      = ft_getopt(varargin, 'allowedval');
 createsubcfg    = ft_getopt(varargin, 'createsubcfg');
 createtopcfg    = ft_getopt(varargin, 'createtopcfg');
-checkfilenames  = ft_getopt(varargin, 'dataset2files');
-checkinside     = ft_getopt(varargin, 'inside2logical', 'off');
-checksize       = ft_getopt(varargin, 'checksize', 'off');
+checkfilenames  = ft_getopt(varargin, 'dataset2files', 'no');
+checkinside     = ft_getopt(varargin, 'inside2logical', 'no');
+checksize       = ft_getopt(varargin, 'checksize', 'no');
 trackconfig     = ft_getopt(varargin, 'trackconfig');
 
 if ~isempty(trackconfig) && strcmp(trackconfig, 'on')
@@ -229,16 +231,13 @@ if ~isempty(forbidden)
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% check for allowed values, give error if non-allowed value is specified
+% check for allowed types and values, give error if incorrect
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if ~isempty(allowedval) && isfield(cfg, allowedval{1}) ...
-    && ~any(strcmp(cfg.(allowedval{1}), allowedval(2:end)))
-  s = ['The only allowed values for cfg.' allowedval{1} ' are: '];
-  for k = 2:numel(allowedval)
-    s = [s allowedval{k} ', '];
-  end
-  s = s(1:end-2); % strip last comma
-  ft_error(s);
+if ~isempty(allowedtype)
+  ft_checkopt(cfg, allowedtype{1}, allowedtype(2:end), {});
+end
+if ~isempty(allowedval)
+  ft_checkopt(cfg, allowedval{1}, {}, allowedval(2:end));
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -275,7 +274,7 @@ end
 % them from the separate substructure to the top level.
 %
 % This is to ensure backward compatibility of end-user scripts, FieldTrip functions
-% and documentation that use an obsolete nested configuration where a flat 
+% and documentation that use an obsolete nested configuration where a flat
 % configuration should be used.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if ~isempty(createtopcfg)
@@ -442,11 +441,8 @@ if ~isempty(createsubcfg)
           'kappa'
           'tolerance'
           'invmethod'
-          'normalize'
-          'normalizeparam'
           'powmethod'
           'projectnoise'
-          'reducerank'
           'realfilter'
           'subspace'
           };
@@ -457,9 +453,6 @@ if ~isempty(createsubcfg)
           'keepmom'
           'lambda'
           'kappa'
-          'normalize'
-          'normalizeparam'
-          'reducerank'
           };
 
       case 'sloreta'
@@ -474,12 +467,9 @@ if ~isempty(createsubcfg)
           'kappa'
           'tolerance'
           'invmethod'
-          'normalize'
-          'normalizeparam'
           'powmethod'
           'projectnoise'
           'projectmom'
-          'reducerank'
           'subspace'
           };
 
@@ -495,12 +485,9 @@ if ~isempty(createsubcfg)
           'kappa'
           'tolerance'
           'invmethod'
-          'normalize'
-          'normalizeparam'
           'powmethod'
           'projectnoise'
           'projectmom'
-          'reducerank'
           'subspace'
           };
 
@@ -513,11 +500,8 @@ if ~isempty(createsubcfg)
           'kappa'
           'tolerance'
           'invmethod'
-          'normalize'
-          'normalizeparam'
           %'powmethod'
           'projectnoise'
-          'reducerank'
           'keepcsd'
           'realfilter'
           'fixedori'
@@ -568,9 +552,9 @@ if ~isempty(createsubcfg)
           'tolerance'
           'invmethod'
           'fixedori'
-          'reducerank'
-          'normalize'
-          'normalizeparam'
+          'noisecov'
+          'toi'
+          'latency_ori'
           };
 
       case 'mvl'

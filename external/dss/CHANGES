@@ -44,3 +44,18 @@ Changes in beta-4:
 - global beta function
 - copyright texts
 - global_beta defined for denoising functions
+
+Moreover, this particular version of the code contains adjustments made for use within FieldTrip:
+
+Some modifications were made to the following functions, in order to support cell-data as input:
+
+dss_core_defl.m
+dss_core_pca.m
+dss_core_symm.m
+dss_preprocess.m
+dss_sphere.m
+pre_sphere.m
+
+New functions, not present in the original toolbox, but based on the original:
+denoise_avg2, which specifically allows for epoch-boundary respecting averaging, cell-input, and specific baseline options. 
+denoise_filter2, which specifically respects epoch boundaries, supports cell-input, and more flexible filters

@@ -71,7 +71,7 @@ stack = stack(3:end);
 
 % remove the non-FieldTrip functions from the path, these should not be part of the default message identifier
 keep = true(size(stack));
-p = fileparts(which('ft_defaults'));
+[v, p] = ft_version;
 for i=1:numel(stack)
   keep(i) = strncmp(p, stack(i).file, length(p));
 end
@@ -298,6 +298,7 @@ switch varargin{1}
       msgId = varargin{1};
       varargin = varargin(2:end); % shift them all by one
     else
+      % use an automatically generated default identifier
       msgId = defaultId;
     end
     
@@ -320,11 +321,6 @@ switch varargin{1}
         % the timeout has not yet passed, do not print the message
         msgState = 'off';
       end
-    end
-    
-    % use an automatically generated default identifier
-    if isempty(msgId)
-      msgId = defaultId;
     end
     
     if varargin{1}(end) =='\'
@@ -392,7 +388,7 @@ switch varargin{1}
         fprintf('\n');
       end
       
-      % decide whether a verboe message should be shown
+      % decide whether a verbose message should be shown
       if istrue(getstate(s, 'verbose'))
         if ~isempty(msgId)
           fprintf('Type "ft_%s off %s" to suppress this message.\n', level, msgId)
@@ -440,8 +436,7 @@ else
 end
 
 function state = getstate(s, msgId)
-identifier = {s.identifier};
-sel = find(strcmp(identifier, msgId));
+sel = find(strcmp({s.identifier}, msgId));
 if numel(sel)==1
   state = s(sel).state;
   if isempty(state)
@@ -452,8 +447,7 @@ else
 end
 
 function timestamp = gettimestamp(s, msgId)
-identifier = {s.identifier};
-sel = find(strcmp(identifier, msgId));
+sel = find(strcmp({s.identifier}, msgId));
 if numel(sel)==1
   timestamp = s(sel).timestamp;
 else
@@ -462,8 +456,7 @@ end
 
 function s = setstate(s, msgId, state)
 if isempty(msgId), return; end % this happens from the command line
-identifier = {s.identifier};
-sel = find(strcmp(identifier, msgId));
+sel = find(strcmp({s.identifier}, msgId));
 if numel(sel)==1
   s(sel).state = state;
 else
@@ -474,8 +467,7 @@ end
 
 function s = settimestamp(s, msgId, timestamp)
 if isempty(msgId), return; end % this happens from the command line
-identifier = {s.identifier};
-sel = find(strcmp(identifier, msgId));
+sel = find(strcmp({s.identifier}, msgId));
 if numel(sel)==1
   s(sel).timestamp = timestamp;
 else

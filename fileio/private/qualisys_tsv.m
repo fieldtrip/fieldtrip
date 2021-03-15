@@ -7,7 +7,7 @@ function varargout = qualisys_tsv(filename, hdr, begsample, endsample, chanindx)
 %   dat = qualysis_tsv(filename, hdr, begsample, endsample, chanindx);
 %   evt = qualysis_tsv(filename, hdr);
 %
-% See also FT_FILETYPE, FT_READ_HEADER, FT_READ_DATA, FT_READ_EVENT
+% See also FT_FILETYPE, FT_READ_HEADER, FT_READ_DATA, FT_READ_EVENT, MOTION_C3D
 
 % Copyright (C) 2019 Robert Oostenveld
 %

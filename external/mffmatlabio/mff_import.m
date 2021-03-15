@@ -3,7 +3,7 @@
 %                 events, channels and channel coordinates.
 %
 % Usage:
-%   mff_import(EEG, mffFile);
+%   EEG = mff_import(mffFile);
 %
 % Input:
 %  mffFile - filename/foldername for the MFF file (MFF file/folder must
@@ -77,8 +77,8 @@ end
 mffPath = fileparts(mffFile);
 if isempty(mffPath)
     mffFile = fullfile(pwd, mffFile);
-else
-    disp('Make sure you call this function with the full MFF ressource path name ******');
+elseif exist(fullfile(pwd, mffFile))
+    mffFile = fullfile(pwd, mffFile);
 end
 
 % import data
@@ -108,20 +108,32 @@ EEG.srate = double(srate(1));
 EEG.pnts  = size(EEG.data,2);
 EEG.xmin  = 0;
 EEG.xmax  = 1;
-if exist('eeg_checkset.m', 'file')
+if exist('eeg_checkset.m', 'file') && exist('eeglab_options.m', 'file')
     EEG = eeg_checkset(EEG);
 end
 
 % scale signal with calibration values if necessary
-infon = mff_importinfon(mffFile);
-if isfield(infon, 'calibration')
+disp('Make sure you to use the MFF ressource path name not the relative path (crash often related to that issue) ******');
+info1 = mff_importinfon(mffFile, 1);
+info2 = mff_importinfon(mffFile, 2);
+if isfield(info1, 'calibration')
     disp('Calibrating data...');
-    for iChan = 1:length(infon.calibration)
-        floatData(iChan,:,:) = floatData(iChan,:,:)*infon.calibration(iChan);
+    for iChan = 1:length(info1.calibration)
+        floatData(iChan,:,:) = floatData(iChan,:,:)*info1.calibration(iChan);
     end
 end
-infon.calibration = [];
-EEG.etc.infon = infon;
+if isfield(info2, 'calibration')
+    disp('Calibrating data...');
+    for iChan = 1:length(info2.calibration)
+        floatData(end-length(info2.calibration)+iChan,:,:) = floatData(end-length(info2.calibration)+iChan,:,:)*info2.calibration(iChan);
+    end
+end
+info1.calibration = [];
+info2.calibration = [];
+EEG.etc.info1 = info1;
+if ~isempty(info2) && length(fieldnames(info2)) > 1 
+    EEG.etc.info2 = info2; % more than just calibration
+end
 
 % import info file
 info    = mff_importinfo(mffFile);
@@ -141,7 +153,12 @@ end
 EEG.urchanlocs = EEG.chanlocs;
 pnschans                = mff_importpnsset(mffFile);
 if length(pnschans) ~= npns && ~(length(pnschans) == size(EEG.data,1) && isempty(EEG.chanlocs))
-    error('Number of PNS raw data channels is not equal to number of PNS channels'); 
+    if length(pnschans) == npns+1
+        % last PNS status channel missing because blank and removed by mff_importsignal
+        pnschans(end) = [];
+    else
+        error('Number of PNS raw data channels is not equal to number of PNS channels');
+    end
 end
 if ~isempty(EEG.chanlocs)
     if exist('eeg_checkchanlocs.m', 'file')
@@ -213,9 +230,18 @@ if ~isempty(cat)
     for iCat = 1:length(cat)
         catContTmp = cat(iCat).trials;
         [catContTmp.name] = deal(cat(iCat).name);
-        catCont = [ catCont catContTmp ];
+        try
+            catCont = [ catCont catContTmp ];
+        catch
+            fieldsTmp = fieldnames(catContTmp);
+            for iCount = 1:length(catContTmp)
+                for iField = 1:length(fieldsTmp)
+                    catCont(end+1).(fieldsTmp{iField}) = catContTmp(iCount).(fieldsTmp{iField});
+                end
+            end
+        end
     end
-    [tmp indices] = sort([catCont.begintime]);
+    [tmp, indices] = sort([catCont.begintime]);
     catCont = catCont(indices);
     
     for iBound = 1:length(cont) % do not add first event
@@ -244,8 +270,13 @@ if ~isempty(cat)
         EEG.event(end).latency  = -EEG.xmin*EEG.srate+1+EEG.pnts*(iBound-1);
         EEG.event(end).duration = (trial.eventend-trial.eventbegin)/1000000*EEG.srate; % this is sometimes off by 1e-13
 
-        EEG.event(end).status   = trial.status;
         EEG.event(end).epoch    = iBound;
+        
+        % copy other fields
+        trialFields = setdiff(fields(trial), { 'name', 'begintime', 'endtime', 'eventbegin', 'eventend' });
+        for iField = 1:length(trialFields)
+            EEG.event(end).(trialFields{iField}) = trial.(trialFields{iField});
+        end
 
         cont(iBound).samplebeg = cont(iBound).begintime/1000000*EEG.srate;
         cont(iBound).sampleend = cont(iBound).endtime/1000000*EEG.srate;
@@ -304,6 +335,8 @@ else
 %            EEG.event(end).latency  = sampleCalculated;
         end
     end
+    
+    % rename Break cnt events
 end
 
 %% resort events and check event structure
@@ -311,7 +344,7 @@ if ~isempty(EEG.event)
     if any(cellfun(@isempty, { EEG.event.latency }))
         error('Some empty event latency')
     end
-    [tmp,iEvent] = sort([EEG.event.latency]);
+    [~,iEvent] = sort([EEG.event.latency]);
     EEG.event = EEG.event(iEvent);
     
     % remove duration of remove data portions from events
@@ -328,13 +361,19 @@ if ~isempty(EEG.event)
     % data trials
     s = dbstack;
     if length(s) <= 1 || ~strcmpi(s(2).file, 'pop_mffimport.m')
-        if exist('eeg_checkset.m', 'file')
+        if exist('eeg_checkset.m', 'file') && exist('eeglab_options.m', 'file')
             EEG = eeg_checkset(EEG,'eventconsistency');
         end
     end
 end
 
 data = EEG.data;
-event = EEG.event;
+events = EEG.event;
 chanlocs = EEG.chanlocs;
 mff = EEG.etc;
+try
+    EEG = eeg_checkset(EEG); 
+catch
+    EEG.pnts   = size(EEG.data,2);
+    EEG.trials = size(EEG.data,3);
+end

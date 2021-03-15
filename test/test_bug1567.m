@@ -23,4 +23,4 @@ for i=1:numel(datasets)
      cfg.continuous = 'no';
    end
    data = ft_preprocessing(cfg);
-end;
+end

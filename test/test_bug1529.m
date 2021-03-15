@@ -8,7 +8,7 @@ function test_bug1529
 
 %% Load the SPMtemplate 
 mritem = ft_read_mri([ftpath '/external/spm8/templates/T1.nii']);
-% mrichecked = ft_determine_coordsys(mritem) ;
+% mrichecked = ft_determine_coordsys(mritem);
 mritem.coordsys = 'spm'; % define the coordinate system (why is this not part of ft_read_mri?)
 
 %% Display the Anatomy via plot_ortho (defaults)

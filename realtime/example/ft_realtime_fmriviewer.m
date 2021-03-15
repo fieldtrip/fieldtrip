@@ -101,7 +101,7 @@ while true
       endsample  = hdr.nSamples*hdr.nTrials;
     elseif strcmp(cfg.bufferdata, 'first')
       begsample  = prevSample+1;
-      endsample  = prevSample+blocksize ;
+      endsample  = prevSample+blocksize;
     else
       ft_error('unsupported value for cfg.bufferdata');
     end
@@ -144,4 +144,3 @@ while true
     pause(0.01);
   end % if enough new samples
 end % while true
-

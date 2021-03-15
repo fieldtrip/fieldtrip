@@ -30,37 +30,37 @@ if any(g~=d),
     v   = zeros(g);
     v(1:d(1),1:d(2),1:d(3)) = tmp;
     clear tmp;
-end;
+end
 
 % XY-shear
 tmp1 = -sqrt(-1)*2*pi*([0:((g(3)-1)/2) 0 (-g(3)/2+1):-1])/g(3);
 for j=1:g(2),
     t        = reshape( exp((j*S3(3,2) + S3(3,1)*(1:g(1)) + S3(3,4)).'*tmp1) ,[g(1) 1 g(3)]);
     v(:,j,:) = real(ifft(fft(v(:,j,:),[],3).*t,[],3));
-end;
+end
 
 % XZ-shear
 tmp1 = -sqrt(-1)*2*pi*([0:((g(2)-1)/2) 0 (-g(2)/2+1):-1])/g(2);
 for k=1:g(3),
     t        = exp( (k*S2(2,3) + S2(2,1)*(1:g(1)) + S2(2,4)).'*tmp1);
     v(:,:,k) = real(ifft(fft(v(:,:,k),[],2).*t,[],2));
-end;
+end
 
 % YZ-shear
 tmp1 = -sqrt(-1)*2*pi*([0:((g(1)-1)/2) 0 (-g(1)/2+1):-1])/g(1);
 for k=1:g(3),
     t        = exp( tmp1.'*(k*S1(1,3) + S1(1,2)*(1:g(2)) + S1(1,4)));
     v(:,:,k) = real(ifft(fft(v(:,:,k),[],1).*t,[],1));
-end;
+end
 
 % XY-shear
 tmp1 = -sqrt(-1)*2*pi*([0:((g(3)-1)/2) 0 (-g(3)/2+1):-1])/g(3);
 for j=1:g(2),
     t        = reshape( exp( (j*S0(3,2) + S0(3,1)*(1:g(1)) + S0(3,4)).'*tmp1) ,[g(1) 1 g(3)]);
     v(:,j,:) = real(ifft(fft(v(:,j,:),[],3).*t,[],3));
-end;
+end
 
-if any(g~=d), v = v(1:d(1),1:d(2),1:d(3)); end;
+if any(g~=d), v = v(1:d(1),1:d(2),1:d(3)); end
 return;
 %_______________________________________________________________________
 

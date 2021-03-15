@@ -10,25 +10,34 @@ function [layout, cfg] = ft_prepare_layout(cfg, data)
 %   layout = ft_prepare_layout(cfg, data)
 % where the optional data input argument is any of the FieldTrip data structures.
 %
-% There are several ways in which a 2-D layout can be made: 1) it can be read
-% directly from a layout file, 2) it can be created on basis of an image or photo, 3)
-% it can be created based on 3-D sensor positions in the configuration, in the data,
-% or in an electrode or gradiometer file.
+% This returns a layout structure with the following elements
+%   layout.pos     = Nx2 matrix with the position where each channel should be plotted
+%   layout.label   = Nx1 cell-array with the channel labels
+%   layout.width   = Nx1 vector with the width of each box for multiplotting
+%   layout.height  = Nx1 vector with the height of each box for multiplotting
+%   layout.mask    = optional cell-array with line segments that determine the area for topographic interpolation
+%   layout.outline = optional cell-array with line segments that represent the head, nose, ears, sulci or other anatomical features
 %
-% Layout files are MATLAB *.mat files with a single variable representing the layout
-% (see below). The layout file can also be an ASCII *.lay file, although this type of
-% layout is no longer recommended, since the outline of the head and the mask within
-% which the interpolation is done is less refined. A large number of template layout
-% files is provided in the fieldtrip/template/layout directory. See also
+% There are several ways in which a 2-D layout can be made:
+% 1) it can be read directly from a layout file
+% 2) it can be created on basis of an image or photo,
+% 3) it can be created from a projection of the 3-D sensor positions in the data, in the configuration, or in an electrode, gradiometer or optode file.
+%
+% Layout files are MATLAB *.mat files containing a single structure representing the layout
+% (see above). The layout file can also be an ASCII file with the extension *.lay, although
+% this file format is no longer recommended, since there is less control over the outline
+% of the head and the mask within which the interpolation is done. A large number of
+% template layout files is provided in the fieldtrip/template/layout directory. See
 % also http://www.fieldtriptoolbox.org/template/layout
 %
 % You can specify any one of the following configuration options
 %   cfg.layout      = filename containg the input layout (*.mat or *.lay file), this can also be a layout
 %                     structure, which is simply returned as-is (see below for details)
 %   cfg.output      = filename (ending in .mat or .lay) to which the layout will be written (default = [])
+%   cfg.feedback    = 'yes' or 'no', whether to show an image of the layout (default = 'no')
 %   cfg.elec        = structure with electrode positions or filename, see FT_READ_SENS
 %   cfg.grad        = structure with gradiometer definition or filename, see FT_READ_SENS
-%   cfg.opto        = sstructure with optode definition or filename, see FT_READ_SENS
+%   cfg.opto        = structure with optode definition or filename, see FT_READ_SENS
 %   cfg.rotate      = number, rotation around the z-axis in degrees (default = [], which means automatic)
 %   cfg.center      = string, center and scale the electrodes in the sphere that represents the head, can be 'yes' or 'no' (default = 'no')
 %   cfg.projection  = string, 2D projection method can be 'stereographic', 'orthographic', 'polar' or 'gnomic' (default = 'polar')
@@ -83,33 +92,26 @@ function [layout, cfg] = ft_prepare_layout(cfg, data)
 %   cfg.width  = scalar (default is automatic)
 %   cfg.height = scalar (default is automatic)
 %
-% For an sEEG shaft the option cfg.layout='vertical' or 'horizontal' is useful. In
-% this case you can also specify the direction of the shaft as going from left-to-right,
-% top-to-bottom, etc.
+% For an sEEG shaft the option cfg.layout='vertical' or 'horizontal' is useful to
+% represent the channels in a linear sequence . In this case you can also specify the
+% direction of the shaft as going from left-to-right, top-to-bottom, etc.
 %   cfg.direction = string, can be any of 'LR', 'RL' (for horizontal), 'TB', 'BT' (for vertical)
 %
-% For an ECoG grid the option cfg.layout='ordered' is useful. In this case you can
-% also specify the number of rows and/or columns and hwo the channels increment over
-% the grid (e.g. first left-to-right, then top-to-bottom). You can check the channel
-% order of your grid using FT_PLOT_LAYOUT.
+% For an ECoG grid the option cfg.layout='ordered' is useful to represent the
+% channels in a grid array. In this case you can also specify the number of rows
+% and/or columns and hwo the channels increment over the grid (e.g. first
+% left-to-right, then top-to-bottom). You can check the channel order of your grid
+% using FT_PLOT_LAYOUT.
 %   cfg.rows      = number of rows (default is automatic)
 %   cfg.columns   = number of columns (default is automatic)
 %   cfg.direction = string, can be any of 'LRTB', 'RLTB', 'LRBT', 'RLBT', 'TBLR', 'TBRL', 'BTLR', 'BTRL' (default = 'LRTB')
-%
-% The output layout structure will contain the following fields
-%   layout.label   = Nx1 cell-array with channel labels
-%   layout.pos     = Nx2 matrix with the channel positions
-%   layout.width   = Nx1 vector with the width of each box for multiplotting
-%   layout.height  = Nx1 vector with the height of each box for multiplotting
-%   layout.mask    = optional cell-array with line segments that determine the area for topographic interpolation
-%   layout.outline = optional cell-array with line segments that represent the head, nose, ears, sulci or other anatomical features
 %
 % See also FT_TOPOPLOTER, FT_TOPOPLOTTFR, FT_MULTIPLOTER, FT_MULTIPLOTTFR, FT_PLOT_LAYOUT
 
 % undocumented and non-recommended option (for SPM only)
 %   cfg.style       string, '2d' or '3d' (default = '2d')
 
-% Copyright (C) 2007-2019, Robert Oostenveld
+% Copyright (C) 2007-2020, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -363,24 +365,9 @@ elseif isequal(cfg.layout, 'butterfly')
   layout.outline = {};
   
 elseif isequal(cfg.layout, 'vertical') || isequal(cfg.layout, 'horizontal')
-  if hasdata && ~isempty(data)
-    % look at the data to determine the overlapping channels
-    originalorder = cfg.channel;
-    cfg.channel = ft_channelselection(cfg.channel, data.label);
-    if iscell(originalorder) && length(originalorder)==length(cfg.channel)
-      % try to keep the order identical to that specified in the configuration
-      [~, sel] = match_str(originalorder, cfg.channel);
-      % re-order them according to the cfg specified by the user
-      cfg.channel  = cfg.channel(sel);
-    end
-    assert(iscell(cfg.channel), 'cfg.channel should be a cell-array of strings');
-    nchan        = length(cfg.channel);
-    layout.label = cfg.channel;
-  else
-    assert(iscell(cfg.channel), 'cfg.channel should be a cell-array of strings');
-    nchan        = length(cfg.channel);
-    layout.label = cfg.channel;
-  end
+  assert(iscell(cfg.channel), 'cfg.channel should be a cell-array of strings');
+  nchan        = length(cfg.channel);
+  layout.label = cfg.channel;
   
   % the width and height of the box are as specified
   % the distance between the channels is slightly larger
@@ -430,17 +417,9 @@ elseif isequal(cfg.layout, 'vertical') || isequal(cfg.layout, 'horizontal')
   end
   
 elseif isequal(cfg.layout, 'ordered')
-  if hasdata
-    % look at the data to determine the overlapping channels
-    cfg.channel   = ft_channelselection(cfg.channel, data.label);
-    chanindx      = match_str(data.label, cfg.channel);
-    nchan         = length(data.label(chanindx));
-    layout.label  = data.label(chanindx);
-  else
-    assert(iscell(cfg.channel), 'cfg.channel should be a valid set of channels');
-    nchan        = length(cfg.channel);
-    layout.label = cfg.channel;
-  end
+  assert(iscell(cfg.channel), 'cfg.channel should be a valid set of channels');
+  nchan        = length(cfg.channel);
+  layout.label = cfg.channel;
   
   % the user can specify the number of columns and rows
   if isfield(cfg, 'columns') && ~isempty(cfg.columns)
@@ -535,16 +514,17 @@ elseif ischar(cfg.layout)
   
   if isempty(strfind(cfg.layout, '.'))
     
-    % check the file name that is specified
-    cfg.layout = [cfg.layout '.mat'];
-    if exist(cfg.layout, 'file')
-      ft_info('layout file without .mat (or .lay) extension specified, appending .mat\n');
+    % check whether a corresponding mat or lay exists
+    if exist([cfg.layout '.mat'], 'file')
+      ft_info('appending .mat to layout file\n');
+      cfg.layout = [cfg.layout '.mat'];
       layout = ft_prepare_layout(cfg);
-      return;
+      return
     else
-      cfg.layout = [cfg.layout(1:end-3) 'lay'];
+      ft_info('appending .lay to layout file\n');
+      cfg.layout = [cfg.layout '.lay'];
       layout = ft_prepare_layout(cfg);
-      return;
+      return
     end
     
   elseif ft_filetype(cfg.layout, 'matlab')
@@ -679,7 +659,7 @@ elseif (~isempty(cfg.image) || ~isempty(cfg.mesh)) && isempty(cfg.layout)
   electrodehelp = [ ...
     '-----------------------------------------------------\n' ...
     'specify electrode locations\n' ...
-    'press the right mouse button to add another electrode\n' ...
+    'press the left mouse button to add another electrode\n' ...
     'press backspace on the keyboard to remove the last electrode\n' ...
     'press "q" on the keyboard to continue\n' ...
     ];
@@ -734,7 +714,7 @@ elseif (~isempty(cfg.image) || ~isempty(cfg.mesh)) && isempty(cfg.layout)
   maskhelp = [ ...
     '------------------------------------------------------------------------\n' ...
     'specify polygons for masking the topgraphic interpolation\n' ...
-    'press the right mouse button to add another point to the current polygon\n' ...
+    'press the left mouse button to add another point to the current polygon\n' ...
     'press backspace on the keyboard to remove the last point\n' ...
     'press "c" on the keyboard to close this polygon and start with another\n' ...
     'press "q" on the keyboard to continue\n' ...
@@ -831,7 +811,7 @@ elseif (~isempty(cfg.image) || ~isempty(cfg.mesh)) && isempty(cfg.layout)
   outlinehelp = [ ...
     '-----------------------------------------------------------------------------------\n' ...
     'specify polygons for adding outlines (e.g. head shape and sulci) to the layout\n' ...
-    'press the right mouse button to add another point to the current polygon\n' ...
+    'press the left mouse button to add another point to the current polygon\n' ...
     'press backspace on the keyboard to remove the last point\n' ...
     'press "c" on the keyboard to close this polygon and start with another\n' ...
     'press "n" on the keyboard to start with another without closing the current polygon\n' ...
@@ -952,8 +932,8 @@ else
 end
 
 % make the subset as specified in cfg.channel
-cfg.channel = ft_channelselection(cfg.channel, setdiff(layout.label, {'COMNT', 'SCALE'}));  % COMNT and SCALE are not really channels
-chansel = match_str(layout.label, cat(1, cfg.channel(:), 'COMNT', 'SCALE'));                % include COMNT and SCALE, keep all channels in the order of the layout
+cfg.channel = ft_channelselection(cfg.channel, setdiff(layout.label, {'COMNT', 'SCALE'}, 'stable'));  % exclude COMNT and SCALE which are not really channels
+chansel = match_str(layout.label, vertcat(cfg.channel(:), 'COMNT', 'SCALE'));                         % include COMNT and SCALE at the end, keep other channels in the order of the layout
 % return the layout for the subset of channels
 layout.pos    = layout.pos(chansel,:);
 layout.label  = layout.label(chansel);
@@ -1177,10 +1157,12 @@ if ~strcmpi(cfg.style, '3d')
 end
 
 % to plot the layout for debugging, you can use this code snippet
-if strcmp(cfg.feedback, 'yes') && ~strcmpi(cfg.style, '3d')
-  tmpcfg = [];
-  tmpcfg.layout = layout;
-  ft_layoutplot(tmpcfg); % FIXME this should use ft_plot_layout
+if strcmp(cfg.feedback, 'yes')
+  if strcmpi(cfg.style, '3d')
+    ft_error('graphical feedback is not implemented for a 3d layout');
+  else
+    ft_plot_layout(layout);
+  end
 end
 
 % to write the layout to a .mat or text file, you can use this code snippet
@@ -1290,20 +1272,32 @@ end
 ft_info('creating layout for %s system\n', ft_senstype(sens));
 
 % apply rotation, but only if viewpoint is not used specifically
-if isempty(viewpoint)
-  if isempty(rotatez)
-    switch ft_senstype(sens)
-      case {'ctf151', 'ctf275', 'bti148', 'bti248', 'ctf151_planar', 'ctf275_planar', 'bti148_planar', 'bti248_planar', 'yokogawa160', 'yokogawa160_planar', 'yokogawa64', 'yokogawa64_planar', 'yokogawa440', 'yokogawa440_planar', 'magnetometer', 'meg'}
-        rotatez = 90;
-      case {'neuromag122', 'neuromag306'}
-        rotatez = 0;
-      case 'electrode'
-        rotatez = 90;
-      otherwise
-        rotatez = 0;
-    end
+if isempty(viewpoint) && isempty(rotatez)
+  if isfield(sens, 'coordsys')
+    % the x-axis to the right of the screen and the y-axis is to the top of the screen
+    % the nose is usually plotted toward the top of the screen
+    sens = ft_convert_coordsys(sens, 'ras', 0);
+  elseif isfield(sens, 'type') && startsWith(sens.type, 'ctf')
+    sens.coordsys = 'ctf';
+    sens = ft_convert_coordsys(sens, 'ras', 0);
+  elseif isfield(sens, 'type') && startsWith(sens.type, 'bti')
+    sens.coordsys = 'bti';
+    sens = ft_convert_coordsys(sens, 'ras', 0);
+  elseif isfield(sens, 'type') && startsWith(sens.type, '4d')
+    sens.coordsys = '4d';
+    sens = ft_convert_coordsys(sens, 'ras', 0);
+  elseif isfield(sens, 'type') && startsWith(sens.type, 'yokogawa')
+    sens.coordsys = 'yokogawa';
+    sens = ft_convert_coordsys(sens, 'ras', 0);
+  elseif isfield(sens, 'type') && startsWith(sens.type, 'neuromag')
+    sens.coordsys = 'neuromag';
+    sens = ft_convert_coordsys(sens, 'ras', 0);
+  elseif isfield(sens, 'type') && startsWith(sens.type, 'itab')
+    sens.coordsys = 'itab';
+    sens = ft_convert_coordsys(sens, 'ras', 0);
+  else
+    ft_warning('use cfg.rotate to specify the correct rotation of the sensors');
   end
-  sens.chanpos = ft_warp_apply(rotate([0 0 rotatez]), sens.chanpos, 'homogenous');
 end
 
 % determine the 3D channel positions
@@ -1421,39 +1415,56 @@ function layout = opto2lay(opto, label, rotatez, projmethod, viewpoint)
 if isempty(rotatez)
   rotatez = 90;
 end
-
-% NIRS channels are named 'RxY - TxZ [wavelength]'
+  
+% NIRS channels are named as 'RxY-TxZ [wavelength]' or as 'RxY-TxZ [chromophore]'
 [rxnames, rem] = strtok(label, {'-', ' '});
 [txnames, rem] = strtok(rem,   {'-', ' '});
 
-% start with an empty layout
-layout = [];
-
+pos = nan(numel(label),3);
 for i=1:numel(label)
-  % create positions halfway between transmitter and receiver
-  rxid = ismember(opto.optolabel, rxnames(i));
-  txid = ismember(opto.optolabel, txnames(i));
-  layout.pos(i, :) = opto.optopos(rxid, :)/2 + opto.optopos(txid, :)/2;
+  if isfield(opto, 'chanpos') && ismember(label{i}, opto.label)
+    % there is an exact match
+    chanid = strcmp(opto.label, label{i});
+    pos(i,:) = opto.chanpos(chanid,:);
+  elseif isfield(opto, 'chanpos') && any(startsWith(opto.label, [rxnames{i} '-' txnames{i}]))
+    % the first part matches with 'RxY-TxZ'
+    chanid = startsWith(opto.label, [rxnames{i} '-' txnames{i}]);
+    pos(i,:) = mean(opto.chanpos(chanid,:), 1); % there will usually be two matches
+  elseif isfield(opto, 'chanpos') && any(startsWith(opto.label, [txnames{i} '-' rxnames{i}]))
+    % the first part matches with 'TxY-RxZ'
+    chanid = startsWith(opto.label, [txnames{i} '-' rxnames{i}]);
+    pos(i,:) = mean(opto.chanpos(chanid,:), 1); % there will usually be two matches
+  elseif ismember(rxnames(i), opto.optolabel) && ismember(txnames{i}, opto.optolabel)
+    % create positions halfway between the transmitter and receiver
+    rxid = strcmp(opto.optolabel, rxnames(i));
+    txid = strcmp(opto.optolabel, txnames(i));
+    pos(i, :) = opto.optopos(rxid, :)/2 + opto.optopos(txid, :)/2;
+  end
 end
 
+% remove the channels without position, like AUX
+sel = ~any(isnan(pos), 2);
+pos = pos(sel,:);
+label = label(sel);
+
 % apply the rotation around the z-axis
-layout.pos = ft_warp_apply(rotate([0 0 rotatez]), layout.pos, 'homogenous');
+pos = ft_warp_apply(rotate([0 0 rotatez]), pos, 'homogenous');
 
 % project 3D points onto 2D plane
-if all(layout.pos(:,3)==0)
+if all(pos(:,3)==0)
   ft_notice('not applying 2D projection');
-  layout.pos = layout.pos(:,1:2);
+  pos = pos(:,1:2);
 elseif isempty(viewpoint)
-  layout.pos = elproj(layout.pos, projmethod);
+  pos = elproj(pos, projmethod);
 else
-  layout.pos = getorthoviewpos(layout.pos, opto.coordsys, viewpoint);
+  pos = getorthoviewpos(pos, opto.coordsys, viewpoint);
 end
 
 % compute the distances between all channel pairs
 dist = zeros(numel(label));
 for i=1:numel(label)
   for j=1:numel(label)
-    dist(i,j) = norm(layout.pos(i,:)-layout.pos(j,:));
+    dist(i,j) = norm(pos(i,:)-pos(j,:));
   end
 end
 dist(dist==0) = inf; % ignore all zeros
@@ -1467,6 +1478,9 @@ end
 % note that the width and height can be overruled elsewhere with cfg.width and cfg.height
 ft_notice('estimated channel width and height is %.4f', mindist);
 
+% start with an empty layout
+layout = [];
+layout.pos    = pos;
 layout.label  = label;
 layout.width  = mindist*ones(numel(label),1);
 layout.height = mindist*ones(numel(label),1);
@@ -1480,6 +1494,7 @@ pos2 = layout.pos; pos2(:,1) = pos2(:,1) - layout.width; pos2(:,2) = pos2(:,2) +
 pos3 = layout.pos; pos3(:,1) = pos3(:,1) + layout.width; pos3(:,2) = pos3(:,2) - layout.height;
 pos4 = layout.pos; pos4(:,1) = pos4(:,1) + layout.width; pos4(:,2) = pos4(:,2) + layout.height;
 pos = [pos1; pos2; pos3; pos4];
+
 indx = convhull(pos);
 layout.mask{1} = pos(indx,:);
 
@@ -1538,7 +1553,7 @@ end
 
 % create view(az,el) transformation matrix
 switch coordsys
-  case {'ras' 'itab' 'neuromag' 'acpc' 'spm' 'mni' 'tal'}
+  case {'ras' 'neuromag' 'itab' 'acpc' 'spm' 'mni' 'tal'}
     switch viewpoint
       case 'left'
         transmat = viewmtx(-90, 0);

@@ -35,14 +35,14 @@
 #define USE_ABSTRACT_UDS_NAMES
 #endif
 
-#define STATUS_ZOMBIE            0			/* status = 0 means zombie mode, don't accept anything   */
-#define STATUS_MASTER            1			/* status = 1 means master mode, accept everything       */
-#define STATUS_IDLE              2			/* status = 2 means idle slave, accept only a single job */
-#define STATUS_BUSY              3 			/* status = 3 means busy slave, don't accept a new job   */
+#define STATUS_ZOMBIE            0			/* status = 0 means zombie mode, don't accept anything    */
+#define STATUS_CONTROLLER        1			/* status = 1 means controller mode, accept everything    */
+#define STATUS_IDLE              2			/* status = 2 means idle worker, accept only a single job */
+#define STATUS_BUSY              3 			/* status = 3 means busy worker, don't accept a new job   */
 
-#define VERSION                  21			/* this should be a decimal number, not a hex */
+#define VERSION                  21			/* this should be a decimal number, not a hex             */
 #define ANNOUNCE_GROUP           "225.0.0.88"
-#define ANNOUNCE_PORT 	         1700		/* it will auto-increment if the port is not available */
+#define ANNOUNCE_PORT 	         1700		/* it will auto-increment if the port is not available    */
 #define DEFAULT_GROUP            "unknown"
 #define DEFAULT_USER             "unknown"
 #define DEFAULT_HOST             "localhost"
@@ -52,19 +52,19 @@
 #define DEFAULT_CPUAVAIL         0
 #define DEFAULT_TIMAVAIL         (24*3600)
 
-#define ACCEPTSLEEP              0.010		/* float, in seconds */
-#define ANNOUNCESLEEP            1.000		/* float, in seconds */
-#define ANNOUNCEJITTER           0.010 		/* float, in seconds */
-#define EXPIRESLEEP              1.500		/* float, in seconds, should be longer than ANNOUNCESLEEP+ANNOUNCEJITTER */
-#define EXPIRETIME               3.000		/* float, in seconds */
+#define ACCEPTSLEEP              0.010		  /* float, in seconds */
+#define ANNOUNCESLEEP            1.000		  /* float, in seconds */
+#define ANNOUNCEJITTER           0.010 		  /* float, in seconds */
+#define EXPIRESLEEP              1.500		  /* float, in seconds, should be longer than ANNOUNCESLEEP+ANNOUNCEJITTER */
+#define EXPIRETIME               3.000		  /* float, in seconds */
 #define MATLABEXECUTABLESIZE     805306368  /* integer, in bytes */
 
 #define BACKLOG                  16
-#define SMARTMEM_MINIMUM         104857600	/* int, lower boundary in bytes */
-#define SMARTSHARE_HISTORY       2			/* int, number if history items peer peer */
-#define SMARTSHARE_PREVHOSTCOUNT 3			/* int, number of times that a host has to "knock" */
-#define SMARTSHARE_TIMEOUT       3			/* int, idle time in seconds after which smartshare is disabled */
-#define SMARTCPU_TOLERANCE       0.05		/* float, the ideal load of a computer is N+0.05, with N the number of CPUs */
+#define SMARTMEM_MINIMUM         104857600	 /* int, lower boundary in bytes */
+#define SMARTSHARE_HISTORY       2			     /* int, number if history items peer peer */
+#define SMARTSHARE_PREVHOSTCOUNT 3			     /* int, number of times that a host has to "knock" */
+#define SMARTSHARE_TIMEOUT       3			     /* int, idle time in seconds after which smartshare is disabled */
+#define SMARTCPU_TOLERANCE       0.05		     /* float, the ideal load of a computer is N+0.05, with N the number of CPUs */
 #define SO_RCVBUF_SIZE           16384
 #define SO_SNDBUF_SIZE           16384
 
@@ -74,7 +74,7 @@
 #define STRLEN			 		 128
 
 #ifndef SYSLOG
-#define SYSLOG 1 /* should be 0 for silent, 1 for background peerslave, 2 for foreground peerslave, 3 for matlab */
+#define SYSLOG 1 /* should be 0 for silent, 1 for background peerworker, 2 for foreground peerworker, 3 for matlab */
 #endif
 
 #if   SYSLOG == 0
@@ -135,7 +135,7 @@ typedef uint64_t UINT64_T;
 
 /* these are used for type checking */
 #define WORDSIZE_CHAR    sizeof(CHAR_T   )
-#define WORDSIZE_UINT8   sizeof(UINT8_T  ) 
+#define WORDSIZE_UINT8   sizeof(UINT8_T  )
 #define WORDSIZE_UINT16  sizeof(UINT16_T )
 #define WORDSIZE_UINT32  sizeof(UINT32_T )
 #define WORDSIZE_UINT64  sizeof(UINT64_T )
@@ -146,40 +146,40 @@ typedef uint64_t UINT64_T;
 #define WORDSIZE_FLOAT32 sizeof(FLOAT32_T)
 #define WORDSIZE_FLOAT64 sizeof(FLOAT64_T)
 
-/* this describes the details of the current job on a busy slave */
+/* this describes the details of the current job on a busy worker */
 typedef struct {
 		UINT32_T hostid;        /* identifier of the peer where the job originates from */
 		UINT32_T jobid;         /* identifier of the job */
 		char name[STRLEN];      /* hostname of the peer where the job originates from */
 		char user[STRLEN];
 		char group[STRLEN];
-		UINT64_T timreq; 
-		UINT64_T memreq; 
-		UINT64_T cpureq; 
+		UINT64_T timreq;
+		UINT64_T memreq;
+		UINT64_T cpureq;
 } current_t;
 
 /* this is the binary packet that is announced over the network */
 typedef struct {
-		UINT32_T version;	   
-		UINT32_T id;	   
-		char name[STRLEN]; 
-		char user[STRLEN]; 
+		UINT32_T version;
+		UINT32_T id;
+		char name[STRLEN];
+		char user[STRLEN];
 		char group[STRLEN];
 		char socket[STRLEN];	/* name of the unix domain socket, or empty if not available */
 		UINT32_T port;
 		UINT32_T status;
-		UINT64_T timavail; 
-		UINT64_T memavail; 
-		UINT64_T cpuavail; 
+		UINT64_T timavail;
+		UINT64_T memavail;
+		UINT64_T cpuavail;
 		current_t current;		/* details of the current job when busy */
 } hostdef_t;
 
 typedef struct {
 		UINT32_T version;
 		UINT32_T id;
-		UINT64_T timreq; 
-		UINT64_T memreq; 
-		UINT64_T cpureq; 
+		UINT64_T timreq;
+		UINT64_T memreq;
+		UINT64_T cpureq;
 		UINT32_T argsize;   	/* size of the job arguments in bytes */
 		UINT32_T optsize;   	/* size of the job options in bytes */
 } jobdef_t;
@@ -200,7 +200,7 @@ typedef struct peerlist_s {
 } peerlist_t;
 
 typedef struct smartsharelist_s {
-		UINT64_T timreq; 
+		UINT64_T timreq;
 		struct smartsharelist_s *next;
 } smartsharelist_t;
 
@@ -234,20 +234,20 @@ extern "C" {
 #endif
 
 /* core function definitions */
-void *udsserver (void *);
-void *tcpserver (void *);
-void *tcpsocket (void *);
-void *announce  (void *);
-void *discover  (void *);
-void *expire    (void *);
-void  peerinit (void *);
-void  peerexit (void *);
+void *udsserver(void *);
+void *tcpserver(void *);
+void *tcpsocket(void *);
+void *announce(void *);
+void *discover(void *);
+void *expire(void *);
+void  peerinit(void *);
+void  peerexit(void *);
 int   announce_once(void);
 
 /* functions from smartshare.c */
-void smartshare_reset   (void);
-int  smartshare_check   (float timreq, int hostid);
-void smartshare_history (jobdef_t *job);
+void smartshare_reset(void);
+int  smartshare_check(float timreq, int hostid);
+void smartshare_history(jobdef_t *job);
 
 /* fnuctions from smartmem.c */
 int smartmem_update(void);

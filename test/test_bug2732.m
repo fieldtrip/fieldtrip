@@ -300,9 +300,9 @@ out3 = ft_preproc_standardize(dat3);
 assert(isequal(id, 'FieldTrip:dataContainsNaN'));
 warning(''); % clear previous warnings
 
-assert(sum(isnan(out1(:,end)))==nchan);
+assert(sum(isnan(out1(:,end)))==0);
 assert(sum(isnan(out2(:,end)))==1);
 assert(sum(isnan(out3(:,10)))==1);
-assert(sum(isnan(out3(10,:)))==ntime);
+assert(sum(isnan(out3(10,:)))==1);
 
 

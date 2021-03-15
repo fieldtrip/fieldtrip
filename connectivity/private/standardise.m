@@ -28,11 +28,11 @@ function [x, mx, sx] = standardise(x, dim, lim)
 %
 % $Id$
 
-if nargin == 1,
+if nargin == 1
   dim = find(size(x)>1,1,'first');
 end
 
-if nargin == 3,
+if nargin == 3
   ft_error('third input argument is not used');
 end
 

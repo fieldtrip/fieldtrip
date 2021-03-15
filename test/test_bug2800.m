@@ -8,7 +8,8 @@ filename = dccnpath('/home/common/matlab/fieldtrip/data/test/bug2800.mat');
 load(filename);
 
 % we need to cd into the private directory
-privatedir = dccnpath('/home/common/matlab/fieldtrip/private');
+[ftver, ftpath] = ft_version;
+privatedir = dccnpath(fullfile(ftpath, 'private'));
 cd(privatedir);
 
 [el,prj] = project_elec(elec.elecpos, vol.bnd(1).pnt, vol.bnd(1).tri);

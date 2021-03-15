@@ -13,7 +13,7 @@ function [varargout] = ft_plot_vector(varargin)
 %   'highlight'       = a logical vector of size Y, where 1 means that the corresponding values in Y are highlighted (according to the highlightstyle)
 %   'highlightstyle'  = can be 'box', 'thickness', 'saturation', 'difference' (default='box')
 %   'color'           = see MATLAB standard line properties and see below
-%   'facecolor'       = color for the highlighted box (default = [0.6 0.6 0.6])
+%   'facecolor'       = color for the highlighted box/difference (default = [0.6 0.6 0.6])
 %   'facealpha'       = transparency for the highlighted box, between 0 and 1 (default = 1)
 %   'linewidth'       = see MATLAB standard line properties
 %   'markersize'      = see MATLAB standard line properties
@@ -136,7 +136,6 @@ fontsize        = ft_getopt(varargin, 'fontsize',   get(0, 'defaulttextfontsize'
 fontname        = ft_getopt(varargin, 'fontname',   get(0, 'defaulttextfontname'));
 fontweight      = ft_getopt(varargin, 'fontweight', get(0, 'defaulttextfontweight'));
 fontunits       = ft_getopt(varargin, 'fontunits',  get(0, 'defaulttextfontunits'));
-% FIXME these are now only used for the highlighted box, but shoudl also be used for the difference
 facecolor       = ft_getopt(varargin, 'facecolor', [0.6 0.6 0.6]);
 facealpha       = ft_getopt(varargin, 'facealpha', 1);
 
@@ -251,7 +250,7 @@ if isempty(height) && ~isempty(vlim)
 end
 
 % first shift the horizontal axis to zero
-if any(hlim) ~= 0
+if any(hlim)
   hdat = hdat - (hlim(1)+hlim(2))/2;
   % then scale to length 1
   if (hlim(2)-hlim(1))~=0
@@ -265,12 +264,12 @@ end
 % then shift to the new horizontal position
 hdat = hdat + hpos;
 
-if any(vlim) ~= 0
+if any(vlim)
   % first shift the vertical axis to zero
   vdat = vdat - (vlim(1)+vlim(2))/2;
   % then scale to length 1
   vdat = vdat / (vlim(2)-vlim(1));
-  % then scale to the new width
+  % then scale to the new height
   vdat = vdat .* height;
 end
 % then shift to the new vertical position
@@ -315,12 +314,11 @@ switch highlightstyle
           % plot each line with its own color
           plot(hor,ver,'linewidth',4*linewidth,'linestyle','-','Color', color(j)); % changed 3* to 4*, as 3* appeared to have no effect
         end
-        
       end
     end
     
   case 'saturation'
-    % find the sample number where the highligh begins and ends
+    % find the sample number where the highlight begins and ends
     highlight = ~highlight; % invert the mask
     begsample = find(diff([0 highlight 0])== 1);
     endsample = find(diff([0 highlight 0])==-1)-1;
@@ -338,19 +336,12 @@ switch highlightstyle
         % plot each line with its own color
         h = plot(hdat, vdat(i,:), style, 'LineWidth', linewidth, 'Color', color(i), 'markersize', markersize, 'markerfacecolor', markerfacecolor);
       end
-      if ~isempty(parent)
-        set(h, 'Parent', parent);
-      end
       linecolor = get(h, 'color');
       linecolor = (linecolor * 0.2) + 0.8; % change saturation of color
       for j=1:length(begsample)
         hor = hdat(   begsample(j):endsample(j));
         ver = vdat(i, begsample(j):endsample(j));
         h = plot(hor,ver,'color',linecolor);
-        
-        if ~isempty(parent)
-          set(h, 'Parent', parent);
-        end
       end
     end
     
@@ -367,11 +358,11 @@ switch highlightstyle
     for i=1:length(begsample)
       X = [hdatbeg(1,begsample(i)) hdat(1,begsample(i):endsample(i)) hdatend(1,endsample(i)) hdatend(1,endsample(i)) hdat(1,endsample(i):-1:begsample(i)) hdatbeg(1,begsample(i))];
       Y = [vdatbeg(1,begsample(i)) vdat(1,begsample(i):endsample(i)) vdatend(1,endsample(i)) vdatend(2,endsample(i)) vdat(2,endsample(i):-1:begsample(i)) vdatbeg(2,begsample(i))];
-      h = patch(X, Y, [.6 .6 .6]); % FIXME this should also use ... 'facecolor', facecolor, , 'facealpha', facealpha
-      set(h, 'linestyle', 'no');
-      if ~isempty(parent)
-        set(h, 'Parent', parent);
+      if isempty(color)
+        color='none'; % this ensures that no edgelines will be plotted on top later on
       end
+      h = patch(X, Y, [.6 .6 .6], 'FaceColor', facecolor, 'FaceAlpha', facealpha);
+      set(h, 'linestyle', 'no');
     end
     
   otherwise
@@ -417,26 +408,20 @@ switch highlightstyle
       ft_warning('do not know how to plot the lines in the appropriate color');
       h = [];
     end
-    if ~isempty(parent)
-      set(h, 'Parent', parent);
-    end
 end % switch highlightstyle
 
 if ~isempty(label)
   switch labelpos
     case 'upperleft'
-      h = text(hpos - width/2, vpos + height/2, label, 'color', fontcolor, 'fontunits', fontunits, 'fontsize', fontsize, 'fontname', fontname, 'fontweight', fontweight);
+      text(hpos - width/2, vpos + height/2, label, 'color', fontcolor, 'fontunits', fontunits, 'fontsize', fontsize, 'fontname', fontname, 'fontweight', fontweight);
     case 'upperright'
-      h = text(hpos + width/2, vpos + height/2, label, 'color', fontcolor, 'fontunits', fontunits, 'fontsize', fontsize, 'fontname', fontname, 'fontweight', fontweight);
+      text(hpos + width/2, vpos + height/2, label, 'color', fontcolor, 'fontunits', fontunits, 'fontsize', fontsize, 'fontname', fontname, 'fontweight', fontweight);
     case 'lowerleft'
-      h = text(hpos - width/2, vpos - height/2, label, 'color', fontcolor, 'fontunits', fontunits, 'fontsize', fontsize, 'fontname', fontname, 'fontweight', fontweight);
+      text(hpos - width/2, vpos - height/2, label, 'color', fontcolor, 'fontunits', fontunits, 'fontsize', fontsize, 'fontname', fontname, 'fontweight', fontweight);
     case 'lowerright'
-      h = text(hpos + width/2, vpos - height/2, label, 'color', fontcolor, 'fontunits', fontunits, 'fontsize', fontsize, 'fontname', fontname, 'fontweight', fontweight);
+      text(hpos + width/2, vpos - height/2, label, 'color', fontcolor, 'fontunits', fontunits, 'fontsize', fontsize, 'fontname', fontname, 'fontweight', fontweight);
     case 'center'
-      h = text(hpos, vpos, label, 'color', fontcolor, 'fontunits', fontunits, 'fontsize', fontsize, 'fontname', fontname, 'fontweight', fontweight);
-  end
-  if ~isempty(parent)
-    set(h, 'Parent', parent);
+      text(hpos, vpos, label, 'color', fontcolor, 'fontunits', fontunits, 'fontsize', fontsize, 'fontname', fontname, 'fontweight', fontweight);
   end
 end
 
@@ -510,7 +495,7 @@ if nargout == 1
 end
 
 if ~holdflag
-  hold off
+  hold('off')
 end
 
 ft_warning(ws); % revert to original state

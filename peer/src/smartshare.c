@@ -49,13 +49,13 @@ int smartshare_check(float t, int hostid) {
 				return 1;
 		}
 
-		/* accept the job when running in master mode */
-		if (hoststatus()==STATUS_MASTER) {
+		/* accept the job when running in controller mode */
+		if (hoststatus()==STATUS_CONTROLLER) {
 				pthread_mutex_unlock(&mutexsmartshare);
 				return 1;
 		}
 
-		/* accept the job if it does not take any time, e.g. writing results back to the master */
+		/* accept the job if it does not take any time, e.g. writing results back to the controller */
 		if (t<=0) {
 				pthread_mutex_unlock(&mutexsmartshare);
 				return 1;

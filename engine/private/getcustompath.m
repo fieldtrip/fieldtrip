@@ -49,7 +49,7 @@ else
 end
 d = p(~s);
 p = p( s);
-% remove the directory containing the peer code, the slave should use its own
+% remove the directory containing the peer code, the worker should use its own
 f = mfilename('fullpath'); % this is .../peer/private/getcustompath.m
 f = fileparts(f);          % this is .../peer/private
 f = fileparts(f);          % this is .../peer

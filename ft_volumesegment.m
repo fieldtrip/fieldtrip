@@ -87,11 +87,11 @@ function [segmented] = ft_volumesegment(cfg, mri)
 %                because it doesn't require to create the tissue probabilty maps before creating
 %                the mask.
 %
-% It is not possible to request tissue-probability map (tpm)  in combination with binary masks
-% (brain, scalp or skull) or skull-stripped anatomy. The output will return only the probabilistic
+% It is not possible to request tissue-probability maps (tpm) in combination with binary masks
+% (brain, scalp or skull) or with a skull-stripped anatomy. The output will return only the probabilistic
 % maps in segmented.gray, white and csf. However, when a segmentation with the probabilistic gray, white
-% and csf representations is available, it is possible to use it as input for brain or skull binary mask.
-% For example:
+% and csf representations is available, it is possible to use it as input to create the brain or skull
+% binary mask. For example:
 %   cfg           = [];
 %   cfg.output    = {'tpm'};
 %   segment_tpm   = ft_volumesegment(cfg, mri);
@@ -111,10 +111,6 @@ function [segmented] = ft_volumesegment(cfg, mri)
 %   z-axis pointing to the top of the head
 %   origin in the anterior commissure.
 % Note that the segmentation only works if the template MRI is in SPM coordinates.
-%
-% If the input mri is a string pointing to a CTF *.mri file, the x-axis is assumed to point to the
-% nose, and the origin is assumed to be on the interauricular line. In this specific case, when
-% ft_read_mri is used to read in the mri, the coordsys field is automatically attached.
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
@@ -168,13 +164,13 @@ if ischar(mri)
   ft_error('please use cfg.inputfile instead of specifying the input variable as a string');
 end
 
+% check if the input data is valid for this function
+mri = ft_checkdata(mri, 'datatype', 'volume', 'feedback', 'yes', 'hasunit', 'yes', 'hascoordsys', 'yes');
+
 % ensure that old and unsupported options are not being relied on by the end-user's script
 % instead of specifying cfg.coordsys, the user should specify the coordsys in the data
 cfg = ft_checkconfig(cfg, 'forbidden', {'units', 'coordsys', 'inputcoord', 'inputcoordsys', 'coordinates'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'output', 'skin', 'scalp'});
-
-% check if the input data is valid for this function
-mri = ft_checkdata(mri, 'datatype', 'volume', 'feedback', 'yes', 'hasunit', 'yes', 'hascoordsys', 'yes');
 
 % set the defaults
 cfg.output           = ft_getopt(cfg, 'output',         'tpm');

@@ -59,18 +59,18 @@ for elec = 1:avg.nchan
     fseek(fid, 5, 'cof'); % skip sweeps header
     raw = fread(fid, avg.npnt, 'float32');
     avg.data(elec,:) = (raw' - avg.baseline(elec)) * avg.calib(elec) / avg.nsweeps;
-end;
+end
 
 % read signal variance if present
 if avg.variance
     variance = zeros(avg.npnt, avg.nchan);
     for elec = 1:avg.nchan,
         variance(:, elec) = fread(fid, avg.npnt, 'float32');
-    end;
+    end
     avg.variance = variance';
 else
     avg.variance = [];
-end;
+end
 
 fclose(fid);
 

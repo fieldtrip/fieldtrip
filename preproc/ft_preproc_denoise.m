@@ -14,6 +14,9 @@ function [dat, w] = ft_preproc_denoise(dat, refdat, hilbertflag)
 %                 the hilbert transformed signal. Only meaningful for narrow
 %                 band reference data
 %
+% If the data contains NaNs, the output of the affected channel(s) will be
+% all(NaN).
+%
 % See also PREPROC
 
 % Copyright (C) 2009, Jan-Mathijs Schoffelen
@@ -47,8 +50,8 @@ end
 
 n1 = size(dat,2);
 n2 = size(refdat,2);
-m1 = mean(dat,2);
-m2 = mean(refdat,2);
+m1 = nanmean(dat,2);
+m2 = nanmean(refdat,2);
 
 %remove mean
 refdat  = refdat-m2(:,ones(n2,1));

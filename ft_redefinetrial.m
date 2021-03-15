@@ -114,16 +114,13 @@ oneRptTimelock = (strcmp(dtype, 'timelock') &&...
 
 % check if the input data is valid for this function, this will convert it to raw if needed
 data = ft_checkdata(data, 'datatype', {'raw+comp', 'raw'}, 'feedback', cfg.feedback);
-fb   = istrue(cfg.feedback);
 
 % select trials of interest
 if ~strcmp(cfg.trials, 'all')
-  if fb
-    if islogical(cfg.trials)
-      fprintf('selecting %d trials\n', sum(cfg.trials));
-    else
-      fprintf('selecting %d trials\n', length(cfg.trials));
-    end
+  if islogical(cfg.trials)
+    ft_info('selecting %d trials\n', sum(cfg.trials));
+  else
+    ft_info('selecting %d trials\n', length(cfg.trials));
   end
   
   % select trials of interest
@@ -192,7 +189,7 @@ if ~isempty(cfg.toilim)
   data.trial    = data.trial(~skiptrial);
   if isfield(data, 'sampleinfo'),  data.sampleinfo  = data.sampleinfo(~skiptrial, :); end
   if isfield(data, 'trialinfo'),   data.trialinfo   = data.trialinfo(~skiptrial, :);  end
-  if fb, fprintf('removing %d trials in which no data was selected\n', sum(skiptrial)); end
+  ft_info('removing %d trials in which no data was selected\n', sum(skiptrial));
   
 elseif ~isempty(cfg.offset)
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -234,7 +231,7 @@ elseif ~isempty(cfg.trl)
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % select new trials from the existing data
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+  
   if ischar(cfg.trl)
     % load the trial information from file
     newtrl = loadvar(cfg.trl, 'trl');
@@ -370,7 +367,7 @@ if ~isempty(cfg.minlength)
   data.trial = data.trial(~skiptrial);
   if isfield(data, 'sampleinfo'), data.sampleinfo  = data.sampleinfo(~skiptrial, :); end
   if isfield(data, 'trialinfo'),  data.trialinfo   = data.trialinfo (~skiptrial, :); end
-  if fb, fprintf('removing %d trials that are too short\n', sum(skiptrial));         end
+  ft_info('removing %d trials that are too short\n', sum(skiptrial));
 end
 
 % convert back to input type if necessary

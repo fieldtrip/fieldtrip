@@ -9,7 +9,7 @@ function [hdr] = read_bucn_nirshdr(filename)
 % Use as
 %   [hdr] = read_bucn_nirshdr(filename)
 %
-% See also read_bucn_nirsdata, READ_BUCN_NIRSEVENT
+% See also READ_BUCN_NIRSDATA, READ_BUCN_NIRSEVENT
 
 % Copyright (C) 2011, Jan-Mathijs Schoffelen
 %

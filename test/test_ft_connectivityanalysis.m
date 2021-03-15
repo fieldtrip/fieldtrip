@@ -19,11 +19,11 @@ cfg.triallength = 1;
 cfg.fsample     = 200;
 cfg.nsignal     = 3;
 cfg.method      = 'ar';
-cfg.params(:,:,1) = [ 0.8 0   0; 
+cfg.params(:,:,1) = [ 0.8 0   0;
                       0   0.9 0.5;
                       0.4 0   0.5];
-cfg.params(:,:,2) = [-0.5    0  0; 
-                        0 -0.8  0; 
+cfg.params(:,:,2) = [-0.5    0  0;
+                        0 -0.8  0;
                         0    0 -0.2];
 cfg.noisecov      = [0.3 0 0;
                        0 1 0;
@@ -112,10 +112,10 @@ cfgc.channelcmb  = {{'signal001'} {'signal002';'signal003'}};
 c15              = ft_connectivityanalysis(cfgc, freq); %gives a 'chan_freq' matrix (4 x nfreq)
 
 
-% this part tests the functionality of blockwisegranger 
-% FIXME as of yet it does not contain any explicit assertions, just the 
+% this part tests the functionality of blockwisegranger
+% FIXME as of yet it does not contain any explicit assertions, just the
 % code is there to check whether or not it crashes.
-% Checks that can be done are: 
+% Checks that can be done are:
 %  - pairwise spectral factorization should yield same results as multivariate when only 2 channels in input
 %  - pairwise/multivariate/blockwise should yield same results when only 2 channels and 1 channel per block
 %  = multivariate and blockwise should yield same results when 1 channel per block in general
@@ -131,11 +131,11 @@ cfg.nsignal     = 2;
 cfg.triallength = 1;
 cfg.fsample     = 200;
 cfg.method      = 'ar';
-cfg.params(:,:,1) = [ 0.8 0; 
+cfg.params(:,:,1) = [ 0.8 0;
                       0   0.9];
-cfg.params(:,:,2) = [-0.5    0; 
-                        0 -0.8]; 
-cfg.noisecov      = [0.3 0; 
+cfg.params(:,:,2) = [-0.5    0;
+                        0 -0.8];
+cfg.noisecov      = [0.3 0;
                        0 1];
 data            = ft_connectivitysimulation(cfg);
 
@@ -211,11 +211,11 @@ cfg.nsignal     = 2;
 cfg.triallength = 1;
 cfg.fsample     = 200;
 cfg.method      = 'ar';
-cfg.params(:,:,1) = [ 0.8 0.5; 
+cfg.params(:,:,1) = [ 0.8 0.5;
                       0   0.9];
-cfg.params(:,:,2) = [-0.5    0; 
-                        0 -0.8]; 
-cfg.noisecov      = [0.3 0; 
+cfg.params(:,:,2) = [-0.5    0;
+                        0 -0.8];
+cfg.noisecov      = [0.3 0;
                        0 1];
 data            = ft_connectivitysimulation(cfg);
 
@@ -297,11 +297,11 @@ cfg.triallength = 1;
 cfg.fsample     = 200;
 cfg.nsignal     = 3;
 cfg.method      = 'ar';
-cfg.params(:,:,1) = [ 0.8 0   0; 
+cfg.params(:,:,1) = [ 0.8 0   0;
                       0   0.9 0;
                       0   0   0.5];
-cfg.params(:,:,2) = [-0.5    0  0; 
-                        0 -0.8  0; 
+cfg.params(:,:,2) = [-0.5    0  0;
+                        0 -0.8  0;
                         0    0 -0.2];
 cfg.noisecov      = [0.3 0 0;
                        0 1 0;
@@ -344,11 +344,11 @@ cfg.triallength = 1;
 cfg.fsample     = 200;
 cfg.nsignal     = 3;
 cfg.method      = 'ar';
-cfg.params(:,:,1) = [ 0.8 0   0; 
+cfg.params(:,:,1) = [ 0.8 0   0;
                       0   0.9 0.5;
                       0.4 0   0.5];
-cfg.params(:,:,2) = [-0.5    0  0; 
-                        0 -0.8  0; 
+cfg.params(:,:,2) = [-0.5    0  0;
+                        0 -0.8  0;
                         0    0 -0.2];
 cfg.noisecov      = [0.3 0 0;
                        0 1 0;
@@ -393,25 +393,25 @@ cfg.fsample     = 200;
 cfg.nsignal     = 6;
 cfg.bpfilter    = 'no';
 cfg.demean       = 'yes';
-cfg.params(:,:,1)      = [0.8   0       0     0       0      0   ; 
-                          0.1   0.8     0     0       0      0.2   ;
-                          0     0       0.9   0       0      0   ;
-                          0     0       0     0.9     0      0   ; 
-                          0     0       0     0       0.5    0   ;
+cfg.params(:,:,1)      = [0.8   0       0     0       0      0
+                          0.1   0.8     0     0       0      0.2
+                          0     0       0.9   0       0      0
+                          0     0       0     0.9     0      0
+                          0     0       0     0       0.5    0
                           0     0      0     0       0      0.5];
                       
-cfg.params(:,:,2)      = [-0.5    0     0     0      0       0   ; 
-                           0     -0.5   0     0      0       0   ;
-                           0      0    -0.8   0      0       0   ;
-                           0      0     0    -0.8    0       0   ;  
-                           0      0     0     0     -0.2     0   ;
+cfg.params(:,:,2)      = [-0.5    0     0     0      0       0
+                           0     -0.5   0     0      0       0
+                           0      0    -0.8   0      0       0
+                           0      0     0    -0.8    0       0
+                           0      0     0     0     -0.2     0
                            0      0     0     0      0      -0.2];
                        
-cfg.noisecov     = [1     0.5     0     0     0     0   ; 
-                    0.5   1       0     0     0     0   ;
-                    0     0       1     0.5   0     0   ;
-                    0     0       0.5   1     0     0   ; 
-                    0     0       0     0     1     0.5 ;
+cfg.noisecov     = [1     0.5     0     0     0     0
+                    0.5   1       0     0     0     0
+                    0     0       1     0.5   0     0
+                    0     0       0.5   1     0     0
+                    0     0       0     0     1     0.5
                     0     0       0     0     0.5   1  ];
                     
 data = ft_connectivitysimulation(cfg);
@@ -452,28 +452,28 @@ cfg.fsample     = 200;
 cfg.nsignal     = 8;
 cfg.bpfilter    = 'no';
 cfg.demean       = 'yes';
-cfg.params(:,:,1)      = [0.8   0       0     0       0      0      0      0; 
+cfg.params(:,:,1)      = [0.8   0       0     0       0      0      0      0;
                           0     0.8     0     0       0      0      0      0;
                           0     0       0.9   0       0.5    0.5    0      0;
-                          0     0       0     0.9     0.5    0.5    0      0; 
+                          0     0       0     0.9     0.5    0.5    0      0;
                           0.4   0.4     0     0       0.5    0      0      0;
                           0.4   0.4     0     0       0      0.5    0      0;
                           0     0       0     0       0      0      0.7    0;
-                          0     0       0     0       0      0      0      0.7];      
+                          0     0       0     0       0      0      0      0.7];
                       
-cfg.params(:,:,2)      = [-0.5    0     0     0      0       0      0      0; 
+cfg.params(:,:,2)      = [-0.5    0     0     0      0       0      0      0;
                            0     -0.5   0     0      0       0      0      0;
                            0      0    -0.8   0      0       0      0      0;
-                           0      0     0    -0.8    0       0      0      0;  
+                           0      0     0    -0.8    0       0      0      0;
                            0      0     0     0     -0.2     0      0      0;
                            0      0     0     0      0      -0.2    0      0;
                            0      0     0     0      0       0     -0.4    0;
                            0      0     0     0      0       0      0     -0.4];
 
-cfg.noisecov     = [1     0.5     0     0     0     0    0    0; 
+cfg.noisecov     = [1     0.5     0     0     0     0    0    0;
                     0.5   1       0     0     0     0    0    0;
                     0     0       1     0.5   0     0    0    0;
-                    0     0       0.5   1     0     0    0    0; 
+                    0     0       0.5   1     0     0    0    0;
                     0     0       0     0     1     0.5  0    0;
                     0     0       0     0     0.5   1    0    0;
                     0     0       0     0     0     0    1    0.5;

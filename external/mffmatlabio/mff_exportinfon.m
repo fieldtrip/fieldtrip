@@ -23,7 +23,9 @@
 % You should have received a copy of the GNU General Public License
 % along with mffmatlabio.  If not, see <https://www.gnu.org/licenses/>.
 
-function mff_exportinfon(EEG, mffFile)
+function mff_exportinfon(EEG, mffFile, index)
+
+infon = [ 'info' int2str(index) ];
 
 p = fileparts(which('mff_importsignal.m'));
 warning('off', 'MATLAB:Java:DuplicateClass');
@@ -34,25 +36,46 @@ mfffactorydelegate = javaObject('com.egi.services.mff.api.LocalMFFFactoryDelegat
 mfffactory         = javaObject('com.egi.services.mff.api.MFFFactory', mfffactorydelegate);
 
 infoType = javaObject('com.egi.services.mff.api.MFFResourceType', javaMethod('valueOf', 'com.egi.services.mff.api.MFFResourceType$MFFResourceTypes', 'kMFF_RT_InfoN'));
-if mfffactory.createResourceAtURI(fullfile(mffFile, 'info1.xml'), infoType)
-    fprintf('Info1.xml file created successfully\n');
+if mfffactory.createResourceAtURI(fullfile(mffFile, [infon  '.xml']), infoType)
+    fprintf('%s.xml file created successfully\n', infon);
 else
-    fprintf('Info1.xml ressource already exist, overwriting\n');
+    fprintf('%s.xml ressource already exist, overwriting\n', infon);
 end
-info = mfffactory.openResourceAtURI( fullfile(mffFile, 'info1.xml'), infoType);
 
-if isfield(EEG.etc, 'infon')
-    tmp = javaMethod('valueOf', 'com.egi.services.mff.api.InfoN$InfoNFileType', 'kEEG');
-    info.setInfoNFileType(tmp);
-    
-    tmp = javaObject('com.egi.services.mff.api.InfoNFileTypeEEG');
-    info.setInfoNFileTypeInformation(tmp);
-    if isfield(EEG.etc.infon, 'infoNFileTypeInformation')
-        tmpInfo = EEG.etc.infon.infoNFileTypeInformation;
-        if ~isempty(tmpInfo.montageName), tmp.setMontageName(tmpInfo.montageName); end
-        if ~isempty(tmpInfo.sensorLayoutName), tmp.setSensorLayoutName(tmpInfo.sensorLayoutName); end
-        if ~isempty(tmpInfo.referenceScheme), tmp.setReferenceScheme(tmpInfo.referenceScheme); end
+info = mfffactory.openResourceAtURI( fullfile(mffFile, [infon  '.xml']), infoType);
+
+% set file type 1 or 2
+tmpInfo = [];
+if isfield(EEG.etc, infon )
+    if isfield(EEG.etc.(infon), 'infoNFileTypeInformation')
+        tmpInfo = EEG.etc.(infon).infoNFileTypeInformation;
     end
 end
+if index == 1 && ~isfield(tmpInfo, 'pnsSetName')
+    tmp = javaMethod('valueOf', 'com.egi.services.mff.api.InfoN$InfoNFileType', 'kEEG');
+    tmp2 = javaObject('com.egi.services.mff.api.InfoNFileTypeEEG');
+else
+    tmp = javaMethod('valueOf', 'com.egi.services.mff.api.InfoN$InfoNFileType', 'kPNSData');
+    tmp2 = javaObject('com.egi.services.mff.api.InfoNFileTypePNSData');
+end
 
+info.setInfoNFileType(tmp);
+if isfield(EEG.etc, infon )
+    if isfield(EEG.etc.(infon), 'infoNFileTypeInformation')
+        tmpInfo = EEG.etc.(infon).infoNFileTypeInformation;
+        if isfield(tmpInfo, 'montageName'), tmp2.setMontageName(tmpInfo.montageName); end
+        if isfield(tmpInfo, 'sensorLayoutName'), tmp2.setSensorLayoutName(tmpInfo.sensorLayoutName); end
+        if isfield(tmpInfo, 'referenceScheme'), tmp2.setReferenceScheme(tmpInfo.referenceScheme); end
+        if isfield(tmpInfo, 'pnsSetName'), tmp2.setPNSSetName(tmpInfo.pnsSetName); end
+    else
+        if index == 1
+            tmp2.setMontageName('EEGLAB exported montage');
+        else
+            tmp2.setPNSSetName('EEGLAB exported PNS channels');
+        end
+    end
+else
+    tmp2.setMontageName('EEGLAB exported montage');
+end
+info.setInfoNFileTypeInformation(tmp2);
 info.saveResource();

@@ -44,7 +44,7 @@ fid=fopen_or_error([filename],'r');
 version     = fread(fid,1,'int32');
 if isempty(version)
     ft_error('ERROR:  This is not a simple binary file.  Note that NetStation does not successfully directly convert EGIS files to simple binary format.');
-end;
+end
 
 %check byteorder
 [str,maxsize,cEndian]=computer;
@@ -53,28 +53,28 @@ if version < 7
         endian = 'ieee-be';
     elseif cEndian == 'L'
         endian = 'ieee-le';
-    end;
+    end
 elseif (version > 6) && ~bitand(version,6)
     if cEndian == 'B'
         endian = 'ieee-le';
     elseif cEndian == 'L'
         endian = 'ieee-be';
-    end;
+    end
     version = swapbytes(uint32(version));
 else
     ft_error('ERROR:  This is not a simple binary file.  Note that NetStation does not successfully directly convert EGIS files to simple binary format.');
-end;
+end
 
 if bitand(version,1) == 0
     unsegmented = 1;
 else
     unsegmented = 0;
-end;
+end
 
 precision = bitand(version,6);
 if precision == 0
     ft_error('File precision is not defined.');
-end;
+end
 
 %       read header...
 year        = fread(fid,1,'int16',endian);
@@ -124,7 +124,7 @@ if unsegmented,
         segmentLengths=[segmentLengths length(eventData)-epocSamples(end)+1];
         NSamples=max(segmentLengths); % samples per segment, will zero pad out to longest length
         preBaseline=min(find(eventData(find(strcmp('tim0',cellstr(EventCodes))),:)))-min(find(eventData(find(strcmp('epoc',cellstr(EventCodes))),:))); %make assumption all prestimulus durations are the same        
-    end;
+    end
 else
     NumCategors = fread(fid,1,'int16',endian);
     for j = 1:NumCategors
@@ -157,7 +157,7 @@ else
             end
             eventData(:,((j-1)*NSamples+1):j*NSamples)  = temp( (NChan+1):(NChan+NEvent), 1:NSamples);
         end
-    end;
+    end
     
     if ~unsegmented
         if NEvent == 0
@@ -173,15 +173,15 @@ else
             baselineCandidates = unique(totalEventSamples);
             counters=hist(totalEventSamples, length(baselineCandidates));
             theEvent=min(baselineCandidates(find(ismember(counters,NSegments))));
-        end;
+        end
         
         preBaseline=theEvent-1;
         if (preBaseline == -1)
             preBaseline =0;
-        end;
+        end
         if isempty(preBaseline)
             preBaseline =0;
-        end;
+        end
     end
 end
 
