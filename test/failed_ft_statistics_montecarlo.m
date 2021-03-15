@@ -1,4 +1,4 @@
-function failed_ft_statistics_montecarlo
+function test_ft_statistics_montecarlo
 
 % MEM 4gb
 % WALLTIME 00:20:00
@@ -110,6 +110,7 @@ sourcemodel_grid = ft_prepare_leadfield(cfg);
 
 [pnt,tri] = mesh_sphere(642);
 cfg.sourcemodel  = struct('pos',pnt.*0.06,'tri',tri,'unit','m');
+cfg.sourcemodel.inside = true(size(pnt,1),1);
 sourcemodel_mesh = ft_prepare_leadfield(cfg);
 
 cfg = [];
@@ -121,7 +122,7 @@ cfg.dics.lambda = '10%';
 cfg.dics.keepfilter = 'yes';
 cfg.dics.realfilter = 'yes';
 cfg.frequency = 10;
-cfg.latency` = 0.25;
+cfg.latency = 0.25;
 source_grid = ft_sourceanalysis(cfg, freq);
 
 cfg.sourcemodel.filter = source_grid.avg.filter;
