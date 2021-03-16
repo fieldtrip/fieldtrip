@@ -106,7 +106,11 @@ labelmat = reshape(labelmat, spatdimlength, prod(siz));
 % combine clusters that are connected in neighbouring channel(s)
 % (combinations). Convert inputs to uint32 as that is required by the mex
 % file (and the values will be positive integers anyway).
-cluster = combineClusters(uint32(labelmat), logical(spatdimneighbstructmat), uint32(total));
+if spatdimlength>1
+  cluster = combineClusters(uint32(labelmat), logical(spatdimneighbstructmat), uint32(total));
+else
+  cluster = labelmat;
+end
 
 % reshape the output to the original format of the data
 cluster = reshape(cluster, spatdimlength, celldims{:});
