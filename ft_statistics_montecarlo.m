@@ -134,6 +134,11 @@ if strcmp(cfg.correcttail, 'yes')
   ft_error('cfg.correcttail = ''yes'' is not allowed, use either ''prob'', ''alpha'' or ''no''')
 end
 
+if strcmp(cfg.correctm, 'tfce')
+  % this requires some defaults, TODO
+  cfg.connectivity = ft_getopt(cfg, 'connectivity', []);
+end
+
 if strcmp(cfg.correctm, 'cluster')
   % set the defaults for clustering
   cfg.clusterstatistic = ft_getopt(cfg, 'clusterstatistic', 'maxsum');
@@ -142,6 +147,13 @@ if strcmp(cfg.correctm, 'cluster')
   cfg.clustercritval   = ft_getopt(cfg, 'clustercritval',   []);
   cfg.clustertail      = ft_getopt(cfg, 'clustertail',      cfg.tail);
   cfg.connectivity     = ft_getopt(cfg, 'connectivity',     []); % the default is dealt with below
+else
+  % these options only apply to clustering, to ensure appropriate configs they are forbidden when _not_ clustering
+  cfg = ft_checkconfig(cfg, 'unused', {'clusterstatistic', 'clusteralpha', 'clustercritval', 'clusterthreshold', 'clustertail', 'neighbours'});
+end
+
+if any(strcmp(cfg.correctm, {'cluster' 'tfce'}))
+  % these options might require a spatial neighbourhood matrix
   
   % deal with the neighbourhood of the channels/triangulation/voxels
   if isempty(cfg.connectivity)
@@ -172,10 +184,6 @@ if strcmp(cfg.correctm, 'cluster')
   else
     % use the specified connectivity: op hoop van zegen
   end
-  
-else
-  % these options only apply to clustering, to ensure appropriate configs they are forbidden when _not_ clustering
-  cfg = ft_checkconfig(cfg, 'unused', {'clusterstatistic', 'clusteralpha', 'clustercritval', 'clusterthreshold', 'clustertail', 'neighbours'});
 end
 
 % for backward compatibility and other warnings relating correcttail
@@ -223,16 +231,7 @@ if strcmp(cfg.correctm, 'cluster')
     cfg.clustercritval = [];  % this will be determined later
   elseif strcmp(cfg.clusterthreshold, 'parametric') && isempty(cfg.clustercritval)
     ft_info('computing a parametric threshold for clustering\n');
-    tmpcfg = [];
-    tmpcfg.dimord         = cfg.dimord;
-    if isfield(cfg, 'dim'), tmpcfg.dim            = cfg.dim; end
-    tmpcfg.alpha          = cfg.clusteralpha;
-    tmpcfg.tail           = cfg.clustertail;
-    tmpcfg.ivar           = cfg.ivar;
-    tmpcfg.uvar           = cfg.uvar;
-    tmpcfg.cvar           = cfg.cvar;
-    tmpcfg.wvar           = cfg.wvar;
-    if isfield(cfg, 'contrastcoefs'), tmpcfg.contrastcoefs = cfg.contrastcoefs; end % needed for Erics F-test statfun
+    tmpcfg = keepfields(cfg, {'dim' 'dimord' 'clusteralpha' 'clustertail' 'ivar' 'uvar' 'cvar' 'wvar' 'contrastcoefs'});
     tmpcfg.computecritval = 'yes';  % explicitly request the computation of the crtitical value
     tmpcfg.computestat    = 'no';   % skip the computation of the statistic
     try
@@ -278,10 +277,10 @@ if isstruct(statobs)
   % remember all details for later reference, continue to work with the statistic
   statfull = statobs;
   statobs  = statobs.stat;
-else
-  % remember the statistic for later reference, continue to work with the statistic
-  statfull.stat = statobs;
 end
+
+% remember the statistic for later reference, continue to work with the statistic
+statfull.stat = statobs;
 
 time_eval = cputime - time_pre;
 ft_info('estimated time per randomization is %.2f seconds\n', time_eval);
@@ -300,14 +299,14 @@ if strcmp(cfg.precondition, 'after')
   [tmpstat, tmpcfg, dat] = statfun(tmpcfg, dat, design);
 end
 
-if strcmp(cfg.correctm, 'max')
+if any(strcmp(cfg.correctm, {'tfce' 'max'}))
   % pre-allocate the memory to hold the distribution of most extreme positive (right) and negative (left) statistical values
   posdistribution = nan(1,Nrand);
   negdistribution = nan(1,Nrand);
 end
 
 % compute the statistic for the randomized data and count the outliers
-for i=1:Nrand
+for i = 1:Nrand
   ft_progress(i/Nrand, 'computing statistic %d from %d\n', i, Nrand);
   if strcmp(cfg.resampling, 'permutation')
     tmpdesign = design(:,resample(i,:));     % the columns in the design matrix are reshufled by means of permutation
@@ -319,7 +318,7 @@ for i=1:Nrand
     tmpdesign = design;                     % the design matrix is not shuffled
     tmpdat    = dat(:,resample(i,:));        % the columns of the data are resampled by means of bootstrapping
   end
-  if strcmp(cfg.correctm, 'cluster')
+  if any(strcmp(cfg.correctm, {'cluster' 'tfce'}))
     % keep each randomization in memory for cluster postprocessing
     dum = statfun(cfg, tmpdat, tmpdesign);
     if isstruct(dum)
@@ -333,6 +332,7 @@ for i=1:Nrand
     if isstruct(statrand)
       statrand = statrand.stat;
     end
+   
     % the following line is for debugging
     % stat.statkeep(:,i) = statrand;
     if strcmp(cfg.correctm, 'max')
@@ -353,6 +353,8 @@ ft_progress('close');
 if strcmp(cfg.correctm, 'cluster')
   % do the cluster postprocessing
   [stat, cfg] = clusterstat(cfg, statrand, statobs);
+elseif strcmp(cfg.correctm, 'tfce')
+  [stat, cfg] = tfcestat(cfg, statrand, statobs);
 else
   if ~isequal(cfg.numrandomization, 'all')
     % in case of random permutations (i.e., montecarlo sample, and NOT full
@@ -446,6 +448,10 @@ else
       stat.mask = stat.prob<=cfg.alpha;
       stat.posdistribution = posdistribution;
       stat.negdistribution = negdistribution;
+    case 'tfce'
+      ft_notice('using a threshold free cluster enhancement based method for multiple comparison correction\n');
+      ft_notice('the returned probabilities and the thresholded mask are corrected for multiple comparisons\n');
+      stat.mask = stat.prob<=cfg.alpha;
     case 'cluster'
       % the correction is implicit in the method
       ft_notice('using a cluster-based method for multiple comparison correction\n');

@@ -1,4 +1,4 @@
-function [stat, cfg] = clusterstat(cfg, statrnd, statobs, varargin)
+function [stat, cfg] = clusterstat(cfg, statrnd, statobs)
 
 % SUBFUNCTION for computing cluster statistic for N-D volumetric source data
 % or for channel-freq-time data
@@ -167,7 +167,7 @@ switch cfg.clusterthreshold
     
     % threshold based on bootstrap using all other randomizations
     % all voxels will get a common threshold
-    [srt, ind] = sort(statrnd(:));
+    srt = sort(statrnd(:));
     if cfg.clustertail==0
       % both tails are needed
       negtailcritval = srt(round((  cfg.clusteralpha/2)*numel(statrnd)));

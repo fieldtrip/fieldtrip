@@ -84,16 +84,17 @@ end
 labelmat = zeros(size(onoff));
 total = 0;
 if ~(numel(siz)==1 && all(siz==1))
-  for spatdimlev=1:spatdimlength
+  for j = 1:spatdimlength
     if numel(siz) <= 3 % if 2D or 3D data (without channel)
       % use spm_bwlabel for 2D/3D data to avoid usage of image processing toolbox
-      [labelmat(spatdimlev, :, :, :), num] = spm_bwlabel(double(reshape(onoff(spatdimlev, :, :, :), celldims{:})), 6); % the previous code contained a '4' for input
+      [clus, num] = spm_bwlabel(double(reshape(onoff(j, :, :, :), celldims{:})), 6); % the previous code contained a '4' for input
     else
-      [labelmat(spatdimlev, :, :, :), num] = bwlabeln(double(reshape(onoff(spatdimlev, :, :, :), celldims{:})), conndef(numel(siz), 'min'));
+      [clus, num] = bwlabeln(double(reshape(onoff(j, :, :, :), celldims{:})), conndef(numel(siz), 'min'));
     end
+    clus(clus~=0) = clus(clus~=0) + total;
+    labelmat(j, :, :, :) = clus;
     
-    
-    labelmat(spatdimlev, :, :, :) = labelmat(spatdimlev, :, :, :) + (labelmat(spatdimlev, :, :, :)~=0)*total;
+    %labelmat(j, :, :, :) = labelmat(j, :, :, :) + (labelmat(j, :, :, :)~=0)*total;
     total = total + num;
   end
 else
@@ -116,4 +117,5 @@ end
 cluster = reshape(cluster, spatdimlength, celldims{:});
 
 % update the total number
-total = numel(unique(cluster(:)))-1; % the value of 0 does not count
+%total = numel(unique(cluster(:)))-1; % the value of 0 does not count
+total = max(cluster(:))-1;
