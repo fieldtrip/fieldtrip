@@ -219,7 +219,7 @@ ws = ft_warning('off', 'MATLAB:warn_r14_stucture_assignment');
 if strcmp(cfg.correctm, 'cluster')
   % determine the critical value for cluster thresholding
   if strcmp(cfg.clusterthreshold, 'nonparametric_individual') || strcmp(cfg.clusterthreshold, 'nonparametric_common')
-    ft_info('using a nonparmetric threshold for clustering\n');
+    ft_info('using a nonparametric threshold for clustering\n');
     cfg.clustercritval = [];  % this will be determined later
   elseif strcmp(cfg.clusterthreshold, 'parametric') && isempty(cfg.clustercritval)
     ft_info('computing a parametric threshold for clustering\n');

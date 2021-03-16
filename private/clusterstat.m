@@ -16,8 +16,9 @@ function [stat, cfg] = clusterstat(cfg, statrnd, statobs, varargin)
 %   cfg.wcm_weight
 %   cfg.feedback
 
-% Copyright (C) 2005-2007, Robert Oostenveld
-%
+% Copyright (C) 2005-2020, Robert Oostenveld
+% Copyright (C) 2021, Robert Oostenveld and Jan-Mathijs Schoffelen
+%  
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
@@ -37,115 +38,155 @@ function [stat, cfg] = clusterstat(cfg, statrnd, statobs, varargin)
 % $Id$
 
 % set the defaults
+cfg.feedback     = ft_getopt(cfg, 'feedback',     'text');
 cfg.orderedstats = ft_getopt(cfg, 'orderedstats', 'no');
 cfg.multivariate = ft_getopt(cfg, 'multivariate', 'no');
 cfg.minnbchan    = ft_getopt(cfg, 'minnbchan',    0);
-cfg.spmversion   = ft_getopt(cfg, 'spmversion', 'spm12');
-cfg.wcm_weight   = ft_getopt(cfg, 'wcm_weight', 1);
+cfg.spmversion   = ft_getopt(cfg, 'spmversion',   'spm12');
+cfg.wcm_weight   = ft_getopt(cfg, 'wcm_weight',   1);
+cfg.dim          = ft_getopt(cfg, 'dim',          []);
+cfg.tail         = ft_getopt(cfg, 'tail',         0);
+
+% these defaults are already set in the caller function, but may be
+% necessary if a user calls this function directly
+cfg.clusterstatistic = ft_getopt(cfg, 'clusterstatistic', 'maxsum');
+cfg.clusterthreshold = ft_getopt(cfg, 'clusterthreshold', 'parametric');
+cfg.clusteralpha     = ft_getopt(cfg, 'clusteralpha',     0.05);
+cfg.clustercritval   = ft_getopt(cfg, 'clustercritval',   []);
+cfg.clustertail      = ft_getopt(cfg, 'clustertail',      cfg.tail);
+cfg.connectivity     = ft_getopt(cfg, 'connectivity',     false);
 
 % ensure that the preferred SPM version is on the path
 ft_hastoolbox(cfg.spmversion, 1);
+
+if isempty(cfg.dim)
+  ft_error('cfg.dim should be defined and not empty');
+end
 
 if cfg.tail~=cfg.clustertail
   ft_error('cfg.tail and cfg.clustertail should be identical')
 end
 
+if ~isfield(cfg, 'inside')
+  cfg.inside = true(cfg.dim);
+end % cfg.inside is set in ft_sourcestatistics, but is also needed for timelock and freq
+
+if isfield(cfg, 'origdim')
+  cfg.dim = cfg.origdim;
+end % this snippet is to support correct clustering of N-dimensional data, not fully tested yet
+
 % get conncevitiy matrix for the spatially neighbouring elements
-channeighbstructmat = full(ft_getopt(cfg, 'connectivity', false));
+connmat = full(ft_getopt(cfg, 'connectivity', false));
 
 needpos = cfg.tail==0 || cfg.tail== 1;
 needneg = cfg.tail==0 || cfg.tail==-1;
-Nsample = size(statrnd,1);
-Nrand   = size(statrnd,2);
 
+Nsample    = size(statrnd,1);
+Nrand      = size(statrnd,2);
 prb_pos    = ones(Nsample,     1);
 prb_neg    = ones(Nsample,     1);
 postailrnd = false(Nsample,Nrand);  % this holds the thresholded values
 negtailrnd = false(Nsample,Nrand);  % this holds the thresholded values
-Nobspos = 0;                        % number of positive clusters in observed data
-Nobsneg = 0;                        % number of negative clusters in observed data
+Nobspos    = 0;                     % number of positive clusters in observed data
+Nobsneg    = 0;                     % number of negative clusters in observed data
 
-if strcmp(cfg.clusterthreshold, 'parametric')
-  % threshold based on the critical value from parametric distribution
-  siz = size(cfg.clustercritval);
-  if all(siz==1) && cfg.clustertail==0
-    %  it only specifies one critical value, assume that the left and right tail are symmetric around zero
-    negtailcritval = -cfg.clustercritval;
-    postailcritval =  cfg.clustercritval;
-  elseif all(siz==1) && cfg.clustertail==-1
-    % it only specifies one critical value corresponding to the left tail
-    negtailcritval = cfg.clustercritval;
-    postailcritval = +inf * ones(size(negtailcritval));
-  elseif all(siz==1) && cfg.clustertail==1
-    % it only specifies one critical value corresponding to the right tail
-    postailcritval =  cfg.clustercritval;
-    negtailcritval = -inf * ones(size(postailcritval));
-  elseif siz(1)==Nsample && siz(2)==1 && cfg.clustertail==0
-    %  it specifies a single critical value for each sample, assume that the left and right tail are symmetric around zero
-    negtailcritval = -cfg.clustercritval;
-    postailcritval =  cfg.clustercritval;
-  elseif siz(1)==Nsample && siz(2)==1 && cfg.clustertail==-1
-    % it specifies a critical value for the left tail
-    % which is different for each sample (samples have a different df)
-    negtailcritval = cfg.clustercritval;
-    postailcritval = +inf * ones(size(negtailcritval));
-  elseif siz(1)==Nsample && siz(2)==1 && cfg.clustertail==1
-    % it specifies a critical value for the right tail
-    % which is different for each sample (samples have a different df)
-    postailcritval = cfg.clustercritval;
-    negtailcritval = +inf * ones(size(postailcritval));
-  elseif siz(1)==Nsample && siz(2)==2 && cfg.clustertail==0
-    % it specifies a critical value for the left and for the right tail of the distribution
-    % which is different for each sample (samples have a different df)
-    negtailcritval = cfg.clustercritval(:,1);
-    postailcritval = cfg.clustercritval(:,2);
-  elseif prod(siz)==2 && cfg.clustertail==0
-    % it specifies a critical value for the left and for the right tail of the distribution
-    % which is the same for each sample (samples have the same df)
-    negtailcritval = cfg.clustercritval(1);
-    postailcritval = cfg.clustercritval(2);
-  else
-    ft_error('cannot make sense out of the specified parametric critical values');
-  end
-  
-elseif strcmp(cfg.clusterthreshold, 'nonparametric_individual')
-  % threshold based on bootstrap using all other randomizations
-  % each voxel will get an individual threshold
-  [srt, ind] = sort(statrnd,2);
-  if cfg.clustertail==0
-    % both tails are needed
-    negtailcritval = srt(:,round((  cfg.clusteralpha/2)*size(statrnd,2)));
-    postailcritval = srt(:,round((1-cfg.clusteralpha/2)*size(statrnd,2)));
-  elseif cfg.clustertail==1
-    % only positive tail is needed
-    postailcritval = srt(:,round((1-cfg.clusteralpha)*size(statrnd,2)));
-    negtailcritval = -inf * ones(size(postailcritval));
-  elseif cfg.clustertail==-1
-    % only negative tail is needed
-    negtailcritval = srt(:,round((  cfg.clusteralpha)*size(statrnd,2)));
-    postailcritval = +inf * ones(size(negtailcritval));
-  end
-  
-elseif strcmp(cfg.clusterthreshold, 'nonparametric_common')
-  % threshold based on bootstrap using all other randomizations
-  % all voxels will get a common threshold
-  [srt, ind] = sort(statrnd(:));
-  if cfg.clustertail==0
-    % both tails are needed
-    negtailcritval = srt(round((  cfg.clusteralpha/2)*numel(statrnd)));
-    postailcritval = srt(round((1-cfg.clusteralpha/2)*numel(statrnd)));
-  elseif cfg.clustertail==1
-    % only positive tail is needed
-    postailcritval = srt(round((1-cfg.clusteralpha)*numel(statrnd)));
-    negtailcritval = -inf * ones(size(postailcritval));
-  elseif cfg.clustertail==-1
-    % only negative tail is needed
-    negtailcritval = srt(round((  cfg.clusteralpha)*numel(statrnd)));
-    postailcritval = +inf * ones(size(negtailcritval));
-  end
-  
-else
-  ft_error('no valid threshold for clustering was given')
+switch cfg.clusterthreshold
+  case 'parametric'
+    if isempty(cfg.clustercritval)
+      ft_error('with parametric cluster thresholding cfg.clustercritval needs to be defined');
+    end
+    
+    % threshold based on the critical value from parametric distribution
+    siz = size(cfg.clustercritval);
+    if all(siz==1) && cfg.clustertail==0
+      %  it only specifies one critical value, assume that the left and right tail are symmetric around zero
+      negtailcritval = -cfg.clustercritval;
+      postailcritval =  cfg.clustercritval;
+    elseif all(siz==1) && cfg.clustertail==-1
+      % it only specifies one critical value corresponding to the left tail
+      negtailcritval = cfg.clustercritval;
+      postailcritval = +inf * ones(size(negtailcritval));
+    elseif all(siz==1) && cfg.clustertail==1
+      % it only specifies one critical value corresponding to the right tail
+      postailcritval =  cfg.clustercritval;
+      negtailcritval = -inf * ones(size(postailcritval));
+    elseif siz(1)==Nsample && siz(2)==1 && cfg.clustertail==0
+      %  it specifies a single critical value for each sample, assume that the left and right tail are symmetric around zero
+      negtailcritval = -cfg.clustercritval;
+      postailcritval =  cfg.clustercritval;
+    elseif siz(1)==Nsample && siz(2)==1 && cfg.clustertail==-1
+      % it specifies a critical value for the left tail
+      % which is different for each sample (samples have a different df)
+      negtailcritval = cfg.clustercritval;
+      postailcritval = +inf * ones(size(negtailcritval));
+    elseif siz(1)==Nsample && siz(2)==1 && cfg.clustertail==1
+      % it specifies a critical value for the right tail
+      % which is different for each sample (samples have a different df)
+      postailcritval = cfg.clustercritval;
+      negtailcritval = +inf * ones(size(postailcritval));
+    elseif siz(1)==Nsample && siz(2)==2 && cfg.clustertail==0
+      % it specifies a critical value for the left and for the right tail of the distribution
+      % which is different for each sample (samples have a different df)
+      negtailcritval = cfg.clustercritval(:,1);
+      postailcritval = cfg.clustercritval(:,2);
+    elseif prod(siz)==2 && cfg.clustertail==0
+      % it specifies a critical value for the left and for the right tail of the distribution
+      % which is the same for each sample (samples have the same df)
+      negtailcritval = cfg.clustercritval(1);
+      postailcritval = cfg.clustercritval(2);
+    else
+      ft_error('cannot make sense out of the specified parametric critical values');
+    end
+    
+  case 'nonparametric_individual'
+    if isempty(cfg.clusteralpha)
+      ft_error('with nonparametric_indivdual cluster thresholding cfg.clusteralpha needs to be defined');
+    end
+    
+    % threshold based on bootstrap using all other randomizations
+    % each voxel will get an individual threshold
+    [srt, ind] = sort(statrnd,2);
+    if cfg.clustertail==0
+      % both tails are needed
+      negtailcritval = srt(:,round((  cfg.clusteralpha/2)*size(statrnd,2)));
+      postailcritval = srt(:,round((1-cfg.clusteralpha/2)*size(statrnd,2)));
+    elseif cfg.clustertail==1
+      % only positive tail is needed
+      postailcritval = srt(:,round((1-cfg.clusteralpha)*size(statrnd,2)));
+      negtailcritval = -inf * ones(size(postailcritval));
+    elseif cfg.clustertail==-1
+      % only negative tail is needed
+      negtailcritval = srt(:,round((  cfg.clusteralpha)*size(statrnd,2)));
+      postailcritval = +inf * ones(size(negtailcritval));
+    end
+    
+  case 'nonparametric_common'
+    if isempty(cfg.clusteralpha)
+      ft_error('with nonparametric_common cluster thresholding cfg.clusteralpha needs to be defined');
+    end
+    
+    % threshold based on bootstrap using all other randomizations
+    % all voxels will get a common threshold
+    [srt, ind] = sort(statrnd(:));
+    if cfg.clustertail==0
+      % both tails are needed
+      negtailcritval = srt(round((  cfg.clusteralpha/2)*numel(statrnd)));
+      postailcritval = srt(round((1-cfg.clusteralpha/2)*numel(statrnd)));
+    elseif cfg.clustertail==1
+      % only positive tail is needed
+      postailcritval = srt(round((1-cfg.clusteralpha)*numel(statrnd)));
+      negtailcritval = -inf * ones(size(postailcritval));
+    elseif cfg.clustertail==-1
+      % only negative tail is needed
+      negtailcritval = srt(round((  cfg.clusteralpha)*numel(statrnd)));
+      postailcritval = +inf * ones(size(negtailcritval));
+    end
+  case 'none'
+    % tfce
+    negtailcritval = [];
+    postailcritval = [];
+  otherwise
+    ft_error('no valid threshold for clustering was given')
 end % determine clusterthreshold
 
 % these should be scalars or column vectors
@@ -163,47 +204,36 @@ for i=1:Nrand
   negtailrnd(:,i) = (statrnd(:,i) <= negtailcritval);
 end
 
-if ~isfield(cfg, 'inside')
-  cfg.inside = true(cfg.dim);
-end % cfg.inside is set in ft_sourcestatistics, but is also needed for timelock and freq
-
-if isfield(cfg, 'origdim')
-  cfg.dim = cfg.origdim;
-end % this snippet is to support correct clustering of N-dimensional data, not fully tested yet
-
 % ensure that SPM is available, needed for spm_bwlabeln
 ft_hastoolbox('spm8up', 3) || ft_hastoolbox('spm2up', 1);
 
 % first do the clustering on the observed data
-spacereshapeable = numel(channeighbstructmat)==1&&~isfinite(channeighbstructmat);
+spacereshapeable = numel(connmat)==1&&~isfinite(connmat);
 if needpos
   
   if spacereshapeable
     % this pertains to data for which the spatial dimension can be reshaped
-    % into 3D, i.e. when it is described on an ordered set of positions on a 3D-grid
-    
-    tmp = zeros(cfg.dim);
-    tmp(cfg.inside) = postailobs;
-    
-    numdims = length(cfg.dim);
-    if numdims == 2 || numdims == 3 % if 2D or 3D data
-      % use spm_bwlabel for 2D/3D data to avoid usage of image processing toolbox
-      [posclusobs, posnum] = spm_bwlabel(tmp, 6);
-    else
-      % use bwlabeln from the image processing toolbox
-      posclusobs = bwlabeln(tmp, conndef(length(cfg.dim), 'min'));
-    end
-    posclusobs = posclusobs(cfg.inside);
-    
+    % into 3D, i.e. when it is described on an ordered set of positions on
+    % a 3D-grid. It deals with the inside dipole positions, and creates a
+    % fake extra spatial dimension, so that findcluster can deal with it
+    tmp = zeros([1 cfg.dim]); 
+    tmp(cfg.inside) = postailobs; 
   else
-    if false
-      posclusobs = findcluster(reshape(postailobs, [cfg.dim,1]),cfg.chancmbneighbstructmat,cfg.chancmbneighbselmat,cfg.minnbchan);
-    else
-      posclusobs = findcluster(reshape(postailobs, [cfg.dim,1]),channeighbstructmat,cfg.minnbchan);
-    end
+    tmp = reshape(postailobs, [cfg.dim 1]);
+  end
+  
+  if false
+    posclusobs = findcluster(tmp, cfg.chancmbneighbstructmat, cfg.chancmbneighbselmat, cfg.minnbchan);
+  else
+    posclusobs = findcluster(tmp, connmat, cfg.minnbchan);
+  end
+  
+  if spacereshapeable
+    posclusobs = posclusobs(cfg.inside);
+  else
     posclusobs = posclusobs(:);
-  end % if channeighbstructmat
-  Nobspos = max(posclusobs(:)); % number of clusters exceeding the threshold
+  end
+  Nobspos    = max(posclusobs); % number of clusters exceeding the threshold
   fprintf('found %d positive clusters in observed data\n', Nobspos);
   
 end % if needpos
@@ -211,31 +241,27 @@ if needneg
   
   if spacereshapeable
     % this pertains to data for which the spatial dimension can be reshaped
-    % into 3D, i.e. when it is described on an ordered set of positions on a 3D-grid
-    
-    tmp = zeros(cfg.dim);
-    tmp(cfg.inside) = negtailobs;
-    
-    numdims = length(cfg.dim);
-    if numdims == 2 || numdims == 3 % if 2D or 3D data
-      % use spm_bwlabel for 2D/3D data to avoid usage of image processing toolbox
-      [negclusobs, negnum] = spm_bwlabel(tmp, 6);
-    else
-      % use bwlabeln from the image processing toolbox
-      negclusobs = bwlabeln(tmp, conndef(length(cfg.dim),'min'));
-    end
-    negclusobs = negclusobs(cfg.inside);
-    
+    % into 3D, i.e. when it is described on an ordered set of positions on
+    % a 3D-grid. It deals with the inside dipole positions, and creates a
+    % fake extra spatial dimension, so that findcluster can deal with it
+    tmp = zeros([1 cfg.dim]); 
+    tmp(cfg.inside) = negtailobs; 
   else
-    if false
-      negclusobs = findcluster(reshape(negtailobs, [cfg.dim,1]),cfg.chancmbneighbstructmat,cfg.chancmbneighbselmat,cfg.minnbchan);
-    else
-      negclusobs = findcluster(reshape(negtailobs, [cfg.dim,1]),channeighbstructmat,cfg.minnbchan);
-    end
-    negclusobs = negclusobs(:);
-  end % if channeighbstructmat
+    tmp = reshape(negtailobs, [cfg.dim 1]);
+  end
   
-  Nobsneg = max(negclusobs(:));
+  if false
+    negclusobs = findcluster(tmp, cfg.chancmbneighbstructmat, cfg.chancmbneighbselmat, cfg.minnbchan);
+  else
+    negclusobs = findcluster(tmp, connmat, cfg.minnbchan);
+  end
+  
+  if spacereshapeable
+    negclusobs = negclusobs(cfg.inside);
+  else
+    negclusobs = negclusobs(:);
+  end
+  Nobsneg    = max(negclusobs); % number of clusters exceeding the threshold
   fprintf('found %d negative clusters in observed data\n', Nobsneg);
   
 end % if needneg
@@ -265,7 +291,7 @@ end
 ft_progress('init', cfg.feedback, 'computing clusters in randomization');
 for i=1:Nrand
   ft_progress(i/Nrand, 'computing clusters in randomization %d from %d\n', i, Nrand);
-  if needpos,
+  if needpos
     if spacereshapeable
       tmp = zeros(cfg.dim);
       tmp(cfg.inside) = postailrnd(:,i);
@@ -281,7 +307,7 @@ for i=1:Nrand
       if 0
         posclusrnd = findcluster(reshape(postailrnd(:,i), [cfg.dim,1]),cfg.chancmbneighbstructmat,cfg.chancmbneighbselmat,cfg.minnbchan);
       else
-        posclusrnd = findcluster(reshape(postailrnd(:,i), [cfg.dim,1]),channeighbstructmat,cfg.minnbchan);
+        posclusrnd = findcluster(reshape(postailrnd(:,i), [cfg.dim,1]),connmat,cfg.minnbchan);
       end
       posclusrnd = posclusrnd(:);
     end
@@ -335,7 +361,7 @@ for i=1:Nrand
       if  0
         negclusrnd = findcluster(reshape(negtailrnd(:,i), [cfg.dim,1]),cfg.chancmbneighbstructmat,cfg.chancmbneighbselmat,cfg.minnbchan);
       else
-        negclusrnd = findcluster(reshape(negtailrnd(:,i), [cfg.dim,1]),channeighbstructmat,cfg.minnbchan);
+        negclusrnd = findcluster(reshape(negtailrnd(:,i), [cfg.dim,1]),connmat,cfg.minnbchan);
       end
       negclusrnd = negclusrnd(:);
     end
