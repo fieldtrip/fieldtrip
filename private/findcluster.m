@@ -136,4 +136,4 @@ cluster = reshape(cluster, spatdimlength, celldims{:});
 
 % update the total number
 %total = numel(unique(cluster(:)))-1; % the value of 0 does not count
-total = max(cluster(:))-1;
+total = max(cluster(:));
