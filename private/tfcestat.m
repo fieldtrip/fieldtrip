@@ -152,7 +152,7 @@ posdistribution = zeros(1,Nrand); % this holds the statistic of the largest posi
 negdistribution = zeros(1,Nrand); % this holds the statistic of the largest negative tfce value in each randomization
 
 % do the clustering on the randomized data
-ft_progress('init', cfg.feedback, 'computing tfce for randomization');
+ft_progress('init', cfg.feedback, 'computing tfce for the test statistic computed from the randomized design');
 for i = 1:Nrand
   ft_progress(i/Nrand, 'computing tfce for randomization %d from %d\n', i, Nrand);
   if needpos
@@ -221,28 +221,22 @@ else
   N = Nrand+1;
 end
 
+% compute the probablities and collect the remaining details in the output structure
+stat = struct();
 if cfg.tail==0
   % consider both tails
-  prob = min(prb_neg, prb_pos)./N; % this is the probability for the most unlikely tail
-elseif cfg.tail==1
-  % only consider the positive tail
-  prob = prb_pos./N;
-elseif cfg.tail==-1
-  % only consider the negative tail
-  prob = prb_neg./N;
-end
-
-% collect the remaining details in the output structure
-stat = struct(); % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2972
-stat.prob = prob;
-if needpos && needneg
+  stat.prob = min(prb_neg, prb_pos)./N; % this is the probability for the most unlikely tail
   stat.stat_tfce = statobspos + statobsneg;
   stat.posdistribution = posdistribution;
   stat.negdistribution = negdistribution;
-elseif needpos
+elseif cfg.tail==1
+  % only consider the positive tail
+  stat.prob = prb_pos./N;
   stat.stat_tfce = statobspos;
   stat.posdistribution = posdistribution;
-elseif needneg
+elseif cfg.tail==-1
+  % only consider the negative tail
+  stat.prob = prb_neg./N;
   stat.stat_tfce = statobsneg;
   stat.negdistribution = negdistribution;
 end

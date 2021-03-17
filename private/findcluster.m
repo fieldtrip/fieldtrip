@@ -22,7 +22,8 @@ function [cluster, total] = findcluster(onoff, spatdimneighbstructmat, varargin)
 %
 % See also SPM_BWLABEL (spm toolbox)
 
-% Copyright (C) 2004, Robert Oostenveld
+% Copyright (C) 2004-2020, Robert Oostenveld
+% Copyright (C) 2021, Robert Oostenveld and Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -45,25 +46,39 @@ function [cluster, total] = findcluster(onoff, spatdimneighbstructmat, varargin)
 siz           = size(onoff);
 spatdimlength = siz(1);
 siz           = siz(2:end);
+dims          = ndims(onoff);
+
+% this is for reshaping back
 celldims      = num2cell([siz 1]);
 
-if length(size(spatdimneighbstructmat))~=2 || ~all(size(spatdimneighbstructmat)==spatdimlength)
+% this is for efficient matrix indexing
+seldims = repmat({':'},[1 dims-1]);
+
+% put the spatial dimension last: this substantially speeds up allocation
+% and selection of data from the matrix, which outweighs the time spent to
+% do the matrix permutation;
+onoff = permute(onoff, [2:dims 1]);
+
+if ~ismatrix(spatdimneighbstructmat) || ~all(size(spatdimneighbstructmat)==spatdimlength)
   ft_error('invalid dimension of spatdimneighbstructmat');
 end
 
-minnbchan=0;
+% this input argument handling is somewhat clunky, but it does the trick
 if length(varargin)==1
-  minnbchan=varargin{1};
+  minnbchan = varargin{1};
+else
+  minnbchan = 0;
 end
 if length(varargin)==2
-  spatdimneighbselmat=varargin{1};
-  minnbchan=varargin{2};
+  spatdimneighbselmat = varargin{1};
+  minnbchan           = varargin{2};
 end
 
 if minnbchan>0
-  % For every (time,frequency)-element, it is calculated how many significant
-  % neighbours this channel has. If a significant channel has less than minnbchan
-  % significant neighbours, then this channel is removed from onoff.
+  % For every (time,frequency)-element, it is calculated how many supra
+  % threshold neighbours this spatial element has. If a supra threshold
+  % spatial elementhas fewer than minnbchan supra threshold neighbours,
+  % it is removed from onoff.
   
   if length(varargin)==1
     selectmat = single(spatdimneighbstructmat | spatdimneighbstructmat');
@@ -71,12 +86,13 @@ if minnbchan>0
   if length(varargin)==2
     selectmat = single(spatdimneighbselmat | spatdimneighbselmat');
   end
-  nremoved=1;
+  
+  nremoved = 1;
   while nremoved>0
-    nsigneighb=reshape(selectmat*reshape(single(onoff),[spatdimlength prod(siz)]),[spatdimlength siz]);
-    remove=(onoff.*nsigneighb)<minnbchan;
-    nremoved=length(find(remove.*onoff));
-    onoff(remove)=0;
+    nsigneighb = reshape(reshape(single(onoff),[prod(siz) spatdimlength])*selectmat,[siz spatdimlength]);
+    remove     = (onoff.*nsigneighb) < minnbchan;
+    nremoved   = length(find(remove.*onoff));
+    onoff(remove) = 0;
   end
 end
 
@@ -85,24 +101,26 @@ labelmat = zeros(size(onoff));
 total = 0;
 if ~(numel(siz)==1 && all(siz==1))
   for j = 1:spatdimlength
-    if numel(siz) <= 3 % if 2D or 3D data (without channel)
+    if numel(siz) <= 3 % if 2D or 3D data (without spatial dimension)
       % use spm_bwlabel for 2D/3D data to avoid usage of image processing toolbox
-      [clus, num] = spm_bwlabel(double(reshape(onoff(j, :, :, :), celldims{:})), 6); % the previous code contained a '4' for input
+      [clus, num] = spm_bwlabel(double(onoff(seldims{:},j)), 6);
     else
-      [clus, num] = bwlabeln(double(reshape(onoff(j, :, :, :), celldims{:})), conndef(numel(siz), 'min'));
+      [clus, num] = bwlabeln(double(onoff(seldims{:},j)), conndef(dims-1, 'min'));
     end
     clus(clus~=0) = clus(clus~=0) + total;
-    labelmat(j, :, :, :) = clus;
-    
-    %labelmat(j, :, :, :) = labelmat(j, :, :, :) + (labelmat(j, :, :, :)~=0)*total;
+    labelmat(seldims{:},j) = clus;
     total = total + num;
   end
 else
   labelmat(onoff>0) = 1:sum(onoff(:));
   total = sum(onoff(:));
 end
-% combine the time and frequency dimension for simplicity
-labelmat = reshape(labelmat, spatdimlength, prod(siz));
+
+% put the spatial dimension back upfront
+labelmat = permute(labelmat, [dims 1:(dims-1)]);
+
+% combine the non-spatial dimensions for simplicity
+labelmat = reshape(labelmat, spatdimlength, []);
 
 % combine clusters that are connected in neighbouring channel(s)
 % (combinations). Convert inputs to uint32 as that is required by the mex

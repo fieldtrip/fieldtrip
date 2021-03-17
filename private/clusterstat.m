@@ -282,7 +282,7 @@ else
 end
 
 % do the clustering on the randomized data
-ft_progress('init', cfg.feedback, 'computing clusters in randomization');
+ft_progress('init', cfg.feedback, 'computing clusters for the thresholded test statistic computed from the randomized design');
 for i = 1:Nrand
   ft_progress(i/Nrand, 'computing clusters in randomization %d from %d\n', i, Nrand);
   if needpos

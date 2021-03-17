@@ -137,6 +137,13 @@ end
 if strcmp(cfg.correctm, 'tfce')
   % this requires some defaults, TODO
   cfg.connectivity = ft_getopt(cfg, 'connectivity', []);
+  cfg.tfce_h0      = ft_getopt(cfg, 'tfce_h0', 0);
+  cfg.tfce_H       = ft_getopt(cfg, 'tfce_H',  2);
+  cfg.tfce_E       = ft_getopt(cfg, 'tfce_E',  0.5);
+  cfg.tfce_nsteps  = ft_getopt(cfg, 'tfce_nsteps', 100);
+else
+  % these options only apply to tfce, to ensure appropriate configs they are forbidden when _not_ clustering
+  cfg = ft_checkconfig(cfg, 'unused', {'tfce_h0', 'tfce_H', 'tfce_E', 'tfce_nsteps'});
 end
 
 if strcmp(cfg.correctm, 'cluster')
@@ -149,7 +156,7 @@ if strcmp(cfg.correctm, 'cluster')
   cfg.connectivity     = ft_getopt(cfg, 'connectivity',     []); % the default is dealt with below
 else
   % these options only apply to clustering, to ensure appropriate configs they are forbidden when _not_ clustering
-  cfg = ft_checkconfig(cfg, 'unused', {'clusterstatistic', 'clusteralpha', 'clustercritval', 'clusterthreshold', 'clustertail', 'neighbours'});
+  cfg = ft_checkconfig(cfg, 'unused', {'clusterstatistic', 'clusteralpha', 'clustercritval', 'clusterthreshold', 'clustertail'});
 end
 
 if any(strcmp(cfg.correctm, {'cluster' 'tfce'}))
