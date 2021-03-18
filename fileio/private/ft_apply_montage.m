@@ -221,7 +221,7 @@ end
 
 % select and keep the columns that are non-empty, i.e. remove the empty columns
 selcol = ~all(montage.tra==0, 1);
-if keepunused
+if istrue(keepunused)
   for i=find(selcol==false)
     % don't remove the column if it corresponds to one of the output channels
     selcol(i) = any(strcmp(montage.labelnew, montage.labelold{i}));
