@@ -2,7 +2,8 @@ function test_ft_clusterplot
 
 % MEM 8gb
 % WALLTIME 00:20:00
-% DEPENDENCY
+% DEPENDENCY ft_clusterplot ft_statistics_montecarlo ft_timelockstatistics
+% clusterstat findcluster
 
 cd(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/eventrelatedstatistics'));
 
@@ -29,7 +30,7 @@ cfg.statistic   = 'ft_statfun_depsamplesT';
 cfg.alpha       = 0.05;
 cfg.correctm    = 'cluster';
 cfg.correcttail = 'prob';
-cfg.numrandomization = 1000;
+cfg.numrandomization = 'all';
 cfg.minnbchan        = 2; % minimal neighbouring channels
 Nsub = 10;
 cfg.design(1,1:2*Nsub)  = [ones(1,Nsub) 2*ones(1,Nsub)];
