@@ -431,7 +431,7 @@ switch field
     elseif isequal(datsiz, [npos npos 3])
       dimord = 'pos_pos_ori';
     elseif isequal(datsiz, [npos npos 1])
-      dimord = 'pos';
+      dimord = 'pos_pos';
     elseif isequal(datsiz, [npos npos nrpt])
       dimord = 'pos_pos_rpt';
     elseif isequalwithoutnans(datsiz, [npos npos nori nrpt])
@@ -449,7 +449,7 @@ switch field
     elseif isequalwithoutnans(datsiz, [npos npos 3])
       dimord = 'pos_pos_ori';
     elseif isequalwithoutnans(datsiz, [npos npos 1])
-      dimord = 'pos';
+      dimord = 'pos_pos';
     elseif isequalwithoutnans(datsiz, [npos npos nrpt])
       dimord = 'pos_pos_rpt';
     elseif isequalwithoutnans(datsiz, [npos npos nrpt nori ntime])
