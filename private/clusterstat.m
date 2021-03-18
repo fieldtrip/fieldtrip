@@ -1,20 +1,9 @@
 function [stat, cfg] = clusterstat(cfg, statrnd, statobs)
 
-% SUBFUNCTION for computing cluster statistic for N-D volumetric source data
-% or for channel-freq-time data
+% CLUSTERSTAT computers cluster statistic for multidimensional channel-freq-time or
+% volumetric source data
 %
-% This function uses
-%   cfg.dim
-%   cfg.inside (only for source data)
-%   cfg.tail = -1, 0, 1
-%   cfg.multivariate = no, yes
-%   cfg.orderedstats = no, yes
-%   cfg.clusterstatistic = max, maxsize, maxsum, wcm
-%   cfg.clusterthreshold = parametric, nonparametric_individual, nonparametric_common
-%   cfg.clusteralpha
-%   cfg.clustercritval
-%   cfg.wcm_weight
-%   cfg.feedback
+% See also TFCESTAT, FINDCLUSTER
 
 % Copyright (C) 2005-2020, Robert Oostenveld
 % Copyright (C) 2021, Robert Oostenveld and Jan-Mathijs Schoffelen
@@ -39,18 +28,20 @@ function [stat, cfg] = clusterstat(cfg, statrnd, statobs)
 
 % set the defaults
 cfg.feedback     = ft_getopt(cfg, 'feedback',     'text');
-cfg.orderedstats = ft_getopt(cfg, 'orderedstats', 'no');
-cfg.multivariate = ft_getopt(cfg, 'multivariate', 'no');
-cfg.minnbchan    = ft_getopt(cfg, 'minnbchan',    0);
 cfg.spmversion   = ft_getopt(cfg, 'spmversion',   'spm12');
-cfg.wcm_weight   = ft_getopt(cfg, 'wcm_weight',   1);
-cfg.dim          = ft_getopt(cfg, 'dim',          []);
-cfg.tail         = ft_getopt(cfg, 'tail',         0);
+cfg.dim          = ft_getopt(cfg, 'dim',          []);        % 1x3 vector, for volumetric source data
+cfg.inside       = ft_getopt(cfg, 'inside',       []);
+cfg.tail         = ft_getopt(cfg, 'tail',         0);         % -1, 0, 1
 
-% these defaults are already set in the caller function, but may be
-% necessary if a user calls this function directly
-cfg.clusterstatistic = ft_getopt(cfg, 'clusterstatistic', 'maxsum');
-cfg.clusterthreshold = ft_getopt(cfg, 'clusterthreshold', 'parametric');
+cfg.orderedstats = ft_getopt(cfg, 'orderedstats', 'no');      % no, yes
+cfg.multivariate = ft_getopt(cfg, 'multivariate', 'no');      % no, yes
+cfg.minnbchan    = ft_getopt(cfg, 'minnbchan',    0);
+cfg.wcm_weight   = ft_getopt(cfg, 'wcm_weight',   1);
+
+% these defaults are already set in the caller function, 
+% but may be necessary if a user calls this function directly
+cfg.clusterstatistic = ft_getopt(cfg, 'clusterstatistic', 'maxsum');      % max, maxsize, maxsum, wcm
+cfg.clusterthreshold = ft_getopt(cfg, 'clusterthreshold', 'parametric');  % parametric, nonparametric_individual, nonparametric_common
 cfg.clusteralpha     = ft_getopt(cfg, 'clusteralpha',     0.05);
 cfg.clustercritval   = ft_getopt(cfg, 'clustercritval',   []);
 cfg.clustertail      = ft_getopt(cfg, 'clustertail',      cfg.tail);
@@ -67,7 +58,7 @@ if cfg.tail~=cfg.clustertail
   ft_error('cfg.tail and cfg.clustertail should be identical')
 end
 
-if ~isfield(cfg, 'inside')
+if isempty(cfg.inside)
   cfg.inside = true(cfg.dim);
 end % cfg.inside is set in ft_sourcestatistics, but is also needed for timelock and freq
 
@@ -75,7 +66,7 @@ if isfield(cfg, 'origdim')
   cfg.dim = cfg.origdim;
 end % this snippet is to support correct clustering of N-dimensional data, not fully tested yet
 
-% get conncevitiy matrix for the spatially neighbouring elements
+% get connectivity matrix for the spatially neighbouring elements
 connmat = full(ft_getopt(cfg, 'connectivity', false));
 
 needpos = cfg.tail==0 || cfg.tail== 1;
@@ -204,13 +195,10 @@ for i=1:Nrand
   negtailrnd(:,i) = (statrnd(:,i) <= negtailcritval);
 end
 
-% ensure that SPM is available, needed for spm_bwlabeln
-ft_hastoolbox('spm8up', 3) || ft_hastoolbox('spm2up', 1);
-
 % first do the clustering on the observed data
-spacereshapeable = numel(connmat)==1&&~isfinite(connmat);
+spacereshapeable = (numel(connmat)==1 && ~isfinite(connmat));
+
 if needpos
-  
   if spacereshapeable
     % this pertains to data for which the spatial dimension can be reshaped
     % into 3D, i.e. when it is described on an ordered set of positions on
@@ -234,8 +222,8 @@ if needpos
   fprintf('found %d positive clusters in observed data\n', Nobspos);
   
 end % if needpos
+
 if needneg
-  
   if spacereshapeable
     % this pertains to data for which the spatial dimension can be reshaped
     % into 3D, i.e. when it is described on an ordered set of positions on
@@ -260,12 +248,11 @@ if needneg
   
 end % if needneg
 
-stat = [];
-stat.stat = statobs;
-
 % catch situation where no clustering of the random data is needed
 if (Nobspos+Nobsneg)==0
   ft_warning('no clusters were found in the observed data');
+  stat = struct(); % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2972
+  stat.stat = statobs;
   stat.prob = ones(Nsample, 1);
   return
 end
@@ -406,7 +393,7 @@ if needpos
     end
   end
   % sort the clusters based on their statistical value
-  [stat, indx] = sort(stat,'descend');
+  [stat, indx] = sort(stat, 'descend');
   % reorder the cluster indices in the data
   tmp = zeros(size(posclusobs));
   for j=1:Nobspos

@@ -1,24 +1,24 @@
 function [stat, cfg] = ft_statistics_montecarlo(cfg, dat, design, varargin)
 
 % FT_STATISTICS_MONTECARLO performs a nonparametric statistical test by calculating
-% Monte-Carlo estimates of the significance probabilities and/or critical values
-% from the permutation distribution. This function should not be called
-% directly, instead you should call the function that is associated with the
-% type of data on which you want to perform the test.
+% Monte-Carlo estimates of the significance probabilities and/or critical values from
+% the permutation distribution. This function should not be called directly, instead
+% you should call the function that is associated with the type of data on which you
+% want to perform the test.
 %
 % Use as
 %   stat = ft_timelockstatistics(cfg, data1, data2, data3, ...)
 %   stat = ft_freqstatistics    (cfg, data1, data2, data3, ...)
 %   stat = ft_sourcestatistics  (cfg, data1, data2, data3, ...)
 %
-% Where the data is obtained from FT_TIMELOCKANALYSIS, FT_FREQANALYSIS
-% or FT_SOURCEANALYSIS respectively, or from FT_TIMELOCKGRANDAVERAGE,
-% FT_FREQGRANDAVERAGE or FT_SOURCEGRANDAVERAGE respectively and with
-% cfg.method = 'montecarlo'
+% where the data is obtained from FT_TIMELOCKANALYSIS, FT_FREQANALYSIS or
+% FT_SOURCEANALYSIS respectively, or from FT_TIMELOCKGRANDAVERAGE,
+% FT_FREQGRANDAVERAGE or FT_SOURCEGRANDAVERAGE respectively 
+% and with cfg.method = 'montecarlo'
 %
 % The configuration options that can be specified are:
 %   cfg.numrandomization = number of randomizations, can be 'all'
-%   cfg.correctm         = string, apply multiple-comparison correction, 'no', 'max', cluster', 'bonferroni', 'holm', 'hochberg', 'fdr' (default = 'no')
+%   cfg.correctm         = string, apply multiple-comparison correction, 'no', 'max', cluster', 'tfce', 'bonferroni', 'holm', 'hochberg', 'fdr' (default = 'no')
 %   cfg.alpha            = number, critical value for rejecting the null-hypothesis per tail (default = 0.05)
 %   cfg.tail             = number, -1, 1 or 0 (default = 0)
 %   cfg.correcttail      = string, correct p-values or alpha-values when doing a two-sided test, 'alpha','prob' or 'no' (default = 'no')
@@ -29,10 +29,9 @@ function [stat, cfg] = ft_statistics_montecarlo(cfg, dat, design, varargin)
 %   cfg.feedback         = string, 'gui', 'text', 'textbar' or 'no' (default = 'text')
 %   cfg.randomseed       = string, 'yes', 'no' or a number (default = 'yes')
 %
-% If you use a cluster-based statistic, you can specify the following
-% options that determine how the single-sample or single-voxel
-% statistics will be thresholded and combined into one statistical
-% value per cluster.
+% If you use a cluster-based statistic, you can specify the following options that
+% determine how the single-sample or single-voxel statistics will be thresholded and
+% combined into one statistical value per cluster.
 %   cfg.clusterstatistic = how to combine the single samples that belong to a cluster, 'maxsum', 'maxsize', 'wcm' (default = 'maxsum')
 %                          the option 'wcm' refers to 'weighted cluster mass', a statistic that combines cluster size and intensity; 
 %                          see Hayasaka & Nichols (2004) NeuroImage for details
@@ -58,16 +57,17 @@ function [stat, cfg] = ft_statistics_montecarlo(cfg, dat, design, varargin)
 %                         'actvsblT'                activation versus baseline T-statistic.
 % or you can specify your own low-level statistical function.
 %
-% You can also use a custom statistic of your choise that is sensitive
-% to the expected effect in the data. You can implement the statistic
-% in a "statfun" that will be called for each randomization. The
-% requirements on a custom statistical function is that the function
-% is called statfun_xxx, and that the function returns a structure
-% with a "stat" field containing the single sample statistical values.
-% Check the private functions statfun_xxx (e.g.  with xxx=tstat) for
-% the correct format of the input and output.
+% You can also use a custom statistic of your choise that is sensitive to the
+% expected effect in the data. You can implement the statistic in a "statfun" that
+% will be called for each randomization. The requirements on a custom statistical
+% function is that the function is called statfun_xxx, and that the function returns
+% a structure with a "stat" field containing the single sample statistical values.
+% Have a look at the functions in the fieldtrip/statfun directory (e.g. 
+% FT_STATFUN_INDEPSAMPLEST) for the correct format of the input and output.
 %
-% See also FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS, FT_SOURCESTATISTICS
+% See also FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS, FT_SOURCESTATISTICS,
+% FT_STATISTICS_ANALYTIC, FT_STATISTICS_STATS, FT_STATISTICS_MVPA,
+% FT_STATISTICS_CROSSVALIDATE
 
 % Undocumented local options:
 %   cfg.resampling       permutation, bootstrap
@@ -135,7 +135,7 @@ if strcmp(cfg.correcttail, 'yes')
 end
 
 if strcmp(cfg.correctm, 'tfce')
-  % this requires some defaults, TODO
+  % TODO this could require some better defaults
   cfg.connectivity = ft_getopt(cfg, 'connectivity', []);
   cfg.tfce_h0      = ft_getopt(cfg, 'tfce_h0', 0);
   cfg.tfce_H       = ft_getopt(cfg, 'tfce_H',  2);

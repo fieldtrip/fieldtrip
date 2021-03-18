@@ -1,13 +1,9 @@
 function [stat, cfg] = tfcestat(cfg, statrnd, statobs)
 
-% SUBFUNCTION for computing threshold-free cluster statistic for N-D volumetric source data
-% or for channel-freq-time data
+% TFCESTAT computes threshold-free cluster statistic multidimensional channel-freq-time or
+% volumetric source data
 %
-% This function uses
-%   cfg.dim
-%   cfg.inside (only for source data)
-%   cfg.tail = -1, 0, 1
-%   cfg.feedback
+% See also CLUSTERSTAT, FINDCLUSTER
 
 % Copyright (C) 2021, Jan-Mathijs Schoffelen
 %  
@@ -33,14 +29,16 @@ function [stat, cfg] = tfcestat(cfg, statrnd, statobs)
 cfg.feedback     = ft_getopt(cfg, 'feedback',     'text');
 cfg.spmversion   = ft_getopt(cfg, 'spmversion',   'spm12');
 cfg.dim          = ft_getopt(cfg, 'dim',          []);
-cfg.tail         = ft_getopt(cfg, 'tail',         0);
+cfg.inside       = ft_getopt(cfg, 'inside',       []);
+cfg.tail         = ft_getopt(cfg, 'tail',         0);         % -1, 0, 1
+
 cfg.tfce_h0      = ft_getopt(cfg, 'tfce_h0',      0);
 cfg.tfce_H       = ft_getopt(cfg, 'tfce_H',       2);
 cfg.tfce_E       = ft_getopt(cfg, 'tfce_E',       0.5);
 cfg.tfce_nsteps  = ft_getopt(cfg, 'nsteps',       100);
 
-% these defaults are already set in the caller function, but may be
-% necessary if a user calls this function directly
+% these defaults are already set in the caller function, 
+% but may be necessary if a user calls this function directly
 cfg.connectivity     = ft_getopt(cfg, 'connectivity',     false);
 
 % ensure that the preferred SPM version is on the path
@@ -50,7 +48,7 @@ if isempty(cfg.dim)
   ft_error('cfg.dim should be defined and not empty');
 end
 
-if ~isfield(cfg, 'inside')
+if isempty(cfg.inside)
   cfg.inside = true(cfg.dim);
 end % cfg.inside is set in ft_sourcestatistics, but is also needed for timelock and freq
 
@@ -58,7 +56,7 @@ if isfield(cfg, 'origdim')
   cfg.dim = cfg.origdim;
 end % this snippet is to support correct clustering of N-dimensional data, not fully tested yet
 
-% get conncevitiy matrix for the spatially neighbouring elements
+% get connectivity matrix for the spatially neighbouring elements
 connmat = full(ft_getopt(cfg, 'connectivity', false));
 
 needpos = cfg.tail==0 || cfg.tail== 1;
@@ -67,9 +65,6 @@ needneg = cfg.tail==0 || cfg.tail==-1;
 Nrand      = size(statrnd,2);
 prb_pos    = zeros(size(statobs));
 prb_neg    = zeros(size(statobs));
-
-% ensure that SPM is available, needed for spm_bwlabeln
-ft_hastoolbox('spm8up', 3) || ft_hastoolbox('spm2up', 1);
 
 % remove the offset, which by default is 0
 statrnd = statrnd - cfg.tfce_h0;
@@ -86,9 +81,9 @@ end
 stepsize = height./cfg.tfce_nsteps;
 
 % first do the clustering on the observed data
-spacereshapeable = numel(connmat)==1&&~isfinite(connmat);
+spacereshapeable = (numel(connmat)==1 && ~isfinite(connmat));
+
 if needpos
-  
   if spacereshapeable
     % this pertains to data for which the spatial dimension can be reshaped
     % into 3D, i.e. when it is described on an ordered set of positions on
@@ -117,8 +112,8 @@ if needpos
   end
   
 end % if needpos
+
 if needneg
-  
   if spacereshapeable
     tmp = zeros([1 cfg.dim]); 
     tmp(cfg.inside) = statobs;

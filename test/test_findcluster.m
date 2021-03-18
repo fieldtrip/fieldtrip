@@ -4,8 +4,10 @@ function test_findcluster
 % WALLTIME 00:20:00
 % DEPENDENCY findcluster
 
-[dum, ftpath] =ft_version;
+[dum, ftpath] = ft_version;
 cd(fullfile(ftpath, 'private'));
+
+ft_hastoolbox('spm12', 1);
 
 % create a data matrix and a spatial neighbourhoodmatrix
 nchan = 5;
