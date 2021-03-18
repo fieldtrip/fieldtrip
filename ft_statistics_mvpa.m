@@ -333,16 +333,21 @@ end
 %% adapt channel labels
 if any(strcmp('chan', cfg.mvpa.dimension_names(cfg.features)))
   % combine all labels when chan is used as features
-  label = sprintf('combined(%s)', sprintf('%s',cfg.channel{:})); 
+  label = sprintf('combined(%s)', strjoin(cfg.channel, ',')); 
 elseif ~isempty(cfg.neighbours)
-  % merge neighbours into combined channels
   label = cell(size(cfg.neighbours,1), 1);
-  for ix = 1:numel(label)
-    chan_ix = cfg.neighbours(ix,:);
-    if sum(chan_ix)>1
-      label{ix} = sprintf('combined(%s)', strjoin(cfg.channel(chan_ix), ','));
-    else
-      label{ix} = cfg.channel{chan_ix};
+  if (size(cfg.neighbours,1) == size(cfg.neighbours,2)) && all(diag(cfg.neighbours))
+    % keep label unchanged
+    label = cfg.channel;
+  else
+    % merge neighbours into combined channels
+    for ix = 1:numel(label)
+      chan_ix = cfg.neighbours(ix,:);
+      if sum(chan_ix)>1
+        label{ix} = sprintf('combined(%s)', strjoin(cfg.channel(chan_ix), ','));
+      else
+        label{ix} = cfg.channel{chan_ix};
+      end
     end
   end
 end
