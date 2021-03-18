@@ -238,7 +238,8 @@ if strcmp(cfg.correctm, 'cluster')
     cfg.clustercritval = [];  % this will be determined later
   elseif strcmp(cfg.clusterthreshold, 'parametric') && isempty(cfg.clustercritval)
     ft_info('computing a parametric threshold for clustering\n');
-    tmpcfg = keepfields(cfg, {'dim' 'dimord' 'clusteralpha' 'clustertail' 'ivar' 'uvar' 'cvar' 'wvar' 'contrastcoefs'});
+    tmpcfg = cfg; % the next line does not pass on non-standard options that a statfun might use
+    % tmpcfg = keepfields(cfg, {'dim' 'dimord' 'clusteralpha' 'clustertail' 'ivar' 'uvar' 'cvar' 'wvar' 'contrastcoefs'});
     tmpcfg.computecritval = 'yes';  % explicitly request the computation of the crtitical value
     tmpcfg.computestat    = 'no';   % skip the computation of the statistic
     try
