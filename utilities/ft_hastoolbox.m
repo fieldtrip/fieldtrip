@@ -208,7 +208,7 @@ switch toolbox
   case 'SPM2UP' % version 2 or later, but not SPM 9X
     dependency = {'spm', get_spm_version()>=2, get_spm_version()<95};
     % this is to avoid crashes when trying to add SPM to the path
-    fallback_toolbox = 'SPM8';
+    fallback_toolbox = 'SPM2';
   case 'SPM5'
     dependency = {'spm', get_spm_version()==5};
   case 'SPM5UP' % version 5 or later, but not SPM 9X
