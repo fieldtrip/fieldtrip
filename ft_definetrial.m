@@ -230,5 +230,4 @@ cfg.trl = trl;
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble trackconfig
 ft_postamble provenance
-ft_postamble hastoolbox
 ft_postamble debug
