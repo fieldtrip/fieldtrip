@@ -88,6 +88,10 @@ showwarning   = ft_getopt(varargin, 'warning',     true);
 bname         = ft_getopt(varargin, 'balancename', '');
 showcallinfo  = ft_getopt(varargin, 'showcallinfo', 'no');
 
+% ensure that the input montage is correct, see https://github.com/fieldtrip/fieldtrip/issues/1718
+assert(length(unique(montage.labelold))==length(montage.labelold), 'the montage is invalid');
+assert(length(unique(montage.labelnew))==length(montage.labelnew), 'the montage is invalid');
+
 if istrue(showwarning)
   warningfun = @warning;
 else
