@@ -324,7 +324,7 @@ for i = 1:Nrand
       tmp = zeros([1 cfg.dim]);
       tmp(cfg.inside) = negtailrnd(:,i);
     else
-      tmp = reshape(postailrnd(:,i), [cfg.dim 1]);
+      tmp = reshape(negtailrnd(:,i), [cfg.dim 1]);
     end
     negclusrnd = findcluster(tmp, connmat, cfg.minnbchan);
     if spacereshapeable
