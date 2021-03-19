@@ -280,5 +280,6 @@ cfg.markersymbol = '.';
 cfg.alpha = 0.05;
 cfg.parameter='stat';
 cfg.zlim = [-5 5];
+cfg.toi  = [-0.1:0.1:0.9];
 ft_clusterplot(cfg, stat);
 

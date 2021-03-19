@@ -48,11 +48,12 @@ cfg.markersymbol = '.';
 cfg.alpha = 0.05;
 cfg.parameter='stat';
 cfg.zlim = [-5 5];
-
+cfg.toi  = [-0.1:0.1:0.9];
 ft_clusterplot(cfg,stat);
 
 %% chan_freq
 stat.freq = 1:376;
+cfg.toi = [20:20:200];
 stat = rmfield(stat, 'time');
 stat.dimord = 'chan_freq';
 
@@ -61,6 +62,7 @@ ft_clusterplot(cfg,stat);
 %% chan_freq_time with singleton time
 stat.time = 1;
 stat.dimord = 'chan_freq_time';
+cfg.toi = [20:20:200];
 
 ft_clusterplot(cfg,stat);
 
@@ -78,6 +80,7 @@ stat.mask     = reshape(stat.mask,    [151 1 376]);
 stat.stat     = reshape(stat.stat,    [151 1 376]);
 stat.ref      = reshape(stat.ref,     [151 1 376]);
                     
+cfg.toi = [20:20:200];
 
 ft_clusterplot(cfg,stat);
 
