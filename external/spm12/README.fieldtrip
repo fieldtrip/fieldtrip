@@ -1,0 +1,6 @@
+This directory contains a subset of the functions from the SPM12
+package. These functions are provided as courtesy to the FieldTrip
+users, and provide just enough functionality to do segmentation and
+anatomical realigmnent.
+
+See https://www.fil.ion.ucl.ac.uk/spm/ and https://github.com/spm for details.
