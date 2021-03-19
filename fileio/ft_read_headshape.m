@@ -956,12 +956,12 @@ switch fileformat
   case 'obj'
     ft_hastoolbox('wavefront', 1);
     % Only tested for structure.io .obj thus far
-    [vertex, faces, texture, textureIdx] = read_obj_new(filename);
+    [vertexline, faces, texture, textureIdx] = read_obj_new(filename);
     
     % the rest of the code assumes the texture to be defined on the vertices
     % and the faces/vertices to be self contained, i.e. not more vertices
     % than faces
-    if size(texture,1)==size(vertex,1)
+    if size(texture,1)==size(vertexline,1)
       texture_per_vert = true;
     else
       texture_per_vert = false;
@@ -973,9 +973,9 @@ switch fileformat
     faces(allzeros, :)      = [];
     textureIdx(allzeros, :) = [];
     ufacesIdx = unique(faces(:));
-    remove = setdiff((1:size(vertex,1))', ufacesIdx);
+    remove = setdiff((1:size(vertexline,1))', ufacesIdx);
     if ~isempty(remove)
-      [vertex, faces] = remove_vertices(vertex, faces, remove);
+      [vertexline, faces] = remove_vertices(vertexline, faces, remove);
     end
     
     %     if fixtexture
@@ -990,7 +990,7 @@ switch fileformat
     %       end
     %     end
     
-    shape.pos   = vertex;
+    shape.pos   = vertexline;
     shape.pos   = shape.pos - repmat(sum(shape.pos)/length(shape.pos),...
       [length(shape.pos),1]); %centering vertices
     shape.tri   = faces; % remove the last row which is zeros
@@ -1037,10 +1037,10 @@ switch fileformat
       
       shape.color = color;
       
-    elseif size(vertex,2)==6
+    elseif size(vertexline,2)==6
       % the vertices also contain RGB colors
       
-      color = vertex(:,4:6);
+      color = vertexline(:,4:6);
       % If color is specified as 0-255 rather than 0-1 correct by dividing
       % by 255
       if range(color(:)) > 1
@@ -1115,10 +1115,10 @@ switch fileformat
   case 'tet'
     % the toolbox from Gabriel Peyre has a function for this
     ft_hastoolbox('toolbox_graph', 1);
-    [vertex, face] = read_tet(filename);
+    [vertexline, face] = read_tet(filename);
     %     'vertex' is a '3 x nb.vert' array specifying the position of the vertices.
     %     'face' is a '4 x nb.face' array specifying the connectivity of the tet mesh.
-    shape.pos = vertex';
+    shape.pos = vertexline';
     shape.tet = face';
     
   case 'tetgen_ele'
@@ -1272,6 +1272,46 @@ switch fileformat
     shape.pos = pos(:,1:3); % vertex positions
     shape.nrm = pos(:,4:6); % vertex normals
     shape.tri = tri;
+
+  case 'duneuro_dgf'
+    lines = readlines(filename);
+    lines = cellstr(lines);
+    % remove comments
+    sel = startsWith(lines, '#');
+    lines(sel) = [];
+    % remove empty lines
+    sel = cellfun(@isempty, lines);
+    lines(sel) = [];
+    
+    vertexline = find(strcmp(lines, 'Vertex'));
+    cubeline   = find(strcmp(lines, 'Cube'));
+    paramline  = find(startsWith(lines, 'parameters'));
+    
+    % parse this line to determine the number of parameters, and thereby the number of additional columns
+    numparam = sscanf(lines{paramline}, 'parameters %d');
+    
+    npos = cubeline - vertexline - 1;
+    shape.pos = nan(npos, 3);
+    for i=1:npos
+      shape.pos(i,:) = str2num(lines{vertexline+i});
+    end
+    
+    nhex = length(lines)-paramline;
+    shape.hex = nan(nhex, 8+numparam);
+    for i=1:nhex
+      shape.hex(i,:) = str2num(lines{paramline+i});
+    end
+    
+    if numparam==1
+      % assume that this is the tissue class
+      shape.tissue = shape.hex(:,9);
+      shape.tissue = shape.tissue + 1; % this should be one-offset
+    end
+    
+    % remove the parameter columns
+    shape.hex = shape.hex(:,1:8);
+    shape.hex = shape.hex + 1; % this should be one-offset
+
     
   otherwise
     % try reading it from an electrode of volume conduction model file
