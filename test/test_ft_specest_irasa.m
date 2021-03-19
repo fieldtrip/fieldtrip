@@ -4,19 +4,19 @@ function test_ft_specest_irasa
 % WALLTIME 00:10:00
 % DEPENDENCY ft_freqanalysis ft_specest_irasa
 
-
-% some added example code to test the effect of bandpass/highpassfiltering
-% on the estimates
+% We do not have that many concurrent licenses of the DSP Systems toolbox (https://nl.mathworks.com/products/dsp-system.html)
+% which was used in the initial version of this script. Therefore this test script does not use the DSP toolbox by default.
+usedsptoolbox = false;
 
 % simulate data
 t = (1:2000)/1000; % time axis
 for rpt = 1:20
-    try
-      % generate pink noise
+    if usedsptoolbox
+      % generate pink noise using the DSP toolbox
         dspobj = dsp.ColoredNoise('Color', 'pink', 'SamplesPerFrame', length(t));
         fn = dspobj()';
-    catch
-        % use another method to make pink noise when dsp.ColoredNoise returns licence error
+    else
+        % use another method to make pink noise
         fn = cumsum(randn(1,length(t))); 
     end
     
@@ -55,11 +55,11 @@ cfg2.dftfilter  = 'yes'; % notch filter to filter out line noise
 cfg2.dftfreq    = [50 100];
 datafilt3       = ft_preprocessing(cfg2, data);
 
-
 cfg.output = 'original';
 freqfilt = ft_freqanalysis(cfg, datafilt);
 freqfilt2 = ft_freqanalysis(cfg, datafilt2);
 freqfilt3 = ft_freqanalysis(cfg, datafilt3);
+
 cfg.output = 'fractal';
 freqfiltI = ft_freqanalysis(cfg, datafilt);
 freqfiltI2 = ft_freqanalysis(cfg, datafilt2);
@@ -70,4 +70,4 @@ semilogy(freq.freq, [freq.powspctrm;freqfilt.powspctrm;freqfilt2.powspctrm;freqf
                      freqI.powspctrm;freqfiltI.powspctrm;freqfiltI2.powspctrm;freqfiltI3.powspctrm]);
 legend({'orig-unfilterd';'orig-bpfiltered';'orig-hpfiltered';'orig-dftfiltered';...
         'frac-unfiltered';'frac-bpfiltered';'frac-hpfiltered';'frac-dftfiltered'});
-    
+
