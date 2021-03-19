@@ -255,19 +255,14 @@ if ~strcmp(eigenspace, 'no')
   
   [eigvec, eigval] = eig(C);
   
+  [eigval,order] = sort(eigval,'descend');
+  eigvec = eigvec(:,order);
+  
   % select the Q largest eigenvalues and the corresponding eigenvectors
-  E_S      = eigvec(:, (M-Q+1):end);
-  Lambda_S = eigval((M-Q+1):end, (M-Q+1):end); % equation (7)
+  E_S      = eigvec(1:Q, :);
+  Lambda_S = eigval(1:Q, 1:Q); % equation (7)  
   
-  % sort from high to low eigenvalues/vectors
-  E_S      = E_S(:,end:-1:1);
-  Lambda_S = Lambda_S(end:-1:1,end:-1:1);
-  
-  % rotate because "eig" puts strongest vectors and values at the end
-  %E_S      = rot90(E_S, 2); -> this is not correct I think, because it also reverse the order of the rows. it should be:
-  %Lambda_S = rot90(Lambda_S, 2); % This should be OK, but for code
-  %consistency I use the same syntax for the order reversal
-  
+
   invLambda_S = diag(1./diag(Lambda_S));%ft_inv(Lambda_S); % should we include invopt? -> no, but we should apply the 'vanilla' inv
   Gamma = E_S * invLambda_S * E_S';
 end
