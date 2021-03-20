@@ -187,10 +187,14 @@ else
   if haspos
     probpos = [stat.posclusters.prob];
     sigpos  = probpos < cfg.alpha;
+  else
+    sigpos  = [];
   end
   if hasneg
     probneg = [stat.negclusters.prob];
     signeg  = probneg < cfg.alpha;
+  else
+    signeg  = [];
   end
   sigpos  = find(sigpos == 1);
   signeg  = find(signeg == 1);
@@ -371,9 +375,9 @@ else
           cfgtopo.xlim = [time(begs(PlN)) time(ends(PlN))];
           cfgtopo.highlightchannel = list{PlN};
           if hastime
-            cfgtopo.comment = strcat('time: ',num2str(mean(time(begs(PlN):(ends(PlN)+1)))), ' s');
+            cfgtopo.comment = strcat('time: ',num2str(mean(time(begs(PlN):(ends(PlN))))), ' s');
           elseif hasfreq
-            cfgtopo.comment = strcat('freq: ',num2str(mean(time(begs(PlN):(ends(PlN)+1)))), ' Hz');
+            cfgtopo.comment = strcat('freq: ',num2str(mean(time(begs(PlN):(ends(PlN))))), ' Hz');
           end
           cfgtopo.commentpos = 'title';
           subplot(cfg.subplotsize(1), cfg.subplotsize(2), iT);
@@ -387,9 +391,9 @@ else
           cfgtopo.xlim = [time(begs(PlN)) time(ends(PlN))];
           cfgtopo.highlightchannel   = list{PlN};
           if hastime
-            cfgtopo.comment = strcat('time: ',num2str(mean(time(begs(PlN):(ends(PlN)+1)))), ' s');
+            cfgtopo.comment = strcat('time: ',num2str(mean(time(begs(PlN):(ends(PlN))))), ' s');
           elseif hasfreq
-            cfgtopo.comment = strcat('freq: ',num2str(mean(time(begs(PlN):(ends(PlN)+1)))), ' Hz');
+            cfgtopo.comment = strcat('freq: ',num2str(mean(time(begs(PlN):(ends(PlN))))), ' Hz');
           end
           cfgtopo.commentpos = 'title';
           subplot(cfg.subplotsize(1), cfg.subplotsize(2), iT);
