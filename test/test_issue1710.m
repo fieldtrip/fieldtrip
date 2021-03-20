@@ -1,3 +1,5 @@
+try
+
 load sourcemodel.mat % this contains "tmp"
 
 npos = 2472;
@@ -20,3 +22,4 @@ cfg = [];
 cfg.funparameter = 'pow';
 ft_sourceplot(cfg, interp);
 
+end
