@@ -2,7 +2,7 @@ function test_clusterstat
 
 % MEM 2gb
 % WALLTIME 00:10:00
-% DEPENDENCY findcluster, clusterstat, ft_statistics_montecarlo
+% DEPENDENCY findcluster clusterstat ft_statistics_montecarlo
 
 pattern = [...
     1 1 1 1 0 1 1 1 1 1;...
