@@ -18,7 +18,7 @@ function [cfg] = ft_singleplotTFR(cfg, data)
 %                        'outline' can only be used with a logical cfg.maskparameter
 %                        use 'saturation' or 'outline' when saving to vector-format (like *.eps) to avoid all sorts of image-problems
 %   cfg.maskalpha      = alpha value between 0 (transparent) and 1 (opaque) used for masking areas dictated by cfg.maskparameter (default = 1)
-%                        (will be ignored in case of numeric cfg.maskparameter or if cfg.maskstyle = 'outline')   
+%                        (will be ignored in case of numeric cfg.maskparameter or if cfg.maskstyle = 'outline')
 %   cfg.masknans       = 'yes' or 'no' (default = 'yes')
 %   cfg.xlim           = 'maxmin' or [xmin xmax] (default = 'maxmin')
 %   cfg.ylim           = 'maxmin' or [ymin ymax] (default = 'maxmin')
@@ -201,7 +201,7 @@ else
   assert(~isempty(cfg.trials), 'empty specification of cfg.trials for data with repetitions');
 end
 
-% parse cfg.channel 
+% parse cfg.channel
 if isfield(cfg, 'channel') && isfield(data, 'label')
   cfg.channel = ft_channelselection(cfg.channel, data.label);
 elseif isfield(cfg, 'channel') && isfield(data, 'labelcmb')
@@ -531,7 +531,8 @@ if ~isempty(range)
   fprintf('selected cfg.xlim = [%f %f]\n', cfg.xlim(1), cfg.xlim(2));
   fprintf('selected cfg.ylim = [%f %f]\n', cfg.ylim(1), cfg.ylim(2));
   % ensure that the new figure appears at the same position
-  f = figure('Position', get(gcf, 'Position'));
+  cfg.figure = 'yes';
+  cfg.position = get(gcf, 'Position');
   ft_topoplotTFR(cfg, data);
 end
 

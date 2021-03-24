@@ -668,6 +668,7 @@ if ~isempty(label)
   cfg.trials = 'all';                     % trial selection has already been taken care of
   fprintf('selected cfg.channel = {%s}\n', join_str(', ', cfg.channel));
   % ensure that the new figure appears at the same position
-  f = figure('position', get(gcf, 'Position'));
+  cfg.figure = 'yes';
+  cfg.position = get(gcf, 'Position');
   ft_singleplotER(cfg, datvarargin{:});
 end
