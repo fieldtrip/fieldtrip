@@ -757,7 +757,7 @@ else
 end
 
 msg = sprintf('%s\n\n%s', msg, content);
-ft_warning(msg);
+ft_warning('FieldTrip:getdimord:warning_dimord_could_not_be_determined', msg);
 end % function warning_dimord_could_not_be_determined
 
 
