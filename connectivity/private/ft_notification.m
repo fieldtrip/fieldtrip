@@ -67,7 +67,8 @@ switch stack(2).name
 end
 
 % remove this function itself and the ft_xxx calling function
-stack = stack(3:end);
+%stack = stack(3:end);
+stack(1:2) = [];
 
 % remove the non-FieldTrip functions from the path, these should not be part of the default message identifier
 keep = true(size(stack));
@@ -91,15 +92,16 @@ end
 if isempty(s)
   s = struct('identifier', {}, 'state', {}, 'timestamp', {});
 end
+ident = {s.identifier};
 
 % set the default notification state
-if ~ismember('all', {s.identifier})
+if ~any(strcmp(ident, 'all'))
   s = setstate(s, 'all', 'on');
 end
 
 % set the default backtrace state
 defaultbacktrace = false;
-if ~ismember('backtrace', {s.identifier})
+if ~any(strcmp(ident, 'backtrace'))
   switch level
     case {'debug' 'info' 'notice'}
       s = setstate(s, 'backtrace', 'off');
@@ -114,7 +116,7 @@ end
 
 % set the default verbose state
 defaultverbose = false;
-if ~ismember('verbose', {s.identifier})
+if ~any(strcmp(ident, 'verbose'))
   switch level
     case 'warning'
       defaultverbose = true;
@@ -126,12 +128,12 @@ if ~ismember('verbose', {s.identifier})
 end
 
 % set the default timeout
-if ~ismember('timeout', {s.identifier})
+if ~any(strcmp(ident, 'timeout'))
   s = setstate(s, 'timeout', 60);
 end
 
 % set the last notification to empty
-if ~ismember('last', {s.identifier})
+if ~any(strcmp(ident, 'last'))
   state.message    = '';
   state.identifier = '';
   state.stack      = struct('file', {}, 'name', {}, 'line', {});
@@ -231,7 +233,7 @@ switch varargin{1}
     
   case {'last' '-last'}
     % return the last notification
-    varargout{1} = getstate(s, 'last');
+    varargout{1} = getstate(s, 'last', ident);
     
   case {'clear' '-clear'}
     % reset the notification system
@@ -241,12 +243,12 @@ switch varargin{1}
     if numel(varargin)>1
       % select a specific item
       msgId = varargin{2};
-      if ~ismember(msgId, {s.identifier})
+      if ~any(strcmp(ident, msgId))
         error('Unknown setting or incorrect message identifier ''%s''.', msgId);
       end
-      msgState = getstate(s, msgId);
+      msgState = getstate(s, msgId, ident);
       if nargout
-        varargout{1} = getreturnstate(s, msgId);
+        varargout{1} = getreturnstate(s, msgId, ident);
       elseif strcmp(msgId, 'verbose')
         if istrue(msgState)
           fprintf('%s output is verbose.\n', level);
@@ -264,14 +266,14 @@ switch varargin{1}
       end
     else
       % return all items
-      r = getreturnstate(s);
+      r = getreturnstate(s, [], ident);
       
       if nargout
         % return the state of all items
         varargout{1} = r;
       else
         % show the state of all items that are different from the default
-        default = getstate(s, 'all');
+        default = getstate(s, 'all', ident);
         fprintf('The default %s state is ''%s''.', level, default);
         r = r(~strcmp({r.state}, default));
         % don't show these
@@ -290,7 +292,7 @@ switch varargin{1}
   otherwise
     
     if nargout
-      varargout{1} = getreturnstate(s);
+      varargout{1} = getreturnstate(s, [], ident);
     end
     
     % first input might be msgId
@@ -299,11 +301,11 @@ switch varargin{1}
       varargin = varargin(2:end); % shift them all by one
     else
       % use an automatically generated default identifier
-      msgId = defaultId;
+      msgId = defaultId(stack);
     end
     
     % get the state for this notification, it will default to the 'all' state
-    msgState = getstate(s, msgId);
+    msgState = getstate(s, msgId, ident);
     
     % errors are always to be printed
     if strcmp(level, 'error')
@@ -311,7 +313,7 @@ switch varargin{1}
     end
     
     if strcmp(msgState, 'once')
-      timeout = getstate(s, 'timeout');
+      timeout = getstate(s, 'timeout', ident);
       since   = elapsed(gettimestamp(s, msgId));
       if (since>timeout)
         % the timeout has passed, update the timestamp and print the message
@@ -333,7 +335,7 @@ switch varargin{1}
     state.identifier = msgId;
     if ~isempty(stack)
       state.stack      = stack;
-      s = setstate(s, 'last', state);
+      s = setstate(s, 'last', state, ident);
     end
     
     if strcmp(msgState, 'on')
@@ -365,7 +367,7 @@ switch varargin{1}
       end % if level=error, warning or otherwise
       
       % decide whether the stack trace should be shown
-      if istrue(getstate(s, 'backtrace'))
+      if istrue(getstate(s, 'backtrace', ident))
         for i=1:numel(stack)
           % show the deepest and lowest-level function first
           [p, f, x] = fileparts(stack(i).file);
@@ -389,7 +391,7 @@ switch varargin{1}
       end
       
       % decide whether a verbose message should be shown
-      if istrue(getstate(s, 'verbose'))
+      if istrue(getstate(s, 'verbose', ident))
         if ~isempty(msgId)
           fprintf('Type "ft_%s off %s" to suppress this message.\n', level, msgId)
         else
@@ -422,28 +424,28 @@ end
 % SUBFUNCTIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function r = getreturnstate(s, msgId)
+function r = getreturnstate(s, msgId, ident)
 if nargin<2
   r = s;
   % don't return these
-  r(strcmp('timeout',   {r.identifier})) = [];
-  r(strcmp('last',      {r.identifier})) = [];
+  r(strcmp('timeout',   ident)) = [];
+  r(strcmp('last',      ident)) = [];
   % don't return the timestamps
   r = rmfield(r, 'timestamp');
 else
-  msgState = getstate(s, msgId);
+  msgState = getstate(s, msgId, ident);
   r = struct('identifier', msgId, 'state', msgState);
 end
 
-function state = getstate(s, msgId)
-sel = find(strcmp({s.identifier}, msgId));
+function state = getstate(s, msgId, ident)
+sel = find(strcmp(ident, msgId));
 if numel(sel)==1
   state = s(sel).state;
   if isempty(state)
-    state = getstate(s, 'all');
+    state = getstate(s, 'all', ident);
   end
 else
-  state = getstate(s, 'all');
+  state = getstate(s, 'all', ident);
 end
 
 function timestamp = gettimestamp(s, msgId)
@@ -454,9 +456,9 @@ else
   timestamp = nan;
 end
 
-function s = setstate(s, msgId, state)
+function s = setstate(s, msgId, state, ident)
 if isempty(msgId), return; end % this happens from the command line
-sel = find(strcmp({s.identifier}, msgId));
+sel = find(strcmp(ident, msgId));
 if numel(sel)==1
   s(sel).state = state;
 else
