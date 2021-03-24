@@ -76,7 +76,7 @@ function [cfg] = ft_topoplotER(cfg, varargin)
 %   cfg.directionality     = '', 'inflow' or 'outflow' specifies for
 %                            connectivity measures whether the inflow into a
 %                            node, or the outflow from a node is plotted. The
-%                            (default) behavior of this option depends on the dimor
+%                            (default) behavior of this option depends on the dimord
 %                            of the input data (see below).
 %   cfg.layout             = specify the channel layout for plotting using one of
 %                            the supported ways (see below).

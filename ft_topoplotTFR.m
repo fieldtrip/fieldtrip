@@ -228,4 +228,3 @@ if ~ft_nargout
   % don't return anything
   clear cfg
 end
-
