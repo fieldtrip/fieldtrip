@@ -96,7 +96,7 @@ ident = {s.identifier};
 
 % set the default notification state
 if ~any(strcmp(ident, 'all'))
-  s = setstate(s, 'all', 'on');
+  s = setstate(s, 'all', 'on', ident);
 end
 
 % set the default backtrace state
@@ -104,13 +104,13 @@ defaultbacktrace = false;
 if ~any(strcmp(ident, 'backtrace'))
   switch level
     case {'debug' 'info' 'notice'}
-      s = setstate(s, 'backtrace', 'off');
+      s = setstate(s, 'backtrace', 'off', ident);
     case 'warning'
       defaultbacktrace = true;
       t = warning('query', 'backtrace'); % get the default state
-      s = setstate(s, 'backtrace', t.state);
+      s = setstate(s, 'backtrace', t.state, ident);
     case 'error'
-      s = setstate(s, 'backtrace', 'on');
+      s = setstate(s, 'backtrace', 'on', ident);
   end % switch
 end
 
@@ -121,15 +121,15 @@ if ~any(strcmp(ident, 'verbose'))
     case 'warning'
       defaultverbose = true;
       t = warning('query', 'verbose'); % get the default state
-      s = setstate(s, 'verbose', t.state);
+      s = setstate(s, 'verbose', t.state, ident);
     otherwise
-      s = setstate(s, 'verbose', 'off');
+      s = setstate(s, 'verbose', 'off', ident);
   end
 end
 
 % set the default timeout
 if ~any(strcmp(ident, 'timeout'))
-  s = setstate(s, 'timeout', 60);
+  s = setstate(s, 'timeout', 60, ident);
 end
 
 % set the last notification to empty
@@ -137,7 +137,7 @@ if ~any(strcmp(ident, 'last'))
   state.message    = '';
   state.identifier = '';
   state.stack      = struct('file', {}, 'name', {}, 'line', {});
-  s = setstate(s, 'last', state);
+  s = setstate(s, 'last', state, ident);
 end
 
 if strcmp(level, 'warning')
@@ -155,7 +155,7 @@ end
 
 if numel(varargin)==1 && (isstruct(varargin{1}) || isempty(varargin{1}))
   for i=1:numel(varargin{1})
-    s = setstate(s, varargin{1}(i).identifier, varargin{1}(i).state);
+    s = setstate(s, varargin{1}(i).identifier, varargin{1}(i).state, ident);
   end
   ft_default.notification.(level) = s;
   return
@@ -173,9 +173,9 @@ switch varargin{1}
     if numel(varargin)>1
       msgId = varargin{2};
       % return the message state of this specific one
-      varargout{1} = getreturnstate(s, msgId);
+      varargout{1} = getreturnstate(s, msgId, ident);
       % switch this specific item on
-      s = setstate(s, msgId, 'on');
+      s = setstate(s, msgId, 'on', ident);
       if strcmp(msgId, 'backtrace')
         defaultbacktrace = false;
       end
@@ -186,16 +186,16 @@ switch varargin{1}
       % return the message state of all
       varargout{1} = getreturnstate(s);
       % switch all on
-      s = setstate(s, 'all', 'on');
+      s = setstate(s, 'all', 'on', ident);
     end
     
   case 'off'
     if numel(varargin)>1
       msgId = varargin{2};
       % return the message state of this specific one
-      varargout{1} = getreturnstate(s, msgId);
+      varargout{1} = getreturnstate(s, msgId, ident);
       % switch this specific item on
-      s = setstate(s, msgId, 'off');
+      s = setstate(s, msgId, 'off', ident);
       if strcmp(msgId, 'backtrace')
         defaultbacktrace = false;
       end
@@ -206,29 +206,29 @@ switch varargin{1}
       % return the message state of all
       varargout{1} = getreturnstate(s);
       % switch all off
-      s = setstate(s, 'all', 'off');
+      s = setstate(s, 'all', 'off', ident);
     end
     
   case 'once'
     if numel(varargin)>1
       msgId = varargin{2};
       % return the specific message state
-      varargout{1} = getreturnstate(s, msgId);
+      varargout{1} = getreturnstate(s, msgId, ident);
       % switch a specific item to once
-      s = setstate(s, msgId, 'once');
+      s = setstate(s, msgId, 'once', ident);
     else
       % return the message state of all
       varargout{1} = getreturnstate(s);
       % switch all to once
-      s = setstate(s, 'all', 'once');
+      s = setstate(s, 'all', 'once', ident);
     end
     
   case 'timeout'
     % set the timeout, this is used for 'once'
     if ischar(varargin{2})
-      s = setstate(s, 'timeout', str2double(varargin{2}));
+      s = setstate(s, 'timeout', str2double(varargin{2}), ident);
     else
-      s = setstate(s, 'timeout', varargin{2});
+      s = setstate(s, 'timeout', varargin{2}, ident);
     end
     
   case {'last' '-last'}
