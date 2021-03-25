@@ -54,7 +54,7 @@ switch numel(stack)
   otherwise
     % it is called from within a function
     name = sprintf('%s:', stack(end:-1:1).name); % this creates something like fun1:fun2:fun3:
-    id   = sprintf('FieldTrip:%sline%d', name, stack(1).line);
+    id   = sprintf('FieldTrip:%s:line%d', name, stack(1).line);
 end
 
 % slashes occur when using nested functions, but are not allowed in the identifier

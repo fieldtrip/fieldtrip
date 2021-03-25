@@ -92,7 +92,7 @@ end
 ident = {s.identifier};
 
 % set the default notification state
-if ~any(strcmp({s.identifier}, 'all'))
+if ~any(strcmp(ident, 'all'))
   [s, ident] = setstate(s, 'all', 'on', ident);
 end
 
@@ -172,7 +172,7 @@ switch varargin{1}
       % return the message state of this specific one
       varargout{1} = getreturnstate(s, msgId);
       % switch this specific item on
-      s = setstate(s, msgId, 'on');
+      s = setstate(s, msgId, 'on', ident);
       if strcmp(msgId, 'backtrace')
         defaultbacktrace = false;
       end
@@ -183,7 +183,7 @@ switch varargin{1}
       % return the message state of all
       varargout{1} = getreturnstate(s);
       % switch all on
-      s = setstate(s, 'all', 'on');
+      s = setstate(s, 'all', 'on', ident);
     end
     
   case 'off'
@@ -245,7 +245,7 @@ switch varargin{1}
       end
       msgState = getstate(s, msgId, ident);
       if nargout
-        varargout{1} = getreturnstate(s, msgId, ident);
+        varargout{1} = getreturnstate(s, msgId);
       elseif strcmp(msgId, 'verbose')
         if istrue(msgState)
           fprintf('%s output is verbose.\n', level);
@@ -263,7 +263,7 @@ switch varargin{1}
       end
     else
       % return all items
-      r = getreturnstate(s, [], ident);
+      r = getreturnstate(s);
       
       if nargout
         % return the state of all items
@@ -289,7 +289,7 @@ switch varargin{1}
   otherwise
     
     if nargout
-      varargout{1} = getreturnstate(s, [], ident);
+      varargout{1} = getreturnstate(s);
     end
     
     % first input might be msgId
@@ -421,7 +421,7 @@ end
 % SUBFUNCTIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function r = getreturnstate(s, msgId, ident)
+function r = getreturnstate(s, msgId)
 if nargin<2
   r = s;
   ident = {r.identifier};
