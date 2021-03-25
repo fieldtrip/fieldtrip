@@ -68,11 +68,11 @@ end
 
 % remove this function itself and the ft_xxx calling function
 %stack = stack(3:end);
-%stack(1:2) = [];
+stack(1:2) = [];
 
 % remove the non-FieldTrip functions from the path, these should not be part of the default message identifier
 [v, p] = ft_version;
-keep   = ~startsWith({stack.file}, p);
+keep   = startsWith({stack.file}, p);
 stack  = stack(keep);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
