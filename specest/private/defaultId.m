@@ -39,8 +39,8 @@ else
   
   % remove the non-FieldTrip functions and scripts, these should not be part of the message identifier
   [v, p] = ft_version;
-  keep = ~startsWith({stack.file}, p);
-  stack = stack(keep);
+  keep   = startsWith({stack.file}, p);
+  stack  = stack(keep);
 end
 
 switch numel(stack)
