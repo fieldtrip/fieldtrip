@@ -430,7 +430,7 @@ if nargin<2
   % don't return the timestamps
   r = rmfield(r, 'timestamp');
 else
-  msgState = getstate(s, msgId, ident);
+  msgState = getstate(s, msgId, {s.identifier});
   r = struct('identifier', msgId, 'state', msgState);
 end
 
