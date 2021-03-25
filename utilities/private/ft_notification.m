@@ -424,9 +424,9 @@ end
 function r = getreturnstate(s, msgId, ident)
 if nargin<2
   r = s;
+  ident = {r.identifier};
   % don't return these
-  r(strcmp('timeout',   ident)) = [];
-  r(strcmp('last',      ident)) = [];
+  r(strcmp(ident, 'timeout')|strcmp(ident, 'last')) = [];
   % don't return the timestamps
   r = rmfield(r, 'timestamp');
 else
