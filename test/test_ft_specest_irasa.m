@@ -2,97 +2,72 @@ function test_ft_specest_irasa
 
 % MEM 2gb
 % WALLTIME 00:10:00
-% DEPENDENCY ft_freqanalysis
+% DEPENDENCY ft_freqanalysis ft_specest_irasa
 
-% script demonstrating the extraction of rhythmic spectral
-% features from the electrophysiological signal, from Stolk et al.,
-% Electrocorticographic dissociation of alpha and beta rhythmic activity
-% in the human sensorimotor system
+% We do not have that many concurrent licenses of the DSP Systems toolbox (https://nl.mathworks.com/products/dsp-system.html)
+% which was used in the initial version of this script. Therefore this test script does not use the DSP toolbox by default.
+usedsptoolbox = false;
 
-try
-  
-  % generate trials with a 15 Hz oscillation embedded in pink noise
-  t = (1:1000)/1000; % time axis
-  for rpt = 1:100
-    % generate pink noise
-    dspobj = dsp.ColoredNoise('Color', 'pink', ...
-      'SamplesPerFrame', length(t));
-    fn = dspobj()';
+% simulate data
+t = (1:2000)/1000; % time axis
+for rpt = 1:20
+    if usedsptoolbox
+      % generate pink noise using the DSP toolbox
+        dspobj = dsp.ColoredNoise('Color', 'pink', 'SamplesPerFrame', length(t));
+        fn = dspobj()';
+    else
+        % use another method to make pink noise
+        fn = cumsum(randn(1,length(t))); 
+    end
     
-    % add a 15 Hz oscillation
-    data.trial{1,rpt} = fn + cos(2*pi*15*t);
+    % add line noise
+    data.trial{1,rpt} = fn + cos(2*pi*50*t) + cos(2*pi*100*t);
     data.time{1,rpt}  = t;
     data.label{1}     = 'chan';
     data.trialinfo(rpt,1) = rpt;
-  end
-  
-  % partition the data into ten overlapping sub-segments
-  w = data.time{1}(end)-data.time{1}(1); % window length
-  cfg               = [];
-  cfg.length        = w*.9;
-  cfg.overlap       = 1-((w-cfg.length)/(10-1));
-  data_r = ft_redefinetrial(cfg, data);
-  
-  % perform IRASA and regular spectral analysis
-  cfg               = [];
-  cfg.foilim        = [1 50];
-  cfg.taper         = 'hanning';
-  cfg.pad           = 'nextpow2';
-  cfg.keeptrials    = 'yes';
-  cfg.method        = 'irasa';
-  frac_r = ft_freqanalysis(cfg, data_r);
-  cfg.method        = 'mtmfft';
-  orig_r = ft_freqanalysis(cfg, data_r);
-  
-  % average across the sub-segments
-  frac_s = {};
-  orig_s = {};
-  for rpt = unique(frac_r.trialinfo)'
-    cfg               = [];
-    cfg.trials        = find(frac_r.trialinfo==rpt);
-    cfg.avgoverrpt    = 'yes';
-    frac_s{end+1} = ft_selectdata(cfg, frac_r);
-    orig_s{end+1} = ft_selectdata(cfg, orig_r);
-  end
-  frac_a = ft_appendfreq([], frac_s{:});
-  orig_a = ft_appendfreq([], orig_s{:});
-  
-  % average across trials
-  cfg               = [];
-  cfg.trials        = 'all';
-  cfg.avgoverrpt    = 'yes';
-  frac = ft_selectdata(cfg, frac_a);
-  orig = ft_selectdata(cfg, orig_a);
-  
-  % subtract the fractal component from the power spectrum
-  cfg               = [];
-  cfg.parameter     = 'powspctrm';
-  cfg.operation     = 'x2-x1';
-  osci = ft_math(cfg, frac, orig);
-  
-  % plot the fractal component and the power spectrum
-  figure; plot(frac.freq, frac.powspctrm, ...
-    'linewidth', 3, 'color', [0 0 0])
-  hold on; plot(orig.freq, orig.powspctrm, ...
-    'linewidth', 3, 'color', [.6 .6 .6])
-  
-  % plot the full-width half-maximum of the oscillatory component
-  f    = fit(osci.freq', osci.powspctrm', 'gauss1');
-  mean = f.b1;
-  std  = f.c1/sqrt(2)*2.3548;
-  fwhm = [mean-std/2 mean+std/2];
-  yl   = get(gca, 'YLim');
-  p = patch([fwhm flip(fwhm)], [yl(1) yl(1) yl(2) yl(2)], [1 1 1]);
-  uistack(p, 'bottom');
-  legend('FWHM oscillation', 'Fractal component', 'Power spectrum');
-  xlabel('Frequency'); ylabel('Power');
-  set(gca, 'YLim', yl);
-  
-catch me
-  if strcmp(me.identifier, 'MATLAB:license:checkouterror')
-    warning('could not run test, the Signal_Blocks license is not available')
-  else
-    rethrow(me);
-  end
 end
+
+% using unfiltered data
+cfg = [];
+cfg.method = 'irasa';
+cfg.output = 'original';
+cfg.pad   = 'nextpow2';
+freq = ft_freqanalysis(cfg, data);
+cfg.output = 'fractal';
+freqI = ft_freqanalysis(cfg, data);
+
+% what happens if we use bandpassfiltered data?
+cfg2            = [];
+cfg2.bpfilter   = 'yes';
+cfg2.bpfilttype = 'firws';
+cfg2.bpfreq     = [60 150];
+datafilt       = ft_preprocessing(cfg2, data);
+
+cfg2.bpfilter = 'no';
+cfg2.hpfilter = 'yes';
+cfg2.hpfreq   = 60;
+cfg2.hpfilttype = 'firws';
+datafilt2       = ft_preprocessing(cfg2, data);
+
+cfg2.bpfilter   = 'no';
+cfg2.hpfilter   = 'no';
+cfg2.dftfilter  = 'yes'; % notch filter to filter out line noise
+cfg2.dftfreq    = [50 100];
+datafilt3       = ft_preprocessing(cfg2, data);
+
+cfg.output = 'original';
+freqfilt = ft_freqanalysis(cfg, datafilt);
+freqfilt2 = ft_freqanalysis(cfg, datafilt2);
+freqfilt3 = ft_freqanalysis(cfg, datafilt3);
+
+cfg.output = 'fractal';
+freqfiltI = ft_freqanalysis(cfg, datafilt);
+freqfiltI2 = ft_freqanalysis(cfg, datafilt2);
+freqfiltI3 = ft_freqanalysis(cfg, datafilt3);
+
+figure; 
+semilogy(freq.freq, [freq.powspctrm;freqfilt.powspctrm;freqfilt2.powspctrm;freqfilt3.powspctrm;...
+                     freqI.powspctrm;freqfiltI.powspctrm;freqfiltI2.powspctrm;freqfiltI3.powspctrm]);
+legend({'orig-unfilterd';'orig-bpfiltered';'orig-hpfiltered';'orig-dftfiltered';...
+        'frac-unfiltered';'frac-bpfiltered';'frac-hpfiltered';'frac-dftfiltered'});
 

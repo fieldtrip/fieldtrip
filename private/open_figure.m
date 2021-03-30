@@ -20,15 +20,33 @@ switch cfg.figure
     if ~isempty(cfg.position)
       figopt = ft_setopt(figopt, 'position', cfg.position);
     end
-    h = figure(figopt{:});
+    
+    % check whether there is already a figure open
+    h = get(0, 'CurrentFigure');
+
+    if isempty(h)
+      % there is no figure open yet, make a new one
+      h = figure(figopt{:});
+    elseif isempty(get(h, 'Children'))
+      % there is an empty figure open, use that and update it
+      if ~isempty(figopt)
+        set(h, figopt{:});
+      end
+    else
+      % there is another figure open, make a new one
+      h = figure(figopt{:});
+    end
+    
   case {'clf', 'no'}
-    % clear the current figure
+    % use the current figure and clear it
     % this will open a new one if there is no figure yet
     h = clf;
+
   case 'gcf'
-    % use the current figure, do not clear
+    % use the current figure but do not clear it
     % this will open a new one if there is no figure yet
     h = gcf;
+  
   otherwise
     % assume that it specifies a figure handle
     h = cfg.figure;

@@ -25,14 +25,14 @@ method = 0;
 % the specific ones are explicit in the orientation of the axes AND in the place of the origin
 % the generic ones are explicit in the orientation of the axes BUT NOT in the place of the origin
 
-specific = {'ctf' 'bti' '4d' 'neuromag' 'itab' 'acpc' 'mni' 'spm' 'fsaverage' 'tal'};
+specific = {'ctf' '4d' 'bti' 'eeglab' 'neuromag' 'itab' 'acpc' 'spm' 'mni' 'fsaverage' 'tal'};
 generic  = {'als' 'ali' 'ars' 'ari' 'pls' 'pli' 'prs' 'pri' 'las' 'lai' 'ras' 'rai' 'lps' 'lpi' 'rps' 'rpi' 'asl' 'ail' 'asr' 'air' 'psl' 'pil' 'psr' 'pir' 'sal' 'ial' 'sar' 'iar' 'spl' 'ipl' 'spr' 'ipr' 'sla' 'ila' 'sra' 'ira' 'slp' 'ilp' 'srp' 'irp' 'lsa' 'lia' 'rsa' 'ria' 'lsp' 'lip' 'rsp' 'rip'};
 coordsys = [specific generic];
 
 %%
 % convert MNI to anything, including TAL
 
-for i=22:length(coordsys)
+for i=1:length(coordsys)
   disp(coordsys{i})
   dum = ft_convert_coordsys(elec, coordsys{i}, method);
   dum = ft_convert_coordsys(mri, coordsys{i}, method);

@@ -103,15 +103,15 @@ else
     % use some prior knowledge to optimize the location of the bounding box
     % with respect to the origin of the coordinate system
     switch mri.coordsys
-      case {'ctf' '4d' 'bti'}
+      case {'ctf', '4d', 'bti', 'eeglab'}
         xshift = 30./cfg.resolution;
         yshift = 0;
         zshift = 40./cfg.resolution;
-      case {'itab' 'neuromag'}
+      case {'neuromag', 'itab'}
         xshift = 0;
         yshift = 30./cfg.resolution;
         zshift = 40./cfg.resolution;
-      case {'acpc' 'spm' 'mni' 'tal'}
+      case {'acpc', 'spm', 'mni', 'tal'}
         ft_warning('FIXME, the bounding box needs a better default');
         xshift = 0;
         yshift = 0;

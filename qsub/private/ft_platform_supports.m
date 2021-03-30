@@ -37,6 +37,7 @@ function tf = ft_platform_supports(what,varargin)
 %   'uimenu'                        uimenu(...)
 %   'weboptions'                    weboptions(...)
 %   'parula'                        parula(...)
+%   'datetime'                      datetime structure
 %   'html'                          html rendering in desktop
 %
 % See also FT_VERSION, VERSION, VER, VERLESSTHAN
@@ -179,6 +180,9 @@ switch what
     tf = is_matlab() && matlabversion('2014b', Inf);
     
   case 'parula'
+    tf = is_matlab() && matlabversion('2014b', Inf);
+    
+  case 'datetime'
     tf = is_matlab() && matlabversion('2014b', Inf);
 
   case 'html'

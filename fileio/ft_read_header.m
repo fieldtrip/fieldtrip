@@ -16,17 +16,17 @@ function [hdr] = ft_read_header(filename, varargin)
 %   'coordsys'       = string, 'head' or 'dewar' (default = 'head')
 %   'headerformat'   = name of a MATLAB function that takes the filename as input (default is automatic)
 %   'password'       = password structure for encrypted data set (only for mayo_mef30 and mayo_mef21)
-%   'readbids'       = boolean, whether to read information from the BIDS sidecar files (default = true)
+%   'readbids'       = string, 'yes', no', or 'ifmakessense', whether to read information from the BIDS sidecar files (default = 'ifmakessense')
 %
-% This returns a header structure with the following elements
-%   hdr.Fs                  sampling frequency
-%   hdr.nChans              number of channels
-%   hdr.nSamples            number of samples per trial
-%   hdr.nSamplesPre         number of pre-trigger samples in each trial
-%   hdr.nTrials             number of trials
-%   hdr.label               Nx1 cell-array with the label of each channel
-%   hdr.chantype            Nx1 cell-array with the channel type, see FT_CHANTYPE
-%   hdr.chanunit            Nx1 cell-array with the physical units, see FT_CHANUNIT
+% This returns a header structure with the following fields
+%   hdr.Fs          = sampling frequency
+%   hdr.nChans      = number of channels
+%   hdr.nSamples    = number of samples per trial
+%   hdr.nSamplesPre = number of pre-trigger samples in each trial
+%   hdr.nTrials     = number of trials
+%   hdr.label       = Nx1 cell-array with the label of each channel
+%   hdr.chantype    = Nx1 cell-array with the channel type, see FT_CHANTYPE
+%   hdr.chanunit    = Nx1 cell-array with the physical units, see FT_CHANUNIT
 %
 % For continuously recorded data, this will return nSamplesPre=0 and nTrials=1.
 %
@@ -95,7 +95,7 @@ function [hdr] = ft_read_header(filename, varargin)
 % See also FT_READ_DATA, FT_READ_EVENT, FT_WRITE_DATA, FT_WRITE_EVENT,
 % FT_CHANTYPE, FT_CHANUNIT
 
-% Copyright (C) 2003-2020 Robert Oostenveld
+% Copyright (C) 2003-2021 Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -186,7 +186,7 @@ coordsys       = ft_getopt(varargin, 'coordsys', 'head'); % this is used for ctf
 coilaccuracy   = ft_getopt(varargin, 'coilaccuracy');     % empty, or a number between 0-2
 chantype       = ft_getopt(varargin, 'chantype', {});
 password       = ft_getopt(varargin, 'password', struct([]));
-readbids       = ft_getopt(varargin, 'readbids', true);
+readbids       = ft_getopt(varargin, 'readbids', 'ifmakessense');
 
 % this should be a cell array
 if ~iscell(chantype); chantype = {chantype}; end
@@ -211,6 +211,16 @@ if strcmp(headerformat, 'compressed')
   headerformat = ft_filetype(filename);
 else
   inflated     = false;
+end
+
+% for backward compatibility with https://github.com/fieldtrip/fieldtrip/issues/1585
+if islogical(readbids)
+  % it should be either yes/no/ifmakessense
+  if readbids
+    readbids = 'yes';
+  else
+    readbids = 'no';
+  end
 end
 
 realtime = any(strcmp(headerformat, {'fcdc_buffer', 'ctf_shm', 'fcdc_mysql'}));
@@ -286,13 +296,14 @@ if strcmp(coordsys, 'dewar') && ~any(strcmp(headerformat, {'fcdc_buffer', 'ctf_d
   ft_error('dewar coordinates are not supported for %s', headerformat);
 end
 
-if istrue(readbids)
-  % deal with data that is organized according to BIDS
-  % data in a BIDS tsv file (like physio and stim) will be explicitly dealt with in BIDS_TSV
+% deal with data that is organized according to BIDS
+if strcmp(readbids, 'yes') || strcmp(readbids, 'ifmakessense')
   [p, f, x] = fileparts(filename);
+  % check whether it is a BIDS dataset with json and tsv sidecar files
+  % data in a BIDS tsv file (like physio and stim) will be explicitly dealt with in BIDS_TSV
   isbids = startsWith(f, 'sub-') && ~strcmp(x, '.tsv');
   if isbids
-    % try to read the BIDS sidecar files
+    % try to read the metadata from the BIDS sidecar files
     sidecar = bids_sidecar(filename);
     if ~isempty(sidecar)
       data_json = read_json(sidecar);
@@ -1654,6 +1665,17 @@ switch headerformat
     end
     hdr.orig = orig;
     
+  case 'matlab'
+    % read the header structure from a MATLAB file
+    % it should either contain a "hdr" structure, or a FieldTrip data structure according to FT_DATATYPE_RAW
+    w = whos(matfile(filename));
+    if any(strcmp({w.name}, 'hdr'))
+      hdr = loadvar(filename, 'hdr');
+    elseif any(strcmp({w.name}, 'data')) || length(w)==1
+      data = loadvar(filename, 'data');
+      hdr = ft_fetch_header(data);
+    end
+
   case 'mayo_mef30'
     ft_hastoolbox('mayo_mef', 1); % make sure mayo_mef exists
     hdr = read_mayo_mef30(filename, password, sortchannel);
@@ -2188,6 +2210,8 @@ switch headerformat
       % FIXME this assumes only 1 such file, or at least it only takes the
       % first one.
       lfpfile = filenames{lfpfile_idx(1)};
+    else
+      lfpfile = {};
     end
     if ~isempty(rawfile_idx)
       rawfile = filenames{rawfile_idx(1)};
@@ -2398,6 +2422,7 @@ switch headerformat
         hdr.orig.(fn{iFn}) = tmp.(fn{iFn});
       end
     end
+    
   case 'artinis_oxy3'
     ft_hastoolbox('artinis', 1);
     hdr = read_artinis_oxy3(filename);
@@ -2817,30 +2842,37 @@ if isfield(hdr, 'opto')
   end
 end
 
-if istrue(readbids) && isbids
-  % the BIDS sidecar files overrule the information present in the file header itself
-  try, hdr.label     = channels_tsv.name;            end
-  try, hdr.chantype  = channels_tsv.type;            end
-  try, hdr.chanunit  = channels_tsv.units;           end
-  try, hdr.Fs        = data_json.SamplingFrequency;  end
-  if exist('electrodes_tsv', 'var')
-    if isfield(hdr, 'elec')
-      ft_warning('updating the electrode structure with the BIDS sidecar is not yet implemented');
-    else
-      hdr.elec = [];
-      hdr.eleclabel = electrodes_tsv.name;
-      hdr.elecpos   = [electrodes_tsv.x electrodes_tsv.y electrodes_tsv.z];
+if (strcmp(readbids, 'yes') || strcmp(readbids, 'ifmakessense')) && isbids
+  % the BIDS sidecar files overrule the information that is present in the file header itself
+  try
+    if exist('data_json', 'var')
+      hdr.Fs = data_json.SamplingFrequency;
     end
-  end
-  if exist('optodes_tsv', 'var')
-    if isfield(hdr, 'opto')
-      ft_warning('updating the optode structure with the BIDS sidecar is not yet implemented');
-    else
-      hdr.opto = [];
-      hdr.optolabel = optodes_tsv.name;
-      hdr.optopos   = [optodes_tsv.x optodes_tsv.y optodes_tsv.z];
+    if exist('channels_tsv', 'var')
+      assert(length(channels_tsv.name)  == hdr.nChans, 'number of channels is not consistent with the BIDS channels.tsv');
+      assert(length(channels_tsv.type)  == hdr.nChans, 'number of channels is not consistent with the BIDS channels.tsv');
+      assert(length(channels_tsv.units) == hdr.nChans, 'number of channels is not consistent with the BIDS channels.tsv');
+      hdr.label     = channels_tsv.name;
+      hdr.chantype  = channels_tsv.type;
+      hdr.chanunit  = channels_tsv.units;
     end
-  end
+    if exist('electrodes_tsv', 'var')
+      hdr.elec         = [];
+      hdr.elec.label   = electrodes_tsv.name;
+      hdr.elec.elecpos = [electrodes_tsv.x electrodes_tsv.y electrodes_tsv.z];
+    end
+    if exist('optodes_tsv', 'var')
+      hdr.opto         = [];
+      hdr.opto.label   = optodes_tsv.name;
+      hdr.opto.optopos = [optodes_tsv.x optodes_tsv.y optodes_tsv.z];
+    end
+  catch ME
+    if strcmp(readbids, 'yes')
+      ft_error(ME.message);
+    else
+      ft_warning(ME.message);
+    end
+  end % catch errors
 end % if readbids and isbids
 
 % ensure that these are column arrays and that they do not have empty entries

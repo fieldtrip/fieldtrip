@@ -79,6 +79,13 @@ function [headmodel, cfg] = ft_prepare_headmodel(cfg, data)
 % SIMBIO
 %   cfg.conductivity
 %
+% DUNEURO
+%   cfg.conductivity      An array with the conductivities must be provided. (see above)
+%   cfg.grid_filename     Alternatively,  a filename for the grid and a filename for the conductivities can be passed.
+%   cfg.tensors_filename  "
+%   cfg.duneuro_settings  (optional) Additional settings can be provided for duneuro (see http://www.duneuro.org).
+
+%
 % SINGLESHELL
 %   cfg.tissue            see above; in combination with 'seg' input; default options are 'brain' or 'scalp'
 %   cfg.order             (optional)
@@ -115,7 +122,7 @@ function [headmodel, cfg] = ft_prepare_headmodel(cfg, data)
 % FT_HEADMODEL_SIMBIO, FT_HEADMODEL_FNS, FT_HEADMODEL_HALFSPACE,
 % FT_HEADMODEL_INFINITE, FT_HEADMODEL_OPENMEEG, FT_HEADMODEL_SINGLESPHERE,
 % FT_HEADMODEL_CONCENTRICSPHERES, FT_HEADMODEL_LOCALSPHERES,
-% FT_HEADMODEL_SINGLESHELL, FT_HEADMODEL_INTERPOLATE
+% FT_HEADMODEL_SINGLESHELL, FT_HEADMODEL_INTERPOLATE, FT_HEADMODEL_DUNEURO
 
 % Copyright (C) 2011, Cristiano Micheli
 % Copyright (C) 2011-2012, Jan-Mathijs Schoffelen, Robert Oostenveld
@@ -183,7 +190,6 @@ cfg.smooth          = ft_getopt(cfg, 'smooth');
 cfg.threshold       = ft_getopt(cfg, 'threshold');
 
 % other options
-cfg.numvertices     = ft_getopt(cfg, 'numvertices');
 cfg.isolatedsource  = ft_getopt(cfg, 'isolatedsource');   % used for dipoli and openmeeg
 cfg.point           = ft_getopt(cfg, 'point');            % used for halfspace
 cfg.submethod       = ft_getopt(cfg, 'submethod');        % used for halfspace
@@ -194,6 +200,7 @@ cfg.baseline        = ft_getopt(cfg, 'baseline');
 cfg.singlesphere    = ft_getopt(cfg, 'singlesphere');
 cfg.grid_filename   = ft_getopt(cfg, 'grid_filename');    % used for duneuro
 cfg.tensors_filename= ft_getopt(cfg, 'tensors_filename'); % used for duneuro
+cfg.duneuro_settings= ft_getopt(cfg, 'duneuro_settings');
 cfg.tissueval       = ft_getopt(cfg, 'tissueval');        % used for simbio
 cfg.transform       = ft_getopt(cfg, 'transform');
 cfg.siunits         = ft_getopt(cfg, 'siunits', 'no');    % yes/no, convert the input and continue with SI units
@@ -279,11 +286,11 @@ switch cfg.method
   case {'bemcp' 'dipoli' 'openmeeg'}
     % the low-level functions all need a mesh
     if isfield(data, 'pos') && isfield(data, 'tri')
-      if isempty(cfg.numvertices) || isequal(cfg.numvertices, arrayfun(@(x) size(x.pos, 1), data))
+      if ~isfield(cfg, 'numvertices') || isempty(cfg.numvertices) || isequal(cfg.numvertices, arrayfun(@(x) size(x.pos, 1), data))
         % copy the input data
         geometry = data;
       else
-        % retriangulate the input data
+        % retriangulate the input to the user-specified number of vertices
         tmpcfg.method = 'headshape';
         tmpcfg.headshape = data;
         tmpcfg.numvertices = cfg.numvertices;
@@ -476,8 +483,7 @@ switch cfg.method
       error('You must provide a mesh with tetrahedral or hexahedral elements, where each element has a scalar or tensor conductivity');
     end
     headmodel = ft_headmodel_duneuro(geometry, 'grid_filename', cfg.grid_filename, 'tensors_filename', cfg.tensors_filename,...
-      'conductivity', cfg.conductivity);
-
+      'conductivity', cfg.conductivity, 'duneuro_settings', cfg.duneuro_settings);
   case {'fns'}
     if input_seg
       data = ft_datatype_segmentation(data, 'segmentationstyle', 'indexed');

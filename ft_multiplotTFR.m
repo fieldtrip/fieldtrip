@@ -21,7 +21,7 @@ function [cfg] = ft_multiplotTFR(cfg, data)
 %                        'outline' can only be used with a logical cfg.maskparameter
 %                        use 'saturation' or 'outline' when saving to vector-format (like *.eps) to avoid all sorts of image-problems
 %   cfg.maskalpha        = alpha value between 0 (transparent) and 1 (opaque) used for masking areas dictated by cfg.maskparameter (default = 1)
-%                        (will be ignored in case of numeric cfg.maskparameter or if cfg.maskstyle = 'outline')   
+%                        (will be ignored in case of numeric cfg.maskparameter or if cfg.maskstyle = 'outline')
 %   cfg.masknans         = 'yes' or 'no' (default = 'yes')
 %   cfg.xlim             = 'maxmin' or [xmin xmax] (default = 'maxmin')
 %   cfg.ylim             = 'maxmin' or [ymin ymax] (default = 'maxmin')
@@ -274,7 +274,7 @@ else
   assert(~isempty(cfg.trials), 'empty specification of cfg.trials for data with repetitions');
 end
 
-% parse cfg.channel 
+% parse cfg.channel
 if isfield(cfg, 'channel') && isfield(data, 'label')
   cfg.channel = ft_channelselection(cfg.channel, data.label);
 elseif isfield(cfg, 'channel') && isfield(data, 'labelcmb')
@@ -363,7 +363,7 @@ end
 %% Section 3: select the data to be plotted and determine min/max range
 
 % Read or create the layout that will be used for plotting
-tmpcfg = keepfields(cfg, {'layout', 'rows', 'columns', 'commentpos', 'skipcomnt', 'scalepos', 'skipscale', 'projection', 'viewpoint', 'rotate', 'width', 'height', 'elec', 'grad', 'opto', 'showcallinfo'});
+tmpcfg = keepfields(cfg, {'layout', 'channel', 'rows', 'columns', 'commentpos', 'skipcomnt', 'scalepos', 'skipscale', 'projection', 'viewpoint', 'rotate', 'width', 'height', 'elec', 'grad', 'opto', 'showcallinfo'});
 cfg.layout = ft_prepare_layout(tmpcfg, data);
 
 % Take the subselection of channels that is contained in the layout, this is the same in all datasets
@@ -427,7 +427,7 @@ datamatrix = permute(datamatrix, ib);
 datamatrix = datamatrix(selchan, sely, selx);
 
 if ~isempty(cfg.maskparameter)
-    % one value for each channel-freq-time point
+  % one value for each channel-freq-time point
   maskmatrix = data.(cfg.maskparameter)(selchan, sely, selx);
   if islogical(maskmatrix) && any(strcmp(cfg.maskstyle, {'saturation', 'opacity'}))
     maskmatrix = double(maskmatrix);
@@ -634,7 +634,7 @@ ft_postamble savefig
 % add a menu to the figure, but only if the current figure does not have subplots
 menu_fieldtrip(gcf, cfg, false);
 
-if ~ft_nargout 
+if ~ft_nargout
   % don't return anything
   clear cfg
 end
@@ -668,7 +668,8 @@ if ~isempty(label)
   cfg.trials = 'all';                     % trial selection has already been taken care of
   fprintf('selected cfg.channel = {%s}\n', join_str(', ', cfg.channel));
   % ensure that the new figure appears at the same position
-  f = figure('Position', get(gcf, 'Position'));
+  cfg.figure = 'yes';
+  cfg.position = get(gcf, 'Position');
   ft_singleplotTFR(cfg, data);
 end
 

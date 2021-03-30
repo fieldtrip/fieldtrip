@@ -6,6 +6,8 @@ function y = htmlcolors(x)
 %   rgb = htmlcolors(name)
 % or
 %   name = htmlcolors(rgb)
+% or 
+%   list = htmlcolors
 %
 % See https://www.rapidtables.com/web/color/html-color-codes.html
 % and https://www.color-hex.com/color-palettes/
@@ -172,12 +174,15 @@ mapping = {
   'maroon',                [128,0,0]
   };
 
-if ischar(x)
+if nargin==0
+  % return the list with names
+  y = mapping(:,1);
+elseif ischar(x)
   % look up the corresponding RGB values
   sel = strcmp(mapping(:,1), x);
   y = mapping{sel, 2};
   y = y/255;
-else
+elseif isnumeric(x)
   x = x*255;
   % look up the corresponding name
   rgb = vertcat(mapping{:,2});

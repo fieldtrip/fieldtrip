@@ -8,19 +8,19 @@ function [event] = ft_read_event(filename, varargin)
 %   [event] = ft_read_event(filename, ...)
 %
 % Additional options should be specified in key-value pairs and can be
-%   'dataformat'     string
-%   'headerformat'   string
-%   'eventformat'    string
-%   'header'         header structure, see FT_READ_HEADER
-%   'detectflank'    string, can be 'up', 'down', 'both', 'updiff', 'downdiff', 'bit' (default is system specific)
-%   'trigshift'      integer, number of samples to shift from flank to detect trigger value (default = 0)
-%   'chanindx'       list with channel numbers for trigger detection, specify -1 in case you don't want to detect triggers (default is automatic)
-%   'threshold'      threshold for analog trigger channels (default is system specific)
-%   'tolerance'      tolerance in samples when merging Neuromag analogue trigger channels (default = 1, meaning that a shift of one sample in both directions is compensated for)
-%   'blocking'       wait for the selected number of events (default = 'no')
-%   'timeout'        amount of time in seconds to wait when blocking (default = 5)
-%   'password'       password structure for encrypted data set (only for mayo_mef30 and mayo_mef21)
-%   'readbids'       boolean, whether to read information from the BIDS sidecar files (default = true)
+%   'dataformat'     = string
+%   'headerformat'   = string
+%   'eventformat'    = string
+%   'header'         = header structure, see FT_READ_HEADER
+%   'detectflank'    = string, can be 'up', 'down', 'both', 'updiff', 'downdiff', 'bit' (default is system specific)
+%   'trigshift'      = integer, number of samples to shift from flank to detect trigger value (default = 0)
+%   'chanindx'       = list with channel numbers for trigger detection, specify -1 in case you don't want to detect triggers (default is automatic)
+%   'threshold'      = threshold for analog trigger channels (default is system specific)
+%   'tolerance'      = tolerance in samples when merging Neuromag analogue trigger channels (default = 1, meaning that a shift of one sample in both directions is compensated for)
+%   'blocking'       = wait for the selected number of events (default = 'no')
+%   'timeout'        = amount of time in seconds to wait when blocking (default = 5)
+%   'password'       = password structure for encrypted data set (only for mayo_mef30 and mayo_mef21)
+%   'readbids'       = 'yes', no', or 'ifmakessense', whether to read information from the BIDS sidecar files (default = 'ifmakessense')
 %
 % This function returns an event structure with the following fields
 %   event.type      = string
@@ -71,7 +71,7 @@ function [event] = ft_read_event(filename, varargin)
 %
 % See also FT_READ_HEADER, FT_READ_DATA, FT_WRITE_EVENT, FT_FILTER_EVENT
 
-% Copyright (C) 2004-2020 Robert Oostenveld
+% Copyright (C) 2004-2021 Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -165,12 +165,22 @@ chanindx         = ft_getopt(varargin, 'chanindx');                  % this allo
 trigindx         = ft_getopt(varargin, 'trigindx');                  % deprecated, use chanindx instead
 triglabel        = ft_getopt(varargin, 'triglabel');                 % deprecated, use chanindx instead
 password         = ft_getopt(varargin, 'password', struct([]));
-readbids         = ft_getopt(varargin, 'readbids', true);
+readbids         = ft_getopt(varargin, 'readbids', 'ifmakessense');
 
 % for backward compatibility, added by Robert in Sept 2019
 if ~isempty(trigindx)
   ft_warning('please use ''chanindx'' instead of ''trigindx''')
   chanindx = trigindx;
+end
+
+% for backward compatibility with https://github.com/fieldtrip/fieldtrip/issues/1585
+if islogical(readbids)
+  % it should be either yes/no/ifmakessense
+  if readbids
+    readbids = 'yes';
+  else
+    readbids = 'no';
+  end
 end
 
 % for backward compatibility, added by Robert in Sept 2019
@@ -234,7 +244,7 @@ if strcmp(eventformat, 'brainvision_vhdr')
   end
 end
 
-if readbids && ~isempty(filename)
+if (strcmp(readbids, 'yes') || strcmp(readbids, 'ifmakessense')) && ~isempty(filename)
   % deal with data that is organized according to BIDS
   % data in a BIDS tsv file (like physio and stim) will be explicitly dealt with in BIDS_TSV
   [p, f, x] = fileparts(filename);
@@ -490,35 +500,10 @@ switch eventformat
     
   case 'brainvision_vmrk'
     if ~isempty(filename)
-      fid = fopen_or_error(filename,'rt');
-      line = [];
-      while ischar(line) || isempty(line)
-        line = fgetl(fid);
-        if ~isempty(line) && ~(isnumeric(line) && line==-1)
-          if strncmpi(line, 'Mk', 2)
-            % this line contains a marker
-            tok = tokenize(line, '=', 0);    % do not squeeze repetitions of the separator
-            if length(tok)~=2
-              ft_warning('skipping unexpected formatted line in BrainVision marker file');
-            else
-              % the line looks like "MkXXX=YYY", which is ok
-              % the interesting part now is in the YYY, i.e. the second token
-              tok = tokenize(tok{2}, ',', 0);    % do not squeeze repetitions of the separator
-              if isempty(tok{1})
-                tok{1}  = [];
-              end
-              if isempty(tok{2})
-                tok{2}  = [];
-              end
-              event(end+1).type     = tok{1};
-              event(end  ).value    = tok{2};
-              event(end  ).sample   = str2num(tok{3});
-              event(end  ).duration = str2num(tok{4});
-            end
-          end
-        end
-      end
-      fclose(fid);
+      event = read_brainvision_vmrk(filename);
+    else
+      % the user specified a BrainVision dataset without a marker file
+      event = [];
     end
     
   case 'bucn_nirs'
@@ -1377,9 +1362,25 @@ switch eventformat
     end
     
   case 'matlab'
-    % read the events from a normal MATLAB file
-    tmp   = load(filename, 'event');
-    event = tmp.event;
+    % read the event structure from a MATLAB file
+    % it should either contain an "event" structure, or a FieldTrip data structure according to FT_DATATYPE_RAW
+    w = whos(matfile(filename));
+    if any(strcmp({w.name}, 'event'))
+      event = loadvar(filename, 'event');
+    elseif any(strcmp({w.name}, 'data')) || length(w)==1
+      % assume that the matlab file contains a raw data structure according to FT_DATATYPE_RAW that includes trigger channels
+      if isempty(hdr)
+        hdr = ft_read_header(filename);
+      end
+      if isempty(chanindx)
+        % try to determine the trigger channels from the header
+        chanindx = find(ft_chantype(hdr, 'trigger'));
+      else
+        % use the user-supplied list of trigger channels
+      end
+      trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', chanindx, 'detectflank', detectflank, 'denoise', denoise, 'trigshift', trigshift, 'trigpadding', trigpadding, 'threshold', threshold, 'denoise', denoise);
+      event = appendstruct(event, trigger);
+    end
     
   case {'manscan_mbi', 'manscan_mb2'}
     if isempty(hdr)

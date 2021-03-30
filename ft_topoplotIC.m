@@ -138,7 +138,7 @@ end
 cfg.interactive = 'no';
 
 % prepare the layout, this should be done only once
-tmpcfg = keepfields(cfg, {'layout', 'rows', 'columns', 'commentpos', 'skipcomnt', 'scalepos', 'skipscale', 'projection', 'viewpoint', 'rotate', 'width', 'height', 'elec', 'grad', 'opto', 'showcallinfo'});
+tmpcfg = keepfields(cfg, {'layout', 'channel', 'rows', 'columns', 'commentpos', 'skipcomnt', 'scalepos', 'skipscale', 'projection', 'viewpoint', 'rotate', 'width', 'height', 'elec', 'grad', 'opto', 'showcallinfo'});
 cfg.layout = ft_prepare_layout(tmpcfg);
 
 % this is needed for the figure title
@@ -169,7 +169,7 @@ if nplots>1
   nyplot = ceil(sqrt(nplots));
   nxplot = ceil(nplots./nyplot);
   for i = 1:length(selcomp)
-    subplot(nxplot, nyplot, i);
+    cfg.figure = subplot(nxplot, nyplot, i);
     cfg.component = selcomp(i);
 
     % call the common function that is shared with ft_topoplotER and ft_topoplotTFR

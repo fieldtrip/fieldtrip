@@ -11,27 +11,26 @@ function [interp] = ft_sourceinterpolate(cfg, functional, anatomical)
 % and the anatomical volume that can be visualized using FT_SOURCEPLOT or written to
 % file using FT_SOURCEWRITE.
 %
-% The following scenarios are possible:
+% The following scenarios can be considered:
 %
 % - Both functional data and anatomical data are defined on 3D regular grids, for
 %   example with a low-res grid for the functional data and a high-res grid for the
 %   anatomy.
 %
-% - The functional data is defined on a 3D regular grid of source positions
-%   and the anatomical data is defined on an irregular point cloud, which can be a
-%   2D triangulated mesh.
+% - The functional data is defined on a 3D regular grid and the anatomical data is 
+%   defined on an irregular point cloud, which can be a 2D triangulated surface mesh.
 %
 % - The functional data is defined on an irregular point cloud, which can be a 2D
-%   triangulated mesh, and the anatomical data is defined on a 3D regular grid.
+%   triangulated surface mesh, and the anatomical data is defined on a 3D regular grid.
 %
-% - Both the functional and the anatomical data are defined on an irregular
-%   point cloud, which can be a 2D triangulated mesh.
+% - Both the functional and the anatomical data are defined on an irregular point
+%   cloud, which can be a 2D triangulated mesh.
 %
-% - The functional data is defined on a low resolution 2D triangulated mesh and the
-%   anatomical data is defined on a high resolution mesh, where the low-res vertices
-%   form a subset of the high-res vertices. This allows for mesh based interpolation.
-%   The algorithm currently implemented is so-called 'smudging' as it is also applied
-%   by the MNE-suite software.
+% - The functional data is defined on a low-resolution 2D triangulated surface mesh and the
+%   anatomical data is defined on a high-resolution 2D triangulated surface mesh, where the 
+%   low-res vertices form a subset of the high-res vertices. This allows for mesh-based
+%   interpolation. The algorithm currently implemented is so-called 'smudging' as it is
+%   also applied by the MNE-suite software.
 %
 % Use as
 %   [interp] = ft_sourceinterpolate(cfg, source, anatomy)
@@ -39,17 +38,19 @@ function [interp] = ft_sourceinterpolate(cfg, functional, anatomical)
 % where
 %   source  is the output of FT_SOURCEANALYSIS
 %   stat    is the output of FT_SOURCESTATISTICS
-%   anatomy is the output of FT_READ_MRI or one of the FT_VOLUMExxx functions,
-%           a cortical sheet that was read with FT_READ_HEADSHAPE, or a regular
-%           3D grid created with FT_PREPARE_SOURCEMODEL.
-% and cfg is a structure with any of the following fields
-%   cfg.parameter     = string (or cell-array) of the parameter(s) to be interpolated
-%   cfg.downsample    = integer number (default = 1, i.e. no downsampling)
-%   cfg.interpmethod  = string, can be 'nearest', 'linear', 'cubic',  'spline', 'sphere_avg' or 'smudge' (default = 'linear for interpolating two 3D volumes, 'nearest' for all other cases)
+%   anatomy is the output of FT_READ_MRI, or one of the FT_VOLUMExxx functions,
+%           or a cortical sheet that was read with FT_READ_HEADSHAPE,
+%           or a regular 3D grid created with FT_PREPARE_SOURCEMODEL.
 %
-% The supported interpolation methods are 'nearest', 'linear', 'cubic' or 'spline'
-% for interpolating two 3D volumes onto each other. For all other cases the supported
-% interpolation methods are 'nearest', 'sphere_avg' or 'smudge'.
+% The configuration should contain:
+%   cfg.parameter     = string or cell-array with the functional parameter(s) to be interpolated
+%   cfg.downsample    = integer number (default = 1, i.e. no downsampling)
+%   cfg.interpmethod  = string, can be 'nearest', 'linear', 'cubic',  'spline', 'sphere_avg', 'sphere_weighteddistance', or 'smudge' (default = 'linear for interpolating two 3D volumes, 'nearest' for all other cases)
+%
+% For interpolating two 3D regular grids or volumes onto each other the supported
+% interpolation methods are 'nearest', 'linear', 'cubic' or 'spline'. For all other
+% cases the supported interpolation methods are 'nearest', 'sphere_avg',
+% 'sphere_weighteddistance' or 'smudge'.
 %
 % The functional and anatomical data should be expressed in the same
 % coordinate sytem, i.e. either both in MEG headcoordinates (NAS/LPA/RPA)
@@ -120,7 +121,7 @@ cfg = ft_checkconfig(cfg, 'renamedval', {'parameter', 'avg.mom', 'mom'});
 
 % set the defaults
 cfg.downsample   = ft_getopt(cfg, 'downsample', 1);
-cfg.feedback     = ft_getopt(cfg, 'feedback',   'text');
+cfg.feedback     = ft_getopt(cfg, 'feedback', 'text');
 cfg.interpmethod = ft_getopt(cfg, 'interpmethod', []);   % cfg.interpmethod depends on how the interpolation should be done and actual defaults will be specified below
 
 % replace pnt by pos

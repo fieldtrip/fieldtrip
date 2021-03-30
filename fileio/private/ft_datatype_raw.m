@@ -85,7 +85,6 @@ for i=1:length(data.trial)
 end
 assert(length(unique(data.label))==length(data.label), 'channel labels must be unique');
 
-
 % convert it into true/false
 if isequal(hassampleinfo, 'ifmakessense')
   hassampleinfo = makessense(data, 'sampleinfo');

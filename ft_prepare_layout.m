@@ -18,22 +18,23 @@ function [layout, cfg] = ft_prepare_layout(cfg, data)
 %   layout.mask    = optional cell-array with line segments that determine the area for topographic interpolation
 %   layout.outline = optional cell-array with line segments that represent the head, nose, ears, sulci or other anatomical features
 %
-% There are several ways in which a 2-D layout can be made: 
+% There are several ways in which a 2-D layout can be made:
 % 1) it can be read directly from a layout file
-% 2) it can be created on basis of an image or photo, 
+% 2) it can be created on basis of an image or photo,
 % 3) it can be created from a projection of the 3-D sensor positions in the data, in the configuration, or in an electrode, gradiometer or optode file.
 %
-% Layout files are MATLAB *.mat files containing a single structure representing the layout 
-% (see above). The layout file can also be an ASCII file with the extension *.lay, although 
-% this file format is no longer recommended, since there is less control over the outline 
-% of the head and the mask within which the interpolation is done. A large number of 
-% template layout files is provided in the fieldtrip/template/layout directory. See 
+% Layout files are MATLAB *.mat files containing a single structure representing the layout
+% (see above). The layout file can also be an ASCII file with the extension *.lay, although
+% this file format is no longer recommended, since there is less control over the outline
+% of the head and the mask within which the interpolation is done. A large number of
+% template layout files is provided in the fieldtrip/template/layout directory. See
 % also http://www.fieldtriptoolbox.org/template/layout
 %
 % You can specify any one of the following configuration options
 %   cfg.layout      = filename containg the input layout (*.mat or *.lay file), this can also be a layout
 %                     structure, which is simply returned as-is (see below for details)
 %   cfg.output      = filename (ending in .mat or .lay) to which the layout will be written (default = [])
+%   cfg.feedback    = 'yes' or 'no', whether to show an image of the layout (default = 'no')
 %   cfg.elec        = structure with electrode positions or filename, see FT_READ_SENS
 %   cfg.grad        = structure with gradiometer definition or filename, see FT_READ_SENS
 %   cfg.opto        = structure with optode definition or filename, see FT_READ_SENS
@@ -931,8 +932,8 @@ else
 end
 
 % make the subset as specified in cfg.channel
-cfg.channel = ft_channelselection(cfg.channel, setdiff(layout.label, {'COMNT', 'SCALE'}));  % COMNT and SCALE are not really channels
-chansel = match_str(layout.label, cat(1, cfg.channel(:), 'COMNT', 'SCALE'));                % include COMNT and SCALE, keep all channels in the order of the layout
+cfg.channel = ft_channelselection(cfg.channel, setdiff(layout.label, {'COMNT', 'SCALE'}, 'stable'));  % exclude COMNT and SCALE which are not really channels
+chansel = match_str(layout.label, vertcat(cfg.channel(:), 'COMNT', 'SCALE'));                         % include COMNT and SCALE at the end, keep other channels in the order of the layout
 % return the layout for the subset of channels
 layout.pos    = layout.pos(chansel,:);
 layout.label  = layout.label(chansel);
@@ -1156,10 +1157,12 @@ if ~strcmpi(cfg.style, '3d')
 end
 
 % to plot the layout for debugging, you can use this code snippet
-if strcmp(cfg.feedback, 'yes') && ~strcmpi(cfg.style, '3d')
-  tmpcfg = [];
-  tmpcfg.layout = layout;
-  ft_layoutplot(tmpcfg); % FIXME this should use ft_plot_layout
+if strcmp(cfg.feedback, 'yes')
+  if strcmpi(cfg.style, '3d')
+    ft_error('graphical feedback is not implemented for a 3d layout');
+  else
+    ft_plot_layout(layout);
+  end
 end
 
 % to write the layout to a .mat or text file, you can use this code snippet
@@ -1269,20 +1272,32 @@ end
 ft_info('creating layout for %s system\n', ft_senstype(sens));
 
 % apply rotation, but only if viewpoint is not used specifically
-if isempty(viewpoint)
-  if isempty(rotatez)
-    switch ft_senstype(sens)
-      case {'ctf151', 'ctf275', 'bti148', 'bti248', 'ctf151_planar', 'ctf275_planar', 'bti148_planar', 'bti248_planar', 'yokogawa160', 'yokogawa160_planar', 'yokogawa64', 'yokogawa64_planar', 'yokogawa440', 'yokogawa440_planar', 'magnetometer', 'meg'}
-        rotatez = 90;
-      case {'neuromag122', 'neuromag306'}
-        rotatez = 0;
-      case 'electrode'
-        rotatez = 90;
-      otherwise
-        rotatez = 0;
-    end
+if isempty(viewpoint) && isempty(rotatez)
+  if isfield(sens, 'coordsys')
+    % the x-axis to the right of the screen and the y-axis is to the top of the screen
+    % the nose is usually plotted toward the top of the screen
+    sens = ft_convert_coordsys(sens, 'ras', 0);
+  elseif isfield(sens, 'type') && startsWith(sens.type, 'ctf')
+    sens.coordsys = 'ctf';
+    sens = ft_convert_coordsys(sens, 'ras', 0);
+  elseif isfield(sens, 'type') && startsWith(sens.type, 'bti')
+    sens.coordsys = 'bti';
+    sens = ft_convert_coordsys(sens, 'ras', 0);
+  elseif isfield(sens, 'type') && startsWith(sens.type, '4d')
+    sens.coordsys = '4d';
+    sens = ft_convert_coordsys(sens, 'ras', 0);
+  elseif isfield(sens, 'type') && startsWith(sens.type, 'yokogawa')
+    sens.coordsys = 'yokogawa';
+    sens = ft_convert_coordsys(sens, 'ras', 0);
+  elseif isfield(sens, 'type') && startsWith(sens.type, 'neuromag')
+    sens.coordsys = 'neuromag';
+    sens = ft_convert_coordsys(sens, 'ras', 0);
+  elseif isfield(sens, 'type') && startsWith(sens.type, 'itab')
+    sens.coordsys = 'itab';
+    sens = ft_convert_coordsys(sens, 'ras', 0);
+  else
+    ft_warning('use cfg.rotate to specify the correct rotation of the sensors');
   end
-  sens.chanpos = ft_warp_apply(rotate([0 0 rotatez]), sens.chanpos, 'homogenous');
 end
 
 % determine the 3D channel positions
@@ -1538,7 +1553,7 @@ end
 
 % create view(az,el) transformation matrix
 switch coordsys
-  case {'ras' 'itab' 'neuromag' 'acpc' 'spm' 'mni' 'tal'}
+  case {'ras' 'neuromag' 'itab' 'acpc' 'spm' 'mni' 'tal'}
     switch viewpoint
       case 'left'
         transmat = viewmtx(-90, 0);

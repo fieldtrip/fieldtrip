@@ -24,10 +24,12 @@ datac = ft_combineplanar(cfg, datap);
 
 cfg = [];
 cfg.grad = datac.grad;
+cfg.channel = 'MEG'; % do not include the reference channels in the layout
 lay = ft_prepare_layout(cfg);
 
 % this appears to run through without error, but
 cfg = [];
+cfg.channel = 'MEG'; % do not include the reference channels in the layout
 ft_layoutplot(cfg, datac);
 % results in a figure that has channels ML* (left) towards the nose and MR* (right)
 % towards the back of the head. So 90 degrees rotated clockwise.

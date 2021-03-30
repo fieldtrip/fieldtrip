@@ -122,15 +122,15 @@ cfg.age     = ft_getopt(cfg, 'age', []);
 cfg.dpf     = ft_getopt(cfg, 'dpf', []);
 
 % get the optode definition
-sens = [];
+% FIXME this should use FT_FETCH_SENS
 if ~isfield(data, 'opto')
   if ~isfield(data, 'hdr') && ~isfield(data.hdr, 'opto')
     error('no optode structure found in the data');
   else
-    sens = data.hdr.opto;
+    opto = data.hdr.opto;
   end
 else
-  sens = data.opto;
+  opto = data.opto;
 end
 
 % select the appropriate channels
@@ -145,7 +145,7 @@ elseif isfield(data, 'label')
   cfg.channel = ft_channelselection(cfg.channel, data.label);
 else
   % update the selected channels based on the optode definition
-  cfg.channel = ft_channelselection(cfg.channel, sens.label);
+  cfg.channel = ft_channelselection(cfg.channel, opto.label);
 end
 cfg.channel = ft_channelselection('nirs', cfg.channel); % only NIRS valid
 
@@ -161,7 +161,7 @@ if isempty(cfg.channel)
 end
 
 % channel indices wrt optode structure
-chanidx     = match_str(sens.label, cfg.channel);
+chanidx     = match_str(opto.label, cfg.channel);
 
 % check on DPF values
 if ~isempty(cfg.age) && ~isempty(cfg.dpf)
@@ -171,7 +171,7 @@ elseif ~isempty(cfg.age)
 elseif ~isempty(cfg.dpf)
   dpfs = repmat(cfg.dpf, size(cfg.channel));
 else
-  dpfs = sens.DPF(chanidx);
+  dpfs = opto.DPF(chanidx);
 end
 
 % which chromophores are desired
@@ -180,18 +180,26 @@ chromophoreName = {'O2Hb' 'HHb'};
 
 %% transform to concentrations or to OD
 % read in the coefficient table
-% TODO FIXME put this into an own function to read this out
+% FIXME put this into an own function to read this out
 fid = fopen(fullfile(fileparts(mfilename('fullpath')), 'private', 'Cope_ext_coeff_table.txt'));
 coefs = cell2mat(textscan(fid, '%f %f %f %f %f'));
 
 % extract all optode combinations that are relevant here
+<<<<<<< HEAD
 tratra         = sens.tra(chanidx, :)';
+=======
+tratra         = opto.tra(chanidx, :)';
+>>>>>>> upstream/master
 transmitteridx = tratra>0;
 receiveridx    = tratra<0;
 optodeidx      = (transmitteridx | receiveridx)'; % transpose to get back to tra order
 
 % extract the wavelengths
+<<<<<<< HEAD
 wavelengths  = sens.wavelength(tratra(transmitteridx));
+=======
+wavelengths  = opto.wavelength(tratra(transmitteridx));
+>>>>>>> upstream/master
 wlidx = bsxfun(@minus, coefs(:, 1), wavelengths);
 
 % find the relevant channel combinations
@@ -210,7 +218,7 @@ end
 
 % do the transformation
 tra      = zeros(size(chancmb, 2)*numel(chromophoreIdx), size(cfg.channel, 1));
-labelnew = cell(1, size(chancmb, 2)*numel(chromophoreIdx));
+labelnew = cell(size(chancmb, 2)*numel(chromophoreIdx), 1);
 
 % transformation has to be done per channel combination
 chanidx = []; % we will use this variable here for indexing channels (Rx-Tx cmbs)
@@ -225,7 +233,7 @@ for c=1:size(chancmb, 2)
 
   % compute the transmitter/receiver distance in cm
   optoidx = find(chanidx, 1, 'first'); % we can take 'first' because the transmitter-optodes have to be physically in the exact same spot to form "one" channel
-  dist = sqrt(sum(diff(sens.optopos(optodeidx(optoidx, :), :)).^2));
+  dist = sqrt(sum(diff(opto.optopos(optodeidx(optoidx, :), :)).^2));
     
   % select dpf
   dpf = mean(dpfs(chanidx));
@@ -250,6 +258,8 @@ end
 
 %% create output
 montage = [];
-montage.labelorg = cfg.channel;
+montage.labelorg = cfg.channel(:)';
 montage.labelnew = labelnew;
 montage.tra      = tra;
+
+

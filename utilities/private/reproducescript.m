@@ -53,7 +53,14 @@ tmpcfg = printstruct('cfg', tmpcfg);
 % pipeline is identical to an output variable at an earlier step, the
 % output variable will automatically be used thanks to the hashing
 % mechanism (see make_or_fetch_inputfile).
-re = ['(?<=' regexptranslate('escape', reproducescript_dir) '[/\\]{1})(\w+_input_\w+(\.mat){1})'];
+% handle path separators in reproducescript_dir: either / or \ should match
+thedir = regexprep(reproducescript_dir, '[/\\]', '[/\\\\]');
+% make sure thedir does not end with a path separator (we will explicitly
+% add it later)
+if strcmp(thedir(end-4:end), '[/\\]')
+  thedir = thedir(1:end-5);
+end
+re = ['(?<=' thedir '[/\\])(\w+_input_\w+(\.mat))'];
 if exist(filename, 'file')
   script = fileread(filename);
   existing_infiles = regexp(script, re, 'match');

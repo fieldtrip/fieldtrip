@@ -53,20 +53,22 @@ persistent issvn
 persistent isgit
 persistent ftver
 persistent ftpath
+persistent is_pc
 
-if nargin<1
-  % this is only supported for git
-  command='revision';
+if isempty(is_pc)
+  is_pc = ispc;
 end
 
-ftpath = fileparts(mfilename('fullpath'));
-ftpath = ftpath(1:end-10); % strip away '/utilities' where this function is located
+if isempty(ftpath)
+  ftpath = fileparts(mfilename('fullpath'));
+  ftpath = ftpath(1:end-10); % strip away '/utilities' where this function is located
+end
 
 % set the defaults
 clean = 'no';
 branch = 'unknown';
 
-if ispc
+if is_pc
   % this requires a file extension
   ext = '.exe';
 else
@@ -85,7 +87,7 @@ if isempty(isgit)
   if isgit
     [status, output] = system(sprintf('git%s --version', ext));
     if status>0
-      if ~ispc
+      if ~is_pc
         % the git command line executable will probably not be available on windows
         ft_warning('you seem to have an GIT development copy of FieldTrip, yet ''git'' does not work as expected');
       end
@@ -94,14 +96,19 @@ if isempty(isgit)
   end
 end
 
-if ~isempty(ftver) && ~isempty(ftpath) && strcmp(command, 'revision')
+if nargin<1
+  % this is only supported for git
+  command = 'revision';
+end
+
+if ~isempty(ftver) && ~isempty(ftpath) && nargin<1
   % use the previously determined values
   
 elseif issvn
   % use svn system call to determine latest revision
   [status, output] = system(sprintf('cd %s && svn%s info', ftpath, ext));
   if status > 0
-    if ~ispc
+    if ~is_pc
       % the command line tools will probably not be available on windows
       ft_warning('you seem to have an SVN development copy of FieldTrip, yet ''svn info'' does not work as expected');
     end
@@ -150,10 +157,10 @@ elseif isequal(regexp(ftpath, ['.*\' filesep '[fF]ieldtrip-lite20[0-9]{6}']), 1)
 else
   % get it from the Contents.m file in the FieldTrip directory
   if ~isdeployed
-       tmp = ver(ftpath);
-       ftver = tmp.Version;
+    tmp = ver(ftpath);
+    ftver = tmp.Version;
   else
-       ftver = 'deployed';
+    ftver = 'deployed';
   end
 end % if issvn, isgit or otherwise
 

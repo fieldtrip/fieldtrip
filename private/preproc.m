@@ -161,68 +161,69 @@ if iscell(cfg)
 end
 
 % set the defaults for the rereferencing options
-cfg.reref =                ft_getopt(cfg, 'reref', 'no');
-cfg.refchannel =           ft_getopt(cfg, 'refchannel', {});
-cfg.refmethod =            ft_getopt(cfg, 'refmethod', 'avg');
-cfg.implicitref =          ft_getopt(cfg, 'implicitref', []);
+cfg.reref                = ft_getopt(cfg, 'reref',       'no');
+cfg.refchannel           = ft_getopt(cfg, 'refchannel',  {});
+cfg.refmethod            = ft_getopt(cfg, 'refmethod',   'avg');
+cfg.implicitref          = ft_getopt(cfg, 'implicitref', []);
+cfg.leadfield            = ft_getopt(cfg, 'leadfield',   []); 
 % set the defaults for the signal processing options
-cfg.polyremoval =          ft_getopt(cfg, 'polyremoval', 'no');
-cfg.polyorder =            ft_getopt(cfg, 'polyorder', 2);
-cfg.detrend =              ft_getopt(cfg, 'detrend', 'no');
-cfg.demean =               ft_getopt(cfg, 'demean', 'no');
-cfg.baselinewindow =       ft_getopt(cfg, 'baselinewindow', 'all');
-cfg.dftfilter =            ft_getopt(cfg, 'dftfilter', 'no');
-cfg.lpfilter =             ft_getopt(cfg, 'lpfilter', 'no');
-cfg.hpfilter =             ft_getopt(cfg, 'hpfilter', 'no');
-cfg.bpfilter =             ft_getopt(cfg, 'bpfilter', 'no');
-cfg.bsfilter =             ft_getopt(cfg, 'bsfilter', 'no');
-cfg.lpfiltord =            ft_getopt(cfg, 'lpfiltord', []);
-cfg.hpfiltord =            ft_getopt(cfg, 'hpfiltord', []);
-cfg.bpfiltord =            ft_getopt(cfg, 'bpfiltord', []);
-cfg.bsfiltord =            ft_getopt(cfg, 'bsfiltord', []);
-cfg.lpfilttype =           ft_getopt(cfg, 'lpfilttype', 'but');
-cfg.hpfilttype =           ft_getopt(cfg, 'hpfilttype', 'but');
-cfg.bpfilttype =           ft_getopt(cfg, 'bpfilttype', 'but');
-cfg.bsfilttype =           ft_getopt(cfg, 'bsfilttype', 'but');
+cfg.polyremoval          = ft_getopt(cfg, 'polyremoval', 'no');
+cfg.polyorder            = ft_getopt(cfg, 'polyorder',   2);
+cfg.detrend              = ft_getopt(cfg, 'detrend',     'no');
+cfg.demean               = ft_getopt(cfg, 'demean',      'no');
+cfg.baselinewindow       = ft_getopt(cfg, 'baselinewindow', 'all');
+cfg.dftfilter            = ft_getopt(cfg, 'dftfilter', 'no');
+cfg.dftfreq              = ft_getopt(cfg, 'dftfreq', [50 100 150]);
+cfg.lpfilter             = ft_getopt(cfg, 'lpfilter',  'no');
+cfg.hpfilter             = ft_getopt(cfg, 'hpfilter',  'no');
+cfg.bpfilter             = ft_getopt(cfg, 'bpfilter',  'no');
+cfg.bsfilter             = ft_getopt(cfg, 'bsfilter',  'no');
+cfg.lpfiltord            = ft_getopt(cfg, 'lpfiltord', []);
+cfg.hpfiltord            = ft_getopt(cfg, 'hpfiltord', []);
+cfg.bpfiltord            = ft_getopt(cfg, 'bpfiltord', []);
+cfg.bsfiltord            = ft_getopt(cfg, 'bsfiltord', []);
+cfg.lpfilttype           = ft_getopt(cfg, 'lpfilttype', 'but');
+cfg.hpfilttype           = ft_getopt(cfg, 'hpfilttype', 'but');
+cfg.bpfilttype           = ft_getopt(cfg, 'bpfilttype', 'but');
+cfg.bsfilttype           = ft_getopt(cfg, 'bsfilttype', 'but');
 if strcmp(cfg.lpfilttype, 'firws'), cfg.lpfiltdir = ft_getopt(cfg, 'lpfiltdir', 'onepass-zerophase'); else, cfg.lpfiltdir = ft_getopt(cfg, 'lpfiltdir', 'twopass'); end
 if strcmp(cfg.hpfilttype, 'firws'), cfg.hpfiltdir = ft_getopt(cfg, 'hpfiltdir', 'onepass-zerophase'); else, cfg.hpfiltdir = ft_getopt(cfg, 'hpfiltdir', 'twopass'); end
 if strcmp(cfg.bpfilttype, 'firws'), cfg.bpfiltdir = ft_getopt(cfg, 'bpfiltdir', 'onepass-zerophase'); else, cfg.bpfiltdir = ft_getopt(cfg, 'bpfiltdir', 'twopass'); end
 if strcmp(cfg.bsfilttype, 'firws'), cfg.bsfiltdir = ft_getopt(cfg, 'bsfiltdir', 'onepass-zerophase'); else, cfg.bsfiltdir = ft_getopt(cfg, 'bsfiltdir', 'twopass'); end
-cfg.lpinstabilityfix =     ft_getopt(cfg, 'lpinstabilityfix', 'no');
-cfg.hpinstabilityfix =     ft_getopt(cfg, 'hpinstabilityfix', 'no');
-cfg.bpinstabilityfix =     ft_getopt(cfg, 'bpinstabilityfix', 'no');
-cfg.bsinstabilityfix =     ft_getopt(cfg, 'bsinstabilityfix', 'no');
-cfg.lpfiltdf =             ft_getopt(cfg, 'lpfiltdf',  []);
-cfg.hpfiltdf =             ft_getopt(cfg, 'hpfiltdf', []);
-cfg.bpfiltdf =             ft_getopt(cfg, 'bpfiltdf', []);
-cfg.bsfiltdf =             ft_getopt(cfg, 'bsfiltdf', []);
-cfg.lpfiltwintype =        ft_getopt(cfg, 'lpfiltwintype', 'hamming');
-cfg.hpfiltwintype =        ft_getopt(cfg, 'hpfiltwintype', 'hamming');
-cfg.bpfiltwintype =        ft_getopt(cfg, 'bpfiltwintype', 'hamming');
-cfg.bsfiltwintype =        ft_getopt(cfg, 'bsfiltwintype', 'hamming');
-cfg.lpfiltdev =            ft_getopt(cfg, 'lpfiltdev', []);
-cfg.hpfiltdev =            ft_getopt(cfg, 'hpfiltdev', []);
-cfg.bpfiltdev =            ft_getopt(cfg, 'bpfiltdev', []);
-cfg.bsfiltdev =            ft_getopt(cfg, 'bsfiltdev', []);
-cfg.plotfiltresp =         ft_getopt(cfg, 'plotfiltresp', 'no');
-cfg.usefftfilt =           ft_getopt(cfg, 'usefftfilt', 'no');
-cfg.medianfilter =         ft_getopt(cfg, 'medianfilter', 'no');
-cfg.medianfiltord =        ft_getopt(cfg, 'medianfiltord', 9);
-cfg.dftfreq =              ft_getopt(cfg, 'dftfreq', [50 100 150]);
-cfg.hilbert =              ft_getopt(cfg, 'hilbert', 'no');
-cfg.derivative =           ft_getopt(cfg, 'derivative', 'no');
-cfg.rectify =              ft_getopt(cfg, 'rectify', 'no');
-cfg.boxcar =               ft_getopt(cfg, 'boxcar', 'no');
-cfg.absdiff =              ft_getopt(cfg, 'absdiff', 'no');
-cfg.precision =            ft_getopt(cfg, 'precision', []);
-cfg.conv =                 ft_getopt(cfg, 'conv', 'no');
-cfg.montage =              ft_getopt(cfg, 'montage', 'no');
-cfg.dftinvert =            ft_getopt(cfg, 'dftinvert', 'no');
-cfg.standardize =          ft_getopt(cfg, 'standardize', 'no');
-cfg.denoise =              ft_getopt(cfg, 'denoise', '');
-cfg.subspace =             ft_getopt(cfg, 'subspace', []);
-cfg.custom =               ft_getopt(cfg, 'custom', '');
-cfg.resample =             ft_getopt(cfg, 'resample', '');
+cfg.lpinstabilityfix     = ft_getopt(cfg, 'lpinstabilityfix', 'no');
+cfg.hpinstabilityfix     = ft_getopt(cfg, 'hpinstabilityfix', 'no');
+cfg.bpinstabilityfix     = ft_getopt(cfg, 'bpinstabilityfix', 'no');
+cfg.bsinstabilityfix     = ft_getopt(cfg, 'bsinstabilityfix', 'no');
+cfg.lpfiltdf             = ft_getopt(cfg, 'lpfiltdf',  []);
+cfg.hpfiltdf             = ft_getopt(cfg, 'hpfiltdf', []);
+cfg.bpfiltdf             = ft_getopt(cfg, 'bpfiltdf', []);
+cfg.bsfiltdf             = ft_getopt(cfg, 'bsfiltdf', []);
+cfg.lpfiltwintype        = ft_getopt(cfg, 'lpfiltwintype', 'hamming');
+cfg.hpfiltwintype        = ft_getopt(cfg, 'hpfiltwintype', 'hamming');
+cfg.bpfiltwintype        = ft_getopt(cfg, 'bpfiltwintype', 'hamming');
+cfg.bsfiltwintype        = ft_getopt(cfg, 'bsfiltwintype', 'hamming');
+cfg.lpfiltdev            = ft_getopt(cfg, 'lpfiltdev', []);
+cfg.hpfiltdev            = ft_getopt(cfg, 'hpfiltdev', []);
+cfg.bpfiltdev            = ft_getopt(cfg, 'bpfiltdev', []);
+cfg.bsfiltdev            = ft_getopt(cfg, 'bsfiltdev', []);
+cfg.plotfiltresp         = ft_getopt(cfg, 'plotfiltresp', 'no');
+cfg.usefftfilt           = ft_getopt(cfg, 'usefftfilt', 'no');
+cfg.medianfilter         = ft_getopt(cfg, 'medianfilter', 'no');
+cfg.medianfiltord        = ft_getopt(cfg, 'medianfiltord', 9);
+cfg.hilbert              = ft_getopt(cfg, 'hilbert', 'no');
+cfg.derivative           = ft_getopt(cfg, 'derivative', 'no');
+cfg.rectify              = ft_getopt(cfg, 'rectify', 'no');
+cfg.boxcar               = ft_getopt(cfg, 'boxcar', 'no');
+cfg.absdiff              = ft_getopt(cfg, 'absdiff', 'no');
+cfg.precision            = ft_getopt(cfg, 'precision', []);
+cfg.conv                 = ft_getopt(cfg, 'conv', 'no');
+cfg.montage              = ft_getopt(cfg, 'montage', 'no');
+cfg.dftinvert            = ft_getopt(cfg, 'dftinvert', 'no');
+cfg.standardize          = ft_getopt(cfg, 'standardize', 'no');
+cfg.denoise              = ft_getopt(cfg, 'denoise', '');
+cfg.subspace             = ft_getopt(cfg, 'subspace', []);
+cfg.custom               = ft_getopt(cfg, 'custom', '');
+cfg.resample             = ft_getopt(cfg, 'resample', '');
 
 % test whether the MATLAB signal processing toolbox is available
 if strcmp(cfg.medianfilter, 'yes') && ~ft_hastoolbox('signal')
@@ -285,103 +286,49 @@ if strcmp(cfg.reref, 'yes')
       ft_error('reference channel was not found')
     end
     
-    if isfield(cfg,'leadfield')
-      % check the leadfield
+    if isempty(cfg.leadfield)
+      ft_error('A leadfield is required to re-refer to REST');
+    else
+      % check the leadfield, apparently the code contributor here wants to
+      % support 3 case, either a matrix, a struct, or a cell-array. Yet the
+      % original code is almost impossible to parse, with a lot of try and
+      % catch statements, so the current version below is an attempt to clean
+      % this up
       if isnumeric(cfg.leadfield)
-        Nchann_lf = size(cfg.leadfield,1); % No. of  channels in leadfield
-        G = cfg.leadfield;
-        if Nchann_lf ~= length(label)
-          ft_error('channels in the leadfield is not euqal to the data');
-        else
-          warning('There is no label info in the leadfield, please maske sure the order in leadfield is the same as in the data');
-        end
+        Nchann_lf = size(cfg.leadfield,1); % No. of channels in leadfield
+        lf_label  = {};
+        G         = cfg.leadfield;
       elseif isstruct(cfg.leadfield)
-        Nchann_lf = size(cfg.leadfield.label,1); % No. of  channels in leadfield
-        if Nchann_lf ~= length(label)
-          ft_error('channels in the leadfield is not euqal to the data');
-        else
-          % check the order in leadfield is the same as in the data
-          try
-            [indx1,indx2] = match_str(cfg.leadfield.label(refindx), label(refindx));
-            if ~isequal(indx1,indx2),ft_error('The order in leadfield may be NOT the same as in the data, please check the leadfield!');end;
-          catch
-            warning('There is no label info in the leadfield input, please maske sure the order in leadfield is the same as in the data');
-          end
-        end
-        % doing the struct-to-matrix conversion for the leadfield
-        try
-          Npos = size(cfg.leadfield.pos,1);
-          lf_X = zeros(Nchann_lf,Npos);
-          lf_Y = zeros(Nchann_lf,Npos);
-          lf_Z = zeros(Nchann_lf,Npos);
-          for i = 1:Npos
-            if ~isempty(cfg.leadfield.leadfield{1,i})
-              lf_X(:,i) = cfg.leadfield.leadfield{1,i}(:,1); % X orientation of the dipole.
-              lf_Y(:,i) = cfg.leadfield.leadfield{1,i}(:,2); % Y orientation of the dipole.
-              lf_Z(:,i) = cfg.leadfield.leadfield{1,i}(:,3); % Z orientation of the dipole.
-            end
-          end
-          G = [lf_X,lf_Y,lf_Z];
-          % the leadfield matrix (channs X sources*3), which
-          % contains the potential or field distributions on all
-          % sensors for the x,y,z-orientations of the dipole.
-        catch
-          try
-            Npos = size(cfg.leadfield.pos,1);
-            G = zeros(Nchann_lf,Npos);
-            for i = 1:Npos
-              if ~isempty(cfg.leadfield.leadfield{1,i}),G(:,i) = cfg.leadfield.leadfield{1,i};end;
-            end
-          catch
-            ft_error('leadfiled may be not calculated by ''ft_prepare_leadfield.m''?');
-          end
-        end
+        Nchann_lf = numel(cfg.leadfield.label);
+        lf_label  = cfg.leadfield.label;
+        G         = cat(2, cfg.leadfield.leadfield{:});
       elseif iscell(cfg.leadfield)
-        Nchann_lf = size(cfg.leadfield{1,1},1); % No. of  channels in leadfield
-        if Nchann_lf ~= length(label)
-          ft_error('channels in the leadfield is not euqal to the data');
-        else
-          warning('There is no label info in the leadfield input, please maske sure the order in leadfield is the same as in the data');
-        end
-        
-        try
-          Npos = length(cfg.leadfield);
-          lf_X = zeros(Nchann_lf,Npos);
-          lf_Y = zeros(Nchann_lf,Npos);
-          lf_Z = zeros(Nchann_lf,Npos);
-          for i = 1:Npos
-            if ~isempty(cfg.leadfield{1,i})
-              lf_X(:,i) = cfg.leadfield{1,i}(:,1); % X orientation of the dipole.
-              lf_Y(:,i) = cfg.leadfield{1,i}(:,2); % Y orientation of the dipole.
-              lf_Z(:,i) = cfg.leadfield{1,i}(:,3); % Z orientation of the dipole.
-            end
-          end
-          G = [lf_X,lf_Y,lf_Z];
-          % the leadfield matrix (channs X sources*3), which
-          % contains the potential or field distributions on all
-          % sensors for the x,y,z-orientations of the dipole.
-        catch
-          try
-            Npos = length(cfg.leadfield);
-            G = zeros(Nchann_lf,Npos);
-            for i = 1:Npos
-              if ~isempty(cfg.leadfield{1,i}),G(:,i) = cfg.leadfield{1,i};end;
-            end
-          catch
-            ft_error('leadfiled may be not calculated by ''ft_prepare_leadfield.m''?');
-          end
-        end
+        Nchann_lf = size(cfg.leadfield{1},1); % No. of channels in leadfield
+        lf_label  = {};
+        G         = cat(2, cfg.leadfield{:});
       end
+      
+      if Nchann_lf ~= length(label)
+        ft_error('channels in the leadfield is not euqal to the data');
+      end
+      
+      if ~isempty(lf_label)
+        [indx1, indx2] = match_str(lf_label(refindx), label(refindx));
+        if ~isequal(indx1, indx2)
+          ft_error('The order in leadfield may be NOT the same as in the data, please check the leadfield!');
+        end          
+      else
+        ft_warning('There is no label info in the leadfield, there is no guarantee that the order of the channels in leadfield is the same as in the data');
+      end
+      
       dat = ft_preproc_rereference(dat, refindx, cfg.refmethod,[],G); % re-referencing
       label = label(refindx); % re-referenced channel labels
-    else
-      ft_error('Leadfield is required to re-refer to REST');
     end
   else
     % mean or median based derivation of specified or all channels
     cfg.refchannel = ft_channelselection(cfg.refchannel, label);
     refindx = match_str(label, cfg.refchannel);
-    if isempty(refindx),ft_error('reference channel was not found');end;
+    if isempty(refindx),ft_error('reference channel was not found');end
     dat = ft_preproc_rereference(dat, refindx, cfg.refmethod);
   end
 end
@@ -400,163 +347,161 @@ end
 
 if any(isnan(dat(:)))
   % filtering is not possible for at least a selection of the data
-  ft_warning('data contains NaNs, no filtering or preprocessing applied');
+  ft_warning('data contains NaNs, not all processing methods are robust to NaNs, so the NaNs might spread');
+end
   
-else
-  
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  % do the filtering on the padded data
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  if ~isempty(cfg.denoise)
-    hflag    = isfield(cfg.denoise, 'hilbert') && strcmp(cfg.denoise.hilbert, 'yes');
-    datlabel = match_str(label, cfg.denoise.channel);
-    reflabel = match_str(label, cfg.denoise.refchannel);
-    tmpdat   = ft_preproc_denoise(dat(datlabel,:), dat(reflabel,:), hflag);
-    dat(datlabel,:) = tmpdat;
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% do the filtering on the padded data
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+if ~isempty(cfg.denoise)
+  hflag    = isfield(cfg.denoise, 'hilbert') && strcmp(cfg.denoise.hilbert, 'yes');
+  datlabel = match_str(label, cfg.denoise.channel);
+  reflabel = match_str(label, cfg.denoise.refchannel);
+  tmpdat   = ft_preproc_denoise(dat(datlabel,:), dat(reflabel,:), hflag);
+  dat(datlabel,:) = tmpdat;
+end
+
+% The filtering should in principle be done prior to the demeaning to
+% ensure that the resulting mean over the baseline window will be
+% guaranteed to be zero (even if there are filter artifacts).
+% However, the filtering benefits from the data being pulled towards zero,
+% causing fewer edge artifacts. That is why we start by removing the slow
+% drift, then filter, and then repeat the demean/detrend/polyremove.
+if strcmp(cfg.polyremoval, 'yes')
+  nsamples  = size(dat,2);
+  begsample = 1        + begpadding;
+  endsample = nsamples - endpadding;
+  dat = ft_preproc_polyremoval(dat, cfg.polyorder, begsample, endsample); % this will also demean and detrend
+elseif strcmp(cfg.detrend, 'yes')
+  nsamples  = size(dat,2);
+  begsample = 1        + begpadding;
+  endsample = nsamples - endpadding;
+  dat = ft_preproc_polyremoval(dat, 1, begsample, endsample); % this will also demean
+elseif strcmp(cfg.demean, 'yes')
+  nsamples  = size(dat,2);
+  begsample = 1        + begpadding;
+  endsample = nsamples - endpadding;
+  dat = ft_preproc_polyremoval(dat, 0, begsample, endsample);
+end
+
+if strcmp(cfg.medianfilter, 'yes'), dat = ft_preproc_medianfilter(dat, cfg.medianfiltord); end
+if strcmp(cfg.lpfilter, 'yes'),     dat = ft_preproc_lowpassfilter(dat, fsample, cfg.lpfreq, cfg.lpfiltord, cfg.lpfilttype, cfg.lpfiltdir, cfg.lpinstabilityfix, cfg.lpfiltdf, cfg.lpfiltwintype, cfg.lpfiltdev, cfg.plotfiltresp, cfg.usefftfilt); end
+if strcmp(cfg.hpfilter, 'yes'),     dat = ft_preproc_highpassfilter(dat, fsample, cfg.hpfreq, cfg.hpfiltord, cfg.hpfilttype, cfg.hpfiltdir, cfg.hpinstabilityfix, cfg.hpfiltdf, cfg.hpfiltwintype, cfg.hpfiltdev, cfg.plotfiltresp, cfg.usefftfilt); end
+if strcmp(cfg.bpfilter, 'yes'),     dat = ft_preproc_bandpassfilter(dat, fsample, cfg.bpfreq, cfg.bpfiltord, cfg.bpfilttype, cfg.bpfiltdir, cfg.bpinstabilityfix, cfg.bpfiltdf, cfg.bpfiltwintype, cfg.bpfiltdev, cfg.plotfiltresp, cfg.usefftfilt); end
+if strcmp(cfg.bsfilter, 'yes')
+  for i=1:size(cfg.bsfreq,1)
+    % apply a bandstop filter for each of the specified bands, i.e. cfg.bsfreq should be Nx2
+    dat = ft_preproc_bandstopfilter(dat, fsample, cfg.bsfreq(i,:), cfg.bsfiltord, cfg.bsfilttype, cfg.bsfiltdir, cfg.bsinstabilityfix, cfg.bsfiltdf, cfg.bsfiltwintype, cfg.bsfiltdev, cfg.plotfiltresp, cfg.usefftfilt);
   end
-  
-  % The filtering should in principle be done prior to the demeaning to
-  % ensure that the resulting mean over the baseline window will be
-  % guaranteed to be zero (even if there are filter artifacts).
-  % However, the filtering benefits from the data being pulled towards zero,
-  % causing less edge artifacts. That is why we start by removing the slow
-  % drift, then filter, and then repeat the demean/detrend/polyremove.
-  if strcmp(cfg.polyremoval, 'yes')
+end
+if strcmp(cfg.polyremoval, 'yes')
+  % the begin and endsample of the polyremoval period correspond to the complete data minus padding
+  nsamples  = size(dat,2);
+  begsample = 1        + begpadding;
+  endsample = nsamples - endpadding;
+  dat = ft_preproc_polyremoval(dat, cfg.polyorder, begsample, endsample);
+end
+if strcmp(cfg.detrend, 'yes')
+  % the begin and endsample of the detrend period correspond to the complete data minus padding
+  nsamples  = size(dat,2);
+  begsample = 1        + begpadding;
+  endsample = nsamples - endpadding;
+  dat = ft_preproc_detrend(dat, begsample, endsample);
+end
+if strcmp(cfg.demean, 'yes')
+  if ischar(cfg.baselinewindow) && strcmp(cfg.baselinewindow, 'all')
+    % the begin and endsample of the baseline period correspond to the complete data minus padding
     nsamples  = size(dat,2);
     begsample = 1        + begpadding;
     endsample = nsamples - endpadding;
-    dat = ft_preproc_polyremoval(dat, cfg.polyorder, begsample, endsample); % this will also demean and detrend
-  elseif strcmp(cfg.detrend, 'yes')
-    nsamples  = size(dat,2);
-    begsample = 1        + begpadding;
-    endsample = nsamples - endpadding;
-    dat = ft_preproc_polyremoval(dat, 1, begsample, endsample); % this will also demean
-  elseif strcmp(cfg.demean, 'yes')
-    nsamples  = size(dat,2);
-    begsample = 1        + begpadding;
-    endsample = nsamples - endpadding;
-    dat = ft_preproc_polyremoval(dat, 0, begsample, endsample);
+    dat       = ft_preproc_baselinecorrect(dat, begsample, endsample);
+  else
+    % determine the begin and endsample of the baseline period and baseline correct for it
+    begsample = nearest(time, cfg.baselinewindow(1));
+    endsample = nearest(time, cfg.baselinewindow(2));
+    dat       = ft_preproc_baselinecorrect(dat, begsample, endsample);
   end
-  
-  if strcmp(cfg.medianfilter, 'yes'), dat = ft_preproc_medianfilter(dat, cfg.medianfiltord); end
-  if strcmp(cfg.lpfilter, 'yes'),     dat = ft_preproc_lowpassfilter(dat, fsample, cfg.lpfreq, cfg.lpfiltord, cfg.lpfilttype, cfg.lpfiltdir, cfg.lpinstabilityfix, cfg.lpfiltdf, cfg.lpfiltwintype, cfg.lpfiltdev, cfg.plotfiltresp, cfg.usefftfilt); end
-  if strcmp(cfg.hpfilter, 'yes'),     dat = ft_preproc_highpassfilter(dat, fsample, cfg.hpfreq, cfg.hpfiltord, cfg.hpfilttype, cfg.hpfiltdir, cfg.hpinstabilityfix, cfg.hpfiltdf, cfg.hpfiltwintype, cfg.hpfiltdev, cfg.plotfiltresp, cfg.usefftfilt); end
-  if strcmp(cfg.bpfilter, 'yes'),     dat = ft_preproc_bandpassfilter(dat, fsample, cfg.bpfreq, cfg.bpfiltord, cfg.bpfilttype, cfg.bpfiltdir, cfg.bpinstabilityfix, cfg.bpfiltdf, cfg.bpfiltwintype, cfg.bpfiltdev, cfg.plotfiltresp, cfg.usefftfilt); end
-  if strcmp(cfg.bsfilter, 'yes')
-    for i=1:size(cfg.bsfreq,1)
-      % apply a bandstop filter for each of the specified bands, i.e. cfg.bsfreq should be Nx2
-      dat = ft_preproc_bandstopfilter(dat, fsample, cfg.bsfreq(i,:), cfg.bsfiltord, cfg.bsfilttype, cfg.bsfiltdir, cfg.bsinstabilityfix, cfg.bsfiltdf, cfg.bsfiltwintype, cfg.bsfiltdev, cfg.plotfiltresp, cfg.usefftfilt);
+end
+if strcmp(cfg.dftfilter, 'yes')
+  datorig = dat;
+  optarg = {};
+  if isfield(cfg, 'dftreplace')
+    optarg = cat(2, optarg, {'dftreplace', cfg.dftreplace});
+    if strcmp(cfg.dftreplace, 'neighbour') && (begpadding>0 || endpadding>0)
+      ft_error('Padding by data mirroring is not supported for spectrum interpolation.');
     end
   end
-  if strcmp(cfg.polyremoval, 'yes')
-    % the begin and endsample of the polyremoval period correspond to the complete data minus padding
-    nsamples  = size(dat,2);
-    begsample = 1        + begpadding;
-    endsample = nsamples - endpadding;
-    dat = ft_preproc_polyremoval(dat, cfg.polyorder, begsample, endsample);
+  if isfield(cfg, 'dftbandwidth')
+    optarg = cat(2, optarg, {'dftbandwidth', cfg.dftbandwidth});
   end
-  if strcmp(cfg.detrend, 'yes')
-    % the begin and endsample of the detrend period correspond to the complete data minus padding
-    nsamples  = size(dat,2);
-    begsample = 1        + begpadding;
-    endsample = nsamples - endpadding;
-    dat = ft_preproc_detrend(dat, begsample, endsample);
+  if isfield(cfg, 'dftneighbourwidth')
+    optarg = cat(2, optarg, {'dftneighbourwidth', cfg.dftneighbourwidth});
   end
-  if strcmp(cfg.demean, 'yes')
-    if ischar(cfg.baselinewindow) && strcmp(cfg.baselinewindow, 'all')
-      % the begin and endsample of the baseline period correspond to the complete data minus padding
-      nsamples  = size(dat,2);
-      begsample = 1        + begpadding;
-      endsample = nsamples - endpadding;
-      dat       = ft_preproc_baselinecorrect(dat, begsample, endsample);
-    else
-      % determine the begin and endsample of the baseline period and baseline correct for it
-      begsample = nearest(time, cfg.baselinewindow(1));
-      endsample = nearest(time, cfg.baselinewindow(2));
-      dat       = ft_preproc_baselinecorrect(dat, begsample, endsample);
-    end
+  dat     = ft_preproc_dftfilter(dat, fsample, cfg.dftfreq, optarg{:});
+  if strcmp(cfg.dftinvert, 'yes')
+    dat = datorig - dat;
   end
-  if strcmp(cfg.dftfilter, 'yes')
-    datorig = dat;
-    optarg = {};
-    if isfield(cfg, 'dftreplace')
-      optarg = cat(2, optarg, {'dftreplace', cfg.dftreplace});
-      if strcmp(cfg.dftreplace, 'neighbour') && (begpadding>0 || endpadding>0)
-        ft_error('Padding by data mirroring is not supported for spectrum interpolation.');
-      end
-    end
-    if isfield(cfg, 'dftbandwidth')
-      optarg = cat(2, optarg, {'dftbandwidth', cfg.dftbandwidth});
-    end
-    if isfield(cfg, 'dftneighbourwidth')
-      optarg = cat(2, optarg, {'dftneighbourwidth', cfg.dftneighbourwidth});
-    end
-    dat     = ft_preproc_dftfilter(dat, fsample, cfg.dftfreq, optarg{:});
-    if strcmp(cfg.dftinvert, 'yes')
-      dat = datorig - dat;
-    end
+end
+if ~strcmp(cfg.hilbert, 'no')
+  dat = ft_preproc_hilbert(dat, cfg.hilbert);
+end
+if strcmp(cfg.rectify, 'yes')
+  dat = ft_preproc_rectify(dat);
+end
+if isnumeric(cfg.boxcar)
+  numsmp = round(cfg.boxcar*fsample);
+  if ~rem(numsmp,2)
+    % the kernel should have an odd number of samples
+    numsmp = numsmp+1;
   end
-  if ~strcmp(cfg.hilbert, 'no')
-    dat = ft_preproc_hilbert(dat, cfg.hilbert);
+  % kernel = ones(1,numsmp) ./ numsmp;
+  % dat    = convn(dat, kernel, 'same');
+  dat = ft_preproc_smooth(dat, numsmp); % better edge behavior
+end
+if isnumeric(cfg.conv)
+  kernel = (cfg.conv(:)'./sum(cfg.conv));
+  if ~rem(length(kernel),2)
+    kernel = [kernel 0];
   end
-  if strcmp(cfg.rectify, 'yes')
-    dat = ft_preproc_rectify(dat);
+  dat = convn(dat, kernel, 'same');
+end
+if strcmp(cfg.derivative, 'yes')
+  dat = ft_preproc_derivative(dat, 1);
+end
+if strcmp(cfg.absdiff, 'yes')
+  % this implements abs(diff(data), which is required for jump detection
+  dat = abs([diff(dat, 1, 2) zeros(size(dat,1),1)]);
+end
+if strcmp(cfg.standardize, 'yes')
+  dat = ft_preproc_standardize(dat, 1, size(dat,2));
+end
+if ~isempty(cfg.subspace)
+  dat = ft_preproc_subspace(dat, cfg.subspace);
+end
+if ~isempty(cfg.custom)
+  if ~isfield(cfg.custom, 'nargout')
+    cfg.custom.nargout = 1;
   end
-  if isnumeric(cfg.boxcar)
-    numsmp = round(cfg.boxcar*fsample);
-    if ~rem(numsmp,2)
-      % the kernel should have an odd number of samples
-      numsmp = numsmp+1;
-    end
-    % kernel = ones(1,numsmp) ./ numsmp;
-    % dat    = convn(dat, kernel, 'same');
-    dat = ft_preproc_smooth(dat, numsmp); % better edge behavior
+  if cfg.custom.nargout==1
+    dat = feval(cfg.custom.funhandle, dat, cfg.custom.varargin);
+  elseif cfg.custom.nargout==2
+    [dat, time] = feval(cfg.custom.funhandle, dat, cfg.custom.varargin);
   end
-  if isnumeric(cfg.conv)
-    kernel = (cfg.conv(:)'./sum(cfg.conv));
-    if ~rem(length(kernel),2)
-      kernel = [kernel 0];
-    end
-    dat = convn(dat, kernel, 'same');
+end
+if strcmp(cfg.resample, 'yes')
+  if ~isfield(cfg, 'resamplefs')
+    cfg.resamplefs = fsample./2;
   end
-  if strcmp(cfg.derivative, 'yes')
-    dat = ft_preproc_derivative(dat, 1);
+  if ~isfield(cfg, 'resamplemethod')
+    cfg.resamplemethod = 'resample';
   end
-  if strcmp(cfg.absdiff, 'yes')
-    % this implements abs(diff(data), which is required for jump detection
-    dat = abs([diff(dat, 1, 2) zeros(size(dat,1),1)]);
-  end
-  if strcmp(cfg.standardize, 'yes')
-    dat = ft_preproc_standardize(dat, 1, size(dat,2));
-  end
-  if ~isempty(cfg.subspace)
-    dat = ft_preproc_subspace(dat, cfg.subspace);
-  end
-  if ~isempty(cfg.custom)
-    if ~isfield(cfg.custom, 'nargout')
-      cfg.custom.nargout = 1;
-    end
-    if cfg.custom.nargout==1
-      dat = feval(cfg.custom.funhandle, dat, cfg.custom.varargin);
-    elseif cfg.custom.nargout==2
-      [dat, time] = feval(cfg.custom.funhandle, dat, cfg.custom.varargin);
-    end
-  end
-  if strcmp(cfg.resample, 'yes')
-    if ~isfield(cfg, 'resamplefs')
-      cfg.resamplefs = fsample./2;
-    end
-    if ~isfield(cfg, 'resamplemethod')
-      cfg.resamplemethod = 'resample';
-    end
-    [dat               ] = ft_preproc_resample(dat,  fsample, cfg.resamplefs, cfg.resamplemethod);
-    [time, dum, fsample] = ft_preproc_resample(time, fsample, cfg.resamplefs, cfg.resamplemethod);
-  end
-  if ~isempty(cfg.precision)
-    % convert the data to another numeric precision, i.e. double, single or int32
-    dat = cast(dat, cfg.precision);
-  end
-end % if any(isnan)
+  [dat               ] = ft_preproc_resample(dat,  fsample, cfg.resamplefs, cfg.resamplemethod);
+  [time, dum, fsample] = ft_preproc_resample(time, fsample, cfg.resamplefs, cfg.resamplemethod);
+end
+if ~isempty(cfg.precision)
+  % convert the data to another numeric precision, i.e. double, single or int32
+  dat = cast(dat, cfg.precision);
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % remove the filter padding and do the preprocessing on the remaining trial data

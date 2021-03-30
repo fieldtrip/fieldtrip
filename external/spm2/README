@@ -1,9 +1,0 @@
-This directory contains a subset of the functions from the SPM2
-package. These functions are provided as courtesy to the FieldTrip
-users, and provide just enough functionality to do segmentation and
-anatomical realigmnent.
-
-The only difference in these functions compared to the official
-SPM2 release is that the isprivate function has been fixed to work
-on recent Matlab releases.
-

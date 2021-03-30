@@ -79,6 +79,8 @@ interpreter         = ft_getopt(varargin, 'interpreter', 'none');
 % color management
 if ischar(color) && exist([color '.m'], 'file')
   color = eval(color);
+elseif ischar(color) && ismember(color, htmlcolors)
+  color = htmlcolors(color);
 end
 
 if isempty(hlim) && isempty(vlim) && isempty(hpos) && isempty(vpos) && isempty(height) && isempty(width)

@@ -70,6 +70,14 @@ end
 if numel(varargin) < 1
   ft_error('this function requires at least one data input argument');
 end
+
+% first check whether the first data argument has a brainordinate field, 
+% which is to be used as the atlas to provide the labels of the parcels
+if isfield(varargin{1}, 'brainordinate')
+  cfg = ft_checkconfig(cfg, 'forbidden', 'atlas');
+  cfg.atlas = varargin{1}.brainordinate;
+end
+
 for k = 1:numel(varargin)
   varargin{k} = ft_checkdata(varargin{k}, 'datatype', {'source+mesh'}, 'feedback', 'yes', 'hasunit', 'yes');
   if k > 1 && (~isequaln(varargin{k}.pos, varargin{1}.pos) || ...
@@ -90,6 +98,7 @@ end
 
 % validate the cfg options
 cfg.parameter = ft_getopt(cfg, 'parameter', 'pow');
+cfg.atlas     = ft_getopt(cfg, 'atlas',     []);
 
 % check whether we're dealing with time or frequency data
 dimord = getdimord(varargin{1}, cfg.parameter);
@@ -114,7 +123,7 @@ elseif strcmp(dimord, 'pos_freq')
 end
 
 % optionally load an atlas
-if isfield(cfg, 'atlas')
+if ~isempty(cfg.atlas)
   [cfg.atlas, varargin{:}] = handle_atlas_input(cfg.atlas, varargin{:});
 end
 

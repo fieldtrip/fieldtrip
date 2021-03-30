@@ -296,16 +296,12 @@ trialall = trl2boolvec(trl);
 % combine all artifacts into a single vector
 rejectall = zeros(1, max(trl(:,2)));
 for i=1:length(cfg.artfctdef.type)
-  if istable(artifact{i})
-    if ~isempty(artifact{i})
-      begsample = artifact{i}.begsample;
-      endsample = artifact{i}.endsample;
-    else
-      % an empty table does not contain any columns
-      begsample = [];
-      endsample = [];
-    end
-  else
+  begsample = [];
+  endsample = [];
+  if istable(artifact{i}) && ~isempty(artifact{i})
+    begsample = artifact{i}.begsample;
+    endsample = artifact{i}.endsample;
+  elseif ~istable(artifact{i}) && ~isempty(artifact{i})
     begsample = artifact{i}(:,1);
     endsample = artifact{i}(:,2);
   end

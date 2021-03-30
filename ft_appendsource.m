@@ -97,7 +97,7 @@ if strcmp(cfg.appenddim, 'auto')
   else
     % we need to check whether the other dimensions are the same.
     % if not, consider some tolerance.
-    boolval1 = checkpos(varargin{:}, 'identical');
+    boolval1 = checkpos(varargin{:}, 'identical', tol);
     if isfield(varargin{1}, 'freq')
       boolval2 = checkfreq(varargin{:}, 'identical', tol);
     else
