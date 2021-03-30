@@ -191,7 +191,7 @@ receiveridx    = tratra<0;
 optodeidx      = (transmitteridx | receiveridx)'; % transpose to get back to tra order
 
 % extract the wavelengths
-wavelengths  = opto.wavelength(tratra(transmitteridx));
+wavelengths = opto.wavelength(tratra(transmitteridx));
 wlidx = bsxfun(@minus, coefs(:, 1), wavelengths);
 
 % find the relevant channel combinations
