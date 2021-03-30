@@ -185,13 +185,13 @@ fid = fopen(fullfile(fileparts(mfilename('fullpath')), 'private', 'Cope_ext_coef
 coefs = cell2mat(textscan(fid, '%f %f %f %f %f'));
 
 % extract all optode combinations that are relevant here
-tratra         = sens.tra(chanidx, :)';
+tratra         = opto.tra(chanidx, :)';
 transmitteridx = tratra>0;
 receiveridx    = tratra<0;
 optodeidx      = (transmitteridx | receiveridx)'; % transpose to get back to tra order
 
 % extract the wavelengths
-wavelengths = sens.wavelength(tratra(transmitteridx));
+wavelengths = opto.wavelength(tratra(transmitteridx));
 wlidx = bsxfun(@minus, coefs(:, 1), wavelengths);
 
 % find the relevant channel combinations
