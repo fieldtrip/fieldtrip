@@ -12,25 +12,26 @@ function crossfreq = ft_crossfrequencyanalysis(cfg, freqlow, freqhigh)
 %   cfg.freqlow    = scalar or vector, selection of frequencies for the low frequency data
 %   cfg.freqhigh   = scalar or vector, selection of frequencies for the high frequency data
 %
-% Channel selection can be specified according to whether one wants to perform within- or 
+% Channel selection can be specified according to whether one wants to perform within- or
 % cross-channel analysis.
 %
-% For within-channel analysis (default), one specifies only a single channel
-% selection:
+% For within-channel analysis (default), you should specifies only a single channel selection:
 %   cfg.channel    = cell-array with selection of channels, see FT_CHANNELSELECTION
-% In this case, the "dimord" will be "chan_freqlow_freqhigh"
+% In this case, the output "dimord" will be "chan_freqlow_freqhigh"
 %
-% For cross-channel analysis, one specifies two sets:
-%   cfg.chanlow    = cell-array with selection of channels for the phase providing channels from the 
+% For cross-channel analysis, you should specifies two channel selections:
+%   cfg.chanlow    = cell-array with selection of channels for the phase providing channels from the
 %                    freqlow data argument, with wildcards allowed, see FT_CHANNELSELECTION
-%   cfg.chanhigh   = cell-array with selection of channels for the amplitude providing channels from the 
+%   cfg.chanhigh   = cell-array with selection of channels for the amplitude providing channels from the
 %                    freqhigh data argument, with wildcards allowed, see FT_CHANNELSELECTION
-% In this case, the "dimord" will be "chancmb_freqlow_freqhigh" and "label" field will be replaced with
-% "labelcmb" (corresponding to the dimension "chancmb") describing the pairs of channel combinations as 
-%   {'chanlow01' 'chanhigh01';
-%    'chanlow01' 'chanhigh02';
-%    ... ;
-%    'chanlow02' 'chanhigh01';
+% In this case, the output "dimord" will be "chancmb_freqlow_freqhigh" and "label"
+% field will be replaced with "labelcmb" (corresponding to the dimension "chancmb")
+% describing the pairs of channel combinations as
+%   {'chanlow01' 'chanhigh01'
+%    'chanlow01' 'chanhigh02'
+%    ... 
+%    'chanlow02' 'chanhigh01'
+%    'chanlow02' 'chanhigh02'
 %    ...
 %    }
 % N.B.: The order of channels corresponds to their order in the original "label" field
@@ -106,6 +107,9 @@ end
 freqlow  = ft_checkdata(freqlow,  'datatype', 'freq', 'feedback', 'yes');
 freqhigh = ft_checkdata(freqhigh, 'datatype', 'freq', 'feedback', 'yes');
 
+% check if the input cfg is valid for this function
+cfg = ft_checkconfig(cfg, 'forbidden',  {'channels'}); % prevent accidental typos, see issue 1729
+
 % FIXME the below is a bit hacky but it does the trick
 if isfield(cfg, 'chanlow') && isfield(cfg, 'chanhigh')
   docrosschan   = true;
@@ -125,9 +129,10 @@ else
   ft_error('you should either specify both cfg.chanlow and cfg.chanhigh, or none of these options');
 end
 
+% get the defaults
 cfg.freqlow    = ft_getopt(cfg, 'freqlow',  'all');
 cfg.freqhigh   = ft_getopt(cfg, 'freqhigh', 'all');
-cfg.nphase   = ft_getopt(cfg, 'nphase', 20);
+cfg.nphase     = ft_getopt(cfg, 'nphase', 20);
 cfg.keeptrials = ft_getopt(cfg, 'keeptrials');
 
 % make selection of frequencies and channels
@@ -155,7 +160,7 @@ nchan  = size(labelcmb,1);
 % prepare the data
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 switch cfg.method
-
+  
   case 'coh'
     % coherence
     cohdatas = zeros(ntrial,nchan,numel(LF),numel(HF));
@@ -167,7 +172,7 @@ switch cfg.method
       end
     end
     cfcdata = cohdatas;
-
+    
   case 'plv'
     % phase locking value
     plvdatas = zeros(ntrial,nchan,numel(LF),numel(HF));
@@ -179,7 +184,7 @@ switch cfg.method
       end
     end
     cfcdata = plvdatas;
-
+    
   case  'mvl'
     % mean vector length
     mvldatas = zeros(ntrial,nchan,numel(LF),numel(HF));
@@ -191,7 +196,7 @@ switch cfg.method
       end
     end
     cfcdata = mvldatas;
-
+    
   case  {'mi','pac'}
     % modulation index
     pacdatas   = zeros(ntrial,nchan,numel(LF),numel(HF),cfg.nphase);
@@ -203,7 +208,7 @@ switch cfg.method
       end
     end
     cfcdata = pacdatas;
-
+    
 end % switch method for data preparation
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -211,7 +216,7 @@ end % switch method for data preparation
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 switch cfg.method
-
+  
   case 'coh'
     [ntrial,nchan,nlf,nhf] = size(cfcdata);
     if strcmp(cfg.keeptrials, 'no')
@@ -221,7 +226,7 @@ switch cfg.method
       crsspctrm = abs(cfcdata);
       dimord = 'rpt_chan_freqlow_freqhigh' ;
     end
-
+    
   case 'plv'
     [ntrial,nchan,nlf,nhf] = size(cfcdata);
     if strcmp(cfg.keeptrials, 'no')
@@ -231,7 +236,7 @@ switch cfg.method
       crsspctrm = abs(cfcdata);
       dimord = 'rpt_chan_freqlow_freqhigh' ;
     end
-
+    
   case  'mvl'
     [ntrial,nchan,nlf,nhf] = size(cfcdata);
     if strcmp(cfg.keeptrials, 'no')
@@ -241,10 +246,10 @@ switch cfg.method
       crsspctrm = abs(cfcdata);
       dimord = 'rpt_chan_freqlow_freqhigh' ;
     end
-
+    
   case  'mi'
     [ntrial,nchan,nlf,nhf,nbin] = size(cfcdata);
-
+    
     if strcmp(cfg.keeptrials, 'yes')
       dimord = 'rpt_chan_freqlow_freqhigh' ;
       crsspctrm = zeros(ntrial,nchan,nlf,nhf);
@@ -253,7 +258,7 @@ switch cfg.method
           pac = squeeze(cfcdata(k,n,:,:,:));
           Q =ones(nbin,1)/nbin;                             % uniform distribution
           mi = zeros(nlf,nhf);
-
+          
           for i=1:nlf
             for j=1:nhf
               P = squeeze(pac(i,j,:))/ nansum(pac(i,j,:));  % normalized distribution
@@ -262,20 +267,20 @@ switch cfg.method
             end
           end
           crsspctrm(k,n,:,:) = mi;
-
+          
         end
       end
-
+      
     else
       dimord = 'chan_freqlow_freqhigh' ;
       crsspctrm = zeros(nchan,nlf,nhf);
       cfcdatamean = reshape(mean(cfcdata,1),[nchan nlf nhf nbin 1]);
-
+      
       for k =1:nchan
         pac = squeeze(cfcdatamean(k,:,:,:));
         Q =ones(nbin,1)/nbin;                             % uniform distribution
         mi = zeros(nlf,nhf);
-
+        
         for i=1:nlf
           for j=1:nhf
             P = squeeze(pac(i,j,:))/ nansum(pac(i,j,:));  % normalized distribution
@@ -285,9 +290,9 @@ switch cfg.method
         end
         crsspctrm(k,:,:) = mi;
       end
-
+      
     end % if keeptrials
-
+    
   case 'pac'
     [ntrial,nchan,nlf,nhf,nbin] = size(cfcdata);
     
@@ -299,7 +304,7 @@ switch cfg.method
       dimord = 'chan_freqlow_freqhigh_phase' ;
       crsspctrm = reshape(mean(cfcdata,1),[nchan nlf nhf nbin 1]);
       crsspctrm(isnan(crsspctrm)) = 0;
-
+      
     end % if keeptrials
     
 end % switch method for actual computation
@@ -349,11 +354,11 @@ for i = 1:size(LFsig,1)
     Nx  = sum(~isnan(LFsigtemp(i,:) .* LFsigtemp(i,:)));
     Ny  = sum(~isnan(HFsigtemp(j,:) .* HFsigtemp(j,:)));
     Nxy = sum(~isnan(LFsigtemp(i,:) .* HFsigtemp(j,:)));
-
+    
     Px  = LFsig(i,:) * ctranspose(LFsig(i,:)) ./ Nx;
     Py  = HFsig(j,:) * ctranspose(HFsig(j,:)) ./ Ny;
     Cxy = LFsig(i,:) * ctranspose(HFsig(j,:)) ./ Nxy;
-
+    
     cohdata(i,j) = Cxy / sqrt(Px * Py);
   end
 end

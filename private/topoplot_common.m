@@ -35,6 +35,7 @@ function cfg = topoplot_common(cfg, varargin)
 %% Section 1: general cfg handling that is independent from the data
 
 % check if the input cfg is valid for this function
+cfg = ft_checkconfig(cfg, 'forbidden',  {'channels', 'trial'}); % prevent accidental typos
 cfg = ft_checkconfig(cfg, 'unused',     {'cohtargetchannel'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'cohrefchannel' 'refchannel'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'zparam', 'parameter'});

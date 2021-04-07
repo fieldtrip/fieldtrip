@@ -174,7 +174,10 @@ if hasbaseline
   baseline = ft_checkdata(baseline, 'datatype', {'timelock', 'freq', 'comp'}, 'feedback', 'yes');
 end
 
-% check that the input cfg is valid for this function
+% check if the input cfg is valid for this function
+cfg = ft_checkconfig(cfg, 'forbidden',  {'channels'}); % prevent accidental typos, see issue 1729
+cfg = ft_checkconfig(cfg, 'forbidden',  {'parallel', 'trials'});
+cfg = ft_checkconfig(cfg, 'forbidden',  {'foi', 'toi'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'toilim', 'latency'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'foilim', 'frequency'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'jacknife', 'jackknife'});
@@ -184,8 +187,6 @@ cfg = ft_checkconfig(cfg, 'renamedval', {'method', 'coh_refchan',     'dics'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'method', 'coh_refdip',      'dics'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'method', 'dics_cohrefchan', 'dics'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'method', 'dics_cohrefdip',  'dics'});
-cfg = ft_checkconfig(cfg, 'forbidden',  {'parallel', 'trials'});
-cfg = ft_checkconfig(cfg, 'forbidden',  {'foi', 'toi'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'hdmfile', 'headmodel'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'vol',     'headmodel'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'grid',    'sourcemodel'});

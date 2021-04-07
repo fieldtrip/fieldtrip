@@ -83,6 +83,7 @@ end
 % ft_checkdata is done further down
 
 % check if the input cfg is valid for this function
+cfg = ft_checkconfig(cfg, 'forbidden',  {'trial'}); % prevent accidental typos, see issue 1729
 cfg = ft_checkconfig(cfg, 'renamed', {'blc', 'demean'});
 cfg = ft_checkconfig(cfg, 'renamed', {'resamplemethod', 'method'});
 cfg = ft_checkconfig(cfg, 'renamed', {'fsample', 'resamplefs'});

@@ -134,8 +134,9 @@ dtype = ft_datatype(data);
 data = ft_checkdata(data, 'datatype', {'raw+comp', 'raw'}, 'feedback', 'yes', 'hassampleinfo', 'yes');
 
 % check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'renamedval',  {'metric',  'absmax',  'maxabs'});
-cfg = ft_checkconfig(cfg, 'renamedval',  {'method',  'absmax',  'maxabs'});
+cfg = ft_checkconfig(cfg, 'forbidden',  {'channels', 'trial'}); % prevent accidental typos, see issue 1729
+cfg = ft_checkconfig(cfg, 'renamedval', {'metric',  'absmax',  'maxabs'});
+cfg = ft_checkconfig(cfg, 'renamedval', {'method',  'absmax',  'maxabs'});
 
 % resolve some common typing errors
 cfg = ft_checkconfig(cfg, 'renamed',  {'keeptrials',  'keeptrial'});

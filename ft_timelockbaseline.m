@@ -65,13 +65,13 @@ if ft_abort
 end
 
 % check if the input data is valid for this function
-timelock = ft_checkdata(timelock, 'datatype',...
-  {'timelock+comp', 'timelock'}, 'feedback', 'yes');
+timelock = ft_checkdata(timelock, 'datatype', {'timelock+comp', 'timelock'}, 'feedback', 'yes');
 
 % check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'renamed', {'blc', 'demean'});
-cfg = ft_checkconfig(cfg, 'renamed', {'blcwindow', 'baselinewindow'});
-cfg = ft_checkconfig(cfg, 'forbidden', 'baselinetype');
+cfg = ft_checkconfig(cfg, 'forbidden',  {'channels'}); % prevent accidental typos, see issue 1729
+cfg = ft_checkconfig(cfg, 'renamed',    {'blc', 'demean'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'blcwindow', 'baselinewindow'});
+cfg = ft_checkconfig(cfg, 'forbidden',  'baselinetype');
 
 % set the defaults
 cfg.baseline  = ft_getopt(cfg, 'baseline',  'no');
