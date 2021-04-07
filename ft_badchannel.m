@@ -105,7 +105,7 @@ end
 data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes');
 
 % check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'forbidden',  {'channels'});
+cfg = ft_checkconfig(cfg, 'forbidden',  {'channels', 'trial'}); % prevent accidental typos, see issue 1729
 cfg = ft_checkconfig(cfg, 'required',   'metric');
 
 % ensure that the preproc specific options are located in the cfg.preproc substructure

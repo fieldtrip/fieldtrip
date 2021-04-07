@@ -72,7 +72,7 @@ dtype = ft_datatype(data);
 data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes');
 
 % check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'forbidden',  {'channels'});
+cfg = ft_checkconfig(cfg, 'forbidden',  {'channels', 'trial'}); % prevent accidental typos, see issue 1729
 
 % set the defaults
 cfg.channel   = ft_getopt(cfg, 'channel', 'all');

@@ -85,6 +85,7 @@ if ft_abort
 end
 
 % check if the input cfg is valid for this function
+cfg = ft_checkconfig(cfg, 'forbidden',  {'trial'}); % prevent accidental typos, see issue 1729
 cfg = ft_checkconfig(cfg, 'renamedval', {'method', 'nearest', 'weighted'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'elecfile', 'elec'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'gradfile', 'grad'});

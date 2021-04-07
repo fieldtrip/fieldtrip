@@ -99,7 +99,7 @@ datain = ft_checkdata(datain, 'datatype', 'raw', 'feedback', 'yes');
 cfg = ft_checkconfig(cfg, 'forbidden', 'medianwindow');
 
 % check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'forbidden',  {'channels'});
+cfg = ft_checkconfig(cfg, 'forbidden',  {'channels'}); % prevent accidental typos, see issue 1729
 cfg = ft_checkconfig(cfg, 'renamed',    {'ectopicbeat_corr', 'ectopicbeatcorrect'}); % for backward compatibility
 cfg = ft_checkconfig(cfg, 'renamed',    {'corr_threshold', 'ectopicbeatthreshold'}); % for backward compatibility
 

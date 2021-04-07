@@ -122,7 +122,7 @@ dtype = ft_datatype(data);
 data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes', 'hassampleinfo', 'yes', 'ismeg', 'yes');
 
 % check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'forbidden',  {'channels'});
+cfg = ft_checkconfig(cfg, 'forbidden',  {'channels', 'trial'}); % prevent accidental typos, see issue 1729
 cfg = ft_checkconfig(cfg, 'renamed',    {'plot3d',      'feedback'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'headshape',   'headmodel', []});
 cfg = ft_checkconfig(cfg, 'required',   {'inwardshift', 'template'});

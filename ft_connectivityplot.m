@@ -62,7 +62,7 @@ if ft_abort
 end
 
 % check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'forbidden',  {'channels'});
+cfg = ft_checkconfig(cfg, 'forbidden',  {'channels'}); % prevent accidental typos, see issue 1729
 cfg = ft_checkconfig(cfg, 'renamed',    {'zparam',     'parameter'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'color',      'linecolor'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'graphcolor', 'linecolor'});

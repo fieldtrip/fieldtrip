@@ -79,7 +79,7 @@ end
 datain = ft_checkdata(datain, 'datatype', {'timelock'}, 'feedback', 'yes', 'hassampleinfo', 'yes');
 
 % check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'forbidden',  {'channels'});
+cfg = ft_checkconfig(cfg, 'forbidden',  {'channels'}); % prevent accidental typos, see issue 1729
 
 % set the defaults
 cfg.method    = ft_getopt(cfg, 'method', 'amplitude');

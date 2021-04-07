@@ -108,7 +108,7 @@ freqlow  = ft_checkdata(freqlow,  'datatype', 'freq', 'feedback', 'yes');
 freqhigh = ft_checkdata(freqhigh, 'datatype', 'freq', 'feedback', 'yes');
 
 % check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'forbidden',  {'channels'});
+cfg = ft_checkconfig(cfg, 'forbidden',  {'channels'}); % prevent accidental typos, see issue 1729
 
 % FIXME the below is a bit hacky but it does the trick
 if isfield(cfg, 'chanlow') && isfield(cfg, 'chanhigh')

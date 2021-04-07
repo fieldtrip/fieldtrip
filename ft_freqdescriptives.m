@@ -88,7 +88,7 @@ freq = ft_checkdata(freq, 'datatype', {'freq', 'freqmvar'}, 'feedback', 'yes');
 freq = ft_checkdata(freq, 'cmbrepresentation', 'sparsewithpow', 'channelcmb', {});
 
 % check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'forbidden',  {'channels'});
+cfg = ft_checkconfig(cfg, 'forbidden',  {'channels', 'trial'}); % prevent accidental typos, see issue 1729
 cfg = ft_checkconfig(cfg, 'renamed',    {'jacknife', 'jackknife'});
 
 % throw warnings for the deprecated options

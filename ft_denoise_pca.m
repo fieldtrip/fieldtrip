@@ -82,7 +82,7 @@ for i=1:length(varargin)
 end
 
 % check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'forbidden',  {'channels'});
+cfg = ft_checkconfig(cfg, 'forbidden',  {'channels', 'trial'}); % prevent accidental typos, see issue 1729
 
 % set the defaults
 cfg.refchannel = ft_getopt(cfg, 'refchannel', 'MEGREF');

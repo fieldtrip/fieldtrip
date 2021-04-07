@@ -90,7 +90,7 @@ ft_preamble trackconfig
 data = ft_checkdata(data, 'datatype', {'raw'}, 'feedback', 'yes', 'hassampleinfo', 'yes');
 
 % check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'forbidden',  {'channels'});
+cfg = ft_checkconfig(cfg, 'forbidden',  {'channels', 'trial'}); % prevent accidental typos, see issue 1729
 
 % set the defaults
 cfg.method   = ft_getopt(cfg, 'method',   'velocity2D');

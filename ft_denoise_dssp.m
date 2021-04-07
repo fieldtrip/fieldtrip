@@ -48,7 +48,7 @@ end
 datain = ft_checkdata(datain, 'datatype', {'raw'}); % FIXME how about timelock and freq?
 
 % check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'forbidden',  {'channels'});
+cfg = ft_checkconfig(cfg, 'forbidden',  {'channels', 'trial'}); % prevent accidental typos, see issue 1729
 cfg = ft_checkconfig(cfg, 'renamed',    {'hdmfile', 'headmodel'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'vol',     'headmodel'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'grid',    'sourcemodel'});

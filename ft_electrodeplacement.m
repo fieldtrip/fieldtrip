@@ -134,7 +134,7 @@ end
 % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2837
 
 % check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'forbidden',  {'channels'});
+cfg = ft_checkconfig(cfg, 'forbidden',  {'channels'}); % prevent accidental typos, see issue 1729
 cfg = ft_checkconfig(cfg, 'renamed',    {'viewdim', 'axisratio'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'method', 'mri', 'volume'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'newfigure', 'figure'});

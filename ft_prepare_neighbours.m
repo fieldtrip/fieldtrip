@@ -105,7 +105,7 @@ if ~isfield(cfg, 'method')
 end
 
 % check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'forbidden',  {'channels'});
+cfg = ft_checkconfig(cfg, 'forbidden',  {'channels'}); % prevent accidental typos, see issue 1729
 cfg = ft_checkconfig(cfg, 'required',   {'method'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'elecfile', 'elec'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'gradfile', 'grad'});

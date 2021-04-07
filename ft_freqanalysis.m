@@ -229,7 +229,7 @@ end
 data = ft_checkdata(data, 'datatype', {'raw', 'raw+comp', 'mvar'}, 'feedback', 'yes', 'hassampleinfo', 'yes');
 
 % check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'forbidden',  {'channels'});
+cfg = ft_checkconfig(cfg, 'forbidden',  {'channels', 'trial'}); % prevent accidental typos, see issue 1729
 cfg = ft_checkconfig(cfg, 'renamed',    {'label', 'channel'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'sgn',   'channel'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'labelcmb', 'channelcmb'});

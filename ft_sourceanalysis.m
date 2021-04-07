@@ -175,7 +175,7 @@ if hasbaseline
 end
 
 % check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'forbidden',  {'channels'});
+cfg = ft_checkconfig(cfg, 'forbidden',  {'channels'}); % prevent accidental typos, see issue 1729
 cfg = ft_checkconfig(cfg, 'forbidden',  {'parallel', 'trials'});
 cfg = ft_checkconfig(cfg, 'forbidden',  {'foi', 'toi'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'toilim', 'latency'});

@@ -67,7 +67,7 @@ datain = ft_checkdata(datain, 'datatype', {'raw' 'timelock' 'freq'}, 'haschantyp
 noise  = ft_checkdata(noise,  'datatype', {      'timelock' 'freq'}, 'haschantype', 'yes', 'haschanunit', 'yes');
 
 % check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'forbidden',  {'channels'});
+cfg = ft_checkconfig(cfg, 'forbidden',  {'channels'}); % prevent accidental typos, see issue 1729
 
 % set the defaults
 cfg.channel   = ft_getopt(cfg, 'channel', 'all');

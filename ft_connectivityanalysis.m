@@ -141,7 +141,7 @@ end
 % data = ft_checkdata(data, 'datatype', {'raw', 'timelock', 'freq', 'source'});
 
 % check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'forbidden',  {'channels'});
+cfg = ft_checkconfig(cfg, 'forbidden',  {'channels', 'trial'}); % prevent accidental typos, see issue 1729
 
 % set the defaults
 cfg.feedback    = ft_getopt(cfg, 'feedback',   'none');

@@ -68,7 +68,7 @@ end
 timelock = ft_checkdata(timelock, 'datatype', {'timelock+comp', 'timelock'}, 'feedback', 'yes');
 
 % check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'forbidden',  {'channels'});
+cfg = ft_checkconfig(cfg, 'forbidden',  {'channels'}); % prevent accidental typos, see issue 1729
 cfg = ft_checkconfig(cfg, 'renamed',    {'blc', 'demean'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'blcwindow', 'baselinewindow'});
 cfg = ft_checkconfig(cfg, 'forbidden',  'baselinetype');
