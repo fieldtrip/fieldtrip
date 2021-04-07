@@ -113,7 +113,7 @@ oneRptTimelock = (strcmp(dtype, 'timelock') &&...
   size(data.trial, 1) == 1);
 
 % check if the input data is valid for this function, this will convert it to raw if needed
-data = ft_checkdata(data, 'datatype', {'raw+comp', 'raw'}, 'feedback', cfg.feedback);
+data = ft_checkdata(data, 'datatype', {'raw+comp', 'raw'}, 'feedback', 'yes');
 
 % select trials of interest
 if ~strcmp(cfg.trials, 'all')

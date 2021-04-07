@@ -47,20 +47,22 @@ end
 % check the input data
 datain = ft_checkdata(datain, 'datatype', {'raw'}); % FIXME how about timelock and freq?
 
-cfg = ft_checkconfig(cfg, 'renamed', {'hdmfile', 'headmodel'});
-cfg = ft_checkconfig(cfg, 'renamed', {'vol',     'headmodel'});
-cfg = ft_checkconfig(cfg, 'renamed', {'grid',    'sourcemodel'});
+% check if the input cfg is valid for this function
+cfg = ft_checkconfig(cfg, 'forbidden',  {'channels'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'hdmfile', 'headmodel'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'vol',     'headmodel'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'grid',    'sourcemodel'});
 
-% get the options
-cfg.trials       = ft_getopt(cfg, 'trials',  'all', 1);
-cfg.channel      = ft_getopt(cfg, 'channel', 'all');
-cfg.sourcemodel  = ft_getopt(cfg, 'sourcemodel');
-cfg.dssp         = ft_getopt(cfg, 'dssp');         % sub-structure to hold the parameters
-cfg.dssp.n_space = ft_getopt(cfg.dssp, 'n_space', 'all'); % number of spatial components to retain from the Gram matrix
-cfg.dssp.n_in    = ft_getopt(cfg.dssp, 'n_in', 'all');    % dimensionality of the Bin subspace to be used for the computation of the intersection
-cfg.dssp.n_out   = ft_getopt(cfg.dssp, 'n_out', 'all');   % dimensionality of the Bout subspace to be used for the computation of the intersection
-cfg.dssp.n_intersect = ft_getopt(cfg.dssp, 'n_intersect', 0.9); % dimensionality of the intersection
-cfg.output       = ft_getopt(cfg, 'output', 'original');
+% set the defaults
+cfg.trials            = ft_getopt(cfg, 'trials',  'all', 1);
+cfg.channel           = ft_getopt(cfg, 'channel', 'all');
+cfg.sourcemodel       = ft_getopt(cfg, 'sourcemodel');
+cfg.dssp              = ft_getopt(cfg, 'dssp');         % sub-structure to hold the parameters
+cfg.dssp.n_space      = ft_getopt(cfg.dssp, 'n_space', 'all'); % number of spatial components to retain from the Gram matrix
+cfg.dssp.n_in         = ft_getopt(cfg.dssp, 'n_in', 'all');    % dimensionality of the Bin subspace to be used for the computation of the intersection
+cfg.dssp.n_out        = ft_getopt(cfg.dssp, 'n_out', 'all');   % dimensionality of the Bout subspace to be used for the computation of the intersection
+cfg.dssp.n_intersect  = ft_getopt(cfg.dssp, 'n_intersect', 0.9); % dimensionality of the intersection
+cfg.output            = ft_getopt(cfg, 'output', 'original');
 
 % select channels and trials of interest, by default this will select all channels and trials
 tmpcfg = keepfields(cfg, {'trials', 'channel', 'tolerance', 'showcallinfo'});
