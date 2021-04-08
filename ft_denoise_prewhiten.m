@@ -62,6 +62,11 @@ if ft_abort
   return
 end
 
+% ensure that the input data is correct, the next line is needed for a
+% attempt correct detection of the data chanunit (with a hdr-field it fails
+% for meggrad data)
+if isfield(datain, 'hdr'), datain = rmfield(datain, 'hdr'); end
+
 % check if the input data is valid for this function
 datain = ft_checkdata(datain, 'datatype', {'raw' 'timelock' 'freq'}, 'haschantype', 'yes', 'haschanunit', 'yes');
 noise  = ft_checkdata(noise,  'datatype', {      'timelock' 'freq'}, 'haschantype', 'yes', 'haschanunit', 'yes');
@@ -77,11 +82,6 @@ cfg.kappa     = ft_getopt(cfg, 'kappa',   []);
 cfg.tol       = ft_getopt(cfg, 'tol',     []);
 cfg.realflag  = ft_getopt(cfg, 'realflag', true); % for complex-valued crsspctrm
 cfg.invmethod = ft_getopt(cfg, 'invmethod', 'tikhonov');
-
-% ensure that the input data is correct, the next line is needed for a
-% attempt correct detection of the data chanunit (with a hdr-field it fails
-% for meggrad data)
-if isfield(datain, 'hdr'), datain = rmfield(datain, 'hdr'); end
 
 dtype_datain = ft_datatype(datain);
 
