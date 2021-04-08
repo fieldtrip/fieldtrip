@@ -93,6 +93,11 @@ end
 % store original datatype
 dtype = ft_datatype(data);
 
+% deal with the special case of timelock rpt_chan_time with 1 trial
+oneRptTimelock = (strcmp(dtype, 'timelock') && ...
+  strcmp(data.dimord, 'rpt_chan_time') && ...
+  size(data.trial, 1) == 1);
+
 % check if the input data is valid for this function, this will convert it to raw if needed
 data = ft_checkdata(data, 'datatype', {'raw+comp', 'raw'}, 'feedback', 'yes');
 
@@ -110,12 +115,6 @@ cfg.feedback     = ft_getopt(cfg, 'feedback',  'yes');
 cfg.trl          = ft_getopt(cfg, 'trl',       []);
 cfg.length       = ft_getopt(cfg, 'length',    []);
 cfg.overlap      = ft_getopt(cfg, 'overlap',   0);
-
-% deal with the special case of timelock rpt_chan_time with 1 trial
-oneRptTimelock = (strcmp(dtype, 'timelock') &&...
-  strcmp(data.dimord, 'rpt_chan_time') &&...
-  size(data.trial, 1) == 1);
-
 
 % select trials of interest
 if ~strcmp(cfg.trials, 'all')
