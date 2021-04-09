@@ -242,6 +242,7 @@ if strcmp(cfg.correctm, 'cluster')
     % tmpcfg = keepfields(cfg, {'dim' 'dimord' 'clusteralpha' 'clustertail' 'ivar' 'uvar' 'cvar' 'wvar' 'contrastcoefs'});
     tmpcfg.computecritval = 'yes';  % explicitly request the computation of the crtitical value
     tmpcfg.computestat    = 'no';   % skip the computation of the statistic
+    tmpcfg.alpha          = cfg.clusteralpha; % the statfun uses cfg.alpha most likely 
     try
       cfg.clustercritval    = getfield(statfun(tmpcfg, dat, design), 'critval');
     catch
