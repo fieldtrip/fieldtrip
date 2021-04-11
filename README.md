@@ -5,9 +5,9 @@ the Netherlands together with collaborating institutes.
 The toolbox offers advanced analysis methods of MEG, EEG, and invasive
 electrophysiological data, such as time-frequency analysis, source reconstruction
 using dipoles, distributed sources and beamformers and non-parametric statistical
-testing. It supports the [data formats](/faq/dataformat) of all major MEG systems
-(CTF, Neuromag/Elekta/Megin, BTi/4D, Yokogawa/Ricoh) and of most popular EEG systems,
-and new formats can be added easily. FieldTrip contains high-level functions that you
+testing. It supports the data formats of all major MEG systems (CTF,
+Neuromag/Elekta/Megin, BTi/4D, Yokogawa/Ricoh) and of most popular EEG systems, and
+new formats can be added easily. FieldTrip contains high-level functions that you
 can use to construct your own analysis protocols in MATLAB. Furthermore, it easily
 allows methods researchers to incorporate new methods for EEG/MEG analysis.
 
