@@ -16,10 +16,10 @@
 %
 % For more information please visit http://www.fieldtriptoolbox.org
 %
-% The FieldTrip software is free but copyrighted software, distributed under the terms
-% of the GNU General Public Licence as published by the Free Software Foundation (either
-% version 2, or at your option any later version). See the file COPYING for more
-% details.
+% The FieldTrip software is free software: you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation, either version 3 of the License, or
+% (at your option) any later version. See the file COPYING for more details.
 %
 % The functions in the FieldTrip toolbox are copyrighted by their respective authors:
 %
