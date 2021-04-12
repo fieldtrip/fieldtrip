@@ -1527,6 +1527,10 @@ elseif filetype_check_extension(filename, '.dat') && exist(fullfile(p, [f '.hea'
   type = 'physionet_dat';
   manufacturer = 'PhysioNet';
   content = 'continuous physiological signals';
+elseif filetype_check_extension(filename, '.dgf') && filetype_check_header(filename, 'DGF')
+  type = 'duneuro_dgf';
+  manufacturer = 'duneuro';
+  content = 'geometrical meshes';
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

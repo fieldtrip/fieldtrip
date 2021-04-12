@@ -6,9 +6,6 @@ function [data] = ft_nirs_transform_ODs(cfg, data)
 %
 % Use as either
 %   [data]      = ft_nirs_transform_ODs(cfg, data)
-%   [freq]      = ft_nirs_transform_ODs(cfg, freq)
-%   [timelock]  = ft_nirs_transform_ODs(cfg, timelock)
-%   [component] = ft_nirs_transform_ODs(cfg, component)
 %
 % The configuration "cfg" is a structure containing information about
 % target of the transformation. The configuration should contain
@@ -115,38 +112,25 @@ if ft_abort
   return
 end
 
-data = ft_checkdata(data, 'datatype', {'raw', 'timelock', 'freq', 'comp'}, 'feedback', 'yes');
+data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes');
 
+% set the defaults
 cfg.channel = ft_getopt(cfg, 'channel', 'nirs');
+cfg.target  = ft_getopt(cfg, 'target', {'O2Hb', 'HHb'});
 
-% determine the type of input data
-if isfield(data, 'trial')
-  israw      = 1;
-  isfreq     = 0;
-  iscomp     = 0;
-  istimelock = 0;
-elseif isfield(data, 'freq')
-  israw      = 0;
-  isfreq     = 1;
-  iscomp     = 0;
-  istimelock = 0;
-elseif isfield(data, 'topo')
-  israw      = 0;
-  isfreq     = 0;
-  iscomp     = 1;
-  istimelock = 0;
-elseif isfield(data, 'avg')
-  israw      = 0;
-  iscomp     = 0;
-  isfreq     = 0;
-  istimelock = 1;
-else
-  error('input data is not recognized');
-end
+% determine the NIRS channels
+cfg.channel = ft_channelselection(cfg.channel, data);
 
+% make a copy of the data
+origdata = data;
+
+% keep only the NIRS channels
 data = ft_selectdata(cfg, data);
 
-cfg.target  = ft_getopt(cfg, 'target', {'O2Hb', 'HHb'});
+% also keep the non-NIRS channels
+tmpcfg = cfg;
+tmpcfg.channel = setdiff(origdata.label, cfg.channel);
+dataextra = ft_selectdata(tmpcfg, origdata);
 
 target = cfg.target;
 if ~iscell(target)
@@ -164,7 +148,7 @@ computeO2Hb = any(ismember(target, 'O2Hb'));
 cfg.montage = montage;
 
 % apply the (combined) montages
-dataout = ft_apply_montage(data, montage);
+dataout = ft_apply_montage(data, montage, 'keepunused', 'yes');
 
 if computetHb
   % total hemoglobin is the sum of oxygenated and deoxygenated hemoglobin
@@ -209,17 +193,8 @@ end
 
 dataout = ft_selectdata(tmpcfg, dataout);
 
-if size(dataout)>1
-  if isfreq
-    data = ft_appendfreq([], dataout{:});
-  elseif istimelock
-    data = ft_appendtimelock([], dataout{:});
-  else
-    data = ft_appenddata([], dataout{:});
-  end
-else
-  data = dataout;
-end
+% append the extra data
+data = ft_appenddata([], dataout, dataextra);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

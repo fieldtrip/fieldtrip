@@ -3,7 +3,7 @@ reading EEG and MEG data from a large variety of files. Furthermore,
 it llows reading additional information from files, such as sensor
 positions, anatomical MRIs, triangulated meshes, etc.
 
-For more information please visit http://www.fieldtriptoolbox.org/development/modules
+For more information please visit https://www.fieldtriptoolbox.org/development/module
 
 The source code for zlib is available at http://www.zlib.net
 

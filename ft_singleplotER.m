@@ -15,7 +15,7 @@ function [cfg] = ft_singleplotER(cfg, varargin)
 %
 % The configuration can have the following parameters:
 %   cfg.parameter     = field to be plotted on y-axis, for example 'avg', 'powspctrm' or 'cohspctrm' (default is automatic)
-%   cfg.maskparameter = field in the first dataset to be used for masking of data; this is not supported when 
+%   cfg.maskparameter = field in the first dataset to be used for masking of data; this is not supported when
 %                       computing the mean over multiple channels, or when giving multiple input datasets (default = [])
 %   cfg.maskstyle     = style used for masking of data, 'box', 'thickness' or 'saturation' (default = 'box')
 %   cfg.maskfacealpha = mask transparency value between 0 and 1
@@ -149,6 +149,7 @@ for i=1:Ndata
 end
 
 % check if the input cfg is valid for this function
+cfg = ft_checkconfig(cfg, 'forbidden',  {'channels', 'trial'}); % prevent accidental typos, see issue 1729
 cfg = ft_checkconfig(cfg, 'unused',     {'cohtargetchannel'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'zlim', 'absmax', 'maxabs'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'directionality', 'feedforward', 'outflow'});
@@ -608,7 +609,8 @@ if ~isempty(range)
   end
   fprintf('selected cfg.xlim = [%f %f]\n', cfg.xlim(1), cfg.xlim(2));
   % ensure that the new figure appears at the same position
-  f = figure('position', get(gcf, 'Position'));
+  cfg.figure = 'yes';
+  cfg.position = get(gcf, 'Position');
   ft_topoplotER(cfg, varargin{:});
 end
 

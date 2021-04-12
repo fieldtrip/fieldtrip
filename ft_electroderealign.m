@@ -172,12 +172,13 @@ if ft_abort
 end
 
 % check if the input cfg is valid for this function
+cfg = ft_checkconfig(cfg, 'forbidden',  {'channels'}); % prevent accidental typos, see issue 1729
+cfg = ft_checkconfig(cfg, 'forbidden',  {'outline'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'template', 'target'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'method', 'realignfiducials', 'fiducial'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'method', 'realignfiducial',  'fiducial'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'warp', 'homogenous', 'rigidbody'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'warp', 'homogeneous', 'rigidbody'});
-cfg = ft_checkconfig(cfg, 'forbidden', 'outline');
 
 % set the defaults
 cfg.warp          = ft_getopt(cfg, 'warp', 'rigidbody');

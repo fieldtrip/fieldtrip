@@ -117,6 +117,9 @@ if ft_abort
   return
 end
 
+% check if the input cfg is valid for this function
+cfg = ft_checkconfig(cfg, 'forbidden',  {'trial'}); % prevent accidental typos, see issue 1729
+
 % set the defaults
 cfg.method          = ft_getopt(cfg, 'method',       'spline');
 cfg.conductivity    = ft_getopt(cfg, 'conductivity', 0.33); % in S/m

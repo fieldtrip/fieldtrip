@@ -1,49 +1,48 @@
-FieldTrip is the MATLAB toolbox for MEG and EEG analysis that is being
-developed at the Donders Institute for Brain, Cognition and Behaviour
-together with collaborating institutes.
+FieldTrip is the MATLAB software toolbox for MEG and EEG analysis that is being
+developed at the Donders Institute for Brain, Cognition and Behaviour in Nijmegen,
+the Netherlands together with collaborating institutes.
 
-The toolbox includes algorithms for simple and advanced analysis
-of MEG and EEG data, such as time-frequency analysis, source
-reconstruction using dipoles, distributed sources and beamformers
-and non-parametric statistical testing. It supports the data formats
-of all major MEG systems (CTF, Neuromag, 4D/BTi) and of the most popular
-EEG systems, and new formats can be added easily. FieldTrip contains
-high-level functions that you can use to construct your own analysis
-protocol in MATLAB. Furthermore, it easily allows developers to
-incorporate low-level algorithms for new EEG/MEG analysis methods.
+The toolbox offers advanced analysis methods of MEG, EEG, and invasive
+electrophysiological data, such as time-frequency analysis, source reconstruction
+using dipoles, distributed sources and beamformers and non-parametric statistical
+testing. It supports the data formats of all major MEG systems (CTF,
+Neuromag/Elekta/Megin, BTi/4D, Yokogawa/Ricoh) and of most popular EEG systems, and
+new formats can be added easily. FieldTrip contains high-level functions that you
+can use to construct your own analysis protocols in MATLAB. Furthermore, it easily
+allows methods researchers to incorporate new methods for EEG/MEG analysis.
 
 For more information please visit http://www.fieldtriptoolbox.org
 
-The FieldTrip software is free but copyrighted software, distributed
-under the terms of the GNU General Public Licence as published by
-the Free Software Foundation (either version 2, or at your option
-any later version). See the file COPYING for more details.
+The FieldTrip software is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version. See the file COPYING for more details.
 
 The functions in the FieldTrip toolbox are copyrighted by their respective authors:
   
   - Robert Oostenveld, DCCN, FCDC, SMI, MBFYS
   - Jan-Mathijs Schoffelen, DCCN, MPI, CCNi, FCDC
-  - Roemer van der Meij, DCC
-  - Jorn Horschig, DCCN
-  - Eelke Spaak, DCCN
-  - Arjen Stolk, DCCN
-  - Lilla Magyari, DCCN, MPI
-  - Vladimir Litvak, UCL
   - Pascal Fries, FCDC
-  - Markus Bauer, FCDC
-  - Ole Jensen, FCDC
-  - Markus Siegel, FCDC, UKE
-  - Jens Schwarzbach, FCDC
   - Eric Maris, DCC, FCDC
+  - Arjen Stolk, DCCN
+  - Eelke Spaak, DCCN
   - Ingrid Nieuwenhuis, DCCN, FCDC
-  - Saskia Haegens, DCCN, FCDC
+  - Jens Schwarzbach, FCDC
+  - Jorn Horschig, DCCN
+  - Lilla Magyari, MPI, DCCN
+  - Markus Siegel, FCDC, UKE
   - Martin Vinck, DCCN, SILS
-  
-  and many others ...
+  - Ole Jensen, FCDC
+  - Roemer van der Meij, DCC 
+  - Saskia Haegens, DCCN, FCDC
+  - Vladimir Litvak, UCL
+  - and many others ...
 
 Copyright (C) 2008-2020, Donders Institute for Brain, Cognition and Behaviour, Radboud University, The Netherlands (DCCN, DCC, DCN)
 
-Copyright (C) 2012-2017, Max Planck Institute for Psycholinguistics, The Netherlands (MPI)
+Copyright (C) 2014-2018, Karolinska Institute, Stockholm, Sweden (NatMEG)
+
+Copyright (C) 2012-2018, Max Planck Institute for Psycholinguistics, The Netherlands (MPI)
 
 Copyright (C) 2008-2017, The Wellcome Trust Centre for Neuroimaging, University College London, UK (UCL)
 
@@ -63,7 +62,8 @@ Copyright (C) 2003-2004, Center for Sensory Motor Interaction, University Aalbor
 
 Copyright (C) 1999-2003, Department of Medical Physics, Radboud University Nijmegen, The Netherlands (MBFYS)
 
-The FieldTrip software is a toolbox, i.e. a library with functions. The release 
-of this toolbox includes functions from other toolboxes that are covered under 
-their respective licenses. See fieldtrip/external for details.
-
+The FieldTrip software is a toolbox, i.e. a library with functions, which in turn
+can depend on other functions. The release of this toolbox includes functions from
+other toolboxes that are covered under their respective licenses. See
+fieldtrip/external for details. Unauthorised copying and distribution of functions
+that are not explicitely covered by the GPL is not allowed!

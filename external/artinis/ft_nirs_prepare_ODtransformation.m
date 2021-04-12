@@ -191,7 +191,7 @@ receiveridx    = tratra<0;
 optodeidx      = (transmitteridx | receiveridx)'; % transpose to get back to tra order
 
 % extract the wavelengths
-wavelengths  = opto.wavelength(tratra(transmitteridx));
+wavelengths = opto.wavelength(tratra(transmitteridx));
 wlidx = bsxfun(@minus, coefs(:, 1), wavelengths);
 
 % find the relevant channel combinations
@@ -210,7 +210,7 @@ end
 
 % do the transformation
 tra      = zeros(size(chancmb, 2)*numel(chromophoreIdx), size(cfg.channel, 1));
-labelnew = cell(1, size(chancmb, 2)*numel(chromophoreIdx));
+labelnew = cell(size(chancmb, 2)*numel(chromophoreIdx), 1);
 
 % transformation has to be done per channel combination
 chanidx = []; % we will use this variable here for indexing channels (Rx-Tx cmbs)
@@ -250,6 +250,8 @@ end
 
 %% create output
 montage = [];
-montage.labelorg = cfg.channel;
+montage.labelorg = cfg.channel(:)';
 montage.labelnew = labelnew;
 montage.tra      = tra;
+
+

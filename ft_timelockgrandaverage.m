@@ -103,6 +103,9 @@ for i=1:length(varargin)
   varargin{i} = ft_checkdata(varargin{i}, 'datatype', 'timelock', 'feedback', 'no');
 end
 
+% check if the input cfg is valid for this function
+cfg = ft_checkconfig(cfg, 'forbidden',  {'channels'}); % prevent accidental typos, see issue 1729
+
 % set the defaults
 cfg.keepindividual = ft_getopt(cfg, 'keepindividual', 'no');
 cfg.channel        = ft_getopt(cfg, 'channel',    'all');

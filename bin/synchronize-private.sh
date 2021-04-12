@@ -210,6 +210,14 @@ ARRAY+=(src/compiler.h)
 sync ${ARRAY[*]}
 
 ################################################################################
+# contains.m
+
+ARRAY=()
+ARRAY+=(matlablt2016b/contains.m)
+ARRAY+=(octave/contains.m)
+sync ${ARRAY[*]}
+
+################################################################################
 # coordsys2label.m
 
 ARRAY=()
@@ -428,6 +436,14 @@ ARRAY=()
 ARRAY+=(fileio/private/encode_nifti1.m)
 ARRAY+=(realtime/example/private/encode_nifti1.m)
 ARRAY+=(realtime/online_mri/private/encode_nifti1.m)
+sync ${ARRAY[*]}
+
+################################################################################
+# endsWith.m
+
+ARRAY=()
+ARRAY+=(matlablt2016b/endsWith.m)
+ARRAY+=(octave/endsWith.m)
 sync ${ARRAY[*]}
 
 ################################################################################
@@ -3541,6 +3557,15 @@ ARRAY=()
 ARRAY+=(connectivity/private/standardise.m)
 ARRAY+=(private/standardise.m)
 sync ${ARRAY[*]}
+
+################################################################################
+# startsWith.m
+
+ARRAY=()
+ARRAY+=(matlablt2016b/startsWith.m)
+ARRAY+=(octave/startsWith.m)
+sync ${ARRAY[*]}
+
 
 ################################################################################
 # strel_bol.m

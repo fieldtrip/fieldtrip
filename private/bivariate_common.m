@@ -139,9 +139,6 @@ for i=1:numel(varargin)
   end % if sparse or full
 end % for varargin
 
-% Ensure that the new figure appears at the same position
-figure('Position', get(gcf, 'Position'));
-
 % Remove these fields from the configuration
 fn = {'originalfunction', 'inputfile', 'refchannel'};
 

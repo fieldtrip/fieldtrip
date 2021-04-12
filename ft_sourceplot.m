@@ -1,4 +1,4 @@
-function ft_sourceplot(cfg, functional, anatomical)
+function [cfg] = ft_sourceplot(cfg, functional, anatomical)
 
 % FT_SOURCEPLOT plots functional source reconstruction data on slices or on a surface,
 % optionally as an overlay on anatomical MRI data, where statistical data can be used to
