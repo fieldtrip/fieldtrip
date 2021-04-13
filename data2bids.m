@@ -545,13 +545,21 @@ cfg.eyetracker.StartTime                  = ft_getopt(cfg.eyetracker, 'StartTime
 cfg.eyetracker.SamplingFrequency          = ft_getopt(cfg.eyetracker, 'SamplingFrequency'    );
 
 %% motion is not part of the official BIDS specification
-% this follows https://bids-specification.readthedocs.io/en/stable/04-modality-specific-files/06-physiological-and-other-continuous-recordings.html
-cfg.motion.Columns                        = ft_getopt(cfg.motion, 'Columns'              );
-cfg.motion.StartTime                      = ft_getopt(cfg.motion, 'StartTime'            );
-cfg.motion.SamplingFrequency              = ft_getopt(cfg.motion, 'SamplingFrequency'    );
-cfg.motion.RecordingDuration              = ft_getopt(cfg.motion, 'RecordingDuration'    );
+% this follows extension proposal 029 (https://bids.neuroimaging.io/bep029)
+cfg.motion.DeviceSerialNumber             = ft_getopt(cfg.motion, 'DeviceSerialNumber'      );
+cfg.motion.EpochLength                    = ft_getopt(cfg.motion, 'EpochLength'             );
+cfg.motion.Manufacturer                   = ft_getopt(cfg.motion, 'Manufacturer'            );
+cfg.motion.ManufacturersModelName         = ft_getopt(cfg.motion, 'ManufacturersModelName'  );
+cfg.motion.MotionChannelCount             = ft_getopt(cfg.motion, 'MotionChannelCount'      );
+cfg.motion.RecordingDuration              = ft_getopt(cfg.motion, 'RecordingDuration'       ); 
+cfg.motion.RecordingType                  = ft_getopt(cfg.motion, 'RecordingType'           ); 
+cfg.motion.SamplingFrequency              = ft_getopt(cfg.motion, 'SamplingFrequency'       ); 
+cfg.motion.SoftwareVersions               = ft_getopt(cfg.motion, 'SoftwareVersions'        );
+cfg.motion.SpaceGeometry                  = ft_getopt(cfg.motion, 'SpaceGeometry'           );
+cfg.motion.StartTime                      = ft_getopt(cfg.motion, 'StartTime'               );
+cfg.motion.SubjectArtefactDescription     = ft_getopt(cfg.motion, 'SubjectArtefactDescription'  );
 
-%% information for the coordsystem.json file for MEG, EEG and iEEG
+%% information for the coordsystem.json file for MEG, EEG, iEEG, and motion
 cfg.coordsystem.MEGCoordinateSystem                             = ft_getopt(cfg.coordsystem, 'MEGCoordinateSystem'                            ); % REQUIRED. Defines the coordinate system for the MEG sensors. See Appendix VIII: preferred names of Coordinate systems. If "Other", provide definition of the coordinate system in [MEGCoordinateSystemDescription].
 cfg.coordsystem.MEGCoordinateUnits                              = ft_getopt(cfg.coordsystem, 'MEGCoordinateUnits'                             ); % REQUIRED. Units of the coordinates of MEGCoordinateSystem. MUST be ???m???, ???cm???, or ???mm???.
 cfg.coordsystem.MEGCoordinateSystemDescription                  = ft_getopt(cfg.coordsystem, 'MEGCoordinateSystemDescription'                 ); % OPTIONAL. Freeform text description or link to document describing the MEG coordinate system system in detail.
@@ -575,6 +583,9 @@ cfg.coordsystem.NIRSCoordinateSystem                            = ft_getopt(cfg.
 cfg.coordsystem.NIRSCoordinateUnits                             = ft_getopt(cfg.coordsystem, 'NIRSCoordinateUnits'                            ); % REQUIRED. Units of the _optodes.tsv, MUST be "m", "mm", "cm" or "pixels".
 cfg.coordsystem.NIRSCoordinateSystemDescription                 = ft_getopt(cfg.coordsystem, 'NIRSCoordinateSystemDescription'                ); % RECOMMENDED. Freeform text description or link to document describing the NIRS coordinate system system in detail (e.g., "Coordinate system with the origin at anterior commissure (AC), negative y-axis going through the posterior commissure (PC), z-axis going to a mid-hemisperic point which lies superior to the AC-PC line, x-axis going to the right").
 cfg.coordsystem.NIRSCoordinateProcessingDescription             = ft_getopt(cfg.coordsystem, 'NIRSCoordinateProcessingDescription'            ); % RECOMMENDED. Has any post-processing (such as projection) been done on the optode positions (e.g., "surface_projection", "none").
+cfg.coordsystem.MotionCoordinateSystem              	        = ft_getopt(cfg.coordsystem, 'MotionCoordinateSystem'                         ); % REQUIRED. 
+cfg.coordsystem.MotionRotationRule              	            = ft_getopt(cfg.coordsystem, 'MotionRotationRule'                             ); % OPTIONAL. 
+cfg.coordsystem.MotionRotationOrder              	            = ft_getopt(cfg.coordsystem, 'MotionRotationOrder'                            ); % OPTIONAL. 
 cfg.coordsystem.IntendedFor                                     = ft_getopt(cfg.coordsystem, 'IntendedFor'                                    ); % OPTIONAL. Path or list of path relative to the subject subfolder pointing to the structural MRI, possibly of different types if a list is specified, to be used with the MEG recording. The path(s) need(s) to use forward slashes instead of backward slashes (e.g. "ses-<label>/anat/sub-01_T1w.nii.gz").
 cfg.coordsystem.AnatomicalLandmarkCoordinates                   = ft_getopt(cfg.coordsystem, 'AnatomicalLandmarkCoordinates'                  ); % OPTIONAL. Key:value pairs of the labels and 3-D digitized locations of anatomical landmarks, interpreted following the AnatomicalLandmarkCoordinateSystem, e.g., {"NAS": [12.7,21.3,13.9], "LPA": [5.2,11.3,9.6], "RPA": [20.2,11.3,9.1]}.
 cfg.coordsystem.AnatomicalLandmarkCoordinateSystem              = ft_getopt(cfg.coordsystem, 'AnatomicalLandmarkCoordinateSystem'             ); % OPTIONAL. Defines the coordinate system for the anatomical landmarks. See Appendix VIII: preferred names of Coordinate systems. If "Other", provide definition of the coordinate system in AnatomicalLandmarkCoordinateSystemDescripti on.
@@ -999,8 +1010,8 @@ if need_nirs_json
 end
 
 need_events_tsv       = need_events_tsv       || need_meg_json || need_eeg_json || need_ieeg_json || need_emg_json || need_exg_json || need_nirs_json || need_eyetracker_json || need_motion_json || (contains(cfg.outputfile, 'task') || ~isempty(cfg.TaskName) || ~isempty(cfg.task)) || ~isempty(cfg.events);
-need_channels_tsv     = need_channels_tsv     || need_meg_json || need_eeg_json || need_ieeg_json || need_emg_json || need_exg_json || need_nirs_json;
-need_coordsystem_json = need_coordsystem_json || need_meg_json || need_electrodes_tsv || need_nirs_json;
+need_channels_tsv     = need_channels_tsv     || need_meg_json || need_eeg_json || need_ieeg_json || need_emg_json || need_exg_json || need_nirs_json || need_motion_json ;
+need_coordsystem_json = need_coordsystem_json || need_meg_json || need_electrodes_tsv || need_nirs_json || need_motion_json ;
 
 if need_emg_json
   ft_warning('EMG data is not yet part of the official BIDS specification');
@@ -1323,10 +1334,11 @@ end
 
 %% need_motion_json
 if need_motion_json
-  motion_json.SamplingFrequency = hdr.Fs;
-  motion_json.StartTime = nan;
-  motion_json.Columns = hdr.label;
-  motion_json.RecordingDuration = (hdr.nSamples*hdr.nTrials)/hdr.Fs;
+    
+  motion_json.SamplingFrequency     = hdr.Fs;
+  motion_json.StartTime             = nan;
+  motion_json.MotionChannelCount    = hdr.nChans; 
+  motion_json.RecordingDuration     = (hdr.nSamples*hdr.nTrials)/hdr.Fs; 
   
   % merge the information specified by the user with that from the data
   % in case fields appear in both, the first input overrules the second
@@ -1377,6 +1389,8 @@ if need_channels_tsv
     type_json = exg_json;
   elseif need_nirs_json
     type_json = nirs_json;
+  elseif need_motion_json
+      type_json = motion_json;
   end
   fn = fieldnames(type_json);
   fn = fn(endsWith(fn, 'ChannelCount'));
@@ -2352,6 +2366,9 @@ switch typ
     dir = 'ieeg';
   case {'nirs'} % this is not part of the official specification
     dir = 'nirs';
+  case {'motion'} % this is not part of the official specification
+    dir = 'motion';
+      
   otherwise
     ft_error('unrecognized data type ''%s''', typ);
 end
