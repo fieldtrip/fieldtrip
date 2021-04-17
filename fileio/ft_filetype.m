@@ -1483,6 +1483,10 @@ elseif filetype_check_extension(filename, '.mvnx') && filetype_check_header(file
   type = 'xsens_mvnx';
   manufacturer = 'https://www.xsens.com/motion-capture';
   content = 'motion capture data';
+elseif filetype_check_extension(filename, '.json') && filetype_check_header(filename, '{"version":1.3') % this JSON format detection is not very robust
+  type = 'openpose_keypoints';
+  manufacturer = 'https://github.com/CMU-Perceptual-Computing-Lab/openpose';
+  content = 'motion capture data';
 elseif filetype_check_extension(filename, '.mif')
   % this could be a mrtrix compatible image file
   type = 'mrtrix_mif';

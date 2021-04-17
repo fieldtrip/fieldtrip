@@ -259,7 +259,7 @@ if ~isfield(cfg, 'viewmode')
 end
 
 if ~isfield(cfg, 'colorgroups')
-  % can be 'sequential', 'allblack', 'labelcharx', 'chantype', or a vector with the length of the number of channels defining the groups
+  % can be 'sequential', 'allblack', 'labelcharN', 'chantype', or a vector with the length of the number of channels defining the groups
   if hascomp
     cfg.colorgroups = 'allblack';
   else
