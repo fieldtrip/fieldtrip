@@ -72,7 +72,7 @@ if (lastframe-firstframe+1)~=numframes
 end
 
 % read a single file
-orig = jsondecodefile(dirlist{1});
+orig = jsondecodefile(fullfile(p, dirlist{1}));
 
 % for consistency with the file format details, "people" will be used instead of "person"
 numpeople = length(orig.people);
@@ -171,7 +171,7 @@ elseif needdat
   ft_info('reading %d frames', numframes);
   % read all files
   for frame=1:numframes
-    keypoints(frame) = jsondecodefile(dirlist{frame});
+    keypoints(frame) = jsondecodefile(fullfile(p, dirlist{frame}));
   end
   
   % the rows correspond to all keypoints for all people
