@@ -1,9 +1,9 @@
 function [cfg] = ft_multiplotER(cfg, varargin)
 
-% FT_MULTIPLOTER plots the event-related potentials or event-related fields verus
-% time, or the oscillatory activity (power or coherence) versus frequency. Multiple
-% datasets can be overlayed. The plots are arranged according to their location
-% specified in the layout.
+% FT_MULTIPLOTER plots the event-related potentials or event-related fields
+% versus time, or the oscillatory activity (power or coherence) versus frequency. 
+% Multiple datasets can be overlayed. The plots are arranged according to
+% the location of the channels specified in the layout.
 %
 % Use as
 %   ft_multiplotER(cfg, data)
@@ -55,6 +55,10 @@ function [cfg] = ft_multiplotER(cfg, varargin)
 %                       inflow into a node, or the outflow from a node is plotted. The (default) behavior
 %                       of this option depends on the dimord of the input data (see below).
 %   cfg.layout        = specify the channel layout for plotting using one of the supported ways (see below).
+%   cfg.select        = 'intersect' or 'union' (default = 'intersect')
+%                       with multiple input arguments determines the
+%                       pre-selection of the data that is considered for
+%                       plotting.
 
 % The following options for the scaling of the EEG, EOG, ECG, EMG, MEG and NIRS channels
 % is optional and can be used to bring the absolute numbers of the different
@@ -219,6 +223,7 @@ cfg.preproc        = ft_getopt(cfg, 'preproc');
 cfg.frequency      = ft_getopt(cfg, 'frequency', 'all'); % needed for frequency selection with TFR data
 cfg.latency        = ft_getopt(cfg, 'latency', 'all'); % needed for latency selection with TFR data, FIXME, probably not used
 cfg.renderer       = ft_getopt(cfg, 'renderer'); % let MATLAB decide on the default
+cfg.select         = ft_getopt(cfg, 'select', 'intersect'); % for ft_selectdata
 
 % check for linestyle being a cell-array
 if ischar(cfg.linestyle)
@@ -325,7 +330,7 @@ if ~strcmp(cfg.baseline, 'no')
 end
 
 % channels SHOULD be selected here, as no interactive action produces a new multiplot
-tmpcfg = keepfields(cfg, {'channel', 'showcallinfo', 'trials'});
+tmpcfg = keepfields(cfg, {'channel', 'showcallinfo', 'trials', 'select'});
 if hasrpt
   tmpcfg.avgoverrpt = 'yes';
 else
