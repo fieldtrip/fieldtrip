@@ -50,7 +50,7 @@ for k = 1:numel(elec)
   
   figure;ft_plot_layout(layout); title(d(k).name, 'interpreter', 'none');
   lay = layout;
-  save(strrep(d(k).name,'sfp','mat'), 'lay');
+  %save(strrep(d(k).name,'sfp','mat'), 'lay');
 end
 
 
