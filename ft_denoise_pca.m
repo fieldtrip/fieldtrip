@@ -161,9 +161,9 @@ else
     
   end
   
-  refchan = ft_channelselection(cfg.refchannel, refdata.label);
+  refchan = ft_channelselection(cfg.refchannel, refdata.label, ft_senstype(refdata));
   refindx = match_str(refdata.label, refchan);
-  megchan = ft_channelselection(cfg.channel, data.label);
+  megchan = ft_channelselection(cfg.channel, data.label, ft_senstype(data));
   megindx = match_str(data.label, megchan);
 
   nref = length(refindx);

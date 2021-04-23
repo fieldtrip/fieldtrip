@@ -45,6 +45,10 @@ function [cfg] = ft_singleplotER(cfg, varargin)
 %                       node, or the outflow from a node is plotted. The
 %                       (default) behavior of this option depends on the dimor
 %                       of the input data (see below).
+%   cfg.select        = 'intersect' or 'union' (default = 'intersect')
+%                       with multiple input arguments determines the
+%                       pre-selection of the data that is considered for
+%                       plotting.
 %
 % The following options for the scaling of the EEG, EOG, ECG, EMG, MEG and NIRS channels
 % is optional and can be used to bring the absolute numbers of the different
@@ -192,6 +196,7 @@ cfg.frequency       = ft_getopt(cfg, 'frequency',     'all'); % needed for frequ
 cfg.latency         = ft_getopt(cfg, 'latency',       'all'); % needed for latency selection with TFR data, FIXME, probably not used
 cfg.showlegend      = ft_getopt(cfg, 'showlegend',    'no');
 cfg.renderer        = ft_getopt(cfg, 'renderer',       []); % let MATLAB decide on the default
+cfg.select          = ft_getopt(cfg, 'select',         'intersect'); % for ft_selectdata
 
 % check for linestyle being a cell-array
 if ischar(cfg.linestyle)
@@ -300,7 +305,7 @@ end
 
 
 % channels should NOT be selected and averaged here, since a topoplot might follow in interactive mode
-tmpcfg = keepfields(cfg, {'showcallinfo', 'trials'});
+tmpcfg = keepfields(cfg, {'showcallinfo', 'trials', 'select'});
 if hasrpt
   tmpcfg.avgoverrpt = 'yes';
 else
