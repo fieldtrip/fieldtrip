@@ -107,14 +107,16 @@ if hasatlas
   end
   ft_progress('close');
   
-  sourcemodel     = removefields(sourcemodel, {'pos' 'dim' 'tri'});
+  sourcemodel     = removefields(sourcemodel, {'pos' 'dim' 'tri' 'inside'});
   sourcemodel.pos = pos; 
+  sourcemodel.inside = true(size(pos,1),1);
   
 elseif isnumeric(cfg.patchsvd)
   % this is based on the old (probably never used) code 
   Ndipoles = size(sourcemodel.pos,1);
   Ninside  = sum(sourcemodel.inside);
   inside   = find(sourcemodel.inside);
+  
   lfall    = cell(Ndipoles,1);
   n        = zeros(Ndipoles,1);
   
