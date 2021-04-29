@@ -276,7 +276,7 @@ for i = 1:nvc
         % create a covariance, or csd matrix that is to be used for the
         % svd. this needs to be computed only once.
         if isfreq
-          tmp = ft_checkdata(data, 'cmbrepresentation', 'fullfast');
+          tmp = ft_checkdata(data, 'cmbstyle', 'fullfast');
           C   = tmp.crsspctrm;
         else
           tmpcfg = [];

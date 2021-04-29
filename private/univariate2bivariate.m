@@ -60,9 +60,9 @@ switch dtype
     if strcmp(inparam, 'fourierspctrm') && strcmp(outparam, 'crsspctrm')
       % fourier coefficients -> cross-spectral density
       if dofull
-        data = ft_checkdata(data, 'cmbrepresentation', 'full');
+        data = ft_checkdata(data, 'cmbstyle', 'full');
       else
-        data = ft_checkdata(data, 'cmbrepresentation', 'sparse', 'channelcmb', cmb);
+        data = ft_checkdata(data, 'cmbstyle', 'sparse', 'channelcmb', cmb);
         getpowindx = 1;
       end
     elseif strcmp(inparam, 'fourierspctrm') && strcmp(outparam, 'lcrsspctrm')
@@ -70,18 +70,18 @@ switch dtype
       getpowindx = 1;
     elseif strcmp(inparam, 'powandcsd') && strcmp(outparam, 'crsspctrm')
       if ~isempty(cmb)
-        data = ft_checkdata(data, 'cmbrepresentation', 'sparse', 'channelcmb', cmb);
+        data = ft_checkdata(data, 'cmbstyle', 'sparse', 'channelcmb', cmb);
         % ensure getting powindx later on to prevent crash
         getpowindx = 1;
       else
-        % data = ft_checkdata(data, 'cmbrepresentation', 'full');
+        % data = ft_checkdata(data, 'cmbstyle', 'full');
         % this should not be possible
         ft_error('cannot convert to a full csd representation');
       end
       
     elseif strcmp(inparam, 'fourierspctrm') && strcmp(outparam, 'powcovspctrm')
       % fourier coefficients -> power covariance
-      data = ft_checkdata(data, 'cmbrepresentation', 'sparsewithpow', 'channelcmb', {});
+      data = ft_checkdata(data, 'cmbstyle', 'sparsewithpow', 'channelcmb', {});
       if sqrtflag, data.powspctrm = sqrt(data.powspctrm); end
       % get covariance by using ft_checkdata
       if demeanflag
@@ -95,9 +95,9 @@ switch dtype
       data.cumtapcnt(:) = 1;
       data.cumsumcnt(:) = 1;
       if ncmb < (nchan-1)*nchan*0.5
-        data = ft_checkdata(data, 'cmbrepresentation', 'sparse', 'channelcmb', cmb);
+        data = ft_checkdata(data, 'cmbstyle', 'sparse', 'channelcmb', cmb);
       else
-        data = ft_checkdata(data, 'cmbrepresentation', 'full');
+        data = ft_checkdata(data, 'cmbstyle', 'full');
       end
       data.powcovspctrm = data.crsspctrm;
       data = rmfield(data, 'crsspctrm');
@@ -117,9 +117,9 @@ switch dtype
       data.cumtapcnt(:) = 1;
       data.cumsumcnt(:) = 1;
       if ncmb < (nchan-1)*nchan*0.5
-        data = ft_checkdata(data, 'cmbrepresentation', 'sparse', 'channelcmb', cmb);
+        data = ft_checkdata(data, 'cmbstyle', 'sparse', 'channelcmb', cmb);
       else
-        data = ft_checkdata(data, 'cmbrepresentation', 'full');
+        data = ft_checkdata(data, 'cmbstyle', 'full');
       end
       data.powcovspctrm = data.crsspctrm;
       data = rmfield(data, 'crsspctrm');

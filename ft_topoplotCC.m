@@ -77,7 +77,7 @@ if ft_abort
 end
 
 % check if the input data is valid for this function
-freq = ft_checkdata(freq, 'cmbrepresentation', 'sparse');
+freq = ft_checkdata(freq, 'cmbstyle', 'sparse');
 
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'required', {'foi', 'layout'});

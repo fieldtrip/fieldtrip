@@ -215,7 +215,7 @@ switch cfg.method
       if hasrpt && ~hasjack
         ft_warning('partialisation on single trial observations is not supported, removing trial dimension');
         try
-          data = ft_checkdata(data, 'datatype', {'freqmvar' 'freq'}, 'cmbrepresentation', 'fullfast');
+          data = ft_checkdata(data, 'datatype', {'freqmvar' 'freq'}, 'cmbstyle', 'fullfast');
           inparam = 'crsspctrm';
           hasrpt = 0;
         catch
@@ -223,7 +223,7 @@ switch cfg.method
         end
       else
         %         try
-        %           data = ft_checkdata(data, 'datatype', {'freqmvar' 'freq'}, 'cmbrepresentation', 'full');
+        %           data = ft_checkdata(data, 'datatype', {'freqmvar' 'freq'}, 'cmbstyle', 'full');
         %           inparam = 'crsspctrm';
         %         catch
         %           ft_error('partial coherence/csd is only supported for input allowing for a all-to-all csd representation');
@@ -457,10 +457,10 @@ if any(~isfield(data, inparam)) || (isfield(data, 'crsspctrm') && (ischar(inpara
           % FIXME this is fast but throws away the trial dimension, consider
           % a way to keep trial information if needed, but use the fast way
           % if possible
-          data = ft_checkdata(data, 'cmbrepresentation', 'fullfast');
+          data = ft_checkdata(data, 'cmbstyle', 'fullfast');
           hasrpt = 0;
         elseif isfield(data, 'powspctrm')
-          data = ft_checkdata(data, 'cmbrepresentation', 'full');
+          data = ft_checkdata(data, 'cmbstyle', 'full');
         end
         
         % convert the inparam back to cell-array in the case of granger
@@ -970,7 +970,7 @@ switch cfg.method
           cfg.refindx = match_str(newlabel, cfg.refchannel);
           
           dat       = dat([i1; i3], :);
-          refindx   = cfg.refindx; 
+          refindx   = cfg.refindx;
         else
           tra      = [];
           newlabel = [];
@@ -1034,7 +1034,7 @@ switch cfg.method
     if strcmp(cfg.method, 'dfi'), optarg = cat(2, optarg, {'combinelags', cfg.(cfg.method).combinelags}); end
     [datout] = ft_connectivity_mutualinformation(dat, optarg{:});
     varout   = [];
-    nrpt     = [];    
+    nrpt     = [];
   case 'corr'
     % pearson's correlation coefficient
     optarg = {'dimord', getdimord(data, inparam), 'feedback', cfg.feedback, 'hasjack', hasjack, 'pownorm', true, 'complex', 'complex'};
