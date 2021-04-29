@@ -89,7 +89,7 @@ ft_sourceplot(cfg, parcellation4d);
 %
 
 cfg = [];
-cfg.parcellation = 'seg';
+cfg.parcellation = 'tissue';
 rawdata3d = ft_sourceparcellate(cfg, source3d, parcellation3d);
 rawdata4d = ft_sourceparcellate(cfg, source4d, parcellation4d);
 
