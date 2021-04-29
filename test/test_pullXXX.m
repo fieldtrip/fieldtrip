@@ -1,4 +1,4 @@
-function test_pull
+% function test_pullXXX
 
 % WALLTIME 00:10:00
 % MEMORY 3gb
@@ -81,10 +81,9 @@ cfg.funparameter = 'seg';
 cfg.funcolormap = 'jet';
 ft_sourceplot(cfg, parcellation4d);
 
-
 %%
 
 cfg = [];
 cfg.parcellation = 'seg';
-source3d_sparse = ft_sourceparcellate(cfg, source3d, parcellation3d);
-source4d_sparse = ft_sourceparcellate(cfg, source4d, parcellation4d);
+rawdata3d = ft_sourceparcellate(cfg, source3d, parcellation3d);
+rawdata4d = ft_sourceparcellate(cfg, source4d, parcellation4d);
