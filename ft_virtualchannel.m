@@ -203,7 +203,8 @@ elseif useparcellation
   end
   
   % ensure that the source and the parcellation are anatomically consistent
-  if ~isalmostequal(source.pos, parcellation.pos, 'abstol', 1000000*eps)
+  tolerance = 0.1 * ft_scalingfactor('mm', source.unit);
+  if ~isalmostequal(source.pos, parcellation.pos, 'abstol', tolerance)
     ft_error('the source positions are not consistent with the parcellation, please use FT_SOURCEINTERPOLATE');
   end
   
