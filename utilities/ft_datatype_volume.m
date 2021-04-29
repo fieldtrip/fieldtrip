@@ -98,7 +98,7 @@ if isfield(volume, 'pos')
   if ~isfield(volume, 'dim')
     volume.dim = pos2dim(volume.pos);
   end
-  assert(prod(volume.dim)==size(volume.pos,1), 'dimensions are inconsistent with number of grid positions');
+  assert(prod(volume.dim(1:3))==size(volume.pos,1), 'dimensions are inconsistent with number of grid positions');
   if  ~isfield(volume, 'transform')
     volume.transform = pos2transform(volume.pos, volume.dim);
   end
@@ -118,6 +118,11 @@ switch version
       volume.unit = lower(volume.unit);
     end
     
+    if isfield(volume, 'inside')
+      % ensure that it is always logical
+      volume = fixinside(volume, 'logical');
+    end
+    
     if isfield(volume, 'dimord')
       volume = rmfield(volume, 'dimord');
     end
@@ -135,14 +140,13 @@ switch version
       volume = rmfield(volume, 'avg');
     end
 
-    % ensure that it is always logical
-    volume = fixinside(volume, 'logical');
-
     fn = getdatfield(volume);
     for i=1:numel(fn)
-      try
-        volume.(fn{i}) = reshape(volume.(fn{i}), volume.dim);
-      catch
+      if numel(volume.(fn{i})) == prod(volume.dim)
+        volume.(fn{i}) = reshape(volume.(fn{i}), volume.dim); % this also works for 4D volumes
+      elseif numel(volume.(fn{i})) == prod(volume.dim(1:3))
+        volume.(fn{i}) = reshape(volume.(fn{i}), volume.dim(1:3));
+      else
         ft_notice('could not reshape "%s" to the dimensions of the volume', fn{i});
       end
     end
