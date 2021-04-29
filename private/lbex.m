@@ -20,7 +20,8 @@ lfa = cat(2, sourcemodel.leadfield{:});
 % do the computations on the svd basis to avoid numerical issues
 [U,S,V] = svd(lfa, 'econ');
 diagS   = diag(S);
-sel     = find(diagS>cfg.lbexeigtol.*diagS(1));
+Tol     = 1e-12;
+sel     = find(diagS>Tol.*diagS(1));
 P       = diag(1./sqrt(diag(S(sel,sel))))*U(:,sel)'; % prewhitening matrix
 lfa     = P*lfa;
 
