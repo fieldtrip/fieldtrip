@@ -1,8 +1,8 @@
 function [indexed, probabilistic] = determine_segmentationstyle(segmentation, fn, dim)
 
 % DETERMINE_SEGMENTATIONSTYLE is a helper function that determines the type of segmentation
-% contained in each of the fields. It is used by ft_datatype_segmentation and
-% ft_datatype_parcellation.
+% contained in each of the fields. It is used by FT_DATATYPE_SEGMENTATION and
+% FT_DATATYPE_PARCELLATION.
 %
 % See also FIXSEGMENTATION, CONVERT_SEGMENTATIONSTYLE
 
