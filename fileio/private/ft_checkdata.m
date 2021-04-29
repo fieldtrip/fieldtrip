@@ -17,7 +17,7 @@ function [data] = ft_checkdata(data, varargin)
 %   datatype           = raw, freq, timelock, comp, spike, source, mesh, dip, volume, segmentation, parcellation
 %   dimord             = any combination of time, freq, chan, refchan, rpt, subj, chancmb, rpttap, pos
 %   senstype           = ctf151, ctf275, ctf151_planar, ctf275_planar, neuromag122, neuromag306, bti148, bti248, bti248_planar, magnetometer, electrode
-%   inside             = logical, index
+%   fsample            = sampling frequency to use to go from SPIKE to RAW representation
 %   ismeg              = yes, no
 %   iseeg              = yes, no
 %   isnirs             = yes, no
@@ -29,11 +29,11 @@ function [data] = ft_checkdata(data, varargin)
 %   hascumtapcnt       = yes, no (only applies to freq data)
 %   hasdim             = yes, no
 %   hasdof             = yes, no
+%   hasbrain           = yes, no (only applies to segmentation)
+%   insidestyle        = logical, index, can also be empty
 %   cmbrepresentation  = sparse, full (applies to covariance and cross-spectral density)
-%   fsample            = sampling frequency to use to go from SPIKE to RAW representation
 %   segmentationstyle  = indexed, probabilistic (only applies to segmentation)
 %   parcellationstyle  = indexed, probabilistic (only applies to parcellation)
-%   hasbrain           = yes, no (only applies to segmentation)
 %   trialinfostyle     = matrix, table or empty
 %
 % For some options you can specify multiple values, e.g.
@@ -42,7 +42,7 @@ function [data] = ft_checkdata(data, varargin)
 %
 % See also FT_DATATYPE_XXX for each of the respective data types.
 
-% Copyright (C) 2007-2015, Robert Oostenveld
+% Copyright (C) 2007-2021, Robert Oostenveld
 % Copyright (C) 2010-2012, Martin Vinck
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
@@ -93,6 +93,18 @@ function [data] = ft_checkdata(data, varargin)
 % FIXME it is presently (dec 2014) not being used anywhere in FT, so can be removed
 %   hastrials          = yes, no
 
+% check whether people are using deprecated options
+sel = find(strcmp(varargin(1:2:end), 'hastrialdef'));
+if ~isempty(sel)
+  ft_warning('the option ''hastrialdef'' is deprecated, please use ''hassampleinfo'' instead');
+  varargin{2*sel-1} = 'hassampleinfo';
+end
+sel = find(strcmp(varargin(1:2:end), 'inside'));
+if ~isempty(sel)
+  ft_warning('the option ''inside'' is deprecated, please use ''insidestyle'' instead');
+  varargin{2*sel-1} = 'insidestyle';
+end
+
 % get the optional input arguments
 feedback             = ft_getopt(varargin, 'feedback', 'no');
 dtype                = ft_getopt(varargin, 'datatype'); % should not conflict with the ft_datatype function
@@ -101,7 +113,6 @@ stype                = ft_getopt(varargin, 'senstype'); % senstype is a function
 ismeg                = ft_getopt(varargin, 'ismeg');
 iseeg                = ft_getopt(varargin, 'iseeg');
 isnirs               = ft_getopt(varargin, 'isnirs');
-inside               = ft_getopt(varargin, 'inside'); % can be 'logical' or 'index'
 hastrials            = ft_getopt(varargin, 'hastrials');
 hasunit              = ft_getopt(varargin, 'hasunit', 'no');
 hascoordsys          = ft_getopt(varargin, 'hascoordsys', 'no');
@@ -111,20 +122,14 @@ hassampleinfo        = ft_getopt(varargin, 'hassampleinfo', 'ifmakessense');
 hasdim               = ft_getopt(varargin, 'hasdim');
 hascumtapcnt         = ft_getopt(varargin, 'hascumtapcnt');
 hasdof               = ft_getopt(varargin, 'hasdof');
+hasbrain             = ft_getopt(varargin, 'hasbrain');
 cmbrepresentation    = ft_getopt(varargin, 'cmbrepresentation');
 channelcmb           = ft_getopt(varargin, 'channelcmb');
-fsample              = ft_getopt(varargin, 'fsample');
+insidestyle          = ft_getopt(varargin, 'insidestyle'); % can be 'logical' or 'index'
 segmentationstyle    = ft_getopt(varargin, 'segmentationstyle'); % this will be passed on to the corresponding ft_datatype_xxx function
 parcellationstyle    = ft_getopt(varargin, 'parcellationstyle'); % this will be passed on to the corresponding ft_datatype_xxx function
-hasbrain             = ft_getopt(varargin, 'hasbrain');
 trialinfostyle       = ft_getopt(varargin, 'trialinfostyle');
-
-% check whether people are using deprecated stuff
-depHastrialdef = ft_getopt(varargin, 'hastrialdef');
-if (~isempty(depHastrialdef))
-  ft_warning('ft_checkdata option ''hastrialdef'' is deprecated; please use ''hassampleinfo'' instead');
-  hassampleinfo = depHastrialdef;
-end
+fsample              = ft_getopt(varargin, 'fsample');
 
 % determine the type of input data
 israw           = ft_datatype(data, 'raw');
@@ -616,12 +621,12 @@ if ~isempty(isnirs)
   end % if okflag
 end
 
-if ~isempty(inside)
-  if strcmp(inside, 'index')
+if ~isempty(insidestyle)
+  if strcmp(insidestyle, 'index')
     ft_warning('the indexed representation of inside/outside source locations is deprecated');
   end
   % TODO absorb the fixinside function into this code
-  data   = fixinside(data, inside);
+  data   = fixinside(data, insidestyle);
   okflag = isfield(data, 'inside');
   
   if ~okflag
@@ -1388,15 +1393,13 @@ source = copyfields(data, source, {'time', 'freq'});
 % convert between datatypes
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function data = volume2source(data)
-if isfield(data, 'dimord')
-  % it is a modern source description
-else
-  % it is an old-fashioned source description
+if ~isfield(data, 'pos')
   xgrid = 1:data.dim(1);
   ygrid = 1:data.dim(2);
   zgrid = 1:data.dim(3);
-  [x y z] = ndgrid(xgrid, ygrid, zgrid);
+  [x, y, z] = ndgrid(xgrid, ygrid, zgrid);
   data.pos = ft_warp_apply(data.transform, [x(:) y(:) z(:)]);
+  data.dim = data.dim(1:3); % remove the 4th and further dimensions
 end
 
 

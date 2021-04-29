@@ -94,7 +94,7 @@ data   = ft_checkdata(data, 'datatype', {'raw', 'raw+comp', 'mvar' 'freq'}, 'fee
 
 % ensure that the source input is a source structure , not a volume structure
 % this will also return source.filter, rather than source.avg.filter
-source = ft_checkdata(source, 'datatype', 'source', 'inside', 'logical', 'hasunit', 'yes');
+source = ft_checkdata(source, 'datatype', 'source', 'insidestyle', 'logical', 'hasunit', 'yes');
 
 % get the defaults
 cfg.pos          = ft_getopt(cfg, 'pos');

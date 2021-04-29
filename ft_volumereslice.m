@@ -79,7 +79,7 @@ end
 
 % check if the input data is valid for this function and ensure that the structures correctly describes a volume
 if isfield(mri, 'inside')
-  mri = ft_checkdata(mri, 'datatype', 'volume', 'feedback', 'yes', 'hasunit', 'yes', 'inside', 'logical');
+  mri = ft_checkdata(mri, 'datatype', 'volume', 'feedback', 'yes', 'hasunit', 'yes', 'insidestyle', 'logical');
 else
   mri = ft_checkdata(mri, 'datatype', 'volume', 'feedback', 'yes', 'hasunit', 'yes');
 end
