@@ -1,8 +1,8 @@
 function segmentation = convert_segmentationstyle(segmentation, fn, dim, style)
 
 % CONVERT_SEGMENTATIONSTYLE is a helper function for converting between probabilistic
-% and indexed representations. It is used by ft_datatype_segmentation and
-% ft_datatype_parcellation.
+% and indexed representations. It is used by FT_DATATYPE_SEGMENTATION and
+% FT_DATATYPE_PARCELLATION.
 %
 % See also FIXSEGMENTATION, DETERMINE_SEGMENTATIONSTYLE
 
