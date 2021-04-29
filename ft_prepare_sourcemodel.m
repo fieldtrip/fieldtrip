@@ -764,7 +764,7 @@ end
 
 if strcmp(cfg.tight, 'yes')
   if ~isfield(sourcemodel, 'dim')
-    ft_error('tightgrid only works for positions on a regular 3D grid');
+    ft_error('cfg.tight only works for positions on a regular 3D grid');
   end
   fprintf('%d dipoles inside, %d dipoles outside brain\n', sum(sourcemodel.inside), sum(~sourcemodel.inside));
   fprintf('making tight grid\n');
