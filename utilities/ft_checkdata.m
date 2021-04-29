@@ -771,13 +771,13 @@ if isequal(current, desired)
   % nothing to do
   
 elseif strcmp(current, 'fourier') && strcmp(desired, 'sparsewithpow')
-  if startsWith(dimord, 'rpttap')
+  if startsWith(data.dimord, 'rpttap')
     nrpt = size(data.cumtapcnt,1);
   else
     nrpt = 1;
   end
-  if contains(dimord, 'freq'), nfrq = length(data.freq); else nfrq = 1; end
-  if contains(dimord, 'time'), ntim = length(data.time); else ntim = 1; end
+  if contains(data.dimord, 'freq'), nfrq = length(data.freq); else nfrq = 1; end
+  if contains(data.dimord, 'time'), ntim = length(data.time); else ntim = 1; end
   
   fastflag = all(data.cumtapcnt(:)==data.cumtapcnt(1));
   flag     = nrpt==1; % needed to truncate the singleton dimension upfront
@@ -859,13 +859,13 @@ elseif strcmp(current, 'fourier') && strcmp(desired, 'sparsewithpow')
   
 elseif strcmp(current, 'fourier') && strcmp(desired, 'sparse')
   if isempty(channelcmb), ft_error('no channel combinations are specified'); end
-  if startsWith(dimord, 'rpttap')
+  if startsWith(data.dimord, 'rpttap')
     nrpt = size(data.cumtapcnt,1);
   else
     nrpt = 1;
   end
-  if contains(dimord, 'freq'), nfrq = length(data.freq); else nfrq = 1; end
-  if contains(dimord, 'time'), ntim = length(data.time); else ntim = 1; end
+  if contains(data.dimord, 'freq'), nfrq = length(data.freq); else nfrq = 1; end
+  if contains(data.dimord, 'time'), ntim = length(data.time); else ntim = 1; end
   
   flag      = nrpt==1; % flag needed to squeeze first dimension if singleton
   ncmb      = size(channelcmb,1);
@@ -947,15 +947,15 @@ elseif strcmp(current, 'fourier') && strcmp(desired, 'sparse')
   
 elseif strcmp(current, 'fourier') && strcmp(desired, 'full')
   % this is how it is currently and the desired functionality of prepare_freq_matrices
-  if startsWith(dimord, 'rpttap')
+  if startsWith(data.dimord, 'rpttap')
     nrpt = size(data.cumtapcnt, 1);
     flag = 0;
   else
     nrpt = 1;
     flag = 1;
   end
-  if contains(dimord, 'freq'), nfrq = length(data.freq); else nfrq = 1; end
-  if contains(dimord, 'time'), ntim = length(data.time); else ntim = 1; end
+  if contains(data.dimord, 'freq'), nfrq = length(data.freq); else nfrq = 1; end
+  if contains(data.dimord, 'time'), ntim = length(data.time); else ntim = 1; end
   if any(data.cumtapcnt(1,:) ~= data.cumtapcnt(1,1)), ft_error('this only works when all frequencies have the same number of tapers'); end
   nchan     = length(data.label);
   crsspctrm = zeros(nrpt,nchan,nchan,nfrq,ntim);
@@ -991,7 +991,7 @@ elseif strcmp(current, 'fourier') && strcmp(desired, 'fullfast')
   nrpt = size(data.fourierspctrm, 1);
   nchn = numel(data.label);
   nfrq = length(data.freq);
-  if contains(dimord, 'time'), ntim = length(data.time); else ntim = 1; end
+  if contains(data.dimord, 'time'), ntim = length(data.time); else ntim = 1; end
   
   data.fourierspctrm = reshape(data.fourierspctrm, [nrpt nchn nfrq*ntim]);
   data.fourierspctrm(~isfinite(data.fourierspctrm)) = 0;
@@ -1051,9 +1051,9 @@ elseif strcmp(current, 'sparse') && strcmp(desired, 'sparsewithpow')
   end
   
 elseif strcmp(current, 'full') && strcmp(desired, 'sparse')
-  if contains(dimord, 'rpt'),  nrpt = size(data.cumtapcnt,1); else nrpt = 1; end
-  if contains(dimord, 'freq'), nfrq = length(data.freq); else nfrq = 1; end
-  if contains(dimord, 'time'), ntim = length(data.time); else ntim = 1; end
+  if contains(data.dimord, 'rpt'),  nrpt = size(data.cumtapcnt,1); else nrpt = 1; end
+  if contains(data.dimord, 'freq'), nfrq = length(data.freq); else nfrq = 1; end
+  if contains(data.dimord, 'time'), ntim = length(data.time); else ntim = 1; end
   nchan    = length(data.label);
   ncmb     = nchan*nchan;
   labelcmb = cell(ncmb, 2);
@@ -1112,9 +1112,9 @@ elseif strcmp(current, 'sparsewithpow') && strcmp(desired, 'sparse')
   data = rmfield(data, 'label');
   
 elseif strcmp(current, 'sparse') && strcmp(desired, 'full')
-  if contains(dimord, 'rpt'),  nrpt = size(data.cumtapcnt,1); else nrpt = 1; end
-  if contains(dimord, 'freq'), nfrq = length(data.freq); else nfrq = 1; end
-  if contains(dimord, 'time'), ntim = length(data.time); else ntim = 1; end
+  if contains(data.dimord, 'rpt'),  nrpt = size(data.cumtapcnt,1); else nrpt = 1; end
+  if contains(data.dimord, 'freq'), nfrq = length(data.freq); else nfrq = 1; end
+  if contains(data.dimord, 'time'), ntim = length(data.time); else ntim = 1; end
   
   if ~isfield(data, 'label')
     % ensure that the bivariate spectral factorization results can be
@@ -1190,9 +1190,9 @@ elseif strcmp(current, 'sparse') && strcmp(desired, 'full')
   end
   
 elseif strcmp(current, 'sparse') && strcmp(desired, 'fullfast')
-  if contains(dimord, 'rpt'),  nrpt = size(data.cumtapcnt,1); else nrpt = 1; end
-  if contains(dimord, 'freq'), nfrq = length(data.freq); else nfrq = 1; end
-  if contains(dimord, 'time'), ntim = length(data.time); else ntim = 1; end
+  if contains(data.dimord, 'rpt'),  nrpt = size(data.cumtapcnt,1); else nrpt = 1; end
+  if contains(data.dimord, 'freq'), nfrq = length(data.freq); else nfrq = 1; end
+  if contains(data.dimord, 'time'), ntim = length(data.time); else ntim = 1; end
   
   if ~isfield(data, 'label')
     data.label = unique(data.labelcmb(:));
