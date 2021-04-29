@@ -610,6 +610,7 @@ if exist('dimord', 'var') && iscell(data.(field))
   end
 end
 
+
 if ~exist('dimord', 'var')
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % ATTEMPT 4: there is only one way that the dimensions can be interpreted
@@ -641,6 +642,7 @@ if ~exist('dimord', 'var')
     return
   end
 end % if dimord does not exist
+
 
 if ~exist('dimord', 'var')
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -684,6 +686,7 @@ if ~exist('dimord', 'var')
   end
 end % if dimord does not exist
 
+
 if ~exist('dimord', 'var')
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % ATTEMPT 6: check whether it is a 3-D volume
@@ -691,12 +694,20 @@ if ~exist('dimord', 'var')
   if isequal(datsiz, [ndim1 ndim2 ndim3])
     dimord = 'dim1_dim2_dim3';
     return
+  elseif isequal(datsiz, [ndim1 ndim2 ndim3 ntime])
+    dimord = 'dim1_dim2_dim3_time';
+    return
+  elseif isequal(datsiz, [ndim1 ndim2 ndim3 nfreq])
+    dimord = 'dim1_dim2_dim3_freq';
+    return
+  elseif isequal(datsiz, [ndim1 ndim2 ndim3 nfreq ntime])
+    dimord = 'dim1_dim2_dim3_freq_time';
+    return
   elseif isfield(data, 'pos') && prod(datsiz)==size(data.pos, 1)
     dimord = 'dim1_dim2_dim3';
     return
   end
 end % if dimord does not exist
-
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
