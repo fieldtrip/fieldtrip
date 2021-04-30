@@ -108,6 +108,9 @@ end
 switch version
   case '2014'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % ensure that it is always logical
+    volume = fixinside(volume, 'logical');
+    
     if isfield(volume, 'coordsys')
       % ensure that it is in lower case
       volume.coordsys = lower(volume.coordsys);
@@ -116,11 +119,6 @@ switch version
     if isfield(volume, 'unit')
       % ensure that it is in lower case
       volume.unit = lower(volume.unit);
-    end
-    
-    if isfield(volume, 'inside')
-      % ensure that it is always logical
-      volume = fixinside(volume, 'logical');
     end
     
     if isfield(volume, 'dimord')
