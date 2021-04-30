@@ -368,7 +368,7 @@ elseif ft_datatype(input, 'freq') && isfield(input, 'crsspctrm')
   inputtype = 'freq_crsspctrm';
   
   % attempt to convert to a chan-chan representation
-  input     = ft_checkdata(input, 'cmbrepresentation', 'full');
+  input     = ft_checkdata(input, 'cmbstyle', 'full');
 else
   inputtype = 'unknown';
 end

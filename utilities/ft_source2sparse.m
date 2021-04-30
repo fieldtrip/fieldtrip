@@ -53,7 +53,7 @@ end
 
 %%
 
-sourcein = ft_checkdata(sourcein, 'datatype', 'source', 'inside', 'logical');
+sourcein = ft_checkdata(sourcein, 'datatype', 'source', 'insidestyle', 'logical');
 
 inside  = find( sourcein.inside(:));
 outside = find(~sourcein.inside(:));

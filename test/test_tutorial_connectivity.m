@@ -105,7 +105,7 @@ freq          = ft_freqanalysis(cfg, data);
 figure;
 cfg = [];
 cfg.channel = 'signal001';
-ft_singleplotER(cfg, ft_checkdata(freq, 'cmbrepresentation', 'sparsewithpow'))
+ft_singleplotER(cfg, ft_checkdata(freq, 'cmbstyle', 'sparsewithpow'))
 %% connectivityanalysis
 cfg           = [];
 cfg.method    = 'coh';

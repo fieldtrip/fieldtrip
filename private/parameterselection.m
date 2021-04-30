@@ -90,7 +90,7 @@ for i=1:length(param)
       select{end+1} = param{i};
     elseif isfield(data, 'pos') && (prod(dim)==size(data.pos, 1) || dim(1)==size(data.pos,1))
       select{end+1} = param{i};
-    elseif isfield(data, 'dimord') && (isfield(data, 'pos') || isfield(data, 'transform')),
+    elseif isfield(data, 'dimord') && (isfield(data, 'pos') || isfield(data, 'transform'))
       dimtok = tokenize(data.dimord, '_');
       nels   = 1;
       for k=1:numel(dimtok)

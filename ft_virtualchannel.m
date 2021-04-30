@@ -94,7 +94,7 @@ data   = ft_checkdata(data, 'datatype', {'raw', 'raw+comp', 'mvar' 'freq'}, 'fee
 
 % ensure that the source input is a source structure , not a volume structure
 % this will also return source.filter, rather than source.avg.filter
-source = ft_checkdata(source, 'datatype', 'source', 'inside', 'logical', 'hasunit', 'yes');
+source = ft_checkdata(source, 'datatype', 'source', 'insidestyle', 'logical', 'hasunit', 'yes');
 
 % get the defaults
 cfg.pos          = ft_getopt(cfg, 'pos');
@@ -203,7 +203,8 @@ elseif useparcellation
   end
   
   % ensure that the source and the parcellation are anatomically consistent
-  if ~isalmostequal(source.pos, parcellation.pos, 'abstol', 1000000*eps)
+  tolerance = 0.1 * ft_scalingfactor('mm', source.unit);
+  if ~isalmostequal(source.pos, parcellation.pos, 'abstol', tolerance)
     ft_error('the source positions are not consistent with the parcellation, please use FT_SOURCEINTERPOLATE');
   end
   
@@ -276,7 +277,7 @@ for i = 1:nvc
         % create a covariance, or csd matrix that is to be used for the
         % svd. this needs to be computed only once.
         if isfreq
-          tmp = ft_checkdata(data, 'cmbrepresentation', 'fullfast');
+          tmp = ft_checkdata(data, 'cmbstyle', 'fullfast');
           C   = tmp.crsspctrm;
         else
           tmpcfg = [];

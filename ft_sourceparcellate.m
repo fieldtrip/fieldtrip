@@ -94,7 +94,7 @@ else
 end
 
 % ensure it is a parcellation, not a segmentation
-parcellation = ft_checkdata(parcellation, 'datatype', 'parcellation', 'parcellationstyle', 'indexed');
+parcellation = ft_checkdata(parcellation, 'datatype', 'parcellation', 'parcellationstyle', 'indexed', 'hasunit', 'yes');
 
 % keep the transformation matrix
 if ~isempty(transform)
@@ -102,11 +102,17 @@ if ~isempty(transform)
 end
 
 % ensure it is a source, not a volume
-source = ft_checkdata(source, 'datatype', 'source', 'inside', 'logical');
+source = ft_checkdata(source, 'datatype', 'source', 'insidestyle', 'logical', 'hasunit', 'yes');
 
 % ensure that the source and the parcellation are anatomically consistent
-if ~isalmostequal(source.pos, parcellation.pos, 'abstol', 1000000*eps)
-  ft_error('the source positions are not consistent with the parcellation, please use FT_SOURCEINTERPOLATE');
+if ~strcmp(source.unit, parcellation.unit)
+  ft_error('the units of the source and parcellation structure are not consistent, please use FT_SOURCEINTERPOLATE');
+end
+
+% ensure that the source and the parcellation are anatomically consistent
+tolerance = 0.1 * ft_scalingfactor('mm', source.unit);
+if ~isalmostequal(source.pos, parcellation.pos, 'abstol', tolerance)
+  ft_error('the positions of the source and parcellation structure are not consistent, please use FT_SOURCEINTERPOLATE');
 end
 
 if isempty(cfg.parcellation)
@@ -158,56 +164,56 @@ if numel(fn)==0
 end
 
 % get the parcellation and the labels that go with it
-seg      = parcellation.(cfg.parcellation);
-seglabel = parcellation.([cfg.parcellation 'label']);
-nseg     = length(seglabel);
+tissue      = parcellation.(cfg.parcellation);
+tissuelabel = parcellation.([cfg.parcellation 'label']);
+ntissue     = length(tissuelabel);
 
 if isfield(source, 'inside')
   % determine the conjunction of the parcellation and the inside source points
   n0 = numel(source.inside);
   n1 = sum(source.inside(:));
-  n2 = sum(seg(:)~=0);
+  n2 = sum(tissue(:)~=0);
   fprintf('there are in total %d positions, %d positions are inside the brain, %d positions have a label\n', n0, n1, n2);
-  fprintf('%d of the positions inside the brain have a label\n',        sum(seg(source.inside)~=0));
-  fprintf('%d of the labeled positions are inside the brain\n',         sum(source.inside(seg(:)~=0)));
-  fprintf('%d of the positions inside the brain do not have a label\n', sum(seg(source.inside)==0));
+  fprintf('%d of the positions inside the brain have a label\n',        sum(tissue(source.inside)~=0));
+  fprintf('%d of the labeled positions are inside the brain\n',         sum(source.inside(tissue(:)~=0)));
+  fprintf('%d of the positions inside the brain do not have a label\n', sum(tissue(source.inside)==0));
   % discard the positions outside the brain and the positions in the brain that do not have a label
-  seg(~source.inside) = 0;
+  tissue(~source.inside) = 0;
 end
 
 % start preparing the output data structure
 parcel       = keepfields(source, {'freq','time','cumtapcnt'});
-parcel.label = seglabel;
+parcel.label = tissuelabel;
 
 for i=1:numel(fn)
   % parcellate each of the desired parameters
   dat = source.(fn{i});
   siz = getdimsiz(source, fn{i});
-  siz(contains(tokenize(dimord{i},'_'),'pos')) = nseg;
+  siz(contains(tokenize(dimord{i},'_'),'pos')) = ntissue;
   
   if strncmp('{pos_pos}', dimord{i}, 9)
-    fprintf('creating %d*%d parcel combinations for parameter %s by taking the %s\n', numel(seglabel), numel(seglabel), fn{i}, cfg.method);
+    fprintf('creating %d*%d parcel combinations for parameter %s by taking the %s\n', numel(tissuelabel), numel(tissuelabel), fn{i}, cfg.method);
     tmp = zeros(siz);
     ft_progress('init', cfg.feedback, 'computing parcellation');
     k = 0;
-    K = numel(seglabel)^2;
-    for j1=1:numel(seglabel)
-      for j2=1:numel(seglabel)
+    K = numel(tissuelabel)^2;
+    for j1=1:numel(tissuelabel)
+      for j2=1:numel(tissuelabel)
         k = k + 1;
-        ft_progress(k/K, 'computing parcellation for %s combined with %s', seglabel{j1}, seglabel{j2});
+        ft_progress(k/K, 'computing parcellation for %s combined with %s', tissuelabel{j1}, tissuelabel{j2});
         switch cfg.method
           case 'mean'
-            tmp(j1,j2,:,:) = cellmean2(dat(seg==j1,seg==j2,:));
+            tmp(j1,j2,:,:) = cellmean2(dat(tissue==j1,tissue==j2,:));
           case 'median'
-            tmp(j1,j2,:,:) = cellmedian2(dat(seg==j1,seg==j2,:));
+            tmp(j1,j2,:,:) = cellmedian2(dat(tissue==j1,tissue==j2,:));
           case 'min'
-            tmp(j1,j2,:,:) = cellmin2(dat(seg==j1,seg==j2,:));
+            tmp(j1,j2,:,:) = cellmin2(dat(tissue==j1,tissue==j2,:));
           case 'max'
-            tmp(j1,j2,:,:) = cellmax2(dat(seg==j1,seg==j2,:));
+            tmp(j1,j2,:,:) = cellmax2(dat(tissue==j1,tissue==j2,:));
           case 'eig'
-            tmp(j1,j2,:,:) = celleig2(dat(seg==j1,seg==j2,:));
+            tmp(j1,j2,:,:) = celleig2(dat(tissue==j1,tissue==j2,:));
           case 'std'
-            tmp(j1,j2,:,:) = cellstd2(dat(seg==j1,seg==j2,:));
+            tmp(j1,j2,:,:) = cellstd2(dat(tissue==j1,tissue==j2,:));
           otherwise
             ft_error('method %s not implemented for %s', cfg.method, dimord{i});
         end % switch
@@ -216,24 +222,24 @@ for i=1:numel(fn)
     ft_progress('close');
     
   elseif strncmp('{pos}', dimord{i}, 5)
-    fprintf('creating %d parcels for parameter %s by taking the %s\n', numel(seglabel), fn{i}, cfg.method);
+    fprintf('creating %d parcels for parameter %s by taking the %s\n', numel(tissuelabel), fn{i}, cfg.method);
     tmp = zeros(siz);
     ft_progress('init', cfg.feedback, 'computing parcellation');
-    for j=1:numel(seglabel)
-      ft_progress(j/numel(seglabel), 'computing parcellation for %s', seglabel{j});
+    for j=1:numel(tissuelabel)
+      ft_progress(j/numel(tissuelabel), 'computing parcellation for %s', tissuelabel{j});
       switch cfg.method
         case 'mean'
-          tmp(j,:,:) = cellmean1(dat(seg==j));
+          tmp(j,:,:) = cellmean1(dat(tissue==j));
         case 'median'
-          tmp(j,:,:) = cellmedian1(dat(seg==j));
+          tmp(j,:,:) = cellmedian1(dat(tissue==j));
         case 'min'
-          tmp(j,:,:) = cellmin1(dat(seg==j));
+          tmp(j,:,:) = cellmin1(dat(tissue==j));
         case 'max'
-          tmp(j,:,:) = cellmax1(dat(seg==j));
+          tmp(j,:,:) = cellmax1(dat(tissue==j));
         case 'eig'
-          tmp(j,:,:) = celleig1(dat(seg==j));
+          tmp(j,:,:) = celleig1(dat(tissue==j));
         case 'std'
-          tmp(j,:,:) = cellstd1(dat(seg==j));
+          tmp(j,:,:) = cellstd1(dat(tissue==j));
         otherwise
           ft_error('method %s not implemented for %s', cfg.method, dimord{i});
       end % switch
@@ -241,33 +247,33 @@ for i=1:numel(fn)
     ft_progress('close');
     
   elseif strncmp('pos_pos', dimord{i}, 7)
-    fprintf('creating %d*%d parcel combinations for parameter %s by taking the %s\n', numel(seglabel), numel(seglabel), fn{i}, cfg.method);
+    fprintf('creating %d*%d parcel combinations for parameter %s by taking the %s\n', numel(tissuelabel), numel(tissuelabel), fn{i}, cfg.method);
     siz     = size(dat);
-    siz(1)  = nseg;
-    siz(2)  = nseg;
+    siz(1)  = ntissue;
+    siz(2)  = ntissue;
     tmp     = nan(siz);
     ft_progress('init', cfg.feedback, 'computing parcellation');
     k = 0;
-    K = numel(seglabel)^2;
-    for j1=1:numel(seglabel)
-      for j2=1:numel(seglabel)
+    K = numel(tissuelabel)^2;
+    for j1=1:numel(tissuelabel)
+      for j2=1:numel(tissuelabel)
         k = k + 1;
-        ft_progress(k/K, 'computing parcellation for %s combined with %s', seglabel{j1}, seglabel{j2});
+        ft_progress(k/K, 'computing parcellation for %s combined with %s', tissuelabel{j1}, tissuelabel{j2});
         switch cfg.method
           case 'mean'
-            tmp(j1,j2,:) = arraymean2(dat(seg==j1,seg==j2,:));
+            tmp(j1,j2,:) = arraymean2(dat(tissue==j1,tissue==j2,:));
           case 'median'
-            tmp(j1,j2,:) = arraymedian2(dat(seg==j1,seg==j2,:));
+            tmp(j1,j2,:) = arraymedian2(dat(tissue==j1,tissue==j2,:));
           case 'min'
-            tmp(j1,j2,:) = arraymin2(dat(seg==j1,seg==j2,:));
+            tmp(j1,j2,:) = arraymin2(dat(tissue==j1,tissue==j2,:));
           case 'max'
-            tmp(j1,j2,:) = arraymax2(dat(seg==j1,seg==j2,:));
+            tmp(j1,j2,:) = arraymax2(dat(tissue==j1,tissue==j2,:));
           case 'eig'
-            tmp(j1,j2,:) = arrayeig2(dat(seg==j1,seg==j2,:));
+            tmp(j1,j2,:) = arrayeig2(dat(tissue==j1,tissue==j2,:));
           case 'maxabs'
-            tmp(j1,j2,:) = arraymaxabs2(dat(seg==j1,seg==j2,:));
+            tmp(j1,j2,:) = arraymaxabs2(dat(tissue==j1,tissue==j2,:));
           case 'std'
-            tmp(j1,j2,:) = arraystd2(dat(seg==j1,seg==j2,:));
+            tmp(j1,j2,:) = arraystd2(dat(tissue==j1,tissue==j2,:));
           otherwise
             ft_error('method %s not implemented for %s', cfg.method, dimord{i});
         end % switch
@@ -276,16 +282,16 @@ for i=1:numel(fn)
     ft_progress('close');
     
   elseif strncmp('pos', dimord{i}, 3)
-    fprintf('creating %d parcels for %s by taking the %s\n', numel(seglabel), fn{i}, cfg.method);
+    fprintf('creating %d parcels for %s by taking the %s\n', numel(tissuelabel), fn{i}, cfg.method);
     siz     = size(dat);
-    siz(1)  = nseg;
+    siz(1)  = ntissue;
     tmp     = nan(siz);
     ft_progress('init', cfg.feedback, 'computing parcellation');
-    for j=1:numel(seglabel)
-      ft_progress(j/numel(seglabel), 'computing parcellation for %s', seglabel{j});
+    for j=1:numel(tissuelabel)
+      ft_progress(j/numel(tissuelabel), 'computing parcellation for %s', tissuelabel{j});
       switch cfg.method
         case 'mean'
-          tmp(j,:) = arraymean1(dat(seg==j,:));
+          tmp(j,:) = arraymean1(dat(tissue==j,:));
         case 'mean_thresholded'
           cfg.mean = ft_getopt(cfg, 'mean', struct('threshold', []));
           if isempty(cfg.mean.threshold)
@@ -293,23 +299,23 @@ for i=1:numel(fn)
           end
           if numel(cfg.mean.threshold)==size(dat,1)
             % assume one threshold per vertex
-            threshold = cfg.mean.threshold(seg==j,:);
+            threshold = cfg.mean.threshold(tissue==j,:);
           else
             threshold = cfg.mean.threshold;
           end
-          tmp(j,:) = arraymean1(dat(seg==j,:), threshold);
+          tmp(j,:) = arraymean1(dat(tissue==j,:), threshold);
         case 'median'
-          tmp(j,:) = arraymedian1(dat(seg==j,:));
+          tmp(j,:) = arraymedian1(dat(tissue==j,:));
         case 'min'
-          tmp(j,:) = arraymin1(dat(seg==j,:));
+          tmp(j,:) = arraymin1(dat(tissue==j,:));
         case 'max'
-          tmp(j,:) = arraymax1(dat(seg==j,:));
+          tmp(j,:) = arraymax1(dat(tissue==j,:));
         case 'maxabs'
-          tmp(j,:) = arraymaxabs1(dat(seg==j,:));
+          tmp(j,:) = arraymaxabs1(dat(tissue==j,:));
         case 'eig'
-          tmp(j,:) = arrayeig1(dat(seg==j,:));
+          tmp(j,:) = arrayeig1(dat(tissue==j,:));
         case 'std'
-          tmp(j,:)  = arraystd1(dat(seg==j,:));
+          tmp(j,:)  = arraystd1(dat(tissue==j,:));
         otherwise
           ft_error('method %s not implemented for %s', cfg.method, dimord{i});
       end % switch

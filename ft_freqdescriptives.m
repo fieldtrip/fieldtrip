@@ -85,7 +85,7 @@ end
 % check if the input data is valid for this function
 freq = ft_checkdata(freq, 'datatype', {'freq', 'freqmvar'}, 'feedback', 'yes');
 % get data in the correct representation, it should only have power
-freq = ft_checkdata(freq, 'cmbrepresentation', 'sparsewithpow', 'channelcmb', {});
+freq = ft_checkdata(freq, 'cmbstyle', 'sparsewithpow', 'channelcmb', {});
 
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'forbidden',  {'channels', 'trial'}); % prevent accidental typos, see issue 1729

@@ -338,7 +338,7 @@ elseif isfield(freq, 'crsspctrm')
   % think of incorporating 'quickflag' to speed up the
   % computation from fourierspectra when single trial
   % estimates are not required...
-  freq = ft_checkdata(freq, 'cmbrepresentation', 'full');
+  freq = ft_checkdata(freq, 'cmbstyle', 'full');
   
   [dum, sensindx] = match_str(cfg.channel, freq.label);
   powspctrmindx = sensindx;
