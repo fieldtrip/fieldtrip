@@ -1419,6 +1419,10 @@ elseif filetype_check_header(filename, 'ply')
   type = 'ply';
   manufacturer = 'Stanford Triangle Format';
   content = 'three dimensional data from 3D scanners, see http://en.wikipedia.org/wiki/PLY_(file_format)';
+elseif filetype_check_extension(filename, '.csv') && filetype_check_header(filename, 'Sensor,Sample,Timestamp')
+  type = 'liberty_csv';
+  manufacturer = 'Polhemus Liberty';
+  content = 'motion capture data';
 elseif filetype_check_extension(filename, '.csv')
   type = 'csv';
   manufacturer = 'Generic';
