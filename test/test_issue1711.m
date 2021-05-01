@@ -52,7 +52,7 @@ source1.transform = transform;
 source1.avg.pow = randn(dim);
 
 % this adds the inside field
-source1 = ft_checkdata(source1);
+source1 = ft_checkdata(source1, 'insidestyle', 'logical');
 source1.inside(~inside) = false;
 
 source1s = ft_source2sparse(source1);
@@ -81,7 +81,7 @@ source2.mom = repmat({randn(3,20)}, prod(dim), prod(dim), 1);
 source2.mom(~inside, ~inside) = {[]};
 
 % this adds the inside field, assuming that all sources are inside
-source2 = ft_checkdata(source2);
+source2 = ft_checkdata(source2, 'insidestyle', 'logical');
 source2.inside(~inside) = false;
 
 source2s = ft_source2sparse(source2);
