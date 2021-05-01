@@ -51,7 +51,7 @@ if isempty(previous_fullname) || ~isequal(fullname, previous_fullname) || isempt
   % remember the full filename including path
   previous_fullname = fullname;
   % read and remember the file content
-  csv = readtable(fullname, 'FileType', 'delimitedtext', 'delimiter', ',', 'ReadVariableNames', true, 'VariableNamingRule', 'preserve');
+  csv = readtable(fullname, 'FileType', 'text', 'Delimiter', ',', 'ReadVariableNames', true);
   csv.Properties.VariableNames = cellfun(@lower, csv.Properties.VariableNames, 'UniformOutput', false);
 else
   % use the persistent variable to speed up subsequent read operations
@@ -111,13 +111,13 @@ elseif needdat
   
   % reshape the positions and insert them in the data matrix
   tmp = csv{:,selpos};
-  tmp = reshape(tmp, 3*nsensor, []);
+  tmp = reshape(tmp', 3*nsensor, []);
   chansel = (6*repmat(1:nsensor, 3, 1)-6) + repmat(1:3, nsensor, 1)' + offset;
   dat(chansel,:) = tmp;
   
   % reshape the orientations and insert them in the data matrix
   tmp = csv{:,selori};
-  tmp = reshape(tmp, 3*nsensor, []);
+  tmp = reshape(tmp', 3*nsensor, []);
   chansel = (6*repmat(1:nsensor, 3, 1)-3) + repmat(1:3, nsensor, 1)' + offset;
   dat(chansel,:) = tmp;
   
