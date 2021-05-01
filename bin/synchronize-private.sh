@@ -574,6 +574,7 @@ sync ${ARRAY[*]}
 # fixinside.m
 
 ARRAY=()
+ARRAY+=(inverse/private/fixinside.m)
 ARRAY+=(fileio/private/fixinside.m)
 ARRAY+=(private/fixinside.m)
 ARRAY+=(utilities/private/fixinside.m)

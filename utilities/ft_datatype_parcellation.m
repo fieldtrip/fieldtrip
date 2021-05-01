@@ -98,13 +98,13 @@ end
 
 switch parcelversion
   case '2012'
-    % convert the inside/outside fields, they should be logical rather than an index
-    if isfield(parcellation, 'inside')
-      parcellation = fixinside(parcellation, 'logical');
-    end
-
     % ensure that it has individual source positions
     parcellation = fixpos(parcellation);
+
+    if isfield(parcellation, 'inside')
+      % ensure that it is always logical
+      parcellation = fixinside(parcellation, 'logical');
+    end
 
     dim = size(parcellation.pos,1);
 

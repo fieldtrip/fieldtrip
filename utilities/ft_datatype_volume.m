@@ -108,8 +108,10 @@ end
 switch version
   case '2014'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % ensure that it is always logical
-    volume = fixinside(volume, 'logical');
+    if isfield(volume, 'inside')
+      % ensure that it is always logical
+      volume = fixinside(volume, 'logical');
+    end 
     
     if isfield(volume, 'coordsys')
       % ensure that it is in lower case

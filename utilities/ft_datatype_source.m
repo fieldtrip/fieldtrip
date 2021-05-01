@@ -105,8 +105,10 @@ switch version
     % ensure that it has individual source positions
     source = fixpos(source);
     
-    % ensure that it is always logical
-    source = fixinside(source, 'logical');
+    if isfield(source, 'inside')
+      % ensure that it is always logical
+      source = fixinside(source, 'logical');
+    end
     
     if isfield(source, 'coordsys')
       % ensure that it is in lower case

@@ -1187,6 +1187,7 @@ switch cfg.method
         if isfield(surf, 'curv'),       surf.curv       = surf.curv(idx);       end
         if isfield(surf, 'sulc'),       surf.sulc       = surf.sulc(idx);       end
         if isfield(surf, 'hemisphere'), surf.hemisphere = surf.hemisphere(idx); end
+        if isfield(surf, 'inside'),     surf.inside     = surf.inside(idx);     end
       end
       
       % these are required
@@ -1200,11 +1201,13 @@ switch cfg.method
       tmpcfg = [];
       tmpcfg.parameter = {cfg.funparameter};
       if ~isempty(cfg.maskparameter)
+        % it was specified by the user
         tmpcfg.parameter = [tmpcfg.parameter {cfg.maskparameter}];
         maskparameter    = cfg.maskparameter;
-      else
-        tmpcfg.parameter = [tmpcfg.parameter {'mask'}];
+      elseif hasmsk
+        % it was constructed on the fly
         functional.mask  = msk;
+        tmpcfg.parameter = [tmpcfg.parameter {'mask'}];
         maskparameter    = 'mask'; % temporary variable
       end
       tmpcfg.interpmethod = cfg.projmethod;
@@ -1219,7 +1222,7 @@ switch cfg.method
       if hasfun, val      = getsubfield(tmpdata, cfg.funparameter);  val     = val(:);     end
       if hasmsk, maskval  = getsubfield(tmpdata, maskparameter);     maskval = maskval(:); end
       
-      if ~isempty(cfg.projthresh)
+      if ~isempty(cfg.projthresh) && hasmsk
         maskval(abs(val) < cfg.projthresh*max(abs(val(:)))) = 0;
       end
       

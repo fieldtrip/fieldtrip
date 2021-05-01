@@ -252,37 +252,41 @@ for i=1:length(chanindx)
     endpad = 0;
   end
   
+  % do not add the beginpadding to the trigger channel, since the diff operation will cause all values to be shifted by one
+  % add the endpadding to the trigger channel, this allows getting the value after the change in case it is the last sample
+  trig = [trig endpad];
+  
   switch detectflank
     case 'up'
       % convert the trigger into an event with a value at a specific sample
-      for j=find(diff([begpad trig endpad])>0)
+      for j=find(diff([begpad trig])>0)
         event(end+1).type   = channel;
         event(end  ).sample = j;                            % assign the sample at which the trigger has gone up
         event(end  ).value  = trig(j+trigshift);            % assign the trigger value just _after_ going up
       end
     case 'updiff'
-      for j=find(diff([begpad trig endpad])>0)
+      for j=find(diff([begpad trig])>0)
         event(end+1).type   = channel;
         event(end  ).sample = j;                                      % assign the sample at which the trigger has gone up
         event(end  ).value  = trig(j+trigshift)-trig(j-1+trigshift);  % assign the trigger value just _after_ going up minus the value before
       end
     case 'down'
       % convert the trigger into an event with a value at a specific sample
-      for j=find(diff([begpad trig endpad])<0)
+      for j=find(diff([begpad trig])<0)
         event(end+1).type   = channel;
         event(end  ).sample = j;                            % assign the sample at which the trigger has gone down
         event(end  ).value  = trig(j+trigshift);            % assign the trigger value just _after_ going down
       end
     case 'downdiff'
       % convert the trigger into an event with a value at a specific sample
-      for j=find(diff([begpad trig endpad])<0)
+      for j=find(diff([begpad trig])<0)
         event(end+1).type   = channel;
         event(end  ).sample = j;                                        % assign the sample at which the trigger has gone down
         event(end  ).value  = trig(j+trigshift)-trig(j-1+trigshift);    % assign the trigger value just _after_ going down minus the value before
       end
     case 'both'
       % convert the trigger into an event with a value at a specific sample
-      difftrace = diff([begpad trig endpad]);
+      difftrace = diff([begpad trig]);
       for j=find(difftrace~=0)
         if difftrace(j)>0
           event(end+1).type   = [channel '_up'];        % distinguish between up and down flank
@@ -296,13 +300,13 @@ for i=1:length(chanindx)
       end
     case 'any'
       % convert the trigger into an event with a value at a specific sample
-      for j=find(diff([begpad trig endpad])~=0)
+      for j=find(diff([begpad trig])~=0)
         event(end+1).type   = channel;
         event(end  ).sample = j;                            % assign the sample at which the trigger has gone up or down
         event(end  ).value  = trig(j+trigshift);            % assign the trigger value just _after_ going up
       end
     case {'bit', 'biton'}
-      trig = uint32([begpad trig endpad]);
+      trig = uint32([begpad trig]);
       for k=1:32
         bitval = bitget(trig, k);                           % get each of the bits separately
         for j=find(~bitval(1:end-1) & bitval(2:end))
@@ -312,7 +316,7 @@ for i=1:length(chanindx)
         end % j
       end % k
     case {'bitoff'}
-      trig = uint32([begpad trig endpad]);
+      trig = uint32([begpad trig]);
       for k=1:32
         bitval = bitget(trig, k);                           % get each of the bits separately
         for j=find(bitval(1:end-1) & ~bitval(2:end))

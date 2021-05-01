@@ -51,7 +51,7 @@ if isempty(previous_fullname) || ~isequal(fullname, previous_fullname) || isempt
   % remember the full filename including path
   previous_fullname = fullname;
   % read and remember the file content
-  csv = readtable(fullname, 'FileType', 'delimitedtext', 'delimiter', ',', 'ReadVariableNames', true, 'VariableNamingRule', 'preserve');
+  csv = readtable(fullname, 'FileType', 'text', 'Delimiter', ',', 'ReadVariableNames', true);
   csv.Properties.VariableNames = cellfun(@lower, csv.Properties.VariableNames, 'UniformOutput', false);
 else
   % use the persistent variable to speed up subsequent read operations
