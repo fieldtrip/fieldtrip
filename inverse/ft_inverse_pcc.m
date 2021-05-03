@@ -71,15 +71,15 @@ refchan        = ft_getopt(varargin, 'refchan');
 refdip         = ft_getopt(varargin, 'refdip');
 supchan        = ft_getopt(varargin, 'supchan');
 supdip         = ft_getopt(varargin, 'supdip');
-feedback       = ft_getopt(varargin, 'feedback', 'text');
-keepcsd        = ft_getopt(varargin, 'keepcsd', 'yes');
-keepfilter     = ft_getopt(varargin, 'keepfilter', 'no');
+feedback       = ft_getopt(varargin, 'feedback',      'text');
+keepcsd        = ft_getopt(varargin, 'keepcsd',       'yes');
+keepfilter     = ft_getopt(varargin, 'keepfilter',    'no');
 keepleadfield  = ft_getopt(varargin, 'keepleadfield', 'no');
-keepmom        = ft_getopt(varargin, 'keepmom', 'yes');
-projectnoise   = ft_getopt(varargin, 'projectnoise', 'yes');
-realfilter     = ft_getopt(varargin, 'realfilter', 'yes');
-fixedori       = ft_getopt(varargin, 'fixedori', 'no');
-weightnorm     = ft_getopt(varargin, 'weightnorm', 'no');
+keepmom        = ft_getopt(varargin, 'keepmom',       'yes');
+projectnoise   = ft_getopt(varargin, 'projectnoise',  'yes');
+realfilter     = ft_getopt(varargin, 'realfilter',    'yes');
+fixedori       = ft_getopt(varargin, 'fixedori',      'no');
+weightnorm     = ft_getopt(varargin, 'weightnorm',    'no');
 
 % construct the low-level options for the covariance matrix inversion as key-value pairs, these are passed to FT_INV
 invopt = {};
