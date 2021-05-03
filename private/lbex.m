@@ -9,10 +9,24 @@ function [sourcemodel] = lbex(cfg, sourcemodel)
 cfg.lbex       = ft_getopt(cfg, 'lbex',       3); % this is a distance, in units of sourcemodel.pos
 cfg.lbexeigtol = ft_getopt(cfg, 'lbexeigtol', 1000*eps);
 cfg.feedback   = ft_getopt(cfg, 'feedback',   'text');
+cfg.keep       = ft_getopt(cfg, 'keep',       'all');
+
+if isequal(cfg.keep, 'all')
+  cfg.keep = sourcemodel.inside;
+else
+  if ~islogical(cfg.keep)
+    keep = false(size(sourcemodel.pos,1),1);
+    keep(cfg.keep) = true;
+    cfg.keep = keep;
+  end
+end
+assert(isequal(numel(cfg.keep), numel(sourcemodel.inside)));
+
+cfg.keep = cfg.keep(:) & sourcemodel.inside(:);
 
 Ndipoles = size(sourcemodel.pos,1);
-Ninside  = sum(sourcemodel.inside);
-inside   = find(sourcemodel.inside);
+Ninside  = sum(cfg.keep);
+inside   = find(cfg.keep);
 
 % concatenate the leadfield of all dipoles that are inside the brain into one large matrix
 lfa = cat(2, sourcemodel.leadfield{:});
@@ -69,6 +83,12 @@ for dipindx=1:Ninside
   ft_progress(dipindx/Ninside, 'computing lbex %d/%d, number of dipoles in ROI=%d, subspace dimension=%d\n', dipindx, Ninside, Nsel, Nsel2);
 
   % remember the subspace projection matrix
-  sourcemodel.subspace{inside(dipindx)} = v(:, sel)'*P;
+  sourcemodel.subspace{inside(dipindx)} = flip(v(:, sel)',1)*P;
 end
 ft_progress('close');
+
+if ~isequal(cfg.keep(:),sourcemodel.inside(:))
+  sourcemodel.inside = cfg.keep;
+  sourcemodel.leadfield(~cfg.keep) = {[]};
+  sourcemodel.subspace(~cfg.keep)  = {[]};
+end

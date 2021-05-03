@@ -180,11 +180,13 @@ end
 % support relative (percentage) measure that can be specified as string (e.g. '10%')
 % the converted value needs to be passed on to ft_inv
 lambda = ft_getopt(invopt, 'lambda');
-if ~isempty(lambda) && ischar(lambda) && lambda(end)=='%' && ~hassubspace
+if ~isempty(lambda) && ischar(lambda) && lambda(end)=='%'
   ratio  = sscanf(lambda, '%f%%');
   ratio  = ratio/100;
   lambda = ratio * trace(C)/size(C,1);
-  invopt = ft_setopt(invopt, 'lambda', lambda);
+  if ~hassubspace
+    invopt = ft_setopt(invopt, 'lambda', lambda);
+  end
 end
 
 if projectnoise || strcmp(weightnorm, 'nai')
