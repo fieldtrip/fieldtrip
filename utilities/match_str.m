@@ -69,8 +69,9 @@ Nb = numel(b);
 
 % this is a very common use pattern that can be dealt with quickly
 if isequal(a, b)
-  sel1 = 1:Na;
-  sel2 = 1:Nb;
+  % the returned vectors must be columns
+  sel1 = (1:Na)';
+  sel2 = (1:Nb)';
   return
 end
 

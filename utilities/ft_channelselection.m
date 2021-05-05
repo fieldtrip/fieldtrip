@@ -116,7 +116,8 @@ if isempty(desired)
   return
 elseif isequal(desired, 'all') || isequal(desired, {'all'})
   % this is a very common use pattern that can be dealt with quickly
-  channel = datachannel;
+  % ensure that the output is a column vector
+  channel = datachannel(:);
   return
 elseif isnumeric(desired)
   % remove channels that fall outside the range
