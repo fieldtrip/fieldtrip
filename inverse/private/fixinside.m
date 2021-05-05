@@ -66,7 +66,12 @@ else
   current = 'indexed';
 end
 
-if strcmp(current, 'indexed') && strcmp(target, 'logical')
+
+if strcmp(current, 'indexed') && strcmp(target, 'indexed')
+  % nothing to do
+elseif strcmp(current, 'logical') && strcmp(target, 'logical')
+  % nothing to do
+elseif strcmp(current, 'indexed') && strcmp(target, 'logical')
   % remove outside
   if isfield(source, 'outside')
     source = rmfield(source, 'outside');
@@ -79,12 +84,13 @@ if strcmp(current, 'indexed') && strcmp(target, 'logical')
   end
   tmp(source.inside) = true;
   source.inside = tmp;
-  
 elseif strcmp(current, 'logical') && strcmp(target, 'index')
   % convert to a vectors with indices
   tmp = source.inside;
   source.inside  = find( tmp(:));
   source.outside = find(~tmp(:));
+else
+  ft_error('incorrect specification of the insidestyle')
 end
 
 if strcmp(target, 'logical')

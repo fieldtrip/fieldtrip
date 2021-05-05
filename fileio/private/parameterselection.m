@@ -37,20 +37,11 @@ elseif isempty(param)
   param = {};        % even being empty, it should be a cell-array
 end
 
-
 sel = find(strcmp(param, 'all'));
 if ~isempty(sel)
   % the old default was a list of all known volume parameters
   % the new default is to try all fields present in the data
   allparam = fieldnames(data);
-  
-  % Around 1 May 2021, seg has been renamed in tissue in the automatic
-  % conversion of probablistic to indexed segmentations/parcellations.
-  if ismember('seg', param) && ~ismember('seg', allparam) && ismember('tissue', allparam)
-    ft_warning('the field ''seg'' has veen renamed to ''trial'', please update your code')
-    param{strcmp(param, 'seg')} = 'tissue';
-  end
-  
   % fields can be nested in source.avg
   if isfield(data, 'avg') && isstruct(data.avg)
     tmp = fieldnames(data.avg);
@@ -59,7 +50,6 @@ if ~isempty(sel)
     end
     allparam = cat(1, allparam, tmp);
   end
-  
   % fields can be nested in source.trial
   if isfield(data, 'trial') && isstruct(data.trial)
     tmp = fieldnames(data.trial);
@@ -70,7 +60,6 @@ if ~isempty(sel)
   end
   param(sel) = [];                          % remove the 'all'
   param      = [param(:)' allparam(:)'];    % add the list of all possible parameters, these will be tested later
-  
 else
   % check all specified parameters and give support for some parameters like 'pow' and 'coh'
   % which most often will indicate 'avg.pow' and 'avg.coh'
@@ -115,7 +104,7 @@ for i=1:length(param)
           nels = nels*numel(getfield(data, dimtok{k}));
         end
       end
-      if nels==prod(dim)
+      if nels==prod(dim),
         select{end+1} = param{i};
       end
     elseif isfield(data, 'dim') && numel(dim)>3 && isequal(dim(1:3), data.dim(1:3))
@@ -123,3 +112,4 @@ for i=1:length(param)
     end
   end
 end
+
