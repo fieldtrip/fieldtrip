@@ -221,7 +221,12 @@ else
   end
 end
 
-headmodel.driver = duneuro_meeg(cfg);
+try
+    headmodel.driver = duneuro_meeg(cfg);
+catch
+    warning('To generate a valid Mex File, please compile duneuro-matlab on your machine following the instructions on the <a href = "https://gitlab.dune-project.org/duneuro/duneuro/-/wikis/Installation-instructions">DUNEuro Wiki page</a>.');
+    return
+end
 
 headmodel.type              = 'duneuro';
 headmodel.forward           = forward;
