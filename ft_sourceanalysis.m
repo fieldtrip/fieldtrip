@@ -350,7 +350,7 @@ if isfreq && isfield(data, 'labelcmb')
   % this point, this step may take some time, if multiple trials are
   % present in the data
   fprintf('converting the linearly indexed channelcombinations into a square CSD-matrix\n');
-  data = ft_checkdata(data, 'cmbrepresentation', 'full');
+  data = ft_checkdata(data, 'cmbstyle', 'full');
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

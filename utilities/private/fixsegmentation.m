@@ -1,7 +1,7 @@
 function segmentation = fixsegmentation(segmentation, fn, style)
 
 % FIXSEGMENTATION is a helper function that ensures the segmentation to be internally
-% consistent. It is used by ft_datatype_segmentation and ft_datatype_parcellation.
+% consistent. It is used by FT_DATATYPE_SEGMENTATION and FT_DATATYPE_PARCELLATION.
 %
 % % See also CONVERT_SEGMENTATIONSTYLE, DETERMINE_SEGMENTATIONSTYLE
 

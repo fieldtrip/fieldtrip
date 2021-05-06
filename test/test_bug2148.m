@@ -7,7 +7,7 @@ function test_bug2148
 % ft_checkdata (ie fixdimord) always wants to reverts dimord to 'chan'
 % although 'labelcmb' is present. The only way to make e.g.
 % ft_connectivitplot work atm is to use:
-% ft_checkdata(data, 'cmbrepresentation', 'full');
+% ft_checkdata(data, 'cmbstyle', 'full');
 % This will make dimord chan_chan_freq and convert labelcmb to label.
 
 cfg             = [];
@@ -57,7 +57,7 @@ cfgp.refchannel = 'AFz';
 ft_topoplotTFR(cfgp, c1);
 
 % do JM's juicy transforms
-tmp = ft_checkdata(freq, 'cmbrepresentation', 'fullfast');
+tmp = ft_checkdata(freq, 'cmbstyle', 'fullfast');
 c1             = ft_connectivityanalysis(cfgc, freq);
 try
   ft_freqdescriptives([], tmp);
@@ -86,7 +86,7 @@ cfgs.frequency = 10;
 cfgs.elecfile = 'standard_1020.elc';
 ft_sourceanalysis(cfgs, tmp);
 
-tmp = ft_checkdata(tmp, 'cmbrepresentation', 'sparse');
+tmp = ft_checkdata(tmp, 'cmbstyle', 'sparse');
 c1             = ft_connectivityanalysis(cfgc, freq);
 try
   ft_freqdescriptives([], tmp);
@@ -113,7 +113,7 @@ cfgs.elecfile = 'standard_1020.elc';
 ft_sourceanalysis(cfgs, tmp);
 
 
-tmp = ft_checkdata(tmp, 'cmbrepresentation', 'sparsewithpow');
+tmp = ft_checkdata(tmp, 'cmbstyle', 'sparsewithpow');
 c1             = ft_connectivityanalysis(cfgc, freq);
 ft_freqdescriptives([], tmp);
 ft_topoplotTFR(cfgp, c1);

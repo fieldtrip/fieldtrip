@@ -121,10 +121,23 @@ end
 
 switch segversion
   case '2012'
-    % determine whether the style of the input fields is probabilistic or indexed
+    % convert the inside/outside fields, they should be logical rather than an index
+    if isfield(segmentation, 'inside')
+      segmentation = fixinside(segmentation, 'logical');
+    end
+
+    % make a list of fields that possibly represent a segmentation
     fn = fieldnames(segmentation);
     fn = setdiff(fn, 'inside'); % exclude the inside field from any conversions
-    [indexed, probabilistic] = determine_segmentationstyle(segmentation, fn, segmentation.dim);
+    sel = false(size(fn));
+    for i=1:numel(fn)
+      sel(i) = (isnumeric(segmentation.(fn{i})) || islogical(segmentation.(fn{i}))) && numel(segmentation.(fn{i}))==prod(segmentation.dim(1:3));
+    end
+    % only consider numeric fields of the correct size
+    fn = fn(sel);
+
+    % determine whether the style of the input fields is probabilistic or indexed
+    [indexed, probabilistic] = determine_segmentationstyle(segmentation, fn, segmentation.dim(1:3));
 
     % ignore the fields that do not contain a segmentation
     sel = indexed | probabilistic;
@@ -192,18 +205,18 @@ switch segversion
         if numel(fn)>1
           ft_error('cannot construct a brain mask on the fly; this requires a single indexed representation');
         else
-          seg      = segmentation.(fn{1});
-          seglabel = segmentation.([fn{1} 'label']);
-          if ~any(strcmp(seglabel, 'brain'))
+          tissue      = segmentation.(fn{1});
+          tissuelabel = segmentation.([fn{1} 'label']);
+          if ~any(strcmp(tissuelabel, 'brain'))
             threshold = 0.5;
             smooth    = 5;
             % ensure that the segmentation contains the brain mask, if not then construct it from gray+white+csf
-            if length(intersect(seglabel, {'gray' 'white' 'csf'}))~=3
+            if length(intersect(tissuelabel, {'gray' 'white' 'csf'}))~=3
               ft_error('cannot construct a brain mask on the fly; this requires gray, white and csf');
             end
-            gray  = seg==find(strcmp(seglabel, 'gray'));
-            white = seg==find(strcmp(seglabel, 'white'));
-            csf   = seg==find(strcmp(seglabel, 'csf'));
+            gray  = tissue==find(strcmp(tissuelabel, 'gray'));
+            white = tissue==find(strcmp(tissuelabel, 'white'));
+            csf   = tissue==find(strcmp(tissuelabel, 'csf'));
             brain = gray + white + csf;
             clear gray white csf seg
             brain = volumesmooth(brain,    smooth,    'brain');

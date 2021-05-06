@@ -114,7 +114,7 @@ for k = 1:Ndata
       % that's ok
     case {'chancmb_freq' 'chancmb_freq_time'}
       % convert into 'chan_chan_freq'
-      varargin{k} = ft_checkdata(varargin{k}, 'cmbrepresentation', 'full');
+      varargin{k} = ft_checkdata(varargin{k}, 'cmbstyle', 'full');
     otherwise
       ft_error('the data should have a dimord of %s or %s', 'chan_chan_freq', 'chancmb_freq');
   end
