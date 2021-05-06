@@ -2,7 +2,7 @@ function ft_write_json(filename, json)
 
 % FT_WRITE_JSON writes a MATLAB structure to a JSON file. Compared to the builtin
 % MATLAB function, this implementation deals a bit different with missing values,
-% booleans, and NaNs, and results in a more human-readable file. 
+% booleans, and NaNs, and results in a more human-readable file.
 %
 % Use as
 %   ft_write_json(filename, struct)
@@ -40,3 +40,33 @@ str = savejson('', json, 'NaN', '"n/a"', 'ParseLogical', true);
 fid = fopen_or_error(filename, 'w');
 fwrite(fid, str);
 fclose(fid);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION this is shared with DATA2BIDS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function s = remove_empty(s)
+if isempty(s)
+  return
+elseif isstruct(s)
+  fn = fieldnames(s);
+  fn = fn(structfun(@isempty, s));
+  s = removefields(s, fn);
+elseif istable(s)
+  remove = false(1,size(s,2));
+  for i=1:size(s,2)
+    % find columns that are non-numeric and where all elements are []
+    remove(i) = ~isnumeric(s{:,i}) && all(cellfun(@isempty, s{:,i}));
+  end
+  s = s(:,~remove);
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION this is shared with DATA2BIDS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function y = sort_fields(x)
+fn = fieldnames(x);
+fn = sort(fn);
+y = struct();
+for i=1:numel(fn)
+  y.(fn{i}) = x.(fn{i});
+end
