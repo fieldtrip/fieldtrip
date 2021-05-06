@@ -551,9 +551,9 @@ cfg.motion.EpochLength                    = ft_getopt(cfg.motion, 'EpochLength' 
 cfg.motion.Manufacturer                   = ft_getopt(cfg.motion, 'Manufacturer'            );
 cfg.motion.ManufacturersModelName         = ft_getopt(cfg.motion, 'ManufacturersModelName'  );
 cfg.motion.MotionChannelCount             = ft_getopt(cfg.motion, 'MotionChannelCount'      );
-cfg.motion.RecordingDuration              = ft_getopt(cfg.motion, 'RecordingDuration'       ); 
-cfg.motion.RecordingType                  = ft_getopt(cfg.motion, 'RecordingType'           ); 
-cfg.motion.SamplingFrequency              = ft_getopt(cfg.motion, 'SamplingFrequency'       ); 
+cfg.motion.RecordingDuration              = ft_getopt(cfg.motion, 'RecordingDuration'       );
+cfg.motion.RecordingType                  = ft_getopt(cfg.motion, 'RecordingType'           );
+cfg.motion.SamplingFrequency              = ft_getopt(cfg.motion, 'SamplingFrequency'       );
 cfg.motion.SoftwareVersions               = ft_getopt(cfg.motion, 'SoftwareVersions'        );
 cfg.motion.SpaceGeometry                  = ft_getopt(cfg.motion, 'SpaceGeometry'           );
 cfg.motion.StartTime                      = ft_getopt(cfg.motion, 'StartTime'               );
@@ -583,9 +583,9 @@ cfg.coordsystem.NIRSCoordinateSystem                            = ft_getopt(cfg.
 cfg.coordsystem.NIRSCoordinateUnits                             = ft_getopt(cfg.coordsystem, 'NIRSCoordinateUnits'                            ); % REQUIRED. Units of the _optodes.tsv, MUST be "m", "mm", "cm" or "pixels".
 cfg.coordsystem.NIRSCoordinateSystemDescription                 = ft_getopt(cfg.coordsystem, 'NIRSCoordinateSystemDescription'                ); % RECOMMENDED. Freeform text description or link to document describing the NIRS coordinate system system in detail (e.g., "Coordinate system with the origin at anterior commissure (AC), negative y-axis going through the posterior commissure (PC), z-axis going to a mid-hemisperic point which lies superior to the AC-PC line, x-axis going to the right").
 cfg.coordsystem.NIRSCoordinateProcessingDescription             = ft_getopt(cfg.coordsystem, 'NIRSCoordinateProcessingDescription'            ); % RECOMMENDED. Has any post-processing (such as projection) been done on the optode positions (e.g., "surface_projection", "none").
-cfg.coordsystem.MotionCoordinateSystem              	        = ft_getopt(cfg.coordsystem, 'MotionCoordinateSystem'                         ); % REQUIRED. 
-cfg.coordsystem.MotionRotationRule              	            = ft_getopt(cfg.coordsystem, 'MotionRotationRule'                             ); % OPTIONAL. 
-cfg.coordsystem.MotionRotationOrder              	            = ft_getopt(cfg.coordsystem, 'MotionRotationOrder'                            ); % OPTIONAL. 
+cfg.coordsystem.MotionCoordinateSystem              	        = ft_getopt(cfg.coordsystem, 'MotionCoordinateSystem'                         ); % REQUIRED.
+cfg.coordsystem.MotionRotationRule              	            = ft_getopt(cfg.coordsystem, 'MotionRotationRule'                             ); % OPTIONAL.
+cfg.coordsystem.MotionRotationOrder              	            = ft_getopt(cfg.coordsystem, 'MotionRotationOrder'                            ); % OPTIONAL.
 cfg.coordsystem.IntendedFor                                     = ft_getopt(cfg.coordsystem, 'IntendedFor'                                    ); % OPTIONAL. Path or list of path relative to the subject subfolder pointing to the structural MRI, possibly of different types if a list is specified, to be used with the MEG recording. The path(s) need(s) to use forward slashes instead of backward slashes (e.g. "ses-<label>/anat/sub-01_T1w.nii.gz").
 cfg.coordsystem.AnatomicalLandmarkCoordinates                   = ft_getopt(cfg.coordsystem, 'AnatomicalLandmarkCoordinates'                  ); % OPTIONAL. Key:value pairs of the labels and 3-D digitized locations of anatomical landmarks, interpreted following the AnatomicalLandmarkCoordinateSystem, e.g., {"NAS": [12.7,21.3,13.9], "LPA": [5.2,11.3,9.6], "RPA": [20.2,11.3,9.1]}.
 cfg.coordsystem.AnatomicalLandmarkCoordinateSystem              = ft_getopt(cfg.coordsystem, 'AnatomicalLandmarkCoordinateSystem'             ); % OPTIONAL. Defines the coordinate system for the anatomical landmarks. See Appendix VIII: preferred names of Coordinate systems. If "Other", provide definition of the coordinate system in AnatomicalLandmarkCoordinateSystemDescripti on.
@@ -1334,11 +1334,11 @@ end
 
 %% need_motion_json
 if need_motion_json
-    
+  
   motion_json.SamplingFrequency     = hdr.Fs;
   motion_json.StartTime             = nan;
-  motion_json.MotionChannelCount    = hdr.nChans; 
-  motion_json.RecordingDuration     = (hdr.nSamples*hdr.nTrials)/hdr.Fs; 
+  motion_json.MotionChannelCount    = hdr.nChans;
+  motion_json.RecordingDuration     = (hdr.nSamples*hdr.nTrials)/hdr.Fs;
   
   % merge the information specified by the user with that from the data
   % in case fields appear in both, the first input overrules the second
@@ -1390,7 +1390,7 @@ if need_channels_tsv
   elseif need_nirs_json
     type_json = nirs_json;
   elseif need_motion_json
-      type_json = motion_json;
+    type_json = motion_json;
   end
   fn = fieldnames(type_json);
   fn = fn(endsWith(fn, 'ChannelCount'));
@@ -1525,7 +1525,7 @@ if need_events_tsv
     
     % merge the information with the json sidecar file
     % in case fields appear in both, the first input overrules the second
-    tmp = mergeconfig(mri_json, read_json(corresponding_json(cfg.outputfile)), false);
+    tmp = mergeconfig(mri_json, ft_read_json(corresponding_json(cfg.outputfile)), false);
     assert(~isempty(tmp.RepetitionTime), 'you must specify cfg.mri.RepetitionTime');
     
     % create a header structure that represents the fMRI timeseries
@@ -1804,7 +1804,7 @@ for i=1:numel(modality)
     end
     
     if isfile(filename)
-      existing = read_json(filename);
+      existing = ft_read_json(filename);
     else
       existing = [];
     end
@@ -1814,12 +1814,12 @@ for i=1:numel(modality)
         if ~isempty(existing)
           ft_warning('not overwriting the existing and non-empty file ''%s''', filename);
         else
-          write_json(filename, modality_json);
+          ft_write_json(filename, modality_json);
         end
       case 'replace'
-        write_json(filename, modality_json);
+        ft_write_json(filename, modality_json);
       case 'merge'
-        write_json(filename, mergeconfig(modality_json, existing, false))
+        ft_write_json(filename, mergeconfig(modality_json, existing, false))
       case 'no'
         % do nothing
         ft_info('not writing %s\n', filename);
@@ -1861,7 +1861,7 @@ for i=1:numel(modality)
     end
     
     if isfile(filename)
-      existing = read_tsv(filename);
+      existing = ft_read_tsv(filename);
     else
       existing = [];
     end
@@ -1871,10 +1871,10 @@ for i=1:numel(modality)
         if ~isempty(existing)
           ft_warning('not overwriting the existing and non-empty file ''%s''', filename);
         else
-          write_tsv(filename, modality_tsv);
+          ft_write_tsv(filename, modality_tsv);
         end
       case 'replace'
-        write_tsv(filename, modality_tsv);
+        ft_write_tsv(filename, modality_tsv);
       case 'merge'
         if ~isempty(existing)
           modality_tsv  = output_compatible(modality_tsv);
@@ -1887,7 +1887,7 @@ for i=1:numel(modality)
             modality_tsv = merge_table(modality_tsv, existing, 'name');
           end
         end
-        write_tsv(filename, modality_tsv);
+        ft_write_tsv(filename, modality_tsv);
       case 'no'
         % do nothing
         ft_info('not writing %s\n', filename);
@@ -1905,7 +1905,7 @@ if ~isempty(cfg.bidsroot)
   filename = fullfile(cfg.bidsroot, 'dataset_description.json');
   
   if isfile(filename)
-    existing = read_json(filename);
+    existing = ft_read_json(filename);
   else
     existing = [];
   end
@@ -1915,12 +1915,12 @@ if ~isempty(cfg.bidsroot)
       if ~isempty(existing)
         ft_warning('not overwriting the existing and non-empty file ''%s''', filename);
       else
-        write_json(filename, dataset_description_settings);
+        ft_write_json(filename, dataset_description_settings);
       end
     case 'replace'
-      write_json(filename, dataset_description_settings);
+      ft_write_json(filename, dataset_description_settings);
     case 'merge'
-      write_json(filename, mergeconfig(dataset_description_settings, existing, false));
+      ft_write_json(filename, mergeconfig(dataset_description_settings, existing, false));
     case 'no'
       % do nothing
     otherwise
@@ -1943,7 +1943,7 @@ if ~isempty(cfg.bidsroot)
   
   filename = fullfile(cfg.bidsroot, 'participants.tsv');
   if isfile(filename)
-    participants = read_tsv(filename);
+    participants = ft_read_tsv(filename);
     % the participants.tsv is always merged
     participants = merge_table(participants, this, 'participant_id');
   else
@@ -1951,7 +1951,7 @@ if ~isempty(cfg.bidsroot)
   end
   
   % write the updated file back to disk
-  write_tsv(filename, participants);
+  ft_write_tsv(filename, participants);
   
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % update the scans.tsv
@@ -1976,7 +1976,7 @@ if ~isempty(cfg.bidsroot)
   end
   
   if isfile(filename)
-    scans_tsv = read_tsv(filename);
+    scans_tsv = ft_read_tsv(filename);
     % the scans.tsv is always merged
     scans_tsv = merge_table(scans_tsv, this, 'filename');
   else
@@ -1984,7 +1984,7 @@ if ~isempty(cfg.bidsroot)
   end
   
   % write the updated file back to disk
-  write_tsv(filename, scans_tsv);
+  ft_write_tsv(filename, scans_tsv);
   
 end % if bidsroot
 
@@ -2213,53 +2213,6 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function tsv = read_tsv(filename)
-ft_info('reading ''%s''\n', filename);
-tsv = readtable(filename, 'Delimiter', 'tab', 'FileType', 'text', 'TreatAsEmpty', 'n/a', 'ReadVariableNames', true);
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function write_tsv(filename, tsv)
-ft_info('writing ''%s''\n', filename);
-fn = tsv.Properties.VariableNames;
-for i=1:numel(fn)
-  % write [] as 'n/a'
-  % write nan as 'n/a'
-  % write boolean as 'True' or 'False'
-  tsv.(fn{i}) = output_compatible(tsv.(fn{i}));
-end
-writetable(tsv, filename, 'Delimiter', 'tab', 'FileType', 'text');
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function json = read_json(filename)
-ft_info('reading ''%s''\n', filename);
-ft_hastoolbox('jsonlab', 1);
-json = loadjson(filename);
-json = ft_struct2char(json); % convert strings into char-arrays
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function write_json(filename, json)
-ft_info('writing ''%s''\n', filename);
-json = remove_empty(json);
-json = sort_fields(json);
-json = ft_struct2char(json); % convert strings into char-arrays
-ft_hastoolbox('jsonlab', 1);
-% see also the output_compatible helper function
-% write nan as 'n/a'
-% write boolean as True/False
-str = savejson('', json, 'NaN', '"n/a"', 'ParseLogical', true);
-fid = fopen_or_error(filename, 'w');
-fwrite(fid, str);
-fclose(fid);
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function filename = corresponding_json(filename)
 [p, f, x] = fileparts(filename);
 if isequal(x, '.gz') && endsWith(f, '.nii')
@@ -2368,7 +2321,7 @@ switch typ
     dir = 'nirs';
   case {'motion'} % this is not part of the official specification
     dir = 'motion';
-      
+    
   otherwise
     ft_error('unrecognized data type ''%s''', typ);
 end
