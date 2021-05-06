@@ -80,7 +80,7 @@ if strcmp(readbids, 'yes') || strcmp(readbids, 'ifmakessense')
     tsvfile = bids_sidecar(filename, 'electrodes');
     if ~isempty(tsvfile) && (isempty(senstype) || strcmp(senstype, 'eeg'))
       % read the electrodes.tsv file
-      electrodes_tsv = read_tsv(tsvfile);
+      electrodes_tsv = ft_read_tsv(tsvfile);
       sens         = [];
       sens.label   = electrodes_tsv.name;
       sens.elecpos = [electrodes_tsv.x electrodes_tsv.y electrodes_tsv.z];
@@ -89,7 +89,7 @@ if strcmp(readbids, 'yes') || strcmp(readbids, 'ifmakessense')
       [p, f] = fileparts(tsvfile);
       jsonfile = fullfile(p, [f '.json']);
       if exist(jsonfile, 'file')
-        electrodes_json = read_json(jsonfile);
+        electrodes_json = ft_read_json(jsonfile);
         ft_warning('the content of the electrodes.json is not used')
         % FIXME do something with the content
       end
@@ -97,7 +97,7 @@ if strcmp(readbids, 'yes') || strcmp(readbids, 'ifmakessense')
       % also read the coordsystem.json file
       coordsysfile = bids_sidecar(filename, 'coordsystem');
       if exist(coordsysfile, 'file')
-        coordsys_json = read_json(coordsysfile);
+        coordsys_json = ft_read_json(coordsysfile);
         ft_warning('the content of the coordsystem.json is not used')
         % FIXME do something with the content
       end
@@ -548,17 +548,3 @@ elseif strcmpi(senstype, 'nirs')
 else
   % it is empty if not specified by the user, in that case either one is fine
 end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION this is shared with DATA2BIDS
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function tsv = read_tsv(filename)
-tsv = readtable(filename, 'Delimiter', 'tab', 'FileType', 'text', 'TreatAsEmpty', 'n/a', 'ReadVariableNames', true);
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION this is shared with DATA2BIDS
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function json = read_json(filename)
-ft_hastoolbox('jsonlab', 1);
-json = loadjson(filename);
-json = ft_struct2char(json); % convert strings into char-arrays
