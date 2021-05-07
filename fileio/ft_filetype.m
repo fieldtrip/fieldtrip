@@ -70,6 +70,7 @@ function [type] = ft_filetype(filename, desired, varargin)
 %  - Neurodata Without Borders *.nwb
 %  - PhysioNet *.hea and *.dat
 %  - NIRx *.tpl, *.wl1 and *.wl2
+%  - York Instruments
 
 % Copyright (C) 2003-2020, Robert Oostenveld
 %
