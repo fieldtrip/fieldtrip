@@ -1612,7 +1612,7 @@ switch dataformat
     end
 
   case 'York_Instruments_hdf5'
-    dat = h5read(filename,[strcat('/acquisitions/default/data/']);
+    dat = h5read(filename,['/acquisitions/default/data/']);
     dat = dat(chanindx,begsample:endsample);
 
   otherwise
