@@ -527,9 +527,7 @@ switch fileformat
     sens.elecpos = [txtData.Loc_X txtData.Loc_Y txtData.Loc_Z];
 
   case 'York_Instruments_hdf5'
-    if isempty(acquisition)
-      acquisition=1;
-    end
+    acquisition='default';
     if isempty(senstype)
       % set the default
       ft_warning('both electrode and gradiometer information is present, returning the electrode information by default');
