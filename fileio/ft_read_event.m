@@ -2246,12 +2246,12 @@ switch eventformat
     trgindx = match_str(hdr.label, 'P_PORT_A');
     trigger = read_trigger(filename, 'header', hdr, 'dataformat', 'York_Instruments_hdf5', 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', trgindx, 'detectflank', detectflank, 'trigshift', trigshift, 'fix4d8192', false);
 
-    event   = appendevent(event, trigger);
+    event   = appendstruct(event, trigger);
 
     respindx = match_str(hdr.label, 'RESPONSE');
     if ~isempty(respindx)
       response = read_trigger(filename, 'header', hdr, 'dataformat', 'York_Instruments_hdf5', 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', respindx, 'detectflank', detectflank, 'trigshift', trigshift);
-      event    = appendevent(event, response);
+      event    = appendstruct(event, response);
     end
 
   case {'artinis_oxy3' 'artinis_oxy4'}
