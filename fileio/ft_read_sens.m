@@ -24,6 +24,7 @@ function [sens] = ft_read_sens(filename, varargin)
 %   4d_pdf 4d_m4d 4d_xyz ctf_ds ctf_res4 itab_raw itab_mhd netmeg neuromag_fif
 %   neuromag_mne neuromag_mne_elec neuromag_mne_grad polhemus_fil polhemus_pos
 %   zebris_sfp spmeeg_mat eeglab_set localite_pos artinis_oxy3 artinis_oxyproj matlab
+%   York Instruments
 %
 % See also FT_READ_HEADER, FT_DATATYPE_SENS, FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD,
 
@@ -524,7 +525,78 @@ switch fileformat
     warning(ws); % revert to the previous warning state
     sens.label   = txtData{:,1};
     sens.elecpos = [txtData.Loc_X txtData.Loc_Y txtData.Loc_Z];
-    
+
+  case 'York_Instruments_hdf5'
+    if isempty(acquisition)
+      acquisition=1;
+    end
+    if isempty(senstype)
+      % set the default
+      ft_warning('both electrode and gradiometer information is present, returning the electrode information by default');
+      senstype = 'eeg';
+    end
+    hdr=ft_read_header(filename);
+    %i will be the channel index, sens_i is the sensor index
+    sens_i=0;
+    for i=1:hdr.nChans
+      if string(hdr.chantype{i})==upper(senstype)
+        sens_i=sens_i+1;
+        sens.chantype{sens_i,1}=hdr.chantype{i};
+              try
+                sens.chanpos(sens_i,1:3) =  h5read(filename,['/config/channels/' hdr.label{i} '/position']);
+                sens.chanori(sens_i,1:3) =  h5read(filename,['/config/channels/' hdr.label{i} '/orientation']);
+                sens.chanunit{sens_i,1}  =  hdr.chanunit{i};
+                sens.coilori(sens_i,1:3) =  sens.chanori(sens_i,1:3);
+                sens.coilpos(sens_i,1:3) =  sens.chanpos(sens_i,1:3);
+                sens.label{sens_i,1}     =  hdr.label{i};
+%                sens.tra(i, sens_i)      =  1;
+              catch
+                error('Error reading channel %i sensor details.',i);
+              end
+      else
+        continue
+      end
+    end
+    if sens_i<1
+      error('No data corresponding to the chosen sensor type (%s) found.',senstype);
+    end
+    %sens.tra  = zeros(i,sens_i); %maps channel index in data, to sensor index
+    sens.tra  = eye(sens_i);
+    %sens.type = char(h5readatt(filename, '/config/', 'name'));
+    sens.type= 'York 4d';
+    %sens.unit= ???
+    %sens.balance
+    if isempty(coordsys)
+      coordsys='dewar';
+    end
+    if strcmp(coordsys,'head')
+      try
+        tCCStoMegscanScs = h5read(filename,[strcat('/acquisitions/',char(string(acquisition))) '/ccs_to_scs_transform']);
+        T = maketform('affine',tCCStoMegscanScs);
+        sens.coilpos=tformfwd(T,sens.chanpos(:,1),sens.chanpos(:,2),sens.coilpos(:,3));
+%        sens.chanori=tformfwd(T,sens.chanori(:,1),sens.chanori(:,2),sens.chanori(:,3));
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%       sens.coilori(:,4)=1;
+%       sens.coilpos(:,4)=1;
+%       sens.coilori(:,1:4) =  mtimes(sens.coilori(:,1:4), tCCStoMegscanScs) ;
+%       sens.coilpos(:,1:4) =  mtimes(sens.coilpos(:,1:4), tCCStoMegscanScs ) ;
+%       sens.coilori(:,4)=[];
+%       sens.coilpos(:,4)=[];
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        R = tCCStoMegscanScs(1:3,1:3); %(mm)
+        sens.coilori =  sens.coilori * R;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+        sens.chanpos=sens.coilpos;
+        sens.chanori=sens.coilori;
+
+        catch
+        error('No dewar to head transform available in hdf5 file');
+      end
+    end
+
   otherwise
     if ~isempty(sens)
       % the electrode or optode information has been read from the BIDS sidecar file
