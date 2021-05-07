@@ -52,6 +52,7 @@ function [hdr] = ft_read_header(filename, varargin)
 %   NetMEG (*.nc)
 %   ITAB - Chieti (*.mhd)
 %   Tristan Babysquid (*.fif)
+%   York Instruments (*.meghdf5)
 %
 % The following EEG dataformats are supported
 %   ANT - Advanced Neuro Technology, EEProbe (*.avr, *.eeg, *.cnt)
@@ -2750,6 +2751,19 @@ switch headerformat
   case 'video'
     hdr = read_video(filename);
     checkUniqueLabels = false;
+
+  case 'York_Instruments_hdf5'
+    orig            = read_YI_HDF5_meta(filename);
+    hdr.Fs          = orig.SampleFrequency;
+    hdr.nChans      = orig.NChannels;
+    hdr.nSamples    = orig.NSamples;
+    hdr.nSamplesPre = 0;    %No YI epoched data type
+    hdr.nTrials = 1;
+    hdr.label       = orig.ChNames;
+    hdr.chantype    = orig.ChType;
+    hdr.chanunit    = orig.ChUnit;
+    % remember original header details
+    hdr.orig        = orig;
     
   otherwise
     if exist(headerformat, 'file')
