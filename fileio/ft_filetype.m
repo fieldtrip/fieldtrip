@@ -1540,6 +1540,11 @@ elseif filetype_check_extension(filename, '.dgf') && filetype_check_header(filen
   type = 'duneuro_dgf';
   manufacturer = 'duneuro';
   content = 'geometrical meshes';
+  % known York Instruments file types
+elseif filetype_check_extension(filename, '.meghdf5')
+  type = 'York_Instruments_hdf5';
+  manufacturer = 'York Instruments';
+  content = 'MEG header and data';
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
