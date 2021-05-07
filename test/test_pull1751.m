@@ -1,6 +1,6 @@
 function test_pull1751
 % load sample set of data
-fname = 'sample_data.oxy4';
+fname = '/home/common/matlab/fieldtrip/data/test/sqi/sample_data.oxy4';
 
 cfg = [];
 cfg.dataset = fname; 
@@ -8,7 +8,7 @@ cfg.channel = 'nirs';
 [data_test] = ft_preprocessing(cfg);
 
 % load expected data output
-load('output_sqi.mat');
+load('/home/common/matlab/fieldtrip/data/test/sqi/output_sqi.mat');
  
 % compute sqi
 cfg=[];
