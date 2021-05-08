@@ -1,17 +1,22 @@
 function test_pull1751
+
+% WALLTIME 00:20:00
+% MEM 3gb
+% DEPENDENCY ft_nirs_signalqualityindex
+
 % load sample set of data
-fname = '/home/common/matlab/fieldtrip/data/test/sqi/sample_data.oxy4';
+fname = dccnpath('/home/common/matlab/fieldtrip/data/test/original/nirs/artinis/Sofia/sample_data.oxy4');
 
 cfg = [];
 cfg.dataset = fname; 
 cfg.channel = 'nirs';
-[data_test] = ft_preprocessing(cfg);
+data_test = ft_preprocessing(cfg);
 
 % load expected data output
 load('/home/common/matlab/fieldtrip/data/test/sqi/output_sqi.mat');
  
 % compute sqi
-cfg=[];
+cfg = [];
 data_out = ft_nirs_signalqualityindex(cfg, data_test);
 
 % check whether it matches the expected output
@@ -33,9 +38,9 @@ trials_new{1, 1} = trials{1, 1}(idx_rand,:);
 data_non_ordered.trial = trials_new;
 data_non_ordered.label = labels_new;
 
-raises_error = 0;
 try
     ft_nirs_signalqualityindex(cfg, data_non_ordered);
+    raises_error = 0;
 catch 
     raises_error = 1;
 end
@@ -50,9 +55,9 @@ labels = data_wrong_num_labels.label;
 labels{3} = 'Rx1-Tx1 [900nm]';
 data_wrong_num_labels.label = labels;
 
-raises_error = 0;
 try
     ft_nirs_signalqualityindex(cfg, data_wrong_num_labels);
+    raises_error = 0;
 catch 
     raises_error = 1;
 end
