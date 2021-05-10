@@ -15,6 +15,11 @@ ft_info('writing ''%s'' to file ''%s''\n', varname, filename);
 
 eval(sprintf('%s = value;', varname));
 
+% Create path if it doesn't exist
+if ~isfolder(fileparts(filename))
+  mkdir(fileparts(filename))
+end
+
 s = whos(varname);
 
 % if variable < ~500 MB, store it in old (uncompressed) format, which is faster
