@@ -849,10 +849,7 @@ switch fileformat
     fclose(fid);
    
    case 'York_Instruments_hdf5'
-    if isempty(acquisition)
-      acquisition=1;
-    end
-
+    acquisition='default';
     try
        shape.pos=transpose(h5read(filename,  '/geometry/head_shape/head_shape'));
     catch
