@@ -16,7 +16,7 @@ ft_info('writing ''%s'' to file ''%s''\n', varname, filename);
 eval(sprintf('%s = value;', varname));
 
 % Create path if it doesn't exist
-if ~exist(fileparts(filename))
+if ~isfolder(fileparts(filename))
   mkdir(fileparts(filename))
 end
 
