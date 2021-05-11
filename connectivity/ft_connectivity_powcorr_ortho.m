@@ -1,29 +1,27 @@
 function [c] = ft_connectivity_powcorr_ortho(mom, varargin)
 
-% FT_CONNECTIVITY_POWCORR_ORTHO computes power correlation after removing the
-% zero-lag contribution on a trial-by-trial basis. This implements the method
-% described in JF Hipp, DJ Hawellek, M Corbetta, M Siegel, AK Engel. Large-scale
-% cortical correlation structure of spontaneous oscillatory activity. Nature
-% neuroscience 15 (6), 884-890.
+% FT_CONNECTIVITY_POWCORR_ORTHO computes power correlation after removing
+% the zero-lag contribution on a trial-by-trial basis, according to Hipp's
+% Nature Neuroscience paper. 
 %
 % Use as
-%   c = ft_connectivity_powcorr(mom, ...)
+%   c = ft_connectivity_powcorr(mom)
+%   c = ft_connectivity_powcorr(mom, 'refindx', refindx)
 %
-% The input argument mom should be a NchanxNrpt matrix containing the complex-valued
-% amplitude and phase information at a given frequency, and the optional key refindx
-% specifies the
-%
-% Additional optional input arguments come as key-value pairs:
-%   refindx   = index/indices of the channels that serve as a reference channel (default is all)
+% Where mom is a NchanxNrpt matrix containing the complex-valued amplitude
+% and phase information at a given frequency, and the optional key refindx
+% specifies the index/indices of the channels that serve as a reference 
+% channel. (Default is 'all').
 %
 % The output c is a NchanxNrefchan matrix that contain the power correlation
 % for all channels orthogonalised relative to the reference channel in the first
-% Nrefchan columns, and the power correlation for the reference channels
+% Nrefchan columns, and the power correlation for the reference channels 
 % orthogonalised relative to the channels in the second Nrefchan columns.
-%
-% See also FT_CONNECTIVITYANALYSIS
 
 % Copyright (C) 2012 Jan-Mathijs Schoffelen
+% 2021: Andrea Ibarra-Chaoul + Tobias Ludwig:
+% added feature to handle multiple tapers by computing orth. power-correlation
+% for each taper separately and then averaging over tapers
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -43,67 +41,67 @@ function [c] = ft_connectivity_powcorr_ortho(mom, varargin)
 %
 % $Id$
 
+
 refindx = ft_getopt(varargin, 'refindx', 'all');
 tapvec  = ft_getopt(varargin, 'tapvec',  ones(1,size(mom,2)));
+% tapvec = [ntap, ntap, ...], same number of tapers for each rep. = trial
 
 if strcmp(refindx, 'all')
   refindx = 1:size(mom,1);
 end
 
-cmomnorm = conj(mom./abs(mom)); % only need to do conj() once
+nchan = size(mom,1);
+ntap  = tapvec(1);
+nrpt  = size(tapvec,1); % number of trials / repetitions
 
-n        = size(mom,1);
-ntap     = tapvec(1);
 if ~all(tapvec==ntap)
   ft_error('unequal number of tapers per observation is not yet supported');
 end
-% FIXME think about multiple tapers per trial
-%if ntap>1
-%  ft_error('more than one taper per observation is not yet supported');
-%end
 
-% create a sparse matrix tra, that can be used as a right multiplying
-% matrix to combine across tapers
+% final connectivity matrix
+c = zeros(nchan, numel(refindx));
 
-ix = zeros(sum(tapvec),1);
-jx = ix;
-sx = ix;
-for k = 1:numel(tapvec)
-  indx = (k-1)*ntap+(1:ntap);
-  ix(indx) = indx;
-  jx(indx) = k;
-  sx(indx) = 1./ntap;
-end
-tra = sparse(ix,jx,sx,sum(tapvec),numel(tapvec));
+% only need to do these two things once (out of next forloop)
+cXnorm = conj(mom./abs(mom));
+powX   = abs(mom).^2;
 
-%tra  = zeros(size(mom,2), numel(tapvec));
-%for k = 1:numel(tapvec)
-%  tra((k-1)*ntap+(1:ntap), k) = 1./ntap;
-%end
-
-powmom = (abs(mom).^2)*tra; % need only once
-powmom = standardise(log10(powmom), 2);
-
-c = zeros(n, numel(refindx)); %;*2);
-N = ones(n,1);
-%warning off;
-for k = 1:numel(refindx)
-  indx     = refindx(k);
-  ref      = mom(indx,:);
-  crefnorm = conj(ref./abs(ref));
+for k = 1:numel(refindx) % for each source/channel
+  indx = refindx(k);
+  Y    = repmat(mom(indx,:), [nchan, 1]); % Y = y nchan times stacked
+   
+  %% orthogonalization in one direction: Y wrt X
+  powYorth = abs(imag(Y.*cXnorm)).^2;
   
-  % FIXME the following is probably not correct for ntap>1
-  pow2 = (abs(imag(ref(N,:).*cmomnorm)).^2)*tra;
-  pow2 = standardise(log10(pow2), 2);
-  c1   = mean(powmom.*pow2, 2);
-  pow1 = (abs(imag(mom.*crefnorm(N,:))).^2)*tra;
-  pow1 = standardise(log10(pow1), 2);
+  zYorth   = zeros(nchan, nrpt*ntap);
+  zX       = zeros(nchan, nrpt*ntap);
   
-  pow2 = (abs(ref).^2)*tra;
-  pow2 = standardise(log10(pow2), 2);
-  pow2 = repmat(pow2, [n 1]);
-  c2   = mean(pow1.*pow2, 2);
+  % correlation for each taper separately
+  for tap = 1:ntap
+    idx = tap + ntap * (0:(nrpt-1));
+    zYorth(:,idx) = standardise(log10(powYorth(:,idx)), 2);
+    zX(:,idx)     = standardise(log10(powX(:,idx)), 2);
+  end
   
+  c1 = mean(zX.*zYorth, 2); % take correlation and average over trials+tapers
+  
+  %% in the other direction: orthogonalize X wrt Y
+  cYnorm = conj(Y./abs(Y));
+  
+  powXorth = abs(imag(mom.*cYnorm)).^2;
+  powY     = abs(Y).^2;
+  
+  zXorth   = zeros(nchan, nrpt*ntap);
+  zY       = zeros(nchan, nrpt*ntap);
+  
+  for tap = 1:ntap
+    idx = tap + ntap * (0:(nrpt-1));
+    zXorth(:,idx) = standardise(log10(powXorth(:,idx)), 2);
+    zY(:,idx)     = standardise(log10(powY(:,idx)), 2);
+  end
+  
+  c2 = mean(zXorth.*zY, 2);
+
   c(:,k) = (c1+c2)./2;
-  %c(:,k+numel(refindx)) = c2;
+  
+end
 end
