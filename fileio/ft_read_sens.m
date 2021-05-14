@@ -547,7 +547,6 @@ switch fileformat
                 sens.coilori(sens_i,1:3) =  sens.chanori(sens_i,1:3);
                 sens.coilpos(sens_i,1:3) =  sens.chanpos(sens_i,1:3);
                 sens.label{sens_i,1}     =  hdr.label{i};
-%                sens.tra(i, sens_i)      =  1;
               catch
                 error('Error reading channel %i sensor details.',i);
               end
@@ -560,7 +559,6 @@ switch fileformat
     end
     %sens.tra  = zeros(i,sens_i); %maps channel index in data, to sensor index
     sens.tra  = eye(sens_i);
-    %sens.type = char(h5readatt(filename, '/config/', 'name'));
     sens.type= 'York 4d';
     %sens.unit= ???
     %sens.balance
@@ -572,24 +570,10 @@ switch fileformat
         tCCStoMegscanScs = h5read(filename,[strcat('/acquisitions/',char(string(acquisition))) '/ccs_to_scs_transform']);
         T = maketform('affine',tCCStoMegscanScs);
         sens.coilpos=tformfwd(T,sens.chanpos(:,1),sens.chanpos(:,2),sens.coilpos(:,3));
-%        sens.chanori=tformfwd(T,sens.chanori(:,1),sens.chanori(:,2),sens.chanori(:,3));
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%       sens.coilori(:,4)=1;
-%       sens.coilpos(:,4)=1;
-%       sens.coilori(:,1:4) =  mtimes(sens.coilori(:,1:4), tCCStoMegscanScs) ;
-%       sens.coilpos(:,1:4) =  mtimes(sens.coilpos(:,1:4), tCCStoMegscanScs ) ;
-%       sens.coilori(:,4)=[];
-%       sens.coilpos(:,4)=[];
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         R = tCCStoMegscanScs(1:3,1:3); %(mm)
         sens.coilori =  sens.coilori * R;
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
         sens.chanpos=sens.coilpos;
         sens.chanori=sens.coilori;
-
         catch
         error('No dewar to head transform available in hdf5 file');
       end
