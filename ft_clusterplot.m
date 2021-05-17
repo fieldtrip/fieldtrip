@@ -380,7 +380,7 @@ else
             cfgtopo.comment = strcat('freq: ',num2str(mean(time(begs(PlN):(ends(PlN))))), ' Hz');
           end
           cfgtopo.commentpos = 'title';
-          subplot(cfg.subplotsize(1), cfg.subplotsize(2), iT);
+          cfgtopo.figure = subplot(cfg.subplotsize(1), cfg.subplotsize(2), iT);
           count = count+1;
           fprintf('making subplot %d from %d\n', count, Npl);
           ft_topoplotTFR(cfgtopo, stat);
@@ -396,7 +396,7 @@ else
             cfgtopo.comment = strcat('freq: ',num2str(mean(time(begs(PlN):(ends(PlN))))), ' Hz');
           end
           cfgtopo.commentpos = 'title';
-          subplot(cfg.subplotsize(1), cfg.subplotsize(2), iT);
+          cfgtopo.figure = subplot(cfg.subplotsize(1), cfg.subplotsize(2), iT);
           count = count+1;
           fprintf('making subplot %d from %d\n', count, Npl);
           ft_topoplotTFR(cfgtopo, stat);

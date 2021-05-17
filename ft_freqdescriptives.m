@@ -82,8 +82,14 @@ if ft_abort
   return
 end
 
+% check if the input data is valid for this function
+freq = ft_checkdata(freq, 'datatype', {'freq', 'freqmvar'}, 'feedback', 'yes');
+% get data in the correct representation, it should only have power
+freq = ft_checkdata(freq, 'cmbstyle', 'sparsewithpow', 'channelcmb', {});
+
 % check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'renamed', {'jacknife', 'jackknife'});
+cfg = ft_checkconfig(cfg, 'forbidden',  {'channels', 'trial'}); % prevent accidental typos, see issue 1729
+cfg = ft_checkconfig(cfg, 'renamed',    {'jacknife', 'jackknife'});
 
 % throw warnings for the deprecated options
 cfg = ft_checkconfig(cfg, 'deprecated', 'biascorrect');
@@ -107,11 +113,6 @@ cfg.channel    = ft_getopt(cfg, 'channel',    'all');
 cfg.frequency  = ft_getopt(cfg, 'frequency',  'all');
 cfg.latency    = ft_getopt(cfg, 'latency',    'all');
 cfg.keeptrials = ft_getopt(cfg, 'keeptrials', 'no');
-
-% check if the input data is valid for this function
-freq = ft_checkdata(freq, 'datatype', {'freq', 'freqmvar'}, 'feedback', cfg.feedback);
-% get data in the correct representation, it should only have power
-freq = ft_checkdata(freq, 'cmbrepresentation', 'sparsewithpow', 'channelcmb', {});
 
 % determine some specific details of the input data
 hasrpt   = ~isempty(strfind(freq.dimord, 'rpt')) || ~isempty(strfind(freq.dimord, 'subj'));

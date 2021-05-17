@@ -110,10 +110,12 @@ if isfreq
   if ~isfield(data, 'fourierspctrm'), ft_error('freq data should contain Fourier spectra'); end
 end
 
-cfg = ft_checkconfig(cfg, 'renamed', {'hdmfile', 'headmodel'});
-cfg = ft_checkconfig(cfg, 'renamed', {'vol',     'headmodel'});
-cfg = ft_checkconfig(cfg, 'renamed', {'grid',    'sourcemodel'});
-cfg = ft_checkconfig(cfg, 'renamed', {'pruneratio', 'tolerance'});
+% check if the input cfg is valid for this function
+cfg = ft_checkconfig(cfg, 'forbidden',  {'channels', 'trial'}); % prevent accidental typos, see issue 1729
+cfg = ft_checkconfig(cfg, 'renamed',    {'hdmfile', 'headmodel'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'vol',     'headmodel'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'grid',    'sourcemodel'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'pruneratio', 'tolerance'});
 
 % set the default configuration
 cfg.channel      = ft_getopt(cfg, 'channel',      'all');

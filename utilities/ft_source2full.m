@@ -52,7 +52,7 @@ end
 
 %%
 
-sourcein = ft_checkdata(sourcein, 'inside', 'logical', 'hasdim', true);
+sourcein = ft_checkdata(sourcein, 'insidestyle', 'logical', 'hasdim', true);
 
 % this assumes that the voxel data are ordered as if in a regularly spaced 3D grid,
 % but with only the inside voxels present

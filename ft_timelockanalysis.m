@@ -101,6 +101,7 @@ end
 data = ft_checkdata(data, 'datatype', {'raw+comp', 'raw'}, 'feedback', 'yes', 'hassampleinfo', 'yes');
 
 % check if the input cfg is valid for this function
+cfg = ft_checkconfig(cfg, 'forbidden',  {'channels', 'trial'}); % prevent accidental typos, see issue 1729
 cfg = ft_checkconfig(cfg, 'forbidden',  {'normalizecov', 'normalizevar'});
 cfg = ft_checkconfig(cfg, 'forbidden',  {'blcovariance', 'blcovariancewindow'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'blc', 'demean'});

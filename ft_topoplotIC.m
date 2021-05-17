@@ -169,7 +169,7 @@ if nplots>1
   nyplot = ceil(sqrt(nplots));
   nxplot = ceil(nplots./nyplot);
   for i = 1:length(selcomp)
-    subplot(nxplot, nyplot, i);
+    cfg.figure = subplot(nxplot, nyplot, i);
     cfg.component = selcomp(i);
 
     % call the common function that is shared with ft_topoplotER and ft_topoplotTFR

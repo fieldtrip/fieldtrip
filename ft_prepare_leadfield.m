@@ -131,13 +131,14 @@ else
 end
 
 % check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'renamed', {'hdmfile', 'headmodel'});
-cfg = ft_checkconfig(cfg, 'renamed', {'vol',     'headmodel'});
-cfg = ft_checkconfig(cfg, 'renamed', {'grid',    'sourcemodel'});
-cfg = ft_checkconfig(cfg, 'renamed', {'om',      'openmeeg'});
-cfg = ft_checkconfig(cfg, 'renamed', {'elecfile', 'elec'});
-cfg = ft_checkconfig(cfg, 'renamed', {'gradfile', 'grad'});
-cfg = ft_checkconfig(cfg, 'renamed', {'optofile', 'opto'});
+cfg = ft_checkconfig(cfg, 'forbidden',  {'channels'}); % prevent accidental typos, see issue 1729
+cfg = ft_checkconfig(cfg, 'renamed',    {'hdmfile', 'headmodel'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'vol',     'headmodel'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'grid',    'sourcemodel'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'om',      'openmeeg'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'elecfile', 'elec'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'gradfile', 'grad'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'optofile', 'opto'});
 
 % set the defaults
 cfg.lbex           = ft_getopt(cfg, 'lbex',           'no');

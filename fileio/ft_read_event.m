@@ -12,7 +12,7 @@ function [event] = ft_read_event(filename, varargin)
 %   'headerformat'   = string
 %   'eventformat'    = string
 %   'header'         = header structure, see FT_READ_HEADER
-%   'detectflank'    = string, can be 'up', 'down', 'both', 'updiff', 'downdiff', 'bit' (default is system specific)
+%   'detectflank'    = string, can be 'up', 'updiff', 'down', 'downdiff', 'both', 'any', 'biton', 'bitoff' (default is system specific)
 %   'trigshift'      = integer, number of samples to shift from flank to detect trigger value (default = 0)
 %   'chanindx'       = list with channel numbers for trigger detection, specify -1 in case you don't want to detect triggers (default is automatic)
 %   'threshold'      = threshold for analog trigger channels (default is system specific)

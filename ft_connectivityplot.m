@@ -62,9 +62,10 @@ if ft_abort
 end
 
 % check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'renamed', {'zparam',     'parameter'});
-cfg = ft_checkconfig(cfg, 'renamed', {'color',      'linecolor'});
-cfg = ft_checkconfig(cfg, 'renamed', {'graphcolor', 'linecolor'});
+cfg = ft_checkconfig(cfg, 'forbidden',  {'channels'}); % prevent accidental typos, see issue 1729
+cfg = ft_checkconfig(cfg, 'renamed',    {'zparam',     'parameter'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'color',      'linecolor'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'graphcolor', 'linecolor'});
 
 % set the defaults
 cfg.channel     = ft_getopt(cfg, 'channel',   'all');
@@ -113,7 +114,7 @@ for k = 1:Ndata
       % that's ok
     case {'chancmb_freq' 'chancmb_freq_time'}
       % convert into 'chan_chan_freq'
-      varargin{k} = ft_checkdata(varargin{k}, 'cmbrepresentation', 'full');
+      varargin{k} = ft_checkdata(varargin{k}, 'cmbstyle', 'full');
     otherwise
       ft_error('the data should have a dimord of %s or %s', 'chan_chan_freq', 'chancmb_freq');
   end

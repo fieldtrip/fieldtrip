@@ -62,9 +62,9 @@ if isfield(freq, 'crsspctrm')
 end
 if ~hasfull
   if keeptrials
-    freq = ft_checkdata(freq, 'cmbrepresentation', 'full');
+    freq = ft_checkdata(freq, 'cmbstyle', 'full');
   else
-    freq = ft_checkdata(freq, 'cmbrepresentation', 'fullfast');
+    freq = ft_checkdata(freq, 'cmbstyle', 'fullfast');
     Ntrials = 1;
   end
 end

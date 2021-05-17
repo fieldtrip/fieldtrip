@@ -162,6 +162,7 @@ hasdata = exist('data', 'var');
 hascomp = hasdata && ft_datatype(data, 'comp'); % can be 'raw+comp' or 'timelock+comp'
 
 % check if the input cfg is valid for this function
+cfg = ft_checkconfig(cfg, 'forbidden',  {'channels'}); % prevent accidental typos, see issue 1729
 cfg = ft_checkconfig(cfg, 'unused',     {'comps', 'inputfile', 'outputfile'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'zscale', 'ylim'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'ylim', 'auto', 'maxabs'});
@@ -258,7 +259,7 @@ if ~isfield(cfg, 'viewmode')
 end
 
 if ~isfield(cfg, 'colorgroups')
-  % can be 'sequential', 'allblack', 'labelcharx', 'chantype', or a vector with the length of the number of channels defining the groups
+  % can be 'sequential', 'allblack', 'labelcharN', 'chantype', or a vector with the length of the number of channels defining the groups
   if hascomp
     cfg.colorgroups = 'allblack';
   else

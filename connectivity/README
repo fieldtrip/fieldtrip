@@ -1,7 +1,7 @@
 This is the FieldTrip CONNECTIVITY module. It contains functions for
 the computation of various connectivity metrics.
 
-For more information please visit http://www.fieldtriptoolbox.org/development/modules
+For more information please visit https://www.fieldtriptoolbox.org/development/module
 
 -------------------------------------------------------------------------------
 Copyright (C) 2009-2011, Donders Institute for Brain, Cognition and Behaviour, The Netherlands (DCCN, DCC, DCN)

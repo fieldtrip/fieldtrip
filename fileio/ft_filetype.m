@@ -1419,6 +1419,10 @@ elseif filetype_check_header(filename, 'ply')
   type = 'ply';
   manufacturer = 'Stanford Triangle Format';
   content = 'three dimensional data from 3D scanners, see http://en.wikipedia.org/wiki/PLY_(file_format)';
+elseif filetype_check_extension(filename, '.csv') && filetype_check_header(filename, 'Sensor,Sample,Timestamp')
+  type = 'liberty_csv';
+  manufacturer = 'Polhemus Liberty';
+  content = 'motion capture data';
 elseif filetype_check_extension(filename, '.csv')
   type = 'csv';
   manufacturer = 'Generic';
@@ -1482,6 +1486,10 @@ elseif filetype_check_extension(filename, '.c3d') && filetype_check_header(filen
 elseif filetype_check_extension(filename, '.mvnx') && filetype_check_header(filename, '<?xml')
   type = 'xsens_mvnx';
   manufacturer = 'https://www.xsens.com/motion-capture';
+  content = 'motion capture data';
+elseif filetype_check_extension(filename, '.json') && filetype_check_header(filename, '{"version":1.3') % this JSON format detection is not very robust
+  type = 'openpose_keypoints';
+  manufacturer = 'https://github.com/CMU-Perceptual-Computing-Lab/openpose';
   content = 'motion capture data';
 elseif filetype_check_extension(filename, '.mif')
   % this could be a mrtrix compatible image file
