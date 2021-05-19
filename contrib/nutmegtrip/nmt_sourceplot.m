@@ -290,7 +290,7 @@ end
     cfg.topoplot      = ft_getopt(cfg, 'topoplot',  '');
 
 
-    %% start building the figure
+    %% start building the figuren
     global st
     
     % things get messy if there's an SPM window already open
