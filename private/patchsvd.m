@@ -134,7 +134,8 @@ elseif isnumeric(cfg.patchsvd)
     
     ft_progress(dipindx/Ninside, 'computing patchsvd %d/%d, Nsel=%d\n', dipindx, Ninside, Nsel);
     % concatenate the leadfield of all dipoles that are inside the ROI into one matrix
-    lfr     = cell2mat(sourcemodel.leadfield(sel(:)'));
+    lfr     = sourcemodel.leadfield(sel(:)');
+    lfr     = cat(2,lfr{:});
     % svd of leadfields of dipoles inside the ROI
     [U,S,V] = svd(lfr, 'econ');
     
@@ -153,7 +154,8 @@ elseif isnumeric(cfg.patchsvd)
   ft_progress('close');
   
 elseif isequal(cfg.patchsvd, 'all')
-  lfr     = cell2mat(sourcemodel.leadfield(sourcemodel.inside(:)'));
+  lfr     = sourcemodel.leadfield(sourcemodel.inside(:)');
+  lfr     = cat(2, lfr{:});
   [U,S,V] = svd(lfr, 'econ');
 
   if cfg.patchsvdnum < 1

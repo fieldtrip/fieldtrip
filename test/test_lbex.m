@@ -1,4 +1,4 @@
-function test_lbex(datadirs)
+function test_patchsvd(datadirs)
 
 % WALLTIME 00:30:00
 % MEM 12gb
