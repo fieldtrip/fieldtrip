@@ -22,7 +22,7 @@ function [data] = ft_preprocessing(cfg, data)
 %   cfg.continuous   = 'yes' or 'no' whether the file contains continuous data
 %                      (default is determined automatic)
 %
-% Instead of specifying the dataset in the configuration, you can also explicitely
+% Instead of specifying the dataset in the configuration, you can also explicitly
 % specify the name of the file containing the header information and the name of the
 % file containing the data, using
 %   cfg.datafile     = string with the filename
