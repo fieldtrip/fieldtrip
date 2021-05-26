@@ -274,7 +274,7 @@ end
 if strcmp(cfg.reref, 'yes')
   if strcmp(cfg.refmethod, 'bipolar') || strcmp(cfg.refmethod, 'laplace')
     % this is implemented as a montage that the user does not get to see
-    tmpcfg = keepfields(cfg, {'refmethod', 'implicitref', 'refchannel', 'channel', 'sortchannels'});
+    tmpcfg = keepfields(cfg, {'refmethod', 'implicitref', 'refchannel', 'channel'});
     tmpcfg.showcallinfo = 'no';
     if strcmp(cfg.groupchans, 'yes')
         % Alphanumeric sorting of channnels' names
