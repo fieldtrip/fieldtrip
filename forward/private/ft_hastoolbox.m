@@ -171,6 +171,7 @@ url = {
   'MATPLOTLIB'    'see https://nl.mathworks.com/matlabcentral/fileexchange/62729-matplotlib-perceptually-uniform-colormaps'
   'CMOCEAN'       'see https://nl.mathworks.com/matlabcentral/fileexchange/57773-matplotlib-perceptually-uniform-colormaps'
   'HOMER3'        'see https://github.com/BUNPC/Homer3 and https://github.com/fNIRS/snirf_homer3'
+  'DUNEURO'       'see http://duneuro.org/ and https://www.fieldtriptoolbox.org/workshop/ohbm2018/'
   };
 
 if nargin<2
@@ -207,7 +208,7 @@ switch toolbox
   case 'SPM2UP' % version 2 or later, but not SPM 9X
     dependency = {'spm', get_spm_version()>=2, get_spm_version()<95};
     % this is to avoid crashes when trying to add SPM to the path
-    fallback_toolbox = 'SPM8';
+    fallback_toolbox = 'SPM2';
   case 'SPM5'
     dependency = {'spm', get_spm_version()==5};
   case 'SPM5UP' % version 5 or later, but not SPM 9X
@@ -426,6 +427,8 @@ switch toolbox
     dependency = is_subdir_in_fieldtrip_path('/external/fileexchange');
   case 'HOMER3'
     dependency = {'SnirfClass' 'DataClass' 'AuxClass' 'MeasListClass' 'MetaDataTagsClass' 'ProbeClass' 'StimClass'};
+  case 'DUNEURO'
+    dependency = {'duneuro_meeg', 'duneuro_function', 'compute_B_primary'};
     
     % the following are FieldTrip modules or toolboxes
   case 'FILEIO'
@@ -480,7 +483,7 @@ if ~status && autoadd>0
     status = myaddpath(fullfile(prefix, lower(toolbox)), silent);
     licensefile = [lower(toolbox) '_license'];
     if status && exist(licensefile, 'file')
-      % this will execute openmeeg_license and mne_license
+      % this will execute openmeeg_license, mne_license and duneuro_license
       % which display the license on screen for three seconds
       feval(licensefile);
     end

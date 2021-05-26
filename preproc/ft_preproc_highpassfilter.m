@@ -277,7 +277,7 @@ switch type
 end
 
 % demean the data before filtering
-meandat = mean(dat,2);
+meandat = nanmean(dat,2);
 dat = bsxfun(@minus, dat, meandat);
 
 try

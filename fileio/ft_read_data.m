@@ -1008,6 +1008,18 @@ switch dataformat
     end
     dat = dat(chanindx, :);
     
+  case 'matlab'
+    % read the data structure from a MATLAB file
+    % it should either contain a numerical "dat" array, or a FieldTrip data structure according to FT_DATATYPE_RAW
+    w = whos(matfile(filename));
+    if any(strcmp({w.name}, 'dat'))
+      dat = loadvar(filename, 'dat');
+      dat = dat(chanindx, begsample:endsample);
+    elseif any(strcmp({w.name}, 'data')) || length(w)==1
+      data = loadvar(filename, 'data');
+      dat = ft_fetch_data(data, 'begsample', begsample, 'endsample', endsample, 'chanindx', chanindx);
+    end
+    
   case 'mayo_mef30'
     hdr.sampleunit = 'index';
     dat = read_mayo_mef30(filename, password, sortchannel, hdr, begsample, endsample, chanindx);

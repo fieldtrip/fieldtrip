@@ -210,6 +210,14 @@ ARRAY+=(src/compiler.h)
 sync ${ARRAY[*]}
 
 ################################################################################
+# contains.m
+
+ARRAY=()
+ARRAY+=(matlablt2016b/contains.m)
+ARRAY+=(octave/contains.m)
+sync ${ARRAY[*]}
+
+################################################################################
 # coordsys2label.m
 
 ARRAY=()
@@ -431,6 +439,14 @@ ARRAY+=(realtime/online_mri/private/encode_nifti1.m)
 sync ${ARRAY[*]}
 
 ################################################################################
+# endsWith.m
+
+ARRAY=()
+ARRAY+=(matlablt2016b/endsWith.m)
+ARRAY+=(octave/endsWith.m)
+sync ${ARRAY[*]}
+
+################################################################################
 # fexec.m
 
 ARRAY=()
@@ -558,6 +574,7 @@ sync ${ARRAY[*]}
 # fixinside.m
 
 ARRAY=()
+ARRAY+=(inverse/private/fixinside.m)
 ARRAY+=(fileio/private/fixinside.m)
 ARRAY+=(private/fixinside.m)
 ARRAY+=(utilities/private/fixinside.m)
@@ -1132,6 +1149,7 @@ ARRAY+=(forward/private/getdimord.m)
 ARRAY+=(private/getdimord.m)
 ARRAY+=(test/private/getdimord.m)
 ARRAY+=(utilities/private/getdimord.m)
+ARRAY+=(contrib/spike/private/getdimord.m)
 sync ${ARRAY[*]}
 
 ################################################################################
@@ -1144,6 +1162,7 @@ ARRAY+=(forward/private/getdimsiz.m)
 ARRAY+=(private/getdimsiz.m)
 ARRAY+=(test/private/getdimsiz.m)
 ARRAY+=(utilities/private/getdimsiz.m)
+ARRAY+=(contrib/spike/private/getdimsiz.m)
 sync ${ARRAY[*]}
 
 ################################################################################
@@ -2440,6 +2459,14 @@ ARRAY+=(private/ndgrid.m)
 sync ${ARRAY[*]}
 
 ################################################################################
+# nearest.m
+
+ARRAY=()
+ARRAY+=(utilities/nearest.m)
+ARRAY+=(preproc/private/nearest.m)
+sync ${ARRAY[*]}
+
+################################################################################
 # neuralynx_crc.m
 
 ARRAY=()
@@ -3531,6 +3558,15 @@ ARRAY=()
 ARRAY+=(connectivity/private/standardise.m)
 ARRAY+=(private/standardise.m)
 sync ${ARRAY[*]}
+
+################################################################################
+# startsWith.m
+
+ARRAY=()
+ARRAY+=(matlablt2016b/startsWith.m)
+ARRAY+=(octave/startsWith.m)
+sync ${ARRAY[*]}
+
 
 ################################################################################
 # strel_bol.m

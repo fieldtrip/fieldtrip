@@ -47,6 +47,9 @@ function [type] = ft_senstype(input, desired)
 %   'neuralynx'
 %   'plexon'
 %   'artinis'
+%   'nirx'
+%   'shimadzu'
+%   'hitachi'
 %   'nirs'
 %   'meg'
 %   'eeg'
@@ -145,6 +148,18 @@ current_argin = {input, desired};
 if isequal(current_argin, previous_argin)
   % don't do the type detection again, but return the previous output from cache
   type = previous_argout{1};
+  return
+end
+
+% in some cases these are easy to determine, no need to continue with the elaborate checks
+if strcmp(desired, 'meg') && isfield(input, 'coilpos')
+  type = true;
+  return
+elseif strcmp(desired, 'eeg') && isfield(input, 'elecpos')
+  type = true;
+  return
+elseif strcmp(desired, 'nirs') && isfield(input, 'optopos')
+  type = true;
   return
 end
 
@@ -258,7 +273,7 @@ elseif issubfield(input, 'orig.FileHeader') && issubfield(input, 'orig.VarHeader
     % this is a complete header that was read from a Plexon *.nex file using read_plexon_nex
     type = 'plexon';
   end
-
+  
 elseif issubfield(input, 'orig.stname')
   % this is a complete header that was read from an ITAB dataset
   type = 'itab';
@@ -426,6 +441,15 @@ else
     elseif (sum(ismember(ft_senslabel('ctfref'), sens.label)) > 10)
       type = 'ctf'; % 29 in the reference set, it might be 151 or 275 channels
       
+    elseif (mean(~cellfun(@isempty, regexp(sens.label, 'Rx(\w+)-Tx(\w+)'))) > 0.5)
+      type = 'artinis';
+    elseif (mean(~cellfun(@isempty, regexp(sens.label, 'Tx(\w+)-Rx(\w+)'))) > 0.5)
+      type = 'artinis';
+    elseif (mean(~cellfun(@isempty, regexp(sens.label, 'S(\w+)-D(\w+)'))) > 0.5)
+      type = 'nirs';
+    elseif (mean(~cellfun(@isempty, regexp(sens.label, 'D(\w+)-S(\w+)'))) > 0.5)
+      type = 'nirs';
+      
     end
   end % look at label, ori and/or pos
 end % if isfield(sens, 'type')
@@ -461,6 +485,8 @@ end
 if ~isempty(desired)
   % return a boolean flag
   switch desired
+    case {'nirs'}
+      type = any(strcmp(type, {'nirs' 'artinis' 'nirx' 'shimadzu' 'hitachi'}));
     case {'eeg'}
       type = any(strcmp(type, {'eeg' 'ieeg' 'seeg' 'ecog' 'ant128' 'biosemi64' 'biosemi128' 'biosemi256' 'egi32' 'egi64' 'egi128' 'egi256' 'ext1020' 'eeg1005' 'eeg1010' 'eeg1020'}));
     case 'ext1020'

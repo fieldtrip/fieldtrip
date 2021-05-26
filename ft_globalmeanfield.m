@@ -73,30 +73,32 @@ if ft_abort
   return
 end
 
+% ensure that the input data is valid for this function, this will also do
+% backward-compatibility conversions of old data that for example was
+% read from an old *.mat file
+datain = ft_checkdata(datain, 'datatype', {'timelock'}, 'feedback', 'yes', 'hassampleinfo', 'yes');
+
+% check if the input cfg is valid for this function
+cfg = ft_checkconfig(cfg, 'forbidden',  {'channels'}); % prevent accidental typos, see issue 1729
+
+% set the defaults
+cfg.method    = ft_getopt(cfg, 'method', 'amplitude');
+
 % select channels and trials of interest, by default this will select all channels and trials
 tmpcfg = keepfields(cfg, {'trials', 'channel', 'tolerance', 'showcallinfo'});
 datain = ft_selectdata(tmpcfg, datain);
 % restore the provenance information
 [cfg, datain] = rollback_provenance(cfg, datain);
 
-% ensure that the input data is valid for this function, this will also do
-% backward-compatibility conversions of old data that for example was
-% read from an old *.mat file
-datain = ft_checkdata(datain, 'datatype', {'timelock'}, 'feedback', 'yes', 'hassampleinfo', 'yes');
-
-% get the options
-cfg.method    = ft_getopt(cfg, 'method', 'amplitude');
-
-% ensure that the options are valid
-cfg = ft_checkopt(cfg, 'method', 'char', {'amplitude', 'power'});
-
-dataout = keepfields(datain,{'avg','time','label','dimord','cfg'});
+dataout = keepfields(datain, {'avg','time','label','dimord','cfg'});
 
 switch cfg.method
   case 'amplitude'
     dataout.avg = std(dataout.avg,1);
   case 'power'
     dataout.avg = std(dataout.avg,1).^2;
+  otherwise
+    ft_error('unsupported method');
 end
 
 dataout.label = {'gmfp'};

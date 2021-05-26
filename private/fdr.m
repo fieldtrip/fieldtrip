@@ -5,6 +5,11 @@ function [h] = fdr(p, q)
 % Use as
 %   h = fdr(p, q)
 %
+% The input argument p is a vector or matrix with (uncorrected) p-values, the input argument
+% q is a scalar that reflects the critical alpha-threshold for the inferential decision. The
+% output argument h is a boolean matrix (same size as p) denoting for each sample whether 
+% the null hypothesis can be rejected. 
+%
 % This implements
 %   Genovese CR, Lazar NA, Nichols T.
 %   Thresholding of statistical maps in functional neuroimaging using the false discovery rate.

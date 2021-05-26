@@ -115,7 +115,14 @@ if ft_abort
   return
 end
 
+% store the original datatype
+dtype = ft_datatype(data);
+
+% check if the input data is valid for this function
+data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes', 'hassampleinfo', 'yes', 'ismeg', 'yes');
+
 % check if the input cfg is valid for this function
+cfg = ft_checkconfig(cfg, 'forbidden',  {'channels', 'trial'}); % prevent accidental typos, see issue 1729
 cfg = ft_checkconfig(cfg, 'renamed',    {'plot3d',      'feedback'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'headshape',   'headmodel', []});
 cfg = ft_checkconfig(cfg, 'required',   {'inwardshift', 'template'});
@@ -134,12 +141,6 @@ cfg.trials     = ft_getopt(cfg, 'trials',     'all', 1);
 cfg.channel    = ft_getopt(cfg, 'channel',    'MEG');
 cfg.topoparam  = ft_getopt(cfg, 'topoparam',  'rms');
 
-% store original datatype
-dtype = ft_datatype(data);
-
-% check if the input data is valid for this function
-data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes', 'hassampleinfo', 'yes', 'ismeg', 'yes');
-
 % do realignment per trial
 pertrial = all(ismember({'nasX';'nasY';'nasZ';'lpaX';'lpaY';'lpaZ';'rpaX';'rpaY';'rpaZ'}, data.label));
 
@@ -157,12 +158,12 @@ if isstruct(cfg.template)
   cfg.template = {cfg.template};
 end
 
-% retain only the MEG channels in the data and temporarily store
-% the rest, these will be added back to the transformed data later.
+% retain only the MEG channels and temporarily store the rest of the channels
+% elsewhere, these will be added back to the transformed data later.
 
 % select trials and channels of interest, first of the non-MEG channels, then of the MEG channels
 tmpcfg = keepfields(cfg, {'trials', 'showcallinfo'}); % don't keep tolerance, it is used differently here
-tmpcfg.channel = setdiff(data.label, ft_channelselection(cfg.channel, data.label));
+tmpcfg.channel = setdiff(data.label, ft_channelselection(cfg.channel, data.label), 'stable');
 rest = ft_selectdata(tmpcfg, data);
 tmpcfg.channel = ft_channelselection(cfg.channel, data.label);
 data = ft_selectdata(tmpcfg, data);

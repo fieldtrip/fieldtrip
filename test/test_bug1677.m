@@ -68,7 +68,7 @@ tmp = ft_freqdescriptives(tmpcfg,freq);
 %     data = fixcsd(data, cmbrepresentation, channelcmb);
 % 
 % Error in ft_freqdescriptives (line 131)
-% freq = ft_checkdata(freq, 'cmbrepresentation', 'sparsewithpow', 'channelcmb', {});
+% freq = ft_checkdata(freq, 'cmbstyle', 'sparsewithpow', 'channelcmb', {});
 %  
 % 740       powspctrm = powspctrm + abs(data.fourierspctrm(p:ntap:end,:,:,:,:)).^2
 

@@ -90,15 +90,17 @@ hasfilter     = isfield(sourcemodel, 'filter');
 % find the dipole positions that are inside/outside the brain
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if ~isfield(sourcemodel, 'inside')
-  sourcemodel.inside = ft_inside_headmodel(sourcemodel.pos, headmodel);
+  if hasfilter
+    sourcemodel.inside = ~cellfun(@isempty, sourcemodel.filter);
+  elseif hasleadfield
+    sourcemodel.inside = ~cellfun(@isempty, sourcemodel.leadfield);
+  else
+    sourcemodel.inside = ft_inside_headmodel(sourcemodel.pos, headmodel);
+  end
 end
 
-if any(sourcemodel.inside>1)
-  % convert to logical representation
-  tmp = false(size(sourcemodel.pos,1),1);
-  tmp(sourcemodel.inside) = true;
-  sourcemodel.inside = tmp;
-end
+% convert to logical representation
+sourcemodel = fixinside(sourcemodel);
 
 % keep the original details on inside and outside positions
 originside = sourcemodel.inside;
@@ -133,33 +135,33 @@ else
   end
 end
 
-% deal with reduced rank
-% check the rank of the leadfields, and project onto the lower dimensional
-% subspace if the number of columns per leadfield > rank: this to avoid
-% numerical issues in the filter computation
-rank_lf = zeros(1,size(sourcemodel.pos,1));
-for i=1:size(sourcemodel.pos,1)
-  rank_lf(i) = rank(sourcemodel.leadfield{i});
-end
-if ~all(rank_lf==rank_lf(1))
-  ft_error('the forward solutions have a different rank for each location, which is not supported');
-end
-if rank_lf(1)<size(sourcemodel.leadfield{1})
-  ft_notice('the forward solutions have a rank of %d, but %d orientations\n',rank_lf(1),size(sourcemodel.leadfield{1},2));
-  ft_notice('projecting the forward solutions on the lower dimensional subspace\n');
-  for i=1:size(sourcemodel.pos,1)
-    [u,s,v{i}] = svd(sourcemodel.leadfield{i}, 'econ');
-    sourcemodel.leadfield{i} = sourcemodel.leadfield{i}*v{i}(:,1:rank_lf(i));
-  end
-end
-
-% convert the leadfield into Nchan*Ndip*Nori
-[Nchan, Nori] = size(sourcemodel.leadfield{1});
-Ndip          = numel(sourcemodel.leadfield);
-leadfield     = permute(reshape(cat(2,sourcemodel.leadfield{:}),Nchan,Nori,Ndip),[1 3 2]);
-
 % use existing filters, or compute them
 if ~hasfilter
+  % deal with reduced rank
+  % check the rank of the leadfields, and project onto the lower dimensional
+  % subspace if the number of columns per leadfield > rank: this to avoid
+  % numerical issues in the filter computation
+  rank_lf = zeros(1,size(sourcemodel.pos,1));
+  for i=1:size(sourcemodel.pos,1)
+    rank_lf(i) = rank(sourcemodel.leadfield{i});
+  end
+  if ~all(rank_lf==rank_lf(1))
+    ft_error('the forward solutions have a different rank for each location, which is not supported');
+  end
+  if rank_lf(1)<size(sourcemodel.leadfield{1})
+    ft_notice('the forward solutions have a rank of %d, but %d orientations\n',rank_lf(1),size(sourcemodel.leadfield{1},2));
+    ft_notice('projecting the forward solutions on the lower dimensional subspace\n');
+    for i=1:size(sourcemodel.pos,1)
+      [u,s,v{i}] = svd(sourcemodel.leadfield{i}, 'econ');
+      sourcemodel.leadfield{i} = sourcemodel.leadfield{i}*v{i}(:,1:rank_lf(i));
+    end
+  end
+
+  % convert the leadfield into Nchan*Ndip*Nori
+  [Nchan, Nori] = size(sourcemodel.leadfield{1});
+  Ndip          = numel(sourcemodel.leadfield);
+  leadfield     = permute(reshape(cat(2,sourcemodel.leadfield{:}),Nchan,Nori,Ndip),[1 3 2]);
+    
   filt = mkfilt_eloreta(leadfield, lambda);
   for i=1:size(sourcemodel.pos,1)
     sourcemodel.filter{i,1} = squeeze(filt(:,i,:))';

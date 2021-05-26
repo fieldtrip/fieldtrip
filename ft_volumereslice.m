@@ -79,7 +79,7 @@ end
 
 % check if the input data is valid for this function and ensure that the structures correctly describes a volume
 if isfield(mri, 'inside')
-  mri = ft_checkdata(mri, 'datatype', 'volume', 'feedback', 'yes', 'hasunit', 'yes', 'inside', 'logical');
+  mri = ft_checkdata(mri, 'datatype', 'volume', 'feedback', 'yes', 'hasunit', 'yes', 'insidestyle', 'logical');
 else
   mri = ft_checkdata(mri, 'datatype', 'volume', 'feedback', 'yes', 'hasunit', 'yes');
 end
@@ -103,15 +103,15 @@ else
     % use some prior knowledge to optimize the location of the bounding box
     % with respect to the origin of the coordinate system
     switch mri.coordsys
-      case {'ctf' '4d' 'bti'}
+      case {'ctf', '4d', 'bti', 'eeglab'}
         xshift = 30./cfg.resolution;
         yshift = 0;
         zshift = 40./cfg.resolution;
-      case {'itab' 'neuromag'}
+      case {'neuromag', 'itab'}
         xshift = 0;
         yshift = 30./cfg.resolution;
         zshift = 40./cfg.resolution;
-      case {'acpc' 'spm' 'mni' 'tal'}
+      case {'acpc', 'spm', 'mni', 'tal'}
         ft_warning('FIXME, the bounding box needs a better default');
         xshift = 0;
         yshift = 0;

@@ -72,8 +72,11 @@ end
 
 % check if the input data is valid for this function
 for i=1:length(varargin)
-    varargin{i} = ft_checkdata(varargin{i}, 'datatype', 'freq', 'feedback', 'no');
+  varargin{i} = ft_checkdata(varargin{i}, 'datatype', 'freq', 'feedback', 'no');
 end
+
+% check if the input cfg is valid for this function
+cfg = ft_checkconfig(cfg, 'forbidden',  {'channels'}); % prevent accidental typos, see issue 1729
 
 % set the defaults
 cfg.keepindividual = ft_getopt(cfg, 'keepindividual', 'no');
@@ -83,13 +86,13 @@ cfg.toilim         = ft_getopt(cfg, 'toilim',     'all');
 cfg.parameter      = ft_getopt(cfg, 'parameter',  []);
 
 if isempty(cfg.parameter) && isfield(varargin{1}, 'powspctrm')
-    cfg.parameter = 'powspctrm';
+  cfg.parameter = 'powspctrm';
 elseif isempty(cfg.parameter)
-    ft_error('you should specify a valid parameter to average');
+  ft_error('you should specify a valid parameter to average');
 end
 
 if ischar(cfg.parameter)
-    cfg.parameter = {cfg.parameter};
+  cfg.parameter = {cfg.parameter};
 end
 
 Nsubj    = length(varargin);
@@ -101,131 +104,131 @@ hastap   = ~isempty(strfind(varargin{i}.dimord, 'tap'));
 
 % check whether the input data is suitable
 if hasrpt
-    ft_error('the input data of each subject should be an average, use FT_FREQDESCRIPTIVES first');
+  ft_error('the input data of each subject should be an average, use FT_FREQDESCRIPTIVES first');
 end
 if hastap
-    ft_error('multiple tapers in the input are not supported');
+  ft_error('multiple tapers in the input are not supported');
 end
 
 if ischar(cfg.foilim) && strcmp(cfg.foilim, 'all')
-    fbeg = -inf;
-    fend =  inf;
+  fbeg = -inf;
+  fend =  inf;
 else
-    fbeg = cfg.foilim(1);
-    fend = cfg.foilim(2);
+  fbeg = cfg.foilim(1);
+  fend = cfg.foilim(2);
 end
 
 if ischar(cfg.toilim) && strcmp(cfg.toilim, 'all')
-    tbeg = -inf;
-    tend =  inf;
+  tbeg = -inf;
+  tend =  inf;
 else
-    tbeg = cfg.toilim(1);
-    tend = cfg.toilim(2);
+  tbeg = cfg.toilim(1);
+  tend = cfg.toilim(2);
 end
 
 % select the data in all inputs
 for k=1:numel(cfg.parameter)
-
-    % determine which channels, frequencies and latencies are available for all inputs
-    for i=1:Nsubj
-        cfg.channel = ft_channelselection(cfg.channel, varargin{i}.label);
-        if hasfreq
-            fbeg = max(fbeg, varargin{i}.freq(1  ));
-            fend = min(fend, varargin{i}.freq(end));
-        end
-        if hastime
-            tbeg = max(tbeg, varargin{i}.time(1  ));
-            tend = min(tend, varargin{i}.time(end));
-        end
+  
+  % determine which channels, frequencies and latencies are available for all inputs
+  for i=1:Nsubj
+    cfg.channel = ft_channelselection(cfg.channel, varargin{i}.label);
+    if hasfreq
+      fbeg = max(fbeg, varargin{i}.freq(1  ));
+      fend = min(fend, varargin{i}.freq(end));
     end
-    cfg.foilim = [fbeg fend];
-    cfg.toilim = [tbeg tend];
-
-    % pick the selections
-    for i=1:Nsubj
-        if ~isfield(varargin{i}, cfg.parameter{k})
-            ft_error('the field %s is not present in data structure %d', cfg.parameter{k}, i);
-        end
-        [dum, chansel] = match_str(cfg.channel, varargin{i}.label);
-        varargin{i}.label = varargin{i}.label(chansel);
-
-        if hasfreq
-            freqsel = nearest(varargin{i}.freq, fbeg):nearest(varargin{i}.freq, fend);
-            varargin{i}.freq = varargin{i}.freq(freqsel);
-        end
-        if hastime
-            timesel = nearest(varargin{i}.time, tbeg):nearest(varargin{i}.time, tend);
-            varargin{i}.time = varargin{i}.time(timesel);
-        end
-        % select the overlapping samples in the power spectrum
-        switch dimord
-            case 'chan_freq'
-                varargin{i}.(cfg.parameter{k}) = varargin{i}.(cfg.parameter{k})(chansel,freqsel);
-            case 'chan_freq_time'
-                varargin{i}.(cfg.parameter{k}) = varargin{i}.(cfg.parameter{k})(chansel,freqsel,timesel);
-            case {'rpt_chan_freq' 'rpttap_chan_freq' 'subj_chan_freq'}
-                varargin{i}.(cfg.parameter{k}) = varargin{i}.(cfg.parameter{k})(:,chansel,freqsel);
-            case {'rpt_chan_freq_time' 'rpttap_chan_freq_time' 'subj_chan_freq_time'}
-                varargin{i}.(cfg.parameter{k}) = varargin{i}.(cfg.parameter{k})(:,chansel,freqsel,timesel);
-            otherwise
-                ft_error('unsupported dimord');
-        end
-    end % for i = subject
+    if hastime
+      tbeg = max(tbeg, varargin{i}.time(1  ));
+      tend = min(tend, varargin{i}.time(end));
+    end
+  end
+  cfg.foilim = [fbeg fend];
+  cfg.toilim = [tbeg tend];
+  
+  % pick the selections
+  for i=1:Nsubj
+    if ~isfield(varargin{i}, cfg.parameter{k})
+      ft_error('the field %s is not present in data structure %d', cfg.parameter{k}, i);
+    end
+    [dum, chansel] = match_str(cfg.channel, varargin{i}.label);
+    varargin{i}.label = varargin{i}.label(chansel);
+    
+    if hasfreq
+      freqsel = nearest(varargin{i}.freq, fbeg):nearest(varargin{i}.freq, fend);
+      varargin{i}.freq = varargin{i}.freq(freqsel);
+    end
+    if hastime
+      timesel = nearest(varargin{i}.time, tbeg):nearest(varargin{i}.time, tend);
+      varargin{i}.time = varargin{i}.time(timesel);
+    end
+    % select the overlapping samples in the power spectrum
+    switch dimord
+      case 'chan_freq'
+        varargin{i}.(cfg.parameter{k}) = varargin{i}.(cfg.parameter{k})(chansel,freqsel);
+      case 'chan_freq_time'
+        varargin{i}.(cfg.parameter{k}) = varargin{i}.(cfg.parameter{k})(chansel,freqsel,timesel);
+      case {'rpt_chan_freq' 'rpttap_chan_freq' 'subj_chan_freq'}
+        varargin{i}.(cfg.parameter{k}) = varargin{i}.(cfg.parameter{k})(:,chansel,freqsel);
+      case {'rpt_chan_freq_time' 'rpttap_chan_freq_time' 'subj_chan_freq_time'}
+        varargin{i}.(cfg.parameter{k}) = varargin{i}.(cfg.parameter{k})(:,chansel,freqsel,timesel);
+      otherwise
+        ft_error('unsupported dimord');
+    end
+  end % for i = subject
 end % for k = parameter
 
 % determine the size of the data to be averaged
 dim = cell(1,numel(cfg.parameter));
 for k=1:numel(cfg.parameter)
-    dim{k} = size(varargin{1}.(cfg.parameter{k}));
+  dim{k} = size(varargin{1}.(cfg.parameter{k}));
 end
 
 % give some feedback on the screen
 if strcmp(cfg.keepindividual, 'no')
-    for k=1:numel(cfg.parameter)
-        ft_info('computing average %s over %d subjects\n', cfg.parameter{k}, Nsubj);
-    end
+  for k=1:numel(cfg.parameter)
+    ft_info('computing average %s over %d subjects\n', cfg.parameter{k}, Nsubj);
+  end
 else
-    for k=1:numel(cfg.parameter)
-        ft_info('not computing average, but keeping individual %s for %d subjects\n', cfg.parameter{k}, Nsubj);
-    end
+  for k=1:numel(cfg.parameter)
+    ft_info('not computing average, but keeping individual %s for %d subjects\n', cfg.parameter{k}, Nsubj);
+  end
 end
 
 % allocate memory to hold the data and collect it
 for k=1:numel(cfg.parameter)
-    if strcmp(cfg.keepindividual, 'no')
-        tmp = zeros(dim{k});
-        for s=1:Nsubj
-            tmp = tmp + varargin{s}.(cfg.parameter{k})./Nsubj; % do a weighted running sum
-        end
-    elseif strcmp(cfg.keepindividual, 'yes')
-        tmp = zeros([Nsubj dim{k}]);
-        for s=1:Nsubj
-            tmp(s,:,:,:,:) = varargin{s}.(cfg.parameter{k});
-        end
+  if strcmp(cfg.keepindividual, 'no')
+    tmp = zeros(dim{k});
+    for s=1:Nsubj
+      tmp = tmp + varargin{s}.(cfg.parameter{k})./Nsubj; % do a weighted running sum
     end
-    grandavg.(cfg.parameter{k}) = tmp;
+  elseif strcmp(cfg.keepindividual, 'yes')
+    tmp = zeros([Nsubj dim{k}]);
+    for s=1:Nsubj
+      tmp(s,:,:,:,:) = varargin{s}.(cfg.parameter{k});
+    end
+  end
+  grandavg.(cfg.parameter{k}) = tmp;
 end
 
 % collect the output data
 grandavg.label = varargin{1}.label;
 grandavg.freq  = varargin{1}.freq;
 if isfield(varargin{1}, 'time')
-    % remember the time axis
-    grandavg.time = varargin{1}.time;
+  % remember the time axis
+  grandavg.time = varargin{1}.time;
 end
 if isfield(varargin{1}, 'labelcmb')
-    grandavg.labelcmb = varargin{1}.labelcmb;
+  grandavg.labelcmb = varargin{1}.labelcmb;
 end
 if isfield(varargin{1}, 'grad')
-    ft_warning('discarding gradiometer information because it cannot be averaged');
+  ft_warning('discarding gradiometer information because it cannot be averaged');
 end
 if isfield(varargin{1}, 'elec')
-    ft_warning('discarding electrode information because it cannot be averaged');
+  ft_warning('discarding electrode information because it cannot be averaged');
 end
 if strcmp(cfg.keepindividual, 'yes')
-    grandavg.dimord = ['subj_',varargin{1}.dimord];
+  grandavg.dimord = ['subj_',varargin{1}.dimord];
 elseif strcmp(cfg.keepindividual, 'no')
-    grandavg.dimord = varargin{1}.dimord;
+  grandavg.dimord = varargin{1}.dimord;
 end
 
 % do the general cleanup and bookkeeping at the end of the function

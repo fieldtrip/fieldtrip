@@ -90,7 +90,19 @@ if ft_abort
   return
 end
 
-% ft_checkdata is done further down
+% store original datatype
+dtype = ft_datatype(data);
+
+% deal with the special case of timelock rpt_chan_time with 1 trial
+oneRptTimelock = (strcmp(dtype, 'timelock') && ...
+  strcmp(data.dimord, 'rpt_chan_time') && ...
+  size(data.trial, 1) == 1);
+
+% check if the input data is valid for this function, this will convert it to raw if needed
+data = ft_checkdata(data, 'datatype', {'raw+comp', 'raw'}, 'feedback', 'yes');
+
+% check if the input cfg is valid for this function
+cfg = ft_checkconfig(cfg, 'forbidden',  {'trial'}); % prevent accidental typos, see issue 1729
 
 % set the defaults
 cfg.offset       = ft_getopt(cfg, 'offset',    []);
@@ -103,17 +115,6 @@ cfg.feedback     = ft_getopt(cfg, 'feedback',  'yes');
 cfg.trl          = ft_getopt(cfg, 'trl',       []);
 cfg.length       = ft_getopt(cfg, 'length',    []);
 cfg.overlap      = ft_getopt(cfg, 'overlap',   0);
-
-% store original datatype
-dtype = ft_datatype(data);
-
-% deal with the special case of timelock rpt_chan_time with 1 trial
-oneRptTimelock = (strcmp(dtype, 'timelock') &&...
-  strcmp(data.dimord, 'rpt_chan_time') &&...
-  size(data.trial, 1) == 1);
-
-% check if the input data is valid for this function, this will convert it to raw if needed
-data = ft_checkdata(data, 'datatype', {'raw+comp', 'raw'}, 'feedback', cfg.feedback);
 
 % select trials of interest
 if ~strcmp(cfg.trials, 'all')
@@ -196,6 +197,7 @@ elseif ~isempty(cfg.offset)
   % shift the time axis from each trial
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   offset = cfg.offset(:);
+  offset = round(offset); % this is in samples and hence it must be expressed as integers
   if length(cfg.offset)==1
     offset = repmat(offset, Ntrial, 1);
   end

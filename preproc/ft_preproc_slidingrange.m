@@ -10,6 +10,11 @@ function y = ft_preproc_slidingrange(dat, width, varargin)
 % Optional key-value pair arguments are:
 %   'normalize', whether to normalize the range of the data with the square
 %                root of the window size
+%
+% If the data contains NaNs, these are ignored for the computation, but
+% retained in the output.
+%
+% See also PREPROC
 
 % Copyright (C) 2012, Donders Centre for Cognitive Neuroimaging, Nijmegen, NL
 %

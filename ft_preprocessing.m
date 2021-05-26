@@ -22,7 +22,7 @@ function [data] = ft_preprocessing(cfg, data)
 %   cfg.continuous   = 'yes' or 'no' whether the file contains continuous data
 %                      (default is determined automatic)
 %
-% Instead of specifying the dataset in the configuration, you can also explicitely
+% Instead of specifying the dataset in the configuration, you can also explicitly
 % specify the name of the file containing the header information and the name of the
 % file containing the data, using
 %   cfg.datafile     = string with the filename
@@ -154,7 +154,7 @@ function [data] = ft_preprocessing(cfg, data)
 %   cfg.export.dataset    = string with the output file name
 %   cfg.export.dataformat = string describing the output file format, see FT_WRITE_DATA
 
-% Copyright (C) 2003-2013, Robert Oostenveld, SMI, FCDC
+% Copyright (C) 2003-2021, Robert Oostenveld, SMI, FCDC
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -198,9 +198,10 @@ if ~isempty(ft_getopt(cfg, 'distribute'))
 end
 
 % check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'renamed', {'blc', 'demean'});
-cfg = ft_checkconfig(cfg, 'renamed', {'blcwindow', 'baselinewindow'});
-cfg = ft_checkconfig(cfg, 'renamed', {'output', 'export'});
+cfg = ft_checkconfig(cfg, 'forbidden',  {'channels', 'trial'}); % prevent accidental typos, see issue 1729
+cfg = ft_checkconfig(cfg, 'renamed',    {'blc', 'demean'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'blcwindow', 'baselinewindow'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'output', 'export'});
 
 % set the defaults
 cfg.method         = ft_getopt(cfg, 'method', 'trial');

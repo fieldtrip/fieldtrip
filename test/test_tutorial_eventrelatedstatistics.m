@@ -21,11 +21,11 @@ grandavgFC    = ft_timelockgrandaverage(cfg, allsubjFC{:});
 %% plotting the grand-averagecfg = [];
 cfg.showlabels  = 'yes';
 cfg.layout      = 'CTF151_helmet.mat';
-figure; ft_multiplotER(cfg, grandavgFIC, grandavgFC)
+ft_multiplotER(cfg, grandavgFIC, grandavgFC)
 
 cfg = [];
 cfg.channel = 'MLT12';
-figure; ft_singleplotER(cfg, grandavgFIC, grandavgFC)
+ft_singleplotER(cfg, grandavgFIC, grandavgFC)
 
 
 %%
@@ -128,7 +128,7 @@ cfg.layout    = 'CTF151_helmet.mat';
 cfg.highlight = 'on';
 cfg.highlightchannel = find(h);
 cfg.comment   = 'no';
-figure; ft_topoplotER(cfg, grandavgFIC)
+ft_topoplotER(cfg, grandavgFIC)
 title('significant without multiple comparison correction')
 
 
@@ -198,7 +198,7 @@ cfg.layout    = 'CTF151_helmet.mat';
 cfg.highlight = 'on';
 cfg.highlightchannel = find(stat.mask);
 cfg.comment   = 'no';
-figure; ft_topoplotER(cfg, grandavgFIC)
+ft_topoplotER(cfg, grandavgFIC)
 title('Nonparametric: significant without multiple comparison correction')
 
 
@@ -243,7 +243,7 @@ cfg.layout    = 'CTF151_helmet.mat';
 cfg.highlight = 'on';
 cfg.highlightchannel = find(stat.mask);
 cfg.comment   = 'no';
-figure; ft_topoplotER(cfg, grandavgFIC)
+ft_topoplotER(cfg, grandavgFIC)
 title('Nonparametric: significant with cluster-based multiple comparison correction')
 
 
@@ -280,5 +280,6 @@ cfg.markersymbol = '.';
 cfg.alpha = 0.05;
 cfg.parameter='stat';
 cfg.zlim = [-5 5];
+cfg.toi  = [-0.1:0.1:0.9];
 ft_clusterplot(cfg, stat);
 

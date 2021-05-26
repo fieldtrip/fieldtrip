@@ -47,6 +47,8 @@ if isnumeric(artifact)
   elseif size(artifact,2)>2
     % when present, the third column must be the offset
     trl = artifact;
+  elseif isempty(artifact)
+    trl = zeros(0,3);
   end
 elseif istable(artifact)
   trl = table();

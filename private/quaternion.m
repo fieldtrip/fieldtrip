@@ -13,6 +13,8 @@ function [H] = quaternion(q)
 %
 % See Neuromag/Elekta/Megin MaxFilter manual version 2.2, section "D2 Coordinate Matching", page 77 for more details and
 % https://en.wikipedia.org/wiki/Quaternions_and_spatial_rotation#Conversion_to_and_from_the_matrix_representation
+%
+% See also TRANSLATE, ROTATE, SCALE
 
 % Copyright (C) 2016-2017, Robert Oostenveld
 %

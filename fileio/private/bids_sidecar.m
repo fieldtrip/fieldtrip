@@ -8,21 +8,23 @@ function sidecar = bids_sidecar(filename, suffix)
 %   sidecar = bids_sidecar(filename, sidecar, retval)
 % where filename refers to a BIDS data file and suffix is a string that refers to the
 % specific sidecar file. To read the json sidecar corresponding to the data itself,
-% you can keep the suffix empty. In that case the suffix (e.g. meg, eeg or ieeg) will
+% you can keep the suffix empty. In that case the suffix (e.g., meg or eeg) will
 % be determined from the filename.
 %
 % This supports, but is not restricted to the following json sidecar files
-%   'eeg'
 %   'meg'
+%   'eeg'
 %   'ieeg'
 %   'nirs'
-%   'coordsys'
+%   'coordsystem'
 %
 % This supports, but is not restricted to the following tsv sidecar files
 %   'channels'
 %   'electrodes'
 %   'optodes'
 %   'events'
+%
+% In case both a tsv and a json sidecar file are present, the tsv file will be returned.
 %
 % See https://bids-specification.readthedocs.io/ for the specification and
 % http://bids.neuroimaging.io/ for background information.
@@ -119,12 +121,16 @@ end
 % start with an empty return value
 sidecar = [];
 
+% if there is both a tsv and a json file for the desired sidecar, we want to return the tsv
+% sort them to get the tsv files first in the list, followed by the json files
+filelist = [filelist(endsWith(filelist', 'tsv')) filelist(endsWith(filelist', 'json'))];
+
 % we are searching for a file with the datatype as suffix and that ends with json
 for i=1:numel(filelist)
   [p, f, x] = fileparts(filelist{i});
   tmp = split(f, '_');
   % check the file extension, the suffix and the entities of each candidate file
-  if any(strcmp(x, {'.json', '.tsv'})) && strcmp(tmp{end}, suffix) && all(ismember(tmp(1:end-1), entities))
+  if ismember(x, {'.tsv', '.json'}) && strcmp(tmp{end}, suffix) && all(ismember(tmp(1:end-1), entities))
     ft_info('found matching BIDS sidecar ''%s''', filelist{i})
     sidecar = filelist{i};
     break % do not consider any of the other potential matches

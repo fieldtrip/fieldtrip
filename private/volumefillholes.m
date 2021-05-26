@@ -5,7 +5,7 @@ function [output] = volumefillholes(input, along)
 % See also VOLUMETHRESHOLD, VOLUMESMOOTH
 
 % ensure that SPM is available, needed for spm_bwlabel
-hasspm = ft_hastoolbox('spm8up', 3) || ft_hastoolbox('spm2', 1);
+ft_hastoolbox('spm8up', 3) || ft_hastoolbox('spm2', 1);
 
 if nargin<2
   inflate = false(size(input)+2);                   % grow the edges along each dimension

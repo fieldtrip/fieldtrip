@@ -113,6 +113,10 @@ for i=1:length(varargin)
   varargin{i} = ft_checkdata(varargin{i}, 'datatype', 'raw');
 end
 
+% check if the input cfg is valid for this function
+cfg = ft_checkconfig(cfg, 'forbidden',  {'channels', 'trial'}); % prevent accidental typos, see issue 1729
+
+% set the defaults
 cfg.nfold       = ft_getopt(cfg, 'nfold',   1);
 cfg.blocklength = ft_getopt(cfg, 'blocklength', 'trial');
 cfg.testtrials  = ft_getopt(cfg, 'testtrials',  'all');
@@ -432,6 +436,8 @@ end
 % update the weights-structure
 weights.time = cfg.reflags;
 weights.rho  = rho;
+weights.covariance = C;
+weights.std        = [std_data;std_refdata];
 if exist('beta_data', 'var')
   weights.mixing = beta_data; 
   weights.beta   = beta_ref;

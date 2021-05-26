@@ -88,6 +88,10 @@ showwarning   = ft_getopt(varargin, 'warning',     true);
 bname         = ft_getopt(varargin, 'balancename', '');
 showcallinfo  = ft_getopt(varargin, 'showcallinfo', 'no');
 
+% ensure that the input montage is correct, see https://github.com/fieldtrip/fieldtrip/issues/1718
+assert(length(unique(montage.labelold))==length(montage.labelold), 'the montage is invalid');
+assert(length(unique(montage.labelnew))==length(montage.labelnew), 'the montage is invalid');
+
 if istrue(showwarning)
   warningfun = @warning;
 else
@@ -221,7 +225,7 @@ end
 
 % select and keep the columns that are non-empty, i.e. remove the empty columns
 selcol = ~all(montage.tra==0, 1);
-if keepunused
+if istrue(keepunused)
   for i=find(selcol==false)
     % don't remove the column if it corresponds to one of the output channels
     selcol(i) = any(strcmp(montage.labelnew, montage.labelold{i}));
@@ -364,7 +368,7 @@ elseif ft_datatype(input, 'freq') && isfield(input, 'crsspctrm')
   inputtype = 'freq_crsspctrm';
   
   % attempt to convert to a chan-chan representation
-  input     = ft_checkdata(input, 'cmbrepresentation', 'full');
+  input     = ft_checkdata(input, 'cmbstyle', 'full');
 else
   inputtype = 'unknown';
 end

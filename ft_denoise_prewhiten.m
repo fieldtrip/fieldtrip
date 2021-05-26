@@ -62,22 +62,26 @@ if ft_abort
   return
 end
 
-% get the defaults
-cfg.channel = ft_getopt(cfg, 'channel', 'all');
-cfg.split   = ft_getopt(cfg, 'split',   'all');
-cfg.lambda  = ft_getopt(cfg, 'lambda',  0);
-cfg.kappa   = ft_getopt(cfg, 'kappa',   []);
-cfg.tol     = ft_getopt(cfg, 'tol',     []);
-cfg.realflag = ft_getopt(cfg, 'realflag', true); % for complex-valued crsspctrm
-cfg.invmethod = ft_getopt(cfg, 'invmethod', 'tikhonov');
-
 % ensure that the input data is correct, the next line is needed for a
 % attempt correct detection of the data chanunit (with a hdr-field it fails
 % for meggrad data)
 if isfield(datain, 'hdr'), datain = rmfield(datain, 'hdr'); end
 
+% check if the input data is valid for this function
 datain = ft_checkdata(datain, 'datatype', {'raw' 'timelock' 'freq'}, 'haschantype', 'yes', 'haschanunit', 'yes');
 noise  = ft_checkdata(noise,  'datatype', {      'timelock' 'freq'}, 'haschantype', 'yes', 'haschanunit', 'yes');
+
+% check if the input cfg is valid for this function
+cfg = ft_checkconfig(cfg, 'forbidden',  {'channels'}); % prevent accidental typos, see issue 1729
+
+% set the defaults
+cfg.channel   = ft_getopt(cfg, 'channel', 'all');
+cfg.split     = ft_getopt(cfg, 'split',   'all');
+cfg.lambda    = ft_getopt(cfg, 'lambda',  0);
+cfg.kappa     = ft_getopt(cfg, 'kappa',   []);
+cfg.tol       = ft_getopt(cfg, 'tol',     []);
+cfg.realflag  = ft_getopt(cfg, 'realflag', true); % for complex-valued crsspctrm
+cfg.invmethod = ft_getopt(cfg, 'invmethod', 'tikhonov');
 
 dtype_datain = ft_datatype(datain);
 
@@ -89,13 +93,14 @@ switch dtype_datain
     assert(ft_datatype(noise, 'timelock'), 'noise data should be of datatype ''timelock''');
   case 'freq'
     if ft_datatype(noise, 'freq')
-      % this is only allowed if both structures have the same singleton
-      % frequency
-      assert(numel(noise.freq==1) && numel(datain.freq==1) && isequal(noise.freq,datain.freq), ...
+      % this is only allowed if both structures have the same singleton frequency
+      assert(numel(noise.freq)==1 && numel(datain.freq)==1 && isequal(noise.freq,datain.freq), ...
         'with both datain and noise of datatype ''freq'', only singleton and equal frequency bins are allowed');
     elseif ft_datatype(noise, 'timelock')
       % this is OK
     end
+  otherwise
+    ft_error('unsupported input data');
 end
 
 % select channels and trials of interest, by default this will select all channels and trials
@@ -153,7 +158,7 @@ if numel(chantype)>0
     tra(sel,sel)      = U(:,selS)*diag(sqrt(diagS(selS)))*U(:,selS)';
   end
   %invnoise = ft_inv(noisecov, 'lambda', cfg.lambda, 'kappa', cfg.kappa, 'tolerance', cfg.tol, 'method', cfg.invmethod);
-
+  
 else
   % invert the noise covariance matrix
   invnoise = ft_inv(noisecov, 'lambda', cfg.lambda, 'kappa', cfg.kappa, 'tolerance', cfg.tol, 'method', cfg.invmethod);
@@ -162,12 +167,12 @@ else
   %sel     = diagS./diagS(1)>1e-12;
   sel      = 1:rank(invnoise);
   
-  
   % the prewhitening projection first rotates to orthogonal channels,
   % then scales, and then rotates the channels back to (more or less)
   % their original MEG-channel representation
   tra      = U(:,sel)*diag(sqrt(diagS(sel)))*U(:,sel)';
 end
+
 prewhiten             = [];
 prewhiten.tra         = tra;
 prewhiten.labelold    = noise.label;

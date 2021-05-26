@@ -6,12 +6,12 @@ function [sourcemodel, cfg] = ft_prepare_leadfield(cfg, data)
 % Use as
 %   [sourcemodel] = ft_prepare_leadfield(cfg, data)
 %
-% It is necessary to input the data on which you want to perform the
-% inverse computations, since that data generally contain the gradiometer
-% information and information about the channels that should be included in
-% the forward model computation. The data structure can be either obtained
-% from FT_PREPROCESSING, FT_FREQANALYSIS or FT_TIMELOCKANALYSIS. If the data is empty,
-% all channels will be included in the forward model.
+% It is necessary to input the data on which you want to perform the inverse
+% computations, since that data generally contain the gradiometer information and
+% information about the channels that should be included in the forward model
+% computation. The data structure can be either obtained from FT_PREPROCESSING,
+% FT_FREQANALYSIS or FT_TIMELOCKANALYSIS. If the data is empty, all channels will be
+% included in the forward model.
 %
 % The configuration should contain
 %   cfg.channel            = Nx1 cell-array with selection of channels (default = 'all'),
@@ -23,6 +23,7 @@ function [sourcemodel, cfg] = ft_prepare_leadfield(cfg, data)
 %   cfg.ygrid      = vector (e.g. -20:1:20) or 'auto' (default = 'auto')
 %   cfg.zgrid      = vector (e.g.   0:1:20) or 'auto' (default = 'auto')
 %   cfg.resolution = number (e.g. 1 cm) for automatic sourcemodel generation
+%
 % Alternatively the position of a few sources at locations of interest can
 % be specified, for example obtained from an anatomical or functional MRI
 %   cfg.sourcemodel.pos        = N*3 matrix with position of each source
@@ -130,23 +131,25 @@ else
 end
 
 % check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'renamed', {'hdmfile', 'headmodel'});
-cfg = ft_checkconfig(cfg, 'renamed', {'vol',     'headmodel'});
-cfg = ft_checkconfig(cfg, 'renamed', {'grid',    'sourcemodel'});
-cfg = ft_checkconfig(cfg, 'renamed', {'om',      'openmeeg'});
-cfg = ft_checkconfig(cfg, 'renamed', {'elecfile', 'elec'});
-cfg = ft_checkconfig(cfg, 'renamed', {'gradfile', 'grad'});
-cfg = ft_checkconfig(cfg, 'renamed', {'optofile', 'opto'});
+cfg = ft_checkconfig(cfg, 'forbidden',  {'channels'}); % prevent accidental typos, see issue 1729
+cfg = ft_checkconfig(cfg, 'renamed',    {'hdmfile',   'headmodel'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'vol',       'headmodel'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'grid',      'sourcemodel'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'om',        'openmeeg'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'elecfile',  'elec'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'gradfile',  'grad'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'optofile',  'opto'});
+cfg = ft_checkconfig(cfg, 'deprecated', {'patchindx', 'patchsize'});
 
 % set the defaults
-cfg.lbex           = ft_getopt(cfg, 'lbex',           'no');
-cfg.sel50p         = ft_getopt(cfg, 'sel50p',         'no');
-cfg.feedback       = ft_getopt(cfg, 'feedback',       'text');
-cfg.mollify        = ft_getopt(cfg, 'mollify',        'no');
-cfg.patchsvd       = ft_getopt(cfg, 'patchsvd',       'no');
+cfg.lbex           = ft_getopt(cfg, 'lbex',      'no');
+cfg.sel50p         = ft_getopt(cfg, 'sel50p',    'no');
+cfg.feedback       = ft_getopt(cfg, 'feedback',  'text');
+cfg.mollify        = ft_getopt(cfg, 'mollify',   'no');
+cfg.patchsvd       = ft_getopt(cfg, 'patchsvd',  'no');
 
-cfg = ft_checkconfig(cfg, 'renamed', {'tightgrid', 'tight'});  % this is moved to cfg.sourcemodel.tight by the subsequent createsubcfg
-cfg = ft_checkconfig(cfg, 'renamed', {'sourceunits', 'unit'}); % this is moved to cfg.sourcemodel.unit by the subsequent createsubcfg
+cfg = ft_checkconfig(cfg, 'renamed', {'tightgrid',   'tight'});  % this is moved to cfg.sourcemodel.tight by the subsequent createsubcfg
+cfg = ft_checkconfig(cfg, 'renamed', {'sourceunits', 'unit'});   % this is moved to cfg.sourcemodel.unit by the subsequent createsubcfg
 
 % put the low-level options pertaining to the sourcemodel in their own field
 cfg = ft_checkconfig(cfg, 'createsubcfg', {'sourcemodel'});
@@ -288,22 +291,23 @@ elseif ft_headmodeltype(headmodel, 'singleshell')
   ft_progress('close');
   
 elseif ft_headmodeltype(headmodel, 'duneuro')
+%   ft_hastoolbox('duneuro', 1); %does not look necessary here? check
   % repeated system calls to the duneuro executable makes it rather slow
   % calling it once for all dipoles is much more efficient
   
   % find the indices of all grid points that are inside the brain
-  insideindx = find(grid.inside);
+  insideindx = find(sourcemodel.inside);
   
   ft_progress('init', cfg.feedback, 'computing leadfield');
   % compute the leadfield on all grid positions inside the brain
-  lf = ft_compute_leadfield(grid.pos(insideindx,:), sens, headmodel, 'reducerank', cfg.reducerank, 'normalize', cfg.normalize, 'normalizeparam', cfg.normalizeparam, 'backproject', cfg.backproject);
+  lf = ft_compute_leadfield(sourcemodel.pos(insideindx,:), sens, headmodel, 'reducerank', cfg.reducerank, 'normalize', cfg.normalize, 'normalizeparam', cfg.normalizeparam, 'backproject', cfg.backproject);
   lf = mat2cell(lf, size(lf,1), repmat(3,1,size(lf,2)/3));
-  grid.leadfield(grid.inside) = lf;
+  sourcemodel.leadfield(sourcemodel.inside) = lf;
   for i=1:length(insideindx)
     thisindx = insideindx(i);
     if isfield(cfg, 'grid') && isfield(cfg.grid, 'mom')
       % multiply with the normalized dipole moment to get the leadfield in the desired orientation
-      grid.leadfield{thisindx} = grid.leadfield{thisindx} * grid.mom(:,thisindx);
+      sourcemodel.leadfield{thisindx} = sourcemodel.leadfield{thisindx} * sourcemodel.mom(:,thisindx);
     end
   end % for all grid locations inside the brain
   
@@ -335,22 +339,22 @@ sourcemodel.label           = sens.label;
 sourcemodel.leadfielddimord = '{pos}_chan_ori';
 
 % mollify the leadfields
-if ~strcmp(cfg.mollify, 'no')
+if ~isequal(cfg.mollify, 'no')
   sourcemodel = mollify(cfg, sourcemodel);
 end
 
 % combine leadfields in patches and do an SVD on them
-if ~strcmp(cfg.patchsvd, 'no')
+if ~isequal(cfg.patchsvd, 'no')
   sourcemodel = patchsvd(cfg, sourcemodel);
 end
 
 % compute the 50 percent channel selection subspace projection
-if ~strcmp(cfg.sel50p, 'no')
+if ~isequal(cfg.sel50p, 'no')
   sourcemodel = sel50p(cfg, sourcemodel, sens);
 end
 
 % compute the local basis function expansion (LBEX) subspace projection
-if ~strcmp(cfg.lbex, 'no')
+if ~isequal(cfg.lbex, 'no')
   sourcemodel = lbex(cfg, sourcemodel);
 end
 

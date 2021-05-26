@@ -141,100 +141,100 @@ if ~any(strcmp(chantype, 'unknown'))
 elseif ft_senstype(input, 'unknown')
   % don't bother doing subsequent checks to determine the chantype
   
-elseif isheader && (ft_senstype(input, 'neuromag') || ft_senstype(input, 'babysquid74'))
+elseif isheader && issubfield(input, 'orig.channames')
+  % this is for Neuromag or Babysquid systems
   % channames-KI is the channel kind, 1=meg, 202=eog, 2=eeg, 3=trigger (I am not sure, but have inferred this from a single test file)
   % chaninfo-TY is the Coil chantype (0=magnetometer, 1=planar gradiometer)
-  if isfield(input, 'orig') && isfield(input.orig, 'channames')
-    for sel=find(input.orig.channames.KI(:)==202)'
-      chantype{sel} = 'eog';
+  for sel=find(input.orig.channames.KI(:)==202)'
+    chantype{sel} = 'eog';
+  end
+  for sel=find(input.orig.channames.KI(:)==2)'
+    chantype{sel} = 'eeg';
+  end
+  for sel=find(input.orig.channames.KI(:)==3)'
+    chantype{sel} = 'digital trigger';
+  end
+  % determine the MEG channel subtype
+  selmeg=find(input.orig.channames.KI(:)==1)';
+  for i=1:length(selmeg)
+    if input.orig.chaninfo.TY(i)==0
+      chantype{selmeg(i)} = 'megmag';
+    elseif input.orig.chaninfo.TY(i)==1
+      % FIXME this might also be a axial gradiometer in case the BabySQUID data is read with the old reading routines
+      chantype{selmeg(i)} = 'megplanar';
     end
-    for sel=find(input.orig.channames.KI(:)==2)'
-      chantype{sel} = 'eeg';
+  end
+  
+elseif isheader && issubfield(input, 'orig.chs.coil_type')
+  % this is for Neuromag or Babysquid systems
+  % all the chs.kinds and chs.coil_types are obtained from the MNE manual, p.210-211
+  for sel=find([input.orig.chs.kind]==1 & [input.orig.chs.coil_type]==2)'    % planar gradiometers
+    chantype(sel) = {'megplanar'}; % Neuromag-122 planar gradiometer
+  end
+  for sel=find([input.orig.chs.kind]==1 & [input.orig.chs.coil_type]==3012)' % planar gradiometers
+    chantype(sel) = {'megplanar'}; % Type T1 planar grad
+  end
+  for sel=find([input.orig.chs.kind]==1 & [input.orig.chs.coil_type]==3013)' % planar gradiometers
+    chantype(sel) = {'megplanar'}; % Type T2 planar grad
+  end
+  for sel=find([input.orig.chs.kind]==1 & [input.orig.chs.coil_type]==3014)' % planar gradiometers
+    chantype(sel) = {'megplanar'}; % Type T3 planar grad
+  end
+  for sel=find([input.orig.chs.kind]==1 & [input.orig.chs.coil_type]==3022)' % magnetometers
+    chantype(sel) = {'megmag'};    % Type T1 magenetometer
+  end
+  for sel=find([input.orig.chs.kind]==1 & [input.orig.chs.coil_type]==3023)' % magnetometers
+    chantype(sel) = {'megmag'};    % Type T2 magenetometer
+  end
+  for sel=find([input.orig.chs.kind]==1 & [input.orig.chs.coil_type]==3024)' % magnetometers
+    chantype(sel) = {'megmag'};    % Type T3 magenetometer
+  end
+  for sel=find([input.orig.chs.kind]==1 & [input.orig.chs.coil_type]==7001)' % axial gradiometer
+    chantype(sel) = {'megaxial'};
+  end
+  for sel=find([input.orig.chs.kind]==301)' % MEG reference channel, located far from head
+    chantype(sel) = {'ref'};
+  end
+  for sel=find([input.orig.chs.kind]==2)'   % EEG channels
+    chantype(sel) = {'eeg'};
+  end
+  for sel=find([input.orig.chs.kind]==201)' % MCG channels
+    chantype(sel) = {'mcg'};
+  end
+  for sel=find([input.orig.chs.kind]==3)'   % Stim channels
+    if any([input.orig.chs(sel).logno] == 101) % new systems: 101 (and 102, if enabled) are digital; low numbers are 'pseudo-analog' (if enabled)
+      chantype(sel([input.orig.chs(sel).logno] == 101)) = {'digital trigger'};
+      chantype(sel([input.orig.chs(sel).logno] == 102)) = {'digital trigger'};
+      chantype(sel([input.orig.chs(sel).logno] <= 32))  = {'analog trigger'};
+      others = [input.orig.chs(sel).logno] > 32 & [input.orig.chs(sel).logno] ~= 101 & ...
+        [input.orig.chs(sel).logno] ~= 102;
+      chantype(sel(others)) = {'other trigger'};
+    elseif any(ismember([input.orig.chs(sel).logno], [14 15 16])) % older systems: STI 014/015/016 are digital; lower numbers 'pseudo-analog'(if enabled)
+      chantype(sel([input.orig.chs(sel).logno] == 14)) = {'digital trigger'};
+      chantype(sel([input.orig.chs(sel).logno] == 15)) = {'digital trigger'};
+      chantype(sel([input.orig.chs(sel).logno] == 16)) = {'digital trigger'};
+      chantype(sel([input.orig.chs(sel).logno] <= 13)) = {'analog trigger'};
+      others = [input.orig.chs(sel).logno] > 16;
+      chantype(sel(others)) = {'other trigger'};
+    else
+      ft_warning('There does not seem to be a suitable trigger channel.');
+      chantype(sel) = {'other trigger'};
     end
-    for sel=find(input.orig.channames.KI(:)==3)'
-      chantype{sel} = 'digital trigger';
-    end
-    % determine the MEG channel subtype
-    selmeg=find(input.orig.channames.KI(:)==1)';
-    for i=1:length(selmeg)
-      if input.orig.chaninfo.TY(i)==0
-        chantype{selmeg(i)} = 'megmag';
-      elseif input.orig.chaninfo.TY(i)==1
-        % FIXME this might also be a axial gradiometer in case the BabySQUID data is read with the old reading routines
-        chantype{selmeg(i)} = 'megplanar';
-      end
-    end
-    
-  elseif isfield(input, 'orig') && isfield(input.orig, 'chs') && isfield(input.orig.chs, 'coil_type')
-    % all the chs.kinds and chs.coil_types are obtained from the MNE manual, p.210-211
-    for sel=find([input.orig.chs.kind]==1 & [input.orig.chs.coil_type]==2)' % planar gradiometers
-      chantype(sel) = {'megplanar'}; % Neuromag-122 planar gradiometer
-    end
-    for sel=find([input.orig.chs.kind]==1 & [input.orig.chs.coil_type]==3012)' %planar gradiometers
-      chantype(sel) = {'megplanar'}; % Type T1 planar grad
-    end
-    for sel=find([input.orig.chs.kind]==1 & [input.orig.chs.coil_type]==3013)' %planar gradiometers
-      chantype(sel) = {'megplanar'}; % Type T2 planar grad
-    end
-    for sel=find([input.orig.chs.kind]==1 & [input.orig.chs.coil_type]==3014)' %planar gradiometers
-      chantype(sel) = {'megplanar'}; % Type T3 planar grad
-    end
-    for sel=find([input.orig.chs.kind]==1 & [input.orig.chs.coil_type]==3022)' %magnetometers
-      chantype(sel) = {'megmag'};    % Type T1 magenetometer
-    end
-    for sel=find([input.orig.chs.kind]==1 & [input.orig.chs.coil_type]==3023)' %magnetometers
-      chantype(sel) = {'megmag'};    % Type T2 magenetometer
-    end
-    for sel=find([input.orig.chs.kind]==1 & [input.orig.chs.coil_type]==3024)' % magnetometers
-      chantype(sel) = {'megmag'};    % Type T3 magenetometer
-    end
-    for sel=find([input.orig.chs.kind]==1 & [input.orig.chs.coil_type]==7001)' % axial gradiometer
-      chantype(sel) = {'megaxial'};
-    end
-    for sel=find([input.orig.chs.kind]==301)' % MEG reference channel, located far from head
-      chantype(sel) = {'ref'};
-    end
-    for sel=find([input.orig.chs.kind]==2)'   % EEG channels
-      chantype(sel) = {'eeg'};
-    end
-    for sel=find([input.orig.chs.kind]==201)' % MCG channels
-      chantype(sel) = {'mcg'};
-    end
-    for sel=find([input.orig.chs.kind]==3)' % Stim channels
-      if any([input.orig.chs(sel).logno] == 101) % new systems: 101 (and 102, if enabled) are digital; low numbers are 'pseudo-analog' (if enabled)
-        chantype(sel([input.orig.chs(sel).logno] == 101)) = {'digital trigger'};
-        chantype(sel([input.orig.chs(sel).logno] == 102)) = {'digital trigger'};
-        chantype(sel([input.orig.chs(sel).logno] <= 32))  = {'analog trigger'};
-        others = [input.orig.chs(sel).logno] > 32 & [input.orig.chs(sel).logno] ~= 101 & ...
-          [input.orig.chs(sel).logno] ~= 102;
-        chantype(sel(others)) = {'other trigger'};
-      elseif any(ismember([input.orig.chs(sel).logno], [14 15 16])) % older systems: STI 014/015/016 are digital; lower numbers 'pseudo-analog'(if enabled)
-        chantype(sel([input.orig.chs(sel).logno] == 14)) = {'digital trigger'};
-        chantype(sel([input.orig.chs(sel).logno] == 15)) = {'digital trigger'};
-        chantype(sel([input.orig.chs(sel).logno] == 16)) = {'digital trigger'};
-        chantype(sel([input.orig.chs(sel).logno] <= 13)) = {'analog trigger'};
-        others = [input.orig.chs(sel).logno] > 16;
-        chantype(sel(others)) = {'other trigger'};
-      else
-        ft_warning('There does not seem to be a suitable trigger channel.');
-        chantype(sel) = {'other trigger'};
-      end
-    end
-    for sel=find([input.orig.chs.kind]==202)' % EOG
-      chantype(sel) = {'eog'};
-    end
-    for sel=find([input.orig.chs.kind]==302)' % EMG
-      chantype(sel) = {'emg'};
-    end
-    for sel=find([input.orig.chs.kind]==402)' % ECG
-      chantype(sel) = {'ecg'};
-    end
-    for sel=find([input.orig.chs.kind]==502)' % MISC
-      chantype(sel) = {'misc'};
-    end
-    for sel=find([input.orig.chs.kind]==602)' % Resp
-      chantype(sel) = {'respiration'};
-    end
+  end
+  for sel=find([input.orig.chs.kind]==202)' % EOG
+    chantype(sel) = {'eog'};
+  end
+  for sel=find([input.orig.chs.kind]==302)' % EMG
+    chantype(sel) = {'emg'};
+  end
+  for sel=find([input.orig.chs.kind]==402)' % ECG
+    chantype(sel) = {'ecg'};
+  end
+  for sel=find([input.orig.chs.kind]==502)' % MISC
+    chantype(sel) = {'misc'};
+  end
+  for sel=find([input.orig.chs.kind]==602)' % Resp
+    chantype(sel) = {'respiration'};
   end
   
 elseif ft_senstype(input, 'babysquid74')
@@ -249,7 +249,7 @@ elseif ft_senstype(input, 'neuromag122')
   sel = myregexp('^MEG', label);
   chantype(sel) = {'megplanar'};
   
-elseif ft_senstype(input, 'neuromag306') && isgrad
+elseif isgrad && ft_senstype(input, 'neuromag306')
   % there should be 204 planar gradiometers and 102 axial magnetometers
   if isfield(input, 'tra')
     tmp = sum(abs(input.tra)>0,2);
@@ -259,7 +259,7 @@ elseif ft_senstype(input, 'neuromag306') && isgrad
     chantype(sel) = {'megplanar'};
   end
   
-elseif ft_senstype(input, 'neuromag306') && islabel
+elseif islabel && ft_senstype(input, 'neuromag306')
   sel = myregexp('^MEG.*1$', label);
   chantype(sel) = {'megmag'};
   sel = myregexp('^MEG.*2$', label);
@@ -267,102 +267,25 @@ elseif ft_senstype(input, 'neuromag306') && islabel
   sel = myregexp('^MEG.*3$', label);
   chantype(sel) = {'megplanar'};
   
-elseif ft_senstype(input, 'neuromag306_combined') && islabel
+elseif islabel && ft_senstype(input, 'neuromag306_combined')
   % the magnetometers are detected, the combined channels remain unknown
   sel = myregexp('^MEG.*1$', label);
   chantype(sel) = {'megmag'};
   
-elseif ft_senstype(input, 'ctf') && isheader
-  % The following is according to "CTF MEG(TM) File Formats" pdf, Release 5.2.1
-  %
-  % eMEGReference      0 Reference magnetometer channel
-  % eMEGReference1     1 Reference 1st-order gradiometer channel
-  % eMEGReference2     2 Reference 2nd-order gradiometer channel
-  % eMEGReference3     3 Reference 3rd-order gradiometer channel
-  % eMEGSensor         4 Sensor magnetometer channel located in head shell
-  % eMEGSensor1        5 Sensor 1st-order gradiometer channel located in head shell
-  % eMEGSensor2        6 Sensor 2nd-order gradiometer channel located in head shell
-  % eMEGSensor3        7 Sensor 3rd-order gradiometer channel located in head shell
-  % eEEGRef            8 EEG unipolar sensors not on the scalp
-  % eEEGSensor         9 EEG unipolar sensors on the scalp
-  % eADCRef           10 (see eADCAmpRef below)
-  % eADCAmpRef        10 ADC amp channels from HLU or PIU (old electronics)
-  % eStimRef          11 Stimulus channel for MEG41
-  % eTimeRef          12 Time reference coming from video channel
-  % ePositionRef      13 Not used
-  % eDACRef           14 DAC channel from ECC or HLU
-  % eSAMSensor        15 SAM channel derived through data analysis
-  % eVirtualSensor    16 Virtual channel derived by combining two or more physical channels
-  % eSystemTimeRef    17 System time showing elapsed time since trial started
-  % eADCVoltRef       18 ADC volt channels from ECC
-  % eStimAnalog       19 Analog trigger channels
-  % eStimDigital      20 Digital trigger channels
-  % eEEGBipolar       21 EEG bipolar sensor not on the scalp
-  % eEEGAflg          22 EEG ADC over range flags
-  % eMEGReset         23 MEG resets (counts sensor jumps for crosstalk purposes)
-  % eDipSrc           24 Dipole source
-  % eSAMSensorNorm    25 Normalized SAM channel derived through data analy- sis
-  % eAngleRef         26 Orientation of head localization field
-  % eExtractionRef    27 Extracted signal from each sensor of field generated by each localization coil
-  % eFitErr           28 Fit error from each head localization coil
-  % eOtherRef         29 Any other type of sensor not mentioned but still valid
-  % eInvalidType      30 An invalid sensor
+elseif isheader && isfield(input, 'orig') && isfield(input.orig, 'sensType') && isfield(input.orig, 'Chan')
+  % the header was read using the open-source MATLAB code that originates from CTF and that was modified by the FCDC
+  origSensType = input.orig.sensType;
+  chantype = ctfchantype(origSensType); % this code is shared
   
-  % start with an empty one
-  origSensType = [];
-  if isfield(input, 'orig')
-    if isfield(input.orig, 'sensType') && isfield(input.orig, 'Chan')
-      % the header was read using the open-source MATLAB code that originates from CTF and that was modified by the FCDC
-      origSensType = input.orig.sensType;
-    elseif isfield(input.orig, 'res4') && isfield(input.orig.res4, 'senres')
-      % the header was read using the CTF p-files, i.e. readCTFds
-      origSensType =  [input.orig.res4.senres.sensorTypeIndex];
-    elseif isfield(input.orig, 'sensor') && isfield(input.orig.sensor, 'info')
-      % the header was read using the CTF importer from the NIH and Daren Weber
-      origSensType = [input.orig.sensor.info.index];
-    end
-  end
+elseif isheader && isfield(input, 'orig') && isfield(input.orig, 'res4') && isfield(input.orig.res4, 'senres')
+  % the header was read using the CTF p-files, i.e. readCTFds
+  origSensType =  [input.orig.res4.senres.sensorTypeIndex];
+  chantype = ctfchantype(origSensType);
   
-  if isempty(origSensType) && mean(strcmp(chantype, 'unknown'))>0.5
-    % only warn in case most of the channels are still unknown
-    ft_warning('could not determine chantype from the CTF header');
-  end
-  
-  for sel=find(origSensType(:)==0)'
-    chantype{sel} = 'refmag';
-  end
-  for sel=find(origSensType(:)==1)'
-    chantype{sel} = 'refgrad';
-  end
-  for sel=find(origSensType(:)==5)'
-    chantype{sel} = 'meggrad';
-  end
-  for sel=find(origSensType(:)==9)'
-    chantype{sel} = 'eeg';
-  end
-  for sel=find(origSensType(:)==11)'
-    % Stimulus channel for MEG41
-    chantype{sel} = 'trigger';
-  end
-  for sel=find(origSensType(:)==13)'
-    chantype{sel} = 'headloc'; % these represent the x, y, z position of the head coils
-  end
-  for sel=find(origSensType(:)==17)'
-    chantype{sel} = 'clock';
-  end
-  for sel=find(origSensType(:)==18)'
-    chantype{sel} = 'adc';
-  end
-  for sel=find(origSensType(:)==20)'
-    % Digital trigger channels
-    chantype{sel} = 'trigger';
-  end
-  for sel=find(origSensType(:)==28)'
-    chantype{sel} = 'headloc_gof'; % these represent the goodness of fit for the head coils
-  end
-  for sel=find(origSensType(:)==29)'
-    chantype{sel} = 'reserved'; % these are "reserved for future use", but relate to head localization
-  end
+elseif isheader && isfield(input, 'orig') && isfield(input.orig, 'sensor') && isfield(input.orig.sensor, 'info')
+  % the header was read using the CTF importer from the NIH and Daren Weber
+  origSensType = [input.orig.sensor.info.index];
+  chantype = ctfchantype(origSensType);
   
 elseif ft_senstype(input, 'ctf') && isgrad
   % in principle it is possible to look at the number of coils, but here the channels are identified based on their name
@@ -754,6 +677,16 @@ elseif ft_senstype(input, 'nex5') && isheader
   
 end % ft_senstype
 
+if isdata
+  % the input was replaced by one of hdr, grad, elec, opto
+  [sel1, sel2] = match_str(origlabel, input.label);
+  origtype = repmat({'unknown'}, size(origlabel));
+  origtype(sel1) = chantype(sel2);
+  % the hdr, grad, elec or opto structure might have a different set of channels
+  chantype = origtype;
+  label = origlabel;
+end
+
 % if possible, set additional types based on channel labels
 label2type = {
   {'ecg', 'ekg'};
@@ -767,15 +700,6 @@ for i = 1:numel(label2type)
   for j = 1:numel(label2type{i})
     chantype(intersect(strmatch(label2type{i}{j}, lower(label)), find(strcmp(chantype, 'unknown')))) = label2type{i}(1);
   end
-end
-
-if isdata
-  % the input was replaced by one of hdr, grad, elec, opto
-  [sel1, sel2] = match_str(origlabel, input.label);
-  origtype = repmat({'unknown'}, size(origlabel));
-  origtype(sel1) = chantype(sel2);
-  % the hdr, grad, elec or opto structure might have a different set of channels
-  chantype = origtype;
 end
 
 if all(strcmp(chantype, 'unknown')) && ~recursion
@@ -811,7 +735,11 @@ if nargin>1
   if isequal(desired, 'meg') || isequal(desired, 'ref')
     % only compare the first three characters, i.e. meggrad or megmag should match
     chantype = strncmp(desired, chantype, 3);
+  elseif isequal(desired, 'trigger')
+    % search for the different types of trigger channels
+    chantype = contains(chantype, desired);
   else
+    % search for an exact match
     chantype = strcmp(desired, chantype);
   end
 end
@@ -823,10 +751,85 @@ previous_argin  = current_argin;
 previous_argout = current_argout;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% helper function
+% SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function match = myregexp(pat, list)
 match = false(size(list));
 for i=1:numel(list)
   match(i) = ~isempty(regexp(list{i}, pat, 'once'));
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function chantype = ctfchantype(origSensType)
+% The following is according to "CTF MEG(TM) File Formats" pdf, Release 5.2.1
+%
+% eMEGReference      0 Reference magnetometer channel
+% eMEGReference1     1 Reference 1st-order gradiometer channel
+% eMEGReference2     2 Reference 2nd-order gradiometer channel
+% eMEGReference3     3 Reference 3rd-order gradiometer channel
+% eMEGSensor         4 Sensor magnetometer channel located in head shell
+% eMEGSensor1        5 Sensor 1st-order gradiometer channel located in head shell
+% eMEGSensor2        6 Sensor 2nd-order gradiometer channel located in head shell
+% eMEGSensor3        7 Sensor 3rd-order gradiometer channel located in head shell
+% eEEGRef            8 EEG unipolar sensors not on the scalp
+% eEEGSensor         9 EEG unipolar sensors on the scalp
+% eADCRef           10 (see eADCAmpRef below)
+% eADCAmpRef        10 ADC amp channels from HLU or PIU (old electronics)
+% eStimRef          11 Stimulus channel for MEG41
+% eTimeRef          12 Time reference coming from video channel
+% ePositionRef      13 Not used
+% eDACRef           14 DAC channel from ECC or HLU
+% eSAMSensor        15 SAM channel derived through data analysis
+% eVirtualSensor    16 Virtual channel derived by combining two or more physical channels
+% eSystemTimeRef    17 System time showing elapsed time since trial started
+% eADCVoltRef       18 ADC volt channels from ECC
+% eStimAnalog       19 Analog trigger channels
+% eStimDigital      20 Digital trigger channels
+% eEEGBipolar       21 EEG bipolar sensor not on the scalp
+% eEEGAflg          22 EEG ADC over range flags
+% eMEGReset         23 MEG resets (counts sensor jumps for crosstalk purposes)
+% eDipSrc           24 Dipole source
+% eSAMSensorNorm    25 Normalized SAM channel derived through data analy- sis
+% eAngleRef         26 Orientation of head localization field
+% eExtractionRef    27 Extracted signal from each sensor of field generated by each localization coil
+% eFitErr           28 Fit error from each head localization coil
+% eOtherRef         29 Any other type of sensor not mentioned but still valid
+% eInvalidType      30 An invalid sensorchantype = cell(length(origSensType), 1);
+chantype = repmat({'unknown'}, size(origSensType));
+for sel=find(origSensType(:)==0)'
+  chantype{sel} = 'refmag';
+end
+for sel=find(origSensType(:)==1)'
+  chantype{sel} = 'refgrad';
+end
+for sel=find(origSensType(:)==5)'
+  chantype{sel} = 'meggrad';
+end
+for sel=find(origSensType(:)==9)'
+  chantype{sel} = 'eeg';
+end
+for sel=find(origSensType(:)==11)'
+  % Stimulus channel for MEG41
+  chantype{sel} = 'trigger';
+end
+for sel=find(origSensType(:)==13)'
+  chantype{sel} = 'headloc'; % these represent the x, y, z position of the head coils
+end
+for sel=find(origSensType(:)==17)'
+  chantype{sel} = 'clock';
+end
+for sel=find(origSensType(:)==18)'
+  chantype{sel} = 'adc';
+end
+for sel=find(origSensType(:)==20)'
+  % Digital trigger channels
+  chantype{sel} = 'trigger';
+end
+for sel=find(origSensType(:)==28)'
+  chantype{sel} = 'headloc_gof'; % these represent the goodness of fit for the head coils
+end
+for sel=find(origSensType(:)==29)'
+  chantype{sel} = 'reserved'; % these are "reserved for future use", but relate to head localization
 end

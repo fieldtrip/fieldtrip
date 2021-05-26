@@ -16,7 +16,7 @@ function [sel1, sel2] = match_str(a, b, fullout)
 % in the output, in this case. This can be convenient in rare cases if the
 % size of the input lists is meaningful.
 
-% Copyright (C) 2000-2012, Robert Oostenveld
+% Copyright (C) 2000-2021, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -66,6 +66,14 @@ a = a(:);
 b = b(:);
 Na = numel(a);
 Nb = numel(b);
+
+% this is a very common use pattern that can be dealt with quickly
+if isequal(a, b)
+  % the returned vectors must be columns
+  sel1 = (1:Na)';
+  sel2 = (1:Nb)';
+  return
+end
 
 % According to the original implementation empty numeric elements are
 % allowed, but are not returned as match. This is different to empty string

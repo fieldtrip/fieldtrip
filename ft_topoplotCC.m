@@ -77,7 +77,7 @@ if ft_abort
 end
 
 % check if the input data is valid for this function
-freq = ft_checkdata(freq, 'cmbrepresentation', 'sparse');
+freq = ft_checkdata(freq, 'cmbstyle', 'sparse');
 
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'required', {'foi', 'layout'});
@@ -96,7 +96,7 @@ cfg.linestyle   = ft_getopt(cfg, 'linestyle',   []);
 cfg.colormap    = ft_getopt(cfg, 'colormap',    []);
 cfg.renderer    = ft_getopt(cfg, 'renderer'); % let MATLAB decide on the default
 
-tmpcfg = keepfields(cfg, {'layout', 'rows', 'columns', 'commentpos', 'skipcomnt', 'scalepos', 'skipscale', 'projection', 'viewpoint', 'rotate', 'width', 'height', 'elec', 'grad', 'opto', 'showcallinfo'});
+tmpcfg = keepfields(cfg, {'layout', 'channel', 'rows', 'columns', 'commentpos', 'skipcomnt', 'scalepos', 'skipscale', 'projection', 'viewpoint', 'rotate', 'width', 'height', 'elec', 'grad', 'opto', 'showcallinfo'});
 lay = ft_prepare_layout(tmpcfg, freq);
 
 beglabel = freq.labelcmb(:,1);

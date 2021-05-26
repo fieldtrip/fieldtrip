@@ -97,7 +97,7 @@ for k = 1:numel(lags_indx)
                                  tmpfreq.fourierspctrm(:,:,:,indx2));
   tmpfreq.time  = freq.time(indx1);
   tmpfreq.label = cat(1, label, label_lagged);
-  tmpfreq       = ft_checkdata(tmpfreq, 'cmbrepresentation', 'sparse', 'channelcmb', tmpchannelcmb);
+  tmpfreq       = ft_checkdata(tmpfreq, 'cmbstyle', 'sparse', 'channelcmb', tmpchannelcmb);
 
   if timeresolved
     error('to do');

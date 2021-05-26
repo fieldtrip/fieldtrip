@@ -240,10 +240,7 @@ elseif isneuromag
 
   % prepare the forward model and the sensor array for subsequent fitting
   % note that the forward model is a magnetic dipole in an infinite vacuum
-  %cfg.channel = ft_channelselection('MEG', hdr.label); % because we want to planars as well (previously only magnetometers)
   cfg.channel = ft_channelselection('MEGMAG', hdr.label); % old
-  %cfg.channel = setdiff(ft_channelselection('MEG', hdr.label),ft_channelselection('MEGMAG', hdr.label)); % just trying out (planar mags)
-  %cfg.channel = ft_channelselection('IAS*',hdr.label); % internal active shielding
   [vol, sens] = ft_prepare_vol_sens([], hdr.grad, 'channel', cfg.channel);
   sens = ft_datatype_sens(sens, 'scaling', 'amplitude/distance', 'distance', 'cm'); % ensure SI units
   coilsignal = [];

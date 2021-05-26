@@ -6,7 +6,7 @@ function [grad, elec] = ctf2grad(hdr, dewar, coilaccuracy)
 % for CTF data. Each of these implementations is dealt with here.
 %
 % Use as
-%   grad = ctf2grad(hdr, dewar, coilaccuracy)
+%   [grad, elec] = ctf2grad(hdr, dewar, coilaccuracy)
 % where
 %   dewar        = boolean, whether to return it in dewar or head coordinates (default is head coordinates)
 %   coilaccuracy = empty or a number (default is empty)
@@ -481,4 +481,14 @@ elseif isfield(hdr, 'sensor') && isfield(hdr.sensor, 'info')
   
 else
   ft_error('unknown header to contruct gradiometer definition');
+end
+
+% chantype and chanunit are required as of 2016, see FT_DATATYPE_SENS
+if ~isempty(grad)
+  grad.chantype = ft_chantype(grad);
+  grad.chanunit = ft_chanunit(grad);
+end
+if ~isempty(elec)
+  elec.chantype = ft_chantype(elec);
+  elec.chanunit = ft_chanunit(elec);
 end

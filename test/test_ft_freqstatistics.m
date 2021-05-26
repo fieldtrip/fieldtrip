@@ -2,7 +2,7 @@ function test_ft_freqstatistics
 
 % MEM 2gb
 % WALLTIME 00:10:00
-% DEPENDENCY ft_freqstatistics, findcluster, clusterstat, ft_statistics_montecarlo
+% DEPENDENCY ft_freqstatistics findcluster clusterstat ft_statistics_montecarlo
 
 % copyright, Roemer, bug 1201 (copyright? really? did I really put this in here? :P) - roevdmei
 

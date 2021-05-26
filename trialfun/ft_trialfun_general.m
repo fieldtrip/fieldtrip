@@ -11,7 +11,7 @@ function [trl, event] = ft_trialfun_general(cfg)
 %   cfg.trialdef.poststim   = latency in seconds (optional)
 %
 % You can specify these options that are passed to FT_READ_EVENT for trigger detection
-%   cfg.trialdef.detectflank    string, can be 'bit', 'up', 'down', 'both', 'peak' or 'trough'
+%   cfg.trialdef.detectflank    string, can be 'up', 'updiff', 'down', 'downdiff', 'both', 'any', 'biton', 'bitoff'
 %   cfg.trialdef.trigshift      integer, number of samples to shift from flank to detect trigger value 
 %   cfg.trialdef.chanindx       list with channel numbers for the trigger detection, specify -1 in case you don't want to detect triggers
 %   cfg.trialdef.threshold      threshold for analog trigger channels

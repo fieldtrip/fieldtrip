@@ -21,7 +21,6 @@ function [data] = ft_rejectvisual(cfg, data)
 %                     'yes'         keep deselected channels in the output data
 %                     'nan'         fill the channels that are deselected with NaNs
 %                     'repair'      repair the deselected channels using FT_CHANNELREPAIR
-%   cfg.neighbours  = neighbourhood structure, see also FT_PREPARE_NEIGHBOURS (required for repairing channels)
 %   cfg.trials      = 'all' or a selection given as a 1xN vector (default = 'all')
 %   cfg.keeptrial   = string, determines how to deal with trials that are
 %                     not selected, can be
@@ -37,9 +36,11 @@ function [data] = ft_rejectvisual(cfg, data)
 %                     'range'     range from min to max in each channel
 %                     'kurtosis'  kurtosis, i.e. measure of peakedness of the amplitude distribution
 %                     'zvalue'    mean and std computed over all time and trials, per channel
+%   cfg.neighbours  = neighbourhood structure, see FT_PREPARE_NEIGHBOURS for details
 %   cfg.latency     = [begin end] in seconds, or 'all', 'minperiod', 'maxperiod', 'prestim', 'poststim' (default = 'all')
 %   cfg.viewmode    = 'remove', 'toggle' or 'hide', only applies to summary mode (default = 'remove')
 %   cfg.box         = string, 'yes' or 'no' whether to draw a box around each graph (default = 'no')
+%   cfg.ylim        = 'maxmin', 'maxabs', 'zeromax', 'minzero', or [ymin ymax] (default = 'maxmin')
 %
 % The following options for the scaling of the EEG, EOG, ECG, EMG, MEG and NIRS channels
 % is optional and can be used to bring the absolute numbers of the different
@@ -87,7 +88,7 @@ function [data] = ft_rejectvisual(cfg, data)
 % See also FT_REJECTARTIFACT, FT_REJECTCOMPONENT
 
 % Copyright (C) 2005-2006, Markus Bauer, Robert Oostenveld
-% Copyright (C) 2006-2020, Robert Oostenveld
+% Copyright (C) 2006-2021, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -134,8 +135,9 @@ dtype = ft_datatype(data);
 data = ft_checkdata(data, 'datatype', {'raw+comp', 'raw'}, 'feedback', 'yes', 'hassampleinfo', 'yes');
 
 % check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'renamedval',  {'metric',  'absmax',  'maxabs'});
-cfg = ft_checkconfig(cfg, 'renamedval',  {'method',  'absmax',  'maxabs'});
+cfg = ft_checkconfig(cfg, 'forbidden',  {'channels', 'trial'}); % prevent accidental typos, see issue 1729
+cfg = ft_checkconfig(cfg, 'renamedval', {'metric',  'absmax',  'maxabs'});
+cfg = ft_checkconfig(cfg, 'renamedval', {'method',  'absmax',  'maxabs'});
 
 % resolve some common typing errors
 cfg = ft_checkconfig(cfg, 'renamed',  {'keeptrials',  'keeptrial'});
@@ -144,7 +146,7 @@ cfg = ft_checkconfig(cfg, 'renamed',  {'alim',  'ylim'});
 
 % set the defaults
 cfg.channel     = ft_getopt(cfg, 'channel'    , 'all');
-cfg.trials      = ft_getopt(cfg, 'trials'     , 'all', 1);
+cfg.trials      = ft_getopt(cfg, 'trials'     , 'all', true);
 cfg.latency     = ft_getopt(cfg, 'latency'    , 'maxperiod');
 cfg.keepchannel = ft_getopt(cfg, 'keepchannel', 'no');
 cfg.keeptrial   = ft_getopt(cfg, 'keeptrial'  , 'no');
@@ -206,8 +208,8 @@ elseif isnumeric(cfg.trials)
 elseif islogical(cfg.trials)
   ntrl_keep = sum(cfg.trials);
 end
-nchan_all = numel(data.label);
-nchan_keep=  numel(ft_channelselection(cfg.channel, data.label));
+nchan_all  = numel(data.label);
+nchan_keep = numel(ft_channelselection(cfg.channel, data.label));
 fprintf('before GUI interaction: %d trials marked to INCLUDE, %d trials marked to EXCLUDE\n', ntrl_keep, ntrl_all-ntrl_keep);
 fprintf('before GUI interaction: %d channels marked to INCLUDE, %d channels marked to EXCLUDE\n', nchan_keep, nchan_all-nchan_keep);
 

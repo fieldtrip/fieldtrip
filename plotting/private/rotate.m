@@ -13,6 +13,8 @@ function [H] = rotate(f)
 % Note that the order in which the rotations are performs matters. The
 % rotation is first done around the z-axis, then the y-axis and finally the
 % x-axis.
+%
+% See also TRANSLATE, SCALE, QUATERNION
 
 % Copyright (C) 2000-2005, Robert Oostenveld
 %

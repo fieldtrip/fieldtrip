@@ -117,6 +117,9 @@ if ft_abort
   return
 end
 
+% check if the input cfg is valid for this function
+cfg = ft_checkconfig(cfg, 'forbidden',  {'trial'}); % prevent accidental typos, see issue 1729
+
 % set the defaults
 cfg.method          = ft_getopt(cfg, 'method',       'spline');
 cfg.conductivity    = ft_getopt(cfg, 'conductivity', 0.33); % in S/m
@@ -178,7 +181,7 @@ end
 
 % match the order of the data channels with the channel positions, order them according to the data
 [datindx, elecindx] = match_str(data.label, elec.label);
-[goodindx, tmp]     = match_str(data.label, setdiff(data.label, cfg.badchannel));
+[goodindx, tmp]     = match_str(data.label, setdiff(data.label, cfg.badchannel, 'stable'));
 
 allchanpos = elec.chanpos(elecindx,:);    % the position of all channels, ordered according to the data
 goodchanpos = allchanpos(goodindx,:);     % the position of good channels

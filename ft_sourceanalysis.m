@@ -84,8 +84,7 @@ function [source] = ft_sourceanalysis(cfg, data, baseline)
 %                         for the size of the corresponding patch (default = 1)
 %
 % Other configuration options are
-%   cfg.channel       = Nx1 cell-array with selection of channels (default = 'all'),
-%                       see FT_CHANNELSELECTION for details
+%   cfg.channel       = Nx1 cell-array with selection of channels (default = 'all'), see FT_CHANNELSELECTION for details
 %   cfg.frequency     = single number (in Hz)
 %   cfg.latency       = single number in seconds, for time-frequency analysis
 %   cfg.lambda        = number or empty for automatic default
@@ -175,7 +174,10 @@ if hasbaseline
   baseline = ft_checkdata(baseline, 'datatype', {'timelock', 'freq', 'comp'}, 'feedback', 'yes');
 end
 
-% check that the input cfg is valid for this function
+% check if the input cfg is valid for this function
+cfg = ft_checkconfig(cfg, 'forbidden',  {'channels'}); % prevent accidental typos, see issue 1729
+cfg = ft_checkconfig(cfg, 'forbidden',  {'parallel', 'trials'});
+cfg = ft_checkconfig(cfg, 'forbidden',  {'foi', 'toi'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'toilim', 'latency'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'foilim', 'frequency'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'jacknife', 'jackknife'});
@@ -185,8 +187,6 @@ cfg = ft_checkconfig(cfg, 'renamedval', {'method', 'coh_refchan',     'dics'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'method', 'coh_refdip',      'dics'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'method', 'dics_cohrefchan', 'dics'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'method', 'dics_cohrefdip',  'dics'});
-cfg = ft_checkconfig(cfg, 'forbidden',  {'parallel', 'trials'});
-cfg = ft_checkconfig(cfg, 'forbidden',  {'foi', 'toi'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'hdmfile', 'headmodel'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'vol',     'headmodel'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'grid',    'sourcemodel'});
@@ -350,7 +350,7 @@ if isfreq && isfield(data, 'labelcmb')
   % this point, this step may take some time, if multiple trials are
   % present in the data
   fprintf('converting the linearly indexed channelcombinations into a square CSD-matrix\n');
-  data = ft_checkdata(data, 'cmbrepresentation', 'full');
+  data = ft_checkdata(data, 'cmbstyle', 'full');
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -423,7 +423,7 @@ elseif isfield(cfg.sourcemodel, 'filter')
   
 elseif isfield(cfg.sourcemodel, 'leadfield')
   ft_notice('using precomputed leadfields');
-  sourcemodel = keepfields(cfg.sourcemodel, {'pos', 'tri', 'dim', 'inside', 'leadfield', 'leadfielddimord', 'label', 'cfg'});
+  sourcemodel = keepfields(cfg.sourcemodel, {'pos', 'tri', 'dim', 'inside', 'leadfield', 'leadfielddimord', 'label', 'cfg', 'subspace'});
   
   if ~isfield(sourcemodel, 'label')
     ft_warning('the labels are missing for the precomputed leadfields, assuming that they were computed with the same channel selection');
@@ -591,7 +591,7 @@ if isfreq && any(strcmp(cfg.method, {'dics', 'pcc', 'eloreta', 'mne','harmony', 
       
     case 'dics'
       tmpcfg         = keepfields(cfg, {'keeptrials', 'rawtrial', 'refchan', 'channel'});
-      tmpcfg.channel = setdiff(cfg.channel, cfg.refchan); % remove the refchan
+      tmpcfg.channel = setdiff(cfg.channel, cfg.refchan, 'stable'); % remove the refchan, ensure that the ordering does not change, see https://github.com/fieldtrip/fieldtrip/issues/1587
       
       % select the data in the channels and the frequency of interest
       [Cf, Cr, Pr, Ntrials, tmpcfg] = prepare_freq_matrices(tmpcfg, data);
