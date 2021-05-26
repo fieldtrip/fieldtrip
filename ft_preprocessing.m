@@ -102,20 +102,11 @@ function [data] = ft_preprocessing(cfg, data)
 %   cfg.reref         = 'no' or 'yes' (default = 'no')
 %   cfg.refchannel    = cell-array with new EEG reference channel(s), this can be 'all' for a common average reference
 %   cfg.refmethod     = 'avg', 'median', 'rest', 'bipolar' or 'laplace' (default = 'avg')
-%   cfg.groupchans    = 'yes' or 'no' (defualt = 'no')
-%                     Allows to decide whether channels should be
-%                     rereferenced in separate groups (this feature applies 
-%                     only to bipolar and Laplacian rereferencing and requires 
-%                     channnels to be named using an alphanumeric code, where 
-%                     letters represent the group and numbers represent the 
-%                     order of the channel whithin its group) 
-%   cfg.leadfield     = leadfield
-%                     if select 'rest','leadfield' is required.
-%                     The leadfield can be a matrix (channels X sources)
-%                     which is calculated by using the forward theory, based on
-%                     the electrode montage, head model and equivalent source
-%                     model. It can also be the output of ft_prepare_leadfield.m
-%                     (e.g. lf.leadfield or lf) based on real head modal using FieldTrip.
+%   cfg.groupchans    = 'yes' or 'no', whether channels should be rereferenced in separate groups 
+%                        when cfg.refmethod='bipolar' or 'laplacian', i.e. for sEEG electrodes. This requires 
+%                        channnels to be named using an alphanumeric code, where letters represent the group 
+%                        and numbers represent the order of the channel whithin its group. (default = 'no')
+%   cfg.leadfield     = leadfield structure, this is required when cfg.refmethod='rest', see FT_PREPARE_LEADFIELD
 %   cfg.implicitref   = 'label' or empty, add the implicit EEG reference as zeros (default = [])
 %   cfg.montage       = 'no' or a montage structure, see FT_APPLY_MONTAGE (default = 'no')
 %
