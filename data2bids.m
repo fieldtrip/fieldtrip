@@ -610,8 +610,8 @@ cfg.channels.status_description = ft_getopt(cfg.channels, 'status_description' ,
 cfg.channels.source             = ft_getopt(cfg.channels, 'source'             , nan);  % REQUIRED. Name of the source as specified in the *_optodes.tsv file. n/a for channels that do not contain NIRS signals (acceleration).
 cfg.channels.detector           = ft_getopt(cfg.channels, 'detector'           , nan);  % REQUIRED. Name of the detector as specified in the *_optodes.tsv file. n/a for channels that do not contain NIRS signals (acceleration).
 cfg.channels.wavelength         = ft_getopt(cfg.channels, 'wavelength'         , nan);  % REQUIRED. Wavelength of light in nm. n/a for channels that do not contain raw NIRS signals (acceleration).
-% FIXME: optional nirs channel fields (e.g. frequencies for frequency
-% domain NIRS) should still be added here.
+% FIXME: optional nirs channel fields (e.g. frequencies for frequency domain NIRS) should still be added here.
+
 % motion specific fields
 cfg.channels.source             = ft_getopt(cfg.channels, 'source'             , nan);  % REQUIRED. Label of the object that is being tracked, for example, label of a tracker or a marker.
 cfg.channels.component          = ft_getopt(cfg.channels, 'component'          , nan);  % REQUIRED. Component of the representational system that the channel contains.
@@ -2050,15 +2050,7 @@ else
   end
   % add motion specific fields (empty columns will be removed in a later
   % step)
-  component=cell(length(name), 1); reference_space=cell(length(name),1);
-  if isfield(hdr, 'chansource');
-    for i=1:length(name)
-      source{i}=hdr.chansource(i);
-      component{i}=hdr.chancomponent(i);
-      reference_space{i}=hdr.chanrefspace(i);
-    end
-  end
-  tab = table(name, type, units, sampling_frequency, source, detector, wavelength, component, reference_space);
+  tab = table(name, type, units, sampling_frequency, source, detector, wavelength);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
