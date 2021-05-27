@@ -782,7 +782,6 @@ need_events_tsv         = false; % for functional and behavioral experiments
 need_channels_tsv       = false; % only needed for MEG/EEG/iEEG/EMG/NIRS
 need_electrodes_tsv     = false; % only needed when actually present as cfg.electrodes, data.elec or as cfg.elec
 need_optodes_tsv        = false; % only needed when actually present as cfg.optodes, data.opto or as cfg.opto
-need_sources_tsv        = false;
 
 switch typ
   case {'nifti', 'nifti2', 'nifti_fsl'}
@@ -1000,10 +999,6 @@ if need_nirs_json
     % optodes can also be specified as cfg.optodes
     need_optodes_tsv= ~isnan(cfg.optodes.name);
   end
-end
-
-if need_motion_json
-  need_sources_tsv = true;
 end
 
 need_events_tsv       = need_events_tsv       || need_meg_json || need_eeg_json || need_ieeg_json || need_emg_json || need_exg_json || need_nirs_json || need_eyetracker_json || need_motion_json || (contains(cfg.outputfile, 'task') || ~isempty(cfg.TaskName) || ~isempty(cfg.task)) || ~isempty(cfg.events);
@@ -1433,32 +1428,6 @@ if need_optodes_tsv
   optodes_tsv = optodes_tsv(keep,:);
 
 end % need_optodes_tsv
-
-%% need_sources_tsv
-if need_sources_tsv
-  if isstruct(cfg.sources)
-    try
-      cfg.sources = struct2table(cfg.sources);
-    catch
-      ft_error('incorrect specification of cfg.sources');
-    end
-  end
-
-  % source details can be specified in cfg.sources or the hdr.sources
-  try
-    sources_tsv = struct2table(hdr.sources);
-  catch
-    ft_error('incorrect specification of hdr.sources');
-  end
-  sources_tsv = merge_table(sources_tsv, cfg.sources, 'name');
-
-  % the default for cfg.sources consists of one row where all values are nan, this needs to be removed
-  keep = false(size(sources_tsv.name));
-  for i=1:numel(sources_tsv.name)
-    keep(i) = ischar(sources_tsv.name{i});
-  end
-  sources_tsv = sources_tsv(keep,:);
-end  % need_sources_tsv
 
 %% need_coordsystem_json
 if need_coordsystem_json
