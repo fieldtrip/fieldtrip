@@ -20,6 +20,20 @@ function [montage, cfg] = ft_prepare_montage(cfg, data)
 % The implicitref option allows adding the implicit reference channel to the data as
 % a channel with zeros.
 %
+% The resulting montage is a structure with the fields
+%   montage.tra      = MxN matrix
+%   montage.labelold = Nx1 cell-array
+%   montage.labelnew = Mx1 cell-array
+%
+% As an example, an output bipolar montage could look like this
+%   bipolar.labelold  = {'1',   '2',   '3',   '4'}
+%   bipolar.labelnew  = {'1-2', '2-3', '3-4'}
+%   bipolar.tra       = [
+%     +1 -1  0  0
+%      0 +1 -1  0
+%      0  0 +1 -1
+%   ];
+%
 % See also FT_PREPROCESSING, FT_APPLY_MONTAGE
 
 % Copyright (C) 2017-2021, Robert Oostenveld
