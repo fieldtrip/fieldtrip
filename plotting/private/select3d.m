@@ -119,7 +119,7 @@ is_perspective = strcmp(get(ax,'projection'),'perspective');
 
 % syntax not supported in old versions of MATLAB
 [a, b] = view(ax); 
-xform  = viewmtx(a,b);
+xform = viewmtx(a,b);
 if is_perspective
     ft_warning('%s does not support perspective axes projection', mfilename);
     d = norm(camtarget(ax)-campos(ax));
@@ -366,9 +366,8 @@ if nargout>1
     facexv = xvert(:,faces(faceiout,:));
     dist = sqrt(facexv(1,:).*facexv(1,:) +  facexv(2,:).*facexv(2,:));
     min_dist = min(dist);
-    min_index = find(dist==min_dist);
     
     % Get closest vertex index and vertex
-    viout = faces(faceiout, min_index);
+    viout = faces(faceiout, dist==min_dist);
     vout = vert(:,viout);
 end
