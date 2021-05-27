@@ -301,7 +301,6 @@ cfg.motion        = ft_getopt(cfg, 'motion');
 cfg.channels      = ft_getopt(cfg, 'channels');
 cfg.electrodes    = ft_getopt(cfg, 'electrodes');
 cfg.optodes       = ft_getopt(cfg, 'optodes');
-cfg.sources       = ft_getopt(cfg, 'sources');
 cfg.events        = ft_getopt(cfg, 'events');     % this can contain the trial definition as Nx3 array, as table, or an event structure
 cfg.coordsystem   = ft_getopt(cfg, 'coordsystem');
 
@@ -636,11 +635,6 @@ cfg.optodes.type                = ft_getopt(cfg.optodes, 'type'                ,
 cfg.optodes.template_x          = ft_getopt(cfg.optodes, 'template_x'          , nan);  % OPTIONAL. Assumed or ideal position along the x axis
 cfg.optodes.template_y          = ft_getopt(cfg.optodes, 'template_y'          , nan);  % OPTIONAL. Assumed or ideal position along the x axis
 cfg.optodes.template_z          = ft_getopt(cfg.optodes, 'template_x'          , nan);  % OPTIONAL. Assumed or ideal position along the x axis
-
-%% columns in the sources.tsv (for motion data)
-cfg.sources.name                = ft_getopt(cfg.sources, 'name'                , nan);  % REQUIRED. Label of the source. Entries are required to correspond to column �source� of _channels.tsv.
-cfg.sources.type                = ft_getopt(cfg.sources, 'type'                , nan);  % REQUIRED.  Type of the source. This can be a physical object that is attached on the body such as a tracker or a marker or a body part whose transform is computed from images or an inverse kinematics model.
-cfg.sources.placement           = ft_getopt(cfg.sources, 'placement'           , nan);  % RECOMMENDED. Placement of the tracked source on the body (e.g., participant, avatar centroid, torso, left arm). It can refer to an external vocabulary for describing body parts.
 
 %% information for the participants.tsv
 cfg.participants = ft_getopt(cfg, 'participants', struct());
