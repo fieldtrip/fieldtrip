@@ -72,9 +72,6 @@ if needhdr
   hdr.label = {}; 
   hdr.chanunit={};
   hdr.chantype={};
-  hdr.chansource={};
-  hdr.chancomponent={};
-  hdr.chanrefspace={};
   
   % loop over all labels for the segments
   if isfield(mvnx.subject.frames.frame,'orientation')
