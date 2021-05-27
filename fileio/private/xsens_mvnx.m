@@ -71,7 +71,6 @@ if needhdr
   hdr = [];
   hdr.label = {}; 
   hdr.chanunit={};
-  hdr.chantype={};
   
   % loop over all labels for the segments
   if isfield(mvnx.subject.frames.frame,'orientation')
@@ -80,11 +79,7 @@ if needhdr
           hdr.label{end+1}=['seg_' mvnx.subject.segments.segment(seg).label '_orientation_Q1'];
           hdr.label{end+1}=['seg_' mvnx.subject.segments.segment(seg).label '_orientation_Q2'];
           hdr.label{end+1}=['seg_' mvnx.subject.segments.segment(seg).label '_orientation_Q3'];
-          hdr.chanunit(end+1:end+4)=repmat({'arbitrary'}, [1 4]);
-          hdr.chantype(end+1:end+4)=repmat({'orientation'}, [1 4]);
-          hdr.chansource(end+1:end+4)=repmat({['seg_' mvnx.subject.segments.segment(seg).label]}, [1 4]);
-          hdr.chancomponent(end+1:end+4)={'w', 'x', 'y', 'z'}; %FIXME: needed to convert to euler angles?
-          hdr.chanrefspace(end+1:end+4) = repmat({'global'}, [1 4]);
+          hdr.chanunit(end+1:end+4)=repmat({'quaternion'}, [1 4]);
       end
   end
   if isfield(mvnx.subject.frames.frame,'position')
@@ -93,10 +88,6 @@ if needhdr
           hdr.label{end+1}=['seg_' mvnx.subject.segments.segment(seg).label '_position_Y'];
           hdr.label{end+1}=['seg_' mvnx.subject.segments.segment(seg).label '_position_Z'];
           hdr.chanunit(end+1:end+3)=repmat({'m'}, [1 3]);
-          hdr.chantype(end+1:end+3)=repmat({'position'}, [1 3]);
-          hdr.chansource(end+1:end+3)=repmat({['seg_' mvnx.subject.segments.segment(seg).label]}, [1 3]);
-          hdr.chancomponent(end+1:end+3)={'x', 'y', 'z'};
-          hdr.chanrefspace(end+1:end+3) = repmat({'global'}, [1 3]);
       end
   end
   if isfield(mvnx.subject.frames.frame,'velocity')
@@ -105,10 +96,6 @@ if needhdr
           hdr.label{end+1}=['seg_' mvnx.subject.segments.segment(seg).label '_velocity_Y'];
           hdr.label{end+1}=['seg_' mvnx.subject.segments.segment(seg).label '_velocity_Z'];
           hdr.chanunit(end+1:end+3)=repmat({'m/s'}, [1 3]);
-          hdr.chantype(end+1:end+3)=repmat({'velocity'}, [1 3]);
-          hdr.chansource(end+1:end+3)=repmat({['seg_' mvnx.subject.segments.segment(seg).label]}, [1 3]);
-          hdr.chancomponent(end+1:end+3)={'x', 'y', 'z'};
-          hdr.chanrefspace(end+1:end+3) = repmat({'global'}, [1 3]);
       end
   end
   if isfield(mvnx.subject.frames.frame,'acceleration')
@@ -117,10 +104,6 @@ if needhdr
           hdr.label{end+1}=['seg_' mvnx.subject.segments.segment(seg).label '_acceleration_Y'];
           hdr.label{end+1}=['seg_' mvnx.subject.segments.segment(seg).label '_acceleration_Z'];
           hdr.chanunit(end+1:end+3)=repmat({'m/s^2'}, [1 3]);
-          hdr.chantype(end+1:end+3)=repmat({'acceleration'}, [1 3]);
-          hdr.chansource(end+1:end+3)=repmat({['seg_' mvnx.subject.segments.segment(seg).label]}, [1 3]);
-          hdr.chancomponent(end+1:end+3)={'x', 'y', 'z'};
-          hdr.chanrefspace(end+1:end+3) = repmat({'global'}, [1 3]);
       end
   end
   if isfield(mvnx.subject.frames.frame,'angularVelocity')
@@ -129,10 +112,6 @@ if needhdr
           hdr.label{end+1}=['seg_' mvnx.subject.segments.segment(seg).label '_angularVelocity_Y'];
           hdr.label{end+1}=['seg_' mvnx.subject.segments.segment(seg).label '_angularVelocity_Z'];
           hdr.chanunit(end+1:end+3)=repmat({'rad/s'}, [1 3]);
-          hdr.chantype(end+1:end+3)=repmat({'angular_velocity'}, [1 3]);
-          hdr.chansource(end+1:end+3)=repmat({['seg_' mvnx.subject.segments.segment(seg).label]}, [1 3]);
-          hdr.chancomponent(end+1:end+3)={'x', 'y', 'z'};
-          hdr.chanrefspace(end+1:end+3) = repmat({'global'}, [1 3]);
       end
   end
   if isfield(mvnx.subject.frames.frame,'angularAcceleration')
@@ -141,10 +120,6 @@ if needhdr
           hdr.label{end+1}=['seg_' mvnx.subject.segments.segment(seg).label '_angularAcceleration_Y'];
           hdr.label{end+1}=['seg_' mvnx.subject.segments.segment(seg).label '_angularAcceleration_Z'];
           hdr.chanunit(end+1:end+3)=repmat({'rad/s^2'}, [1 3]);
-          hdr.chantype(end+1:end+3)=repmat({'angular_acceleration'}, [1 3]);
-          hdr.chansource(end+1:end+3)=repmat({['seg_' mvnx.subject.segments.segment(seg).label]}, [1 3]);
-          hdr.chancomponent(end+1:end+3)={'x', 'y', 'z'};
-          hdr.chanrefspace(end+1:end+3) = repmat({'global'}, [1 3]);
       end
   end
   
@@ -152,11 +127,7 @@ if needhdr
   if isfield(mvnx.subject.frames.frame,'footContacts')
       for fc=1:numel(mvnx.subject.footContactDefinition.contactDefinition) % loop over foot contacts
           hdr.label{end+1}=['fc_' mvnx.subject.footContactDefinition.contactDefinition(fc).label '_footContacts'];
-          hdr.chanunit(end+1)={'arbitrary'};
-          hdr.chantype(end+1)={'foot_contacts'};
-          hdr.chansource(end+1)={['fc_' mvnx.subject.footContactDefinition.contactDefinition(fc).label]};
-          hdr.chancomponent(end+1)={'n/a'};
-          hdr.chanrefspace(end+1)= {'n/a'};
+          hdr.chanunit(end+1)={'boolean'};
       end
   end
   
@@ -167,10 +138,6 @@ if needhdr
           hdr.label{end+1}=['sen_' mvnx.subject.sensors.sensor(sen).label '_sensorFreeAcceleration_Y'];
           hdr.label{end+1}=['sen_' mvnx.subject.sensors.sensor(sen).label '_sensorFreeAcceleration_Z'];
           hdr.chanunit(end+1:end+3)=repmat({'m/s^2'}, [1 3]);
-          hdr.chantype(end+1:end+3)=repmat({'acceleration'}, [1 3]);
-          hdr.chansource(end+1:end+3)=repmat({['sen_' mvnx.subject.sensors.sensor(sen).label]}, [1 3]);
-          hdr.chancomponent(end+1:end+3)={'x', 'y', 'z'};
-          hdr.chanrefspace(end+1:end+3) = repmat({['sen_' mvnx.subject.sensors.sensor(sen).label]}, [1 3]);
       end
   end
   if isfield(mvnx.subject.frames.frame,'sensorMagneticField')
@@ -179,10 +146,6 @@ if needhdr
           hdr.label{end+1}=['sen_' mvnx.subject.sensors.sensor(sen).label '_sensorMagneticField_Y'];
           hdr.label{end+1}=['sen_' mvnx.subject.sensors.sensor(sen).label '_sensorMagneticField_Z'];
           hdr.chanunit(end+1:end+3)=repmat({'a.u.'}, [1 3]);
-          hdr.chantype(end+1:end+3)=repmat({'magnetic_field'}, [1 3]);
-          hdr.chansource(end+1:end+3)=repmat({['sen_' mvnx.subject.sensors.sensor(sen).label]}, [1 3]); 
-          hdr.chancomponent(end+1:end+3)={'x', 'y', 'z'};
-          hdr.chanrefspace(end+1:end+3) = repmat({['sen_' mvnx.subject.sensors.sensor(sen).label]}, [1 3]);
       end
   end
   if isfield(mvnx.subject.frames.frame,'sensorOrientation')
@@ -191,11 +154,7 @@ if needhdr
           hdr.label{end+1}=['sen_' mvnx.subject.sensors.sensor(sen).label '_sensorOrientation_Q1'];
           hdr.label{end+1}=['sen_' mvnx.subject.sensors.sensor(sen).label '_sensorOrientation_Q2'];
           hdr.label{end+1}=['sen_' mvnx.subject.sensors.sensor(sen).label '_sensorOrientation_Q3'];
-          hdr.chanunit(end+1:end+4)=repmat({'arbitrary'}, [1 4]);
-          hdr.chantype(end+1:end+4)=repmat({'orientation'}, [1 4]);
-          hdr.chansource(end+1:end+4)=repmat({['sen_' mvnx.subject.sensors.sensor(sen).label]}, [1 4]);
-          hdr.chancomponent(end+1:end+4)={'w', 'x', 'y', 'z'}; %FIXME: needed to convert to euler angles?
-          hdr.chanrefspace(end+1:end+4) = repmat({'global'}, [1 4]);
+          hdr.chanunit(end+1:end+4)=repmat({'quaternion'}, [1 4]);
       end
   end  
 
@@ -206,10 +165,6 @@ if needhdr
           hdr.label{end+1}=['jnt_' mvnx.subject.joints.joint(jnt).label '_jointAngle_Y'];
           hdr.label{end+1}=['jnt_' mvnx.subject.joints.joint(jnt).label '_jointAngle_Z'];
           hdr.chanunit(end+1:end+3)=repmat({'deg'}, [1 3]);
-          hdr.chantype(end+1:end+3)=repmat({'joint_angle'}, [1 3]);
-          hdr.chansource(end+1:end+3)=repmat({['jnt_' mvnx.subject.joints.joint(jnt).label]}, [1 3]);
-          hdr.chancomponent(end+1:end+3)={'x', 'y', 'z'};
-          hdr.chanrefspace(end+1:end+3) = repmat({['jnt_' mvnx.subject.joints.joint(jnt).label]}, [1 3]);
       end
   end
   if isfield(mvnx.subject.frames.frame,'jointAngleXZY')
@@ -218,10 +173,6 @@ if needhdr
           hdr.label{end+1}=['jnt_' mvnx.subject.joints.joint(jnt).label '_jointAngleXZY_Y'];
           hdr.label{end+1}=['jnt_' mvnx.subject.joints.joint(jnt).label '_jointAngleXZY_Z'];
           hdr.chanunit(end+1:end+3)=repmat({'deg'}, [1 3]);
-          hdr.chantype(end+1:end+3)=repmat({'joint_angle'}, [1 3]);
-          hdr.chansource(end+1:end+3)=repmat({['jnt_' mvnx.subject.joints.joint(jnt).label]}, [1 3]);
-          hdr.chancomponent(end+1:end+3)={'x', 'y', 'z'};
-          hdr.chanrefspace(end+1:end+3) = repmat({['jnt_' mvnx.subject.joints.joint(jnt).label]}, [1 3]);
       end
   end
   
@@ -232,10 +183,6 @@ if needhdr
           hdr.label{end+1}=['jntx_' mvnx.subject.ergonomicJointAngles.ergonomicJointAngle(jntx).label '_jointAngleErgo_Y'];
           hdr.label{end+1}=['jntx_' mvnx.subject.ergonomicJointAngles.ergonomicJointAngle(jntx).label '_jointAngleErgo_Z'];
           hdr.chanunit(end+1:end+3)=repmat({'deg'}, [1 3]);
-          hdr.chantype(end+1:end+3)=repmat({'joint_angle'}, [1 3]);
-          hdr.chansource(end+1:end+3)=repmat({['jntx_' mvnx.subject.ergonomicJointAngles.ergonomicJointAngle(jntx).label]}, [1 3]);
-          hdr.chancomponent(end+1:end+3)={'x', 'y', 'z'};
-          hdr.chanrefspace(end+1:end+3) = repmat({['jntx_' mvnx.subject.ergonomicJointAngles.ergonomicJointAngle(jntx).label]}, [1 3]);
       end
   end
   if isfield(mvnx.subject.frames.frame,'jointAngleErgoXZY')
@@ -244,10 +191,6 @@ if needhdr
           hdr.label{end+1}=['jntx_' mvnx.subject.ergonomicJointAngles.ergonomicJointAngle(jntx).label '_jointAngleErgoXZY_Y'];
           hdr.label{end+1}=['jntx_' mvnx.subject.ergonomicJointAngles.ergonomicJointAngle(jntx).label '_jointAngleErgoXZY_Z'];
           hdr.chanunit(end+1:end+3)=repmat({'deg'}, [1 3]);
-          hdr.chantype(end+1:end+3)=repmat({'joint_angle'}, [1 3]);
-          hdr.chansource(end+1:end+3)=repmat({['jntx_' mvnx.subject.ergonomicJointAngles.ergonomicJointAngle(jntx).label]}, [1 3]);
-          hdr.chancomponent(end+1:end+3)={'x', 'y', 'z'};
-          hdr.chanrefspace(end+1:end+3) = repmat({['jntx_' mvnx.subject.ergonomicJointAngles.ergonomicJointAngle(jntx).label]}, [1 3]);
       end
   end
   
@@ -257,10 +200,6 @@ if needhdr
       hdr.label{end+1}=['seg_COM_centerOfMass_Y'];
       hdr.label{end+1}=['seg_COM_centerOfMass_Z'];
       hdr.chanunit(end+1:end+3)=repmat({'m'}, [1 3]);
-      hdr.chantype(end+1:end+3)=repmat({'position'}, [1 3]);
-      hdr.chansource(end+1:end+3)=repmat({'centerOfMass'}, [1 3]);
-      hdr.chancomponent(end+1:end+3)={'x', 'y', 'z'};
-      hdr.chanrefspace(end+1:end+3) = repmat({'global'}, [1 3]);
   end
   
   hdr.nChans      = numel(hdr.label);
@@ -268,54 +207,7 @@ if needhdr
   hdr.nSamplesPre = 0; % continuous data
   hdr.nTrials     = 1; % continuous data
   hdr.Fs          = mvnx.subject.frameRate;
-  hdr.chansource  = hdr.chansource';
-  hdr.chancomponent = hdr.chancomponent';
-  hdr.chanrefspace = hdr.chanrefspace';
-  
-  % fetch information about the sources
-  nmb_sources=length(mvnx.subject.segments.segment) + length(mvnx.subject.sensors.sensor) + length(mvnx.subject.joints.joint) + length(mvnx.subject.ergonomicJointAngles) + length(mvnx.subject.footContactDefinition.contactDefinition);
-  sources=[];
-  sources.name=cell(nmb_sources,1);
-  sources.type=cell(nmb_sources,1);
-  sources.placement=cell(nmb_sources,1);
-  idx=1;
-  
-  % segments
-  nmb_segments=length(mvnx.subject.segments.segment);
-  sources.name(idx:nmb_segments)= cellfun(@strcat, repmat({'seg_'}, [1 nmb_segments]), {mvnx.subject.segments.segment(:).label}, 'UniformOutput', false);
-  sources.type(idx:nmb_segments)=repmat({'inferred'}, [1 nmb_segments]);
-  sources.placement(idx:nmb_segments)={mvnx.subject.segments.segment(:).label}; %FIXME: this might need better specifications
-  idx=idx+nmb_segments;
-  
-  % sensors
-  nmb_sensors=length(mvnx.subject.sensors.sensor);
-  sources.name(idx:idx-1+nmb_sensors)=cellfun(@strcat, repmat({'sen_'}, [1 nmb_sensors]), {mvnx.subject.sensors.sensor(:).label}, 'UniformOutput', false);
-  sources.type(idx:idx-1+nmb_sensors)=repmat({'tracker'}, [1 nmb_sensors]);
-  sources.placement(idx:idx-1+nmb_sensors)={mvnx.subject.sensors.sensor(:).label}; %FIXME: this might need better specifications
-  idx= idx+nmb_sensors;
-  
-  % joints
-  nmb_joints=length(mvnx.subject.joints.joint);
-  sources.name(idx:idx-1+nmb_joints)= cellfun(@strcat, repmat({'jnt_'}, [1 nmb_joints]), {mvnx.subject.joints.joint(:).label}, 'UniformOutput', false);
-  sources.type(idx:idx-1+nmb_joints)=repmat({'inferred'}, [1 nmb_joints]);
-  sources.placement(idx:idx-1+nmb_joints)={mvnx.subject.joints.joint(:).label}; %FIXME: this might need better specifications
-  idx= idx+nmb_joints;
-  
-  % ergonomic joint angles
-  nmb_Ejoints=length(mvnx.subject.ergonomicJointAngles.ergonomicJointAngle);
-  sources.name(idx:idx-1+nmb_Ejoints)=cellfun(@strcat, repmat({'jntx_'}, [1 nmb_Ejoints]), {mvnx.subject.ergonomicJointAngles.ergonomicJointAngle(:).label}, 'UniformOutput', false);
-  sources.type(idx:idx-1+nmb_Ejoints)=repmat({'inferred'}, [1 nmb_Ejoints]);
-  sources.placement(idx:idx-1+nmb_Ejoints)={mvnx.subject.ergonomicJointAngles.ergonomicJointAngle(:).label}; %FIXME: this might need better specifications
-  idx=idx+nmb_Ejoints;
-  
-  % foot contacts
-  nmb_fc=length(mvnx.subject.footContactDefinition.contactDefinition);
-  sources.name(idx:idx-1+nmb_fc)=cellfun(@strcat, repmat({'fc_'}, [1 nmb_fc]), {mvnx.subject.footContactDefinition.contactDefinition(:).label}, 'UniformOutput', false);
-  sources.type(idx:idx-1+nmb_fc)=repmat({'inferred'}, [1 nmb_fc]);
-  sources.placement(idx:idx-1+nmb_fc)={mvnx.subject.footContactDefinition.contactDefinition(:).label}; %FIXME: this might need better specifications
- 
-  % update source field into header
-  hdr.sources=sources;
+  hdr.chantype    = repmat({'motion'}, size(hdr.label));
   
   % return the header details
   varargout = {hdr};
