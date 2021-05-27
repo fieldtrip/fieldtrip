@@ -175,11 +175,11 @@ for i=1:numel(filelist)
       if contains(s(j).message, invalid{k})
         % pretty display
         fprintf('================================================================================\n');
-        fprintf('ERROR: %s\n', invalid{k});
+        fprintf('ERROR: %s\n', f); % invalid{k});
         fprintf('================================================================================\n');
         
         checkcode(f)
-        error('please fix line %d in %s', s(j).line, f);
+        % error('please fix line %d in %s', s(j).line, f);
       end
     end
   end
@@ -187,7 +187,7 @@ end
 
 for i=1:numel(filelist)
   f = filelist{i};
-  assert(checktilde(f), 'Do not use tilde to ignore outputs.');
+  assert(checktilde(f), sprintf('Do not use tilde to ignore outputs in %s', f));
 end
 
 %%

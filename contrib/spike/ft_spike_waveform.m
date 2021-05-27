@@ -105,20 +105,20 @@ for iUnit = 1:nUnits
   % check if we should get the first dimension first
   spikeindx = spikesel(iUnit);
   waves     = spike.waveform{spikeindx};
-  [nLeads nSamples nSpikes] = size(waves);
+  [nLeads, nSamples, nSpikes] = size(waves);
   samples = 0:nSamples-1;
   
   % detect if we need to invert the waveform or not
-  maxSample = round(2*nSamples/3);
-  mn        = nanmean(nanmean(waves,3),1); % nLeads by nSamples
-  [vl,iup]   = nanmax(mn(1:maxSample));
-  [vl,idown] = nanmin(mn(1:maxSample));
+  maxSample   = round(2*nSamples/3);
+  mn          = nanmean(nanmean(waves,3),1); % nLeads by nSamples
+  [vl, iup]   = nanmax(mn(1:maxSample));
+  [vl, idown] = nanmin(mn(1:maxSample));
   if iup>idown, waves = -waves; end % if maximum follows after minimum, invert.
   
-  maxSample = round(2*nSamples/3);
-  mn        = nanmean(nanmean(waves,3),1); % nLeads by nSamples
-  [vl,iup]   = nanmax(mn(1:maxSample));
-  [vl,idown] = nanmin(mn(1:maxSample));
+  maxSample   = round(2*nSamples/3);
+  mn          = nanmean(nanmean(waves,3),1); % nLeads by nSamples
+  [vl, iup]   = nanmax(mn(1:maxSample));
+  [vl, idown] = nanmin(mn(1:maxSample));
 
   % discard waveforms where derivative is not positive until peak index
   if strcmp(cfg.rejectonpeak,'yes') && idown>iup
@@ -132,8 +132,8 @@ for iUnit = 1:nUnits
     
     % these have a later max than min: reject, this removes late peaks.
     mnOverLead = nanmean(waves,1);
-    [vl,iu]   = nanmax(mnOverLead,[],2);
-    [vl,id]   = nanmin(mnOverLead,[],2);
+    [vl, iu]   = nanmax(mnOverLead,[],2);
+    [vl, id]   = nanmin(mnOverLead,[],2);
     rm2 = find(iu>id);
   else
     rm1 = [];
@@ -150,7 +150,7 @@ for iUnit = 1:nUnits
       mnOverLead = nanmean(waves(:,:,iWave),1);
       df         = diff(mnOverLead);
       idx        = find(df==0)+1;
-      if ~isempty(idx),
+      if ~isempty(idx)
         if all(nanmax(mnOverLead(idx))>=mnOverLead) || all(nanmin(mnOverLead(idx))<=mnOverLead)
           dl = [dl iWave];
         end
@@ -163,7 +163,7 @@ for iUnit = 1:nUnits
   toRemove = unique([rm1(:); rm2(:); rm3(:)]);
   waves(:,:,toRemove) = [];
   fprintf('Removing %d spikes from unit %s\n', length(toRemove), spike.label{spikeindx});
-  [nLeads nSamples nSpikes] = size(waves);
+  [nLeads, nSamples, nSpikes] = size(waves);
   fprintf('Keeping %d spikes from unit %s\n', nSpikes, spike.label{spikeindx});
   
   % align the waveforms automatically to the peak index
@@ -172,8 +172,8 @@ for iUnit = 1:nUnits
     if strcmp(cfg.rejectonpeak,'no')
       warning('aligning without rejecting outliers is dangerous');
     end
-    mnWave             = nanmean(waves,1);
-    [ignore,alignIndx] = nanmax(mnWave(:,:,:),[],2); % maximum across units
+    mnWave              = nanmean(waves,1);
+    [ignore, alignIndx] = nanmax(mnWave(:,:,:),[],2); % maximum across units
     padLen       = nSamples+1;
     samplesShift = -padLen:padLen;
     wavesShift   = NaN(nLeads,length(samplesShift),nSpikes);
@@ -208,11 +208,11 @@ for iUnit = 1:nUnits
   
   dof = sum(~isnan(waves),3);
   sd  = nanstd(waves,[],3);
-  mn         = nanmean(nanmean(waves,3),1); % nLeads by nSamples
-  [vl,iup]   = nanmax(mn(1:end));
-  [vl,idown] = nanmin(mn(1:end));
-  mn         = nanmean(waves,3); % nLeads by nSamples
-  [nLeads nSamples nSpikes] = size(waves);
+  mn          = nanmean(nanmean(waves,3),1); % nLeads by nSamples
+  [vl, iup]   = nanmax(mn(1:end));
+  [vl, idown] = nanmin(mn(1:end));
+  mn          = nanmean(waves,3); % nLeads by nSamples
+  [nLeads, nSamples, nSpikes] = size(waves);
 
   % --- normalize amplitude ratio of spike waveforms if requested
   if strcmp(cfg.normalize,'yes')
@@ -246,11 +246,11 @@ for iUnit = 1:nUnits
   end
 end
     
-wave.time  = time;
-wave.avg   = mnWaveform;
-wave.dof   = dofWaveform;
-wave.var   = varWaveform;
-wave.label = spike.label(spikesel);
+wave.time   = time;
+wave.avg    = mnWaveform;
+wave.dof    = dofWaveform;
+wave.var    = varWaveform;
+wave.label  = spike.label(spikesel);
 wave.dimord = 'chan_lead_time';
 
 % do the general cleanup and bookkeeping at the end of the function

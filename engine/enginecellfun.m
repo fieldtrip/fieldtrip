@@ -184,7 +184,7 @@ while ~all(submitted) || ~all(collected)
   end
   
   % try to submit as many jobs as possible
-  for submit = find(~submitted);
+  for submit = find(~submitted)
     
     if all(hasjob | isbusy)
       % all engines are busy, we have to wait for and collect some results before submitting new jobs
@@ -198,7 +198,7 @@ while ~all(submitted) || ~all(collected)
     end
     
     % submit the job for execution
-    [curjobid curputtime] = enginefeval(fname, argin{:}, 'diary', diary, 'nargout', numargout);
+    [curjobid, curputtime] = enginefeval(fname, argin{:}, 'diary', diary, 'nargout', numargout);
     
     if ~isempty(curjobid)
       % fprintf('submitted job %d\n', submit);

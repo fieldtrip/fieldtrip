@@ -41,7 +41,7 @@ cosDS = dest'*src; % angles between destination positions
 
 % Compute the interpolation matrix to tolerance tol
 [Gss]      = interpMx(cosSS,order,tol);  % [nSrc x nSrc]
-[Gds Hds]  = interpMx(cosDS,order,tol);  % [nDest x nSrc]
+[Gds, Hds] = interpMx(cosDS,order,tol);  % [nDest x nSrc]
 
 % Include the regularisation
 if ( lambda>0 ) Gss = Gss+lambda*eye(size(Gss)); end
@@ -55,9 +55,9 @@ C = [      Gss            muGss*ones(size(Gss,1),1);...
 iC = pinv(C);
 
 % Compute the mapping from source measurements and positions to destination positions
-if ( strcmp(lower(type),'spline') )
+if ( strcmpi(type,'spline') )
   W = [Gds ones(size(Gds,1),1).*muGss]*iC(:,1:end-1); % [nDest x nSrc]
-elseif (strcmp(lower(type),'slap'))
+elseif (strcmpi(type,'slap'))
   W = Hds*iC(1:end-1,1:end-1); %(:,1:end-1); % [nDest x nSrc]
 end
 return;
@@ -66,14 +66,14 @@ function [G,H]=interpMx(cosEE,order,tol)
 % compute the interpolation matrix for this set of point pairs
 if ( nargin < 3 || isempty(tol) ) tol=1e-10; end
 G=zeros(size(cosEE)); H=zeros(size(cosEE));
-for i=1:numel(cosEE);
+for i=1:numel(cosEE)
    x = cosEE(i);
    n=1; Pns1=1; Pn=x;           % seeds for the legendre ploy recurence
    tmp  = ( (2*n+1) * Pn ) / ((n*n+n).^order);
    G(i) = tmp ;         % 1st element in the sum
    H(i) = (n*n+n)*tmp;  % 1st element in the sum
    oGi=inf; dG=abs(G(i)); oHi=inf; dH=abs(H(i));
-   for n=2:500; % do the sum
+   for n=2:500 % do the sum
       Pns2=Pns1; Pns1=Pn; Pn=((2*n-1)*x*Pns1 - (n-1)*Pns2)./n; % legendre poly recurance
       oGi=G(i);  oHi=H(i);
       tmp  = ((2*n+1) * Pn) / ((n*n+n).^order);

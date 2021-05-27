@@ -1032,10 +1032,10 @@ if isempty(cmenulab)
         ft_error('cfg.selectmode = ''markpeakevent'' and ''marktroughevent'' only supported with 1 channel in the data')
       end
       if strcmp(cfg.selectmode, 'markpeakevent')
-        [dum ind_minmax] = max(dat(begsel-begsample+1:endsel-begsample+1));
+        [dum, ind_minmax] = max(dat(begsel-begsample+1:endsel-begsample+1));
         val = 'peak';
       elseif strcmp(cfg.selectmode, 'marktroughevent')
-        [dum ind_minmax] = min(dat(begsel-begsample+1:endsel-begsample+1));
+        [dum, ind_minmax] = min(dat(begsel-begsample+1:endsel-begsample+1));
         val = 'trough';
       end
       samp_minmax = begsel + ind_minmax - 1;
