@@ -129,7 +129,7 @@ cfg.implicitref = [];
 cfg.reref = 'yes';
 cfg.refmethod = 'rest';
 cfg.refchannel = 'all';
-cfg.leadfield = lfmat;
+cfg.leadfield = leadfield;
 data1 = ft_preprocessing(cfg, data);
 
 % the REST rereferenced data should have a mean that is close to zero
