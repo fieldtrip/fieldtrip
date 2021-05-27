@@ -631,7 +631,7 @@ elseif ismneavg
   
   if flipori
     tmpmom = cat(1, source.avg.mom{source.inside});
-    [u, ~, ~] = svd(tmpmom, 'econ');
+    [u, s, v] = svd(tmpmom, 'econ');
     flip( source.inside) = sign(u(:,1));
     flip(~source.inside) = nan;
     for i=1:numel(source.inside)
@@ -704,7 +704,7 @@ elseif islcmvavg
   
   if flipori
     tmpmom = cat(1, source.avg.mom{source.inside});
-    [u, ~, ~] = svd(tmpmom, 'econ');
+    [u, s, v] = svd(tmpmom, 'econ');
     flip( source.inside) = sign(u(:,1));
     flip(~source.inside) = nan;
     for i=1:numel(source.inside)

@@ -189,7 +189,7 @@ elseif needevt
       end
     end
     % sort the events on their sample number, this is consistent with FT_READ_EVENT
-    [~, indx] = sort([evt.sample]);
+    [dum, indx] = sort([evt.sample]);
     evt = evt(indx);
   catch
     % there are no events

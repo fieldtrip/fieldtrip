@@ -691,7 +691,7 @@ if isempty(cfg.outputfile)
     end
     if strcmp(cfg.method, 'copy') && ~isempty(cfg.dataset)
       % copy the file extension from the input dataset
-      [~, ~, x] = fileparts(cfg.dataset);
+      [p, f, x] = fileparts(cfg.dataset);
       cfg.outputfile = [cfg.outputfile x];
     end
   end
@@ -1741,8 +1741,8 @@ switch cfg.method
     end % switch typ
     
   case 'copy'
-    [~, ~, xin] = fileparts(cfg.dataset);
-    [p, ~, xout] = fileparts(cfg.outputfile);
+    [p, f, xin] = fileparts(cfg.dataset);
+    [p, f, xout] = fileparts(cfg.outputfile);
     if ~strcmp(xin, xout)
       ft_error('input and output filename extension do not match');
     end
@@ -1965,7 +1965,7 @@ if ~isempty(cfg.bidsroot)
   end
   
   this = table();
-  [~, f, x] = fileparts(cfg.outputfile);
+  [p, f, x] = fileparts(cfg.outputfile);
   this.filename = {fullfile(datatype2dirname(cfg.datatype), [f x])};
   fn = fieldnames(cfg.scans);
   for i=1:numel(fn)
@@ -2068,7 +2068,7 @@ if isfield(hdr, 'opto')
     if isempty(labelidx)
       continue
     else
-      [~, optoidx, wavelengthidx]=find(hdr.opto.tra(labelidx,:));
+      [dum, optoidx, wavelengthidx]=find(hdr.opto.tra(labelidx,:));
       for k=optoidx
         if any(strcmp(hdr.opto.optotype{k}, {'receiver', 'detector'}))
           detector{i}=hdr.opto.optolabel{k};

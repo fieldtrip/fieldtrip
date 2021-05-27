@@ -239,7 +239,7 @@ if strcmp(eventformat, 'brainvision_vhdr')
   if ~isfield(vhdr, 'MarkerFile') || isempty(vhdr.MarkerFile)
     filename = [];
   else
-    [p, ~, ~] = fileparts(filename);
+    [p, f, x] = fileparts(filename);
     filename = fullfile(p, vhdr.MarkerFile);
   end
 end
@@ -2295,7 +2295,7 @@ switch eventformat
     
     % ensure that the filename contains a full path specification,
     % otherwise the low-level function fails
-    [p,~,~] = fileparts(filename);
+    [p, f, x] = fileparts(filename);
     if ~isempty(p)
       % this is OK
     elseif isempty(p)
