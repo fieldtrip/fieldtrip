@@ -309,7 +309,7 @@ if strcmp(cfg.reref, 'yes')
       end
       
       if Nchann_lf ~= length(label)
-        ft_error('channels in the leadfield is not euqal to the data');
+        ft_error('channels in the leadfield are not equal to those in the data');
       end
       
       if ~isempty(lf_label)
@@ -321,7 +321,7 @@ if strcmp(cfg.reref, 'yes')
         ft_warning('There is no label info in the leadfield, there is no guarantee that the order of the channels in leadfield is the same as in the data');
       end
       
-      dat = ft_preproc_rereference(dat, refindx, cfg.refmethod,[],G); % re-referencing
+      dat   = ft_preproc_rereference(dat, refindx, cfg.refmethod, [], G); % re-referencing
       label = label(refindx); % re-referenced channel labels
       
     case {'bipolar', 'laplace'}
