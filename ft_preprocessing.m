@@ -102,10 +102,9 @@ function [data] = ft_preprocessing(cfg, data)
 %   cfg.reref         = 'no' or 'yes' (default = 'no')
 %   cfg.refchannel    = cell-array with new EEG reference channel(s), this can be 'all' for a common average reference
 %   cfg.refmethod     = 'avg', 'median', 'rest', 'bipolar' or 'laplace' (default = 'avg')
-%   cfg.groupchans    = 'yes' or 'no', whether channels should be rereferenced in separate groups 
-%                        when cfg.refmethod='bipolar' or 'laplacian', i.e. for sEEG electrodes. This requires 
-%                        channnels to be named using an alphanumeric code, where letters represent the group 
-%                        and numbers represent the order of the channel whithin its group. (default = 'no')
+%   cfg.groupchans    = 'yes' or 'no', should channels be rereferenced in separate groups for bipolar and laplace methods,
+%                       this requires channnels to be named using an alphanumeric code, where letters represent the group
+%                       and numbers represent the order of the channel whithin its group (default = 'no')
 %   cfg.leadfield     = leadfield structure, this is required when cfg.refmethod='rest', see FT_PREPARE_LEADFIELD
 %   cfg.implicitref   = 'label' or empty, add the implicit EEG reference as zeros (default = [])
 %   cfg.montage       = 'no' or a montage structure, see FT_APPLY_MONTAGE (default = 'no')
