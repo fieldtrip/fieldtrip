@@ -557,11 +557,8 @@ switch fileformat
     if sens_i<1
       error('No data corresponding to the chosen sensor type (%s) found.',senstype);
     end
-    %sens.tra  = zeros(i,sens_i); %maps channel index in data, to sensor index
     sens.tra  = eye(sens_i);
     sens.type= 'York 4d';
-    %sens.unit= ???
-    %sens.balance
     if isempty(coordsys)
       coordsys='dewar';
     end
