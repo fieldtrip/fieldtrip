@@ -113,7 +113,7 @@ switch ft_headmodeltype(headmodel)
     
   case {'bem', 'dipoli', 'asa', 'bemcp', 'singleshell' 'openmeeg'}
     % these already contain one or multiple triangulated surfaces for the boundaries
-    mesh = headmodel.mesh;
+    mesh = headmodel.bnd;
     
   case 'simbio'
     % the ft_plot_mesh function below wants the SIMBIO tetrahedral or hexahedral mesh
