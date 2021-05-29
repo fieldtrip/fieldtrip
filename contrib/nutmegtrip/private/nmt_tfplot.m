@@ -17,7 +17,7 @@ fwinfin(badrows,:) = [];
 ffin = fwinfin';
 ffin = ffin(:);
 
-[~,fwinfin2fwin]=intersect(fwinfin,fwin,'rows');
+[dum,fwinfin2fwin]=intersect(fwinfin,fwin,'rows');
 
 z = nan(size(ffin,1),size(tf,1));
 
