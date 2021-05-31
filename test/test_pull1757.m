@@ -1,4 +1,4 @@
-%function test_pull1757
+function test_pull1757
 
 %addpath('..');
 
