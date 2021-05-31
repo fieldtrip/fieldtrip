@@ -82,7 +82,7 @@ for k = 1:numel(refindx) % for each source/channel
     zX(:,idx)     = standardise(log10(powX(:,idx)), 2);
   end
   
-  c1 = mean(zX.*zYorth, 2); % take correlation and average over trials+tapers
+  c1 = mean(zX.*zYorth, 2); % take correlation averaging over trials+tapers
   
   %% in the other direction: orthogonalize X wrt Y
   cYnorm = conj(Y./abs(Y));
