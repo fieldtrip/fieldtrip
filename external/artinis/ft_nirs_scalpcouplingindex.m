@@ -202,27 +202,32 @@ chanidx = sci > cfg.threshold;
 goodchannel = datain.label( chanidx);
 badchannel  = datain.label(~chanidx);
 
-switch cfg.keepchannel
-  case 'no'
-    selcfg = [];
-    selcfg.channel = goodchannel;
-    dataout = ft_selectdata(selcfg, datain);
-    fprintf('the following channels were removed: '); % to be continued below ...
-  case 'nan'
-    dataout = datain;
-    for i = 1:length(datain.trial)
-      dataout.trial{i}(~chanidx,:) = nan;
-    end
-    fprintf('the following channels were filled with NaNs: '); % to be continued below ...
-  otherwise
-    error('invalid option for cfg.keepchannel');
+if ~isempty(badchannel)
+  switch cfg.keepchannel
+    case 'no'
+      selcfg = [];
+      selcfg.channel = goodchannel;
+      dataout = ft_selectdata(selcfg, datain);
+      fprintf('the following channels were removed: '); % to be continued below ...
+    case 'nan'
+      dataout = datain;
+      for i = 1:length(datain.trial)
+        dataout.trial{i}(~chanidx,:) = nan;
+      end
+      fprintf('the following channels were filled with NaNs: '); % to be continued below ...
+    otherwise
+      error('invalid option for cfg.keepchannel');
+  end
+  
+  % show which channels were removed or filled with NaNs
+  for i=1:(length(badchannel)-1)
+    fprintf('\n%s', badchannel{i});
+  end
+  fprintf('\n%s\n', badchannel{end});
+  
+else
+  dataout=datain;
 end
-
-% show which channels were removed or filled with NaNs
-for i=1:(length(badchannel)-1)
-  fprintf('\n%s', badchannel{i});
-end
-fprintf('\n%s\n', badchannel{end});
 
 % this might involve more active checking of whether the input options
 % are consistent with the data and with each other
