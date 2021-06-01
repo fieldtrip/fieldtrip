@@ -401,7 +401,7 @@ switch cfg.method
     cfg.laggedcoherence.lags = ft_getopt(cfg.laggedcoherence, 'lags', []);
     cfg.laggedcoherence.timeresolved = false;
     
-   case {'plm'}
+  case 'plm'
     data = ft_checkdata(data, 'datatype', 'raw');
     if ~isfield(data, 'fsample')
       data.fsample = 1./mean(diff(data.time{1}));
@@ -410,6 +410,13 @@ switch cfg.method
     outparam = 'plm';
   
     cfg.bandwidth = ft_getopt(cfg, 'bandwidth', 0.5);
+  
+  case 'mim'
+    cfg.indices = ft_getopt(cfg, 'indices', []);
+    
+    data     = ft_checkdata(data, 'datatype', 'freq');
+    inparam  = 'crsspctrm';
+    outparam = 'mimspctrm';
     
   otherwise
     ft_error('unknown method % s', cfg.method);
@@ -1059,10 +1066,34 @@ switch cfg.method
   case 'plm'
     % phase linearity measurement.
     optarg   = {'bandwidth', cfg.bandwidth, 'fsample', data.fsample};
-    [datout] = ft_connectivity_plm(data.(inparam), optarg{:});
+    datout   = ft_connectivity_plm(data.(inparam), optarg{:});
     varout   = [];
     
     outdimord = 'rpt_chan_chan';
+  
+  case 'mim'
+    % multiple interaction measure
+    optarg   = {'indices', cfg.indices};
+    if numel(cfg.indices)~=numel(data.label)
+      ft_error('for a mim computation, the cfg.indices vector should be the same as the number of channels in the inputd ata');
+    end
+    if (contains(data.dimord, 'rpt') && size(data.(inparam),1) == 1) || ~contains(data.dimord, 'rpt')
+      datout   = ft_connectivity_mim(shiftdim(data.(inparam)), optarg{:});
+    else
+      ft_error('the ''rpt'' dimension should either be of singleton length, or non existent for mim computation');
+    end
+    
+    outdimord = 'chan_chan_freq';
+    varout   = [];
+      
+    % mim requires an updated (shortened) label
+    label = cell(max(cfg.indices),1);
+    for k = 1:max(cfg.indices)
+      str = sprintf('%s, ', data.label{cfg.indices==k});
+      str = str(1:end-2);
+      label{k,1} = sprintf('(%s)', str);
+    end
+    data.label = label;
     
   otherwise
     ft_error('unknown method %s', cfg.method);
