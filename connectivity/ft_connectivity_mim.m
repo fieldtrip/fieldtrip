@@ -16,7 +16,8 @@ function [M] = ft_connectivity_mim(input, varargin)
 %   indices   = 1xN vector with indices of the groups to which the channels belong,
 %               e.g. [1 1 2 2] for a 2-by-2 connectivity between planar MEG channels.
 %
-% The output m contains the Channel*Channel connectivity measure.
+% The output m contains the newChannel x newChannel x Frequency
+% connectivity measure, with newChannel equal to max(indices)
 %
 % See also FT_CONNECTIVITYANALYSIS
 
@@ -53,25 +54,30 @@ sizeout = sizein;
 sizeout(1:2) = max(indices);
 
 % compute the inverse of the auto terms only once for speed up
-for k = 1:sizeout(1)
-  invC{k,1} = pinv(real(input(indices==k,indices==k)));
+invC = cell(sizeout(1),sizeout(3));
+for kk = 1:sizeout(3)
+  for k = 1:sizeout(1)
+    invC{k,kk} = pinv(real(input(indices==k,indices==k,kk)));
+  end
 end
 
-
-for k = 1:sizeout(1)
-  for m = 1:sizeout(1)
-    indx1 = indices==k;
-    indx2 = indices==m;
-    %cs_aa_re = real(input(indx1,indx1));
-    %cs_bb_re = real(input(indx2,indx2));
-    cs_ab_im = imag(input(indx1,indx2));
-    
-    %inv_cs_bb_re = pinv(cs_bb_re);
-    %inv_cs_aa_re = pinv(cs_aa_re);
-    inv_cs_bb_re = invC{m};
-    inv_cs_aa_re = invC{k};
-    transp_cs_ab_im = transpose(cs_ab_im);
-    M(k,m) = trace(inv_cs_aa_re*cs_ab_im*inv_cs_bb_re*transp_cs_ab_im); % try to speed up by dividing calculation in steps
+M = zeros(sizeout);
+for kk = 1:sizeout(3)
+  for k = 1:sizeout(1)
+    for m = 1:sizeout(1)
+      indx1 = indices==k;
+      indx2 = indices==m;
+      %cs_aa_re = real(input(indx1,indx1));
+      %cs_bb_re = real(input(indx2,indx2));
+      cs_ab_im = imag(input(indx1,indx2,kk));
+      
+      %inv_cs_bb_re = pinv(cs_bb_re);
+      %inv_cs_aa_re = pinv(cs_aa_re);
+      inv_cs_bb_re = invC{m,kk};
+      inv_cs_aa_re = invC{k,kk};
+      transp_cs_ab_im = transpose(cs_ab_im);
+      M(k,m,kk) = trace(inv_cs_aa_re*cs_ab_im*inv_cs_bb_re*transp_cs_ab_im); % try to speed up by dividing calculation in steps
+    end
   end
 end
 
