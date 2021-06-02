@@ -43,6 +43,7 @@ function [stat] = ft_connectivityanalysis(cfg, data)
 %     'corr'       Pearson correlation, support for timelock or raw data
 %     'laggedcoherence', lagged coherence estimate
 %     'plm'        phase linearity measurement
+%     'mim'        multivariate interaction measure, support for freq data
 %
 % Additional configuration options are
 %   cfg.channel    = Nx1 cell-array containing a list of channels which are
@@ -68,6 +69,8 @@ function [stat] = ft_connectivityanalysis(cfg, data)
 %   cfg.bandwidth   = scalar, needed for 'psi', half-bandwidth of the integration
 %                     across frequencies (in Hz, default is the Rayleigh frequency)
 %                     needed for 'plm', half-bandwidth of the integration window (in Hz)
+%   cfg.indices     = vector, needed for 'mim', indexing which channels
+%                     belong together
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
@@ -82,7 +85,8 @@ function [stat] = ft_connectivityanalysis(cfg, data)
 %
 % For the implemented methods, see also FT_CONNECTIVITY_CORR,
 % FT_CONNECTIVITY_GRANGER, FT_CONNECTIVITY_PPC, FT_CONNECTIVITY_WPLI,
-% FT_CONNECTIVITY_PDC, FT_CONNECTIVITY_DTF, FT_CONNECTIVITY_PSI
+% FT_CONNECTIVITY_PDC, FT_CONNECTIVITY_DTF, FT_CONNECTIVITY_PSI,
+% FT_CONNECTIVITY_MIM
 
 % Undocumented options:
 %   cfg.refindx             =
@@ -98,7 +102,7 @@ function [stat] = ft_connectivityanalysis(cfg, data)
 
 % Copyright (C) 2009, Jan-Mathijs Schoffelen, Andre Bastos, Martin Vinck, Robert Oostenveld
 % Copyright (C) 2010-2011, Jan-Mathijs Schoffelen, Martin Vinck
-% Copyright (C) 2012-2019, Jan-Mathijs Schoffelen
+% Copyright (C) 2012-2021, Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
