@@ -195,7 +195,7 @@ elseif useparcellation
   end
   
   % ensure it is a parcellation, not a segmentation
-  parcellation = ft_checkdata(parcellation, 'datatype', 'parcellation', 'parcel lationstyle', 'indexed');
+  parcellation = ft_checkdata(parcellation, 'datatype', 'parcellation', 'parcellationstyle', 'indexed');
   
   % keep the transformation matrix
   if ~isempty(transform)

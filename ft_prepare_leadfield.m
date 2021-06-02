@@ -132,23 +132,24 @@ end
 
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'forbidden',  {'channels'}); % prevent accidental typos, see issue 1729
-cfg = ft_checkconfig(cfg, 'renamed',    {'hdmfile', 'headmodel'});
-cfg = ft_checkconfig(cfg, 'renamed',    {'vol',     'headmodel'});
-cfg = ft_checkconfig(cfg, 'renamed',    {'grid',    'sourcemodel'});
-cfg = ft_checkconfig(cfg, 'renamed',    {'om',      'openmeeg'});
-cfg = ft_checkconfig(cfg, 'renamed',    {'elecfile', 'elec'});
-cfg = ft_checkconfig(cfg, 'renamed',    {'gradfile', 'grad'});
-cfg = ft_checkconfig(cfg, 'renamed',    {'optofile', 'opto'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'hdmfile',   'headmodel'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'vol',       'headmodel'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'grid',      'sourcemodel'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'om',        'openmeeg'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'elecfile',  'elec'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'gradfile',  'grad'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'optofile',  'opto'});
+cfg = ft_checkconfig(cfg, 'deprecated', {'patchindx', 'patchsize'});
 
 % set the defaults
-cfg.lbex           = ft_getopt(cfg, 'lbex',           'no');
-cfg.sel50p         = ft_getopt(cfg, 'sel50p',         'no');
-cfg.feedback       = ft_getopt(cfg, 'feedback',       'text');
-cfg.mollify        = ft_getopt(cfg, 'mollify',        'no');
-cfg.patchsvd       = ft_getopt(cfg, 'patchsvd',       'no');
+cfg.lbex           = ft_getopt(cfg, 'lbex',      'no');
+cfg.sel50p         = ft_getopt(cfg, 'sel50p',    'no');
+cfg.feedback       = ft_getopt(cfg, 'feedback',  'text');
+cfg.mollify        = ft_getopt(cfg, 'mollify',   'no');
+cfg.patchsvd       = ft_getopt(cfg, 'patchsvd',  'no');
 
-cfg = ft_checkconfig(cfg, 'renamed', {'tightgrid', 'tight'});  % this is moved to cfg.sourcemodel.tight by the subsequent createsubcfg
-cfg = ft_checkconfig(cfg, 'renamed', {'sourceunits', 'unit'}); % this is moved to cfg.sourcemodel.unit by the subsequent createsubcfg
+cfg = ft_checkconfig(cfg, 'renamed', {'tightgrid',   'tight'});  % this is moved to cfg.sourcemodel.tight by the subsequent createsubcfg
+cfg = ft_checkconfig(cfg, 'renamed', {'sourceunits', 'unit'});   % this is moved to cfg.sourcemodel.unit by the subsequent createsubcfg
 
 % put the low-level options pertaining to the sourcemodel in their own field
 cfg = ft_checkconfig(cfg, 'createsubcfg', {'sourcemodel'});
@@ -338,22 +339,22 @@ sourcemodel.label           = sens.label;
 sourcemodel.leadfielddimord = '{pos}_chan_ori';
 
 % mollify the leadfields
-if ~strcmp(cfg.mollify, 'no')
+if ~isequal(cfg.mollify, 'no')
   sourcemodel = mollify(cfg, sourcemodel);
 end
 
 % combine leadfields in patches and do an SVD on them
-if ~strcmp(cfg.patchsvd, 'no')
+if ~isequal(cfg.patchsvd, 'no')
   sourcemodel = patchsvd(cfg, sourcemodel);
 end
 
 % compute the 50 percent channel selection subspace projection
-if ~strcmp(cfg.sel50p, 'no')
+if ~isequal(cfg.sel50p, 'no')
   sourcemodel = sel50p(cfg, sourcemodel, sens);
 end
 
 % compute the local basis function expansion (LBEX) subspace projection
-if ~strcmp(cfg.lbex, 'no')
+if ~isequal(cfg.lbex, 'no')
   sourcemodel = lbex(cfg, sourcemodel);
 end
 

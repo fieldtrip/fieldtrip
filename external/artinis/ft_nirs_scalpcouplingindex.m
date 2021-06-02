@@ -10,6 +10,9 @@ function dataout = ft_nirs_scalpcouplingindex(cfg, datain)
 %
 %   cfg.threshold    = scalar, the correlation value which has to be
 %                      exceeded to be labelled a 'good' channel (default = 0.75)
+%   cfg.keepchannel = string, determines how to deal with channels that are not selected, can be
+%                      'no'          completely remove deselected channels from the data (default)
+%                      'nan'         fill the channels that are deselected with NaNs
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
@@ -110,6 +113,7 @@ datain = ft_checkdata(datain, 'datatype', 'raw', 'senstype', 'nirs');
 
 % get the options
 cfg.threshold    = ft_getopt(cfg, 'threshold', 0.75);
+cfg.keepchannel = ft_getopt(cfg, 'keepchannel', 'no');
 
 % ensure that the options are valid
 cfg = ft_checkopt(cfg, 'threshold', 'doublescalar');
@@ -192,11 +196,38 @@ while i<nChans
   
 end
 
-% remove the bad channels on the original datain
+% remove the bad channels on the original datain (default) or replaces with
+% nans
 chanidx = sci > cfg.threshold;
-selcfg = [];
-selcfg.channel = datain.label(chanidx);
-dataout = ft_selectdata(selcfg, datain);
+goodchannel = datain.label( chanidx);
+badchannel  = datain.label(~chanidx);
+
+if ~isempty(badchannel)
+  switch cfg.keepchannel
+    case 'no'
+      selcfg = [];
+      selcfg.channel = goodchannel;
+      dataout = ft_selectdata(selcfg, datain);
+      fprintf('the following channels were removed: '); % to be continued below ...
+    case 'nan'
+      dataout = datain;
+      for i = 1:length(datain.trial)
+        dataout.trial{i}(~chanidx,:) = nan;
+      end
+      fprintf('the following channels were filled with NaNs: '); % to be continued below ...
+    otherwise
+      error('invalid option for cfg.keepchannel');
+  end
+  
+  % show which channels were removed or filled with NaNs
+  for i=1:(length(badchannel)-1)
+    fprintf('\n%s', badchannel{i});
+  end
+  fprintf('\n%s\n', badchannel{end});
+  
+else
+  dataout=datain;
+end
 
 % this might involve more active checking of whether the input options
 % are consistent with the data and with each other

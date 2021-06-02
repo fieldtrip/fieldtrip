@@ -423,7 +423,7 @@ elseif isfield(cfg.sourcemodel, 'filter')
   
 elseif isfield(cfg.sourcemodel, 'leadfield')
   ft_notice('using precomputed leadfields');
-  sourcemodel = keepfields(cfg.sourcemodel, {'pos', 'tri', 'dim', 'inside', 'leadfield', 'leadfielddimord', 'label', 'cfg'});
+  sourcemodel = keepfields(cfg.sourcemodel, {'pos', 'tri', 'dim', 'inside', 'leadfield', 'leadfielddimord', 'label', 'cfg', 'subspace'});
   
   if ~isfield(sourcemodel, 'label')
     ft_warning('the labels are missing for the precomputed leadfields, assuming that they were computed with the same channel selection');

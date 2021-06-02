@@ -59,7 +59,7 @@ handles = definehandles;
 fid = fopen_or_error(filename, 'rb', 'ieee-le');
 
 % these are always present
-[id ver rev sys_name] = GetMeg160SystemInfoM(fid);
+[id, ver, rev, sys_name] = GetMeg160SystemInfoM(fid);
 channel_count   = GetMeg160ChannelCountM(fid);
 channel_info    = GetMeg160ChannelInfoM(fid);
 calib_info      = GetMeg160CalibInfoM(fid);

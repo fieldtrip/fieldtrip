@@ -76,31 +76,29 @@ switch dataformat
 end
 
 
-
 % NEUROSHARE LIBRARY %
 % set the library (note: library has to be on the path)
 [feedback] = ns_SetLibrary(which(lib));
-if feedback~=0, [feedback err] = ns_GetLastErrorMsg; disp(err), end
+if feedback~=0, [feedback, err] = ns_GetLastErrorMsg; disp(err), end
 
 % feedback about datafile and library
 [feedback, libinfo] = ns_GetLibraryInfo;
-if feedback~=0, [feedback err] = ns_GetLastErrorMsg; disp(err), end
+if feedback~=0, [feedback, err] = ns_GetLastErrorMsg; disp(err), end
 disp(['Loading file ' filename ' using ' libinfo.Description ' from ' libinfo.Creator]);
 
 % open dataset
-[feedback fileID] = ns_OpenFile(filename);
-if feedback~=0, [feedback err] = ns_GetLastErrorMsg; disp(err), end
-
+[feedback, fileID] = ns_OpenFile(filename);
+if feedback~=0, [feedback, err] = ns_GetLastErrorMsg; disp(err), end
 
 
 % HEADER %
 % retrieve dataset information
-[feedback hdr.fileinfo] = ns_GetFileInfo(fileID);
-if feedback~=0, [feedback err] = ns_GetLastErrorMsg; disp(err), end
+[feedback, hdr.fileinfo] = ns_GetFileInfo(fileID);
+if feedback~=0, [feedback, err] = ns_GetLastErrorMsg; disp(err), end
 
 % retrieve entity information
-[feedback hdr.entityinfo] = ns_GetEntityInfo(fileID, 1:hdr.fileinfo.EntityCount);
-if feedback~=0, [feedback err] = ns_GetLastErrorMsg; disp(err), end
+[feedback, hdr.entityinfo] = ns_GetEntityInfo(fileID, 1:hdr.fileinfo.EntityCount);
+if feedback~=0, [feedback, err] = ns_GetLastErrorMsg; disp(err), end
 
 % hdr.entityinfo.EntityType specifies the type of entity data recorded on that
 % channel. It can be one of the following:
@@ -121,42 +119,42 @@ end
 
 % retrieve event information
 if ~isempty(list.event)
-  [feedback hdr.eventinfo] = ns_GetEventInfo(fileID, list.event);
-  if feedback~=0, [feedback err] = ns_GetLastErrorMsg; disp(err), end
+  [feedback, hdr.eventinfo] = ns_GetEventInfo(fileID, list.event);
+  if feedback~=0, [feedback, err] = ns_GetLastErrorMsg; disp(err), end
 end
 
 % retrieve analog information
 if ~isempty(list.analog)
-  [feedback hdr.analoginfo] = ns_GetAnalogInfo(fileID, list.analog);
-  if feedback~=0, [feedback err] = ns_GetLastErrorMsg; disp(err), end
+  [feedback, hdr.analoginfo] = ns_GetAnalogInfo(fileID, list.analog);
+  if feedback~=0, [feedback, err] = ns_GetLastErrorMsg; disp(err), end
 end
 
 % retrieve segment information
 if ~isempty(list.segment)
-  [feedback hdr.seginfo] = ns_GetSegmentInfo(fileID, list.segment);
-  if feedback~=0, [feedback err] = ns_GetLastErrorMsg; disp(err), end
-  [feedback hdr.segsourceinfo] = ns_GetSegmentSourceInfo(fileID, list.segment, 1);
-  if feedback~=0, [feedback err] = ns_GetLastErrorMsg; disp(err), end
+  [feedback, hdr.seginfo] = ns_GetSegmentInfo(fileID, list.segment);
+  if feedback~=0, [feedback, err] = ns_GetLastErrorMsg; disp(err), end
+  [feedback, hdr.segsourceinfo] = ns_GetSegmentSourceInfo(fileID, list.segment, 1);
+  if feedback~=0, [feedback, err] = ns_GetLastErrorMsg; disp(err), end
 end
 
 % retrieve neural information
 if ~isempty(list.neural)
-  [feedback hdr.neuralinfo] = ns_GetNeuralInfo(fileID, list.neural);
-  if feedback~=0, [feedback err] = ns_GetLastErrorMsg; disp(err), end
+  [feedback, hdr.neuralinfo] = ns_GetNeuralInfo(fileID, list.neural);
+  if feedback~=0, [feedback, err] = ns_GetLastErrorMsg; disp(err), end
 end
 
 
 % required to get actual analog chan numbers
 if ~isempty(list.analog)
-  [feedback analog.contcount] = ns_GetAnalogData(fileID, list.analog, 1, max([hdr.entityinfo(list.analog).ItemCount]));
+  [feedback, analog.contcount] = ns_GetAnalogData(fileID, list.analog, 1, max([hdr.entityinfo(list.analog).ItemCount]));
 end
 
 
 % EVENT %
 % retrieve events
 if strcmp(readevent, 'yes') && ~isempty(list.event)
-  [feedback event.timestamp event.data event.datasize] = ns_GetEventData(fileID, list.event, 1:max([hdr.entityinfo(list.event).ItemCount]));
-  if feedback~=0, [feedback err] = ns_GetLastErrorMsg; disp(err), end
+  [feedback, event.timestamp, event.data, event.datasize] = ns_GetEventData(fileID, list.event, 1:max([hdr.entityinfo(list.event).ItemCount]));
+  if feedback~=0, [feedback, err] = ns_GetLastErrorMsg; disp(err), end
    
   % skip empty ones ???
   event.timestamp(event.datasize==0)=[];
@@ -167,7 +165,7 @@ if strcmp(readevent, 'yes') && ~isempty(list.event)
     if hdr.entityinfo(list.event(c)).ItemCount~=0
       for i=1:length(event.timestamp)
         [feedback, event.sample(i,c)] = ns_GetIndexByTime(fileID, list.event(c), event.timestamp(i,c), 0);
-        if feedback~=0, [feedback err] = ns_GetLastErrorMsg; disp(err), end
+        if feedback~=0, [feedback, err] = ns_GetLastErrorMsg; disp(err), end
       end
     end
   end
@@ -191,16 +189,16 @@ if strcmp(readanalog, 'yes') && ~isempty(list.analog)
       chanindx = list.analog(chanindx & analog.contcount~=0); % only read nonempty channels
     end
   end
-  if isempty(begsample); 
+  if isempty(begsample)
     begsample = 1;
   end
-  if isempty(endsample);
+  if isempty(endsample)
     itemcount = max([hdr.entityinfo(list.analog).ItemCount]);
   else
     itemcount = endsample - begsample + 1;
   end
-  [feedback analog.contcount analog.data] = ns_GetAnalogData(fileID, chanindx, begsample, itemcount);
-  if feedback~=0, [feedback err] = ns_GetLastErrorMsg; disp(err), end
+  [feedback, analog.contcount, analog.data] = ns_GetAnalogData(fileID, chanindx, begsample, itemcount);
+  if feedback~=0, [feedback, err] = ns_GetLastErrorMsg; disp(err), end
 elseif strcmp(readanalog, 'yes') && isempty(list.analog)
   ft_warning('no analog events were found in the data')
 end
@@ -211,8 +209,8 @@ end
 % retrieve segments       [ (sorted) spike waveforms ]
 if strcmp(readspike, 'yes') && ~isempty(list.segment)
   % collect data: all chans (=list.segment) and all waveforms (=hdr.entityinfo.ItemCount)
-  [feedback segment.timestamp segment.data segment.samplecount segment.unitID] = ns_GetSegmentData(fileID, list.segment, 1:max([hdr.entityinfo(list.segment).ItemCount]));
-  if feedback~=0, [feedback err] = ns_GetLastErrorMsg; disp(err), end
+  [feedback, segment.timestamp, segment.data, segment.samplecount, segment.unitID] = ns_GetSegmentData(fileID, list.segment, 1:max([hdr.entityinfo(list.segment).ItemCount]));
+  if feedback~=0, [feedback, err] = ns_GetLastErrorMsg; disp(err), end
 elseif strcmp(readspike, 'yes') && isempty(list.segment)
   ft_warning('no spike waveforms were found in the data')
 end
@@ -221,8 +219,8 @@ end
 if strcmp(readspike, 'yes') && ~isempty(list.neural)
   neural.data = nan(length(list.neural), max([hdr.entityinfo(list.neural).ItemCount])); % pre-allocate
   for chan=1:length(list.neural) % get timestamps
-    [feedback neural.data(chan,1:hdr.entityinfo(list.neural(chan)).ItemCount)] = ns_GetNeuralData(fileID, list.neural(chan), 1, hdr.entityinfo(list.neural(chan)).ItemCount);
-    if feedback~=0, [feedback err] = ns_GetLastErrorMsg; disp(err), end
+    [feedback, neural.data(chan,1:hdr.entityinfo(list.neural(chan)).ItemCount)] = ns_GetNeuralData(fileID, list.neural(chan), 1, hdr.entityinfo(list.neural(chan)).ItemCount);
+    if feedback~=0, [feedback, err] = ns_GetLastErrorMsg; disp(err), end
   end
 elseif strcmp(readspike, 'yes') && isempty(list.neural)
   ft_warning('no spike timestamps were found in the data')
@@ -232,7 +230,7 @@ end
 
 % close dataset
 [feedback] = ns_CloseFile(fileID);
-if feedback~=0, [feedback err] = ns_GetLastErrorMsg; disp(err), end
+if feedback~=0, [feedback, err] = ns_GetLastErrorMsg; disp(err), end
 
 
 % collect the output

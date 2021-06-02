@@ -583,9 +583,9 @@ cfg.coordsystem.NIRSCoordinateSystem                            = ft_getopt(cfg.
 cfg.coordsystem.NIRSCoordinateUnits                             = ft_getopt(cfg.coordsystem, 'NIRSCoordinateUnits'                            ); % REQUIRED. Units of the _optodes.tsv, MUST be "m", "mm", "cm" or "pixels".
 cfg.coordsystem.NIRSCoordinateSystemDescription                 = ft_getopt(cfg.coordsystem, 'NIRSCoordinateSystemDescription'                ); % RECOMMENDED. Freeform text description or link to document describing the NIRS coordinate system system in detail (e.g., "Coordinate system with the origin at anterior commissure (AC), negative y-axis going through the posterior commissure (PC), z-axis going to a mid-hemisperic point which lies superior to the AC-PC line, x-axis going to the right").
 cfg.coordsystem.NIRSCoordinateProcessingDescription             = ft_getopt(cfg.coordsystem, 'NIRSCoordinateProcessingDescription'            ); % RECOMMENDED. Has any post-processing (such as projection) been done on the optode positions (e.g., "surface_projection", "none").
-cfg.coordsystem.MotionCoordinateSystem              	        = ft_getopt(cfg.coordsystem, 'MotionCoordinateSystem'                         ); % REQUIRED.
-cfg.coordsystem.MotionRotationRule              	            = ft_getopt(cfg.coordsystem, 'MotionRotationRule'                             ); % OPTIONAL.
-cfg.coordsystem.MotionRotationOrder              	            = ft_getopt(cfg.coordsystem, 'MotionRotationOrder'                            ); % OPTIONAL.
+cfg.coordsystem.MotionCoordinateSystem              	          = ft_getopt(cfg.coordsystem, 'MotionCoordinateSystem'                         ); % REQUIRED.
+cfg.coordsystem.MotionRotationRule              	              = ft_getopt(cfg.coordsystem, 'MotionRotationRule'                             ); % OPTIONAL.
+cfg.coordsystem.MotionRotationOrder              	              = ft_getopt(cfg.coordsystem, 'MotionRotationOrder'                            ); % OPTIONAL.
 cfg.coordsystem.IntendedFor                                     = ft_getopt(cfg.coordsystem, 'IntendedFor'                                    ); % OPTIONAL. Path or list of path relative to the subject subfolder pointing to the structural MRI, possibly of different types if a list is specified, to be used with the MEG recording. The path(s) need(s) to use forward slashes instead of backward slashes (e.g. "ses-<label>/anat/sub-01_T1w.nii.gz").
 cfg.coordsystem.AnatomicalLandmarkCoordinates                   = ft_getopt(cfg.coordsystem, 'AnatomicalLandmarkCoordinates'                  ); % OPTIONAL. Key:value pairs of the labels and 3-D digitized locations of anatomical landmarks, interpreted following the AnatomicalLandmarkCoordinateSystem, e.g., {"NAS": [12.7,21.3,13.9], "LPA": [5.2,11.3,9.6], "RPA": [20.2,11.3,9.1]}.
 cfg.coordsystem.AnatomicalLandmarkCoordinateSystem              = ft_getopt(cfg.coordsystem, 'AnatomicalLandmarkCoordinateSystem'             ); % OPTIONAL. Defines the coordinate system for the anatomical landmarks. See Appendix VIII: preferred names of Coordinate systems. If "Other", provide definition of the coordinate system in AnatomicalLandmarkCoordinateSystemDescripti on.
@@ -596,7 +596,7 @@ cfg.coordsystem.FiducialsCoordinates                            = ft_getopt(cfg.
 cfg.coordsystem.FiducialsCoordinateSystem                       = ft_getopt(cfg.coordsystem, 'FiducialsCoordinateSystem'                      ); % RECOMMENDED. Refers to the coordinate space to which the landmarks positions are to be interpreted - preferably the same as the NIRSCoordinateSystem
 cfg.coordsystem.FiducialsCoordinateUnits                        = ft_getopt(cfg.coordsystem, 'FiducialsCoordinateUnits'                       ); % RECOMMENDED. Units in which the coordinates that are listed in the field AnatomicalLandmarkCoordinateSystem are represented (e.g., "mm", "cm").
 cfg.coordsystem.FiducialsCoordinateSystemDescription            = ft_getopt(cfg.coordsystem, 'FiducialsCoordinateSystemDescription'           ); % RECOMMENDED. Free-form text description of the coordinate system. May also include a link to a documentation page or paper describing the system in greater detail.
-
+ 
 %% columns in the channels.tsv
 cfg.channels.name               = ft_getopt(cfg.channels, 'name'               , nan);  % REQUIRED. Channel name (e.g., MRT012, MEG023)
 cfg.channels.type               = ft_getopt(cfg.channels, 'type'               , nan);  % REQUIRED. Type of channel; MUST use the channel types listed below.
@@ -611,10 +611,10 @@ cfg.channels.software_filters   = ft_getopt(cfg.channels, 'software_filters'   ,
 cfg.channels.status             = ft_getopt(cfg.channels, 'status'             , nan);  % OPTIONAL. Data quality observed on the channel (good/bad). A channel is considered bad if its data quality is compromised by excessive noise. Description of noise type SHOULD be provided in [status_description].
 cfg.channels.status_description = ft_getopt(cfg.channels, 'status_description' , nan);  % OPTIONAL. Freeform text description of noise or artifact affecting data quality on the channel. It is meant to explain why the channel was declared bad in [status].
 % specific options for NIRS channels
-% FIXME optional nirs channel fields (e.g. frequencies for frequency domain NIRS) should still be added here
 cfg.channels.source             = ft_getopt(cfg.channels, 'source'             , nan);  % REQUIRED. Name of the source as specified in the *_optodes.tsv file. n/a for channels that do not contain NIRS signals (acceleration).
 cfg.channels.detector           = ft_getopt(cfg.channels, 'detector'           , nan);  % REQUIRED. Name of the detector as specified in the *_optodes.tsv file. n/a for channels that do not contain NIRS signals (acceleration).
 cfg.channels.wavelength         = ft_getopt(cfg.channels, 'wavelength'         , nan);  % REQUIRED. Wavelength of light in nm. n/a for channels that do not contain raw NIRS signals (acceleration).
+% FIXME optional nirs channel fields (e.g. frequencies for frequency domain NIRS) should still be added here
 
 %% columns in the electrodes.tsv
 cfg.electrodes.name             = ft_getopt(cfg.electrodes, 'name'             , nan);  % REQUIRED. Name of the electrode
@@ -691,7 +691,7 @@ if isempty(cfg.outputfile)
     end
     if strcmp(cfg.method, 'copy') && ~isempty(cfg.dataset)
       % copy the file extension from the input dataset
-      [~, ~, x] = fileparts(cfg.dataset);
+      [p, f, x] = fileparts(cfg.dataset);
       cfg.outputfile = [cfg.outputfile x];
     end
   end
@@ -1741,8 +1741,8 @@ switch cfg.method
     end % switch typ
     
   case 'copy'
-    [~, ~, xin] = fileparts(cfg.dataset);
-    [p, ~, xout] = fileparts(cfg.outputfile);
+    [p, f, xin] = fileparts(cfg.dataset);
+    [p, f, xout] = fileparts(cfg.outputfile);
     if ~strcmp(xin, xout)
       ft_error('input and output filename extension do not match');
     end
@@ -1965,7 +1965,7 @@ if ~isempty(cfg.bidsroot)
   end
   
   this = table();
-  [~, f, x] = fileparts(cfg.outputfile);
+  [p, f, x] = fileparts(cfg.outputfile);
   this.filename = {fullfile(datatype2dirname(cfg.datatype), [f x])};
   fn = fieldnames(cfg.scans);
   for i=1:numel(fn)
@@ -2068,7 +2068,7 @@ if isfield(hdr, 'opto')
     if isempty(labelidx)
       continue
     else
-      [~, optoidx, wavelengthidx]=find(hdr.opto.tra(labelidx,:));
+      [dum, optoidx, wavelengthidx]=find(hdr.opto.tra(labelidx,:));
       for k=optoidx
         if any(strcmp(hdr.opto.optotype{k}, {'receiver', 'detector'}))
           detector{i}=hdr.opto.optolabel{k};

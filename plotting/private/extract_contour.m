@@ -17,13 +17,13 @@
 
 outbnd = [];
 for i = 1:length(indx)
-    %For each vertex in mask
-    [row,~]  = find(tri == (indx(i))); %find neighbours
+    % for each vertex in mask
+    [row,dum] = find(tri == (indx(i))); % find neighbours
     neigh = tri(row,:);
     neigh = unique(neigh(:));
     outbnd = [outbnd neigh(mask(neigh)==0)'];
     outbnd(outbnd==indx(i)) = [];
-end %find all "outer" neighbours to this cluster
+end % find all "outer" neighbours to this cluster
 outbnd = unique(outbnd);
 
 indx1 = any(ismember(tri,outbnd)'); % outer vertex connections

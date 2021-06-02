@@ -100,14 +100,14 @@ for i = 1:Ndata
   end
 end
 
-if Ndata>1,
-  if all(opt.issource==1),
+if Ndata>1
+  if all(opt.issource==1)
     % this is allowed maybe in the future: multiple source input arguments
     ft_error('currently, not more than 1 data argument is allowed, unless one of them is a parcellation, and the other a channel level structure');
-  elseif all(opt.isfreq==1),
+  elseif all(opt.isfreq==1)
     % this is allowed maybe in the future: multiple freq input arguments
     ft_error('currently, not more than 1 data argument is allowed, unless one of them is a parcellation, and the other a channel level structure');
-  elseif all(opt.istimelock==1),
+  elseif all(opt.istimelock==1)
     % this is allowed maybe in the future: multiple timelock input arguments
     ft_error('currently, not more than 1 data argument is allowed, unless one of them is a parcellation, and the other a channel level structure');
   elseif Ndata==2 && sum(opt.issource==1)
@@ -1044,7 +1044,7 @@ end
 zmin = inf;
 zmax = -inf;
 for i=1:numel(opt.dat)
-  [tmpmin tmpmax] = caxis(opt.handles.axes.movie_subplot{i});
+  [tmpmin, tmpmax] = caxis(opt.handles.axes.movie_subplot{i});
   zmin = min(tmpmin, zmin);
   zmax = max(tmpmax, zmax);
 end
@@ -1107,7 +1107,7 @@ else
     set(opt.handles.button.incrUpperColor, 'Enable', 'on');
     set(opt.handles.button.decrLowerColor, 'Enable', 'on');
     for i=1:numel(opt.dat)
-      [tmpmin tmpmax] = caxis(opt.handles.axes.movie_subplot{i});
+      [tmpmin, tmpmax] = caxis(opt.handles.axes.movie_subplot{i});
       zmax = max(tmpmax, zmax);
     end
     zmin = -zmax;
@@ -1117,7 +1117,7 @@ else
     set(opt.handles.button.incrUpperColor, 'Enable', 'on');
     set(opt.handles.button.decrLowerColor, 'Enable', 'on');
     for i=1:numel(opt.dat)
-      [tmpmin tmpmax] = caxis(opt.handles.axes.movie_subplot{i});
+      [tmpmin, tmpmax] = caxis(opt.handles.axes.movie_subplot{i});
       zmin = min(tmpmin, zmin);
       zmax = max(tmpmax, zmax);
     end

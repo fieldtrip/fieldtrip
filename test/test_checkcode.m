@@ -6,70 +6,6 @@ function test_checkcode
 
 % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=3309
 
-%%
-
-[v, p] = ft_version;
-p = {p};
-f = {};
-
-while ~isempty(p)
-  fprintf('looking in directory %s\n', p{1});
-  nf = dir(p{1});
-  p(1) = []; % remove this one
-  for i=1:numel(nf)
-    if nf(i).isdir && ~isequal(nf(i).name(1), '.') && ~isequal(nf(i).name, 'external') && ~isequal(nf(i).name, 'test')
-      p{end+1} = fullfile(nf(i).folder, nf(i).name);
-    else
-      if ~nf(i).isdir && nf(i).name(end-1)=='.' && nf(i).name(end)=='m'
-        f{end+1} = fullfile(nf(i).folder, nf(i).name);
-      end
-    end
-  end
-end
-
-filelist = f;
-clear f p
-
-fprintf('found %d *.m files\n', numel(filelist));
-
-%%
-
-invalid = {
-  'Use || instead of | as the OR operator in (scalar) conditional statements.'
-  'Use && instead of & as the AND operator in (scalar) conditional statements.'
-  'is known to MATLAB by its file name'
-  'Use ISCELL instead of comparing the class to ''cell''.'
-  'Use ISLOGICAL instead of comparing the class to ''logical''.'
-  'Use TRUE or FALSE instead of LOGICAL(1) or LOGICAL(0).'
-  };
-
-m = {};
-for i=1:numel(filelist)
-  f = filelist{i};
-  s = checkcode(f);
-  m = union(m, {s.message});
-  for j=1:numel(s)
-    for k=1:numel(invalid)
-      if contains(s(j).message, invalid{k})
-        % pretty display
-        fprintf('================================================================================\n');
-        fprintf('ERROR: %s\n', invalid{k});
-        fprintf('================================================================================\n');
-        
-        checkcode(f)
-        error('please fix line %d in %s', s(j).line, f);
-      end
-    end
-  end
-end
-
-%%
-
-% this shows the full list of warning messages
-if false
-  disp(m);
-end
-
 % this is a subset of the LINT warnings, I removed the ones about unused variables
 %
 %     ''findstr' is not recommended. Use 'strfind' instead.'
@@ -191,4 +127,90 @@ end
 %     'When checking if a variable is a matrix consider using ISMATRIX.'
 %     '{ A{:} B } can often be replaced by [ A {B}], which can be much faster.'
 
+%%
 
+[v, p] = ft_version;
+p = {p};
+f = {};
+
+while ~isempty(p)
+  fprintf('looking in directory %s\n', p{1});
+  nf = dir(p{1});
+  p(1) = []; % remove this one
+  for i=1:numel(nf)
+    if nf(i).isdir && ~isequal(nf(i).name(1), '.') && ~isequal(nf(i).name, 'external') && ~isequal(nf(i).name, 'test')
+      p{end+1} = fullfile(nf(i).folder, nf(i).name);
+    else
+      if ~nf(i).isdir && nf(i).name(end-1)=='.' && nf(i).name(end)=='m'
+        f{end+1} = fullfile(nf(i).folder, nf(i).name);
+      end
+    end
+  end
+end
+
+filelist = f;
+clear f p
+
+fprintf('found %d *.m files\n', numel(filelist));
+
+%%
+
+invalid = {
+  'Use || instead of | as the OR operator in (scalar) conditional statements.'
+  'Use && instead of & as the AND operator in (scalar) conditional statements.'
+  'is known to MATLAB by its file name'
+  'Use ISCELL instead of comparing the class to ''cell''.'
+  'Use ISLOGICAL instead of comparing the class to ''logical''.'
+  'Use TRUE or FALSE instead of LOGICAL(1) or LOGICAL(0).'
+  'Best practice is to separate output variables with commas.'
+  };
+
+m = {};
+for i=1:numel(filelist)
+  f = filelist{i};
+  s = checkcode(f);
+  m = union(m, {s.message});
+  for j=1:numel(s)
+    for k=1:numel(invalid)
+      if contains(s(j).message, invalid{k})
+        % pretty display
+        fprintf('================================================================================\n');
+        fprintf('ERROR: %s\n', f); % invalid{k});
+        fprintf('================================================================================\n');
+        
+        checkcode(f)
+        % error('please fix line %d in %s', s(j).line, f);
+      end
+    end
+  end
+end
+
+for i=1:numel(filelist)
+  f = filelist{i};
+  assert(checktilde(f), sprintf('Do not use tilde to ignore outputs in %s', f));
+end
+
+%%
+
+% this shows the full list of warning messages
+if false
+  disp(m);
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION, see https://github.com/fieldtrip/fieldtrip/issues/831
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function bool = checktilde(filename)
+[p, f, x] = fileparts(filename);
+if ismember(f, {'matlab2markdown', 'markdown2matlab'})
+  % these are known false positives, they should not trigger an error
+  bool = true;
+  return
+end
+fid = fopen(filename, 'r');
+str = fread(fid, [1, inf], 'char=>char');
+bool = true; % this is the return value when all is fine
+bool = bool & isempty(regexp(str, '\[~', 'once'));
+bool = bool & isempty(regexp(str, '~\]', 'once'));
+bool = bool & isempty(regexp(str, ', *~ *,', 'once'));
+fclose(fid);

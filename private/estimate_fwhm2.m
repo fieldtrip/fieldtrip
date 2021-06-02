@@ -53,7 +53,7 @@ source.fwhm = fwhm;
 %   dpos = pos-pos(k*onesvec,:);
 %   d   = sqrt(sum(dpos.^2, 2));
 %   sel = d<=maxdist;
-%   [s,~] = gaussfit3D(dpos(sel,:), Cmat(sel,k));
+%   [s,dum] = gaussfit3D(dpos(sel,:), Cmat(sel,k));
 %   fwhm(inside(k),:,:) = s;
 % end
 % source.fwhm = fwhm;

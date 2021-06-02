@@ -35,7 +35,7 @@ end
 
 % Acq is writing the data to shared memory in real-time
 % here we read the data from shared memory, first the meta information only
-[msgType msgId sampleNumber numSamples numChannels] = read_ctf_shm;
+[msgType, msgId, sampleNumber, numSamples, numChannels] = read_ctf_shm;
 
 event = [];
 

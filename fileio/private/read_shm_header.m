@@ -30,7 +30,7 @@ persistent previous_headerfile previous_header
 headerfile = filetype_check_uri(filename);
 
 % determine the content of all chared memory packets
-[msgType msgId sampleNumber numSamples numChannels] = read_ctf_shm;
+[msgType, msgId, sampleNumber, numSamples, numChannels] = read_ctf_shm;
 
 if ~isempty(headerfile)
   % the headerfile has been specified by the user
@@ -74,7 +74,7 @@ if isempty(previous_header) || isempty(previous_headerfile) || ~isequal(previous
       buf(28160-9010+i) = trgchan(i)-1;  % tell the index of the trigger channel, zero offset
     end
     % the setup packet may have moved in the meantine, determine its latest location
-    [msgType msgId sampleNumber numSamples numChannels] = read_ctf_shm;
+    [msgType, msgId, sampleNumber, numSamples, numChannels] = read_ctf_shm;
     sel = find(msgType==0);
     % write the updated setup packet, this should cause AcqBuffer to do online trigger detection
     write_ctf_shm(sel, 0, 0, 0, 0, 0, buf);

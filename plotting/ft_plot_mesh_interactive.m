@@ -199,7 +199,7 @@ classdef ft_plot_mesh_interactive<handle
         % get the intersection with the mesh (largely taken from
         % ft_sourcemovie)
         [ipos, d] = intersect_line(self.pos, self.tri, point(1,:), point(2,:));
-        [~, ix]  = min(abs(d));
+        [dum, ix]  = min(abs(d));
         if ~isempty(ix)
           dpos = self.pos - ipos(ix*ones(size(self.pos,1),1),:);
           index = nearest(sum(dpos.^2,2),0);
@@ -362,7 +362,7 @@ classdef ft_plot_mesh_interactive<handle
     function ind = tim_to_ind(self, tim)
       % TIM_TO_IND takes a time point and returns the corresponding index
       % into the time axis.
-      [~,ind] = min(abs(self.time-tim));
+      [dum,ind] = min(abs(self.time-tim));
     end
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

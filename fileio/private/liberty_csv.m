@@ -111,13 +111,13 @@ elseif needdat
   
   % reshape the positions and insert them in the data matrix
   tmp = csv{:,selpos};
-  tmp = reshape(tmp, 3*nsensor, []);
+  tmp = reshape(tmp', 3*nsensor, []);
   chansel = (6*repmat(1:nsensor, 3, 1)-6) + repmat(1:3, nsensor, 1)' + offset;
   dat(chansel,:) = tmp;
   
   % reshape the orientations and insert them in the data matrix
   tmp = csv{:,selori};
-  tmp = reshape(tmp, 3*nsensor, []);
+  tmp = reshape(tmp', 3*nsensor, []);
   chansel = (6*repmat(1:nsensor, 3, 1)-3) + repmat(1:3, nsensor, 1)' + offset;
   dat(chansel,:) = tmp;
   

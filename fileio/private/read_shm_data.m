@@ -28,7 +28,7 @@ function [dat, dimord] = read_shm_data(hdr, chanindx, begtrial, endtrial)
 persistent ctf_shm
 
 % read the data from shared memory, first the meta information only
-[msgType msgId sampleNumber numSamples numChannels] = read_ctf_shm;
+[msgType, msgId, sampleNumber, numSamples, numChannels] = read_ctf_shm;
 
 if isempty(ctf_shm)
   ctf_shm.msgType      = nan(size(msgType));

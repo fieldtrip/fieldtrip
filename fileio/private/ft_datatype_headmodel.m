@@ -106,10 +106,9 @@ if iscell(headmodel)
 end
 
 switch version
-
   case '2015'
     % first make it consistent with the 2014 version
-    headmodel = ft_datatype_headmodel(headmodel, 'version', '2013');
+    headmodel = ft_datatype_headmodel(headmodel, 'version', '2014');
 
     % rename pnt into pos
     headmodel = fixpos(headmodel);

@@ -141,7 +141,7 @@ if computecov
   tmpcfg.latency = cfg.covariancewindow;
   datacov = ft_selectdata(tmpcfg, data);
   % restore the provenance information
-  [~, datacov] = rollback_provenance(cfg, datacov); % not sure what to do here
+  [dum, datacov] = rollback_provenance(cfg, datacov); % not sure what to do here
   datacov      = ft_checkdata(datacov, 'datatype', 'timelock');
   
   if isfield(datacov, 'trial')

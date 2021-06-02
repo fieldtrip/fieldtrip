@@ -11,7 +11,7 @@ function [atlas, varargout] = handle_atlas_input(atlas, varargin)
 
 if ischar(atlas)
   % initialize the atlas
-  [~, f, ~] = fileparts(atlas);
+  [p, f, x] = fileparts(atlas);
   fprintf(['reading ', f, ' atlas coordinates and labels\n']);
   atlas = ft_read_atlas(atlas);
 end

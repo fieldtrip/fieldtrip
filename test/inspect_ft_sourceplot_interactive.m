@@ -51,7 +51,7 @@ difference_mni = ft_transform_geometry(transf, difference);
 cfg = [];
 cfg.data_labels = {'Congruent', 'Incongruent', 'Difference'};
 cfg.has_diff = true;
-[~,ftpath] = ft_version();
+[ftver, ftpath] = ft_version();
 cfg.atlas = fullfile(ftpath, 'template', 'atlas', 'aal', 'ROI_MNI_V4.nii');
 ft_sourceplot_interactive(cfg, sourceFC_mni, sourceFIC_mni, difference_mni);
 

@@ -1,10 +1,10 @@
 function [output] = ft_singletrialanalysis_aseo(cfg, data, erp_fft)
 
-% FT_SINGLETRIALANALYSIS_ASEO executes single-trial analysis, using the 
-% ASEO algorithm (Xu et al, 2009)
+% FT_SINGLETRIALANALYSIS_ASEO executes single-trial analysis, using the ASEO
+% algorithm (Xu et al, 2009)
 %
-% Use as:
-% [output] = ft_singletrialanalysis_aseo(cfg, data_fft, erp_fft)
+% Use as
+%   [output] = ft_singletrialanalysis_aseo(cfg, data_fft, erp_fft)
 % where data_fft is the observed data in the frequency domain, erp_fft
 % contains the initial ERP components in the frequency domain. cfg is a
 % configuration structure according to
@@ -18,7 +18,7 @@ function [output] = ft_singletrialanalysis_aseo(cfg, data, erp_fft)
 % sigma      : Power of the input white noise of AR model for on-going activity
 % residual   : Residual signal after removing ERPs in time domain
 % rejectflag : Each element of rejectflag indicating that the corresponding
-%              trial should be rejected or not. For example, rejectflag(9)==1 means 
+%              trial should be rejected or not. For example, rejectflag(9)==1 means
 %              the 9th trial is rejected.
 % corr_est    : Correlation between the original data and the recovered signal
 
@@ -52,7 +52,7 @@ if isempty(lat_est), lat_est = zeros(ntrl, ncomp);          end  % ERP latency
 if isempty(noise),   noise   = ones(nsmp_fft/2+1, ntrl);    end  %.*repmat(var(data_init,[],1),nsmp/2+1,1);   % Power spectrum of on-going activity
   
 %--------------------------------------------------------------------------------------------
-% estimation of the ERP amplitudes and latencies, first pass, starting with uniform estimates 
+% estimation of the ERP amplitudes and latencies, first pass, starting with uniform estimates
 if doinit
   amp_in = amp_est;
   lat_in = lat_est;
@@ -64,7 +64,7 @@ if doinit
 end
 
 %---------------------------------------------------------
-% do one iteration of ERP and on-going activity estimation  
+% do one iteration of ERP and on-going activity estimation
 for k = 1:numiteration
   %reject trials, based on some heuristics defined in the cfg
   [rejectflag, corr_est] = ft_rejecttrial(cfg, erp_est, amp_est, lat_est, data);
@@ -105,8 +105,8 @@ for k = 1:numiteration
     pad      = nsmp_fft./fsample;
     optarg   = {'taper','dpss','pad',pad,'tapsmofrq',tapsmofrq};
     
-    [noise, ~, freqoi] = ft_specest_mtmfft(residual',timeaxis,optarg{:});
-    noise              = squeeze(mean(abs(noise).^2))'./(nsample./2);
+    [noise, dum, freqoi] = ft_specest_mtmfft(residual',timeaxis,optarg{:});
+    noise                = squeeze(mean(abs(noise).^2))'./(nsample./2);
     
     orig = ft_specest_mtmfft(temp2',timeaxis,optarg{:});
     orig = squeeze(mean(abs(orig).^2))'./(nsample./2);
@@ -187,7 +187,7 @@ function  [power, coeffAR, sigma] = ft_estimate_ar(dat, rejectflag, nfft, maxOrd
 % coeffAR : Estimated AR coefficients
 % sigma   : Power of the input white noise in the AR model
 
-[~, nrpt_orig] = size(dat);
+[dum, nrpt_orig] = size(dat);
 
 % reject the poor trials
 dat          = dat(:,~rejectflag);
@@ -222,7 +222,7 @@ for n = 1:maxOrderAR-1
   costFun(n+1)            = nrpt*nsmp.*log(sigmaSquare)+(n)*log(nrpt*nsmp); % BIC cost function
 end
 
-[~, orderAR] = min(real(costFun));
+[dum, orderAR] = min(real(costFun));
 fprintf('the optimal AR-model order is %d\n', orderAR);
 coeffAR      = coeffARTrial(1:orderAR, orderAR);
 
@@ -304,7 +304,7 @@ function [lat_est, amp_est] = ft_estimate_parameters(cfg, data, erp_est, amp_est
 % erp_est : The most-recent estimates of the ERP waveforms in frequency domain
 % amp_est : The most-recent estimates of ERP amplitudes
 % lat_est : The most-recent estimates of ERP latencies
-% compNo  : Component # 
+% compNo  : Component #
 % noise   : The most=recent estimates of spectrum of on-going activity
 %
 % OUTPUT ----
@@ -322,11 +322,11 @@ erp_est([1 end], :) = erp_est([1 end], :)/2; % JM note: this probably has someth
 ntrl                = size(data,2);
 freqSeq             = 2*pi/(2*nsmp-2)*(0:(nsmp-1))';
   
-% Estimate ERP latencies and amplitudes trial by trial 
+% Estimate ERP latencies and amplitudes trial by trial
 sel       = [1:(compNo-1) (compNo+1):size(amp_est,2)];%setdiff(1:size(amp_est,2), compNo);
 fft_point = round(2*nsmp-2);
 index1 = round(-jitter(compNo).*fsample + fft_point/2);
-index2 = round( jitter(compNo).*fsample + fft_point/2);    
+index2 = round( jitter(compNo).*fsample + fft_point/2);
 temp = zeros(size(noise));
 for trialNo = 1:ntrl
              
@@ -335,11 +335,11 @@ for trialNo = 1:ntrl
   erp_estTmp = erp_est(:,       sel);
   
   % Signal after removal of the other ERP components
-  signal = data(:,trialNo) - (exp(-1i*freqSeq*lat_estTmp ).*erp_estTmp) * amp_estTmp.';  
+  signal = data(:,trialNo) - (exp(-1i*freqSeq*lat_estTmp ).*erp_estTmp) * amp_estTmp.';
            
   % Estimate the ERP latency
   temp(:,trialNo) = inv_noise(:,trialNo).*conj(signal).*(erp_est(:,compNo));
-end  
+end
 temp_tau  = fft(temp, fft_point);  % Do Fourier transform on all trials at once
 temp_tau  = fftshift(temp_tau, 1); % and shift
 
@@ -350,7 +350,7 @@ temp_tau  = fftshift(temp_tau, 1); % and shift
 % now extract the latencies in a different way than the original
 % implementation
 T  = real(temp_tau);
-dT = ft_deriv(T); 
+dT = ft_deriv(T);
 
 % zero crossings of the downward sloping derivative
 zero_c = sign(dT(1:end-1,:))>sign(dT(2:end,:));
@@ -368,18 +368,18 @@ for trialNo = 1:ntrl
     % search window, this then probably takes an edge
     ruo        = T(index1:index2,trialNo);
     index      = round(numel(ruo)./2);
-    lat_est(trialNo, compNo) = (-jitter(compNo) + (index-1));%*searchGrid)*(fsample/1000); %searchWindow(index) in samples (as opposed as original implementation;%  
+    lat_est(trialNo, compNo) = (-jitter(compNo) + (index-1));%*searchGrid)*(fsample/1000); %searchWindow(index) in samples (as opposed as original implementation;%
   else
-    [~, index] = min(abs(tmp_i1));
+    [dum, index] = min(abs(tmp_i1));
     index      = tmp_i1(index);
-    lat_est(trialNo, compNo) = (index-1); %searchWindow(index) in samples (as opposed as original implementation;  
+    lat_est(trialNo, compNo) = (index-1); %searchWindow(index) in samples (as opposed as original implementation;
   end
 end
 fprintf('the number of trials for which no max was found = %d\n',cnt);
 
 % Estimate the ERP amplitudes using Least-Squares in the frequency domain
 for trialNo = 1:ntrl
-  A     = exp(-1i*freqSeq* lat_est(trialNo,:) ).*erp_est; 
+  A     = exp(-1i*freqSeq* lat_est(trialNo,:) ).*erp_est;
   A_tmp = A.*(inv_noise(:,trialNo) * ones(1, Ncomp));
   x     = data(:,trialNo);
   amp_estTmp = real(A'*A_tmp)\real(A_tmp'*x);
@@ -395,26 +395,26 @@ if any(~isfinite(amp_est(:)))
 end
 
 % erp_tmp = real(ifft(cat(1,erp_est,conj(erp_est(end-1:-1:2,:)))));
-% dat_tmp = real(ifft(cat(1,data,conj(data(end-1:-1:2,:)))));  
-% 
+% dat_tmp = real(ifft(cat(1,data,conj(data(end-1:-1:2,:)))));
+%
 % erp_tmp = erp_tmp(1:options.nsample,:);
 % dat_tmp = dat_tmp(1:options.nsample,:);
 % dat_tmp_new = zeros(size(dat_tmp));
-% 
+%
 % for trialNo = 1:Nrpt
 %   % shift dat_tmp in the time domain to match the latency, negative sign is
 %   % on purpose
 %   dat_tmp_new(:,trialNo) = fun_shift(dat_tmp(:,trialNo), -lat_est(trialNo, compNo), 1);
 % end
-%   
+%
 % % do a regression
 % X   = erp_tmp(:,compNo)-mean(erp_tmp(:,compNo));
 % X   = X./max(X);
 % W   = diag((X-median(X)).^2);
 % tmp = (X'*W*X)\X'*W*dat_tmp_new;
-% 
+%
 % %tmp = dat_tmp_new'/[X ones(options.nsample,1)]';
-% 
+%
 % amp_est(:,compNo) = tmp';
 
 function dT = ft_deriv(T)
@@ -434,7 +434,7 @@ function [seq] = fun_shift(seq, step, dim)
 % step > 0    -----  Right or Down
 % Dim =1      -----  Row
 % Dim =2      -----  Col
-[row, col] = size(seq);  
+[row, col] = size(seq);
 step       = -1*round(step);
     
 if (dim==2) && (abs(step)>=col)
@@ -490,11 +490,11 @@ invsqrt_noise = 1./sqrt(noise);
 acceptIndex   = find(~rejectflag);
 erp_est       = zeros(nsmp,ncomp);
 for k = 1:nsmp
-  A_tilde = amp_in(acceptIndex,:).*exp(-1i*freqSeq(k)*lat_in(acceptIndex,:)).* (invsqrt_noise(k, acceptIndex).'*ones(1,ncomp)) ;  
+  A_tilde = amp_in(acceptIndex,:).*exp(-1i*freqSeq(k)*lat_in(acceptIndex,:)).* (invsqrt_noise(k, acceptIndex).'*ones(1,ncomp)) ;
   X_tilde = data(k,acceptIndex).'.*invsqrt_noise(k,acceptIndex).';
   S_tilde = (A_tilde'* A_tilde)\(A_tilde'*X_tilde);
        
-  erp_est(k,:) = S_tilde.';   
+  erp_est(k,:) = S_tilde.';
 end
      
 % update the latency and amplitude estimates
@@ -508,7 +508,7 @@ end
       
 % Compute residual signal by removing ERPs
 residual_f      = zeros(nsmp, ntrl);
-reconstructed_f = zeros(nsmp, ntrl); 
+reconstructed_f = zeros(nsmp, ntrl);
 for trialNo = 1:ntrl
   reconstructed_f(:,trialNo) = ( exp(-1i*freqSeq*lat_est(trialNo,:) ).*erp_est )* amp_est(trialNo, :).';
   residual_f(:,trialNo)      = data(:,trialNo) - reconstructed_f(:,trialNo);
@@ -531,11 +531,11 @@ function [rejectflag, corr_est] = ft_rejecttrial(cfg, erp_est, amp_est, lat_est,
 thresholdAmpH   = ft_getopt(cfg.aseo, 'thresholdAmpH'); % maximum acceptable amplitude of trials, times of avergae amplitude
 thresholdAmpL   = ft_getopt(cfg.aseo, 'thresholdAmpL'); % minimum  acceptable amplitude of trials, times of avergae amplitude
 thresholdCorr   = ft_getopt(cfg.aseo, 'thresholdCorr'); % minimum correlation with the original data
-ncomp   = size(amp_est,2); 
+ncomp   = size(amp_est,2);
 ntrl    = size(data,2);
 
 
-nsmp = size(data,1); 
+nsmp = size(data,1);
 freqSeq      = 2*pi/(2*nsmp-1)*(0:(nsmp-1))';
 rejectflag   = false(ntrl,1);
 corr_est     = zeros(ntrl,1);
@@ -548,27 +548,27 @@ end
 %   amp_est_k    = amp_est(:,k);
 %   sel          = 1:numel(amp_est_k);%sign(amp_est_k)==polarity(k);
 %   amp_est_mean = mean(amp_est_k(sel));
-%   
+%
 %   % check the amplitudes for each trial, but take the polarity into account
 %   if ~isempty(polarity)
 %     switch polarity(k)
 %       case 1
-%         rejectflag = rejectflag | (amp_est_k>thresholdAmpH*amp_est_mean) | (amp_est_k<thresholdAmpL*amp_est_mean); 
+%         rejectflag = rejectflag | (amp_est_k>thresholdAmpH*amp_est_mean) | (amp_est_k<thresholdAmpL*amp_est_mean);
 %       case -1
 %         rejectflag = rejectflag | (amp_est_k<thresholdAmpH*amp_est_mean) | (amp_est_k>thresholdAmpL*amp_est_mean);
 %     end
 %   else
-%   
+%
 %     rejectflag = rejectflag|(amp_est_k<thresholdAmpL*amp_est_mean)|(amp_est_k>thresholdAmpH*amp_est_mean);
 %   end
 % end
 
 % check the correlation between the original data samples and estimated ERPs
 for k = 1:ntrl
-  signal = exp(-1i*freqSeq* lat_est(k,:) ).*erp_est;     
+  signal = exp(-1i*freqSeq* lat_est(k,:) ).*erp_est;
   signal = signal*amp_est(k, :).';
         
-  corr_tmp      = real(signal'*data(:,k))/norm(signal)/norm(data(:,k)) ; 
+  corr_tmp      = real(signal'*data(:,k))/norm(signal)/norm(data(:,k)) ;
   rejectflag(k) = rejectflag(k) | real(corr_tmp) < thresholdCorr;
   corr_est(k)   = corr_tmp;
 end

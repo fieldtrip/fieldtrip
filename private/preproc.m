@@ -96,7 +96,12 @@ function [dat, label, time, cfg] = preproc(dat, label, time, cfg, begpadding, en
 % Preprocessing options that you should only use for EEG data are
 %   cfg.reref         = 'no' or 'yes' (default = 'no')
 %   cfg.refchannel    = cell-array with new EEG reference channel(s)
-%   cfg.refmethod     = 'avg', 'median', 'rest' or 'bipolar' (default = 'avg')
+%   cfg.refmethod     = 'avg', 'median', 'rest', 'bipolar' or 'laplace' (default = 'avg')
+%   cfg.groupchans    = 'yes' or 'no', should channels be rereferenced in separate groups
+%                       for bipolar and laplace methods, this requires channnels to be
+%                       named using an alphanumeric code, where letters represent the
+%                       group and numbers represent the order of the channel whithin
+%                       its group (default = 'no')
 %   cfg.leadfield     = matrix or cell-array, this is required when refmethod is 'rest'
 %                       The leadfield can be a single matrix (channels X sources) which
 %                       is calculated by using the forward theory, based on the
@@ -165,7 +170,8 @@ cfg.reref                = ft_getopt(cfg, 'reref',       'no');
 cfg.refchannel           = ft_getopt(cfg, 'refchannel',  {});
 cfg.refmethod            = ft_getopt(cfg, 'refmethod',   'avg');
 cfg.implicitref          = ft_getopt(cfg, 'implicitref', []);
-cfg.leadfield            = ft_getopt(cfg, 'leadfield',   []); 
+cfg.leadfield            = ft_getopt(cfg, 'leadfield',   []);
+cfg.groupchans           = ft_getopt(cfg, 'groupchans', 'no');
 % set the defaults for the signal processing options
 cfg.polyremoval          = ft_getopt(cfg, 'polyremoval', 'no');
 cfg.polyorder            = ft_getopt(cfg, 'polyorder',   2);
@@ -265,30 +271,24 @@ if ~isempty(cfg.implicitref) && ~any(match_str(cfg.implicitref,label))
 end
 
 if strcmp(cfg.reref, 'yes')
-  if strcmp(cfg.refmethod, 'bipolar')
-    % this is implemented as a montage that the user does not get to see
-    tmpcfg = keepfields(cfg, {'refmethod', 'implicitref', 'refchannel', 'channel'});
-    tmpcfg.showcallinfo = 'no';
-    montage = ft_prepare_montage(tmpcfg);
-    % convert the data temporarily to a raw structure
-    tmpdata.trial = {dat};
-    tmpdata.time  = {time};
-    tmpdata.label = label;
-    % apply the montage to the data
-    tmpdata = ft_apply_montage(tmpdata, montage, 'feedback', 'none');
-    dat   = tmpdata.trial{1}; % the number of channels can have changed
-    label = tmpdata.label;    % the output channels can be different than the input channels
-    clear tmpdata
-  elseif isequal(cfg.refmethod,'rest')
-    cfg.refchannel = ft_channelselection(cfg.refchannel, label);
-    refindx = match_str(label, cfg.refchannel);
-    if isempty(refindx)
-      ft_error('reference channel was not found')
-    end
-    
-    if isempty(cfg.leadfield)
-      ft_error('A leadfield is required to re-refer to REST');
-    else
+  switch cfg.refmethod
+    case {'avg', 'median'}
+      % mean or median based derivation of specified or all channels
+      cfg.refchannel = ft_channelselection(cfg.refchannel, label);
+      refindx = match_str(label, cfg.refchannel);
+      if isempty(refindx),ft_error('reference channel was not found');end
+      dat = ft_preproc_rereference(dat, refindx, cfg.refmethod);
+      
+    case {'rest'}
+      cfg.refchannel = ft_channelselection(cfg.refchannel, label);
+      refindx = match_str(label, cfg.refchannel);
+      if isempty(refindx)
+        ft_error('reference channel was not found')
+      end
+      
+      if isempty(cfg.leadfield)
+        ft_error('A leadfield is required to re-refer to REST');
+      end
       % check the leadfield, apparently the code contributor here wants to
       % support 3 case, either a matrix, a struct, or a cell-array. Yet the
       % original code is almost impossible to parse, with a lot of try and
@@ -309,29 +309,42 @@ if strcmp(cfg.reref, 'yes')
       end
       
       if Nchann_lf ~= length(label)
-        ft_error('channels in the leadfield is not euqal to the data');
+        ft_error('channels in the leadfield are not equal to those in the data');
       end
       
       if ~isempty(lf_label)
         [indx1, indx2] = match_str(lf_label(refindx), label(refindx));
         if ~isequal(indx1, indx2)
           ft_error('The order in leadfield may be NOT the same as in the data, please check the leadfield!');
-        end          
+        end
       else
         ft_warning('There is no label info in the leadfield, there is no guarantee that the order of the channels in leadfield is the same as in the data');
       end
       
-      dat = ft_preproc_rereference(dat, refindx, cfg.refmethod,[],G); % re-referencing
+      dat   = ft_preproc_rereference(dat, refindx, cfg.refmethod, [], G); % re-referencing
       label = label(refindx); % re-referenced channel labels
-    end
-  else
-    % mean or median based derivation of specified or all channels
-    cfg.refchannel = ft_channelselection(cfg.refchannel, label);
-    refindx = match_str(label, cfg.refchannel);
-    if isempty(refindx),ft_error('reference channel was not found');end
-    dat = ft_preproc_rereference(dat, refindx, cfg.refmethod);
-  end
-end
+      
+    case {'bipolar', 'laplace'}
+      % this is implemented as a montage that the user does not get to see
+      tmpcfg = keepfields(cfg, {'refmethod', 'implicitref', 'refchannel', 'channel', 'groupchans'});
+      tmpcfg.showcallinfo = 'no';
+      montage = ft_prepare_montage(tmpcfg);
+      
+      % convert the data temporarily to a raw structure
+      tmpdata.trial = {dat};
+      tmpdata.time  = {time};
+      tmpdata.label = label;
+      
+      % apply the montage to the data
+      tmpdata = ft_apply_montage(tmpdata, montage, 'feedback', 'none');
+      dat     = tmpdata.trial{1}; % the number of channels can have changed
+      label   = tmpdata.label;    % the output channels can be different than the input channels
+      clear tmpdata
+      
+    otherwise
+      ft_error('unsupported value for cfg.refmethod');
+  end % switch refmethod
+end % if reref
 
 if ~strcmp(cfg.montage, 'no') && ~isempty(cfg.montage)
   % convert the data temporarily to a raw structure
@@ -349,7 +362,7 @@ if any(isnan(dat(:)))
   % filtering is not possible for at least a selection of the data
   ft_warning('data contains NaNs, not all processing methods are robust to NaNs, so the NaNs might spread');
 end
-  
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % do the filtering on the padded data
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
