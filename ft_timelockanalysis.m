@@ -51,7 +51,6 @@ function [timelock] = ft_timelockanalysis(cfg, data)
 % Deprecated options:
 % cfg.blcovariance
 % cfg.blcovariancewindow
-% cfg.normalizevar
 % cfg.normalizecov
 % cfg.vartrllength
 

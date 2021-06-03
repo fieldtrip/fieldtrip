@@ -138,10 +138,6 @@ datsiz = size(varargin{1}.(cfg.parameter));
 dimord = getdimord(varargin{1}, cfg.parameter);
 nsubj  = length(varargin);
 
-% whether to compute the within-subject variance over all blocks
-% this only makes sense for input structures with a plain average and variance
-hasvar = strcmp(cfg.parameter, 'avg') && isfield(varargin{1}, 'var');
-
 % whether to normalize the variance with N or N-1, see VAR
 normalizewithN = strcmpi(cfg.normalizevar, 'N');
 
@@ -160,28 +156,27 @@ if istrue(cfg.keepindividual)
   fprintf('not computing average, but keeping individual %s for %d subjects\n', cfg.parameter, nsubj);
   
   % allocate memory to hold the data and collect it
-  avgmat = zeros([nsubj, datsiz]);
+  dat = zeros([nsubj, datsiz]);
   for s=1:nsubj
-    avgmat(s, :, :, :) = varargin{s}.(cfg.parameter);
+    dat(s, :, :, :) = varargin{s}.(cfg.parameter);
   end
-  grandavg.individual = avgmat; % Nsubj x Nchan x Nsamples
+  grandavg.individual = dat; % Nsubj x Nchan x Nsamples
   
 else
-  avgmat = nan([nsubj, datsiz]);
-  dofmat = nan([nsubj, datsiz]);
-  varmat = nan([nsubj, datsiz]);
+  dat = nan([nsubj, datsiz]);
+  dof = nan([nsubj, datsiz]);
   
   switch cfg.method
     case 'across'
       fprintf('computing average of %s across %d subjects\n', cfg.parameter, nsubj);
       for s=1:nsubj
-        avgmat(s, :, :, :) = varargin{s}.(cfg.parameter);
+        dat(s, :, :, :) = varargin{s}.(cfg.parameter);
       end
       
       % compute the mean and variance across subjects
-      grandavg.avg = reshape(mymean(avgmat, 1),                 datsiz);
-      grandavg.var = reshape(myvar(avgmat, normalizewithN, 1),  datsiz);
-      grandavg.dof = reshape(sum(isfinite(avgmat), 1),          datsiz);
+      grandavg.avg = reshape(mymean(dat, 1),                 datsiz);
+      grandavg.var = reshape(myvar(dat, normalizewithN, 1),  datsiz);
+      grandavg.dof = reshape(sum(isfinite(dat), 1),          datsiz);
       
       if normalizewithN
         % just to be sure
@@ -196,44 +191,23 @@ else
       fprintf('computing average of %s within subjects over %d blocks\n', cfg.parameter, nsubj);
       
       for s=1:nsubj
-        avgmat(s, :, :, :) = varargin{s}.(cfg.parameter) .* varargin{s}.dof;
-        dofmat(s, :, :, :) = varargin{s}.dof;
-        if hasvar
-          if strcmpi(cfg.normalizevar, 'N-1')
-            % assume that the within-block variance was normalized with N-1
-            varmat(s, :, :, :) = varargin{s}.var .* (varargin{s}.dof-1);
-          elseif strcmpi(cfg.normalizevar, 'N')
-            % assume that the within-block variance was normalized with N
-            varmat(s, :, :, :) = varargin{s}.var .* varargin{s}.dof;
-          end
-        end % if hasvar
+        dat(s, :, :, :) = varargin{s}.(cfg.parameter);
+        dof(s, :, :, :) = varargin{s}.dof;
       end % for nsub
       
-      % compute the mean across blocks
-      grandavg.avg = mysum(avgmat, 1) ./ sum(dofmat, 1);
+      % compute the weighted mean across input arguments
+      grandavg.avg = mysum(dat .* dof, 1) ./ sum(dof, 1);
       grandavg.avg = reshape(grandavg.avg, datsiz);
-      grandavg.dof = sum(dofmat, 1);
+      grandavg.dof = sum(dof, 1);
       grandavg.dof = reshape(grandavg.dof, datsiz);
       
-      % compute the variance across blocks
-      if hasvar
-        if strcmpi(cfg.normalizevar, 'N-1')
-          grandavg.var = mysum(varmat,1) ./ (sum(dofmat,1)-1);
-          grandavg.var(all(isnan(varmat),1)) = nan; % nansum returns 0 when all inputs are nan, we want nan in that case
-        elseif strcmpi(cfg.normalizevar, 'N')
-          grandavg.var = mysum(varmat,1) ./ sum(dofmat,1);
-          grandavg.var(all(isnan(varmat),1)) = nan; % nansum returns 0 when all inputs are nan, we want nan in that case
-        end
-        grandavg.var = reshape(grandavg.var, datsiz);
-      end % if hasvar
-      
+      % this follows https://en.wikipedia.org/wiki/Weighted_arithmetic_mean#Weighted_sample_variance with frequency weights
       if normalizewithN
-        % just to be sure
-        grandavg.var(grandavg.dof<=0) = NaN;
+        grandavg.var = mysum(dof .* (dat - repmat(reshape(grandavg.avg, [1 datsiz]), [nsubj 1 1])).^2, 1) ./  sum(dof, 1);
+        grandavg.var = reshape(grandavg.var, datsiz);
       else
-        % see https://stats.stackexchange.com/questions/4068/how-should-one-define-the-sample-variance-for-scalar-input
-        % the fieldtrip/external/stats/nanvar implementation behaves differently here than Mathworks VAR and NANVAR implementations
-        grandavg.var(grandavg.dof<=1) = NaN;
+        grandavg.var = mysum(dof .* (dat - repmat(reshape(grandavg.avg, [1 datsiz]), [nsubj 1 1])).^2, 1) ./ (sum(dof, 1) - 1);
+        grandavg.var = reshape(grandavg.var, datsiz);
       end
       
     otherwise
