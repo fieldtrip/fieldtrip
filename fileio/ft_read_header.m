@@ -2753,7 +2753,7 @@ switch headerformat
     checkUniqueLabels = false;
 
   case 'York_Instruments_hdf5'
-    orig            = read_YI_HDF5_meta(filename);
+    orig            = read_yi_hdf5_meta(filename);
     hdr.Fs          = orig.SampleFrequency;
     hdr.nChans      = orig.NChannels;
     hdr.nSamples    = orig.NSamples;

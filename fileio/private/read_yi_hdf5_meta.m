@@ -1,6 +1,6 @@
-function [info] = read_YI_HDF5_meta(datafile, acq_run)
+function [info] = read_yi_hdf5_meta(datafile, acq_run)
 
-% info=read_YI_HDF5_meta(datafile)
+% info=read_yi_hdf5_meta(datafile)
 % Collects the required Fieldtrip header data from the data file 'filename'
 %
 % Copyright (C) 2020, York Neuroimaging Centre, University of York, R Aveyard
