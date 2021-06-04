@@ -106,6 +106,10 @@ end
 % ensure to be a column  vector
 Fl = Fl(:);
 
+% determine the largest integer number of line-noise cycles that fits in
+% the data, allowing for some numerical noise
+n = round(floor(nsamples .* (Fl./Fs + 100*eps)) .* Fs./Fl);
+  
 % preprocessing fails on channels that contain NaN
 if any(isnan(dat(:)))
   ft_warning('FieldTrip:dataContainsNaN', 'data contains NaN values');
@@ -114,8 +118,6 @@ end
 % Method A): DFT filter
 if strcmp(Flreplace,'zero')
   
-  % determine the largest integer number of line-noise cycles that fits in the data
-  n = round(floor(nsamples .* Fl./Fs) * Fs./Fl);
   if all(n==n(1))
     % make a selection of samples such that the line-noise fits the data
     sel = 1:n(1);
@@ -160,7 +162,6 @@ elseif strcmp(Flreplace,'neighbour')
   end
   
   % error message if periodicity of the interference frequency doesn't match the DFT length
-  n = round(floor(nsamples .* Fl./Fs) * Fs./Fl);
   if n ~= nsamples
     ft_error('Spectrum interpolation requires that the data length fits complete cycles of the powerline frequency, e.g., exact multiples of 20 ms for a 50 Hz line frequency (sampling rate of 1000 Hz).');
   end
