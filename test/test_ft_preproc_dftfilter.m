@@ -1,4 +1,4 @@
-function test_issue1770
+function test_ft_preproc_dftfilter
 
 % WALLTIME 00:10:00
 % MEM 2gb
