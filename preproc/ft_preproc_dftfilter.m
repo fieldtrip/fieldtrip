@@ -163,7 +163,10 @@ elseif strcmp(Flreplace,'neighbour')
   
   % error message if periodicity of the interference frequency doesn't match the DFT length
   if n ~= nsamples
-    ft_error('Spectrum interpolation requires that the data length fits complete cycles of the powerline frequency, e.g., exact multiples of 20 ms for a 50 Hz line frequency (sampling rate of 1000 Hz).');
+    ft_warning('Spectrum interpolation requires that the data length fits complete cycles of the powerline frequency, e.g., exact multiples of 20 ms for a 50 Hz line frequency (sampling rate of 1000 Hz).');
+    nfft = round(ceil(nsamples .* (Fl./Fs + 100*eps)) .* Fs./Fl);
+  else
+    nfft = nsamples;
   end
   
   if (length(Fl) ~= length(Flwidth)) || (length(Fl) ~= length(Neighwidth))
@@ -179,8 +182,8 @@ elseif strcmp(Flreplace,'neighbour')
     f4int(i,:) = [f2int(i,1)-Neighwidth(i) f2int(i,:) f2int(i,2)+Neighwidth(i)];
   end
   
-  data_fft = fft(dat,nsamples,2); % calculate fft to obtain spectrum that will be interpolated
-  frq = Fs*linspace(0,1,nsamples+1);
+  data_fft = fft(dat,nfft,2); % calculate fft to obtain spectrum that will be interpolated
+  frq = Fs*linspace(0,1,nfft+1);
   
   % interpolate 50Hz (and harmonics) amplitude in spectrum
   for i = 1:length(Fl)
@@ -197,6 +200,6 @@ elseif strcmp(Flreplace,'neighbour')
   % complex fourier coefficients are transformed back into time domin, fourier coefficients are treated as conjugate 'symmetric'
   % to ensure a real valued signal after iFFT
   filt = ifft(data_fft,[],2,'symmetric');
-  
+  filt = filt(:,1:nsamples);
 end
 
