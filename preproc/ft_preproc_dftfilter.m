@@ -106,17 +106,28 @@ end
 % ensure to be a column  vector
 Fl = Fl(:);
 
-% determine the largest integer number of line-noise cycles that fits in
-% the data, allowing for some numerical noise
-n    = round(floor(nsamples .* (Fl./Fs + 100*eps)) .* Fs./Fl);
-nfft = round(ceil(nsamples .* (Fl./Fs + 100*eps)) .* Fs./Fl);
-  
 % preprocessing fails on channels that contain NaN
 if any(isnan(dat(:)))
   ft_warning('FieldTrip:dataContainsNaN', 'data contains NaN values');
 end
 
-if ~all(n==n(1)) || ~all(nfft==nfft(1))
+% determine the largest integer number of line-noise cycles that fits in
+% the data, allowing for some numerical noise
+n    = round(floor(nsamples .* (Fl./Fs + 100*eps)) .* Fs./Fl);
+
+% check whether the filtering can be done in a single step
+doloop = false;
+if all(n==n(1)) && ~strcmp(Flreplace, 'zero')
+  % do a sanity check on the to-be-needed nfft
+  nfft = round(ceil(nsamples .* (Fl./Fs + 100*eps)) .* Fs./Fl);
+  if ~all(nfft==nfft(1))
+    doloop = true;
+  end
+elseif ~all(n==n(1))
+  doloop = true;
+end
+
+if doloop
   % the different frequencies require different numbers of samples, apply the filters sequentially
   filt = dat;
   for i=1:numel(Fl)
@@ -128,7 +139,7 @@ end
 
 % Method A): DFT filter
 if strcmp(Flreplace,'zero')
-  sel = 1:n(1);
+  sel = 1:n;
   
   % temporarily remove mean to avoid leakage
   meandat = nanmean(dat(:,sel),2);
