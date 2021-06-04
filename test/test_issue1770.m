@@ -39,4 +39,12 @@ subplot(2,2,1);plot(datafilt1.time{1}, data.trial{1}-datafilt1.trial{1}); ylim([
 subplot(2,2,2);plot(datafilt2.time{1}, data.trial{1}-datafilt2.trial{1}); ylim([-1.1 1.1]);xlabel('estimated linenoise method 2');
 subplot(2,2,3);plot(data.time{1}, lnoise); ylim([-1.1 1.1]);xlabel('simulated linenoise');
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% some other instances, testing ft_preproc_dftfilter directly
+dat = randn(1, 1001);
+ft_preproc_dftfilter(dat, 1000, 50, 'dftreplace', 'neighbour');
+
+dat = randn(1, 1001);
+ft_preproc_dftfilter(dat, 1000, [53, 79, 127], 'dftreplace', 'neighbour');
+
 
