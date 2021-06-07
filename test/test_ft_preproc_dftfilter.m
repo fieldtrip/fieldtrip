@@ -65,3 +65,57 @@ dat = randn(1, 1001) + ([krn(1:500) ones(1,501)]).*sin(2.*pi.*(tim).*50);
 filt = ft_preproc_dftfilter(dat, 678.253, 50, 'dftreplace', 'neighbour', 'dftneighbourwidth', 4, 'dftbandwidth', 2);
 figure;plot(tim, dat-filt); hold on;plot(tim, ([krn(1:500) ones(1,501)]).*sin(2.*pi.*(tim).*50));
 
+%%%%%%%%%
+% Code chunk from Sabine
+samples_off = 2; % samples to add, so a full 50 Hz cycle doesn't fit
+
+lengthsec= 4;  % data length in seconds
+fs = 1000; % sampling rate
+acfreq = 50; % set the powerline frequency, e.g., 50 or 60 Hz    
+
+datlength = (lengthsec*fs);
+dat = gausswin(datlength, round(datlength/100) )'; 
+t= (0:(length(dat)-1))/fs;
+noise = cos( 2 * pi * acfreq * t );
+
+% spectrum interpolation 
+filt_spec = ft_preproc_dftfilter(dat + noise, fs, acfreq, 'dftreplace', 'neighbour', ... 
+'dftbandwidth', 2, 'dftneighbourwidth', 2 );
+
+% add samples to the data to introduce leakage
+datlength2 = (lengthsec*fs) + samples_off;  % LEAK, add samples, so a full cycle doesn't fit
+dat2 = gausswin(datlength2, round(datlength2/100) )'; 
+t2 = (0:(length(dat2)-1))/fs;
+noise2 = cos( 2 * pi * acfreq * t2 );
+
+% comment out error message in the dftfilter function, before running this
+filt_spec_leak = ft_preproc_dftfilter(dat2 + noise2, fs, acfreq, 'dftreplace', 'neighbour', ... 
+'dftbandwidth', 2, 'dftneighbourwidth', 2 );
+
+figure;
+hold all
+plot( t , dat + noise,'k')
+ylabel('Amplitude (a.u.)')
+xlabel('Time (s)')
+ylim( [ -1.25 2.05 ] )
+xlim( [ 0 4.005 ] )
+legend('Gaussian with 50 Hz line noise')
+title('Gaussian with added 50 Hz sinusoid of constant amplitude - 4.003 s')
+
+figure;
+hold all
+plot( t , filt_spec, 'b')
+plot( t2 , filt_spec_leak,'r')
+plot(t, dat,'k')
+xlabel('Time (s)')
+ylabel('Amplitude (a.u.)')
+legend('Spectrum Interpolation Full Cycle', 'Spectrum Interpolation Not Full Cycle', ... 
+'Original Clean Gaussian')
+
+ylim( [ -0.5 1.5] )
+xlim( [ 0 4 ] )
+title(['DFT neighbour function used for mixed signal (gaussian + line noise)  - Data length = ' ... 
+num2str(datlength/fs) ' s and ' num2str(datlength2/fs) ' s']);
+
+
+
