@@ -70,7 +70,7 @@ function [type] = ft_filetype(filename, desired, varargin)
 %  - Neurodata Without Borders *.nwb
 %  - PhysioNet *.hea and *.dat
 %  - NIRx *.tpl, *.wl1 and *.wl2
-%  - York Instruments
+%  - York Instruments *.meghdf5
 
 % Copyright (C) 2003-2020, Robert Oostenveld
 %
@@ -1542,7 +1542,7 @@ elseif filetype_check_extension(filename, '.dgf') && filetype_check_header(filen
   content = 'geometrical meshes';
   % known York Instruments file types
 elseif filetype_check_extension(filename, '.meghdf5')
-  type = 'York_Instruments_hdf5';
+  type = 'yorkinstruments_hdf5';
   manufacturer = 'York Instruments';
   content = 'MEG header and data';
 end

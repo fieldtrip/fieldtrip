@@ -44,7 +44,7 @@ function [shape] = ft_read_headshape(filename, varargin)
 %   '4d_*'
 %   'neuromag_*'
 %   'yokogawa_*'
-%   'York_Instruments_hdf5'
+%   'yorkinstruments_hdf5'
 %   'polhemus_*'
 %   'freesurfer_*'
 %   'mne_source'
@@ -848,7 +848,7 @@ switch fileformat
     
     fclose(fid);
    
-   case 'York_Instruments_hdf5'
+   case 'yorkinstruments_hdf5'
     acquisition='default';
     try
        shape.pos=transpose(h5read(filename,  '/geometry/head_shape/head_shape'));

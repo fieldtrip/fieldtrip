@@ -2238,19 +2238,19 @@ switch eventformat
     end
     event = read_yokogawa_event(filename, 'detectflank', detectflank, 'chanindx', chanindx, 'threshold', threshold);
     
-  case {'York_Instruments_hdf5'}
+  case {'yorkinstruments_hdf5'}
     if isempty(hdr)
       hdr = ft_read_header(filename, 'headerformat', eventformat);
     end
     % read the trigger channel and do flank detection
     trgindx = match_str(hdr.label, 'P_PORT_A');
-    trigger = read_trigger(filename, 'header', hdr, 'dataformat', 'York_Instruments_hdf5', 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', trgindx, 'detectflank', detectflank, 'trigshift', trigshift, 'fix4d8192', false);
+    trigger = read_trigger(filename, 'header', hdr, 'dataformat', 'yorkinstruments_hdf5', 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', trgindx, 'detectflank', detectflank, 'trigshift', trigshift, 'fix4d8192', false);
 
     event   = appendstruct(event, trigger);
 
     respindx = match_str(hdr.label, 'RESPONSE');
     if ~isempty(respindx)
-      response = read_trigger(filename, 'header', hdr, 'dataformat', 'York_Instruments_hdf5', 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', respindx, 'detectflank', detectflank, 'trigshift', trigshift);
+      response = read_trigger(filename, 'header', hdr, 'dataformat', 'yorkinstruments_hdf5', 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', respindx, 'detectflank', detectflank, 'trigshift', trigshift);
       event    = appendstruct(event, response);
     end
 

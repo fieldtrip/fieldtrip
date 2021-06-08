@@ -2752,8 +2752,8 @@ switch headerformat
     hdr = read_video(filename);
     checkUniqueLabels = false;
 
-  case 'York_Instruments_hdf5'
-    orig            = read_yi_hdf5_meta(filename);
+  case 'yorkinstruments_hdf5'
+    orig            = read_yorkinstruments_hdf5_meta(filename);
     hdr.Fs          = orig.SampleFrequency;
     hdr.nChans      = orig.NChannels;
     hdr.nSamples    = orig.NSamples;

@@ -1611,7 +1611,7 @@ switch dataformat
       dat = read_yokogawa_data(filename, hdr, begsample, endsample, chanindx);
     end
 
-  case 'York_Instruments_hdf5'
+  case 'yorkinstruments_hdf5'
     dat = h5read(filename,['/acquisitions/default/data/']);
     dat = dat(chanindx,begsample:endsample);
 

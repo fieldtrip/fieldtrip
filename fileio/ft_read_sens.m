@@ -24,7 +24,7 @@ function [sens] = ft_read_sens(filename, varargin)
 %   4d_pdf 4d_m4d 4d_xyz ctf_ds ctf_res4 itab_raw itab_mhd netmeg neuromag_fif
 %   neuromag_mne neuromag_mne_elec neuromag_mne_grad polhemus_fil polhemus_pos
 %   zebris_sfp spmeeg_mat eeglab_set localite_pos artinis_oxy3 artinis_oxyproj matlab
-%   York Instruments
+%   yorkinstruments_hdf5
 %
 % See also FT_READ_HEADER, FT_DATATYPE_SENS, FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD,
 
@@ -526,7 +526,7 @@ switch fileformat
     sens.label   = txtData{:,1};
     sens.elecpos = [txtData.Loc_X txtData.Loc_Y txtData.Loc_Z];
 
-  case 'York_Instruments_hdf5'
+  case 'yorkinstruments_hdf5'
     acquisition='default';
     if isempty(senstype)
       % set the default
@@ -558,7 +558,7 @@ switch fileformat
       error('No data corresponding to the chosen sensor type (%s) found.',senstype);
     end
     sens.tra  = eye(sens_i);
-    sens.type= 'York 4d';
+    sens.type= 'yorkinstruments248';
     if isempty(coordsys)
       coordsys='dewar';
     end

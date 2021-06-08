@@ -8,7 +8,7 @@ function test_yorkinstruments
 % this is where the data is installed on the DCCN compute cluster
 % and where the nightly regression testing is done
 
-filename = dccnpath('/home/common/matlab/fieldtrip/data/test/original/yi.meghdf5');
+filename = dccnpath('/home/common/matlab/fieldtrip/data/test/original/meg/yorkinstruments/yi.meghdf5');
 hdr = ft_read_header(filename);
 
 if length(ft_channelselection('MEG', hdr.label))~=246
@@ -19,7 +19,7 @@ if ~ft_senstype(hdr, 'bti248')
   error('hdr ~= bti248');
 end
 
-if ~strcmp(ft_filetype(filename), 'York_Instruments_hdf5')
+if ~strcmp(ft_filetype(filename), 'yorkinstruments_hdf5')
   error('Filetype not detected correctly');
 end	
 
