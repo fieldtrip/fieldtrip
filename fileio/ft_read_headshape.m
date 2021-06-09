@@ -44,6 +44,7 @@ function [shape] = ft_read_headshape(filename, varargin)
 %   '4d_*'
 %   'neuromag_*'
 %   'yokogawa_*'
+%   'yorkinstruments_hdf5'
 %   'polhemus_*'
 %   'freesurfer_*'
 %   'mne_source'
@@ -846,7 +847,35 @@ switch fileformat
     end
     
     fclose(fid);
-    
+   
+   case 'yorkinstruments_hdf5'
+    acquisition='default';
+    try
+       shape.pos=transpose(h5read(filename,  '/geometry/head_shape/head_shape'));
+    catch
+      error('Headshape data not found.');
+    end
+    shape.unit='mm';
+    temp=h5info(filename,  '/geometry/fiducials/');
+    Nfids=length(temp.Groups);
+      for i=1:Nfids
+      [null, shape.fid.label{i}, null]= fileparts(temp.Groups(i).Name);
+      shape.fid.pos(i,1:3)=h5read(filename, strcat('/geometry/fiducials/',shape.fid.label{i} ,'/location'));
+      end
+    if isempty(coordsys)
+      coordsys='dewar'
+    end
+    if strcmp(coordsys,'dewar')
+      try
+         tCCStoMegscanScs = h5read(filename,[strcat('/acquisitions/',char(string(acquisition))) '/ccs_to_scs_transform']);
+         T = maketform('affine',tCCStoMegscanScs);
+         shape.pos=tforminv(T,shape.pos(:,1),shape.pos(:,2),shape.pos(:,3));
+         shape.fid.pos=tforminv(T,shape.fid.pos(:,1),shape.fid.pos(:,2),shape.fid.pos(:,3));
+      catch
+        error('No head to dewar transform available in hdf5 file');
+      end
+    end
+
   case 'ply'
     [vert, face] = read_ply(filename);
     shape.pos = [vert.x vert.y vert.z];
