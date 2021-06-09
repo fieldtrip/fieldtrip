@@ -1610,7 +1610,11 @@ switch dataformat
       ft_hastoolbox('yokogawa', 1); % error if it cannot be added
       dat = read_yokogawa_data(filename, hdr, begsample, endsample, chanindx);
     end
-    
+
+  case 'yorkinstruments_hdf5'
+    dat = h5read(filename,['/acquisitions/default/data/']);
+    dat = dat(chanindx,begsample:endsample);
+
   otherwise
     if exist(dataformat, 'file')
       % attempt to run "dataformat" as a function, this allows the user to specify an external reading function
