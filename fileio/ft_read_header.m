@@ -2759,9 +2759,9 @@ switch headerformat
     hdr.nSamples    = orig.NSamples;
     hdr.nSamplesPre = 0;    %No YI epoched data type
     hdr.nTrials = 1;
-    hdr.label       = orig.ChNames;
-    hdr.chantype    = orig.ChType;
-    hdr.chanunit    = orig.ChUnit;
+    hdr.label       = cellstr(orig.ChNames);
+    hdr.chantype    = cellstr(orig.ChType);
+    hdr.chanunit    = cellstr(orig.ChUnit);
     % remember original header details
     hdr.orig        = orig;
     

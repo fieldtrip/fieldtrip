@@ -29,19 +29,19 @@ if nargin < 2
 end
 
 %Check that the datafile exists
-if ~isempty(datafile),
-%Check that the acquisition exists in the data file
+if ~isempty(datafile)
+  %Check that the acquisition exists in the data file
   try
     check = h5info(datafile,strcat('/acquisitions/',num2str(acq_run)));
   catch
     error('Invalid YI HDF5 file: Missing dataset "/acquisitions/%d".',acq_run);
   end
-  %Check that this acquisition is 'real' data, not COH or something else 
+  %Check that this acquisition is 'real' data, not COH or something else
   info.acq_type=char(h5readatt(datafile,  strcat('/acquisitions/',num2str(acq_run))  ,'acq_type'));
-  if  ~strcmp(info.acq_type,'ACQ'),
+  if  ~strcmp(info.acq_type,'ACQ')
     error('"/acquisitions/%d" is not a data acquisition run.',acq_run);
   end
-
+  
   info.SampleFrequency=h5readatt(datafile,  strcat('/acquisitions/',num2str(acq_run))  ,'sample_rate');
   info.Sequence=h5readatt(datafile,  strcat('/acquisitions/',num2str(acq_run))  ,'sequence');
   info.Description=char(h5readatt(datafile,  strcat('/acquisitions/',num2str(acq_run))  ,'description'));
@@ -51,28 +51,25 @@ if ~isempty(datafile),
   [info.NChannels, null]=size(info.ChNames);
   Data = h5read(datafile,[strcat('/acquisitions/',num2str(acq_run)) '/data/']);
   [null, info.NSamples]=size(Data);
-  try [null info.NTrials] = size(h5read(datafile,[strcat('/acquisitions/',num2str(acq_run)) '/epochs/trigger_codes']));
-  catch info.NTrials=1
+  try [null, info.NTrials] = size(h5read(datafile,[strcat('/acquisitions/',num2str(acq_run)) '/epochs/trigger_codes']));
+  catch info.NTrials=1;
   end
+  
+  info.ChUnit = strings(info.NChannels,1);
+  info.ChType = strings(info.NChannels,1);
   
   for i = 1:info.NChannels
     info.ChUnit(i)=h5readatt(datafile, char(strcat('/config/channels/',info.ChNames(i) )) ,'units');
-    if info.ChUnit{i}=='?'
-	    info.ChUnit{i}='unknown';
+    if isequal(info.ChUnit(i), '?')
+      info.ChUnit(i)='unknown';
     end
-
+    
     info.ChType(i)=h5readatt(datafile, char(strcat('/config/channels/',info.ChNames(i) )) ,'chan_type');
     try info.ChType(i)=h5readatt(datafile, char(strcat('/config/channels/',info.ChNames(i) )) ,'mode');
     catch
       continue
     end
   end
-
-   
+  
+  
 end
-      
-
-
-
-
-
