@@ -20,6 +20,19 @@ if ~ft_senstype(hdr, 'bti248')
 end
 
 if ~strcmp(ft_filetype(filename), 'yorkinstruments_hdf5')
-  error('Filetype not detected correctly');
-end	
+  error('filetype not detected correctly');
+end
+
+%%
+
+% there is no dewar to head transform available
+sens = ft_read_sens(filename, 'senstype', 'meg', 'coordsys', 'dewar');
+figure
+ft_plot_sens(sens);
+
+%%
+
+headshape = ft_read_headshape(filename);
+figure
+ft_plot_headshape(headshape);
 
