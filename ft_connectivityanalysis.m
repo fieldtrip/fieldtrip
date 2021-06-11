@@ -43,6 +43,8 @@ function [stat] = ft_connectivityanalysis(cfg, data)
 %     'corr'       Pearson correlation, support for timelock or raw data
 %     'laggedcoherence', lagged coherence estimate
 %     'plm'        phase linearity measurement
+%     'mim'        multivariate interaction measure, support for freq data
+%     'cancoh'     canonical coherence, support for freq data
 %
 % Additional configuration options are
 %   cfg.channel    = Nx1 cell-array containing a list of channels which are
@@ -68,6 +70,12 @@ function [stat] = ft_connectivityanalysis(cfg, data)
 %   cfg.bandwidth   = scalar, needed for 'psi', half-bandwidth of the integration
 %                     across frequencies (in Hz, default is the Rayleigh frequency)
 %                     needed for 'plm', half-bandwidth of the integration window (in Hz)
+%   cfg.indices     = vector, needed for 'mim' and 'cancoh', indexing which channels
+%                     belong together
+%   cfg.realflag    = false (default) or true, needed for 'cancoh',
+%                     indicating whether the canonical vectors are
+%                     determined from the real-valued part of a complex
+%                     matrix.
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
@@ -82,7 +90,8 @@ function [stat] = ft_connectivityanalysis(cfg, data)
 %
 % For the implemented methods, see also FT_CONNECTIVITY_CORR,
 % FT_CONNECTIVITY_GRANGER, FT_CONNECTIVITY_PPC, FT_CONNECTIVITY_WPLI,
-% FT_CONNECTIVITY_PDC, FT_CONNECTIVITY_DTF, FT_CONNECTIVITY_PSI
+% FT_CONNECTIVITY_PDC, FT_CONNECTIVITY_DTF, FT_CONNECTIVITY_PSI,
+% FT_CONNECTIVITY_MIM
 
 % Undocumented options:
 %   cfg.refindx             =
@@ -98,7 +107,7 @@ function [stat] = ft_connectivityanalysis(cfg, data)
 
 % Copyright (C) 2009, Jan-Mathijs Schoffelen, Andre Bastos, Martin Vinck, Robert Oostenveld
 % Copyright (C) 2010-2011, Jan-Mathijs Schoffelen, Martin Vinck
-% Copyright (C) 2012-2019, Jan-Mathijs Schoffelen
+% Copyright (C) 2012-2021, Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -275,7 +284,7 @@ switch cfg.method
     inparam = 'crsspctrm';
     outparam = 'plvspctrm';
     normrpt = 1;
-  case {'corr'}
+  case {'corr' 'cancorr'}
     data = ft_checkdata(data, 'datatype', {'raw' 'timelock'});
     if isfield(data, 'cov')
       % it looks like a timelock with a cov, which is perfectly valid as input
@@ -288,8 +297,10 @@ switch cfg.method
       tmpcfg.covariance = 'yes';
       data = ft_timelockanalysis(tmpcfg, data);
     end
-    inparam = 'cov';
+    inparam  = 'cov';
     outparam = cfg.method;
+    if strcmp(cfg.method, 'cancorr'), cfg.indices = ft_getopt(cfg, 'indices', []); end
+    
   case {'amplcorr' 'powcorr'}
     data = ft_checkdata(data, 'datatype', {'freqmvar' 'freq' 'source' 'source+mesh'});
     dtype = ft_datatype(data);
@@ -401,7 +412,7 @@ switch cfg.method
     cfg.laggedcoherence.lags = ft_getopt(cfg.laggedcoherence, 'lags', []);
     cfg.laggedcoherence.timeresolved = false;
     
-   case {'plm'}
+  case 'plm'
     data = ft_checkdata(data, 'datatype', 'raw');
     if ~isfield(data, 'fsample')
       data.fsample = 1./mean(diff(data.time{1}));
@@ -410,7 +421,22 @@ switch cfg.method
     outparam = 'plm';
   
     cfg.bandwidth = ft_getopt(cfg, 'bandwidth', 0.5);
+  
+  case 'mim'
+    cfg.indices = ft_getopt(cfg, 'indices', []);
     
+    data     = ft_checkdata(data, 'datatype', 'freq');
+    inparam  = 'crsspctrm';
+    outparam = 'mimspctrm';
+  
+  case 'cancoh'
+    cfg.indices = ft_getopt(cfg, 'indices', []);
+    cfg.realflag = ft_getopt(cfg, 'realflag', 0);
+    
+    data     = ft_checkdata(data, 'datatype', 'freq');
+    inparam  = 'crsspctrm';
+    outparam = 'cancohspctrm';
+  
   otherwise
     ft_error('unknown method % s', cfg.method);
 end
@@ -1059,10 +1085,59 @@ switch cfg.method
   case 'plm'
     % phase linearity measurement.
     optarg   = {'bandwidth', cfg.bandwidth, 'fsample', data.fsample};
-    [datout] = ft_connectivity_plm(data.(inparam), optarg{:});
+    datout   = ft_connectivity_plm(data.(inparam), optarg{:});
     varout   = [];
     
     outdimord = 'rpt_chan_chan';
+  
+  case 'mim'
+    % multiple interaction measure
+    optarg   = {'indices', cfg.indices};
+    if numel(cfg.indices)~=numel(data.label)
+      ft_error('for a mim computation, the cfg.indices vector should be the same as the number of channels in the input data');
+    end
+    if (contains(data.dimord, 'rpt') && size(data.(inparam),1) == 1) || ~contains(data.dimord, 'rpt')
+      datout   = ft_connectivity_mim(shiftdim(data.(inparam)), optarg{:});
+    else
+      ft_error('the ''rpt'' dimension should either be of singleton length, or non existent for mim computation');
+    end
+    
+    outdimord = 'chan_chan_freq';
+    varout    = [];
+      
+    % mim requires an updated (shortened) label
+    label = cell(max(cfg.indices),1);
+    for k = 1:max(cfg.indices)
+      str = sprintf('%s, ', data.label{cfg.indices==k});
+      str = str(1:end-2);
+      label{k,1} = sprintf('(%s)', str);
+    end
+    data.label = label;
+  
+  case 'cancoh'
+    % canonical coherence
+    optarg   = {'indices', cfg.indices, 'realflag', cfg.realflag};
+    if numel(cfg.indices)~=numel(data.label)
+      ft_error('for a canonical coherence computation, the cfg.indices vector should be the same as the number of channels in the input data');
+    end
+    if (contains(data.dimord, 'rpt') && size(data.(inparam),1) == 1) || ~contains(data.dimord, 'rpt')
+      datout   = ft_connectivity_cancorr(shiftdim(data.(inparam)), optarg{:});
+    else
+      ft_error('the ''rpt'' dimension should either be of singleton length, or non existent for canonical coherence computation');
+    end
+    
+    outdimord = 'chan_chan_freq';
+    varout    = [];
+      
+    % cancoh requires an updated (shortened) label
+    label = cell(max(cfg.indices),1);
+    for k = 1:max(cfg.indices)
+      str = sprintf('%s, ', data.label{cfg.indices==k});
+      str = str(1:end-2);
+      label{k,1} = sprintf('(%s)', str);
+    end
+    data.label = label;
+    
     
   otherwise
     ft_error('unknown method %s', cfg.method);

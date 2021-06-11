@@ -545,15 +545,16 @@ if ispccdata
             Cdr               = csd(dipsel, refsel);
             source.avg.coh(i) = (Cdr.^2) ./ (Pd*Pr);
           case 'lambda1'
-            %compute coherence on Joachim Gross' way
+            % compute coherence the Joachim Gross' way
             Pd                = lambda1(csd(dipsel, dipsel));
             Pr                = lambda1(csd(refsel, refsel));
             Cdr               = lambda1(csd(dipsel, refsel));
             source.avg.coh(i) = abs(Cdr).^2 ./ (Pd*Pr);
           case 'canonical'
-            [ccoh, c2, v1, v2] = ft_connectivity_cancorr(csd, dipsel, refsel);
-            [cmax, indmax]     = max(ccoh);
-            source.avg.coh(i)  = ccoh(indmax);
+            % compute canonical coherence
+            
+            ccoh = ft_connectivity_cancorr(csd([dipsel refsel],[dipsel refsel]), 'indices', [ones(1,numel(dipsel)) ones(1,numel(refsel))*2]);
+            source.avg.coh(i)  = ccoh(1,2);
           otherwise
             ft_error('unsupported cohmethod');
         end % cohmethod
