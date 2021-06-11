@@ -519,3 +519,12 @@ cfgc.granger.conditional = 'no';
 g5               = ft_connectivityanalysis(cfgc, freq);
 cfgc.granger.conditional = 'yes';
 g6               = ft_connectivityanalysis(cfgc, freq);
+
+% the 'blockwise' data can also be used to test mim and cancoh
+cfgc = [];
+cfgc.indices = [1 1 2 2 3 3 4 4];
+cfgc.method = 'mim';
+mim = ft_connectivityanalysis(cfgc, freq);
+cfgc.method = 'cancoh';
+cancoh = ft_connectivityanalysis(cfgc, freq);
+
