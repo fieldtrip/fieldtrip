@@ -201,6 +201,12 @@ end
 % SUBFUNCTION, see https://github.com/fieldtrip/fieldtrip/issues/831
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function bool = checktilde(filename)
+[p, f, x] = fileparts(filename);
+if ismember(f, {'matlab2markdown', 'markdown2matlab'})
+  % these are known false positives, they should not trigger an error
+  bool = true;
+  return
+end
 fid = fopen(filename, 'r');
 str = fread(fid, [1, inf], 'char=>char');
 bool = true; % this is the return value when all is fine

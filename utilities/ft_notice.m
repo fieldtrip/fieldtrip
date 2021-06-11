@@ -54,7 +54,7 @@ function varargout = ft_notice(varargin)
 % $Id$
 
 if nargout
-  varargout{:} = ft_notification(varargin{:});
+  [varargout{1:nargout}] = ft_notification(varargin{:});
 elseif isequal(varargin, {'last'})
   % return an answer anyway
   varargout{1} = ft_notification(varargin{:});

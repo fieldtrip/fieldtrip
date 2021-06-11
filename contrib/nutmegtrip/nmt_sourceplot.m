@@ -336,11 +336,13 @@ for funidx = 1:length(funparameters)
     try, cfg.funparameter  = cfg.funparameter{1};  end
     try, cfg.maskparameter = cfg.maskparameter{1}; end
     
-    switch(getdimord(functional,cfg.funparameter))
-        case '{pos}_freq_time'
-            cfg.plottype      = ft_getopt(cfg, 'plottype', 'tf'); % default plot type is "time-freq"
-        otherwise
-            cfg.plottype      = ft_getopt(cfg, 'plottype', 'ts'); % default plot type is "time series"
+     if isfield(functional,'freqbands')
+         cfg.plottype      = ft_getopt(cfg, 'plottype', 'tf'); % default plot type is "time-freq"
+         
+         nmtdimord = 'pos_freq_time';
+     else
+         cfg.plottype      = ft_getopt(cfg, 'plottype', 'ts'); % default plot type is "time series"
+         nmtdimord = 'pos_time';
     end
     
     if isvolume && cfg.downsample~=1
@@ -423,59 +425,20 @@ for funidx = 1:length(funparameters)
     % handle the dimensions of functional data
     
     if hasfun
-        dimord = getdimord(functional, cfg.funparameter);
-        dimtok = tokenize(dimord, '_');
-        
-        if strcmp(dimtok{1}, '{pos}')
             tmpdim = getdimsiz(functional, cfg.funparameter);
             fun = nan(tmpdim);
             insideindx = find(functional.inside);
             
             tmpfun = cell2mat(tmpfun);
-            switch(dimord)
-                case {'{pos}_freq_time','{pos}_ori_time','{pos}_unknown_time'} % ori is hack... FT thinks that 3 freq bands is an ori!
-                    tmpfun = reshape(tmpfun,[size(tmpfun,1)/length(insideindx) length(insideindx) size(tmpfun,2)]);
-                    tmpfun = permute(tmpfun, [2 1 3]);
-            end
+                tmpfun = reshape(tmpfun,[size(tmpfun,1)/length(insideindx) length(insideindx) size(tmpfun,2)]);
+                tmpfun = permute(tmpfun, [2 1 3]);
             
-            %    tmpfun = real(tmpfun);
-            %    tmpfun = (tmpfun ./ repmat(mean(abs(tmpfun(:,:,1:200)),3),1,1,476));
-            
-            %    tmpfun = sum(tmpfun,2);
-            %    fun = fun(insideindx,1,:);
-            
+             
             fun(insideindx,:,:) = tmpfun; % replace the cell-array functional with a normal array
             clear tmpfun;
-            dimtok{1} = 'pos';  % update the description of the dimensions
-            dimord([1 5]) = []; % remove the { and }
-        else
-            fun = tmpfun;
-            clear tmpfun;
-        end
         
         
-        if strcmp(dimord, 'pos_rgb')
-            % treat functional data as rgb values
-            if any(fun(:)>1 | fun(:)<0)
-                % scale
-                tmpdim = size(fun);
-                nvox   = prod(tmpdim(1:end-1));
-                tmpfun = reshape(fun,[nvox tmpdim(end)]);
-                m1     = max(tmpfun,[],1);
-                m2     = min(tmpfun,[],1);
-                tmpfun = (tmpfun-m2(ones(nvox,1),:))./(m1(ones(nvox,1),:)-m2(ones(nvox,1),:));
-                fun    = reshape(tmpfun, tmpdim);
-                clear tmpfun
-            end
-            qi      = 1;
-            hasfreq = 0;
-            hastime = 0;
-            
-            doimage = 1;
-            fcolmin = 0;
-            fcolmax = 1;
-            
-        else
+ 
             % determine scaling min and max (fcolmin fcolmax) and funcolormap
             if ~isa(fun, 'logical')
                 funmin = min(fun(:));
@@ -538,33 +501,32 @@ for funidx = 1:length(funparameters)
             end
             
             if ndims(fun)>3 || prod(dim)==size(fun,1)
-                if strcmp(dimord, 'pos_freq_time') || strcmp(dimord, 'pos_ori_time')
-                    % functional contains time-frequency representation
-                    qi      = [1 1];
-                    hasfreq = numel(functional.freq)>1;
-                    hastime = numel(functional.time)>1;
-                    %fun     = reshape(fun, [dim numel(functional.freq) numel(functional.time)]);
-                    
-                    fun = permute(fun,[1 3 2]); % reorder to pos_time_freq
-                    dimord = 'pos_time_freq';
-                elseif strcmp(dimord, 'pos_time')
-                    % functional contains evoked field
-                    qi      = 1;
-                    hasfreq = 0;
-                    hastime = numel(functional.time)>1;
-                    fun     = squeeze(fun);
-                    %        fun     = reshape(fun, [dim numel(functional.time)]);
-                elseif strcmp(dimord, 'pos_freq')
-                    % functional contains frequency spectra
-                    qi      = 1;
-                    hasfreq = numel(functional.freq)>1;
-                    hastime = 0;
-                    fun     = reshape(fun, [dim numel(functional.freq)]);
-                else
-                    qi      = 1;
-                    hasfreq = 0;
-                    hastime = 0;
-                    fun     = reshape(fun, dim);
+                switch nmtdimord
+                    case 'pos_freq_time'
+                        % functional contains time-frequency representation
+                        qi      = [1 1];
+                        hasfreq = numel(functional.freq)>1;
+                        hastime = numel(functional.time)>1;
+                        %fun     = reshape(fun, [dim numel(functional.freq) numel(functional.time)]);
+                        
+                        if hasfreq == 0
+                            warning('You might want to add a freq field to your input.')
+                        end
+                        
+                        fun = permute(fun,[1 3 2]); % reorder to pos_time_freq
+                        nmtdimord = 'pos_time_freq';
+                    case 'pos_time'
+                        % functional contains evoked field
+                        qi      = 1;
+                        hasfreq = 0;
+                        hastime = numel(functional.time)>1;
+                        fun     = squeeze(fun);
+                        %        fun     = reshape(fun, [dim numel(functional.time)]);
+                    otherwise
+                        qi      = 1;
+                        hasfreq = 0;
+                        hastime = 0;
+                        fun     = reshape(fun, dim);
                 end
             else
                 % do nothing
@@ -574,7 +536,6 @@ for funidx = 1:length(funparameters)
             end
             
             doimage = 0;
-        end % if dimord has rgb or something else
     else
         % there is no functional data
         qi      = 1;
@@ -609,19 +570,8 @@ for funidx = 1:length(funparameters)
     
     % handle mask
     if hasmsk
-        % reshape to match fun
-        if strcmp(dimord, 'pos_time_freq')
-            % functional contains timefrequency representation
+        if isfield(functional,'freqbands')
             msk = permute(msk,[1 3 2]); % reorder to pos_time_freq
-            msk     = reshape(msk, [dim numel(functional.time) numel(functional.freq)]);
-        elseif strcmp(dimord, 'pos_time')
-            % functional contains evoked field
-            msk     = reshape(msk, [dim numel(functional.time)]);
-        elseif strcmp(dimord, 'pos_freq')
-            % functional contains frequency spectra
-            msk     = reshape(msk, [dim numel(functional.freq)]);
-        else
-            msk     = reshape(msk, dim);
         end
         
         % determine scaling and opacitymap
@@ -739,7 +689,7 @@ for funidx = 1:length(funparameters)
     end
 
     %% *********************************************************************************
-    % SPM8 expects everything in mm
+    % SPM expects everything in mm
     functional = ft_convert_units(functional,'mm');
     
     
@@ -764,19 +714,19 @@ for funidx = 1:length(funparameters)
                 end
                 
                 if(~isfield(cfg,'time') && ~isfield(cfg,'vox'))
-                    [~,peakind] = max(abs(st.nmt.fun{funidx}(:)));
+                    [dum,peakind] = max(abs(st.nmt.fun{funidx}(:)));
                     [peakvox_idx,peaktime_idx] = ind2sub(size(st.nmt.fun{funidx}),peakind);
                     cfg.time_idx(1) = peaktime_idx;
                     cfg.vox_idx = peakvox_idx;
                 end
                 
                 if(~isfield(cfg,'time') && isfield(cfg,'vox'))
-                    [~,peaktime_idx] = max(abs(st.nmt.fun{funidx}(cfg.vox_idx,:)));
+                    [dum,peaktime_idx] = max(abs(st.nmt.fun{funidx}(cfg.vox_idx,:)));
                     cfg.time_idx(1) = peaktime_idx;
                 end
                 
                 if(isfield(cfg,'time') && ~isfield(cfg,'vox'))
-                    [~,peakvox_idx] = max(abs(st.nmt.fun{funidx}(cfg.time_idx,:)));
+                    [dum,peakvox_idx] = max(abs(st.nmt.fun{funidx}(cfg.time_idx,:)));
                     cfg.vox_idx = peakvox_idx;
                 end
                 
@@ -794,7 +744,7 @@ for funidx = 1:length(funparameters)
                 st.nmt.freq = functional.freqbands;
                 
                 if(~isfield(cfg,'time') && ~isfield(cfg,'vox'))
-                    [~,peakind] = max(abs(st.nmt.fun{funidx}(:)));
+                    [dum,peakind] = max(abs(st.nmt.fun{funidx}(:)));
                     [peakvox_idx,peaktime_idx,peakfreq_idx] = ind2sub(size(st.nmt.fun{funidx}),peakind);
                     cfg.time_idx(1) = peaktime_idx;
                     cfg.freq_idx(1) = peakfreq_idx;
@@ -802,12 +752,12 @@ for funidx = 1:length(funparameters)
                 end
                 
                 if(~isfield(cfg,'time') && isfield(cfg,'vox'))
-                    [~,peaktime_idx] = max(abs(st.nmt.fun{funidx}(cfg.vox_idx,:)));
+                    [dum,peaktime_idx] = max(abs(st.nmt.fun{funidx}(cfg.vox_idx,:)));
                     cfg.time_idx(1) = peaktime_idx;
                 end
                 
                 if(isfield(cfg,'time') && ~isfield(cfg,'vox'))
-                    [~,peakvox_idx] = max(abs(st.nmt.fun{funidx}(cfg.time_idx,:)));
+                    [dum,peakvox_idx] = max(abs(st.nmt.fun{funidx}(cfg.time_idx,:)));
                     cfg.vox_idx = peakvox_idx;
                 end
                 

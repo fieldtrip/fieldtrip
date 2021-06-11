@@ -122,13 +122,11 @@ grad.chanpos = grad_head.chanpos;
 if ~isfield(cfg, 'trl') || isempty(cfg.trl)
   cfg.trl = [1 hdr.nTrials.*hdr.nSamples 0];
 end
-tmpcfg              = [];
-tmpcfg.dataset      = cfg.dataset;
-tmpcfg.trl          = cfg.trl;
+tmpcfg              = removefields(cfg, {'method' 'numclusters'});
 tmpcfg.channel      = {'HLC0011' 'HLC0012' 'HLC0013' 'HLC0021' 'HLC0022' 'HLC0023' 'HLC0031' 'HLC0032' 'HLC0033'};
 tmpcfg.continuous   = 'yes';
 data                = ft_preprocessing(tmpcfg);
-data                = removefields(data, 'elec'); % this slows down a great
+data                = removefields(data, 'elec'); % this slows down a great deal
 % rendering the persistent variable trick useless.
 % we don't need the elec anyway
 

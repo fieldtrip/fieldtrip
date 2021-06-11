@@ -1,6 +1,5 @@
 function test_issue1313
 
-
 % WALLTIME 00:10:00
 % MEM 2gb
 % DEPENDENCY resampledesign
@@ -46,7 +45,7 @@ assert(size(resample,1)==600);
 
 % ensure that the requested warning is given
 w = ft_warning('last');
-assert(startsWith(w.message, 'cfg.numrandomization is close to the maximum number of unique permutations'));
+assert(startsWith(w.message, 'the number of randomizations'));
 
 %%
 % 10 subjects, 2 conditions
@@ -69,4 +68,4 @@ assert(size(resample,1)==1500);
 
 % ensure that the requested warning is given
 w = ft_warning('last');
-assert(startsWith(w.message, 'cfg.numrandomization is larger than the maximum number of unique permutations'));
+assert(startsWith(w.message, 'the number of randomizations'));

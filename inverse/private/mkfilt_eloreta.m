@@ -23,7 +23,7 @@ if nargin<2;regu=.05;end
 
 [nchan, ng, ndum]=size(L);
 LL=zeros(nchan,ndum,ng);
-for i=1:ndum;-
+for i=1:ndum
     LL(:,i,:)=L(:,:,i);
 end
 LL=reshape(LL,nchan,ndum*ng);

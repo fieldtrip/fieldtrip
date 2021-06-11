@@ -234,9 +234,9 @@ elseif ~isempty(cfg.uvar) && strcmp(cfg.resampling, 'permutation')
   elseif ~ischar(cfg.numrandomization)
     % see https://github.com/fieldtrip/fieldtrip/issues/1313
     if cfg.numrandomization > prod(unitlen)
-      ft_warning('cfg.numrandomization is larger than the maximum number of unique permutations, better use ''all''')
+      ft_warning('the number of randomizations (%d) is larger than the maximum number of unique permutations (%d), better use cfg.numrandomization=''all''', cfg.numrandomization, prod(unitlen))
     elseif cfg.numrandomization/prod(unitlen) > 0.5
-      ft_warning('cfg.numrandomization is close to the maximum number of unique permutations, better use ''all''')
+      ft_warning('the number of randomizations (%d) is close to the maximum number of unique permutations (%d), better use cfg.numrandomization=''all''', cfg.numrandomization, prod(unitlen))
     end
     
     % create the desired number of permutations by random shuffling
