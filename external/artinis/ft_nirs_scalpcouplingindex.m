@@ -1,18 +1,20 @@
 function dataout = ft_nirs_scalpcouplingindex(cfg, datain)
 
-% FT_NIRS_SCALPCOUPLINGINDEX computes the zero-lag cross-correlation
-% between pairs of raw NIRS-channels to identify bad channels.
+% FT_NIRS_SCALPCOUPLINGINDEX computes the zero-lag cross-correlation between pairs of
+% raw NIRS-channels to identify bad channels. In the output data structure the bad
+% channels are removed, or filled with NaNs.
 %
 % Use as
 %   [outdata] = ft_scalpcouplingindex(cfg, indata)
-% where indata is raw NIRS-data (in optical densities, ODs)
-% and cfg is a configuration structure that should contain
+% where cfg is a configuration structure and indata is raw NIRS-data (in optical
+% densities, ODs) that is represented according to the output of FT_PREPROCESSING.
 %
-%   cfg.threshold    = scalar, the correlation value which has to be
-%                      exceeded to be labelled a 'good' channel (default = 0.75)
+% The configuration should contain the following options
+%   cfg.threshold   = scalar, the correlation value which has to be exceeded to be 
+%                     labelled a 'good' channel (default = 0.75)
 %   cfg.keepchannel = string, determines how to deal with channels that are not selected, can be
-%                      'no'          completely remove deselected channels from the data (default)
-%                      'nan'         fill the channels that are deselected with NaNs
+%                     'no'  completely remove deselected channels from the data (default)
+%                     'nan' fill the channels that are deselected with NaNs
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
@@ -29,7 +31,7 @@ function dataout = ft_nirs_scalpcouplingindex(cfg, datain)
 %
 % Please cite accordingly. Thank you!
 %
-% See also FT_NIRS_TRANSFORM_ODS
+% See also FT_NIRS_SIGNALQUALITYINDEX, FT_NIRS_REFERENCECHANNELSUBTRACTION, FT_NIRS_TRANSFORM_ODS
 
 % You are using the FieldTrip NIRS toolbox developed and maintained by
 % Artinis Medical Systems (http://www.artinis.com). For more information
@@ -184,14 +186,14 @@ while i<nChans
         sci(cidxA) = sci(cidxA) + rsum/(numel(chanidx)-1);
         sci(cidxB) = sci(cidxB) + rsum/(numel(chanidx)-1);
       end % end for:cb
-            
+      
       % mark this channel as 'done'
       skipChan(cidxA) = true;
     end % end for:ca
     
     % skip the last channel as it's either 'done' or has no 'companion'
     skipChan(chanidx(end)) = true;
-
+    
   end % end if:skipChan
   
 end
