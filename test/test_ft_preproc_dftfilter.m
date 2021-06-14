@@ -11,8 +11,8 @@ fs = 500;
 data = [];
 data.time{1} = -1:1/fs:2.4980; %-> observation: using linspace instead works fine
 
-lnoise(1,:) = hanning(1750)'.*sin((2.*pi.*data.time{1}).*50);
-lnoise(2,:) = hanning(1750)'.*sin((2.*pi.*data.time{1}).*100);
+lnoise(1,:) = (1+hanning(1750))'.*sin((2.*pi.*data.time{1}).*50);
+lnoise(2,:) = (1+hanning(1750))'.*sin((2.*pi.*data.time{1}).*100);
 
 data.trial{1} = randn(2,1750)+lnoise;
 data.label = {'a';'b'};
@@ -28,45 +28,65 @@ cfg.dftbandwidth = [1 2]; %width of window to be interpolated
 cfg.dftneighbourwidth = [2 2]; %width of window from which to interpolate
 datafilt1 = ft_preprocessing(cfg, data);
 
+cfg.dftreplace   = 'neighbour_fft';
+datafilt2 = ft_preprocessing(cfg, data); % this should now work thanks to some eps leniency
+
 cfg           = [];
 cfg.dftfilter = 'yes';
 cfg.dftfreq   = [lineFreq lineFreq*2];
-datafilt2     = ft_preprocessing(cfg, data);
+datafilt3     = ft_preprocessing(cfg, data);
 
 figure
 
-subplot(2,2,1);plot(datafilt1.time{1}, data.trial{1}-datafilt1.trial{1}); ylim([-1.1 1.1]);xlabel('estimated linenoise method 1');
-subplot(2,2,2);plot(datafilt2.time{1}, data.trial{1}-datafilt2.trial{1}); ylim([-1.1 1.1]);xlabel('estimated linenoise method 2');
-subplot(2,2,3);plot(data.time{1}, lnoise); ylim([-1.1 1.1]);xlabel('simulated linenoise');
+subplot(2,2,1);plot(datafilt1.time{1}, data.trial{1}-datafilt1.trial{1}); ylim([-2.1 2.1]);xlabel('estimated linenoise neighbour');
+subplot(2,2,2);plot(datafilt2.time{1}, data.trial{1}-datafilt2.trial{1}); ylim([-2.1 2.1]);xlabel('estimated linenoise neighbour_fft','interpreter','none');
+subplot(2,2,3);plot(datafilt2.time{1}, data.trial{1}-datafilt3.trial{1}); ylim([-2.1 2.1]);xlabel('estimated linenoise static dft');
+subplot(2,2,4);plot(data.time{1}, lnoise); ylim([-2.1 2.1]);xlabel('simulated linenoise');
+
+figure; plot(data.time{1}, datafilt1.trial{1}-datafilt2.trial{1});
+% the difference here can be explained by the fact that neighbour_fft takes
+% an asymmetric band around 50/100 Hz, due to rounding in nearest I guess
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % some other instances, testing ft_preproc_dftfilter directly
 tim = (0:1999)./1000;
-dat = randn(1, 2000) + hanning(2000)'.*sin(2.*pi.*(tim).*50);
-filt = ft_preproc_dftfilter(dat, 1000, 50, 'dftreplace', 'neighbour');
-figure;plot(tim, dat-filt); hold on;plot(tim, hanning(2000)'.*sin(2.*pi.*(tim).*50));
+dat = randn(1, 2000) + (1+hanning(2000))'.*sin(2.*pi.*(tim).*50);
+filt  = ft_preproc_dftfilter(dat, 1000, 50, 'dftreplace', 'neighbour');
+filt2 = ft_preproc_dftfilter(dat, 1000, 50, 'dftreplace', 'neighbour_fft');
+
+figure;plot(tim, dat-filt); hold on;plot(tim, (1+hanning(2000))'.*sin(2.*pi.*(tim).*50));
+figure;plot(tim, dat-filt2); hold on;plot(tim, (1+hanning(2000))'.*sin(2.*pi.*(tim).*50));
+figure;plot(filt, filt2, 'o');
 
 tim = (0:2000)./1000;
-dat = randn(1, 2001) + hanning(2001)'.*sin(2.*pi.*(tim).*50);
+dat = randn(1, 2001) + (1+hanning(2001))'.*sin(2.*pi.*(tim).*50);
 filt = ft_preproc_dftfilter(dat, 1000, 50, 'dftreplace', 'neighbour');
-figure;plot(tim, dat-filt); hold on;plot(tim, hanning(2001)'.*sin(2.*pi.*(tim).*50));
+try
+ filt2 = ft_preproc_dftfilter(dat, 1000, 50, 'dftreplace', 'neighbour_fft');
+ ft_error('if the code ends up here, then something suddenly started working');
+catch
+ % this is supposed to happen
+end
+  
+figure;plot(tim, dat-filt); hold on;plot(tim, (1+hanning(2001))'.*sin(2.*pi.*(tim).*50));
 
 
-dat = randn(3, 2001) + [hanning(2001)'.*sin(2.*pi.*(tim).*53) ; hanning(2001)'.*sin(2.*pi.*(tim).*79 - 0.025) ; hanning(2001)'.*sin(2.*pi.*(tim).*127 + 0.002)];
+dat = randn(3, 2001) + [(1+hanning(2001))'.*sin(2.*pi.*(tim).*53) ; (1+hanning(2001))'.*sin(2.*pi.*(tim).*79 - 0.025) ; (1+hanning(2001))'.*sin(2.*pi.*(tim).*127 + 0.002)];
 filt = ft_preproc_dftfilter(dat, 1000, [53, 79, 127], 'dftreplace', 'neighbour', 'dftneighbourwidth', [1 1 1]);
 figure; 
-subplot(2,2,1); plot(tim, dat(1,:)-filt(1,:)); hold on;plot(tim, hanning(2001)'.*sin(2.*pi.*(tim).*53));
-subplot(2,2,2); plot(tim, dat(2,:)-filt(2,:)); hold on;plot(tim, hanning(2001)'.*sin(2.*pi.*(tim).*79 - 0.025));
-subplot(2,2,3); plot(tim, dat(3,:)-filt(3,:)); hold on;plot(tim, hanning(2001)'.*sin(2.*pi.*(tim).*127 + 0.002));
+subplot(2,2,1); plot(tim, dat(1,:)-filt(1,:)); hold on;plot(tim, (1+hanning(2001))'.*sin(2.*pi.*(tim).*53));
+subplot(2,2,2); plot(tim, dat(2,:)-filt(2,:)); hold on;plot(tim, (1+hanning(2001))'.*sin(2.*pi.*(tim).*79 - 0.025));
+subplot(2,2,3); plot(tim, dat(3,:)-filt(3,:)); hold on;plot(tim, (1+hanning(2001))'.*sin(2.*pi.*(tim).*127 + 0.002));
 
 tim = (0:5000)./678.253;
-krn = hanning(5000)';
+krn = (1+hanning(5000)')./2;
 dat = randn(1, 5001) + ([krn(1:2500) ones(1,2501)]).*sin(2.*pi.*(tim).*50);
 filt = ft_preproc_dftfilter(dat, 678.253, 50, 'dftreplace', 'neighbour', 'dftneighbourwidth', 2, 'dftbandwidth', 2);
 figure;hold on;plot(tim, ([krn(1:2500) ones(1,2501)]).*sin(2.*pi.*(tim).*50));plot(tim, dat-filt)
 
 tim = (0:4999)./1000;
-krn = hanning(5000)';
+krn = (1+hanning(5000)')./2;
 dat = randn(1, 5000) + ([krn(1:2500) ones(1,2500)]).*sin(2.*pi.*(tim).*50);
 filt = ft_preproc_dftfilter(dat, 1000, 50, 'dftreplace', 'neighbour', 'dftneighbourwidth', 2, 'dftbandwidth', 2);
 figure;hold on;plot(tim, ([krn(1:2500) ones(1,2500)]).*sin(2.*pi.*(tim).*50));plot(tim, dat-filt)

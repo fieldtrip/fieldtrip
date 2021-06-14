@@ -30,7 +30,7 @@ function [filt] = ft_preproc_dftfilter(dat, Fs, Fl, varargin)
 % used to estimate the line noise. The estimate is subtracted from the
 % complete data.
 %
-% If dftreplace = 'neighbour' the powerline component is reduced via spectrum 
+% If dftreplace = 'neighbour_fft' the powerline component is reduced via spectrum 
 % interpolation (Leske & Dalal, 2019, NeuroImage 189,
 %  doi: 10.1016/j.neuroimage.2019.01.026)
 % The signal is:
@@ -94,6 +94,9 @@ function [filt] = ft_preproc_dftfilter(dat, Fs, Fl, varargin)
 
 % defaults
 Flreplace  = ft_getopt(varargin, 'dftreplace',        'zero');
+Flwidth    = ft_getopt(varargin, 'dftbandwidth',      [1 2 3]); % this is tricky, because it assumes to coincide with default [50 100 150]
+Neighwidth = ft_getopt(varargin, 'dftneighbourwidth', [2 2 2]);
+
 
 % determine the size of the data
 [nchans, nsamples] = size(dat);
@@ -115,31 +118,20 @@ end
 % the data, allowing for some numerical noise
 n    = round(floor(nsamples .* (Fl./Fs + 100*eps)) .* Fs./Fl);
 
-% check whether the filtering can be done in a single step
-doloop = false;
-if all(n==n(1)) && ~strcmp(Flreplace, 'zero')
-  % do a sanity check on the to-be-needed nfft
-  nfft = round(ceil(nsamples .* (Fl./Fs + 100*eps)) .* Fs./Fl);
-  if ~all(nfft==nfft(1))
-    doloop = true;
-  end
-elseif ~all(n==n(1))
-  doloop = true;
-end
-
-if doloop
+% check whether the filtering can be done in a single step, this can be
+% done for the zero method if all n==n(1)
+if (~strcmp(Flreplace, 'zero') && numel(n)>1) || ~all(n==n(1))
   % the different frequencies require different numbers of samples, apply the filters sequentially
   filt = dat;
   for i=1:numel(Fl)
-    optarg = varargin;
-    filt = ft_preproc_dftfilter(filt, Fs, Fl(i), optarg{:});
+    filt = ft_preproc_dftfilter(filt, Fs, Fl(i), 'dftreplace', Flreplace, 'dftbandwidth', Flwidth(i), 'dftneighbourwidth', Neighwidth(i)); % enumerate all options 
   end
   return
 end
 
-% Method A): DFT filter
 if strcmp(Flreplace,'zero')
-  sel = 1:n;
+  % Method A): DFT filter  
+  sel = 1:n(1);
   
   % temporarily remove mean to avoid leakage
   meandat = nanmean(dat(:,sel),2);
@@ -156,12 +148,52 @@ if strcmp(Flreplace,'zero')
   % add the mean back to the filtered data
   filt = bsxfun(@plus, filt, meandat);
   
-  % Method B): Spectrum Interpolation
 elseif strcmp(Flreplace,'neighbour')
-  
-  Flwidth    = ft_getopt(varargin, 'dftbandwidth',      [1 2 3]);
-  Neighwidth = ft_getopt(varargin, 'dftneighbourwidth', [2 2 2]);
+  Flwidth    = Flwidth(1:numel(Fl)); % this is a check due to the clunky defaults
+  Neighwidth = Neighwidth(1:numel(Fl));
 
+  % Method B1): DFT filter based estimation of stopband phase and DFT based
+  % estimation of outside band power
+  sel = 1:n;
+  
+  % temporarily remove the mean to avoid leakage
+  meandat = nanmean(dat(:,sel),2);
+  dat = bsxfun(@minus, dat, meandat);
+  
+  % fit a sine and cosine to the requested set of frequencies
+  R    = Fs/n; % Rayleigh frequency
+  time = (0:nsamples-1)/Fs;
+  
+  nbin = round((Neighwidth+Flwidth)/R); % number of bins to be estimated at each side of the centre frequency
+  freqs = (-nbin:nbin)*R + Fl;
+  
+  tmp  = exp(2*1i*pi*freqs(:)*time);                   % complex sin and cos
+  beta = 2*dat(:,sel)/tmp(:,sel);                % estimated amplitude of complex sin and cos on integer number of cycles
+  
+  stopband = nearest(freqs - Fl, Flwidth.*[-1 1]);
+  stopbool = false(1,numel(freqs));
+  stopbool(stopband(1):stopband(2)) = true;
+  
+  stopsignal = real(beta(:,stopbool)*tmp(stopbool,:));
+  
+  % retain the phase information
+  beta(:,stopbool) = beta(:,stopbool)./abs(beta(:,stopbool));
+  
+  % estimate the amplitude from the flanking bands
+  amp = mean(abs(beta(:,~stopbool)),2);
+  beta(:,stopbool) = beta(:,stopbool).*amp(:,ones(1,sum(stopbool)));
+  
+  replacesignal = real(beta(:,stopbool)*tmp(stopbool,:));
+  
+  filt = dat - stopsignal + replacesignal;
+  
+  % add the mean back to the filtered data
+  filt = bsxfun(@plus, filt, meandat);
+     
+elseif strcmp(Flreplace,'neighbour_fft')
+  % Method B): Spectrum Interpolation
+  
+  
   Flwidth    = Flwidth(:);
   Neighwidth = Neighwidth(:);
   if numel(Fl)<numel(Flwidth)
@@ -173,8 +205,9 @@ elseif strcmp(Flreplace,'neighbour')
   
   % error message if periodicity of the interference frequency doesn't match the DFT length
   if n ~= nsamples
-    ft_warning('Spectrum interpolation requires that the data length fits complete cycles of the powerline frequency, e.g., exact multiples of 20 ms for a 50 Hz line frequency (sampling rate of 1000 Hz).');
-    nfft = round(ceil(nsamples .* (Fl./Fs + 100*eps)) .* Fs./Fl);
+    ft_error('Spectrum interpolation requires that the data length fits complete cycles of the powerline frequency, e.g., exact multiples of 20 ms for a 50 Hz line frequency (sampling rate of 1000 Hz).');
+    % nfft = round(ceil(nsamples .* (Fl./Fs + 100*eps)) .* Fs./Fl);
+    nfft = nsamples;
   else
     nfft = nsamples;
   end
@@ -184,13 +217,10 @@ elseif strcmp(Flreplace,'neighbour')
   end
   
   % frequencies to interpolate
-  for i = 1:length(Fl)
-    f2int(i,:) = [Fl(i)-Flwidth(i) Fl(i)+Flwidth(i)];
-  end
+  f2int = [Fl(:)-Flwidth(:) Fl(:)+Flwidth(:)];
+  
   % frequencies used for interpolation
-  for i = 1:length(Neighwidth)
-    f4int(i,:) = [f2int(i,1)-Neighwidth(i) f2int(i,:) f2int(i,2)+Neighwidth(i)];
-  end
+  f4int = [f2int(:,1)-Neighwidth(:) f2int f2int(:,2)+Neighwidth(:)];
   
   data_fft = fft(dat,nfft,2); % calculate fft to obtain spectrum that will be interpolated
   frq = Fs*linspace(0,1,nfft+1);
