@@ -41,29 +41,35 @@ subplot(2,2,3);plot(data.time{1}, lnoise); ylim([-1.1 1.1]);xlabel('simulated li
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % some other instances, testing ft_preproc_dftfilter directly
-tim = (0:999)./1000;
-dat = randn(1, 1000) + hanning(1000)'.*sin(2.*pi.*(tim).*50);
+tim = (0:1999)./1000;
+dat = randn(1, 2000) + hanning(2000)'.*sin(2.*pi.*(tim).*50);
 filt = ft_preproc_dftfilter(dat, 1000, 50, 'dftreplace', 'neighbour');
-figure;plot(tim, dat-filt); hold on;plot(tim, hanning(1000)'.*sin(2.*pi.*(tim).*50));
+figure;plot(tim, dat-filt); hold on;plot(tim, hanning(2000)'.*sin(2.*pi.*(tim).*50));
 
-tim = (0:1000)./1000;
-dat = randn(1, 1001) + hanning(1001)'.*sin(2.*pi.*(tim).*50);
+tim = (0:2000)./1000;
+dat = randn(1, 2001) + hanning(2001)'.*sin(2.*pi.*(tim).*50);
 filt = ft_preproc_dftfilter(dat, 1000, 50, 'dftreplace', 'neighbour');
-figure;plot(tim, dat-filt); hold on;plot(tim, hanning(1001)'.*sin(2.*pi.*(tim).*50));
+figure;plot(tim, dat-filt); hold on;plot(tim, hanning(2001)'.*sin(2.*pi.*(tim).*50));
 
 
-dat = randn(3, 1001) + [hanning(1001)'.*sin(2.*pi.*(tim).*53) ; hanning(1001)'.*sin(2.*pi.*(tim).*79 - 0.025) ; hanning(1001)'.*sin(2.*pi.*(tim).*127 + 0.002)];
+dat = randn(3, 2001) + [hanning(2001)'.*sin(2.*pi.*(tim).*53) ; hanning(2001)'.*sin(2.*pi.*(tim).*79 - 0.025) ; hanning(2001)'.*sin(2.*pi.*(tim).*127 + 0.002)];
 filt = ft_preproc_dftfilter(dat, 1000, [53, 79, 127], 'dftreplace', 'neighbour', 'dftneighbourwidth', [1 1 1]);
 figure; 
-subplot(2,2,1); plot(tim, dat(1,:)-filt(1,:)); hold on;plot(tim, hanning(1001)'.*sin(2.*pi.*(tim).*53));
-subplot(2,2,2); plot(tim, dat(2,:)-filt(2,:)); hold on;plot(tim, hanning(1001)'.*sin(2.*pi.*(tim).*79 - 0.025));
-subplot(2,2,3); plot(tim, dat(3,:)-filt(3,:)); hold on;plot(tim, hanning(1001)'.*sin(2.*pi.*(tim).*127 + 0.002));
+subplot(2,2,1); plot(tim, dat(1,:)-filt(1,:)); hold on;plot(tim, hanning(2001)'.*sin(2.*pi.*(tim).*53));
+subplot(2,2,2); plot(tim, dat(2,:)-filt(2,:)); hold on;plot(tim, hanning(2001)'.*sin(2.*pi.*(tim).*79 - 0.025));
+subplot(2,2,3); plot(tim, dat(3,:)-filt(3,:)); hold on;plot(tim, hanning(2001)'.*sin(2.*pi.*(tim).*127 + 0.002));
 
-tim = (0:1000)./678.253;
-krn = hanning(1000)';
-dat = randn(1, 1001) + ([krn(1:500) ones(1,501)]).*sin(2.*pi.*(tim).*50);
-filt = ft_preproc_dftfilter(dat, 678.253, 50, 'dftreplace', 'neighbour', 'dftneighbourwidth', 4, 'dftbandwidth', 2);
-figure;plot(tim, dat-filt); hold on;plot(tim, ([krn(1:500) ones(1,501)]).*sin(2.*pi.*(tim).*50));
+tim = (0:5000)./678.253;
+krn = hanning(5000)';
+dat = randn(1, 5001) + ([krn(1:2500) ones(1,2501)]).*sin(2.*pi.*(tim).*50);
+filt = ft_preproc_dftfilter(dat, 678.253, 50, 'dftreplace', 'neighbour', 'dftneighbourwidth', 2, 'dftbandwidth', 2);
+figure;hold on;plot(tim, ([krn(1:2500) ones(1,2501)]).*sin(2.*pi.*(tim).*50));plot(tim, dat-filt)
+
+tim = (0:4999)./1000;
+krn = hanning(5000)';
+dat = randn(1, 5000) + ([krn(1:2500) ones(1,2500)]).*sin(2.*pi.*(tim).*50);
+filt = ft_preproc_dftfilter(dat, 1000, 50, 'dftreplace', 'neighbour', 'dftneighbourwidth', 2, 'dftbandwidth', 2);
+figure;hold on;plot(tim, ([krn(1:2500) ones(1,2500)]).*sin(2.*pi.*(tim).*50));plot(tim, dat-filt)
 
 %%%%%%%%%
 % Code chunk from Sabine
