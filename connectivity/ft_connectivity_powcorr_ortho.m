@@ -52,21 +52,23 @@ end
 
 nchan = size(mom,1);
 ntap  = tapvec(1);
-nrpt  = size(tapvec,1); % number of trials / repetitions
+nrpt  = numel(tapvec); % number of trials / repetitions
 
 if ~all(tapvec==ntap)
   ft_error('unequal number of tapers per observation is not yet supported');
 end
 
 % final connectivity matrix
-c = zeros(nchan, numel(refindx));
+c = zeros(nchan, numel(refindx))+nan;
 
 % only need to do these two things once (out of next forloop)
 cXnorm = conj(mom./abs(mom));
 powX   = abs(mom).^2;
 
 for k = 1:numel(refindx) % for each source/channel
-  indx = refindx(k);
+  indx   = refindx(k);
+  target = setdiff(1:size(mom,1), indx);
+  
   Y    = repmat(mom(indx,:), [nchan, 1]); % Y = y nchan times stacked
    
   %% orthogonalization in one direction: Y wrt X
@@ -78,8 +80,8 @@ for k = 1:numel(refindx) % for each source/channel
   % correlation for each taper separately
   for tap = 1:ntap
     idx = tap + ntap * (0:(nrpt-1));
-    zYorth(:,idx) = standardise(log10(powYorth(:,idx)), 2);
-    zX(:,idx)     = standardise(log10(powX(:,idx)), 2);
+    zYorth(target,idx) = standardise(log10(powYorth(target,idx)), 2);
+    zX(target,idx)     = standardise(log10(powX(target,idx)), 2);
   end
   
   c1 = mean(zX.*zYorth, 2); % take correlation averaging over trials+tapers
@@ -95,8 +97,8 @@ for k = 1:numel(refindx) % for each source/channel
   
   for tap = 1:ntap
     idx = tap + ntap * (0:(nrpt-1));
-    zXorth(:,idx) = standardise(log10(powXorth(:,idx)), 2);
-    zY(:,idx)     = standardise(log10(powY(:,idx)), 2);
+    zXorth(target,idx) = standardise(log10(powXorth(target,idx)), 2);
+    zY(target,idx)     = standardise(log10(powY(target,idx)), 2);
   end
   
   c2 = mean(zXorth.*zY, 2);
