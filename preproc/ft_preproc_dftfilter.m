@@ -86,6 +86,7 @@ function [filt] = ft_preproc_dftfilter(dat, Fs, Fl, varargin)
 % Copyright (C) 2003, Pascal Fries
 % Copyright (C) 2003-2015, Robert Oostenveld
 % Copyright (C) 2016, Sabine Leske
+% Copyright (C) 2021, Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
