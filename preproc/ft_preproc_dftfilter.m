@@ -33,7 +33,7 @@ function [filt] = ft_preproc_dftfilter(dat, Fs, Fl, varargin)
 % If dftreplace = 'neighbour' the powerline component is reduced via
 % spectrum interpolation (Leske & Dalal, 2019, NeuroImage 189,
 % doi: 10.1016/j.neuroimage.2019.01.026), estimating the required signal
-% components by fitting sines and cosines. The algorhmic steps are
+% components by fitting sines and cosines. The algorithmic steps are
 % described in more detail below. % Preferably the data should have a length 
 % that is an integer multiple of the oscillation period of the line noise
 % (i.e. 20ms for 50Hz noise). If the data is of different length, then only
