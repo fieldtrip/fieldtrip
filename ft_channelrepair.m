@@ -31,9 +31,11 @@ function [data] = ft_channelrepair(cfg, data)
 % and determining the neighbours is non-trivial. In that case you must use
 % a complete sensor definition from another dataset or from a template.
 %
-% The EEG, MEG or NIRS sensor positions can be present asa field in the 
-% data or can be specified as. Either one is required for the following
-% methods: 'weighted', 'spline', and 'slap'.
+% The EEG, MEG or NIRS sensor positions can be present as a field in the 
+% data (data.grad/data.elec/data.opto, depending on the type of data), 
+% or can be specified as cfg option. Either one is required for the following
+% methods: 'weighted', 'spline', and 'slap'. Depending on the type of
+% data this should be one of the following
 %   cfg.elec = structure with electrode positions or filename, see FT_READ_SENS
 %   cfg.grad = structure with gradiometer definition or filename, see FT_READ_SENS
 %   cfg.opto = structure with optode definition, see FT_READ_SENS
