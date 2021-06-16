@@ -149,21 +149,30 @@ if needsens
     sens = ft_fetch_sens(cfg, data);
   end
   
-  % determine the type of data
-  iseeg  = ft_senstype(sens, 'eeg');
-  ismeg  = ft_senstype(sens, 'meg');
-  isnirs = ft_senstype(sens, 'opto');
-  
   % check if any of the channel positions contains NaNs; this happens when
   % component data are backprojected to the sensor level
   if any(isnan(sens.chanpos(:)))
     ft_error('The channel positions contain NaNs; this prohibits correct behavior of the function. Please replace the input channel definition with one that contains valid channel positions');
   end
   
-  if ismeg && ~any(strcmp(ft_senstype(sens), {'ctf151', 'ctf275', 'bti148', 'bti248', 'babysquid74'}))
-    % MEG systems with only magnetometers or axial gradiometers are easy, planar systems are not
-    ft_warning('be careful when using "%s" - mixing of sensor types (e.g. magnetometers and gradiometers) can lead to wrong data. Check your neighbour-structure thoroughly', ft_senstype(sens));
-  end
+  % determine the type of data
+  iseeg  = ft_senstype(sens, 'eeg');
+  ismeg  = ft_senstype(sens, 'meg');
+  isnirs = ft_senstype(sens, 'opto');
+  
+  sensortype = ft_senstype(sens);
+else
+  % some things need to be guessed from the data
+  iseeg  = ft_senstype(data, 'eeg');
+  ismeg  = ft_senstype(data, 'meg');
+  isnirs = ft_senstype(data, 'opto');
+  
+  sensortype = ft_senstype(data);
+end
+
+if ismeg && ~any(strcmp(sensortype, {'ctf151', 'ctf275', 'bti148', 'bti248', 'babysquid74'}))
+  % MEG systems with only magnetometers or axial gradiometers are easy, planar systems are not
+  ft_warning('be careful when using "%s" - mixing of sensor types (e.g. magnetometers and gradiometers) can lead to wrong data. Check your neighbour-structure thoroughly', ft_senstype(sens));
 end
 
 if ~isempty(cfg.missingchannel) && strcmp(cfg.method, 'weighted')
