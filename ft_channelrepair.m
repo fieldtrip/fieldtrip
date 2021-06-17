@@ -114,6 +114,8 @@ if ismember(cfg.method, {'weighted', 'average'})
   cfg = ft_checkconfig(cfg, 'required', {'neighbours'});
 end
 
+cfg = ft_checkconfig(cfg, 'forbidden', 'layout');
+
 % store the original datatype
 dtype = ft_datatype(data);
 

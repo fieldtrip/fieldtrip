@@ -33,10 +33,12 @@ end
 cfg.method = 'average';
 newdata = ft_channelrepair(cfg, removefields(data, {'elec', 'grad'}));
 
-% rumour has it, that this should work
-cfg.method = 'weighted';
-cfg.layout = '4D248_helmet.mat';
-newdata   = ft_channelrepair(cfg, removefields(data, {'elec', 'grad'}));
+% rumour has it, that this should work: it indeed did at some point, but
+% shouldn't work. This has been changed by an explicit call to
+% ft_checkconfig
+% cfg.method = 'weighted';
+% cfg.layout = '4D248_helmet.mat';
+% newdata   = ft_channelrepair(cfg, removefields(data, {'elec', 'grad'}));
 
 % % do the EEG processing: this does not work, because there's no example EEG data
 % with sensor positions 
