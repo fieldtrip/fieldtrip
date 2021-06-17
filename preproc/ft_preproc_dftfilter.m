@@ -49,12 +49,12 @@ function [filt] = ft_preproc_dftfilter(dat, Fs, Fl, varargin)
 % uses an FFT and iFFT for the estimation of the spectral components. The signal is:
 % I)   transformed into the frequency domain via a fast Fourier
 %       transform (FFT),
-% II)  the line noise component (e.g. 50Hz, Flwidth = 1 (±1Hz): 49-51Hz) is
+% II)  the line noise component (e.g. 50Hz, dftbandwidth = 1 (±1Hz): 49-51Hz) is
 %       interpolated in the amplitude spectrum by replacing the amplitude
 %       of this frequency bin by the mean of the adjacent frequency bins
 %       ('neighbours', e.g. 49Hz and 51Hz).
-%       Neighwidth defines frequencies considered for the mean (e.g.
-%       Neighwidth = 2 (±2Hz) implies 47-49 Hz and 51-53 Hz).
+%       dftneighbourwidth defines frequencies considered for the mean (e.g.
+%       dftneighbourwidth = 2 (±2Hz) implies 47-49 Hz and 51-53 Hz).
 %       The original phase information of the noise frequency bin is
 %       retained.
 % III) the signal is transformed back into the time domain via inverse FFT
@@ -106,9 +106,9 @@ function [filt] = ft_preproc_dftfilter(dat, Fs, Fl, varargin)
 % $Id$
 
 % defaults
-Flreplace  = ft_getopt(varargin, 'dftreplace',        'zero');
-Flwidth    = ft_getopt(varargin, 'dftbandwidth',      [1 2 3]); % this is tricky, because it assumes to coincide with default [50 100 150]
-Neighwidth = ft_getopt(varargin, 'dftneighbourwidth', [2 2 2]);
+dftreplace        = ft_getopt(varargin, 'dftreplace',        'zero');
+dftbandwidth      = ft_getopt(varargin, 'dftbandwidth',      [1 2 3]); % this is tricky, because it assumes to coincide with default [50 100 150]
+dftneighbourwidth = ft_getopt(varargin, 'dftneighbourwidth', [2 2 2]);
 
 
 % determine the size of the data
@@ -133,16 +133,16 @@ n    = round(floor(nsamples .* (Fl./Fs + 100*eps)) .* Fs./Fl);
 
 % check whether the filtering can be done in a single step, this can be
 % done for the zero method if all n==n(1)
-if (~strcmp(Flreplace, 'zero') && numel(n)>1) || ~all(n==n(1))
+if (~strcmp(dftreplace, 'zero') && numel(n)>1) || ~all(n==n(1))
   % the different frequencies require different numbers of samples, apply the filters sequentially
   filt = dat;
   for i=1:numel(Fl)
-    filt = ft_preproc_dftfilter(filt, Fs, Fl(i), 'dftreplace', Flreplace, 'dftbandwidth', Flwidth(i), 'dftneighbourwidth', Neighwidth(i)); % enumerate all options 
+    filt = ft_preproc_dftfilter(filt, Fs, Fl(i), 'dftreplace', dftreplace, 'dftbandwidth', dftbandwidth(i), 'dftneighbourwidth', dftneighbourwidth(i)); % enumerate all options 
   end
   return
 end
 
-if strcmp(Flreplace,'zero')
+if strcmp(dftreplace,'zero')
   % Method A): DFT filter  
   sel = 1:n(1);
   
@@ -152,68 +152,69 @@ if strcmp(Flreplace,'zero')
   
   % fit a sine and cosine to each channel in the data and subtract them
   time = (0:nsamples-1)/Fs;
-  tmp  = exp(1i*2*pi*Fl*time);                   % complex sin and cos
-  ampl = 2*dat(:,sel)/tmp(:,sel);                % estimated amplitude of complex sin and cos on integer number of cycles
-  est  = ampl*tmp;                               % estimated signal at this frequency
-  filt = dat - est;                              % subtract estimated signal
+  tmp  = exp(1i*2*pi*Fl*time);       % complex sin and cos
+  ampl = 2*dat(:, sel)/tmp(:, sel);  % estimated amplitude of complex sin and cos on integer number of cycles
+  est  = ampl*tmp;                   % estimated signal at this frequency
+  filt = dat - est;                  % subtract estimated signal
   filt = real(filt);
   
   % add the mean back to the filtered data
   filt = bsxfun(@plus, filt, meandat);
   
-elseif strcmp(Flreplace,'neighbour')
-  Flwidth    = Flwidth(1:numel(Fl)); % this is a check due to the clunky defaults
-  Neighwidth = Neighwidth(1:numel(Fl));
+elseif strcmp(dftreplace,'neighbour')
+  dftbandwidth      = dftbandwidth(1:numel(Fl)); % this is a check due to the clunky defaults
+  dftneighbourwidth = dftneighbourwidth(1:numel(Fl));
 
   % Method B1): DFT filter based estimation of stopband phase and DFT based
   % estimation of outside band power
   sel = 1:n;
   
   % temporarily remove the mean to avoid leakage
-  meandat = nanmean(dat(:,sel),2);
+  meandat = nanmean(dat(:, sel),2);
   dat = bsxfun(@minus, dat, meandat);
   
   % fit a sine and cosine to the requested set of frequencies
   R    = Fs/n; % Rayleigh frequency
   time = (0:nsamples-1)/Fs;
   
-  nbin = round((Neighwidth+Flwidth)/R); % number of bins to be estimated at each side of the centre frequency
+  nbin = round((dftneighbourwidth+dftbandwidth)/R); % number of bins to be estimated at each side of the centre frequency
   freqs = (-nbin:nbin)*R + Fl;
   
-  tmp  = exp(2*1i*pi*freqs(:)*time);                   % complex sin and cos
-  beta = 2*dat(:,sel)/tmp(:,sel);                % estimated amplitude of complex sin and cos on integer number of cycles
+  tmp  = exp(2*1i*pi*freqs(:)*time); % complex sin and cos
+  beta = 2*dat(:, sel)/tmp(:, sel);  % estimated amplitude of complex sin and cos on integer number of cycles
   
-  stopband = nearest(freqs - Fl, Flwidth.*[-1 1]);
+  % boolean variable that indicates which frequency bins are to be replaced
+  stopband = nearest(freqs - Fl, dftbandwidth.*[-1 1]);
   stopbool = false(1,numel(freqs));
   stopbool(stopband(1):stopband(2)) = true;
   
-  stopsignal = real(beta(:,stopbool)*tmp(stopbool,:));
+  % bandstop signal
+  stopsignal = real(beta(:, stopbool)*tmp(stopbool, :));
   
   % retain the phase information
-  beta(:,stopbool) = beta(:,stopbool)./abs(beta(:,stopbool));
+  beta(:, stopbool) = beta(:, stopbool)./abs(beta(:, stopbool));
   
   % estimate the amplitude from the flanking bands
-  amp = mean(abs(beta(:,~stopbool)),2);
-  beta(:,stopbool) = beta(:,stopbool).*amp(:,ones(1,sum(stopbool)));
+  amp = mean(abs(beta(:, ~stopbool)),2);
+  beta(:, stopbool) = beta(:, stopbool).*amp(:, ones(1, sum(stopbool)));
   
-  replacesignal = real(beta(:,stopbool)*tmp(stopbool,:));
+  % replacement signal
+  replacesignal = real(beta(:, stopbool)*tmp(stopbool, :));
   
   filt = dat - stopsignal + replacesignal;
   
   % add the mean back to the filtered data
   filt = bsxfun(@plus, filt, meandat);
      
-elseif strcmp(Flreplace,'neighbour_fft')
+elseif strcmp(dftreplace,'neighbour_fft')
   % Method B): Spectrum Interpolation
-  
-  
-  Flwidth    = Flwidth(:);
-  Neighwidth = Neighwidth(:);
-  if numel(Fl)<numel(Flwidth)
-    Flwidth = Flwidth(1:numel(Fl));
+  dftbandwidth      = dftbandwidth(:);
+  dftneighbourwidth = dftneighbourwidth(:);
+  if numel(Fl)<numel(dftbandwidth)
+    dftbandwidth = dftbandwidth(1:numel(Fl));
   end
-  if numel(Fl)<numel(Neighwidth)
-    Neighwidth = Neighwidth(1:numel(Fl));
+  if numel(Fl)<numel(dftneighbourwidth)
+    dftneighbourwidth = dftneighbourwidth(1:numel(Fl));
   end
   
   % error message if periodicity of the interference frequency doesn't match the DFT length
@@ -225,34 +226,34 @@ elseif strcmp(Flreplace,'neighbour_fft')
     nfft = nsamples;
   end
   
-  if (length(Fl) ~= length(Flwidth)) || (length(Fl) ~= length(Neighwidth))
+  if (length(Fl) ~= length(dftbandwidth)) || (length(Fl) ~= length(dftneighbourwidth))
     ft_error('The number of frequencies to interpolate (cfg.dftfreq) should be the same as the number of bandwidths (cfg.dftbandwidth) and bandwidths of neighbours (cfg.neighbourwidth)');
   end
   
   % frequencies to interpolate
-  f2int = [Fl(:)-Flwidth(:) Fl(:)+Flwidth(:)];
+  f2int = [Fl(:)-dftbandwidth(:) Fl(:)+dftbandwidth(:)];
   
   % frequencies used for interpolation
-  f4int = [f2int(:,1)-Neighwidth(:) f2int f2int(:,2)+Neighwidth(:)];
+  f4int = [f2int(:,1)-dftneighbourwidth(:) f2int f2int(:,2)+dftneighbourwidth(:)];
   
-  data_fft = fft(dat,nfft,2); % calculate fft to obtain spectrum that will be interpolated
-  frq = Fs*linspace(0,1,nfft+1);
+  data_fft = fft(dat, nfft, 2); % calculate fft to obtain spectrum that will be interpolated
+  frq      = Fs*linspace(0, 1, nfft+1);
   
   % interpolate 50Hz (and harmonics) amplitude in spectrum
   for i = 1:length(Fl)
     smpl2int = nearest(frq,f2int(i,1)):nearest(frq,f2int(i,2));                                                   % samples of frequencies that will be interpolated
-    smpl4int = [(nearest(frq,f4int(i,1)):nearest(frq,f4int(i,2))-1),(nearest(frq,f4int(i,3))+1:nearest(frq,f4int(i,4)))]; % samples of neighbouring frequencies used to calculate the mean
+    smpl4int = [(nearest(frq,f4int(i,1)):nearest(frq,f4int(i,2))-1), (nearest(frq,f4int(i,3))+1:nearest(frq,f4int(i,4)))]; % samples of neighbouring frequencies used to calculate the mean
     
     % new amplitude is calculated as the mean of the neighbouring frequencies
     mns4int= bsxfun(@times, ones(size(data_fft(:,smpl2int))), mean(abs(data_fft(:,smpl4int)),2));
     
     % Eulers formula: replace noise components with new mean amplitude combined with phase, that is retained from the original data
-    data_fft(:,smpl2int) = bsxfun(@times, exp(bsxfun(@times,angle(data_fft(:,smpl2int)),1i)), mns4int);
+    data_fft(:, smpl2int) = bsxfun(@times, exp(bsxfun(@times,angle(data_fft(:, smpl2int)),1i)), mns4int);
   end
   
   % complex fourier coefficients are transformed back into time domin, fourier coefficients are treated as conjugate 'symmetric'
   % to ensure a real valued signal after iFFT
   filt = ifft(data_fft,[],2,'symmetric');
-  filt = filt(:,1:nsamples);
+  filt = filt(:, 1:nsamples);
 end
 
