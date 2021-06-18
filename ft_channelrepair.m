@@ -144,10 +144,20 @@ end
 
 if needsens
   % this requires the spatial information of the channels
+  
   try
     % prefer sens from cfg over sens from data
     sens = ft_fetch_sens(cfg);
   catch
+    if isfield(data, 'grad') && isfield(data, 'elec')
+      % this is a case where ft_fetch_sens needs extra instructions,
+      % otherwise it fails
+      if ft_senstype(data, 'meg')
+        cfg.senstype = 'meg';
+      elseif ft_senstype(data, 'eeg')
+        cfg.senstype = 'eeg';
+      end
+    end
     sens = ft_fetch_sens(cfg, data);
   end
   
@@ -224,6 +234,7 @@ switch cfg.method
         b      = sort(b); % undo automatical sorting by setdiff
         list(~ismember(find(list), b)) = [];
         
+        distance = 1; % needed here, in case isempty(goodsensindx)
         if strcmp(cfg.method, 'weighted')
           % get corresponding ids for sens structure
           [a, b] = match_str(sens.label, data.label(list));
@@ -237,8 +248,6 @@ switch cfg.method
             fprintf('\tusing neighbour %s\n', sens.label{goodsensindx});
             distance = sqrt(sum((sens.chanpos(goodsensindx, :) - repmat(sens.chanpos(badsensindx, :), numel(goodsensindx), 1)).^2, 2));
           end
-        else
-          distance = 1;
         end
         repair(k, list) = (1./distance);
         repair(k, list) = repair(k, list) ./ sum(repair(k, list));
@@ -293,6 +302,7 @@ switch cfg.method
         b      = sort(b); % undo automatical sorting by setdiff
         list(~ismember(find(list), b)) = [];
         
+        distance = 1; % needed here, in case isempty(goodsensindx)
         if strcmp(cfg.method, 'weighted')
           % get corresponding ids for sens structure
           [a, b] = match_str(sens.label, interp.label(list));
@@ -306,8 +316,6 @@ switch cfg.method
             fprintf('\tusing neighbour %s\n', sens.label{goodsensindx});
             distance = sqrt(sum((sens.chanpos(goodsensindx, :) - repmat(sens.chanpos(badsensindx, :), numel(goodsensindx), 1)).^2, 2));
           end
-        else 
-          distance = 1;
         end
         repair(k, list) = (1./distance);
         repair(k, list) = repair(k, list) ./ sum(repair(k, list));  
