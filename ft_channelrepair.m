@@ -2,7 +2,7 @@ function [data] = ft_channelrepair(cfg, data)
 
 % FT_CHANNELREPAIR repairs bad or missing channels in the data by replacing
 % them with the plain average of of all neighbours, by a weighted average
-% of all neighbours, by an interpolation based on a surface Laplacian, or 
+% of all neighbours, by an interpolation based on a surface Laplacian, or
 % by spherical spline interpolating (see Perrin et al., 1989).
 %
 % Use as
@@ -10,35 +10,35 @@ function [data] = ft_channelrepair(cfg, data)
 % where the input data corresponds to the output from FT_PREPROCESSING.
 %
 % The configuration should contain
-%   cfg.method         = 'weighted', 'average', 'spline', 'slap' or 'nan'
-%                        (default = 'weighted')
+%   cfg.method         = 'weighted', 'average', 'spline', 'slap' or 'nan' (default = 'weighted')
 %   cfg.badchannel     = cell-array, see FT_CHANNELSELECTION for details
 %   cfg.missingchannel = cell-array, see FT_CHANNELSELECTION for details
-%   cfg.neighbours     = neighbourhood structure, see FT_PREPARE_NEIGHBOURS 
-%                        for details
-%   cfg.trials         = 'all' or a selection given as a 1xN vector 
-%                        (default = 'all')
-%   cfg.lambda         = regularisation parameter (default = 1e-5, for 
-%                        method 'spline' and 'slap')
-%   cfg.order          = order of the polynomial interpolation (default = 4
-%                        for methods 'spline' and 'slap')
+%   cfg.neighbours     = neighbourhood structure, see FT_PREPARE_NEIGHBOURS for details
+%   cfg.trials         = 'all' or a selection given as a 1xN vector (default = 'all')
+%   cfg.lambda         = regularisation parameter (default = 1e-5, for method 'spline' and 'slap')
+%   cfg.order          = order of the polynomial interpolation (default = 4 for methods 'spline' and 'slap')
+%   cfg.senstype       = string, which type of data to repair. Can be 'meg', 'eeg' or 'nirs' (default is automatic)
 %
-% The weighted neighbour approach cannot be used reliably to repair multiple 
+% The weighted neighbour approach cannot be used reliably to repair multiple
 % bad channels that lie next to each other.
 %
-% If you want to reconstruct channels that are absent in your data, those 
-% channels may also be missing from the sensor definition (grad, elec or opto) 
+% If you want to reconstruct channels that are absent in your data, those
+% channels may also be missing from the sensor definition (grad, elec or opto)
 % and determining the neighbours is non-trivial. In that case you must use
 % a complete sensor definition from another dataset or from a template.
 %
-% The EEG, MEG or NIRS sensor positions can be present as a field in the 
-% data (data.grad/data.elec/data.opto, depending on the type of data), 
+% The EEG, MEG or NIRS sensor positions can be present as a field in the
+% data (data.grad/data.elec/data.opto, depending on the type of data),
 % or can be specified as cfg option. Either one is required for the following
 % methods: 'weighted', 'spline', and 'slap'. Depending on the type of
 % data this should be one of the following
 %   cfg.elec = structure with electrode positions or filename, see FT_READ_SENS
 %   cfg.grad = structure with gradiometer definition or filename, see FT_READ_SENS
 %   cfg.opto = structure with optode definition, see FT_READ_SENS
+%
+% This function will only repair one type of channels (MEG, EEG or NIRS) at
+% a time. If you want to repair multiple types of channels, you should call
+% it multiple times and use FT_SELECTDATA and FT_APPENDDATA.
 %
 % This function only interpolates data over space, not over time. If you want to
 % interpolate using temporal information, e.g. using a segment of data before and
@@ -104,6 +104,7 @@ cfg = ft_checkconfig(cfg, 'renamed',    {'optofile', 'opto'});
 % set the default configuration
 cfg.badchannel     = ft_getopt(cfg, 'badchannel',     {});
 cfg.missingchannel = ft_getopt(cfg, 'missingchannel', {});
+cfg.senstype       = ft_getopt(cfg, 'senstype',       []); % default is handled below
 cfg.trials         = ft_getopt(cfg, 'trials',         'all', 1);
 cfg.method         = ft_getopt(cfg, 'method',         'weighted');
 cfg.lambda         = ft_getopt(cfg, 'lambda',         []); % subfunction will handle this
@@ -143,23 +144,28 @@ if ismember(cfg.method, {'nan', 'average'})
 end
 
 if needsens
-  % this requires the spatial information of the channels
   
-  try
-    % prefer sens from cfg over sens from data
-    sens = ft_fetch_sens(cfg);
-  catch
-    if isfield(data, 'grad') && isfield(data, 'elec')
-      % this is a case where ft_fetch_sens needs extra instructions,
-      % otherwise it fails
-      if ft_senstype(data, 'meg')
-        cfg.senstype = 'meg';
-      elseif ft_senstype(data, 'eeg')
-        cfg.senstype = 'eeg';
-      end
+  % sometimes the data can have both gradiometers, electrodes and/or optodes
+  % but this function can only deal with one type of data at a time
+  if isempty(cfg.senstype)
+    % look at the bad channels, then at the data
+    if all(ft_chantype(cat(1, cfg.missingchannel(:), cfg.badchannel(:)), 'meg')) || ft_senstype(data, 'meg')
+      ft_notice('assuming that the data is MEG, use cfg.senstype to overrule this');
+      cfg.senstype = 'meg';
+    elseif all(ft_chantype(cat(1, cfg.missingchannel(:), cfg.badchannel(:)), 'eeg')) || ft_senstype(data, 'eeg')
+      ft_notice('assuming that the data is EEG, use cfg.senstype to overrule this');
+      cfg.senstype = 'eeg';
+    elseif all(ft_chantype(cat(1, cfg.missingchannel(:), cfg.badchannel(:)), 'nirs')) || ft_senstype(data, 'nirs')
+      ft_notice('assuming that the data is NIRS, use cfg.senstype to overrule this');
+      cfg.senstype = 'nirs';
+    else
+      % let FT_FETCH_SENS decide which sens to return
     end
-    sens = ft_fetch_sens(cfg, data);
   end
+  
+  % the 3D spatial information of the channels is needed
+  % this will prefer sens from cfg over sens from data
+  sens = ft_fetch_sens(cfg, data);
   
   % check if any of the channel positions contains NaNs; this happens when
   % component data are backprojected to the sensor level
@@ -167,18 +173,20 @@ if needsens
     ft_error('The channel positions contain NaNs; this prohibits correct behavior of the function. Please replace the input channel definition with one that contains valid channel positions');
   end
   
-  % determine the type of data
+  % determine the global type of the data
   iseeg  = ft_senstype(sens, 'eeg');
   ismeg  = ft_senstype(sens, 'meg');
   isnirs = ft_senstype(sens, 'opto');
   
+  % determine the detailled type, e.g. ctf151 or neuromag122
   sensortype = ft_senstype(sens);
+  
 else
-  % some things need to be guessed from the data
+  % determine the global type of the data
   iseeg  = ft_senstype(data, 'eeg');
   ismeg  = ft_senstype(data, 'meg');
   isnirs = ft_senstype(data, 'opto');
-  
+  % determine the detailled type, e.g. ctf151 or neuromag122
   sensortype = ft_senstype(data);
 end
 
@@ -318,7 +326,7 @@ switch cfg.method
           end
         end
         repair(k, list) = (1./distance);
-        repair(k, list) = repair(k, list) ./ sum(repair(k, list));  
+        repair(k, list) = repair(k, list) ./ sum(repair(k, list));
       end
       
       % use sparse matrix to speed up computations
