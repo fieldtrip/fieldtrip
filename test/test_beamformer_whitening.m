@@ -1,6 +1,6 @@
 function test_beamformer_whitening
 
-% WALLTIME 01:30:00
+% WALLTIME 02:00:00
 % MEM 8gb
 % DEPENDENCY ft_denoise_prewhiten ft_sourceanalysis
 
