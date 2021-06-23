@@ -136,7 +136,6 @@ cfg.covariance = 'yes';
 tlck_white = ft_timelockanalysis(cfg, data_white);
 
 [u,s,v] = svd(tlck_white.cov, 'econ');
-keyboard
 
 cfg             = [];
 cfg.headmodel   = headmodel;
