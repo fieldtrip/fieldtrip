@@ -1,27 +1,29 @@
-function test_benchmark_ft_rectify
+function tests = test_ft_preproc_rectify
 
 % MEM 1gb
 % WALLTIME 00:10:00
-% DEPENDENCY
+% DEPENDENCY ft_preproc_rectify
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% these are the data specific parameters
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+if nargout
+  % assume that this is called by RUNTESTS
+  tests = functiontests(localfunctions);
+else
+  % assume that this is called from the command line
+  fn = localfunctions;
+  for i=1:numel(fn)
+    feval(fn{i});
+  end
+end
 
-m_array = [0 1 8 64 128];       % number of channels
-n_array = [0 10 100 500 1000];  % number of samples
-niter   = 10;                   % number of iterations with the same parameter/variable set
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function testPositive(testCase)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% these are the function specific parameters
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+nchan   = 8;
+nsample = 1000;
+dat     = randn(nchan, nsample);
 
-funname = 'ft_preproc_rectify';
+result = ft_preproc_rectify(dat);
 
-clear argname 
-argname = {};
-
-clear argval 
-argval = {};
-
-benchmark(funname, argname, argval, m_array, n_array, niter, 'feedback', 'table', 'tableheader', true, 'tabledata', true)
+assert(all(result(:)>=0));
+assert(isequal(size(dat), size(result)));

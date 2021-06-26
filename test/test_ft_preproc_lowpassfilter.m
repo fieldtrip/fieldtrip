@@ -1,53 +1,136 @@
-function test_benchmark_ft_lowpassfilter
+function tests = test_ft_preproc_lowpassfilter
 
 % MEM 1gb
 % WALLTIME 00:10:00
-% DEPENDENCY
+% DEPENDENCY ft_preproc_lowpassfilter
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% these are the data specific parameters
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+if nargout
+  % assume that this is called by RUNTESTS
+  tests = functiontests(localfunctions);
+else
+  % assume that this is called from the command line
+  fn = localfunctions;
+  for i=1:numel(fn)
+    feval(fn{i});
+  end
+end
 
-m_array = [0 1 8 64 128];       % number of channels
-n_array = [0 10 100 500 1000];  % number of samples
-niter   = 10;                   % number of iterations with the same parameter/variable set
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function testOptions(testCase)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% these are the function specific parameters
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+nchan   = 8;
+nsample = 1000;
 
-funname = 'ft_preproc_lowpassfilter';
+dat = randn(nchan, nsample) + 1;
+Fs  = 1000;
+Flp = 35;
 
-clear argname 
-argname{1} = 'Fsample';
-argname{2} = 'Fl';
-argname{3} = 'order';
-argname{4} = 'type';
-argname{5} = 'dir';
+instabilityfix  = [];
+df              = []; 
+wintype         = []; 
+dev             = []; 
+plotfiltresp    = [];
+usefftfilt      = [];
 
-clear argval 
-argval{1} = 1000;
-argval{2} = 30;
-argval{3} = nan; % see below
-argval{4} = nan; % see below
-argval{5} = 'onepass';
+result = {};
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, [], 'brickwall', [], instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt); % this does not use order and dir
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 1, 'but'      , 'onepass'                  , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 1, 'but'      , 'onepass-reverse'          , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 1, 'but'      , 'twopass'                  , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 1, 'but'      , 'twopass-reverse'          , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 1, 'but'      , 'twopass-average'          , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 2, 'but'      , 'onepass'                  , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 2, 'but'      , 'onepass-reverse'          , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 2, 'but'      , 'twopass'                  , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 2, 'but'      , 'twopass-reverse'          , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 2, 'but'      , 'twopass-average'          , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 2, 'firws'    , 'onepass'                  , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 2, 'firws'    , 'onepass-reverse'          , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 2, 'firws'    , 'onepass-zerophase'        , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 2, 'firws'    , 'onepass-reverse-zerophase', instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 2, 'firws'    , 'onepass-minphase'         , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 2, 'firws'    , 'twopass'                  , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 2, 'firws'    , 'twopass-reverse'          , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 2, 'firws'    , 'twopass-average'          , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 2, 'fir'      , 'onepass'                  , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 2, 'fir'      , 'onepass-reverse'          , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 2, 'fir'      , 'onepass-zerophase'        , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 2, 'fir'      , 'onepass-reverse-zerophase', instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 2, 'fir'      , 'onepass-minphase'         , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 2, 'fir'      , 'twopass'                  , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 2, 'fir'      , 'twopass-reverse'          , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 2, 'fir'      , 'twopass-average'          , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 2, 'firls'    , 'onepass'                  , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 2, 'firls'    , 'onepass-reverse'          , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 2, 'firls'    , 'onepass-zerophase'        , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 2, 'firls'    , 'onepass-reverse-zerophase', instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 2, 'firls'    , 'onepass-minphase'         , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 2, 'firls'    , 'twopass'                  , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 2, 'firls'    , 'twopass-reverse'          , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 2, 'firls'    , 'twopass-average'          , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 4, 'but'      , 'onepass'                  , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 4, 'but'      , 'onepass-reverse'          , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 4, 'but'      , 'twopass'                  , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 4, 'but'      , 'twopass-reverse'          , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 4, 'but'      , 'twopass-average'          , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 4, 'firws'    , 'onepass'                  , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 4, 'firws'    , 'onepass-reverse'          , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 4, 'firws'    , 'onepass-zerophase'        , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 4, 'firws'    , 'onepass-reverse-zerophase', instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 4, 'firws'    , 'onepass-minphase'         , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 4, 'firws'    , 'twopass'                  , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 4, 'firws'    , 'twopass-reverse'          , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 4, 'firws'    , 'twopass-average'          , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 4, 'fir'      , 'onepass'                  , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 4, 'fir'      , 'onepass-reverse'          , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 4, 'fir'      , 'onepass-zerophase'        , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 4, 'fir'      , 'onepass-reverse-zerophase', instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 4, 'fir'      , 'onepass-minphase'         , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 4, 'fir'      , 'twopass'                  , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 4, 'fir'      , 'twopass-reverse'          , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 4, 'fir'      , 'twopass-average'          , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 4, 'firls'    , 'onepass'                  , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 4, 'firls'    , 'onepass-reverse'          , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 4, 'firls'    , 'onepass-zerophase'        , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 4, 'firls'    , 'onepass-reverse-zerophase', instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 4, 'firls'    , 'onepass-minphase'         , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 4, 'firls'    , 'twopass'                  , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 4, 'firls'    , 'twopass-reverse'          , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 4, 'firls'    , 'twopass-average'          , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 8, 'but'      , 'onepass'                  , 'split', [], [], [], [], []); % this one is instable
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 8, 'but'      , 'onepass-reverse'          , 'split', [], [], [], [], []);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 8, 'but'      , 'twopass'                  , 'split', [], [], [], [], []);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 8, 'but'      , 'twopass-reverse'          , 'split', [], [], [], [], []);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 8, 'but'      , 'twopass-average'          , 'split', [], [], [], [], []);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 8, 'firws'    , 'onepass'                  , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 8, 'firws'    , 'onepass-reverse'          , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 8, 'firws'    , 'onepass-zerophase'        , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 8, 'firws'    , 'onepass-reverse-zerophase', instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 8, 'firws'    , 'onepass-minphase'         , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 8, 'firws'    , 'twopass'                  , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 8, 'firws'    , 'twopass-reverse'          , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 8, 'firws'    , 'twopass-average'          , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 8, 'fir'      , 'onepass'                  , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 8, 'fir'      , 'onepass-reverse'          , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 8, 'fir'      , 'onepass-zerophase'        , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 8, 'fir'      , 'onepass-reverse-zerophase', instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 8, 'fir'      , 'onepass-minphase'         , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 8, 'fir'      , 'twopass'                  , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 8, 'fir'      , 'twopass-reverse'          , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 8, 'fir'      , 'twopass-average'          , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 8, 'firls'    , 'onepass'                  , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 8, 'firls'    , 'onepass-reverse'          , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 8, 'firls'    , 'onepass-zerophase'        , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 8, 'firls'    , 'onepass-reverse-zerophase', instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 8, 'firls'    , 'onepass-minphase'         , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 8, 'firls'    , 'twopass'                  , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 8, 'firls'    , 'twopass-reverse'          , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+result{end+1} = ft_preproc_lowpassfilter(dat, Fs, Flp, 8, 'firls'    , 'twopass-average'          , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
 
-% use butterworth with varying filter order
-argval{4} = 'but';
-argval{3} = 2;
-benchmark(funname, argname, argval, m_array, n_array, niter, 'feedback', 'table', 'tableheader', true, 'tabledata', true)
-argval{3} = 4;
-benchmark(funname, argname, argval, m_array, n_array, niter, 'feedback', 'table', 'tableheader', false, 'tabledata', true)
-argval{3} = 8;
-benchmark(funname, argname, argval, m_array, n_array, niter, 'feedback', 'table', 'tableheader', false, 'tabledata', true)
-
-% use fir with varying filter order
-argval{4} = 'fir';
-argval{3} = 16;
-benchmark(funname, argname, argval, m_array, n_array, niter, 'feedback', 'table', 'tableheader', false, 'tabledata', true)
-argval{3} = 32;
-benchmark(funname, argname, argval, m_array, n_array, niter, 'feedback', 'table', 'tableheader', false, 'tabledata', true)
-argval{3} = 64;
-benchmark(funname, argname, argval, m_array, n_array, niter, 'feedback', 'table', 'tableheader', false, 'tabledata', true)
-
-
+% all iterations were done with (slightly) different options, hence the results should not be equal
+for i=1:numel(result)
+  for j=(i+1):numel(result)
+    assert(~isequal(result{i}, result{j}), 'the results %d and %d should not be equal', i, j);
+  end
+end

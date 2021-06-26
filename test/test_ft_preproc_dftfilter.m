@@ -4,6 +4,21 @@ function test_ft_preproc_dftfilter
 % MEM 2gb
 % DEPENDENCY ft_preproc_dftfilter
 
+if nargout
+  % assume that this is called by RUNTESTS
+  tests = functiontests(localfunctions);
+else
+  % assume that this is called from the command line
+  fn = localfunctions;
+  for i=1:numel(fn)
+    feval(fn{i});
+  end
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function testIssue1770(testCase)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 % this is an issue related to numerical precision which is too strictly
 % checked in ft_preproc_dftfilter (with spectral interpolation)
 
@@ -21,11 +36,11 @@ data.fsample = fs;
 lineFreq = 50;
 
 cfg              = [];
-cfg.dftfilter    = 'yes'; %apply line noise filter with spectrum interpolation
-cfg.dftfreq      = [lineFreq lineFreq*2]; %line noise and harmonic
-cfg.dftreplace   = 'neighbour'; %spectral interpolation
-cfg.dftbandwidth = [1 2]; %width of window to be interpolated
-cfg.dftneighbourwidth = [2 2]; %width of window from which to interpolate
+cfg.dftfilter    = 'yes'; % apply line noise filter with spectrum interpolation
+cfg.dftfreq      = [lineFreq lineFreq*2]; % line noise and harmonic
+cfg.dftreplace   = 'neighbour'; % spectral interpolation
+cfg.dftbandwidth = [1 2]; % width of window to be interpolated
+cfg.dftneighbourwidth = [2 2]; % width of window from which to interpolate
 datafilt1 = ft_preprocessing(cfg, data);
 
 cfg.dftreplace   = 'neighbour_fft';
@@ -63,18 +78,18 @@ tim = (0:2000)./1000;
 dat = randn(1, 2001) + (1+hanning(2001))'.*sin(2.*pi.*(tim).*50);
 filt = ft_preproc_dftfilter(dat, 1000, 50, 'dftreplace', 'neighbour');
 try
- filt2 = ft_preproc_dftfilter(dat, 1000, 50, 'dftreplace', 'neighbour_fft');
- ft_error('if the code ends up here, then something suddenly started working');
+  filt2 = ft_preproc_dftfilter(dat, 1000, 50, 'dftreplace', 'neighbour_fft');
+  ft_error('if the code ends up here, then something suddenly started working');
 catch
- % this is supposed to happen
+  % this is supposed to happen
 end
-  
+
 figure;plot(tim, dat-filt); hold on;plot(tim, (1+hanning(2001))'.*sin(2.*pi.*(tim).*50));
 
 
 dat = randn(3, 2001) + [(1+hanning(2001))'.*sin(2.*pi.*(tim).*53) ; (1+hanning(2001))'.*sin(2.*pi.*(tim).*79 - 0.025) ; (1+hanning(2001))'.*sin(2.*pi.*(tim).*127 + 0.002)];
 filt = ft_preproc_dftfilter(dat, 1000, [53, 79, 127], 'dftreplace', 'neighbour', 'dftneighbourwidth', [1 1 1]);
-figure; 
+figure;
 subplot(2,2,1); plot(tim, dat(1,:)-filt(1,:)); hold on;plot(tim, (1+hanning(2001))'.*sin(2.*pi.*(tim).*53));
 subplot(2,2,2); plot(tim, dat(2,:)-filt(2,:)); hold on;plot(tim, (1+hanning(2001))'.*sin(2.*pi.*(tim).*79 - 0.025));
 subplot(2,2,3); plot(tim, dat(3,:)-filt(3,:)); hold on;plot(tim, (1+hanning(2001))'.*sin(2.*pi.*(tim).*127 + 0.002));
@@ -97,26 +112,26 @@ samples_off = 2; % samples to add, so a full 50 Hz cycle doesn't fit
 
 lengthsec= 4;  % data length in seconds
 fs = 1000; % sampling rate
-acfreq = 50; % set the powerline frequency, e.g., 50 or 60 Hz    
+acfreq = 50; % set the powerline frequency, e.g., 50 or 60 Hz
 
 datlength = (lengthsec*fs);
-dat = gausswin(datlength, round(datlength/100) )'; 
+dat = gausswin(datlength, round(datlength/100) )';
 t= (0:(length(dat)-1))/fs;
 noise = cos( 2 * pi * acfreq * t );
 
-% spectrum interpolation 
-filt_spec = ft_preproc_dftfilter(dat + noise, fs, acfreq, 'dftreplace', 'neighbour', ... 
-'dftbandwidth', 2, 'dftneighbourwidth', 2 );
+% spectrum interpolation
+filt_spec = ft_preproc_dftfilter(dat + noise, fs, acfreq, 'dftreplace', 'neighbour', ...
+  'dftbandwidth', 2, 'dftneighbourwidth', 2 );
 
 % add samples to the data to introduce leakage
 datlength2 = (lengthsec*fs) + samples_off;  % LEAK, add samples, so a full cycle doesn't fit
-dat2 = gausswin(datlength2, round(datlength2/100) )'; 
+dat2 = gausswin(datlength2, round(datlength2/100) )';
 t2 = (0:(length(dat2)-1))/fs;
 noise2 = cos( 2 * pi * acfreq * t2 );
 
 % comment out error message in the dftfilter function, before running this
-filt_spec_leak = ft_preproc_dftfilter(dat2 + noise2, fs, acfreq, 'dftreplace', 'neighbour', ... 
-'dftbandwidth', 2, 'dftneighbourwidth', 2 );
+filt_spec_leak = ft_preproc_dftfilter(dat2 + noise2, fs, acfreq, 'dftreplace', 'neighbour', ...
+  'dftbandwidth', 2, 'dftneighbourwidth', 2 );
 
 figure;
 hold all
@@ -135,13 +150,10 @@ plot( t2 , filt_spec_leak,'r')
 plot(t, dat,'k')
 xlabel('Time (s)')
 ylabel('Amplitude (a.u.)')
-legend('Spectrum Interpolation Full Cycle', 'Spectrum Interpolation Not Full Cycle', ... 
-'Original Clean Gaussian')
+legend('Spectrum Interpolation Full Cycle', 'Spectrum Interpolation Not Full Cycle', ...
+  'Original Clean Gaussian')
 
 ylim( [ -0.5 1.5] )
 xlim( [ 0 4 ] )
-title(['DFT neighbour function used for mixed signal (gaussian + line noise)  - Data length = ' ... 
-num2str(datlength/fs) ' s and ' num2str(datlength2/fs) ' s']);
-
-
-
+title(['DFT neighbour function used for mixed signal (gaussian + line noise)  - Data length = ' ...
+  num2str(datlength/fs) ' s and ' num2str(datlength2/fs) ' s']);
