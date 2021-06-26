@@ -1,11 +1,15 @@
-function [FM, xf] = ft_preproc_online_filter_apply(FM, x)
+function [state, xf] = ft_preproc_online_filter_apply(state, x)
 
-% function [FM, xf] = ft_preproc_online_filter_apply(FM, x)
+% FT_PREPROC_ONLINE_FILTER_APPLY passes a signal through the online filter and
+% returns the updated filter model (delay states) and the filtered signal.
 %
-% Passes signal x (channels times samples) through the filter,
-% returns updated filter model (delay states) and filtered signal.
+% Use as
+%   [state, dat] = ft_preproc_online_filter_apply(state, dat)
+% where
+%   dat   = Nchan x Ntime
+%   state = filter state, see FT_PREPROC_ONLINE_FILTER_INIT
 %
-% See also FT_PREPROC_ONLINE_FILTER_INIT
+% See also PREPROC
 
 % Copyright (C) 2010, Stefan Klanke
 %
@@ -34,14 +38,14 @@ if dimX > numX
   xf = zeros(size(x));
   
   for k=1:numX;
-    z_old = FM.z;
-    z0 = x(:,k) - z_old*FM.A2;
-    xf(:,k) = z_old * FM.B2 + z0*FM.B1;
-    FM.z(:,2:end) = z_old(:,1:end-1);
-    FM.z(:,1) = z0;
+    z_old = state.z;
+    z0 = x(:,k) - z_old*state.A2;
+    xf(:,k) = z_old * state.B2 + z0*state.B1;
+    state.z(:,2:end) = z_old(:,1:end-1);
+    state.z(:,1) = z0;
   end
 else
   % use built-in MATLAB stuff - faster for many samples, few channels
-  [xf, z] = filter(FM.B, FM.A, x, FM.z',2);
-  FM.z = z';
+  [xf, z] = filter(state.B, state.A, x, state.z',2);
+  state.z = z';
 end

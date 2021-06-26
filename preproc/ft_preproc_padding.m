@@ -23,7 +23,7 @@ function [dat] = ft_preproc_padding(dat, padtype, prepadlength, postpadlength)
 %
 % See also FT_PREPROCESSING
 
-% Copyright (C) 2012, J?rn M. Horschig, Robert Oostenveld, Jan-Mathijs Schoffelen
+% Copyright (C) 2012, Jorn M. Horschig, Robert Oostenveld, Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -51,20 +51,18 @@ if prepadlength == 0 && postpadlength == 0
   return;
 end
 
-nchans = size(dat, 1);
-nsamples = size(dat, 2);
+[nchans, nsamples] = size(dat);
 
 switch(padtype)
   case 'remove'
     dat = dat(:, prepadlength+1:end-postpadlength);
     
   case 'mirror'
-    
     % create an indexvector to index the data with
     index = (1:(prepadlength+nsamples+postpadlength))-prepadlength;
     while any(index<1|index>nsamples)
       index(index<1)        = -index(index<1) + 1;
-      index(index>nsamples) = 2.*nsamples - index(index>nsamples) + 1; 
+      index(index>nsamples) = 2.*nsamples - index(index>nsamples) + 1;
     end
     dat = dat(:, index);
     
@@ -91,6 +89,3 @@ switch(padtype)
   otherwise
     ft_error('unknown padding option');
 end
-
-end
-

@@ -7,7 +7,7 @@ function [dat, state] = ft_preproc_standardize(dat, begsample, endsample, state)
 % Use as
 %   [dat] = ft_preproc_standardize(dat, begsample, endsample)
 % where
-%   dat        data matrix (Nchans dat Ntime)
+%   dat        data matrix (Nchans x Ntime)
 %   begsample  index of the begin sample for the mean and stdev estimate
 %   endsample  index of the end sample for the mean and stdev estimate
 %
