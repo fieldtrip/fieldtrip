@@ -5,11 +5,12 @@ function [spectrum, freqoi, timeoi] = ft_specest_tfr(dat, time, varargin)
 % domain.
 %
 % Use as
-%   [spectrum,freqoi,timeoi] = ft_specest_convol(dat,time,...)
-% where
-%   dat       = matrix of chan*sample
+%   [spectrum, freqoi, timeoi] = ft_specest_convol(dat, time, ...)
+% where the input arguments are
+%   dat       = matrix of nchan*nsample
 %   time      = vector, containing time in seconds for each sample
-%   spectrum  = array of chan*freqoi*timeoi of fourier coefficients
+% and the output arguments are
+%   spectrum  = array of nchan*nfreq*ntime of fourier coefficients
 %   freqoi    = vector of frequencies in spectrum
 %   timeoi    = vector of timebins in spectrum
 %
@@ -18,8 +19,8 @@ function [spectrum, freqoi, timeoi] = ft_specest_tfr(dat, time, varargin)
 %   freqoi    = vector, containing frequencies (in Hz)
 %   width     = number or vector, width of the wavelet, determines the temporal and spectral resolution (default = 7)
 %   gwidth    = number, determines the length of the used wavelets in standard deviations of the implicit Gaussian kernel
-%   verbose   = output progress to console (0 or 1, default 1)
 %   polyorder = number, the order of the polynomial to fitted to and removed from the data prior to the fourier transform (default = 0 -> remove DC-component)
+%   verbose   = output progress to console (0 or 1, default 1)
 %
 % See also FT_FREQANALYSIS, FT_SPECEST_MTMFFT, FT_SPECEST_MTMCONVOL, FT_SPECEST_HILBERT, FT_SPECEST_NANFFT, FT_SPECEST_WAVELET
 
