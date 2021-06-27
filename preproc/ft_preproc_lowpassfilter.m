@@ -224,7 +224,7 @@ switch type
       ft_info('  transition width %.1f Hz, passband 0-%.1f Hz, stopband %.1f-%.0f Hz\n', df, tb, Fn);
     end
     if ~isOrderLow
-      ft_info('  max. passband deviation %.4f (%.2f%%), stopband attenuation %.0f dB\n', pbDev, pbDev * 100, sbAtt);
+      ft_info('  maximum passband deviation %.4f (%.2f%%), stopband attenuation %.0f dB\n', pbDev, pbDev * 100, sbAtt);
     end
     
   case 'fir'
