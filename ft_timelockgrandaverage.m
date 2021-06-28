@@ -224,7 +224,8 @@ keepgrad = false;
 keepelec = false;
 keepopto = false;
 
-if isfield(varargin{1}, 'grad') % positions are different between subjects
+hasgrad = cellfun(@(x) isfield(x, 'grad'), varargin(:));
+if all(hasgrad) % check if positions are different between subjects
   keepgrad = true;
   for i=2:nsubj
     keepgrad = keepgrad && isequal(varargin{1}.grad, varargin{i}.grad);
@@ -234,7 +235,8 @@ if isfield(varargin{1}, 'grad') % positions are different between subjects
   end
 end
 
-if isfield(varargin{1}, 'elec') % positions are different between subjects
+haselec = cellfun(@(x) isfield(x, 'elec'), varargin(:));
+if all(haselec) % check if positions are different between subjects
   keepelec = true;
   for i=2:nsubj
     keepelec = keepelec && isequal(varargin{1}.elec, varargin{i}.elec);
@@ -244,7 +246,8 @@ if isfield(varargin{1}, 'elec') % positions are different between subjects
   end
 end
 
-if isfield(varargin{1}, 'opto') % positions are different between subjects
+hasopto = cellfun(@(x) isfield(x, 'opto'), varargin(:));
+if all(hasopto) % check if positions are different between subjects
   keepopto = true;
   for i=2:nsubj
     keepopto = keepopto && isequal(varargin{1}.opto, varargin{i}.opto);
