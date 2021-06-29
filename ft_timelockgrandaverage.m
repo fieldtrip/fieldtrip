@@ -219,56 +219,38 @@ end % if keepindividual
 % collect the output data
 grandavg = copyfields(varargin{1}, grandavg, {'time', 'freq', 'label', 'labelcmb'});
 
-% these should only be present in the output when they are identical in all inputs
-keepgrad = false;
-keepelec = false;
-keepopto = false;
-
+% sensor positions should only be present in the output when they are identical in all inputs
 hasgrad = cellfun(@(x) isfield(x, 'grad'), varargin(:));
 if all(hasgrad) % check if positions are different between subjects
-  keepgrad = true;
-  for i=2:nsubj
-    keepgrad = keepgrad && isequal(varargin{1}.grad, varargin{i}.grad);
-  end
-  if ~keepgrad
-    ft_warning('discarding gradiometer information because it cannot be averaged');
+  samegrad = cellfun(@(x) isequal(varargin{1}.grad, x.grad), varargin(2:end));
+  if all(samegrad)
+    grandavg.grad = varargin{1}.grad;
+  else
+    ft_warning('discarding gradiometer information because it is not identical in all inputs');
   end
 end
 
 haselec = cellfun(@(x) isfield(x, 'elec'), varargin(:));
 if all(haselec) % check if positions are different between subjects
-  keepelec = true;
-  for i=2:nsubj
-    keepelec = keepelec && isequal(varargin{1}.elec, varargin{i}.elec);
-  end
-  if ~keepelec
-    ft_warning('discarding electrode information because it cannot be averaged');
+  sameelec = cellfun(@(x) isequal(varargin{1}.elec, x.elec), varargin(2:end));
+  if all(sameelec)
+    grandavg.elec = varargin{1}.elec;
+  else
+    ft_warning('discarding electrode information because it is not identical in all inputs');
   end
 end
 
 hasopto = cellfun(@(x) isfield(x, 'opto'), varargin(:));
 if all(hasopto) % check if positions are different between subjects
-  keepopto = true;
-  for i=2:nsubj
-    keepopto = keepopto && isequal(varargin{1}.opto, varargin{i}.opto);
+  sameopto = cellfun(@(x) isequal(varargin{1}.opto, x.opto), varargin(2:end));
+  if all(sameopto)
+    grandavg.opto = varargin{1}.opto;
+  else
+    ft_warning('discarding optode information because it is not identical in all inputs');
   end
-  if ~keepopto
-    ft_warning('discarding optode information because it cannot be averaged');
-  end
 end
 
-if keepgrad
-  grandavg.grad = varargin{1}.grad;
-end
-
-if keepelec
-  grandavg.elec = varargin{1}.elec;
-end
-
-if keepopto
-  grandavg.opto = varargin{1}.opto;
-end
-
+% set dimord
 if strcmp(cfg.keepindividual, 'yes')
   grandavg.dimord = ['subj_', dimord];
 elseif strcmp(cfg.keepindividual, 'no')
