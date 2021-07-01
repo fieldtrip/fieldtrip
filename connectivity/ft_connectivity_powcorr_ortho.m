@@ -1,27 +1,30 @@
-function [c] = ft_connectivity_powcorr_ortho(mom, varargin)
+function [c] = ft_connectivity_powcorr_ortho(input, varargin)
 
 % FT_CONNECTIVITY_POWCORR_ORTHO computes power correlation after removing
 % the zero-lag contribution on a trial-by-trial basis, according to Hipp's
-% Nature Neuroscience paper. 
+% Nature Neuroscience paper.
 %
 % Use as
-%   c = ft_connectivity_powcorr(mom)
-%   c = ft_connectivity_powcorr(mom, 'refindx', refindx)
+%   [c] = ft_connectivity_powcorr(input, ...)
 %
-% Where mom is a NchanxNrpt matrix containing the complex-valued amplitude
-% and phase information at a given frequency, and the optional key refindx
-% specifies the index/indices of the channels that serve as a reference 
-% channel. (Default is 'all').
+% Where the input is a Nchan*Nrpt matrix containing the complex-valued amplitude
+% and phase information at a given frequency.
 %
-% The output c is a NchanxNrefchan matrix that contain the power correlation
-% for all channels orthogonalised relative to the reference channel in the first
-% Nrefchan columns, and the power correlation for the reference channels 
-% orthogonalised relative to the channels in the second Nrefchan columns.
+% The output c is a Nchan*Nref matrix that contain the power correlation for all
+% channels orthogonalised relative to the reference channel in the first Nref
+% columns, and the power correlation for the reference channels orthogonalised
+% relative to the channels in the second Nref columns.
+%
+% Additional optional input arguments come as key-value pairs:
+%   'refindx'  = index/indices of the channels that serve as a reference channel (default is all)
+%   'tapvec'   = vector with the number of tapers per trial
+%
+% See also CONNECTIVITY, FT_CONNECTIVITYANALYSIS
 
 % Copyright (C) 2012 Jan-Mathijs Schoffelen
-% 2021: Andrea Ibarra-Chaoul + Tobias Ludwig:
-% added feature to handle multiple tapers by computing orth. power-correlation
-% for each taper separately and then averaging over tapers
+% Copyright (C) 2021 Andrea Ibarra-Chaoul and Tobias Ludwig, who added the feature to
+% handle multiple tapers by computing orthogonal power-correlation for each taper
+% separately and then averaging over tapers
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -41,18 +44,20 @@ function [c] = ft_connectivity_powcorr_ortho(mom, varargin)
 %
 % $Id$
 
-
 refindx = ft_getopt(varargin, 'refindx', 'all');
-tapvec  = ft_getopt(varargin, 'tapvec',  ones(1,size(mom,2)));
-% tapvec = [ntap, ntap, ...], same number of tapers for each rep. = trial
+tapvec  = ft_getopt(varargin, 'tapvec',  ones(1,size(input,2))); % default is 1 taper per trial
 
 if strcmp(refindx, 'all')
-  refindx = 1:size(mom,1);
+  refindx = 1:size(input,1);
 end
 
-nchan = size(mom,1);
+[nchan, nrpttap] = size(input);
 ntap  = tapvec(1);
 nrpt  = numel(tapvec); % number of trials / repetitions
+
+if sum(tapvec)~=nrpttap
+  ft_error('the number of tapers and trials does not match');
+end
 
 if ~all(tapvec==ntap)
   ft_error('unequal number of tapers per observation is not yet supported');
@@ -62,16 +67,16 @@ end
 c = zeros(nchan, numel(refindx))+nan;
 
 % only need to do these two things once (out of next forloop)
-cXnorm = conj(mom./abs(mom));
-powX   = abs(mom).^2;
+cXnorm = conj(input./abs(input));
+powX   = abs(input).^2;
 
 for k = 1:numel(refindx) % for each source/channel
   indx   = refindx(k);
-  target = setdiff(1:size(mom,1), indx);
+  target = setdiff(1:size(input,1), indx);
   
-  Y    = repmat(mom(indx,:), [nchan, 1]); % Y = y nchan times stacked
-   
-  %% orthogonalization in one direction: Y wrt X
+  Y    = repmat(input(indx,:), [nchan, 1]); % Y = y nchan times stacked
+  
+  % orthogonalization in one direction: Y wrt X
   powYorth = abs(imag(Y.*cXnorm)).^2;
   
   zYorth   = zeros(nchan, nrpt*ntap);
@@ -86,10 +91,10 @@ for k = 1:numel(refindx) % for each source/channel
   
   c1 = mean(zX.*zYorth, 2); % take correlation averaging over trials+tapers
   
-  %% in the other direction: orthogonalize X wrt Y
+  % in the other direction: orthogonalize X wrt Y
   cYnorm = conj(Y./abs(Y));
   
-  powXorth = abs(imag(mom.*cYnorm)).^2;
+  powXorth = abs(imag(input.*cYnorm)).^2;
   powY     = abs(Y).^2;
   
   zXorth   = zeros(nchan, nrpt*ntap);
@@ -102,8 +107,7 @@ for k = 1:numel(refindx) % for each source/channel
   end
   
   c2 = mean(zXorth.*zY, 2);
-
+  
   c(:,k) = (c1+c2)./2;
   
-end
 end
