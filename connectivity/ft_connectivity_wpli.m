@@ -16,18 +16,18 @@ function [wpli, v, n] = ft_connectivity_wpli(input, varargin)
 %   Repetitions x Channelcombination (x Frequency) (x Time)
 %
 % The first dimension should contain repetitions and should not contain an
-% average already. Also, it should not consist of leave one out averages.
-%
-% Additional optional input arguments come as key-value pairs:
-%   dojack   = 1 or 0,   compute a variance estimate, based on leave-one-out
-%   feedback = 'none', 'text', 'textbar' type of feedback showing progress of computation
-%   debias   = 1 (or true) or 0 (or false), compute debiased wpli or not
+% average already. Also, it should not consist of leave-one-out averages.
 %
 % The output wpli contains the wpli, v is a leave-one-out variance estimate
-% which is only computed if dojack = 1,and n is the number of repetitions
+% which is only computed if dojack=true, and n is the number of repetitions
 % in the input data.
 %
-% See also FT_CONNECTIVITYANALYSIS
+% Additional optional input arguments come as key-value pairs:
+%   'dojack'    = boolean, compute a variance estimate based on leave-one-out
+%   'debias'    = boolean, compute debiased wpli or not
+%   'feedback'  = 'none', 'text', 'textbar', 'dial', 'etf', 'gui' type of feedback showing progress of computation, see FT_PROGRESS
+%
+% See also CONNECTIVITY, FT_CONNECTIVITYANALYSIS
 
 % Copyright (C) 2011, Martin Vinck
 %
@@ -51,7 +51,7 @@ function [wpli, v, n] = ft_connectivity_wpli(input, varargin)
 
 feedback    = ft_getopt(varargin, 'feedback', 'none');
 debias      = ft_getopt(varargin, 'debias');
-dojack      = ft_getopt(varargin, 'dojack');
+dojack      = ft_getopt(varargin, 'dojack', false);
 
 siz = size(input);
 n = siz(1);
@@ -85,9 +85,9 @@ if dojack && n>2 % n needs to be larger than 2 to get a meaningful variance
       num   = s; % this is estimator of E(Im(X))
       denom = sw; % estimator of E(|Im(X)|)
     end
-    tmp          = num./denom; % avoids doing the division twice
-    tmp(isnan(tmp)) = 0; % added for nan support
-    leave1outsum = leave1outsum + tmp; % added this for nan support
+    tmp          = num./denom;            % avoids doing the division twice
+    tmp(isnan(tmp)) = 0;                  % added for nan support
+    leave1outsum = leave1outsum + tmp;    % added this for nan support
     leave1outssq = leave1outssq + tmp.^2; % added this for nan support
   end
   % compute the sem here
