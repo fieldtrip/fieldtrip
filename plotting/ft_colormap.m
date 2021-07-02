@@ -24,8 +24,9 @@ function cmap = ft_colormap(varargin)
 %
 % The colormaps from CMOCEAN include 'thermal', 'haline', 'solar', 'ice', 'oxy',
 % 'deep', 'dense' 'algae', 'matter', 'turbid', 'speed', 'amp', 'tempo', 'rain', 
-% 'delta', 'curl', 'diff', 'tarn', 'phase', and 'topo'. To reverse these
-% colormaps, specify them with minus sign in front, e.g. '-topo'
+% 'delta', 'curl', 'diff', 'tarn', 'phase', and 'topo'. 
+%
+% To reverse these colormaps, specify them with minus sign in front, e.g. '-topo'
 %
 % The colormaps from BREWERMAP can be specified as a string, e.g. 'RdBu' or with an
 % asterisk (e.g. '*RdBu' to reverse the colormap, like '*RdBu'. See BREWERMAP for more 
@@ -142,7 +143,11 @@ elseif isequal(name, 'default')
 else
   % this works both for the MATLAB and the MATPLOTLIB colormaps
   % which have the different colormaps available as an m-file
-  cmap = feval(name, n);
+  if name(1)=='-'
+    cmap = flipud(feval(name(2:end), n));
+  else
+    cmap = feval(name, n);
+  end
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
