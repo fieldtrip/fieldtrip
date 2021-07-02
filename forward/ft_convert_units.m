@@ -15,9 +15,8 @@ function [object] = ft_convert_units(object, target, varargin)
 %   segmented mri, see FT_DATATYPE_SEGMENTATION
 %   source model, see FT_DATATYPE_SOURCE and FT_PREPARE_SOURCEMODEL
 %
-% The possible target units are 'm', 'dm', 'cm ' or 'mm'. If no target units are
-% specified, this function will only determine the geometrical units of the input
-% object.
+% The possible target units are 'm', 'cm ' or 'mm'. If no target units are specified,
+% this function will only determine the geometrical units of the input object.
 %
 % See also FT_DETERMINE_UNITS, FT_DETERMINE_COORDSYS, FT_CONVERT_COORDSYS, FT_PLOT_AXES, FT_PLOT_XXX
 
