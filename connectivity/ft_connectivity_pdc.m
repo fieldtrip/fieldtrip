@@ -9,24 +9,24 @@ function [pdc, pdcvar, n] = ft_connectivity_pdc(input, varargin)
 % 'nPDC' (for PDC) and 'GPDC' for generalized pdc.
 %
 % Use as
-%   [p, v, n] = ft_connectivity_pdc(h, key1, value1, ...)
+%   [p, v, n] = ft_connectivity_pdc(H, ...)
 %
 % The input argument H should be a spectral transfer matrix organized as
 %   Nrpt x Nchan x Nchan x Nfreq (x Ntime),
 % where Nrpt can be 1.
 %
 % Additional optional input arguments come as key-value pairs:
-%   'hasjack'  = 0 (default) is a boolean specifying whether the input
-%                contains leave-one-outs, required for correct variance
-%                estimate
-%   'feedback' = string, determining verbosity (default = 'none'), see FT_PROGRESS
-%   'invfun'   = 'inv' (default) or 'pinv', the function used to invert the
-%                transfer matrix to obtain the fourier transform of the
-%                MVAR coefficients. Use 'pinv' if the data are
-%                poorly-conditioned.
-%   'noisecov' = matrix containing the covariance of the residuals of the
-%                MVAR model. If this matrix is defined, the function
-%                returns the generalized partial directed coherence.
+%   'hasjack'   = 0 (default) is a boolean specifying whether the input
+%                 contains leave-one-outs, required for correct variance
+%                 estimate
+%   'invfun'    = 'inv' (default) or 'pinv', the function used to invert the
+%                 transfer matrix to obtain the fourier transform of the
+%                 MVAR coefficients. Use 'pinv' if the data are
+%                 poorly-conditioned.
+%   'noisecov'  = matrix containing the covariance of the residuals of the
+%                 MVAR model. If this matrix is defined, the function
+%                 returns the generalized partial directed coherence.
+%   'feedback'  = 'none', 'text', 'textbar', 'dial', 'etf', 'gui' type of feedback showing progress of computation, see FT_PROGRESS
 %
 % Output arguments:
 %   p = partial directed coherence matrix Nchan x Nchan x Nfreq (x Ntime).
@@ -39,7 +39,7 @@ function [pdc, pdcvar, n] = ft_connectivity_pdc(input, varargin)
 % is assumed to contain the leave-one-out estimates of H, thus a more
 % reliable estimate of the relevant quantities.
 %
-% See also FT_CONNECTIVITYANALYSIS
+% See also CONNECTIVITY, FT_CONNECTIVITYANALYSIS
 
 % Copyright (C) 2009-2017, Jan-Mathijs Schoffelen
 %

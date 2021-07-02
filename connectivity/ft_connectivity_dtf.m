@@ -3,38 +3,35 @@ function [dtf, dtfvar, n] = ft_connectivity_dtf(input, varargin)
 % FT_CONNECTIVITY_DTF computes the directed transfer function.
 %
 % Use as
-%   [d, v, n] = ft_connectivity_dtf(h, ...)
+%   [d, v, n] = ft_connectivity_dtf(input, ...)
 %
-% The input data h should be a spectral transfer matrix organized as
-%   Nrpt x Nchan x Nchan x Nfreq (x Ntime),
+% The input should be a spectral transfer matrix organized as
+%   Nrpt x Nchan x Nchan x Nfreq (x Ntime)
 % where Nrpt can be 1.
 %
-% Additional optional input arguments come as key-value pairs:
-%   'hasjack'  = 0 (default) is a boolean specifying whether the input
-%                contains leave-one-outs, required for correct variance
-%                estimate.
-%   'feedback' = string, determining verbosity (default = 'none'), see FT_PROGRESS
-%   'crsspctrm' = matrix containing the cross-spectral density. If this
-%                 matrix is defined, the function
-%                 returns the ddtf, which requires an estimation of partial
-%                 coherence from this matrix.
-%   'invfun'   = 'inv' (default) or 'pinv', the function used to invert the
-%                crsspctrm matrix to obtain the partial coherence. Pinv is
-%                useful if the data are poorly-conditioned.
-%
-%
-% Output arguments:
+% The output represents
 %   d = partial directed coherence matrix Nchan x Nchan x Nfreq (x Ntime).
 %       If multiple observations in the input, the average is returned.
 %   v = variance of d across observations.
 %   n = number of observations.
 %
-% Typically, nrpt should be 1 (where the spectral transfer matrix is computed across
-% observations. When nrpt>1 and hasjack is true the input is assumed to contain the
-% leave-one-out estimates of H, thus a more reliable estimate of the relevant
-% quantities.
+% Typically, nrpt should be 1 where the spectral transfer matrix is computed across
+% observations. When nrpt>1 and hasjack=true, the input is assumed to contain the
+% leave-one-out estimates of the spectral transfer matrix, thus a more reliable
+% estimate of the relevant quantities.
 %
-% See also FT_CONNECTIVITYANALYSIS
+% Additional optional input arguments come as key-value pairs:
+%   'hasjack'   = boolean, specifying whether the input contains leave-one-outs,
+%                 required for correct variance estimate (default = false)
+%   'crsspctrm' = matrix containing the cross-spectral density. If this
+%                 matrix is defined, the function returns the ddtf, which
+%                 requires an estimation of partial coherence from this matrix.
+%   'invfun'    = 'inv' (default) or 'pinv', the function used to invert the
+%                 crsspctrm matrix to obtain the partial coherence. Pinv is
+%                 useful if the data are poorly-conditioned.
+%   'feedback'  = 'none', 'text', 'textbar', 'dial', 'etf', 'gui' type of feedback showing progress of computation, see FT_PROGRESS
+%
+% See also CONNECTIVITY, FT_CONNECTIVITYANALYSIS
 
 % Copyright (C) 2009-2017, Jan-Mathijs Schoffelen
 %
@@ -66,14 +63,14 @@ switch invfun
   case {'inv' 'pinv'}
     invfun = str2func(invfun);
   otherwise
-    ft_error('unknown specification of inversion-function for the transfer matrix');
+    ft_error('unknown specification of inverse function for the transfer matrix');
 end
 
 if ~isempty(powindx)
   % this error message is rather uninformative, but is kept for now for
   % backward compatibility reasons (i.e. it might exist when called from
   % ft_connectivityanalysis
-  ft_error('linearly indexed data for dtf computation is at the moment not supported');
+  ft_error('linearly indexed data for DTF computation is at the moment not supported');
 end
 
 siz    = [size(input) 1];
@@ -81,7 +78,7 @@ n      = siz(1);
 outsum = zeros(siz(2:end));
 outssq = zeros(siz(2:end));
 
-% check the crsspctrm, if it's present, compute the partial coherence
+% check the crsspctrm; if it is present, compute the partial coherence
 if ~isempty(crsspctrm)
   assert(isequal(size(crsspctrm),size(input)), 'the input data should be of the same size as the crsspctrm');
   fprintf('computing dDTF in the presence of a crsspctrm\n');
@@ -113,7 +110,6 @@ for j = 1:n
   else
     % dDTF
     tmpc   = reshape(crsspctrm(j,:,:,:,:), siz(2:end));
-    
     den    = sum(sum(abs(tmph).^2,3),2);
     tmpdtf = abs(tmph)./sqrt(repmat(den, [1 siz(2) siz(4) 1 1 1]));
     tmpdtf = tmpdtf.*tmpc;

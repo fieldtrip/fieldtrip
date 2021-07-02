@@ -5,7 +5,7 @@ function [granger, v, n] = ft_connectivity_granger(H, Z, S, varargin)
 % 9849-9854 (2004).
 %
 % Use as
-%   [GRANGER, V, N] = FT_CONNECTIVITY_GRANGER(H, Z, S, ...)
+%   [granger, v, n] = ft_connectivity_granger(H, Z, S, ...)
 %
 % The input data should be
 %   H = spectral transfer matrix, Nrpt x Nchan x Nchan x Nfreq (x Ntime),
@@ -17,11 +17,11 @@ function [granger, v, n] = ft_connectivity_granger(H, Z, S, varargin)
 % Additional optional input arguments come as key-value pairs:
 %   'dimord'  = required string specifying how to interpret the input data
 %               supported values are 'rpt_chan_chan_freq(_time) and
-%               'rpt_chan_freq(_time), 'rpt_pos_pos_XXX' and 'rpt_pos_XXX'
-%   'method'  = 'granger' (default), or 'instantaneous', or 'total'.
-%   'hasjack' = 0 (default) is a boolean specifying whether the input
-%               contains leave-one-outs, required for correct variance
-%               estimate
+%               'rpt_chan_freq(_time), 'rpt_pos_pos_freq(_time)' and
+%               'rpt_pos_freq(_time)'
+%   'method'  = 'granger' (default), or 'instantaneous', or 'total'
+%   'hasjack' = boolean, specifying whether the input contains leave-one-outs,
+%               required for correct variance estimate (default = false)
 %   'powindx' = is a variable determining the exact computation, see below
 %
 % If the inputdata is such that the channel-pairs are linearly indexed, granger
@@ -36,10 +36,10 @@ function [granger, v, n] = ft_connectivity_granger(H, Z, S, varargin)
 % The same holds for the Z and S matrices.
 %
 % Pairwise block-granger causality can be computed when the inputdata has
-% dimensionality Nchan x Nchan. In that case powindx should be specified, as a 1x2
+% dimensionality Nchan x Nchan. In that case 'powindx' should be specified, as a 1x2
 % cell-array indexing the individual channels that go into each 'block'.
 %
-% See also FT_CONNECTIVITYANALYSIS
+% See also CONNECTIVITY, FT_CONNECTIVITYANALYSIS
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
@@ -68,10 +68,13 @@ function [granger, v, n] = ft_connectivity_granger(H, Z, S, varargin)
 %
 % $Id$
 
+% check for a supported dimord
+ft_checkopt(varargin, 'dimord', 'char');
+
 method  = ft_getopt(varargin, 'method',  'granger');
-hasjack = ft_getopt(varargin, 'hasjack', 0);
-powindx = ft_getopt(varargin, 'powindx', []);
-dimord  = ft_getopt(varargin, 'dimord',  []);
+hasjack = ft_getopt(varargin, 'hasjack', false);
+powindx = ft_getopt(varargin, 'powindx');
+dimord  = ft_getopt(varargin, 'dimord');
 
 %FIXME speed up code and check
 siz = size(H);
@@ -174,7 +177,7 @@ switch method
           indx1 = 1:n1;
           indx1_  = (1:ntot)'; indx1_(indx1) = [];
           indx2   = n1+(1:n2);
-          indx12_ = (1:ntot)'; indx12_([indx1(:);indx2(:)]) = []; 
+          indx12_ = (1:ntot)'; indx12_([indx1(:);indx2(:)]) = [];
           
           for kk = 1:n
             tmpZ = reshape(Z(kk,indx,indx), [ntot ntot]);
@@ -185,8 +188,8 @@ switch method
             
             % projection matrix for therest+block1 -> block2
             P2 = [  eye(n1)    -tmpZ(indx1,indx2)/tmpZ(indx2,indx2) zeros(n1,ntot-n1-n2);
-                  zeros(n2,n1)   eye(n2) zeros(n2, ntot-n1-n2);
-                  zeros(ntot-n1-n2,n1) -tmpZ(indx12_,indx2)/tmpZ(indx2,indx2) eye(ntot-n1-n2)];
+              zeros(n2,n1)   eye(n2) zeros(n2, ntot-n1-n2);
+              zeros(ntot-n1-n2,n1) -tmpZ(indx12_,indx2)/tmpZ(indx2,indx2) eye(ntot-n1-n2)];
             
             % invert only once
             for jj = 1:nfreq
