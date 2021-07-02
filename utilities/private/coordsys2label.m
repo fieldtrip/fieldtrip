@@ -38,7 +38,7 @@ function [labelx, labely, labelz] = coordsys2label(coordsys, format, both)
 % $Id$
 
 
-% FIXME this function could also rerturn a label for the origin
+% FIXME this function could also return a label for the origin
 % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=3304
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

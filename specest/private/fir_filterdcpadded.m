@@ -61,7 +61,7 @@ end
 
 % Group delay
 if mod(length(b), 2) ~= 1
-    ft_error('Filter order is not even.');
+    ft_error('Filter order must be a real, even, positive integer.');
 end
 groupDelay = (length(b) - 1) / 2;
 
