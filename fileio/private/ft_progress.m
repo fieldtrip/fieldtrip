@@ -69,15 +69,6 @@ persistent lastArgin % the last varargin, this is used when ft_progress('close')
 % every 100ms)
 persistent closing
 
-try
-  % do not show the progress feedback after "ft_info off"
-  show = ft_info;
-  show = show(strcmp({show.identifier}, 'all')).state;
-  if ~istrue(show)
-    return
-  end
-end
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if nargin>1 && ischar(varargin{1}) && strcmp(varargin{1}, 'init')
   % reset these to the defaults
