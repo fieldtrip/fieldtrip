@@ -777,7 +777,7 @@ need_electrodes_tsv     = false; % only needed when actually present as cfg.elec
 need_optodes_tsv        = false; % only needed when actually present as cfg.optodes, data.opto or as cfg.opto
 
 switch typ
-  case {'nifti', 'nifti2', 'nifti_fsl'}
+  case {'nifti', 'nifti2', 'nifti_gz'}
     mri = ft_read_mri(cfg.dataset);
     if ~isempty(cfg.dicomfile)
       % read the header details from the matching DICOM file specified by the user

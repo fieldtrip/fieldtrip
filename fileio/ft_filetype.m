@@ -548,7 +548,7 @@ elseif filetype_check_extension(filename, '.nii') && filetype_check_header(filen
   
   % known FSL file types
 elseif filetype_check_extension(filename, '.nii.gz')
-  type = 'nifti_fsl';
+  type = 'nifti_gz';
   content = 'MRI image data';
   
   % known LORETA file types

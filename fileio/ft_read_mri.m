@@ -402,7 +402,7 @@ switch dataformat
       transform(3,3) = dz;
     end
 
-  case {'nifti', 'freesurfer_mgz', 'freesurfer_mgh', 'nifti_fsl'}
+  case {'nifti', 'freesurfer_mgz', 'freesurfer_mgh', 'nifti_gz'}
 
     ft_hastoolbox('freesurfer', 1);
     tmp = MRIread(filename);
