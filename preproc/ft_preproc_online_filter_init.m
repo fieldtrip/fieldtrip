@@ -1,14 +1,16 @@
-function FM = ft_preproc_online_filter_init(B, A, x)
+function state = ft_preproc_online_filter_init(B, A, x)
 
-% function FM = ft_preproc_online_filter_init(B, A, x)
+% FT_PREPROC_ONLINE_FILTER_INIT initialize an IIR filter model with coefficients B
+% and A, as used in filter and butter etc. The most recent sample of the signal must
+% be given as a column vector.
 %
-% Initialize an IIR filter model with coefficients B and A, as used in filter and butter etc.
-% One sample x of the signal must be given as a column vector.
+% Use as
+%   state = ft_preproc_online_filter_init(B, A, dat)
 %
 % This function will calculate the filter delay states such that the initial response
-% is as if 'x' would have been applied since forever.
+% will be as if the filter already have been applied forever.
 %
-% See also FT_PREPROC_ONLINE_FILTER_APPLY
+% See also PREPROC, FT_PREPROC_ONLINE_FILTER_APPLY
 
 % Copyright (C) 2010, Stefan Klanke
 %
@@ -42,37 +44,37 @@ end
 La = length(A);
 Lb = length(B);
 
-FM = [];
-FM.d = size(x,1);
+state = [];
+state.d = size(x,1);
 
 if La<Lb
   % pad A with zeros
   A = [A; zeros(Lb-La,1)];
-  FM.N = Lb-1;	% filter order
+  state.N = Lb-1;	% filter order
 elseif La>Lb
   % pad B with zeros
   B = [B; zeros(La-Lb,1)];
-  FM.N = La-1;
+  state.N = La-1;
 else
-  FM.N = La-1;
+  state.N = La-1;
 end
 
-FM.A  = A;
-FM.B  = B;
-FM.A2 = A(2:end);
-FM.B1 = B(1);
-FM.B2 = B(2:end);
+state.A  = A;
+state.B  = B;
+state.A2 = A(2:end);
+state.B1 = B(1);
+state.B2 = B(2:end);
 
 % this would be for direct form II, but MATLAB filter uses direct form II transpose
-% FM.z = x*(ones(1,FM.N)/sum(B));
+% state.z = x*(ones(1,state.N)/sum(B));
 
 % there might be a faster way to compute this, but I can't think of any right now
 % M is the matrix that describes the evolution of the filter in a 2+N-dim space
 % composed of [output; delay states; input].
 % We want to find the delay states corresponding to constant input (=1).
-M = [[0; -A(2:end); 0],[eye(FM.N);zeros(2,FM.N)],[B;1]];
-n = null(M-eye(2+FM.N));  % = eigenvector of M corresponding to eigenvalue=1, that is n=M*n
+M = [[0; -A(2:end); 0],[eye(state.N);zeros(2,state.N)],[B;1]];
+n = null(M-eye(2+state.N));  % = eigenvector of M corresponding to eigenvalue=1, that is n=M*n
 n = n(:,1);               % ensure that it is only the first eigenvector
 z = n(2:end-1);           % delay state part of it
 z = z*(1-B(1))/z(1);      % scale appropiately
-FM.z = x*z';
+state.z = x*z';
