@@ -7,68 +7,49 @@ function test_ft_preproc_dftfilter
 % this is an issue related to numerical precision which is too strictly
 % checked in ft_preproc_dftfilter (with spectral interpolation)
 
-inspect_results = false; %true if visual inspection required
-run_additional_tests = false; %true if particular tests needed
-
 fs = 500;
-lineFreq = 50;
-nharmonics = 2;
-start_time = -1; %s
-end_time = 2.498; %s
-nsamples = (end_time - start_time) * fs;
 data = [];
-data.time{1} = linspace(start_time, end_time, nsamples);
+data.time{1} = -1:1/fs:2.4980; %-> observation: using linspace instead works fine
 
-lnoise = zeros(nharmonics,nsamples);
-for i = 1:nharmonics
-    lnoise(i,:) = (1+hanning(nsamples))'.*sin((2.*pi.*data.time{1}).*(lineFreq*i));
-end
+lnoise(1,:) = (1+hanning(1750))'.*sin((2.*pi.*data.time{1}).*50);
+lnoise(2,:) = (1+hanning(1750))'.*sin((2.*pi.*data.time{1}).*100);
 
-data.trial{1} = randn(nharmonics,nsamples)+lnoise;
-alphabet = ('a':'z').';
-data.label = num2cell(alphabet(1:nharmonics));
+data.trial{1} = randn(2,1750)+lnoise;
+data.label = {'a';'b'};
 data.fsample = fs;
+
+lineFreq = 50;
 
 cfg              = [];
 cfg.dftfilter    = 'yes'; %apply line noise filter with spectrum interpolation
-cfg.dftfreq      = linspace(lineFreq,lineFreq*nharmonics,nharmonics); %line noise and harmonic
+cfg.dftfreq      = [lineFreq lineFreq*2]; %line noise and harmonic
 cfg.dftreplace   = 'neighbour'; %spectral interpolation
-cfg.dftbandwidth = 1:nharmonics; %width of window to be interpolated
-cfg.dftneighbourwidth = repmat(2,nharmonics,1); %width of window from which to interpolate
+cfg.dftbandwidth = [1 2]; %width of window to be interpolated
+cfg.dftneighbourwidth = [2 2]; %width of window from which to interpolate
 datafilt1 = ft_preprocessing(cfg, data);
 
-try
-    cfg.dftreplace   = 'neighbour_fft';
-    datafilt2 = ft_preprocessing(cfg, data); % this should now work thanks to some eps leniency
-    ft_error('if the code ends up here, then something suddenly started working');
-catch
-    datafilt2 = data; %bypass the neighbour_fft method
-end
+cfg.dftreplace   = 'neighbour_fft';
+datafilt2 = ft_preprocessing(cfg, data); % this should now work thanks to some eps leniency
 
 cfg           = [];
 cfg.dftfilter = 'yes';
-cfg.dftfreq      = linspace(lineFreq,lineFreq*nharmonics,nharmonics);
+cfg.dftfreq   = [lineFreq lineFreq*2];
 datafilt3     = ft_preprocessing(cfg, data);
 
-if inspect_results
-    figure;
-    subplot(2,2,1);plot(datafilt1.time{1}, data.trial{1}-datafilt1.trial{1}); ylim([-2.1 2.1]);xlabel('estimated linenoise neighbour');
-    subplot(2,2,2);plot(datafilt2.time{1}, data.trial{1}-datafilt2.trial{1}); ylim([-2.1 2.1]);xlabel('estimated linenoise neighbour_fft','interpreter','none');
-    subplot(2,2,3);plot(datafilt2.time{1}, data.trial{1}-datafilt3.trial{1}); ylim([-2.1 2.1]);xlabel('estimated linenoise static dft');
-    subplot(2,2,4);plot(data.time{1}, lnoise); ylim([-2.1 2.1]);xlabel('simulated linenoise');
+figure
 
-    figure; plot(data.time{1}, datafilt1.trial{1}-datafilt2.trial{1});
-    title('difference between filtered signals obtained by "zero" and "neighbour" methods')
-    % the difference here can be explained by the fact that neighbour_fft takes
-    % an asymmetric band around 50/100 Hz, due to rounding in nearest I guess
-end
+subplot(2,2,1);plot(datafilt1.time{1}, data.trial{1}-datafilt1.trial{1}); ylim([-2.1 2.1]);xlabel('estimated linenoise neighbour');
+subplot(2,2,2);plot(datafilt2.time{1}, data.trial{1}-datafilt2.trial{1}); ylim([-2.1 2.1]);xlabel('estimated linenoise neighbour_fft','interpreter','none');
+subplot(2,2,3);plot(datafilt2.time{1}, data.trial{1}-datafilt3.trial{1}); ylim([-2.1 2.1]);xlabel('estimated linenoise static dft');
+subplot(2,2,4);plot(data.time{1}, lnoise); ylim([-2.1 2.1]);xlabel('simulated linenoise');
 
-if ~run_additional_tests
-    return
-end
+figure; plot(data.time{1}, datafilt1.trial{1}-datafilt2.trial{1});
+% the difference here can be explained by the fact that neighbour_fft takes
+% an asymmetric band around 50/100 Hz, due to rounding in nearest I guess
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% some other instances, testing ft_preproc_dftfilter directly
+% some other instances, testing ft_preproc_dftfilter directly
 tim = (0:1999)./1000;
 dat = randn(1, 2000) + (1+hanning(2000))'.*sin(2.*pi.*(tim).*50);
 filt  = ft_preproc_dftfilter(dat, 1000, 50, 'dftreplace', 'neighbour');
