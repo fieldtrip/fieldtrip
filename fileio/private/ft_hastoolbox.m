@@ -348,7 +348,7 @@ switch toolbox
   case 'DATAHASH'
     dependency = {'DataHash'};
   case 'IBTB'
-    dependency = {'binr','information'};
+    dependency = {'binr','information', 'eqpop', 'eqspace', 'ceqspace', 'gseqspace'};
   case 'ICASSO'
     dependency = {'icassoEst'};
   case 'XUNIT'
@@ -582,6 +582,9 @@ elseif isfolder(toolbox)
     % this comes with its own startup script
     addpath(fullfile(toolbox, 'startup'))
     startup_MVPA_Light;
+  elseif ~isempty(regexp(lower(toolbox), 'ibtb', 'once'))
+    % this needs to be added with all its subdirectories
+    addpath(genpath(toolbox));
   else
     addpath(toolbox);
   end
