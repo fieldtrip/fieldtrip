@@ -7,19 +7,33 @@ function test_ft_connectivityanalysis
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % this part tests the functionality for plain and power correlation 
 
-timelock.trial = rand(3,50);
+% 3 channels, 50 timepoints, 10 trials
+dat = randn(3,1000*50);
+for i=1:10
+  % add some correlation between channel 1 and 2
+  dat(2,:) = dat(1,:) + dat(2,:);
+end
+
+timelock = [];
+for i=1:1000
+  begsample = (i-1)*50+1;
+  endsample = (i  )*50;
+  timelock.trial(i,:,:) = dat(:,begsample:endsample);
+end
 timelock.label = {'1';'2';'3'};
 timelock.time = 1:50;
-timelock.cov = cov(timelock.trial');
+timelock.cov = cov(dat', 0);
 
 cfg = [];
 cfg.method = 'corr';
 timelock_corr = ft_connectivityanalysis(cfg, timelock);
 
-assert(isalmostequal(timelock_corr.corr, corr(timelock.trial'), 'reltol', 100*eps))
+% the normalization and the demeaning is not the same, hence some tolerance is needed
+assert(isalmostequal(timelock_corr.corr, corr(dat'), 'abstol', 0.01))
 
 %--------------------------------------------------------
 
+freq = [];
 freq.powspctrm = rand(10,3,1);
 freq.freq = 1;
 freq.label = {'1';'2';'3'};
@@ -129,11 +143,11 @@ c12              = ft_connectivityanalysis(cfgc, freq);
 cfgc             = [];
 cfgc.method      = 'granger';
 cfgc.channelcmb  = {'signal001' 'signal002'};
-c13              = ft_connectivityanalysis(cfgc, freq); %gives a 'chan_chan_freq' matrix
+c13              = ft_connectivityanalysis(cfgc, freq); % gives a 'chan_chan_freq' matrix
 cfgc.sfmethod    = 'bivariate';
-c14              = ft_connectivityanalysis(cfgc, freq); %gives a 'chan_freq' matrix
+c14              = ft_connectivityanalysis(cfgc, freq); % gives a 'chan_freq' matrix
 cfgc.channelcmb  = {{'signal001'} {'signal002';'signal003'}};
-c15              = ft_connectivityanalysis(cfgc, freq); %gives a 'chan_freq' matrix (4 x nfreq)
+c15              = ft_connectivityanalysis(cfgc, freq); % gives a 'chan_freq' matrix (4 x nfreq)
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % this part tests the functionality of block-wise Granger causality
@@ -163,7 +177,7 @@ cfg.params(:,:,2) = [-0.5    0;
                         0 -0.8];
 cfg.noisecov      = [0.3 0;
                        0 1];
-data            = ft_connectivitysimulation(cfg);
+data              = ft_connectivitysimulation(cfg);
 
 % do mvaranalysis
 cfgm       = [];
@@ -189,9 +203,9 @@ c1b            = ft_connectivityanalysis(cfgc, freq);
 cfgc.granger.sfmethod = 'bivariate';
 c1b2           = ft_connectivityanalysis(cfgc, freq);
 cfgc.granger.sfmethod = 'multivariate';
-cfgc.granger.block(1).name =  'block1';
+cfgc.granger.block(1).name  = 'block1';
 cfgc.granger.block(1).label = freq.label(1);
-cfgc.granger.block(2).name = 'block2';
+cfgc.granger.block(2).name  = 'block2';
 cfgc.granger.block(2).label = freq.label(2);
 c1xm           = ft_connectivityanalysis(cfgc, mfreq);
 c1x            = ft_connectivityanalysis(cfgc, freq);
@@ -212,9 +226,9 @@ cfgc = [];
 cfgc.method = 'granger';
 c2  = ft_connectivityanalysis(cfgc, freq2);
 c2m = ft_connectivityanalysis(cfgc, mfreq2);
-cfgc.granger.block(1).name =  'block1';
+cfgc.granger.block(1).name  = 'block1';
 cfgc.granger.block(1).label = freq2.label(1:2);
-cfgc.granger.block(2).name = 'block2';
+cfgc.granger.block(2).name  = 'block2';
 cfgc.granger.block(2).label = freq2.label(3:4);
 c2x = ft_connectivityanalysis(cfgc, freq2);
 
@@ -243,7 +257,7 @@ cfg.params(:,:,2) = [-0.5    0;
                         0 -0.8];
 cfg.noisecov      = [0.3 0;
                        0 1];
-data            = ft_connectivitysimulation(cfg);
+data              = ft_connectivitysimulation(cfg);
 
 % do mvaranalysis
 cfgm       = [];
@@ -274,9 +288,9 @@ cfgc.granger.sfmethod = 'bivariate';
 c1b2           = ft_connectivityanalysis(cfgc, freq);
 c1b2sub        = ft_connectivityanalysis(cfgc, freqsub);
 cfgc.granger.sfmethod = 'multivariate';
-cfgc.granger.block(1).name =  'block1';
+cfgc.granger.block(1).name  = 'block1';
 cfgc.granger.block(1).label = freq.label(1);
-cfgc.granger.block(2).name = 'block2';
+cfgc.granger.block(2).name  = 'block2';
 cfgc.granger.block(2).label = freq.label(2);
 c1xm           = ft_connectivityanalysis(cfgc, mfreq);
 c1x            = ft_connectivityanalysis(cfgc, freq);
@@ -298,9 +312,9 @@ cfgc = [];
 cfgc.method = 'granger';
 c2  = ft_connectivityanalysis(cfgc, freq2);
 c2m = ft_connectivityanalysis(cfgc, mfreq2);
-cfgc.granger.block(1).name =  'block1';
+cfgc.granger.block(1).name  = 'block1';
 cfgc.granger.block(1).label = freq2.label(1:2);
-cfgc.granger.block(2).name = 'block2';
+cfgc.granger.block(2).name  = 'block2';
 cfgc.granger.block(2).label = freq2.label(3:4);
 c2x = ft_connectivityanalysis(cfgc, freq2);
 
@@ -333,7 +347,7 @@ cfg.noisecov      = [0.3 0 0;
                        0 1 0;
                        0 0 0.2];
 
-data            = ft_connectivitysimulation(cfg);
+data              = ft_connectivitysimulation(cfg);
 
 % freqanalysis
 cfgf           = [];
@@ -348,11 +362,11 @@ cfgc.granger.sfmethod = 'bivariate';
 g1               = ft_connectivityanalysis(cfgc, freq);
 cfgc.granger.sfmethod = 'multivariate';
 g2               = ft_connectivityanalysis(cfgc, freq);
-cfgc.granger.block(1).name = freq.label{1};
+cfgc.granger.block(1).name  = freq.label{1};
 cfgc.granger.block(1).label = freq.label(1);
-cfgc.granger.block(2).name = freq.label{2};
+cfgc.granger.block(2).name  = freq.label{2};
 cfgc.granger.block(2).label = freq.label(2);
-cfgc.granger.block(3).name = freq.label{3};
+cfgc.granger.block(3).name  = freq.label{3};
 cfgc.granger.block(3).label = freq.label(3);
 g3               = ft_connectivityanalysis(cfgc, freq);
 
@@ -380,7 +394,7 @@ cfg.noisecov      = [0.3 0 0;
                        0 1 0;
                        0 0 0.2];
 
-data            = ft_connectivitysimulation(cfg);
+data              = ft_connectivitysimulation(cfg);
 
 % freqanalysis
 cfgf           = [];
@@ -395,11 +409,11 @@ cfgc.granger.sfmethod = 'bivariate';
 g1               = ft_connectivityanalysis(cfgc, freq);
 cfgc.granger.sfmethod = 'multivariate';
 g2               = ft_connectivityanalysis(cfgc, freq);
-cfgc.granger.block(1).name = freq.label{1};
+cfgc.granger.block(1).name  = freq.label{1};
 cfgc.granger.block(1).label = freq.label(1);
-cfgc.granger.block(2).name = freq.label{2};
+cfgc.granger.block(2).name  = freq.label{2};
 cfgc.granger.block(2).label = freq.label(2);
-cfgc.granger.block(3).name = freq.label{3};
+cfgc.granger.block(3).name  = freq.label{3};
 cfgc.granger.block(3).label = freq.label(3);
 g3               = ft_connectivityanalysis(cfgc, freq);
 
