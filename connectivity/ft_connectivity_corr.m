@@ -52,9 +52,8 @@ function [c, v, outcnt] = ft_connectivity_corr(input, varargin)
 %   'feedback'  = 'none', 'text', 'textbar', 'dial', 'etf', 'gui' type of feedback showing progress of computation, see FT_PROGRESS
 %
 % Partialisation can be performed when the input data is (chan x chan). The following
-% options need to be specified:
-%   pchanindx   = index-vector to the channels that need to be partialised
-%   allchanindx = index-vector to all channels that are used (including the "to-be-partialised" ones).
+% option needs to be specified:
+%   pchan   = index-vector to the channels that need to be partialised
 %
 % See also CONNECTIVITY, FT_CONNECTIVITYANALYSIS
 
@@ -81,14 +80,13 @@ function [c, v, outcnt] = ft_connectivity_corr(input, varargin)
 % FiXME: If output is angle, then jack-knifing should be done
 % differently since it is a circular variable
 
-hasjack     = ft_getopt(varargin, 'hasjack', false);
-cmplx       = ft_getopt(varargin, 'complex', 'abs');
+hasjack     = ft_getopt(varargin, 'hasjack',  false);
+cmplx       = ft_getopt(varargin, 'complex',  'abs');
 feedback    = ft_getopt(varargin, 'feedback', 'none');
 dimord      = ft_getopt(varargin, 'dimord');
 powindx     = ft_getopt(varargin, 'powindx');
 pownorm     = ft_getopt(varargin, 'pownorm', 0);
-pchanindx   = ft_getopt(varargin, 'pchanindx');
-allchanindx = ft_getopt(varargin, 'allchanindx');
+pchan       = ft_getopt(varargin, 'pchanindx');
 
 if isempty(dimord)
   ft_error('input parameters should contain a dimord');
@@ -97,13 +95,12 @@ end
 siz = [size(input) 1];
 
 % do partialisation if necessary
-if ~isempty(pchanindx) && isempty(powindx)
+if ~isempty(pchan) && isempty(powindx)
   % partial spectra are computed as in Rosenberg JR et al (1998) J.Neuroscience Methods, equation 38
   
-  chan   = allchanindx;
-  nchan  = numel(chan);
-  pchan  = pchanindx;
   npchan = numel(pchan);
+  chan   = setdiff(1:size(input,2), pchan);
+  nchan  = numel(chan);
   newsiz = siz;
   newsiz(2:3) = numel(chan); % size of partialised csd
   
@@ -121,9 +118,9 @@ if ~isempty(pchanindx) && isempty(powindx)
   input = A;
   siz = size(input);
   
-elseif ~isempty(pchanindx)
+elseif ~isempty(pchan)
   % linearly indexed crossspectra require some more complicated handling
-  if numel(pchanindx)>1
+  if numel(pchan)>1
     ft_error('more than one channel for partialisation with linearly indexed crossspectra is currently not implemented');
   end
   
@@ -133,22 +130,22 @@ elseif ~isempty(pchanindx)
     % achieve F_ab\p = F_ab - F_ap*inv(F_p)*F_pb;
     
     this = powindx(k,:);
-    sela = find(powindx(:,1)==this(1)&powindx(:,2)==pchanindx);
-    if ~isempty(sela)
+    sela = powindx(:,1)==this(1)&powindx(:,2)==pchan;
+    if sum(sela)>0
       F_ap = input(:,sela,:,:);
     else
-      sela = find(powindx(:,2)==this(1)&powindx(:,1)==pchanindx);
+      sela = powindx(:,2)==this(1)&powindx(:,1)==pchan;
       F_ap = conj(input(:,sela,:,:));
     end
     
-    selb = find(powindx(:,2)==this(2)&powindx(:,1)==pchanindx);
-    if ~isempty(selb)
+    selb = powindx(:,2)==this(2)&powindx(:,1)==pchan;
+    if sum(selb)>0
       F_pb = input(:,selb,:,:);
     else
-      selb = find(powindx(:,1)==this(2)&powindx(:,2)==pchanindx);
+      selb = powindx(:,1)==this(2)&powindx(:,2)==pchan;
       F_pb = conj(input(:,selb,:,:));
     end
-    selp = find(powindx(:,1)==pchanindx&powindx(:,2)==pchanindx);
+    selp = powindx(:,1)==pchan&powindx(:,2)==pchan;
     F_pp = input(:,selp,:,:);
     
     p_input(:,k,:,:) = input(:,k,:,:) - F_ap.*(1./F_pp).*F_pb;

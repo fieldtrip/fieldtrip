@@ -133,6 +133,12 @@ cfgc.partchannel = 'signal003'; % this should destroy coherence between 1 and 2
 cfgc.method      = 'coh';
 c10              = ft_connectivityanalysis(cfgc, freq);
 
+% this is to test the alternative, where the freq data has a labelcmb,
+% rather than fourierspectra
+cc    = ft_channelcombination({'all' 'all'},freq.label)
+freqx = ft_checkdata(freq,'cmbstyle','sparsewithpow','channelcmb',cc);
+c10b  = ft_connectivityanalysis(cfgc, freqx);
+
 cfgc             = [];
 cfgc.method      = 'coh';
 cfgc.channelcmb  = {'signal001' 'signal002'};
