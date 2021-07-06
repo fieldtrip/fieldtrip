@@ -293,8 +293,21 @@ switch field
       dimord = 'subj_chan_time';
     end
     
-  case {'avg' 'var' 'dof'}
+  case {'avg' 'var'}
     if isequal(datsiz, [nrpt nchan ntime])
+      dimord = 'rpt_chan_time';
+    elseif isequal(datsiz, [nchan ntime])
+      dimord = 'chan_time';
+    elseif isequalwithoutnans(datsiz, [nrpt nchan ntime])
+      dimord = 'rpt_chan_time';
+    elseif isequalwithoutnans(datsiz, [nchan ntime])
+      dimord = 'chan_time';
+    end
+    
+  case {'dof'}
+    if isequal(datsiz, [1 1])
+      dimord = 'unknown';
+    elseif isequal(datsiz, [nrpt nchan ntime])
       dimord = 'rpt_chan_time';
     elseif isequal(datsiz, [nchan ntime])
       dimord = 'chan_time';
