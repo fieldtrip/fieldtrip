@@ -212,6 +212,8 @@ elseif length(strfind(dimord, 'chan'))==2 || length(strfind(dimord, 'pos'))==2
   end
   ft_progress('close');
   
+else
+  ft_error('unsupported dimord "%s"', dimord);
 end
 
 n  = siz(1);
@@ -241,7 +243,7 @@ function [c] = complexeval(c, str)
 
 switch str
   case 'complex'
-    %do nothing
+    % do nothing
   case 'abs'
     c = abs(c);
   case 'angle'
