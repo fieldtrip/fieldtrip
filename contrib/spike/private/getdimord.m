@@ -137,7 +137,7 @@ if isfield(data, 'cumtapcnt')
     nrpttap = sum(data.cumtapcnt);
   else
     % it is a matrix, hence it is repetitions by frequencies
-    % this happens after  mtmconvol with keeptrials
+    % this happens after mtmconvol with keeptrials
     nrpttap = sum(data.cumtapcnt,2);
     if any(nrpttap~=nrpttap(1))
       ft_warning('unexpected variation of the number of tapers over trials')
