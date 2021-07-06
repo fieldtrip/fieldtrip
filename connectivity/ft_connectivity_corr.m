@@ -53,7 +53,7 @@ function [c, v, outcnt] = ft_connectivity_corr(input, varargin)
 %
 % Partialisation can be performed when the input data is (chan x chan). The following
 % option needs to be specified:
-%   pchan   = index-vector to the channels that need to be partialised
+%   pchanindx   = index-vector to the channels that need to be partialised
 %
 % See also CONNECTIVITY, FT_CONNECTIVITYANALYSIS
 
@@ -86,7 +86,7 @@ feedback    = ft_getopt(varargin, 'feedback', 'none');
 dimord      = ft_getopt(varargin, 'dimord');
 powindx     = ft_getopt(varargin, 'powindx');
 pownorm     = ft_getopt(varargin, 'pownorm', 0);
-pchan       = ft_getopt(varargin, 'pchanindx');
+pchanindx   = ft_getopt(varargin, 'pchanindx');
 
 if isempty(dimord)
   ft_error('input parameters should contain a dimord');
@@ -95,11 +95,11 @@ end
 siz = [size(input) 1];
 
 % do partialisation if necessary
-if ~isempty(pchan) && isempty(powindx)
+if ~isempty(pchanindx) && isempty(powindx)
   % partial spectra are computed as in Rosenberg JR et al (1998) J.Neuroscience Methods, equation 38
   
-  npchan = numel(pchan);
-  chan   = setdiff(1:size(input,2), pchan);
+  npchanindx = numel(pchanindx);
+  chan   = setdiff(1:size(input,2), pchanindx);
   nchan  = numel(chan);
   newsiz = siz;
   newsiz(2:3) = numel(chan); % size of partialised csd
@@ -107,10 +107,10 @@ if ~isempty(pchan) && isempty(powindx)
   A = zeros(newsiz);
   
   for j = 1:siz(1) % loop over rpt
-    AA = reshape(input(j, chan,  chan, : ), [nchan  nchan  prod(siz(4:end))]); % fold freq_time into one dimension
-    AB = reshape(input(j, chan,  pchan,: ), [nchan  npchan prod(siz(4:end))]);
-    BA = reshape(input(j, pchan, chan, : ), [npchan nchan  prod(siz(4:end))]);
-    BB = reshape(input(j, pchan, pchan, :), [npchan npchan prod(siz(4:end))]);
+    AA = reshape(input(j, chan,  chan, : ),         [nchan  nchan      prod(siz(4:end))]); % fold freq_time into one dimension
+    AB = reshape(input(j, chan,  pchanindx,: ),     [nchan  npchanindx prod(siz(4:end))]);
+    BA = reshape(input(j, pchanindx, chan, : ),     [npchanindx nchan  prod(siz(4:end))]);
+    BB = reshape(input(j, pchanindx, pchanindx, :), [npchanindx npchanindx prod(siz(4:end))]);
     for k = 1:prod(siz(4:end)) % loop over freq or freq_time
       A(j,:,:,k) = AA(:,:,k) - AB(:,:,k)/(BB(:,:,k))*BA(:,:,k);
     end
@@ -118,9 +118,9 @@ if ~isempty(pchan) && isempty(powindx)
   input = A;
   siz = size(input);
   
-elseif ~isempty(pchan)
+elseif ~isempty(pchanindx)
   % linearly indexed crossspectra require some more complicated handling
-  if numel(pchan)>1
+  if numel(pchanindx)>1
     ft_error('more than one channel for partialisation with linearly indexed crossspectra is currently not implemented');
   end
   
@@ -130,22 +130,22 @@ elseif ~isempty(pchan)
     % achieve F_ab\p = F_ab - F_ap*inv(F_p)*F_pb;
     
     this = powindx(k,:);
-    sela = powindx(:,1)==this(1)&powindx(:,2)==pchan;
+    sela = powindx(:,1)==this(1)&powindx(:,2)==pchanindx;
     if sum(sela)>0
       F_ap = input(:,sela,:,:);
     else
-      sela = powindx(:,2)==this(1)&powindx(:,1)==pchan;
+      sela = powindx(:,2)==this(1)&powindx(:,1)==pchanindx;
       F_ap = conj(input(:,sela,:,:));
     end
     
-    selb = powindx(:,2)==this(2)&powindx(:,1)==pchan;
+    selb = powindx(:,2)==this(2)&powindx(:,1)==pchanindx;
     if sum(selb)>0
       F_pb = input(:,selb,:,:);
     else
-      selb = powindx(:,1)==this(2)&powindx(:,2)==pchan;
+      selb = powindx(:,1)==this(2)&powindx(:,2)==pchanindx;
       F_pb = conj(input(:,selb,:,:));
     end
-    selp = powindx(:,1)==pchan&powindx(:,2)==pchan;
+    selp = powindx(:,1)==pchanindx&powindx(:,2)==pchanindx;
     F_pp = input(:,selp,:,:);
     
     p_input(:,k,:,:) = input(:,k,:,:) - F_ap.*(1./F_pp).*F_pb;
