@@ -226,7 +226,7 @@ switch cfg.method
         try
           data = ft_checkdata(data, 'datatype', {'freqmvar' 'freq'}, 'cmbstyle', 'fullfast');
           inparam = 'crsspctrm';
-          hasrpt  = contains(data.dimord, 'rpt');
+          hasrpt  = contains(getdimord(data.(inparam)), 'rpt');
         catch
           ft_error('partial coherence/csd is only supported for input allowing for a all-to-all csd representation');
         end
