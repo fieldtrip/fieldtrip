@@ -33,6 +33,7 @@ headmodel = ft_headmodel_concentricspheres(geometry, 'conductivity', [0.33 1.00 
 
 % test for comp type
 cfg = [];
+cfg.updatesens = 'no';
 comp = ft_componentanalysis(cfg, data);
 ft_checkdata(comp, 'datatype', 'comp');
 
@@ -41,7 +42,7 @@ cfg.xgrid = 'auto';
 cfg.ygrid = 'auto';
 cfg.zgrid = 'auto';
 cfg.resolution = 1; %cm
-cfg.component = 1:5;
+cfg.component = [1 2 5];
 cfg.headmodel = headmodel;
 sourceout = ft_dipolefitting(cfg, comp);
 

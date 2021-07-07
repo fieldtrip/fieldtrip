@@ -33,6 +33,7 @@ headmodel = ft_headmodel_concentricspheres(geometry, 'conductivity', [0.33 1.00 
 
 % test for comp type
 cfg = [];
+cfg.updatesens = 'no';
 comp = ft_componentanalysis(cfg,data);
 ft_checkdata(comp, 'datatype', 'comp');
 
