@@ -26,8 +26,8 @@ data.elec.tra = eye(nchan);
 data.elec.unit = 'cm';
 
 geometry = [];
-geometry.pos = data.sens.elecpos;
-geometry.unit = data.sens.unit;
+geometry.pos = data.elec.elecpos;
+geometry.unit = data.elec.unit;
 % fit a 4-sphere concentric model to the geometry
 headmodel = ft_headmodel_concentricspheres(geometry, 'conductivity', [0.33 1.00 0.042 0.33]);
 
