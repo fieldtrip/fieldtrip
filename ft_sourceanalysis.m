@@ -195,9 +195,9 @@ cfg = ft_checkconfig(cfg, 'renamed',    {'gradfile', 'grad'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'optofile', 'opto'});
 
 % determine the type of input data
+istimelock = ft_datatype(data, 'timelock');
 isfreq     = ft_datatype(data, 'freq');
 iscomp     = ft_datatype(data, 'comp');
-istimelock = ft_datatype(data, 'timelock');
 if ~any([isfreq iscomp istimelock])
   ft_error('input data is not recognized');
 end
@@ -207,9 +207,10 @@ if istimelock
   cfg.method = ft_getopt(cfg, 'method', 'lcmv');
 elseif isfreq
   cfg.method = ft_getopt(cfg, 'method', 'dics');
-else
-  cfg.method = ft_getopt(cfg, 'method', []);
 end
+
+% ensure that the method is specified
+ft_checkopt(cfg, 'method', 'char');
 
 if isequal(cfg.method, 'harmony')
   ft_error('The harmony implementation does not work at present. Please contact the main developer of this method directly');
@@ -243,23 +244,23 @@ cfg.(cfg.method).invmethod     = ft_getopt(cfg.(cfg.method), 'invmethod',     []
 cfg.(cfg.method).powmethod     = ft_getopt(cfg.(cfg.method), 'powmethod',     []);
 
 % get any further options
-cfg.keepleadfield    = ft_getopt(cfg, 'keepleadfield', 'no');
-cfg.keeptrials       = ft_getopt(cfg, 'keeptrials', 'no');
-cfg.trialweight      = ft_getopt(cfg, 'trialweight', 'equal');
-cfg.jackknife        = ft_getopt(cfg, 'jackknife',   'no');
-cfg.pseudovalue      = ft_getopt(cfg, 'pseudovalue', 'no');
-cfg.bootstrap        = ft_getopt(cfg, 'bootstrap',   'no');
-cfg.singletrial      = ft_getopt(cfg, 'singletrial', 'no');
-cfg.rawtrial         = ft_getopt(cfg, 'rawtrial',    'no');
-cfg.randomization    = ft_getopt(cfg, 'randomization', 'no');
+cfg.keepleadfield    = ft_getopt(cfg, 'keepleadfield',  'no');
+cfg.keeptrials       = ft_getopt(cfg, 'keeptrials',     'no');
+cfg.trialweight      = ft_getopt(cfg, 'trialweight',    'equal');
+cfg.jackknife        = ft_getopt(cfg, 'jackknife',      'no');
+cfg.pseudovalue      = ft_getopt(cfg, 'pseudovalue',    'no');
+cfg.bootstrap        = ft_getopt(cfg, 'bootstrap',      'no');
+cfg.singletrial      = ft_getopt(cfg, 'singletrial',    'no');
+cfg.rawtrial         = ft_getopt(cfg, 'rawtrial',       'no');
+cfg.randomization    = ft_getopt(cfg, 'randomization',  'no');
 cfg.numrandomization = ft_getopt(cfg, 'numrandomization', 100);
-cfg.permutation      = ft_getopt(cfg, 'permutation',      'no');
-cfg.numpermutation   = ft_getopt(cfg, 'numpermutation',   100);
-cfg.wakewulf         = ft_getopt(cfg, 'wakewulf', 'yes');
-cfg.killwulf         = ft_getopt(cfg, 'killwulf', 'yes');
-cfg.channel          = ft_getopt(cfg, 'channel',  'all');
-cfg.latency          = ft_getopt(cfg, 'latency',   'all');
-cfg.frequency        = ft_getopt(cfg, 'frequency', 'all');
+cfg.permutation      = ft_getopt(cfg, 'permutation',    'no');
+cfg.numpermutation   = ft_getopt(cfg, 'numpermutation', 100);
+cfg.wakewulf         = ft_getopt(cfg, 'wakewulf',       'yes');
+cfg.killwulf         = ft_getopt(cfg, 'killwulf',       'yes');
+cfg.channel          = ft_getopt(cfg, 'channel',        'all');
+cfg.latency          = ft_getopt(cfg, 'latency',        'all');
+cfg.frequency        = ft_getopt(cfg, 'frequency',      'all');
 % these only apply to DICS and PCC
 cfg.refdip           = ft_getopt(cfg, 'refdip', []);
 cfg.supdip           = ft_getopt(cfg, 'supdip', []);
@@ -339,7 +340,7 @@ elseif isfreq
     if isfield(data, 'time')
       cfg.latency   = data.time; % should be a single number here
     end
-
+    
   end
 end
 
@@ -501,12 +502,12 @@ end % if refdip/supdip, precomputed filter, leadfield, keepfilter, keepleadfield
 % channels in the localspheres volume conduction model are different.
 % Hence a subset of the data channels will be used.
 Nchans = length(cfg.channel);
-if contains(data.dimord, 'freq')
+if ~iscomp && contains(data.dimord, 'freq')
   Nfreq = numel(data.freq);
 else
   Nfreq = 1;
 end
-if contains(data.dimord, 'time')
+if ~iscomp && contains(data.dimord, 'time')
   Ntime = numel(data.time);
 else
   Ntime = 1;
@@ -519,7 +520,7 @@ if isfreq && any(strcmp(cfg.method, {'dics', 'pcc', 'eloreta', 'mne','harmony', 
   
   switch cfg.method
     case 'pcc'
-
+      
       if hasbaseline
         ft_error('not supported')
       end
@@ -1092,7 +1093,7 @@ elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne', 'harmony', 'r
       dip(i) = ft_inverse_eloreta(sourcemodel, sens, headmodel, squeeze_avg, squeeze_Cy, methodopt{:}, leadfieldopt{:});
     end
   elseif strcmp(cfg.method, 'sam')
-    % convert time in samples for Evoked Related SAM
+    % convert time in samples for Event Related SAM
     latency = ft_getopt(methodopt, 'latency_toi');
     toi     = ft_getopt(methodopt, 'toi');
     if isempty(toi) && ~isempty(latency) && ~isequal(latency, 'all')
@@ -1100,7 +1101,6 @@ elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne', 'harmony', 'r
       toi(2) = nearest(data.time, latency(2));
       methodopt = ft_setopt(methodopt, 'toi', toi);
     end
-    
     for i=1:Nrepetitions
       squeeze_Cy  = reshape(Cy(i,:,:), [size_Cy(2)  size_Cy(3)]);
       squeeze_avg = reshape(avg(i,:,:),[size_avg(2) size_avg(3)]);
@@ -1166,6 +1166,32 @@ elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne', 'harmony', 'r
       end
       squeeze_avg = reshape(avg(i,:,:),[size_avg(2) size_avg(3)]);
       dip(i) = mvlestimate(sourcemodel, sens, headmodel, squeeze_avg, methodopt{:}, leadfieldopt{:});
+    end
+  else
+    ft_error('method ''%s'' is unsupported for source reconstruction in the time domain', cfg.method);
+  end
+  
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  % do source reconstruction for component topographies
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+elseif iscomp && any(strcmp(cfg.method, {'rv'}))
+  
+  % get the relevant low level options from the cfg and convert into key-value pairs
+  tmpcfg = cfg.(cfg.method);
+  methodopt = ft_cfg2keyval(tmpcfg);
+  
+  % construct the low-level options for the leadfield computation as key-value pairs, these are passed to the inverse function and FT_COMPUTE_LEADFIELD
+  leadfieldopt = {};
+  leadfieldopt = ft_setopt(leadfieldopt, 'reducerank',     ft_getopt(cfg, 'reducerank'));
+  leadfieldopt = ft_setopt(leadfieldopt, 'backproject',    ft_getopt(cfg, 'backproject'));
+  leadfieldopt = ft_setopt(leadfieldopt, 'normalize',      ft_getopt(cfg, 'normalize'));
+  leadfieldopt = ft_setopt(leadfieldopt, 'normalizeparam', ft_getopt(cfg, 'normalizeparam'));
+  leadfieldopt = ft_setopt(leadfieldopt, 'weight',         ft_getopt(cfg, 'weight'));
+  
+  if strcmp(cfg.method, 'rv')
+    for i=cfg.component(:)'
+      fprintf('estimating residual variance at each source position for component %d\n', i);
+      dip(i) = ft_inverse_rv(sourcemodel, sens, headmodel, data.topo(:,i), methodopt{:}, leadfieldopt{:});
     end
   else
     ft_error('method ''%s'' is unsupported for source reconstruction in the time domain', cfg.method);
