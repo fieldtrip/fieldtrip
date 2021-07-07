@@ -60,6 +60,7 @@ facecolor   = ft_getopt(varargin, 'facecolor', 'white');
 vertexcolor = ft_getopt(varargin, 'vertexcolor', 'none');
 edgecolor   = ft_getopt(varargin, 'edgecolor'); % the default for this is set below
 facealpha   = ft_getopt(varargin, 'facealpha', 1);
+edgealpha   = ft_getopt(varargin, 'edgealpha', 1);
 surfaceonly = ft_getopt(varargin, 'surfaceonly');
 unit        = ft_getopt(varargin, 'unit');
 grad        = ft_getopt(varargin, 'grad');
@@ -152,9 +153,9 @@ end
 
 % plot the triangulated surfaces of the volume conduction model
 for i=1:length(mesh)
-  ft_plot_mesh(mesh(i), 'faceindex', faceindex, 'vertexindex', vertexindex, ...
-    'vertexsize', vertexsize, 'facecolor', facecolor, 'edgecolor', edgecolor, ...
-    'vertexcolor', vertexcolor, 'facealpha', facealpha, 'surfaceonly', surfaceonly);
+  ft_plot_mesh(mesh(i), 'faceindex', faceindex, 'vertexindex', vertexindex, 'vertexsize', vertexsize, ...
+    'facecolor', facecolor, 'edgecolor', edgecolor, 'vertexcolor', vertexcolor, ...
+    'facealpha', facealpha, 'edgealpha', edgealpha, 'surfaceonly', surfaceonly);
 end
 
 % revert to original state

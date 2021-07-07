@@ -1,4 +1,4 @@
-function rgb = red
+function rgb = skin_light
 
 % This returns a predefined color as [red green blue] values
 %   red               = [255   0   0]/255;
@@ -20,6 +20,14 @@ function rgb = red
 %   skin_medium       = [188 142 106]/255;
 %   skin_medium_dark  = [155 102	65]/255;
 %   skin_dark         = [ 91  71  61]/255;
+%
+% The different skin-based colors follow the Fitzpatrick scale with type I and II
+% combined, and return RGB values that approximate those used by Apple in the emoji
+% skin tones. See also https://emojipedia.org/emoji-modifier-sequence/
+%
+% If no specific skin tone is specified, this function returns a light skin color.
+% This corresponds with that of one of the developers who approximated his own skin
+% color more than 15 years ago upon the first implementation of this function.
 
-rgb = [255 0 0]/255;
-
+% returns a predefined color as [red green blue] values
+rgb = [249	223	192]/255;
