@@ -1190,8 +1190,18 @@ elseif iscomp && any(strcmp(cfg.method, {'rv'}))
   
   if strcmp(cfg.method, 'rv')
     for i=cfg.component(:)'
-      fprintf('estimating residual variance at each source position for component %d\n', i);
+      fprintf('estimating residual variance for component %d\n', i);
       dip(i) = ft_inverse_rv(sourcemodel, sens, headmodel, data.topo(:,i), methodopt{:}, leadfieldopt{:});
+    end
+  elseif strcmp(cfg.method, 'sloreta')
+    for i=cfg.component(:)'
+      fprintf('estimating sloreta for component %d\n', i);
+      dip(i) = ft_inverse_sloreta(sourcemodel, sens, headmodel, data.topo(:,i), [], methodopt{:}, leadfieldopt{:});
+    end
+  elseif strcmp(cfg.method, 'eloreta')
+    for i=cfg.component(:)'
+      fprintf('estimating eloreta for component %d\n', i);
+      dip(i) = ft_inverse_eloreta(sourcemodel, sens, headmodel, data.topo(:,i), [], methodopt{:}, leadfieldopt{:});
     end
   else
     ft_error('method ''%s'' is unsupported for source reconstruction in the time domain', cfg.method);
