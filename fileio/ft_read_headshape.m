@@ -985,76 +985,63 @@ switch fileformat
   case 'obj'
     ft_hastoolbox('wavefront', 1);
     % Only tested for structure.io .obj thus far
-    [vertexline, faces, texture, textureIdx] = read_obj_new(filename);
+    [pos, tri, texture, textureIdx] = read_obj_new(filename);
     
-    % the rest of the code assumes the texture to be defined on the vertices
-    % and the faces/vertices to be self contained, i.e. not more vertices
-    % than faces
-    if size(texture,1)==size(vertexline,1)
+    % check if the texture is defined per vertex, in which case the texture
+    % can be refined below
+    if size(texture, 1)==size(pos, 1)
       texture_per_vert = true;
     else
       texture_per_vert = false;
     end
     
-    % prune the vertices and keep the faces consistent, remove the faces
-    % with 0's first
-    allzeros = sum(faces==0,2)==3;
-    faces(allzeros, :)      = [];
+    % remove the triangles with 0's first
+    allzeros = sum(tri==0,2)==3;
+    tri(allzeros, :)        = [];
     textureIdx(allzeros, :) = [];
-    ufacesIdx = unique(faces(:));
-    remove = setdiff((1:size(vertexline,1))', ufacesIdx);
+    
+    % check whether all vertices belong to a triangle. If not: prune the
+    % vertices and keep the faces consistent
+    utriIdx = unique(tri(:));
+    remove  = setdiff((1:size(pos, 1))', utriIdx);
     if ~isempty(remove)
-      [vertexline, faces] = remove_vertices(vertexline, faces, remove);
+      [pos, tri] = remove_vertices(pos, tri, remove);
+      if texture_per_vert
+        % also remove the removed vertices from the texture
+        texture(remove, :) = [];
+      end
     end
-    
-    %     if fixtexture
-    %       texture_old = texture;
-    %       texture     = zeros(size(vertex,1), size(texture_old,2));
-    %
-    %       % create the vertex-based texture as an average across the faces that
-    %       % contain the vertex
-    %       for k = 1:size(vertex,1)
-    %         sel = textureIdx(faces==k);
-    %         texture(k,:) = mean(texture_old(mode(sel),:));
-    %       end
-    %     end
-    
-    shape.pos   = vertexline;
-    shape.pos   = shape.pos - repmat(sum(shape.pos)/length(shape.pos),...
-      [length(shape.pos),1]); %centering vertices
-    shape.tri   = faces; % remove the last row which is zeros
     
     if hasimage
       if texture_per_vert
         % Refines the mesh and textures to increase resolution of the colormapping
-        [shape.pos, shape.tri, texture] = refine(shape.pos, shape.tri,...
-          'banks', texture);
+        [pos, tri, texture] = refine(pos, tri, 'banks', texture);
         
         picture = imread(image);
-        color   = (zeros(length(shape.pos),3));
-        for i=1:length(shape.pos)
+        color   = zeros(size(pos, 1), 3);
+        for i = 1:size(pos, 1)
           color(i,1:3) = picture(floor((1-texture(i,2))*length(picture)),...
             1+floor(texture(i,1)*length(picture)),1:3);
         end
       else
         % do the texture to color mapping in a different way, without
         % additional refinement
-        picture = flip(imread(image),1);
+        picture      = flip(imread(image),1);
         [sy, sx, sz] = size(picture);
-        picture = reshape(picture, sy*sx, sz);
+        picture      = reshape(picture, sy*sx, sz);
         
         % make image 3D if grayscale
         if sz == 1
           picture = repmat(picture, 1, 3);
         end
-        [uniq_vert, ix] = unique(shape.tri);
-        texture_ix = textureIdx(ix);
+        [dum, ix]  = unique(tri);
+        textureIdx = textureIdx(ix);
         
         % get the indices into the image
-        x   = abs(round(texture(:,1)*(sx-1)))+1;
-        y   = abs(round(texture(:,2)*(sy-1)))+1;
-        xy  = sub2ind([sy sx],y,x);
-        sel = xy(texture_ix);
+        x     = abs(round(texture(:,1)*(sx-1)))+1;
+        y     = abs(round(texture(:,2)*(sy-1)))+1;
+        xy    = sub2ind([sy sx], y, x);
+        sel   = xy(textureIdx);
         color = double(picture(sel,:))/255;
       end
       
@@ -1064,21 +1051,23 @@ switch fileformat
         color = color./255;
       end
       
-      shape.color = color;
-      
-    elseif size(vertexline,2)==6
+    elseif size(pos, 2)==6
       % the vertices also contain RGB colors
       
-      color = vertexline(:,4:6);
+      color = pos(:, 4:6);
+      pos   = pos(:, 1:3);
+      
       % If color is specified as 0-255 rather than 0-1 correct by dividing
       % by 255
       if range(color(:)) > 1
         color = color./255;
       end
-      
-      shape.color = color;
     end
     
+    shape.pos   = pos - repmat(mean(pos,1), [size(pos, 1),1]); %centering vertices
+    shape.tri   = tri; 
+    shape.color = color;
+      
   case 'vtk'
     [pos, tri] = read_vtk(filename);
     shape.pos = pos;
