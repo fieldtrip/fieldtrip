@@ -2,7 +2,7 @@ function test_ft_dipolefitting
 
 % WALLTIME 00:20:00
 % MEM 2gb
-% DEPENDENCY ft_dipolefitting
+% DEPENDENCY ft_dipolefitting ft_headmodel_concentricspheres
 % DATATYPE comp timelock freq
 
 fs = 500;
