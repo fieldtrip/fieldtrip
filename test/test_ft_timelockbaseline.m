@@ -16,15 +16,11 @@ data.time{1} = linspace(start_time, end_time, nsamples);
 data.trial{1} = randn(nchan,nsamples);
 data.sampleinfo = [1 nsamples];
 data.label = cellstr(num2str((1:nchan).'));
-data.sens.label = data.label;
-data.sens.chanpos = randn(nchan,3);
-data.sens.elecpos = data.sens.chanpos;
-data.sens.tra = eye(nchan);
-data.sens.unit = 'cm';
 
 cfg = [];
 timelock = ft_timelockanalysis(cfg,data);
 ft_checkdata(timelock, 'datatype', 'timelock');
+
 cfg = [];
 cfg.baseline = [-1 0];
 cfg.channel = 'all';
