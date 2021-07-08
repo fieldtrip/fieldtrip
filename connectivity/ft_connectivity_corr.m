@@ -131,7 +131,7 @@ elseif ~isempty(pchanindx)
     
     this = powindx(k,:);
     sela = powindx(:,1)==this(1)&powindx(:,2)==pchanindx;
-    if sum(sela)>0
+    if any(sela)
       F_ap = input(:,sela,:,:);
     else
       sela = powindx(:,2)==this(1)&powindx(:,1)==pchanindx;
@@ -139,7 +139,7 @@ elseif ~isempty(pchanindx)
     end
     
     selb = powindx(:,2)==this(2)&powindx(:,1)==pchanindx;
-    if sum(selb)>0
+    if any(selb)
       F_pb = input(:,selb,:,:);
     else
       selb = powindx(:,1)==this(2)&powindx(:,2)==pchanindx;
