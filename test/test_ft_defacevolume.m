@@ -1,6 +1,6 @@
 function test_ft_defacevolume
 
-% MEM 3gb
+% MEM 4gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_defacevolume
 
