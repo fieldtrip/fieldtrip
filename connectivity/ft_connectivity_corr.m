@@ -52,9 +52,8 @@ function [c, v, outcnt] = ft_connectivity_corr(input, varargin)
 %   'feedback'  = 'none', 'text', 'textbar', 'dial', 'etf', 'gui' type of feedback showing progress of computation, see FT_PROGRESS
 %
 % Partialisation can be performed when the input data is (chan x chan). The following
-% options need to be specified:
+% option needs to be specified:
 %   pchanindx   = index-vector to the channels that need to be partialised
-%   allchanindx = index-vector to all channels that are used (including the "to-be-partialised" ones).
 %
 % See also CONNECTIVITY, FT_CONNECTIVITYANALYSIS
 
@@ -81,14 +80,13 @@ function [c, v, outcnt] = ft_connectivity_corr(input, varargin)
 % FiXME: If output is angle, then jack-knifing should be done
 % differently since it is a circular variable
 
-hasjack     = ft_getopt(varargin, 'hasjack', false);
-cmplx       = ft_getopt(varargin, 'complex', 'abs');
+hasjack     = ft_getopt(varargin, 'hasjack',  false);
+cmplx       = ft_getopt(varargin, 'complex',  'abs');
 feedback    = ft_getopt(varargin, 'feedback', 'none');
 dimord      = ft_getopt(varargin, 'dimord');
 powindx     = ft_getopt(varargin, 'powindx');
 pownorm     = ft_getopt(varargin, 'pownorm', 0);
 pchanindx   = ft_getopt(varargin, 'pchanindx');
-allchanindx = ft_getopt(varargin, 'allchanindx');
 
 if isempty(dimord)
   ft_error('input parameters should contain a dimord');
@@ -100,20 +98,19 @@ siz = [size(input) 1];
 if ~isempty(pchanindx) && isempty(powindx)
   % partial spectra are computed as in Rosenberg JR et al (1998) J.Neuroscience Methods, equation 38
   
-  chan   = allchanindx;
+  npchanindx = numel(pchanindx);
+  chan   = setdiff(1:size(input,2), pchanindx);
   nchan  = numel(chan);
-  pchan  = pchanindx;
-  npchan = numel(pchan);
   newsiz = siz;
   newsiz(2:3) = numel(chan); % size of partialised csd
   
   A = zeros(newsiz);
   
   for j = 1:siz(1) % loop over rpt
-    AA = reshape(input(j, chan,  chan, : ), [nchan  nchan  prod(siz(4:end))]); % fold freq_time into one dimension
-    AB = reshape(input(j, chan,  pchan,: ), [nchan  npchan prod(siz(4:end))]);
-    BA = reshape(input(j, pchan, chan, : ), [npchan nchan  prod(siz(4:end))]);
-    BB = reshape(input(j, pchan, pchan, :), [npchan npchan prod(siz(4:end))]);
+    AA = reshape(input(j, chan,  chan, : ),         [nchan  nchan      prod(siz(4:end))]); % fold freq_time into one dimension
+    AB = reshape(input(j, chan,  pchanindx,: ),     [nchan  npchanindx prod(siz(4:end))]);
+    BA = reshape(input(j, pchanindx, chan, : ),     [npchanindx nchan  prod(siz(4:end))]);
+    BB = reshape(input(j, pchanindx, pchanindx, :), [npchanindx npchanindx prod(siz(4:end))]);
     for k = 1:prod(siz(4:end)) % loop over freq or freq_time
       A(j,:,:,k) = AA(:,:,k) - AB(:,:,k)/(BB(:,:,k))*BA(:,:,k);
     end
@@ -133,22 +130,22 @@ elseif ~isempty(pchanindx)
     % achieve F_ab\p = F_ab - F_ap*inv(F_p)*F_pb;
     
     this = powindx(k,:);
-    sela = find(powindx(:,1)==this(1)&powindx(:,2)==pchanindx);
-    if ~isempty(sela)
+    sela = powindx(:,1)==this(1)&powindx(:,2)==pchanindx;
+    if any(sela)
       F_ap = input(:,sela,:,:);
     else
-      sela = find(powindx(:,2)==this(1)&powindx(:,1)==pchanindx);
+      sela = powindx(:,2)==this(1)&powindx(:,1)==pchanindx;
       F_ap = conj(input(:,sela,:,:));
     end
     
-    selb = find(powindx(:,2)==this(2)&powindx(:,1)==pchanindx);
-    if ~isempty(selb)
+    selb = powindx(:,2)==this(2)&powindx(:,1)==pchanindx;
+    if any(selb)
       F_pb = input(:,selb,:,:);
     else
-      selb = find(powindx(:,1)==this(2)&powindx(:,2)==pchanindx);
+      selb = powindx(:,1)==this(2)&powindx(:,2)==pchanindx;
       F_pb = conj(input(:,selb,:,:));
     end
-    selp = find(powindx(:,1)==pchanindx&powindx(:,2)==pchanindx);
+    selp = powindx(:,1)==pchanindx&powindx(:,2)==pchanindx;
     F_pp = input(:,selp,:,:);
     
     p_input(:,k,:,:) = input(:,k,:,:) - F_ap.*(1./F_pp).*F_pb;

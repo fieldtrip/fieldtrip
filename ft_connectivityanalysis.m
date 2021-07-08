@@ -221,22 +221,18 @@ needrpt = true; % logical flag to specify whether (pseudo)-repetitions are requi
 switch cfg.method
   case {'coh' 'csd'}
     if ~isempty(cfg.partchannel)
-      if hasrpt && ~hasjack
+      if hasrpt && ~hasjack && ~isfield(data, 'labelcmb')
         ft_warning('partialisation on single trial observations is not supported, removing trial dimension');
         try
           data = ft_checkdata(data, 'datatype', {'freqmvar' 'freq'}, 'cmbstyle', 'fullfast');
           inparam = 'crsspctrm';
-          hasrpt = 0;
+          hasrpt  = contains(getdimord(data.(inparam)), 'rpt');
         catch
           ft_error('partial coherence/csd is only supported for input allowing for a all-to-all csd representation');
         end
       else
-        %         try
-        %           data = ft_checkdata(data, 'datatype', {'freqmvar' 'freq'}, 'cmbstyle', 'full');
-        %           inparam = 'crsspctrm';
-        %         catch
-        %           ft_error('partial coherence/csd is only supported for input allowing for a all-to-all csd representation');
-        %         end
+        % FIXME not sure whether any inappropriate input is caught down
+        % below
         inparam = 'crsspctrm';
       end
     else
@@ -373,13 +369,13 @@ switch cfg.method
   case {'mi' 'di' 'dfi'}
     % create the subcfg for the mutual information
     if ~isfield(cfg, cfg.method), cfg.(cfg.method) = []; end
-    cfg.(cfg.method).method  = ft_getopt(cfg.(cfg.method), 'method',  'gcmi'); % default to the Gaussian Copula based method
-    cfg.(cfg.method).numbin  = ft_getopt(cfg.(cfg.method), 'numbin',  10);
-    cfg.(cfg.method).lags    = ft_getopt(cfg.(cfg.method), 'lags',    0);
-    cfg.(cfg.method).montage = ft_getopt(cfg.(cfg.method), 'montage', []);
-    cfg.(cfg.method).complex = ft_getopt(cfg.(cfg.method), 'complex', 'complex');
-    cfg.(cfg.method).combinelags = ft_getopt(cfg.(cfg.method), 'combinelags', false);
-    cfg.(cfg.method).feature     = ft_getopt(cfg.(cfg.method), 'feature',     []);
+    cfg.(cfg.method).method       = ft_getopt(cfg.(cfg.method), 'method',  'gcmi'); % default to the Gaussian Copula based method
+    cfg.(cfg.method).numbin       = ft_getopt(cfg.(cfg.method), 'numbin',  10);
+    cfg.(cfg.method).lags         = ft_getopt(cfg.(cfg.method), 'lags',    0);
+    cfg.(cfg.method).montage      = ft_getopt(cfg.(cfg.method), 'montage', []);
+    cfg.(cfg.method).complex      = ft_getopt(cfg.(cfg.method), 'complex', 'complex');
+    cfg.(cfg.method).combinelags  = ft_getopt(cfg.(cfg.method), 'combinelags', false);
+    cfg.(cfg.method).feature      = ft_getopt(cfg.(cfg.method), 'feature',     []);
     cfg.(cfg.method).precondition = ft_getopt(cfg.(cfg.method), 'precondition', false);
     
     % what are the input requirements?
@@ -571,24 +567,20 @@ if ~isempty(cfg.partchannel) && (isfield(data, 'label') || isfield(data, 'labelc
   elseif isfield(data, 'labelcmb')
     [indx, label] = labelcmb2indx(data.labelcmb);
   end
-  allchannel = ft_channelselection(cfg.channel, label);
+  allchannel = ft_channelselection(label, cfg.channel);
   pchanindx  = match_str(allchannel, cfg.partchannel);
-  kchanindx  = setdiff(1:numel(allchannel), pchanindx);
-  keepchn    = allchannel(kchanindx);
   
-  cfg.pchanindx   = pchanindx;
-  cfg.allchanindx = kchanindx;
+  cfg.pchanindx = pchanindx;
   
   partstr = '';
   for k = 1:numel(cfg.partchannel)
     partstr = [partstr, '-', cfg.partchannel{k}];
   end
-  for k = 1:numel(keepchn)
-    keepchn{k} = [keepchn{k}, '\', partstr(2:end)];
-  end
   if isfield(data, 'label')
     % update labels of the partialed channels
-    data.label = keepchn;
+    for k = 1:numel(data.label)
+      data.label{k} = [data.label{k}, '\', partstr(2:end)];
+    end
   elseif isfield(data, 'labelcmb')
     for k = 1:numel(data.labelcmb)
       data.labelcmb{k} = [data.labelcmb{k}, '\', partstr(2:end)];
@@ -597,7 +589,6 @@ if ~isempty(cfg.partchannel) && (isfield(data, 'label') || isfield(data, 'labelc
   
 else
   cfg.pchanindx   = [];
-  cfg.allchanindx = [];
 end
 
 % check if jackknife is required
@@ -658,17 +649,25 @@ switch cfg.method
   case 'coh'
     % coherence (unsquared), if cfg.complex = 'imag' imaginary part of coherency
     optarg = {'complex', cfg.complex, 'dimord', data.dimord, 'feedback', cfg.feedback, 'pownorm', normpow, 'hasjack', hasjack};
-    if ~isempty(cfg.pchanindx), optarg = cat(2, optarg, {'pchanindx', cfg.pchanindx, 'allchanindx', cfg.allchanindx}); end
-    if exist('powindx', 'var'), optarg = cat(2, optarg, {'powindx', powindx}); end
+    if ~isempty(cfg.pchanindx), optarg = cat(2, optarg, {'pchanindx', cfg.pchanindx}); end
+    if exist('powindx', 'var'), optarg = cat(2, optarg, {'powindx',   powindx});       end
     [datout, varout, nrpt] = ft_connectivity_corr(data.(inparam), optarg{:});
     
+    if ~isempty(cfg.pchanindx) && isfield(data, 'label')
+      % the labels need to be updated (because some may have disappeared)
+      data.label(cfg.pchanindx) = [];
+    end
   case 'csd'
     % cross-spectral density (e.g. useful if partialisation is required)
     optarg = {'complex', cfg.complex, 'dimord', data.dimord, 'feedback', cfg.feedback, 'pownorm', normpow, 'hasjack', hasjack};
-    if ~isempty(cfg.pchanindx), optarg = cat(2, optarg, {'pchanindx', cfg.pchanindx, 'allchanindx', cfg.allchanindx}); end
-    if exist('powindx', 'var'), optarg = cat(2, optarg, {'powindx', powindx}); end
+    if ~isempty(cfg.pchanindx), optarg = cat(2, optarg, {'pchanindx', cfg.pchanindx}); end
+    if exist('powindx', 'var'), optarg = cat(2, optarg, {'powindx',   powindx});       end
     [datout, varout, nrpt] = ft_connectivity_corr(data.(inparam), optarg{:});
     
+    if ~isempty(cfg.pchanindx) && isfield(data, 'label')
+      % the labels need to be updated (because some may have disappeared)
+      data.label(cfg.pchanindx) = [];
+    end
   case {'wpli' 'wpli_debiased'}
     % weighted pli or debiased weighted phase lag index.
     optarg = {'feedback', cfg.feedback, 'dojack', dojack, 'debias', strcmp(cfg.method, 'wpli_debiased')};
@@ -682,8 +681,8 @@ switch cfg.method
   case 'plv'
     % phase locking value
     optarg = {'complex', cfg.complex, 'dimord', data.dimord, 'feedback', cfg.feedback, 'pownorm', normpow, 'hasjack', hasjack};
-    if ~isempty(cfg.pchanindx), optarg = cat(2, optarg, {'pchanindx', cfg.pchanindx, 'allchanindx', cfg.allchanindx}); end
-    if exist('powindx', 'var'), optarg = cat(2, optarg, {'powindx', powindx}); end
+    if ~isempty(cfg.pchanindx), optarg = cat(2, optarg, {'pchanindx', cfg.pchanindx}); end
+    if exist('powindx', 'var'), optarg = cat(2, optarg, {'powindx',   powindx});       end
     [datout, varout, nrpt] = ft_connectivity_corr(data.(inparam), optarg{:});
     
   case 'amplcorr'
@@ -1062,9 +1061,13 @@ switch cfg.method
   case 'corr'
     % pearson's correlation coefficient
     optarg = {'dimord', getdimord(data, inparam), 'feedback', cfg.feedback, 'hasjack', hasjack, 'pownorm', true, 'complex', 'complex'};
-    if ~isempty(cfg.pchanindx), optarg = cat(2, optarg, {'pchanindx', cfg.pchanindx, 'allchanindx', cfg.allchanindx}); end
+    if ~isempty(cfg.pchanindx), optarg = cat(2, optarg, {'pchanindx', cfg.pchanindx}); end
     [datout, varout, nrpt] = ft_connectivity_corr(data.(inparam), optarg{:});
     
+    if ~isempty(cfg.pchanindx) && isfield(data, 'label')
+      % the labels need to be updated (because some may have disappeared)
+      data.label(cfg.pchanindx) = [];
+    end
   case 'xcorr'
     % cross-correlation function
     ft_error('method %s is not yet implemented', cfg.method);
