@@ -270,6 +270,7 @@ for indx=1:Ndata
       if ~isfield(cfg,  'xparam')
         cfg.xlim = [1 1];
         xparam   = '';
+        yparam   = '';
       end
   end
   
@@ -391,18 +392,20 @@ for indx=1:Ndata
   end
   
   % Get physical min/max range of x
-  if strcmp(cfg.xlim, 'maxmin')
-    xmin = min(data.(xparam));
-    xmax = max(data.(xparam));
-  else
-    xmin = cfg.xlim(1);
-    xmax = cfg.xlim(2);
+  if ~isempty(xparam)
+    if strcmp(cfg.xlim, 'maxmin')
+      xmin = min(data.(xparam));
+      xmax = max(data.(xparam));
+    else
+      xmin = cfg.xlim(1);
+      xmax = cfg.xlim(2);
+    end
+    xminindx = nearest(data.(xparam), xmin);
+    xmaxindx = nearest(data.(xparam), xmax);
+    xmin = data.(xparam)(xminindx);
+    xmax = data.(xparam)(xmaxindx);
+    selx = xminindx:xmaxindx;
   end
-  xminindx = nearest(data.(xparam), xmin);
-  xmaxindx = nearest(data.(xparam), xmax);
-  xmin = data.(xparam)(xminindx);
-  xmax = data.(xparam)(xmaxindx);
-  selx = xminindx:xmaxindx;
   
   % Get physical min/max range of y
   if ~isempty(yparam)
