@@ -129,7 +129,7 @@ else
 end
 
 % compute the lateralized potentials
-Nchan = size(cfg.channelcmb);
+Nchan = size(cfg.channelcmb,1);
 for i=1:Nchan
   % here the channel names "C3" and "C4" are used to clarify the
   % computation of the lateralized potential on all channel pairs

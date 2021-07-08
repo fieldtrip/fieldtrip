@@ -226,7 +226,7 @@ switch cfg.method
         try
           data = ft_checkdata(data, 'datatype', {'freqmvar' 'freq'}, 'cmbstyle', 'fullfast');
           inparam = 'crsspctrm';
-          hasrpt  = contains(getdimord(data.(inparam)), 'rpt');
+          hasrpt  = contains(getdimord(data, inparam), 'rpt');
         catch
           ft_error('partial coherence/csd is only supported for input allowing for a all-to-all csd representation');
         end
@@ -685,6 +685,10 @@ switch cfg.method
     if exist('powindx', 'var'), optarg = cat(2, optarg, {'powindx',   powindx});       end
     [datout, varout, nrpt] = ft_connectivity_corr(data.(inparam), optarg{:});
     
+    if ~isempty(cfg.pchanindx) && isfield(data, 'label')
+      % the labels need to be updated (because some may have disappeared)
+      data.label(cfg.pchanindx) = [];
+    end
   case 'amplcorr'
     % amplitude correlation
     dimord = getdimord(data, inparam);

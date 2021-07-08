@@ -45,7 +45,7 @@ function [c, v, outcnt] = ft_connectivity_corr(input, varargin)
 %   'powindx'   = required if the input data contain linearly indexed channel pairs. This
 %                 should be an Nx2 matrix indexing on each row for the respective channel
 %                 pair the indices of the corresponding auto-spectra.
-%   'pownorm'    = boolean flag that specifies whether normalisation with the product
+%   'pownorm'   = boolean flag that specifies whether normalisation with the product
 %                 of the power should be performed (thus should be true when
 %                 correlation/coherence is requested, and false when covariance
 %                 or cross-spectral density is requested).
@@ -53,7 +53,7 @@ function [c, v, outcnt] = ft_connectivity_corr(input, varargin)
 %
 % Partialisation can be performed when the input data is (chan x chan). The following
 % option needs to be specified:
-%   pchanindx   = index-vector to the channels that need to be partialised
+%   'pchanindx' = index-vector to the channels that need to be partialised
 %
 % See also CONNECTIVITY, FT_CONNECTIVITYANALYSIS
 
@@ -116,7 +116,7 @@ if ~isempty(pchanindx) && isempty(powindx)
     end
   end
   input = A;
-  siz = size(input);
+  siz = [size(input) 1];
   
 elseif ~isempty(pchanindx)
   % linearly indexed crossspectra require some more complicated handling
@@ -131,7 +131,7 @@ elseif ~isempty(pchanindx)
     
     this = powindx(k,:);
     sela = powindx(:,1)==this(1)&powindx(:,2)==pchanindx;
-    if sum(sela)>0
+    if any(sela)
       F_ap = input(:,sela,:,:);
     else
       sela = powindx(:,2)==this(1)&powindx(:,1)==pchanindx;
@@ -139,7 +139,7 @@ elseif ~isempty(pchanindx)
     end
     
     selb = powindx(:,2)==this(2)&powindx(:,1)==pchanindx;
-    if sum(selb)>0
+    if any(selb)
       F_pb = input(:,selb,:,:);
     else
       selb = powindx(:,1)==this(2)&powindx(:,2)==pchanindx;

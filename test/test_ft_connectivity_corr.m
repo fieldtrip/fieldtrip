@@ -34,15 +34,15 @@ end
 result = {};
 result{end+1} = ft_connectivity_corr(input, 'dimord', dimord, 'hasjack', false, 'pownorm', false);
 result{end+1} = ft_connectivity_corr(input, 'dimord', dimord, 'hasjack', false, 'pownorm', true);
-result{end+1} = ft_connectivity_corr(input, 'dimord', dimord, 'hasjack', false, 'pownorm', true, 'pchanindx', 1, 'allchanindx', 1:3);
-result{end+1} = ft_connectivity_corr(input, 'dimord', dimord, 'hasjack', false, 'pownorm', true, 'pchanindx', 2, 'allchanindx', 1:3);
-result{end+1} = ft_connectivity_corr(input, 'dimord', dimord, 'hasjack', false, 'pownorm', true, 'pchanindx', 1:2, 'allchanindx', 1:3);
+result{end+1} = ft_connectivity_corr(input, 'dimord', dimord, 'hasjack', false, 'pownorm', true, 'pchanindx', 1);
+result{end+1} = ft_connectivity_corr(input, 'dimord', dimord, 'hasjack', false, 'pownorm', true, 'pchanindx', 1:2);
+result{end+1} = ft_connectivity_corr(input, 'dimord', dimord, 'hasjack', false, 'pownorm', true, 'pchanindx', 1:3);
 
 assert(all(diag(result{2})==1));
-assert(all(isnan(result{3}(1,1)), 'all'));
-assert(all(isnan(result{4}(2,2)), 'all'));
-assert(all(isnan(result{5}(1:2,1:2)), 'all'));
-assert(result{5}(3,3)==1);
+assert(all(size(result{2})==[3 3]));
+assert(all(size(result{3})==[2 2]));
+assert(all(size(result{4})==[1 1]));
+assert(all(size(result{5})==[0 0]));
 
 % all iterations were done with (slightly) different options, hence the results should not be equal
 for i=1:numel(result)
