@@ -1,8 +1,8 @@
 function test_ft_defacevolume
 
-% MEM 2gb
+% MEM 3gb
 % WALLTIME 00:10:00
-% DEPENDENCY ft_defacevolume SPM
+% DEPENDENCY ft_defacevolume
 
 mri = [];
 mri.anatomy = randn(181,217,181);

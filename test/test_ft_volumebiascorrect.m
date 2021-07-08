@@ -1,8 +1,8 @@
 function test_ft_volumebiascorrect
 
-% MEM 2gb
+% MEM 3gb
 % WALLTIME 00:60:00
-% DEPENDENCY ft_volumebiascorrect SPM
+% DEPENDENCY ft_volumebiascorrect
 
 mri = [];
 mri.anatomy = randn(181,217,181);
