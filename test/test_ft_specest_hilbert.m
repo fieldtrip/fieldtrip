@@ -35,15 +35,6 @@ result = {};
 result{end+1} = ft_specest_hilbert(dat, time, 'verbose', verbose, 'freqoi', freqoi, 'width', width, 'filttype', 'but',   'filtorder', 4,   'filtdir', 'twopass', 'timeoi', time);
 result{end+1} = ft_specest_hilbert(dat, time, 'verbose', verbose, 'freqoi', freqoi, 'width', width, 'filttype', 'but',   'filtorder', 4,   'filtdir', 'twopass', 'timeoi', time(1:2:end));
 result{end+1} = ft_specest_hilbert(dat, time, 'verbose', verbose, 'freqoi', freqoi, 'width', width, 'filttype', 'but',   'filtorder', 5,   'filtdir', 'twopass', 'timeoi', time(1:2:end));
-result{end+1} = ft_specest_hilbert(dat, time, 'verbose', verbose, 'freqoi', freqoi, 'width', width, 'filttype', 'firws', 'filtorder', 100, 'filtdir', 'twopass', 'timeoi', time);
-result{end+1} = ft_specest_hilbert(dat, time, 'verbose', verbose, 'freqoi', freqoi, 'width', width, 'filttype', 'firws', 'filtorder', 100, 'filtdir', 'twopass', 'timeoi', time(1:2:end));
-result{end+1} = ft_specest_hilbert(dat, time, 'verbose', verbose, 'freqoi', freqoi, 'width', width, 'filttype', 'firws', 'filtorder', 330, 'filtdir', 'twopass', 'timeoi', time(1:2:end));
-result{end+1} = ft_specest_hilbert(dat, time, 'verbose', verbose, 'freqoi', freqoi, 'width', width, 'filttype', 'fir',   'filtorder', 100, 'filtdir', 'twopass', 'timeoi', time);
-result{end+1} = ft_specest_hilbert(dat, time, 'verbose', verbose, 'freqoi', freqoi, 'width', width, 'filttype', 'fir',   'filtorder', 100, 'filtdir', 'twopass', 'timeoi', time(1:2:end));
-result{end+1} = ft_specest_hilbert(dat, time, 'verbose', verbose, 'freqoi', freqoi, 'width', width, 'filttype', 'fir',   'filtorder', 330, 'filtdir', 'twopass', 'timeoi', time(1:2:end));
-result{end+1} = ft_specest_hilbert(dat, time, 'verbose', verbose, 'freqoi', freqoi, 'width', width, 'filttype', 'firls', 'filtorder', 100, 'filtdir', 'twopass', 'timeoi', time);
-result{end+1} = ft_specest_hilbert(dat, time, 'verbose', verbose, 'freqoi', freqoi, 'width', width, 'filttype', 'firls', 'filtorder', 100, 'filtdir', 'twopass', 'timeoi', time(1:2:end));
-result{end+1} = ft_specest_hilbert(dat, time, 'verbose', verbose, 'freqoi', freqoi, 'width', width, 'filttype', 'firls', 'filtorder', 330, 'filtdir', 'twopass', 'timeoi', time(1:2:end));
 
 % filtdir=twopass is the default, use a different filter order for the following ones
 result{end+1} = ft_specest_hilbert(dat, time, 'verbose', verbose, 'freqoi', freqoi, 'width', width, 'filttype', 'but', 'filtorder', 1, 'filtdir', 'onepass');
