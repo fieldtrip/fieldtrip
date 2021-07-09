@@ -987,8 +987,7 @@ switch fileformat
     % Only tested for structure.io .obj thus far
     [pos, tri, texture, textureIdx] = read_obj_new(filename);
     
-    % check if the texture is defined per vertex, in which case the texture
-    % can be refined below
+    % check if the texture is defined per vertex, in which case the texture can be refined below
     if size(texture, 1)==size(pos, 1)
       texture_per_vert = true;
     else
@@ -1000,8 +999,7 @@ switch fileformat
     tri(allzeros, :)        = [];
     textureIdx(allzeros, :) = [];
     
-    % check whether all vertices belong to a triangle. If not: prune the
-    % vertices and keep the faces consistent
+    % check whether all vertices belong to a triangle. If not, then prune the vertices and keep the faces consistent.
     utriIdx = unique(tri(:));
     remove  = setdiff((1:size(pos, 1))', utriIdx);
     if ~isempty(remove)
@@ -1013,6 +1011,8 @@ switch fileformat
     end
     
     if hasimage
+      % there is an image with color information
+
       if texture_per_vert
         % Refines the mesh and textures to increase resolution of the colormapping
         [pos, tri, texture] = refine(pos, tri, 'banks', texture);
@@ -1020,12 +1020,10 @@ switch fileformat
         picture = imread(image);
         color   = zeros(size(pos, 1), 3);
         for i = 1:size(pos, 1)
-          color(i,1:3) = picture(floor((1-texture(i,2))*length(picture)),...
-            1+floor(texture(i,1)*length(picture)),1:3);
+          color(i,1:3) = picture(floor((1-texture(i,2))*length(picture)),1+floor(texture(i,1)*length(picture)),1:3);
         end
       else
-        % do the texture to color mapping in a different way, without
-        % additional refinement
+        % do the texture to color mapping in a different way, without additional refinement
         picture      = flip(imread(image),1);
         [sy, sx, sz] = size(picture);
         picture      = reshape(picture, sy*sx, sz);
@@ -1045,8 +1043,7 @@ switch fileformat
         color = double(picture(sel,:))/255;
       end
       
-      % If color is specified as 0-255 rather than 0-1 correct by dividing
-      % by 255
+      % If color is specified as 0-255 rather than 0-1 correct by dividing by 255
       if range(color(:)) > 1
         color = color./255;
       end
@@ -1057,17 +1054,22 @@ switch fileformat
       color = pos(:, 4:6);
       pos   = pos(:, 1:3);
       
-      % If color is specified as 0-255 rather than 0-1 correct by dividing
-      % by 255
+      % If color is specified as 0-255 rather than 0-1 correct by dividing by 255
       if range(color(:)) > 1
         color = color./255;
       end
+      
+    else
+      % there is no color information
+      color = [];
     end
     
-    shape.pos   = pos - repmat(mean(pos,1), [size(pos, 1),1]); %centering vertices
-    shape.tri   = tri; 
-    shape.color = color;
-      
+    shape.pos   = pos - repmat(mean(pos,1), [size(pos, 1),1]); % centering vertices
+    shape.tri   = tri;
+    if ~isempty(color)
+      shape.color = color;
+    end
+
   case 'vtk'
     [pos, tri] = read_vtk(filename);
     shape.pos = pos;
