@@ -1,17 +1,17 @@
 function test_lbex(datadirs)
 
-% WALLTIME 00:45:00
+% WALLTIME 01:00:00
 % MEM 12gb
 % DEPENDENCY ft_prepare_leadfield
 
-%if nargin==0
-    datadirs{1} = dccnpath('/home/common/matlab/fieldtrip/data');
-    datadirs{2} = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/networkanalysis');
-%end
+if nargin==0
+  datadirs{1} = dccnpath('/home/common/matlab/fieldtrip/data');
+  datadirs{2} = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/networkanalysis');
+end
 
 %% read the continuous data and segment into 2 seconds epochs, with 50% overlap
 cfg            = [];
-cfg.dataset    = fullfile(datadirs{1},'SubjectRest.ds'); 
+cfg.dataset    = fullfile(datadirs{1},'SubjectRest.ds');
 cfg.continuous = 'yes';
 cfg.channel    = {'MEG'};
 data1 = ft_preprocessing(cfg);
@@ -70,7 +70,7 @@ data2         = ft_resampledata(cfg, data2);
 
 %% use ICA in order to identify cardiac and blink components
 %cfg                 = [];
-%cfg.method          = 'runica'; 
+%cfg.method          = 'runica';
 %cfg.runica.maxsteps = 50;
 %cfg.randomseed      = 0;
 %comp                = ft_componentanalysis(cfg, datads);
@@ -78,10 +78,10 @@ load(fullfile(datadir,'comp.mat'));
 
 %% visualize components
 
-% these were the indices of the bad comp**[[reference:ft_definetrial|ft_definetrial]]** and onents that were identified 
+% these were the indices of the bad comp**[[reference:ft_definetrial|ft_definetrial]]** and onents that were identified
 % they may be different if you re-run the ICA decomposition
-badcomp = [2 3 7 16]; 
- 
+badcomp = [2 3 7 16];
+
 cfg           = [];
 cfg.component = badcomp;
 data1      = ft_rejectcomponent(cfg, comp, data1);
@@ -165,10 +165,10 @@ cfg.frequency         = freq.freq;
 cfg.method            = 'dics';
 cfg.headmodel         = hdm;
 cfg.keeptrials        = 'yes';
-cfg.dics.lambda        = '20%';
-cfg.dics.projectnoise  = 'yes';
-cfg.dics.fixedori      = 'yes';
-cfg.dics.realfilter    = 'yes';
+cfg.dics.lambda       = '20%';
+cfg.dics.projectnoise = 'yes';
+cfg.dics.fixedori     = 'yes';
+cfg.dics.realfilter   = 'yes';
 cfg.dics.keepfilter   = 'yes';
 cfg.sourcemodel       = lf81;
 source81              = ft_sourceanalysis(cfg, freq);
@@ -222,7 +222,7 @@ F4220lbex = cat(1,source4220lbex.avg.filter{:});
 C4220lbex = F4220lbex*C*F4220lbex';
 C4220lbex = C4220lbex./sqrt(diag(C4220lbex)*diag(C4220lbex)');
 
-% conclusion lbex leads to overall less spurious coherence
-figure;histogram(abs(C8120(:)),20)
-hold on;histogram(abs(C4120lbex(:)),20)
+% conclusion: lbex leads to overall less spurious coherence
+figure; histogram(abs(C8120(:)),20)
+hold on; histogram(abs(C4120lbex(:)),20)
 
