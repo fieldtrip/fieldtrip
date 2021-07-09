@@ -16,14 +16,17 @@ data.time{1} = linspace(start_time, end_time, nsamples);
 data.trial{1} = randn(nchan,nsamples);
 data.sampleinfo = [1 nsamples];
 data.label = cellstr(num2str((1:nchan).'));
+
+% construct a set of electrodes randomly distributed over the upper hemisphere
 data.elec.label = data.label;
+data.elec.unit = 'cm';
+data.elec.tra = eye(nchan);
 data.elec.elecpos = randn(nchan,3);
+data.elec.elecpos(:,3) = abs(data.elec.elecpos(:,3));
 for i=1:nchan
   data.elec.elecpos(i,:) = 10*data.elec.elecpos(i,:)/norm(data.elec.elecpos(i,:));
 end
 data.elec.chanpos = data.elec.elecpos;
-data.elec.tra = eye(nchan);
-data.elec.unit = 'cm';
 
 geometry = [];
 geometry.pos = data.elec.elecpos;
