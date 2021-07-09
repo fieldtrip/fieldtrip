@@ -282,6 +282,13 @@ switch cfg.method
       time{tr}  = tim;
     end
     
+    % create the output data
+    simulated         = [];
+    simulated.trial   = trial;
+    simulated.time    = time;
+    simulated.fsample = cfg.fsample;
+    simulated.label   = label;
+    
   case {'mvnrnd'}
     fltpad = 100; % hard coded
     
