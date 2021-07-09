@@ -15,10 +15,6 @@ data = [];
 data.time{1} = linspace(start_time, end_time, nsamples);
 data.trial{1} = randn(nchan,nsamples);
 data.label = cellstr(num2str((1:nchan).'));
-data.sens.label = data.label;
-data.sens.chanpos = randn(nchan,3);
-data.sens.elecpos = data.sens.chanpos;
-data.sens.tra = eye(nchan);
 
 cfg = [];
 cfg.velocity2D.kernel = [1 1 0 -1 -1].*(fs/6);
