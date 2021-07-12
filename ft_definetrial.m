@@ -18,7 +18,8 @@ function [cfg] = ft_definetrial(cfg)
 %   cfg.headerfile     = string with the filename
 %   cfg.datafile       = string with the filename
 % and optionally
-%   cfg.representation = string, 'numeric' or 'table', this determines how the trl is returned (default = 'numeric')
+%   cfg.representation = [], 'numeric' or 'table', determines how the trl is returned 
+%                        (default = [], returns the output of the trialfun as is)
 %   cfg.headerformat
 %   cfg.dataformat
 %
@@ -139,8 +140,8 @@ end
 cfg = ft_checkconfig(cfg, 'dataset2files', 'yes');
 
 % set the default options
-cfg.representation  = ft_getopt(cfg, 'representation', 'numeric'); % numeric or table
-cfg.trialfun        = ft_getopt(cfg, 'trialfun', 'ft_trialfun_general');
+cfg.representation = ft_getopt(cfg, 'representation'); % empty, 'numeric' or 'table'
+cfg.trialfun       = ft_getopt(cfg, 'trialfun', 'ft_trialfun_general');
 
 % create the trial definition for this dataset and condition
 if isfield(cfg, 'trl')
@@ -189,41 +190,30 @@ if isfield(cfg, 'trialdef') && isfield(cfg.trialdef, 'eventtype') && isequal(cfg
   ft_info('no trials have been defined yet, see FT_DEFINETRIAL for further help\n');
 elseif size(trl,1)<1
   ft_error('no trials were defined, see FT_DEFINETRIAL for help');
+elseif size(trl,2) < 3
+  ft_error('trl must have at least 3 columns, see FT_DEFINETRIAL for help');
 end
 
 % add the new trials and events to the output configuration
 ft_info('found %d events\n', length(event));
 cfg.event = event;
 
-if strcmp(cfg.representation, 'numeric') && istable(trl)
-  if isempty(trl)
-    % an empty table does not have columns
-    trl = zeros(0,3);
-  else
-    % convert the table to a numeric array with the columns begsample, endsample and offset
-    trl = table2array(trl(:,1:3));
-    if size(trl,2)>3
-      % keep any additional columns
-      trl = horzcat(trl, table2array(trl(:,4:end)));
-    end
-  end
+% set trl to requested type
+if isempty(cfg.representation)  
+  % keep the format as is
+elseif strcmp(cfg.representation, 'numeric') && istable(trl)
+  % convert from table to numeric
+  trl = table2array(trl);
 elseif strcmp(cfg.representation, 'table') && isnumeric(trl)
-  if isempty(trl)
-    % an empty table does not have columns
-    trl = table();
-  else
-    % convert the numeric array to a table with the columns begsample and endsample
-    begsample = trl(:,1);
-    endsample = trl(:,2);
-    offset    = trl(:,3);
-    trl = table(begsample, endsample, offset);
-    for i=4:size(trl,2)
-      % keep any additional columns, they will have default names
-      trl{:,i} = trl(:,i);
-    end
-  end
+  % convert the numeric array to a table 
+  trl = array2table(trl);
+  
+  % the 3 first columns are named begsample, endsample and offset, and the
+  % rest get default names
+  trl.Properties.VariableNames(1:3) = {'begsample', 'endsample', 'offset'};
 end
 
+% assign trl to the cfg
 ft_info('created %d trials\n', size(trl,1));
 cfg.trl = trl;
 
