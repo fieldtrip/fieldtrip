@@ -12,24 +12,23 @@ function [cfg] = ft_definetrial(cfg)
 % where the configuration structure should contain
 %   cfg.trialdef       = structure with details of trial definition, see below
 %   cfg.trialfun       = string with function name, see below (default = 'ft_trialfun_general')
-%   cfg.representation = 'numeric' (default) or 'table'. Determines whether trl is returned as a matrix or table
 % and furthermore
 %   cfg.dataset        = string with the filename
 % or
 %   cfg.headerfile     = string with the filename
 %   cfg.datafile       = string with the filename
 % and optionally
+%   cfg.representation = string, 'numeric' or 'table', this determines how the trl is returned (default = 'numeric')
 %   cfg.headerformat
 %   cfg.dataformat
 %
-% A call to FT_DEFINETRIAL results in the trial definition "trl" being
-% added to the output configuration structure. The trials are defined
-% according to the triggers, trials or other events in the data, or
-% from a user-specified MATLAB function (subsequently referred to as
-% the trial function) which returns "trl". The user can specify the
-% name of his/her custom trial function that is tailored to the
-% experimental paradigm, or use the default trial function
-% FT_TRIALFUN_GENERAL.
+% A call to FT_DEFINETRIAL results in the trial definition "trl" being added
+% to the output configuration structure. The trials are defined according to 
+% the triggers, trials or other events in the data, or from a user-specified 
+% MATLAB function (subsequently referred to as the trial function) which 
+% returns "trl". The user can specify the name of his/her custom trial 
+% function that is tailored to the experimental paradigm, or use the default
+% trial function FT_TRIALFUN_GENERAL.
 %
 % The trial definition "trl" is an Nx3 matrix or table, where N is the number
 % of trials. The first column contains the sample-indices of the start of each
