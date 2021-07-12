@@ -4,6 +4,8 @@ function test_ft_prepare_headmodel
 % MEM 2gb
 % DEPENDENCY ft_prepare_headmodel
 
+nchan = 64;
+
 % construct a set of electrodes randomly distributed over the upper hemisphere
 elec.label = cellstr(num2str((1:nchan).'));
 elec.unit = 'cm';
