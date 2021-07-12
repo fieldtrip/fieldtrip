@@ -185,18 +185,19 @@ else
   
 end % if trl or trialfun
 
+% add the new trials and events to the output configuration
+ft_info('found %d events\n', length(event));
+cfg.event = event;
+
 if isfield(cfg, 'trialdef') && isfield(cfg.trialdef, 'eventtype') && isequal(cfg.trialdef.eventtype, '?')
   % give a gentle message instead of an error
   ft_info('no trials have been defined yet, see FT_DEFINETRIAL for further help\n');
+  return
 elseif size(trl,1)<1
   ft_error('no trials were defined, see FT_DEFINETRIAL for help');
 elseif size(trl,2) < 3
   ft_error('trl must have at least 3 columns, see FT_DEFINETRIAL for help');
 end
-
-% add the new trials and events to the output configuration
-ft_info('found %d events\n', length(event));
-cfg.event = event;
 
 % set trl to requested type
 if isempty(cfg.representation)  
@@ -207,9 +208,7 @@ elseif strcmp(cfg.representation, 'numeric') && istable(trl)
 elseif strcmp(cfg.representation, 'table') && isnumeric(trl)
   % convert the numeric array to a table 
   trl = array2table(trl);
-  
-  % the 3 first columns are named begsample, endsample and offset, and the
-  % rest get default names
+  % the 3 first columns are named begsample, endsample and offset, and the rest get default names
   trl.Properties.VariableNames(1:3) = {'begsample', 'endsample', 'offset'};
 end
 
