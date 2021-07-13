@@ -4,13 +4,13 @@ function test_ft_volumewrite
 % MEM 2gb
 % DEPENDENCY ft_volumewrite
 
-mrifilename   = dccnpath('/home/common/matlab/fieldtrip/template/headmodel/standard_mri.mat');
+[ftver, ftpath] = ft_version;
+mrifilename = fullfile(ftpath, 'template', 'headmodel', 'standard_mri.mat');
 
 mri = ft_read_mri(mrifilename);
 cfg = [];
 cfg.parameter = 'anatomy';
 cfg.filename = 'tempmri';
-cfg.filetype = 'nifti';
+cfg.filetype = 'nifti_spm';
 ft_volumewrite(cfg, mri)
-delete tempmri.nii
-
+delete tempmri*

@@ -5,7 +5,8 @@ function test_ft_combineplanar
 % DEPENDENCY ft_combineplanar ft_preprocessing ft_timelockanalysis
 % ft_prepare_neighbours ft_megplanar
 
-subjectfilename   = dccnpath('/home/common/matlab/fieldtrip/Subject01/Subject01.ds');
+[ftver, ftpath] = ft_version;
+subjectfilename = fullfile(ftpath, 'Subject01', 'Subject01.ds');
 
 cfg                         = [];
 cfg.dataset                 = subjectfilename;
