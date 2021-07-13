@@ -15,8 +15,7 @@ source.inside = 1:gridsize;
 
 cfg = [];
 cfg.parameter = 'pow';
-cfg.filename = 'tempsource';
+cfg.filename = tempname;
 cfg.filetype = 'nifti';
 ft_sourcewrite(cfg, source)
-delete tempsource.nii
-
+delete([cfg.filename '.nii'])
