@@ -2,27 +2,24 @@ function test_ft_combineplanar
 
 % WALLTIME 00:20:00
 % MEM 2gb
-% DEPENDENCY ft_combineplanar ft_preprocessing ft_timelockanalysis
-% ft_prepare_neighbours ft_megplanar
+% DEPENDENCY ft_combineplanar ft_preprocessing ft_timelockanalysis ft_prepare_neighbours ft_megplanar
 
-[ftver, ftpath] = ft_version;
-subjectfilename = fullfile(ftpath, 'Subject01', 'Subject01.ds');
+subjectfilename = dccnpath('/home/common/matlab/fieldtrip/data/Subject01.ds');
 
-cfg                         = [];
-cfg.dataset                 = subjectfilename;
+cfg            = [];
+cfg.dataset    = subjectfilename;
 cfg.channel    = {'MEG', '-MLP31', '-MLO12'};        % read all MEG channels except MLP31 and MLO12
 data = ft_preprocessing(cfg);
 
 cfg = [];
 data = ft_timelockanalysis(cfg,data);
 
-cfg                 = [];
-cfg.feedback        = 'no';
-cfg.method          = 'template';
-cfg.neighbours      = ft_prepare_neighbours(cfg, data);
-
-cfg.planarmethod    = 'sincos';
-data        = ft_megplanar(cfg, data);
+cfg              = [];
+cfg.feedback     = 'no';
+cfg.method       = 'template';
+cfg.neighbours   = ft_prepare_neighbours(cfg, data);
+cfg.planarmethod = 'sincos';
+data = ft_megplanar(cfg, data);
 
 cfg = [];
 cfg.updatesens = 'no';
