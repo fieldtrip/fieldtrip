@@ -8,9 +8,10 @@ function test_ft_volumewrite
 mrifilename = fullfile(ftpath, 'template', 'headmodel', 'standard_mri.mat');
 
 mri = ft_read_mri(mrifilename);
+
 cfg = [];
 cfg.parameter = 'anatomy';
-cfg.filename = 'tempmri';
+cfg.filename = tempname;
 cfg.filetype = 'nifti_spm';
 ft_volumewrite(cfg, mri)
-delete tempmri*
+delete([cfg.filename '*'])
