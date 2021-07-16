@@ -20,9 +20,9 @@ cfg.parameter = 'pow';
 cfg.appenddim = 'rpt';
 sourceout = ft_appendsource(cfg, source, source2);
 
-return; %following cases do not work yet
+return; %following cases do not work yet (cf. issue #1833)
 %%
-% test case of different posiitons, same time frames
+% test case of different positions, same time frames
 source2 = source;
 source2.pow = randn(gridsize,nsamples);
 source2.pos = randn(gridsize,3);

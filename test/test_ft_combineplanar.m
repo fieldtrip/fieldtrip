@@ -4,6 +4,8 @@ function test_ft_combineplanar
 % MEM 2gb
 % DEPENDENCY ft_combineplanar ft_preprocessing ft_timelockanalysis ft_prepare_neighbours ft_megplanar
 
+% template loading should be modified once template MEG data are available
+% (cf.issue #1834)
 subjectfilename = dccnpath('/home/common/matlab/fieldtrip/data/Subject01.ds');
 
 cfg            = [];
