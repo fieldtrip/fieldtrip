@@ -66,8 +66,11 @@ if ft_abort
 end
 
 % check if the input data is valid for this function
-if ~ft_datatype(timelock, 'timelock')
-  ft_error('Data must be of datatype ''timelock''. To apply baseline correction to data that is of datatype ''raw'', use ft_preprocessing instead.');
+israw = ft_datatype(timelock, 'raw');
+iscomp = ft_datatype(timelock, 'comp');
+if israw || iscomp
+  % the type 'raw' also captures component data
+  ft_warning('The input data is expected to be of datatype ''timelock''. Consider using ft_preprocessing instead, to avoid unexpected sideeffects. The datatype will be temporarily converted.');
 end
 timelock = ft_checkdata(timelock, 'datatype', {'timelock+comp', 'timelock'}, 'feedback', 'yes');
 
@@ -180,6 +183,13 @@ if ~(ischar(cfg.baseline) && strcmp(cfg.baseline, 'no'))
    end
 
 end % ~strcmp(cfg.baseline, 'no')
+
+if iscomp
+  timelock = ft_checkdata(timelock, 'datatype', 'raw+comp');
+elseif israw
+  % convert the timelock structure back into a raw structure
+  timelock = ft_checkdata(timelock, 'datatype', 'raw');
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Output scaffolding

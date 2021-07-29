@@ -432,7 +432,15 @@ if strcmp(cfg.demean, 'yes')
     % determine the begin and endsample of the baseline period and baseline correct for it
     begsample = nearest(time, cfg.baselinewindow(1));
     endsample = nearest(time, cfg.baselinewindow(2));
-    dat       = ft_preproc_baselinecorrect(dat, begsample, endsample);
+    if begsample==endsample && ...
+        ((begsample==1 && time(begsample)>cfg.baselinewindow(1)) || (begsample==numel(time) && time(begsample)<cfg.baselinewindow(2)))
+      ft_warning('requested baselinewindow does not have any samples in the time axis, no baseline correction applied in this trial')
+    else
+      if begsample==endsample
+        ft_warning('requested baselinewindow just has a single sample in the time axis')
+      end
+      dat = ft_preproc_baselinecorrect(dat, begsample, endsample);
+    end
   end
 end
 if strcmp(cfg.dftfilter, 'yes')
