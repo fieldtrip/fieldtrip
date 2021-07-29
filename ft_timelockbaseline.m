@@ -1,6 +1,7 @@
 function [timelock] = ft_timelockbaseline(cfg, timelock)
 
-% FT_TIMELOCKBASELINE performs baseline correction for ERF and ERP data
+% FT_TIMELOCKBASELINE performs baseline correction for ERF and ERP data. To apply
+% baseline correction to data that is not timelocked, use ft_preprocessing instead.
 %
 % Use as
 %    [timelock] = ft_timelockbaseline(cfg, timelock)
@@ -65,6 +66,9 @@ if ft_abort
 end
 
 % check if the input data is valid for this function
+if isfield(timelock, 'trial') && iscell(timelock.trial) % Data is not timelocked
+  ft_error('Data must be timelocked. To apply baseline correction to data that is not timelocked, use ft_preprocessing instead.');
+end
 timelock = ft_checkdata(timelock, 'datatype', {'timelock+comp', 'timelock'}, 'feedback', 'yes');
 
 % check if the input cfg is valid for this function
