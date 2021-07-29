@@ -67,7 +67,7 @@ end
 
 % check if the input data is valid for this function
 if ~ft_datatype(timelock, 'timelock')
-  ft_error('Data must be timelocked. To apply baseline correction to data that is not timelocked, use ft_preprocessing instead.');
+  ft_error('Data must be of datatype ''timelock''. To apply baseline correction to data that is of datatype ''raw'', use ft_preprocessing instead.');
 end
 timelock = ft_checkdata(timelock, 'datatype', {'timelock+comp', 'timelock'}, 'feedback', 'yes');
 
