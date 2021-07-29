@@ -5,7 +5,7 @@ function [timelock] = ft_timelockbaseline(cfg, timelock)
 %
 % Use as
 %    [timelock] = ft_timelockbaseline(cfg, timelock)
-% where the timelock data comes from FT_TIMELOCKANALYSIS and the
+% where the timelock data is the output from FT_TIMELOCKANALYSIS, and the
 % configuration should contain
 %   cfg.baseline     = [begin end] (default = 'no')
 %   cfg.channel      = cell-array, see FT_CHANNELSELECTION
@@ -20,7 +20,7 @@ function [timelock] = ft_timelockbaseline(cfg, timelock)
 % files should contain only a single variable, corresponding with the
 % input/output structure.
 %
-% See also FT_TIMELOCKANALYSIS, FT_FREQBASELINE, FT_TIMELOCKGRANDAVERAGE
+% See also FT_TIMELOCKANALYSIS, FT_FREQBASELINE, FT_TIMELOCKGRANDAVERAGE, FT_DATATYPE_TIMELOCK
 
 % Undocumented local options:
 %   cfg.baselinewindow
