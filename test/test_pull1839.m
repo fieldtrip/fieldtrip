@@ -21,21 +21,30 @@ cfg = [];
 cfg.method = 'pca';
 comp = ft_componentanalysis(cfg, data);
 
+% it should also work for timelock data
+cfg = [];
+cfg.keeptrials = 'yes';
+tlck = ft_timelockanalysis(cfg, data);
+
 cfg1 = [];
 cfg1.demean = 'yes';
 cfg1.baselinewindow = [-0.1 0];
 dataout1 = ft_preprocessing(cfg1, data);
 compout1 = ft_preprocessing(cfg1, comp);
+tlckout1 = ft_preprocessing(cfg1, tlck);
 
 cfg2 = [];
 cfg2.baseline = [-0.1 0];
 dataout2 = ft_timelockbaseline(cfg2, data);
 compout2 = ft_timelockbaseline(cfg2, comp);
+tlckout2 = ft_timelockbaseline(cfg2, tlck);
 
 % this should work just fine
 [ok,message] = isalmostequal(rmfield(dataout1,'cfg'),rmfield(dataout2,'cfg'),'abstol',100*eps);
 assert(ok);
 [ok,message] = isalmostequal(rmfield(compout1,'cfg'),removefields(compout2,{'cfg' 'topodimord' 'unmixingdimord'}),'abstol',100*eps);
+assert(ok);
+[ok,message] = isalmostequal(rmfield(tlckout1,'cfg'),rmfield(tlckout2,'cfg'),'abstol',100*eps);
 assert(ok);
 
 % create some other data
@@ -53,16 +62,23 @@ cfg = [];
 cfg.method = 'pca';
 comp = ft_componentanalysis(cfg, data);
 
+% it should also work for timelock data
+cfg = [];
+cfg.keeptrials = 'yes';
+tlck = ft_timelockanalysis(cfg, data);
+
 cfg1 = [];
 cfg1.demean = 'yes';
 cfg1.baselinewindow = [-0.1 0];
 dataout1 = ft_preprocessing(cfg1, data);
 compout1 = ft_preprocessing(cfg1, comp);
+tlckout1 = ft_preprocessing(cfg1, tlck);
 
 cfg2 = [];
 cfg2.baseline = [-0.1 0];
 dataout2 = ft_timelockbaseline(cfg2, data);
 compout2 = ft_timelockbaseline(cfg2, comp);
+tlckout2 = ft_timelockbaseline(cfg2, tlck);
 
 % this inserts nans for the shorter trials in the converted data objects,
 % dataout2/compout2
@@ -70,6 +86,8 @@ compout2 = ft_timelockbaseline(cfg2, comp);
 assert(ok);
 assert(numel(dataout1.time{1}) ~= numel(dataout2.time{1}));
 [ok,message] = isalmostequal(compout1.trial{1},compout2.trial{1}(:,1:100),'abstol',100*eps);
+assert(ok);
+[ok,message] = isalmostequal(removefields(tlckout1,{'cfg' 'sampleinfo'}),rmfield(tlckout2,'cfg'),'abstol',100*eps);
 assert(ok);
 
 % create yet some other data, now including a trial that does not have data
@@ -90,22 +108,29 @@ cfg = [];
 cfg.method = 'pca';
 comp = ft_componentanalysis(cfg, data);
 
+% it should also work for timelock data
+cfg = [];
+cfg.keeptrials = 'yes';
+tlck = ft_timelockanalysis(cfg, data);
+
 cfg1 = [];
 cfg1.demean = 'yes';
 cfg1.baselinewindow = [-0.1 0];
 dataout1 = ft_preprocessing(cfg1, data);
 compout1 = ft_preprocessing(cfg1, comp);
+tlckout1 = ft_preprocessing(cfg1, tlck);
 
 cfg2 = [];
 cfg2.baseline = [-0.1 0];
 dataout2 = ft_timelockbaseline(cfg2, data);
 compout2 = ft_timelockbaseline(cfg2, comp);
+tlckout2 = ft_timelockbaseline(cfg2, tlck);
 
 % this inserts nans for the shorter trials in the converted data objects,
 % dataout2/compout2
 [ok,message] = isalmostequal(dataout1.trial{4},dataout2.trial{4}(:,22:121),'abstol',100*eps);
 assert(ok);
 assert(numel(dataout1.time{1}) ~= numel(dataout2.time{1}));
-[ok,message] = isalmostequal(compout1.trial{4},compout2.trial{4}(:,1:100),'abstol',100*eps);
+[ok,message] = isalmostequal(compout1.trial{4},compout2.trial{4}(:,22:121),'abstol',100*eps);
 assert(ok);
 
