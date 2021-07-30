@@ -379,22 +379,24 @@ end
 % guaranteed to be zero (even if there are filter artifacts).
 % However, the filtering benefits from the data being pulled towards zero,
 % causing fewer edge artifacts. That is why we start by removing the slow
-% drift, then filter, and then repeat the demean/detrend/polyremove.
-if strcmp(cfg.polyremoval, 'yes')
+% drift, then filter, and then repeat the demean/detrend/polyremove. Note
+% that this might interfere with a situation where the requested baseline
+% window is not present in the local time axis of the trial, e.g. when the
+% trials are of different length
+if any(strcmp({cfg.polyremoval cfg.detrend cfg.demean}, 'yes'))
+  if strcmp(cfg.polyremoval, 'yes') 
+    polyorder = cfg.polyorder;
+  elseif strcmp(cfg.detrend, 'yes')
+    polyorder = 1;
+  elseif strcmp(cfg.demean, 'yes')
+    polyorder = 0;
+  end
+  datorig   = dat;
   nsamples  = size(dat,2);
   begsample = 1        + begpadding;
   endsample = nsamples - endpadding;
-  dat = ft_preproc_polyremoval(dat, cfg.polyorder, begsample, endsample); % this will also demean and detrend
-elseif strcmp(cfg.detrend, 'yes')
-  nsamples  = size(dat,2);
-  begsample = 1        + begpadding;
-  endsample = nsamples - endpadding;
-  dat = ft_preproc_polyremoval(dat, 1, begsample, endsample); % this will also demean
-elseif strcmp(cfg.demean, 'yes')
-  nsamples  = size(dat,2);
-  begsample = 1        + begpadding;
-  endsample = nsamples - endpadding;
-  dat = ft_preproc_polyremoval(dat, 0, begsample, endsample);
+  dat       = ft_preproc_polyremoval(dat, polyorder, begsample, endsample); % this will also demean and detrend
+  datdiff   = datorig - dat;
 end
 
 if strcmp(cfg.medianfilter, 'yes'), dat = ft_preproc_medianfilter(dat, cfg.medianfiltord); end
@@ -432,7 +434,16 @@ if strcmp(cfg.demean, 'yes')
     % determine the begin and endsample of the baseline period and baseline correct for it
     begsample = nearest(time, cfg.baselinewindow(1));
     endsample = nearest(time, cfg.baselinewindow(2));
-    dat       = ft_preproc_baselinecorrect(dat, begsample, endsample);
+    if begsample==endsample && ...
+        ((begsample==1 && time(begsample)>cfg.baselinewindow(1)) || (begsample==numel(time) && time(begsample)<cfg.baselinewindow(2)))
+      ft_warning('requested baselinewindow does not have any samples in the time axis, no baseline correction applied in this trial');
+      dat = dat + datdiff; % add back the previously subtracted stuff
+    else
+      if begsample==endsample
+        ft_warning('requested baselinewindow just has a single sample in the time axis')
+      end
+      dat = ft_preproc_baselinecorrect(dat, begsample, endsample);
+    end
   end
 end
 if strcmp(cfg.dftfilter, 'yes')
