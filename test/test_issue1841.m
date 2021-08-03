@@ -17,5 +17,5 @@ V1     = randn(size(elec.chanpos,1),1);
 [V2, L2, L1]           = splint(elec.chanpos, V1, elec.chanpos, order, 500, lambda);
 [W, Gss, gx2, hx2]     = sphericalSplineInterpolate(elec.chanpos', elec.chanpos', lambda, order, 'slap');
 
-figure;plot(V2, W*V1, 'o'); % this should be the same, or not?
+figure;plot(L1, W*V1, 'o'); % this should be the same, or not?
 
