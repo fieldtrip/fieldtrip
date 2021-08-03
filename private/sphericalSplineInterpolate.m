@@ -1,4 +1,4 @@
-function [W,Gss,Gds,Hds]=sphericalSplineInterpolate(src,dest,lambda,order,type,tol)
+function [W, Gss, Gds, Hds] = sphericalSplineInterpolate(src, dest, lambda, order, type, tol)
 %interpolate matrix for spherical interpolation
 %
 % W = sphericalSplineInterpolate(src,dest,lambda,order,type,tol)
@@ -24,10 +24,10 @@ function [W,Gss,Gds,Hds]=sphericalSplineInterpolate(src,dest,lambda,order,type,t
 % made. This software and documents are distributed without any
 % warranty, express or implied. 
 
-if ( nargin < 3 || isempty(lambda)) lambda=1e-5; end
-if ( nargin < 4 || isempty(order)) order=4; end
-if ( nargin < 5 || isempty(type)) type='spline'; end
-if ( nargin < 6 || isempty(tol)) tol=eps; end
+if ( nargin < 3 || isempty(lambda)) lambda = 1e-5;     end
+if ( nargin < 4 || isempty(order))  order  = 4;        end
+if ( nargin < 5 || isempty(type))   type   = 'spline'; end
+if ( nargin < 6 || isempty(tol))    tol    = eps;      end
 
 % map the positions onto the sphere (not using repop, by JMH)
 src  = src ./repmat(sqrt(sum(src.^2)),  size(src, 1), 1);  % src   = repop(src,'./',sqrt(sum(src.^2)));
