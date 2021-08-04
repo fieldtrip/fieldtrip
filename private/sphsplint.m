@@ -49,6 +49,7 @@ function [ WVo, WLo ] = sphsplint ( elc1, elc2, order, degree, lambda )
 
 
 % Sets the defaults.
+if ( nargin < 2 ), elc2 = elc1; end
 if ( nargin < 3 || isempty ( order ) ),  order  = 4;    end
 if ( nargin < 4 || isempty ( degree ) ), degree = [];   end
 if ( nargin < 5 || isempty ( lambda ) ), lambda = 1e-5; end
