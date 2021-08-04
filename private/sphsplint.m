@@ -72,7 +72,7 @@ elcs = unique ( cat ( 1, elc1, elc2 ), 'rows' );
 [ ~, ind2 ] = ismember ( elc2, elcs, 'rows' );
 
 % Fits a sphere to the electrodes and centers them.
-[ center, radius ] = my_fitsphere ( elcs );
+[ center, radius ] = fitsphere ( elcs );
 elcs = elcs - center;
 
 % % Checks the spherical fitting.
