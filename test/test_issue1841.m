@@ -26,10 +26,14 @@ Vi     = randn(size(elec.chanpos,1),1);
 
 % Compares the output of the original functions.
 figure
-subplot 121,plot(Vo, WV*Vi, 'o'),title('Potential')
-subplot 122,plot(Lo, WL*Vi, 'o'),title('Laplacian')
+subplot 121
+plot(Vo, WV*Vi, 'o'),title('Potential')
+subplot 122
+plot(Lo, WL*Vi, 'o'),title('Laplacian')
 
 % Compares with the output of the new function.
 figure
-subplot 121,plot(Vo, WVo*Vi, 'o'),title('Potential')
-subplot 122,plot(Lo, WLo*Vi, 'o'),title('Laplacian')
+subplot 121
+plot(Vo, WVo*Vi, 'o'),title('Potential')
+subplot 122
+plot(Lo, WLo*Vi, 'o'),title('Laplacian')
