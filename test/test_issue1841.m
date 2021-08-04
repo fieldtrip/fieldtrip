@@ -9,6 +9,8 @@ function test_issue1841
 [ftver, ftdir] = ft_version;
 elec = ft_read_sens(fullfile(ftdir, 'template/electrode/standard_1020.elc'));
 
+cd(fullfile(ftdir, 'private')); % this needs to be done, otherwise private functions cannot be tested
+
 % Centers the sensor definition.
 center = fitsphere ( elec.chanpos );
 elec.chanpos = elec.chanpos - center;
