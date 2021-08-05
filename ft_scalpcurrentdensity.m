@@ -204,13 +204,13 @@ if strcmp(cfg.method, 'spline')
   
   % Builds the spatial filter only once.
   fprintf('Calculating the filter to build the SCD.\n');
-  [WVo,WLo]=sphsplint(goodchanpos, allchanpos, cfg.order, cfg.degree, cfg.lambda);
+  [WVo, WLo] = sphsplint(goodchanpos, allchanpos, cfg.order, cfg.degree, cfg.lambda);
   
   ft_progress('init', cfg.feedback, 'computing SCD for trial...')
   for trlop=1:Ntrials
     % do compute interpolation
     ft_progress(trlop/Ntrials, 'computing SCD for trial %d of %d', trlop, Ntrials);
-    scd.trial{trlop} = WLo*data.trial{trlop}(goodindx,:);
+    scd.trial{trlop} = WLo * data.trial{trlop}(goodindx,:);
   end
   ft_progress('close');
 
