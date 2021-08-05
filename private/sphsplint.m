@@ -59,11 +59,11 @@ siz1 = size ( elc1, 1 );
 
 % Sets the default degree, if no provided.
 if isempty ( degree )
-    if     siz1 <= 32,  degree = 9;
-    elseif siz1 <= 64,  degree = 14;
-    elseif siz1 <= 128, degree = 20;
-    else,               degree = 32;
-    end
+  if     siz1 <= 32,  degree = 9;
+  elseif siz1 <= 64,  degree = 14;
+  elseif siz1 <= 128, degree = 20;
+  else,               degree = 32;
+  end
 end
 
 
@@ -79,11 +79,11 @@ elcs = elcs - center;
 % % Checks the spherical fitting.
 % err    = mean ( sqrt ( sum ( elcs .^2, 2 ) ) ) / radius - 1;
 % if err < 0.01
-%     fprintf ( 'Perfect spherical fit (residual: %.1f%%).\n', 100 * err );
+%   fprintf ( 'Perfect spherical fit (residual: %.1f%%).\n', 100 * err );
 % elseif err < 0.1
-%     fprintf ( 'Good spherical fit (residual: %.1f%%).\n', 100 * err );
+%   fprintf ( 'Good spherical fit (residual: %.1f%%).\n', 100 * err );
 % else
-%     ft_warning ( 'Bad spherical fit (residual: %.2f%%). The interpolation will be inaccurate.', 100 * err );
+%   ft_warning ( 'Bad spherical fit (residual: %.2f%%). The interpolation will be inaccurate.', 100 * err );
 % end
 
 % Projects the electrodes over a unit-sphere.
@@ -135,13 +135,13 @@ WLo  = WLo / ( radius ^ 2 );
 function [ gx, hx ] = perrin_gh ( x, order, degree )
 
 % Calculates the Legendre polynomials up to the requested degree.
-lpol    = mplgndr ( degree, 0, x );
-lpol    = lpol ( :, 2: end );
+lpol = mplgndr ( degree, 0, x );
+lpol = lpol ( :, 2: end );
 
 % Gets the g(x) and h(x) functions (Eqs. 3 and 5b).
-gx      =  sum ( ( 2 * ( 1: degree ) + 1 ) ./ ( ( 1: degree ) .* ( ( 1: degree ) + 1 ) ) .^ order .* lpol, 2 ) / ( 4 * pi );
-hx      = -sum ( ( 2 * ( 1: degree ) + 1 ) ./ ( ( 1: degree ) .* ( ( 1: degree ) + 1 ) ) .^ ( order - 1 ) .* lpol, 2 ) / ( 4 * pi );
+gx   =  sum ( ( 2 * ( 1: degree ) + 1 ) ./ ( ( 1: degree ) .* ( ( 1: degree ) + 1 ) ) .^ order .* lpol, 2 ) / ( 4 * pi );
+hx   = -sum ( ( 2 * ( 1: degree ) + 1 ) ./ ( ( 1: degree ) .* ( ( 1: degree ) + 1 ) ) .^ ( order - 1 ) .* lpol, 2 ) / ( 4 * pi );
 
 % Reshapes the g(x) and h(x) functions as matrices.
-gx      = reshape ( gx, size ( x ) );
-hx      = reshape ( hx, size ( x ) );
+gx   = reshape ( gx, size ( x ) );
+hx   = reshape ( hx, size ( x ) );
