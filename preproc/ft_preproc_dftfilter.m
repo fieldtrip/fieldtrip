@@ -110,7 +110,10 @@ function [filt] = ft_preproc_dftfilter(dat, Fs, Fl, varargin)
 dftreplace        = ft_getopt(varargin, 'dftreplace',        'zero');
 dftbandwidth      = ft_getopt(varargin, 'dftbandwidth',      [1 2 3]); % this is tricky, because it assumes to coincide with default [50 100 150]
 dftneighbourwidth = ft_getopt(varargin, 'dftneighbourwidth', [2 2 2]);
-
+if isequal(dftreplace, 'zero')
+  dftbandwidth      = nan(size(Fl));
+  dftneighbourwidth = nan(size(Fl));
+end
 
 % determine the size of the data
 [nchans, nsamples] = size(dat);
@@ -137,7 +140,7 @@ n    = round(floor(nsamples .* (Fl./Fs + 100*eps)) .* Fs./Fl);
 if (~strcmp(dftreplace, 'zero') && numel(n)>1) || ~all(n==n(1))
   % the different frequencies require different numbers of samples, apply the filters sequentially
   filt = dat;
-  for i=1:numel(Fl)
+  for i = 1:numel(Fl)
     filt = ft_preproc_dftfilter(filt, Fs, Fl(i), 'dftreplace', dftreplace, 'dftbandwidth', dftbandwidth(i), 'dftneighbourwidth', dftneighbourwidth(i)); % enumerate all options 
   end
   return
