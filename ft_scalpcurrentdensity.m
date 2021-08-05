@@ -188,7 +188,6 @@ goodchanpos = allchanpos(goodindx,:);     % the position of good channels
 
 % compute SCD for each trial
 if strcmp(cfg.method, 'spline')
-  
   fprintf('Checking spherical fit... ');
   [c, r] = fitsphere(chanpos);
   d = chanpos - repmat(c, numel(find(sensidx)), 1);
@@ -201,18 +200,16 @@ if strcmp(cfg.method, 'spline')
   else
     fprintf('good spherical fit (residual: %.1f%%)\n', 100*(d-1));
   end
-  
   % Builds the spatial filter only once.
   fprintf('Calculating the filter to build the SCD.\n');
   [WVo, WLo] = sphsplint(goodchanpos, allchanpos, cfg.order, cfg.degree, cfg.lambda);
-  
-  ft_progress('init', cfg.feedback, 'computing SCD for trial...')
-  for trlop=1:Ntrials
-    % do compute interpolation
-    ft_progress(trlop/Ntrials, 'computing SCD for trial %d of %d', trlop, Ntrials);
-    scd.trial{trlop} = WLo * data.trial{trlop}(goodindx,:);
-  end
-  ft_progress('close');
+  % Creates a montage to apply the spatial filter.
+  montage.tra      = WLo;
+  montage.labelold = elec.label(allchanpos(goodindx));
+  montage.labelnew = elec.label(allchanpos);
+  % Applies the montage to both the data and electrode definition.
+  scd  = ft_apply_montage(data, montage);
+  elec = ft_apply_montage(elec, montage);
 
 elseif strcmp(cfg.method, 'finite')
   if ~isempty(cfg.badchannel)
@@ -277,17 +274,8 @@ else
   fprintf('output Hjorth filtered potential is in uV\n');
 end
 
-% collect the results
-scd.elec    = elec;
-scd.time    = data.time;
-scd.label   = data.label;
-scd.fsample = 1/mean(diff(data.time{1}));
-if isfield(data, 'sampleinfo')
-  scd.sampleinfo = data.sampleinfo;
-end
-if isfield(data, 'trialinfo')
-  scd.trialinfo = data.trialinfo;
-end
+% Adds the electrode definition to the data.
+scd.elec = elec;
 
 % convert back to input type if necessary
 switch dtype
