@@ -185,26 +185,31 @@ end
 
 allchanpos = elec.chanpos(elecindx,:);    % the position of all channels, ordered according to the data
 goodchanpos = allchanpos(goodindx,:);     % the position of good channels
-anychanpos  = [0 0 1];                    % random channel, will be used in case there are no bad channels
 
 % compute SCD for each trial
 if strcmp(cfg.method, 'spline')
-  ft_progress('init', cfg.feedback, 'computing SCD for trial...')
-  for trlop=1:Ntrials
-    % do compute interpolation
-    ft_progress(trlop/Ntrials, 'computing SCD for trial %d of %d', trlop, Ntrials);
-    if ~isempty(cfg.badchannel)
-      % compute scd for all channels, also for the bad ones
-      fprintf('computing scd also at locations of bad channels');
-      [V2, L2, L1] = splint(goodchanpos, data.trial{trlop}(goodindx,:), allchanpos, cfg.order, cfg.degree, cfg.lambda);
-      scd.trial{trlop} = L2;
-    else
-      % just compute scd for input channels, specify arbitrary channel to-be-discarded for interpolation to save computation time
-      [V2, L2, L1] = splint(goodchanpos, data.trial{trlop}(goodindx,:), anychanpos, cfg.order, cfg.degree, cfg.lambda);
-      scd.trial{trlop} = L1;
-    end
+  fprintf('Checking spherical fit... ');
+  [c, r] = fitsphere(chanpos);
+  d = chanpos - repmat(c, numel(find(sensidx)), 1);
+  d = sqrt(sum(d.^2, 2));
+  d = mean(abs(d) / r);
+  if abs(d-1) > 0.1
+    ft_warning('bad spherical fit (residual: %.2f%%). The interpolation will be inaccurate.', 100*(d-1));
+  elseif abs(d-1) < 0.01
+    fprintf('perfect spherical fit (residual: %.1f%%)\n', 100*(d-1));
+  else
+    fprintf('good spherical fit (residual: %.1f%%)\n', 100*(d-1));
   end
-  ft_progress('close');
+  % Builds the spatial filter only once.
+  fprintf('Calculating the filter to build the SCD.\n');
+  [WVo, WLo] = sphsplint(goodchanpos, allchanpos, cfg.order, cfg.degree, cfg.lambda);
+  % Creates a montage to apply the spatial filter.
+  montage.tra      = WLo;
+  montage.labelold = elec.label(allchanpos(goodindx));
+  montage.labelnew = elec.label(allchanpos);
+  % Applies the montage to both the data and electrode definition.
+  scd  = ft_apply_montage(data, montage);
+  elec = ft_apply_montage(elec, montage);
 
 elseif strcmp(cfg.method, 'finite')
   if ~isempty(cfg.badchannel)
@@ -269,17 +274,8 @@ else
   fprintf('output Hjorth filtered potential is in uV\n');
 end
 
-% collect the results
-scd.elec    = elec;
-scd.time    = data.time;
-scd.label   = data.label;
-scd.fsample = 1/mean(diff(data.time{1}));
-if isfield(data, 'sampleinfo')
-  scd.sampleinfo = data.sampleinfo;
-end
-if isfield(data, 'trialinfo')
-  scd.trialinfo = data.trialinfo;
-end
+% Adds the electrode definition to the data.
+scd.elec = elec;
 
 % convert back to input type if necessary
 switch dtype

@@ -395,8 +395,13 @@ switch cfg.method
     
     % interpolate
     fprintf('computing weight matrix...');
-    repair = sphericalSplineInterpolate(chanpos(goodindx(sensidx), :)', chanpos', cfg.lambda, cfg.order, cfg.method);
+    [pot,lap] = sphsplint(chanpos(goodindx(sensidx), :), chanpos, cfg.order, 500, cfg.lambda);
     fprintf(' done!\n');
+    
+    % Chooses the right output.
+    if strcmp(cfg.method, 'spline'), repair = pot;
+    else, repair = lap;
+    end
     
     if ~allchans
       % only use the rows corresponding to the channels that actually need interpolation
