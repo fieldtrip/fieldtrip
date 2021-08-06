@@ -135,7 +135,7 @@ end
 if isfreq
   % some restrictions apply to frequency data
   if ~isfield(data, 'fourierspctrm'), ft_error('freq data should contain Fourier spectra'); end
-  if numel(data.freq)>1, ft_error('with spectral input data only a single frequency bin is supported'); end
+  %if numel(data.freq)>1, ft_error('with spectral input data only a single frequency bin is supported'); end
   if ~any(strcmp({'svd' 'none'}, cfg.method)), ft_error('with spectral input data only ''svd'' or ''none'' are supported methods'); end
 end
 
@@ -279,6 +279,9 @@ for i = 1:nvc
         if isfreq
           tmp = ft_checkdata(data, 'cmbstyle', 'fullfast');
           C   = tmp.crsspctrm;
+          if size(C,3)>1
+            C = mean(C,3);
+          end
         else
           tmpcfg = [];
           tmpcfg.covariance = 'yes';
@@ -297,6 +300,11 @@ for i = 1:nvc
       
       if isequal(cfg.numcomponent, 'all')
         ncomp = size(u,2);
+      elseif ischar(cfg.numcomponent) && isequal(cfg.numcomponent(end), '%')
+        % return number of components that explain x% of variance
+        perc  = sscanf(cfg.numcomponent, '%f%%')./100;
+        diags = diag(s);
+        ncomp = find(cumsum(diags)./sum(diags) > perc, 1, 'first');
       else
         if size(u,2)>=cfg.numcomponent
           ncomp = cfg.numcomponent;
