@@ -174,23 +174,27 @@ Ntrials = numel(data.trial);
 if isempty(cfg.badchannel)
   % check if the first sample of the first trial contains NaNs; if so treat it as a bad channel
   cfg.badchannel = ft_channelselection(find(isnan(data.trial{1}(:,1))), data.label);
-  if ~isempty(cfg.badchannel)
-    ft_info('detected channel %s as bad\n', cfg.badchannel{:});
-  end
 end
 
 % match the order of the data channels with the channel positions, order them according to the data
 [datindx, elecindx] = match_str(data.label, elec.label);
 [goodindx, tmp]     = match_str(data.label, setdiff(data.label, cfg.badchannel, 'stable'));
 
-allchanpos = elec.chanpos(elecindx,:);    % the position of all channels, ordered according to the data
-goodchanpos = allchanpos(goodindx,:);     % the position of good channels
+if ~isempty(cfg.badchannel)
+  ft_info('detected channel %s as bad\n', cfg.badchannel{:});
+  tmpcfg         = [];
+  tmpcfg.channel = data.label(goodindx);
+  data           = ft_selectdata(tmpcfg, data);
+end
+
+allchanpos  = elec.chanpos(elecindx,:); % the position of all channels, ordered according to the data
+goodchanpos = allchanpos(goodindx,:);   % the position of good channels
 
 % compute SCD for each trial
 if strcmp(cfg.method, 'spline')
   fprintf('Checking spherical fit... ');
-  [c, r] = fitsphere(chanpos);
-  d = chanpos - repmat(c, numel(find(sensidx)), 1);
+  [c, r] = fitsphere(allchanpos);
+  d = allchanpos - repmat(c, size(allchanpos,1), 1);
   d = sqrt(sum(d.^2, 2));
   d = mean(abs(d) / r);
   if abs(d-1) > 0.1
@@ -205,9 +209,9 @@ if strcmp(cfg.method, 'spline')
   [WVo, WLo] = sphsplint(goodchanpos, allchanpos, cfg.order, cfg.degree, cfg.lambda);
   % Creates a montage to apply the spatial filter.
   montage.tra      = WLo;
-  montage.labelold = elec.label(allchanpos(goodindx));
-  montage.labelnew = elec.label(allchanpos);
-  % Applies the montage to both the data and electrode definition.
+  montage.labelold = elec.label(elecindx(goodindx));
+  montage.labelnew = elec.label(elecindx);
+  % Applies the montage to both the data and electrode definition
   scd  = ft_apply_montage(data, montage);
   elec = ft_apply_montage(elec, montage);
 
