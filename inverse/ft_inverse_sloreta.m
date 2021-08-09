@@ -218,7 +218,7 @@ elseif ~isempty(subspace)
   end
 end
 
-L = cell2mat(sourcemodel.leadfield);
+L = cell2mat(sourcemodel.leadfield');
 G = L*L'; % Gram matrix
 invG = inv(G + lambda * eye(size(G))); % regularized G^-1
 
