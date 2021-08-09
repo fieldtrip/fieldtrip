@@ -218,51 +218,56 @@ elseif ~isempty(subspace)
   end
 end
 
-L = cell2mat(sourcemodel.leadfield');
-G = L*L'; % Gram matrix
-invG = inv(G + lambda * eye(size(G))); % regularized G^-1
+if ~hasfilter
+    % compute the Gram matrix and its inversion across all voxels
+    L = cell2mat(sourcemodel.leadfield');
+    G = L*L'; % Gram matrix
+    invG = inv(G + lambda * eye(size(G))); % regularized G^-1
+end
 
 ft_progress('init', feedback, 'scanning grid');
 for i=1:size(sourcemodel.pos,1)
   ft_progress(i/size(sourcemodel.pos,1), 'scanning grid %d/%d\n', i, size(sourcemodel.pos,1));
 
-  if hasleadfield && hasmom && size(sourcemodel.mom, 1)==size(sourcemodel.leadfield{i}, 2)
-    % reuse the leadfield that was previously computed and project
-    lf = sourcemodel.leadfield{i} * sourcemodel.mom(:,i);
-  elseif  hasleadfield &&  hasmom
-    % reuse the leadfield that was previously computed but don't project
-    lf = sourcemodel.leadfield{i};
-  elseif  hasleadfield && ~hasmom
-    % reuse the leadfield that was previously computed
-    lf = sourcemodel.leadfield{i};
-  elseif ~hasleadfield &&  hasmom
-    % compute the leadfield for a fixed dipole orientation
-    lf = ft_compute_leadfield(sourcemodel.pos(i,:), sens, headmodel, leadfieldopt{:}) * sourcemodel.mom(:,i);
-  else
-    % compute the leadfield
-    lf = ft_compute_leadfield(sourcemodel.pos(i,:), sens, headmodel, leadfieldopt{:});
-  end
-  
-  if fixedori
-    [vv, dd] = eig(pinv(lf' * invG * lf) * lf' * invG * C * invG * lf); % eqn 13.22 from Sekihara & Nagarajan 2008 for sLORETA
-    [dum, maxeig]=max(diag(dd));
-    eta = vv(:,maxeig);
-    lf  = lf * eta;
-    if ~isempty(subspace), lforig = lforig * eta; end
-    estimate.ori{i} = eta;
-  end
-  
   if hasfilter
-    % use the provided filter
-    filt = sourcemodel.filter{i};
+      % use the provided filter
+      filt = sourcemodel.filter{i};
   else
-    % construct the spatial filter
-    % sLORETA: if orthogonal components are retained (i.e., fixedori = 'no')
-    %          then weight for each lead field column must be calculated separately
-    for ii=1:size(lf,2)
-      filt(ii,:) = pinv(sqrt(lf(:,ii)' * invG * lf(:,ii))) * lf(:,ii)' * invG;
-    end
+      
+      if hasleadfield && hasmom && size(sourcemodel.mom, 1)==size(sourcemodel.leadfield{i}, 2)
+          % reuse the leadfield that was previously computed and project
+          lf = sourcemodel.leadfield{i} * sourcemodel.mom(:,i);
+      elseif  hasleadfield &&  hasmom
+          % reuse the leadfield that was previously computed but don't project
+          lf = sourcemodel.leadfield{i};
+      elseif  hasleadfield && ~hasmom
+          % reuse the leadfield that was previously computed
+          lf = sourcemodel.leadfield{i};
+      elseif ~hasleadfield &&  hasmom
+          % compute the leadfield for a fixed dipole orientation
+          lf = ft_compute_leadfield(sourcemodel.pos(i,:), sens, headmodel, leadfieldopt{:}) * sourcemodel.mom(:,i);
+      else
+          % compute the leadfield
+          lf = ft_compute_leadfield(sourcemodel.pos(i,:), sens, headmodel, leadfieldopt{:});
+      end
+      
+      if fixedori
+          [vv, dd] = eig(pinv(lf' * invG * lf) * lf' * invG * C * invG * lf); % eqn 13.22 from Sekihara & Nagarajan 2008 for sLORETA
+          [dum, maxeig]=max(diag(dd));
+          eta = vv(:,maxeig);
+          lf  = lf * eta;
+          if ~isempty(subspace), lforig = lforig * eta; end
+          estimate.ori{i} = eta;
+      end
+      
+      % construct the spatial filter
+      % sLORETA: if orthogonal components are retained (i.e., fixedori = 'no')
+      %          then weight for each lead field column must be calculated separately
+      for ii=1:size(lf,2)
+          filt(ii,:) = pinv(sqrt(lf(:,ii)' * invG * lf(:,ii))) * lf(:,ii)' * invG;
+      end
   end
+  
   if ~all(isreal(filt))
     ft_error('spatial filter has complex values -- did you set lambda properly?');
   end
