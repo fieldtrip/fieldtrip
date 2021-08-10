@@ -2086,7 +2086,7 @@ if isfield(hdr, 'opto')
   % add these columns to the table
   tab = horzcat(tab, table(source, detector, wavelength));
   
-elseif ft_chantype(hdr, 'nirs')
+elseif any(ft_chantype(hdr, 'nirs'))
   % deduce the NIRS-specific information from the channel name
   % which typical is something like 'Rx*-Tx* [*wavelength*] or 'S*-D* [*wavelength*]
   source     = cell(length(name), 1);
