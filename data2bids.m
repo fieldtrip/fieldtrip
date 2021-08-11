@@ -1152,11 +1152,11 @@ if need_meg_json
     meg_json.EpochLength              = hdr.nSamples/hdr.Fs;
   end
   if ft_senstype(hdr.grad, 'ctf151')
-    meg_json.ContinuousHeadLocalization = any(strcmp(hdr.chantype, 'headloc')); % CTF specific
+    meg_json.ContinuousHeadLocalization = any(strcmpi(hdr.chantype, 'headloc')); % CTF specific
     meg_json.Manufacturer             = 'CTF';
     meg_json.ManufacturersModelName   = 'CTF-151';
   elseif ft_senstype(hdr.grad, 'ctf275')
-    meg_json.ContinuousHeadLocalization = any(strcmp(hdr.chantype, 'headloc')); % CTF specific
+    meg_json.ContinuousHeadLocalization = any(strcmpi(hdr.chantype, 'headloc')); % CTF specific
     meg_json.Manufacturer             = 'CTF';
     meg_json.ManufacturersModelName   = 'CTF-275';
   elseif ft_senstype(hdr.grad, 'neuromag122')
@@ -1376,6 +1376,21 @@ if need_channels_tsv
   end
   channels_tsv = channels_tsv(keep,:);
   
+  % there are some chanel types used in FieldTrip that are named differently in BIDS
+  channels_tsv.type(strcmpi(channels_tsv.type, 'unknown'))     = 'OTHER';
+  channels_tsv.type(strcmpi(channels_tsv.type, 'meggrad'))     = 'MEGGRADAXIAL';
+  channels_tsv.type(strcmpi(channels_tsv.type, 'megplanar'))   = 'MEGGRADPLANAR';
+  channels_tsv.type(strcmpi(channels_tsv.type, 'refmag'))      = 'MEGREFMAG';
+  channels_tsv.type(strcmpi(channels_tsv.type, 'refgrad'))     = 'MEGREFGRADAXIAL';
+  channels_tsv.type(strcmpi(channels_tsv.type, 'refplanar'))   = 'MEGREFGRADPLANAR';
+  channels_tsv.type(strcmpi(channels_tsv.type, 'respiration')) = 'RESP';
+  channels_tsv.type(strcmpi(channels_tsv.type, 'headloc'))     = 'HLU';
+  channels_tsv.type(strcmpi(channels_tsv.type, 'headloc_gof')) = 'FITERR';
+  channels_tsv.type(contains(channels_tsv.type, 'trigger', 'IgnoreCase', true)) = 'TRIG';
+  
+  % channel types in BIDS must be in upper case
+  channels_tsv.type = upper(channels_tsv.type);
+  
   % do a sanity check on the number of channels for the electrophysiology data types
   if need_meg_json
     type_json = meg_json;
@@ -1401,7 +1416,7 @@ if need_channels_tsv
     end
   end
   if size(channels_tsv,1)~=jsoncount
-    ft_warning('incorrect specification of the channel count: %d in the json, %d in the tsv', jsoncount, size(channels_tsv,1));
+    ft_warning('inconsistent specification of the channel count: %d in the json, %d in the tsv', jsoncount, size(channels_tsv,1));
   end
 end % if need_channels_tsv
 
@@ -2086,7 +2101,7 @@ if isfield(hdr, 'opto')
   % add these columns to the table
   tab = horzcat(tab, table(source, detector, wavelength));
   
-elseif any(ft_chantype(hdr, 'nirs'))
+elseif any(strcmpi(hdr.chantype, 'nirs'))
   % deduce the NIRS-specific information from the channel name
   % which typical is something like 'Rx*-Tx* [*wavelength*] or 'S*-D* [*wavelength*]
   source     = cell(length(name), 1);
