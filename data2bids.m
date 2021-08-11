@@ -1377,16 +1377,16 @@ if need_channels_tsv
   channels_tsv = channels_tsv(keep,:);
   
   % there are some chanel types used in FieldTrip that are named differently in BIDS
-  channels_tsv.type(strcmpi(channels_tsv.type, 'unknown'))     = 'OTHER';
-  channels_tsv.type(strcmpi(channels_tsv.type, 'meggrad'))     = 'MEGGRADAXIAL';
-  channels_tsv.type(strcmpi(channels_tsv.type, 'megplanar'))   = 'MEGGRADPLANAR';
-  channels_tsv.type(strcmpi(channels_tsv.type, 'refmag'))      = 'MEGREFMAG';
-  channels_tsv.type(strcmpi(channels_tsv.type, 'refgrad'))     = 'MEGREFGRADAXIAL';
-  channels_tsv.type(strcmpi(channels_tsv.type, 'refplanar'))   = 'MEGREFGRADPLANAR';
-  channels_tsv.type(strcmpi(channels_tsv.type, 'respiration')) = 'RESP';
-  channels_tsv.type(strcmpi(channels_tsv.type, 'headloc'))     = 'HLU';
-  channels_tsv.type(strcmpi(channels_tsv.type, 'headloc_gof')) = 'FITERR';
-  channels_tsv.type(contains(channels_tsv.type, 'trigger', 'IgnoreCase', true)) = 'TRIG';
+  channels_tsv.type(strcmpi(channels_tsv.type, 'unknown'))     = {'OTHER'};
+  channels_tsv.type(strcmpi(channels_tsv.type, 'meggrad'))     = {'MEGGRADAXIAL'};
+  channels_tsv.type(strcmpi(channels_tsv.type, 'megplanar'))   = {'MEGGRADPLANAR'};
+  channels_tsv.type(strcmpi(channels_tsv.type, 'refmag'))      = {'MEGREFMAG'};
+  channels_tsv.type(strcmpi(channels_tsv.type, 'refgrad'))     = {'MEGREFGRADAXIAL'};
+  channels_tsv.type(strcmpi(channels_tsv.type, 'refplanar'))   = {'MEGREFGRADPLANAR'};
+  channels_tsv.type(strcmpi(channels_tsv.type, 'respiration')) = {'RESP'};
+  channels_tsv.type(strcmpi(channels_tsv.type, 'headloc'))     = {'HLU'};
+  channels_tsv.type(strcmpi(channels_tsv.type, 'headloc_gof')) = {'FITERR'};
+  channels_tsv.type(contains(channels_tsv.type, 'trigger', 'IgnoreCase', true)) = {'TRIG'};
   
   % channel types in BIDS must be in upper case
   channels_tsv.type = upper(channels_tsv.type);
@@ -1506,14 +1506,34 @@ if need_coordsystem_json
     end
   elseif isfield(hdr, 'grad') && ft_senstype(hdr.grad, 'neuromag')
     % coordinate system for MEG sensors
-    coordsystem_json.MEGCoordinateSystem            = 'Neuromag';
+    coordsystem_json.MEGCoordinateSystem            = 'ElektaNeuromag';
     coordsystem_json.MEGCoordinateUnits             = 'm';
     coordsystem_json.MEGCoordinateSystemDescription = 'Neuromag head coordinates, orientation RAS, origin between the ears';
     % coordinate system for head localization coils
-    coordsystem_json.HeadCoilCoordinates                 = []; % FIXME it might be possible to get these from the dataset header
-    coordsystem_json.HeadCoilCoordinateSystem            = 'Neuromag';
+    coordsystem_json.HeadCoilCoordinates                 = [];  % getting from the dataset header
+    coordsystem_json.HeadCoilCoordinateSystem            = 'ElektaNeuromag';
     coordsystem_json.HeadCoilCoordinateUnits             = 'm';
     coordsystem_json.HeadCoilCoordinateSystemDescription = 'Neuromag head coordinates, orientation RAS, origin between the ears';
+    if isempty(coordsystem_json.HeadCoilCoordinates) 
+       coordsystem_json = rmfield(coordsystem_json, 'HeadCoilCoordinates'); % needed to set the names afterwards        
+       idxHPI= find([hdr.orig.dig.kind] == 2); % count the kind==2 (HLU in the Elekta/Megin system), usually 4 or 5
+       for i=1:length(idxHPI)
+           coordsystem_json.HeadCoilCoordinates.(['coil' num2str(i)]) = hdr.orig.dig(idxHPI(i)).r';
+       end
+       
+    end
+    % coordinates of the anatomical landmarks (LPA/RPA/NAS)
+    coordsystem_json.AnatomicalLandmarkCoordinates                 = [];  % getting from the dataset header
+    coordsystem_json.AnatomicalLandmarkCoordinateSystem            = 'ElektaNeuromag';
+    coordsystem_json.AnatomicalLandmarkCoordinateUnits             = 'm';
+    coordsystem_json.AnatomicalLandmarkCoordinateSystemDescription = 'Neuromag head coordinates, orientation RAS, origin between the ears';
+    if isempty(coordsystem_json.AnatomicalLandmarkCoordinates) 
+        coordsystem_json = rmfield(coordsystem_json, 'AnatomicalLandmarkCoordinates'); % needed to set the names afterwards
+        coordsystem_json.AnatomicalLandmarkCoordinates.lpa = hdr.orig.dig(1).r';
+        coordsystem_json.AnatomicalLandmarkCoordinates.rpa = hdr.orig.dig(2).r';
+        coordsystem_json.AnatomicalLandmarkCoordinates.nas = hdr.orig.dig(3).r';   
+    end
+  
   else
     ft_warning('coordsystem handling not yet supported for this data, you MUST specify cfg.coordsystem');
     coordsystem_json = table();
