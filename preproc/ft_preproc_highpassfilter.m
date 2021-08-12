@@ -1,4 +1,4 @@
-function [filt, B, A] = ft_preproc_highpassfilter(dat,Fs,Fhp,N,type,dir,instabilityfix,df,wintype,dev,plotfiltresp,usefftfilt)
+function [filt, B, A] = ft_preproc_highpassfilter(dat, Fs, Fhp, N, type, dir, instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt)
 
 % FT_PREPROC_HIGHPASSFILTER applies a high-pass filter to the data and thereby removes
 % the low frequency components in the data
@@ -6,39 +6,38 @@ function [filt, B, A] = ft_preproc_highpassfilter(dat,Fs,Fhp,N,type,dir,instabil
 % Use as
 %   [filt] = ft_preproc_highpassfilter(dat, Fsample, Fhp, N, type, dir, instabilityfix)
 % where
-%   dat        data matrix (Nchans X Ntime)
-%   Fsample    sampling frequency in Hz
-%   Fhp        filter frequency
-%   N          optional filter order, default is 6 (but) or dependent upon
-%              frequency band and data length (fir/firls)
-%   type       optional filter type, can be
-%                'but' Butterworth IIR filter (default)
-%                'firws' windowed sinc FIR filter
-%                'fir' FIR filter using MATLAB fir1 function
-%                'firls' FIR filter using MATLAB firls function (requires MATLAB Signal Processing Toolbox)
-%                'brickwall' Frequency-domain filter using MATLAB FFT and iFFT function
-%   dir        optional filter direction, can be
-%                'onepass'         forward filter only
-%                'onepass-reverse' reverse filter only, i.e. backward in time
-%                'twopass'         zero-phase forward and reverse filter (default except for firws)
-%                'twopass-reverse' zero-phase reverse and forward filter
-%                'twopass-average' average of the twopass and the twopass-reverse
-%                'onepass-zerophase' zero-phase forward filter with delay compensation (default for firws, linear-phase symmetric FIR only)
-%                'onepass-reverse-zerophase' zero-phase reverse filter with delay compensation
-%                'onepass-minphase' minimum-phase converted forward filter (non-linear!, firws only)
-%   instabilityfix optional method to deal with filter instabilities
-%                'no'       only detect and give error (default)
-%                'reduce'   reduce the filter order
-%                'split'    split the filter in two lower-order filters, apply sequentially
-%   df         optional transition width (firws)
-%   wintype    optional window type (firws), can be
-%                'hann'                 (max passband deviation 0.0063 [0.63%], stopband attenuation -44dB)
-%                'hamming' (default)    (max passband deviation 0.0022 [0.22%], stopband attenuation -53dB)
-%                'blackman'             (max passband deviation 0.0002 [0.02%], stopband attenuation -74dB)
-%                'kaiser'
-%   dev        optional max passband deviation/stopband attenuation (firws with kaiser window, default = 0.001 [0.1%, -60 dB])
-%   plotfiltresp optional, 'yes' or 'no', plot filter responses (firws, default = 'no')
-%   usefftfilt optional, 'yes' or 'no', use fftfilt instead of filter (firws, default = 'no')
+%   dat             data matrix (Nchans X Ntime)
+%   Fs              sampling frequency in Hz
+%   Fhp             filter frequency in Hz
+%   order           optional filter order, default is 6 (but) or dependent on frequency band and data length (fir/firls)
+%   type            optional filter type, can be
+%                     'but'       Butterworth IIR filter (default)
+%                     'firws'     FIR filter with windowed sinc
+%                     'fir'       FIR filter using MATLAB fir1 function
+%                     'firls'     FIR filter using MATLAB firls function (requires MATLAB Signal Processing Toolbox)
+%                     'brickwall' frequency-domain filter using forward and inverse FFT
+%   dir             optional filter direction, can be
+%                     'onepass'                   forward filter only
+%                     'onepass-reverse'           reverse filter only, i.e. backward in time
+%                     'onepass-zerophase'         zero-phase forward filter with delay compensation (default for firws, linear-phase symmetric FIR only)
+%                     'onepass-reverse-zerophase' zero-phase reverse filter with delay compensation
+%                     'onepass-minphase'          minimum-phase converted forward filter (non-linear, only for firws)
+%                     'twopass'                   zero-phase forward and reverse filter (default, except for firws)
+%                     'twopass-reverse'           zero-phase reverse and forward filter
+%                     'twopass-average'           average of the twopass and the twopass-reverse
+%   instabilityfix  optional method to deal with filter instabilities
+%                     'no'       only detect and give error (default)
+%                     'reduce'   reduce the filter order
+%                     'split'    split the filter in two lower-order filters, apply sequentially
+%   df              optional transition width (firws)
+%   wintype         optional window type (firws), can be
+%                     'hamming' (default)    maximum passband deviation 0.0022 [0.22%], stopband attenuation -53dB
+%                     'hann'                 maximum passband deviation 0.0063 [0.63%], stopband attenuation -44dB
+%                     'blackman'             maximum passband deviation 0.0002 [0.02%], stopband attenuation -74dB
+%                     'kaiser'
+%   dev             optional max passband deviation/stopband attenuation (only for firws with kaiser window, default = 0.001 [0.1%, -60 dB])
+%   plotfiltresp    optional, 'yes' or 'no', plot filter responses (only for firws, default = 'no')
+%   usefftfilt      optional, 'yes' or 'no', use fftfilt instead of filter (only for firws, default = 'no')
 %
 % Note that a one- or two-pass filter has consequences for the strength of the filter,
 % i.e. a two-pass filter with the same filter order will attenuate the signal twice as
@@ -51,7 +50,7 @@ function [filt, B, A] = ft_preproc_highpassfilter(dat,Fs,Fhp,N,type,dir,instabil
 %
 % See also PREPROC
 
-% Copyright (c) 2003-2014, Robert Oostenveld, Arjen Stolk, Andreas Widmann
+% Copyright (c) 2003-2021, Robert Oostenveld, Arjen Stolk, Andreas Widmann
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -150,21 +149,20 @@ switch type
       N = 6;
     end
     [B, A] = butter(N, max(Fhp)/Fn, 'high');
-
+    
   case 'firws'
-
     % Input arguments
     if length(Fhp) ~= 1
-        ft_error('One cutoff frequency required.')
+      ft_error('One cutoff frequency required.')
     end
-
+    
     % Filter order AND transition width set?
     if ~isempty(N) && ~isempty(df)
-        ft_warning('firws:dfOverridesN', 'Filter order AND transition width set - transition width setting will override filter order.')
+      ft_warning('firws:dfOverridesN', 'Filter order AND transition width set - transition width setting will override filter order.')
     elseif isempty(N) && isempty(df) % Default transition width heuristic
-        df = fir_df(Fhp, Fs);
+      df = fir_df(Fhp, Fs);
     end
-
+    
     % Compute filter order from transition width
     [foo, maxDf] = fir_df(Fhp, Fs); %#ok<ASGLU>
     isOrderLow = false;
@@ -181,24 +179,24 @@ switch type
         isOrderLow = true;
       end
     end
-
+    
     % Window
     if strcmp(wintype, 'kaiser')
-        beta = kaiserbeta(dev);
-        win = windows('kaiser', N + 1, beta);
+      beta = kaiserbeta(dev);
+      win = windows('kaiser', N + 1, beta);
     else
-        win = windows(wintype, N + 1);
+      win = windows(wintype, N + 1);
     end
-
+    
     % Impulse response
     B = firws(N, Fhp / Fn, 'high', win);
     A = 1;
-
+    
     % Convert to minimum phase
     if strcmp(dir, 'onepass-minphase')
       B = minphaserceps(B);
     end
-
+    
     % Twopass filtering
     if strncmp(dir, 'twopass', 7)
       pbDev = (dev + 1)^2 - 1;
@@ -221,14 +219,9 @@ switch type
       ft_info('  transition width %.1f Hz, stopband 0-%.1f Hz, passband %.1f-%.0f Hz\n', df, tb, Fn);
     end
     if ~isOrderLow
-      ft_info('  max. passband deviation %.4f (%.2f%%), stopband attenuation %.0f dB\n', pbDev, pbDev * 100, sbAtt);
+      ft_info('  maximum passband deviation %.4f (%.2f%%), stopband attenuation %.0f dB\n', pbDev, pbDev * 100, sbAtt);
     end
-
-    % Plot filter responses
-    if strcmp(plotfiltresp, 'yes')
-      plotfresp(B, [], [], Fs, dir)
-    end
-
+    
   case 'fir'
     if isempty(N)
       N = 3*fix(Fs / Fhp);
@@ -274,6 +267,11 @@ switch type
     
   otherwise
     ft_error('unsupported filter type "%s"', type);
+end
+
+% Plot filter responses
+if strcmp(plotfiltresp, 'yes')
+  plotfresp(B, A, [], Fs, dir)
 end
 
 % demean the data before filtering

@@ -72,10 +72,18 @@ ft_multiplotER(cfg, goodscd, offsetscd);
 
 % Compare difference between scd with and without offset:
 diffscd = goodscd.avg - offsetscd.avg;
-if mean(abs(diffscd(:))) > 100*eps % only floating point errors expected
+if mean(abs(diffscd(:))) > 1e5*eps % only floating point errors expected -> JM cranked this tolerance level up
+  % the increased tolerance is needed after PR1846 which introduced an
+  % integrated way to compute the projection matrix + the application of
+  % ft_apply_montage to project the data. Given that the projection matrix
+  % will be the same in goodscd and offsetscd, the numeric difference stems
+  % from the multiplication of ft_apply_montage with or without offset
   error('scd with and without offset strongly differs');
 end
-
+difftra = goodscd.elec.tra - offsetscd.elec.tra;
+if mean(abs(difftra(:))) > 100*eps
+  error('projection matrices for scd with and without offset strongly differ');
+end
 
 %% 1d) Test method spline with data channels shuffled
 

@@ -537,6 +537,16 @@ artifactcolors = colorcheck([0.9686 0.7608 0.7686; 0.7529 0.7098 0.9647; 0.7373 
 if ~isempty(event) && isstruct(event)
   eventtypes  = unique({event.type});
   eventcolors = colorcheck('krbgmcy', numel(eventtypes));
+  % durations and offsets can be either empty or should be numeric values, see FT_READ_EVENT
+  % the code further down expects them to be numeric values, so change them to zero
+  for i=1:numel(event)
+    if isempty(event(i).duration)
+      event(i).duration = 0;
+    end
+    if isempty(event(i).offset)
+      event(i).offset = 0;
+    end
+  end
 else
   eventtypes = {};
   eventcolors = '';
@@ -1633,10 +1643,11 @@ artdat = ft_fetch_data(opt.artdata, 'begsample', begsample, 'endsample', endsamp
 artlab = opt.artdata.label;
 
 if ~isempty(opt.event) && isstruct(opt.event)
-  % select only the events in the current time window
-  event     = opt.event;
-  evtsample = [event(:).sample];
-  event     = event(evtsample>=begsample & evtsample<=endsample);
+  % select those events that overlap with the current time window
+  event    = opt.event;
+  begevent = [event(:).sample];
+  endevent = [event(:).sample] + [event(:).duration];
+  event    = event(begevent<=endsample & endevent>=begsample);
 else
   event = [];
 end

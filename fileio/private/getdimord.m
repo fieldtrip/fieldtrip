@@ -137,7 +137,7 @@ if isfield(data, 'cumtapcnt')
     nrpttap = sum(data.cumtapcnt);
   else
     % it is a matrix, hence it is repetitions by frequencies
-    % this happens after  mtmconvol with keeptrials
+    % this happens after mtmconvol with keeptrials
     nrpttap = sum(data.cumtapcnt,2);
     if any(nrpttap~=nrpttap(1))
       ft_warning('unexpected variation of the number of tapers over trials')
@@ -293,8 +293,21 @@ switch field
       dimord = 'subj_chan_time';
     end
     
-  case {'avg' 'var' 'dof'}
+  case {'avg' 'var'}
     if isequal(datsiz, [nrpt nchan ntime])
+      dimord = 'rpt_chan_time';
+    elseif isequal(datsiz, [nchan ntime])
+      dimord = 'chan_time';
+    elseif isequalwithoutnans(datsiz, [nrpt nchan ntime])
+      dimord = 'rpt_chan_time';
+    elseif isequalwithoutnans(datsiz, [nchan ntime])
+      dimord = 'chan_time';
+    end
+    
+  case {'dof'}
+    if isequal(datsiz, [1 1])
+      dimord = 'unknown';
+    elseif isequal(datsiz, [nrpt nchan ntime])
       dimord = 'rpt_chan_time';
     elseif isequal(datsiz, [nchan ntime])
       dimord = 'chan_time';

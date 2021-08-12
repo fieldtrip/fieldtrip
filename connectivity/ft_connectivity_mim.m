@@ -12,14 +12,15 @@ function [M] = ft_connectivity_mim(input, varargin)
 % The input data should be an array organized as
 %   Channel x Channel x Frequency
 %
+% The output m contains the newChannel x newChannel x Frequency connectivity measure,
+% with newChannel equal to max(indices).
+%
 % Additional optional input arguments come as key-value pairs:
-%   indices   = 1xN vector with indices of the groups to which the channels belong,
+%   'indices' = 1xN vector with indices of the groups to which the channels belong,
 %               e.g. [1 1 2 2] for a 2-by-2 connectivity between 2 planar MEG channels.
 %
-% The output m contains the newChannel x newChannel x Frequency
-% connectivity measure, with newChannel equal to max(indices)
 %
-% See also FT_CONNECTIVITYANALYSIS
+% See also CONNECTIVITY, FT_CONNECTIVITYANALYSIS
 
 % Copyright (C) 2011-2014 by the Human Connectome Project, WU-Minn Consortium (1U54MH091657)
 % Copyright (C) 2021 Jan-Mathijs Schoffelen, DCCN

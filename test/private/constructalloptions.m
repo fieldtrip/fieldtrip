@@ -4,7 +4,7 @@ function optarg = constructalloptions(arg)
 % pairs that can be used for testing a function.
 %
 % Use as
-%   optarg = test_constructoptarg(arg)
+%   optarg = constructoptarg(arg)
 % where
 %   arg(1).name  = string, name of the first option
 %   arg(1).value = cell-array with all possible values for the first option

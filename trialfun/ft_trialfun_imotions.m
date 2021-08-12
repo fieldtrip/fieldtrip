@@ -1,6 +1,7 @@
 function [trl, event] = ft_trialfun_imotions(cfg)
 
-% FT_TRIALFUN_IMOTIONS makes a trial definition for an iMotions event structure
+% FT_TRIALFUN_IMOTIONS makes a trial definition for an iMotions event structure.
+% Note that this returns the trial definition as a table rather than as a numeric array.
 %
 % The trialdef structure can contain the following specifications
 % cfg.trialdef.eventtype  = string or cell-array of strings (default = 'StimulusName')
@@ -49,6 +50,3 @@ end
 type  = type(:);
 value = value(:);
 trl   = table(begsample, endsample, offset, type, value);
-
-
-

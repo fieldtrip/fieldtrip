@@ -1,19 +1,28 @@
-function data_out = ft_nirs_signalqualityindex(cfg, data_in)
-% FT_NIRS_SIGNALQUALITYINDEX processes NIRS data and returns a copy of the 
-% original data replaced with nans in the signal segements that are bellow 
-% the specified quality threshold.
+function dataout = ft_nirs_signalqualityindex(cfg, datain)
+
+% FT_NIRS_SIGNALQUALITYINDEX processes NIRS data and returns a copy of the original
+% data replaced with nans in the signal segements that are bellow the specified
+% quality threshold.
 %
 % Use as
-%   [out_data] = ft_nirs_signalqualityindex(cfg, in_data)
-% where indata is raw NIRS-data (in optical densities, ODs)
-% and cfg is a configuration structure.
+%   dataout = ft_nirs_signalqualityindex(cfg, datain)
+% where cfg is a configuration structure and indata is raw NIRS-data (in optical
+% densities, ODs) that is represented according to the output of FT_PREPROCESSING.
 %
-%
-%   cfg.threshold    = scalar, the SQI (signal quality index) value that 
-%                      has to be exceeded to be labelled as a 'good' 
+% The configuration should contain the following options
+%   cfg.threshold    = scalar, the SQI (signal quality index) value that
+%                      has to be exceeded to be labelled as a 'good'
 %                      channel (default = 3.5)
 %   cfg.windowlength = scalar, the length (in seconds) of the signal
 %                      segments to be analyzed (default = 10)
+%
+% This function is based on:
+% - Sappia, M. S., Hakimi, N., Colier, W. N., & Horschig, J. M. (2020).
+%   Signal quality index: an algorithm for quantitative assessment of
+%   functional near infrared spectroscopy signal quality. Biomedical Optics
+%   Express, 11(11), 6732-6754. https://doi.org/10.1364/BOE.409317
+%
+% Please cite accordingly. Thank you!
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
@@ -22,15 +31,7 @@ function data_out = ft_nirs_signalqualityindex(cfg, data_in)
 % file on disk and/or the output data will be written to a *.mat file. These mat
 % files should contain only a single variable, corresponding with the% input/output structure.
 %
-% This function is based on:
-% - Sappia, M. S., Hakimi, N., Colier, W. N., & Horschig, J. M. (2020). 
-%   Signal quality index: an algorithm for quantitative assessment of 
-%   functional near infrared spectroscopy signal quality. Biomedical Optics 
-%   Express, 11(11), 6732-6754. https://doi.org/10.1364/BOE.409317
-%
-% Please cite accordingly. Thank you!
-%
-% See also FT_NIRS_TRANSFORM_ODS, SQI
+% See also FT_NIRS_SCALPCOUPLINGINDEX, FT_NIRS_REFERENCECHANNELSUBTRACTION, FT_NIRS_TRANSFORM_ODS
 
 % You are using the FieldTrip NIRS toolbox developed and maintained by
 % Artinis Medical Systems (http://www.artinis.com). For more information
@@ -82,7 +83,7 @@ function data_out = ft_nirs_signalqualityindex(cfg, data_in)
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%              parsing the input options and data
+%%              parsing the input options and data
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % these are used by the ft_preamble/ft_postamble function and scripts
@@ -90,26 +91,28 @@ ft_revision = '$Id$';
 ft_nargin   = nargin;
 ft_nargout  = nargout;
 
+% do the general setup of the function
+
 % the ft_preamble function works by calling a number of scripts from
 % fieldtrip/utility/private that are able to modify the local workspace
 
-ft_defaults                   % this ensures that the path is correct and that the ft_defaults global variable is available
-ft_preamble init              % this will reset ft_warning and show the function help if nargin==0 and return an error
-ft_preamble debug             % this allows for displaying or saving the function name and input arguments upon an error
-ft_preamble loadvar    datain % this reads the input data in case the user specified the cfg.inputfile option
-ft_preamble provenance datain % this records the time and memory usage at the beginning of the function
-ft_preamble trackconfig       % this converts the cfg structure in a config object, which tracks the cfg options that are being used
+ft_defaults
+ft_preamble init
+ft_preamble debug
+ft_preamble loadvar    datain
+ft_preamble provenance datain
+ft_preamble trackconfig
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
-    % do not continue function execution in case the outputfile is present and the user indicated to keep it
-    return
+  % do not continue function execution in case the outputfile is present and the user indicated to keep it
+  return
 end
 
 % ensure that the input data is raw NIRS-data, this will also do
 % backward-compatibility conversions of old data that for example was
 % read from an old *.mat file
-data_in = ft_checkdata(data_in, 'datatype', 'raw', 'senstype', 'nirs');
+datain = ft_checkdata(datain, 'datatype', 'raw', 'senstype', 'nirs');
 
 % get the options
 cfg.threshold    = ft_getopt(cfg, 'threshold', 3.5);
@@ -118,27 +121,28 @@ cfg.windowlength = ft_getopt(cfg, 'windowlength', 10);
 cfg = ft_checkopt(cfg, 'threshold', 'doublescalar');
 cfg = ft_checkopt(cfg, 'windowlength', 'doublescalar');
 
-data_resampled = data_in; % copy of data to compute SQI on 
-data_out = data_in; % where low quality signal segments will be replaced with nans
+data_resampled = datain; % copy of data to compute SQI on
+dataout = datain; % where low quality signal segments will be replaced with nans
 
 % check if labels match the expected order (wavelengths belonging to the
 % same channel are consecutive)
 matching_channels = match_nirs_labels(data_resampled.label);
 idx_channels = 1:size(matching_channels,1);
 
-for idx_temp_channel=1:size(matching_channels,1)  
-    idx_matching = find(matching_channels(idx_temp_channel,:)==1);
-    if numel(idx_matching) ~= 2
-       error('Expected channel combination associated with 2 wavelengths. Found %d',numel(idx_matching));
-    end
-    idx_channel1 = idx_matching(1);
-    idx_channel2 = idx_matching(2);
-    if abs(idx_channel2 - idx_channel1) > 1 
-        error('Labels do not match the expected order');
-    end   
+for idx_temp_channel=1:size(matching_channels,1)
+  idx_matching = find(matching_channels(idx_temp_channel,:)==1);
+  if numel(idx_matching) ~= 2
+    error('Expected channel combination associated with 2 wavelengths. Found %d',numel(idx_matching));
+  end
+  idx_channel1 = idx_matching(1);
+  idx_channel2 = idx_matching(2);
+  if abs(idx_channel2 - idx_channel1) > 1
+    error('Labels do not match the expected order');
+  end
 end
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%                signal quality index computation
+%%                signal quality index computation
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % if sample rate is not 50 Hz, then resample
@@ -153,64 +157,60 @@ cfg_Hb = [];
 [data_Hb] = ft_nirs_transform_ODs(cfg_Hb, data_resampled);
 
 resampled_windowsize = cfg.windowlength * data_resampled.fsample; % in samples
-org_windowsize = cfg.windowlength * data_in.fsample;
+org_windowsize = cfg.windowlength * datain.fsample;
 
 % loop through all channels and trials
 num_channels = numel(data_resampled.label);
 num_trials = numel(data_resampled.trial);
 
 while(numel(idx_channels)>0)
-    idx_temp_channel=idx_channels(1);
-    idx_matching = find(matching_channels(idx_temp_channel,:)==1);
-    idx_channel1 = idx_matching(1);
-    idx_channel2 = idx_matching(2);
-    idx_channels(idx_channels == idx_matching(1)) = [];
-    idx_channels(idx_channels == idx_matching(2)) = [];
-    for idx_trial = 1:num_trials
-        % get ODs and Hb signals per trial, per channel
-        OD1 = data_resampled.trial{idx_trial}(idx_channel1,:);
-        OD2 = data_resampled.trial{idx_trial}(idx_channel2,:);
-        oxy = data_Hb.trial{idx_trial}(idx_channel1,:);
-        dxy = data_Hb.trial{idx_trial}(idx_channel2,:);    
-        
-        % compute window onset samples per signal segment
-        window_onsets_resampled = 1:resampled_windowsize:numel(OD1) - resampled_windowsize; % no overlap
-        window_onsets_org = 1:org_windowsize:size(data_out.trial{idx_trial}(idx_channel1,:),2) - org_windowsize;
-            
-        for idx_window = 1:numel(window_onsets_resampled)
-            idx_signal_segment = window_onsets_resampled(idx_window):window_onsets_resampled(idx_window) + resampled_windowsize;
-            % get signal segments
-            OD1_segment = OD1(idx_signal_segment);
-            OD2_segment = OD2(idx_signal_segment);
-            oxy_segment = oxy(idx_signal_segment);
-            dxy_segment = dxy(idx_signal_segment);
-            % compute SQI score 
-            sqi_score = SQI(OD1_segment, OD2_segment, oxy_segment, dxy_segment, data_resampled.fsample);
-            if sqi_score < cfg.threshold
-                idx_sample_start = window_onsets_org(idx_window); 
-                idx_signal_segment_orig = idx_sample_start:idx_sample_start + org_windowsize;
-                data_out.trial{idx_trial}(idx_channel1, idx_signal_segment_orig) = NaN;
-                data_out.trial{idx_trial}(idx_channel2, idx_signal_segment_orig) = NaN;
-            end
-        end
+  idx_temp_channel=idx_channels(1);
+  idx_matching = find(matching_channels(idx_temp_channel,:)==1);
+  idx_channel1 = idx_matching(1);
+  idx_channel2 = idx_matching(2);
+  idx_channels(idx_channels == idx_matching(1)) = [];
+  idx_channels(idx_channels == idx_matching(2)) = [];
+  for idx_trial = 1:num_trials
+    % get ODs and Hb signals per trial, per channel
+    OD1 = data_resampled.trial{idx_trial}(idx_channel1,:);
+    OD2 = data_resampled.trial{idx_trial}(idx_channel2,:);
+    oxy = data_Hb.trial{idx_trial}(idx_channel1,:);
+    dxy = data_Hb.trial{idx_trial}(idx_channel2,:);
+    
+    % compute window onset samples per signal segment
+    window_onsets_resampled = 1:resampled_windowsize:numel(OD1) - resampled_windowsize; % no overlap
+    window_onsets_org = 1:org_windowsize:size(dataout.trial{idx_trial}(idx_channel1,:),2) - org_windowsize;
+    
+    for idx_window = 1:numel(window_onsets_resampled)
+      idx_signal_segment = window_onsets_resampled(idx_window):window_onsets_resampled(idx_window) + resampled_windowsize;
+      % get signal segments
+      OD1_segment = OD1(idx_signal_segment);
+      OD2_segment = OD2(idx_signal_segment);
+      oxy_segment = oxy(idx_signal_segment);
+      dxy_segment = dxy(idx_signal_segment);
+      % compute SQI score
+      sqi_score = SQI(OD1_segment, OD2_segment, oxy_segment, dxy_segment, data_resampled.fsample);
+      if sqi_score < cfg.threshold
+        idx_sample_start = window_onsets_org(idx_window);
+        idx_signal_segment_orig = idx_sample_start:idx_sample_start + org_windowsize;
+        dataout.trial{idx_trial}(idx_channel1, idx_signal_segment_orig) = NaN;
+        dataout.trial{idx_trial}(idx_channel2, idx_signal_segment_orig) = NaN;
+      end
     end
+  end
 end
 
 
-
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%            end of signal quality index computation
+%%            end of signal quality index computation
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% general cleanup and bookkeeping 
 
 % the ft_postamble function works by calling a number of scripts from
 % fieldtrip/utility/private that are able to modify the local workspace
 
-ft_postamble debug               % this clears the onCleanup function used for debugging in case of an error
-ft_postamble trackconfig         % this converts the config object back into a struct and can report on the unused fields
-ft_postamble previous   datain   % this copies the datain.cfg structure into the cfg.previous field. You can also use it for multiple inputs, or for "varargin"
-ft_postamble provenance dataout  % this records the time and memory at the end of the function, prints them on screen and adds this information together with the function name and MATLAB version etc. to the output cfg
-ft_postamble history    dataout  % this adds the local cfg structure to the output data structure, i.e. dataout.cfg = cfg
-ft_postamble savevar    dataout  % this saves the output data structure to disk in case the user specified the cfg.outputfile option
+ft_postamble debug
+ft_postamble trackconfig
+ft_postamble previous   datain
+ft_postamble provenance dataout
+ft_postamble history    dataout
+ft_postamble savevar    dataout

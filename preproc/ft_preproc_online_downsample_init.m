@@ -1,8 +1,11 @@
-function DM = ft_preproc_online_downsample_init(factor)
+function state = ft_preproc_online_downsample_init(factor)
 
-% function DM = ft_preproc_online_downsample_init(factor)
+% FT_PREPROC_ONLINE_DOWNSAMPLE_INIT initializes an downsampling model with the given factor.
+% 
+% Use as
+%  state = ft_preproc_online_downsample_init(factor)
 %
-% Initialize an downsampling model with the given factor.
+% See also PREPROC, FT_PREPROC_ONLINE_DOWNSAMPLE_APPLY
 
 % Copyright (C) 2010, Stefan Klanke
 %
@@ -24,9 +27,9 @@ function DM = ft_preproc_online_downsample_init(factor)
 %
 % $Id$
 
-if factor < 1 or factor~=round(factor)
+if factor < 1 || factor~=round(factor)
 	error('Argument ''factor'' must be a positive integer number');
 end
 
-DM.factor  = factor;
-DM.numSkip = 0;
+state.factor  = factor;
+state.numSkip = 0;

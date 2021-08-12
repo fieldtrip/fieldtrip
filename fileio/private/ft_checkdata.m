@@ -319,7 +319,7 @@ if ~isempty(dtype)
       case 'timelock'
         okflag = okflag + (istimelock & ~iscomp);
       case 'comp'
-        okflag = okflag + (iscomp & ~(israw | istimelock | isfreq));
+        okflag = okflag + (iscomp && ~(israw || istimelock || isfreq));
       case 'spike'
         okflag = okflag + isspike;
       case 'volume'
@@ -994,10 +994,11 @@ elseif strcmp(current, 'fourier') && strcmp(desired, 'fullfast')
   if contains(data.dimord, 'time'), ntim = length(data.time); else ntim = 1; end
   
   data.fourierspctrm = reshape(data.fourierspctrm, [nrpt nchn nfrq*ntim]);
-  data.fourierspctrm(~isfinite(data.fourierspctrm)) = 0;
+  %data.fourierspctrm(~isfinite(data.fourierspctrm)) = 0;
   crsspctrm = complex(zeros(nchn,nchn,nfrq*ntim));
   for k = 1:nfrq*ntim
     tmp = transpose(data.fourierspctrm(:,:,k));
+    tmp(~isfinite(tmp)) = 0;
     n   = sum(tmp~=0,2);
     crsspctrm(:,:,k) = tmp*tmp'./n(1);
   end
