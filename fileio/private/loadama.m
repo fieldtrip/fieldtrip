@@ -9,7 +9,7 @@ function [ama] = loadama(filename)
 % See also LOADTRI, LOADMAT
 
 % Copyright (C) 2005, Robert Oostenveld
-% Additions 2021, Thom Oostendorp
+% Copyright (C) 2021, Thom Oostendorp
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -30,21 +30,17 @@ function [ama] = loadama(filename)
 % $Id$
 
 fid = fopen(filename, 'rb', 'ieee-le');
-
 version = fread(fid, 1, 'int');
-% TFO 2021-08-10
-% adepted to make it cope with both versions 10 and 11
-if (version~=10) & (version~=11)
-  ft_error(sprintf(['%s is either not an inverted A matrix, or not ' ...
-                    'version 10 or 11'], filename));
-end
 
 % TFO 2021-08-10
-% version 11 and higher of dipoli uses double precision
-% so all 'float's have been replaced by 'float64's
-floatFormat='float64';
-if version==10
+% version 11 and higher of dipoli uses double precision so all 'float's have been replaced by 'float64's
+switch version
+  case 10
     floatFormat='float';
+  case 11
+    floatFormat='float64';
+  otherwise
+    ft_error('%s is either not an inverted A matrix, or neither version 10 nor 11', filename);
 end
 
 mode = fread(fid, 1, 'int');
@@ -61,7 +57,7 @@ for i=1:ngeo
   geo(i).npos    = fread(fid, 1, 'int');
   geo(i).pos     = fread(fid, [3 geo(i).npos], floatFormat)';
   geo(i).ntri    = fread(fid, 1, 'int');
-  geo(i).tri     = fread(fid, [3 geo(i).ntri], 'int')' + 1;  % Matlab indexing starts at 1
+  geo(i).tri     = fread(fid, [3 geo(i).ntri], 'int')' + 1;  % MATLAB indexing starts at 1
   geo(i).sigmam  = fread(fid, 1, floatFormat);
   geo(i).sigmap  = fread(fid, 1, floatFormat);
   geo(i).geocon  = fread(fid, ngeo, 'int');
@@ -75,12 +71,11 @@ if mode~=1
   elec.name    = char(fread(fid, [1 80], 'uchar'));
   elec.npos    = fread(fid, 1, 'int');
   for i=1:(elec.npos+1)
-    elec.el(i).tri  = fread(fid, 1, 'int') + 1; % Matlab indexing starts at 1
+    elec.el(i).tri  = fread(fid, 1, 'int') + 1; % MATLAB indexing starts at 1
     % TFO 2021-08-10
-    % In the 64-bit version, each field is padded to a multiple of 8 bytes
-    % so we need to read 4 dummy bytes
+    % In the 64-bit version, each field is padded to a multiple of 8 bytes, so we need to read 4 dummy bytes
     if version>10
-        dum = fread(fid, 4, 'char');
+      dum = fread(fid, 4, 'char');
     end    
     elec.el(i).la   = fread(fid, 1, floatFormat);
     elec.el(i).mu   = fread(fid, 1, floatFormat);
@@ -88,10 +83,9 @@ if mode~=1
     % the ELECTRODE c-structure is padded to word boundaries, i.e. to 4 bytes
     dum = fread(fid, 2, 'char');
     % TFO 2021-08-10
-    % In the 64-bit version, each field is padded to a multiple of 8 bytes
-    % so we need to read 4 more dummy bytes
+    % In the 64-bit version, each field is padded to a multiple of 8 bytes, so we need to read 4 more dummy bytes
     if version>10
-        dum = fread(fid, 4, 'char');
+      dum = fread(fid, 4, 'char');
     end
   end
   elec.vertex  = fread(fid, 1, 'int');
