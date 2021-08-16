@@ -9,7 +9,7 @@ classdef AuxClass < matlab.mixin.Copyable
     end
     
     % Non-SNIRF class properties
-    properties
+    properties (Access = private)
         filename
         fileformat
     end
@@ -74,6 +74,10 @@ classdef AuxClass < matlab.mixin.Copyable
             try
                 % Open group
                 [gid, fid] = HDF5_GroupOpen(fileobj, location);
+                if gid<0
+                    err = -1;
+                    return;
+                end
 
                 obj.name            = HDF5_DatasetLoad(gid, 'name');
                 obj.dataTimeSeries  = HDF5_DatasetLoad(gid, 'dataTimeSeries');
@@ -83,7 +87,7 @@ classdef AuxClass < matlab.mixin.Copyable
                 % Close group
                 HDF5_GroupClose(fileobj, gid, fid);
             catch
-                err = -1;
+                err = -2;
             end
         end
 
