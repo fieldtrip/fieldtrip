@@ -875,12 +875,97 @@ switch dataformat
     data.label = hdr.label;
     data.sampleinfo = [1 size(dat,2)];
     
-    % convert the raw data structure to Homer format
-    nirs = fieldtrip2homer(data, 'event', evt);
+    % devide data in nirs channels, stimulus channels and auxillary channels
+    seldat  = startsWith(hdr.chantype, 'nirs');
+    selstim = strcmp(hdr.chantype, 'stimulus');
+    selaux  = ~seldat & ~selstim;
     
-    % convert the Homer structure to Snirf and write it to disk
-    snirf = SnirfClass(nirs);
-    snirf.Save(filename);
+    % create empty SnirfClass
+    snirf = SnirfClass();
+    
+    % collect information for creation of snirf file
+    source_idx=find(contains(data.hdr.opto.optotype, {'transmitter', 'source'}));
+    detector_idx=find(contains(data.hdr.opto.optotype, {'receiver', 'detector'}));
+    tra=data.hdr.opto.tra;
+    all_wavelengths=data.hdr.opto.wavelength(tra(find(tra>0)));
+    split=median(all_wavelengths);
+    WL1.values=all_wavelengths(all_wavelengths<split);
+    WL2.values=all_wavelengths(all_wavelengths>split);
+    WL1.nominal=round(median(WL1.values),-1);
+    WL2.nominal=round(median(WL2.values),-1);
+    num_WL=2;
+    ft_warning('Fieldtrip assumes that nominal wavelengths of %d and %d nm were used. Please adjust manually when this is not correct', WL1.nominal, WL2.nominal)
+     
+    % metaDataTags
+    snirf.metaDataTags(1).tags.LengthUnit = data.hdr.opto.unit; 
+    snirf.metaDataTags(1).tags.TimeUnit = 's'; 
+    snirf.metaDataTags(1).tags.FrequencyUnit = 'Hz';
+    
+    % data 
+    % (FIX ME: in theory this can contain multiple data blocks)
+    snirf.data(1).dataTimeSeries = data.trial{1}(seldat,:)'; % <number of time points> x <number of channels>
+    snirf.data(1).time = data.time{1}'; % <number of time points x 1> (can also be  represented as <start time x sample time spacing>
+    
+    % measurementList
+    for i=1:size(tra,1)
+      source=find(tra(i,:)>0);
+      detector=find(tra(i,:)<0);
+      snirf.data.measurementList(i).sourceIndex = find(source_idx==source);
+      snirf.data.measurementList(i).detectorIndex = find(detector_idx==detector);
+%       snirf.data.measurementList(i).wavelengthActual =
+%       all_wavelengths(i); % is not yet supported by the snirf toolbox
+      if any(all_wavelengths(i)==WL1.values)
+        snirf.data.measurementList(i).wavelengthIndex = 1;
+      else
+        snirf.data.measurementList(i).wavelengthIndex = 2;
+      end
+      snirf.data.measurementList(i).dataType = 99999;
+      snirf.data.measurementList(i).dataTypeLabel = 'dOD';
+    end
+    ft_warning('FT assumes that the input data is change in optical density. Adjust manually if not correct')
+    
+    % stim
+    if ~isempty(evt)
+      % distinguish events with different names
+      evt_names=unique({evt(:).value});
+      for i=1:length(evt_names)
+        snirf.stim(i).name = evt_names{i};
+        evt_idx=find(strcmp({evt(:).value}, evt_names{i}));
+        starttime = ([evt(evt_idx).sample]-1)/data.hdr.Fs;
+        duration = [evt(evt_idx).duration]/data.hdr.Fs;
+        value = ones(1,length(evt_idx));
+        snirf.stim(i).data = [starttime' duration' value'];
+      end
+    end
+    
+    % probe
+    snirf.probe(1).wavelengths = [WL1.nominal WL2.nominal];
+    if all(data.hdr.opto.optopos(:,3)==0)
+      snirf.probe(1).sourcePos2D = data.hdr.opto.optopos(source_idx, 1:2);
+      snirf.probe(1).detectorPos2D = data.hdr.opto.optopos(detector_idx, 1:2);
+    else
+      snirf.probe(1).sourcePos3D = data.hdr.opto.optopos(source_idx, 1:3);
+      snirf.probe(1).detectorPos3D = data.hdr.opto.optopos(detector_idx, 1:3);
+      layoutpos=getorthoviewpos(data.hdr.opto.optopos, 'ras', 'superior');
+      snirf.probe(1).sourcePos2D = layoutpos(source_idx, 1:2);
+      snirf.probe(1).detectorPos2D = layoutpos(detector_idx, 1:2);
+    end
+    snirf.probe(1).sourceLabels=data.hdr.opto.optolabel(source_idx);
+    snirf.probe(1).detectorLabels=data.hdr.opto.optolabel(detector_idx);
+
+    % aux
+    if sum(selaux)~=0
+      auxdata=data.trial{1}(selaux,:);
+      auxlabels = data.label(selaux);
+      for i=1:sum(selaux)
+        snirf.aux(i).name = auxlabels{i}; % check if correct format
+        snirf.aux(i).dataTimeSeries = auxdata(i,:)';
+        snirf.aux(i).time = data.time{1}';
+      end
+    end
+        
+    % save .snirf file
+    snirf.Save(filename)
     
   otherwise
     ft_error('unsupported data format');
@@ -917,3 +1002,61 @@ for i=1:numel(type)
       type{i} = 'Other';
   end
 end
+
+function pos = getorthoviewpos(pos, coordsys, viewpoint)
+% see alsoft_prepare_layout
+if size(pos,2)~=3
+  ft_error('XYZ coordinates are required to obtain the orthographic projections based on a viewpoint')
+end
+
+% create view(az,el) transformation matrix
+switch coordsys
+  case {'ras' 'neuromag' 'itab' 'acpc' 'spm' 'mni' 'tal'}
+    switch viewpoint
+      case 'left'
+        transmat = viewmtx(-90, 0);
+      case 'right'
+        transmat = viewmtx(90, 0);
+      case 'topleft'
+        transmat = viewmtx(-90, 45);
+      case 'topright'
+        transmat = viewmtx(90, 45);
+      case 'superior'
+        transmat = viewmtx(0, 90);
+      case 'inferior'
+        transmat = viewmtx(180, -90);
+      case 'posterior'
+        transmat = viewmtx(0, 0);
+      case 'anterior'
+        transmat = viewmtx(180, 0);
+      otherwise
+        ft_error('orthographic projection using viewpoint "%s" is not supported', viewpoint)
+    end % switch viewpoint
+  case {'als' 'ctf' '4d' 'bti'}
+    switch viewpoint
+      case 'left'
+        transmat = viewmtx(180, 0);
+      case 'right'
+        transmat = viewmtx(0, 0);
+      case 'topleft'
+        transmat = viewmtx(180, 45);
+      case 'topright'
+        transmat = viewmtx(0, 45);
+      case 'superior'
+        transmat = viewmtx(-90, 90);
+      case 'inferior'
+        transmat = viewmtx(90, -90);
+      case 'posterior'
+        transmat = viewmtx(-90, 0);
+      case 'anterior'
+        transmat = viewmtx(90, 0);
+      otherwise
+        ft_error('orthographic projection using viewpoint "%s" is not supported', viewpoint)
+    end % switch viewpoint
+  otherwise
+    ft_error('orthographic projection using coordinate system "%s" is not supported', coordsys)
+end % switch coordsys
+
+% extract xy
+pos      = ft_warp_apply(transmat, pos, 'homogenous');
+pos      = pos(:,[1 2]);
