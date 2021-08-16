@@ -1377,16 +1377,16 @@ if need_channels_tsv
   channels_tsv = channels_tsv(keep,:);
   
   % there are some chanel types used in FieldTrip that are named differently in BIDS
-  channels_tsv.type(strcmpi(channels_tsv.type, 'unknown'))     = 'OTHER';
-  channels_tsv.type(strcmpi(channels_tsv.type, 'meggrad'))     = 'MEGGRADAXIAL';
-  channels_tsv.type(strcmpi(channels_tsv.type, 'megplanar'))   = 'MEGGRADPLANAR';
-  channels_tsv.type(strcmpi(channels_tsv.type, 'refmag'))      = 'MEGREFMAG';
-  channels_tsv.type(strcmpi(channels_tsv.type, 'refgrad'))     = 'MEGREFGRADAXIAL';
-  channels_tsv.type(strcmpi(channels_tsv.type, 'refplanar'))   = 'MEGREFGRADPLANAR';
-  channels_tsv.type(strcmpi(channels_tsv.type, 'respiration')) = 'RESP';
-  channels_tsv.type(strcmpi(channels_tsv.type, 'headloc'))     = 'HLU';
-  channels_tsv.type(strcmpi(channels_tsv.type, 'headloc_gof')) = 'FITERR';
-  channels_tsv.type(contains(channels_tsv.type, 'trigger', 'IgnoreCase', true)) = 'TRIG';
+  channels_tsv.type(strcmpi(channels_tsv.type, 'unknown'))     = {'OTHER'};
+  channels_tsv.type(strcmpi(channels_tsv.type, 'meggrad'))     = {'MEGGRADAXIAL'};
+  channels_tsv.type(strcmpi(channels_tsv.type, 'megplanar'))   = {'MEGGRADPLANAR'};
+  channels_tsv.type(strcmpi(channels_tsv.type, 'refmag'))      = {'MEGREFMAG'};
+  channels_tsv.type(strcmpi(channels_tsv.type, 'refgrad'))     = {'MEGREFGRADAXIAL'};
+  channels_tsv.type(strcmpi(channels_tsv.type, 'refplanar'))   = {'MEGREFGRADPLANAR'};
+  channels_tsv.type(strcmpi(channels_tsv.type, 'respiration')) = {'RESP'};
+  channels_tsv.type(strcmpi(channels_tsv.type, 'headloc'))     = {'HLU'};
+  channels_tsv.type(strcmpi(channels_tsv.type, 'headloc_gof')) = {'FITERR'};
+  channels_tsv.type(contains(channels_tsv.type, 'trigger', 'IgnoreCase', true)) = {'TRIG'};
   
   % channel types in BIDS must be in upper case
   channels_tsv.type = upper(channels_tsv.type);
