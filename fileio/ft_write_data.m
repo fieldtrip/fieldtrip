@@ -884,17 +884,17 @@ switch dataformat
     snirf = SnirfClass();
     
     % collect information for creation of snirf file
-    source_idx=find(contains(data.hdr.opto.optotype, {'transmitter', 'source'}));
-    detector_idx=find(contains(data.hdr.opto.optotype, {'receiver', 'detector'}));
-    tra=data.hdr.opto.tra;
-    all_wavelengths=data.hdr.opto.wavelength(tra(find(tra>0)));
-    split=median(all_wavelengths);
-    WL1.values=all_wavelengths(all_wavelengths<split);
-    WL2.values=all_wavelengths(all_wavelengths>split);
-    WL1.nominal=round(median(WL1.values),-1);
-    WL2.nominal=round(median(WL2.values),-1);
-    num_WL=2;
-    ft_warning('Fieldtrip assumes that nominal wavelengths of %d and %d nm were used. Please adjust manually when this is not correct', WL1.nominal, WL2.nominal)
+    source_idx = find(contains(data.hdr.opto.optotype, {'transmitter', 'source'}));
+    detector_idx = find(contains(data.hdr.opto.optotype, {'receiver', 'detector'}));
+    tra = data.hdr.opto.tra;
+    all_wavelengths = data.hdr.opto.wavelength(tra(find(tra>0)));
+    split = median(all_wavelengths);
+    WL1.values = all_wavelengths(all_wavelengths<split);
+    WL2.values = all_wavelengths(all_wavelengths>split);
+    WL1.nominal = round(median(WL1.values),-1);
+    WL2.nominal = round(median(WL2.values),-1);
+    num_WL = 2;
+    ft_warning('assuming that the nominal wavelengths are %d and %d nm', WL1.nominal, WL2.nominal)
      
     % metaDataTags
     snirf.metaDataTags(1).tags.LengthUnit = data.hdr.opto.unit; 
@@ -908,8 +908,8 @@ switch dataformat
     
     % measurementList
     for i=1:size(tra,1)
-      source=find(tra(i,:)>0);
-      detector=find(tra(i,:)<0);
+      source = find(tra(i,:)>0);
+      detector = find(tra(i,:)<0);
       snirf.data.measurementList(i).sourceIndex = find(source_idx==source);
       snirf.data.measurementList(i).detectorIndex = find(detector_idx==detector);
 %       snirf.data.measurementList(i).wavelengthActual =
@@ -922,21 +922,21 @@ switch dataformat
       snirf.data.measurementList(i).dataType = 99999;
       snirf.data.measurementList(i).dataTypeLabel = 'dOD';
     end
-    ft_warning('FT assumes that the input data is change in optical density. Adjust manually if not correct')
+    ft_warning('assuming that the input data represents (change in) optical densities')
     % sort the channels according to wavelengths (because this is the way
     % that homer handles data) and change the order of the data accordingly
-    [~, idx]=sort(([snirf.data.measurementList(:).wavelengthIndex]));
-    snirf.data.measurementList=snirf.data.measurementList(idx);
+    [~, idx] = sort(([snirf.data.measurementList(:).wavelengthIndex]));
+    snirf.data.measurementList = snirf.data.measurementList(idx);
     % update the data accordingly
     snirf.data.dataTimeSeries=snirf.data.dataTimeSeries(:, idx);
     
     % stim
     if ~isempty(evt)
       % distinguish events with different names
-      evt_names=unique({evt(:).value});
+      evt_names = unique({evt(:).value});
       for i=1:length(evt_names)
         snirf.stim(i).name = evt_names{i};
-        evt_idx=find(strcmp({evt(:).value}, evt_names{i}));
+        evt_idx = find(strcmp({evt(:).value}, evt_names{i}));
         starttime = ([evt(evt_idx).sample]-1)/data.hdr.Fs;
         duration = [evt(evt_idx).duration]/data.hdr.Fs;
         value = ones(1,length(evt_idx));
@@ -956,12 +956,12 @@ switch dataformat
       snirf.probe(1).sourcePos2D = layoutpos(source_idx, 1:2);
       snirf.probe(1).detectorPos2D = layoutpos(detector_idx, 1:2);
     end
-    snirf.probe(1).sourceLabels=data.hdr.opto.optolabel(source_idx);
-    snirf.probe(1).detectorLabels=data.hdr.opto.optolabel(detector_idx);
+    snirf.probe(1).sourceLabels = data.hdr.opto.optolabel(source_idx);
+    snirf.probe(1).detectorLabels = data.hdr.opto.optolabel(detector_idx);
 
     % aux
     if sum(selaux)~=0
-      auxdata=data.trial{1}(selaux,:);
+      auxdata = data.trial{1}(selaux,:);
       auxlabels = data.label(selaux);
       for i=1:sum(selaux)
         snirf.aux(i).name = auxlabels{i}; % check if correct format
