@@ -923,6 +923,12 @@ switch dataformat
       snirf.data.measurementList(i).dataTypeLabel = 'dOD';
     end
     ft_warning('FT assumes that the input data is change in optical density. Adjust manually if not correct')
+    % sort the channels according to wavelengths (because this is the way
+    % that homer handles data) and change the order of the data accordingly
+    [~, idx]=sort(([snirf.data.measurementList(:).wavelengthIndex]));
+    snirf.data.measurementList=snirf.data.measurementList(idx);
+    % update the data accordingly
+    snirf.data.dataTimeSeries=snirf.data.dataTimeSeries(:, idx);
     
     % stim
     if ~isempty(evt)
