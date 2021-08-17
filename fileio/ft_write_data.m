@@ -887,7 +887,9 @@ switch dataformat
     source_idx = find(contains(data.hdr.opto.optotype, {'transmitter', 'source'}));
     detector_idx = find(contains(data.hdr.opto.optotype, {'receiver', 'detector'}));
     tra = data.hdr.opto.tra;
-    all_wavelengths = data.hdr.opto.wavelength(tra(find(tra>0)));
+    tra_t = tra'; % transpose tra matrix to get indices of wavelength by row (thus by channel)
+    wl_idx = find(tra_t>0);
+    all_wavelengths = data.hdr.opto.wavelength(tra_t(wl_idx));
     split = median(all_wavelengths);
     WL1.values = all_wavelengths(all_wavelengths<split);
     WL2.values = all_wavelengths(all_wavelengths>split);
@@ -932,15 +934,40 @@ switch dataformat
     
     % stim
     if ~isempty(evt)
-      % distinguish events with different names
-      evt_names = unique({evt(:).value});
-      for i=1:length(evt_names)
-        snirf.stim(i).name = evt_names{i};
-        evt_idx = find(strcmp({evt(:).value}, evt_names{i}));
-        starttime = ([evt(evt_idx).sample]-1)/data.hdr.Fs;
-        duration = [evt(evt_idx).duration]/data.hdr.Fs;
-        value = ones(1,length(evt_idx));
-        snirf.stim(i).data = [starttime' duration' value'];
+      % select events with a string value, the type will be a string
+      sel = cellfun(@ischar, {evt.value});
+      if any(sel)
+        evt_names = unique({evt(:).value}); % if the values are strings, this propably contains the event names
+        for i=1:length(evt_names)
+          snirf.stim(i).name = evt_names{i};
+          evt_idx = find(strcmp({evt(:).value}, evt_names{i}));
+          starttime = ([evt(evt_idx).sample]-1)/data.hdr.Fs;
+          duration = [evt(evt_idx).duration]/data.hdr.Fs;
+          if isempty(duration)
+            duration = zeros(1, length(starttime));
+          end
+          value = ones(1,length(evt_idx));
+          snirf.stim(i).data = [starttime' duration' value'];
+        end
+      end
+      % select events with a numeric value, the type will be a string
+      sel = cellfun(@isnumeric, {evt.value});
+      if any(sel)
+        evt_names = unique({evt(:).type});
+        for i=1:length(evt_names)
+          snirf.stim(i).name = evt_names{i};
+          evt_idx = find(strcmp({evt(:).type}, evt_names{i}));
+          starttime = ([evt(evt_idx).sample]-1)/data.hdr.Fs;
+          duration = [evt(evt_idx).duration]/data.hdr.Fs;
+          if isempty(duration)
+            duration = zeros(1, length(starttime));
+          end
+          value = [evt(evt_idx).value];
+          if isempty(value)
+            value = ones(1, length(starttime));
+          end
+          snirf.stim(i).data = [starttime' duration' value'];
+        end
       end
     end
     
