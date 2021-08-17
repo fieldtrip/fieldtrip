@@ -8,7 +8,7 @@ function setviewpoint(ax, coordsys, viewpoint)
 % For example
 %   setviewport(gca, 'mni', 'left')
 %
-% See alo FT_PREPARE_LAYOUT>getorthoviewpos, COORDSYS2LABEL
+% See alo GETORTHOVIEWPOS, COORDSYS2LABEL
 
 if isempty(coordsys)
   coordsys = 'unknown';
