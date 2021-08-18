@@ -174,19 +174,61 @@ switch fileformat
     sens = read_polhemus_pos(filename);
     
   case 'besa_elp'
-    ft_error('unknown fileformat for electrodes or gradiometers');
-    % the code below does not yet work
     fid = fopen_or_error(filename);
-    % the ascii file contains: type, label, angle, angle
-    tmp = textscan(fid, '%s%s%f%f');
+    % these files seem to come in different formats with 3, 4 or 5 columns
+    % read the first line to determine the number of columns
+    format = length(strsplit(deblank2(fgetl(fid))));
+    fseek(fid, 0, 'bof');
+    switch format
+      case 3
+        % 3-column: label, azimuth, elevation
+        tmp = textscan(fid, '%s%f%f');
+        type      = repmat({'EEG'}, size(tmp{1}));
+        label     = tmp{1};
+        azimuth   = tmp{2};
+        elevation = tmp{3};
+        radius    = repmat(85, size(tmp{1}));
+        ft_warning('assuming that the electrodes are placed on a 85 mm sphere');
+      case 4
+        % 4-column: type, label, azimuth, elevation
+        tmp = textscan(fid, '%s%s%f%f');
+        type      = tmp{1};
+        label     = tmp{2};
+        azimuth   = tmp{3};
+        elevation = tmp{4};
+        radius    = repmat(85, size(label));
+        ft_warning('assuming that the electrodes are placed on a 85 mm sphere');
+      case 5
+        % 5-column: type, label, azimuth, elevation, radius
+        tmp = textscan(fid, '%s%s%f%f%f');
+        type      = tmp{1};
+        label     = tmp{2};
+        azimuth   = tmp{3};
+        elevation = tmp{4};
+        radius    = tmp{5};
+      otherwise
+        ft_error('unsupported file format for .elp');
+    end
     fclose(fid);
-    sel = strcmpi(tmp{1}, 'EEG');  % type can be EEG or POS
-    sens.label = tmp{2}(sel);
-    az = tmp{3}(sel) * pi/180;
-    el = tmp{4}(sel) * pi/180;
-    r  = ones(size(el));
+    
+    sel = strcmpi(type, 'EEG');  % type can be EEG, POS or FID
+    az = azimuth(sel) * pi/180;
+    el = elevation(sel) * pi/180;
+    r  = radius(sel);
     [x, y, z] = sph2cart(az, el, r);
-    sens.chanpos = [x y z];
+    sens.elecpos = [x y z];
+    sens.label = label(sel);
+    sens.unit = 'mm';
+    
+    sel = strcmpi(type, 'FID');  % type can be EEG, POS or FID
+    if any(sel)
+      az = azimuth(sel) * pi/180;
+      el = elevation(sel) * pi/180;
+      r  = radius(sel);
+      [x, y, z] = sph2cart(az, el, r);
+      sens.fid.pos = [x y z];
+      sens.fid.label = label(sel);
+    end
     
   case 'besa_pos'
     tmp = importdata(filename);
@@ -525,7 +567,7 @@ switch fileformat
     warning(ws); % revert to the previous warning state
     sens.label   = txtData{:,1};
     sens.elecpos = [txtData.Loc_X txtData.Loc_Y txtData.Loc_Z];
-
+    
   case 'yorkinstruments_hdf5'
     acquisition='default';
     if isempty(senstype)
@@ -540,16 +582,16 @@ switch fileformat
       if string(hdr.chantype{i})==upper(senstype)
         sens_i=sens_i+1;
         sens.chantype{sens_i,1}=hdr.chantype{i};
-              try
-                sens.chanpos(sens_i,1:3) =  h5read(filename,['/config/channels/' hdr.label{i} '/position']);
-                sens.chanori(sens_i,1:3) =  h5read(filename,['/config/channels/' hdr.label{i} '/orientation']);
-                sens.chanunit{sens_i,1}  =  hdr.chanunit{i};
-                sens.coilori(sens_i,1:3) =  sens.chanori(sens_i,1:3);
-                sens.coilpos(sens_i,1:3) =  sens.chanpos(sens_i,1:3);
-                sens.label{sens_i,1}     =  hdr.label{i};
-              catch
-                error('Error reading channel %i sensor details.',i);
-              end
+        try
+          sens.chanpos(sens_i,1:3) =  h5read(filename,['/config/channels/' hdr.label{i} '/position']);
+          sens.chanori(sens_i,1:3) =  h5read(filename,['/config/channels/' hdr.label{i} '/orientation']);
+          sens.chanunit{sens_i,1}  =  hdr.chanunit{i};
+          sens.coilori(sens_i,1:3) =  sens.chanori(sens_i,1:3);
+          sens.coilpos(sens_i,1:3) =  sens.chanpos(sens_i,1:3);
+          sens.label{sens_i,1}     =  hdr.label{i};
+        catch
+          error('Error reading channel %i sensor details.',i);
+        end
       else
         continue
       end
@@ -571,11 +613,11 @@ switch fileformat
         sens.coilori =  sens.coilori * R;
         sens.chanpos=sens.coilpos;
         sens.chanori=sens.coilori;
-        catch
+      catch
         error('No dewar to head transform available in hdf5 file');
       end
     end
-
+    
   otherwise
     if ~isempty(sens)
       % the electrode or optode information has been read from the BIDS sidecar file
