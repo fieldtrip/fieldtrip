@@ -161,6 +161,7 @@ switch fileformat
   case 'besa_elp'
     fid = fopen_or_error(filename);
     % these files seem to come in different formats with 3, 4 or 5 columns
+    % see http://wiki.besa.de/index.php?title=Channel_Definition_File_Formats
     % read the first line to determine the number of columns
     format = length(strsplit(deblank2(fgetl(fid))));
     fseek(fid, 0, 'bof');
@@ -170,49 +171,45 @@ switch fileformat
         tmp = textscan(fid, '%s%f%f');
         type      = repmat({'EEG'}, size(tmp{1}));
         label     = tmp{1};
-        azimuth   = tmp{2};
-        elevation = tmp{3};
+        theta     = tmp{2};
+        phi       = tmp{3};
         radius    = repmat(85, size(tmp{1}));
-        ft_warning('assuming that the electrodes are placed on a 85 mm sphere');
+      ft_warning('assuming a head radius of 85 mm');
       case 4
         % 4-column: type, label, azimuth, elevation
         tmp = textscan(fid, '%s%s%f%f');
         type      = tmp{1};
         label     = tmp{2};
-        azimuth   = tmp{3};
-        elevation = tmp{4};
+        theta     = tmp{3};
+        phi       = tmp{4};
         radius    = repmat(85, size(label));
-        ft_warning('assuming that the electrodes are placed on a 85 mm sphere');
+      ft_warning('assuming a head radius of 85 mm');
       case 5
         % 5-column: type, label, azimuth, elevation, radius
         tmp = textscan(fid, '%s%s%f%f%f');
         type      = tmp{1};
         label     = tmp{2};
-        azimuth   = tmp{3};
-        elevation = tmp{4};
+        theta     = tmp{3};
+        phi       = tmp{4};
         radius    = tmp{5};
       otherwise
         ft_error('unsupported file format for .elp');
     end
     fclose(fid);
-    
-    sel = strcmpi(type, 'EEG');  % type can be EEG, POS or FID
-    az = azimuth(sel) * pi/180;
-    el = elevation(sel) * pi/180;
-    r  = radius(sel);
-    [x, y, z] = sph2cart(az, el, r);
-    sens.elecpos = [x y z];
-    sens.label = label(sel);
-    sens.unit = 'mm';
-    
-    sel = strcmpi(type, 'FID');  % type can be EEG, POS or FID
+
+    radians = @(degree) degree*pi/180;
+    x = radius .* cos(radians(phi))   .* sin(radians(theta));
+    y = radius .* sin(radians(theta)) .* sin(radians(phi));
+    z = radius .* cos(radians(theta));
+    sel = strcmpi(type, 'EEG') | strcmpi(type, 'SCP') | strcmpi(type, 'REF');
+    sens.elecpos = [x(sel) y(sel) z(sel)];
+    sens.chanpos = [x(sel) y(sel) z(sel)];
+    sens.label   = label(sel);
+    sens.unit    = 'mm';
+    sel = strcmpi(type, 'FID');
     if any(sel)
-      az = azimuth(sel) * pi/180;
-      el = elevation(sel) * pi/180;
-      r  = radius(sel);
-      [x, y, z] = sph2cart(az, el, r);
-      sens.fid.pos = [x y z];
-      sens.fid.label = label(sel);
+      sens.fid.pos    = [x(sel) y(sel) z(sel)];
+      sens.fid.label  = label(sel);
     end
     
   case 'besa_pos'
@@ -473,11 +470,11 @@ switch fileformat
       sens.label = tmp{1}(2:end);
       theta = cellfun(@str2double, tmp{2}(2:end));
       phi   = cellfun(@str2double, tmp{3}(2:end));
-      radians = @(x) pi*x/180;
+      radians = @(degree) degree*pi/180;
       ft_warning('assuming a head radius of 85 mm');
-      x = 85*cos(radians(phi)).*sin(radians(theta));
-      y = 85*sin(radians(theta)).*sin(radians(phi));
-      z = 85*cos(radians(theta));
+      x = 85 * cos(radians(phi))   .* sin(radians(theta));
+      y = 85 * sin(radians(theta)) .* sin(radians(phi));
+      z = 85 * cos(radians(theta));
       sens.unit = 'mm';
       sens.elecpos = [x y z];
       sens.chanpos = [x y z];
