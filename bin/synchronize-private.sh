@@ -1187,7 +1187,7 @@ sync ${ARRAY[*]}
 # getorthoviewpos.m
 
 ARRAY=()
-ARRAY+=(/private/getorthoviewpos.m)
+ARRAY+=(private/getorthoviewpos.m)
 ARRAY+=(fileio/private/getorthoviewpos.m)
 sync ${ARRAY[*]}
 
