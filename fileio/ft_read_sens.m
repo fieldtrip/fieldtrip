@@ -154,39 +154,63 @@ switch fileformat
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   case 'asa_elc'
     sens = read_asa_elc(filename);
-    
-  case 'artinis_oxy3'
-    ft_hastoolbox('artinis', 1);
-    hdr = read_artinis_oxy3(filename, false);
-    sens = hdr.opto;
-    
-  case 'artinis_oxy4'
-    ft_hastoolbox('artinis', 1);
-    hdr = read_artinis_oxy4(filename, false);
-    sens = hdr.opto;
-    
-  case 'artinis_oxyproj'
-    ft_hastoolbox('artinis', 1);
-    hdr = read_artinis_oxyproj(filename);
-    sens = hdr.opto;
-    
+   
   case 'polhemus_pos'
     sens = read_polhemus_pos(filename);
     
   case 'besa_elp'
-    ft_error('unknown fileformat for electrodes or gradiometers');
-    % the code below does not yet work
     fid = fopen_or_error(filename);
-    % the ascii file contains: type, label, angle, angle
-    tmp = textscan(fid, '%s%s%f%f');
+    % these files seem to come in different formats with 3, 4 or 5 columns
+    % see http://wiki.besa.de/index.php?title=Channel_Definition_File_Formats
+    % read the first line to determine the number of columns
+    format = length(strsplit(deblank2(fgetl(fid))));
+    fseek(fid, 0, 'bof');
+    switch format
+      case 3
+        % 3-column: label, azimuth, elevation
+        tmp = textscan(fid, '%s%f%f');
+        type      = repmat({'EEG'}, size(tmp{1}));
+        label     = tmp{1};
+        theta     = tmp{2};
+        phi       = tmp{3};
+        radius    = repmat(85, size(tmp{1}));
+      ft_warning('assuming a head radius of 85 mm');
+      case 4
+        % 4-column: type, label, azimuth, elevation
+        tmp = textscan(fid, '%s%s%f%f');
+        type      = tmp{1};
+        label     = tmp{2};
+        theta     = tmp{3};
+        phi       = tmp{4};
+        radius    = repmat(85, size(label));
+      ft_warning('assuming a head radius of 85 mm');
+      case 5
+        % 5-column: type, label, azimuth, elevation, radius
+        tmp = textscan(fid, '%s%s%f%f%f');
+        type      = tmp{1};
+        label     = tmp{2};
+        theta     = tmp{3};
+        phi       = tmp{4};
+        radius    = tmp{5};
+      otherwise
+        ft_error('unsupported file format for .elp');
+    end
     fclose(fid);
-    sel = strcmpi(tmp{1}, 'EEG');  % type can be EEG or POS
-    sens.label = tmp{2}(sel);
-    az = tmp{3}(sel) * pi/180;
-    el = tmp{4}(sel) * pi/180;
-    r  = ones(size(el));
-    [x, y, z] = sph2cart(az, el, r);
-    sens.chanpos = [x y z];
+
+    radians = @(degree) degree*pi/180;
+    x = radius .* cos(radians(phi))   .* sin(radians(theta));
+    y = radius .* sin(radians(theta)) .* sin(radians(phi));
+    z = radius .* cos(radians(theta));
+    sel = strcmpi(type, 'EEG') | strcmpi(type, 'SCP') | strcmpi(type, 'REF');
+    sens.elecpos = [x(sel) y(sel) z(sel)];
+    sens.chanpos = [x(sel) y(sel) z(sel)];
+    sens.label   = label(sel);
+    sens.unit    = 'mm';
+    sel = strcmpi(type, 'FID');
+    if any(sel)
+      sens.fid.pos    = [x(sel) y(sel) z(sel)];
+      sens.fid.label  = label(sel);
+    end
     
   case 'besa_pos'
     tmp = importdata(filename);
@@ -446,11 +470,11 @@ switch fileformat
       sens.label = tmp{1}(2:end);
       theta = cellfun(@str2double, tmp{2}(2:end));
       phi   = cellfun(@str2double, tmp{3}(2:end));
-      radians = @(x) pi*x/180;
+      radians = @(degree) degree*pi/180;
       ft_warning('assuming a head radius of 85 mm');
-      x = 85*cos(radians(phi)).*sin(radians(theta));
-      y = 85*sin(radians(theta)).*sin(radians(phi));
-      z = 85*cos(radians(theta));
+      x = 85 * cos(radians(phi))   .* sin(radians(theta));
+      y = 85 * sin(radians(theta)) .* sin(radians(phi));
+      z = 85 * cos(radians(theta));
       sens.unit = 'mm';
       sens.elecpos = [x y z];
       sens.chanpos = [x y z];
@@ -525,7 +549,7 @@ switch fileformat
     warning(ws); % revert to the previous warning state
     sens.label   = txtData{:,1};
     sens.elecpos = [txtData.Loc_X txtData.Loc_Y txtData.Loc_Z];
-
+    
   case 'yorkinstruments_hdf5'
     acquisition='default';
     if isempty(senstype)
@@ -540,16 +564,16 @@ switch fileformat
       if string(hdr.chantype{i})==upper(senstype)
         sens_i=sens_i+1;
         sens.chantype{sens_i,1}=hdr.chantype{i};
-              try
-                sens.chanpos(sens_i,1:3) =  h5read(filename,['/config/channels/' hdr.label{i} '/position']);
-                sens.chanori(sens_i,1:3) =  h5read(filename,['/config/channels/' hdr.label{i} '/orientation']);
-                sens.chanunit{sens_i,1}  =  hdr.chanunit{i};
-                sens.coilori(sens_i,1:3) =  sens.chanori(sens_i,1:3);
-                sens.coilpos(sens_i,1:3) =  sens.chanpos(sens_i,1:3);
-                sens.label{sens_i,1}     =  hdr.label{i};
-              catch
-                error('Error reading channel %i sensor details.',i);
-              end
+        try
+          sens.chanpos(sens_i,1:3) =  h5read(filename,['/config/channels/' hdr.label{i} '/position']);
+          sens.chanori(sens_i,1:3) =  h5read(filename,['/config/channels/' hdr.label{i} '/orientation']);
+          sens.chanunit{sens_i,1}  =  hdr.chanunit{i};
+          sens.coilori(sens_i,1:3) =  sens.chanori(sens_i,1:3);
+          sens.coilpos(sens_i,1:3) =  sens.chanpos(sens_i,1:3);
+          sens.label{sens_i,1}     =  hdr.label{i};
+        catch
+          error('Error reading channel %i sensor details.',i);
+        end
       else
         continue
       end
@@ -571,11 +595,11 @@ switch fileformat
         sens.coilori =  sens.coilori * R;
         sens.chanpos=sens.coilpos;
         sens.chanori=sens.coilori;
-        catch
+      catch
         error('No dewar to head transform available in hdf5 file');
       end
     end
-
+    
   otherwise
     if ~isempty(sens)
       % the electrode or optode information has been read from the BIDS sidecar file
