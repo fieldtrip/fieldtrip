@@ -1378,6 +1378,7 @@ if need_channels_tsv
   
   % there are some chanel types used in FieldTrip that are named differently in BIDS
   channels_tsv.type(strcmpi(channels_tsv.type, 'unknown'))     = {'OTHER'};
+  channels_tsv.type(strcmpi(channels_tsv.type, 'clock'))       = {'SYSCLOCK'};
   channels_tsv.type(strcmpi(channels_tsv.type, 'meggrad'))     = {'MEGGRADAXIAL'};
   channels_tsv.type(strcmpi(channels_tsv.type, 'megplanar'))   = {'MEGGRADPLANAR'};
   channels_tsv.type(strcmpi(channels_tsv.type, 'refmag'))      = {'MEGREFMAG'};
