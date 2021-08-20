@@ -875,12 +875,136 @@ switch dataformat
     data.label = hdr.label;
     data.sampleinfo = [1 size(dat,2)];
     
-    % convert the raw data structure to Homer format
-    nirs = fieldtrip2homer(data, 'event', evt);
+    % devide data in nirs channels, stimulus channels and auxillary channels
+    seldat  = startsWith(hdr.chantype, 'nirs');
+    selstim = strcmp(hdr.chantype, 'stimulus');
+    selaux  = ~seldat & ~selstim;
     
-    % convert the Homer structure to Snirf and write it to disk
-    snirf = SnirfClass(nirs);
-    snirf.Save(filename);
+    % create empty SnirfClass
+    snirf = SnirfClass();
+    
+    % collect information for creation of snirf file
+    source_idx = find(contains(data.hdr.opto.optotype, {'transmitter', 'source'}));
+    detector_idx = find(contains(data.hdr.opto.optotype, {'receiver', 'detector'}));
+    tra = data.hdr.opto.tra;
+    tra_t = tra'; % transpose tra matrix to get indices of wavelength by row (thus by channel)
+    wl_idx = find(tra_t>0);
+    all_wavelengths = data.hdr.opto.wavelength(tra_t(wl_idx));
+    split = median(all_wavelengths);
+    WL1.values = all_wavelengths(all_wavelengths<split);
+    WL2.values = all_wavelengths(all_wavelengths>split);
+    WL1.nominal = round(median(WL1.values),-1);
+    WL2.nominal = round(median(WL2.values),-1);
+    num_WL = 2;
+    ft_warning('assuming that the nominal wavelengths are %d and %d nm', WL1.nominal, WL2.nominal)
+     
+    % metaDataTags
+    snirf.metaDataTags(1).tags.LengthUnit = data.hdr.opto.unit; 
+    snirf.metaDataTags(1).tags.TimeUnit = 's'; 
+    snirf.metaDataTags(1).tags.FrequencyUnit = 'Hz';
+    
+    % data
+    snirf.data(1).dataTimeSeries = data.trial{1}(seldat,:)'; % <number of time points> x <number of channels>
+    snirf.data(1).time = data.time{1}'; % <number of time points x 1> (can also be  represented as <start time x sample time spacing>
+    % FIXME it is not clear how to write multiple trials of a pseudo-continuous or epoched and stimulus aligned dataset
+    % and it is not clear how stimuli in SNIRF (one table) relate to multiple blocks of data
+    % see https://github.com/fNIRS/snirf/blob/master/snirf_specification.md#nirsidataj
+    if numel(data.trial)>1
+      ft_warning('only the first trial of the data is exported to SNIFR');
+    end
+    
+    % measurementList
+    for i=1:size(tra,1)
+      source = find(tra(i,:)>0);
+      detector = find(tra(i,:)<0);
+      snirf.data.measurementList(i).sourceIndex = find(source_idx==source);
+      snirf.data.measurementList(i).detectorIndex = find(detector_idx==detector);
+%       snirf.data.measurementList(i).wavelengthActual =
+%       all_wavelengths(i); % is not yet supported by the snirf toolbox
+      if any(all_wavelengths(i)==WL1.values)
+        snirf.data.measurementList(i).wavelengthIndex = 1;
+      else
+        snirf.data.measurementList(i).wavelengthIndex = 2;
+      end
+      snirf.data.measurementList(i).dataType = 99999;
+      snirf.data.measurementList(i).dataTypeLabel = 'dOD';
+    end
+    ft_warning('assuming that the input data represents (change in) optical densities')
+
+    % sort the channels according to wavelengths (because this is the way
+    % that homer handles data) and change the order of the data accordingly
+    [~, idx] = sort(([snirf.data.measurementList(:).wavelengthIndex]));
+    snirf.data.measurementList = snirf.data.measurementList(idx);
+    % update the data accordingly
+    snirf.data.dataTimeSeries=snirf.data.dataTimeSeries(:, idx);
+    
+    % stim
+    if ~isempty(evt)
+      % select events with a string value, the type will be a string
+      sel = cellfun(@ischar, {evt.value});
+      if any(sel)
+        evt_names = unique({evt(:).value}); % if the values are strings, this propably contains the event names
+        for i=1:length(evt_names)
+          snirf.stim(i).name = evt_names{i};
+          evt_idx = find(strcmp({evt(:).value}, evt_names{i}));
+          starttime = ([evt(evt_idx).sample]-1)/data.hdr.Fs;
+          duration = [evt(evt_idx).duration]/data.hdr.Fs;
+          if isempty(duration)
+            duration = zeros(1, length(starttime));
+          end
+          value = ones(1,length(evt_idx));
+          snirf.stim(i).data = [starttime' duration' value'];
+        end
+      end
+      % select events with a numeric value, the type will be a string
+      sel = cellfun(@isnumeric, {evt.value});
+      if any(sel)
+        evt_names = unique({evt(:).type});
+        for i=1:length(evt_names)
+          snirf.stim(i).name = evt_names{i};
+          evt_idx = find(strcmp({evt(:).type}, evt_names{i}));
+          starttime = ([evt(evt_idx).sample]-1)/data.hdr.Fs;
+          duration = [evt(evt_idx).duration]/data.hdr.Fs;
+          if isempty(duration)
+            duration = zeros(1, length(starttime));
+          end
+          value = [evt(evt_idx).value];
+          if isempty(value)
+            value = ones(1, length(starttime));
+          end
+          snirf.stim(i).data = [starttime' duration' value'];
+        end
+      end
+    end
+    
+    % probe
+    snirf.probe(1).wavelengths = [WL1.nominal WL2.nominal];
+    if all(data.hdr.opto.optopos(:,3)==0)
+      snirf.probe(1).sourcePos2D = data.hdr.opto.optopos(source_idx, 1:2);
+      snirf.probe(1).detectorPos2D = data.hdr.opto.optopos(detector_idx, 1:2);
+    else
+      snirf.probe(1).sourcePos3D = data.hdr.opto.optopos(source_idx, 1:3);
+      snirf.probe(1).detectorPos3D = data.hdr.opto.optopos(detector_idx, 1:3);
+      layoutpos=getorthoviewpos(data.hdr.opto.optopos, 'ras', 'superior');
+      snirf.probe(1).sourcePos2D = layoutpos(source_idx, 1:2);
+      snirf.probe(1).detectorPos2D = layoutpos(detector_idx, 1:2);
+    end
+    snirf.probe(1).sourceLabels = data.hdr.opto.optolabel(source_idx);
+    snirf.probe(1).detectorLabels = data.hdr.opto.optolabel(detector_idx);
+
+    % aux
+    if sum(selaux)~=0
+      auxdata = data.trial{1}(selaux,:);
+      auxlabels = data.label(selaux);
+      for i=1:sum(selaux)
+        snirf.aux(i).name = auxlabels{i}; % check if correct format
+        snirf.aux(i).dataTimeSeries = auxdata(i,:)';
+        snirf.aux(i).time = data.time{1}';
+      end
+    end
+        
+    % save .snirf file
+    snirf.Save(filename)
     
   otherwise
     ft_error('unsupported data format');
@@ -917,3 +1041,5 @@ for i=1:numel(type)
       type{i} = 'Other';
   end
 end
+
+

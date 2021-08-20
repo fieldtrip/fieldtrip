@@ -1184,6 +1184,14 @@ ARRAY+=(utilities/private/gethostname.m)
 sync ${ARRAY[*]}
 
 ################################################################################
+# getorthoviewpos.m
+
+ARRAY=()
+ARRAY+=(private/getorthoviewpos.m)
+ARRAY+=(fileio/private/getorthoviewpos.m)
+sync ${ARRAY[*]}
+
+################################################################################
 # getpid.m
 
 ARRAY=()
