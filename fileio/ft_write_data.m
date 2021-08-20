@@ -31,11 +31,12 @@ function ft_write_data(filename, dat, varargin)
 %   homer_nirs
 %   snirf
 %
-% For EEG data formats, the input data is assumed to be scaled in microvolt.
+% For EEG data, the input data is assumed to be scaled in microvolt.
+% For NIRS data, the input data is assumed to represent optical densities.
 %
 % See also FT_READ_HEADER, FT_READ_DATA, FT_READ_EVENT, FT_WRITE_EVENT
 
-% Copyright (C) 2007-2020, Robert Oostenveld
+% Copyright (C) 2007-2021, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -867,15 +868,10 @@ switch dataformat
     % this uses the SNIRF reading functions from the Homer3 toolbox
     ft_hastoolbox('homer3', 1);
     
-    % convert the input arguments into a FieldTrip raw data structure
-    data = [];
-    data.hdr = hdr;
-    data.trial{1} = dat;
-    data.time{1} = ((1:hdr.nSamples*hdr.nTrials)-1)/hdr.Fs;
-    data.label = hdr.label;
-    data.sampleinfo = [1 size(dat,2)];
+    % construct a time axis that matches the data, it starts at 0 seconds
+    time = ((1:hdr.nSamples*hdr.nTrials)-1)/hdr.Fs;
     
-    % devide data in nirs channels, stimulus channels and auxillary channels
+    % divide data in nirs channels, stimulus channels and auxillary channels
     seldat  = startsWith(hdr.chantype, 'nirs');
     selstim = strcmp(hdr.chantype, 'stimulus');
     selaux  = ~seldat & ~selstim;
@@ -884,34 +880,27 @@ switch dataformat
     snirf = SnirfClass();
     
     % collect information for creation of snirf file
-    source_idx = find(contains(data.hdr.opto.optotype, {'transmitter', 'source'}));
-    detector_idx = find(contains(data.hdr.opto.optotype, {'receiver', 'detector'}));
-    tra = data.hdr.opto.tra;
+    source_idx = find(contains(hdr.opto.optotype, {'transmitter', 'source'}));
+    detector_idx = find(contains(hdr.opto.optotype, {'receiver', 'detector'}));
+    tra = hdr.opto.tra;
     tra_t = tra'; % transpose tra matrix to get indices of wavelength by row (thus by channel)
     wl_idx = find(tra_t>0);
-    all_wavelengths = data.hdr.opto.wavelength(tra_t(wl_idx));
+    all_wavelengths = hdr.opto.wavelength(tra_t(wl_idx));
     split = median(all_wavelengths);
     WL1.values = all_wavelengths(all_wavelengths<split);
     WL2.values = all_wavelengths(all_wavelengths>split);
     WL1.nominal = round(median(WL1.values),-1);
     WL2.nominal = round(median(WL2.values),-1);
-    num_WL = 2;
     ft_warning('assuming that the nominal wavelengths are %d and %d nm', WL1.nominal, WL2.nominal)
      
     % metaDataTags
-    snirf.metaDataTags(1).tags.LengthUnit = data.hdr.opto.unit; 
+    snirf.metaDataTags(1).tags.LengthUnit = hdr.opto.unit; 
     snirf.metaDataTags(1).tags.TimeUnit = 's'; 
     snirf.metaDataTags(1).tags.FrequencyUnit = 'Hz';
     
     % data
-    snirf.data(1).dataTimeSeries = data.trial{1}(seldat,:)'; % <number of time points> x <number of channels>
-    snirf.data(1).time = data.time{1}'; % <number of time points x 1> (can also be  represented as <start time x sample time spacing>
-    % FIXME it is not clear how to write multiple trials of a pseudo-continuous or epoched and stimulus aligned dataset
-    % and it is not clear how stimuli in SNIRF (one table) relate to multiple blocks of data
-    % see https://github.com/fNIRS/snirf/blob/master/snirf_specification.md#nirsidataj
-    if numel(data.trial)>1
-      ft_warning('only the first trial of the data is exported to SNIFR');
-    end
+    snirf.data(1).dataTimeSeries = dat(seldat,:)'; % <number of time points> x <number of channels>
+    snirf.data(1).time = time';                    % <number of time points x 1> (can also be  represented as <start time x sample time spacing>
     
     % measurementList
     for i=1:size(tra,1)
@@ -919,8 +908,7 @@ switch dataformat
       detector = find(tra(i,:)<0);
       snirf.data.measurementList(i).sourceIndex = find(source_idx==source);
       snirf.data.measurementList(i).detectorIndex = find(detector_idx==detector);
-%       snirf.data.measurementList(i).wavelengthActual =
-%       all_wavelengths(i); % is not yet supported by the snirf toolbox
+%     snirf.data.measurementList(i).wavelengthActual = all_wavelengths(i); % this is not yet supported by the snirf toolbox
       if any(all_wavelengths(i)==WL1.values)
         snirf.data.measurementList(i).wavelengthIndex = 1;
       else
@@ -931,11 +919,10 @@ switch dataformat
     end
     ft_warning('assuming that the input data represents (change in) optical densities')
 
-    % sort the channels according to wavelengths (because this is the way
-    % that homer handles data) and change the order of the data accordingly
+    % sort the channels according to wavelengths, because this is the way that homer handles data
     [~, idx] = sort(([snirf.data.measurementList(:).wavelengthIndex]));
-    snirf.data.measurementList = snirf.data.measurementList(idx);
     % update the data accordingly
+    snirf.data.measurementList = snirf.data.measurementList(idx);
     snirf.data.dataTimeSeries=snirf.data.dataTimeSeries(:, idx);
     
     % stim
@@ -947,8 +934,8 @@ switch dataformat
         for i=1:length(evt_names)
           snirf.stim(i).name = evt_names{i};
           evt_idx = find(strcmp({evt(:).value}, evt_names{i}));
-          starttime = ([evt(evt_idx).sample]-1)/data.hdr.Fs;
-          duration = [evt(evt_idx).duration]/data.hdr.Fs;
+          starttime = ([evt(evt_idx).sample]-1)/hdr.Fs;
+          duration = [evt(evt_idx).duration]/hdr.Fs;
           if isempty(duration)
             duration = zeros(1, length(starttime));
           end
@@ -963,8 +950,8 @@ switch dataformat
         for i=1:length(evt_names)
           snirf.stim(i).name = evt_names{i};
           evt_idx = find(strcmp({evt(:).type}, evt_names{i}));
-          starttime = ([evt(evt_idx).sample]-1)/data.hdr.Fs;
-          duration = [evt(evt_idx).duration]/data.hdr.Fs;
+          starttime = ([evt(evt_idx).sample]-1)/hdr.Fs;
+          duration = [evt(evt_idx).duration]/hdr.Fs;
           if isempty(duration)
             duration = zeros(1, length(starttime));
           end
@@ -979,27 +966,27 @@ switch dataformat
     
     % probe
     snirf.probe(1).wavelengths = [WL1.nominal WL2.nominal];
-    if all(data.hdr.opto.optopos(:,3)==0)
-      snirf.probe(1).sourcePos2D = data.hdr.opto.optopos(source_idx, 1:2);
-      snirf.probe(1).detectorPos2D = data.hdr.opto.optopos(detector_idx, 1:2);
+    if all(hdr.opto.optopos(:,3)==0)
+      snirf.probe(1).sourcePos2D    = hdr.opto.optopos(source_idx, 1:2);
+      snirf.probe(1).detectorPos2D  = hdr.opto.optopos(detector_idx, 1:2);
     else
-      snirf.probe(1).sourcePos3D = data.hdr.opto.optopos(source_idx, 1:3);
-      snirf.probe(1).detectorPos3D = data.hdr.opto.optopos(detector_idx, 1:3);
-      layoutpos=getorthoviewpos(data.hdr.opto.optopos, 'ras', 'superior');
-      snirf.probe(1).sourcePos2D = layoutpos(source_idx, 1:2);
-      snirf.probe(1).detectorPos2D = layoutpos(detector_idx, 1:2);
+      snirf.probe(1).sourcePos3D    = hdr.opto.optopos(source_idx, 1:3);
+      snirf.probe(1).detectorPos3D  = hdr.opto.optopos(detector_idx, 1:3);
+      layoutpos = getorthoviewpos(hdr.opto.optopos, 'ras', 'superior');
+      snirf.probe(1).sourcePos2D    = layoutpos(source_idx, 1:2);
+      snirf.probe(1).detectorPos2D  = layoutpos(detector_idx, 1:2);
     end
-    snirf.probe(1).sourceLabels = data.hdr.opto.optolabel(source_idx);
-    snirf.probe(1).detectorLabels = data.hdr.opto.optolabel(detector_idx);
+    snirf.probe(1).sourceLabels     = hdr.opto.optolabel(source_idx);
+    snirf.probe(1).detectorLabels   = hdr.opto.optolabel(detector_idx);
 
     % aux
     if sum(selaux)~=0
-      auxdata = data.trial{1}(selaux,:);
-      auxlabels = data.label(selaux);
+      auxdata = dat(selaux,:);
+      auxlabels = hdr.label(selaux);
       for i=1:sum(selaux)
         snirf.aux(i).name = auxlabels{i}; % check if correct format
         snirf.aux(i).dataTimeSeries = auxdata(i,:)';
-        snirf.aux(i).time = data.time{1}';
+        snirf.aux(i).time = time';
       end
     end
         
