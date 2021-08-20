@@ -1,7 +1,7 @@
 function pos = getorthoviewpos(pos, coordsys, viewpoint)
 
-% GETORTHOVIEWPOS obtains XY pos from XYZ pos as orthographic projections 
-% depending on the viewpoint and coordsys.
+% GETORTHOVIEWPOS obtains the orthographic projections of 3D positions
+% based on a given coordinate system and viewpoint
 %
 % Use as
 %   getorthoviewpos(pos, coordsys, viewpoint)
@@ -9,7 +9,7 @@ function pos = getorthoviewpos(pos, coordsys, viewpoint)
 % For example
 %   getorthoviewpoint(pos, 'mni', 'superior')
 %
-% See alo ELPROJ and COORDSYS2LABEL
+% See alo SETVIEWPOINT, COORDSYS2LABEL
 
 if size(pos,2)~=3
   ft_error('XYZ coordinates are required to obtain the orthographic projections based on a viewpoint')
