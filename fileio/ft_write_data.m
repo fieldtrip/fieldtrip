@@ -903,10 +903,15 @@ switch dataformat
     snirf.metaDataTags(1).tags.TimeUnit = 's'; 
     snirf.metaDataTags(1).tags.FrequencyUnit = 'Hz';
     
-    % data 
-    % (FIX ME: in theory this can contain multiple data blocks)
+    % data
     snirf.data(1).dataTimeSeries = data.trial{1}(seldat,:)'; % <number of time points> x <number of channels>
     snirf.data(1).time = data.time{1}'; % <number of time points x 1> (can also be  represented as <start time x sample time spacing>
+    % FIXME it is not clear how to write multiple trials of a pseudo-continuous or epoched and stimulus aligned dataset
+    % and it is not clear how stimuli in SNIRF (one table) relate to multiple blocks of data
+    % see https://github.com/fNIRS/snirf/blob/master/snirf_specification.md#nirsidataj
+    if numel(data.trial)>1
+      ft_warning('only the first trial of the data is exported to SNIFR');
+    end
     
     % measurementList
     for i=1:size(tra,1)
@@ -925,6 +930,7 @@ switch dataformat
       snirf.data.measurementList(i).dataTypeLabel = 'dOD';
     end
     ft_warning('assuming that the input data represents (change in) optical densities')
+
     % sort the channels according to wavelengths (because this is the way
     % that homer handles data) and change the order of the data accordingly
     [~, idx] = sort(([snirf.data.measurementList(:).wavelengthIndex]));
