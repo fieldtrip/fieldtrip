@@ -892,10 +892,10 @@ switch dataformat
     WL1.nominal = round(median(WL1.values),-1);
     WL2.nominal = round(median(WL2.values),-1);
     ft_warning('assuming that the nominal wavelengths are %d and %d nm', WL1.nominal, WL2.nominal)
-     
+    
     % metaDataTags
-    snirf.metaDataTags(1).tags.LengthUnit = hdr.opto.unit; 
-    snirf.metaDataTags(1).tags.TimeUnit = 's'; 
+    snirf.metaDataTags(1).tags.LengthUnit = hdr.opto.unit;
+    snirf.metaDataTags(1).tags.TimeUnit = 's';
     snirf.metaDataTags(1).tags.FrequencyUnit = 'Hz';
     
     % data
@@ -908,7 +908,7 @@ switch dataformat
       detector = find(tra(i,:)<0);
       snirf.data.measurementList(i).sourceIndex = find(source_idx==source);
       snirf.data.measurementList(i).detectorIndex = find(detector_idx==detector);
-%     snirf.data.measurementList(i).wavelengthActual = all_wavelengths(i); % this is not yet supported by the snirf toolbox
+      %     snirf.data.measurementList(i).wavelengthActual = all_wavelengths(i); % this is not yet supported by the snirf toolbox
       if any(all_wavelengths(i)==WL1.values)
         snirf.data.measurementList(i).wavelengthIndex = 1;
       else
@@ -918,9 +918,9 @@ switch dataformat
       snirf.data.measurementList(i).dataTypeLabel = 'dOD';
     end
     ft_warning('assuming that the input data represents (change in) optical densities')
-
+    
     % sort the channels according to wavelengths, because this is the way that homer handles data
-    [~, idx] = sort(([snirf.data.measurementList(:).wavelengthIndex]));
+    [dum, idx] = sort(([snirf.data.measurementList(:).wavelengthIndex]));
     % update the data accordingly
     snirf.data.measurementList = snirf.data.measurementList(idx);
     snirf.data.dataTimeSeries=snirf.data.dataTimeSeries(:, idx);
@@ -978,7 +978,7 @@ switch dataformat
     end
     snirf.probe(1).sourceLabels     = hdr.opto.optolabel(source_idx);
     snirf.probe(1).detectorLabels   = hdr.opto.optolabel(detector_idx);
-
+    
     % aux
     if sum(selaux)~=0
       auxdata = dat(selaux,:);
@@ -989,7 +989,7 @@ switch dataformat
         snirf.aux(i).time = time';
       end
     end
-        
+    
     % save .snirf file
     snirf.Save(filename)
     
