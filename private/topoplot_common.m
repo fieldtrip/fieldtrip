@@ -728,11 +728,6 @@ for indx=1:Ndata
     end
   end
   
-  % Set renderer if specified
-  if ~isempty(cfg.renderer)
-    set(gcf, 'renderer', cfg.renderer)
-  end
-  
   % set the figure window title, but only if the user has not changed it
   if isempty(get(gcf, 'Name'))
     if isfield(cfg, 'funcname')

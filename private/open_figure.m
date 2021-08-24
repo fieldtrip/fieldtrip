@@ -64,6 +64,11 @@ if ~isempty(cfg.figurename)
   set(h, 'name', cfg.figurename);
 end
 
+if ~isempty(cfg.renderer)
+  % set figure renderer
+  set(h, 'Renderer', cfg.renderer);
+end
+
 if ~isempty(cfg.title)
   % this appears above the axes
   title(cfg.title);
