@@ -206,7 +206,7 @@ Ndata = numel(varargin);
 for indx=1:Ndata
   
   % open a new figure, or add it to the existing one
-  open_figure(keepfields(cfg, {'figure', 'clearfigure', 'position', 'visible', 'renderer', 'figurename', 'title'}));
+  open_figure(keepfields(cfg, {'figure', 'position', 'visible', 'renderer', 'figurename', 'title'}));
   
   if iscell(cfg.dataname)
     dataname = cfg.dataname{indx};

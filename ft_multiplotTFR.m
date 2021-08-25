@@ -459,7 +459,7 @@ chanHeight = cfg.layout.height(sellay);
 
 % open a new figure, or add it to the existing one
 % note that in general adding a TFR to an existing one does not make sense, since they will overlap
-open_figure(keepfields(cfg, {'figure', 'clearfigure', 'position', 'visible', 'renderer', 'figurename', 'title'}));
+open_figure(keepfields(cfg, {'figure', 'position', 'visible', 'renderer', 'figurename', 'title'}));
 hold on
 
 % Get physical z-axis range (color axis):
