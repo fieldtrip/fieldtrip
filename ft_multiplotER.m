@@ -490,7 +490,7 @@ chanLabel  = cfg.layout.label(sellay);
 linecolor = linecolor_common(cfg, varargin{:});
 
 % open a new figure, or add it to the existing one
-open_figure(keepfields(cfg, {'figure', 'clearfigure', 'position', 'visible', 'renderer', 'figurename', 'title'}));
+open_figure(keepfields(cfg, {'figure', 'position', 'visible', 'renderer', 'figurename', 'title'}));
 
 if ischar(linecolor)
   set(gca, 'ColorOrder', char2rgb(linecolor))
