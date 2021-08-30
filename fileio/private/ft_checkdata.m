@@ -1145,7 +1145,7 @@ elseif strcmp(current, 'sparse') && strcmp(desired, 'full')
   % remove obsolete fields
   data = removefields(data, {'powspctrm', 'labelcmb', 'dof'});
   
-  fn = fieldnames(data);
+  fn = setdiff(fieldnames(data), {'time' 'freq' 'dimord', 'label', 'cfg'});
   for ii=1:numel(fn)
     if numel(data.(fn{ii})) == nrpt*ncmb*nfrq*ntim
       if nrpt==1
@@ -1213,7 +1213,7 @@ elseif strcmp(current, 'sparse') && strcmp(desired, 'fullfast')
   
   complete = all(cmbindx(:)~=0);
   
-  fn = fieldnames(data);
+  fn = setdiff(fieldnames(data), {'time' 'freq' 'dimord' 'label' 'cfg'});
   for ii=1:numel(fn)
     if numel(data.(fn{ii})) == nrpt*ncmb*nfrq*ntim
       if nrpt==1
