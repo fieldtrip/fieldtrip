@@ -299,7 +299,7 @@ for k = 1:nchan
       ix  = k;
       iy  = nchan - m + 1;
       % use the convention of the row-channel causing the column-channel
-      if hastime && hasfreq
+      if hastime && hasfreq && ntime>1
         tmp = reshape(dat(m,k,:,:), [nfreq ntime]);
         ft_plot_matrix(tmp, 'width', 1, 'height', 1, 'hpos', ix.*1.2, 'vpos', iy.*1.2, 'clim', cfg.zlim, 'box', 'yes');
       elseif hasfreq
@@ -310,7 +310,7 @@ for k = 1:nchan
       end
       if k==1
         % first column, plot scale on y axis
-        if hastime && hasfreq
+        if hastime && hasfreq && ntime>1
           val1 = cfg.ylim(1);
           val2 = cfg.ylim(2);
         elseif hasfreq
