@@ -6,15 +6,15 @@ function test_pullXXX
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% This function creates a tetrahedral two-sphere geometry with cylindrical electrodes
-% which can be used to perform forward simulations, particularly in FEMfuns (Finite Element Method for useful neuroscience simulations).
-% It has been created in the IntoTheBrain project and will be extended to allow the full use of FEMfuns within FieldTrip.
+% This function creates a tetrahedral two-sphere mesh with cylindrical electrodes lying on the boundary between the two spheres (i.e., intracranial electrodes)
+% which can be used to perform (e.g., ECoG) forward simulations, particularly in FEMfuns (Finite Element Method for useful neuroscience simulations, https://github.com/meronvermaas/FEMfuns).
+% It has been created in the IntoTheBrain project (@mcpiastra @ThomOostendorp) and functions will be extended to allow the full use of FEMfuns within FieldTrip.
 % The structure of this script is more or less:
 % 1. Create two triangulated spheres representing the brain and skull and electrode coordinates on top of the brain surface
 % 2. Create cylinders at each electrode coordinate.
 %   a. make the cylinder surface crossing through the spherical surface it is combined with
 %   b. refine the spherical surface where the cylinder crosses it
-%   c. cut of the part of the cylinderical surface sticking into the sphere
+%   c. cut off the part of the cylindrical surface sticking into the sphere
 % 3. Combine all the surfaces into one surface with unique faces and nodes
 % 4. Make a tetrahedral mesh
 
