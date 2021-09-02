@@ -7,13 +7,17 @@ function [mri] = ft_read_mri(filename, varargin)
 % Use as
 %   [mri] = ft_read_mri(filename)
 %
-% Additional options should be specified in key-value pairs and can be
-%   'dataformat' = string specifying the file format, determining the low-
-%                  level reading routine to be used. If no explicit format
-%                  is given, it is determined automatically from the filename.
-%   'outputfield' = string specifying the name of the field in the
-%                  structure in which the numeric data is stored. The
-%                  default is 'anatomy'
+% Additional options should be specified in key-value pairs and can include
+%   'dataformat'  = string specifying the file format, determining the low-level
+%                   reading routine to be used. If no explicit format is given,
+%                   it is determined automatically from the filename.
+%   'volumes'     = vector with the volume indices to read from a 4D nifti (only for nifti_spm)
+%   'outputfield' = string specifying the name of the field in the structure in which the
+%                   numeric data is stored (only for mrtrix_mif, default = 'anatomy')
+%   'fixel2voxel' = string, the operation to apply to the fixels belonging to the
+%                  same voxel, can be 'max', 'min', 'mean' (only for mrtrix_mif, default = 'max')
+%   'indexfile'   = string, pointing to a fixel index file, if not present in the same directory
+%                   as the functional data (only for mrtrix_mif)
 %
 % The following values apply for the dataformat
 %   'afni_head'/'afni_brik'      uses AFNI code
@@ -24,18 +28,18 @@ function [mri] = ft_read_mri(filename, varargin)
 %   'ctf_mri4'
 %   'ctf_svl'
 %   'dicom'                      uses FreeSurfer code
-%   'dicom_old'                  uses own code
+%   'dicom_old'                  uses MATLAB image processing toolbox code
 %   'freesurfer_mgh'             uses FreeSurfer code
 %   'freesurfer_mgz'             uses FreeSurfer code
-%   'matlab'                     assumes a MATLAB *.mat file containing a mri structure according to FT_DATATYPE_VOLUME
-%   'minc'                       uses SPM (<= version SPM5)
+%   'matlab'                     assumes a MATLAB *.mat file containing a struct
+%   'minc'                       uses SPM, this requires SPM5 or older
+%   'mrtrix_mif'                 uses mrtrix code
 %   'neuromag_fif'               uses MNE toolbox
 %   'neuromag_fif_old'           uses meg-pd toolbox
 %   'nifti'                      uses FreeSurfer code
 %   'nifti_fsl'                  uses FreeSurfer code
 %   'nifti_spm'                  uses SPM
 %   'yokogawa_mri'
-%   'mrtrix_mif'                 uses mrtrix code
 %
 % The following MRI file formats are supported
 %   CTF (*.svl, *.mri version 4 and 5)
@@ -50,25 +54,20 @@ function [mri] = ft_read_mri(filename, varargin)
 %   Yokogawa (*.mrk, incomplete)
 %   Mrtrix image format (*.mif)
 %
-% If you have a series of DICOM files, please provide the name of any of the files
-% in the series (e.g. the first one). The other files will be found automatically.
+% If you have a series of DICOM files, please provide the name of any of the files in
+% the series (e.g. the first one). The files corresponding to the whole volume will
+% be found automatically.
 %
-% The output MRI may have a homogenous transformation matrix that converts
-% the coordinates of each voxel (in xgrid/ygrid/zgrid) into head
-% coordinates.
+% The output MRI may have a homogenous transformation matrix that converts the
+% coordinates of each voxel (in xgrid/ygrid/zgrid) into head coordinates.
 %
-% If the input file is a 4D nifti, and you wish to load in just a subset of
-% the volumes (e.g. due to memory constraints), you should use as
-% dataformat 'nifti_spm': this supports the additional key-value pair
-%   'volumes' = vector, with indices of the to-be-read volumes, the order
-%   of the indices is ignored, and the volumes will be sorted according to
-%   the numeric indices, i.e. [1:10] yields the same as [10:-1:1]
+% If the input file is a 4D nifti, and you wish to load in just a subset of the
+% volumes (e.g. due to memory constraints), you should use as dataformat 'nifti_spm',
+% which uses the optional key-value pair 'volumes' = vector, with the indices of the
+% to-be-read volumes, the order of the indices is ignored, and the volumes will be
+% sorted according to the numeric indices, i.e. [1:10] yields the same as [10:-1:1]
 %
 % See also FT_DATATYPE_VOLUME, FT_WRITE_MRI, FT_READ_DATA, FT_READ_HEADER, FT_READ_EVENT
-
-% Undocumented options
-%   'fixel2voxel' = string, operation to apply to the fixels belonging to  the same voxel (only for *.mif). 'max' (default), 'min', 'mean'
-%   'indexfile'   = string, pointing to a fixel index file, if not present in the same directory as the functional data
 
 % Copyright (C) 2008-2020, Robert Oostenveld & Jan-Mathijs Schoffelen
 %
@@ -142,16 +141,16 @@ switch dataformat
     [img, hdr] = read_ctf_mri(filename);
     transform = hdr.transformMRI2Head;
     coordsys  = 'ctf';
-
+    
   case 'ctf_mri4'
     [img, hdr] = read_ctf_mri4(filename);
     transform = hdr.transformMRI2Head;
     coordsys  = 'ctf';
-
+    
   case 'ctf_svl'
     [img, hdr] = read_ctf_svl(filename);
     transform = hdr.transform;
-
+    
   case 'asa_mri'
     [img, seg, hdr] = read_asa_mri(filename);
     transform = hdr.transformMRI2Head;
@@ -159,7 +158,7 @@ switch dataformat
       % in case seg exists it will be added to the output
       clear seg
     end
-
+    
   case 'minc'
     if ~(hasspm2 || hasspm5)
       fprintf('the SPM2 or SPM5 toolbox is required to read *.mnc files\n');
@@ -169,7 +168,7 @@ switch dataformat
     hdr = spm_vol_minc(filename);
     img = spm_read_vols(hdr);
     transform = hdr.mat;
-
+    
   case 'nifti_spm'
     if ~(hasspm5 || hasspm8 || hasspm12)
       fprintf('the SPM5 or newer toolbox is required to read *.nii files\n');
@@ -187,24 +186,24 @@ switch dataformat
     end
     %img = spm_read_vols(hdr);
     transform = hdr.mat;
-
+    
   case {'analyze_img' 'analyze_hdr'}
     if ~(hasspm8 || hasspm12)
       fprintf('the SPM8 or newer toolbox is required to read analyze files\n');
       ft_hastoolbox('spm8up', 1);
     end
-
+    
     % use the image file instead of the header
     filename((end-2):end) = 'img';
     % use the functions from SPM to read the Analyze MRI
     hdr = spm_vol(filename);
     img = spm_read_vols(hdr);
     transform = hdr.mat;
-
+    
   case 'analyze_old'
     % use the functions from Darren Weber's mri_toolbox to read the Analyze MRI
     ft_hastoolbox('mri', 1);     % from Darren Weber, see http://eeg.sourceforge.net/
-
+    
     avw = avw_img_read(filename, 0); % returned volume is LAS*
     img = avw.img;
     hdr = avw.hdr;
@@ -216,19 +215,19 @@ switch dataformat
     % the coordinate system comparable to SPM
     ft_warning('flipping 1st dimension (L-R) to obtain volume in neurological convention');
     img = flipdim(img, 1);
-
+    
     transform      = diag(hdr.dime.pixdim(2:4));
     transform(4,4) = 1;
-
+    
   case {'afni_brik' 'afni_head'}
     % needs afni
     ft_hastoolbox('afni', 1);    % see http://afni.nimh.nih.gov/
-
+    
     [err, img, hdr, ErrMessage] = BrikLoad(filename);
     if err
       ft_error('could not read AFNI file');
     end
-
+    
     % FIXME: this should be checked, but I only have a single BRIK file
     % construct the homogenous transformation matrix that defines the axes
     ft_warning('homogenous transformation might be incorrect for AFNI file');
@@ -237,24 +236,24 @@ switch dataformat
     transform(1,1)   = hdr.DELTA(1);
     transform(2,2)   = hdr.DELTA(2);
     transform(3,3)   = hdr.DELTA(3);
-
+    
     % FIXME: I am not sure about the "RAI" image orientation
     img = flipdim(img,1);
     img = flipdim(img,2);
     dim = size(img);
     transform(1,4) = -dim(1) - transform(1,4);
     transform(2,4) = -dim(2) - transform(2,4);
-
+    
   case 'neuromag_fif'
     % needs mne toolbox
     ft_hastoolbox('mne', 1);
-
+    
     % use the mne functions to read the Neuromag MRI
     hdr = fiff_read_mri(filename);
     img_t = cat(3, hdr.slices.data);
     img = permute(img_t,[2 1 3]);
     hdr.slices = rmfield(hdr.slices, 'data'); % remove the image data to save memory
-
+    
     % information below is from MNE - fiff_define_constants.m
     % coordinate system 4 - is the MEG head coordinate system (fiducials)
     % coordinate system 5 - is the MRI coordinate system
@@ -263,7 +262,7 @@ switch dataformat
     %                                     shift, no rotation to 2001)
     % MEG sensor positions come in system 4
     % MRI comes in system 2001
-
+    
     transform = eye(4);
     if isfield(hdr, 'trans') && issubfield(hdr.trans, 'trans')
       if (hdr.trans.from == 4) && (hdr.trans.to == 5)
@@ -282,18 +281,18 @@ switch dataformat
       if (hdr.voxel_trans.from == 2001) && (hdr.voxel_trans.to == 5)
         % matlab_shift compensates for the different index conventions
         % between C and matlab
-
+        
         % the lines below is old code (prior to Jan 3, 2013) and only works with
         % 1 mm resolution MRIs
         %matlab_shift = [ 0 0 0 0.001; 0 0 0 -0.001; 0 0 0 0.001; 0 0 0 0];
         % transform transforms from 2001 to 5 and further to 4
         %transform = transform\(hdr.voxel_trans.trans+matlab_shift);
-
+        
         % the lines below should work with arbitrary resolution
         matlab_shift = eye(4);
         matlab_shift(1:3,4) = [-1,-1,-1];
         transform = transform\(hdr.voxel_trans.trans * matlab_shift);
-
+        
         coordsys  = 'neuromag';
         mri.unit  = 'm';
       else
@@ -304,43 +303,43 @@ switch dataformat
       ft_warning('W: voxel_trans structure is not defined.');
       ft_warning('W: Please check the MRI fif-file');
     end
-
+    
   case 'neuromag_fif_old'
     % needs meg_pd toolbox
     ft_hastoolbox('meg-pd', 1);
-
+    
     % use the meg_pd functions to read the Neuromag MRI
     [img,coords] = loadmri(filename);
     dev = loadtrans(filename,'MRI','HEAD');
     transform  = dev*coords;
     hdr.coords = coords;
     hdr.dev    = dev;
-
+    
   case 'dicom'
     % this seems to return a right-handed volume with the transformation
     % matrix stored in the file headers.
-
+    
     % needs the freesurfer toolbox
     ft_hastoolbox('freesurfer', 1);
-    [dcmdir,junk1,junk2] = fileparts(filename);
-    if isempty(dcmdir),
+    [dcmdir, junk1, junk2] = fileparts(filename);
+    if isempty(dcmdir)
       dcmdir = '.';
     end
-    [img,transform,hdr,mr_params] = load_dicom_series(dcmdir,dcmdir,filename);
+    [img, transform,hdr, mr_params] = load_dicom_series(dcmdir,dcmdir,filename);
     transform = vox2ras_0to1(transform);
-
+    
   case 'dicom_old'
     % this does not necessarily return a right-handed volume and only a
     % transformation-matrix with the voxel size
-
+    
     % this uses the Image processing toolbox
     % the DICOM file probably represents a stack of slices, possibly even multiple volumes
     orig = dicominfo(filename);
     dim(1) = orig.Rows;
     dim(2) = orig.Columns;
-
+    
     [p, f] = fileparts(filename);
-
+    
     % this works for the Siemens scanners at the FCDC
     tok = tokenize(f, '.');
     for i=5:length(tok)
@@ -350,26 +349,26 @@ switch dataformat
     filename = filename(1:end-1);       % remove the last '.'
     dirlist  = dir(fullfile(p, filename));
     dirlist  = {dirlist.name};
-
+    
     if isempty(dirlist)
       % this is for the Philips data acquired at KI
       ft_warning('could not determine list of dicom files, trying with *.dcm');
       dirlist  = dir(fullfile(p, '*.dcm'));
       dirlist  = {dirlist.name};
     end
-
+    
     if isempty(dirlist)
       ft_warning('could not determine list of dicom files, trying with *.ima');
       dirlist  = dir(fullfile(p, '*.ima'));
       dirlist  = {dirlist.name};
     end
-
+    
     if length(dirlist)==1
       % try something else to get a list of all the slices
       dirlist = dir(fullfile(p, '*'));
       dirlist = {dirlist(~[dirlist.isdir]).name};
     end
-
+    
     keep = false(1, length(dirlist));
     for i=1:length(dirlist)
       filename = char(fullfile(p, dirlist{i}));
@@ -390,34 +389,29 @@ switch dataformat
     % remove the files that were skipped
     hdr     = hdr(keep);
     dirlist = dirlist(keep);
-
+    
     % pre-allocate enough space for the subsequent slices
     dim(3) = length(dirlist);
     img    = zeros(dim(1), dim(2), dim(3));
     for i=1:length(dirlist)
       filename = char(fullfile(p, dirlist{i}));
-      fprintf('reading image data from ''%s''\n', filename);
+      ft_info('reading image data from ''%s''\n', filename);
       img(:,:,i) = dicomread(hdr(i));
     end
-
-    % reorder the slices
+    
+    % reorder and concatenate the slices
     [z, indx]   = sort(cell2mat({hdr.SliceLocation}));
     hdr = hdr(indx);
     img = img(:,:,indx);
-
-    try
-      % construct a homgeneous transformation matrix that performs the scaling from voxels to mm
-      dx = hdr(1).PixelSpacing(1);
-      dy = hdr(1).PixelSpacing(2);
-      dz = hdr(2).SliceLocation - hdr(1).SliceLocation;
-      transform = eye(4);
-      transform(1,1) = dx;
-      transform(2,2) = dy;
-      transform(3,3) = dz;
-    end
-
+    
+    % construct a homgeneous transformation matrix that performs the scaling from voxels to mm
+    transform = dicom2transform(hdr);
+    
+    % this makes the mapping of voxels to patient coordinates consistent with Horos
+    img = permute(img, [2, 1, 3]);
+    
   case {'nifti', 'freesurfer_mgz', 'freesurfer_mgh', 'nifti_gz'}
-
+    
     ft_hastoolbox('freesurfer', 1);
     tmp = MRIread(filename);
     ndims = numel(size(tmp.vol));
@@ -431,7 +425,7 @@ switch dataformat
     end
     hdr = rmfield(tmp, 'vol');
     transform = tmp.vox2ras1;
-
+    
   case 'yokogawa_mri'
     ft_hastoolbox('yokogawa', 1);
     fid = fopen_or_error(filename, 'rb');
@@ -439,7 +433,7 @@ switch dataformat
     patient_info = GetMeg160PatientInfoFromMriFileM(fid);
     [data_style, model, marker, image_parameter, normalize, besa_fiducial_point] = GetMeg160MriFileHeaderInfoM(fid);
     fclose(fid);
-
+    
     % gather all meta-information
     hdr.mri_info = mri_info;
     hdr.patient_info = patient_info;
@@ -449,20 +443,20 @@ switch dataformat
     hdr.image_parameter = image_parameter;
     hdr.normalize = normalize;
     hdr.besa_fiducial_point = besa_fiducial_point;
-
+    
     ft_error('FIXME yokogawa_mri implementation is incomplete');
-
+    
   case 'matlab'
     mri = loadvar(filename, 'mri');
-
+    
   case {'mif' 'mrtrix_mif'}
     ft_hastoolbox('mrtrix', 1);
     
     tmp = read_mrtrix(filename);
     
     % check if it's sparse fixeldata
-    isfixel = numel(tmp.dim==3)&&tmp.dim(3)==1;
-      
+    isfixel = numel(tmp.dim==3) && tmp.dim(3)==1;
+    
     if ~isfixel
       mri.hdr     = removefields(tmp, {'data'});
       mri.(outputfield) = tmp.data;
