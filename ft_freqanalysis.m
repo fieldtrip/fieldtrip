@@ -29,7 +29,8 @@ function [freq] = ft_freqanalysis(cfg, data)
 %                       output will contain a spectral transfer matrix,
 %                       the cross-spectral density matrix, and the
 %                       covariance matrix of the innovatio noise.
-%                     'superlet', ...
+%                     'superlet', combines Morlet-wavelet based
+%                       decompositions, see below.
 %                     'irasa', implements Irregular-Resampling Auto-Spectral 
 %                       Analysis (IRASA), to separate the fractal components 
 %                       from the periodicities in the signal.
