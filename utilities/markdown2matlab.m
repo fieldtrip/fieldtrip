@@ -94,6 +94,7 @@ while ~feof(infid)
   
   line = fgetl(infid);
   linenumber = linenumber + 1;
+  
   if ~ischar(line), break, end
   
   % replace each tab by two spaces
@@ -109,6 +110,10 @@ while ~feof(infid)
     
   elseif strcmp(state, 'jekyllheader') && match(line, '^---$')
     % do not output the end of the header
+ 
+  elseif strcmp(state, 'codeblock') && match(line, '^```$')
+    % do not output the end of the code block
+    reset_state = true;
     
   elseif match(line, '^```')
     state = 'codeblock';
@@ -116,12 +121,9 @@ while ~feof(infid)
     
   elseif strcmp(state, 'codeblock') && ~match(line, '^```')
     % output the code as-is
-    fprintf(outfid, '%s\n', remainder);
+    fprintf(outfid, '%s\n', line);
     reset_state = false;
-    
-  elseif strcmp(state, 'codeblock') && match(line, '^```$')
-    % do not output the end of the code block
-    
+      
   elseif match(line, '{%[ -~]*%}')
     % jekyll code should not be converted into the MATLAB script
     

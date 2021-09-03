@@ -29,9 +29,27 @@ function [freq] = ft_freqanalysis(cfg, data)
 %                       output will contain a spectral transfer matrix,
 %                       the cross-spectral density matrix, and the
 %                       covariance matrix of the innovatio noise.
+%                     'superlet', combines Morlet-wavelet based
+%                       decompositions, see below.
+%                     'irasa', implements Irregular-Resampling Auto-Spectral 
+%                       Analysis (IRASA), to separate the fractal components 
+%                       from the periodicities in the signal.
 %   cfg.output      = 'pow'       return the power-spectra
 %                     'powandcsd' return the power and the cross-spectra
 %                     'fourier'   return the complex Fourier-spectra
+%                     'fractal'   (when cfg.method = 'irasa'), return the
+%                       fractal component of the spectrum (1/f)
+%                     'original'  (when cfg.method = 'irasa'), return the
+%                       full power spectrum
+%                     'fooof'     returns a smooth power-spectrum,
+%                       based on a parametrization of a mixture of aperiodic and periodic
+%                       components (only works with cfg.method = 'mtmfft')
+%                     'fooof_aperiodic' returns a power-spectrum with the
+%                       fooof based estimate of the aperiodic part of the signal.
+%                     'fooof_peaks' returns a power-spectrum with the fooof
+%                       based estimate of the aperiodic signal removed,
+%                       it's expressed as
+%                       10^(log10(fooof)-log10(fooof_aperiodic))
 %   cfg.channel     = Nx1 cell-array with selection of channels (default = 'all'),
 %                       see FT_CHANNELSELECTION for details
 %   cfg.channelcmb  = Mx2 cell-array with selection of channel pairs (default = {'all' 'all'}),
@@ -312,9 +330,9 @@ switch cfg.method
     end
     
   case 'irasa'
-    cfg.taper       = ft_getopt(cfg, 'taper', 'hanning');
+    cfg.taper       = ft_getopt(cfg, 'taper',  'hanning');
     cfg.output      = ft_getopt(cfg, 'output', 'fractal');
-    cfg.pad         = ft_getopt(cfg, 'pad', 'nextpow2');
+    cfg.pad         = ft_getopt(cfg, 'pad',    'nextpow2');
     if ~isequal(cfg.taper, 'hanning')
       ft_error('the irasa method supports hanning tapers only');
     end
@@ -415,7 +433,7 @@ if strcmp(cfg.keeptrials, 'yes') && strcmp(cfg.keeptapers, 'yes')
 end
 
 % Set flags for output
-if ismember(cfg.output, {'pow','fractal','original'})
+if ismember(cfg.output, {'pow','fractal','original','fooof','fooof_peaks','fooof_aperiodic'})
   powflg = 1;
   csdflg = 0;
   fftflg = 0;
@@ -429,6 +447,18 @@ elseif strcmp(cfg.output, 'fourier')
   fftflg = 1;
 else
   ft_error('Unrecognized output required');
+end
+
+% Check whether the keeptrials is correct for fooof
+if startsWith(cfg.output, 'fooof')
+  % ensure that Brainstorm is on the path: if the user uses their own
+  % version of the code, assume that the paths are correctly set
+  if keeprpt~=1
+    ft_error('Keeping trials and/or tapers is not allowed when using fooof');
+  end
+  if ~isequal(cfg.method, 'mtmfft')
+    ft_error('Fooof is only supported with cfg.method = ''mtmfft''');
+  end
 end
 
 % prepare channel(cmb)
@@ -921,7 +951,73 @@ if powflg
       powspctrm(:,hasdc_nyq,:) = powspctrm(:,hasdc_nyq,:)./2;
     end
   end
-  freq.powspctrm = powspctrm;
+  
+  if startsWith(cfg.output, 'fooof')
+    TF(:,1,:) = powspctrm;
+    Freqs     = freq.freq;
+    Freqs(Freqs==0) = [];
+    % This grabs the defaults from the brainstorm code
+    opts_bst  = getfield(process_fooof('GetDescription'), 'options');
+    
+    % Fetch user settings, this is a chunk of code copied over from
+    % process_fooof, to bypass the whole database etc handling.
+    opt                     = ft_getopt(cfg, 'fooof', []);
+    opt.freq_range          = ft_getopt(opt, 'freq_range', Freqs([1 end]));
+    opt.peak_width_limits   = ft_getopt(opt, 'peak_width_limits', opts_bst.peakwidth.Value{1});
+    opt.max_peaks           = ft_getopt(opt, 'max_peaks',         opts_bst.maxpeaks.Value{1});
+    opt.min_peak_height     = ft_getopt(opt, 'min_peak_height',   opts_bst.minpeakheight.Value{1}/10); % convert from dB to B
+    opt.aperiodic_mode      = ft_getopt(opt, 'aperiodic_mode',    opts_bst.apermode.Value);
+    opt.peak_threshold      = ft_getopt(opt, 'peak_threshold',    2);   % 2 std dev: parameter for interface simplification
+    opt.return_spectrum     = ft_getopt(opt, 'return_spectrum',   1);   % SPM/FT: set to 1
+    % Matlab-only options
+    opt.power_line          = ft_getopt(opt, 'power_line',        '50'); % for some reason it should be a string, if you don't want a notch, use 'inf'. Brainstorm's default is '60'
+    opt.peak_type           = ft_getopt(opt, 'peak_type',         opts_bst.peaktype.Value);
+    opt.proximity_threshold = ft_getopt(opt, 'proximity_threshold', opts_bst.proxthresh.Value{1});
+    opt.guess_weight        = ft_getopt(opt, 'guess_weight',      opts_bst.guessweight.Value);
+    opt.thresh_after        = ft_getopt(opt, 'thresh_after',      true);   % Threshold after fitting always selected for Matlab (mirrors the Python FOOOF closest by removing peaks that do not satisfy a user's predetermined conditions)
+    
+    % Output options
+    opt.sort_type  = opts_bst.sorttype.Value;
+    opt.sort_param = opts_bst.sortparam.Value;
+	  opt.sort_bands = opts_bst.sortbands.Value;
+
+    % Check input frequency bounds
+    if (any(opt.freq_range < 0) || opt.freq_range(1) >= opt.freq_range(2))
+      bst_report('error','Invalid Frequency range');
+      return
+    end
+    
+    hasOptimTools = 0;
+    if exist('fmincon', 'file')
+      hasOptimTools = 1;
+      disp('Using constrained optimization, Guess Weight ignored.')
+    end
+    
+    [fs, fg] = process_fooof('FOOOF_matlab', TF, freq.freq, opt, hasOptimTools);
+    
+    % add the options back to the cfg
+    cfg.fooof = opt;
+    
+    switch cfg.output
+      case 'fooof'
+        powspctrm_f = cat(1, fg.fooofed_spectrum);
+      case 'fooof_peaks'
+        powspctrm_f = cat(1, fg.peak_fit);
+      case 'fooof_aperiodic'
+        powspctrm_f = cat(1, fg.ap_fit);
+    end
+    fg = removefields(fg, {'fooofed_spectrum', 'peak_fit', 'ap_fit'});
+    
+    for k = 1:size(powspctrm_f,1)
+      powspctrm(k,:) = interp1(fs, powspctrm_f(k,:), freq.freq, 'linear', nan);
+      fg(k).label    = freq.label{k};
+    end
+    freq.powspctrm   = powspctrm;
+    freq.fooofparams = fg(:);
+    
+  else
+    freq.powspctrm = powspctrm;
+  end
 end
 if fftflg
   % correct the 0 Hz or Nyqist bin if present, scaling with a factor of 2 is only appropriate for ~0 Hz
