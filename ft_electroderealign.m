@@ -120,7 +120,7 @@ function [elec_realigned] = ft_electroderealign(cfg, elec_original)
 %   cfg.moveinward     = number, the distance that the electrode should be moved
 %                        inward (negative numbers result in an outward move)
 %
-% If you want to align electrodes to the freesurfer average brain, you should
+% If you want to align ECoG electrodes to the freesurfer average brain, you should
 % specify the path to your headshape (e.g., lh.pial), and ensure you have the
 % corresponding registration file (e.g., lh.sphere.reg) in the same directory.
 % Moreover, the path to the local freesurfer home is required. Note that, because the
@@ -430,7 +430,7 @@ elseif strcmp(cfg.method, 'volume')
   if strcmp(cfg.warp, 'mni')
     norm.elecpos = warp_mni(cfg, elec);
   else
-    error([cfg.warp ' warping method not supported for method volume']);
+    error([cfg.warp ' warp not supported for method volume']);
   end
 
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
