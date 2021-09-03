@@ -43,6 +43,7 @@ function [elec_realigned] = ft_electroderealign(cfg, elec_original)
 %                        'fiducial'        realign using three fiducials (e.g. NAS, LPA and RPA)
 %                        'template'        realign the electrodes to match a template set
 %                        'headshape'       realign the electrodes to fit the head surface
+%                        'volume'          projects electrodes based on a normalized anatomical volume
 %                        'project'         projects electrodes onto the head surface
 %                        'moveinward'      moves electrodes inward along their normals
 %   cfg.warp          = string describing the spatial transformation for the template and headshape methods
@@ -59,6 +60,7 @@ function [elec_realigned] = ft_electroderealign(cfg, elec_original)
 %                        'fsaverage'       surface-based realignment with FreeSurfer fsaverage brain (left->left or right->right)
 %                        'fsaverage_sym'   surface-based realignment with FreeSurfer fsaverage_sym left hemisphere (left->left or right->left)
 %                        'fsinflated'      surface-based realignment with FreeSurfer individual subject inflated brain (left->left or right->right)
+%                        'mni'             volume-based realignment using volume normalization parameters obtained from ft_volumenormalise
 %   cfg.channel        = Nx1 cell-array with selection of channels (default = 'all'),
 %                        see  FT_CHANNELSELECTION for details
 %   cfg.keepchannel    = string, 'yes' or 'no' (default = 'no')
@@ -91,6 +93,9 @@ function [elec_realigned] = ft_electroderealign(cfg, elec_original)
 %                        single triangulated boundary, or a Nx3 matrix with surface
 %                        points
 %
+% If you want to normalize EEG electrodes based a normalized anatomical volume, you should specify the volume as
+%   cfg.volume         = anatomical volume, normalized with ft_volumenormalise
+%
 % If you want to align ECoG electrodes to the pial surface, you first need to compute
 % the cortex hull with FT_PREPARE_MESH. Then use either the algorithm described in
 % Dykstra et al. (2012, Neuroimage) or in Hermes et al. (2010, J Neurosci methods) to
@@ -115,7 +120,7 @@ function [elec_realigned] = ft_electroderealign(cfg, elec_original)
 %   cfg.moveinward     = number, the distance that the electrode should be moved
 %                        inward (negative numbers result in an outward move)
 %
-% If you want to align ECoG electrodes to the freesurfer average brain, you should
+% If you want to align electrodes to the freesurfer average brain, you should
 % specify the path to your headshape (e.g., lh.pial), and ensure you have the
 % corresponding registration file (e.g., lh.sphere.reg) in the same directory.
 % Moreover, the path to the local freesurfer home is required. Note that, because the
@@ -216,8 +221,10 @@ end
 switch cfg.method
   case 'template'        % realign the sensors to match a template set
     cfg = ft_checkconfig(cfg, 'required', 'target', 'forbidden', 'headshape');
-  case 'headshape'     % realign the sensors to fit the head surface
+  case 'headshape'       % realign the sensors to fit the head surface
     cfg = ft_checkconfig(cfg, 'required', 'headshape', 'forbidden', 'target');
+  case 'volume'          % realign using a normalized anatomical volume
+    cfg = ft_checkconfig(cfg, 'required', 'volume', 'forbidden', 'target');
   case 'fiducial'        % realign using the NAS, LPA and RPA fiducials
     cfg = ft_checkconfig(cfg, 'required', 'target', 'forbidden', 'headshape');
   case 'moveinward'      % moves eletrodes inward
@@ -407,6 +414,23 @@ elseif strcmp(cfg.method, 'headshape')
     dpre  = ft_warp_error([],     elec.elecpos, headshape, cfg.warp);
     dpost = ft_warp_error(norm.m, elec.elecpos, headshape, cfg.warp);
     fprintf('mean distance prior to warping %f, after warping %f\n', dpre, dpost);
+  end
+  
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+elseif strcmp(cfg.method, 'volume')
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+  % determine electrode selection and overlapping subset for warping
+  cfg.channel = ft_channelselection(cfg.channel, elec.label);
+  [cfgsel, datsel] = match_str(cfg.channel, elec.label);
+  elec.label   = elec.label(datsel);
+  elec.elecpos = elec.elecpos(datsel,:);
+
+  norm.label = elec.label;
+  if strcmp(cfg.warp, 'mni')
+    norm.elecpos = warp_mni(cfg, elec);
+  else
+    error([cfg.warp ' warping method not supported for method volume']);
   end
 
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -608,9 +632,10 @@ end % if method
 % apply the spatial transformation to all electrodes, and replace the
 % electrode labels by their case-sensitive original values
 switch cfg.method
-  case {'template', 'headshape'}
+  case {'template', 'headshape', 'volume'}
     if strcmpi(cfg.warp, 'dykstra2012') || strcmpi(cfg.warp, 'hermes2010') || ...
-        strcmpi(cfg.warp, 'fsaverage') || strcmpi(cfg.warp, 'fsaverage_sym') || strcmpi(cfg.warp, 'fsinflated')
+        strcmpi(cfg.warp, 'fsaverage') || strcmpi(cfg.warp, 'fsaverage_sym') || strcmpi(cfg.warp, 'fsinflated') || ...
+        strcmpi(cfg.warp, 'mni') 
       elec_realigned = norm;
       elec_realigned.label = label_original;
     else
@@ -669,6 +694,10 @@ switch cfg.method
       elseif strcmp(cfg.warp, 'fsaverage_sym')
         elec_realigned.coordsys = 'fsaverage_sym';
       end
+    end
+  case 'volume'
+    if isfield(cfg.volume, 'coordsys')
+      elec_realigned.coordsys = cfg.volume.coordsys;
     end
   case 'fiducial'
     if isfield(target, 'coordsys')
