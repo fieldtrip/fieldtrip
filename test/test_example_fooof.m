@@ -16,7 +16,7 @@ for rpt = 1:1
   fn = fn./max(abs(fn));
   
   sgn10 = ft_preproc_bandpassfilter(randn(1,length(t)),1000,[8 12],[],'firws');
-  sgn10 = 0.05.*sgn10./max(abs(sgn10));
+  sgn10 = 0.15.*sgn10./max(abs(sgn10));
   
   sgn60 = ft_preproc_bandpassfilter(randn(1,length(t)),1000,[40 80],[],'firws');
   sgn60 = 0.05.*sgn60./max(abs(sgn60));

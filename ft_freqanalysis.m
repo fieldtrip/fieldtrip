@@ -953,6 +953,9 @@ if powflg
   end
   
   if startsWith(cfg.output, 'fooof')
+    % check for brainstorm functions on the path, and add if needed
+    ft_hastoolbox('brainstorm', 1);
+    
     TF(:,1,:) = powspctrm;
     Freqs     = freq.freq;
     Freqs(Freqs==0) = [];
