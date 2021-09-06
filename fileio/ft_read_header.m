@@ -518,7 +518,7 @@ switch headerformat
     
     NEV = openNEV(filename,'noread','nosave');
     
-    %searching for associated nsX file in same folder
+    % searching for associated nsX file in same folder
     files=dir(strcat(fullfile(p,n),'.ns*'));
     if isempty(files)
       ft_error('no .ns* file associated to %s in %s',n,p);
@@ -558,7 +558,7 @@ switch headerformat
       chantype = unique(channelstype,'stable');
     end
     
-    %selecting channel according to chantype
+    % selecting channel according to chantype
     orig_label=deblank({orig.ElectrodesInfo.Label});
     orig_unit=deblank({orig.ElectrodesInfo.AnalogUnits});
     channels={}; channelstype={}; channelsunit={}; skipfactor=[];
@@ -589,9 +589,9 @@ switch headerformat
       ft_error('inconsistent skip factors across channels');
     end
     
-    %If no channel selected issue error specifying available chantypes
+    % If no channel selected issue error specifying available chantypes
     if isempty(channels)
-      ft_error('No channel selected. Availabe chantypes are: %s',strjoin(unique(chaninfo.chantype)));
+      ft_error('No channel selected. Availabe chantypes are: %s', strjoin(unique(chaninfo.chantype)));
     end
     
     hdr.Fs          = orig.MetaTags.SamplingFreq/skipfactor;
