@@ -2310,7 +2310,7 @@ switch eventformat
     end
     event = read_spmeeg_event(filename, 'header', hdr);
     
-  case {'blackrock_nev', 'blackrock_nsx'}
+  case {'blackrock_nev'}
     % use the NPMK toolbox for the file reading
     ft_hastoolbox('NPMK', 1);
     
@@ -2336,7 +2336,7 @@ switch eventformat
     % probably not necessary for all but we often have pins up
     % FIXME: what is the consequence for the values if the pins were not 'up'?
     % Should this be solved more generically? E.g. with an option?
-    eventCodes2= eventCodes-min(eventCodes)+1;
+    eventCodes2 = eventCodes - min(eventCodes) + 1;
     
     for k=1:numel(eventCodes2)
       event(k).type      = 'trigger';
