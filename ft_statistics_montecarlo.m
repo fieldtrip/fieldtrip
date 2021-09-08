@@ -168,18 +168,6 @@ if any(strcmp(cfg.correctm, {'cluster' 'tfce'}))
       % input data can be reshaped into a 3D volume, use bwlabeln/spm_bwlabel rather than clusterstat
       ft_info('using connectivity of voxels in 3-D volume\n');
       cfg.connectivity = nan;
-    elseif isfield(cfg, 'brainordinate')
-      % input data describes a parcellated volume/surface, for which
-      % neighbours can be defined
-      ft_info('using the triangulation information to identify parcel neighbours for spatial connectivity');
-      opt.parcellation = ft_getopt(cfg, 'parcellation', 'parcellation');
-      opt.label        = ft_getopt(cfg, 'channel',      []); % is assumed to be present -> is this robust?
-      opt.connectmidline = ft_getopt(cfg, 'connectmidline', false);
-      [cfg.connectivity, label] = parcellation2connectivity(cfg.brainordinate, 'parcellation', opt.parcellation, ...
-        'label', opt.label, 'connectmidline', opt.connectmidline);
-      if ~isequal(label, cfg.channel)
-        ft_error('the (order of the) labels in the adjacency matrix are different from the data');
-      end
     elseif isfield(cfg, 'tri')
       % input data describes a surface along which neighbours can be defined
       ft_info('using connectivity of vertices along triangulated surface\n');

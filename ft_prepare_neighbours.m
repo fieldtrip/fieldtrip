@@ -8,7 +8,8 @@ function [neighbours, cfg] = ft_prepare_neighbours(cfg, data)
 % template for the given data type. Alternatively, using the 'parcellation'
 % method, in combination with an atlas as input data, spatial neighbours
 % of parcels are determined, based on the spatial relationship between the
-% labeled mesh vertices or grid nodes.
+% labeled mesh vertices. Currently, only atlases defined on a triangular
+% mesh are supported.
 %
 % Use as
 %   neighbours = ft_prepare_neighbours(cfg)
@@ -38,7 +39,6 @@ function [neighbours, cfg] = ft_prepare_neighbours(cfg, data)
 % options
 %   cfg.parcellation  = string that denotes the field in the atlast that
 %                       parcellation to be used
-%   cfg.
 %
 % The output is an array of structures with the "neighbours" which is
 % structured like this:
@@ -96,7 +96,7 @@ end
 
 % the data can be passed as input arguments or can be read from disk
 hasdata  = exist('data', 'var');
-hasatlas = hasdata && (ft_datatype(data, 'mesh+label') || ft_datatype(data, 'volume+label')); 
+hasatlas = hasdata && (ft_datatype(data, 'mesh+label') || ft_datatype(data, 'volume+label' || ft_datatype(data, 'source+label'))); 
 
 % these undocumented methods are needed to support some of the high-level FT functions that call this function
 if ~isfield(cfg, 'method')
@@ -134,9 +134,9 @@ cfg = ft_checkconfig(cfg, 'renamed',    {'optofile', 'opto'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'method', 'tri', 'triangulation'});
 
 % set the defaults
-cfg.feedback = ft_getopt(cfg, 'feedback', 'no');
-cfg.channel  = ft_getopt(cfg, 'channel', 'all');
-cfg.compress = ft_getopt(cfg, 'compress', 'yes');
+cfg.feedback     = ft_getopt(cfg, 'feedback',     'no');
+cfg.channel      = ft_getopt(cfg, 'channel',      'all');
+cfg.compress     = ft_getopt(cfg, 'compress',     'yes');
 cfg.parcellation = ft_getopt(cfg, 'parcellation', 'parcellation');
 
 if hasdata && ~hasatlas
@@ -159,13 +159,14 @@ if strcmp(cfg.method, 'distance') || strcmp(cfg.method, 'triangulation')
   
   if isfield(cfg, 'layout') && ~isempty(cfg.layout)
     % get 2D positions from the layout
-    tmpcfg = keepfields(cfg, {'layout', 'channel', 'rows', 'columns', 'commentpos', 'skipcomnt', 'scalepos', 'skipscale', 'projection', 'viewpoint', 'rotate', 'width', 'height', 'elec', 'grad', 'opto', 'showcallinfo'});
+    tmpcfg  = keepfields(cfg, {'layout', 'channel',   'rows', 'columns', 'commentpos', ...
+               'skipcomnt', 'scalepos',  'skipscale', 'projection', 'viewpoint', ...
+               'rotate',    'width',     'height',    'elec', 'grad', 'opto', 'showcallinfo'});
     tmpcfg.skipscale = 'yes';
     tmpcfg.skipcomnt = 'yes';
-    layout = ft_prepare_layout(tmpcfg);
+    layout  = ft_prepare_layout(tmpcfg);
     chanpos = layout.pos;
-    label = layout.label;
-    
+    label   = layout.label;
   else
     % get 3D positions from the sensor description
     if hasdata
@@ -320,13 +321,12 @@ switch cfg.method
           neighbours(k).neighblabel = label(adj(k,:)>0);
         end
         
-      case 'volume+label'
+      case {'volume+label' 'source+label'}
         ft_error('not yet implemented');
       otherwise
         % this shouldn't happen, but throw an error just to be sure
         ft_error('the input data should be an atlas with cfg.method = ''parcellation''');
     end
-    
     
   otherwise
     ft_error('unsupported method ''%s''', cfg.method);
@@ -361,7 +361,7 @@ if ~isempty(desired)
   neighbours = complete;
 end
 
-for i=1:length(neighbours)
+for i = 1:length(neighbours)
   % convert them into row-arrays for a nicer code representation with PRINTRSTRUCT
   neighbours(i).neighblabel = neighbours(i).neighblabel(:)';
 end
@@ -380,7 +380,7 @@ else
   fprintf('there are on average %.1f neighbours per channel\n', k/length(neighbours));
 end
 
-if strcmp(cfg.feedback, 'yes')
+if strcmp(cfg.feedback, 'yes') && ~hasatlas
   % give some graphical feedback
   tmpcfg = keepfields(cfg, {'layout', 'rows', 'columns', 'commentpos', 'skipcomnt', 'scalepos', 'skipscale', 'projection', 'viewpoint', 'rotate', 'width', 'height', 'elec', 'grad', 'opto', 'showcallinfo'});
   tmpcfg.neighbours = neighbours;
@@ -390,6 +390,8 @@ if strcmp(cfg.feedback, 'yes')
   else
     ft_neighbourplot(tmpcfg);
   end
+elseif strcmp(cfg.feedback, 'yes')
+  ft_notice('no visual feedback about the neighbours is possible with the current input');
 end
 
 % do the general cleanup and bookkeeping at the end of the function
