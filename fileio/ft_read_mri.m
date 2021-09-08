@@ -316,8 +316,8 @@ switch dataformat
     hdr.dev    = dev;
     
   case 'dicom'
-    % this seems to return a right-handed volume with the transformation
-    % matrix stored in the file headers.
+    % this returns a right-handed volume with the transformation matrix stored in the file headers
+    % see https://github.com/fieldtrip/website/pull/444
     
     % needs the freesurfer toolbox
     ft_hastoolbox('freesurfer', 1);
@@ -327,20 +327,18 @@ switch dataformat
     end
     [img, transform,hdr, mr_params] = load_dicom_series(dcmdir,dcmdir,filename);
     transform = vox2ras_0to1(transform);
+    coordsys  = 'scanras';
+    unit      = 'mm';
     
   case 'dicom_old'
-    % this does not necessarily return a right-handed volume and only a
-    % transformation-matrix with the voxel size
-    
     % this uses the Image processing toolbox
-    % the DICOM file probably represents a stack of slices, possibly even multiple volumes
+    % the DICOM files represent a stack of slices, and possibly even multiple volumes
     orig = dicominfo(filename);
     dim(1) = orig.Rows;
     dim(2) = orig.Columns;
     
-    [p, f] = fileparts(filename);
-    
     % this works for the Siemens scanners at the FCDC
+    [p, f] = fileparts(filename);
     tok = tokenize(f, '.');
     for i=5:length(tok)
       tok{i} = '*';
@@ -406,12 +404,13 @@ switch dataformat
     
     % construct a homgeneous transformation matrix that performs the scaling from voxels to mm
     transform = dicom2transform(hdr);
+    coordsys  = 'dicom'; % identical to scanlps, see https://www.fieldtriptoolbox.org/faq/coordsys/#details-of-the-dicom-coordinate-system
+    unit      = 'mm';
     
     % this makes the mapping of voxels to patient coordinates consistent with Horos
     img = permute(img, [2, 1, 3]);
     
   case {'nifti', 'freesurfer_mgz', 'freesurfer_mgh', 'nifti_gz'}
-    
     ft_hastoolbox('freesurfer', 1);
     tmp = MRIread(filename);
     ndims = numel(size(tmp.vol));
@@ -451,7 +450,6 @@ switch dataformat
     
   case {'mif' 'mrtrix_mif'}
     ft_hastoolbox('mrtrix', 1);
-    
     tmp = read_mrtrix(filename);
     
     % check if it's sparse fixeldata
@@ -519,11 +517,8 @@ switch dataformat
 end
 
 if exist('img', 'var')
-  % set up the axes of the volume in voxel coordinates
-  %nx = size(img,1);
-  %ny = size(img,2);
-  %nz = size(img,3);
-  mri.dim = size(img); %[nx ny nz];
+  % determine the size of the volume in voxels
+  mri.dim = size(img);
   % store the anatomical data
   mri.(outputfield) = img;
 end
@@ -544,13 +539,17 @@ try
 end
 
 try
-  % try to determine the units of the coordinate system
+  % determine the geometrical units in which it is expressed
+  mri.unit = unit;
+catch
   mri = ft_determine_units(mri);
 end
 
 try
-  % try to add a descriptive label for the coordinate system
+  % add a descriptive label for the coordinate system
   mri.coordsys = coordsys;
+catch
+  mri.coordsys = 'unknown';
 end
 
 if inflated
