@@ -37,7 +37,6 @@ function [mri] = ft_read_mri(filename, varargin)
 %   'neuromag_fif'               uses MNE toolbox
 %   'neuromag_fif_old'           uses meg-pd toolbox
 %   'nifti'                      uses FreeSurfer code
-%   'nifti_fsl'                  uses FreeSurfer code
 %   'nifti_spm'                  uses SPM
 %   'yokogawa_mri'
 %
@@ -184,8 +183,32 @@ switch dataformat
       volumes = sort(intersect(volumes, 1:size(hdr.private.dat,4)));
       img = double(hdr.private.dat(:,:,:,volumes));
     end
-    %img = spm_read_vols(hdr);
     transform = hdr.mat;
+    unit = 'mm';
+    
+    try
+      % The nifti header allows three methods for specifying the coordinates of the
+      % voxels. For two of the methods (sform and qform), the header contains a
+      % numerical code from 0 to 4 that specifies the coordinate system. SPM8 and
+      % SPM12 use a field in the private header of the nifti object to code this.
+      switch hdr.private.mat_intent
+        case 'UNKNOWN'
+          coordsys = 'unknown';
+        case 'Scanner'
+          coordsys = 'scanras';
+        case 'Aligned'
+          coordsys = 'aligned';
+        case 'Talairach'
+          coordsys = 'tal';
+        case 'MNI152'
+          coordsys = 'mni152';
+      end
+      
+      % We cannot trust it yet, see https://github.com/fieldtrip/fieldtrip/issues/1879
+      ft_notice('the coordinate system from the NIfTI file appears to be ''%s''\n', coordsys);
+      coordsys = 'unknown';
+    end
+    
     
   case {'analyze_img' 'analyze_hdr'}
     if ~(hasspm8 || hasspm12)
@@ -207,6 +230,7 @@ switch dataformat
     avw = avw_img_read(filename, 0); % returned volume is LAS*
     img = avw.img;
     hdr = avw.hdr;
+    
     % The default Analyze orientation is axial unflipped (LAS*), which means
     % that the resulting volume is according to the radiological convention.
     % Most other fMRI and EEG/MEG software (except Mayo/Analyze) uses
@@ -214,7 +238,7 @@ switch dataformat
     % the first axis of the 3D volume (right-left) should be flipped to make
     % the coordinate system comparable to SPM
     ft_warning('flipping 1st dimension (L-R) to obtain volume in neurological convention');
-    img = flipdim(img, 1);
+    img = flip(img, 1);
     
     transform      = diag(hdr.dime.pixdim(2:4));
     transform(4,4) = 1;
@@ -238,8 +262,8 @@ switch dataformat
     transform(3,3)   = hdr.DELTA(3);
     
     % FIXME: I am not sure about the "RAI" image orientation
-    img = flipdim(img,1);
-    img = flipdim(img,2);
+    img = flip(img,1);
+    img = flip(img,2);
     dim = size(img);
     transform(1,4) = -dim(1) - transform(1,4);
     transform(2,4) = -dim(2) - transform(2,4);
@@ -258,8 +282,7 @@ switch dataformat
     % coordinate system 4 - is the MEG head coordinate system (fiducials)
     % coordinate system 5 - is the MRI coordinate system
     % coordinate system 2001 - MRI voxel coordinates
-    % coordinate system 2002 - Surface RAS coordinates (is mainly vertical
-    %                                     shift, no rotation to 2001)
+    % coordinate system 2002 - Surface RAS coordinates (is mainly vertical shift, no rotation to 2001)
     % MEG sensor positions come in system 4
     % MRI comes in system 2001
     
@@ -276,17 +299,14 @@ switch dataformat
       ft_warning('W: Maybe coregistration is missing?');
     end
     if isfield(hdr, 'voxel_trans') && issubfield(hdr.voxel_trans, 'trans')
-      % centers the coordinate system
-      % and switches from mm to m
+      % centers the coordinate system and switches from mm to m
       if (hdr.voxel_trans.from == 2001) && (hdr.voxel_trans.to == 5)
-        % matlab_shift compensates for the different index conventions
-        % between C and matlab
+        % matlab_shift compensates for the different index conventions between C and MATLAB
         
-        % the lines below is old code (prior to Jan 3, 2013) and only works with
-        % 1 mm resolution MRIs
-        %matlab_shift = [ 0 0 0 0.001; 0 0 0 -0.001; 0 0 0 0.001; 0 0 0 0];
+        % the lines below is old code (prior to Jan 3, 2013) and only works with 1 mm resolution MRIs
+        %   matlab_shift = [ 0 0 0 0.001; 0 0 0 -0.001; 0 0 0 0.001; 0 0 0 0];
         % transform transforms from 2001 to 5 and further to 4
-        %transform = transform\(hdr.voxel_trans.trans+matlab_shift);
+        %   transform = transform\(hdr.voxel_trans.trans+matlab_shift);
         
         % the lines below should work with arbitrary resolution
         matlab_shift = eye(4);
@@ -410,20 +430,40 @@ switch dataformat
     % this makes the mapping of voxels to patient coordinates consistent with Horos
     img = permute(img, [2, 1, 3]);
     
-  case {'nifti', 'freesurfer_mgz', 'freesurfer_mgh', 'nifti_gz'}
+  case {'nifti', 'nifti_gz', 'freesurfer_mgz', 'freesurfer_mgh'}
     ft_hastoolbox('freesurfer', 1);
     tmp = MRIread(filename);
     ndims = numel(size(tmp.vol));
     if ndims==3
-      img = permute(tmp.vol, [2 1 3]); %FIXME although this is probably correct
-      %see the help of MRIread, anecdotally columns and rows seem to need a swap
-      %in order to match the transform matrix (alternatively a row switch of the
-      %latter can be done)
+      img = permute(tmp.vol, [2 1 3]);
+      % FIXME although this is probably correct
+      % see the help of MRIread, anecdotally columns and rows seem to need a swap
+      % in order to match the transform matrix (alternatively a row switch of the
+      % latter can be done)
     elseif ndims==4
       img = permute(tmp.vol, [2 1 3 4]);
     end
     hdr = rmfield(tmp, 'vol');
-    transform = tmp.vox2ras1;
+    transform = hdr.vox2ras1;
+    unit = 'mm';
+    
+    if isfield(hdr, 'niftihdr')
+      % The nifti header allows three methods for specifying the coordinates of the
+      % voxels. For two of the methods (sform and qform), the header contains a
+      % numerical code that specifies the coordinate system.
+      coordsys = {'unknown', 'scanras', 'aligned', 'tal', 'mni152'}; % corresponding to 0, 1, 2, 3, 4
+      if isequal(hdr.vox2ras0, hdr.niftihdr.sform)
+        coordsys = coordsys{hdr.niftihdr.sform_code + 1};
+      elseif isequal(hdr.vox2ras0, hdr.niftihdr.qform)
+        coordsys = coordsys{hdr.niftihdr.qform_code + 1};
+      else
+        coordsys = 'unknown';
+      end
+      
+      % We cannot trust it yet, see https://github.com/fieldtrip/fieldtrip/issues/1879
+      ft_notice('the coordinate system from the NIfTI file appears to be ''%s''\n', coordsys);
+      coordsys = 'unknown';
+    end
     
   case 'yokogawa_mri'
     ft_hastoolbox('yokogawa', 1);
