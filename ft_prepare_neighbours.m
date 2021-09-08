@@ -307,11 +307,24 @@ switch cfg.method
         % get the parcel values for the edges that 'go across parcels'
         boundary = data.(cfg.parcellation)(edges);
         boundary = boundary(boundary(:,1)~=boundary(:,2),:);
-        boundary = unique([boundary; boundary(:,[2 1])], 'rows');
+        
+        % unique parcel-crossing edges
+        uboundary = unique(boundary, 'rows');
+        %uboundary = unique([boundary; boundary(:,[2 1])], 'rows');
+        
+        % count 
+        nboundary = zeros(size(uboundary, 1), 1);
+        for k = 1:numel(nboundary)
+          nboundary(k) = sum(boundary(:,1)==uboundary(k,1) & boundary(:,2)==uboundary(k,2));
+        end
+        
+        nthresh   = 2; % at least nthresh edges need to be there, in order to count as a neighbour, e.g.: touching at the corner does not count
+        uboundary = uboundary(nboundary>nthresh, :);
+        uboundary = [uboundary; uboundary(:,[2 1])]; % to make the adjacency matrix symmetric
         
         % fill the adjacency matrix
-        n   = size(boundary,1);
-        adj = full(sparse(boundary(:,1),boundary(:,2),ones(n,1)));
+        n   = size(uboundary,1);
+        adj = full(sparse(uboundary(:,1),uboundary(:,2),ones(n,1)));
         
         label = data.([cfg.parcellation 'label']);
         
