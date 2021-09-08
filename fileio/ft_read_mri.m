@@ -5,21 +5,21 @@ function [mri] = ft_read_mri(filename, varargin)
 % FT_DATATYPE_VOLUME.
 %
 % Use as
-%   [mri] = ft_read_mri(filename)
+%   [mri] = ft_read_mri(filename, ...)
 %
 % Additional options should be specified in key-value pairs and can include
 %   'dataformat'  = string specifying the file format, determining the low-level
 %                   reading routine to be used. If no explicit format is given,
 %                   it is determined automatically from the filename.
-%   'volumes'     = vector with the volume indices to read from a 4D nifti (only for nifti_spm)
+%   'volumes'     = vector with the volume indices to read from a 4-D nifti (only for 'nifti_spm')
 %   'outputfield' = string specifying the name of the field in the structure in which the
-%                   numeric data is stored (only for mrtrix_mif, default = 'anatomy')
+%                   numeric data is stored (only for 'mrtrix_mif', default = 'anatomy')
 %   'fixel2voxel' = string, the operation to apply to the fixels belonging to the
-%                  same voxel, can be 'max', 'min', 'mean' (only for mrtrix_mif, default = 'max')
+%                  same voxel, can be 'max', 'min', 'mean' (only for 'mrtrix_mif', default = 'max')
 %   'indexfile'   = string, pointing to a fixel index file, if not present in the same directory
-%                   as the functional data (only for mrtrix_mif)
+%                   as the functional data (only for 'mrtrix_mif')
 %
-% The following values apply for the dataformat
+% The supported dataformats are
 %   'afni_head'/'afni_brik'      uses AFNI code
 %   'analyze_img'/'analyze_hdr'  uses SPM code
 %   'analyze_old'                uses Darren Webber's code

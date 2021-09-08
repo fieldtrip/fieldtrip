@@ -7,23 +7,31 @@ function [V] = ft_write_mri(filename, dat, varargin)
 %   ft_write_mri(filename, dat, ...)
 % where the input argument dat represents the 3-D array with the values.
 %
+% The 3-D array with the values can be further described with 
+%   'transform'    = 4x4 homogenous transformation matrix, specifying the transformation from voxel coordinates to head or world coordinates
+%   'unit'         = string, geometrical units of the coordinate system
+%   'coordsys'     = string, description of the coordinate system
+%
 % Additional options should be specified in key-value pairs and can be
 %   'dataformat'   = string, see below
-%   'transform'    = 4x4 homogenous transformation matrix, specifying the transformation from voxel coordinates to head coordinates
-%   'unit'         = string, desired units for the image data on disk, for example 'mm'
-%   'spmversion'   = version of SPM to be used, in case data needs to be written in analyze format
+%   'spmversion'   = string, version of SPM to be used (default = 'spm12')
 %   'scl_slope'    = slope parameter for nifti files
 %   'scl_inter'    = intersect parameter for nifti files
+%   'vmpversion'   = 1 or 2, version of the vmp format to use (default = 2)
 %
-% The specified filename can already contain the filename extention, but that is not
-% required since it will be added automatically.
+% The specified filename can already contain the filename extention. If not present,
+% it will be added automatically.
 %
 % The supported dataformats are
-%   'vmr', 'vmp' (Brainvoyager specific file formats)
-%   'analyze'
-%   'nifti', 'nifti2', 'nifti_gz'
-%   'vista' (simbio specific file formats)
-%   'mgz', 'mgh' (freesurfer specific file formats)
+%   'analyze'   outdated format and not recommended
+%   'mgz'       FreeSurfer specific format
+%   'mgh'       FreeSurfer specific format
+%   'nifti'
+%   'nifti2'
+%   'nifti_gz'
+%   'vista'     SIMBIO specific format
+%   'vmr'       Brainvoyager specific format
+%   'vmp'       Brainvoyager specific format
 %
 % See also FT_READ_MRI, FT_WRITE_DATA, FT_WRITE_HEADSHAPE
 
