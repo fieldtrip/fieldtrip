@@ -214,10 +214,10 @@ if isempty(facecolor) % set default color depending on shape
   end
 end
 if ischar(facecolor) && exist([facecolor '.m'], 'file')
-  facecolor = eval(facecolor);
+  facecolor = feval(facecolor);
 end
 if ischar(edgecolor) && exist([edgecolor '.m'], 'file')
-  edgecolor = eval(edgecolor);
+  edgecolor = feval(edgecolor);
 end
 
 % select a subset of channels and coils to be plotted
