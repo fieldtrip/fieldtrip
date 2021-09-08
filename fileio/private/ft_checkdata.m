@@ -1362,7 +1362,7 @@ fn = fieldnames(source);
 sel = false(size(fn));
 for i=1:numel(fn)
   tmp = source.(fn{i});
-  sel(i) = iscell(tmp) && isequal(tmp(:), data.label(:));
+  sel(i) = iscell(tmp) && isequal(sort(tmp(:)), sort(data.label(:)));
 end
 parcelparam = fn(sel);
 if numel(parcelparam)~=1
