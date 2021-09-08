@@ -65,10 +65,10 @@ parent      = ft_getopt(varargin, 'parent', []);
 
 % color management
 if ischar(facecolor) && exist([facecolor '.m'], 'file')
-	facecolor = eval(facecolor);
+	facecolor = feval(facecolor);
 end
 if ischar(edgecolor) && exist([edgecolor '.m'], 'file')
-	edgecolor = eval(edgecolor);
+	edgecolor = feval(edgecolor);
 end
 
 % convert the two cornerpoints into something that the patch function understands
