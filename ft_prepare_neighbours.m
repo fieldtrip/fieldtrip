@@ -1,24 +1,31 @@
 function [neighbours, cfg] = ft_prepare_neighbours(cfg, data)
 
-% FT_PREPARE_NEIGHBOURS finds the channel neighbours for spatial clustering or
-% interpolation of bad channels. Using the 'distance' method, neighbours are based on
-% a minimum neighbourhood distance (in cfg.neighbourdist). Using the 'triangulation'
-% method calculates a triangulation based on a 2D projection of the sensor positions.
-% The 'template' method loads a default template for the given data type.
+% FT_PREPARE_NEIGHBOURS finds the channel neighbours for spatial clustering
+% or interpolation of bad channels. Using the 'distance' method, neighbours
+% are based on a minimum neighbourhood distance (in cfg.neighbourdist). 
+% Using the 'triangulation' method calculates a triangulation based on a 2D
+% projection of the sensor positions. The 'template' method loads a default
+% template for the given data type. Alternatively, using the 'parcellation'
+% method, in combination with an atlas as input data, spatial neighbours
+% of parcels are determined, based on the spatial relationship between the
+% labeled mesh vertices. Currently, only atlases defined on a triangular
+% mesh are supported.
 %
 % Use as
 %   neighbours = ft_prepare_neighbours(cfg)
 % or
 %   neighbours = ft_prepare_neighbours(cfg, data)
-% with an input data structure with the channels of interest and that contains a
-% sensor description.
+% with an input data structure with the channels of interest and that 
+% contains a sensor description, or represents an atlas, see FT_READ_ATLAS
 %
 % The configuration can contain
 %   cfg.channel       = channels in the data for which neighbours should be determined
 %   cfg.method        = 'distance', 'triangulation' or 'template'
 %   cfg.template      = name of the template file, e.g. CTF275_neighb.mat
-%   cfg.neighbourdist = number, maximum distance between neighbouring sensors (only for 'distance', default is 40 mm)
-%   cfg.compress      = 'yes' or 'no', add extra edges by compressing in the x- and y-direction (only for 'triangulation', default is yes)
+%   cfg.neighbourdist = number, maximum distance between neighbouring sensors
+%                       (only for 'distance', default is 40 mm)
+%   cfg.compress      = 'yes' or 'no', add extra edges by compressing in the 
+%                       x- and y-direction (only for 'triangulation', default is yes)
 %   cfg.feedback      = 'yes' or 'no' (default = 'no')
 %
 % The 3D sensor positions can be present in the data or can be specified as
@@ -27,6 +34,11 @@ function [neighbours, cfg] = ft_prepare_neighbours(cfg, data)
 %
 % The 2D channel positions can be specified as
 %   cfg.layout        = filename of the layout, see FT_PREPARE_LAYOUT
+%
+% With an atlas in the input, the method 'parcellation' has the additional
+% options
+%   cfg.parcellation  = string that denotes the field in the atlast that
+%                       parcellation to be used
 %
 % The output is an array of structures with the "neighbours" which is
 % structured like this:
@@ -40,9 +52,11 @@ function [neighbours, cfg] = ft_prepare_neighbours(cfg, data)
 %
 % Note that a channel is not considered to be a neighbour of itself.
 %
-% See also FT_NEIGHBOURPLOT, FT_PREPARE_LAYOUT, FT_DATATYPE_SENS, FT_READ_SENS
+% See also FT_NEIGHBOURPLOT, FT_PREPARE_LAYOUT, FT_DATATYPE_SENS,
+% FT_READ_SENS, FT_READ_ATLAS
 
-% Copyright (C) 2006-2020, Eric Maris, Jorn M. Horschig, Robert Oostenveld
+% Copyright (C) 2006-2021, Eric Maris, Jorn M. Horschig, Robert Oostenveld,
+% Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -81,7 +95,8 @@ if ft_abort
 end
 
 % the data can be passed as input arguments or can be read from disk
-hasdata = exist('data', 'var');
+hasdata  = exist('data', 'var');
+hasatlas = hasdata && (ft_datatype(data, 'mesh+label') || ft_datatype(data, 'volume+label' || ft_datatype(data, 'source+label'))); 
 
 % these undocumented methods are needed to support some of the high-level FT functions that call this function
 if ~isfield(cfg, 'method')
@@ -104,6 +119,12 @@ if ~isfield(cfg, 'method')
   end
 end
 
+if hasatlas && ~strcmp(cfg.method, 'parcellation')
+  ft_error('an atlas as input data argument requires cfg.method = ''parcellation''');
+elseif strcmp(cfg.method, 'parcellation') && ~hasatlas
+  ft_error('cfg.method = ''parcellation'' requires an atlas as input data');
+end
+
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'forbidden',  {'channels'}); % prevent accidental typos, see issue 1729
 cfg = ft_checkconfig(cfg, 'required',   {'method'});
@@ -113,11 +134,12 @@ cfg = ft_checkconfig(cfg, 'renamed',    {'optofile', 'opto'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'method', 'tri', 'triangulation'});
 
 % set the defaults
-cfg.feedback = ft_getopt(cfg, 'feedback', 'no');
-cfg.channel  = ft_getopt(cfg, 'channel', 'all');
-cfg.compress = ft_getopt(cfg, 'compress', 'yes');
+cfg.feedback     = ft_getopt(cfg, 'feedback',     'no');
+cfg.channel      = ft_getopt(cfg, 'channel',      'all');
+cfg.compress     = ft_getopt(cfg, 'compress',     'yes');
+cfg.parcellation = ft_getopt(cfg, 'parcellation', 'parcellation');
 
-if hasdata
+if hasdata && ~hasatlas
   % check if the input data is valid for this function
   data = ft_checkdata(data);
   % set the default for senstype depending on the data
@@ -137,13 +159,14 @@ if strcmp(cfg.method, 'distance') || strcmp(cfg.method, 'triangulation')
   
   if isfield(cfg, 'layout') && ~isempty(cfg.layout)
     % get 2D positions from the layout
-    tmpcfg = keepfields(cfg, {'layout', 'channel', 'rows', 'columns', 'commentpos', 'skipcomnt', 'scalepos', 'skipscale', 'projection', 'viewpoint', 'rotate', 'width', 'height', 'elec', 'grad', 'opto', 'showcallinfo'});
+    tmpcfg  = keepfields(cfg, {'layout', 'channel',   'rows', 'columns', 'commentpos', ...
+               'skipcomnt', 'scalepos',  'skipscale', 'projection', 'viewpoint', ...
+               'rotate',    'width',     'height',    'elec', 'grad', 'opto', 'showcallinfo'});
     tmpcfg.skipscale = 'yes';
     tmpcfg.skipcomnt = 'yes';
-    layout = ft_prepare_layout(tmpcfg);
+    layout  = ft_prepare_layout(tmpcfg);
     chanpos = layout.pos;
-    label = layout.label;
-    
+    label   = layout.label;
   else
     % get 3D positions from the sensor description
     if hasdata
@@ -173,7 +196,6 @@ if strcmp(cfg.method, 'distance') || strcmp(cfg.method, 'triangulation')
   end
   
 end % if distance or triangulation
-
 
 switch cfg.method
   case 'specified'
@@ -259,18 +281,78 @@ switch cfg.method
     end
     neighbours = compneighbstructfromtri(chanpos, label, tri);
     
+  case 'parcellation'
+    
+    if ~isfield(data, cfg.parcellation)
+      ft_error('required field %s not present in the input atlas', cfg.parcellation);
+    end
+    
+    switch ft_datatype(data)
+      case 'mesh+label'
+        
+        tri = data.tri;
+        
+        % ensure that the vertices are indexed starting from 1
+        if min(tri(:))==0
+          tri = tri + 1;
+        end
+        
+        % ensure that the vertices are indexed according to 1:number of unique vertices
+        tri = tri_reindex(tri);
+        
+        % create the unique edges from the triangulation
+        edges  = [tri(:,[1 2]); tri(:,[1 3]); tri(:,[2 3])];
+        edges  = double(unique(sort([edges; edges(:,[2 1])],2), 'rows'));
+        
+        % get the parcel values for the edges that 'go across parcels'
+        boundary = data.(cfg.parcellation)(edges);
+        boundary = boundary(boundary(:,1)~=boundary(:,2),:);
+        
+        % unique parcel-crossing edges
+        uboundary = unique(boundary, 'rows');
+        %uboundary = unique([boundary; boundary(:,[2 1])], 'rows');
+        
+        % count 
+        nboundary = zeros(size(uboundary, 1), 1);
+        for k = 1:numel(nboundary)
+          nboundary(k) = sum(boundary(:,1)==uboundary(k,1) & boundary(:,2)==uboundary(k,2));
+        end
+        
+        nthresh   = 2; % at least nthresh edges need to be there, in order to count as a neighbour, e.g.: touching at the corner does not count
+        uboundary = uboundary(nboundary>nthresh, :);
+        uboundary = [uboundary; uboundary(:,[2 1])]; % to make the adjacency matrix symmetric
+        
+        % fill the adjacency matrix
+        n   = size(uboundary,1);
+        adj = full(sparse(uboundary(:,1),uboundary(:,2),ones(n,1)));
+        
+        label = data.([cfg.parcellation 'label']);
+        
+        neighbours = struct([]);
+        for k = 1:size(adj,1)
+          neighbours(k).label       = label{k};
+          neighbours(k).neighblabel = label(adj(k,:)>0);
+        end
+        
+      case {'volume+label' 'source+label'}
+        ft_error('not yet implemented');
+      otherwise
+        % this shouldn't happen, but throw an error just to be sure
+        ft_error('the input data should be an atlas with cfg.method = ''parcellation''');
+    end
+    
   otherwise
     ft_error('unsupported method ''%s''', cfg.method);
 end
 
 % only select those channels that are in the data
 if isfield(cfg, 'channel') && ~isempty(cfg.channel)
-  if hasdata
+  if hasdata && ~hasatlas
     desired = ft_channelselection(cfg.channel, data.label);
   else
     desired = ft_channelselection(cfg.channel, {neighbours(:).label});
   end
-elseif (hasdata)
+elseif hasdata
   desired = data.label;
 else
   desired = {neighbours(:).label};
@@ -278,7 +360,7 @@ end
 
 if ~isempty(desired)
   complete = struct;
-  for i=1:numel(desired)
+  for i = 1:numel(desired)
     complete(i).label = desired{i};
     sel = find(strcmp({neighbours(:).label}, desired{i}));
     if numel(sel)==1
@@ -292,13 +374,13 @@ if ~isempty(desired)
   neighbours = complete;
 end
 
-for i=1:length(neighbours)
+for i = 1:length(neighbours)
   % convert them into row-arrays for a nicer code representation with PRINTRSTRUCT
   neighbours(i).neighblabel = neighbours(i).neighblabel(:)';
 end
   
 k = 0;
-for i=1:length(neighbours)
+for i = 1:length(neighbours)
   if isempty(neighbours(i).neighblabel)
     ft_warning('no neighbours found for %s', neighbours(i).label);
   end
@@ -311,7 +393,7 @@ else
   fprintf('there are on average %.1f neighbours per channel\n', k/length(neighbours));
 end
 
-if strcmp(cfg.feedback, 'yes')
+if strcmp(cfg.feedback, 'yes') && ~hasatlas
   % give some graphical feedback
   tmpcfg = keepfields(cfg, {'layout', 'rows', 'columns', 'commentpos', 'skipcomnt', 'scalepos', 'skipscale', 'projection', 'viewpoint', 'rotate', 'width', 'height', 'elec', 'grad', 'opto', 'showcallinfo'});
   tmpcfg.neighbours = neighbours;
@@ -321,6 +403,8 @@ if strcmp(cfg.feedback, 'yes')
   else
     ft_neighbourplot(tmpcfg);
   end
+elseif strcmp(cfg.feedback, 'yes')
+  ft_notice('no visual feedback about the neighbours is possible with the current input');
 end
 
 % do the general cleanup and bookkeeping at the end of the function
@@ -332,17 +416,17 @@ ft_postamble history    neighbours
 ft_postamble savevar    neighbours
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION that compute the neighbourhood geometry from the
 % gradiometer/electrode positions
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [neighbours] = compneighbstructfrompos(chanpos, label, neighbourdist)
 
 nchan = length(label);
 
 % compute the distance between all sensors
 dist = zeros(nchan,nchan);
-for i=1:nchan
+for i = 1:nchan
   dist(i,:) = sqrt(sum((chanpos(1:nchan,:) - repmat(chanpos(i,:), nchan, 1)).^2,2))';
 end
 
@@ -356,17 +440,17 @@ channeighbstructmat = (channeighbstructmat .* ~eye(nchan));
 % convert back to logical
 channeighbstructmat = logical(channeighbstructmat);
 
-% construct a structured cell-array with all neighbours
+% construct a struct-array with all neighbours
 neighbours=struct;
-for i=1:nchan
+for i = 1:nchan
   neighbours(i).label       = label{i};
   neighbours(i).neighblabel = label(channeighbstructmat(i,:));
 end
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION that computes the neighbourhood geometry from the
 % triangulation
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [neighbours] = compneighbstructfromtri(chanpos, label, tri)
 
 nchan = length(label);
@@ -385,7 +469,7 @@ end
 % construct a structured cell-array with all neighbours
 neighbours = struct;
 alldist = [];
-for i=1:nchan
+for i = 1:nchan
   neighbours(i).label       = label{i};
   neighbidx                 = find(channeighbstructmat(i,:));
   neighbours(i).dist        = sqrt(sum((repmat(chanpos(i, :), numel(neighbidx), 1) - chanpos(neighbidx, :)).^2, 2));
@@ -402,3 +486,14 @@ for i=1:nchan
   neighbours(i).neighblabel(idx)  = [];
 end
 neighbours = rmfield(neighbours, 'dist');
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION that ensures a consistent triangulation
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function [newtri] = tri_reindex(tri)
+
+% this subfunction reindexes tri such that they run from 1:number of unique vertices
+newtri       = tri;
+[srt, indx]  = sort(tri(:));
+tmp          = cumsum(double(diff([0;srt])>0));
+newtri(indx) = tmp;
