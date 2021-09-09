@@ -37,8 +37,7 @@ function [neighbours, cfg] = ft_prepare_neighbours(cfg, data)
 %
 % With an atlas in the input, the method 'parcellation' has the additional
 % options
-%   cfg.parcellation  = string that denotes the field in the atlast that
-%                       parcellation to be used
+%   cfg.parcellation  = string that denotes the field in the atlas that is to be used
 %
 % The output is an array of structures with the "neighbours" which is
 % structured like this:
