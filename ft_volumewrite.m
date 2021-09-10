@@ -127,8 +127,6 @@ cfg.markorigin   = ft_getopt(cfg, 'markorigin',   'no');
 cfg.markfiducial = ft_getopt(cfg, 'markfiducial', 'no');
 cfg.markcorner   = ft_getopt(cfg, 'markcorner',   'no');
 cfg.spmversion   = ft_getopt(cfg, 'spmversion',   'spm12');
-
-
 cfg.datatype     = ft_getopt(cfg, 'datatype');
 cfg.scaling      = ft_getopt(cfg, 'scaling');
 
