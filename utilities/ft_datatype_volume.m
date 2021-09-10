@@ -11,7 +11,7 @@ function [volume] = ft_datatype_volume(volume, varargin)
 % An example volume structure is
 %       anatomy: [181x217x181 double]  the numeric data, in this case anatomical information
 %           dim: [181 217 181]         the dimensionality of the 3D volume
-%     transform: [4x4 double]          affine transformation matrix for mapping the voxel coordinates to the head coordinate system
+%     transform: [4x4 double]          4x4 homogenous transformation matrix, specifying the transformation from voxel coordinates to head or world coordinates
 %          unit: 'mm'                  geometrical units of the coordinate system
 %      coordsys: 'ctf'                 description of the coordinate system
 %
