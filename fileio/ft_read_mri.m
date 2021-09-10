@@ -192,9 +192,9 @@ switch dataformat
     
     try
       % The nifti header allows three methods for specifying the coordinates of the
-      % voxels. For two of the methods (sform and qform), the header contains a
-      % numerical code from 0 to 4 that specifies the coordinate system. SPM8 and
-      % SPM12 use a field in the private header of the nifti object to code this.
+      % voxels. For two of them (sform and qform), the header contains a numerical
+      % code from 0 to 4 that specifies the coordinate system. SPM8 and SPM12 use a
+      % field in the private header of the nifti object to code this.
       switch hdr.private.mat_intent
         case 'UNKNOWN'
           coordsys = 'unknown';
@@ -210,7 +210,7 @@ switch dataformat
       
       % We cannot trust it yet, see https://github.com/fieldtrip/fieldtrip/issues/1879
       ft_notice('the coordinate system from the NIfTI file appears to be ''%s''\n', coordsys);
-      coordsys = 'unknown';
+      clear coordsys
     end
     
     
@@ -453,8 +453,8 @@ switch dataformat
     
     if isfield(hdr, 'niftihdr')
       % The nifti header allows three methods for specifying the coordinates of the
-      % voxels. For two of the methods (sform and qform), the header contains a
-      % numerical code that specifies the coordinate system.
+      % voxels. For two of them (sform and qform), the header contains a numerical
+      % code that specifies the coordinate system.
       coordsys = {'unknown', 'scanras', 'aligned', 'tal', 'mni152'}; % corresponding to 0, 1, 2, 3, 4
       if isequal(hdr.vox2ras0, hdr.niftihdr.sform)
         coordsys = coordsys{hdr.niftihdr.sform_code + 1};
@@ -466,7 +466,7 @@ switch dataformat
       
       % We cannot trust it yet, see https://github.com/fieldtrip/fieldtrip/issues/1879
       ft_notice('the coordinate system from the NIfTI file appears to be ''%s''\n', coordsys);
-      coordsys = 'unknown';
+      clear coordsys
     end
     
   case 'yokogawa_mri'
