@@ -1154,11 +1154,13 @@ switch cfg.method
         % ensure that the units are consistent, convert the units if required
         surf = ft_convert_units(surf, functional.unit);
       end
-      if isfield(functional, 'coordsys')
+      if isfield(functional, 'coordsys') && isfield(surf, 'coordsys')
         % ensure that the coordinate systems match
         functional = fixcoordsys(functional);
         surf       = fixcoordsys(surf);
         assert(isequal(functional.coordsys, surf.coordsys), 'coordinate systems do not match');
+      else
+        ft_notice('assuming that the coordinate systems match');
       end
       
       % downsample the cortical surface
