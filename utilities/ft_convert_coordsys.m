@@ -28,7 +28,7 @@ function [object] = ft_convert_coordsys(object, target, varargin)
 % Recognized and supported coordinate systems are 'ctf', 'bti', '4d', 'yokogawa',
 % 'eeglab', 'neuromag', 'itab', 'acpc', 'spm', 'mni', 'fsaverage', 'tal', 'scanras',
 % 'scanlps', 'dicom'.
-% 
+%
 % Furthermore, supported coordinate systems that do not specify the origin are 'ras',
 % 'als', 'lps', etc. See https://www.fieldtriptoolbox.org/faq/coordsys for more
 % details.
@@ -259,7 +259,7 @@ tal2ras       = eye(4);
 % the SCANRAS coordinate system is RAS with the origin at the center opf the gradient coil
 scanras2ras     = eye(4);
 
-% the DICOM and SCANALS coordinate system are the same, and rotated 180 degrees from SCANRAS
+% the DICOM and SCANLPS coordinate system are the same, and rotated 180 degrees from SCANRAS
 dicom2scanlps   = eye(4);
 dicom2lps       = eye(4);
 scanlps2lps     = eye(4);
