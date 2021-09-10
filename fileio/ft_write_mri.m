@@ -1,13 +1,13 @@
 function [V] = ft_write_mri(filename, dat, varargin)
 
-% FT_WRITE_MRI exports volumetric data such as anatomical and functional
-% MRI to a file.
+% FT_WRITE_MRI exports volumetric data such as anatomical and functional MRI
+% to a file.
 %
 % Use as
 %   ft_write_mri(filename, dat, ...)
-% where the input argument dat represents the 3-D array with the values.
+% where the input argument dat represents the 3D array with the values.
 %
-% The 3-D array with the values can be further described with 
+% The 3-D array with the values can be further described with
 %   'transform'    = 4x4 homogenous transformation matrix, specifying the transformation from voxel coordinates to head or world coordinates
 %   'unit'         = string, geometrical units of the coordinate system
 %   'coordsys'     = string, description of the coordinate system
@@ -23,15 +23,16 @@ function [V] = ft_write_mri(filename, dat, varargin)
 % it will be added automatically.
 %
 % The supported dataformats are
-%   'analyze'   outdated format and not recommended
-%   'mgz'       FreeSurfer specific format
-%   'mgh'       FreeSurfer specific format
-%   'nifti'
-%   'nifti2'
-%   'nifti_gz'
-%   'vista'     SIMBIO specific format
-%   'vmr'       Brainvoyager specific format
-%   'vmp'       Brainvoyager specific format
+%   'analyze'     outdated format and not recommended
+%   'mgz'         FreeSurfer specific format
+%   'mgh'         FreeSurfer specific format
+%   'nifti'     	uses FreeSurfer code
+%   'nifti2'      uses FreeSurfer code
+%   'nifti_gz'    uses FreeSurfer code
+%   'nifti_spm'   uses SPM
+%   'vista'       SIMBIO specific format
+%   'vmr'         Brainvoyager specific format
+%   'vmp'         Brainvoyager specific format
 %
 % See also FT_READ_MRI, FT_WRITE_DATA, FT_WRITE_HEADSHAPE
 
@@ -56,38 +57,89 @@ function [V] = ft_write_mri(filename, dat, varargin)
 % $Id$
 
 % get the options
-transform     = ft_getopt(varargin, 'transform',  eye(4));
+transform     = ft_getopt(varargin, 'transform');   % this complements the input data when specified as a 3D array
+unit          = ft_getopt(varargin, 'unit');        % this complements the input data when specified as a 3D array
+coordsys      = ft_getopt(varargin, 'coordsys');    % this complements the input data when specified as a 3D array
 spmversion    = ft_getopt(varargin, 'spmversion', 'spm12');
-dataformat    = ft_getopt(varargin, 'dataformat'); % FIXME this is inconsistent with ft_read_mri, which uses 'format'
-unit          = ft_getopt(varargin, 'unit');
+dataformat    = ft_getopt(varargin, 'dataformat');
 scl_slope     = ft_getopt(varargin, 'scl_slope', 1);
 scl_inter     = ft_getopt(varargin, 'scl_inter', 0);
 
-% convert the input to the desired units
-if ~isempty(unit)
-  % organize the input data as a FieldTrip structure and estimate its units
-  tmp.anatomy   = dat;
-  tmp.dim       = size(dat);
-  tmp.transform = transform;
-  % convert  the input data to the desired units
-  tmp = ft_convert_units(tmp, unit);
-  % the transformation matrix is the only thing that would have changed
-  transform = tmp.transform;
+%% ensure that the input data is consistent
+if isnumeric(dat)
+  % convert the data to a structure according to FT_DATATYPE_VOLUME and FT_READ_MRI
+  mri.anatomy = dat;
+  mri.dim     = size(dat);
+  clear dat % to avoid confusion
+  if ~isempty(transform)
+    mri.transform = transform;
+  else
+    mri.coordsys = eye(4);
+  end
+  if ~isempty(unit)
+    mri.unit = unit;
+  else
+    mri = ft_determine_units(mri);
+  end
+  if ~isempty(coordsys)
+    mri.coordsys = coordsys;
+  else
+    mri.coordsys = 'unknown';
+  end
+elseif ft_datatype(dat, 'volume')
+  % assume that the data is specified according to FT_DATATYPE_VOLUME and FT_READ_MRI
+  mri = dat;
+  clear dat % to avoid confusion
+  if ~isempty(transform) && ~isequal(transform, mri.transform)
+    ft_error('the transformation matrices are not consistent');
+  end
+  if ~isempty(unit)
+    % convert it to the specified units, this will also estimate the units if required
+    mri = ft_convert_units(mri, unit);
+  end
+  if ~isempty(coordsys)
+    % convert it to the specified coordinate system, this will also interactively determine the coordinate system if required
+    mri = ft_convert_coordsys(mri, coordsys);
+  end
+else
+  ft_error('unsupported input data');
 end
 
-if isstruct(dat) && isfield(dat, 'anatomy') && isequal(transform, eye(4))
-  % this is an anatomical MRI as returned by FT_READ_MRI
-  transform = dat.transform;
-  dat       = dat.anatomy;
-end
+% decompose the input data into separate fields
+dat         = mri.anatomy;
+transform   = mri.transform;
+dim         = mri.dim;
+unit        = mri.unit;
+coordsys    = mri.coordsys;
+clear mri % to avoid confusion
 
+%% determine the details of the output format
 if isempty(dataformat)
   % only do the autodetection if the format was not specified
   dataformat = ft_filetype(filename);
 end
 
+% determine the filename extension
+[p, f, x] = fileparts(filename);
+if isempty(x)
+  switch  dataformat
+    case {'vmr', 'vmp', 'mgz', 'mgh'}
+      x = ['.' dataformat];
+    case {'analyze_old', 'analyze_img', 'analyze_hdr', 'analyze', 'nifti_img'}
+      x = '.img';
+    case {'freesurfer_mgz'}
+      x = '.mgz';
+    case {'nifti_spm', 'nifti',  'nifti2'}
+      x = '.nii';
+    case {'nifti_gz'}
+      x = '.nii.gz';
+  end
+  % ensure that the filename has an extension
+  filename = fullfile(p, [f x]);
+end
+
 if nargout>0
-  % start with an empty output argument, it will only be returned by the SPM formats
+  % this will be updated by the SPM code and otherwise not used
   V = [];
 end
 
@@ -96,31 +148,28 @@ if ~ismember(dataformat, {'empty', 'fcdc_global', 'fcdc_buffer', 'fcdc_mysql'})
   isdir_or_mkdir(fileparts(filename));
 end
 
+%% write the data
 switch dataformat
   
   case {'vmr' 'vmp'}
-    % brainvoyager file formats
+    %% write to brainvoyager format
     vmpversion = ft_getopt(varargin, 'vmpversion', 2);
     write_brainvoyager(filename, dat, dataformat, vmpversion);
     
   case {'analyze_old'}
-    % analyze format, using old code
-    
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % write in Analyze format, using some functions from Darren Webbers toolbox
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %% write to Analyze format, using old code and functions from Darren Webbers toolbox
     avw = avw_hdr_make;
-
+    
     % specify the image data and dimensions
     avw.hdr.dime.dim(2:4) = size(dat);
     avw.img = dat;
-
+    
     % orientation 0 means transverse unflipped (axial, radiological)
     % X direction first,  progressing from patient right to left,
     % Y direction second, progressing from patient posterior to anterior,
     % Z direction third,  progressing from patient inferior to superior.
     avw.hdr.hist.orient = 0;
-
+    
     % specify voxel size
     avw.hdr.dime.pixdim(2:4) = [1 1 1];
     % FIXME, this currently does not work due to all flipping and permuting
@@ -128,7 +177,7 @@ switch dataformat
     % resy = y(2)-y(1);
     % resz = z(2)-z(1);
     % avw.hdr.dime.pixdim(2:4) = [resy resx resz];
-
+    
     % specify the data type
     switch class(dat)
       case 'logical'
@@ -150,18 +199,18 @@ switch dataformat
         avw.hdr.dime.datatype = 64;
         avw.hdr.dime.bitpix   = 64;
       otherwise
-        ft_error('unsupported datatype %s to write to analyze_old format', class(dat));
+        ft_error('unsupported datatype "%s" to write to analyze_old format', class(dat));
     end
-
+    
     % write the header and image data
     avw_img_write(avw, filename, [], 'ieee-le');
     
   case {'analyze_img' 'analyze_hdr' 'analyze' 'nifti_img' 'nifti_spm'}
-    % analyze or nifti data, using SPM
+    %% analyze or nifti data, using SPM
     V = volumewrite_spm(filename, dat, transform, spmversion, scl_slope, scl_inter);
     
   case {'freesurfer_mgz' 'mgz' 'mgh'}
-    % mgz data, using Freesurfer
+    %% mgz data, using Freesurfer
     ft_hastoolbox('freesurfer', 1);
     
     % in MATLAB the transformation matrix assumes the voxel indices to be 1-based
@@ -170,7 +219,7 @@ switch dataformat
     save_mgh(dat, filename, transform);
     
   case {'nifti' 'nifti_gz' 'nifti2'}
-    % nifti data, using Freesurfer
+    %% nifti data, using Freesurfer
     ft_hastoolbox('freesurfer', 1);
     
     datatype = class(dat);
@@ -188,7 +237,7 @@ switch dataformat
       case 'uint8'
         datatype = 'uchar';
       otherwise
-        ft_error('unsupported datatype to write to a nifti file');
+        ft_error('unsupported datatype "s" to write to nifti format', datatype);
     end
     
     ndims = numel(size(dat));
@@ -211,7 +260,7 @@ switch dataformat
     MRIwrite(mri, filename, datatype);
     
   case {'vista'}
-    % this requires the SIMBIO/Vista toolbox
+    %% this requires the SIMBIO/Vista toolbox
     ft_hastoolbox('simbio', 1);
     write_vista_vol(size(dat), dat, filename);
     
