@@ -60,10 +60,15 @@ function [V] = ft_write_mri(filename, dat, varargin)
 transform     = ft_getopt(varargin, 'transform');   % this complements the input data when specified as a 3D array
 unit          = ft_getopt(varargin, 'unit');        % this complements the input data when specified as a 3D array
 coordsys      = ft_getopt(varargin, 'coordsys');    % this complements the input data when specified as a 3D array
-spmversion    = ft_getopt(varargin, 'spmversion', 'spm12');
+spmversion    = ft_getopt(varargin, 'spmversion');
 dataformat    = ft_getopt(varargin, 'dataformat');
 scl_slope     = ft_getopt(varargin, 'scl_slope', 1);
 scl_inter     = ft_getopt(varargin, 'scl_inter', 0);
+
+% use the version that is on the path, or default to spm12
+if ~ft_hastoolbox('spm') && isempty(spmversion)
+  spmversion = 'spm12';
+end
 
 %% ensure that the input data is consistent
 if isnumeric(dat)

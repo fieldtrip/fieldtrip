@@ -95,7 +95,12 @@ filename = fetch_url(filename);
 % get the options
 dataformat  = ft_getopt(varargin, 'dataformat');
 outputfield = ft_getopt(varargin, 'outputfield', 'anatomy');
-spmversion  = ft_getopt(varargin, 'spmversion', 'spm12'); % this default is not used for minc files
+spmversion  = ft_getopt(varargin, 'spmversion');
+
+% use the version that is on the path, or default to spm12
+if ~ft_hastoolbox('spm') && isempty(spmversion)
+  spmversion = 'spm12';
+end
 
 % the following is added for backward compatibility of using 'format' rather than 'dataformat'
 format    = ft_getopt(varargin, 'format');
