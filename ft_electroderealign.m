@@ -672,7 +672,7 @@ switch cfg.method
     % remember the transformation
     elec_realigned.homogeneous = norm.m;
     
-  case {'project', 'moveinward'}
+  case {'project', 'moveinward', 'mni'}
     % nothing to be done
     elec_realigned = norm;
     elec_realigned.label = label_original;
@@ -716,6 +716,13 @@ switch cfg.method
     if isfield(elec_original, 'coordsys')
       elec_realigned.coordsys = elec_original.coordsys;
     end
+  case {'mni'}
+    % the coordinate system remains the same
+    if isfield(normalise, 'coordsys')
+      elec_realigned.coordsys = normalise.coordsys;
+    else
+      elec_realigned.coordsys = 'mni';
+    end  
   otherwise
     ft_error('unknown method');
 end
