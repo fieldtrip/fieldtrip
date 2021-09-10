@@ -110,9 +110,9 @@ if isempty(dataformat)
   dataformat = ft_filetype(filename);
 end
 
-if strcmp(dataformat, 'compressed') || (strcmp(dataformat, 'freesurfer_mgz') && ispc)
-  % the file is compressed, unzip on the fly, freesurfer mgz files get
-  % special treatment on a pc
+if strcmp(dataformat, 'compressed') || (strcmp(dataformat, 'freesurfer_mgz') && ispc) || any(filetype_check_extension(filename, {'gz', 'zip', 'tar', 'tgz'}))
+  % the file is compressed, unzip on the fly, 
+  % freesurfer mgz files get special treatment only on a pc  
   inflated = true;
   filename = inflate_file(filename);
   if strcmp(dataformat, 'freesurfer_mgz')
@@ -120,7 +120,11 @@ if strcmp(dataformat, 'compressed') || (strcmp(dataformat, 'freesurfer_mgz') && 
     filename     = [filename '.mgh'];
     movefile(filename_old, filename);
   end
-  dataformat = ft_filetype(filename);
+  if ~strcmp(dataformat, 'nifti_spm')
+    % replace it with the filetype's default format, but don't overwrite in
+    % case dataformat was nifti_spm
+    dataformat = ft_filetype(filename);
+  end
 else
   inflated = false;
 end
