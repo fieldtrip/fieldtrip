@@ -540,12 +540,15 @@ end
 try
   % store the homogenous transformation matrix if present
   mri.transform = transform;
+catch
+  % don't store anything if not present
 end
 
 try
   % determine the geometrical units in which it is expressed
   mri.unit = unit;
 catch
+  % estimate the units from the data
   mri = ft_determine_units(mri);
 end
 
@@ -553,7 +556,7 @@ try
   % add a descriptive label for the coordinate system
   mri.coordsys = coordsys;
 catch
-  mri.coordsys = 'unknown';
+  % don't store anything if not present
 end
 
 if inflated
