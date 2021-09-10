@@ -36,9 +36,9 @@ assert(isequal(neighbours(8).neighblabel, {'4' '5' '7'}));
 
 % make some data
 data = [];
-data.trial = randn(100, 8, 1);
-data.trial(1:50, [1 2], :) = data.trial(1:50, [1 2], :) + 2;
-data.trial(1:50, [6 7], :) = data.trial(1:50, [6 7], :) - 2;
+data.trial = randn(200, 8, 1);
+data.trial(1:100, [1 2], :) = data.trial(1:100, [1 2], :) + 2;
+data.trial(1:100, [6 7], :) = data.trial(1:100, [6 7], :) - 2;
 data.dimord = 'rpt_chan_time';
 data.time = 1;
 data.label = atlas.parcellationlabel;
@@ -46,10 +46,11 @@ data.label = atlas.parcellationlabel;
 cfg           = [];
 cfg.method    = 'montecarlo';
 cfg.numrandomization = 1000;
-cfg.design    = [ones(1,50) ones(1,50)*2];
+cfg.design    = [ones(1,100) ones(1,100)*2];
 cfg.statistic = 'indepsamplesT';
 cfg.correctm  = 'cluster';
 cfg.neighbours = neighbours;
+cfg.clusteralpha = 0.0001;
 stat = ft_timelockstatistics(cfg, data);
 
 assert(isequal(stat.posclusterslabelmat, [1 1 0 0 0 0 0 0]'));
