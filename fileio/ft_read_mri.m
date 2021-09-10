@@ -11,7 +11,7 @@ function [mri] = ft_read_mri(filename, varargin)
 %   'dataformat'  = string specifying the file format, determining the low-level
 %                   reading routine to be used. If no explicit format is given,
 %                   it is determined automatically from the filename.
-%   'volumes'     = vector with the volume indices to read from a 4-D nifti (only for 'nifti_spm')
+%   'volumes'     = vector with the volume indices to read from a 4D nifti (only for 'nifti_spm')
 %   'outputfield' = string specifying the name of the field in the structure in which the
 %                   numeric data is stored (only for 'mrtrix_mif', default = 'anatomy')
 %   'fixel2voxel' = string, the operation to apply to the fixels belonging to the
