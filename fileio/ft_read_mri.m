@@ -18,6 +18,7 @@ function [mri] = ft_read_mri(filename, varargin)
 %                  same voxel, can be 'max', 'min', 'mean' (only for 'mrtrix_mif', default = 'max')
 %   'indexfile'   = string, pointing to a fixel index file, if not present in the same directory
 %                   as the functional data (only for 'mrtrix_mif')
+%   'spmversion'  = string, version of SPM to be used (default = 'spm12')
 %
 % The supported dataformats are
 %   'afni_head'/'afni_brik'      uses AFNI code
@@ -94,6 +95,7 @@ filename = fetch_url(filename);
 % get the options
 dataformat  = ft_getopt(varargin, 'dataformat');
 outputfield = ft_getopt(varargin, 'outputfield', 'anatomy');
+spmversion  = ft_getopt(varargin, 'spmversion', 'spm12'); % this default is not used for minc files
 
 % the following is added for backward compatibility of using 'format' rather than 'dataformat'
 format    = ft_getopt(varargin, 'format');
@@ -110,8 +112,8 @@ if isempty(dataformat)
 end
 
 if strcmp(dataformat, 'compressed') || (strcmp(dataformat, 'freesurfer_mgz') && ispc) || any(filetype_check_extension(filename, {'gz', 'zip', 'tar', 'tgz'}))
-  % the file is compressed, unzip on the fly, 
-  % freesurfer mgz files get special treatment only on a pc  
+  % the file is compressed, unzip on the fly,
+  % freesurfer mgz files get special treatment only on a pc
   inflated = true;
   filename = inflate_file(filename);
   if strcmp(dataformat, 'freesurfer_mgz')
@@ -175,7 +177,7 @@ switch dataformat
   case 'nifti_spm'
     if ~(hasspm5 || hasspm8 || hasspm12)
       fprintf('the SPM5 or newer toolbox is required to read *.nii files\n');
-      ft_hastoolbox('spm12', 1);
+      ft_hastoolbox(spmversion, 1);
     end
     volumes = ft_getopt(varargin, 'volumes', []);
     
@@ -209,7 +211,7 @@ switch dataformat
       end
       
       % We cannot trust it yet, see https://github.com/fieldtrip/fieldtrip/issues/1879
-      ft_notice('the coordinate system from the NIfTI file appears to be ''%s''\n', coordsys);
+      ft_notice('the coordinate system appears to be ''%s''\n', coordsys);
       clear coordsys
     end
     
@@ -217,7 +219,7 @@ switch dataformat
   case {'analyze_img' 'analyze_hdr'}
     if ~(hasspm8 || hasspm12)
       fprintf('the SPM8 or newer toolbox is required to read analyze files\n');
-      ft_hastoolbox('spm8up', 1);
+      ft_hastoolbox(spmversion, 1);
     end
     
     % use the image file instead of the header
@@ -465,7 +467,7 @@ switch dataformat
       end
       
       % We cannot trust it yet, see https://github.com/fieldtrip/fieldtrip/issues/1879
-      ft_notice('the coordinate system from the NIfTI file appears to be ''%s''\n', coordsys);
+      ft_notice('the coordinate system appears to be ''%s''\n', coordsys);
       clear coordsys
     end
     
