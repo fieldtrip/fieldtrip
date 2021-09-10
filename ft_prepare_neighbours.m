@@ -95,7 +95,7 @@ end
 
 % the data can be passed as input arguments or can be read from disk
 hasdata  = exist('data', 'var');
-hasatlas = hasdata && (ft_datatype(data, 'mesh+label') || ft_datatype(data, 'volume+label' || ft_datatype(data, 'source+label'))); 
+hasatlas = hasdata && (ft_datatype(data, 'mesh+label') || ft_datatype(data, 'volume+label') || ft_datatype(data, 'source+label')); 
 
 % these undocumented methods are needed to support some of the high-level FT functions that call this function
 if ~isfield(cfg, 'method')
