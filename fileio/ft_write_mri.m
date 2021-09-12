@@ -71,7 +71,7 @@ if ~ft_hastoolbox('spm') && isempty(spmversion)
 end
 
 %% ensure that the input data is consistent
-if isnumeric(dat)
+if isnumeric(dat) || islogical(dat)
   % convert the data to a structure according to FT_DATATYPE_VOLUME and FT_READ_MRI
   mri.anatomy = dat;
   mri.dim     = size(dat);
