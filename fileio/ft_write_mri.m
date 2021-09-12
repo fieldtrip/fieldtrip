@@ -9,8 +9,8 @@ function [V] = ft_write_mri(filename, dat, varargin)
 %
 % The 3-D array with the values can be further described with
 %   'transform'    = 4x4 homogenous transformation matrix, specifying the transformation from voxel coordinates to head or world coordinates
-%   'unit'         = string, geometrical units of the coordinate system
-%   'coordsys'     = string, description of the coordinate system
+%   'unit'         = string, desired geometrical units for the data, for example 'mm'
+%   'coordsys'     = string, desired coordinate system for the data
 %
 % Additional options should be specified in key-value pairs and can be
 %   'dataformat'   = string, see below
