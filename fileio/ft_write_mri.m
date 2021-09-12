@@ -105,6 +105,8 @@ elseif ft_datatype(dat, 'volume')
   if ~isempty(coordsys)
     % convert it to the specified coordinate system, this will also interactively determine the coordinate system if required
     mri = ft_convert_coordsys(mri, coordsys);
+  elseif ~isfield(mri, 'coordsys')
+    mri.coordsys = 'unknown';
   end
 else
   ft_error('unsupported input data');
