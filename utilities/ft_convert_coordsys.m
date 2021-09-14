@@ -25,8 +25,13 @@ function [object] = ft_convert_coordsys(object, target, varargin)
 %   segmented mri, see FT_DATATYPE_SEGMENTATION
 %   anatomical or functional atlas, see FT_READ_ATLAS
 %
-% Possible input coordinate systems are 'ctf', '4d', 'bti', 'yokogawa', 'eeglab', 'neuromag' and 'itab'.
-% Possible target coordinate systems are 'acpc', 'ras', 'als', etc.
+% Recognized and supported coordinate systems are 'ctf', 'bti', '4d', 'yokogawa',
+% 'eeglab', 'neuromag', 'itab', 'acpc', 'spm', 'mni', 'fsaverage', 'tal', 'scanras',
+% 'scanlps', 'dicom'.
+%
+% Furthermore, supported coordinate systems that do not specify the origin are 'ras',
+% 'als', 'lps', etc. See https://www.fieldtriptoolbox.org/faq/coordsys for more
+% details.
 %
 % Note that the conversion will be an automatic and approximate conversion, not
 % taking into account differences in individual anatomies/differences in conventions
@@ -124,6 +129,7 @@ end
 %   s = superior
 %   i = inferior
 
+% the generic ones specify the axes but no origin
 generic = {
   'als'; 'ali'; 'ars'; 'ari';...
   'pls'; 'pli'; 'prs'; 'pri';...
@@ -138,7 +144,8 @@ generic = {
   'lsa'; 'lia'; 'rsa'; 'ria';...
   'lsp'; 'lip'; 'rsp'; 'rip'}';
 
-specific = {'ctf', 'bti', 'fourd', 'yokogawa', 'eeglab', 'neuromag', 'itab', 'acpc', 'spm', 'mni', 'fsaverage', 'tal', 'scanras', 'scanlps', 'dicom', 'nifti'};
+% the specific ones specify the axes and also the origin
+specific = {'ctf', 'bti', 'fourd', 'yokogawa', 'eeglab', 'neuromag', 'itab', 'acpc', 'spm', 'mni', 'fsaverage', 'tal', 'scanras', 'scanlps', 'dicom'};
 
 % generic orientation triplets (like RAS and ALS) are not specific with regard to the origin
 if ismember(object.coordsys, generic) && strcmp(target, 'acpc')
@@ -162,10 +169,10 @@ end
 
 % this is based on the ear canals, see ALIGN_CTF2ACPC
 acpc2ctf = [
-  0.0000  0.9987  0.0517  34.7467
+   0.0000  0.9987  0.0517  34.7467
   -1.0000  0.0000  0.0000   0.0000
-  0.0000 -0.0517  0.9987  52.2749
-  0.0000  0.0000  0.0000   1.0000
+   0.0000 -0.0517  0.9987  52.2749
+   0.0000  0.0000  0.0000   1.0000
   ];
 
 % this is based on the ear canals, see ALIGN_NEUROMAG2ACPC
@@ -178,10 +185,10 @@ acpc2neuromag = [
 
 % see http://freesurfer.net/fswiki/CoordinateSystems
 fsaverage2mni = [
-  0.9975   -0.0073    0.0176   -0.0429
-  0.0146    1.0009   -0.0024    1.5496
+   0.9975   -0.0073    0.0176   -0.0429
+   0.0146    1.0009   -0.0024    1.5496
   -0.0130   -0.0093    0.9971    1.1840
-  0.0000    0.0000    0.0000    1.0000
+   0.0000    0.0000    0.0000    1.0000
   ];
 
 % this is a 90 degree rotation around the z-axis
@@ -216,13 +223,13 @@ ctf2bti = eye(4);
 % the CTF and EEGLAB coordinate system are the same, see http://www.fieldtriptoolbox.org/faq/coordsys/
 ctf2eeglab = eye(4);
 
-% the Neuromag and Itab coordinate system are the same, see http://www.fieldtriptoolbox.org/faq/coordsys/
+% the NEUROMAG and ITAB coordinate system are the same, see http://www.fieldtriptoolbox.org/faq/coordsys/
 neuromag2itab = eye(4);
 
 % BTI and 4D are different names for exactly the same system, see http://www.fieldtriptoolbox.org/faq/coordsys/
 bti2fourd = eye(4);
 
-% the Yokogawa system expresses positions relative to the dewar, not relative to the head
+% the YOKOGAWA system expresses positions relative to the dewar, not relative to the head
 % see https://www.fieldtriptoolbox.org/faq/coordsys/#details-of-the-yokogawa-coordinate-system
 yokogawa2als = eye(4);
 
@@ -239,7 +246,7 @@ ctf2als   = eye(4);
 bti2als   = eye(4);
 fourd2als = eye(4);
 
-% the Neuromag, Itab, ACPC, MNI, SPM and FSAVERAGE coordinate systems are all RAS coordinate systems
+% the NEUROMAG, ITAB, ACPC, MNI, SPM and FSAVERAGE coordinate systems are all RAS coordinate systems
 % but the origin is poorly defined in RAS, hence converting from RAS to another is problematic
 neuromag2ras  = eye(4);
 itab2ras      = eye(4);
@@ -249,16 +256,14 @@ spm2ras       = eye(4);
 fsaverage2ras = eye(4);
 tal2ras       = eye(4);
 
-% the NIFTI, and SCANRAS coordinate system are the same
-% the DICOM and SCANALS coordinate system are the same, and rotated 180 degrees from SCANRAS
-nifti2scanras   = eye(4);
-nifti2ras       = eye(4);
+% the SCANRAS coordinate system is RAS with the origin at the center opf the gradient coil
 scanras2ras     = eye(4);
+
+% the DICOM and SCANLPS coordinate system are the same, and rotated 180 degrees from SCANRAS
 dicom2scanlps   = eye(4);
 dicom2lps       = eye(4);
 scanlps2lps     = eye(4);
 scanlps2scanras = lps2ras; % this is a 180 degree rotation around the z-axis
-dicom2nifti     = lps2ras; % this is a 180 degree rotation around the z-axis
 
 % make the combined and the inverse transformations where possible
 coordsys = [specific generic];
