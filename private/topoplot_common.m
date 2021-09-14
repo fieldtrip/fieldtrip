@@ -195,18 +195,16 @@ if isfield(cfg, 'colormap')
   if size(cfg.colormap,2)~=3
     ft_error('cfg.colormap must be Nx3');
   end
-  ft_colormap(cfg.colormap);
-  ncolors = size(cfg.colormap,1);
-else
-  ncolors = []; % let the low-level function deal with this
 end
 
 Ndata = numel(varargin);
-
 for indx=1:Ndata
   
   % open a new figure, or add it to the existing one
   open_figure(keepfields(cfg, {'figure', 'position', 'visible', 'renderer', 'figurename', 'title'}));
+  if isfield(cfg, 'colormap')
+    ft_colormap(cfg.colormap);
+  end
   
   if iscell(cfg.dataname)
     dataname = cfg.dataname{indx};
@@ -601,7 +599,6 @@ for indx=1:Ndata
     opt = ft_setopt(opt, 'datmask',       msk);
     if strcmp(style, 'imsat') || strcmp(style, 'imsatiso')
       opt = ft_setopt(opt, 'clim',  [zmin zmax]);
-      opt = ft_setopt(opt, 'ncolors',  ncolors);
     end
     ft_plot_topo(chanX, chanY, dat, opt{:});
   end
