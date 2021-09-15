@@ -2131,6 +2131,10 @@ if strcmp(cfg.viewmode, 'component')
       % plot the topography of this component
       laysel = match_str(opt.laytime.label, opt.hdr.label(chanindx(i)));
       chanz = opt.orgdata.topo(sel1,chanindx(i));
+      if all(chanz==0)
+        % this is most likely a channel that is not a component, and has been added later on
+        continue;
+      end
       
       if strcmp(cfg.compscale, 'local')
         % compute scaling factors for each individual component
