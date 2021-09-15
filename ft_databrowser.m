@@ -49,6 +49,8 @@ function [cfg] = ft_databrowser(cfg, data)
 %   cfg.visible                 = string, 'on' or 'off' whether figure will be visible (default = 'on')
 %   cfg.position                = location and size of the figure, specified as a vector of the form [left bottom width height]
 %   cfg.renderer                = string, 'opengl', 'zbuffer', 'painters', see MATLAB Figure Properties. If this function crashes, you should try 'painters'.
+%   cfg.colormap                = string, or Nx3 matrix, colormap for the
+%                                  to-be-shown topographies (see FT_COLORMAP)
 %
 % The following options for the scaling of the EEG, EOG, ECG, EMG, MEG and NIRS channels
 % is optional and can be used to bring the absolute numbers of the different
@@ -205,6 +207,7 @@ cfg.chanscale           = ft_getopt(cfg, 'chanscale');
 cfg.mychanscale         = ft_getopt(cfg, 'mychanscale');
 cfg.mychan              = ft_getopt(cfg, 'mychan');
 cfg.layout              = ft_getopt(cfg, 'layout');
+cfg.colormap            = ft_getopt(cfg, 'colormap');
 cfg.plotlabels          = ft_getopt(cfg, 'plotlabels', 'some');
 cfg.event               = ft_getopt(cfg, 'event');                       % this only exists for backward compatibility and should not be documented
 cfg.continuous          = ft_getopt(cfg, 'continuous');                  % the default is set further down in the code, conditional on the input data
@@ -589,11 +592,13 @@ elseif isempty(cfg.selfun) && isempty(cfg.selcfg)
   % topoplotER
   cfg.selcfg{3} = [];
   cfg.selcfg{3}.linecolor = linecolor;
-  cfg.selcfg{3}.layout = cfg.layout;
+  cfg.selcfg{3}.layout    = cfg.layout;
+  cfg.selcfg{3}.colormap  = cfg.colormap;
   cfg.selfun{3} = 'topoplotER';
   % topoplotVAR
   cfg.selcfg{4} = [];
-  cfg.selcfg{4}.layout = cfg.layout;
+  cfg.selcfg{4}.layout   = cfg.layout;
+  cfg.selcfg{4}.colormap = cfg.colormap;
   cfg.selfun{4} = 'topoplotVAR';
   % movieplotER
   cfg.selcfg{5} = [];
@@ -657,6 +662,16 @@ end
 
 % open a new figure with the specified settings
 h = open_figure(keepfields(cfg, {'figure', 'position', 'visible', 'renderer'}));
+
+% check colormap is in proper format and set it
+if isfield(cfg, 'colormap')
+  if ischar(cfg.colormap)
+    cfg.colormap = ft_colormap(cfg.colormap);
+  elseif iscell(cfg.colormap)
+    cfg.colormap = ft_colormap(cfg.colormap{:});
+  end
+end
+
 
 % put appdata in figure
 setappdata(h, 'opt', opt);
