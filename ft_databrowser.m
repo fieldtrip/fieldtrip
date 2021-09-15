@@ -1731,6 +1731,9 @@ end
 % determine the position of the channel/component labels relative to the real axes
 % FIXME needs a shift to the left for components
 labelx = opt.laytime.pos(:,1) - opt.laytime.width/2 - 0.01;
+if strcmp(cfg.viewmode, 'component')
+  labelx = labelx - opt.laytime.height - 0.025;
+end
 labely = opt.laytime.pos(:,2);
 
 % determine the total extent of all virtual axes relative to the real axes
@@ -2078,7 +2081,7 @@ if strcmp(cfg.viewmode, 'component')
   
   % determine the position of each of the topographies
   laytopo.pos(:,1)  = opt.laytime.pos(:,1) - opt.laytime.width/2 - opt.laytime.height;
-  laytopo.pos(:,2)  = opt.laytime.pos(:,2) + opt.laytime.height/2;
+  laytopo.pos(:,2)  = opt.laytime.pos(:,2); %- opt.laytime.height/2;
   laytopo.width     = opt.laytime.height;
   laytopo.height    = opt.laytime.height;
   laytopo.label     = opt.laytime.label;
@@ -2182,7 +2185,7 @@ if strcmp(cfg.viewmode, 'component')
   
   set(gca, 'yTick', [])
   
-  ax(1) = min(laytopo.pos(:,1) - laytopo.width);
+  ax(1) = min(laytopo.pos(:,1) - 3*laytopo.width);
   ax(2) = max(opt.laytime.pos(:,1) + opt.laytime.width/2);
   ax(3) = min(opt.laytime.pos(:,2) - opt.laytime.height/2);
   ax(4) = max(opt.laytime.pos(:,2) + opt.laytime.height/2);
