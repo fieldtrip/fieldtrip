@@ -2980,6 +2980,10 @@ hdr = tmp;
 % SUBFUNCTION to fill in empty labels
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function labels = fixlabels(labels)
+if isnumeric(labels)
+  % convert the array of numbers into the corresponding strings
+  labels = cellfun(@num2str, num2cell(labels), 'UniformOutput', false);
+end
 for i = find(cellfun(@isempty, {labels{:}}))
   labels{i} = sprintf('%d', i);
 end

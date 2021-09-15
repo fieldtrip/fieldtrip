@@ -388,20 +388,20 @@ switch cfg.method
 end
 
 % set all the defaults
-cfg.pad       = ft_getopt(cfg, 'pad',       []);
+cfg.pad               = ft_getopt(cfg, 'pad',       []);
 if isempty(cfg.pad)
   ft_notice('Default cfg.pad=''maxperlen'' can run slowly. Consider using cfg.pad=''nextpow2'' for more efficient FFT computation.')
   cfg.pad = 'maxperlen';
 end
-cfg.padtype   = ft_getopt(cfg, 'padtype',   'zero');
-cfg.output    = ft_getopt(cfg, 'output',    'pow'); % the default for irasa is set earlier
-cfg.calcdof   = ft_getopt(cfg, 'calcdof',   'no');
-cfg.channel   = ft_getopt(cfg, 'channel',   'all');
-cfg.precision = ft_getopt(cfg, 'precision', 'double');
-cfg.foi       = ft_getopt(cfg, 'foi',       []);
-cfg.foilim    = ft_getopt(cfg, 'foilim',    []);
-cfg.correctt_ftimwin = ft_getopt(cfg, 'correctt_ftimwin', 'no');
-cfg.polyremoval      = ft_getopt(cfg, 'polyremoval', 0);
+cfg.padtype           = ft_getopt(cfg, 'padtype',   'zero');
+cfg.output            = ft_getopt(cfg, 'output',    'pow'); % the default for irasa is set earlier
+cfg.calcdof           = ft_getopt(cfg, 'calcdof',   'no');
+cfg.channel           = ft_getopt(cfg, 'channel',   'all');
+cfg.precision         = ft_getopt(cfg, 'precision', 'double');
+cfg.foi               = ft_getopt(cfg, 'foi',       []);
+cfg.foilim            = ft_getopt(cfg, 'foilim',    []);
+cfg.correctt_ftimwin  = ft_getopt(cfg, 'correctt_ftimwin', 'no');
+cfg.polyremoval       = ft_getopt(cfg, 'polyremoval', 0);
 
 % keeptrials and keeptapers should be conditional on cfg.output,
 % cfg.output = 'fourier' should always output tapers
