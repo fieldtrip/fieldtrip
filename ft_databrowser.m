@@ -49,8 +49,7 @@ function [cfg] = ft_databrowser(cfg, data)
 %   cfg.visible                 = string, 'on' or 'off' whether figure will be visible (default = 'on')
 %   cfg.position                = location and size of the figure, specified as a vector of the form [left bottom width height]
 %   cfg.renderer                = string, 'opengl', 'zbuffer', 'painters', see MATLAB Figure Properties. If this function crashes, you should try 'painters'.
-%   cfg.colormap                = string, or Nx3 matrix, colormap for the
-%                                  to-be-shown topographies (see FT_COLORMAP)
+%   cfg.colormap                = string, or Nx3 matrix, see FT_COLORMAP
 %
 % The following options for the scaling of the EEG, EOG, ECG, EMG, MEG and NIRS channels
 % is optional and can be used to bring the absolute numbers of the different
@@ -663,15 +662,17 @@ end
 % open a new figure with the specified settings
 h = open_figure(keepfields(cfg, {'figure', 'position', 'visible', 'renderer'}));
 
-% check colormap is in proper format and set it
-if isfield(cfg, 'colormap')
+% check if the colormap is in proper format
+if ~isempty(cfg.colormap)
   if ischar(cfg.colormap)
     cfg.colormap = ft_colormap(cfg.colormap);
   elseif iscell(cfg.colormap)
     cfg.colormap = ft_colormap(cfg.colormap{:});
   end
+  if size(cfg.colormap,2)~=3
+    ft_error('cfg.colormap must be Nx3');
+  end
 end
-
 
 % put appdata in figure
 setappdata(h, 'opt', opt);
