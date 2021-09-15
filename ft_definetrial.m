@@ -186,7 +186,11 @@ else
 end % if trl or trialfun
 
 % add the new trials and events to the output configuration
-ft_info('found %d events\n', length(event));
+if isstruct(event)
+  ft_info('found %d events\n', length(event));
+elseif istable(event)
+  ft_info('found %d events\n', size(event, 1));
+end
 cfg.event = event;
 
 if isfield(cfg, 'trialdef') && isfield(cfg.trialdef, 'eventtype') && isequal(cfg.trialdef.eventtype, '?')
