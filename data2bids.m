@@ -1600,9 +1600,9 @@ if need_events_tsv
   if istable(cfg.events) && all(ismember({'onset', 'duration'}, fieldnames(cfg.events)))
     % use the events table as it is
     events_tsv = cfg.events;
+
   elseif istable(cfg.events) && all(ismember({'begsample', 'endsample', 'offset'}, fieldnames(cfg.events)))
-    % it is a "trl" matrix formatted as table, use it as it is, but add
-    % onset and duration
+    % it is a "trl" matrix formatted as table, use it as it is, but add onset and duration
     events_tsv = cfg.events;
     begsample                   = table2array(events_tsv(:,{'begsample'}));
     endsample                   = table2array(events_tsv(:,{'endsample'}));
@@ -1611,13 +1611,17 @@ if need_events_tsv
     table_onset_duration        = table(onset, duration);
     events_tsv                  = [table_onset_duration events_tsv];
     
+  elseif istable(cfg.events) && ~isempty(cfg.events)
+    ft_error('cannot interpret cfg.events');
+
   elseif isstruct(cfg.events) && ~isempty(cfg.events) && numel(fieldnames(cfg.events))>0
-    % it is the output from FT_READ_EVENT
+    % it is the structure output from FT_READ_EVENT
     if exist('hdr', 'var')
-      events_tsv = event2table(hdr, cfg.events);
+      events_tsv = event2table(hdr, cfg.events);row
     else
       events_tsv = event2table([], cfg.events);
     end
+    
   elseif isnumeric(cfg.events) && ~isempty(cfg.events)
     % it is a "trl" matrix formatted as numeric array, convert it to an events table
     begsample = cfg.events(:,1);
@@ -1630,16 +1634,19 @@ if need_events_tsv
     onset     = (begsample-1)/hdr.Fs;
     duration  = (endsample-begsample+1)/hdr.Fs;
     events_tsv = table(onset, duration, begsample, endsample, offset);
-  elseif exist('trigger', 'var')
+  
+  elseif isempty(cfg.events) && exist('trigger', 'var')
     % convert the triggers from FT_READ_EVENT into a table
     if exist('hdr', 'var')
       events_tsv = event2table(hdr, trigger);
     else
       events_tsv = event2table([], trigger);
     end
+    
   elseif ~isempty(cfg.presentationfile)
     % read the presentation file and convert into a table
     events_tsv = event2table([], ft_read_event(cfg.presentationfile));
+  
   else
     ft_warning('no events were specified');
     % make an empty table with columns for onset and duration
