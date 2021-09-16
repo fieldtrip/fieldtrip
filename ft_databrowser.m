@@ -49,6 +49,7 @@ function [cfg] = ft_databrowser(cfg, data)
 %   cfg.visible                 = string, 'on' or 'off' whether figure will be visible (default = 'on')
 %   cfg.position                = location and size of the figure, specified as a vector of the form [left bottom width height]
 %   cfg.renderer                = string, 'opengl', 'zbuffer', 'painters', see MATLAB Figure Properties. If this function crashes, you should try 'painters'.
+%   cfg.colormap                = string, or Nx3 matrix, see FT_COLORMAP
 %
 % The following options for the scaling of the EEG, EOG, ECG, EMG, MEG and NIRS channels
 % is optional and can be used to bring the absolute numbers of the different
@@ -205,6 +206,7 @@ cfg.chanscale           = ft_getopt(cfg, 'chanscale');
 cfg.mychanscale         = ft_getopt(cfg, 'mychanscale');
 cfg.mychan              = ft_getopt(cfg, 'mychan');
 cfg.layout              = ft_getopt(cfg, 'layout');
+cfg.colormap            = ft_getopt(cfg, 'colormap');
 cfg.plotlabels          = ft_getopt(cfg, 'plotlabels', 'some');
 cfg.event               = ft_getopt(cfg, 'event');                       % this only exists for backward compatibility and should not be documented
 cfg.continuous          = ft_getopt(cfg, 'continuous');                  % the default is set further down in the code, conditional on the input data
@@ -589,11 +591,13 @@ elseif isempty(cfg.selfun) && isempty(cfg.selcfg)
   % topoplotER
   cfg.selcfg{3} = [];
   cfg.selcfg{3}.linecolor = linecolor;
-  cfg.selcfg{3}.layout = cfg.layout;
+  cfg.selcfg{3}.layout    = cfg.layout;
+  cfg.selcfg{3}.colormap  = cfg.colormap;
   cfg.selfun{3} = 'topoplotER';
   % topoplotVAR
   cfg.selcfg{4} = [];
-  cfg.selcfg{4}.layout = cfg.layout;
+  cfg.selcfg{4}.layout   = cfg.layout;
+  cfg.selcfg{4}.colormap = cfg.colormap;
   cfg.selfun{4} = 'topoplotVAR';
   % movieplotER
   cfg.selcfg{5} = [];
@@ -657,6 +661,18 @@ end
 
 % open a new figure with the specified settings
 h = open_figure(keepfields(cfg, {'figure', 'position', 'visible', 'renderer'}));
+
+% check if the colormap is in proper format
+if ~isempty(cfg.colormap)
+  if ischar(cfg.colormap)
+    cfg.colormap = ft_colormap(cfg.colormap);
+  elseif iscell(cfg.colormap)
+    cfg.colormap = ft_colormap(cfg.colormap{:});
+  end
+  if size(cfg.colormap,2)~=3
+    ft_error('cfg.colormap must be Nx3');
+  end
+end
 
 % put appdata in figure
 setappdata(h, 'opt', opt);
@@ -1658,7 +1674,20 @@ if ~isempty(cfg.precision)
 end
 
 % apply preprocessing and determine the time axis
-[dat, lab, tim] = preproc(dat, opt.hdr.label(chanindx), offset2time(offset, opt.fsample, size(dat,2)), cfg.preproc);
+tim = offset2time(offset, opt.fsample, size(dat,2));
+finitevals = isfinite(sum(dat));
+if all(~finitevals)
+  lab = opt.hdr.label(chanindx);
+elseif any(~finitevals)
+  % loop across the chunks to avoid nan-related warnings from preproc and potential loss of data
+  begsmp = find( ~[0 finitevals] & [finitevals 0] );
+  endsmp = find( ~[finitevals 0] & [0 finitevals] ) - 1;
+  for k = 1:numel(begsmp)
+    [dat(:,begsmp(k):endsmp(k)), lab] = preproc(dat(:,begsmp(k):endsmp(k)), opt.hdr.label(chanindx), tim(begsmp(k):endsmp(k)), cfg.preproc);
+  end
+else
+  [dat, lab, tim] = preproc(dat, opt.hdr.label(chanindx), tim, cfg.preproc);
+end
 
 % add NaNs to data for plotting purposes. NaNs will be added when requested horizontal scaling is longer than the data.
 nsamplepad = opt.nanpaddata(opt.trlop);
@@ -1715,6 +1744,9 @@ end
 % determine the position of the channel/component labels relative to the real axes
 % FIXME needs a shift to the left for components
 labelx = opt.laytime.pos(:,1) - opt.laytime.width/2 - 0.01;
+if strcmp(cfg.viewmode, 'component')
+  labelx = labelx - opt.laytime.height - 0.025;
+end
 labely = opt.laytime.pos(:,2);
 
 % determine the total extent of all virtual axes relative to the real axes
@@ -2062,7 +2094,7 @@ if strcmp(cfg.viewmode, 'component')
   
   % determine the position of each of the topographies
   laytopo.pos(:,1)  = opt.laytime.pos(:,1) - opt.laytime.width/2 - opt.laytime.height;
-  laytopo.pos(:,2)  = opt.laytime.pos(:,2) + opt.laytime.height/2;
+  laytopo.pos(:,2)  = opt.laytime.pos(:,2); %- opt.laytime.height/2;
   laytopo.width     = opt.laytime.height;
   laytopo.height    = opt.laytime.height;
   laytopo.label     = opt.laytime.label;
@@ -2112,6 +2144,10 @@ if strcmp(cfg.viewmode, 'component')
       % plot the topography of this component
       laysel = match_str(opt.laytime.label, opt.hdr.label(chanindx(i)));
       chanz = opt.orgdata.topo(sel1,chanindx(i));
+      if all(chanz==0)
+        % this is most likely a channel that is not a component, and has been added later on
+        continue;
+      end
       
       if strcmp(cfg.compscale, 'local')
         % compute scaling factors for each individual component
@@ -2166,7 +2202,7 @@ if strcmp(cfg.viewmode, 'component')
   
   set(gca, 'yTick', [])
   
-  ax(1) = min(laytopo.pos(:,1) - laytopo.width);
+  ax(1) = min(laytopo.pos(:,1) - 3*laytopo.width);
   ax(2) = max(opt.laytime.pos(:,1) + opt.laytime.width/2);
   ax(3) = min(opt.laytime.pos(:,2) - opt.laytime.height/2);
   ax(4) = max(opt.laytime.pos(:,2) + opt.laytime.height/2);
