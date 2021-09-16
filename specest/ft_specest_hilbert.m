@@ -52,19 +52,19 @@ function [spectrum, freqoi, timeoi] = ft_specest_hilbert(dat, time, varargin)
 freqoi     = ft_getopt(varargin, 'freqoi');
 timeoi     = ft_getopt(varargin, 'timeoi', 'all');
 width      = ft_getopt(varargin, 'width', 1);
-bpfilttype = ft_getopt(varargin, 'bpfilttype');    if isempty(bpfilttype),  ft_error('you need to specify filter type'),         end
-bpfiltord  = ft_getopt(varargin, 'bpfiltord');     if isempty(bpfiltord), ft_error('you need to specify filter order'),        end
-bpfiltdir  = ft_getopt(varargin, 'bpfiltdir');     if isempty(bpfiltdir),   ft_error('you need to specify filter direction'),    end
+bpfilttype = ft_getopt(varargin, 'bpfilttype');
+bpfiltord  = ft_getopt(varargin, 'bpfiltord');
+bpfiltdir  = ft_getopt(varargin, 'bpfiltdir');
 bpinstabilityfix = ft_getopt(varargin, 'bpinstabilityfix', 'no');
 bpfiltdf         = ft_getopt(varargin, 'bpfiltdf');
 bpfiltwintype    = ft_getopt(varargin, 'bpfiltwintype');
 bpfiltdev        = ft_getopt(varargin, 'bpfiltdev');
 
 pad        = ft_getopt(varargin, 'pad');
-padtype    = ft_getopt(varargin, 'padtype', 'zero');
-polyorder  = ft_getopt(varargin, 'polyorder', 0);
+padtype    = ft_getopt(varargin, 'padtype',    'zero');
+polyorder  = ft_getopt(varargin, 'polyorder',  0);
 fbopt      = ft_getopt(varargin, 'feedback');
-verbose    = ft_getopt(varargin, 'verbose', true);
+verbose    = ft_getopt(varargin, 'verbose',    true);
 edgeartnan = ft_getopt(varargin, 'edgeartnan', false);
 
 if isempty(fbopt)
@@ -72,13 +72,50 @@ if isempty(fbopt)
   fbopt.n = 1;
 end
 
+% set the default filter type
+if isempty(bpfilttype)
+  bpfilttype = 'but';
+end
+
+% set the default filter direction
+if isempty(bpfiltdir)
+  if strcmp(bpfilttype, 'firws')
+    bpfiltdir = 'onepass-zerophase';
+  else
+    bpfiltdir = 'twopass';
+  end
+end
+
 % edge artifacts from filters are only exactly defined for FIR filters
 if edgeartnan && ~any(strcmp(bpfilttype, {'firws','fir','firls'}))
-  ft_error('edge artifacts are only exactly defined, and can only be replaced by NaNs, for FIR filters')
+  ft_error('edge artifacts are only exactly defined, and can only be replaced by NaNs, for FIR filters');
+elseif edgeartnan
+  if isempty(bpfiltord)
+    ft_error('the filter order for the FIR filters needs to be specified for edge artifact replacement');
+  end  
 end
 
 % Set n's
-[nchan,ndatsample] = size(dat);
+[nchan, ndatsample] = size(dat);
+
+% Determine fsample and set total time-length of data
+fsample = 1./mean(diff(time));
+dattime = ndatsample./fsample; % total time in seconds of input data
+
+% Set a default sampling for the frequencies-of-interest if not defined
+if isempty(freqoi)
+  freqoi = linspace(2*width, (fsample/3), 50);
+end
+% check for freqoi = 0 and remove it
+if any(freqoi==0)
+  freqoi(freqoi==0) = [];
+end
+nfreqoi = length(freqoi);
+
+% expand width to array if constant width
+if numel(width) == 1
+  width = ones(1,nfreqoi) * width;
+end
 
 % This does not work on integer data
 if ~isa(dat, 'double') && ~isa(dat, 'single')
@@ -90,11 +127,6 @@ if polyorder >= 0
   dat = ft_preproc_polyremoval(dat, polyorder, 1, ndatsample);
 end
 
-% Determine fsample and set total time-length of data
-fsample = 1./mean(diff(time));
-dattime = ndatsample / fsample; % total time in seconds of input data
-
-
 % Zero padding
 if round(pad * fsample) < ndatsample
   ft_error('the padding that you specified is shorter than the data');
@@ -104,17 +136,6 @@ if isempty(pad) % if no padding is specified padding is equal to current data le
 end
 prepad     = floor(((pad - dattime) * fsample) ./ 2);
 postpad    = ceil(((pad - dattime) * fsample) ./ 2);
-
-
-% set a default sampling for the frequencies-of-interest
-if isempty(freqoi)
-  freqoi = linspace(2*width, (fsample/3), 50);
-end
-% check for freqoi = 0 and remove it
-if any(freqoi==0)
-  freqoi(freqoi==0) = [];
-end
-nfreqoi = length(freqoi);
 
 % Set timeboi and timeoi
 timeoiinput = timeoi;
@@ -138,11 +159,6 @@ if isnumeric(timeoiinput)
       ft_warning('output time-bins are different from input time-bins');
     end
   end
-end
-
-% expand width to array if constant width
-if numel(width) == 1
-  width = ones(1,nfreqoi) * width;
 end
 
 % expand filter order to array if constant filterorder
@@ -179,7 +195,12 @@ for ifreqoi = 1:nfreqoi
   end
   
   % filter
-  flt = ft_preproc_bandpassfilter(dat, fsample, filtfreq(ifreqoi,:), bpfiltord(ifreqoi), bpfilttype, bpfiltdir, bpinstabilityfix, bpfiltdf, bpfiltwintype, bpfiltdev);
+  if isempty(bpfiltord)
+    ibpfiltord = [];
+  else
+    ibpfiltord = bpfiltord(ifreqoi);
+  end
+  flt = ft_preproc_bandpassfilter(dat, fsample, filtfreq(ifreqoi,:), ibpfiltord, bpfilttype, bpfiltdir, bpinstabilityfix, bpfiltdf, bpfiltwintype, bpfiltdev);
   
   % transform
   dum = transpose(hilbert(transpose(ft_preproc_padding(flt, padtype, prepad, postpad))));
