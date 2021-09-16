@@ -1674,7 +1674,20 @@ if ~isempty(cfg.precision)
 end
 
 % apply preprocessing and determine the time axis
-[dat, lab, tim] = preproc(dat, opt.hdr.label(chanindx), offset2time(offset, opt.fsample, size(dat,2)), cfg.preproc);
+tim = offset2time(offset, opt.fsample, size(dat,2));
+finitevals = isfinite(sum(dat));
+if all(~finitevals)
+  lab = opt.hdr.label(chanindx);
+elseif any(~finitevals)
+  % loop across the chunks to avoid nan-related warnings from preproc and potential loss of data
+  begsmp = find( ~[0 finitevals] & [finitevals 0] );
+  endsmp = find( ~[finitevals 0] & [0 finitevals] ) - 1;
+  for k = 1:numel(begsmp)
+    [dat(:,begsmp(k):endsmp(k)), lab] = preproc(dat(:,begsmp(k):endsmp(k)), opt.hdr.label(chanindx), tim(begsmp(k):endsmp(k)), cfg.preproc);
+  end
+else
+  [dat, lab, tim] = preproc(dat, opt.hdr.label(chanindx), tim, cfg.preproc);
+end
 
 % add NaNs to data for plotting purposes. NaNs will be added when requested horizontal scaling is longer than the data.
 nsamplepad = opt.nanpaddata(opt.trlop);
