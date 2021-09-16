@@ -134,7 +134,6 @@ function [freq] = ft_freqanalysis(cfg, data)
 % The standard deviation in the temporal domain (st) at frequency f0 is
 % defined as: st = 1/(2*pi*sf)
 %
-%
 % SUPERLET performs time-frequency analysis on any time series trial data using the
 % 'wavelet method' based on a frequency-wise combination of Morlet wavelets of varying cycle
 % widths (see Moca et al. 2019, https://doi.org/10.1101/583732).
@@ -157,7 +156,6 @@ function [freq] = ft_freqanalysis(cfg, data)
 % defined as: sf = f0/width
 % The standard deviation in the temporal domain (st) at frequency f0 is
 % defined as: st = 1/(2*pi*sf)
-%
 %
 % TFR performs time-frequency analysis on any time series trial data using the
 % 'wavelet method' based on Morlet wavelets. Using convolution in the time domain
@@ -315,7 +313,7 @@ switch cfg.method
     end
     
   case 'mtmfft'
-    cfg.taper       = ft_getopt(cfg, 'taper', 'dpss');
+    cfg.taper = ft_getopt(cfg, 'taper', 'dpss');
     if isequal(cfg.taper, 'dpss') && not(isfield(cfg, 'tapsmofrq'))
       ft_error('you must specify a smoothing parameter with taper = dpss');
     end
@@ -330,9 +328,9 @@ switch cfg.method
     end
     
   case 'irasa'
-    cfg.taper       = ft_getopt(cfg, 'taper',  'hanning');
-    cfg.output      = ft_getopt(cfg, 'output', 'fractal');
-    cfg.pad         = ft_getopt(cfg, 'pad',    'nextpow2');
+    cfg.taper  = ft_getopt(cfg, 'taper',  'hanning');
+    cfg.output = ft_getopt(cfg, 'output', 'fractal');
+    cfg.pad    = ft_getopt(cfg, 'pad',    'nextpow2');
     if ~isequal(cfg.taper, 'hanning')
       ft_error('the irasa method supports hanning tapers only');
     end
@@ -351,10 +349,11 @@ switch cfg.method
     cfg.gwidth = ft_getopt(cfg, 'gwidth', 3);
     
   case 'superlet'
+    cfg.superlet           = ft_getopt(cfg,          'superlet');
     cfg.superlet.basewidth = ft_getopt(cfg.superlet, 'basewidth', 3);
-    cfg.superlet.gwidth = ft_getopt(cfg.superlet, 'gwidth', 3);
-    cfg.superlet.combine = ft_getopt(cfg.superlet, 'combine', 'additive');
-    cfg.superlet.order = ft_getopt(cfg.superlet, 'order', ones(1, numel(cfg.foi)));
+    cfg.superlet.gwidth    = ft_getopt(cfg.superlet, 'gwidth',    3);
+    cfg.superlet.combine   = ft_getopt(cfg.superlet, 'combine',   'additive');
+    cfg.superlet.order     = ft_getopt(cfg.superlet, 'order',     ones(1, numel(cfg.foi)));
     if size(cfg.superlet.order) ~= size(cfg.foi)
       ft_error('cfg.foi and cfg.superlet.order must be the same size');
     end
@@ -367,16 +366,26 @@ switch cfg.method
     
   case 'hilbert'
     ft_warning('method = hilbert requires user action to deal with filtering-artifacts')
-    if ~isfield(cfg, 'filttype'),         cfg.filttype      = 'but';        end
-    if ~isfield(cfg, 'filtorder'),        cfg.filtorder     = 4;            end
-    if ~isfield(cfg, 'filtdir'),          cfg.filtdir       = 'twopass';    end
-    if ~isfield(cfg, 'width'),            cfg.width         = 1;            end
+    cfg = ft_checkconfig(cfg, 'renamed', {'filttype',  'bpfilttype'});
+    cfg = ft_checkconfig(cfg, 'renamed', {'filtorder', 'bpfiltord'});
+    cfg = ft_checkconfig(cfg, 'renamed', {'filtdir',   'bpfiltdir'});
+    cfg.bpfilttype       = ft_getopt(cfg, 'bpfilttype', 'but');
+    cfg.bpfiltord        = ft_getopt(cfg, 'bpfiltord',  4);
+    cfg.bpfiltdir        = ft_getopt(cfg, 'bpfiltdir',  'twopass');
+    cfg.bpinstabilityfix = ft_getopt(cfg, 'bpinstabilityfix', 'no');
+    cfg.bpfiltdf         = ft_getopt(cfg, 'bpfiltdf');
+    cfg.bpfiltwintype    = ft_getopt(cfg, 'bpfiltwintype');
+    cfg.bpfiltdev        = ft_getopt(cfg, 'bpfiltdev');
+    cfg.width            = ft_getopt(cfg, 'width', 1);
+    
+    fn = fieldnames(cfg);
+    bpfiltoptions = ft_cfg2keyval(keepfields(cfg, fn(startsWith(fn, 'bp'))));
     
   case 'mvar'
     if isfield(cfg, 'inputfile')
-      freq = feval(@ft_freqanalysis_mvar,cfg);
+      freq = ft_freqanalysis_mvar(cfg);
     else
-      freq = feval(@ft_freqanalysis_mvar,cfg,data);
+      freq = ft_freqanalysis_mvar(cfg, data);
     end
     return
     
@@ -598,7 +607,7 @@ for itrial = 1:ntrials
       hastime = false;
       
     case 'wavelet'
-      [spectrum,foi,toi] = ft_specest_wavelet(dat, time, 'timeoi', cfg.toi, 'width', cfg.width, 'gwidth', cfg.gwidth,options{:}, 'feedback', fbopt);
+      [spectrum,foi,toi] = ft_specest_wavelet(dat, time, 'timeoi', cfg.toi, 'width', cfg.width, 'gwidth', cfg.gwidth, options{:}, 'feedback', fbopt);
       
       % the following variable is created to keep track of the number of
       % trials per time bin and is needed for proper normalization if
@@ -676,7 +685,7 @@ for itrial = 1:ntrials
       spectrum = reshape(spectrum,[1 nchan numel(foi) numel(toi)]);
       
     case 'hilbert'
-      [spectrum,foi,toi] = ft_specest_hilbert(dat, time, 'timeoi', cfg.toi, 'filttype', cfg.filttype, 'filtorder', cfg.filtorder, 'filtdir', cfg.filtdir, 'width', cfg.width, options{:}, 'feedback', fbopt);
+      [spectrum,foi,toi] = ft_specest_hilbert(dat, time, 'timeoi', cfg.toi, 'width', cfg.width, bpfiltoptions{:}, options{:}, 'feedback', fbopt);
       hastime = true;
       % create FAKE ntaper (this requires very minimal code change below for compatibility with the other specest functions)
       ntaper = ones(1,numel(foi));

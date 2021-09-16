@@ -32,29 +32,29 @@ width   = 5;
 result = {};
 
 % first explore the different filter types and orders
-result{end+1} = ft_specest_hilbert(dat, time, 'verbose', verbose, 'freqoi', freqoi, 'width', width, 'filttype', 'but',   'filtorder', 2,   'filtdir', 'twopass', 'timeoi', time);
-result{end+1} = ft_specest_hilbert(dat, time, 'verbose', verbose, 'freqoi', freqoi, 'width', width, 'filttype', 'but',   'filtorder', 2,   'filtdir', 'twopass', 'timeoi', time(1:2:end));
-result{end+1} = ft_specest_hilbert(dat, time, 'verbose', verbose, 'freqoi', freqoi, 'width', width, 'filttype', 'but',   'filtorder', 3,   'filtdir', 'twopass', 'timeoi', time(1:2:end));
+result{end+1} = ft_specest_hilbert(dat, time, 'verbose', verbose, 'freqoi', freqoi, 'width', width, 'bpfilttype', 'but',   'bpfiltord', 2,   'bpfiltdir', 'twopass', 'timeoi', time);
+result{end+1} = ft_specest_hilbert(dat, time, 'verbose', verbose, 'freqoi', freqoi, 'width', width, 'bpfilttype', 'but',   'bpfiltord', 2,   'bpfiltdir', 'twopass', 'timeoi', time(1:2:end));
+result{end+1} = ft_specest_hilbert(dat, time, 'verbose', verbose, 'freqoi', freqoi, 'width', width, 'bpfilttype', 'but',   'bpfiltord', 3,   'bpfiltdir', 'twopass', 'timeoi', time(1:2:end));
 
-% filtdir=twopass is the default, use a different filter order for the following ones
-result{end+1} = ft_specest_hilbert(dat, time, 'verbose', verbose, 'freqoi', freqoi, 'width', width, 'filttype', 'but', 'filtorder', 1, 'filtdir', 'onepass');
-result{end+1} = ft_specest_hilbert(dat, time, 'verbose', verbose, 'freqoi', freqoi, 'width', width, 'filttype', 'but', 'filtorder', 1, 'filtdir', 'onepass-reverse');
-result{end+1} = ft_specest_hilbert(dat, time, 'verbose', verbose, 'freqoi', freqoi, 'width', width, 'filttype', 'but', 'filtorder', 1, 'filtdir', 'twopass');
-result{end+1} = ft_specest_hilbert(dat, time, 'verbose', verbose, 'freqoi', freqoi, 'width', width, 'filttype', 'but', 'filtorder', 1, 'filtdir', 'twopass-reverse');
-result{end+1} = ft_specest_hilbert(dat, time, 'verbose', verbose, 'freqoi', freqoi, 'width', width, 'filttype', 'but', 'filtorder', 1, 'filtdir', 'twopass-average');
+% bpfiltdir=twopass is the default, use a different filter order for the following ones
+result{end+1} = ft_specest_hilbert(dat, time, 'verbose', verbose, 'freqoi', freqoi, 'width', width, 'bpfilttype', 'but', 'bpfiltord', 1, 'bpfiltdir', 'onepass');
+result{end+1} = ft_specest_hilbert(dat, time, 'verbose', verbose, 'freqoi', freqoi, 'width', width, 'bpfilttype', 'but', 'bpfiltord', 1, 'bpfiltdir', 'onepass-reverse');
+result{end+1} = ft_specest_hilbert(dat, time, 'verbose', verbose, 'freqoi', freqoi, 'width', width, 'bpfilttype', 'but', 'bpfiltord', 1, 'bpfiltdir', 'twopass');
+result{end+1} = ft_specest_hilbert(dat, time, 'verbose', verbose, 'freqoi', freqoi, 'width', width, 'bpfilttype', 'but', 'bpfiltord', 1, 'bpfiltdir', 'twopass-reverse');
+result{end+1} = ft_specest_hilbert(dat, time, 'verbose', verbose, 'freqoi', freqoi, 'width', width, 'bpfilttype', 'but', 'bpfiltord', 1, 'bpfiltdir', 'twopass-average');
 
 % padtype=zero is the default, use a different filter order for the following ones
-result{end+1} = ft_specest_hilbert(dat, time, 'verbose', verbose, 'freqoi', freqoi, 'width', width, 'filttype', 'but', 'filtorder', 2, 'filtdir', 'twopass', 'pad', 2, 'padtype', 'zero'      );
-result{end+1} = ft_specest_hilbert(dat, time, 'verbose', verbose, 'freqoi', freqoi, 'width', width, 'filttype', 'but', 'filtorder', 2, 'filtdir', 'twopass', 'pad', 2, 'padtype', 'mean'      );
-result{end+1} = ft_specest_hilbert(dat, time, 'verbose', verbose, 'freqoi', freqoi, 'width', width, 'filttype', 'but', 'filtorder', 2, 'filtdir', 'twopass', 'pad', 2, 'padtype', 'localmean' );
-result{end+1} = ft_specest_hilbert(dat, time, 'verbose', verbose, 'freqoi', freqoi, 'width', width, 'filttype', 'but', 'filtorder', 2, 'filtdir', 'twopass', 'pad', 2, 'padtype', 'edge'      );
-result{end+1} = ft_specest_hilbert(dat, time, 'verbose', verbose, 'freqoi', freqoi, 'width', width, 'filttype', 'but', 'filtorder', 2, 'filtdir', 'twopass', 'pad', 2, 'padtype', 'mirror'    );
+result{end+1} = ft_specest_hilbert(dat, time, 'verbose', verbose, 'freqoi', freqoi, 'width', width, 'bpfilttype', 'but', 'bpfiltord', 2, 'bpfiltdir', 'twopass', 'pad', 2, 'padtype', 'zero'      );
+result{end+1} = ft_specest_hilbert(dat, time, 'verbose', verbose, 'freqoi', freqoi, 'width', width, 'bpfilttype', 'but', 'bpfiltord', 2, 'bpfiltdir', 'twopass', 'pad', 2, 'padtype', 'mean'      );
+result{end+1} = ft_specest_hilbert(dat, time, 'verbose', verbose, 'freqoi', freqoi, 'width', width, 'bpfilttype', 'but', 'bpfiltord', 2, 'bpfiltdir', 'twopass', 'pad', 2, 'padtype', 'localmean' );
+result{end+1} = ft_specest_hilbert(dat, time, 'verbose', verbose, 'freqoi', freqoi, 'width', width, 'bpfilttype', 'but', 'bpfiltord', 2, 'bpfiltdir', 'twopass', 'pad', 2, 'padtype', 'edge'      );
+result{end+1} = ft_specest_hilbert(dat, time, 'verbose', verbose, 'freqoi', freqoi, 'width', width, 'bpfilttype', 'but', 'bpfiltord', 2, 'bpfiltdir', 'twopass', 'pad', 2, 'padtype', 'mirror'    );
 
 % polyorder=0 is the default, use a different filter order for the following ones
-result{end+1} = ft_specest_hilbert(dat, time, 'verbose', verbose, 'freqoi', freqoi, 'width', width, 'filttype', 'but', 'filtorder', 3, 'filtdir', 'twopass', 'polyorder', 0);
-result{end+1} = ft_specest_hilbert(dat, time, 'verbose', verbose, 'freqoi', freqoi, 'width', width, 'filttype', 'but', 'filtorder', 3, 'filtdir', 'twopass', 'polyorder', 1);
-result{end+1} = ft_specest_hilbert(dat, time, 'verbose', verbose, 'freqoi', freqoi, 'width', width, 'filttype', 'but', 'filtorder', 3, 'filtdir', 'twopass', 'polyorder', 2);
-result{end+1} = ft_specest_hilbert(dat, time, 'verbose', verbose, 'freqoi', freqoi, 'width', width, 'filttype', 'but', 'filtorder', 3, 'filtdir', 'twopass', 'polyorder', 3);
+result{end+1} = ft_specest_hilbert(dat, time, 'verbose', verbose, 'freqoi', freqoi, 'width', width, 'bpfilttype', 'but', 'bpfiltord', 3, 'bpfiltdir', 'twopass', 'polyorder', 0);
+result{end+1} = ft_specest_hilbert(dat, time, 'verbose', verbose, 'freqoi', freqoi, 'width', width, 'bpfilttype', 'but', 'bpfiltord', 3, 'bpfiltdir', 'twopass', 'polyorder', 1);
+result{end+1} = ft_specest_hilbert(dat, time, 'verbose', verbose, 'freqoi', freqoi, 'width', width, 'bpfilttype', 'but', 'bpfiltord', 3, 'bpfiltdir', 'twopass', 'polyorder', 2);
+result{end+1} = ft_specest_hilbert(dat, time, 'verbose', verbose, 'freqoi', freqoi, 'width', width, 'bpfilttype', 'but', 'bpfiltord', 3, 'bpfiltdir', 'twopass', 'polyorder', 3);
 
 % all iterations were done with (slightly) different options, hence the results should not be equal
 for i=1:numel(result)
