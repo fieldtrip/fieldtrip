@@ -186,7 +186,7 @@ if strcmp(cfg.marker, 'highlights')
 end
 
 % check colormap is proper format and set it
-if isfield(cfg, 'colormap')
+if isfield(cfg, 'colormap') && ~isequal(cfg.colormap, 'default')
   if ischar(cfg.colormap)
     cfg.colormap = ft_colormap(cfg.colormap);
   elseif iscell(cfg.colormap)

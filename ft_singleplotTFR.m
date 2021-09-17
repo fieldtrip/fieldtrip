@@ -156,7 +156,7 @@ cfg.ylim           = ft_getopt(cfg, 'ylim',          'maxmin');
 cfg.zlim           = ft_getopt(cfg, 'zlim',          'maxmin');
 cfg.fontsize       = ft_getopt(cfg, 'fontsize',       8);
 cfg.colorbar       = ft_getopt(cfg, 'colorbar',      'yes');
-cfg.colormap       = ft_getopt(cfg, 'colormap',       []);
+cfg.colormap       = ft_getopt(cfg, 'colormap',       'default');
 cfg.colorbartext   = ft_getopt(cfg, 'colorbartext',  '');
 cfg.interactive    = ft_getopt(cfg, 'interactive',   'yes');
 cfg.hotkeys        = ft_getopt(cfg, 'hotkeys',       'yes');
@@ -421,7 +421,7 @@ else
 end
 
 % set colormap
-if ~isempty(cfg.colormap)
+if isfield(cfg, 'colormap') && ~isequal(cfg.colormap, 'default')
   if ischar(cfg.colormap)
     cfg.colormap = ft_colormap(cfg.colormap);
   elseif iscell(cfg.colormap)

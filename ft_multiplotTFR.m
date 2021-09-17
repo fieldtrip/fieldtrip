@@ -198,7 +198,7 @@ cfg.xlim           = ft_getopt(cfg, 'xlim',         'maxmin');
 cfg.ylim           = ft_getopt(cfg, 'ylim',         'maxmin');
 cfg.zlim           = ft_getopt(cfg, 'zlim',         'maxmin');
 cfg.colorbar       = ft_getopt(cfg, 'colorbar',     'no');
-cfg.colormap       = ft_getopt(cfg, 'colormap',      []);
+cfg.colormap       = ft_getopt(cfg, 'colormap',      'default');
 cfg.colorbartext   = ft_getopt(cfg, 'colorbartext', '');
 cfg.comment        = ft_getopt(cfg, 'comment',       date);
 cfg.limittext      = ft_getopt(cfg, 'limittext',    'default');
@@ -231,7 +231,7 @@ if ~isfield(cfg, 'box')
 end
 
 % check if the colormap is in proper format
-if ~isempty(cfg.colormap)
+if isfield(cfg, 'colormap') && ~isequal(cfg.colormap, 'default')
   if ischar(cfg.colormap)
     cfg.colormap = ft_colormap(cfg.colormap);
   elseif iscell(cfg.colormap)
