@@ -13,7 +13,7 @@ function [cfg] = ft_topoplotIC(cfg, comp)
 %   cfg.layout             = specification of the layout, see below
 %
 % The configuration can have the following parameters:
-%   cfg.colormap           = any sized colormap, see COLORMAP
+%   cfg.colormap           = string, or Nx3 matrix, see FT_COLORMAP 
 %   cfg.zlim               = plotting limits for color dimension, 'maxmin', 'maxabs', 'zeromax', 'minzero', or [zmin zmax] (default = 'maxmin')
 %   cfg.marker             = 'on', 'labels', 'numbers', 'off'
 %   cfg.markersymbol       = channel marker symbol (default = 'o')

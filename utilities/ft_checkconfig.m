@@ -311,6 +311,14 @@ if ~isempty(createtopcfg)
           'normalizeparam'
           'weight'
           };
+      
+      case {'superlet'}
+        fieldname = {
+          'basewidth'
+          'gwidth'
+          'combine'
+          'order'
+          };
         
       otherwise
         ft_error('unexpected name of the subfunction');
