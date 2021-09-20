@@ -360,7 +360,7 @@ end
 
 if any(isnan(dat(:)))
   % filtering is not possible for at least a selection of the data
-  ft_warning('data contains NaNs, not all processing methods are robust to NaNs, so the NaNs might spread');
+  ft_warning('FieldTrip:dataContainsNaN', 'data contains NaNs, not all processing methods are robust to NaNs, so the NaNs might spread');
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
