@@ -19,8 +19,8 @@ function [c, v, n] = ft_connectivity_psi(input, varargin)
 % The output p contains the phase slope index, v is a variance estimate which only
 % can be computed if the data contains leave-one-out samples, and n is the number of
 % repetitions in the input data. If the phase slope index is positive, then the first
-% chan (1st dim) becomes more lagged (or less leading) with higher frequency,
-% indicating that it is causally driven by the second channel (2nd dim).
+% chan (1st dim) becomes more leading (or less lagged) with higher frequency,
+% indicating that it is causally driving the second channel (2nd dim).
 %
 % Additional optional input arguments come as key-value pairs:
 %   'nbin'			=	scalar, half-bandwidth parameter: the number of frequency bins across which to integrate
