@@ -32,10 +32,10 @@ function [cfg] = ft_singleplotTFR(cfg, data)
 %   cfg.refchannel     = name of reference channel for visualising connectivity, can be 'gui'
 %   cfg.fontsize       = font size of title (default = 8)
 %   cfg.hotkeys        = enables hotkeys (leftarrow/rightarrow/uparrow/downarrow/pageup/pagedown/m) for dynamic zoom and translation (ctrl+) of the axes and color limits
-%   cfg.colormap       = any sized colormap, see COLORMAP
+%   cfg.colormap       = string, or Nx3 matrix, see FT_COLORMAP
 %   cfg.colorbar       = 'yes', 'no' (default = 'yes')
-%   cfg.colorbartext   =  string indicating the text next to colorbar
-%   cfg.interactive    = Interactive plot 'yes' or 'no' (default = 'yes')
+%   cfg.colorbartext   = string indicating the text next to colorbar
+%   cfg.interactive    = interactive plot 'yes' or 'no' (default = 'yes')
 %                        In a interactive plot you can select areas and produce a new
 %                        interactive plot when a selected area is clicked. Multiple areas
 %                        can be selected by holding down the SHIFT key.
@@ -156,7 +156,8 @@ cfg.ylim           = ft_getopt(cfg, 'ylim',          'maxmin');
 cfg.zlim           = ft_getopt(cfg, 'zlim',          'maxmin');
 cfg.fontsize       = ft_getopt(cfg, 'fontsize',       8);
 cfg.colorbar       = ft_getopt(cfg, 'colorbar',      'yes');
-cfg.colorbartext   = ft_getopt(cfg, 'colorbartext',   '');
+cfg.colormap       = ft_getopt(cfg, 'colormap',       'default');
+cfg.colorbartext   = ft_getopt(cfg, 'colorbartext',  '');
 cfg.interactive    = ft_getopt(cfg, 'interactive',   'yes');
 cfg.hotkeys        = ft_getopt(cfg, 'hotkeys',       'yes');
 cfg.maskalpha      = ft_getopt(cfg, 'maskalpha',      1);
@@ -420,7 +421,7 @@ else
 end
 
 % set colormap
-if isfield(cfg, 'colormap')
+if isfield(cfg, 'colormap') && ~isequal(cfg.colormap, 'default')
   if ischar(cfg.colormap)
     cfg.colormap = ft_colormap(cfg.colormap);
   elseif iscell(cfg.colormap)

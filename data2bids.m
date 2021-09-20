@@ -1617,7 +1617,7 @@ if need_events_tsv
   elseif isstruct(cfg.events) && ~isempty(cfg.events) && numel(fieldnames(cfg.events))>0
     % it is the structure output from FT_READ_EVENT
     if exist('hdr', 'var')
-      events_tsv = event2table(hdr, cfg.events);row
+      events_tsv = event2table(hdr, cfg.events);
     else
       events_tsv = event2table([], cfg.events);
     end
