@@ -259,7 +259,7 @@ switch cfg.appenddim
   case 'rpt'
     
     % determine the intersection of all input data
-    tmpcfg = keepfields(cfg, {'tolerance', 'channel', 'showcallinfo'});
+    tmpcfg = keepfields(cfg, {'tolerance', 'channel', 'channelcmb', 'showcallinfo'});
     tmpcfg.select = 'intersect';
     [varargin{:}] = ft_selectdata(tmpcfg, varargin{:});
     for i=1:numel(varargin)
