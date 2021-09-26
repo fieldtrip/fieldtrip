@@ -73,7 +73,7 @@ assert(~ismember('prestim', events.Properties.VariableNames));
 assert(~ismember('poststim', events.Properties.VariableNames));
 
 % make a selection of the rows
-sel = true(numel(events),1);
+sel = true(size(events,1),1);
 
 fn = fieldnames(cfg.trialdef);
 for i=1:numel(fn)
