@@ -2,7 +2,13 @@ function [trl, event] = ft_trialfun_show(cfg)
 
 % FT_TRIALFUN_SHOW will show a summary of the event information on screen. It will
 % not return an actual trial definition. This function should in general not be
-% called directly, it will be called by FT_TRIALFUN_GENERAL.
+% called directly, it will be called by FT_DEFINETRIAL.
+%
+% Use this function by calling 
+%   [cfg] = ft_definetrial(cfg)
+% where the configuration structure should contain
+%   cfg.dataset   = string with the filename
+%   cfg.trialfun  = 'ft_trialfun_show'
 %
 % See also FT_DEFINETRIAL, FT_TRIALFUN_GENERAL, FT_TRIALFUN_GUI
 

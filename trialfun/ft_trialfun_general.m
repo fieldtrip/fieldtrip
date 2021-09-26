@@ -1,10 +1,17 @@
 function [trl, event] = ft_trialfun_general(cfg)
 
-% FT_TRIALFUN_GENERAL determines trials/segments in the data that are interesting for
-% analysis, using the general event structure returned by FT_READ_EVENT. This
-% function is independent of the dataformat.
+% FT_TRIALFUN_GENERAL reads events from the dataset using FT_READ_EVENT and
+% constructs a trial definition. This function should in general not be called
+% directly, it will be called by FT_DEFINETRIAL.
 %
-% The trialdef structure can contain the following specifications
+% Use this function by calling 
+%   [cfg] = ft_definetrial(cfg)
+% where the configuration structure should contain
+%   cfg.dataset   = string with the filename
+%   cfg.trialfun  = 'ft_trialfun_general'
+%   cfg.trialdef  = structure with the details of trial definition, see below
+%
+% The cfg.trialdef structure can contain the following specifications
 %   cfg.trialdef.eventtype  = string, or cell-array with strings
 %   cfg.trialdef.eventvalue = number, string, or list with numbers or strings
 %   cfg.trialdef.prestim    = number, latency in seconds (optional)
@@ -22,15 +29,7 @@ function [trl, event] = ft_trialfun_general(cfg)
 %    cfg.trialdef.ntrials     = number of trials (optional, can be 1)
 %    cfg.trialdef.overlap     = single number (between 0 and 1 (exclusive)) specifying the fraction of overlap between snippets (0 = no overlap)
 %
-% If you specify
-%   cfg.trialdef.eventtype  = 'show
-% a list with the events in your datafile will be displayed on screen.
-%
-% If you specify
-%   cfg.trialdef.eventtype = 'gui'
-% a graphical user interface will allow you to select events of interest.
-%
-% See also FT_DEFINETRIAL, FT_PREPROCESSING, FT_READ_EVENT
+% See also FT_DEFINETRIAL, FT_PREPROCESSING, FT_TRIALFUN_GUI, FT_TRIALFUN_SHOW
 
 % Copyright (C) 2005-2021, Robert Oostenveld
 %
@@ -57,8 +56,6 @@ cfg.trialdef = ft_getopt(cfg, 'trialdef');
 
 % check if the input cfg is valid for this function
 cfg.trialdef = ft_checkconfig(cfg.trialdef, 'renamed', {'triallength', 'length'});
-cfg.trialdef = ft_checkconfig(cfg.trialdef, 'renamedval', {'eventtype', '?', 'show'});
-cfg.trialdef = ft_checkconfig(cfg.trialdef, 'renamedval', {'eventvalue', '?', 'show'});
 
 % set the defaults
 cfg.trialdef.eventtype    = ft_getopt(cfg.trialdef, 'eventtype');
@@ -102,20 +99,7 @@ else
   event = ft_read_event(cfg.headerfile, 'headerformat', cfg.headerformat, 'eventformat', cfg.eventformat, 'dataformat', cfg.dataformat,  'detectflank', cfg.trialdef.detectflank, 'trigshift', cfg.trialdef.trigshift, 'chanindx', cfg.trialdef.chanindx, 'threshold', cfg.trialdef.threshold, 'tolerance', cfg.trialdef.tolerance);
 end
 
-if isequal(cfg.trialdef.eventtype, 'show') || isequal(cfg.trialdef.eventvalue, 'show')
-  % no trials should be added, only show event information
-  cfg.hdr   = hdr;
-  cfg.event = event;
-  [trl, event] = ft_trialfun_show(cfg);
-  return
-  
-elseif isequal(cfg.trialdef.eventtype, 'gui') || isequal(cfg.trialdef.eventvalue, 'gui')
-  % trials are specified using a graphical user interface
-  cfg.hdr   = hdr;
-  cfg.event = event;
-  [trl, event] = ft_trialfun_gui(cfg);
-  
-elseif ~isempty(cfg.trialdef.length) && ~isinf(cfg.trialdef.length)
+if ~isempty(cfg.trialdef.length) && ~isinf(cfg.trialdef.length)
   % make as many trials as possible with the specified length and offset
   begsample   = 1;
   endsample   = round(hdr.nSamples*hdr.nTrials);
@@ -133,8 +117,11 @@ elseif ~isempty(cfg.trialdef.length) && ~isinf(cfg.trialdef.length)
   end
   return
   
-elseif isequal(cfg.trialdef.ntrials, 1) || isequal(cfg.trialdef.length, inf)
-  % construct the desired number of trials, make them as long as possible
+elseif isscalar(cfg.trialdef.ntrials) || isequal(cfg.trialdef.length, inf)
+  % construct a single trial
+  if isscalar(cfg.trialdef.ntrials) && cfg.trialdef.ntrials~=1
+    ft_error('this is only supported for a single trial');
+  end
   begsample = 1;
   endsample = round(hdr.nSamples*hdr.nTrials);
   offset    = 0;

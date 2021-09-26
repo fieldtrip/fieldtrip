@@ -12,7 +12,7 @@ cfg = [];
 cfg.dataset = dataset;
 cfg.trialfun = 'ft_trialfun_general';
 
-%% this should show something on screen
+%% 266 trials
 
 cfg.trialdef = [];
 cfgout = ft_definetrial(cfg)
@@ -22,7 +22,7 @@ assert(size(cfgout.trl,1)==266);
 %% this should show something on screen
 
 cfg.trialdef = [];
-cfg.trialdef.eventtype = 'show';
+cfg.trialdef.eventtype = '?';
 cfgout = ft_definetrial(cfg)
 
 assert(~isfield(cfgout, 'trl'));
@@ -30,7 +30,7 @@ assert(~isfield(cfgout, 'trl'));
 %% this should show something on screen
 
 cfg.trialdef = [];
-cfg.trialdef.eventvalue = 'show';
+cfg.trialdef.eventvalue = '?';
 cfgout = ft_definetrial(cfg)
 
 assert(~isfield(cfgout, 'trl'));
