@@ -10,10 +10,10 @@ dataset = dccnpath('/home/common/matlab/fieldtrip/data/Subject01.ds');
 
 cfg = [];
 cfg.dataset = dataset;
-cfg.trialfun = 'ft_trialfun_general';
 
 %% 266 trials
 
+cfg.trialfun = 'ft_trialfun_general';
 cfg.trialdef = [];
 cfgout = ft_definetrial(cfg)
 
@@ -21,6 +21,7 @@ assert(size(cfgout.trl,1)==266);
 
 %% this should show something on screen
 
+cfg.trialfun = 'ft_trialfun_general'; % or ft_trialfun_show
 cfg.trialdef = [];
 cfg.trialdef.eventtype = '?';
 cfgout = ft_definetrial(cfg)
@@ -29,6 +30,7 @@ assert(~isfield(cfgout, 'trl'));
 
 %% this should show something on screen
 
+cfg.trialfun = 'ft_trialfun_general'; % or ft_trialfun_show
 cfg.trialdef = [];
 cfg.trialdef.eventvalue = '?';
 cfgout = ft_definetrial(cfg)
@@ -37,18 +39,21 @@ assert(~isfield(cfgout, 'trl'));
 
 %% this should show the GUI
 
+cfg.trialfun = 'ft_trialfun_general'; % or ft_trialfun_gui
 cfg.trialdef = [];
 cfg.trialdef.eventtype = 'gui';
 cfgout = ft_definetrial(cfg)
 
 %% this should show the GUI
 
+cfg.trialfun = 'ft_trialfun_general'; % or ft_trialfun_gui
 cfg.trialdef = [];
 cfg.trialdef.eventvalue = 'gui';
 cfgout = ft_definetrial(cfg)
 
 %% this should show the GUI with a subset of events
 
+cfg.trialfun = 'ft_trialfun_general'; % or ft_trialfun_gui
 cfg.trialdef = [];
 cfg.trialdef.eventtype = 'STIM';
 cfg.trialdef.eventvalue = 'gui';
@@ -56,6 +61,7 @@ cfgout = ft_definetrial(cfg)
 
 %% one long segment
 
+cfg.trialfun = 'ft_trialfun_general';
 cfg.trialdef = [];
 cfg.trialdef.length = inf;
 cfgout = ft_definetrial(cfg)
@@ -64,6 +70,7 @@ assert(size(cfgout.trl,1)==1);
 
 %% one long segment
 
+cfg.trialfun = 'ft_trialfun_general';
 cfg.trialdef = [];
 cfg.trialdef.ntrials = 1;
 cfgout = ft_definetrial(cfg)
@@ -72,9 +79,18 @@ assert(size(cfgout.trl,1)==1);
 
 %% 266*3 segments
 
+cfg.trialfun = 'ft_trialfun_general';
 cfg.trialdef = [];
 cfg.trialdef.length = 1;
 cfgout = ft_definetrial(cfg)
 
 assert(size(cfgout.trl,1)==266*3);
+
+%% another one
+
+cfg.trialfun = 'ft_trialfun_trial';
+cfg.trialdef = [];
+cfgout = ft_definetrial(cfg)
+
+assert(size(cfgout.trl,1)==266);
 

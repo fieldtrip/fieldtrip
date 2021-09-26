@@ -29,7 +29,7 @@ function [trl, event] = ft_trialfun_general(cfg)
 %    cfg.trialdef.ntrials     = number of trials (optional, can be 1)
 %    cfg.trialdef.overlap     = single number (between 0 and 1 (exclusive)) specifying the fraction of overlap between snippets (0 = no overlap)
 %
-% See also FT_DEFINETRIAL, FT_PREPROCESSING, FT_TRIALFUN_GUI, FT_TRIALFUN_SHOW
+% See also FT_DEFINETRIAL, FT_TRIALFUN_GUI, FT_TRIALFUN_SHOW
 
 % Copyright (C) 2005-2021, Robert Oostenveld
 %
