@@ -27,11 +27,18 @@ elseif ischar(x) && iscellstr(y)
     end
   end
   
-elseif (isnumeric(x) || ischar(x)) && iscell(y)
-  % this works if the cell-array y contains both numbers and strings
+elseif isnumeric(x) && iscell(y)
+  % this works if y contains both numbers and strings
   s = false;
   for i=1:numel(y)
     s = s || ismember(x, y{i});
+  end
+  
+elseif ischar(x) && iscell(y)
+  % this works if y contains both numbers and strings
+  s = false;
+  for i=1:numel(y)
+    s = s || strcmp(x, y{i});
   end
   
 else
