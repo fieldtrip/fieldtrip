@@ -6,7 +6,7 @@ function [data] = ft_redefinetrial(cfg, data)
 % into shorter fragments.
 %
 % Use as
-%   data = ft_redefinetrial(cfg, data)
+%   [data] = ft_redefinetrial(cfg, data)
 % where the input data should correspond to the output of FT_PREPROCESSING and the
 % configuration should be specified as explained below. Note that some options are
 % mutually exclusive. If you want to use both,  you neew two calls to this function
