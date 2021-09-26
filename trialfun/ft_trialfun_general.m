@@ -8,8 +8,8 @@ function [trl, event] = ft_trialfun_general(cfg)
 %   [cfg] = ft_definetrial(cfg)
 % where the configuration structure should contain
 %   cfg.dataset   = string with the filename
-%   cfg.trialfun  = 'ft_trialfun_general'
 %   cfg.trialdef  = structure with the details of trial definition, see below
+%   cfg.trialfun  = 'ft_trialfun_general'
 %
 % The cfg.trialdef structure can contain the following specifications
 %   cfg.trialdef.eventtype  = string, or cell-array with strings
