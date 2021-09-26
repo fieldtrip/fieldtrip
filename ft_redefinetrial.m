@@ -39,7 +39,7 @@ function [data] = ft_redefinetrial(cfg, data)
 % Alternatively you can specify the data to be cut into (non-)overlapping
 % segments, starting from the beginning of each trial. This may lead to loss
 % of data at the end of the trials
-%   cfg.length    = single number (in unit of time, typically seconds) of the required snippets
+%   cfg.length    = single number (in seconds) of the required snippets
 %   cfg.overlap   = single number (between 0 and 1 (exclusive)) specifying the fraction of overlap between snippets (0 = no overlap)
 %
 % Alternatively you can merge or stitch pseudo-continuous segmented data back into a
