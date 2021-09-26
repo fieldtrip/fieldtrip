@@ -48,7 +48,7 @@ function [data] = ft_redefinetrial(cfg, data)
 % filtering or demeaning). If there are missing segments (e.g. due to artifact
 % rejection), the output data will have one trial for each section where the data is
 % continuous.
-%   cfg.continuous = 'yes' 
+%   cfg.continuous = 'yes'
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
@@ -356,28 +356,28 @@ elseif ~isempty(cfg.length)
   [cfg, data] = rollback_provenance(cfg, data);
   
 elseif istrue(cfg.continuous)
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % identify conscitive segments that can be glued back together
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    data = ft_checkdata(data, 'hassampleinfo', 'yes');
-    
-    boolvec = artifact2boolvec(data.sampleinfo);
-    newtrl = boolvec2trl(boolvec);
-    
-    % In general: An offset of 0 means that the first sample of the trial corresponds
-    % to the trigger. A positive offset indicates that the first sample is later than
-    % the trigger.
-    
-    % here we want to use the start of the recording as t=0
-    newtrl(:,3) = newtrl(:,1) - 1;
-    
-    tmpcfg = keepfields(cfg, {'showcallinfo', 'feedback'});
-    tmpcfg.trl = newtrl;
-
-    data   = removefields(data, {'trialinfo'}); % the trialinfo does not apply any more
-    data   = ft_redefinetrial(tmpcfg, data);
-    % restore the provenance information
-    [cfg, data] = rollback_provenance(cfg, data);
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  % identify conscitive segments that can be glued back together
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  data = ft_checkdata(data, 'hassampleinfo', 'yes');
+  
+  boolvec = artifact2boolvec(data.sampleinfo);
+  newtrl = boolvec2trl(boolvec);
+  
+  % In general: An offset of 0 means that the first sample of the trial corresponds
+  % to the trigger. A positive offset indicates that the first sample is later than
+  % the trigger.
+  
+  % here we want to use the start of the recording as t=0
+  newtrl(:,3) = newtrl(:,1) - 1;
+  
+  tmpcfg = keepfields(cfg, {'showcallinfo', 'feedback'});
+  tmpcfg.trl = newtrl;
+  
+  data   = removefields(data, {'trialinfo'}); % the trialinfo does not apply any more
+  data   = ft_redefinetrial(tmpcfg, data);
+  % restore the provenance information
+  [cfg, data] = rollback_provenance(cfg, data);
   
 end % processing the realignment or data selection
 
