@@ -220,6 +220,11 @@ else
     end
   end
   
+  if all(isnan(trl(:,4)))
+    % the values are not informative, remove them
+    trl = trl(:,1:3);
+  end
+  
   % This complicated line just computes the trial onset times in seconds
   % and converts them to a cell-array of strings to use in the GUI
   triggertime = cellfun(@num2str, mat2cell((trl(:, 1)-trl(:, 3))./hdr.Fs, ones(1, size(trl, 1))), 'UniformOutput', 0);
