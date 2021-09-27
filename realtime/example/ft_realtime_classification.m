@@ -29,7 +29,7 @@ function ft_realtime_classification(cfg)
 % matrix should contain a flag indicating whether it belongs to the test or
 % to the training set (0 or 1 respectively).
 %
-% Example useage:
+% Example usage:
 %   cfg = [];
 %   cfg.dataset  = 'Subject01.ds';
 %   cfg.trialfun = 'trialfun_Subject01';

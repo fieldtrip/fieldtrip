@@ -1,18 +1,21 @@
 function [trl, event] = ft_trialfun_edf(cfg)
 
-% FT_TRIALFUN_EDF is an example trial function. It searches for events of type "up"
-% in an analog data channel, as indentified by thresholding. This threshold can be a
-% hard threshold, i.e. a numeric, or flexibly defined by an executable string (e.g.,
-% calculating the 'median' of an analog signal.
+% FT_TRIALFUN_EDF is an example trial function for EDF data. It searches for events
+% of type "up" in an analog data channel, as indentified by thresholding. This
+% threshold can be a hard threshold, i.e. a numeric, or can flexibly be defined
+% depending on the data, for example calculating the 'median' of an analog signal.
 %
-% You can use this example trial function as template for your own
-% conditial trial definitions.
+% You can use this as a template for your own conditial trial definitions.
 %
-% See also FT_DEFINETRIAL, FT_PREPROCESSING
+% Use this function by calling 
+%   [cfg] = ft_definetrial(cfg)
+% where the configuration structure should contain
+%   cfg.dataset  = string with the filename
+%   cfg.trialfun = 'ft_trialfun_edf'
+%
+% See also FT_DEFINETRIAL, FT_TRIALFUN_GENERAL
 
-if strcmp(mfilename,'ft_trialfun_edf')
-  ft_warning('this trial function is only an example, please copy it and adapt it to your specific EDF situation - see http://www.fieldtriptoolbox.org/getting_started/edf');
-end
+ft_warning('this trial function is only an example, please copy it and adapt it to your specific EDF situation - see http://www.fieldtriptoolbox.org/getting_started/edf');
 
 % read the header information
 hdr           = ft_read_header(cfg.dataset);

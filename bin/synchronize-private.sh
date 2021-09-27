@@ -71,6 +71,14 @@ ARRAY+=(private/bg_rgba2rgb.m)
 sync ${ARRAY[*]}
 
 ################################################################################
+# bids_sidecar.m
+
+ARRAY=()
+ARRAY+=(fileio/private/bids_sidecar.m)
+ARRAY+=(trialfun/private/bids_sidecar.m)
+sync ${ARRAY[*]}
+
+################################################################################
 # bounding_mesh.m
 
 ARRAY=()
