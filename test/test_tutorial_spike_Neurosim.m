@@ -61,6 +61,9 @@ cfg.datafile = dccnpath('/home/common/matlab/fieldtrip/data/test/original/neuros
 cfg.trialfun = 'ft_trialfun_general';
 cfg = ft_definetrial(cfg);
 
+% THIS IS WHERE THE ERROR FURTHER DOWN ORIGINATES, USING ft_trialfun_general TO
+% SEGMENT CONTINUOUS DATA NOW RESULTS IN NON_OVERLAPPING SEGMENTS. IN THE PAST THESE
+% WERE (ACCIDENTALLY) OVERLAPPING SEGMENTS, AS EACH SEGMENT STARTED AT T=0.
 
 cfg.trlunit='samples'; %ft_trialfun_general gives us samles, not timestamps
 cfg.hdr = spike.hdr; %using 'samples' requires the header information.
