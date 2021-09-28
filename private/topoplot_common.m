@@ -192,8 +192,7 @@ if ~isequal(cfg.colormap, 'default')
     cfg.colormap = ft_colormap(cfg.colormap);
   elseif iscell(cfg.colormap)
     cfg.colormap = ft_colormap(cfg.colormap{:});
-  end
-  if size(cfg.colormap,2)~=3
+  elseif isnumeric(cfg.colormap) && size(cfg.colormap,2)~=3
     ft_error('cfg.colormap must be Nx3');
   end
   % the actual colormap will be set below
