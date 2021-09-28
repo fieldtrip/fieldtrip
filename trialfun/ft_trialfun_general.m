@@ -203,7 +203,7 @@ else
     end
   end
   
-  if all(isnan(trl(:,4)))
+  if ~isempty(trl) && all(isnan(trl(:,4)))
     % the values are not informative, remove them
     trl = trl(:,1:3);
   end
