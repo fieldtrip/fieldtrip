@@ -1,8 +1,15 @@
 function [trl, allevents] = ft_trialfun_bids(cfg)
 
 % FT_TRIALFUN_BIDS determines trials/segments to be used for subsequent analysis, on
-% the basis of the BIDS "events.tsv" file. This function works for any BIDS formatted
-% dataset.
+% the basis of the BIDS "events.tsv" file. This function should in general not be
+% called directly, it will be called by FT_DEFINETRIAL.
+%
+% Use this function by calling 
+%   [cfg] = ft_definetrial(cfg)
+% where the configuration structure should contain
+%   cfg.dataset   = string with the filename
+%   cfg.trialdef  = structure with the details of trial definition, see below
+%   cfg.trialfun  = 'ft_trialfun_bids'
 %
 % The trialdef structure should contain the following specifications
 %   cfg.trialdef.prestim    = latency in seconds (required)
