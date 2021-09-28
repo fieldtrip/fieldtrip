@@ -146,7 +146,7 @@ if ~isempty(cfg.atlas)
 end
 
 % allow for a user specified colormap of the non-diff surfaces
-cfg.colormap = ft_getopt(cfg, 'colormap');
+cfg.colormap = ft_getopt(cfg, 'colormap', 'default');
 
 % other defaults are set in the lower-level object
 
