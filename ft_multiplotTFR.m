@@ -230,8 +230,8 @@ if ~isfield(cfg, 'box')
   end
 end
 
-% check if the colormap is in proper format
-if isfield(cfg, 'colormap') && ~isequal(cfg.colormap, 'default')
+% check if the colormap is in the proper format
+if ~isequal(cfg.colormap, 'default')
   if ischar(cfg.colormap)
     cfg.colormap = ft_colormap(cfg.colormap);
   elseif iscell(cfg.colormap)
@@ -512,7 +512,7 @@ end % plot channels
 % plot the layout, labels and outline
 ft_plot_layout(cfg.layout, 'box', cfg.box, 'label', cfg.showlabels, 'outline', cfg.showoutline, 'point', 'no', 'mask', 'no', 'fontsize', cfg.fontsize, 'labelyoffset', 1.4*median(cfg.layout.height/2), 'labelalignh', 'center', 'chanindx', find(~ismember(cfg.layout.label, {'COMNT', 'SCALE'})) );
 
-% show colormap
+% apply the colormap
 if ~isempty(cfg.colormap)
   set(gcf,  'colormap', cfg.colormap);
 end

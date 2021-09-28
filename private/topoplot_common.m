@@ -95,6 +95,7 @@ cfg.gridscale         = ft_getopt(cfg, 'gridscale',         67);
 cfg.interplimits      = ft_getopt(cfg, 'interplimits',     'head');
 cfg.interpolation     = ft_getopt(cfg, 'interpolation',     default_interpmethod);
 cfg.contournum        = ft_getopt(cfg, 'contournum',        6);
+cfg.colormap          = ft_getopt(cfg, 'colormap',         'default');
 cfg.colorbar          = ft_getopt(cfg, 'colorbar',         'no');
 cfg.colorbartext      = ft_getopt(cfg, 'colorbartext',    '');
 cfg.shading           = ft_getopt(cfg, 'shading',          'flat');
@@ -185,8 +186,8 @@ if strcmp(cfg.marker, 'highlights')
   cfg.marker = 'off';
 end
 
-% check colormap is proper format and set it
-if isfield(cfg, 'colormap') && ~isequal(cfg.colormap, 'default')
+% check if the colormap is in the proper format
+if ~isequal(cfg.colormap, 'default')
   if ischar(cfg.colormap)
     cfg.colormap = ft_colormap(cfg.colormap);
   elseif iscell(cfg.colormap)
@@ -195,6 +196,7 @@ if isfield(cfg, 'colormap') && ~isequal(cfg.colormap, 'default')
   if size(cfg.colormap,2)~=3
     ft_error('cfg.colormap must be Nx3');
   end
+  % the actual colormap will be set below
 end
 
 Ndata = numel(varargin);
@@ -202,8 +204,10 @@ for indx=1:Ndata
   
   % open a new figure, or add it to the existing one
   open_figure(keepfields(cfg, {'figure', 'position', 'visible', 'renderer', 'figurename', 'title'}));
-  if isfield(cfg, 'colormap')
-    ft_colormap(cfg.colormap);
+  
+  % apply the same colormap to all figures
+  if ~isempty(cfg.colormap)
+    set(gcf,  'colormap', cfg.colormap);
   end
   
   if iscell(cfg.dataname)

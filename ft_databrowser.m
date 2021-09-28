@@ -206,7 +206,7 @@ cfg.chanscale           = ft_getopt(cfg, 'chanscale');
 cfg.mychanscale         = ft_getopt(cfg, 'mychanscale');
 cfg.mychan              = ft_getopt(cfg, 'mychan');
 cfg.layout              = ft_getopt(cfg, 'layout');
-cfg.colormap            = ft_getopt(cfg, 'colormap');
+cfg.colormap            = ft_getopt(cfg, 'colormap', 'default');
 cfg.plotlabels          = ft_getopt(cfg, 'plotlabels', 'some');
 cfg.event               = ft_getopt(cfg, 'event');                       % this only exists for backward compatibility and should not be documented
 cfg.continuous          = ft_getopt(cfg, 'continuous');                  % the default is set further down in the code, conditional on the input data
@@ -338,6 +338,10 @@ if hasdata
   if isfield(data, 'cfg') && ~isempty(ft_findcfg(data.cfg, 'origfs'))
     % don't use the events in case the data has been resampled
     ft_warning('the data has been resampled, not showing the events');
+    event = [];
+  elseif istimelock
+    % don't use the events in case the data has been averaged
+    ft_warning('the data has been averaged, not showing the events');
     event = [];
   elseif ~isempty(cfg.event)
     % use the events that the user passed in the configuration
@@ -662,7 +666,7 @@ end
 % open a new figure with the specified settings
 h = open_figure(keepfields(cfg, {'figure', 'position', 'visible', 'renderer'}));
 
-% check if the colormap is in proper format
+% check if the colormap is in proper format and set it
 if ~isempty(cfg.colormap)
   if ischar(cfg.colormap)
     cfg.colormap = ft_colormap(cfg.colormap);
@@ -671,6 +675,8 @@ if ~isempty(cfg.colormap)
   end
   if size(cfg.colormap,2)~=3
     ft_error('cfg.colormap must be Nx3');
+  else
+    set(h, 'colormap', cfg.colormap);
   end
 end
 

@@ -93,7 +93,7 @@ cfg.arrowsize   = ft_getopt(cfg, 'arrowsize',   nan);     % length of the arrow 
 cfg.arrowoffset = ft_getopt(cfg, 'arrowoffset', nan);     % absolute, should be in figure units, i.e. the same units as the layout
 cfg.arrowlength = ft_getopt(cfg, 'arrowlength', 0.8);     % relative to the complete line
 cfg.linestyle   = ft_getopt(cfg, 'linestyle',   []);
-cfg.colormap    = ft_getopt(cfg, 'colormap',    []);
+cfg.colormap    = ft_getopt(cfg, 'colormap',    'default');
 cfg.renderer    = ft_getopt(cfg, 'renderer'); % let MATLAB decide on the default
 
 tmpcfg = keepfields(cfg, {'layout', 'channel', 'rows', 'columns', 'commentpos', 'skipcomnt', 'scalepos', 'skipscale', 'projection', 'viewpoint', 'rotate', 'width', 'height', 'elec', 'grad', 'opto', 'showcallinfo'});

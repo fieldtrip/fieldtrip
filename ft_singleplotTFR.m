@@ -420,8 +420,8 @@ else
   ft_plot_matrix(xval, yval, zval, 'clim', [zmin zmax], 'tag', 'cip')
 end
 
-% set colormap
-if isfield(cfg, 'colormap') && ~isequal(cfg.colormap, 'default')
+% check if the colormap is in the proper format and set it
+if ~isequal(cfg.colormap, 'default')
   if ischar(cfg.colormap)
     cfg.colormap = ft_colormap(cfg.colormap);
   elseif iscell(cfg.colormap)
