@@ -1,0 +1,8 @@
+function test_bug1891
+
+% MEM 320kb
+% WALLTIME 00:00:10
+% DEPENDENCY ft_connectivity_wpli.m
+
+data = rand(200,200);
+ft_connectivity_wpli(data, 'dojack', false);
