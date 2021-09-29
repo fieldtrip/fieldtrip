@@ -66,7 +66,11 @@ if n>1
   else
     wpli     = outsum./outsumW; % estimator of E(Im(X))/E(|Im(X)|)
   end
-  wpli = reshape(wpli,siz(2:end)); % remove the first singular dimension
+  if (length(siz) == 2)
+    wpli = reshape(wpli,[ siz(2:end) 1 ] );
+  else
+    wpli = reshape(wpli,siz(2:end));
+  end
 else
   wpli = NaN(siz(2:end)); % for one observation, we should return NaNs
   ft_warning('ft_connectivity_wpli:nTrials', 'computation wpli requires >1 trial, returning NaNs');
