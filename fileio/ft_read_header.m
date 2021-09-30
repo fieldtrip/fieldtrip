@@ -84,7 +84,7 @@ function [hdr] = ft_read_header(filename, varargin)
 %   Neurodata Without Borders: Neurophysiology (*.nwb)
 %
 % The following NIRS dataformats are supported
-%   Artinis - Artinis Medical Systems B.V. (*.oxy3, *.oxy4, *.oxyproj)
+%   Artinis - Artinis Medical Systems B.V. (*.oxy3, *.oxy4, *.oxy5, *.oxyproj)
 %   BUCN - Birkbeck college, London (*.txt)
 %   SNIRF - Society for functional near-infrared spectroscopy (*.snirf)
 %
@@ -2431,6 +2431,10 @@ switch headerformat
   case 'artinis_oxy4'
     ft_hastoolbox('artinis', 1);
     hdr = read_artinis_oxy4(filename);
+    
+  case 'artinis_oxy5'
+    ft_hastoolbox('artinis', 1);
+    hdr = read_artinis_oxy5(filename);
     
   case 'artinis_oxyproj'
     ft_hastoolbox('artinis', 1);

@@ -23,8 +23,8 @@ function [sens] = ft_read_sens(filename, varargin)
 %   asa_elc besa_elp besa_pos besa_sfp yokogawa_ave yokogawa_con yokogawa_raw 4d
 %   4d_pdf 4d_m4d 4d_xyz ctf_ds ctf_res4 itab_raw itab_mhd netmeg neuromag_fif
 %   neuromag_mne neuromag_mne_elec neuromag_mne_grad polhemus_fil polhemus_pos
-%   zebris_sfp spmeeg_mat eeglab_set localite_pos artinis_oxy3 artinis_oxyproj matlab
-%   yorkinstruments_hdf5
+%   zebris_sfp spmeeg_mat eeglab_set localite_pos artinis_oxy3 artinis_oxy4 
+%   artinis_oxy5 artinis_oxyproj yorkinstruments_hdf5 matlab
 %
 % See also FT_READ_HEADER, FT_DATATYPE_SENS, FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD,
 
@@ -141,7 +141,7 @@ switch fileformat
     % optode information is mostly stored in the header of the NIRS dataset
     % hence we use the standard fieldtrip/fileio ft_read_header function
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  case {'homer_nirs', 'snirf', 'artinis_oxy3', 'artinis_oxy4', 'artinis_oxyproj', 'nirx_wl1', 'nirx_wl2', 'nirx_tpl'}
+  case {'homer_nirs', 'snirf', 'artinis_oxy3', 'artinis_oxy4', 'artinis_oxy5', 'artinis_oxyproj', 'nirx_wl1', 'nirx_wl2', 'nirx_tpl'}
     hdr = ft_read_header(filename, 'headerformat', fileformat, 'coordsys', coordsys, 'readbids', readbids);
     if isfield(hdr, 'opto')
       sens = hdr.opto;
