@@ -5,7 +5,7 @@ function test_issue1695
 % DEPENDENCY ft_version ft_read_mri ft_volumereslice ft_volumenormalise ft_warp_apply spm_file spm_preproc_run
 
 %% Init
-[~,ftpath] = ft_version;
+[ftver, ftpath] = ft_version;
 
 %% Read sourcemodel
 dat = load(fullfile(ftpath, 'template/sourcemodel/standard_sourcemodel3d10mm.mat'));

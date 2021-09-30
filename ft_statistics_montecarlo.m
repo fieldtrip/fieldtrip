@@ -40,7 +40,7 @@ function [stat, cfg] = ft_statistics_montecarlo(cfg, dat, design, varargin)
 %   cfg.clustercritval   = for parametric thresholding (default is determined by the statfun)
 %   cfg.clustertail      = -1, 1 or 0 (default = 0)
 %
-% To include the channel dimension for clustering, you should specify
+% To include the channel dimension for clustering of channel level data, you should specify
 %   cfg.neighbours       = neighbourhood structure, see FT_PREPARE_NEIGHBOURS
 % If you specify an empty neighbourhood structure, clustering will only be done
 % over frequency and/or time and not over neighbouring channels.
@@ -60,7 +60,7 @@ function [stat, cfg] = ft_statistics_montecarlo(cfg, dat, design, varargin)
 % You can also use a custom statistic of your choise that is sensitive to the
 % expected effect in the data. You can implement the statistic in a "statfun" that
 % will be called for each randomization. The requirements on a custom statistical
-% function is that the function is called statfun_xxx, and that the function returns
+% function is that the function is called ft_statfun_xxx, and that the function returns
 % a structure with a "stat" field containing the single sample statistical values.
 % Have a look at the functions in the fieldtrip/statfun directory (e.g. 
 % FT_STATFUN_INDEPSAMPLEST) for the correct format of the input and output.
@@ -168,9 +168,6 @@ if any(strcmp(cfg.correctm, {'cluster' 'tfce'}))
       % input data can be reshaped into a 3D volume, use bwlabeln/spm_bwlabel rather than clusterstat
       ft_info('using connectivity of voxels in 3-D volume\n');
       cfg.connectivity = nan;
-      %if isfield(cfg, 'inside')
-      %  cfg = fixinside(cfg, 'index');
-      %end
     elseif isfield(cfg, 'tri')
       % input data describes a surface along which neighbours can be defined
       ft_info('using connectivity of vertices along triangulated surface\n');
@@ -189,7 +186,10 @@ if any(strcmp(cfg.correctm, {'cluster' 'tfce'}))
       cfg.connectivity = false(size(dat,1));
     end
   else
-    % use the specified connectivity: op hoop van zegen
+    % use the specified connectivity: this is not fully robust because
+    % there is no guarantee that the order of the spatial elements in the
+    % data is the same as the order of the spatial elements in the
+    % adjacency matrix
   end
 end
 
@@ -242,6 +242,7 @@ if strcmp(cfg.correctm, 'cluster')
     % tmpcfg = keepfields(cfg, {'dim' 'dimord' 'clusteralpha' 'clustertail' 'ivar' 'uvar' 'cvar' 'wvar' 'contrastcoefs'});
     tmpcfg.computecritval = 'yes';  % explicitly request the computation of the crtitical value
     tmpcfg.computestat    = 'no';   % skip the computation of the statistic
+    tmpcfg.alpha          = cfg.clusteralpha; % the statfun uses cfg.alpha most likely 
     try
       cfg.clustercritval    = getfield(statfun(tmpcfg, dat, design), 'critval');
     catch

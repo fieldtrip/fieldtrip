@@ -105,8 +105,20 @@ switch version
     % ensure that it has individual source positions
     source = fixpos(source);
     
-    % ensure that it is always logical
-    source = fixinside(source, 'logical');
+    if isfield(source, 'inside')
+      % ensure that it is always logical
+      source = fixinside(source, 'logical');
+    end
+    
+    if isfield(source, 'coordsys')
+      % ensure that it is in lower case
+      source.coordsys = lower(source.coordsys);
+    end
+    
+    if isfield(source, 'unit')
+      % ensure that it is in lower case
+      source.unit = lower(source.unit);
+    end
     
     % remove obsolete fields
     if isfield(source, 'method')
@@ -146,14 +158,6 @@ switch version
       source = rmfield(source, 'avg');
     end
     
-    if isfield(source, 'inside')
-      % the inside is by definition logically indexed
-      probe = find(source.inside, 1, 'first');
-    else
-      % just take the first source position
-      probe = 1;
-    end
-    
     if isfield(source, 'trial') && isstruct(source.trial)
       npos = size(source.pos,1);
       
@@ -176,7 +180,11 @@ switch version
         if iscell(dat)
           datsiz(1) = nrpt; % swap the size of pos with the size of rpt
           val  = cell(npos,1);
-          indx = find(source.inside);
+          if isfield(source, 'inside')
+            indx = find(source.inside);
+          else
+            indx = 1:npos;
+          end
           for k=1:length(indx)
             val{indx(k)}          = nan(datsiz);
             val{indx(k)}(1,:,:,:) = dat{indx(k)};

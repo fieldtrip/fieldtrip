@@ -1,4 +1,4 @@
-function ft_sourceplot(cfg, functional, anatomical)
+function [cfg] = ft_sourceplot(cfg, functional, anatomical)
 
 % FT_SOURCEPLOT plots functional source reconstruction data on slices or on a surface,
 % optionally as an overlay on anatomical MRI data, where statistical data can be used to
@@ -743,24 +743,14 @@ switch cfg.method
     cfg.slicedim   = ft_getopt(cfg, 'slicedim',   3);
     cfg.slicerange = ft_getopt(cfg, 'slicerange', 'auto');
     
-    % white BG => mskana
-    
-    % TODO: HERE THE FUNCTION THAT MAKES TO SLICE DIMENSION ALWAYS THE THIRD DIMENSION, AND ALSO KEEP TRANSFORMATION MATRIX UP TO DATE
-    % zoiets
-    % if hasana; ana = shiftdim(ana,cfg.slicedim-1); end
-    % if hasfun; fun = shiftdim(fun,cfg.slicedim-1); end
-    % if hasmsk; msk = shiftdim(msk,cfg.slicedim-1); end
-    
     % ADDED BY JM: allow for slicedim different than 3
     switch cfg.slicedim
       case 1
-        dim = dim([2 3 1]);
         if hasana, ana = permute(ana,[2 3 1]); end
         if hasfun, fun = permute(fun,[2 3 1]); end
         if hasmsk, msk = permute(msk,[2 3 1]); end
         cfg.slicedim=3;
       case 2
-        dim = dim([3 1 2]);
         if hasana, ana = permute(ana,[3 1 2]); end
         if hasfun, fun = permute(fun,[3 1 2]); end
         if hasmsk, msk = permute(msk,[3 1 2]); end
@@ -780,15 +770,15 @@ switch cfg.method
           insideMask = false(size(fun));
           insideMask(functional.inside) = true;
           
-          ind_fslice = min(find(max(max(insideMask,[],1),[],2)));
-          ind_lslice = max(find(max(max(insideMask,[],1),[],2)));
+          ind_fslice = find(max(max(insideMask,[],1),[],2), 1, 'first');
+          ind_lslice = find(max(max(insideMask,[],1),[],2), 1, 'last');
         else
-          ind_fslice = min(find(~isnan(max(max(fun,[],1),[],2))));
-          ind_lslice = max(find(~isnan(max(max(fun,[],1),[],2))));
+          ind_fslice = find(~isnan(max(max(fun,[],1),[],2)), 1, 'first');
+          ind_lslice = find(~isnan(max(max(fun,[],1),[],2)), 1, 'last');
         end
       elseif hasana % if only ana, no fun
-        ind_fslice = min(find(max(max(ana,[],1),[],2)));
-        ind_lslice = max(find(max(max(ana,[],1),[],2)));
+        ind_fslice = find(max(max(ana,[],1),[],2), 1, 'first');
+        ind_lslice = find(max(max(ana,[],1),[],2), 1, 'last');
       else
         ft_error('no functional parameter and no anatomical parameter, can not plot');
       end
@@ -801,10 +791,13 @@ switch cfg.method
     if hasana; new_ana = ana(:,:,ind_allslice); clear ana; ana=new_ana; clear new_ana; end
     if hasfun; new_fun = fun(:,:,ind_allslice); clear fun; fun=new_fun; clear new_fun; end
     if hasmsk; new_msk = msk(:,:,ind_allslice); clear msk; msk=new_msk; clear new_msk; end
-    % if hasmskana; new_mskana = mskana(:,:,ind_allslice); clear mskana; mskana=new_mskana; clear new_mskana; end
     
     % update the dimensions of the volume
-    if hasana; dim=size(ana); else dim=size(fun); end
+    if hasana
+      dim=size(ana);
+    else
+      dim=size(fun);
+    end
     
     %%%%% make a "quilt", that contain all slices on 2D patched sheet
     % Number of patches along sides of Quilt (M and N)
@@ -815,19 +808,13 @@ switch cfg.method
       dim(end+1:3) = 1;
     end
     
-    %if cfg.slicedim~=3
-    %  ft_error('only supported for slicedim=3');
-    %end
-    
-    
     m = dim(1);
     n = dim(2);
     M = ceil(sqrt(dim(3)));
     N = ceil(sqrt(dim(3)));
-    num_patch = N*M;
     
+    num_patch = N*M;
     num_slice = (dim(cfg.slicedim));
-    num_empt = num_patch-num_slice;
     % put empty slides on ana, fun, msk, mskana to fill Quilt up
     if hasana; ana(:,:,end+1:num_patch)=0; end
     if hasfun; fun(:,:,end+1:num_patch)=0; end
@@ -844,11 +831,8 @@ switch cfg.method
         quilt_fun(ybeg*m+1:(ybeg+1)*m, xbeg*n+1:(xbeg+1)*n)=fun(:,:,iSlice);
       end
       if hasmsk
-        quilt_msk(ybeg.*m+1:(ybeg+1)*m, xbeg*n+1:(xbeg+1)*n)=msk(:,:,iSlice);
+        quilt_msk(ybeg*m+1:(ybeg+1)*m, xbeg*n+1:(xbeg+1)*n)=msk(:,:,iSlice);
       end
-      %     if hasmskana
-      %       quilt_mskana(ybeg.*m+1:(ybeg+1).*m, xbeg.*n+1:(xbeg+1).*n)=mskana(:,:,iSlice);
-      %     end
     end
     % make vols and scales, containes volumes to be plotted (fun, ana, msk), added by ingnie
     if hasana; vols2D{1} = quilt_ana; scales{1} = []; end % needed when only plotting ana
@@ -905,7 +889,7 @@ switch cfg.method
     
     if istrue(cfg.colorbar)
       if hasfun
-        % use a normal MATLAB coorbar
+        % use a normal MATLAB colorbar
         hc = colorbar;
         set(hc, 'YLim', [fcolmin fcolmax]);
         ylabel(hc, cfg.colorbartext);
@@ -1058,8 +1042,14 @@ switch cfg.method
     if hasatlas
       opt.atlas = atlas;
     end
-    if hasana
+    if hasana && ~strcmp(cfg.maskstyle, 'colormix')
       opt.ana = ana;
+    elseif hasana && strcmp(cfg.maskstyle, 'colormix')
+      opt.background = ana;
+    elseif ~hasana && ~strcmp(cfg.maskstyle, 'colormix')
+      % nothing needed
+    elseif ~hasana && strcmp(cfg.maskstyle, 'colormix')
+      opt.background = zeros(size(fun));
     end
     if hasfun
       opt.fun = fun;
@@ -1076,7 +1066,8 @@ switch cfg.method
     opt.hastime       = hastime;
     opt.hasmsk        = hasmsk;
     opt.hasfun        = hasfun;
-    opt.hasana        = hasana;
+    opt.hasana        = isfield(opt, 'ana');
+    opt.hasbackground = isfield(opt, 'background');
     opt.qi            = qi;
     opt.tag           = 'ik';
     opt.functional    = functional;
@@ -1163,11 +1154,13 @@ switch cfg.method
         % ensure that the units are consistent, convert the units if required
         surf = ft_convert_units(surf, functional.unit);
       end
-      if isfield(functional, 'coordsys')
+      if isfield(functional, 'coordsys') && isfield(surf, 'coordsys')
         % ensure that the coordinate systems match
         functional = fixcoordsys(functional);
         surf       = fixcoordsys(surf);
         assert(isequal(functional.coordsys, surf.coordsys), 'coordinate systems do not match');
+      else
+        ft_notice('assuming that the coordinate systems match');
       end
       
       % downsample the cortical surface
@@ -1187,6 +1180,7 @@ switch cfg.method
         if isfield(surf, 'curv'),       surf.curv       = surf.curv(idx);       end
         if isfield(surf, 'sulc'),       surf.sulc       = surf.sulc(idx);       end
         if isfield(surf, 'hemisphere'), surf.hemisphere = surf.hemisphere(idx); end
+        if isfield(surf, 'inside'),     surf.inside     = surf.inside(idx);     end
       end
       
       % these are required
@@ -1200,11 +1194,13 @@ switch cfg.method
       tmpcfg = [];
       tmpcfg.parameter = {cfg.funparameter};
       if ~isempty(cfg.maskparameter)
+        % it was specified by the user
         tmpcfg.parameter = [tmpcfg.parameter {cfg.maskparameter}];
         maskparameter    = cfg.maskparameter;
-      else
-        tmpcfg.parameter = [tmpcfg.parameter {'mask'}];
+      elseif hasmsk
+        % it was constructed on the fly
         functional.mask  = msk;
+        tmpcfg.parameter = [tmpcfg.parameter {'mask'}];
         maskparameter    = 'mask'; % temporary variable
       end
       tmpcfg.interpmethod = cfg.projmethod;
@@ -1219,7 +1215,7 @@ switch cfg.method
       if hasfun, val      = getsubfield(tmpdata, cfg.funparameter);  val     = val(:);     end
       if hasmsk, maskval  = getsubfield(tmpdata, maskparameter);     maskval = maskval(:); end
       
-      if ~isempty(cfg.projthresh)
+      if ~isempty(cfg.projthresh) && hasmsk
         maskval(abs(val) < cfg.projthresh*max(abs(val(:)))) = 0;
       end
       
@@ -1641,10 +1637,9 @@ else
   lab = 'NA';
 end
 
-
 if opt.hasana
   options = {'transform', eye(4),     'location', opt.ijk, 'style', 'subplot',...
-    'update',    opt.update, 'doscale',  false,   'clim',  opt.clim};
+             'update',    opt.update, 'doscale',  false,   'clim',  opt.clim};
   if isfield(opt, 'intersectmesh')
     options = cat(2, options, 'intersectmesh', opt.intersectmesh);
   end
@@ -1692,16 +1687,22 @@ if opt.hasfun
         tmpmask = opt.msk(:,:,:,tmpqi(1),tmpqi(2));
       end
     end
+    
+    plotoptions = {'transform', eye(4), 'location', opt.ijk, ...
+      'style', 'subplot', 'parents', tmph, 'update', opt.update, ...
+      'colormap', opt.funcolormap, 'clim', [opt.fcolmin opt.fcolmax]};
     if opt.hasmsk
-      ft_plot_ortho(tmpfun, 'datmask', tmpmask, 'transform', eye(4), 'location', opt.ijk, ...
-        'style', 'subplot', 'parents', tmph, 'update', opt.update, ...
-        'colormap', opt.funcolormap, 'clim', [opt.fcolmin opt.fcolmax], ...
-        'opacitylim', [opt.opacmin opt.opacmax]);
-    else
-      ft_plot_ortho(tmpfun, 'transform', eye(4), 'location', opt.ijk, ...
-        'style', 'subplot', 'parents', tmph, 'update', opt.update, ...
-        'colormap', opt.funcolormap, 'clim', [opt.fcolmin opt.fcolmax]);
+      plotoptions = cat(2, plotoptions, {'datmask', tmpmask, 'opacitylim', [opt.opacmin opt.opacmax]});
+    elseif opt.hasbackground
+      % there's a background, in the absence of the mask, the fun should be
+      % plotted with an opacity value of 0.5
+      plotoptions = cat(2, plotoptions, {'datmask', ones(size(tmpfun))./2, 'opacitylim', [0 1]});
     end
+    if opt.hasbackground
+      % the background should always be added, independent of the mask
+      plotoptions = cat(2, plotoptions, {'background', opt.background, 'maskstyle', 'colormix'});
+    end
+    ft_plot_ortho(tmpfun, plotoptions{:});
     % After the first call, the handles to the functional surfaces exist.
     % Create a variable containing these, and sort according to the parents.
     opt.funhandles = findobj(opt.handlesfigure, 'type', 'surface');
@@ -1734,18 +1735,22 @@ if opt.hasfun
         tmpmask = opt.msk(:,:,:,tmpqi(1),tmpqi(2));
       end
     end
+    
+    plotoptions = {'transform', eye(4), 'location', opt.ijk, ...
+        'style', 'subplot', 'surfhandle', opt.funhandles, 'update', opt.update, ...
+        'colormap', opt.funcolormap, 'clim', [opt.fcolmin opt.fcolmax]};
     if opt.hasmsk
-      tmph  = opt.funhandles;
-      ft_plot_ortho(tmpfun, 'datmask', tmpmask, 'transform', eye(4), 'location', opt.ijk, ...
-        'style', 'subplot', 'surfhandle', tmph, 'update', opt.update, ...
-        'colormap', opt.funcolormap, 'clim', [opt.fcolmin opt.fcolmax], ...
-        'opacitylim', [opt.opacmin opt.opacmax]);
-    else
-      tmph  = opt.funhandles;
-      ft_plot_ortho(tmpfun, 'transform', eye(4), 'location', opt.ijk, ...
-        'style', 'subplot', 'surfhandle', tmph, 'update', opt.update, ...
-        'colormap', opt.funcolormap, 'clim', [opt.fcolmin opt.fcolmax]);
+      plotoptions = cat(2, plotoptions, {'datmask', tmpmask, 'opacitylim', [opt.opacmin opt.opacmax]});
+    elseif opt.hasbackground
+      % there's a background, in the absence of the mask, the fun should be
+      % plotted with an opacity value of 0.5
+      plotoptions = cat(2, plotoptions, {'datmask', ones(size(tmpfun))./2, 'opacitylim', [0 1]});
     end
+    if opt.hasbackground
+      % the background should always be added, independent of the mask
+      plotoptions = cat(2, plotoptions, {'background', opt.background, 'maskstyle', 'colormix'});
+    end
+    ft_plot_ortho(tmpfun, plotoptions{:});
   end
 end
 set(opt.handlesaxes(1), 'Visible',opt.axis);

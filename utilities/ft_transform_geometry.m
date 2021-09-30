@@ -119,7 +119,7 @@ switch dtype
     end
     if (isfield(input, 'tetra') || isfield(input, 'hex')) && (globalrescale || axesrescale)
       ft_error('only a rigid body transformation without rescaling is allowed');
-    end        
+    end
 end
 
 % tfields must be rotated, translated and scaled
@@ -127,23 +127,28 @@ end
 % mfields must be simply multipied
 % recfields must be recursed into
 tfields   = {'pos' 'pnt' 'o' 'coilpos' 'elecpos' 'optopos' 'chanpos' 'chanposold' 'nas' 'lpa' 'rpa' 'zpoint'}; % apply rotation plus translation
-rfields   = {'ori' 'nrm'     'coilori' 'elecori' 'optoori' 'chanori' 'chanoriold'                           }; % only apply rotation
-mfields   = {'transform'};           % plain matrix multiplication
-recfields = {'fid' 'bnd' 'orig'};    % recurse into these fields
+rfields   = {'ori' 'nrm'     'coilori' 'elecori' 'optoori' 'chanori' 'chanoriold' 'mom'                     }; % only apply rotation
+mfields   = {'transform'};                % plain matrix multiplication
+recfields = {'fid' 'bnd' 'orig' 'dip'};   % recurse into these fields
 % the field 'r' is not included here, because it applies to a volume
 % conductor model, and scaling is not allowed, so r will not change.
 
 fnames = fieldnames(input);
 for k = 1:numel(fnames)
+  % name = sprintf('%s.%s', inputname(2), fnames{k});
   if ~isempty(input.(fnames{k}))
     if any(strcmp(fnames{k}, tfields))
+      % ft_info('applying transformation to %s', name);
       input.(fnames{k}) = apply(transform, input.(fnames{k}));
     elseif any(strcmp(fnames{k}, rfields))
+      % ft_info('applying rotation to %s', name);
       input.(fnames{k}) = apply(rotation, input.(fnames{k}));
     elseif any(strcmp(fnames{k}, mfields))
+      % ft_info('applying multiplication to %s', name);
       input.(fnames{k}) = transform*input.(fnames{k});
     elseif any(strcmp(fnames{k}, recfields))
       for j = 1:numel(input.(fnames{k}))
+        % ft_info('recursing into %s', name);
         input.(fnames{k})(j) = ft_transform_geometry(transform, input.(fnames{k})(j));
       end
     else
@@ -158,6 +163,19 @@ output = input;
 % SUBFUNCTION that applies the homogeneous transformation
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [new] = apply(transform, old)
-old(:,4) = 1;
-new = old * transform';
-new = new(:,1:3);
+
+[m, n] = size(old);
+if m~=3 && n==3
+  % each row is one position
+  old(:,4) = 1;
+  new = old * transform';
+  new = new(:,1:3);
+elseif m==3 && n~=3
+  % each column is one position
+  old(4,:) = 1;
+  new = transform * old;
+  new = new(1:3,:);
+else
+  ft_warning('ambiguous input, cannot apply transformation');
+  new = old;
+end

@@ -31,7 +31,7 @@ segprob.transform(3,4) = -0.5;
 segindx = ft_datatype_segmentation(segprob, 'segmentationstyle', 'indexed');
 
 cfg = [];
-cfg.funparameter = 'seg';
+cfg.funparameter = 'tissue';
 cfg.method = 'ortho';
 cfg.location = [5 5 5]; % this is the center of the volume, in this plot it will be rounded off to the nearest voxel
 ft_sourceplot(cfg, segindx);
@@ -50,7 +50,7 @@ cfg.method = 'hexahedral';
 mesh_vol_hex1 = ft_prepare_mesh(cfg, segprob);
 
 figure
-ft_plot_ortho(segindx.seg, 'transform', segindx.transform, 'location', [5 5 5], 'style', 'intersect');
+ft_plot_ortho(segindx.tissue, 'transform', segindx.transform, 'location', [5 5 5], 'style', 'intersect');
 hold on
 ft_plot_mesh(mesh_vol_hex1, 'surfaceonly', false, 'facecolor', 'none', 'edgecolor', 'm');
 view(120, 30)
@@ -79,8 +79,8 @@ mesh_vol_hex2 = ft_prepare_mesh(cfg, segprob2);
 
 % this one looks OK in terms of alignment
 figure
-% ft_plot_ortho(segindx.seg, 'transform', segindx.transform, 'location', [5 5 5], 'style', 'intersect');
-ft_plot_ortho(segindx2.seg, 'transform', segindx2.transform, 'location', [5 5 5], 'style', 'intersect'); % this one looks OK in terms of alignment
+% ft_plot_ortho(segindx.tissue, 'transform', segindx.transform, 'location', [5 5 5], 'style', 'intersect');
+ft_plot_ortho(segindx2.tissue, 'transform', segindx2.transform, 'location', [5 5 5], 'style', 'intersect'); % this one looks OK in terms of alignment
 hold on
 ft_plot_mesh(mesh_vol_hex2, 'surfaceonly', false, 'facecolor', 'none', 'edgecolor', 'm');
 view(120, 30)
@@ -108,9 +108,9 @@ cfg.method = 'hexahedral';
 mesh_vol_hex3 = ft_prepare_mesh(cfg, segprob3);
 
 figure
-% ft_plot_ortho(segindx.seg, 'transform', segindx.transform, 'location', [5 5 5], 'style', 'intersect');
-% ft_plot_ortho(segindx2.seg, 'transform', segindx2.transform, 'location', [5 5 5], 'style', 'intersect');
-ft_plot_ortho(segindx3.seg, 'transform', segindx3.transform, 'location', [5 5 5], 'style', 'intersect'); % this one looks OK in terms of alignment
+% ft_plot_ortho(segindx.tissue, 'transform', segindx.transform, 'location', [5 5 5], 'style', 'intersect');
+% ft_plot_ortho(segindx2.tissue, 'transform', segindx2.transform, 'location', [5 5 5], 'style', 'intersect');
+ft_plot_ortho(segindx3.tissue, 'transform', segindx3.transform, 'location', [5 5 5], 'style', 'intersect'); % this one looks OK in terms of alignment
 hold on
 ft_plot_mesh(mesh_vol_hex3, 'surfaceonly', false, 'facecolor', 'none', 'edgecolor', 'm');
 view(120, 30)
@@ -127,7 +127,7 @@ cfg.method = 'tetrahedral';
 mesh_vol_tet = ft_prepare_mesh(cfg, segprob);
 
 figure
-ft_plot_ortho(segindx.seg, 'transform', segindx.transform, 'location', [5 5 5], 'style', 'intersect');
+ft_plot_ortho(segindx.tissue, 'transform', segindx.transform, 'location', [5 5 5], 'style', 'intersect');
 hold on
 ft_plot_mesh(mesh_vol_tet, 'surfaceonly', false, 'facecolor', 'none', 'edgecolor', 'm');
 view(120, 30)

@@ -90,6 +90,9 @@ end
 avgL = ft_checkdata(avgL, 'datatype', 'timelock');
 avgR = ft_checkdata(avgR, 'datatype', 'timelock');
 
+% check if the input cfg is valid for this function
+cfg = ft_checkconfig(cfg, 'forbidden',  {'channels'}); % prevent accidental typos, see issue 1729
+
 % set the defaults
 if ~isfield(cfg, 'channelcmb')
   cfg.channelcmb = {
@@ -126,7 +129,7 @@ else
 end
 
 % compute the lateralized potentials
-Nchan = size(cfg.channelcmb);
+Nchan = size(cfg.channelcmb,1);
 for i=1:Nchan
   % here the channel names "C3" and "C4" are used to clarify the
   % computation of the lateralized potential on all channel pairs

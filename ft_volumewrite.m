@@ -15,20 +15,25 @@ function ft_volumewrite(cfg, volume)
 %
 % The configuration structure should contain the following elements
 %   cfg.parameter     = string, describing the functional data to be processed,
-%                         e.g. 'pow', 'coh', 'nai' or 'anatomy'
+%                       e.g. 'pow', 'coh', 'nai' or 'anatomy'
 %   cfg.filename      = filename without the extension
-%   cfg.filetype      = 'analyze_old', 'nifti', 'nifti_img', 'analyze_spm',
-%                       'nifti_spm', 'mgz', 'mgh', 'vmp' or 'vmr'
-%   cfg.vmpversion    = 1 or 2 (default) version of the vmp-format to use
-%   cfg.spmversion    = 'spm12' (default) version of spm to use
 %
-% The default filetype is 'nifti', which means that a single *.nii file
-% will be written using code from the freesurfer toolbox. The 'nifti_img' filetype
-% uses SPM for a dual file (*.img/*.hdr) nifti-format file. The 'nifti_spm'
-% filetype uses SPM for a single 'nifti' file. 
-% The analyze, analyze_spm, nifti, nifti_img, nifti_spm and mgz filetypes support a homogeneous
-% transformation matrix, the other filetypes do not support a homogeneous transformation
-% matrix and hence will be written in their native coordinate system.
+% To determine the file format, the following option can be specified 
+%   cfg.filetype      = 'analyze_old', 'nifti' (default), 'nifti_img', 'analyze_spm',
+%                       'nifti_spm', 'nifti_gz', 'mgz', 'mgh', 'vmp' or 'vmr'
+%
+% Depending on the filetype, the cfg should also contain
+%   cfg.vmpversion    = 1 or 2, version of the vmp format to use (default = 2)
+%   cfg.spmversion    = string, version of SPM to be used (default = 'spm12')
+%
+% The default filetype is 'nifti', which means that a single *.nii file will be
+% written using code from the freesurfer toolbox. The 'nifti_img' filetype uses SPM
+% for a dual file (*.img/*.hdr) nifti-format file. The 'nifti_spm' filetype uses SPM
+% for a single 'nifti' file.
+%
+% The analyze, analyze_spm, nifti, nifti_img, nifti_spm and mgz filetypes support a
+% homogeneous transformation matrix, the other filetypes do not support a homogeneous
+% transformation matrix and hence will be written in their native coordinate system.
 %
 % You can specify the datatype for the nifti, analyze_spm and analyze_old
 % formats. If not specified, the class of the input data will be preserved,
@@ -66,7 +71,7 @@ function ft_volumewrite(cfg, volume)
 % cfg.parameter
 
 % Copyright (C) 2003-2006, Robert Oostenveld, Markus Siegel
-% Copyright (C) 2011-2020, Jan-Mathijs Schoffelen
+% Copyright (C) 2011-2021, Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -122,8 +127,6 @@ cfg.markorigin   = ft_getopt(cfg, 'markorigin',   'no');
 cfg.markfiducial = ft_getopt(cfg, 'markfiducial', 'no');
 cfg.markcorner   = ft_getopt(cfg, 'markcorner',   'no');
 cfg.spmversion   = ft_getopt(cfg, 'spmversion',   'spm12');
-
-
 cfg.datatype     = ft_getopt(cfg, 'datatype');
 cfg.scaling      = ft_getopt(cfg, 'scaling');
 
@@ -204,6 +207,9 @@ end
 data(isnan(data)) = 0;
 
 datatype = class(data);
+if isempty(cfg.datatype)
+  cfg.datatype = datatype;
+end
 if ~isequal(datatype, cfg.datatype)
   ft_info('datatype of input data is %s, requested output datatype is %s', datatype, cfg.datatype);
 end
@@ -220,32 +226,32 @@ if istrue(cfg.scaling)
   % scale the data so that it fits in the desired numerical data format
   switch lower(cfg.datatype)    
     case 'uint8'
-      slope  = (maxval-minval)/(2^8-1);
-      offset = minval; 
+      scl_slope = (maxval-minval)/(2^8-1);
+      scl_inter = minval; 
     case 'int8'
-      slope  = maxval/(2^7-1);
-      offset = 0;
+      scl_slope = maxval/(2^7-1);
+      scl_inter = 0;
     case 'int16'
-      slope  = maxval/(2^15-1);
-      offset = 0;
+      scl_slope = maxval/(2^15-1);
+      scl_inter = 0;
     case 'int32'
-      slope  = maxval/(2^31-1);
-      offset = 0;
+      scl_slope = maxval/(2^31-1);
+      scl_inter = 0;
     case 'single'
-      slope  = maxval;
-      offset = 0;
+      scl_slope = maxval;
+      scl_inter = 0;
     case 'double'
-      slope  = maxval;
-      offset = 0;
+      scl_slope = maxval;
+      scl_inter = 0;
     otherwise
       ft_error('unknown datatype');
   end
-  data = (data - offset)./slope;
+  data = (data - scl_inter)./scl_slope;
 else
-  % thesea are parameters that can be written to a nifti file, and can be
+  % these are parameters that can be written to a nifti file, and can be
   % used to get the data back (close to) its original values
-  slope  = [];
-  offset = [];
+  scl_slope = [];
+  scl_inter = [];
 end
 
 if ~isequal(datatype, cfg.datatype)
@@ -301,7 +307,7 @@ switch cfg.filetype
       ft_error('unsupported coordinate system ''%s''', volume.coordsys);
     end
     
-  case {'analyze_spm', 'nifti', 'nifti_img' 'nifti_spm' 'mgz' 'mgh'}
+  case {'analyze_spm' 'nifti' 'nifti_img' 'nifti_spm' 'nifti_gz' 'mgz' 'mgh'}
     % this format supports a homogenous transformation matrix
     % nothing needs to be changed
   otherwise
@@ -329,7 +335,17 @@ switch cfg.filetype
     if isempty(ext)
       cfg.filename = sprintf('%s.nii', cfg.filename);
     end
-    ft_write_mri(cfg.filename, data, 'dataformat', 'nifti', 'transform', transform, 'scl_slope', slope, 'scl_inter', offset);
+    ft_write_mri(cfg.filename, data, 'dataformat', 'nifti', 'transform', transform, 'scl_slope', scl_slope, 'scl_inter', scl_inter);
+  
+  case 'nifti_gz'
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % write in zipped nifti format, using functions from  the freesurfer toolbox
+    % this format supports a homogeneous transformation matrix
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    if isempty(ext)
+      cfg.filename = sprintf('%s.nii.gz', cfg.filename);
+    end
+    ft_write_mri(cfg.filename, data, 'dataformat', 'nifti_gz', 'transform', transform, 'scl_slope', scl_slope, 'scl_inter', scl_inter);
 
   case 'nifti_img'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

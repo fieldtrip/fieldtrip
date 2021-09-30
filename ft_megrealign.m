@@ -115,7 +115,14 @@ if ft_abort
   return
 end
 
+% store the original datatype
+dtype = ft_datatype(data);
+
+% check if the input data is valid for this function
+data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes', 'hassampleinfo', 'yes', 'ismeg', 'yes');
+
 % check if the input cfg is valid for this function
+cfg = ft_checkconfig(cfg, 'forbidden',  {'channels', 'trial'}); % prevent accidental typos, see issue 1729
 cfg = ft_checkconfig(cfg, 'renamed',    {'plot3d',      'feedback'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'headshape',   'headmodel', []});
 cfg = ft_checkconfig(cfg, 'required',   {'inwardshift', 'template'});
@@ -133,12 +140,6 @@ cfg.feedback   = ft_getopt(cfg, 'feedback',   'yes');
 cfg.trials     = ft_getopt(cfg, 'trials',     'all', 1);
 cfg.channel    = ft_getopt(cfg, 'channel',    'MEG');
 cfg.topoparam  = ft_getopt(cfg, 'topoparam',  'rms');
-
-% store original datatype
-dtype = ft_datatype(data);
-
-% check if the input data is valid for this function
-data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes', 'hassampleinfo', 'yes', 'ismeg', 'yes');
 
 % do realignment per trial
 pertrial = all(ismember({'nasX';'nasY';'nasZ';'lpaX';'lpaY';'lpaZ';'rpaX';'rpaY';'rpaZ'}, data.label));

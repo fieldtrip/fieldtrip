@@ -103,7 +103,7 @@ end
 labelmat = zeros(size(onoff));
 numcluster = 0;
 
-if ~(numel(siz)==1 && all(siz==1))
+if ~(numel(siz)==1 && all(siz==1) && islogical(onoff))
   for j = 1:spatdimlength
     if numel(siz) <= 3 % if 2D or 3D data (without spatial dimension)
       % use SPM for 2D/3D data instead of the MATLAB image processing toolbox

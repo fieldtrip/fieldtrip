@@ -28,9 +28,11 @@ function data = fixcoordsys(data)
 
 data.coordsys = lower(data.coordsys);
 
-% see also http://www.fieldtriptoolbox.org/faq/how_are_the_different_head_and_mri_coordinate_systems_defined
-if any(strcmpi(data.coordsys, {'mni', 'spm'}))
+% see also http://www.fieldtriptoolbox.org/faq/coordsys
+if any(strcmpi(data.coordsys, {'mni', 'mni152', 'spm'}))
   data.coordsys = 'mni';
 elseif any(strcmpi(data.coordsys, {'ctf', '4d', 'bti', 'eeglab'}))
   data.coordsys = 'ctf';
+elseif any(strcmpi(data.coordsys, {'dicom', 'scanlps'}))
+  data.coordsys = 'dicom';
 end

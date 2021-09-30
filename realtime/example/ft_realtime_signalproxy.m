@@ -63,7 +63,6 @@ if ~isfield(cfg, 'channel'),              cfg.channel = ft_senslabel('eeg1020');
 if ~isfield(cfg, 'fsample'),              cfg.fsample = 250;                                end % in Hz
 if ~isfield(cfg, 'speed'),                cfg.speed = 1 ;                                   end % relative
 % set the defaults for filtering
-if ~isfield(cfg, 'onlinefilter'),         cfg.onlinefilter = 'yes';                         end
 if ~isfield(cfg, 'lpfilter'),             cfg.lpfilter = 'no';                              end
 if ~isfield(cfg, 'hpfilter'),             cfg.hpfilter = 'no';                              end
 if ~isfield(cfg, 'bpfilter'),             cfg.bpfilter = 'no';                              end
@@ -96,15 +95,15 @@ count      = 0;
 prevSample = 0;
 stopwatch  = tic;
 
-if strcmp(cfg.onlinefilter, 'yes')
+onlinefilter = strcmp(cfg.lpfilter, 'yes') + strcmp(cfg.hpfilter, 'yes') + strcmp(cfg.bpfilter, 'yes');
+if onlinefilter>1
+  error('you cannot specify more than one filter')
+end
+
+if onlinefilter
   % Nyquist frequency
   Fn = hdr.Fs/2;
-  % oly one type of filter will be applied
-  if strcmp(cfg.bpfilter, 'yes')
-    Fbp = cfg.bpfreq;
-    N   = ft_getopt(cfg, 'bpfiltord', 3);
-    [B, A] = butter(N, [min(Fbp)/Fn max(Fbp)/Fn]);
-  elseif strcmp(cfg.lpfilter, 'yes')
+  if strcmp(cfg.lpfilter, 'yes')
     Flp = cfg.lpfreq;
     N   = ft_getopt(cfg, 'lpfiltord', 4);
     [B, A] = butter(N, Flp/Fn);
@@ -112,6 +111,10 @@ if strcmp(cfg.onlinefilter, 'yes')
     Fhp = cfg.hpfreq;
     N   = ft_getopt(cfg, 'hpfiltord', 4);
     [B, A] = butter(N, Fhp/Fn, 'high');
+  elseif strcmp(cfg.bpfilter, 'yes')
+    Fbp = cfg.bpfreq;
+    N   = ft_getopt(cfg, 'bpfiltord', 3);
+    [B, A] = butter(N, [min(Fbp)/Fn max(Fbp)/Fn]);
   end
   % initialize the filter model
   FM = ft_preproc_online_filter_init(B, A, zeros(hdr.nChans, 1));
@@ -154,7 +157,7 @@ while true
   pause(((endsample-begsample+1)/hdr.Fs)/cfg.speed);
   
   % apply some filters
-  if strcmp(cfg.onlinefilter, 'yes')
+  if onlinefilter
     [FM, dat] = ft_preproc_online_filter_apply(FM, dat);
   else
     if strcmp(cfg.lpfilter, 'yes'),     dat = ft_preproc_lowpassfilter (dat, hdr.Fs, cfg.lpfreq, cfg.lpfiltord, cfg.lpfilttype, cfg.lpfiltdir); end

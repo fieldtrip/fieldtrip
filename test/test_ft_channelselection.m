@@ -6,47 +6,47 @@ function test_ft_channelselection
 
 datasets = ref_datasets;
 
-for i=1:size(datasets,2);
-    filename = fullfile(datasets(i).origdir, 'original', datasets(i).type, datasets(i).datatype, datasets(i).filename);
-    
-    if isempty(datasets(i).dataformat)
-        hdr = ft_read_header(filename);
-    else
-        hdr = ft_read_header(filename,'headerformat',datasets(i).dataformat);
+for i=1:size(datasets,2)
+  filename = fullfile(datasets(i).origdir, 'original', datasets(i).type, datasets(i).datatype, datasets(i).filename);
+  
+  if isempty(datasets(i).dataformat)
+    hdr = ft_read_header(filename);
+  else
+    hdr = ft_read_header(filename,'headerformat',datasets(i).dataformat);
+  end
+  
+  if ~ft_senstype(hdr, datasets(i).senstype)
+    error(['incorrect senstype detection: ' datasets(i).datatype]);
+  else
+    type=ft_senstype(hdr);
+  end
+  
+  if ~isnan(datasets(i).numeeg) && length(ft_channelselection('EEG', hdr.label, type))~=datasets(i).numeeg
+    error('incorrect number of EEG channels');
+  end
+  if ~isnan(datasets(i).nummeg) && length(ft_channelselection('MEG', hdr.label, type))~=datasets(i).nummeg
+    error('incorrect number of MEG channels');
+  end
+  if ~isnan(datasets(i).numeog) && length(ft_channelselection('EOG', hdr.label, type))~=datasets(i).numeog
+    error('incorrect number of EOG channels');
+  end
+  if ~isnan(datasets(i).numecg) && length(ft_channelselection('ECG', hdr.label, type))~=datasets(i).numecg
+    error('incorrect number of ECG channels');
+  end
+  if ~isnan(datasets(i).numemg) && length(ft_channelselection('EMG', hdr.label, type))~=datasets(i).numemg
+    error('incorrect number of EMG channels');
+  end
+  
+  %exceptions for 'neuromag306' and 'yokogawa160' MEG datasets:
+  %selecting gradiometer/magnetometer sensors
+  if strcmp(type,'neuromag306') || strcmp(type,'yokogawa160')
+    if ~isnan(datasets(i).numemg) && length(ft_channelselection('MEGMAG', hdr.label, type))~=datasets(i).nummegmag
+      error('incorrect number of MEGMAG channels');
     end
-    
-    if ~ft_senstype(hdr, datasets(i).senstype)
-        error(['incorrect senstype detection: ' datasets(i).datatype]);
-    else
-        type=ft_senstype(hdr);
+    if ~isnan(datasets(i).numemg) && length(ft_channelselection('MEGGRAD', hdr.label, type))~=datasets(i).nummeggrad
+      error('incorrect number of MEGGRAD channels');
     end
-    
-    if ~isnan(datasets(i).numeeg) && length(ft_channelselection('EEG', hdr.label, type))~=datasets(i).numeeg
-        error('incorrect number of EEG channels');
-    end
-    if ~isnan(datasets(i).nummeg) && length(ft_channelselection('MEG', hdr.label, type))~=datasets(i).nummeg
-        error('incorrect number of MEG channels');
-    end
-    if ~isnan(datasets(i).numeog) && length(ft_channelselection('EOG', hdr.label, type))~=datasets(i).numeog
-        error('incorrect number of EOG channels');
-    end
-    if ~isnan(datasets(i).numecg) && length(ft_channelselection('ECG', hdr.label, type))~=datasets(i).numecg
-        error('incorrect number of ECG channels');
-    end
-    if ~isnan(datasets(i).numemg) && length(ft_channelselection('EMG', hdr.label, type))~=datasets(i).numemg
-        error('incorrect number of EMG channels');
-    end
-
-    %exceptions for 'neuromag306' and 'yokogawa160' MEG datasets:
-    %selecting gradiometer/magnetometer sensors
-    if strcmp(type,'neuromag306') || strcmp(type,'yokogawa160')
-        if ~isnan(datasets(i).numemg) && length(ft_channelselection('MEGMAG', hdr.label, type))~=datasets(i).nummegmag
-            error('incorrect number of MEGMAG channels');
-        end
-        if ~isnan(datasets(i).numemg) && length(ft_channelselection('MEGGRAD', hdr.label, type))~=datasets(i).nummeggrad
-            error('incorrect number of MEGGRAD channels');
-        end
-    end
+  end
 end
 
 %% test http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=3135
@@ -55,7 +55,7 @@ label   = {'Cz','FCz','FC3'};
 
 sel = ft_channelselection(desired, label);
 assert(all(ismember(sel, desired)), 'not all selected channels were desired');
-  
+
 %% test http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=3225#c7
 
 sel = ft_channelselection('Cz', label);
@@ -73,5 +73,30 @@ assert(numel(sel)==1) % anything with a 3 in it
 sel = ft_channelselection('*C*', label);
 assert(numel(sel)==3) % anything with a C in it
 
+%% test regression error introduced with https://github.com/fieldtrip/fieldtrip/commit/1a728349d2d0e80b9ee730bf9186e4a4b79091f2
 
+desired = {'Cz','FCz','FC3'};
+label   = {'Cz','FCz','FC3'};
 
+sel = ft_channelselection('all', label);
+assert(size(sel,1)==3); % it must be a column vector, regardless of the input shape
+sel = ft_channelselection('all', label');
+assert(size(sel,1)==3); % it must be a column vector, regardless of the input shape
+
+sel = ft_channelselection(desired, label);
+assert(size(sel,1)==3); % it must be a column vector, regardless of the input shape
+sel = ft_channelselection(desired, label');
+assert(size(sel,1)==3); % it must be a column vector, regardless of the input shape
+sel = ft_channelselection(desired', label);
+assert(size(sel,1)==3); % it must be a column vector, regardless of the input shape
+sel = ft_channelselection(desired', label');
+assert(size(sel,1)==3); % it must be a column vector, regardless of the input shape
+
+[sel1, sel2] = match_str(desired, label);
+assert(size(sel1,1)==3 && size(sel2,1)==3); % it must be a column vector, regardless of the input shape
+[sel1, sel2] = match_str(desired, label');
+assert(size(sel1,1)==3 && size(sel2,1)==3); % it must be a column vector, regardless of the input shape
+[sel1, sel2] = match_str(desired', label);
+assert(size(sel1,1)==3 && size(sel2,1)==3); % it must be a column vector, regardless of the input shape
+[sel1, sel2] = match_str(desired', label');
+assert(size(sel1,1)==3 && size(sel2,1)==3); % it must be a column vector, regardless of the input shape

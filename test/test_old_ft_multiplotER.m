@@ -75,9 +75,9 @@ coh2  = ft_connectivityanalysis(cfgc2, freqx);
 
 %plot
 cfg.refchannel = 'Cz';
-coh2 = ft_checkdata(coh2, 'cmbrepresentation', 'full');
+coh2 = ft_checkdata(coh2, 'cmbstyle', 'full');
 ft_multiplotER(cfg, coh2);
-coh2 = ft_checkdata(coh2, 'cmbrepresentation', 'sparse');
+coh2 = ft_checkdata(coh2, 'cmbstyle', 'sparse');
 ft_multiplotER(cfg, coh2);
 
 %create connectivity-data with very sparse linear indexing

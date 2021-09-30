@@ -62,9 +62,10 @@ if ft_abort
 end
 
 % check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'renamed', {'zparam',     'parameter'});
-cfg = ft_checkconfig(cfg, 'renamed', {'color',      'linecolor'});
-cfg = ft_checkconfig(cfg, 'renamed', {'graphcolor', 'linecolor'});
+cfg = ft_checkconfig(cfg, 'forbidden',  {'channels'}); % prevent accidental typos, see issue 1729
+cfg = ft_checkconfig(cfg, 'renamed',    {'zparam',     'parameter'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'color',      'linecolor'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'graphcolor', 'linecolor'});
 
 % set the defaults
 cfg.channel     = ft_getopt(cfg, 'channel',   'all');
@@ -113,7 +114,7 @@ for k = 1:Ndata
       % that's ok
     case {'chancmb_freq' 'chancmb_freq_time'}
       % convert into 'chan_chan_freq'
-      varargin{k} = ft_checkdata(varargin{k}, 'cmbrepresentation', 'full');
+      varargin{k} = ft_checkdata(varargin{k}, 'cmbstyle', 'full');
     otherwise
       ft_error('the data should have a dimord of %s or %s', 'chan_chan_freq', 'chancmb_freq');
   end
@@ -298,7 +299,7 @@ for k = 1:nchan
       ix  = k;
       iy  = nchan - m + 1;
       % use the convention of the row-channel causing the column-channel
-      if hastime && hasfreq
+      if hastime && hasfreq && ntime>1
         tmp = reshape(dat(m,k,:,:), [nfreq ntime]);
         ft_plot_matrix(tmp, 'width', 1, 'height', 1, 'hpos', ix.*1.2, 'vpos', iy.*1.2, 'clim', cfg.zlim, 'box', 'yes');
       elseif hasfreq
@@ -309,7 +310,7 @@ for k = 1:nchan
       end
       if k==1
         % first column, plot scale on y axis
-        if hastime && hasfreq
+        if hastime && hasfreq && ntime>1
           val1 = cfg.ylim(1);
           val2 = cfg.ylim(2);
         elseif hasfreq

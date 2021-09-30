@@ -391,18 +391,12 @@ if ~isempty(individual.grad)
   ft_plot_sens(individual.grad, individual.gradstyle{:});
 end
 
-% FIXME this only works for boundary element models
-if isstruct(template.headmodel) && isfield(template.headmodel, 'bnd')
-  for i = 1:numel(template.headmodel.bnd)
-    ft_plot_mesh(template.headmodel.bnd(i), template.headmodelstyle{:});
-  end
+if isstruct(template.headmodel)
+  ft_plot_headmodel(template.headmodel, template.headmodelstyle{:});
 end
 
-% FIXME this only works for boundary element models
-if isstruct(individual.headmodel) && isfield(individual.headmodel, 'bnd')
-  for i = 1:numel(individual.headmodel.bnd)
-    ft_plot_mesh(individual.headmodel.bnd(i), individual.headmodelstyle{:});
-  end
+if isstruct(individual.headmodel)
+  ft_plot_headmodel(individual.headmodel, individual.headmodelstyle{:});
 end
 
 if isstruct(template.headshape) && isfield(template.headshape, 'pos') && ~isempty(template.headshape.pos)

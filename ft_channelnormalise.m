@@ -65,18 +65,21 @@ if ft_abort
   return
 end
 
+% store the original datatype
+dtype = ft_datatype(data);
+
+% check if the input data is valid for this function
+data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes');
+
+% check if the input cfg is valid for this function
+cfg = ft_checkconfig(cfg, 'forbidden',  {'channels', 'trial'}); % prevent accidental typos, see issue 1729
+
 % set the defaults
 cfg.channel   = ft_getopt(cfg, 'channel', 'all');
 cfg.trials    = ft_getopt(cfg, 'trials', 'all', 1);
 cfg.scale     = ft_getopt(cfg, 'scale', 1);
 cfg.demean    = ft_getopt(cfg, 'demean', 'yes');
 cfg.method    = ft_getopt(cfg, 'method', 'perchannel'); % or acrosschannel
-
-% store original datatype
-dtype = ft_datatype(data);
-
-% check if the input data is valid for this function
-data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes');
 
 if ~strcmp(cfg.channel, 'all') || ~strcmp(cfg.trials, 'all')
   % select channels and trials of interest
@@ -85,6 +88,7 @@ if ~strcmp(cfg.channel, 'all') || ~strcmp(cfg.trials, 'all')
   % restore the provenance information
   [cfg, data] = rollback_provenance(cfg, data);
 end
+
 % initialise some variables
 nchan  = numel(data.label);
 ntrl   = numel(data.trial);

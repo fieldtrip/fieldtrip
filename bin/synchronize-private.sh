@@ -71,6 +71,14 @@ ARRAY+=(private/bg_rgba2rgb.m)
 sync ${ARRAY[*]}
 
 ################################################################################
+# bids_sidecar.m
+
+ARRAY=()
+ARRAY+=(fileio/private/bids_sidecar.m)
+ARRAY+=(trialfun/private/bids_sidecar.m)
+sync ${ARRAY[*]}
+
+################################################################################
 # bounding_mesh.m
 
 ARRAY=()
@@ -574,6 +582,7 @@ sync ${ARRAY[*]}
 # fixinside.m
 
 ARRAY=()
+ARRAY+=(inverse/private/fixinside.m)
 ARRAY+=(fileio/private/fixinside.m)
 ARRAY+=(private/fixinside.m)
 ARRAY+=(utilities/private/fixinside.m)
@@ -1180,6 +1189,14 @@ ARRAY=()
 ARRAY+=(qsub/private/gethostname.m)
 ARRAY+=(test/private/gethostname.m)
 ARRAY+=(utilities/private/gethostname.m)
+sync ${ARRAY[*]}
+
+################################################################################
+# getorthoviewpos.m
+
+ARRAY=()
+ARRAY+=(private/getorthoviewpos.m)
+ARRAY+=(fileio/private/getorthoviewpos.m)
 sync ${ARRAY[*]}
 
 ################################################################################
@@ -2032,6 +2049,14 @@ sync ${ARRAY[*]}
 ARRAY=()
 ARRAY+=(connectivity/private/mtimes3x3.mexw64)
 ARRAY+=(src/mtimes3x3.mexw64)
+sync ${ARRAY[*]}
+
+################################################################################
+# multivariate_decomp.m
+
+ARRAY=()
+ARRAY+=(connectivity/private/multivariate_decomp.m)
+ARRAY+=(private/multivariate_decomp.m)
 sync ${ARRAY[*]}
 
 ################################################################################

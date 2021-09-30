@@ -304,12 +304,12 @@ for trlop=1:numtrl
       % accumulate the sum and the sum-of-squares
       sumval = sumval + nansum(dat,2);
       sumsqr = sumsqr + nansum(dat.^2,2);
-      numsmp = numsmp + size(dat,2);
+      numsmp = numsmp + sum(isfinite(dat),2);
     else
       % store per trial the sum and the sum-of-squares
-      sumval(:,trlop) = sum(dat,2);
-      sumsqr(:,trlop) = sum(dat.^2,2);
-      numsmp(:,trlop) = size(dat,2);
+      sumval(:,trlop) = nansum(dat,2);
+      sumsqr(:,trlop) = nansum(dat.^2,2);
+      numsmp(:,trlop) = sum(isfinite(dat),2);
     end
   else % store all data in memory, saves computation time
     if hasdata
@@ -335,12 +335,12 @@ for trlop=1:numtrl
       % accumulate the sum and the sum-of-squares
       sumval = sumval + nansum(dat{trlop},2);
       sumsqr = sumsqr + nansum(dat{trlop}.^2,2);
-      numsmp = numsmp + size(dat{trlop},2);
+      numsmp = numsmp + sum(isfinite(dat{trlop}),2);
     else
       % store per trial the sum and the sum-of-squares
-      sumval(:,trlop) = sum(dat{trlop},2);
-      sumsqr(:,trlop) = sum(dat{trlop}.^2,2);
-      numsmp(:,trlop) = size(dat{trlop},2);
+      sumval(:,trlop) = nansum(dat{trlop},2);
+      sumsqr(:,trlop) = nansum(dat{trlop}.^2,2);
+      numsmp(:,trlop) = sum(isfinite(dat{trlop}),2);
     end
   end
 end % for trlop
@@ -414,8 +414,8 @@ end % for trlop
 
 if demeantrial
   for trlop = 1:numtrl
-    zmax{trlop} = zmax{trlop}-mean(zmax{trlop},2);
-    zsum{trlop} = zsum{trlop}-mean(zsum{trlop},2);
+    zmax{trlop} = zmax{trlop}-nanmean(zmax{trlop},2);
+    zsum{trlop} = zsum{trlop}-nanmean(zsum{trlop},2);
   end
 end
 
@@ -434,9 +434,9 @@ end
 %    end
 %    dat{trlop} = preproc(dat{trlop}, cfg.artfctdef.zvalue.channel(sgnlop), hdr.Fs, cfg.artfctdef.zvalue, [], fltpadding, fltpadding);
 %    % accumulate the sum and the sum-of-squares
-%    sumval = sumval + sum(dat{trlop},2);
-%    sumsqr = sumsqr + sum(dat{trlop}.^2,2);
-%    numsmp = numsmp + size(dat{trlop},2);
+%    sumval = sumval + nansum(dat{trlop},2);
+%    sumsqr = sumsqr + nansum(dat{trlop}.^2,2);
+%    numsmp = numsmp + sum(isfinite(dat{trlop}));
 %  end % for trlop
 %
 %  % compute the average and the standard deviation

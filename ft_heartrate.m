@@ -98,9 +98,10 @@ datain = ft_checkdata(datain, 'datatype', 'raw', 'feedback', 'yes');
 % ensure that users with old scripts are aware of changes
 cfg = ft_checkconfig(cfg, 'forbidden', 'medianwindow');
 
-% for backward compatibility
-cfg = ft_checkconfig(cfg, 'renamed', {'ectopicbeat_corr', 'ectopicbeatcorrect'});
-cfg = ft_checkconfig(cfg, 'renamed', {'corr_threshold', 'ectopicbeatthreshold'});
+% check if the input cfg is valid for this function
+cfg = ft_checkconfig(cfg, 'forbidden',  {'channels'}); % prevent accidental typos, see issue 1729
+cfg = ft_checkconfig(cfg, 'renamed',    {'ectopicbeat_corr', 'ectopicbeatcorrect'}); % for backward compatibility
+cfg = ft_checkconfig(cfg, 'renamed',    {'corr_threshold', 'ectopicbeatthreshold'}); % for backward compatibility
 
 % set the default options
 cfg.channel          = ft_getopt(cfg, 'channel', 'all');

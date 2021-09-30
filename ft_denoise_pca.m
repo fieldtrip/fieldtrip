@@ -81,6 +81,9 @@ for i=1:length(varargin)
   varargin{i} = ft_checkdata(varargin{i}, 'datatype', 'raw');
 end
 
+% check if the input cfg is valid for this function
+cfg = ft_checkconfig(cfg, 'forbidden',  {'channels', 'trial'}); % prevent accidental typos, see issue 1729
+
 % set the defaults
 cfg.refchannel = ft_getopt(cfg, 'refchannel', 'MEGREF');
 cfg.channel    = ft_getopt(cfg, 'channel',    'MEG');
@@ -90,7 +93,6 @@ cfg.trials     = ft_getopt(cfg, 'trials',     'all', 1);
 cfg.pertrial   = ft_getopt(cfg, 'pertrial',   'no');
 cfg.feedback   = ft_getopt(cfg, 'feedback',   'none');
 cfg.updatesens = ft_getopt(cfg, 'updatesens', 'yes');
-
 
 if istrue(cfg.pertrial)
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -159,9 +161,9 @@ else
     
   end
   
-  refchan = ft_channelselection(cfg.refchannel, refdata.label);
+  refchan = ft_channelselection(cfg.refchannel, refdata.label, ft_senstype(refdata));
   refindx = match_str(refdata.label, refchan);
-  megchan = ft_channelselection(cfg.channel, data.label);
+  megchan = ft_channelselection(cfg.channel, data.label, ft_senstype(data));
   megindx = match_str(data.label, megchan);
 
   nref = length(refindx);

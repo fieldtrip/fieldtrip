@@ -86,7 +86,7 @@ end
 
 % check if the input data is valid for this function
 for i=1:length(varargin)
-  varargin{i} = ft_checkdata(varargin{i}, 'datatype', {'source'}, 'feedback', 'no', 'inside', 'logical');
+  varargin{i} = ft_checkdata(varargin{i}, 'datatype', {'source'}, 'feedback', 'no', 'insidestyle', 'logical');
   varargin{i} = ft_datatype_source(varargin{i}, 'version', 'upcoming');
 end
 

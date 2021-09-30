@@ -70,6 +70,7 @@ function [type] = ft_filetype(filename, desired, varargin)
 %  - Neurodata Without Borders *.nwb
 %  - PhysioNet *.hea and *.dat
 %  - NIRx *.tpl, *.wl1 and *.wl2
+%  - York Instruments *.meghdf5
 
 % Copyright (C) 2003-2020, Robert Oostenveld
 %
@@ -547,7 +548,7 @@ elseif filetype_check_extension(filename, '.nii') && filetype_check_header(filen
   
   % known FSL file types
 elseif filetype_check_extension(filename, '.nii.gz')
-  type = 'nifti_fsl';
+  type = 'nifti_gz';
   content = 'MRI image data';
   
   % known LORETA file types
@@ -1419,6 +1420,10 @@ elseif filetype_check_header(filename, 'ply')
   type = 'ply';
   manufacturer = 'Stanford Triangle Format';
   content = 'three dimensional data from 3D scanners, see http://en.wikipedia.org/wiki/PLY_(file_format)';
+elseif filetype_check_extension(filename, '.csv') && filetype_check_header(filename, 'Sensor,Sample,Timestamp')
+  type = 'liberty_csv';
+  manufacturer = 'Polhemus Liberty';
+  content = 'motion capture data';
 elseif filetype_check_extension(filename, '.csv')
   type = 'csv';
   manufacturer = 'Generic';
@@ -1483,6 +1488,10 @@ elseif filetype_check_extension(filename, '.mvnx') && filetype_check_header(file
   type = 'xsens_mvnx';
   manufacturer = 'https://www.xsens.com/motion-capture';
   content = 'motion capture data';
+elseif filetype_check_extension(filename, '.json') && filetype_check_header(filename, '{"version":1.3') % this JSON format detection is not very robust
+  type = 'openpose_keypoints';
+  manufacturer = 'https://github.com/CMU-Perceptual-Computing-Lab/openpose';
+  content = 'motion capture data';
 elseif filetype_check_extension(filename, '.mif')
   % this could be a mrtrix compatible image file
   type = 'mrtrix_mif';
@@ -1531,6 +1540,11 @@ elseif filetype_check_extension(filename, '.dgf') && filetype_check_header(filen
   type = 'duneuro_dgf';
   manufacturer = 'duneuro';
   content = 'geometrical meshes';
+  % known York Instruments file types
+elseif filetype_check_extension(filename, '.meghdf5')
+  type = 'yorkinstruments_hdf5';
+  manufacturer = 'York Instruments';
+  content = 'MEG header and data';
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

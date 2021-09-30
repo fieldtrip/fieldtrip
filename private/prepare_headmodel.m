@@ -128,6 +128,7 @@ end
 
 % the prepare_vol_sens function from the forwinv module does most of the actual work
 [headmodel, sens] = ft_prepare_vol_sens(headmodel, sens, 'channel', cfg.channel);
+cfg.headmodel     = headmodel;
 
 % update the selected channels in the configuration
 if iscell(sens)

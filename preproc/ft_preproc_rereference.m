@@ -4,19 +4,13 @@ function [dat, ref] = ft_preproc_rereference(dat, refchan, method, handlenan, le
 % or rereferences the data to the selected channels
 %
 % Use as
-%   [dat] = ft_preproc_rereference(dat, refchan, method, handlenan,leadfield)
-% REST example: [dat] = ft_preproc_rereference(dat, refchan,
-%                       'rest',[],leadfield);
+%   [dat] = ft_preproc_rereference(dat, refchan, method, handlenan, leadfield)
 % where
 %   dat        data matrix (Nchans X Ntime)
 %   refchan    vector with indices of the new reference channels, or 'all'
 %   method     string, can be 'avg', 'median', or 'rest'
-%              if select 'rest','leadfield' is required.
-%              The leadfield should be a matrix (channels X sources)
-%              which is calculated by using the forward theory, based on
-%              the electrode montage, head model and equivalent source
-%              model.
 %   handlenan  boolean, can be false (default) or true
+%   leadfield  leadfield matrix (required for REST, otherwise empty)
 %
 % If the new reference channel(s) are not specified, the data will be
 % rereferenced to the average of all channels.
@@ -25,9 +19,14 @@ function [dat, ref] = ft_preproc_rereference(dat, refchan, method, handlenan, le
 % these will spread to all output channels, unless the handlenan flag has
 % been set to true.
 %
+% For REST the leadfield should be a matrix (channels X sources)
+% which is calculated by using the forward theory, based on
+% the electrode montage, head model and equivalent source
+% model.
+%
 % See also PREPROC
 
-% Copyright (C) 1998-2017, Robert Oostenveld
+% Copyright (C) 1998-2021, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -80,7 +79,7 @@ if hasnan && handlenan
     case 'median'
       ref = nanmedian(dat(refchan,:), 1);
     case 'rest'
-      ft_error('channels contain NaN, and REST method is not supported');
+      ft_error('handling of NaNs is not supported for the REST method');
     otherwise
       ft_error('unsupported method')
   end % switch
@@ -89,17 +88,14 @@ else
   if any(isnan(dat(:)))
     ft_warning('FieldTrip:dataContainsNaN', 'data contains NaN values');
   end
-  % compute the average value over the reference channels
-  % or re-referencing to REST
+  % compute the average value over the reference channels or re-referencing to REST
   switch method
     case 'avg'
       ref = mean(dat(refchan,:), 1);
     case 'median'
       ref = median(dat(refchan,:), 1);
     case 'rest' % re-referencing to REST
-      temp_dat = dat(refchan,:);
-      dat = rest_refer(temp_dat,leadfield(refchan,:)); % re-rerefencing to REST
-      ref = [];
+      dat = rest_refer(dat(refchan,:), leadfield(refchan,:)); % re-rerefencing to REST
     otherwise
       ft_error('unsupported method')
   end % switch
@@ -111,6 +107,7 @@ if ~isequal(method,'rest')
     dat(chan,:) = dat(chan,:) - ref;
   end
 end
+
 % -------------------------------------------------------------------------
 % subfunction
 function [data_z] = rest_refer(data,G)
@@ -135,6 +132,7 @@ function [data_z] = rest_refer(data,G)
 if nargin < 2
   error('Please input the Lead Field matrix!');
 end
+
 Nchans = size(data,1);
 data = data - repmat(mean(data),Nchans,1); % average
 

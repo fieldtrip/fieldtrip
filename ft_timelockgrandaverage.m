@@ -10,27 +10,26 @@ function [grandavg] = ft_timelockgrandaverage(cfg, varargin)
 %   avg1..N are the ERF/ERP averages as obtained from FT_TIMELOCKANALYSIS
 %
 % and cfg is a configuration structure with
-%   cfg.channel        = Nx1 cell-array with selection of channels (default = 'all'),
-%                        see FT_CHANNELSELECTION for details
+%   cfg.method         = string, 'across' or 'within' (default = 'across'), see below for details
+%   cfg.parameter      = string, which parameter to average (default = 'avg')
+%   cfg.channel        = Nx1 cell-array with selection of channels (default = 'all'), see FT_CHANNELSELECTION for details
 %   cfg.latency        = [begin end] in seconds or 'all' (default = 'all')
-%   cfg.keepindividual = 'yes' or 'no' (default = 'no')
-%   cfg.normalizevar   = 'N' or 'N-1' (default = 'N-1')
-%   cfg.method         = 'across' (default) or 'within', see below.
-%   cfg.parameter      = string or cell-array indicating which
-%                        parameter to average. default is set to
-%                        'avg', if it is present in the data.
+%   cfg.keepindividual = string, 'yes' or 'no' (default = 'no')
+%   cfg.nanmean        = string, can be 'yes' or 'no' (default = 'yes')
+%   cfg.normalizevar   = string, 'N' or 'N-1' (default = 'N-1')
 %
-% If cfg.method = 'across', a plain average is performed, i.e. the
-% requested parameter in each input argument is weighted equally in the
-% average. This is useful when averaging across subjects. The
-% variance-field will contain the variance across the parameter of
-% interest, and the dof-field will contain the number of input arguments.
+% If cfg.method = 'across', a plain average is performed, i.e. the requested
+% parameter in each input argument is weighted equally in the average. This is useful
+% when averaging across subjects. The variance-field will contain the variance across
+% the parameter of interest, and the output dof-field will contain the number of
+% input arguments.
 %
-% If cfg.method = 'within', a weighted average is performed, i.e. the
-% requested parameter in each input argument is weighted according to the
-% dof-field. This is useful when averaging across blocks within subjects.
-% The variance-field will contain the variance across all input
-% observations, and the dof-field will contain the number of observations.
+% If cfg.method = 'within', a weighted average is performed, i.e. the requested
+% parameter in each input argument is weighted according to the degrees of freedom in
+% the dof-field. This is useful when averaging within subjects across blocks, e.g.
+% when each block was recorded in a separate file. The variance-field will contain
+% the variance across all input observations, and the output dof-field will contain
+% the total number of observations.
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
@@ -90,160 +89,172 @@ end
 % check if the input data is valid for this function
 for i=1:length(varargin)
   if isfield(varargin{i},'trial') && isfield(varargin{i},'avg') % see bug2372 (dieloz)
-    varargin{i} = rmfield(varargin{i},'trial');
-    ft_warning('depreciating trial field: using the avg to compute the grand average');
-    if strcmp(varargin{i}.dimord,'rpt_chan_time')
-      varargin{i}.dimord = 'chan_time';
-    end
+    varargin{i} = rmfield(varargin{i}, 'trial');
+    varargin{i}.dimord = 'chan_time';
+    ft_warning('not using the trials, using the single-subject average to compute the grand average');
   else
     if isfield(varargin{i},'trial') && ~isfield(varargin{i},'avg')
-      ft_error('input dataset %d does not contain avg field: see ft_timelockanalysis', i);
+      ft_error('input structure %d does not contain an average, use FT_TIMELOCKANALYSIS first', i);
     end
   end
   varargin{i} = ft_checkdata(varargin{i}, 'datatype', 'timelock', 'feedback', 'no');
 end
 
+% check if the input cfg is valid for this function
+cfg = ft_checkconfig(cfg, 'forbidden',  {'channels'}); % prevent accidental typos, see issue 1729
+
 % set the defaults
+cfg.method         = ft_getopt(cfg, 'method'        , 'across');
+cfg.parameter      = ft_getopt(cfg, 'parameter'     , 'avg');
+cfg.channel        = ft_getopt(cfg, 'channel'       , 'all');
+cfg.latency        = ft_getopt(cfg, 'latency'       , 'all');
 cfg.keepindividual = ft_getopt(cfg, 'keepindividual', 'no');
-cfg.channel        = ft_getopt(cfg, 'channel',    'all');
-cfg.latency        = ft_getopt(cfg, 'latency',    'all');
-cfg.normalizevar   = ft_getopt(cfg, 'normalizevar', 'N-1');
-cfg.method         = ft_getopt(cfg, 'method',    'across');
-cfg.parameter      = ft_getopt(cfg, 'parameter',  'avg');
+cfg.nanmean        = ft_getopt(cfg, 'nanmean'       , 'yes');
+cfg.normalizevar   = ft_getopt(cfg, 'normalizevar'  , 'N-1');
 
 if iscell(cfg.parameter)
   if numel(cfg.parameter)>1
-    fprintf('ft_grandaverage supports a single parameter to be averaged, taking the first parameter from the specified list: %s\n', cfg.parameter{1});
+    ft_error('only a single parameter can be specified to be averaged');
+  else
+    cfg.parameter = cfg.parameter{1};
   end
-  cfg.parameter = cfg.parameter{1};
 end
 
-if strcmp(cfg.parameter,'trial')
-  ft_error('not supporting averaging over the repetition dimension');
+if strcmp(cfg.parameter, 'trial')
+  ft_error('not supporting averaging over the repetition dimension, please use FT_TIMELOCKANALYSIS');
 end
 
-Nsubj    = length(varargin);
-dimord   = getdimord(varargin{1}, cfg.parameter);
-hastime  = contains(dimord, 'time');
-hasdof   = isfield(varargin{1}, 'dof');
-
-if ischar(cfg.latency) && strcmp(cfg.latency, 'all')
-  tbeg = min(varargin{1}.time);
-  tend = max(varargin{1}.time);
-else
-  tbeg = cfg.latency(1);
-  tend = cfg.latency(2);
-end
-
-% ensure that the data in all inputs has the same channels, time-axis, etc.
-tmpcfg = keepfields(cfg, {'parameter', 'channel', 'latency', 'showcallinfo'});
+% select trials and channels of interest
+orgcfg = cfg;
+tmpcfg = keepfields(cfg, {'parameter', 'channel', 'tolerance', 'latency', 'showcallinfo'});
 [varargin{:}] = ft_selectdata(tmpcfg, varargin{:});
 % restore the provenance information
 [cfg, varargin{:}] = rollback_provenance(cfg, varargin{:});
+% do not use the default option returned by FT_SELECTDATA, but the original one for this function
+cfg.nanmean = orgcfg.nanmean;
 
 % determine the size of the data to be averaged
 datsiz = size(varargin{1}.(cfg.parameter));
+dimord = getdimord(varargin{1}, cfg.parameter);
+nsubj  = length(varargin);
 
-% give some feedback on the screen
-if strcmp(cfg.keepindividual, 'no')
-  if strcmp(cfg.method, 'across')
-    fprintf('computing average of %s over %d subjects\n', cfg.parameter, Nsubj);
-  else % cfg.method = 'within'
-    fprintf('computing average of %s over %d blocks\n', cfg.parameter, Nsubj);
-  end
+% whether to normalize the variance with N or N-1, see VAR
+normalizewithN = strcmpi(cfg.normalizevar, 'N');
+
+% whether nans should persist in the output or be treated as missing values
+if istrue(cfg.nanmean)
+  mymean = @nanmean;
+  myvar  = @nanvar;
+  mysum  = @nansum;
 else
-  fprintf('not computing average, but keeping individual %s for %d subjects\n', cfg.parameter, Nsubj);
+  mymean = @mean;
+  myvar  = @var;
+  mysum  = @sum;
 end
 
-% allocate memory to hold the data and collect it
-avgmat = zeros([Nsubj, datsiz]);
-
-if strcmp(cfg.keepindividual, 'yes')
-  for s=1:Nsubj
-    avgmat(s, :, :) = varargin{s}.(cfg.parameter);
-  end
-  grandavg.individual = avgmat; % Nsubj x Nchan x Nsamples
+if istrue(cfg.keepindividual)
+  fprintf('not computing average, but keeping individual %s for %d subjects\n', cfg.parameter, nsubj);
   
-else % ~strcmp(cfg.keepindividual, 'yes')
-  avgdof  = ones([Nsubj, datsiz]);
-  avgvar  = zeros([Nsubj, datsiz]);
-  for s=1:Nsubj
-    switch cfg.method
-      case 'across'
-        avgmat(s, :, :, :) = varargin{s}.(cfg.parameter);
-        avgvar(s, :, :, :) = varargin{s}.(cfg.parameter) .^2; % preparing the computation of the variance
-      case 'within'
-        avgmat(s, :, :, :) = varargin{s}.(cfg.parameter).*varargin{s}.dof;
-        avgdof(s, :, :, :) = varargin{s}.dof;
-        if min(varargin{s}.dof(:))>1 % otherwise the variance is not valid
-          avgvar(s, :, :, :) = (varargin{s}.(cfg.parameter).^2).*varargin{s}.dof;
-          % avgvar(s, :, :, :) = varargin{s}.var .* (varargin{s}.dof-1); % reversing the last div in ft_timelockanalysis
-        else
-          avgvar(s, :, :, :) = zeros(datsiz); % shall we remove the .var field from the structure under these conditions ?
-        end
-      otherwise
-        ft_error('unsupported value for cfg.method')
-    end % switch
+  % allocate memory to hold the data and collect it
+  dat = zeros([nsubj, datsiz]);
+  for s=1:nsubj
+    dat(s, :, :, :) = varargin{s}.(cfg.parameter);
   end
-  % average across subject dimension
-  ResultDOF      = reshape(sum(avgdof, 1), datsiz);
-  grandavg.avg   = reshape(sum(avgmat, 1), datsiz)./ResultDOF; % computes both means (plain and weighted)
-  % Nchan x Nsamples, skips the singleton
-  % if strcmp(cfg.method, 'across')
-  ResultVar      = reshape(sum(avgvar,1), datsiz)-reshape(sum(avgmat,1), datsiz).^2./ResultDOF;
-  % else  % cfg.method = 'within'
-  % ResultVar      = reshape(sum(avgvar, 1), datsiz); % subtraction of means was done for each block already
-  % end
-  switch cfg.normalizevar
-    case 'N-1'
-      ResultVar = ResultVar./(ResultDOF-1);
-    case 'N'
-      ResultVar = ResultVar./ResultDOF;
-  end
-  grandavg.var = ResultVar;
-  grandavg.dof = ResultDOF;
-end
+  grandavg.individual = dat; % Nsubj x Nchan x Nsamples
+  
+else
+  dat = nan([nsubj, datsiz]);
+  dof = nan([nsubj, datsiz]);
+  
+  switch cfg.method
+    case 'across'
+      fprintf('computing average of %s across %d subjects\n', cfg.parameter, nsubj);
+      for s=1:nsubj
+        dat(s, :, :, :) = varargin{s}.(cfg.parameter);
+      end
+      
+      % compute the mean and variance across subjects
+      grandavg.avg = reshape(mymean(dat, 1),                 datsiz);
+      grandavg.var = reshape(myvar(dat, normalizewithN, 1),  datsiz);
+      grandavg.dof = reshape(sum(isfinite(dat), 1),          datsiz);
+      
+      if normalizewithN
+        % just to be sure
+        grandavg.var(grandavg.dof<=0) = NaN;
+      else
+        % see https://stats.stackexchange.com/questions/4068/how-should-one-define-the-sample-variance-for-scalar-input
+        % the fieldtrip/external/stats/nanvar implementation behaves differently here than Mathworks VAR and NANVAR implementations
+        grandavg.var(grandavg.dof<=1) = NaN;
+      end
+      
+    case 'within'
+      fprintf('computing average of %s within subjects over %d blocks\n', cfg.parameter, nsubj);
+      
+      for s=1:nsubj
+        dat(s, :, :, :) = varargin{s}.(cfg.parameter);
+        dof(s, :, :, :) = varargin{s}.dof;
+      end % for nsub
+      
+      % compute the weighted mean across input arguments
+      grandavg.avg = mysum(dat .* dof, 1) ./ sum(dof, 1);
+      grandavg.avg = reshape(grandavg.avg, datsiz);
+      grandavg.dof = sum(dof, 1);
+      grandavg.dof = reshape(grandavg.dof, datsiz);
+      
+      % this follows https://en.wikipedia.org/wiki/Weighted_arithmetic_mean#Weighted_sample_variance with frequency weights
+      if normalizewithN
+        grandavg.var = mysum(dof .* (dat - repmat(reshape(grandavg.avg, [1 datsiz]), [nsubj 1 1])).^2, 1) ./  sum(dof, 1);
+        grandavg.var = reshape(grandavg.var, datsiz);
+      else
+        grandavg.var = mysum(dof .* (dat - repmat(reshape(grandavg.avg, [1 datsiz]), [nsubj 1 1])).^2, 1) ./ (sum(dof, 1) - 1);
+        grandavg.var = reshape(grandavg.var, datsiz);
+      end
+      
+    otherwise
+      ft_error('unsupported value for cfg.method')
+      
+  end % switch
+end % if keepindividual
 
 % collect the output data
-if isfield(varargin{1}, 'time')
-  % remember the time axis
-  grandavg.time = varargin{1}.time;
-end
-grandavg.label = varargin{1}.label;
+grandavg = copyfields(varargin{1}, grandavg, {'time', 'freq', 'label', 'labelcmb'});
 
-if isfield(varargin{1}, 'labelcmb')
-  grandavg.labelcmb = varargin{1}.labelcmb;
-end
-
-switch cfg.method
-  
-  case 'across'
-    if isfield(varargin{1}, 'grad') % positions are different between subjects
-      ft_warning('discarding gradiometer information because it cannot be averaged');
-    end
-    if isfield(varargin{1}, 'elec') % positions are different between subjects
-      ft_warning('discarding electrode information because it cannot be averaged');
-    end
-    
-  case 'within'
-    % misses the test for all equal grad fields (should be the case for
-    % averaging across blocks, if all block data is corrected for head
-    % position changes
-    if isfield(varargin{1}, 'grad')
-      grandavg.grad = varargin{1}.grad;
-    end
-    if isfield(varargin{1}, 'elec')
-      grandavg.elec = varargin{1}.elec;
-    end
-    
-  otherwise
-    ft_error('unsupported method "%s"', cfg.method);
+% sensor positions should only be present in the output when they are identical in all inputs
+hasgrad = cellfun(@(x) isfield(x, 'grad'), varargin(:));
+if all(hasgrad) % check if positions are different between subjects
+  samegrad = cellfun(@(x) isequal(varargin{1}.grad, x.grad), varargin(2:end));
+  if all(samegrad)
+    grandavg.grad = varargin{1}.grad;
+  else
+    ft_warning('discarding gradiometer information because it is not identical in all inputs');
+  end
 end
 
+haselec = cellfun(@(x) isfield(x, 'elec'), varargin(:));
+if all(haselec) % check if positions are different between subjects
+  sameelec = cellfun(@(x) isequal(varargin{1}.elec, x.elec), varargin(2:end));
+  if all(sameelec)
+    grandavg.elec = varargin{1}.elec;
+  else
+    ft_warning('discarding electrode information because it is not identical in all inputs');
+  end
+end
+
+hasopto = cellfun(@(x) isfield(x, 'opto'), varargin(:));
+if all(hasopto) % check if positions are different between subjects
+  sameopto = cellfun(@(x) isequal(varargin{1}.opto, x.opto), varargin(2:end));
+  if all(sameopto)
+    grandavg.opto = varargin{1}.opto;
+  else
+    ft_warning('discarding optode information because it is not identical in all inputs');
+  end
+end
+
+% set dimord
 if strcmp(cfg.keepindividual, 'yes')
   grandavg.dimord = ['subj_', dimord];
-else
-  grandavg.dimord = dimord;
+elseif strcmp(cfg.keepindividual, 'no')
+  grandavg.dimord =  dimord;
 end
 
 % do the general cleanup and bookkeeping at the end of the function

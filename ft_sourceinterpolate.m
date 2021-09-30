@@ -17,7 +17,7 @@ function [interp] = ft_sourceinterpolate(cfg, functional, anatomical)
 %   example with a low-res grid for the functional data and a high-res grid for the
 %   anatomy.
 %
-% - The functional data is defined on a 3D regular grid and the anatomical data is 
+% - The functional data is defined on a 3D regular grid and the anatomical data is
 %   defined on an irregular point cloud, which can be a 2D triangulated surface mesh.
 %
 % - The functional data is defined on an irregular point cloud, which can be a 2D
@@ -27,7 +27,7 @@ function [interp] = ft_sourceinterpolate(cfg, functional, anatomical)
 %   cloud, which can be a 2D triangulated mesh.
 %
 % - The functional data is defined on a low-resolution 2D triangulated surface mesh and the
-%   anatomical data is defined on a high-resolution 2D triangulated surface mesh, where the 
+%   anatomical data is defined on a high-resolution 2D triangulated surface mesh, where the
 %   low-res vertices form a subset of the high-res vertices. This allows for mesh-based
 %   interpolation. The algorithm currently implemented is so-called 'smudging' as it is
 %   also applied by the MNE-suite software.
@@ -160,15 +160,15 @@ else
 end
 
 if isUnstructuredAna
-  anatomical = ft_checkdata(anatomical, 'datatype', {'source', 'source+label', 'mesh'}, 'inside', 'logical', 'feedback', 'yes', 'hasunit', 'yes');
+  anatomical = ft_checkdata(anatomical, 'datatype', {'source', 'source+label', 'mesh'}, 'insidestyle', 'logical', 'feedback', 'yes', 'hasunit', 'yes');
 else
-  anatomical = ft_checkdata(anatomical, 'datatype', {'volume', 'volume+label'}, 'inside', 'logical', 'feedback', 'yes', 'hasunit', 'yes');
+  anatomical = ft_checkdata(anatomical, 'datatype', {'volume', 'volume+label'}, 'insidestyle', 'logical', 'feedback', 'yes', 'hasunit', 'yes');
 end
 
 if isUnstructuredFun
-  functional = ft_checkdata(functional, 'datatype', 'source', 'inside', 'logical', 'feedback', 'yes', 'hasunit', 'yes');
+  functional = ft_checkdata(functional, 'datatype', 'source', 'insidestyle', 'logical', 'feedback', 'yes', 'hasunit', 'yes');
 else
-  functional = ft_checkdata(functional, 'datatype', 'volume', 'inside', 'logical', 'feedback', 'yes', 'hasunit', 'yes');
+  functional = ft_checkdata(functional, 'datatype', 'volume', 'insidestyle', 'logical', 'feedback', 'yes', 'hasunit', 'yes');
 end
 
 if ~isa(cfg.parameter, 'cell')
@@ -476,7 +476,7 @@ elseif ~isUnstructuredFun && isUnstructuredAna
         for m=1:dimf(5)
           fv    = double_ifnot(dat_array{i}(:,:,:,k,m)); % ensure double precision to allow sparse multiplication
           fv    = fv(functional.inside(:));
-          av    = interpmat*fv; 
+          av    = interpmat*fv;
           allav(:,k,m) = av;
         end
       end
@@ -539,6 +539,7 @@ elseif ~isUnstructuredFun && ~isUnstructuredAna
     
   elseif isequal(cfg.interpmethod, 'mode') && ~isAtlasFun
     ft_error('the interpolation method ''mode'' is only supported for parcellations');
+
   else
     % start with an empty structure, keep some fields
     interp = keepfields(functional, {'time', 'freq'});
@@ -641,6 +642,10 @@ elseif ~isUnstructuredFun && ~isUnstructuredAna
         allav = reshape(allav, prod(anatomical.dim), dimf(4), dimf(5));
       end
       interp = setsubfield(interp, dat_name{i}, allav);
+      % keep the description of the labels in the segmentation/parcellation
+      if strcmp(cfg.interpmethod, 'nearest') && isfield(functional, [dat_name{i} 'label'])
+        interp.([dat_name{i} 'label']) = functional.([dat_name{i} 'label']);
+      end
     end
     
   end

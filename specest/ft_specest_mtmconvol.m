@@ -1,31 +1,31 @@
-function [spectrum,ntaper,freqoi,timeoi] = ft_specest_mtmconvol(dat, time, varargin)
+function [spectrum, ntaper, freqoi, timeoi] = ft_specest_mtmconvol(dat, time, varargin)
 
 % FT_SPECEST_MTMCONVOL performs wavelet convolution in the time domain by
 % multiplication in the frequency domain.
 %
 % Use as
-%   [spectrum,ntaper,freqoi,timeoi] = ft_specest_mtmconvol(dat,time,...)
-% where input
+%   [spectrum, ntaper, freqoi, timeoi] = ft_specest_mtmconvol(dat, time, ...)
+% where the input arguments are
 %   dat       = matrix of chan*sample
 %   time      = vector, containing time in seconds for each sample
-% and output
+% and the ouitput arguments are
 %   spectrum  = matrix of ntaper*chan*freqoi*timeoi of fourier coefficients
 %   ntaper    = vector containing the number of tapers per freqoi
 %   freqoi    = vector of frequencies in spectrum
 %   timeoi    = vector of timebins in spectrum
 %
 % Optional arguments should be specified in key-value pairs and can include
-%   taper     = 'dpss', 'hanning' or many others, see WINDOW (default = 'dpss')
-%   pad       = number, indicating time-length of data to be padded out to in seconds
-%   padtype   = string, indicating type of padding to be used (see ft_preproc_padding, default: zero)
+%   freqoi    = vector, containing frequencies (in Hz)
 %   timeoi    = vector, containing time points of interest (in seconds)
 %   timwin    = vector, containing length of time windows (in seconds)
-%   freqoi    = vector, containing frequencies (in Hz)
-%   tapsmofrq = number, the amount of spectral smoothing through multi-tapering. Note: 4 Hz smoothing means plus-minus 4 Hz, i.e. a 8 Hz smoothing box
-%   dimord    = 'tap_chan_freq_time' (default) or 'chan_time_freqtap' for memory efficiency
-%   verbose   = output progress to console (0 or 1, default 1)
+%   taper     = 'dpss', 'hanning' or many others, see WINDOW (default = 'dpss')
 %   taperopt  = additional taper options to be used in the WINDOW function, see WINDOW
+%   tapsmofrq = number, the amount of spectral smoothing through multi-tapering. Note: 4 Hz smoothing means plus-minus 4 Hz, i.e. a 8 Hz smoothing box
+%   pad       = number, indicating time-length of data to be padded out to in seconds
+%   padtype   = string, indicating type of padding to be used (see ft_preproc_padding, default: zero)
+%   dimord    = 'tap_chan_freq_time' (default) or 'chan_time_freqtap' for memory efficiency
 %   polyorder = number, the order of the polynomial to fitted to and removed from the data prior to the fourier transform (default = 0 -> remove DC-component)
+%   verbose   = output progress to console (0 or 1, default 1)
 %
 % See also FT_FREQANALYSIS, FT_SPECEST_MTMFFT, FT_SPECEST_TFR, FT_SPECEST_HILBERT, FT_SPECEST_WAVELET
 
@@ -66,18 +66,19 @@ verbose   = ft_getopt(varargin, 'verbose', true);
 polyorder = ft_getopt(varargin, 'polyorder', 0);
 tapopt    = ft_getopt(varargin, 'taperopt');
 
-if isempty(fbopt),
+if isempty(fbopt)
   fbopt.i = 1;
   fbopt.n = 1;
 end
 
 % throw errors for required input
-if isempty(tapsmofrq) && strcmp(taper, 'dpss')
-  ft_error('you need to specify tapsmofrq when using dpss tapers')
+if ismember(taper, {'dpss', 'sine', 'sine_old'}) && isempty(tapsmofrq)
+  % these are multitapering methods
+  ft_error('you need to specify tapsmofrq when using %s tapers', taper)
 end
 if isempty(timwin)
   ft_error('you need to specify timwin')
-elseif (length(timwin) ~= length(freqoi) && ~strcmp(freqoi,'all'))
+elseif ~strcmp(freqoi,'all') && length(timwin)~=length(freqoi)
   ft_error('timwin should be of equal length as freqoi')
 end
 
@@ -107,7 +108,7 @@ if isempty(pad) % if no padding is specified padding is equal to current data le
 end
 postpad    = round((pad - dattime) * fsample);
 endnsample = round(pad * fsample);  % total number of samples of padded data
-endtime    = pad;            % total time in seconds of padded data
+endtime    = pad;                   % total time in seconds of padded data
 
 % Set freqboi and freqoi
 freqoiinput = freqoi;
@@ -120,16 +121,15 @@ elseif strcmp(freqoi,'all')
   freqboi    = freqboilim(1):1:freqboilim(2);
   freqoi     = (freqboi-1) ./ endtime;
 end
+
 % check for freqoi = 0 and remove it, there is no wavelet for freqoi = 0
 if freqoi(1)==0
   freqoi(1)  = [];
-  freqboi(1) = [];
   if length(timwin) == (length(freqoi) + 1)
     timwin(1) = [];
   end
 end
-nfreqboi = length(freqboi);
-nfreqoi  = length(freqoi);
+nfreqoi = length(freqoi);
 
 % throw a warning if input freqoi is different from output freqoi
 if isnumeric(freqoiinput)
@@ -176,7 +176,6 @@ if numel(timwin)==1 && nfreqoi~=1
   timwin = repmat(timwin,[1 nfreqoi]);
 end
 timwinsample = round(timwin .* fsample);
-
 
 % determine whether tapers need to be recomputed
 current_argin = {time, postpad, taper, timwinsample, tapsmofrq, freqoi, timeoi, tapopt}; % reasoning: if time and postpad are equal, it's the same length trial, if the rest is equal then the requested output is equal

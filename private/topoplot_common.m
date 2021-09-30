@@ -35,6 +35,7 @@ function cfg = topoplot_common(cfg, varargin)
 %% Section 1: general cfg handling that is independent from the data
 
 % check if the input cfg is valid for this function
+cfg = ft_checkconfig(cfg, 'forbidden',  {'channels', 'trial'}); % prevent accidental typos
 cfg = ft_checkconfig(cfg, 'unused',     {'cohtargetchannel'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'cohrefchannel' 'refchannel'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'zparam', 'parameter'});
@@ -94,6 +95,7 @@ cfg.gridscale         = ft_getopt(cfg, 'gridscale',         67);
 cfg.interplimits      = ft_getopt(cfg, 'interplimits',     'head');
 cfg.interpolation     = ft_getopt(cfg, 'interpolation',     default_interpmethod);
 cfg.contournum        = ft_getopt(cfg, 'contournum',        6);
+cfg.colormap          = ft_getopt(cfg, 'colormap',         'default');
 cfg.colorbar          = ft_getopt(cfg, 'colorbar',         'no');
 cfg.colorbartext      = ft_getopt(cfg, 'colorbartext',    '');
 cfg.shading           = ft_getopt(cfg, 'shading',          'flat');
@@ -184,28 +186,28 @@ if strcmp(cfg.marker, 'highlights')
   cfg.marker = 'off';
 end
 
-% check colormap is proper format and set it
-if isfield(cfg, 'colormap')
+% check if the colormap is in the proper format
+if ~isequal(cfg.colormap, 'default')
   if ischar(cfg.colormap)
     cfg.colormap = ft_colormap(cfg.colormap);
   elseif iscell(cfg.colormap)
     cfg.colormap = ft_colormap(cfg.colormap{:});
-  end
-  if size(cfg.colormap,2)~=3
+  elseif isnumeric(cfg.colormap) && size(cfg.colormap,2)~=3
     ft_error('cfg.colormap must be Nx3');
   end
-  ft_colormap(cfg.colormap);
-  ncolors = size(cfg.colormap,1);
-else
-  ncolors = []; % let the low-level function deal with this
+  % the actual colormap will be set below
 end
 
 Ndata = numel(varargin);
-
 for indx=1:Ndata
   
   % open a new figure, or add it to the existing one
-  open_figure(keepfields(cfg, {'figure', 'clearfigure', 'position', 'visible', 'renderer', 'figurename', 'title'}));
+  open_figure(keepfields(cfg, {'figure', 'position', 'visible', 'renderer', 'figurename', 'title'}));
+  
+  % apply the same colormap to all figures
+  if ~isempty(cfg.colormap)
+    set(gcf,  'colormap', cfg.colormap);
+  end
   
   if iscell(cfg.dataname)
     dataname = cfg.dataname{indx};
@@ -269,6 +271,7 @@ for indx=1:Ndata
       if ~isfield(cfg,  'xparam')
         cfg.xlim = [1 1];
         xparam   = '';
+        yparam   = '';
       end
   end
   
@@ -390,18 +393,20 @@ for indx=1:Ndata
   end
   
   % Get physical min/max range of x
-  if strcmp(cfg.xlim, 'maxmin')
-    xmin = min(data.(xparam));
-    xmax = max(data.(xparam));
-  else
-    xmin = cfg.xlim(1);
-    xmax = cfg.xlim(2);
+  if ~isempty(xparam)
+    if strcmp(cfg.xlim, 'maxmin')
+      xmin = min(data.(xparam));
+      xmax = max(data.(xparam));
+    else
+      xmin = cfg.xlim(1);
+      xmax = cfg.xlim(2);
+    end
+    xminindx = nearest(data.(xparam), xmin);
+    xmaxindx = nearest(data.(xparam), xmax);
+    xmin = data.(xparam)(xminindx);
+    xmax = data.(xparam)(xmaxindx);
+    selx = xminindx:xmaxindx;
   end
-  xminindx = nearest(data.(xparam), xmin);
-  xmaxindx = nearest(data.(xparam), xmax);
-  xmin = data.(xparam)(xminindx);
-  xmax = data.(xparam)(xmaxindx);
-  selx = xminindx:xmaxindx;
   
   % Get physical min/max range of y
   if ~isempty(yparam)
@@ -597,7 +602,6 @@ for indx=1:Ndata
     opt = ft_setopt(opt, 'datmask',       msk);
     if strcmp(style, 'imsat') || strcmp(style, 'imsatiso')
       opt = ft_setopt(opt, 'clim',  [zmin zmax]);
-      opt = ft_setopt(opt, 'ncolors',  ncolors);
     end
     ft_plot_topo(chanX, chanY, dat, opt{:});
   end
@@ -722,11 +726,6 @@ for indx=1:Ndata
       c = colorbar('location', cfg.colorbar);
       ylabel(c, cfg.colorbartext);
     end
-  end
-  
-  % Set renderer if specified
-  if ~isempty(cfg.renderer)
-    set(gcf, 'renderer', cfg.renderer)
   end
   
   % set the figure window title, but only if the user has not changed it

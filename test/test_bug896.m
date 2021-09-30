@@ -8,8 +8,8 @@ load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug896.mat'));
 
 ft_checkdata(stat_coh, 'datatype', 'freq');
 ft_checkdata(stat_coh_full, 'datatype', 'freq');
-ft_checkdata(stat_coh, 'datatype', 'freq', 'cmbrepresentation', 'full');
-ft_checkdata(stat_coh_full, 'datatype', 'freq', 'cmbrepresentation', 'full');
+ft_checkdata(stat_coh, 'datatype', 'freq', 'cmbstyle', 'full');
+ft_checkdata(stat_coh_full, 'datatype', 'freq', 'cmbstyle', 'full');
 
 if ~ft_datatype(stat_coh, 'freq')
   error('ft_datatype failed on the "stat_coh" input data');

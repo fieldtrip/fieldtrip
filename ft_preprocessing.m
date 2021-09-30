@@ -22,7 +22,7 @@ function [data] = ft_preprocessing(cfg, data)
 %   cfg.continuous   = 'yes' or 'no' whether the file contains continuous data
 %                      (default is determined automatic)
 %
-% Instead of specifying the dataset in the configuration, you can also explicitely
+% Instead of specifying the dataset in the configuration, you can also explicitly
 % specify the name of the file containing the header information and the name of the
 % file containing the data, using
 %   cfg.datafile     = string with the filename
@@ -101,14 +101,11 @@ function [data] = ft_preprocessing(cfg, data)
 % Preprocessing options that you should only use for EEG data are
 %   cfg.reref         = 'no' or 'yes' (default = 'no')
 %   cfg.refchannel    = cell-array with new EEG reference channel(s), this can be 'all' for a common average reference
-%   cfg.refmethod     = 'avg', 'median', 'rest' or 'bipolar' for bipolar derivation of sequential channels (default = 'avg')
-%   cfg.leadfield      = leadfield
-%                     if select 'rest','leadfield' is required.
-%                     The leadfield can be a matrix (channels X sources)
-%                     which is calculated by using the forward theory, based on
-%                     the electrode montage, head model and equivalent source
-%                     model. It can also be the output of ft_prepare_leadfield.m
-%                     (e.g. lf.leadfield or lf) based on real head modal using FieldTrip.
+%   cfg.refmethod     = 'avg', 'median', 'rest', 'bipolar' or 'laplace' (default = 'avg')
+%   cfg.groupchans    = 'yes' or 'no', should channels be rereferenced in separate groups for bipolar and laplace methods,
+%                       this requires channnels to be named using an alphanumeric code, where letters represent the group
+%                       and numbers represent the order of the channel whithin its group (default = 'no')
+%   cfg.leadfield     = leadfield structure, this is required when cfg.refmethod='rest', see FT_PREPARE_LEADFIELD
 %   cfg.implicitref   = 'label' or empty, add the implicit EEG reference as zeros (default = [])
 %   cfg.montage       = 'no' or a montage structure, see FT_APPLY_MONTAGE (default = 'no')
 %
@@ -156,7 +153,7 @@ function [data] = ft_preprocessing(cfg, data)
 %   cfg.export.dataset    = string with the output file name
 %   cfg.export.dataformat = string describing the output file format, see FT_WRITE_DATA
 
-% Copyright (C) 2003-2013, Robert Oostenveld, SMI, FCDC
+% Copyright (C) 2003-2021, Robert Oostenveld, SMI, FCDC
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -200,9 +197,10 @@ if ~isempty(ft_getopt(cfg, 'distribute'))
 end
 
 % check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'renamed', {'blc', 'demean'});
-cfg = ft_checkconfig(cfg, 'renamed', {'blcwindow', 'baselinewindow'});
-cfg = ft_checkconfig(cfg, 'renamed', {'output', 'export'});
+cfg = ft_checkconfig(cfg, 'forbidden',  {'channels', 'trial'}); % prevent accidental typos, see issue 1729
+cfg = ft_checkconfig(cfg, 'renamed',    {'blc', 'demean'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'blcwindow', 'baselinewindow'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'output', 'export'});
 
 % set the defaults
 cfg.method         = ft_getopt(cfg, 'method', 'trial');
@@ -229,6 +227,7 @@ cfg.padtype        = ft_getopt(cfg, 'padtype', 'data');
 cfg.reref          = ft_getopt(cfg, 'reref', 'no');
 cfg.refchannel     = ft_getopt(cfg, 'refchannel', {});
 cfg.refmethod      = ft_getopt(cfg, 'refmethod', 'avg');
+cfg.groupchans     = ft_getopt(cfg, 'groupchans', 'no');
 cfg.implicitref    = ft_getopt(cfg, 'implicitref');
 
 % construct the low-level options as key-value pairs, these are passed to FT_READ_HEADER and FT_READ_DATA
@@ -328,7 +327,7 @@ if hasdata
   cfg.trials = ft_getopt(cfg, 'trials', 'all', 1);
   
   % select trials of interest
-  tmpcfg = keepfields(cfg, {'trials', 'channel', 'tolerance', 'showcallinfo'});
+  tmpcfg = keepfields(cfg, {'trials', 'channel', 'latency', 'tolerance', 'showcallinfo'});
   data   = ft_selectdata(tmpcfg, data);
   % restore the provenance information
   [cfg, data] = rollback_provenance(cfg, data);
@@ -674,7 +673,7 @@ if strcmp(cfg.updatesens, 'yes')
   if ~isempty(cfg.montage) && ~isequal(cfg.montage, 'no')
     montage = cfg.montage;
   elseif strcmp(cfg.reref, 'yes')
-    if strcmp(cfg.refmethod, 'bipolar') || strcmp(cfg.refmethod, 'avg')
+    if strcmp(cfg.refmethod, 'bipolar') || strcmp(cfg.refmethod, 'avg') || strcmp(cfg.refmethod, 'laplace')
       tmpcfg = keepfields(cfg, {'refmethod', 'implicitref', 'refchannel', 'channel'});
       tmpcfg.showcallinfo = 'no';
       montage = ft_prepare_montage(tmpcfg, data);

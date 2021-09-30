@@ -12,7 +12,7 @@ function [event] = ft_read_event(filename, varargin)
 %   'headerformat'   = string
 %   'eventformat'    = string
 %   'header'         = header structure, see FT_READ_HEADER
-%   'detectflank'    = string, can be 'up', 'down', 'both', 'updiff', 'downdiff', 'bit' (default is system specific)
+%   'detectflank'    = string, can be 'up', 'updiff', 'down', 'downdiff', 'both', 'any', 'biton', 'bitoff' (default is system specific)
 %   'trigshift'      = integer, number of samples to shift from flank to detect trigger value (default = 0)
 %   'chanindx'       = list with channel numbers for trigger detection, specify -1 in case you don't want to detect triggers (default is automatic)
 %   'threshold'      = threshold for analog trigger channels (default is system specific)
@@ -239,7 +239,7 @@ if strcmp(eventformat, 'brainvision_vhdr')
   if ~isfield(vhdr, 'MarkerFile') || isempty(vhdr.MarkerFile)
     filename = [];
   else
-    [p, ~, ~] = fileparts(filename);
+    [p, f, x] = fileparts(filename);
     filename = fullfile(p, vhdr.MarkerFile);
   end
 end
@@ -1708,8 +1708,13 @@ switch eventformat
     elseif isepoched
       begsample = cumsum([1 repmat(hdr.nSamples, hdr.nTrials-1, 1)']);
       events_id = split(split(hdr.orig.epochs.event_id, ';'), ':');
-      events_label = cell2mat(events_id(:, 1));
-      events_code = str2num(cell2mat(events_id(:, 2)));
+      if all(cellfun(@ischar, events_id(:, 1)))
+        events_label = events_id(:, 1);
+        events_code = str2num(cell2mat(events_id(:, 2)));
+      elseif all(cellfun(@isnumeric, events_id(:, 1)))
+        events_label = cell2mat(events_id(:, 1));
+        events_code = str2num(cell2mat(events_id(:, 2)));
+      end
       for i=1:hdr.nTrials
         event(end+1).type      = 'trial';
         event(end  ).sample    = begsample(i);
@@ -2238,6 +2243,22 @@ switch eventformat
     end
     event = read_yokogawa_event(filename, 'detectflank', detectflank, 'chanindx', chanindx, 'threshold', threshold);
     
+  case {'yorkinstruments_hdf5'}
+    if isempty(hdr)
+      hdr = ft_read_header(filename, 'headerformat', eventformat);
+    end
+    % read the trigger channel and do flank detection
+    trgindx = match_str(hdr.label, 'P_PORT_A');
+    trigger = read_trigger(filename, 'header', hdr, 'dataformat', 'yorkinstruments_hdf5', 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', trgindx, 'detectflank', detectflank, 'trigshift', trigshift, 'fix4d8192', false);
+    
+    event   = appendstruct(event, trigger);
+    
+    respindx = match_str(hdr.label, 'RESPONSE');
+    if ~isempty(respindx)
+      response = read_trigger(filename, 'header', hdr, 'dataformat', 'yorkinstruments_hdf5', 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', respindx, 'detectflank', detectflank, 'trigshift', trigshift);
+      event    = appendstruct(event, response);
+    end
+    
   case {'artinis_oxy3' 'artinis_oxy4'}
     ft_hastoolbox('artinis', 1);
     
@@ -2289,13 +2310,13 @@ switch eventformat
     end
     event = read_spmeeg_event(filename, 'header', hdr);
     
-  case {'blackrock_nev', 'blackrock_nsx'}
+  case {'blackrock_nev'}
     % use the NPMK toolbox for the file reading
     ft_hastoolbox('NPMK', 1);
     
     % ensure that the filename contains a full path specification,
     % otherwise the low-level function fails
-    [p,~,~] = fileparts(filename);
+    [p, f, x] = fileparts(filename);
     if ~isempty(p)
       % this is OK
     elseif isempty(p)
@@ -2315,7 +2336,7 @@ switch eventformat
     % probably not necessary for all but we often have pins up
     % FIXME: what is the consequence for the values if the pins were not 'up'?
     % Should this be solved more generically? E.g. with an option?
-    eventCodes2= eventCodes-min(eventCodes)+1;
+    eventCodes2 = eventCodes - min(eventCodes) + 1;
     
     for k=1:numel(eventCodes2)
       event(k).type      = 'trigger';

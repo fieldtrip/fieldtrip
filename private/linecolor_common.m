@@ -65,7 +65,7 @@ elseif strcmp(cfg.colorgroups, 'chantype')
   linecolor = cfg.linecolor(cfg.colorgroups(:),:);
 elseif startsWith(cfg.colorgroups, 'labelchar')
   % channel groups are defined by the Nth letter of the channel label
-  labelchar_num = str2double(cfg.colorgroups(10));
+  labelchar_num = sscanf(cfg.colorgroups, 'labelchar%d');
   vec_letters = num2str(zeros(Nchan,1));
   for iChan = 1:Nchan
     vec_letters(iChan) = label{iChan}(labelchar_num);

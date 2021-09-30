@@ -86,16 +86,17 @@ if ft_abort
   return
 end
 
-% check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'required',    {'method', 'design'});
-cfg = ft_checkconfig(cfg, 'renamed',     {'approach',   'method'});
-cfg = ft_checkconfig(cfg, 'forbidden',   {'transform'});
-cfg = ft_checkconfig(cfg, 'forbidden',   {'trials'}); % this used to be present until 24 Dec 2014, but was deemed too confusing by Robert
-
 % check if the input data is valid for this function
 for i=1:length(varargin)
   varargin{i} = ft_checkdata(varargin{i}, 'datatype', 'freq', 'feedback', 'no');
 end
+
+% check if the input cfg is valid for this function
+cfg = ft_checkconfig(cfg, 'forbidden',  {'channels'}); % prevent accidental typos, see issue 1729
+cfg = ft_checkconfig(cfg, 'required',   {'method', 'design'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'approach',   'method'});
+cfg = ft_checkconfig(cfg, 'forbidden',  {'transform'});
+cfg = ft_checkconfig(cfg, 'forbidden',  {'trials'}); % this used to be present until 24 Dec 2014, but was deemed too confusing by Robert
 
 % set the defaults
 cfg.parameter   = ft_getopt(cfg, 'parameter'); % default is set below

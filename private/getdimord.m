@@ -137,7 +137,7 @@ if isfield(data, 'cumtapcnt')
     nrpttap = sum(data.cumtapcnt);
   else
     % it is a matrix, hence it is repetitions by frequencies
-    % this happens after  mtmconvol with keeptrials
+    % this happens after mtmconvol with keeptrials
     nrpttap = sum(data.cumtapcnt,2);
     if any(nrpttap~=nrpttap(1))
       ft_warning('unexpected variation of the number of tapers over trials')
@@ -293,8 +293,21 @@ switch field
       dimord = 'subj_chan_time';
     end
     
-  case {'avg' 'var' 'dof'}
+  case {'avg' 'var'}
     if isequal(datsiz, [nrpt nchan ntime])
+      dimord = 'rpt_chan_time';
+    elseif isequal(datsiz, [nchan ntime])
+      dimord = 'chan_time';
+    elseif isequalwithoutnans(datsiz, [nrpt nchan ntime])
+      dimord = 'rpt_chan_time';
+    elseif isequalwithoutnans(datsiz, [nchan ntime])
+      dimord = 'chan_time';
+    end
+    
+  case {'dof'}
+    if isequal(datsiz, [1 1])
+      dimord = 'unknown';
+    elseif isequal(datsiz, [nrpt nchan ntime])
       dimord = 'rpt_chan_time';
     elseif isequal(datsiz, [nchan ntime])
       dimord = 'chan_time';
@@ -610,6 +623,7 @@ if exist('dimord', 'var') && iscell(data.(field))
   end
 end
 
+
 if ~exist('dimord', 'var')
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % ATTEMPT 4: there is only one way that the dimensions can be interpreted
@@ -641,6 +655,7 @@ if ~exist('dimord', 'var')
     return
   end
 end % if dimord does not exist
+
 
 if ~exist('dimord', 'var')
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -684,6 +699,7 @@ if ~exist('dimord', 'var')
   end
 end % if dimord does not exist
 
+
 if ~exist('dimord', 'var')
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % ATTEMPT 6: check whether it is a 3-D volume
@@ -691,12 +707,20 @@ if ~exist('dimord', 'var')
   if isequal(datsiz, [ndim1 ndim2 ndim3])
     dimord = 'dim1_dim2_dim3';
     return
+  elseif isequal(datsiz, [ndim1 ndim2 ndim3 ntime])
+    dimord = 'dim1_dim2_dim3_time';
+    return
+  elseif isequal(datsiz, [ndim1 ndim2 ndim3 nfreq])
+    dimord = 'dim1_dim2_dim3_freq';
+    return
+  elseif isequal(datsiz, [ndim1 ndim2 ndim3 nfreq ntime])
+    dimord = 'dim1_dim2_dim3_freq_time';
+    return
   elseif isfield(data, 'pos') && prod(datsiz)==size(data.pos, 1)
     dimord = 'dim1_dim2_dim3';
     return
   end
 end % if dimord does not exist
-
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

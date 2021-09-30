@@ -38,7 +38,7 @@ opt.fgt = 0;
 opt.tol = 10e-12;
 opt.outliers = 0.0;
 opt.outliers = 0;
-[transform,~] = cpd_register(headshape,template, opt);
+[transform,dum] = cpd_register(headshape,template, opt);
 
 M = eye(4,4);
 M(1:3,1:3) = transform.R;

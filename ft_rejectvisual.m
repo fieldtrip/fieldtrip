@@ -40,6 +40,7 @@ function [data] = ft_rejectvisual(cfg, data)
 %   cfg.latency     = [begin end] in seconds, or 'all', 'minperiod', 'maxperiod', 'prestim', 'poststim' (default = 'all')
 %   cfg.viewmode    = 'remove', 'toggle' or 'hide', only applies to summary mode (default = 'remove')
 %   cfg.box         = string, 'yes' or 'no' whether to draw a box around each graph (default = 'no')
+%   cfg.ylim        = 'maxmin', 'maxabs', 'zeromax', 'minzero', or [ymin ymax] (default = 'maxmin')
 %
 % The following options for the scaling of the EEG, EOG, ECG, EMG, MEG and NIRS channels
 % is optional and can be used to bring the absolute numbers of the different
@@ -134,8 +135,9 @@ dtype = ft_datatype(data);
 data = ft_checkdata(data, 'datatype', {'raw+comp', 'raw'}, 'feedback', 'yes', 'hassampleinfo', 'yes');
 
 % check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'renamedval',  {'metric',  'absmax',  'maxabs'});
-cfg = ft_checkconfig(cfg, 'renamedval',  {'method',  'absmax',  'maxabs'});
+cfg = ft_checkconfig(cfg, 'forbidden',  {'channels', 'trial'}); % prevent accidental typos, see issue 1729
+cfg = ft_checkconfig(cfg, 'renamedval', {'metric',  'absmax',  'maxabs'});
+cfg = ft_checkconfig(cfg, 'renamedval', {'method',  'absmax',  'maxabs'});
 
 % resolve some common typing errors
 cfg = ft_checkconfig(cfg, 'renamed',  {'keeptrials',  'keeptrial'});

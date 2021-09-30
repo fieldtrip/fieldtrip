@@ -30,10 +30,10 @@ function [cfg] = ft_databrowser(cfg, data)
 %   cfg.allowoverlap            = 'yes' or 'no', whether data that is overlapping in multiple trials is allowed (default = 'no')
 %   cfg.channel                 = cell-array with channel labels, see FT_CHANNELSELECTION
 %   cfg.channelclamped          = cell-array with channel labels, that when using the 'vertical' viewmode will always be shown at the bottom. This is useful for showing ECG/EOG channels along with the other channels
-%   cfg.compscale               = string, 'global' or 'local', defines whether the colormap for the topographic scaling is applied per topography or on all visualized components (default 'global')
-%   cfg.viewmode                = string, 'butterfly', 'vertical', 'component' for visualizing ICA/PCA components (default is 'butterfly')
+%   cfg.compscale               = string, 'global' or 'local', defines whether the colormap for the topographic scaling is applied per topography or on all visualized components (default = 'local')
+%   cfg.viewmode                = string, 'vertical', 'butterfly', or 'component' for visualizing ICA/PCA topographies together with the timecourses (default = 'vertical')
 %   cfg.plotlabels              = 'yes', 'no' or 'some', whether to plot channel labels in vertical viewmode. The option 'some' plots one label for every ten channels, which is useful if there are many channels (default = 'some')
-%   cfg.plotevents              = 'no' or 'yes', whether to plot event markers. (default is 'yes')
+%   cfg.plotevents              = 'no' or 'yes', whether to plot event markers (default = 'yes')
 %   cfg.ploteventlabels         = 'type=value', 'colorvalue' (default = 'type=value')
 %   cfg.artfctdef.xxx.artifact  = Nx2 matrix with artifact segments see FT_ARTIFACT_xxx functions
 %   cfg.selectfeature           = string, name of feature to be selected/added (default = 'visual')
@@ -49,6 +49,7 @@ function [cfg] = ft_databrowser(cfg, data)
 %   cfg.visible                 = string, 'on' or 'off' whether figure will be visible (default = 'on')
 %   cfg.position                = location and size of the figure, specified as a vector of the form [left bottom width height]
 %   cfg.renderer                = string, 'opengl', 'zbuffer', 'painters', see MATLAB Figure Properties. If this function crashes, you should try 'painters'.
+%   cfg.colormap                = string, or Nx3 matrix, see FT_COLORMAP
 %
 % The following options for the scaling of the EEG, EOG, ECG, EMG, MEG and NIRS channels
 % is optional and can be used to bring the absolute numbers of the different
@@ -162,6 +163,7 @@ hasdata = exist('data', 'var');
 hascomp = hasdata && ft_datatype(data, 'comp'); % can be 'raw+comp' or 'timelock+comp'
 
 % check if the input cfg is valid for this function
+cfg = ft_checkconfig(cfg, 'forbidden',  {'channels'}); % prevent accidental typos, see issue 1729
 cfg = ft_checkconfig(cfg, 'unused',     {'comps', 'inputfile', 'outputfile'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'zscale', 'ylim'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'ylim', 'auto', 'maxabs'});
@@ -204,11 +206,12 @@ cfg.chanscale           = ft_getopt(cfg, 'chanscale');
 cfg.mychanscale         = ft_getopt(cfg, 'mychanscale');
 cfg.mychan              = ft_getopt(cfg, 'mychan');
 cfg.layout              = ft_getopt(cfg, 'layout');
+cfg.colormap            = ft_getopt(cfg, 'colormap', 'default');
 cfg.plotlabels          = ft_getopt(cfg, 'plotlabels', 'some');
 cfg.event               = ft_getopt(cfg, 'event');                       % this only exists for backward compatibility and should not be documented
 cfg.continuous          = ft_getopt(cfg, 'continuous');                  % the default is set further down in the code, conditional on the input data
 cfg.precision           = ft_getopt(cfg, 'precision', 'double');
-cfg.compscale           = ft_getopt(cfg, 'compscale', 'global');
+cfg.compscale           = ft_getopt(cfg, 'compscale', 'local');
 cfg.renderer            = ft_getopt(cfg, 'renderer');
 cfg.fontsize            = ft_getopt(cfg, 'fontsize', 12);
 cfg.fontunits           = ft_getopt(cfg, 'fontunits', 'points');         % inches, centimeters, normalized, points, pixels
@@ -248,7 +251,7 @@ headeropt  = ft_setopt(headeropt, 'coilaccuracy',   ft_getopt(cfg, 'coilaccuracy
 headeropt  = ft_setopt(headeropt, 'checkmaxfilter', ft_getopt(cfg, 'checkmaxfilter'));      % this allows to read non-maxfiltered neuromag data recorded with internal active shielding
 headeropt  = ft_setopt(headeropt, 'chantype',       ft_getopt(cfg, 'chantype', {}));        % 2017.10.10 AB required for NeuroOmega files
 
-if ~isfield(cfg, 'viewmode')
+if isempty(ft_getopt(cfg, 'viewmode'))
   % can be 'butterfly', 'vertical', or 'component'
   if hascomp
     cfg.viewmode = 'component';
@@ -257,8 +260,8 @@ if ~isfield(cfg, 'viewmode')
   end
 end
 
-if ~isfield(cfg, 'colorgroups')
-  % can be 'sequential', 'allblack', 'labelcharx', 'chantype', or a vector with the length of the number of channels defining the groups
+if isempty(ft_getopt(cfg, 'colorgroups'))
+  % can be 'sequential', 'allblack', 'labelcharN', 'chantype', or a vector with the length of the number of channels defining the groups
   if hascomp
     cfg.colorgroups = 'allblack';
   else
@@ -273,7 +276,6 @@ if ~isempty(cfg.chanscale)
   elseif numel(cfg.channel) ~= numel(cfg.chanscale)
     ft_error('cfg.chanscale should have the same number of elements as cfg.channel');
   end
-  
   % make sure chanscale is a column vector, not a row vector
   cfg.chanscale = cfg.chanscale(:);
 end
@@ -283,7 +285,7 @@ if ~isempty(cfg.mychanscale) && ~isfield(cfg, 'mychan')
   cfg.mychanscale = [];
 end
 
-if ~isfield(cfg, 'channel')
+if isempty(ft_getopt(cfg, 'channel'))
   if hascomp
     if size(data.topo,2)>9
       cfg.channel = 1:10;
@@ -336,6 +338,10 @@ if hasdata
   if isfield(data, 'cfg') && ~isempty(ft_findcfg(data.cfg, 'origfs'))
     % don't use the events in case the data has been resampled
     ft_warning('the data has been resampled, not showing the events');
+    event = [];
+  elseif istimelock
+    % don't use the events in case the data has been averaged
+    ft_warning('the data has been averaged, not showing the events');
     event = [];
   elseif ~isempty(cfg.event)
     % use the events that the user passed in the configuration
@@ -537,6 +543,16 @@ artifactcolors = colorcheck([0.9686 0.7608 0.7686; 0.7529 0.7098 0.9647; 0.7373 
 if ~isempty(event) && isstruct(event)
   eventtypes  = unique({event.type});
   eventcolors = colorcheck('krbgmcy', numel(eventtypes));
+  % durations and offsets can be either empty or should be numeric values, see FT_READ_EVENT
+  % the code further down expects them to be numeric values, so change them to zero
+  for i=1:numel(event)
+    if isempty(event(i).duration)
+      event(i).duration = 0;
+    end
+    if isempty(event(i).offset)
+      event(i).offset = 0;
+    end
+  end
 else
   eventtypes = {};
   eventcolors = '';
@@ -579,11 +595,13 @@ elseif isempty(cfg.selfun) && isempty(cfg.selcfg)
   % topoplotER
   cfg.selcfg{3} = [];
   cfg.selcfg{3}.linecolor = linecolor;
-  cfg.selcfg{3}.layout = cfg.layout;
+  cfg.selcfg{3}.layout    = cfg.layout;
+  cfg.selcfg{3}.colormap  = cfg.colormap;
   cfg.selfun{3} = 'topoplotER';
   % topoplotVAR
   cfg.selcfg{4} = [];
-  cfg.selcfg{4}.layout = cfg.layout;
+  cfg.selcfg{4}.layout   = cfg.layout;
+  cfg.selcfg{4}.colormap = cfg.colormap;
   cfg.selfun{4} = 'topoplotVAR';
   % movieplotER
   cfg.selcfg{5} = [];
@@ -647,6 +665,18 @@ end
 
 % open a new figure with the specified settings
 h = open_figure(keepfields(cfg, {'figure', 'position', 'visible', 'renderer'}));
+
+% check if the colormap is in proper format and set it
+if ~isempty(cfg.colormap)
+  if ischar(cfg.colormap)
+    cfg.colormap = ft_colormap(cfg.colormap);
+  elseif iscell(cfg.colormap)
+    cfg.colormap = ft_colormap(cfg.colormap{:});
+  elseif isnumeric(cfg.colormap) && size(cfg.colormap,2)~=3
+    ft_error('cfg.colormap must be Nx3');
+  end
+  set(h, 'colormap', cfg.colormap);
+end
 
 % put appdata in figure
 setappdata(h, 'opt', opt);
@@ -1032,10 +1062,10 @@ if isempty(cmenulab)
         ft_error('cfg.selectmode = ''markpeakevent'' and ''marktroughevent'' only supported with 1 channel in the data')
       end
       if strcmp(cfg.selectmode, 'markpeakevent')
-        [dum ind_minmax] = max(dat(begsel-begsample+1:endsel-begsample+1));
+        [dum, ind_minmax] = max(dat(begsel-begsample+1:endsel-begsample+1));
         val = 'peak';
       elseif strcmp(cfg.selectmode, 'marktroughevent')
-        [dum ind_minmax] = min(dat(begsel-begsample+1:endsel-begsample+1));
+        [dum, ind_minmax] = min(dat(begsel-begsample+1:endsel-begsample+1));
         val = 'trough';
       end
       samp_minmax = begsel + ind_minmax - 1;
@@ -1633,10 +1663,11 @@ artdat = ft_fetch_data(opt.artdata, 'begsample', begsample, 'endsample', endsamp
 artlab = opt.artdata.label;
 
 if ~isempty(opt.event) && isstruct(opt.event)
-  % select only the events in the current time window
-  event     = opt.event;
-  evtsample = [event(:).sample];
-  event     = event(evtsample>=begsample & evtsample<=endsample);
+  % select those events that overlap with the current time window
+  event    = opt.event;
+  begevent = [event(:).sample];
+  endevent = [event(:).sample] + [event(:).duration];
+  event    = event(begevent<=endsample & endevent>=begsample);
 else
   event = [];
 end
@@ -1647,7 +1678,20 @@ if ~isempty(cfg.precision)
 end
 
 % apply preprocessing and determine the time axis
-[dat, lab, tim] = preproc(dat, opt.hdr.label(chanindx), offset2time(offset, opt.fsample, size(dat,2)), cfg.preproc);
+tim = offset2time(offset, opt.fsample, size(dat,2));
+finitevals = isfinite(sum(dat));
+if all(~finitevals)
+  lab = opt.hdr.label(chanindx);
+elseif any(~finitevals)
+  % loop across the chunks to avoid nan-related warnings from preproc and potential loss of data
+  begsmp = find( ~[0 finitevals] & [finitevals 0] );
+  endsmp = find( ~[finitevals 0] & [0 finitevals] ) - 1;
+  for k = 1:numel(begsmp)
+    [dat(:,begsmp(k):endsmp(k)), lab] = preproc(dat(:,begsmp(k):endsmp(k)), opt.hdr.label(chanindx), tim(begsmp(k):endsmp(k)), cfg.preproc);
+  end
+else
+  [dat, lab, tim] = preproc(dat, opt.hdr.label(chanindx), tim, cfg.preproc);
+end
 
 % add NaNs to data for plotting purposes. NaNs will be added when requested horizontal scaling is longer than the data.
 nsamplepad = opt.nanpaddata(opt.trlop);
@@ -1704,6 +1748,9 @@ end
 % determine the position of the channel/component labels relative to the real axes
 % FIXME needs a shift to the left for components
 labelx = opt.laytime.pos(:,1) - opt.laytime.width/2 - 0.01;
+if strcmp(cfg.viewmode, 'component')
+  labelx = labelx - opt.laytime.height - 0.025;
+end
 labely = opt.laytime.pos(:,2);
 
 % determine the total extent of all virtual axes relative to the real axes
@@ -2051,7 +2098,7 @@ if strcmp(cfg.viewmode, 'component')
   
   % determine the position of each of the topographies
   laytopo.pos(:,1)  = opt.laytime.pos(:,1) - opt.laytime.width/2 - opt.laytime.height;
-  laytopo.pos(:,2)  = opt.laytime.pos(:,2) + opt.laytime.height/2;
+  laytopo.pos(:,2)  = opt.laytime.pos(:,2); %- opt.laytime.height/2;
   laytopo.width     = opt.laytime.height;
   laytopo.height    = opt.laytime.height;
   laytopo.label     = opt.laytime.label;
@@ -2069,7 +2116,10 @@ if strcmp(cfg.viewmode, 'component')
     chany = laychan.pos(sel2,2);
     
     if strcmp(cfg.compscale, 'global')
-      for i=1:length(chanindx) % loop through all components to get max and min
+      % compute scaling factors for all components that are plotted together
+      zmin = nan(1, length(chanindx));
+      zmax = nan(1, length(chanindx));
+      for i=1:length(chanindx)
         zmin(i) = min(opt.orgdata.topo(sel1,chanindx(i)));
         zmax(i) = max(opt.orgdata.topo(sel1,chanindx(i)));
       end
@@ -2078,28 +2128,52 @@ if strcmp(cfg.viewmode, 'component')
         zmin = min(zmin);
         zmax = max(zmax);
       elseif strcmp(cfg.zlim, 'maxabs')
-        zmax = max([abs(zmin) abs(zmax)]);
+        zmax = max(abs([zmin zmax]));
         zmin = -zmax;
+      elseif strcmp(cfg.zlim, 'zeromax')
+        zmin = 0;
+        zmax = max(zmax);
+      elseif strcmp(cfg.zlim, 'minzero')
+        zmin = min(zmin);
+        zmax = 0;
+      elseif isnumeric(cfg.zlim) && numel(cfg.zlim)==2
+        zmin = cfg.zlim(1);
+        zmax = cfg.zlim(2);
       else
-        ft_error('configuration option for component scaling could not be recognized');
+        ft_error('unsupported specification of cfg.zlim');
       end
-    end
+    end % if cfg.compscale
     
     for i=1:length(chanindx)
       % plot the topography of this component
       laysel = match_str(opt.laytime.label, opt.hdr.label(chanindx(i)));
       chanz = opt.orgdata.topo(sel1,chanindx(i));
+      if all(chanz==0)
+        % this is most likely a channel that is not a component, and has been added later on
+        continue;
+      end
       
       if strcmp(cfg.compscale, 'local')
-        % compute scaling factors here
+        % compute scaling factors for each individual component
         if strcmp(cfg.zlim, 'maxmin')
           zmin = min(chanz);
           zmax = max(chanz);
         elseif strcmp(cfg.zlim, 'maxabs')
           zmax = max(abs(chanz));
           zmin = -zmax;
+        elseif strcmp(cfg.zlim, 'zeromax')
+          zmin = 0;
+          zmax = max(chanz);
+        elseif strcmp(cfg.zlim, 'minzero')
+          zmin = min(chanz);
+          zmax = 0;
+        elseif isnumeric(cfg.zlim) && numel(cfg.zlim)==2
+          zmin = cfg.zlim(1);
+          zmax = cfg.zlim(2);
+        else
+          ft_error('unsupported specification of cfg.zlim');
         end
-      end
+      end % if cfg.compscale
       
       % scaling
       chanz = (chanz - zmin) ./  (zmax- zmin);
@@ -2132,7 +2206,7 @@ if strcmp(cfg.viewmode, 'component')
   
   set(gca, 'yTick', [])
   
-  ax(1) = min(laytopo.pos(:,1) - laytopo.width);
+  ax(1) = min(laytopo.pos(:,1) - 3*laytopo.width);
   ax(2) = max(opt.laytime.pos(:,1) + opt.laytime.width/2);
   ax(3) = min(opt.laytime.pos(:,2) - opt.laytime.height/2);
   ax(4) = max(opt.laytime.pos(:,2) + opt.laytime.height/2);

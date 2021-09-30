@@ -60,7 +60,8 @@ if ft_abort
 end
 
 % check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'required', {'gradient'});
+cfg = ft_checkconfig(cfg, 'forbidden',  {'trial'}); % prevent accidental typos, see issue 1729
+cfg = ft_checkconfig(cfg, 'required',   {'gradient'});
 
 % set the defaults
 cfg.trials     = ft_getopt(cfg, 'trials', 'all', 1);

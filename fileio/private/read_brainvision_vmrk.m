@@ -42,13 +42,13 @@ while ischar(line) || isempty(line)
   if ~isempty(line) && ~(isnumeric(line) && line==-1)
     if startsWith(line, 'Mk')
       % this line starts with "Mk", so it probably contains a marker
-      tok = split(line, '=');
+      tok = strsplit(line, '=');
       if length(tok)~=2
         ft_warning('skipping unexpected formatted line in BrainVision marker file');
       else
         % the line looks like "MkXXX=YYY", which is ok
         % the interesting part now is in the YYY, i.e. the second token
-        tok = split(tok{2}, ',');
+        tok = strsplit(tok{2}, ',');
         if isempty(tok{1})
           tok{1}  = [];
         end

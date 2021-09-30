@@ -38,7 +38,7 @@ function [labelx, labely, labelz] = coordsys2label(coordsys, format, both)
 % $Id$
 
 
-% FIXME this function could also rerturn a label for the origin
+% FIXME this function could also return a label for the origin
 % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=3304
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -74,7 +74,9 @@ if ~isempty(coordsys) && ~strcmp(coordsys, 'unknown')
     
   else
     switch lower(coordsys)
-      case {'ras' 'neuromag' 'itab' 'acpc' 'spm' 'mni' 'tal'}
+      case {'ras' 'scanras' 'nifti' 'neuromag' 'itab' 'acpc' 'spm' 'mni' 'tal'}
+        % the nifti coordinate system is defined according to https://doi.org/10.1016/j.jneumeth.2016.03.001 and https://github.com/fieldtrip/website/pull/444
+        % but see also https://brainder.org/2012/09/23/the-nifti-file-format/ which shows that it can be more complex than that
         labelx = {'-X (left)'      '+X (right)'   };
         labely = {'-Y (posterior)' '+Y (anterior)'};
         labelz = {'-Z (inferior)'  '+Z (superior)'};
@@ -82,17 +84,17 @@ if ~isempty(coordsys) && ~strcmp(coordsys, 'unknown')
         labelx = {'-X (posterior)' '+X (anterior)'};
         labely = {'-Y (right)'     '+Y (left)'};
         labelz = {'-Z (inferior)'  '+Z (superior)'};
+      case {'lps' 'scanlps' 'dicom'}
+        labelx = {'-X (right)'     '+X (left)'};
+        labely = {'-Y (anterior)'  '+Y (posterior)'};
+        labelz = {'-Z (inferior)'  '+Z (superior)'};
       case {'rsp' 'paxinos'}
         labelx = {'-X (left)'      '+X (right)'};
         labely = {'-Y (inferior)'  '+Y (superior)'};
         labelz = {'-Z (anterior)'  '+Z (posterior)'};
-      case {'lps'}
-        labelx = {'-X (right)'      '+X (left)'};
-        labely = {'-Y (anterior)'  '+Y (posterior)'};
-        labelz = {'-Z (inferior)'  '+Z (superior)'};
       otherwise
         % the coordinate system is unknown
-        ft_warning('unknown coordsys ''%s''', coordsys);
+        ft_warning('cannot determine the labels for the axes of the "%s" coordinate system', coordsys);
         labelx = {'-X (unknown)' '+X (unknown)'};
         labely = {'-Y (unknown)' '+Y (unknown)'};
         labelz = {'-Z (unknown)' '+Z (unknown)'};

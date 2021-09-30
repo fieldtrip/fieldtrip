@@ -1,19 +1,22 @@
 function [spectrum, freqoi] = ft_specest_neuvar(dat, time, varargin)
 
-% FT_SPECEST_NEUVAR computes a time-domain estimation of overall signal 
-% power, having compensated for the 1/f distribution of spectral content.
+% FT_SPECEST_NEUVAR computes a time-domain estimation of overall signal power, having
+% compensated for the 1/f distribution of spectral content.
 %
 % Use as
-%   [spectrum,ntaper,freqoi] = ft_specest_neuvar(dat,time...)
-% where
+%   [spectrum, freqoi] = ft_specest_neuvar(dat, time...)
+% where the input arguments are
 %   dat        = matrix of chan*sample
 %   time       = vector, containing time in seconds for each sample
-%   neuvar     = matrix of chan*neuvar
+% and the output arguments are
+%   spectrum   = matrix of chan*neuvar
+%   freqoi     = vector of frequencies in spectrum
 %
 % Optional arguments should be specified in key-value pairs and can include
-%   order      = number, the order of differentation for compensating for the 1/f (default: 1)
+%   order      = number, the order of differentation for compensating for the 1/f (default = 1)
 %   pad        = number, total length of data after zero padding (in seconds)
-%   padtype    = string, indicating type of padding to be used (see ft_preproc_padding, default: 0)
+%   padtype    = string, indicating type of padding to be used, can be 'zero', 'mean', 'localmean', 'edge', or 'mirror' (default = 'zero')
+%   polyorder  = number, the order of the polynomial to fitted to and removed from the data prior to the Fourier transform (default = 0, which removes the DC-component)
 %   verbose    = output progress to console (0 or 1, default 1)
 %
 % See also FT_FREQANALYSIS, FT_SPECEST_MTMFFT, FT_SPECEST_MTMCONVOL, FT_SPECEST_TFR, FT_SPECEST_HILBERT, FT_SPECEST_WAVELET
@@ -44,6 +47,7 @@ order     = ft_getopt(varargin, 'order', 1);
 pad       = ft_getopt(varargin, 'pad');
 padtype   = ft_getopt(varargin, 'padtype', 'zero');
 fbopt     = ft_getopt(varargin, 'feedback');
+polyorder = ft_getopt(varargin, 'polyorder', 1);
 verbose   = ft_getopt(varargin, 'verbose', true);
 
 if isempty(fbopt)
@@ -55,7 +59,7 @@ end
 dat = cast(dat, 'double');
 
 % Set n's
-[nchan,ndatsample] = size(dat);
+[nchan, ndatsample] = size(dat);
 
 % This does not work on integer data
 if ~isa(dat, 'double') && ~isa(dat, 'single')
@@ -66,13 +70,20 @@ end
 fsample = 1./mean(diff(time));
 dattime = ndatsample / fsample; % total time in seconds of input data
 
+% remove polynomial fit from the data -> default is demeaning
+if polyorder >= 0
+  dat = ft_preproc_polyremoval(dat, polyorder, 1, ndatsample);
+end
+
 % Zero padding
 if round(pad * fsample) < ndatsample
   ft_error('the padding that you specified is shorter than the data');
 end
+
 if isempty(pad) % if no padding is specified padding is equal to current data length
   pad = dattime;
 end
+
 postpad    = ceil((pad - dattime) * fsample);
 endnsample = round(pad * fsample);  % total number of samples of padded data
 endtime    = pad;                   % total time in seconds of padded data
@@ -90,5 +101,5 @@ elseif verbose
   fprintf([str, '\n']);
 end
 spectrum = var(ft_preproc_padding(dat, padtype, 0, postpad), [], 2)'; % freq X chan
-spectrum = sqrt(spectrum); % take square root since cfg.output = 'pow' assumes the output is amplitude and squares it 
+spectrum = sqrt(spectrum); % take square root since cfg.output = 'pow' assumes the output is amplitude and squares it
 freqoi = 0; % assign to DC frequency

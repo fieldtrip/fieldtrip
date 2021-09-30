@@ -86,8 +86,6 @@ ctf = {
   './bug3280/A1826_comparisonSEF_20161212_02.ds'
   './bug3297/testMEG001_1200hz_20170517_05.ds'
   './bug3375/ctf/muenster_A1331.ds'
-  './data2bids/mous/sub-A2002/meg/sub-A2002_task-auditory_meg.ds'
-  './data2bids/mous/sub-A2002/meg/sub-A2002_task-rest_meg.ds'
   };
 
 % ctf151 and ctf275 datasets are expected to have their channel order alphabetical

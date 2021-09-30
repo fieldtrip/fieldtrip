@@ -1,73 +1,57 @@
-function test_ft_specest_irasa
+function tests = test_ft_specest_irasa
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
-% DEPENDENCY ft_freqanalysis ft_specest_irasa
+% DEPENDENCY ft_specest_irasa
 
-% We do not have that many concurrent licenses of the DSP Systems toolbox (https://nl.mathworks.com/products/dsp-system.html)
-% which was used in the initial version of this script. Therefore this test script does not use the DSP toolbox by default.
-usedsptoolbox = false;
-
-% simulate data
-t = (1:2000)/1000; % time axis
-for rpt = 1:20
-    if usedsptoolbox
-      % generate pink noise using the DSP toolbox
-        dspobj = dsp.ColoredNoise('Color', 'pink', 'SamplesPerFrame', length(t));
-        fn = dspobj()';
-    else
-        % use another method to make pink noise
-        fn = cumsum(randn(1,length(t))); 
-    end
-    
-    % add line noise
-    data.trial{1,rpt} = fn + cos(2*pi*50*t) + cos(2*pi*100*t);
-    data.time{1,rpt}  = t;
-    data.label{1}     = 'chan';
-    data.trialinfo(rpt,1) = rpt;
+if nargout
+  % assume that this is called by RUNTESTS
+  tests = functiontests(localfunctions);
+else
+  % assume that this is called from the command line
+  fn = localfunctions;
+  for i=1:numel(fn)
+    feval(fn{i});
+  end
 end
 
-% using unfiltered data
-cfg = [];
-cfg.method = 'irasa';
-cfg.output = 'original';
-cfg.pad   = 'nextpow2';
-freq = ft_freqanalysis(cfg, data);
-cfg.output = 'fractal';
-freqI = ft_freqanalysis(cfg, data);
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function testOptions(testCase)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% what happens if we use bandpassfiltered data?
-cfg2            = [];
-cfg2.bpfilter   = 'yes';
-cfg2.bpfilttype = 'firws';
-cfg2.bpfreq     = [60 150];
-datafilt       = ft_preprocessing(cfg2, data);
+fsample = 1000;
+nchan   = 2;
+nsample = 1000;
 
-cfg2.bpfilter = 'no';
-cfg2.hpfilter = 'yes';
-cfg2.hpfreq   = 60;
-cfg2.hpfilttype = 'firws';
-datafilt2       = ft_preprocessing(cfg2, data);
+dat     = randn(nchan, nsample) + 1 + linspace(0,1,nsample);
+time    = (0:(nsample-1))/fsample;
+freqoi  = 1:150;
 
-cfg2.bpfilter   = 'no';
-cfg2.hpfilter   = 'no';
-cfg2.dftfilter  = 'yes'; % notch filter to filter out line noise
-cfg2.dftfreq    = [50 100];
-datafilt3       = ft_preprocessing(cfg2, data);
+result = {};
+result{end+1} = ft_specest_irasa(dat, time, 'verbose', false, 'freqoi', freqoi, 'output', 'original');
+result{end+1} = ft_specest_irasa(dat, time, 'verbose', false, 'freqoi', freqoi, 'output', 'fractal');
+result{end+1} = ft_specest_irasa(dat, time, 'verbose', false, 'freqoi', freqoi(2:2:end), 'output', 'original');
+result{end+1} = ft_specest_irasa(dat, time, 'verbose', false, 'freqoi', freqoi(2:2:end), 'output', 'fractal');
 
-cfg.output = 'original';
-freqfilt = ft_freqanalysis(cfg, datafilt);
-freqfilt2 = ft_freqanalysis(cfg, datafilt2);
-freqfilt3 = ft_freqanalysis(cfg, datafilt3);
+% try out another padding
+result{end+1} = ft_specest_irasa(dat, time, 'verbose', false, 'freqoi', freqoi, 'output', 'original', 'pad', 2);
+result{end+1} = ft_specest_irasa(dat, time, 'verbose', false, 'freqoi', freqoi, 'output', 'fractal',  'pad', 2);
 
-cfg.output = 'fractal';
-freqfiltI = ft_freqanalysis(cfg, datafilt);
-freqfiltI2 = ft_freqanalysis(cfg, datafilt2);
-freqfiltI3 = ft_freqanalysis(cfg, datafilt3);
+% try out the various padding types, don't remove the polynomial fit
+result{end+1} = ft_specest_irasa(dat, time, 'verbose', false, 'freqoi', freqoi, 'output', 'fractal', 'polyorder', -1, 'pad', 2, 'padtype', 'zero');
+result{end+1} = ft_specest_irasa(dat, time, 'verbose', false, 'freqoi', freqoi, 'output', 'fractal', 'polyorder', -1, 'pad', 2, 'padtype', 'mean');
+result{end+1} = ft_specest_irasa(dat, time, 'verbose', false, 'freqoi', freqoi, 'output', 'fractal', 'polyorder', -1, 'pad', 2, 'padtype', 'localmean');
+result{end+1} = ft_specest_irasa(dat, time, 'verbose', false, 'freqoi', freqoi, 'output', 'fractal', 'polyorder', -1, 'pad', 2, 'padtype', 'edge');
+result{end+1} = ft_specest_irasa(dat, time, 'verbose', false, 'freqoi', freqoi, 'output', 'fractal', 'polyorder', -1, 'pad', 2, 'padtype', 'mirror');
 
-figure; 
-semilogy(freq.freq, [freq.powspctrm;freqfilt.powspctrm;freqfilt2.powspctrm;freqfilt3.powspctrm;...
-                     freqI.powspctrm;freqfiltI.powspctrm;freqfiltI2.powspctrm;freqfiltI3.powspctrm]);
-legend({'orig-unfilterd';'orig-bpfiltered';'orig-hpfiltered';'orig-dftfiltered';...
-        'frac-unfiltered';'frac-bpfiltered';'frac-hpfiltered';'frac-dftfiltered'});
+% the default polyorder 1 is already covered earlier
+result{end+1} = ft_specest_irasa(dat, time, 'verbose', false, 'freqoi', freqoi, 'output', 'fractal', 'polyorder', 0);
+result{end+1} = ft_specest_irasa(dat, time, 'verbose', false, 'freqoi', freqoi, 'output', 'fractal', 'polyorder', 2);
+result{end+1} = ft_specest_irasa(dat, time, 'verbose', false, 'freqoi', freqoi, 'output', 'fractal', 'polyorder', 3);
 
+% all iterations were done with (slightly) different options, hence the results should not be equal
+for i=1:numel(result)
+  for j=(i+1):numel(result)
+    assert(~isequaln(result{i}, result{j}), 'the results %d and %d should not be equal', i, j);
+  end
+end

@@ -42,9 +42,14 @@ switch cfg.figure
     % this will open a new one if there is no figure yet
     h = clf;
 
+  case 'gca'
+    % use the current axes but do not clear them
+    % this will open a new figure if there is no figure yet
+    h = gca;
+
   case 'gcf'
     % use the current figure but do not clear it
-    % this will open a new one if there is no figure yet
+    % this will open a new figure if there is no figure yet
     h = gcf;
   
   otherwise
@@ -57,6 +62,11 @@ assert(ishandle(h), 'failed to open figure');
 if ~isempty(cfg.figurename)
   % this appears as the name of the window
   set(h, 'name', cfg.figurename);
+end
+
+if ~isempty(cfg.renderer)
+  % set figure renderer
+  set(h, 'Renderer', cfg.renderer);
 end
 
 if ~isempty(cfg.title)

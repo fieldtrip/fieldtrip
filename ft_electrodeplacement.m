@@ -132,9 +132,12 @@ end
 
 % ensure that old and unsupported options are not being relied on by the end-user's script
 % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2837
-cfg = ft_checkconfig(cfg, 'renamed', {'viewdim', 'axisratio'});
+
+% check if the input cfg is valid for this function
+cfg = ft_checkconfig(cfg, 'forbidden',  {'channels'}); % prevent accidental typos, see issue 1729
+cfg = ft_checkconfig(cfg, 'renamed',    {'viewdim', 'axisratio'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'method', 'mri', 'volume'});
-cfg = ft_checkconfig(cfg, 'renamed', {'newfigure', 'figure'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'newfigure', 'figure'});
 
 % set the defaults
 cfg.method        = ft_getopt(cfg, 'method');                  % volume, headshape, 1020, shaft
@@ -1834,4 +1837,3 @@ opt.init = true;
 
 setappdata(h, 'opt', opt);
 cb_redraw(h);
-

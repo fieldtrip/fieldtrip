@@ -37,8 +37,8 @@ function [cfg] = ft_multiplotTFR(cfg, data)
 %                          Draw a box around each graph
 %   cfg.hotkeys          = enables hotkeys (up/down arrows) for dynamic colorbar adjustment
 %   cfg.colorbar         = 'yes', 'no' (default = 'no')
-%   cfg.colorbartext     =  string indicating the text next to colorbar
-%   cfg.colormap         = any sized colormap, see COLORMAP
+%   cfg.colorbartext     = string indicating the text next to colorbar
+%   cfg.colormap         = string, or Nx3 matrix, see FT_COLORMAP
 %   cfg.showlabels       = 'yes', 'no' (default = 'no')
 %   cfg.showoutline      = 'yes', 'no' (default = 'no')
 %   cfg.showscale        = 'yes', 'no' (default = 'yes')
@@ -179,45 +179,47 @@ end
 data = ft_checkdata(data, 'datatype', 'freq');
 
 % check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'renamed', {'cohrefchannel', 'refchannel'});
-cfg = ft_checkconfig(cfg, 'renamed', {'matrixside', 'directionality'});
-cfg = ft_checkconfig(cfg, 'renamed', {'zparam', 'parameter'});
+cfg = ft_checkconfig(cfg, 'forbidden',  {'channels', 'trial'}); % prevent accidental typos, see issue 1729
+cfg = ft_checkconfig(cfg, 'renamed',    {'cohrefchannel', 'refchannel'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'matrixside', 'directionality'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'zparam', 'parameter'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'directionality', 'feedback', 'inflow'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'directionality', 'feedforward', 'outflow'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'zlim', 'absmax', 'maxabs'});
-cfg = ft_checkconfig(cfg, 'unused', {'cohtargetchannel'});
-cfg = ft_checkconfig(cfg, 'renamed', {'newfigure', 'figure'});
+cfg = ft_checkconfig(cfg, 'unused',     {'cohtargetchannel'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'newfigure', 'figure'});
 
 % set the defaults
-cfg.parameter      = ft_getopt(cfg, 'parameter', 'powspctrm');
-cfg.baseline       = ft_getopt(cfg, 'baseline', 'no');
+cfg.parameter      = ft_getopt(cfg, 'parameter',    'powspctrm');
+cfg.baseline       = ft_getopt(cfg, 'baseline',     'no');
 cfg.baselinetype   = ft_getopt(cfg, 'baselinetype', 'absolute');
 cfg.trials         = ft_getopt(cfg, 'trials', 'all', 1);
-cfg.xlim           = ft_getopt(cfg, 'xlim', 'maxmin');
-cfg.ylim           = ft_getopt(cfg, 'ylim', 'maxmin');
-cfg.zlim           = ft_getopt(cfg, 'zlim', 'maxmin');
-cfg.colorbar       = ft_getopt(cfg, 'colorbar', 'no');
+cfg.xlim           = ft_getopt(cfg, 'xlim',         'maxmin');
+cfg.ylim           = ft_getopt(cfg, 'ylim',         'maxmin');
+cfg.zlim           = ft_getopt(cfg, 'zlim',         'maxmin');
+cfg.colorbar       = ft_getopt(cfg, 'colorbar',     'no');
+cfg.colormap       = ft_getopt(cfg, 'colormap',      'default');
 cfg.colorbartext   = ft_getopt(cfg, 'colorbartext', '');
-cfg.comment        = ft_getopt(cfg, 'comment', date);
-cfg.limittext      = ft_getopt(cfg, 'limittext', 'default');
-cfg.showlabels     = ft_getopt(cfg, 'showlabels', 'no');
-cfg.showoutline    = ft_getopt(cfg, 'showoutline', 'no');
-cfg.showscale      = ft_getopt(cfg, 'showscale',   'yes');
-cfg.showcomment    = ft_getopt(cfg, 'showcomment', 'yes');
-cfg.channel        = ft_getopt(cfg, 'channel', 'all');
-cfg.fontsize       = ft_getopt(cfg, 'fontsize', 8);
+cfg.comment        = ft_getopt(cfg, 'comment',       date);
+cfg.limittext      = ft_getopt(cfg, 'limittext',    'default');
+cfg.showlabels     = ft_getopt(cfg, 'showlabels',   'no');
+cfg.showoutline    = ft_getopt(cfg, 'showoutline',  'no');
+cfg.showscale      = ft_getopt(cfg, 'showscale',    'yes');
+cfg.showcomment    = ft_getopt(cfg, 'showcomment',  'yes');
+cfg.channel        = ft_getopt(cfg, 'channel',      'all');
+cfg.fontsize       = ft_getopt(cfg, 'fontsize',      8);
 cfg.fontweight     = ft_getopt(cfg, 'fontweight');
-cfg.interactive    = ft_getopt(cfg, 'interactive', 'yes');
-cfg.hotkeys        = ft_getopt(cfg, 'hotkeys', 'yes');
-cfg.orient         = ft_getopt(cfg, 'orient', 'landscape');
-cfg.maskalpha      = ft_getopt(cfg, 'maskalpha', 1);
-cfg.masknans       = ft_getopt(cfg, 'masknans', 'yes');
+cfg.interactive    = ft_getopt(cfg, 'interactive',  'yes');
+cfg.hotkeys        = ft_getopt(cfg, 'hotkeys',      'yes');
+cfg.orient         = ft_getopt(cfg, 'orient',       'landscape');
+cfg.maskalpha      = ft_getopt(cfg, 'maskalpha',     1);
+cfg.masknans       = ft_getopt(cfg, 'masknans',     'yes');
 cfg.maskparameter  = ft_getopt(cfg, 'maskparameter');
-cfg.maskstyle      = ft_getopt(cfg, 'maskstyle', 'opacity');
+cfg.maskstyle      = ft_getopt(cfg, 'maskstyle',    'opacity');
 cfg.directionality = ft_getopt(cfg, 'directionality', '');
 cfg.figurename     = ft_getopt(cfg, 'figurename');
-cfg.commentpos     = ft_getopt(cfg, 'commentpos', 'layout');
-cfg.scalepos       = ft_getopt(cfg, 'scalepos', 'layout');
+cfg.commentpos     = ft_getopt(cfg, 'commentpos',   'layout');
+cfg.scalepos       = ft_getopt(cfg, 'scalepos',     'layout');
 cfg.renderer       = ft_getopt(cfg, 'renderer'); % let MATLAB decide on the default
 
 if ~isfield(cfg, 'box')
@@ -228,18 +230,16 @@ if ~isfield(cfg, 'box')
   end
 end
 
-% set colormap
-if isfield(cfg,'colormap')
+% check if the colormap is in the proper format
+if ~isequal(cfg.colormap, 'default')
   if ischar(cfg.colormap)
     cfg.colormap = ft_colormap(cfg.colormap);
   elseif iscell(cfg.colormap)
     cfg.colormap = ft_colormap(cfg.colormap{:});
+  elseif isnumeric(cfg.colormap) && size(cfg.colormap,2)~=3
+    ft_error('cfg.colormap must be Nx3');
   end
-  if size(cfg.colormap,2)~=3
-    ft_error('colormap must be a n x 3 matrix');
-  else
-    set(gcf,'colormap', cfg.colormap);
-  end
+  % the actual colormap will be set below
 end
 
 % this is needed for the figure title
@@ -458,7 +458,7 @@ chanHeight = cfg.layout.height(sellay);
 
 % open a new figure, or add it to the existing one
 % note that in general adding a TFR to an existing one does not make sense, since they will overlap
-open_figure(keepfields(cfg, {'figure', 'clearfigure', 'position', 'visible', 'renderer', 'figurename', 'title'}));
+open_figure(keepfields(cfg, {'figure', 'position', 'visible', 'renderer', 'figurename', 'title'}));
 hold on
 
 % Get physical z-axis range (color axis):
@@ -511,10 +511,9 @@ end % plot channels
 % plot the layout, labels and outline
 ft_plot_layout(cfg.layout, 'box', cfg.box, 'label', cfg.showlabels, 'outline', cfg.showoutline, 'point', 'no', 'mask', 'no', 'fontsize', cfg.fontsize, 'labelyoffset', 1.4*median(cfg.layout.height/2), 'labelalignh', 'center', 'chanindx', find(~ismember(cfg.layout.label, {'COMNT', 'SCALE'})) );
 
-% show colormap
-if isfield(cfg, 'colormap')
-  if size(cfg.colormap, 2)~=3, ft_error('multiplotTFR(): Colormap must be a n x 3 matrix'); end
-  set(gcf, 'colormap', cfg.colormap);
+% apply the colormap
+if ~isempty(cfg.colormap)
+  set(gcf,  'colormap', cfg.colormap);
 end
 
 % Construct comment

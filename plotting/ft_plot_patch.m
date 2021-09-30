@@ -83,10 +83,10 @@ box = istrue(box);
 
 % color management
 if ischar(facecolor) && exist([facecolor '.m'], 'file')
-  facecolor = eval(facecolor);
+  facecolor = feval(facecolor);
 end
 if ischar(edgecolor) && exist([edgecolor '.m'], 'file')
-  edgecolor = eval(edgecolor);
+  edgecolor = feval(edgecolor);
 end
 
 % this should be a string, because valid options include yes, no, xy, x, y
@@ -229,7 +229,7 @@ if ~isempty(axis) && ~strcmp(axis, 'no')
     % x-axis should touch 0,0
     xrange = hlim;
     if sign(xrange(1))==sign(xrange(2))
-      [dum minind] = min(abs(hlim));
+      [dum, minind] = min(abs(hlim));
       xrange(minind) = 0;
     end
     ft_plot_line(xrange, [0 0], 'hpos', hpos, 'vpos', vpos, 'hlim', hlim, 'vlim', vlim, 'width', width, 'height', height);
@@ -238,7 +238,7 @@ if ~isempty(axis) && ~strcmp(axis, 'no')
     % y-axis should touch 0,0
     yrange = vlim;
     if sign(yrange(1))==sign(yrange(2))
-      [dum minind] = min(abs(vlim));
+      [dum, minind] = min(abs(vlim));
       yrange(minind) = 0;
     end
     ft_plot_line([0 0], yrange, 'hpos', hpos, 'vpos', vpos, 'hlim', hlim, 'vlim', vlim, 'width', width, 'height', height);
@@ -252,7 +252,7 @@ if ~isempty(parent)
 end
 
 % the (optional) output is the handle
-if nargout == 1;
+if nargout == 1
   varargout{1} = h;
 end
 

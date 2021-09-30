@@ -1,4 +1,4 @@
-function ft_sourceplot_interactive(cfg, varargin)
+function [cfg] = ft_sourceplot_interactive(cfg, varargin)
 
 % FT_SOURCEPLOT_INTERACTIVE provides a rapid way to plot 3D surface
 % renderings of pos_time or pos_freq functional data, and interactively
@@ -13,12 +13,6 @@ function ft_sourceplot_interactive(cfg, varargin)
 % Input data needs to be source+mesh, so has to contain a tri, pos, and one
 % functional field plus a time- or frequency axis.
 %
-% Use e.g. like so:
-%
-% cfg = [];
-% cfg.data_labels = {'Congruent', 'Incongruent'};
-% ft_sourceplot_interactive(cfg, sourceFC, sourceFIC);
-%
 % Configuration options (all optional) include:
 %   cfg.parameter       = string, functional parameter to plot. Default = 'pow'.
 %   cfg.data_labels     = cell array of strings, describing each data input argument. Default =
@@ -28,7 +22,7 @@ function ft_sourceplot_interactive(cfg, varargin)
 %                         freq dimension.
 %   cfg.pow_label       = string, ylabel for line graphs of functional data. Default = 'Current
 %                         density (a.u.)'.
-%   cfg.clim            = 2-element numeric vector, color limits for surface plots. Default = 
+%   cfg.clim            = 2-element numeric vector, color limits for surface plots. Default =
 %                         [0 max(data)*0.75], and [-max(data)*0.75, max(data)*0.75] for an
 %                         optional last functional input argument reflecting a difference score
 %                         (see 'has_diff' option below).
@@ -45,9 +39,33 @@ function ft_sourceplot_interactive(cfg, varargin)
 %                         the line graphs corresponding to 'virtual electrodes' placed on the
 %                         surface plots. Atlas must be in the coordinate system of the
 %                         specified data input arguments. See FT_READ_ATLAS.
-%   
 %
+% Example use:
+%   cfg = [];
+%   cfg.data_labels = {'Congruent', 'Incongruent'};
+%   ft_sourceplot_interactive(cfg, sourceFC, sourceFIC);
+%
+% See also FT_SOURCEPLOT, FT_SOURCEMOVIE
+
 % Copyright (C) 2019 Eelke Spaak, Donders Institute. e.spaak@donders.ru.nl
+%
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
+% for the documentation and details.
+%
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
+%
+% $Id$
 
 % these are used by the ft_preamble/ft_postamble function and scripts
 ft_nargin = nargin;
@@ -71,7 +89,7 @@ if numel(varargin) < 1
   ft_error('this function requires at least one data input argument');
 end
 
-% first check whether the first data argument has a brainordinate field, 
+% first check whether the first data argument has a brainordinate field,
 % which is to be used as the atlas to provide the labels of the parcels
 if isfield(varargin{1}, 'brainordinate')
   cfg = ft_checkconfig(cfg, 'forbidden', 'atlas');
@@ -81,7 +99,7 @@ end
 for k = 1:numel(varargin)
   varargin{k} = ft_checkdata(varargin{k}, 'datatype', {'source+mesh'}, 'feedback', 'yes', 'hasunit', 'yes');
   if k > 1 && (~isequaln(varargin{k}.pos, varargin{1}.pos) || ...
-    ~isequaln(varargin{k}.tri, varargin{1}.tri))
+      ~isequaln(varargin{k}.tri, varargin{1}.tri))
     % ensure all input arguments are expressed on the same mesh
     ft_error('input arguments for plotting need to all have identical .pos and .tri');
   end
@@ -128,7 +146,7 @@ if ~isempty(cfg.atlas)
 end
 
 % allow for a user specified colormap of the non-diff surfaces
-cfg.colormap = ft_getopt(cfg, 'colormap');
+cfg.colormap = ft_getopt(cfg, 'colormap', 'default');
 
 % other defaults are set in the lower-level object
 
@@ -142,7 +160,7 @@ if isa(data{1}, 'cell') && size(data{1},1)==size(varargin{1}.pos,1)
     tmp  = nan(numel(data{m}),nsmp);
     tmp(inside,:) = cat(1,data{m}{:});
     data{m} = tmp;
-  end  
+  end
 end
 % set up the arguments
 keyval = ft_cfg2keyval(cfg);
@@ -152,9 +170,16 @@ keyval = [keyval {'tri', varargin{1}.tri, 'pos', varargin{1}.pos, 'data', data, 
 viewer = ft_plot_mesh_interactive(keyval{:});
 viewer.show();
 
+% do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
 ft_postamble provenance
 ft_postamble savefig
 
+% add a menu to the figure, but only if the current figure does not have subplots
+menu_fieldtrip(gcf, cfg, false);
+
+if ~ft_nargout
+  % don't return anything
+  clear cfg
 end

@@ -30,8 +30,8 @@ function [sourcemodel, cfg] = ft_prepare_sourcemodel(cfg)
 %   cfg.zgrid         = vector (e.g.   0:1:20) or 'auto' (default = 'auto')
 %   cfg.resolution    = number (e.g. 1 cm) for automatic grid generation
 %
-% BASEDONPOS - places sources on positions that you explicitly specify,
-% according to the following configuration options:
+% BASEDONPOS - places sources on positions that you explicitly specify, according to
+% the following configuration options:
 %   cfg.sourcemodel.pos       = N*3 matrix with position of each source
 %   cfg.sourcemodel.inside    = N*1 vector with boolean value whether position is inside brain (optional)
 %   cfg.sourcemodel.dim       = [Nx Ny Nz] vector with dimensions in case of 3D grid (optional)
@@ -42,13 +42,17 @@ function [sourcemodel, cfg] = ft_prepare_sourcemodel(cfg)
 %   cfg.sourcemodel.subspace
 %   cfg.sourcemodel.lbex
 %
-% BASEDONMNI - uses source positions from a template sourcemodel that is
-% inversely warped from MNI coordinates to the individual subjects MRI.
-% It uses the following configuration options:
-%   cfg.mri             = structure with anatomical MRI model or filename, see FT_READ_MRI
+% BASEDONMNI - uses source positions from a template sourcemodel that is inversely
+% warped from MNI coordinates to the individual subjects MRI. It uses the following
+% configuration options:
+%   cfg.mri             = structure with the anatomical MRI, or the filename of the MRI, see FT_READ_MRI
 %   cfg.nonlinear       = 'no' (or 'yes'), use non-linear normalization
 %   cfg.resolution      = number (e.g. 6) of the resolution of the template MNI grid, defined in mm
-%   cfg.template        = specification of a template sourcemodel as structure, or the filename of a template sourcemodel (defined in MNI space)
+%   cfg.template        = structure with the template sourcemodel, or the filename of a template sourcemodel (defined in MNI space)
+%   cfg.templatemri     = string, filename of the MNI template (default = 'T1.mnc' for SPM2 or 'T1.nii' for SPM8 and SPM12)
+%   cfg.spmversion      = string, 'spm2', 'spm8', 'spm12' (default = 'spm12')
+%   cfg.spmmethod       = string, 'old', 'new' or 'mars', see FT_VOLUMENORMALISE
+%   cfg.nonlinear       = string, 'yes' or 'no', see FT_VOLUMENORMALISE
 % Either cfg.resolution or cfg.template needs to be defined; if both are defined, cfg.template prevails.
 %
 % BASEDONMRI - makes a segmentation of the individual anatomical MRI and places
@@ -104,7 +108,7 @@ function [sourcemodel, cfg] = ft_prepare_sourcemodel(cfg)
 % See also FT_PREPARE_LEADFIELD, FT_PREPARE_HEADMODEL, FT_SOURCEANALYSIS,
 % FT_DIPOLEFITTING, FT_MEGREALIGN
 
-% Copyright (C) 2004-2020, Robert Oostenveld
+% Copyright (C) 2004-2021, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -648,7 +652,7 @@ switch cfg.method
     % ensure that it is specified with logical inside
     mnigrid = fixinside(mnigrid);
     
-    % spatial normalisation of mri and construction of subject specific sourcemodel positions
+    % spatial normalisation of the MRI to the template
     tmpcfg           = keepfields(cfg, {'spmversion', 'spmmethod', 'nonlinear'});
     if isfield(cfg, 'templatemri')
       % this option is called differently for the two functions
@@ -656,16 +660,11 @@ switch cfg.method
     end
     normalise = ft_volumenormalise(tmpcfg, mri);
     
-    if ~isfield(normalise, 'params') && ~isfield(normalise, 'initial')
-      % this is for older implementations of FT_VOLUMENORMALISE
-      fprintf('applying an inverse warp based on a linear transformation only\n');
-      sourcemodel.pos = ft_warp_apply(inv(normalise.cfg.final), mnigrid.pos);
-    else
-      % the normalisation from original subject head coordinates to MNI consists of an initial linear, followed by a nonlinear transformation
-      % the reverse transformations need to be done to get from MNI to the original subject head coordinates
-      % first apply the inverse of the nonlinear transformation, followed by the inverse of the initial linear transformation
-      sourcemodel.pos = ft_warp_apply(inv(normalise.initial), ft_warp_apply(normalise.params, mnigrid.pos, 'sn2individual'));
-    end
+    % the normalisation from original subject head coordinates to MNI consists of an initial rigid body transformation, followed by a more precise (non)linear transformation
+    % the reverse transformations are used to get from MNI to the original subject head coordinates
+    % first apply the inverse of the nonlinear transformation, followed by the inverse of the initial rigid body transformation
+    sourcemodel.pos = ft_warp_apply(inv(normalise.initial), ft_warp_apply(normalise.params, mnigrid.pos, 'sn2individual'), 'homogeneous');
+    
     % copy some of the fields over from the input arguments
     sourcemodel = copyfields(mri,       sourcemodel, {'unit', 'coordsys'});
     sourcemodel = copyfields(mnigrid,   sourcemodel, {'dim', 'tri', 'inside'});
@@ -764,7 +763,7 @@ end
 
 if strcmp(cfg.tight, 'yes')
   if ~isfield(sourcemodel, 'dim')
-    ft_error('tightgrid only works for positions on a regular 3D grid');
+    ft_error('cfg.tight only works for positions on a regular 3D grid');
   end
   fprintf('%d dipoles inside, %d dipoles outside brain\n', sum(sourcemodel.inside), sum(~sourcemodel.inside));
   fprintf('making tight grid\n');

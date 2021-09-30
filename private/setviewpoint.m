@@ -8,7 +8,7 @@ function setviewpoint(ax, coordsys, viewpoint)
 % For example
 %   setviewport(gca, 'mni', 'left')
 %
-% See alo FT_PREPARE_LAYOUT>getorthoviewpos, COORDSYS2LABEL
+% See alo GETORTHOVIEWPOS, COORDSYS2LABEL
 
 if isempty(coordsys)
   coordsys = 'unknown';
@@ -26,7 +26,7 @@ switch viewpoint
 end
 
 switch lower(coordsys)
-  case {'ras' 'neuromag' 'itab' 'acpc' 'spm' 'mni' 'tal'}
+  case {'ras' 'scanras' 'nifti' 'neuromag' 'itab' 'acpc' 'spm' 'mni' 'tal'}
     switch viewpoint
       case 'superior'
         view(ax, [0 0 1]); % the nose is pointing up
@@ -56,6 +56,21 @@ switch lower(coordsys)
       case 'posterior'
         view(ax, [-1 0 0]);
     end % switch viewpoint
+  case {'lps' 'scanlps' 'dicom'}
+    switch viewpoint
+      case 'superior'
+        view(ax, [180 90]); % not exactly the same as [0 0 1], this causes the nose pointing up
+      case 'inferior'
+        view(ax, [0 -90]); % not exactly the same as [0 0 -1], this causes the noise pointing up
+      case 'left'
+        view(ax, [1 0 0]);
+      case 'right'
+        view(ax, [-1 0 0]);
+      case 'anterior'
+        view(ax, [0 -1 0]);
+      case 'posterior'
+        view(ax, [0 1 0]);
+    end % switch viewpoint
   case {'rsp' 'paxinos'}
     switch viewpoint
       case 'superior'
@@ -71,21 +86,6 @@ switch lower(coordsys)
       case 'posterior'
         view(ax, [0 0 1]);
     end % switch viewpoint
-  case {'lps'}
-    switch viewpoint
-      case 'superior'
-        view(ax, [0 0 1]);
-      case 'inferior'
-        view(ax, [0 0 -1]);
-      case 'left'
-        view(ax, [1 0 0]);
-      case 'right'
-        view(ax, [-1 0 0]);
-      case 'anterior'
-        view(ax, [0 -1 0]);
-      case 'posterior'
-        view(ax, [0 1 0]);
-    end % switch viewpoint
   otherwise
-    ft_warning('cannot change the viewpoint for "%s" coordinate system', coordsys);
+    ft_warning('cannot change the viewpoint for the "%s" coordinate system', coordsys);
 end % switch coordsys

@@ -151,5 +151,3 @@ for t = 1:10
   desired = transpose(transpose(source4.pow(:,:,t)) - cfg.confound * betas);
   assert(isalmostequal(source4_out.pow(:,:,t), desired, 'abstol', 1e-12));
 end
-
-

@@ -2,7 +2,7 @@ This is the FieldTrip INVERSE module. It contains functions for inverse
 modeling and source estimation of EEG and MEG data, based on a variety
 of volume conduction models, including spherical and realistic models.
 
-For more information please visit http://www.fieldtriptoolbox.org/development/modules
+For more information please visit https://www.fieldtriptoolbox.org/development/module
 
 -------------------------------------------------------------------------------
 Copyright (C) 2008-2009, Donders Institute for Brain, Cognition and Behaviour, The Netherlands (DCCN, DCC, DCN)

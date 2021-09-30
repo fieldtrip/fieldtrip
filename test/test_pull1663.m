@@ -11,7 +11,7 @@ function test_pull1663
 % The structure of this script is more or less
 % 1. create input data (dull segmentation, hex and tet meshes, dipoles, sensors)
 % 2. compute and compare MEG leadfield for hex and tet meshes
-%   a. create volume conductor (ft_prepare_headmodel) 
+%   a. create volume conductor (ft_prepare_headmodel)
 %   b. create source grid (ft_prepare_sourcemodel)
 %   c. compute leadfield (ft_prepare_leadfield)
 %   d. compare hex leadfield with tet leadfield
@@ -28,8 +28,8 @@ segprob = [];
 segprob.brain = false(10,10,10); segprob.brain(4:7,4:7,4:7) = true;
 segprob.skull = false(10,10,10); segprob.skull(3:8,3:8,3:8) = true;
 segprob.scalp = false(10,10,10); segprob.scalp(2:9,2:9,2:9) = true;
-% segprob.air = true(10,10,10);
-% segprob.air(2:9,2:9,2:9) = false;
+%segprob.air = true(10,10,10);
+%segprob.air(2:9,2:9,2:9) = false;
 %segprob.brain = false(11,11,11); segprob.brain(4:8,4:8,4:8) = true;
 %segprob.skull = false(11,11,11); segprob.skull(3:9,3:9,3:9) = true;
 %segprob.scalp = false(11,11,11); segprob.scalp(2:10,2:10,2:10) = true;
@@ -41,12 +41,12 @@ segprob.transform(1,4) = -0.5;
 segprob.transform(2,4) = -0.5;
 segprob.transform(3,4) = -0.5;
 
-% visualize the segmentation 
+% visualize the segmentation
 % it is more difficult to visualize a probabilistic segmentation than an indexed one
 segindx = ft_datatype_segmentation(segprob, 'segmentationstyle', 'indexed');
 
 cfg = [];
-cfg.funparameter = 'seg';
+cfg.funparameter = 'tissue';
 cfg.method = 'ortho';
 cfg.location = [5 5 5]; % this is the center of the volume, in this plot it will be rounded off to the nearest voxel
 ft_sourceplot(cfg, segindx);
@@ -58,7 +58,7 @@ cfg.method = 'hexahedral';
 mesh_vol_hex = ft_prepare_mesh(cfg, segprob);
 
 figure
-ft_plot_ortho(segindx.seg, 'transform', segindx.transform, 'location', [5 5 5], 'style', 'intersect');
+ft_plot_ortho(segindx.tissue, 'transform', segindx.transform, 'location', [5 5 5], 'style', 'intersect');
 hold on
 ft_plot_mesh(mesh_vol_hex, 'surfaceonly', false, 'facecolor', 'none', 'edgecolor', 'm');
 view(120, 30)
@@ -71,18 +71,18 @@ mesh_vol_tet = ft_prepare_mesh(cfg, segprob);
 
 
 figure
-ft_plot_ortho(segindx.seg, 'transform', segindx.transform, 'location', [5 5 5], 'style', 'intersect');
+ft_plot_ortho(segindx.tissue, 'transform', segindx.transform, 'location', [5 5 5], 'style', 'intersect');
 hold on
 ft_plot_mesh(mesh_vol_tet, 'surfaceonly', false, 'facecolor', 'none', 'edgecolor', 'm');
 view(120, 30)
 
 %% define sensors
 
-% i manually passed 5 coils and fixed projections 
+% i manually passed 5 coils and fixed projections
 % or maybe take some from a ctf file? something like this (from test_pull1377.m)
 
 % for MEG data + sensor info
-% 
+%
 % load(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/preproc_ctf151.mat'), 'data');
 % datameg = data;
 % clear data
@@ -91,7 +91,7 @@ coils = [5 5 12; 5 12 5; -2 5 5; 12 5 5; 5 -2 5];
 projections = [0 0 1 ; 0 1 0; -1 0 0; 1 0 0; 0 -1 0 ];
 
 figure
-ft_plot_ortho(segindx.seg, 'transform', segindx.transform, 'location', [5 5 5], 'style', 'intersect');
+ft_plot_ortho(segindx.tissue, 'transform', segindx.transform, 'location', [5 5 5], 'style', 'intersect');
 hold on
 quiver3(coils(:,1),coils(:,2),coils(:,3),projections(:,1),projections(:,2),projections(:,3),'bo')
 
@@ -116,7 +116,7 @@ dip_pos = [5.5 6.5 6.5; 5.5 5.5 3.5; 3.5 5.5 5.5];
 dip_mom = [0 1 0; 0 0 -1; -1 0 0 ];
 
 figure
-ft_plot_ortho(segindx.seg, 'transform', segindx.transform, 'location', [5 5 5], 'style', 'intersect');
+ft_plot_ortho(segindx.tissue, 'transform', segindx.transform, 'location', [5 5 5], 'style', 'intersect');
 hold on
 quiver3(dip_pos(:,1),dip_pos(:,2),dip_pos(:,3),dip_mom(:,1),dip_mom(:,2),dip_mom(:,3),'bo')
 view(-200, 15)

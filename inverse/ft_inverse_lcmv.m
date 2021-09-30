@@ -134,16 +134,17 @@ end
 % find the dipole positions that are inside/outside the brain
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if ~isfield(sourcemodel, 'inside')
-  sourcemodel.inside = ft_inside_headmodel(sourcemodel.pos, headmodel);
+  if hasfilter
+    sourcemodel.inside = ~cellfun(@isempty, sourcemodel.filter);
+  elseif hasleadfield
+    sourcemodel.inside = ~cellfun(@isempty, sourcemodel.leadfield);
+  else
+    sourcemodel.inside = ft_inside_headmodel(sourcemodel.pos, headmodel);
+  end
 end
 
-if any(sourcemodel.inside>1)
-  % convert to logical representation
-  tmp = false(size(sourcemodel.pos,1),1);
-  tmp(sourcemodel.inside) = true;
-  sourcemodel.inside = tmp;
-end
-
+% convert to logical representation
+sourcemodel = fixinside(sourcemodel);
 
 if hasfilter && (fixedori || ~isequal(weightnorm, 'no'))
   ft_warning('with precomputed spatial filters a fixed orientation constraint or weight normalisation options are not applied');
@@ -184,7 +185,9 @@ if ~isempty(lambda) && ischar(lambda) && lambda(end)=='%'
   ratio  = sscanf(lambda, '%f%%');
   ratio  = ratio/100;
   lambda = ratio * trace(C)/size(C,1);
-  invopt = ft_setopt(invopt, 'lambda', lambda);
+  if ~hassubspace
+    invopt = ft_setopt(invopt, 'lambda', lambda);
+  end
 end
 
 if projectnoise || strcmp(weightnorm, 'nai')
@@ -234,8 +237,10 @@ else
   invC = ft_inv(C, invopt{:});
 end
 
-% compute the square of invC, which might be needed for unitnoisegain or NAI constraint
-invC_squared = invC^2;
+if ~hassubspace
+  % compute the square of invC, which might be needed for unitnoisegain or NAI constraint
+  invC_squared = invC^2;
+end
 
 % start the scanning with the proper metric
 ft_progress('init', feedback, 'scanning grid');
@@ -267,11 +272,12 @@ for i=1:size(sourcemodel.pos,1)
 
     if hassubspace
       % do subspace projection of the forward model
+      lforig = lf;
       lf    = sourcemodel.subspace{i} * lf;
       % the data and the covariance become voxel dependent due to the projection
       dat   = sourcemodel.subspace{i} * dat_pre_subspace;
       C     = sourcemodel.subspace{i} * C_pre_subspace * sourcemodel.subspace{i}';
-      invC  = ft_inv(sourcemodel.subspace{i} * C_pre_subspace * sourcemodel.subspace{i}', invopt{:});
+      invC  = ft_inv(C, invopt{:});
     elseif ~isempty(subspace)
       % do subspace projection of the forward model only
       lforig = lf;
@@ -403,7 +409,9 @@ for i=1:size(sourcemodel.pos,1)
     end
   end
   if keepfilter
-    if ~isempty(subspace)
+    if hassubspace
+      estimate.filter{i,1} = filt*sourcemodel.subspace{i};
+    elseif ~isempty(subspace)
       estimate.filter{i,1} = filt*subspace;
       %estimate.filter{i} = filt*pinv(subspace);
     else

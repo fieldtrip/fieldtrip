@@ -70,6 +70,9 @@ end
 % check if the input data is valid for this function, the input data must be raw
 datain = ft_checkdata(datain, 'datatype', 'raw', 'feedback', 'yes');
 
+% check if the input cfg is valid for this function
+cfg = ft_checkconfig(cfg, 'forbidden',  {'channels'}); % prevent accidental typos, see issue 1729
+
 % set the default options
 cfg.channel        = ft_getopt(cfg, 'channel', {});
 cfg.feedback       = ft_getopt(cfg, 'feedback', 'yes');
