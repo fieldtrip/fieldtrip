@@ -541,10 +541,7 @@ for indx=1:Ndata
         comment = sprintf('%0s=[%.3g %.3g]', yparam, ymin, ymax);
       end
     case 'zlim'
-      comment = '';
-      if ~isempty(yparam)
-        comment = sprintf('%0s=[%.3g %.3g]', cfg.parameter, zmin, zmax);
-      end
+      comment = sprintf('%0s=[%.3g %.3g]', cfg.parameter, zmin, zmax);
     otherwise
       comment = cfg.comment; % allow custom comments (e.g., ft_clusterplot specifies custom comments)
   end % switch comment
