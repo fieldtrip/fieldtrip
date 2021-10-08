@@ -1,0 +1,29 @@
+cff-version: 1.3.0
+title: FieldTrip
+authors:
+  - family-names: "Oostenveld"
+    given-names: "Robert"
+    orcid: ""
+version: ""
+date-released:
+license: "GPL3"
+repository-code: "https://github.com/fieldtrip/fieldtrip"
+message: "If you use this software, please cite relevant articles below."
+references:
+  - type: article
+    authors:
+      - family-names: "Oostenveld"
+        given names: "Robert"
+      - family-names: "Fries"
+        given names: "Pascal"
+      - family-names: "Maris"
+        given names: "Eric"
+      - family-names: "Schoffelen"
+        given names: "Jan-Mathijs"
+    title: "FieldTrip: Open Source Software for Advanced Analysis of MEG, EEG, and Invasive Electrophysiological Data."
+    journal: "Computational intelligence and neuroscience"
+    date-published: 2011
+    number-volumes: 2011
+    pages: 156869
+    doi: 10.1155/2011/156869
+  
