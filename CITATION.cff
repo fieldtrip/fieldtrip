@@ -3,10 +3,13 @@ title: FieldTrip
 authors:
   - family-names: "Oostenveld"
     given-names: "Robert"
-    orcid: ""
+    orcid: "0000-0002-1974-1293"
+  - family-names: "Schoffelen"
+    given-names: "Jan-Mathijs"
+    orcid: "0000-0003-0923-6610"
 version: ""
 date-released:
-license: "GPL3"
+license: "gpl-3.0"
 repository-code: "https://github.com/fieldtrip/fieldtrip"
 message: "If you use this software, please cite relevant articles below."
 references:
@@ -26,4 +29,3 @@ references:
     number-volumes: 2011
     pages: 156869
     doi: 10.1155/2011/156869
-  
