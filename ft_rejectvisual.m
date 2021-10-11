@@ -20,6 +20,7 @@ function [data] = ft_rejectvisual(cfg, data)
 %                     'no'          completely remove deselected channels from the data (default)
 %                     'yes'         keep deselected channels in the output data
 %                     'nan'         fill the channels that are deselected with NaNs
+%                     'zero'        fill the channels that are deselected with zeros
 %                     'repair'      repair the deselected channels using FT_CHANNELREPAIR
 %   cfg.trials      = 'all' or a selection given as a 1xN vector (default = 'all')
 %   cfg.keeptrial   = string, determines how to deal with trials that are
@@ -27,6 +28,7 @@ function [data] = ft_rejectvisual(cfg, data)
 %                     'no'     completely remove deselected trials from the data (default)
 %                     'yes'    keep deselected trials in the output data
 %                     'nan'    fill the trials that are deselected with NaNs
+%                     'zero'   fill the trials that are deselected with zeros
 %   cfg.metric      = string, describes the metric that should be computed in summary mode
 %                     for each channel in each trial, can be
 %                     'var'       variance within each channel (default)
@@ -267,6 +269,15 @@ if ~all(chansel)
         data.trial{i}(~chansel,:) = nan;
       end
       
+    case 'zero'
+      % show the user which channels are removed
+      fprintf('the following channels were filled with zeros: ');
+      
+      % mark the selection as zero
+      for i=1:length(data.trial)
+        data.trial{i}(~chansel,:) = 0;;
+      end
+      
     case 'repair'
       % create cfg struct for call to FT_CHANNELREPAIR
       orgcfg = cfg;
@@ -317,9 +328,19 @@ if ~all(trlsel)
     case 'nan'
       % show the user which trials are removed
       fprintf('the following trials were filled with NaNs: ');
+
       % mark the selection as nan
       for i = trl_removed
         data.trial{i}(:,:) = nan;
+      end
+      
+    case 'zero'
+      % show the user which trials are removed
+      fprintf('the following trials were filled with zeros: ');
+
+      % mark the selection as zero
+      for i = trl_removed
+        data.trial{i}(:,:) = 0;;
       end
       
     otherwise

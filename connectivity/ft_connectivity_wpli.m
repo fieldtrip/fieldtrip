@@ -53,7 +53,7 @@ feedback    = ft_getopt(varargin, 'feedback', 'none');
 debias      = ft_getopt(varargin, 'debias');
 dojack      = ft_getopt(varargin, 'dojack', false);
 
-siz = size(input);
+siz = [ size(input) 1 ];
 n = siz(1);
 ft_progress('init', feedback, 'computing metric...');
 if n>1
@@ -66,7 +66,7 @@ if n>1
   else
     wpli     = outsum./outsumW; % estimator of E(Im(X))/E(|Im(X)|)
   end
-  wpli = reshape(wpli,siz(2:end)); % remove the first singular dimension
+  wpli = reshape(wpli,siz(2:end));
 else
   wpli = NaN(siz(2:end)); % for one observation, we should return NaNs
   ft_warning('ft_connectivity_wpli:nTrials', 'computation wpli requires >1 trial, returning NaNs');
