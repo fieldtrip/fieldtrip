@@ -30,10 +30,10 @@ end
 if ~isstruct(state)
     params.name        = 'Quasiperiodic averaging with known triggers';
     params.description = '';
-    params.param       = {'fs','tr','tr_inds','begin','end'};
+    params.param       = {'tr','tr_inds','pre','pst'};
     params.param_value = {[], [], [], [], []};
-    params.param_type  = {'scalar','vector','vector','scalar','scalar'};
-    params.param_desc  = {'sampling frequency','trigger indices','used trigger indices','beginning of the ON mask','end of the ON mask'};
+    params.param_type  = {'vector','vector','scalar','scalar'};
+    params.param_desc  = {'trigger indices','used trigger indices','beginning of the ON mask','end of the ON mask'};
     params.approach    = {'pca','defl','symm'};
     params.alpha       = {};
     params.beta        = {'beta_global'};
@@ -44,21 +44,6 @@ if isfield(params, 'mask')
   mask = params.mask;
 else
   mask = {};
-end
-
-% not available, using as direct indices
-if isfield(params, 'tr_begin')
-  tr_begin = params.tr_begin(:);
-  tr_end   = params.tr_end(:);
-end
-
-% specify the indices for the triggering
-if isfield(params,'tr_inds')
-  tr_inds = params.tr_inds(:);
-elseif ~isfield(params,'tr_inds') && isfield(params,'tr')
-  tr_inds = params.tr(:);
-else
-  tr_inds = [];
 end
 
 % specify the behaviour of the demeaning, default is use the whole segment
@@ -76,11 +61,34 @@ if isfield(params, 'demean')
   end
 end
 
-% can be switched to false if the function is not used iteratively (for
-% dss)
+% can be switched to false if the function is not used iteratively (for dss)
 computenew = true;
 if isfield(params, 'computenew') && params.computenew==0
   computenew = false;
+end
+
+% not available, using as direct indices
+if isfield(params, 'tr_begin')
+  tr_begin = params.tr_begin(:);
+  tr_end   = params.tr_end(:);
+end
+
+% specify the indices for the triggering, requires different handling when
+% the input is a cell-array
+if isfield(params, 'artifact') && isfield(params, 'sampleinfo')
+  % this is new functionality, combines artifact and sampleinfo into
+  [params.tr, params.pre, params.pst] = artifact2peaks(params, iscell(s));
+  
+  params = rmfield(params, 'artifact');
+  params = rmfield(params, 'sampleinfo');
+end
+  
+if isfield(params,'tr_inds')
+  tr_inds = params.tr_inds(:);
+elseif ~isfield(params,'tr_inds') && isfield(params,'tr')
+  tr_inds = params.tr(:);
+else
+  tr_inds = [];
 end
 
 if ~iscell(s)
@@ -124,7 +132,7 @@ if ~iscell(s)
     begsmp = pre    - (tr_inds(i) - tr_begin(i)) + 1;
     endsmp = begsmp + (tr_end(i)  - tr_begin(i));
     tmp    = s(:,tr_begin(i):tr_end(i));
-    if demeanflag,
+    if demeanflag
       tmp    = tmp - sum(tmp,2)*(ones(1,size(tmp,2))./n(i));
     end
     avg(:,begsmp:endsmp) = avg(:,begsmp:endsmp) + tmp;
@@ -133,7 +141,7 @@ if ~iscell(s)
   avg = avg./cnt;
   
   % reconstructing the signals, only when needed
-  if computenew,
+  if computenew
     s_new = zeros(size(s));
     for i = 1:length(tr_inds)
       begsmp = pre    - (tr_inds(i) - tr_begin(i)) + 1;
@@ -183,12 +191,6 @@ elseif iscell(s)
     pst = params.pst;
   end 
 
-  %maxpre = -inf;
-  %maxpst = -inf;
-  %for i = 1:length(pre)
-  %  if ~isempty(pre{i}), maxpre = max([maxpre; pre{i}(:)]); end
-  %  if ~isempty(pst{i}), maxpst = max([maxpst; pst{i}(:)]); end
-  %end
   try
     maxpre = max(cat(2,pre{:}));
   catch
@@ -206,7 +208,6 @@ elseif iscell(s)
   % loop across the individual cells that contain useable data
   usetrials = find(~cellfun('isempty',tr_inds));
   for i = usetrials(:)'
-    %if ~isempty(tr_inds{i})
       
       % create variables local to the i-loop
       dat   = s{i};
@@ -223,7 +224,7 @@ elseif iscell(s)
       begsmp = max(1, triggers-presmp);
       endsmp = min(M, triggers+pstsmp);
       
-      if demeanflag==3,
+      if demeanflag==3
         if ~exist('bslcnt', 'var')
           bslcnt = 0;
           bsl    = zeros(size(dat,1),1);
@@ -250,7 +251,7 @@ elseif iscell(s)
             if n==0, continue; end
         end
         
-        if demeanflag>0 && demeanflag<3,
+        if demeanflag>0 && demeanflag<3
           %tmp = tmp - (sum(tmp(:,sel),2)/n)*ones(1,size(tmp,2));
           tmp = bsxfun(@minus, tmp, sum(tmp(:,sel),2)/n);
         end
@@ -264,13 +265,12 @@ elseif iscell(s)
         cnt(1,tmpindx) = cnt(1,tmpindx) + tmpnonzero;
       end % for k
       
-    %end % if 
   end % for i
   
   % normalize
   avg = avg./cnt(ones(N,1),:);
   
-  if demeanflag==3,
+  if demeanflag==3
     avg = avg - repmat(bsl./bslcnt, [1 size(avg,2)]);
   end
   
@@ -329,3 +329,51 @@ for k = 1:numel(ix)
 end
 p = iy;
 
+function [p, pre, pst] = artifact2peaks(params, cellflag)
+
+% helper function that converts a combination of artifact and sampleinfo
+% into a cell-array that reflects the location of the peaks (expressed in
+% indices local to the rows in sampleinfo), and the number of pre and post
+% samples to take. That is, rather than expressing a local time axis as
+% [beg end offset] it's equivalently expressed as [peak pre pst]
+
+n = size(params.sampleinfo,1);
+
+if cellflag
+  p  = cell(n,1);
+  pre = cell(n,1);
+  pst = cell(n,1);
+  
+  s     = artifact2boolvec(params.sampleinfo);
+  peaks = artifact2boolvec((params.artifact(:,1)-params.artifact(:,3)).*[1 1], 'endsample', max(params.sampleinfo(:)));
+  prepeaks = artifact2boolvec(params.artifact(:,[1 1]), 'endsample', max(params.sampleinfo(:)));
+  pstpeaks = artifact2boolvec(params.artifact(:,[2 2]), 'endsample', max(params.sampleinfo(:))); % need to be handled separately, because windows can overlap
+  for k = 1:n
+    if k ==225
+      keyboard
+    end
+    
+    indx = params.sampleinfo(k,1):params.sampleinfo(k,2);
+    p{k} = find(peaks(indx));
+    np   = numel(p{k});
+    
+    prek   = find(prepeaks(indx));
+    if numel(prek)<np
+      prek = [ones(1,np-numel(prek)) prek];
+    elseif numel(prek)>np
+      prek = prek(1:np);
+    end
+    pre{k} =  p{k} - prek;
+    
+    pstk   = find(pstpeaks(indx));
+    if numel(pstk)<np
+      pstk = [pstk ones(1,np-numel(pstk))*numel(indx)];
+    elseif numel(pstk)>np
+      pstk = pstk((end-np+1):end);
+    end
+    pst{k} = -p{k} + pstk;
+  end
+  
+  
+else
+end
