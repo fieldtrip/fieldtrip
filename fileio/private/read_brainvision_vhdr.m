@@ -37,6 +37,9 @@ vhdr.NumberOfChannels = read_ini(filename, 'NumberOfChannels=', '%d');
 vhdr.SamplingInterval = read_ini(filename, 'SamplingInterval=', '%f'); % microseconds
 
 if ~isempty(vhdr.NumberOfChannels)
+  % only show the warning once
+  ft_warning once FieldTrip:fileio:UnknownResolution
+  
   for i=1:vhdr.NumberOfChannels
     chan_str  = sprintf('Ch%d=', i);
     chan_info = read_ini(filename, chan_str, '%s');
@@ -47,10 +50,13 @@ if ~isempty(vhdr.NumberOfChannels)
     if ~isempty(resolution)
       vhdr.resolution(i) = resolution;
     else
-      ft_warning('unknown resolution (i.e. recording units) for channel %d in %s', i, filename);
+      ft_warning('FieldTrip:fileio:UnknownResolution', 'unknown resolution (i.e. recording units) for channel %d in "%s"', i, filename);
       vhdr.resolution(i) = 1;
     end
   end
+  
+  % switch the warning state back to the default
+  ft_warning on FieldTrip:fileio:UnknownResolution
 end
 
 % compute the sampling rate in Hz
@@ -82,15 +88,15 @@ info = dir(dataFile);
 if isempty(info)
   info = dir(filename);
   if ~isempty(info)
-    ft_notice('Could not find "%s" as specified in the .vhdr file, using "%s" instead', dataFile, dataFileSameName);
+    ft_notice('could not find "%s" as specified in the .vhdr file, using "%s" instead', dataFile, dataFileSameName);
     vhdr.DataFile = [f dataExt]; % without full path
     dataFile = dataFileSameName; % with full path
   else
-    ft_error('cannot determine the location of the data file %s', dataFile);
+    ft_error('cannot determine the location of the data file "%s"', dataFile);
   end
 else
   if ~strcmp(dataFile, dataFileSameName)
-    ft_notice('Could not find "%s" as specified in the .vhdr file, using "%s" instead', dataFile, dataFileSameName);
+    ft_notice('could not find "%s" as specified in the .vhdr file, using "%s" instead', dataFile, dataFileSameName);
   end
 end
 
@@ -99,15 +105,15 @@ if ~isempty(markerFile)
   if isempty(info)
     info = dir(markerFileSameName);
     if ~isempty(info)
-      ft_notice('Could not find "%s" as specified in the .vhdr file, using "%s" instead', markerFile, markerFileSameName);
+      ft_notice('could not find "%s" as specified in the .vhdr file, using "%s" instead', markerFile, markerFileSameName);
       vhdr.MarkerFile = [f markerExt]; % without full path
       markerFile = markerFileSameName; % with full path
     else
-      ft_error('cannot determine the location of the marker file %s', markerFile);
+      ft_error('cannot determine the location of the marker file "%s"', markerFile);
     end
   else
     if ~strcmp(markerFile, markerFileSameName)
-      ft_notice('Could not find "%s" as specified in the .vhdr file, using "%s" instead', markerFile, markerFileSameName);
+      ft_notice('could not find "%s" as specified in the .vhdr file, using "%s" instead', markerFile, markerFileSameName);
     end
   end
 end
