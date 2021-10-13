@@ -690,6 +690,10 @@ switch cfg.method
     if isfield(cfg.dss, 'wdim') && ~isempty(cfg.dss.wdim)
       params.wdim = cfg.dss.wdim;
     end
+    if isfield(params.denf, 'params') && isfield(params.denf.params, 'artifact')
+      % this may require the sampleinfo in the params structure, to keep the sampling bookkeeping correct
+      params.denf.params.sampleinfo = data.sampleinfo;
+    end
     
     % create the state
     state   = dss_create_state(dat, params);

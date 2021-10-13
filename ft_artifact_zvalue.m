@@ -601,13 +601,15 @@ if strcmp(cfg.artfctdef.zvalue.artfctpeak, 'yes')
     % can either be fully within the trl, or overlapping at one (or
     % both) edges
     current = artifact(k,:);
-    seltrl  = find(current(2)>opt.trl(:,1) & current(1)<opt.trl(:,2));
+    seltrl  = find(current(2)>=opt.trl(:,1) & current(1)<=opt.trl(:,2));
      
     % in case the artifact is in more than one trial a for-loop is needed
     mx     = [];
     mx_idx = [];
     for m = 1:numel(seltrl)
       idx = current - opt.trl(seltrl(m),1) + 1;
+      idx(1) = max(idx(1),1);
+      idx(2) = min(idx(2),size(opt.zval{seltrl(m)},2));
       [mx(m), mx_idx(m)] = max(opt.zval{seltrl(m)}(idx(1):idx(2)));
     end
     
