@@ -4,7 +4,7 @@ function [trl, event] = ft_trialfun_general(cfg)
 % constructs a trial definition. This function should in general not be called
 % directly, it will be called by FT_DEFINETRIAL.
 %
-% Use this function by calling 
+% Use this function by calling
 %   [cfg] = ft_definetrial(cfg)
 % where the configuration structure should contain
 %   cfg.dataset   = string with the filename
@@ -52,7 +52,7 @@ function [trl, event] = ft_trialfun_general(cfg)
 % $Id$
 
 % most defaults are in trialdef
-cfg.trialdef = ft_getopt(cfg, 'trialdef');
+cfg.trialdef = ft_getopt(cfg, 'trialdef', struct());
 
 % check if the input cfg is valid for this function
 cfg.trialdef = ft_checkconfig(cfg.trialdef, 'renamed', {'triallength', 'length'});

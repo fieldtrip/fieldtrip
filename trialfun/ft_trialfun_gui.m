@@ -5,7 +5,7 @@ function [trl, event] = ft_trialfun_gui(cfg)
 % definition. This function should in general not be called directly, it will be
 % called by FT_DEFINETRIAL.
 %
-% Use this function by calling 
+% Use this function by calling
 %   [cfg] = ft_definetrial(cfg)
 % where the configuration structure should contain
 %   cfg.dataset   = string with the filename
@@ -34,7 +34,7 @@ function [trl, event] = ft_trialfun_gui(cfg)
 % $Id$
 
 % most defaults are in trialdef
-cfg.trialdef = ft_getopt(cfg, 'trialdef');
+cfg.trialdef = ft_getopt(cfg, 'trialdef', struct());
 
 % set the defaults
 cfg.trialdef.eventtype    = ft_getopt(cfg.trialdef, 'eventtype');
