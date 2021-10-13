@@ -23,22 +23,22 @@ function bnd = read_asa_bnd(fn)
 %
 % $Id$
 
-Npnt = read_asa(fn, 'NumberPositions=', '%d');
-Ntri = read_asa(fn, 'NumberPolygons=', '%d');
-Unit = read_asa(fn, 'UnitPosition', '%s');
+Npnt = read_ini(fn, 'NumberPositions=', '%d');
+Ntri = read_ini(fn, 'NumberPolygons=', '%d');
+Unit = read_ini(fn, 'UnitPosition', '%s');
 
-pnt = read_asa(fn, 'Positions', '%f');
+pnt = read_ini(fn, 'Positions', '%f');
 if any(size(pnt)~=[Npnt,3])
-  pnt_file = read_asa(fn, 'Positions', '%s');
+  pnt_file = read_ini(fn, 'Positions', '%s');
   [path, name, ext] = fileparts(fn);
   fid = fopen_or_error(fullfile(path, pnt_file), 'rb', 'ieee-le');
   pnt = fread(fid, [3,Npnt], 'float')';
   fclose(fid);
 end
 
-tri = read_asa(fn, 'Polygons', '%f');
+tri = read_ini(fn, 'Polygons', '%f');
 if any(size(tri)~=[Ntri,3])
-  tri_file = read_asa(fn, 'Polygons', '%s');
+  tri_file = read_ini(fn, 'Polygons', '%s');
   [path, name, ext] = fileparts(fn);
   fid = fopen_or_error(fullfile(path, tri_file), 'rb', 'ieee-le');
   tri = fread(fid, [3,Ntri], 'int32')';

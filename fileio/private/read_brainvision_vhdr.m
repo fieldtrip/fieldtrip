@@ -28,18 +28,18 @@ function [vhdr] = read_brainvision_vhdr(filename)
 %
 % $Id$
 
-vhdr.DataFile         = read_asa(filename, 'DataFile=', '%s');
-vhdr.MarkerFile       = read_asa(filename, 'MarkerFile=', '%s');
-vhdr.DataFormat       = read_asa(filename, 'DataFormat=', '%s');
-vhdr.DataOrientation  = read_asa(filename, 'DataOrientation=', '%s');
-vhdr.BinaryFormat     = read_asa(filename, 'BinaryFormat=', '%s');
-vhdr.NumberOfChannels = read_asa(filename, 'NumberOfChannels=', '%d');
-vhdr.SamplingInterval = read_asa(filename, 'SamplingInterval=', '%f'); % microseconds
+vhdr.DataFile         = read_ini(filename, 'DataFile=', '%s');
+vhdr.MarkerFile       = read_ini(filename, 'MarkerFile=', '%s');
+vhdr.DataFormat       = read_ini(filename, 'DataFormat=', '%s');
+vhdr.DataOrientation  = read_ini(filename, 'DataOrientation=', '%s');
+vhdr.BinaryFormat     = read_ini(filename, 'BinaryFormat=', '%s');
+vhdr.NumberOfChannels = read_ini(filename, 'NumberOfChannels=', '%d');
+vhdr.SamplingInterval = read_ini(filename, 'SamplingInterval=', '%f'); % microseconds
 
 if ~isempty(vhdr.NumberOfChannels)
   for i=1:vhdr.NumberOfChannels
     chan_str  = sprintf('Ch%d=', i);
-    chan_info = read_asa(filename, chan_str, '%s');
+    chan_info = read_ini(filename, chan_str, '%s');
     t = tokenize(chan_info, ',');
     vhdr.label{i} = t{1};
     vhdr.reference{i} = t{2};
@@ -132,10 +132,10 @@ elseif strcmpi(vhdr.DataFormat, 'ascii')
   vhdr.skipColumns = 0;
   
   % Read ascii info from header (if available).
-  dataPoints    = read_asa(filename, 'DataPoints=', '%d');
-  skipLines     = read_asa(filename, 'SkipLines=', '%d');
-  skipColumns   = read_asa(filename, 'SkipColumns=', '%d');
-  decimalSymbol = read_asa(filename, 'DecimalSymbol=', '%s'); % This is not used in reading dataset yet
+  dataPoints    = read_ini(filename, 'DataPoints=', '%d');
+  skipLines     = read_ini(filename, 'SkipLines=', '%d');
+  skipColumns   = read_ini(filename, 'SkipColumns=', '%d');
+  decimalSymbol = read_ini(filename, 'DecimalSymbol=', '%s'); % This is not used in reading dataset yet
   
   if ~isempty(dataPoints); vhdr.nSamples = dataPoints; end
   if ~isempty(skipLines); vhdr.skipLines = skipLines; end
