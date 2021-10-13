@@ -132,9 +132,9 @@ elseif strcmpi(vhdr.DataFormat, 'ascii')
   vhdr.skipColumns = 0;
   
   % Read ascii info from header (if available).
-  dataPoints = read_asa(filename, 'DataPoints=', '%d');
-  skipLines = read_asa(filename, 'SkipLines=', '%d');
-  skipColumns = read_asa(filename, 'SkipColumns=', '%d');
+  dataPoints    = read_asa(filename, 'DataPoints=', '%d');
+  skipLines     = read_asa(filename, 'SkipLines=', '%d');
+  skipColumns   = read_asa(filename, 'SkipColumns=', '%d');
   decimalSymbol = read_asa(filename, 'DecimalSymbol=', '%s'); % This is not used in reading dataset yet
   
   if ~isempty(dataPoints); vhdr.nSamples = dataPoints; end
@@ -154,7 +154,7 @@ elseif strcmpi(vhdr.DataFormat, 'ascii')
     tline = fgetl(fid); % read the complete first line
     fclose(fid);
     t = tokenize(tline, ' ', true); % cut the line into pieces
-    vhdr.nSamples = length(t) - 1; % the first element is the channel label
+    vhdr.nSamples = length(t) - 1;  % the first element is the channel label
   end
 end
 
@@ -180,6 +180,9 @@ vhdr.impedances.refChan = [];
 fid = fopen_or_error(filename, 'rt');
 while ~feof(fid)
   tline = fgetl(fid);
+  if tline == -1
+    break; % the end-of-file was reached with an empty line
+  end
   if startsWith(tline, 'Impedance [')
     chanCounter = 0;
     refCounter = 0;
@@ -193,7 +196,7 @@ while ~feof(fid)
         if ~isempty(spaceList)
           chanName = chanName(spaceList(end)+1:end);
         end
-        if strfind(chanName,'REF_') == 1 %for situation where there is more than one reference
+        if strfind(chanName,'REF_') == 1 % for situation where there is more than one reference
           refCounter = refCounter+1;
           vhdr.impedances.refChan(refCounter) = impCounter;
           if ~isempty(impedances)
@@ -201,7 +204,7 @@ while ~feof(fid)
           else
             vhdr.impedances.reference(refCounter) = NaN;
           end
-        elseif strcmpi(chanName,'ref') %single reference
+        elseif strcmpi(chanName,'ref') % single reference
           refCounter = refCounter+1;
           vhdr.impedances.refChan(refCounter) = impCounter;
           if ~isempty(impedances)
