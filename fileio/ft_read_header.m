@@ -1676,7 +1676,7 @@ switch headerformat
       data = loadvar(filename, 'data');
       hdr = ft_fetch_header(data);
     end
-
+    
   case 'mayo_mef30'
     ft_hastoolbox('mayo_mef', 1); % make sure mayo_mef exists
     hdr = read_mayo_mef30(filename, password, sortchannel);
@@ -2751,7 +2751,7 @@ switch headerformat
   case 'video'
     hdr = read_video(filename);
     checkUniqueLabels = false;
-
+    
   case 'yorkinstruments_hdf5'
     orig            = read_yorkinstruments_hdf5_meta(filename);
     hdr.Fs          = orig.SampleFrequency;
@@ -2992,15 +2992,23 @@ labels = labels(:);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION to fill in empty chantype
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function labels = fixchantype(labels)
-sel = cellfun(@isempty, labels);
-labels(sel) = {'unknown'};
-labels = labels(:);
+function chantype = fixchantype(chantype)
+if isnumeric(chantype)
+  % convert the array of numbers into the corresponding strings
+  chantype = cellfun(@num2str, num2cell(chantype), 'UniformOutput', false);
+end
+sel = cellfun(@isempty, chantype) | strcmp(chantype, 'NaN');
+chantype(sel) = {'unknown'};
+chantype = chantype(:);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION to fill in empty chanunit
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function labels = fixchanunit(labels)
-sel = cellfun(@isempty, labels);
-labels(sel) = {'unknown'};
-labels = labels(:);
+function chanunit = fixchanunit(chanunit)
+if isnumeric(chanunit)
+  % convert the array of numbers into the corresponding strings
+  chanunit = cellfun(@num2str, num2cell(chanunit), 'UniformOutput', false);
+end
+sel = cellfun(@isempty, chanunit) | strcmp(chanunit, 'NaN');
+chanunit(sel) = {'unknown'};
+chanunit = chanunit(:);
