@@ -417,7 +417,9 @@ elseif ~strcmp(cfg.method, 'predetermined unmixing matrix') && strcmp(cfg.cellmo
   ft_info('concatenated data matrix size %dx%d\n', size(dat,1), size(dat,2));
   
   hasdatanans = any(~isfinite(dat(:)));
-  if hasdatanans
+  if hasdatanans && strcmp(cfg.method, 'dss')
+    ft_error('DSS does not work with nans or inf in the data');
+  elseif hasdatanans
     ft_info('data contains nan or inf, only using the samples without nan or inf\n');
     finitevals = sum(~isfinite(dat))==0;
     if ~any(finitevals)

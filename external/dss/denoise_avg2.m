@@ -155,7 +155,7 @@ elseif iscell(s)
     for k = 1:numel(params.time)
       tr_inds{k} = nearest(params.time{k},0);
     end
-    params.tr_inds = tr_inds;
+    params.tr = tr_inds;
   else
     tr_inds = params.tr;
   end
