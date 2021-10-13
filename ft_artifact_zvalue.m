@@ -576,17 +576,14 @@ end
 h   = getparent(h);
 opt = getappdata(h, 'opt');
 
-% convert to one long vector
-dum = zeros(1,max(opt.trl(:,2)));
+% convert the artifact values per trial to one long boolean vector
+boolvec = zeros(1,max(opt.trl(:,2)));
 for trlop=1:opt.numtrl
-  dum(opt.trl(trlop,1):opt.trl(trlop,2)) = opt.artval{trlop};
+  boolvec(opt.trl(trlop,1):opt.trl(trlop,2)) = opt.artval{trlop};
 end
-artval = dum;
 
 % find the padded artifacts and put them in a Nx2 trl-like matrix
-artbeg = find(diff([0 artval])== 1);
-artend = find(diff([artval 0])==-1);
-artifact = [artbeg(:) artend(:)];
+artifact = boolvec2artifact(boolvec);
 
 if strcmp(cfg.artfctdef.zvalue.artfctpeak, 'yes')
   cnt    = 1;
