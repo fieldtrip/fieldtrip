@@ -128,8 +128,8 @@ cfg.interpmethod = ft_getopt(cfg, 'interpmethod', []);   % cfg.interpmethod depe
 anatomical = fixpos(anatomical);
 functional = fixpos(functional);
 
-% ensure the functional data to be in double precision
-functional = ft_struct2double(functional);
+% ensure the functional data to be in double precision, the maxdepth parameter ensure double precision up to the content of functional.avg.mom{:}, avoiding too much recursion
+functional = ft_struct2double(functional, 3);
 
 if (strcmp(cfg.interpmethod, 'nearest') || strcmp(cfg.interpmethod, 'mode')) && (ft_datatype(functional, 'volume+label') || ft_datatype(functional, 'source+label') || ft_datatype(functional, 'mesh+label'))
   % the first input argument describes a parcellation or segmentation with tissue labels
