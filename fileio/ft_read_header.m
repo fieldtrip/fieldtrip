@@ -2729,12 +2729,14 @@ switch headerformat
     hdr.nTrials     = 1;
     [p, f, x] = fileparts(filename);
     if hdr.nChans>1
+      ft_warning('creating fake channel names');
       for i=1:hdr.nChans
         % use the file name and channel number
-        hdr.label{i,1} = sprintf('%s channel %d', f, i);
+        hdr.label{i,1} = sprintf('%d', i);
         hdr.chantype{i,1} = 'audio';
       end
     else
+      % use the filename as the channel name
       hdr.label{1,1} = f;
       hdr.chantype{1,1} = 'audio';
     end
@@ -2757,7 +2759,7 @@ switch headerformat
     hdr.Fs          = orig.SampleFrequency;
     hdr.nChans      = orig.NChannels;
     hdr.nSamples    = orig.NSamples;
-    hdr.nSamplesPre = 0;    %No YI epoched data type
+    hdr.nSamplesPre = 0;    % No YI epoched data type
     hdr.nTrials = 1;
     hdr.label       = cellstr(orig.ChNames);
     hdr.chantype    = cellstr(orig.ChType);
