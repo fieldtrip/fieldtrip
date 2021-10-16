@@ -468,8 +468,10 @@ if ischar(cfg.ylim)
     % the first trial is used to determine the vertical scaling
     dat = data.trial{sel}(chansel,:);
   else
-    % one second of data is read from file to determine the vertical scaling
-    dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', 1, 'endsample', round(hdr.Fs), 'chanindx', chansel, 'checkboundary', strcmp(cfg.continuous, 'no'), 'dataformat', cfg.dataformat, headeropt{:});
+    % read one second (or one block) of data to determine the vertical scaling
+    begsample = 1;
+    endsample = min(round(hdr.Fs), hdr.nSamples);
+    dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', begsample, 'endsample', endsample, 'chanindx', chansel, 'checkboundary', strcmp(cfg.continuous, 'no'), 'dataformat', cfg.dataformat, headeropt{:});
   end % if hasdata
   % convert the data to another numeric precision, i.e. double, single or int32
   if ~isempty(cfg.precision)
