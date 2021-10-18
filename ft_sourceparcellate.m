@@ -28,7 +28,7 @@ function [parcel] = ft_sourceparcellate(cfg, source, parcellation)
 %
 % See also FT_SOURCEANALYSIS, FT_DATATYPE_PARCELLATION, FT_DATATYPE_SEGMENTATION
 
-% Copyright (C) 2012-2013, Robert Oostenveld
+% Copyright (C) 2012-2021, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -191,7 +191,7 @@ for i=1:numel(fn)
   siz = getdimsiz(source, fn{i});
   siz(contains(tokenize(dimord{i},'_'),'pos')) = ntissue;
   
-  if strncmp('{pos_pos}', dimord{i}, 9)
+  if startsWith(dimord, '{pos_pos}')
     fprintf('creating %d*%d parcel combinations for parameter %s by taking the %s\n', numel(tissuelabel), numel(tissuelabel), fn{i}, cfg.method);
     tmp = zeros(siz);
     ft_progress('init', cfg.feedback, 'computing parcellation');
@@ -203,17 +203,17 @@ for i=1:numel(fn)
         ft_progress(k/K, 'computing parcellation for %s combined with %s', tissuelabel{j1}, tissuelabel{j2});
         switch cfg.method
           case 'mean'
-            tmp(j1,j2,:,:) = cellmean2(dat(tissue==j1,tissue==j2,:));
+            tmp(j1,j2,:,:) = cellmean(dat(tissue==j1,tissue==j2));
           case 'median'
-            tmp(j1,j2,:,:) = cellmedian2(dat(tissue==j1,tissue==j2,:));
+            tmp(j1,j2,:,:) = cellmedian(dat(tissue==j1,tissue==j2));
           case 'min'
-            tmp(j1,j2,:,:) = cellmin2(dat(tissue==j1,tissue==j2,:));
+            tmp(j1,j2,:,:) = cellmin(dat(tissue==j1,tissue==j2));
           case 'max'
-            tmp(j1,j2,:,:) = cellmax2(dat(tissue==j1,tissue==j2,:));
+            tmp(j1,j2,:,:) = cellmax(dat(tissue==j1,tissue==j2));
           case 'eig'
-            tmp(j1,j2,:,:) = celleig2(dat(tissue==j1,tissue==j2,:));
+            tmp(j1,j2,:,:) = celleig(dat(tissue==j1,tissue==j2));
           case 'std'
-            tmp(j1,j2,:,:) = cellstd2(dat(tissue==j1,tissue==j2,:));
+            tmp(j1,j2,:,:) = cellstd(dat(tissue==j1,tissue==j2));
           otherwise
             ft_error('method %s not implemented for %s', cfg.method, dimord{i});
         end % switch
@@ -221,7 +221,7 @@ for i=1:numel(fn)
     end % for j1
     ft_progress('close');
     
-  elseif strncmp('{pos}', dimord{i}, 5)
+  elseif startsWith(dimord, '{pos}')
     fprintf('creating %d parcels for parameter %s by taking the %s\n', numel(tissuelabel), fn{i}, cfg.method);
     tmp = zeros(siz);
     ft_progress('init', cfg.feedback, 'computing parcellation');
@@ -229,24 +229,24 @@ for i=1:numel(fn)
       ft_progress(j/numel(tissuelabel), 'computing parcellation for %s', tissuelabel{j});
       switch cfg.method
         case 'mean'
-          tmp(j,:,:) = cellmean1(dat(tissue==j));
+          tmp(j,:,:) = cellmean(dat(tissue==j));
         case 'median'
-          tmp(j,:,:) = cellmedian1(dat(tissue==j));
+          tmp(j,:,:) = cellmedian(dat(tissue==j));
         case 'min'
-          tmp(j,:,:) = cellmin1(dat(tissue==j));
+          tmp(j,:,:) = cellmin(dat(tissue==j));
         case 'max'
-          tmp(j,:,:) = cellmax1(dat(tissue==j));
+          tmp(j,:,:) = cellmax(dat(tissue==j));
         case 'eig'
-          tmp(j,:,:) = celleig1(dat(tissue==j));
+          tmp(j,:,:) = celleig(dat(tissue==j));
         case 'std'
-          tmp(j,:,:) = cellstd1(dat(tissue==j));
+          tmp(j,:,:) = cellstd(dat(tissue==j));
         otherwise
           ft_error('method %s not implemented for %s', cfg.method, dimord{i});
       end % switch
     end % for
     ft_progress('close');
     
-  elseif strncmp('pos_pos', dimord{i}, 7)
+  elseif startsWith(dimord, 'pos_pos')
     fprintf('creating %d*%d parcel combinations for parameter %s by taking the %s\n', numel(tissuelabel), numel(tissuelabel), fn{i}, cfg.method);
     siz     = size(dat);
     siz(1)  = ntissue;
@@ -281,7 +281,7 @@ for i=1:numel(fn)
     end % for j1
     ft_progress('close');
     
-  elseif strncmp('pos', dimord{i}, 3)
+  elseif startsWith(dimord, 'pos')
     fprintf('creating %d parcels for %s by taking the %s\n', numel(tissuelabel), fn{i}, cfg.method);
     siz     = size(dat);
     siz(1)  = ntissue;
@@ -336,7 +336,7 @@ for i=1:numel(fn)
   tok(strcmp(tok, 'pos}'))  = {'chan'}; % replace pos by chan
   
   % squeeze out any singleton oris
-  siz  = [size(tmp) 1 1]; % add trailing singleton to be sure
+  siz  = [size(tmp) 1]; % add trailing singleton to be sure
   oris = contains(tok, 'ori') & siz(1:numel(tok))==1;
   siz(oris) = [];
   tmp = reshape(tmp, siz);
@@ -387,9 +387,9 @@ else
   end
   sel = sum(x>threshold,2);
   if ~isempty(sel)
-    y   = mean(x(sel>0,:),1);
+    y = mean(x(sel>0,:),1);
   else
-    y   = nan+zeros(1,size(x,2));
+    y = nan+zeros(1,size(x,2));
   end
 end
 
@@ -406,14 +406,14 @@ if ~isempty(x)
 else
   y = nan(1,size(x,2));
 end
-  
+
 function y = arraymax1(x)
 if ~isempty(x)
   y = max(x,[], 1);
 else
   y = nan(1,size(x,2));
 end
-  
+
 function y = arrayeig1(x)
 if ~isempty(x)
   siz = size(x);
@@ -444,6 +444,7 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTIONS to compute something over the first two dimensions
+% all of these functions should be implemented the same
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function y = arraymean2(x)
 siz = size(x);
@@ -471,11 +472,9 @@ x = reshape(x, [siz(1)*siz(2) siz(3:end) 1]); % simplify it into a single dimens
 y = arrayeig1(x);
 
 function y = arraymaxabs2(x)
-% take the value that is at max(abs(x))
 siz = size(x);
 x = reshape(x, [siz(1)*siz(2) siz(3:end) 1]); % simplify it into a single dimension
-[dum,ix] = max(abs(x), [], 1);
-y        = x(ix);
+y = arraymaxabs1(x);
 
 function y = arraystd2(x)
 siz = size(x);
@@ -483,111 +482,53 @@ x = reshape(x, [siz(1)*siz(2) siz(3:end) 1]); % simplify it into a single dimens
 y = arraystd1(x);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTIONS for doing something over the first dimension of a cell-array
+% SUBFUNCTIONS for doing something over all elements of a cell-array
+% add a singleton dimension, concatenate into an array, and do the computatioon
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function y = cellmean1(x)
-siz = size(x);
-if siz(1)==1 && siz(2)>1
-  siz([2 1]) = siz([1 2]);
-  x = reshape(x, siz);
+function y = cellmean(x)
+siz = size(x{1});
+for i=1:numel(x)
+  x{i} = reshape(x{i}, [1 siz]);
 end
-y = x{1};
-n = 1;
-for i=2:siz(1)
-  y = y + x{i};
-  n = n + 1;
+x = cat(1, x{:});
+y = arraymean1(x);
+
+function y = cellmedian(x)
+siz = size(x{1});
+for i=1:numel(x)
+  x{i} = reshape(x{i}, [1 siz]);
 end
-y = y/n;
+x = cat(1, x{:});
+y = arraymedian1(x);
 
-function y = cellmedian1(x)
-siz = size(x);
-if siz(1)==1 && siz(2)>1
-  siz([2 1]) = siz([1 2]);
-  x = reshape(x, siz);
+function y = cellmin(x)
+siz = size(x{1});
+for i=1:numel(x)
+  x{i} = reshape(x{i}, [1 siz]);
 end
-x = cat(1,x{:});
-y = median(x, 1);
+x = cat(1, x{:});
+y = arraymin1(x);
 
-function y = cellmin1(x)
-siz = size(x);
-if siz(1)==1 && siz(2)>1
-  siz([2 1]) = siz([1 2]);
-  x = reshape(x, siz);
+function y = cellmax(x)
+siz = size(x{1});
+for i=1:numel(x)
+  x{i} = reshape(x{i}, [1 siz]);
 end
-y = x{1};
-for i=2:siz(1)
-  y = min(x{i}, y);
+x = cat(1, x{:});
+y = arraymax1(x);
+
+function y = celleig(x)
+siz = size(x{1});
+for i=1:numel(x)
+  x{i} = reshape(x{i}, [1 siz]);
 end
+x = cat(1, x{:});
+y = arrayeig1(x);
 
-function y = cellmax1(x)
-siz = size(x);
-if siz(1)==1 && siz(2)>1
-  siz([2 1]) = siz([1 2]);
-  x = reshape(x, siz);
+function y = cellstd(x)
+siz = size(x{1});
+for i=1:numel(x)
+  x{i} = reshape(x{i}, [1 siz]);
 end
-y = x{1};
-for i=2:siz(1)
-  y = max(x{i}, y);
-end
-
-function y = celleig1(x)
-% FIXME this does not work for TFR representations
-siz = size(x);
-if siz(1)==1 && siz(2)>1
-  siz([2 1]) = siz([1 2]);
-  x = reshape(x, siz);
-end
-x = cat(1,x{:});
-% [u, s, v] = svds(real(x), 1);  % x = u * s * v'
-% y = s(1,1) * v(:,1);           % retain the largest eigenvector with appropriate scaling
-
-% this is computationally more efficient and returns a complex-valued output, following a real valued svd
-[u, s] = svds(real(x*x'), 1);
-y = u(:,1)'*x;
-
-function y = cellstd1(x)
-siz = size(x);
-if siz(1)==1 && siz(2)>1
-  siz([2 1]) = siz([1 2]);
-  x = reshape(x, siz);
-end
-y = x{1};
-n = 1;
-for i=2:siz(1)
-  y = y + x{i};
-  n = n + 1;
-end
-y = std(y);
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTIONS to compute something over the first two dimensions of a cell-array
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function y = cellmean2(x)
-siz = size(x);
-x = reshape(x, [siz(1)*siz(2) siz(3:end) 1]); % represent the first two as a single dimension
-y = cellmean1(x);
-
-function y = cellmedian2(x)
-siz = size(x);
-x = reshape(x, [siz(1)*siz(2) siz(3:end) 1]); % represent the first two as a single dimension
-y = cellmedian1(x);
-
-function y = cellmin2(x)
-siz = size(x);
-x = reshape(x, [siz(1)*siz(2) siz(3:end) 1]); % represent the first two as a single dimension
-y = cellmin1(x);
-
-function y = cellmax2(x)
-siz = size(x);
-x = reshape(x, [siz(1)*siz(2) siz(3:end) 1]); % represent the first two as a single dimension
-y = cellmax1(x);
-
-function y = celleig2(x)
-siz = size(x);
-x = reshape(x, [siz(1)*siz(2) siz(3:end) 1]); % represent the first two as a single dimension
-y = celleig1(x);
-
-function y = cellstd2(x)
-siz = size(x);
-x = reshape(x, [siz(1)*siz(2) siz(3:end) 1]); % represent the first two as a single dimension
-y = cellstd1(x);
+x = cat(1, x{:});
+y = arraystd1(x);
