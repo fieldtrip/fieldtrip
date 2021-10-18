@@ -336,7 +336,7 @@ for i=1:numel(fn)
   tok(strcmp(tok, 'pos}'))  = {'chan'}; % replace pos by chan
   
   % squeeze out any singleton oris
-  siz  = [size(tmp) 1]; % add trailing singleton to be sure
+  siz  = [size(tmp) 1 1]; % add trailing singleton to be sure
   oris = contains(tok, 'ori') & siz(1:numel(tok))==1;
   siz(oris) = [];
   tmp = reshape(tmp, siz);

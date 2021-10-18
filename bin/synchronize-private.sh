@@ -46,6 +46,21 @@ ARRAY+=(fileio/private/appendstruct.m)
 sync ${ARRAY[*]}
 
 ################################################################################
+# artifact2boolvec.m
+
+ARRAY=()
+ARRAY+=(private/artifact2boolvec.m)
+ARRAY+=(external/dss/private/artifact2boolvec.m)
+sync ${ARRAY[*]}
+
+################################################################################
+# artifact2trl.m
+
+ARRAY=()
+ARRAY+=(private/artifact2trl.m)
+ARRAY+=(external/dss/private/artifact2trl.m)
+sync ${ARRAY[*]}
+################################################################################
 # atlas_lookup.m
 
 ARRAY=()
@@ -76,6 +91,14 @@ sync ${ARRAY[*]}
 ARRAY=()
 ARRAY+=(fileio/private/bids_sidecar.m)
 ARRAY+=(trialfun/private/bids_sidecar.m)
+sync ${ARRAY[*]}
+
+################################################################################
+# boolvec2artifact.m
+
+ARRAY=()
+ARRAY+=(private/boolvec2artifact.m)
+ARRAY+=(external/dss/private/boolvec2artifact.m)
 sync ${ARRAY[*]}
 
 ################################################################################
@@ -3671,6 +3694,14 @@ sync ${ARRAY[*]}
 ARRAY=()
 ARRAY+=(forward/private/triangle4pt.m)
 ARRAY+=(private/triangle4pt.m)
+sync ${ARRAY[*]}
+
+################################################################################
+# trl2boolvec.m
+
+ARRAY=()
+ARRAY+=(private/trl2boolvec.m)
+ARRAY+=(external/dss/private/trl2boolvec.m)
 sync ${ARRAY[*]}
 
 ################################################################################
