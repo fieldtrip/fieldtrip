@@ -357,7 +357,7 @@ elseif ~isempty(cfg.length)
   
 elseif istrue(cfg.continuous)
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  % identify conscitive segments that can be glued back together
+  % identify consecutive segments that can be glued back together
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   data = ft_checkdata(data, 'hassampleinfo', 'yes');
   
