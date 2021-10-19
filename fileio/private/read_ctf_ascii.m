@@ -40,6 +40,9 @@ function [file] = read_ctf_ascii(filename)
 
 fid = fopen_or_error(filename, 'r');
 
+% turn warnings off
+ws = ft_warning('off');
+
 line = '';
 while ischar(line)
   line = cleanline(fgetl(fid));
@@ -56,10 +59,7 @@ while ischar(line)
       value(1) = ' ';           % remove the :
       value  = strtrim(value);
       item   = strtrim(item);
-
-      % turn warnings off
-      ws = ft_warning('off');
-
+      
       % the item name should be a real string, otherwise I cannot put it into the structure
       if strcmp(sprintf('%d', str2num(deblank(item))), deblank(item))
         % add something to the start of the string to distinguish it from a number
@@ -75,14 +75,15 @@ while ischar(line)
         eval(sprintf('file.%s.%s = [ %s ];', line, item, value));
       end
 
-      % revert to previous warning state
-      ft_warning(ws);
     end
     subline = cleanline(fgetl(fid));    % read the first item
   end
 end
 
 fclose(fid);
+
+% revert to previous warning state
+ft_warning(ws);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function line = cleanline(line)
