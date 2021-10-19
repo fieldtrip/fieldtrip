@@ -40,9 +40,6 @@ function [file] = read_ctf_ascii(filename)
 
 fid = fopen_or_error(filename, 'r');
 
-% turn warnings off
-ws = ft_warning('off');
-
 line = '';
 while ischar(line)
   line = cleanline(fgetl(fid));
@@ -81,9 +78,6 @@ while ischar(line)
 end
 
 fclose(fid);
-
-% revert to previous warning state
-ft_warning(ws);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function line = cleanline(line)
