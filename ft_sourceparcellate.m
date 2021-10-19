@@ -191,7 +191,7 @@ for i=1:numel(fn)
   siz = getdimsiz(source, fn{i});
   siz(contains(tokenize(dimord{i},'_'),'pos')) = ntissue;
   
-  if startsWith(dimord, '{pos_pos}')
+  if startsWith(dimord{i}, '{pos_pos}')
     fprintf('creating %d*%d parcel combinations for parameter %s by taking the %s\n', numel(tissuelabel), numel(tissuelabel), fn{i}, cfg.method);
     tmp = zeros(siz);
     ft_progress('init', cfg.feedback, 'computing parcellation');
@@ -221,7 +221,7 @@ for i=1:numel(fn)
     end % for j1
     ft_progress('close');
     
-  elseif startsWith(dimord, '{pos}')
+  elseif startsWith(dimord{i}, '{pos}')
     fprintf('creating %d parcels for parameter %s by taking the %s\n', numel(tissuelabel), fn{i}, cfg.method);
     tmp = zeros(siz);
     ft_progress('init', cfg.feedback, 'computing parcellation');
@@ -246,7 +246,7 @@ for i=1:numel(fn)
     end % for
     ft_progress('close');
     
-  elseif startsWith(dimord, 'pos_pos')
+  elseif startsWith(dimord{i}, 'pos_pos')
     fprintf('creating %d*%d parcel combinations for parameter %s by taking the %s\n', numel(tissuelabel), numel(tissuelabel), fn{i}, cfg.method);
     siz     = size(dat);
     siz(1)  = ntissue;
@@ -281,7 +281,7 @@ for i=1:numel(fn)
     end % for j1
     ft_progress('close');
     
-  elseif startsWith(dimord, 'pos')
+  elseif startsWith(dimord{i}, 'pos')
     fprintf('creating %d parcels for %s by taking the %s\n', numel(tissuelabel), fn{i}, cfg.method);
     siz     = size(dat);
     siz(1)  = ntissue;
