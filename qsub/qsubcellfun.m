@@ -359,10 +359,10 @@ for submit=1:numjob
   % submit the job
   if ~isempty(fcomp)
     % use the compiled version
-    [curjobid curputtime] = qsubfeval(fcomp, argin{:}, 'memreq', memreq, 'timreq', timreq, 'memoverhead', memoverhead, 'timoverhead', timoverhead, 'diary', diary, 'batch', batch, 'batchid', batchid, 'backend', backend, 'options', submitoptions, 'queue', queue, 'matlabcmd', matlabcmd, 'display', display, 'jvm', jvm, 'nargout', numargout, 'whichfunction', whichfunction, 'rerunable', rerunable);
+    [curjobid, curputtime] = qsubfeval(fcomp, argin{:}, 'memreq', memreq, 'timreq', timreq, 'memoverhead', memoverhead, 'timoverhead', timoverhead, 'diary', diary, 'batch', batch, 'batchid', batchid, 'backend', backend, 'options', submitoptions, 'queue', queue, 'matlabcmd', matlabcmd, 'display', display, 'jvm', jvm, 'nargout', numargout, 'whichfunction', whichfunction, 'rerunable', rerunable);
   else
     % use the non-compiled version
-    [curjobid curputtime] = qsubfeval(fname, argin{:}, 'memreq', memreq, 'timreq', timreq, 'memoverhead', memoverhead, 'timoverhead', timoverhead, 'diary', diary, 'batch', batch, 'batchid', batchid, 'backend', backend, 'options', submitoptions, 'queue', queue, 'matlabcmd', matlabcmd, 'display', display, 'jvm', jvm, 'nargout', numargout, 'whichfunction', whichfunction, 'rerunable', rerunable);
+    [curjobid, curputtime] = qsubfeval(fname, argin{:}, 'memreq', memreq, 'timreq', timreq, 'memoverhead', memoverhead, 'timoverhead', timoverhead, 'diary', diary, 'batch', batch, 'batchid', batchid, 'backend', backend, 'options', submitoptions, 'queue', queue, 'matlabcmd', matlabcmd, 'display', display, 'jvm', jvm, 'nargout', numargout, 'whichfunction', whichfunction, 'rerunable', rerunable);
   end
 
   % fprintf('submitted job %d\n', submit);

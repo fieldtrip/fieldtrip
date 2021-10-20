@@ -93,7 +93,7 @@ spike.hdr.orig=orig;
 spike.hdr.nChans=length(label);
 spike.hdr.nSamplesPre        = 0;
 spike.hdr.nTrials            = 1;
-[spike.hdr.chantype spike.hdr.chanunit] = deal(cell(length(label),1));
+[spike.hdr.chantype, spike.hdr.chanunit] = deal(cell(length(label),1));
 spike.hdr.chantype(:) = {'spike (neurosim)'};
 spike.hdr.chanunit(:) = {'unknown'};
 

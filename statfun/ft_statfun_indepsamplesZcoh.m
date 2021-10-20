@@ -124,7 +124,7 @@ if strcmp(cfg.computestat, 'yes')
     tempstat=(atanh(abs(csdc1))-biasc1-atanh(abs(csdc2))+biasc2)./denomZ;
     s.stat(((freqtimindx-1)*nchancmb + 1):(freqtimindx*nchancmb))=tempstat(chancmbsel);
   end
-  s.stat = reshape(s.stat, [nchancmb nfreqtim]);
+  %s.stat = reshape(s.stat, [nchancmb nfreqtim]);
 end
 
 if strcmp(cfg.computecritval,'yes')
@@ -147,7 +147,7 @@ if strcmp(cfg.computeprob,'yes')
   elseif cfg.tail==1
     s.prob = 1-normcdf(s.stat);
   end
-  s.prob = reshape(s.prob, [nchancmb nfreqtim]);
+  %s.prob = reshape(s.prob, [nchancmb nfreqtim]);
 end
 
 % adjust the dimord

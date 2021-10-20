@@ -239,7 +239,7 @@ if strcmp(eventformat, 'brainvision_vhdr')
   if ~isfield(vhdr, 'MarkerFile') || isempty(vhdr.MarkerFile)
     filename = [];
   else
-    [p, ~, ~] = fileparts(filename);
+    [p, f, x] = fileparts(filename);
     filename = fullfile(p, vhdr.MarkerFile);
   end
 end
@@ -1708,8 +1708,13 @@ switch eventformat
     elseif isepoched
       begsample = cumsum([1 repmat(hdr.nSamples, hdr.nTrials-1, 1)']);
       events_id = split(split(hdr.orig.epochs.event_id, ';'), ':');
-      events_label = cell2mat(events_id(:, 1));
-      events_code = str2num(cell2mat(events_id(:, 2)));
+      if all(cellfun(@ischar, events_id(:, 1)))
+        events_label = events_id(:, 1);
+        events_code = str2num(cell2mat(events_id(:, 2)));
+      elseif all(cellfun(@isnumeric, events_id(:, 1)))
+        events_label = cell2mat(events_id(:, 1));
+        events_code = str2num(cell2mat(events_id(:, 2)));
+      end
       for i=1:hdr.nTrials
         event(end+1).type      = 'trial';
         event(end  ).sample    = begsample(i);
@@ -2238,6 +2243,22 @@ switch eventformat
     end
     event = read_yokogawa_event(filename, 'detectflank', detectflank, 'chanindx', chanindx, 'threshold', threshold);
     
+  case {'yorkinstruments_hdf5'}
+    if isempty(hdr)
+      hdr = ft_read_header(filename, 'headerformat', eventformat);
+    end
+    % read the trigger channel and do flank detection
+    trgindx = match_str(hdr.label, 'P_PORT_A');
+    trigger = read_trigger(filename, 'header', hdr, 'dataformat', 'yorkinstruments_hdf5', 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', trgindx, 'detectflank', detectflank, 'trigshift', trigshift, 'fix4d8192', false);
+    
+    event   = appendstruct(event, trigger);
+    
+    respindx = match_str(hdr.label, 'RESPONSE');
+    if ~isempty(respindx)
+      response = read_trigger(filename, 'header', hdr, 'dataformat', 'yorkinstruments_hdf5', 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', respindx, 'detectflank', detectflank, 'trigshift', trigshift);
+      event    = appendstruct(event, response);
+    end
+    
   case {'artinis_oxy3' 'artinis_oxy4'}
     ft_hastoolbox('artinis', 1);
     
@@ -2295,7 +2316,7 @@ switch eventformat
     
     % ensure that the filename contains a full path specification,
     % otherwise the low-level function fails
-    [p,~,~] = fileparts(filename);
+    [p, f, x] = fileparts(filename);
     if ~isempty(p)
       % this is OK
     elseif isempty(p)

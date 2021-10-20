@@ -113,13 +113,13 @@ end
 % cross-spectral density
 
 if isreal(dat)
-  ft_notice('the input consists of time-series data: computing computing the dipole moments and variance')
+  ft_notice('the input consists of real-valued topographies: computing the dipole moments and variance')
   datatype = 'time';
 elseif size(dat,1)==size(dat,2) && sum(sum((abs(dat - dat')<10^-10)))==numel(dat)
   ft_notice('the input consists of a cross-spectral density: computing source-level power')
   datatype = 'csd';
 else
-  ft_notice('the input consists of Fourier coefficients: computing source-level Fourier coefficients and power')
+  ft_notice('the input consists of complex-valued topographies: computing source-level Fourier coefficients and power')
   datatype = 'fourier';
 end
 
@@ -168,9 +168,9 @@ for i=1:size(sourcemodel.pos,1)
   if strcmp(datatype, 'time') || strcmp(datatype, 'fourier')
     % Compute dipole moment and residual variance
     estimate.mom{i} = lfi * dat;
-    estimate.rv(i)  = sum(sum(abs(dat - lf*mom{i}).^2, 1), 2)./sum(sum(abs(dat).^2, 1), 2);
+    estimate.rv(i)  = sum(sum(abs(dat - lf*estimate.mom{i}).^2, 1), 2)./sum(sum(abs(dat).^2, 1), 2);
     % Compute power at each location, this is convenient for plotting
-    estimate.pow(i) = mean(sum(abs(mom{i}(:)).^2, 1));  % FIXME is this normalization correct?
+    estimate.pow(i) = mean(sum(abs(estimate.mom{i}(:)).^2, 1));  % FIXME is this normalization correct?
   else
     % Compute power, the data represents a covariance or CSD matrix
     estimate.pow(i) = sum(real(sum((lfi*dat).*lfi,2)));

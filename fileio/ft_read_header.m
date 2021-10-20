@@ -52,6 +52,7 @@ function [hdr] = ft_read_header(filename, varargin)
 %   NetMEG (*.nc)
 %   ITAB - Chieti (*.mhd)
 %   Tristan Babysquid (*.fif)
+%   York Instruments (*.meghdf5)
 %
 % The following EEG dataformats are supported
 %   ANT - Advanced Neuro Technology, EEProbe (*.avr, *.eeg, *.cnt)
@@ -306,19 +307,19 @@ if strcmp(readbids, 'yes') || strcmp(readbids, 'ifmakessense')
     % try to read the metadata from the BIDS sidecar files
     sidecar = bids_sidecar(filename);
     if ~isempty(sidecar)
-      data_json = read_json(sidecar);
+      data_json = ft_read_json(sidecar);
     end
     sidecar = bids_sidecar(filename, 'channels');
     if ~isempty(sidecar)
-      channels_tsv = read_tsv(sidecar);
+      channels_tsv = ft_read_tsv(sidecar);
     end
     sidecar = bids_sidecar(filename, 'electrodes');
     if ~isempty(sidecar)
-      electrodes_tsv = read_tsv(sidecar);
+      electrodes_tsv = ft_read_tsv(sidecar);
     end
     sidecar = bids_sidecar(filename, 'optodes');
     if ~isempty(sidecar)
-      optodes_tsv = read_tsv(sidecar);
+      optodes_tsv = ft_read_tsv(sidecar);
     end
   end
 end
@@ -2750,6 +2751,19 @@ switch headerformat
   case 'video'
     hdr = read_video(filename);
     checkUniqueLabels = false;
+
+  case 'yorkinstruments_hdf5'
+    orig            = read_yorkinstruments_hdf5_meta(filename);
+    hdr.Fs          = orig.SampleFrequency;
+    hdr.nChans      = orig.NChannels;
+    hdr.nSamples    = orig.NSamples;
+    hdr.nSamplesPre = 0;    %No YI epoched data type
+    hdr.nTrials = 1;
+    hdr.label       = cellstr(orig.ChNames);
+    hdr.chantype    = cellstr(orig.ChType);
+    hdr.chanunit    = cellstr(orig.ChUnit);
+    % remember original header details
+    hdr.orig        = orig;
     
   otherwise
     if exist(headerformat, 'file')
@@ -2986,17 +3000,3 @@ function labels = fixchanunit(labels)
 sel = cellfun(@isempty, labels);
 labels(sel) = {'unknown'};
 labels = labels(:);
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION this is shared with DATA2BIDS
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function tsv = read_tsv(filename)
-tsv = readtable(filename, 'Delimiter', 'tab', 'FileType', 'text', 'TreatAsEmpty', 'n/a', 'ReadVariableNames', true);
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION this is shared with DATA2BIDS
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function json = read_json(filename)
-ft_hastoolbox('jsonlab', 1);
-json = loadjson(filename);
-json = ft_struct2char(json); % convert strings into char-arrays

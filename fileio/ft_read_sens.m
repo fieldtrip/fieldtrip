@@ -24,6 +24,7 @@ function [sens] = ft_read_sens(filename, varargin)
 %   4d_pdf 4d_m4d 4d_xyz ctf_ds ctf_res4 itab_raw itab_mhd netmeg neuromag_fif
 %   neuromag_mne neuromag_mne_elec neuromag_mne_grad polhemus_fil polhemus_pos
 %   zebris_sfp spmeeg_mat eeglab_set localite_pos artinis_oxy3 artinis_oxyproj matlab
+%   yorkinstruments_hdf5
 %
 % See also FT_READ_HEADER, FT_DATATYPE_SENS, FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD,
 
@@ -80,7 +81,7 @@ if strcmp(readbids, 'yes') || strcmp(readbids, 'ifmakessense')
     tsvfile = bids_sidecar(filename, 'electrodes');
     if ~isempty(tsvfile) && (isempty(senstype) || strcmp(senstype, 'eeg'))
       % read the electrodes.tsv file
-      electrodes_tsv = read_tsv(tsvfile);
+      electrodes_tsv = ft_read_tsv(tsvfile);
       sens         = [];
       sens.label   = electrodes_tsv.name;
       sens.elecpos = [electrodes_tsv.x electrodes_tsv.y electrodes_tsv.z];
@@ -89,7 +90,7 @@ if strcmp(readbids, 'yes') || strcmp(readbids, 'ifmakessense')
       [p, f] = fileparts(tsvfile);
       jsonfile = fullfile(p, [f '.json']);
       if exist(jsonfile, 'file')
-        electrodes_json = read_json(jsonfile);
+        electrodes_json = ft_read_json(jsonfile);
         ft_warning('the content of the electrodes.json is not used')
         % FIXME do something with the content
       end
@@ -97,7 +98,7 @@ if strcmp(readbids, 'yes') || strcmp(readbids, 'ifmakessense')
       % also read the coordsystem.json file
       coordsysfile = bids_sidecar(filename, 'coordsystem');
       if exist(coordsysfile, 'file')
-        coordsys_json = read_json(coordsysfile);
+        coordsys_json = ft_read_json(coordsysfile);
         ft_warning('the content of the coordsystem.json is not used')
         % FIXME do something with the content
       end
@@ -524,7 +525,57 @@ switch fileformat
     warning(ws); % revert to the previous warning state
     sens.label   = txtData{:,1};
     sens.elecpos = [txtData.Loc_X txtData.Loc_Y txtData.Loc_Z];
-    
+
+  case 'yorkinstruments_hdf5'
+    acquisition='default';
+    if isempty(senstype)
+      % set the default
+      ft_warning('both electrode and gradiometer information is present, returning the electrode information by default');
+      senstype = 'eeg';
+    end
+    hdr=ft_read_header(filename);
+    %i will be the channel index, sens_i is the sensor index
+    sens_i=0;
+    for i=1:hdr.nChans
+      if string(hdr.chantype{i})==upper(senstype)
+        sens_i=sens_i+1;
+        sens.chantype{sens_i,1}=hdr.chantype{i};
+              try
+                sens.chanpos(sens_i,1:3) =  h5read(filename,['/config/channels/' hdr.label{i} '/position']);
+                sens.chanori(sens_i,1:3) =  h5read(filename,['/config/channels/' hdr.label{i} '/orientation']);
+                sens.chanunit{sens_i,1}  =  hdr.chanunit{i};
+                sens.coilori(sens_i,1:3) =  sens.chanori(sens_i,1:3);
+                sens.coilpos(sens_i,1:3) =  sens.chanpos(sens_i,1:3);
+                sens.label{sens_i,1}     =  hdr.label{i};
+              catch
+                error('Error reading channel %i sensor details.',i);
+              end
+      else
+        continue
+      end
+    end
+    if sens_i<1
+      error('No data corresponding to the chosen sensor type (%s) found.',senstype);
+    end
+    sens.tra  = eye(sens_i);
+    sens.type= 'yorkinstruments248';
+    if isempty(coordsys)
+      coordsys='dewar';
+    end
+    if strcmp(coordsys,'head')
+      try
+        tCCStoMegscanScs = h5read(filename,[strcat('/acquisitions/',char(string(acquisition))) '/ccs_to_scs_transform']);
+        T = maketform('affine',tCCStoMegscanScs);
+        sens.coilpos=tformfwd(T,sens.chanpos(:,1),sens.chanpos(:,2),sens.coilpos(:,3));
+        R = tCCStoMegscanScs(1:3,1:3); %(mm)
+        sens.coilori =  sens.coilori * R;
+        sens.chanpos=sens.coilpos;
+        sens.chanori=sens.coilori;
+        catch
+        error('No dewar to head transform available in hdf5 file');
+      end
+    end
+
   otherwise
     if ~isempty(sens)
       % the electrode or optode information has been read from the BIDS sidecar file
@@ -548,17 +599,3 @@ elseif strcmpi(senstype, 'nirs')
 else
   % it is empty if not specified by the user, in that case either one is fine
 end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION this is shared with DATA2BIDS
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function tsv = read_tsv(filename)
-tsv = readtable(filename, 'Delimiter', 'tab', 'FileType', 'text', 'TreatAsEmpty', 'n/a', 'ReadVariableNames', true);
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION this is shared with DATA2BIDS
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function json = read_json(filename)
-ft_hastoolbox('jsonlab', 1);
-json = loadjson(filename);
-json = ft_struct2char(json); % convert strings into char-arrays

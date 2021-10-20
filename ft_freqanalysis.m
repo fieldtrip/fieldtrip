@@ -331,7 +331,7 @@ switch cfg.method
   case 'wavelet'
     cfg.width  = ft_getopt(cfg, 'width',  7);
     cfg.gwidth = ft_getopt(cfg, 'gwidth', 3);
-
+    
   case 'superlet'
     cfg.superlet.basewidth = ft_getopt(cfg.superlet, 'basewidth', 3);
     cfg.superlet.gwidth = ft_getopt(cfg.superlet, 'gwidth', 3);
@@ -562,11 +562,11 @@ for itrial = 1:ntrials
     case 'mtmfft'
       [spectrum,ntaper,foi] = ft_specest_mtmfft(dat, time, 'taper', cfg.taper, options{:}, 'feedback', fbopt);
       hastime = false;
-    
+      
     case 'irasa'
       [spectrum,ntaper,foi] = ft_specest_irasa(dat, time, options{:}, 'feedback', fbopt);
       hastime = false;
-
+      
     case 'wavelet'
       [spectrum,foi,toi] = ft_specest_wavelet(dat, time, 'timeoi', cfg.toi, 'width', cfg.width, 'gwidth', cfg.gwidth,options{:}, 'feedback', fbopt);
       
@@ -580,7 +580,7 @@ for itrial = 1:ntrials
       ntaper = ones(1,numel(foi));
       % modify spectrum for same reason as fake ntaper
       spectrum = reshape(spectrum,[1 nchan numel(foi) numel(toi)]);
-
+      
     case 'superlet'
       % calculate number of wavelets and respective cycle width dependent on superlet order
       % equivalent one-liners:
@@ -600,7 +600,7 @@ for itrial = 1:ntrials
         end
         cycles{i_f} = frq_cyc;
       end
-
+      
       % compute superlets
       spectrum = NaN(nchan,length(cfg.foi),length(cfg.toi));
       % index of 'freqoi' value in 'options'
@@ -613,7 +613,7 @@ for itrial = 1:ntrials
         opt{idx_freqoi} = cfg.foi(i_f);
         % compute responses for individual wavelets
         for i_wl = 1:cfg.superlet.order(i_f)
-          [spec_f(i_wl,:,:),~,toi] = ft_specest_wavelet(dat, time, 'timeoi', cfg.toi, 'width', cycles{i_f}(i_wl), 'gwidth', cfg.superlet.gwidth, opt{:}, 'feedback', fbopt);
+          [spec_f(i_wl,:,:), dum, toi] = ft_specest_wavelet(dat, time, 'timeoi', cfg.toi, 'width', cycles{i_f}(i_wl), 'gwidth', cfg.superlet.gwidth, opt{:}, 'feedback', fbopt);
         end
         % geometric mean across individual wavelets
         spectrum(:,i_f,:) = prod(spec_f, 1).^(1/cfg.superlet.order(i_f));

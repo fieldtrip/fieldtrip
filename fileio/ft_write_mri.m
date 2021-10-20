@@ -19,14 +19,15 @@ function [V] = ft_write_mri(filename, dat, varargin)
 % required since it will be added automatically.
 %
 % The supported dataformats are
+%   'vmr', 'vmp' (Brainvoyager specific file formats)
 %   'analyze'
-%   'nifti'
-%   'vista'
-%   'mgz'   (freesurfer)
+%   'nifti', 'nifti2', 'nifti_gz'
+%   'vista' (simbio specific file formats)
+%   'mgz', 'mgh' (freesurfer specific file formats)
 %
 % See also FT_READ_MRI, FT_WRITE_DATA, FT_WRITE_HEADSHAPE
 
-% Copyright (C) 2011-2012, Jan-Mathijs Schoffelen
+% Copyright (C) 2011-2021, Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -160,7 +161,7 @@ switch dataformat
     transform = vox2ras_1to0(transform);
     save_mgh(dat, filename, transform);
     
-  case {'nifti'}
+  case {'nifti' 'nifti_gz' 'nifti2'}
     % nifti data, using Freesurfer
     ft_hastoolbox('freesurfer', 1);
     

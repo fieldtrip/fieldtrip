@@ -155,7 +155,7 @@ if isempty(token)
   return;
 end
 
-[tok rem] = strtok(in, token);
+[tok, rem] = strtok(in, token);
 if isempty(rem)
   out = in;
   return;

@@ -139,7 +139,6 @@ url = {
   'PLEXON'        'available from http://www.plexon.com/assets/downloads/sdk/ReadingPLXandDDTfilesinMatlab-mexw.zip'
   'MISC'          'various functions that were downloaded from http://www.mathworks.com/matlabcentral/fileexchange and elsewhere'
   '35625-INFORMATION-THEORY-TOOLBOX'      'see http://www.mathworks.com/matlabcentral/fileexchange/35625-information-theory-toolbox'
-  '29046-MUTUAL-INFORMATION'              'see http://www.mathworks.com/matlabcentral/fileexchange/35625-information-theory-toolbox'
   '14888-MUTUAL-INFORMATION-COMPUTATION'  'see http://www.mathworks.com/matlabcentral/fileexchange/14888-mutual-information-computation'
   'PLOT2SVG'      'see http://www.mathworks.com/matlabcentral/fileexchange/7401-scalable-vector-graphics-svg-export-of-figures'
   'BRAINSUITE'    'see http://brainsuite.bmap.ucla.edu/processing/additional-tools/'
@@ -349,7 +348,7 @@ switch toolbox
   case 'DATAHASH'
     dependency = {'DataHash'};
   case 'IBTB'
-    dependency = {'binr','information'};
+    dependency = {'binr','information', 'eqpop', 'eqspace', 'ceqspace', 'gseqspace'};
   case 'ICASSO'
     dependency = {'icassoEst'};
   case 'XUNIT'
@@ -359,16 +358,8 @@ switch toolbox
   case '35625-INFORMATION-THEORY-TOOLBOX'
     dependency = {'conditionalEntropy', 'entropy', 'jointEntropy',...
       'mutualInformation' 'nmi' 'nvi' 'relativeEntropy'};
-  case '29046-MUTUAL-INFORMATION'
-    dependency = {'MI', 'license.txt'};
   case '14888-MUTUAL-INFORMATION-COMPUTATION'
-    dependency = {'condentropy', 'demo_mi', 'estcondentropy.cpp',...
-      'estjointentropy.cpp', 'estpa.cpp', ...
-      'findjointstateab.cpp', 'makeosmex.m',...
-      'mutualinfo.m', 'condmutualinfo.m',...
-      'entropy.m', 'estentropy.cpp',...
-      'estmutualinfo.cpp', 'estpab.cpp',...
-      'jointentropy.m' 'mergemultivariables.m' };
+    dependency = {'condentropy', 'demo_mi', 'estcondentropy.cpp', 'estjointentropy.cpp', 'estpa.cpp', 'findjointstateab.cpp', 'makeosmex.m', 'mutualinfo.m', 'condmutualinfo.m', 'entropy.m', 'estentropy.cpp', 'estmutualinfo.cpp', 'estpab.cpp', 'jointentropy.m' 'mergemultivariables.m' };
   case 'PLOT2SVG'
     dependency = {'plot2svg.m', 'simulink2svg.m'};
   case 'BRAINSUITE'
@@ -591,6 +582,9 @@ elseif isfolder(toolbox)
     % this comes with its own startup script
     addpath(fullfile(toolbox, 'startup'))
     startup_MVPA_Light;
+  elseif ~isempty(regexp(lower(toolbox), 'ibtb', 'once'))
+    % this needs to be added with all its subdirectories
+    addpath(genpath(toolbox));
   else
     addpath(toolbox);
   end

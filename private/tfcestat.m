@@ -212,7 +212,10 @@ ft_progress('close');
 if isequal(cfg.numrandomization, 'all')
   N = Nrand;
 else
-  % the minimum possible p-value should not be 0, but 1/N
+  % the minimum possible p-value should not be 0, but 1/N, and the max
+  % should be 1
+  prb_neg = prb_neg+1;
+  prb_pos = prb_pos+1;
   N = Nrand+1;
 end
 
@@ -241,7 +244,7 @@ function extent_map = getextent(clustered_map, num, extent_map)
 
 clustered_map = clustered_map(:);
 nv = histc(clustered_map,0:num);
-[~,idxall] = sort(clustered_map,'ascend');
+[dum,idxall] = sort(clustered_map,'ascend');
 idxall(1:nv(1)) = [];
 nv(1) = [];
 ends = cumsum(nv);

@@ -319,7 +319,7 @@ if ~isempty(dtype)
       case 'timelock'
         okflag = okflag + (istimelock & ~iscomp);
       case 'comp'
-        okflag = okflag + (iscomp & ~(israw | istimelock | isfreq));
+        okflag = okflag + (iscomp && ~(israw || istimelock || isfreq));
       case 'spike'
         okflag = okflag + isspike;
       case 'volume'

@@ -30,10 +30,10 @@ function [cfg] = ft_databrowser(cfg, data)
 %   cfg.allowoverlap            = 'yes' or 'no', whether data that is overlapping in multiple trials is allowed (default = 'no')
 %   cfg.channel                 = cell-array with channel labels, see FT_CHANNELSELECTION
 %   cfg.channelclamped          = cell-array with channel labels, that when using the 'vertical' viewmode will always be shown at the bottom. This is useful for showing ECG/EOG channels along with the other channels
-%   cfg.compscale               = string, 'global' or 'local', defines whether the colormap for the topographic scaling is applied per topography or on all visualized components (default 'global')
-%   cfg.viewmode                = string, 'butterfly', 'vertical', 'component' for visualizing ICA/PCA components (default is 'butterfly')
+%   cfg.compscale               = string, 'global' or 'local', defines whether the colormap for the topographic scaling is applied per topography or on all visualized components (default = 'local')
+%   cfg.viewmode                = string, 'vertical', 'butterfly', or 'component' for visualizing ICA/PCA topographies together with the timecourses (default = 'vertical')
 %   cfg.plotlabels              = 'yes', 'no' or 'some', whether to plot channel labels in vertical viewmode. The option 'some' plots one label for every ten channels, which is useful if there are many channels (default = 'some')
-%   cfg.plotevents              = 'no' or 'yes', whether to plot event markers. (default is 'yes')
+%   cfg.plotevents              = 'no' or 'yes', whether to plot event markers (default = 'yes')
 %   cfg.ploteventlabels         = 'type=value', 'colorvalue' (default = 'type=value')
 %   cfg.artfctdef.xxx.artifact  = Nx2 matrix with artifact segments see FT_ARTIFACT_xxx functions
 %   cfg.selectfeature           = string, name of feature to be selected/added (default = 'visual')
@@ -209,7 +209,7 @@ cfg.plotlabels          = ft_getopt(cfg, 'plotlabels', 'some');
 cfg.event               = ft_getopt(cfg, 'event');                       % this only exists for backward compatibility and should not be documented
 cfg.continuous          = ft_getopt(cfg, 'continuous');                  % the default is set further down in the code, conditional on the input data
 cfg.precision           = ft_getopt(cfg, 'precision', 'double');
-cfg.compscale           = ft_getopt(cfg, 'compscale', 'global');
+cfg.compscale           = ft_getopt(cfg, 'compscale', 'local');
 cfg.renderer            = ft_getopt(cfg, 'renderer');
 cfg.fontsize            = ft_getopt(cfg, 'fontsize', 12);
 cfg.fontunits           = ft_getopt(cfg, 'fontunits', 'points');         % inches, centimeters, normalized, points, pixels
@@ -249,7 +249,7 @@ headeropt  = ft_setopt(headeropt, 'coilaccuracy',   ft_getopt(cfg, 'coilaccuracy
 headeropt  = ft_setopt(headeropt, 'checkmaxfilter', ft_getopt(cfg, 'checkmaxfilter'));      % this allows to read non-maxfiltered neuromag data recorded with internal active shielding
 headeropt  = ft_setopt(headeropt, 'chantype',       ft_getopt(cfg, 'chantype', {}));        % 2017.10.10 AB required for NeuroOmega files
 
-if ~isfield(cfg, 'viewmode')
+if isempty(ft_getopt(cfg, 'viewmode'))
   % can be 'butterfly', 'vertical', or 'component'
   if hascomp
     cfg.viewmode = 'component';
@@ -258,7 +258,7 @@ if ~isfield(cfg, 'viewmode')
   end
 end
 
-if ~isfield(cfg, 'colorgroups')
+if isempty(ft_getopt(cfg, 'colorgroups'))
   % can be 'sequential', 'allblack', 'labelcharN', 'chantype', or a vector with the length of the number of channels defining the groups
   if hascomp
     cfg.colorgroups = 'allblack';
@@ -274,7 +274,6 @@ if ~isempty(cfg.chanscale)
   elseif numel(cfg.channel) ~= numel(cfg.chanscale)
     ft_error('cfg.chanscale should have the same number of elements as cfg.channel');
   end
-  
   % make sure chanscale is a column vector, not a row vector
   cfg.chanscale = cfg.chanscale(:);
 end
@@ -284,7 +283,7 @@ if ~isempty(cfg.mychanscale) && ~isfield(cfg, 'mychan')
   cfg.mychanscale = [];
 end
 
-if ~isfield(cfg, 'channel')
+if isempty(ft_getopt(cfg, 'channel'))
   if hascomp
     if size(data.topo,2)>9
       cfg.channel = 1:10;
@@ -538,6 +537,16 @@ artifactcolors = colorcheck([0.9686 0.7608 0.7686; 0.7529 0.7098 0.9647; 0.7373 
 if ~isempty(event) && isstruct(event)
   eventtypes  = unique({event.type});
   eventcolors = colorcheck('krbgmcy', numel(eventtypes));
+  % durations and offsets can be either empty or should be numeric values, see FT_READ_EVENT
+  % the code further down expects them to be numeric values, so change them to zero
+  for i=1:numel(event)
+    if isempty(event(i).duration)
+      event(i).duration = 0;
+    end
+    if isempty(event(i).offset)
+      event(i).offset = 0;
+    end
+  end
 else
   eventtypes = {};
   eventcolors = '';
@@ -1033,10 +1042,10 @@ if isempty(cmenulab)
         ft_error('cfg.selectmode = ''markpeakevent'' and ''marktroughevent'' only supported with 1 channel in the data')
       end
       if strcmp(cfg.selectmode, 'markpeakevent')
-        [dum ind_minmax] = max(dat(begsel-begsample+1:endsel-begsample+1));
+        [dum, ind_minmax] = max(dat(begsel-begsample+1:endsel-begsample+1));
         val = 'peak';
       elseif strcmp(cfg.selectmode, 'marktroughevent')
-        [dum ind_minmax] = min(dat(begsel-begsample+1:endsel-begsample+1));
+        [dum, ind_minmax] = min(dat(begsel-begsample+1:endsel-begsample+1));
         val = 'trough';
       end
       samp_minmax = begsel + ind_minmax - 1;
@@ -1634,10 +1643,11 @@ artdat = ft_fetch_data(opt.artdata, 'begsample', begsample, 'endsample', endsamp
 artlab = opt.artdata.label;
 
 if ~isempty(opt.event) && isstruct(opt.event)
-  % select only the events in the current time window
-  event     = opt.event;
-  evtsample = [event(:).sample];
-  event     = event(evtsample>=begsample & evtsample<=endsample);
+  % select those events that overlap with the current time window
+  event    = opt.event;
+  begevent = [event(:).sample];
+  endevent = [event(:).sample] + [event(:).duration];
+  event    = event(begevent<=endsample & endevent>=begsample);
 else
   event = [];
 end
@@ -2070,7 +2080,10 @@ if strcmp(cfg.viewmode, 'component')
     chany = laychan.pos(sel2,2);
     
     if strcmp(cfg.compscale, 'global')
-      for i=1:length(chanindx) % loop through all components to get max and min
+      % compute scaling factors for all components that are plotted together
+      zmin = nan(1, length(chanindx));
+      zmax = nan(1, length(chanindx));
+      for i=1:length(chanindx)
         zmin(i) = min(opt.orgdata.topo(sel1,chanindx(i)));
         zmax(i) = max(opt.orgdata.topo(sel1,chanindx(i)));
       end
@@ -2079,12 +2092,21 @@ if strcmp(cfg.viewmode, 'component')
         zmin = min(zmin);
         zmax = max(zmax);
       elseif strcmp(cfg.zlim, 'maxabs')
-        zmax = max([abs(zmin) abs(zmax)]);
+        zmax = max(abs([zmin zmax]));
         zmin = -zmax;
+      elseif strcmp(cfg.zlim, 'zeromax')
+        zmin = 0;
+        zmax = max(zmax);
+      elseif strcmp(cfg.zlim, 'minzero')
+        zmin = min(zmin);
+        zmax = 0;
+      elseif isnumeric(cfg.zlim) && numel(cfg.zlim)==2
+        zmin = cfg.zlim(1);
+        zmax = cfg.zlim(2);
       else
-        ft_error('configuration option for component scaling could not be recognized');
+        ft_error('unsupported specification of cfg.zlim');
       end
-    end
+    end % if cfg.compscale
     
     for i=1:length(chanindx)
       % plot the topography of this component
@@ -2092,15 +2114,26 @@ if strcmp(cfg.viewmode, 'component')
       chanz = opt.orgdata.topo(sel1,chanindx(i));
       
       if strcmp(cfg.compscale, 'local')
-        % compute scaling factors here
+        % compute scaling factors for each individual component
         if strcmp(cfg.zlim, 'maxmin')
           zmin = min(chanz);
           zmax = max(chanz);
         elseif strcmp(cfg.zlim, 'maxabs')
           zmax = max(abs(chanz));
           zmin = -zmax;
+        elseif strcmp(cfg.zlim, 'zeromax')
+          zmin = 0;
+          zmax = max(chanz);
+        elseif strcmp(cfg.zlim, 'minzero')
+          zmin = min(chanz);
+          zmax = 0;
+        elseif isnumeric(cfg.zlim) && numel(cfg.zlim)==2
+          zmin = cfg.zlim(1);
+          zmax = cfg.zlim(2);
+        else
+          ft_error('unsupported specification of cfg.zlim');
         end
-      end
+      end % if cfg.compscale
       
       % scaling
       chanz = (chanz - zmin) ./  (zmax- zmin);

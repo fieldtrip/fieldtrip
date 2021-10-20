@@ -1,5 +1,10 @@
+function test_layout_egi
 
-[ftver,ftpath] = ft_version;
+% MEM 1gb
+% WALLTIME 00:10:00
+% DEPENDENCY
+
+[ftver, ftpath] = ft_version;
 dir_elec = fullfile(ftpath, 'template', 'electrode');
 dir_lay  = fullfile(ftpath, 'template', 'layout');
 
@@ -24,7 +29,7 @@ for k = 1:numel(elec)
   layout = [];
   layout.mask = tmplay1.mask;
   layout.outline = [tmplay1.outline(1) tmplay2.outline([1 3:end])];
-
+  
   cfg      = [];
   cfg.elec = elec{k};
   tmplay   = ft_prepare_layout(cfg);
@@ -47,11 +52,9 @@ for k = 1:numel(elec)
     
   end
   
-  
-  figure;ft_plot_layout(layout); title(d(k).name, 'interpreter', 'none');
+  figure
+  ft_plot_layout(layout);
+  title(d(k).name, 'interpreter', 'none');
   lay = layout;
-  %save(strrep(d(k).name,'sfp','mat'), 'lay');
+  % save(strrep(d(k).name,'sfp','mat'), 'lay');
 end
-
-
-

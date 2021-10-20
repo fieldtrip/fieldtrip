@@ -1,9 +1,9 @@
 function [c, v, n] = ft_connectivity_psi(input, varargin)
 
-% FT_CONNECTIVITY_PSI computes the phase slope index from a data-matrix
-% containing the cross-spectral density. It implements the method described
-% in: Nolte et al., Robustly estimating the flow direction of information
-% in complex physical systems. Physical Review Letters, 2008; 100; 234101.
+% FT_CONNECTIVITY_PSI computes the phase slope index from a data-matrix containing
+% the cross-spectral density. This implements the method described in Nolte et al.,
+% Robustly estimating the flow direction of information in complex physical systems.
+% Physical Review Letters, 2008; 100; 234101.
 %
 % Use as
 %   [c, v, n] = ft_connectivity_psi(input, ...)
@@ -16,25 +16,21 @@ function [c, v, n] = ft_connectivity_psi(input, varargin)
 % The first dimension should be singleton if the input already contains an
 % average.
 %
+% The output p contains the phase slope index, v is a variance estimate which only
+% can be computed if the data contains leave-one-out samples, and n is the number of
+% repetitions in the input data. If the phase slope index is positive, then the first
+% chan (1st dim) becomes more lagged (or less leading) with higher frequency,
+% indicating that it is causally driven by the second channel (2nd dim).
+%
 % Additional optional input arguments come as key-value pairs:
-%   nbin			=	scalar, half-bandwidth parameter: the number of frequency bins
-%								across which to integrate
-%   hasjack		= 0 or 1, specifying whether the repetitions represent
-%               leave-one-out samples (allowing for a variance estimate)
-%   feedback	= 'none', 'text', 'textbar' type of feedback showing progress of
-%               computation
-%   dimord		= string, specifying how the input matrix should be interpreted
-%   powindx   =
-%   normalize =
+%   'nbin'			=	scalar, half-bandwidth parameter: the number of frequency bins across which to integrate
+%   'hasjack'		= boolean, specifying whether the repetitions represent leave-one-out samples (allowing for a variance estimate)
+%   'feedback'  = 'none', 'text', 'textbar', 'dial', 'etf', 'gui' type of feedback showing progress of computation, see FT_PROGRESS
+%   'dimord'		= string, specifying how the input matrix should be interpreted
+%   'powindx'   = ?
+%   'normalize' = ?
 %
-% The output p contains the phase slope index, v is a variance estimate
-% which only can be computed if the data contains leave-one-out samples,
-% and n is the number of repetitions in the input data. If the phase slope
-% index is positive, then the first chan (1st dim) becomes more lagged (or
-% less leading) with higher frequency, indicating that it is causally
-% driven by the second channel (2nd dim)
-%
-% See also FT_CONNECTIVITYANALYSIS
+% See also CONNECTIVITY, FT_CONNECTIVITYANALYSIS
 
 % Copyright (C) 2009-2010 Donders Institute, Jan-Mathijs Schoffelen
 %
@@ -58,7 +54,7 @@ function [c, v, n] = ft_connectivity_psi(input, varargin)
 
 % FIXME: interpretation of the slope
 
-hasjack   = ft_getopt(varargin, 'hasjack', 0);
+hasjack   = ft_getopt(varargin, 'hasjack', false);
 feedback  = ft_getopt(varargin, 'feedback', 'none');
 dimord    = ft_getopt(varargin, 'dimord');
 powindx   = ft_getopt(varargin, 'powindx');
@@ -142,7 +138,7 @@ end
 
 function [y] = phaseslope(x, n, norm)
 
-m   = size(x, 1); %total number of frequency bins
+m   = size(x, 1); % total number of frequency bins
 y   = zeros(size(x));
 x(1:end-1,:,:,:,:) = conj(x(1:end-1,:,:,:,:)).*x(2:end,:,:,:,:);
 

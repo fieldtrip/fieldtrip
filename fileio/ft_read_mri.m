@@ -57,6 +57,13 @@ function [mri] = ft_read_mri(filename, varargin)
 % the coordinates of each voxel (in xgrid/ygrid/zgrid) into head
 % coordinates.
 %
+% If the input file is a 4D nifti, and you wish to load in just a subset of
+% the volumes (e.g. due to memory constraints), you should use as
+% dataformat 'nifti_spm': this supports the additional key-value pair
+%   'volumes' = vector, with indices of the to-be-read volumes, the order
+%   of the indices is ignored, and the volumes will be sorted according to
+%   the numeric indices, i.e. [1:10] yields the same as [10:-1:1]
+%
 % See also FT_DATATYPE_VOLUME, FT_WRITE_MRI, FT_READ_DATA, FT_READ_HEADER, FT_READ_EVENT
 
 % Undocumented options
@@ -168,9 +175,16 @@ switch dataformat
       fprintf('the SPM5 or newer toolbox is required to read *.nii files\n');
       ft_hastoolbox('spm12', 1);
     end
+    volumes = ft_getopt(varargin, 'volumes', []);
+    
     % use the functions from SPM
     hdr = spm_vol_nifti(filename);
-    img = double(hdr.private.dat);
+    if isempty(volumes)
+      img = double(hdr.private.dat);
+    else
+      volumes = sort(intersect(volumes, 1:size(hdr.private.dat,4)));
+      img = double(hdr.private.dat(:,:,:,volumes));
+    end
     %img = spm_read_vols(hdr);
     transform = hdr.mat;
 
@@ -402,7 +416,7 @@ switch dataformat
       transform(3,3) = dz;
     end
 
-  case {'nifti', 'freesurfer_mgz', 'freesurfer_mgh', 'nifti_fsl'}
+  case {'nifti', 'freesurfer_mgz', 'freesurfer_mgh', 'nifti_gz'}
 
     ft_hastoolbox('freesurfer', 1);
     tmp = MRIread(filename);

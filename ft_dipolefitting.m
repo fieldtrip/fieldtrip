@@ -460,7 +460,7 @@ if strcmp(cfg.gridsearch, 'yes')
       for t=1:ntime
         % find the source position with the minimum error
         [err, indx] = min(sourcemodel.error(:,t));
-        dip(t).pos = sourcemodel.pos(indx,:);                        % note that for a symmetric dipole pair this results in a vector
+        dip(t).pos = sourcemodel.pos(indx,:);                 % note that for a symmetric dipole pair this results in a vector
         dip(t).pos = reshape(dip(t).pos,3,cfg.numdipoles)';   % convert to a Nx3 array
         dip(t).mom = zeros(cfg.numdipoles*3,1);               % set the dipole moment to zero
         if cfg.numdipoles==1

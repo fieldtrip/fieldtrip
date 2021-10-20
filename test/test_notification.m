@@ -12,6 +12,24 @@ subfunction(@ft_warning)
 % ft_error cannot be tested the same way, since the error stops everything
 errortest
 
+oncetest(@ft_debug)
+oncetest(@ft_info)
+oncetest(@ft_notice)
+oncetest(@ft_warning)
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function oncetest(notice)
+
+global ft_default
+ft_default = [];
+
+for i=1:10
+  msgId = 'FieldTrip:test:test_notification:suboncetest';
+  notice('once', msgId)
+  notice(msgId, 'this should be printed only once for each notification level')
+end
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function errortest
 

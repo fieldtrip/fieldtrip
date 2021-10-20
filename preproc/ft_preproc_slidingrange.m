@@ -1,18 +1,17 @@
-function y = ft_preproc_slidingrange(dat, width, varargin)
+function y = ft_preproc_slidingrange(dat, width, normalize, varargin)
 
 % FT_PREPROC_SLIDINGRANGE computes the range of the data in a sliding time
-% window of the width specified. Width should be an odd number (since the
-% window needs to be centered on an individual sample).
+% window of the width specified.
 %
 % Use as
-%   y = ft_preproc_slidingrange(dat, width, ...)
+%   [dat] = ft_preproc_slidingrange(dat, width, normalize)
+% where
+%   dat        data matrix (Nchans x Ntime)
+%   width      width of the smoothing kernel, this should be an odd number since the window needs to be centered on an individual sample
+%   normalize  boolean, whether to normalize the range of the data with the square root of the window size (default = false)
 %
-% Optional key-value pair arguments are:
-%   'normalize', whether to normalize the range of the data with the square
-%                root of the window size
-%
-% If the data contains NaNs, these are ignored for the computation, but
-% retained in the output.
+% If the data contains NaNs, these are ignored for the computation, but retained in
+% the output.
 %
 % See also PREPROC
 
@@ -36,7 +35,15 @@ function y = ft_preproc_slidingrange(dat, width, varargin)
 %
 % $Id$
 
-normalize = ft_getopt(varargin, 'normalize', false);
+if nargin>3
+  % for backward compatibility, this function was first implemented as ft_preproc_slidingrange(dat, width, ...)
+  % with 'normalize' as an optional key-value pair, but all other PREPROC functions take fixed input arguments
+  normalize = varargin{1};
+end
+
+if nargin<3 || isempty(normalize)
+  normalize = false;
+end
 
 % preprocessing fails on channels that contain NaN
 if any(isnan(dat(:)))

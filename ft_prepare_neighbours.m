@@ -157,7 +157,7 @@ if strcmp(cfg.method, 'distance') || strcmp(cfg.method, 'triangulation')
   
   if hasdata
     % remove channels that are not in data
-    [~, sensidx] = match_str(data.label, label);
+    [dum, sensidx] = match_str(data.label, label);
     chanpos = chanpos(sensidx, :);
     label   = label(sensidx);
   end

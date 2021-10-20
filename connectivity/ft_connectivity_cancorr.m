@@ -1,21 +1,31 @@
-function [px, py, wx, wy, powx, powy] = ft_connectivity_cancorr(C, x, y, varargin)
+function [R] = ft_connectivity_cancorr(input, varargin)
 
-% FT_CONNECTIVITY_CANCORR computes the canonical correlation or coherence between
-% multiple variables. Canonical correlation analysis (CCA) is a way of measuring the
-% linear relationship between two multidimensional variables. It finds two bases, one
-% for each variable, that are optimal with respect to correlations and, at the same
-% time, it finds the corresponding correlations.
+% FT_CONNECTIVITY_CANCORR computes the canonical correlation or canonical coherence
+% between multiple variables. Canonical correlation analysis (CCA) is a way of
+% measuring the linear relationship between two multidimensional variables. It finds
+% two bases, one for each variable, that are optimal with respect to correlations
+% and, at the same time, it finds the corresponding correlations.
 %
 % Use as
-%   [px, py, wx, wy] = ft_connectivity_cancorr(C, x, y, ...)
-% 
-% The input data C represents the Nchan*Nchan covariance or cross-spectral density
-% matrix, and x and y specify the indices to the cross-spectral density making up the
-% dependent and independent variable
+%   [R] = ft_connectivity_cancorr(input, ...)
 %
-% See also FT_CONNECTIVITYANALYSIS
+% The input data should be a covariance or cross-spectral density array organized as
+%   Channel x Channel
+% or
+%   Channel x Channel (x Frequency)
+%
+% The output R represents the max(indices)*max(indices) canonical correlation matrix
+% or canonical coherence matrix.
+%
+% Additional optional input arguments come as key-value pairs:
+%   'indices'  = 1xNchan vector with indices of the groups to which the channels belong,
+%                e.g. [1 1 2 2] for a 2-by-2 connectivity between 2 planar MEG channels
+%   'realflag' = boolean flag whether to use the real-valued part only for the determination
+%                of the rotation (default = false)
+%
+% See also CONNECTIVITY, FT_CONNECTIVITYANALYSIS
 
-% Copyright (C) 2005-2018, Robert Oostenveld
+% Copyright (C) 2021 Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -35,86 +45,28 @@ function [px, py, wx, wy, powx, powy] = ft_connectivity_cancorr(C, x, y, varargi
 %
 % $Id$
 
-powflag  = ft_getopt(varargin, 'powflag', 0);
-realflag = ft_getopt(varargin, 'realflag', 0);
-trunc    = ft_getopt(varargin, 'powflag', 0);
+indices  = ft_getopt(varargin, 'indices');
+realflag = ft_getopt(varargin, 'realflag', false);
 
-ind = find(sum(isfinite(C))>0);
-
-xorig = x;
-yorig = y;
-x     = intersect(ind, x);
-y     = intersect(ind, y);
-
-% use the approach as specified by Borga et al 1992: a unified approach to PCA, PLS, MLR and CCA
-% that is: solve the generalized eigenvalue problem eig(inv(B)*A) with A = [O Cxy; Cyx O], and B = [Cxx O; O Cyy];
-indx    = zeros(length(ind), 1);
-indy    = zeros(length(ind), 1);
-indx(1:length(x))     = 1;
-indy(length(x)+1:end) = 1;
-
-Aorig  = [indx*indy' + indy*indx'].*C([x y],[x y]);
-Borig  = [indx*indx' + indy*indy'].*C([x y],[x y]);
-
-if realflag
-  A = real(Aorig);
-  B = real(Borig);
-else
-  A = Aorig;
-  B = Borig;
-end
-% if A and B are rank deficient this could lead to non-finite eigenvalues
-% [w, p]     = eig(A,B);
-[ua, sa, va] = svds(C(x,x), rank(C(x,x)));
-[ub, sb, vb] = svds(C(y,y), rank(C(y,y)));
-U            = [ua' zeros(size(ua,2),size(ub,1)); zeros(size(ub,2),size(ua,1)) ub'];
-[w, p]       = eig(U*A*U', U*B*U');
-
-[srt, ind] = sort(diag(abs(p)), 'descend');
-w          = w(:, ind);
-p          = p(ind, ind);
-
-% eigenvalues come in pairs, with 180-degree ambiguity
-nump = ceil(size(p,1)/2);
-% wx   = zeros(length(xorig)); wx(find(ismember(xorig,x)), 1:nump) = w(1:length(x),     1:2:end);
-% wy   = zeros(length(yorig)); wy(find(ismember(yorig,y)), 1:nump) = w(length(x)+1:end, 1:2:end);
-wx = zeros(length(xorig));
-wy = zeros(length(yorig));
-px   = abs(p(1:2:end, 1:2:end));
-py   = abs(p(1:2:end, 1:2:end));
-
-if powflag
-  powx = wx'*B(x,x)*wx;
-  powy = wy'*B(y,y)*wy;
+if isempty(indices) && isequal(size(input(:,:,1)), [2 2])
+  % simply assume two channels
+  indices = [1 1 2 2];
 end
 
-if false
-  Cxx = C(x,x);
-  Cyy = C(y,y);
-  Cxy = C(x,y);
-  Cyx = C(y,x);
-  
-  [wx, px] = eig(inv(Cxx)*Cxy*inv(Cyy)*Cyx);
-  [wy, py] = eig(inv(Cyy)*Cyx*inv(Cxx)*Cxy);
-  
-  [srtx,indx] = sort(diag(px), 'descend');
-  [srty,indy] = sort(diag(py), 'descend');
-  
-  px = px(indx,indx);
-  wx = wx(:,   indx);
-  py = py(indy,indy);
-  wy = wy(:,   indy);
-  
-  if powflag
-    powx = wx'*Cxx*wx;
-    powy = wy'*Cyy*wy;
+sizein  = size(input);
+sizeout = [sizein 1];
+sizeout(1:2) = max(indices);
+
+R = zeros(sizeout);
+for kk = 1:sizeout(3)
+  for k = 1:sizeout(1)
+    for m = 1:sizeout(1)
+      indx1 = find(indices==k);
+      indx2 = find(indices==m);
+      
+      [E, D] = multivariate_decomp(input([indx1 indx2], [indx1 indx2], kk), 1:numel(indx1), numel(indx1)+(1:numel(indx2)), 'cca', realflag);
+      
+      R(k, m, kk) = D(1);
+    end
   end
-end
-
-if trunc>0 && trunc<1
-  px = px.*double(px>trunc);
-  py = py.*double(py>trunc);
-elseif trunc>=1
-  px(trunc+1:end,trunc+1:end) = 0;
-  py(trunc+1:end,trunc+1:end) = 0;
 end

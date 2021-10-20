@@ -1,9 +1,16 @@
-function [DM, xd] = ft_preproc_online_downsample_apply(DM, x)
+function [state, y] = ft_preproc_online_downsample_apply(state, x)
 
-% function [DM, xd] = ft_preproc_online_downsample_apply(DM, x)
+% FT_PREPROC_ONLINE_DOWNSAMPLE_APPLY passes a signal through the online downsampler
+% and returns the downsampler state and the downsampled signal. The state keeps track
+% of the number of samples to be skipped in the next call.
 %
-% Passes signal x (channels times samples) through the downsampler.
-% Returns updated downsample model (numSkip!) and downsampled signal.
+% Use as
+%    [state, dat] = ft_preproc_online_downsample_apply(state, x)
+% where
+%   dat   = Nchan x Ntime
+%   state = downsampler state, see FT_PREPROC_ONLINE_DOWNSAMPLE_INIT
+%
+% See also PREPROC
 
 % Copyright (C) 2010, Stefan Klanke
 %
@@ -25,16 +32,15 @@ function [DM, xd] = ft_preproc_online_downsample_apply(DM, x)
 %
 % $Id$
 
-[dimX, numX] = size(x);
+N = size(x,2);
 
-N  = size(x,2);
-% to get number K of sample we can write out, subtract the skipped samples, 
-% and then add maximum possible number of skip samples for next time (=DM.factor-1)
-K  = floor((N - DM.numSkip + DM.factor-1)/DM.factor);
-		
-startIdx = 1+DM.numSkip;
-endIdx   = 1+DM.numSkip + (K-1)*DM.factor;
+% to get number K of sample we can write out, subtract the skipped samples,
+% and then add maximum possible number of skip samples for next time (=state.factor-1)
+K  = floor((N - state.numSkip + state.factor-1)/state.factor);
 
-xd = x(:,startIdx:DM.factor:endIdx);
-DM.numSkip = DM.factor-1-(N-endIdx); % for next time
-	
+startIdx = 1+state.numSkip;
+endIdx   = 1+state.numSkip + (K-1)*state.factor;
+
+y = x(:,startIdx:state.factor:endIdx);
+state.numSkip = state.factor-1-(N-endIdx); % for next time
+

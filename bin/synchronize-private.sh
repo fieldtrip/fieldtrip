@@ -2036,6 +2036,14 @@ ARRAY+=(src/mtimes3x3.mexw64)
 sync ${ARRAY[*]}
 
 ################################################################################
+# multivariate_decomp.m
+
+ARRAY=()
+ARRAY+=(connectivity/private/multivariate_decomp.m)
+ARRAY+=(private/multivariate_decomp.m)
+sync ${ARRAY[*]}
+
+################################################################################
 # mxDeserialize.m
 
 ARRAY=()

@@ -1,6 +1,6 @@
 function test_pull1688
 
-% WALLTIME 00:01:00
+% WALLTIME 00:10:00
 % MEM 1gb
 % DEPENDENCY xdf2fieldtrip fileio/private/sccn_xdf
 

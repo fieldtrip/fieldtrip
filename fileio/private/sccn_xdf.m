@@ -80,7 +80,7 @@ for i=1:numel(streams)
     srate(i) = streams{i}.info.effective_srate;
   end
 end
-[~, indx] = max(srate);
+[dum, indx] = max(srate);
 
 % only keep the stream with the maximum sampling rate
 % this is probably the EEG stream

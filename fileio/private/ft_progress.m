@@ -7,11 +7,11 @@ function ft_progress(varargin)
 %
 % Prior to the for-loop, you should call either
 %   ft_progress('init', 'none',    'Please wait...')
-%   ft_progress('init', 'gui',     'Please wait...')
-%   ft_progress('init', 'etf',     'Please wait...')      % estimated time to finish
-%   ft_progress('init', 'dial',    'Please wait...')      % rotating dial
-%   ft_progress('init', 'textbar', 'Please wait...')      % ascii progress bar
 %   ft_progress('init', 'text',    'Please wait...')
+%   ft_progress('init', 'textbar', 'Please wait...')      % ascii progress bar
+%   ft_progress('init', 'dial',    'Please wait...')      % rotating dial
+%   ft_progress('init', 'etf',     'Please wait...')      % estimated time to finish
+%   ft_progress('init', 'gui',     'Please wait...')
 %
 % In each iteration of the for-loop, you should call either
 %   ft_progress(x)                                       % only show percentage
@@ -68,15 +68,6 @@ persistent lastArgin % the last varargin, this is used when ft_progress('close')
 % to the restriction in the number of updates to once
 % every 100ms)
 persistent closing
-
-try
-  % do not show the progress feedback after "ft_info off"
-  show = ft_info;
-  show = show(strcmp({show.identifier}, 'all')).state;
-  if ~istrue(show)
-    return
-  end
-end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if nargin>1 && ischar(varargin{1}) && strcmp(varargin{1}, 'init')

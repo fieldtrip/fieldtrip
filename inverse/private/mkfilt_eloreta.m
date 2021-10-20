@@ -1,4 +1,4 @@
-function [A,Wout]=mkfilt_eloreta(L,regu,W);
+function [A,Wout]=mkfilt_eloreta(L,regu,W)
 % makes spatial filter according to eLoreta 
 % usage  A=mkfilt_eloreta(L); or  A=mkfilt_eloreta(L,regu);
 %
@@ -21,9 +21,9 @@ function [A,Wout]=mkfilt_eloreta(L,regu,W);
 
 if nargin<2;regu=.05;end
 
-[nchan ng ndum]=size(L);
+[nchan, ng, ndum]=size(L);
 LL=zeros(nchan,ndum,ng);
-for i=1:ndum;
+for i=1:ndum
     LL(:,i,:)=L(:,:,i);
 end
 LL=reshape(LL,nchan,ndum*ng);
@@ -37,13 +37,13 @@ Winv=zeros(ndum,ndum,ng);
 winvkt=zeros(ng*ndum,nchan);
 kont=0;
 kk=0;
-while kont==0;
+while kont==0
     kk=kk+1;
-    for i=1:ng;
+    for i=1:ng
         Winv(:,:,i)=(inv(W(:,:,i)+trace(W(:,:,i))/(ndum*10^6)));
         %if i==ng;disp(W(:,:,i));end
     end
-    for i=1:ng;
+    for i=1:ng
         %winvkt(i,:,:)=Winv(:,:,i)*(squeeze(LL(:,:,i)))';
         %winvkt(i,:,:)=(squeeze(LL(:,:,i)))';
         winvkt(ndum*(i-1)+1:ndum*i,:)=Winv(:,:,i)*LL(:,ndum*(i-1)+1:ndum*i)';
@@ -57,7 +57,7 @@ while kont==0;
         [ux,sx,vx]=svd(kwinvkt);
         %disp(sx(1,1)/alpha)
         Wold=W;
-        for i=1:ng;
+        for i=1:ng
         Lloc=squeeze(L(:,i,:));
         % Wold=W;
         Mb=Lloc'*M*Lloc;
@@ -66,7 +66,7 @@ while kont==0;
         end
     reldef=(norm(reshape(W,[],1)-reshape(Wold,[],1))/norm(reshape(Wold,[],1)));
     disp(reldef)
-    if kk>20 || reldef< .000001 ; kont=1;end;
+    if kk>20 || reldef< .000001 ; kont=1;end
 end
 %disp(kk)
 
@@ -74,7 +74,7 @@ ktm=LL'*M;
 %ktm=reshape(ktm,ng,ndum,nchan);
  A=zeros(nchan,ng,ndum);
 
- for i=1:ng;
+ for i=1:ng
      A(:,i,:)=(Winv(:,:,i)*ktm(ndum*(i-1)+1:ndum*i,:))';
  end
  Wout=W;

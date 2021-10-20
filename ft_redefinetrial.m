@@ -197,6 +197,7 @@ elseif ~isempty(cfg.offset)
   % shift the time axis from each trial
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   offset = cfg.offset(:);
+  offset = round(offset); % this is in samples and hence it must be expressed as integers
   if length(cfg.offset)==1
     offset = repmat(offset, Ntrial, 1);
   end

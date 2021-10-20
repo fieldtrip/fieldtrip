@@ -252,7 +252,7 @@ while ~all(submitted) || ~all(collected)
     % submit the job for execution
     ws = warning('off', 'FieldTrip:peer:noSlaveAvailable');
     % peerfeval will give a warning if the submission timed out
-    [curjobid curputtime] = peerfeval(fname, argin{:}, 'timeout', 5, 'memreq', memreq, 'timreq', timreq, 'diary', diary, 'nargout', numargout);
+    [curjobid, curputtime] = peerfeval(fname, argin{:}, 'timeout', 5, 'memreq', memreq, 'timreq', timreq, 'diary', diary, 'nargout', numargout);
     warning(ws);
 
     if ~isempty(curjobid)

@@ -1,8 +1,8 @@
 function [dataout] = ft_eventtiminganalysis(cfg, data)
 
-% FT_EVENTTIMINGANALYSIS computes a model of single trial event-
-% related activity, by estimating per trial the latency (and
-% amplitude) of event-related signal components.
+% FT_EVENTTIMINGANALYSIS computes a model of single trial event- related activity, 
+% by estimating per trial the latency (and amplitude) of event-related signal
+% components.
 %
 % Use as
 %   [dataout] = ft_eventtiminganalysis(cfg, data)
@@ -273,21 +273,21 @@ switch cfg.method
     ft_hastoolbox('cellfunction',  1);
     
     if ~isfield(cfg, 'gbve'), cfg.gbve = []; end
-    cfg.gbve.NORMALIZE_DATA    = ft_getopt(cfg.gbve, 'NORMALIZE_DATA',     true);
-    cfg.gbve.CENTER_DATA       = ft_getopt(cfg.gbve, 'CENTER_DATA',        false);
-    cfg.gbve.USE_ADAPTIVE_SIGMA= ft_getopt(cfg.gbve, 'USE_ADAPTIVE_SIGMA', false);
-    cfg.gbve.sigma             = ft_getopt(cfg.gbve, 'sigma',    0.01:0.01:0.2);
-    cfg.gbve.distance          = ft_getopt(cfg.gbve, 'distance', 'corr2');
-    cfg.gbve.alpha             = ft_getopt(cfg.gbve, 'alpha',    [0 0.001 0.01 0.1]);
-    cfg.gbve.exponent          = ft_getopt(cfg.gbve, 'exponent', 1);
-    cfg.gbve.use_maximum       = ft_getopt(cfg.gbve, 'use_maximum', 1); % consider the positive going peak
-    cfg.gbve.show_pca          = ft_getopt(cfg.gbve, 'show_pca',          false);
-    cfg.gbve.show_trial_number = ft_getopt(cfg.gbve, 'show_trial_number', false);
-    cfg.gbve.verbose           = ft_getopt(cfg.gbve, 'verbose',           true);
-    cfg.gbve.disp_log          = ft_getopt(cfg.gbve, 'disp_log',          false);
-    cfg.gbve.latency           = ft_getopt(cfg.gbve, 'latency',  [-inf inf]);
-    cfg.gbve.xwin              = ft_getopt(cfg.gbve, 'xwin',     1); % default is a bit of smoothing
-    cfg.gbve.nfold             = ft_getopt(cfg.gbve, 'nfold',    5);
+    cfg.gbve.NORMALIZE_DATA     = ft_getopt(cfg.gbve, 'NORMALIZE_DATA',     true);
+    cfg.gbve.CENTER_DATA        = ft_getopt(cfg.gbve, 'CENTER_DATA',        false);
+    cfg.gbve.USE_ADAPTIVE_SIGMA = ft_getopt(cfg.gbve, 'USE_ADAPTIVE_SIGMA', false);
+    cfg.gbve.sigma              = ft_getopt(cfg.gbve, 'sigma',              0.01:0.01:0.2);
+    cfg.gbve.distance           = ft_getopt(cfg.gbve, 'distance',           'corr2');
+    cfg.gbve.alpha              = ft_getopt(cfg.gbve, 'alpha',              [0 0.001 0.01 0.1]);
+    cfg.gbve.exponent           = ft_getopt(cfg.gbve, 'exponent',           1);
+    cfg.gbve.use_maximum        = ft_getopt(cfg.gbve, 'use_maximum',        1); % consider the positive going peak
+    cfg.gbve.show_pca           = ft_getopt(cfg.gbve, 'show_pca',           false);
+    cfg.gbve.show_trial_number  = ft_getopt(cfg.gbve, 'show_trial_number',  false);
+    cfg.gbve.verbose            = ft_getopt(cfg.gbve, 'verbose',            true);
+    cfg.gbve.disp_log           = ft_getopt(cfg.gbve, 'disp_log',           false);
+    cfg.gbve.latency            = ft_getopt(cfg.gbve, 'latency',            [-inf inf]);
+    cfg.gbve.xwin               = ft_getopt(cfg.gbve, 'xwin',               1); % default is a bit of smoothing
+    cfg.gbve.nfold              = ft_getopt(cfg.gbve, 'nfold',              5);
     
     nchan = numel(data.label);
     ntrl  = numel(data.trial);
@@ -333,7 +333,7 @@ switch cfg.method
             
             data_reordered = data_k(order,:);
             lags           = lags + tmin;
-            [data_aligned, ~] = perform_realign(data_reordered, data.time{1}, lags);
+            [data_aligned, dum] = perform_realign(data_reordered, data.time{1}, lags);
             data_aligned(~isfinite(data_aligned)) = nan;
             ep_evoked = nanmean(data_aligned);
             ep_evoked = ep_evoked ./ norm(ep_evoked);
@@ -360,9 +360,9 @@ switch cfg.method
       end
       
       if options.use_maximum
-        [order,lags] = extractlag( points, options );
+        [order, lags] = extractlag( points, options );
       else
-        [order,lags] = extractlag( -points, options );
+        [order, lags] = extractlag( -points, options );
       end
       disp(['---------- Using alpha = ',num2str(options.alpha)]);
       data_reordered = chandat(order,:);
@@ -370,7 +370,7 @@ switch cfg.method
       [data_aligned] = perform_realign(data_reordered, data.time{1}, lags );
       data_aligned(~isfinite(data_aligned)) = nan;
       
-      [~,order_inv] = sort(order);
+      [dum, order_inv] = sort(order);
       lags_no_order = lags(order_inv);
       data_aligned  = data_aligned(order_inv,:);
       
