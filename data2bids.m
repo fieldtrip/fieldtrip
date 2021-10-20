@@ -547,16 +547,12 @@ cfg.eyetracker.SamplingFrequency          = ft_getopt(cfg.eyetracker, 'SamplingF
 
 %% motion is not part of the official BIDS specification
 % this follows extension proposal 029 (https://bids.neuroimaging.io/bep029)
-cfg.motion.DeviceSerialNumber             = ft_getopt(cfg.motion, 'DeviceSerialNumber'      );
 cfg.motion.EpochLength                    = ft_getopt(cfg.motion, 'EpochLength'             );
-cfg.motion.Manufacturer                   = ft_getopt(cfg.motion, 'Manufacturer'            );
-cfg.motion.ManufacturersModelName         = ft_getopt(cfg.motion, 'ManufacturersModelName'  );
 cfg.motion.MotionChannelCount             = ft_getopt(cfg.motion, 'MotionChannelCount'      );
-cfg.motion.RecordingDuration              = ft_getopt(cfg.motion, 'RecordingDuration'       );
 cfg.motion.RecordingType                  = ft_getopt(cfg.motion, 'RecordingType'           );
-cfg.motion.SoftwareVersions               = ft_getopt(cfg.motion, 'SoftwareVersions'        );
-cfg.motion.SpaceGeometry                  = ft_getopt(cfg.motion, 'SpaceGeometry'           );
 cfg.motion.SubjectArtefactDescription     = ft_getopt(cfg.motion, 'SubjectArtefactDescription'  );
+cfg.motion.TrackingSystems                = ft_getopt(cfg.motion, 'TrackingSystems'  );
+cfg.motion.TrackingSystemCount            = ft_getopt(cfg.motion, 'TrackingSystemCount'  );
 %% information for the coordsystem.json file for MEG, EEG, iEEG, and motion
 cfg.coordsystem.MEGCoordinateSystem                             = ft_getopt(cfg.coordsystem, 'MEGCoordinateSystem'                            ); % REQUIRED. Defines the coordinate system for the MEG sensors. See Appendix VIII: preferred names of Coordinate systems. If "Other", provide definition of the coordinate system in [MEGCoordinateSystemDescription].
 cfg.coordsystem.MEGCoordinateUnits                              = ft_getopt(cfg.coordsystem, 'MEGCoordinateUnits'                             ); % REQUIRED. Units of the coordinates of MEGCoordinateSystem. MUST be ???m???, ???cm???, or ???mm???.
@@ -1342,12 +1338,20 @@ end
 
 %% need_motion_json
 if need_motion_json
-
-  motion_json.MotionChannelCount                                            = hdr.nChans;
-
-  motion_json.TrackingSystems.(cfg.tracksys).TrackedPointsCount             = ft_getopt(cfg.motion.TrackingSystems.(cfg.tracksys), 'TrackedPointsCount');
-  motion_json.TrackingSystems.(cfg.tracksys).StartTime                      = ft_getopt(cfg.motion, 'start_time');
+  
+  % tracking system description 
+  tracksysInd = find(strcmp(cfg.channels.tracking_system, cfg.tracksys)); 
+  
+  motion_json.TrackingSystems.(cfg.tracksys).DeviceSerialNumber             = ft_getopt(cfg.motion.TrackingSystems.(cfg.tracksys), 'DeviceSerialNumber');
+  motion_json.TrackingSystems.(cfg.tracksys).SoftwareVersions               = ft_getopt(cfg.motion.TrackingSystems.(cfg.tracksys), 'SoftwareVersions');
+  motion_json.TrackingSystems.(cfg.tracksys).ExternalSoftwareVersions       = ft_getopt(cfg.motion.TrackingSystems.(cfg.tracksys), 'ExternalSoftwareVersions');
+  motion_json.TrackingSystems.(cfg.tracksys).Manufacturer                   = ft_getopt(cfg.motion.TrackingSystems.(cfg.tracksys), 'Manufacturer');
+  motion_json.TrackingSystems.(cfg.tracksys).ManufacturersModelName         = ft_getopt(cfg.motion.TrackingSystems.(cfg.tracksys), 'ManufacturersModelName');
+  motion_json.TrackingSystems.(cfg.tracksys).SamplingFrequencyNominal       = ft_getopt(cfg.motion.TrackingSystems.(cfg.tracksys), 'SamplingFrequencyNominal');
+  motion_json.TrackingSystems.(cfg.tracksys).SamplingFrequencyEffective     = hdr.Fs; 
+  motion_json.TrackingSystems.(cfg.tracksys).StartTime                      = ft_getopt(cfg.motion.TrackingSystems.(cfg.tracksys), 'StartTime');
   motion_json.TrackingSystems.(cfg.tracksys).RecordingDuration              = (hdr.nSamples*hdr.nTrials)/hdr.Fs;
+  motion_json.TrackingSystems.(cfg.tracksys).TrackedPointsCount             = numel(unique(cfg.channels.tracked_point(tracksysInd)));
   motion_json.TrackingSystems.(cfg.tracksys).POSChannelCount                = sum(strcmpi(hdr.chantype, 'POS'));  
   motion_json.TrackingSystems.(cfg.tracksys).ORNTChannelCount               = sum(strcmpi(hdr.chantype, 'ORNT'));
   motion_json.TrackingSystems.(cfg.tracksys).VELChannelCount                = sum(strcmpi(hdr.chantype, 'VEL')); 
@@ -1355,14 +1359,14 @@ if need_motion_json
   motion_json.TrackingSystems.(cfg.tracksys).ACCChannelCount                = sum(strcmpi(hdr.chantype, 'ACC'));  
   motion_json.TrackingSystems.(cfg.tracksys).ANGACCChannelCount             = sum(strcmpi(hdr.chantype, 'ANGACC'));
   motion_json.TrackingSystems.(cfg.tracksys).MAGNChannelCount               = sum(strcmpi(hdr.chantype, 'MAGN'));  
-  motion_json.TrackingSystems.(cfg.tracksys).JNTANGChannelCount             = sum(strcmpi(hdr.chantype, 'JNTAN'));
+  motion_json.TrackingSystems.(cfg.tracksys).JNTANGChannelCount             = sum(strcmpi(hdr.chantype, 'JNTANG'));
   
   % merge the information specified by the user with that from the data
   % in case fields appear in both, the first input overrules the second
   motion_json = mergeconfig(motion_settings,  motion_json, false);
   motion_json = mergeconfig(generic_settings, motion_json, false);
   
-end
+end % if need_motion_json 
 
 %% need_channels_tsv
 if need_channels_tsv
@@ -1537,7 +1541,7 @@ if need_scans_json
   % merge the information specified by the user with that from the data
   % in case fields appear in both, the first input overrules the second
   scans_json = mergeconfig(scans_settings, scans_json, false); 
-end 
+end % if need_scans_json
 
 
 %% need_events_tsv
