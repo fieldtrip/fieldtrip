@@ -1344,12 +1344,10 @@ end
 if need_motion_json
 
   motion_json.MotionChannelCount                                            = hdr.nChans;
-  motion_json.RecordingDuration                                             = (hdr.nSamples*hdr.nTrials)/hdr.Fs;
-  motion_json.TrackedPointsCountTotal                                       = numel(unique(cfg.channels.tracked_point));
 
   motion_json.TrackingSystems.(cfg.tracksys).TrackedPointsCount             = ft_getopt(cfg.motion.TrackingSystems.(cfg.tracksys), 'TrackedPointsCount');
   motion_json.TrackingSystems.(cfg.tracksys).StartTime                      = ft_getopt(cfg.motion, 'start_time');
-  
+  motion_json.TrackingSystems.(cfg.tracksys).RecordingDuration              = (hdr.nSamples*hdr.nTrials)/hdr.Fs;
   motion_json.TrackingSystems.(cfg.tracksys).POSChannelCount                = sum(strcmpi(hdr.chantype, 'POS'));  
   motion_json.TrackingSystems.(cfg.tracksys).ORNTChannelCount               = sum(strcmpi(hdr.chantype, 'ORNT'));
   motion_json.TrackingSystems.(cfg.tracksys).VELChannelCount                = sum(strcmpi(hdr.chantype, 'VEL')); 
@@ -1539,7 +1537,7 @@ if need_scans_json
   % merge the information specified by the user with that from the data
   % in case fields appear in both, the first input overrules the second
   scans_json = mergeconfig(scans_settings, scans_json, false); 
-end % if need_scans_json
+end 
 
 
 %% need_events_tsv
