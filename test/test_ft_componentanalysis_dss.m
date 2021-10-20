@@ -1,7 +1,7 @@
 function test_ft_componentanalysis_dss(datadir)
 
 % WALLTIME 00:20:00
-% MEM 8gb
+% MEM 12gb
 % DEPENDENCY ft_componentanalysis ft_artifact_zvalue denoise_avg2
 
 if nargin==0
