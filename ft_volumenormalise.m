@@ -1,4 +1,4 @@
-function [normalised] = ft_volumenormalise(cfg, mri)
+function [normalised] = ft_volumenormalise2(cfg, mri)
 
 % FT_VOLUMENORMALISE normalises anatomical and functional volume data
 % to a template anatomical MRI.
@@ -19,7 +19,7 @@ function [normalised] = ft_volumenormalise(cfg, mri)
 %                          template MRI specified in cfg.template.
 %   cfg.opts             = structure with normalisation options, see SPM documentation for details
 %   cfg.template         = string, filename of the template anatomical MRI (default = 'T1.mnc'
-%                          for SPM2 or 'T1.nii' for SPM8 and SPM12).
+%                          for spm2 or 'T1.nii' for spm8 and for spm12).
 %   cfg.templatecoordsys = the coordinate system of the template when using a template other
 %                          than the default
 %   cfg.tpm              = string, file name of the SPM tissue probablility map to use in
@@ -119,6 +119,7 @@ cfg.keepintermediate = ft_getopt(cfg, 'keepintermediate', 'no');
 cfg.nonlinear        = ft_getopt(cfg, 'nonlinear',        'yes');
 cfg.smooth           = ft_getopt(cfg, 'smooth',           'no');
 cfg.templatecoordsys = ft_getopt(cfg, 'templatecoordsys', 'spm'); % assume is that the template comes from SPM
+cfg.templatemask     = ft_getopt(cfg, 'templatemask',     []);
 
 % ensure that the requested method works with the specified SPM version
 if ~strcmp(cfg.spmversion, 'spm12') && (strcmp(cfg.spmmethod, 'new') || strcmp(cfg.spmmethod, 'mars'))
@@ -148,6 +149,13 @@ end
 template_ftype = ft_filetype(cfg.template);
 if ~any(strcmp(template_ftype, {'analyze_hdr', 'analyze_img', 'minc', 'nifti'}))
   ft_error('the template anatomy should be stored in an SPM-compatible file');
+end
+
+if ~isempty(cfg.templatemask)
+    templatemsk_ftype = ft_filetype(cfg.templatemask);
+    if ~any(strcmp(templatemsk_ftype, {'analyze_hdr', 'analyze_img', 'minc', 'nifti'}))
+      ft_error('the template mask should be stored in an SPM-compatible file');
+    end
 end
 
 if strcmp(cfg.keepinside, 'yes')
@@ -181,20 +189,13 @@ end
 
 % Ensure that the input MRI has interpretable units and that it is expressed in a
 % coordinate system which is in approximate agreement with the template.
+ft_notice('Doing initial alignment...')
 mri  = ft_convert_units(mri, 'mm'); % this assumes that the template is expressed in mm
+orig = mri.transform;
+mri  = ft_convert_coordsys(mri, cfg.templatecoordsys, 2, cfg.template);
 
-if ~isfield(cfg, 'initial')
-  ft_notice('Doing initial alignment...')
-  orig = mri.transform;
-  mri  = ft_convert_coordsys(mri, cfg.templatecoordsys, 2, cfg.template);
-  % keep track of the initial rigid body transformation that does the approximate co-registration
-  initial = mri.transform / orig;
-else
-  ft_notice('Skipping the initial alignment, using the alignment specified in the configuration');
-  initial = cfg.initial;
-  % apply the initial rigid body transformation to the input data
-  mri.transform = initial * mri.transform; 
-end
+% keep track of an initial transformation matrix that does the approximate co-registration
+initial = mri.transform / orig;
 
 % use NIFTI whenever possible
 if strcmpi(cfg.spmversion, 'spm2')
@@ -234,6 +235,20 @@ switch template_ftype
     ft_error('Unknown template');
 end
 
+% read the template mask anatomical volume
+if ~isempty(cfg.templatemask)
+    switch templatemsk_ftype
+      case 'minc'
+        VWG = spm_vol_minc(cfg.templatemask);
+      case {'analyze_img', 'analyze_hdr', 'nifti'}
+        VWG = spm_vol(cfg.templatemask);
+      otherwise
+    ft_error('Unknown templatemask');
+    end
+else
+    VWG = [];
+end
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % compute the normalisation parameters, if needed
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -244,13 +259,13 @@ if ~isfield(cfg, 'spmparams')
   if strcmp(cfg.spmmethod, 'old') && strcmp(cfg.nonlinear, 'yes')
     ft_info('Warping the individual anatomy to the template anatomy, using non-linear transformations');
     % compute the parameters by warping the individual anatomy
-    params = spm_normalise(VG, VF(1));
+    params    = spm_normalise(VG, VF(1), [], VWG);    
     
   elseif strcmp(cfg.spmmethod, 'old') && strcmp(cfg.nonlinear, 'no')
     ft_info('Warping the individual anatomy to the template anatomy, using only linear transformations');
     % compute the parameters by warping the individual anatomy
     cfg.opts.nits = ft_getopt(cfg.opts, 'nits', 0); % put number of non-linear iterations to zero
-    params = spm_normalise(VG, VF(1), [], [], [], cfg.opts);
+    params    = spm_normalise(VG, VF(1), [], VWG, [], cfg.opts);
     
   elseif strcmp(cfg.spmmethod, 'new') || strcmp(cfg.spmmethod, 'mars')
     ft_info('Warping the individual anatomy to the template anatomy, using the %s-style segmentation', cfg.spmmethod);
@@ -259,6 +274,8 @@ if ~isfield(cfg, 'spmparams')
       spmpath = spm('dir');
       cfg.tpm = fullfile(spmpath, 'tpm', 'TPM.nii');
       ft_notice('Using default SPM tissue probability maps ''%s''', cfg.tpm);
+    else
+      ft_notice('Using user specified tissue probability maps ''%s''', cfg.tpm);        
     end
     
     % create the structure that is required for spm_preproc8
@@ -272,8 +289,14 @@ if ~isfield(cfg, 'spmparams')
     opts.samp     = ft_getopt(opts, 'samp',     3);
     opts.fwhm     = ft_getopt(opts, 'fwhm',     1);
     
-    Affine = spm_maff8(opts.image(1),3,32,opts.tpm,eye(4),'mni');
-    Affine = spm_maff8(opts.image(1),3, 1,opts.tpm,Affine,'mni');
+    if strcmp(cfg.templatecoordsys, 'mni')
+        regtyp = 'mni';
+    else
+        regtyp = 'subj';
+    end
+    
+    Affine = spm_maff8(opts.image(1), 3, 32, opts.tpm, eye(4), regtyp);
+    Affine = spm_maff8(opts.image(1), 3, 1, opts.tpm, Affine, regtyp);
     opts.Affine = Affine;
     
     % run the segmentation
@@ -351,6 +374,9 @@ for k=1:length(Vout)
   normalised = setsubfield(normalised, cfg.parameter{k}, spm_read_vols(Vout(k)));
 end
 
+% determine the affine coordinate transformation from individual head coordinates to template coordinates
+final = VG.mat * inv(params.Affine) * inv(VF(1).mat) * initial;
+
 normalised.transform = Vout(1).mat;
 normalised.dim       = size(normalised.anatomy);
 normalised.params    = params;  % this holds the normalization parameters
@@ -388,13 +414,10 @@ end
 ft_postamble debug
 ft_postamble trackconfig
 
-% Remember the initial and normalisation parameters in the configuration, this allows
-% redoing the transformations without any computations (e.g. estimating them on a T1
-% and applying them on a T2)
-%
-% they are added only here to prevent them to be removed when doing the trackconfig
-cfg.initial   = initial;
+% remember the normalisation parameters in the configuration
+% maintain this order for the time being to prevent them to be removed when doing the trackconfig
 cfg.spmparams = params;
+cfg.final     = final;
 
 ft_postamble previous   mri
 ft_postamble provenance normalised
