@@ -987,7 +987,7 @@ if need_meg_json || need_eeg_json || need_ieeg_json
     need_electrodes_tsv = true;
   catch
     % electrodes can also be specified as cfg.electrodes
-    need_electrodes_tsv = ~isnan(cfg.electrodes.name);
+    need_electrodes_tsv = ~isequal(cfg.electrodes.name, nan);
   end
 end
 
@@ -1441,8 +1441,8 @@ if need_electrodes_tsv
   end
   
   % electrode details can be specified in cfg.elec, data.elec or in cfg.electrodes
-  electrodes_tsv = elec2table(elec);
-  electrodes_tsv = merge_table(electrodes_tsv, cfg.electrodes, 'name');
+  electrodes_tsv = elec2table(elec);                                    % this includes the cfg.elec and data.elec
+  electrodes_tsv = merge_table(electrodes_tsv, cfg.electrodes, 'name'); % this includes the cfg.electrodes
   
   % the default for cfg.electrodes consists of one row where all values are nan, this needs to be removed
   keep = false(size(electrodes_tsv.name));
@@ -1473,8 +1473,8 @@ if need_optodes_tsv
   end
   
   % optode details can be specified in cfg.opto, data.opto or cfg.optodes
-  optodes_tsv=opto2table(opto); % this includes the cfg.opto and data.opto
-  optodes_tsv=merge_table(optodes_tsv, cfg.optodes, 'name'); % this includes the cfg.optodes
+  optodes_tsv = opto2table(opto);                              % this includes the cfg.opto and data.opto
+  optodes_tsv = merge_table(optodes_tsv, cfg.optodes, 'name'); % this includes the cfg.optodes
   
   % the default for cfg.electrodes consists of one row where all values are nan, this needs to be removed
   keep = false(size(optodes_tsv.name));
