@@ -904,16 +904,6 @@ switch typ
       trigger = ft_fetch_event(varargin{1});
     end
     
-    try
-      % try to get the electrode definition, either from the data or from the configuration
-      tmpcfg = keepfields(cfg, {'elec'});
-      tmpcfg.senstype = 'eeg';
-      elec = ft_fetch_sens(tmpcfg, varargin{1});
-      need_electrodes_tsv = true;
-    catch
-      need_electrodes_tsv = false;
-    end
-    
     if ft_senstype(varargin{1}, 'ctf') || ft_senstype(varargin{1}, 'neuromag')
       % use the subsequent MEG-specific metadata handling for the JSON and TSV sidecar files
       typ = ft_senstype(varargin{1});
@@ -975,37 +965,24 @@ switch typ
 end % switch typ
 
 if need_meg_json || need_eeg_json || need_ieeg_json
-  try
-    % try to get the electrode definition, either from data.elec or from cfg.elec
-    tmpcfg = keepfields(cfg, {'elec'});
-    tmpcfg.senstype = 'eeg';
-    if ~isempty(varargin)
-      elec = ft_fetch_sens(tmpcfg, varargin{1});
-    else
-      elec = ft_fetch_sens(tmpcfg);
-    end
+  % determine whether an electrode definition is available
+  if isfield(cfg, 'elec') && ~isempty(cfg.elec)
     need_electrodes_tsv = true;
-  catch
-    % electrodes can also be specified as cfg.electrodes
+  elseif ~isempty(varargin) && isfield(varargin{1}, 'elec') && ~isempty(varargin{1}.elec)
+    need_electrodes_tsv = true;
+  else
     need_electrodes_tsv = ~isequal(cfg.electrodes.name, nan);
   end
 end
 
 if need_nirs_json
-  try
-    % try to get the optode definition, either from data.opto or from
-    % cfg.optodes
-    tmpcfg = keepfields(cfg, {'opto'});
-    tmpcfg.senstype='nirs';
-    if ~isempty(varargin)
-      opto = ft_fetch_sens(tmpcfg, varargin{1});
-    else
-      opto = ft_fetch_sens(tmpcfg);
-    end
+  % determine whether an optode definition is available
+  if isfield(cfg, 'opto') && ~isempty(cfg.opto)
     need_optodes_tsv = true;
-  catch
-    % optodes can also be specified as cfg.optodes
-    need_optodes_tsv= ~isnan(cfg.optodes.name);
+  elseif ~isempty(varargin) && isfield(varargin{1}, 'opto') && ~isempty(varargin{1}.opto)
+    need_optodes_tsv = true;
+  else
+    need_optodes_tsv = ~isequal(cfg.optodes.name, nan);
   end
 end
 
@@ -1424,6 +1401,19 @@ end % if need_channels_tsv
 %% need_electrodes_tsv
 if need_electrodes_tsv
   
+  % try to get the elec structure from the configuration or data
+  try
+    tmpcfg = keepfields(cfg, {'elec'});
+    tmpcfg.senstype = 'eeg';
+    if ~isempty(varargin)
+      elec = ft_fetch_sens(tmpcfg, varargin{1});
+    else
+      elec = ft_fetch_sens(tmpcfg);
+    end
+  catch
+    elec = [];
+  end
+  
   if isstruct(cfg.electrodes)
     % remove fields with non-informative defaults
     fn = fieldnames(cfg.electrodes);
@@ -1455,6 +1445,19 @@ end % need_electrodes_tsv
 
 %% need_optodes_tsv
 if need_optodes_tsv
+  
+  % try to get the opto structure from the configuration or data
+  try
+    tmpcfg = keepfields(cfg, {'opto'});
+    tmpcfg.senstype='nirs';
+    if ~isempty(varargin)
+      opto = ft_fetch_sens(tmpcfg, varargin{1});
+    else
+      opto = ft_fetch_sens(tmpcfg);
+    end
+  catch
+    opto = [];
+  end
   
   if isstruct(cfg.optodes)
     % remove fields with non-informative defaults
