@@ -50,6 +50,9 @@ function [status] = ft_hastoolbox(toolbox, autoadd, silent)
 %   return
 % end
 
+% Note to developers: please do NOT use ft_warning and ft_error
+% inside this function, but rather the normal warning and error.
+
 if isdeployed
   % it is not possible to check the presence of functions or change the path in a compiled application
   status = true;
@@ -519,9 +522,9 @@ if ~status && autoadd>0
       msg = sprintf('the %s toolbox is not installed', toolbox);
     end
     if autoadd==1
-      ft_error(msg);
+      error(msg);
     elseif autoadd==2
-      ft_warning(msg);
+      warning(msg);
     else
       % fail silently
     end
@@ -535,7 +538,7 @@ elseif ~status && autoadd<0
   else
     msg = sprintf('the %s toolbox is not installed', toolbox);
   end
-  ft_error(msg);
+  error(msg);
 end
 
 % this function is called many times in FieldTrip and associated toolboxes
