@@ -60,7 +60,7 @@ end
 filename = fullfile(p, f);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% PART ONE (optional), read the pre-computed besa leadfield
+% PART ONE (optional), read the pre-computed BESA leadfield
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if ischar(sourcemodel)
@@ -160,6 +160,9 @@ if isfield(sourcemodel, 'leadfield')
   
   % ensure that it is represented as 3-D volume
   sourcemodel = ft_checkdata(sourcemodel, 'datatype', 'volume');
+
+  % determine the indices of the positions in the source compartment
+  insideindx = find(sourcemodel.inside);
   
   nchan = length(sens.label);
   if size(sourcemodel.leadfield{insideindx(1)},1)~=nchan
