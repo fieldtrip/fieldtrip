@@ -73,10 +73,11 @@ cfg.sourcemodel.resolution = 1;
 leadfield = ft_prepare_leadfield(cfg);
 
 % remember one position
-pos1 = leadfield.pos(leadfield.inside(1),:);
+firstindx = find(leadfield.inside, 1, 'first');
+pos1 = leadfield.pos(firstindx,:);
 pos2 = [0 0 7];
 
-lf1  = leadfield.leadfield{leadfield.inside(1)};
+lf1  = leadfield.leadfield{firstindx};
 
 % the following call generates the volume conduction model and writes all files to disk
 filename = fullfile(tempname, 'leadfield');
@@ -108,9 +109,9 @@ assert(all(mean(lfb, 1)<eps(single(1))), 'the leadfield is not average reference
 lfa = ft_compute_leadfield(pos1, elecAA, volAA); % the original
 lfb = ft_compute_leadfield(pos1, elecBB, volBB); % the interpolation
 
-assert(isalmostequal(lfa, lfb, 'reltol', 1e-3), 'the leadfields are different');
 assert(all(mean(lfa, 1)<eps), 'the leadfield is not average referenced');
 assert(all(mean(lfb, 1)<eps), 'the leadfield is not average referenced');
+assert(isalmostequal(lfa, lfb, 'reltol', 1e-3), 'the leadfields are different');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% use the same electrodes with with different names
@@ -121,9 +122,9 @@ assert(all(mean(lfb, 1)<eps), 'the leadfield is not average referenced');
 lfa = ft_compute_leadfield(pos1, elecAA, volAA); % the original
 lfb = ft_compute_leadfield(pos1, elecBB, volBB); % the interpolation
 
-assert(isalmostequal(lfa, lfb, 'reltol', 1e-4), 'the leadfields are different');
 assert(all(mean(lfa, 1)<eps), 'the leadfield is not average referenced');
 assert(all(mean(lfb, 1)<eps), 'the leadfield is not average referenced');
+assert(isalmostequal(lfa, lfb, 'reltol', 1e-4), 'the leadfields are different');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% use electrodes with a different placement
@@ -134,10 +135,10 @@ assert(all(mean(lfb, 1)<eps), 'the leadfield is not average referenced');
 lfa = ft_compute_leadfield(pos2, elecAA, volAA); % the original
 lfb = ft_compute_leadfield(pos2, elecBB, volBB); % the interpolation
 
-c = corrcoef(lfa(:), lfb(:)); c = c(1,2);
-assert(c>0.8, 'the leadfields are different');
 assert(all(mean(lfa, 1)<eps), 'the leadfield is not average referenced');
 assert(all(mean(lfb, 1)<eps), 'the leadfield is not average referenced');
+c = corrcoef(lfa(:), lfb(:)); c = c(1,2);
+assert(c>0.8, 'the leadfields are different');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% use a bipolar electrode montage
@@ -148,6 +149,6 @@ assert(all(mean(lfb, 1)<eps), 'the leadfield is not average referenced');
 lfa = ft_compute_leadfield(pos2, elecAA, volAA); % the original
 lfb = ft_compute_leadfield(pos2, elecBB, volBB); % the interpolation
 
-assert(isalmostequal(lfa, lfb, 'abstol', inf, 'reltol', inf, 'relnormtol', 1e-3), 'the leadfields are different');
 assert(~all(mean(lfa, 1)<eps), 'the leadfield is average referenced');
 assert(~all(mean(lfb, 1)<eps), 'the leadfield is average referenced');
+assert(isalmostequal(lfa, lfb, 'abstol', inf, 'reltol', inf, 'relnormtol', 1e-3), 'the leadfields are different');
