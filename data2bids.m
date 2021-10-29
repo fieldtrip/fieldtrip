@@ -956,10 +956,9 @@ switch typ
       hdr = ft_read_header(cfg.headerfile, headeropt{:});
       if strcmp(cfg.method, 'convert')
         % the data should be converted and written to disk
-        dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', 1, 'endsample', hdr.nSamples*hdr.nTrials, dataopt{:});
+        dat     = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', 1, 'endsample', hdr.nSamples*hdr.nTrials, dataopt{:});
         trigger = ft_read_event(cfg.datafile, 'header', hdr, eventopt{:});
       end
-      % FIXME try to get the electrode definition, either from the data or from the configuration
     end
     
 end % switch typ
@@ -968,10 +967,12 @@ if need_meg_json || need_eeg_json || need_ieeg_json
   % determine whether an electrode definition is available
   if isfield(cfg, 'elec') && ~isempty(cfg.elec)
     need_electrodes_tsv = true;
+  elseif exist('hdr', 'var') && isfield(hdr, 'elec')
+    need_electrodes_tsv = true;
   elseif ~isempty(varargin) && isfield(varargin{1}, 'elec') && ~isempty(varargin{1}.elec)
     need_electrodes_tsv = true;
   else
-    need_electrodes_tsv = ~isequal(cfg.electrodes.name, nan);
+    need_electrodes_tsv = ~isequaln(cfg.electrodes.name, nan);
   end
 end
 
@@ -979,10 +980,12 @@ if need_nirs_json
   % determine whether an optode definition is available
   if isfield(cfg, 'opto') && ~isempty(cfg.opto)
     need_optodes_tsv = true;
+  elseif exist('hdr', 'var') && isfield(hdr, 'opto')
+    need_optodes_tsv = true;
   elseif ~isempty(varargin) && isfield(varargin{1}, 'opto') && ~isempty(varargin{1}.opto)
     need_optodes_tsv = true;
   else
-    need_optodes_tsv = ~isequal(cfg.optodes.name, nan);
+    need_optodes_tsv = ~isequaln(cfg.optodes.name, nan);
   end
 end
 
@@ -1407,6 +1410,8 @@ if need_electrodes_tsv
     tmpcfg.senstype = 'eeg';
     if ~isempty(varargin)
       elec = ft_fetch_sens(tmpcfg, varargin{1});
+    elseif exist('hdr', 'var') && isfield(hdr, 'elec')
+      elec = hdr.elec;
     else
       elec = ft_fetch_sens(tmpcfg);
     end
@@ -1452,6 +1457,8 @@ if need_optodes_tsv
     tmpcfg.senstype='nirs';
     if ~isempty(varargin)
       opto = ft_fetch_sens(tmpcfg, varargin{1});
+    elseif exist('hdr', 'var') && isfield(hdr, 'opto')
+      opto = hdr.opto;
     else
       opto = ft_fetch_sens(tmpcfg);
     end
