@@ -113,7 +113,7 @@ url = {
   'NLXNETCOM'     'see http://www.neuralynx.com'
   'GTEC'          'see http://www.gtec.at'
   'DIPOLI'        'see ftp://ftp.fieldtriptoolbox.org/pub/fieldtrip/external'
-  'MNE'           'see http://www.nmr.mgh.harvard.edu/martinos/userInfo/data/sofMNE.php'
+  'MNE'           'see https://mne.tools/stable/overview/matlab.html'
   'TCP_UDP_IP'    'see http://www.mathworks.com/matlabcentral/fileexchange/345, or contact Peter Rydesaeter'
   'BEMCP'         'contact Christophe Phillips'
   'OPENMEEG'      'see http://openmeeg.github.io and http://www.fieldtriptoolbox.org/faq/how_do_i_install_the_openmeeg_binaries'
