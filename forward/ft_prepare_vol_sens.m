@@ -537,13 +537,13 @@ elseif iseeg
       ft_hastoolbox('duneuro', 1);
 
       if(~isfield(headmodel,'eeg_transfer'))
-        %set electrodes
+        % set electrodes
         cfg = [];
         cfg.type = headmodel.electrodes;
         cfg.codims = headmodel.subentities;
         headmodel.driver.set_electrodes(sens.elecpos', cfg);
         
-        %compute transfer matrix
+        % compute transfer matrix
         cfg = [];
         cfg.solver.reduction = headmodel.reduction;
         headmodel.eeg_transfer = headmodel.driver.compute_eeg_transfer_matrix(cfg);
@@ -560,7 +560,7 @@ elseif iseeg
 
       matchlab = isequal(sens.label, headmodel.sens.label);
       matchpos = isequal(sens.elecpos, headmodel.sens.elecpos);
-      matchtra = (~isfield(sens, 'tra') && ~isfield(headmodel.sens, 'tra')) || isequal(sens.tra, headmodel.sens.tra);
+      matchtra = (~isfield(sens, 'tra') && ~isfield(headmodel.sens, 'tra')) || (isfield(sens, 'tra') && isfield(headmodel.sens, 'tra') && isequal(sens.tra, headmodel.sens.tra));
 
       if matchlab && matchpos && matchtra
         % the input sensor array matches precisely with the forward model
@@ -584,11 +584,13 @@ elseif iseeg
       ft_error('unsupported volume conductor model for EEG');
   end
 
-  % FIXME this needs careful thought to ensure that the average referencing which is now done here and there, and that the linear interpolation in case of BEM are all dealt with consistently
-  % % always ensure that there is a linear transfer matrix for
-  % % rereferencing the EEG potential
+  % FIXME this needs careful thought to ensure that the average referencing which is
+  % now done here and there, and that the linear interpolation in case of BEM are all
+  % dealt with consistently always ensure that there is a linear transfer matrix for
+  % rereferencing the EEG potential
+  %
   % if ~isfield(sens, 'tra');
-  %   sens.tra = eye(length(sens.label));
+  %   sens.tra = eye(length(sens.label)) - 1/length(sens.label);
   % end
 
   % update the channel positions as the electrodes were projected to the skin surface
