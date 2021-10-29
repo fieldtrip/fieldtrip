@@ -1,4 +1,4 @@
-function failed_headmodel_interpolate
+function test_headmodel_interpolate
 
 % WALLTIME 00:45:00
 % MEM 6gb
