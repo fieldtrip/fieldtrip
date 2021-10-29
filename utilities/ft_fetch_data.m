@@ -29,12 +29,6 @@ function [dat] = ft_fetch_data(data, varargin)
 %
 % $Id$
 
-% check whether input is data
-skipcheckdata = ft_getopt(varargin, 'skipcheckdata');
-if isempty(skipcheckdata) || skipcheckdata ~= 1
-  data = ft_checkdata(data, 'datatype', 'raw', 'hassampleinfo', 'yes');
-end
-
 % get the options
 if true
   p = inputParser;
@@ -44,21 +38,30 @@ if true
   addOptional(p, 'endsample', []);
   addOptional(p, 'chanindx', []);
   addOptional(p, 'allowoverlap', false);
+  addOptional(p, 'skipcheckdata', false);
   parse(p,varargin{:});
   hdr           = p.Results.header;
   begsample     = p.Results.begsample;
   endsample     = p.Results.endsample;
   chanindx      = p.Results.chanindx;
   allowoverlap  = p.Results.allowoverlap;
+  skipcheckdata = p.Results.skipcheckdata;
 else
-  hdr          = ft_getopt(varargin, 'header');
-  begsample    = ft_getopt(varargin, 'begsample');
-  endsample    = ft_getopt(varargin, 'endsample');
-  chanindx     = ft_getopt(varargin, 'chanindx');
-  allowoverlap = ft_getopt(varargin, 'allowoverlap', false);
+  hdr           = ft_getopt(varargin, 'header');
+  begsample     = ft_getopt(varargin, 'begsample');
+  endsample     = ft_getopt(varargin, 'endsample');
+  chanindx      = ft_getopt(varargin, 'chanindx');
+  allowoverlap  = ft_getopt(varargin, 'allowoverlap', false);
+  skipcheckdata = ft_getopt(varargin, 'skipcheckdata', false);
 end
 
+% these should be booleans
 allowoverlap = istrue(allowoverlap);
+skipcheckdata = istrue(skipcheckdata);
+
+if ~skipcheckdata
+  data = ft_checkdata(data, 'datatype', 'raw', 'hassampleinfo', 'yes');
+end
 
 if isempty(hdr)
   hdr = ft_fetch_header(data);
