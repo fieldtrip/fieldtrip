@@ -258,11 +258,13 @@ elseif isfield(sourcemodel, 'filename')
   inputvol = sourcemodel;
   
   if ~isfield(sens, 'tra')
-    sens.tra = eye(length(sens.label));
+    % the EEG forward model should be average referenced in the absense of an explicit montage
+    sens.tra = eye(length(sens.label)) - 1/length(sens.label);
   end
   
   if ~isfield(inputvol.sens, 'tra')
-    inputvol.sens.tra = eye(length(inputvol.sens.label));
+    % the EEG forward model should be average referenced in the absense of an explicit montage
+    inputvol.sens.tra = eye(length(inputvol.sens.label)) - 1/length(inputvol.sens.label);
   end
   
   % create a 2D projection and triangulation
