@@ -1009,7 +1009,7 @@ end
 
 if need_motion_json
     % if motion data, check if coordinate system information is provided
-    need_coordsystem_json = isfield(cfg.motion, 'coordsystem'); 
+    need_coordsystem_json = isfield(cfg, 'coordsystem'); 
 end
 
 need_events_tsv       = need_events_tsv       || need_meg_json || need_eeg_json || need_ieeg_json || need_emg_json || need_exg_json || need_nirs_json || need_eyetracker_json || need_motion_json || (contains(cfg.outputfile, 'task') || ~isempty(cfg.TaskName) || ~isempty(cfg.task)) || ~isempty(cfg.events);
