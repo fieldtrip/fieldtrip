@@ -62,6 +62,7 @@ function cfg = data2bids(cfg, varargin)
 %   cfg.mod                     = string
 %   cfg.echo                    = string
 %   cfg.proc                    = string
+%   cfg.tracksys                = string
 %
 % When specifying the output directory in cfg.bidsroot, you can also specify
 % additional information to be added as extra columns in the participants.tsv and
@@ -767,10 +768,9 @@ need_stim_json          = false;
 need_eyetracker_json    = false;
 need_motion_json        = false;
 need_coordsystem_json   = false;
-need_scans_json         = false;
 % determine the tsv files that are required
 need_events_tsv         = false; % for functional and behavioral experiments
-need_channels_tsv       = false; % only needed for MEG/EEG/iEEG/EMG/NIRS
+need_channels_tsv       = false; % only needed for MEG/EEG/iEEG/EMG/NIRS/motion
 need_electrodes_tsv     = false; % only needed when actually present as cfg.electrodes, data.elec or as cfg.elec
 need_optodes_tsv        = false; % only needed when actually present as cfg.optodes, data.opto or as cfg.opto
 
@@ -1010,7 +1010,6 @@ end
 need_events_tsv       = need_events_tsv       || need_meg_json || need_eeg_json || need_ieeg_json || need_emg_json || need_exg_json || need_nirs_json || need_eyetracker_json || need_motion_json || (contains(cfg.outputfile, 'task') || ~isempty(cfg.TaskName) || ~isempty(cfg.task)) || ~isempty(cfg.events);
 need_channels_tsv     = need_channels_tsv     || need_meg_json || need_eeg_json || need_ieeg_json || need_emg_json || need_exg_json || need_nirs_json || need_motion_json ;
 need_coordsystem_json = need_coordsystem_json || need_meg_json || need_electrodes_tsv || need_nirs_json || need_motion_json ;
-need_scans_json       = need_motion_json ;
 
 if need_emg_json
   ft_warning('EMG data is not yet part of the official BIDS specification');
@@ -1118,11 +1117,6 @@ motion_settings = keepfields(cfg.motion, fn);
 fn = fieldnames(cfg.coordsystem);
 fn = fn(~cellfun(@isempty, regexp(fn, '^[A-Z].*|^iEEG')));
 coordsystem_settings = keepfields(cfg.coordsystem, fn);
-
-% make the relevant selection, all json fields start with a capital letter
-fn = fieldnames(cfg.scans);
-fn = fn(~cellfun(@isempty, regexp(fn, '^[A-Z]..*')));
-scans_settings = keepfields(cfg.scans, fn);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% construct the content for the json and tsv files
@@ -1533,16 +1527,6 @@ if need_coordsystem_json
 end % if need_coordsystem_json
 
 
-%% need_scans_json
-if need_scans_json
-  scans_json.filename.Description = 'name of file';
-  scans_json.acq_time.Description = 'date of acquistion shifted by randomly chosen number of days';
-  
-  % merge the information specified by the user with that from the data
-  % in case fields appear in both, the first input overrules the second
-  scans_json = mergeconfig(scans_settings, scans_json, false); 
-end % if need_scans_json
-
 
 %% need_events_tsv
 if need_events_tsv
@@ -1819,7 +1803,7 @@ end % switch method
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % each of these has a corresponding json file
-modality = {'mri', 'meg', 'eeg', 'ieeg', 'nirs', 'physio', 'stim', 'emg', 'exg', 'audio', 'video', 'eyetracker', 'motion', 'coordsystem', 'scans'};
+modality = {'mri', 'meg', 'eeg', 'ieeg', 'nirs', 'physio', 'stim', 'emg', 'exg', 'audio', 'video', 'eyetracker', 'motion', 'coordsystem'};
 for i=1:numel(modality)
   if eval(sprintf('need_%s_json', modality{i}))
     modality_json = eval(sprintf('%s_json', modality{i}));
