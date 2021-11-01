@@ -1764,7 +1764,12 @@ switch cfg.method
             [p, f, x] = fileparts(cfg.outputfile);
             cfg.outputfile = fullfile(p, [f '.tsv']);
             ft_info('writing %s\n', cfg.outputfile);
-            writematrix(dat', cfg.outputfile, 'FileType', 'text', 'Delimiter', '\t'); % without headers, the JSON will be written further down
+            if strcmp(cfg.datatype, 'motion')
+                writecell(hdr.label', cfg.outputfile,'FileType', 'text', 'Delimiter', '\t');
+                writematrix([]', cfg.outputfile, 'FileType', 'text', 'Delimiter', '\t','WriteMode','append'); % use headers, the JSON will be written further down
+            else
+                writematrix(dat', cfg.outputfile, 'FileType', 'text', 'Delimiter', '\t'); % without headers, the JSON will be written further down
+            end
           case {'events'}
             % add the TSV file extension, this is needed for behavioral data represented in scans.tsv
             % the events.tsv file will be written further down
