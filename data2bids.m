@@ -1332,35 +1332,39 @@ end
 
 %% need_motion_json
 if need_motion_json
-  
-  % tracking system description 
-  tracksysInd = find(strcmp(cfg.channels.tracking_system, cfg.tracksys)); 
-  
-  motion_json.TrackingSystems.(cfg.tracksys).DeviceSerialNumber             = ft_getopt(cfg.motion.TrackingSystems.(cfg.tracksys), 'DeviceSerialNumber');
-  motion_json.TrackingSystems.(cfg.tracksys).SoftwareVersions               = ft_getopt(cfg.motion.TrackingSystems.(cfg.tracksys), 'SoftwareVersions');
-  motion_json.TrackingSystems.(cfg.tracksys).ExternalSoftwareVersions       = ft_getopt(cfg.motion.TrackingSystems.(cfg.tracksys), 'ExternalSoftwareVersions');
-  motion_json.TrackingSystems.(cfg.tracksys).Manufacturer                   = ft_getopt(cfg.motion.TrackingSystems.(cfg.tracksys), 'Manufacturer');
-  motion_json.TrackingSystems.(cfg.tracksys).ManufacturersModelName         = ft_getopt(cfg.motion.TrackingSystems.(cfg.tracksys), 'ManufacturersModelName');
-  motion_json.TrackingSystems.(cfg.tracksys).SamplingFrequencyNominal       = ft_getopt(cfg.motion.TrackingSystems.(cfg.tracksys), 'SamplingFrequencyNominal');
-  motion_json.TrackingSystems.(cfg.tracksys).SamplingFrequencyEffective     = hdr.Fs; 
-  motion_json.TrackingSystems.(cfg.tracksys).StartTime                      = ft_getopt(cfg.motion.TrackingSystems.(cfg.tracksys), 'StartTime');
-  motion_json.TrackingSystems.(cfg.tracksys).RecordingDuration              = (hdr.nSamples*hdr.nTrials)/hdr.Fs;
-  motion_json.TrackingSystems.(cfg.tracksys).TrackedPointsCount             = numel(unique(cfg.channels.tracked_point(tracksysInd)));
-  motion_json.TrackingSystems.(cfg.tracksys).POSChannelCount                = sum(strcmpi(hdr.chantype, 'POS'));  
-  motion_json.TrackingSystems.(cfg.tracksys).ORNTChannelCount               = sum(strcmpi(hdr.chantype, 'ORNT'));
-  motion_json.TrackingSystems.(cfg.tracksys).VELChannelCount                = sum(strcmpi(hdr.chantype, 'VEL')); 
-  motion_json.TrackingSystems.(cfg.tracksys).ANGVELChannelCount             = sum(strcmpi(hdr.chantype, 'ANGVEL'));
-  motion_json.TrackingSystems.(cfg.tracksys).ACCChannelCount                = sum(strcmpi(hdr.chantype, 'ACC'));  
-  motion_json.TrackingSystems.(cfg.tracksys).ANGACCChannelCount             = sum(strcmpi(hdr.chantype, 'ANGACC'));
-  motion_json.TrackingSystems.(cfg.tracksys).MAGNChannelCount               = sum(strcmpi(hdr.chantype, 'MAGN'));  
-  motion_json.TrackingSystems.(cfg.tracksys).JNTANGChannelCount             = sum(strcmpi(hdr.chantype, 'JNTANG'));
-  
-  % merge the information specified by the user with that from the data
-  % in case fields appear in both, the first input overrules the second
-  motion_json = mergeconfig(motion_settings,  motion_json, false);
-  motion_json = mergeconfig(generic_settings, motion_json, false);
-  
-end % if need_motion_json 
+    
+    try
+        motion_json.MotionChannelCount                                            = numel(cfg.channels.name); % cfg.channels have to be provided
+        motion_json.TrackingSystems.(cfg.tracksys).DeviceSerialNumber             = ft_getopt(cfg.motion.TrackingSystems.(cfg.tracksys), 'DeviceSerialNumber');
+        motion_json.TrackingSystems.(cfg.tracksys).SoftwareVersions               = ft_getopt(cfg.motion.TrackingSystems.(cfg.tracksys), 'SoftwareVersions');
+        motion_json.TrackingSystems.(cfg.tracksys).ExternalSoftwareVersions       = ft_getopt(cfg.motion.TrackingSystems.(cfg.tracksys), 'ExternalSoftwareVersions');
+        motion_json.TrackingSystems.(cfg.tracksys).Manufacturer                   = ft_getopt(cfg.motion.TrackingSystems.(cfg.tracksys), 'Manufacturer');
+        motion_json.TrackingSystems.(cfg.tracksys).ManufacturersModelName         = ft_getopt(cfg.motion.TrackingSystems.(cfg.tracksys), 'ManufacturersModelName');
+        motion_json.TrackingSystems.(cfg.tracksys).SamplingFrequencyNominal       = ft_getopt(cfg.motion.TrackingSystems.(cfg.tracksys), 'SamplingFrequencyNominal');
+        motion_json.TrackingSystems.(cfg.tracksys).SamplingFrequencyEffective     = hdr.Fs;
+        motion_json.TrackingSystems.(cfg.tracksys).RecordingDuration              = (hdr.nSamples*hdr.nTrials)/hdr.Fs;
+        
+        % tracking system description
+        tracksysInd = find(strcmp(cfg.channels.tracking_system, cfg.tracksys));
+        motion_json.TrackingSystems.(cfg.tracksys).TrackedPointsCount         = numel(unique(cfg.channels.tracked_point(tracksysInd))); % cfg.channels have to be provided
+    catch
+    end
+    
+    motion_json.TrackingSystems.(cfg.tracksys).POSChannelCount                = sum(strcmpi(hdr.chantype, 'POS'));
+    motion_json.TrackingSystems.(cfg.tracksys).ORNTChannelCount               = sum(strcmpi(hdr.chantype, 'ORNT'));
+    motion_json.TrackingSystems.(cfg.tracksys).VELChannelCount                = sum(strcmpi(hdr.chantype, 'VEL'));
+    motion_json.TrackingSystems.(cfg.tracksys).ANGVELChannelCount             = sum(strcmpi(hdr.chantype, 'ANGVEL'));
+    motion_json.TrackingSystems.(cfg.tracksys).ACCChannelCount                = sum(strcmpi(hdr.chantype, 'ACC'));
+    motion_json.TrackingSystems.(cfg.tracksys).ANGACCChannelCount             = sum(strcmpi(hdr.chantype, 'ANGACC'));
+    motion_json.TrackingSystems.(cfg.tracksys).MAGNChannelCount               = sum(strcmpi(hdr.chantype, 'MAGN'));
+    motion_json.TrackingSystems.(cfg.tracksys).JNTANGChannelCount             = sum(strcmpi(hdr.chantype, 'JNTANG'));
+    
+    % merge the information specified by the user with that from the data
+    % in case fields appear in both, the first input overrules the second
+    motion_json = mergeconfig(motion_settings,  motion_json, false);
+    motion_json = mergeconfig(generic_settings, motion_json, false);
+    
+end % if need_motion_json
 
 %% need_channels_tsv
 if need_channels_tsv
