@@ -1759,7 +1759,7 @@ switch cfg.method
             ft_info('writing %s\n', cfg.outputfile);
             if strcmp(cfg.datatype, 'motion')
                 writecell(hdr.label', cfg.outputfile,'FileType', 'text', 'Delimiter', '\t');
-                writematrix([]', cfg.outputfile, 'FileType', 'text', 'Delimiter', '\t','WriteMode','append'); % use headers, the JSON will be written further down
+                writematrix(dat', cfg.outputfile, 'FileType', 'text', 'Delimiter', '\t','WriteMode','append'); % use headers, the JSON will be written further down
             else
                 writematrix(dat', cfg.outputfile, 'FileType', 'text', 'Delimiter', '\t'); % without headers, the JSON will be written further down
             end
