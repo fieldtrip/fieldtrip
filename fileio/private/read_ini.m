@@ -1,9 +1,9 @@
-function [val] = read_asa(filename, elem, format, number, token)
+function [val] = read_ini(filename, elem, format, number, token)
 
-% READ_ASA reads a specified element from an ASA file
+% READ_INI reads a specified element from a Windows *.ini file
 %
-% val = read_asa(filename, element, type, number)
-%
+% Use as
+%   val = read_ini(filename, element, type, number)
 % where the element is a string such as
 %   NumberSlices
 %   NumberPositions
@@ -11,16 +11,16 @@ function [val] = read_asa(filename, elem, format, number, token)
 %   Columns
 %   etc.
 %
-% and format specifies the datatype according to
+% and format specifies the datatype to be returned according to
 %   %d  (integer value)
 %   %f  (floating point value)
 %   %s  (string)
 %
-% number is optional to specify how many lines of data should be read
-% The default is 1 for strings and Inf for numbers.
+% The number argument is optional to specify how many lines of data
+% should be read, the default is 1 for strings and Inf for numbers.
 %
-% token is optional to specifiy a character that separates the values from
-% anything not wanted.
+% The token argument is optional to specifiy a character that separates
+% the values from anything not wanted.
 
 % Copyright (C) 2002-2012, Robert Oostenveld
 %

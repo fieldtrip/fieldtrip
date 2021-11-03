@@ -904,16 +904,6 @@ switch typ
       trigger = ft_fetch_event(varargin{1});
     end
     
-    try
-      % try to get the electrode definition, either from the data or from the configuration
-      tmpcfg = keepfields(cfg, {'elec'});
-      tmpcfg.senstype = 'eeg';
-      elec = ft_fetch_sens(tmpcfg, varargin{1});
-      need_electrodes_tsv = true;
-    catch
-      need_electrodes_tsv = false;
-    end
-    
     if ft_senstype(varargin{1}, 'ctf') || ft_senstype(varargin{1}, 'neuromag')
       % use the subsequent MEG-specific metadata handling for the JSON and TSV sidecar files
       typ = ft_senstype(varargin{1});
@@ -966,46 +956,36 @@ switch typ
       hdr = ft_read_header(cfg.headerfile, headeropt{:});
       if strcmp(cfg.method, 'convert')
         % the data should be converted and written to disk
-        dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', 1, 'endsample', hdr.nSamples*hdr.nTrials, dataopt{:});
+        dat     = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', 1, 'endsample', hdr.nSamples*hdr.nTrials, dataopt{:});
         trigger = ft_read_event(cfg.datafile, 'header', hdr, eventopt{:});
       end
-      % FIXME try to get the electrode definition, either from the data or from the configuration
     end
     
 end % switch typ
 
 if need_meg_json || need_eeg_json || need_ieeg_json
-  try
-    % try to get the electrode definition, either from data.elec or from cfg.elec
-    tmpcfg = keepfields(cfg, {'elec'});
-    tmpcfg.senstype = 'eeg';
-    if ~isempty(varargin)
-      elec = ft_fetch_sens(tmpcfg, varargin{1});
-    else
-      elec = ft_fetch_sens(tmpcfg);
-    end
+  % determine whether an electrode definition is available
+  if isfield(cfg, 'elec') && ~isempty(cfg.elec)
     need_electrodes_tsv = true;
-  catch
-    % electrodes can also be specified as cfg.electrodes
-    need_electrodes_tsv = ~isnan(cfg.electrodes.name);
+  elseif exist('hdr', 'var') && isfield(hdr, 'elec')
+    need_electrodes_tsv = true;
+  elseif ~isempty(varargin) && isfield(varargin{1}, 'elec') && ~isempty(varargin{1}.elec)
+    need_electrodes_tsv = true;
+  else
+    need_electrodes_tsv = ~isequaln(cfg.electrodes.name, nan);
   end
 end
 
 if need_nirs_json
-  try
-    % try to get the optode definition, either from data.opto or from
-    % cfg.optodes
-    tmpcfg = keepfields(cfg, {'opto'});
-    tmpcfg.senstype='nirs';
-    if ~isempty(varargin)
-      opto = ft_fetch_sens(tmpcfg, varargin{1});
-    else
-      opto = ft_fetch_sens(tmpcfg);
-    end
+  % determine whether an optode definition is available
+  if isfield(cfg, 'opto') && ~isempty(cfg.opto)
     need_optodes_tsv = true;
-  catch
-    % optodes can also be specified as cfg.optodes
-    need_optodes_tsv= ~isnan(cfg.optodes.name);
+  elseif exist('hdr', 'var') && isfield(hdr, 'opto')
+    need_optodes_tsv = true;
+  elseif ~isempty(varargin) && isfield(varargin{1}, 'opto') && ~isempty(varargin{1}.opto)
+    need_optodes_tsv = true;
+  else
+    need_optodes_tsv = ~isequaln(cfg.optodes.name, nan);
   end
 end
 
@@ -1424,6 +1404,21 @@ end % if need_channels_tsv
 %% need_electrodes_tsv
 if need_electrodes_tsv
   
+  % try to get the elec structure from the configuration or data
+  try
+    tmpcfg = keepfields(cfg, {'elec'});
+    tmpcfg.senstype = 'eeg';
+    if ~isempty(varargin)
+      elec = ft_fetch_sens(tmpcfg, varargin{1});
+    elseif exist('hdr', 'var') && isfield(hdr, 'elec')
+      elec = hdr.elec;
+    else
+      elec = ft_fetch_sens(tmpcfg);
+    end
+  catch
+    elec = [];
+  end
+  
   if isstruct(cfg.electrodes)
     % remove fields with non-informative defaults
     fn = fieldnames(cfg.electrodes);
@@ -1441,8 +1436,8 @@ if need_electrodes_tsv
   end
   
   % electrode details can be specified in cfg.elec, data.elec or in cfg.electrodes
-  electrodes_tsv = elec2table(elec);
-  electrodes_tsv = merge_table(electrodes_tsv, cfg.electrodes, 'name');
+  electrodes_tsv = elec2table(elec);                                    % this includes the cfg.elec and data.elec
+  electrodes_tsv = merge_table(electrodes_tsv, cfg.electrodes, 'name'); % this includes the cfg.electrodes
   
   % the default for cfg.electrodes consists of one row where all values are nan, this needs to be removed
   keep = false(size(electrodes_tsv.name));
@@ -1455,6 +1450,21 @@ end % need_electrodes_tsv
 
 %% need_optodes_tsv
 if need_optodes_tsv
+  
+  % try to get the opto structure from the configuration or data
+  try
+    tmpcfg = keepfields(cfg, {'opto'});
+    tmpcfg.senstype='nirs';
+    if ~isempty(varargin)
+      opto = ft_fetch_sens(tmpcfg, varargin{1});
+    elseif exist('hdr', 'var') && isfield(hdr, 'opto')
+      opto = hdr.opto;
+    else
+      opto = ft_fetch_sens(tmpcfg);
+    end
+  catch
+    opto = [];
+  end
   
   if isstruct(cfg.optodes)
     % remove fields with non-informative defaults
@@ -1473,8 +1483,8 @@ if need_optodes_tsv
   end
   
   % optode details can be specified in cfg.opto, data.opto or cfg.optodes
-  optodes_tsv=opto2table(opto); % this includes the cfg.opto and data.opto
-  optodes_tsv=merge_table(optodes_tsv, cfg.optodes, 'name'); % this includes the cfg.optodes
+  optodes_tsv = opto2table(opto);                              % this includes the cfg.opto and data.opto
+  optodes_tsv = merge_table(optodes_tsv, cfg.optodes, 'name'); % this includes the cfg.optodes
   
   % the default for cfg.electrodes consists of one row where all values are nan, this needs to be removed
   keep = false(size(optodes_tsv.name));
@@ -1600,7 +1610,7 @@ if need_events_tsv
   if istable(cfg.events) && all(ismember({'onset', 'duration'}, fieldnames(cfg.events)))
     % use the events table as it is
     events_tsv = cfg.events;
-
+    
   elseif istable(cfg.events) && all(ismember({'begsample', 'endsample', 'offset'}, fieldnames(cfg.events)))
     % it is a "trl" matrix formatted as table, use it as it is, but add onset and duration
     events_tsv = cfg.events;
@@ -1613,7 +1623,7 @@ if need_events_tsv
     
   elseif istable(cfg.events) && ~isempty(cfg.events)
     ft_error('cannot interpret cfg.events');
-
+    
   elseif isstruct(cfg.events) && ~isempty(cfg.events) && numel(fieldnames(cfg.events))>0
     % it is the structure output from FT_READ_EVENT
     if exist('hdr', 'var')
@@ -1634,7 +1644,7 @@ if need_events_tsv
     onset     = (begsample-1)/hdr.Fs;
     duration  = (endsample-begsample+1)/hdr.Fs;
     events_tsv = table(onset, duration, begsample, endsample, offset);
-  
+    
   elseif isempty(cfg.events) && exist('trigger', 'var')
     % convert the triggers from FT_READ_EVENT into a table
     if exist('hdr', 'var')
@@ -1646,7 +1656,7 @@ if need_events_tsv
   elseif ~isempty(cfg.presentationfile)
     % read the presentation file and convert into a table
     events_tsv = event2table([], ft_read_event(cfg.presentationfile));
-  
+    
   else
     ft_warning('no events were specified');
     % make an empty table with columns for onset and duration
@@ -2362,8 +2372,6 @@ switch typ
     dir = 'ieeg';
   case {'nirs'} % this is not part of the official specification
     dir = 'nirs';
-  case {'motion'} % this is not part of the official specification
-    dir = 'motion';
     
   otherwise
     ft_error('unrecognized data type ''%s''', typ);

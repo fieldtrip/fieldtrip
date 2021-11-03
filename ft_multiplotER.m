@@ -21,7 +21,7 @@ function [cfg] = ft_multiplotER(cfg, varargin)
 %   cfg.maskparameter = field in the first dataset to be used for marking significant data
 %   cfg.maskstyle     = style used for masking of data, 'box', 'thickness' or 'saturation' (default = 'box')
 %   cfg.maskfacealpha = mask transparency value between 0 and 1
-%   cfg.xlim          = 'maxmin' or [xmin xmax] (default = 'maxmin')
+%   cfg.xlim          = 'maxmin', 'maxabs', 'zeromax', 'minzero', or [xmin xmax] (default = 'maxmin')
 %   cfg.ylim          = 'maxmin', 'maxabs', 'zeromax', 'minzero', or [ymin ymax] (default = 'maxmin')
 %   cfg.gradscale     = number, scaling to apply to the MEG gradiometer channels prior to display
 %   cfg.magscale      = number, scaling to apply to the MEG magnetometer channels prior to display
@@ -414,13 +414,26 @@ cfg.layout = ft_prepare_layout(tmpcfg, varargin{1});
 [selchan, sellay] = match_str(varargin{1}.label, cfg.layout.label);
 
 % Get physical min/max range of x, i.e. time or frequency
-if strcmp(cfg.xlim, 'maxmin')
-  % Find maxmin throughout all varargins:
-  xmin = [];
-  xmax = [];
+if ~isnumeric(cfg.xlim)
+  % Find maxmin throughout all varargins
+  xmin = +inf;
+  xmax = -inf;
   for i=1:Ndata
     xmin = nanmin([xmin varargin{i}.(xparam)]);
     xmax = nanmax([xmax varargin{i}.(xparam)]);
+  end
+  switch cfg.xlim
+    case 'maxmin'
+      % keep them as they are
+    case 'maxabs'
+      xmax = max(abs(xmax), abs(xmin));
+      xmin = -xmax;
+    case 'zeromax'
+      xmin = 0;
+    case 'minzero'
+      xmax = 0;
+    otherwise
+      ft_error('invalid specification of cfg.xlim');
   end
 else
   xmin = cfg.xlim(1);

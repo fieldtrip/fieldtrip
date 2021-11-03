@@ -60,7 +60,7 @@ end
 filename = fullfile(p, f);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% PART ONE (optional), read the pre-computed besa leadfield
+% PART ONE (optional), read the pre-computed BESA leadfield
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if ischar(sourcemodel)
@@ -160,6 +160,9 @@ if isfield(sourcemodel, 'leadfield')
   
   % ensure that it is represented as 3-D volume
   sourcemodel = ft_checkdata(sourcemodel, 'datatype', 'volume');
+
+  % determine the indices of the positions in the source compartment
+  insideindx = find(sourcemodel.inside);
   
   nchan = length(sens.label);
   if size(sourcemodel.leadfield{insideindx(1)},1)~=nchan
@@ -255,11 +258,13 @@ elseif isfield(sourcemodel, 'filename')
   inputvol = sourcemodel;
   
   if ~isfield(sens, 'tra')
-    sens.tra = eye(length(sens.label));
+    % the EEG forward model should be average referenced in the absense of an explicit montage
+    sens.tra = eye(length(sens.label)) - 1/length(sens.label);
   end
   
   if ~isfield(inputvol.sens, 'tra')
-    inputvol.sens.tra = eye(length(inputvol.sens.label));
+    % the EEG forward model should be average referenced in the absense of an explicit montage
+    inputvol.sens.tra = eye(length(inputvol.sens.label)) - 1/length(inputvol.sens.label);
   end
   
   % create a 2D projection and triangulation

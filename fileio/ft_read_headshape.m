@@ -1272,10 +1272,10 @@ switch fileformat
     shape.fid.pos   = elec.chanpos;
     shape.fid.label = elec.label;
     
-    npos = read_asa(filename, 'NumberHeadShapePoints=', '%d');
+    npos = read_ini(filename, 'NumberHeadShapePoints=', '%d');
     if ~isempty(npos) && npos>0
-      origunit = read_asa(filename, 'UnitHeadShapePoints', '%s', 1);
-      pos = read_asa(filename, 'HeadShapePoints', '%f', npos, ':');
+      origunit = read_ini(filename, 'UnitHeadShapePoints', '%s', 1);
+      pos = read_ini(filename, 'HeadShapePoints', '%f', npos, ':');
       pos = ft_scalingfactor(origunit, 'mm')*pos;
       
       shape.pos = pos;

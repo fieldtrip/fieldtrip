@@ -28,10 +28,11 @@ cfg.artfctdef.zvalue.artfctpeakrange = [-.25 .5]; % save out 250ms prior and 500
 cfg = ft_artifact_zvalue(cfg);
 
 
-paramscell.tr  = cfg.artfctdef.zvalue.peaks_indx;
-paramscell.pre = 0.25*meg.fsample;
-paramscell.pst = 0.50*meg.fsample;
-paramscell.demean = true;
+% paramscell.tr  = cfg.artfctdef.zvalue.peaks_indx;
+% paramscell.pre = 0.25*meg.fsample;
+% paramscell.pst = 0.50*meg.fsample;
+% paramscell.demean = true;
+paramscell.artifact = cfg.artfctdef.zvalue.artifact;
 
 cfg                   = [];
 cfg.method            = 'dss';

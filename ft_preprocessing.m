@@ -674,7 +674,7 @@ if strcmp(cfg.updatesens, 'yes')
     montage = cfg.montage;
   elseif strcmp(cfg.reref, 'yes')
     if strcmp(cfg.refmethod, 'bipolar') || strcmp(cfg.refmethod, 'avg') || strcmp(cfg.refmethod, 'laplace')
-      tmpcfg = keepfields(cfg, {'refmethod', 'implicitref', 'refchannel', 'channel'});
+      tmpcfg = keepfields(cfg, {'refmethod', 'implicitref', 'refchannel', 'channel', 'groupchans'});
       tmpcfg.showcallinfo = 'no';
       montage = ft_prepare_montage(tmpcfg, data);
     else

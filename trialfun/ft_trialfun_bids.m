@@ -48,7 +48,7 @@ function [trl, allevents] = ft_trialfun_bids(cfg)
 % $Id$
 
 % most defaults are in trialdef
-cfg.trialdef = ft_getopt(cfg, 'trialdef');
+cfg.trialdef = ft_getopt(cfg, 'trialdef', struct());
 
 % specify the default file formats
 cfg.eventformat   = ft_getopt(cfg, 'eventformat');

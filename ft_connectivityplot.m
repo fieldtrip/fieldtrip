@@ -13,12 +13,9 @@ function [cfg] = ft_connectivityplot(cfg, varargin)
 %
 % The configuration can have the following options
 %   cfg.parameter   = string, the functional parameter to be plotted (default = 'cohspctrm')
-%   cfg.xlim        = selection boundaries over first dimension in data (e.g., freq)
-%                     'maxmin' or [xmin xmax] (default = 'maxmin')
-%   cfg.ylim        = selection boundaries over second dimension in data
-%                     (i.e. ,time, if present), 'maxmin', or [ymin ymax]
-%                     (default = 'maxmin')
-%   cfg.zlim        = plotting limits for color dimension, 'maxmin', 'maxabs' or [zmin zmax] (default = 'maxmin')
+%   cfg.xlim        = 'maxmin', 'maxabs', 'zeromax', 'minzero', or [xmin xmax] (default = 'maxmin')
+%   cfg.ylim        = 'maxmin', 'maxabs', 'zeromax', 'minzero', or [ymin ymax] (default = 'maxmin')
+%   cfg.zlim        = plotting limits for color dimension, 'maxmin', 'maxabs', 'zeromax', 'minzero', or [zmin zmax] (default = 'maxmin')
 %   cfg.channel     = list of channels to be included for the plotting (default = 'all'), see FT_CHANNELSELECTION for details
 %
 % See also FT_CONNECTIVITYANALYSIS, FT_CONNECTIVITYSIMULATION, FT_MULTIPLOTCC, FT_TOPOPLOTCC
@@ -171,53 +168,86 @@ elseif hastime
   yparam = '';
 end
 
-
-
-% Get physical min/max range of x:
-if ischar(cfg.xlim) && strcmp(cfg.xlim, 'maxmin')
-  xmin = inf;
+% Get physical min/max range of x, i.e. time
+if ~isnumeric(cfg.xlim)
+  % Find maxmin throughout all varargins
+  xmin = +inf;
   xmax = -inf;
-  for k = 1:Ndata
-    xmin = min(xmin,varargin{k}.(xparam)(1));
-    xmax = max(xmax,varargin{k}.(xparam)(end));
+  for i=1:Ndata
+    xmin = nanmin([xmin varargin{i}.(xparam)]);
+    xmax = nanmax([xmax varargin{i}.(xparam)]);
   end
+  switch cfg.xlim
+    case 'maxmin'
+      % keep them as they are
+    case 'maxabs'
+      xmax = max(abs(xmax), abs(xmin));
+      xmin = -xmax;
+    case 'zeromax'
+      xmin = 0;
+    case 'minzero'
+      xmax = 0;
+    otherwise
+      ft_error('invalid specification of cfg.xlim');
+  end % switch
 else
   xmin = cfg.xlim(1);
   xmax = cfg.xlim(2);
 end
 cfg.xlim = [xmin xmax];
 
-% Get physical min/max range of y:
-if ischar(cfg.ylim) && strcmp(cfg.ylim, 'maxmin') && ~isempty(yparam)
-  ymin = inf;
-  ymax = -inf;
-  for k = 1:Ndata
-    ymin = min(ymin,varargin{k}.(yparam)(1));
-    ymax = max(ymax,varargin{k}.(yparam)(end));
-  end
-elseif ~isempty(yparam)
-  ymin = cfg.ylim(1);
-  ymax = cfg.ylim(2);
-elseif isempty(yparam)
+% Get physical min/max range of y, i.e. freq
+if isempty(yparam)
   ymin = [];
   ymax = [];
-end
+elseif ~isnumeric(cfg.ylim)
+  % Find maxmin throughout all varargins
+  ymin = +inf;
+  ymax = -inf;
+  for i=1:Ndata
+    ymin = nanmin([ymin varargin{i}.(yparam)]);
+    ymax = nanmax([ymax varargin{i}.(yparam)]);
+  end
+  switch cfg.ylim
+    case 'maxmin'
+      % keep them as they are
+    case 'maxabs'
+      ymax = max(abs(ymax), abs(ymin));
+      ymin = -ymax;
+    case 'zeromax'
+      ymin = 0;
+    case 'minzero'
+      ymax = 0;
+    otherwise
+      ft_error('invalid specification of cfg.ylim');
+  end % switch
+else
+  ymin = cfg.ylim(1);
+  ymax = cfg.ylim(2);
+end  
 cfg.ylim = [ymin ymax];
 
 % Get physical min/max range of z, which is the functional data:
-if ischar(cfg.zlim) && strcmp(cfg.zlim, 'maxmin')
-  zmin = inf;
+if ~isnumeric(cfg.zlim)
+  zmin = +inf;
   zmax = -inf;
   for k = 1:Ndata
-    zmin = min(zmin,min(varargin{k}.(cfg.parameter{k})(:)));
-    zmax = max(zmax,max(varargin{k}.(cfg.parameter{k})(:)));
+    zmin = nanmin([zmin min(varargin{k}.(cfg.parameter{k})(:))]);
+    zmax = nanmax([zmax max(varargin{k}.(cfg.parameter{k})(:))]);
   end
-elseif ischar(cfg.zlim) && strcmp(cfg.zlim, 'maxabs')
-  zmax = -inf;
-  for k = 1:Ndata
-    zmax = max(zmax,max(abs(varargin{k}.(cfg.parameter{k})(:))));
-  end
-  zmin = -zmax;
+  switch cfg.zlim
+    case 'maxmin'
+      % keep them as they are
+    case 'maxabs'
+      zmax = max(abs(zmax), abs(zmin));
+      zmin = -zmax;
+    case 'zeromax'
+      zmin = 0;
+    case 'minzero'
+      zmax = 0;
+    otherwise
+      ft_error('invalid specification of cfg.ylim');
+  end % switch
 else
   zmin = cfg.zlim(1);
   zmax = cfg.zlim(2);

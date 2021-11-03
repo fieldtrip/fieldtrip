@@ -251,6 +251,11 @@ headeropt  = ft_setopt(headeropt, 'coilaccuracy',   ft_getopt(cfg, 'coilaccuracy
 headeropt  = ft_setopt(headeropt, 'checkmaxfilter', ft_getopt(cfg, 'checkmaxfilter'));      % this allows to read non-maxfiltered neuromag data recorded with internal active shielding
 headeropt  = ft_setopt(headeropt, 'chantype',       ft_getopt(cfg, 'chantype', {}));        % 2017.10.10 AB required for NeuroOmega files
 
+% construct the low-level options as key-value pairs, these are passed to FT_READ_EVENT
+eventopt = {};
+eventopt  = ft_setopt(eventopt, 'eventformat',   ft_getopt(cfg, 'eventformat'));        % is passed to low-level function, empty implies autodetection
+eventopt  = ft_setopt(eventopt, 'readbids',      ft_getopt(cfg, 'readbids'));           % is passed to low-level function
+
 if isempty(ft_getopt(cfg, 'viewmode'))
   % can be 'butterfly', 'vertical', or 'component'
   if hascomp
@@ -392,7 +397,7 @@ else
     event = cfg.event;
   else
     % read the events from file
-    event = ft_read_event(cfg.dataset);
+    event = ft_read_event(cfg.dataset, eventopt{:});
   end
   
   cfg.channel = ft_channelselection(cfg.channel, hdr.label);
@@ -463,8 +468,10 @@ if ischar(cfg.ylim)
     % the first trial is used to determine the vertical scaling
     dat = data.trial{sel}(chansel,:);
   else
-    % one second of data is read from file to determine the vertical scaling
-    dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', 1, 'endsample', round(hdr.Fs), 'chanindx', chansel, 'checkboundary', strcmp(cfg.continuous, 'no'), 'dataformat', cfg.dataformat, headeropt{:});
+    % read one second (or one block) of data to determine the vertical scaling
+    begsample = 1;
+    endsample = min(round(hdr.Fs), hdr.nSamples);
+    dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', begsample, 'endsample', endsample, 'chanindx', chansel, 'checkboundary', strcmp(cfg.continuous, 'no'), 'dataformat', cfg.dataformat, headeropt{:});
   end % if hasdata
   % convert the data to another numeric precision, i.e. double, single or int32
   if ~isempty(cfg.precision)
@@ -1870,6 +1877,7 @@ if strcmp(cfg.plotevents, 'yes')
     eventtype     = event(i).type;
     eventvalue    = event(i).value;
     eventduration = event(i).duration;
+    eventoffset   = event(i).offset;
     
     % construct the text label that will be shown with the event
     switch cfg.ploteventlabels
@@ -1898,7 +1906,7 @@ if strcmp(cfg.plotevents, 'yes')
       eventcol = opt.eventcolors(strcmp(opt.eventtypes, eventtype),:);
     end
     
-    % compute the time of the event
+    % compute the time that the event starts
     eventtime(i) = (event(i).sample-begsample)/opt.fsample + opt.hlim(1);
     xpos = [eventtime(i) eventtime(i)+eventduration/opt.fsample];
     
@@ -1909,6 +1917,11 @@ if strcmp(cfg.plotevents, 'yes')
       % plot it as a box when it has a duration, pad it on either side with half a sample
       xpos = xpos + [-.5 +.5]./opt.fsample;
       lh = ft_plot_box([xpos -1 1], 'tag', 'event', 'hpos', opt.hpos, 'vpos', opt.vpos, 'width', opt.width, 'height', opt.height, 'hlim', opt.hlim, 'vlim', [-1 1], 'edgecolor', eventcol, 'facecolor', eventcol, 'facealpha', cfg.eventalpha);
+      if eventoffset<0 && eventoffset>-eventduration
+        % add a vertical line, but only if it falls inside the box
+        xpos = [eventtime(i) eventtime(i)] - eventoffset/opt.fsample;
+        ft_plot_line(xpos, [-1 1], 'tag', 'event', 'hpos', opt.hpos, 'vpos', opt.vpos, 'width', opt.width, 'height', opt.height, 'hlim', opt.hlim, 'vlim', [-1 1], 'color', eventcol);
+      end
     end
     
     % store this data in the line object so that it can be displayed with cb_datacursortext

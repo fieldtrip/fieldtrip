@@ -176,6 +176,8 @@ elseif m==3 && n~=3
   new = transform * old;
   new = new(1:3,:);
 else
-  ft_warning('ambiguous input, cannot apply transformation');
-  new = old;
+  % assume that each row is one position
+  old(:,4) = 1;
+  new = old * transform';
+  new = new(:,1:3);
 end

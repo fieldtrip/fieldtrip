@@ -417,7 +417,9 @@ elseif ~strcmp(cfg.method, 'predetermined unmixing matrix') && strcmp(cfg.cellmo
   ft_info('concatenated data matrix size %dx%d\n', size(dat,1), size(dat,2));
   
   hasdatanans = any(~isfinite(dat(:)));
-  if hasdatanans
+  if hasdatanans && strcmp(cfg.method, 'dss')
+    ft_error('DSS does not work with nans or inf in the data');
+  elseif hasdatanans
     ft_info('data contains nan or inf, only using the samples without nan or inf\n');
     finitevals = sum(~isfinite(dat))==0;
     if ~any(finitevals)
@@ -689,6 +691,10 @@ switch cfg.method
     end
     if isfield(cfg.dss, 'wdim') && ~isempty(cfg.dss.wdim)
       params.wdim = cfg.dss.wdim;
+    end
+    if isfield(params.denf, 'params') && isfield(params.denf.params, 'artifact')
+      % this may require the sampleinfo in the params structure, to keep the sampling bookkeeping correct
+      params.denf.params.sampleinfo = data.sampleinfo;
     end
     
     % create the state

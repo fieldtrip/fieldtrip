@@ -23,8 +23,8 @@ function [cfg] = ft_multiplotTFR(cfg, data)
 %   cfg.maskalpha        = alpha value between 0 (transparent) and 1 (opaque) used for masking areas dictated by cfg.maskparameter (default = 1)
 %                        (will be ignored in case of numeric cfg.maskparameter or if cfg.maskstyle = 'outline')
 %   cfg.masknans         = 'yes' or 'no' (default = 'yes')
-%   cfg.xlim             = 'maxmin' or [xmin xmax] (default = 'maxmin')
-%   cfg.ylim             = 'maxmin' or [ymin ymax] (default = 'maxmin')
+%   cfg.xlim             = 'maxmin', 'maxabs', 'zeromax', 'minzero', or [xmin xmax] (default = 'maxmin')
+%   cfg.ylim             = 'maxmin', 'maxabs', 'zeromax', 'minzero', or [ymin ymax] (default = 'maxmin')
 %   cfg.zlim             = plotting limits for color dimension, 'maxmin', 'maxabs', 'zeromax', 'minzero', or [zmin zmax] (default = 'maxmin')
 %   cfg.gradscale        = number, scaling to apply to the MEG gradiometer channels prior to display
 %   cfg.magscale         = number, scaling to apply to the MEG magnetometer channels prior to display
@@ -370,9 +370,22 @@ cfg.layout = ft_prepare_layout(tmpcfg, data);
 [selchan, sellay] = match_str(data.label, cfg.layout.label);
 
 % Get physical min/max range of x, i.e. time
-if strcmp(cfg.xlim, 'maxmin')
+if ~isnumeric(cfg.xlim)
   xmin = nanmin(data.(xparam));
   xmax = nanmax(data.(xparam));
+  switch cfg.xlim
+    case 'maxmin'
+      % keep them as they are
+    case 'maxabs'
+      xmax = max(abs(xmax), abs(xmin));
+      xmin = -xmax;
+    case 'zeromax'
+      xmin = 0;
+    case 'minzero'
+      xmax = 0;
+    otherwise
+      ft_error('invalid specification of cfg.xlim');
+  end % switch
 else
   xmin = cfg.xlim(1);
   xmax = cfg.xlim(2);
@@ -386,10 +399,23 @@ xmax = data.(xparam)(xmaxindx);
 selx = xminindx:xmaxindx;
 xval = data.(xparam)(selx);
 
-% Get physical min/max range of y, i.e. frequency
-if strcmp(cfg.ylim, 'maxmin')
+% Get physical min/max range of y, i.e. freq
+if ~isnumeric(cfg.ylim)
   ymin = nanmin(data.(yparam));
   ymax = nanmax(data.(yparam));
+  switch cfg.ylim
+    case 'maxmin'
+      % keep them as they are
+    case 'maxabs'
+      ymax = max(abs(ymax), abs(ymin));
+      ymin = -ymax;
+    case 'zeromax'
+      ymin = 0;
+    case 'minzero'
+      ymax = 0;
+    otherwise
+      ft_error('invalid specification of cfg.ylim');
+  end % switch
 else
   ymin = cfg.ylim(1);
   ymax = cfg.ylim(2);
