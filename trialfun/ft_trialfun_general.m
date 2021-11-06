@@ -56,6 +56,7 @@ cfg.trialdef = ft_getopt(cfg, 'trialdef', struct());
 
 % check if the input cfg is valid for this function
 cfg.trialdef = ft_checkconfig(cfg.trialdef, 'renamed', {'triallength', 'length'});
+cfg.trialdef = ft_checkconfig(cfg.trialdef, 'renamedval', {'ntrials', inf, []});
 
 % set the defaults
 cfg.trialdef.eventtype    = ft_getopt(cfg.trialdef, 'eventtype');
