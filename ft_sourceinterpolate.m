@@ -171,23 +171,8 @@ else
   functional = ft_checkdata(functional, 'datatype', 'volume', 'insidestyle', 'logical', 'feedback', 'yes', 'hasunit', 'yes');
 end
 
-if ~isa(cfg.parameter, 'cell')
-  cfg.parameter = {cfg.parameter};
-end
-
-% try to select all relevant parameters present in the data
-if any(strcmp(cfg.parameter, 'all'))
-  cfg.parameter = parameterselection('all', functional);
-  for k = numel(cfg.parameter):-1:1
-    % check whether the field is numeric
-    tmp = getsubfield(functional, cfg.parameter{k});
-    if iscell(tmp)
-      cfg.parameter(k) = [];
-    elseif strcmp(cfg.parameter{k}, 'pos')
-      cfg.parameter(k) = [];
-    end
-  end
-end
+% select the parameters from the data
+cfg.parameter = parameterselection(cfg.parameter, functional);
 
 % ensure that the functional data has the same unit as the anatomical data
 functional = ft_convert_units(functional, anatomical.unit);
