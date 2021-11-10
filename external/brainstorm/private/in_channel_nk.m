@@ -8,7 +8,7 @@ function ChannelMat = in_channel_nk(ChannelFile, version)
 % This function is part of the Brainstorm software:
 % https://neuroimage.usc.edu/brainstorm
 % 
-% Copyright (c)2000-2018 University of Southern California & McGill University
+% Copyright (c)2000-2020 University of Southern California & McGill University
 % This software is distributed under the terms of the GNU General Public License
 % as published by the Free Software Foundation. Further details on the GPLv3
 % license can be found at http://www.gnu.org/copyleft/gpl.html.
@@ -98,7 +98,7 @@ for i = 1:length(ChannelMat.Channel)
         case 102,  ChannelMat.Channel(i).Name = 'X13/BP2';                   ChannelMat.Channel(i).Type = 'EEG';
         case 103,  ChannelMat.Channel(i).Name = 'X14/BP3';                   ChannelMat.Channel(i).Type = 'EEG';
         case 104,  ChannelMat.Channel(i).Name = 'X15/BP4';                   ChannelMat.Channel(i).Type = 'EEG';
-        case num2cell(105:255), ChannelMat.Channel(i).Name = sprintf('X%d', i - 89);   ChannelMat.Channel(i).Type = 'EEG';
+        case num2cell(105:254), ChannelMat.Channel(i).Name = sprintf('X%d', i - 89);   ChannelMat.Channel(i).Type = 'EEG';
         case 255,  ChannelMat.Channel(i).Name = 'AVG';                       ChannelMat.Channel(i).Type = 'MISC';   
         case 256,  ChannelMat.Channel(i).Name = 'Z';                         ChannelMat.Channel(i).Type = 'MISC';
         case num2cell(257:Nchan),  ChannelMat.Channel(i).Name = sprintf('EX%d', i);   ChannelMat.Channel(i).Type = 'EEG';

@@ -1,15 +1,15 @@
-function sFile = in_fopen_manscan(DataFile)
+function [sFile, ChannelMat] = in_fopen_manscan(DataFile)
 % IN_FOPEN_MANSCAN: Open a MANSCAN file (continuous recordings)
 %
-% USAGE:  sFile = in_fopen_manscan(DataFile)
+% USAGE:  [sFile, ChannelMat] = in_fopen_manscan(DataFile)
 
 % @=============================================================================
-% This software is part of the Brainstorm software:
-% http://neuroimage.usc.edu/brainstorm
+% This function is part of the Brainstorm software:
+% https://neuroimage.usc.edu/brainstorm
 % 
-% Copyright (c)2000-2013 Brainstorm by the University of Southern California
+% Copyright (c)2000-2020 University of Southern California & McGill University
 % This software is distributed under the terms of the GNU General Public License
-% as published by the Free Software Foundation. Further details on the GPL
+% as published by the Free Software Foundation. Further details on the GPLv3
 % license can be found at http://www.gnu.org/copyleft/gpl.html.
 % 
 % FOR RESEARCH PURPOSES ONLY. THE SOFTWARE IS PROVIDED "AS IS," AND THE
@@ -21,15 +21,15 @@ function sFile = in_fopen_manscan(DataFile)
 % For more information type "brainstorm license" at command prompt.
 % =============================================================================@
 %
-% Authors: Francois Tadel, 2012
+% Authors: Francois Tadel, 2012-2018
         
 
 %% ===== READ HEADER =====
 % Get text file (.mbi)
 MbiFile = strrep(DataFile, '.mb2', '.mbi');
 % If doesn't exist: error
-if ~exist(MbiFile, 'file')
-    ft_error('Cannot open file: missing text file .mbi');
+if ~file_exist(MbiFile)
+    error('Cannot open file: missing text file .mbi');
 end
 % Initialize header
 iEpoch = 1;
@@ -38,7 +38,7 @@ hdr.epoch(iEpoch).Channel = [];
 hdr.Events = [];
 curBlock = '';
 % Read file line by line
-fid = fopen_or_error(MbiFile,'r');
+fid = fopen(MbiFile,'r');
 while(1)
     % Reached the end of the file: exit the loop
     if feof(fid)
@@ -131,52 +131,53 @@ end
 
 %% ===== CREATE BRAINSTORM SFILE STRUCTURE =====
 % Initialize returned file structure
-sFile = []; %db_template('sfile');
+sFile = db_template('sfile');
 % Add information read from header
 sFile.byteorder  = 'l';
 sFile.filename   = DataFile;
 sFile.format = 'EEG-MANSCAN';
 sFile.device = 'MANSCAN';
-sFile.channelmat = [];
 % Comment: short filename
-[tmp__, sFile.comment, tmp__] = fileparts(DataFile);
+[tmp__, sFile.comment, tmp__] = bst_fileparts(DataFile);
 % Consider that the sampling rate of the file is the sampling rate of the first signal
 sFile.prop.sfreq = 256;
 sFile.prop.nAvg  = 1;
 % No info on bad channels
 sFile.channelflag = ones(length(hdr.epoch(iEpoch).ChannelOrder), 1);
-
+% Acquisition date
+try
+    sFile.acq_date = str_date(hdr.epoch.ExperimentTime, 'mm/dd/yy');
+catch
+end
 
 %% ===== EPOCHS =====
 if (length(hdr.epoch) <= 1)
-    sFile.prop.samples = [0, hdr.epoch(1).Sweeps-1];
-    sFile.prop.times   = sFile.prop.samples ./ sFile.prop.sfreq;
+    sFile.prop.times   = [0, hdr.epoch(1).Sweeps-1] ./ sFile.prop.sfreq;
 else
     % Build epochs structure
     for iEpoch = 1:length(hdr.epoch)
         sFile.epochs(iEpoch).label   = sprintf('Epoch #%02d', iEpoch);
-        sFile.epochs(iEpoch).samples = [0, hdr.epoch(iEpoch).Sweeps-1];
-        sFile.epochs(iEpoch).times   = sFile.epochs(iEpoch).samples ./ sFile.prop.sfreq;
+        sFile.epochs(iEpoch).times   = [0, hdr.epoch(iEpoch).Sweeps-1] ./ sFile.prop.sfreq;
         sFile.epochs(iEpoch).nAvg    = 1;
         sFile.epochs(iEpoch).select  = 1;
-        sFile.epochs(iEpoch).bad         = 0;
+        sFile.epochs(iEpoch).bad     = 0;
         sFile.epochs(iEpoch).channelflag = [];
         
         % Check if all the epochs have the same channel list
         if (iEpoch > 1) && ~isequal(hdr.epoch(iEpoch).ChannelOrder, hdr.epoch(1).ChannelOrder)
-            ft_error('Channel list must remain constant across epochs.');
+            error('Channel list must remain constant across epochs.');
         end
     end
     % Extract global min/max for time and samples indices
-    sFile.prop.samples = [min([sFile.epochs.samples]), max([sFile.epochs.samples])];
     sFile.prop.times   = [min([sFile.epochs.times]),   max([sFile.epochs.times])];
 end
 
 
 %% ===== CREATE EMPTY CHANNEL FILE =====
 nChannels = length(hdr.epoch(1).ChannelOrder);
+ChannelMat = db_template('channelmat');
 ChannelMat.Comment = [sFile.device ' channels'];
-%ChannelMat.Channel = repmat(db_template('channeldesc'), [1, nChannels]);
+ChannelMat.Channel = repmat(db_template('channeldesc'), [1, nChannels]);
 hdr.Gains = [];
 % For each channel
 for iChan = 1:nChannels
@@ -209,8 +210,6 @@ for iChan = 1:nChannels
         hdr.Gains(iChan,1) = hdr.epoch(1).Channel(iDesc).UnitDisplayToFile;
     end
 end
-% Return channel structure
-sFile.channelmat = ChannelMat;
 
 
 %% ===== FORMAT EVENTS =====
@@ -229,108 +228,16 @@ if ~isempty(hdr.Events)
             sample = [sample; sample + duration];
         end
         % Create event structure
-        sFile.events(iEvt).label   = uniqueEvt{iEvt};
-        sFile.events(iEvt).samples = sample;
-        sFile.events(iEvt).times   = sample ./ sFile.prop.sfreq;
-        sFile.events(iEvt).epochs  = [hdr.Events(iOcc).iEpoch];
-        sFile.events(iEvt).select  = 1;
+        sFile.events(iEvt).label    = uniqueEvt{iEvt};
+        sFile.events(iEvt).times    = sample ./ sFile.prop.sfreq;
+        sFile.events(iEvt).epochs   = [hdr.Events(iOcc).iEpoch];
+        sFile.events(iEvt).select   = 1;
+        sFile.events(iEvt).channels = cell(1, size(sFile.events(iEvt).times, 2));
+        sFile.events(iEvt).notes    = cell(1, size(sFile.events(iEvt).times, 2));
     end
 end
 % Save file header
 sFile.header = hdr;
     
-  
-function splStr = str_split( str, delimiters, isCollapse )
-% STR_SPLIT: Split string.
-%
-% USAGE:  str_split( str, delimiters, isCollapse=1 ) : delimiters in an array of char delimiters
-%         str_split( str )             : default are file delimiters ('\' and '/')
-%
-% INPUT: 
-%    - str        : String to split
-%    - delimiters : String that contains all the characters used to split, default = '/\'
-%    - isCollapse : If 1, remove all the empty entries
-% 
-% OUTPUT: 
-%    - splStr : cell-array of blocks found between separators
-
-% @=============================================================================
-% This software is part of the Brainstorm software:
-% http://neuroimage.usc.edu/brainstorm
-% 
-% Copyright (c)2000-2013 Brainstorm by the University of Southern California
-% This software is distributed under the terms of the GNU General Public License
-% as published by the Free Software Foundation. Further details on the GPL
-% license can be found at http://www.gnu.org/copyleft/gpl.html.
-% 
-% FOR RESEARCH PURPOSES ONLY. THE SOFTWARE IS PROVIDED "AS IS," AND THE
-% UNIVERSITY OF SOUTHERN CALIFORNIA AND ITS COLLABORATORS DO NOT MAKE ANY
-% WARRANTY, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO WARRANTIES OF
-% MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE, NOR DO THEY ASSUME ANY
-% LIABILITY OR RESPONSIBILITY FOR THE USE OF THIS SOFTWARE.
-%
-% For more information type "brainstorm license" at command prompt.
-% =============================================================================@
-%
-% Authors: Francois Tadel, 2008
-
-% Default delimiters: file delimiters ('\', '/')
-if (nargin < 3) || isempty(isCollapse)
-    isCollapse = 1;
-end
-if (nargin < 2) || isempty(delimiters)
-    delimiters = '/\';
-end
-% Empty input
-if isempty(str)
-    splStr = {};
-    return
-end
-
-% Find all delimiters in string
-iDelim = [];
-for i=1:length(delimiters)
-    iDelim = [iDelim strfind(str, delimiters(i))];
-end
-iDelim = unique(iDelim);
-
-% If no delimiter: return the whole string
-if isempty(iDelim)
-    splStr = {str};
-    return
-end
-
-% Allocates the split array
-splStr = cell(1, length(iDelim)+1);
     
-% First part (before first delimiter)
-if (iDelim(1) ~= 1)
-    iSplitStr = 1;
-    splStr{iSplitStr} = str(1:iDelim(1)-1);
-else
-    iSplitStr = 0;
-end
-    
-% Loop over all other delimiters
-for i = 2:length(iDelim)
-    if (isCollapse  && (iDelim(i) - iDelim(i-1) > 1)) || ...
-       (~isCollapse && (iDelim(i) - iDelim(i-1) >= 1))
-        iSplitStr = iSplitStr + 1;
-        splStr{iSplitStr} = str(iDelim(i-1)+1:iDelim(i)-1);
-    end
-end
-    
-% Last part (after last delimiter)
-if (iDelim(end) ~= length(str))
-    iSplitStr = iSplitStr + 1;
-    splStr{iSplitStr} = str(iDelim(end)+1:end);
-end
-    
-% Remove all the unused entries
-if (iSplitStr < length(splStr))
-    splStr(iSplitStr+1:end) = [];
-end
-
-
-
 

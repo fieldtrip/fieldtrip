@@ -2864,17 +2864,23 @@ switch contextName
         end
         
     case 'UseSigProcToolbox'
-        if isempty(GlobalData.Program.HasSigProcToolbox)
-            % Check if Signal Processing Toolbox is installed
-            GlobalData.Program.HasSigProcToolbox = exist('fir2', 'file') == 2;
-        end
-        % Return user preferences
-        if ~GlobalData.Program.HasSigProcToolbox
-            argout1 = 0;
-        elseif isfield(GlobalData, 'Preferences') && isfield(GlobalData.Preferences, 'UseSigProcToolbox')
-            argout1 = GlobalData.Preferences.UseSigProcToolbox;
+        % In a parfor loop: GlobalData is empty => Check only if the toolbox is installed (ignore user preferences) 
+        if isempty(GlobalData) || ~isfield(GlobalData, 'Program') || ~isfield(GlobalData.Program, 'HasSigProcToolbox')
+            argout1 = exist('fir2', 'file');
         else
-            argout1 = 1;
+            % Save the result of the check for the SigProc tb
+            if isempty(GlobalData.Program.HasSigProcToolbox)
+                % Check if Signal Processing Toolbox is installed
+                GlobalData.Program.HasSigProcToolbox = (exist('fir2', 'file') == 2);
+            end
+            % Return user preferences
+            if ~GlobalData.Program.HasSigProcToolbox
+                argout1 = 0;
+            elseif isfield(GlobalData, 'Preferences') && isfield(GlobalData.Preferences, 'UseSigProcToolbox')
+                argout1 = GlobalData.Preferences.UseSigProcToolbox;
+            else
+                argout1 = 1;
+            end
         end
 
     case 'CustomColormaps'
@@ -3130,7 +3136,7 @@ switch contextName
         if isempty(argout1.Freqs)
             argout1.Freqs = defPref.Freqs;
         end
-        if ~isempty(argout1.FreqBands) && ~ischar(argout1.FreqBands{1,2})
+        if ~isempty(argout1.FreqBands) && ((size(argout1.FreqBands,2) ~= 3) || ~all(cellfun(@ischar, argout1.FreqBands(:))) || any(cellfun(@(c)isempty(strtrim(c)), argout1.FreqBands(:))))
             argout1.FreqBands = defPref.FreqBands;
         end
 
@@ -3464,6 +3470,7 @@ switch contextName
                      {'.msr'},               'EEG: ANT ASA (*.msr)',                 'EEG-ANT-MSR'; ...
                      {'.cnt','.avr'},        'EEG: ANT EEProbe (*.cnt;*.avr)',       'EEG-ANT-CNT'; ...
                      {'*'},                  'EEG: ASCII text (*.*)',                'EEG-ASCII'; ...
+                     {'.raw'},               'EEG: Axion AxIS (*.raw)',              'EEG-AXION'; ...
                      {'.bdf'},               'EEG: BDF (*.bdf)',                     'EEG-BDF'; ...
                      {'.avr','.mux','.mul'}, 'EEG: BESA exports (*.avr;*.mul;*.mux)', 'EEG-BESA'; ...
                      {'.ns1','.ns2','.ns3','.ns4','.ns5','.ns6'}, 'EEG: Blackrock NeuroPort (*.nsX/*.nev)', 'EEG-BLACKROCK';
@@ -3520,6 +3527,7 @@ switch contextName
                      {'.msr'},               'EEG: ANT ASA (*.msr)',                 'EEG-ANT-MSR'; ...
                      {'.cnt','.avr'},        'EEG: ANT EEProbe (*.cnt;*.avr)',       'EEG-ANT-CNT'; ...
                      {'*'},                  'EEG: ASCII text (*.*)',                'EEG-ASCII'; ...
+                     {'.raw'},               'EEG: Axion AxIS (*.raw)',              'EEG-AXION'; ...
                      {'.bdf'},               'EEG: BDF (*.bdf)',                     'EEG-BDF'; ...
                      {'.avr','.mux','.mul'}, 'EEG: BESA exports (*.avr;*.mul;*.mux)', 'EEG-BESA'; ...
                      {'.ns1','.ns2','.ns3','.ns4','.ns5','.ns6'}, 'EEG: Blackrock NeuroPort (*.nsX/*.nev)', 'EEG-BLACKROCK';

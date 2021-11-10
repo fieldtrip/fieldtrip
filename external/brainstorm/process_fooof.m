@@ -135,6 +135,7 @@ function OutputFile = Run(sProcess, sInputs) %#ok<DEFNU>
     opt.min_peak_height     = sProcess.options.minpeakheight.Value{1} / 10; % convert from dB to B
     opt.aperiodic_mode      = sProcess.options.apermode.Value;
     opt.peak_threshold      = 2;   % 2 std dev: parameter for interface simplification
+    opt.border_threshold    = 1;   % 1 std dev: proximity to edge of spectrum, static in Python 
     opt.return_spectrum     = 0;   % SPM/FT: set to 1
     % Matlab-only options
     opt.power_line          = sProcess.options.powerline.Value;
@@ -147,7 +148,7 @@ function OutputFile = Run(sProcess, sInputs) %#ok<DEFNU>
     % Output options
     opt.sort_type  = sProcess.options.sorttype.Value;
     opt.sort_param = sProcess.options.sortparam.Value;
-	  opt.sort_bands = sProcess.options.sortbands.Value;
+	opt.sort_bands = sProcess.options.sortbands.Value;
 
     % Check input frequency bounds
     if (any(opt.freq_range < 0) || opt.freq_range(1) >= opt.freq_range(2))
@@ -253,12 +254,12 @@ function [fs, fg] = FOOOF_matlab(TF, Freqs, opt, hOT)
         flat_spec = flatten_spectrum(fs, spec(chan,:), aperiodic_pars, opt.aperiodic_mode);
         % Fit peaks
         [peak_pars, peak_function] = fit_peaks(fs, flat_spec, opt.max_peaks, opt.peak_threshold, opt.min_peak_height, ...
-            opt.peak_width_limits/2, opt.proximity_threshold, opt.peak_type, opt.guess_weight,hOT);
+            opt.peak_width_limits/2, opt.proximity_threshold, opt.border_threshold, opt.peak_type, opt.guess_weight,hOT);
         if opt.thresh_after && ~hOT  % Check thresholding requirements are met for unbounded optimization
             peak_pars(peak_pars(:,2) < opt.min_peak_height,:)     = []; % remove peaks shorter than limit
             peak_pars(peak_pars(:,3) < opt.peak_width_limits(1)/2,:)  = []; % remove peaks narrower than limit
             peak_pars(peak_pars(:,3) > opt.peak_width_limits(2)/2,:)  = []; % remove peaks broader than limit
-            peak_pars = drop_peak_cf(peak_pars, opt.proximity_threshold, opt.freq_range); % remove peaks outside frequency limits
+            peak_pars = drop_peak_cf(peak_pars, opt.border_threshold, opt.freq_range); % remove peaks outside frequency limits
             peak_pars(peak_pars(:,1) < 0,:) = []; % remove peaks with a centre frequency less than zero (bypass drop_peak_cf)
             peak_pars = drop_peak_overlap(peak_pars, opt.proximity_threshold); % remove smallest of two peaks fit too closely
         end
@@ -517,7 +518,7 @@ spectrum_flat = power_spectrum - gen_aperiodic(freqs,robust_aperiodic_params,ape
 
 end
 
-function [model_params,peak_function] = fit_peaks(freqs, flat_iter, max_n_peaks, peak_threshold, min_peak_height, gauss_std_limits, proxThresh, peakType, guess_weight,hOT)
+function [model_params,peak_function] = fit_peaks(freqs, flat_iter, max_n_peaks, peak_threshold, min_peak_height, gauss_std_limits, proxThresh, bordThresh, peakType, guess_weight,hOT)
 %       Iteratively fit peaks to flattened spectrum.
 %
 %       Parameters
@@ -616,7 +617,7 @@ function [model_params,peak_function] = fit_peaks(freqs, flat_iter, max_n_peaks,
 
             % Check peaks based on edges, and on overlap
             % Drop any that violate requirements.
-            guess_params = drop_peak_cf(guess_params, proxThresh, [min(freqs) max(freqs)]);
+            guess_params = drop_peak_cf(guess_params, bordThresh, [min(freqs) max(freqs)]);
             guess_params = drop_peak_overlap(guess_params, proxThresh);
 
             % If there are peak guesses, fit the peaks, and sort results.
@@ -667,7 +668,7 @@ function [model_params,peak_function] = fit_peaks(freqs, flat_iter, max_n_peaks,
 
             end
             guess_params(guess_params(:,1) == 0,:) = [];
-            guess_params = drop_peak_cf(guess_params, proxThresh, [min(freqs) max(freqs)]);
+            guess_params = drop_peak_cf(guess_params, bordThresh, [min(freqs) max(freqs)]);
             guess_params = drop_peak_overlap(guess_params, proxThresh);
 
             % If there are peak guesses, fit the peaks, and sort results.
@@ -708,7 +709,7 @@ function [model_params,peak_function] = fit_peaks(freqs, flat_iter, max_n_peaks,
                 flat_iter = flat_iter - peak_gauss;
             end
             guess_params(guess_params(:,1) == 0,:) = [];
-            guess_params = drop_peak_cf(guess_params, proxThresh, [min(freqs) max(freqs)]);
+            guess_params = drop_peak_cf(guess_params, bordThresh, [min(freqs) max(freqs)]);
             guess_params = drop_peak_overlap(guess_params, proxThresh);
             if ~isempty(guess_params)
                 gauss_params = fit_peak_guess(guess_params, freqs, flat_spec, 1, guess_weight, gauss_std_limits,hOT);
@@ -753,7 +754,7 @@ function [model_params,peak_function] = fit_peaks(freqs, flat_iter, max_n_peaks,
                 flat_iter = flat_iter - peak_cauchy;
             end
             guess_params(guess_params(:,1) == 0,:) = [];
-            guess_params = drop_peak_cf(guess_params, proxThresh, [min(freqs) max(freqs)]);
+            guess_params = drop_peak_cf(guess_params, bordThresh, [min(freqs) max(freqs)]);
             guess_params = drop_peak_overlap(guess_params, proxThresh);
             if ~isempty(guess_params)
                 cauchy_params = fit_peak_guess(guess_params, freqs, flat_spec, 2, guess_weight, gauss_std_limits,hOT);
