@@ -292,7 +292,7 @@ switch toolbox
   case 'FASTICA'
     dependency = 'fpica';
   case 'BRAINSTORM'
-    dependency = 'bst_get';
+    dependency = 'process_fooof';
   case 'DENOISE'
     dependency = {'tsr', 'sns'};
   case 'CTF'
