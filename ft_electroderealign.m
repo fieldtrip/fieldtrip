@@ -189,21 +189,9 @@ cfg = ft_checkconfig(cfg, 'renamedval', {'method', 'realignfiducial',  'fiducial
 cfg = ft_checkconfig(cfg, 'renamedval', {'warp', 'homogenous', 'rigidbody'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'warp', 'homogeneous', 'rigidbody'});
 
-% set the defaults
-cfg.warp          = ft_getopt(cfg, 'warp', 'rigidbody');
-cfg.channel       = ft_getopt(cfg, 'channel',  'all');
-cfg.keepchannel   = ft_getopt(cfg, 'keepchannel', 'no');
-cfg.feedback      = ft_getopt(cfg, 'feedback', 'no');
-cfg.casesensitive = ft_getopt(cfg, 'casesensitive', 'no');
-cfg.headshape     = ft_getopt(cfg, 'headshape', []);     % for triangulated head surface, without labels
+% set these defaults already here, the rest will follow later
 cfg.target        = ft_getopt(cfg, 'target',  []);       % for electrodes or fiducials, always with labels
 cfg.coordsys      = ft_getopt(cfg, 'coordsys');          % this allows for automatic template fiducial placement
-
-if isempty(cfg.target)
-  % remove the field, otherwise ft_checkconfig will complain
-  cfg = rmfield(cfg, 'target');
-end
-
 if ~isempty(cfg.coordsys) && isempty(cfg.target)
   % set the template fiducial locations according to the coordinate system
   switch lower(cfg.coordsys)
@@ -219,19 +207,31 @@ if ~isempty(cfg.coordsys) && isempty(cfg.target)
     otherwise
       ft_error('the %s coordinate system is not automatically supported, please specify fiducial details in cfg.target')
   end
+elseif isempty(cfg.target)
+  % remove the field, otherwise ft_checkconfig will complain depending on
+  % the settings for checkconfig
+  cfg = rmfield(cfg, 'target');
 end
 
 % ensure that the right cfg options have been set corresponding to the method
 switch cfg.method
-  case 'template'        % realign the sensors to match a template set
+  case 'template'      % realign the sensors to match a template set
     cfg = ft_checkconfig(cfg, 'required', 'target', 'forbidden', 'headshape');
   case 'headshape'     % realign the sensors to fit the head surface
     cfg = ft_checkconfig(cfg, 'required', 'headshape', 'forbidden', 'target');
-  case 'fiducial'        % realign using the NAS, LPA and RPA fiducials
+  case 'fiducial'      % realign using the NAS, LPA and RPA fiducials
     cfg = ft_checkconfig(cfg, 'required', 'target', 'forbidden', 'headshape');
-  case 'moveinward'      % moves eletrodes inward
+  case 'moveinward'    % moves eletrodes inward
     cfg = ft_checkconfig(cfg, 'required', 'moveinward');
 end % switch cfg.method
+
+% set the rest of the defaults, this is to avoid confusion in ft_checkconfig w.r.t. to the method specific checks
+cfg.warp          = ft_getopt(cfg, 'warp', 'rigidbody');
+cfg.channel       = ft_getopt(cfg, 'channel',  'all');
+cfg.keepchannel   = ft_getopt(cfg, 'keepchannel', 'no');
+cfg.feedback      = ft_getopt(cfg, 'feedback', 'no');
+cfg.casesensitive = ft_getopt(cfg, 'casesensitive', 'no');
+cfg.headshape     = ft_getopt(cfg, 'headshape', []);     % for triangulated head surface, without labels
 
 if strcmp(cfg.method, 'fiducial') && isfield(cfg, 'warp') && ~isequal(cfg.warp, 'rigidbody')
   ft_warning('The method ''fiducial'' implies a rigid body tramsformation. See also http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1722');
@@ -298,9 +298,14 @@ if usetarget
   end
   clear tmp
   for i=1:Ntemplate
-    % ensure up-to-date sensor description
-    % ensure that the units are consistent with the electrodes
-    tmp(i) = ft_convert_units(ft_datatype_sens(target(i)), elec.unit);
+    try
+      % ensure up-to-date sensor description
+      % ensure that the units are consistent with the electrodes
+      tmp(i) = ft_convert_units(ft_datatype_sens(target(i)), elec.unit);
+    catch
+      ft_warning('cannot check the consistency of the units in the fiducials and the electrodes, you need to ensure this yourself');
+      tmp(i) = target(i);
+    end
   end
   target = tmp;
 end
@@ -665,7 +670,7 @@ switch cfg.method
       elec_realigned.(cfg.warp) = norm.m;
     end
     
-  case  {'fiducial' 'interactive'}
+  case  {'fiducial', 'interactive'}
     % the transformation is a 4x4 homogenous matrix
     % apply the transformation to the original complete set of sensors
     elec_realigned = ft_transform_geometry(norm.m, elec_original);
@@ -734,10 +739,6 @@ if istrue(cfg.keepchannel)
   elec_realigned.label = [elec_realigned.label; elec_original.label(idx)];
   elec_realigned.elecpos = [elec_realigned.elecpos; elec_original.elecpos(idx,:)];
 end
-
-% channel positions are identical to the electrode positions (this was checked at the start)
-elec_realigned.chanpos = elec_realigned.elecpos;
-elec_realigned.tra = eye(numel(elec_realigned.label));
 
 % copy over unit, chantype, chanunit, and tra information in case this was not already done
 if ~isfield(elec_realigned, 'unit') && isfield(elec_original, 'unit')

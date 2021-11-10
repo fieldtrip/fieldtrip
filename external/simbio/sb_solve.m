@@ -1,14 +1,14 @@
-function x = sb_solve(sysmat,vecb);
+function x = sb_solve(sysmat,vecb)
 
 % SB_SOLVE
 %
 % $Id$
 
 %scalen
-disp('Scaling stiffnes matrix...')
+disp('Scaling stiffness matrix...')
 dkond = 1./(sqrt(diag(sysmat)));
 vecb = vecb.*dkond;
-[indexi indexj s] = find(sysmat);
+[indexi, indexj, s] = find(sysmat);
 sys_size = size(sysmat,1);
 clear sysmat;
 s = (s.*dkond(indexi)).*dkond(indexj);
