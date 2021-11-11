@@ -5,12 +5,13 @@ function test_tutorial_headmodel_eeg_fem
 % DEPENDENCY ft_prepare_headmodel ft_prepare_mesh ft_datatype_segmentation
 
 mri = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/Subject01.mri'));
+
+% this needs to be done before reslicing
 nas = mri.hdr.fiducial.mri.nas;
 lpa = mri.hdr.fiducial.mri.lpa;
 rpa = mri.hdr.fiducial.mri.rpa;
 
 vox2head = mri.transform;
-
 nas = ft_warp_apply(vox2head, nas, 'homogenous');
 lpa = ft_warp_apply(vox2head, lpa, 'homogenous');
 rpa = ft_warp_apply(vox2head, rpa, 'homogenous');
@@ -33,7 +34,7 @@ mesh = ft_prepare_mesh(cfg,seg_i);
 cfg        = [];
 cfg.method ='simbio';
 cfg.conductivity = [0.33 0.14 1.79 0.01 0.43];   % order follows mesh.tissyelabel
-vol        = ft_prepare_headmodel(cfg, mesh);
+headmodel  = ft_prepare_headmodel(cfg, mesh);
 
 ft_plot_mesh(mesh, 'surfaceonly', 'yes');
 
@@ -50,7 +51,7 @@ ft_plot_sens(elec);
 % Then, we determine the translation and rotation that is needed to get the position of the fiducials in the electrode structure (defined with labels 'Nz', 'LPA', 'RPA') to their counterparts in the CTF head coordinate system that we acquired from the anatomical mri (nas, lpa, rpa).
 %
 % create a structure similar to a template set of electrodes
-fid.chanpos       = [nas; lpa; rpa];       % CTF head coordinates of fiducials
+fid.pos           = [nas; lpa; rpa];       % CTF head coordinates of fiducials
 fid.label         = {'Nz','LPA','RPA'};    % use the same labels as those in elec
 fid.unit          = 'mm';                  % use the same units as those in mri
 
@@ -79,8 +80,5 @@ ft_plot_sens(elec_aligned);
 cfg          = [];
 cfg.method   = 'interactive';
 cfg.elec     = elec_aligned;
-cfg.headshape = vol;
+cfg.headshape = headmodel;
 elec_aligned = ft_electroderealign(cfg);
-
-save elec_aligned elec_aligned;
-

@@ -566,19 +566,19 @@ elseif strcmp(cfg.method, 'interactive')
   
   tmpcfg = [];
   tmpcfg.individual.elec = elec;
-  if isfield(cfg, 'headshape') && ~isempty(cfg.headshape)
-    tmpcfg.template.headshape = cfg.headshape;
+  if useheadshape
+    tmpcfg.template.headshape = headshape;
   end
-  if isfield(cfg, 'target') && ~isempty(cfg.target)
-    if iscell(cfg.target)
-      if numel(cfg.target)>1
+  if usetarget
+    if iscell(target)
+      if numel(target)>1
         ft_notice('computing the average electrode positions');
-        tmpcfg.template.elec = ft_average_sens(cfg.target);
+        tmpcfg.template.elec = ft_average_sens(target);
       else
-        tmpcfg.template.elec = cfg.target{1};
+        tmpcfg.template.elec = target{1};
       end
     elseif isstruct(cfg.target)
-      tmpcfg.template.elec = cfg.target;
+      tmpcfg.template.elec = target;
     end
     tmpcfg.template.elecstyle = {'facecolor', 'blue'};
     ft_info('plotting the target electrodes in blue');
