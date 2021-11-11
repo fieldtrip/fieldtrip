@@ -86,11 +86,21 @@ cfgout = ft_definetrial(cfg)
 
 assert(size(cfgout.trl,1)==266*3);
 
-%% another one
+%% 266 original trials
 
 cfg.trialfun = 'ft_trialfun_trial';
 cfg.trialdef = [];
 cfgout = ft_definetrial(cfg)
 
 assert(size(cfgout.trl,1)==266);
+
+%% ntrials=inf should also work, see https://github.com/fieldtrip/fieldtrip/issues/1912
+
+cfg.trialfun = 'ft_trialfun_general';
+cfg.trialdef = [];
+cfg.trialdef.length = 1;
+cfg.trialdef.ntrials = inf;
+cfgout = ft_definetrial(cfg)
+
+assert(size(cfgout.trl,1)==266*3);
 

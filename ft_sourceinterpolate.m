@@ -159,6 +159,9 @@ else
   isUnstructuredFun  = true;
 end
 
+% select the parameters from the data, this needs to be done here, because after running checkdata, the parameterselection fails if the numeric data has nfreq/ntime/etc>1 
+cfg.parameter = parameterselection(cfg.parameter, functional);
+
 if isUnstructuredAna
   anatomical = ft_checkdata(anatomical, 'datatype', {'source', 'source+label', 'mesh'}, 'insidestyle', 'logical', 'feedback', 'yes', 'hasunit', 'yes');
 else
@@ -171,23 +174,6 @@ else
   functional = ft_checkdata(functional, 'datatype', 'volume', 'insidestyle', 'logical', 'feedback', 'yes', 'hasunit', 'yes');
 end
 
-if ~isa(cfg.parameter, 'cell')
-  cfg.parameter = {cfg.parameter};
-end
-
-% try to select all relevant parameters present in the data
-if any(strcmp(cfg.parameter, 'all'))
-  cfg.parameter = parameterselection('all', functional);
-  for k = numel(cfg.parameter):-1:1
-    % check whether the field is numeric
-    tmp = getsubfield(functional, cfg.parameter{k});
-    if iscell(tmp)
-      cfg.parameter(k) = [];
-    elseif strcmp(cfg.parameter{k}, 'pos')
-      cfg.parameter(k) = [];
-    end
-  end
-end
 
 % ensure that the functional data has the same unit as the anatomical data
 functional = ft_convert_units(functional, anatomical.unit);

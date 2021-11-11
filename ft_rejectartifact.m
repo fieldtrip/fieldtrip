@@ -572,7 +572,7 @@ end
 if isempty(cfg.trl)
   ft_error('No trials left after artifact rejection.')
 else
-  if hasdata && ~any(strcmp({'nan', 'zero', 'value'}, cfg.artfctdef.reject)) % Skip this step to avoid removing parts that were filled with NaNs or zeros
+  if hasdata && ~any(strcmp(cfg.artfctdef.reject, {'nan', 'zero', 'value'})) % Skip this step to avoid removing parts that were filled with NaNs or zeros
     % apply the updated trial definition on the data
     tmpcfg      = keepfields(cfg, {'trl', 'showcallinfo'});
     data        = removefields(data, {'trialinfo'});
