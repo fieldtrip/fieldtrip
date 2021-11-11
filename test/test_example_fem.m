@@ -12,7 +12,7 @@ mri = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/Subject01.mri'));
 %% segmentation
 cfg          = [];
 cfg.output   = {'gray', 'white', 'csf', 'skull', 'scalp'};
-segmentedmri = ft_headmodelumesegment(cfg, mri);
+segmentedmri = ft_volumesegment(cfg, mri);
 
 %% mesh
 cfg        = [];
@@ -60,32 +60,18 @@ end
 
 cfg                 = [];
 cfg.mri             = mri;
+cfg.resolution      = 3;
 sourcemodel         = ft_prepare_sourcemodel(cfg);
 sourcemodel         = ft_convert_units(sourcemodel, headmodel.unit);
+sourcemodel.inside(500:end) = false; % do only a few dipoles
 
 cfg            = [];
 cfg.headmodel  = headmodel;
 cfg.elec       = elec_align;
 cfg.sourcemodel = sourcemodel;
+cfg.channel    = elec_align.label(4:6); % do only a few channels, to save time
 lf             = ft_prepare_leadfield(cfg);
 
-% plot the leadfield for a few representative locations: points around z-axis with increasing z values
-
-plotpos = [];
-n=size(lf.pos,1);
-p=1;
-for i = 1:n
-  if lf.pos(i,1)==-0.1 && lf.pos(i,2)==-0.2
-      plotpos(p)=i;
-      p=p+1;
-  end
-end
-
-figure;
-for i=1:20
-
-  subplot(4,5,i);
-  ft_plot_topo3d(lf.cfg.elec.chanpos,lf.leadfield{plotpos(i)}(:,3));
-  % view([0 0]);
-
-end
+m = cellfun(@mean,lf.leadfield(lf.inside),'uniformoutput',false)';
+m = cat(1, m{:});
+assert(all(m(:)<eps));
