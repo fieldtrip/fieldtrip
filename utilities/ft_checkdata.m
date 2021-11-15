@@ -1423,12 +1423,32 @@ if isfield(data, 'dim')
   data.transform = pos2transform(data.pos, data.dim);
 end
 
-% remove the unwanted fields
-data = removefields(data, {'pos', 'xgrid', 'ygrid', 'zgrid', 'tri', 'tet', 'hex'});
+% remove the unwanted or possibly invalid fields
+fn    = fieldnames(data);
+rm_fn = fn(contains(fn, 'dimord')); 
+data = removefields(data, [{'pos', 'xgrid', 'ygrid', 'zgrid', 'tri', 'tet', 'hex'} rm_fn(:)']);
 
 % make inside a volume
 data = fixinside(data, 'logical');
 
+% reshape everything with a 'pos' in the dimord
+fn = fieldnames(data);
+for k = 1:numel(fn)
+  tmp    = getsubfield(data, fn{k});
+  dimord = getdimord(data, fn{k});
+  tmpdim = getdimsiz(data, fn{k});
+  sel    = find(contains(dimord, 'pos'));
+  if isempty(sel)
+    continue
+  else
+    assert(all(tmpdim(sel)==prod(data.dim)));
+    newdim = zeros(1,0);
+    for m = 1:numel(sel)
+      newdim = cat(2, newdim, [data.dim tmpdim((sel(m)+1):end)]);
+    end
+    data = setsubfield(data, fn{k}, reshape(tmp, newdim));
+  end
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % convert between datatypes
