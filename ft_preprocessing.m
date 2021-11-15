@@ -238,6 +238,7 @@ headeropt  = ft_setopt(headeropt, 'coordsys',       ft_getopt(cfg, 'coordsys', '
 headeropt  = ft_setopt(headeropt, 'coilaccuracy',   ft_getopt(cfg, 'coilaccuracy'));        % is passed to low-level function
 headeropt  = ft_setopt(headeropt, 'checkmaxfilter', ft_getopt(cfg, 'checkmaxfilter'));      % this allows to read non-maxfiltered neuromag data recorded with internal active shielding
 headeropt  = ft_setopt(headeropt, 'chantype',       ft_getopt(cfg, 'chantype', {}));        % 2017.10.10 AB required for NeuroOmega files
+headeropt  = ft_setopt(headeropt, 'cache',          ft_getopt(cfg, 'cache', false));        % cache header
 
 if ~isfield(cfg, 'feedback')
   if strcmp(cfg.method, 'channel')
@@ -253,7 +254,7 @@ if isfield(cfg, 'emghpfreq'),  ft_error('EMG specific preprocessing is not suppo
 if isfield(cfg, 'emgrectify'), ft_error('EMG specific preprocessing is not supported any more'); end
 if isfield(cfg, 'emghilbert'), ft_error('EMG specific preprocessing is not supported any more'); end
 if isfield(cfg, 'eegchannel'), ft_error('EEG specific preprocessing is not supported any more'); end
-if isfield(cfg, 'resamplefs'), ft_error('resampling is not supported any more, see RESAMPLEDATA'); end
+if isfield(cfg, 'resamplefs'), ft_error('resampling is not supported any more, see FT_RESAMPLEDATA'); end
 
 if isfield(cfg, 'lnfilter') && strcmp(cfg.lnfilter, 'yes')
   ft_error('line noise filtering using the option cfg.lnfilter is not supported any more, use cfg.bsfilter instead')

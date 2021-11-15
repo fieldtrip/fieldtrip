@@ -48,13 +48,17 @@ function ft_postamble(cmd, varargin)
 %#function ft_postamble_randomseed
 %#function ft_postamble_hastoolbox
 
+persistent cmd_exists
+
 % this is a trick to pass the input arguments into the ft_postamble_xxx script
 assignin('caller', 'iW1aenge_postamble', varargin);
 
 full_cmd=['ft_postamble_' cmd];
-cmd_exists=false;
+% if isempty(cmd_exists)
+%   cmd_exists=false;
+% end
 
-if exist(full_cmd, 'file')
+if isempty(cmd_exists) && exist(full_cmd, 'file')
   % Matlab can find commands in a private subdirectory; Octave cannot.
   % If pwd is already the private directory, or if using Matlab then
   % the command can be evaluated directly

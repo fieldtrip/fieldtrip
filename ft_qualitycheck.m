@@ -215,6 +215,7 @@ if strcmp(cfg.analyze,'yes')
     % preprocess
     cfgpreproc     = cfgdef;
     cfgpreproc.trl = cfgdef.trl(t,:);
+    cfgpreproc.cache = true;
     data           = ft_preprocessing(cfgpreproc); clear cfgpreproc;
     
     % determine headposition
@@ -254,7 +255,8 @@ if strcmp(cfg.analyze,'yes')
    
     toc
   end % end of trial loop
-  
+  clear ft_read_header % remove the hdr from the cache of that function
+
   % determine headmotion: distance from initial trial (in cm)
   if isctf && hasheadpos
     summary.avg(6,:) = sqrt(sum((headpos.avg(1:3,:)-repmat(headpos.avg(1:3,1),1,size(headpos.avg,2))).^2,1)); % N
