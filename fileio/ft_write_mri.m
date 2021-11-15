@@ -115,9 +115,6 @@ end
 % decompose the input data into separate fields
 dat         = mri.anatomy;
 transform   = mri.transform;
-dim         = mri.dim;
-unit        = mri.unit;
-coordsys    = mri.coordsys;
 clear mri % to avoid confusion
 
 %% determine the details of the output format
