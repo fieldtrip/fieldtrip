@@ -1426,15 +1426,15 @@ end
 % remove the unwanted or possibly invalid fields, also remove all numeric
 % fields that have a '{pos}' dimord
 fn    = fieldnames(data);
-rm_fn = cell(0,1);
+remove_fn = cell(0,1);
 for k = 1:numel(fn)
   tmpdimord = getdimord(data, fn{k});
   if any(contains(split(tmpdimord, '_'), '{pos}'))
-    rm_fn = cat(1, rm_fn, fn{k});
+    remove_fn = cat(1, remove_fn, fn{k});
   end
 end
-rm_fn = cat(1, rm_fn(:), fn(contains(fn, 'dimord')));
-data  = removefields(data, [{'pos', 'xgrid', 'ygrid', 'zgrid', 'tri', 'tet', 'hex'} rm_fn(:)']);
+remove_fn = cat(1, remove_fn(:), fn(contains(fn, 'dimord')));
+data  = removefields(data, [{'pos', 'xgrid', 'ygrid', 'zgrid', 'tri', 'tet', 'hex'} remove_fn(:)']);
 
 % make inside a volume
 data = fixinside(data, 'logical');
