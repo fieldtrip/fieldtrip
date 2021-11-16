@@ -1423,18 +1423,13 @@ if isfield(data, 'dim')
   data.transform = pos2transform(data.pos, data.dim);
 end
 
-% remove the unwanted or possibly invalid fields, also remove all numeric
-% fields that have a '{pos}' dimord
-fn    = fieldnames(data);
-remove_fn = cell(0,1);
-for k = 1:numel(fn)
-  tmpdimord = getdimord(data, fn{k});
-  if any(contains(split(tmpdimord, '_'), '{pos}'))
-    remove_fn = cat(1, remove_fn, fn{k});
-  end
+% remove the unwanted or possibly invalid fields, also remove all numeric fields that have a '{pos}' dimord
+fn     = fieldnames(data);
+remove = false(size(fn));
+for k=1:numel(fn)
+  remove(k) = contains(fn{k}, 'dimord') | contains(getdimord(data, fn{k}), '{pos}');
 end
-remove_fn = cat(1, remove_fn(:), fn(contains(fn, 'dimord')));
-data  = removefields(data, [{'pos', 'xgrid', 'ygrid', 'zgrid', 'tri', 'tet', 'hex'} remove_fn(:)']);
+data = removefields(data, [{'pos', 'xgrid', 'ygrid', 'zgrid', 'tri', 'tet', 'hex'} fn{remove}]);
 
 % make inside a volume
 data = fixinside(data, 'logical');
