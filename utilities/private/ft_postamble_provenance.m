@@ -44,11 +44,11 @@ end
 
 % the proctime and procmem rely on cryptical variables that were created and added to
 % the function workspace by the ft_preamble_callinfo script.
-if istrue(ft_getopt(cfg, 'tracktimeinfo', 'yes'))
+if exist('ftohDiW7th_FuncTimer', 'var')
   cfg.callinfo.proctime = toc(ftohDiW7th_FuncTimer);
 end
 
-if istrue(ft_getopt(cfg, 'trackmeminfo', 'yes'))
+if exist('ftohDiW7th_FuncMem', 'var')
   cfg.callinfo.procmem  = memtoc(ftohDiW7th_FuncMem);
 end
 
@@ -93,11 +93,11 @@ if istrue(ft_getopt(cfg, 'showcallinfo', 'yes'))
   % stack(2) is the calling ft_postamble function
   % stack(3) is the main FieldTrip function that we are interested in
   
-  if istrue(ft_getopt(cfg, 'tracktimeinfo', 'yes')) && istrue(ft_getopt(cfg, 'trackmeminfo', 'yes'))
+  if issubfield(cfg.callinfo, 'proctime') && issubfield(cfg.callinfo, 'procmem')
     ft_info('the call to "%s" took %d seconds and required the additional allocation of an estimated %d MB\n', stack(3).name, round(cfg.callinfo.proctime), round(cfg.callinfo.procmem/(1024*1024)));
-  elseif ~istrue(ft_getopt(cfg, 'tracktimeinfo', 'yes')) && istrue(ft_getopt(cfg, 'trackmeminfo', 'yes'))
+  elseif issubfield(cfg.callinfo, 'procmem')
     ft_info('the call to "%s" required the additional allocation of an estimated %d MB\n', stack(3).name, round(cfg.callinfo.procmem/(1024*1024)));
-  elseif istrue(ft_getopt(cfg, 'tracktimeinfo', 'yes')) && ~istrue(ft_getopt(cfg, 'trackmeminfo', 'yes'))
+  elseif issubfield(cfg.callinfo, 'proctime')
     ft_info('the call to "%s" took %d seconds\n', stack(3).name, round(cfg.callinfo.proctime));
   else
     % nothing is to be printed
