@@ -787,7 +787,8 @@ if ismeg
     'color','white',...
     'Units','normalized',...
     'Position',[0.4 0.05 0.55 0.4]);
-  
+ 
+
   MEGchans                 = ft_channelselection('MEG', timelock.label);
   MEGchanindx              = match_str(timelock.label, MEGchans);
   cfgtopo                  = [];
@@ -795,11 +796,18 @@ if ismeg
   cfgtopo.colorbar         = 'no';
   cfgtopo.comment          = 'no';
   cfgtopo.style            = 'blank';
-  cfgtopo.layout           = ft_prepare_layout([], timelock);
+  if ~isctf
+    cfgtopo.layout           = ft_prepare_layout([], timelock);
+  else
+    tmpcfg = [];
+    tmpcfg.layout  = 'CTF275_helmet.mat';
+    cfgtopo.layout = ft_prepare_layout(tmpcfg);
+  end
   cfgtopo.highlight        = 'on';
   cfgtopo.highlightsymbol  = '.';
   cfgtopo.highlightsize    = 14;
   cfgtopo.highlightchannel = find(sum(timelock.jumps(MEGchanindx,:),2)>0);
+  cfgtopo.figure           = 'gca';
   data.label               = MEGchans;
   data.powspctrm           = sum(timelock.jumps(MEGchanindx,:),2);
   data.dimord              = 'chan_freq';
