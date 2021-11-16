@@ -85,7 +85,7 @@ cfg.channel = ft_getopt(cfg, 'channel', 'all');
 cfg.trials = ft_getopt(cfg, 'trials', 'all');
 
 % select channels and trials of interest, by default this will select all channels and trials
-tmpcfg = keepfields(cfg, {'trials', 'channel', 'tolerance', 'showcallinfo'});
+tmpcfg = keepfields(cfg, {'trials', 'channel', 'tolerance', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
 datain = ft_selectdata(tmpcfg, datain);
 % restore the provenance information
 [cfg, datain] = rollback_provenance(cfg, datain);

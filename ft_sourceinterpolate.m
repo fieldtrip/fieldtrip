@@ -185,7 +185,7 @@ end
 
 if ~isUnstructuredAna && cfg.downsample~=1
   % downsample the anatomical volume
-  tmpcfg = keepfields(cfg, {'downsample', 'showcallinfo'});
+  tmpcfg = keepfields(cfg, {'downsample', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
   tmpcfg.parameter = 'anatomy';
   anatomical = ft_volumedownsample(tmpcfg, anatomical);
   % restore the provenance information and put back cfg.parameter

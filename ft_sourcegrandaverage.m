@@ -120,7 +120,7 @@ for k = 1:numel(checkfields)
 end
 
 % ensure a consistent selection of the data over all inputs
-tmpcfg = keepfields(cfg, {'parameter', 'trials', 'latency', 'frequency', 'foilim', 'showcallinfo'});
+tmpcfg = keepfields(cfg, {'parameter', 'trials', 'latency', 'frequency', 'foilim', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
 [varargin{:}] = ft_selectdata(tmpcfg, varargin{:});
 % restore the provenance information
 [cfg, varargin{:}] = rollback_provenance(cfg, varargin{:});

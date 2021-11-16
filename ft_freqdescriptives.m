@@ -129,7 +129,7 @@ if ~hasrpt && ~strcmp(cfg.trials, 'all'), ft_error('trial selection requires inp
 if ~varflg && jckflg,                     varflg = 1; end
 
 % select data of interest
-tmpcfg = keepfields(cfg, {'trials', 'channel', 'latency', 'frequency', 'showcallinfo'});
+tmpcfg = keepfields(cfg, {'trials', 'channel', 'latency', 'frequency', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
 freq = ft_selectdata(tmpcfg, freq);
 % restore the provenance information
 [cfg, freq] = rollback_provenance(cfg, freq);

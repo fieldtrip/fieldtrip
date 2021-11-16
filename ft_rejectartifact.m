@@ -574,7 +574,7 @@ if isempty(cfg.trl)
 else
   if hasdata && ~any(strcmp(cfg.artfctdef.reject, {'nan', 'zero', 'value'})) % Skip this step to avoid removing parts that were filled with NaNs or zeros
     % apply the updated trial definition on the data
-    tmpcfg      = keepfields(cfg, {'trl', 'showcallinfo'});
+    tmpcfg      = keepfields(cfg, {'trl', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
     data        = removefields(data, {'trialinfo'});
     data        = ft_redefinetrial(tmpcfg, data);
     % restore the provenance information

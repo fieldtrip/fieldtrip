@@ -134,7 +134,7 @@ if ~strcmp(cfg.trials, 'all')
   end
   
   % select trials of interest
-  tmpcfg = keepfields(cfg, {'trials', 'showcallinfo'});
+  tmpcfg = keepfields(cfg, {'trials', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
   data   = ft_selectdata(tmpcfg, data);
   % restore the provenance information
   [cfg, data] = rollback_provenance(cfg, data);
@@ -333,7 +333,7 @@ elseif ~isempty(cfg.length)
   end
   clear begsample endsample offset
   
-  tmpcfg = keepfields(cfg, {'showcallinfo', 'feedback'});
+  tmpcfg = keepfields(cfg, {'feedback', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
   tmpcfg.trl = newtrl;
   
   if isfield(data, 'trialinfo') && ~istable(data.trialinfo)
@@ -371,7 +371,7 @@ elseif istrue(cfg.continuous)
   % here we want to use the start of the recording as t=0
   newtrl(:,3) = newtrl(:,1) - 1;
   
-  tmpcfg = keepfields(cfg, {'showcallinfo', 'feedback'});
+  tmpcfg = keepfields(cfg, {'feedback', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
   tmpcfg.trl = newtrl;
   
   data   = removefields(data, {'trialinfo'}); % the trialinfo does not apply any more
