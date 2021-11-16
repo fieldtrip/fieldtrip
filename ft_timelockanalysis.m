@@ -136,7 +136,7 @@ end
 
 % compute the covariance matrix, if requested
 if computecov
-  tmpcfg = keepfields(cfg, {'trials', 'channel', 'tolerance', 'showcallinfo'});
+  tmpcfg = keepfields(cfg, {'trials', 'channel', 'tolerance', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
   tmpcfg.latency = cfg.covariancewindow;
   datacov = ft_selectdata(tmpcfg, data);
   % restore the provenance information
@@ -192,7 +192,7 @@ end
 
 % select trials and channels of interest
 orgcfg = cfg;
-tmpcfg = keepfields(cfg, {'trials', 'channel', 'tolerance', 'latency', 'showcallinfo'});
+tmpcfg = keepfields(cfg, {'trials', 'channel', 'tolerance', 'latency', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
 data   = ft_selectdata(tmpcfg, data);
 % restore the provenance information
 [cfg, data] = rollback_provenance(cfg, data);

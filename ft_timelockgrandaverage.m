@@ -126,7 +126,7 @@ end
 
 % select trials and channels of interest
 orgcfg = cfg;
-tmpcfg = keepfields(cfg, {'parameter', 'channel', 'tolerance', 'latency', 'showcallinfo'});
+tmpcfg = keepfields(cfg, {'parameter', 'channel', 'tolerance', 'latency', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
 [varargin{:}] = ft_selectdata(tmpcfg, varargin{:});
 % restore the provenance information
 [cfg, varargin{:}] = rollback_provenance(cfg, varargin{:});

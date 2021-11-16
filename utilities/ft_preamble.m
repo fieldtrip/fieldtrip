@@ -46,7 +46,7 @@ function ft_preamble(cmd, varargin)
 %#function ft_preamble_randomseed
 
 % this is a trick to pass the input arguments into the ft_preamble_xxx script
-assignin('caller', 'iW1aenge_preamble', varargin);
+assignin('caller', 'preamble_argin', varargin);
 
 full_cmd = ['ft_preamble_' cmd];
 cmd_exists = false;

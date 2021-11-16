@@ -268,7 +268,7 @@ end
 
 if cfg.downsample~=1
   % optionally downsample the anatomical and/or functional volumes
-  tmpcfg = keepfields(cfg, {'downsample', 'spmversion', 'showcallinfo'});
+  tmpcfg = keepfields(cfg, {'downsample', 'spmversion', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
   tmpcfg.smooth = 'no'; % smoothing is done in ft_volumesegment itself
   mri = ft_volumedownsample(tmpcfg, mri);
   % restore the provenance information

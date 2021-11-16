@@ -162,7 +162,7 @@ end
 % elsewhere, these will be added back to the transformed data later.
 
 % select trials and channels of interest, first of the non-MEG channels, then of the MEG channels
-tmpcfg = keepfields(cfg, {'trials', 'showcallinfo'}); % don't keep tolerance, it is used differently here
+tmpcfg = keepfields(cfg, {'trials', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'}); % don't keep tolerance, it is used differently here
 tmpcfg.channel = setdiff(data.label, ft_channelselection(cfg.channel, data.label), 'stable');
 rest = ft_selectdata(tmpcfg, data);
 tmpcfg.channel = ft_channelselection(cfg.channel, data.label);
@@ -247,7 +247,7 @@ else
 end
 
 % copy all options that are potentially used in ft_prepare_sourcemodel
-tmpcfg           = keepfields(cfg, {'sourcemodel', 'mri', 'headshape', 'symmetry', 'smooth', 'threshold', 'spheremesh', 'inwardshift', 'xgrid' 'ygrid', 'zgrid', 'resolution', 'tight', 'warpmni', 'template', 'showcallinfo'});
+tmpcfg           = keepfields(cfg, {'sourcemodel', 'mri', 'headshape', 'symmetry', 'smooth', 'threshold', 'spheremesh', 'inwardshift', 'xgrid' 'ygrid', 'zgrid', 'resolution', 'tight', 'warpmni', 'template', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
 tmpcfg.headmodel = volold;
 tmpcfg.grad      = data.grad;
 % create the source positions on which the data will be projected

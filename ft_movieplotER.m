@@ -91,7 +91,7 @@ cfg.renderer    = ft_getopt(cfg, 'renderer'); % let MATLAB decide on the default
 
 % apply optional baseline correction
 if ~strcmp(cfg.baseline, 'no')
-  tmpcfg = keepfields(cfg, {'baseline', 'baselinetype', 'parameter', 'showcallinfo'});
+  tmpcfg = keepfields(cfg, {'baseline', 'baselinetype', 'parameter', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
   data = ft_timelockbaseline(tmpcfg, data);
   [cfg, data] = rollback_provenance(cfg, data);
 end

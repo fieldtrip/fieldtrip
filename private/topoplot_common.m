@@ -312,7 +312,7 @@ for indx=1:Ndata
   end
   
   % time and/or frequency should NOT be selected and averaged here, since a singleplot might follow in interactive mode
-  tmpcfg = keepfields(cfg, {'channel', 'showcallinfo', 'trials'});
+  tmpcfg = keepfields(cfg, {'channel', 'trials', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
   if hasrpt
     tmpcfg.avgoverrpt = 'yes';
   else

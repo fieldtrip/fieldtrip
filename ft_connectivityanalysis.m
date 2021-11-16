@@ -172,7 +172,7 @@ normpow = 1; % default, has to be overruled e.g. in csd
 
 % select trials of interest
 if ~strcmp(cfg.trials, 'all')
-  tmpcfg = keepfields(cfg, {'trials', 'tolerance', 'showcallinfo'});
+  tmpcfg = keepfields(cfg, {'trials', 'tolerance', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
   data = ft_selectdata(tmpcfg, data);
   [cfg, data] = rollback_provenance(cfg, data);
 end

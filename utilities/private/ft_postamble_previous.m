@@ -31,9 +31,9 @@
 % remember the cfg history of the input data structures
 cfg.previous = {};
 cnt = 0;
-for tmpindx=1:length(iW1aenge_postamble)
-  if exist(iW1aenge_postamble{tmpindx}, 'var')
-    tmpvar = eval(iW1aenge_postamble{tmpindx});
+for tmpindx=1:length(postamble_argin)
+  if exist(postamble_argin{tmpindx}, 'var')
+    tmpvar = eval(postamble_argin{tmpindx});
   else
     tmpvar = [];
   end

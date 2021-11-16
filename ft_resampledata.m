@@ -119,7 +119,7 @@ usefsample = any(strcmp(cfg.method, {'resample', 'downsample', 'decimate', 'mean
 usetime    = ~usefsample;
 
 % select trials of interest
-tmpcfg = keepfields(cfg, {'trials', 'showcallinfo'});
+tmpcfg = keepfields(cfg, {'trials', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
 data   = ft_selectdata(tmpcfg, data);
 % restore the provenance information
 [cfg, data] = rollback_provenance(cfg, data);

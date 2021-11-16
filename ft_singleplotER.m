@@ -305,7 +305,7 @@ end
 
 
 % channels should NOT be selected and averaged here, since a topoplot might follow in interactive mode
-tmpcfg = keepfields(cfg, {'showcallinfo', 'trials', 'select'});
+tmpcfg = keepfields(cfg, {'trials', 'select', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
 if hasrpt
   tmpcfg.avgoverrpt = 'yes';
 else
