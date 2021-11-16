@@ -290,6 +290,21 @@ data.pos = pos;
 data.time = 1:7;
 data.freq = 1:8;
 
+% this should be ignored in the conversion
+data.mom = cell(prod(dim), 1);
+for i=1:prod(dim)
+  data.mom{i} = randn(3, length(data.time));
+end
+assert(strcmp(getdimord(data, 'mom'), '{pos}_ori_time'))
+
+% this should be ignored in the conversion
+data.filter = cell(prod(dim), 1);
+data.filterdimord = '{pos}_chan_ori'; % otherwise it is detected as '{pos}_unknown_ori'
+for i=1:prod(dim)
+  data.filter{i} = randn(64, 3);
+end
+assert(strcmp(getdimord(data, 'filter'), '{pos}_chan_ori'))
+
 data.coh = rand(prod(dim),1);
 assert(strcmp(getdimord(data, 'coh'), 'pos'))
 tmp = ft_checkdata(data, 'datatype', 'volume')
