@@ -570,6 +570,9 @@ end
 if exist('img', 'var')
   % determine the size of the volume in voxels
   mri.dim = size(img);
+  if numel(mri.dim)>3
+    mri.dim = mri.dim(1:3); % dim should be the spatial 3D dim
+  end
   % store the anatomical data
   mri.(outputfield) = img;
 end
