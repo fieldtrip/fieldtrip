@@ -49,7 +49,7 @@ function ft_postamble(cmd, varargin)
 %#function ft_postamble_hastoolbox
 
 % this is a trick to pass the input arguments into the ft_postamble_xxx script
-assignin('caller', 'iW1aenge_postamble', varargin);
+assignin('caller', 'postamble_argin', varargin);
 
 full_cmd = ['ft_postamble_' cmd];
 cmd_exists = false;
