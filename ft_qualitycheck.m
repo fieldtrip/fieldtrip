@@ -198,7 +198,7 @@ if strcmp(cfg.analyze,'yes')
   cfgfreq.channel      = allchans;
   cfgfreq.method       = 'mtmfft';
   cfgfreq.taper        = 'hanning';
-  cfgfreq.keeptrials   = 'no';
+  cfgfreq.keeptrials   = 'yes'; % deal with this later
   cfgfreq.foilim       = [0 min(info.hdr.Fs/2, 400)];
   cfgfreq.feedback     = cfg.feedback;
 
@@ -232,8 +232,22 @@ if strcmp(cfg.analyze,'yes')
   end
   
   % process trial by trial
-  for t = 1:ntrials
-    fprintf('analyzing trial %s of %s \t', num2str(t), num2str(ntrials));
+  chunksize = 5;
+  chunks    = (1:chunksize:ntrials)';
+  chunks(:,2) = chunks(:,1) + chunksize - 1;
+  chunks(end,2) = ntrials;
+  nchunks   = size(chunks,1);
+  
+  % averaging matrix to compute per-epoch power efficiently
+  avgmat = zeros(chunksize, floor(timeunit/cfgredef.length));
+  for it = 1:size(avgmat,1)
+    avgmat(it, (it-1)*chunksize + (1:chunksize)) = 1./chunksize;
+  end
+  
+  for ic = 1:nchunks
+    t = chunks(ic,1):chunks(ic,2);
+    
+    fprintf('analyzing trials %d-%d of %d \t', t(1), t(end), ntrials);
     
     % preprocess
     cfgpreproc     = cfgdef;
@@ -244,38 +258,61 @@ if strcmp(cfg.analyze,'yes')
     
     % determine headposition
     if isctf && hasheadpos
-      headpos.avg(1,t) = mean(data.trial{1,1}(Nx,:) * 100);  % meter to cm
-      headpos.avg(2,t) = mean(data.trial{1,1}(Ny,:) * 100);
-      headpos.avg(3,t) = mean(data.trial{1,1}(Nz,:) * 100);
-      headpos.avg(4,t) = mean(data.trial{1,1}(Lx,:) * 100);
-      headpos.avg(5,t) = mean(data.trial{1,1}(Ly,:) * 100);
-      headpos.avg(6,t) = mean(data.trial{1,1}(Lz,:) * 100);
-      headpos.avg(7,t) = mean(data.trial{1,1}(Rx,:) * 100);
-      headpos.avg(8,t) = mean(data.trial{1,1}(Ry,:) * 100);
-      headpos.avg(9,t) = mean(data.trial{1,1}(Rz,:) * 100);
+      tmp = cellfun(@mean, cellrowselect(data.trial, [Nx Ny Nz Lx Ly Lz Rx Ry Rz]), repmat({2},[1 numel(t)]), 'uniformoutput', false);
+      headpos.avg(:,t) = cat(2, tmp{:}).*100;
+%       headpos.avg(1,t) = mean(data.trial{1,1}(Nx,:) * 100);  % meter to cm
+%       headpos.avg(2,t) = mean(data.trial{1,1}(Ny,:) * 100);
+%       headpos.avg(3,t) = mean(data.trial{1,1}(Nz,:) * 100);
+%       headpos.avg(4,t) = mean(data.trial{1,1}(Lx,:) * 100);
+%       headpos.avg(5,t) = mean(data.trial{1,1}(Ly,:) * 100);
+%       headpos.avg(6,t) = mean(data.trial{1,1}(Lz,:) * 100);
+%       headpos.avg(7,t) = mean(data.trial{1,1}(Rx,:) * 100);
+%       headpos.avg(8,t) = mean(data.trial{1,1}(Ry,:) * 100);
+%       headpos.avg(9,t) = mean(data.trial{1,1}(Rz,:) * 100);
     end
+    
     
     % update values
-    timelock.avg(:,t)    = mean(data.trial{1}(allchanindx,:),2);
-    timelock.median(:,t) = median(data.trial{1}(allchanindx,:),2);
-    timelock.range(:,t)  = max(data.trial{1}(allchanindx,:),[],2) - min(data.trial{1}(allchanindx,:),[],2);
-    timelock.min(:,t)    = min(data.trial{1}(allchanindx,:),[],2);
-    timelock.max(:,t)    = max(data.trial{1}(allchanindx,:),[],2);
-    
+%     timelock.avg(:,t)    = mean(data.trial{1}(allchanindx,:),2);
+%     timelock.median(:,t) = median(data.trial{1}(allchanindx,:),2);
+%     timelock.min(:,t)    = min(data.trial{1}(allchanindx,:),[],2);
+%     timelock.max(:,t)    = max(data.trial{1}(allchanindx,:),[],2);
+%     timelock.range(:,t)  = timelock.max(:,t) - timelock.min(:,t);
+    tmpdata   = cellrowselect(data.trial, allchanindx);
+    tmpdimvec = repmat({2}, [1 numel(t)]);
+
+    tmp = cellfun(@mean, tmpdata, tmpdimvec, 'uniformoutput', false);
+    timelock.avg(:,t) = cat(2, tmp{:});
+    tmp = cellfun(@median, tmpdata, tmpdimvec, 'uniformoutput', false);
+    timelock.median(:,t) = cat(2, tmp{:});
+    tmp = cellfun(@max, tmpdata, cell(1, numel(t)), tmpdimvec, 'uniformoutput', false);
+    timelock.max(:,t) = cat(2, tmp{:});
+    tmp = cellfun(@min, tmpdata, cell(1, numel(t)), tmpdimvec, 'uniformoutput', false);
+    timelock.min(:,t) = cat(2, tmp{:});
+    timelock.range(:,t) = timelock.max(:,t) - timelock.min(:,t);
+
     % detect jumps
-    for c = 1:size(data.trial{1}(allchanindx,:),1)
-      timelock.jumps(c,t) = length(find(diff(data.trial{1,1}(allchanindx(c),:)) > jumpthreshold));
-    end
-    
+%     for c = 1:size(data.trial{1}(allchanindx,:),1)
+%       timelock.jumps(c,t) = length(find(diff(data.trial{1,1}(allchanindx(c),:)) > jumpthreshold));
+%     end
+    tmpdif = cellcolselect(tmpdata, 2:nsmp(1)) - cellcolselect(tmpdata, 1:(nsmp(1)-1));
+    tmp    = cellfun(@sum, tmpdif > jumpthreshold, tmpdimvec, 'uniformoutput', false);
+    timelock.jumps(:,t) = cat(2, tmp{:});
+
     % remove the grad and elec to make the subsequent code faster. See https://github.com/fieldtrip/fieldtrip/issues/1551
     data = removefields(data, {'grad', 'elec'});
     
     % FFT and noise estimation
-    redef                 = ft_redefinetrial(cfgredef, data); clear data;
-    FFT                   = ft_freqanalysis(cfgfreq, redef); clear redef;
-    freq.powspctrm(:,:,t) = FFT.powspctrm;
-    summary.avg(9,t)      = mean(mean(findpower(0,  2,  FFT, chanindx))); % Low Freq Power
-    summary.avg(10,t)     = mean(mean(findpower(cfg.linefreq-1, cfg.linefreq+1, FFT, chanindx))); clear FFT; % Line Freq Power
+    redef = ft_redefinetrial(cfgredef, data); i1 = 1:numel(data.trial); clear data;
+    FFT   = ft_freqanalysis(cfgfreq, redef); i2 = 1:numel(redef.trial); clear redef;
+    
+    % average the power across trials
+    FFT.powspctrm = reshape(avgmat(i1, i2) * FFT.powspctrm(:,:), [numel(i1) numel(FFT.label) numel(FFT.freq)]); 
+
+    freq.powspctrm(:,:,t) = permute(FFT.powspctrm, [2 3 1]);
+    summary.avg(9,t)      = mean(mean(findpower(0,  2,  FFT, chanindx), 2), 3); % Low Freq Power
+    summary.avg(10,t)     = mean(mean(findpower(cfg.linefreq-0.5, cfg.linefreq+0.5, FFT, chanindx), 2), 3); % Line Freq Power
+    clear FFT; 
    
     toc
   end % end of trial loop
@@ -430,8 +467,8 @@ function [power, freq] = findpower(low, high, freqinput, chans)
 xmin  = nearest(getsubfield(freqinput, 'freq'), low);
 xmax  = nearest(getsubfield(freqinput, 'freq'), high);
 % select the freq range
-power = freqinput.powspctrm(chans, xmin:xmax);
-freq  = freqinput.freq(:, xmin:xmax);
+power = freqinput.powspctrm(:, chans, xmin:xmax);
+freq  = freqinput.freq(xmin:xmax);
 
 %%%%%%%%%%%%%%%%%%%%%%%% SUBFUNCTION %%%%%%%%%%%%%%%%%%%%%%%%%
 function draw_figure(varargin)
@@ -737,8 +774,8 @@ h.SpectrumAxes = axes(...
   'Position',[.15 .2 .8 .7]);
 
 % plot powerspectrum
-semilogx(h.SpectrumAxes, freq.freq, mean(log10(mean(freq.powspctrm,3)),1)*powscaling,'r','LineWidth',2);
-xlim([1 330])
+semilogx(h.SpectrumAxes, freq.freq, mean(log10(mean(freq.powspctrm*powscaling,3)),1),'r','LineWidth',2);
+xlim([1 400])
 xlabel(h.SpectrumAxes, 'Frequency [Hz]');
 ylabel(h.SpectrumAxes, ['log10 Power [' ylab '^2/Hz]']);
 
