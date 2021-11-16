@@ -51,8 +51,8 @@ function ft_postamble(cmd, varargin)
 % this is a trick to pass the input arguments into the ft_postamble_xxx script
 assignin('caller', 'iW1aenge_postamble', varargin);
 
-full_cmd=['ft_postamble_' cmd];
-cmd_exists=false;
+full_cmd = ['ft_postamble_' cmd];
+cmd_exists = false;
 
 if exist(full_cmd, 'file')
   % Matlab can find commands in a private subdirectory; Octave cannot.
@@ -61,19 +61,16 @@ if exist(full_cmd, 'file')
   cmd_exists = true;
 
 elseif ~ft_platform_supports('exists-in-private-directory')
-  % Octave does not find files by name in a private directory, so the full
-  % filename must be specified.
-  private_dir=fullfile(fileparts(which(mfilename)),'private');
-  full_path=fullfile(private_dir,[full_cmd '.m']);
-
-  cmd_exists=exist(full_path,'file');
-  full_cmd_parts={'ft_tmp_orig_pwd=pwd();',...
-                  'ft_tmp_orig_pwd_cleaner='...
-                                'onCleanup(@()cd(ft_tmp_orig_pwd));',...
-                  sprintf('cd(''%s'');',private_dir),...
-                  [full_cmd ';'],...
-                  'clear ft_tmp_orig_pwd_cleaner;'};
-  full_cmd=sprintf('%s',full_cmd_parts{:});
+  % Octave does not find files by name in a private directory, so the full filename must be specified.
+  private_dir = fullfile(fileparts(which(mfilename)),'private');
+  full_path   = fullfile(private_dir,[full_cmd '.m']);
+  cmd_exists  = exist(full_path, 'file');
+  full_cmd_parts = {'ft_tmp_orig_pwd = pwd(); ',...
+                    'ft_tmp_orig_pwd_cleaner = onCleanup(@()cd(ft_tmp_orig_pwd)); ',...
+                    sprintf('cd(''%s''); ',private_dir),...
+                    [full_cmd '; '],...
+                    'clear ft_tmp_orig_pwd_cleaner;'};
+  full_cmd = sprintf('%s', full_cmd_parts{:});
 end
 
 if ~cmd_exists
@@ -84,4 +81,3 @@ if ~cmd_exists
 end
 
 evalin('caller', full_cmd);
-
