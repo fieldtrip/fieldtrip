@@ -22,7 +22,7 @@ for m=[eps exp(1) pi 1:20]
       data.trial{i} = rand(size(data.label, 2), size(data.time{i}, 2));
     end
     
-    tmp = ft_checkdata(data, 'datatype', 'timelock');
+    tmp = ft_checkdata(data, 'datatype', 'timelock', 'hassampleinfo', 'no');
     
     if (mean(diff(tmp.time)) - fsample > 12e-17)
       error('estimation of fsample does not match!')
@@ -42,7 +42,7 @@ for m=[eps exp(1) pi 1:20]
       data.trial{i} = rand(size(data.label, 2), size(data.time{i}, 2));
     end
     
-    tmp = ft_checkdata(data, 'datatype', 'timelock');
+    tmp = ft_checkdata(data, 'datatype', 'timelock', 'hassampleinfo', 'no');
     
     if (mean(diff(tmp.time)) - fsample > 12e-17)
       error('estimation of fsample does not match!')
@@ -66,7 +66,7 @@ for m=[eps exp(1) pi 1:20]
       data.trial{i} = rand(size(data.label, 2), size(data.time{i}, 2));
     end
     
-    tmp = ft_checkdata(data, 'datatype', 'timelock');
+    tmp = ft_checkdata(data, 'datatype', 'timelock', 'hassampleinfo', 'no');
     
     if (mean(diff(tmp.time)) - fsample > 12e-17)
       error('estimation of fsample does not match!')
@@ -83,7 +83,7 @@ for m=[eps exp(1) pi 1:20]
       data.trial{i} = rand(size(data.label, 2), size(data.time{i}, 2));
     end
     
-    tmp = ft_checkdata(data, 'datatype', 'timelock');
+    tmp = ft_checkdata(data, 'datatype', 'timelock', 'hassampleinfo', 'no');
     
     if (mean(diff(tmp.time)) - fsample > 12e-17)
       error('estimation of fsample does not match!')
@@ -105,7 +105,7 @@ for m=[eps exp(1) pi 1:20]
     
     if (n==eps)
       try
-        tmp = ft_checkdata(data, 'datatype', 'timelock');
+        tmp = ft_checkdata(data, 'datatype', 'timelock', 'hassampleinfo', 'no');
         if (mean(diff(tmp.time)) - fsample > 12e-17)
           warning('estimation of fsample does not match, but we''re near eps!')
         end
@@ -130,14 +130,13 @@ for m=[eps exp(1) pi 1:20]
       data.trial{i} = rand(size(data.label, 2), size(data.time{i}, 2));
     end
     
-    tmp = ft_checkdata(data, 'datatype', 'timelock');
+    tmp = ft_checkdata(data, 'datatype', 'timelock', 'hassampleinfo', 'no');
     
     if (mean(diff(tmp.time)) - fsample > 12e-17)
       error('estimation of fsample does not match!')
     end
   end
 end
-
 
 % make some raw data with unequal time-axis, excluding 0
 data = [];
@@ -149,7 +148,7 @@ for i=1:numel(data.time)
   data.trial{i} = rand(size(data.label, 2), size(data.time{i}, 2));
 end
 
-tmp = ft_checkdata(data, 'datatype', 'timelock');
+tmp = ft_checkdata(data, 'datatype', 'timelock', 'hassampleinfo', 'no');
 
 if sum(tmp.time-[-1.5:0.22:3]) > 12e-17 || numel(tmp.time) ~= 21
   error('time axis is wrong');
@@ -165,7 +164,7 @@ for i=1:numel(data.time)
   data.trial{i} = rand(size(data.label, 2), size(data.time{i}, 2));
 end
 
-tmp = ft_checkdata(data, 'datatype', 'timelock');
+tmp = ft_checkdata(data, 'datatype', 'timelock', 'hassampleinfo', 'no');
 
 if ~isequal(tmp.time, [-2:4])
   error('time axis is wrong');
@@ -182,7 +181,7 @@ for i=1:numel(data.time)
   data.trial{i} = rand(size(data.label, 2), size(data.time{i}, 2));
 end
 
-tmp = ft_checkdata(data, 'datatype', 'timelock');
+tmp = ft_checkdata(data, 'datatype', 'timelock', 'hassampleinfo', 'no');
 
 if ~isequal(tmp.time, [-5:-2])
   error('time axis is wrong');
@@ -199,7 +198,7 @@ for i=1:numel(data.time)
   data.trial{i} = rand(size(data.label, 2), size(data.time{i}, 2));
 end
 
-tmp = ft_checkdata(data, 'datatype', 'timelock');
+tmp = ft_checkdata(data, 'datatype', 'timelock', 'hassampleinfo', 'no');
 
 if ~isequal(tmp.time, [2:5])
   error('time axis is wrong');
@@ -207,25 +206,18 @@ end
 
 % make some raw data with unequal time-axis, including 0, with some jitter
 
-success = 0;
-attempts = 5; % this might not work if the RNG sucks
-while ~success
-  try
-    data = [];
-    data.label = {'1', '2'};
-    data.time{1} = -.5:.25:1;
-    data.time{2} = -.25:.25:.25;
-    data.time{3} = .25:.25:1;
-    data.time{4} = -.5:.25:-.25;
-    
-    for i=1:numel(data.time)
-      data.time{i} = data.time{i} + (rand-0.5)/1000;
-      data.trial{i} = rand(size(data.label, 2), size(data.time{i}, 2));
-    end
-    tmp = ft_checkdata(data, 'datatype', 'timelock');
-    success = 1;
-  end
+data = [];
+data.label = {'1', '2'};
+data.time{1} = -.5:.25:1;
+data.time{2} = -.25:.25:.25;
+data.time{3} = .25:.25:1;
+data.time{4} = -.5:.25:-.25;
+
+for i=1:numel(data.time)
+  data.time{i} = data.time{i} + (rand-0.5)/1000;
+  data.trial{i} = rand(size(data.label, 2), size(data.time{i}, 2));
 end
+tmp = ft_checkdata(data, 'datatype', 'timelock', 'hassampleinfo', 'no');
 
 %% converting raw data to timelock data
 
@@ -242,28 +234,24 @@ for i=1:numel(data.time)
 end
 
 tmp = ft_checkdata(data, 'datatype', 'timelock');
-
 sanityCheck(tmp);
-
 
 %% shift time axis to be strictly positive
 for i=1:numel(data.time)
   data.time{i} = data.time{i} + 0.6;
 end
 
-
 tmp = ft_checkdata(data, 'datatype', 'timelock');
-
 sanityCheck(tmp);
+
 %% shift time axis to be strictly negative
 for i=1:numel(data.time)
   data.time{i} = data.time{i} - .6 - 1.1;
 end
 
-
 tmp = ft_checkdata(data, 'datatype', 'timelock');
-
 sanityCheck(tmp);
+
 %% make time-axis incredibly small
 data.time{1} = -.5:.25:1;
 data.time{2} = -.25:.25:.25;
@@ -273,10 +261,9 @@ for i=1:numel(data.time)
   data.time{i} = (data.time{i}) ./ (10^-12);
 end
 
-
 tmp = ft_checkdata(data, 'datatype', 'timelock');
-
 sanityCheck(tmp);
+
 %% make time-axis awesomly huge
 data.time{1} = -.5:.25:1;
 data.time{2} = -.25:.25:.25;
@@ -286,18 +273,58 @@ for i=1:numel(data.time)
   data.time{i} = data.time{i} .* (10^12);
 end
 
-
 tmp = ft_checkdata(data, 'datatype', 'timelock');
-
 sanityCheck(tmp);
 
+%% source to volume conversions, see https://github.com/fieldtrip/fieldtrip/pull/1920
 
-end
+% prepare the regular grid positions
+dim = [4 5 6];
+transform = eye(4);
+[X, Y, Z] = ndgrid(1:dim(1), 1:dim(2), 1:dim(3));
+pos = ft_warp_apply(transform, [X(:) Y(:) Z(:)]);
 
+data = [];
+data.dim = dim;
+data.pos = pos;
+data.time = 1:7;
+data.freq = 1:8;
 
+data.coh = rand(prod(dim),1);
+assert(strcmp(getdimord(data, 'coh'), 'pos'))
+tmp = ft_checkdata(data, 'datatype', 'volume')
+assert(strcmp(getdimord(tmp, 'coh'), 'dim1_dim2_dim3'))
+
+data.coh = rand(prod(dim), length(data.time));
+assert(strcmp(getdimord(data, 'coh'), 'pos_time'))
+tmp = ft_checkdata(data, 'datatype', 'volume')
+assert(strcmp(getdimord(tmp, 'coh'), 'dim1_dim2_dim3_time'))
+
+data.coh = rand(prod(dim), length(data.time), length(data.freq));
+assert(strcmp(getdimord(data, 'coh'), 'pos_time_freq'))
+tmp = ft_checkdata(data, 'datatype', 'volume')
+assert(strcmp(getdimord(tmp, 'coh'), 'dim1_dim2_dim3_time_freq'))
+
+data.coh = rand(prod(dim), prod(dim));
+assert(strcmp(getdimord(data, 'coh'), 'pos_pos'))
+tmp = ft_checkdata(data, 'datatype', 'volume')
+assert(strcmp(getdimord(tmp, 'coh'), 'dim1_dim2_dim3_dim1_dim2_dim3'))
+
+data.coh = rand(prod(dim), prod(dim), length(data.time));
+assert(strcmp(getdimord(data, 'coh'), 'pos_pos_time'))
+tmp = ft_checkdata(data, 'datatype', 'volume')
+assert(strcmp(getdimord(tmp, 'coh'), 'dim1_dim2_dim3_dim1_dim2_dim3_time'))
+
+data.coh = rand(prod(dim), prod(dim), length(data.time), length(data.freq));
+assert(strcmp(getdimord(data, 'coh'), 'pos_pos_time_freq'))
+tmp = ft_checkdata(data, 'datatype', 'volume')
+assert(strcmp(getdimord(tmp, 'coh'), 'dim1_dim2_dim3_dim1_dim2_dim3_time_freq'))
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function sanityCheck(tmp)
 
-% sanity checks
 % This does not need to be checked, because by construction
 % a timelock structure should not contain a sampleinfo field
 %if ~isequal(size(tmp.sampleinfo), [4,2])
@@ -320,5 +347,5 @@ if any(isnan(tmp.trial(1, :))) ...
     || any(isnan(tmp.trial(4, 1:4)))  || any(~isnan(tmp.trial(4, [5:14])))
   error('nans are misplaced in .trial');
 end
-end
+
 

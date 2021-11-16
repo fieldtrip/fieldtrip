@@ -1423,33 +1423,42 @@ if isfield(data, 'dim')
   data.transform = pos2transform(data.pos, data.dim);
 end
 
-% remove the unwanted or possibly invalid fields, also remove all numeric fields that have a '{pos}' dimord
-fn     = fieldnames(data);
-remove = false(size(fn));
-for k=1:numel(fn)
-  remove(k) = contains(fn{k}, 'dimord') || contains(getdimord(data, fn{k}), '{pos}');
-end
-data = removefields(data, [{'pos', 'xgrid', 'ygrid', 'zgrid', 'tri', 'tet', 'hex'} fn{remove}]);
-
 % make inside a volume
 data = fixinside(data, 'logical');
 
-% reshape everything with a 'pos' in the dimord
+% remove the fields that are represented as cell array, such as filter, mom, etc.
 fn = fieldnames(data);
+fn = setdiff(fn, {'pos', 'dim', 'transform', 'xgrid', 'ygrid', 'zgrid', 'tri', 'tet', 'hex'});
+for k=1:numel(fn)
+  if iscell(data.(fn{k}))
+    data = rmfield(data, fn{k});
+  end
+end
+
+% only process the fields for which the dimord starts with 'pos_'
+fn = fieldnames(data);
+fn = setdiff(fn, {'pos', 'dim', 'transform', 'xgrid', 'ygrid', 'zgrid', 'tri', 'tet', 'hex'});
+keep = false(size(fn));
+for k=1:numel(fn)
+  keep(k) = ~endsWith(fn{k}, 'dimord') && startsWith(getdimord(data, fn{k}), 'pos_');
+end
+fn = fn(keep);
+
+% reshape everything with a 'pos' in the dimord
 for k = 1:numel(fn)
-  tmp    = getsubfield(data, fn{k});
   dimord = getdimord(data, fn{k});
-  tmpdim = getdimsiz(data, fn{k});
-  sel    = find(contains(split(dimord, '_'), 'pos'));
-  if isempty(sel)
-    continue
-  else
-    assert(all(tmpdim(sel)==prod(data.dim)));
-    newdim = zeros(1,0);
-    for m = 1:numel(sel)
-      newdim = cat(2, newdim, [data.dim tmpdim((sel(m)+1):end)]);
-    end
-    data = setsubfield(data, fn{k}, reshape(tmp, newdim));
+  dimsiz = getdimsiz(data, fn{k});
+  if startsWith(dimord, 'pos_pos')
+    % reshape the first two dimensions
+    tmp = getsubfield(data, fn{k});
+    data.(fn{k}) = reshape(tmp, [data.dim data.dim dimsiz(3:end)]);
+  elseif startsWith(dimord, 'pos')
+    % reshape the first dimension
+    tmp = getsubfield(data, fn{k});
+    data.(fn{k}) = reshape(tmp, [data.dim dimsiz(2:end)]);
+  elseif contains(dimord, 'pos')
+    % the position should always come as the first
+    ft_error('unsupported data representation');
   end
 end
 
