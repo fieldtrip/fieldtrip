@@ -79,6 +79,10 @@ cfg.visualize = ft_getopt(cfg, 'visualize', 'yes');
 cfg.saveplot  = ft_getopt(cfg, 'saveplot',  'yes');
 cfg.linefreq  = ft_getopt(cfg, 'linefreq',  50);
 cfg.plotunit  = ft_getopt(cfg, 'plotunit',  3600);
+cfg.feedback  = ft_getopt(cfg, 'feedback',  []);
+
+% allow the user to specify their own trl, if not all 10s chunks will be used
+cfg.trl       = ft_getopt(cfg, 'trl', []);
 
 %% ANALYSIS
 if strcmp(cfg.analyze,'yes')
@@ -106,20 +110,38 @@ if strcmp(cfg.analyze,'yes')
   end
   
   % add info
-  info.event                  = ft_read_event(cfg.dataset);
-  info.hdr                    = ft_read_header(cfg.dataset);
+  info.hdr                    = ft_read_header(cfg.dataset, 'cache', true);
+  info.event                  = ft_read_event(cfg.dataset, 'header', info.hdr);
   info.filetype               = fltp;
   
   % trial definition
-  cfgdef                      = [];
-  cfgdef.dataset              = cfg.dataset;
-  cfgdef.trialfun             = 'ft_trialfun_general';
-  cfgdef.trialdef.triallength = 10;
-  cfgdef.continuous           = 'yes';
-  cfgdef                      = ft_definetrial(cfgdef);
+  if isempty(cfg.trl)
+    cfgdef                      = [];
+    cfgdef.dataset              = cfg.dataset;
+    cfgdef.trialfun             = 'ft_trialfun_general';
+    cfgdef.trialdef.length      = 10;
+    cfgdef.continuous           = 'yes';
+    cfgdef.event                = info.event;
+    cfgdef.feedback             = cfg.feedback;
+    cfgdef                      = ft_definetrial(cfgdef);
 
-  ntrials                     = size(cfgdef.trl,1)-1; % remove last trial
-  timeunit                    = cfgdef.trialdef.triallength;
+    % in CTF data, if the user pressed abort, the last chunk of data is typically
+    % ill-defined
+    cfgdef.trl = cfgdef.trl(1:end-1,:);
+
+  else
+    cfgdef          = [];
+    cfgdef.dataset  = cfg.dataset;
+    cfgdef.feedback = cfg.feedback;
+    cfgdef.trl      = cfg.trl;
+  end
+
+  % check whether all chunks are equally long
+  nsmp = cfgdef.trl(:,2)-cfgdef.trl(:,1)+1;
+  assert(all(nsmp==nsmp(1)));
+
+  ntrials                     = size(cfgdef.trl,1);
+  timeunit                    = nsmp(1)./info.hdr.Fs;
   
   % channelselection for jump detection (all) and for FFT (brain)
   if ismeg
@@ -168,7 +190,7 @@ if strcmp(cfg.analyze,'yes')
   
   % analysis settings
   cfgredef             = [];
-  cfgredef.length      = 1;
+  cfgredef.length      = 2;
   cfgredef.overlap     = 0;
   
   cfgfreq              = [];
@@ -178,7 +200,8 @@ if strcmp(cfg.analyze,'yes')
   cfgfreq.taper        = 'hanning';
   cfgfreq.keeptrials   = 'no';
   cfgfreq.foilim       = [0 min(info.hdr.Fs/2, 400)];
-  
+  cfgfreq.feedback     = cfg.feedback;
+
   % output variables
   timelock.dimord = 'chan_time';
   timelock.label  = allchans;
@@ -192,7 +215,7 @@ if strcmp(cfg.analyze,'yes')
   
   freq.dimord     = 'chan_freq_time';
   freq.label      = allchans;
-  freq.freq       = (cfgfreq.foilim(1):cfgfreq.foilim(2));
+  freq.freq       = (cfgfreq.foilim(1):0.5:cfgfreq.foilim(2));
   freq.time       = (timeunit-timeunit/2:timeunit:timeunit*ntrials-timeunit/2);
   freq.powspctrm  = NaN(length(allchans), length(freq.freq), ntrials); % updated in loop
   
@@ -210,12 +233,13 @@ if strcmp(cfg.analyze,'yes')
   
   % process trial by trial
   for t = 1:ntrials
-    fprintf('analyzing trial %s of %s \n', num2str(t), num2str(ntrials));
+    fprintf('analyzing trial %s of %s \t', num2str(t), num2str(ntrials));
     
     % preprocess
     cfgpreproc     = cfgdef;
     cfgpreproc.trl = cfgdef.trl(t,:);
-    cfgpreproc.cache = true;
+    cfgpreproc.cacheheader = true;
+    cfgpreproc.channel = info.hdr.label;
     data           = ft_preprocessing(cfgpreproc); clear cfgpreproc;
     
     % determine headposition
@@ -713,9 +737,10 @@ h.SpectrumAxes = axes(...
   'Position',[.15 .2 .8 .7]);
 
 % plot powerspectrum
-loglog(h.SpectrumAxes, freq.freq, mean(mean(freq.powspctrm,1),3)*powscaling,'r','LineWidth',2);
+semilogx(h.SpectrumAxes, freq.freq, mean(log10(mean(freq.powspctrm,3)),1)*powscaling,'r','LineWidth',2);
+xlim([1 330])
 xlabel(h.SpectrumAxes, 'Frequency [Hz]');
-ylabel(h.SpectrumAxes, ['Power [' ylab '^2/Hz]']);
+ylabel(h.SpectrumAxes, ['log10 Power [' ylab '^2/Hz]']);
 
 % ARTEFACT PANEL
 h.JumpPanel = uipanel(...
