@@ -147,6 +147,10 @@ function [data] = ft_preprocessing(cfg, data)
 % cfg.removemcg
 % cfg.montage (in combination with meg-data in the input) applies montage
 %              to both data and grad-structure)
+% cfg.cacheheader = extract header information from the cache, if possible this may be useful in case 
+%             chunks of data are read in  a loop. Note that the user needs to manually empty the cache
+%             from ft_read_header afterwards, to avoid potential side effects
+%
 % You can use this function to read data from one format, filter it, and
 % write it to disk in another format. The reading is done either as one
 % long continuous segment or in multiple trials. This is achieved by
@@ -238,6 +242,7 @@ headeropt  = ft_setopt(headeropt, 'coordsys',       ft_getopt(cfg, 'coordsys', '
 headeropt  = ft_setopt(headeropt, 'coilaccuracy',   ft_getopt(cfg, 'coilaccuracy'));        % is passed to low-level function
 headeropt  = ft_setopt(headeropt, 'checkmaxfilter', ft_getopt(cfg, 'checkmaxfilter'));      % this allows to read non-maxfiltered neuromag data recorded with internal active shielding
 headeropt  = ft_setopt(headeropt, 'chantype',       ft_getopt(cfg, 'chantype', {}));        % 2017.10.10 AB required for NeuroOmega files
+headeropt  = ft_setopt(headeropt, 'cache',          ft_getopt(cfg, 'cacheheader', false));        % cache header
 
 if ~isfield(cfg, 'feedback')
   if strcmp(cfg.method, 'channel')
@@ -253,7 +258,7 @@ if isfield(cfg, 'emghpfreq'),  ft_error('EMG specific preprocessing is not suppo
 if isfield(cfg, 'emgrectify'), ft_error('EMG specific preprocessing is not supported any more'); end
 if isfield(cfg, 'emghilbert'), ft_error('EMG specific preprocessing is not supported any more'); end
 if isfield(cfg, 'eegchannel'), ft_error('EEG specific preprocessing is not supported any more'); end
-if isfield(cfg, 'resamplefs'), ft_error('resampling is not supported any more, see RESAMPLEDATA'); end
+if isfield(cfg, 'resamplefs'), ft_error('resampling is not supported any more, see FT_RESAMPLEDATA'); end
 
 if isfield(cfg, 'lnfilter') && strcmp(cfg.lnfilter, 'yes')
   ft_error('line noise filtering using the option cfg.lnfilter is not supported any more, use cfg.bsfilter instead')
@@ -402,7 +407,8 @@ else
   
   % read the header
   hdr = ft_read_header(cfg.headerfile, headeropt{:});
-  
+  headeropt = ft_setopt(headeropt, 'cache', false); % ensure this to be false, otherwise the data will be cached, too
+
   % this option relates to reading over trial boundaries in a pseudo-continuous dataset
   if ~isfield(cfg, 'continuous')
     if hdr.nTrials==1

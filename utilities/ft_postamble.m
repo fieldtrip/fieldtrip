@@ -48,35 +48,47 @@ function ft_postamble(cmd, varargin)
 %#function ft_postamble_randomseed
 %#function ft_postamble_hastoolbox
 
+persistent cmd_exists
+
 % this is a trick to pass the input arguments into the ft_postamble_xxx script
 assignin('caller', 'iW1aenge_postamble', varargin);
 
 full_cmd=['ft_postamble_' cmd];
-cmd_exists=false;
+% if isempty(cmd_exists)
+%   cmd_exists=false;
+% end
 
-if exist(full_cmd, 'file')
-  % Matlab can find commands in a private subdirectory; Octave cannot.
-  % If pwd is already the private directory, or if using Matlab then
-  % the command can be evaluated directly
-  cmd_exists = true;
-
-elseif ~ft_platform_supports('exists-in-private-directory')
-  % Octave does not find files by name in a private directory, so the full
-  % filename must be specified.
-  private_dir=fullfile(fileparts(which(mfilename)),'private');
-  full_path=fullfile(private_dir,[full_cmd '.m']);
-
-  cmd_exists=exist(full_path,'file');
-  full_cmd_parts={'ft_tmp_orig_pwd=pwd();',...
-                  'ft_tmp_orig_pwd_cleaner='...
-                                'onCleanup(@()cd(ft_tmp_orig_pwd));',...
-                  sprintf('cd(''%s'');',private_dir),...
-                  [full_cmd ';'],...
-                  'clear ft_tmp_orig_pwd_cleaner;'};
-  full_cmd=sprintf('%s',full_cmd_parts{:});
+if isempty(cmd_exists)
+  cmd_exists = struct([]);
 end
 
-if ~cmd_exists
+if ~isfield(cmd_exists, full_cmd)
+  if exist(full_cmd, 'file')
+    % Matlab can find commands in a private subdirectory; Octave cannot.
+    % If pwd is already the private directory, or if using Matlab then
+    % the command can be evaluated directly
+    cmd_exists(1).(full_cmd) = full_cmd;
+
+  elseif ~ft_platform_supports('exists-in-private-directory')
+    % Octave does not find files by name in a private directory, so the full
+    % filename must be specified.
+    private_dir=fullfile(fileparts(which(mfilename)),'private');
+    full_path=fullfile(private_dir,[full_cmd '.m']);
+
+    
+    full_cmd_parts={'ft_tmp_orig_pwd=pwd();',...
+      'ft_tmp_orig_pwd_cleaner='...
+      'onCleanup(@()cd(ft_tmp_orig_pwd));',...
+      sprintf('cd(''%s'');',private_dir),...
+      [full_cmd ';'],...
+      'clear ft_tmp_orig_pwd_cleaner;'};
+    cmd_exists(1).(full_cmd) = sprintf('%s',full_cmd_parts{:});
+  else
+    cmd_exists(1).(full_cmd) = false;
+  end
+end
+
+if ~cmd_exists.(full_cmd)
   % XXX earlier versions would not do anything if ~cmd_exists,
   % but fail silently (without raising an error or warning).
   % Should that behavior be kept?
