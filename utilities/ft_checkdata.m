@@ -1427,7 +1427,7 @@ end
 fn     = fieldnames(data);
 remove = false(size(fn));
 for k=1:numel(fn)
-  remove(k) = contains(fn{k}, 'dimord') | contains(getdimord(data, fn{k}), '{pos}');
+  remove(k) = contains(fn{k}, 'dimord') || contains(getdimord(data, fn{k}), '{pos}');
 end
 data = removefields(data, [{'pos', 'xgrid', 'ygrid', 'zgrid', 'tri', 'tet', 'hex'} fn{remove}]);
 
