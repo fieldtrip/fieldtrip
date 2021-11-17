@@ -1429,18 +1429,18 @@ data = fixinside(data, 'logical');
 % remove the fields that are represented as cell array, such as filter, mom, etc.
 fn = fieldnames(data);
 fn = setdiff(fn, {'pos', 'dim', 'transform', 'xgrid', 'ygrid', 'zgrid', 'tri', 'tet', 'hex'});
-for k=1:numel(fn)
-  if iscell(data.(fn{k}))
-    data = rmfield(data, fn{k});
-  end
-end
+% for k=1:numel(fn)
+%   if iscell(data.(fn{k}))
+%     data = rmfield(data, fn{k});
+%   end
+% end
 
 % only process the fields for which the dimord starts with 'pos_'
 fn = fieldnames(data);
 fn = setdiff(fn, {'pos', 'dim', 'transform', 'xgrid', 'ygrid', 'zgrid', 'tri', 'tet', 'hex'});
 keep = false(size(fn));
 for k=1:numel(fn)
-  keep(k) = ~endsWith(fn{k}, 'dimord') && startsWith(getdimord(data, fn{k}), 'pos_');
+  keep(k) = ~endsWith(fn{k}, 'dimord') && (startsWith(getdimord(data, fn{k}), 'pos_') || startsWith(getdimord(data, fn{k}), '{pos}_'));
 end
 fn = fn(keep);
 
@@ -1456,6 +1456,10 @@ for k = 1:numel(fn)
     % reshape the first dimension
     tmp = getsubfield(data, fn{k});
     data.(fn{k}) = reshape(tmp, [data.dim dimsiz(2:end)]);
+  elseif startsWith(dimord, '{pos}')
+    % this is a cell array
+    tmp = getsubfield(data, fn{k});
+    data.(fn{k}) = reshape(tmp, data.dim);
   elseif contains(dimord, 'pos')
     % the position should always come as the first
     ft_error('unsupported data representation');
