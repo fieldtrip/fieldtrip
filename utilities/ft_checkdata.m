@@ -1460,6 +1460,10 @@ for k = 1:numel(fn)
     % this is a cell array
     tmp = getsubfield(data, fn{k});
     data.(fn{k}) = reshape(tmp, data.dim);
+  elseif startsWith(dimord, '{pos_pos}')
+    % this is a cell array
+    tmp = getsubfield(data, fn{k});
+    data.(fn{k}) = reshape(tmp, [data.dim data.dim]);
   elseif contains(dimord, 'pos')
     % the position should always come as the first
     ft_error('unsupported data representation');
