@@ -151,11 +151,11 @@ if ~any(strcmp(template_ftype, {'analyze_hdr', 'analyze_img', 'minc', 'nifti'}))
   ft_error('the template anatomy should be stored in an SPM-compatible file');
 end
 
-if ~isempty(cfg.templatemask)
-    templatemsk_ftype = ft_filetype(cfg.templatemask);
-    if ~any(strcmp(templatemsk_ftype, {'analyze_hdr', 'analyze_img', 'minc', 'nifti'}))
-      ft_error('the template mask should be stored in an SPM-compatible file');
-    end
+if isfield(cfg, 'templatemask') || ~isempty(cfg.templatemask)
+  templatemsk_ftype = ft_filetype(cfg.templatemask);
+  if ~any(strcmp(templatemsk_ftype, {'analyze_hdr', 'analyze_img', 'minc', 'nifti'}))
+    ft_error('the template mask should be stored in an SPM-compatible file');
+  end
 end
 
 if strcmp(cfg.keepinside, 'yes')
@@ -191,11 +191,19 @@ end
 % coordinate system which is in approximate agreement with the template.
 ft_notice('Doing initial alignment...')
 mri  = ft_convert_units(mri, 'mm'); % this assumes that the template is expressed in mm
-orig = mri.transform;
-mri  = ft_convert_coordsys(mri, cfg.templatecoordsys, 2, cfg.template);
 
-% keep track of an initial transformation matrix that does the approximate co-registration
-initial = mri.transform / orig;
+if ~isfield(cfg, 'initial')
+  ft_notice('Doing initial alignment...')
+  orig = mri.transform;
+  mri  = ft_convert_coordsys(mri, cfg.templatecoordsys, 2, cfg.template);
+  % keep track of the initial rigid body transformation that does the approximate co-registration
+  initial = mri.transform / orig;
+else
+  ft_notice('Skipping the initial alignment, using the alignment specified in the configuration');
+  initial = cfg.initial;
+  % apply the initial rigid body transformation to the input data
+  mri.transform = initial * mri.transform; 
+end
 
 % use NIFTI whenever possible
 if strcmpi(cfg.spmversion, 'spm2')
@@ -237,14 +245,14 @@ end
 
 % read the template mask anatomical volume
 if ~isempty(cfg.templatemask)
-    switch templatemsk_ftype
-      case 'minc'
-        VWG = spm_vol_minc(cfg.templatemask);
-      case {'analyze_img', 'analyze_hdr', 'nifti'}
-        VWG = spm_vol(cfg.templatemask);
-      otherwise
-    ft_error('Unknown templatemask');
-    end
+  switch templatemsk_ftype
+    case 'minc'
+      VWG = spm_vol_minc(cfg.templatemask);
+    case {'analyze_img', 'analyze_hdr', 'nifti'}
+      VWG = spm_vol(cfg.templatemask);
+    otherwise
+      ft_error('Unknown templatemask');
+  end
 else
     VWG = [];
 end
@@ -414,10 +422,13 @@ end
 ft_postamble debug
 ft_postamble trackconfig
 
-% remember the normalisation parameters in the configuration
-% maintain this order for the time being to prevent them to be removed when doing the trackconfig
+% Remember the initial and normalisation parameters in the configuration, this allows
+% redoing the transformations without any computations (e.g. estimating them on a T1
+% and applying them on a T2)
+%
+% they are added only here to prevent them to be removed when doing the trackconfig
+cfg.initial   = initial;
 cfg.spmparams = params;
-cfg.final     = final;
 
 ft_postamble previous   mri
 ft_postamble provenance normalised
