@@ -160,7 +160,7 @@ if strcmp(cfg.method, 'distance') || strcmp(cfg.method, 'triangulation')
     % get 2D positions from the layout
     tmpcfg  = keepfields(cfg, {'layout', 'channel',   'rows', 'columns', 'commentpos', ...
                'skipcomnt', 'scalepos',  'skipscale', 'projection', 'viewpoint', ...
-               'rotate',    'width',     'height',    'elec', 'grad', 'opto', 'showcallinfo'});
+               'rotate',    'width',     'height',    'elec', 'grad', 'opto', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
     tmpcfg.skipscale = 'yes';
     tmpcfg.skipcomnt = 'yes';
     layout  = ft_prepare_layout(tmpcfg);
@@ -394,7 +394,7 @@ end
 
 if strcmp(cfg.feedback, 'yes') && ~hasatlas
   % give some graphical feedback
-  tmpcfg = keepfields(cfg, {'layout', 'rows', 'columns', 'commentpos', 'skipcomnt', 'scalepos', 'skipscale', 'projection', 'viewpoint', 'rotate', 'width', 'height', 'elec', 'grad', 'opto', 'showcallinfo'});
+  tmpcfg = keepfields(cfg, {'layout', 'rows', 'columns', 'commentpos', 'skipcomnt', 'scalepos', 'skipscale', 'projection', 'viewpoint', 'rotate', 'width', 'height', 'elec', 'grad', 'opto', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
   tmpcfg.neighbours = neighbours;
   if hasdata
     tmpcfg.senstype = cfg.senstype;

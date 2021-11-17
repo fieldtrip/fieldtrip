@@ -159,9 +159,6 @@ else
   isUnstructuredFun  = true;
 end
 
-% select the parameters from the data, this needs to be done here, because after running checkdata, the parameterselection fails if the numeric data has nfreq/ntime/etc>1 
-cfg.parameter = parameterselection(cfg.parameter, functional);
-
 if isUnstructuredAna
   anatomical = ft_checkdata(anatomical, 'datatype', {'source', 'source+label', 'mesh'}, 'insidestyle', 'logical', 'feedback', 'yes', 'hasunit', 'yes');
 else
@@ -174,6 +171,8 @@ else
   functional = ft_checkdata(functional, 'datatype', 'volume', 'insidestyle', 'logical', 'feedback', 'yes', 'hasunit', 'yes');
 end
 
+% select the parameters from the data, this needs to be done here, because after running checkdata, the parameterselection fails if the numeric data has nfreq/ntime/etc>1 
+cfg.parameter = parameterselection(cfg.parameter, functional);
 
 % ensure that the functional data has the same unit as the anatomical data
 functional = ft_convert_units(functional, anatomical.unit);
@@ -186,7 +185,7 @@ end
 
 if ~isUnstructuredAna && cfg.downsample~=1
   % downsample the anatomical volume
-  tmpcfg = keepfields(cfg, {'downsample', 'showcallinfo'});
+  tmpcfg = keepfields(cfg, {'downsample', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
   tmpcfg.parameter = 'anatomy';
   anatomical = ft_volumedownsample(tmpcfg, anatomical);
   % restore the provenance information and put back cfg.parameter

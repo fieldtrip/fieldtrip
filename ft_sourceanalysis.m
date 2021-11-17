@@ -307,7 +307,7 @@ cfg.channel = ft_channelselection([cfg.channel(:); cfg.supchan(:)], data.label);
 source = [];
 
 if istimelock
-  tmpcfg = keepfields(cfg, {'channel', 'latency', 'showcallinfo'});
+  tmpcfg = keepfields(cfg, {'channel', 'latency', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
   % keep the time axis in the output
   tmpcfg.avgovertime = 'no';
   data = ft_selectdata(tmpcfg, data);
@@ -318,7 +318,7 @@ if istimelock
   source = copyfields(data, source, {'time'});
   
 elseif isfreq
-  tmpcfg = keepfields(cfg, {'channel', 'latency', 'frequency', 'nanmean', 'showcallinfo'});
+  tmpcfg = keepfields(cfg, {'channel', 'latency', 'frequency', 'nanmean', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
   
   if ismember(cfg.method, {'pcc' 'dics'})
     tmpcfg.avgoverfreq = 'yes';
@@ -378,7 +378,7 @@ if ~isempty(cfg.refdip) || ~isempty(cfg.supdip)
   [headmodel, sens, cfg] = prepare_headmodel(cfg, data);
   
   % construct the dipole positions on which the source reconstruction will be done
-  tmpcfg           = keepfields(cfg, {'sourcemodel', 'mri', 'headshape', 'symmetry', 'smooth', 'threshold', 'spheremesh', 'inwardshift', 'xgrid', 'ygrid', 'zgrid', 'resolution', 'tight', 'warpmni', 'template', 'reducerank', 'backproject', 'normalize', 'normalizeparam', 'weight', 'showcallinfo'});
+  tmpcfg           = keepfields(cfg, {'sourcemodel', 'mri', 'headshape', 'symmetry', 'smooth', 'threshold', 'spheremesh', 'inwardshift', 'xgrid', 'ygrid', 'zgrid', 'resolution', 'tight', 'warpmni', 'template', 'reducerank', 'backproject', 'normalize', 'normalizeparam', 'weight', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
   tmpcfg.headmodel = headmodel;
   if ft_senstype(sens, 'eeg')
     tmpcfg.elec = sens;
@@ -464,7 +464,7 @@ elseif istrue(cfg.keepleadfield) || istrue(cfg.permutation) || istrue(cfg.random
   [headmodel, sens, cfg] = prepare_headmodel(cfg, data);
   
   % construct the dipole positions on which the source reconstruction will be done
-  tmpcfg           = keepfields(cfg, {'sourcemodel', 'mri', 'headshape', 'symmetry', 'smooth', 'threshold', 'spheremesh', 'inwardshift', 'xgrid', 'ygrid', 'zgrid', 'resolution', 'tight', 'warpmni', 'template', 'reducerank', 'backproject', 'normalize', 'normalizeparam', 'weight', 'showcallinfo'});
+  tmpcfg           = keepfields(cfg, {'sourcemodel', 'mri', 'headshape', 'symmetry', 'smooth', 'threshold', 'spheremesh', 'inwardshift', 'xgrid', 'ygrid', 'zgrid', 'resolution', 'tight', 'warpmni', 'template', 'reducerank', 'backproject', 'normalize', 'normalizeparam', 'weight', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
   tmpcfg.headmodel = headmodel;
   if ft_senstype(sens, 'eeg')
     tmpcfg.elec = sens;
@@ -485,7 +485,7 @@ else
   [headmodel, sens, cfg] = prepare_headmodel(cfg, data);
   
   % construct the dipole positions on which the source reconstruction will be done
-  tmpcfg           = keepfields(cfg, {'sourcemodel', 'mri', 'headshape', 'symmetry', 'smooth', 'threshold', 'spheremesh', 'inwardshift', 'xgrid', 'ygrid', 'zgrid', 'resolution', 'tight', 'warpmni', 'template', 'reducerank', 'backproject', 'normalize', 'normalizeparam', 'weight', 'showcallinfo'});
+  tmpcfg           = keepfields(cfg, {'sourcemodel', 'mri', 'headshape', 'symmetry', 'smooth', 'threshold', 'spheremesh', 'inwardshift', 'xgrid', 'ygrid', 'zgrid', 'resolution', 'tight', 'warpmni', 'template', 'reducerank', 'backproject', 'normalize', 'normalizeparam', 'weight', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
   tmpcfg.headmodel = headmodel;
   if ft_senstype(sens, 'eeg')
     tmpcfg.elec = sens;
