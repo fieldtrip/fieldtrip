@@ -273,7 +273,7 @@ if ~isfield(cfg, 'spmparams')
     ft_info('Warping the individual anatomy to the template anatomy, using only linear transformations');
     % compute the parameters by warping the individual anatomy
     cfg.opts.nits = ft_getopt(cfg.opts, 'nits', 0); % put number of non-linear iterations to zero
-    params    = spm_normalise(VG, VF(1), [], VWG, [], cfg.opts);
+    params = spm_normalise(VG, VF(1), [], VWG, [], cfg.opts);
     
   elseif strcmp(cfg.spmmethod, 'new') || strcmp(cfg.spmmethod, 'mars')
     ft_info('Warping the individual anatomy to the template anatomy, using the %s-style segmentation', cfg.spmmethod);
