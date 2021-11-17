@@ -1,4 +1,4 @@
-function [normalised] = ft_volumenormalise2(cfg, mri)
+function [normalised] = ft_volumenormalise(cfg, mri)
 
 % FT_VOLUMENORMALISE normalises anatomical and functional volume data
 % to a template anatomical MRI.
