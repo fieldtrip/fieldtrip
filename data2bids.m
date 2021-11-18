@@ -1576,7 +1576,7 @@ if need_events_tsv
     
     % create a header structure that represents the fMRI timeseries
     hdr.Fs = 1/tmp.RepetitionTime;
-    hdr.nSamples = mri.dim(4);
+    hdr.nSamples = size(mri.anatomy, 4);
     
     % create a event structure with one trigger for each BOLD volume
     trigger = [];
