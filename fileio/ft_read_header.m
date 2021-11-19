@@ -2831,12 +2831,12 @@ end
 if ~isfield(hdr, 'chantype') && checkUniqueLabels
   % use a helper function which has some built in intelligence
   hdr.chantype = ft_chantype(hdr);
-end % for
+end
 
 if ~isfield(hdr, 'chanunit') && checkUniqueLabels
   % use a helper function which has some built in intelligence
   hdr.chanunit = ft_chanunit(hdr);
-end % for
+end
 
 % ensure that the output grad is according to the latest definition
 if isfield(hdr, 'grad')
