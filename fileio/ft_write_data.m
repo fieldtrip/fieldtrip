@@ -92,6 +92,25 @@ if ~ismember(dataformat, {'empty', 'fcdc_global', 'fcdc_buffer', 'fcdc_mysql'})
   isdir_or_mkdir(fileparts(filename));
 end
 
+if ~isfield(hdr, 'chantype')
+  % use a helper function which has some built in intelligence
+  hdr.chantype = ft_chantype(hdr);
+end
+
+if ~isfield(hdr, 'chanunit') && checkUniqueLabels
+  % use a helper function which has some built in intelligence
+  hdr.chanunit = ft_chanunit(hdr);
+end
+
+if nchans~=hdr.nChans && length(chanindx)==nchans
+  % assume that the header corresponds to the original multichannel
+  % file and that the data represents a subset of channels
+  hdr.label    = hdr.label(chanindx);
+  hdr.chantype = hdr.chantype(chanindx);
+  hdr.chanunit = hdr.chanunit(chanindx);
+  hdr.nChans   = length(chanindx);
+end
+
 switch dataformat
   
   case 'empty'
@@ -129,13 +148,6 @@ switch dataformat
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     if ~isempty(evt)
       ft_error('writing events is not supported here, please see FT_WRITE_EVENT');
-    end
-    
-    if ~isempty(chanindx)
-      % assume that the header corresponds to the original multichannel
-      % file and that the data represents a subset of channels
-      hdr.label  = hdr.label(chanindx);
-      hdr.nChans = length(chanindx);
     end
     
     [host, port] = filetype_check_uri(filename);
@@ -284,12 +296,6 @@ switch dataformat
       ft_error('appending data is not yet supported for this data format');
     end
     
-    if nchans~=hdr.nChans && length(chanindx)==nchans
-      % assume that the header corresponds to the original multichannel
-      % file and that the data represents a subset of channels
-      hdr.label  = hdr.label(chanindx);
-      hdr.nChans = length(chanindx);
-    end
     % the header should at least contain the following fields
     %   hdr.label
     %   hdr.nChans
@@ -332,12 +338,6 @@ switch dataformat
     else
       hdr.nSamples = nsamples;
       hdr.nTrials  = 1;
-      if nchans~=hdr.nChans && length(chanindx)==nchans
-        % assume that the header corresponds to the original multichannel
-        % file and that the data represents a subset of channels
-        hdr.label     = hdr.label(chanindx);
-        hdr.nChans    = length(chanindx);
-      end
       if ~isfield(hdr, 'precision')
         hdr.precision = 'double';
       end
@@ -593,25 +593,21 @@ switch dataformat
     if ~isempty(evt)
       ft_error('writing events is not supported');
     end
-    
-    if nchans~=hdr.nChans && length(chanindx)==nchans
-      % assume that the header corresponds to the original multichannel
-      % file and that the data represents a subset of channels
-      hdr.label  = hdr.label(chanindx);
-      hdr.nChans = length(chanindx);
-    end
-    
     if nchans~=1
       ft_error('this format only supports single channel continuous data');
     end
     
-    [p, f, x] = fileparts(filename);
-    if isempty(x)
-      % append the format as extension
-      filename = [filename '.' dataformat];
-    end
+    [path, file, ext] = fileparts(filename);
+    filename = fullfile(path, [file '.' dataformat]);
     
-    audiowrite(filename, dat, hdr.Fs, 'BitsPerSample', nbits);
+    switch dataformat
+      case {'m4a' 'mp4' 'oga' 'ogg'}
+        options = {};
+      otherwise
+        options = {'BitsPerSample', nbits};
+    end % switch
+    
+    audiowrite(filename, dat, hdr.Fs, options{:});
     
   case 'plexon_nex'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -623,12 +619,13 @@ switch dataformat
     if ~isempty(evt)
       ft_error('writing events is not supported');
     end
-    
-    [path, file] = fileparts(filename);
-    filename = fullfile(path, [file, '.nex']);
     if nchans~=1
       ft_error('only supported for single-channel data');
     end
+    
+    [path, file, ext] = fileparts(filename);
+    filename = fullfile(path, [file, '.nex']);
+    
     % construct a NEX structure with  the required parts of the header
     nex.hdr.VarHeader.Type       = 5; % continuous
     nex.hdr.VarHeader.Name       = hdr.label{1};
@@ -668,20 +665,8 @@ switch dataformat
     [path, file, ext] = fileparts(filename);
     filename = fullfile(path, [file, '.ncs']);
     
-    if nchans~=hdr.nChans && length(chanindx)==nchans
-      % assume that the header corresponds to the original multichannel
-      % file and that the data represents a subset of channels
-      % WARNING the AD channel index assumes that the data was read from a DMA or SDMA file
-      % the first 17 channels contain status info, this number is zero-offset
-      ADCHANNEL  = chanindx - 17 - 1;
-      LABEL      = hdr.label{chanindx};
-    elseif hdr.nChans==1
-      ADCHANNEL  = -1;            % unknown
-      LABEL      = hdr.label{1};  % single channel
-    else
-      ft_error('cannot determine channel label');
-    end
-    
+    LABEL      = hdr.label{1};  % single channel
+    ADCHANNEL  = -1;            % unknown
     FSAMPLE    = hdr.Fs;
     RECORDNSMP = 512;
     RECORDSIZE = 1044;
@@ -722,7 +707,7 @@ switch dataformat
     fprintf('writing to %s\n', filename);
     write_neuralynx_ncs(filename, ncs);
     
-    if 0
+    if false
       % the following code snippet can be used for testing
       ncs2 = read_neuralynx_ncs(filename, 1, inf);
     end
@@ -737,12 +722,10 @@ switch dataformat
     if ~isempty(evt)
       ft_error('writing events is not supported');
     end
-    if ~isempty(chanindx)
-      % assume that the header corresponds to the original multichannel
-      % file and that the data represents a subset of channels
-      hdr.label  = hdr.label(chanindx);
-      hdr.nChans = length(chanindx);
-    end
+    
+    [path, file, ext] = fileparts(filename);
+    filename = fullfile(path, [file, '.gdf']);
+    
     write_gdf(filename, hdr, dat);
     
   case 'edf'
@@ -755,12 +738,10 @@ switch dataformat
     if ~isempty(evt)
       ft_error('writing events is not supported');
     end
-    if ~isempty(chanindx)
-      % assume that the header corresponds to the original multichannel
-      % file and that the data represents a subset of channels
-      hdr.label  = hdr.label(chanindx);
-      hdr.nChans = length(chanindx);
-    end
+    
+    [path, file, ext] = fileparts(filename);
+    filename = fullfile(path, [file, '.edf']);
+    
     write_edf(filename, hdr, dat);
     
   case 'anywave_ades'
@@ -772,14 +753,6 @@ switch dataformat
     end
     if ~isempty(evt)
       ft_error('writing events is not supported');
-    end
-    if ~isempty(chanindx)
-      % assume that the header corresponds to the original multichannel
-      % file and that the data represents a subset of channels
-      hdr.label     = hdr.label(chanindx);
-      hdr.chantype  = hdr.chantype(chanindx);
-      hdr.chanunit  = hdr.chanunit(chanindx);
-      hdr.nChans    = length(chanindx);
     end
     
     dattype = unique(hdr.chantype);
@@ -829,12 +802,6 @@ switch dataformat
     if append
       ft_error('appending data is not yet supported for this data format');
     end
-    if ~isempty(chanindx)
-      % assume that the header corresponds to the original multichannel
-      % file and that the data represents a subset of channels
-      hdr.label  = hdr.label(chanindx);
-      hdr.nChans = length(chanindx);
-    end
     
     % convert the input arguments into a FieldTrip raw data structure
     data = [];
@@ -858,12 +825,6 @@ switch dataformat
     if append
       ft_error('appending data is not yet supported for this data format');
     end
-    if ~isempty(chanindx)
-      % assume that the header corresponds to the original multichannel
-      % file and that the data represents a subset of channels
-      hdr.label  = hdr.label(chanindx);
-      hdr.nChans = length(chanindx);
-    end
     
     % this uses the SNIRF reading functions from the Homer3 toolbox
     ft_hastoolbox('homer3', 1);
@@ -880,7 +841,7 @@ switch dataformat
     snirf = SnirfClass();
     
     % collect information for creation of snirf file
-    source_idx = find(contains(hdr.opto.optotype, {'transmitter', 'source'}));
+    source_idx   = find(contains(hdr.opto.optotype, {'transmitter', 'source'}));
     detector_idx = find(contains(hdr.opto.optotype, {'receiver', 'detector'}));
     tra = hdr.opto.tra;
     tra_t = tra'; % transpose tra matrix to get indices of wavelength by row (thus by channel)
@@ -906,7 +867,7 @@ switch dataformat
     for i=1:size(tra,1)
       source = find(tra(i,:)>0);
       detector = find(tra(i,:)<0);
-      snirf.data.measurementList(i).sourceIndex = find(source_idx==source);
+      snirf.data.measurementList(i).sourceIndex   = find(source_idx==source);
       snirf.data.measurementList(i).detectorIndex = find(detector_idx==detector);
       %     snirf.data.measurementList(i).wavelengthActual = all_wavelengths(i); % this is not yet supported by the snirf toolbox
       if any(all_wavelengths(i)==WL1.values)
@@ -1028,5 +989,3 @@ for i=1:numel(type)
       type{i} = 'Other';
   end
 end
-
-
