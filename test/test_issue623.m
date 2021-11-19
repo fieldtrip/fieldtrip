@@ -8,6 +8,8 @@ function test_issue623
 
 filename = dccnpath('/home/common/matlab/fieldtrip/data/test/original/eeg/brainvision/Mischa.vhdr');
 
+ft_hastoolbox('compat/obsolete', 1); % ft_qualitycheck has moved to be obsolete
+
 %%
 
 cfg = [];

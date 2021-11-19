@@ -2259,7 +2259,7 @@ switch eventformat
       event    = appendstruct(event, response);
     end
     
-  case {'artinis_oxy3' 'artinis_oxy4'}
+  case {'artinis_oxy3' 'artinis_oxy4' 'artinis_oxy5'}
     ft_hastoolbox('artinis', 1);
     
     if strcmp(eventformat, 'artinis_oxy3')
@@ -2273,6 +2273,12 @@ switch eventformat
         hdr = read_artinis_oxy4(filename);
       end
       event = read_artinis_oxy4(filename, true);
+      
+    elseif strcmp(eventformat, 'artinis_oxy5')
+      if isempty(hdr)
+        hdr = read_artinis_oxy5(filename);
+      end
+      event = read_artinis_oxy5(filename, true);
     end
     
     if isempty(chanindx)

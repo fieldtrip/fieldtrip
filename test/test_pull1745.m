@@ -32,7 +32,7 @@ source3d = ft_checkdata(volume3d, 'datatype', 'source');
 source4d = ft_checkdata(volume4d, 'datatype', 'source'); % note the warning: could not determine dimord of "functional"
 
 % add the time axis that describes the 4th dimension of the functional data
-source4d.time = (0:volume4d.dim(4)-1) * tr;
+source4d.time = (0:size(volume4d.functional,4)-1) * tr;
 % reshape the functional data
 source4d = ft_checkdata(source4d, 'datatype', 'source');
 

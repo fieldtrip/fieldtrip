@@ -1,17 +1,17 @@
-function data = read_artinis_oxy4(filename, header, begsample, endsample, chanindx)
-% reads Artinix oxy4-files into FieldTrip format
+function data = read_artinis_oxy55(filename, header, begsample, endsample, chanindx)
+% reads Artinix oxy55-files into FieldTrip format
 %
 % use as
-%   header = read_artinis_oxy4(filename)
+%   header = read_artinis_oxy5(filename)
 % or 
-%   event  = read_artinis_oxy4(filename, read_event)
+%   event  = read_artinis_oxy5(filename, read_event)
 % where read_event is a Boolean with the value true, or  
-%   data   = read_artinis_oxy4(filename, header, [begsample], [endsample], [chanindx])
+%   data   = read_artinis_oxy55(filename, header, [begsample], [endsample], [chanindx])
 % where begsample, endsample and chanindx are optional.
 %
 % The returned variables will be in FieldTrip style. 
 %
-% See also FT_READ_HEADER, FT_READ_DATA, READ_ARTINIS_OXY4
+% See also FT_READ_HEADER, FT_READ_DATA, READ_ARTINIS_OXU5
 
 % You are using the FieldTrip NIRS toolbox developed and maintained by 
 % Artinis Medical Systems (http://www.artinis.com). For more information
@@ -53,7 +53,7 @@ function data = read_artinis_oxy4(filename, header, begsample, endsample, chanin
 % 
 % This toolbox is not to be used for medical or clinical purposes.
 % 
-% Copyright (c) 2019 by Artinis Medical Systems.
+% Copyright (c) 2021 by Artinis Medical Systems.
 % Contact: askforinfo@artinis.com
 
 if nargin > 2 && islogical(header)
@@ -62,7 +62,7 @@ if nargin > 2 && islogical(header)
 end
 
 if nargin == 1 || nargin == 2 && islogical(header) && ~header    
-  data = read_oxy4_header(filename);
+  data = read_oxy5_header(filename);
   if isfield(data, 'opto')
     % ensure that the optode definition is according to the latest standards
     data.opto = ft_datatype_sens(data.opto);
@@ -79,7 +79,7 @@ else % nargin > 1 && ~islogical(header)
       end
     end
   end  
-  data = read_oxy4_data(filename, 0, header.nSamples); % sample subselection does not work yet
+  data = read_oxy5_data(filename, 0, header.nSamples); % sample subselection does not work yet
   
   if endsample > size(data, 2)
     warning('Cannot deliver all requested samples, nan''ing %d sample(s)', endsample-size(data, 2));

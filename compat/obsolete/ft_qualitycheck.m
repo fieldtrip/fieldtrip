@@ -79,7 +79,7 @@ cfg.visualize = ft_getopt(cfg, 'visualize', 'yes');
 cfg.saveplot  = ft_getopt(cfg, 'saveplot',  'yes');
 cfg.linefreq  = ft_getopt(cfg, 'linefreq',  50);
 cfg.plotunit  = ft_getopt(cfg, 'plotunit',  3600);
-
+cfg.trl       = ft_getopt(cfg, 'trl', []);
 %% ANALYSIS
 if strcmp(cfg.analyze,'yes')
   tic
@@ -109,16 +109,21 @@ if strcmp(cfg.analyze,'yes')
   info.event                  = ft_read_event(cfg.dataset);
   info.hdr                    = ft_read_header(cfg.dataset);
   info.filetype               = fltp;
-  
-  % trial definition
-  cfgdef                      = [];
-  cfgdef.dataset              = cfg.dataset;
-  cfgdef.trialfun             = 'ft_trialfun_general';
-  cfgdef.trialdef.triallength = 10;
-  cfgdef.continuous           = 'yes';
-  cfgdef                      = ft_definetrial(cfgdef);
-
-  ntrials                     = size(cfgdef.trl,1)-1; % remove last trial
+ 
+  if isempty(cfg.trl) 
+    % trial definition
+    cfgdef                      = [];
+    cfgdef.dataset              = cfg.dataset;
+    cfgdef.trialfun             = 'ft_trialfun_general';
+    cfgdef.trialdef.triallength = 10;
+    cfgdef.continuous           = 'yes';
+    cfgdef                      = ft_definetrial(cfgdef);
+    cfgdef.trl = cfgdef.trl(1:end-1, :); % remove last trial
+  else
+    % UNDOCUMENTED POSSIBILITY to add cfg.trl
+    cfgdef.trl = cfg.trl;
+  end
+  ntrials                     = size(cfgdef.trl,1);
   timeunit                    = cfgdef.trialdef.triallength;
   
   % channelselection for jump detection (all) and for FFT (brain)
