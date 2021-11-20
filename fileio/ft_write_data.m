@@ -84,12 +84,25 @@ end
 % convert 'yes' or 'no' string into boolean
 append = istrue(append);
 
-% determine the data size
-[nchans, nsamples] = size(dat);
-
 % ensure that the directory exists if we want to write to a file
 if ~ismember(dataformat, {'empty', 'fcdc_global', 'fcdc_buffer', 'fcdc_mysql'})
   isdir_or_mkdir(fileparts(filename));
+end
+
+% determine the data size
+[nchans, nsamples] = size(dat);
+
+% ensure that the header is (reasonably) complete
+if ~isfield(hdr, 'nChans')
+  if isfield(hdr, 'label')
+    hdr.nChans = length(hdr.label);
+  else
+    hdr.nChans = nchans;
+  end
+end
+
+if ~isfield(hdr, 'label')
+  hdr.label = arrayfun(@num2str, 1:hdr.nChans, 'UniformOutput', false)';
 end
 
 if ~isfield(hdr, 'chantype')
@@ -97,7 +110,7 @@ if ~isfield(hdr, 'chantype')
   hdr.chantype = ft_chantype(hdr);
 end
 
-if ~isfield(hdr, 'chanunit') && checkUniqueLabels
+if ~isfield(hdr, 'chanunit')
   % use a helper function which has some built in intelligence
   hdr.chanunit = ft_chanunit(hdr);
 end
