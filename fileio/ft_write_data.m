@@ -115,13 +115,18 @@ if ~isfield(hdr, 'chanunit')
   hdr.chanunit = ft_chanunit(hdr);
 end
 
-if nchans~=hdr.nChans && length(chanindx)==nchans
-  % assume that the header corresponds to the original multichannel
-  % file and that the data represents a subset of channels
+if ~isempty(chanindx)
+  % the header (and possibly the data) correspond to the original multichannel file
   hdr.label    = hdr.label(chanindx);
   hdr.chantype = hdr.chantype(chanindx);
   hdr.chanunit = hdr.chanunit(chanindx);
   hdr.nChans   = length(chanindx);
+  if length(chanindx)==nchans
+    % assume that the data already represents the desired subset of channels
+  else
+    % assume that the data corresponds to the original multichannel file
+    dat = dat(chanindx,:);
+  end
 end
 
 switch dataformat
