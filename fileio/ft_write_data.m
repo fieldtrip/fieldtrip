@@ -276,34 +276,17 @@ switch dataformat
     end % writing header
     
     if ~isempty(dat)
-      max_nsamples = 32556;
-      if size(dat,2)>max_nsamples
-        % FIXME this is a hack to split large writes into multiple smaller writes
-        % this is to work around a problem observed in the neuralynx proxy
-        % when sampling 32 channels at 32KHz
-        begsample = 1;
-        while begsample<=size(dat,2)
-          endsample = begsample - 1 + max_nsamples;
-          endsample = min(endsample, size(dat,2));
-          % if append is already one of the arguments, remove it from varargin
-          indx = find(strcmp(varargin, 'append')); % find the "append" key
-          if ~isempty(indx)
-            indx = [indx indx+1];                  % remove the key and the value
-            varargin(indx) = [];
-          end
-          ft_write_data(filename, dat(:,begsample:endsample), varargin{:}, 'append', false);
-          begsample = endsample + 1;
-        end
-      else
-        % FIXME this is the normal code, which will also be used recursively
-        % reformat the data into a buffer-compatible format
-        packet.nchans    = size(dat,1);
-        packet.nsamples  = size(dat,2);
-        packet.data_type = find(strcmp(type, class(dat))) - 1; % zero-offset
-        packet.bufsize   = numel(dat) * wordsize{strcmp(type, class(dat))};
-        packet.buf       = dat;
-        buffer('put_dat', packet, host, port);
-      end % if data larger than chuncksize
+      MAXNUMSAMPLE = 600000; % see buffer.h
+      if size(dat,2)>MAXNUMSAMPLE
+        ft_error('number of samples exceeds the size of the ring buffer');
+      end
+      % reformat the data into a buffer-compatible format
+      packet.nchans    = size(dat,1);
+      packet.nsamples  = size(dat,2);
+      packet.data_type = find(strcmp(type, class(dat))) - 1; % zero-offset
+      packet.bufsize   = numel(dat) * wordsize{strcmp(type, class(dat))};
+      packet.buf       = dat;
+      buffer('put_dat', packet, host, port);
     end
     
   case {'brainvision_eeg', 'brainvision_vhdr'}
