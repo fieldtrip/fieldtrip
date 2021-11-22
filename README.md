@@ -38,7 +38,7 @@ The functions in the FieldTrip toolbox are copyrighted by their respective autho
   - Vladimir Litvak, UCL
   - and many others ...
 
-Copyright (C) 2008-2020, Donders Institute for Brain, Cognition and Behaviour, Radboud University, The Netherlands (DCCN, DCC, DCN)
+Copyright (C) 2008-2021, Donders Institute for Brain, Cognition and Behaviour, Radboud University, The Netherlands (DCCN, DCC, DCN)
 
 Copyright (C) 2014-2018, Karolinska Institute, Stockholm, Sweden (NatMEG)
 
@@ -66,4 +66,4 @@ The FieldTrip software is a toolbox, i.e. a library with functions, which in tur
 can depend on other functions. The release of this toolbox includes functions from
 other toolboxes that are covered under their respective licenses. See
 fieldtrip/external for details. Unauthorised copying and distribution of functions
-that are not explicitely covered by the GPL is not allowed!
+that are not explicitly covered by the GPL is not allowed!
