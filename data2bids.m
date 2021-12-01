@@ -156,9 +156,9 @@ function cfg = data2bids(cfg, varargin)
 %   cfg.electrodes.someoption       = cell-array, please check the MATLAB code
 %   cfg.optodes.someoption          = cell-array, please check the MATLAB code
 %
-% The implementation in this function corresponds to BIDS version 1.2.0. See
-% https://bids-specification.readthedocs.io/ for the full specification and
-% http://bids.neuroimaging.io/ for further details.
+% The implementation in this function aims to correspond to the latest BIDS version.
+% See https://bids-specification.readthedocs.io/ for the full specification
+% and http://bids.neuroimaging.io/ for further details.
 %
 % See also FT_DATAYPE_RAW, FT_DATAYPE_VOLUME, FT_DATATYPE_SENS, FT_DEFINETRIAL,
 % FT_PREPROCESSING, FT_READ_MRI, FT_READ_EVENT
@@ -310,7 +310,7 @@ cfg.coordsystem   = ft_getopt(cfg, 'coordsystem');
 cfg.dataset_description                     = ft_getopt(cfg, 'dataset_description'                       );
 cfg.dataset_description.writesidecar        = ft_getopt(cfg.dataset_description, 'writesidecar', 'yes'   );
 cfg.dataset_description.Name                = ft_getopt(cfg.dataset_description, 'Name'                  ); % REQUIRED. Name of the dataset.
-cfg.dataset_description.BIDSVersion         = ft_getopt(cfg.dataset_description, 'BIDSVersion', 1.2      ); % REQUIRED. The version of the BIDS standard that was used.
+cfg.dataset_description.BIDSVersion         = ft_getopt(cfg.dataset_description, 'BIDSVersion', '1.6'    ); % REQUIRED. The version of the BIDS standard that was used.
 cfg.dataset_description.DatasetType         = ft_getopt(cfg.dataset_description, 'DatasetType', 'raw'    ); % RECOMMENDED. The interpretaton of the dataset. MUST be one of "raw" or "derivative". For backwards compatibility, the default value is "raw".
 cfg.dataset_description.License             = ft_getopt(cfg.dataset_description, 'License'               ); % RECOMMENDED. What license is this dataset distributed under? The use of license name abbreviations is suggested for specifying a license. A list of common licenses with suggested abbreviations can be found in Appendix II.
 cfg.dataset_description.Authors             = ft_getopt(cfg.dataset_description, 'Authors'               ); % OPTIONAL. List of individuals who contributed to the creation/curation of the dataset.
@@ -596,7 +596,7 @@ cfg.coordsystem.FiducialsCoordinates                            = ft_getopt(cfg.
 cfg.coordsystem.FiducialsCoordinateSystem                       = ft_getopt(cfg.coordsystem, 'FiducialsCoordinateSystem'                      ); % RECOMMENDED. Refers to the coordinate space to which the landmarks positions are to be interpreted - preferably the same as the NIRSCoordinateSystem
 cfg.coordsystem.FiducialsCoordinateUnits                        = ft_getopt(cfg.coordsystem, 'FiducialsCoordinateUnits'                       ); % RECOMMENDED. Units in which the coordinates that are listed in the field AnatomicalLandmarkCoordinateSystem are represented (e.g., "mm", "cm").
 cfg.coordsystem.FiducialsCoordinateSystemDescription            = ft_getopt(cfg.coordsystem, 'FiducialsCoordinateSystemDescription'           ); % RECOMMENDED. Free-form text description of the coordinate system. May also include a link to a documentation page or paper describing the system in greater detail.
- 
+
 %% columns in the channels.tsv
 cfg.channels.name               = ft_getopt(cfg.channels, 'name'               , nan);  % REQUIRED. Channel name (e.g., MRT012, MEG023)
 cfg.channels.type               = ft_getopt(cfg.channels, 'type'               , nan);  % REQUIRED. Type of channel; MUST use the channel types listed below.
@@ -904,16 +904,6 @@ switch typ
       trigger = ft_fetch_event(varargin{1});
     end
     
-    try
-      % try to get the electrode definition, either from the data or from the configuration
-      tmpcfg = keepfields(cfg, {'elec'});
-      tmpcfg.senstype = 'eeg';
-      elec = ft_fetch_sens(tmpcfg, varargin{1});
-      need_electrodes_tsv = true;
-    catch
-      need_electrodes_tsv = false;
-    end
-    
     if ft_senstype(varargin{1}, 'ctf') || ft_senstype(varargin{1}, 'neuromag')
       % use the subsequent MEG-specific metadata handling for the JSON and TSV sidecar files
       typ = ft_senstype(varargin{1});
@@ -966,46 +956,36 @@ switch typ
       hdr = ft_read_header(cfg.headerfile, headeropt{:});
       if strcmp(cfg.method, 'convert')
         % the data should be converted and written to disk
-        dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', 1, 'endsample', hdr.nSamples*hdr.nTrials, dataopt{:});
+        dat     = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', 1, 'endsample', hdr.nSamples*hdr.nTrials, dataopt{:});
         trigger = ft_read_event(cfg.datafile, 'header', hdr, eventopt{:});
       end
-      % FIXME try to get the electrode definition, either from the data or from the configuration
     end
     
 end % switch typ
 
 if need_meg_json || need_eeg_json || need_ieeg_json
-  try
-    % try to get the electrode definition, either from data.elec or from cfg.elec
-    tmpcfg = keepfields(cfg, {'elec'});
-    tmpcfg.senstype = 'eeg';
-    if ~isempty(varargin)
-      elec = ft_fetch_sens(tmpcfg, varargin{1});
-    else
-      elec = ft_fetch_sens(tmpcfg);
-    end
+  % determine whether an electrode definition is available
+  if isfield(cfg, 'elec') && ~isempty(cfg.elec)
     need_electrodes_tsv = true;
-  catch
-    % electrodes can also be specified as cfg.electrodes
-    need_electrodes_tsv = ~isnan(cfg.electrodes.name);
+  elseif exist('hdr', 'var') && isfield(hdr, 'elec')
+    need_electrodes_tsv = true;
+  elseif ~isempty(varargin) && isfield(varargin{1}, 'elec') && ~isempty(varargin{1}.elec)
+    need_electrodes_tsv = true;
+  else
+    need_electrodes_tsv = ~isequaln(cfg.electrodes.name, nan);
   end
 end
 
 if need_nirs_json
-  try
-    % try to get the optode definition, either from data.opto or from
-    % cfg.optodes
-    tmpcfg = keepfields(cfg, {'opto'});
-    tmpcfg.senstype='nirs';
-    if ~isempty(varargin)
-      opto = ft_fetch_sens(tmpcfg, varargin{1});
-    else
-      opto = ft_fetch_sens(tmpcfg);
-    end
+  % determine whether an optode definition is available
+  if isfield(cfg, 'opto') && ~isempty(cfg.opto)
     need_optodes_tsv = true;
-  catch
-    % optodes can also be specified as cfg.optodes
-    need_optodes_tsv= ~isnan(cfg.optodes.name);
+  elseif exist('hdr', 'var') && isfield(hdr, 'opto')
+    need_optodes_tsv = true;
+  elseif ~isempty(varargin) && isfield(varargin{1}, 'opto') && ~isempty(varargin{1}.opto)
+    need_optodes_tsv = true;
+  else
+    need_optodes_tsv = ~isequaln(cfg.optodes.name, nan);
   end
 end
 
@@ -1377,16 +1357,17 @@ if need_channels_tsv
   channels_tsv = channels_tsv(keep,:);
   
   % there are some chanel types used in FieldTrip that are named differently in BIDS
-  channels_tsv.type(strcmpi(channels_tsv.type, 'unknown'))     = 'OTHER';
-  channels_tsv.type(strcmpi(channels_tsv.type, 'meggrad'))     = 'MEGGRADAXIAL';
-  channels_tsv.type(strcmpi(channels_tsv.type, 'megplanar'))   = 'MEGGRADPLANAR';
-  channels_tsv.type(strcmpi(channels_tsv.type, 'refmag'))      = 'MEGREFMAG';
-  channels_tsv.type(strcmpi(channels_tsv.type, 'refgrad'))     = 'MEGREFGRADAXIAL';
-  channels_tsv.type(strcmpi(channels_tsv.type, 'refplanar'))   = 'MEGREFGRADPLANAR';
-  channels_tsv.type(strcmpi(channels_tsv.type, 'respiration')) = 'RESP';
-  channels_tsv.type(strcmpi(channels_tsv.type, 'headloc'))     = 'HLU';
-  channels_tsv.type(strcmpi(channels_tsv.type, 'headloc_gof')) = 'FITERR';
-  channels_tsv.type(contains(channels_tsv.type, 'trigger', 'IgnoreCase', true)) = 'TRIG';
+  channels_tsv.type(strcmpi(channels_tsv.type, 'unknown'))     = {'OTHER'};
+  channels_tsv.type(strcmpi(channels_tsv.type, 'clock'))       = {'SYSCLOCK'};
+  channels_tsv.type(strcmpi(channels_tsv.type, 'meggrad'))     = {'MEGGRADAXIAL'};
+  channels_tsv.type(strcmpi(channels_tsv.type, 'megplanar'))   = {'MEGGRADPLANAR'};
+  channels_tsv.type(strcmpi(channels_tsv.type, 'refmag'))      = {'MEGREFMAG'};
+  channels_tsv.type(strcmpi(channels_tsv.type, 'refgrad'))     = {'MEGREFGRADAXIAL'};
+  channels_tsv.type(strcmpi(channels_tsv.type, 'refplanar'))   = {'MEGREFGRADPLANAR'};
+  channels_tsv.type(strcmpi(channels_tsv.type, 'respiration')) = {'RESP'};
+  channels_tsv.type(strcmpi(channels_tsv.type, 'headloc'))     = {'HLU'};
+  channels_tsv.type(strcmpi(channels_tsv.type, 'headloc_gof')) = {'FITERR'};
+  channels_tsv.type(contains(channels_tsv.type, 'trigger', 'IgnoreCase', true)) = {'TRIG'};
   
   % channel types in BIDS must be in upper case
   channels_tsv.type = upper(channels_tsv.type);
@@ -1423,6 +1404,21 @@ end % if need_channels_tsv
 %% need_electrodes_tsv
 if need_electrodes_tsv
   
+  % try to get the elec structure from the configuration or data
+  try
+    tmpcfg = keepfields(cfg, {'elec'});
+    tmpcfg.senstype = 'eeg';
+    if ~isempty(varargin)
+      elec = ft_fetch_sens(tmpcfg, varargin{1});
+    elseif exist('hdr', 'var') && isfield(hdr, 'elec')
+      elec = hdr.elec;
+    else
+      elec = ft_fetch_sens(tmpcfg);
+    end
+  catch
+    elec = [];
+  end
+  
   if isstruct(cfg.electrodes)
     % remove fields with non-informative defaults
     fn = fieldnames(cfg.electrodes);
@@ -1440,8 +1436,8 @@ if need_electrodes_tsv
   end
   
   % electrode details can be specified in cfg.elec, data.elec or in cfg.electrodes
-  electrodes_tsv = elec2table(elec);
-  electrodes_tsv = merge_table(electrodes_tsv, cfg.electrodes, 'name');
+  electrodes_tsv = elec2table(elec);                                    % this includes the cfg.elec and data.elec
+  electrodes_tsv = merge_table(electrodes_tsv, cfg.electrodes, 'name'); % this includes the cfg.electrodes
   
   % the default for cfg.electrodes consists of one row where all values are nan, this needs to be removed
   keep = false(size(electrodes_tsv.name));
@@ -1454,6 +1450,21 @@ end % need_electrodes_tsv
 
 %% need_optodes_tsv
 if need_optodes_tsv
+  
+  % try to get the opto structure from the configuration or data
+  try
+    tmpcfg = keepfields(cfg, {'opto'});
+    tmpcfg.senstype='nirs';
+    if ~isempty(varargin)
+      opto = ft_fetch_sens(tmpcfg, varargin{1});
+    elseif exist('hdr', 'var') && isfield(hdr, 'opto')
+      opto = hdr.opto;
+    else
+      opto = ft_fetch_sens(tmpcfg);
+    end
+  catch
+    opto = [];
+  end
   
   if isstruct(cfg.optodes)
     % remove fields with non-informative defaults
@@ -1472,8 +1483,8 @@ if need_optodes_tsv
   end
   
   % optode details can be specified in cfg.opto, data.opto or cfg.optodes
-  optodes_tsv=opto2table(opto); % this includes the cfg.opto and data.opto
-  optodes_tsv=merge_table(optodes_tsv, cfg.optodes, 'name'); % this includes the cfg.optodes
+  optodes_tsv = opto2table(opto);                              % this includes the cfg.opto and data.opto
+  optodes_tsv = merge_table(optodes_tsv, cfg.optodes, 'name'); % this includes the cfg.optodes
   
   % the default for cfg.electrodes consists of one row where all values are nan, this needs to be removed
   keep = false(size(optodes_tsv.name));
@@ -1506,14 +1517,34 @@ if need_coordsystem_json
     end
   elseif isfield(hdr, 'grad') && ft_senstype(hdr.grad, 'neuromag')
     % coordinate system for MEG sensors
-    coordsystem_json.MEGCoordinateSystem            = 'Neuromag';
+    coordsystem_json.MEGCoordinateSystem            = 'ElektaNeuromag';
     coordsystem_json.MEGCoordinateUnits             = 'm';
     coordsystem_json.MEGCoordinateSystemDescription = 'Neuromag head coordinates, orientation RAS, origin between the ears';
     % coordinate system for head localization coils
-    coordsystem_json.HeadCoilCoordinates                 = []; % FIXME it might be possible to get these from the dataset header
-    coordsystem_json.HeadCoilCoordinateSystem            = 'Neuromag';
+    coordsystem_json.HeadCoilCoordinates                 = [];  % getting from the dataset header
+    coordsystem_json.HeadCoilCoordinateSystem            = 'ElektaNeuromag';
     coordsystem_json.HeadCoilCoordinateUnits             = 'm';
     coordsystem_json.HeadCoilCoordinateSystemDescription = 'Neuromag head coordinates, orientation RAS, origin between the ears';
+    if isempty(coordsystem_json.HeadCoilCoordinates)
+      coordsystem_json = rmfield(coordsystem_json, 'HeadCoilCoordinates'); % needed to set the names afterwards
+      idxHPI= find([hdr.orig.dig.kind] == 2); % count the kind==2 (HLU in the Elekta/Megin system), usually 4 or 5
+      for i=1:length(idxHPI)
+        coordsystem_json.HeadCoilCoordinates.(['coil' num2str(i)]) = hdr.orig.dig(idxHPI(i)).r';
+      end
+      
+    end
+    % coordinates of the anatomical landmarks (LPA/RPA/NAS)
+    coordsystem_json.AnatomicalLandmarkCoordinates                 = [];  % getting from the dataset header
+    coordsystem_json.AnatomicalLandmarkCoordinateSystem            = 'ElektaNeuromag';
+    coordsystem_json.AnatomicalLandmarkCoordinateUnits             = 'm';
+    coordsystem_json.AnatomicalLandmarkCoordinateSystemDescription = 'Neuromag head coordinates, orientation RAS, origin between the ears';
+    if isempty(coordsystem_json.AnatomicalLandmarkCoordinates)
+      coordsystem_json = rmfield(coordsystem_json, 'AnatomicalLandmarkCoordinates'); % needed to set the names afterwards
+      coordsystem_json.AnatomicalLandmarkCoordinates.lpa = hdr.orig.dig(1).r';
+      coordsystem_json.AnatomicalLandmarkCoordinates.rpa = hdr.orig.dig(2).r';
+      coordsystem_json.AnatomicalLandmarkCoordinates.nas = hdr.orig.dig(3).r';
+    end
+    
   else
     ft_warning('coordsystem handling not yet supported for this data, you MUST specify cfg.coordsystem');
     coordsystem_json = table();
@@ -1545,7 +1576,7 @@ if need_events_tsv
     
     % create a header structure that represents the fMRI timeseries
     hdr.Fs = 1/tmp.RepetitionTime;
-    hdr.nSamples = mri.dim(4);
+    hdr.nSamples = size(mri.anatomy, 4);
     
     % create a event structure with one trigger for each BOLD volume
     trigger = [];
@@ -1579,9 +1610,9 @@ if need_events_tsv
   if istable(cfg.events) && all(ismember({'onset', 'duration'}, fieldnames(cfg.events)))
     % use the events table as it is
     events_tsv = cfg.events;
+    
   elseif istable(cfg.events) && all(ismember({'begsample', 'endsample', 'offset'}, fieldnames(cfg.events)))
-    % it is a "trl" matrix formatted as table, use it as it is, but add
-    % onset and duration
+    % it is a "trl" matrix formatted as table, use it as it is, but add onset and duration
     events_tsv = cfg.events;
     begsample                   = table2array(events_tsv(:,{'begsample'}));
     endsample                   = table2array(events_tsv(:,{'endsample'}));
@@ -1590,13 +1621,17 @@ if need_events_tsv
     table_onset_duration        = table(onset, duration);
     events_tsv                  = [table_onset_duration events_tsv];
     
+  elseif istable(cfg.events) && ~isempty(cfg.events)
+    ft_error('cannot interpret cfg.events');
+    
   elseif isstruct(cfg.events) && ~isempty(cfg.events) && numel(fieldnames(cfg.events))>0
-    % it is the output from FT_READ_EVENT
+    % it is the structure output from FT_READ_EVENT
     if exist('hdr', 'var')
       events_tsv = event2table(hdr, cfg.events);
     else
       events_tsv = event2table([], cfg.events);
     end
+    
   elseif isnumeric(cfg.events) && ~isempty(cfg.events)
     % it is a "trl" matrix formatted as numeric array, convert it to an events table
     begsample = cfg.events(:,1);
@@ -1609,16 +1644,19 @@ if need_events_tsv
     onset     = (begsample-1)/hdr.Fs;
     duration  = (endsample-begsample+1)/hdr.Fs;
     events_tsv = table(onset, duration, begsample, endsample, offset);
-  elseif exist('trigger', 'var')
+    
+  elseif isempty(cfg.events) && exist('trigger', 'var')
     % convert the triggers from FT_READ_EVENT into a table
     if exist('hdr', 'var')
       events_tsv = event2table(hdr, trigger);
     else
       events_tsv = event2table([], trigger);
     end
+    
   elseif ~isempty(cfg.presentationfile)
     % read the presentation file and convert into a table
     events_tsv = event2table([], ft_read_event(cfg.presentationfile));
+    
   else
     ft_warning('no events were specified');
     % make an empty table with columns for onset and duration
@@ -2334,8 +2372,6 @@ switch typ
     dir = 'ieeg';
   case {'nirs'} % this is not part of the official specification
     dir = 'nirs';
-  case {'motion'} % this is not part of the official specification
-    dir = 'motion';
     
   otherwise
     ft_error('unrecognized data type ''%s''', typ);

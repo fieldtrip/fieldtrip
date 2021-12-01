@@ -1145,7 +1145,7 @@ elseif strcmp(current, 'sparse') && strcmp(desired, 'full')
   % remove obsolete fields
   data = removefields(data, {'powspctrm', 'labelcmb', 'dof'});
   
-  fn = fieldnames(data);
+  fn = setdiff(fieldnames(data), {'time' 'freq' 'dimord', 'label', 'cfg'});
   for ii=1:numel(fn)
     if numel(data.(fn{ii})) == nrpt*ncmb*nfrq*ntim
       if nrpt==1
@@ -1213,7 +1213,7 @@ elseif strcmp(current, 'sparse') && strcmp(desired, 'fullfast')
   
   complete = all(cmbindx(:)~=0);
   
-  fn = fieldnames(data);
+  fn = setdiff(fieldnames(data), {'time' 'freq' 'dimord' 'label' 'cfg'});
   for ii=1:numel(fn)
     if numel(data.(fn{ii})) == nrpt*ncmb*nfrq*ntim
       if nrpt==1
@@ -1362,7 +1362,7 @@ fn = fieldnames(source);
 sel = false(size(fn));
 for i=1:numel(fn)
   tmp = source.(fn{i});
-  sel(i) = iscell(tmp) && isequal(tmp(:), data.label(:));
+  sel(i) = iscell(tmp) && isequal(sort(tmp(:)), sort(data.label(:)));
 end
 parcelparam = fn(sel);
 if numel(parcelparam)~=1
@@ -1423,12 +1423,52 @@ if isfield(data, 'dim')
   data.transform = pos2transform(data.pos, data.dim);
 end
 
-% remove the unwanted fields
-data = removefields(data, {'pos', 'xgrid', 'ygrid', 'zgrid', 'tri', 'tet', 'hex'});
-
 % make inside a volume
 data = fixinside(data, 'logical');
 
+% remove the fields that are represented as cell array, such as filter, mom, etc.
+fn = fieldnames(data);
+fn = setdiff(fn, {'pos', 'dim', 'transform', 'xgrid', 'ygrid', 'zgrid', 'tri', 'tet', 'hex'});
+% for k=1:numel(fn)
+%   if iscell(data.(fn{k}))
+%     data = rmfield(data, fn{k});
+%   end
+% end
+
+% only process the fields for which the dimord starts with 'pos_'
+fn = fieldnames(data);
+fn = setdiff(fn, {'pos', 'dim', 'transform', 'xgrid', 'ygrid', 'zgrid', 'tri', 'tet', 'hex'});
+keep = false(size(fn));
+for k=1:numel(fn)
+  keep(k) = ~endsWith(fn{k}, 'dimord') && (startsWith(getdimord(data, fn{k}), 'pos_') || startsWith(getdimord(data, fn{k}), '{pos}_'));
+end
+fn = fn(keep);
+
+% reshape everything with a 'pos' in the dimord
+for k = 1:numel(fn)
+  dimord = getdimord(data, fn{k});
+  dimsiz = getdimsiz(data, fn{k});
+  if startsWith(dimord, 'pos_pos')
+    % reshape the first two dimensions
+    tmp = getsubfield(data, fn{k});
+    data.(fn{k}) = reshape(tmp, [data.dim data.dim dimsiz(3:end)]);
+  elseif startsWith(dimord, 'pos')
+    % reshape the first dimension
+    tmp = getsubfield(data, fn{k});
+    data.(fn{k}) = reshape(tmp, [data.dim dimsiz(2:end)]);
+  elseif startsWith(dimord, '{pos}')
+    % this is a cell array
+    tmp = getsubfield(data, fn{k});
+    data.(fn{k}) = reshape(tmp, data.dim);
+  elseif startsWith(dimord, '{pos_pos}')
+    % this is a cell array
+    tmp = getsubfield(data, fn{k});
+    data.(fn{k}) = reshape(tmp, [data.dim data.dim]);
+  elseif contains(dimord, 'pos')
+    % the position should always come as the first
+    ft_error('unsupported data representation');
+  end
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % convert between datatypes

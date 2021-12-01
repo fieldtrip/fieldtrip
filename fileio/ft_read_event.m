@@ -2259,7 +2259,7 @@ switch eventformat
       event    = appendstruct(event, response);
     end
     
-  case {'artinis_oxy3' 'artinis_oxy4'}
+  case {'artinis_oxy3' 'artinis_oxy4' 'artinis_oxy5'}
     ft_hastoolbox('artinis', 1);
     
     if strcmp(eventformat, 'artinis_oxy3')
@@ -2273,6 +2273,12 @@ switch eventformat
         hdr = read_artinis_oxy4(filename);
       end
       event = read_artinis_oxy4(filename, true);
+      
+    elseif strcmp(eventformat, 'artinis_oxy5')
+      if isempty(hdr)
+        hdr = read_artinis_oxy5(filename);
+      end
+      event = read_artinis_oxy5(filename, true);
     end
     
     if isempty(chanindx)
@@ -2310,7 +2316,7 @@ switch eventformat
     end
     event = read_spmeeg_event(filename, 'header', hdr);
     
-  case {'blackrock_nev', 'blackrock_nsx'}
+  case {'blackrock_nev'}
     % use the NPMK toolbox for the file reading
     ft_hastoolbox('NPMK', 1);
     
@@ -2336,7 +2342,7 @@ switch eventformat
     % probably not necessary for all but we often have pins up
     % FIXME: what is the consequence for the values if the pins were not 'up'?
     % Should this be solved more generically? E.g. with an option?
-    eventCodes2= eventCodes-min(eventCodes)+1;
+    eventCodes2 = eventCodes - min(eventCodes) + 1;
     
     for k=1:numel(eventCodes2)
       event(k).type      = 'trigger';

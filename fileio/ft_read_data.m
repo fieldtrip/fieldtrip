@@ -1377,6 +1377,10 @@ switch dataformat
     ft_hastoolbox('artinis', 1);
     dat = read_artinis_oxy4(filename, hdr, begsample, endsample, chanindx);
     
+  case 'artinis_oxy5'
+    ft_hastoolbox('artinis', 1);
+    dat = read_artinis_oxy5(filename, hdr, begsample, endsample, chanindx);
+    
   case 'plexon_ds'
     dat = read_plexon_ds(filename, hdr, begsample, endsample, chanindx);
     

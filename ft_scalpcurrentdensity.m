@@ -163,7 +163,7 @@ tmpcfg.senstype = 'EEG';
 elec = ft_fetch_sens(tmpcfg, data);
 
 % select channels and trials of interest
-tmpcfg = keepfields(cfg, {'trials', 'showcallinfo'});
+tmpcfg = keepfields(cfg, {'trials', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
 tmpcfg.channel = elec.label;
 data = ft_selectdata(tmpcfg, data);
 % restore the provenance information

@@ -176,6 +176,9 @@ chanindx      = match_str(hdr.label, label);
 nchan         = length(chanindx);
 artifact      = table();
 
+% only print this once
+ft_notice once FieldTrip:applyingPreprocessing
+
 ft_progress('init', cfg.feedback, ['searching for artifacts in ' num2str(nchan) ' channels']);
 for trlop=1:ntrial
   ft_progress(trlop/ntrial, 'searching in trial %d from %d\n', trlop, ntrial);
@@ -198,6 +201,7 @@ for trlop=1:ntrial
   status = struct2cell(artfctdef);
   status = status(cellfun(@(x) ischar(x), status));
   if any(ismember(status, {'yes', 'abs', 'complex', 'real', 'imag', 'absreal', 'absimag', 'angle'}))
+    ft_notice('FieldTrip:applyingPreprocessing', 'applying preprocessing options')
     dat = preproc(dat, label, time, artfctdef);
   end
   
@@ -283,6 +287,9 @@ for trlop=1:ntrial
   end % for sgnlop
 end % for trlop
 ft_progress('close');
+
+% reset it to the default 
+ft_notice on FieldTrip:applyingPreprocessing
 
 if strcmp(cfg.representation, 'numeric') && istable(artifact)
   if isempty(artifact)

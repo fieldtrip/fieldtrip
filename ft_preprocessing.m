@@ -327,7 +327,7 @@ if hasdata
   cfg.trials = ft_getopt(cfg, 'trials', 'all', 1);
   
   % select trials of interest
-  tmpcfg = keepfields(cfg, {'trials', 'channel', 'latency', 'tolerance', 'showcallinfo'});
+  tmpcfg = keepfields(cfg, {'trials', 'channel', 'latency', 'tolerance', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
   data   = ft_selectdata(tmpcfg, data);
   % restore the provenance information
   [cfg, data] = rollback_provenance(cfg, data);
@@ -674,7 +674,7 @@ if strcmp(cfg.updatesens, 'yes')
     montage = cfg.montage;
   elseif strcmp(cfg.reref, 'yes')
     if strcmp(cfg.refmethod, 'bipolar') || strcmp(cfg.refmethod, 'avg') || strcmp(cfg.refmethod, 'laplace')
-      tmpcfg = keepfields(cfg, {'refmethod', 'implicitref', 'refchannel', 'channel'});
+      tmpcfg = keepfields(cfg, {'refmethod', 'implicitref', 'refchannel', 'channel', 'groupchans'});
       tmpcfg.showcallinfo = 'no';
       montage = ft_prepare_montage(tmpcfg, data);
     else

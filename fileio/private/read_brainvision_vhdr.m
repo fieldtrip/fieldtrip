@@ -28,18 +28,21 @@ function [vhdr] = read_brainvision_vhdr(filename)
 %
 % $Id$
 
-vhdr.DataFile         = read_asa(filename, 'DataFile=', '%s');
-vhdr.MarkerFile       = read_asa(filename, 'MarkerFile=', '%s');
-vhdr.DataFormat       = read_asa(filename, 'DataFormat=', '%s');
-vhdr.DataOrientation  = read_asa(filename, 'DataOrientation=', '%s');
-vhdr.BinaryFormat     = read_asa(filename, 'BinaryFormat=', '%s');
-vhdr.NumberOfChannels = read_asa(filename, 'NumberOfChannels=', '%d');
-vhdr.SamplingInterval = read_asa(filename, 'SamplingInterval=', '%f'); % microseconds
+vhdr.DataFile         = read_ini(filename, 'DataFile=', '%s');
+vhdr.MarkerFile       = read_ini(filename, 'MarkerFile=', '%s');
+vhdr.DataFormat       = read_ini(filename, 'DataFormat=', '%s');
+vhdr.DataOrientation  = read_ini(filename, 'DataOrientation=', '%s');
+vhdr.BinaryFormat     = read_ini(filename, 'BinaryFormat=', '%s');
+vhdr.NumberOfChannels = read_ini(filename, 'NumberOfChannels=', '%d');
+vhdr.SamplingInterval = read_ini(filename, 'SamplingInterval=', '%f'); % microseconds
 
 if ~isempty(vhdr.NumberOfChannels)
+  % only show the warning once
+  ft_warning once FieldTrip:fileio:UnknownResolution
+  
   for i=1:vhdr.NumberOfChannels
     chan_str  = sprintf('Ch%d=', i);
-    chan_info = read_asa(filename, chan_str, '%s');
+    chan_info = read_ini(filename, chan_str, '%s');
     t = tokenize(chan_info, ',');
     vhdr.label{i} = t{1};
     vhdr.reference{i} = t{2};
@@ -47,10 +50,13 @@ if ~isempty(vhdr.NumberOfChannels)
     if ~isempty(resolution)
       vhdr.resolution(i) = resolution;
     else
-      ft_warning('unknown resolution (i.e. recording units) for channel %d in %s', i, filename);
+      ft_warning('FieldTrip:fileio:UnknownResolution', 'unknown resolution (i.e. recording units) for channel %d in "%s"', i, filename);
       vhdr.resolution(i) = 1;
     end
   end
+  
+  % switch the warning state back to the default
+  ft_warning on FieldTrip:fileio:UnknownResolution
 end
 
 % compute the sampling rate in Hz
@@ -82,15 +88,15 @@ info = dir(dataFile);
 if isempty(info)
   info = dir(filename);
   if ~isempty(info)
-    ft_notice('Could not find "%s" as specified in the .vhdr file, using "%s" instead', dataFile, dataFileSameName);
+    ft_notice('could not find "%s" as specified in the .vhdr file, using "%s" instead', dataFile, dataFileSameName);
     vhdr.DataFile = [f dataExt]; % without full path
     dataFile = dataFileSameName; % with full path
   else
-    ft_error('cannot determine the location of the data file %s', dataFile);
+    ft_error('cannot determine the location of the data file "%s"', dataFile);
   end
 else
   if ~strcmp(dataFile, dataFileSameName)
-    ft_notice('Could not find "%s" as specified in the .vhdr file, using "%s" instead', dataFile, dataFileSameName);
+    ft_notice('could not find "%s" as specified in the .vhdr file, using "%s" instead', dataFile, dataFileSameName);
   end
 end
 
@@ -99,15 +105,15 @@ if ~isempty(markerFile)
   if isempty(info)
     info = dir(markerFileSameName);
     if ~isempty(info)
-      ft_notice('Could not find "%s" as specified in the .vhdr file, using "%s" instead', markerFile, markerFileSameName);
+      ft_notice('could not find "%s" as specified in the .vhdr file, using "%s" instead', markerFile, markerFileSameName);
       vhdr.MarkerFile = [f markerExt]; % without full path
       markerFile = markerFileSameName; % with full path
     else
-      ft_error('cannot determine the location of the marker file %s', markerFile);
+      ft_error('cannot determine the location of the marker file "%s"', markerFile);
     end
   else
     if ~strcmp(markerFile, markerFileSameName)
-      ft_notice('Could not find "%s" as specified in the .vhdr file, using "%s" instead', markerFile, markerFileSameName);
+      ft_notice('could not find "%s" as specified in the .vhdr file, using "%s" instead', markerFile, markerFileSameName);
     end
   end
 end
@@ -132,10 +138,10 @@ elseif strcmpi(vhdr.DataFormat, 'ascii')
   vhdr.skipColumns = 0;
   
   % Read ascii info from header (if available).
-  dataPoints = read_asa(filename, 'DataPoints=', '%d');
-  skipLines = read_asa(filename, 'SkipLines=', '%d');
-  skipColumns = read_asa(filename, 'SkipColumns=', '%d');
-  decimalSymbol = read_asa(filename, 'DecimalSymbol=', '%s'); % This is not used in reading dataset yet
+  dataPoints    = read_ini(filename, 'DataPoints=', '%d');
+  skipLines     = read_ini(filename, 'SkipLines=', '%d');
+  skipColumns   = read_ini(filename, 'SkipColumns=', '%d');
+  decimalSymbol = read_ini(filename, 'DecimalSymbol=', '%s'); % This is not used in reading dataset yet
   
   if ~isempty(dataPoints); vhdr.nSamples = dataPoints; end
   if ~isempty(skipLines); vhdr.skipLines = skipLines; end
@@ -154,7 +160,7 @@ elseif strcmpi(vhdr.DataFormat, 'ascii')
     tline = fgetl(fid); % read the complete first line
     fclose(fid);
     t = tokenize(tline, ' ', true); % cut the line into pieces
-    vhdr.nSamples = length(t) - 1; % the first element is the channel label
+    vhdr.nSamples = length(t) - 1;  % the first element is the channel label
   end
 end
 
@@ -180,6 +186,9 @@ vhdr.impedances.refChan = [];
 fid = fopen_or_error(filename, 'rt');
 while ~feof(fid)
   tline = fgetl(fid);
+  if tline == -1
+    break; % the end-of-file was reached with an empty line
+  end
   if startsWith(tline, 'Impedance [')
     chanCounter = 0;
     refCounter = 0;
@@ -193,7 +202,7 @@ while ~feof(fid)
         if ~isempty(spaceList)
           chanName = chanName(spaceList(end)+1:end);
         end
-        if strfind(chanName,'REF_') == 1 %for situation where there is more than one reference
+        if strfind(chanName,'REF_') == 1 % for situation where there is more than one reference
           refCounter = refCounter+1;
           vhdr.impedances.refChan(refCounter) = impCounter;
           if ~isempty(impedances)
@@ -201,7 +210,7 @@ while ~feof(fid)
           else
             vhdr.impedances.reference(refCounter) = NaN;
           end
-        elseif strcmpi(chanName,'ref') %single reference
+        elseif strcmpi(chanName,'ref') % single reference
           refCounter = refCounter+1;
           vhdr.impedances.refChan(refCounter) = impCounter;
           if ~isempty(impedances)

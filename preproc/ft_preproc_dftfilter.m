@@ -18,7 +18,7 @@ function [filt] = ft_preproc_dftfilter(dat, Fs, Fl, varargin)
 %              the default European value of 50 Hz is assumed)
 % 
 % Additional optional arguments are to be provided as key-value pairs:
-%   dftreplace = 'zero' (default), 'dftreplace' or 'dftreplace_fft'.
+%   dftreplace = 'zero' (default), 'neighbour' or 'neighbour_fft'.
 % 
 % If dftreplace = 'zero', the powerline component's amplitude is estimated by
 % fitting a sine and cosine at the specified frequency, and subsequently
@@ -70,7 +70,7 @@ function [filt] = ft_preproc_dftfilter(dat, Fs, Fl, varargin)
 %
 % When using spectral interpolation, additional arguments are:
 %
-%   dftwidth          bandwidth of line noise frequencies, applies to spectrum interpolation, in Hz
+%   dftbandwidth      bandwidth of line noise frequencies, applies to spectrum interpolation, in Hz
 %   dftneighbourwidth width of frequencies neighbouring line noise frequencies, applies to spectrum interpolation (dftreplace = 'neighbour'), in Hz
 % 
 % If the data contains NaNs, the output of the affected channel(s) will be

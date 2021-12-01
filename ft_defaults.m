@@ -15,10 +15,10 @@ function ft_defaults
 %   ft_default.checkpath         = string, can be 'pedantic', 'once', 'no' (default = 'pedantic')
 %   ft_default.checksize         = number in bytes, can be inf (default = 1e5)
 %   ft_default.showcallinfo      = string, can be 'yes' or 'no' (default = 'yes')
+%   ft_default.trackcallinfo     = string, can be 'yes' or 'no' (default = 'yes')
 %   ft_default.trackconfig       = string, can be 'cleanup', 'report', 'off' (default = 'off')
 %   ft_default.trackusage        = false, or string with salt for one-way encryption of identifying information (by default this is enabled and an automatic salt is created)
 %   ft_default.trackdatainfo     = string, can be 'yes' or 'no' (default = 'no')
-%   ft_default.trackcallinfo     = string, can be 'yes' or 'no' (default = 'yes')
 %   ft_default.outputfilepresent = string, can be 'keep', 'overwrite', 'error' (default = 'overwrite')
 %   ft_default.debug             = string, can be 'display', 'displayonerror', 'displayonsuccess', 'save', 'saveonerror', saveonsuccess' or 'no' (default = 'no')
 %   ft_default.toolbox.signal    = string, can be 'compat' or 'matlab' (default = 'compat')
@@ -147,6 +147,34 @@ else
   prevcleanup = {};
 end
 
+% show a welcome message
+fprintf([
+  '-------------------------------------------------------------------------------------------' ...
+  '\nFieldTrip is developed by members and collaborators of the Donders Institute for Brain,' ...
+  '\nCognition and Behaviour at Radboud University, Nijmegen, the Netherlands.' ...
+  '\n'...
+  '\n                          --------------------------'...
+  '\n                        /                            \\'...
+  '\n                     ------------------------------------'...
+  '\n                    /                                    \\'...
+  '\n          -------------------------------------------------'...
+  '\n         /                            /\\/\\/\\/\\/\\ '...
+  '\n         ---------------------------------------------------'...
+  '\n                  |        F  i  e  l  d  T  r  i  p       |'...
+  '\n                  ------------------------------------------'...
+  '\n                   \\                                      /'...
+  '\n                     ------------------------------------'...
+  '\n                          \\            /'...
+  '\n                            ----------'...
+  '\n' ...
+  '\nPlease cite the FieldTrip reference paper when you have used FieldTrip in your study.' ...
+  '\nRobert Oostenveld, Pascal Fries, Eric Maris, and Jan-Mathijs Schoffelen. FieldTrip: Open' ...
+  '\nSource Software for Advanced Analysis of MEG, EEG, and Invasive Electrophysiological Data.' ...
+  '\nComputational Intelligence and Neuroscience, vol. 2011, Article ID 156869, 9 pages, 2011.' ...
+  '\ndoi:10.1155/2011/156869.' ...
+  '\n-------------------------------------------------------------------------------------------\n'
+  ]);
+
 % Ensure that the path containing ft_defaults is on the path.
 % This allows people to do "cd path_to_fieldtrip; ft_defaults"
 ftPath = fileparts(mfilename('fullpath')); % get the full path to this function, strip away 'ft_defaults'
@@ -157,13 +185,13 @@ if isempty(regexp(path, [ftPath pathsep '|' ftPath '$'], 'once'))
 end
 
 if ~isdeployed
-
-  if isempty(which('ft_test')) || isempty(which('ft_notice'))
+  
+  if isempty(which('ft_hastoolbox')) || isempty(which('ft_warning'))
     % the fieldtrip/utilities directory contains the ft_hastoolbox and ft_warning
     % functions, which are required for the remainder of this script
     addpath(fullfile(fileparts(which('ft_defaults')), 'utilities'));
   end
-
+  
   % Some people mess up their path settings and then have different versions of certain toolboxes on the path.
   % The following will issue a warning
   checkMultipleToolbox('FieldTrip',           'ft_defaults.m');
@@ -194,33 +222,33 @@ if ~isdeployed
   checkMultipleToolbox('yokogawa_meg_reader', 'getYkgwHdrEvent.p');
   checkMultipleToolbox('biosig',              'sopen.m');
   checkMultipleToolbox('icasso',              'icassoEst.m');
-
+  
   try
     % external/signal contains alternative implementations of some signal processing functions
     if ~ft_platform_supports('signal') || ~strcmp(ft_default.toolbox.signal, 'matlab') || ~ft_hastoolbox('signal')
       addpath(fullfile(fileparts(which('ft_defaults')), 'external', 'signal'));
     end
   end
-
+  
   try
     % external/stats contains alternative implementations of some statistics functions
     if ~ft_platform_supports('stats') || ~strcmp(ft_default.toolbox.stats, 'matlab') || ~ft_hastoolbox('stats')
       addpath(fullfile(fileparts(which('ft_defaults')), 'external', 'stats'));
     end
   end
-
+  
   try
     % external/images contains alternative implementations of some image processing functions
     if ~ft_platform_supports('images') || ~strcmp(ft_default.toolbox.images, 'matlab') || ~ft_hastoolbox('images')
       addpath(fullfile(fileparts(which('ft_defaults')), 'external', 'images'));
     end
   end
-
+  
   try
     % this directory contains various functions that were obtained from elsewere, e.g. MATLAB file exchange
     ft_hastoolbox('fileexchange', 3, 1); % not required
   end
-
+  
   try
     % these directories deal with compatibility with older MATLAB versions
     if ft_platform_supports('matlabversion', -inf, '2008a'), ft_hastoolbox('compat/matlablt2008b', 3, 1); end
@@ -249,10 +277,18 @@ if ~isdeployed
     if ft_platform_supports('matlabversion', -inf, '2019b'), ft_hastoolbox('compat/matlablt2020a', 3, 1); end
     if ft_platform_supports('matlabversion', -inf, '2020a'), ft_hastoolbox('compat/matlablt2020b', 3, 1); end
     if ft_platform_supports('matlabversion', -inf, '2020b'), ft_hastoolbox('compat/matlablt2021a', 3, 1); end
+    if ft_platform_supports('matlabversion', -inf, '2021a'), ft_hastoolbox('compat/matlablt2021b', 3, 1); end
+    if ft_platform_supports('matlabversion', -inf, '2021b'), ft_hastoolbox('compat/matlablt2022a', 3, 1); end
+    if ft_platform_supports('matlabversion', -inf, '2022a'), ft_hastoolbox('compat/matlablt2022b', 3, 1); end
+    if ft_platform_supports('matlabversion', -inf, '2022b'), ft_hastoolbox('compat/matlablt2023a', 3, 1); end
+    if ft_platform_supports('matlabversion', -inf, '2023a'), ft_hastoolbox('compat/matlablt2023b', 3, 1); end
+    if ft_platform_supports('matlabversion', -inf, '2023b'), ft_hastoolbox('compat/matlablt2024a', 3, 1); end
+    if ft_platform_supports('matlabversion', -inf, '2024a'), ft_hastoolbox('compat/matlablt2024b', 3, 1); end
+    if ft_platform_supports('matlabversion', -inf, '2024b'), ft_hastoolbox('compat/matlablt2025a', 3, 1); end
     % this deals with compatibility with all OCTAVE versions
     if ft_platform_supports('octaveversion', -inf, +inf),    ft_hastoolbox('compat/octave', 3, 1); end
   end
-
+  
   try
     % these contains template layouts, neighbour structures, MRIs and cortical meshes
     ft_hastoolbox('template/layout',      1, 1);
@@ -262,67 +298,67 @@ if ~isdeployed
     ft_hastoolbox('template/neighbours',  1, 1);
     ft_hastoolbox('template/sourcemodel', 1, 1);
   end
-
+  
   try
     % this is used in ft_statistics
     ft_hastoolbox('statfun', 1, 1);
   end
-
+  
   try
     % this is used in ft_definetrial
     ft_hastoolbox('trialfun', 1, 1);
   end
-
+  
   try
     % this contains the low-level reading functions
     ft_hastoolbox('fileio', 1, 1);
   end
-
+  
   try
     % this is for filtering etc. on time-series data
     ft_hastoolbox('preproc', 1, 1);
   end
-
+  
   try
     % this contains forward models for the EEG and MEG volume conductor
     ft_hastoolbox('forward', 1, 1);
   end
-
+  
   try
     % this contains inverse source estimation methods
     ft_hastoolbox('inverse', 1, 1);
   end
-
+  
   try
     % this contains intermediate-level plotting functions, e.g. multiplots and 3-d objects
     ft_hastoolbox('plotting', 1, 1);
   end
-
+  
   try
     % this contains intermediate-level functions for spectral analysis
     ft_hastoolbox('specest', 1, 1);
   end
-
+  
   try
     % this contains the functions to compute connectivity metrics
     ft_hastoolbox('connectivity', 1, 1);
   end
-
+  
   try
     % this contains test scripts
     ft_hastoolbox('test', 1, 1);
   end
-
+  
   try
     % this contains the functions for spike and spike-field analysis
     ft_hastoolbox('contrib/spike', 1, 1);
   end
-
+  
   try
     % this contains user contributed functions
     ft_hastoolbox('contrib/misc', 1, 1);
   end
-
+  
   try
     % this contains specific code and examples for realtime processing
     ft_hastoolbox('realtime/example', 3, 1);    % not required
@@ -330,7 +366,7 @@ if ~isdeployed
     ft_hastoolbox('realtime/online_meg', 3, 1); % not required
     ft_hastoolbox('realtime/online_eeg', 3, 1); % not required
   end
-
+  
 end
 
 % the toolboxes added by this function should not be removed by FT_POSTAMBLE_HASTOOLBOX

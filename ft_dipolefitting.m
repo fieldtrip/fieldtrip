@@ -389,7 +389,7 @@ if strcmp(cfg.gridsearch, 'yes')
     ft_notice('computing the leadfields for the gridsearch on the fly');
     
     % construct the dipole positions on which the source reconstruction will be done
-    tmpcfg           = keepfields(cfg, {'sourcemodel', 'mri', 'headshape', 'symmetry', 'smooth', 'threshold', 'spheremesh', 'inwardshift', 'xgrid' 'ygrid', 'zgrid', 'resolution', 'tight', 'warpmni', 'template', 'showcallinfo'});
+    tmpcfg           = keepfields(cfg, {'sourcemodel', 'mri', 'headshape', 'symmetry', 'smooth', 'threshold', 'spheremesh', 'inwardshift', 'xgrid' 'ygrid', 'zgrid', 'resolution', 'tight', 'warpmni', 'template', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
     tmpcfg.headmodel = headmodel;
     if ft_senstype(sens, 'eeg')
       tmpcfg.elec = sens;

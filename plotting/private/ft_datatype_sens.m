@@ -76,7 +76,7 @@ function [sens] = ft_datatype_sens(sens, varargin)
 % (2010) Added support for bipolar or otherwise more complex linear combinations
 %  of EEG electrodes using sens.tra, similar to MEG.
 %
-% (2009) Noice reduction has been added for MEG systems in the balance field.
+% (2009) Noise reduction has been added for MEG systems in the balance field.
 %
 % (2006) The optional fields sens.type and sens.unit were added.
 %
@@ -417,7 +417,18 @@ switch version
         sens.elecpos = sens.pnt; sens = rmfield(sens, 'pnt');
       end
     end
-    
+
+    if isfield(sens, 'pos')
+      if ismeg
+        % sensor description is a MEG sensor-array, containing oriented coils
+        sens.coilpos = sens.pos; sens = rmfield(sens, 'pos');
+        sens.coilori = sens.ori; sens = rmfield(sens, 'ori');
+      else
+        % sensor description is something else, EEG/ECoG/sEEG, etc
+        sens.elecpos = sens.pos; sens = rmfield(sens, 'pos');
+      end
+    end
+
     if ~isfield(sens, 'chanpos')
       if ismeg
         % sensor description is a MEG sensor-array, containing oriented coils

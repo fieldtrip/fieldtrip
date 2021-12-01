@@ -53,9 +53,19 @@ template = dccnpath('/home/common/matlab/fieldtrip/external/spm8/templates/T1.ni
 source.coordsys = 'mni'; % this can also be determined with ft_determine_coordsys
 
 template_mri = ft_read_mri(template);
+
+%%
+
 cfg              = [];
 cfg.voxelcoord   = 'no';
 cfg.parameter    = {'avg.pow'};
+cfg.interpmethod = 'spline';
+% cfg.coordsys   = 'mni'; % not supported any more, should be specified in the input data
+source_int  = ft_sourceinterpolate(cfg, source, template_mri);
+
+cfg              = [];
+cfg.voxelcoord   = 'no';
+cfg.parameter    = 'avg.pow'; % this was a regression error in commit 4569991a6b38824e39effc114ad4cf2419351702
 cfg.interpmethod = 'spline';
 % cfg.coordsys   = 'mni'; % not supported any more, should be specified in the input data
 source_int  = ft_sourceinterpolate(cfg, source, template_mri);

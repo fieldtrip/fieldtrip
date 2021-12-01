@@ -95,6 +95,7 @@ cfg.gridscale         = ft_getopt(cfg, 'gridscale',         67);
 cfg.interplimits      = ft_getopt(cfg, 'interplimits',     'head');
 cfg.interpolation     = ft_getopt(cfg, 'interpolation',     default_interpmethod);
 cfg.contournum        = ft_getopt(cfg, 'contournum',        6);
+cfg.colormap          = ft_getopt(cfg, 'colormap',         'default');
 cfg.colorbar          = ft_getopt(cfg, 'colorbar',         'no');
 cfg.colorbartext      = ft_getopt(cfg, 'colorbartext',    '');
 cfg.shading           = ft_getopt(cfg, 'shading',          'flat');
@@ -185,28 +186,28 @@ if strcmp(cfg.marker, 'highlights')
   cfg.marker = 'off';
 end
 
-% check colormap is proper format and set it
-if isfield(cfg, 'colormap')
+% check if the colormap is in the proper format
+if ~isequal(cfg.colormap, 'default')
   if ischar(cfg.colormap)
     cfg.colormap = ft_colormap(cfg.colormap);
   elseif iscell(cfg.colormap)
     cfg.colormap = ft_colormap(cfg.colormap{:});
-  end
-  if size(cfg.colormap,2)~=3
+  elseif isnumeric(cfg.colormap) && size(cfg.colormap,2)~=3
     ft_error('cfg.colormap must be Nx3');
   end
-  ft_colormap(cfg.colormap);
-  ncolors = size(cfg.colormap,1);
-else
-  ncolors = []; % let the low-level function deal with this
+  % the actual colormap will be set below
 end
 
 Ndata = numel(varargin);
-
 for indx=1:Ndata
   
   % open a new figure, or add it to the existing one
-  open_figure(keepfields(cfg, {'figure', 'clearfigure', 'position', 'visible', 'renderer', 'figurename', 'title'}));
+  open_figure(keepfields(cfg, {'figure', 'position', 'visible', 'renderer', 'figurename', 'title'}));
+  
+  % apply the same colormap to all figures
+  if ~isempty(cfg.colormap)
+    set(gcf,  'colormap', cfg.colormap);
+  end
   
   if iscell(cfg.dataname)
     dataname = cfg.dataname{indx};
@@ -311,7 +312,7 @@ for indx=1:Ndata
   end
   
   % time and/or frequency should NOT be selected and averaged here, since a singleplot might follow in interactive mode
-  tmpcfg = keepfields(cfg, {'channel', 'showcallinfo', 'trials'});
+  tmpcfg = keepfields(cfg, {'channel', 'trials', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
   if hasrpt
     tmpcfg.avgoverrpt = 'yes';
   else
@@ -540,10 +541,7 @@ for indx=1:Ndata
         comment = sprintf('%0s=[%.3g %.3g]', yparam, ymin, ymax);
       end
     case 'zlim'
-      comment = '';
-      if ~isempty(yparam)
-        comment = sprintf('%0s=[%.3g %.3g]', cfg.parameter, zmin, zmax);
-      end
+      comment = sprintf('%0s=[%.3g %.3g]', cfg.parameter, zmin, zmax);
     otherwise
       comment = cfg.comment; % allow custom comments (e.g., ft_clusterplot specifies custom comments)
   end % switch comment
@@ -601,7 +599,6 @@ for indx=1:Ndata
     opt = ft_setopt(opt, 'datmask',       msk);
     if strcmp(style, 'imsat') || strcmp(style, 'imsatiso')
       opt = ft_setopt(opt, 'clim',  [zmin zmax]);
-      opt = ft_setopt(opt, 'ncolors',  ncolors);
     end
     ft_plot_topo(chanX, chanY, dat, opt{:});
   end
@@ -726,11 +723,6 @@ for indx=1:Ndata
       c = colorbar('location', cfg.colorbar);
       ylabel(c, cfg.colorbartext);
     end
-  end
-  
-  % Set renderer if specified
-  if ~isempty(cfg.renderer)
-    set(gcf, 'renderer', cfg.renderer)
   end
   
   % set the figure window title, but only if the user has not changed it

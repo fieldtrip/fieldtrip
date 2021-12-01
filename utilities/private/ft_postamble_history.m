@@ -30,7 +30,7 @@
 % some fields are for internal use only and should not be stored
 cfg = removefields(cfg, ignorefields('history'));
 
-if isequal(iW1aenge_postamble, {'varargout'}) && isequal(iW1aenge_preamble, {'varargin'}) && isfield(cfg, 'previous')
+if isequal(postamble_argin, {'varargout'}) && isequal(preamble_argin, {'varargin'}) && isfield(cfg, 'previous')
   % distribute the elements of cfg.previous over the output variables
   if iscell(cfg.previous)
     aa5mo0Ke = cfg.previous;
@@ -44,14 +44,14 @@ if isequal(iW1aenge_postamble, {'varargout'}) && isequal(iW1aenge_preamble, {'va
   end
   cfg.previous = aa5mo0Ke;
   clear aa5mo0Ke tmpindx
-elseif isequal(iW1aenge_postamble, {'varargout'})
+elseif isequal(postamble_argin, {'varargout'})
   for tmpindx=1:numel(varargout)
     eval(sprintf('try, varargout{%d}.cfg = cfg; end', tmpindx));
   end
   clear tmpindx
 else
-  for tmpindx=1:length(iW1aenge_postamble)
-    eval(sprintf('try, %s.cfg = cfg; end', iW1aenge_postamble{tmpindx}));
+  for tmpindx=1:length(postamble_argin)
+    eval(sprintf('try, %s.cfg = cfg; end', postamble_argin{tmpindx}));
   end
   clear tmpindx
 end
