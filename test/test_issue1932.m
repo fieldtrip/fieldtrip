@@ -5,15 +5,16 @@ function test_issue1932
 % DEPENDENCY fieldtrip2homer event2boolvec
 
 load(dccnpath('/home/common/matlab/fieldtrip/data/test/issue1932/data.mat'));
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/issue1932/Events.mat'));
+tmp = load(dccnpath('/home/common/matlab/fieldtrip/data/test/issue1932/Events.mat'));
+event = tmp.events;
 
 %%
 
 clear values
-for i=1:length(events)
-  begsample = events(i).sample + events(i).offset;
-  endsample = events(i).sample + events(i).offset + events(i).duration;
-  values(begsample:endsample) = find(strcmp(events(i).value, unique({events.value})));
+for i=1:length(event)
+  begsample = event(i).sample + event(i).offset;
+  endsample = event(i).sample + event(i).offset + event(i).duration;
+  values(begsample:endsample) = find(strcmp(event(i).value, unique({event.value})));
 end
 
 figure
@@ -23,11 +24,11 @@ plot(2*(values==2), '.')
 plot(3*(values==3), '.')
 
 axis([56000 76000 0.5 3.5]);
-legend(unique({events.value}))
+legend(unique({event.value}))
 
 %%
 
-nirs = fieldtrip2homer(Selection, 'event', events);
+nirs = fieldtrip2homer(Selection, 'event', event);
 
 figure
 imagesc(nirs.s)
