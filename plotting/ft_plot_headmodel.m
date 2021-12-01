@@ -16,6 +16,7 @@ function ft_plot_headmodel(headmodel, varargin)
 %   'edgealpha'    = transparency, between 0 and 1 (default = 1)
 %   'surfaceonly'  = true or false, plot only the outer surface of a hexahedral or tetrahedral mesh (default = false)
 %   'unit'         = string, convert to the specified geometrical units (default = [])
+%   'axes'         = boolean, whether to plot the axes of the 3D coordinate system (default = false)
 %   'grad'         = gradiometer array, used in combination with local spheres model
 %
 % Example
@@ -28,6 +29,7 @@ function ft_plot_headmodel(headmodel, varargin)
 % See also FT_PREPARE_HEADMODEL, FT_PLOT_MESH, FT_PLOT_SENS
 
 % Copyright (C) 2009, Cristiano Micheli
+% Copyright (C) 2009-2021, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -58,11 +60,12 @@ vertexindex = ft_getopt(varargin, 'vertexindex', 'none');
 vertexsize  = ft_getopt(varargin, 'vertexsize', 10);
 facecolor   = ft_getopt(varargin, 'facecolor', 'white');
 vertexcolor = ft_getopt(varargin, 'vertexcolor', 'none');
-edgecolor   = ft_getopt(varargin, 'edgecolor'); % the default for this is set below
+edgecolor   = ft_getopt(varargin, 'edgecolor');           % the default for this is set below
 facealpha   = ft_getopt(varargin, 'facealpha', 1);
 edgealpha   = ft_getopt(varargin, 'edgealpha', 1);
 surfaceonly = ft_getopt(varargin, 'surfaceonly');
 unit        = ft_getopt(varargin, 'unit');
+axes_       = ft_getopt(varargin, 'axes', false);         % do not confuse with built-in (/Applications/MATLAB_R2020b.app/toolbox/matlab/graphics/axis/axes)
 grad        = ft_getopt(varargin, 'grad');
 
 if ~isempty(unit)
@@ -155,7 +158,7 @@ end
 for i=1:length(mesh)
   ft_plot_mesh(mesh(i), 'faceindex', faceindex, 'vertexindex', vertexindex, 'vertexsize', vertexsize, ...
     'facecolor', facecolor, 'edgecolor', edgecolor, 'vertexcolor', vertexcolor, ...
-    'facealpha', facealpha, 'edgealpha', edgealpha, 'surfaceonly', surfaceonly);
+    'facealpha', facealpha, 'edgealpha', edgealpha, 'surfaceonly', surfaceonly, 'axes', axes_);
 end
 
 % revert to original state
