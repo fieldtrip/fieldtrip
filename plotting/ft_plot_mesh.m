@@ -23,6 +23,7 @@ function [hs] = ft_plot_mesh(mesh, varargin)
 %   'vertexmarker' = character, e.g. '.', 'o' or 'x' (default = '.')
 %   'vertexsize'   = scalar or vector with the size for each vertex (default = 10)
 %   'unit'         = string, convert to the specified geometrical units (default = [])
+%   'axes'          = boolean, whether to plot the axes of the 3D coordinate system (default = false)
 %   'maskstyle',   = 'opacity' or 'colormix', if the latter is specified, opacity masked color values
 %                    are converted (in combination with a background color) to RGB. This bypasses
 %                    openGL functionality, which behaves unpredictably on some platforms (e.g. when
@@ -46,7 +47,7 @@ function [hs] = ft_plot_mesh(mesh, varargin)
 % See also FT_PLOT_HEADSHAPE, FT_PLOT_HEADMODEL, TRIMESH, PATCH
 
 % Copyright (C) 2009, Cristiano Micheli
-% Copyright (C) 2009-2015, Robert Oostenveld
+% Copyright (C) 2009-2021, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -105,6 +106,7 @@ material_     = ft_getopt(varargin, 'material');        % note the underscore, t
 tag           = ft_getopt(varargin, 'tag',         '');
 surfaceonly   = ft_getopt(varargin, 'surfaceonly');     % default is handled below
 unit          = ft_getopt(varargin, 'unit');
+axes_         = ft_getopt(varargin, 'axes', false);     % do not confuse with built-in (/Applications/MATLAB_R2020b.app/toolbox/matlab/graphics/axis/axes)
 clim          = ft_getopt(varargin, 'clim');
 alphalim      = ft_getopt(varargin, 'alphalim');
 alphamapping  = ft_getopt(varargin, 'alphamap', 'rampup');
@@ -518,6 +520,11 @@ end
 axis off
 axis vis3d
 axis equal
+
+if istrue(axes_)
+  % plot the 3D axes, this depends on the units and coordsys
+  ft_plot_axes(mesh);
+end
 
 if ~nargout
   clear hs
