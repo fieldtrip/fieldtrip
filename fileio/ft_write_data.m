@@ -892,12 +892,13 @@ switch dataformat
       % select events with a string value, the type will be a string
       sel = cellfun(@ischar, {evt.value});
       if any(sel)
-        evt_names = unique({evt(:).value}); % if the values are strings, this propably contains the event names
+        evt_string = evt(sel);
+        evt_names = unique({evt_string(:).value}); % if the values are strings, this propably contains the event names
         for i=1:length(evt_names)
           snirf.stim(i).name = evt_names{i};
-          evt_idx = find(strcmp({evt(:).value}, evt_names{i}));
-          starttime = ([evt(evt_idx).sample]-1)/hdr.Fs;
-          duration = [evt(evt_idx).duration]/hdr.Fs;
+          evt_idx = find(strcmp({evt_string(:).value}, evt_names{i}));
+          starttime = ([evt_string(evt_idx).sample]-1)/hdr.Fs;
+          duration = [evt_string(evt_idx).duration]/hdr.Fs;
           if isempty(duration)
             duration = zeros(1, length(starttime));
           end
@@ -908,16 +909,17 @@ switch dataformat
       % select events with a numeric value, the type will be a string
       sel = cellfun(@isnumeric, {evt.value});
       if any(sel)
-        evt_names = unique({evt(:).type});
+        evt_numeric = evt(sel);
+        evt_names = unique({evt_numeric(:).type});
         for i=1:length(evt_names)
           snirf.stim(i).name = evt_names{i};
-          evt_idx = find(strcmp({evt(:).type}, evt_names{i}));
-          starttime = ([evt(evt_idx).sample]-1)/hdr.Fs;
-          duration = [evt(evt_idx).duration]/hdr.Fs;
+          evt_idx = find(strcmp({evt_numeric(:).type}, evt_names{i}));
+          starttime = ([evt_numeric(evt_idx).sample]-1)/hdr.Fs;
+          duration = [evt_numeric(evt_idx).duration]/hdr.Fs;
           if isempty(duration)
             duration = zeros(1, length(starttime));
           end
-          value = [evt(evt_idx).value];
+          value = [evt_numeric(evt_idx).value];
           if isempty(value)
             value = ones(1, length(starttime));
           end
