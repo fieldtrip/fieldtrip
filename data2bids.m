@@ -1133,7 +1133,7 @@ if need_meg_json
   meg_json.MEGREFChannelCount         = sum(strcmpi(hdr.chantype, 'refmag') | strcmpi(hdr.chantype, 'refgrad') | strcmpi(hdr.chantype, 'refplanar') | strcmpi(hdr.chantype, 'ref'));
   meg_json.EEGChannelCount            = sum(strcmpi(hdr.chantype, 'eeg'));
   meg_json.ECOGChannelCount           = sum(strcmpi(hdr.chantype, 'ecog'));
-  meg_json.SEEGChannelCount           = sum(strcmpi(hdr.chantype, 'seeg'));
+  meg_json.SEEGChannelCount           = sum(strcmpi(hdr.chantype, 'seeg') | strcmpi(hdr.chantype, 'dbs'));
   meg_json.EOGChannelCount            = sum(strcmpi(hdr.chantype, 'eog'));
   meg_json.ECGChannelCount            = sum(strcmpi(hdr.chantype, 'ecg'));
   meg_json.EMGChannelCount            = sum(strcmpi(hdr.chantype, 'emg'));
@@ -1189,7 +1189,7 @@ end % if need_eeg_json
 if need_ieeg_json
   ieeg_json.SamplingFrequency          = hdr.Fs;
   ieeg_json.ECOGChannelCount           = sum(strcmpi(hdr.chantype, 'ecog'));
-  ieeg_json.SEEGChannelCount           = sum(strcmpi(hdr.chantype, 'seeg'));
+  ieeg_json.SEEGChannelCount           = sum(strcmpi(hdr.chantype, 'seeg') | strcmpi(hdr.chantype, 'dbs'));
   ieeg_json.EEGChannelCount            = sum(strcmpi(hdr.chantype, 'eeg'));
   ieeg_json.EOGChannelCount            = sum(strcmpi(hdr.chantype, 'eog'));
   ieeg_json.ECGChannelCount            = sum(strcmpi(hdr.chantype, 'ecg'));
