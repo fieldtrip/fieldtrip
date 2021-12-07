@@ -362,7 +362,23 @@ switch senstype
   case {'itab153' 'itab28' 'itab28_old'}
     % all itab MEG channels start with MAG
     labelmeg = datachannel(strncmp('MAG', datachannel, length('MAG')));
-    
+
+  case{'qzfm_gen2'}        
+      % This is for use with QZFM_Gen2 Optically Pumped Magnetometers
+      % manufactured by QuSpin Inc.
+      % SPECS: https://quspin.com/qzfm-gen-2-update/
+
+      labelmeg  = datachannel(strncmp('meg', datachantype, 3));
+      labelmegref = datachannel(strncmp('refmag', datachantype, 3));
+      
+      % All channels measuring tangential fields are end with TAN
+      % All channels measuring radial fields are end with RAD
+
+      % This is specific to data collected from UCL. Also see:
+      % https://www.fieldtriptoolbox.org/getting_started/opm_fil/
+      labelmegtan = labelmeg(~cellfun(@isempty, regexp(labelmeg, '.*TAN$')));
+      labelmegrad = labelmeg(~cellfun(@isempty, regexp(labelmeg, '.*RAD$')));
+
   otherwise
     if ~isempty(datachantype)
       labelmeg = datachannel(strncmp('meg', datachantype, 3));
@@ -404,6 +420,8 @@ findmegrefg    = find(strcmpi(channel, 'MEGREFG'));
 findmegrefl    = find(strcmpi(channel, 'MEGREFL'));
 findmegrefr    = find(strcmpi(channel, 'MEGREFR'));
 findmegrefm    = find(strcmpi(channel, 'MEGREFM'));
+findmegtan     = find(strcmpi(channel, 'MEGTAN'));
+findmegrad     = find(strcmpi(channel, 'MEGRAD'));
 findeog        = find(strcmpi(channel, 'EOG'));
 findmz         = find(strcmp(channel, 'MZ' ));
 findml         = find(strcmp(channel, 'ML' ));
@@ -494,6 +512,8 @@ if findmegrefg,    channel = [channel; labelmegrefg]; end
 if findmegrefl,    channel = [channel; labelmegrefl]; end
 if findmegrefr,    channel = [channel; labelmegrefr]; end
 if findmegrefm,    channel = [channel; labelmegrefm]; end
+if findmegtan,     channel = [channel; labelmegtan]; end
+if findmegrad,     channel = [channel; labelmegrad]; end
 if findeog,        channel = [channel; labeleog]; end
 if findmz ,        channel = [channel; labelmz ]; end
 if findml ,        channel = [channel; labelml ]; end
