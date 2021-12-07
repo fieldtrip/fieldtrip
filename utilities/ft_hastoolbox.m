@@ -187,8 +187,117 @@ if nargin<3
   silent = 0;
 end
 
+if ~iscell(toolbox)
+  toolbox = {toolbox};
+end
+
 % determine whether the toolbox is installed
 toolbox = upper(toolbox);
+
+for k = 1:numel(toolbox)
+  [dependency{k}, fallback_toolbox] = getdependency(toolbox{k}, silent);
+  status(k) = is_present(dependency{k});
+  if ~status(k) && ~isempty(fallback_toolbox)
+    toolbox{k} = fallback_toolbox;
+  end
+end
+
+toolbox = toolbox(~status);
+status  = status(~status);
+
+% try to determine the path of the requested toolbox and add it
+if any(~status) && autoadd>0
+  
+  % for core FieldTrip modules
+  prefix = fileparts(which('ft_defaults'));
+  if any(~status)
+    status = myaddpath(fullfile(prefix, lower(toolbox)), silent);
+  end
+  
+  % for external FieldTrip modules
+  prefix = fullfile(fileparts(which('ft_defaults')), 'external');
+  if any(~status)
+    status(~status) = myaddpath(fullfile(prefix, lower(toolbox(~status))), silent);
+    licensefile = [lower(toolbox) '_license'];
+    if status && exist(licensefile, 'file')
+      % this will execute openmeeg_license, mne_license and duneuro_license
+      % which display the license on screen for three seconds
+      feval(licensefile);
+    end
+  end
+  
+  % for contributed FieldTrip extensions
+  prefix = fullfile(fileparts(which('ft_defaults')), 'contrib');
+  if any(~status)
+    status(~status) = myaddpath(fullfile(prefix, lower(toolbox(~status))), silent);
+    licensefile = [lower(toolbox) '_license'];
+    if status && exist(licensefile, 'file')
+      % this will execute openmeeg_license, mne_license and artinis_license
+      % which display the license on screen for a few seconds
+      feval(licensefile);
+    end
+  end
+  
+  % for linux computers in the Donders Centre for Cognitive Neuroimaging
+  prefix = '/home/common/matlab';
+  if any(~status) && isfolder(prefix)
+    status(~status) = myaddpath(fullfile(prefix, lower(toolbox(~status))), silent);
+  end
+  
+  % for windows computers in the Donders Centre for Cognitive Neuroimaging
+  prefix = 'h:\common\matlab';
+  if any(~status) && isfolder(prefix)
+    status(~status) = myaddpath(fullfile(prefix, lower(toolbox(~status))), silent);
+  end
+  
+  % use the MATLAB subdirectory in your homedirectory, this works on linux and mac
+  prefix = fullfile(getenv('HOME'), 'matlab');
+  if any(~status) && isfolder(prefix)
+    status(~status) = myaddpath(fullfile(prefix, lower(toolbox(~status))), silent);
+  end
+  
+  if any(~status)
+    % the toolbox is not on the path and cannot be added
+    sel = find(strcmp(url(:,1), toolbox));
+    if ~isempty(sel)
+      msg = sprintf('the %s toolbox is not installed, %s', toolbox, url{sel, 2});
+    else
+      msg = sprintf('the %s toolbox is not installed', toolbox);
+    end
+    if autoadd==1
+      error(msg);
+    elseif autoadd==2
+      warning(msg);
+    else
+      % fail silently
+    end
+  end
+  
+elseif any(~status) && autoadd<0
+  % the toolbox is not on the path and should not be added
+  sel = find(strcmp(url(:,1), toolbox));
+  if ~isempty(sel)
+    msg = sprintf('the %s toolbox is not installed, %s', toolbox, url{sel, 2});
+  else
+    msg = sprintf('the %s toolbox is not installed', toolbox);
+  end
+  error(msg);
+end
+
+% this function is called many times in FieldTrip and associated toolboxes
+% use efficient handling if the same toolbox has been investigated before
+% if status
+%  previous.(fixname(toolbox)) = status;
+% end
+
+% remember the previous path, allows us to determine on the next call
+% whether the path has been modified outise of this function
+% previouspath = path;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% helper function
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function [dependency, fallback_toolbox] = getdependency(toolbox, silent)
 
 % In case SPMxUP not available, allow to use fallback toolbox
 fallback_toolbox='';
@@ -459,108 +568,13 @@ switch toolbox
     dependency = false;
 end
 
-status = is_present(dependency);
-if ~status && ~isempty(fallback_toolbox)
-  % in case of SPMxUP
-  toolbox = fallback_toolbox;
-end
-
-% try to determine the path of the requested toolbox and add it
-if ~status && autoadd>0
-  
-  % for core FieldTrip modules
-  prefix = fileparts(which('ft_defaults'));
-  if ~status
-    status = myaddpath(fullfile(prefix, lower(toolbox)), silent);
-  end
-  
-  % for external FieldTrip modules
-  prefix = fullfile(fileparts(which('ft_defaults')), 'external');
-  if ~status
-    status = myaddpath(fullfile(prefix, lower(toolbox)), silent);
-    licensefile = [lower(toolbox) '_license'];
-    if status && exist(licensefile, 'file')
-      % this will execute openmeeg_license, mne_license and duneuro_license
-      % which display the license on screen for three seconds
-      feval(licensefile);
-    end
-  end
-  
-  % for contributed FieldTrip extensions
-  prefix = fullfile(fileparts(which('ft_defaults')), 'contrib');
-  if ~status
-    status = myaddpath(fullfile(prefix, lower(toolbox)), silent);
-    licensefile = [lower(toolbox) '_license'];
-    if status && exist(licensefile, 'file')
-      % this will execute openmeeg_license, mne_license and artinis_license
-      % which display the license on screen for a few seconds
-      feval(licensefile);
-    end
-  end
-  
-  % for linux computers in the Donders Centre for Cognitive Neuroimaging
-  prefix = '/home/common/matlab';
-  if ~status && isfolder(prefix)
-    status = myaddpath(fullfile(prefix, lower(toolbox)), silent);
-  end
-  
-  % for windows computers in the Donders Centre for Cognitive Neuroimaging
-  prefix = 'h:\common\matlab';
-  if ~status && isfolder(prefix)
-    status = myaddpath(fullfile(prefix, lower(toolbox)), silent);
-  end
-  
-  % use the MATLAB subdirectory in your homedirectory, this works on linux and mac
-  prefix = fullfile(getenv('HOME'), 'matlab');
-  if ~status && isfolder(prefix)
-    status = myaddpath(fullfile(prefix, lower(toolbox)), silent);
-  end
-  
-  if ~status
-    % the toolbox is not on the path and cannot be added
-    sel = find(strcmp(url(:,1), toolbox));
-    if ~isempty(sel)
-      msg = sprintf('the %s toolbox is not installed, %s', toolbox, url{sel, 2});
-    else
-      msg = sprintf('the %s toolbox is not installed', toolbox);
-    end
-    if autoadd==1
-      error(msg);
-    elseif autoadd==2
-      warning(msg);
-    else
-      % fail silently
-    end
-  end
-  
-elseif ~status && autoadd<0
-  % the toolbox is not on the path and should not be added
-  sel = find(strcmp(url(:,1), toolbox));
-  if ~isempty(sel)
-    msg = sprintf('the %s toolbox is not installed, %s', toolbox, url{sel, 2});
-  else
-    msg = sprintf('the %s toolbox is not installed', toolbox);
-  end
-  error(msg);
-end
-
-% this function is called many times in FieldTrip and associated toolboxes
-% use efficient handling if the same toolbox has been investigated before
-% if status
-%  previous.(fixname(toolbox)) = status;
-% end
-
-% remember the previous path, allows us to determine on the next call
-% whether the path has been modified outise of this function
-% previouspath = path;
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % helper function
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function status = myaddpath(toolbox, silent)
 global ft_default
 
-if ~isfolder(toolbox)
+if any(~isfolder(toolbox))
   % search for a case-insensitive match, this is needed for MVPA-Light
   [p, f] = fileparts(toolbox);
   dirlist = dir(p);
@@ -573,33 +587,45 @@ end
 if isdeployed
   ft_warning('cannot change path settings for %s in a compiled application', toolbox);
   status = true;
-elseif isfolder(toolbox)
+elseif any(isfolder(toolbox))
+  sel = isfolder(toolbox);
+
   if ~silent
     ft_warning('off','backtrace');
-    ft_warning('adding %s toolbox to your MATLAB path', toolbox);
+    ft_warning('adding %s toolbox to your MATLAB path', toolbox{sel});
     ft_warning('on','backtrace');
   end
-  if any(~cellfun(@isempty, regexp(lower(toolbox), {'spm2$', 'spm5$', 'spm8$', 'spm12$'})))
-    % SPM needs to be added with all its subdirectories
-    addpath(genpath(toolbox));
-    % check whether the mex files are compatible
-    check_spm_mex;
-  elseif ~isempty(regexp(lower(toolbox), 'mvpa-light$', 'once'))
-    % this comes with its own startup script
-    addpath(fullfile(toolbox, 'startup'))
-    startup_MVPA_Light;
-  elseif ~isempty(regexp(lower(toolbox), 'ibtb', 'once'))
-    % this needs to be added with all its subdirectories
-    addpath(genpath(toolbox));
-  else
-    addpath(toolbox);
-  end
+
+  % deal with some exceptions
+  % spm
+  % mvpa-light
+  % ibtb
+  addpath(toolbox{sel});
+  status = false(1,numel(sel));
+  status(sel) = true;
+
+%   if any(~cellfun(@isempty, regexp(lower(toolbox), {'spm2$', 'spm5$', 'spm8$', 'spm12$'})))
+%     % SPM needs to be added with all its subdirectories
+%     addpath(genpath(toolbox));
+%     % check whether the mex files are compatible
+%     check_spm_mex;
+%   elseif ~isempty(regexp(lower(toolbox), 'mvpa-light$', 'once'))
+%     % this comes with its own startup script
+%     addpath(fullfile(toolbox, 'startup'))
+%     startup_MVPA_Light;
+%   elseif ~isempty(regexp(lower(toolbox), 'ibtb', 'once'))
+%     % this needs to be added with all its subdirectories
+%     addpath(genpath(toolbox));
+%   else
+%     addpath(toolbox);
+%   end
+
   % remember the toolbox that was just added to the path, it will be cleaned up by FT_POSTAMBLE_HASTOOLBOX
   if ~isfield(ft_default, 'toolbox') || ~isfield(ft_default.toolbox, 'cleanup')
     ft_default.toolbox.cleanup = {};
   end
-  ft_default.toolbox.cleanup{end+1} = toolbox;
-  status = true;
+  ft_default.toolbox.cleanup{end+(1:numel(toolbox))} = toolbox;
+  %status = true;
 elseif (~isempty(regexp(toolbox, 'spm2$', 'once')) || ~isempty(regexp(toolbox, 'spm5$', 'once')) || ~isempty(regexp(toolbox, 'spm8$', 'once')) || ~isempty(regexp(toolbox, 'spm12$', 'once'))) && exist([toolbox 'b'], 'dir')
   % the final release version of SPM is not available, add the beta version instead
   status = myaddpath([toolbox 'b'], silent);
@@ -734,4 +760,4 @@ status = ~isempty(w) && ~isequal(w, 'variable');
 % ISFOLDER is needed for versions prior to 2017b
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function tf = isfolder(dirpath)
-tf = exist(dirpath,'dir') == 7;
+tf = cellfun(@exist, dirpath, repmat({'dir'}, size(dirpath))) == 7;
