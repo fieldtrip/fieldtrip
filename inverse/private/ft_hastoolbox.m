@@ -235,7 +235,7 @@ switch toolbox
   case 'MEG-CALC'
     dependency = {'megmodel', 'megfield', 'megtrans'};
   case 'MVPA-LIGHT'
-    dependency = {'mv_crossvalidate','train_lda'};
+    dependency = {'mv_classify','train_lda'};
   case 'BIOSIG'
     dependency = {'sopen', 'sread'};
   case 'EEG'
