@@ -617,12 +617,11 @@ cfg.channels.status_description         = ft_getopt(cfg.channels, 'status_descri
 % specific options for NIRS channels
 cfg.channels.source                     = ft_getopt(cfg.channels, 'source'                      , nan);
 cfg.channels.detector                   = ft_getopt(cfg.channels, 'detector'                    , nan);
-cfg.channels.wavelength                 = ft_getopt(cfg.channels, 'wavelength'                  , nan);
 cfg.channels.wavelength_nominal         = ft_getopt(cfg.channels, 'wavelength_nominal'          , nan);
-cfg.channels.orientation_component      = ft_getopt(cfg.channels, 'orientation_component'       , nan);
 cfg.channels.wavelength_actual          = ft_getopt(cfg.channels, 'wavelength_actual'           , nan);
 cfg.channels.wavelength_emission_actual = ft_getopt(cfg.channels, 'wavelength_emission_actual'  , nan);
 cfg.channels.short_channel              = ft_getopt(cfg.channels, 'short_channel'               , nan);
+cfg.channels.orientation_component      = ft_getopt(cfg.channels, 'orientation_component'       , nan);
 
 %% columns in the electrodes.tsv
 cfg.electrodes.name             = ft_getopt(cfg.electrodes, 'name'             , nan);  % REQUIRED. Name of the electrode
@@ -641,7 +640,7 @@ cfg.optodes.y                   = ft_getopt(cfg.optodes, 'y'                   ,
 cfg.optodes.z                   = ft_getopt(cfg.optodes, 'z'                   , nan);  % REQUIRED. Recorded position along the z-axis. n/a if not available
 cfg.optodes.template_x          = ft_getopt(cfg.optodes, 'template_x'          , nan);  % OPTIONAL. Assumed or ideal position along the x axis
 cfg.optodes.template_y          = ft_getopt(cfg.optodes, 'template_y'          , nan);  % OPTIONAL. Assumed or ideal position along the x axis
-cfg.optodes.template_z          = ft_getopt(cfg.optodes, 'template_x'          , nan);  % OPTIONAL. Assumed or ideal position along the x axis
+cfg.optodes.template_z          = ft_getopt(cfg.optodes, 'template_z'          , nan);  % OPTIONAL. Assumed or ideal position along the x axis
 cfg.optodes.description         = ft_getopt(cfg.optodes, 'description'         , nan);  % OPTIONAL.	string	Free-form text description of the optode, or other information of interest.
 cfg.optodes.detector_type       = ft_getopt(cfg.optodes, 'detector_type'       , nan);  % OPTIONAL.	string	The type of detector. Only to be used if the field DetectorType in *_nirs.json is set to mixed.
 cfg.optodes.source_type         = ft_getopt(cfg.optodes, 'source_type'         , nan);  % OPTIONAL.	string	The type of source. Only to be used if the field SourceType in *_nirs.json is set to mixed.
@@ -2148,8 +2147,6 @@ if isfield(hdr, 'opto')
       end
     end
   end
-  % add these columns to the table
-  tab = horzcat(tab, table(source, detector, wavelength));
   
 elseif any(strcmpi(hdr.chantype, 'nirs'))
   % deduce the NIRS-specific information from the channel name
@@ -2181,9 +2178,35 @@ elseif any(strcmpi(hdr.chantype, 'nirs'))
       continue
     end
   end
-  % add these columns to the table
-  tab = horzcat(tab, table(source, detector, wavelength));
 end
+
+% distinguish between nominal and actual wavelength
+if length(unique(wavelength))>2
+  ft_warning('Assuming that the given wavelengths are actual wavelengths.')
+  wavelength_actual = wavelength;
+  % try to find the nominal wavelengths:
+    split = median(wavelength);
+    WL1.values = wavelength(wavelength<split);
+    WL2.values = wavelength(wavelength>split);
+    WL1.nominal = round(median(WL1.values),-1);
+    WL2.nominal = round(median(WL2.values),-1);
+    ft_warning('assuming that the nominal wavelengths are %d and %d nm', WL1.nominal, WL2.nominal)
+    wavelength_nominal = nan(size(wavelength));
+    for i=1:length(wavelength)
+      if any(wavelength(i)==WL1.values)
+        wavelength_nominal(i) = WL1.nominal; 
+      elseif any(wavelength(i)==WL2.values)
+        wavelength_nominal(i) = WL2.nominal;
+      end
+    end
+else
+  ft_warning('Assuming that the given wavelengths are nominal wavelengths.')
+  wavelength_nominal = wavelength;
+  wavelength_actual = nan(size(wavelength));
+end
+
+  % add these columns to the table
+  tab = horzcat(tab, table(source, detector, wavelength_nominal, wavelength_actual));
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
