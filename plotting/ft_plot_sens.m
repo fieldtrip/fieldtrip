@@ -11,6 +11,7 @@ function hs = ft_plot_sens(sens, varargin)
 %   'label'           = show the label, can be 'off', 'label', 'number' (default = 'off')
 %   'chantype'        = string or cell-array with strings, for example 'meg' (default = 'all')
 %   'unit'            = string, convert the sensor array to the specified geometrical units (default = [])
+%   'axes'            = boolean, whether to plot the axes of the 3D coordinate system (default = false)
 %   'fontcolor'       = string, color specification (default = 'k')
 %   'fontsize'        = number, sets the size of the text (default = 10)
 %   'fontunits'       =
@@ -52,7 +53,7 @@ function hs = ft_plot_sens(sens, varargin)
 %
 % See also FT_READ_SENS, FT_PLOT_HEADSHAPE, FT_PLOT_HEADMODEL
 
-% Copyright (C) 2009-2018, Robert Oostenveld, Arjen Stolk
+% Copyright (C) 2009-2021, Robert Oostenveld, Arjen Stolk
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -81,9 +82,10 @@ sens = ft_datatype_sens(sens);
 label           = ft_getopt(varargin, 'label', 'off');
 chantype        = ft_getopt(varargin, 'chantype');
 unit            = ft_getopt(varargin, 'unit');
+axes_           = ft_getopt(varargin, 'axes', false);     % do not confuse with built-in (/Applications/MATLAB_R2020b.app/toolbox/matlab/graphics/axis/axes)
 orientation     = ft_getopt(varargin, 'orientation', false);
 % these have to do with the font
-fontcolor       = ft_getopt(varargin, 'fontcolor', 'k'); % default is black
+fontcolor       = ft_getopt(varargin, 'fontcolor', 'k');  % default is black
 fontsize        = ft_getopt(varargin, 'fontsize',   get(0, 'defaulttextfontsize'));
 fontname        = ft_getopt(varargin, 'fontname',   get(0, 'defaulttextfontname'));
 fontweight      = ft_getopt(varargin, 'fontweight', get(0, 'defaulttextfontweight'));
@@ -97,7 +99,7 @@ coilsize        = ft_getopt(varargin, 'coilsize');  % default depends on the inp
 elec            = ft_getopt(varargin, 'elec', false);
 elecshape       = ft_getopt(varargin, 'elecshape'); % default depends on the input, see below
 elecsize        = ft_getopt(varargin, 'elecsize');  % default depends on the input, see below
-headshape       = ft_getopt(varargin, 'headshape', []); % for elecshape 'disc'
+headshape       = ft_getopt(varargin, 'headshape', []); % needed for elecshape 'disc'
 % this is for NIRS optode arrays
 opto            = ft_getopt(varargin, 'opto', false);
 optoshape       = ft_getopt(varargin, 'optoshape'); % default depends on the input, see below
@@ -301,13 +303,16 @@ end % if istrue(individual)
 
 if isempty(ori)
   if ~isempty(headshape)
+    % the following code uses some functions from the computer vision toolbox
+    % ft_hastoolbox('vision', -1);
+    
     % how many local points on the headshape are used for estimating the local norm
     npoints = 25;
     
+    % calculate local norm vectors
     for i=1:size(pos,1)
-      % calculate local norm vectors
-      d = sqrt( (pos(i,1)-headshape.pos(:,1)).^2 + ...
-        (pos(i,2)-headshape.pos(:,2)).^2 + (pos(i,3)-headshape.pos(:,3)).^2 );
+      % compute the distance to all headshape points
+      d = sqrt( (pos(i,1)-headshape.pos(:,1)).^2 + (pos(i,2)-headshape.pos(:,2)).^2 + (pos(i,3)-headshape.pos(:,3)).^2 );
       [dum, idx] = sort(d);
       x = headshape.pos(idx(1:npoints),1);
       y = headshape.pos(idx(1:npoints),2);
@@ -318,13 +323,14 @@ if isempty(ori)
       v = nrm(:,2);
       w = nrm(:,3);
       
-      % flip the normal vector if it is not pointing toward the center
-      C = mean(headshape.pos,1); % headshape center
+      % compute the headshape center
+      C = mean(headshape.pos,1);
+      % the vector should be pointing away from the center, otherwise flip it
       for k = 1:numel(x)
-        p1 = C - [x(k),y(k),z(k)];
-        p2 = [u(k),v(k),w(k)];
+        p1 = C - [x(k) y(k) z(k)];
+        p2 =     [u(k) v(k) w(k)];
         angle = atan2(norm(cross(p1,p2)),p1*p2');
-        if angle > pi/2 || angle < -pi/2
+        if ~(angle > pi/2 || angle < -pi/2)
           u(k) = -u(k);
           v(k) = -v(k);
           w(k) = -w(k);
@@ -335,27 +341,27 @@ if isempty(ori)
       ori(i,:) = Fn;
     end % for
     
-  elseif ~isempty(pos)
-    if ~any(isnan(pos(:))) && size(pos,1)>2
-      % determine orientations based on surface triangulation
-      tri = projecttri(pos, 'delaunay');
-      ori = normals(pos, tri);
-    elseif size(pos,1)>4
-      % determine orientations by fitting a sphere to the sensors
-      try
-        tmp = pos(~any(isnan(pos), 2),:); % remove rows that contain a nan
-        center = fitsphere(tmp);
-      catch
-        center = [nan nan nan];
-      end
-      for i=1:size(pos,1)
-        ori(i,:) = pos(i,:) - center;
-        ori(i,:) = ori(i,:)/norm(ori(i,:));
-      end
-    else
-      ori = nan(size(pos));
+  elseif ~any(isnan(pos(:))) && size(pos,1)>2
+    % determine orientations based on a surface triangulation of the sensors
+    tri = projecttri(pos, 'delaunay');
+    ori = normals(pos, tri);
+    
+  elseif size(pos,1)>4
+    % determine orientations by fitting a sphere to the sensors
+    try
+      tmp = pos(~any(isnan(pos), 2),:); % remove rows that contain a nan
+      center = fitsphere(tmp);
+    catch
+      center = [nan nan nan];
     end
+    for i=1:size(pos,1)
+      ori(i,:) = pos(i,:) - center;
+      ori(i,:) = ori(i,:)/norm(ori(i,:));
+    end
+  else
+    ori = nan(size(pos));
   end
+  
 end % if empty(ori)
 
 if mean(isnan(ori(:)))>0.25
@@ -514,6 +520,11 @@ end % if label
 
 axis vis3d
 axis equal
+
+if istrue(axes_)
+  % plot the 3D axes, this depends on the units and coordsys
+  ft_plot_axes(sens);
+end
 
 if ~nargout
   clear hs

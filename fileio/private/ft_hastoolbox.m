@@ -165,6 +165,7 @@ url = {
   'SQDPROJECT'                            'see http://www.isr.umd.edu/Labs/CSSL/simonlab'
   'TCP_UDP_IP'                            'see http://www.mathworks.com/matlabcentral/fileexchange/345, or contact Peter Rydesaeter'
   'TOOLBOX_GRAPH'                         'see http://www.mathworks.com/matlabcentral/fileexchange/5355-toolbox-graph or contact Gabriel Peyre'
+  'VISION'                                'see https://nl.mathworks.com/products/computer-vision/'
   'VGRID'                                 'see http://www.rheinahrcampus.de/~medsim/vgrid/manual.html'
   'VIDEOMEG'                              'see https://github.com/andreyzhd/VideoMEG'
   'WAVEFRONT'                             'see http://mathworks.com/matlabcentral/fileexchange/27982-wavefront-obj-toolbox'
@@ -234,7 +235,7 @@ switch toolbox
   case 'MEG-CALC'
     dependency = {'megmodel', 'megfield', 'megtrans'};
   case 'MVPA-LIGHT'
-    dependency = {'mv_crossvalidate','train_lda'};
+    dependency = {'mv_classify','train_lda'};
   case 'BIOSIG'
     dependency = {'sopen', 'sread'};
   case 'EEG'
@@ -285,6 +286,8 @@ switch toolbox
     dependency = {has_license('signal_toolbox'), 'window', 'hanning'};                      % also check the availability of a toolbox license
   case 'IMAGES'
     dependency = {has_license('image_toolbox'), 'imerode', 'imdilate'};                     % also check the availability of a toolbox license
+  case 'VISION'
+    dependency = {has_license('video_and_image_blockset'), 'pointCloud', 'pcnormals'};      % also check the availability of a toolbox license
   case {'DCT', 'DISTCOMP'}
     dependency = {has_license('distrib_computing_toolbox'), 'parpool', 'batch'};            % also check the availability of a toolbox license
   case 'COMPILER'

@@ -1,4 +1,4 @@
-function hs = ft_plot_headshape(headshape,varargin)
+function hs = ft_plot_headshape(headshape, varargin)
 
 % FT_PLOT_HEADSHAPE visualizes the shape of a head from a variety of
 % acquisition system. Usually the head shape is measured with a
@@ -19,6 +19,7 @@ function hs = ft_plot_headshape(headshape,varargin)
 %   'fidlabel'     = ['yes', 'no', 1, 0, 'true', 'false']
 %   'transform'    = transformation matrix for the fiducials, converts MRI voxels into head shape coordinates
 %   'unit'         = string, convert to the specified geometrical units (default = [])
+%   'axes'         = boolean, whether to plot the axes of the 3D coordinate system (default = false)
 %
 % Example
 %   shape = ft_read_headshape(filename);
@@ -27,6 +28,7 @@ function hs = ft_plot_headshape(headshape,varargin)
 % See also FT_PLOT_MESH, FT_PLOT_ORTHO
 
 % Copyright (C) 2009, Cristiano Micheli
+% Copyright (C) 2009-2021, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -63,22 +65,23 @@ hastri = isfield(headshape, 'tri');
 
 % get the optional input arguments
 if hastri
-  vertexcolor  = ft_getopt(varargin, 'vertexcolor',  'none');
-  facecolor    = ft_getopt(varargin, 'facecolor',    [1 1 1]/2);
-  edgecolor    = ft_getopt(varargin, 'edgecolor',    'none');
+  vertexcolor = ft_getopt(varargin, 'vertexcolor',  'none');
+  facecolor   = ft_getopt(varargin, 'facecolor',    [1 1 1]/2);
+  edgecolor   = ft_getopt(varargin, 'edgecolor',    'none');
 else
-  vertexcolor  = ft_getopt(varargin, 'vertexcolor',  'r');
-  facecolor    = ft_getopt(varargin, 'facecolor',    'none');
-  edgecolor    = ft_getopt(varargin, 'edgecolor',    'none');
+  vertexcolor = ft_getopt(varargin, 'vertexcolor',  'r');
+  facecolor   = ft_getopt(varargin, 'facecolor',    'none');
+  edgecolor   = ft_getopt(varargin, 'edgecolor',    'none');
 end
-vertexsize   = ft_getopt(varargin, 'vertexsize',   10);
-material_    = ft_getopt(varargin, 'material');
-tag          = ft_getopt(varargin, 'tag',         '');
-fidcolor     = ft_getopt(varargin, 'fidcolor',     'g');
-fidmarker    = ft_getopt(varargin, 'fidmarker',    '*');
-fidlabel     = ft_getopt(varargin, 'fidlabel',     true);
-transform    = ft_getopt(varargin, 'transform');
-unit         = ft_getopt(varargin, 'unit');
+vertexsize    = ft_getopt(varargin, 'vertexsize',   10);
+material_     = ft_getopt(varargin, 'material');            % do not confuse with /Applications/MATLAB_R2020b.app/toolbox/matlab/graph3d/material.m
+tag           = ft_getopt(varargin, 'tag',         '');
+fidcolor      = ft_getopt(varargin, 'fidcolor',     'g');
+fidmarker     = ft_getopt(varargin, 'fidmarker',    '*');
+fidlabel      = ft_getopt(varargin, 'fidlabel',     true);
+transform     = ft_getopt(varargin, 'transform');
+unit          = ft_getopt(varargin, 'unit');
+axes_         = ft_getopt(varargin, 'axes', false);         % do not confuse with built-in (/Applications/MATLAB_R2020b.app/toolbox/matlab/graphics/axis/axes)
 
 if ~isempty(unit)
   headshape = ft_convert_units(headshape, unit);
@@ -99,7 +102,7 @@ if ~holdflag
 end
 
 mesh = keepfields(headshape, {'pos', 'tri', 'tet', 'hex', 'color', 'unit', 'coordsys'});
-h  = ft_plot_mesh(mesh, 'vertexcolor', vertexcolor, 'vertexsize', vertexsize, 'facecolor', facecolor, 'edgecolor', edgecolor, 'material', material_, 'tag', tag);
+h  = ft_plot_mesh(mesh, 'vertexcolor', vertexcolor, 'vertexsize', vertexsize, 'facecolor', facecolor, 'edgecolor', edgecolor, 'material', material_, 'axes', axes_, 'tag', tag);
 hs = [hs; h];
 
 if isfield(headshape, 'fid')
@@ -133,5 +136,5 @@ if ~holdflag
   hold off
 end
 
-warning(ws); %revert to original state
+warning(ws); % revert to original state
 
