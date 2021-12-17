@@ -1379,6 +1379,7 @@ if need_channels_tsv
   channels_tsv.type(strcmpi(channels_tsv.type, 'headloc'))     = {'HLU'};
   channels_tsv.type(strcmpi(channels_tsv.type, 'headloc_gof')) = {'FITERR'};
   channels_tsv.type(contains(channels_tsv.type, 'trigger', 'IgnoreCase', true)) = {'TRIG'};
+  channels_tsv.type(contains(channels_tsv.type, 'nirs'))       = {'unknown'}; % depends on the type of measurement and should be provided by the user 
   
   % channel types in BIDS must be in upper case
   channels_tsv.type = upper(channels_tsv.type);
