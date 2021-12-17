@@ -102,7 +102,7 @@ elseif nargin==3
   for i=1:n1
     if ischar(t1{1,i})
       t1.(c1{i}) = cellstr(t1{:,i});
-    elseif isnumeric(t1{1,i})
+    elseif isnumeric(t1{1,i}) | islogical(t1{1,i})
       t1.(c1{i}) = num2cell(t1{:,i});
     end
   end
@@ -110,7 +110,7 @@ elseif nargin==3
   for i=1:n2
     if ischar(t2{1,i})
       t2.(c2{i}) = cellstr(t2{:,i});
-    elseif isnumeric(t2{1,i})
+    elseif isnumeric(t2{1,i}) | islogical(t2{1,i})
       t2.(c2{i}) = num2cell(t2{:,i});
     end
   end
