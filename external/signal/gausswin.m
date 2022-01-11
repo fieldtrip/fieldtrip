@@ -28,6 +28,11 @@ function x = gausswin(L, w)
     help(mfilename);
   end
   if nargin == 1, w = 2.5; end % if
-  x = exp ( -0.5 * ( w/L * [ -(L-1) : 2 : L-1 ]' ) .^ 2 );
+
+  if L==1
+    x = 1;
+  else
+    x = exp ( -0.5 * ( w/(L-1) * ( -(L-1) : 2 : L-1 )' ) .^ 2 );
+  end
 
 end
