@@ -47,126 +47,38 @@ for k = 1:numel(filelist)
       tmp = blackmanharris(16);
       assert(isequal(tmp(1:15), blackmanharris(15, 'periodic')));
     case 'bohmanwin'
-%assert(isequal(bohmanwin (1), 1)
-%assert(isequal(bohmanwin (2), zeros (2, 1))
+      assert(isequal(bohmanwin(1), 1));
+      assert(isequal(bohmanwin(2), zeros(2, 1)));
     case 'boxcar'
-%assert(isequal(boxcar (1), 1)
-%assert(isequal(boxcar (2), ones (2, 1))
-%assert(isequal(boxcar (100), ones (100, 1))
+      assert(isequal(boxcar(1), 1));
+      assert(isequal(boxcar(2), ones(2, 1)));
+      assert(isequal(boxcar(100), ones(100, 1)));
     case 'butter'
-%!shared sf, sf2, off_db
-%! off_db = 0.5;
-%! ## Sampling frequency must be that high to make the low pass filters pass.
-%! sf = 6000; sf2 = sf/2;
-%! data=[sinetone(5,sf,10,1),sinetone(10,sf,10,1),sinetone(50,sf,10,1),sinetone(200,sf,10,1),sinetone(400,sf,10,1)];
-
-%!test
-%! ## Test low pass order 1 with 3dB @ 50Hz
-%! data=[sinetone(5,sf,10,1),sinetone(10,sf,10,1),sinetone(50,sf,10,1),sinetone(200,sf,10,1),sinetone(400,sf,10,1)];
-%! [b, a] = butter ( 1, 50 / sf2 );
-%! filtered = filter ( b, a, data );
-%! damp_db = 20 * log10 ( max ( filtered ( end - sf : end, : ) ) );
-%! assert ( [ damp_db( 4 ) - damp_db( 5 ), damp_db( 1 : 3 ) ], [ 6 0 0 -3 ], off_db )
-
-%!test
-%! ## Test low pass order 4 with 3dB @ 50Hz
-%! data=[sinetone(5,sf,10,1),sinetone(10,sf,10,1),sinetone(50,sf,10,1),sinetone(200,sf,10,1),sinetone(400,sf,10,1)];
-%! [b, a] = butter ( 4, 50 / sf2 );
-%! filtered = filter ( b, a, data );
-%! damp_db = 20 * log10 ( max ( filtered ( end - sf : end, : ) ) );
-%! assert ( [ damp_db( 4 ) - damp_db( 5 ), damp_db( 1 : 3 ) ], [ 24 0 0 -3 ], off_db )
-
-%!test
-%! ## Test high pass order 1 with 3dB @ 50Hz
-%! data=[sinetone(5,sf,10,1),sinetone(10,sf,10,1),sinetone(50,sf,10,1),sinetone(200,sf,10,1),sinetone(400,sf,10,1)];
-%! [b, a] = butter ( 1, 50 / sf2, "high" );
-%! filtered = filter ( b, a, data );
-%! damp_db = 20 * log10 ( max ( filtered ( end - sf : end, : ) ) );
-%! assert ( [ damp_db( 2 ) - damp_db( 1 ), damp_db( 3 : end ) ], [ 6 -3 0 0 ], off_db )
-
-%!test
-%! ## Test high pass order 4 with 3dB @ 50Hz
-%! data=[sinetone(5,sf,10,1),sinetone(10,sf,10,1),sinetone(50,sf,10,1),sinetone(200,sf,10,1),sinetone(400,sf,10,1)];
-%! [b, a] = butter ( 4, 50 / sf2, "high" );
-%! filtered = filter ( b, a, data );
-%! damp_db = 20 * log10 ( max ( filtered ( end - sf : end, : ) ) );
-%! assert ( [ damp_db( 2 ) - damp_db( 1 ), damp_db( 3 : end ) ], [ 24 -3 0 0 ], off_db )
-
-%% Test input validation
-%!error [a, b] = butter ()
-%!error [a, b] = butter (1)
-%!error [a, b] = butter (1, 2, 3, 4, 5)
-%!error [a, b] = butter (.5, .2)
-%!error [a, b] = butter (3, .2, "invalid")
-
-%!error [a, b] = butter (9, .6, "stop")
-%!error [a, b] = butter (9, .6, "bandpass")
-
-%!error [a, b] = butter (9, .6, "s", "high")
-
-%% Test output orientation
-%!test
-%! butter (9, .6);
-%! assert (isrow (ans));
-%!test
-%! A = butter (9, .6);
-%! assert (isrow (A));
-%!test
-%! [A, B] = butter (9, .6);
-%! assert (isrow (A));
-%! assert (isrow (B));
-%!test
-%! [z, p, g] = butter (9, .6);
-%! assert (iscolumn (z));
-%! assert (iscolumn (p));
-%! assert (isscalar (g));
-%!test
-%! [a, b, c, d] = butter (9, .6);
-%! assert (ismatrix (a));
-%! assert (iscolumn (b));
-%! assert (isrow (c));
-%! assert (isscalar (d));
+      % FIXME the octave tests are either too detailed or only check for
+      % output orientation
     case 'filtfilt'
-%!test
-%! randn('state',0);
-%! r = randn(1,200);
-%! [b,a] = butter(10, [.2, .25]);
-%! yfb = filtfilt(b, a, r);
-%! assert (size(r), size(yfb));
-%! assert (mean(abs(yfb)) < 1e3);
-%! assert (mean(abs(yfb)) < mean(abs(r)));
-%! ybf = fliplr(filtfilt(b, a, fliplr(r)));
-%! assert (mean(abs(ybf)) < 1e3);
-%! assert (mean(abs(ybf)) < mean(abs(r)));
+      r = randn(1,200);
+      [b,a] = butter(10, [.2, .25]);
+      yfb = filtfilt(b, a, r);
+      assert(isequal(size(r), size(yfb)));
+      assert(mean(abs(yfb)) < 1e3);
+      assert(mean(abs(yfb)) < mean(abs(r)));
+      ybf = fliplr(filtfilt(b, a, fliplr(r)));
+      assert(mean(abs(ybf)) < 1e3);
+      assert(mean(abs(ybf)) < mean(abs(r)));
 
-%!test
-%! randn('state',0);
-%! r = randn(1,1000);
-%! s = 10 * sin(pi * 4e-2 * (1:length(r)));
-%! [b,a] = cheby1(2, .5, [4e-4 8e-2]);
-%! y = filtfilt(b, a, r+s);
-%! assert (size(r), size(y));
-%! assert (mean(abs(y)) < 1e3);
-%! assert (corr(s(250:750), y(250:750)) > .95)
-%! [b,a] = butter(2, [4e-4 8e-2]);
-%! yb = filtfilt(b, a, r+s);
-%! assert (mean(abs(yb)) < 1e3);
-%! assert (corr(y, yb) > .99)
-
-%!test
-%! randn('state',0);
-%! r = randn(1,1000);
-%! s = 10 * sin(pi * 4e-2 * (1:length(r)));
-%! [b,a] = butter(2, [4e-4 8e-2]);
-%! y = filtfilt(b, a, [r.' s.']);
-%! yr = filtfilt(b, a, r);
-%! ys = filtfilt(b, a, s);
-%! assert (y, [yr.' ys.']);
-%! y2 = filtfilt(b.', a.', [r.' s.']);
-%! assert (y, y2);
+      r = randn(1,1000);
+      s = 10 * sin(pi * 4e-2 * (1:length(r)));
+      [b,a] = butter(2, [4e-4 8e-2]);
+      y = filtfilt(b, a, [r.' s.']);
+      yr = filtfilt(b, a, r);
+      ys = filtfilt(b, a, s);
+      assert(isequal(y, [yr.' ys.']));
+      y2 = filtfilt(b.', a.', [r.' s.']);
+      assert(isequal(y, y2));
     case 'flattopwin'
       assert(isequal(flattopwin(1), 1));
-      assert(isalmostequal(flattopwin(2), 0.0042 / 4.6402 * ones (2, 1), 'abstol', eps));
+      assert(isalmostequal(flattopwin(2), -0.421051e-3 * ones (2, 1), 'abstol', eps)); % slightly different coeffs.
       assert(isalmostequal(flattopwin(15), flipud(flattopwin(15)), 'abstol', 10*eps));
       assert(isalmostequal(flattopwin(16), flipud(flattopwin(16)), 'abstol', 10*eps));
       assert(isequal(flattopwin(15), flattopwin(15, 'symmetric')));
@@ -178,13 +90,14 @@ for k = 1:numel(filelist)
       assert(isequal(gausswin(3), [exp(-3.125); 1; exp(-3.125)]));
     case 'hann'
       assert(isequal(hann(1), 1));
-      assert(isalmostequal(hann(2), [0.75;0.75], 'abstol', eps)); %the original octave required [0;0], yet matlab returns [0.75;0.75]
+      assert(isalmostequal(hann(2), [0;0], 'abstol', eps)); 
       assert(isalmostequal(hann(16), flipud(hann(16)), 'abstol', 10*eps));
       assert(isalmostequal(hann(15), flipud(hann(15)), 'abstol', 10*eps));
       assert(isequal(hann(15), hann(15, 'symmetric')));
-      tmp = hann(16, 'periodic');
-      assert(isequal(tmp(2:16), hann(15, 'symmetric'))); % this is different from the octave test, since it is how matlab does it
+      tmp = hann(16, 'symmetric');
+      assert(isequal(tmp(1:15), hann(15, 'periodic')));
     case 'hanning'
+      % this is more or less tested with 'hann'
     case 'hilbert'
       % FIXME
     case 'kaiser'
@@ -217,8 +130,42 @@ for k = 1:numel(filelist)
       assert(isequal(tukeywin(16, 1), hanning (16)));
     case 'window'
       assert(isequal(window(@hanning, 16), window('hanning', 16)));
-      assert(isequal(window(@triang, 16),  window('triang', 16)));
+      assert(isequal(window(@triang,  16), window('triang', 16)));
     otherwise
       ft_error('function %s is not part of the official external/signal directory', filelist{k});
   end
+end
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% compare the external/signal output with the matlab version
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+for k = 1:numel(filelist)
+  try
+    % this only works for the functions that create a window
+    funhandle = str2func(filelist{k});
+    output1.(filelist{k}) = funhandle(50);
+  end
+end
+
+restoredefaultpath
+
+% ensure that the the matlab version is used
+ft_default.toolbox.signal = 'matlab';
+addpath(ftpath);
+ft_defaults;
+
+for k = 1:numel(filelist)
+  try
+    % this only works for the functions that create a window
+    funhandle = str2func(filelist{k});
+    output2.(filelist{k}) = funhandle(50);
+  end
+end
+
+fn1 = fieldnames(output1);
+fn2 = fieldnames(output2);
+assert(isequal(sort(fn1), sort(fn2)));
+for k = 1:numel(fn1)
+  assert(isalmostequal(output1.(fn1{k}), output2.(fn1{k}), 'abstol', 10*eps));
 end
