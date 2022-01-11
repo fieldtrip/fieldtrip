@@ -262,7 +262,6 @@ switch cfg.refmethod
     montage = ft_apply_montage(montage1, montage2);
     
   case {'longitudinal', 'doublebanana'}
-    ft_info('note that the ''longitudinal'' montage is the same as the ''doublebanana''');
     % see https://www.learningeeg.com/montages-and-technical-components
     montage = [];
     montage.labelold = {'Fp1', 'Fpz', 'Fp2', 'F7', 'F3', 'Fz', 'F4', 'F8', 'T3', 'C3', 'Cz', 'C4', 'T4', 'T5', 'P3', 'Pz', 'P4', 'T6', 'O1', 'Oz', 'O2'};
@@ -272,7 +271,7 @@ switch cfg.refmethod
       'F7-T3'
       'T3-T5'
       'T5-O1'
-      % left parasagittalchain
+      % left parasagittal chain
       'Fp1-F3'
       'F3-C3'
       'C3-P3'
@@ -331,7 +330,7 @@ switch cfg.refmethod
     assert(all(max(montage.tra, [], 2)==+1));
     assert(all(min(montage.tra, [], 2)==-1));
     
-  case 'traverse'
+  case 'transverse'
     % this is inspired by https://doi.org/10.1016/j.earlhumdev.2011.08.008 but probably better documented elsewhere
     % see https://www.learningeeg.com/montages-and-technical-components
     % this particular implementation only considers the 10% distances
