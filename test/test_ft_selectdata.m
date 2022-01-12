@@ -315,6 +315,10 @@ cfg.select = 'intersect';
 datasel1 = ft_selectdata(cfg, data);
 
 cfg.select = 'union';
-datasel2 = ft_selectdata(cfg, data);
-
-
+ok = true;
+try
+  datasel2 = ft_selectdata(cfg, data);
+catch
+  ok = false;
+end
+assert(~ok, 'ft_selectdata with raw input and union selection should fail');
