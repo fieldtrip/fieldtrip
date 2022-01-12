@@ -42,7 +42,7 @@ function ft_defaults
 % undocumented options
 %   ft_default.siunits        = 'yes' or 'no'
 
-% Copyright (C) 2009-2018, Robert Oostenveld
+% Copyright (C) 2009-2022, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -106,9 +106,9 @@ if ~isfield(ft_default, 'tracktimeinfo'),  ft_default.tracktimeinfo  = 'yes';   
 if ~isfield(ft_default, 'trackmeminfo')
   if ispc()
     % don't track memory usage info under Windows; this does not work (yet)
-    ft_default.trackmeminfo   = 'no';
+    ft_default.trackmeminfo = 'no';
   else
-    ft_default.trackmeminfo   = 'yes';
+    ft_default.trackmeminfo = 'yes';
   end
 end
 
@@ -244,130 +244,76 @@ if ~isdeployed
     end
   end
   
+  % this directory contains various functions that were obtained from elsewere, e.g. MATLAB file exchange
+  addtopath = {'fileexchange'};
+
+  % these directories deal with compatibility with older MATLAB versions and with Octave
+  if ft_platform_supports('matlabversion', -inf, '2008a'), addtopath{end+1} = 'compat/matlablt2008b'; end
+  if ft_platform_supports('matlabversion', -inf, '2008b'), addtopath{end+1} = 'compat/matlablt2009a'; end
+  if ft_platform_supports('matlabversion', -inf, '2009a'), addtopath{end+1} = 'compat/matlablt2009b'; end
+  if ft_platform_supports('matlabversion', -inf, '2009b'), addtopath{end+1} = 'compat/matlablt2010a'; end
+  if ft_platform_supports('matlabversion', -inf, '2010a'), addtopath{end+1} = 'compat/matlablt2010b'; end
+  if ft_platform_supports('matlabversion', -inf, '2010b'), addtopath{end+1} = 'compat/matlablt2011a'; end
+  if ft_platform_supports('matlabversion', -inf, '2011a'), addtopath{end+1} = 'compat/matlablt2011b'; end
+  if ft_platform_supports('matlabversion', -inf, '2011b'), addtopath{end+1} = 'compat/matlablt2012a'; end
+  if ft_platform_supports('matlabversion', -inf, '2012a'), addtopath{end+1} = 'compat/matlablt2012b'; end
+  if ft_platform_supports('matlabversion', -inf, '2012b'), addtopath{end+1} = 'compat/matlablt2013a'; end
+  if ft_platform_supports('matlabversion', -inf, '2013a'), addtopath{end+1} = 'compat/matlablt2013b'; end
+  if ft_platform_supports('matlabversion', -inf, '2013b'), addtopath{end+1} = 'compat/matlablt2014a'; end
+  if ft_platform_supports('matlabversion', -inf, '2014a'), addtopath{end+1} = 'compat/matlablt2014b'; end
+  if ft_platform_supports('matlabversion', -inf, '2014d'), addtopath{end+1} = 'compat/matlablt2015a'; end
+  if ft_platform_supports('matlabversion', -inf, '2015a'), addtopath{end+1} = 'compat/matlablt2015b'; end
+  if ft_platform_supports('matlabversion', -inf, '2015b'), addtopath{end+1} = 'compat/matlablt2016a'; end
+  if ft_platform_supports('matlabversion', -inf, '2016a'), addtopath{end+1} = 'compat/matlablt2016b'; end
+  if ft_platform_supports('matlabversion', -inf, '2016b'), addtopath{end+1} = 'compat/matlablt2017a'; end
+  if ft_platform_supports('matlabversion', -inf, '2017a'), addtopath{end+1} = 'compat/matlablt2017b'; end
+  if ft_platform_supports('matlabversion', -inf, '2017b'), addtopath{end+1} = 'compat/matlablt2018a'; end
+  if ft_platform_supports('matlabversion', -inf, '2018a'), addtopath{end+1} = 'compat/matlablt2018b'; end
+  if ft_platform_supports('matlabversion', -inf, '2018b'), addtopath{end+1} = 'compat/matlablt2019a'; end
+  if ft_platform_supports('matlabversion', -inf, '2019a'), addtopath{end+1} = 'compat/matlablt2019b'; end
+  if ft_platform_supports('matlabversion', -inf, '2019b'), addtopath{end+1} = 'compat/matlablt2020a'; end
+  if ft_platform_supports('matlabversion', -inf, '2020a'), addtopath{end+1} = 'compat/matlablt2020b'; end
+  if ft_platform_supports('matlabversion', -inf, '2020b'), addtopath{end+1} = 'compat/matlablt2021a'; end
+  if ft_platform_supports('matlabversion', -inf, '2021a'), addtopath{end+1} = 'compat/matlablt2021b'; end
+  if ft_platform_supports('matlabversion', -inf, '2021b'), addtopath{end+1} = 'compat/matlablt2022a'; end
+  if ft_platform_supports('matlabversion', -inf, '2022a'), addtopath{end+1} = 'compat/matlablt2022b'; end
+  if ft_platform_supports('matlabversion', -inf, '2022b'), addtopath{end+1} = 'compat/matlablt2023a'; end
+  if ft_platform_supports('matlabversion', -inf, '2023a'), addtopath{end+1} = 'compat/matlablt2023b'; end
+  if ft_platform_supports('matlabversion', -inf, '2023b'), addtopath{end+1} = 'compat/matlablt2024a'; end
+  if ft_platform_supports('matlabversion', -inf, '2024a'), addtopath{end+1} = 'compat/matlablt2024b'; end
+  if ft_platform_supports('matlabversion', -inf, '2024b'), addtopath{end+1} = 'compat/matlablt2025a'; end
+  % this deals with compatibility with all OCTAVE versions
+  if ft_platform_supports('octaveversion', -inf, +inf),    addtopath{end+1} = 'compat/octave'; end
+
   try
-    % this directory contains various functions that were obtained from elsewere, e.g. MATLAB file exchange
-    ft_hastoolbox('fileexchange', 3, 1); % not required
+    ft_hastoolbox(addtopath, 3, 1); % not required
   end
   
-  try
-    % these directories deal with compatibility with older MATLAB versions
-    if ft_platform_supports('matlabversion', -inf, '2008a'), ft_hastoolbox('compat/matlablt2008b', 3, 1); end
-    if ft_platform_supports('matlabversion', -inf, '2008b'), ft_hastoolbox('compat/matlablt2009a', 3, 1); end
-    if ft_platform_supports('matlabversion', -inf, '2009a'), ft_hastoolbox('compat/matlablt2009b', 3, 1); end
-    if ft_platform_supports('matlabversion', -inf, '2009b'), ft_hastoolbox('compat/matlablt2010a', 3, 1); end
-    if ft_platform_supports('matlabversion', -inf, '2010a'), ft_hastoolbox('compat/matlablt2010b', 3, 1); end
-    if ft_platform_supports('matlabversion', -inf, '2010b'), ft_hastoolbox('compat/matlablt2011a', 3, 1); end
-    if ft_platform_supports('matlabversion', -inf, '2011a'), ft_hastoolbox('compat/matlablt2011b', 3, 1); end
-    if ft_platform_supports('matlabversion', -inf, '2011b'), ft_hastoolbox('compat/matlablt2012a', 3, 1); end
-    if ft_platform_supports('matlabversion', -inf, '2012a'), ft_hastoolbox('compat/matlablt2012b', 3, 1); end
-    if ft_platform_supports('matlabversion', -inf, '2012b'), ft_hastoolbox('compat/matlablt2013a', 3, 1); end
-    if ft_platform_supports('matlabversion', -inf, '2013a'), ft_hastoolbox('compat/matlablt2013b', 3, 1); end
-    if ft_platform_supports('matlabversion', -inf, '2013b'), ft_hastoolbox('compat/matlablt2014a', 3, 1); end
-    if ft_platform_supports('matlabversion', -inf, '2014a'), ft_hastoolbox('compat/matlablt2014b', 3, 1); end
-    if ft_platform_supports('matlabversion', -inf, '2014d'), ft_hastoolbox('compat/matlablt2015a', 3, 1); end
-    if ft_platform_supports('matlabversion', -inf, '2015a'), ft_hastoolbox('compat/matlablt2015b', 3, 1); end
-    if ft_platform_supports('matlabversion', -inf, '2015b'), ft_hastoolbox('compat/matlablt2016a', 3, 1); end
-    if ft_platform_supports('matlabversion', -inf, '2016a'), ft_hastoolbox('compat/matlablt2016b', 3, 1); end
-    if ft_platform_supports('matlabversion', -inf, '2016b'), ft_hastoolbox('compat/matlablt2017a', 3, 1); end
-    if ft_platform_supports('matlabversion', -inf, '2017a'), ft_hastoolbox('compat/matlablt2017b', 3, 1); end
-    if ft_platform_supports('matlabversion', -inf, '2017b'), ft_hastoolbox('compat/matlablt2018a', 3, 1); end
-    if ft_platform_supports('matlabversion', -inf, '2018a'), ft_hastoolbox('compat/matlablt2018b', 3, 1); end
-    if ft_platform_supports('matlabversion', -inf, '2018b'), ft_hastoolbox('compat/matlablt2019a', 3, 1); end
-    if ft_platform_supports('matlabversion', -inf, '2019a'), ft_hastoolbox('compat/matlablt2019b', 3, 1); end
-    if ft_platform_supports('matlabversion', -inf, '2019b'), ft_hastoolbox('compat/matlablt2020a', 3, 1); end
-    if ft_platform_supports('matlabversion', -inf, '2020a'), ft_hastoolbox('compat/matlablt2020b', 3, 1); end
-    if ft_platform_supports('matlabversion', -inf, '2020b'), ft_hastoolbox('compat/matlablt2021a', 3, 1); end
-    if ft_platform_supports('matlabversion', -inf, '2021a'), ft_hastoolbox('compat/matlablt2021b', 3, 1); end
-    if ft_platform_supports('matlabversion', -inf, '2021b'), ft_hastoolbox('compat/matlablt2022a', 3, 1); end
-    if ft_platform_supports('matlabversion', -inf, '2022a'), ft_hastoolbox('compat/matlablt2022b', 3, 1); end
-    if ft_platform_supports('matlabversion', -inf, '2022b'), ft_hastoolbox('compat/matlablt2023a', 3, 1); end
-    if ft_platform_supports('matlabversion', -inf, '2023a'), ft_hastoolbox('compat/matlablt2023b', 3, 1); end
-    if ft_platform_supports('matlabversion', -inf, '2023b'), ft_hastoolbox('compat/matlablt2024a', 3, 1); end
-    if ft_platform_supports('matlabversion', -inf, '2024a'), ft_hastoolbox('compat/matlablt2024b', 3, 1); end
-    if ft_platform_supports('matlabversion', -inf, '2024b'), ft_hastoolbox('compat/matlablt2025a', 3, 1); end
-    % this deals with compatibility with all OCTAVE versions
-    if ft_platform_supports('octaveversion', -inf, +inf),    ft_hastoolbox('compat/octave', 3, 1); end
-  end
+  addtopath        = {'template/layout' 'template/anatomy' 'template/headmodel' 'template/electrode' 'template/neighbours' 'template/sourcemodel'}; % these contains template layouts, neighbour structures, MRIs and cortical meshes
+  addtopath{end+1} = 'statfun';        % this is used in ft_statistics
+  addtopath{end+1} = 'trialfun';       % this is used in ft_definetrial
+  addtopath{end+1} = 'fileio';         % this contains the low-level reading functions
+  addtopath{end+1} = 'preproc';        % this is for filtering etc. on time-series data
+  addtopath{end+1} = 'forward';        % this contains forward models for the EEG and MEG volume conductor
+  addtopath{end+1} = 'inverse';        % this contains inverse source estimation methods
+  addtopath{end+1} = 'plotting';       % this contains intermediate-level plotting functions, e.g. multiplots and 3-d objects
+  addtopath{end+1} = 'specest';        % this contains intermediate-level functions for spectral analysis
+  addtopath{end+1} = 'connectivity';   % this contains the functions to compute connectivity metrics
+  addtopath{end+1} = 'test';           % this contains test scripts
+  addtopath{end+1} = 'contrib/spike';  % this contains the functions for spike and spike-field analysis
+  addtopath{end+1} = 'contrib/misc';   % this contains user contributed functions
   
-  try
-    % these contains template layouts, neighbour structures, MRIs and cortical meshes
-    ft_hastoolbox('template/layout',      1, 1);
-    ft_hastoolbox('template/anatomy',     1, 1);
-    ft_hastoolbox('template/headmodel',   1, 1);
-    ft_hastoolbox('template/electrode',   1, 1);
-    ft_hastoolbox('template/neighbours',  1, 1);
-    ft_hastoolbox('template/sourcemodel', 1, 1);
+  try 
+    ft_hastoolbox(addtopath, 1, 1); % required
   end
-  
-  try
-    % this is used in ft_statistics
-    ft_hastoolbox('statfun', 1, 1);
-  end
-  
-  try
-    % this is used in ft_definetrial
-    ft_hastoolbox('trialfun', 1, 1);
-  end
-  
-  try
-    % this contains the low-level reading functions
-    ft_hastoolbox('fileio', 1, 1);
-  end
-  
-  try
-    % this is for filtering etc. on time-series data
-    ft_hastoolbox('preproc', 1, 1);
-  end
-  
-  try
-    % this contains forward models for the EEG and MEG volume conductor
-    ft_hastoolbox('forward', 1, 1);
-  end
-  
-  try
-    % this contains inverse source estimation methods
-    ft_hastoolbox('inverse', 1, 1);
-  end
-  
-  try
-    % this contains intermediate-level plotting functions, e.g. multiplots and 3-d objects
-    ft_hastoolbox('plotting', 1, 1);
-  end
-  
-  try
-    % this contains intermediate-level functions for spectral analysis
-    ft_hastoolbox('specest', 1, 1);
-  end
-  
-  try
-    % this contains the functions to compute connectivity metrics
-    ft_hastoolbox('connectivity', 1, 1);
-  end
-  
-  try
-    % this contains test scripts
-    ft_hastoolbox('test', 1, 1);
-  end
-  
-  try
-    % this contains the functions for spike and spike-field analysis
-    ft_hastoolbox('contrib/spike', 1, 1);
-  end
-  
-  try
-    % this contains user contributed functions
-    ft_hastoolbox('contrib/misc', 1, 1);
-  end
-  
+   
+  % try to add a few more, but it is not a show stopper if these fail
   try
     % this contains specific code and examples for realtime processing
-    ft_hastoolbox('realtime/example', 3, 1);    % not required
-    ft_hastoolbox('realtime/online_mri', 3, 1); % not required
-    ft_hastoolbox('realtime/online_meg', 3, 1); % not required
-    ft_hastoolbox('realtime/online_eeg', 3, 1); % not required
+    ft_hastoolbox({'realtime/example' 'realtime/online_mri' 'realtime/online_meg' 'realtime/online_eeg'}, 3, 1); % not required
   end
   
-end
+end % if not deployed
 
 % the toolboxes added by this function should not be removed by FT_POSTAMBLE_HASTOOLBOX
 ft_default.toolbox.cleanup = prevcleanup;
@@ -414,7 +360,7 @@ end % function checkMultipleToolbox
 function checkIncorrectPath
 p = fileparts(mfilename('fullpath'));
 incorrect = fullfile(p, 'compat', 'incorrect');
-if ~isempty(strfind(path, incorrect))
+if contains(path, incorrect)
   ft_warning('Your path is set up incorrectly. You probably used addpath(genpath(''path_to_fieldtrip'')), this can lead to unexpected behavior. See http://www.fieldtriptoolbox.org/faq/should_i_add_fieldtrip_with_all_subdirectories_to_my_matlab_path');
 end
 end % function checkIncorrectPath
