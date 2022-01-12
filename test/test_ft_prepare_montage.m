@@ -97,10 +97,14 @@ data4b = ft_preprocessing(cfg, comp);
 
 %%
 
+fsample = 1000;
+ntrial = 20;
+nsample = 1000;
+
 data1020 = [];
 data1020.label = ft_senslabel('eeg1020');
 
-nchan = length(data.label);
+nchan = length(data1020.label);
 
 for i=1:ntrial
   data1020.time{i}  = (1:nsample)./fsample;
