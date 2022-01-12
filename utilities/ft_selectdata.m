@@ -39,6 +39,8 @@ function [varargout] = ft_selectdata(cfg, varargin)
 % inputs is retained (replacing missing data with nans). In either case, the order (e.g. of
 % the channels) is made consistent across inputs.  The behavior can be specified with
 %   cfg.select      = string, can be 'intersect' or 'union' (default = 'intersect')
+% Note that the option cfg.select = 'union' does not work for 'raw' data
+% structures.
 %
 % See also FT_DATATYPE, FT_CHANNELSELECTION, FT_CHANNELCOMBINATION
 
@@ -110,6 +112,9 @@ cfg = ft_checkconfig(cfg, 'renamedval', {'parameter', 'trial.nai', 'nai'});
 
 cfg.tolerance = ft_getopt(cfg, 'tolerance', 1e-5);        % default tolerance for checking equality of time/freq axes
 cfg.select    = ft_getopt(cfg, 'select',   'intersect');  % default is to take intersection, alternative 'union'
+if isequal(dtype, 'raw') && isequal(cfg.select, 'union')
+  ft_error('using cfg.select=''union'' in combination with ''raw'' datatype is not supported');
+end
 
 if strcmp(dtype, 'volume') || strcmp(dtype, 'segmentation')
   % it must be a source representation, not a volume representation
