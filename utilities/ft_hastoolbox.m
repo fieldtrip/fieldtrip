@@ -218,8 +218,8 @@ if any(~status) && autoadd>0
   prefix = fullfile(fileparts(which('ft_defaults')), 'external');
   if any(~status)
     status(~status) = myaddpath(fullfile(prefix, lower(toolbox(~status))), silent);
-    licensefile = [lower(toolbox) '_license'];
-    if status && exist(licensefile, 'file')
+    licensefile = strcat(lower(toolbox), '_license');
+    if status && cellfun(@exist, licensefile, repmat({'file'}, size(licensefile)))
       % this will execute openmeeg_license, mne_license and duneuro_license
       % which display the license on screen for three seconds
       feval(licensefile);
@@ -231,7 +231,7 @@ if any(~status) && autoadd>0
   if any(~status)
     status(~status) = myaddpath(fullfile(prefix, lower(toolbox(~status))), silent);
     licensefile = [lower(toolbox) '_license'];
-    if status && exist(licensefile, 'file')
+    if status && cellfun(@exist, licensefile, repmat({'file'}, size(licensefile)))
       % this will execute openmeeg_license, mne_license and artinis_license
       % which display the license on screen for a few seconds
       feval(licensefile);
@@ -240,19 +240,19 @@ if any(~status) && autoadd>0
   
   % for linux computers in the Donders Centre for Cognitive Neuroimaging
   prefix = '/home/common/matlab';
-  if any(~status) && isfolder(prefix)
+  if any(~status) && isfolder({prefix})
     status(~status) = myaddpath(fullfile(prefix, lower(toolbox(~status))), silent);
   end
   
   % for windows computers in the Donders Centre for Cognitive Neuroimaging
   prefix = 'h:\common\matlab';
-  if any(~status) && isfolder(prefix)
+  if any(~status) && isfolder({prefix})
     status(~status) = myaddpath(fullfile(prefix, lower(toolbox(~status))), silent);
   end
   
   % use the MATLAB subdirectory in your homedirectory, this works on linux and mac
   prefix = fullfile(getenv('HOME'), 'matlab');
-  if any(~status) && isfolder(prefix)
+  if any(~status) && isfolder({prefix})
     status(~status) = myaddpath(fullfile(prefix, lower(toolbox(~status))), silent);
   end
   
@@ -260,9 +260,9 @@ if any(~status) && autoadd>0
     % the toolbox is not on the path and cannot be added
     sel = find(strcmp(url(:,1), toolbox));
     if ~isempty(sel)
-      msg = sprintf('the %s toolbox is not installed, %s', toolbox, url{sel, 2});
+      msg = sprintf('the %s toolbox is not installed, %s', toolbox{~status}, url{sel, 2});
     else
-      msg = sprintf('the %s toolbox is not installed', toolbox);
+      msg = sprintf('the %s toolbox is not installed', toolbox{~status});
     end
     if autoadd==1
       error(msg);
@@ -277,9 +277,9 @@ elseif any(~status) && autoadd<0
   % the toolbox is not on the path and should not be added
   sel = find(strcmp(url(:,1), toolbox));
   if ~isempty(sel)
-    msg = sprintf('the %s toolbox is not installed, %s', toolbox, url{sel, 2});
+    msg = sprintf('the %s toolbox is not installed, %s', toolbox{~status}, url{sel, 2});
   else
-    msg = sprintf('the %s toolbox is not installed', toolbox);
+    msg = sprintf('the %s toolbox is not installed', toolbox{~status});
   end
   error(msg);
 end
@@ -588,47 +588,54 @@ if isdeployed
   ft_warning('cannot change path settings for %s in a compiled application', toolbox);
   status = true;
 elseif any(isfolder(toolbox))
+  status      = false(1,numel(toolbox));
+  
+  % the toolboxes that exist as a folder can be added to the path, but there are a few exceptions
   sel = isfolder(toolbox);
-
+  
   if ~silent
     ft_warning('off','backtrace');
     ft_warning('adding %s toolbox to your MATLAB path', toolbox{sel});
     ft_warning('on','backtrace');
   end
-
+  
   % deal with some exceptions
-  % spm
-  % mvpa-light
-  % ibtb
+  % spm, mvpa-light, ibtb
+  selspm  = isfolder(toolbox, 'spm$');        sel(selspm)  = false;
+  selmvpa = isfolder(toolbox, 'mvpa-light$'); sel(selmvpa) = false;
+  selibtb = isfolder(toolbox, 'ibtb$');       sel(selibtb) = false;
+  
+  if any(selspm)
+    %     % SPM needs to be added with all its subdirectories
+    addpath(genpath(toolbox{selspm}));
+    % check whether the mex files are compatible
+    check_spm_mex;
+  end
+  if any(selmvpa)
+    % this comes with its own startup script
+    addpath(fullfile(toolbox{selmvpa}, 'startup'))
+    startup_MVPA_Light;
+  end
+  if any(selibtb)
+    % this needs to be added with all its subdirectories
+    addpath(genpath(toolbox{selibtb}));
+  end
+
   addpath(toolbox{sel});
-  status = false(1,numel(sel));
   status(sel) = true;
 
-%   if any(~cellfun(@isempty, regexp(lower(toolbox), {'spm2$', 'spm5$', 'spm8$', 'spm12$'})))
-%     % SPM needs to be added with all its subdirectories
-%     addpath(genpath(toolbox));
-%     % check whether the mex files are compatible
-%     check_spm_mex;
-%   elseif ~isempty(regexp(lower(toolbox), 'mvpa-light$', 'once'))
-%     % this comes with its own startup script
-%     addpath(fullfile(toolbox, 'startup'))
-%     startup_MVPA_Light;
-%   elseif ~isempty(regexp(lower(toolbox), 'ibtb', 'once'))
-%     % this needs to be added with all its subdirectories
-%     addpath(genpath(toolbox));
-%   else
-%     addpath(toolbox);
-%   end
-
-  % remember the toolbox that was just added to the path, it will be cleaned up by FT_POSTAMBLE_HASTOOLBOX
+  % remember the toolboxes that have just been added to the path, it will be cleaned up by FT_POSTAMBLE_HASTOOLBOX
   if ~isfield(ft_default, 'toolbox') || ~isfield(ft_default.toolbox, 'cleanup')
     ft_default.toolbox.cleanup = {};
   end
   ft_default.toolbox.cleanup{end+(1:numel(toolbox))} = toolbox;
   %status = true;
-elseif (~isempty(regexp(toolbox, 'spm2$', 'once')) || ~isempty(regexp(toolbox, 'spm5$', 'once')) || ~isempty(regexp(toolbox, 'spm8$', 'once')) || ~isempty(regexp(toolbox, 'spm12$', 'once'))) && exist([toolbox 'b'], 'dir')
+elseif (~cellfun('isempty', regexp(toolbox, 'spm2$', 'once')) || ...
+        ~cellfun('isempty', regexp(toolbox, 'spm5$', 'once')) || ...
+        ~cellfun('isempty', regexp(toolbox, 'spm8$', 'once')) || ...
+        ~cellfun('isempty', regexp(toolbox, 'spm12$', 'once'))) && any(isfolder(strcat(toolbox,'b')))
   % the final release version of SPM is not available, add the beta version instead
-  status = myaddpath([toolbox 'b'], silent);
+  status = myaddpath(strcat(toolbox, 'b'), silent);
 else
   status = false;
 end
@@ -759,5 +766,8 @@ status = ~isempty(w) && ~isequal(w, 'variable');
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % ISFOLDER is needed for versions prior to 2017b
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function tf = isfolder(dirpath)
+function tf = isfolder(dirpath, str)
 tf = cellfun(@exist, dirpath, repmat({'dir'}, size(dirpath))) == 7;
+if nargin>1
+  tf(tf) = ~cellfun(@isempty, regexp(dirpath(tf), str, 'once'));
+end
