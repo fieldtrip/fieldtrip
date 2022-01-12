@@ -1,4 +1,7 @@
 % Copyright (C) 1999 Paul Kienzle
+% Copyright (C) 2003 Doug Stewart <dastew@sympatico.ca>
+% Copyright (C) 2011 Alexander Klein <alexander.klein@math.uni-giessen.de>
+% Copyright (C) 2018 John W. Eaton
 %
 % This program is free software; you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by
@@ -46,18 +49,18 @@
 % Author: Paul Kienzle <pkienzle@user.sf.net>
 % Modified by: Doug Stewart <dastew@sympatico.ca> Feb, 2003
 
-function [a, b, c, d] = butter (n, W, varargin)
+function [a, b, c, d] = butter(n, W, varargin)
 
 if (nargin>4 || nargin<2) || (nargout>4 || nargout<2)
-  error ('usage: [b, a] or [z, p, g] or [a,b,c,d] = butter (n, W [, "ftype"][,"s"])');
+  error('usage: [b, a] or [z, p, g] or [a,b,c,d] = butter (n, W [, "ftype"][,"s"])');
 end
 
 % interpret the input parameters
 if (~(length(n)==1 && n == round(n) && n > 0))
-  error ('butter: filter order n must be a positive integer');
+  error('butter: filter order n must be a positive integer');
 end
 
-stop = 0;
+stop    = 0;
 digital = 1;
 for i=1:length(varargin)
   switch varargin{i}
@@ -69,20 +72,19 @@ for i=1:length(varargin)
   end
 end
 
-
-[r, c]=size(W);
-if (~(length(W)<=2 && (r==1 || c==1)))
-  error ('butter: frequency must be given as w0 or [w0, w1]');
-elseif (~(length(W)==1 || length(W) == 2))
+[r, c] = size(W);
+if ~(length(W)<=2 && (r==1 || c==1))
+  error('butter: frequency must be given as w0 or [w0, w1]');
+elseif ~(length(W)==1 || length(W) == 2)
   error ('butter: only one filter band allowed');
-elseif (length(W)==2 && ~(W(1) < W(2)))
-  error ('butter: first band edge must be smaller than second');
+elseif length(W)==2 && ~(W(1) < W(2))
+  error('butter: first band edge must be smaller than second');
 end
 
-if ( digital && ~all(W >= 0 & W <= 1))
-  error ('butter: critical frequencies must be in (0 1)');
-elseif ( ~digital && ~all(W >= 0 ))
-  error ('butter: critical frequencies must be in (0 inf)');
+if digital && ~all(W >= 0 & W <= 1)
+  error('butter: critical frequencies must be in (0 1)');
+elseif ~digital && ~all(W >= 0)
+  error('butter: critical frequencies must be in (0 inf)');
 end
 
 % Prewarp to the band edges to s plane
@@ -91,11 +93,13 @@ if digital
   W = 2/T*tan(pi*W/T);
 end
 
-% Generate splane poles for the prototype butterworth filter
+% Generate splane poles for the prototype Butterworth filter
 % source: Kuc
 C = 1; % default cutoff frequency
-pole = C*exp(1i*pi*(2*[1:n] + n - 1)/(2*n));
-if mod(n,2) == 1, pole((n+1)/2) = -1; end  % pure real value at exp(i*pi)
+pole = C*exp(1i*pi*(2*(1:n) + n - 1)/(2*n));
+if mod(n,2) == 1 
+  pole((n+1)/2) = -1; 
+end  % pure real value at exp(i*pi)
 zero = [];
 gain = C^n;
 
@@ -106,17 +110,16 @@ gain = C^n;
 if digital
   [zero, pole, gain] = bilinear(zero, pole, gain, T);
 end
-
+  
 % convert to the correct output form
-if nargout==2,
+if nargout<=2
   a = real(gain*poly(zero));
   b = real(poly(pole));
-elseif nargout==3,
-  a = zero;
-  b = pole;
+elseif nargout==3
+  a = zero(:);
+  b = pole(:);
   c = gain;
 else
   % output ss results
   [a, b, c, d] = zp2ss (zero, pole, gain);
 end
-
