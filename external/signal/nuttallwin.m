@@ -45,11 +45,14 @@ function [w] = nuttallwin(L, opt)
     end %switch
   end %if
 
-  
-  a0 = 0.355768;
-  a1 = 0.487396;
-  a2 = 0.144232;
-  a3 = 0.012604;
+  a0 = 0.3635819;
+  a1 = 0.4891775;
+  a2 = 0.1365995;
+  a3 = 0.0106411; % coefficients from wikipedia to better match matlab output
+%   a0 = 0.355768; % original coefficients don't match matlab output
+%   a1 = 0.487396;
+%   a2 = 0.144232;
+%   a3 = 0.012604;
   if L==1
     w = 1;
   else

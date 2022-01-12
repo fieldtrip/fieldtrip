@@ -33,7 +33,9 @@ addpath(ftpath);
 ft_defaults;
 
 for k = 1:numel(filelist)
-  assert(exist(filelist{k}, 'file'))
+  assert(exist(filelist{k}, 'file'));
+
+  fprintf('testing the functionality of %s\n', filelist{k});
   switch filelist{k}
     case 'barthannwin'
       assert(isequal(barthannwin(1), 1));
@@ -104,7 +106,7 @@ for k = 1:numel(filelist)
       assert(isequal(kaiser(1), 1));
     case 'nuttallwin'
       assert(isequal(nuttallwin(1), 1));
-      assert(isalmostequal(nuttallwin(2), zeros(2, 1), 'abstol', eps));
+      assert(isalmostequal(nuttallwin(2), 0.3628e-3*ones(2,1), 'abstol', eps));
       assert(isalmostequal(nuttallwin(15), flipud(nuttallwin(15)), 'abstol', 10*eps));
       assert(isalmostequal(nuttallwin(16), flipud(nuttallwin(16)), 'abstol', 10*eps));
       assert(isequal(nuttallwin(15), nuttallwin(15, 'symmetric')));
