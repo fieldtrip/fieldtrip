@@ -15,7 +15,7 @@ function [status] = ft_hastoolbox(toolbox, autoadd, silent)
 % silent = 0 means that it will give some feedback about adding the toolbox
 % silent = 1 means that it will not give feedback
 
-% Copyright (C) 2005-2019, Robert Oostenveld
+% Copyright (C) 2005-2022, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -240,19 +240,19 @@ if any(~status) && autoadd>0
   
   % for linux computers in the Donders Centre for Cognitive Neuroimaging
   prefix = '/home/common/matlab';
-  if any(~status) && isfolder({prefix})
+  if any(~status) && is_folder({prefix})
     status(~status) = myaddpath(fullfile(prefix, lower(toolbox(~status))), silent);
   end
   
   % for windows computers in the Donders Centre for Cognitive Neuroimaging
   prefix = 'h:\common\matlab';
-  if any(~status) && isfolder({prefix})
+  if any(~status) && is_folder({prefix})
     status(~status) = myaddpath(fullfile(prefix, lower(toolbox(~status))), silent);
   end
   
   % use the MATLAB subdirectory in your homedirectory, this works on linux and mac
   prefix = fullfile(getenv('HOME'), 'matlab');
-  if any(~status) && isfolder({prefix})
+  if any(~status) && is_folder({prefix})
     status(~status) = myaddpath(fullfile(prefix, lower(toolbox(~status))), silent);
   end
   
@@ -564,7 +564,7 @@ switch toolbox
   case {'REALTIME', 'STATFUN', 'TRIALFUN', 'TEMPLATE/LAYOUT', 'TEMPLATE/ANATOMY', 'TEMPLATE/ATLAS', 'TEMPLATE/DEWAR', 'TEMPLATE/HEADMODEL', 'TEMPLATE/ELECTRODE', 'TEMPLATE/NEIGHBOURS', 'TEMPLATE/SOURCEMODEL'}
     dependency = is_subdir_in_fieldtrip_path(toolbox);
   otherwise
-    if ~silent, ft_warning('cannot determine whether the %s toolbox is present', toolbox); end
+    if ~silent, warning('cannot determine whether the %s toolbox is present', toolbox); end
     dependency = false;
 end
 
@@ -574,7 +574,7 @@ end
 function status = myaddpath(toolbox, silent)
 global ft_default
 
-if any(~isfolder(toolbox))
+if any(~is_folder(toolbox))
   % search for a case-insensitive match, this is needed for MVPA-Light
   [p, f] = fileparts(toolbox);
   dirlist = dir(p);
@@ -585,28 +585,29 @@ if any(~isfolder(toolbox))
 end
 
 if isdeployed
-  ft_warning('cannot change path settings for %s in a compiled application', toolbox);
+  warning('cannot change path settings for %s in a compiled application', toolbox);
   status = true;
-elseif any(isfolder(toolbox))
-  status      = false(1,numel(toolbox));
+  
+elseif any(is_folder(toolbox))
+  status = false(1,numel(toolbox));
   
   % the toolboxes that exist as a folder can be added to the path, but there are a few exceptions
-  sel = isfolder(toolbox);
+  sel = is_folder(toolbox);
   
   if ~silent
-    ft_warning('off','backtrace');
-    ft_warning('adding %s toolbox to your MATLAB path', toolbox{sel});
-    ft_warning('on','backtrace');
+    ws = warning('off','backtrace'); % switch this off
+    warning('adding %s toolbox to your MATLAB path', toolbox{sel});
+    warning(ws); % revert to the previous state
   end
   
   % deal with some exceptions
   % spm, mvpa-light, ibtb
-  selspm  = isfolder(toolbox, 'spm$');        sel(selspm)  = false;
-  selmvpa = isfolder(toolbox, 'mvpa-light$'); sel(selmvpa) = false;
-  selibtb = isfolder(toolbox, 'ibtb$');       sel(selibtb) = false;
+  selspm  = is_folder(toolbox, 'spm$');        sel(selspm)  = false;
+  selmvpa = is_folder(toolbox, 'mvpa-light$'); sel(selmvpa) = false;
+  selibtb = is_folder(toolbox, 'ibtb$');       sel(selibtb) = false;
   
   if any(selspm)
-    %     % SPM needs to be added with all its subdirectories
+    % SPM needs to be added with all its subdirectories
     addpath(genpath(toolbox{selspm}));
     % check whether the mex files are compatible
     check_spm_mex;
@@ -620,22 +621,23 @@ elseif any(isfolder(toolbox))
     % this needs to be added with all its subdirectories
     addpath(genpath(toolbox{selibtb}));
   end
-
+  
   addpath(toolbox{sel});
   status(sel) = true;
-
+  
   % remember the toolboxes that have just been added to the path, it will be cleaned up by FT_POSTAMBLE_HASTOOLBOX
   if ~isfield(ft_default, 'toolbox') || ~isfield(ft_default.toolbox, 'cleanup')
     ft_default.toolbox.cleanup = {};
   end
   ft_default.toolbox.cleanup{end+(1:numel(toolbox))} = toolbox;
-  %status = true;
+  
 elseif (~cellfun('isempty', regexp(toolbox, 'spm2$', 'once')) || ...
-        ~cellfun('isempty', regexp(toolbox, 'spm5$', 'once')) || ...
-        ~cellfun('isempty', regexp(toolbox, 'spm8$', 'once')) || ...
-        ~cellfun('isempty', regexp(toolbox, 'spm12$', 'once'))) && any(isfolder(strcat(toolbox,'b')))
+    ~cellfun('isempty', regexp(toolbox, 'spm5$', 'once')) || ...
+    ~cellfun('isempty', regexp(toolbox, 'spm8$', 'once')) || ...
+    ~cellfun('isempty', regexp(toolbox, 'spm12$', 'once'))) && any(is_folder(strcat(toolbox,'b')))
   % the final release version of SPM is not available, add the beta version instead
   status = myaddpath(strcat(toolbox, 'b'), silent);
+  
 else
   status = false;
 end
@@ -644,7 +646,6 @@ end
 % helper function
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function path = unixpath(path)
-%path(path=='\') = '/'; % replace backward slashes with forward slashes
 path = strrep(path,'\','/');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -692,15 +693,14 @@ status   = contains(haystack, needle);
 % helper function
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function status = has_mex(name)
-full_name=[name '.' mexext];
-status = (exist(full_name, 'file')==3);
+status = (exist([name '.' mexext], 'file')==3);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % helper function
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function v = get_spm_version()
 if ~is_present('spm')
-  v=NaN;
+  v = NaN;
   return
 end
 
@@ -714,7 +714,7 @@ v = str2num([token{:}{:}]);
 function status = check_spm_mex()
 status = true;
 try
-  % this will always result in an error
+  % without an input argument this should always result in an error
   spm_conv_vol
 catch
   me = lasterror;
@@ -723,7 +723,7 @@ catch
 end
 if ~status
   % SPM8 mex file issues are common on macOS with recent MATLAB versions
-  ft_warning('the SPM mex files are incompatible with your platform, see http://bit.ly/2OGF6US');
+  ft_warning('the SPM mex files are incompatible with your platform, see https://www.fieldtriptoolbox.org/faq/matlab_complains_about_a_missing_or_invalid_mex_file_what_should_i_do');
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -764,9 +764,9 @@ w = which(function_name);
 status = ~isempty(w) && ~isequal(w, 'variable');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% ISFOLDER is needed for versions prior to 2017b
+% helper function
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function tf = isfolder(dirpath, str)
+function tf = is_folder(dirpath, str)
 tf = cellfun(@exist, dirpath, repmat({'dir'}, size(dirpath))) == 7;
 if nargin>1
   tf(tf) = ~cellfun(@isempty, regexp(dirpath(tf), str, 'once'));

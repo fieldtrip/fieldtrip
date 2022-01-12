@@ -42,7 +42,7 @@ function ft_defaults
 % undocumented options
 %   ft_default.siunits        = 'yes' or 'no'
 
-% Copyright (C) 2009-2018, Robert Oostenveld
+% Copyright (C) 2009-2022, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -106,9 +106,9 @@ if ~isfield(ft_default, 'tracktimeinfo'),  ft_default.tracktimeinfo  = 'yes';   
 if ~isfield(ft_default, 'trackmeminfo')
   if ispc()
     % don't track memory usage info under Windows; this does not work (yet)
-    ft_default.trackmeminfo   = 'no';
+    ft_default.trackmeminfo = 'no';
   else
-    ft_default.trackmeminfo   = 'yes';
+    ft_default.trackmeminfo = 'yes';
   end
 end
 
@@ -286,34 +286,34 @@ if ~isdeployed
   if ft_platform_supports('octaveversion', -inf, +inf),    addtopath{end+1} = 'compat/octave'; end
 
   try
-    ft_hastoolbox(addtopath, 3, 1);
+    ft_hastoolbox(addtopath, 3, 1); % not required
   end
   
-  addtopath = {'template/layout'     'template/anatomy' 'template/headmodel' 'template/electrode' 'template/neighbours' 'template/sourcemodel'}; % these contains template layouts, neighbour structures, MRIs and cortical meshes
-  addtopath = [addtopath {'statfun'}];  % this is used in ft_statistics
-  addtopath = [addtopath {'trialfun'}]; % this is used in ft_definetrial
-  addtopath = [addtopath {'fileio'}];   % this contains the low-level reading functions
-  addtopath = [addtopath {'preproc'}];  % this is for filtering etc. on time-series data
-  addtopath = [addtopath {'forward'}];  % this contains forward models for the EEG and MEG volume conductor
-  addtopath = [addtopath {'inverse'}];  % this contains inverse source estimation methods
-  addtopath = [addtopath {'plotting'}]; % this contains intermediate-level plotting functions, e.g. multiplots and 3-d objects
-  addtopath = [addtopath {'specest'}];  % this contains intermediate-level functions for spectral analysis
-  addtopath = [addtopath {'connectivity'}]; % this contains the functions to compute connectivity metrics
-  addtopath = [addtopath {'test'}];     % this contains test scripts
-  addtopath = [addtopath {'contrib/spike'}]; % this contains the functions for spike and spike-field analysis
-  addtopath = [addtopath {'contrib/misc'}];  % this contains user contributed functions
+  addtopath        = {'template/layout' 'template/anatomy' 'template/headmodel' 'template/electrode' 'template/neighbours' 'template/sourcemodel'}; % these contains template layouts, neighbour structures, MRIs and cortical meshes
+  addtopath{end+1} = 'statfun';        % this is used in ft_statistics
+  addtopath{end+1} = 'trialfun';       % this is used in ft_definetrial
+  addtopath{end+1} = 'fileio';         % this contains the low-level reading functions
+  addtopath{end+1} = 'preproc';        % this is for filtering etc. on time-series data
+  addtopath{end+1} = 'forward';        % this contains forward models for the EEG and MEG volume conductor
+  addtopath{end+1} = 'inverse';        % this contains inverse source estimation methods
+  addtopath{end+1} = 'plotting';       % this contains intermediate-level plotting functions, e.g. multiplots and 3-d objects
+  addtopath{end+1} = 'specest';        % this contains intermediate-level functions for spectral analysis
+  addtopath{end+1} = 'connectivity';   % this contains the functions to compute connectivity metrics
+  addtopath{end+1} = 'test';           % this contains test scripts
+  addtopath{end+1} = 'contrib/spike';  % this contains the functions for spike and spike-field analysis
+  addtopath{end+1} = 'contrib/misc';   % this contains user contributed functions
   
   try 
-    ft_hastoolbox(addtopath, 1,1);
+    ft_hastoolbox(addtopath, 1, 1); % required
   end
    
-  % try to add a few more, but it is not a show stopper if it does not work
+  % try to add a few more, but it is not a show stopper if these fail
   try
     % this contains specific code and examples for realtime processing
     ft_hastoolbox({'realtime/example' 'realtime/online_mri' 'realtime/online_meg' 'realtime/online_eeg'}, 3, 1); % not required
   end
   
-end
+end % if not deployed
 
 % the toolboxes added by this function should not be removed by FT_POSTAMBLE_HASTOOLBOX
 ft_default.toolbox.cleanup = prevcleanup;
@@ -360,7 +360,7 @@ end % function checkMultipleToolbox
 function checkIncorrectPath
 p = fileparts(mfilename('fullpath'));
 incorrect = fullfile(p, 'compat', 'incorrect');
-if ~isempty(strfind(path, incorrect))
+if contains(path, incorrect)
   ft_warning('Your path is set up incorrectly. You probably used addpath(genpath(''path_to_fieldtrip'')), this can lead to unexpected behavior. See http://www.fieldtriptoolbox.org/faq/should_i_add_fieldtrip_with_all_subdirectories_to_my_matlab_path');
 end
 end % function checkIncorrectPath
