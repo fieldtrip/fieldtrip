@@ -31,7 +31,7 @@ addpath(ftpath);
 ft_defaults;
 
 for k = 1:numel(filelist)
-  assert(exist(filelist{k}, 'file')==2);
+  assert(exist(filelist{k}, 'file')==2||exist(filelist{k}, 'file')==3);
   funhandle = str2func(filelist{k});
 
   fprintf('testing the functionality of %s\n', filelist{k});
