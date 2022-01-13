@@ -576,16 +576,22 @@ global ft_default
 
 if any(~is_folder(toolbox))
   % search for a case-insensitive match, this is needed for MVPA-Light
-  [p, f] = fileparts(toolbox);
-  dirlist = dir(p);
-  sel = strcmpi({dirlist.name}, f);
-  if sum(sel)==1
-    toolbox = fullfile(p, dirlist(sel).name);
+  notfolder = find(~is_folder(toolbox));
+  for k = notfolder(:)'
+    % for loop is needed here, because support for cell-arrays in fileparts
+    % is matlab version dependent
+    [p, f] = fileparts(toolbox{notfolder(k)});
+    dirlist = dir(p);
+    sel = strcmpi({dirlist.name}, f);
+    if sum(sel)==1
+      toolbox{notfolder(k)} = fullfile(p, dirlist(sel).name);
+    end
   end
 end
 
 if isdeployed
-  warning('cannot change path settings for %s in a compiled application', toolbox);
+  
+  warning('cannot change path settings for %s in a compiled application', sprintf('%s ', toolbox{:}));
   status = true;
   
 elseif any(is_folder(toolbox))
