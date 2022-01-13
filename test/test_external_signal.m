@@ -33,7 +33,7 @@ addpath(ftpath);
 ft_defaults;
 
 for k = 1:numel(filelist)
-  assert(exist(filelist{k}, 'file'));
+  assert(exist(filelist{k}, 'file')==2);
 
   fprintf('testing the functionality of %s\n', filelist{k});
   switch filelist{k}
