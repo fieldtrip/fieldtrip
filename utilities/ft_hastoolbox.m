@@ -219,7 +219,7 @@ if any(~status) && autoadd>0
     if status && cellfun(@exist, licensefile, repmat({'file'}, size(licensefile)))
       % this will execute openmeeg_license, mne_license and duneuro_license
       % which display the license on screen for three seconds
-      feval(licensefile);
+      cellfun(@feval, licensefile);
     end
   end
   
@@ -231,7 +231,7 @@ if any(~status) && autoadd>0
     if status && cellfun(@exist, licensefile, repmat({'file'}, size(licensefile)))
       % this will execute openmeeg_license, mne_license and artinis_license
       % which display the license on screen for a few seconds
-      feval(licensefile);
+      cellfun(@feval, licensefile);
     end
   end
   
