@@ -500,19 +500,19 @@ if ~status && autoadd>0
   
   % for linux computers in the Donders Centre for Cognitive Neuroimaging
   prefix = '/home/common/matlab';
-  if ~status && isfolder(prefix)
+  if ~status && is_folder(prefix)
     status = myaddpath(fullfile(prefix, lower(toolbox)), silent);
   end
   
   % for windows computers in the Donders Centre for Cognitive Neuroimaging
   prefix = 'h:\common\matlab';
-  if ~status && isfolder(prefix)
+  if ~status && is_folder(prefix)
     status = myaddpath(fullfile(prefix, lower(toolbox)), silent);
   end
   
   % use the MATLAB subdirectory in your homedirectory, this works on linux and mac
   prefix = fullfile(getenv('HOME'), 'matlab');
-  if ~status && isfolder(prefix)
+  if ~status && is_folder(prefix)
     status = myaddpath(fullfile(prefix, lower(toolbox)), silent);
   end
   
@@ -560,7 +560,7 @@ end
 function status = myaddpath(toolbox, silent)
 global ft_default
 
-if ~isfolder(toolbox)
+if ~is_folder(toolbox)
   % search for a case-insensitive match, this is needed for MVPA-Light
   [p, f] = fileparts(toolbox);
   dirlist = dir(p);
@@ -573,7 +573,7 @@ end
 if isdeployed
   ft_warning('cannot change path settings for %s in a compiled application', toolbox);
   status = true;
-elseif isfolder(toolbox)
+elseif is_folder(toolbox)
   if ~silent
     ft_warning('off','backtrace');
     ft_warning('adding %s toolbox to your MATLAB path', toolbox);
@@ -733,5 +733,5 @@ status = ~isempty(w) && ~isequal(w, 'variable');
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % ISFOLDER is needed for versions prior to 2017b
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function tf = isfolder(dirpath)
+function tf = is_folder(dirpath)
 tf = exist(dirpath,'dir') == 7;

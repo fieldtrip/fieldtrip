@@ -42,7 +42,7 @@ function ft_defaults
 % undocumented options
 %   ft_default.siunits        = 'yes' or 'no'
 
-% Copyright (C) 2009-2018, Robert Oostenveld
+% Copyright (C) 2009-2022, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
