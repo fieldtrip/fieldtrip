@@ -202,9 +202,6 @@ for k = 1:numel(toolbox)
   end
 end
 
-toolbox = toolbox(~status);
-status  = status(~status);
-
 % try to determine the path of the requested toolbox and add it
 if any(~status) && autoadd>0
   
