@@ -775,7 +775,10 @@ else
   
   % identify button - to find label of nearest channel to datapoint
   uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'identify', 'userdata', 'i', 'position', [0.91, 0.83, 0.08, 0.04], 'callback', @keyboard_cb)
-  
+
+  % viewmode button
+  uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'viewmode', 'userdata', 'm', 'position', [0.91, 0.18, 0.08, 0.04], 'callback', @keyboard_cb)
+
   ft_uilayout(h, 'tag', 'labels',  'width', 0.10, 'height', 0.05);
   ft_uilayout(h, 'tag', 'buttons', 'width', 0.05, 'height', 0.05);
   
@@ -1571,6 +1574,23 @@ switch key
       cfg.selectmode = 'markartifact';
     end
     fprintf('switching to selectmode = %s\n', cfg.selectmode);
+    setappdata(h, 'opt', opt);
+    setappdata(h, 'cfg', cfg);
+    redraw_cb(h, eventdata);
+  case 'm'
+    viewmodes = {'vertical','butterfly'};
+    imode = find(strcmp(viewmodes, cfg.viewmode));
+    cfg.viewmode = viewmodes{rem(imode, numel(viewmodes)) + 1};
+    scale_updown = 10;
+    switch cfg.viewmode
+      case 'butterfly'
+        cfg.ylim = cfg.ylim * scale_updown;
+      case 'vertical'
+        cfg.ylim = cfg.ylim / scale_updown;
+    end
+    opt.changedchanflg = true;
+    delete(findobj(h, 'tag', 'chanlabel'));  % remove channel labels here, and not in redrawing to save significant execution time (see bug 2065)
+
     setappdata(h, 'opt', opt);
     setappdata(h, 'cfg', cfg);
     redraw_cb(h, eventdata);
