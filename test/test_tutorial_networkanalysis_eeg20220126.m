@@ -309,6 +309,7 @@ cfg               = [];
 cfg.method        = 'surface';
 cfg.funparameter  = 'pow';
 cfg.colorbar      = 'no';
+cfg.funcolormap   = '*RdBu';
 figure(8);ft_sourceplot(cfg, sourceint);
 view([-90 30]);
 light('style','infinite','position',[0 -200 200]);
