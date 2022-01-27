@@ -66,8 +66,6 @@ cfg.channel     = {'EEG087', 'EEG088'};
 cfg.xlim        = [3 30];
 subplot(1,2,2); ft_singleplotER(cfg, datapow);
 
-%
-%
 %% # Computation of the forward model
 % load the required geometrical information
 load(fullfile(datadir, 'dkatlas.mat'));
@@ -160,7 +158,6 @@ cfg.elec              = elec_aligned;
 source = ft_sourceanalysis(cfg, freq);
 source = ft_sourcedescriptives([], source); % to get the neural-activity-index
 
-%
 %% ## Visualization of the neural-activity-index
 % plot the neural activity index (power/noise)
 
@@ -187,7 +184,6 @@ light('Position',[0,-90 30])
 material dull
 set(gcf,'color','w');
 
-%
 %% ## Creation of a 'pseudo-contrast' based on a median split of the epochs
 %
 % Typically, in an experimental context, it is useful to visualize activity
@@ -247,8 +243,6 @@ cfg         = [];
 cfg.channel = {'EEG087', 'EEG088'};
 subplot(1,2,2);ft_singleplotER(cfg, datapow_high, datapow_low);
 
-%
-%
 %% ## Source reconstruction of 'low' and 'high' alpha activity epochs
 %
 % Now we will compute the source reconstructed alpha power again,
@@ -303,15 +297,15 @@ cfg.operation = 'log10(x1)-log10(x2)';
 cfg.parameter = 'pow';
 source_ratio  = ft_math(cfg, source_high, source_low);
 
-cfg = [];
-cfg.parameter    = 'pow';
+cfg           = [];
+cfg.parameter = 'pow';
 sourceint = ft_sourceinterpolate(cfg,source_ratio,dkatlas);
-cfg=[];
+cfg       = [];
 sourceint = ft_sourceparcellate(cfg, sourceint, dkatlas);
 
 % We now visualize the log-difference on the cortical sheet.
 %
-cfg = [];
+cfg               = [];
 cfg.method        = 'surface';
 cfg.funparameter  = 'pow';
 cfg.colorbar      = 'no';
@@ -322,8 +316,6 @@ colorbar off
 material dull
 set(gcf,'color','w');
 
-%
-%
 % Compare this source reconstruction with the scalp topography generated above. 
 % How do the two representations compare?
 %
@@ -336,16 +328,11 @@ cfg.method  ='coh';
 cfg.complex = 'absimag';
 source_conn = ft_connectivityanalysis(cfg, source);
 
-%
-%
 % We can now make a, rather uninformative, visualization of the connectome, 
 % plotting the full weighted graph, between all pairs of nodes.
 %
 figure(9);imagesc(source_conn.cohspctrm);
 
-%
-%
-%
 %% ## Parcellation and network analysis
 %
 % We can now explore the structure in the estimated connectivity matrices using 
@@ -362,27 +349,25 @@ cfg.parameter = 'cohspctrm';
 cfg.threshold = .1;
 network_full = ft_networkanalysis(cfg,source_conn);
 %% sourceinterpolate
-cfg = [];
-cfg.parameter    = 'degrees';
-network_int = ft_sourceinterpolate(cfg,network_full,dkatlas);
-cfg=[];
-network_int = ft_sourceparcellate(cfg, network_int, dkatlas);
-%%
-% create a fancy mask
+cfg           = [];
+cfg.parameter = 'degrees';
+network_int   = ft_sourceinterpolate(cfg,network_full,dkatlas);
+cfg           = [];
+network_int   = ft_sourceparcellate(cfg, network_int, dkatlas);
 
-cfg = [];
+
+% create a fancy mask
+cfg               = [];
 cfg.method        = 'surface';
 cfg.funparameter  = 'degrees';
 cfg.colorbar      = 'no';
-figure(8);ft_sourceplot(cfg, network_int);
+figure(10);ft_sourceplot(cfg, network_int);
 view([-90 30]);
 light('style','infinite','position',[0 -200 200]);
 colorbar off
 material dull
 set(gcf,'color','w');
 
-%
-%
 % Compare the degree values for the parcellated and the full connectomes. 
 % Why are the values different? What determines the maximum value?
 %
