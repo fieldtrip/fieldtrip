@@ -1,11 +1,9 @@
 function writematrix(datamatrix, filename, varargin)
 
-% This is a extremely limited backward compatible overloaded version of
-% writematrix with extremely limited functionality. The writematrix function
-% has been introduced in MATLAB 2019a. This version is only capable of 
-% % writing text files, using dlmwrite
-% under the hood. dlmwrite is not recommended by Mathworks, where the
-% intended replacement function is writematrix
+% This is a very limited overloaded version of the MathWorks function WRITEMATRIX 
+% which has been introduced in MATLAB 2019a. This version does not offer full 
+% backwards compatibility, it is only capable of writing text files using 
+% the (now deprecated) MathWorks function DLMWRITE under the hood. 
 %
 % Use as:
 %   writematrix(datamatrix, filename, varargin)
