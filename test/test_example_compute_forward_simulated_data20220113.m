@@ -9,9 +9,10 @@ function test_example_compute_forward_simulated_data
 %%
 % load the template MNI headmodel, electrodes and MRI
 
-headmodel = ft_read_headmodel('matlab/fieldtrip/template/headmodel/standard_bem.mat');
-elec = ft_read_sens('matlab/fieldtrip/template/electrode/standard_1020.elc');
-mri = ft_read_mri('matlab/fieldtrip/template/anatomy/single_subj_T1_1mm.nii');
+[ftver, ftpath] = ft_version;
+headmodel = ft_read_headmodel(fullfile(ftpath, 'template/headmodel/standard_bem.mat'));
+elec = ft_read_sens(fullfile(ftpath, 'template/electrode/standard_1020.elc'));
+mri = ft_read_mri(fullfile(ftpath, 'template/anatomy/single_subj_T1_1mm.nii'));
 
 %%
 % explore the location to place the dipole
