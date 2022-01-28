@@ -62,6 +62,7 @@ function cfg = data2bids(cfg, varargin)
 %   cfg.mod                     = string
 %   cfg.echo                    = string
 %   cfg.proc                    = string
+%   cfg.desc                    = string
 %
 % When specifying the output directory in cfg.bidsroot, you can also specify
 % additional information to be added as extra columns in the participants.tsv and
@@ -260,10 +261,11 @@ cfg.run       = ft_getopt(cfg, 'run');
 cfg.mod       = ft_getopt(cfg, 'mod');
 cfg.echo      = ft_getopt(cfg, 'echo');
 cfg.proc      = ft_getopt(cfg, 'proc');
+cfg.desc      = ft_getopt(cfg, 'desc');
 cfg.datatype  = ft_getopt(cfg, 'datatype');
 
 % do a sanity check on the fields that form the filename as key-value pair
-fn = {'sub', 'ses', 'task', 'acq', 'ce', 'rec', 'dir', 'run', 'mod', 'echo', 'proc'};
+fn = {'sub', 'ses', 'task', 'acq', 'ce', 'rec', 'dir', 'run', 'mod', 'echo', 'proc', 'desc'};
 for i=1:numel(fn)
   if ischar(cfg.(fn{i})) && any(cfg.(fn{i})=='-')
     ft_error('the field cfg.%s cannot contain a "-"', fn{i});
@@ -693,6 +695,7 @@ if isempty(cfg.outputfile)
     filename = add_entity(filename, 'mod',  cfg.mod);
     filename = add_entity(filename, 'echo', cfg.echo);
     filename = add_entity(filename, 'proc', cfg.proc);
+    filename = add_entity(filename, 'desc', cfg.desc);
     filename = add_datatype(filename, cfg.datatype);
     if ~isempty(cfg.ses)
       % construct the output filename, with session directory
@@ -1861,6 +1864,7 @@ for i=1:numel(modality)
       f = remove_entity(f, 'mod');      % remove _mod-something
       f = remove_entity(f, 'echo');     % remove _echo-something
       f = remove_entity(f, 'proc');     % remove _proc-something
+      f = remove_entity(f, 'desc');     % remove _desc-something
       f = remove_datatype(f);           % remove _meg, _eeg, etc.
       filename = fullfile(p, [f '_coordsystem.json']);
     else
@@ -1917,6 +1921,7 @@ for i=1:numel(modality)
       f = remove_entity(f, 'mod');      % remove _mod-something
       f = remove_entity(f, 'echo');     % remove _echo-something
       f = remove_entity(f, 'proc');     % remove _proc-something
+      f = remove_entity(f, 'desc');     % remove _desc-something
       f = remove_datatype(f);           % remove _meg, _eeg, etc.
       filename = fullfile(p, sprintf('%s_%s.tsv', f, modality{i}));
     else
