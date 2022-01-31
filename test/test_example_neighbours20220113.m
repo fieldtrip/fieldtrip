@@ -181,6 +181,6 @@ neighbours(21).neighblabel = { 'P4', 'P8', 'O1', 'Oz' };
 cfg = [];
 cfg.elec = elec;
 cfg.neighbours = neighbours;
-cfg.enableedit = 'yes';
+cfg.enableedit = 'no'; % in the example it is yes, but for automated testing this has to be no
 cfg.verbose = 'yes';
 neighbours_edited = ft_neighbourplot(cfg);
