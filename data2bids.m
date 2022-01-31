@@ -1364,6 +1364,13 @@ if need_channels_tsv
   channels_tsv = hdr2table(hdr);
   channels_tsv = merge_table(channels_tsv, cfg.channels, 'name');
   
+  channels_tsv = movevars(channels_tsv,{'type'},'After',{'name'});
+  channels_tsv = movevars(channels_tsv,{'units'},'After',{'type'});   
+  if ismember({'low_cutoff'},channels_tsv.Properties.VariableNames) %this required is for modality ieeg
+     channels_tsv = movevars(channels_tsv,{'low_cutoff'},'After',{'units'});
+     channels_tsv = movevars(channels_tsv,{'high_cutoff'},'After',{'low_cutoff'});
+  end
+  
   % the default for cfg.channels consists of one row where all values are nan, this needs to be removed
   keep = false(size(channels_tsv.name));
   for i=1:numel(channels_tsv.name)
