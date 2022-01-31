@@ -263,8 +263,8 @@ cfg.mod       = ft_getopt(cfg, 'mod');
 cfg.echo      = ft_getopt(cfg, 'echo');
 cfg.proc      = ft_getopt(cfg, 'proc');
 cfg.desc      = ft_getopt(cfg, 'desc');
-cfg.datatype  = ft_getopt(cfg, 'datatype');
 cfg.space     = ft_getopt(cfg, 'space');
+cfg.datatype  = ft_getopt(cfg, 'datatype');
 
 % do a sanity check on the fields that form the filename as key-value pair
 fn = {'sub', 'ses', 'task', 'acq', 'ce', 'rec', 'dir', 'run', 'mod', 'echo', 'proc', 'desc', 'space'};
@@ -1868,7 +1868,9 @@ for i=1:numel(modality)
       f = remove_entity(f, 'proc');     % remove _proc-something
       f = remove_entity(f, 'desc');     % remove _desc-something
       f = remove_datatype(f);           % remove _meg, _eeg, etc.
-      f = add_entity(f, 'space', cfg.space);
+      if ismember(modality{i}, {'mri', 'meg', 'motion', 'coordsystem'})
+        f = add_entity(f, 'space', cfg.space); % this should be present in case it is not empty
+      end
       filename = fullfile(p, [f '_coordsystem.json']);
     else
       % just replace the extension with json
@@ -1926,7 +1928,9 @@ for i=1:numel(modality)
       f = remove_entity(f, 'proc');     % remove _proc-something
       f = remove_entity(f, 'desc');     % remove _desc-something
       f = remove_datatype(f);           % remove _meg, _eeg, etc.
-      f = add_entity(f, 'space', cfg.space);
+      if ismember(modality{i}, {'electrodes', 'optodes'})
+        f = add_entity(f, 'space', cfg.space); % this should be present in case it is not empty
+      end
       filename = fullfile(p, sprintf('%s_%s.tsv', f, modality{i}));
     else
       [p, f] = fileparts(cfg.outputfile);
