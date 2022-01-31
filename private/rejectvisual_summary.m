@@ -412,6 +412,7 @@ info = guidata(h);
 excludetrltxt = sprintf('%d, ', find(~info.trlsel));
 excludetrltxt = excludetrltxt(1:end-2);
 set(findobj('tag','edit_toggle_trials'), 'string', excludetrltxt)
+set(info.plottrltxt, 'string', excludetrltxt)
 
 % process input from the "toggle channels" textbox
 function toggle_channels(h, eventdata)
