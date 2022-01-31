@@ -2045,6 +2045,9 @@ if ~isempty(cfg.bidsroot)
   this = table();
   [p, f, x] = fileparts(cfg.outputfile);
   this.filename = {fullfile(datatype2dirname(cfg.datatype), [f x])};
+  path = fullfile(datatype2dirname(cfg.datatype), [f x]);
+  path(strfind(path,'\')) = '/';
+  this.filename = {path};
   fn = fieldnames(cfg.scans);
   for i=1:numel(fn)
     % write [] as 'n/a'
