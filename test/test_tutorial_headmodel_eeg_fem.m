@@ -77,8 +77,11 @@ ft_plot_sens(elec_aligned);
 %
 %% ## Interactive alignment
 %
-cfg          = [];
-cfg.method   = 'interactive';
-cfg.elec     = elec_aligned;
-cfg.headshape = headmodel;
-elec_aligned = ft_electroderealign(cfg);
+if false
+  % this should not run in the non-interactive test environment
+  cfg          = [];
+  cfg.method   = 'interactive';
+  cfg.elec     = elec_aligned;
+  cfg.headshape = headmodel;
+  elec_aligned = ft_electroderealign(cfg);
+end
