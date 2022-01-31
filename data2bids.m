@@ -63,7 +63,6 @@ function cfg = data2bids(cfg, varargin)
 %   cfg.echo                    = string
 %   cfg.proc                    = string
 %   cfg.desc                    = string
-%   cfg.space                   = string
 %
 % When specifying the output directory in cfg.bidsroot, you can also specify
 % additional information to be added as extra columns in the participants.tsv and
@@ -264,10 +263,9 @@ cfg.echo      = ft_getopt(cfg, 'echo');
 cfg.proc      = ft_getopt(cfg, 'proc');
 cfg.desc      = ft_getopt(cfg, 'desc');
 cfg.datatype  = ft_getopt(cfg, 'datatype');
-cfg.space     = ft_getopt(cfg, 'space');
 
 % do a sanity check on the fields that form the filename as key-value pair
-fn = {'sub', 'ses', 'task', 'acq', 'ce', 'rec', 'dir', 'run', 'mod', 'echo', 'proc', 'desc', 'space'};
+fn = {'sub', 'ses', 'task', 'acq', 'ce', 'rec', 'dir', 'run', 'mod', 'echo', 'proc', 'desc'};
 for i=1:numel(fn)
   if ischar(cfg.(fn{i})) && any(cfg.(fn{i})=='-')
     ft_error('the field cfg.%s cannot contain a "-"', fn{i});
@@ -1868,7 +1866,6 @@ for i=1:numel(modality)
       f = remove_entity(f, 'proc');     % remove _proc-something
       f = remove_entity(f, 'desc');     % remove _desc-something
       f = remove_datatype(f);           % remove _meg, _eeg, etc.
-      f = add_entity(f, 'space', cfg.space);
       filename = fullfile(p, [f '_coordsystem.json']);
     else
       % just replace the extension with json
@@ -1926,7 +1923,6 @@ for i=1:numel(modality)
       f = remove_entity(f, 'proc');     % remove _proc-something
       f = remove_entity(f, 'desc');     % remove _desc-something
       f = remove_datatype(f);           % remove _meg, _eeg, etc.
-      f = add_entity(f, 'space', cfg.space);
       filename = fullfile(p, sprintf('%s_%s.tsv', f, modality{i}));
     else
       [p, f] = fileparts(cfg.outputfile);
