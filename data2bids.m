@@ -1363,6 +1363,11 @@ if need_channels_tsv
   % channel information can come from the header and from cfg.channels
   channels_tsv = hdr2table(hdr);
   channels_tsv = merge_table(channels_tsv, cfg.channels, 'name');
+
+  % columns should appear in a specific order
+  required = {'name', 'type', 'units', 'low_cutoff', 'high_cutoff'};
+  optional = setdiff(channels_tsv.Properties.VariableNames, required, 'stable');
+  channels_tsv = sort_columns(channels_tsv, [required, optional]);
   
   % the default for cfg.channels consists of one row where all values are nan, this needs to be removed
   keep = false(size(channels_tsv.name));
@@ -1382,7 +1387,7 @@ if need_channels_tsv
   channels_tsv.type(strcmpi(channels_tsv.type, 'respiration')) = {'RESP'};
   channels_tsv.type(strcmpi(channels_tsv.type, 'headloc'))     = {'HLU'};
   channels_tsv.type(strcmpi(channels_tsv.type, 'headloc_gof')) = {'FITERR'};
-  channels_tsv.type(contains(channels_tsv.type, 'trigger', 'IgnoreCase', true)) = {'TRIG'};
+  channels_tsv.type(strcmpi(channels_tsv.type, 'trigger'))     = {'TRIG'};
   
   % channel types in BIDS must be in upper case
   channels_tsv.type = upper(channels_tsv.type);
@@ -1542,7 +1547,7 @@ if need_coordsystem_json
     coordsystem_json.HeadCoilCoordinateSystemDescription = 'Neuromag head coordinates, orientation RAS, origin between the ears';
     if isempty(coordsystem_json.HeadCoilCoordinates)
       coordsystem_json = rmfield(coordsystem_json, 'HeadCoilCoordinates'); % needed to set the names afterwards
-      idxHPI= find([hdr.orig.dig.kind] == 2); % count the kind==2 (HLU in the Elekta/Megin system), usually 4 or 5
+      idxHPI = find([hdr.orig.dig.kind] == 2); % count the kind==2 (HLU in the Elekta/Megin system), usually 4 or 5
       for i=1:length(idxHPI)
         coordsystem_json.HeadCoilCoordinates.(['coil' num2str(i)]) = hdr.orig.dig(idxHPI(i)).r';
       end
@@ -1693,11 +1698,9 @@ if need_events_tsv
     events_tsv.Properties.VariableNames = lower(events_tsv.Properties.VariableNames);
     
     % ensure that the onset and duration appear as the first two columns
-    order = nan(1, size(events_tsv,2));
-    order(1) = find(strcmp(events_tsv.Properties.VariableNames, 'onset'));
-    order(2) = find(strcmp(events_tsv.Properties.VariableNames, 'duration'));
-    order(3:end) = setdiff(1:size(events_tsv,2), order([1 2]));
-    events_tsv = events_tsv(:,order);
+    required = {'onset', 'duration'};
+    optional = setdiff(events_tsv.Properties.VariableNames, required, 'stable');
+    events_tsv = sort_columns(events_tsv, [required, optional]);
     
     % sort the events ascending on the onset
     events_tsv = sortrows(events_tsv, 'onset');
@@ -1769,6 +1772,7 @@ switch cfg.method
         ft_write_mri(cfg.outputfile, mri, 'dataformat', 'nifti');
         
       case {'ctf_ds', 'ctf_meg4', 'ctf_res4', 'ctf151', 'ctf275', 'neuromag_fif', 'neuromag122', 'neuromag306'}
+        % we cannot write MEG data back to its native format
         ft_error('please use a system specific tool for converting MEG datasets');
         
       case {'presentation_log'}
@@ -2356,12 +2360,33 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function y = sort_fields(x)
-fn = fieldnames(x);
-fn = sort(fn);
+function y = sort_columns(x, desired)
+original = x.Properties.VariableNames;
+if nargin<2
+  % sort alphabetically
+  desired = sort(original);
+else
+  % only keep the desired columns that are actually present
+  desired = intersect(desired, original, 'stable');
+end
+[dum, order] = ismember(desired, original);  
+y = x(:, order);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function y = sort_fields(x, desired)
+original = fieldnames(x);
+if nargin<2
+  % sort alphabetically
+  desired = sort(original);
+else
+  % only keep the desired fields that are actually present
+  desired = intersect(desired, original, 'stable');
+end
 y = struct();
-for i=1:numel(fn)
-  y.(fn{i}) = x.(fn{i});
+for i=1:numel(desired)
+  y.(desired{i}) = x.(desired{i});
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
