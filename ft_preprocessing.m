@@ -634,7 +634,7 @@ else
     if isfield(hdr, 'orig')
       s = hdr.orig;
       s = whos('s');
-      if s.bytes>10240
+      if s.bytes>3*1024^2
         hdr = rmfield(hdr, 'orig');
       end
     end
