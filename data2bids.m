@@ -1521,9 +1521,9 @@ end % need_optodes_tsv
 if need_coordsystem_json
   if isfield(hdr, 'grad') && ft_senstype(hdr.grad, 'ctf')
     % coordinate system for MEG sensors
-    coordsystem_json.MEGCoordinateSystem            = 'CTF';
-    coordsystem_json.MEGCoordinateUnits             = 'cm';
-    coordsystem_json.MEGCoordinateSystemDescription = 'CTF head coordinates, orientation ALS, origin between the ears';
+    coordsystem_json.MEGCoordinateSystem                 = 'CTF';
+    coordsystem_json.MEGCoordinateUnits                  = 'cm';
+    coordsystem_json.MEGCoordinateSystemDescription      = 'CTF head coordinates, orientation ALS, origin between the ears';
     % coordinate system for head localization coils
     coordsystem_json.HeadCoilCoordinates                 = []; % see below
     coordsystem_json.HeadCoilCoordinateSystem            = 'CTF';
@@ -1537,13 +1537,14 @@ if need_coordsystem_json
         coordsystem_json.HeadCoilCoordinates.(fixname(label{i})) = position(:,i)';
       end
     end
+    
   elseif isfield(hdr, 'grad') && ft_senstype(hdr.grad, 'neuromag')
     % coordinate system for MEG sensors
-    coordsystem_json.MEGCoordinateSystem            = 'ElektaNeuromag';
-    coordsystem_json.MEGCoordinateUnits             = 'm';
-    coordsystem_json.MEGCoordinateSystemDescription = 'Neuromag head coordinates, orientation RAS, origin between the ears';
+    coordsystem_json.MEGCoordinateSystem                 = 'ElektaNeuromag';
+    coordsystem_json.MEGCoordinateUnits                  = 'm';
+    coordsystem_json.MEGCoordinateSystemDescription      = 'Neuromag head coordinates, orientation RAS, origin between the ears';
     % coordinate system for head localization coils
-    coordsystem_json.HeadCoilCoordinates                 = [];  % getting from the dataset header
+    coordsystem_json.HeadCoilCoordinates                 = []; % see below
     coordsystem_json.HeadCoilCoordinateSystem            = 'ElektaNeuromag';
     coordsystem_json.HeadCoilCoordinateUnits             = 'm';
     coordsystem_json.HeadCoilCoordinateSystemDescription = 'Neuromag head coordinates, orientation RAS, origin between the ears';
@@ -1553,10 +1554,10 @@ if need_coordsystem_json
       for i=1:length(idxHPI)
         coordsystem_json.HeadCoilCoordinates.(['coil' num2str(i)]) = hdr.orig.dig(idxHPI(i)).r';
       end
-      
     end
+    
     % coordinates of the anatomical landmarks (LPA/RPA/NAS)
-    coordsystem_json.AnatomicalLandmarkCoordinates                 = [];  % getting from the dataset header
+    coordsystem_json.AnatomicalLandmarkCoordinates                 = []; % see below
     coordsystem_json.AnatomicalLandmarkCoordinateSystem            = 'ElektaNeuromag';
     coordsystem_json.AnatomicalLandmarkCoordinateUnits             = 'm';
     coordsystem_json.AnatomicalLandmarkCoordinateSystemDescription = 'Neuromag head coordinates, orientation RAS, origin between the ears';
@@ -1770,7 +1771,7 @@ switch cfg.method
             ft_sourceplot(tmpcfg, mri);
           end
         end
-        ft_info('writing %s\n', cfg.outputfile);
+        ft_info('writing ''%s''\n', cfg.outputfile);
         ft_write_mri(cfg.outputfile, mri, 'dataformat', 'nifti');
         
       case {'ctf_ds', 'ctf_meg4', 'ctf_res4', 'ctf151', 'ctf275', 'neuromag_fif', 'neuromag122', 'neuromag306'}
@@ -1789,20 +1790,20 @@ switch cfg.method
             % write the data in BrainVision core file format
             [p, f, x] = fileparts(cfg.outputfile);
             cfg.outputfile = fullfile(p, [f '.vhdr']);
-            ft_info('writing %s\n', cfg.outputfile);
+            ft_info('writing ''%s''\n', cfg.outputfile);
             ft_write_data(cfg.outputfile, dat, 'dataformat', 'brainvision_eeg', 'header', hdr, 'event', trigger);
           case {'nirs'}
             % write the data in SNIRF file format
             [p, f, x] = fileparts(cfg.outputfile);
             cfg.outputfile = fullfile(p, [f '.snirf']);
-            ft_info('writing %s\n', cfg.outputfile);
+            ft_info('writing ''%s''\n', cfg.outputfile);
             ft_write_data(cfg.outputfile, dat, 'dataformat', 'snirf', 'header', hdr, 'event', trigger);
           case {'physio', 'stim', 'eyetracker', 'motion'}
             % write the data according to the Stim and Physio format as specified at
             % https://bids-specification.readthedocs.io/en/stable/04-modality-specific-files/06-physiological-and-other-continuous-recordings.html
             [p, f, x] = fileparts(cfg.outputfile);
             cfg.outputfile = fullfile(p, [f '.tsv']);
-            ft_info('writing %s\n', cfg.outputfile);
+            ft_info('writing ''%s''\n', cfg.outputfile);
             writematrix(dat', cfg.outputfile, 'FileType', 'text', 'Delimiter', '\t'); % without headers, the JSON will be written further down
           case {'events'}
             % add the TSV file extension, this is needed for behavioral data represented in scans.tsv
@@ -1900,7 +1901,7 @@ for i=1:numel(modality)
         ft_write_json(filename, mergeconfig(modality_json, existing, false))
       case 'no'
         % do nothing
-        ft_info('not writing %s\n', filename);
+        ft_info('not writing ''%s''\n', filename);
       otherwise
         ft_error('incorrect option for cfg.writejson');
     end % switch writejson
@@ -1972,7 +1973,7 @@ for i=1:numel(modality)
         ft_write_tsv(filename, modality_tsv);
       case 'no'
         % do nothing
-        ft_info('not writing %s\n', filename);
+        ft_info('not writing ''%s''\n', filename);
       otherwise
         ft_error('incorrect option for cfg.writetsv');
     end % switch
@@ -2064,6 +2065,9 @@ if ~isempty(cfg.bidsroot)
   else
     scans_tsv = this;
   end
+  
+  % the filename should have forward slashes, see #1957 and #1959
+  scans_tsv = strrep(scans_tsv.filename, '\', '/');
   
   % write the updated file back to disk
   ft_write_tsv(filename, scans_tsv);
