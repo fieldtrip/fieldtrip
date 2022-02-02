@@ -1,4 +1,4 @@
-function cfg = data2bids(cfg, varargin)
+function [cfg] = data2bids(cfg, varargin)
 
 % DATA2BIDS is a helper function to convert MRI, MEG, EEG, iEEG or NIRS data to the
 % Brain Imaging Data Structure. The overall idea is that you write a MATLAB script in
