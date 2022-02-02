@@ -1,4 +1,5 @@
 function inspect_bug1937
+
 % DEPENDENCY ft_connectivitysimulation ft_freqanalysis_mvar qsubfeval qsubget
 
 % alebac, 19 Mar 2014: added support "waitfor" for multiple jobs
@@ -115,5 +116,3 @@ joblist3 = qsubfeval(@ft_freqgrandaverage, cfg3,'memreq',1*(1024^3),'timreq',60,
 
 cd(prevdir);
 rmdir(tmpdir, 's');
-
-

@@ -1,4 +1,4 @@
-function test_ft_electroderealign
+function inspect_ft_electroderealign
 
 % MEM 3gb
 % WALLTIME 00:10:00
@@ -88,4 +88,3 @@ elec_realigned4 = ft_electroderealign(cfg);
 figure
 ft_plot_sens(elec_realigned4, 'label', 'on');
 ft_plot_axes(elec_realigned4, 'fontcolor', 'k');
-
