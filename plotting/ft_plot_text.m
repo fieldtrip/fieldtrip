@@ -54,7 +54,7 @@ function [varargout] = ft_plot_text(X, Y, str, varargin)
 %
 % $Id$
 
-ws = ft_warning('on', 'MATLAB:divideByZero');
+% ws = ft_warning('on', 'MATLAB:divideByZero');
 
 % get the optional input arguments
 hpos                = ft_getopt(varargin, 'hpos');
@@ -144,4 +144,4 @@ if nargout == 1
   varargout{1} = h;
 end
 
-ft_warning(ws); % revert to original state
+% ft_warning(ws); % revert to original state
