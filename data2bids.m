@@ -2067,7 +2067,7 @@ if ~isempty(cfg.bidsroot)
   end
   
   % the filename should have forward slashes, see #1957 and #1959
-  scans_tsv = strrep(scans_tsv.filename, '\', '/');
+  scans_tsv.filename = strrep(scans_tsv.filename, '\', '/');
   
   % write the updated file back to disk
   ft_write_tsv(filename, scans_tsv);
