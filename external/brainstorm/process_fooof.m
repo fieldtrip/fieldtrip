@@ -490,7 +490,7 @@ function aperiodic_params = robust_ap_fit(freqs, power_spectrum, aperiodic_mode)
         case 'fixed'  % no knee
             aperiodic_params = fminsearch(@error_expo_nk_function, guess_vec, options, freqs_ignore, spectrum_ignore);
         case 'knee'
-            aperiodic_params = fminsearch(@error_expo_function, guess_vec, options, freqs, power_spectrum);
+            aperiodic_params = fminsearch(@error_expo_function, guess_vec, options, freqs_ignore, spectrum_ignore);
     end
 end
 
