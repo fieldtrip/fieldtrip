@@ -368,6 +368,8 @@ cfg.channel = data.label(chansel);
 tmpcfg = [];
 if strcmp(cfg.keepchannel, 'no')
   tmpcfg.channel = cfg.channel;
+elseif strcmp(cfg.keepchannel, 'yes')
+  cfg.badchannel = data.label(~chansel);
 end
 if strcmp(cfg.keeptrial, 'no')
   tmpcfg.trials = cfg.trials;
