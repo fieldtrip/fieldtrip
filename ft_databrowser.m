@@ -1581,7 +1581,7 @@ switch key
     viewmodes = {'vertical','butterfly'};
     imode = find(strcmp(viewmodes, cfg.viewmode));
     cfg.viewmode = viewmodes{rem(imode, numel(viewmodes)) + 1};
-    scale_updown = 10;
+    scale_updown = numel(opt.curdata.label) / 5;
     switch cfg.viewmode
       case 'butterfly'
         cfg.ylim = cfg.ylim * scale_updown;
