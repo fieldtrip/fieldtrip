@@ -224,7 +224,8 @@ end % for each trial
 
 ft_info('identified %d out of %d trials as bad\n', sum(badsegment), length(badsegment));
 
-% the output is consistent with that of other artifact detection functions
+% keep track of bad segments
+% this format is consistent with that of other artifact detection functions
 artifact = data.sampleinfo(badsegment,:);
 cfg.artfctdef.badsegment.artifact = artifact;
 

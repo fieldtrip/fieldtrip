@@ -1,4 +1,5 @@
 function inspect_bug3013
+
 % DEPENDENCY ft_sourceplot ft_plot_ortho
 
 %%
@@ -85,5 +86,3 @@ drawnow
 cfg.axisratio = 'data';
 ft_sourceplot(cfg, mri);
 drawnow
-
-
