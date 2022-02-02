@@ -117,7 +117,7 @@ if numel(y)==1 && fastflag
   % a full eigenvalue decomposition is an overkill, this solution is
   % probably correct (and much faster than eig, or even eigs(..,..,1)
   E(x,1) = (A(y,x)/B(x,x));
-  E(y) = sqrt((A(y,x)*E(x))./B(y,y));
+  E(y,1) = sqrt((A(y,x)*E(x))./B(y,y));
   D    = (B*E)\(A*E);
 else
   % ad hoc check for well-behavedness of the matrix, and do the decomposition

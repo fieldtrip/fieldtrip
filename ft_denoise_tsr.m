@@ -49,8 +49,8 @@ function dataout = ft_denoise_tsr(cfg, varargin)
 %                            separately per channel
 %   cfg.output             = string, 'model' or 'residual' (defaul = 'model'),
 %                            specifies what is outputed in .trial field in <dataout>
-%   cfg.performance        = string, 'Pearson' or 'r-squared' (default =
-%                            'Pearson'), indicating what performance metric is outputed in .weights(k).performance
+%   cfg.performance        = string, 'pearson' or 'r-squared' (default =
+%                            'pearson'), indicating what performance metric is outputed in .weights(k).performance
 %                            field of <dataout> for the k-th fold
 %
 % If cfg.threshold is 1 x 2 integer array, the cfg.threshold(1) parameter scales
@@ -138,7 +138,7 @@ cfg.perchannel         = ft_getopt(cfg, 'perchannel',         'yes');
 cfg.method             = ft_getopt(cfg, 'method',             'mlr');
 cfg.threshold          = ft_getopt(cfg, 'threshold',          0);
 cfg.output             = ft_getopt(cfg, 'output',             'model');
-cfg.performance        = ft_getopt(cfg, 'performance',        'Pearson');
+cfg.performance        = ft_getopt(cfg, 'performance',        'pearson');
 
 if ~iscell(cfg.refchannel)
   cfg.refchannel = {cfg.refchannel};
@@ -366,8 +366,8 @@ end
 refdata.trial = cellvecmult(refdata.trial, std_refdata);
 data.trial    = cellvecmult(data.trial, std_data);
 if exist('beta_data', 'var')
-  beta_ref  = beta_ref'*diag(std_refdata); 
-  beta_data = diag(std_data)*beta_data;
+  beta_ref  = (beta_ref*diag(1./std_refdata))'; 
+  beta_data = diag(1./std_data)*beta_data;
 else
   beta_ref = diag(std_data)*beta_ref*diag(1./std_refdata);
 end
@@ -406,8 +406,12 @@ if usetestdata
   [dum,testrefdata] = rollback_provenance(cfg, testrefdata);
 
   predicted = beta_ref*testrefdata.trial;
-  observed  = testdata.trial;
-  
+  if exist('beta_data', 'var')
+    observed = beta_data'*testdata.trial;
+  else
+    observed = testdata.trial;
+  end
+
   % create output data structure
   dataout      = keepfields(testdata, {'cfg' 'label' 'grad' 'elec' 'opto' 'fsample' 'trialinfo'});
   dataout.time = testdata.time;
@@ -439,8 +443,13 @@ weights.rho  = rho;
 weights.covariance = C;
 weights.std        = [std_data;std_refdata];
 if exist('beta_data', 'var')
-  weights.mixing = beta_data; 
-  weights.beta   = beta_ref;
+  weights.unmixing = beta_data';
+  weights.beta     = beta_ref;
+
+  % compute the mixing weights as per Haufe 2013
+  W = weights.unmixing;
+  A = (C(1:nchan, 1:nchan) * W')/(W * C(1:nchan,1:nchan) * W');
+  weights.mixing = A;
 else
   % a per channel approach has been done, the beta weights reflect
   % (channelxtime-lag) -> reshape
@@ -456,8 +465,8 @@ end
 
 % Compute performance statistics
 fprintf('Computing performance metric\n');
-switch cfg.performance
-  case 'Pearson'
+switch lower(cfg.performance)
+  case 'pearson'
     for k = 1:size(observed{1}, 1)
       tmp = nancov(cellcat(1, cellrowselect(observed,k), cellrowselect(predicted,k)), 1, 2, 1);
       weights.performance(k,1) = tmp(1,2)./sqrt(tmp(1,1).*tmp(2,2));
