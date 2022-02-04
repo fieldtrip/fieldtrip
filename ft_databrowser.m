@@ -1615,21 +1615,6 @@ end % function keyboard_cb
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function toggle_viewmode_cb(h, eventdata, varargin)
-% FIXME should be used
-opt = guidata(getparent(h));
-if ~isempty(varargin) && ischar(varargin{1})
-  cfg.viewmode = varargin{1};
-end
-opt.changedchanflg = true; % trigger for redrawing channel labels and preparing layout again (see bug 2065 and 2878)
-guidata(getparent(h), opt);
-delete(findobj(h, 'tag', 'chanlabel'));  % remove channel labels here, and not in redrawing to save significant execution time (see bug 2065)
-redraw_cb(h);
-end % function toggle_viewmode_cb
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function h = getparent(h)
 p = h;
 while p~=0
@@ -1647,7 +1632,10 @@ h = getparent(h);
 opt = getappdata(h, 'opt');
 cfg = getappdata(h, 'cfg');
 
-figure(h); % ensure that the calling figure is in the front
+% ensure that the calling figure is in the front
+if h~=gcf
+  figure(h);
+end
 
 cfg.channelclamped = ft_getopt(cfg, 'channelclamped');
 
@@ -1672,14 +1660,10 @@ endsample = opt.trlvis(opt.trlop, 2);
 offset    = opt.trlvis(opt.trlop, 3);
 chanindx  = match_str(opt.hdr.label, cfg.channel);
 
-% this is a trigger for redrawing channel labels and preparing layout again (see bug 2065 and 2878)
-changedchanflg = opt.changedchanflg;
-opt.changedchanflg = false;
-
 if isempty(opt.orgdata)
   dat = ft_read_data(cfg.datafile, 'header', opt.hdr, 'begsample', begsample, 'endsample', endsample, 'chanindx', chanindx, 'checkboundary', ~istrue(cfg.continuous), 'dataformat', cfg.dataformat, opt.headeropt{:});
 else
-  dat = ft_fetch_data(opt.orgdata, 'header', opt.hdr, 'begsample', begsample, 'endsample', endsample, 'chanindx', chanindx, 'allowoverlap', cfg.allowoverlap);
+  dat = ft_fetch_data(opt.orgdata, 'header', opt.hdr, 'begsample', begsample, 'endsample', endsample, 'chanindx', chanindx, 'allowoverlap', cfg.allowoverlap, 'skipcheckdata', true);
 end
 
 % fetch only the artifacts in the current time window, they are represented as booleans, with one channel per artifact type
@@ -1731,6 +1715,7 @@ opt.curdata.trial{1}   = dat;
 opt.curdata.hdr        = opt.hdr;
 opt.curdata.fsample    = opt.fsample;
 opt.curdata.sampleinfo = [begsample endsample];
+opt.curdata = copyfields(opt.orgdata, opt.curdata, {'grad', 'elec', 'opto'});
 % remove the local copy of the data fields
 clear lab tim dat
 
@@ -1743,6 +1728,10 @@ opt.curdata = chanscale_common(tmpcfg, opt.curdata);
 lab = opt.curdata.label;
 tim = opt.curdata.time{1};
 dat = opt.curdata.trial{1};
+
+% this is a trigger for redrawing channel labels and preparing layout again (see bug 2065 and 2878)
+changedchanflg = opt.changedchanflg;
+opt.changedchanflg = false;
 
 if strcmp(cfg.viewmode, 'butterfly')
   % the timecourse layout is always the same
@@ -1771,10 +1760,10 @@ else
 end
 
 % determine the position of the channel/component labels relative to the real axes
-% FIXME needs a shift to the left for components
-labelx = opt.layouttime.pos(:,1) - opt.layouttime.width/2 - 0.01;
 if strcmp(cfg.viewmode, 'component')
-  labelx = labelx - opt.layouttime.height - 0.025;
+  labelx = opt.layouttime.pos(:,1) - opt.layouttime.width/2 - 2*opt.layouttime.height;
+else
+  labelx = opt.layouttime.pos(:,1) - opt.layouttime.width/2 - 0.01;
 end
 labely = opt.layouttime.pos(:,2);
 
@@ -1993,7 +1982,7 @@ if strcmp(cfg.viewmode, 'butterfly')
 
   set(gca, 'yTick', yTick, 'yTickLabel', yTickLabel)
 
-elseif any(strcmp(cfg.viewmode, {'component', 'vertical'}))
+elseif strcmp(cfg.viewmode, 'vertical') || strcmp(cfg.viewmode, 'component')
 
   % determine channel indices into data outside of loop
   laysels = match_str(opt.layouttime.label, opt.hdr.label);
@@ -2124,15 +2113,13 @@ else
 end
 
 if strcmp(cfg.viewmode, 'component')
-  % determine the position of each of the original channels for the topgraphy
-  laychan = opt.layouttopo;
 
-  % determine the position of each of the topographies
-  laytopo.pos(:,1)  = opt.layouttime.pos(:,1) - opt.layouttime.width/2 - opt.layouttime.height;
-  laytopo.pos(:,2)  = opt.layouttime.pos(:,2); %- opt.layouttime.height/2;
-  laytopo.width     = opt.layouttime.height;
-  laytopo.height    = opt.layouttime.height;
-  laytopo.label     = opt.layouttime.label;
+  % determine the layout for each of the component topographies
+  layoutcomp.pos(:,1)  = opt.layouttime.pos(:,1) - opt.layouttime.width/2 - opt.layouttime.height;
+  layoutcomp.pos(:,2)  = opt.layouttime.pos(:,2);
+  layoutcomp.width     = opt.layouttime.height;
+  layoutcomp.height    = opt.layouttime.height;
+  layoutcomp.label     = opt.layouttime.label;
 
   if ~isequal(opt.chanindx, chanindx)
     opt.chanindx = chanindx;
@@ -2142,9 +2129,10 @@ if strcmp(cfg.viewmode, 'component')
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     delete(findobj(h, 'tag', 'topography'));
 
-    [sel1, sel2] = match_str(opt.orgdata.topolabel, laychan.label);
-    chanx = laychan.pos(sel2,1);
-    chany = laychan.pos(sel2,2);
+    % determine the position of each of the original channels for the topgraphy
+    [sel1, sel2] = match_str(opt.orgdata.topolabel, opt.layouttopo.label);
+    chanx = opt.layouttopo.pos(sel2,1);
+    chany = opt.layouttopo.pos(sel2,2);
 
     if strcmp(cfg.compscale, 'global')
       % compute scaling factors for all components that are plotted together
@@ -2209,22 +2197,22 @@ if strcmp(cfg.viewmode, 'component')
       % scaling
       chanz = (chanz - zmin) ./  (zmax- zmin);
 
-      % laychan is the actual topo layout, in pixel units for .mat files
-      % laytopo is a vertical layout determining where to plot each topo, with one entry per component
+      % layouttopo is the actual 2D topographic channel layout, in pixel units for .mat files
+      % layoutcomp is a vertical layout determining where to plot each component topography, with one entry per component
 
       plotopt = {
         'interpmethod', cfg.interpolation, ...
         'interplim',    cfg.interplimits, ...
         'gridscale',    cfg.gridscale, ...
-        'outline',      laychan.outline, ...
+        'outline',      opt.layouttopo.outline, ...
+        'mask',         opt.layouttopo.mask, ...
         'shading',      cfg.shading, ...
         'isolines',     cfg.contournum, ...
-        'mask',         laychan.mask, ...
         'tag',          'topography', ...
-        'hpos',         laytopo.pos(laysel,1)-laytopo.width(laysel)/2, ...
-        'vpos',         laytopo.pos(laysel,2)-laytopo.height(laysel)/2, ...
-        'width',        laytopo.width(laysel), ...
-        'height',       laytopo.height(laysel)};
+        'hpos',         layoutcomp.pos(laysel,1), ...
+        'vpos',         layoutcomp.pos(laysel,2), ...
+        'width',        layoutcomp.width(laysel), ...
+        'height',       layoutcomp.height(laysel)};
 
       ft_plot_topo(chanx, chany, chanz, plotopt{:});
       % axis equal
@@ -2237,7 +2225,7 @@ if strcmp(cfg.viewmode, 'component')
 
   set(gca, 'yTick', [])
 
-  ax(1) = min(laytopo.pos(:,1) - 3*laytopo.width);
+  ax(1) = min(layoutcomp.pos(:,1) - 2*layoutcomp.width);
   ax(2) = max(opt.layouttime.pos(:,1) + opt.layouttime.width/2);
   ax(3) = min(opt.layouttime.pos(:,2) - opt.layouttime.height/2);
   ax(4) = max(opt.layouttime.pos(:,2) + opt.layouttime.height/2);
@@ -2333,18 +2321,6 @@ if get(0, 'currentFigure') ~= h
   return
 end
 
-% get opt, set flg for redrawing channels, redraw
-h = getparent(h);
-opt = getappdata(h, 'opt');
-cfg = getappdata(h, 'cfg');
-
-if strcmp(cfg.viewmode, 'butterfly')
-  opt.changedchanflg = false; % trigger for redrawing channel labels and preparing layout again (see bug 2065 and 2878)
-else
-  opt.changedchanflg = true; % trigger for redrawing channel labels and preparing layout again (see bug 2065 and 2878)
-end
-
-setappdata(h, 'opt', opt);
 redraw_cb(h,eventdata);
 
 end % function resize_cb
