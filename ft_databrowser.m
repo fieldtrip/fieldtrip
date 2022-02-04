@@ -227,6 +227,7 @@ cfg.gridscale           = ft_getopt(cfg, 'gridscale', 45);
 cfg.shading             = ft_getopt(cfg, 'shading', 'flat');
 cfg.interplimits        = ft_getopt(cfg, 'interplim', 'mask');
 cfg.interpolation       = ft_getopt(cfg, 'interpmethod', 'v4');
+cfg.channelclamped      = ft_getopt(cfg, 'channelclamped');
 % set the defaults for plotting the events
 cfg.plotevents          = ft_getopt(cfg, 'plotevents', 'yes');
 cfg.ploteventlabels     = ft_getopt(cfg, 'ploteventlabels', 'type=value');
@@ -1637,8 +1638,6 @@ if h~=gcf
   figure(h);
 end
 
-cfg.channelclamped = ft_getopt(cfg, 'channelclamped');
-
 % temporarily store the originally selected list of channels
 userchan    = cfg.channel;
 
@@ -2272,8 +2271,8 @@ cfg.channel = userchan;
 
 setappdata(h, 'opt', opt);
 setappdata(h, 'cfg', cfg);
-end % function redraw_cb
 
+end % function redraw_cb
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
