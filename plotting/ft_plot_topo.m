@@ -12,13 +12,14 @@ function [Zi, h] = ft_plot_topo(chanX, chanY, dat, varargin)
 %   'mask'          = cell-array with line segments that forms the mask (see FT_PREPARE_LAYOUT)
 %   'outline'       = cell-array with line segments that for the outline (see  FT_PREPARE_LAYOUT)
 %   'isolines'      = vector with values for isocontour lines (default = [])
-%   'interplim'    = string, 'electrodes' or 'mask' (default = 'electrodes')
+%   'interplim'     = string, 'electrodes' or 'mask' (default = 'electrodes')
 %   'interpmethod'  = string, 'nearest', 'linear', 'natural', 'cubic' or 'v4' (default = 'v4')
 %   'style'         = can be 'surf', 'iso', 'isofill', 'surfiso', 'imsat', 'imsatiso', 'colormix'
 %   'clim'          = [min max], limits for color scaling
 %   'shading'       = string, 'none', 'flat', 'interp' (default = 'flat')
 %   'parent'        = handle which is set as the parent for all plots
 %   'tag'           = string, the name assigned to the object. All tags with the same name can be deleted in a figure, without deleting other parts of the figure.
+%   'box'           = draw a box around the local axes, can be 'yes' or 'no'
 %
 % It is possible to plot the object in a local pseudo-axis (c.f. subplot), which is specfied as follows
 %   'hpos'          = horizontal position of the lower left corner of the local axes
@@ -72,6 +73,10 @@ mask          = ft_getopt(varargin, 'mask');
 outline       = ft_getopt(varargin, 'outline');
 clim          = ft_getopt(varargin, 'clim', []);
 parent        = ft_getopt(varargin, 'parent', []);
+box           = ft_getopt(varargin, 'box', false);
+
+% convert the yes/no strings into boolean values
+box = istrue(box);
 
 % check for nans in the data, they can be still left incase people want to mask non channels.
 if any(isnan(dat))
@@ -329,6 +334,16 @@ if strcmp(style, 'isofill') && ~isempty(isolines)
   if ~isempty(parent)
     set(h, 'Parent', parent);
   end
+end
+
+if box
+  % this plots a box around the original hpos/vpos with appropriate width/height
+  boxposition = zeros(1,4);
+  boxposition(1) = hpos - width/2;
+  boxposition(2) = hpos + width/2;
+  boxposition(3) = vpos - height/2;
+  boxposition(4) = vpos + height/2;
+  ft_plot_box(boxposition);
 end
 
 % apply clim if it was given
