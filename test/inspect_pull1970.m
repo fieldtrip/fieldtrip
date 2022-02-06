@@ -14,6 +14,16 @@ cfg.channel = 'MEG';
 data = ft_preprocessing(cfg);
 
 %%
+
+cfg = [];
+cfg.plotevents = 'no';
+cfg.viewmode = 'vertical';
+cfg.artfctdef.other.artifact = zeros(0,2);
+cfg.artfctdef.blink.artifact = zeros(0,2);
+cfg.artfctdef.movement.artifact = zeros(0,2);
+ft_databrowser(cfg, data)
+
+%%
 % all viewmodes can work with component data
 
 cfg = [];
