@@ -1324,11 +1324,13 @@ function enable_callbacks(h, bool)
 h = getparent(h);
 cfg = getappdata(h, 'cfg');
 if bool
+  set(h, 'ResizeFcn',             @resize_cb);
   set(h, 'KeyPressFcn',           @keypress_cb);
   set(h, 'WindowButtonDownFcn',   {@ft_select_range, 'multiple', false, 'xrange', true, 'yrange', false, 'clear', true, 'contextmenu', cfg.selfun, 'callback', {@select_range_cb, h}, 'event', 'WindowButtonDownFcn'});
   set(h, 'WindowButtonUpFcn',     {@ft_select_range, 'multiple', false, 'xrange', true, 'yrange', false, 'clear', true, 'contextmenu', cfg.selfun, 'callback', {@select_range_cb, h}, 'event', 'WindowButtonUpFcn'});
   set(h, 'WindowButtonMotionFcn', {@ft_select_range, 'multiple', false, 'xrange', true, 'yrange', false, 'clear', true, 'contextmenu', cfg.selfun, 'callback', {@select_range_cb, h}, 'event', 'WindowButtonMotionFcn'});
 else
+  set(h, 'ResizeFcn',             []);
   set(h, 'KeyPressFcn',           []);
   set(h, 'WindowButtonDownFcn',   []);
   set(h, 'WindowButtonUpFcn',     []);
@@ -1730,6 +1732,25 @@ end % function keypress_cb
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function resize_cb(h, eventdata)
+h = getparent(h);
+opt = getappdata(h, 'opt');
+cfg = getappdata(h, 'cfg');
+
+if strcmp(cfg.viewmode, 'butterfly')
+  % no reason to redraw
+else
+  opt.changedchanflg = true;
+  setappdata(h, 'opt', opt);
+  redraw_cb(h, eventdata);
+end
+
+end % function resize_cb
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function redraw_cb(h, eventdata)
 
 % disable the interactive callbacks to prevent piling up of GUI events, they are enabled again at the end of the function
@@ -2094,6 +2115,21 @@ elseif strcmp(cfg.viewmode, 'vertical') || strcmp(cfg.viewmode, 'component')
     delete(findobj(h, 'tag', 'channellabel'));
   end
 
+  % determine how many labels to skip in case of 'some'
+  if strcmp(cfg.plotlabels, 'some') && strcmp(cfg.fontunits, 'points')
+    % determine number of labels to plot by estimating overlap using current figure size
+    % the idea is that figure height in pixels roughly corresponds to the amount of letters at cfg.fontsize (points) put above each other without overlap
+    figheight = get(h, 'Position');
+    figheight = figheight(4);
+    labheight = cfg.fontsize+6; % 6 added, so that labels are not too close together (i.e. overlap if font was 6 points bigger)
+    labskip = ceil(numel(chanindx)*labheight/figheight);
+  elseif strcmp(cfg.plotlabels, 'some')
+    labskip = 10;
+  else
+    % do not skip any labels
+    labskip = 1;
+  end
+
   for i = 1:length(chanindx)
     datsel = i; % this is not the original channel number, but the one from the selection
     laysel = laysels(i);
@@ -2101,17 +2137,8 @@ elseif strcmp(cfg.viewmode, 'vertical') || strcmp(cfg.viewmode, 'component')
     if ~isempty(datsel) && ~isempty(laysel)
       % only plot chanlabels when necessary
       if changedchanflg % trigger for redrawing channel labels and preparing layout again (see bug 2065 and 2878)
-        % determine how many labels to skip in case of 'some'
-        if strcmp(cfg.plotlabels, 'some') && strcmp(cfg.fontunits, 'points')
-          % determine number of labels to plot by estimating overlap using current figure size
-          % the idea is that figure height in pixels roughly corresponds to the amount of letters at cfg.fontsize (points) put above each other without overlap
-          figheight = get(h, 'Position');
-          figheight = figheight(4);
-          labdiscfac = ceil(numel(chanindx) ./ (figheight ./ (cfg.fontsize+6))); % 6 added, so that labels are not too close together (i.e. overlap if font was 6 points bigger)
-        else
-          labdiscfac = 10;
-        end
-        if strcmp(cfg.plotlabels, 'yes') || (strcmp(cfg.plotlabels, 'some') && mod(i,labdiscfac)==0)
+
+        if strcmp(cfg.plotlabels, 'yes') || (strcmp(cfg.plotlabels, 'some') && mod(i,labskip)==0)
           ft_plot_text(labelx(laysel), labely(laysel), opt.hdr.label(chanindx(i)), 'tag', 'channellabel', 'HorizontalAlignment', 'right', 'FontSize', cfg.fontsize, 'FontUnits', cfg.fontunits);
           set(gca, 'FontSize', cfg.axisfontsize, 'FontUnits', cfg.axisfontunits);
         end
@@ -2128,20 +2155,11 @@ elseif strcmp(cfg.viewmode, 'vertical') || strcmp(cfg.viewmode, 'component')
   end
 
   % plot yticks
-  if length(chanindx)> 6
+  if length(chanindx)>6
     % plot yticks at each label in case adaptive labeling is used (cfg.plotlabels = 'some')
     % otherwise, use the old ytick plotting based on hard-coded number of channels
     if strcmp(cfg.plotlabels, 'some')
-      if strcmp(cfg.plotlabels, 'some') && strcmp(cfg.fontunits, 'points')
-        % determine number of labels to plot by estimating overlap using current figure size
-        % the idea is that figure height in pixels roughly corresponds to the amount of letters at cfg.fontsize (points) put above each other without overlap
-        figheight = get(h, 'Position');
-        figheight = figheight(4);
-        labdiscfac = ceil(numel(chanindx) ./ (figheight ./ (cfg.fontsize+2))); % 2 added, so that labels are not too close together (i.e. overlap if font was 2 points bigger)
-      else
-        labdiscfac = 10;
-      end
-      yTick = sort(labely(mod(chanindx,labdiscfac)==0), 'ascend'); % sort is required, yticks should be increasing in value
+      yTick = sort(labely(mod(chanindx,labskip)==0), 'ascend'); % sort is required, yticks should be increasing in value
       yTickLabel = [];
     else
       if length(chanindx)>19
