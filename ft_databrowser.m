@@ -519,7 +519,7 @@ else
   linecolor = linecolor_common(cfg, hdr);
 end
 
-% collect the artifacts that have been detected from cfg.artfctdef.xxx.artifact
+% collect the artifacts from cfg.artfctdef.xxx.artifact
 artlabel = fieldnames(cfg.artfctdef);
 sel      = zeros(size(artlabel));
 artifact = cell(size(artlabel));
@@ -530,8 +530,7 @@ for i=1:length(artlabel)
     ft_info('detected %3d %s artifacts\n', size(artifact{i}, 1), artlabel{i});
   end
 end
-
-% get the subset of the artfctdef fields that seem to contain artifacts
+% continue with the subset of artfctdef fields that actually contain artifacts
 artifact = artifact(sel==1);
 artlabel = artlabel(sel==1);
 
@@ -569,14 +568,18 @@ else
 end
 
 ft_info('the different artifact types correspond to the following colors:');
+tmp = pad(artifacttypes); % pad the artifacttypes to the same width
 for i=1:length(artifacttypes)
-  ft_info('  %s = %s\n', artifacttypes{i}, htmlcolors(artifactcolors(i,:)));
+  ft_info('  %s = %s\n', tmp{i}, htmlcolors(artifactcolors(i,:)));
 end
+clear tmp
 
 ft_info('the different event types correspond to the following colors:');
+tmp = pad(eventtypes); % pad the eventtypes to the same width
 for i=1:length(eventtypes)
-  ft_info('  %s = %s\n', eventtypes{i}, htmlcolors(eventcolors(i,:)));
+  ft_info('  %s = %s\n', tmp{i}, htmlcolors(eventcolors(i,:)));
 end
+clear tmp
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % set up default functions to be available in the right-click menu
@@ -627,15 +630,15 @@ elseif isempty(cfg.selfun) && isempty(cfg.selcfg)
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% set up the data structures used in the GUI
+% set up the data structures
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% the structure "opt" represents the global data/settings, it should contain
+% the structure "opt" represents the global data+settings, it should contain
 % - the original data, epoched or continuous
 % - the artifacts represented as continuous data
 % - the redraw_cb settings
 % - the preproc   settings
-% - the select_range_cb settings (also used in keyboard_cb)
+% - the select_range_cb settings (also used in keypress_cb)
 
 % these elements are stored inside the figure, so that the callback routines can modify them
 opt = [];
@@ -722,21 +725,21 @@ set(gcf, 'NumberTitle', 'off');
 % set(zoom(h), 'actionPostCallback', @zoom_drawlabels_cb)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% set up the figure and callbacks
+% add the graphical user interface elements and callbacks
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-set(h, 'ReSizeFcn',             @resize_cb); % trigger redraw and replotting of labels
-set(h, 'KeyPressFcn',           @keyboard_cb);
-set(h, 'WindowButtonDownFcn',   {@ft_select_range, 'multiple', false, 'xrange', true, 'yrange', false, 'clear', true, 'contextmenu', cfg.selfun, 'callback', {@select_range_cb, h}, 'event', 'WindowButtonDownFcn'});
-set(h, 'WindowButtonUpFcn',     {@ft_select_range, 'multiple', false, 'xrange', true, 'yrange', false, 'clear', true, 'contextmenu', cfg.selfun, 'callback', {@select_range_cb, h}, 'event', 'WindowButtonUpFcn'});
-set(h, 'WindowButtonMotionFcn', {@ft_select_range, 'multiple', false, 'xrange', true, 'yrange', false, 'clear', true, 'contextmenu', cfg.selfun, 'callback', {@select_range_cb, h}, 'event', 'WindowButtonMotionFcn'});
+% these will be set using enable_callbacks after each redraw
+set(h, 'KeyPressFcn',           []);
+set(h, 'WindowButtonDownFcn',   []);
+set(h, 'WindowButtonUpFcn',     []);
+set(h, 'WindowButtonMotionFcn', []);
 
 if ~isempty(findobj(h, 'tag', 'navigateui'))
   % assume that the graphical user interface elements are already present
-  % this speeds up plottingin cases like this https://www.fieldtriptoolbox.org/example/video_eeg/
+  % this speeds up plotting in cases like this https://www.fieldtriptoolbox.org/example/video_eeg/
 
 else
-  % plot the graphical user interface elements
+  % add the graphical user interface elements
   uicontrol('tag', 'labels',  'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', opt.trialviewtype, 'userdata', 't')
   uicontrol('tag', 'buttons', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '<', 'userdata', 'leftarrow')
   uicontrol('tag', 'buttons', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '>', 'userdata', 'rightarrow')
@@ -758,6 +761,17 @@ else
   uicontrol('tag', 'buttons', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '-', 'userdata', 'shift+downarrow')
   uicontrol('tag', 'buttons', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', '+', 'userdata', 'shift+uparrow')
 
+  % preproc button - allows updating the preprocessing options on the fly
+  uicontrol('tag', 'rightcolumn', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'preproc', 'userdata', 'p', 'position', [0.91, 0.88, 0.08, 0.04])
+
+  % identify button - to find label of nearest channel to datapoint
+  uicontrol('tag', 'rightcolumn', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'identify', 'userdata', 'i', 'position', [0.91, 0.83, 0.08, 0.04])
+
+  % viewmode button to toggle between vertical and butterfly
+  if ~strcmp(cfg.viewmode, 'component')
+    uicontrol('tag', 'rightcolumn', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'viewmode', 'userdata', 'm', 'position', [0.91, 0.78, 0.08, 0.04])
+  end
+
   % legend artifacts/features
   for iArt = 1:length(artlabel)
     uicontrol('tag', 'artifactui', 'parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', artlabel{iArt}, 'userdata',  num2str(iArt),  'position', [0.91, 0.850 - ((2+iArt-1)*0.09), 0.08, 0.04], 'backgroundcolor', opt.artifactcolors(iArt,:))
@@ -771,23 +785,13 @@ else
     set(arth(hsel), 'fontweight', 'bold')
   end
 
-  % preproc button - allows updating the preprocessing options on the fly
-  uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'preproc', 'userdata', 'p', 'position', [0.91, 0.88, 0.08, 0.04], 'callback', @keyboard_cb)
-
-  % identify button - to find label of nearest channel to datapoint
-  uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'identify', 'userdata', 'i', 'position', [0.91, 0.83, 0.08, 0.04], 'callback', @keyboard_cb)
-
-  % viewmode button to toggle between vertical and butterfly
-  if ~strcmp(cfg.viewmode, 'component')
-    uicontrol('parent', h, 'units', 'normalized', 'style', 'pushbutton', 'string', 'viewmode', 'userdata', 'm', 'position', [0.91, 0.78, 0.08, 0.04], 'callback', @keyboard_cb)
-  end
-
   ft_uilayout(h, 'tag', 'labels',  'width', 0.10, 'height', 0.05);
   ft_uilayout(h, 'tag', 'buttons', 'width', 0.05, 'height', 0.05);
 
-  ft_uilayout(h, 'tag', 'labels',     'style', 'pushbutton', 'callback', @keyboard_cb);
-  ft_uilayout(h, 'tag', 'buttons',    'style', 'pushbutton', 'callback', @keyboard_cb);
-  ft_uilayout(h, 'tag', 'artifactui', 'style', 'pushbutton', 'callback', @keyboard_cb);
+  ft_uilayout(h, 'tag', 'labels',      'style', 'pushbutton', 'callback', @keypress_cb);
+  ft_uilayout(h, 'tag', 'buttons',     'style', 'pushbutton', 'callback', @keypress_cb);
+  ft_uilayout(h, 'tag', 'rightcolumn', 'style', 'pushbutton', 'callback', @keypress_cb);
+  ft_uilayout(h, 'tag', 'artifactui',  'style', 'pushbutton', 'callback', @keypress_cb);
 
   ft_uilayout(h, 'tag', 'labels',  'retag', 'navigateui'); % this renames the existing tags
   ft_uilayout(h, 'tag', 'buttons', 'retag', 'navigateui'); % this renames the existing tags
@@ -800,10 +804,11 @@ else
   end
   menu_fieldtrip(h, tmpcfg, false);
 
-end % if findobj pushbutton
+end % if findobj navigateui
 
 definetrial_cb(h);
 redraw_cb(h);
+help_cb(h);
 
 if nargout
   % wait until the user interface is closed, get the user data with the updated artifact details
@@ -828,7 +833,7 @@ if nargout
     cfg.preproc = browsecfg.preproc;
   end
 
-  % add the update event to the output cfg
+  % add the updated events to the output cfg
   cfg.event = opt.event;
 
 end % if nargout
@@ -846,6 +851,84 @@ end
 end % main function
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function h = getparent(h)
+p = h;
+while p~=0
+  h = p;
+  p = get(h, 'parent');
+end
+end % function getparent
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function cursortext = cb_datacursortext(h, eventdata)
+pos = get(eventdata, 'Position');
+
+linetype = getappdata(eventdata.Target, 'datacursor_linetype');
+
+if strcmp(linetype, 'event')
+  cursortext = sprintf('%s\nt = %g s', getappdata(eventdata.Target, 'datacursor_eventlabel'), getappdata(eventdata.Target, 'datacursor_eventtime'));
+
+elseif strcmp(linetype, 'artifact')
+  cursortext = sprintf('%s\nt = %g s', getappdata(eventdata.Target, 'datacursor_artifactlabel'), getappdata(eventdata.Target, 'datacursor_artifacttime'));
+
+elseif strcmp(linetype, 'channel')
+  % get plotted x axis
+  plottedX = get(eventdata.Target, 'xdata');
+
+  % determine values of data at real x axis
+  timeAxis = getappdata(eventdata.Target, 'datacursor_xdata');
+  dataAxis = getappdata(eventdata.Target, 'datacursor_ydata');
+  tInd = nearest(plottedX, pos(1));
+
+  % get label
+  chanLabel = getappdata(eventdata.Target, 'datacursor_label');
+  chanLabel = chanLabel{1};
+
+  cursortext = sprintf('%s = %g\nt = %g', chanLabel, dataAxis(tInd), timeAxis(tInd));
+
+else
+  % explicitly tell the user there is no info because the x-axis and y-axis do not correspond to real data values (both are always between 0 and 1)
+  cursortext = '<no cursor available>';
+end
+end % function cb_datacursortext
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION see also linecolor_common
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function color = colorcheck(color, n)
+% define the mapping between color characters and RGB values
+name = 'rgbcmywk';
+rgb = [
+  1 0 0
+  0 1 0
+  0 0 1
+  0 1 1
+  1 0 1
+  1 1 0
+  1 1 1
+  0 0 0
+  ];
+% ensure that all colors are represented as RGB
+if ischar(color)
+  original = color;
+  color = nan(length(original), 3);
+  for i=1:length(original)
+    color(i,:) = rgb(name==original(i),:);
+  end
+end
+% ensure that there are enough colors
+color = repmat(color, ceil(n/size(color,1)), 1);
+color = color(1:n,:);
+end % function colorcheck
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -861,6 +944,7 @@ end % function cleanup_cb
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function definetrial_cb(h, eventdata)
+h = getparent(h);
 opt = getappdata(h, 'opt');
 cfg = getappdata(h, 'cfg');
 
@@ -990,31 +1074,8 @@ end % function definetrial_cb
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function help_cb(h, eventdata)
-fprintf('------------------------------------------------------------------------------------\n')
-fprintf('You can use the following keyboard buttons in the databrowser\n')
-fprintf('1-9                : select artifact type 1-9\n');
-fprintf('shift 1-9          : select previous artifact of type 1-9\n');
-fprintf('                     (does not work with numpad keys)\n');
-fprintf('control 1-9        : select next artifact of type 1-9\n');
-fprintf('alt 1-9            : select next artifact of type 1-9\n');
-fprintf('arrow-left         : previous trial\n');
-fprintf('arrow-right        : next trial\n');
-fprintf('shift arrow-up     : increase vertical scaling\n');
-fprintf('shift arrow-down   : decrease vertical scaling\n');
-fprintf('shift arrow-left   : increase horizontal scaling\n');
-fprintf('shift arrow-down   : decrease horizontal scaling\n');
-fprintf('s                  : toggles between cfg.selectmode options\n');
-fprintf('q                  : quit\n');
-fprintf('------------------------------------------------------------------------------------\n')
-fprintf('\n')
-end % function help_cb
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function select_range_cb(h, range, cmenulab) %range 1X4 in sec relative to current trial
+function select_range_cb(h, range, cmenulab)
+h = getparent(h);
 opt = getappdata(h, 'opt');
 cfg = getappdata(h, 'cfg');
 
@@ -1023,17 +1084,16 @@ range(1) = max(opt.hpos-opt.width/2, range(1));
 range(2) = max(opt.hpos-opt.width/2, range(2));
 range(1) = min(opt.hpos+opt.width/2, range(1));
 range(2) = min(opt.hpos+opt.width/2, range(2));
-range = (range-(opt.hpos-opt.width/2)) / opt.width; % left side of the box becomes 0, right side becomes 1
+range = (range-(opt.hpos-opt.width/2)) / opt.width;          % left side of the box becomes 0, right side becomes 1
 range = range * (opt.hlim(2) - opt.hlim(1)) + opt.hlim(1);   % 0 becomes hlim(1), 1 becomes hlim(2)
 
 begsample = opt.trlvis(opt.trlop,1);
 endsample = opt.trlvis(opt.trlop,2);
 offset    = opt.trlvis(opt.trlop,3);
 
-% determine the selection
+% determine the selection, it is now always based on begsample/endsample/offset -roevdmei
 begsel = round(range(1)*opt.fsample+begsample-offset-1);
 endsel = round(range(2)*opt.fsample+begsample-offset);
-% artifact selection is now always based on begsample/endsample/offset -roevdmei
 
 % the selection should always be confined to the current trial
 begsel = max(begsample, begsel);
@@ -1059,55 +1119,46 @@ if isempty(cmenulab)
     setappdata(h, 'opt', opt);
     setappdata(h, 'cfg', cfg);
     redraw_cb(h);
+
   elseif strcmp(cfg.selectmode, 'markpeakevent') || strcmp(cfg.selectmode, 'marktroughevent')
-    %mark or unmark events, marking at peak/trough of window
-    if any(intersect(begsel:endsel, [opt.event.sample]))
-      fprintf('there is overlap with one or more event(s), disabling this/these event(s)\n');
+    % mark or unmark events at the peak or trough in the selected window
+    if ~isempty(opt.event) && any(intersect(begsel:endsel, [opt.event.sample]))
+      fprintf('there is overlap with one or more event(s), removing this/these event(s)\n');
       ind_rem = intersect(begsel:endsel, [opt.event.sample]);
       for iRemove = 1:length(ind_rem)
         opt.event([opt.event.sample]==ind_rem(iRemove)) = [];
       end
     else
-      fprintf('there is no overlap with any event, adding an event to the peak/trough value\n');
-      % check if only 1 chan, other wise not clear max in which channel. %
-      % ingnie: would be cool to add the option to select the channel when multiple channels
-      if size(dat,1) > 1
-        ft_error('cfg.selectmode = ''markpeakevent'' and ''marktroughevent'' only supported with 1 channel in the data')
-      end
+      dat = opt.curdata.trial{1}(:,(begsel-begsample+1):(endsel-begsample+1));
       if strcmp(cfg.selectmode, 'markpeakevent')
-        [dum, ind_minmax] = max(dat(begsel-begsample+1:endsel-begsample+1));
-        val = 'peak';
+        fprintf('adding an event to the largest peak or maxium value\n');
+        [val, indx] = max(dat(:));
+        [chanindx, smpindx] = ind2sub(size(dat), indx);
+        type = 'peak';
       elseif strcmp(cfg.selectmode, 'marktroughevent')
-        [dum, ind_minmax] = min(dat(begsel-begsample+1:endsel-begsample+1));
-        val = 'trough';
+        fprintf('adding an event to the largest trough or negative value\n');
+        [val, indx] = min(dat(:));
+        [chanindx, smpindx] = ind2sub(size(dat), indx);
+        type = 'trough';
       end
-      samp_minmax = begsel + ind_minmax - 1;
-      event_new.type     = 'datacursor_manual';
-      event_new.sample   = samp_minmax;
+      event_new.type     = [type '_' opt.curdata.label{chanindx}];
+      event_new.sample   = begsel + smpindx - 1;
       event_new.value    = val;
       event_new.duration = 1;
       event_new.offset   = 0;
-      % add new event to end opt.event
-      % check if events are in order now
-      if  min(diff([opt.event.sample]))>0
-        % add new event in line with old ones
-        nearest_event = nearest([opt.event.sample], samp_minmax);
-        if opt.event(nearest_event).sample > samp_minmax
-          % place new event before nearest
-          ind_event_new = nearest_event;
-        else
-          % place new event after nearest
-          ind_event_new = nearest_event +1;
-        end
-        event_lastpart = opt.event(ind_event_new:end);
-        opt.event(ind_event_new) = event_new;
-        opt.event(ind_event_new+1:end+1) = event_lastpart;
+      disp(event_new)
+      if isempty(opt.event)
+        % store the new event
+        opt.event = event_new;
       else
-        % just add to end
+        % append the new event
         opt.event(end+1) = event_new;
+        % sort to keep the order consistent
+        [dum, indx] = sort([opt.event.sample]);
+        opt.event = opt.event(indx);
       end
-      clear event_new ind_event_new event_lastpart val dum ind_minmax
-    end
+    end % remove or add an event
+
     % redraw only when marking (so the focus doesn't go back to the databrowser after calling selfuns
     setappdata(h, 'opt', opt);
     setappdata(h, 'cfg', cfg);
@@ -1137,13 +1188,12 @@ else
   % prepare input
   funhandle = ft_getuserfun(cmenulab, 'browse');
   funcfg    = cfg.selcfg{selfunind};
-  % get windowname and give as input (can be used for the other functions as well, not implemented yet)
+  % construct a descriptive name for the new figure
   if ~strcmp(opt.trialviewtype, 'trialsegment')
-    str = sprintf('%s %d/%d, time from %g to %g s', opt.trialviewtype, opt.trlop, size(opt.trlvis,1), seldata.time{1}(1), seldata.time{1}(end));
+    funcfg.figurename = sprintf('%s : %s %d/%d, time from %g to %g s', cmenulab, opt.trialviewtype, opt.trlop, size(opt.trlvis,1), seldata.time{1}(1), seldata.time{1}(end));
   else
-    str = sprintf('trial %d/%d: segment: %d/%d , time from %g to %g s', opt.trllock, size(opt.trlorg,1), opt.trlop, size(opt.trlvis,1), seldata.time{1}(1), seldata.time{1}(end));
+    funcfg.figurename = sprintf('%s : trial %d/%d: segment: %d/%d , time from %g to %g s', cmenulab, opt.trllock, size(opt.trlorg,1), opt.trlop, size(opt.trlvis,1), seldata.time{1}(1), seldata.time{1}(end));
   end
-  funcfg.figurename = [cmenulab ': ' str];
   feval(funhandle, funcfg, seldata);
 end
 
@@ -1256,21 +1306,80 @@ end % function preproc_cfg2_cb
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function keyboard_cb(h, eventdata)
+function enable_buttons(h, bool)
+h = getparent(h);
+buttons = findobj(h, 'style', 'pushbutton');
+if bool
+  set(buttons, 'enable', 'on');
+else
+  set(buttons, 'enable', 'off');
+end
+end % function enable_buttons
 
-if (isempty(eventdata) && ft_platform_supports('matlabversion',-Inf, '2014a')) || isa(eventdata, 'matlab.ui.eventdata.ActionData')
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function enable_callbacks(h, bool)
+h = getparent(h);
+cfg = getappdata(h, 'cfg');
+if bool
+  set(h, 'KeyPressFcn',           @keypress_cb);
+  set(h, 'WindowButtonDownFcn',   {@ft_select_range, 'multiple', false, 'xrange', true, 'yrange', false, 'clear', true, 'contextmenu', cfg.selfun, 'callback', {@select_range_cb, h}, 'event', 'WindowButtonDownFcn'});
+  set(h, 'WindowButtonUpFcn',     {@ft_select_range, 'multiple', false, 'xrange', true, 'yrange', false, 'clear', true, 'contextmenu', cfg.selfun, 'callback', {@select_range_cb, h}, 'event', 'WindowButtonUpFcn'});
+  set(h, 'WindowButtonMotionFcn', {@ft_select_range, 'multiple', false, 'xrange', true, 'yrange', false, 'clear', true, 'contextmenu', cfg.selfun, 'callback', {@select_range_cb, h}, 'event', 'WindowButtonMotionFcn'});
+else
+  set(h, 'KeyPressFcn',           []);
+  set(h, 'WindowButtonDownFcn',   []);
+  set(h, 'WindowButtonUpFcn',     []);
+  set(h, 'WindowButtonMotionFcn', []);
+end
+end % function enable_windowbuttoncallback
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function help_cb(h, eventdata)
+
+fprintf('------------------------------------------------------------------------------------\n')
+fprintf('You can use the following keyboard buttons in the databrowser\n')
+fprintf('1-9                : select artifact type 1-9\n');
+fprintf('shift 1-9          : select previous artifact of type 1-9 (does not work with numpad)\n');
+fprintf('alt 1-9            : select next artifact of type 1-9\n');
+fprintf('arrow-left         : previous trial\n');
+fprintf('arrow-right        : next trial\n');
+fprintf('shift arrow-up     : increase vertical scaling\n');
+fprintf('shift arrow-down   : decrease vertical scaling\n');
+fprintf('shift arrow-left   : increase horizontal scaling\n');
+fprintf('shift arrow-down   : decrease horizontal scaling\n');
+fprintf('t                  : open trial or segment selection dialog\n');
+fprintf('c                  : open channel selection dialog\n');
+fprintf('h                  : open horizontal scaling dialog\n');
+fprintf('v                  : open vertical scaling dialog\n');
+fprintf('p                  : open preproc editor\n');
+fprintf('i                  : identify a specific channel\n');
+fprintf('m                  : toggles between cfg.viewmode options\n');
+fprintf('s                  : toggles between cfg.selectmode options\n');
+fprintf('q                  : quit\n');
+fprintf('------------------------------------------------------------------------------------\n')
+fprintf('\n')
+end % function help_cb
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function keypress_cb(h, eventdata)
+
+% disable the buttons to prevent piling up of GUI events, they are enabled again at the end of the function
+enable_buttons(h, false);
+
+if (isempty(eventdata) && ft_platform_supports('matlabversion', -Inf, '2014a')) || isa(eventdata, 'matlab.ui.eventdata.ActionData')
   % determine the key that corresponds to the uicontrol element that was activated
   key = get(h, 'userdata');
 else
   % determine the key that was pressed on the keyboard
   key = parsekeyboardevent(eventdata);
-end
-
-% get focus back to figure
-if ~strcmp(get(h, 'type'), 'figure')
-  set(h, 'enable', 'off');
-  drawnow;
-  set(h, 'enable', 'on');
 end
 
 h = getparent(h);
@@ -1299,7 +1408,7 @@ switch key
       redraw_cb(h, eventdata);
     end
   case {'shift+1' 'shift+2' 'shift+3' 'shift+4' 'shift+5' 'shift+6' 'shift+7' 'shift+8' 'shift+9'}
-    % go to previous artifact
+    % go to previous artifact of the current type
     opt.artsel = str2double(key(end));
     numart = size(opt.artdata.trial{1}, 1);
     if opt.artsel > numart
@@ -1407,7 +1516,7 @@ switch key
     opt.changedchanflg = true; % trigger for redrawing channel labels and preparing layout again (see bug 2065 and 2878)
     setappdata(h, 'opt', opt);
     setappdata(h, 'cfg', cfg);
-    delete(findobj(h, 'tag', 'chanlabel'));  % remove channel labels here, and not in redrawing to save significant execution time (see bug 2065)
+    delete(findobj(h, 'tag', 'channellabel'));  % remove channel labels here, and not in redrawing to save significant execution time (see bug 2065)
     redraw_cb(h, eventdata);
   case 'downarrow'
     chansel = match_str(opt.hdr.label, cfg.channel);
@@ -1422,7 +1531,7 @@ switch key
     opt.changedchanflg = true; % trigger for redrawing channel labels and preparing layout again (see bug 2065 and 2878)
     setappdata(h, 'opt', opt);
     setappdata(h, 'cfg', cfg);
-    delete(findobj(h, 'tag', 'chanlabel'));  % remove channel labels here, and not in redrawing to save significant execution time (see bug 2065)
+    delete(findobj(h, 'tag', 'channellabel'));  % remove channel labels here, and not in redrawing to save significant execution time (see bug 2065)
     redraw_cb(h, eventdata);
   case 'shift+leftarrow'
     cfg.blocksize = cfg.blocksize*sqrt(2);
@@ -1511,11 +1620,11 @@ switch key
     opt.changedchanflg = true; % trigger for redrawing channel labels and preparing layout again (see bug 2065 and 2878)
     setappdata(h, 'opt', opt);
     setappdata(h, 'cfg', cfg);
-    delete(findobj(h, 'tag', 'chanlabel'));  % remove channel labels here, and not in redrawing to save significant execution time (see bug 2065)
+    delete(findobj(h, 'tag', 'channellabel'));  % remove channel labels here, and not in redrawing to save significant execution time (see bug 2065)
     redraw_cb(h, eventdata);
   case 'i'
-    delete(findobj(h, 'tag', 'identified'));
-    % click in data and get name of nearest channel
+    % click in the figure to highlight and get the name of the nearest channel
+    delete(findobj(h, 'tag', 'identifiedchannel'));
     fprintf('click in the figure to identify the name of the closest channel\n');
     val = ginput(1);
     xpos = val(1);
@@ -1539,38 +1648,39 @@ switch key
       tmpydat = cat(1,tmpydat{:});
       tmpydat = tmpydat(end:-1:1,:); % order of timecourse objects is reverse of channel order
       tmpxdat = get(tcobj(1), 'xdata');
-      % first find closest sample on x
+      % first find the closest sample number along the horizontal direction
       xsmp = nearest(tmpxdat, val(1));
-      % then find the closest y sample, this gives the channel number
+      % then find the closest value over all channels, this gives the channel number
       datindx    = nearest(tmpydat(:,xsmp), val(2));
       label      = opt.curdata.label{datindx};
+      % decide whether to place the label below or above the line
       layoutindx = match_str(opt.layouttime.label, label);
-      if val(2)>0.5
-        ypos = val(2) - opt.layouttime.height(layoutindx);
+      if val(2)>opt.layouttime.pos(layoutindx,2)
+        ypos = opt.layouttime.pos(layoutindx,2) - opt.layouttime.height(layoutindx)/2;
       else
-        ypos = val(2) + opt.layouttime.height(layoutindx);
+        ypos = opt.layouttime.pos(layoutindx,2) + opt.layouttime.height(layoutindx)/2;
       end
     end
-    fprintf('channel name: %s\n',label);
+    fprintf('identified channel name: %s\n',label);
     redraw_cb(h, eventdata);
 
-    ft_plot_text(xpos, ypos, label, 'FontSize', cfg.fontsize, 'FontUnits', cfg.fontunits, 'tag', 'identified', 'FontSize', cfg.fontsize, 'FontUnits', cfg.fontunits);
+    ft_plot_text(xpos, ypos, label, 'FontSize', cfg.fontsize, 'FontUnits', cfg.fontunits, 'tag', 'identifiedchannel', 'FontSize', cfg.fontsize, 'FontUnits', cfg.fontunits);
     if ~ishold
       hold on
-      ft_plot_vector(opt.curdata.time{1}, opt.curdata.trial{1}(datindx,:)', 'box', false, 'tag', 'identified', 'hpos', opt.layouttime.pos(layoutindx,1), 'vpos', opt.layouttime.pos(layoutindx,2), 'width', opt.layouttime.width(layoutindx), 'height', opt.layouttime.height(layoutindx), 'hlim', opt.hlim, 'vlim', opt.vlim, 'color', 'k', 'linewidth', 2);
+      ft_plot_vector(opt.curdata.time{1}, opt.curdata.trial{1}(datindx,:)', 'box', false, 'tag', 'identifiedchannel', 'hpos', opt.layouttime.pos(layoutindx,1), 'vpos', opt.layouttime.pos(layoutindx,2), 'width', opt.layouttime.width(layoutindx), 'height', opt.layouttime.height(layoutindx), 'hlim', opt.hlim, 'vlim', opt.vlim, 'color', 'k', 'linewidth', 2);
       hold off
     else
-      ft_plot_vector(opt.curdata.time{1}, opt.curdata.trial{1}(datindx,:)', 'box', false, 'tag', 'identified', 'hpos', opt.layouttime.pos(layoutindx,1), 'vpos', opt.layouttime.pos(layoutindx,2), 'width', opt.layouttime.width(layoutindx), 'height', opt.layouttime.height(layoutindx), 'hlim', opt.hlim, 'vlim', opt.vlim, 'color', 'k', 'linewidth', 2);
+      ft_plot_vector(opt.curdata.time{1}, opt.curdata.trial{1}(datindx,:)', 'box', false, 'tag', 'identifiedchannel', 'hpos', opt.layouttime.pos(layoutindx,1), 'vpos', opt.layouttime.pos(layoutindx,2), 'width', opt.layouttime.width(layoutindx), 'height', opt.layouttime.height(layoutindx), 'hlim', opt.hlim, 'vlim', opt.vlim, 'color', 'k', 'linewidth', 2);
     end
   case 's'
-    % toggle between selectmode options: switch from 'markartifact', to 'markpeakevent' to 'marktroughevent' and back with on screen feedback
+    % toggle between selectmode options
     curstate = find(strcmp(cfg.selectmode, {'markartifact', 'markpeakevent', 'marktroughevent'}));
     if curstate == 1
-      cfg.selectmode = 'markpeakevent';
+      cfg.selectmode = 'markpeakevent'; % go to the next
     elseif curstate == 2
-      cfg.selectmode = 'marktroughevent';
+      cfg.selectmode = 'marktroughevent'; % go to the next
     elseif curstate == 3
-      cfg.selectmode = 'markartifact';
+      cfg.selectmode = 'markartifact'; % go to the first
     end
     fprintf('switching to selectmode = %s\n', cfg.selectmode);
     setappdata(h, 'opt', opt);
@@ -1585,19 +1695,23 @@ switch key
         % toggle between viewmodes
         cfg.viewmode = 'vertical';
         cfg.ylim = cfg.ylim / scale_adjust;
+        opt.changedchanflg = true;
+        delete(findobj(h, 'tag', 'channellabel'));  % remove channel labels here, and not in redrawing to save significant execution time (see bug 2065)
+        setappdata(h, 'opt', opt);
+        setappdata(h, 'cfg', cfg);
+        redraw_cb(h, eventdata);
       case 'vertical'
         % toggle between viewmodes
         cfg.viewmode = 'butterfly';
         cfg.ylim = cfg.ylim * scale_adjust;
+        opt.changedchanflg = true;
+        delete(findobj(h, 'tag', 'channellabel'));  % remove channel labels here, and not in redrawing to save significant execution time (see bug 2065)
+        setappdata(h, 'opt', opt);
+        setappdata(h, 'cfg', cfg);
+        redraw_cb(h, eventdata);
       otherwise
-        % nothing to do
-        return;
+        % do nothing
     end % switch
-    opt.changedchanflg = true;
-    delete(findobj(h, 'tag', 'chanlabel'));  % remove channel labels here, and not in redrawing to save significant execution time (see bug 2065)
-    setappdata(h, 'opt', opt);
-    setappdata(h, 'cfg', cfg);
-    redraw_cb(h, eventdata);
   case 'control+control'
     % do nothing
   case 'shift+shift'
@@ -1605,30 +1719,22 @@ switch key
   case 'alt+alt'
     % do nothing
   otherwise
-    setappdata(h, 'opt', opt);
-    setappdata(h, 'cfg', cfg);
-    help_cb(h);
+    help_cb(h, eventdata);
 end
+
+enable_buttons(h, true);
 uiresume(h);
-end % function keyboard_cb
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function h = getparent(h)
-p = h;
-while p~=0
-  h = p;
-  p = get(h, 'parent');
-end
-end % function getparent
+end % function keypress_cb
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function redraw_cb(h, eventdata)
+
+% disable the interactive callbacks to prevent piling up of GUI events, they are enabled again at the end of the function
+enable_callbacks(h, false);
+
 h = getparent(h);
 opt = getappdata(h, 'opt');
 cfg = getappdata(h, 'cfg');
@@ -1637,6 +1743,14 @@ cfg = getappdata(h, 'cfg');
 if h~=gcf
   figure(h);
 end
+
+delete(findobj(h, 'tag', 'timecourse'));
+delete(findobj(h, 'tag', 'identifiedchannel'));
+delete(findobj(h, 'tag', 'selectedrange'));
+% not removing channel labels, they cause the bulk of redrawing time for the slow text function (note, interpreter = none hardly helps), see bug 2065
+% delete(findobj(h, 'tag', 'channellabel'));
+
+
 
 % temporarily store the originally selected list of channels
 userchan    = cfg.channel;
@@ -1773,7 +1887,7 @@ ax(3) = min(opt.layouttime.pos(:,2) - opt.layouttime.height/2);
 ax(4) = max(opt.layouttime.pos(:,2) + opt.layouttime.height/2);
 % add white space to bottom and top so channels are not out-of-axis for the majority
 % NOTE there is a second spot where this is done below, specifically for viewmode = component (also need to be here), which should be kept the same as this
-if any(strcmp(cfg.viewmode,{'vertical', 'component'}))
+if strcmp(cfg.viewmode, 'vertical') || strcmp(cfg.viewmode, 'component')
   % determine amount of vertical padding using cfg.verticalpadding
   if ~isnumeric(cfg.verticalpadding) && strcmp(cfg.verticalpadding, 'auto')
     % determine amount of padding using the number of channels
@@ -1954,16 +2068,6 @@ if strcmp(cfg.plotevents, 'yes')
 
 end % if plot events
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%fprintf('plotting data...\n');
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-delete(findobj(h, 'tag', 'timecourse'));
-delete(findobj(h, 'tag', 'identified'));
-
-% not removing channel labels, they cause the bulk of redrawing time for the slow text function (note, interpreter = none hardly helps)
-% warning, when deleting the labels using the line below, one can easily tripple the excution time of redrawing in viewmode = vertical (see bug 2065)
-% delete(findobj(h, 'tag', 'chanlabel'));
-
 if strcmp(cfg.viewmode, 'butterfly')
   ft_plot_vector(tim, dat', 'box', false, 'tag', 'timecourse', 'hpos', opt.layouttime.pos(1,1), 'vpos', opt.layouttime.pos(1,2), 'width', opt.layouttime.width(1), 'height', opt.layouttime.height(1), 'hlim', opt.hlim, 'vlim', opt.vlim, 'color', opt.linecolor(chanindx,:), 'linewidth', cfg.linewidth, 'style', cfg.linestyle);
   set(gca, 'FontSize', cfg.axisfontsize, 'FontUnits', cfg.axisfontunits);
@@ -1982,13 +2086,12 @@ if strcmp(cfg.viewmode, 'butterfly')
   set(gca, 'yTick', yTick, 'yTickLabel', yTickLabel)
 
 elseif strcmp(cfg.viewmode, 'vertical') || strcmp(cfg.viewmode, 'component')
-
   % determine channel indices into data outside of loop
   laysels = match_str(opt.layouttime.label, opt.hdr.label);
 
   % delete old chan labels before renewing, if they need to be renewed
   if changedchanflg % trigger for redrawing channel labels and preparing layout again (see bug 2065 and 2878)
-    delete(findobj(h, 'tag', 'chanlabel'));
+    delete(findobj(h, 'tag', 'channellabel'));
   end
 
   for i = 1:length(chanindx)
@@ -2009,7 +2112,7 @@ elseif strcmp(cfg.viewmode, 'vertical') || strcmp(cfg.viewmode, 'component')
           labdiscfac = 10;
         end
         if strcmp(cfg.plotlabels, 'yes') || (strcmp(cfg.plotlabels, 'some') && mod(i,labdiscfac)==0)
-          ft_plot_text(labelx(laysel), labely(laysel), opt.hdr.label(chanindx(i)), 'tag', 'chanlabel', 'HorizontalAlignment', 'right', 'FontSize', cfg.fontsize, 'FontUnits', cfg.fontunits);
+          ft_plot_text(labelx(laysel), labely(laysel), opt.hdr.label(chanindx(i)), 'tag', 'channellabel', 'HorizontalAlignment', 'right', 'FontSize', cfg.fontsize, 'FontUnits', cfg.fontunits);
           set(gca, 'FontSize', cfg.axisfontsize, 'FontUnits', cfg.axisfontunits);
         end
       end
@@ -2068,8 +2171,8 @@ elseif strcmp(cfg.viewmode, 'vertical') || strcmp(cfg.viewmode, 'component')
   set(gca, 'yTick', yTick, 'yTickLabel', yTickLabel);
 
 else
-  % the following is implemented for 2column, 3column, etcetera.
-  % it also works for topographic layouts, such as CTF151
+  % the following is implemented for other viewmodes
+  % for example when the channels are organized according to a CTF151 layout
 
   % determine channel indices into data outside of loop
   laysels = match_str(opt.layouttime.label, opt.hdr.label);
@@ -2097,6 +2200,10 @@ else
 
 end % if strcmp viewmode
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% add the ticks along the horizontal axis
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 if any(strcmp(cfg.viewmode, {'butterfly', 'component', 'vertical'}))
   nticks = 11;
   xTickLabel = cellstr(num2str( linspace(tim(1), tim(end), nticks)' , '%1.2f'))';
@@ -2112,6 +2219,9 @@ else
 end
 
 if strcmp(cfg.viewmode, 'component')
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  % add the component topographies
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
   % determine the layout for each of the component topographies
   layoutcomp.pos(:,1)  = opt.layouttime.pos(:,1) - opt.layouttime.width/2 - opt.layouttime.height;
@@ -2123,9 +2233,6 @@ if strcmp(cfg.viewmode, 'component')
   if ~isequal(opt.chanindx, chanindx)
     opt.chanindx = chanindx;
 
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % fprintf('plotting component topographies...\n');
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     delete(findobj(h, 'tag', 'topography'));
 
     % determine the position of each of the original channels for the topgraphy
@@ -2271,85 +2378,5 @@ cfg.channel = userchan;
 
 setappdata(h, 'opt', opt);
 setappdata(h, 'cfg', cfg);
-
+enable_callbacks(h, true);
 end % function redraw_cb
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function cursortext = cb_datacursortext(h, eventdata)
-pos = get(eventdata, 'Position');
-
-linetype = getappdata(eventdata.Target, 'datacursor_linetype');
-
-if strcmp(linetype, 'event')
-  cursortext = sprintf('%s\nt = %g s', getappdata(eventdata.Target, 'datacursor_eventlabel'), getappdata(eventdata.Target, 'datacursor_eventtime'));
-
-elseif strcmp(linetype, 'artifact')
-  cursortext = sprintf('%s\nt = %g s', getappdata(eventdata.Target, 'datacursor_artifactlabel'), getappdata(eventdata.Target, 'datacursor_artifacttime'));
-
-elseif strcmp(linetype, 'channel')
-  % get plotted x axis
-  plottedX = get(eventdata.Target, 'xdata');
-
-  % determine values of data at real x axis
-  timeAxis = getappdata(eventdata.Target, 'datacursor_xdata');
-  dataAxis = getappdata(eventdata.Target, 'datacursor_ydata');
-  tInd = nearest(plottedX, pos(1));
-
-  % get label
-  chanLabel = getappdata(eventdata.Target, 'datacursor_label');
-  chanLabel = chanLabel{1};
-
-  cursortext = sprintf('%s = %g\nt = %g', chanLabel, dataAxis(tInd), timeAxis(tInd));
-
-else
-  % explicitly tell the user there is no info because the x-axis and y-axis do not correspond to real data values (both are always between 0 and 1)
-  cursortext = '<no cursor available>';
-end
-end % function cb_datacursortext
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function resize_cb(h, eventdata)
-
-% check whether the current figure is the browser
-if get(0, 'currentFigure') ~= h
-  return
-end
-
-redraw_cb(h,eventdata);
-
-end % function resize_cb
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION see also linecolor_common
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function color = colorcheck(color, n)
-% define the mapping between color characters and RGB values
-name = 'rgbcmywk';
-rgb = [
-  1 0 0
-  0 1 0
-  0 0 1
-  0 1 1
-  1 0 1
-  1 1 0
-  1 1 1
-  0 0 0
-  ];
-% ensure that all colors are represented as RGB
-if ischar(color)
-  original = color;
-  color = nan(length(original), 3);
-  for i=1:length(original)
-    color(i,:) = rgb(name==original(i),:);
-  end
-end
-% ensure that there are enough colors
-color = repmat(color, ceil(n/size(color,1)), 1);
-color = color(1:n,:);
-end % function colorcheck
