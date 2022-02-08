@@ -52,6 +52,14 @@ function dataout = ft_denoise_tsr(cfg, varargin)
 %   cfg.performance        = string, 'pearson' or 'r-squared' (default =
 %                            'pearson'), indicating what performance metric is outputed in .weights(k).performance
 %                            field of <dataout> for the k-th fold
+%   cfg.covmethod          = string, 'finite', or 'overlapfinite' (default
+%                            = 'finite'), compute covariance for the auto 
+%                            terms on the finite datapoints per channel, or
+%                            only on the datapoints that are finite for the
+%                            cross terms. If there is a large number of
+%                            unshared nans across datasets, and if this number
+%                            is large in comparison to the total number of
+%                            datapoints the 'finite' method may become unstable.
 %
 % If cfg.threshold is 1 x 2 integer array, the cfg.threshold(1) parameter scales
 % uniformly in the dimension of predictor variable and cfg.threshold(2) in the
@@ -139,6 +147,7 @@ cfg.method             = ft_getopt(cfg, 'method',             'mlr');
 cfg.threshold          = ft_getopt(cfg, 'threshold',          0);
 cfg.output             = ft_getopt(cfg, 'output',             'model');
 cfg.performance        = ft_getopt(cfg, 'performance',        'pearson');
+cfg.covmethod          = ft_getopt(cfg, 'covmethod',          'finite');
 
 if ~iscell(cfg.refchannel)
   cfg.refchannel = {cfg.refchannel};
@@ -294,7 +303,6 @@ end
 data.trial = cellshift(data.trial, 0, 2, [abs(min(reflags)) abs(max(reflags))], 'overlap');
 data.time  = cellshift(data.time,  0, 2, [abs(min(reflags)) abs(max(reflags))], 'overlap');
 
-
 % only keep the trials that have > 0 samples
 tmpcfg        = [];
 tmpcfg.trials = find(cellfun('size',data.trial,2)>0);
@@ -334,12 +342,27 @@ fprintf('computing the covariance\n');
 nref  = size(refdata.trial{1},1);
 nchan = numel(data.label);
 
-C = nan(nchan,nchan);
-C(1:nchan,1:nchan)        = nancov(data.trial,    data.trial, 1, 2, 1);
-C(1:nchan,nchan+(1:nref)) = nancov(data.trial, refdata.trial, 1, 2, 1);
-C(nchan+(1:nref),1:nchan) = C(1:nchan,nchan+(1:nref)).';
-C(nchan+(1:nref),nchan+(1:nref)) = nancov(refdata.trial, refdata.trial, 1, 2, 1);
-
+switch cfg.covmethod
+  case 'finite'
+    C = nan(nchan,nchan);
+    C(1:nchan,1:nchan)        = nancov(data.trial,    data.trial, 1, 2, 1);
+    C(1:nchan,nchan+(1:nref)) = nancov(data.trial, refdata.trial, 1, 2, 1);
+    C(nchan+(1:nref),1:nchan) = C(1:nchan,nchan+(1:nref)).';
+    C(nchan+(1:nref),nchan+(1:nref)) = nancov(refdata.trial, refdata.trial, 1, 2, 1);
+  case 'overlapfinite'
+    % also only use the non-overlapping finite samples for the
+    % autocovariance estimates
+    C   = nan(nchan,nchan);
+    f1  = cellfun(@sum,isfinite(data.trial),'UniformOutput',false)==numel(data.label);
+    f2  = cellfun(@sum,isfinite(refdata.trial),'UniformOutput',false)==numel(refdata.label);
+    sel = f1&f2;
+    C(1:nchan,1:nchan)        = nancov(cellcolselect(data.trial, sel),    cellcolselect(data.trial, sel), 1, 2, 1);
+    C(1:nchan,nchan+(1:nref)) = nancov(cellcolselect(data.trial, sel), cellcolselect(refdata.trial, sel), 1, 2, 1);
+    C(nchan+(1:nref),1:nchan) = C(1:nchan,nchan+(1:nref)).';
+    C(nchan+(1:nref),nchan+(1:nref)) = nancov(cellcolselect(refdata.trial, sel), cellcolselect(refdata.trial, sel), 1, 2, 1);
+  otherwise
+    ft_error('cfg.covmethod = ''%s'' is not implemented', cfg.covmethod);
+end
 % compute the regression
 if istrue(cfg.perchannel)
   beta_ref  = zeros(nchan, nref);
@@ -448,7 +471,7 @@ if exist('beta_data', 'var')
 
   % compute the mixing weights as per Haufe 2013
   W = weights.unmixing;
-  A = (C(1:nchan, 1:nchan) * W')/(W * C(1:nchan,1:nchan) * W');
+  A = (C(1:nchan, 1:nchan) * W')*pinv(W * C(1:nchan,1:nchan) * W');
   weights.mixing = A;
 else
   % a per channel approach has been done, the beta weights reflect
