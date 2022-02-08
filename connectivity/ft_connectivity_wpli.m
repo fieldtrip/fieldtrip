@@ -10,32 +10,39 @@ function [wpli, v, n] = ft_connectivity_wpli(input, varargin)
 % Use as
 %   [wpi, v, n] = ft_connectivity_wpli(input, ...)
 %
-% The input data input should be organized as:
+% The input data input should contain cross-spectral densities organized as:
 %   Repetitions x Channel x Channel (x Frequency) (x Time)
 % or
 %   Repetitions x Channelcombination (x Frequency) (x Time)
-% or
-%   Repetitions x Channel (x Frequency) (x Time) 
-% inside a "freq" datatype structure with repetition tapers information for
-% on-fly csd computation.
+% 
+% Alternatively, the input data can contain fourier coefficients organized
+% as:
+%   Repetitions_tapers x Channel (x Frequency) (x Time) 
 %
-% The first dimension should contain repetitions and should not contain an
-% average already. Also, it should not consist of leave-one-out averages.
+% The first dimension of the input data matrix should contain repetitions and should not 
+% contain an average already. Also, the input should not consist of leave-one-out averages.
 %
 % The output wpli contains the wpli, v is a leave-one-out variance estimate
 % which is only computed if dojack=true, and n is the number of repetitions
 % in the input data.
 %
 % Additional optional input arguments come as key-value pairs:
-%   'dojack'    = boolean, compute a variance estimate based on leave-one-out
+%   'dojack'    = boolean, compute a variance estimate based on
+%                 leave-one-out, only supported when input data is a
+%                 bivariate cross-spectral density
 %   'debias'    = boolean, compute debiased wpli or not
-%   'feedback'  = 'none', 'text', 'textbar', 'dial', 'etf', 'gui' type of feedback showing progress of computation, see FT_PROGRESS
-%   'onflycsd'  = boolean, compute CSD on fly (saves memory when many
-%   trials)
+%   'feedback'  = 'none', 'text', 'textbar', 'dial', 'etf', 'gui' type of feedback 
+%                 showing progress of computation, see FT_PROGRESS
+%   'isunivariate' = boolean, compute CSD on fly (saves memory with many trials)
+%   'cumtapcnt' = vector that contains the cumulative taper counter, defining how
+%                 tapers should be combined to define repetitions. If not
+%                 defined (or empty), it will be ones(size(input,1),1),
+%                 i.e. each slice of the matrix is considered a repetition.
+%                 This option is only function in case isunivariate = true
 %
-% See also CONNECTIVITY, FT_CONNECTIVITYANALYSIS
+% See also FT_CONNECTIVITYANALYSIS
 
-% Copyright (C) 2011, Martin Vinck
+% Copyright (C) 2011-2022, Martin Vinck and Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -55,31 +62,42 @@ function [wpli, v, n] = ft_connectivity_wpli(input, varargin)
 %
 % $Id$
 
-feedback    = ft_getopt(varargin, 'feedback', 'none');
-debias      = ft_getopt(varargin, 'debias');
-dojack      = ft_getopt(varargin, 'dojack', false);
-onflycsd    = ft_getopt(varargin, 'onflycsd', false);
+feedback     = ft_getopt(varargin, 'feedback',     'none');
+debias       = ft_getopt(varargin, 'debias');
+dojack       = ft_getopt(varargin, 'dojack',       false);
+isunivariate = ft_getopt(varargin, 'isunivariate', false);
+cumtapcnt    = ft_getopt(varargin, 'cumtapcnt',    []);
 
-if onflycsd
-  input = ft_checkdata(input, 'datatype', {'freqmvar' 'freq'}, 'hascumtapcnt', 'yes');
+if dojack && isunivariate
+  error('jackknife variance estimates with on-the-fly csd computation is not supported');
+end
+if isunivariate
+  if isempty(cumtapcnt)
+    cumtapcnt = ones(size(input,1), 1);
+  end
+  assert(sum(cumtapcnt)==size(input,1));
+
+  siz    = [size(input) 1]; 
+  nchan  = siz(2);
+  outsiz = [nchan nchan siz(3:end)];
+  n      = size(cumtapcnt,1);
   
-  nchan = size(input.label,1);
-  n = size(input.cumtapcnt,1);
-  sumtapcnt = [0;cumsum(input.cumtapcnt(:,1))];
+  sumtapcnt = [0;cumsum(cumtapcnt(:,1))];
 
-  outsum = complex(zeros(nchan, nchan));
-  outsumW = complex(zeros(nchan, nchan));
-  outssq = complex(zeros(nchan, nchan));
+  outsum  = complex(zeros(outsiz));
+  outsumW = complex(zeros(outsiz));
+  outssq  = complex(zeros(outsiz));
 
-  for p=1:n
-    indx=(sumtapcnt(p)+1):sumtapcnt(p+1);
-    fourierTrial = transpose(input.fourierspctrm(indx,:));
-    csdTrial = (fourierTrial*fourierTrial')./length(indx);
+  for k = 1:n 
+    indx  = (sumtapcnt(k)+1):sumtapcnt(k+1);
+    for m = 1:prod(outsiz(3:end))
+      trial = transpose(input(indx,:,m));
+      csdimag = imag(trial*trial')./length(indx);
 
-    csdImag = imag(csdTrial);
-    outsum = outsum + csdImag;
-    outsumW = outsumW + abs(csdImag);
-    outssq = outssq + (csdImag.^2);
+      outsum(:,:,m)  = outsum(:,:,m)  + csdimag;
+      outsumW(:,:,m) = outsumW(:,:,m) + abs(csdimag);
+      outssq(:,:,m)  = outssq(:,:,m)  + (csdimag.^2);
+    end
   end
   if debias
     wpli = (outsum.^2 - outssq)./(outsumW.^2 - outssq);

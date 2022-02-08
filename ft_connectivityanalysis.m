@@ -76,11 +76,6 @@ function [stat] = ft_connectivityanalysis(cfg, data)
 %                     indicating whether the canonical vectors are
 %                     determined from the real-valued part of a complex
 %                     matrix.
-%   cfg.onflycsd    = false (default) or true, used for
-%                     'wpli'/'wpli_debiased' to average across trial "on
-%                     fly" and thus save immense memory when trials are
-%                     many (e.g. resting state connectivity)
-%                    
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
@@ -263,19 +258,17 @@ switch cfg.method
   
   case {'wpli'}
     data = ft_checkdata(data, 'datatype', {'freqmvar' 'freq'});
-    cfg.onflycsd    = ft_getopt(cfg, 'onflycsd', 0);
-    if (cfg.onflycsd) 
-        inparam = 'fourierspctrm';
-    else 
-        inparam = 'crsspctrm';
+    if isfield(data, 'fourierspctrm')
+      inparam = 'fourierspctrm';
+    else
+      inparam = 'crsspctrm';
     end
     outparam = 'wplispctrm';
     if hasjack, ft_error('to compute wpli, data should be in rpt format'); end
   
   case {'wpli_debiased'}
     data = ft_checkdata(data, 'datatype', {'freqmvar' 'freq'});
-    cfg.onflycsd    = ft_getopt(cfg, 'onflycsd', 0);    
-    if (cfg.onflycsd) 
+    if isfield(data, 'fourierspctrm') 
         inparam = 'fourierspctrm';
     else 
         inparam = 'crsspctrm';
@@ -685,13 +678,12 @@ switch cfg.method
     end
   case {'wpli' 'wpli_debiased'}
     % weighted pli or debiased weighted phase lag index.
-    if (~cfg.onflycsd)
-      optarg = {'feedback', cfg.feedback, 'dojack', dojack, 'debias', strcmp(cfg.method, 'wpli_debiased'), 'onflycsd', 0};
-      [datout, varout, nrpt] = ft_connectivity_wpli(data.(inparam), optarg{:});
-    else
-      optarg = {'feedback', cfg.feedback, 'dojack', dojack, 'debias', strcmp(cfg.method, 'wpli_debiased'), 'onflycsd', 1};
-      [datout, varout, nrpt] = ft_connectivity_wpli(data, optarg{:});
+    optarg = {'feedback', cfg.feedback, 'dojack', dojack, 'debias', strcmp(cfg.method, 'wpli_debiased')};
+    if isequal(inparam, 'fourierspctrm')
+      optarg = cat(2, optarg, {'isunivariate' 1 'cumtapcnt' data.cumtapcnt});
     end
+    [datout, varout, nrpt] = ft_connectivity_wpli(data.(inparam), optarg{:});
+    data.dimord = strrep(data.dimord, 'chan', 'chan_chan'); % needed for data structure consistency
   case {'wppc' 'ppc'}
     % weighted pairwise phase consistency or pairwise phase consistency
     optarg = {'feedback', cfg.feedback, 'dojack', dojack, 'weighted', strcmp(cfg.method, 'wppc')};
