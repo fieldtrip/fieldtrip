@@ -127,6 +127,10 @@ c10m           = ft_connectivityanalysis(cfgc, mfreq);
 cfgc.method    = 'gpdc';
 c11            = ft_connectivityanalysis(cfgc, freq);
 c11m           = ft_connectivityanalysis(cfgc, mfreq);
+cfgc.method    = 'wpli';
+c12            = ft_connectivityanalysis(cfgc, freq);
+c12b           = ft_connectivityanalysis(cfgc, ft_checkdata(freq, 'cmbstyle', 'full'));
+assert(isequaln(c12.wplispctrm, c12b.wplispctrm));
 
 cfgc             = [];
 cfgc.partchannel = 'signal003'; % this should destroy coherence between 1 and 2
