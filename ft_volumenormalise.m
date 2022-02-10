@@ -22,6 +22,9 @@ function [normalised] = ft_volumenormalise(cfg, mri)
 %                          for spm2 or 'T1.nii' for spm8 and for spm12).
 %   cfg.templatecoordsys = the coordinate system of the template when using a template other
 %                          than the default
+%   cfg.templatemask     = string, filename of a mask for the template
+%                          anatomical MRI spcified in cfg.template, e.g. a
+%                          brain mask (optional).
 %   cfg.tpm              = string, file name of the SPM tissue probablility map to use in
 %                          case spmversion is 'spm12' and spmmethod is 'new' or 'mars'
 %   cfg.write            = 'yes' or 'no' (default = 'no'), writes the segmented volumes to SPM2
@@ -254,7 +257,7 @@ if ~isempty(cfg.templatemask)
       ft_error('Unknown templatemask');
   end
 else
-    VWG = [];
+  VWG = [];
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -267,7 +270,7 @@ if ~isfield(cfg, 'spmparams')
   if strcmp(cfg.spmmethod, 'old') && strcmp(cfg.nonlinear, 'yes')
     ft_info('Warping the individual anatomy to the template anatomy, using non-linear transformations');
     % compute the parameters by warping the individual anatomy
-    params    = spm_normalise(VG, VF(1), [], VWG);    
+    params = spm_normalise(VG, VF(1), [], VWG);
     
   elseif strcmp(cfg.spmmethod, 'old') && strcmp(cfg.nonlinear, 'no')
     ft_info('Warping the individual anatomy to the template anatomy, using only linear transformations');
@@ -283,7 +286,7 @@ if ~isfield(cfg, 'spmparams')
       cfg.tpm = fullfile(spmpath, 'tpm', 'TPM.nii');
       ft_notice('Using default SPM tissue probability maps ''%s''', cfg.tpm);
     else
-      ft_notice('Using user specified tissue probability maps ''%s''', cfg.tpm);        
+      ft_notice('Using user specified tissue probability maps ''%s''', cfg.tpm);
     end
     
     % create the structure that is required for spm_preproc8
@@ -298,9 +301,9 @@ if ~isfield(cfg, 'spmparams')
     opts.fwhm     = ft_getopt(opts, 'fwhm',     1);
     
     if strcmp(cfg.templatecoordsys, 'mni')
-        regtyp = 'mni';
+      regtyp = 'mni';
     else
-        regtyp = 'subj';
+      regtyp = 'subj';
     end
     
     Affine = spm_maff8(opts.image(1), 3, 32, opts.tpm, eye(4), regtyp);
@@ -313,7 +316,7 @@ if ~isfield(cfg, 'spmparams')
     ft_info('Writing the deformation field to file');
     switch cfg.spmmethod
       case 'new'
-        bb        = spm_get_bbox(opts.tpm.V(1));
+        bb          = spm_get_bbox(opts.tpm.V(1));
         spm_preproc_write8(params, zeros(6,4), [0 0], [0 1], 1, 1, bb, cfg.downsample);
       case 'mars'
         ft_hastoolbox('mars', 1);
