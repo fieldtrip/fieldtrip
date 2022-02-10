@@ -110,7 +110,7 @@ switch parcelversion
 
     % make a list of fields that possibly represent a parcellation
     fn = fieldnames(parcellation);
-    fn = setdiff(fn, 'inside'); % exclude the inside field from any conversions
+    fn = setdiff(fn, {'inside','pow'}); % exclude the inside field and source power from any conversions
     sel = false(size(fn));
     for i=1:numel(fn)
       sel(i) = (isnumeric(parcellation.(fn{i})) || islogical(parcellation.(fn{i}))) && numel(parcellation.(fn{i}))==dim;
