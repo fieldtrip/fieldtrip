@@ -36,7 +36,7 @@ function ft_plot_layout(layout, varargin)
 %
 % See also FT_PREPARE_LAYOUT, FT_PLOT_TOPO
 
-% Copyright (C) 2009, Robert Oostenveld
+% Copyright (C) 2009-2022, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -55,8 +55,6 @@ function ft_plot_layout(layout, varargin)
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
 % $Id$
-
-ws = warning('on', 'MATLAB:divideByZero');
 
 % get the optional input arguments
 chanindx     = ft_getopt(varargin, 'chanindx',     []);
@@ -244,5 +242,3 @@ axis off
 if ~holdflag
   hold off
 end
-
-warning(ws); %revert to original state

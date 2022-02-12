@@ -41,13 +41,13 @@ function [hs] = ft_plot_mesh(mesh, varargin)
 % You can plot an additional contour around specified areas using
 %   'contour'           = inside of contour per vertex, either 0 or 1
 %   'contourcolor'      = string, color specification
-%   'contourlinestyle'  = string, line specification 
+%   'contourlinestyle'  = string, line specification
 %   'contourlinewidth'  = number
 %
 % See also FT_PLOT_HEADSHAPE, FT_PLOT_HEADMODEL, TRIMESH, PATCH
 
 % Copyright (C) 2009, Cristiano Micheli
-% Copyright (C) 2009-2021, Robert Oostenveld
+% Copyright (C) 2009-2022, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -66,8 +66,6 @@ function [hs] = ft_plot_mesh(mesh, varargin)
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
 % $Id$
-
-ws = ft_warning('on', 'MATLAB:divideByZero');
 
 % rename pnt into pos
 mesh = fixpos(mesh);
@@ -532,5 +530,3 @@ end
 if ~holdflag
   hold off
 end
-
-ft_warning(ws); % revert to original state

@@ -53,7 +53,7 @@ function hs = ft_plot_sens(sens, varargin)
 %
 % See also FT_READ_SENS, FT_PLOT_HEADSHAPE, FT_PLOT_HEADMODEL
 
-% Copyright (C) 2009-2021, Robert Oostenveld, Arjen Stolk
+% Copyright (C) 2009-2022, Robert Oostenveld, Arjen Stolk
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -72,8 +72,6 @@ function hs = ft_plot_sens(sens, varargin)
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
 % $Id$
-
-ws = ft_warning('on', 'MATLAB:divideByZero');
 
 % ensure that the sensor description is up-to-date
 sens = ft_datatype_sens(sens);
@@ -532,8 +530,6 @@ end
 if ~holdflag
   hold off
 end
-
-ft_warning(ws); % revert to original state
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION all optional inputs are passed to ft_plot_mesh

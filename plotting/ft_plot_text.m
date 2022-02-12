@@ -34,7 +34,7 @@ function [varargout] = ft_plot_text(X, Y, str, varargin)
 %
 % See also FT_PLOT_VECTOR, FT_PLOT_MATRIX, FT_PLOT_LINE, FT_PLOT_BOX
 
-% Copyrights (C) 2009-2011, Robert Oostenveld
+% Copyrights (C) 2009-2022, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -53,8 +53,6 @@ function [varargout] = ft_plot_text(X, Y, str, varargin)
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
 % $Id$
-
-ws = ft_warning('on', 'MATLAB:divideByZero');
 
 % get the optional input arguments
 hpos                = ft_getopt(varargin, 'hpos');
@@ -143,5 +141,3 @@ set(h, 'interpreter', interpreter);
 if nargout == 1
   varargout{1} = h;
 end
-
-ft_warning(ws); % revert to original state

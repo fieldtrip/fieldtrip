@@ -21,7 +21,7 @@ function h = ft_plot_dipole(pos, ori, varargin)
 %
 % See also FT_PLOT_MESH, FT_PLOT_ORTHO
 
-% Copyright (C) 2009-2018, Robert Oostenveld
+% Copyright (C) 2009-2022, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -40,8 +40,6 @@ function h = ft_plot_dipole(pos, ori, varargin)
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
 % $Id$
-
-ws = ft_warning('on', 'MATLAB:divideByZero');
 
 % get the optional input arguments
 amplitudescale = ft_getopt(varargin, 'scale',     'none');
@@ -192,5 +190,3 @@ end
 if ~nargout
   clear h
 end
-
-ft_warning(ws); %revert to original state

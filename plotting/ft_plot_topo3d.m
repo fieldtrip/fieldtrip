@@ -16,7 +16,7 @@ function ft_plot_topo3d(pos, val, varargin)
 %
 % See also FT_PLOT_TOPO, FT_PLOT_SENS, FT_TOPOPLOTER, FT_TOPOPLOTTFR
 
-% Copyright (C) 2009-2015, Robert Oostenveld
+% Copyright (C) 2009-2022, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -35,8 +35,6 @@ function ft_plot_topo3d(pos, val, varargin)
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
 % $Id$
-
-ws = warning('on', 'MATLAB:divideByZero');
 
 % get the optional input arguments
 contourstyle  = ft_getopt(varargin, 'contourstyle', 'none');
@@ -224,5 +222,3 @@ axis equal
 if ~holdflag
   hold off
 end
-
-warning(ws); % revert to original state
