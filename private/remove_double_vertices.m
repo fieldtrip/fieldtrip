@@ -7,18 +7,19 @@ function [posR, triR, keeppos] = remove_double_vertices(pos, tri)
 % Use as
 %   [pos, tri] = remove_double_vertices(pos, tri)
 
-[pos1,i1,i2] = unique(pos, 'rows');
-%keeppos   = find(ismember(pos,pos1,'rows'));
-%removepos = setdiff([1:size(pos,1)],keeppos);
-keeppos   = i1;
-removepos = setdiff(1:size(pos,1), keeppos);
-
 npos = size(pos,1);
 ntri = size(tri,1);
+
+[pos1,i1,i2] = unique(pos, 'rows');
+keeppos      = i1;
+removepos    = setdiff(1:size(pos,1), keeppos);
 
 if all(removepos==0 | removepos==1)
   removepos = find(removepos);
 end
+
+% re-index the indices in tri, to avoid too many triangles to be chucked out
+tri = i1(i2(tri));
 
 % remove the vertices and determine the new numbering (indices) in numb
 keeppos = setdiff(1:npos, removepos);
