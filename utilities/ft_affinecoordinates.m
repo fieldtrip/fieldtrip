@@ -101,7 +101,7 @@ for i=1:length(generic)
   for j=1:length(generic)
     xxx = generic{i};
     yyy = generic{j};
-    eval(sprintf('%s2%s = transform_generic(''%s'', ''%s'');', yyy, xxx, xxx, yyy));
+    eval(sprintf('%s2%s = transform_generic(''%s'', ''%s'');', xxx, yyy, xxx, yyy));
   end
 end
 
@@ -267,19 +267,19 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function T = transform_generic(from, to)
 
-ap_in  = find(from=='a' | from=='p');
-ap_out = find(to=='a'   | to=='p');
-lr_in  = find(from=='l' | from=='r');
-lr_out = find(to=='l'   | to=='r');
-si_in  = find(from=='s' | from=='i');
-si_out = find(to=='s'   | to=='i');
+ap_in  = find(to=='a'   | to=='p');
+ap_out = find(from=='a' | from=='p');
+lr_in  = find(to=='l'   | to=='r');
+lr_out = find(from=='l' | from=='r');
+si_in  = find(to=='s'   | to=='i');
+si_out = find(from=='s' | from=='i');
 
-% index axis according to ap,lr,si
+% index the axis according to ap,lr,si
 order_in  = [ap_in  lr_in  si_in];
 order_out = [ap_out lr_out si_out];
 
 % check whether one of the axis needs flipping
-flip = 2.*(0.5-double(from(order_in)~=to(order_out)));
+flip = 2.*(0.5-double(to(order_in)~=from(order_out)));
 
 T = zeros(4);
 for k = 1:3
