@@ -26,11 +26,16 @@ function [pos, tri] = remove_double_vertices(pos, tri)
 %
 % $Id$
 
-[dum, i1, i2] = unique(pos, 'rows');
+npos = size(pos, 1);
+[dum, keeppos, i2] = unique(pos, 'rows');
 clear dum
 
+numb    = zeros(1,npos);
+numb(keeppos) = 1:length(keeppos);
+
 % re-index the indices in tri
-tri = i1(i2(tri));
+tri = keeppos(i2(tri));
+tri = numb(tri);
 
 % remove the vertices and triangles
-pos = pos(i1, :);
+pos = pos(keeppos, :);
