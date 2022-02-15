@@ -8,7 +8,7 @@ function [data] = ft_megplanar(cfg, data)
 % Use as
 %    [interp] = ft_megplanar(cfg, data)
 % where the input data corresponds to the output from FT_PREPROCESSING,
-% FT_TIMELOCKANALYSIS or FT_FREQANALYSIS (with output='fourierspcrm').
+% FT_TIMELOCKANALYSIS or FT_FREQANALYSIS (with output='fourier').
 %
 % The configuration should contain
 %   cfg.planarmethod   = string, can be 'sincos', 'orig', 'fitplane', 'sourceproject' (default = 'sincos')
