@@ -4,7 +4,7 @@ function test_issue1973
 % MEM 4gb
 % DEPENDENCY ft_statfun_actvsblT
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/issue1973/data.mat'));
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/issue1973.mat'));
 
 %%
 
@@ -41,7 +41,10 @@ cfg.design   = design;
 cfg.ivar     = 1;
 cfg.uvar     = 2;
 
+
 tlprestim.time  = tlpoststim.time; % this is needed, because FieldTrip checks for the overlap in the time axes
+
+% this originally gave an error because of an issue with ft_statfun_actvsblT
 [timelockstats1] = ft_timelockstatistics(cfg, tlprestim, tlpoststim);
 
 [timelockstats2] = ft_timelockstatistics(cfg, tlprestimhacked, tlpoststim);
