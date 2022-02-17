@@ -1,20 +1,19 @@
 %% PATHS
 
 clear variables
+close all
 restoredefaultpath
 addpath /home/lau/matlab/fieldtrip/
 ft_defaults
 
-path = fullfile('/home/lau/projects/functional_cerebellum/raw', ...
-                '0001/20210810_000000/', ...
-                'MEG/001.func_cerebellum_raw/files');
+path = '/home/lau/Dokumenter/wakeman_henson_face_data/ds117/sub001/MEG';
 
 %% SEGMENT
 
 cfg                         = [];
-cfg.dataset                 = fullfile(path, 'func_cerebellum_raw.fif');
+cfg.dataset                 = fullfile(path, 'run_01_raw.fif');
 cfg.trialdef.eventtype      = 'STI101';
-cfg.trialdef.eventvalue     = 3;
+cfg.trialdef.eventvalue     = 5;
 cfg.trialdef.prestim        = 0.200;        
 cfg.trialdef.poststim       = 0.600;        
 cfg.continuous              = 'yes';
@@ -36,7 +35,6 @@ timelock = ft_timelockanalysis(cfg, data_fif);
 %% PLOT TIMELOCK
 
 cfg = [];
-cfg.channel = 'MEGMAG';
 
 ft_multiplotER(cfg, timelock);
 
@@ -47,9 +45,16 @@ cfg.ssp = 'all';
 
 denoised_timelock = ft_denoise_ssp(cfg, timelock);
 
+%% PLOT SINGLE PLOT
+
+cfg = [];
+cfg.channel = 'MEG2611';
+
+ft_singleplotER(cfg, denoised_timelock);
+ft_singleplotER(cfg, timelock);
+
 %% PLOT DENOISED TIMELOCK
 
 cfg = [];
-cfg.channel = 'MEGMAG';
 
-ft_multiplotER(cfg, denoised_timelock);
+ft_multiplotER(cfg, denoised_timelock); %% fails
