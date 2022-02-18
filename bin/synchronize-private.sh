@@ -843,6 +843,7 @@ sync ${ARRAY[*]}
 ARRAY=()
 ARRAY+=(private/ft_fetch_sens.m)
 ARRAY+=(test/private/ft_fetch_sens.m)
+ARRAY+=(external/artinis/private/ft_fetch_sens.m)
 sync ${ARRAY[*]}
 
 ################################################################################
@@ -1174,7 +1175,6 @@ sync ${ARRAY[*]}
 # getdimord.m
 
 ARRAY=()
-ARRAY+=(contrib/nutmegtrip/private/getdimord.m)
 ARRAY+=(fileio/private/getdimord.m)
 ARRAY+=(forward/private/getdimord.m)
 ARRAY+=(private/getdimord.m)

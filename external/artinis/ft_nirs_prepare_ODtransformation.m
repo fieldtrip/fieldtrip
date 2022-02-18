@@ -122,16 +122,7 @@ cfg.age     = ft_getopt(cfg, 'age', []);
 cfg.dpf     = ft_getopt(cfg, 'dpf', []);
 
 % get the optode definition
-% FIXME this should use FT_FETCH_SENS
-if ~isfield(data, 'opto')
-  if ~isfield(data, 'hdr') && ~isfield(data.hdr, 'opto')
-    error('no optode structure found in the data');
-  else
-    opto = data.hdr.opto;
-  end
-else
-  opto = data.opto;
-end
+opto = ft_fetch_sens(cfg, data);
 
 % select the appropriate channels
 if isfield(data, 'topolabel')
