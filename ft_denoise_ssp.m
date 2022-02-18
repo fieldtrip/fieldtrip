@@ -23,7 +23,7 @@ function [data] = ft_denoise_ssp(cfg, data)
 %
 % See also FT_PREPROCESSING, FT_DENOISE_PCA
 
-% Copyright (C) 2004-2022, whose names to put, Gianpaulo Demarchi, Lau
+% Copyright (C) 2004-2022, Gianpaolo Demarchi, Lau
 % Møller Andersen, Robert Oostenveld, Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
