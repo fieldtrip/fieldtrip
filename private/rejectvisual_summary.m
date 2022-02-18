@@ -3,7 +3,7 @@ function [chansel, trlsel, cfg] = rejectvisual_summary(cfg, data)
 % SUBFUNCTION for ft_rejectvisual
 
 % Copyright (C) 2005-2006, Markus Bauer, Robert Oostenveld
-% Copyright (C) 2006-2021, Robert Oostenveld
+% Copyright (C) 2006-2021, Robert Oostenveld, Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -110,42 +110,31 @@ bgcolor = get(h, 'color');
 
 metriclist = {'var' 'std' 'min' 'max' 'maxabs' 'range' 'kurtosis' '1/var' 'zvalue' 'maxzvalue' 'neighbexpvar' 'neighbcorr' 'neighbstdratio' 'db'};
 
-% text string for metric
-uicontrol(h, 'Units', 'normalized', 'position', [0.52 0.47 0.14 0.095], 'Style', 'text', 'HorizontalAlignment', 'left', 'backgroundcolor', get(h, 'color'), 'string', 'Metric used:');
+uicontrol(h, 'Units', 'normalized', 'position', [0.575 0.50 0.24 0.04], 'Style', 'text', 'HorizontalAlignment', 'left', 'backgroundcolor', get(h, 'color'), 'string', 'Metric used:'); % text string for metric
+uicontrol(h, 'Units', 'normalized', 'position', [0.725 0.51 0.20 0.04], 'Style', 'popupmenu', 'backgroundcolor', bgcolor, 'string', metriclist,       'HandleVisibility', 'off', 'callback', @change_metric); % popup menu for metric
+uicontrol(h, 'Units', 'normalized', 'position', [0.575 0.46 0.24 0.04], 'Style', 'text', 'HorizontalAlignment', 'left', 'backgroundcolor', get(h, 'color'), 'string', 'Plot trial:');
+info.plottrltxt = uicontrol(h, 'Units', 'normalized', 'position', [0.725 0.47 0.20 0.04], 'Style', 'edit', 'HorizontalAlignment', 'left', 'backgroundcolor', [1 1 1], 'callback', @display_trial); % editbox for trial plotting
 
-% popup menu for metric
-uicontrol('Units', 'normalized', 'position', [0.63 0.47 0.2 0.1], 'Style', 'popupmenu', 'backgroundcolor', bgcolor, 'string', metriclist,       'HandleVisibility', 'off', 'callback', @change_metric);
+% editboxes for manually specifying which channels/trials to toggle on or off
+uicontrol(h, 'Units', 'normalized', 'position', [0.575 0.42 0.24 0.04], 'Style', 'text', 'HorizontalAlignment', 'left', 'backgroundcolor', get(h, 'color'), 'string', 'Toggle trial:');
+uicontrol(h, 'Units', 'normalized', 'position', [0.725 0.43 0.20 0.04], 'Style', 'edit', 'HorizontalAlignment', 'left', 'backgroundcolor', [1 1 1], 'callback', @toggle_trials, 'tag', 'edit_toggle_trials');
+uicontrol(h, 'Units', 'normalized', 'position', [0.575 0.38 0.24 0.04], 'Style', 'text', 'HorizontalAlignment', 'left', 'backgroundcolor', get(h, 'color'), 'string', 'Toggle channel:');
+uicontrol(h, 'Units', 'normalized', 'position', [0.725 0.39 0.20 0.04], 'Style', 'edit', 'HorizontalAlignment', 'left', 'backgroundcolor', [1 1 1], 'callback', @toggle_channels, 'tag', 'edit_toggle_channels');
+
+info.excludetrllbl  = uicontrol(h, 'Units', 'normalized', 'position', [0.575 0.34 0.24 0.04], 'Style', 'text', 'HorizontalAlignment', 'left', 'backgroundcolor', get(h, 'color'), 'string', sprintf('Rejected trials: %i/%i', sum(info.trlsel==0), info.ntrl));
+info.excludetrltxt  = uicontrol(h, 'Units', 'normalized', 'position', [0.605 0.30 0.45 0.04], 'Style', 'text', 'HorizontalAlignment', 'left', 'backgroundcolor', get(h, 'color'), 'Enable', 'Inactive');
+info.excludechanlbl = uicontrol(h, 'Units', 'normalized', 'position', [0.575 0.26 0.28 0.04], 'Style', 'text', 'HorizontalAlignment', 'left', 'backgroundcolor', get(h, 'color'), 'string', sprintf('Rejected channels: %i/%i', sum(info.chansel==0), info.nchan));
+info.excludechantxt = uicontrol(h, 'Units', 'normalized', 'position', [0.605 0.22 0.45 0.04], 'Style', 'text', 'HorizontalAlignment', 'left', 'backgroundcolor', get(h, 'color'), 'Enable', 'Inactive');
 
 % instructions
 instructions = sprintf('Drag the mouse over the channels or trials you wish to exclude');
-uicontrol(h, 'Units', 'normalized', 'position', [0.520 0.450 0.450 0.050], 'Style', 'text', 'HorizontalAlignment', 'left', 'backgroundcolor', get(h, 'color'), 'string', instructions, 'FontWeight', 'bold', 'ForegroundColor', 'r');
-
-% editboxes for manually specifying which channels/trials to toggle on or off
-uicontrol(h, 'Units', 'normalized', 'position', [0.520 0.420 0.14 0.05], 'Style', 'text', 'HorizontalAlignment', 'left', 'backgroundcolor', get(h, 'color'), 'string', 'Toggle trial:');
-uicontrol(h, 'Units', 'normalized', 'position', [0.520 0.390 0.14 0.05], 'Style', 'edit', 'HorizontalAlignment', 'left', 'backgroundcolor', [1 1 1], 'callback', @toggle_trials, 'tag', 'edit_toggle_trials');
-uicontrol(h, 'Units', 'normalized', 'position', [0.520 0.320 0.14 0.05], 'Style', 'text', 'HorizontalAlignment', 'left', 'backgroundcolor', get(h, 'color'), 'string', 'Toggle channel:');
-uicontrol(h, 'Units', 'normalized', 'position', [0.520 0.290 0.14 0.05], 'Style', 'edit', 'HorizontalAlignment', 'left', 'backgroundcolor', [1 1 1], 'callback', @toggle_channels, 'tag', 'edit_toggle_channels');
-
-% editbox for trial plotting
-uicontrol(h, 'Units', 'normalized', 'position', [0.520 0.210 0.14 0.05], 'Style', 'text', 'HorizontalAlignment', 'left', 'backgroundcolor', get(h, 'color'), 'string', 'Plot trial:');
-info.plottrltxt = uicontrol(h, 'Units', 'normalized', 'position', [0.520 0.180 0.14 0.05], 'Style', 'edit', 'HorizontalAlignment', 'left', 'backgroundcolor', [1 1 1], 'callback', @display_trial);
-
-info.excludetrllbl  = uicontrol(h, 'Units', 'normalized', 'position', [0.685 0.420 0.210 0.05], 'Style', 'text', 'HorizontalAlignment', 'left', 'backgroundcolor', get(h, 'color'), 'string', sprintf('Rejected trials: %i/%i', sum(info.trlsel==0), info.ntrl));
-info.excludetrltxt  = uicontrol(h, 'Units', 'normalized', 'position', [0.685 0.390 0.210 0.05], 'Style', 'text', 'HorizontalAlignment', 'left', 'backgroundcolor', get(h, 'color'), 'Enable', 'Inactive');
-info.excludechanlbl = uicontrol(h, 'Units', 'normalized', 'position', [0.685 0.320 0.210 0.05], 'Style', 'text', 'HorizontalAlignment', 'left', 'backgroundcolor', get(h, 'color'), 'string', sprintf('Rejected channels: %i/%i', sum(info.chansel==0), info.nchan));
-info.excludechantxt = uicontrol(h, 'Units', 'normalized', 'position', [0.685 0.290 0.210 0.05], 'Style', 'text', 'HorizontalAlignment', 'left', 'backgroundcolor', get(h, 'color'), 'Enable', 'Inactive');
-
-% "show rejected" button
-% ui_tog = uicontrol(h, 'Units', 'normalized', 'position', [0.55 0.200 0.25 0.05], 'Style', 'checkbox', 'backgroundcolor', get(h, 'color'), 'string', 'Show rejected?', 'callback', @toggle_rejected);
-% if strcmp(cfg.viewmode, 'toggle')
-%     set(ui_tog, 'value', 1);
-% end
+uicontrol(h, 'Units', 'normalized', 'position', [0.575 0.125 0.35 0.08], 'Style', 'text', 'HorizontalAlignment', 'left', 'backgroundcolor', get(h, 'color'), 'string', instructions, 'FontWeight', 'bold', 'ForegroundColor', 'r');
 
 % logbox
 info.output_box = uicontrol(h, 'Units', 'normalized', 'position', [0.00 0.00 1.00 0.1], 'Style', 'edit', 'HorizontalAlignment', 'left', 'Max', 3, 'Min', 1, 'Enable', 'inactive', 'FontName', get(0, 'FixedWidthFontName'), 'FontSize', 9, 'ForegroundColor', [0 0 0], 'BackgroundColor', [1 1 1]);
 
 % quit button
-uicontrol(h, 'Units', 'normalized', 'position', [0.85 0.125 0.10 0.05], 'string', 'quit', 'callback', @quit);
+uicontrol(h, 'Units', 'normalized', 'position', [0.825 0.11 0.10 0.04], 'string', 'quit', 'callback', @quit);
 
 guidata(h, info);
 
