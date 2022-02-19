@@ -1,17 +1,30 @@
+function test_issue1952
+
+% WALLTIME 00:20:00
+% MEM 4gb
+
+% DEPENDENCY ft_denoise_ssp
+
 %% PATHS
 
-clear variables
-close all
-restoredefaultpath
-addpath /home/lau/matlab/fieldtrip/
-ft_defaults
+% path = '/home/lau/Dokumenter/wakeman_henson_face_data/ds117/sub001/MEG';
+% dataset = fullfile(path, 'run_01_raw.fif');
 
-path = '/home/lau/Dokumenter/wakeman_henson_face_data/ds117/sub001/MEG';
+dataset = dccnpath('/home/common/matlab/fieldtrip/data/ftp/workshop/natmeg/oddball1_mc_downsampled.fif');
+if ~exist(dataset, 'file')
+  % probably not on filesystem at Donders
+  datadir = tempdir;
+  s = ftp('ftp.fieldtriptoolbox.org');
+  cd(s,'pub/fieldtrip/workshop/natmeg');
+  mget(s, 'oddball1_mc_downsampled.fif', datadir);
+  close(s);
+  dataset = fullfile(datadir, 'oddball1_mc_downsampled.fif');
+end
 
 %% SEGMENT
 
 cfg                         = [];
-cfg.dataset                 = fullfile(path, 'run_01_raw.fif');
+cfg.dataset                 = dataset;
 cfg.trialdef.eventtype      = 'STI101';
 cfg.trialdef.eventvalue     = 5;
 cfg.trialdef.prestim        = 0.200;        
