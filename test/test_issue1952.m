@@ -10,33 +10,41 @@ function test_issue1952
 % path = '/home/lau/Dokumenter/wakeman_henson_face_data/ds117/sub001/MEG';
 % dataset = fullfile(path, 'run_01_raw.fif');
 
-dataset = dccnpath('/home/common/matlab/fieldtrip/data/ftp/workshop/natmeg/oddball1_mc_downsampled.fif');
+dataset = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/epilepsy/raw/case1/neuromag/case1_cHPI_raw.fif');
 if ~exist(dataset, 'file')
   % probably not on filesystem at Donders
   datadir = tempdir;
   s = ftp('ftp.fieldtriptoolbox.org');
-  cd(s,'pub/fieldtrip/workshop/natmeg');
-  mget(s, 'oddball1_mc_downsampled.fif', datadir);
+  cd(s,'pub/fieldtrip/tutorial/epilepsy/raw/case1/neuromag');
+  mget(s, 'case1_cHPI_raw.fif', datadir);
   close(s);
-  dataset = fullfile(datadir, 'oddball1_mc_downsampled.fif');
+  dataset = fullfile(datadir, 'case1_cHPI_raw.fif');
 end
 
 %% SEGMENT
 
 cfg                         = [];
 cfg.dataset                 = dataset;
-cfg.trialdef.eventtype      = 'STI101';
-cfg.trialdef.eventvalue     = 5;
-cfg.trialdef.prestim        = 0.200;        
-cfg.trialdef.poststim       = 0.600;        
-cfg.continuous              = 'yes';
-cfg = ft_definetrial(cfg);
+
+hdr = ft_read_header(dataset, 'checkmaxfilter', false);
+fs  = hdr.Fs;
+
+cfg.trl = [(fs:fs:100*fs)+1;(2*fs:fs:101*fs)]';
+cfg.trl(:,3) = 0;
+
+
+% cfg.trialdef.eventtype      = 'STI101';
+% cfg.trialdef.eventvalue     = 5;
+% cfg.trialdef.prestim        = 0.200;        
+% cfg.trialdef.poststim       = 0.600;        
+% cfg.continuous              = 'yes';
+% cfg = ft_definetrial(cfg);
 
 % preprocess the data
 cfg.channel                 = {'MEG'};
 cfg.demean                  = 'yes';     % apply baselinecorrection
-cfg.baselinewindow          = [-0.200 0]; % on basis of mean signal between -0.05 and 0
-
+%cfg.baselinewindow          = [-0.200 0]; % on basis of mean signal between -0.05 and 0
+cfg.checkmaxfilter = false;
 data_fif = ft_preprocessing(cfg);
 
 %% TIMELOCK
@@ -48,7 +56,7 @@ timelock = ft_timelockanalysis(cfg, data_fif);
 %% PLOT TIMELOCK
 
 cfg = [];
-
+cfg.layout = 'neuromag306mag_helmet.mat';
 ft_multiplotER(cfg, timelock);
 
 %% DENOISE WITH SSP
@@ -62,12 +70,12 @@ denoised_timelock = ft_denoise_ssp(cfg, timelock);
 
 cfg = [];
 cfg.channel = 'MEG2611';
+cfg.layout = 'neuromag306mag_helmet.mat';
 
-ft_singleplotER(cfg, denoised_timelock);
-ft_singleplotER(cfg, timelock);
+ft_singleplotER(cfg, timelock, denoised_timelock);
 
 %% PLOT DENOISED TIMELOCK
 
 cfg = [];
-
-ft_multiplotER(cfg, denoised_timelock); %% fails
+cfg.layout = 'neuromag306mag_helmet.mat';
+ft_multiplotER(cfg, timelock, denoised_timelock); %% fails
