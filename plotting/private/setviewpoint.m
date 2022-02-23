@@ -10,21 +10,6 @@ function setviewpoint(ax, coordsys, viewpoint)
 %
 % See alo GETORTHOVIEWPOS, COORDSYS2LABEL
 
-
-if isa(ax, 'matlab.graphics.axis.Axes')
-  % this is what is expected
-elseif isa(ax, 'matlab.ui.Figure')
-  % find the axes in this figure and recurse for
-  ax = findobj(ax, 'type', 'Axes');
-  for i=1:length(ax)
-    setviewpoint(ax(i), coordsys, viewpoint);
-  end
-  return
-else
-  % no idea, let's just try and see what happens
-end
-
-
 if isempty(coordsys)
   coordsys = 'unknown';
 end
