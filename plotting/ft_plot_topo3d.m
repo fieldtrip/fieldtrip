@@ -13,6 +13,9 @@ function ft_plot_topo3d(pos, val, varargin)
 %   'isolines'     = vector with values at which to draw isocontours, or 'auto' (default = 'auto')
 %   'facealpha'    = scalar, between 0 and 1 (default = 1)
 %   'refine'       = scalar, number of refinement steps for the triangulation, to get a smoother interpolation (default = 0)
+%   'unit'         = string, 'm', 'cm' or 'mm' (default = 'cm')
+%   'coordsys'     = string, assume the data to be in the specified coordinate system (default = 'unknown')
+%   'axes'         = boolean, whether to plot the axes of the 3D coordinate system (default = false)
 %
 % See also FT_PLOT_TOPO, FT_PLOT_SENS, FT_TOPOPLOTER, FT_TOPOPLOTTFR
 
@@ -42,6 +45,9 @@ nrefine       = ft_getopt(varargin, 'refine', 0);
 isolines      = ft_getopt(varargin, 'isolines', 'auto');
 topostyle     = ft_getopt(varargin, 'topostyle', 'color');  % FIXME what is the purpose of this option?
 facealpha     = ft_getopt(varargin, 'facealpha', 1);
+unit          = ft_getopt(varargin, 'unit', 'cm');
+coordsys      = ft_getopt(varargin, 'coordsys');
+axes_         = ft_getopt(varargin, 'axes',       false); % do not confuse with built-in function
 
 if islogical(contourstyle) && contourstyle==false
   % false was supported up to 18 November 2013, 'none' is more consistent with other plotting options
@@ -218,6 +224,16 @@ end % plot the contours
 axis off
 axis vis3d
 axis equal
+
+if istrue(axes_)
+  % plot the 3D axes, this depends on the units and coordsys
+  ft_plot_axes([], 'coordsys', coordsys, 'unit', unit);
+end
+
+if ~isempty(coordsys)
+  % add a context sensitive menu to change the 3d viewpoint to top|bottom|left|right|front|back
+  menu_viewpoint(gca, coordsys)
+end
 
 if ~holdflag
   hold off

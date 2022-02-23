@@ -3467,6 +3467,14 @@ ARRAY+=(utilities/setsubfield.m)
 sync ${ARRAY[*]}
 
 ################################################################################
+# setviewpoint.m
+
+ARRAY=()
+ARRAY+=(private/setviewpoint.m)
+ARRAY+=(plotting/private/setviewpoint.m)
+sync ${ARRAY[*]}
+
+################################################################################
 # sine_taper.m
 
 ARRAY=()

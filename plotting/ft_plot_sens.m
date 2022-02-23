@@ -80,7 +80,7 @@ sens = ft_datatype_sens(sens);
 label           = ft_getopt(varargin, 'label', 'off');
 chantype        = ft_getopt(varargin, 'chantype');
 unit            = ft_getopt(varargin, 'unit');
-axes_           = ft_getopt(varargin, 'axes', false);     % do not confuse with built-in (/Applications/MATLAB_R2020b.app/toolbox/matlab/graphics/axis/axes)
+axes_           = ft_getopt(varargin, 'axes', false);     % do not confuse with built-in function
 orientation     = ft_getopt(varargin, 'orientation', false);
 % these have to do with the font
 fontcolor       = ft_getopt(varargin, 'fontcolor', 'k');  % default is black
@@ -524,11 +524,17 @@ if istrue(axes_)
   ft_plot_axes(sens);
 end
 
-if ~nargout
-  clear hs
+if isfield(sens, 'coordsys')
+  % add a context sensitive menu to change the 3d viewpoint to top|bottom|left|right|front|back
+  menu_viewpoint(gca, sens.coordsys)
 end
+
 if ~holdflag
   hold off
+end
+
+if ~nargout
+  clear hs
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -104,7 +104,7 @@ material_     = ft_getopt(varargin, 'material');        % note the underscore, t
 tag           = ft_getopt(varargin, 'tag',         '');
 surfaceonly   = ft_getopt(varargin, 'surfaceonly');     % default is handled below
 unit          = ft_getopt(varargin, 'unit');
-axes_         = ft_getopt(varargin, 'axes', false);     % do not confuse with built-in (/Applications/MATLAB_R2020b.app/toolbox/matlab/graphics/axis/axes)
+axes_         = ft_getopt(varargin, 'axes', false);     % do not confuse with built-in function
 clim          = ft_getopt(varargin, 'clim');
 alphalim      = ft_getopt(varargin, 'alphalim');
 alphamapping  = ft_getopt(varargin, 'alphamap', 'rampup');
@@ -524,9 +524,15 @@ if istrue(axes_)
   ft_plot_axes(mesh);
 end
 
-if ~nargout
-  clear hs
+if isfield(mesh, 'coordsys')
+  % add a context sensitive menu to change the 3d viewpoint to top|bottom|left|right|front|back
+  menu_viewpoint(gca, mesh.coordsys)
 end
+
 if ~holdflag
   hold off
+end
+
+if ~nargout
+  clear hs
 end
