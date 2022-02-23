@@ -160,9 +160,17 @@ if ~isempty(cfg.age) && ~isempty(cfg.dpf)
 elseif ~isempty(cfg.age)
   error('the use of cfg.age is not implemented, yet');
 elseif ~isempty(cfg.dpf)
+  % this is where they should be
   dpfs = repmat(cfg.dpf, size(cfg.channel));
-else
+elseif isfield(opto, 'DPF')
+  % this is for backward compatibility
   dpfs = opto.DPF(chanidx);
+elseif isfield(data, 'opto') && isfield(data.opto, 'DPF')
+  % this is for backward compatibility
+  dpfs = data.opto.DPF(chanidx);
+elseif isfield(data, 'hdr') && isfield(data.hdr, 'opto') && isfield(data.hdr.opto, 'DPF')
+  % this is for backward compatibility
+  dpfs = data.hdr.opto.DPF(chanidx);
 end
 
 % which chromophores are desired
