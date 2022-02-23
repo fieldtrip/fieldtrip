@@ -43,19 +43,23 @@ end
 % selected channels for the other file formats but at the moment only the
 % implementation of the binary multiplexed formats is smart enough.
 
+if strcmpi(hdr.DataFormat, 'binary')
+
+    switch lower(hdr.BinaryFormat)
+        case 'int_16'
+          sampletype = 'int16';
+          samplesize = 2;
+        case 'int_32'
+          sampletype = 'int32';
+          samplesize = 4;
+        case 'ieee_float_32'
+          sampletype = 'float32';
+          samplesize = 4;
+    end % case
+
+end % if
+
 if strcmpi(hdr.DataFormat, 'binary') && strcmpi(hdr.DataOrientation, 'multiplexed') && any(strcmpi(hdr.BinaryFormat, {'int_16', 'int_32', 'ieee_float_32'}))
-  
-  switch lower(hdr.BinaryFormat)
-    case 'int_16'
-      sampletype = 'int16';
-      samplesize = 2;
-    case 'int_32'
-      sampletype = 'int32';
-      samplesize = 4;
-    case 'ieee_float_32'
-      sampletype = 'float32';
-      samplesize = 4;
-  end % case
   
   fid = fopen_or_error(filename, 'rb', 'ieee-le');
   
@@ -94,7 +98,9 @@ if strcmpi(hdr.DataFormat, 'binary') && strcmpi(hdr.DataOrientation, 'multiplexe
   
   fclose(fid);
   
-elseif strcmpi(hdr.DataFormat, 'binary') && strcmpi(hdr.DataOrientation, 'vectorized') && strcmpi(hdr.BinaryFormat, 'ieee_float_32')
+elseif strcmpi(hdr.DataFormat, 'binary') && strcmpi(hdr.DataOrientation, 'vectorized') && any(strcmpi(hdr.BinaryFormat, {'int_32', 'ieee_float_32]'}))
+  % TODO: Is int_16 possible with vectorized?
+
   fid = fopen_or_error(filename, 'rb', 'ieee-le');
   fseek(fid, 0, 'eof');
   hdr.nSamples = ftell(fid)/(4*hdr.NumberOfChannels);
@@ -102,10 +108,21 @@ elseif strcmpi(hdr.DataFormat, 'binary') && strcmpi(hdr.DataOrientation, 'vector
   numsamples = (endsample-begsample+1);
   for chan=1:hdr.NumberOfChannels
     fseek(fid, (begsample-1)*4, 'cof');                 % skip the first N samples
-    [tmp, siz] = fread(fid, numsamples, 'float32');     % read these samples
+    [tmp, siz] = fread(fid, numsamples, sampletype);    % read these samples
     fseek(fid, (hdr.nSamples-endsample)*4, 'cof');      % skip the last M samples
     dat(chan,:) = tmp(:)';
   end
+  
+  % compute real microvolts using the calibration factor (resolution)
+  %  if strcmp(sampletype, 'int32')
+  %    dat = dat .* hdr.resolution; 
+  %  end
+  % TODO: check that float_32 has a calibration factor of 1
+  calib = reshape(hdr.resolution,[],1);
+  for k = 1:size(dat,2)
+    dat(:,k) = calib.*dat(:,k);
+  end
+  
   fclose(fid);
   
 elseif strcmpi(hdr.DataFormat, 'ascii') && strcmpi(hdr.DataOrientation, 'multiplexed')
