@@ -116,22 +116,28 @@ if ~strcmp(desired, 'none')
   % then apply the desired balancing
   if strcmp(desired, 'all')
     desireds = fieldnames(data.grad.balance);
-    for desired_index = 1:length(desireds)
-        desired = desireds{desired_index};
-        if ~strcmp(desired, 'current')
-          try
-            desired_montage = data.grad.balance.(desired);
-          catch
-            ft_error('unknown balancing for input data');
-          end
-          fprintf('converting the data from "none" to "%s"\n', desired);
-          data = ft_apply_montage(data, desired_montage, 'keepunused', 'yes', 'balancename', desired);
-          if istrue(cfg.updatesens)
-            fprintf('converting the sensor description from "none" to "%s"\n', desired);
-            data.grad = ft_apply_montage(data.grad, desired_montage, 'keepunused', 'yes', 'balancename', desired);
-          end
-        end % if desired
+  else
+      desireds = cfg.ssp;
+    if ~iscell(desireds)
+        ft_error('cfg.ssp must be a cell array of projector names')
     end
+
+  end
+  for desired_index = 1:length(desireds)
+    desired = desireds{desired_index};
+    if ~strcmp(desired, 'current')
+      try
+        desired_montage = data.grad.balance.(desired);
+      catch
+        ft_error('unknown balancing for input data');
+      end
+      fprintf('converting the data from "none" to "%s"\n', desired);
+      data = ft_apply_montage(data, desired_montage, 'keepunused', 'yes', 'balancename', desired);
+      if istrue(cfg.updatesens)
+        fprintf('converting the sensor description from "none" to "%s"\n', desired);
+        data.grad = ft_apply_montage(data.grad, desired_montage, 'keepunused', 'yes', 'balancename', desired);
+      end
+    end % if desired
   end
 end
 
