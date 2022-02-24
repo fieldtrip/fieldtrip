@@ -66,16 +66,25 @@ cfg.ssp = 'all';
 
 denoised_timelock = ft_denoise_ssp(cfg, timelock);
 
+%% DENOISE WITH SSP CELL ARRAY
+
+cfg = [];
+cfg.ssp = {'mag_ssp_upright_fif___pca_mags_v1', ...
+           'mag_ssp_upright_fif___pca_mags_v2', ...
+           'mag_ssp_upright_fif___pca_mags_v3'};
+
+denoised_timelock_specific = ft_denoise_ssp(cfg, timelock);
+
 %% PLOT SINGLE PLOT
 
 cfg = [];
 cfg.channel = 'MEG2611';
 cfg.layout = 'neuromag306mag_helmet.mat';
 
-ft_singleplotER(cfg, timelock, denoised_timelock);
+ft_singleplotER(cfg, timelock, denoised_timelock, denoised_timelock_specific);
 
 %% PLOT DENOISED TIMELOCK
 
 cfg = [];
 cfg.layout = 'neuromag306mag_helmet.mat';
-ft_multiplotER(cfg, timelock, denoised_timelock); %% fails
+ft_multiplotER(cfg, timelock, denoised_timelock, denoised_timelock_specific); %% fails
