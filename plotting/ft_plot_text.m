@@ -63,7 +63,7 @@ hlim                = ft_getopt(varargin, 'hlim');
 vlim                = ft_getopt(varargin, 'vlim');
 tag                 = ft_getopt(varargin, 'tag', '');
 % these have to do with the font
-color               = ft_getopt(varargin, 'color', 'k');
+color               = ft_getopt(varargin, 'fontcolor', 'k');
 fontsize            = ft_getopt(varargin, 'fontsize',   get(0, 'defaulttextfontsize'));
 fontname            = ft_getopt(varargin, 'fontname',   get(0, 'defaulttextfontname'));
 fontweight          = ft_getopt(varargin, 'fontweight', get(0, 'defaulttextfontweight'));
