@@ -1,16 +1,15 @@
 function [data] = ft_denoise_ssp(cfg, data)
 
 % FT_DENOISE_SSP projects out topographies based on ambient noise on
-% Neuromag/Elekta/MEGIN systems.
-% These are estimated during maintenance visits from the engineers of MEGIN
+% Neuromag/Elekta/MEGIN systems. These topographies are estimated during maintenance
+% visits from the engineers of MEGIN
+%
 % Use as
 %   [data] = ft_denoise_ssp(cfg, data)
 % where data should come from FT_PREPROCESSING and the configuration
 % should contain
-%   cfg.ssp        = 'all' or a cell array of SSP names to apply (default =
-%   'all')
-%   cfg.trials     = 'all' or a selection given as a 1xN vector (default =
-%   'all')
+%   cfg.ssp        = 'all' or a cell array of SSP names to apply (default = 'all')
+%   cfg.trials     = 'all' or a selection given as a 1xN vector (default = 'all')
 %   cfg.updatesens = 'no' or 'yes' (default = 'yes')
 %
 % To facilitate data-handling and distributed computing you can use
@@ -21,7 +20,7 @@ function [data] = ft_denoise_ssp(cfg, data)
 % files should contain only a single variable, corresponding with the
 % input/output structure.
 %
-% See also FT_PREPROCESSING, FT_DENOISE_PCA
+% See also FT_PREPROCESSING, FT_DENOISE_SYNTHETIC, FT_DENOISE_PCA
 
 % Copyright (C) 2004-2022, Gianpaolo Demarchi, Lau
 % Møller Andersen, Robert Oostenveld, Jan-Mathijs Schoffelen
