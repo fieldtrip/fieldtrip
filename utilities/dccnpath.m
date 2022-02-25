@@ -19,7 +19,7 @@ function file = dccnpath(filename)
 %   dccnpath = @(filename) strrep(strrep(filename,'H:','/home'),'\','/');
 % end
 
-% Copyright (C) 2012-2019, Donders Centre for Cognitive Neuroimaging, Nijmegen, NL
+% Copyright (C) 2012-2022, Donders Centre for Cognitive Neuroimaging, Nijmegen, NL
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -51,7 +51,7 @@ end
 
 alternative1 = [f x]; % this should not be used when it is only "test", since that is too generic
 alternative2 = strrep(filename, '/home/common/matlab/fieldtrip', '/Volumes/home/common/matlab/fieldtrip');
-alternative3 = strrep(filename, '/home/common/matlab/fieldtrip', '/Volumes/128GB/data/test');
+alternative3 = strrep(filename, '/home/common/matlab/fieldtrip', '/Volumes/SamsungT7/data/test');
 
 % exist(alternative1, 'file') returns 7 in case the present working directory matches alternative1
 if endsWith(pwd, alternative1)
