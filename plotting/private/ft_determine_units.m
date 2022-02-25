@@ -84,16 +84,20 @@ elseif isfield(obj, 'bnd') && isfield(obj.bnd, 'unit')
   
 else
   % try to determine the units by looking at the size of the object
-  if isfield(obj, 'chanpos') && ~isempty(obj.chanpos)
+  if isfield(obj, 'chanpos') && ~isempty(obj.chanpos) && ~all(isnan(obj.chanpos(:)))
     siz = norm(idrange(obj.chanpos));
     unit = ft_estimate_units(siz);
     
-  elseif isfield(obj, 'elecpos') && ~isempty(obj.elecpos)
+  elseif isfield(obj, 'elecpos') && ~isempty(obj.elecpos) && ~all(isnan(obj.elecpos(:)))
     siz = norm(idrange(obj.elecpos));
     unit = ft_estimate_units(siz);
     
-  elseif isfield(obj, 'coilpos') && ~isempty(obj.coilpos)
+  elseif isfield(obj, 'coilpos') && ~isempty(obj.coilpos) && ~all(isnan(obj.coilpos(:)))
     siz = norm(idrange(obj.coilpos));
+    unit = ft_estimate_units(siz);
+
+  elseif isfield(obj, 'optopos') && ~isempty(obj.optopos) && ~all(isnan(obj.optopos(:)))
+    siz = norm(idrange(obj.optopos));
     unit = ft_estimate_units(siz);
     
   elseif isfield(obj, 'pnt') && ~isempty(cat(1, obj.pnt))
