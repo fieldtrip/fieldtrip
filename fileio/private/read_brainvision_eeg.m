@@ -93,7 +93,7 @@ if strcmpi(hdr.DataFormat, 'binary') && strcmpi(hdr.DataOrientation, 'multiplexe
 
   fclose(fid);
 
-elseif strcmpi(hdr.DataFormat, 'binary') && strcmpi(hdr.DataOrientation, 'vectorized') && any(strcmpi(hdr.BinaryFormat, {'int_16', 'int_32', 'ieee_float_32]'}))
+elseif strcmpi(hdr.DataFormat, 'binary') && strcmpi(hdr.DataOrientation, 'vectorized') && any(strcmpi(hdr.BinaryFormat, {'int_16', 'int_32', 'ieee_float_32'}))
   fid = fopen_or_error(filename, 'rb', 'ieee-le');
 
   fseek(fid, 0, 'eof');
