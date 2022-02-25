@@ -1110,9 +1110,11 @@ elseif filetype_check_extension(filename, '.label') && filetype_check_header(fil
   content = 'list of vertices belonging to a region';
   
 elseif filetype_check_extension(filename, '.txt') && numel(strfind(filename,'_nrs_')) == 1
-  % This may be improved by looking into the file, rather than assuming the
-  % filename has "_nrs_" somewhere. Also, distinction by the different file
-  % types could be made
+  % This is for the ASCII-formatted NIRS data acquired with the UCL-BIRKBECK machine and postprocessed by the Paris group
+  % 
+  % This may be improved by looking into the file, rather than assuming the filename
+  % has "_nrs_" somewhere. Also, distinction by the different file types could be
+  % made
   type = 'bucn_nirs';
   manufacturer = 'BUCN';
   content = 'ascii formatted NIRS data';
