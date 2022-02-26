@@ -44,6 +44,7 @@ function [normalised] = ft_volumenormalise(cfg, mri)
 %   cfg.spmparams        = you can feed in the parameters from a prior normalisation, for example
 %                          to apply the parameters determined from an aantomical MRI to an
 %                          interpolated source resontruction
+%   cfg.initial          = Initial alignmet between target and template (optional; used for intracranial electrode alignment).
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
