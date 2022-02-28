@@ -631,6 +631,7 @@ cfg_mp.trackcallinfo = 'no';
 cfg_mp.layout  = info.cfg.layout;
 cfg_mp.channel = info.data.label(info.chansel);
 cfg_mp.dataname = info.cfg.dataname;
+cfg_mp.ylim     = info.cfg.ylim;
 currfig = gcf;
 for n = 1:length(trls)
   % ft_multiplotER should be able to make the selection, but fails due to http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2978
