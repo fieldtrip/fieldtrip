@@ -268,13 +268,19 @@ switch type
     A = 1;
     B = firls(order,f,z); % requires MATLAB signal processing toolbox
   case 'brickwall'
-    ax = linspace(0, Fs, size(dat,2));  % frequency coefficients
-    fl = nearest(ax, min(Fbp))-1;       % low cut-off frequency
-    fh = nearest(ax, max(Fbp))+1;       % high cut-off frequency
-    a  = 0; % suppresion rate of frequencies-not-of-interest
+    ax = (0:(size(dat,2)-1))./(Fs/size(dat,2)); %linspace(0, Fs, size(dat,2));  % frequency coefficients
+    
+    a  = ones(1, size(dat,2));
+    fl = nearest(ax, min(Fbp)); % low cut-off frequency
+    fh = nearest(ax, max(Fbp)); % high cut-off frequency
+    a(fl:fh) = 0;
+    fl = nearest(ax, Fs-max(Fbp));
+    fh = nearest(ax, Fs-min(Fbp));
+    a(fl:fh) = 0;
+    
     f           = fft(dat,[],2);        % FFT
-    f(:,fl:fh)  = a.*f(:,fl:fh);        % perform band cut-off
-    filt        = 2*real(ifft(f,[],2)); % iFFT
+    f           = f.*a(ones(size(dat,1)),:); % brickwall
+    filt        = real(ifft(f,[],2)); % iFFT
     return
   otherwise
     ft_error('unsupported filter type "%s"', type);
