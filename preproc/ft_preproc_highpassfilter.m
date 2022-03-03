@@ -50,7 +50,8 @@ function [filt, B, A] = ft_preproc_highpassfilter(dat, Fs, Fhp, N, type, dir, in
 %
 % See also PREPROC
 
-% Copyright (c) 2003-2021, Robert Oostenveld, Arjen Stolk, Andreas Widmann
+% Copyright (c) 2003-2022, Robert Oostenveld, Arjen Stolk, Andreas Widmann,
+% Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.

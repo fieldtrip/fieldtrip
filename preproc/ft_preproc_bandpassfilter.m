@@ -56,7 +56,8 @@ function [filt, B, A] = ft_preproc_bandpassfilter(dat, Fs, Fbp, order, type, dir
 %
 % See also PREPROC
 
-% Copyright (c) 2003-2021, Robert Oostenveld, Arjen Stolk, Andreas Widmann
+% Copyright (c) 2003-2022, Robert Oostenveld, Arjen Stolk, Andreas Widmann,
+% Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -277,7 +278,7 @@ switch type
     fbin2 = nearest(ax, [Fs-max(Fbp) Fs-min(Fbp)]); % same band at the other end of the spectrum 
     
     a(1:(fbin1(1)-1))            = 0;
-    a((fbin1(1)+1):(fbin2(1)-1)) = 0;
+    a((fbin1(2)+1):(fbin2(1)-1)) = 0;
     a((fbin2(2)+1):end)          = 0;
     
     f    = fft(dat,[],2);             % FFT
