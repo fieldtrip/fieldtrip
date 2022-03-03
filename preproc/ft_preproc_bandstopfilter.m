@@ -147,6 +147,10 @@ end
 % Nyquist frequency
 Fn = Fs/2;
 
+% demean the data before filtering
+meandat = nanmean(dat,2);
+dat = bsxfun(@minus, dat, meandat);
+
 % compute filter coefficients
 switch type
   case 'but'
@@ -268,20 +272,19 @@ switch type
     A = 1;
     B = firls(order,f,z); % requires MATLAB signal processing toolbox
   case 'brickwall'
-    ax = (0:(size(dat,2)-1))./(Fs/size(dat,2)); %linspace(0, Fs, size(dat,2));  % frequency coefficients
+    ax = (0:(size(dat,2)-1))./(Fs/size(dat,2)); % frequency axis
     
-    a  = ones(1, size(dat,2));
-    fl = nearest(ax, min(Fbp)); % low cut-off frequency
-    fh = nearest(ax, max(Fbp)); % high cut-off frequency
-    a(fl:fh) = 0;
-    fl = nearest(ax, Fs-max(Fbp));
-    fh = nearest(ax, Fs-min(Fbp));
-    a(fl:fh) = 0;
+    a    = ones(1, size(dat,2));
+    fbin1 = nearest(ax, [min(Fbp)    max(Fbp)]);
+    fbin2 = nearest(ax, [Fs-max(Fbp) Fs-min(Fbp)]); % same band at the other end of the spectrum 
     
-    f           = fft(dat,[],2);        % FFT
-    f           = f.*a(ones(size(dat,1)),:); % brickwall
-    filt        = real(ifft(f,[],2)); % iFFT
-    return
+    a(fbin1(1):fbin1(2)) = 0;
+    a(fbin2(1):fbin2(2)) = 0;
+    
+    f    = fft(dat,[],2);             % FFT
+    f    = f.*a(ones(size(dat,1)),:); % brickwall
+    filt = real(ifft(f,[],2));        % iFFT
+    
   otherwise
     ft_error('unsupported filter type "%s"', type);
 end
@@ -291,32 +294,30 @@ if strcmp(plotfiltresp, 'yes')
   plotfresp(B, A, [], Fs, dir)
 end
 
-% demean the data before filtering
-meandat = nanmean(dat,2);
-dat = bsxfun(@minus, dat, meandat);
-
-try
-  filt = filter_with_correction(B,A,dat,dir,usefftfilt);
-catch
-  switch instabilityfix
-    case 'no'
-      rethrow(lasterror);
-    case 'reduce'
-      ft_warning('off','backtrace');
-      ft_warning('instability detected - reducing the %dth order filter to an %dth order filter', order, order-1);
-      ft_warning('on','backtrace');
-      filt = ft_preproc_bandstopfilter(dat,Fs,Fbp,order-1,type,dir,instabilityfix);
-    case 'split'
-      N1 = ceil(order/2);
-      N2 = floor(order/2);
-      ft_warning('off','backtrace');
-      ft_warning('instability detected - splitting the %dth order filter in a sequential %dth and a %dth order filter', order, N1, N2);
-      ft_warning('on','backtrace');
-      filt1 = ft_preproc_bandstopfilter(dat  ,Fs,Fbp,N1,type,dir,instabilityfix);
-      filt  = ft_preproc_bandstopfilter(filt1,Fs,Fbp,N2,type,dir,instabilityfix);
-    otherwise
-      ft_error('incorrect specification of instabilityfix');
-  end % switch
+if ~isequal(type, 'brickwall')
+  try
+    filt = filter_with_correction(B,A,dat,dir,usefftfilt);
+  catch
+    switch instabilityfix
+      case 'no'
+        rethrow(lasterror);
+      case 'reduce'
+        ft_warning('off','backtrace');
+        ft_warning('instability detected - reducing the %dth order filter to an %dth order filter', order, order-1);
+        ft_warning('on','backtrace');
+        filt = ft_preproc_bandstopfilter(dat,Fs,Fbp,order-1,type,dir,instabilityfix);
+      case 'split'
+        N1 = ceil(order/2);
+        N2 = floor(order/2);
+        ft_warning('off','backtrace');
+        ft_warning('instability detected - splitting the %dth order filter in a sequential %dth and a %dth order filter', order, N1, N2);
+        ft_warning('on','backtrace');
+        filt1 = ft_preproc_bandstopfilter(dat  ,Fs,Fbp,N1,type,dir,instabilityfix);
+        filt  = ft_preproc_bandstopfilter(filt1,Fs,Fbp,N2,type,dir,instabilityfix);
+      otherwise
+        ft_error('incorrect specification of instabilityfix');
+    end % switch
+  end
 end
 
 % add the mean back to the filtered data
