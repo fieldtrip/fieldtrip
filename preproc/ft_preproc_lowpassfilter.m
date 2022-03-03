@@ -275,7 +275,7 @@ switch type
     a((fbin1+1):(fbin2-1)) = 0;
     
     f    = fft(dat,[],2);             % FFT
-    f    = f.*a(ones(size(dat,1)),:); % brickwall
+    f    = f.*a(ones(size(dat,1),1),:); % brickwall
     filt = real(ifft(f,[],2));        % iFFT
  
   otherwise
