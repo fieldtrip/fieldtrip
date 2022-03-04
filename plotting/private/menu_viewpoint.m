@@ -1,4 +1,4 @@
-function ft_viewpoint(h, coordsys)
+function menu_viewpoint(h, coordsys)
 
 h = getparent(h);
 
@@ -11,7 +11,7 @@ setappdata(h, 'coordsys', coordsys);
 cm = uicontextmenu(h);
 viewpoint = {'top', 'bottom', 'left', 'right', 'front', 'back'};
 for i=1:length(viewpoint)
-  uimenu(cm, 'Text', viewpoint{i}, 'callback', @cb_viewpoint);
+  uimenu(cm, 'Label', viewpoint{i}, 'callback', @cb_viewpoint);
 end
 
 try
@@ -19,13 +19,21 @@ try
   h.ContextMenu = cm;
 catch
   % FIXME it would be nice to get this to work on older MATLAB versions
-  % 2018b has h.UIContextMenu, but it seems to work a bit differently
+  % (e.g.) 2018b has h.UIContextMenu, but it seems to work a bit
+  % differently, but it's worth a shot as fallback option
+  set(h, 'UIContextMenu', cm);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_viewpoint(h, eventdata)
-h = getparent(h);
-setviewpoint(h, getappdata(h, 'coordsys'), eventdata.Source.Text);
+h  = getparent(h);
+ax = findall(h, 'type', 'axes');
+try
+  str = eventdata.Source.Text;
+catch
+  str = eventdata.Source.Label;
+end
+setviewpoint(ax, getappdata(h, 'coordsys'), str);
 uiresume;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
