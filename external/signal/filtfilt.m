@@ -1,20 +1,3 @@
-% Copyright (C) 1999 Paul Kienzle
-% Copyright (C) 2007 Francesco Potortì
-% Copyright (C) 2008 Luca Citi
-%
-% This program is free software; you can redistribute it and/or modify
-% it under the terms of the GNU General Public License as published by
-% the Free Software Foundation; either version 2 of the License, or
-% (at your option) any later version.
-%
-% This program is distributed in the hope that it will be useful,
-% but WITHOUT ANY WARRANTY; without even the implied warranty of
-% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-% GNU General Public License for more details.
-%
-% You should have received a copy of the GNU General Public License
-% along with this program; If not, see <http://www.gnu.org/licenses/>.
-
 % usage: y = filtfilt(b, a, x)
 %
 % Forward and reverse filter the signal. This corrects for phase
@@ -30,6 +13,24 @@
 %    y = filtfilt(b,a,x); z = filter(b,a,x); % apply filter
 %    plot(t,x,';data;',t,y,';filtfilt;',t,z,';filter;')
 
+% Copyright (C) 1999 Paul Kienzle
+% Copyright (C) 2007 Francesco Potortì
+% Copyright (C) 2008 Luca Citi
+% Copytight (C) 2022 Jan-Mathijs Schoffelen
+%
+% This program is free software; you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation; either version 2 of the License, or
+% (at your option) any later version.
+%
+% This program is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
+%
+% You should have received a copy of the GNU General Public License
+% along with this program; If not, see <http://www.gnu.org/licenses/>.
+
 % Changelog:
 % 2000 02 pkienzle@kienzle.powernet.co.uk
 %      - pad with zeros to load up the state vector on filter reverse.
@@ -39,9 +40,11 @@
 %      - work for multiple columns as well
 % 2008 12 lciti@essex.ac.uk
 %      - fixed instability issues with IIR filters and noisy inputs
-%	    - initial states computed according to Likhterov & Kopeika, 2003
+%	     - initial states computed according to Likhterov & Kopeika, 2003
 %      - use of a "reflection method" to reduce end effects
 %      - added some basic tests
+% 2022 03 janmathijs.schoffelen@donders.ru.nl
+%      - vectorization across channels for speed up
 
 % TODO:  (pkienzle) My version seems to have similar quality to matlab,
 %	but both are pretty bad.  They do remove gross lag errors, though.
@@ -85,14 +88,24 @@ else
 end
 si(1) = [];
 
-y  = zeros(size(x));
-for c = 1:size(x, 2)	% filter all columns, one by one
+if 0
+  % this is the original, slower, non-vectorized version
+  y  = zeros(size(x));
+  for c = 1:size(x, 2)	% filter all columns, one by one
     v = [2*x(1,c)-x((lrefl+1):-1:2,c); x(:,c);
-        2*x(end,c)-x((end-1):-1:end-lrefl,c)]; % a column vector
+         2*x(end,c)-x((end-1):-1:end-lrefl,c)]; % a column vector
     % Do forward and reverse filtering
     v = filter(b,a,v,si*v(1));		       % forward filter
     v = flipud(filter(b,a,flipud(v),si*v(end))); % reverse filter
     y(:,c) = v((lrefl+1):(lx+lrefl));
+  end
+else
+  % create a padded version of the data (using data from the edges), filter twice
+  % and subselect the center portion, matrix-wise rather than in the above for-loop
+  v = [2.*x(ones(lrefl,1), :) - x((lrefl+1):-1:2,:); x; 2.*x(ones(lrefl,1).*lx,:) - x((lx-1):-1:(lx-lrefl),:)];
+  v = filter(b, a, v, si(:)*v(1,:)); % forward filter
+  v = filter(b, a, v(end:-1:1,:), si(:)*v(end,:)); % reverse filter
+  y = v((lrefl+lx):-1:(lrefl+1),:);
 end
 
 if (rotate)			% x was a row vector
