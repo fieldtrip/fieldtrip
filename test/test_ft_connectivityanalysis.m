@@ -1,6 +1,6 @@
 function test_ft_connectivityanalysis
 
-% MEM 2gb
+% MEM 4gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_connectivityanalysis ft_connectivitysimulation ft_freqanalysis ft_mvaranalysis ft_connectivity_cancorr ft_connectivity_corr ft_connectivity_csd2transfer ft_connectivity_dtf ft_connectivity_granger ft_connectivity_mim ft_connectivity_mutualinformation ft_connectivity_pdc ft_connectivity_plm ft_connectivity_powcorr_ortho ft_connectivity_ppc ft_connectivity_psi ft_connectivity_wpli.m
 
