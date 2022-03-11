@@ -51,7 +51,7 @@ end
 
 alternative1 = [f x]; % this should not be used when it is only "test", since that is too generic
 alternative2 = strrep(filename, '/home/common/matlab/fieldtrip', '/Volumes/home/common/matlab/fieldtrip');
-alternative3 = strrep(filename, '/home/common/matlab/fieldtrip', '/Volumes/SamsungT7/data/test');
+alternative3 = strrep(filename, '/home/common/matlab/fieldtrip', '/Volumes/SamsungT7/fieldtrip');
 
 % exist(alternative1, 'file') returns 7 in case the present working directory matches alternative1
 if endsWith(pwd, alternative1)
