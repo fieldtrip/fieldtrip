@@ -1551,6 +1551,14 @@ elseif filetype_check_extension(filename, '.meghdf5')
   type = 'yorkinstruments_hdf5';
   manufacturer = 'York Instruments';
   content = 'MEG header and data';
+elseif filetype_check_extension(filename, '.jnii')
+  type = 'openjdata_jnii';
+  manufacturer = 'OpenJData'; % See http://openjdata.org
+  content = 'MRI';
+elseif filetype_check_extension(filename, '.bnii')
+  type = 'openjdata_bnii';
+  manufacturer = 'OpenJData'; % See http://openjdata.org
+  content = 'MRI';
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
