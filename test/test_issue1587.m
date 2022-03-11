@@ -112,7 +112,7 @@ end
 
 %%
 
-dataset = dccnpath('/home/common/matlab/fieldtrip/data/Subject01.ds');
+dataset = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds');
 
 grad = ft_read_sens(dataset, 'senstype', 'meg');
 

@@ -8,7 +8,7 @@ function test_headmodel_localspheres_new_old
 % get the data which is needed
 
 % read in the gradiometer information
-cd(dccnpath('/home/common/matlab/fieldtrip/data'));
+cd(dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf'));
 hdr  = ft_read_header('Subject01.ds');
 grad = hdr.grad;
 

@@ -4,7 +4,7 @@ function test_tutorial_preprocessing
 % MEM 2gb
 % DEPENDENCY ft_definetrial ft_preprocessing
 
-dataset = dccnpath('/home/common/matlab/fieldtrip/data/Subject01.ds');
+dataset = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds');
 
 cfg                         = [];
 cfg.dataset                 = dataset;

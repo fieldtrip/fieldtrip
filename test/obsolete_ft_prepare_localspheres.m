@@ -25,7 +25,7 @@ success = true;
 % get the data which is needed
 
 % read in the gradiometer information
-hdr  = ft_read_header(dccnpath('/home/common/matlab/fieldtrip/data/Subject01.ds'));
+hdr  = ft_read_header(dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds'));
 grad = hdr.grad;
 
 % read in the segmented mri

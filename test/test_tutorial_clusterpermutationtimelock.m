@@ -5,7 +5,7 @@ function test_tutorial_clusterpermutationtimelock(dataset)
 % DEPENDENCY ft_timelockanalysis ft_multiplotER ft_singleplotER ft_timelockstatistics ft_topoplotER ft_clusterplot ft_megplanar ft_combineplanar
 
 if nargin==0
-  dataset = dccnpath('/home/common/matlab/fieldtrip/data/Subject01.ds');
+  dataset = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds');
 end
 
 cfg                         = [];

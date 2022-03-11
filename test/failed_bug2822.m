@@ -16,7 +16,7 @@ path_to_load = dccnpath('/home/common/matlab/fieldtrip');
 
 % find the interesting segments of data
 cfg = [];
-cfg.dataset                 = dccnpath('/home/common/matlab/fieldtrip/data/Subject01.ds');       % name of CTF dataset
+cfg.dataset                 = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds');       % name of CTF dataset
 cfg.trialdef.eventtype      = 'backpanel trigger';
 cfg.trialdef.prestim        = 1;
 cfg.trialdef.poststim       = 2;
