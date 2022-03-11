@@ -8,7 +8,7 @@ function test_bug843
 % behave robustly in combination with a specified refchannel; also
 % directionality needs to be documented
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/preproc_ctf275'));
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/preproc_ctf275.mat'));
 
 % constrain to MEG channels
 cfg = [];

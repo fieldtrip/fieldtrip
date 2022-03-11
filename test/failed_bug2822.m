@@ -7,12 +7,8 @@ function failed_bug2822
 % this is to test the implementation of the frequency domain MNE reconstruction
 
 %% Start-up
-%path_ft = '/home/electromag/lucamb/fieldtrip-dev';
-%addpath(path_ft)
 
 %% Load data (dataFIC)
-path_to_load = dccnpath('/home/common/matlab/fieldtrip');
-%load(dccnpath([path_to_load, '/data/test/dataFIC.mat']))
 
 % find the interesting segments of data
 cfg = [];
@@ -44,7 +40,7 @@ freq = ft_freqanalysis(cfg, dataFIC);
 
 %% Fake Headmodel and leadfield
 
-load(dccnpath([path_to_load, '/template/headmodel/standard_singleshell.mat']))
+load(dccnpath('/home/common/matlab/fieldtrip/template/headmodel/standard_singleshell.mat'))
 
 % use 'icosahedron' private function to generate the mash
 mesh = [];
