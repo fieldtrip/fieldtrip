@@ -20,7 +20,7 @@ load(fullfile(datadir, 'segmentedmri.mat'));
 mri = segmentedmri; clear segmentedmri;
 
 % specify the file for the headshape
-hdmfile  = dccnpath('/home/common/matlab/fieldtrip/data/Subject01.shape');
+hdmfile  = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.shape');
 
 % read in the headshape
 shape = ft_read_headshape(hdmfile);

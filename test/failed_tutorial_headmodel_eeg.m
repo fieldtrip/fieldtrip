@@ -6,7 +6,7 @@ function failed_tutorial_headmodel_eeg
 
 clear all;
 %% load mri
-mri=ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/Subject01.mri'));
+mri=ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.mri'));
 
 %% segmentation
 load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/segmentedmri.mat'));

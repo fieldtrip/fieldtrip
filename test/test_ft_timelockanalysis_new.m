@@ -334,7 +334,7 @@ if 0
     tlock=ft_timelockanalysis_new(cfg,data);
     cfg=[];
     cfg.method='lcmv';
-    cfg.hdmfile=dccnpath('/home/common/matlab/fieldtrip/data/Subject01.hdm');
+    cfg.hdmfile=dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.hdm');
     cfg.grad=data.grad;
     source=ft_sourceanalysis(cfg,tlock);
 
@@ -350,7 +350,7 @@ if 0
     save tlck tlckFC tlckFIC;
     cfg=[];
     cfg.method='lcmv';
-    cfg.hdmfile=dccnpath('/home/common/matlab/fieldtrip/data/Subject01.hdm');
+    cfg.hdmfile=dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.hdm');
     cfg.grad=data.grad;
     sourceFC=ft_sourceanalysis(cfg,tlckFC);
 end
@@ -382,7 +382,7 @@ if 0
     cfg.headmodel=vol;
     source=ft_sourceanalysis(cfg,tlock);
 
-    mri=ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/Subject01.mri'));
+    mri=ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.mri'));
     sourcediff=source;
     % sourcediff.avg.pow=(source.avg.pow-source.avg.noise)./source.avg.noise;
     sourcediff.avg.pow=(source.avg.pow)./source.avg.noise;

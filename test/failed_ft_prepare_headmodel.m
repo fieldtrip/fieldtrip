@@ -26,14 +26,14 @@ load standard_mri
 load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/segmentedmri.mat'));
 
 % specify the file for the headshape
-shapefile  = dccnpath('/home/common/matlab/fieldtrip/data/Subject01.shape');
+shapefile  = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.shape');
 
 % read in the headshape
 shape = ft_read_headshape(shapefile);
 shapevol.bnd = shape;
 
 % hdmfile
-hdmfile  = dccnpath('/home/common/matlab/fieldtrip/data/Subject01.hdm');
+hdmfile  = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.hdm');
 
 
 %   vol = ft_prepare_headmodel(cfg)       or
