@@ -206,13 +206,13 @@ cfg           = [];
 cfg.method    = 'dics';
 cfg.refchan   = 'EMGlft';
 cfg.frequency = 18;
-cfg.headmodel = 'SubjectCMC.hdm';
-cfg.inwardshift     = 1;
+cfg.headmodel = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/SubjectCMC.hdm');
+cfg.inwardshift = 1;
 cfg.sourcemodel.resolution = 1;
 cfg.sourcemodel.unit       = 'cm';
 source        = ft_sourceanalysis(cfg, freq);
 
-mri = ft_read_mri('SubjectCMC.mri');
+mri = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/SubjectCMC.mri'));
 mri = ft_volumereslice([], mri);
 
 cfg            = [];

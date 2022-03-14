@@ -22,7 +22,7 @@ function test_example_ica_eog
 %
 % preprocessing of example dataset
 cfg = [];
-cfg.dataset            = dccnpath('/home/common/matlab/fieldtrip/data/ArtifactMEG.ds');
+cfg.dataset            = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/ArtifactMEG.ds');
 cfg.trialdef.eventtype = 'trial';
 cfg = ft_definetrial(cfg);
 
@@ -51,7 +51,7 @@ comp = ft_componentanalysis(cfg, data);
 %   cfg = [];
 %   cfg = ...
 %   freq = ft_freqanalysis(cfg, comp);
-% 
+%
 % % or
 % %
 %   cfg = [];
