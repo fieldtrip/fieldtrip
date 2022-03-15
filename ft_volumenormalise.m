@@ -155,7 +155,7 @@ if ~any(strcmp(template_ftype, {'analyze_hdr', 'analyze_img', 'minc', 'nifti'}))
   ft_error('the template anatomy should be stored in an SPM-compatible file');
 end
 
-if isfield(cfg, 'templatemask') || ~isempty(cfg.templatemask)
+if isfield(cfg, 'templatemask') && ~isempty(cfg.templatemask)
   templatemsk_ftype = ft_filetype(cfg.templatemask);
   if ~any(strcmp(templatemsk_ftype, {'analyze_hdr', 'analyze_img', 'minc', 'nifti'}))
     ft_error('the template mask should be stored in an SPM-compatible file');
