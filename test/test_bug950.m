@@ -10,7 +10,7 @@ function test_bug950
 % the headmodel for the inverse/forward steps
 
 % load in some data
-load(dccnpath(fullfile('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/','preproc_ctf151')));
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/preproc_ctf151.mat'));
 
 cfg = [];
 cfg.gradient = 'G3BR';

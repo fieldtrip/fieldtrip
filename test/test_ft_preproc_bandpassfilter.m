@@ -33,100 +33,46 @@ dev             = [];
 plotfiltresp    = [];
 usefftfilt      = [];
 
+filttypes = {'brickwall', 'firws' 'fir' 'firls' 'but'};
+filtdirs  = {'onepass' 'onepass-reverse' 'twopass' 'twopass-reverse' 'twopass-average' 'onepass-zerophase' 'onepass-reverse-zerophase' 'onepass-minphase'};
+filtorders = {[] 1 2 4 8};
+
 result = {};
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, [], 'brickwall', [], instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt); % this does not use order and dir
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 1, 'but'      , 'onepass'                  , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 1, 'but'      , 'onepass-reverse'          , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 1, 'but'      , 'twopass'                  , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 1, 'but'      , 'twopass-reverse'          , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 1, 'but'      , 'twopass-average'          , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 2, 'but'      , 'onepass'                  , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 2, 'but'      , 'onepass-reverse'          , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 2, 'but'      , 'twopass'                  , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 2, 'but'      , 'twopass-reverse'          , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 2, 'but'      , 'twopass-average'          , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 2, 'firws'    , 'onepass'                  , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 2, 'firws'    , 'onepass-reverse'          , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 2, 'firws'    , 'onepass-zerophase'        , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 2, 'firws'    , 'onepass-reverse-zerophase', instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 2, 'firws'    , 'onepass-minphase'         , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 2, 'firws'    , 'twopass'                  , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 2, 'firws'    , 'twopass-reverse'          , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 2, 'firws'    , 'twopass-average'          , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 2, 'fir'      , 'onepass'                  , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 2, 'fir'      , 'onepass-reverse'          , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 2, 'fir'      , 'onepass-zerophase'        , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 2, 'fir'      , 'onepass-reverse-zerophase', instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 2, 'fir'      , 'onepass-minphase'         , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 2, 'fir'      , 'twopass'                  , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 2, 'fir'      , 'twopass-reverse'          , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 2, 'fir'      , 'twopass-average'          , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 2, 'firls'    , 'onepass'                  , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 2, 'firls'    , 'onepass-reverse'          , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 2, 'firls'    , 'onepass-zerophase'        , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 2, 'firls'    , 'onepass-reverse-zerophase', instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 2, 'firls'    , 'onepass-minphase'         , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 2, 'firls'    , 'twopass'                  , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 2, 'firls'    , 'twopass-reverse'          , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 2, 'firls'    , 'twopass-average'          , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 4, 'but'      , 'onepass'                  , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 4, 'but'      , 'onepass-reverse'          , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 4, 'but'      , 'twopass'                  , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 4, 'but'      , 'twopass-reverse'          , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 4, 'but'      , 'twopass-average'          , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 4, 'firws'    , 'onepass'                  , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 4, 'firws'    , 'onepass-reverse'          , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 4, 'firws'    , 'onepass-zerophase'        , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 4, 'firws'    , 'onepass-reverse-zerophase', instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 4, 'firws'    , 'onepass-minphase'         , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 4, 'firws'    , 'twopass'                  , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 4, 'firws'    , 'twopass-reverse'          , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 4, 'firws'    , 'twopass-average'          , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 4, 'fir'      , 'onepass'                  , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 4, 'fir'      , 'onepass-reverse'          , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 4, 'fir'      , 'onepass-zerophase'        , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 4, 'fir'      , 'onepass-reverse-zerophase', instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 4, 'fir'      , 'onepass-minphase'         , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 4, 'fir'      , 'twopass'                  , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 4, 'fir'      , 'twopass-reverse'          , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 4, 'fir'      , 'twopass-average'          , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 4, 'firls'    , 'onepass'                  , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 4, 'firls'    , 'onepass-reverse'          , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 4, 'firls'    , 'onepass-zerophase'        , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 4, 'firls'    , 'onepass-reverse-zerophase', instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 4, 'firls'    , 'onepass-minphase'         , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 4, 'firls'    , 'twopass'                  , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 4, 'firls'    , 'twopass-reverse'          , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 4, 'firls'    , 'twopass-average'          , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 8, 'but'      , 'onepass'                  , 'split', [], [], [], [], []); % this one is instable
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 8, 'but'      , 'onepass-reverse'          , 'split', [], [], [], [], []);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 8, 'but'      , 'twopass'                  , 'split', [], [], [], [], []);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 8, 'but'      , 'twopass-reverse'          , 'split', [], [], [], [], []);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 8, 'but'      , 'twopass-average'          , 'split', [], [], [], [], []);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 8, 'firws'    , 'onepass'                  , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 8, 'firws'    , 'onepass-reverse'          , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 8, 'firws'    , 'onepass-zerophase'        , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 8, 'firws'    , 'onepass-reverse-zerophase', instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 8, 'firws'    , 'onepass-minphase'         , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 8, 'firws'    , 'twopass'                  , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 8, 'firws'    , 'twopass-reverse'          , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 8, 'firws'    , 'twopass-average'          , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 8, 'fir'      , 'onepass'                  , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 8, 'fir'      , 'onepass-reverse'          , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 8, 'fir'      , 'onepass-zerophase'        , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 8, 'fir'      , 'onepass-reverse-zerophase', instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 8, 'fir'      , 'onepass-minphase'         , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 8, 'fir'      , 'twopass'                  , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 8, 'fir'      , 'twopass-reverse'          , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 8, 'fir'      , 'twopass-average'          , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 8, 'firls'    , 'onepass'                  , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 8, 'firls'    , 'onepass-reverse'          , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 8, 'firls'    , 'onepass-zerophase'        , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 8, 'firls'    , 'onepass-reverse-zerophase', instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 8, 'firls'    , 'onepass-minphase'         , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 8, 'firls'    , 'twopass'                  , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 8, 'firls'    , 'twopass-reverse'          , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
-result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 8, 'firls'    , 'twopass-average'          , instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+opts   = {};
+for i1 = 1:numel(filttypes)
+  if isequal(filttypes{i1}, 'brickwall')
+    opts{end+1}   =[filttypes{i1}]; 
+    result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, [], filttypes{i1}, [], instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+    continue;
+  elseif isequal(filttypes{i1}, 'but')
+    sel2 = 1:5;
+    sel3 = 2:4; % order 8 may become unstable, and thus requires an instabilityfix
+  elseif isequal(filttypes{i1}, 'firws')
+    sel2 = find(~contains(filtdirs, 'twopass')); % this leads to a filter that is not stable
+    sel3 = 1; % the low number orders do not make sense at all for the finite impulse filters.
+  else
+    sel2 = 1:numel(filtdirs);
+    sel3 = 1;
+  end
+  for i2 = sel2
+    for i3 = sel3
+      tmp = filtorders{i3};
+      if isempty(tmp)
+        tmp = 'defaultorder';
+      elseif isnumeric(tmp)
+        tmp = sprintf('order %d', tmp);
+      end
+      opts{end+1}   = sprintf('%s_%s_%s', filttypes{i1}, filtdirs{i2}, tmp); 
+      result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, filtorders{i3}, filttypes{i1}, filtdirs{i2}, instabilityfix, df, wintype, dev, plotfiltresp, usefftfilt);
+    end
+  end
+end
+
+% result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 8, 'but'      , 'onepass'                  , 'split', [], [], [], [], []); % this one is instable
+% result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 8, 'but'      , 'onepass-reverse'          , 'split', [], [], [], [], []);
+% result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 8, 'but'      , 'twopass'                  , 'split', [], [], [], [], []);
+% result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 8, 'but'      , 'twopass-reverse'          , 'split', [], [], [], [], []);
+% result{end+1} = ft_preproc_bandpassfilter(dat, Fs, Fbp, 8, 'but'      , 'twopass-average'          , 'split', [], [], [], [], []);
 
 % all iterations were done with (slightly) different options, hence the results should not be equal
 for i=1:numel(result)
@@ -134,3 +80,19 @@ for i=1:numel(result)
     assert(~isequal(result{i}, result{j}), 'the results %d and %d should not be equal', i, j);
   end
 end
+
+for i=1:size(result{1},1)
+  for k=1:numel(result)
+    for m=(k+1):numel(result)
+      b(k,m) = result{k}(i,:)/result{m}(i,:);
+      b(m,k) = result{m}(i,:)/result{k}(i,:);
+    end
+    B(:,:,i) = b;
+  end
+end
+n = numel(result);
+figure;imagesc((mean(B,3)+mean(B,3)')/2);
+set(gca, 'xtick', 1:n, 'ytick', 1:n, 'xticklabel', opts', 'yticklabel', opts', 'ticklabelinterpreter', 'none');
+set(gcf, 'position', [230 47 993 750]);
+colorbar
+axis equal;axis tight

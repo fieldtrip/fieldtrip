@@ -120,7 +120,7 @@ function [cfg] = ft_databrowser(cfg, data)
 % FT_ARTIFACT_JUMP, FT_ARTIFACT_MANUAL, FT_ARTIFACT_THRESHOLD, FT_ARTIFACT_CLIP,
 % FT_ARTIFACT_ECG, FT_COMPONENTANALYSIS
 
-% Copyright (C) 2009-2020, Robert Oostenveld, Ingrid Nieuwenhuis
+% Copyright (C) 2009-2022, Robert Oostenveld, Ingrid Nieuwenhuis
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.

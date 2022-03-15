@@ -25,7 +25,9 @@ grad1 = ft_read_sens(filename, 'senstype', 'meg', 'coilaccuracy', 1);
 grad2 = ft_read_sens(filename, 'senstype', 'meg', 'coilaccuracy', 2);
 
 if false
-  % this only ran once on 12 Oct 2018 with the old code
+  % this only ran once on 12 Oct 2018 with the old code, and for gradx_old
+  % it was recomputed with the latest FT on Feb 28, 2022 (after adding the
+  % SSP balancing to the grad structure
   gradx_old = ft_read_sens(filename, 'senstype', 'meg', 'coilaccuracy', []);
   grad0_old = ft_read_sens(filename, 'senstype', 'meg', 'coilaccuracy', 0);
   grad1_old = ft_read_sens(filename, 'senstype', 'meg', 'coilaccuracy', 1);

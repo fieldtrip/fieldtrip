@@ -5,8 +5,8 @@ function test_bug1530
 % DEPENDENCY ft_sourceplot
 
 % The problem: apparently ft_sourceplot fails on parameterselection
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1530/cfg_sourceDiffIntNorm'));
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1530/sourceDiffIntNorm'));
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1530/cfg_sourceDiffIntNorm.mat'));
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1530/sourceDiffIntNorm.mat'));
 
 % update surffile according to new filename
 cfg.surffile = 'surface_inflated_both.mat';

@@ -105,7 +105,7 @@ end % for all datasets
 % this checks that all three CTF implementations still work
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-filename = dccnpath('/home/common/matlab/fieldtrip/data/Subject01.ds');
+filename = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds');
 hdr1 = ft_read_header(filename, 'headerformat', 'ctf_ds');
 hdr2 = ft_read_header(filename, 'headerformat', 'read_ctf_res4');
 %hdr3 = ft_read_header(filename, 'headerformat', 'ctf_read_res4');

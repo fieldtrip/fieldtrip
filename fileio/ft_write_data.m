@@ -594,9 +594,6 @@ switch dataformat
     if ~isempty(evt)
       ft_error('writing events is not supported');
     end
-    if nchans~=1
-      ft_error('this format only supports single channel continuous data');
-    end
     
     [path, file, ext] = fileparts(filename);
     filename = fullfile(path, [file '.' dataformat]);
@@ -608,7 +605,7 @@ switch dataformat
         options = {'BitsPerSample', nbits};
     end % switch
     
-    audiowrite(filename, dat, hdr.Fs, options{:});
+    audiowrite(filename, dat', hdr.Fs, options{:});
     
   case 'plexon_nex'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

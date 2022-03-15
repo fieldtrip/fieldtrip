@@ -3,7 +3,7 @@ function test_ft_badchannel
 % WALLTIME 00:10:00
 % MEM 2gb
 
-dataset = dccnpath('/home/common/matlab/fieldtrip/data/Subject01.ds');
+dataset = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds');
 
 ft_debug off
 interactive = false;

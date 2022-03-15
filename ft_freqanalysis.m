@@ -401,7 +401,7 @@ switch cfg.method
     cfg.bpfiltwintype    = ft_getopt(cfg, 'bpfiltwintype');
     cfg.bpfiltdev        = ft_getopt(cfg, 'bpfiltdev');
     cfg.width            = ft_getopt(cfg, 'width', 1);
-    cfg.edgartnan        = istrue(ft_getopt(cfg, 'edgeartnan', 'no'));
+    cfg.edgeartnan       = ft_getopt(cfg, 'edgeartnan', 'no');
     
     fn = fieldnames(cfg);
     bpfiltoptions = ft_cfg2keyval(keepfields(cfg, fn(startsWith(fn, 'bp'))));

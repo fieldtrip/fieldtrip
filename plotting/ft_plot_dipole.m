@@ -12,16 +12,18 @@ function h = ft_plot_dipole(pos, ori, varargin)
 %   'length'    = number indicating length of the stick (default = 'auto')
 %   'thickness' = number indicating thickness of the stick (default = 'auto')
 %   'color'     = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r' (default = 'r')
-%   'unit'      = 'm', 'cm' or 'mm', used for automatic scaling (default = 'cm')
-%   'scale'     = scale the dipole with the amplitude, can be 'none',  'both', 'diameter', 'length' (default = 'none')
 %   'alpha'     = alpha value of the plotted dipole
+%   'scale'     = scale the dipole with the amplitude, can be 'none',  'both', 'diameter', 'length' (default = 'none')
+%   'unit'      = 'm', 'cm' or 'mm', used for automatic scaling (default = 'cm')
+%   'coordsys'  = string, assume the data to be in the specified coordinate system (default = 'unknown')
+%   'axes'      = boolean, whether to plot the axes of the 3D coordinate system (default = false)
 %
 % Example
 %   ft_plot_dipole([0 0 0], [1 2 3], 'color', 'r', 'alpha', 1)
 %
 % See also FT_PLOT_MESH, FT_PLOT_ORTHO
 
-% Copyright (C) 2009-2018, Robert Oostenveld
+% Copyright (C) 2009-2022, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -41,16 +43,16 @@ function h = ft_plot_dipole(pos, ori, varargin)
 %
 % $Id$
 
-ws = ft_warning('on', 'MATLAB:divideByZero');
-
 % get the optional input arguments
 amplitudescale = ft_getopt(varargin, 'scale',     'none');
 color          = ft_getopt(varargin, 'color',     'r'); % can also be a RGB triplet
+alpha          = ft_getopt(varargin, 'alpha',      1);
 diameter       = ft_getopt(varargin, 'diameter',  'auto');
 length         = ft_getopt(varargin, 'length',    'auto');
 thickness      = ft_getopt(varargin, 'thickness', 'auto');
 unit           = ft_getopt(varargin, 'unit',      'cm');
-alpha          = ft_getopt(varargin, 'alpha',      1);
+coordsys       = ft_getopt(varargin, 'coordsys');
+axes_          = ft_getopt(varargin, 'axes',       false); % do not confuse with built-in function
 
 % for backward compatibility, this can be changed into an error at the end of 2016
 units = ft_getopt(varargin, 'units');
@@ -185,6 +187,16 @@ axis off
 axis vis3d
 axis equal
 
+if istrue(axes_)
+  % plot the 3D axes, this depends on the units and coordsys
+  ft_plot_axes([], 'coordsys', coordsys, 'unit', unit);
+end
+
+if ~isempty(coordsys)
+  % add a context sensitive menu to change the 3d viewpoint to top|bottom|left|right|front|back
+  menu_viewpoint(gca, coordsys)
+end
+
 if ~holdflag
   hold off
 end
@@ -192,5 +204,3 @@ end
 if ~nargout
   clear h
 end
-
-ft_warning(ws); %revert to original state

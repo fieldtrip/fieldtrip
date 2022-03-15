@@ -5,7 +5,7 @@ function inspect_pull1970
 % DEPENDENCY ft_databrowser
 
 cfg = [];
-cfg.dataset = dccnpath('/home/common/matlab/fieldtrip/data/Subject01.ds');
+cfg.dataset = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds');
 cfg = ft_definetrial(cfg);
 cfg.trl = cfg.trl(1:20,:);
 cfg.trl(:,3) = cfg.trl(:,1)-1;

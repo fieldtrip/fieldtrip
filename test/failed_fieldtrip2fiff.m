@@ -5,7 +5,7 @@ function failed_fieldtrip2fiff
 % DEPENDENCY fieldtrip2fiff ft_read_header ft_read_data ft_read_event
 
 % use file location on Donders server
-dataset_ctf      = dccnpath('/home/common/matlab/fieldtrip/data/MarkusBraille.ds');
+dataset_ctf      = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/SubjectBraille.ds');
 sensfile         = dccnpath('/home/common/matlab/fieldtrip/template/electrode/GSN-HydroCel-257.sfp');
 dataset_neuromag = dccnpath('/home/common/matlab/fieldtrip/data/test/bug2036/sample_audvis_raw.fif');
 dataset_eeg      = dccnpath('/home/common/matlab/fieldtrip/data/test/bug2036/svui_0003_eeg_go-sd_010.raw');
@@ -40,13 +40,13 @@ events = mne_read_events(eventfile); % this is simply a binary file with three c
 %-------------------------------------%
 %-CTF: write epoched
 cfg = [];
-cfg.dataset             = dataset_ctf;   % name of CTF dataset  
+cfg.dataset             = dataset_ctf;   % name of CTF dataset
 cfg.trialdef.eventtype  = 'backpanel trigger';
 cfg.trialdef.eventvalue = 4;
 cfg.trialdef.prestim    = 0.4;
 cfg.trialdef.poststim   = 0.6;
 
-cfg = ft_definetrial(cfg);            
+cfg = ft_definetrial(cfg);
 
 cfg.channel   = 'MEG';
 %  data = ft_preprocessing(cfg); ERROR: not implemented
@@ -113,7 +113,7 @@ cfg.trialdef.eventtype      = 'STI 014';
 cfg.trialdef.prestim        = 1;
 cfg.trialdef.poststim       = 2;
 cfg.trialdef.eventvalue     = 1;
-cfg = ft_definetrial(cfg); 
+cfg = ft_definetrial(cfg);
 
 cfg.channel   = {'MEG', 'EEG', '-MEG 2443'  '-EEG 053'};
 data = ft_preprocessing(cfg);
@@ -144,7 +144,7 @@ cfg = [];
 cfg.dataset = fifffile;
 data1 = ft_preprocessing(cfg);
 avg1 = ft_timelockanalysis([], data1);
-ft_datatype(avg1) 
+ft_datatype(avg1)
 %-----------------%
 %-------------------------------------%
 
@@ -185,7 +185,7 @@ cfg.trialdef.eventtype      = 'trigger'; % TODO: adapt to EEG dataset
 cfg.trialdef.prestim        = .5;
 cfg.trialdef.poststim       = 1;
 cfg.trialdef.eventvalue     = 'Targ'; % TODO: adapt to EEG dataset
-cfg = ft_definetrial(cfg); 
+cfg = ft_definetrial(cfg);
 
 cfg.channel   = {'EEG'};
 data = ft_preprocessing(cfg);
@@ -216,6 +216,6 @@ cfg = [];
 cfg.dataset = fifffile;
 data1 = ft_preprocessing(cfg);
 avg1 = ft_timelockanalysis([], data1);
-ft_datatype(avg1) 
+ft_datatype(avg1)
 %-----------------%
 %-------------------------------------%

@@ -6,7 +6,7 @@ function test_bug2621
 
 
 %read in the mri
-mri = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/Subject01.mri'));
+mri = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.mri'));
 
 %segment the mri
 cfg.output = 'brain';

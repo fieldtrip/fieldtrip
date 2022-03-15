@@ -621,8 +621,18 @@ switch cfg.method
     
   case 'pca'
     % compute data cross-covariance matrix
-    C = (dat*dat')./(size(dat,2)-1);
-    
+    if iscell(dat)
+      C  = zeros(size(dat{1},1));
+      nC = 0;
+      for k = 1:numel(dat)
+        C  = C + (dat{k}*dat{k}');
+        nC = nC + size(dat{k},2);
+      end
+      C = C./(nC-1);
+    else
+      C = (dat*dat')./(size(dat,2)-1);
+    end
+
     % eigenvalue decomposition (EVD)
     [E,D] = eig(C);
     

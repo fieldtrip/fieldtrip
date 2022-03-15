@@ -30,9 +30,9 @@ function test_tutorial_mvpa_light
 %
 % The data can be loaded into MATLAB using
 %
-load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/eventrelatedaveraging/dataFIC_LP'));
-load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/eventrelatedaveraging/dataFC_LP'));
-load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/eventrelatedaveraging/dataIC_LP'));
+load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/eventrelatedaveraging/dataFIC_LP.mat'));
+load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/eventrelatedaveraging/dataFC_LP.mat'));
+load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/eventrelatedaveraging/dataIC_LP.mat'));
 
 % To get started, we investigate whether we can discriminate between the three classes
 % FIC, FC, and IC, using the average activity in the 0.5-0.7 s post-stimulus interval.
@@ -141,7 +141,7 @@ mv_plot_result(stat.mvpa)
 %
 % Many neuroimaging datasets have a 3-D structure _[trials x channels x time]_. Classification across time can help identify the time points in a trial _when_ discriminative information shows up. To this end, classification is performed for each time point separately. First, we need to make sure that the time dimension is not averaged out. We can set `cfg.avgovertime = 'no'`, but since the default value is `'no'` we can simply omit this parameter.
 %
-cfg = [] ;  
+cfg = [] ;
 cfg.method           = 'mvpa';
 cfg.features         = 'chan';
 cfg.mvpa.classifier  = 'lda';
@@ -184,7 +184,7 @@ mv_plot_result(stat.mvpa, stat.time)
 %
 % Which channels contribute most to classification performance? The answer to this question can be used to better interpret the data or to perform feature selection. To this end, we will perform a separate classification analysis for each channel.
 %
-cfg = [] ;  
+cfg = [] ;
 cfg.method        = 'mvpa';
 cfg.latency       = [0.3, 0.7];
 cfg.avgovertime   = 'yes';
@@ -202,7 +202,7 @@ stat = ft_timelockstatistics(cfg, dataFIC_LP, dataFC_LP)
 %
 cfg              = [];
 cfg.parameter    = 'accuracy';
-cfg.layout       = 'CTF151_helmet.mat';            
+cfg.layout       = 'CTF151_helmet.mat';
 cfg.xlim         = [0, 0];
 cfg.colorbar     = 'yes';
 ft_topoplotER(cfg, stat);
@@ -230,7 +230,7 @@ neighbours = ft_prepare_neighbours(cfg);
 % We are now ready to re-run the searchlight analysis. We can pass the neighbourhood structure
 % via the parameter `cfg.neighbours`.
 %
-  cfg = [] ;  
+  cfg = [] ;
   cfg.method        = 'mvpa';
   cfg.features      = 'time';
   cfg.design        = [ones(nFIC,1); 2*ones(nFC,1)];
@@ -249,7 +249,7 @@ neighbours = ft_prepare_neighbours(cfg);
   
   cfg              = [];
   cfg.parameter    = 'accuracy';
-  cfg.layout       = 'CTF151_helmet.mat';            
+  cfg.layout       = 'CTF151_helmet.mat';
   cfg.xlim         = [0, 0];
   cfg.colorbar     = 'yes';
   ft_topoplotER(cfg, stat);
@@ -262,7 +262,7 @@ neighbours = ft_prepare_neighbours(cfg);
 %
 % Notice the symmetry between the previous two analyses: for the 'when' analysis, we performed a classification for each time point using channels as features, for the 'where' analysis we performed a classification for each channel using time points as features. We select between these two analyses by setting `cfg.features` to either `'chan'` or `'time'`. What happens if we set `cfg.features = []`?
 %
-cfg = [] ;  
+cfg = [] ;
 cfg.method        = 'mvpa';
 cfg.latency       = [-0.1, 0.8];
 cfg.features      = [];
@@ -284,7 +284,7 @@ set(gca, 'YTick', 1:2:length(stat.label), 'YTickLabel', stat.label(1:2:end));
 % time x time classification, we need to set the `cfg.generalize` parameter:
 %
 %
-cfg = [] ;  
+cfg = [] ;
 cfg.method           = 'mvpa';
 cfg.features         = 'chan';
 cfg.generalize       = 'time';
@@ -327,7 +327,7 @@ mv_plot_result(stat.mvpa, stat.time, stat.time)
 % each time-frequency point separately using channels as features. To this end,
 % we only need to set `cfg.features = 'chan'`.
 %
-cfg = [] ;  
+cfg = [] ;
 cfg.method        = 'mvpa';
 cfg.features      = 'chan';
 cfg.design        = [ones(nFIC,1); 2*ones(nFC,1)];
@@ -367,7 +367,7 @@ mv_plot_result(stat.mvpa, stat.time, stat.freq)
 % A larger feature space provides more information to the classifier but it also is more
 % computationally demanding and potentially holds the danger of overfitting.
 %
-cfg = [] ;  
+cfg = [] ;
 cfg.method        = 'mvpa';
 cfg.features      = 'chan';
 cfg.design        = [ones(nFIC,1); 2*ones(nFC,1)];

@@ -31,7 +31,7 @@ function [Zi, h] = ft_plot_topo(chanX, chanY, dat, varargin)
 %
 % See also FT_PLOT_TOPO3D, FT_PLOT_LAYOUT, FT_TOPOPLOTER, FT_TOPOPLOTTFR
 
-% Copyrights (C) 2009-2013, Giovanni Piantoni, Robert Oostenveld
+% Copyrights (C) 2009-2022, Giovanni Piantoni, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -53,8 +53,6 @@ function [Zi, h] = ft_plot_topo(chanX, chanY, dat, varargin)
 
 % these are for speeding up the plotting on subsequent calls
 persistent previous_argin previous_maskimage
-
-ws = ft_warning('on', 'MATLAB:divideByZero');
 
 % get the optional input arguments
 hpos          = ft_getopt(varargin, 'hpos',         0);
@@ -243,7 +241,7 @@ else
 end
 
 if ~isempty(maskimage)
-  % make boolean  
+  % make boolean
   maskimage      = maskimage~=0;
   % apply mask to the data to hide parts of the interpolated data (outside the circle) and channels that were specified to be masked
   % this combines the input options mask and maskdat
@@ -359,5 +357,3 @@ previous_maskimage = maskimage;
 if ~holdflag
   hold off
 end
-
-ft_warning(ws); % revert to original state

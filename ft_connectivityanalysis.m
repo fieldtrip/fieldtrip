@@ -258,13 +258,21 @@ switch cfg.method
   
   case {'wpli'}
     data = ft_checkdata(data, 'datatype', {'freqmvar' 'freq'});
-    inparam = 'crsspctrm';
+    if isfield(data, 'fourierspctrm')
+      inparam = 'fourierspctrm';
+    else
+      inparam = 'crsspctrm';
+    end
     outparam = 'wplispctrm';
     if hasjack, ft_error('to compute wpli, data should be in rpt format'); end
   
   case {'wpli_debiased'}
     data = ft_checkdata(data, 'datatype', {'freqmvar' 'freq'});
-    inparam = 'crsspctrm';
+    if isfield(data, 'fourierspctrm') 
+        inparam = 'fourierspctrm';
+    else 
+        inparam = 'crsspctrm';
+    end
     outparam = 'wpli_debiasedspctrm';
     if hasjack, ft_error('to compute wpli, data should be in rpt format'); end
   
@@ -671,8 +679,11 @@ switch cfg.method
   case {'wpli' 'wpli_debiased'}
     % weighted pli or debiased weighted phase lag index.
     optarg = {'feedback', cfg.feedback, 'dojack', dojack, 'debias', strcmp(cfg.method, 'wpli_debiased')};
+    if isequal(inparam, 'fourierspctrm')
+      optarg = cat(2, optarg, {'isunivariate' 1 'cumtapcnt' data.cumtapcnt});
+    end
     [datout, varout, nrpt] = ft_connectivity_wpli(data.(inparam), optarg{:});
-    
+    data.dimord = strrep(data.dimord, 'chan', 'chan_chan'); % needed for data structure consistency
   case {'wppc' 'ppc'}
     % weighted pairwise phase consistency or pairwise phase consistency
     optarg = {'feedback', cfg.feedback, 'dojack', dojack, 'weighted', strcmp(cfg.method, 'wppc')};

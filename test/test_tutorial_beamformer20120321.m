@@ -36,7 +36,7 @@ freqPost = ft_freqanalysis(cfg, dataPost);
 
 %% Compute (or load) the forward model)
 
-mri = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/Subject01.mri'));
+mri = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.mri'));
 if ~exist(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/segmentedmri.mat'), 'file')
   % segment the anatomical MRI
   cfg = [];
