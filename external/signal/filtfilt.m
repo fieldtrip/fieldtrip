@@ -16,7 +16,7 @@
 % Copyright (C) 1999 Paul Kienzle
 % Copyright (C) 2007 Francesco Potortì
 % Copyright (C) 2008 Luca Citi
-% Copytight (C) 2022 Jan-Mathijs Schoffelen
+% Copyright (C) 2022 Jan-Mathijs Schoffelen
 %
 % This program is free software; you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by
