@@ -398,6 +398,8 @@ switch toolbox
     dependency = {'fig2plotly' 'savejson'};
   case 'JSONIO'
     dependency = {'jsonread', 'jsonwrite', 'jsonread.mexa64'};
+  case 'JNIFTI'
+    dependency = {'loadjnifti', 'savejnifti'};
   case 'CPD'
     dependency = {'cpd', 'cpd_affine', 'cpd_P'};
   case 'XDF'
