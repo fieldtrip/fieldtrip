@@ -15,7 +15,7 @@ function [status] = ft_hastoolbox(toolbox, autoadd, silent)
 % silent = 0 means that it will give some feedback about adding the toolbox
 % silent = 1 means that it will not give feedback
 
-% Copyright (C) 2005-2019, Robert Oostenveld
+% Copyright (C) 2005-2022, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -114,6 +114,7 @@ url = {
   'ITAB'                                  'contact Stefania Della Penna'
   'JSONIO'                                'see https://github.com/gllmflndn/JSONio'
   'JSONLAB'                               'see https://se.mathworks.com/matlabcentral/fileexchange/33381-jsonlab--a-toolbox-to-encode-decode-json-files'
+  'JNIFTI'                                'see https://github.com/NeuroJSON/jnifti'
   'LAGEXTRACTION'                         'see https://github.com/agramfort/eeglab-plugin-ieee-tbme-2010'
   'MARS'                                  'see http://www.parralab.org/mars'
   'MATLAB2BESA'                           'see http://www.besa.de/downloads/matlab/ and get the "MATLAB to BESA Export functions"'
@@ -394,12 +395,12 @@ switch toolbox
     dependency = {'extractlag' 'perform_realign'};
   case 'JSONLAB'
     dependency = {'loadjson' 'savejson'};
+  case 'JNIFTI'
+    dependency = {'loadjnifti' 'savejnifti'};
   case 'PLOTLY'
     dependency = {'fig2plotly' 'savejson'};
   case 'JSONIO'
     dependency = {'jsonread', 'jsonwrite', 'jsonread.mexa64'};
-  case 'JNIFTI'
-    dependency = {'loadjnifti', 'savejnifti'};
   case 'CPD'
     dependency = {'cpd', 'cpd_affine', 'cpd_P'};
   case 'XDF'
