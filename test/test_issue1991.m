@@ -18,9 +18,22 @@ mri2 = ft_read_mri(file2);
 
 %%
 
-fn = {'anatomy', 'dim', 'unit', 'transform'};
+% do not compare the anatomy in the samples to the original, as that is obviously different
+% it appears that the jnifti/samples represent a segmentation rather than the original MRI
+fn = {'dim', 'unit', 'transform'};
 
 for i=1:length(fn)
   assert(isequal(mri0.(fn{i}), mri1.(fn{i})), ['difference in jnii field ' fn{i}]);
   assert(isequal(mri0.(fn{i}), mri2.(fn{i})), ['difference in bnii field ' fn{i}]);
 end
+
+%%
+
+assert(isequal(mri1.anatomy, mri2.anatomy), 'difference in anatomy')
+
+%%
+
+cfg = [];
+figure; ft_sourceplot(cfg, mri0);
+figure; ft_sourceplot(cfg, mri1);
+figure; ft_sourceplot(cfg, mri2);
