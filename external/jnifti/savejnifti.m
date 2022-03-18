@@ -22,7 +22,7 @@ function savejnifti(jnii, filename, varargin)
 %                *.bnii for binary JNIfTI file
 %                *.jnii for text JNIfTI file
 %        options: (optional) if saving to a .bnii file, please see the options for
-%               saveubjson.m (part of JSONLab); if saving to .jnii, please see the 
+%               savebj.m (part of JSONLab); if saving to .jnii, please see the 
 %               supported options for savejson.m (part of JSONLab).
 %
 %    example:

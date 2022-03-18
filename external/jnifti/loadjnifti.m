@@ -15,7 +15,7 @@ function jnii=loadjnifti(filename, varargin)
 %                *.jnii for text JNIfTI file
 %                *.nii  for NIFTI-1/2 files
 %        options: (optional) if loading from a .bnii file, please see the options for
-%               loadubjson.m (part of JSONLab); if loading from a .jnii, please see the 
+%               loadbj.m (part of JSONLab); if loading from a .jnii, please see the 
 %               supported options for loadjson.m (part of JSONLab).
 %
 %    output:
@@ -51,7 +51,7 @@ if(regexp(filename,'\.nii$'))
 elseif(regexp(filename,'\.jnii$'))
     jnii=loadjson(filename,varargin{:});
 elseif(regexp(filename,'\.bnii$'))
-    jnii=loadubjson(filename,varargin{:});
+    jnii=loadbj(filename,varargin{:});
 else
     error('file suffix must be .jnii for text JNIfTI, .bnii for binary JNIfTI or .nii for NIFTI-1/2 files');
 end

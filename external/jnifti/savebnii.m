@@ -20,7 +20,7 @@ function savebnii(jnii, filename, varargin)
 %                jnii.NIFTIExtension - a cell array contaiing the extension data buffers
 %        filename: the output file name to the binary-JNIfTI file (.bnii)
 %        options: (optional) if saving to .bnii, please see the 
-%               supported options for saveubjson.m (part of JSONLab).
+%               supported options for savebj.m (part of JSONLab).
 %
 %    example:
 %        jnii=jnifticreate(uint8(magic(10)),'Name','10x10 magic matrix');
@@ -36,8 +36,8 @@ if(nargin<2)
     error('you must provide data and output file name');
 end
 
-if(~exist('saveubjson','file'))
+if(~exist('savebj','file'))
     error('you must first install JSONLab from http://github.com/fangq/jsonlab/');
 end
 
-saveubjson('',jnii,'FileName',filename,varargin{:});
+savebj('',jnii,'FileName',filename,varargin{:});

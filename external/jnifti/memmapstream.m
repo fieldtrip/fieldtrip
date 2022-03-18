@@ -1,4 +1,4 @@
-function outstruct=memmapstream(bytes, format)
+function outstruct=memmapstream(bytes, format, varargin)
 %
 %    outstruct=memmapstream(bytes, format)
 %
@@ -58,11 +58,22 @@ bytes=bytes(:)';
 
 datatype=struct('int8',1,'int16',2,'int32',4,'int64',8,'uint8',1,'uint16',2,'uint32',4,'uint64',8,'single',4,'double',8);
 
-outstruct=struct();
+opt=varargin2struct(varargin{:});
+opt.usemap=jsonopt('usemap',0,opt) && exist('containers.Map');
+
+if(opt.usemap)
+    outstruct=containers.Map();
+else
+    outstruct=struct();
+end
 len=1;
 for i=1:size(format,1)
     bytelen=datatype.(format{i,1})*prod(format{i,2});
-    outstruct.(format{i,3})=reshape(typecast(uint8(bytes(len:bytelen+len-1)),format{i,1}),format{i,2});
+    if(opt.usemap)
+        outstruct(format{i,3})=reshape(typecast(uint8(bytes(len:bytelen+len-1)),format{i,1}),format{i,2});
+    else
+        outstruct.(format{i,3})=reshape(typecast(uint8(bytes(len:bytelen+len-1)),format{i,1}),format{i,2});
+    end
     len=len+bytelen;
     if(len>length(bytes))
         break;

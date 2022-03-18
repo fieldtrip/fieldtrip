@@ -25,7 +25,7 @@ function nii=nii2jnii(filename, format, varargin)
 %               file name - *.jnii for text-based JNIfTI, or *.bnii for the 
 %               binary version
 %        options: (optional) if saving to a .bnii file, please see the options for
-%               saveubjson.m (part of JSONLab); if saving to .jnii, please see the 
+%               savebj.m (part of JSONLab); if saving to .jnii, please see the 
 %               supported options for savejson.m (part of JSONLab).
 %
 %    output:
@@ -338,7 +338,7 @@ if(nargout==0 && strcmp(format,'nii')==0 && strcmp(format,'jnii')==0)
     if(regexp(format,'\.jnii$'))
         savejson('',nii,'FileName',format,varargin{:});
     elseif(regexp(format,'\.bnii$'))
-        saveubjson('',nii,'FileName',format,varargin{:});
+        savebj('',nii,'FileName',format,varargin{:});
     else
         error('file suffix must be .jnii for text JNIfTI or .bnii for binary JNIfTI');
     end
