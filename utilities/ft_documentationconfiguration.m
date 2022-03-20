@@ -177,6 +177,7 @@ currletter = char(96);
 
 fprintf(fid, '---\n');
 fprintf(fid, 'title: Index of all configuration options\n');
+fprintf(fid, 'tags: [cfg]\n');
 fprintf(fid, '---\n');
 fprintf(fid, '\n');
 fprintf(fid, '# Index of all configuration options \n');
