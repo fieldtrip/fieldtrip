@@ -4,12 +4,12 @@ function [configuration] = ft_documentationconfiguration(filename)
 % documentation of all configuration options.
 %
 % Normal users will not be calling this function, but will rather look at
-% http://www.fieldtriptoolboxorg/reference/configuration where the output of this
+% http://www.fieldtriptoolbox.org/configuration where the output of this
 % function can be found.
 %
 % See also FT_DOCUMENTATIONREFERENCE
 
-% Copyright (C) 2008-2019, Robert Oostenveld
+% Copyright (C) 2008-2022, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -46,12 +46,14 @@ subdir = {
   };
 
 funname = {};
+fundir = {};
 
 % find all functions that should be included in the reference documentation
 for i=1:length(subdir)
   f = dir(fullfile(ftpath, subdir{i}, 'ft_*.m'));
   f = {f.name}';
   funname = cat(1, funname, f);
+  fundir = cat(1, fundir, repmat(subdir(i), numel(f), 1));
 end
 
 for j=1:length(funname)
@@ -59,7 +61,7 @@ for j=1:length(funname)
   funname{j} = f;
 end
 
-ncfg  = 0;
+ncfg = 0;
 configuration = {};
 
 for j=1:length(funname)
@@ -86,10 +88,10 @@ for j=1:length(funname)
         thisline = cat(2, prevline, thisline);
         prevline = '';
       elseif isempty(regexp(prevline, '^ *cfg')) && ~isempty(regexp(thisline, '^  cfg'))
-       % previous line is a paragraph, this line starts with "cfg" but has no extra space in front of it
-       % so assume that the cfg is part of the running text in the paragraph and conactenate the lines
-       thisline = cat(2, prevline, thisline);
-       prevline = '';
+        % previous line is a paragraph, this line starts with "cfg" but has no extra space in front of it
+        % so assume that the cfg is part of the running text in the paragraph and conactenate the lines
+        thisline = cat(2, prevline, thisline);
+        prevline = '';
       end
     catch
       disp(lasterr);
@@ -117,6 +119,7 @@ for j=1:length(funname)
     if ~isempty(regexp(str{i}, '^ *cfg.[a-zA-Z0-9_\.]*'))
       ncfg = ncfg+1;
       configuration{ncfg,1} = funname{j};
+      configuration{ncfg,4} = fundir{j};
       dum = regexp(str{i}, 'cfg.[a-zA-Z0-9_\.]*', 'match');
       configuration{ncfg,2} = dum{1};
       dum = str{i};
@@ -137,7 +140,11 @@ end
 
 % add links to reference doc
 for i=1:size(configuration,1)
-  configuration{i,1} = sprintf('[%s](/reference/%s)', configuration{i,1}, configuration{i,1});
+  if configuration{i,4} == '.'
+    configuration{i,1} = sprintf('[%s](/reference/%s)', configuration{i,1}, configuration{i,1});
+  else
+    configuration{i,1} = sprintf('[%s](/reference/%s)', configuration{i,1}, fullfile(configuration{i,4}, configuration{i,1}));
+  end
 end
 
 configuration = sortrows(configuration(:,[2 3 1]));
