@@ -61,3 +61,28 @@ catch
   ok = false;
 end
 assert(~ok); clear ok
+
+source = [];
+[ftver, ftdir] = ft_version;
+pwdir = pwd;
+cd(fullfile(ftdir, 'private'));
+[source.pos, source.tri] = mesh_sphere(200);
+cd(pwdir);
+
+source.pow = randn(size(source.pos,1),10);
+source.freq = 1:10;
+
+source2 = source;
+source2.pos(:,3) = source.pos(:,3) + 2;
+
+% concatenate across pos with one source containing a mesh
+cfg = [];
+cfg.parameter = 'pow';
+sourceout = ft_appendsource(cfg, rmfield(source, 'tri'), source2);
+assert(min(sourceout.tri(:))==size(source.pos,1)+1);
+
+% concatenate across pos with 2 meshes
+sourceout = ft_appendsource(cfg, source, source2);
+assert(max(sourceout.tri(:))==size(sourceout.pos,1));
+
+
