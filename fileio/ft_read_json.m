@@ -37,11 +37,11 @@ hasjsonlab = ft_hastoolbox('jsonlab');
 % but not so optimal for writing.
 
 if hasspm12up
-  % use the JSONLAB implementation
+  % use the SPM12 implementation
   json = spm_jsonread(filename);
 
 elseif hasjsonlab
-  % use the SPM12 implementation
+  % use the JSONLAB implementation
   json = loadjson(filename);
 
 else
