@@ -1,6 +1,6 @@
 function test_issue1329
 
-% WALLTIME 00:30:00
+% WALLTIME 00:60:00
 % MEM 2gb
 % DEPENDENCY ft_convert_coordsys
 

@@ -11,9 +11,9 @@ function [cfg] = ft_movieplotER(cfg, data)
 %   cfg.xlim         = 'maxmin' or [xmin xmax] (default = 'maxmin')
 %   cfg.zlim         = plotting limits for color dimension, 'maxmin',
 %                      'maxabs', 'zeromax', 'minzero', or [zmin zmax] (default = 'maxmin')
-%   cfg.samperframe  = number, samples per frame (default = 1)
-%   cfg.framespersec = number, frames per second (default = 5)
-%   cfg.framesfile   = [], no file saved, or 'string', filename of saved frames.mat (default = []);
+%   cfg.speed        = number, initial speed for interactive mode (default = 1)
+%   cfg.samperframe  = number, samples per frame for non-interactive mode (default = 1)
+%   cfg.framespersec = number, frames per second for non-interactive mode (default = 5)%   cfg.framesfile   = 'string' or empty, filename of saved frames.mat (default = [])
 %   cfg.layout       = specification of the layout, see below
 %   cfg.baseline     = 'yes','no' or [time1 time2] (default = 'no'), see FT_TIMELOCKBASELINE
 %   cfg.baselinetype = 'absolute' or 'relative' (default = 'absolute')
@@ -40,8 +40,7 @@ function [cfg] = ft_movieplotER(cfg, data)
 %
 % See also FT_MULTIPLOTER, FT_TOPOPLOTER, FT_SINGLEPLOTER, FT_MOVIEPLOTTFR, FT_SOURCEMOVIE
 
-% Copyright (C) 2009, Ingrid Nieuwenhuis
-% Copyright (C) 2011, Jan-Mathijs Schoffelen, Robert Oostenveld, Cristiano Micheli
+% Copyright (C) 2009-2022, Ingrid Nieuwenhuis, Jan-Mathijs Schoffelen, Robert Oostenveld, Cristiano Micheli
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -133,4 +132,3 @@ if ~ft_nargout
   % don't return anything
   clear cfg
 end
-

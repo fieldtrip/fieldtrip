@@ -7,7 +7,7 @@ function json = ft_read_json(filename)
 %
 % See also FT_WRITE_JSON, FT_READ_TSV, FT_WRITE_TSV, JSONDECODE, JSONENCODE
 
-% Copyright (C) 2018-2021, Robert Oostenveld
+% Copyright (C) 2018-2022, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -28,6 +28,29 @@ function json = ft_read_json(filename)
 % $Id$
 
 ft_info('reading ''%s''\n', filename);
-ft_hastoolbox('jsonlab', 1);
-json = loadjson(filename);
-json = ft_struct2char(json); % convert strings into char-arrays
+
+% Only check whether they are already present on the path
+hasspm12up = ft_hastoolbox('SPM12UP');
+hasjsonlab = ft_hastoolbox('jsonlab');
+
+% The default is to use the native MATLAB implementation, which is fine for reading
+% but not so optimal for writing.
+
+if hasspm12up
+  % use the SPM12 implementation
+  json = spm_jsonread(filename);
+
+elseif hasjsonlab
+  % use the JSONLAB implementation
+  json = loadjson(filename);
+
+else
+  % use the native MATLAB implementation
+  fid = fopen_or_error(filename, 'rt');
+  jsontxt = fread(fid, [1 inf], 'char=>char');
+  fclose(fid);
+  json = jsondecode(jsontxt);
+end
+
+% convert all strings into char-arrays
+json = ft_struct2char(json);

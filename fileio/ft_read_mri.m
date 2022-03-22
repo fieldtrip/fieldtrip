@@ -32,6 +32,8 @@ function [mri] = ft_read_mri(filename, varargin)
 %   'dicom_old'                  uses MATLAB image processing toolbox code
 %   'freesurfer_mgh'             uses FreeSurfer code
 %   'freesurfer_mgz'             uses FreeSurfer code
+%   'jnifti_jnii'
+%   'jnifti_bnii'
 %   'matlab'                     assumes a MATLAB *.mat file containing a struct
 %   'minc'                       uses SPM, this requires SPM5 or older
 %   'mrtrix_mif'                 uses mrtrix code
@@ -69,7 +71,7 @@ function [mri] = ft_read_mri(filename, varargin)
 %
 % See also FT_DATATYPE_VOLUME, FT_WRITE_MRI, FT_READ_DATA, FT_READ_HEADER, FT_READ_EVENT
 
-% Copyright (C) 2008-2020, Robert Oostenveld & Jan-Mathijs Schoffelen
+% Copyright (C) 2008-2022, Robert Oostenveld & Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -151,16 +153,16 @@ switch dataformat
     [img, hdr] = read_ctf_mri(filename);
     transform = hdr.transformMRI2Head;
     coordsys  = 'ctf';
-    
+
   case 'ctf_mri4'
     [img, hdr] = read_ctf_mri4(filename);
     transform = hdr.transformMRI2Head;
     coordsys  = 'ctf';
-    
+
   case 'ctf_svl'
     [img, hdr] = read_ctf_svl(filename);
     transform = hdr.transform;
-    
+
   case 'asa_mri'
     [img, seg, hdr] = read_asa_mri(filename);
     transform = hdr.transformMRI2Head;
@@ -168,7 +170,7 @@ switch dataformat
       % in case seg exists it will be added to the output
       clear seg
     end
-    
+
   case 'minc'
     if ~(hasspm2 || hasspm5)
       fprintf('the SPM2 or SPM5 toolbox is required to read *.mnc files\n');
@@ -178,14 +180,14 @@ switch dataformat
     hdr = spm_vol_minc(filename);
     img = spm_read_vols(hdr);
     transform = hdr.mat;
-    
+
   case 'nifti_spm'
     if ~(hasspm5 || hasspm8 || hasspm12)
       fprintf('the SPM5 or newer toolbox is required to read *.nii files\n');
       ft_hastoolbox(spmversion, 1);
     end
     volumes = ft_getopt(varargin, 'volumes', []);
-    
+
     % use the functions from SPM
     hdr = spm_vol_nifti(filename);
     if isempty(volumes)
@@ -196,7 +198,7 @@ switch dataformat
     end
     transform = hdr.mat;
     unit = 'mm';
-    
+
     try
       % The nifti header allows three methods for specifying the coordinates of the
       % voxels. For two of them (sform and qform), the header contains a numerical
@@ -214,34 +216,34 @@ switch dataformat
         case 'MNI152'
           coordsys = 'mni152';
       end
-      
+
       % We cannot trust it yet, see https://github.com/fieldtrip/fieldtrip/issues/1879
       ft_notice('the coordinate system appears to be ''%s''\n', coordsys);
       clear coordsys
     end
-    
-    
+
+
   case {'analyze_img' 'analyze_hdr'}
     if ~(hasspm8 || hasspm12)
       fprintf('the SPM8 or newer toolbox is required to read analyze files\n');
       ft_hastoolbox(spmversion, 1);
     end
-    
+
     % use the image file instead of the header
     filename((end-2):end) = 'img';
     % use the functions from SPM to read the Analyze MRI
     hdr = spm_vol(filename);
     img = spm_read_vols(hdr);
     transform = hdr.mat;
-    
+
   case 'analyze_old'
     % use the functions from Darren Weber's mri_toolbox to read the Analyze MRI
     ft_hastoolbox('mri', 1);     % from Darren Weber, see http://eeg.sourceforge.net/
-    
+
     avw = avw_img_read(filename, 0); % returned volume is LAS*
     img = avw.img;
     hdr = avw.hdr;
-    
+
     % The default Analyze orientation is axial unflipped (LAS*), which means
     % that the resulting volume is according to the radiological convention.
     % Most other fMRI and EEG/MEG software (except Mayo/Analyze) uses
@@ -250,19 +252,19 @@ switch dataformat
     % the coordinate system comparable to SPM
     ft_warning('flipping 1st dimension (L-R) to obtain volume in neurological convention');
     img = flip(img, 1);
-    
+
     transform      = diag(hdr.dime.pixdim(2:4));
     transform(4,4) = 1;
-    
+
   case {'afni_brik' 'afni_head'}
     % needs afni
     ft_hastoolbox('afni', 1);    % see http://afni.nimh.nih.gov/
-    
+
     [err, img, hdr, ErrMessage] = BrikLoad(filename);
     if err
       ft_error('could not read AFNI file');
     end
-    
+
     % FIXME: this should be checked, but I only have a single BRIK file
     % construct the homogenous transformation matrix that defines the axes
     ft_warning('homogenous transformation might be incorrect for AFNI file');
@@ -271,24 +273,24 @@ switch dataformat
     transform(1,1)   = hdr.DELTA(1);
     transform(2,2)   = hdr.DELTA(2);
     transform(3,3)   = hdr.DELTA(3);
-    
+
     % FIXME: I am not sure about the "RAI" image orientation
     img = flip(img,1);
     img = flip(img,2);
     dim = size(img);
     transform(1,4) = -dim(1) - transform(1,4);
     transform(2,4) = -dim(2) - transform(2,4);
-    
+
   case 'neuromag_fif'
     % needs mne toolbox
     ft_hastoolbox('mne', 1);
-    
+
     % use the mne functions to read the Neuromag MRI
     hdr = fiff_read_mri(filename);
     img_t = cat(3, hdr.slices.data);
     img = permute(img_t,[2 1 3]);
     hdr.slices = rmfield(hdr.slices, 'data'); % remove the image data to save memory
-    
+
     % information below is from MNE - fiff_define_constants.m
     % coordinate system 4 - is the MEG head coordinate system (fiducials)
     % coordinate system 5 - is the MRI coordinate system
@@ -296,7 +298,7 @@ switch dataformat
     % coordinate system 2002 - Surface RAS coordinates (is mainly vertical shift, no rotation to 2001)
     % MEG sensor positions come in system 4
     % MRI comes in system 2001
-    
+
     transform = eye(4);
     if isfield(hdr, 'trans') && issubfield(hdr.trans, 'trans')
       if (hdr.trans.from == 4) && (hdr.trans.to == 5)
@@ -313,17 +315,17 @@ switch dataformat
       % centers the coordinate system and switches from mm to m
       if (hdr.voxel_trans.from == 2001) && (hdr.voxel_trans.to == 5)
         % matlab_shift compensates for the different index conventions between C and MATLAB
-        
+
         % the lines below is old code (prior to Jan 3, 2013) and only works with 1 mm resolution MRIs
         %   matlab_shift = [ 0 0 0 0.001; 0 0 0 -0.001; 0 0 0 0.001; 0 0 0 0];
         % transform transforms from 2001 to 5 and further to 4
         %   transform = transform\(hdr.voxel_trans.trans+matlab_shift);
-        
+
         % the lines below should work with arbitrary resolution
         matlab_shift = eye(4);
         matlab_shift(1:3,4) = [-1,-1,-1];
         transform = transform\(hdr.voxel_trans.trans * matlab_shift);
-        
+
         coordsys  = 'neuromag';
         mri.unit  = 'm';
       else
@@ -334,22 +336,22 @@ switch dataformat
       ft_warning('W: voxel_trans structure is not defined.');
       ft_warning('W: Please check the MRI fif-file');
     end
-    
+
   case 'neuromag_fif_old'
     % needs meg_pd toolbox
     ft_hastoolbox('meg-pd', 1);
-    
+
     % use the meg_pd functions to read the Neuromag MRI
     [img,coords] = loadmri(filename);
     dev = loadtrans(filename,'MRI','HEAD');
     transform  = dev*coords;
     hdr.coords = coords;
     hdr.dev    = dev;
-    
+
   case 'dicom'
     % this returns a right-handed volume with the transformation matrix stored in the file headers
     % see https://github.com/fieldtrip/website/pull/444
-    
+
     % needs the freesurfer toolbox
     ft_hastoolbox('freesurfer', 1);
     [dcmdir, junk1, junk2] = fileparts(filename);
@@ -360,14 +362,14 @@ switch dataformat
     transform = vox2ras_0to1(transform);
     coordsys  = 'scanras';
     unit      = 'mm';
-    
+
   case 'dicom_old'
     % this uses the Image processing toolbox
     % the DICOM files represent a stack of slices, and possibly even multiple volumes
     orig = dicominfo(filename);
     dim(1) = orig.Rows;
     dim(2) = orig.Columns;
-    
+
     % this works for the Siemens scanners at the FCDC
     [p, f] = fileparts(filename);
     tok = tokenize(f, '.');
@@ -378,26 +380,26 @@ switch dataformat
     filename = filename(1:end-1);       % remove the last '.'
     dirlist  = dir(fullfile(p, filename));
     dirlist  = {dirlist.name};
-    
+
     if isempty(dirlist)
       % this is for the Philips data acquired at KI
       ft_warning('could not determine list of dicom files, trying with *.dcm');
       dirlist  = dir(fullfile(p, '*.dcm'));
       dirlist  = {dirlist.name};
     end
-    
+
     if isempty(dirlist)
       ft_warning('could not determine list of dicom files, trying with *.ima');
       dirlist  = dir(fullfile(p, '*.ima'));
       dirlist  = {dirlist.name};
     end
-    
+
     if length(dirlist)==1
       % try something else to get a list of all the slices
       dirlist = dir(fullfile(p, '*'));
       dirlist = {dirlist(~[dirlist.isdir]).name};
     end
-    
+
     keep = false(1, length(dirlist));
     for i=1:length(dirlist)
       filename = char(fullfile(p, dirlist{i}));
@@ -418,7 +420,7 @@ switch dataformat
     % remove the files that were skipped
     hdr     = hdr(keep);
     dirlist = dirlist(keep);
-    
+
     % pre-allocate enough space for the subsequent slices
     dim(3) = length(dirlist);
     img    = zeros(dim(1), dim(2), dim(3));
@@ -427,20 +429,20 @@ switch dataformat
       ft_info('reading image data from ''%s''\n', filename);
       img(:,:,i) = dicomread(hdr(i));
     end
-    
+
     % reorder and concatenate the slices
     [z, indx]   = sort(cell2mat({hdr.SliceLocation}));
     hdr = hdr(indx);
     img = img(:,:,indx);
-    
+
     % construct a homgeneous transformation matrix that performs the scaling from voxels to mm
     transform = dicom2transform(hdr);
     coordsys  = 'dicom'; % identical to scanlps, see https://www.fieldtriptoolbox.org/faq/coordsys/#details-of-the-dicom-coordinate-system
     unit      = 'mm';
-    
+
     % this makes the mapping of voxels to patient coordinates consistent with Horos
     img = permute(img, [2, 1, 3]);
-    
+
   case {'nifti', 'nifti_gz', 'freesurfer_mgz', 'freesurfer_mgh'}
     ft_hastoolbox('freesurfer', 1);
     tmp = MRIread(filename);
@@ -457,7 +459,7 @@ switch dataformat
     hdr = rmfield(tmp, 'vol');
     transform = hdr.vox2ras1;
     unit = 'mm';
-    
+
     if isfield(hdr, 'niftihdr')
       % The nifti header allows three methods for specifying the coordinates of the
       % voxels. For two of them (sform and qform), the header contains a numerical
@@ -470,12 +472,12 @@ switch dataformat
       else
         coordsys = 'unknown';
       end
-      
+
       % We cannot trust it yet, see https://github.com/fieldtrip/fieldtrip/issues/1879
       ft_notice('the coordinate system appears to be ''%s''\n', coordsys);
       clear coordsys
     end
-    
+
   case 'yokogawa_mri'
     ft_hastoolbox('yokogawa', 1);
     fid = fopen_or_error(filename, 'rb');
@@ -483,7 +485,7 @@ switch dataformat
     patient_info = GetMeg160PatientInfoFromMriFileM(fid);
     [data_style, model, marker, image_parameter, normalize, besa_fiducial_point] = GetMeg160MriFileHeaderInfoM(fid);
     fclose(fid);
-    
+
     % gather all meta-information
     hdr.mri_info = mri_info;
     hdr.patient_info = patient_info;
@@ -493,19 +495,19 @@ switch dataformat
     hdr.image_parameter = image_parameter;
     hdr.normalize = normalize;
     hdr.besa_fiducial_point = besa_fiducial_point;
-    
+
     ft_error('FIXME yokogawa_mri implementation is incomplete');
-    
+
   case 'matlab'
     mri = loadvar(filename, 'mri');
-    
+
   case {'mif' 'mrtrix_mif'}
     ft_hastoolbox('mrtrix', 1);
     tmp = read_mrtrix(filename);
-    
+
     % check if it's sparse fixeldata
     isfixel = numel(tmp.dim==3) && tmp.dim(3)==1;
-    
+
     if ~isfixel
       mri.hdr     = removefields(tmp, {'data'});
       mri.(outputfield) = tmp.data;
@@ -522,11 +524,11 @@ switch dataformat
       end
       index     = read_mrtrix(indexfile);
       tmpdata   = reshape(index.data, [], 2);
-      
+
       vox_index = find(tmpdata(:,1)>0);
       num_index = tmpdata(vox_index,1);
       fix_index = tmpdata(vox_index,2)+1;
-      
+
       % create a mapping matrix of fixel2voxel -> currently this only works
       % for scalar fixel data.
       tmpdata = zeros(numel(num_index), max(num_index));
@@ -536,7 +538,7 @@ switch dataformat
       tmpdata(tmpdata==0) = nan;
       tmpdata             = tmpdata.'; % transpose is intended
       tmpdata(isfinite(tmpdata)) = tmp.data(tmpdata(isfinite(tmpdata)));
-      
+
       switch fix2vox_fun
         case 'magmax'
           tmpx    = nanmin(tmpdata,[],1).';
@@ -553,7 +555,7 @@ switch dataformat
         otherwise
           ft_error('unsupported fixel2voxel operation requested');
       end
-      
+
       mri.hdr  = removefields(tmp, {'data'});
       mri.(outputfield) = zeros([prod(index.dim(1:3)) size(tmpdata,2)]);
       mri.(outputfield)(vox_index,:) = tmpdata;
@@ -562,7 +564,85 @@ switch dataformat
       mri.transform = tmp.transform;
       mri.transform(1:3,1:3) = diag(tmp.vox(1:3))*mri.transform(1:3,1:3);
     end
-    
+
+  case {'openjdata_jnii' 'openjdata_bnii'}
+    % this depends on two external toolboxes
+    ft_hastoolbox('jsonlab', 1);
+    ft_hastoolbox('jnifti', 1);
+
+    jnii = loadjnifti(filename);
+
+    mri.hdr     = jnii.NIFTIHeader;
+    mri.anatomy = jnii.NIFTIData;
+    mri.dim     = jnii.NIFTIHeader.Dim;
+    mri.unit    = jnii.NIFTIHeader.Unit.L; % units of length
+
+    % see https://brainder.org/2012/09/23/the-nifti-file-format/
+    coordsys = {'scanras', 'aligned', 'tal', 'mni152'};
+
+    if jnii.NIFTIHeader.SForm>0
+      mri.coordsys  = coordsys{jnii.NIFTIHeader.SForm};
+      mri.transform = [
+        jnii.NIFTIHeader.Affine
+        0 0 0 1
+        ];
+
+    elseif jnii.NIFTIHeader.QForm>0
+      mri.coordsys = coordsys{jnii.NIFTIHeader.QForm};
+
+      % this is adapted from freesurfer/load_nifti_hdr.m
+      b = jnii.NIFTIHeader.Quatern.b;
+      c = jnii.NIFTIHeader.Quatern.c;
+      d = jnii.NIFTIHeader.Quatern.d;
+      x = jnii.NIFTIHeader.QuaternOffset.x;
+      y = jnii.NIFTIHeader.QuaternOffset.y;
+      z = jnii.NIFTIHeader.QuaternOffset.z;
+
+      a = 1.0 - (b*b + c*c + d*d);
+      if(abs(a) < 1.0e-7)
+        a = 1.0 / sqrt(b*b + c*c + d*d);
+        b = b*a;
+        c = c*a;
+        d = d*a;
+        a = 0.0;
+      else
+        a = sqrt(a);
+      end
+
+      r11 = a*a + b*b - c*c - d*d;
+      r12 = 2.0*b*c - 2.0*a*d;
+      r13 = 2.0*b*d + 2.0*a*c;
+      r21 = 2.0*b*c + 2.0*a*d;
+      r22 = a*a + c*c - b*b - d*d;
+      r23 = 2.0*c*d - 2.0*a*b;
+      r31 = 2.0*b*d - 2*a*c;
+      r32 = 2.0*c*d + 2*a*b;
+      r33 = a*a + d*d - c*c - b*b;
+
+      if(jnii.NIFTIHeader.VoxelSize(1) < 0.0)
+        r13 = -r13;
+        r23 = -r23;
+        r33 = -r33;
+      end
+
+      R = [r11 r12 r13; r21 r22 r23; r31 r32 r33];
+      S = diag(jnii.NIFTIHeader.VoxelSize(2:4));
+      T = [x y z]';
+      mri.transform = [R*S T; 0 0 0 1];
+
+    else
+      mri.coordsys = 'unknown';
+      % Method 1
+      mri.transform      = diag(jnii.NIFTIHeader.VoxelSize(2:4));
+      mri.transform(4,4) = 1;
+    end
+
+    % ensure that this is double precision and not uint8
+     mri.transform = double(mri.transform);
+
+    % these are already part of the output structure and should not be reassigned
+    clear coordsys transform unit
+
   otherwise
     ft_error('unrecognized filetype ''%s'' for ''%s''', dataformat, filename);
 end
