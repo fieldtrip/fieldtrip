@@ -360,6 +360,9 @@ end
 	%FWHM
 		[err, Info.WORSLEY_FWHM] = BrikInfo_SectionValue(BRIKinfo, 'WORSLEY_FWHM');	
 	
+  %TEMPLATE_SPACE
+		[err, Info.TEMPLATE_SPACE] = BrikInfo_SectionValue(BRIKinfo, 'TEMPLATE_SPACE');	
+	  
   try
   %ATLAS_LABEL_TABLE (if present)
     [err, atlastable] = BrikInfo_SectionValue(BRIKinfo, 'ATLAS_LABEL_TABLE');	

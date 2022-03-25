@@ -205,8 +205,13 @@ switch fileformat
     
     atlas     = [];
     atlas.dim = tmp.dim(1:3);
-    atlas.coordsys = 'tal'; % FIXME could be different in other atlases
+    if isfield(tmp.hdr, 'TEMPLATE_SPACE') && ~isempty(tmp.hdr.TEMPLATE_SPACE)
+      atlas.coordsys = lower(tmp.hdr.TEMPLATE_SPACE); % FIXME this is based on AFNI conventions, not easily decodable by FT
+    else
+      atlas.coordsys = 'tal'; % FIXME could be different in other atlases
+    end
     atlas.transform = tmp.transform;
+    atlas.hdr = tmp.hdr;
     for k = 1:nbrick
       
       brickname = sprintf('brick%d',k-1);
