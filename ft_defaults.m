@@ -190,10 +190,11 @@ end
 
 if ~isdeployed
   
+  filepath_ftdefaults = fullfile(fileparts(which('ft_defaults')));
   if isempty(which('ft_hastoolbox')) || isempty(which('ft_warning'))
     % the fieldtrip/utilities directory contains the ft_hastoolbox and ft_warning
     % functions, which are required for the remainder of this script
-    addpath(fullfile(fileparts(which('ft_defaults')), 'utilities'));
+    addpath(fullfile(filepath_ftdefaults, 'utilities'));
   end
   
   % Some people mess up their path settings and then have different versions of certain toolboxes on the path.
@@ -227,31 +228,25 @@ if ~isdeployed
   checkMultipleToolbox('biosig',              'sopen.m');
   checkMultipleToolbox('icasso',              'icassoEst.m');
   
-  try
-    % external/signal contains alternative implementations of some signal processing functions
-    if ~ft_platform_supports('signal') || ~strcmp(ft_default.toolbox.signal, 'matlab') || ~ft_hastoolbox('signal')
-      addpath(fullfile(fileparts(which('ft_defaults')), 'external', 'signal'));
-    end
+  addtopath = cell(1,0);
+  % external/signal contains alternative implementations of some signal processing functions
+  if ~ft_platform_supports('signal') || ~strcmp(ft_default.toolbox.signal, 'matlab') || ~ft_hastoolbox('signal')
+    addtopath{end+1} = fullfile(filepath_ftdefaults, 'external', 'signal');
+    %addpath(fullfile(filepath_ftdefaults, 'external', 'signal'));
   end
   
-  try
-    % external/stats contains alternative implementations of some statistics functions
-    if ~ft_platform_supports('stats') || ~strcmp(ft_default.toolbox.stats, 'matlab') || ~ft_hastoolbox('stats')
-      addpath(fullfile(fileparts(which('ft_defaults')), 'external', 'stats'));
-    end
+  % external/stats contains alternative implementations of some statistics functions
+  if ~ft_platform_supports('stats') || ~strcmp(ft_default.toolbox.stats, 'matlab') || ~ft_hastoolbox('stats')
+    %addpath(fullfile(filepath_ftdefaults, 'external', 'stats'));
+    addtopath{end+1} = fullfile(filepath_ftdefaults, 'external', 'stats');
   end
   
-  try
-    % external/images contains alternative implementations of some image processing functions
-    if ~ft_platform_supports('images') || ~strcmp(ft_default.toolbox.images, 'matlab') || ~ft_hastoolbox('images')
-      addpath(fullfile(fileparts(which('ft_defaults')), 'external', 'images'));
-    end
+  % external/images contains alternative implementations of some image processing functions
+  if ~ft_platform_supports('images') || ~strcmp(ft_default.toolbox.images, 'matlab') || ~ft_hastoolbox('images')
+    %addpath(fullfile(filepath_ftdefaults, 'external', 'images'));
+    addtopath{end+1} = fullfile(filepath_ftdefaults, 'external', 'images');
   end
-  
-  try
-    % this directory contains various functions that were obtained from elsewere, e.g. MATLAB file exchange
-    ft_hastoolbox('fileexchange', 3, 1); % not required
-  end
+  addpath(addtopath{:});
   
   try
     % these directories deal with compatibility with older MATLAB versions
@@ -293,83 +288,34 @@ if ~isdeployed
     if ft_platform_supports('octaveversion', -inf, +inf),    ft_hastoolbox('compat/octave', 3, 1); end
   end
   
-  try
-    % these contains template layouts, neighbour structures, MRIs and cortical meshes
-    ft_hastoolbox('template/layout',      1, 1);
-    ft_hastoolbox('template/anatomy',     1, 1);
-    ft_hastoolbox('template/headmodel',   1, 1);
-    ft_hastoolbox('template/electrode',   1, 1);
-    ft_hastoolbox('template/neighbours',  1, 1);
-    ft_hastoolbox('template/sourcemodel', 1, 1);
-  end
+  addtopath = {'template/layout'  % these contains template layouts, neighbour structures, MRIs and cortical meshes
+    'template/anatomy' 
+    'template/headmodel' 
+    'template/electrode' 
+    'template/neighbours'
+    'template/sourcemodel'
+    'statfun'                     % this is used in ft_statistics
+    'trialfun'                    % this is used in ft_definetrial
+    'fileio'                      % this contains the low-level reading functions
+    'preproc'                     % this is for filtering etc. on time-series data
+    'forward'                     % this contains forward models for the EEG and MEG volume conductor
+    'inverse'                     % this contains inverse source estimation methods
+    'plotting'                    % this contains intermediate-level plotting functions, e.g. multiplots and 3-d objects
+    'specest'                     % this contains intermediate-level functions for spectral analysis
+    'connectivity'                % this contains the functions to compute connectivity metrics
+    'test'                        % this contains test scripts
+    'contrib/spike'               % this contains the functions for spike and spike-field analysis
+    'contrib/misc'}';             % this contains other user contributed functions
+    
+  ft_hastoolbox(addtopath, 1, 1);
+
+  addtopath = {'realtime/example'
+    'realtime/online_mri'
+    'realtime/online_meg'
+    'realtime/online_eeg'
+    'external/fileexchange'};
   
-  try
-    % this is used in ft_statistics
-    ft_hastoolbox('statfun', 1, 1);
-  end
-  
-  try
-    % this is used in ft_definetrial
-    ft_hastoolbox('trialfun', 1, 1);
-  end
-  
-  try
-    % this contains the low-level reading functions
-    ft_hastoolbox('fileio', 1, 1);
-  end
-  
-  try
-    % this is for filtering etc. on time-series data
-    ft_hastoolbox('preproc', 1, 1);
-  end
-  
-  try
-    % this contains forward models for the EEG and MEG volume conductor
-    ft_hastoolbox('forward', 1, 1);
-  end
-  
-  try
-    % this contains inverse source estimation methods
-    ft_hastoolbox('inverse', 1, 1);
-  end
-  
-  try
-    % this contains intermediate-level plotting functions, e.g. multiplots and 3-d objects
-    ft_hastoolbox('plotting', 1, 1);
-  end
-  
-  try
-    % this contains intermediate-level functions for spectral analysis
-    ft_hastoolbox('specest', 1, 1);
-  end
-  
-  try
-    % this contains the functions to compute connectivity metrics
-    ft_hastoolbox('connectivity', 1, 1);
-  end
-  
-  try
-    % this contains test scripts
-    ft_hastoolbox('test', 1, 1);
-  end
-  
-  try
-    % this contains the functions for spike and spike-field analysis
-    ft_hastoolbox('contrib/spike', 1, 1);
-  end
-  
-  try
-    % this contains user contributed functions
-    ft_hastoolbox('contrib/misc', 1, 1);
-  end
-  
-  try
-    % this contains specific code and examples for realtime processing
-    ft_hastoolbox('realtime/example', 3, 1);    % not required
-    ft_hastoolbox('realtime/online_mri', 3, 1); % not required
-    ft_hastoolbox('realtime/online_meg', 3, 1); % not required
-    ft_hastoolbox('realtime/online_eeg', 3, 1); % not required
-  end
+  ft_hastoolbox(addtopath, 3, 1); % less strictly needed, so don't throw an error if failure 
   
 end
 
