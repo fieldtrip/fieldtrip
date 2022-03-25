@@ -3,26 +3,26 @@ function [err, Qd, s, termname, nterms, sindices, dfbothSS, modw, modwo, tnames,
 %   [err, Qd, Rd, sindices, dfboth, modw, modwo, dfx] = PreProc(n,group,varnames)
 %
 %Purpose:
-%   
-%  Returns QR decomposition results for the design matrix projected to null space 
-%   
+%
+%  Returns QR decomposition results for the design matrix projected to null space
+%
 %Input Parameters:
 %   n: number of datasets = total # of combinations including repeats
 %   group: cell array of factor levels
-%   varnames: 
-%   
+%   varnames:
+%
 %Output Parameters:
 %   err : 0 No Problem
 %       : 1  Problems
-%   
-%   
-%      
+%
+%
+%
 %Key Terms:
-%   
+%
 %More Info :
-%   
-%   
-%   
+%
+%
+%
 %
 %     Author : Gang Chen
 %     Date : Tue Mar 23 13:57:52 EST 2004
@@ -63,14 +63,14 @@ end
 
 for j=1:ng   % for each factor
    gj = group{j};
-   [gij,gnj] = grp2idx(gj);   % Create index vector from a grouping variable: gij is a vector 
+   [gij,gnj] = grp2idx(gj);   % Create index vector from a grouping variable: gij is a vector
 	                           % taking integer values from 1 up to the number of unique entries in gj
 										% gnj is a cell array of names, so that gnj(gij) reproduces gj
    nlevels = size(gnj,1);     % levels for this factor
    dfvar(j) = nlevels - 1;    % D. F. for this factor
 
    if (unbalanced.yes == 0),	% balanced
-      if (cov.do & j==cov.marker)        
+      if (cov.do & j==cov.marker)
 	      gdum{j} = gj;
          dfvar(j) = 1;           % D. F. = 1
          vconstr{j} = zeros(0,1);
@@ -81,21 +81,21 @@ for j=1:ng   % for each factor
 %        vmean{j} = ones(1,nlevels) / nlevels;  % array (1Xnlevels) of one ones, but vmean is never used in the code!!!!!!!!!1
 	   end
 	else % Unbalanced designs	
-	   if (cov.do & j==cov.marker)        
+	   if (cov.do & j==cov.marker)
 	      gdum{j} = gj;
          dfvar(j) = 1;           % D. F. = 1
          vconstr{j} = zeros(0,1);
 %        vmean{j} = 1;		
       else
 		   gdum{j} = idummy(gij, 3);
-		end	  
+		end	
 	end % if (unbalanced.yes == 0): Only for balanced designs
 		
 end
 
 % Create dummy variable arrays for each term in the model.
 nterms = size(termlist,1);             % Number of rows (1st dimension) in termlist
-[sterms,sindex] = sortrows(termlist);  % Sort terms in ascending order. 
+[sterms,sindex] = sortrows(termlist);  % Sort terms in ascending order.
 ncols = 1;
 nconstr = 0;
 
@@ -143,7 +143,7 @@ for j=1:nterms
       else
          tn = [varnames{varnum} '*' tn];
          tconstr = [kron(vconstr,eye(size(tconstr,2)));
-                    kron(eye(length(vconstr)),tconstr)];   % Kronecker 
+                    kron(eye(length(vconstr)),tconstr)];   % Kronecker
       end
 
       % If the rest of this term is computed, take advantage of that
@@ -245,7 +245,7 @@ s(length(sindices)).Qdt = [];
 for j=length(sindices):-1:1
    % Find the next model index to fit
    k = sindices(j);
-   
+
    % Look in unsorted arrays to see if we have already fit this model
    if j>nterms
       k0 = k+nterms;
@@ -255,27 +255,27 @@ for j=length(sindices):-1:1
    if dfboth(k0)~=-1
       continue
    end
-   
+
    % Find the model with this index
    if (j > nterms)
       thismod = modwo(k, :);
    else
       thismod = modw(k, :);
    end
-   
+
    % Get the design matrix for this model
    keepterms = find(thismod);
    clist = ismember(termname, [0 keepterms]);
    X = dmat2(:,clist);
    C = cmat(:,clist);
 
-   % Fit this term 
+   % Fit this term
 	[err, s(j).Qdt, dfx0] = QRDecom(X, C);	
 
    % Use these results for each term that requires them
 
    mod0 = repmat(thismod, nterms, 1);
-   k = find(all(modw == mod0, 2));    
+   k = find(all(modw == mod0, 2));
    dfw(k) = dfx0;
    dfboth(k) = 0;
 	
@@ -291,10 +291,10 @@ dfe = n-dfx;   %residual degrees of freedom
 if (Contr.do == 1),
 
    % In design matrix dmat, the first column is all one's, for the total mean. Then there are totally
-   % FL(1).N_level + FL(2).N_level + FL(3).N_level + FL(4).N_level columns for the main effects. 
+   % FL(1).N_level + FL(2).N_level + FL(3).N_level + FL(4).N_level columns for the main effects.
    % Next 2nd order interactions, 3rd order interaction, and 4th order interactions.
 
-   % Store only those mean columns in design matrix. 
+   % Store only those mean columns in design matrix.
 
    %num_col0 = 1;  % the 1st column is for grand mean (0 order)
 
@@ -340,19 +340,19 @@ if (Contr.do == 1),
    %end
 
    % for every design
-   if (Contr.ord1.tot > 0),		% 1st order contrasts   
+   if (Contr.ord1.tot > 0),		% 1st order contrasts
       [err, Contr] = ContrVec(1, n, NF, group, dmat, Contr, FL, num_col);
    end   % if (Contr1.tot > 0)
 
-   if (NF > 1 & Contr.ord2.tot > 0),  % 2nd order contrasts   
+   if (NF > 1 & Contr.ord2.tot > 0),  % 2nd order contrasts
       [err, Contr] = ContrVec(2, n, NF, group, dmat, Contr, FL, num_col);
    end   % if (Contr2.tot > 0)
 
-   if (NF > 2 & Contr.ord3.tot > 0),  % 3rd order contrasts   
+   if (NF > 2 & Contr.ord3.tot > 0),  % 3rd order contrasts
       [err, Contr] = ContrVec(3, n, NF, group, dmat, Contr, FL, num_col);
    end   % if (Contr3.tot > 0)
 	
-	if (NF > 3 & Contr.ord4.tot > 0),  % 4th order contrasts   
+	if (NF > 3 & Contr.ord4.tot > 0),  % 4th order contrasts
       [err, Contr] = ContrVec(4, n, NF, group, dmat, Contr, FL, num_col);
    end   % if (Contr3.tot > 0)
 

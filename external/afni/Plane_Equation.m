@@ -4,8 +4,8 @@ function [err,Eq] = Plane_Equation (Triplets, verbose)
 %
 %Purpose:
 %   Determine the equation of the plane passing through three points
-%   
-%   
+%
+%
 %Input Parameters:
 %   Triplets is an Nx1 vector of strucutres. Each structure defines a plane
 %    .XYZ : is a 3x3 matrix containing the XYZ of each of the three points
@@ -14,19 +14,19 @@ function [err,Eq] = Plane_Equation (Triplets, verbose)
 %           If the three points are colinear, Eq = [0 0 0 0]
 %
 %   verbose (0/1), default is 1
-%   
+%
 %Output Parameters:
 %   err : 0 No Problem
 %       : 1 Mucho Problems
-%   
+%
 %   Eq is a Nx4 matrix containing the equation of the plane containing each
 %       triplet in  Triplets. The plane passing by triplet i is speicifed in
 %       Eq(i,:) the plane would be Eq(i,1)x + Eq(i,2)y + Eq(i,3)z + Eq(i,4) = 0
-%      
+%
 %More Info :
-%   
+%
 %   see also ShowPlane
-%   try 
+%   try
 %       Triplets(1).XYZ = [0 0 0; 1 0 0; 1 1 0];
 %       Triplets(2).XYZ = [0 0 0; 1 0 0; 1 1 1];
 %       Triplets(3).XYZ = [0 5 0; 1 5 0; 1 1 1];
@@ -35,7 +35,7 @@ function [err,Eq] = Plane_Equation (Triplets, verbose)
 %       [err,PatchHandles] = ShowPlane (Eq); view(3)
 %
 %     Author : Ziad Saad
-%     Date : Thu Oct 22 16:09:56 CDT 1998 
+%     Date : Thu Oct 22 16:09:56 CDT 1998
 
 
 %Define the function name for easy referencing

@@ -3,19 +3,19 @@ function [err,Fname] = wryte3 (M,Fname,Opt)
 %   [err,UsedName] = wryte3 (M,Fname,[Opt])
 %
 %Purpose:
-%   Write matrix M to a text file 
-%   
-%   
+%   Write matrix M to a text file
+%
+%
 %Input Parameters:
 %   M : NxK matrix
 %   Fname : string containing the file name to write the matrix to
 %   Opt is either a flag (0/1) or an optional structure with the following fields
-%     .Space string specifying whether to use a space character 's' or 
+%     .Space string specifying whether to use a space character 's' or
 %             a tab 't' or a comma ',' between numbers on the same line.
 %             The default is 's'. There won't be a comma after the last number.
 %     .OverWrite specifies whether you want to allow for overwrite
 %          Options are 'y' for yes, 'n' for no and 'p' for prompting
-%          the user for a new name. 
+%          the user for a new name.
 %          You can also use 'a' for append.
 %          Default is 'n'
 %     .Fast If it is set to 'y', the function will try to use matlab's
@@ -29,15 +29,15 @@ function [err,Fname] = wryte3 (M,Fname,Opt)
 %Output Parameters:
 %   err : 0 No Problem
 %       : 1 Mucho Problems
-%   
-%   UsedName : Filename M was saved to 
+%
+%   UsedName : Filename M was saved to
 %       (it's the same as Fname, unless you're prompted to change it)
-%      
+%
 %More Info :
-%   
+%
 %
 %     Author : Ziad Saad
-%     Date : Thu Apr 23 14:41:43 CDT 1998 
+%     Date : Thu Apr 23 14:41:43 CDT 1998
 
 
 %Define the function name for easy referencing
@@ -54,7 +54,7 @@ if (nargin == 3),
    if (~isstruct(Opt)),
       ov = Opt;
       Opt = [];
-      if (ov), Opt.OverWrite = 'y'; 
+      if (ov), Opt.OverWrite = 'y';
       else Opt.OverWrite = 'n';
       end
    end
@@ -153,7 +153,7 @@ switch Opt.Fast,
 			   for (i=1:1:ii),
 				   if (i == ii),	jjtemp = jj - 1;	end
 				   for (j=1:1:jjtemp),
-					   rr = real(M(i,j)); im = imag(M(i,j)); 
+					   rr = real(M(i,j)); im = imag(M(i,j));
                   if (eq_str(Opt.Space,'s')),
 						   fprintf(fid,'% g%+gi ', rr,  im);	end
 					   if (eq_str(Opt.Space,'t')),
@@ -164,7 +164,7 @@ switch Opt.Fast,
 				   if (i ~= ii), fprintf(fid,'\n');	end
 			   end
 			   %Now put the last number in
-            rr = real(M(ii,jj)); im = imag(M(ii,jj)); 
+            rr = real(M(ii,jj)); im = imag(M(ii,jj));
 			   fprintf(fid,'% g%+gi\n', rr,  im);	
 		   end
       else

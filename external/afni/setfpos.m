@@ -8,7 +8,7 @@ function h=setfpos(x,y)
 % h is the figure handle to the figure just handled
 % Sets current figure lower left position to X by Y pixels (measured from
 % lower left corner of screen. On image, max pixels are about
-% 1264, 980 
+% 1264, 980
 %
 %  adapted from function setfsize.m
 %

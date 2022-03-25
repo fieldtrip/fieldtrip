@@ -2,8 +2,8 @@ function Decis = ErrEval (FuncName, ErrCode);
 %
 %	Decis = ErrEval (FuncName, ErrCode);
 %
-%This function displays an error message based on ErrCode and 
-%returns 1 if it's a lethal error (Err_) , or 0 if it's 
+%This function displays an error message based on ErrCode and
+%returns 1 if it's a lethal error (Err_) , or 0 if it's
 %an error or a warning (Wrn_)that does not require aborting a function
 %
 %
@@ -12,7 +12,7 @@ function Decis = ErrEval (FuncName, ErrCode);
 %   Err_ or Wrn_  depending on wether it's an error or
 %   a warning.
 %  The second part is a string that indicates the type of
-%   error encountered. 
+%   error encountered.
 %
 %Defined values of ErrCode are :
 %  No						%No problem
@@ -27,19 +27,19 @@ function Decis = ErrEval (FuncName, ErrCode);
 %  BadOptCombo       %Bad Option Combination
 %  InpFieldMiss      %A field is missing from one of the input structures
 %  OptFieldMiss      %A fiels is missing from the Options structures
-%  EmptyInp          %Input data is empty 
+%  EmptyInp          %Input data is empty
 %  FileExist         %File exists
 %  FileNotExist      %File does not exist
 % To pass a generic message, replace the ErrCode by any ther string
 %
 % Here's a typical example of the function usage
 % if (ErrEval ('LoadSliceData','Err_Image Type Not Supported')), err = 1;	return;end
-% 
+%
 %
 %		Ziad Saad Thu Mar 26 11:43:51 CST 1998
 
 
-if (eq_str(ErrCode,'No')), %in case you send a No only to 
+if (eq_str(ErrCode,'No')), %in case you send a No only to
 	Decis = 0;
 	return;
 end
@@ -59,7 +59,7 @@ switch tmp
 	case 'Wrn'
 		Decis = 0;
 	otherwise
-		fprintf (2,'\nError in ErrEval, prefix %s from %s is ambiguous.\nReturning a 1 decision.\n\n\a',tmp, ErrCode);
+		warning ('Error in ErrEval, prefix %s from %s is ambiguous.\nReturning a 1 decision.\n\n\a',tmp, ErrCode);
 		Decis = 1;
 		return;
 end
@@ -104,9 +104,9 @@ end
 
 %For the error message
 if (Decis),
-	fprintf (2,'\a\nError in %s : %s\n\n',FuncName,s);
+	warning('\a\nError in %s : %s\n\n',FuncName,s);
 else
-	fprintf (2,'\nWarning from %s : %s\n\n',FuncName,s);
+	warning('\nWarning from %s : %s\n\n',FuncName,s);
 end
 
 return;

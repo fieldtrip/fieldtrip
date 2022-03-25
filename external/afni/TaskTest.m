@@ -3,25 +3,25 @@ function [err,tasktest] = TaskTest (N_runs, polort, N_basis, N_tasks, Task, N_ba
 %   [err,] = ContrTest ()
 %
 %Purpose:
-%   
-% Generate matrix for the -glt option in 3dDevolve  
-%   
+%
+% Generate matrix for the -glt option in 3dDevolve
+%
 %Input Parameters:
-%   
-%   
-%   
+%
+%
+%
 %Output Parameters:
 %   err : 0 No Problem
 %       : 1  Problems
-%   
-%   
-%      
+%
+%
+%
 %Key Terms:
-%   
+%
 %More Info :
-%   
-%   
-%   
+%
+%
+%
 %
 %     Author : Gang Chen
 %     Date : Mon Jul 21 18:25:31 EDT 2003
@@ -47,8 +47,8 @@ for (i = 1:1:N_tasks),
 	tasktest(i).name = sprintf('%s_task.1D',Task(i).Label);
    fid = fopen(tasktest(i).name, 'w');
 	for (j = 1:1:N_basis),
-%		mtrx(i,(i-1)*N_basis+j+(polort+1)*N_runs) = 1;  %Assign one 1 for each basis function of every task 
-      mtrx((i-1)*N_basis+j,(i-1)*N_basis+j+(polort+1)*N_runs) = 1; 
+%		mtrx(i,(i-1)*N_basis+j+(polort+1)*N_runs) = 1;  %Assign one 1 for each basis function of every task
+      mtrx((i-1)*N_basis+j,(i-1)*N_basis+j+(polort+1)*N_runs) = 1;
 		for (k = 1:1:(polort+1)*N_runs+N_basis*N_tasks+N_base),
 		   fprintf(1, '%g	', mtrx((i-1)*N_basis+j,k));
 		   fprintf(fid, '%g ', mtrx((i-1)*N_basis+j,k));

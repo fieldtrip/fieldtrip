@@ -1,52 +1,52 @@
 function ht = plotsign2 (h,s,Opt);
 %	ht = plotsign2 (h,s,[Opt]);
 %	h is the figure handle, if you need to specify a subplot within the figure
-%    pass the figure handle and the subplot number in h, like: [1 213] 
+%    pass the figure handle and the subplot number in h, like: [1 213]
 %    or [1 2 1 3]
 %	s is the text string, if s is not supplied, a default string is used
 %    the default is : machine : date \n path:filename of calling matlab script
 %
 % Opt is an optional structure with the following optional fields
 %  .Place is an approximate position for placing the text.
-%     .Place is a three character string where the first character 
+%     .Place is a three character string where the first character
 %      specifies whether the placement is relative to the Figure 'F'
-%      or the plot 'P'. The second character 
-%      specifies the Y position, and the second character the 
+%      or the plot 'P'. The second character
+%      specifies the Y position, and the second character the
 %      X position. For example 'FTC' means Figure Top Center.
 %      Your options for the relative positioning are :
 %              F for figure and P for plot
 %      Your options for the Y position (first letter) are:
-%              T or C or B (Top or Center or Bottom) 
+%              T or C or B (Top or Center or Bottom)
 %      Your options for the X position (second letter) are:
 %       			L or C or R (Left or Center or Right)
 %      text alignment is done automatically, unless you specify a .Align option.
-%     The default is 'FBR'  
+%     The default is 'FBR'
 %  .Pos (2x1 or 3x1 vector) pins the X Y postion (relative the X Y axis) of the plot
 %    .Pos overrides .Place.
-%   NOTE : The units of .Pos are relative to the plot 
+%   NOTE : The units of .Pos are relative to the plot
 %  .Font is the fontsize to use (a number or string). (like 8, or 10 or 12 etc).
 %     The default is 2 numbers less the current axis on the figure (usually 8)
 %     You can also specify 'l' or 's' for large or small (2 less or 2 more than
 %     current axis). 'n' for a font equal to that of current axis.
 %  .FontName is an optional string specifying a font name
 %  .Color : choose colors that you normally specify in text function, like 'r'
-%       the default is 'k'. You can also specify an rgb vector 
+%       the default is 'k'. You can also specify an rgb vector
 %       (values between 1 and 0)
 %  .ReverseVideo: 'y' puts a background behind text to ensure it is readable.
 %                 default is to do nothing.
 %  .HAlign : string specifying the horizontal alignment of text, options are
 %       'left', 'center', 'right', '' for default
-%  .VAlign : string specifying the vertical alignment of text, options are 
+%  .VAlign : string specifying the vertical alignment of text, options are
 %       'top', 'middle', 'bottom', '' for default
 %
 %  Once you see the object, you can move it with the mouse
 %  ht is the handle to the text object
 %
 %  example:
-%  t=0:0.1:50; Y = sin(0.5.*t); cf = figure(1); plot (t,Y); 
+%  t=0:0.1:50; Y = sin(0.5.*t); cf = figure(1); plot (t,Y);
 %  Ssign = sprintf ('Z.S.Saad %s\n image:%s/%s', date, pwd, mfilename );
 %  plotsign2(cf,Ssign);
-%  or 
+%  or
 %  Opt.Place = 'FTC'; Opt.Color = 'r'; Opt.Font = 16;
 %  plotsign2(cf,Ssign,Opt);
 %  or
@@ -72,7 +72,7 @@ figure (h(1));
 	
 
 if (nargin == 1),
-	[ST,I] = dbstack; 
+	[ST,I] = dbstack;
 	if (length(ST) > 1), %use the calling function name as a signature
 		[jnk1, CallPath, CallFname] = GetPath(ST(2).name);
       if (CallPath(1)=='.') CallPath = pwd; end
@@ -86,8 +86,8 @@ if (nargin == 1),
 	[err, snl, Nlines] = GetNextLine(smach, 2);
 	if (Nlines >= 2),
 		[err, smach] = GetNextLine(smach,Nlines);
-	end 
-	if (tmp), 
+	end
+	if (tmp),
 		smach = sprintf('Dunno');	
 		else
 			smach = deblank(smach); smach = smach(1:length(smach)-1);
@@ -134,7 +134,7 @@ if (~isfield(Opt,'ReverseVideo') | isempty(Opt.ReverseVideo)),
    Opt.ReverseVideo = '';
 end
 
-if (Opt.ReverseVideo == 'y'), 
+if (Opt.ReverseVideo == 'y'),
    if (isnumeric(Opt.Color)) Opt.BackgroundColor = 1 - Opt.Color;
    else Opt.BackgroundColor = [0 0 0];
    end
@@ -162,7 +162,7 @@ end
 
 %place text anywhere	
 	ht=text(0,0,s, 'color',Opt.Color);
-   if (~isempty(Opt.ReverseVideo)), 
+   if (~isempty(Opt.ReverseVideo)),
       col = get(ht,'color');
       if (0),
          col = 1-col; %not nice
@@ -181,12 +181,12 @@ end
 		set(ht,'FontName', Opt.FontName);
 	end
 %set font size
-	set(ht,'fontsize',fs); 
+	set(ht,'fontsize',fs);
 %set interpreter
    if (~isfield(Opt,'Interpreter') | isempty(Opt.Interpreter)),
 	   Opt.Interpreter = 'none';
    end
-   
+
    set(ht,'Interpreter',Opt.Interpreter);
 
 %store current units
@@ -231,10 +231,10 @@ end
 		end
 		switch Opt.Place(2), %the Y axis
 			case 'B', %bottom
-				if (DoF), 
+				if (DoF),
 					Vpos(2) = (-AxSize(2) + 0.02) .* Mult(2);
 					AlgnV = 'bottom';
-				else	Vpos(2) = (-0.05); 
+				else	Vpos(2) = (-0.05);
 					AlgnV = 'top';
 				end
 				

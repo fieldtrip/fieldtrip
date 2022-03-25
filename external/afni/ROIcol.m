@@ -6,11 +6,11 @@ function [c] = ROIcol(i,nc, verb)
 %   nc: number of colors in map. Default is 32.
 %       larger numbers cause longer delays at map generation.
 % returns
-%   c: The color RGB triplets  
+%   c: The color RGB triplets
 %
-%example: 
+%example:
 %  plot (sin([0:0.1:3]),'Color', ROIcol); hold on
-%  plot (cos([0:0.1:3]),'Color', ROIcol); hold on       
+%  plot (cos([0:0.1:3]),'Color', ROIcol); hold on
 %see also ROIcmap
 % Ziad S. Saad SSCC/NIMH/NIH, saadz@mail.nih.gov
 
@@ -31,7 +31,7 @@ end
 if (isempty(nc)), nc = 32; end
 
 if (isempty(ncl)) ncl = nc; end
-if (ncl ~= nc), 
+if (ncl ~= nc),
    M = [];
 end
 
@@ -46,7 +46,7 @@ end
 if (isempty(i)),
    if (isempty(ic)),
       ic = 1;
-   else 
+   else
       ic = ic + 1;
    end
 else
@@ -54,6 +54,6 @@ else
 end
 
 ic = rem(ic,nc)+1;
- 
+
 c = M(ic,:);
 return;

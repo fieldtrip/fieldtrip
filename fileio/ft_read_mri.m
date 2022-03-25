@@ -120,9 +120,11 @@ end
 
 if strcmp(dataformat, 'compressed') || (strcmp(dataformat, 'freesurfer_mgz') && ispc) || any(filetype_check_extension(filename, {'gz', 'zip', 'tar', 'tgz'}))
   % the file is compressed, unzip on the fly,
-  % freesurfer mgz files get special treatment only on a pc
-  inflated = true;
-  filename = inflate_file(filename);
+  % -freesurfer mgz files get special treatment only on a pc
+  % -compressed AFNI BRIKS also need the HEAD copied over to the temp dir
+  
+  filename_old = filename;
+  filename    = inflate_file(filename_old);
   if strcmp(dataformat, 'freesurfer_mgz')
     filename_old = filename;
     filename     = [filename '.mgh'];
@@ -133,6 +135,11 @@ if strcmp(dataformat, 'compressed') || (strcmp(dataformat, 'freesurfer_mgz') && 
     % case dataformat was nifti_spm
     dataformat = ft_filetype(filename);
   end
+  if strcmp(dataformat, 'afni_brik')
+    [p, f, e] =fileparts(filename_old);
+    copyfile(fullfile(p, strrep(f, 'BRIK', 'HEAD')), strrep(filename, 'BRIK', 'HEAD'));
+  end
+  inflated = true;
 else
   inflated = false;
 end
@@ -267,7 +274,7 @@ switch dataformat
 
     % FIXME: this should be checked, but I only have a single BRIK file
     % construct the homogenous transformation matrix that defines the axes
-    ft_warning('homogenous transformation might be incorrect for AFNI file');
+    ft_warning('homogeneous transformation might be incorrect for AFNI file');
     transform        = eye(4);
     transform(1:3,4) = hdr.ORIGIN(:);
     transform(1,1)   = hdr.DELTA(1);

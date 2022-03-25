@@ -266,6 +266,12 @@ end
 	%VOLREG_ROTCOM_NUM
 		[err, Info.VOLREG_ROTCOM_NUM] = BrikInfo_SectionValue(BRIKinfo, 'VOLREG_ROTCOM_NUM');	
 	
+   %Inbal's matrix, 
+   %TO get AFNI's RAI coords from AFNI i, j, k, indices (start at 0):
+   % M = reshape(Info.IJK_TO_DICOM_REAL, 4, 3)'; I = [i j k 1]';
+   % X = M*I
+      [err, Info.IJK_TO_DICOM_REAL ] = BrikInfo_SectionValue(BRIKinfo, 'IJK_TO_DICOM_REAL');	
+      
 	if (~err),
 		for (i=1:1:Info.VOLREG_ROTCOM_NUM),
 			sp = pad_strn(num2str(i-1), '0', 6, 1);
@@ -354,6 +360,11 @@ end
 	%FWHM
 		[err, Info.WORSLEY_FWHM] = BrikInfo_SectionValue(BRIKinfo, 'WORSLEY_FWHM');	
 	
+  try
+  %ATLAS_LABEL_TABLE (if present)
+    [err, atlastable] = BrikInfo_SectionValue(BRIKinfo, 'ATLAS_LABEL_TABLE');	
+    Info.ATLAS_LABEL_TABLE = parse_atlastable(atlastable);
+  end
 	itype = unique(Info.BRICK_TYPES);
  
  	if (length(itype) > 1),
