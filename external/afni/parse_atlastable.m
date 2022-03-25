@@ -27,5 +27,14 @@ end
 
 function out = getcontent(substring)
 
+% anecdotally, I have come across 2 situations: one with the values between
+% double quotation marks, or without, try to accommodate both situations
 sel = regexp(substring, '"');
-out = substring((sel(1)+1):(sel(2)-1));
+if isempty(sel)
+  sel = regexp(substring, '=');
+  out = deblank(substring((sel+1):end));
+elseif numel(sel)>=2
+  out = substring((sel(1)+1):(sel(2)-1));
+else
+  error('something unexpected happened');
+end
