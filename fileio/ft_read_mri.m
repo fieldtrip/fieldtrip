@@ -267,27 +267,53 @@ switch dataformat
     % needs afni
     ft_hastoolbox('afni', 1);    % see http://afni.nimh.nih.gov/
 
-    [err, img, hdr, ErrMessage] = BrikLoad(filename);
+    [err, hdr] = BrikInfo(filename);
+    
+    % check the precision of the data, and if scaling is required. If the precision is other than float, 
+    %and no scaling is required, then return the data in its native precision, let the low level code take
+    % care of that
+    if any(hdr.BRICK_FLOAT_FACS~=0)
+      opts.OutPrecision = '';
+    else
+      opts.OutPrecision = '*';
+      opts.Scale = 0;
+    end
+    [err, img, hdr, ErrMessage] = BrikLoad(filename, opts);
     if err
       ft_error('could not read AFNI file');
     end
 
-    % FIXME: this should be checked, but I only have a single BRIK file
-    % construct the homogenous transformation matrix that defines the axes
-    ft_warning('homogeneous transformation might be incorrect for AFNI file');
-    transform        = eye(4);
-    transform(1:3,4) = hdr.ORIGIN(:);
-    transform(1,1)   = hdr.DELTA(1);
-    transform(2,2)   = hdr.DELTA(2);
-    transform(3,3)   = hdr.DELTA(3);
+    if isfield(hdr, 'ORIENT_SPECIFIC')
+      [err, orient, flipvec] = AFNI_OrientCode(hdr.ORIENT_SPECIFIC);
+      % FIXME, I don't understand why the orient vector needs to be like
+      % this: it seems the opposite of what is reflected in the coordsys
+      % (see below), but it seems to yield internally consistent results
+    else
+      % afni volume info
+      orient = 'LPI'; % hope for the best
+    end
+     
+%     if isfield(hdr, 'TEMPLATE_SPACE')
+%       space = hdr.TEMPLATE_SPACE;
+%     end
+    
+    % origin and basis vectors in world space
+    [unused, ix] = AFNI_Index2XYZcontinuous([0 0 0; eye(3)], hdr, orient);
+    
+    % basis vectors in voxel space
+    e1 = ix(2,:) - ix(1,:);
+    e2 = ix(3,:) - ix(1,:);
+    e3 = ix(4,:) - ix(1,:);
 
-    % FIXME: I am not sure about the "RAI" image orientation
-    img = flip(img,1);
-    img = flip(img,2);
-    dim = size(img);
-    transform(1,4) = -dim(1) - transform(1,4);
-    transform(2,4) = -dim(2) - transform(2,4);
+    % change from base0 (afni) to base1 (SPM/Matlab)
+    o = ix(1,:) - (e1+e2+e3);
 
+    % create matrix
+    transform = [e1;e2;e3;o]';
+    transform = cat(1, transform, [0 0 0 1]);
+    
+    coordsys = lower(hdr.Orientation(:,2)');
+    
   case 'neuromag_fif'
     % needs mne toolbox
     ft_hastoolbox('mne', 1);
@@ -715,3 +741,9 @@ else
   value       = filecontent.(varname);  % read the variable named according to the input specification
   clear filecontent
 end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function bool = isrighthanded(orient)
+bool = ismember(orient, {'ALS' 'RAS' 'PRS' 'LPS' 'SAL' 'SRA' 'SPR' 'SLP'});
