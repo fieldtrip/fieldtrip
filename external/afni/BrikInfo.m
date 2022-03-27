@@ -87,6 +87,8 @@ function [err,Info, BRIKinfo] = BrikInfo (BrickName)
 %      .HISTORY_NOTE
 %      .NOTES_COUNT
 %      .NOTE_NUMBER_xxx
+%      .TEMPLATE_SPACE
+%      .ATLAS_LABEL_TABLE
 %      
 %  To implement in the future,
 %      VOLREG_MATVEC_xxxxxx , VOLREG_ROTCOM_xxxxxx
@@ -96,7 +98,7 @@ function [err,Info, BRIKinfo] = BrikInfo (BrickName)
 %      .Extension_1D: The extension of the 1D filename
 %  BrikLoad and WriteBrik now read and write 1D files
 %
-%  If the .HEAD 
+%  If the .HEAD contains a TEMPLATE_SPACE and ATLAS_LABEL_TABLE, these are added as well
 %
 %Key Terms:
 %   The 1st, second and third dimensions refer to the dimensions the slices were entered into to3d 
@@ -361,11 +363,11 @@ end
 	%FWHM
 		[err, Info.WORSLEY_FWHM] = BrikInfo_SectionValue(BRIKinfo, 'WORSLEY_FWHM');	
 	
-  %TEMPLATE_SPACE
+        %TEMPLATE_SPACE
 		[err, Info.TEMPLATE_SPACE] = BrikInfo_SectionValue(BRIKinfo, 'TEMPLATE_SPACE');	
 	
-  %ATLAS_LABEL_TABLE (if present)
-    [err, atlastable] = BrikInfo_SectionValue(BRIKinfo, 'ATLAS_LABEL_TABLE');	  
+        %ATLAS_LABEL_TABLE (if present)
+                [err, atlastable] = BrikInfo_SectionValue(BRIKinfo, 'ATLAS_LABEL_TABLE');	  
   
     try
       Info.ATLAS_LABEL_TABLE = parse_atlastable(atlastable);
@@ -437,7 +439,7 @@ return;
 
 function T = parse_atlastable(atlastable)
 
-% function to convert a string (read from an afni .HEAD file) with
+% subfunction to convert a string (read from an afni .HEAD file) with
 % atlastable information into a struct
 
 % assume that the string is well-behaved, and that it consists of a series
