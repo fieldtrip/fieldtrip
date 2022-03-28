@@ -292,11 +292,7 @@ switch dataformat
       % afni volume info
       orient = 'LPI'; % hope for the best
     end
-     
-%     if isfield(hdr, 'TEMPLATE_SPACE')
-%       space = hdr.TEMPLATE_SPACE;
-%     end
-    
+        
     % origin and basis vectors in world space
     [unused, ix] = AFNI_Index2XYZcontinuous([0 0 0; eye(3)], hdr, orient);
     
@@ -313,7 +309,23 @@ switch dataformat
     transform = cat(1, transform, [0 0 0 1]);
     
     coordsys = lower(hdr.Orientation(:,2)');
-    
+    if isfield(hdr, 'TEMPLATE_SPACE') && ~isempty(hdr.TEMPLATE_SPACE)
+      space = hdr.TEMPLATE_SPACE;
+      if startsWith(space, 'tt_')
+        space = 'tal';
+      elseif startsWith(space, 'mni')
+        space = 'mni';
+      end
+      if ismember(space, {'tal' 'mni'})
+        % xyz orientation should be RAS
+        if ~strcmp(coordsys, 'ras')
+          ft_warning('the template space suggests that the image is in %s coordinates, but the xyz does not match this: sticking to %s for now', space, coordsys);
+        else
+          coordsys = space;
+        end
+      end
+    end
+
   case 'neuromag_fif'
     % needs mne toolbox
     ft_hastoolbox('mne', 1);
@@ -700,26 +712,22 @@ if exist('hdr', 'var')
   mri.hdr = hdr;
 end
 
-try
-  % store the homogenous transformation matrix if present
+if exist('transform', 'var')
+  % store the homogeneous transformation matrix if present
   mri.transform = transform;
-catch
-  % don't store anything if not present
 end
 
-try
+if exist('unit', 'var')
   % determine the geometrical units in which it is expressed
   mri.unit = unit;
-catch
+else
   % estimate the units from the data
   mri = ft_determine_units(mri);
 end
 
-try
+if exist('coordsys', 'var')
   % add a descriptive label for the coordinate system
   mri.coordsys = coordsys;
-catch
-  % don't store anything if not present
 end
 
 if inflated

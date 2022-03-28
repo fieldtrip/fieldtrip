@@ -199,12 +199,13 @@ switch fileformat
     ft_hastoolbox('afni', 1);
     
     tmp     = ft_read_mri(filename);
-    if isfield(tmp.hdr, 'TEMPLATE_SPACE') && ~isempty(tmp.hdr.TEMPLATE_SPACE)
+    if isfield(tmp, 'coordsys') && ~strcmp(tmp.coordsys, 'unknown')
+      coordsys = tmp.coordsys;
+    elseif isfield(tmp.hdr, 'TEMPLATE_SPACE') && ~isempty(tmp.hdr.TEMPLATE_SPACE)
       coordsys = lower(tmp.hdr.TEMPLATE_SPACE); % FIXME this is based on AFNI conventions, not easily decodable by FT
     else
       coordsys = 'tal'; % FIXME could be different in other atlases
     end
-    
     
     if isfield(tmp.hdr, 'ATLAS_LABEL_TABLE') && ~isempty(tmp.hdr.ATLAS_LABEL_TABLE)
       if isfield(tmp.hdr.ATLAS_LABEL_TABLE(1), 'sb_label') && ~all(tmp.anatomy(:)==round(tmp.anatomy(:)))
