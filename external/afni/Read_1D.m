@@ -1,16 +1,16 @@
 function [err, v, Info, Com] = Read_1D (fname, p1)
 %
 %   [err,M, Info, Com] = Read_1D (fname, [opt])
-% or 
+% or
 %   [err,M] = Read_1D (fname,[opt])
 % or
 %   M = Read_1D (fname, [opt])
-% or 
-%  open a GUI file selector if no arguments are passed 
+% or
+%  open a GUI file selector if no arguments are passed
 %
 %Purpose:
 %   Reads an AFNI 1D file into M
-%   
+%
 %   The file is to contain an ASCII table
 %   of numbers. All rows must have the same number of entries
 %   or the function will fail.
@@ -25,7 +25,7 @@ function [err, v, Info, Com] = Read_1D (fname, p1)
 %   fname : the name of the 1D file
 %   Opt: An optional options structure
 %      .verb (0/1) verbose mode, default is 1
-%      .method (0/1/2) default is 0. 
+%      .method (0/1/2) default is 0.
 %           0: use matlab to interpret 1D files
 %              that have comments and other
 %              1D formatting gimmicks (slow for large files)
@@ -35,10 +35,10 @@ function [err, v, Info, Com] = Read_1D (fname, p1)
 %              i.e. one that has only numbers in it.
 %              If you have a complex 1D file, the matrix
 %              M returned is real and can be turned into
-%              a complex one with: M = complex(M(:,1:2:end),M(:,2:2:end)); 
+%              a complex one with: M = complex(M(:,1:2:end),M(:,2:2:end));
 %           2: use ConvertDset program to purify 1D file
 %              then read it into matlab.
-%              Complex 1D files should be treated as in method 1 
+%              Complex 1D files should be treated as in method 1
 %           3: use 1dcat to purify 1D file. Faster than 2
 %              Complex 1D files should be treated as in method 1
 %
@@ -56,16 +56,16 @@ function [err, v, Info, Com] = Read_1D (fname, p1)
 %   err : 0 No Problem
 %       : 1  Problems
 %   M : Matrix containing values in fname
-%   Info: An  Info header structure to pass along to 
+%   Info: An  Info header structure to pass along to
 %         the WriteBrik function
-%   
-%      
+%
+%
 %Key Terms:
-%   
+%
 %More Info :
-%   
-%   
-%   
+%
+%
+%
 %
 %     Author : Ziad Saad
 %     Date : Fri Jul 23 10:11:34 EDT 2004
@@ -83,10 +83,10 @@ if (nargin == 0 | isempty(fname)),
    if (ff),
       fname = sprintf('%s%c%s', pp, filesep(), ff);
    end
-   verb = 1; Opt = []; 
+   verb = 1; Opt = [];
 elseif (nargin == 1),
    verb = 1; Opt = [];
-else 
+else
    if (isstruct(p1)),
       Opt = p1;
       if (isfield(Opt, 'verb') & ~isempty(Opt.verb)) verb = Opt.verb;
@@ -114,7 +114,7 @@ if (Opt.method < 0 | Opt.method > 3),
    return;
 end
 
-if (~filexist(fname)), % try with extension
+if (~filexist(fname) & Opt.method ~= 3), % try with extension
 	fname2 = sprintf('%s.1D', fname);
    fname3 = sprintf('%s.1D.dset', fname);
    if (verb), fprintf(1,'Trying for %s or %s\n', fname2, fname3); end
@@ -126,11 +126,11 @@ if (~filexist(fname)), % try with extension
       fprintf (2, 'Error %s:\n %s not found\n', FuncName, fname);
       return;
    end
-else 
+else
 	if (verb), fprintf(1,'File %s exists and will be read.\n', fname); end
 end
 
-if (Opt.method == 0), 
+if (Opt.method == 0),
    %load the 1D file
    if (verb), fprintf(1,'Reading file\n'); end
    fid = fopen(fname,'r');
@@ -150,8 +150,8 @@ if (Opt.method == 0),
    if (verb > 1), fprintf(1,'Removing line breaks\n'); end
    ib = find (c == '\');
    nib = length(ib);
-   for (i=1:1:nib), 
-      c(ib(i)) = ' '; 
+   for (i=1:1:nib),
+      c(ib(i)) = ' ';
       if (c(ib(i)+1) ~= 10),
          fprintf(1,'Error %s:\nline break not followed by newline.\n', FuncName);
          err = 1;
@@ -171,16 +171,16 @@ if (Opt.method == 0),
          found = 0;
          j = ia(i)-1;
          while (j>0 & ~found),
-            if (c(j) >= '0' & c(j) <= '9'), 
+            if (c(j) >= '0' & c(j) <= '9'),
                j = j -1;
-            else 
+            else
                found = j;
             end
          end
          cnew = [cnew ' ' c(lst:found )]; % Copy OK stuff
          if (found),
              prod = str2num(c(found:ia(i)-1));
-         else 
+         else
             fprintf(1,'Error %s:\nno number preceding @\n', FuncName);
             err = 1;
             return;
@@ -202,7 +202,7 @@ if (Opt.method == 0),
    if (length(ia)),
       c(ia) = ' ';   %get rid of them
       iscomplex = 1;
-   else 
+   else
       iscomplex = 0;
    end
 
@@ -229,14 +229,14 @@ if (Opt.method == 0),
          rmcom = sprintf('rm -f %s', ftmp);
          unix(rmcom);
       case 3
-         if (verb > 1), 
-            fprintf(1,'The fast about way, no temp business ...\n'); 
+         if (verb > 1),
+            fprintf(1,'The fast about way, no temp business ...\n');
          end
          %remove insignificant trailing whites
          c = strtrim(c);
          %count number of lines
          eofline1 = find(c == 10,1);
-         lv = sscanf(c(1:eofline1),'%f'); nlines = max(length(lv),1); 
+         lv = sscanf(c(1:eofline1),'%f'); nlines = max(length(lv),1);
          v = sscanf(c,'%f'); nr = length(v)/nlines;
          if (nr ~= 1), v = reshape(v,nlines, nr)'; end
    end
@@ -254,16 +254,16 @@ if (Opt.method == 0),
       if (verb) fprintf(1,'Selecting columns ...\n'); end
       v = v(:, Opt.col_index+1);
    end
-   
-   %slices? 
-   if (Opt.chunk_size > 0), 
+
+   %slices?
+   if (Opt.chunk_size > 0),
       strt = (Opt.chunk_size .*  Opt.chunk_index) + 1;
       stp =   Opt.chunk_size .* (Opt.chunk_index+1);
-      if (strt > size(v,1)), 
+      if (strt > size(v,1)),
             fprintf(1,'Error %s:\nNothing left to read (strt = %d, nvec = %d)\n', FuncName, strt, size(v,1));
             err = 1;
             return;
-		 end         
+		 end
       if (stp > size(v,1)) stp = size(v,1); end
       v = v (strt:stp,:);
    end
@@ -276,16 +276,16 @@ elseif (Opt.method == 1),
       if (verb) fprintf(1,'Selecting columns ...\n'); end
       v = v(:, Opt.col_index+1);
    end
-   
-   %slices? 
-   if (Opt.chunk_size > 0), 
+
+   %slices?
+   if (Opt.chunk_size > 0),
       strt = (Opt.chunk_size .*  Opt.chunk_index) + 1;
       stp =   Opt.chunk_size .* (Opt.chunk_index+1);
-      if (strt > size(v,1)), 
+      if (strt > size(v,1)),
             fprintf(1,'Error %s:\nNothing left to read (strt = %d, nvec = %d)\n', FuncName, strt, size(v,1));
             err = 1;
             return;
-		   end         
+		   end
       if (stp > size(v,1)) stp = size(v,1); end
       v = v (strt:stp,:);
    end
@@ -294,9 +294,9 @@ elseif (Opt.method == 2),
    ftmp = sprintf('%s_Read_1D_tmp_', fname);
    ftmpout = sprintf('%s.1D.dset', ftmp);
    rmcom = sprintf('rm -f %s', ftmpout);
-   if (filexist(ftmpout)), 
-      unix(rmcom); % cleanup 
-   end 
+   if (filexist(ftmpout)),
+      unix(rmcom);% cleanup
+   end
    % sub-bricks?
    if (~isempty(Opt.col_index)),
       ssel = sprintf('''[');
@@ -306,29 +306,34 @@ elseif (Opt.method == 2),
    end
    convcom = sprintf('ConvertDset -o_1dp -input %s%s -i_1D -prefix %s', fname, ssel, ftmp);
    if (verb > 1) fprintf(2,'Command is:\n%s\n', convcom); end
-   unix(convcom);
+   [sss,www] = unix(convcom);
+   if (sss),
+      fprintf(1,'Error %s:\nFailed executing: %s\n',FuncName, convcom);
+      err = 1;
+      return;
+   end
    v = load(ftmpout);
-   unix(rmcom); 
-   %slices? 
-   if (Opt.chunk_size > 0), 
+   unix(rmcom);
+   %slices?
+   if (Opt.chunk_size > 0),
       strt = (Opt.chunk_size .*  Opt.chunk_index) + 1;
       stp =   Opt.chunk_size .* (Opt.chunk_index+1);
-      if (strt > size(v,1)), 
+      if (strt > size(v,1)),
             fprintf(1,'Error %s:\nNothing left to read (strt = %d, nvec = %d)\n', FuncName, strt, size(v,1));
             err = 1;
             return;
-		   end         
+		   end
       if (stp > size(v,1)) stp = size(v,1); end
       v = v (strt:stp,:);
    end
 elseif (Opt.method == 3),
    if (verb) fprintf(1,'Running 1dcat for purging 1D file of bells and whistles\n'); end
-   ftmp = sprintf('%s_Read_1D_tmp_', fname);
+   ftmp = sprintf('r1d_%s', newid());
    ftmpout = sprintf('%s.1D.dset', ftmp);
    rmcom = sprintf('rm -f %s', ftmpout);
-   if (filexist(ftmpout)), 
-      unix(rmcom); % cleanup 
-   end 
+   if (filexist(ftmpout)),
+      unix(rmcom);% cleanup
+   end
    % sub-bricks?
    if (~isempty(Opt.col_index)),
       ssel = sprintf('''[');
@@ -340,16 +345,16 @@ elseif (Opt.method == 3),
    if (verb > 1) fprintf(2,'Command is:\n%s\n', convcom); end
    unix(convcom);
    v = load(ftmpout);
-   unix(rmcom); 
-   %slices? 
-   if (Opt.chunk_size > 0), 
+   unix(rmcom);
+   %slices?
+   if (Opt.chunk_size > 0),
       strt = (Opt.chunk_size .*  Opt.chunk_index) + 1;
       stp =   Opt.chunk_size .* (Opt.chunk_index+1);
-      if (strt > size(v,1)), 
+      if (strt > size(v,1)),
             fprintf(1,'Error %s:\nNothing left to read (strt = %d, nvec = %d)\n', FuncName, strt, size(v,1));
             err = 1;
             return;
-		   end         
+		   end
       if (stp > size(v,1)) stp = size(v,1); end
       v = v (strt:stp,:);
    end
@@ -360,7 +365,7 @@ if (nargout == 3),
    [err, Info] = Info_1D(v, fname);
 elseif (nargout == 1),
    err = v;
-else 
+else
    err = 0;
 end
 

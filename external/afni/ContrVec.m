@@ -3,25 +3,25 @@ function [err, Contr] = ContrVec(order, n, NF, group, dmat, Contr, FL, num_col)
 %   [err,] = ContrVec.m ()
 %
 %Purpose:
-%   
+%
 %   Obtain a vector for each contrast so that effect size is calculated in SumsOfSquares.m
-%   
+%
 %Input Parameters:
-%   
-%   
-%   
+%
+%
+%
 %Output Parameters:
 %   err : 0 No Problem
 %       : 1  Problems
-%   
-%   
-%      
+%
+%
+%
 %Key Terms:
-%   
+%
 %More Info :
-%   
-%   
-%   
+%
+%
+%
 %
 %     Author : Gang Chen
 %     Date : Wed Dec 1 10:15:29 EST 2004
@@ -47,18 +47,18 @@ case 1,   % dmat(:, num_col0+1:num_col0+num_col(1)) is the matrix for 1st order 
       for (j = 1:1:Contr.ord1.cnt(i).NT),   % for each term in a contrast
          first = 0;
          Contr.ord1.cnt(i).code(j).pos = 0;			
-			shift = 1;   % Grand mean 
+			shift = 1;   % Grand mean
 	      for (k = 1:1:NF),
-            if (Contr.ord1.cnt(i).code(j).str(k) >= 'a' & Contr.ord1.cnt(i).code(j).str(k) <= 'z'), 
+            if (Contr.ord1.cnt(i).code(j).str(k) >= 'a' & Contr.ord1.cnt(i).code(j).str(k) <= 'z'),
 				   tmpv = 10 + Contr.ord1.cnt(i).code(j).str(k) - 'a';
 				else tmpv = Contr.ord1.cnt(i).code(j).str(k) - '0'; end  % tmpv = level #
 						
-				if (tmpv ~= 0), 
+				if (tmpv ~= 0),
 	            first = first + 1;  % the first non-zero index backward! For 1st-roder, it is the only nonzero index.
 			      if (first == 1),
 			         Contr.ord1.cnt(i).idx1 = k;
 %				      tmp = FL(k).N_level;
-	            elseif (first > 1), 
+	            elseif (first > 1),
 	               fprintf('\nError in contrast coding: more than one non-zero index in 1st order constrasts!\n');
 	               fprintf(2,'Halted: Ctrl+c to exit'); pause;
 			      end  % if (first == 1)
@@ -73,7 +73,7 @@ case 1,   % dmat(:, num_col0+1:num_col0+num_col(1)) is the matrix for 1st order 
 			   tmpv = 10 + Contr.ord1.cnt(i).code(j).str(Contr.ord1.cnt(i).idx1) - 'a';
 			else tmpv = Contr.ord1.cnt(i).code(j).str(Contr.ord1.cnt(i).idx1) - '0'; end
 					
-         Contr.ord1.cnt(i).code(j).pos = shift + tmpv; 
+         Contr.ord1.cnt(i).code(j).pos = shift + tmpv;
 			
 %        tmp = FL(Contr.ord1.cnt(i).idx1).N_level/n;
 %         Contr.ord1.cnt(i).scalar = tmp * Contr.ord1.cnt(i).coef*Contr.ord1.cnt(i).coef';		
@@ -96,21 +96,21 @@ case 1,   % dmat(:, num_col0+1:num_col0+num_col(1)) is the matrix for 1st order 
 
 case 2,  % dmat(:, num_col0+num_col(1)+1:num_col0+num_col(1)+num_col(2)) is the matrix for 2nd order contrasts
 
-   % when the 1st factor is collapsed 
+   % when the 1st factor is collapsed
    %   shift1 = (FL(1).N_level*(FL(2).N_level + FL(3).N_level + FL(4).N_level))*(str2num(Contr2.cnt(i).code(1).str(1)) == 0);
-   % when the 2nd factor is collapsed 
+   % when the 2nd factor is collapsed
    %   shift2 = (FL(2).N_level*(FL(3).N_level + FL(4).N_level))*(str2num(Contr2.cnt(i).code(1).str(2)) == 0);
-   % when the 3rd factor is collapsed 
+   % when the 3rd factor is collapsed
    %   shift3 = (FL(3).N_level*FL(4).N_level)*(str2num(Contr2.cnt(i).code(1).str(3)) == 0);
    %
-   % when the 4th factor is collapsed 
+   % when the 4th factor is collapsed
    %   shift4 = FL(4).N_level*(str2num(Contr2.cnt(i).code(1).str(4)) == 0);
    %
    %   Contr2.cnt(i).shift = num_col0 + num_col(1) + 1 + shift1 + shift2 + shift3 + shift4;  % position shifting for the two collapsed indices
 
    shift = 1 + num_col(1);   % Grand mean plus factor means
-   for (i = 1:1:Contr.ord2.tot),   
-	         
+   for (i = 1:1:Contr.ord2.tot),
+	
    % for the two non-zero indices
 	Contr.ord2.cnt(i).vec = zeros(1, n);  % n = ntot in anovan.m: total number of files, and no. of arrows in dmat
 	Contr.ord2.cnt(i).scalar = 0;
@@ -118,11 +118,11 @@ case 2,  % dmat(:, num_col0+num_col(1)+1:num_col0+num_col(1)+num_col(2)) is the 
       first = 0;
 	   Contr.ord2.cnt(i).code(j).pos = 0;
 		for (k = 1:1:NF),
-         if (Contr.ord2.cnt(i).code(j).str(k) >= 'a' & Contr.ord2.cnt(i).code(j).str(k) <= 'z'), 
+         if (Contr.ord2.cnt(i).code(j).str(k) >= 'a' & Contr.ord2.cnt(i).code(j).str(k) <= 'z'),
 			   tmpv = 10 + Contr.ord2.cnt(i).code(j).str(k) - 'a';
 			else tmpv = Contr.ord2.cnt(i).code(j).str(k) - '0'; end
 						
-			if (tmpv ~= 0), 
+			if (tmpv ~= 0),
             first = first + 1;  % the first non-zero index backward!
 	        	if (first == 1),
 		         Contr.ord2.cnt(i).idx1 = k;
@@ -149,7 +149,7 @@ case 2,  % dmat(:, num_col0+num_col(1)+1:num_col0+num_col(1)+num_col(2)) is the 
 			end % if (sec_fctr > 2)
 						
 %			switch Contr.ord2.cnt(i).idx2
-%         case 2, 
+%         case 2,
 %            if (Contr.ord2.cnt(i).code(j).str(1) >= 'a' & Contr.ord2.cnt(i).code(j).str(1) <= 'z'),
 %				   tmpv1 = 10 + Contr.ord2.cnt(i).code(j).str(1) - 'a';
 %            else tmpv1 = Contr.ord2.cnt(i).code(j).str(1) - '0'; end
@@ -158,7 +158,7 @@ case 2,  % dmat(:, num_col0+num_col(1)+1:num_col0+num_col(1)+num_col(2)) is the 
 %            else tmpv2 = Contr.ord2.cnt(i).code(j).str(2) - '0'; end % tmpv = level #
 									
 %				Contr.ord2.cnt(i).code(j).pos = shift + (tmpv1 - 1) * FL(2).N_level + tmpv2; % AB
-%         case 3, 
+%         case 3,
 %            if (Contr.ord2.cnt(i).code(j).str(1) >= 'a' & Contr.ord2.cnt(i).code(j).str(1) <= 'z'),
 %				   tmpv1 = 10 + Contr.ord2.cnt(i).code(j).str(1) - 'a';
 %            else tmpv1 = Contr.ord2.cnt(i).code(j).str(1) - '0'; end
@@ -166,9 +166,9 @@ case 2,  % dmat(:, num_col0+num_col(1)+1:num_col0+num_col(1)+num_col(2)) is the 
 %				   tmpv2 = 10 + Contr.ord2.cnt(i).code(j).str(3) - 'a';
 %            else tmpv2 = Contr.ord2.cnt(i).code(j).str(3) - '0'; end									
 									
-%				Contr.ord2.cnt(i).code(j).pos = shift + FL(1).N_level*FL(2).N_level+ ... 
+%				Contr.ord2.cnt(i).code(j).pos = shift + FL(1).N_level*FL(2).N_level+ ...
 %               (tmpv1 - 1) * FL(3).N_level + tmpv2; % AC	
-         
+
 %			case 4,   % AD
 %			   if (Contr.ord2.cnt(i).code(j).str(1) >= 'a' & Contr.ord2.cnt(i).code(j).str(1) <= 'z'),
 %				   tmpv1 = 10 + Contr.ord2.cnt(i).code(j).str(1) - 'a';
@@ -177,7 +177,7 @@ case 2,  % dmat(:, num_col0+num_col(1)+1:num_col0+num_col(1)+num_col(2)) is the 
 %				   tmpv2 = 10 + Contr.ord2.cnt(i).code(j).str(4) - 'a';
 %            else tmpv2 = Contr.ord2.cnt(i).code(j).str(4) - '0'; end
 				
-%				Contr.ord2.cnt(i).code(j).pos = shift + FL(1).N_level*FL(2).N_level+ FL(1).N_level*FL(3).N_level+... 
+%				Contr.ord2.cnt(i).code(j).pos = shift + FL(1).N_level*FL(2).N_level+ FL(1).N_level*FL(3).N_level+...
 %               (tmpv1 - 1) * FL(4).N_level + tmpv2; % AD
 %	      end				
       case 2,  % 2nd-order contrasts Bx
@@ -189,7 +189,7 @@ case 2,  % dmat(:, num_col0+num_col(1)+1:num_col0+num_col(1)+num_col(2)) is the 
 			   tmpv2 = 10 + Contr.ord2.cnt(i).code(j).str(sec_fctr) - 'a';
 		   else tmpv2 = Contr.ord2.cnt(i).code(j).str(sec_fctr) - '0'; end	
 			
-			Contr.ord2.cnt(i).code(j).pos = shift + (tmpv1 - 1) * FL(sec_fctr).N_level + tmpv2; 
+			Contr.ord2.cnt(i).code(j).pos = shift + (tmpv1 - 1) * FL(sec_fctr).N_level + tmpv2;
 			for (ll = 2:1:NF), % shift over all those Ax's
 			   Contr.ord2.cnt(i).code(j).pos = Contr.ord2.cnt(i).code(j).pos + FL(1).N_level*FL(ll).N_level;
 			end
@@ -212,8 +212,8 @@ case 2,  % dmat(:, num_col0+num_col(1)+1:num_col0+num_col(1)+num_col(2)) is the 
 %		          (tmpv1 - 1) * FL(3).N_level + tmpv2; % BC
 %				else Contr.ord2.cnt(i).code(j).pos = shift + FL(1).N_level*(FL(2).N_level + FL(3).N_level + FL(4).N_level) + ...
 %		          (tmpv1 - 1) * FL(3).N_level + tmpv2; % BC
-%				end	 	 
-%		      tmp = FL(2).N_level*FL(3).N_level/n; 
+%				end	 	
+%		      tmp = FL(2).N_level*FL(3).N_level/n;
 %			else fprintf('\nSomething is wrong in the contrast coding!\n'); fprintf(2,'Halted: Ctrl+c to exit'); pause; end
 
 		case 3,  % 2nd-order contrasts Cx
@@ -224,7 +224,7 @@ case 2,  % dmat(:, num_col0+num_col(1)+1:num_col0+num_col(1)+num_col(2)) is the 
 			   tmpv2 = 10 + Contr.ord2.cnt(i).code(j).str(sec_fctr) - 'a';
 		   else tmpv2 = Contr.ord2.cnt(i).code(j).str(sec_fctr) - '0'; end	
 			
-			Contr.ord2.cnt(i).code(j).pos = shift + (tmpv1 - 1) * FL(sec_fctr).N_level + tmpv2; 
+			Contr.ord2.cnt(i).code(j).pos = shift + (tmpv1 - 1) * FL(sec_fctr).N_level + tmpv2;
 			for (ll = 2:1:NF), % shift over all those Ax's
 			   Contr.ord2.cnt(i).code(j).pos = Contr.ord2.cnt(i).code(j).pos + FL(1).N_level*FL(ll).N_level;
 			end
@@ -247,7 +247,7 @@ case 2,  % dmat(:, num_col0+num_col(1)+1:num_col0+num_col(1)+num_col(2)) is the 
 			   tmpv2 = 10 + Contr.ord2.cnt(i).code(j).str(sec_fctr) - 'a';
 		   else tmpv2 = Contr.ord2.cnt(i).code(j).str(sec_fctr) - '0'; end	
 			
-			Contr.ord2.cnt(i).code(j).pos = shift + (tmpv1 - 1) * FL(sec_fctr).N_level + tmpv2; 
+			Contr.ord2.cnt(i).code(j).pos = shift + (tmpv1 - 1) * FL(sec_fctr).N_level + tmpv2;
 			for (ll = 2:1:NF), % shift over all those Ax's
 			   Contr.ord2.cnt(i).code(j).pos = Contr.ord2.cnt(i).code(j).pos + FL(1).N_level*FL(ll).N_level;
 			end
@@ -291,7 +291,7 @@ case 2,  % dmat(:, num_col0+num_col(1)+1:num_col0+num_col(1)+num_col(2)) is the 
 case 3,
 
    shift = 1 + num_col(1) + num_col(2);   % skip grand mean, factor means and 2nd-roder terms
-   for (i = 1:1:Contr.ord3.tot),   
+   for (i = 1:1:Contr.ord3.tot),
    % for the  non-zero indices
 	   Contr.ord3.cnt(i).vec = zeros(1, n);  % n = ntot in anovan.m: total number of files, and no. of arrows in dmat
 	   Contr.ord3.cnt(i).scalar = 0;
@@ -300,19 +300,19 @@ case 3,
 		   Contr.ord3.cnt(i).code(j).pos = 0;
 			
 		   for (k = 1:1:NF),
-            if (Contr.ord3.cnt(i).code(j).str(k) >= 'a' & Contr.ord3.cnt(i).code(j).str(k) <= 'z'), 
+            if (Contr.ord3.cnt(i).code(j).str(k) >= 'a' & Contr.ord3.cnt(i).code(j).str(k) <= 'z'),
 				   tmpv = 10 + Contr.ord3.cnt(i).code(j).str(k) - 'a';
 			   else tmpv = Contr.ord3.cnt(i).code(j).str(k) - '0'; end
 			
-			   if (tmpv ~= 0),  
+			   if (tmpv ~= 0),
 	            first = first + 1;  % the first non-zero index backward!
 		         % if (first == 1), tmp = str2num(Contr3.cnt(i).code(j).str(k)) - 1;	  % (level# - 1) for the first collapsed index	   		
 				   % elseif (first == 2), Contr3.cnt(i).code(j).shift = Contr3.cnt(i).code(j).shift + tmp * FL(k).N_level str2num(Contr3.cnt(i).code(j).str(k);
 				   if (first == 1),
 				      Contr.ord3.cnt(i).idx1 = k;
-					   %Contr3.cnt(i).code(j).pos = Contr3.cnt(i).shift + str2num(Contr3.cnt(i).code(j).str(k)) - 1; 
+					   %Contr3.cnt(i).code(j).pos = Contr3.cnt(i).shift + str2num(Contr3.cnt(i).code(j).str(k)) - 1;
 %					   tmp = FL(k).N_level;
-		         elseif (first == 2), 
+		         elseif (first == 2),
 				      Contr.ord3.cnt(i).idx2 = k;
 					   %Contr3.cnt(i).code(j).pos = Contr3.cnt(i).code(j).pos + (str2num(Contr3.cnt(i).code(j).str(k)) - 1) * tmp;
 		            %else fprintf('\nError in contrast coding: more than two non-zero indices!\n');
@@ -358,7 +358,7 @@ case 3,
 							Contr.ord3.cnt(i).code(j).pos = shift + FL(1).N_level * FL(2).N_level * FL(3).N_level + ...
 							   (tmpv1 - 1) * FL(2).N_level * FL(4).N_level + (tmpv2 - 1) * FL(4).N_level + tmpv3; % ABD
 %							   tmp = FL(1).N_level*FL(2).N_level*FL(4).N_level/n;
-                     
+
 							case 5, % ABE
 							
 							if (Contr.ord3.cnt(i).code(j).str(1) >= 'a' & Contr.ord3.cnt(i).code(j).str(1) <= 'z'),
@@ -377,7 +377,7 @@ case 3,
 								(tmpv1 - 1) * FL(2).N_level * FL(5).N_level + (tmpv2 - 1) * FL(5).N_level + tmpv3; % ABE
 
 						end   % switch Contr.ord3.cnt(i).idx3
-					case 3, 
+					case 3,
 					   if (Contr.ord3.cnt(i).idx3 == 4),  % ACD
 						   if (Contr.ord3.cnt(i).code(j).str(1) >= 'a' & Contr.ord3.cnt(i).code(j).str(1) <= 'z'),
 								tmpv1 = 10 + Contr.ord3.cnt(i).code(j).str(1) - 'a';
@@ -398,9 +398,9 @@ case 3,
 				end				
 			case 2,
 			   switch Contr.ord3.cnt(i).idx2
-				   case 3, 
-					   switch Contr.ord3.cnt(i).idx3 
-						   
+				   case 3,
+					   switch Contr.ord3.cnt(i).idx3
+						
 							case 4,  % BCD
 							if (Contr.ord3.cnt(i).code(j).str(2) >= 'a' & Contr.ord3.cnt(i).code(j).str(2) <= 'z'),
 								tmpv1 = 10 + Contr.ord3.cnt(i).code(j).str(2) - 'a';
@@ -414,7 +414,7 @@ case 3,
 							
 							Contr.ord3.cnt(i).code(j).pos = shift + FL(1).N_level*FL(2).N_level*FL(3).N_level + FL(1).N_level*FL(2).N_level*FL(4).N_level + ...
 						      FL(1).N_level * FL(2).N_level * FL(5).N_level + FL(1).N_level*FL(3).N_level*FL(4).N_level + FL(1).N_level * FL(3).N_level * FL(5).N_level + ...
-								FL(1).N_level * FL(4).N_level * FL(5).N_level + (tmpv1 - 1) * FL(3).N_level * FL(4).N_level + (tmpv2 - 1)* FL(4).N_level + tmpv3; 
+								FL(1).N_level * FL(4).N_level * FL(5).N_level + (tmpv1 - 1) * FL(3).N_level * FL(4).N_level + (tmpv2 - 1)* FL(4).N_level + tmpv3;
 								
 							case 5, % BCE
 							if (Contr.ord3.cnt(i).code(j).str(2) >= 'a' & Contr.ord3.cnt(i).code(j).str(2) <= 'z'),
@@ -500,7 +500,7 @@ case 3,
 case 4,
 
    shift = 1 + num_col(1) + num_col(2) + num_col(3);   % skip grand mean, factor means and 2nd-roder terms
-   for (i = 1:1:Contr.ord4.tot),   
+   for (i = 1:1:Contr.ord4.tot),
    % for the  non-zero indices
 	   Contr.ord4.cnt(i).vec = zeros(1, n);  % n = ntot in anovan.m: total number of input files, and no. of arrows in dmat
 	   Contr.ord4.cnt(i).scalar = 0;
@@ -509,20 +509,20 @@ case 4,
 		   Contr.ord4.cnt(i).code(j).pos = 0;
 			
 		   for (k = 1:1:NF),
-            if (Contr.ord4.cnt(i).code(j).str(k) >= 'a' & Contr.ord4.cnt(i).code(j).str(k) <= 'z'), 
+            if (Contr.ord4.cnt(i).code(j).str(k) >= 'a' & Contr.ord4.cnt(i).code(j).str(k) <= 'z'),
 				   tmpv = 10 + Contr.ord4.cnt(i).code(j).str(k) - 'a';
 			   else tmpv = Contr.ord4.cnt(i).code(j).str(k) - '0'; end
 			
-			   if (tmpv ~= 0),  
-	            first = first + 1;  % the first non-zero index 
+			   if (tmpv ~= 0),
+	            first = first + 1;  % the first non-zero index
 					% Maybe I should replace all idx with idx() in *.m and Contr.ord4.cnt(i).idx(first) = k when first ~= 0 later?
 				   switch first
 					case 1,
 				      Contr.ord4.cnt(i).idx1 = k;
-		         case 2, 
+		         case 2,
 				      Contr.ord4.cnt(i).idx2 = k;
 				   case 3,
-				      Contr.ord4.cnt(i).idx3 = k; 
+				      Contr.ord4.cnt(i).idx3 = k;
 					case 4,
 					   Contr.ord4.cnt(i).idx4 = k;
 					end		
@@ -533,7 +533,7 @@ case 4,
 			   switch Contr.ord4.cnt(i).idx2
 				case 2,
 				   switch Contr.ord4.cnt(i).idx3
-					case 3, 
+					case 3,
 						switch Contr.ord4.cnt(i).idx4
 						case 4,	% ABCD				
 							
@@ -551,7 +551,7 @@ case 4,
 					      else tmpv4 = Contr.ord4.cnt(i).code(j).str(4) - '0'; end
 							
 							Contr.ord4.cnt(i).code(j).pos = shift + (tmpv1 - 1) * FL(2).N_level * FL(3).N_level * FL(4).N_level + ...
-					         (tmpv2 - 1) * FL(3).N_level * FL(4).N_level + (tmpv3 - 1) * FL(4).N_level + tmpv4; 
+					         (tmpv2 - 1) * FL(3).N_level * FL(4).N_level + (tmpv3 - 1) * FL(4).N_level + tmpv4;
 
 						case 5, % ABCE
 						   if (Contr.ord4.cnt(i).code(j).str(1) >= 'a' & Contr.ord4.cnt(i).code(j).str(1) <= 'z'),

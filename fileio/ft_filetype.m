@@ -562,10 +562,10 @@ elseif filetype_check_extension(filename, '.slor')
   content = 'source reconstruction';
   
   % known AFNI file types
-elseif filetype_check_extension(filename, '.brik') || filetype_check_extension(filename, '.BRIK')
+elseif filetype_check_extension(lower(filename), '.brik')
   type = 'afni_brik';
   content = 'MRI image data';
-elseif filetype_check_extension(filename, '.head') || filetype_check_extension(filename, '.HEAD')
+elseif filetype_check_extension(lower(filename), '.head')
   type = 'afni_head';
   content = 'MRI header data';
   

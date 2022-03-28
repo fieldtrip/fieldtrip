@@ -8,7 +8,7 @@ function [ant] = iseven (x);
 	d = x ./ 2;
 	if fix(d) == d,
 	  ant = 1;
- 	else 
+ 	else
 		ant = 0;
 	end;
 

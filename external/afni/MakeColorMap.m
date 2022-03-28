@@ -3,16 +3,16 @@ function [err,M] = MakeColorMap (Fiducials,Ncols,Opt)
 %   [err,M] = MakeColorMap (Fiducials,Ncols,Opt)
 %
 %Purpose:
-%   returns the RGB colormap containing Ncols that vary linearily 
+%   returns the RGB colormap containing Ncols that vary linearily
 %   from the first color in Fiducials to the last.
-%   
+%
 %Input Parameters:
-%   Fiducials : Nx3 matix specifying the RGB values (0-255) or 
+%   Fiducials : Nx3 matix specifying the RGB values (0-255) or
 %              (0-1) depending on the value of Opt.Range. Those
 %              fiducial colours will be equally spaced on the map
-%   Ncols : Total number of colours in the map   
-%           You are somewhat restricted in the total number of 
-%           colours you choose. You must choose a number that 
+%   Ncols : Total number of colours in the map
+%           You are somewhat restricted in the total number of
+%           colours you choose. You must choose a number that
 %           allows you to have the same number of colours between
 %           each successive fiducials. Do not worry, the function
 %           will suggest a good number closest to the one you chose.
@@ -22,15 +22,15 @@ function [err,M] = MakeColorMap (Fiducials,Ncols,Opt)
 %           in both Fiducials and M form 0-255 (integers)
 %           or 0-1 floats.
 %     .SkipLast (0/1) if set to 0, then the last color specified in
-%          Fiducials is the last color in M. If set to 1, the last 
-%          color in M represents the color that would come right 
+%          Fiducials is the last color in M. If set to 1, the last
+%          color in M represents the color that would come right
 %          before the last one in Fifucials. This last option is
 %          usefull when you're crating cyclical color maps where
-%          the last color in Fiduciasl is like the first.      
+%          the last color in Fiduciasl is like the first.
 %     .Showme (0/1) optional parameter to show a display of the map
 %     .Write optional string. If supplied, M is written to the file
 %       specified by .Write
-%   
+%
 %Output Parameters:
 %   err : 0 No Problem
 %       : 1 Mucho Problems
@@ -40,7 +40,7 @@ function [err,M] = MakeColorMap (Fiducials,Ncols,Opt)
 %      Fiducials = [255 0 0; 0 255 0; 0 0 255];
 %      Opt.Range = 255; Opt.SkipLast = 1; Opt.Write = '';
 %      [err,M] = MakeColorMap (Fiducials,6,Opt)
-% gives M = 
+% gives M =
 %   255     0     0
 %   128   128     0
 %     0   255     0
@@ -64,7 +64,7 @@ function [err,M] = MakeColorMap (Fiducials,Ncols,Opt)
 %            ROIcmap, ShowCmap, readXcol
 %
 %     Author : Ziad Saad
-%     Date : Wed Apr 08 12:51:29 CDT 1998 
+%     Date : Wed Apr 08 12:51:29 CDT 1998
 
 
 %Define the function name for easy referencing

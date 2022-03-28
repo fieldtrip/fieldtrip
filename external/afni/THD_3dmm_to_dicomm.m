@@ -4,24 +4,24 @@ function [err,XYZdic, map] = THD_3dmm_to_dicomm (Info, XYZmm)
 %
 %Purpose:
 %   Transform image coordinate (in mm) to dicom (RAI) in mm
-%   
-%   
+%
+%
 %Input Parameters:
 %   Info: Structure of header file, see BrikInfo
 %   XYZmm: Nx3 matrix of 3dmm coordinates
-%   
-%   
-%   
+%
+%
+%
 %Output Parameters:
 %   err : 0 No Problem
 %       : 1  Problems
 %   XYZdic: Nx3 matrix of dicom coordinates
 %   map: 1x3 vector such that XYZdic = XYZmm(:,map)
-%      
-%   
-%      
+%
+%
+%
 %Key Terms:
-%   
+%
 %More Info :
 %   Based on THD_3dmm_to_dicomm in thd_coords.c
 %
@@ -69,10 +69,10 @@ XYZdic = [];
 if (nargin > 1),
    XYZdic = XYZmm;
    if (~isempty(XYZmm)),
-      XYZdic(:,1) = XYZmm(:,map(1)); 
-      XYZdic(:,2) = XYZmm(:,map(2)); 
-      XYZdic(:,3) = XYZmm(:,map(3)); 
-   end    
+      XYZdic(:,1) = XYZmm(:,map(1));
+      XYZdic(:,2) = XYZmm(:,map(2));
+      XYZdic(:,3) = XYZmm(:,map(3));
+   end
 end
 
 

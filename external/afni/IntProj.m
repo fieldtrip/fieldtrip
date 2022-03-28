@@ -6,14 +6,14 @@ function IntProj(ana, hs, proj)
 %      hs stands for half slab
 %  proj: (-1) minimum intensity projection
 %          1  maximum intensity projection
-%  For output, the function creates 
+%  For output, the function creates
 % see also insane function Int_Proj
 
 FuncName = 'IntProj';
 
 if (proj == -1) proj_s = 'min';
 elseif (proj == 1) proj_s = 'max';
-else 
+else
    fprintf(2,'Error %s: Bad projection parameter\n', FuncName);
    return;
 end
@@ -35,15 +35,15 @@ for (pd = 1:1:3), % projection direction
    if (pd == 1) dc = 'I';
    elseif (pd == 2) dc = 'J';
    elseif (pd == 3) dc = 'K';
-   else 
+   else
       fprintf(2,'Error %s: Bad projection direction\n', FuncName);
       return;
    end
-   
+
    if (verb) fprintf(1,'%s: Processing direction %s\n', FuncName, dc); end
    %create the output set
    Vmi = zeros(Nvox(1), Nvox(2), Nvox(3));
-   
+
    if (proj == -1),
       if (pd == 1),
          for (i=hs+1:1:Nvox(1)+hs),
@@ -78,7 +78,7 @@ for (pd = 1:1:3), % projection direction
          end	
          Vmall(:) = max(Vmi(:),Vmall(:));	
       end
-   
+
    end
    OptW.Prefix = sprintf('%s_%s%g%s', ana_pref, proj_s, hs, dc);
    OptW.Scale = 1;

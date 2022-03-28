@@ -3,17 +3,17 @@ function [err,ITout,ColMapout] = ScaleToMap (ITvect,ColMap,Opt)
 %   [err,Mout,ColMapout] = ScaleToMap (M,ColMap,Opt)
 %
 %Purpose:
-%   This function scales a matrix (or vector) to make it fit a 
+%   This function scales a matrix (or vector) to make it fit a
 %   colormap. It was originally deisgned to represent functional
 %   data onto 3D and 2D meshes, but it works for a lot of other apps.
-%   
-%   
+%
+%
 %Input Parameters:
 %   M is a matrix (KxL) containing the data that needs scaling.
 %     you can choose one value in M to be a "mask" so that
 %     data points having the "mask" value will have a special colour.
 %     (read on for more info)
-%   ColMap is a Nx3 matrix that contains the colours that the data in M 
+%   ColMap is a Nx3 matrix that contains the colours that the data in M
 %          should be mapped to. This colour map is applied to values in M
 %          different from "mask" value
 %   Opt is the options structure with the following fields
@@ -22,40 +22,40 @@ function [err,ITout,ColMapout] = ScaleToMap (ITvect,ColMap,Opt)
 %               to be mapped to the last and first colours in the colormap
 %               If you do so, then for different ITvect with different values,
 %               The colors will look different. So, to keep the color significance
-%               constant across data sets you can specify [min max] in 
-%               .DataRange so that the first color is always min and the 
+%               constant across data sets you can specify [min max] in
+%               .DataRange so that the first color is always min and the
 %               last color is always max.If you do not specify a range,
-%               The minimum and maximum values of ITvect will be used. 
+%               The minimum and maximum values of ITvect will be used.
 %               NOTE: The limits in DataRange are overrun by values in the
-%               Data set that are lower than min or higher than max. 
+%               Data set that are lower than min or higher than max.
 %       .MaskValue (optional) is the value in M considered as "mask"
 %                   default is no MaskValue used
 %       .MaskColor (optional) is the color to give to points in M
-%            having a value of "mask". default is black. This 
+%            having a value of "mask". default is black. This
 %            field can't be specified without .MaskValue
 %       .Format (optional) specifies the format ot Mout
-%            if set to 1 then Mout has the same size as M, 
+%            if set to 1 then Mout has the same size as M,
 %            and it contains the scaled values of M
-%            if set to 3 then Mout has the size of Kx3 if 
+%            if set to 3 then Mout has the size of Kx3 if
 %            M has a size of Kx1 and KxLx3 if M has a size of
 %            KxL. The values in Mout now represent rgb values
 %            interpolated from ColMap.
-%            When Mout has a size of Kx3, the Mout(:,1) is the 
+%            When Mout has a size of Kx3, the Mout(:,1) is the
 %            red gun value, Mout(:,2) the green and Mout(:,3) the blue.
 %            When Mout has a size of KxLx3, Mout(:,:,1) is the red
 %            matrix, Mout(:,:,2) is the green etc...
-%   
-%   
+%
+%
 %Output Parameters:
 %   err : 0 No Problem
 %       : 1 Mucho Problems
 %   Mout : the scaled version of M (either in indexed colour or true colour)
 %   ColMapOut : The colormap made out of Opt.MaskColor for the first color
 %                and ColMap for the rest of the colours.
-%   
-%      
+%
+%
 %More Info :
-%   	DispIVSurf, MyDataStructures 
+%   	DispIVSurf, MyDataStructures
 %
 %Opt.MaskValue = -1;
 %Opt.MaskColor = [0 1 0];
@@ -68,8 +68,8 @@ function [err,ITout,ColMapout] = ScaleToMap (ITvect,ColMap,Opt)
 %[err,Mout,ColMapout] = ScaleToMap (M,ColMap,Opt);
 %
 %figure
-%image(Mout);colormap(ColMapout);colorbar%   
-%   
+%image(Mout);colormap(ColMapout);colorbar%
+%
 %If you want the true color, try
 %Opt.Format = 3;
 %
@@ -79,13 +79,13 @@ function [err,ITout,ColMapout] = ScaleToMap (ITvect,ColMap,Opt)
 %
 %[err,Mout,ColMapout] = ScaleToMap (M,ColMap,Opt);
 %
-% Displaying the result is not obvious here, just look at 
+% Displaying the result is not obvious here, just look at
 % Mout it's pretty obvious
 %
 %	see also, MakeColorMap
 %
 %     Author : Ziad Saad
-%     Date : Wed Apr 08 15:16:05 CDT 1998 
+%     Date : Wed Apr 08 15:16:05 CDT 1998
 
 
 %Define the function name for easy referencing
@@ -124,7 +124,7 @@ end
 
 if (size(Opt.MaskColor,2) ~= 3),
 	err = ErrEval(FuncName,'Err_Opt.MaskColor  must have a 1x3 dimention.');	return;
-end 
+end
 
 if (~isfield(Opt,'Format') | isempty(Opt.Format)),
 	Opt.Format = 1;
@@ -154,14 +154,14 @@ ITvect = reshape (ITvect,Nr.*Nc,1);
 %Add the min and max values of DataRange if specified for correct scaling
 if (~isempty(Opt.DataRange)),
 	igood = find (ITvect < Opt.DataRange(1));
-	if (~isempty(igood)) 
+	if (~isempty(igood))
 		%fprintf(1,'fixing min range, %d elements\n', length(igood));
-		ITvect(igood) = Opt.DataRange(1); 
+		ITvect(igood) = Opt.DataRange(1);
 	end
 	igood = find (ITvect > Opt.DataRange(2));
-	if (~isempty(igood)) 
+	if (~isempty(igood))
 		%fprintf(1,'fixing max range, %d elements\n', length(igood));
-		ITvect(igood) = Opt.DataRange(2); 
+		ITvect(igood) = Opt.DataRange(2);
 	end
 	
 	ITvect = [ITvect ; Opt.DataRange(1) ; Opt.DataRange(2)];

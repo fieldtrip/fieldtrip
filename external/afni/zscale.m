@@ -1,7 +1,7 @@
 function [y] = zscale (x,ub,lb, perc)
 % [Y] = ZSCALE (X,UB,LB)
-% This function scales  X into Y such that 
-%	its maximum value is UB 
+% This function scales  X into Y such that
+%	its maximum value is UB
 %	and minimum value is LB
 % If perc is specified, then clipping is done
 % at the percentile range specified (e.g. [2 98])

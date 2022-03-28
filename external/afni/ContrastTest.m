@@ -4,24 +4,24 @@ function [err,contrfile] = ContrastTest (N_runs, polort, N_basis, Task, N_tasks,
 %
 %Purpose:
 %   Construct the contrast test matrix used in -glt option of 3dDeconvolve.
-%   
-%   
+%
+%
 %Input Parameters:
-%   
-%   
-%   
+%
+%
+%
 %Output Parameters:
 %   err : 0 No Problem
 %       : 1  Problems
-%   
-%   
-%      
+%
+%
+%
 %Key Terms:
-%   
+%
 %More Info :
-%   
-%   
-%   
+%
+%
+%
 %
 %     Author : Gang Chen
 %     Date : Tue Jul 29 13:01:05 EDT 2003
@@ -57,16 +57,16 @@ for (i = 1:1:N_contr),
 		   if El(i).order(j) == k,
 			   for (m=1:1:N_basis),
 				   for (p = 1:1:Task(k).BasisOpt_struct(m).maxlag - Task(k).BasisOpt_struct(m).minlag + 1)
-%			         mtrx(i,m+(k-1)*N_basis+(polort+1)*N_runs) = El(i).sign(j);  
+%			         mtrx(i,m+(k-1)*N_basis+(polort+1)*N_runs) = El(i).sign(j);
                   mtrx(i,p+(m-1)*(Task(k).BasisOpt_struct(m).maxlag - Task(k).BasisOpt_struct(m).minlag + 1)...
 					      +(k-1)*(Task(k).BasisOpt_struct(m).maxlag - Task(k).BasisOpt_struct(m).minlag + 1)*N_basis...
-					      +(polort+1)*N_runs) = El(i).sign(j);    %Don't ask me how I worked this out. It is so tedious and nasty 
+					      +(polort+1)*N_runs) = El(i).sign(j);    %Don't ask me how I worked this out. It is so tedious and nasty
 							                                        %to housekeep the indices.
 							                                        %Don't even remember how I figured it out now
 					end
 				end
 	      end
-		end  
+		end
 	end
 	contrfile(i).name = sprintf('%s_contr.1D',El(i).labels);
    fid = fopen(contrfile(i).name, 'w');

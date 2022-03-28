@@ -4,23 +4,23 @@ function [err,Sc] = tross_Encode_String (S)
 %
 %Purpose:
 %   encodes a string a la Tom Ross for use in AFNI's HEADER
-%   
-%   
+%
+%
 %Input Parameters:
 %   S
-%   
-%   
+%
+%
 %Output Parameters:
 %   err : 0 No Problem
 %       : 1 Mucho Problems
 %   Se : the encoded version of S
-%   
-%      
+%
+%
 %Key Terms:
-%   
+%
 %More Info :
 %   README.attributes
-%   
+%
 %   To decode an encoded string (Se) you can run
 %   eval(['fprintf(1,''' Se ''');'])
 %
@@ -71,7 +71,7 @@ for (i=1:1:N_Sd),
 			Sc = sprintf('%s%s', Sc, char(Sd(i)));
 	end
 end
- 
+
 
 err = 0;
 return;
