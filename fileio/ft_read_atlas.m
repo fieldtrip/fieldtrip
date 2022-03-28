@@ -219,7 +219,8 @@ switch fileformat
       values  = [tmp.hdr.ATLAS_LABEL_TABLE.val]';
       
     elseif contains(filename, 'TTatlas+tlrc')
-          
+      isprobabilistic = false;
+
       % the following information is from https://sscc.nimh.nih.gov/afni/doc/misc/afni_ttatlas/index_html
       values = [
         68
