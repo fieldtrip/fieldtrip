@@ -451,11 +451,18 @@ o  = regexp(atlastable, 'OKEY');
 g  = regexp(atlastable, 'GYoAR');
 c  = regexp(atlastable, 'COG');
 
+% the sub-brick label is optional, only present for probabilistic atlases 
+s  = regexp(atlastable, 'SB_LABEL'); 
+isprobabilistic = ~isempty(s);
+
 assert(numel(ap)==numel(st));
 assert(numel(ap)==numel(v));
 assert(numel(ap)==numel(o));
 assert(numel(ap)==numel(g));
 assert(numel(ap)==numel(c));
+if isprobabilistic
+  assert(numel(ap)==numel(s));
+end
 
 ap(end+1) = numel(atlastable);
 
@@ -465,7 +472,18 @@ for k = 1:numel(st)
   T(k,1).val    = str2double(getcontent(atlastable(v(k):(o(k)-1))));
   T(k,1).okey   = str2double(getcontent(atlastable(o(k):(g(k)-1))));
   T(k,1).gyoar  = str2double(getcontent(atlastable(g(k):(c(k)-1))));
-  T(k,1).cog    = str2num(getcontent(atlastable(c(k):(ap(k+1)-1))));
+  if isprobabilistic
+    T(k,1).cog = str2num(getcontent(atlastable(c(k):(s(k)-1))));
+    tmp        = getcontent(atlastable(s(k):(ap(k+1)-1)));
+    % the sub-brick label can be numeric, or string
+    if ~isempty(str2num(tmp))
+      T(k,1).sb_label = str2num(tmp);
+    else
+      T(k,1).sb_label = tmp;
+    end
+  else
+    T(k,1).cog = str2num(getcontent(atlastable(c(k):(ap(k+1)-1))));
+  end
 end
 
 function out = getcontent(substring)
