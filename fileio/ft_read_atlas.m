@@ -206,9 +206,17 @@ switch fileformat
     end
     
     
-    if isfield(tmp.hdr, 'ATLAS_LABEL_TABLE') && ~isempty(tmp.hdr, 'ATLAS_LABEL_TABLE')
+    if isfield(tmp.hdr, 'ATLAS_LABEL_TABLE') && ~isempty(tmp.hdr.ATLAS_LABEL_TABLE)
+      if isfield(tmp.hdr.ATLAS_LABEL_TABLE(1), 'sb_label') && ~all(tmp.anatomy(:)==round(tmp.anatomy(:)))
+        % probabilistic atlas
+        isprobabilistic = true;
+      else
+        % indexed atlas
+        isprobabilistic = false;
+      end
       labels  = {tmp.hdr.ATLAS_LABEL_TABLE.struct}';
       values  = [tmp.hdr.ATLAS_LABEL_TABLE.val]';
+      
     elseif contains(filename, 'TTatlas+tlrc')
           
       % the following information is from https://sscc.nimh.nih.gov/afni/doc/misc/afni_ttatlas/index_html
@@ -469,20 +477,30 @@ switch fileformat
     nbrick  = size(tmp.anatomy,4);
     for k = 1:nbrick
       
-      brickname = sprintf('brick%d',k-1);
-      brick     = tmp.anatomy(:,:,:,k);
-      ulabel    = setdiff(unique(brick(:)), 0);
-      label     = cell(size(ulabel));
-      nlabel    = numel(label);
-      
-      % renumber the brick from 1:N and keep track of the label
-      newbrick  = zeros(size(brick));
-      for i = 1:nlabel
-        label(i) = labels(values==ulabel(i));
-        newbrick(brick==ulabel(i)) = i;
+      if ~isprobabilistic
+        brickname = sprintf('brick%d',k-1);
+        brick     = tmp.anatomy(:,:,:,k);
+        ulabel    = setdiff(unique(brick(:)), 0);
+        label     = cell(size(ulabel));
+        nlabel    = numel(label);
+        
+        % renumber the brick from 1:N and keep track of the label
+        newbrick  = zeros(size(brick));
+        for i = 1:nlabel
+          sel = find(values==ulabel(i));
+          if ~isempty(sel)
+            label(i) = labels(sel);
+            newbrick(brick==ulabel(i)) = i;
+          else
+            ft_warning('the value %d does not have a label according to the ATLAS_LABEL_TABLE and will be discarded', ulabel(i));
+          end
+        end
+        atlas.(brickname) = newbrick;
+        atlas.([brickname 'label']) = label;
+      else
+        atlas.(labels{k}) = tmp.anatomy(:,:,:,values(k)+1); % indexing is 0-based in this case
       end
-      atlas.(brickname) = newbrick;
-      atlas.([brickname 'label']) = label;
+        
     end
 
   case 'wfu'
