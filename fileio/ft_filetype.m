@@ -1430,6 +1430,10 @@ elseif filetype_check_extension(filename, '.csv') && filetype_check_header(filen
   type = 'liberty_csv';
   manufacturer = 'Polhemus Liberty';
   content = 'motion capture data';
+elseif filetype_check_extension(filename, '.csv') && filetype_check_header(filename, '"Date",')
+  type = 'sensys_csv';
+  manufacturer = 'Sensys';
+  content = 'fluxgate magnetometer data';
 elseif filetype_check_extension(filename, '.csv')
   type = 'csv';
   manufacturer = 'Generic';
