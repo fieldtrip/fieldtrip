@@ -330,6 +330,7 @@ switch dataformat
         if ~strcmp(coordsys, 'ras')
           ft_warning('the template space suggests that the image is in %s coordinates, but the xyz orientation %s does not match this', space, coordsys);
           xxx2ras = true;
+        else
           coordsys = space;
         end
       end
@@ -744,7 +745,7 @@ if exist('xxx2ras', 'var') && xxx2ras==true
   % mapping matrix is diagonal for the 3x3 rotation part (i.e. ijk should
   % be ras, in order for the tal/mni coordsys to make sense
   mri = ft_convert_coordsys(mri, 'ras', 0);
-  mri.coordsys = coordsys;
+  mri.coordsys = space;
 end
 
 if inflated
