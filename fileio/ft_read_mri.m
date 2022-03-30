@@ -315,7 +315,7 @@ switch dataformat
       else
         space = 'tal'; % accommodate the case when this is not specified in the hdr, make assumption
       end
-      if startsWith(space, 'tt_') 
+      if startsWith(space, 'tt_') || startsWith(space, 'TT_')
         space = 'tal';
       elseif startsWith(space, 'mni')
         space = 'mni';
@@ -328,9 +328,8 @@ switch dataformat
       if ismember(space, {'tal' 'mni'})
         % xyz orientation should be RAS
         if ~strcmp(coordsys, 'ras')
-          ft_warning('the template space suggests that the image is in %s coordinates, but the xyz orientation %s does not match thi', space, coordsys);
+          ft_warning('the template space suggests that the image is in %s coordinates, but the xyz orientation %s does not match this', space, coordsys);
           xxx2ras = true;
-        else
           coordsys = space;
         end
       end
