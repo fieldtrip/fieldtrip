@@ -309,17 +309,27 @@ switch dataformat
     transform = cat(1, transform, [0 0 0 1]);
     
     coordsys = lower(hdr.Orientation(:,2)');
-    if isfield(hdr, 'TEMPLATE_SPACE') && ~isempty(hdr.TEMPLATE_SPACE)
-      space = hdr.TEMPLATE_SPACE;
-      if startsWith(space, 'tt_')
+    if contains(filename, 'TTatlas') || (isfield(hdr, 'TEMPLATE_SPACE') && ~isempty(hdr.TEMPLATE_SPACE))
+      if isfield(hdr, 'TEMPLATE_SPACE') && ~isempty(hdr.TEMPLATE_SPACE)
+        space = hdr.TEMPLATE_SPACE;
+      else
+        space = 'tal'; % accommodate the case when this is not specified in the hdr, make assumption
+      end
+      if startsWith(space, 'tt_') 
         space = 'tal';
       elseif startsWith(space, 'mni')
         space = 'mni';
+      elseif startsWith(space, 'tlrc')
+        % according to the documentation tlrc is rather generic as a
+        % specification of the space, but originally it meant tal.
+        ft_warning('space ''tlrc'' might be ambiguous, here assuming the coordsys to be ''tal''');
+        space = 'tal';
       end
       if ismember(space, {'tal' 'mni'})
         % xyz orientation should be RAS
         if ~strcmp(coordsys, 'ras')
-          ft_warning('the template space suggests that the image is in %s coordinates, but the xyz does not match this: sticking to %s for now', space, coordsys);
+          ft_warning('the template space suggests that the image is in %s coordinates, but the xyz orientation %s does not match thi', space, coordsys);
+          xxx2ras = true;
         else
           coordsys = space;
         end
@@ -727,6 +737,14 @@ end
 
 if exist('coordsys', 'var')
   % add a descriptive label for the coordinate system
+  mri.coordsys = coordsys;
+end
+
+if exist('xxx2ras', 'var') && xxx2ras==true
+  % this is needed for AFNI formatted data, where the created voxels-to-world
+  % mapping matrix is diagonal for the 3x3 rotation part (i.e. ijk should
+  % be ras, in order for the tal/mni coordsys to make sense
+  mri = ft_convert_coordsys(mri, 'ras', 0);
   mri.coordsys = coordsys;
 end
 

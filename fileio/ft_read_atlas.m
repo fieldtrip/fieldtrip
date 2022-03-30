@@ -206,7 +206,7 @@ switch fileformat
     else
       coordsys = 'tal'; % FIXME could be different in other atlases
     end
-    
+
     if isfield(tmp.hdr, 'ATLAS_LABEL_TABLE') && ~isempty(tmp.hdr.ATLAS_LABEL_TABLE)
       if isfield(tmp.hdr.ATLAS_LABEL_TABLE(1), 'sb_label') && ~all(tmp.anatomy(:)==round(tmp.anatomy(:)))
         % probabilistic atlas
