@@ -1887,12 +1887,12 @@ ARRAY+=(utilities/private/memprofile.mexmaci64)
 sync ${ARRAY[*]}
 
 ################################################################################
-# mergeconfig.m
+# mergestruct.m
 
 ARRAY=()
-ARRAY+=(private/mergeconfig.m)
-ARRAY+=(test/private/mergeconfig.m)
-ARRAY+=(utilities/private/mergeconfig.m)
+ARRAY+=(private/mergestruct.m)
+ARRAY+=(test/private/mergestruct.m)
+ARRAY+=(utilities/private/mergestruct.m)
 sync ${ARRAY[*]}
 
 ################################################################################

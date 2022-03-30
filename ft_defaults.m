@@ -85,7 +85,7 @@ end
 fieldtripprefs = fullfile(prefdir, 'fieldtripprefs.mat');
 if exist(fieldtripprefs, 'file')
   prefs       = load(fieldtripprefs); % the file contains multiple fields
-  ft_default  = mergeconfig(ft_default, prefs);
+  ft_default  = mergestruct(ft_default, prefs);
 end
 
 % Set the defaults in a global variable, ft_checkconfig will copy these over into the local configuration.

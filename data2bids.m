@@ -1127,8 +1127,8 @@ if need_mri_json
   mri_json = keepfields(dcm, [fieldnames(mri_settings); fieldnames(generic_settings)]);
   % merge the information specified by the user with that from the data
   % in case fields appear in both, the first input overrules the second
-  mri_json = mergeconfig(mri_settings,     mri_json, false);
-  mri_json = mergeconfig(generic_settings, mri_json, false);
+  mri_json = mergestruct(mri_settings,     mri_json, false);
+  mri_json = mergestruct(generic_settings, mri_json, false);
 end % if need_mri_json
 
 %% need_meg_json
@@ -1166,8 +1166,8 @@ if need_meg_json
   
   % merge the information specified by the user with that from the data
   % in case fields appear in both, the first input overrules the second
-  meg_json = mergeconfig(meg_settings,     meg_json, false);
-  meg_json = mergeconfig(generic_settings, meg_json, false);
+  meg_json = mergestruct(meg_settings,     meg_json, false);
+  meg_json = mergestruct(generic_settings, meg_json, false);
 end % if need_meg_json
 
 %% need_eeg_json
@@ -1186,8 +1186,8 @@ if need_eeg_json
   
   % merge the information specified by the user with that from the data
   % in case fields appear in both, the first input overrules the second
-  eeg_json = mergeconfig(eeg_settings,     eeg_json, false);
-  eeg_json = mergeconfig(generic_settings, eeg_json, false);
+  eeg_json = mergestruct(eeg_settings,     eeg_json, false);
+  eeg_json = mergestruct(generic_settings, eeg_json, false);
 end % if need_eeg_json
 
 %% need_ieeg_json
@@ -1208,8 +1208,8 @@ if need_ieeg_json
   
   % merge the information specified by the user with that from the data
   % in case fields appear in both, the first input overrules the second
-  ieeg_json = mergeconfig(ieeg_settings,    ieeg_json, false);
-  ieeg_json = mergeconfig(generic_settings, ieeg_json, false);
+  ieeg_json = mergestruct(ieeg_settings,    ieeg_json, false);
+  ieeg_json = mergestruct(generic_settings, ieeg_json, false);
 end
 
 %% need_emg_json
@@ -1227,8 +1227,8 @@ if need_emg_json
   
   % merge the information specified by the user with that from the data
   % in case fields appear in both, the first input overrules the second
-  emg_json = mergeconfig(emg_settings,     emg_json, false);
-  emg_json = mergeconfig(generic_settings, emg_json, false);
+  emg_json = mergestruct(emg_settings,     emg_json, false);
+  emg_json = mergestruct(generic_settings, emg_json, false);
 end
 
 %% need_exg_json
@@ -1241,8 +1241,8 @@ if need_exg_json
   
   % merge the information specified by the user with that from the data
   % in case fields appear in both, the first input overrules the second
-  exg_json = mergeconfig(exg_settings,     exg_json, false);
-  exg_json = mergeconfig(generic_settings, exg_json, false);
+  exg_json = mergestruct(exg_settings,     exg_json, false);
+  exg_json = mergestruct(generic_settings, exg_json, false);
 end
 
 %% need_nirs_json
@@ -1261,8 +1261,8 @@ if need_nirs_json
   
   % merge the information specified by the user with that from the data
   % in case fields appear in both, the first input overrules the second
-  nirs_json = mergeconfig(nirs_settings,    nirs_json, false);
-  nirs_json = mergeconfig(generic_settings, nirs_json, false);
+  nirs_json = mergestruct(nirs_settings,    nirs_json, false);
+  nirs_json = mergestruct(generic_settings, nirs_json, false);
 end
 
 %% need_audio_json
@@ -1273,8 +1273,8 @@ if need_audio_json
   
   % merge the information specified by the user with that from the data
   % in case fields appear in both, the first input overrules the second
-  audio_json = mergeconfig(audio_settings,   audio_json, false);
-  audio_json = mergeconfig(generic_settings, audio_json, false);
+  audio_json = mergestruct(audio_settings,   audio_json, false);
+  audio_json = mergestruct(generic_settings, audio_json, false);
 end
 
 %% need_video_json
@@ -1289,8 +1289,8 @@ if need_video_json
   
   % merge the information specified by the user with that from the data
   % in case fields appear in both, the first input overrules the second
-  video_json = mergeconfig(video_settings,   video_json, false);
-  video_json = mergeconfig(generic_settings, video_json, false);
+  video_json = mergestruct(video_settings,   video_json, false);
+  video_json = mergestruct(generic_settings, video_json, false);
 end
 
 %% need_physio_json
@@ -1301,8 +1301,8 @@ if need_physio_json
   
   % merge the information specified by the user with that from the data
   % in case fields appear in both, the first input overrules the second
-  physio_json = mergeconfig(physio_settings,  physio_json, false);
-  physio_json = mergeconfig(generic_settings, physio_json, false);
+  physio_json = mergestruct(physio_settings,  physio_json, false);
+  physio_json = mergestruct(generic_settings, physio_json, false);
 end
 
 %% need_stim_json
@@ -1313,8 +1313,8 @@ if need_stim_json
   
   % merge the information specified by the user with that from the data
   % in case fields appear in both, the first input overrules the second
-  stim_json = mergeconfig(stim_settings,    stim_json, false);
-  stim_json = mergeconfig(generic_settings, stim_json, false);
+  stim_json = mergestruct(stim_settings,    stim_json, false);
+  stim_json = mergestruct(generic_settings, stim_json, false);
 end
 
 %% need_eyetracker_json
@@ -1325,8 +1325,8 @@ if need_eyetracker_json
   
   % merge the information specified by the user with that from the data
   % in case fields appear in both, the first input overrules the second
-  eyetracker_json = mergeconfig(eyetracker_settings,  eyetracker_json, false);
-  eyetracker_json = mergeconfig(generic_settings,     eyetracker_json, false);
+  eyetracker_json = mergestruct(eyetracker_settings,  eyetracker_json, false);
+  eyetracker_json = mergestruct(generic_settings,     eyetracker_json, false);
 end
 
 %% need_motion_json
@@ -1339,8 +1339,8 @@ if need_motion_json
   
   % merge the information specified by the user with that from the data
   % in case fields appear in both, the first input overrules the second
-  motion_json = mergeconfig(motion_settings,  motion_json, false);
-  motion_json = mergeconfig(generic_settings, motion_json, false);
+  motion_json = mergestruct(motion_settings,  motion_json, false);
+  motion_json = mergestruct(generic_settings, motion_json, false);
 end
 
 %% need_channels_tsv
@@ -1364,7 +1364,7 @@ if need_channels_tsv
   
   % channel information can come from the header and from cfg.channels
   channels_tsv = hdr2table(hdr);
-  channels_tsv = merge_table(channels_tsv, cfg.channels, 'name');
+  channels_tsv = mergetable(channels_tsv, cfg.channels, 'name');
 
   % columns should appear in a specific order
   required = {'name', 'type', 'units', 'low_cutoff', 'high_cutoff'};
@@ -1459,7 +1459,7 @@ if need_electrodes_tsv
   
   % electrode details can be specified in cfg.elec, data.elec or in cfg.electrodes
   electrodes_tsv = elec2table(elec);                                    % this includes the cfg.elec and data.elec
-  electrodes_tsv = merge_table(electrodes_tsv, cfg.electrodes, 'name'); % this includes the cfg.electrodes
+  electrodes_tsv = mergetable(electrodes_tsv, cfg.electrodes, 'name'); % this includes the cfg.electrodes
   
   % the default for cfg.electrodes consists of one row where all values are nan, this needs to be removed
   keep = false(size(electrodes_tsv.name));
@@ -1506,7 +1506,7 @@ if need_optodes_tsv
   
   % optode details can be specified in cfg.opto, data.opto or cfg.optodes
   optodes_tsv = opto2table(opto);                              % this includes the cfg.opto and data.opto
-  optodes_tsv = merge_table(optodes_tsv, cfg.optodes, 'name'); % this includes the cfg.optodes
+  optodes_tsv = mergetable(optodes_tsv, cfg.optodes, 'name'); % this includes the cfg.optodes
   
   % the default for cfg.electrodes consists of one row where all values are nan, this needs to be removed
   keep = false(size(optodes_tsv.name));
@@ -1575,7 +1575,7 @@ if need_coordsystem_json
   
   % merge the information specified by the user with that from the data
   % in case fields appear in both, the first input overrules the second
-  coordsystem_json = mergeconfig(coordsystem_settings, coordsystem_json, false); % FIXME the order of precedence is different here
+  coordsystem_json = mergestruct(coordsystem_settings, coordsystem_json, false); % FIXME the order of precedence is different here
 end % if need_coordsystem_json
 
 %% need_events_tsv
@@ -1594,7 +1594,7 @@ if need_events_tsv
     
     % merge the information with the json sidecar file
     % in case fields appear in both, the first input overrules the second
-    tmp = mergeconfig(mri_json, ft_read_json(corresponding_json(cfg.outputfile)), false);
+    tmp = mergestruct(mri_json, ft_read_json(corresponding_json(cfg.outputfile)), false);
     assert(~isempty(tmp.RepetitionTime), 'you must specify cfg.mri.RepetitionTime');
     
     % create a header structure that represents the fMRI timeseries
@@ -1898,7 +1898,7 @@ for i=1:numel(modality)
       case 'replace'
         ft_write_json(filename, modality_json);
       case 'merge'
-        ft_write_json(filename, mergeconfig(modality_json, existing, false))
+        ft_write_json(filename, mergestruct(modality_json, existing, false))
       case 'no'
         % do nothing
         ft_info('not writing ''%s''\n', filename);
@@ -1964,10 +1964,10 @@ for i=1:numel(modality)
           existing      = output_compatible(existing);
           if strcmp(modality{i}, 'events')
             % merge complete rows
-            modality_tsv = merge_table(modality_tsv, existing);
+            modality_tsv = mergetable(modality_tsv, existing);
           else
             % use the channel name as the unique key
-            modality_tsv = merge_table(modality_tsv, existing, 'name');
+            modality_tsv = mergetable(modality_tsv, existing, 'name');
           end
         end
         ft_write_tsv(filename, modality_tsv);
@@ -2003,7 +2003,7 @@ if ~isempty(cfg.bidsroot)
     case 'replace'
       ft_write_json(filename, dataset_description_settings);
     case 'merge'
-      ft_write_json(filename, mergeconfig(dataset_description_settings, existing, false));
+      ft_write_json(filename, mergestruct(dataset_description_settings, existing, false));
     case 'no'
       % do nothing
     otherwise
@@ -2028,7 +2028,7 @@ if ~isempty(cfg.bidsroot)
   if isfile(filename)
     participants = ft_read_tsv(filename);
     % the participants.tsv is always merged
-    participants = merge_table(participants, this, 'participant_id');
+    participants = mergetable(participants, this, 'participant_id');
   else
     participants = this;
   end
@@ -2061,7 +2061,7 @@ if ~isempty(cfg.bidsroot)
   if isfile(filename)
     scans_tsv = ft_read_tsv(filename);
     % the scans.tsv is always merged
-    scans_tsv = merge_table(scans_tsv, this, 'filename');
+    scans_tsv = mergetable(scans_tsv, this, 'filename');
   else
     scans_tsv = this;
   end
