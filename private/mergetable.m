@@ -1,17 +1,17 @@
-function t3 = merge_table(t1, t2, key)
+function t3 = mergetable(t1, t2, key)
 
-% MERGE_TABLE merges two tables where the rows and columns can be partially
+% MERGETABLE merges two tables where the rows and columns can be partially
 % overlapping or different. Values from the 2nd input have precedence in case the
 % same row and column is also present in the 1st.
 %
 % Use as
-%   t3 = merge_table(t1, t2)
+%   t3 = mergetable(t1, t2)
 % or
-%   t3 = merge_table(t1, t2, key)
+%   t3 = mergetable(t1, t2, key)
 %
-% See also TABLE, JOIN, INNERJOIN, OUTERJOIN
+% See also MERGESTRUCT, JOIN, INNERJOIN, OUTERJOIN
 
-% Copyright (C) 2019, Robert Oostenveld
+% Copyright (C) 2019-2022, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.

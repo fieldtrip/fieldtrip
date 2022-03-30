@@ -95,7 +95,7 @@ assert(isstruct(cfg) || (isnumeric(cfg) && isempty(cfg)), 'The configuration mus
 
 % this script requires some options that can be user-specified, but otherwise are obtained from ft_default
 % merge the default options into the configuration, except the preamble field which is used for passing arguments
-cfg = mergeconfig(cfg, ft_default);
+cfg = mergestruct(cfg, ft_default);
 
 % determine whether function execution should be aborted or continued
 if isfield(cfg, 'outputfile') && ~isempty(cfg.outputfile)
