@@ -141,13 +141,13 @@ end
 
 % the fieldtrip code should be able to read in all atlases without error
 ok = true;
-try
+%try
   for k = find(hastable)'
     fname = fullfile(f(k).folder, f(k).name);
     y{k} = ft_read_atlas(fname);
   end
-catch
-  ok = false;
-end
-assert(ok==1);
+%catch
+%  ok = false;
+%end
+%assert(ok==1);
 
