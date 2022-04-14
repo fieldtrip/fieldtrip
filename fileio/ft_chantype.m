@@ -202,7 +202,7 @@ elseif isheader && issubfield(input, 'orig.chs.coil_type')
     chantype(sel) = {'mcg'};
   end
   for sel=find([input.orig.chs.kind]==3)'   % Stim channels
-    if any([input.orig.chs(sel).logno] == 101) % new systems: 101 (and 102, if enabled) are digital; low numbers are 'pseudo-analog' (if enabled)
+    if any(([input.orig.chs(sel).logno] == 101) | ([input.orig.chs(sel).logno] == 102)) % new systems: 101 (and 102, if enabled) are digital; low numbers are 'pseudo-analog' (if enabled)
       chantype(sel([input.orig.chs(sel).logno] == 101)) = {'digital trigger'};
       chantype(sel([input.orig.chs(sel).logno] == 102)) = {'digital trigger'};
       chantype(sel([input.orig.chs(sel).logno] <= 32))  = {'analog trigger'};

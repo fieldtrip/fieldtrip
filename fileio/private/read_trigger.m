@@ -156,7 +156,7 @@ end
 if strncmpi(dataformat, 'neuromag', 8) && ~fixneuromag
   for k = 1:size(dat,1)
     switch hdr.chantype{chanindx(1)}
-      case 'binary trigger'
+      case 'digital trigger'
         if any(dat(k,:)<0)
           dat(k,:) = double(typecast(int16(dat(k,:)), 'uint16'));
         end
