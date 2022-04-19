@@ -108,7 +108,6 @@ if isunivariate
 else
   siz = [ size(input) 1 ];
   n = siz(1);
-  ft_progress('init', feedback, 'computing metric...');
   if n>1
     input    = imag(input);          % make everything imaginary
     outsum   = nansum(input,1);      % compute the sum; this is 1 x size(2:end)
@@ -127,7 +126,9 @@ else
 
   [leave1outsum, leave1outssq] = deal(zeros([1 siz(2:end)]));
   if dojack && n>2 % n needs to be larger than 2 to get a meaningful variance
+    ft_progress('init', feedback, 'computing metric...');
     for k = 1:n
+      ft_progress(k/n, 'computing metric for replicate %d from %d\n', k, n);
       s  = outsum  - input(k,:,:,:,:,:,:); % works for any array up to 7-D
       sw = outsumW - abs(input(k,:,:,:,:,:,:));
       if debias
@@ -143,6 +144,8 @@ else
       leave1outsum = leave1outsum + tmp;    % added this for nan support
       leave1outssq = leave1outssq + tmp.^2; % added this for nan support
     end
+    ft_progress('close');
+
     % compute the sem here
     n = sum(~isnan(input),1); % this is the actual df when nans are found in the input matrix
     v = (n-1).^2.*(leave1outssq - (leave1outsum.^2)./n)./(n - 1); % 11.5 efron, sqrt and 1/n done in ft_connectivityanalysis
@@ -154,4 +157,3 @@ else
     v = [];
   end
 end
-ft_progress('close');

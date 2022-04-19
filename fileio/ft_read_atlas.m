@@ -65,7 +65,8 @@ filename = fetch_url(filename);
 
 [p, f, x] = fileparts(filename);
 
-if strcmp(f, 'TTatlas+tlrc')
+if contains(filename, 'BRIK') || contains(filename, 'HEAD')
+  % this is robust for both compressed or uncompressed afni atlases. 
   format = 'afni';
 elseif strcmp(x, '.nii') && exist(fullfile(p, [f '.txt']), 'file')
   % This is a combination of nii+txt file, where the txt file may contain three columns like this
@@ -89,14 +90,14 @@ elseif strcmp(x, '.nii') && exist(fullfile(p, [f '.txt']), 'file')
     format = 'aal';
   end
   fclose(fid);
-elseif strcmp(x, '.mgz') && ~isempty(strfind(f, 'aparc')) || ~isempty(strfind(f, 'aseg'))
+elseif strcmp(x, '.mgz') && contains(strfind(f, 'aparc')) || contains(f, 'aseg')
   % individual volume based segmentation from freesurfer
   format = 'freesurfer_volume';
 elseif ft_filetype(filename, 'caret_label')
   % this is a gifti file that contains both the values for a set of
   % vertices as well as the labels.
   format = 'caret_label';
-elseif ~isempty(strfind(filename, 'MPM'))
+elseif contains(filename, 'MPM')
   % assume to be from the spm_anatomy toolbox
   format = 'spm_anatomy';
 elseif strcmp(x, '.xml') && (isfolder(strtok(fullfile(p,f), '_')) || isfolder(strtok(fullfile(p,f), '-')))
@@ -106,9 +107,9 @@ elseif strcmp(x, '.xml') && (isfolder(strtok(fullfile(p,f), '_')) || isfolder(st
   format = 'fsl';
 elseif strcmp(x, '.mat')
   format = 'mat';
-elseif strcmp(x, '.nii') && ~isempty(strfind(f, 'Yeo2011_7Networks'))
+elseif strcmp(x, '.nii') && contains(f, 'Yeo2011_7Networks')
   format = 'yeo7';
-elseif strcmp(x, '.nii') && ~isempty(strfind(f, 'Yeo2011_17Networks'))
+elseif strcmp(x, '.nii') && contains(f, 'Yeo2011_17Networks')
   format = 'yeo17';
 else
   format = 'wfu';
@@ -197,428 +198,313 @@ switch fileformat
     % check whether the required AFNI toolbox is available
     ft_hastoolbox('afni', 1);
     
-    atlas = ft_read_mri(filename);
-    
-    % the AFNI atlas contains two volumes at 1mm resolution
-    atlas.brick0   = atlas.anatomy(:,:,:,1);
-    atlas.brick1   = atlas.anatomy(:,:,:,2);
-    atlas          = rmfield(atlas, 'anatomy');
-    atlas.dim      = atlas.dim([1 2 3]);
-    atlas.coordsys = 'tal';
-    
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % the following information is from https://afni.nimh.nih.gov/afni/doc/misc/ttatlas_tlrc
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    
-    atlas.descr.brick = [
-      1
-      1
-      0
-      0
-      0
-      0
-      0
-      0
-      0
-      0
-      0
-      0
-      0
-      0
-      0
-      0
-      0
-      0
-      0
-      0
-      0
-      0
-      0
-      0
-      0
-      0
-      0
-      0
-      0
-      0
-      0
-      0
-      0
-      0
-      1
-      1
-      1
-      0
-      0
-      0
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      0
-      0
-      0
-      0
-      0
-      0
-      0
-      0
-      0
-      0
-      0
-      0
-      0
-      1
-      0
-      0
-      ];
-    
-    atlas.descr.value = [
-      68
-      71
-      20
-      21
-      22
-      24
-      25
-      26
-      27
-      28
-      29
-      30
-      31
-      32
-      33
-      34
-      35
-      36
-      37
-      39
-      40
-      41
-      42
-      43
-      44
-      45
-      46
-      47
-      48
-      49
-      50
-      51
-      52
-      70
-      72
-      73
-      74
-      75
-      76
-      77
-      124
-      125
-      126
-      128
-      129
-      130
-      131
-      132
-      133
-      134
-      135
-      136
-      137
-      138
-      144
-      145
-      151
-      146
-      147
-      148
-      149
-      81
-      82
-      83
-      84
-      85
-      86
-      87
-      88
-      89
-      90
-      91
-      93
-      94
-      95
-      96
-      97
-      98
-      99
-      100
-      101
-      102
-      103
-      104
-      105
-      106
-      107
-      108
-      109
-      110
-      111
-      112
-      113
-      114
-      115
-      116
-      117
-      118
-      119
-      120
-      121
-      122
-      123
-      53
-      54
-      55
-      56
-      57
-      58
-      59
-      60
-      61
-      62
-      63
-      66
-      65
-      127
-      64
-      67
-      ];
-    
-    atlas.descr.name = {
-      'Hippocampus'
-      'Amygdala'
-      'Posterior Cingulate'
-      'Anterior Cingulate'
-      'Subcallosal Gyrus'
-      'Transverse Temporal Gyrus'
-      'Uncus'
-      'Rectal Gyrus'
-      'Fusiform Gyrus'
-      'Inferior Occipital Gyrus'
-      'Inferior Temporal Gyrus'
-      'Insula'
-      'Parahippocampal Gyrus'
-      'Lingual Gyrus'
-      'Middle Occipital Gyrus'
-      'Orbital Gyrus'
-      'Middle Temporal Gyrus'
-      'Superior Temporal Gyrus'
-      'Superior Occipital Gyrus'
-      'Inferior Frontal Gyrus'
-      'Cuneus'
-      'Angular Gyrus'
-      'Supramarginal Gyrus'
-      'Cingulate Gyrus'
-      'Inferior Parietal Lobule'
-      'Precuneus'
-      'Superior Parietal Lobule'
-      'Middle Frontal Gyrus'
-      'Paracentral Lobule'
-      'Postcentral Gyrus'
-      'Precentral Gyrus'
-      'Superior Frontal Gyrus'
-      'Medial Frontal Gyrus'
-      'Lentiform Nucleus'
-      'Hypothalamus'
-      'Red Nucleus'
-      'Substantia Nigra'
-      'Claustrum'
-      'Thalamus'
-      'Caudate'
-      'Caudate Tail'
-      'Caudate Body'
-      'Caudate Head'
-      'Ventral Anterior Nucleus'
-      'Ventral Posterior Medial Nucleus'
-      'Ventral Posterior Lateral Nucleus'
-      'Medial Dorsal Nucleus'
-      'Lateral Dorsal Nucleus'
-      'Pulvinar'
-      'Lateral Posterior Nucleus'
-      'Ventral Lateral Nucleus'
-      'Midline Nucleus'
-      'Anterior Nucleus'
-      'Mammillary Body'
-      'Medial Globus Pallidus'
-      'Lateral Globus Pallidus'
-      'Putamen'
-      'Nucleus Accumbens'
-      'Medial Geniculum Body'
-      'Lateral Geniculum Body'
-      'Subthalamic Nucleus'
-      'Brodmann area 1'
-      'Brodmann area 2'
-      'Brodmann area 3'
-      'Brodmann area 4'
-      'Brodmann area 5'
-      'Brodmann area 6'
-      'Brodmann area 7'
-      'Brodmann area 8'
-      'Brodmann area 9'
-      'Brodmann area 10'
-      'Brodmann area 11'
-      'Brodmann area 13'
-      'Brodmann area 17'
-      'Brodmann area 18'
-      'Brodmann area 19'
-      'Brodmann area 20'
-      'Brodmann area 21'
-      'Brodmann area 22'
-      'Brodmann area 23'
-      'Brodmann area 24'
-      'Brodmann area 25'
-      'Brodmann area 27'
-      'Brodmann area 28'
-      'Brodmann area 29'
-      'Brodmann area 30'
-      'Brodmann area 31'
-      'Brodmann area 32'
-      'Brodmann area 33'
-      'Brodmann area 34'
-      'Brodmann area 35'
-      'Brodmann area 36'
-      'Brodmann area 37'
-      'Brodmann area 38'
-      'Brodmann area 39'
-      'Brodmann area 40'
-      'Brodmann area 41'
-      'Brodmann area 42'
-      'Brodmann area 43'
-      'Brodmann area 44'
-      'Brodmann area 45'
-      'Brodmann area 46'
-      'Brodmann area 47'
-      'Uvula of Vermis'
-      'Pyramis of Vermis'
-      'Tuber of Vermis'
-      'Declive of Vermis'
-      'Culmen of Vermis'
-      'Cerebellar Tonsil'
-      'Inferior Semi-Lunar Lobule'
-      'Fastigium'
-      'Nodule'
-      'Uvula'
-      'Pyramis'
-      'Culmen'
-      'Declive'
-      'Dentate'
-      'Tuber'
-      'Cerebellar Lingual'
-      };
-    
-    % the following is basically the conversion from the 2005 format to the 2012 format
-    sel0   = (atlas.descr.brick==0);
-    label0 = atlas.descr.name(sel0);
-    value0 = atlas.descr.value(sel0);
-    % construct a new array with parcel or atlas values
-    if numel(label0)<=intmax('uint8')
-      new_brick0 = zeros(atlas.dim, 'uint8');
-    elseif numel(label0)<=intmax('uint16')
-      new_brick0 = zeros(atlas.dim, 'uint16');
-    elseif numel(label0)<=intmax('uint32')
-      new_brick0 = zeros(atlas.dim, 'uint32');
+    tmp     = ft_read_mri(filename);
+    if isfield(tmp, 'coordsys') && ~strcmp(tmp.coordsys, 'unknown')
+      coordsys = tmp.coordsys;
+    elseif isfield(tmp.hdr, 'TEMPLATE_SPACE') && ~isempty(tmp.hdr.TEMPLATE_SPACE)
+      coordsys = lower(tmp.hdr.TEMPLATE_SPACE); % FIXME this is based on AFNI conventions, not easily decodable by FT
     else
-      new_brick0 = zeros(atlas.dim);
+      coordsys = 'tal'; % FIXME could be different in other atlases
     end
-    for i=1:numel(label0)
-      % replace the original values with numbers from 1 to N
-      new_brick0(atlas.brick0==value0(i)) = i;
-    end
-    
-    sel1   = (atlas.descr.brick==1);
-    label1 = atlas.descr.name(sel1);
-    value1 = atlas.descr.value(sel1);
-    % construct a new array with parcel or atlas values
-    if numel(label1)<=intmax('uint8')
-      new_brick1 = zeros(atlas.dim, 'uint8');
-    elseif numel(label1)<=intmax('uint16')
-      new_brick1 = zeros(atlas.dim, 'uint16');
-    elseif numel(label1)<=intmax('uint32')
-      new_brick1 = zeros(atlas.dim, 'uint32');
+
+    if isfield(tmp.hdr, 'ATLAS_LABEL_TABLE') && ~isempty(tmp.hdr.ATLAS_LABEL_TABLE)
+      if isfield(tmp.hdr.ATLAS_LABEL_TABLE(1), 'sb_label') && ~all(tmp.anatomy(:)==round(tmp.anatomy(:)))
+        % probabilistic atlas
+        isprobabilistic = true;
+      else
+        % indexed atlas
+        isprobabilistic = false;
+      end
+      labels  = {tmp.hdr.ATLAS_LABEL_TABLE.struct}';
+      values  = [tmp.hdr.ATLAS_LABEL_TABLE.val]';
+      
+    elseif contains(filename, 'TTatlas+tlrc')
+      isprobabilistic = false;
+
+      % the following information is from https://sscc.nimh.nih.gov/afni/doc/misc/afni_ttatlas/index_html
+      values = [
+        68
+        71
+        20
+        21
+        22
+        24
+        25
+        26
+        27
+        28
+        29
+        30
+        31
+        32
+        33
+        34
+        35
+        36
+        37
+        39
+        40
+        41
+        42
+        43
+        44
+        45
+        46
+        47
+        48
+        49
+        50
+        51
+        52
+        70
+        72
+        73
+        74
+        75
+        76
+        77
+        124
+        125
+        126
+        128
+        129
+        130
+        131
+        132
+        133
+        134
+        135
+        136
+        137
+        138
+        144
+        145
+        151
+        146
+        147
+        148
+        149
+        81
+        82
+        83
+        84
+        85
+        86
+        87
+        88
+        89
+        90
+        91
+        93
+        94
+        95
+        96
+        97
+        98
+        99
+        100
+        101
+        102
+        103
+        104
+        105
+        106
+        107
+        108
+        109
+        110
+        111
+        112
+        113
+        114
+        115
+        116
+        117
+        118
+        119
+        120
+        121
+        122
+        123
+        53
+        54
+        55
+        56
+        57
+        58
+        59
+        60
+        61
+        62
+        63
+        66
+        65
+        127
+        64
+        67
+        ];
+      
+      labels = {
+        'Hippocampus'
+        'Amygdala'
+        'Posterior Cingulate'
+        'Anterior Cingulate'
+        'Subcallosal Gyrus'
+        'Transverse Temporal Gyrus'
+        'Uncus'
+        'Rectal Gyrus'
+        'Fusiform Gyrus'
+        'Inferior Occipital Gyrus'
+        'Inferior Temporal Gyrus'
+        'Insula'
+        'Parahippocampal Gyrus'
+        'Lingual Gyrus'
+        'Middle Occipital Gyrus'
+        'Orbital Gyrus'
+        'Middle Temporal Gyrus'
+        'Superior Temporal Gyrus'
+        'Superior Occipital Gyrus'
+        'Inferior Frontal Gyrus'
+        'Cuneus'
+        'Angular Gyrus'
+        'Supramarginal Gyrus'
+        'Cingulate Gyrus'
+        'Inferior Parietal Lobule'
+        'Precuneus'
+        'Superior Parietal Lobule'
+        'Middle Frontal Gyrus'
+        'Paracentral Lobule'
+        'Postcentral Gyrus'
+        'Precentral Gyrus'
+        'Superior Frontal Gyrus'
+        'Medial Frontal Gyrus'
+        'Lentiform Nucleus'
+        'Hypothalamus'
+        'Red Nucleus'
+        'Substantia Nigra'
+        'Claustrum'
+        'Thalamus'
+        'Caudate'
+        'Caudate Tail'
+        'Caudate Body'
+        'Caudate Head'
+        'Ventral Anterior Nucleus'
+        'Ventral Posterior Medial Nucleus'
+        'Ventral Posterior Lateral Nucleus'
+        'Medial Dorsal Nucleus'
+        'Lateral Dorsal Nucleus'
+        'Pulvinar'
+        'Lateral Posterior Nucleus'
+        'Ventral Lateral Nucleus'
+        'Midline Nucleus'
+        'Anterior Nucleus'
+        'Mammillary Body'
+        'Medial Globus Pallidus'
+        'Lateral Globus Pallidus'
+        'Putamen'
+        'Nucleus Accumbens'
+        'Medial Geniculum Body'
+        'Lateral Geniculum Body'
+        'Subthalamic Nucleus'
+        'Brodmann area 1'
+        'Brodmann area 2'
+        'Brodmann area 3'
+        'Brodmann area 4'
+        'Brodmann area 5'
+        'Brodmann area 6'
+        'Brodmann area 7'
+        'Brodmann area 8'
+        'Brodmann area 9'
+        'Brodmann area 10'
+        'Brodmann area 11'
+        'Brodmann area 13'
+        'Brodmann area 17'
+        'Brodmann area 18'
+        'Brodmann area 19'
+        'Brodmann area 20'
+        'Brodmann area 21'
+        'Brodmann area 22'
+        'Brodmann area 23'
+        'Brodmann area 24'
+        'Brodmann area 25'
+        'Brodmann area 27'
+        'Brodmann area 28'
+        'Brodmann area 29'
+        'Brodmann area 30'
+        'Brodmann area 31'
+        'Brodmann area 32'
+        'Brodmann area 33'
+        'Brodmann area 34'
+        'Brodmann area 35'
+        'Brodmann area 36'
+        'Brodmann area 37'
+        'Brodmann area 38'
+        'Brodmann area 39'
+        'Brodmann area 40'
+        'Brodmann area 41'
+        'Brodmann area 42'
+        'Brodmann area 43'
+        'Brodmann area 44'
+        'Brodmann area 45'
+        'Brodmann area 46'
+        'Brodmann area 47'
+        'Uvula of Vermis'
+        'Pyramis of Vermis'
+        'Tuber of Vermis'
+        'Declive of Vermis'
+        'Culmen of Vermis'
+        'Cerebellar Tonsil'
+        'Inferior Semi-Lunar Lobule'
+        'Fastigium'
+        'Nodule'
+        'Uvula'
+        'Pyramis'
+        'Culmen'
+        'Declive'
+        'Dentate'
+        'Tuber'
+        'Cerebellar Lingual'
+        };
+
     else
-      new_brick1 = zeros(atlas.dim);
-    end
-    for i=1:numel(label1)
-      % replace the original values with numbers from 1 to N
-      new_brick1(atlas.brick1==value1(i)) = i;
+      ft_error('no information about the atlas labels is available');
     end
     
-    atlas = rmfield(atlas, {'brick0', 'brick1', 'descr'});
-    atlas.brick0      = new_brick0;
-    atlas.brick0label = label0;
-    atlas.brick1      = new_brick1;
-    atlas.brick1label = label1;
+    atlas     = [];
+    atlas.dim = tmp.dim(1:3);
+    atlas.transform = tmp.transform;
+    atlas.hdr = tmp.hdr;
+    atlas.coordsys = coordsys;
     
+    nbrick  = size(tmp.anatomy,4);
+    for k = 1:nbrick
+      
+      if ~isprobabilistic
+        brickname = sprintf('brick%d',k-1);
+        brick     = tmp.anatomy(:,:,:,k);
+        ulabel    = setdiff(unique(brick(:)), 0);
+        label     = cell(size(ulabel));
+        nlabel    = numel(label);
+        
+        % renumber the brick from 1:N and keep track of the label
+        newbrick  = zeros(size(brick));
+        for i = 1:nlabel
+          sel = find(values==ulabel(i));
+          if ~isempty(sel)
+            label(i) = labels(sel);
+            newbrick(brick==ulabel(i)) = i;
+          else
+            ft_warning('the value %d does not have a label according to the ATLAS_LABEL_TABLE and will be discarded', ulabel(i));
+          end
+        end
+        atlas.(brickname) = newbrick;
+        atlas.([brickname 'label']) = label;
+      else
+        atlas.(labels{k}) = tmp.anatomy(:,:,:,values(k)+1); % indexing is 0-based in this case
+      end
+        
+    end
+
   case 'wfu'
     
     atlas        = ft_read_mri(filename);

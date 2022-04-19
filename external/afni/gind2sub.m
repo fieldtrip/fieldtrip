@@ -4,21 +4,21 @@ function [err, v] = gind2sub (sz, ndx)
 %
 %Purpose:
 %   This function converts a linear index to multiple subscripts based on the dimensions.
-%   It is a further modified version from Ziad's modification based on the original Matlab 
+%   It is a further modified version from Ziad's modification based on the original Matlab
 %   function IND2SUB. The difference from what Ziad did is that we vary the subscript starting
 %   from the last dimension and ends with the first dimension instead of the other way around.
-%   
+%
 %Input Parameters:
 %   sz: dimension vector
 %   ndx: counter index for the total number of combinations.
-%   
+%
 %Output Parameters:
 %   err : 0 No Problem
 %       : 1  Problems
-%   v: array of subscripts  
-%      
+%   v: array of subscripts
+%
 %Key Terms:
-%   
+%
 %More Info :
 %
 %     Author : Gang Chen

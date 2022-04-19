@@ -4,11 +4,11 @@ function [MapMPM, MapML, aur] = CA_EZ_Prep()
 % thd_ttatlas_CA_EZ.c and thd_ttatlas_CA_EZ.h .
 % The new files created are called thd_ttatlas_CA_EZ-auto.c and thd_ttatlas_CA_EZ-auto.h
 % must be inspected then moved and renamed into afni's src directory.
-% 
+%
 % See SUMA/Readme_Modify.log for info on sequence of execution
 % search for: + How you install a new Zilles, Amunts, Eickhoff SPM toolbox:%
-% 
-% See also scripts: 
+%
+% See also scripts:
 %  @Prep_New_CA_EZ
 %  @Compare_CA_EZ
 %  @Create_suma_tlrc.tgz
@@ -127,7 +127,7 @@ if (~isempty(which('se_note'))),
    se_note;
    k = 0;
    vers = '';
-   if (exist('fg')),   
+   if (exist('fg')),
       h = get(fg, 'Children');
       cs = [];
       nref = 0;
@@ -137,12 +137,12 @@ if (~isempty(which('se_note'))),
          if (~isempty(tmp)),
             k = k + 1;
             cs(k).s = tmp;
-            if (iscellstr(cs(k).s) && length(cs(k).s) > 1), 
-               if (length(cs(k).s) > 5), %papers 
+            if (iscellstr(cs(k).s) && length(cs(k).s) > 1),
+               if (length(cs(k).s) > 5), %papers
                   nref = nref + 1;
                   ref(nref) = k;
                   cs(k).typ = 1;
-               else 
+               else
                   cs(k).typ = -1; %the authors's info
                   au = cellstr(cs(k).s);
                end
@@ -151,10 +151,10 @@ if (~isempty(which('se_note'))),
                ot(l) = cellstr(cs(k).s);
                if (~isempty(strfind(char(ot(l)), 'Version'))),
                   vers = zdeblank(char(ot(l)));
-               end 
+               end
                l = l + 1;
             end
-         end   
+         end
       end
       if (isempty(vers)),
          fprintf(2,'Version string not found!\n');
@@ -205,17 +205,17 @@ if (~isempty(which('se_note'))),
          otr = flipud(char(ot));
          car = char(ca);
          sdecl = sprintf('char CA_EZ_REF_STR[%d][%d]', size(otr,1)+size(aur,1)+size(car,1)+10, max([size(otr,2)+15, size(aur,2)+15,size(car,2)+15]));
-         sdecl2 = sprintf('char CA_EZ_VERSION_STR[%d]',length(vers)+3); 
+         sdecl2 = sprintf('char CA_EZ_VERSION_STR[%d]',length(vers)+3);
          %do someting nice
          fida = fopen(rname,'w');
          fprintf(fida, '%s = {\n',sdecl);
-         fprintf(fida, '"%s",\n"%s",\n"%s",\n',otr(1,:), otr(2,:), otr(3,:)); 
+         fprintf(fida, '"%s",\n"%s",\n"%s",\n',otr(1,:), otr(2,:), otr(3,:));
          for (i=1:1:size(aur,1)), fprintf(fida, '"   %s",\n', aur(i,:)); end
-         fprintf(fida, '"%s",\n', otr(4,:)); 
+         fprintf(fida, '"%s",\n', otr(4,:));
          for (i=1:1:size(car,1)), fprintf(fida, '"   %s",\n', car(i,:));  end
          fprintf(fida, '"%s",\n', otr(5,:));
          fprintf(fida, '" ",\n" ",\n"AFNI adaptation by",\n" Ziad S. Saad (saadz@mail.nih.gov, SSCC/NIMH/NIH)",\n');
-         fprintf(fida, '" Info automatically created with CA_EZ_Prep.m based on se_note.m",\n'); 
+         fprintf(fida, '" Info automatically created with CA_EZ_Prep.m based on se_note.m",\n');
          fprintf(fida, '""};/* Must be the only empty string in the array*/\n'); %Must be the only empty string in the array
          fprintf(fida, '%s = { "%s" };\n', sdecl2, vers);
          fclose(fida);
@@ -227,7 +227,7 @@ else
 end
 
 %Prep C output files
-   
+
    fidc = fopen (cname,'w');
    if (fidc < 0),
       fprintf(2,'Failed to open output .c file\n');
@@ -245,14 +245,14 @@ end
    fprintf(fidc,'%s', str);
 
 %Add the references string file
-   fprintf(fidc,'/*! Leave the reference string in a separate file\nfor easy script parsing.*/\n#include "%s"\n\n', rname);   
+   fprintf(fidc,'/*! Leave the reference string in a separate file\nfor easy script parsing.*/\n#include "%s"\n\n', rname);
 
 %Now do specifics to .h file
    NLbl_ML = size(MapML,1);
    MaxLbl_ML = size(MapML,2)+3;
    NLbl_MPM = length(MapMPM);
    MaxLbl_MPM = 0;
-   for (i=1:1:NLbl_MPM), 
+   for (i=1:1:NLbl_MPM),
       if (MaxLbl_MPM < length(MapMPM(i).name)), MaxLbl_MPM = length(MapMPM(i).name); end
    end
    MaxLbl_MPM = MaxLbl_MPM+3;
@@ -260,9 +260,9 @@ end
       fprintf(2,'Error: Labels longer than ATLAS_CMAX defined in AFNI src code.\nIncrease limit here and in thd_ttaltas_query.h\n');
       return;
    end
-   
+
    fprintf(fidh,'/* ----------- Macro Labels --------------------- */\n');
-   fprintf(fidh,'/* ----------- Based on: %s -------------*/\n', ML_file(1).name);   
+   fprintf(fidh,'/* ----------- Based on: %s -------------*/\n', ML_file(1).name);
    fprintf(fidh,'#define ML_EZ_COUNT   %d\n\n', NLbl_ML);
    fprintf(fidh,'extern ATLAS_point ML_EZ_list[ML_EZ_COUNT] ;\nextern char * ML_EZ_labels[ML_EZ_COUNT] ;\n');
    fprintf(fidh,'extern int ML_EZ_labeled ;\nextern int ML_EZ_current ;\n');
@@ -272,33 +272,33 @@ end
    fprintf(fidh,'extern ATLAS_point LR_EZ_list[LR_EZ_COUNT] ;\nextern char * LR_EZ_labels[LR_EZ_COUNT] ;\n');
    fprintf(fidh,'extern int LR_EZ_labeled ;\nextern int LR_EZ_current ;\n\n');
    fprintf(fidh,'/* -----------     MPM      --------------------- */\n');
-   fprintf(fidh,'/* ----------- Based on: %s --------------*/\n', MPM_file(1).name);   
+   fprintf(fidh,'/* ----------- Based on: %s --------------*/\n', MPM_file(1).name);
    fprintf(fidh,'#define CA_EZ_COUNT   %d\n', NLbl_MPM);
    fprintf(fidh,'#define CA_EZ_MPM_MIN 100  /*!< minimum meaningful value in MPM atlas */\n');
    fprintf(fidh,'extern ATLAS_point CA_EZ_list[CA_EZ_COUNT] ;\nextern char * CA_EZ_labels[CA_EZ_COUNT] ;\n');
    fprintf(fidh,'extern int CA_EZ_labeled ;\nextern int CA_EZ_current ;\n\n');
    fprintf(fidh,'/* -----------     Refs      --------------------- */\n');
-   fprintf(fidh,'/* ----------- Based on se_note.m --------------*/\n');   
+   fprintf(fidh,'/* ----------- Based on se_note.m --------------*/\n');
    fprintf(fidh,'extern %s;\n', sdecl);
    fprintf(fidh,'extern %s;\n', sdecl2);
 
 
 %first create ML structure
    fprintf(fidc,'/* ----------- Macro Labels --------------------- */\n');
-   fprintf(fidc,'/* ----------- Based on: %s -------------*/\n', ML_file(1).name);   
+   fprintf(fidc,'/* ----------- Based on: %s -------------*/\n', ML_file(1).name);
    fprintf(fidc,'ATLAS_point ML_EZ_list[ML_EZ_COUNT] = {\n');
    for (i=1:1:size(MapML,1)),
       %pad string by dots
-      fprintf(fidc,'   { %-3d , "%s", 0, 0, 0, 0, ""}', i, pad_with_dot(MapML(i,:), 50));   
-      if (i<size(MapML,1)) fprintf(fidc,',\n'); else fprintf(fidc,'\n'); end      
+      fprintf(fidc,'   { %-3d , "%s", 0, 0, 0, 0, ""}', i, pad_with_dot(MapML(i,:), 50));
+      if (i<size(MapML,1)) fprintf(fidc,',\n'); else fprintf(fidc,'\n'); end
    end
    fprintf(fidc,'};\n\n');
 
 %Now create MPM structure
    fprintf(fidc,'/* -----------     MPM      --------------------- */\n');
-   fprintf(fidc,'/* ----------- Based on: %s --------------*/\n', MPM_file(1).name);   
+   fprintf(fidc,'/* ----------- Based on: %s --------------*/\n', MPM_file(1).name);
    fprintf(fidc,'ATLAS_point CA_EZ_list[CA_EZ_COUNT] = { \n');
-   for (i=1:1:NLbl_MPM), 
+   for (i=1:1:NLbl_MPM),
       [err,PathString,FileString] = GetPath (MapMPM(i).ref, 1);
       fprintf(fidc,'   { %-3d, "%s", 0, 0, 0, 0, "%s" }', ...
                         MapMPM(i).GV, pad_with_dot(MapMPM(i).name,40), pad_with_dot(RemoveExtension(FileString,'.img|.mnc|.hdr'), 27));
@@ -311,7 +311,7 @@ end
    fprintf(fidc,'/* ---- Based on my understanding -------------- */\n');
    fprintf(fidc,'ATLAS_point LR_EZ_list[LR_EZ_COUNT] = {\n');
    Lst = ['Non-Brain...'; 'Right Brain.'; 'Left Brain..'];
-   for (i=1:1:3), 
+   for (i=1:1:3),
       fprintf(fidc,'   { %-3d, "%s", 0, 0, 0, 0, "" }', ...
                         i-1, Lst(i, :));
       if (i<3) fprintf(fidc,',\n'); else fprintf(fidc,'\n'); end
@@ -341,16 +341,16 @@ function str = fix_string(stri)
    broken = 0;
    closed = 0;
    while (i > 1 && ~broken),
-      if (str(i) == ')'), 
-         closed = closed + 1; 
-      elseif (str(i) == '('), 
+      if (str(i) == ')'),
+         closed = closed + 1;
+      elseif (str(i) == '('),
          if (closed == 0),
             broken = 1;
          end
       end
       i = i - 1;
    end
-   
+
    if (broken),
       i = n_str;
       fixed = 0;
@@ -362,9 +362,9 @@ function str = fix_string(stri)
             fixed = 1;
          end
          i = i - 1;
-      end   
+      end
    end
-return;  
+return;
 
 function str = pad_with_dot(stri, ntot)
    if (nargin == 2),
@@ -378,5 +378,5 @@ function str = pad_with_dot(stri, ntot)
       str(i) = '.';
       i = i - 1;
    end
-      
-return;  
+
+return;

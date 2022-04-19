@@ -6,22 +6,22 @@ function [Prefix, ViewName, Ext] = AfniPrefix (Prefix)
 %   returns the afni prefix, view and extension from a brick name
 %   No checking is done to make sure that View or Ext are acceptable
 %   see PrefixStatus instead
-%   
+%
 %Input Parameters:
 %   Name : 'elvis' or 'elvis+orig' or 'elvis+orig.HEAD'
-%   
-%   
+%
+%
 %Output Parameters:
 %   Prefix: 'elvis'
 %   View: '+orig'
 %   Ext: .HEAD
-%      
+%
 %Key Terms:
-%   
+%
 %More Info :
 %   PrefixStatus
-%   
-%   
+%
+%
 %
 %     Author : Ziad Saad
 %     Date : Tue Dec 4 15:24:09 EST 2001

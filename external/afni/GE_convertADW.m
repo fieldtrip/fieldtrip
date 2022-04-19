@@ -30,7 +30,7 @@ function status = GE_convertADW(inDir,outStem,starttime,nvols)
 % Modified to use spm write functions
 % Modified to use spm_write_plane instead of spm_write_vol
 %
-% Souheil J. Inati  
+% Souheil J. Inati
 % Dartmouth College
 % September 2001
 % souheil.inati@dartmouth.edu

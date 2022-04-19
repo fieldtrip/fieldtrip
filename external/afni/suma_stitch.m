@@ -23,7 +23,7 @@ for (i=1:1:N_1),
       jstp = jstrt + size(a,2) - 1;
       istrt, istp-istrt, jstrt, jstp-jstrt,
       A(istrt:istp,jstrt:jstp,:) = a;
-      subplot (N_1, N_1, k); image(a); title(lst(k).name); drawnow; 
+      subplot (N_1, N_1, k); image(a); title(lst(k).name); drawnow;
       k = k +1;
    end
 end

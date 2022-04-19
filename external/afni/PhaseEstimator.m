@@ -2,7 +2,7 @@ function [R] = PhaseEstimator(R, Opt)
 
 if (~isfield(Opt, 'AmpPhase') | ~Opt.AmpPhase),
    for (icol=1:1:length(R)),
-      %Calculate the phase of the trace, with the peak  
+      %Calculate the phase of the trace, with the peak
       %to be the start of the phase
       nptrc = length(R(icol).tptrace);
       R(icol).phz=-2.*ones(size(R(icol).t));
@@ -11,9 +11,9 @@ if (~isfield(Opt, 'AmpPhase') | ~Opt.AmpPhase),
       while (i <= nptrc-1),
          while(R(icol).t(j) < R(icol).tptrace(i+1)),
             if (R(icol).t(j) >= R(icol).tptrace(i)),
-               %Note: Using a constant244 period for each interval 
+               %Note: Using a constant244 period for each interval
                %causes slope discontinuity within a period.
-               %One should resample prd(i) so that it is 
+               %One should resample prd(i) so that it is
                %estimated at each time in R(icol).t(j)
                %dunno if that makes much of a difference in the end however.
                R(icol).phz(j) = (R(icol).t(j) - (R(icol).tptrace(i))) ...
@@ -31,7 +31,7 @@ if (~isfield(Opt, 'AmpPhase') | ~Opt.AmpPhase),
       %change phase to radians
       R(icol).phz = R(icol).phz.*2.*pi;
    end
-else, %phase based on amplitude 
+else, %phase based on amplitude
    for (icol=1:1:length(R)),
       % at first scale to the max
       mxamp = max(R(icol).ptrace);
@@ -49,10 +49,10 @@ else, %phase based on amplitude
          R(icol).phz_pol(i) = 0;
          i = i + 1;
       end
-      if (R(icol).tptrace(1) < R(icol).tntrace(1)), 
+      if (R(icol).tptrace(1) < R(icol).tntrace(1)),
          cpol=-1;    %expiring phase, peak behind us
          itp = 2;
-      else 
+      else
          cpol = 1; %inspiring phase (bottom behind us)
          inp = 2;
       end
@@ -80,10 +80,10 @@ else, %phase based on amplitude
           in = find(R(icol).phz_pol<0);
           plot (R(icol).t(in),0.45.*mxamp,'g.');
       end
-      %Now that we have the polarity, without computing sign(dR/dt) 
+      %Now that we have the polarity, without computing sign(dR/dt)
       % as in Glover et al 2000, calculate the phase per eq. 3 of that paper
       %first the sum in the numerator
-      gR = round(gR/mxamp.*100)+1; gR(find(gR>100))=100; 
+      gR = round(gR/mxamp.*100)+1; gR(find(gR>100))=100;
       shb = sum(hb);
       hbsum = zeros(1,100);
       hbsum(1)=hb(1)./shb;
@@ -91,7 +91,7 @@ else, %phase based on amplitude
          hbsum(i) = hbsum(i-1)+hb(i)./shb;
       end
       for(i=1:1:length(R(icol).t)),
-         R(icol).phz(i) = pi.*hbsum(round(gR(i))).*R(icol).phz_pol(i); 
+         R(icol).phz(i) = pi.*hbsum(round(gR(i))).*R(icol).phz_pol(i);
       end
    end
 end

@@ -1,27 +1,27 @@
-function D=afni_niml_writesimple(S,fn)
+function D=afni_niml_writesimple(S,fn,varargin)
 % writes surface data in a 'simple' struct in NIML format to a file.
 %
 % D=AFNI_NIML_WRITESIMPLE(fn,S) writes surface data S to the file FN.
 % S should be a struct with a field S.data, and optionally S.stats,
-% S.labels, S.history, S.types, and S.node_indices. 
-% This function returns the more complicated NIML-struct D that is 
+% S.labels, S.history, S.types, and S.node_indices.
+% This function returns the more complicated NIML-struct D that is
 % written by afni_niml_write
 %
 % S.data            a PxN struct for P nodes and N datapoints per node.
-% S.node_indices    (optional) a Nx1 vector with indices in base 0. If 
-%                   omitted, then it is assumed that all nodes have data. 
-% S.stats       }   Either a string (with ';'-separated elements for 
-% S.labels      }   S.stats and .labels: , or a cell with strings. 
-% S.history     }   In the latter case, if the number of elements in the 
+% S.node_indices    (optional) a Nx1 vector with indices in base 0. If
+%                   omitted, then it is assumed that all nodes have data.
+% S.stats       }   Either a string (with ';'-separated elements for
+% S.labels      }   S.stats and .labels: , or a cell with strings.
+% S.history     }   In the latter case, if the number of elements in the
 %                   cell is less than P, then elements are taken in cycles.
 %
-% Example: 
+% Example:
 %   S=struct()
 %   S.data=randn(100002,4);
 %   S.labels={'A-mean','A-Tscore','B-mean','B-Tscore'};
 %   S.stats={'none','Ttest(15)'}; % each stat descriptor will be used twice
-%   afni_niml_writesimple('test.niml.dset',S)         
-% 
+%   afni_niml_writesimple('test.niml.dset',S)
+%
 % NNO Feb 2010 <n.oosterhof@bangor.ac.uk>
 
 if isnumeric(S)
@@ -91,7 +91,8 @@ if size(idxs,1)==1
 end
 
 if numel(idxs) ~= nverts
-    error('The number of node indices (%d) does not match the number of rows (%d) in the data.',nverts,numel(idxs));
+    error(['The number of node indices (%d) does not match the '...
+                'number of rows (%d) in the data.'],nverts,numel(idxs));
 end
 
 nd.data=idxs;
@@ -105,7 +106,7 @@ nodes{2}=nd;
 nd=struct();
 nd.atr_name='COLMS_RANGE';
 nd.name='AFNI_atr';
-nd.data=data2range(S.data);
+nd.data={{data2range(S.data)}};
 nodes{3}=nd;
 
 % default labels for columns
@@ -116,23 +117,45 @@ end
 
 % default value for history; make call stack
 st=dbstack();
-stc=cell(numel(st));
+stc=cell(numel(st),1);
 for j=1:numel(st)
     stc{j}=sprintf('%s (%d)',st(j).name,st(j).line);
 end
-defaulthistory=sprintf('Written %s using: %s',datestr(clock),unsplit_string(stc,' <- '));
+defaulthistory=sprintf('Written %s using: %s',datestr(clock),...
+                                unsplit_string(stc,' <- '));
 if isfield(S,'history')
     S.history=[S.history ';' defaulthistory];
 end
 
-nodes{4}=make_str_element('COLMS_LABS',S,'labels',defaultlabels,ncols);
-nodes{5}=make_str_element('COLMS_TYPE',S,'types',{'Generic_Float'},ncols);
-nodes{6}=make_str_element('COLMS_STATSYM',S,'stats',{'none'},ncols);
-nodes{7}=make_str_element('HISTORY_NOTE',S,'history',defaulthistory,ncols);
+nodes{4}=make_str_element('COLMS_LABS',S,'labels',...
+                        defaultlabels,ncols);
+nodes{5}=make_str_element('COLMS_TYPE',S,'types',...
+                        make_default_type(S.data),ncols);
+nodes{6}=make_str_element('COLMS_STATSYM',S,'stats',...
+                        {'none'},ncols);
+nodes{7}=make_str_element('HISTORY_NOTE',S,'history',...
+                        defaulthistory,ncols);
 
 D.nodes=nodes;
 
-afni_niml_write(D,fn);
+afni_niml_write(D,fn,varargin{:});
+
+% NNO May 2011 bug fixed reported by Ziad Saad
+% https://afni.nimh.nih.gov/afni/community/board/read.php?f=1&i=38222&t=3818
+% 5#reply_38222
+%
+% For now, assume all columns have the same type; consistent with
+% AFNI_NIML_PRINT
+function df=make_default_type(data)
+
+ncols=size(data,2);
+if ~isnumeric(data) || isequal(round(data),data) % handle booleans as int
+    tp='Generic_Int';
+else
+    tp='Generic_Float';
+end
+
+df=repmat({tp},1,ncols);
 
 function elem=make_str_element(Nodefieldname,S,Sfieldname,default,ncols)
 elem=struct();
@@ -152,10 +175,11 @@ if iscell(vals);
     end
     vals=unsplit_string(v,';');
 elseif ~ischar(vals)
-    error('Unrecognized data type for field %s (%s)', Nodefieldname, Sfieldname);
+    error('Unrecognized data type for field %s (%s)', ...
+                                Nodefieldname, Sfieldname);
 end
 
-elem.data=vals;
+elem.data={{vals}};
 
 
 function r=data2range(data,precision)

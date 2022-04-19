@@ -18,7 +18,7 @@ if (exist('/usr/lib/X11/rgb.txt') == 2),
    i = 0;
    while (tmp ~= -1 )
       tmp = zdeblank(tmp);
-      if (isdigit(tmp(1))),
+      if (afni_isdigit(tmp(1))),
          i = i + 1;
          [name(i).r,name(i).g,name(i).b,s1,s2,s3,s4] = strread(tmp,'%d%d%d %s %s %s %s');
          if (~isempty(s4)) name(i).s = sprintf('%s %s %s %s', char(s1), char(s2), char(s3), char(s4));
@@ -65,13 +65,13 @@ for (i=6:1:N-5),
    end
    colormap(M);
    subplot 211;
-	image ([1:1:length(M(:,1))]);   
+	image ([1:1:length(M(:,1))]);
    input ('Hit Enter:', 's');
 end
 
 end
 figure(1), clf;
-subplot (211); 
+subplot (211);
 str = sprintf('Colors in %s\nPick colors (background then foreground) with mouse\nHit "enter" to quit', Colname);
 colormap(Mall); image ([1:1:N]); title (str, 'fontsize',14);
 drawnow;

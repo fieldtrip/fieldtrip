@@ -2,25 +2,25 @@ function GroupAna
 %GroupAna.m
 %
 %Purpose:
-%   
-%   
-%   
+%
+%
+%
 %Input Parameters:
-%   
-%   
-%   
+%
+%
+%
 %Output Parameters:
 %   err : 0 No Problem
 %       : 1  Problems
-%   
-%   
-%      
+%
+%
+%
 %Key Terms:
-%   
+%
 %More Info :
-%   
-%   
-%   
+%
+%
+%
 diary('diary');    % save all subsequent command window input and most of the resulting command window output to be appended
                    % to file 'diary'
 
@@ -43,6 +43,9 @@ err = 1;
 
 clear all;
 
+% tolerance for numerical 0
+tol = 1.0e-4;
+
 fprintf('\nPlease read the following carefully about group analysis setup:\n');
 fprintf('\n\t1. If the resolution of your EPI data is near n millimeters, during Talairach conversion use\n');
 fprintf('\t  "the command adwarp -dxyz n" to greatly reduce runtime without sacrificing accuracy.\n');
@@ -60,8 +63,8 @@ fprintf('\n\t5. Currently all of the following terms are modeled: main effects a
 % Grouop analysis for Volume or Surface data?
 flg = 0;
 while flg == 0,
-   data_type = input('\nGroups analysis for volume or surface data (0 - volume; 1 - surface)? ');
-	if (data_type ~= 0 & data_type ~= 1),
+   data_type = input('\nGroups analysis for volume or surface data (0 - volume; 1 - surface 1D output; 2 - surface NIML output;)? ');
+	if (data_type ~= 0 & data_type ~= 1 & data_type ~= 2),
 	   flg = 0; fprintf(2,'Error: wrong input! Please try it again.\n');
 	else flg = 1;
    end
@@ -79,6 +82,17 @@ if (data_type == 1),
 	      flg = 0; fprintf(2,'Error: the input is not a number. Please try it again.\n');
 	   else flg = 1; end
    end
+elseif (data_type == 2),
+   fprintf(1,...
+'\nEven though the output is in NIML, the input files still have to be in 1D format.');
+	Frame_N = input('\nWhich column corresponds to regressor coefficient in the 1D files? (1, 2, 3, ...) ');	
+	while flg == 0,
+	   node_file = input('Provide a 1D file containing node indices, or enter the total number of nodes if you have full datasets: ','s');
+      node_n=str2num(node_file);
+      if (isempty(node_n) & ~filexist(node_file)),
+         flg = 0; fprintf(2,'Error: the input is not a number, or file %s not found. Please try it again.\n');
+	   else flg = 1; end
+   end
 else Opt.Frames = 1;	 % In the case of volumetric data, it's supposed to have only ONE subbrik!
 end
 
@@ -92,7 +106,7 @@ while flg == 0,
 end
 
 switch NF
-   case 1,  
+   case 1,
 	fprintf('\nAvailable design types: \n');
 	fprintf('\n\tType 1: one factor with fixed effect.\n');
 	
@@ -160,7 +174,7 @@ end
 % Balanced design?
 flg = 0;
 while flg == 0,
- 
+
 	unbalanced.yes = 1 - input('\nIs the design balanced? (1 - Yes; 0 - No) ');
    if (unbalanced.yes ~= 0 & unbalanced.yes ~= 1),
  	   flg = 0; fprintf(2,'Error: inapproriate input. Please try it again.\n');
@@ -203,7 +217,7 @@ end
 flg = 0;
 ntot = 1;
 
-if (unbalanced.yes == 1),    
+if (unbalanced.yes == 1),
 
    if ((NF == 1 | NF == 2 | NF == 3 | NF == 4) & dsgn == 1),  % Basically for 1,2,3,4-way ANCOVA: This loop is the same as balanced. Maybe also for 4-way ANCOVA?
       for (i=1:1:NF),
@@ -243,10 +257,10 @@ if (unbalanced.yes == 1),
  	   end  % for (i=1:1:(NF-1))
 	
 	   FL(NF).N_level = 0;		
-	   fprintf(2, '\nLabel for No. %i ', NF); 
+	   fprintf(2, '\nLabel for No. %i ', NF);
 	   FL(NF).expr = input('factor: ', 's');     % Label this unbalanced factor
 %		fprintf(2, '\nNote: Since this is a nested design the label for levels (usuall subject names) of factor No. %i (%c - %s)', NF, 64+NF, FL(NF).expr);
-%		fprintf(2, '\nhas to be DIFFERENT for each level of factor %c (%s)!!!\n\n', 64+1, FL(1).expr);  
+%		fprintf(2, '\nhas to be DIFFERENT for each level of factor %c (%s)!!!\n\n', 64+1, FL(1).expr);
  	
  	   flag = 0;
 		while flag == 0,
@@ -273,7 +287,7 @@ if (unbalanced.yes == 1),
 		else 	
 		   flag = 0;
 			fprintf(2, '\nError: There is some overlap among the labels of factor %c (%s) across the groups of factor %c (%s)!\n', ...
-			   64+NF, FL(NF).expr, 64+1, FL(1).expr); 
+			   64+NF, FL(NF).expr, 64+1, FL(1).expr);
 	   end			
 		end % while flag == 0
 		
@@ -298,7 +312,7 @@ if (unbalanced.yes == 1),
  	   end  % for (i=1:1:(NF-1))
 	
 	   FL(NF).N_level = 0;		% Info for factor D, which is nested with both A and B
-	   fprintf(2, '\nLabel for No. %i ', NF); 
+	   fprintf(2, '\nLabel for No. %i ', NF);
 	   FL(NF).expr = input('factor: ', 's');     % Label this unbalanced factor
  	
  	   flag = 0;
@@ -327,7 +341,7 @@ if (unbalanced.yes == 1),
 %		else 	
 %		   flag = 0;
 %			fprintf(2, '\nError: There is some overlap among the labels of factor %c (%s) across the groups of factor %c (%s) and factor %c (%s)!\n', ...
-%			   64+NF, FL(NF).expr, 64+1, FL(1).expr, 64+2, FL(2).expr); 
+%			   64+NF, FL(NF).expr, 64+1, FL(1).expr, 64+2, FL(2).expr);
 		else 	
 		   flag = 0;
 			fprintf(2, '\nError: Currently the labels for different groups have to be the same for this design.'); 						
@@ -362,12 +376,12 @@ if ~((NF == 1 | NF == 2 | NF == 3 | NF == 4) & dsgn == 1 & unbalanced.yes == 1),
 fprintf(2,'\nEnter the sample size (number of observations) per combination');
 FL(NF+1).N_level =  input(': ');  % Should it be changed to a different name instead of FL???
 ntot = ntot * FL(NF+1).N_level;    % total number of factor combinations including repeats
-sz(NF+1) = FL(NF+1).N_level; 
-end  
+sz(NF+1) = FL(NF+1).N_level;
+end
 
 % Running ANCOVA?
 flg = 0;
-%cov.label = [];   
+%cov.label = [];
 %while flg == 0,
 %   cov.do = input('\nAny covariate (concomitant variable)? (1 - Yes; 0 - No) ');
 %   if (cov.do ~= 0 & cov.do ~= 1),
@@ -380,7 +394,7 @@ cov.do = 0;
 
 %Only allow one covariate now!
 if (cov.do),
- 
+
    FL(NF+1).N_level = 1;  % This is for PreProc.m to get the correct 'shift' position
 
    if (NF == 2 & dsgn == 3),  % 2-way ANOVA of A(R)XB(R) possible in FMRI?
@@ -397,10 +411,10 @@ if (cov.do),
    fid0 = fopen(cov.FN,'r');
    if (fid0 == -1),
       flg = 0; fprintf(2,'Error: File %s does not exist. Please try it again. \n', cov.FN);
-   else flg = 1; 
+   else flg = 1;
 	   [cov.vec, count] = fscanf(fid0, '%f');
 	   if (count ~= ntot & ~((NF ==1 | NF == 2 | NF == 3) & dsgn == 1)), % Check length of the 1D file
-	      fprintf(2, '\nError: The column length of the covariate has to equal to the total number of input files!\n'); 
+	      fprintf(2, '\nError: The column length of the covariate has to equal to the total number of input files!\n');
 			fprintf(2,'Halted: Ctrl+c to exit'); pause;
 	   end
 		cov.vec = cov.vec - mean(cov.vec);
@@ -423,13 +437,13 @@ file_format = 1;  % Ignore that file_format = 0 now since it leads to too much t
 
 if (file_format == 0),   % unused now!
    flg = 0;
-   file_num = input('Number of input files: ');  
+   file_num = input('Number of input files: ');
 	file_SB = input('Number of subbriks for analysis in each file: ');
 	if (isnumeric(file_num) == 0 | isempty(file_num) | isnumeric(file_SB) == 0 | isempty(file_SB)),
 	   flg = 0; fprintf(2,'Error: the input is not a number. Please try it again.\n');
 	else flg = 1; end	
    if (file_num*file_SB ~= ntot),
-	   fprintf(2, '\nError: The number of files and subbriks are not consistent!\n'); 
+	   fprintf(2, '\nError: The number of files and subbriks are not consistent!\n');
  		fprintf(2,'Halted: Ctrl+c to exit'); pause;
 	end	
 end   % if (file_format == 0)
@@ -447,7 +461,7 @@ end
 GP = cell(NF, ntot);    %creat a cell array to reflect the structure of all the combinations
 
 if (file_format == 1),
-   
+
    if (unbalanced.yes == 1),    % Try 4-way design 3 first
 	
 %	if ((NF == 1 | NF == 2 | NF == 3 | NF == 4) & dsgn == 1),  % Meant for 1,2,3,4-way ANCOVA with unequal sample size
@@ -462,7 +476,7 @@ if (file_format == 1),
 	
 	switch NF
 	case 1,
-		for (ii = 1:1:FL(1).N_level),		   
+		for (ii = 1:1:FL(1).N_level),		
 				   fprintf (2,'\nFor factor %c (%s) at level %i (%s),', 64+1, FL(1).expr, ii, FL(1).level(ii).expr);
 					sz = input('\nsample size is: ');
 					fprintf (2,'\nProvide those %i input files:\n', sz);					
@@ -484,8 +498,8 @@ if (file_format == 1),
 					      else 	
 					         if isempty(strfind(file(FI).nm, '1D')) == 0		% if 1D file (surface data)
 								   format = '1D';
-								else 					   
-								   while (1); fprintf(2,'Error: format of file %s is incorrect!\n', file(FI).nm); 
+								else 					
+								   while (1); fprintf(2,'Error: format of file %s is incorrect!\n', file(FI).nm);
 						         fprintf(2,'Halted: Ctrl+c to exit'); pause; end
 								end
 					      end
@@ -495,8 +509,8 @@ if (file_format == 1),
 		end % for (ii = 1:1:FL(1).N_level)		
 
 	case 2,
-		for (ii = 1:1:FL(1).N_level),		   
-   	   for (jj = 1:1:FL(2).N_level),		      
+		for (ii = 1:1:FL(1).N_level),		
+   	   for (jj = 1:1:FL(2).N_level),		
 				   fprintf (2,'\nFor factor %c (%s) at level %i (%s),', 64+1, FL(1).expr, ii, FL(1).level(ii).expr);
 					fprintf (2,'\n    factor %c (%s) at level %i (%s),', 64+2, FL(2).expr, jj, FL(2).level(jj).expr);
 					sz = input('\nsample size is: ');
@@ -521,7 +535,7 @@ if (file_format == 1),
 					         if isempty(strfind(file(FI).nm, '1D')) == 0		% if 1D file (surface data)
 								   format = '1D';
 								else	
-								   while (1); fprintf(2,'Error: format of file %s is incorrect!\n', file(FI).nm); 
+								   while (1); fprintf(2,'Error: format of file %s is incorrect!\n', file(FI).nm);
 						         fprintf(2,'Halted: Ctrl+c to exit'); pause; end
 								end
 					      end
@@ -532,8 +546,8 @@ if (file_format == 1),
 		end % for (ii = 1:1:FL(1).N_level)
 	
 	case 3,
-		for (ii = 1:1:FL(1).N_level),		   
-   	   for (jj = 1:1:FL(2).N_level),		      
+		for (ii = 1:1:FL(1).N_level),		
+   	   for (jj = 1:1:FL(2).N_level),		
    	      for (kk = 1:1:FL(3).N_level),
 				   fprintf (2,'\nFor factor %c (%s) at level %i (%s),', 64+1, FL(1).expr, ii, FL(1).level(ii).expr);
 					fprintf (2,'\n    factor %c (%s) at level %i (%s),', 64+2, FL(2).expr, jj, FL(2).level(jj).expr);
@@ -560,8 +574,8 @@ if (file_format == 1),
 					      else 	
 					         if isempty(strfind(file(FI).nm, '1D')) == 0		% if 1D file (surface data)
 								   format = '1D';
-								else 					   
-								   while (1); fprintf(2,'Error: format of file %s is incorrect!\n', file(FI).nm); 
+								else 					
+								   while (1); fprintf(2,'Error: format of file %s is incorrect!\n', file(FI).nm);
 						         fprintf(2,'Halted: Ctrl+c to exit'); pause; end
 								end
 					      end
@@ -573,8 +587,8 @@ if (file_format == 1),
 		end % for (ii = 1:1:FL(1).N_level)
 
    case 4,		
-		for (ii = 1:1:FL(1).N_level),		   
-   	   for (jj = 1:1:FL(2).N_level),		      
+		for (ii = 1:1:FL(1).N_level),		
+   	   for (jj = 1:1:FL(2).N_level),		
    	      for (kk = 1:1:FL(3).N_level),
 				for (ll = 1:1:FL(4).N_level),
 				   fprintf (2,'\nFor factor %c (%s) at level %i (%s),', 64+1, FL(1).expr, ii, FL(1).level(ii).expr);
@@ -601,10 +615,10 @@ if (file_format == 1),
 					      elseif isempty(strfind(file(FI).nm, 'orig')) == 0
 					         format = 'orig';
 					      else 	
-					         if isempty(strfind(file(FI).nm, '1D')) == 0		% if 1D file (surface data)		   					 
+					         if isempty(strfind(file(FI).nm, '1D')) == 0		% if 1D file (surface data)		   					
 									format = '1D';
 							   else
-								   while (1); fprintf(2,'Error: format of file %s is incorrect!\n', file(FI).nm); 
+								   while (1); fprintf(2,'Error: format of file %s is incorrect!\n', file(FI).nm);
 						         fprintf(2,'Halted: Ctrl+c to exit'); pause; end
 								end
 					      end
@@ -618,7 +632,7 @@ if (file_format == 1),
 		
    end % switch NF
 	if (ntot == FI), fprintf (2,'\n%i input files have been read in. \n', FI);
-	else fprintf(2,'Error: Total number of files do not match up. \n'); 
+	else fprintf(2,'Error: Total number of files do not match up. \n');
 	while (1); fprintf(2,'Halted: Ctrl+c to exit'); pause; end
 	end	
 	end % if (dsgn == 1)					
@@ -629,13 +643,13 @@ if (file_format == 1),
 %    	if (unbalanced.type == 1),
    		for (i = 1:1:FL(1).N_level),
    	   for (j = 1:1:FL(2).N_level),
-   	   for (k = 1:1:FL(3).UL(i).N_level), 	   
+   	   for (k = 1:1:FL(3).UL(i).N_level), 	
  	      			
 %   			FI = acc + (j-1)*FL(3).UL(i).N_level + k;   % file index
  	 		   % Create a matrix for group indices
 % 		   	GP(1, FI) = {FL(1).level(i).expr};
 %   		   GP(2, FI) = {FL(2).level(j).expr};
-%   		   GP(3, FI) = {FL(3).UL(i).n(k).expr};   		   
+%   		   GP(3, FI) = {FL(3).UL(i).n(k).expr};   		
 				
 				for (r = 1:1:FL(NF+1).N_level),  % if there is any repeated observations
 				FI = FI + 1;
@@ -647,7 +661,7 @@ if (file_format == 1),
 				while flg == 0,
    	         fprintf (2,'\n(%i) factor combination:\n', FI);
                for (m=1:1:NF),
-	               fprintf('\tfactor %c (%s) at level %s \n', 64+m, FL(m).expr, char(GP(m, FI)));   			      
+	               fprintf('\tfactor %c (%s) at level %s \n', 64+m, FL(m).expr, char(GP(m, FI)));   			
                end
 	            fprintf('\tat repeat %i \n', r);
    	         file(FI).nm = input('is: ', 's');	
@@ -662,8 +676,8 @@ if (file_format == 1),
 					else 	
 					   if isempty(strfind(file(FI).nm, '1D')) == 0		% if 1D file (surface data)
 							format = '1D';
-						else 					   
-						   while (1); fprintf(2,'Error: format of file %s is incorrect!\n', file(FI).nm); 
+						else 					
+						   while (1); fprintf(2,'Error: format of file %s is incorrect!\n', file(FI).nm);
 						   fprintf(2,'Halted: Ctrl+c to exit'); pause; end
 						end
 					end					
@@ -692,7 +706,7 @@ if (file_format == 1),
 % 		   	GP(1, FI) = {FL(1).level(i).expr};
 %   		   GP(2, FI) = {FL(2).level(j).expr};
 %   		   GP(3, FI) = {FL(3).level(k).expr};
-%   		   GP(4, FI) = {FL(4).UL(i).n(l).expr}; 
+%   		   GP(4, FI) = {FL(4).UL(i).n(l).expr};
 				
 				for (r = 1:1:FL(NF+1).N_level),				
 				FI = FI +1;
@@ -705,7 +719,7 @@ if (file_format == 1),
 				while flg == 0,
    	         fprintf (2,'\n(%i) factor combination:\n', FI);
                for (m=1:1:NF),
-	               fprintf('\tfactor %c (%s) at level %s \n', 64+m, FL(m).expr, char(GP(m, FI)));   			      
+	               fprintf('\tfactor %c (%s) at level %s \n', 64+m, FL(m).expr, char(GP(m, FI)));   			
                end
 	            fprintf('\tat repeat %i \n', r);
    	         file(FI).nm = input('is: ', 's');	
@@ -721,8 +735,8 @@ if (file_format == 1),
 					else 	
 					         if isempty(strfind(file(FI).nm, '1D')) == 0		% if 1D file (surface data)
 								   format = '1D';
-								else 					   
-								   while (1); fprintf(2,'Error: format of file %s is incorrect!\n', file(FI).nm); 
+								else 					
+								   while (1); fprintf(2,'Error: format of file %s is incorrect!\n', file(FI).nm);
 						         fprintf(2,'Halted: Ctrl+c to exit'); pause; end
 								end
 					end					
@@ -737,7 +751,7 @@ if (file_format == 1),
  	 		  		
 %     end % if (unbalanced.type == 1),
      end % if ((NF == 4 & dsgn == 3))
-	  
+	
    if ((NF == 4 & dsgn == 5)),	% CXD(AXB)
    		FI = 0; % File index
 			for (i = 1:1:FL(1).N_level),
@@ -756,7 +770,7 @@ if (file_format == 1),
 				while flg == 0,
    	         fprintf (2,'\n(%i) factor combination:\n', FI);
                for (m=1:1:NF),
-	               fprintf('\tfactor %c (%s) at level %s \n', 64+m, FL(m).expr, char(GP(m, FI)));   			      
+	               fprintf('\tfactor %c (%s) at level %s \n', 64+m, FL(m).expr, char(GP(m, FI)));   			
                end
 	            fprintf('\tat repeat %i \n', r);
    	         file(FI).nm = input('is: ', 's');	
@@ -772,8 +786,8 @@ if (file_format == 1),
 					else 	
 					         if isempty(strfind(file(FI).nm, '1D')) == 0		% if 1D file (surface data)
 								   format = '1D';
-								else 					   
-								   while (1); fprintf(2,'Error: format of file %s is incorrect!\n', file(FI).nm); 
+								else 					
+								   while (1); fprintf(2,'Error: format of file %s is incorrect!\n', file(FI).nm);
 						         fprintf(2,'Halted: Ctrl+c to exit'); pause; end
 								end
 					end					
@@ -785,8 +799,8 @@ if (file_format == 1),
  	  	   end
    		end
  	 		  		
-     end % if ((NF == 4 & dsgn == 5))	  	  
-	  
+     end % if ((NF == 4 & dsgn == 5))	  	
+	
      %end  % (unbalanced.yes == 1),
 
    else  % Balanced designs	
@@ -795,11 +809,11 @@ if (file_format == 1),
    for (i=1:1:ntot),
    %Ziad Saad modified Matlab function ind2sub for the purpose here
 	%Converting the index into multiple subscripts
-   %I want vary the levels starting the last factor in stead of the first. 
+   %I want vary the levels starting the last factor in stead of the first.
 	   [err, file(i).v] = gind2sub (fliplr(sz), i);   %flip before subscripting. Doing flip because
-   %I want vary the levels starting the last factor in stead of the first. 
+   %I want vary the levels starting the last factor in stead of the first.
       scpt = fliplr(file(i).v);  %flip back to restore the original order	
-	  
+	
 	   flg = 0;
    	while flg == 0,
          fprintf (2,'\n(%i) factor combination:\n', i);
@@ -821,8 +835,8 @@ if (file_format == 1),
 			else 	
 					         if isempty(strfind(file(i).nm, '1D')) == 0		% if 1D file (surface data)
 								   format = '1D';
-								else 					   
-								   while (1); fprintf(2,'Error: format of file %s is incorrect!\n', file(i).nm); 
+								else 					
+								   while (1); fprintf(2,'Error: format of file %s is incorrect!\n', file(i).nm);
 						         fprintf(2,'Halted: Ctrl+c to exit'); pause; end
 								end
 			end					
@@ -855,12 +869,12 @@ if (file_format == 0),   % unused now!
    		acc = FI;
    		end
  		
-   		for (m = 1:1:FL(1).N_level), 
- 	         counter(m) = 0; 
+   		for (m = 1:1:FL(1).N_level),
+ 	         counter(m) = 0;
       	end   %Just initiation
  		
    		for (i=1:1:file_num),
- 
+
       	   flg = 0;
    			while flg == 0,
    	         fprintf('Input file for subject #%i ', i);
@@ -871,9 +885,9 @@ if (file_format == 0),   % unused now!
    			   if (isnumeric(file(i).F1L) == 0 | isempty(file(i).F1L)),
    			      flg = 0; fprintf(2,'Error: the input is not a number. Please try it again.\n');
    			   end
- 
+
    			   for (m = 1:1:FL(1).N_level),
-   			   if (file(i).F1L == m), 
+   			   if (file(i).F1L == m),
    				   counter(m) = counter(m) + 1;
  	   			   file(i).cntr(m) = counter(m);  % Any better way to implement this without the temporary array of counter(j)?
    				end   % set a counter of 4th factor level marker for later use
@@ -887,7 +901,7 @@ if (file_format == 0),   % unused now!
  		
    		fprintf('\nIt is assumed that all files have the same subbrik order.');
          fprintf('\nFor each subbrik of an input file, specify the factor level of 2nd and 3rd factors. \n');
- 
+
    	   for (j = 1:1:file_SB),
    	      fprintf('\n\tFor subbrik %i: \n', j-1);
    	      for (k = 1:1:(NF-2)),   % Here we only keep record of 2nd and 3rd factor levels
@@ -905,15 +919,15 @@ if (file_format == 0),   % unused now!
 
    for (i=1:1:ntot),
 		[err, file(i).v] = gind2sub (fliplr(sz), i);   %flip before subscripting. Doing flip because
-         %I want vary the levels starting the last factor in stead of the first. 
+         %I want vary the levels starting the last factor in stead of the first.
       scpt = fliplr(file(i).v);  %flip back to restore the original order	
       for (k=1:1:NF),
 	      GP(k, i) = {FL(k).level(scpt(k)).expr};
       end
 	end
 
-	for (j = 1:1:FL(1).N_level), 
-	   counter(j) = 0; 
+	for (j = 1:1:FL(1).N_level),
+	   counter(j) = 0;
 	end   %Just initiation
    for (i = 1:1:file_num),
 	  	flg = 0;
@@ -928,7 +942,7 @@ if (file_format == 0),   % unused now!
 			end
 
 			for (j = 1:1:FL(1).N_level),
-			   if (file(i).F1L == j), 
+			   if (file(i).F1L == j),
 				   counter(j) = counter(j) + 1;
 				   file(i).cntr(j) = counter(j);  % Any better way to implement this without the temporary array of counter(j)?
 				end   % set a counter of 4th factor level marker for later use
@@ -975,10 +989,10 @@ while flg == 0,
    else flg = 1; end
 end
 
-if (Contr.do == 0), 
+if (Contr.do == 0),
    Contr.ord1.tot = 0;   % assign these for output later
-	Contr.ord2.tot = 0; 
-	Contr.ord3.tot = 0; 
+	Contr.ord2.tot = 0;
+	Contr.ord3.tot = 0;
 	Contr.ord4.tot = 0;
 else
 
@@ -1028,7 +1042,7 @@ if (NF == 1),
 			end
 			Contr.ord1.cnt(i).coef(j) = input('Corresponding coefficient (e.g., 1 or -1): ');
 		end
-		if (sum(Contr.ord1.cnt(i).coef) ~= 0), 
+		if (abs(sum(Contr.ord1.cnt(i).coef)) > tol),
 		   flg0 = 0; fprintf(2,'\nError: All the coefficients of a contrast have to sum up to 0! Try again...\n\n');
 		else flg0 = 1; end
       end
@@ -1075,7 +1089,7 @@ if (NF == 2),
 			end
 			Contr.ord1.cnt(i).coef(j) = input('Corresponding coefficient (e.g., 1 or -1): ');
 		end
-		if (sum(Contr.ord1.cnt(i).coef) ~= 0), 
+		if (abs(sum(Contr.ord1.cnt(i).coef)) > tol),
 		   flg0 = 0; fprintf(2,'\nError: All the coefficients of a contrast have to sum up to 0! Try again...\n\n');
 		else flg0 = 1; end
       end
@@ -1107,7 +1121,7 @@ if (NF == 2),
 
 		flg0 = 0;
 		while flg0 == 0,
-		for (j = 1:1:Contr.ord2.cnt(i).NT),		   
+		for (j = 1:1:Contr.ord2.cnt(i).NT),		
 		   flg = 0;
          while flg == 0,
 			   fprintf('Factor index for No. %i term ', j);
@@ -1118,7 +1132,7 @@ if (NF == 2),
 			end
 			Contr.ord2.cnt(i).coef(j) = input('Corresponding coefficient (e.g., 1 or -1): ');
 		end
-		if (sum(Contr.ord2.cnt(i).coef) ~= 0), 
+		if (abs(sum(Contr.ord2.cnt(i).coef)) > tol),
 		   flg0 = 0; fprintf(2,'\nError: All the coefficients of a contrast have to sum up to 0! Try again...\n\n');
 		else flg0 = 1; end
       end
@@ -1129,13 +1143,13 @@ if (NF == 2),
    fprintf(1,'Done with 2nd order contrast information.\n');
 end
 
-if (NF == 3 | NF == 4),   
+if (NF == 3 | NF == 4),
 
    % 1st order contrasts
    flg = 0;
    while flg == 0,
       fprintf('\n1st order contrasts have %i factor(s) collapsed.\n', NF-1);
-   	%fprintf('\t1. Simple mean for a factor level, such as [1 0 0];\n'); 
+   	%fprintf('\t1. Simple mean for a factor level, such as [1 0 0];\n');
 	   %fprintf('\t2. Difference between two factor levels, such as [1 -1 0];\n');
    	%fprintf('\t3. Linear combination of factor levels, such as [0.5 0.5 -1];\n');
 	   fprintf('\nNotice: Contrasts for random factor are NOT feasible.\n');
@@ -1171,7 +1185,7 @@ if (NF == 3 | NF == 4),
 			end
 			Contr.ord1.cnt(i).coef(j) = input('Corresponding coefficient (e.g., 1 or -1): ');
 		end
-		if (sum(Contr.ord1.cnt(i).coef) ~= 0), 
+		if (abs(sum(Contr.ord1.cnt(i).coef)) > tol),
 	      flg0 = 0; fprintf(2,'\nError: All the coefficients of a contrast have to sum up to 0! Try again...\n\n');
    	else flg0 = 1; end
      end	
@@ -1215,7 +1229,7 @@ if (NF == 3 | NF == 4),
 			end
 			Contr.ord2.cnt(i).coef(j) = input('Corresponding coefficient (e.g., 1 or -1): ');
 		end
-		if (sum(Contr.ord2.cnt(i).coef) ~= 0), 
+		if (abs(sum(Contr.ord2.cnt(i).coef)) > tol),
 	      flg0 = 0; fprintf(2,'\nError: All the coefficients of a contrast have to sum up to 0! Try again...\n\n');
 	   else flg0 = 1; end
    end  %flg0 = 0;
@@ -1261,7 +1275,7 @@ if (NF == 3 | NF == 4),
 			end
 			Contr.ord3.cnt(i).coef(j) = input('Corresponding coefficient (e.g., 1 or -1): ');
 		end
-		if (sum(Contr.ord3.cnt(i).coef) ~= 0), 
+		if (abs(sum(Contr.ord3.cnt(i).coef)) > tol),
 	      flg0 = 0; fprintf(2,'\nError: All the coefficients of a contrast have to sum up to 0! Try again...\n\n');
 	   else flg0 = 1; end
       end  %flg0 = 0;
@@ -1271,13 +1285,13 @@ if (NF == 3 | NF == 4),
 	
 end  % if (NF == 4)
 
-if (NF == 5),   
+if (NF == 5),
 
    % 1st order contrasts
    flg = 0;
    while flg == 0,
       fprintf('\n1st order contrasts have %i factor(s) collapsed.\n', NF-1);
-   	%fprintf('\t1. Simple mean for a factor level, such as [1 0 0];\n'); 
+   	%fprintf('\t1. Simple mean for a factor level, such as [1 0 0];\n');
 	   %fprintf('\t2. Difference between two factor levels, such as [1 -1 0];\n');
    	%fprintf('\t3. Linear combination of factor levels, such as [0.5 0.5 -1];\n');
 	   fprintf('\nNotice: Contrasts for random factor are NOT feasible.\n');
@@ -1313,7 +1327,7 @@ if (NF == 5),
 			end
 			Contr.ord1.cnt(i).coef(j) = input('Corresponding coefficient (e.g., 1 or -1): ');
 		end  % for (j = 1:1:Contr.ord1.cnt(i).NT)
-		if (sum(Contr.ord1.cnt(i).coef) ~= 0), 
+		if (abs(sum(Contr.ord1.cnt(i).coef)) > tol),
 	      flg0 = 0; fprintf(2,'\nError: All the coefficients of a contrast have to sum up to 0! Try again...\n\n');
 	   else flg0 = 1; end
       end  %flg0 = 0;
@@ -1357,7 +1371,7 @@ if (NF == 5),
 			end  % while flg == 0
 			Contr.ord2.cnt(i).coef(j) = input('Corresponding coefficient (e.g., 1 or -1): ');
 		end  % for (j = 1:1:Contr.ord2.cnt(i).NT)
-		if (sum(Contr.ord2.cnt(i).coef) ~= 0), 
+		if (abs(sum(Contr.ord2.cnt(i).coef)) > tol),
 	      flg0 = 0; fprintf(2,'\nError: All the coefficients of a contrast have to sum up to 0! Try again...\n\n');
 	   else flg0 = 1; end
       end  %flg0 = 0;
@@ -1402,7 +1416,7 @@ if (NF == 5),
 			end
 			Contr.ord3.cnt(i).coef(j) = input('Corresponding coefficient (e.g., 1 or -1): ');
 		end
-		if (sum(Contr.ord3.cnt(i).coef) ~= 0), 
+		if (abs(sum(Contr.ord3.cnt(i).coef)) > tol),
 	      flg0 = 0; fprintf(2,'\nError: All the coefficients of a contrast have to sum up to 0! Try again...\n\n');
 	   else flg0 = 1; end
       end  %flg0 = 0;
@@ -1446,7 +1460,7 @@ if (NF == 5),
 			end
 			Contr.ord4.cnt(i).coef(j) = input('Corresponding coefficient (e.g., 1 or -1): ');
 		end
-		if (sum(Contr.ord4.cnt(i).coef) ~= 0), 
+		if (abs(sum(Contr.ord4.cnt(i).coef)) > tol),
 	      flg0 = 0; fprintf(2,'\nError: All the coefficients of a contrast have to sum up to 0! Try again...\n\n');
 	   else flg0 = 1; end
       end  %flg0 = 0;
@@ -1460,10 +1474,10 @@ end  % end of if (Contrast)
 
 % Done for gathering info from the user.
 
-%=========================================   
+%=========================================
 
 cov.marker = 10000;  % temporary solution when no covariate exists in PreProc.m
-     
+
 if (cov.do),  % new design type after covariate is added: Seems this section not needed?
    switch NF
 	   case 1,
@@ -1587,7 +1601,7 @@ if (cov.do),         % swap the covariate with another factor for some special c
 		end
 		end
 				
-	else 
+	else
 		for (i = 1:1:Contr.ord1.tot),
       for (j = 1:1:Contr.ord1.cnt(i).NT),
 	      Contr.ord1.cnt(i).code(j).str = [Contr.ord1.cnt(i).code(j).str(1) Contr.ord1.cnt(i).code(j).str(2) Contr.ord1.cnt(i).code(j).str(3) '0'];
@@ -1615,7 +1629,7 @@ switch NF
    case 1,	
 	
 	case 2,
-	   
+	
 	case 3,
 	   if (dsgn == 3 | dsgn == 4), N_Brik = 5; end
 				
@@ -1639,12 +1653,34 @@ Opt.Format = 'matrix';
 
 t0 = clock;
 
-[err, FileInfo] = BrikInfo(file(1).nm); 
-if (data_type == 0), 
+[err, FileInfo] = BrikInfo(file(1).nm);
+if (data_type == 0),
    slices = FileInfo.DATASET_DIMENSIONS(3);    % Get the number of slices along Z axis from file header
-elseif (data_type == 1),
-   if (Frame_N == 1), Opt.method = 1; % if being purified 
+elseif (data_type == 1 | data_type == 2 ),
+   if (Frame_N == 1), Opt.method = 1; % if being purified
 	else Opt.method = 2; end
+   if (data_type == 2 ),
+      %finalize NI
+      %I would have liked to do it when the user enters the number or the
+      %filename but the function: newid() seems to hang when the users
+      %use cut and paste to answer all the questions at once - don't know
+      %why that is.
+      node_n=str2num(node_file);
+      NI = [];
+      if (isempty(node_n)),
+         ropt.method = 3;
+         ropt.verb = 2;
+         NI = Read_1D(node_file,ropt);
+         node_n = length(NI);
+      else
+         NI = [0:1:node_n-1];
+      end
+      if (isempty(NI)),
+	      flg = 0; fprintf(2,'Error: the input is not a number, or 1D file reading failed. \n');
+         return;
+	   end
+   end
+
    Opt.SliceSize_1D = 50000;  % each time run 50000 nodes due to memory limit
 	slices =  ceil(node_n/Opt.SliceSize_1D);
 end
@@ -1660,24 +1696,25 @@ for (sn = 1:1:slices),
 
 	if (file_format == 1),   % Each file contains only single subbrik
 %   fprintf(1,'\nReading %d input files...', ntot);
-		Opt.Slices = sn;   % Right now just try once slice  
+		Opt.Slices = sn;   % Right now just try once slice
 %		Opt.Frames = 1;
-	   for (i=1:1:ntot),      % Read in each file   
+	   for (i=1:1:ntot),      % Read in each file
 		 %V(i) is supposed to be a N X M X K matrix? The information regarding the dimensions
-		 %should be in Info: Info.DATASET_DIMENSIONS(1), Info.DATASET_DIMENSIONS(2), 
+		 %should be in Info: Info.DATASET_DIMENSIONS(1), Info.DATASET_DIMENSIONS(2),
 		 %Info.DATASET_DIMENSIONS(3), Info.DATASET_RANK(2)?
 %      [err, X(:, :, :, i), Info, ErrMessage] = BrikLoad(file(i).nm, Opt);
 			
 			if (data_type == 0),  % Volume data
 			   [err, X(:, :, i), Info, ErrMessage] = BrikLoad(file(i).nm, Opt);
-			elseif (data_type == 1),	% Surface data
+			elseif (data_type == 1 | data_type == 2),	% Surface data
 			   Opt.Frames = Frame_N;
 				[err, Z, Info, ErrMessage] = BrikLoad(file(i).nm, Opt);
-				if (sn ~= 1), X(:,1,i) = zeros(size(X(:,1,i))); end 
-				% For the last chunk of nodes, which are not a whole set of 50,000. 
-				% Not an elegant solution: This would create some dangling 0's in the output file!
+				if (sn ~= 1), X(:,1,i) = zeros(size(X(:,1,i))); end
+				% For the last chunk of nodes, which are not a whole set of 50,000.
+				% Not an elegant solution: This would create some dangling 0's in
+            % the output file!
 				X(1:size(Z,1), 1, i) = Z;
-				clear Z; 
+				clear Z;
 			end	
 				
 	   	if (err == 1),
@@ -1689,9 +1726,9 @@ for (sn = 1:1:slices),
 
 	if (file_format == 0),   % Each file contains mutliple subbriks from one subject
 %   fprintf(1,'\nReading slice #%d from %d input files... ', sn, file_num);
-		Opt.Slices = sn;   % Right now just try once slice  
+		Opt.Slices = sn;   % Right now just try once slice
 	% Create a subbrik array. Here we assume the first file_SB subbriks are for ANOVA. Need to change for general situation?
-		for (i = 1:1:file_SB), Opt.Frames = [Opt.Frames, i]; end	  
+		for (i = 1:1:file_SB), Opt.Frames = [Opt.Frames, i]; end	
 	
 	   for (i=1:1:file_num),      % Read in each file. For each subject (file), there should have FL(1).N_level*FL(4).N_level files
 %      [err, tmp(:, :, :, (i-1)*file_SB+1:i*file_SB), Info, ErrMessage] = BrikLoad(file(i).nm,Opt);
@@ -1716,21 +1753,21 @@ for (sn = 1:1:slices),
   	    end
 
 	% Here we run 4-way ANOVA one slice a time due to swap memory issue. In matrix tmp, the first two
-	% dimensions are voxels along X and Y axes while the 4th dimension is subbrik tacked together for 
-	% each subject. We need to shuffle the 4th dimension in tmp so that the 4th dimention is arranged 
-	% in the following order: varying 4th factor first, then 3rd, then 2nd and 1st factors. 
+	% dimensions are voxels along X and Y axes while the 4th dimension is subbrik tacked together for
+	% each subject. We need to shuffle the 4th dimension in tmp so that the 4th dimention is arranged
+	% in the following order: varying 4th factor first, then 3rd, then 2nd and 1st factors.
 	
 	% 1st factor: (file(i).F1L-1)*file_SB*FL(4).N_level
 	% 2nd factor: (SB(j).lv(1)-1)*FL(3).N_level*FL(4).N_level
 	% 3rd factor: (SB(j).lv(2)-1)*FL(4).N_level
 	% 4th factor: file(i).cntr(file(i).F1L)
 	
-%			X(:, :, :, (i-1)*file_SB*FL(1).N_level + (j-1)*FL(3).N_level*FL(4).N_level + (k-1)*FL(4).N_level + l)	 
-% Here i, j, k, and l are indeces for 1st, 2nd, 3rd and 4th factor levels. 
+%			X(:, :, :, (i-1)*file_SB*FL(1).N_level + (j-1)*FL(3).N_level*FL(4).N_level + (k-1)*FL(4).N_level + l)	
+% Here i, j, k, and l are indeces for 1st, 2nd, 3rd and 4th factor levels.
 
 % file_SB = FL(3).N_level*FL(2).N_level   Maybe I should set a checking condition to make sure this equality does hold?
 
-% Is there a better way to load those subbriks directly into matrix X instead of relaying them into 
+% Is there a better way to load those subbriks directly into matrix X instead of relaying them into
 % matrix tmp???
 			
 	end
@@ -1741,7 +1778,7 @@ for (sn = 1:1:slices),
 	dim = size(X);
 	
 %fstat = zeros(D1, D2, D3, N_Brik);
-	fstat = zeros(D1, D2, N_Brik); 
+	fstat = zeros(D1, D2, N_Brik);
 %intensity = zeros(D1, D2, D3, N_Brik);
 	intensity = zeros(D1, D2, N_Brik);
 
@@ -1840,7 +1877,7 @@ for (sn = 1:1:slices),
 			case 2,
 			   if (Contr.ord2.cnt(i).idx2 == 3), Contr.ord2.df(i) = dfdenom(6) * (dsgn == 1 | dsgn == 2) + dfdenom(5) * (dsgn == 3 | dsgn == 4);  % MSBC
 				else fprintf('\nSomething is wrong in the contrast coding!\n'); fprintf(2,'Halted: Ctrl+c to exit'); pause;	
-				end		   
+				end		
 			case 3,
 			   fprintf('\nSomething is wrong in the contrast coding!\n'); fprintf(2,'Halted: Ctrl+c to exit'); pause;
 		   end
@@ -1861,7 +1898,7 @@ for (sn = 1:1:slices),
 			   switch Contr.ord2.cnt(i).idx2
 				   case 3, Contr.ord2.df(i) = dfdenom(8) * (dsgn == 1 | dsgn == 2) + dfdenom(7) * (dsgn == 3 | dsgn == 4 | dsgn == 5);  % MSBC
 					case 4, Contr.ord2.df(i) = dfdenom(9) * (dsgn == 1 | dsgn == 2) + dfdenom(8) * (dsgn == 3 | dsgn == 4 | dsgn == 5);  % Less likely occur: MSBD	
-				end		   
+				end		
 			case 3,   % Less likely occur
 			   switch Contr.ord2.cnt(i).idx2MSE
 					case 4, Contr.ord2.df(i) = dfdenom(10) * (dsgn == 1 | dsgn == 2) + dfdenom(9)*(dsgn == 3 | dsgn == 4 | dsgn == 5); % Less likely occur: MSCD		
@@ -1886,7 +1923,7 @@ for (sn = 1:1:slices),
 				   case 3, Contr.ord2.df(i) = dfdenom(10) * (dsgn == 1 | dsgn == 2) + dfdenom(9) * (dsgn == 3 | dsgn == 4);  % MSBC
 					case 4, Contr.ord2.df(i) = dfdenom(11) * (dsgn == 1 | dsgn == 2) + dfdenom(10) * (dsgn == 3 | dsgn == 4);  % Less likely occur: MSBD
 					case 5, Contr.ord2.df(i) = dfdenom(12) * (dsgn == 1 | dsgn == 2) + dfdenom(11) * (dsgn == 3 | dsgn == 4);  % Less likely occur: MSBE
-				end		   
+				end		
 			case 3,   % Less likely occur
 			   switch Contr.ord2.cnt(i).idx2
 					case 4, Contr.ord2.df(i) = dfdenom(13) * (dsgn == 1 | dsgn == 2) + dfdenom(12)*(dsgn == 3 | dsgn == 4); % Less likely occur: MSCD	
@@ -1910,7 +1947,7 @@ for (sn = 1:1:slices),
 		   switch Contr.ord3.cnt(i).idx1
 		   case 1,
 			   switch Contr.ord3.cnt(i).idx2
-				   case 2, 
+				   case 2,
 					   if (Contr.ord3.cnt(i).idx3 == 3), Contr.ord3.df(i) = dfdenom(7)*(dsgn == 1 | dsgn == 2);  % MSABC
 							else fprintf('\nSomething is wrong in the contrast coding!\n'); fprintf(2,'Halted: Ctrl+c to exit'); pause;
 						end	
@@ -1928,26 +1965,26 @@ for (sn = 1:1:slices),
 		   switch Contr.ord3.cnt(i).idx1
 		   case 1,
 			   switch Contr.ord3.cnt(i).idx2
-				   case 2, 
+				   case 2,
 					   switch Contr.ord3.cnt(i).idx3
 						   %case 3, Contr.ord3.df(i) = dfdenom(11)*(dsgn == 1 | dsgn == 2) + dfdenom(10)* (dsgn == 3 | dsgn == 4 | dsgn == 5);  % MSABC
 							case 3, Contr.ord3.df(i) = dfdenom(11)*(dsgn == 1 | dsgn == 2) + dfdenom(10)* (dsgn == 3 | dsgn == 4) + dfdenom(9)* (dsgn == 5);  % MSABC
 							case 4, Contr.ord3.df(i) = dfdenom(12)*(dsgn == 1 | dsgn == 2);  % MSABD not exist for (dsgn == 3 | dsgn == 4 | dsgn == 5)			
 						end	
-					case 3, 
+					case 3,
 					   if (Contr.ord3.cnt(i).idx3 == 4), Contr.ord3.df(i) = dfdenom(13)*(dsgn == 1 | dsgn == 2);  % MSACD
 						else fprintf('\nSomething is wrong in the contrast coding!\n'); fprintf(2,'Halted: Ctrl+c to exit'); pause;
 					   end
 				end	
 			case 2,
 			   switch Contr.ord3.cnt(i).idx2
-				   case 3, 
+				   case 3,
 					   if (Contr.ord3.cnt(i).idx3 == 4), Contr.ord3.df(i) = dfdenom(14)*(dsgn == 1 | dsgn == 2) + dfdenom(11)* (dsgn == 3 | dsgn == 4 | dsgn == 5);   % MSBCD
 						else fprintf('\nSomething is wrong in the contrast coding!\n'); fprintf(2,'Halted: Ctrl+c to exit'); pause;end
-				   case 4, 
+				   case 4,
 					   fprintf('\nSomething is wrong in the contrast coding!\n'); fprintf(2,'Halted: Ctrl+c to exit'); pause;	
-				end   
-			case 3,   
+				end
+			case 3,
 			   fprintf('\nSomething is wrong in the contrast coding!\n');
 		      fprintf(2,'Halted: Ctrl+c to exit'); pause;	
 			case 4,
@@ -1963,13 +2000,13 @@ for (sn = 1:1:slices),
 		   switch Contr.ord3.cnt(i).idx1
 		   case 1,
 			   switch Contr.ord3.cnt(i).idx2
-				   case 2, 
+				   case 2,
 					   switch Contr.ord3.cnt(i).idx3
 						   case 3, Contr.ord3.df(i) = dfdenom(16)*(dsgn == 1 | dsgn == 2) + dfdenom(15)* (dsgn == 3 | dsgn == 4);  % MSABC
-							case 4, Contr.ord3.df(i) = dfdenom(17)*(dsgn == 1 | dsgn == 2) + dfdenom(16)* (dsgn == 3 | dsgn == 4);  % MSABD 
+							case 4, Contr.ord3.df(i) = dfdenom(17)*(dsgn == 1 | dsgn == 2) + dfdenom(16)* (dsgn == 3 | dsgn == 4);  % MSABD
 							case 5, Contr.ord3.df(i) = dfdenom(18)*(dsgn == 1 | dsgn == 2);  % MSABE			
 						end	
-					case 3, 
+					case 3,
 					   switch Contr.ord3.cnt(i).idx3
 						   case 4, Contr.ord3.df(i) = dfdenom(19)*(dsgn == 1 | dsgn == 2) + dfdenom(17)* (dsgn == 3 | dsgn == 4);  % MSACD
 							case 5, Contr.ord3.df(i) = dfdenom(20)*(dsgn == 1 | dsgn == 2);  % MSACE
@@ -1981,7 +2018,7 @@ for (sn = 1:1:slices),
 				end	% switch Contr.ord3.cnt(i).idx2
 			case 2,
 			   switch Contr.ord3.cnt(i).idx2
-				   case 3, 
+				   case 3,
 					   switch Contr.ord3.cnt(i).idx3
 						   case 4, Contr.ord3.df(i) = dfdenom(22)*(dsgn == 1 | dsgn == 2) + dfdenom(18)* (dsgn == 3 | dsgn == 4);   % MSBCD
 						   case 5, Contr.ord3.df(i) = dfdenom(23)*(dsgn == 1 | dsgn == 2) + dfdenom(19)* (dsgn == 3 | dsgn == 4);   % MSBCE
@@ -1989,11 +2026,11 @@ for (sn = 1:1:slices),
 					case 4,	
 						if (Contr.ord3.cnt(i).idx3 == 5), Contr.ord3.df(i) = dfdenom(24)*(dsgn == 1 | dsgn == 2) + dfdenom(20)* (dsgn == 3 | dsgn == 4);   % MSBDE
 						else fprintf('\nSomething is wrong in the contrast coding!\n'); fprintf(2,'Halted: Ctrl+c to exit'); pause;end
-				   case 4, 
+				   case 4,
 					   fprintf('\nSomething is wrong in the contrast coding!\n'); fprintf(2,'Halted: Ctrl+c to exit'); pause;	
 				end   % switch Contr.ord3.cnt(i).idx2
-			case 3,   
-			   if (Contr.ord3.cnt(i).idx2 == 4 & Contr.ord3.cnt(i).idx3 == 5), 
+			case 3,
+			   if (Contr.ord3.cnt(i).idx2 == 4 & Contr.ord3.cnt(i).idx3 == 5),
 				if (dsgn == 1 | dsgn == 2),
 				   Contr.ord3.df(i) = dfdenom(25);
 				elseif (dsgn == 3),
@@ -2012,24 +2049,24 @@ for (sn = 1:1:slices),
 	   for (i = 1:1:Contr.ord4.tot),
 		   switch Contr.ord4.cnt(i).idx1
 			   case 1,
-			   switch Contr.ord4.cnt(i).idx2		         
-					case 2, 
+			   switch Contr.ord4.cnt(i).idx2		
+					case 2,
 		         switch Contr.ord4.cnt(i).idx3
-			         case 3, 
+			         case 3,
 						switch Contr.ord4.cnt(i).idx4
-						   case 4, 
+						   case 4,
 							if (dsgn == 1 | dsgn == 2),
 							   Contr.ord4.df(i) = dfdenom(26);
 							elseif (dsgn == 3  | dsgn == 4),
 							   Contr.ord4.df(i) = dfdenom(22);  % MSABCD
 							end	
-							case 5, 
+							case 5,
 							if (dsgn == 1 | dsgn == 2),
 							   Contr.ord4.df(i) = dfdenom(27);
 							end   % MSABCE
 						end  % switch Contr.ord4.cnt(i).idx4
-						case 4, 
-						if (Contr.ord4.cnt(i).idx4 == 5), 
+						case 4,
+						if (Contr.ord4.cnt(i).idx4 == 5),
 						if (dsgn == 1 | dsgn == 2),
 						   Contr.ord4.df(i) = dfdenom(28);   % MSABDE
 						end	
@@ -2040,10 +2077,10 @@ for (sn = 1:1:slices),
 					end  % switch Contr.ord4.cnt(i).idx3
 					case 3,
 					switch Contr.ord4.cnt(i).idx3
-					   case 4, 
-						if (Contr.ord4.cnt(i).idx4 == 5), 
+					   case 4,
+						if (Contr.ord4.cnt(i).idx4 == 5),
 						if (dsgn == 1 | dsgn == 2),
-						   Contr.ord4.df(i) = dfdenom(29);   % MSACDE 
+						   Contr.ord4.df(i) = dfdenom(29);   % MSACDE
 						end
 						else fprintf('\nSomething is wrong in the contrast coding!\n'); fprintf(2,'Halted: Ctrl+c to exit'); pause;
 						end
@@ -2059,12 +2096,12 @@ for (sn = 1:1:slices),
 				   case 3,
 					switch Contr.ord4.cnt(i).idx3
 					   case 4,
-						if (Contr.ord4.cnt(i).idx4 == 5), 
+						if (Contr.ord4.cnt(i).idx4 == 5),
 						if (dsgn == 1 | dsgn == 2),
 						   Contr.ord4.df(i) = dfdenom(30);   % MSBCDE
 						end	
 						else fprintf('\nSomething is wrong in the contrast coding!\n'); fprintf(2,'Halted: Ctrl+c to exit'); pause;	
-	               end 
+	               end
 						case 5, fprintf('\nSomething is wrong in the contrast coding!\n');
 	                  fprintf(2,'Halted: Ctrl+c to exit'); pause;
 					end % switch Contr.ord4.cnt(i).idx3
@@ -2079,19 +2116,20 @@ for (sn = 1:1:slices),
 		end  % for (i = 1:1:Contr.ord4.tot)
 	end	% 	if ((NF == 5) & Contr.ord4.tot > 0)	
 	
-%	if (cov.do == 1), covoutdf = dfe;  end % df of MSE 
+%	if (cov.do == 1), covoutdf = dfe;  end % df of MSE
 
 %Set up options for writing out the results
 	
    Opt.Prefix = sprintf('%s', OutFN);
    Opt.NoCheck = 0;
    Opt.Scale = 1;
-   if (data_type == 0), Opt.View = sprintf('+%s', format); 
-	elseif (data_type == 1) Opt.View = '.1D.dset'; end
+   if (data_type == 0), Opt.View = sprintf('+%s', format);
+	elseif (data_type == 1) Opt.View = '.1D.dset';
+   elseif (data_type == 2) Opt.View = '.niml.dset'; end
 
-   Info.TYPESTRING = '3DIM_HEAD_FUNC'; 
+   Info.TYPESTRING = '3DIM_HEAD_FUNC';
    %Info.DATASET_RANK(2) = 2*N_Brik;    % Number of subbriks
-%	if (cov.do == 1), 
+%	if (cov.do == 1),
 %	   Info.DATASET_RANK(2) = 2*(N_Brik + Contr.ord1.tot + Contr.ord2.tot + Contr.ord3.tot +1);
 %   else Info.DATASET_RANK(2) = 2*(N_Brik + Contr.ord1.tot + Contr.ord2.tot + Contr.ord3.tot);    % Number of subbriks
 %	end
@@ -2144,7 +2182,7 @@ for (sn = 1:1:slices),
 	end
 
 % ANOCVA	
-%	if (cov.do == 1), 
+%	if (cov.do == 1),
 %	   Info.BRICK_STATAUX = [Info.BRICK_STATAUX 2*(i+N_Brik+Contr.ord1.tot+Contr.ord2.tot+Contr.ord3.tot)-1 3 1 covoutdf];   % 3 is for t stat defined in 3ddata.h
 %   	Info.BRICK_TYPES = [Info.BRICK_TYPES 3 3];  % 3 for float; 1 for short
 %	end
@@ -2153,7 +2191,7 @@ for (sn = 1:1:slices),
    Info.BRICK_LABS =  [];
    for (i = 1:1:N_Brik),  %create labels for all terms
       Info.BRICK_LABS =  [Info.BRICK_LABS cell2mat(tnames_new(i)) '~'];   % Label for intensity
-	   Info.BRICK_LABS =  [Info.BRICK_LABS cell2mat(tnames_new(i)) ' ' 'F' '~'];   % Label for F 
+	   Info.BRICK_LABS =  [Info.BRICK_LABS cell2mat(tnames_new(i)) ' ' 'F' '~'];   % Label for F
    end
 
 % For 1st order contrasts
@@ -2189,12 +2227,12 @@ for (sn = 1:1:slices),
 	end	
 	
 	% ANOCVA	
-%	if (cov.do == 1), 
+%	if (cov.do == 1),
 %	   Info.BRICK_LABS =  [Info.BRICK_LABS cov.label '~'];   % Label for beta
 %	   Info.BRICK_LABS =  [Info.BRICK_LABS cov.label ' ' 't' '~'];   % Label for t
 %	end
 
-   Info.SCENE_DATA(2) = 11;   % 11 means Bucket Func type, defined in AFNI doc README.attributes  
+   Info.SCENE_DATA(2) = 11;   % 11 means Bucket Func type, defined in AFNI doc README.attributes
    Info.SCENE_DATA(3) = 1;    % 1 means 3DIM_HEAD_FUNC, defined in AFNI doc README.attributes
 	
    if (isfield(Info,{'TAXIS_NUMS'})),
@@ -2209,22 +2247,44 @@ for (sn = 1:1:slices),
    if (isfield(Info,{'BRICK_FLOAT_FACS'})),
       Info = rmfield(Info, {'BRICK_FLOAT_FACS'});
    end
-   
-   
+
+
    Opt.Frames = [];  %Because it might have been set as the frame list in the case of input files with multiple subbriks during loading
 
 % Write output: reshape because the 3rd dimension is supposed to be Z in the normal situation.
    OptW = Opt;
    OptW.Scale = 0;
    if (data_type == 0),
-      [err2, ErrMessage, NewInfo] = WriteBrik(reshape(M, D1, D2, 1, Info.DATASET_RANK(2)), Info, OptW); 
+      [err2, ErrMessage, NewInfo] = WriteBrik(reshape(M, D1, D2, 1, Info.DATASET_RANK(2)), Info, OptW);
 	elseif (data_type == 1), % Collapse the 2nd dimsion, which is 1 for surface data.
-      [err2, ErrMessage, NewInfo] = WriteBrik(squeeze(reshape(M, D1, D2, 1, Info.DATASET_RANK(2))), Info, OptW); 
-	end	
+      [err2, ErrMessage, NewInfo] = WriteBrik(squeeze(reshape(M, D1, D2, 1, Info.DATASET_RANK(2))), Info, OptW);
+	elseif (data_type == 2),
+      [sstt, uid] = system('3dnewid -fun');
+      ftmp = sprintf('__GroupAna_tmp%d_%s.mat', sn, uid);
+      Mo = squeeze(reshape(M, D1, D2, 1, Info.DATASET_RANK(2)));
+      NIo = NI((1+(sn-1)*Opt.SliceSize_1D):min([length(NI) sn*Opt.SliceSize_1D]));
+      save(ftmp, 'Mo', 'NIo'); clear('Mo'); clear('NIo');
+      flist(sn) = cellstr(ftmp);
+   end	
 	fprintf(1, 'done in %f seconds\n', toc);	
-	
-end  % end of the big loop of running ANOVA and writing up: One slice a time 
-
+end  % end of the big loop of running ANOVA and writing up: One slice a time
+if (data_type == 2),
+   clear('LC'); clear ('M');
+   for (it=1:1:length(flist)),
+      F = load(char(flist(it)));
+      if (it==1),
+         M = F.Mo;
+      else
+         M = [M ; F.Mo];
+      end
+      clear('F');
+      delete(char(flist(it)));
+   end
+   Info.FileFormat='NIML';
+   Info.NodeIndices = NI;
+   OptW.Slices = [];
+   [err2, ErrMessage, NewInfo] = WriteBrik(M, Info, OptW);
+end
 fprintf(1, '\nCongratulations, job is successfully done!!! Total runtime: %f minutes...', etime(clock,t0)/60);	
 fprintf(1, '\nOutput files are %s%s.*\n\n', Opt.Prefix, Opt.View);	
 err = 0;

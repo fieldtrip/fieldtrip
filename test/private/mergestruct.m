@@ -1,14 +1,14 @@
-function s1 = mergeconfig(s1, s2, emptymeaningful)
+function s1 = mergestruct(s1, s2, emptymeaningful)
 
-% MERGECONFIG merges the fields of a structure with another structure. The fields of
+% MERGESTRUCT merges the fields of a structure with another structure. The fields of
 % the 2nd structure are only copied in case they are absent in the 1st structure.
 %
 % Use as
-%   s3 = mergeconfig(s1, s2, emptymeaningful)
+%   s3 = mergestruct(s1, s2, emptymeaningful)
 %
-% See also MERGE_TABLE
+% See also PRINTSTRUCT, APPENDSTRUCT, COPYFIELDS, KEEPFIELDS, REMOVEFIELDS, MERGETABLE
 
-% Copyright (C) 2009-2019, Robert Oostenveld
+% Copyright (C) 2009-2022, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -93,7 +93,7 @@ else
       % do not copy it over, keep the original value
     elseif  isfield(s1, fn) &&  isstruct(s2.(fn))
       % merge the two substructures using recursive call
-      s1.(fn) = mergeconfig(s1.(fn), s2.(fn));
+      s1.(fn) = mergestruct(s1.(fn), s2.(fn));
     end
   end % for all default fields
   

@@ -7,20 +7,20 @@ function [Sd] = zdeblankall (S)
 %   blanks are characters that return true
 %   for the function isspace.
 %   This includes space, tab, new line etc.
-%   
+%
 %Input Parameters:
 %   S : a string
-%   
-%   
+%
+%
 %Output Parameters:
-%  Sd : S without any blanks   
-%   
-%      
+%  Sd : S without any blanks
+%
+%
 %Key Terms:
-%   
+%
 %More Info :
 %   isspace, zdeblank
-%   
+%
 %   function is nothing but:
 %   Sd = S(find(~isspace(S)));
 %

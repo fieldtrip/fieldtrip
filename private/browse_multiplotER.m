@@ -14,7 +14,7 @@ default             = [];
 default.interactive = 'yes';
 default.axes        = 'no';
 default.baseline    = 'yes';
-cfg = mergeconfig(cfg, default);
+cfg = mergestruct(cfg, default);
 
 figure;
 ft_multiplotER(cfg, timelock);

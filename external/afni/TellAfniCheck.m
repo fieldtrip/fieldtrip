@@ -4,23 +4,23 @@ function [err, g, b] = TellAfniCheck (w)
 %
 %Purpose:
 %   Parses AFNI's returned string from plugout_drive
-%   
-%   
+%
+%
 %Input Parameters:
 %   w the string output by plugout_drive
-%   
-%   
+%
+%
 %Output Parameters:
 %   err : 0 No Problem
 %       : N  N Problems
 %   g   : Number of OK tokens
 %   b   : Number of BAD tokens
-%   
-%      
+%
+%
 %More Info :
-%   
+%
 %    See TellAfni
-%   
+%
 %
 %     Author : Ziad Saad
 %     Date : Wed Dec 7 11:00:06 EST 2005
@@ -35,7 +35,7 @@ DBG = 1;
 
 %initailize return variables
 err = 1;
-g = 0; 
+g = 0;
 b = 0;
 
 slook = 'AFNI response string:';

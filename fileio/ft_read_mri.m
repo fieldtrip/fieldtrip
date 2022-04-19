@@ -120,9 +120,11 @@ end
 
 if strcmp(dataformat, 'compressed') || (strcmp(dataformat, 'freesurfer_mgz') && ispc) || any(filetype_check_extension(filename, {'gz', 'zip', 'tar', 'tgz'}))
   % the file is compressed, unzip on the fly,
-  % freesurfer mgz files get special treatment only on a pc
-  inflated = true;
-  filename = inflate_file(filename);
+  % -freesurfer mgz files get special treatment only on a pc
+  % -compressed AFNI BRIKS also need the HEAD copied over to the temp dir
+  
+  filename_old = filename;
+  filename    = inflate_file(filename_old);
   if strcmp(dataformat, 'freesurfer_mgz')
     filename_old = filename;
     filename     = [filename '.mgh'];
@@ -133,6 +135,11 @@ if strcmp(dataformat, 'compressed') || (strcmp(dataformat, 'freesurfer_mgz') && 
     % case dataformat was nifti_spm
     dataformat = ft_filetype(filename);
   end
+  if strcmp(dataformat, 'afni_brik')
+    [p, f, e] =fileparts(filename_old);
+    copyfile(fullfile(p, strrep(f, 'BRIK', 'HEAD')), strrep(filename, 'BRIK', 'HEAD'));
+  end
+  inflated = true;
 else
   inflated = false;
 end
@@ -260,26 +267,74 @@ switch dataformat
     % needs afni
     ft_hastoolbox('afni', 1);    % see http://afni.nimh.nih.gov/
 
-    [err, img, hdr, ErrMessage] = BrikLoad(filename);
+    [err, hdr] = BrikInfo(filename);
+    
+    % check the precision of the data, and if scaling is required. If the precision is other than float, 
+    %and no scaling is required, then return the data in its native precision, let the low level code take
+    % care of that
+    if any(hdr.BRICK_FLOAT_FACS~=0)
+      opts.OutPrecision = '';
+    else
+      opts.OutPrecision = '*';
+      opts.Scale = 0;
+    end
+    [err, img, hdr, ErrMessage] = BrikLoad(filename, opts);
     if err
       ft_error('could not read AFNI file');
     end
 
-    % FIXME: this should be checked, but I only have a single BRIK file
-    % construct the homogenous transformation matrix that defines the axes
-    ft_warning('homogenous transformation might be incorrect for AFNI file');
-    transform        = eye(4);
-    transform(1:3,4) = hdr.ORIGIN(:);
-    transform(1,1)   = hdr.DELTA(1);
-    transform(2,2)   = hdr.DELTA(2);
-    transform(3,3)   = hdr.DELTA(3);
+    if isfield(hdr, 'ORIENT_SPECIFIC')
+      [err, orient, flipvec] = AFNI_OrientCode(hdr.ORIENT_SPECIFIC);
+      % FIXME, I don't understand why the orient vector needs to be like
+      % this: it seems the opposite of what is reflected in the coordsys
+      % (see below), but it seems to yield internally consistent results
+    else
+      % afni volume info
+      orient = 'LPI'; % hope for the best
+    end
+        
+    % origin and basis vectors in world space
+    [unused, ix] = AFNI_Index2XYZcontinuous([0 0 0; eye(3)], hdr, orient);
+    
+    % basis vectors in voxel space
+    e1 = ix(2,:) - ix(1,:);
+    e2 = ix(3,:) - ix(1,:);
+    e3 = ix(4,:) - ix(1,:);
 
-    % FIXME: I am not sure about the "RAI" image orientation
-    img = flip(img,1);
-    img = flip(img,2);
-    dim = size(img);
-    transform(1,4) = -dim(1) - transform(1,4);
-    transform(2,4) = -dim(2) - transform(2,4);
+    % change from base0 (afni) to base1 (SPM/Matlab)
+    o = ix(1,:) - (e1+e2+e3);
+
+    % create matrix
+    transform = [e1;e2;e3;o]';
+    transform = cat(1, transform, [0 0 0 1]);
+    
+    coordsys = lower(hdr.Orientation(:,2)');
+    if contains(filename, 'TTatlas') || (isfield(hdr, 'TEMPLATE_SPACE') && ~isempty(hdr.TEMPLATE_SPACE))
+      if isfield(hdr, 'TEMPLATE_SPACE') && ~isempty(hdr.TEMPLATE_SPACE)
+        space = hdr.TEMPLATE_SPACE;
+      else
+        space = 'tal'; % accommodate the case when this is not specified in the hdr, make assumption
+      end
+      if startsWith(space, 'tt_') || startsWith(space, 'TT_')
+        space = 'tal';
+      elseif startsWith(space, 'mni')
+        space = 'mni';
+      elseif startsWith(space, 'tlrc')
+        % according to the documentation tlrc is rather generic as a
+        % specification of the space, but originally it meant tal.
+        ft_warning('space ''tlrc'' might be ambiguous, here assuming the coordsys to be ''tal''');
+        space = 'tal';
+      end
+      if ismember(space, {'tal' 'mni'})
+        % xyz orientation should be RAS
+        if ~strcmp(coordsys, 'ras')
+          ft_warning('the template space suggests that the image is in %s coordinates, but the xyz orientation %s does not match this', space, coordsys);
+          xxx2ras = true;
+        else
+          coordsys = space;
+        end
+      end
+    end
 
   case 'neuromag_fif'
     % needs mne toolbox
@@ -667,26 +722,30 @@ if exist('hdr', 'var')
   mri.hdr = hdr;
 end
 
-try
-  % store the homogenous transformation matrix if present
+if exist('transform', 'var')
+  % store the homogeneous transformation matrix if present
   mri.transform = transform;
-catch
-  % don't store anything if not present
 end
 
-try
+if exist('unit', 'var')
   % determine the geometrical units in which it is expressed
   mri.unit = unit;
-catch
+else
   % estimate the units from the data
   mri = ft_determine_units(mri);
 end
 
-try
+if exist('coordsys', 'var')
   % add a descriptive label for the coordinate system
   mri.coordsys = coordsys;
-catch
-  % don't store anything if not present
+end
+
+if exist('xxx2ras', 'var') && xxx2ras==true
+  % this is needed for AFNI formatted data, where the created voxels-to-world
+  % mapping matrix is diagonal for the 3x3 rotation part (i.e. ijk should
+  % be ras, in order for the tal/mni coordsys to make sense
+  mri = ft_convert_coordsys(mri, 'ras', 0);
+  mri.coordsys = space;
 end
 
 if inflated
@@ -708,3 +767,9 @@ else
   value       = filecontent.(varname);  % read the variable named according to the input specification
   clear filecontent
 end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function bool = isrighthanded(orient)
+bool = ismember(orient, {'ALS' 'RAS' 'PRS' 'LPS' 'SAL' 'SRA' 'SPR' 'SLP'});

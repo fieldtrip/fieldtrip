@@ -85,7 +85,7 @@ try
     % read options from the preferences file
     if exist(fieldtripprefs, 'file')
       prefs      = load(fieldtripprefs); % the file contains multiple fields
-      ft_default = mergeconfig(ft_default, prefs);
+      ft_default = mergestruct(ft_default, prefs);
     end
   end
   
