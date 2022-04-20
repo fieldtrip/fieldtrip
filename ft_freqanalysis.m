@@ -650,37 +650,41 @@ for itrial = 1:ntrials
       % equivalent one-liners:
       %   multiplicative: cycles = arrayfun(@(order) arrayfun(@(wl_num) cfg.width*wl_num, 1:order), cfg.order,'uni',0)
       %   additive: cycles = arrayfun(@(order) arrayfun(@(wl_num) cfg.width+wl_num-1, 1:order), cfg.order,'uni',0)
-      cycles = cell(length(cfg.foi),1);
+      order_int = ceil(cfg.order);
+      cycles = cell(length(cfg.foi), 1);
       for i_f = 1:length(cfg.foi)
-        frq_cyc = NaN(1,cfg.order(i_f));
+        frq_cyc = NaN(1, order_int(i_f));
         if strcmp(cfg.combine, 'multiplicative')
-          for i_wl = 1:cfg.order(i_f)
-            frq_cyc(i_wl) = cfg.width*i_wl;
+          for i_wl = 1:order_int(i_f)
+            frq_cyc(i_wl) = cfg.width * i_wl;
           end
         elseif strcmp(cfg.combine, 'additive')
-          for i_wl = 1:cfg.order(i_f)
-            frq_cyc(i_wl) = cfg.width+i_wl-1;
+          for i_wl = 1:order_int(i_f)
+            frq_cyc(i_wl) = cfg.width + i_wl - 1;
           end
         end
         cycles{i_f} = frq_cyc;
       end
       
       % compute superlets
-      spectrum = NaN(nchan,length(cfg.foi),length(cfg.toi));
+      spectrum = NaN(nchan, length(cfg.foi), length(cfg.toi));
       % index of 'freqoi' value in 'options'
       idx_freqoi = find(ismember(options(1:2:end), 'freqoi'))*2;
       foi = options{idx_freqoi};
       for i_f = 1:length(cfg.foi)
         % collext individual wavelets' responses per frequency
-        spec_f = NaN(cfg.order(i_f), nchan, length(cfg.toi));
+        spec_f = NaN(order_int(i_f), nchan, length(cfg.toi));
         opt = options;
         opt{idx_freqoi} = cfg.foi(i_f);
         % compute responses for individual wavelets
-        for i_wl = 1:cfg.order(i_f)
-          [spec_f(i_wl,:,:), dum, toi] = ft_specest_wavelet(dat, time, 'timeoi', cfg.toi, 'width', cycles{i_f}(i_wl), 'gwidth', cfg.gwidth, opt{:}, 'feedback', fbopt);
+        for i_wl = 1:order_int(i_f)
+          [spec_f(i_wl, :, :), ~, toi] = ft_specest_wavelet(dat, time, 'timeoi', cfg.toi, 'width', cycles{i_f}(i_wl), 'gwidth', cfg.gwidth, opt{:}, 'feedback', fbopt);
+        end
+        if floor(cfg.order(i_f)) ~= order_int(i_f)
+            spec_f(i_wl, :, :) = spec_f(i_wl, :, :) .^ rem(cfg.order(i_f), 1);
         end
         % geometric mean across individual wavelets
-        spectrum(:,i_f,:) = prod(spec_f, 1).^(1/cfg.order(i_f));
+        spectrum(:, i_f, :) = prod(spec_f, 1) .^ (1 / cfg.order(i_f));
       end
       clear spec_f
       
