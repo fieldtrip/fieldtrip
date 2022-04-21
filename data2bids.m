@@ -1007,11 +1007,6 @@ if need_nirs_json
   end
 end
 
-if need_motion_json
-    % if motion data, check if coordinate system information is provided
-    need_coordsystem_json = isfield(cfg, 'coordsystem'); 
-end
-
 need_events_tsv       = need_events_tsv       || need_meg_json || need_eeg_json || need_ieeg_json || need_emg_json || need_exg_json || need_nirs_json || need_eyetracker_json || need_motion_json || (contains(cfg.outputfile, 'task') || ~isempty(cfg.TaskName) || ~isempty(cfg.task)) || ~isempty(cfg.events);
 need_channels_tsv     = need_channels_tsv     || need_meg_json || need_eeg_json || need_ieeg_json || need_emg_json || need_exg_json || need_nirs_json || need_motion_json ;
 need_coordsystem_json = need_coordsystem_json || need_meg_json || need_electrodes_tsv || need_nirs_json ;
@@ -1750,6 +1745,7 @@ switch cfg.method
             [p, f, x] = fileparts(cfg.outputfile);
             cfg.outputfile = fullfile(p, [f '.vhdr']);
             ft_info('writing %s\n', cfg.outputfile);
+            %ft_write_data(cfg.outputfile,[], 'dataformat', 'brainvision_eeg', 'header', hdr, 'event', trigger);
             ft_write_data(cfg.outputfile, dat, 'dataformat', 'brainvision_eeg', 'header', hdr, 'event', trigger);
           case {'nirs'}
             % write the data in SNIRF file format
@@ -1763,6 +1759,7 @@ switch cfg.method
             [p, f, x] = fileparts(cfg.outputfile);
             cfg.outputfile = fullfile(p, [f '.tsv']);
             ft_info('writing %s\n', cfg.outputfile);
+            %dat = []; 
             if strcmp(cfg.datatype, 'motion')
                 writecell(hdr.label', cfg.outputfile,'FileType', 'text', 'Delimiter', '\t');
                 writematrix(dat', cfg.outputfile, 'FileType', 'text', 'Delimiter', '\t','WriteMode','append'); % use headers, the JSON will be written further down
