@@ -1401,7 +1401,7 @@ if need_channels_tsv
     type_json = motion_json;
   end
   fn = fieldnames(type_json);
-  fn = fn(endsWith(fn, 'ChannelCount'));
+  fn = fn(endsWith(fn, 'ChannelCount') & ~contains(fn,'ShortChannel'));
   jsoncount = 0;
   for i=1:numel(fn)
     if ~isempty(type_json.(fn{i}))
