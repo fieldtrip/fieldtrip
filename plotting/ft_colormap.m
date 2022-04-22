@@ -32,6 +32,9 @@ function cmap = ft_colormap(varargin)
 % asterisk (e.g. '*RdBu' to reverse the colormap, like '*RdBu'. See BREWERMAP for more 
 % information, or execute the interactive BREWERMAP_VIEW function to see them in detail.
 %
+% See Crameri et al 2020. The misuse of colour in science communication.
+% https://doi.org/10.1038/s41467-020-19160-7 and http://colorbrewer2.org.
+%
 % See also COLORMAP, COLORMAPEDITOR, BREWERMAP, MATPLOTLIB, CMOCEAN
 
 % Copyright (C) 2020, Jan-Mathijs Schoffelen, Robert Oostenveld
