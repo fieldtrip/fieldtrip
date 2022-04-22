@@ -2,26 +2,26 @@ function [nel, comm] = ToyTalk()
 %           ToyTalk()
 %
 % A sample function to illustrate how matlab can listen to communication from
-% SUMA. 
+% SUMA.
 %
 %Dependency:
 %-----------
-%The TCP communication is based on pnet.m by:  
-%       Peter Rydesäter, 
+%The TCP communication is based on pnet.m by:
+%       Peter Rydesäter,
 %       Mitthögskolan(Mid Sweden University) campus Östersund, SWEDEN
 %pnet is not in AFNI's matlab library yet. You should have a copy of it by now
 %since you pointed me to it. If the mex file is not available for your machine,
 %you will need to compile a mex file for pnet. On the mac (or linux), just do:
 %   mex -O pnet.c
 %
-%Of course you will need the AFNI_matlab library that is included in 
-%afni's source archive. 
+%Of course you will need the AFNI_matlab library that is included in
+%afni's source archive.
 %
 %
 %Usage:
 %------
 %  Prepare some data, by creating a coarse (just for simplicity) version
-%  of the surfaces used in the AFNI workshop. 
+%  of the surfaces used in the AFNI workshop.
 %
 %  MapIcosahedron -spec DemoSubj_lh.spec -ld 12 -morph sphere.reg -prefix std12.
 %
@@ -45,48 +45,48 @@ function [nel, comm] = ToyTalk()
 %
 %  In matlab, watch it process the cross hair information.
 %
-%  To stop the function, and get the matlab prompt again, 
+%  To stop the function, and get the matlab prompt again,
 %  use ctrl+c 'in matlab'. You can start it again, but will have
-%  to press 't' in the still running SUMA twice. 
-%  
+%  to press 't' in the still running SUMA twice.
+%
 %  I am hoping the code is sufficient to show you how this is done
-%  I tried to hide all unecessary detail for you. It bugs me that 
+%  I tried to hide all unecessary detail for you. It bugs me that
 %  there is no way to start a workprocess on command line, so that
 %  one's code does not have to handle repeated polling for new data
-%  but oh well. If you new of new matlab developments on that front, 
+%  but oh well. If you know of new matlab developments on that front,
 %  please let me know.
-% 
+%
 %Limitations:
 %-------------
 %1- Matlab uses the same port as AFNI for listening to SUMA. So you should not be
 %running AFNI with -niml (listening mode) if you want matlab to be listening too.
 %This limitation will soon be removed.
-%2- Matlab does not talk 'directly' to SUMA the way afni does. While this is a 
+%2- Matlab does not talk 'directly' to SUMA the way afni does. While this is a
 %possiblity, I need concrete examples of where that is useful. I would be more
 %inclined to create a 'TellSuma.m' which parallels 'TellAfni.m' to communicate
 %with SUMA from matlab. Let me know what you think
 %
-  
+
    global comm ;
-  
-   comm = afni_talk_defs(); %reset communication structure. 
-   comm.dbg = 1;
+
+   comm = afni_talk_defs(comm); %reset communication structure.
+   comm.dbg = 2;
    pnet ('closeall');
-   
+
    pause on;
-   
+
    err = 0;
    dataread=[];
    ud = struct;    % user data structure
    while (~err ),
       %do something
       figure(1); plot (sin(randn(1,100))); drawnow;
-      
-      %%%%%%%%%%%%%%% THIS BLOCK SHOULD BE A WORKPROCESS 
+
+      %%%%%%%%%%%%%%% THIS BLOCK SHOULD BE A WORKPROCESS
       %%%%%%%%%%%%%%% that calls a callback with the data
       %%%%%%%%%%%%%%% that was read. But I don't know how
-      %%%%%%%%%%%%%%% to do such a thing yet... 
-                      
+      %%%%%%%%%%%%%%% to do such a thing yet...
+
       %check for meat
       [err,dataread] = afni_ni_checkfordata();
       if (length(dataread)),
@@ -95,12 +95,12 @@ function [nel, comm] = ToyTalk()
          fprintf(1,[ 'Total data: %d characters\n',...
                      '%d elements\n'],...
                       length(dataread), length(ud.tt));
-         for (iel=1:1:length(ud.tt)), 
-            fprintf(1,'  %d: %s in mm(%d)\n', iel, char(ud.tt{iel}), iel); 
+         for (iel=1:1:length(ud.tt)),
+            fprintf(1,'  %d: %s in mm(%d)\n', iel, char(ud.tt{iel}), iel);
          end
          clear (dataread);
-         
-         %change into nel elements 
+
+         %change into nel elements
                %NOTE: You cannot assemble output of afni_nel_parse
                %into a vector of structures because each nel
                %is a struct with different fields
@@ -110,36 +110,36 @@ function [nel, comm] = ToyTalk()
             data(iel).nel = afni_nel_parse(ud.mm{iel});
          end
          clear ud
-         
+
          %do the callback
          ProcessSUMAdata(data);
-         
+
          %cleanup
-         clear data      
+         clear data
       else
          %no data read
       end
             %%%%%%%%%%%%%%% END of WORKPROCESS block
    end
    return
-   
+
 function ProcessSUMAdata(ds)
    global SO;  %surface object
-   
+
    dopt.verbose = 0;
    dopt.OpenGL = 1;
    dopt.GraphType = 'Surf';
-   
+
    if (isempty(SO)),
       SO.NodeNormList = [];
       SO.FaceSetList = [];
       SO.NodeList = [];
    end
-   
+
    N_nel = length(ds);
    for (iel = 1:1:N_nel),     %Process each element. Cleanup is handled in
                               %parent function
-      fprintf(1,'Got nel %s\n',ds(iel).nel.name); 
+      fprintf(1,'Got nel %s\n',ds(iel).nel.name);
       %do something with nels
       if (strcmp(ds(iel).nel.name,'SUMA_crosshair_xyz')),
          %Get the node of interest

@@ -162,9 +162,9 @@ while (true)
       begsample = 1;
       ft_notice('padding the beginning of the audio with %d silent samples', begpad);
     end
-    if endsample>videohdr.nTrials*videohdr.nSamples
-      endpad = endsample-videohdr.nTrials*videohdr.nSamples;
-      endsample = videohdr.nTrials*videohdr.nSamples;
+    if endsample>audiohdr.nTrials*audiohdr.nSamples
+      endpad = endsample-videohdr.nTrials*audiohdr.nSamples;
+      endsample = audiohdr.nTrials*audiohdr.nSamples;
       ft_notice('padding the end of the audio with %d silent samples', endpad);
     end
     

@@ -3,25 +3,25 @@ function [err, Qd, dfx, dmat2] = QRDecom(dmat, cmat)
 %   [err,] = QRDecom.m ()
 %
 %Purpose:
-%   
-%   
-%   
+%
+%
+%
 %Input Parameters:
-%   
-%   
-%   
+%
+%
+%
 %Output Parameters:
 %   err : 0 No Problem
 %       : 1  Problems
-%   
-%   
-%      
+%
+%
+%
 %Key Terms:
-%   
+%
 %More Info :
-%   
-%   
-%   
+%
+%
+%
 %
 %     Author : Gang Chen
 %     Date : Tue Mar 23 16:09:23 EST 2004

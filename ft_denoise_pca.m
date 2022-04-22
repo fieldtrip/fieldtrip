@@ -32,14 +32,14 @@ function data = ft_denoise_pca(cfg, varargin)
 % if 0 < cfg.truncate < 1, the singular value spectrum will be thresholded at the
 % fraction cfg.truncate of the largest singular value.
 %
-% See also FT_PREPROCESSING, FT_DENOISE_SYNTHETIC
+% See also FT_PREPROCESSING, FT_DENOISE_SYNTHETIC, FT_DENOISE_SSP
 
 % Undocumented cfg-option: cfg.pca the output structure of an earlier call
 % to the function. Can be used regress out the reference channels from
 % another data set.
 
 % Copyright (c) 2008-2009, Jan-Mathijs Schoffelen, CCNi Glasgow
-% Copyright (c) 2010-2011, Jan-Mathijs Schoffelen, DCCN Nijmegen
+% Copyright (c) 2010-2022, Jan-Mathijs Schoffelen, DCCN Nijmegen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -99,7 +99,7 @@ if istrue(cfg.pertrial)
   % iterate over trials
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-  tmpcfg  = keepfields(cfg, {'trials', 'showcallinfo'});
+  tmpcfg  = keepfields(cfg, {'trials', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
   % select trials of interest
   for i=1:numel(varargin)
     varargin{i}        = ft_selectdata(tmpcfg, varargin{i});
@@ -128,7 +128,7 @@ else
   computeweights = ~isfield(cfg, 'pca');
 
   % select trials of interest
-  tmpcfg  = keepfields(cfg, {'trials', 'showcallinfo'});
+  tmpcfg  = keepfields(cfg, {'trials', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
   if length(varargin)==1
     % channel data and reference channel data are in 1 data structure
     megchan = ft_channelselection(cfg.channel,    varargin{1}.label);

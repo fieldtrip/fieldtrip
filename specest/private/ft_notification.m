@@ -173,6 +173,7 @@ switch varargin{1}
       varargout{1} = getreturnstate(s, msgId);
       % switch this specific item on
       s = setstate(s, msgId, 'on', ident);
+      s = settimestamp(s, msgId, nan, ident);
       if strcmp(msgId, 'backtrace')
         defaultbacktrace = false;
       end
@@ -193,6 +194,7 @@ switch varargin{1}
       varargout{1} = getreturnstate(s, msgId);
       % switch this specific item on
       s = setstate(s, msgId, 'off', ident);
+      s = settimestamp(s, msgId, nan, ident);
       if strcmp(msgId, 'backtrace')
         defaultbacktrace = false;
       end
@@ -311,10 +313,10 @@ switch varargin{1}
     
     if strcmp(msgState, 'once')
       timeout = getstate(s, 'timeout', ident);
-      since   = elapsed(gettimestamp(s, msgId));
+      since   = elapsed(gettimestamp(s, msgId, ident));
       if (since>timeout)
         % the timeout has passed, update the timestamp and print the message
-        s = settimestamp(s, msgId, tic);
+        s = settimestamp(s, msgId, tic, ident);
         msgState = 'on';
       else
         % the timeout has not yet passed, do not print the message
@@ -435,6 +437,7 @@ else
 end
 
 function state = getstate(s, msgId, ident)
+if nargin<3, ident = {s.identifier}; end
 sel = find(strcmp(ident, msgId));
 if numel(sel)==1
   state = s(sel).state;
@@ -445,8 +448,9 @@ else
   state = getstate(s, 'all', ident);
 end
 
-function timestamp = gettimestamp(s, msgId)
-sel = find(strcmp({s.identifier}, msgId));
+function timestamp = gettimestamp(s, msgId, ident)
+if nargin<3, ident = {s.identifier}; end
+sel = find(strcmp(ident, msgId));
 if numel(sel)==1
   timestamp = s(sel).timestamp;
 else
@@ -468,9 +472,10 @@ else
   end
 end
 
-function s = settimestamp(s, msgId, timestamp)
+function s = settimestamp(s, msgId, timestamp, ident)
 if isempty(msgId), return; end % this happens from the command line
-sel = find(strcmp({s.identifier}, msgId));
+if nargin<4, ident = {s.identifier}; end
+sel = find(strcmp(ident, msgId));
 if numel(sel)==1
   s(sel).timestamp = timestamp;
 else

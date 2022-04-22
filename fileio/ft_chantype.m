@@ -29,7 +29,7 @@ function chantype = ft_chantype(input, desired)
 %
 % See also FT_READ_HEADER, FT_SENSTYPE, FT_CHANUNIT
 
-% Copyright (C) 2008-2015, Robert Oostenveld
+% Copyright (C) 2008-2021, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -62,6 +62,13 @@ if nargin<2
   desired = [];
 end
 
+current_argin = {input, desired};
+if isequal(current_argin, previous_argin)
+  % return the previous output from cache
+  chantype = previous_argout{1};
+  return
+end
+
 % determine the type of input, this is handled similarly as in FT_CHANUNIT
 isheader = isa(input, 'struct')  && isfield(input, 'label') && isfield(input, 'Fs');
 isdata   = isa(input, 'struct')  && ~isheader && (isfield(input, 'hdr') || isfield(input, 'grad') || isfield(input, 'elec') || isfield(input, 'opto'));
@@ -76,13 +83,6 @@ islabel  = isa(input, 'cell')    && ~isempty(input) && isa(input{1}, 'char');
 if isheader
   % this speeds up the caching in real-time applications
   input.nSamples = 0;
-end
-
-current_argin = {input, desired};
-if isequal(current_argin, previous_argin)
-  % don't do the chantype detection again, but return the previous output from cache
-  chantype = previous_argout{1};
-  return
 end
 
 if isdata

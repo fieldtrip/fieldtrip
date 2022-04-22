@@ -132,7 +132,7 @@ if isempty(cfg.thresholdside)
 end
 
 % select trials and channels of interest
-tmpcfg = keepfields(cfg, {'trials', 'channel', 'tolerance', 'latency', 'showcallinfo'});
+tmpcfg = keepfields(cfg, {'trials', 'channel', 'tolerance', 'latency', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
 data   = ft_selectdata(tmpcfg, data);
 % restore the provenance information
 [cfg, data] = rollback_provenance(cfg, data);
@@ -224,7 +224,8 @@ end % for each trial
 
 ft_info('identified %d out of %d trials as bad\n', sum(badsegment), length(badsegment));
 
-% the output is consistent with that of other artifact detection functions
+% keep track of bad segments
+% this format is consistent with that of other artifact detection functions
 artifact = data.sampleinfo(badsegment,:);
 cfg.artfctdef.badsegment.artifact = artifact;
 

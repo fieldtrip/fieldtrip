@@ -19,9 +19,9 @@ function [data] = ft_denoise_synthetic(cfg, data)
 % files should contain only a single variable, corresponding with the
 % input/output structure.
 %
-% See also FT_PREPROCESSING, FT_DENOISE_PCA
+% See also FT_PREPROCESSING, FT_DENOISE_PCA, FT_DENOISE_SSP
 
-% Copyright (C) 2004-2008, Robert Oostenveld
+% Copyright (C) 2004-2022, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -86,7 +86,7 @@ if ~hasref
 end
 
 % select trials of interest
-tmpcfg = keepfields(cfg, {'trials', 'showcallinfo'});
+tmpcfg = keepfields(cfg, {'trials', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
 data   = ft_selectdata(tmpcfg, data);
 % restore the provenance information
 [cfg, data] = rollback_provenance(cfg, data);

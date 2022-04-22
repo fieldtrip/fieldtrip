@@ -8,7 +8,7 @@ classdef DataClass < matlab.mixin.Copyable
     end
     
     % Non-SNIRF class properties
-    properties
+    properties (Access = private)
         filename
         fileformat
     end
@@ -583,6 +583,10 @@ classdef DataClass < matlab.mixin.Copyable
             if isempty(obj)
                 obj = DataClass();
             end
+            if isempty(obj2)
+                obj = DataClass();
+                return;
+            end
             if ~isa(obj2, 'DataClass')
                 return;
             end
@@ -616,7 +620,7 @@ classdef DataClass < matlab.mixin.Copyable
                 return;
             end
             for ii=1:length(obj.measurementList)
-                if ~(obj.measurementList(ii)==obj2.measurementList(ii))
+                if ~(obj.measurementList(ii) == obj2.measurementList(ii))
                     return;
                 end
             end

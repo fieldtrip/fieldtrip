@@ -23,7 +23,7 @@ function ft_plot_axes(object, varargin)
 %
 % See also FT_PLOT_SENS, FT_PLOT_MESH, FT_PLOT_ORTHO, FT_PLOT_HEADSHAPE, FT_PLOT_DIPOLE, FT_PLOT_HEADMODEL
 
-% Copyright (C) 2015, Jan-Mathijs Schoffelen
+% Copyright (C) 2015-2021, Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -98,8 +98,8 @@ rbol  =   5 * ft_scalingfactor('mm', unit);
 axmax = axisscale*axmax;
 rbol  = axisscale*rbol;
 
-fprintf('The axes are %g %s long in each direction\n', axmax, unit);
-fprintf('The diameter of the sphere at the origin is %g %s\n', 2*rbol, unit);
+ft_info('The axes are %g %s long in each direction\n', axmax, unit);
+ft_info('The diameter of the sphere at the origin is %g %s\n', 2*rbol, unit);
 
 % get the xyz-axes
 xdat  = [-axmax 0 0; axmax 0 0];

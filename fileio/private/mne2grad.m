@@ -439,6 +439,20 @@ if nEEG>0
   elec.elecpos = 100*elec.elecpos;
 end
 
+% construct SSP projectors, these can be applied later to the data and grad
+% structure using FT_DENOISE_SSP
+grad.balance = [];
+grad.balance.current = 'none';
+
+for i = 1:length(hdr.projs)
+  hdr.projs(i).active = 'true';
+  montage = [];
+  montage.tra = mne_make_projector(hdr.projs(i), hdr.ch_names, []);
+  montage.labelorg = hdr.ch_names;
+  montage.labelnew = hdr.ch_names;
+  grad.balance.(fixname(hdr.projs(i).desc)) = montage;
+end
+
 % remove grad if completely empty
 if size(grad.label,1) == 0
   grad = [];

@@ -89,7 +89,7 @@ switch cfg.appenddim
     end
     
     % determine the union of all input data
-    tmpcfg = keepfields(cfg, {'tolerance', 'channel', 'showcallinfo'});
+    tmpcfg = keepfields(cfg, {'tolerance', 'channel', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
     tmpcfg.select = 'union';
     [varargin{:}] = ft_selectdata(tmpcfg, varargin{:});
     for i=1:numel(varargin)
@@ -176,7 +176,7 @@ switch cfg.appenddim
     end
     
     % determine the union of all input data
-    tmpcfg = keepfields(cfg, {'tolerance', 'channel', 'showcallinfo'});
+    tmpcfg = keepfields(cfg, {'tolerance', 'channel', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
     tmpcfg.select = 'union';
     [varargin{:}] = ft_selectdata(tmpcfg, varargin{:});
     for i=1:numel(varargin)
@@ -259,7 +259,7 @@ switch cfg.appenddim
   case 'rpt'
     
     % determine the intersection of all input data
-    tmpcfg = keepfields(cfg, {'tolerance', 'channel', 'showcallinfo'});
+    tmpcfg = keepfields(cfg, {'tolerance', 'channel', 'channelcmb', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
     tmpcfg.select = 'intersect';
     [varargin{:}] = ft_selectdata(tmpcfg, varargin{:});
     for i=1:numel(varargin)
@@ -267,10 +267,10 @@ switch cfg.appenddim
     end
     
     % start with the intersection of all input data
-    data = keepfields(varargin{1}, {'label', 'time', 'freq', 'dimord', 'topo', 'unmixing', 'topolabel'});
+    data = keepfields(varargin{1}, {'label', 'time', 'freq', 'dimord', 'topo', 'unmixing', 'topolabel', 'labelcmb'});
     if numel(cfg.parameter)>0
       % this check should not be done if there is no data to append, this happens when called from ft_appenddata
-      assert(numel(data.label)>0);
+      assert((isfield(data, 'label') && numel(data.label)>0) || (isfield(data, 'labelcmb') && size(data.labelcmb,1)>0));
     end
     if hastime, assert(numel(data.time)>0); end
     if hasfreq, assert(numel(data.freq)>0); end
@@ -284,7 +284,7 @@ switch cfg.appenddim
     for i=1:numel(cfg.parameter)
       dimsiz = getdimsiz(varargin{1}, cfg.parameter{i});
       switch getdimord(varargin{1}, cfg.parameter{i})
-        case {'chan' 'chan_time' 'chan_freq' 'chan_chan' 'chan_freq_time' 'chan_chan_freq' 'chan_chan_time' 'chan_chan_freq_time'}
+        case {'chan' 'chan_time' 'chan_freq' 'chan_chan' 'chan_freq_time' 'chan_chan_freq' 'chan_chan_time' 'chan_chan_freq_time' 'chancmb' 'chancmb_time' 'chancmb_freq' 'chancmb_freq_time'}
           dat = cell(size(varargin));
           for j=1:numel(varargin)
             % add a singleton dimension to the beginning

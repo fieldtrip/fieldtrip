@@ -6,7 +6,7 @@ function failed_tutorial_headmodel_eeg
 
 clear all;
 %% load mri
-mri=ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/Subject01.mri'));
+mri=ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.mri'));
 
 %% segmentation
 load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/segmentedmri.mat'));
@@ -19,7 +19,7 @@ load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/segmen
 
 % check if segmentation is the same as the segmentation on the ftp site
 
-segmentedmri2 = load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/headmodel_eeg/segmentedmri'));
+segmentedmri2 = load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/headmodel_eeg/segmentedmri.mat'));
 segmentedmri2 = rmfield(segmentedmri2.segmentedmri,'cfg');
 %segmentedmri1 = rmfield(segmentedmri,'cfg');
 %assert(isequal(segmentedmri2,segmentedmri1),'Segmentation does not match the segmentation on ftp/tutorial/headmodel_eeg');
@@ -53,14 +53,14 @@ vol_openmeeg = ft_prepare_headmodel(cfg,bnd);
 
 % check if segmentation is the same as the segmentation on the ftp site
 % dipoli
-vol2 = load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/headmodel_eeg/vol'));
+vol2 = load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/headmodel_eeg/vol.mat'));
 vol2 = rmfield(vol2.vol,'cfg');
 vol1 = rmfield(vol,'cfg');
 assert(isequal(vol2, vol1),'Segmentation of dipoli vol does not match the segmentation on ftp/tutorial/headmodel_eeg');
 clear vol1 vol2;
 
 % openmeeg
-vol2 = load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/headmodel_eeg/vol_openmeeg'));
+vol2 = load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/headmodel_eeg/vol_openmeeg.mat'));
 vol2 = rmfield(vol2.vol_openmeeg,'cfg');
 vol1 = rmfield(vol_openmeeg,'cfg');
 assert(isequal(vol2, vol1),'Segmentation of openmeeg vol does not match the segmentation on ftp/tutorial/headmodel_eeg');
@@ -74,7 +74,7 @@ figure;
 ft_plot_mesh(vol.bnd(2),'facecolor','none');
 figure;
 ft_plot_mesh(vol.bnd(3),'facecolor','none');
-% 
+%
 figure;
 ft_plot_mesh(vol.bnd(1), 'facecolor',[0.2 0.2 0.2], 'facealpha', 0.3, 'edgecolor', [1 1 1], 'edgealpha', 0.05);
 hold on;
@@ -129,7 +129,7 @@ close all;
 %   cfg.method='interactive';
 %   cfg.elec=elec_align;
 %   cfg.headshape=vol.bnd(1);
-% %  
+% %
 %   elec_align=ft_electroderealign(cfg);
 %  close all;
 

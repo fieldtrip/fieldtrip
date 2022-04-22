@@ -39,6 +39,8 @@ function [varargout] = ft_selectdata(cfg, varargin)
 % inputs is retained (replacing missing data with nans). In either case, the order (e.g. of
 % the channels) is made consistent across inputs.  The behavior can be specified with
 %   cfg.select      = string, can be 'intersect' or 'union' (default = 'intersect')
+% Note that the option cfg.select = 'union' does not work for 'raw' data
+% structures.
 %
 % See also FT_DATATYPE, FT_CHANNELSELECTION, FT_CHANNELCOMBINATION
 
@@ -110,6 +112,9 @@ cfg = ft_checkconfig(cfg, 'renamedval', {'parameter', 'trial.nai', 'nai'});
 
 cfg.tolerance = ft_getopt(cfg, 'tolerance', 1e-5);        % default tolerance for checking equality of time/freq axes
 cfg.select    = ft_getopt(cfg, 'select',   'intersect');  % default is to take intersection, alternative 'union'
+if isequal(dtype, 'raw') && isequal(cfg.select, 'union')
+  ft_error('using cfg.select=''union'' in combination with ''raw'' datatype is not supported');
+end
 
 if strcmp(dtype, 'volume') || strcmp(dtype, 'segmentation')
   % it must be a source representation, not a volume representation
@@ -757,26 +762,39 @@ else
   
   switch selmode
     case 'intersect'
+      haslabel = false(ndata,1);
       for k=1:ndata
-        if ~isfield(varargin{k}, 'label')
-          cfg.channelcmb = ft_channelcombination(cfg.channelcmb, unique(varargin{k}.labelcmb(:)));
-        else
+        haslabel = isfield(varargin{k}, 'label');
+      end
+      if all(haslabel)
+        for k=1:ndata
           cfg.channelcmb = ft_channelcombination(cfg.channelcmb, varargin{k}.label);
         end
-      end
-      
-      ncfgcmb = size(cfg.channelcmb,1);
-      cfgcmb  = cell(ncfgcmb, 1);
-      for i=1:ncfgcmb
-        cfgcmb{i} = sprintf('%s&%s', cfg.channelcmb{i,1}, cfg.channelcmb{i,2});
+        cfgcmb = cellfun(@sprintf,repmat({'%s_%s'},size(cfg.channelcmb,1),1),cfg.channelcmb(:,1),cfg.channelcmb(:,2),'UniformOutput',false);
+      elseif all(~haslabel)
+        % the data already has labelcmb, and thus needs a slightly different way to
+        % preset the cfg.channelcmb
+        chancmb = cellfun(@sprintf,repmat({'%s_%s'},size(varargin{1}.labelcmb,1),1),varargin{1}.labelcmb(:,1),varargin{1}.labelcmb(:,2),'UniformOutput',false);
+        for k=2:ndata
+          tmp = cellfun(@sprintf,repmat({'%s_%s'},size(varargin{k}.labelcmb,1),1),varargin{k}.labelcmb(:,1),varargin{k}.labelcmb(:,2),'UniformOutput',false);
+          chancmb = intersect(chancmb, tmp);
+        end
+        cfgcmb = unique(chancmb);
+        
+        if isequal(cfg.channelcmb, {'all' 'all'})
+          % nothing needed here
+        else
+          cfg.channelcmb = cellfun(@sprintf,repmat({'%s_%s'},size(cfg.channelcmb,1),1),cfg.channelcmb(:,1),cfg.channelcmb(:,2),'UniformOutput',false);
+        
+          cfgcmb = intersect(cfg.channelcmb, cfgcmb);
+        end
+        
+      else
+        ft_error('a combination of data with and without label field is not possible');
       end
       
       for k=1:ndata
-        ndatcmb = size(varargin{k}.labelcmb,1);
-        datcmb = cell(ndatcmb, 1);
-        for i=1:ndatcmb
-          datcmb{i} = sprintf('%s&%s', varargin{k}.labelcmb{i,1}, varargin{k}.labelcmb{i,2});
-        end
+        datcmb = cellfun(@sprintf,repmat({'%s_%s'},size(varargin{k}.labelcmb,1),1),varargin{k}.labelcmb(:,1),varargin{k}.labelcmb(:,2),'UniformOutput',false);
         
         % return the order according to the (joint) configuration, not according to the (individual) data
         % FIXME this should adhere to the general code guidelines, where

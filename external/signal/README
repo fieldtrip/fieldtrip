@@ -1,5 +1,11 @@
-This is a selection of Octave functions that were downloaded from
+This directory contains a selection of Octave functions that were downloaded from
 http://octave.sourceforge.net/signal/index.html and modified to
 make them MATLAB compatible. They serve as drop-in replacement for
 some functions in the Mathworks signal processing toolbox.
 
+Note that the hilbert and hanning functions are not from the Octave toolbox, 
+these have been taken from SPM (hilbert), or were handcrafted (hanning)
+
+Last update was performed Jan 11, 2022 by Jan-Mathijs, using version
+[4fcb75] (i.e. the default branch) from 
+https://sourceforge.net/p/octave/signal/ci/default/tree/

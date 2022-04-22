@@ -14,7 +14,7 @@ default             = [];
 default.xlim        = [min(timelock.time) max(timelock.time)];
 default.marker      = 'on';
 default.interactive = 'no';
-cfg = mergeconfig(cfg, default);
+cfg = mergestruct(cfg, default);
 
 figure;
 ft_topoplotER(cfg, timelock);

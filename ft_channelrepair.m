@@ -124,7 +124,7 @@ dtype = ft_datatype(data);
 data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes');
 
 % select trials of interest
-tmpcfg = keepfields(cfg, {'trials', 'tolerance', 'showcallinfo'});
+tmpcfg = keepfields(cfg, {'trials', 'tolerance', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
 data = ft_selectdata(tmpcfg, data);
 % restore the provenance information
 [cfg, data] = rollback_provenance(cfg, data);
@@ -395,8 +395,13 @@ switch cfg.method
     
     % interpolate
     fprintf('computing weight matrix...');
-    repair = sphericalSplineInterpolate(chanpos(goodindx(sensidx), :)', chanpos', cfg.lambda, cfg.order, cfg.method);
+    [pot,lap] = sphsplint(chanpos(goodindx(sensidx), :), chanpos, cfg.order, 500, cfg.lambda);
     fprintf(' done!\n');
+    
+    % Chooses the right output.
+    if strcmp(cfg.method, 'spline'), repair = pot;
+    else, repair = lap;
+    end
     
     if ~allchans
       % only use the rows corresponding to the channels that actually need interpolation

@@ -61,11 +61,11 @@ end
 if istrue(ft_getopt(cfg, 'trackdatainfo', 'yes'))
   % compute the MD5 hash of each of the input arguments
   % temporarily remove the cfg field for getting the hash (creating a duplicate of the data, but still has the same mem ref, so no extra mem needed)
-  if isequal(iW1aenge_preamble, {'varargin'})
+  if isequal(preamble_argin, {'varargin'})
     tmpargin = varargin;
   else
-    isvar = cellfun(@(x) exist(x, 'var')==1, iW1aenge_preamble);
-    tmpargin = cellfun(@eval, iW1aenge_preamble(isvar), 'UniformOutput', false);
+    isvar = cellfun(@(x) exist(x, 'var')==1, preamble_argin);
+    tmpargin = cellfun(@eval, preamble_argin(isvar), 'UniformOutput', false);
     tmpargin( isvar) = tmpargin;
     tmpargin(~isvar) = {[]};
     clear isvar

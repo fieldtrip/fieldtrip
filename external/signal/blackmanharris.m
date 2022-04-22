@@ -19,18 +19,34 @@
 % @seealso{rectwin,  bartlett}
 % @end deftypefn
 
-function [w] = blackmanharris (L)
+function [w] = blackmanharris(L, opt)
   if (nargin < 1)
     help(mfilename);
   elseif(~ isscalar(L))
     error('L must be a number');
   end % if
+  
+  N = L - 1;
+  if (nargin == 2)
+    switch (opt)
+      case 'periodic'
+        N = L;
+      case 'symmetric'
+        N = L - 1;
+      otherwise
+        error('blackmanharris: window type must be either ''periodic'' or ''symmetric''');
+    end %switch
+  end %if
 
-  N = L-1;
   a0 = 0.35875;
   a1 = 0.48829;
   a2 = 0.14128;
   a3 = 0.01168;
-  n = 0:N;
-  w = a0 - a1.*cos(2.*pi.*n./N) + a2.*cos(4.*pi.*n./N) - a3.*cos(6.*pi.*n./N);
+  n = (0:(L-1))';
+  
+  if N==0
+    w = 1;
+  else
+    w = a0 - a1.*cos(2.*pi.*n./N) + a2.*cos(4.*pi.*n./N) - a3.*cos(6.*pi.*n./N);
+  end
 end

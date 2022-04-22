@@ -40,9 +40,9 @@ if (isfield(cfg, 'outputfile') && ~isempty(cfg.outputfile)) || exist('Fief7bee_r
     % write the output variable(s) to a MATLAB file
     iW1aenge_now = datestr(now, 30);
     cfg.outputfile = {};
-    for i=1:numel(iW1aenge_postamble)
+    for i=1:numel(postamble_argin)
       cfg.outputfile{i} = fullfile(Fief7bee_reproducescript, sprintf('%s_%s_output_%s.mat', ...
-        iW1aenge_now, FjmoT6aA_highest_ft, iW1aenge_postamble{i}));
+        iW1aenge_now, FjmoT6aA_highest_ft, postamble_argin{i}));
     end
     
     % save the state of the random number generator
@@ -59,7 +59,7 @@ if (isfield(cfg, 'outputfile') && ~isempty(cfg.outputfile)) || exist('Fief7bee_r
     
     % write a snippet of MATLAB code with the user-specified configuration and function call
     reproducescript(Fief7bee_reproducescript, fullfile(Fief7bee_reproducescript, 'script.m'),...
-      FjmoT6aA_highest_ft, cfg, isempty(iW1aenge_postamble));
+      FjmoT6aA_highest_ft, cfg, isempty(postamble_argin));
     
     % instruct savevar() to also write hashes of output files to the
     % hashfile
@@ -74,15 +74,15 @@ if (isfield(cfg, 'outputfile') && ~isempty(cfg.outputfile)) || exist('Fief7bee_r
     Fief7bee_hashfile = [];
   end
   
-  if isequal(iW1aenge_postamble, {'varargout'}) && ~iscell(cfg.outputfile)
+  if isequal(postamble_argin, {'varargout'}) && ~iscell(cfg.outputfile)
     % this should be a cell-array, oterwise it cannot be matched with varargout
     cfg.outputfile = {cfg.outputfile};
   end
   
   % save the output data structures to a MATLAB .mat file
   if iscell(cfg.outputfile)
-    % iW1aenge_postamble is a cell-array containing the variable names
-    if isequal(iW1aenge_postamble, {'varargout'})
+    % postamble_argin is a cell-array containing the variable names
+    if isequal(postamble_argin, {'varargout'})
       % the output is in varargout
       for tmpindx=1:length(cfg.outputfile)
         savevar(cfg.outputfile{tmpindx}, 'data', varargout{tmpindx}, Fief7bee_hashfile);
@@ -91,13 +91,13 @@ if (isfield(cfg, 'outputfile') && ~isempty(cfg.outputfile)) || exist('Fief7bee_r
     else
       % the output is in explicitly named variables
       for tmpindx=1:length(cfg.outputfile)
-        savevar(cfg.outputfile{tmpindx}, iW1aenge_postamble{tmpindx}, eval(iW1aenge_postamble{tmpindx}), Fief7bee_hashfile);
+        savevar(cfg.outputfile{tmpindx}, postamble_argin{tmpindx}, eval(postamble_argin{tmpindx}), Fief7bee_hashfile);
       end % for
       clear tmpindx
     end
   else
-    % iW1aenge_postamble{1} contains the name of the only variable
-    savevar(cfg.outputfile, iW1aenge_postamble{1}, eval(iW1aenge_postamble{1}), Fief7bee_hashfile);
+    % postamble_argin{1} contains the name of the only variable
+    savevar(cfg.outputfile, postamble_argin{1}, eval(postamble_argin{1}), Fief7bee_hashfile);
   end
   
   if isfield(cfg, 'outputlock') && ~isempty(cfg.outputlock)
@@ -106,6 +106,6 @@ if (isfield(cfg, 'outputfile') && ~isempty(cfg.outputfile)) || exist('Fief7bee_r
   
   if ~ft_nargout
     % do not return the output variable "ans"
-    clear(iW1aenge_postamble{1});
+    clear(postamble_argin{1});
   end
 end

@@ -108,7 +108,7 @@ end
 if isfield(varargin{1}, 'time') || isfield(varargin{1}, 'freq')
   % make a selection of the time and/or frequency dimension
   tmpcfg = keepfields(cfg, {'frequency', 'avgoverfreq', 'keepfreqdim', 'latency',...
-    'avgovertime', 'keeptimedim', 'showcallinfo'});
+    'avgovertime', 'keeptimedim', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
   [varargin{:}] = ft_selectdata(tmpcfg, varargin{:});
   % restore the provenance information
   [cfg, varargin{:}] = rollback_provenance(cfg, varargin{:});
@@ -146,7 +146,7 @@ if ~isempty(cfg.atlas)
 end
 
 % allow for a user specified colormap of the non-diff surfaces
-cfg.colormap = ft_getopt(cfg, 'colormap');
+cfg.colormap = ft_getopt(cfg, 'colormap', 'default');
 
 % other defaults are set in the lower-level object
 

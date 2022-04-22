@@ -4,11 +4,11 @@ function [cs] = NewCs(Name, win, p1, p2, p3, p4, p5)
 %
 %Purpose:
 %   Create a command structure for passing to TellAfni
-%   
-%   
+%
+%
 %Input Parameters:
 %   Name: Name of command, see AFNI's README.driver for all possibilities
-%         Example: SET_THRESHOLD 
+%         Example: SET_THRESHOLD
 %         To see a list of commands, try the function TellAfni_Commands
 %         To start AFNI, use the special Name: 'start_afni'
 %   Con : Index of controller where command is applied.
@@ -24,8 +24,8 @@ function [cs] = NewCs(Name, win, p1, p2, p3, p4, p5)
 %       .w  : AFNI controller
 %       .c  : AFNI command (Name)
 %       .v  : AFNI command value
-%   
-%      
+%
+%
 %More Info :
 %    TellAfni
 %    TellAfni_Commands
@@ -57,19 +57,19 @@ if (np == 2),                   p3 = ''; p4 = ''; p5 = ''; end
 if (np == 3),                            p4 = ''; p5 = ''; end
 if (np == 4),                                     p5 = ''; end
 
-if (~isempty(win)), 
+if (~isempty(win)),
    win = upper(win);
-   uwin = win; 
-else 
+   uwin = win;
+else
    win = 'A';
    uwin = '';
 end
 
 if (length(win) ~= 1 | win < 'A' | win > 'J'),
-   fprintf(2,'Bad window specifer %s\n', win); 
-   return;           
+   fprintf(2,'Bad window specifer %s\n', win);
+   return;
 end
-  
+
 Name = upper(Name);
 switch (Name),
    case 'START_AFNI',
@@ -82,11 +82,11 @@ switch (Name),
          end
       end
       cs.v = sprintf('%s %s', cs.v, p2);;
-      
+
    case 'ADD_OVERLAY_COLOR',
       if (np ~= 2 | isnumeric(p1) | isnumeric(p2)),
          fprintf(2,'Command <%s> requires two string parameters.\nHave %d in %s\n',...
-             Name, np); 
+             Name, np);
          return;
       end
       cs.c = Name;
@@ -97,7 +97,7 @@ switch (Name),
          fprintf(2,'Command <%s> needs 1 or 2 parameters.\nHave %d\n', Name, np);
          return;
       end
-      
+
       if (~isnumeric(p1)),
          if (upper(p1(1)) >= 'A' & upper(p1(1)) <= 'J'),
             win = p1(1);
@@ -114,7 +114,7 @@ switch (Name),
          if (p2 < 0 | p2 > 4),
             fprintf(2,'Command <%s> has a bad value for decimal (%f).\nDecimal must be between 0 and 4\n',...
                      cs.c, p2);
-         end 
+         end
          return;
       end
       cs.v = sprintf('%c.%d %d', win, p1*10000, p2);
@@ -123,24 +123,24 @@ switch (Name),
    case 'SET_THRESHNEW',
       val = p1;
       isp = '';
-      if (np == 1), dec = ''; 
-      elseif (np==2), 
+      if (np == 1), dec = '';
+      elseif (np==2),
          if (~isempty(find(p2 == '*'))), dec = '*';
          else dec = '';
          end
-         if (~isempty(find(p2 == 'p'))), 
+         if (~isempty(find(p2 == 'p'))),
             isp = 'p';
             if (val < 0.0 | val > 1.0),
                fprintf(2,'Command <%s> requires pvalues between 0 and 1.0\n',...
-                  Name); 
+                  Name);
             end
-         else 
+         else
             isp = '';
          end
       end
       cs.w = win;
       cs.c = Name;
-      cs.v = sprintf('%c %.14f %c%c', cs.w, val, dec, isp); 
+      cs.v = sprintf('%c %.14f %c%c', cs.w, val, dec, isp);
    case 'SET_PBAR_NUMBER',
       if (np ~= 1),
          fprintf(2,'Command <%s> requires 1 parameter\n', Name);
@@ -164,12 +164,12 @@ switch (Name),
       if (np ~= 1),
          fprintf(2,'Command <%s> requires 1 parameter\n', Name);
          return;
-      end      
+      end
       [win, p1, p1n] = NewCs_GetWin(p1, uwin);
       if (p1(1) ~= '+' & p1(1) ~= '-'),
          fprintf(2,'parameter must be either + or -\n', Name);
          return;
-      end 
+      end
       cs.w = win; cs.c = Name; cs.v = sprintf('%c.%s', win, p1);
    case 'SET_PBAR_ALL',
       if (np ~= 2),
@@ -188,14 +188,14 @@ switch (Name),
          return;
       end
       if (ncol < 99),
-         %find out how many colors are specified in p2   
+         %find out how many colors are specified in p2
          if (WordCount(p2) ~= ncol),
             fprintf(2,'Command <%s>: Mismatch between num (%d) and number of val=color strings (%d)\n', Name, ncol, WordCount(p2));
             return;
          end
          cs.w = win; cs.c = Name; cs.v = sprintf('%c.%c%d %s', win, ps, ncol, p2);
       else
-         %check on the topval 
+         %check on the topval
          np2 = WordCount(p2);
          if (np2 < 2 ),
             fprintf(2,'Command <%s> needs 2 parameters in second string (topval colorscale_name)\n', Name);
@@ -218,7 +218,7 @@ switch (Name),
       if (p1(1) ~= '+' & p1(1) ~= '-'),
          fprintf(2,'parameter must be either + or -\n', Name);
          return;
-      end 
+      end
       cs.w = win; cs.c = Name; cs.v = sprintf('%c.%s', win, p1);
    case 'DEFINE_COLORSCALE',
       if (np ~= 2),
@@ -235,7 +235,7 @@ switch (Name),
       if (p1(1) ~= '+' & p1(1) ~= '-'),
          fprintf(2,'parameter must be either + or -\n', Name);
          return;
-      end 
+      end
       cs.w = win; cs.c = Name; cs.v = sprintf('%c.%s', win, p1);
    case 'SET_FUNC_RANGE',
       if (np ~= 1),
@@ -257,7 +257,7 @@ switch (Name),
       if (p1(1) ~= '+' & p1(1) ~= '-'),
          fprintf(2,'parameter must be either + or -\n', Name);
          return;
-      end 
+      end
       cs.w = win; cs.c = Name; cs.v = sprintf('%c.%s', win, p1);
    case 'SET_FUNC_RESAM',
       if (np ~= 1),
@@ -321,7 +321,7 @@ switch (Name),
             fprintf(2,'Command <%s> requires 1 parameter between A and J\n', Name);
             return;
          end
-         win = p1(1);      
+         win = p1(1);
       end
       cs.w = win; cs.c = Name;  cs.v = sprintf('%c', win);
    case {'SET_SESSION', 'SWITCH_SESSION', 'SWITCH_DIRECTORY'},
@@ -343,7 +343,7 @@ switch (Name),
          return;
       end
       cs.w = win; cs.c = Name; cs.v = sprintf('%c %d %d %d', win, val(1), val(2), val(3));
-      
+
    case {'SET_ANATOMY', 'SWITCH_ANATOMY', 'SWITCH_UNDERLAY'},
       if (np < 1),
          fprintf(2,'Command <%s> requires at least 1 parameter\n', Name);
@@ -384,7 +384,7 @@ switch (Name),
                       p1, NewCs_OKwindowname());
          return;
       end
-      cs.w = win; cs.c = Name; cs.v = sprintf('%c.%s %s', win, p1, p2);   
+      cs.w = win; cs.c = Name; cs.v = sprintf('%c.%s %s', win, p1, p2);
    case 'CLOSE_WINDOW',
       if (np ~= 1),
          fprintf(2,'Command <%s> requires 1 parameter \n', Name);
@@ -397,7 +397,7 @@ switch (Name),
                       p1, NewCs_OKwindowname());
          return;
       end
-      cs.w = win; cs.c = Name; cs.v = sprintf('%c.%s', win, p1);  
+      cs.w = win; cs.c = Name; cs.v = sprintf('%c.%s', win, p1);
    case 'SAVE_JPEG',
       if (np ~= 2),
          fprintf(2,'Command <%s> requires 2 parameters\n', Name);
@@ -411,7 +411,7 @@ switch (Name),
          return;
       end
       cs.w = win; cs.c = Name; cs.v = sprintf('%c.%s %s', win, p1, p2);
-   case { 'SET_DICOM_XYZ', 'SET_SPM_XYZ', 'SET_IJK'}, 
+   case { 'SET_DICOM_XYZ', 'SET_SPM_XYZ', 'SET_IJK'},
       if (np < 1),
          fprintf(2,'Command <%s> requires at least 1 parameter\n', Name);
          return;
@@ -435,13 +435,13 @@ switch (Name),
                       p1, NewCs_OKxhaircode());
          return;
       end
-      cs.w = win; cs.c = Name; cs.v = sprintf('%c.%s', win, p1);  
+      cs.w = win; cs.c = Name; cs.v = sprintf('%c.%s', win, p1);
    case 'PURGE_MEMORY',
-      cs.w = win; cs.c = Name; cs.v = sprintf('%s', p1);  
+      cs.w = win; cs.c = Name; cs.v = sprintf('%s', p1);
    case 'QUIT',
       cs.w = win; cs.c = Name; cs.v = '';
    case 'SETENV',
-      cs.w = win; cs.c = Name; cs.v = sprintf('%s %s', p1, p2);  
+      cs.w = win; cs.c = Name; cs.v = sprintf('%s %s', p1, p2);
    case 'REDISPLAY',
       cs.w = win; cs.c = Name; cs.v = '';
    case 'SLEEP',
@@ -539,7 +539,7 @@ function [win,p1,p1n] = NewCs_GetWin(p1, uwin)
          end
       end
       p1n = str2double(p1);
-   else 
+   else
       p1n = p1;
    end
    if (isempty(win)) win = 'A'; end
@@ -547,10 +547,10 @@ return
 
 %check on windowname
 function [err] = NewCs_OKwindowname(p1)
-   
+
    lcool = {'axialimage', 'sagittalimage', 'coronalimage',...
             'axialgraph', 'sagittalgraph', 'coronalgraph'};
-   if (nargin == 1),   
+   if (nargin == 1),
       switch (p1),
          case lcool,
             err = 0;
@@ -571,10 +571,10 @@ return
 
 %Check on xhaircode
 function [err] = NewCs_OKxhaircode(p1)
-   
+
    lcool = {'OFF', 'SINGLE', 'MULTI',...
             'LR_AP', 'LR_IS', 'AP_IS', 'LR', 'AP', 'IS'};
-   if (nargin == 1),   
+   if (nargin == 1),
       switch (p1),
          case lcool,
             err = 0;
@@ -595,10 +595,10 @@ return
 
 %Check on resample
 function [err] = NewCs_OKresam(p1)
-   
+
    lcool = {'NN', 'Li', 'Cu',...
             'Bk'};
-   if (nargin == 1),   
+   if (nargin == 1),
       switch (p1),
          case lcool,
             err = 0;
@@ -619,9 +619,9 @@ return
 
 %Check on panel
 function [err] = NewCs_OKpanel(p1)
-   
+
    lcool = {'Define_Overlay', 'Define_Datamode', 'Define_Markers'};
-   if (nargin == 1),   
+   if (nargin == 1),
       switch (p1),
          case lcool,
             err = 0;
@@ -644,7 +644,7 @@ return
 function [k] = NewCs_CheckFnames(s)
    [si, s] = strtok(s,' ');
    k = 0;
-   if (exist(si,'dir') == 7 || filexist(si)), 
+   if (exist(si,'dir') == 7 || filexist(si)),
       k = k + 1;
    else
       k = -1;

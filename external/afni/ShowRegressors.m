@@ -3,25 +3,25 @@ function [err] = ShowRegressors (Task)
 %   [err] = ShowRegressors ()
 %
 %Purpose:
-%   
+%
 %   Gang
-%   
+%
 %Input Parameters:
-%   
-%   
-%   
+%
+%
+%
 %Output Parameters:
 %   err : 0 No Problem
 %       : 1  Problems
-%   
-%   
-%      
+%
+%
+%
 %Key Terms:
-%   
+%
 %More Info :
-%   
-%   
-%   
+%
+%
+%
 %
 %     Author : Ziad Saad
 %     Date : Fri Jul 18 15:24:43 EDT 2003
@@ -50,7 +50,7 @@ m(:,3) = m(is,3);
 
 if (N_tasks),
    for (i=1:1:N_tasks),
-      subplot (N_tasks,1,i); 
+      subplot (N_tasks,1,i);
       for (j=1:1:size(Task(i).StimReg,1)),
 %         plot (Task(i).StimReg', ln_style(j)); hold on
          plot (Task(i).StimReg(j,:)', 'color', m(j,:)); hold on
@@ -62,7 +62,7 @@ end
 figure(2);clf
 if (N_tasks),
    for (i=1:1:N_tasks),
-%      subplot (N_tasks,1,i); 
+%      subplot (N_tasks,1,i);
       for (j=1:1:size(Task(i).StimReg,1)),
 		   plot (Task(i).StimReg(j,:)', 'color', m(i*j,:)); hold on
 %         plot (Task(i).StimReg', ln_style(i)); hold on

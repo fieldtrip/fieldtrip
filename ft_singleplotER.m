@@ -305,7 +305,7 @@ end
 
 
 % channels should NOT be selected and averaged here, since a topoplot might follow in interactive mode
-tmpcfg = keepfields(cfg, {'showcallinfo', 'trials', 'select'});
+tmpcfg = keepfields(cfg, {'trials', 'select', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
 if hasrpt
   tmpcfg.avgoverrpt = 'yes';
 else
@@ -463,7 +463,7 @@ end
 linecolor = linecolor_common(cfg, varargin{:});
 
 % open a new figure, or add it to the existing one
-open_figure(keepfields(cfg, {'figure', 'clearfigure', 'position', 'visible', 'renderer', 'figurename', 'title'}));
+open_figure(keepfields(cfg, {'figure', 'position', 'visible', 'renderer', 'figurename', 'title'}));
 
 yval = datamatrix;
 mask = maskmatrix;

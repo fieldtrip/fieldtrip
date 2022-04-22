@@ -562,10 +562,10 @@ elseif filetype_check_extension(filename, '.slor')
   content = 'source reconstruction';
   
   % known AFNI file types
-elseif filetype_check_extension(filename, '.brik') || filetype_check_extension(filename, '.BRIK')
+elseif filetype_check_extension(lower(filename), '.brik')
   type = 'afni_brik';
   content = 'MRI image data';
-elseif filetype_check_extension(filename, '.head') || filetype_check_extension(filename, '.HEAD')
+elseif filetype_check_extension(lower(filename), '.head')
   type = 'afni_head';
   content = 'MRI header data';
   
@@ -1110,9 +1110,11 @@ elseif filetype_check_extension(filename, '.label') && filetype_check_header(fil
   content = 'list of vertices belonging to a region';
   
 elseif filetype_check_extension(filename, '.txt') && numel(strfind(filename,'_nrs_')) == 1
-  % This may be improved by looking into the file, rather than assuming the
-  % filename has "_nrs_" somewhere. Also, distinction by the different file
-  % types could be made
+  % This is for the ASCII-formatted NIRS data acquired with the UCL-BIRKBECK machine and postprocessed by the Paris group
+  % 
+  % This may be improved by looking into the file, rather than assuming the filename
+  % has "_nrs_" somewhere. Also, distinction by the different file types could be
+  % made
   type = 'bucn_nirs';
   manufacturer = 'BUCN';
   content = 'ascii formatted NIRS data';
@@ -1139,6 +1141,10 @@ elseif filetype_check_extension(filename, '.oxy3')
   content = '(f)NIRS data';
 elseif filetype_check_extension(filename, '.oxy4')
   type = 'artinis_oxy4';
+  manufacturer = 'Artinis Medical Systems';
+  content = '(f)NIRS data';
+elseif filetype_check_extension(filename, '.oxy5')
+  type = 'artinis_oxy5';
   manufacturer = 'Artinis Medical Systems';
   content = '(f)NIRS data';
 elseif filetype_check_extension(filename, '.oxyproj')
@@ -1424,6 +1430,10 @@ elseif filetype_check_extension(filename, '.csv') && filetype_check_header(filen
   type = 'liberty_csv';
   manufacturer = 'Polhemus Liberty';
   content = 'motion capture data';
+elseif filetype_check_extension(filename, '.csv') && filetype_check_header(filename, '"Date",')
+  type = 'sensys_csv';
+  manufacturer = 'Sensys';
+  content = 'fluxgate magnetometer data';
 elseif filetype_check_extension(filename, '.csv')
   type = 'csv';
   manufacturer = 'Generic';
@@ -1545,6 +1555,14 @@ elseif filetype_check_extension(filename, '.meghdf5')
   type = 'yorkinstruments_hdf5';
   manufacturer = 'York Instruments';
   content = 'MEG header and data';
+elseif filetype_check_extension(filename, '.jnii')
+  type = 'openjdata_jnii';
+  manufacturer = 'OpenJData'; % See http://openjdata.org
+  content = 'MRI';
+elseif filetype_check_extension(filename, '.bnii')
+  type = 'openjdata_bnii';
+  manufacturer = 'OpenJData'; % See http://openjdata.org
+  content = 'MRI';
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

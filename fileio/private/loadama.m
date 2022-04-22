@@ -9,6 +9,7 @@ function [ama] = loadama(filename)
 % See also LOADTRI, LOADMAT
 
 % Copyright (C) 2005, Robert Oostenveld
+% Copyright (C) 2021, Thom Oostendorp
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -29,10 +30,17 @@ function [ama] = loadama(filename)
 % $Id$
 
 fid = fopen(filename, 'rb', 'ieee-le');
-
 version = fread(fid, 1, 'int');
-if version~=10
-  ft_error(sprintf('%s is either not an inverted A matrix, or one of an old version', filename));
+
+% TFO 2021-08-10
+% version 11 and higher of dipoli uses double precision so all 'float's have been replaced by 'float64's
+switch version
+  case 10
+    floatFormat='float';
+  case 11
+    floatFormat='float64';
+  otherwise
+    ft_error('%s is either not an inverted A matrix, or neither version 10 nor 11', filename);
 end
 
 mode = fread(fid, 1, 'int');
@@ -47,13 +55,13 @@ geo  = [];
 for i=1:ngeo
   geo(i).name    = char(fread(fid, [1 80], 'uchar'));
   geo(i).npos    = fread(fid, 1, 'int');
-  geo(i).pos     = fread(fid, [3 geo(i).npos], 'float')';
+  geo(i).pos     = fread(fid, [3 geo(i).npos], floatFormat)';
   geo(i).ntri    = fread(fid, 1, 'int');
-  geo(i).tri     = fread(fid, [3 geo(i).ntri], 'int')' + 1;  % Matlab indexing starts at 1
-  geo(i).sigmam  = fread(fid, 1, 'float');
-  geo(i).sigmap  = fread(fid, 1, 'float');
+  geo(i).tri     = fread(fid, [3 geo(i).ntri], 'int')' + 1;  % MATLAB indexing starts at 1
+  geo(i).sigmam  = fread(fid, 1, floatFormat);
+  geo(i).sigmap  = fread(fid, 1, floatFormat);
   geo(i).geocon  = fread(fid, ngeo, 'int');
-  geo(i).deflat  = fread(fid, ngeo, 'float');
+  geo(i).deflat  = fread(fid, ngeo, floatFormat);
   totpnt = totpnt + geo(i).npos;
   tottri = tottri + geo(i).ntri;
 end
@@ -63,12 +71,22 @@ if mode~=1
   elec.name    = char(fread(fid, [1 80], 'uchar'));
   elec.npos    = fread(fid, 1, 'int');
   for i=1:(elec.npos+1)
-    elec.el(i).tri  = fread(fid, 1, 'int') + 1; % Matlab indexing starts at 1
-    elec.el(i).la   = fread(fid, 1, 'float');
-    elec.el(i).mu   = fread(fid, 1, 'float');
+    elec.el(i).tri  = fread(fid, 1, 'int') + 1; % MATLAB indexing starts at 1
+    % TFO 2021-08-10
+    % In the 64-bit version, each field is padded to a multiple of 8 bytes, so we need to read 4 dummy bytes
+    if version>10
+      dum = fread(fid, 4, 'char');
+    end    
+    elec.el(i).la   = fread(fid, 1, floatFormat);
+    elec.el(i).mu   = fread(fid, 1, floatFormat);
     elec.el(i).name = char(fread(fid, [1 10], 'char'));
     % the ELECTRODE c-structure is padded to word boundaries, i.e. to 4 bytes
     dum = fread(fid, 2, 'char');
+    % TFO 2021-08-10
+    % In the 64-bit version, each field is padded to a multiple of 8 bytes, so we need to read 4 more dummy bytes
+    if version>10
+      dum = fread(fid, 4, 'char');
+    end
   end
   elec.vertex  = fread(fid, 1, 'int');
   elec.surface = fread(fid, 1, 'int');
@@ -85,19 +103,22 @@ else
 end
 
 % read the inverted A-matrix
-bi = fread(fid, [totpnt nrow], 'float')';
+bi = fread(fid, [totpnt nrow], floatFormat)';
 
 % read the isolated source compartment information, if present
 iso_sur    = fread(fid, 1, 'int') + 1;  % Matlab indexing starts at 1
 inner_only = fread(fid, 1, 'int');
 if iso_sur~=0
   iso_totpnt = geo(iso_sur).npos;
-  iso_b      = fread(fid, [iso_totpnt iso_totpnt], 'float')';
+  iso_b      = fread(fid, [iso_totpnt iso_totpnt], floatFormat)';
 else
   iso_b = [];
 end
 
 fclose(fid);
+clear floatFormat;
+clear dum;
+clear i;
 
 % put all local variables into a structure, this is a bit unusual programming style
 % the output structure is messy, but contains all relevant information

@@ -7,7 +7,7 @@ function inspect_ft_electrodeplacement
 %%
 % do some prepatations
 
-filename = dccnpath('/home/common/matlab/fieldtrip/data/Subject01.mri');
+filename = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.mri');
 mri = ft_read_mri(filename);
 
 cfg             = [];

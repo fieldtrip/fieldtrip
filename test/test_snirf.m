@@ -40,6 +40,11 @@ cd(fileparts(cfg.dataset)); % we should be located in the directory with the opt
 data2 = ft_preprocessing(cfg);
 event2 = ft_read_event(cfg.dataset, 'chanindx', -1); % do not parse the ADC channels
 
+% replace the original data of the first sample by channel numbers. This helps to assert
+% whether data2a is still the same as the original data (data2), even if the
+% channel order is switched.
+data2.trial{1}(:,1) = [1:length(data2.label)]';
+
 % write the data to disk and convert to snirf
 ft_write_data(f2, data2.trial{1}, 'header', data2.hdr, 'event', event2)
 
@@ -75,7 +80,7 @@ assert(isequal([event1.value],  [event1a.value]));
 assert(isalmostequal(data2.time,        data2a.time, 'abstol', 1e-8));
 assert(isalmostequal(data2.fsample,     data2a.fsample, 'abstol', 1e-8));
 assert(isalmostequal(data2.sampleinfo,  data2a.sampleinfo, 'abstol', 1e-8));
-assert(isalmostequal(data2.trial,       data2a.trial, 'abstol', 1e-8));
+assert(length(intersect(data2.trial{1}(:,1), data2a.trial{1}(:,1)))==length(data2.trial{1}(:,1))); % the first sample should contain 1:nchan (see here above)
 
 % the channel names are not the same, neither for the nirs channels, not for the ADC/AUX channels
 % assert(isequal(data2.label, data2a.label));

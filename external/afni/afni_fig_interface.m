@@ -7,7 +7,7 @@ function afni_fig_interface(src, evnt)
       ud = default_ud();
       set(src,'UserData',ud);
    end
-   
+
    if (  lower(evnt.Character) == 'l'  ),
       ud.axes_lock = ~ud.axes_lock;
       set (src,'UserData',ud);
@@ -17,26 +17,26 @@ function afni_fig_interface(src, evnt)
    elseif (  lower(evnt.Character) == 'a'  ),
       if (ud.axes_lock),
          reset_axis(evnt.Character, get_all_axes(src));
-      else 
+      else
          reset_axis(evnt.Character,gca); %can send arrays for characters and axes
-      end 
+      end
    elseif (  lower(evnt.Character) == 'x'  |...
          lower(evnt.Character) == 'y'  |...
          lower(evnt.Character) == 'z' ),
       if (ud.axes_lock),
          zoom_axis(evnt.Character, get_all_axes(src));
-      else 
+      else
          zoom_axis(evnt.Character,gca); %can send arrays for characters and axes
-      end 
+      end
    elseif ( strcmp(evnt.Key , 'leftarrow') |...
             strcmp(evnt.Key , 'rightarrow') |...
             strcmp(evnt.Key , 'uparrow') |...
             strcmp(evnt.Key , 'downarrow')),
       if (ud.axes_lock),
          shift_axis(evnt, get_all_axes(src));
-      else 
+      else
          shift_axis(evnt, gca);
-      end 
+      end
    end
    figure(cf);
 return;
@@ -62,7 +62,7 @@ function zoom_axis(a,h)
          if (~(lower(a(ia)) - 'x')), se = [1 2];
          elseif (~(lower(a(ia)) - 'y')), se = [3 4];
          elseif (~(lower(a(ia)) - 'z')), se = [5 6];
-         else 
+         else
             return;
          end
          v = axis;
@@ -72,7 +72,7 @@ function zoom_axis(a,h)
          v(se(1)) = vc-vd/dv;
          v(se(2)) = vc+vd/dv;
          axis(v);
-      end   
+      end
    end
    axes(gca);
 return;
@@ -82,15 +82,15 @@ function shift_axis(e,h)
    for (ie=1:1:length(e)),
       for (ih=1:1:length(h)),
          axes(h(ih));
-         if (strcmp(e(ie).Key , 'leftarrow')), 
+         if (strcmp(e(ie).Key , 'leftarrow')),
             se = [1 2]; dv = +0.1;
-         elseif (strcmp(e(ie).Key , 'rightarrow')), 
+         elseif (strcmp(e(ie).Key , 'rightarrow')),
             se = [1 2]; dv = -0.1;
-         elseif (strcmp(e(ie).Key , 'downarrow')), 
+         elseif (strcmp(e(ie).Key , 'downarrow')),
             se = [3 4]; dv = -0.1;
-         elseif (strcmp(e(ie).Key , 'uparrow')), 
+         elseif (strcmp(e(ie).Key , 'uparrow')),
             se = [3 4]; dv = 0.1;
-         else 
+         else
             return;
          end
          v = axis
@@ -98,7 +98,7 @@ function shift_axis(e,h)
          v(se(1)) = v(se(1))+vd*dv;
          v(se(2)) = v(se(2))+vd*dv;
          axis(v);
-      end   
+      end
    end
    axes(gca);
 return;

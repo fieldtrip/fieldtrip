@@ -1,37 +1,37 @@
 function [trl, event] = ft_trialfun_general(cfg)
 
-% FT_TRIALFUN_GENERAL determines trials/segments in the data that are
-% interesting for analysis, using the general event structure returned
-% by read_event. This function is independent of the dataformat
+% FT_TRIALFUN_GENERAL reads events from the dataset using FT_READ_EVENT and
+% constructs a trial definition. This function should in general not be called
+% directly, it will be called by FT_DEFINETRIAL.
 %
-% The trialdef structure can contain the following specifications
-%   cfg.trialdef.eventtype  = string
-%   cfg.trialdef.eventvalue = number, string or list with numbers or strings
-%   cfg.trialdef.prestim    = latency in seconds (optional)
-%   cfg.trialdef.poststim   = latency in seconds (optional)
+% Use this function by calling
+%   [cfg] = ft_definetrial(cfg)
+% where the configuration structure should contain
+%   cfg.dataset   = string with the filename
+%   cfg.trialdef  = structure with the details of trial definition, see below
+%   cfg.trialfun  = 'ft_trialfun_general'
+%
+% The cfg.trialdef structure can contain the following specifications
+%   cfg.trialdef.eventtype  = string, or cell-array with strings
+%   cfg.trialdef.eventvalue = number, string, or list with numbers or strings
+%   cfg.trialdef.prestim    = number, latency in seconds (optional)
+%   cfg.trialdef.poststim   = number, latency in seconds (optional)
 %
 % You can specify these options that are passed to FT_READ_EVENT for trigger detection
-%   cfg.trialdef.detectflank    string, can be 'up', 'updiff', 'down', 'downdiff', 'both', 'any', 'biton', 'bitoff'
-%   cfg.trialdef.trigshift      integer, number of samples to shift from flank to detect trigger value 
-%   cfg.trialdef.chanindx       list with channel numbers for the trigger detection, specify -1 in case you don't want to detect triggers
-%   cfg.trialdef.threshold      threshold for analog trigger channels
-%   cfg.trialdef.tolerance      tolerance in samples when merging analogue trigger channels, only for Neuromag
+%   cfg.trialdef.detectflank  = string, can be 'up', 'updiff', 'down', 'downdiff', 'both', 'any', 'biton', 'bitoff'
+%   cfg.trialdef.trigshift    = integer, number of samples to shift from flank to detect trigger value
+%   cfg.trialdef.chanindx     = list with channel numbers for the trigger detection, specify -1 in case you don't want to detect triggers
+%   cfg.trialdef.threshold    = threshold for analog trigger channels
+%   cfg.trialdef.tolerance    = tolerance in samples when merging analogue trigger channels, only for Neuromag
 %
 % If you want to read all data from a continuous file in segments, you can specify
-%    cfg.trialdef.triallength = duration in seconds (can be Inf)
-%    cfg.trialdef.ntrials     = number of trials
+%    cfg.trialdef.length      = duration of the segments in seconds (can be Inf)
+%    cfg.trialdef.ntrials     = number of trials (optional, can be 1)
+%    cfg.trialdef.overlap     = single number (between 0 and 1 (exclusive)) specifying the fraction of overlap between snippets (0 = no overlap)
 %
-% If you specify
-%   cfg.trialdef.eventtype  = '?'
-% a list with the events in your datafile will be displayed on screen.
-%
-% If you specify
-%   cfg.trialdef.eventtype = 'gui'
-% a graphical user interface will allow you to select events of interest.
-%
-% See also FT_DEFINETRIAL, FT_PREPROCESSING, FT_READ_EVENT
+% See also FT_DEFINETRIAL, FT_TRIALFUN_GUI, FT_TRIALFUN_SHOW
 
-% Copyright (C) 2005-2020, Robert Oostenveld
+% Copyright (C) 2005-2021, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -51,42 +51,37 @@ function [trl, event] = ft_trialfun_general(cfg)
 %
 % $Id$
 
-% some events do not require the specification a type, pre or poststim period
-% in that case it is more convenient not to have them, instead of making them empty
-if ~isfield(cfg, 'trialdef')
-  cfg.trialdef = [];
-end
-if isfield(cfg.trialdef, 'eventvalue')  && isempty(cfg.trialdef.eventvalue   ), cfg.trialdef = rmfield(cfg.trialdef, 'eventvalue' ); end
-if isfield(cfg.trialdef, 'prestim')     && isempty(cfg.trialdef.prestim      ), cfg.trialdef = rmfield(cfg.trialdef, 'prestim'    ); end
-if isfield(cfg.trialdef, 'poststim')    && isempty(cfg.trialdef.poststim     ), cfg.trialdef = rmfield(cfg.trialdef, 'poststim'   ); end
-if isfield(cfg.trialdef, 'triallength') && isempty(cfg.trialdef.triallength  ), cfg.trialdef = rmfield(cfg.trialdef, 'triallength'); end
-if isfield(cfg.trialdef, 'ntrials')     && isempty(cfg.trialdef.ntrials      ), cfg.trialdef = rmfield(cfg.trialdef, 'ntrials'    ); end
+% most defaults are in trialdef
+cfg.trialdef = ft_getopt(cfg, 'trialdef', struct());
 
-if isfield(cfg.trialdef, 'triallength')
-  % reading all segments from a continuous file is incompatible with any other option
-  cfg.trialdef = removefields(cfg.trialdef, {'eventvalue', 'prestim', 'poststim'});
-  if ~isfield(cfg.trialdef, 'ntrials')
-    if isinf(cfg.trialdef.triallength)
-      cfg.trialdef.ntrials = 1;
-    else
-      cfg.trialdef.ntrials = inf;
-    end
-  end
-end
+% check if the input cfg is valid for this function
+cfg.trialdef = ft_checkconfig(cfg.trialdef, 'renamed', {'triallength', 'length'});
+cfg.trialdef = ft_checkconfig(cfg.trialdef, 'renamedval', {'ntrials', inf, []});
 
-% default file formats and chanindx for trigger detection
+% set the defaults
+cfg.trialdef.eventtype    = ft_getopt(cfg.trialdef, 'eventtype');
+cfg.trialdef.eventvalue   = ft_getopt(cfg.trialdef, 'eventvalue');
+cfg.trialdef.prestim      = ft_getopt(cfg.trialdef, 'prestim');
+cfg.trialdef.poststim     = ft_getopt(cfg.trialdef, 'poststim');
+
+% these options are similar to those in FT_REDEFINETRIALS
+cfg.trialdef.length       = ft_getopt(cfg.trialdef, 'length');
+cfg.trialdef.overlap      = ft_getopt(cfg.trialdef, 'overlap', 0); % between 0 and 1
+cfg.trialdef.ntrials      = ft_getopt(cfg.trialdef, 'ntrials');
+
+% these options get passed to FT_READ_EVENT
+cfg.trialdef.detectflank  = ft_getopt(cfg.trialdef, 'detectflank');
+cfg.trialdef.trigshift    = ft_getopt(cfg.trialdef, 'trigshift');
+cfg.trialdef.chanindx     = ft_getopt(cfg.trialdef, 'chanindx');
+cfg.trialdef.threshold    = ft_getopt(cfg.trialdef, 'threshold');
+cfg.trialdef.tolerance    = ft_getopt(cfg.trialdef, 'tolerance');
+
+% specify the default file formats
 cfg.eventformat   = ft_getopt(cfg, 'eventformat');
 cfg.headerformat  = ft_getopt(cfg, 'headerformat');
 cfg.dataformat    = ft_getopt(cfg, 'dataformat');
 
-% these options get passed to FT_READ_EVENT
-cfg.trialdef.detectflank = ft_getopt(cfg.trialdef, 'detectflank');
-cfg.trialdef.trigshift   = ft_getopt(cfg.trialdef, 'trigshift');
-cfg.trialdef.chanindx    = ft_getopt(cfg.trialdef, 'chanindx');
-cfg.trialdef.threshold   = ft_getopt(cfg.trialdef, 'threshold');
-cfg.trialdef.tolerance   = ft_getopt(cfg.trialdef, 'tolerance');
-
-% get the header, among others for the sampling frequency
+% get the header, this is among others for the sampling frequency
 if isfield(cfg, 'hdr')
   ft_info('using the header from the configuration structure\n');
   hdr = cfg.hdr;
@@ -105,253 +100,113 @@ else
   event = ft_read_event(cfg.headerfile, 'headerformat', cfg.headerformat, 'eventformat', cfg.eventformat, 'dataformat', cfg.dataformat,  'detectflank', cfg.trialdef.detectflank, 'trigshift', cfg.trialdef.trigshift, 'chanindx', cfg.trialdef.chanindx, 'threshold', cfg.trialdef.threshold, 'tolerance', cfg.trialdef.tolerance);
 end
 
-% for the following, the trials do not depend on the events in the data
-if isfield(cfg.trialdef, 'triallength')
-  if isinf(cfg.trialdef.triallength)
-    % make one long trial with the complete continuous data in it
-    trl = [1 hdr.nSamples*hdr.nTrials 0];
-  elseif isinf(cfg.trialdef.ntrials)
-    % cut the continuous data into as many segments as possible
-    nsamples = round(cfg.trialdef.triallength*hdr.Fs);
-    trlbeg   = 1:nsamples:(hdr.nSamples*hdr.nTrials - nsamples + 1);
-    trlend   = trlbeg + nsamples - 1;
-    offset   = zeros(size(trlbeg));
-    trl = [trlbeg(:) trlend(:) offset(:)];
+if ~isempty(cfg.trialdef.length) && ~isinf(cfg.trialdef.length)
+  % make as many trials as possible with the specified length and offset
+  begsample   = 1;
+  endsample   = round(hdr.nSamples*hdr.nTrials);
+  offset      = 0;
+  nsmp        = round(cfg.trialdef.length*hdr.Fs);
+  nshift      = round((1-cfg.trialdef.overlap)*nsmp);
+  alltrl      = (begsample:nshift:(endsample+1-nsmp))';
+  alltrl(:,2) = alltrl(:,1) + nsmp - 1;
+  alltrl(:,3) = alltrl(:,1) + offset - alltrl(1,1);
+  % trim to the requested number of trials
+  if ~isempty(cfg.trialdef.ntrials)
+    trl = alltrl(1:cfg.trialdef.ntrials,:);
   else
-    % make the pre-specified number of trials
-    nsamples = round(cfg.trialdef.triallength*hdr.Fs);
-    trlbeg   = (0:(cfg.trialdef.ntrials-1))*nsamples + 1;
-    trlend   = trlbeg + nsamples - 1;
-    offset   = zeros(size(trlbeg));
-    trl = [trlbeg(:) trlend(:) offset(:)];
+    trl = alltrl;
   end
   return
-end
-
-trl = [];
-val = [];
-if isfield(cfg.trialdef, 'eventtype')
-  if isequal(cfg.trialdef.eventtype, '?')
-    % no trials should be added, show event information using subfunction and exit
-    show_event(event);
-    return
-  elseif isequal(cfg.trialdef.eventtype, 'gui') || (isfield(cfg.trialdef, 'eventvalue') && length(cfg.trialdef.eventvalue)==1 && strcmp(cfg.trialdef.eventvalue, 'gui'))
-    cfg.trialdef = select_event(event, cfg.trialdef);
-    usegui = 1;
-  else
-    usegui = 0;
+  
+elseif isscalar(cfg.trialdef.ntrials) || isequal(cfg.trialdef.length, inf)
+  % construct a single trial
+  if isscalar(cfg.trialdef.ntrials) && cfg.trialdef.ntrials~=1
+    ft_error('this is only supported for a single trial');
   end
+  begsample = 1;
+  endsample = round(hdr.nSamples*hdr.nTrials);
+  offset    = 0;
+  trl       = [begsample endsample offset];
+  return
+  
 else
-  usegui = 0;
-end
-
-% start by selecting all events
-sel = true(1, length(event)); % this should be a row vector
-
-% select all events of the specified type
-if isfield(cfg.trialdef, 'eventtype') && ~isempty(cfg.trialdef.eventtype)
-  for i=1:numel(event)
-    sel(i) = sel(i) && ismatch(event(i).type, cfg.trialdef.eventtype);
-  end
-elseif ~isfield(cfg.trialdef, 'eventtype') || isempty(cfg.trialdef.eventtype)
-  % search for trial events
-  for i=1:numel(event)
-    sel(i) = sel(i) && ismatch(event(i).type, 'trial');
-  end
-end
-
-% select all events with the specified value
-if isfield(cfg.trialdef, 'eventvalue') && ~isempty(cfg.trialdef.eventvalue)
-  for i=1:numel(event)
-    sel(i) = sel(i) && ismatch(event(i).value, cfg.trialdef.eventvalue);
-  end
-end
-
-% convert from boolean vector into a list of indices
-sel = find(sel);
-
-if usegui
-  % Checks whether offset and duration are defined for all the selected
-  % events and/or prestim/poststim are defined in trialdef.
-  if (any(cellfun('isempty', {event(sel).offset})) || ...
-      any(cellfun('isempty', {event(sel).duration}))) && ...
-      ~(isfield(cfg.trialdef, 'prestim') && isfield(cfg.trialdef, 'poststim'))
-    
-    % If at least some of offset/duration values and prestim/poststim
-    % values are missing tries to ask the user for prestim/poststim
-    answer = inputdlg({'Prestimulus latency (sec)','Poststimulus latency (sec)'}, 'Enter borders');
-    if isempty(answer) || any(cellfun('isempty', answer))
-      ft_error('The information in the data and cfg is insufficient to define trials.');
-    else
-      cfg.trialdef.prestim=str2double(answer{1});
-      cfg.trialdef.poststim=str2double(answer{2});
-      if isnan(cfg.trialdef.prestim) || isnan(cfg.trialdef.poststim)
-        ft_error('Illegal input for trial borders');
-      end
+  % select events on basis of event types and values
+  sel = true(1, length(event)); % this should be a row vector
+  
+  % select all events of the specified type
+  if isfield(cfg.trialdef, 'eventtype') && ~isempty(cfg.trialdef.eventtype)
+    for i=1:numel(event)
+      sel(i) = sel(i) && ismatch(event(i).type, cfg.trialdef.eventtype);
     end
-  end % if specification is not complete
-end % if usegui
-
-for i=sel
-  % catch empty fields in the event table and interpret them meaningfully
-  if isempty(event(i).offset)
-    % time axis has no offset relative to the event
-    event(i).offset = 0;
+  elseif isempty(cfg.trialdef.eventtype)
+    % search for trial events
+    for i=1:numel(event)
+      sel(i) = sel(i) && ismatch(event(i).type, 'trial');
+    end
   end
-  if isempty(event(i).duration)
-    % the event does not specify a duration
-    event(i).duration = 0;
+  
+  % select all events with the specified value
+  if isfield(cfg.trialdef, 'eventvalue') && ~isempty(cfg.trialdef.eventvalue)
+    for i=1:numel(event)
+      sel(i) = sel(i) && ismatch(event(i).value, cfg.trialdef.eventvalue);
+    end
   end
-  % determine where the trial starts with respect to the event
-  if ~isfield(cfg.trialdef, 'prestim')
-    trloff = event(i).offset;
-    trlbeg = event(i).sample;
-  else
-    % override the offset of the event
-    trloff = round(-cfg.trialdef.prestim*hdr.Fs);
-    % also shift the begin sample with the specified amount
-    trlbeg = event(i).sample + trloff;
-  end
-  % determine the number of samples that has to be read (excluding the begin sample)
-  if ~isfield(cfg.trialdef, 'poststim')
-    trldur = max(event(i).duration - 1, 0);
-  else
-    % this will not work if prestim was not defined, the code will then crash
-    trldur = round((cfg.trialdef.poststim+cfg.trialdef.prestim)*hdr.Fs) - 1;
-  end
-  trlend = trlbeg + trldur;
-  % add the beginsample, endsample and offset of this trial to the list
-  % if all samples are in the dataset
-  if trlbeg>0 && trlend<=hdr.nSamples*hdr.nTrials
-    trl = [trl; [trlbeg trlend trloff]];
-    if isnumeric(event(i).value)
-      val = [val; event(i).value];
+  
+  % convert from boolean vector into a list of indices
+  sel = find(sel);
+  
+  % start with an empty list
+  trl = [];
+  
+  for i=sel
+    % catch empty fields in the event table and interpret them meaningfully
+    if isempty(event(i).offset)
+      % time axis has no offset relative to the event
+      event(i).offset = 0;
+    end
+    if isempty(event(i).duration)
+      % the event does not specify a duration
+      event(i).duration = 0;
+    end
+    
+    % determine where the trial starts with respect to the event
+    if isempty(cfg.trialdef.prestim)
+      trloff = event(i).offset;
+      trlbeg = event(i).sample;
+    else
+      % override the offset of the event
+      trloff = round(-cfg.trialdef.prestim*hdr.Fs);
+      % also shift the begin sample with the specified amount
+      trlbeg = event(i).sample + trloff;
+    end
+    % determine the number of samples that has to be read (excluding the begin sample)
+    if isempty(cfg.trialdef.poststim)
+      trldur = max(event(i).duration - 1, 0);
+    else
+      % this will not work if prestim was not defined, the code will then crash
+      trldur = round((cfg.trialdef.poststim+cfg.trialdef.prestim)*hdr.Fs) - 1;
+    end
+    trlend = trlbeg + trldur;
+    
+    if isnumeric(event(i).value) && ~isempty(event(i).value)
+      trlval = event(i).value;
     elseif ischar(event(i).value) && numel(event(i).value)>1 && (event(i).value(1)=='S'|| event(i).value(1)=='R')
       % on brainvision these are called 'S  1' for stimuli or 'R  1' for responses
-      val = [val; str2double(event(i).value(2:end))];
+      trlval = str2double(event(i).value(2:end));
     else
-      val = [val; nan];
+      trlval = nan;
     end
-  end
-end
-
-% append the vector with values
-if ~isempty(val) && ~all(isnan(val)) && size(trl,1)==size(val,1)
-  trl = [trl val];
-end
-
-if usegui && ~isempty(trl)
-  % This complicated line just computes the trigger times in seconds and
-  % converts them to a cell-array of strings to use in the GUI
-  eventstrings = cellfun(@num2str, mat2cell((trl(:, 1)- trl(:, 3))./hdr.Fs , ones(1, size(trl, 1))), 'UniformOutput', 0);
-  
-  % Let us start with handling at least the completely unsegmented case
-  % semi-automatically. The more complicated cases are better left
-  % to the user.
-  if hdr.nTrials==1
-    selected = find(trl(:,1)>0 & trl(:,2)<=hdr.nSamples);
-  else
-    selected = find(trl(:,1)>0);
-  end
-  
-  indx = select_channel_list(eventstrings, selected , 'Select events');
-  
-  trl = trl(indx, :);
-end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION that shows event table
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function show_event(event)
-if isempty(event)
-  ft_info('no events were found in the datafile\n');
-  return
-end
-eventtype = unique({event.type});
-Neventtype = length(eventtype);
-if Neventtype==0
-  ft_info('no events were found in the datafile\n');
-else
-  ft_info('the following events were found in the datafile\n');
-  for i=1:Neventtype
-    sel = find(strcmp(eventtype{i}, {event.type}));
-    try
-      eventvalue = unique({event(sel).value});            % cell-array with string value
-      eventvalue = sprintf('''%s'' ', eventvalue{:});     % translate into a single string
-    catch
-      eventvalue = unique(cell2mat({event(sel).value}));  % array with numeric values or empty
-      eventvalue = num2str(eventvalue);                   % translate into a single string
-    end
-    ft_info('event type: ''%s'' ', eventtype{i});
-    ft_info('with event values: %s', eventvalue);
-    ft_info('\n');
-  end
-end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION that allows the user to select an event using gui
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function trialdef = select_event(event, trialdef)
-if isempty(event)
-  ft_info('no events were found in the datafile\n');
-  return
-end
-if strcmp(trialdef.eventtype, 'gui')
-  eventtype = unique({event.type});
-else
-  eventtype ={trialdef.eventtype};
-end
-Neventtype = length(eventtype);
-if Neventtype==0
-  ft_info('no events were found in the datafile\n');
-else
-  % Two lists are built in parallel
-  settings={}; % The list of actual values to be used later
-  strsettings={}; % The list of strings to show in the GUI
-  for i=1:Neventtype
-    sel = find(strcmp(eventtype{i}, {event.type}));
     
-    emptyval = find(cellfun('isempty', {event(sel).value}));
-    
-    if all(cellfun(@isnumeric, {event(sel).value}))
-      [event(sel(emptyval)).value]=deal(Inf);
-      eventvalue = unique([event(sel).value]);
-    else
-      if ~isempty(find(strcmp('Inf', {event(sel).value})))
-        % It's a very unlikely scenario but ...
-        ft_warning('Event value''Inf'' cannot be handled by GUI selection. Mistakes are possible.')
-      end
-      [event(sel(emptyval)).value]=deal('Inf');
-      eventvalue = unique({event(sel).value});
-      if ~iscell(eventvalue)
-        eventvalue = {eventvalue};
-      end
-    end
-    for j=1:length(eventvalue)
-      if (isnumeric(eventvalue(j)) && eventvalue(j)~=Inf) || ...
-          (iscell(eventvalue(j)) && ischar(eventvalue{j}) && ~strcmp(eventvalue{j}, 'Inf'))
-        settings = [settings; [eventtype(i), eventvalue(j)]];
-      else
-        settings = [settings; [eventtype(i), {[]}]];
-      end
-      
-      if isa(eventvalue, 'numeric')
-        strsettings = [strsettings; {['Type: ' eventtype{i} ' ; Value: ' num2str(eventvalue(j))]}];
-      else
-        strsettings = [strsettings; {['Type: ' eventtype{i} ' ; Value: ' eventvalue{j}]}];
-      end
+    % add the trial only if all samples are in the dataset
+    if trlbeg>0 && trlend<=hdr.nSamples*hdr.nTrials
+      thistrl = [trlbeg trlend trloff trlval];
+      trl = cat(1, trl, thistrl);
     end
   end
-  if isempty(strsettings)
-    ft_info('no events of the selected type were found in the datafile\n');
-    return
+  
+  if ~isempty(trl) && all(isnan(trl(:,4)))
+    % the values are not informative, remove them
+    trl = trl(:,1:3);
   end
   
-  [selection, ok] = listdlg('ListString',strsettings, 'SelectionMode', 'multiple', 'Name', 'Select event', 'ListSize', [300 300]);
-  
-  if ok
-    trialdef.eventtype  = settings(selection,1);
-    trialdef.eventvalue = settings(selection,2);
-  end
 end
-

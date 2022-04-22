@@ -1,4 +1,4 @@
-function cfg = ft_badchannel(cfg, data)
+function [cfg] = ft_badchannel(cfg, data)
 
 % FT_BADCHANNEL tries to identify bad channels in a MEG or EEG dataset. Different
 % methods are implemented to identify bad channels, these are largely shared with
@@ -133,7 +133,7 @@ if isempty(cfg.thresholdside)
 end
 
 % select trials and channels of interest
-tmpcfg = keepfields(cfg, {'trials', 'channel', 'tolerance', 'latency', 'showcallinfo'});
+tmpcfg = keepfields(cfg, {'trials', 'channel', 'tolerance', 'latency', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
 data   = ft_selectdata(tmpcfg, data);
 % restore the provenance information
 [cfg, data] = rollback_provenance(cfg, data);
@@ -225,6 +225,7 @@ end % for each trial
 
 ft_info('identified %d out of %d channels as bad\n', sum(badchannel), length(badchannel));
 
+% keep track of bad channels
 cfg.badchannel = data.label(badchannel);
 
 % do the general cleanup and bookkeeping at the end of the function

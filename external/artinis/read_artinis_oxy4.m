@@ -2,16 +2,16 @@ function data = read_artinis_oxy4(filename, header, begsample, endsample, chanin
 % reads Artinix oxy4-files into FieldTrip format
 %
 % use as
-%   header = read_artinis_oxy3(filename)
+%   header = read_artinis_oxy4(filename)
 % or 
-%   event  = read_artinis_oxy3(filename, read_event)
+%   event  = read_artinis_oxy4(filename, read_event)
 % where read_event is a Boolean with the value true, or  
-%   data   = read_artinis_oxy3(filename, header, [begsample], [endsample], [chanindx])
+%   data   = read_artinis_oxy4(filename, header, [begsample], [endsample], [chanindx])
 % where begsample, endsample and chanindx are optional.
 %
 % The returned variables will be in FieldTrip style. 
 %
-% See also FT_READ_HEADER, FT_READ_DATA, READ_ARTINIS_OXY3
+% See also FT_READ_HEADER, FT_READ_DATA, READ_ARTINIS_OXY4
 
 % You are using the FieldTrip NIRS toolbox developed and maintained by 
 % Artinis Medical Systems (http://www.artinis.com). For more information

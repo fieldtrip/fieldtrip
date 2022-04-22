@@ -138,14 +138,17 @@ end
 % rename old to new value, give warning
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if ~isempty(renamedval) && issubfield(cfg, renamedval{1})
-  if strcmpi(getsubfield(cfg, renamedval{1}), renamedval{2})
+  if isequaln(getsubfield(cfg, renamedval{1}), renamedval{2})
     cfg = setsubfield(cfg, renamedval{1}, renamedval{3});
+    % format the values as a string, regardless of their type
+    str2 = printstruct([], renamedval{2}, 'lastnewline', false, 'lastsemicolon', false);
+    str3 = printstruct([], renamedval{3}, 'lastnewline', false, 'lastsemicolon', false);
     if silent
       % don't mention it
     elseif loose
-      ft_warning('use cfg.%s=''%s'' instead of cfg.%s=''%s''', renamedval{1}, renamedval{3}, renamedval{1}, renamedval{2});
+      ft_warning('use cfg.%s=%s instead of cfg.%s=%s', renamedval{1}, str3, renamedval{1}, str2);
     elseif pedantic
-      ft_error('use cfg.%s=''%s'' instead of cfg.%s=''%s''', renamedval{1}, renamedval{3}, renamedval{1}, renamedval{2});
+      ft_error('use cfg.%s=%s instead of cfg.%s=%s', renamedval{1}, str3, renamedval{1}, str2);
     end
   end
 end
@@ -310,6 +313,14 @@ if ~isempty(createtopcfg)
           'normalize'
           'normalizeparam'
           'weight'
+          };
+      
+      case {'superlet'}
+        fieldname = {
+          'basewidth'
+          'gwidth'
+          'combine'
+          'order'
           };
         
       otherwise

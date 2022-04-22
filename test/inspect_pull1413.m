@@ -1,6 +1,5 @@
 function inspect_pull1413
 
-
 % WALLTIME 00:10:00
 % MEM 2gb
 % DEPENDENCY ft_rejectvisual rejectvisual_summary
@@ -73,4 +72,3 @@ cfg = [];
 cfg.method = 'summary';
 cfg.neighbours = neighbours;
 data_clean = ft_rejectvisual(cfg, data);
-

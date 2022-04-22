@@ -3,7 +3,7 @@ function [chansel, trlsel, cfg] = rejectvisual_summary(cfg, data)
 % SUBFUNCTION for ft_rejectvisual
 
 % Copyright (C) 2005-2006, Markus Bauer, Robert Oostenveld
-% Copyright (C) 2006-2021, Robert Oostenveld
+% Copyright (C) 2006-2021, Robert Oostenveld, Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -105,64 +105,36 @@ info.axes(3) = axes('position', [0.100 0.250 0.375 0.300]);  % trials
 % the user cannot try to toggle trials while nothing is present on the
 % plots
 
-
 % set up radio buttons for choosing metric
 bgcolor = get(h, 'color');
-g = uibuttongroup('Position', [0.520 0.150 0.375 0.45], 'bordertype', 'none', 'backgroundcolor', bgcolor);
-r        = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0 10/11 0.40 0.12 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'string', 'var',       'HandleVisibility', 'off');
-r(end+1) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0  9/11 0.40 0.12 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'string', 'std',       'HandleVisibility', 'off');
-r(end+1) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0  8/11 0.40 0.12 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', 'min',       'HandleVisibility', 'off');
-r(end+1) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0  7/11 0.40 0.12 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', 'max',       'HandleVisibility', 'off');
-r(end+1) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0  6/11 0.40 0.12 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', 'maxabs',    'HandleVisibility', 'off');
-r(end+1) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0  5/11 0.40 0.12 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', 'range',     'HandleVisibility', 'off');
-r(end+1) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0  4/11 0.40 0.12 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', 'kurtosis',  'HandleVisibility', 'off');
-r(end+1) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0  3/11 0.40 0.12 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', '1/var',     'HandleVisibility', 'off');
-r(end+1) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0  2/11 0.40 0.12 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', 'zvalue',    'HandleVisibility', 'off');
-r(end+1) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0  1/11 0.40 0.12 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', 'maxzvalue', 'HandleVisibility', 'off');
-r(end+1) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0  0/11 0.40 0.12 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', 'neighbexpvar',   'HandleVisibility', 'off');
-% these cannot be seen but are technically present, they can be selected with cfg.metric
-r(end+1) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0  -10/12 0.40 0.12 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'string', 'db',        'HandleVisibility', 'off');
-r(end+1) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0  -10/12 0.40 0.12 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', 'neighbcorr',     'HandleVisibility', 'off');
-r(end+1) = uicontrol('Units', 'normalized', 'parent', g, 'position', [ 0.0  -10/12 0.40 0.12 ], 'Style', 'Radio', 'backgroundcolor', bgcolor, 'String', 'neighbstdratio', 'HandleVisibility', 'off');
+
+metriclist = {'var' 'std' 'min' 'max' 'maxabs' 'range' 'kurtosis' '1/var' 'zvalue' 'maxzvalue' 'neighbexpvar' 'neighbcorr' 'neighbstdratio' 'db'};
+
+uicontrol(h, 'Units', 'normalized', 'position', [0.575 0.50 0.24 0.04], 'Style', 'text', 'HorizontalAlignment', 'left', 'backgroundcolor', get(h, 'color'), 'string', 'Metric used:'); % text string for metric
+uicontrol(h, 'Units', 'normalized', 'position', [0.725 0.51 0.20 0.04], 'Style', 'popupmenu', 'backgroundcolor', bgcolor, 'string', metriclist,       'HandleVisibility', 'off', 'callback', @change_metric); % popup menu for metric
+uicontrol(h, 'Units', 'normalized', 'position', [0.575 0.46 0.24 0.04], 'Style', 'text', 'HorizontalAlignment', 'left', 'backgroundcolor', get(h, 'color'), 'string', 'Plot trial:');
+info.plottrltxt = uicontrol(h, 'Units', 'normalized', 'position', [0.725 0.47 0.20 0.04], 'Style', 'edit', 'HorizontalAlignment', 'left', 'backgroundcolor', [1 1 1], 'callback', @display_trial); % editbox for trial plotting
+
+% editboxes for manually specifying which channels/trials to toggle on or off
+uicontrol(h, 'Units', 'normalized', 'position', [0.575 0.42 0.24 0.04], 'Style', 'text', 'HorizontalAlignment', 'left', 'backgroundcolor', get(h, 'color'), 'string', 'Toggle trial:');
+uicontrol(h, 'Units', 'normalized', 'position', [0.725 0.43 0.20 0.04], 'Style', 'edit', 'HorizontalAlignment', 'left', 'backgroundcolor', [1 1 1], 'callback', @toggle_trials, 'tag', 'edit_toggle_trials');
+uicontrol(h, 'Units', 'normalized', 'position', [0.575 0.38 0.24 0.04], 'Style', 'text', 'HorizontalAlignment', 'left', 'backgroundcolor', get(h, 'color'), 'string', 'Toggle channel:');
+uicontrol(h, 'Units', 'normalized', 'position', [0.725 0.39 0.20 0.04], 'Style', 'edit', 'HorizontalAlignment', 'left', 'backgroundcolor', [1 1 1], 'callback', @toggle_channels, 'tag', 'edit_toggle_channels');
+
+info.excludetrllbl  = uicontrol(h, 'Units', 'normalized', 'position', [0.575 0.34 0.24 0.04], 'Style', 'text', 'HorizontalAlignment', 'left', 'backgroundcolor', get(h, 'color'), 'string', sprintf('Rejected trials: %i/%i', sum(info.trlsel==0), info.ntrl));
+info.excludetrltxt  = uicontrol(h, 'Units', 'normalized', 'position', [0.605 0.30 0.45 0.04], 'Style', 'text', 'HorizontalAlignment', 'left', 'backgroundcolor', get(h, 'color'), 'Enable', 'Inactive');
+info.excludechanlbl = uicontrol(h, 'Units', 'normalized', 'position', [0.575 0.26 0.28 0.04], 'Style', 'text', 'HorizontalAlignment', 'left', 'backgroundcolor', get(h, 'color'), 'string', sprintf('Rejected channels: %i/%i', sum(info.chansel==0), info.nchan));
+info.excludechantxt = uicontrol(h, 'Units', 'normalized', 'position', [0.605 0.22 0.45 0.04], 'Style', 'text', 'HorizontalAlignment', 'left', 'backgroundcolor', get(h, 'color'), 'Enable', 'Inactive');
 
 % instructions
 instructions = sprintf('Drag the mouse over the channels or trials you wish to exclude');
-uicontrol(h, 'Units', 'normalized', 'position', [0.63 0.520 0.400 0.050], 'Style', 'text', 'HorizontalAlignment', 'left', 'backgroundcolor', get(h, 'color'), 'string', instructions, 'FontWeight', 'bold', 'ForegroundColor', 'r');
-
-% pre-select appropriate metric, if defined
-set(g, 'SelectionChangeFcn', @change_metric);
-for i=1:length(r)
-  if strcmp(get(r(i), 'string'), cfg.metric)
-    set(g, 'SelectedObject', r(i));
-  end
-end
-
-% editboxes for manually specifying which channels/trials to toggle on or off
-uicontrol(h, 'Units', 'normalized', 'position', [0.630 0.470 0.14 0.05], 'Style', 'text', 'HorizontalAlignment', 'left', 'backgroundcolor', get(h, 'color'), 'string', 'Toggle trial:');
-uicontrol(h, 'Units', 'normalized', 'position', [0.630 0.430 0.14 0.05], 'Style', 'edit', 'HorizontalAlignment', 'left', 'backgroundcolor', [1 1 1], 'callback', @toggle_trials);
-uicontrol(h, 'Units', 'normalized', 'position', [0.630 0.340 0.14 0.05], 'Style', 'text', 'HorizontalAlignment', 'left', 'backgroundcolor', get(h, 'color'), 'string', 'Toggle channel:');
-uicontrol(h, 'Units', 'normalized', 'position', [0.630 0.300 0.14 0.05], 'Style', 'edit', 'HorizontalAlignment', 'left', 'backgroundcolor', [1 1 1], 'callback', @toggle_channels);
-
-% editbox for trial plotting
-uicontrol(h, 'Units', 'normalized', 'position', [0.630 0.210 0.14 0.05], 'Style', 'text', 'HorizontalAlignment', 'left', 'backgroundcolor', get(h, 'color'), 'string', 'Plot trial:');
-info.plottrltxt = uicontrol(h, 'Units', 'normalized', 'position', [0.630 0.170 0.14 0.05], 'Style', 'edit', 'HorizontalAlignment', 'left', 'backgroundcolor', [1 1 1], 'callback', @display_trial);
-
-info.excludetrllbl  = uicontrol(h, 'Units', 'normalized', 'position', [0.795 0.470 0.210 0.05], 'Style', 'text', 'HorizontalAlignment', 'left', 'backgroundcolor', get(h, 'color'), 'string', sprintf('Rejected trials: %i/%i', sum(info.trlsel==0), info.ntrl));
-info.excludetrltxt  = uicontrol(h, 'Units', 'normalized', 'position', [0.795 0.330 0.210 0.15], 'Style', 'text', 'HorizontalAlignment', 'left', 'backgroundcolor', get(h, 'color'));
-info.excludechanlbl = uicontrol(h, 'Units', 'normalized', 'position', [0.795 0.340 0.210 0.05], 'Style', 'text', 'HorizontalAlignment', 'left', 'backgroundcolor', get(h, 'color'), 'string', sprintf('Rejected channels: %i/%i', sum(info.chansel==0), info.nchan));
-info.excludechantxt = uicontrol(h, 'Units', 'normalized', 'position', [0.795 0.200 0.210 0.15], 'Style', 'text', 'HorizontalAlignment', 'left', 'backgroundcolor', get(h, 'color'));
-
-% "show rejected" button
-% ui_tog = uicontrol(h, 'Units', 'normalized', 'position', [0.55 0.200 0.25 0.05], 'Style', 'checkbox', 'backgroundcolor', get(h, 'color'), 'string', 'Show rejected?', 'callback', @toggle_rejected);
-% if strcmp(cfg.viewmode, 'toggle')
-%     set(ui_tog, 'value', 1);
-% end
+uicontrol(h, 'Units', 'normalized', 'position', [0.575 0.125 0.35 0.08], 'Style', 'text', 'HorizontalAlignment', 'left', 'backgroundcolor', get(h, 'color'), 'string', instructions, 'FontWeight', 'bold', 'ForegroundColor', 'r');
 
 % logbox
-info.output_box = uicontrol(h, 'Units', 'normalized', 'position', [0.00 0.00 1.00 0.15], 'Style', 'edit', 'HorizontalAlignment', 'left', 'Max', 3, 'Min', 1, 'Enable', 'inactive', 'FontName', get(0, 'FixedWidthFontName'), 'FontSize', 9, 'ForegroundColor', [0 0 0], 'BackgroundColor', [1 1 1]);
+info.output_box = uicontrol(h, 'Units', 'normalized', 'position', [0.00 0.00 1.00 0.1], 'Style', 'edit', 'HorizontalAlignment', 'left', 'Max', 3, 'Min', 1, 'Enable', 'inactive', 'FontName', get(0, 'FixedWidthFontName'), 'FontSize', 9, 'ForegroundColor', [0 0 0], 'BackgroundColor', [1 1 1]);
 
 % quit button
-uicontrol(h, 'Units', 'normalized', 'position', [0.80 0.175 0.10 0.05], 'string', 'quit', 'callback', @quit);
+uicontrol(h, 'Units', 'normalized', 'position', [0.825 0.11 0.10 0.04], 'string', 'quit', 'callback', @quit);
 
 guidata(h, info);
 
@@ -186,7 +158,6 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 function compute_metric(h)
 info = guidata(h);
 tmp = info.level(info.chansel, info.trlsel);
@@ -214,11 +185,11 @@ else
   sd   = [];
 end
 
-update_log(info.output_box, 'Computing metric...');
-ft_progress('init', info.cfg.feedback, 'computing metric');
+update_log(info.output_box, sprintf('Computing %s...', info.metric));
+ft_progress('init', info.cfg.feedback, sprintf('computing %s', info.metric));
 level = nan(info.nchan, info.ntrl);
 for i=1:info.ntrl
-  ft_progress(i/info.ntrl, 'computing metric %d of %d\n', i, info.ntrl);
+  ft_progress(i/info.ntrl, 'computing %s %d of %d\n', i, info.metric, info.ntrl);
   % not entirely sure whether info.data.time{i} is correct, so I am constructing it here on the fly
   dat = preproc(info.data.trial{i}, info.data.label, offset2time(info.offset(i), info.fsample, size(info.data.trial{i}, 2)), info.cfg.preproc);
   val = artifact_level(dat, info.metric, mval, sd, info.cfg.connectivity);
@@ -239,7 +210,6 @@ guidata(h, info);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 function redraw(h)
 info  = guidata(h);
 % work with a copy of the data
@@ -357,7 +327,7 @@ set(info.excludetrllbl, 'string', sprintf('Trials to exclude: %i/%i', sum(info.t
 if ~all(info.trlsel)
   excludetrltxt = sprintf('%d, ', find(~info.trlsel));
   excludetrltxt = excludetrltxt(1:end-2);
-  set(info.excludetrltxt, 'String', excludetrltxt, 'FontAngle', 'normal');
+  set(info.excludetrltxt, 'String', excludetrltxt, 'FontAngle', 'normal', 'ButtonDownFcn', @toggle_trials_fill);
 else
   set(info.excludetrltxt, 'String', 'No trials to exclude', 'FontAngle', 'italic');
 end
@@ -369,7 +339,7 @@ if ~all(info.chansel)
     excludechantxt = sprintf('%d, ', find(~info.chansel));
   end
   excludechantxt = excludechantxt(1:end-2);
-  set(info.excludechantxt, 'String', excludechantxt, 'FontAngle', 'normal');
+  set(info.excludechantxt, 'String', excludechantxt, 'FontAngle', 'normal', 'ButtonDownFcn', @toggle_channels_fill);
 else
   set(info.excludechantxt, 'String', 'No channels to exclude', 'FontAngle', 'italic');
 end
@@ -377,10 +347,9 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 function toggle_trials(h, eventdata)
 info = guidata(h);
-% extract trials from string
+% process input from the "toggle trials" textbox
 rawtrls = get(h, 'string');
 set(h, 'string', '');
 if ~isempty(rawtrls)
@@ -407,8 +376,21 @@ compute_metric(h)
 guidata(h, info);
 uiresume;
 
-% process input from the "toggle channels" textbox
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function toggle_trials_fill(h,eventdata)
+info = guidata(h);
+excludetrltxt = sprintf('%d, ', find(~info.trlsel));
+excludetrltxt = excludetrltxt(1:end-2);
+set(findobj('tag', 'edit_toggle_trials'), 'string', excludetrltxt)
+set(info.plottrltxt, 'string', excludetrltxt)
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function toggle_channels(h, eventdata)
+% process input from the "toggle channels" textbox
 info = guidata(h);
 rawchans = get(h, 'string');
 set(h, 'string', '');
@@ -456,10 +438,17 @@ uiresume;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function toggle_channels_fill(h, eventdata)
+info = guidata(h);
+excludechantxt = sprintf('%d, ', find(~info.chansel));
+excludechantxt = excludechantxt(1:end-2);
+set(findobj('tag', 'edit_toggle_channels'), 'string', excludechantxt)
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function toggle_visual(h, eventdata)
-% copied from FT_SELECT_BOX, but without the waitforbuttonpress command since this
-% toggle_visual callback is triggered by the ButtonDown event
+% copied from FT_SELECT_BOX, but without the waitforbuttonpress command since here it  is triggered by the ButtonDown event
 point1 = get(gca, 'CurrentPoint');    % button down detected
 finalRect = rbbox;                    % return figure units
 point2 = get(gca, 'CurrentPoint');    % button up detected
@@ -552,7 +541,6 @@ uiresume;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 function quit(h, eventdata)
 info = guidata(h);
 info.quit = 1;
@@ -562,10 +550,10 @@ uiresume;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 function change_metric(h, eventdata)
 info = guidata(h);
-info.metric = get(eventdata.NewValue, 'string');
+%info.metric = get(eventdata.NewValue, 'string');
+info.metric = h.String{h.Value};
 guidata(h, info);
 compute_metric(h);
 uiresume;
@@ -573,7 +561,6 @@ uiresume;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 function toggle_rejected(h, eventdata)
 info = guidata(h);
 toggle = get(h, 'value');
@@ -588,7 +575,6 @@ uiresume;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 function update_log(h, new_text)
 new_text        = [datestr(now, 13) '# ' new_text];
 curr_text       = get(h, 'string');
@@ -605,7 +591,6 @@ drawnow;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 function [maxperchan, maxpertrl, maxperchan_all, maxpertrl_all] = set_maxper(level, chansel, trlsel, metric)
 if ismember(metric, {'var', 'std', 'max', 'maxabs', 'range', 'kurtosis', '1/var', 'zvalue', 'maxzvalue', 'neighbstdratio'})
   % take the maximum
@@ -626,7 +611,6 @@ maxpertrl  = extreme(level, [], 1);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 function display_trial(h, eventdata)
 info = guidata(h);
 update_log(info.output_box, 'Making multiplot of individual trials ...');
@@ -647,6 +631,7 @@ cfg_mp.trackcallinfo = 'no';
 cfg_mp.layout  = info.cfg.layout;
 cfg_mp.channel = info.data.label(info.chansel);
 cfg_mp.dataname = info.cfg.dataname;
+cfg_mp.ylim     = info.cfg.ylim;
 currfig = gcf;
 for n = 1:length(trls)
   % ft_multiplotER should be able to make the selection, but fails due to http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2978
@@ -666,7 +651,6 @@ update_log(info.output_box, 'Done.');
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 function range = fixrange(range)
 % ensure that the horizontal and vertical range always increase
 % also when both are negative, or both are the same, or both are or zero

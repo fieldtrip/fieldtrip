@@ -23,6 +23,7 @@ function [hs] = ft_plot_mesh(mesh, varargin)
 %   'vertexmarker' = character, e.g. '.', 'o' or 'x' (default = '.')
 %   'vertexsize'   = scalar or vector with the size for each vertex (default = 10)
 %   'unit'         = string, convert to the specified geometrical units (default = [])
+%   'axes'          = boolean, whether to plot the axes of the 3D coordinate system (default = false)
 %   'maskstyle',   = 'opacity' or 'colormix', if the latter is specified, opacity masked color values
 %                    are converted (in combination with a background color) to RGB. This bypasses
 %                    openGL functionality, which behaves unpredictably on some platforms (e.g. when
@@ -40,13 +41,13 @@ function [hs] = ft_plot_mesh(mesh, varargin)
 % You can plot an additional contour around specified areas using
 %   'contour'           = inside of contour per vertex, either 0 or 1
 %   'contourcolor'      = string, color specification
-%   'contourlinestyle'  = string, line specification 
+%   'contourlinestyle'  = string, line specification
 %   'contourlinewidth'  = number
 %
 % See also FT_PLOT_HEADSHAPE, FT_PLOT_HEADMODEL, TRIMESH, PATCH
 
 % Copyright (C) 2009, Cristiano Micheli
-% Copyright (C) 2009-2015, Robert Oostenveld
+% Copyright (C) 2009-2022, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -65,8 +66,6 @@ function [hs] = ft_plot_mesh(mesh, varargin)
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
 % $Id$
-
-ws = ft_warning('on', 'MATLAB:divideByZero');
 
 % rename pnt into pos
 mesh = fixpos(mesh);
@@ -105,6 +104,7 @@ material_     = ft_getopt(varargin, 'material');        % note the underscore, t
 tag           = ft_getopt(varargin, 'tag',         '');
 surfaceonly   = ft_getopt(varargin, 'surfaceonly');     % default is handled below
 unit          = ft_getopt(varargin, 'unit');
+axes_         = ft_getopt(varargin, 'axes', false);     % do not confuse with built-in function
 clim          = ft_getopt(varargin, 'clim');
 alphalim      = ft_getopt(varargin, 'alphalim');
 alphamapping  = ft_getopt(varargin, 'alphamap', 'rampup');
@@ -176,30 +176,30 @@ end
 
 % color management
 if ischar(vertexcolor) && exist([vertexcolor '.m'], 'file')
-  vertexcolor = eval(vertexcolor);
+  vertexcolor = feval(vertexcolor);
 elseif ischar(vertexcolor) && ismember(vertexcolor, htmlcolors)
   vertexcolor = htmlcolors(vertexcolor);
 elseif ischar(vertexcolor) && isequal(vertexcolor, 'curv') % default of ft_sourceplot method surface
   if isfield(mesh, 'curv')
-    cortex_light = eval('cortex_light');
-    cortex_dark  = eval('cortex_dark');
+    cortex_light = feval('cortex_light');
+    cortex_dark  = feval('cortex_dark');
     % the curvature determines the color of gyri and sulci
     vertexcolor = mesh.curv(:) * cortex_dark + (1-mesh.curv(:)) * cortex_light;
   else
-    cortex_light = eval('cortex_light');
+    cortex_light = feval('cortex_light');
     vertexcolor = repmat(cortex_light, size(mesh.pos,1), 1);
     ft_warning('no curv field present in the mesh structure, using cortex_light as vertexcolor')
   end
 end
 
 if ischar(facecolor) && exist([facecolor '.m'], 'file')
-  facecolor = eval(facecolor);
+  facecolor = feval(facecolor);
 elseif ischar(facecolor) && ismember(facecolor, htmlcolors)
   facecolor = htmlcolors(facecolor);
 end
 
 if ischar(edgecolor) && exist([edgecolor '.m'], 'file')
-  edgecolor = eval(edgecolor);
+  edgecolor = feval(edgecolor);
 elseif ischar(edgecolor) && ismember(edgecolor, htmlcolors)
   edgecolor = htmlcolors(edgecolor);
 end
@@ -519,11 +519,20 @@ axis off
 axis vis3d
 axis equal
 
-if ~nargout
-  clear hs
+if istrue(axes_)
+  % plot the 3D axes, this depends on the units and coordsys
+  ft_plot_axes(mesh);
 end
+
+if isfield(mesh, 'coordsys')
+  % add a context sensitive menu to change the 3d viewpoint to top|bottom|left|right|front|back
+  menu_viewpoint(gca, mesh.coordsys)
+end
+
 if ~holdflag
   hold off
 end
 
-ft_warning(ws); % revert to original state
+if ~nargout
+  clear hs
+end

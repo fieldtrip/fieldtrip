@@ -470,6 +470,7 @@ elseif domask
     
     case 'colormix'
       if isempty(cmap), error('using ''colormix'' as maskstyle requires an explicitly defined colormap'); end
+      if ischar(cmap),  cmap = strrep(cmap, 'default', 'parula'); cmap = ft_colormap(cmap); end
       V = bg_rgba2rgb(Vback,V,cmap,clim,Vmask,'rampup',opacitylim);
       if isempty(h)
         % create surface object
@@ -512,7 +513,7 @@ if dointersect
   end
 end
 
-if ~isempty(cmap) && ~isequal(cmap, 'rgb')
+if ~isempty(cmap) && ~isequal(cmap, 'rgb') && ~isequal(maskstyle, 'colormix')
   ft_colormap(cmap);
   if ~isempty(clim)
     caxis(clim);

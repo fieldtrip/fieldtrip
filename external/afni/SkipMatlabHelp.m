@@ -5,27 +5,27 @@ function [CnoHelp] = SkipMatlabHelp (C)
 %Purpose:
 %   removes the first set of comments from a character array
 %   that would normally consiture matlab's help text (see example)
-%   
-%   
+%
+%
 %Input Parameters:
 %   C : a character array
-%   
-%   
+%
+%
 %Output Parameters:
 %   CnoHelp : C without the help comments
-%   
-%   
-%      
+%
+%
+%
 %More Info :
 %   C = sprintf ('%%Hello Baby\n%%Couci Couci Cooo\nAbc = 100\n%%Waldo\njon=6')
 %   [CnoHelp] = SkipMatlabHelp (C)
-%   
+%
 %  PurgeComments
 %	NextString
 %	FindChar
 %
 %     Author : Ziad Saad
-%     Date : Sat Mar 27 14:27:36 CST 1999 
+%     Date : Sat Mar 27 14:27:36 CST 1999
 
 
 %Define the function name for easy referencing

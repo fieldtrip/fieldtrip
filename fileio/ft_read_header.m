@@ -84,7 +84,7 @@ function [hdr] = ft_read_header(filename, varargin)
 %   Neurodata Without Borders: Neurophysiology (*.nwb)
 %
 % The following NIRS dataformats are supported
-%   Artinis - Artinis Medical Systems B.V. (*.oxy3, *.oxy4, *.oxyproj)
+%   Artinis - Artinis Medical Systems B.V. (*.oxy3, *.oxy4, *.oxy5, *.oxyproj)
 %   BUCN - Birkbeck college, London (*.txt)
 %   SNIRF - Society for functional near-infrared spectroscopy (*.snirf)
 %
@@ -518,7 +518,7 @@ switch headerformat
     
     NEV = openNEV(filename,'noread','nosave');
     
-    %searching for associated nsX file in same folder
+    % searching for associated nsX file in same folder
     files=dir(strcat(fullfile(p,n),'.ns*'));
     if isempty(files)
       ft_error('no .ns* file associated to %s in %s',n,p);
@@ -558,7 +558,7 @@ switch headerformat
       chantype = unique(channelstype,'stable');
     end
     
-    %selecting channel according to chantype
+    % selecting channel according to chantype
     orig_label=deblank({orig.ElectrodesInfo.Label});
     orig_unit=deblank({orig.ElectrodesInfo.AnalogUnits});
     channels={}; channelstype={}; channelsunit={}; skipfactor=[];
@@ -589,9 +589,9 @@ switch headerformat
       ft_error('inconsistent skip factors across channels');
     end
     
-    %If no channel selected issue error specifying available chantypes
+    % If no channel selected issue error specifying available chantypes
     if isempty(channels)
-      ft_error('No channel selected. Availabe chantypes are: %s',strjoin(unique(chaninfo.chantype)));
+      ft_error('No channel selected. Availabe chantypes are: %s', strjoin(unique(chaninfo.chantype)));
     end
     
     hdr.Fs          = orig.MetaTags.SamplingFreq/skipfactor;
@@ -1676,7 +1676,7 @@ switch headerformat
       data = loadvar(filename, 'data');
       hdr = ft_fetch_header(data);
     end
-
+    
   case 'mayo_mef30'
     ft_hastoolbox('mayo_mef', 1); % make sure mayo_mef exists
     hdr = read_mayo_mef30(filename, password, sortchannel);
@@ -2432,6 +2432,10 @@ switch headerformat
     ft_hastoolbox('artinis', 1);
     hdr = read_artinis_oxy4(filename);
     
+  case 'artinis_oxy5'
+    ft_hastoolbox('artinis', 1);
+    hdr = read_artinis_oxy5(filename);
+    
   case 'artinis_oxyproj'
     ft_hastoolbox('artinis', 1);
     hdr = read_oxyproj_header(filename);
@@ -2729,12 +2733,14 @@ switch headerformat
     hdr.nTrials     = 1;
     [p, f, x] = fileparts(filename);
     if hdr.nChans>1
+      ft_warning('creating fake channel names');
       for i=1:hdr.nChans
         % use the file name and channel number
-        hdr.label{i,1} = sprintf('%s channel %d', f, i);
+        hdr.label{i,1} = sprintf('%d', i);
         hdr.chantype{i,1} = 'audio';
       end
     else
+      % use the filename as the channel name
       hdr.label{1,1} = f;
       hdr.chantype{1,1} = 'audio';
     end
@@ -2751,13 +2757,13 @@ switch headerformat
   case 'video'
     hdr = read_video(filename);
     checkUniqueLabels = false;
-
+    
   case 'yorkinstruments_hdf5'
     orig            = read_yorkinstruments_hdf5_meta(filename);
     hdr.Fs          = orig.SampleFrequency;
     hdr.nChans      = orig.NChannels;
     hdr.nSamples    = orig.NSamples;
-    hdr.nSamplesPre = 0;    %No YI epoched data type
+    hdr.nSamplesPre = 0;    % No YI epoched data type
     hdr.nTrials = 1;
     hdr.label       = cellstr(orig.ChNames);
     hdr.chantype    = cellstr(orig.ChType);
@@ -2829,12 +2835,12 @@ end
 if ~isfield(hdr, 'chantype') && checkUniqueLabels
   % use a helper function which has some built in intelligence
   hdr.chantype = ft_chantype(hdr);
-end % for
+end
 
 if ~isfield(hdr, 'chanunit') && checkUniqueLabels
   % use a helper function which has some built in intelligence
   hdr.chanunit = ft_chanunit(hdr);
-end % for
+end
 
 % ensure that the output grad is according to the latest definition
 if isfield(hdr, 'grad')
@@ -2980,6 +2986,10 @@ hdr = tmp;
 % SUBFUNCTION to fill in empty labels
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function labels = fixlabels(labels)
+if isnumeric(labels)
+  % convert the array of numbers into the corresponding strings
+  labels = cellfun(@num2str, num2cell(labels), 'UniformOutput', false);
+end
 for i = find(cellfun(@isempty, {labels{:}}))
   labels{i} = sprintf('%d', i);
 end
@@ -2988,15 +2998,23 @@ labels = labels(:);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION to fill in empty chantype
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function labels = fixchantype(labels)
-sel = cellfun(@isempty, labels);
-labels(sel) = {'unknown'};
-labels = labels(:);
+function chantype = fixchantype(chantype)
+if isnumeric(chantype)
+  % convert the array of numbers into the corresponding strings
+  chantype = cellfun(@num2str, num2cell(chantype), 'UniformOutput', false);
+end
+sel = cellfun(@isempty, chantype) | strcmp(chantype, 'NaN');
+chantype(sel) = {'unknown'};
+chantype = chantype(:);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION to fill in empty chanunit
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function labels = fixchanunit(labels)
-sel = cellfun(@isempty, labels);
-labels(sel) = {'unknown'};
-labels = labels(:);
+function chanunit = fixchanunit(chanunit)
+if isnumeric(chanunit)
+  % convert the array of numbers into the corresponding strings
+  chanunit = cellfun(@num2str, num2cell(chanunit), 'UniformOutput', false);
+end
+sel = cellfun(@isempty, chanunit) | strcmp(chanunit, 'NaN');
+chanunit(sel) = {'unknown'};
+chanunit = chanunit(:);

@@ -42,7 +42,8 @@ end
 pos      = get(0,'DefaultFigurePosition');
 pos(3:4) = [290 300];
 dlg      = dialog('Name', titlestr, 'Position', pos);
-set(gca, 'Visible', 'off'); % explicitly turn the axis off, as it sometimes appears
+drawnow
+set(dlg, 'Visible', 'off'); % explicitly turn the axis off, as it sometimes appears
 
 select            = select(:)';     % ensure that it is a row array
 userdata.label    = label;

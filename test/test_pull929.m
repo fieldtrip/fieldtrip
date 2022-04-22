@@ -11,6 +11,7 @@ function test_pull929
 
 load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2685/bug2685.mat'));
 
+% this is needed to avoid the data being recognized as MEG
 ERP_standard = rmfield(ERP_standard, 'grad');
 
 cfg = [];
@@ -61,6 +62,7 @@ end
 
 offsetdata = ERP_standard;
 offsetdata.avg = gooddata.avg+1000; % add constant offset of 1000 V
+
 cfg = [];
 cfg.method = 'spline';
 offsetscd = ft_scalpcurrentdensity(cfg, offsetdata);
@@ -72,10 +74,18 @@ ft_multiplotER(cfg, goodscd, offsetscd);
 
 % Compare difference between scd with and without offset:
 diffscd = goodscd.avg - offsetscd.avg;
-if mean(abs(diffscd(:))) > 100*eps % only floating point errors expected
+if mean(abs(diffscd(:))) > 1e6*eps % only floating point errors expected -> JM cranked this tolerance level up
+  % the increased tolerance is needed after PR1846 which introduced an
+  % integrated way to compute the projection matrix + the application of
+  % ft_apply_montage to project the data. Given that the projection matrix
+  % will be the same in goodscd and offsetscd, the numeric difference stems
+  % from the multiplication of ft_apply_montage with or without offset
   error('scd with and without offset strongly differs');
 end
-
+difftra = goodscd.elec.tra - offsetscd.elec.tra;
+if mean(abs(difftra(:))) > 1e2*eps
+  error('projection matrices for scd with and without offset strongly differ');
+end
 
 %% 1d) Test method spline with data channels shuffled
 
@@ -98,7 +108,7 @@ ft_multiplotER(cfg, goodscd, shufflescd);
 
 % Compare difference between scd with and without channels shuffled:
 diffscd = goodscd.avg - shufflescd.avg(unidx,:);
-if mean(abs(diffscd(:))) > 100*eps % only floating point errors expected
+if mean(abs(diffscd(:))) > 1e2*eps % only floating point errors expected
   error('scd with and without shuffling of channels strongly differs');
 end
 
@@ -121,7 +131,7 @@ ft_multiplotER(cfg, goodscd, shufflescd);
 
 % Compare difference between scd with and without channels shuffled:
 diffscd = goodscd.avg - shufflescd.avg;
-if mean(abs(diffscd(:))) > 100*eps % only floating point errors expected
+if mean(abs(diffscd(:))) > 1e2*eps % only floating point errors expected
   error('scd with and without shuffling of channels strongly differs');
 end
 
@@ -143,13 +153,14 @@ baddata.avg(1:64,:) = NaN; % set first half of channels to NaN
 try
   cfg = [];
   cfg.method = 'finite';
-  failed = true;
   scd = ft_scalpcurrentdensity(cfg, baddata); % should fail on data with channels containing NaNs
   failed = false;
+catch
+  failed = true;
 end
 
 if failed
-  fprintf('this correctly throws error in presence of bad channels\n')
+  fprintf('this correctly throws an error in the presence of bad channels\n')
 else
-  error('this should have thrown an error in presence of bad channels\n')
+  error('this should have thrown an error in the presence of bad channels\n')
 end

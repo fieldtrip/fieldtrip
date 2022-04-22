@@ -43,17 +43,19 @@ vec1 = v2 - v1;
 vec3 = v3 - v1;
 origin = repmat(mean([v1;v2;v3]), [size(v1,1), 1]);
 
-tmp(:,1,:) = vec1';
-tmp(:,2,:) = vec3';
-tmp   = pinvNx2(tmp);
-la    = sum(vec0'.*shiftdim(tmp(1,:,:))).'; % tmp*vec0';
-mu    = sum(vec0'.*shiftdim(tmp(2,:,:))).';
+%tmp(:,1,:) = vec1';
+%tmp(:,2,:) = vec3';
+%tmp   = pinvNx2(tmp);
+tmp   = pinvNx2(cat(3, vec1, vec3));
+la    = sum(vec0.*squeeze(tmp(:,1,:)),2); % tmp*vec0';
+mu    = sum(vec0.*squeeze(tmp(:,2,:)),2);
 
 % determine the projection onto the plane of the triangle
 proj  = v1 + [la la la].*vec1 + [mu mu mu].*vec3;
 
 % determine the signed distance from the original point to its projection
-% where the sign is negative if the original point is closer to the origin 
+% where the sign is negative if the original point is closer to the origin
+% which is defined as the mean of all points in [v1;v2;v3]
 origin_r    = sum((r    - origin).^2,2);
 origin_proj = sum((proj - origin).^2,2);
 

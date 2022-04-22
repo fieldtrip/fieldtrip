@@ -25,7 +25,7 @@ end
 default             = [];
 default.markers     = 'labels';
 default.interactive = 'no';
-cfg = mergeconfig(cfg, default);
+cfg = mergestruct(cfg, default);
 
 figure;
 ft_topoplotER(cfg, timelock);

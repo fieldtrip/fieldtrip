@@ -286,7 +286,7 @@ switch cfg.method
 end
 
 % select trials of interest
-tmpcfg = keepfields(cfg, {'trials', 'channel', 'tolerance', 'showcallinfo'});
+tmpcfg = keepfields(cfg, {'trials', 'channel', 'tolerance', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
 data   = ft_selectdata(tmpcfg, data);
 % restore the provenance information
 [cfg, data] = rollback_provenance(cfg, data);
@@ -347,7 +347,12 @@ end
 if strcmp(cfg.doscale, 'yes')
   % determine the scaling of the data, scale it to approximately unity
   % this will improve the performance of some methods, esp. fastica
-  tmp                 = data.trial{1};
+  trlidx = 1;
+  tmp    = data.trial{trlidx};
+  while all(isnan(tmp(:))) % if all data in this trial is NaN
+      trlidx  = trlidx + 1; % try next trial
+      tmp     = data.trial{trlidx}; % overwrite tmp with next trial
+  end
   tmp(~isfinite(tmp)) = 0; % ensure that the scaling is a finite value
   scale = norm((tmp*tmp')./size(tmp,2)); clear tmp;
   scale = sqrt(scale);
@@ -417,7 +422,9 @@ elseif ~strcmp(cfg.method, 'predetermined unmixing matrix') && strcmp(cfg.cellmo
   ft_info('concatenated data matrix size %dx%d\n', size(dat,1), size(dat,2));
   
   hasdatanans = any(~isfinite(dat(:)));
-  if hasdatanans
+  if hasdatanans && strcmp(cfg.method, 'dss')
+    ft_error('DSS does not work with nans or inf in the data');
+  elseif hasdatanans
     ft_info('data contains nan or inf, only using the samples without nan or inf\n');
     finitevals = sum(~isfinite(dat))==0;
     if ~any(finitevals)
@@ -614,8 +621,18 @@ switch cfg.method
     
   case 'pca'
     % compute data cross-covariance matrix
-    C = (dat*dat')./(size(dat,2)-1);
-    
+    if iscell(dat)
+      C  = zeros(size(dat{1},1));
+      nC = 0;
+      for k = 1:numel(dat)
+        C  = C + (dat{k}*dat{k}');
+        nC = nC + size(dat{k},2);
+      end
+      C = C./(nC-1);
+    else
+      C = (dat*dat')./(size(dat,2)-1);
+    end
+
     % eigenvalue decomposition (EVD)
     [E,D] = eig(C);
     
@@ -689,6 +706,10 @@ switch cfg.method
     end
     if isfield(cfg.dss, 'wdim') && ~isempty(cfg.dss.wdim)
       params.wdim = cfg.dss.wdim;
+    end
+    if isfield(params.denf, 'params') && isfield(params.denf.params, 'artifact')
+      % this may require the sampleinfo in the params structure, to keep the sampling bookkeeping correct
+      params.denf.params.sampleinfo = data.sampleinfo;
     end
     
     % create the state

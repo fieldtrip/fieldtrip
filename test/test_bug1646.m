@@ -49,7 +49,7 @@ bnd = ft_prepare_mesh(cfg, headmodel);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 cfg = [];
-cfg.headshape = dccnpath('/home/common/matlab/fieldtrip/data/Subject01.shape');
+cfg.headshape = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.shape');
 bnd = ft_prepare_mesh(cfg);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
