@@ -5,17 +5,17 @@ function [trl, event] = ft_trialfun_neuromagSTI016fix(cfg)
 % values into a new "STI101" channel and then uses the new channel to define trials.
 %
 % Use this function by calling
-%  [cfg] = ft_definetrial(cfg)
+%   [cfg] = ft_definetrial(cfg)
 % where the configuration structure should contain
-%  cfg.dataset             = string, containing filename or directory
-%  cfg.trialdef.prestim    = pre stimulus time in s
-%  cfg.trialdef.poststim   = post stimulus time in seconds
-%  cfg.trialdef.eventvalue = list with trigger values
-%  cfg.trialfun            = 'ft_trialfun_neuromagSTI016fix';
+%   cfg.dataset             = string, containing filename or directory
+%   cfg.trialdef.prestim    = pre stimulus time in s
+%   cfg.trialdef.poststim   = post stimulus time in seconds
+%   cfg.trialdef.eventvalue = list with trigger values
+%   cfg.trialfun            = 'ft_trialfun_neuromagSTI016fix';
 %
 % See also FT_DEFINETRIAL, FT_TRIALFUN_GENERAL
 
-% Undocumentet option:
+% Undocumented option:
 %  cfg.checkmaxfilter      = check that MaxFilter has run (default = yes).
 
 % Get only specific event type
@@ -23,7 +23,7 @@ cfg.trialdef.eventtype = ft_getopt(cfg.trialdef, 'eventtype', 'STI101');
 cfg.trialdef.eventvalue = ft_getopt(cfg.trialdef, 'eventvalue', []);
 
 % MaxFilter option
-cfg.checkmaxfilter = ft_getopt(cfg.trialdef, 'checkmaxfilter', 'yes');
+cfg.checkmaxfilter = ft_getopt(cfg.trialdef, 'checkmaxfilter');
 
 % read the header information, needed for the sampling rate and channel labels
 hdr = ft_read_header(cfg.dataset, 'checkmaxfilter', cfg.checkmaxfilter);

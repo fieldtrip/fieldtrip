@@ -44,7 +44,7 @@ function [normalised] = ft_volumenormalise(cfg, mri)
 %   cfg.spmparams        = you can feed in the parameters from a prior normalisation, for example
 %                          to apply the parameters determined from an aantomical MRI to an
 %                          interpolated source resontruction
-%   cfg.initial          = Initial alignmet between target and template (optional; used for intracranial electrode alignment).
+%   cfg.initial          = Initial alignment between target and template (optional; used for intracranial electrode alignment).
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
@@ -385,9 +385,6 @@ end
 for k=1:length(Vout)
   normalised = setsubfield(normalised, cfg.parameter{k}, spm_read_vols(Vout(k)));
 end
-
-% determine the affine coordinate transformation from individual head coordinates to template coordinates
-final = VG.mat * inv(params.Affine) * inv(VF(1).mat) * initial;
 
 normalised.transform = Vout(1).mat;
 normalised.dim       = size(normalised.anatomy);
