@@ -16,9 +16,11 @@ function lf = eeg_leadfield1(R, elc, vol)
 % This implementation is adapted from
 %   Luetkenhoener, Habilschrift '92
 % The original reference is
-%   R. Kavanagh, T. M. Darccey, D. Lehmann, and D. H. Fender. Evaluation of methods for three-dimensional localization of electric sources in the human brain. IEEE Trans Biomed Eng, 25:421-429, 1978.
+%   R. Kavanagh, T. M. Darccey, D. Lehmann, and D. H. Fender. Evaluation of methods
+%   for three-dimensional localization of electric sources in the human brain. IEEE
+%   Trans Biomed Eng, 25:421-429, 1978.
 
-% Copyright (C) 2002, Robert Oostenveld
+% Copyright (C) 2002-2022, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
