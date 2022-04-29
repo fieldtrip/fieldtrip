@@ -90,7 +90,7 @@ elseif strcmp(x, '.nii') && exist(fullfile(p, [f '.txt']), 'file')
     format = 'aal';
   end
   fclose(fid);
-elseif strcmp(x, '.mgz') && contains(strfind(f, 'aparc')) || contains(f, 'aseg')
+elseif strcmp(x, '.mgz') && contains(f, 'aparc') || contains(f, 'aseg')
   % individual volume based segmentation from freesurfer
   format = 'freesurfer_volume';
 elseif ft_filetype(filename, 'caret_label')
