@@ -321,6 +321,10 @@ if strcmp(readbids, 'yes') || strcmp(readbids, 'ifmakessense')
     if ~isempty(sidecar)
       optodes_tsv = ft_read_tsv(sidecar);
     end
+    sidecar = bids_sidecar(filename, 'coordsystem');
+    if ~isempty(sidecar)
+      coord_json = ft_read_json(sidecar);
+    end
   end
 end
 
@@ -2873,7 +2877,8 @@ if (strcmp(readbids, 'yes') || strcmp(readbids, 'ifmakessense')) && isbids
       assert(length(channels_tsv.type)  == hdr.nChans, 'number of channels is not consistent with the BIDS channels.tsv');
       assert(length(channels_tsv.units) == hdr.nChans, 'number of channels is not consistent with the BIDS channels.tsv');
       hdr.label     = channels_tsv.name;
-      hdr.chantype  = channels_tsv.type;
+      hdr.chantype = repmat({'unknown'}, [length(hdr.label), 1]);
+      hdr.chantype(contains(channels_tsv.type, 'NIRS')) = {'nirs'};
       hdr.chanunit  = channels_tsv.units;
     end
     if exist('electrodes_tsv', 'var')
@@ -2883,8 +2888,28 @@ if (strcmp(readbids, 'yes') || strcmp(readbids, 'ifmakessense')) && isbids
     end
     if exist('optodes_tsv', 'var')
       hdr.opto         = [];
-      hdr.opto.label   = optodes_tsv.name;
+      hdr.opto.optolabel   = optodes_tsv.name;
       hdr.opto.optopos = [optodes_tsv.x optodes_tsv.y optodes_tsv.z];
+      if all(all(isnan(hdr.opto.optopos)))
+        try
+          hdr.opto.optopos = [optodes_tsv.template_x optodes_tsv.template_y optodes_tsv.template_z];
+        end
+      end
+      hdr.opto.optotype = optodes_tsv.type;
+      hdr.opto.wavelength = unique(channels_tsv.wavelength_nominal)';
+      if exist('channels_tsv', 'var')
+        hdr.opto.label = channels_tsv.name;
+        hdr.opto.unit = coord_json.NIRSCoordinateUnites;
+        M = height(channels_tsv);
+        N = height(optodes_tsv);
+        hdr.opto.tra = zeros(M, N);
+        for i=1:M
+          tx = find(strcmp(optodes_tsv.name, channels_tsv.source(i)));
+          rx = find(strcmp(optodes_tsv.name, channels_tsv.detector(i)));
+          hdr.opto.tra(i, tx) = +find(channels_tsv.wavelength_nominal(i) == hdr.opto.wavelength);
+          hdr.opto.tra(i, rx) = -find(channels_tsv.wavelength_nominal(i) == hdr.opto.wavelength);
+        end
+      end
     end
   catch ME
     if strcmp(readbids, 'yes')
