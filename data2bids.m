@@ -2232,6 +2232,11 @@ if isempty(opto)
   tab = table();
 else
   name = opto.optolabel(:);
+  type = cell(size(name));
+  idx_source = find(contains(opto.optotype, {'transmitter', 'source'}));
+  idx_detector = find(contains(opto.optotype, {'receiver', 'detector'}));
+  type(idx_source) = {'source'};
+  type(idx_detector) = {'detector'};
   if all(opto.optopos(:,3)==0) % these are probably template positions
     ft_info('assuming the optode positions are template positions');
     x=nan(length(name),1);
@@ -2249,7 +2254,7 @@ else
     template_y=nan(length(name),1);
     template_z=nan(length(name),1);
   end
-  tab = table(name, x, y, z, template_x, template_y,template_z);
+  tab = table(name, type, x, y, z, template_x, template_y,template_z);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
