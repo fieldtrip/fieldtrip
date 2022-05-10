@@ -1836,7 +1836,8 @@ switch cfg.method
             
             ft_info('writing %s\n', cfg.outputfile);
             %dat = []; 
-            if strcmp(cfg.datatype, 'motion')
+
+            if any(strcmp(cfg.datatype, {'motion', 'physio'}))
                 writecell(hdr.label', cfg.outputfile,'FileType', 'text', 'Delimiter', '\t');
                 writematrix(dat', cfg.outputfile, 'FileType', 'text', 'Delimiter', '\t','WriteMode','append'); % use headers, the JSON will be written further down
             else
