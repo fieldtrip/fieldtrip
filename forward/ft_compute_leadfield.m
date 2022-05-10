@@ -429,7 +429,7 @@ elseif iseeg
       end
 
       if isfield(headmodel, 'o')
-        % shift the origin of the spheres, electrodes and dipole
+        % shift the center of the spheres to the origin, also do this for the electrodes and dipole
         sens.elecpos = sens.elecpos - repmat(headmodel.o, size(sens.elecpos, 1), 1);
         dippos = dippos - repmat(headmodel.o, Ndipoles, 1);
       end
