@@ -1360,13 +1360,12 @@ if need_motion_json
         end
     catch
     end
-    
 
     % merge the information specified by the user with that from the data
     % in case fields appear in both, the first input overrules the second
     motion_settings_temp = rmfield(motion_settings, 'TrackingSystems'); 
-    motion_json = mergeconfig(motion_json, motion_settings_temp); 
-    motion_json = mergeconfig(generic_settings, motion_json, false);
+    motion_json = mergestruct(motion_json, motion_settings_temp); 
+    motion_json = mergestruct(generic_settings, motion_json, false);
     
 end % if need_motion_json
 
@@ -1835,7 +1834,6 @@ switch cfg.method
             cfg.outputfile = fullfile(p, [f '.tsv']);
             
             ft_info('writing %s\n', cfg.outputfile);
-            %dat = []; 
 
             if any(strcmp(cfg.datatype, {'motion', 'physio'}))
                 writecell(hdr.label', cfg.outputfile,'FileType', 'text', 'Delimiter', '\t');
@@ -1843,10 +1841,7 @@ switch cfg.method
             else
                 writematrix(dat', cfg.outputfile, 'FileType', 'text', 'Delimiter', '\t'); % without headers, the JSON will be written further down
             end
-
-            ft_info('writing ''%s''\n', cfg.outputfile);
-            writematrix(dat', cfg.outputfile, 'FileType', 'text', 'Delimiter', '\t'); % without headers, the JSON will be written further down
-            
+          
           case {'events'}
             % add the TSV file extension, this is needed for behavioral data represented in scans.tsv
             % the events.tsv file will be written further down
