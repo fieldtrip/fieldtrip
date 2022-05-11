@@ -2492,6 +2492,8 @@ switch typ
     dir = 'eeg';
   case {'ieeg'} % this could also include 'events' or other non-brain data
     dir = 'ieeg';
+  case {'motion'} % this is not part of the official specification
+    dir = 'motion';
   case {'nirs'} % this is not part of the official specification
     dir = 'nirs';
     
