@@ -56,7 +56,7 @@ for i=1:M
   tx = measurementList(i).sourceIndex;                        % transmitter
   rx = measurementList(i).detectorIndex;                      % receiver
   wl = probe.wavelengths(measurementList(i).wavelengthIndex); % wavelength in nm
-  opto.label{i} = sprintf('D%d-S%d [%dnm]', rx, tx, round(wl));
+  opto.label{i} = sprintf('%s-%s [%dnm]', probe.sourceLabels{tx}, probe.detectorLabels{rx}, round(wl));
 end
 
 % the following specifies for each of the M channels at which wavelength each of the
