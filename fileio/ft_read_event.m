@@ -166,6 +166,7 @@ trigindx         = ft_getopt(varargin, 'trigindx');                  % deprecate
 triglabel        = ft_getopt(varargin, 'triglabel');                 % deprecated, use chanindx instead
 password         = ft_getopt(varargin, 'password', struct([]));
 readbids         = ft_getopt(varargin, 'readbids', 'ifmakessense');
+combinebinary    = ft_getopt(varargin, 'combinebinary'); % this is a sub-option for yokogawa data
 
 % for backward compatibility, added by Robert in Sept 2019
 if ~isempty(trigindx)
@@ -2235,13 +2236,16 @@ switch eventformat
     % the user should be able to specify the analog threshold, but the code falls back to '1.6' as default
     % the user should be able to specify the trigger channels
     % the user should be able to specify the flank, but the code falls back to 'up' as default
+    % the user can specify combinebinary to be true, in which case the individual binarized trigger channels
+    % will be combined into a single trigger code
+    % the user may need to specify a trigshift~=0 to ensure that unintended asynchronicity in the TTL-pulses is avoided
     if isempty(detectflank)
       detectflank = 'up';
     end
     if isempty(threshold)
       threshold = 1.6;
     end
-    event = read_yokogawa_event(filename, 'detectflank', detectflank, 'chanindx', chanindx, 'threshold', threshold);
+    event = read_yokogawa_event(filename, 'detectflank', detectflank, 'chanindx', chanindx, 'threshold', threshold, 'combinebinary', combinebinary, 'trigshift', trigshift);
     
   case {'yorkinstruments_hdf5'}
     if isempty(hdr)
