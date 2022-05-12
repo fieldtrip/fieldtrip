@@ -51,7 +51,7 @@ fixbiosemi   = ft_getopt(varargin, 'fixbiosemi',   false);
 fixartinis   = ft_getopt(varargin, 'fixartinis',   false);
 fixstaircase = ft_getopt(varargin, 'fixstaircase', false);
 fixhomer     = ft_getopt(varargin, 'fixhomer',     false);
-fixyokogawa  = ft_getopt(varargin, 'combinebinary', false);
+combinebinary = ft_getopt(varargin, 'combinebinary', false);
 threshold    = ft_getopt(varargin, 'threshold'          );
 
 if isempty(hdr)
@@ -225,7 +225,7 @@ if ~isempty(threshold)
   end
 end
 
-if fixyokogawa
+if combinebinary
   % this can only be done after thresholding
   % combines the single binary channels into a numbered trigger
   newdat = zeros(1, size(dat,2));
