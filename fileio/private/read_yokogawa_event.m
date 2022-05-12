@@ -38,6 +38,7 @@ chanindx    = ft_getopt(varargin, 'chanindx');
 threshold   = ft_getopt(varargin, 'threshold');
 detectflank = ft_getopt(varargin, 'detectflank');
 combinebinary = ft_getopt(varargin, 'combinebinary', false);
+trigshift   = ft_getopt(varargin, 'trigshift');
 if isempty(combinebinary)
   combinebinary = false;
 end
@@ -141,7 +142,7 @@ end
 
 % read the trigger channels and detect the flanks
 if ~isempty(chanindx)
-  trigger = read_trigger(filename, 'header', hdr, 'denoise', false, 'chanindx', chanindx, 'detectflank', detectflank, 'threshold', threshold, 'combinebinary', combinebinary);
+  trigger = read_trigger(filename, 'header', hdr, 'denoise', false, 'chanindx', chanindx, 'detectflank', detectflank, 'threshold', threshold, 'combinebinary', combinebinary, 'trigshift', trigshift);
   % combine the triggers and the other events
   event = appendstruct(event, trigger);
 end
