@@ -51,7 +51,7 @@ fixbiosemi   = ft_getopt(varargin, 'fixbiosemi',   false);
 fixartinis   = ft_getopt(varargin, 'fixartinis',   false);
 fixstaircase = ft_getopt(varargin, 'fixstaircase', false);
 fixhomer     = ft_getopt(varargin, 'fixhomer',     false);
-fixyokogawa  = ft_getopt(varargin, 'fixyokogawa',  false);
+fixyokogawa  = ft_getopt(varargin, 'combinebinary', false);
 threshold    = ft_getopt(varargin, 'threshold'          );
 
 if isempty(hdr)

@@ -37,7 +37,10 @@ handles = definehandles;
 chanindx    = ft_getopt(varargin, 'chanindx');
 threshold   = ft_getopt(varargin, 'threshold');
 detectflank = ft_getopt(varargin, 'detectflank');
-fixyokogawa = ft_getopt(varargin, 'fixyokogawa', true);
+combinebinary = ft_getopt(varargin, 'combinebinary', false);
+if isempty(combinebinary)
+  combinebinary = false;
+end
 
 % ensure that the required toolbox is on the path
 if ft_hastoolbox('yokogawa_meg_reader')
@@ -138,7 +141,7 @@ end
 
 % read the trigger channels and detect the flanks
 if ~isempty(chanindx)
-  trigger = read_trigger(filename, 'header', hdr, 'denoise', false, 'chanindx', chanindx, 'detectflank', detectflank, 'threshold', threshold, 'fixyokogawa', fixyokogawa);
+  trigger = read_trigger(filename, 'header', hdr, 'denoise', false, 'chanindx', chanindx, 'detectflank', detectflank, 'threshold', threshold, 'combinebinary', combinebinary);
   % combine the triggers and the other events
   event = appendstruct(event, trigger);
 end
