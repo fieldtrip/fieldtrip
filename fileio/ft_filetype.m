@@ -1434,6 +1434,10 @@ elseif filetype_check_extension(filename, '.csv') && filetype_check_header(filen
   type = 'sensys_csv';
   manufacturer = 'Sensys';
   content = 'fluxgate magnetometer data';
+elseif filetype_check_extension(filename, '.csv') && filetype_check_header(filename, 'EEG')
+  type = 'unicorn_csv';
+  manufacturer = 'Gtec/Unicorn';
+  content = 'EEG data';
 elseif filetype_check_extension(filename, '.csv')
   type = 'csv';
   manufacturer = 'Generic';
