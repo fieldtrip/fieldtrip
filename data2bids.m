@@ -1330,35 +1330,31 @@ end
 
 %% need_motion_json
 if need_motion_json
-
-    motion_json.MotionChannelCount                                            = numel(cfg.channels.name); % cfg.channels have to be provided
-    tracksysind = find(strcmp({cfg.motion.TrackingSystems(:).TrackingSystemName}, cfg.tracksys));
     
-    try
-        for tsi = 1:numel(cfg.motion.TrackingSystems)
-            motion_json.TrackingSystems(tsi).TrackingSystemName             = ft_getopt(cfg.motion.TrackingSystems(tsi), 'TrackingSystemName');
-            motion_json.TrackingSystems(tsi).DeviceSerialNumber             = ft_getopt(cfg.motion.TrackingSystems(tsi), 'DeviceSerialNumber');
-            motion_json.TrackingSystems(tsi).SoftwareVersions               = ft_getopt(cfg.motion.TrackingSystems(tsi), 'SoftwareVersions');
-            motion_json.TrackingSystems(tsi).ExternalSoftwareVersions       = ft_getopt(cfg.motion.TrackingSystems(tsi), 'ExternalSoftwareVersions');
-            motion_json.TrackingSystems(tsi).Manufacturer                   = ft_getopt(cfg.motion.TrackingSystems(tsi), 'Manufacturer');
-            motion_json.TrackingSystems(tsi).ManufacturersModelName         = ft_getopt(cfg.motion.TrackingSystems(tsi), 'ManufacturersModelName');
-            motion_json.TrackingSystems(tsi).SamplingFrequency              = ft_getopt(cfg.motion.TrackingSystems(tsi), 'SamplingFrequency');
-            motion_json.TrackingSystems(tsi).SamplingFrequencyEffective     = ft_getopt(cfg.motion.TrackingSystems(tsi), 'SamplingFrequencyEffective');
-            motion_json.TrackingSystems(tsi).RecordingDuration              = ft_getopt(cfg.motion.TrackingSystems(tsi), 'RecordingDuration');
-     
-            % tracking system description
-            tracksysChanInd                                                 = find(strcmp(cfg.channels.tracking_system, motion_json.TrackingSystems(tsi).TrackingSystemName));
-            motion_json.TrackingSystems(tsi).TrackedPointsCount             = numel(unique(cfg.channels.tracked_point(tracksysChanInd))); % cfg.channels have to be provided
-            motion_json.TrackingSystems(tsi).POSChannelCount                = sum(strcmpi(cfg.channels.type(tracksysChanInd), 'POS'));
-            motion_json.TrackingSystems(tsi).ORNTChannelCount               = sum(strcmpi(cfg.channels.type(tracksysChanInd), 'ORNT'));
-            motion_json.TrackingSystems(tsi).VELChannelCount                = sum(strcmpi(cfg.channels.type(tracksysChanInd), 'VEL'));
-            motion_json.TrackingSystems(tsi).ANGVELChannelCount             = sum(strcmpi(cfg.channels.type(tracksysChanInd), 'ANGVEL'));
-            motion_json.TrackingSystems(tsi).ACCChannelCount                = sum(strcmpi(cfg.channels.type(tracksysChanInd), 'ACC'));
-            motion_json.TrackingSystems(tsi).ANGACCChannelCount             = sum(strcmpi(cfg.channels.type(tracksysChanInd), 'ANGACC'));
-            motion_json.TrackingSystems(tsi).MAGNChannelCount               = sum(strcmpi(cfg.channels.type(tracksysChanInd), 'MAGN'));
-            motion_json.TrackingSystems(tsi).JNTANGChannelCount             = sum(strcmpi(cfg.channels.type(tracksysChanInd), 'JNTANG'));
-        end
-    catch
+    motion_json.MotionChannelCount                                            = numel(cfg.channels.name); % cfg.channels have to be provided
+    
+    for tsi = 1:numel(cfg.motion.TrackingSystems)
+        motion_json.TrackingSystems(tsi).TrackingSystemName             = ft_getopt(cfg.motion.TrackingSystems(tsi), 'TrackingSystemName');
+        motion_json.TrackingSystems(tsi).DeviceSerialNumber             = ft_getopt(cfg.motion.TrackingSystems(tsi), 'DeviceSerialNumber');
+        motion_json.TrackingSystems(tsi).SoftwareVersions               = ft_getopt(cfg.motion.TrackingSystems(tsi), 'SoftwareVersions');
+        motion_json.TrackingSystems(tsi).ExternalSoftwareVersions       = ft_getopt(cfg.motion.TrackingSystems(tsi), 'ExternalSoftwareVersions');
+        motion_json.TrackingSystems(tsi).Manufacturer                   = ft_getopt(cfg.motion.TrackingSystems(tsi), 'Manufacturer');
+        motion_json.TrackingSystems(tsi).ManufacturersModelName         = ft_getopt(cfg.motion.TrackingSystems(tsi), 'ManufacturersModelName');
+        motion_json.TrackingSystems(tsi).SamplingFrequency              = ft_getopt(cfg.motion.TrackingSystems(tsi), 'SamplingFrequency');
+        motion_json.TrackingSystems(tsi).SamplingFrequencyEffective     = ft_getopt(cfg.motion.TrackingSystems(tsi), 'SamplingFrequencyEffective');
+        motion_json.TrackingSystems(tsi).RecordingDuration              = ft_getopt(cfg.motion.TrackingSystems(tsi), 'RecordingDuration');
+        
+        % tracking system description
+        tracksysChanInd                                                 = find(strcmp(cfg.channels.tracking_system, motion_json.TrackingSystems(tsi).TrackingSystemName));
+        motion_json.TrackingSystems(tsi).TrackedPointsCount             = numel(unique(cfg.channels.tracked_point(tracksysChanInd))); % cfg.channels have to be provided
+        motion_json.TrackingSystems(tsi).POSChannelCount                = sum(strcmpi(cfg.channels.type(tracksysChanInd), 'POS'));
+        motion_json.TrackingSystems(tsi).ORNTChannelCount               = sum(strcmpi(cfg.channels.type(tracksysChanInd), 'ORNT'));
+        motion_json.TrackingSystems(tsi).VELChannelCount                = sum(strcmpi(cfg.channels.type(tracksysChanInd), 'VEL'));
+        motion_json.TrackingSystems(tsi).ANGVELChannelCount             = sum(strcmpi(cfg.channels.type(tracksysChanInd), 'ANGVEL'));
+        motion_json.TrackingSystems(tsi).ACCChannelCount                = sum(strcmpi(cfg.channels.type(tracksysChanInd), 'ACC'));
+        motion_json.TrackingSystems(tsi).ANGACCChannelCount             = sum(strcmpi(cfg.channels.type(tracksysChanInd), 'ANGACC'));
+        motion_json.TrackingSystems(tsi).MAGNChannelCount               = sum(strcmpi(cfg.channels.type(tracksysChanInd), 'MAGN'));
+        motion_json.TrackingSystems(tsi).JNTANGChannelCount             = sum(strcmpi(cfg.channels.type(tracksysChanInd), 'JNTANG'));
     end
 
     % merge the information specified by the user with that from the data
