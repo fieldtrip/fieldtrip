@@ -1923,6 +1923,14 @@ for i=1:numel(modality)
     if isfile(filename)
       existing = ft_read_json(filename);
     else
+      % if there is a single tracking system in motion file, the field
+      % value has to be coverted to a cell array so that .json output will
+      % be an array 
+      if  strcmp(modality{i}, 'motion')
+          if modality_json.TrackingSystemCount == 1
+              modality_json.TrackingSystems = {modality_json.TrackingSystems};
+          end
+      end
       existing = [];
     end
     
