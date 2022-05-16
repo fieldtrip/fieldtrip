@@ -16,19 +16,24 @@ function [data] = ft_resampledata(cfg, data)
 %   cfg.sampleindex     = 'no' or 'yes', add a channel with the original sample indices (default = 'no')
 %
 % Instead of specifying cfg.resamplefs, you can also specify a time axis on which you
-% want the data to be resampled. This is usefull for merging data from two acquisition
+% want the data to be resampled. This is useful for merging data from two acquisition
 % devices, after resampledata you can call FT_APPENDDATA to concatenate the channels
 % from the different acquisition devices.
 %   cfg.time        = cell-array with one time axis per trial (i.e. from another dataset)
 %   cfg.method      = interpolation method, see INTERP1 (default = 'pchip')
 %   cfg.extrapval   = extrapolation behaviour, scalar value or 'extrap' (default = as in INTERP1)
 %
+% Optionally, an explicit anti-aliasing low pass filter can be applied to the data, prior to the resampling. 
+% This may be useful if a method is used that does not apply a low pass filter under the hood, or if strong
+% signal components are present in the bandwidth that is close to the new Nyquist frequency.
+%   cfg.lpfilter    = 'yes' or 'no' (default = 'no')
+%   cfg.lpfreq      = scalar value for low pass frequency (there is no
 % Previously this function used to detrend the data by default. The motivation for
 % this is that the data is filtered prior to resampling to avoid aliassing and
 % detrending prevents occasional edge artifacts of the filters. Detrending is fine
 % for removing slow drifts in data prior to frequency analysis, but not good if you
 % subsequently want to look at the evoked fields. Therefore the old default value
-% 'yes' has been removed and you now explicitely have to specify whether you want to
+% 'yes' has been removed and you now explicitly have to specify whether you want to
 % detrend.
 %
 % To facilitate data-handling and distributed computing you can use
@@ -43,6 +48,7 @@ function [data] = ft_resampledata(cfg, data)
 
 % Copyright (C) 2003-2006, FC Donders Centre, Markus Siegel
 % Copyright (C) 2004-2019, FC Donders Centre, Robert Oostenveld
+% Copyright (C) 2022, DCCN, Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -100,6 +106,7 @@ cfg.trials           = ft_getopt(cfg, 'trials',          'all', 1);
 cfg.method           = ft_getopt(cfg, 'method',          []);
 cfg.sampleindex      = ft_getopt(cfg, 'sampleindex',     'no');
 cfg.extrapval        = ft_getopt(cfg, 'extrapval',       []);
+cfg.lpfilter         = ft_getopt(cfg, 'lpfilter');
 
 % store original datatype
 convert = ft_datatype(data);
@@ -148,6 +155,14 @@ cfg.origfs = double(data.fsample);
 
 % set this to nan, it will be updated later on
 data.fsample = nan;
+
+if isempty(cfg.lpfilter), cfg.lpfilter = 'no'; end
+dolpfilt = istrue(cfg.lpfilter);
+if dolpfilt
+  cfg.lpfilttype = ft_getopt(cfg, 'lpfilttype');
+  cfg.lpfiltord  = ft_getopt(cfg, 'lpfiltord');
+  cfg            = ft_checkconfig(cfg, 'required', 'lpfreq');
+end
 
 if usefsample
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -208,6 +223,10 @@ if usefsample
       [olddat, bsl] = ft_preproc_baselinecorrect(olddat, nearest(oldtim, cfg.baselinewindow(1)), nearest(oldtim, cfg.baselinewindow(2)));
     else
       [olddat, bsl] = ft_preproc_baselinecorrect(olddat);
+    end
+
+    if istrue(cfg.lpfilter)
+      olddat = ft_preproc_lowpassfilter(olddat, cfg.origfs, cfg.lpfreq, cfg.lpfiltord, cfg.lpfilttype);
     end
 
     % pad the data with zeros on both sides
@@ -327,6 +346,10 @@ elseif usetime
       [olddat, bsl] = ft_preproc_baselinecorrect(olddat);
     end
 
+    if istrue(cfg.lpfilter)
+      olddat = ft_preproc_lowpassfilter(olddat, cfg.origfs, cfg.lpfreq, cfg.lpfiltord, cfg.lpfilttype);
+    end
+    
     % perform the resampling
     newtim = cfg.time{itr};
     if length(oldtim)>1
