@@ -23,7 +23,8 @@ function [data] = ft_resampledata(cfg, data)
 %   cfg.method      = interpolation method, see INTERP1 (default = 'pchip')
 %   cfg.extrapval   = extrapolation behaviour, scalar value or 'extrap' (default = as in INTERP1)
 %
-% Optionally, an explicit anti-aliasing low pass filter can be applied to the data, prior to the resampling. 
+% Note, that depending on the selected method, an implicit anti-aliasing low pass filter is applied, prior
+% to the resampling. Optionally, an explicit anti-aliasing low pass filter can be specified. 
 % This may be useful if a method is used that does not apply a low pass filter under the hood, or if strong
 % signal components are present in the bandwidth that is close to the new Nyquist frequency.
 %   cfg.lpfilter    = 'yes' or 'no' (default = 'no')
