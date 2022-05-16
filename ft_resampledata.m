@@ -32,13 +32,14 @@ function [data] = ft_resampledata(cfg, data)
 %   cfg.lpfilter    = 'yes' or 'no' (default = 'no')
 %   cfg.lpfreq      = scalar value for low pass frequency (there is no default, so needs to be always specified)
 %
-% Previously this function used to detrend the data by default. The motivation for
-% this is that the data is filtered prior to resampling to avoid aliassing and
-% detrending prevents occasional edge artifacts of the filters. Detrending is fine
-% for removing slow drifts in data prior to frequency analysis, but not good if you
-% subsequently want to look at the evoked fields. Therefore the old default value
-% 'yes' has been removed and you now explicitly have to specify whether you want to
-% detrend.
+% More documentation about anti alias filtering can be found in this <a href="matlab: 
+% web('https://www.fieldtriptoolbox.org/faq/resampling_lowpassfilter')">FAQ</a> on the FieldTrip website.
+%
+% Previously this function used to detrend the data by default. The motivation for this is that the data 
+% is filtered prior to resampling to avoid aliassing and detrending prevents occasional edge artifacts of 
+% the filters. Detrending is fine for removing slow drifts in data prior to frequency analysis, but not good
+% if you subsequently want to look at the evoked fields. Therefore the old default value 'yes' has been
+% removed and you now explicitly have to specify whether you want to detrend.
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
