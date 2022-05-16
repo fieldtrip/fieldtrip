@@ -1343,6 +1343,10 @@ if need_motion_json
         motion_json.TrackingSystems(tsi).SamplingFrequency              = ft_getopt(cfg.motion.TrackingSystems(tsi), 'SamplingFrequency');
         motion_json.TrackingSystems(tsi).SamplingFrequencyEffective     = ft_getopt(cfg.motion.TrackingSystems(tsi), 'SamplingFrequencyEffective');
         motion_json.TrackingSystems(tsi).RecordingDuration              = ft_getopt(cfg.motion.TrackingSystems(tsi), 'RecordingDuration');
+        motion_json.TrackingSystems(tsi).SpatialAxes                    = ft_getopt(cfg.motion.TrackingSystems(tsi), 'SpatialAxes');
+        motion_json.TrackingSystems(tsi).RotationRule                   = ft_getopt(cfg.motion.TrackingSystems(tsi), 'RotationRule');
+        motion_json.TrackingSystems(tsi).RotationOrder                  = ft_getopt(cfg.motion.TrackingSystems(tsi), 'RotationOrder');
+        
         
         % tracking system description
         tracksysChanInd                                                 = find(strcmp(cfg.channels.tracking_system, motion_json.TrackingSystems(tsi).TrackingSystemName));
