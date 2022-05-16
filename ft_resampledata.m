@@ -24,11 +24,14 @@ function [data] = ft_resampledata(cfg, data)
 %   cfg.extrapval   = extrapolation behaviour, scalar value or 'extrap' (default = as in INTERP1)
 %
 % Note, that depending on the selected method, an implicit anti-aliasing low pass filter is applied, prior
-% to the resampling. Optionally, an explicit anti-aliasing low pass filter can be specified. 
-% This may be useful if a method is used that does not apply a low pass filter under the hood, or if strong
-% signal components are present in the bandwidth that is close to the new Nyquist frequency.
+% to the resampling. This is only the case for the method 'resample'. Optionally, an explicit anti-aliasing 
+% low pass filter can be specified.  This may be useful if the requested output sampling rate is lower than
+% the sampling rate of the input data, and if a method is used that does not apply a low pass filter 
+% under the hood, i.e. for any method other than 'resample', or if strong signal components are present in the 
+% bandwidth that is close to the new Nyquist frequency.
 %   cfg.lpfilter    = 'yes' or 'no' (default = 'no')
-%   cfg.lpfreq      = scalar value for low pass frequency (there is no
+%   cfg.lpfreq      = scalar value for low pass frequency (there is no default, so needs to be always specified)
+%
 % Previously this function used to detrend the data by default. The motivation for
 % this is that the data is filtered prior to resampling to avoid aliassing and
 % detrending prevents occasional edge artifacts of the filters. Detrending is fine
