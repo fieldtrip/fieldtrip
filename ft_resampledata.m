@@ -31,6 +31,8 @@ function [data] = ft_resampledata(cfg, data)
 % bandwidth that is close to the new Nyquist frequency.
 %   cfg.lpfilter    = 'yes' or 'no' (default = 'no')
 %   cfg.lpfreq      = scalar value for low pass frequency (there is no default, so needs to be always specified)
+%   cfg.lpfilttype  = string, filter type (default is set in ft_preproc_lowpassfilter)
+%   cfg.lpfiltord   = scalar, filter order (default is set in ft_preproc_lowpassfilter)
 %
 % More documentation about anti alias filtering can be found in this <a href="matlab: 
 % web('https://www.fieldtriptoolbox.org/faq/resampling_lowpassfilter')">FAQ</a> on the FieldTrip website.
@@ -49,7 +51,7 @@ function [data] = ft_resampledata(cfg, data)
 % files should contain only a single variable, corresponding with the
 % input/output structure.
 %
-% See also FT_PREPROCESSING, FT_APPENDDATA, RESAMPLE, DOWNSAMPLE, INTERP1
+% See also FT_PREPROCESSING, FT_APPENDDATA, RESAMPLE, DOWNSAMPLE, INTERP1, FT_PREPROC_LOWPASSFILTER
 
 % Copyright (C) 2003-2006, FC Donders Centre, Markus Siegel
 % Copyright (C) 2004-2019, FC Donders Centre, Robert Oostenveld
