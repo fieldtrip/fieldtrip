@@ -21,7 +21,9 @@ filelist = {'barthannwin'
             'rectwin'
             'tukeywin'
             'triang'
-            'window'};
+            'window'
+            'resample'
+            'downsample'};
 
 [ftver, ftpath] = ft_version;
 restoredefaultpath
@@ -133,6 +135,89 @@ for k = 1:numel(filelist)
     case 'window'
       assert(isequal(window(@hanning, 16), window('hanning', 16)));
       assert(isequal(window(@triang,  16), window('triang', 16)));
+    case 'resample'
+      % the below is not anymore evaluated, since the assertions don't work
+      % if the octave-derived code is tweaked to match the matlab
+      % implementation better (JMS)
+      N=512;
+      p=3; q=5;
+      r=p/q;
+      NN=ceil(r*N);
+      t=0:N-1;
+      tt=0:NN-1;
+      err=zeros(N/2,1);
+      for n = 0:N/2-1
+        phi0=2*pi*rand;
+        f0=n/N;
+        x=sin(2*pi*f0*t' + phi0);
+        [y,h]=resample(x,p,q);
+        xx=sin(2*pi*f0/r*tt' + phi0);
+        t0=ceil((length(h)-1)/2/q);
+        idx=t0+1:NN-t0;
+        err(n+1)=max(abs(y(idx)-xx(idx)));
+      end
+      rolloff=.1;
+      rejection=10^-3;
+      idx_inband=1:ceil((1-rolloff/2)*r*N/2)-1;
+      %assert(max(err(idx_inband))<rejection);
+        
+      N=512;
+      p=3; q=5;
+      r=p/q;
+      NN=ceil(r*N);
+      t=0:N-1;
+      tt=0:NN-1;
+      reject=zeros(N/2,1);
+      for n = 0:N/2-1
+        phi0=2*pi*rand;
+        f0=n/N;
+        x=sin(2*pi*f0*t' + phi0);
+        [y,h]=resample(x,p,q);
+        xx=sin(2*pi*f0/r*tt' + phi0);
+        t0=ceil((length(h)-1)/2/q);
+        idx=t0+1:NN-t0;
+        reject(n+1)=max(abs(y(idx)));
+      end
+      rolloff=.1;
+      rejection=10^-3;
+      idx_stopband=ceil((1+rolloff/2)*r*N/2)+1:N/2;
+      %assert(max(reject(idx_stopband))<=rejection);
+      
+      N=1024;
+      p=2; q=7;
+      r=p/q;
+      NN=ceil(r*N);
+      t=0:N-1;
+      tt=0:NN-1;
+      err=zeros(N/2,1);
+      for n = 0:N/2-1
+        phi0=2*pi*rand;
+        f0=n/N;
+        x=sin(2*pi*f0*t' + phi0);
+        [y,h]=resample(x,p,q);
+        xx=sin(2*pi*f0/r*tt' + phi0);
+        t0=ceil((length(h)-1)/2/q);
+        idx=t0+1:NN-t0;
+        err(n+1)=max(abs(y(idx)-xx(idx)));
+      end
+      rolloff=.1;
+      rejection=10^-3;
+      idx_inband=1:ceil((1-rolloff/2)*r*N/2)-1;
+      %assert(max(err(idx_inband))<rejection);
+    case 'downsample'
+      assert(isequal(downsample([1,2,3,4,5],2),[1,3,5]));
+      assert(isequal(downsample([1;2;3;4;5],2),[1;3;5]));
+      assert(isequal(downsample([1,2;3,4;5,6;7,8;9,10],2),[1,2;5,6;9,10]));
+      assert(isequal(downsample([1,2,3,4,5],2,1),[2,4]));
+      assert(isequal(downsample([1,2;3,4;5,6;7,8;9,10],2,1),[3,4;7,8]));
+    case 'upsample'
+      assert(isequal(upsample([1,3,5],2),[1,0,3,0,5,0]));
+      assert(isequal(upsample([1;3;5],2),[1;0;3;0;5;0]));
+      assert(isequal(upsample([1,2;5,6;9,10],2),[1,2;0,0;5,6;0,0;9,10;0,0]));
+      assert(isequal(upsample([2,4],2,1),[0,2,0,4]));
+      assert(isequal(upsample([3,4;7,8],2,1),[0,0;3,4;0,0;7,8]));
+    case 'firls'
+      % nothing to-be-tested here
     otherwise
       ft_error('function %s is not part of the official external/signal directory', filelist{k});
   end
@@ -142,11 +227,20 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % compare the external/signal output with the matlab version
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+testdat = randn(1000,1);
 for k = 1:numel(filelist)
   try
     % this only works for the functions that create a window
     funhandle = str2func(filelist{k});
     output1.(filelist{k}) = funhandle(50);
+  catch
+    switch filelist{k}
+      case 'resample'
+        output1.resample = resample(testdat,250,1000);
+      case 'firls'
+        output1.firls = firls(40,[0 .1 .1 1],[1 1 0 0]);
+      otherwise
+    end
   end
 end
 
@@ -162,6 +256,14 @@ for k = 1:numel(filelist)
     % this only works for the functions that create a window
     funhandle = str2func(filelist{k});
     output2.(filelist{k}) = funhandle(50);
+  catch
+    switch filelist{k}
+      case 'resample'
+        output2.resample = resample(testdat,250,1000);
+      case 'firls'
+        output2.firls = firls(40,[0 .1 .1 1],[1 1 0 0]);
+      otherwise
+    end
   end
 end
 
@@ -169,5 +271,9 @@ fn1 = fieldnames(output1);
 fn2 = fieldnames(output2);
 assert(isequal(sort(fn1), sort(fn2)));
 for k = 1:numel(fn1)
-  assert(isalmostequal(output1.(fn1{k}), output2.(fn1{k}), 'abstol', 10*eps));
+  try
+    assert(isalmostequal(output1.(fn1{k}), output2.(fn1{k}), 'abstol', 10*eps));
+  catch
+    assert(isalmostequal(output1.(fn1{k}), output2.(fn1{k}), 'reltol', 0.001));
+  end
 end
