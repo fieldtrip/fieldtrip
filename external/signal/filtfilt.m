@@ -74,6 +74,7 @@ lb = length(b);
 la = length(a);
 n = max(lb, la);
 lrefl = 3 * (n - 1);
+if lrefl >= lx, lrefl = lx-1; end
 if la < n, a(n) = 0; end
 if lb < n, b(n) = 0; end
 

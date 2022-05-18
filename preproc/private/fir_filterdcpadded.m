@@ -43,59 +43,83 @@ function [ data ] = fir_filterdcpadded(b, a, data, causal, usefftfilt)
 
 % Defaults
 if nargin <= 4 || isempty(usefftfilt)
-    usefftfilt = 0;
+  usefftfilt = 0;
 end
 if nargin <= 3 || isempty(causal)
-    causal = 0;
+  causal = 0;
 end
 
 % Check arguments
 if nargin < 3
-    ft_error('Not enough input arguments.');
+  ft_error('Not enough input arguments.');
 end
 
 % Is FIR?
 if ~isscalar(a) || a ~= 1
-    ft_error('Not a FIR filter. onepass-zerophase and onepass-minphase filtering is available for FIR filters only.')
+  ft_error('Not a FIR filter. onepass-zerophase and onepass-minphase filtering is available for FIR filters only.')
 end
 
 % Group delay
 if mod(length(b), 2) ~= 1
-    ft_error('Filter order must be a real, even, positive integer.');
+  ft_error('Filter order must be a real, even, positive integer.');
 end
 groupDelay = (length(b) - 1) / 2;
 
-% Filter symmetry
-isSym = all(b(1:groupDelay) == b(end:-1:groupDelay + 2));
-isAntisym = all([b(1:groupDelay) == -b(end:-1:groupDelay + 2) b(groupDelay + 1) == 0]);
-if causal == 0 && ~(isSym || isAntisym)
+if causal == 0
+  % Filter symmetry, add a check with some numeric tolerance, needed if the
+  % filter coefficients are computed using the compat functions
+  isSym     = all(b(1:groupDelay)  ==  b(end:-1:groupDelay + 2));
+  isAntisym = all([b(1:groupDelay) == -b(end:-1:groupDelay + 2) b(groupDelay + 1) == 0]);
+  
+  % the filter should be either symmetric or antisymmetric: the check above
+  % requires exact numeric anti-/symmetry. The compat drop in replacements
+  % have some numeric inaccuracies, close to eps, so we might be a bit
+  % lenient here
+  if ~isSym && isalmostequal(b(1:groupDelay), b(end:-1:groupDelay + 2), 'abstol', eps*10)
+    ft_warning('Filter coefficients are nearly symmetric, making them explicitly symmetric');
+    bold = b;
+    b(1:groupDelay)          = ( bold(1:groupDelay) + bold(end:-1:groupDelay + 2) )./2;
+    b(end:-1:groupDelay + 2) = ( bold(1:groupDelay) + bold(end:-1:groupDelay + 2) )./2;
+  end
+  isSym     = all(b(1:groupDelay)  ==  b(end:-1:groupDelay + 2));
+  
+  if ~isAntisym && isalmostequal(b(1:groupDelay), -b(end:-1:groupDelay + 2), 'abstol', eps*10) && isalmostequal(b(groupDelay + 1), 0, 'abstol', eps*10)
+    ft_warning('Filter coefficients are nearly antisymmetric, making them explicitly antisymmetric');
+    bold = b;
+    b(1:groupDelay)          =  ( bold(1:groupDelay) - bold(end:-1:groupDelay + 2) )./2;
+    b(end:-1:groupDelay + 2) = -( bold(1:groupDelay) - bold(end:-1:groupDelay + 2) )./2;
+  end
+  isAntisym = all([b(1:groupDelay) == -b(end:-1:groupDelay + 2) b(groupDelay + 1) == 0]);
+  
+  if ~(isSym || isAntisym)
     ft_error('Filter is not anti-/symmetric. For onepass-zerophase filtering the filter must be anti-/symmetric.')
+  end
 end
 
 % Padding
 if causal
-    startPad = repmat(data(1, :), [2 * groupDelay 1]);
-    endPad = [];
+  startPad = repmat(data(1, :), [2 * groupDelay 1]);
+  endPad = [];
 else
-    startPad = repmat(data(1, :), [groupDelay 1]);
-    endPad = repmat(data(end, :), [groupDelay 1]);
+  startPad = repmat(data(1, :), [groupDelay 1]);
+  endPad = repmat(data(end, :), [groupDelay 1]);
 end
 
 % Filter data (with double precision)
 isSingle = isa(data, 'single');
 
 if usefftfilt
-    data = fftfilt(double(b), double([startPad; data; endPad]));
+  data = fftfilt(double(b), double([startPad; data; endPad]));
 else
-    data = filter(double(b), 1, double([startPad; data; endPad])); % Pad and filter with double precision
+  data = filter(double(b), 1, double([startPad; data; endPad])); % Pad and filter with double precision
 end
 
 % Convert to single
 if isSingle
-    data = single(data);
+  data = single(data);
 end
 
 % Remove padded data
 data = data(2 * groupDelay + 1:end, :);
- 
+
 end

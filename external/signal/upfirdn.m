@@ -39,5 +39,5 @@ if(floor(p) ~= p || floor(q) ~= q || p < 1 || q < 1)
 end
 	
 yout = upsample(xin,p);
-yout = conv(yout, h); % original was filter(h, 1, yout);
+yout = convn(yout, h); % original was filter(h, 1, yout);
 yout = downsample(yout,q);
