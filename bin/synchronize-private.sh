@@ -1477,6 +1477,7 @@ sync ${ARRAY[*]}
 ARRAY=()
 ARRAY+=(test/private/isalmostequal.m)
 ARRAY+=(private/isalmostequal.m)
+ARRAY+=(preproc/private/isalmostequal.m)
 sync ${ARRAY[*]}
 
 ################################################################################
