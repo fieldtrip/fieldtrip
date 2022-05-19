@@ -1679,7 +1679,7 @@ switch headerformat
     
   case 'mayo_mef30'
     ft_hastoolbox('mayo_mef', 1); % make sure mayo_mef exists
-    hdr = read_mayo_mef30(filename, password, sortchannel);
+    hdr = read_mayo_mef30(filename, password);
     
   case 'mayo_mef21'
     ft_hastoolbox('mayo_mef', 1); % make sure mayo_mef exists

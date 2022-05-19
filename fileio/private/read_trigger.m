@@ -51,6 +51,7 @@ fixbiosemi   = ft_getopt(varargin, 'fixbiosemi',   false);
 fixartinis   = ft_getopt(varargin, 'fixartinis',   false);
 fixstaircase = ft_getopt(varargin, 'fixstaircase', false);
 fixhomer     = ft_getopt(varargin, 'fixhomer',     false);
+combinebinary = ft_getopt(varargin, 'combinebinary', false);
 threshold    = ft_getopt(varargin, 'threshold'          );
 
 if isempty(hdr)
@@ -224,6 +225,17 @@ if ~isempty(threshold)
   end
 end
 
+if combinebinary
+  % this can only be done after thresholding
+  % combines the single binary channels into a numbered trigger
+  newdat = zeros(1, size(dat,2));
+  for i = 1:size(dat,1)
+    newdat = newdat + dat(i,:).*2^(i-1);
+  end
+  dat = newdat; clear newdat
+  hdr.label{chanindx(1)} = 'combined_binary_trigger';
+end
+
 if isempty(dat)
   % either no trigger channels were selected, or no samples
   return
@@ -239,7 +251,7 @@ if isempty(detectflank)
   end
 end
 
-for i=1:length(chanindx)
+for i = 1:size(dat,1)
   % process each trigger channel independently
   channel = hdr.label{chanindx(i)};
   trig    = dat(i,:);

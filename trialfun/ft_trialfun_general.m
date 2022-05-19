@@ -75,6 +75,7 @@ cfg.trialdef.trigshift    = ft_getopt(cfg.trialdef, 'trigshift');
 cfg.trialdef.chanindx     = ft_getopt(cfg.trialdef, 'chanindx');
 cfg.trialdef.threshold    = ft_getopt(cfg.trialdef, 'threshold');
 cfg.trialdef.tolerance    = ft_getopt(cfg.trialdef, 'tolerance');
+cfg.trialdef.combinebinary = ft_getopt(cfg.trialdef, 'combinebinary');
 
 % specify the default file formats
 cfg.eventformat   = ft_getopt(cfg, 'eventformat');
@@ -97,7 +98,7 @@ if isfield(cfg, 'event')
   event = cfg.event;
 else
   ft_info('reading the events from ''%s''\n', cfg.headerfile);
-  event = ft_read_event(cfg.headerfile, 'headerformat', cfg.headerformat, 'eventformat', cfg.eventformat, 'dataformat', cfg.dataformat,  'detectflank', cfg.trialdef.detectflank, 'trigshift', cfg.trialdef.trigshift, 'chanindx', cfg.trialdef.chanindx, 'threshold', cfg.trialdef.threshold, 'tolerance', cfg.trialdef.tolerance);
+  event = ft_read_event(cfg.headerfile, 'headerformat', cfg.headerformat, 'eventformat', cfg.eventformat, 'dataformat', cfg.dataformat,  'detectflank', cfg.trialdef.detectflank, 'trigshift', cfg.trialdef.trigshift, 'chanindx', cfg.trialdef.chanindx, 'threshold', cfg.trialdef.threshold, 'tolerance', cfg.trialdef.tolerance, 'combinebinary', cfg.trialdef.combinebinary);
 end
 
 if ~isempty(cfg.trialdef.length) && ~isinf(cfg.trialdef.length)

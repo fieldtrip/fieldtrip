@@ -6,6 +6,17 @@ some functions in the Mathworks signal processing toolbox.
 Note that the hilbert and hanning functions are not from the Octave toolbox, 
 these have been taken from SPM (hilbert), or were handcrafted (hanning)
 
-Last update was performed Jan 11, 2022 by Jan-Mathijs, using version
+Updates:
+Jan 11, 2022 by Jan-Mathijs, using version
 [4fcb75] (i.e. the default branch) from 
 https://sourceforge.net/p/octave/signal/ci/default/tree/
+
+May 16, 2022 by Jan-Mathijs, added functionality for resample:
+-upsample
+-downsample
+-upfirdn
+-resample
+-firls
+-fir1
+-fir2
+Note: resample has been adjusted as to match the default implementation in MATLAB (2021b), i.e. using a (non-configurable) beta parameter for the Kaiser window of 5, and using a firls anti-aliasing filter, instead of a sinc filter
