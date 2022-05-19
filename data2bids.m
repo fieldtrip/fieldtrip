@@ -62,6 +62,7 @@ function [cfg] = data2bids(cfg, varargin)
 %   cfg.mod                     = string
 %   cfg.echo                    = string
 %   cfg.proc                    = string
+%   cfg.tracksys                = string
 %   cfg.space                   = string
 %   cfg.desc                    = string
 %
@@ -254,6 +255,7 @@ cfg.bidsroot  = ft_getopt(cfg, 'bidsroot');
 cfg.sub       = ft_getopt(cfg, 'sub');
 cfg.ses       = ft_getopt(cfg, 'ses');
 cfg.task      = ft_getopt(cfg, 'task');
+cfg.tracksys  = ft_getopt(cfg, 'tracksys');
 cfg.acq       = ft_getopt(cfg, 'acq');
 cfg.ce        = ft_getopt(cfg, 'ce');
 cfg.rec       = ft_getopt(cfg, 'rec');
@@ -267,7 +269,8 @@ cfg.desc      = ft_getopt(cfg, 'desc');
 cfg.datatype  = ft_getopt(cfg, 'datatype');
 
 % do a sanity check on the fields that form the filename as key-value pair
-fn = {'sub', 'ses', 'task', 'acq', 'ce', 'rec', 'dir', 'run', 'mod', 'echo', 'proc', 'space', 'desc'};
+fn = {'sub', 'ses', 'task', 'tracksys', 'acq', 'ce', 'rec', 'dir', 'run', 'mod', 'echo', 'proc', 'space', 'desc'};
+
 for i=1:numel(fn)
   if ischar(cfg.(fn{i})) && any(cfg.(fn{i})=='-')
     ft_error('the field cfg.%s cannot contain a "-"', fn{i});
@@ -554,19 +557,12 @@ cfg.eyetracker.SamplingFrequency          = ft_getopt(cfg.eyetracker, 'SamplingF
 
 %% motion is not part of the official BIDS specification
 % this follows extension proposal 029 (https://bids.neuroimaging.io/bep029)
-cfg.motion.DeviceSerialNumber             = ft_getopt(cfg.motion, 'DeviceSerialNumber'      );
 cfg.motion.EpochLength                    = ft_getopt(cfg.motion, 'EpochLength'             );
-cfg.motion.Manufacturer                   = ft_getopt(cfg.motion, 'Manufacturer'            );
-cfg.motion.ManufacturersModelName         = ft_getopt(cfg.motion, 'ManufacturersModelName'  );
 cfg.motion.MotionChannelCount             = ft_getopt(cfg.motion, 'MotionChannelCount'      );
-cfg.motion.RecordingDuration              = ft_getopt(cfg.motion, 'RecordingDuration'       );
 cfg.motion.RecordingType                  = ft_getopt(cfg.motion, 'RecordingType'           );
-cfg.motion.SamplingFrequency              = ft_getopt(cfg.motion, 'SamplingFrequency'       );
-cfg.motion.SoftwareVersions               = ft_getopt(cfg.motion, 'SoftwareVersions'        );
-cfg.motion.SpaceGeometry                  = ft_getopt(cfg.motion, 'SpaceGeometry'           );
-cfg.motion.StartTime                      = ft_getopt(cfg.motion, 'StartTime'               );
 cfg.motion.SubjectArtefactDescription     = ft_getopt(cfg.motion, 'SubjectArtefactDescription'  );
-
+cfg.motion.TrackingSystems                = ft_getopt(cfg.motion, 'TrackingSystems'  );
+cfg.motion.TrackingSystemCount            = ft_getopt(cfg.motion, 'TrackingSystemCount'  );
 %% information for the coordsystem.json file for MEG, EEG, iEEG, and motion
 cfg.coordsystem.MEGCoordinateSystem                             = ft_getopt(cfg.coordsystem, 'MEGCoordinateSystem'                            ); % REQUIRED. Defines the coordinate system for the MEG sensors. See Appendix VIII: preferred names of Coordinate systems. If "Other", provide definition of the coordinate system in [MEGCoordinateSystemDescription].
 cfg.coordsystem.MEGCoordinateUnits                              = ft_getopt(cfg.coordsystem, 'MEGCoordinateUnits'                             ); % REQUIRED. Units of the coordinates of MEGCoordinateSystem. MUST be ???m???, ???cm???, or ???mm???.
@@ -628,6 +624,8 @@ cfg.channels.wavelength_actual          = ft_getopt(cfg.channels, 'wavelength_ac
 cfg.channels.wavelength_emission_actual = ft_getopt(cfg.channels, 'wavelength_emission_actual'  , nan);
 cfg.channels.short_channel              = ft_getopt(cfg.channels, 'short_channel'               , nan);
 
+% specific options for motion channels
+% cfg.channels.tracked_point         = ft_getopt(cfg.channels, 'tracked_point'  , nan); 
 %% columns in the electrodes.tsv
 cfg.electrodes.name             = ft_getopt(cfg.electrodes, 'name'             , nan);  % REQUIRED. Name of the electrode
 cfg.electrodes.x                = ft_getopt(cfg.electrodes, 'x'                , nan);  % REQUIRED. Recorded position along the x-axis
@@ -689,7 +687,8 @@ if isempty(cfg.outputfile)
     filename = ['sub-' cfg.sub];
     filename = add_entity(filename, 'ses',  cfg.ses);
     filename = add_entity(filename, 'task', cfg.task);
-    filename = add_entity(filename, 'acq',  cfg.acq);
+    filename = add_entity(filename, 'tracksys', cfg.tracksys); 
+    filename = add_entity(filename, 'acq',  cfg.acq); 
     filename = add_entity(filename, 'ce',   cfg.ce);
     filename = add_entity(filename, 'rec',  cfg.rec);
     filename = add_entity(filename, 'dir',  cfg.dir);
@@ -789,7 +788,7 @@ need_motion_json        = false;
 need_coordsystem_json   = false;
 % determine the tsv files that are required
 need_events_tsv         = false; % for functional and behavioral experiments
-need_channels_tsv       = false; % only needed for MEG/EEG/iEEG/EMG/NIRS
+need_channels_tsv       = false; % only needed for MEG/EEG/iEEG/EMG/NIRS/motion
 need_electrodes_tsv     = false; % only needed when actually present as cfg.electrodes, data.elec or as cfg.elec
 need_optodes_tsv        = false; % only needed when actually present as cfg.optodes, data.opto or as cfg.opto
 
@@ -1008,7 +1007,7 @@ end
 
 need_events_tsv       = need_events_tsv       || need_meg_json || need_eeg_json || need_ieeg_json || need_emg_json || need_exg_json || need_nirs_json || need_eyetracker_json || need_motion_json || (contains(cfg.outputfile, 'task') || ~isempty(cfg.TaskName) || ~isempty(cfg.task)) || ~isempty(cfg.events);
 need_channels_tsv     = need_channels_tsv     || need_meg_json || need_eeg_json || need_ieeg_json || need_emg_json || need_exg_json || need_nirs_json || need_motion_json ;
-need_coordsystem_json = need_coordsystem_json || need_meg_json || need_electrodes_tsv || need_nirs_json || need_motion_json ;
+need_coordsystem_json = need_coordsystem_json || need_meg_json || need_electrodes_tsv || need_nirs_json ;
 
 if need_emg_json
   ft_warning('EMG data is not yet part of the official BIDS specification');
@@ -1331,17 +1330,44 @@ end
 
 %% need_motion_json
 if need_motion_json
-  
-  motion_json.SamplingFrequency     = hdr.Fs;
-  motion_json.StartTime             = nan;
-  motion_json.MotionChannelCount    = hdr.nChans;
-  motion_json.RecordingDuration     = (hdr.nSamples*hdr.nTrials)/hdr.Fs;
-  
-  % merge the information specified by the user with that from the data
-  % in case fields appear in both, the first input overrules the second
-  motion_json = mergestruct(motion_settings,  motion_json, false);
-  motion_json = mergestruct(generic_settings, motion_json, false);
-end
+    
+    motion_json.MotionChannelCount                                            = numel(cfg.channels.name); % cfg.channels have to be provided
+    
+    for tsi = 1:numel(cfg.motion.TrackingSystems)
+        motion_json.TrackingSystems(tsi).TrackingSystemName             = ft_getopt(cfg.motion.TrackingSystems(tsi), 'TrackingSystemName');
+        motion_json.TrackingSystems(tsi).DeviceSerialNumber             = ft_getopt(cfg.motion.TrackingSystems(tsi), 'DeviceSerialNumber');
+        motion_json.TrackingSystems(tsi).SoftwareVersions               = ft_getopt(cfg.motion.TrackingSystems(tsi), 'SoftwareVersions');
+        motion_json.TrackingSystems(tsi).ExternalSoftwareVersions       = ft_getopt(cfg.motion.TrackingSystems(tsi), 'ExternalSoftwareVersions');
+        motion_json.TrackingSystems(tsi).Manufacturer                   = ft_getopt(cfg.motion.TrackingSystems(tsi), 'Manufacturer');
+        motion_json.TrackingSystems(tsi).ManufacturersModelName         = ft_getopt(cfg.motion.TrackingSystems(tsi), 'ManufacturersModelName');
+        motion_json.TrackingSystems(tsi).SamplingFrequency              = ft_getopt(cfg.motion.TrackingSystems(tsi), 'SamplingFrequency');
+        motion_json.TrackingSystems(tsi).SamplingFrequencyEffective     = ft_getopt(cfg.motion.TrackingSystems(tsi), 'SamplingFrequencyEffective');
+        motion_json.TrackingSystems(tsi).RecordingDuration              = ft_getopt(cfg.motion.TrackingSystems(tsi), 'RecordingDuration');
+        motion_json.TrackingSystems(tsi).SpatialAxes                    = ft_getopt(cfg.motion.TrackingSystems(tsi), 'SpatialAxes');
+        motion_json.TrackingSystems(tsi).RotationRule                   = ft_getopt(cfg.motion.TrackingSystems(tsi), 'RotationRule');
+        motion_json.TrackingSystems(tsi).RotationOrder                  = ft_getopt(cfg.motion.TrackingSystems(tsi), 'RotationOrder');
+        
+        
+        % tracking system description
+        tracksysChanInd                                                 = find(strcmp(cfg.channels.tracking_system, motion_json.TrackingSystems(tsi).TrackingSystemName));
+        motion_json.TrackingSystems(tsi).TrackedPointsCount             = numel(unique(cfg.channels.tracked_point(tracksysChanInd))); % cfg.channels have to be provided
+        motion_json.TrackingSystems(tsi).POSChannelCount                = sum(strcmpi(cfg.channels.type(tracksysChanInd), 'POS'));
+        motion_json.TrackingSystems(tsi).ORNTChannelCount               = sum(strcmpi(cfg.channels.type(tracksysChanInd), 'ORNT'));
+        motion_json.TrackingSystems(tsi).VELChannelCount                = sum(strcmpi(cfg.channels.type(tracksysChanInd), 'VEL'));
+        motion_json.TrackingSystems(tsi).ANGVELChannelCount             = sum(strcmpi(cfg.channels.type(tracksysChanInd), 'ANGVEL'));
+        motion_json.TrackingSystems(tsi).ACCChannelCount                = sum(strcmpi(cfg.channels.type(tracksysChanInd), 'ACC'));
+        motion_json.TrackingSystems(tsi).ANGACCChannelCount             = sum(strcmpi(cfg.channels.type(tracksysChanInd), 'ANGACC'));
+        motion_json.TrackingSystems(tsi).MAGNChannelCount               = sum(strcmpi(cfg.channels.type(tracksysChanInd), 'MAGN'));
+        motion_json.TrackingSystems(tsi).JNTANGChannelCount             = sum(strcmpi(cfg.channels.type(tracksysChanInd), 'JNTANG'));
+    end
+
+    % merge the information specified by the user with that from the data
+    % in case fields appear in both, the first input overrules the second
+    motion_settings_temp = rmfield(motion_settings, 'TrackingSystems'); 
+    motion_json = mergestruct(motion_json, motion_settings_temp); 
+    motion_json = mergestruct(generic_settings, motion_json, false);
+    
+end % if need_motion_json
 
 %% need_channels_tsv
 if need_channels_tsv
@@ -1578,6 +1604,8 @@ if need_coordsystem_json
   coordsystem_json = mergestruct(coordsystem_settings, coordsystem_json, false); % FIXME the order of precedence is different here
 end % if need_coordsystem_json
 
+
+
 %% need_events_tsv
 if need_events_tsv
   
@@ -1790,6 +1818,7 @@ switch cfg.method
             % write the data in BrainVision core file format
             [p, f, x] = fileparts(cfg.outputfile);
             cfg.outputfile = fullfile(p, [f '.vhdr']);
+
             ft_info('writing ''%s''\n', cfg.outputfile);
             ft_write_data(cfg.outputfile, dat, 'dataformat', 'brainvision_eeg', 'header', hdr, 'event', trigger);
           case {'nirs'}
@@ -1803,8 +1832,16 @@ switch cfg.method
             % https://bids-specification.readthedocs.io/en/stable/04-modality-specific-files/06-physiological-and-other-continuous-recordings.html
             [p, f, x] = fileparts(cfg.outputfile);
             cfg.outputfile = fullfile(p, [f '.tsv']);
-            ft_info('writing ''%s''\n', cfg.outputfile);
-            writematrix(dat', cfg.outputfile, 'FileType', 'text', 'Delimiter', '\t'); % without headers, the JSON will be written further down
+            
+            ft_info('writing %s\n', cfg.outputfile);
+
+            if any(strcmp(cfg.datatype, {'motion', 'physio'}))
+                writecell(hdr.label', cfg.outputfile,'FileType', 'text', 'Delimiter', '\t');
+                writematrix(dat', cfg.outputfile, 'FileType', 'text', 'Delimiter', '\t','WriteMode','append'); % use headers, the JSON will be written further down
+            else
+                writematrix(dat', cfg.outputfile, 'FileType', 'text', 'Delimiter', '\t'); % without headers, the JSON will be written further down
+            end
+          
           case {'events'}
             % add the TSV file extension, this is needed for behavioral data represented in scans.tsv
             % the events.tsv file will be written further down
@@ -1860,31 +1897,44 @@ for i=1:numel(modality)
     modality_json = eval(sprintf('%s_json', modality{i}));
     modality_json = remove_empty(modality_json);
     
-    if strcmp(modality{i}, 'coordsystem')
-      [p, f] = fileparts(cfg.outputfile);
-      f = remove_entity(f, 'task');     % remove _task-something
-      f = remove_entity(f, 'acq');      % remove _acq-something
-      f = remove_entity(f, 'ce');       % remove _ce-something
-      f = remove_entity(f, 'rec');      % remove _rec-something
-      f = remove_entity(f, 'dir');      % remove _dir-something
-      f = remove_entity(f, 'run');      % remove _run-something
-      f = remove_entity(f, 'mod');      % remove _mod-something
-      f = remove_entity(f, 'echo');     % remove _echo-something
-      f = remove_entity(f, 'proc');     % remove _proc-something
-      f = remove_entity(f, 'desc');     % remove _desc-something
-      f = remove_datatype(f);           % remove _meg, _eeg, etc.
-      if ismember(modality{i}, {'mri', 'meg', 'motion', 'coordsystem'})
-         f = add_entity(f, 'space', cfg.space);
-       end
-      filename = fullfile(p, [f '_coordsystem.json']);
-    else
-      % just replace the extension with json
-      filename = corresponding_json(cfg.outputfile);
-    end
+            if strcmp(modality{i}, 'coordsystem')
+                [p, f] = fileparts(cfg.outputfile);
+                f = remove_entity(f, 'task');     % remove _task-something
+                f = remove_entity(f, 'acq');      % remove _acq-something
+                f = remove_entity(f, 'ce');       % remove _ce-something
+                f = remove_entity(f, 'rec');      % remove _rec-something
+                f = remove_entity(f, 'dir');      % remove _dir-something
+                f = remove_entity(f, 'run');      % remove _run-something
+                f = remove_entity(f, 'mod');      % remove _mod-something
+                f = remove_entity(f, 'echo');     % remove _echo-something
+                f = remove_entity(f, 'proc');     % remove _proc-something
+                f = remove_entity(f, 'desc');     % remove _desc-something
+                f = remove_datatype(f);           % remove _meg, _eeg, etc.
+                if ismember(modality{i}, {'mri', 'meg', 'motion', 'coordsystem'})
+                    f = add_entity(f, 'space', cfg.space);
+                end
+                filename = fullfile(p, [f '_coordsystem.json']);
+            elseif strcmp(modality{i}, 'motion')
+                [p, f] = fileparts(cfg.outputfile);
+                f = remove_entity(f, 'tracksys'); % remove _tracksys-something
+                filename = fullfile(p, [f '.json']);
+            else
+                % just replace the extension with json
+                filename = corresponding_json(cfg.outputfile);
+            end
+    
     
     if isfile(filename)
       existing = ft_read_json(filename);
     else
+      % if there is a single tracking system in motion file, the field
+      % value has to be coverted to a cell array so that .json output will
+      % be an array 
+      if  strcmp(modality{i}, 'motion')
+          if modality_json.TrackingSystemCount == 1
+              modality_json.TrackingSystems = {modality_json.TrackingSystems};
+          end
+      end
       existing = [];
     end
     
@@ -1919,11 +1969,12 @@ for i=1:numel(modality)
   if eval(sprintf('need_%s_tsv', modality{i}))
     modality_tsv = eval(sprintf('%s_tsv', modality{i}));
     modality_tsv = remove_empty(modality_tsv);
-    
+
     if any(strcmp(modality{i}, {'electrodes', 'optodes'}))
       [p, f] = fileparts(cfg.outputfile);
       f = remove_entity(f, 'task');     % remove _task-something
       f = remove_entity(f, 'acq');      % remove _acq-something
+      f = remove_entity(f, 'tracksys'); % remove _tracksys-something
       f = remove_entity(f, 'ce');       % remove _ce-something
       f = remove_entity(f, 'rec');      % remove _rec-something
       f = remove_entity(f, 'dir');      % remove _dir-something
@@ -1936,6 +1987,18 @@ for i=1:numel(modality)
       if ismember(modality{i}, {'electrodes', 'optodes'})
         f = add_entity(f, 'space', cfg.space);
       end
+      filename = fullfile(p, sprintf('%s_%s.tsv', f, modality{i}));
+    else
+      [p, f] = fileparts(cfg.outputfile);
+      f = remove_datatype(f); % remove _bold, _meg, etc.
+      filename = fullfile(p, sprintf('%s_%s.tsv', f, modality{i}));
+    end
+    
+    % remove tracksys from channels.tsv
+    if any(strcmp(modality{i}, 'channels'))
+      [p, f] = fileparts(cfg.outputfile);
+      f = remove_entity(f, 'tracksys'); % remove _tracksys-something
+      f = remove_datatype(f);           % remove _meg, _eeg, etc.
       filename = fullfile(p, sprintf('%s_%s.tsv', f, modality{i}));
     else
       [p, f] = fileparts(cfg.outputfile);
@@ -2047,9 +2110,16 @@ if ~isempty(cfg.bidsroot)
     filename = fullfile(cfg.bidsroot, ['sub-' cfg.sub], ['sub-' cfg.sub '_scans.tsv']);
   end
   
+  % get filename
   this = table();
   [p, f, x] = fileparts(cfg.outputfile);
   this.filename = {fullfile(datatype2dirname(cfg.datatype), [f x])};
+  
+  % get date
+  if isfield(cfg, 'acq_time')
+   this.acq_time = cfg.acq_time;
+  end 
+  
   fn = fieldnames(cfg.scans);
   for i=1:numel(fn)
     % write [] as 'n/a'
@@ -2057,7 +2127,8 @@ if ~isempty(cfg.bidsroot)
     % write boolean as 'True' or 'False'
     this.(fn{i}) = output_compatible(cfg.scans.(fn{i}));
   end
-  
+   
+
   if isfile(filename)
     scans_tsv = ft_read_tsv(filename);
     % the scans.tsv is always merged
@@ -2065,7 +2136,7 @@ if ~isempty(cfg.bidsroot)
   else
     scans_tsv = this;
   end
-  
+
   % the filename should have forward slashes, see #1957 and #1959
   scans_tsv.filename = strrep(scans_tsv.filename, '\', '/');
   
@@ -2416,7 +2487,7 @@ switch typ
     dir = 'dwi';
   case {'phasediff' 'phase1' 'phase2' 'magnitude1' 'magnitude2' 'magnitude' 'fieldmap' 'epi'}
     dir = 'fmap';
-  case {'events' 'stim' 'physio' 'emg' 'exg' 'eyetracker' 'motion' 'audio' 'video'} % these could also all be stored in 'func' or one of the other directories with brain data
+  case {'events' 'stim' 'physio' 'emg' 'exg' 'eyetracker' 'audio' 'video'} % these could also all be stored in 'func' or one of the other directories with brain data
     dir = 'beh';
   case {'meg'} % this could also include 'events' or other non-brain data
     dir = 'meg';
@@ -2424,6 +2495,8 @@ switch typ
     dir = 'eeg';
   case {'ieeg'} % this could also include 'events' or other non-brain data
     dir = 'ieeg';
+  case {'motion'} % this is not part of the official specification
+    dir = 'motion';
   case {'nirs'} % this is not part of the official specification
     dir = 'nirs';
     
