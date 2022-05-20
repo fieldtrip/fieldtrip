@@ -49,7 +49,7 @@ if isempty(previous_fullname) || ~isequal(fullname, previous_fullname) || isempt
   % remember the full filename including path
   previous_fullname = fullname;
 
-  dat = readtable(filename);
+  dat = readtable(filename, 'MissingRule', 'omitrow');
   dat = table2array(dat);
 
   [nrow, ncol] = size(dat);
