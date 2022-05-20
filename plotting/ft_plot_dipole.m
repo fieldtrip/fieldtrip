@@ -21,7 +21,7 @@ function h = ft_plot_dipole(pos, ori, varargin)
 % Example
 %   ft_plot_dipole([0 0 0], [1 2 3], 'color', 'r', 'alpha', 1)
 %
-% See also FT_PLOT_MESH, FT_PLOT_ORTHO
+% See also FT_PLOT_MESH, FT_PLOT_ORTHO, QUIVER3, PLOT3
 
 % Copyright (C) 2009-2022, Robert Oostenveld
 %
@@ -67,6 +67,8 @@ if isequal(diameter, 'auto')
   switch unit
     case 'm'
       diameter = 0.005;
+    case 'dm'
+      diameter = 0.05;
     case 'cm'
       diameter = 0.5;
     case 'mm'
@@ -81,6 +83,8 @@ if isequal(length, 'auto')
   switch unit
     case 'm'
       length = 0.015;
+    case 'dm'
+      length = 0.15;
     case 'cm'
       length = 1.5;
     case 'mm'
