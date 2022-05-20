@@ -1342,16 +1342,21 @@ end
 
 %% need_motion_json
 if need_motion_json
-  motion_json.POSChannelCount                = sum(strcmpi(hdr.chantype, 'POS'));
-  motion_json.ORNTChannelCount               = sum(strcmpi(hdr.chantype, 'ORNT'));
-  motion_json.VELChannelCount                = sum(strcmpi(hdr.chantype, 'VEL'));
-  motion_json.ANGVELChannelCount             = sum(strcmpi(hdr.chantype, 'ANGVEL'));
-  motion_json.ACCChannelCount                = sum(strcmpi(hdr.chantype, 'ACC'));
-  motion_json.ANGACCChannelCount             = sum(strcmpi(hdr.chantype, 'ANGACC'));
-  motion_json.MAGNChannelCount               = sum(strcmpi(hdr.chantype, 'MAGN'));
-  motion_json.JNTANGChannelCount             = sum(strcmpi(hdr.chantype, 'JNTANG'));
+  motion_json.SamplingFrequency     = hdr.Fs;
+  motion_json.StartTime             = nan;
+  motion_json.MotionChannelCount    = hdr.nChans;
+  motion_json.RecordingDuration     = (hdr.nSamples*hdr.nTrials)/hdr.Fs;
+  motion_json.SamplingFrequencyEffective = size(dat,2)/motion_json.RecordingDuration;
+  motion_json.POSChannelCount       = sum(strcmpi(hdr.chantype, 'POS'));
+  motion_json.ORNTChannelCount      = sum(strcmpi(hdr.chantype, 'ORNT'));
+  motion_json.VELChannelCount       = sum(strcmpi(hdr.chantype, 'VEL'));
+  motion_json.ANGVELChannelCount    = sum(strcmpi(hdr.chantype, 'ANGVEL'));
+  motion_json.ACCChannelCount       = sum(strcmpi(hdr.chantype, 'ACC'));
+  motion_json.ANGACCChannelCount    = sum(strcmpi(hdr.chantype, 'ANGACC'));
+  motion_json.MAGNChannelCount      = sum(strcmpi(hdr.chantype, 'MAGN'));
+  motion_json.JNTANGChannelCount    = sum(strcmpi(hdr.chantype, 'JNTANG'));
   if isfield(cfg, 'channels') && isfield(cfg.channels, 'tracked_point')
-    motion_json.TrackedPointsCount           = numel(setdiff(unique(cfg.channels.tracked_point), 'n/a'));
+    motion_json.TrackedPointsCount  = numel(setdiff(unique(cfg.channels.tracked_point), 'n/a'));
   end
 
   % merge the information specified by the user with that from the data
