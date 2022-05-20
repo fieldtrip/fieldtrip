@@ -615,7 +615,7 @@ cfg.coordsystem.FiducialsCoordinateSystemDescription            = ft_getopt(cfg.
 cfg.channels.name                       = ft_getopt(cfg.channels, 'name'                        , nan);  % REQUIRED. Channel name (e.g., MRT012, MEG023)
 cfg.channels.type                       = ft_getopt(cfg.channels, 'type'                        , nan);  % REQUIRED. Type of channel; MUST use the channel types listed below.
 cfg.channels.units                      = ft_getopt(cfg.channels, 'units'                       , nan);  % REQUIRED. Physical unit of the data values recorded by this channel in SI (see Appendix V: Units for allowed symbols).
-% specific options for EEG/MEG channels
+% specific options for EEG/MEG/iEEG channels
 cfg.channels.sampling_frequency         = ft_getopt(cfg.channels, 'sampling_frequency'          , nan);  % OPTIONAL. Sampling rate of the channel in Hz.
 cfg.channels.description                = ft_getopt(cfg.channels, 'description'                 , nan);  % OPTIONAL. Brief free-text description of the channel, or other information of interest. See examples below.
 cfg.channels.low_cutoff                 = ft_getopt(cfg.channels, 'low_cutoff'                  , nan);  % OPTIONAL. Frequencies used for the high-pass filter applied to the channel in Hz. If no high-pass filter applied, use n/a.
@@ -633,9 +633,11 @@ cfg.channels.orientation_component      = ft_getopt(cfg.channels, 'orientation_c
 cfg.channels.wavelength_actual          = ft_getopt(cfg.channels, 'wavelength_actual'           , nan);
 cfg.channels.wavelength_emission_actual = ft_getopt(cfg.channels, 'wavelength_emission_actual'  , nan);
 cfg.channels.short_channel              = ft_getopt(cfg.channels, 'short_channel'               , nan);
-
 % specific options for motion channels
-% cfg.channels.tracked_point         = ft_getopt(cfg.channels, 'tracked_point'  , nan);
+cfg.channels.sampling_frequency         = ft_getopt(cfg.channels, 'sampling_frequency'          , nan);
+cfg.channels.component                  = ft_getopt(cfg.channels, 'component'                   , nan);
+cfg.channels.tracked_point              = ft_getopt(cfg.channels, 'tracked_point'               , nan);
+
 %% columns in the electrodes.tsv
 cfg.electrodes.name             = ft_getopt(cfg.electrodes, 'name'             , nan);  % REQUIRED. Name of the electrode
 cfg.electrodes.x                = ft_getopt(cfg.electrodes, 'x'                , nan);  % REQUIRED. Recorded position along the x-axis
