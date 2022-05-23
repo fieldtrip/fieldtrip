@@ -433,7 +433,7 @@ end
 % SUBFUNCTION for reading the 16 bit values
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function buf = readLowLevel(filename, offset, numwords)
-is_below_2GB = offset < 2*1024^2;
+is_below_2GB = offset < 2*1024^3;
 read_16bit_success = true;
 if is_below_2GB
   % use the external mex file, only works for <2GB
