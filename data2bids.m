@@ -1143,7 +1143,7 @@ if need_meg_json
   meg_json.ECGChannelCount            = sum(strcmpi(hdr.chantype, 'ecg'));
   meg_json.EMGChannelCount            = sum(strcmpi(hdr.chantype, 'emg'));
   meg_json.MiscChannelCount           = sum(strcmpi(hdr.chantype, 'misc') | strcmpi(hdr.chantype, 'unknown'));
-  meg_json.TriggerChannelCount        = sum(strcmpi(hdr.chantype, 'trigger') | strcmpi(hdr.chantype, 'analog trigger') | strcmpi(hdr.chantype, 'digital trigger'));
+  meg_json.TriggerChannelCount        = sum(contains(hdr.chantype, 'trigger'));
   meg_json.RecordingDuration          = (hdr.nTrials*hdr.nSamples)/hdr.Fs;
   
   if hdr.nTrials>1
