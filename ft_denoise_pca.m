@@ -183,9 +183,6 @@ else
   m             = cellmean(refdata.trial,    2);
   refdata.trial = cellvecadd(refdata.trial, -m);
 
-  % compute std of data before the regression
-  stdpre = cellstd(data.trial, 2);
-
   if computeweights
 
     % zscore
@@ -262,9 +259,6 @@ else
     pca = cfg.pca;
 
   end
-
-  % compute std of data after
-  stdpst = cellstd(data.trial, 2);
 
   % demean FIXME is this needed
   m          = cellmean(data.trial, 2);
