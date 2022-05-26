@@ -56,7 +56,7 @@ elseif isnumeric(val) && numel(val)>1 && any(isnan(val))
   val = num2cell(val);
   val = cellfun(@output_compatible, val, 'UniformOutput', false);
 elseif isdatetime(val)
-  val = datestr(val, 'yyyy-mm-ddTHH:MM:SS'); % following RFC3339 and BIDS 
+  val = datestr(val, 'yyyy-mm-ddTHH:MM:SS.FFF'); % following RFC3339 and BIDS 
 else
   % write [] as 'n/a'
   % write nan as 'n/a'
