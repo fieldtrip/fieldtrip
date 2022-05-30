@@ -1,16 +1,17 @@
 ===============================================================================
 =                                 JSONLab                                     =
-=           An open-source MATLAB/Octave JSON encoder and decoder             =
+= compact, portable, robust JSON/binary-JSON encoder/decoder for MATLAB/Octave=
 ===============================================================================
 
-* Copyright (C) 2011-2022  Qianqian Fang <q.fang at neu.edu>
+* Copyright (c) 2011-2022  Qianqian Fang <q.fang at neu.edu>
 * License: BSD or GNU General Public License version 3 (GPL v3), see License*.txt
 * Version: 2.9.8 (Micronus Prime - Beta)
+* URL: https://neurojson.org/jsonlab
 * JData Specification Version: V1 Draft-3 (http://github.com/NeuroJSON/jdata)
 * Binary JData Specification Version: V1 Draft-2 (http://github.com/NeuroJSON/bjdata)
-* URL: http://neurojson.org/jsonlab
+* Compatibility: MATLAB R2008 or newer, GNU Octave 3.8 or newer
 * Acknowledgement: This project is supported by US National Institute of Health (NIH) \
-  grant `U24-NS124027 <https://taggs.hhs.gov/Detail/AwardDetail?arg_AwardNum=U24NS124027&arg_ProgOfficeCode=137>`_
+  grant [https://reporter.nih.gov/project-details/10308329 U24-NS124027]
 -------------------------------------------------------------------------------
 
 Table of Content:
@@ -29,30 +30,61 @@ VIII.Acknowledgement
 
 0. What's New
 
-We are extremely excited to announce that JSONLab project, as the reference implementation
-for the JData and BJData specifications, is official funded by the US National Institute 
-of Health (NIH) as part of the NeuroJSON project (http://neurojson.org) since 2021. 
-The goal of the NeuroJSON project is to develop human-readable,
-scalable and future-proof neuroimaging data standards and data sharing services. All data
+We are excited to announce that the JSONLab project, as the official reference library
+for both the [https://neurojson.org/jdata/draft3 JData] and [https://neurojson.org/bjdata/draft2 BJData]
+specifications, is funded by the US National Institute of Health (NIH) as
+part of the NeuroJSON project (https://neurojson.org).
+The goal of the NeuroJSON project is to develop human-readable, scalable and 
+future-proof neuroimaging data standards and data sharing services. All data
 produced from the NeuroJSON project will be using JSON/Binary JData formats as the
 underlying serialization standards and use the lightweight JData specification as
-general-purpose data annotation standard, all of which have been evolved from the over
-a decade development of JSONLab.
+language-independent data annotation standard, all of which have been evolved from
+the over a decade development of JSONLab.
 
-JSONLab v2.9.8 - code named "Micronus - beta" - is a beta-release of JSONLab v3.0 and
-contains breaking features for `savebj`/`loadbj`. It implements the latest Binary JData
-Specification v1 Draft-2 https://github.com/NeuroJSON/bjdata/, where the default
-byte order changed from Big-Endian, as in UBJSON Draft-12/BJData Draft 2, to Little-Endian
-format. Previously, JSONLab v2.0 implements BJData Draft-1, which used Big-Endian
-as the default byte order for all numerical data.
+JSONLab v2.9.8 - code named "Micronus - beta" - is the beta-release of the next milestone -
+JSONLab v3.0 - containing a number of key feature enhancement and bug fixes. The major 
+new features include
+
+# exporting JSON Memory-Map for rapid disk-map like JSON/binary JSON reading and writing, 
+# supporting JSONPath query to MATLAB data and JSON/binary JSON file and streams, 
+# ('''breaking''') upgrading the supported BJData spec to [https://neurojson.org/bjdata/draft2 V1 Draft 2] \
+  where the default numerical data byte order changed from Big-Endian to '''Little-Endian'''
+# adding initial support to JData [https://github.com/NeuroJSON/jdata/blob/master/JData_specification.md#data-referencing-and-links _DataLink_] \
+  decoding to link multiple JSON/binary JSON files
 
 There have been many major updates added to this release since the previous 
 release v2.0 in June 2020. A list of the major changes are summarized below
 (with key features marked by *), including the support to BJData Draft-2 specification,
-incorrect optimized ND-array BJData/UBJSON element order, and options to use MATLAB/Octave
-built-in jsonencode/jsondecode functions. The octave-jsonlab package has also been
+new interface functions `savejd/loadjd`, and options to use MATLAB/Octave built-in
+`jsonencode/jsondecode` functions. The `octave-jsonlab` package has also been
 included in the official distributions of Debian Bullseye and Ubuntu 21.04 or newer.
 
+* 2022-04-19*[2278bb1] stop escaping / to \/ in JSON string, see https://mondotondo.com/2010/12/29/the-solidus-issue/
+* 2022-04-01*[fb711bb] add loadjd and savejd as the unified JSON/binary JSON file interface
+* 2022-03-30 [4433a21] improve datalink uri handling to consider : inside uri
+* 2022-03-30 [6368409] make datalink URL query more robust
+* 2022-03-29 [dd9e9c6] when file suffix is missing, assume JSON feed
+* 2022-03-29*[07c58f3] initial support for _DataLink_ of online/local file with JSONPath ref
+* 2022-03-29 [897b7ba] fix test for older octave
+* 2022-03-20 [bf03eff] force msgpack to use big-endian
+* 2022-03-13 [46bbfa9] support empty name key, which is valid in JSON, fix #79
+* 2022-03-12 [9ab040a] increase default float number digits from 10 to 16, fix #78
+* 2022-03-11 [485ea29] update error message on the valid root-level markers
+* 2022-02-23 [aa3913e] disable TFN marker in optimized header due to security risk and low benefit
+* 2022-02-23 [f2c3223] support SCH{[ markers in optimized container type
+* 2022-02-14 [540f95c] add optional preceding whitespace, explain format
+* 2022-02-13 [3dfa904] debugged and tested mmap, add mmapinclude and mmapexclude options
+* 2022-02-10*[6150ae1] handle uncompressed raw data (only base64 encoded) in jdatadecode
+* 2022-02-10 [88a59eb] give a warning when jdatadecode fails, but still return the raw data
+* 2022-02-03*[05edb7a] fast reading and writing json data record using mmap and jsonpath
+* 2022-02-02*[b0f0ebd] return disk-map or memory-map table in loadjson
+* 2022-02-01 [0888218] correct typos and add additional descriptions in README
+* 2022-02-01*[03133c7] fix row-major ('formatversion',1.8) ND array storage order, update demo outputs
+* 2022-02-01 [5998c70] revert variable name encoding to support unicode strings
+* 2022-01-31 [16454e7] test flexible whitespaces in 1D/2D arrays, test mixed array from string
+* 2022-01-31*[5c1ef15] accelerate fastarrayparser by 200%! jsonlab_speedtest cuts from 11s to 5.8s
+* 2022-01-30 [9b25e20] fix octave 3.8 error on travis, it does not support single
+* 2022-01-30 [5898f6e] add octave 5.2 to travis
 * 2022-01-30*[2e3344c] [bjdata:breaking] Upgrade savebj/loadbj to BJData v1-draft 2, use little-endian by default
 * 2022-01-30*[2e3344c] [bjdata:breaking] Fix optimized ND array element order (previously used column-major)
 * 2022-01-30*[2e3344c] optimize loadjson and loadbj speed
@@ -91,6 +123,7 @@ following breaking differences:
 * BJData supports an optimized ND array container (supported in JSONLab since 2013)
 * BJData does not convert `NaN/Inf/-Inf` to `null` (supported in JSONLab since 2013)
 * BJData Draft 2 changes the default byte order to Little-Endian instead of Big-Endian (JSONLab 3.0 or later)
+* BJData only permits non-zero-fixed-length data types as the optimized array type, i.e. only `UiuImlMLhdDC` are allowed
 
 To avoid using the new features, one should attach `'UBJSON',1` and `'Endian','B'`
 in the `savebj` command as
@@ -115,6 +148,16 @@ data structure (array, struct, cell, struct array, cell array, and objects) into
 JSON/UBJSON/MessagePack formatted strings and files, or to parse a 
 JSON/UBJSON/MessagePack file into MATLAB data structure. JSONLab supports both 
 MATLAB and [http://www.gnu.org/software/octave GNU Octave] (a free MATLAB clone).
+
+Compared to other MATLAB/Octave JSON parsers, JSONLab is uniquely lightweight, 
+ultra-portable, producing dependable outputs across a wide-range of MATLAB 
+(tested on R2008) and Octave (tested on v3.8) versions. It also uniquely supports 
+BinaryJData/UBJSON/MessagePack data files as binary-JSON-like formats, designed 
+for efficiency and flexibility with loss-less binary storage. As a parser written
+completely with the native MATLAB language, it is surprisingly fast when reading 
+small-to-moderate sized JSON files (1-2 MB) with simple hierarchical structures,
+and is heavily optimized for reading JSON files containing large N-D arrays
+(known as the "fast array parser" in `loadjson`).
 
 JSON ([http://www.json.org/ JavaScript Object Notation]) is a highly portable, 
 human-readable and [http://en.wikipedia.org/wiki/JSON "fat-free"] text format 
@@ -228,17 +271,29 @@ JSONLab is also available on Arch Linux. You may install it using the below comm
 
 III.Using JSONLab
 
-JSONLab provides a pair of functions, `loadjson` -- a JSON parser, and 
-`savejson` -- a MATLAB-to-JSON encoder, to read/write the text-based JSON; and 
+JSONLab provides a pair of functions, `loadjson` -- a JSON parser, and `savejson` -- 
+a MATLAB-to-JSON encoder, to read/write text-based JSON; it also provides
 three equivallent pairs -- `loadbj/savebj` for binary JData, `loadubjson/saveubjson`
 for UBJSON and `loadmsgpack/savemsgpack` for MessagePack. The `load*` functions 
-for the 3 supported data formats share almost the same input parameter format; 
-similarly for the 3 `save*` functions (`savejson/saveubjson/savemsgpack`)
-These encoders and decoders are capable of processing/sharing almost all 
+for the 3 supported data formats share almost the same input parameter format,
+similarly for the 3 `save*` functions (`savejson/saveubjson/savemsgpack`).
+These encoders and decoders are capable of processing/sharing almost all
 data structures supported by MATLAB, thanks to `jdataencode/jdatadecode` - 
 a pair of in-memory data converters translating complex data structures
-to the easy-to-serialized forms according to the JData specifications.
+to their easy-to-serialized forms according to the JData specifications.
 The detailed help information can be found in the `Contents.m` file. 
+
+In JSONLab 2.9.8 and later versions, a unified file loading and saving interface
+is provided for JSON, binary JSON and HDF5, including `loadjd` and `savejd`
+for reading and writing below files types:
+
+* JSON based files: `.json`, `.jdt` (text JData file), `.jmsh` (text JMesh file), \
+  `.jnii` (text JNIfTI file), `.jnirs` (text JSNIRF file)
+* BJData based files: `.bjd`, `.jdb` (binary JData file), `.bmsh` (binary JMesh file), \
+  `.bnii` (binary JNIfTI file), `.bnirs` (binary JSNIRF file), `.jamm` (MATLAB session file)
+* UBJSON based files: `.ubj`
+* MessagePack based files: `.msgpack`
+* HDF5 based files: `.h5`, `.hdf5`, `.snirf` (SNIRF fNIRS data files) - require [https://github.com/fangq/easyh5 EasyH5 toolbox]
 
 In the below section, we provide a few examples on how to us each of the 
 core functions for encoding/decoding JSON/UBJSON/MessagePack data.
@@ -386,8 +441,8 @@ In short, to conveniently read/write data files created by JSONLab into Python,
 whether they are JSON based or binary JData/UBJSON based, one just need to download
 the below two light-weight python modules:
 
-* **jdata**: PyPi: https://pypi.org/project/jdata/  ; Github: https://github.com/fangq/pyjdata
-* **bjdata** PyPi: https://pypi.org/project/bjdata/ ; Github: https://github.com/fangq/pybj
+* `jdata`: PyPi: https://pypi.org/project/jdata/  ; Github: https://github.com/NeuroJSON/pyjdata
+* `bjdata` PyPi: https://pypi.org/project/bjdata/ ; Github: https://github.com/NeuroJSON/pybj
 
 To install these modules on Python 2.x, please first check if your system has
 `pip` and `numpy`, if not, please install it by running (using Ubuntu/Debian as example)

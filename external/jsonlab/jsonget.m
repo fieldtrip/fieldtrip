@@ -33,15 +33,17 @@ function json=jsonget(fname,mmap,varargin)
 % -- this function is part of JSONLab toolbox (http://iso2mesh.sf.net/cgi-bin/index.cgi?jsonlab)
 %
 
-if(regexp(fname,'^\s*(?:\[.*\])|(?:\{.*\})\s*$','once'))
-    inputstr=fname;
-elseif(~exist('memmapfile','file'))
-    if(exist(fname,'file'))
-       try
-           fid = fopen(fname,'rb');
-       catch
-       end
-    end
+if(ischar(fname) || isa(fname,'string'))
+        if(regexp(fname,'^\s*(?:\[.*\])|(?:\{.*\})\s*$','once'))
+            inputstr=fname;
+        elseif(~exist('memmapfile','file'))
+            if(exist(fname,'file'))
+               try
+                   fid = fopen(fname,'rb');
+               catch
+               end
+            end
+        end
 end
 
 mmap=[mmap{:}];
@@ -58,6 +60,17 @@ if(length(varargin)>=1)
 end
 
 json={};
+
+if(isstruct(fname) || iscell(fname) || isa(fname,'table') || isa(fname,'containers.Map'))
+    for i=1:length(keylist)
+        json{end+1}=getfromjsonpath(fname,keylist{i});
+    end
+    if(length(json)==1)
+        json=json{1};
+    end
+    return;
+end
+
 for i=1:length(keylist)
     bmap=mmap{loc(i)*2};
     rec={'uint8',[1,bmap(2)],  'x'};

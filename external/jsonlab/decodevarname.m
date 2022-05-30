@@ -46,6 +46,10 @@ if(isunpack)
         h2u=@hex2unicode;
         newname=regexprep(name,'(^x|_){1}0x([0-9a-fA-F]+)_','${h2u($2)}');
     else
+        if(isunpack && strcmp(name,'x0x0_'))
+            newname='';
+            return;
+        end
         pos=regexp(name,'(^x|_){1}0x([0-9a-fA-F]+)_','start');
         pend=regexp(name,'(^x|_){1}0x([0-9a-fA-F]+)_','end');
         if(isempty(pos))

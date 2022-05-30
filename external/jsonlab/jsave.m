@@ -91,10 +91,13 @@ for i=1:length(varlist)
 end
 
 savefun=@savebj;
+loadfun=@loadbj;
 if(regexp(filename,'\.[jJ][sS][oO][nN]$'))
     savefun=@savejson;
+    loadfun=@loadjson;
 elseif(regexp(filename,'\.[jJ][dD][tT]$'))
     savefun=@savejson;
+    loadfun=@loadjson;
 elseif(regexp(filename,'\.[mM][sS][gG][pP][kK]$'))
     savefun=@savemsgpack;
 end
@@ -120,6 +123,14 @@ if(jsonopt('matlab',0,opt) && exist('jsonencode','builtin'))
     fid=fopen(filename,jsonopt('writemode','w',opt));
     fwrite(fid,headerjson);
     fwrite(fid,sprintf('\n\n\n'));
+    fwrite(fid,bodyjson);
+    fclose(fid);
+elseif(jsonopt('usemmap',0,opt)==1)
+    bodyjson=savefun('WorkspaceData',body,...
+        'compression','zlib','keeptype',1,'array2struct',1,varargin{:});
+    header.(encodevarname('_MMap_'))=loadfun(bodyjson,'mmaponly',1,varargin{:});
+    savefun('WorkspaceHeader',header,'filename',filename,varargin{:});
+    fid=fopen(filename,'ab+');
     fwrite(fid,bodyjson);
     fclose(fid);
 else

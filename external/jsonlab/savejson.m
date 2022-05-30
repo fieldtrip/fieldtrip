@@ -1,4 +1,4 @@
-function json=savejson(rootname,obj,varargin)
+function output=savejson(rootname,obj,varargin)
 %
 % json=savejson(obj)
 %    or
@@ -23,7 +23,7 @@ function json=savejson(rootname,obj,varargin)
 %           opt can have the following fields (first in [.|.] is the default)
 %
 %           FileName [''|string]: a file name to save the output JSON data
-%           FloatFormat ['%.10g'|string]: format to show each numeric element
+%           FloatFormat ['%.16g'|string]: format to show each numeric element
 %                         of a 1D/2D array;
 %           IntFormat ['%.0f'|string]: format to display integer elements
 %                         of a 1D/2D array;
@@ -152,7 +152,7 @@ opt.formatversion=jsonopt('FormatVersion',3,opt);
 opt.compressarraysize=jsonopt('CompressArraySize',100,opt);
 opt.compressstringsize=jsonopt('CompressStringSize',opt.compressarraysize*4,opt);
 opt.intformat=jsonopt('IntFormat','%.0f',opt);
-opt.floatformat=jsonopt('FloatFormat','%.10g',opt);
+opt.floatformat=jsonopt('FloatFormat','%.16g',opt);
 opt.unpackhex=jsonopt('UnpackHex',1,opt);
 opt.arraytostruct=jsonopt('ArrayToStruct',0,opt);
 opt.parselogical=jsonopt('ParseLogical',0,opt);
@@ -270,6 +270,8 @@ if(~isempty(filename))
         fwrite(fid,json,'char');
     end
     fclose(fid);
+else
+    output=json;
 end
 
 %%-------------------------------------------------------------------------
@@ -470,14 +472,12 @@ if(~strcmp(item.KeyType,'char'))
     return;
 end
 
-len=prod(dim);
-forcearray= (len>1 || (varargin{1}.singletarray==1 && level>0));
 ws=varargin{1}.whitespaces_;
 padding0=repmat(ws.tab,1,level);
 nl=ws.newline;
 
-if(isempty(item)) 
-    if(~isempty(name)) 
+if(isempty(item))
+    if(~isempty(name))
         txt={padding0, '"', decodevarname(name,varargin{1}.unpackhex),'":[]'};
     else
         txt={padding0, '[]'};
@@ -486,30 +486,25 @@ if(isempty(item))
     return;
 end
 if(~isempty(name)) 
-    if(forcearray)
-        txt={padding0, '"', decodevarname(name,varargin{1}.unpackhex),'":{', nl};
-    end
+    txt={padding0, '"', decodevarname(name,varargin{1}.unpackhex),'":{', nl};
 else
-    if(forcearray)
-        txt={padding0, '{', nl};
-    end
+    txt={padding0, '{', nl};
 end
 
 for i=1:dim(1)
-    if(~isempty(names{i}))
-	    txt{end+1}=obj2json(names{i},val{i},...
-             level+(dim(1)>1),varargin{:});
-        if(i<length(names))
-            txt{end+1}=',';
-        end
-        if(i<dim(1))
-            txt{end+1}=nl;
-        end
+    if(isempty(names{i}))
+        txt{end+1}=obj2json('x0x0_',val{i},level+(dim(1)>1),varargin{:});
+    else
+        txt{end+1}=obj2json(names{i},val{i},level+(dim(1)>1),varargin{:});
+    end
+    if(i<length(names))
+        txt{end+1}=',';
+    end
+    if(i<dim(1))
+        txt{end+1}=nl;
     end
 end
-if(forcearray)
-    txt(end+1:end+3)={nl,padding0,'}'};
-end
+txt(end+1:end+3)={nl,padding0,'}'};
 txt = sprintf('%s',txt{:});
 
 %%-------------------------------------------------------------------------
@@ -802,14 +797,14 @@ if(isoct)
    end
 end
 if(isoct)
-  escapechars={'\\','\"','\/','\a','\f','\n','\r','\t','\v'};
+  escapechars={'\\','\"','\a','\f','\n','\r','\t','\v'};
   for i=1:length(escapechars)
     newstr=regexprep(newstr,escapechars{i},escapechars{i});
   end
   newstr=regexprep(newstr,'\\\\(u[0-9a-fA-F]{4}[^0-9a-fA-F]*)','\$1');
 else
-  escapechars={'\\','\"','\/','\a','\b','\f','\n','\r','\t','\v'};
-  esc={'\\\\','\\"','\\/','\\a','\\b','\\f','\\n','\\r','\\t','\\v'};
+  escapechars={'\\','\"','\a','\b','\f','\n','\r','\t','\v'};
+  esc={'\\\\','\\"','\\a','\\b','\\f','\\n','\\r','\\t','\\v'};
   for i=1:length(escapechars)
     newstr=regexprep(newstr,escapechars{i},esc{i});
   end

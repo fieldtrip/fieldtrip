@@ -162,11 +162,13 @@ function [data, mmap] = loadjson(fname,varargin)
            end
        catch
            try
-               string = urlread(['file://',fname]);
+               string = urlread(fname);
            catch
                string = urlread(['file://',fullfile(pwd,fname)]);
            end
        end
+    elseif(regexpi(fname,'^\s*(http|https|ftp|file)://'))
+       string = urlread(fname);
     else
        error_pos('input file does not exist');
     end
@@ -333,7 +335,7 @@ function [object, pos,index_esc, mmap] = parse_array(inputstr, pos, esc, index_e
                                     pos=endpos;
                                     pos=parse_char(inputstr, pos, ']');
                                     if(pbar>0)
-                                        waitbar(pos/length(inStr),pbar,'loading ...');
+                                        waitbar(pos/length(inputstr),pbar,'loading ...');
                                     end
                                     return;
                                 end
@@ -576,8 +578,8 @@ function [object, pos, index_esc, mmap] = parse_object(inputstr, pos, esc, index
     if cc ~= '}'
         while 1
             [str, pos, index_esc] = parseStr(inputstr, pos, esc, index_esc, varargin{:});
-            if isempty(str)
-                pos=error_pos('Name of value at position %d cannot be empty',inputstr,pos);
+            if isempty(str) && ~usemap
+                str='x0x0_'; % empty name is valid in JSON, decodevarname('x0x0_') restores '\0'
             end
             [pos, w1, w2]=parse_char(inputstr, pos, ':');
             if(nargout>3)

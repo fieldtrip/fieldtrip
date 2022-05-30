@@ -23,9 +23,9 @@ function msgpk=savemsgpack(rootname,obj,varargin)
 %
 
 if(nargin==1)
-    msgpk=savebj('',rootname,'MessagePack',1);
+    msgpk=savebj('',rootname,'MessagePack',1, 'endian','B');
 elseif(length(varargin)==1 && ischar(varargin{1}))
-    msgpk=savebj(rootname,obj,'FileName',varargin{1},'MessagePack',1);
+    msgpk=savebj(rootname,obj,'FileName',varargin{1},'MessagePack',1, 'endian','B');
 else
-    msgpk=savebj(rootname,obj,varargin{:},'MessagePack',1);
+    msgpk=savebj(rootname,obj,varargin{:},'MessagePack',1, 'endian','B');
 end
