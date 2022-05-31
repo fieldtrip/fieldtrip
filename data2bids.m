@@ -1836,8 +1836,8 @@ switch cfg.method
 
             if any(strcmp(cfg.datatype, {'motion', 'physio'}))
               % with headers, the JSON will be written further down
-              writecell(hdr.label', cfg.outputfile,'FileType', 'text', 'Delimiter', '\t');
-              writematrix(dat', cfg.outputfile, 'FileType', 'text', 'Delimiter', '\t','WriteMode','append'); 
+              writecell(hdr.label', cfg.outputfile, 'FileType', 'text', 'Delimiter', '\t');
+              writematrix(dat', cfg.outputfile, 'FileType', 'text', 'Delimiter', '\t', 'WriteMode','append'); 
             else
               % without headers, the JSON will be written further down
               writematrix(dat', cfg.outputfile, 'FileType', 'text', 'Delimiter', '\t'); 
