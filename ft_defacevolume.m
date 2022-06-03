@@ -31,7 +31,7 @@ function mri = ft_defacevolume(cfg, mri)
 %
 % See also FT_ANONYMIZEDATA, FT_DEFACEMESH, FT_ANALYSISPIPELINE, FT_SOURCEPLOT
 
-% Copyright (C) 2015-2018, Robert Oostenveld
+% Copyright (C) 2015-2022, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -160,14 +160,15 @@ switch cfg.method
       diagonal_vox  = norm(range(corner_vox));
       resolution    = diagonal_head/diagonal_vox; % this is in units of "mri.unit"
       
-      % create a contrast enhanced version of the anatomy
-      mri.anatomy = double(mri.anatomy);
-      dum = unique(mri.anatomy(:));
-      clim(1) = dum(round(0.05*numel(dum)));
-      clim(2) = dum(round(0.95*numel(dum)));
-      anatomy = (mri.anatomy-clim(1))/(clim(2)-clim(1));
+      % enhance the contrast of the volumetric data, see also FT_VOLUMEREALIGN
+      dat  = double(mri.anatomy);
+      dum  = unique(dat(:));
+      dmin = dum(round(0.05*numel(dum))); % take the 5% value of the histogram
+      dmax = dum(round(0.95*numel(dum))); % take the 95% value of the histogram
+      dat  = (dat-dmin)./(dmax-dmin);
       
-      ft_plot_ortho(anatomy, 'transform', mri.transform, 'unit', mri.unit, 'resolution', resolution, 'style', 'intersect');
+      ft_plot_ortho(dat, 'transform', mri.transform, 'unit', mri.unit, 'resolution', resolution, 'style', 'intersect');
+
     elseif ismesh
       if isfield(mri, 'hex')
         ft_plot_mesh(mri, 'surfaceonly', 'yes');
@@ -177,8 +178,9 @@ switch cfg.method
     end
     
     axis vis3d
-    view([110 36]);
-    
+    view(110, 36);
+    rotate3d on
+
     % shift the axes to the left
     ax = get(gca, 'position');
     ax(1) = 0;

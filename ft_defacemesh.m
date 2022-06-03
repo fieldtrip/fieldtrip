@@ -18,7 +18,7 @@ function mesh = ft_defacemesh(cfg, mesh)
 %
 % See also FT_ANONYMIZEDATA, FT_DEFACEVCOLUME, FT_ANALYSISPIPELINE, FT_PLOT_MESH
 
-% Copyright (C) 2015-2016, Robert Oostenveld
+% Copyright (C) 2015-2022, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
