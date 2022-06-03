@@ -1,17 +1,17 @@
 function mri = ft_defacevolume(cfg, mri)
 
 % FT_DEFACEVOLUME allows you to de-identify an anatomical MRI by erasing specific
-% regions, such as the face and ears. The graphical user interface allows you to
-% position a box over the anatomical data inside which all anatomical voxel values will
-% be replaced by zero. You might have to call this function multiple times when both
-% face and ears need to be removed. Following defacing, you should check the result
-% with FT_SOURCEPLOT.
+% regions, such as the face and ears. The interactive graphical user interface allows
+% you to position a box over the anatomical data inside which all anatomical voxel
+% values will be replaced by zero. You might have to call this function multiple
+% times when both face and ears need to be removed. Following defacing, you should
+% check the result with FT_SOURCEPLOT.
 %
 % Use as
 %   mri = ft_defacevolume(cfg, mri)
 %
 % The configuration can contain the following options
-%   cfg.method     = 'box', 'spm' (default = 'box')
+%   cfg.method     = 'interactive', 'spm' (default = 'interactive')
 %
 % If you specify the box method, the following options apply
 %   cfg.translate  = initial position of the center of the box (default = [0 0 0])
@@ -69,8 +69,11 @@ if ft_abort
   return
 end
 
+% for backward compatibility
+cfg = ft_checkconfig(cfg, 'renamedval', {'method', 'box', 'interactive'});
+
 % set the defaults
-cfg.method    = ft_getopt(cfg, 'method', 'box');
+cfg.method    = ft_getopt(cfg, 'method', 'interactive');
 cfg.rotate    = ft_getopt(cfg, 'rotate', [0 0 0]);
 cfg.scale     = ft_getopt(cfg, 'scale'); % the automatic default is determined further down
 cfg.translate = ft_getopt(cfg, 'translate', [0 0 0]);
@@ -124,7 +127,7 @@ switch cfg.method
     delete(filename1{1});
     delete(filename2{1});
     
-  case 'box'
+  case 'interactive'
     % determine the size of the "unit" sphere in the origin and the length of the axes
     switch mri.unit
       case 'mm'
@@ -133,11 +136,14 @@ switch cfg.method
       case 'cm'
         axmax = 15;
         rbol  = 0.5;
+      case 'dm'
+        axmax = 1.5;
+        rbol  = 0.05;
       case 'm'
         axmax = 0.15;
         rbol  = 0.005;
       otherwise
-        ft_error('unknown units "%s"', unit);
+        ft_error('unknown units "%s"', mri.unit);
     end
     
     figHandle = figure;
