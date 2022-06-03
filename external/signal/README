@@ -17,4 +17,6 @@ May 16, 2022 by Jan-Mathijs, added functionality for resample:
 -upfirdn
 -resample
 -firls
+-fir1
+-fir2
 Note: resample has been adjusted as to match the default implementation in MATLAB (2021b), i.e. using a (non-configurable) beta parameter for the Kaiser window of 5, and using a firls anti-aliasing filter, instead of a sinc filter

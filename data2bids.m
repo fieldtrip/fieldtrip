@@ -845,8 +845,6 @@ switch typ
     % read the triggers from disk
     trigger = ft_read_event(cfg.datafile, 'header', hdr, 'readbids', false);
     need_meg_json = true;
-    
-    
 
   case {'brainvision_vhdr', 'edf', 'eeglab_set', 'biosemi_bdf'}
     % the file on disk contains ExG data in a BIDS compiant format

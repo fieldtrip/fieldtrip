@@ -49,7 +49,9 @@ if isempty(previous_fullname) || ~isequal(fullname, previous_fullname) || isempt
   % remember the full filename including path
   previous_fullname = fullname;
 
-  dat = readtable(filename);
+  % specifying false for ReadVariableNames fails on MATLAB R2015b, hence the 0
+  % MATLAB R2015b does not have the 'MissingRule' option yet, you can specify 'HeaderLines' as 1 to skip the first line (or remove it manually from the txt file) 
+  dat = readtable(filename, 'ReadVariableNames', 0, 'Delimiter', '\t', 'MissingRule', 'omitrow');
   dat = table2array(dat);
 
   [nrow, ncol] = size(dat);

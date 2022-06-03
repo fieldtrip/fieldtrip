@@ -1,4 +1,4 @@
-function [transform] = ft_affinecoordinates(original, target)
+function [transform] = ft_affinecoordinates(original, target, varargin)
 
 % FT_AFFINECOORDINATES returns the affine coordinate transformation matrix that
 % converts FROM a specific head coordinate TO a specific head coordinate system.
@@ -39,6 +39,13 @@ function [transform] = ft_affinecoordinates(original, target)
 %   r = right
 %   s = superior
 %   i = inferior
+
+% get the options
+requireorigin = ft_getopt(varargin, 'requireorigin', true);
+
+% ensure these are in lower case
+original = lower(original);
+target = lower(target);
 
 generic = {
   'als'; 'ali'; 'ars'; 'ari';...
@@ -217,12 +224,15 @@ clear acpc2spm acpc2mni acpc2fsaverage acpc2tal
 clear bti2tal ctf2tal fourd2tal itab2tal neuromag2tal
 clear tal2bti tal2ctf tal2fourd tal2itab tal2neuromag
 
-% the origin is poorly defined in generic orientation triplets (like RAS and ALS), hence converting them to any specific coordinate system is problematic
-for i=1:length(generic)
-  for j=1:length(specific)
-    xxx = generic{i};
-    yyy = specific{j};
-    eval(sprintf('clear %s2%s', xxx, yyy));
+if requireorigin
+  % the origin is poorly defined in generic orientation triplets (like RAS and ALS)
+  % hence converting between them is problematic with regards to translations
+  for i=1:length(generic)
+    for j=1:length(specific)
+      xxx = generic{i};
+      yyy = specific{j};
+      eval(sprintf('clear %s2%s', xxx, yyy));
+    end
   end
 end
 
@@ -260,7 +270,6 @@ if exist(sprintf('%s2%s', xxx, yyy), 'var')
 else
   ft_error('converting from %s to %s is not supported', original, target);
 end
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION to construct generic transformations such as RAS2ALS

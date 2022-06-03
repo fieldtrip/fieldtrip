@@ -1,4 +1,4 @@
-function ft_write_json(filename, json)
+function ft_write_json(filename, json, varargin)
 
 % FT_WRITE_JSON writes a MATLAB structure to a JSON file. Compared to the builtin
 % MATLAB function, this implementation deals a bit different with missing values,
@@ -29,9 +29,14 @@ function ft_write_json(filename, json)
 %
 % $Id$
 
+% get the options
+sort = ft_getopt(varargin, 'sort', true); % can be true/false, or 'yes'/'no'
+
 ft_info('writing ''%s''\n', filename);
 json = remove_empty(json);
-json = sort_fields(json);
+if istrue(sort)
+ json = sort_fields(json);
+end
 json = ft_struct2char(json); % convert strings into char-arrays
 ft_hastoolbox('jsonlab', 1);
 % write nan as 'n/a'

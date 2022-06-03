@@ -701,12 +701,17 @@ switch cfg.method
     params         = removefields(struct(cfg.dss), {'V' 'dV' 'W' 'indx'});
     params.denf.h  = str2func(cfg.dss.denf.function);
     params.preprocf.h = str2func(cfg.dss.preprocf.function);
-    if ~ischar(cfg.numcomponent)
-      params.sdim = cfg.numcomponent;
-    end
     if isfield(cfg.dss, 'wdim') && ~isempty(cfg.dss.wdim)
       params.wdim = cfg.dss.wdim;
     end
+    if ~ischar(cfg.numcomponent)
+      params.sdim = cfg.numcomponent;
+      if isfield(params, 'wdim')
+        params.sdim = min(params.sdim, params.wdim);
+      end
+    end
+    
+
     if isfield(params.denf, 'params') && isfield(params.denf.params, 'artifact')
       % this may require the sampleinfo in the params structure, to keep the sampling bookkeeping correct
       params.denf.params.sampleinfo = data.sampleinfo;

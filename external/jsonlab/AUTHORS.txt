@@ -8,14 +8,14 @@ Address: Qianqian Fang
          ISEC 206
          360 Huntington Ave, Boston, MA 02115, USA
          Phone[O]: 617-373-3829
-URL: http://fanglab.org, http://neurojson.org
+URL: http://fanglab.org, https://neurojson.org
 Email: <q.fang at neu.edu> and <fangqq at gmail.com>
 
 
 Since 2021, this project has been partially funded by the USA National Institute of Health (NIH)
 and National Institute of Neurological Disorders and Stroke (NINDS) under grant
 U24-NS124027 (PI Qianqian Fang). It is the reference implementation of the JData
-and BJData specifications developed under the NeuroJSON Project (http://neurojson.org).
+and BJData specifications developed under the NeuroJSON Project (https://neurojson.org).
 
 
 The script loadjson.m was built upon previous works (BSD 3-clause license) by

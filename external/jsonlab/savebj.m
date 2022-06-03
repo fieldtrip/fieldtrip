@@ -1,4 +1,4 @@
-function json=savebj(rootname,obj,varargin)
+function output=savebj(rootname,obj,varargin)
 %
 % bjd=savebj(obj)
 %    or
@@ -294,6 +294,8 @@ if(~isempty(filename))
     end
     fwrite(fid,json);
     fclose(fid);
+else
+    output=json;
 end
 
 %%-------------------------------------------------------------------------
@@ -477,17 +479,11 @@ if(~strcmp(Omarker{1},'{'))
 else
     om0=Omarker{1};
 end
-len=prod(dim);
-forcearray= (len>1 || (varargin{1}.singletarray==1 && level>0));
 
 if(~isempty(name)) 
-    if(forcearray)
-        txt=[N_(decodevarname(name,varargin{:}),varargin{:}) om0];
-    end
+    txt=[N_(decodevarname(name,varargin{:}),varargin{:}) om0];
 else
-    if(forcearray)
-        txt=om0;
-    end
+    txt=om0;
 end
 for i=1:dim(1)
     if(~isempty(names{i}))
@@ -495,9 +491,7 @@ for i=1:dim(1)
              level+(dim(1)>1),varargin{:})];
     end
 end
-if(forcearray)
-    txt=[txt Omarker{2}];
-end
+txt=[txt Omarker{2}];
 
 %%-------------------------------------------------------------------------
 function txt=str2ubjson(name,item,level,varargin)
@@ -830,7 +824,7 @@ else
             txt=cell2ubjson('',num2cell(mat,1),level,varargin{:});
         else
             rowmat=permute(mat,ndims(mat):-1:1);
-            txt=D_a(rowmat(:),Fmarker(3),size(mat),varargin{:});
+            txt=D_a(rowmat(:),Fmarker(isa(rowmat,'double')+2),size(mat),varargin{:});
         end
     end
 end

@@ -57,7 +57,7 @@ function [stat, cfg] = ft_statistics_montecarlo(cfg, dat, design, varargin)
 %                         'actvsblT'                activation versus baseline T-statistic.
 % or you can specify your own low-level statistical function.
 %
-% You can also use a custom statistic of your choise that is sensitive to the
+% You can also use a custom statistic of your choice that is sensitive to the
 % expected effect in the data. You can implement the statistic in a "statfun" that
 % will be called for each randomization. The requirements on a custom statistical
 % function is that the function is called ft_statfun_xxx, and that the function returns

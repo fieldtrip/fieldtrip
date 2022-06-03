@@ -35,6 +35,8 @@ function newdata=jdatadecode(data,varargin)
 %                         for octave, the default value is an empty string ''.
 %               FullArrayShape: [0|1] if set to 1, converting _ArrayShape_ 
 %                         objects to full matrices, otherwise, stay sparse
+%               MaxLinkLevel: [0|int] When expanding _DataLink_ pointers,
+%                         this sets the maximum level of recursion
 %               FormatVersion: [2|float]: set the JSONLab output version; 
 %                         since v2.0, JSONLab uses JData specification Draft 1
 %                         for output format, it is incompatible with all
@@ -64,6 +66,7 @@ function newdata=jdatadecode(data,varargin)
         opt=varargin2struct(varargin{:});
     end
     opt.fullarrayshape=jsonopt('FullArrayShape',0,opt);
+    opt.maxlinklevel=jsonopt('MaxLinkLevel',0,opt);
 
     %% process non-structure inputs
     if(~isstruct(data))
@@ -454,6 +457,45 @@ function newdata=jdatadecode(data,varargin)
         end
         if(len==1)
             newdata=newdata{1};
+        end
+    end
+
+    %% handle data link
+    if(opt.maxlinklevel>0 && isfield(data,N_('_DataLink_')))
+        if(ischar(data.(N_('_DataLink_'))))
+            datalink=data.(N_('_DataLink_'));
+            if(regexp(datalink,'\:\$'))
+                ref=regexp(datalink, '^(?<proto>[a-zA-Z]+://)*(?<path>.+)(?<delim>\:)()*(?<jsonpath>(?<=:)\$\d*\.*.*)*', 'names');
+            else
+                ref=regexp(datalink, '^(?<proto>[a-zA-Z]+://)*(?<path>.+)(?<delim>\:)*(?<jsonpath>(?<=:)\$\d*\..*)*', 'names');
+            end
+            if(~isempty(ref.path))
+                uripath=[ref.proto ref.path];
+                [fpath, fname, fext]=fileparts(uripath);
+                opt.maxlinklevel=opt.maxlinklevel-1;
+                switch(lower(fext))
+                    case {'.json','.jnii','.jdt','.jdat','.jmsh','.jnirs'}
+                        newdata=loadjson(uripath, opt);
+                    case {'.bjd' ,'.bnii','.jdb','.jbat','.bmsh','.bnirs', '.jamm'}
+                        newdata=loadbj(uripath, opt);
+                    case {'.ubj'}
+                        newdata=loadubjson(uripath, opt);
+                    case {'.msgpack'}
+                        newdata=loadmsgpack(uripath, opt);
+                    case {'.h5','.hdf5','.snirf'}  % this requires EasyH5 toolbox
+                        newdata=loadh5(uripath, opt);
+                    otherwise
+                        % _DataLink_ url does not specify type, assuming JSON format
+                        if(regexpi(datalink,'^\s*(http|https|ftp|file)://'))
+                            newdata=loadjson(uripath, opt);
+                        else
+                            warning('_DataLink_ url is not supported')
+                        end
+                end
+                if(~isempty(ref.jsonpath))
+                    newdata=getfromjsonpath(newdata,ref.jsonpath);
+                end
+            end
         end
     end
 

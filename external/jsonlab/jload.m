@@ -77,7 +77,11 @@ if(jsonopt('matlab',0,opt) && exist('jsonencode','builtin'))
     end
     header=jsondecode(jsonstr(1:pos+1));
 else
-    header=loadfun(filename,'ObjectID',1, varargin{:});
+    try
+        header=loadfun(filename,'ObjectID',1, 'MaxBuffer', 65536, varargin{:});
+    catch
+        header=loadfun(filename,'ObjectID',1, varargin{:});
+    end
 end
 
 allvar=fieldnames(header.WorkspaceHeader);

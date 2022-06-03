@@ -84,8 +84,8 @@ elseif nargin==3
   c1 = t1.Properties.VariableNames;
   c2 = t2.Properties.VariableNames;
   
-  assert(contains(key, c1));
-  assert(contains(key, c2));
+  assert(any(contains(c1, key)));
+  assert(any(contains(c2, key)));
   
   [m1, n1] = size(t1);
   [m2, n2] = size(t2);
