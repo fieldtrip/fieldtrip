@@ -1028,7 +1028,7 @@ if need_meg_json
   end
 end
   
-if need_electrodes_tsv || need_nirs_json
+if need_electrodes_tsv || need_nirs_json || need_motion_json
   need_coordsystem_json = true;
 end
 
