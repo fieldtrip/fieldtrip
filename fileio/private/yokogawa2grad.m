@@ -28,7 +28,7 @@ function grad = yokogawa2grad(hdr)
 % $Id$
 
 if ~ft_hastoolbox('yokogawa')
-    ft_error('cannot determine whether Yokogawa toolbox is present');
+  ft_error('cannot determine whether Yokogawa toolbox is present');
 end
 
 if isfield(hdr, 'label')
@@ -54,9 +54,9 @@ end
 
 handles    = definehandles;
 isgrad     = (hdr.channel_info(:,2)==handles.AxialGradioMeter | ...
-              hdr.channel_info(:,2)==handles.PlannerGradioMeter | ...
-              hdr.channel_info(:,2)==handles.MagnetoMeter | ...
-              hdr.channel_info(:,2)==handles.RefferenceAxialGradioMeter);
+  hdr.channel_info(:,2)==handles.PlannerGradioMeter | ...
+  hdr.channel_info(:,2)==handles.MagnetoMeter | ...
+  hdr.channel_info(:,2)==handles.RefferenceAxialGradioMeter);
 % reference channels are excluded because the positions are not specified
 %              hdr.channel_info(:,2)==handles.RefferencePlannerGradioMeter
 %              hdr.channel_info(:,2)==handles.RefferenceMagnetoMeter
@@ -85,7 +85,7 @@ ori_1st_to_2nd = ...
 baseline = hdr.channel_info(isgrad,size(hdr.channel_info,2));
 
 % Define the location and orientation of 2nd coil
-info = hdr.channel_info(isgrad,2); 
+info = hdr.channel_info(isgrad,2);
 for i=1:sum(isgrad)
   if (info(i) == handles.AxialGradioMeter || info(i) == handles.RefferenceAxialGradioMeter )
     grad.coilpos(i+sum(isgrad),:) = [grad.coilpos(i,:)+ori_1st(i,:)*baseline(i)*100];
@@ -95,7 +95,7 @@ for i=1:sum(isgrad)
     grad.coilori(i+sum(isgrad),:) = -ori_1st(i,:);
   else
     grad.coilpos(i+sum(isgrad),:) = [0 0 0];
-    grad.coilori(i+sum(isgrad),:) = [0 0 0];  
+    grad.coilori(i+sum(isgrad),:) = [0 0 0];
   end
 end
 
@@ -104,10 +104,10 @@ grad.tra = repmat(diag(ones(1,size(grad.coilpos,1)/2),0),1,2);
 
 % for mangetometers change tra as there is no second coil
 if any(ismag)
-    sz_pnt = size(grad.coilpos,1)/2;
-    % create logical variable
-    not_2nd_coil = ([diag(zeros(sz_pnt),0)' ismag']~=0);
-    grad.tra(ismag,not_2nd_coil) = 0;
+  sz_pnt = size(grad.coilpos,1)/2;
+  % create logical variable
+  not_2nd_coil = ([diag(zeros(sz_pnt),0)' ismag']~=0);
+  grad.tra(ismag,not_2nd_coil) = 0;
 end
 
 % the gradiometer labels should be consistent with the channel labels in
@@ -117,14 +117,14 @@ end
 % channel index and type of channel exists for Yokogawa systems. Therefore
 % all have individual label sequences: No useful support in ft_senslabel possible
 if ~isempty(label)
-    grad.label = label(isgrad);
+  grad.label = label(isgrad);
 else
-    % this is only backup, if something goes wrong above.
-    label = cell(size(isgrad));
-    for i=1:length(label)
+  % this is only backup, if something goes wrong above.
+  label = cell(size(isgrad));
+  for i=1:length(label)
     label{i} = sprintf('AG%03d', i);
-    end
-    grad.label = label(isgrad);    
+  end
+  grad.label = label(isgrad);
 end
 grad.unit = 'cm';
 
@@ -133,45 +133,44 @@ grad.unit = 'cm';
 % this defines some usefull constants
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function handles = definehandles
-handles.output = [];
-handles.sqd_load_flag = false;
-handles.mri_load_flag = false;
-handles.NullChannel         = 0;
-handles.MagnetoMeter        = 1;
-handles.AxialGradioMeter    = 2;
-handles.PlannerGradioMeter  = 3;
-handles.RefferenceChannelMark = hex2dec('0100');
-handles.RefferenceMagnetoMeter       = bitor( handles.RefferenceChannelMark, handles.MagnetoMeter );
-handles.RefferenceAxialGradioMeter   = bitor( handles.RefferenceChannelMark, handles.AxialGradioMeter );
-handles.RefferencePlannerGradioMeter = bitor( handles.RefferenceChannelMark, handles.PlannerGradioMeter );
-handles.TriggerChannel      = -1;
-handles.EegChannel          = -2;
-handles.EcgChannel          = -3;
-handles.EtcChannel          = -4;
-handles.NonMegChannelNameLength = 32;
-handles.DefaultMagnetometerSize       = (4.0/1000.0);       % ????4.0mm???????`
-handles.DefaultAxialGradioMeterSize   = (15.5/1000.0);      % ???a15.5mm???~??
-handles.DefaultPlannerGradioMeterSize = (12.0/1000.0);      % ????12.0mm???????`
-handles.AcqTypeContinuousRaw = 1;
-handles.AcqTypeEvokedAve     = 2;
-handles.AcqTypeEvokedRaw     = 3;
-handles.sqd = [];
-handles.sqd.selected_start  = [];
-handles.sqd.selected_end    = [];
+handles.output                          = [];
+handles.sqd_load_flag                   = false;
+handles.mri_load_flag                   = false;
+handles.NullChannel                     = 0;
+handles.MagnetoMeter                    = 1;
+handles.AxialGradioMeter                = 2;
+handles.PlannerGradioMeter              = 3;
+handles.RefferenceChannelMark           = hex2dec('0100');
+handles.RefferenceMagnetoMeter          = bitor( handles.RefferenceChannelMark, handles.MagnetoMeter );
+handles.RefferenceAxialGradioMeter      = bitor( handles.RefferenceChannelMark, handles.AxialGradioMeter );
+handles.RefferencePlannerGradioMeter    = bitor( handles.RefferenceChannelMark, handles.PlannerGradioMeter );
+handles.TriggerChannel                  = -1;
+handles.EegChannel                      = -2;
+handles.EcgChannel                      = -3;
+handles.EtcChannel                      = -4;
+handles.NonMegChannelNameLength         = 32;
+handles.DefaultMagnetometerSize         = (4.0/1000.0);       % ????4.0mm???????`
+handles.DefaultAxialGradioMeterSize     = (15.5/1000.0);      % ???a15.5mm???~??
+handles.DefaultPlannerGradioMeterSize   = (12.0/1000.0);      % ????12.0mm???????`
+handles.AcqTypeContinuousRaw            = 1;
+handles.AcqTypeEvokedAve                = 2;
+handles.AcqTypeEvokedRaw                = 3;
+handles.sqd                             = [];
+handles.sqd.selected_start              = [];
+handles.sqd.selected_end                = [];
 handles.sqd.axialgradiometer_ch_no      = [];
 handles.sqd.axialgradiometer_ch_info    = [];
 handles.sqd.axialgradiometer_data       = [];
 handles.sqd.plannergradiometer_ch_no    = [];
 handles.sqd.plannergradiometer_ch_info  = [];
 handles.sqd.plannergradiometer_data     = [];
-handles.sqd.nullchannel_ch_no   = [];
-handles.sqd.nullchannel_data    = [];
-handles.sqd.selected_time       = [];
-handles.sqd.sample_rate         = [];
-handles.sqd.sample_count        = [];
-handles.sqd.pretrigger_length   = [];
-handles.sqd.matching_info   = [];
-handles.sqd.source_info     = [];
-handles.sqd.mri_info        = [];
-handles.mri                 = [];
-
+handles.sqd.nullchannel_ch_no           = [];
+handles.sqd.nullchannel_data            = [];
+handles.sqd.selected_time               = [];
+handles.sqd.sample_rate                 = [];
+handles.sqd.sample_count                = [];
+handles.sqd.pretrigger_length           = [];
+handles.sqd.matching_info               = [];
+handles.sqd.source_info                 = [];
+handles.sqd.mri_info                    = [];
+handles.mri                             = [];

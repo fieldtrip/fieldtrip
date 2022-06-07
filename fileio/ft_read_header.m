@@ -2701,7 +2701,7 @@ switch headerformat
   case {'yokogawa_ave', 'yokogawa_con', 'yokogawa_raw', 'yokogawa_mrk'}
     % header can be read with two toolboxes: Yokogawa MEG Reader and Yokogawa MEG160 (old inofficial toolbox)
     % newest toolbox takes precedence.
-    if ft_hastoolbox('yokogawa_meg_reader', 3); % stay silent if it cannot be added
+    if ft_hastoolbox('yokogawa_meg_reader', 3) % stay silent if it cannot be added
       hdr = read_yokogawa_header_new(filename);
       % add a gradiometer structure for forward and inverse modelling
       hdr.grad = yokogawa2grad_new(hdr);
