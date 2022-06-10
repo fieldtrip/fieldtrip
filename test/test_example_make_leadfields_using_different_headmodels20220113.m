@@ -1,7 +1,7 @@
 function test_example_make_leadfield_using_different_headmodels
 
 % MEM 12gb
-% WALLTIME 00:30:00
+% WALLTIME 00:45:00
 
 %
 %% Make leadfields using different headmodels

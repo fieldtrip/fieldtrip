@@ -1,7 +1,7 @@
 function test_issue1184
 
 % MEM 8gb
-% WALLTIME 00:20:00
+% WALLTIME 00:30:00
 % DEPENDENCY ft_resampledata
 
 data = [];
