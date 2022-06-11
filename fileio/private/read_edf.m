@@ -342,7 +342,7 @@ elseif needdat || needevt
     useChanindx = true;
   elseif ~isempty(chanindx) &&  isfield(EDF, 'chansel')
     % a subset of channels should been selected from the predefined list
-    chanindx = EDF.chansel(chanindx);
+    chanindx = EDF.chansel;
     useChanindx = true;
   elseif  isempty(chanindx) &&  isfield(EDF, 'chansel')
     % all channels from the predefined list should be selected
