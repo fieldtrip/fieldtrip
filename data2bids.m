@@ -1017,9 +1017,22 @@ if need_nirs_json
   end
 end
 
+if need_meg_json
+  if ~isempty(hdr.orig.dev_head_t)
+    need_coordsystem_json = true;
+  else
+    need_coordsystem_json = false;
+    ft_warning('No device to head transform available in file');
+  end
+end
+  
+if need_electrodes_tsv || need_nirs_json || need_motion_json
+  need_coordsystem_json = true;
+end
+
 need_events_tsv       = need_events_tsv       || need_meg_json || need_eeg_json || need_ieeg_json || need_emg_json || need_exg_json || need_nirs_json || need_eyetracker_json || need_motion_json || (contains(cfg.outputfile, 'task') || ~isempty(cfg.TaskName) || ~isempty(cfg.task)) || ~isempty(cfg.events);
 need_channels_tsv     = need_channels_tsv     || need_meg_json || need_eeg_json || need_ieeg_json || need_emg_json || need_exg_json || need_nirs_json || need_motion_json ;
-need_coordsystem_json = need_coordsystem_json || need_meg_json || need_electrodes_tsv || need_nirs_json ;
+% need_coordsystem_json = need_coordsystem_json || need_meg_json || need_electrodes_tsv || need_nirs_json ;
 
 if need_emg_json
   ft_warning('EMG data is not yet part of the official BIDS specification');
@@ -1573,12 +1586,14 @@ if need_coordsystem_json
     coordsystem_json.HeadCoilCoordinateSystem            = 'ElektaNeuromag';
     coordsystem_json.HeadCoilCoordinateUnits             = 'm';
     coordsystem_json.HeadCoilCoordinateSystemDescription = 'Neuromag head coordinates, orientation RAS, origin between the ears';
-    if isempty(coordsystem_json.HeadCoilCoordinates)
+    if isempty(coordsystem_json.HeadCoilCoordinates)  && ~isempty(hdr.orig.dig)
       coordsystem_json = rmfield(coordsystem_json, 'HeadCoilCoordinates'); % needed to set the names afterwards
       idxHPI = find([hdr.orig.dig.kind] == 2); % count the kind==2 (HLU in the Elekta/Megin system), usually 4 or 5
       for i=1:length(idxHPI)
         coordsystem_json.HeadCoilCoordinates.(['coil' num2str(i)]) = hdr.orig.dig(idxHPI(i)).r';
       end
+    else
+        coordsystem_json.HeadCoilCoordinates = nan;
     end
 
     % coordinates of the anatomical landmarks (LPA/RPA/NAS)
@@ -1586,11 +1601,13 @@ if need_coordsystem_json
     coordsystem_json.AnatomicalLandmarkCoordinateSystem            = 'ElektaNeuromag';
     coordsystem_json.AnatomicalLandmarkCoordinateUnits             = 'm';
     coordsystem_json.AnatomicalLandmarkCoordinateSystemDescription = 'Neuromag head coordinates, orientation RAS, origin between the ears';
-    if isempty(coordsystem_json.AnatomicalLandmarkCoordinates)
+    if isempty(coordsystem_json.AnatomicalLandmarkCoordinates)  && ~isempty(hdr.orig.dig)
       coordsystem_json = rmfield(coordsystem_json, 'AnatomicalLandmarkCoordinates'); % needed to set the names afterwards
       coordsystem_json.AnatomicalLandmarkCoordinates.lpa = hdr.orig.dig(1).r';
       coordsystem_json.AnatomicalLandmarkCoordinates.rpa = hdr.orig.dig(2).r';
       coordsystem_json.AnatomicalLandmarkCoordinates.nas = hdr.orig.dig(3).r';
+    else
+      coordsystem_json.AnatomicalLandmarkCoordinates = nan;
     end
 
   else
@@ -2148,7 +2165,8 @@ if ~isempty(val)
 end
 
 function f = remove_entity(f, key)
-part = regexp(f, sprintf('_%s-[a-zA-Z0-9]*', key), 'split');
+disp(f)
+part = regexp(f, sprintf('_%s-[a-zA-Z0-9+]*', key), 'split');
 if numel(part)>1 && ~isempty(part{2})
   f = [part{1} part{2}];
 else
