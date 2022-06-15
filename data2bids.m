@@ -1017,22 +1017,9 @@ if need_nirs_json
   end
 end
 
-if need_meg_json
-  if ~isempty(hdr.orig.dev_head_t)
-    need_coordsystem_json = true;
-  else
-    need_coordsystem_json = false;
-    ft_warning('No device to head transform available in file');
-  end
-end
-  
-if need_electrodes_tsv || need_nirs_json || need_motion_json
-  need_coordsystem_json = true;
-end
-
 need_events_tsv       = need_events_tsv       || need_meg_json || need_eeg_json || need_ieeg_json || need_emg_json || need_exg_json || need_nirs_json || need_eyetracker_json || need_motion_json || (contains(cfg.outputfile, 'task') || ~isempty(cfg.TaskName) || ~isempty(cfg.task)) || ~isempty(cfg.events);
 need_channels_tsv     = need_channels_tsv     || need_meg_json || need_eeg_json || need_ieeg_json || need_emg_json || need_exg_json || need_nirs_json || need_motion_json ;
-% need_coordsystem_json = need_coordsystem_json || need_meg_json || need_electrodes_tsv || need_nirs_json ;
+need_coordsystem_json = need_coordsystem_json || need_meg_json || need_electrodes_tsv || need_nirs_json ;
 
 if need_emg_json
   ft_warning('EMG data is not yet part of the official BIDS specification');
@@ -1558,10 +1545,17 @@ end % need_optodes_tsv
 %% need_coordsystem_json
 if need_coordsystem_json
   if isfield(hdr, 'grad') && ft_senstype(hdr.grad, 'ctf')
+
     % coordinate system for MEG sensors
     coordsystem_json.MEGCoordinateSystem                 = 'CTF';
     coordsystem_json.MEGCoordinateUnits                  = 'cm';
     coordsystem_json.MEGCoordinateSystemDescription      = 'CTF head coordinates, orientation ALS, origin between the ears';
+
+    % CTF empty-room recordings use the standard positions as if they were measured
+    if all(hdr.orig.hc.standard == hdr.orig.hc.dewar, [1 2])
+      ft_notice('this seems to be an empty room recording that uses the standard positions')
+    end
+
     % coordinate system for head localization coils
     coordsystem_json.HeadCoilCoordinates                 = []; % see below
     coordsystem_json.HeadCoilCoordinateSystem            = 'CTF';
@@ -1577,38 +1571,40 @@ if need_coordsystem_json
     end
 
   elseif isfield(hdr, 'grad') && ft_senstype(hdr.grad, 'neuromag')
+
     % coordinate system for MEG sensors
     coordsystem_json.MEGCoordinateSystem                 = 'ElektaNeuromag';
     coordsystem_json.MEGCoordinateUnits                  = 'm';
     coordsystem_json.MEGCoordinateSystemDescription      = 'Neuromag head coordinates, orientation RAS, origin between the ears';
-    % coordinate system for head localization coils
-    coordsystem_json.HeadCoilCoordinates                 = []; % see below
-    coordsystem_json.HeadCoilCoordinateSystem            = 'ElektaNeuromag';
-    coordsystem_json.HeadCoilCoordinateUnits             = 'm';
-    coordsystem_json.HeadCoilCoordinateSystemDescription = 'Neuromag head coordinates, orientation RAS, origin between the ears';
-    if isempty(coordsystem_json.HeadCoilCoordinates)  && ~isempty(hdr.orig.dig)
-      coordsystem_json = rmfield(coordsystem_json, 'HeadCoilCoordinates'); % needed to set the names afterwards
-      idxHPI = find([hdr.orig.dig.kind] == 2); % count the kind==2 (HLU in the Elekta/Megin system), usually 4 or 5
-      for i=1:length(idxHPI)
-        coordsystem_json.HeadCoilCoordinates.(['coil' num2str(i)]) = hdr.orig.dig(idxHPI(i)).r';
-      end
-    else
-        coordsystem_json.HeadCoilCoordinates = nan;
-    end
 
-    % coordinates of the anatomical landmarks (LPA/RPA/NAS)
-    coordsystem_json.AnatomicalLandmarkCoordinates                 = []; % see below
-    coordsystem_json.AnatomicalLandmarkCoordinateSystem            = 'ElektaNeuromag';
-    coordsystem_json.AnatomicalLandmarkCoordinateUnits             = 'm';
-    coordsystem_json.AnatomicalLandmarkCoordinateSystemDescription = 'Neuromag head coordinates, orientation RAS, origin between the ears';
-    if isempty(coordsystem_json.AnatomicalLandmarkCoordinates)  && ~isempty(hdr.orig.dig)
-      coordsystem_json = rmfield(coordsystem_json, 'AnatomicalLandmarkCoordinates'); % needed to set the names afterwards
-      coordsystem_json.AnatomicalLandmarkCoordinates.lpa = hdr.orig.dig(1).r';
-      coordsystem_json.AnatomicalLandmarkCoordinates.rpa = hdr.orig.dig(2).r';
-      coordsystem_json.AnatomicalLandmarkCoordinates.nas = hdr.orig.dig(3).r';
-    else
-      coordsystem_json.AnatomicalLandmarkCoordinates = nan;
-    end
+    % Neuromag empty-room recordings do not have digitizer information
+    if ~isempty(hdr.orig.dig)
+      % coordinate system for head localization coils
+      coordsystem_json.HeadCoilCoordinates                 = []; % see below
+      coordsystem_json.HeadCoilCoordinateSystem            = 'ElektaNeuromag';
+      coordsystem_json.HeadCoilCoordinateUnits             = 'm';
+      coordsystem_json.HeadCoilCoordinateSystemDescription = 'Neuromag head coordinates, orientation RAS, origin between the ears';
+      if isempty(coordsystem_json.HeadCoilCoordinates)
+        idxHPI = find([hdr.orig.dig.kind] == 2); % count the kind==2 (HLU in the Elekta/Megin system), usually 4 or 5
+        for i=1:length(idxHPI)
+          % the coils do not have a name but are numbered
+          coordsystem_json.HeadCoilCoordinates.(['coil' num2str(i)]) = hdr.orig.dig(idxHPI(i)).r';
+        end
+      end
+      % coordinates of the anatomical landmarks (LPA/RPA/NAS)
+      coordsystem_json.AnatomicalLandmarkCoordinates                 = []; % see below
+      coordsystem_json.AnatomicalLandmarkCoordinateSystem            = 'ElektaNeuromag';
+      coordsystem_json.AnatomicalLandmarkCoordinateUnits             = 'm';
+      coordsystem_json.AnatomicalLandmarkCoordinateSystemDescription = 'Neuromag head coordinates, orientation RAS, origin between the ears';
+      if isempty(coordsystem_json.AnatomicalLandmarkCoordinates)
+        coordsystem_json = rmfield(coordsystem_json, 'AnatomicalLandmarkCoordinates'); % needed to set the names afterwards
+        coordsystem_json.AnatomicalLandmarkCoordinates.lpa = hdr.orig.dig(1).r';
+        coordsystem_json.AnatomicalLandmarkCoordinates.rpa = hdr.orig.dig(2).r';
+        coordsystem_json.AnatomicalLandmarkCoordinates.nas = hdr.orig.dig(3).r';
+      else
+        coordsystem_json.AnatomicalLandmarkCoordinates = nan;
+      end
+    end % if ~emptyroom
 
   else
     ft_warning('automatic coordsystem handling not yet supported for this data, you MUST specify cfg.coordsystem');
@@ -2165,7 +2161,6 @@ if ~isempty(val)
 end
 
 function f = remove_entity(f, key)
-disp(f)
 part = regexp(f, sprintf('_%s-[a-zA-Z0-9+]*', key), 'split');
 if numel(part)>1 && ~isempty(part{2})
   f = [part{1} part{2}];
