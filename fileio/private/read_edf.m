@@ -224,8 +224,12 @@ if needhdr
   
   if isempty(chanindx)
     chanindx=1:EDF.NS;
+  else
+    if any(chanindx>EDF.NS)
+      error('The selected channels are not present in the data');
+    end
   end
-  
+
   EDF.AS.spb = sum(EDF.SPR);    % Samples per Block
   bi=[0;cumsum(EDF.SPR)];
   

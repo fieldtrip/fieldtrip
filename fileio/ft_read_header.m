@@ -418,12 +418,8 @@ switch headerformat
     if isempty(chanindx)
       hdr = read_besa_besa(filename);
     else
-      hdr = read_besa_besa(filename,[],1);
-      if chanindx > hdr.orig.channel_info.orig_n_channels
-        ft_error('FILEIO:InvalidChanIndx', 'selected channels are not present in the data');
-      else
-        hdr = read_besa_besa(filename,[],chanindx);
-      end
+      % this will keep the non-selected channels hidden from the user
+      hdr = read_besa_besa(filename, [], chanindx);
     end
     
   case 'besa_avr'
@@ -853,12 +849,8 @@ switch headerformat
     if isempty(chanindx)
       hdr = read_edf(filename);
     else
-      hdr = read_edf(filename,[],1);
-      if chanindx > hdr.orig.NS
-        ft_error('FILEIO:InvalidChanIndx', 'selected channels are not present in the data');
-      else
-        hdr = read_edf(filename,[],chanindx);
-      end
+      % this will keep the non-selected channels hidden from the user
+      hdr = read_edf(filename, [], chanindx);
     end
     
   case 'eep_avr'
