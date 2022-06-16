@@ -584,6 +584,16 @@ ARRAY+=(private/fitsphere.m)
 sync ${ARRAY[*]}
 
 ################################################################################
+# fixcoordsys.m
+
+ARRAY=()
+ARRAY+=(fileio/private/fixcoordsys.m)
+ARRAY+=(forward/private/fixcoordsys.m)
+ARRAY+=(plotting/private/fixcoordsys.m)
+ARRAY+=(utilities/fixcoordsys.m)
+sync ${ARRAY[*]}
+
+################################################################################
 # fixdimord.m
 
 ARRAY=()
