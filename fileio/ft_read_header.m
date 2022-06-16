@@ -321,6 +321,10 @@ if strcmp(readbids, 'yes') || strcmp(readbids, 'ifmakessense')
     if ~isempty(sidecar)
       optodes_tsv = ft_read_tsv(sidecar);
     end
+    sidecar = bids_sidecar(filename, 'coordsystem');
+    if ~isempty(sidecar)
+      coordsystem_json = ft_read_json(sidecar);
+    end
   end
 end
 
@@ -2885,6 +2889,27 @@ if (strcmp(readbids, 'yes') || strcmp(readbids, 'ifmakessense')) && isbids
       hdr.opto         = [];
       hdr.opto.label   = optodes_tsv.name;
       hdr.opto.optopos = [optodes_tsv.x optodes_tsv.y optodes_tsv.z];
+    end
+    if exist('coordsystem_json', 'var')
+      if isfield(hdr, 'grad')
+        if strcmp(coordsys, 'dewar')
+          % the sensors will be in dewar coordinates, regardless of the coordsystem_json
+        else
+          % the coordsystem_json overrules the coordinate system 
+          hdr.grad.coordsys = coordsystem_json.MEGCoordinateSystem;
+        end
+        % the units of the grad structure will be correct, they differ between MEG systems, and may depend on coilaccuracy
+        % convert them to the units specified in coordsystem_json
+        hdr.grad = ft_convert_units(hdr.grad, coordsystem_json.MEGCoordinateUnits);
+      end
+      if isfield(hdr, 'elec')
+        hdr.elec.coordsys = coordsystem_json.EEGCoordinateSystem;
+        hdr.elec.unit     = coordsystem_json.EEGCoordinateUnits;
+      end
+      if isfield(hdr, 'opto')
+        hdr.opto.coordsys = coordsystem_json.NIRSCoordinateSystem;
+        hdr.opto.unit     = coordsystem_json.NIRSCoordinateUnits;
+      end
     end
   catch ME
     if strcmp(readbids, 'yes')
