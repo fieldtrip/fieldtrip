@@ -44,6 +44,13 @@ else
   load grad2_old
 end
 
+% as of 16 June 2022 the units will follow those specified in coordsys.json
+% this causes the units to be inconsistent with the old ones, which are always in cm
+gradx = ft_convert_units(gradx, gradx_old.unit);
+grad0 = ft_convert_units(grad0, grad0_old.unit);
+grad1 = ft_convert_units(grad1, grad1_old.unit);
+grad2 = ft_convert_units(grad2, grad2_old.unit);
+
 assert( isalmostequal(gradx, gradx_old, 'abstol', 1e-12));
 assert(~isalmostequal(grad0, grad0_old, 'abstol', 1e-12));
 assert(~isalmostequal(grad1, grad1_old, 'abstol', 1e-12));

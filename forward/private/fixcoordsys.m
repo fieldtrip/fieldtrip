@@ -35,6 +35,8 @@ elseif any(strcmpi(data.coordsys, {'ctf', '4d', 'bti', 'eeglab'}))
   data.coordsys = 'ctf';
 elseif any(strcmpi(data.coordsys, {'dicom', 'scanlps'}))
   data.coordsys = 'dicom';
+elseif any(strcmpi(data.coordsys, {'elekta/neuromag', 'elekta', 'megin' }))
+  data.coordsys = 'neuromag';
 elseif any(strcmpi(data.coordsys, {'other'}))
   data.coordsys = 'unknown';
 end
