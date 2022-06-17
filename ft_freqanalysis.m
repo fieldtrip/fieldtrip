@@ -378,7 +378,7 @@ switch cfg.method
     cfg.order   = ft_getopt(cfg, 'order',   ones(1, numel(cfg.foi)));
     if numel(cfg.order) == 1
       cfg.order = cfg.order.*length(cfg.foi);
-    elseif numel(cfg.order)~= numel(cfg.foi)
+    elseif numel(cfg.order) ~= numel(cfg.foi)
       ft_error('cfg.foi must have the same number of elements as cfg.foi, or must be a scalar');
     end
     
@@ -678,7 +678,7 @@ for itrial = 1:ntrials
         opt{idx_freqoi} = cfg.foi(i_f);
         % compute responses for individual wavelets
         for i_wl = 1:order_int(i_f)
-          [spec_f(i_wl, :, :), ~, toi] = ft_specest_wavelet(dat, time, 'timeoi', cfg.toi, 'width', cycles{i_f}(i_wl), 'gwidth', cfg.gwidth, opt{:}, 'feedback', fbopt);
+          [spec_f(i_wl, :, :), dum, toi] = ft_specest_wavelet(dat, time, 'timeoi', cfg.toi, 'width', cycles{i_f}(i_wl), 'gwidth', cfg.gwidth, opt{:}, 'feedback', fbopt);
         end
         if floor(cfg.order(i_f)) ~= order_int(i_f)
             spec_f(i_wl, :, :) = spec_f(i_wl, :, :) .^ rem(cfg.order(i_f), 1);
