@@ -2882,7 +2882,7 @@ if (strcmp(readbids, 'yes') || strcmp(readbids, 'ifmakessense')) && isbids
       hdr.opto.label   = optodes_tsv.name;
       hdr.opto.optopos = [optodes_tsv.x optodes_tsv.y optodes_tsv.z];
     end
-    if exist('coordsystem_json', 'var')
+    if exist('coordsystem_json', 'var') && ~isempty(coordsystem_json)
       if isfield(hdr, 'grad')
         if strcmp(coordsys, 'dewar')
           % the sensors will be in dewar coordinates, regardless of the coordsystem_json
