@@ -95,8 +95,6 @@ switch spikeformat
     [p, f, x] = fileparts(filename);
     spike.label     = {f};  % use the filename as label for the spike channel
     spike.timestamp = S;
-    spike.waveform  = {};   % this is unknown
-    spike.unit      = {};   % this is unknown
     spike.hdr       = H;
     
   case 'wave_clus'
