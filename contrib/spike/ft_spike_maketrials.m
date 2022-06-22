@@ -269,7 +269,7 @@ elseif strcmp(cfg.trlunit, 'samples')
     
     % only keep the spikes that fall within a trial
     fn = fieldnames(spike);
-    fn = setdiff(fn, {'label', 'cfg', 'dimord', 'time', 'trial', 'trialtime'});
+    fn = setdiff(fn, {'label', 'cfg', 'hdr', 'dimord', 'time', 'trial', 'trialtime'});
     fn = fn(~endsWith(fn, 'dimord'));
     for i=1:numel(fn)
       switch getdimord(spike, fn{i})
