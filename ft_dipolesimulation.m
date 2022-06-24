@@ -9,25 +9,25 @@ function [data] = ft_dipolesimulation(cfg)
 % FT_PREPROCESSING.
 %
 % The dipoles position and orientation have to be specified with
-%   cfg.dip.pos     = [Rx Ry Rz] (size Nx3)
-%   cfg.dip.mom     = [Qx Qy Qz] (size 3xN)
-%   cfg.dip.unit    = string, can be 'mm', 'cm', 'm' (default is automatic)
-%
-% The number of trials and the time axes of the trials can be specified by
-%   cfg.fsample    = simulated sample frequency (default = 1000)
-%   cfg.trllen     = length of simulated trials in seconds (default = 1)
-%   cfg.numtrl     = number of simulated trials (default = 10)
-%   cfg.baseline   = number (default = 0.3)
-% or by
-%   cfg.time       = cell-array with one time axis per trial, for example obtained from an existing dataset
+%   cfg.sourcemodel.pos        = [Rx Ry Rz] (size Nx3)
+%   cfg.sourcemodel.mom        = [Qx Qy Qz] (size 3xN)
+%   cfg.sourcemodel.unit       = string, can be 'mm', 'cm', 'm' (default is automatic)
 %
 % The timecourse of the dipole activity is given as a cell-array with one
 % dipole signal per trial
-%   cfg.dip.signal     = cell-array with one dipole signal per trial
+%   cfg.sourcemodel.signal     = cell-array with one dipole signal per trial
 % or by specifying the parameters of a sine-wave signal
-%   cfg.dip.frequency  =   in Hz
-%   cfg.dip.phase      =   in radians
-%   cfg.dip.amplitude  =   per dipole
+%   cfg.sourcemodel.frequency  =   in Hz
+%   cfg.sourcemodel.phase      =   in radians
+%   cfg.sourcemodel.amplitude  =   per dipole
+%
+% The number of trials and the time axes of the trials can be specified by
+%   cfg.fsample     = simulated sample frequency (default = 1000)
+%   cfg.trllen      = length of simulated trials in seconds (default = 1)
+%   cfg.numtrl      = number of simulated trials (default = 10)
+%   cfg.baseline    = number (default = 0.3)
+% or by
+%   cfg.time        = cell-array with one time axis per trial, for example obtained from an existing dataset
 %
 % Random white noise can be added to the data in each trial, either by
 % specifying an absolute or a relative noise level
@@ -110,7 +110,7 @@ cfg = ft_checkconfig(cfg, 'renamed',    {'vol',     'headmodel'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'dip',    'sourcemodel'});
 
 % for consistency with FT_TIMELOCKSIMULUATION and FT_FREQSIMULATION
-cfg = ft_checkconfig(cfg, 'createsubcfg', 'dip');
+cfg = ft_checkconfig(cfg, 'createsubcfg', 'sourcemodel');
 cfg = ft_checkconfig(cfg, 'renamed', {'ntrials', 'numtrl'});
 cfg = ft_checkconfig(cfg, 'renamed', {'triallength', 'trllen'});
 
