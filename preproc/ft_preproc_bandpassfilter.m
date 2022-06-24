@@ -271,7 +271,8 @@ switch type
     B = firls(order,f,z); % requires MATLAB signal processing toolbox
     
   case 'brickwall'
-    ax = (0:(size(dat,2)-1))./(Fs/size(dat,2)); % frequency axis
+    ix = round((0:Fs) ./ (Fs ./ size(dat,2)));
+    ax = ix ./ (size(dat,2)./Fs); % frequency axis, including the other end of the spectrum
     
     a    = ones(1, size(dat,2));
     fbin1 = nearest(ax, [min(Fbp)    max(Fbp)]);
