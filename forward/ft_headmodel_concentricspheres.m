@@ -68,30 +68,33 @@ end
 mesh = fixpos(mesh);
 
 if ~isstruct(mesh) || ~isfield(mesh, 'pos')
-  ft_error('the input mesh should be a set of points or a single triangulated surface')
+  ft_error('the input mesh should be a set of points or a triangulated surface')
 end
 
 if isequal(fitind, 'all')
   fitind = 1:numel(mesh);
 end
 
-% only keep the ones that need to be fitted
+% only keep the meshes that need to be fitted
 mesh = mesh(fitind);
 
 % assign the default conductivities
 if isempty(conductivity)
+  % this assumes that the meshes are ordered 'insidefirst'
+  defaultconductivity = true;
   switch length(mesh)
     case 1
       conductivity = 1;                        % brain
     case 3
-      conductivity = [0.3300   0.0042 0.3300]; % brain,      skull, skin
+      conductivity = [0.3300   0.0042 0.3300]; % brain, skull, scalp
     case 4
-      conductivity = [0.3300 1 0.0042 0.3300]; % brain, csf, skull, skin
+      conductivity = [0.3300 1 0.0042 0.3300]; % brain, csf, skull, scalp
     otherwise
       ft_error('conductivity values should be specified for each tissue type');
   end
 else
-  ft_error('conductivity values should be specified for each tissue type');
+  % this assumes that the meshes are ordered consistently with the user-specified conductivity
+  defaultconductivity = false;
 end
 
 if length(mesh) ~= length(conductivity)
@@ -101,9 +104,8 @@ end
 % ensure that the mesh has units, estimate them if needed
 mesh = ft_determine_units(mesh);
 
-% start with an empty volume conductor
-headmodel = [];
-headmodel.unit = mesh(1).unit;        % copy the geometrical units into the volume conductor
+% start with an empty volume conductor, copy the units and coordsys over (if available)
+headmodel = keepfields(mesh(1), {'unit', 'coordsys'});
 headmodel.type = 'concentricspheres';
 
 % concatenate the vertices of all surfaces
@@ -138,7 +140,12 @@ if any(diff(indx)<1)
 end
 % order the spheres from the smallest to the largest ('insidefirst' order)
 headmodel.r    = headmodel.r(indx);
-headmodel.cond = headmodel.cond(indx);
+if ~defaultconductivity
+  % assume that the specified conductivities are in the same order as the meshes
+  headmodel.cond = headmodel.cond(indx);
+else
+  % the conductivities are already ordered 'insidefirst'
+end
 
 for i=1:numel(mesh)
   fprintf('concentric sphere %d: radius = %f, conductivity = %f\n', i, headmodel.r(i), headmodel.cond(i));
