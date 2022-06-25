@@ -25,12 +25,12 @@ ft_sourceplot(cfg, mri);
 % compute a forward model for a single dipole, 10 trials of 1 second each, with a 2Hz signal
 
 cfg = [];
-cfg.dip.unit = 'mm';
-cfg.dip.pos = [-40 -20 50]; % left motor cortex
-% cfg.dip.pos = [-50 30 -10]; % orbitofrontaal
-cfg.dip.mom = cfg.dip.pos/norm(cfg.dip.pos); % radial
-% cfg.dip.mom = [0 1 0]; % tangential
-cfg.dip.frequency = 2;
+cfg.sourcemodel.unit = 'mm';
+cfg.sourcemodel.pos = [-40 -20 50]; % left motor cortex
+% cfg.sourcemodel.pos = [-50 30 -10]; % orbitofrontaal
+cfg.sourcemodel.mom = cfg.sourcemodel.pos/norm(cfg.sourcemodel.pos); % radial
+% cfg.sourcemodel.mom = [0 1 0]; % tangential
+cfg.sourcemodel.frequency = 2;
 cfg.elec = elec;
 cfg.headmodel = headmodel;
 data = ft_dipolesimulation(cfg);
@@ -42,13 +42,13 @@ figure
 % ft_plot_headmodel(headmodel);
 % ft_plot_ortho(mri.anatomy, 'location', [0 0 0], 'transform', mri.tra);
 ft_plot_sens(elec, 'label', 'label');
-ft_plot_dipole(data.cfg.dip.pos, data.cfg.dip.mom, 'unit', 'mm')
+ft_plot_dipole(data.cfg.sourcemodel.pos, data.cfg.sourcemodel.mom, 'unit', 'mm')
 
 %%
 % again look at ft_sourceplot, make a cross-section at the dipole position
 
 cfg = [];
-cfg.location = data.cfg.dip.pos;
+cfg.location = data.cfg.sourcemodel.pos;
 ft_sourceplot(cfg, mri)
 
 %%
