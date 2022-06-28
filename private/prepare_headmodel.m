@@ -13,7 +13,7 @@ function [headmodel, sens, cfg] = prepare_headmodel(cfg, data)
 % the skin surface of a BEM head model.
 %
 % This function will return the electrodes/gradiometers in an order that is
-% consistent with the order in cfg.channel, or - in case that is empty - in 
+% consistent with the order in cfg.channel, or - in case that is empty - in
 % the order of the input electrode/gradiometer definition.
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -128,7 +128,21 @@ end
 
 % the prepare_vol_sens function from the forwinv module does most of the actual work
 [headmodel, sens] = ft_prepare_vol_sens(headmodel, sens, 'channel', cfg.channel);
-cfg.headmodel     = headmodel;
+
+if ~ischar(cfg.headmodel)
+  % update the headmodel in the configuration
+  cfg.headmodel = headmodel;
+end
+
+if isfield(cfg, 'grad') && ~ischar(cfg.grad) && ft_senstype(sens, 'meg')
+  % update the gradiometer definition in the configuration
+  cfg.grad = sens;
+elseif isfield(cfg, 'elec') && ~ischar(cfg.elec) && ft_senstype(sens, 'eeg')
+  % update the electrode definition in the configuration
+  cfg.elec = sens;
+else
+  % the gradiometer or electrode definition was specified in the data or read from file
+end
 
 % update the selected channels in the configuration
 if iscell(sens)
