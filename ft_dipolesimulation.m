@@ -247,8 +247,8 @@ for trial=1:cfg.numtrl
   nchannels = size(lf,1);
   data.trial{trial} = zeros(nchannels,nsamples);
   for i = 1:3
-    data.trial{trial} = data.trial{trial} + lf(:,i:3:end) * ...
-      (repmat(dipmom{trial}(i:3:end),1,nsamples) .* dipsignal{trial});
+    data.trial{trial} = data.trial{trial} + ...
+      lf(:,i:3:end) * (repmat(dipmom{trial}(i:3:end),1,nsamples) .* dipsignal{trial});
   end
 end
 ft_progress('close');
