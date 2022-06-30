@@ -28,12 +28,14 @@ function [freq] = ft_freqanalysis(cfg, data)
 %                       obtained with FT_MVARANALYSIS. In this case, the
 %                       output will contain a spectral transfer matrix,
 %                       the cross-spectral density matrix, and the
-%                       covariance matrix of the innovatio noise.
+%                       covariance matrix of the innovation noise.
 %                     'superlet', combines Morlet-wavelet based
 %                       decompositions, see below.
 %                     'irasa', implements Irregular-Resampling Auto-Spectral 
 %                       Analysis (IRASA), to separate the fractal components 
 %                       from the periodicities in the signal.
+%                     'hilbert', implements the filter-Hilbert method, see
+%                       below.
 %   cfg.output      = 'pow'       return the power-spectra
 %                     'powandcsd' return the power and the cross-spectra
 %                     'fourier'   return the complex Fourier-spectra
