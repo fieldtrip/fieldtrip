@@ -144,19 +144,21 @@ if computecov
   if keeptrials
     covsig = nan(nrpt, nchan, nchan);
   else
-    covsig = zeros(nchan, nchan);
-    allsmp = 0;
+    covsig = zeros(nrpt, nchan, nchan);
+    allsmp = zeros(nrpt, 1);
   end
 
   % compute the covariance per trial
-  for k = 1:nrpt
-    dat    = reshape(datacov.trial(k,:,:), [nchan ntime]);
+  datacov_trial = datacov.trial; % Avoid sending full datacov struct to each parallel worker
+  cfg_removemean = cfg.removemean; % Avoid sending full cfg struct to each parallel worker
+  parfor k = 1:nrpt
+    dat    = reshape(datacov_trial(k,:,:), [nchan ntime]);
     datsmp = isfinite(dat);
     if ~all(ismember(sum(datsmp,1), [0 nchan]))
       ft_error('channel specific NaNs are not supported for covariance computation');
     end
     numsmp = sum(datsmp(1,:));
-    if istrue(cfg.removemean)
+    if istrue(cfg_removemean)
       dat  = ft_preproc_baselinecorrect(dat);
       numsmp = max(numsmp-1,1);
     end
@@ -165,14 +167,14 @@ if computecov
     if keeptrials
       covsig(k,:,:) = dat*dat'./numsmp;
     else
-      covsig = covsig + dat*dat';
-      allsmp = allsmp + numsmp;
+      covsig(k,:,:) = dat*dat';
+      allsmp(k) = numsmp;
       % normalisation will be done after the for-loop
     end
   end
 
   if ~keeptrials
-    covsig = covsig./allsmp;
+    covsig = reshape(sum(covsig,1), [nchan, nchan])./sum(allsmp);
   end
 end
 
