@@ -28,35 +28,21 @@ function [timelock] = ft_timelockanalysis(cfg, data)
 %
 % See also FT_TIMELOCKGRANDAVERAGE, FT_TIMELOCKSTATISTICS
 
-% Guidelines for use in an analysis pipeline:
-% after FT_TIMELOCKANALYSIS you will have timelocked data - i.e., event-related
-% fields (ERFs) or potentials (ERPs) - represented as the average and/or
-% covariance over trials.
-% This usually serves as input for one of the following functions:
-%    * FT_TIMELOCKBASELINE      to perform baseline normalization
-%    * FT_TIMELOCKGRANDAVERAGE  to compute the ERP/ERF average and variance over multiple subjects
-%    * FT_TIMELOCKSTATISTICS    to perform parametric or non-parametric statistical tests
-% Furthermore, the data can be visualised using the various plotting
-% functions, including:
-%    * FT_SINGLEPLOTER          to plot the ERP/ERF of a single channel or the average over multiple channels
-%    * FT_TOPOPLOTER            to plot the topographic distribution over the head
-%    * FT_MULTIPLOTER           to plot ERPs/ERFs in a topographical layout
-
 % FIXME if input is one raw trial, the covariance is not computed correctly
 %
 % Undocumented local options:
-% cfg.feedback
-% cfg.preproc
+%   cfg.feedback
+%   cfg.preproc
 %
 % Deprecated options:
-% cfg.blcovariance
-% cfg.blcovariancewindow
-% cfg.normalizecov
-% cfg.vartrllength
+%   cfg.blcovariance
+%   cfg.blcovariancewindow
+%   cfg.normalizecov
+%   cfg.vartrllength
 
 % Copyright (C) 2018, Jan-Mathijs Schoffelen
 % Copyright (C) 2003-2006, Markus Bauer
-% Copyright (C) 2003-2021, Robert Oostenveld
+% Copyright (C) 2003-2022, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -142,7 +128,7 @@ if computecov
   % restore the provenance information
   [dum, datacov] = rollback_provenance(cfg, datacov); % not sure what to do here
   datacov      = ft_checkdata(datacov, 'datatype', 'timelock');
-  
+
   if isfield(datacov, 'trial')
     [nrpt, nchan, ntime] = size(datacov.trial);
   else
@@ -153,7 +139,7 @@ if computecov
     datacov       = rmfield(datacov, 'avg');
     datacov.dimord = 'rpt_chan_time';
   end
-  
+
   % pre-allocate memory space for the covariance matrices
   if keeptrials
     covsig = nan(nrpt, nchan, nchan);
@@ -161,7 +147,7 @@ if computecov
     covsig = zeros(nchan, nchan);
     allsmp = 0;
   end
-  
+
   % compute the covariance per trial
   for k = 1:nrpt
     dat    = reshape(datacov.trial(k,:,:), [nchan ntime]);
@@ -175,7 +161,7 @@ if computecov
       numsmp = max(numsmp-1,1);
     end
     dat(~datsmp)  = 0;
-    
+
     if keeptrials
       covsig(k,:,:) = dat*dat'./numsmp;
     else
@@ -184,7 +170,7 @@ if computecov
       % normalisation will be done after the for-loop
     end
   end
-  
+
   if ~keeptrials
     covsig = covsig./allsmp;
   end

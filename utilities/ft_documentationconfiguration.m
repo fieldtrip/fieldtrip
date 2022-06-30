@@ -172,39 +172,37 @@ for i=2:size(configuration,1)
 end
 fprintf('merged %d cfg options\n', count);
 
-fid = fopen(filename, 'wb');
-currletter = char(96);
+if nargin>0
+  % write the index of all configuration options to a Markdown file
+  fid = fopen(filename, 'wb');
+  currletter = char(96);
 
-fprintf(fid, '---\n');
-fprintf(fid, 'title: Index of all configuration options\n');
-fprintf(fid, 'tags: [cfg]\n');
-fprintf(fid, '---\n');
-fprintf(fid, '\n');
-fprintf(fid, '# Index of all configuration options \n');
-fprintf(fid, '\n');
-fprintf(fid, 'A detailed description of each function is available in the [reference documentation](/reference).\n');
-fprintf(fid, '\n');
+  fprintf(fid, '---\n');
+  fprintf(fid, 'title: Index of all configuration options\n');
+  fprintf(fid, 'tags: [cfg]\n');
+  fprintf(fid, '---\n');
+  fprintf(fid, '\n');
+  fprintf(fid, '# Index of all configuration options \n');
+  fprintf(fid, '\n');
+  fprintf(fid, 'A detailed description of each function is available in the [reference documentation](/reference).\n');
+  fprintf(fid, '\n');
 
-for i=1:size(configuration,1)
-  if isempty(configuration{i,1})
-    continue;
-  elseif length(configuration{i,2})<5
-    continue;
+  for i=1:size(configuration,1)
+    if isempty(configuration{i,1})
+      continue;
+    elseif length(configuration{i,2})<5
+      continue;
+    end
+    thisletter = configuration{i,2}(5);
+    while currletter<thisletter
+      currletter = currletter + 1;
+      fprintf(fid, '## %s \n\n', upper(char(currletter)));
+    end
+    fprintf(fid, '**%s** - %s  \n', configuration{i,2}, configuration{i,1});
+
+    fprintf(fid, '%s\n\n', configuration{i,3});
   end
-  thisletter = configuration{i,2}(5);
-  while currletter<thisletter
-    currletter = currletter + 1;
-    fprintf(fid, '## %s \n\n', upper(char(currletter)));
-  end
-  fprintf(fid, '**%s** - %s  \n', configuration{i,2}, configuration{i,1});
-
-  % do postprocessing to make sure we don't mess up dokuwiki layout
-  % '' is a markup instruction for dokuwiki so escape by replacing it
-  % with %%''%%
-  % configuration{i,3} = strrep(configuration{i,3},'''''','%%''''%%');
-
-  fprintf(fid, '%s\n\n', configuration{i,3});
+  fclose(fid);
 end
-fclose(fid);
 
 return
