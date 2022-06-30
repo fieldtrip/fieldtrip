@@ -197,23 +197,6 @@ function [freq] = ft_freqanalysis(cfg, data)
 %
 % See also FT_FREQSTATISTICS, FT_FREQDESCRIPTIVES, FT_CONNECTIVITYANALYSIS
 
-% Guidelines for use in an analysis pipeline:
-% after FT_FREQANALYSIS you will have frequency or time-frequency
-% representations (TFRs) of the data, represented as power-spectra,
-% power and cross-spectra, or complex fourier-spectra, either for individual
-% trials or an average over trials.
-% This usually serves as input for one of the following functions:
-%    * FT_FREQDESCRIPTIVES  to compute descriptive univariate statistics
-%    * FT_FREQSTATISTICS    to perform parametric or non-parametric statistical tests
-%    * FT_FREQBASELINE      to perform baseline normalization of the spectra
-%    * FT_FREQGRANDAVERAGE  to compute the average spectra over multiple subjects or datasets
-%    * FT_CONNECTIVITYANALYSIS to compute various measures of connectivity
-% Furthermore, the data can be visualised using the various plotting
-% functions, including:
-%    * FT_SINGLEPLOTTFR     to plot the TFR of a single channel or the average over multiple channels
-%    * FT_TOPOPLOTTFR       to plot the topographic distribution over the head
-%    * FT_MULTIPLOTTFR      to plot TFRs in a topographical layout
-
 % Undocumented local options:
 %   cfg.correctt_ftimwin  = 'yes' or 'no', whether to try and determine new t_ftimwins based on correct cfg.foi)
 
