@@ -215,15 +215,11 @@ function [freq] = ft_freqanalysis(cfg, data)
 %    * FT_MULTIPLOTTFR      to plot TFRs in a topographical layout
 
 % Undocumented local options:
-% cfg.method = 'hilbert'. Keeping this as undocumented as it does not make
-%              sense to use in ft_freqanalysis unless the user is doing his
-%              own filter-padding to remove edge-artifacts
-% cfg.correctt_ftimwin (set to yes to try to determine new t_ftimwins based
-%                       on correct cfg.foi)
+%   cfg.correctt_ftimwin  = 'yes' or 'no', whether to try and determine new t_ftimwins based on correct cfg.foi)
 
 % Copyright (C) 2003-2006, F.C. Donders Centre, Pascal Fries
 % Copyright (C) 2004-2006, F.C. Donders Centre, Markus Siegel
-% Copyright (C) 2007-2012, DCCN, The FieldTrip team
+% Copyright (C) 2007-2022, DCCN, The FieldTrip team
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
