@@ -1,4 +1,4 @@
-function [wpli, v, n] = ft_connectivity_wpli(input, varargin)
+function [wpli, v, n] = ft_connectivity_wpli(inputdata, varargin)
 
 % FT_CONNECTIVITY_WPLI computes the weighted phase lag index from a data matrix
 % containing the cross-spectral density. This implements the method described in
@@ -8,7 +8,7 @@ function [wpli, v, n] = ft_connectivity_wpli(input, varargin)
 % 15;55(4):1548-65.
 %
 % Use as
-%   [wpi, v, n] = ft_connectivity_wpli(input, ...)
+%   [wpi, v, n] = ft_connectivity_wpli(inputdata, ...)
 %
 % The input data input should contain cross-spectral densities organized as:
 %   Repetitions x Channel x Channel (x Frequency) (x Time)
@@ -73,11 +73,11 @@ if dojack && isunivariate
 end
 if isunivariate
   if isempty(cumtapcnt)
-    cumtapcnt = ones(size(input,1), 1);
+    cumtapcnt = ones(size(inputdata,1), 1);
   end
-  assert(sum(cumtapcnt)==size(input,1));
+  assert(sum(cumtapcnt)==size(inputdata,1));
 
-  siz    = [size(input) 1]; 
+  siz    = [size(inputdata) 1]; 
   nchan  = siz(2);
   outsiz = [nchan nchan siz(3:end)];
   n      = size(cumtapcnt,1);
@@ -91,7 +91,7 @@ if isunivariate
   for k = 1:n 
     indx  = (sumtapcnt(k)+1):sumtapcnt(k+1);
     for m = 1:prod(outsiz(3:end))
-      trial = transpose(input(indx,:,m));
+      trial = transpose(inputdata(indx,:,m));
       csdimag = imag(trial*trial')./length(indx);
 
       outsum(:,:,m)  = outsum(:,:,m)  + csdimag;
@@ -106,14 +106,14 @@ if isunivariate
   end
   v = [];
 else
-  siz = [ size(input) 1 ];
+  siz = [ size(inputdata) 1 ];
   n = siz(1);
   if n>1
-    input    = imag(input);          % make everything imaginary
-    outsum   = nansum(input,1);      % compute the sum; this is 1 x size(2:end)
-    outsumW  = nansum(abs(input),1); % normalization of the WPLI
+    inputdata    = imag(inputdata);          % make everything imaginary
+    outsum   = nansum(inputdata,1);      % compute the sum; this is 1 x size(2:end)
+    outsumW  = nansum(abs(inputdata),1); % normalization of the WPLI
     if debias
-      outssq   = nansum(input.^2,1);
+      outssq   = nansum(inputdata.^2,1);
       wpli     = (outsum.^2 - outssq)./(outsumW.^2 - outssq); % do the pairwise thing in a handy way
     else
       wpli     = outsum./outsumW; % estimator of E(Im(X))/E(|Im(X)|)
@@ -129,10 +129,10 @@ else
     ft_progress('init', feedback, 'computing metric...');
     for k = 1:n
       ft_progress(k/n, 'computing metric for replicate %d from %d\n', k, n);
-      s  = outsum  - input(k,:,:,:,:,:,:); % works for any array up to 7-D
-      sw = outsumW - abs(input(k,:,:,:,:,:,:));
+      s  = outsum  - inputdata(k,:,:,:,:,:,:); % works for any array up to 7-D
+      sw = outsumW - abs(inputdata(k,:,:,:,:,:,:));
       if debias
-        sq    = outssq - input(k,:,:,:,:,:,:).^2;
+        sq    = outssq - inputdata(k,:,:,:,:,:,:).^2;
         num   = s.^2  - sq;
         denom = sw.^2 - sq;
       else
@@ -147,7 +147,7 @@ else
     ft_progress('close');
 
     % compute the sem here
-    n = sum(~isnan(input),1); % this is the actual df when nans are found in the input matrix
+    n = sum(~isnan(inputdata),1); % this is the actual df when nans are found in the input matrix
     v = (n-1).^2.*(leave1outssq - (leave1outsum.^2)./n)./(n - 1); % 11.5 efron, sqrt and 1/n done in ft_connectivityanalysis
     v = reshape(v,siz(2:end)); % remove the first singular dimension
     n = reshape(n,siz(2:end));

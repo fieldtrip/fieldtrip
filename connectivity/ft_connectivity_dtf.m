@@ -1,9 +1,9 @@
-function [dtf, dtfvar, n] = ft_connectivity_dtf(input, varargin)
+function [dtf, dtfvar, n] = ft_connectivity_dtf(inputdata, varargin)
 
 % FT_CONNECTIVITY_DTF computes the directed transfer function.
 %
 % Use as
-%   [d, v, n] = ft_connectivity_dtf(input, ...)
+%   [d, v, n] = ft_connectivity_dtf(inputdata, ...)
 %
 % The input should be a spectral transfer matrix organized as
 %   Nrpt x Nchan x Nchan x Nfreq (x Ntime)
@@ -73,14 +73,14 @@ if ~isempty(powindx)
   ft_error('linearly indexed data for DTF computation is at the moment not supported');
 end
 
-siz    = [size(input) 1];
+siz    = [size(inputdata) 1];
 n      = siz(1);
 outsum = zeros(siz(2:end));
 outssq = zeros(siz(2:end));
 
 % check the crsspctrm; if it is present, compute the partial coherence
 if ~isempty(crsspctrm)
-  assert(isequal(size(crsspctrm),size(input)), 'the input data should be of the same size as the crsspctrm');
+  assert(isequal(size(crsspctrm),size(inputdata)), 'the input data should be of the same size as the crsspctrm');
   fprintf('computing dDTF in the presence of a crsspctrm\n');
   
   % the crsspctrm allows for the partial coherence to be computed
@@ -102,7 +102,7 @@ end
 
 % data should be represented as chan_chan_therest
 for j = 1:n
-  tmph   = reshape(input(j,:,:,:,:), siz(2:end));
+  tmph   = reshape(inputdata(j,:,:,:,:), siz(2:end));
   if isempty(crsspctrm)
     % plain DTF
     den    = sum(abs(tmph).^2,2);

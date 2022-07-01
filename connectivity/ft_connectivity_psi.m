@@ -1,4 +1,4 @@
-function [c, v, n] = ft_connectivity_psi(input, varargin)
+function [c, v, n] = ft_connectivity_psi(inputdata, varargin)
 
 % FT_CONNECTIVITY_PSI computes the phase slope index from a data-matrix containing
 % the cross-spectral density. This implements the method described in Nolte et al.,
@@ -6,9 +6,9 @@ function [c, v, n] = ft_connectivity_psi(input, varargin)
 % Physical Review Letters, 2008; 100; 234101.
 %
 % Use as
-%   [c, v, n] = ft_connectivity_psi(input, ...)
+%   [c, v, n] = ft_connectivity_psi(inputdata, ...)
 %
-% The input data input should be organized as
+% Where the input data input should be organized as
 %   Repetitions x Channel x Channel (x Frequency) (x Time)
 % or
 %   Repetitions x Channelcombination (x Frequency) (x Time)
@@ -67,47 +67,47 @@ end
 
 if (length(strfind(dimord, 'chan'))~=2 || contains(dimord, 'pos')>0) && ~isempty(powindx)
   %crossterms are not described with chan_chan_therest, but are linearly indexed
-  
-  siz = size(input);
-  
+
+  siz = size(inputdata);
+
   outsum = zeros(siz(2:end));
   outssq = zeros(siz(2:end));
   pvec   = [2 setdiff(1:numel(siz),2)];
-  
+
   ft_progress('init', feedback, 'computing metric...');
   %first compute coherency and then phaseslopeindex
   for j = 1:siz(1)
     ft_progress(j/siz(1), 'computing metric for replicate %d from %d\n', j, siz(1));
-    c      = reshape(input(j,:,:,:,:), siz(2:end));
-    p1     = abs(reshape(input(j,powindx(:,1),:,:,:), siz(2:end)));
-    p2     = abs(reshape(input(j,powindx(:,2),:,:,:), siz(2:end)));
-    
+    c      = reshape(inputdata(j,:,:,:,:), siz(2:end));
+    p1     = abs(reshape(inputdata(j,powindx(:,1),:,:,:), siz(2:end)));
+    p2     = abs(reshape(inputdata(j,powindx(:,2),:,:,:), siz(2:end)));
+
     p      = ipermute(phaseslope(permute(c./sqrt(p1.*p2), pvec), nbin, normalize), pvec);
-    
+
     outsum = outsum + p;
     outssq = outssq + p.^2;
   end
   ft_progress('close');
-  
+
 elseif length(strfind(dimord, 'chan'))==2 || length(strfind(dimord, 'pos'))==2
   %crossterms are described by chan_chan_therest
-  
-  siz = size(input);
-  
+
+  siz = size(inputdata);
+
   outsum = zeros(siz(2:end));
   outssq = zeros(siz(2:end));
   pvec   = [3 setdiff(1:numel(siz),3)];
-  
+
   ft_progress('init', feedback, 'computing metric...');
   for j = 1:siz(1)
     ft_progress(j/siz(1), 'computing metric for replicate %d from %d\n', j, siz(1));
     p1  = zeros([siz(2) 1 siz(4:end)]);
     p2  = zeros([1 siz(3) siz(4:end)]);
     for k = 1:siz(2)
-      p1(k,1,:,:,:,:) = input(j,k,k,:,:,:,:);
-      p2(1,k,:,:,:,:) = input(j,k,k,:,:,:,:);
+      p1(k,1,:,:,:,:) = inputdata(j,k,k,:,:,:,:);
+      p2(1,k,:,:,:,:) = inputdata(j,k,k,:,:,:,:);
     end
-    c      = reshape(input(j,:,:,:,:,:,:), siz(2:end));
+    c      = reshape(inputdata(j,:,:,:,:,:,:), siz(2:end));
     p1     = p1(:,ones(1,siz(3)),:,:,:,:);
     p2     = p2(ones(1,siz(2)),:,:,:,:,:);
     p      = ipermute(phaseslope(permute(c./sqrt(p1.*p2), pvec), nbin, normalize), pvec);
@@ -116,14 +116,14 @@ elseif length(strfind(dimord, 'chan'))==2 || length(strfind(dimord, 'pos'))==2
     outssq = outssq + p.^2;
   end
   ft_progress('close');
-  
+
 end
 
 n = siz(1);
 c = outsum./n;
 
 if n>1
-  n = shiftdim(sum(~isnan(input),1),1);
+  n = shiftdim(sum(~isnan(inputdata),1),1);
   if hasjack
     bias = (n-1).^2;
   else

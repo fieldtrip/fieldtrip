@@ -1,4 +1,4 @@
-function [R] = ft_connectivity_cancorr(input, varargin)
+function [R] = ft_connectivity_cancorr(inputdata, varargin)
 
 % FT_CONNECTIVITY_CANCORR computes the canonical correlation or canonical coherence
 % between multiple variables. Canonical correlation analysis (CCA) is a way of
@@ -7,7 +7,7 @@ function [R] = ft_connectivity_cancorr(input, varargin)
 % and, at the same time, it finds the corresponding correlations.
 %
 % Use as
-%   [R] = ft_connectivity_cancorr(input, ...)
+%   [R] = ft_connectivity_cancorr(inputdata, ...)
 %
 % The input data should be a covariance or cross-spectral density array organized as
 %   Channel x Channel
@@ -48,12 +48,12 @@ function [R] = ft_connectivity_cancorr(input, varargin)
 indices  = ft_getopt(varargin, 'indices');
 realflag = ft_getopt(varargin, 'realflag', false);
 
-if isempty(indices) && isequal(size(input(:,:,1)), [2 2])
+if isempty(indices) && isequal(size(inputdata(:,:,1)), [2 2])
   % simply assume two channels
   indices = [1 1 2 2];
 end
 
-sizein  = size(input);
+sizein  = size(inputdata);
 sizeout = [sizein 1];
 sizeout(1:2) = max(indices);
 
@@ -64,7 +64,7 @@ for kk = 1:sizeout(3)
       indx1 = find(indices==k);
       indx2 = find(indices==m);
       
-      [E, D] = multivariate_decomp(input([indx1 indx2], [indx1 indx2], kk), 1:numel(indx1), numel(indx1)+(1:numel(indx2)), 'cca', realflag);
+      [E, D] = multivariate_decomp(inputdata([indx1 indx2], [indx1 indx2], kk), 1:numel(indx1), numel(indx1)+(1:numel(indx2)), 'cca', realflag);
       
       R(k, m, kk) = D(1);
     end

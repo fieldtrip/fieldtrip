@@ -1,4 +1,4 @@
-function [pdc, pdcvar, n] = ft_connectivity_pdc(input, varargin)
+function [pdc, pdcvar, n] = ft_connectivity_pdc(inputdata, varargin)
 
 % FT_CONNECTIVITY_PDC computes partial directed coherence. This function implements
 % the metrices described in Baccala et al., Biological Cybernetics 2001, 84(6),
@@ -9,9 +9,9 @@ function [pdc, pdcvar, n] = ft_connectivity_pdc(input, varargin)
 % 'nPDC' (for PDC) and 'GPDC' for generalized pdc.
 %
 % Use as
-%   [p, v, n] = ft_connectivity_pdc(H, ...)
+%   [p, v, n] = ft_connectivity_pdc(inputdata, ...)
 %
-% The input argument H should be a spectral transfer matrix organized as
+% The input data should be a spectral transfer matrix organized as
 %   Nrpt x Nchan x Nchan x Nfreq (x Ntime),
 % where Nrpt can be 1.
 %
@@ -74,7 +74,7 @@ switch invfun
 end
 
 % crossterms are described by chan_chan_therest
-siz = [size(input) 1];
+siz = [size(inputdata) 1];
 n   = siz(1);
 
 if ~isempty(noisecov)
@@ -92,7 +92,7 @@ outssq = zeros(siz(2:end));
 % the mathematics for pdc is most straightforward using the inverse of the
 % transfer function
 pdim     = prod(siz(4:end));
-tmpinput = reshape(input, [siz(1:3) pdim]);
+tmpinput = reshape(inputdata, [siz(1:3) pdim]);
 ft_progress('init', feedback, 'inverting the transfer function...');
 for k = 1:n
   ft_progress(k/n, 'inverting the transfer function for replicate %d from %d\n', k, n);
@@ -103,11 +103,11 @@ for k = 1:n
   tmpinput(k,:,:,:) = tmp;
 end
 ft_progress('close');
-input = reshape(tmpinput, siz);
+inputdata = reshape(tmpinput, siz);
 
 for j = 1:n
   ft_progress(j/n, 'computing metric for replicate %d from %d\n', j, n);
-  invh   = reshape(input(j,:,:,:,:), siz(2:end));
+  invh   = reshape(inputdata(j,:,:,:,:), siz(2:end));
   
   den    = sum(abs(invh).^2,1);
   tmppdc = abs(invh)./sqrt(repmat(den, [siz(2) 1 1 1 1]));
