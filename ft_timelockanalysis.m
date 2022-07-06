@@ -103,6 +103,7 @@ cfg.covariance        = ft_getopt(cfg, 'covariance'       , 'no');
 cfg.covariancewindow  = ft_getopt(cfg, 'covariancewindow' , 'all');
 cfg.removemean        = ft_getopt(cfg, 'removemean'       , 'yes');
 cfg.feedback          = ft_getopt(cfg, 'feedback'         , 'text');
+cfg.parformaxworkers  = ft_getopt(cfg, 'parformaxworkers' , Inf);
 
 % create logical flags for convenience
 keeptrials = istrue(cfg.keeptrials);
@@ -148,10 +149,12 @@ if computecov
     allsmp = zeros(nrpt, 1);
   end
 
-  % compute the covariance per trial
+  % prepare for doing a parfor loop
   datacov_trial = datacov.trial; % Avoid sending full datacov struct to each parallel worker
   cfg_removemean = cfg.removemean; % Avoid sending full cfg struct to each parallel worker
-  parfor k = 1:nrpt
+
+  % compute the covariance per trial
+  parfor (k = 1:nrpt, cfg.parformaxworkers)
     dat    = reshape(datacov_trial(k,:,:), [nchan ntime]);
     datsmp = isfinite(dat);
     if ~all(ismember(sum(datsmp,1), [0 nchan]))
