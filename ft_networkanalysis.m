@@ -84,6 +84,7 @@ end
 cfg = ft_checkconfig(cfg, 'required', {'method' 'parameter'});
 
 cfg.threshold = ft_getopt(cfg, 'threshold', []);
+cfg.parformaxworkers  = ft_getopt(cfg, 'parformaxworkers' , Inf);
 
 % ensure that the bct-toolbox is on the path
 ft_hastoolbox('BCT', 1);
@@ -189,12 +190,13 @@ switch cfg.method
     dimord = dimord;
 end
 
+% Prepare for parfor loop
 outsiz_4 = outsiz(4); % Make clear to parfor that the inner loop stop variable is a static value
 cfg_method = cfg.method; % Avoid sending full cfg struct to each parallel worker
 
 binarywarning = 'weights are not taken into account and graph is converted to binary values by thresholding';
 
-parfor k = 1:outsiz(3)
+parfor (k = 1:outsiz(3), cfg.parformaxworkers)
   for m = 1:outsiz_4
 
     % switch to the appropriate function from the BCT
