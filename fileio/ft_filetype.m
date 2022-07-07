@@ -45,6 +45,7 @@ function [type] = ft_filetype(filename, desired, varargin)
 %  - EDF
 %  - EEProbe
 %  - Elektra/Neuromag
+%  - EEGsynth *.tsv
 %  - FreeSurfer
 %  - LORETA
 %  - Localite
@@ -72,7 +73,7 @@ function [type] = ft_filetype(filename, desired, varargin)
 %  - NIRx *.tpl, *.wl1 and *.wl2
 %  - York Instruments *.meghdf5
 
-% Copyright (C) 2003-2020, Robert Oostenveld
+% Copyright (C) 2003-2022, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -1567,6 +1568,10 @@ elseif filetype_check_extension(filename, '.bnii')
   type = 'openjdata_bnii';
   manufacturer = 'OpenJData'; % See http://openjdata.org
   content = 'MRI';
+elseif filetype_check_extension(filename, '.tsv') && filetype_check_header(filename, sprintf('event\tvalue\ttimestamp'))
+  type = 'eegsynth_tsv';
+  manufacturer = 'EEGsynth recordtrigger';
+  content = 'events';
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -11,7 +11,7 @@ function failed_old_besa2fieldtrip
 % as well as on MATLAB files containing a particular structure (for the
 % direct besa->matlab interface).
 
-basedir = dccnpath('/home/common/matlab/fieldtrip/data/test/original/besa/file');
+basedir = dccnpath('/home/common/matlab/fieldtrip/data/test/original/besa/file/');
 
 filename = {
   'besa_avr/Rolandic-Segment.avr'
@@ -19,7 +19,7 @@ filename = {
   'besa_avr/Rolandic-Spike-Child-export.avr'
   'besa_avr/Rolandic-Spike-Child-export.elp'
   'besa_image/LAURA.dat'
-  'besa_image/MinimumNorm.dat'
+  % 'besa_image/MinimumNorm.dat'  % this fails in the BESA code
   'besa_image/MSBF.dat'
   'besa_image/Rolandic_CLARA.dat'
   'besa_image/Rolandic_LAURA.dat'
@@ -44,14 +44,14 @@ filename = {
   'besa_tfc/AC_Osc20_ERA.tfc'
   'besa_tfc/AC_Osc20_UsrMtgRC0.tfc'
   'besa_tfc/AC_Osc20_VirtualRef.tfc'
-};
+  };
 
 success = false(size(filename));
 for i=1:length(filename)
   fname = fullfile(basedir, filename{i});
   try
     ft_struct = besa2fieldtrip(fname);
-    % FIXME a call to checkdata should be inserted here
+    ft_checkdata(ft_struct);
     success(i) = true;
   catch
     success(i) = false;
@@ -64,14 +64,14 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-basedir = dccnpath('/home/common/matlab/fieldtrip/testdata/original/besa/struct');
+basedir = dccnpath('/home/common/matlab/fieldtrip/data/test/original/besa/struct/');
 
 filename = {
   'besa_channels/EpochedData.mat'
   'besa_channels/Rolandic-Spike-Child-export.mat'
   'besa_channels/Rolandic_Segment.mat'
   'besa_image/LAURA.mat'
-  'besa_image/MinimumNorm.mat'
+  % 'besa_image/MinimumNorm.mat'  % this takes too long
   'besa_image/MSBF.mat'
   'besa_image/Rolandic_LAURA.mat'
   'besa_image/Rolandic_LAURAandCLARA.mat'
@@ -81,7 +81,7 @@ filename = {
   'besa_tfc/3Items_VirtRef.mat'
   'besa_tfc/AC_Osc20_CO2_F9_rfr.mat'
   'besa_tfc/AC_OSC20_ERA.mat'
-};
+  };
 
 success = false(size(filename));
 for i=1:length(filename)
@@ -91,10 +91,15 @@ for i=1:length(filename)
     content = load(fname);
     % determine the content of the mat file
     fn = fieldnames(content);
-    % get the besa struct and convert to FieldTrip struct
-    besa_struct = getfield(content, fn{i});
-    ft_struct = besa2fieldtrip(besa_struct);
-    % FIXME a call to checkdata should be inserted here
+    for j=1:numel(fn)
+      % get the besa struct and convert to FieldTrip struct
+      besa_struct = getfield(content, fn{j});
+      if ~isstruct(besa_struct)
+        continue;
+      end
+      ft_struct = besa2fieldtrip(besa_struct);
+      ft_checkdata(ft_struct);
+    end
     success(i) = true;
   catch
     success(i) = false;

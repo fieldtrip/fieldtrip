@@ -1,11 +1,11 @@
-function [c] = ft_connectivity_powcorr_ortho(input, varargin)
+function [c] = ft_connectivity_powcorr_ortho(inputdata, varargin)
 
 % FT_CONNECTIVITY_POWCORR_ORTHO computes power correlation after removing
 % the zero-lag contribution on a trial-by-trial basis, according to Hipp's
 % Nature Neuroscience paper.
 %
 % Use as
-%   [c] = ft_connectivity_powcorr(input, ...)
+%   [c] = ft_connectivity_powcorr(inputdata, ...)
 %
 % Where the input is a Nchan*Nrpt matrix containing the complex-valued amplitude
 % and phase information at a given frequency.
@@ -45,13 +45,13 @@ function [c] = ft_connectivity_powcorr_ortho(input, varargin)
 % $Id$
 
 refindx = ft_getopt(varargin, 'refindx', 'all');
-tapvec  = ft_getopt(varargin, 'tapvec',  ones(1,size(input,2))); % default is 1 taper per trial
+tapvec  = ft_getopt(varargin, 'tapvec',  ones(1,size(inputdata,2))); % default is 1 taper per trial
 
 if strcmp(refindx, 'all')
-  refindx = 1:size(input,1);
+  refindx = 1:size(inputdata,1);
 end
 
-[nchan, nrpttap] = size(input);
+[nchan, nrpttap] = size(inputdata);
 ntap  = tapvec(1);
 nrpt  = numel(tapvec); % number of trials / repetitions
 
@@ -67,14 +67,14 @@ end
 c = zeros(nchan, numel(refindx))+nan;
 
 % only need to do these two things once (out of next forloop)
-cXnorm = conj(input./abs(input));
-powX   = abs(input).^2;
+cXnorm = conj(inputdata./abs(inputdata));
+powX   = abs(inputdata).^2;
 
 for k = 1:numel(refindx) % for each source/channel
   indx   = refindx(k);
-  target = setdiff(1:size(input,1), indx);
+  target = setdiff(1:size(inputdata,1), indx);
   
-  Y    = repmat(input(indx,:), [nchan, 1]); % Y = y nchan times stacked
+  Y    = repmat(inputdata(indx,:), [nchan, 1]); % Y = y nchan times stacked
   
   % orthogonalization in one direction: Y wrt X
   powYorth = abs(imag(Y.*cXnorm)).^2;
@@ -94,7 +94,7 @@ for k = 1:numel(refindx) % for each source/channel
   % in the other direction: orthogonalize X wrt Y
   cYnorm = conj(Y./abs(Y));
   
-  powXorth = abs(imag(input.*cYnorm)).^2;
+  powXorth = abs(imag(inputdata.*cYnorm)).^2;
   powY     = abs(Y).^2;
   
   zXorth   = zeros(nchan, nrpt*ntap);

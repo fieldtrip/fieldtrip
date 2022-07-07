@@ -163,7 +163,7 @@ switch fileformat
     % these files seem to come in different formats with 3, 4 or 5 columns
     % see http://wiki.besa.de/index.php?title=Channel_Definition_File_Formats
     % read the first line to determine the number of columns
-    format = length(strsplit(deblank2(fgetl(fid))));
+    format = length(strsplit(strtrim(fgetl(fid))));
     fseek(fid, 0, 'bof');
     switch format
       case 3

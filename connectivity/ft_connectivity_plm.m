@@ -1,4 +1,4 @@
-function [p] = ft_connectivity_plm(input, varargin)
+function [p] = ft_connectivity_plm(inputdata, varargin)
 
 % FT_CONNECTIVITY_PLM computes the phase linearity measurement from a cell array of
 % time-domain data, where each cell is an epoch. This implements the metric described
@@ -6,7 +6,7 @@ function [p] = ft_connectivity_plm(input, varargin)
 % connectivity", IEEE Transactions on Medical Imaging, 2018.
 %
 % Use as
-%   [p] = ft_connectivity_plm(input, ...)
+%   [p] = ft_connectivity_plm(inputdata, ...)
 %
 % The input data input should be organized as a cell-array, one element for each
 % epoch/repetition. Each cell should be a matrix of of nchan x nsamples values.
@@ -60,18 +60,18 @@ if isempty(B)
   B=1;
 end
 
-nsmp = cellfun('size', input, 2);
+nsmp = cellfun('size', inputdata, 2);
 assert(all(nsmp==nsmp(1)), 'currently there is no support for input, where the trials are of different length');
 
-nrpt=numel(input);
-for k = 1:numel(input)
-  input{k} = hilbert(input{k}')';
+nrpt=numel(inputdata);
+for k = 1:numel(inputdata)
+  inputdata{k} = hilbert(inputdata{k}')';
 end
 % NOTE by JM: Is it expected that the data has been bandpassfiltered at
 % this point? How would this be checked?
 
-nchan=size(input{1},1);
-trial_length=size(input{1},2);
+nchan=size(inputdata{1},1);
+trial_length=size(inputdata{1},2);
 ph_min=0.1;        % Eps of Eq.(17) of the manuscript
 f=(fs/trial_length)*(0:(trial_length-1));
 f_integr=(abs(f)<B) | (abs(f-fs)<B);
@@ -80,7 +80,7 @@ p=zeros(nchan, nchan, nrpt);
 for ktime=1:nrpt
   for kchan1=1:(nchan-1)
     for kchan2=(kchan1+1):nchan
-      temp=fft(input{ktime}(kchan1,:).*conj(input{ktime}(kchan2,:)));    % NOTE BY FB: The inner cycle can be vectorized
+      temp=fft(inputdata{ktime}(kchan1,:).*conj(inputdata{ktime}(kchan2,:)));    % NOTE BY FB: The inner cycle can be vectorized
       temp(1)=temp(1).*(abs(angle(temp(1)))>ph_min);  % Volume conduction suppression
       temp=(abs(temp)).^2;
       p_temp=sum(temp(f_integr))./sum(temp);
