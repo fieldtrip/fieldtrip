@@ -1956,9 +1956,9 @@ sync ${ARRAY[*]}
 # mesh_sphere.m
 
 ARRAY=()
-ARRAY+=(external/openmeeg/mesh_sphere.m)
 ARRAY+=(external/bemcp/mesh_sphere.m)
 ARRAY+=(external/dipoli/mesh_sphere.m)
+ARRAY+=(external/openmeeg/mesh_sphere.m)
 ARRAY+=(forward/private/mesh_sphere.m)
 ARRAY+=(plotting/private/mesh_sphere.m)
 ARRAY+=(private/mesh_sphere.m)
@@ -3057,7 +3057,10 @@ sync ${ARRAY[*]}
 # refine.m
 
 ARRAY=()
+ARRAY+=(external/bemcp/refine.m)
+ARRAY+=(external/dipoli/private/refine.m)
 ARRAY+=(external/openmeeg/private/refine.m)
+ARRAY+=(forward/private/refine.m)
 ARRAY+=(plotting/private/refine.m)
 ARRAY+=(fileio/private/refine.m)
 ARRAY+=(private/refine.m)
