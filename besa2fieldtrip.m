@@ -393,6 +393,7 @@ elseif iscell(labels) && length(labels)==1
     newlabels = labels;
   end
 elseif ischar(labels) && any(size(labels)==1)
+  labels = strtrim(labels); % remove whitespace at the edges
   newlabels = tokenize(labels(:)', ' '); % also ensure that it is a row-string
 elseif ischar(labels) && ~any(size(labels)==1)
   for i=1:size(labels)
