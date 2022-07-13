@@ -141,43 +141,33 @@ if computecov
     datacov.dimord = 'rpt_chan_time';
   end
 
-  % pre-allocate memory space for the covariance matrices
-  if keeptrials
-    covsig = nan(nrpt, nchan, nchan);
-  else
-    covsig = zeros(nrpt, nchan, nchan);
-    allsmp = zeros(nrpt, 1);
-  end
-
   % prepare for doing a parfor loop
   datacov_trial = datacov.trial; % Avoid sending full datacov struct to each parallel worker
   cfg_removemean = cfg.removemean; % Avoid sending full cfg struct to each parallel worker
 
-  % compute the covariance per trial
-  parfor (k = 1:nrpt, cfg.parformaxworkers)
-    dat    = reshape(datacov_trial(k,:,:), [nchan ntime]);
-    datsmp = isfinite(dat);
-    if ~all(ismember(sum(datsmp,1), [0 nchan]))
-      ft_error('channel specific NaNs are not supported for covariance computation');
-    end
-    numsmp = sum(datsmp(1,:));
-    if istrue(cfg_removemean)
-      dat  = ft_preproc_baselinecorrect(dat);
-      numsmp = max(numsmp-1,1);
-    end
-    dat(~datsmp)  = 0;
+  if keeptrials
+    % pre-allocate memory space for the covariance matrices
+    covsig = nan(nrpt, nchan, nchan);
 
-    if keeptrials
+    % compute the covariance per trial
+    parfor (k = 1:nrpt, cfg.parformaxworkers)
+      [dat, numsmp] = ft_timelockanalysis_covdat(datacov_trial(k,:,:), nchan, ntime, cfg_removemean);
       covsig(k,:,:) = dat*dat'./numsmp;
-    else
-      covsig(k,:,:) = dat*dat';
-      allsmp(k) = numsmp;
+    end
+
+  else
+    % pre-allocate memory space for the covariance matrices
+    covsig = zeros(nchan, nchan);
+    allsmp = 0;
+
+    % compute the covariance per trial
+    parfor (k = 1:nrpt, cfg.parformaxworkers)
+      [dat, numsmp] = ft_timelockanalysis_covdat(datacov_trial(k,:,:), nchan, ntime, cfg_removemean);
+      covsig = covsig + dat*dat';
+      allsmp = allsmp + numsmp;
       % normalisation will be done after the for-loop
     end
-  end
-
-  if ~keeptrials
-    covsig = reshape(sum(covsig,1), [nchan, nchan])./sum(allsmp);
+    covsig = covsig ./ allsmp;
   end
 end
 
@@ -263,3 +253,22 @@ ft_postamble previous   data
 ft_postamble provenance timelock
 ft_postamble history    timelock
 ft_postamble savevar    timelock
+
+end
+
+function [dat, numsmp] = ft_timelockanalysis_covdat(datacov_trial_k, nchan, ntime, cfg_removemean)
+  %% Local function ft_timelockanalysis_covdat
+  % Calculate dat and numsmp for specific trial
+  % To be called from within the two parfor loops, so both parfors do the same first step
+  dat    = reshape(datacov_trial_k, [nchan ntime]);
+  datsmp = isfinite(dat);
+  if ~all(ismember(sum(datsmp,1), [0 nchan]))
+    ft_error('channel specific NaNs are not supported for covariance computation');
+  end
+  numsmp = sum(datsmp(1,:));
+  if istrue(cfg_removemean)
+    dat  = ft_preproc_baselinecorrect(dat);
+    numsmp = max(numsmp-1,1);
+  end
+  dat(~datsmp)  = 0;
+end
