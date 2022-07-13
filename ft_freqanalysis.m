@@ -771,7 +771,7 @@ for itrial = 1:ntrials
     
     % prepare cumtapcnt
     switch cfg.method %% IMPORTANT, SHOULD WE KEEP THIS SPLIT UP PER METHOD OR GO FOR A GENERAL SOLUTION NOW THAT WE HAVE SPECEST
-      case 'mtmconvol'
+      case {'mtmconvol' 'wavelet'}
         cumtapcnt = zeros(ntrials,nfoi);
       case 'mtmfft'
         cumtapcnt = zeros(ntrials,1);
