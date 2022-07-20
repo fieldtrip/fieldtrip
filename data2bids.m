@@ -1787,7 +1787,7 @@ switch cfg.method
             [p, f, x] = fileparts(cfg.outputfile);
             cfg.outputfile = fullfile(p, [f '.snirf']);
             ft_info('writing %s\n', cfg.outputfile);
-            ft_write_data(cfg.outputfile, dat, 'dataformat', 'snirf', 'header', hdr, 'event', cfg.events);
+            ft_write_data(cfg.outputfile, dat, 'dataformat', 'snirf', 'header', hdr, 'event', trigger);
           case {'physio', 'stim', 'eyetracker', 'motion'}
             % write the data according to the Stim and Physio format as specified at
             % https://bids-specification.readthedocs.io/en/stable/04-modality-specific-files/06-physiological-and-other-continuous-recordings.html
