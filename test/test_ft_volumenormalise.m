@@ -15,6 +15,8 @@ mri = ft_read_mri(filename);
 % construct a fake source reconstruction and inperpolate it on the anatomical MRI
 % the source reconstruction looks like a checkerboard and is limited to the head
 
+printstack()
+
 cfg                 = [];
 cfg.mri             = mri;
 cfg.threshold       = 0.1;
@@ -45,6 +47,7 @@ cfg.interpmethod = 'nearest';
 source = ft_sourceinterpolate(cfg, sourcemodel, mri);
 
 %%
+printstack()
 
 cfg = [];
 cfg.funparameter = 'pow';
@@ -55,6 +58,7 @@ cfg.figurename = 'original';
 ft_sourceplot(cfg, source);
 
 %%
+printstack()
 
 rmpath(genpath(fullfile(ftpath,'external','spm2'))); rmpath(genpath(fullfile(ftpath,'external','spm8'))); rmpath(genpath(fullfile(ftpath,'external','spm12')));
 
@@ -78,6 +82,7 @@ cfg.spmmethod = 'mars'; % this takes about 210 seconds
 n12mars = ft_volumenormalise(cfg, source);
 
 %%
+printstack()
 
 cfg = [];
 cfg.funparameter = 'pow';
@@ -97,6 +102,8 @@ ft_sourceplot(cfg, n12mars);
 
 %%
 % normalizing the anatomical MRI on the fly should give the same result as using the spmparams in a separate call
+
+printstack()
 
 rmpath(genpath(fullfile(ftpath,'external','spm2'))); rmpath(genpath(fullfile(ftpath,'external','spm8'))); rmpath(genpath(fullfile(ftpath,'external','spm12')));
 
@@ -134,7 +141,6 @@ assert(isequal(n12mars.anatomy, n12mars_params.anatomy));
 assert(~isequal(n12old.anatomy, n12new.anatomy));
 assert(~isequal(n12old.anatomy, n12mars.anatomy));
 
-
 %%
 % transition back and forth between individual, approximate and normalised space, using the different sets of parameters
 
@@ -143,6 +149,8 @@ version = {'n2', 'n8', 'n12old', 'n12new', 'n12mars'};
 for i=1:numel(version)
   rmpath(genpath(fullfile(ftpath,'external','spm2'))); rmpath(genpath(fullfile(ftpath,'external','spm8'))); rmpath(genpath(fullfile(ftpath,'external','spm12')));
   clear initial params
+  
+  printstack()
   
   initial = getfield(eval(version{i}), 'initial');
   params  = getfield(eval(version{i}), 'params');
@@ -163,6 +171,8 @@ end
 
 %%
 % FT_VOLUMENORMALISE is also being called from within FT_PREPARE_SOURCEMODEL
+
+printstack()
 
 rmpath(genpath(fullfile(ftpath,'external','spm2'))); rmpath(genpath(fullfile(ftpath,'external','spm8'))); rmpath(genpath(fullfile(ftpath,'external','spm12')));
 
@@ -193,3 +203,12 @@ view(0, 0);
 
 ft_determine_coordsys(sourcemodel_warp_mars, 'interactive', false)
 view(0, 0);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function printstack
+st = dbstack;
+for i=2:length(st)
+  fprintf('in %s at line %d\n', st(i).file, st(i).line);
+end
