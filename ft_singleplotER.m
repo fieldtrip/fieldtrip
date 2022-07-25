@@ -92,10 +92,6 @@ function [cfg] = ft_singleplotER(cfg, varargin)
 %
 % See also FT_SINGLEPLOTTFR, FT_MULTIPLOTER, FT_MULTIPLOTTFR, FT_TOPOPLOTER, FT_TOPOPLOTTFR
 
-% Undocumented local options:
-% cfg.zlim/xparam (set to a specific frequency range or time range [zmax zmin] for an average
-% over the frequency/time bins for TFR data.  Use in conjunction with e.g. xparam = 'time', and cfg.parameter = 'powspctrm').
-
 % Copyright (C) 2003-2006, Ole Jensen
 % Copyright (C) 2006-2017, F.C. Donders Centre
 %
