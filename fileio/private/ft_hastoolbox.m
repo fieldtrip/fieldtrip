@@ -53,11 +53,32 @@ function [status] = ft_hastoolbox(toolbox, autoadd, silent)
 % Note to developers: please do NOT use ft_warning and ft_error
 % inside this function, but rather the normal warning and error.
 
+% these are for speeding up subsequent calls with the same input arguments
+persistent previous_argin previous_argout
+
 if isdeployed
   % it is not possible to check the presence of functions or change the path in a compiled application
   status = true;
   return
 end
+
+if nargin<2
+  % default is not to add the path automatically
+  autoadd = 0;
+end
+
+if nargin<3
+  % default is not to be silent
+  silent = 0;
+end
+
+current_argin = {toolbox, autoadd, silent};
+if isequal(current_argin, previous_argin)
+  % return the previous output from cache
+  status = previous_argout{1};
+  return
+end
+
 
 % this points the user to the website where he/she can download the toolbox
 url = {
@@ -178,16 +199,6 @@ url = {
   'YOKOGAWA'                              'this is deprecated, please use YOKOGAWA_MEG_READER instead'
   'YOKOGAWA_MEG_READER'                   'contact Ricoh engineers'
   };
-
-if nargin<2
-  % default is not to add the path automatically
-  autoadd = 0;
-end
-
-if nargin<3
-  % default is not to be silent
-  silent = 0;
-end
 
 % determine whether the toolbox is installed
 toolbox = upper(toolbox);
@@ -559,6 +570,13 @@ end
 % remember the previous path, allows us to determine on the next call
 % whether the path has been modified outise of this function
 % previouspath = path;
+
+
+% remember the current input and output arguments, so that they can be
+% reused on a subsequent call in case the same input argument is given
+current_argout = {status};
+previous_argin  = current_argin;
+previous_argout = current_argout;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % helper function

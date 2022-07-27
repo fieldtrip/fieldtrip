@@ -93,7 +93,7 @@ function [type] = ft_filetype(filename, desired, varargin)
 %
 % $Id$
 
-% these are for remembering the type on subsequent calls with the same input arguments
+% these are for speeding up subsequent calls with the same input arguments
 persistent previous_argin previous_argout previous_pwd
 
 if nargin<2
@@ -1112,7 +1112,7 @@ elseif filetype_check_extension(filename, '.label') && filetype_check_header(fil
   
 elseif filetype_check_extension(filename, '.txt') && numel(strfind(filename,'_nrs_')) == 1
   % This is for the ASCII-formatted NIRS data acquired with the UCL-BIRKBECK machine and postprocessed by the Paris group
-  % 
+  %
   % This may be improved by looking into the file, rather than assuming the filename
   % has "_nrs_" somewhere. Also, distinction by the different file types could be
   % made

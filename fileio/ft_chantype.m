@@ -49,7 +49,7 @@ function chantype = ft_chantype(input, desired)
 %
 % $Id$
 
-% these are for remembering the type on subsequent calls with the same input arguments
+% these are for speeding up subsequent calls with the same input arguments
 persistent previous_argin previous_argout
 
 % this is to avoid a recursion loop

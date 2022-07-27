@@ -3,7 +3,7 @@ function [chansel, trlsel, cfg] = rejectvisual_summary(cfg, data)
 % SUBFUNCTION for ft_rejectvisual
 
 % Copyright (C) 2005-2006, Markus Bauer, Robert Oostenveld
-% Copyright (C) 2006-2021, Robert Oostenveld, Jan-Mathijs Schoffelen
+% Copyright (C) 2006-2022, Robert Oostenveld, Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -22,6 +22,17 @@ function [chansel, trlsel, cfg] = rejectvisual_summary(cfg, data)
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
 % $Id$
+
+if ft_platform_supports('matlabversion', '2014b', inf)
+  % make the figure large enough to hold stuff and place it centered at the top of the
+  % screen where it would appear by default
+  pos = get(groot, 'DefaultFigurePosition'); % groot was introduced in R2014b
+  w = 800;
+  h = 600;
+  x = pos(1) + pos(3)/2 - w/2;
+  y = pos(2) + pos(4)/2 - h/2;
+  cfg.position = ft_getopt(cfg, 'position', [x y w h]);
+end
 
 % determine the initial selection of trials
 ntrl = length(data.trial);
@@ -88,14 +99,33 @@ else
   info.cfg.connectivity = [];
 end
 
-h = figure();
-guidata(h, info);
+h = create_figure(info);
 
-% set up display
-interactive = true;
+% Compute initial metric...
+compute_metric(h);
 
-% make the figure large enough to hold stuff
-set(h, 'Position', [100 350 900 600]);
+while ishandle(h)
+  redraw(h);
+  info = guidata(h);
+  if info.quit == 0
+    uiwait(h);
+  else
+    chansel = info.chansel;
+    trlsel  = info.trlsel;
+    cfg     = info.cfg;
+    delete(h);
+    break;
+  end
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function h = create_figure(info)
+% Creates the GUI and plots the data for the first time.
+% All additional changes are done by manipulating the properties of the
+% specific graphical objects
+h = open_figure(keepfields(info.cfg, {'figure', 'position', 'visible', 'renderer', 'figurename', 'title'}));
 
 % define three axes
 info.axes(1) = axes('position', [0.100 0.650 0.375 0.300]);  % summary
@@ -136,24 +166,8 @@ info.output_box = uicontrol(h, 'Units', 'normalized', 'position', [0.00 0.00 1.0
 % quit button
 uicontrol(h, 'Units', 'normalized', 'position', [0.825 0.11 0.10 0.04], 'string', 'quit', 'callback', @quit);
 
+% store the updated info in the figure
 guidata(h, info);
-
-% Compute initial metric...
-compute_metric(h);
-
-while interactive && ishandle(h)
-  redraw(h);
-  info = guidata(h);
-  if info.quit == 0
-    uiwait(h);
-  else
-    chansel = info.chansel;
-    trlsel  = info.trlsel;
-    cfg     = info.cfg;
-    delete(h);
-    break;
-  end
-end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
@@ -209,7 +223,7 @@ guidata(h, info);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%s%%%%
 function redraw(h)
 info  = guidata(h);
 % work with a copy of the data
