@@ -129,8 +129,13 @@ end
 hpad = [hpad; zeros(nz_post,1)];
 
 % filtering
-xfilt = upfirdn(x,hpad,p,q);
-y = xfilt(offset+1:offset+Ly,:);
+if p==1 && q==1
+  % no resampling needed.
+  y = x;
+else
+  xfilt = upfirdn(x,hpad,p,q);
+  y = xfilt(offset+1:offset+Ly,:);
+end
 
 if isrowvector
   y=y.';
