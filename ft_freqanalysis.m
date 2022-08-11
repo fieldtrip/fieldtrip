@@ -526,6 +526,12 @@ else
     ft_error('the specified padding is too short');
   end
 end
+if strcmp(cfg.method, 'mtmfft') && strcmp(cfg.taper, 'dpss')
+  % memory allocation for mtmfft is slightly different because of the possiblity of
+  % variable number of tapers over trials (when using dpss), the below exception is
+  % made so memory can still be allocated fully (see bug #1025)
+  trllength = cellfun(@numel,data.time);
+end
 
 % correct foi and implement foilim 'backwards compatibility'
 if ~isempty(cfg.foi) && ~isempty(cfg.foilim)
@@ -587,11 +593,6 @@ for itrial = 1:ntrials
       [spectrum_mtmconvol,ntaper,foi,toi] = ft_specest_mtmconvol(dat, time, 'timeoi', cfg.toi, 'timwin', cfg.t_ftimwin, 'taper', ...
         cfg.taper, options{:}, 'dimord', 'chan_time_freqtap', 'feedback', fbopt);
       
-      % the following variable is created to keep track of the number of
-      % trials per time bin and is needed for proper normalization if
-      % keeprpt==1 and the triallength is variable
-      if itrial==1, trlcnt = zeros(1, numel(foi), numel(toi)); end
-      
       hastime = true;
       % error for different number of tapers per trial
       if (keeprpt == 4) && any(ntaper(:) ~= ntaper(1))
@@ -614,12 +615,7 @@ for itrial = 1:ntrials
       
     case 'wavelet'
       [spectrum,foi,toi] = ft_specest_wavelet(dat, time, 'timeoi', cfg.toi, 'width', cfg.width, 'gwidth', cfg.gwidth, options{:}, 'feedback', fbopt);
-      
-      % the following variable is created to keep track of the number of
-      % trials per time bin and is needed for proper normalization if
-      % keeprpt==1 and the triallength is variable
-      if itrial==1, trlcnt = zeros(1, numel(foi), numel(toi)); end
-      
+            
       hastime = true;
       % create FAKE ntaper (this requires very minimal code change below for compatibility with the other specest functions)
       ntaper = ones(1,numel(foi));
@@ -668,12 +664,7 @@ for itrial = 1:ntrials
         spectrum(:, i_f, :) = prod(spec_f, 1) .^ (1 / cfg.order(i_f));
       end
       clear spec_f
-      
-      % the following variable is created to keep track of the number of
-      % trials per time bin and is needed for proper normalization if
-      % keeprpt==1 and the triallength is variable
-      if itrial==1, trlcnt = zeros(1, numel(foi), numel(toi)); end
-      
+            
       hastime = true;
       % create FAKE ntaper (this requires very minimal code change below for compatibility with the other specest functions)
       ntaper = ones(1,numel(foi));
@@ -682,12 +673,7 @@ for itrial = 1:ntrials
       
     case 'tfr'
       [spectrum,foi,toi] = ft_specest_tfr(dat, time, 'timeoi', cfg.toi, 'width', cfg.width, 'gwidth', cfg.gwidth,options{:}, 'feedback', fbopt);
-      
-      % the following variable is created to keep track of the number of
-      % trials per time bin and is needed for proper normalization if
-      % keeprpt==1 and the triallength is variable
-      if itrial==1, trlcnt = zeros(1, numel(foi), numel(toi)); end
-      
+            
       hastime = true;
       % create FAKE ntaper (this requires very minimal code change below for compatibility with the other specest functions)
       ntaper = ones(1,numel(foi));
@@ -721,23 +707,32 @@ for itrial = 1:ntrials
   
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   %%% Memory allocation
-  if strcmp(cfg.method, 'mtmfft') && strcmp(cfg.taper, 'dpss')
-    % memory allocation for mtmfft is slightly different because of the possiblity of
-    % variable number of tapers over trials (when using dpss), the below exception is
-    % made so memory can still be allocated fully (see bug #1025
-    trllength = cellfun(@numel,data.time);
-    % determine number of tapers per trial
-    ntaptrl = sum(floor((2 .* (trllength./data.fsample) .* cfg.tapsmofrq) - 1)); % I floored it for now, because I don't know whether this formula is accurate in all cases, by flooring the memory allocated
-    % will most likely be less than it should be, but this would still have the same effect of 'not-crashing-matlabs'.
-    % I do have the feeling a round would be 100% accurate, but atm I cannot check this in Percival and Walden
-    % - roevdmei
-  else
-    ntaptrl = ntrials .* maxtap; % the way it used to be in all cases (before bug #1025)
-  end
   
   % by default, everything is has the time dimension, if not, some specifics are performed
   if itrial == 1
     % allocate memory to output variables
+
+    switch cfg.method
+      case {'mtmconvol', 'wavelet', 'superlet', 'tfr'}
+        % the following variable is created to keep track of the number of
+        % trials per time bin and is needed for proper normalization if
+        % keeprpt==1 and the triallength is variable
+        trlcnt = zeros(1, nfoi, ntoi);
+    end
+
+    if strcmp(cfg.method, 'mtmfft') && strcmp(cfg.taper, 'dpss')
+      % memory allocation for mtmfft is slightly different because of the possiblity of
+      % variable number of tapers over trials (when using dpss), the below exception is
+      % made so memory can still be allocated fully (see bug #1025)
+      % determine number of tapers per trial
+      ntaptrl = sum(floor((2 .* (trllength./data.fsample) .* cfg.tapsmofrq) - 1)); % I floored it for now, because I don't know whether this formula is accurate in all cases, by flooring the memory allocated
+      % will most likely be less than it should be, but this would still have the same effect of 'not-crashing-matlabs'.
+      % I do have the feeling a round would be 100% accurate, but atm I cannot check this in Percival and Walden
+      % - roevdmei
+    else
+      ntaptrl = ntrials .* maxtap; % the way it used to be in all cases (before bug #1025)
+    end
+
     if keeprpt == 1 % cfg.keeptrials, 'no' &&  cfg.keeptapers, 'no'
       if powflg, powspctrm     = zeros(nchan,nfoi,ntoi,cfg.precision);             end
       if csdflg, crsspctrm     = complex(zeros(nchancmb,nfoi,ntoi,cfg.precision)); end
