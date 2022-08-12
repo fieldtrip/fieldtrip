@@ -2732,6 +2732,14 @@ ARRAY+=(private/preproc.m)
 sync ${ARRAY[*]}
 
 ################################################################################
+# printor.m
+
+ARRAY=()
+ARRAY+=(utilities/private/printor.m)
+ARRAY+=(fileio/private/printor.m)
+sync ${ARRAY[*]}
+
+################################################################################
 # print_mem.m
 
 ARRAY=()
