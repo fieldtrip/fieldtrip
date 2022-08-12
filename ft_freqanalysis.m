@@ -571,13 +571,32 @@ else
   options = {'pad', cfg.pad, 'padtype', cfg.padtype, 'freqoi', cfg.foi, 'polyorder', cfg.polyremoval, 'output', cfg.output};
 end
 
+ft_progress('init', cfg.feedback, 'processing trials');
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Memory allocation
+%%% Requires calling specest for the first trial, to get the needed size
+%%% parameters for the dimensions of the output variables
+itrial = 1;
+
+fbopt.i = itrial;
+fbopt.n = ntrials;
+fbopt.useftprogress = true;
+  
+dat = data.trial{itrial}; % chansel has already been performed
+time = data.time{itrial};
+
+% Perform specest call
+[dum1, dum2, hastime, ntaper, foi, toi, dum7, maxtap, nfoi, ntoi] = ft_freqanalysis_specest(cfg, fbopt, dat, time, options, keeprpt, nchan, bpfiltoptions);
+
+% Actual memory allocation
+[powspctrm, crsspctrm, fourierspctrm, dimord, dof, cumtapcnt, trlcnt] =  ft_freqanalysis_memoryallocation(cfg, data.fsample, trllength, ntrials, maxtap, keeprpt, powflg, csdflg, fftflg, hastime, nchan,nfoi,ntoi,nchancmb);
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Main loop over trials, inside fourierspectra are obtained and transformed into the appropriate outputs
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % this is done on trial basis to save memory
 
-ft_progress('init', cfg.feedback, 'processing trials');
-trlcnt = []; % only some methods need this variable, but it needs to be defined outside the trial loop
 for itrial = 1:ntrials
 
   clear spectrum % in case of very large trials, this lowers peak mem usage a bit
@@ -591,13 +610,6 @@ for itrial = 1:ntrials
 
   % Perform specest call
   [spectrum_mtmconvol, spectrum, hastime, ntaper, foi, toi, freqtapind, maxtap, nfoi, ntoi] = ft_freqanalysis_specest(cfg, fbopt, dat, time, options, keeprpt, nchan, bpfiltoptions);
-  
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  %%% Memory allocation
-  
-  if itrial == 1     
-    [powspctrm, crsspctrm, fourierspctrm, dimord, dof, cumtapcnt, trlcnt] =  ft_freqanalysis_memoryallocation(cfg, data.fsample, trllength, ntrials, maxtap, keeprpt, powflg, csdflg, fftflg, hastime, nchan,nfoi,ntoi,nchancmb);
-  end % itrial==1
   
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   %%% Create output
