@@ -584,6 +584,7 @@ for itrial = 1:ntrials
 
   fbopt.i = itrial;
   fbopt.n = ntrials;
+  fbopt.useftprogress = true;
   
   dat = data.trial{itrial}; % chansel has already been performed
   time = data.time{itrial};
