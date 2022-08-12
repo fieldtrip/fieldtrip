@@ -278,6 +278,7 @@ if numel(data.label)==0
 end
 
 % switch over method and do some of the method specfic checks and defaulting
+bpfiltoptions = {};
 switch cfg.method
   
   case 'mtmconvol'
@@ -578,133 +579,17 @@ end
 ft_progress('init', cfg.feedback, 'processing trials');
 trlcnt = []; % only some methods need this variable, but it needs to be defined outside the trial loop
 for itrial = 1:ntrials
-  
+
+  clear spectrum % in case of very large trials, this lowers peak mem usage a bit
+
   fbopt.i = itrial;
   fbopt.n = ntrials;
   
   dat = data.trial{itrial}; % chansel has already been performed
   time = data.time{itrial};
-  
-  clear spectrum % in case of very large trials, this lowers peak mem usage a bit
-  
-  % Perform specest call and set some specifics
-  switch cfg.method
-    
-    case 'mtmconvol'
-      [spectrum_mtmconvol,ntaper,foi,toi] = ft_specest_mtmconvol(dat, time, 'timeoi', cfg.toi, 'timwin', cfg.t_ftimwin, 'taper', ...
-        cfg.taper, options{:}, 'dimord', 'chan_time_freqtap', 'feedback', fbopt);
-      
-      hastime = true;
-      % error for different number of tapers per trial
-      if (keeprpt == 4) && any(ntaper(:) ~= ntaper(1))
-        ft_error('currently you can only keep trials AND tapers, when using the number of tapers per frequency is equal across frequency')
-      end
-      % create tapfreqind for later indexing
-      freqtapind = [];
-      tempntaper = [0; cumsum(ntaper(:))];
-      for iindfoi = 1:numel(foi)
-        freqtapind{iindfoi} = tempntaper(iindfoi)+1:tempntaper(iindfoi+1);
-      end
-      
-    case 'mtmfft'
-      [spectrum,ntaper,foi] = ft_specest_mtmfft(dat, time, 'taper', cfg.taper, options{:}, 'feedback', fbopt);
-      hastime = false;
-      
-    case 'irasa'
-      [spectrum,ntaper,foi] = ft_specest_irasa(dat, time, options{:}, 'feedback', fbopt);
-      hastime = false;
-      
-    case 'wavelet'
-      [spectrum,foi,toi] = ft_specest_wavelet(dat, time, 'timeoi', cfg.toi, 'width', cfg.width, 'gwidth', cfg.gwidth, options{:}, 'feedback', fbopt);
-            
-      hastime = true;
-      % create FAKE ntaper (this requires very minimal code change below for compatibility with the other specest functions)
-      ntaper = ones(1,numel(foi));
-      % modify spectrum for same reason as fake ntaper
-      spectrum = reshape(spectrum,[1 nchan numel(foi) numel(toi)]);
-      
-    case 'superlet'
-      % calculate number of wavelets and respective cycle width dependent on superlet order
-      % equivalent one-liners:
-      %   multiplicative: cycles = arrayfun(@(order) arrayfun(@(wl_num) cfg.width*wl_num, 1:order), cfg.order,'uni',0)
-      %   additive: cycles = arrayfun(@(order) arrayfun(@(wl_num) cfg.width+wl_num-1, 1:order), cfg.order,'uni',0)
-      order_int = ceil(cfg.order);
-      cycles = cell(length(cfg.foi), 1);
-      for i_f = 1:length(cfg.foi)
-        frq_cyc = NaN(1, order_int(i_f));
-        if strcmp(cfg.combine, 'multiplicative')
-          for i_wl = 1:order_int(i_f)
-            frq_cyc(i_wl) = cfg.width * i_wl;
-          end
-        elseif strcmp(cfg.combine, 'additive')
-          for i_wl = 1:order_int(i_f)
-            frq_cyc(i_wl) = cfg.width + i_wl - 1;
-          end
-        end
-        cycles{i_f} = frq_cyc;
-      end
-      
-      % compute superlets
-      spectrum = NaN(nchan, length(cfg.foi), length(cfg.toi));
-      % index of 'freqoi' value in 'options'
-      idx_freqoi = find(ismember(options(1:2:end), 'freqoi'))*2;
-      foi = options{idx_freqoi};
-      for i_f = 1:length(cfg.foi)
-        % collext individual wavelets' responses per frequency
-        spec_f = NaN(order_int(i_f), nchan, length(cfg.toi));
-        opt = options;
-        opt{idx_freqoi} = cfg.foi(i_f);
-        % compute responses for individual wavelets
-        for i_wl = 1:order_int(i_f)
-          [spec_f(i_wl, :, :), dum, toi] = ft_specest_wavelet(dat, time, 'timeoi', cfg.toi, 'width', cycles{i_f}(i_wl), 'gwidth', cfg.gwidth, opt{:}, 'feedback', fbopt);
-        end
-        if floor(cfg.order(i_f)) ~= order_int(i_f)
-            spec_f(i_wl, :, :) = spec_f(i_wl, :, :) .^ rem(cfg.order(i_f), 1);
-        end
-        % geometric mean across individual wavelets
-        spectrum(:, i_f, :) = prod(spec_f, 1) .^ (1 / cfg.order(i_f));
-      end
-      clear spec_f
-            
-      hastime = true;
-      % create FAKE ntaper (this requires very minimal code change below for compatibility with the other specest functions)
-      ntaper = ones(1,numel(foi));
-      % modify spectrum for same reason as fake ntaper
-      spectrum = reshape(spectrum,[1 nchan numel(foi) numel(toi)]);
-      
-    case 'tfr'
-      [spectrum,foi,toi] = ft_specest_tfr(dat, time, 'timeoi', cfg.toi, 'width', cfg.width, 'gwidth', cfg.gwidth,options{:}, 'feedback', fbopt);
-            
-      hastime = true;
-      % create FAKE ntaper (this requires very minimal code change below for compatibility with the other specest functions)
-      ntaper = ones(1,numel(foi));
-      % modify spectrum for same reason as fake ntaper
-      spectrum = reshape(spectrum,[1 nchan numel(foi) numel(toi)]);
-      
-    case 'hilbert'
-      [spectrum,foi,toi] = ft_specest_hilbert(dat, time, 'timeoi', cfg.toi, 'width', cfg.width, bpfiltoptions{:}, options{:}, 'feedback', fbopt, 'edgeartnan', cfg.edgeartnan);
-      hastime = true;
-      % create FAKE ntaper (this requires very minimal code change below for compatibility with the other specest functions)
-      ntaper = ones(1,numel(foi));
-      % modify spectrum for same reason as fake ntaper
-      spectrum = reshape(spectrum,[1 nchan numel(foi) numel(toi)]);
-      
-    case 'neuvar'
-      [spectrum,foi] = ft_specest_neuvar(dat, time, options{:}, 'feedback', fbopt);
-      hastime = false;
-      % create FAKE ntaper (this requires very minimal code change below for compatibility with the other specest functions)
-      ntaper = ones(1,numel(foi));
-      
-  end % switch
-  
-  % Set n's
-  maxtap = max(ntaper);
-  nfoi   = numel(foi);
-  if hastime
-    ntoi = numel(toi);
-  else
-    ntoi = 1; % this makes the same code compatible for hastime = false, as time is always the last dimension, and if singleton will disappear
-  end
+
+  % Perform specest call
+  [spectrum_mtmconvol, spectrum, hastime, ntaper, foi, toi, freqtapind, maxtap, nfoi, ntoi] = ft_freqanalysis_specest(cfg, fbopt, dat, time, options, keeprpt, nchan, bpfiltoptions);
   
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   %%% Memory allocation
@@ -1031,6 +916,139 @@ ft_postamble previous   data
 ft_postamble provenance freq
 ft_postamble history    freq
 ft_postamble savevar    freq
+
+end
+
+function [spectrum_mtmconvol, spectrum, hastime, ntaper, foi, toi, freqtapind, maxtap, nfoi, ntoi] = ft_freqanalysis_specest(cfg, fbopt, dat, time, options, keeprpt, nchan, bpfiltoptions)
+
+  % initialize outputs
+  if strcmp(cfg.method, 'mtmconvol')
+    spectrum = [];
+  else
+    spectrum_mtmconvol = [];
+    freqtapind = [];
+  end
+  % hastime, ntaper, foi are always assigned to
+  toi =[];
+  
+  % Perform specest call and set some specifics
+  switch cfg.method
+    
+    case 'mtmconvol'
+      [spectrum_mtmconvol,ntaper,foi,toi] = ft_specest_mtmconvol(dat, time, 'timeoi', cfg.toi, 'timwin', cfg.t_ftimwin, 'taper', ...
+        cfg.taper, options{:}, 'dimord', 'chan_time_freqtap', 'feedback', fbopt);
+      
+      hastime = true;
+      % error for different number of tapers per trial
+      if (keeprpt == 4) && any(ntaper(:) ~= ntaper(1))
+        ft_error('currently you can only keep trials AND tapers, when using the number of tapers per frequency is equal across frequency')
+      end
+      % create tapfreqind for later indexing
+      freqtapind = cell(1, numel(foi));
+      tempntaper = [0; cumsum(ntaper(:))];
+      for iindfoi = 1:numel(foi)
+        freqtapind{iindfoi} = tempntaper(iindfoi)+1:tempntaper(iindfoi+1);
+      end
+      
+    case 'mtmfft'
+      [spectrum,ntaper,foi] = ft_specest_mtmfft(dat, time, 'taper', cfg.taper, options{:}, 'feedback', fbopt);
+      hastime = false;
+      
+    case 'irasa'
+      [spectrum,ntaper,foi] = ft_specest_irasa(dat, time, options{:}, 'feedback', fbopt);
+      hastime = false;
+      
+    case 'wavelet'
+      [spectrum,foi,toi] = ft_specest_wavelet(dat, time, 'timeoi', cfg.toi, 'width', cfg.width, 'gwidth', cfg.gwidth, options{:}, 'feedback', fbopt);
+            
+      hastime = true;
+      % create FAKE ntaper (this requires very minimal code change below for compatibility with the other specest functions)
+      ntaper = ones(1,numel(foi));
+      % modify spectrum for same reason as fake ntaper
+      spectrum = reshape(spectrum,[1 nchan numel(foi) numel(toi)]);
+      
+    case 'superlet'
+      % calculate number of wavelets and respective cycle width dependent on superlet order
+      % equivalent one-liners:
+      %   multiplicative: cycles = arrayfun(@(order) arrayfun(@(wl_num) cfg.width*wl_num, 1:order), cfg.order,'uni',0)
+      %   additive: cycles = arrayfun(@(order) arrayfun(@(wl_num) cfg.width+wl_num-1, 1:order), cfg.order,'uni',0)
+      order_int = ceil(cfg.order);
+      cycles = cell(length(cfg.foi), 1);
+      for i_f = 1:length(cfg.foi)
+        frq_cyc = NaN(1, order_int(i_f));
+        if strcmp(cfg.combine, 'multiplicative')
+          for i_wl = 1:order_int(i_f)
+            frq_cyc(i_wl) = cfg.width * i_wl;
+          end
+        elseif strcmp(cfg.combine, 'additive')
+          for i_wl = 1:order_int(i_f)
+            frq_cyc(i_wl) = cfg.width + i_wl - 1;
+          end
+        end
+        cycles{i_f} = frq_cyc;
+      end
+      
+      % compute superlets
+      spectrum = NaN(nchan, length(cfg.foi), length(cfg.toi));
+      % index of 'freqoi' value in 'options'
+      idx_freqoi = find(ismember(options(1:2:end), 'freqoi'))*2;
+      foi = options{idx_freqoi};
+      for i_f = 1:length(cfg.foi)
+        % collext individual wavelets' responses per frequency
+        spec_f = NaN(order_int(i_f), nchan, length(cfg.toi));
+        opt = options;
+        opt{idx_freqoi} = cfg.foi(i_f);
+        % compute responses for individual wavelets
+        for i_wl = 1:order_int(i_f)
+          [spec_f(i_wl, :, :), dum, toi] = ft_specest_wavelet(dat, time, 'timeoi', cfg.toi, 'width', cycles{i_f}(i_wl), 'gwidth', cfg.gwidth, opt{:}, 'feedback', fbopt);
+        end
+        if floor(cfg.order(i_f)) ~= order_int(i_f)
+            spec_f(i_wl, :, :) = spec_f(i_wl, :, :) .^ rem(cfg.order(i_f), 1);
+        end
+        % geometric mean across individual wavelets
+        spectrum(:, i_f, :) = prod(spec_f, 1) .^ (1 / cfg.order(i_f));
+      end
+      clear spec_f
+            
+      hastime = true;
+      % create FAKE ntaper (this requires very minimal code change below for compatibility with the other specest functions)
+      ntaper = ones(1,numel(foi));
+      % modify spectrum for same reason as fake ntaper
+      spectrum = reshape(spectrum,[1 nchan numel(foi) numel(toi)]);
+      
+    case 'tfr'
+      [spectrum,foi,toi] = ft_specest_tfr(dat, time, 'timeoi', cfg.toi, 'width', cfg.width, 'gwidth', cfg.gwidth,options{:}, 'feedback', fbopt);
+            
+      hastime = true;
+      % create FAKE ntaper (this requires very minimal code change below for compatibility with the other specest functions)
+      ntaper = ones(1,numel(foi));
+      % modify spectrum for same reason as fake ntaper
+      spectrum = reshape(spectrum,[1 nchan numel(foi) numel(toi)]);
+      
+    case 'hilbert'
+      [spectrum,foi,toi] = ft_specest_hilbert(dat, time, 'timeoi', cfg.toi, 'width', cfg.width, bpfiltoptions{:}, options{:}, 'feedback', fbopt, 'edgeartnan', cfg.edgeartnan);
+      hastime = true;
+      % create FAKE ntaper (this requires very minimal code change below for compatibility with the other specest functions)
+      ntaper = ones(1,numel(foi));
+      % modify spectrum for same reason as fake ntaper
+      spectrum = reshape(spectrum,[1 nchan numel(foi) numel(toi)]);
+      
+    case 'neuvar'
+      [spectrum,foi] = ft_specest_neuvar(dat, time, options{:}, 'feedback', fbopt);
+      hastime = false;
+      % create FAKE ntaper (this requires very minimal code change below for compatibility with the other specest functions)
+      ntaper = ones(1,numel(foi));
+      
+  end % switch
+
+  % Set n's
+  maxtap = max(ntaper);
+  nfoi   = numel(foi);
+  if hastime
+    ntoi = numel(toi);
+  else
+    ntoi = 1; % this makes the same code compatible for hastime = false, as time is always the last dimension, and if singleton will disappear
+  end
 
 end
 
