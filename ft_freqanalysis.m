@@ -493,6 +493,7 @@ end
 % determine the corresponding indices of all channels
 chanind    = match_str(data.label, cfg.channel);
 nchan      = numel(chanind);
+nchancmb   = [];
 if csdflg
   assert(nchan>1, 'CSD output requires multiple channels');
   % determine the corresponding indices of all channel combinations
@@ -708,70 +709,8 @@ for itrial = 1:ntrials
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   %%% Memory allocation
   
-  % by default, everything is has the time dimension, if not, some specifics are performed
-  if itrial == 1
-    % allocate memory to output variables
-
-    switch cfg.method
-      case {'mtmconvol', 'wavelet', 'superlet', 'tfr'}
-        % the following variable is created to keep track of the number of
-        % trials per time bin and is needed for proper normalization if
-        % keeprpt==1 and the triallength is variable
-        trlcnt = zeros(1, nfoi, ntoi);
-    end
-
-    if strcmp(cfg.method, 'mtmfft') && strcmp(cfg.taper, 'dpss')
-      % memory allocation for mtmfft is slightly different because of the possiblity of
-      % variable number of tapers over trials (when using dpss), the below exception is
-      % made so memory can still be allocated fully (see bug #1025)
-      % determine number of tapers per trial
-      ntaptrl = sum(floor((2 .* (trllength./data.fsample) .* cfg.tapsmofrq) - 1)); % I floored it for now, because I don't know whether this formula is accurate in all cases, by flooring the memory allocated
-      % will most likely be less than it should be, but this would still have the same effect of 'not-crashing-matlabs'.
-      % I do have the feeling a round would be 100% accurate, but atm I cannot check this in Percival and Walden
-      % - roevdmei
-    else
-      ntaptrl = ntrials .* maxtap; % the way it used to be in all cases (before bug #1025)
-    end
-
-    if keeprpt == 1 % cfg.keeptrials, 'no' &&  cfg.keeptapers, 'no'
-      if powflg, powspctrm     = zeros(nchan,nfoi,ntoi,cfg.precision);             end
-      if csdflg, crsspctrm     = complex(zeros(nchancmb,nfoi,ntoi,cfg.precision)); end
-      if fftflg, fourierspctrm = complex(zeros(nchan,nfoi,ntoi,cfg.precision));    end
-      dimord    = 'chan_freq_time';
-    elseif keeprpt == 2 % cfg.keeptrials, 'yes' &&  cfg.keeptapers, 'no'
-      if powflg, powspctrm     = nan(ntrials,nchan,nfoi,ntoi,cfg.precision);                                                                 end
-      if csdflg, crsspctrm     = complex(nan(ntrials,nchancmb,nfoi,ntoi,cfg.precision),nan(ntrials,nchancmb,nfoi,ntoi,cfg.precision)); end
-      if fftflg, fourierspctrm = complex(nan(ntrials,nchan,nfoi,ntoi,cfg.precision),nan(ntrials,nchan,nfoi,ntoi,cfg.precision));       end
-      dimord    = 'rpt_chan_freq_time';
-    elseif keeprpt == 4 % cfg.keeptrials, 'yes' &&  cfg.keeptapers, 'yes'
-      if powflg, powspctrm     = zeros(ntaptrl,nchan,nfoi,ntoi,cfg.precision);        end %
-      if csdflg, crsspctrm     = complex(zeros(ntaptrl,nchancmb,nfoi,ntoi,cfg.precision)); end
-      if fftflg, fourierspctrm = complex(zeros(ntaptrl,nchan,nfoi,ntoi,cfg.precision));    end
-      dimord    = 'rpttap_chan_freq_time';
-    end
-    if ~hastime
-      dimord = dimord(1:end-5); % cut _time
-    end
-    
-    % prepare calcdof
-    if strcmp(cfg.calcdof, 'yes')
-      if hastime
-        dof = zeros(nfoi,ntoi);
-        %dof = zeros(ntrials,nfoi,ntoi);
-      else
-        dof = zeros(nfoi,1);
-        %dof = zeros(ntrials,nfoi);
-      end
-    end
-    
-    % prepare cumtapcnt
-    switch cfg.method %% IMPORTANT, SHOULD WE KEEP THIS SPLIT UP PER METHOD OR GO FOR A GENERAL SOLUTION NOW THAT WE HAVE SPECEST
-      case {'mtmconvol' 'wavelet'}
-        cumtapcnt = zeros(ntrials,nfoi);
-      case 'mtmfft'
-        cumtapcnt = zeros(ntrials,1);
-    end
-    
+  if itrial == 1     
+    [powspctrm, crsspctrm, fourierspctrm, dimord, dof, cumtapcnt, trlcnt] =  ft_freqanalysis_memoryallocation(cfg, data.fsample, trllength, ntrials, maxtap, keeprpt, powflg, csdflg, fftflg, hastime, nchan,nfoi,ntoi,nchancmb);
   end % itrial==1
   
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1092,3 +1031,79 @@ ft_postamble previous   data
 ft_postamble provenance freq
 ft_postamble history    freq
 ft_postamble savevar    freq
+
+end
+
+function [powspctrm, crsspctrm, fourierspctrm, dimord, dof, cumtapcnt, trlcnt] =  ft_freqanalysis_memoryallocation(cfg, fsample, trllength, ntrials, maxtap, keeprpt, powflg, csdflg, fftflg, hastime, nchan,nfoi,ntoi,nchancmb)
+  % allocate memory to output variables
+  % by default, everything is has the time dimension, if not, some specifics are performed
+
+  % initialize the outputs
+  powspctrm = [];
+  crsspctrm = complex([]);
+  fourierspctrm = complex([]);
+  dimord = '';
+  dof = [];
+  cumtapcnt = [];
+  trlcnt = [];
+
+  switch cfg.method
+    case {'mtmconvol', 'wavelet', 'superlet', 'tfr'}
+      % the following variable is created to keep track of the number of
+      % trials per time bin and is needed for proper normalization if
+      % keeprpt==1 and the triallength is variable
+      trlcnt = zeros(1, nfoi, ntoi);
+  end
+
+  if strcmp(cfg.method, 'mtmfft') && strcmp(cfg.taper, 'dpss')
+    % memory allocation for mtmfft is slightly different because of the possiblity of
+    % variable number of tapers over trials (when using dpss), the below exception is
+    % made so memory can still be allocated fully (see bug #1025)
+    % determine number of tapers per trial
+    ntaptrl = sum(floor((2 .* (trllength./fsample) .* cfg.tapsmofrq) - 1)); % I floored it for now, because I don't know whether this formula is accurate in all cases, by flooring the memory allocated
+    % will most likely be less than it should be, but this would still have the same effect of 'not-crashing-matlabs'.
+    % I do have the feeling a round would be 100% accurate, but atm I cannot check this in Percival and Walden
+    % - roevdmei
+  else
+    ntaptrl = ntrials .* maxtap; % the way it used to be in all cases (before bug #1025)
+  end
+
+  if keeprpt == 1 % cfg.keeptrials, 'no' &&  cfg.keeptapers, 'no'
+    if powflg, powspctrm     = zeros(nchan,nfoi,ntoi,cfg.precision);             end
+    if csdflg, crsspctrm     = complex(zeros(nchancmb,nfoi,ntoi,cfg.precision)); end
+    if fftflg, fourierspctrm = complex(zeros(nchan,nfoi,ntoi,cfg.precision));    end
+    dimord    = 'chan_freq_time';
+  elseif keeprpt == 2 % cfg.keeptrials, 'yes' &&  cfg.keeptapers, 'no'
+    if powflg, powspctrm     = nan(ntrials,nchan,nfoi,ntoi,cfg.precision);                                                                 end
+    if csdflg, crsspctrm     = complex(nan(ntrials,nchancmb,nfoi,ntoi,cfg.precision),nan(ntrials,nchancmb,nfoi,ntoi,cfg.precision)); end
+    if fftflg, fourierspctrm = complex(nan(ntrials,nchan,nfoi,ntoi,cfg.precision),nan(ntrials,nchan,nfoi,ntoi,cfg.precision));       end
+    dimord    = 'rpt_chan_freq_time';
+  elseif keeprpt == 4 % cfg.keeptrials, 'yes' &&  cfg.keeptapers, 'yes'
+    if powflg, powspctrm     = zeros(ntaptrl,nchan,nfoi,ntoi,cfg.precision);        end %
+    if csdflg, crsspctrm     = complex(zeros(ntaptrl,nchancmb,nfoi,ntoi,cfg.precision)); end
+    if fftflg, fourierspctrm = complex(zeros(ntaptrl,nchan,nfoi,ntoi,cfg.precision));    end
+    dimord    = 'rpttap_chan_freq_time';
+  end
+  if ~hastime
+    dimord = dimord(1:end-5); % cut _time
+  end
+    
+  % prepare calcdof
+  if strcmp(cfg.calcdof, 'yes')
+    if hastime
+      dof = zeros(nfoi,ntoi);
+      %dof = zeros(ntrials,nfoi,ntoi);
+    else
+      dof = zeros(nfoi,1);
+      %dof = zeros(ntrials,nfoi);
+    end
+  end
+  
+  % prepare cumtapcnt
+  switch cfg.method %% IMPORTANT, SHOULD WE KEEP THIS SPLIT UP PER METHOD OR GO FOR A GENERAL SOLUTION NOW THAT WE HAVE SPECEST
+    case {'mtmconvol' 'wavelet'}
+      cumtapcnt = zeros(ntrials,nfoi);
+    case 'mtmfft'
+      cumtapcnt = zeros(ntrials,1);
+  end
+end
