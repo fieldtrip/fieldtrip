@@ -706,9 +706,7 @@ for itrial = 1:ntrials
       % do calcdof  dof = zeros(numper,numfoi,numtoi);
       if strcmp(cfg.calcdof, 'yes')
         if hastime
-          acttimboiind = ~all(isnan(spectrum(1,:,foiind(ifoi),:)), 2); % check over all channels, some channels might contain a NaN
-          acttimboiind = reshape(acttimboiind, [1 ntoi]);
-          dof(ifoi,acttimboiind) = ntaper(ifoi) + dof(ifoi,acttimboiind);
+          dof(ifoi,acttboi) = ntaper(ifoi) + dof(ifoi,acttboi);
         else % hastime = false
           dof(ifoi) = ntaper(ifoi) + dof(ifoi);
         end
