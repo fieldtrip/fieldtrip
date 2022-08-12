@@ -495,6 +495,7 @@ end
 chanind    = match_str(data.label, cfg.channel);
 nchan      = numel(chanind);
 nchancmb   = [];
+cutdatindcmb = [];
 if csdflg
   assert(nchan>1, 'CSD output requires multiple channels');
   % determine the corresponding indices of all channel combinations
@@ -614,7 +615,7 @@ for itrial = 1:ntrials
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   %%% Create output
   if keeprpt~=4
-    
+
     % mtmconvol is a special case and needs special processing
     if strcmp(cfg.method, 'mtmconvol')
       foiind = ones(1,nfoi);
@@ -624,48 +625,8 @@ for itrial = 1:ntrials
     end
     
     for ifoi = 1:nfoi
-      if strcmp(cfg.method, 'mtmconvol')
-        spectrum = reshape(permute(spectrum_mtmconvol(:,:,freqtapind{ifoi}),[3 1 2]),[ntaper(ifoi) nchan 1 ntoi]);
-      end
-      
-      % set ingredients for below
-      if ~hastime
-        acttboi  = 1;
-        nacttboi = 1;
-      else
-        acttboi   = ~all(isnan(spectrum(1,:,foiind(ifoi),:)), 2); % check over all channels, some channels might contain a NaN
-        acttboi   = reshape(acttboi, [1 ntoi]);                   % size(spectrum) = [? nchan nfoi ntoi]
-        nacttboi = sum(acttboi);
-      end
-      
-      acttap = logical([ones(ntaper(ifoi),1);zeros(size(spectrum,1)-ntaper(ifoi),1)]);
-      if powflg
-        if strcmp(cfg.method, 'irasa') % ft_specest_irasa outputs power and not amplitude
-          powdum = spectrum(acttap,:,foiind(ifoi),acttboi);
-        else
-          powdum = abs(spectrum(acttap,:,foiind(ifoi),acttboi)) .^2;
-        end
-        % sinetaper scaling is disabled, because it is not consistent with the other
-        % tapers. if scaling is required, please specify cfg.taper =
-        % 'sine_old'
-        
-        %         if isfield(cfg, 'taper') && strcmp(cfg.taper, 'sine')
-        %             %sinetapscale = zeros(ntaper(ifoi),nfoi);  % assumes fixed number of tapers
-        %             sinetapscale = zeros(ntaper(ifoi),1);  % assumes fixed number of tapers
-        %             for isinetap = 1:ntaper(ifoi)  % assumes fixed number of tapers
-        %               sinetapscale(isinetap,:) = (1 - (((isinetap - 1) ./ ntaper(ifoi)) .^ 2));
-        %             end
-        %             sinetapscale = reshape(repmat(sinetapscale,[1 1 nchan ntoi]),[ntaper(ifoi) nchan 1 ntoi]);
-        %             powdum = powdum .* sinetapscale;
-        %           end
-      end
-      if fftflg
-        fourierdum = spectrum(acttap,:,foiind(ifoi),acttboi);
-      end
-      if csdflg
-        csddum = spectrum(acttap,cutdatindcmb(:,1),foiind(ifoi),acttboi) .* conj(spectrum(acttap,cutdatindcmb(:,2),foiind(ifoi),acttboi));
-      end
-      
+      [powdum, fourierdum, csddum, acttboi, nacttboi] = ft_freqanalysis_prepoutput_notaper(cfg, spectrum_mtmconvol, spectrum, freqtapind, ntaper(ifoi), nchan, ntoi, ifoi, cutdatindcmb, foiind(ifoi), hastime, powflg, csdflg, fftflg);
+
       % switch between keep's
       switch keeprpt
         
@@ -1134,5 +1095,57 @@ function [powspctrm, crsspctrm, fourierspctrm, dimord, dof, cumtapcnt, trlcnt] =
       cumtapcnt = zeros(ntrials,nfoi);
     case 'mtmfft'
       cumtapcnt = zeros(ntrials,1);
+  end
+end
+
+
+function [powdum, fourierdum, csddum, acttboi, nacttboi] = ft_freqanalysis_prepoutput_notaper(cfg, spectrum_mtmconvol, spectrum, freqtapind, ntaper_ifoi, nchan, ntoi, ifoi, cutdatindcmb, foiind_ifoi, hastime, powflg, csdflg, fftflg)
+
+  % initialize outputs
+  powdum = [];
+  fourierdum = [];
+  csddum = [];
+  % acttboi, nacttboi are always assigned a value
+  
+  if strcmp(cfg.method, 'mtmconvol')
+    spectrum = reshape(permute(spectrum_mtmconvol(:,:,freqtapind{ifoi}),[3 1 2]),[ntaper_ifoi nchan 1 ntoi]);
+  end
+  
+  % set ingredients for below
+  if ~hastime
+    acttboi  = 1;
+    nacttboi = 1;
+  else
+    acttboi   = ~all(isnan(spectrum(1,:,foiind_ifoi,:)), 2); % check over all channels, some channels might contain a NaN
+    acttboi   = reshape(acttboi, [1 ntoi]);                   % size(spectrum) = [? nchan nfoi ntoi]
+    nacttboi = sum(acttboi);
+  end
+  
+  acttap = logical([ones(ntaper_ifoi,1);zeros(size(spectrum,1)-ntaper_ifoi,1)]);
+  if powflg
+    if strcmp(cfg.method, 'irasa') % ft_specest_irasa outputs power and not amplitude
+      powdum = spectrum(acttap,:,foiind_ifoi,acttboi);
+    else
+      powdum = abs(spectrum(acttap,:,foiind_ifoi,acttboi)) .^2;
+    end
+    % sinetaper scaling is disabled, because it is not consistent with the other
+    % tapers. if scaling is required, please specify cfg.taper =
+    % 'sine_old'
+    
+    %         if isfield(cfg, 'taper') && strcmp(cfg.taper, 'sine')
+    %             %sinetapscale = zeros(ntaper_ifoi,nfoi);  % assumes fixed number of tapers
+    %             sinetapscale = zeros(ntaper_ifoi,1);  % assumes fixed number of tapers
+    %             for isinetap = 1:ntaper_ifoi  % assumes fixed number of tapers
+    %               sinetapscale(isinetap,:) = (1 - (((isinetap - 1) ./ ntaper_ifoi) .^ 2));
+    %             end
+    %             sinetapscale = reshape(repmat(sinetapscale,[1 1 nchan ntoi]),[ntaper_ifoi nchan 1 ntoi]);
+    %             powdum = powdum .* sinetapscale;
+    %           end
+  end
+  if fftflg
+    fourierdum = spectrum(acttap,:,foiind_ifoi,acttboi);
+  end
+  if csdflg
+    csddum = spectrum(acttap,cutdatindcmb(:,1),foiind_ifoi,acttboi) .* conj(spectrum(acttap,cutdatindcmb(:,2),foiind_ifoi,acttboi));
   end
 end
