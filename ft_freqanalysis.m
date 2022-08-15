@@ -261,6 +261,7 @@ cfg.inputlock   = ft_getopt(cfg, 'inputlock',  []);  % this can be used as mutex
 cfg.outputlock  = ft_getopt(cfg, 'outputlock', []);  % this can be used as mutex when doing distributed computation
 cfg.trials      = ft_getopt(cfg, 'trials',     'all', 1);
 cfg.channel     = ft_getopt(cfg, 'channel',    'all');
+cfg.parformaxworkers = ft_getopt(cfg, 'parformaxworkers', Inf);
 
 % select channels and trials of interest, by default this will select all channels and trials
 tmpcfg = keepfields(cfg, {'trials', 'channel', 'tolerance', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
@@ -610,7 +611,7 @@ data_time = data.time;
 
 if keeprpt==1
 
-  parfor itrial = 1:ntrials
+  parfor (itrial = 1:ntrials, cfg.parformaxworkers)
   
     fbopt = struct();
     fbopt.i = itrial;
@@ -688,7 +689,7 @@ elseif keeprpt==2
   fft_update_size = [1, fourierspctrm_size(2:end)];
   csd_update_size = [1, crsspctrm_size(2:end)];
 
-  parfor itrial = 1:ntrials
+  parfor (itrial = 1:ntrials, cfg.parformaxworkers)
   
     fbopt = struct();
     fbopt.i = itrial;
