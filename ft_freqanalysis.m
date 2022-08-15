@@ -589,28 +589,36 @@ dat = data.trial{itrial}; % chansel has already been performed
 time = data.time{itrial};
 
 % Perform specest call
-[dum1, dum2, hastime, ntaper, foi, toi, dum7, maxtap, nfoi, ntoi] = ft_freqanalysis_specest(cfg, fbopt, dat, time, options, keeprpt, nchan, bpfiltoptions);
+[dum1, dum2, hastime, ntaper, first_foi, first_toi, dum7, maxtap, nfoi, ntoi] = ft_freqanalysis_specest(cfg, fbopt, dat, time, options, keeprpt, nchan, bpfiltoptions);
 
 % Actual memory allocation
 [powspctrm, crsspctrm, fourierspctrm, dimord, dof, cumtapcnt, trlcnt] =  ft_freqanalysis_memoryallocation(cfg, data.fsample, trllength, ntrials, maxtap, keeprpt, outflg, hastime, nchan,nfoi,ntoi,nchancmb);
+trlcnt_size = size(trlcnt);
+do_trlcnt = ~isempty(trlcnt);
+powspctrm_size = size(powspctrm);
+fourierspctrm_size = size(fourierspctrm);
+crsspctrm_size = size(crsspctrm);
+dof_size = size(dof);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Main loop over trials, inside fourierspectra are obtained and transformed into the appropriate outputs
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % this is done on trial basis to save memory
 
+data_trial = data.trial;
+data_time = data.time;
+
 if keeprpt==1
 
-  for itrial = 1:ntrials
+  parfor itrial = 1:ntrials
   
-    clear spectrum % in case of very large trials, this lowers peak mem usage a bit
-  
+    fbopt = struct();
     fbopt.i = itrial;
     fbopt.n = ntrials;
-    fbopt.useftprogress = true;
+    fbopt.useftprogress = false;
     
-    dat = data.trial{itrial}; % chansel has already been performed
-    time = data.time{itrial};
+    dat = data_trial{itrial}; % chansel has already been performed
+    time = data_time{itrial};
   
     % Perform specest call
     [spectrum_mtmconvol, spectrum, hastime, ntaper, foi, toi, freqtapind, maxtap, nfoi, ntoi] = ft_freqanalysis_specest(cfg, fbopt, dat, time, options, keeprpt, nchan, bpfiltoptions);
@@ -626,42 +634,51 @@ if keeprpt==1
       foiind = 1:nfoi;
     end
     
+    trlcnt_update = zeros(trlcnt_size);
+    powspctrm_update = zeros(powspctrm_size);
+    fourierspctrm_update = zeros(fourierspctrm_size);
+    crsspctrm_update = zeros(crsspctrm_size);
+    dof_update = zeros(dof_size);
+
     for ifoi = 1:nfoi
       [powdum, fourierdum, csddum, acttboi, nacttboi] = ft_freqanalysis_prepoutput_notaper(cfg, spectrum_mtmconvol, spectrum, freqtapind, ntaper(ifoi), nchan, ntoi, ifoi, cutdatindcmb, foiind(ifoi), hastime, outflg);
         
-      if ~isempty(trlcnt)
-        trlcnt(1, ifoi, :) = trlcnt(1, ifoi, :) + shiftdim(double(acttboi(:)'),-1);
+      if do_trlcnt
+        trlcnt_update(1, ifoi, :) = shiftdim(double(acttboi(:)'),-1);
       end
       
       if outflg.pow
-        powspctrm(:,ifoi,acttboi) = powspctrm(:,ifoi,acttboi) + (reshape(mean(powdum,1),[nchan 1 nacttboi]) ./ ntrials);
-        %powspctrm(:,ifoi,~acttboi) = NaN;
+        powspctrm_update(:,ifoi,acttboi) = reshape(mean(powdum,1),[nchan 1 nacttboi]) ./ ntrials;
       end
       if outflg.fft
-        fourierspctrm(:,ifoi,acttboi) = fourierspctrm(:,ifoi,acttboi) + (reshape(mean(fourierdum,1),[nchan 1 nacttboi]) ./ ntrials);
-        %fourierspctrm(:,ifoi,~acttboi) = NaN;
+        fourierspctrm_update(:,ifoi,acttboi) = reshape(mean(fourierdum,1),[nchan 1 nacttboi]) ./ ntrials;
       end
       if outflg.csd
-        crsspctrm(:,ifoi,acttboi) = crsspctrm(:,ifoi,acttboi) + (reshape(mean(csddum,1),[nchancmb 1 nacttboi]) ./ ntrials);
-        %crsspctrm(:,ifoi,~acttboi) = NaN;
+        crsspctrm_update(:,ifoi,acttboi) = reshape(mean(csddum,1),[nchancmb 1 nacttboi]) ./ ntrials;
       end
   
       % do calcdof  dof = zeros(numper,numfoi,numtoi);
       if outflg.dof
         if hastime
-          dof(ifoi,acttboi) = ntaper(ifoi) + dof(ifoi,acttboi);
+          dof_update(ifoi,acttboi) = ntaper(ifoi);
         else % hastime = false
-          dof(ifoi) = ntaper(ifoi) + dof(ifoi);
+          dof_update(ifoi) = ntaper(ifoi);
         end
       end
     end %ifoi
+
+    trlcnt = trlcnt + trlcnt_update;
+    powspctrm = powspctrm + powspctrm_update;
+    fourierspctrm = fourierspctrm + fourierspctrm_update;
+    crsspctrm = crsspctrm + crsspctrm_update;
+    dof = dof + dof_update;
  
     % set cumptapcnt
     switch cfg.method %% IMPORTANT, SHOULD WE KEEP THIS SPLIT UP PER METHOD OR GO FOR A GENERAL SOLUTION NOW THAT WE HAVE SPECEST
       case {'mtmconvol' 'wavelet'}
         cumtapcnt(itrial,:) = ntaper;
       case 'mtmfft'
-        cumtapcnt(itrial,1) = ntaper(1); % fixed number of tapers? for the moment, yes, as specest_mtmfft computes only one set of tapers
+        cumtapcnt(itrial,:) = ntaper(1); % fixed number of tapers? for the moment, yes, as specest_mtmfft computes only one set of tapers
     end  
   end % for ntrials
 
@@ -811,12 +828,12 @@ end
 freq        = [];
 freq.label  = data.label;
 freq.dimord = dimord;
-freq.freq   = foi;
-hasdc       = find(foi==0);
-hasnyq      = find(foi==data.fsample./2);
+freq.freq   = first_foi;
+hasdc       = find(first_foi==0);
+hasnyq      = find(first_foi==data.fsample./2);
 hasdc_nyq   = [hasdc hasnyq];
-if exist('toi', 'var')
-  freq.time = toi;
+if ~isempty(first_toi)
+  freq.time = first_toi;
 end
 if outflg.pow
   % correct the 0 Hz or Nyqist bin if present, scaling with a factor of 2 is only appropriate for ~0 Hz
