@@ -450,20 +450,21 @@ end
 
 % Set flags for output
 if ismember(cfg.output, {'pow','fractal','original','fooof','fooof_peaks','fooof_aperiodic'})
-  powflg = 1;
-  csdflg = 0;
-  fftflg = 0;
+  outflg.pow = 1;
+  outflg.csd = 0;
+  outflg.fft = 0;
 elseif strcmp(cfg.output, 'powandcsd')
-  powflg = 1;
-  csdflg = 1;
-  fftflg = 0;
+  outflg.pow = 1;
+  outflg.csd = 1;
+  outflg.fft = 0;
 elseif strcmp(cfg.output, 'fourier')
-  powflg = 0;
-  csdflg = 0;
-  fftflg = 1;
+  outflg.pow = 0;
+  outflg.csd = 0;
+  outflg.fft = 1;
 else
   ft_error('Unrecognized output required');
 end
+outflg.dof = strcmp(cfg.calcdof, 'yes');
 
 % Check whether the keeptrials is correct for fooof
 if startsWith(cfg.output, 'fooof')
@@ -478,10 +479,10 @@ if startsWith(cfg.output, 'fooof')
 end
 
 % prepare channel(cmb)
-if ~isfield(cfg, 'channelcmb') && csdflg
+if ~isfield(cfg, 'channelcmb') && outflg.csd
   %set the default for the channelcombination
   cfg.channelcmb = {'all' 'all'};
-elseif isfield(cfg, 'channelcmb') && ~csdflg
+elseif isfield(cfg, 'channelcmb') && ~outflg.csd
   % no cross-spectrum needs to be computed, hence remove the combinations from cfg
   cfg = rmfield(cfg, 'channelcmb');
 end
@@ -496,7 +497,7 @@ chanind    = match_str(data.label, cfg.channel);
 nchan      = numel(chanind);
 nchancmb   = [];
 cutdatindcmb = [];
-if csdflg
+if outflg.csd
   assert(nchan>1, 'CSD output requires multiple channels');
   % determine the corresponding indices of all channel combinations
   [dummy,chancmbind(:,1)] = match_str(cfg.channelcmb(:,1), data.label);
@@ -591,7 +592,7 @@ time = data.time{itrial};
 [dum1, dum2, hastime, ntaper, foi, toi, dum7, maxtap, nfoi, ntoi] = ft_freqanalysis_specest(cfg, fbopt, dat, time, options, keeprpt, nchan, bpfiltoptions);
 
 % Actual memory allocation
-[powspctrm, crsspctrm, fourierspctrm, dimord, dof, cumtapcnt, trlcnt] =  ft_freqanalysis_memoryallocation(cfg, data.fsample, trllength, ntrials, maxtap, keeprpt, powflg, csdflg, fftflg, hastime, nchan,nfoi,ntoi,nchancmb);
+[powspctrm, crsspctrm, fourierspctrm, dimord, dof, cumtapcnt, trlcnt] =  ft_freqanalysis_memoryallocation(cfg, data.fsample, trllength, ntrials, maxtap, keeprpt, outflg, hastime, nchan,nfoi,ntoi,nchancmb);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Main loop over trials, inside fourierspectra are obtained and transformed into the appropriate outputs
@@ -625,7 +626,7 @@ for itrial = 1:ntrials
     end
     
     for ifoi = 1:nfoi
-      [powdum, fourierdum, csddum, acttboi, nacttboi] = ft_freqanalysis_prepoutput_notaper(cfg, spectrum_mtmconvol, spectrum, freqtapind, ntaper(ifoi), nchan, ntoi, ifoi, cutdatindcmb, foiind(ifoi), hastime, powflg, csdflg, fftflg);
+      [powdum, fourierdum, csddum, acttboi, nacttboi] = ft_freqanalysis_prepoutput_notaper(cfg, spectrum_mtmconvol, spectrum, freqtapind, ntaper(ifoi), nchan, ntoi, ifoi, cutdatindcmb, foiind(ifoi), hastime, outflg);
 
       % switch between keep's
       switch keeprpt
@@ -635,29 +636,29 @@ for itrial = 1:ntrials
             trlcnt(1, ifoi, :) = trlcnt(1, ifoi, :) + shiftdim(double(acttboi(:)'),-1);
           end
           
-          if powflg
+          if outflg.pow
             powspctrm(:,ifoi,acttboi) = powspctrm(:,ifoi,acttboi) + (reshape(mean(powdum,1),[nchan 1 nacttboi]) ./ ntrials);
             %powspctrm(:,ifoi,~acttboi) = NaN;
           end
-          if fftflg
+          if outflg.fft
             fourierspctrm(:,ifoi,acttboi) = fourierspctrm(:,ifoi,acttboi) + (reshape(mean(fourierdum,1),[nchan 1 nacttboi]) ./ ntrials);
             %fourierspctrm(:,ifoi,~acttboi) = NaN;
           end
-          if csdflg
+          if outflg.csd
             crsspctrm(:,ifoi,acttboi) = crsspctrm(:,ifoi,acttboi) + (reshape(mean(csddum,1),[nchancmb 1 nacttboi]) ./ ntrials);
             %crsspctrm(:,ifoi,~acttboi) = NaN;
           end
           
         case 2 % cfg.keeptrials, 'yes' &&  cfg.keeptapers, 'no'
-          if powflg
+          if outflg.pow
             powspctrm(itrial,:,ifoi,acttboi) = reshape(mean(powdum,1),[nchan 1 nacttboi]);
             powspctrm(itrial,:,ifoi,~acttboi) = NaN;
           end
-          if fftflg
+          if outflg.fft
             fourierspctrm(itrial,:,ifoi,acttboi) = reshape(mean(fourierdum,1), [nchan 1 nacttboi]);
             fourierspctrm(itrial,:,ifoi,~acttboi) = NaN;
           end
-          if csdflg
+          if outflg.csd
             crsspctrm(itrial,:,ifoi,acttboi) = reshape(mean(csddum,1), [nchancmb 1 nacttboi]);
             crsspctrm(itrial,:,ifoi,~acttboi) = NaN;
           end
@@ -665,7 +666,7 @@ for itrial = 1:ntrials
       end % switch keeprpt
       
       % do calcdof  dof = zeros(numper,numfoi,numtoi);
-      if strcmp(cfg.calcdof, 'yes')
+      if outflg.dof
         if hastime
           dof(ifoi,acttboi) = ntaper(ifoi) + dof(ifoi,acttboi);
         else % hastime = false
@@ -688,17 +689,17 @@ for itrial = 1:ntrials
     tapcounter  = currrptind(end);
     %rptind = reshape(1:ntrials .* maxtap,[maxtap ntrials]);
     %currrptind = rptind(:,itrial);
-    if powflg
+    if outflg.pow
       if strcmp(cfg.method, 'irasa') % ft_specest_irasa outputs power and not amplitude
         powspctrm(currrptind,:,:) = spectrum;
       else
         powspctrm(currrptind,:,:) = abs(spectrum).^2;
       end
     end
-    if fftflg
+    if outflg.fft
       fourierspctrm(currrptind,:,:,:) = spectrum;
     end
-    if csdflg
+    if outflg.csd
       crsspctrm(currrptind,:,:,:) =          spectrum(cutdatindcmb(:,1),:,:) .* ...
         conj(spectrum(cutdatindcmb(:,2),:,:));
     end
@@ -724,17 +725,17 @@ ft_progress('close');
 % re-normalise the TFRs if keeprpt==1
 if (strcmp(cfg.method, 'mtmconvol') || strcmp(cfg.method, 'wavelet')) && keeprpt==1
   nanmask = trlcnt==0;
-  if powflg
+  if outflg.pow
     powspctrm = powspctrm.*ntrials;
     powspctrm = powspctrm./trlcnt(ones(size(powspctrm,1),1),:,:);
     powspctrm(nanmask(ones(size(powspctrm,1),1),:,:)) = nan;
   end
-  if fftflg
+  if outflg.fft
     fourierspctrm = fourierspctrm.*ntrials;
     fourierspctrm = fourierspctrm./trlcnt(ones(size(fourierspctrm,1),1),:,:);
     fourierspctrm(nanmask(ones(size(fourierspctrm,1),1),:,:)) = nan;
   end
-  if csdflg
+  if outflg.csd
     crsspctrm = crsspctrm.*ntrials;
     crsspctrm = crsspctrm./trlcnt(ones(size(crsspctrm,1),1),:,:);
     crsspctrm(nanmask(ones(size(crsspctrm,1),1),:,:)) = nan;
@@ -752,7 +753,7 @@ hasdc_nyq   = [hasdc hasnyq];
 if exist('toi', 'var')
   freq.time = toi;
 end
-if powflg
+if outflg.pow
   % correct the 0 Hz or Nyqist bin if present, scaling with a factor of 2 is only appropriate for ~0 Hz
   if ~isempty(hasdc_nyq)
     if keeprpt>1
@@ -833,7 +834,7 @@ if powflg
     freq.powspctrm = powspctrm;
   end
 end
-if fftflg
+if outflg.fft
   % correct the 0 Hz or Nyqist bin if present, scaling with a factor of 2 is only appropriate for ~0 Hz
   if ~isempty(hasdc_nyq)
     if keeprpt>1
@@ -844,7 +845,7 @@ if fftflg
   end
   freq.fourierspctrm = fourierspctrm;
 end
-if csdflg
+if outflg.csd
   % correct the 0 Hz or Nyqist bin if present, scaling with a factor of 2 is only appropriate for ~0 Hz
   if ~isempty(hasdc_nyq)
     if keeprpt>1
@@ -856,7 +857,7 @@ if csdflg
   freq.labelcmb  = cfg.channelcmb;
   freq.crsspctrm = crsspctrm;
 end
-if strcmp(cfg.calcdof, 'yes')
+if outflg.dof
   freq.dof = 2 .* dof;
 end
 if strcmp(cfg.method, 'mtmfft') && (keeprpt == 2 || keeprpt == 4)
@@ -1024,7 +1025,7 @@ function [spectrum_mtmconvol, spectrum, hastime, ntaper, foi, toi, freqtapind, m
 
 end
 
-function [powspctrm, crsspctrm, fourierspctrm, dimord, dof, cumtapcnt, trlcnt] =  ft_freqanalysis_memoryallocation(cfg, fsample, trllength, ntrials, maxtap, keeprpt, powflg, csdflg, fftflg, hastime, nchan,nfoi,ntoi,nchancmb)
+function [powspctrm, crsspctrm, fourierspctrm, dimord, dof, cumtapcnt, trlcnt] =  ft_freqanalysis_memoryallocation(cfg, fsample, trllength, ntrials, maxtap, keeprpt, outflg, hastime, nchan,nfoi,ntoi,nchancmb)
   % allocate memory to output variables
   % by default, everything is has the time dimension, if not, some specifics are performed
 
@@ -1059,19 +1060,19 @@ function [powspctrm, crsspctrm, fourierspctrm, dimord, dof, cumtapcnt, trlcnt] =
   end
 
   if keeprpt == 1 % cfg.keeptrials, 'no' &&  cfg.keeptapers, 'no'
-    if powflg, powspctrm     = zeros(nchan,nfoi,ntoi,cfg.precision);             end
-    if csdflg, crsspctrm     = complex(zeros(nchancmb,nfoi,ntoi,cfg.precision)); end
-    if fftflg, fourierspctrm = complex(zeros(nchan,nfoi,ntoi,cfg.precision));    end
+    if outflg.pow, powspctrm     = zeros(nchan,nfoi,ntoi,cfg.precision);             end
+    if outflg.csd, crsspctrm     = complex(zeros(nchancmb,nfoi,ntoi,cfg.precision)); end
+    if outflg.fft, fourierspctrm = complex(zeros(nchan,nfoi,ntoi,cfg.precision));    end
     dimord    = 'chan_freq_time';
   elseif keeprpt == 2 % cfg.keeptrials, 'yes' &&  cfg.keeptapers, 'no'
-    if powflg, powspctrm     = nan(ntrials,nchan,nfoi,ntoi,cfg.precision);                                                                 end
-    if csdflg, crsspctrm     = complex(nan(ntrials,nchancmb,nfoi,ntoi,cfg.precision),nan(ntrials,nchancmb,nfoi,ntoi,cfg.precision)); end
-    if fftflg, fourierspctrm = complex(nan(ntrials,nchan,nfoi,ntoi,cfg.precision),nan(ntrials,nchan,nfoi,ntoi,cfg.precision));       end
+    if outflg.pow, powspctrm     = nan(ntrials,nchan,nfoi,ntoi,cfg.precision);                                                                 end
+    if outflg.csd, crsspctrm     = complex(nan(ntrials,nchancmb,nfoi,ntoi,cfg.precision),nan(ntrials,nchancmb,nfoi,ntoi,cfg.precision)); end
+    if outflg.fft, fourierspctrm = complex(nan(ntrials,nchan,nfoi,ntoi,cfg.precision),nan(ntrials,nchan,nfoi,ntoi,cfg.precision));       end
     dimord    = 'rpt_chan_freq_time';
   elseif keeprpt == 4 % cfg.keeptrials, 'yes' &&  cfg.keeptapers, 'yes'
-    if powflg, powspctrm     = zeros(ntaptrl,nchan,nfoi,ntoi,cfg.precision);        end %
-    if csdflg, crsspctrm     = complex(zeros(ntaptrl,nchancmb,nfoi,ntoi,cfg.precision)); end
-    if fftflg, fourierspctrm = complex(zeros(ntaptrl,nchan,nfoi,ntoi,cfg.precision));    end
+    if outflg.pow, powspctrm     = zeros(ntaptrl,nchan,nfoi,ntoi,cfg.precision);        end %
+    if outflg.csd, crsspctrm     = complex(zeros(ntaptrl,nchancmb,nfoi,ntoi,cfg.precision)); end
+    if outflg.fft, fourierspctrm = complex(zeros(ntaptrl,nchan,nfoi,ntoi,cfg.precision));    end
     dimord    = 'rpttap_chan_freq_time';
   end
   if ~hastime
@@ -1079,7 +1080,7 @@ function [powspctrm, crsspctrm, fourierspctrm, dimord, dof, cumtapcnt, trlcnt] =
   end
     
   % prepare calcdof
-  if strcmp(cfg.calcdof, 'yes')
+  if outflg.dof
     if hastime
       dof = zeros(nfoi,ntoi);
       %dof = zeros(ntrials,nfoi,ntoi);
@@ -1099,7 +1100,7 @@ function [powspctrm, crsspctrm, fourierspctrm, dimord, dof, cumtapcnt, trlcnt] =
 end
 
 
-function [powdum, fourierdum, csddum, acttboi, nacttboi] = ft_freqanalysis_prepoutput_notaper(cfg, spectrum_mtmconvol, spectrum, freqtapind, ntaper_ifoi, nchan, ntoi, ifoi, cutdatindcmb, foiind_ifoi, hastime, powflg, csdflg, fftflg)
+function [powdum, fourierdum, csddum, acttboi, nacttboi] = ft_freqanalysis_prepoutput_notaper(cfg, spectrum_mtmconvol, spectrum, freqtapind, ntaper_ifoi, nchan, ntoi, ifoi, cutdatindcmb, foiind_ifoi, hastime, outflg)
 
   % initialize outputs
   powdum = [];
@@ -1122,7 +1123,7 @@ function [powdum, fourierdum, csddum, acttboi, nacttboi] = ft_freqanalysis_prepo
   end
   
   acttap = logical([ones(ntaper_ifoi,1);zeros(size(spectrum,1)-ntaper_ifoi,1)]);
-  if powflg
+  if outflg.pow
     if strcmp(cfg.method, 'irasa') % ft_specest_irasa outputs power and not amplitude
       powdum = spectrum(acttap,:,foiind_ifoi,acttboi);
     else
@@ -1142,10 +1143,10 @@ function [powdum, fourierdum, csddum, acttboi, nacttboi] = ft_freqanalysis_prepo
     %             powdum = powdum .* sinetapscale;
     %           end
   end
-  if fftflg
+  if outflg.fft
     fourierdum = spectrum(acttap,:,foiind_ifoi,acttboi);
   end
-  if csdflg
+  if outflg.csd
     csddum = spectrum(acttap,cutdatindcmb(:,1),foiind_ifoi,acttboi) .* conj(spectrum(acttap,cutdatindcmb(:,2),foiind_ifoi,acttboi));
   end
 end
