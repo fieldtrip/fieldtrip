@@ -684,17 +684,20 @@ if keeprpt==1
 
 elseif keeprpt==2
 
-  for itrial = 1:ntrials
+  pow_update_size = [1, powspctrm_size(2:end)];
+  fft_update_size = [1, fourierspctrm_size(2:end)];
+  csd_update_size = [1, crsspctrm_size(2:end)];
+
+  parfor itrial = 1:ntrials
   
-    clear spectrum % in case of very large trials, this lowers peak mem usage a bit
-  
+    fbopt = struct();
     fbopt.i = itrial;
     fbopt.n = ntrials;
-    fbopt.useftprogress = true;
+    fbopt.useftprogress = false;
     
-    dat = data.trial{itrial}; % chansel has already been performed
-    time = data.time{itrial};
-  
+    dat = data_trial{itrial}; % chansel has already been performed
+    time = data_time{itrial};
+      
     % Perform specest call
     [spectrum_mtmconvol, spectrum, hastime, ntaper, foi, toi, freqtapind, maxtap, nfoi, ntoi] = ft_freqanalysis_specest(cfg, fbopt, dat, time, options, keeprpt, nchan, bpfiltoptions);
     
@@ -708,39 +711,47 @@ elseif keeprpt==2
       % by using this vector below for indexing, the below code does not need to be duplicated for mtmconvol
       foiind = 1:nfoi;
     end
+
+    % For larger matrices, initializing with zeros(size) + NaN is as yet faster than with NaN(size)
+    powspctrm_update = zeros(pow_update_size) + NaN;
+    fourierspctrm_update = zeros(fft_update_size) + NaN;
+    crsspctrm_update = zeros(csd_update_size) + NaN;
+    dof_update = zeros(dof_size);
     
     for ifoi = 1:nfoi
       [powdum, fourierdum, csddum, acttboi, nacttboi] = ft_freqanalysis_prepoutput_notaper(cfg, spectrum_mtmconvol, spectrum, freqtapind, ntaper(ifoi), nchan, ntoi, ifoi, cutdatindcmb, foiind(ifoi), hastime, outflg);
 
       if outflg.pow
-        powspctrm(itrial,:,ifoi,acttboi) = reshape(mean(powdum,1),[nchan 1 nacttboi]);
-        powspctrm(itrial,:,ifoi,~acttboi) = NaN;
+        powspctrm_update(1,:,ifoi,acttboi) = reshape(mean(powdum,1),[nchan 1 nacttboi]);
       end
       if outflg.fft
-        fourierspctrm(itrial,:,ifoi,acttboi) = reshape(mean(fourierdum,1), [nchan 1 nacttboi]);
-        fourierspctrm(itrial,:,ifoi,~acttboi) = NaN;
+        fourierspctrm_update(1,:,ifoi,acttboi) = reshape(mean(fourierdum,1), [nchan 1 nacttboi]);
       end
       if outflg.csd
-        crsspctrm(itrial,:,ifoi,acttboi) = reshape(mean(csddum,1), [nchancmb 1 nacttboi]);
-        crsspctrm(itrial,:,ifoi,~acttboi) = NaN;
+        crsspctrm_update(1,:,ifoi,acttboi) = reshape(mean(csddum,1), [nchancmb 1 nacttboi]);
       end
       
       % do calcdof  dof = zeros(numper,numfoi,numtoi);
       if outflg.dof
         if hastime
-          dof(ifoi,acttboi) = ntaper(ifoi) + dof(ifoi,acttboi);
+          dof_update(ifoi,acttboi) = ntaper(ifoi);
         else % hastime = false
-          dof(ifoi) = ntaper(ifoi) + dof(ifoi);
+          dof_update(ifoi) = ntaper(ifoi);
         end
       end
     end %ifoi
+
+    powspctrm(itrial,:,:,:) = powspctrm_update;
+    fourierspctrm(itrial,:,:,:) = fourierspctrm_update;
+    crsspctrm(itrial,:,:,:) = crsspctrm_update;
+    dof = dof + dof_update;
     
     % set cumptapcnt
     switch cfg.method %% IMPORTANT, SHOULD WE KEEP THIS SPLIT UP PER METHOD OR GO FOR A GENERAL SOLUTION NOW THAT WE HAVE SPECEST
       case {'mtmconvol' 'wavelet'}
         cumtapcnt(itrial,:) = ntaper;
       case 'mtmfft'
-        cumtapcnt(itrial,1) = ntaper(1); % fixed number of tapers? for the moment, yes, as specest_mtmfft computes only one set of tapers
+        cumtapcnt(itrial,:) = ntaper(1); % fixed number of tapers? for the moment, yes, as specest_mtmfft computes only one set of tapers
     end
   
   end % for ntrials
