@@ -28,7 +28,7 @@ i = 2;
 hdr = ft_read_header(filename{i});
 dat = ft_read_data(filename{i});
 evt = ft_read_event(filename{i});
-assert(isequal(size(dat), [7 104517]));
+assert(isequal(size(dat), [10 104517]));
 assert(sum(strcmp({evt.type}','INPUT'))==210);
 
 %%
