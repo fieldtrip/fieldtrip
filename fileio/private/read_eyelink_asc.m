@@ -1,12 +1,14 @@
 function asc = read_eyelink_asc(filename)
 
 % READ_EYELINK_ASC reads the header information, input triggers, messages
-% and all data points from an Eyelink *.asc file
+% and all data points from an Eyelink *.asc file. The output events are
+% represented as matlab tables (after Aug 2022)
 %
 % Use as
 %   asc = read_eyelink_asc(filename)
 
 % Copyright (C) 2010-2015, Robert Oostenveld
+% Copyright (C) 2022, Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -47,6 +49,9 @@ aline(aline==uint8(sprintf('\r'))) = [];        % remove cariage return
 aline = tokenize(aline, uint8(newline));        % split on newline
 
 for i=1:numel(aline)
+  % this is a bit inefficient, due to the massive cat and sscanf operations, but I
+  % keep it like this for now
+
   tline = aline{i};
   
   if numel(tline) && any(tline(1)=='0':'9')
@@ -80,37 +85,35 @@ for i=1:numel(aline)
       asc.input = cat(1, asc.input, this);
     end
     
-    
   elseif regexp(tline, '\*\*.*')
     asc.header = cat(1, asc.header, {tline});
-    
     
   elseif regexp(tline, '^MSG')
     asc.msg = cat(1, asc.msg, {tline});
     
-    
   elseif regexp(tline, '^SFIX')
-    asc.sfix = cat(1, asc.sfix, {tline});
-    
+    tline    = convertline(tline);
+    asc.sfix = cat(1, asc.sfix, tline);
     
   elseif regexp(tline, '^EFIX')
-    asc.efix = cat(1, asc.efix, {tline});
-    
+    tline    = convertline(tline);
+    asc.efix = cat(1, asc.efix, tline);
     
   elseif regexp(tline, '^SSACC')
-    asc.ssacc = cat(1, asc.ssacc, {tline});
-    
+    tline     = convertline(tline);
+    asc.ssacc = cat(1, asc.ssacc, tline);
     
   elseif regexp(tline, '^ESACC')
-    asc.esacc = cat(1, asc.esacc, {tline});
-    
+    tline     = convertline(tline);
+    asc.esacc = cat(1, asc.esacc, tline);
     
   elseif regexp(tline, '^SBLINK')
-    asc.sblink = cat(1, asc.sblink, {tline});
-    
+    tline      = convertline(tline);
+    asc.sblink = cat(1, asc.sblink, tline);
     
   elseif regexp(tline, '^EBLINK')
-    asc.eblink = cat(1, asc.eblink, {tline});
+    tline      = convertline(tline);
+    asc.eblink = cat(1, asc.eblink, tline);
     
   else
     % all other lines are not parsed
@@ -118,6 +121,51 @@ for i=1:numel(aline)
   
 end
 
+if ~isempty(asc.input)
+  asc.input = struct2table(asc.input);
+end
+
+% convert the cell-arrays into tables
+if ~isempty(asc.sfix),   asc.sfix   = totable(asc.sfix(:, 2:end),   {'eye' 'stime'}); end
+if ~isempty(asc.sblink), asc.sblink = totable(asc.sblink(:, 2:end), {'eye' 'stime'}); end
+if ~isempty(asc.ssacc),  asc.ssacc  = totable(asc.ssacc(:, 2:end),  {'eye' 'stime'}); end
+
+if ~isempty(asc.efix)
+  try
+    asc.efix = totable(asc.efix(:,2:end), {'eye', 'stime', 'etime', 'dur', 'axp', 'ayp', 'aps'});
+  catch
+    asc.efix = totable(asc.efix(:,2:end), {'eye', 'stime', 'etime', 'dur', 'axp', 'ayp', 'aps', 'xr', 'yr'});
+  end
+end
+if ~isempty(asc.eblink)
+  asc.eblink = totable(asc.eblink(:,2:end), {'eye', 'stime', 'etime', 'dur'});
+end
+if ~isempty(asc.esacc)
+  try
+    asc.esacc = totable(asc.esacc(:,2:end), {'eye', 'stime', 'etime', 'dur', 'sxp', 'syp', 'exp', 'eyp', 'ampl', 'pv'});
+  catch
+    asc.esacc = totable(asc.esacc(:,2:end), {'eye', 'stime', 'etime', 'dur', 'sxp', 'syp', 'exp', 'eyp', 'ampl', 'pv', 'xr', 'yr'});
+  end
+end
+
 % remove the samples that were not filled with real data
 asc.dat = asc.dat(:,1:current);
 
+function lineout = convertline(linein)
+
+% split the line by horizontal tabs, and the first output element
+% thereof by spaces. 
+
+tmp     = strrep(linein, sprintf('\t'), ' ');
+lineout = strsplit(tmp, ' ');
+lineout = lineout(:)';
+
+function tableout = totable(cellin, fnames)
+
+% convert into table, and do a str2double conversion for the numeric data,
+% assuming only the first variable to be kept as a string
+
+tableout = cell2table(cellin, 'VariableNames', fnames);
+for k = 2:numel(fnames)
+  tableout.(fnames{k}) = str2double(tableout.(fnames{k}));
+end
