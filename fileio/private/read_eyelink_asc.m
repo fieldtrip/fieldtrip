@@ -28,18 +28,6 @@ function asc = read_eyelink_asc(filename)
 %
 % $Id$
 
-asc.header  = {};
-asc.msg     = {};
-asc.input   = [];
-asc.sfix    = {};
-asc.efix    = {};
-asc.ssacc   = {};
-asc.esacc   = {};
-asc.dat     = [];
-asc.sblink   = {}; % blink parsing added
-asc.eblink   = {};
-current   = 0;
-
 % read the whole file at once
 fid = fopen_or_error(filename, 'rt');
 aline = fread(fid, inf, 'char=>char');          % returns a single long string
@@ -48,88 +36,77 @@ fclose(fid);
 aline(aline==uint8(sprintf('\r'))) = [];        % remove cariage return
 aline = tokenize(aline, uint8(newline));        % split on newline
 
-for i=1:numel(aline)
-  % this is a bit inefficient, due to the massive cat and sscanf operations, but I
-  % keep it like this for now
+sel = startsWith(aline, '0') | ...
+      startsWith(aline, '1') | ...
+      startsWith(aline, '2') | ...
+      startsWith(aline, '3') | ...
+      startsWith(aline, '4') | ...
+      startsWith(aline, '5') | ...
+      startsWith(aline, '6') | ...
+      startsWith(aline, '7') | ...
+      startsWith(aline, '8') | ...
+      startsWith(aline, '9');
 
-  tline = aline{i};
-  
-  if numel(tline) && any(tline(1)=='0':'9')
-    % if regexp(tline, '^[0-9]')
-    tline   = strrep(tline, ' . ', ' NaN '); % replace missing values
-    tmp     = sscanf(tline, '%f');
-    nchan   = numel(tmp);
-    current = current + 1;
-    
-    if size(asc.dat, 1)<nchan
-      % increase the allocated number of channels
-      asc.dat(nchan,:) = 0;
-    end
-    
-    if size(asc.dat, 2)<current
-      % increase the allocated number of samples
-      asc.dat(:,end+10000) = 0;
-    end
-    
-    % add the current sample to the data matrix
-    asc.dat(1:nchan, current) = tmp;
-    
-    
-  elseif regexp(tline, '^INPUT')
-    [val, num] = sscanf(tline, 'INPUT %d %d');
-    this.timestamp = val(1);
-    this.value     = val(2);
-    if isempty(asc.input)
-      asc.input = this;
-    else
-      asc.input = cat(1, asc.input, this);
-    end
-    
-  elseif regexp(tline, '\*\*.*')
-    asc.header = cat(1, asc.header, {tline});
-    
-  elseif regexp(tline, '^MSG')
-    asc.msg = cat(1, asc.msg, {tline});
-    
-  elseif regexp(tline, '^SFIX')
-    tline    = convertline(tline);
-    asc.sfix = cat(1, asc.sfix, tline);
-    
-  elseif regexp(tline, '^EFIX')
-    tline    = convertline(tline);
-    asc.efix = cat(1, asc.efix, tline);
-    
-  elseif regexp(tline, '^SSACC')
-    tline     = convertline(tline);
-    asc.ssacc = cat(1, asc.ssacc, tline);
-    
-  elseif regexp(tline, '^ESACC')
-    tline     = convertline(tline);
-    asc.esacc = cat(1, asc.esacc, tline);
-    
-  elseif regexp(tline, '^SBLINK')
-    tline      = convertline(tline);
-    asc.sblink = cat(1, asc.sblink, tline);
-    
-  elseif regexp(tline, '^EBLINK')
-    tline      = convertline(tline);
-    asc.eblink = cat(1, asc.eblink, tline);
-    
-  else
-    % all other lines are not parsed
+datline = aline(sel);
+aline   = aline(~sel);
+
+% check if the formatting for all datlines is similar
+nline  = numel(datline);
+seltab = char(datline)==sprintf('\t');
+ntab   = sum(seltab,2);
+
+% check whether all lines have the same number of columns
+assert(all(ntab==ntab(1)));
+
+fmt = repmat('%s ', [1 ntab(1)+1]);
+fmt = fmt(1:end-1);
+
+% convert datline in a long string again
+datline = char(datline)';
+datline(end+1, :) = sprintf('\t');
+datline = datline(:)';
+
+C   = textscan(datline, fmt, nline);
+dat = zeros(nline, numel(C)) + nan;
+for i=1:numel(C)
+  notok = strcmp(C{i}, '.')|strcmp(C{i}, '...');
+  tmp = reshape([char(C{i}(~notok))';repmat(' ',1,sum(~notok))],[],1)';
+
+  % convert to floats, much faster than str2double
+  if ~isempty(tmp)
+    tmp = textscan(tmp, '%f');
+    dat(~notok, i) = tmp{1};
   end
-  
 end
+asc.dat = dat';
 
-if ~isempty(asc.input)
-  asc.input = struct2table(asc.input);
-end
+selsfix    = startsWith(aline, 'SFIX');
+selefix    = startsWith(aline, 'EFIX');
+selssacc   = startsWith(aline, 'SSACC');
+selesacc   = startsWith(aline, 'ESACC');
+selsblink  = startsWith(aline, 'SBLINK');
+seleblink  = startsWith(aline, 'EBLINK');
+selmsg     = startsWith(aline, 'MSG');
+selhdr     = startsWith(aline, '**');
+selinput   = startsWith(aline, 'INPUT');
+
+asc.sfix   = tocell(aline(selsfix)); % convert cell-vector of lines into a cell array
+asc.efix   = tocell(aline(selefix));
+asc.ssacc  = tocell(aline(selssacc));
+asc.esacc  = tocell(aline(selesacc));
+asc.sblink = tocell(aline(selsblink));
+asc.eblink = tocell(aline(seleblink));
+asc.msg    = tocell(aline(selmsg), 1);
+asc.header = char(aline(selhdr));
+asc.input  = tocell(aline(selinput));
 
 % convert the cell-arrays into tables
 if ~isempty(asc.sfix),   asc.sfix   = totable(asc.sfix(:, 2:end),   {'eye' 'stime'}); end
 if ~isempty(asc.sblink), asc.sblink = totable(asc.sblink(:, 2:end), {'eye' 'stime'}); end
 if ~isempty(asc.ssacc),  asc.ssacc  = totable(asc.ssacc(:, 2:end),  {'eye' 'stime'}); end
+if ~isempty(asc.input),  asc.input  = totable(asc.input(:, 2:end),  {'timestamp', 'value'}, [1 2]); end
 
+% these lines may have been formatted in different ways
 if ~isempty(asc.efix)
   try
     asc.efix = totable(asc.efix(:,2:end), {'eye', 'stime', 'etime', 'dur', 'axp', 'ayp', 'aps'});
@@ -148,24 +125,47 @@ if ~isempty(asc.esacc)
   end
 end
 
-% remove the samples that were not filled with real data
-asc.dat = asc.dat(:,1:current);
+% remove any all-nan rows
+asc.dat(sum(~isfinite(asc.dat),2)==size(asc.dat,2), :) = [];
 
-function lineout = convertline(linein)
+function lineout = convertline(linein, msgflag)
 
 % split the line by horizontal tabs, and the first output element
 % thereof by spaces. 
 
-tmp     = strrep(linein, sprintf('\t'), ' ');
-lineout = strsplit(tmp, ' ');
-lineout = lineout(:)';
+%tmp     = strrep(linein, sprintf('\t'), ' ');
+lineout = strsplit(linein, '\t');
+lineout = [strsplit(lineout{1}, ' ') lineout(2:end)];
+if msgflag
+  tmp = strsplit(lineout{2}, ' ');
+  lineout = [lineout(1) tmp(1) {sprintf('%s ', tmp{2:end})}];
+end
 
-function tableout = totable(cellin, fnames)
+function tableout = totable(cellin, fnames, convert)
+
+if nargin<3
+  convert = 2:numel(fnames);
+end
 
 % convert into table, and do a str2double conversion for the numeric data,
 % assuming only the first variable to be kept as a string
 
 tableout = cell2table(cellin, 'VariableNames', fnames);
-for k = 2:numel(fnames)
+for k = convert
   tableout.(fnames{k}) = str2double(tableout.(fnames{k}));
+end
+
+function cellout = tocell(textin, msgflag)
+
+if nargin<2
+  msgflag = false;
+end
+
+cellout = {};
+for k = 1:numel(textin)
+  tline   = convertline(textin{k}, msgflag); 
+  if k==1
+    cellout = cell(numel(textin), numel(tline));
+  end
+  cellout(k,:) = tline;
 end
