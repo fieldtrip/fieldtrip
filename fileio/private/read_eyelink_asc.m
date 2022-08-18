@@ -50,131 +50,129 @@ sel = startsWith(aline, '0') | ...
 datline = aline(sel);
 aline   = aline(~sel);
 
-if ~skipdata
-  % according to the eyelink documentation, the sample lines have different
-  % flavours, depending on how the data was collected (monocular or
-  % binocular), and possibly the conversion settings from edf2asc
-  % Monocular,                              <time> <xp>  <yp>  <ps>
-  % Monocular, with velocity                <time> <xp>  <yp>  <ps>  <xv>  <yv>
-  % Monocular, with resolution              <time> <xp>  <yp>  <ps>  <xr>  <yr>
-  % Monocular, with velocity and resolution <time> <xp>  <yp>  <ps>  <xv>  <yv>  <xr>  <yr>
-  % Binocular,                              <time> <xpl> <ypl> <psl> <xpr> <ypr> <psr>
-  % Binocular, with velocity                <time> <xpl> <ypl> <psl> <xpr> <ypr> <psr> <xvl> <yvl> <xvr> <yvr>
-  % Binocular, with resolution              <time> <xpl> <ypl> <psl> <xpr> <ypr> <psr> <xr> <yr>
-  % Binocular, with velocity and resolution <time> <xpl> <ypl> <psl> <xpr> <ypr> <psr> <xvl> <yvl> <xvr> <yvr><xr> <yr>
-  %
-  % Then, there may be additional columns, if recorded with cornea reflection
-  % mode:
-  %
-  % MONOCULAR Corneal Reflection (CR) Samples
-  % "..." if no warning for sample
-  % first character is "I" if sample was interpolated
-  % second character is "C" if CR missing
-  % third character is "R" if CR recovery in progress
-  %
-  % BINOCULAR Corneal Reflection (CR) Samples?
-  % "....." if no warning for sample
-  % first character is "I" if sample was interpolated
-  % second character is "C" if LEFT CR missing
-  % third character is "R" if LEFT CR recovery in progress
-  % fourth character is "C" if RIGHT CR missing
-  % fifth character is "R" if RIGHT CR recovery in progress
-  %
-  % Then, there may be additional columns, if data collection was done in
-  % remote mode:
-  %
-  % Data files recorded using the Remote Mode have extra columns to encode the
-  % target distance, position, and eye/target status information. The first three
-  % columns are:
-  % <target x>: X position of the target in camera coordinate (a value from 0 to 10000).
-  % Returns "MISSING_DATA" (-32768) if target is missing.
-  % <target y>: Y position of the target in camera coordinate (a value from 0 to 10000).
-  % Returns "MISSING_DATA" (-32768) if target is missing.
-  % <target distance>: Distance between the target and camera (in millimeters).
-  % Returns "MISSING_DATA" (-32768) if target is missing.
-  % The next thirteen fields represent warning messages for that sample relating to
-  % the target and eye image processing."............." if no warning for target and eye image
-  % first character is "M" if target is missing
-  % second character is "A" if extreme target angle occurs
-  % third character is "N" if target is near eye so that the target window and eye window overlap
-  % fourth character is "C" if target is too close
-  % fifth character is "F" if target is too far
-  % sixth character is "T" if target is near top edge of the camera image
-  % seventh character is "B" if target is near bottom edge of the camera image
-  % eighth character is "L" if target is near left edge of the camera image
-  % ninth character is "R" if target is near right edge of the camera image
-  % tenth character is "T" if eye is near top edge of the camera image
-  % eleventh character is "B" if eye is near bottom edge of the camera image
-  % twelfth character is "L" if eye is near left edge of the camera image
-  % thirteenth character is "R" if eye is near right edge of the camera image
-  % For a binocular recording, there will be seventeen target/eye status columns,
-  % with the last eight columns reporting the warning messages for the left and
-  % right eyes separately.
+% according to the eyelink documentation, the sample lines have different
+% flavours, depending on how the data was collected (monocular or
+% binocular), and possibly the conversion settings from edf2asc
+% Monocular,                              <time> <xp>  <yp>  <ps>
+% Monocular, with velocity                <time> <xp>  <yp>  <ps>  <xv>  <yv>
+% Monocular, with resolution              <time> <xp>  <yp>  <ps>  <xr>  <yr>
+% Monocular, with velocity and resolution <time> <xp>  <yp>  <ps>  <xv>  <yv>  <xr>  <yr>
+% Binocular,                              <time> <xpl> <ypl> <psl> <xpr> <ypr> <psr>
+% Binocular, with velocity                <time> <xpl> <ypl> <psl> <xpr> <ypr> <psr> <xvl> <yvl> <xvr> <yvr>
+% Binocular, with resolution              <time> <xpl> <ypl> <psl> <xpr> <ypr> <psr> <xr> <yr>
+% Binocular, with velocity and resolution <time> <xpl> <ypl> <psl> <xpr> <ypr> <psr> <xvl> <yvl> <xvr> <yvr><xr> <yr>
+%
+% Then, there may be additional columns, if recorded with cornea reflection
+% mode:
+%
+% MONOCULAR Corneal Reflection (CR) Samples
+% "..." if no warning for sample
+% first character is "I" if sample was interpolated
+% second character is "C" if CR missing
+% third character is "R" if CR recovery in progress
+%
+% BINOCULAR Corneal Reflection (CR) Samples?
+% "....." if no warning for sample
+% first character is "I" if sample was interpolated
+% second character is "C" if LEFT CR missing
+% third character is "R" if LEFT CR recovery in progress
+% fourth character is "C" if RIGHT CR missing
+% fifth character is "R" if RIGHT CR recovery in progress
+%
+% Then, there may be additional columns, if data collection was done in
+% remote mode:
+%
+% Data files recorded using the Remote Mode have extra columns to encode the
+% target distance, position, and eye/target status information. The first three
+% columns are:
+% <target x>: X position of the target in camera coordinate (a value from 0 to 10000).
+% Returns "MISSING_DATA" (-32768) if target is missing.
+% <target y>: Y position of the target in camera coordinate (a value from 0 to 10000).
+% Returns "MISSING_DATA" (-32768) if target is missing.
+% <target distance>: Distance between the target and camera (in millimeters).
+% Returns "MISSING_DATA" (-32768) if target is missing.
+% The next thirteen fields represent warning messages for that sample relating to
+% the target and eye image processing."............." if no warning for target and eye image
+% first character is "M" if target is missing
+% second character is "A" if extreme target angle occurs
+% third character is "N" if target is near eye so that the target window and eye window overlap
+% fourth character is "C" if target is too close
+% fifth character is "F" if target is too far
+% sixth character is "T" if target is near top edge of the camera image
+% seventh character is "B" if target is near bottom edge of the camera image
+% eighth character is "L" if target is near left edge of the camera image
+% ninth character is "R" if target is near right edge of the camera image
+% tenth character is "T" if eye is near top edge of the camera image
+% eleventh character is "B" if eye is near bottom edge of the camera image
+% twelfth character is "L" if eye is near left edge of the camera image
+% thirteenth character is "R" if eye is near right edge of the camera image
+% For a binocular recording, there will be seventeen target/eye status columns,
+% with the last eight columns reporting the warning messages for the left and
+% right eyes separately.
 
-  % So, anecdotally, parsing the file is a bit tedious, and not very robust.
-  % Reading and converting per line is super slow, so here I chose to pipe
-  % the datalines through a checker that removes all '...' '.....'
-  % '.............' and '.................' (or containing warning) stuff
-  % so that we end up with more or less well behaved data.
+% So, anecdotally, parsing the file is a bit tedious, and not very robust.
+% Reading and converting per line is super slow, so here I chose to pipe
+% the datalines through a checker that removes all '...' '.....'
+% '.............' and '.................' (or containing warning) stuff
+% so that we end up with more or less well behaved data.
 
-  
-  % check if the formatting for all datlines is similar
-  seltab = char(datline)==sprintf('\t');
-  ntab   = sum(seltab,2);
 
-  % check whether all lines have the same number of columns
-  assert(all(ntab==ntab(1)));
-  
-  % identify the chunks of consecutive '...' and comments
-  str = char(datline)';
-  str(end+1, :) = sprintf('\t');
-  siz = size(str);
-  str = uint8(str(:)');
+% check if the formatting for all datlines is similar
+seltab = char(datline)==sprintf('\t');
+ntab   = sum(seltab,2);
 
-  boolval = str==46 | (str>=65&str<=90); % dots or capital letters
-  begsmp  = find(boolval==1 & [0 boolval(1:end-1)]==0);
-  endsmp  = find(boolval==1 & [boolval(2:end) 1]==0);
-  sel     = ~ismember(endsmp-begsmp+1, [3 5 13 17]);
-  boolval(begsmp(sel)) = false;
-  str(boolval) = 32;
+% check whether all lines have the same number of columns
+assert(all(ntab==ntab(1)));
 
-  str = reshape(char(str), siz); % now all the warnings etc should have been removed
-  datline = cellstr(str(1:end-1,:)');
+% identify the chunks of consecutive '...' and comments
+str = char(datline)';
+str(end+1, :) = sprintf('\t');
+siz = size(str);
+str = uint8(str(:)');
 
-  % check again if the formatting for all datlines is similar
-  nline  = numel(datline);
-  seltab = char(datline)==sprintf('\t');
-  ntab   = sum(seltab,2);
+boolval = str==46 | (str>=65&str<=90); % dots or capital letters
+begsmp  = find(boolval==1 & [0 boolval(1:end-1)]==0);
+endsmp  = find(boolval==1 & [boolval(2:end) 1]==0);
+sel     = ~ismember(endsmp-begsmp+1, [3 5 13 17]);
+boolval(begsmp(sel)) = false;
+str(boolval) = 32;
 
-  % check whether all lines have the same number of columns
-  assert(all(ntab==ntab(1)));
+str = reshape(char(str), siz); % now all the warnings etc should have been removed
+datline = cellstr(str(1:end-1,:)');
 
-  fmt = repmat('%s ', [1 ntab(1)+1]);
-  fmt = fmt(1:end-1);
+% check again if the formatting for all datlines is similar
+nline  = numel(datline);
+seltab = char(datline)==sprintf('\t');
+ntab   = sum(seltab,2);
 
-  % convert datline in a long string again
-  datline = char(datline)';
-  datline(end+1, :) = sprintf('\t');
-  datline = datline(:)';
+% check whether all lines have the same number of columns
+assert(all(ntab==ntab(1)));
 
-  C   = textscan(datline, fmt, nline, 'Delimiter', sprintf('\t'));
-  dat = zeros(nline, numel(C)) + nan;
-  for i=1:numel(C)
-    notok = strcmp(C{i}, '.')|strcmp(C{i}, '  ')|strcmp(C{i}, '     ')|cellfun('isempty', C{i})|startsWith(C{i}, '. ');
-    ok    = ~notok;
-    tmp = reshape([char(C{i}(ok))';repmat(' ',1,sum(ok))],[],1)';
+fmt = repmat('%s ', [1 ntab(1)+1]);
+fmt = fmt(1:end-1);
 
-    % convert to floats, much faster than str2double
-    if sum(ok)
-      tmp = textscan(tmp, '%f');
-      dat(ok, i) = tmp{1};
-    end
+% convert datline in a long string again
+datline = char(datline)';
+datline(end+1, :) = sprintf('\t');
+datline = datline(:)';
+
+C   = textscan(datline, fmt, nline, 'Delimiter', sprintf('\t'));
+dat = zeros(nline, numel(C)) + nan;
+for i=1:numel(C)
+  notok = strcmp(C{i}, '.')|strcmp(C{i}, '  ')|strcmp(C{i}, '     ')|cellfun('isempty', C{i})|startsWith(C{i}, '. ');
+  ok    = ~notok;
+  tmp = reshape([char(C{i}(ok))';repmat(' ',1,sum(ok))],[],1)';
+
+  % convert to floats, much faster than str2double
+  if sum(ok)
+    tmp = textscan(tmp, '%f');
+    dat(ok, i) = tmp{1};
   end
-  asc.dat = dat';
-
-  % remove any all-nan rows
-  asc.dat(sum(~isfinite(asc.dat),2)==size(asc.dat,2), :) = [];
 end
+asc.dat = dat';
+
+% remove any all-nan rows
+asc.dat(sum(~isfinite(asc.dat),2)==size(asc.dat,2), :) = [];
 
 selsfix    = startsWith(aline, 'SFIX');
 selefix    = startsWith(aline, 'EFIX');
