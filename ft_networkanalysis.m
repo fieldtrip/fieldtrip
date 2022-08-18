@@ -111,10 +111,15 @@ if strcmp(cfg.method, 'charpath') && ~strcmp(cfg.parameter, 'distance')
   ft_error('characteristic path length can only be computed on distance matrices');
 end
 
+% Only call size function once.
+inputsize = size(input);
+% Make sure there are four values in the vector
+inputsize(length(inputsize)+1:4) = 1;
+
 % check for binary or not
 isbinary = true;
-for k = 1:size(input,3)
-  for m = 1:size(input,4)
+for k = 1:inputsize(3)
+  for m = 1:inputsize(4)
     tmp = input(:,:,k,m);
     isbinary = all(ismember(tmp(:), [0 1]));
     if ~isbinary
@@ -130,9 +135,9 @@ end
 
 if ~isbinary && ~isempty(cfg.threshold)
   fprintf('thresholding the input graph at a value of %d\n', cfg.threshold);
-  newinput = false(size(input));
-  for k = 1:size(input,3)
-    for m = 1:size(input,4)
+  newinput = false(inputsize);
+  for k = 1:inputsize(3)
+    for m = 1:inputsize(4)
       tmp = input(:,:,k,m);
       newinput(:,:,k,m) = tmp>cfg.threshold;
     end
@@ -143,8 +148,8 @@ end
 
 % check for directed or not
 isdirected = true;
-for k = 1:size(input,3)
-  for m = 1:size(input,4)
+for k = 1:inputsize(3)
+  for m = 1:inputsize(4)
     tmp = input(:,:,k,m);
     isdirected = ~all(all(tmp==tmp.'));
     if ~isdirected
@@ -164,7 +169,7 @@ needlabel = true;
 switch cfg.method
   case {'assortativity' 'charpath' 'density'  'transitivity'}
     % 1 value per connection matrix
-    outsiz = [size(input) 1];
+    outsiz = inputsize;
     outsiz(1:2) = 1;
     output = zeros(outsiz);
     if strcmp(dimord(1:3), 'pos')
@@ -175,7 +180,7 @@ switch cfg.method
     needlabel = false;
   case {'betweenness' 'clustering_coef' 'degrees'}
     % 1 value per node
-    outsiz = [size(input) 1];
+    outsiz = inputsize;
     outsiz(1) = 1;
     output = zeros(outsiz);
     if strcmp(dimord(1:3), 'pos')
@@ -185,19 +190,19 @@ switch cfg.method
     end
   case {'distance' 'edge_betweenness'}
     % 1 value per node pair
-    outsiz = [size(input) 1];
+    outsiz = inputsize;
     output = zeros(outsiz);
     dimord = dimord;
 end
 
 % Prepare for parfor loop
-outsiz_4 = outsiz(4); % Make clear to parfor that the inner loop stop variable is a static value
+siz_4 = inputsize(4); % Make clear to parfor that the inner loop stop variable is a static value
 cfg_method = cfg.method; % Avoid sending full cfg struct to each parallel worker
 
 binarywarning = 'weights are not taken into account and graph is converted to binary values by thresholding';
 
-parfor (k = 1:outsiz(3), cfg.parformaxworkers)
-  for m = 1:outsiz_4
+parfor (k = 1:inputsize(3), cfg.parformaxworkers)
+  for m = 1:siz_4
 
     % switch to the appropriate function from the BCT
     switch cfg_method
