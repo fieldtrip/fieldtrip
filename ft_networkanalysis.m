@@ -165,7 +165,6 @@ end
 
 fprintf('computing %s\n', cfg.method);
 % allocate memory
-needlabel = true;
 switch cfg.method
   case {'assortativity' 'charpath' 'density'  'transitivity'}
     % 1 value per connection matrix
@@ -177,7 +176,6 @@ switch cfg.method
     elseif strcmp(dimord(1:4), 'chan')
       dimord = dimord(11:end);
     end
-    needlabel = false;
   case {'betweenness' 'clustering_coef' 'degrees'}
     % 1 value per node
     outsiz = inputsize;
@@ -192,7 +190,7 @@ switch cfg.method
     % 1 value per node pair
     outsiz = inputsize;
     output = zeros(outsiz);
-    dimord = dimord;
+    % Full dimord used
 end
 
 % Prepare for parfor loop
@@ -307,7 +305,6 @@ end
 % create the output structure
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-stat              = [];
 stat = keepfields(data, {'label', 'freq', 'time', 'grad', 'elec', 'opto', 'dof', 'pos', 'tri', 'inside', 'brainordinate'});
 stat.(cfg.method) = output;
 stat.dimord       = dimord;
