@@ -72,7 +72,7 @@ for i = 1:length( EEG.chanlocs )
   end
 end
 
-if isfield(EEG, 'chaninfo') && isfield(EEG.chaninfo, 'nosedir') && ~isempty(EEG.chaninfo.nosedir)
+if ind>1 && isfield(EEG, 'chaninfo') && isfield(EEG.chaninfo, 'nosedir') && ~isempty(EEG.chaninfo.nosedir)
   switch EEG.chaninfo.nosedir
     case '+X'
       header.elec.coordsys = 'ctf';
