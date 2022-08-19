@@ -137,7 +137,10 @@ if (cfg.latency(2) > max(endTrialLatency)), cfg.latency(2) = max(endTrialLatency
 end
 
 cfgSelect = [];
-cfgSelect.trials  = cfg.trials;
+cfgSelect.toilim = cfg.latency;
+data = ft_redefinetrial(cfgSelect, data); % ft_selectdata is not sufficiently robust for variable trial lengths
+
+cfgSelect = keepfields(cfg, {'trials'});
 data = ft_selectdata(cfgSelect,data);
 ntrial = length(data.trial);
 
