@@ -364,7 +364,7 @@ for k = 1:n
     aindx = peaks_indx(indx);
     aindx = aindx(p{k}(m));
     
-    ix = artifact2boolvec(artifact(aindx,1:2), 'endsample', nsmp)&s;
+    ix = artifact2boolvec(artifact(aindx,1:2), 'endsample', nsmp);
     ix = ix(indx);
     ix = boolvec2artifact(ix);
     
