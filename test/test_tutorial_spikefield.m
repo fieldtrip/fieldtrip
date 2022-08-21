@@ -149,7 +149,7 @@ for k = 1:length(stsConvol.label)
   cfg.spikechannel   = stsConvol.label{k};
   cfg.channel        = stsConvol.lfplabel(chan);
   cfg.avgoverchan    = 'unweighted';
-  cfg.winstepsize    = 0.01; % step size of the window that we slide over time
+  cfg.winstepsize    = 0.05; % step size of the window that we slide over time
   cfg.timwin         = 0.5; % duration of sliding window
   statSts            = ft_spiketriggeredspectrum_stat(cfg,stsConvol);
  

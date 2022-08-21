@@ -972,10 +972,14 @@ if (~isfield(layout, 'outline') || ~isfield(layout, 'mask')) && ~strcmpi(cfg.sty
       % the following centers all electrodes around zero
       xrange = range(x);
       yrange = range(y);
+      shiftx = min(x);
+      shifty = min(y);
     else
       % the following prevent topography distortion in case electrodes are not evenly distributed over the whole head
       xrange = 2*( max(max(x),abs(min(x)) ));
       yrange = 2*( max(max(y),abs(min(y)) ));
+      shiftx = ( max(max(x),abs(min(x)) )).*sign(min(x));
+      shifty = ( max(max(y),abs(min(y)) )).*sign(min(y));
     end
     if xrange==0
       xrange = 1;
@@ -987,8 +991,8 @@ if (~isfield(layout, 'outline') || ~isfield(layout, 'mask')) && ~strcmpi(cfg.sty
     layout.width  = layout.width./xrange;
     layout.height = layout.height./yrange;
     % Then shift and scale the electrode positions
-    layout.pos(:,1) = 0.8*((layout.pos(:,1)-min(x))/xrange-0.5);
-    layout.pos(:,2) = 0.8*((layout.pos(:,2)-min(y))/yrange-0.5);
+    layout.pos(:,1) = 0.8*((layout.pos(:,1)-shiftx)/xrange-0.5);
+    layout.pos(:,2) = 0.8*((layout.pos(:,2)-shifty)/yrange-0.5);
   end
   
   if ~isfield(layout, 'outline') && ischar(cfg.outline)

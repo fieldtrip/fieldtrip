@@ -919,11 +919,12 @@ switch headerformat
       hdr.label{i} = sprintf('%d', i);
     end
     
-    % remember the original header details
-    hdr.orig.header = asc.header;
     % remember all header and data details upon request
     if cache
       hdr.orig = asc;
+    else
+      % remember the original header details
+      hdr.orig = removefields(asc, 'dat');
     end
     
   case  'spmeeg_mat'
