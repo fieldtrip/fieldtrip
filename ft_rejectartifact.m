@@ -11,9 +11,9 @@ function [cfg] = ft_rejectartifact(cfg, data)
 % as an input parameter.
 %
 % Use as
-%   cfg = ft_rejectartifact(cfg)
+%   [cfg] = ft_rejectartifact(cfg)
 % with the cfg as obtained from FT_DEFINETRIAL, or as
-%   data = ft_rejectartifact(cfg, data)
+%   [data] = ft_rejectartifact(cfg, data)
 % with the data as obtained from FT_PREPROCESSING
 %
 % The following configuration options are supported

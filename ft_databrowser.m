@@ -7,8 +7,8 @@ function [cfg] = ft_databrowser(cfg, data)
 % the artifacts.
 %
 % Use as
-%   cfg = ft_databrowser(cfg)
-%   cfg = ft_databrowser(cfg, data)
+%   [cfg] = ft_databrowser(cfg)
+%   [cfg] = ft_databrowser(cfg, data)
 % If you only specify the configuration structure, it should contain the name of the
 % dataset on your hard disk (see below). If you specify input data, it should be a
 % data structure as obtained from FT_PREPROCESSING or from FT_COMPONENTANALYSIS.
