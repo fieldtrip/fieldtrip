@@ -9,16 +9,16 @@ function [varargout] = ft_plot_vector(varargin)
 % where X and Y are similar as the input to the MATLAB plot function.
 %
 % Optional arguments should come in key-value pairs and can include
-%   'axis'            = draw the local axis,  can be 'yes', 'no', 'xy', 'x' or 'y'
-%   'highlight'       = a logical vector of size Y, where 1 means that the corresponding values in Y are highlighted (according to the highlightstyle)
-%   'highlightstyle'  = can be 'box', 'thickness', 'saturation', 'difference' (default='box')
 %   'color'           = see MATLAB standard line properties and see below
-%   'facecolor'       = color for the highlighted box/difference (default = [0.6 0.6 0.6])
-%   'facealpha'       = transparency for the highlighted box, between 0 and 1 (default = 1)
+%   'style'           = see MATLAB standard line properties
 %   'linewidth'       = see MATLAB standard line properties
 %   'markersize'      = see MATLAB standard line properties
 %   'markerfacecolor' = see MATLAB standard line properties
-%   'style'           = see MATLAB standard line properties
+%   'axis'            = draw the local axis,  can be 'yes', 'no', 'xy', 'x' or 'y'
+%   'highlight'       = a logical vector of size Y, where 1 means that the corresponding values in Y are highlighted (according to the highlightstyle)
+%   'highlightstyle'  = can be 'box', 'thickness', 'saturation', 'difference' (default='box')
+%   'facecolor'       = color for the highlighted box/difference (default = [0.6 0.6 0.6])
+%   'facealpha'       = transparency for the highlighted box/difference, between 0 and 1 (default = 1)
 %   'tag'             = string, the name assigned to the object. All tags with the same name can be deleted in a figure, without deleting other parts of the figure.
 %   'box'             = draw a box around the local axes, can be 'yes' or 'no'
 %
@@ -72,7 +72,7 @@ function [varargout] = ft_plot_vector(varargin)
 %
 % See also FT_PLOT_MATRIX, PLOT
 
-% Copyrights (C) 2009-2013, Robert Oostenveld
+% Copyrights (C) 2009-2022, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
