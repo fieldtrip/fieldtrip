@@ -604,6 +604,7 @@ elseif isempty(cfg.selfun) && isempty(cfg.selcfg)
   cfg.selcfg{2} = [];
   cfg.selcfg{2}.linecolor = linecolor;
   cfg.selcfg{2}.layout = cfg.layout;
+  cfg.selcfg{2}.colorgroups = 'sequential';
   cfg.selfun{2} = 'multiplotER';
   % topoplotER
   cfg.selcfg{3} = [];
@@ -1194,6 +1195,11 @@ else
   else
     funcfg.figurename = sprintf('%s : trial %d/%d: segment: %d/%d , time from %g to %g s', cmenulab, opt.trllock, size(opt.trlorg,1), opt.trlop, size(opt.trlvis,1), seldata.time{1}(1), seldata.time{1}(end));
   end
+  
+  % the function that is executed does not know that only a subset of the channels will be passed in the input, 
+  % make sure that the funcfg's linecolor is consistent with this selection
+  selchan = match_str(opt.orgdata.label, seldata.label);
+  if isfield(funcfg, 'linecolor'), funcfg.linecolor = opt.linecolor(selchan, :); end
   feval(funhandle, funcfg, seldata);
 end
 
