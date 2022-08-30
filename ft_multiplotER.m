@@ -45,11 +45,11 @@ function [cfg] = ft_multiplotER(cfg, varargin)
 %                       can be selected by holding down the SHIFT key.
 %   cfg.renderer      = 'painters', 'zbuffer', ' opengl' or 'none' (default = [])
 %   cfg.colorgroups   = 'sequential', 'allblack', 'labelcharN' (N = Nth character in label), 'chantype' or a vector
-%                       with the length of the number of channels defining the groups (default = 'sequential')
+%                       with the length of the number of channels defining the groups (default = 'condition')
 %   cfg.linestyle     = linestyle/marker type, see options of the PLOT function (default = '-')
 %                       can be a single style for all datasets, or a cell-array containing one style for each dataset
 %   cfg.linewidth     = linewidth in points (default = 0.5)
-%   cfg.linecolor     = color(s) used for plotting the dataset(s) (default = 'brgkywrgbkywrgbkywrgbkyw')
+%   cfg.linecolor     = color(s) used for plotting the dataset(s) (default = customized lines map with 15 colors)
 %                       alternatively, colors can be specified as Nx3 matrix of RGB values
 %   cfg.directionality = '', 'inflow' or 'outflow' specifies for connectivity measures whether the
 %                       inflow into a node, or the outflow from a node is plotted. The (default) behavior
@@ -211,7 +211,7 @@ cfg.interactive    = ft_getopt(cfg, 'interactive', 'yes');
 cfg.orient         = ft_getopt(cfg, 'orient', 'landscape');
 cfg.maskparameter  = ft_getopt(cfg, 'maskparameter');
 cfg.colorgroups    = ft_getopt(cfg, 'colorgroups', 'condition');
-cfg.linecolor      = ft_getopt(cfg, 'linecolor', 'brgkywrgbkywrgbkywrgbkyw');
+cfg.linecolor      = ft_getopt(cfg, 'linecolor', []); % the default is handled somewhere else
 cfg.linestyle      = ft_getopt(cfg, 'linestyle', '-');
 cfg.linewidth      = ft_getopt(cfg, 'linewidth', 0.5);
 cfg.maskstyle      = ft_getopt(cfg, 'maskstyle', 'box');
@@ -505,11 +505,11 @@ linecolor = linecolor_common(cfg, varargin{:});
 % open a new figure, or add it to the existing one
 open_figure(keepfields(cfg, {'figure', 'position', 'visible', 'renderer', 'figurename', 'title'}));
 
-if ischar(linecolor)
-  set(gca, 'ColorOrder', char2rgb(linecolor))
-elseif isnumeric(linecolor)
-  set(gca, 'ColorOrder', linecolor)
-end
+% if ischar(linecolor)
+%   set(gca, 'ColorOrder', char2rgb(linecolor))
+% elseif isnumeric(linecolor)
+%   set(gca, 'ColorOrder', linecolor)
+% end
 
 % Plot the data
 for m=1:length(selchan)
@@ -529,11 +529,7 @@ for m=1:length(selchan)
       yval(yval > ymax) = ymax;
       yval(yval < ymin) = ymin;
       % select the color for the channel/condition
-      if strcmp(cfg.colorgroups, 'condition')
-        color = linecolor(i,:);
-      else
-        color = linecolor(m,:);
-      end
+      color = linecolor(m,:,i);
       ft_plot_vector(xval, yval, 'width', chanWidth(m), 'height', chanHeight(m), 'hpos', chanX(m), 'vpos', chanY(m), 'hlim', [xmin xmax], 'vlim', [ymin ymax], 'color', color, 'style', cfg.linestyle{i}, 'linewidth', cfg.linewidth, 'axis', cfg.axes, 'highlight', mask, 'highlightstyle', cfg.maskstyle, 'facealpha', cfg.maskfacealpha);
     end
   end
@@ -551,7 +547,7 @@ if istrue(cfg.showcomment)
       if ischar(linecolor)
         colorLabels = [colorLabels '\n' dataname{i} '='         linecolor(i)     ];
       elseif isnumeric(linecolor)
-        colorLabels = [colorLabels '\n' dataname{i} '=' num2str(linecolor(i, :)) ];
+        colorLabels = sprintf('%s\n%s=[%.3g %.3g %.3g]',colorLabels, dataname{i}, linecolor(1,1,i), linecolor(1,2,i), linecolor(1,3,i));
       end
     end
   end
@@ -621,6 +617,7 @@ if strcmp(cfg.interactive, 'yes')
   info.(ident).dataname = dataname;
   info.(ident).cfg      = cfg;
   info.(ident).varargin = varargin;
+  info.(ident).linecolor = linecolor;
   guidata(gcf, info);
   
   set(gcf, 'WindowButtonUpFcn',  {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotER}, 'event', 'WindowButtonUpFcn'});
@@ -679,6 +676,7 @@ ident       = get(gca,'tag');
 info        = guidata(gcf);
 cfg         = info.(ident).cfg;
 datvarargin = info.(ident).varargin;
+linecolor   = info.(ident).linecolor;
 if ~isempty(label)
   cfg = removefields(cfg, 'inputfile');   % the reading has already been done and varargin contains the data
   cfg.baseline = 'no';                    % make sure the next function does not apply a baseline correction again
@@ -689,5 +687,8 @@ if ~isempty(label)
   % ensure that the new figure appears at the same position
   cfg.figure = 'yes';
   cfg.position = get(gcf, 'Position');
+  
+  selchan = match_str(datvarargin{1}.label, cfg.channel);
+  cfg.linecolor = linecolor(selchan, :, :); % make a subselection for the correct inheritance of the line colors
   ft_singleplotER(cfg, datvarargin{:});
 end

@@ -763,6 +763,9 @@ for indx=1:Ndata
     info.(ident).dataname    = dataname;
     info.(ident).cfg         = cfg;
     info.(ident).commenth    = comment_handle;
+    if exist('linecolor', 'var')
+      info.(ident).linecolor   = linecolor;
+    end
     if ~isfield(info.(ident),'datvarargin')
       info.(ident).datvarargin = varargin(1:Ndata); % add all datasets to figure
     end
@@ -791,6 +794,8 @@ ident       = get(gca, 'tag');
 info        = guidata(gcf);
 cfg         = info.(ident).cfg;
 datvarargin = info.(ident).datvarargin;
+linecolor   = ft_getopt(info.(ident), 'linecolor', linecolor_common(cfg, datvarargin{:}));
+
 if ~isempty(label)
   cfg = removefields(cfg, 'inputfile');       % the reading has already been done and varargin contains the data
   cfg.baseline = 'no';                        % make sure the next function does not apply a baseline correction again
@@ -807,6 +812,9 @@ if ~isempty(label)
   % ensure that the new figure appears at the same position
   cfg.figure = 'yes';
   cfg.position = get(gcf, 'Position');
+  
+  selchan = match_str(datvarargin{1}.label, cfg.channel);
+  cfg.linecolor = linecolor(selchan, :, :); % make a subselection for the correct inheritance of the line colors
   ft_singleplotER(cfg, datvarargin{:});
 end
 

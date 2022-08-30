@@ -457,6 +457,7 @@ end
 
 % determine the coloring of channels/conditions
 linecolor = linecolor_common(cfg, varargin{:});
+linecolor = mean(linecolor(selchan, :, :));
 
 % open a new figure, or add it to the existing one
 open_figure(keepfields(cfg, {'figure', 'position', 'visible', 'renderer', 'figurename', 'title'}));
@@ -470,14 +471,14 @@ if strcmp(cfg.maskstyle, 'difference')
 else
   % loop over the conditions, plot them on top of each other
   for i=1:Ndata
-    ft_plot_vector(xval, yval(i,:), 'color', linecolor(i,:), 'style', cfg.linestyle{i}, 'linewidth', cfg.linewidth, 'highlight', mask, 'highlightstyle', cfg.maskstyle, 'hlim', [xmin xmax], 'vlim', [ymin ymax], 'facealpha', cfg.maskfacealpha);
+    ft_plot_vector(xval, yval(i,:), 'color', linecolor(1,:,i), 'style', cfg.linestyle{i}, 'linewidth', cfg.linewidth, 'highlight', mask, 'highlightstyle', cfg.maskstyle, 'hlim', [xmin xmax], 'vlim', [ymin ymax], 'facealpha', cfg.maskfacealpha);
   end
 end
 
 if ischar(linecolor)
   set(gca, 'ColorOrder', char2rgb(linecolor))
 elseif isnumeric(linecolor)
-  set(gca, 'ColorOrder', linecolor)
+  set(gca, 'ColorOrder', shiftdim(linecolor(1,:,:),1)');
 end
 
 % show the legend with the colors of the conditions
@@ -562,6 +563,9 @@ if strcmp(cfg.interactive, 'yes')
   info.(ident).cfg       = cfg;
   info.(ident).varargin  = varargin;
   info.(ident).dataname  = dataname;
+  if exist('linecolor', 'var')
+    info.(ident).linecolor   = linecolor;
+  end
   guidata(gcf, info);
   set(gcf, 'windowbuttonupfcn',     {@ft_select_range, 'multiple', false, 'yrange', false, 'callback', {@select_topoplotER}, 'event', 'windowbuttonupfcn'});
   set(gcf, 'windowbuttondownfcn',   {@ft_select_range, 'multiple', false, 'yrange', false, 'callback', {@select_topoplotER}, 'event', 'windowbuttondownfcn'});
