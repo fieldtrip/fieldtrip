@@ -11,7 +11,7 @@ function linecolor = linecolor_common(cfg, varargin)
 %   ft_connectivityplot
 %
 % The goal is to create a N x 3 x M matrix of rgb-values, where
-% where N = Nchan or 1, and M = Ncond or 1, depending on the specification
+% where N = Nchan, and M = Ncond, depending on the specification
 % of cfg.colorgroups
 
 cfg.linecolor   = ft_getopt(cfg, 'linecolor', []);
