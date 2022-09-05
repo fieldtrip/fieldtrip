@@ -199,6 +199,7 @@ cfg.width        = ft_getopt(cfg, 'width',      []);
 cfg.height       = ft_getopt(cfg, 'height',     []);
 cfg.commentpos   = ft_getopt(cfg, 'commentpos', 'layout');
 cfg.scalepos     = ft_getopt(cfg, 'scalepos',   'layout');
+cfg.spatial_colors = ft_getopt(cfg, 'spatial_colors', 'no');
 
 if isempty(cfg.skipscale)
   if ischar(cfg.layout) && any(strcmp(cfg.layout, {'ordered', 'vertical', 'horizontal', 'butterfly', 'circular'}))
@@ -349,11 +350,21 @@ elseif isequal(cfg.layout, 'circular')
   
 elseif isequal(cfg.layout, 'butterfly')
   if hasdata && ~isempty(data)
-    % look at the data to determine the overlapping channels
+    % look at the data to determine the channels to be plotted
     cfg.channel  = ft_channelselection(cfg.channel, data.label);
     chanindx     = match_str(data.label, cfg.channel);
     nchan        = length(data.label(chanindx));
     layout.label = data.label(chanindx);
+    if istrue(cfg.spatial_colors)
+      % this requires the creation of a 'normal' layout, so that the
+      % sensor positions can be used for the color coding
+      tmpcfg    = removefields(cfg, 'layout');
+      tmplayout = ft_prepare_layout(tmpcfg, data);
+      [chanindx1, chanindx2] = match_str(layout.label, tmplayout.label);
+      layout.color = zeros(nchan, 3);
+      layout.color(chanindx1, :) = tmplayout.color(chanindx2, :);
+    end
+    
   else
     assert(iscell(cfg.channel), 'cfg.channel should be a valid set of channels');
     nchan        = length(cfg.channel);
@@ -1187,6 +1198,21 @@ elseif ~isempty(cfg.output) && strcmpi(cfg.style, '3d')
   % the layout file format does not support 3D positions, furthermore for
   % a 3D layout the width and height are currently set to NaN
   ft_error('writing a 3D layout to an output file is not supported');
+end
+
+if istrue(cfg.spatial_colors) && ~isfield(layout, 'color')
+  % create a channel specific rgb-value based on their X/Y positions and a
+  % computed Z position, assuming the channels on the positive half sphere
+  sel = match_str(layout.label, setdiff(layout.label,{'COMNT';'SCALE'}));
+  xy  = sqrt(sum(layout.pos(sel,:).^2,2));
+  z   = sqrt(max(xy).^2 - xy.^2);
+  
+  xyz = [layout.pos(sel,:) z];
+  xyz = xyz - min(xyz, [], 1);
+  rgb = xyz./max(xyz, [], 1);
+  
+  layout.color = ones(numel(layout.label), 3);
+  layout.color(sel, :) = rgb;
 end
 
 % do the general cleanup and bookkeeping at the end of the function
