@@ -93,7 +93,7 @@ function [cfg] = ft_singleplotER(cfg, varargin)
 % See also FT_SINGLEPLOTTFR, FT_MULTIPLOTER, FT_MULTIPLOTTFR, FT_TOPOPLOTER, FT_TOPOPLOTTFR
 
 % Copyright (C) 2003-2006, Ole Jensen
-% Copyright (C) 2006-2017, F.C. Donders Centre
+% Copyright (C) 2006-2022, Donders Centre for Cognitive Neuroimaging
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
