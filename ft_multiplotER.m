@@ -40,7 +40,7 @@ function [cfg] = ft_multiplotER(cfg, varargin)
 %   cfg.limittext     = add user-defined text instead of cfg.comment, (default = cfg.comment)
 %   cfg.fontsize      = font size of comment and labels (default = 8)
 %   cfg.interactive   = 'yes' or 'no', make the plot interactive (default = 'yes')
-%                       In a interactive plot you can select areas and produce a new
+%                       In an interactive plot you can select areas and produce a new
 %                       interactive plot when a selected area is clicked. Multiple areas
 %                       can be selected by holding down the SHIFT key.
 %   cfg.renderer      = 'painters', 'zbuffer', ' opengl' or 'none' (default = [])
@@ -115,13 +115,12 @@ function [cfg] = ft_multiplotER(cfg, varargin)
 % FT_TOPOPLOTTFR, FT_PREPARE_LAYOUT
 
 % Undocumented local options:
-% cfg.layoutname
 % cfg.preproc
 % cfg.orient = landscape/portrait
 
 % Copyright (C) 2003-2006, Ole Jensen
 % Copyright (C) 2007-2011, Roemer van der Meij & Jan-Mathijs Schoffelen
-% Copyright (C) 2012-2017, F.C. Donders Centre
+% Copyright (C) 2012-2022, Donders Centre for Cognitive Neuroimaging
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -192,38 +191,56 @@ cfg = ft_checkconfig(cfg, 'renamed',    {'newfigure', 'figure'});
 % cfg = ft_checkconfig(cfg, 'deprecated', {'xparam'});
 
 % set the defaults
-cfg.baseline       = ft_getopt(cfg, 'baseline', 'no');
-cfg.trials         = ft_getopt(cfg, 'trials', 'all', 1);
-cfg.xlim           = ft_getopt(cfg, 'xlim', 'maxmin');
-cfg.ylim           = ft_getopt(cfg, 'ylim', 'maxmin');
-cfg.comment        = ft_getopt(cfg, 'comment', date);
-cfg.limittext      = ft_getopt(cfg, 'limittext', 'default');
-cfg.axes           = ft_getopt(cfg, 'axes', 'yes');
-cfg.showlabels     = ft_getopt(cfg, 'showlabels', 'no');
-cfg.showoutline    = ft_getopt(cfg, 'showoutline', 'no');
-cfg.showscale      = ft_getopt(cfg, 'showscale',   'yes');
-cfg.showcomment    = ft_getopt(cfg, 'showcomment', 'yes');
-cfg.box            = ft_getopt(cfg, 'box', 'no');
-cfg.fontsize       = ft_getopt(cfg, 'fontsize', 8);
+cfg.baseline       = ft_getopt(cfg, 'baseline',       'no');
+cfg.trials         = ft_getopt(cfg, 'trials',         'all', 1);
+cfg.xlim           = ft_getopt(cfg, 'xlim',           'maxmin');
+cfg.ylim           = ft_getopt(cfg, 'ylim',           'maxmin');
+cfg.comment        = ft_getopt(cfg, 'comment',        date);
+cfg.limittext      = ft_getopt(cfg, 'limittext',      'default');
+cfg.axes           = ft_getopt(cfg, 'axes',           'yes');
+cfg.showlabels     = ft_getopt(cfg, 'showlabels',     'no');
+cfg.showoutline    = ft_getopt(cfg, 'showoutline',    'no');
+cfg.showscale      = ft_getopt(cfg, 'showscale',      'yes');
+cfg.showcomment    = ft_getopt(cfg, 'showcomment',    'yes');
+cfg.box            = ft_getopt(cfg, 'box',            'no');
+cfg.fontsize       = ft_getopt(cfg, 'fontsize',       8);
 cfg.fontweight     = ft_getopt(cfg, 'fontweight');
-cfg.interpreter    = ft_getopt(cfg, 'interpreter', 'none');  % none, tex or latex
-cfg.interactive    = ft_getopt(cfg, 'interactive', 'yes');
-cfg.orient         = ft_getopt(cfg, 'orient', 'landscape');
+cfg.interpreter    = ft_getopt(cfg, 'interpreter',    'none');  % none, tex or latex
+cfg.interactive    = ft_getopt(cfg, 'interactive',    'yes');
+cfg.orient         = ft_getopt(cfg, 'orient',         'landscape');
 cfg.maskparameter  = ft_getopt(cfg, 'maskparameter');
-cfg.colorgroups    = ft_getopt(cfg, 'colorgroups', 'condition');
-cfg.linecolor      = ft_getopt(cfg, 'linecolor', []); % the default is handled somewhere else
-cfg.linestyle      = ft_getopt(cfg, 'linestyle', '-');
-cfg.linewidth      = ft_getopt(cfg, 'linewidth', 0.5);
-cfg.maskstyle      = ft_getopt(cfg, 'maskstyle', 'box');
-cfg.maskfacealpha  = ft_getopt(cfg, 'maskfacealpha', 1);
-cfg.channel        = ft_getopt(cfg, 'channel', 'all');
+cfg.linecolor      = ft_getopt(cfg, 'linecolor',      []); % the default is handled somewhere else
+cfg.linestyle      = ft_getopt(cfg, 'linestyle',      '-');
+cfg.linewidth      = ft_getopt(cfg, 'linewidth',      0.5);
+cfg.maskstyle      = ft_getopt(cfg, 'maskstyle',      'box');
+cfg.maskfacealpha  = ft_getopt(cfg, 'maskfacealpha',  1);
+cfg.channel        = ft_getopt(cfg, 'channel',        'all');
 cfg.directionality = ft_getopt(cfg, 'directionality', '');
 cfg.figurename     = ft_getopt(cfg, 'figurename');
 cfg.preproc        = ft_getopt(cfg, 'preproc');
-cfg.frequency      = ft_getopt(cfg, 'frequency', 'all'); % needed for frequency selection with TFR data
-cfg.latency        = ft_getopt(cfg, 'latency', 'all'); % needed for latency selection with TFR data, FIXME, probably not used
-cfg.renderer       = ft_getopt(cfg, 'renderer'); % let MATLAB decide on the default
-cfg.select         = ft_getopt(cfg, 'select', 'intersect'); % for ft_selectdata
+cfg.frequency      = ft_getopt(cfg, 'frequency',      'all'); % needed for frequency selection with TFR data
+cfg.latency        = ft_getopt(cfg, 'latency',        'all'); % needed for latency selection with TFR data, FIXME, probably not used
+cfg.renderer       = ft_getopt(cfg, 'renderer');              % let MATLAB decide on the default
+cfg.select         = ft_getopt(cfg, 'select',         'intersect'); % for ft_selectdata
+cfg.layouttopo     = ft_getopt(cfg, 'layouttopo');
+cfg.spatial_colors = ft_getopt(cfg, 'spatial_colors', 'no');
+
+% some options constrain the default value for other options
+if istrue(cfg.spatial_colors)
+  cfg.colorgroups = ft_getopt(cfg, 'colorgroups', 'sequential');
+else
+  cfg.colorgroups = ft_getopt(cfg, 'colorgroups', 'condition');
+end
+
+% some options have constrained values with multiple data inputs
+if Ndata>1
+  cfg = ft_checkconfig(cfg, 'allowedval', {'colorgroups', 'condition'});
+  cfg = ft_checkconfig(cfg, 'allowedval', {'spatial_colors', 'no', 0, false});
+end
+
+if isfield(cfg, 'layout') && isequal(cfg.layout, 'butterfly') && istrue(cfg.showscale)
+  cfg.skipscale = 'no'; % this is used in ft_prepare_layout
+end
 
 % check for linestyle being a cell-array
 if ischar(cfg.linestyle)
@@ -407,7 +424,7 @@ end
 %% Section 3: select the data to be plotted and determine min/max range
 
 % Read or create the layout that will be used for plotting
-tmpcfg = keepfields(cfg, {'layout', 'channel', 'rows', 'columns', 'commentpos', 'skipcomnt', 'scalepos', 'skipscale', 'projection', 'viewpoint', 'rotate', 'width', 'height', 'elec', 'grad', 'opto', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+tmpcfg = keepfields(cfg, {'layout', 'channel', 'rows', 'columns', 'commentpos', 'skipcomnt', 'scalepos', 'skipscale', 'projection', 'viewpoint', 'rotate', 'width', 'height', 'elec', 'grad', 'opto', 'spatial_colors', 'layouttopo', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
 cfg.layout = ft_prepare_layout(tmpcfg, varargin{1});
 
 % Take the subselection of channels that is contained in the layout, this is the same in all datasets
@@ -505,12 +522,6 @@ linecolor = linecolor_common(cfg, varargin{:});
 % open a new figure, or add it to the existing one
 open_figure(keepfields(cfg, {'figure', 'position', 'visible', 'renderer', 'figurename', 'title'}));
 
-% if ischar(linecolor)
-%   set(gca, 'ColorOrder', char2rgb(linecolor))
-% elseif isnumeric(linecolor)
-%   set(gca, 'ColorOrder', linecolor)
-% end
-
 % Plot the data
 for m=1:length(selchan)
   mask = maskmatrix(m, :);
@@ -537,6 +548,13 @@ end % for number of channels
 
 % plot the layout, labels and outline
 ft_plot_layout(cfg.layout, 'box', cfg.box, 'label', cfg.showlabels, 'outline', cfg.showoutline, 'point', 'no', 'mask', 'no', 'fontsize', cfg.fontsize, 'labelyoffset', 1.4*median(cfg.layout.height/2), 'labelalignh', 'center', 'chanindx', find(~ismember(cfg.layout.label, {'COMNT', 'SCALE'})), 'interpreter', cfg.interpreter);
+if isfield(cfg.layout, 'layout')
+  ax1 = gca;
+  pos = get(ax1, 'position');
+  ax2 = axes('position', [pos(1) pos(2)+pos(4)-0.2 0.2 0.2]);
+  ft_plot_layout(cfg.layout.layout, 'box', 'no', 'label', 'off', 'spatial_colors', cfg.spatial_colors, 'pointsize', 5);
+  set(gcf, 'CurrentAxes', ax1);
+end
 
 % write comment
 if istrue(cfg.showcomment)
@@ -607,6 +625,12 @@ set(gcf, 'NumberTitle', 'off');
 
 % Make the figure interactive
 if strcmp(cfg.interactive, 'yes')
+  if all(cfg.layout.pos(:,1)==cfg.layout.pos(1,1) & cfg.layout.pos(:,2)==cfg.layout.pos(2,2)) && isfield(cfg.layout, 'layout')
+    % it's a butterfly layout, which does not work well in interactive
+    % mode, replace it with the one that (hopefully) has topographical
+    % information
+    cfg.layout = cfg.layout.layout;
+  end
   % add the cfg/data/channel information to the figure under identifier linked to this axis
   ident                 = ['axh' num2str(round(sum(clock.*1e6)))]; % unique identifier for this axis
   set(gca, 'tag', ident);

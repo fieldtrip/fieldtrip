@@ -1,40 +1,62 @@
-function linecolor = linecolor_common(cfg, varargin)
+function [linecolor, linestyle, linewidth] = lineattributes_common(cfg, varargin)
 
-% LINECOLOR_COMMON implements consistent color handling for multiple channels/conditions
-%
+% LINEATTRIBUTES_COMMON implements consistent line attributes for multiple channels/conditions
+% 
 % This function is used by 
 %   ft_databrowser
 %   ft_multiplotER
 %   ft_singleplotER
-%
+% 
 % It is not yet used by
 %   ft_connectivityplot
-%
-% The goal is to create a N x 3 x M matrix of rgb-values, where
-% where N = Nchan, and M = Ncond, depending on the specification
-% of cfg.colorgroups
+% 
+% Use as
+% 
+% [linecolor, linestyle, linewidth] = lineattributes_common(cfg, varargin)
+% 
+% The input varargin are the data object(s) which are the input of the caller function.
+% The output consists of:
+% 
+%   linecolor = N x 3 x M matrix with rgb-values for N channels and M data arguments
+%   linestyle = N x M cell array with linestyle for N channels and M data arguments
+%   linewidth = N x M matrix with linewidth for N channels and M data arguments  
+% 
+% The configuration can have the following parameters:
+%   cfg.colorgroups = char or numeric vector determining whether the
+%                       different values are going to be distributed across channels
+%                       ('sequential'), or across data arguments ('condition')
+%   cfg.linecolor   = char, Nx3 matrix, or Nx3xM matrix
+%   cfg.linestyle   = char, or cell-array
+%   cfg.linewidth   = scalar, or NxM matrix
 
 cfg.linecolor   = ft_getopt(cfg, 'linecolor', []);
 cfg.colorgroups = ft_getopt(cfg, 'colorgroups', 'condition'); 
+cfg.spatial_colors = ft_getopt(cfg, 'spatial_colors', 'no');
 
-if isempty(cfg.linecolor)
-  cfg.linecolor = [0.75 0 0; 
-    0 0 1; 
-    0 1 0; 
-    0.44 0.19 0.63; 
-    0 0.13 0.38;
-    0.5 0.5 0.5;
-    1 0.75 0;
-    1 0 0;
-    0.89 0.42 0.04;
-    0.85 0.59 0.58;
-    0.57 0.82 0.31;
-    0 0.69 0.94;
-    1 0 0.4;
-    0 0.69 0.31;
-    0 0.44 0.75];
+if isempty(cfg.linecolor) && ~istrue(cfg.spatial_colors)
+  cfg.linecolor = [
+    0    0    1
+    0.75 0    0
+    0    1    0
+    0.44 0.19 0.63
+    0    0.13 0.38
+    0.5  0.5  0.5
+    1    0.75 0
+    1    0    0
+    0.89 0.42 0.04
+    0.85 0.59 0.58
+    0.57 0.82 0.31
+    0    0.69 0.94
+    1    0    0.4
+    0    0.69 0.31
+    0    0.44 0.75];
+elseif isempty(cfg.linecolor) && istrue(cfg.spatial_colors)
+  if isfield(cfg, 'layout') && isfield(cfg.layout, 'color')
+    cfg.linecolor = cfg.layout.color;
+  else
+    ft_error('this does not work yet'); % FIXME in principle the color can be derived from the 3D chanpos if present in the data
+  end
 end
-
 
 Ndata = length(varargin);
 
@@ -52,17 +74,11 @@ if Ndata>1 && ~strcmp(cfg.colorgroups, 'condition')
   ft_error('cfg.colorgroups=''%s'' is not supported', cfg.colorgroups);
 end
 
-if Ndata==1
-  Ncolor = Nchan;
-else
-  Ncolor = Ndata;
-end
-
 if ischar(cfg.linecolor)
   % convert to rgb
   cfg.linecolor = char2rgb(cfg.linecolor);
 end
-  
+
 % ensure it is a Nx3xM matrix, the right size will be dealt with below
 if ndims(cfg.linecolor)==3
   % if cfg.linecolor is already 3D

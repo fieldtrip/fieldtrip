@@ -457,7 +457,7 @@ end
 
 % determine the coloring of channels/conditions
 linecolor = linecolor_common(cfg, varargin{:});
-linecolor = mean(linecolor(selchan, :, :));
+linecolor = mean(linecolor(selchan, :, :), 1);
 
 % open a new figure, or add it to the existing one
 open_figure(keepfields(cfg, {'figure', 'position', 'visible', 'renderer', 'figurename', 'title'}));

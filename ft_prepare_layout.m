@@ -17,6 +17,7 @@ function [layout, cfg] = ft_prepare_layout(cfg, data)
 %   layout.height  = Nx1 vector with the height of each box for multiplotting
 %   layout.mask    = optional cell-array with line segments that determine the area for topographic interpolation
 %   layout.outline = optional cell-array with line segments that represent the head, nose, ears, sulci or other anatomical features
+%   layout.color   = optional Nx3 matrix with rgb values for the channels' color, for fine-grained color behavior 
 %
 % There are several ways in which a 2-D layout can be made:
 % 1) it can be read directly from a layout file
@@ -91,6 +92,12 @@ function [layout, cfg] = ft_prepare_layout(cfg, data)
 %   cfg.layout = 'circular'   will distribute the channels on a circle
 %   cfg.width  = scalar (default is automatic)
 %   cfg.height = scalar (default is automatic)
+%   cfg.layouttopo = filename or struct (default is empty)
+%
+% For a butterfly layout, the option cfg.layouttopo will add an extra field to the layout, containing the spatial layout
+% of the sensor array. This can be used to plot the spatial distribution of the color-coded channels, as in ft_multiplotER
+% with cfg.layout = 'butterfly'. If it's defined empty, but if the input data argument contains a sensor description, then it 
+% will be created from this
 %
 % For an sEEG shaft the option cfg.layout='vertical' or 'horizontal' is useful to
 % represent the channels in a linear sequence . In this case you can also specify the
@@ -200,6 +207,7 @@ cfg.height       = ft_getopt(cfg, 'height',     []);
 cfg.commentpos   = ft_getopt(cfg, 'commentpos', 'layout');
 cfg.scalepos     = ft_getopt(cfg, 'scalepos',   'layout');
 cfg.spatial_colors = ft_getopt(cfg, 'spatial_colors', 'no');
+cfg.layouttopo   = ft_getopt(cfg, 'layouttopo', []);
 
 if isempty(cfg.skipscale)
   if ischar(cfg.layout) && any(strcmp(cfg.layout, {'ordered', 'vertical', 'horizontal', 'butterfly', 'circular'}))
@@ -355,16 +363,6 @@ elseif isequal(cfg.layout, 'butterfly')
     chanindx     = match_str(data.label, cfg.channel);
     nchan        = length(data.label(chanindx));
     layout.label = data.label(chanindx);
-    if istrue(cfg.spatial_colors)
-      % this requires the creation of a 'normal' layout, so that the
-      % sensor positions can be used for the color coding
-      tmpcfg    = removefields(cfg, 'layout');
-      tmplayout = ft_prepare_layout(tmpcfg, data);
-      [chanindx1, chanindx2] = match_str(layout.label, tmplayout.label);
-      layout.color = zeros(nchan, 3);
-      layout.color(chanindx1, :) = tmplayout.color(chanindx2, :);
-    end
-    
   else
     assert(iscell(cfg.channel), 'cfg.channel should be a valid set of channels');
     nchan        = length(cfg.channel);
@@ -376,6 +374,35 @@ elseif isequal(cfg.layout, 'butterfly')
   layout.mask    = {};
   layout.outline = {};
   
+  layout.label{end+1}  = 'SCALE';
+  layout.pos(end+1, :) = layout.pos(1,:);
+  layout.width(end+1)  = layout.width(1);
+  layout.height(end+1) = layout.height(1);
+  
+  tmpcfg = removefields(cfg, {'layout' 'layouttopo'});
+  tmpcfg.skipscale = 'yes';
+  tmpcfg.skipcmnt  = 'yes';
+  if ~isempty(cfg.layouttopo)
+    tmpcfg.layout = cfg.layouttopo;
+  end
+  try
+    % failure may happen if the tmpcfg.layout = [], and if the data does
+    % not contain a sensor description. 
+    tmplayout = ft_prepare_layout(tmpcfg, data);
+    layout.layout = tmplayout;  
+  end
+  
+  if istrue(cfg.spatial_colors) && exist('tmplayout', 'var')
+    % this requires the 'normal' layout, so that the
+    % sensor positions can be used for the color coding
+    [chanindx1, chanindx2] = match_str(layout.label, tmplayout.label);
+    layout.color = zeros(nchan, 3);
+    layout.color(chanindx1, :) = tmplayout.color(chanindx2, :);
+  elseif istrue(cfg.spatial_colors)
+    ft_warning('cannot add color information to the layout due to missing information');
+  end
+    
+
 elseif isequal(cfg.layout, 'vertical') || isequal(cfg.layout, 'horizontal')
   assert(iscell(cfg.channel), 'cfg.channel should be a cell-array of strings');
   nchan        = length(cfg.channel);
@@ -1209,7 +1236,7 @@ if istrue(cfg.spatial_colors) && ~isfield(layout, 'color')
   
   xyz = [layout.pos(sel,:) z];
   xyz = xyz - min(xyz, [], 1);
-  rgb = xyz./max(xyz, [], 1);
+  rgb = xyz./(max(xyz, [], 1)+10*eps);
   
   layout.color = ones(numel(layout.label), 3);
   layout.color(sel, :) = rgb;

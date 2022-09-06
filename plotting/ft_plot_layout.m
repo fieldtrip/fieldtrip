@@ -74,6 +74,7 @@ verbose      = ft_getopt(varargin, 'verbose',      false);
 pointsymbol  = ft_getopt(varargin, 'pointsymbol');
 pointcolor   = ft_getopt(varargin, 'pointcolor');
 pointsize    = ft_getopt(varargin, 'pointsize');
+spatial_colors = ft_getopt(varargin, 'spatial_colors', 'no');
 
 % these have to do with the font
 fontcolor   = ft_getopt(varargin, 'fontcolor', 'k'); % default is black
@@ -88,7 +89,7 @@ interpreter  = ft_getopt(varargin, 'interpreter', 'tex'); % none, tex or latex
 labelrotate   = ft_getopt(varargin, 'labelrotate',  0);
 labelalignh   = ft_getopt(varargin, 'labelalignh',  'center');
 labelalignv   = ft_getopt(varargin, 'labelalignv',  'middle');
-labelcolor    = ft_getopt(varargin, 'labelcolor', 'k');
+labelcolor    = ft_getopt(varargin, 'labelcolor',   'k');
 
 % convert between true/false/yes/no etc. statements
 point   = istrue(point);
@@ -99,6 +100,19 @@ outline = istrue(outline);
 verbose = istrue(verbose);
 
 % color management
+if istrue(spatial_colors)
+  if ~isfield(layout, 'color')
+    ft_error('the layout should have a color-field, if spatialcolors is ''yes''');
+  end
+  pointcolor = layout.color;
+  if isempty(pointsize)
+    pointsize   = 12;
+  end
+  if isempty(pointsymbol)
+    pointsymbol = 'o';
+  end
+end
+
 if ischar(pointcolor) && exist([pointcolor '.m'], 'file')
   pointcolor = eval(pointcolor);
 end
@@ -164,7 +178,13 @@ Lbl    = layout.label;
 
 if point
   if ~isempty(pointsymbol) && ~isempty(pointcolor) && ~isempty(pointsize) % if they're all non-empty, don't use the default
-    plot(X, Y, 'marker', pointsymbol, 'color', pointcolor, 'markersize', pointsize, 'linestyle', 'none');
+    if size(pointcolor, 1) == numel(X)
+      for k = 1:numel(X)
+        plot(X(k), Y(k), 'marker', pointsymbol, 'markerfacecolor', pointcolor(k, :), 'markersize', pointsize, 'color', [0 0 0]);
+      end
+    else
+      plot(X, Y, 'marker', pointsymbol, 'color', pointcolor, 'markersize', pointsize, 'linestyle', 'none');
+    end
   else
     plot(X, Y, 'marker', '.', 'color', 'b', 'linestyle', 'none');
     plot(X, Y, 'marker', 'o', 'color', 'y', 'linestyle', 'none');
