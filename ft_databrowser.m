@@ -192,7 +192,7 @@ cfg.selfun              = ft_getopt(cfg, 'selfun');                    % default
 cfg.selcfg              = ft_getopt(cfg, 'selcfg');                    % defaulting done below, requires layouts/etc to be processed
 cfg.seldat              = ft_getopt(cfg, 'seldat', 'current');
 cfg.colorgroups         = ft_getopt(cfg, 'colorgroups', 'sequential');
-cfg.linecolor           = ft_getopt(cfg, 'linecolor', []); % the default is defined in linecolor_common
+cfg.linecolor           = ft_getopt(cfg, 'linecolor', []); % the default is defined in lineattributes_common
 cfg.linestyle           = ft_getopt(cfg, 'linestyle', '-');
 cfg.linewidth           = ft_getopt(cfg, 'linewidth', 0.5);
 cfg.eegscale            = ft_getopt(cfg, 'eegscale');
@@ -514,9 +514,9 @@ end
 
 % determine the coloring of channels
 if hasdata
-  linecolor = linecolor_common(cfg, data);
+  linecolor = lineattributes_common(cfg, data);
 else
-  linecolor = linecolor_common(cfg, hdr);
+  linecolor = lineattributes_common(cfg, hdr);
 end
 
 % collect the artifacts from cfg.artfctdef.xxx.artifact
@@ -901,7 +901,7 @@ end % function cb_datacursortext
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION see also linecolor_common
+% SUBFUNCTION see also lineattributes_common
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function color = colorcheck(color, n)
 % define the mapping between color characters and RGB values

@@ -517,7 +517,7 @@ chanLabel  = cfg.layout.label(sellay);
 %% Section 4: do the actual plotting
 
 % determine the coloring of channels/conditions
-linecolor = linecolor_common(cfg, varargin{:});
+[linecolor, linestyle, linewidth] = lineattributes_common(cfg, varargin{:});
 
 % open a new figure, or add it to the existing one
 open_figure(keepfields(cfg, {'figure', 'position', 'visible', 'renderer', 'figurename', 'title'}));
@@ -531,7 +531,7 @@ for m=1:length(selchan)
     % Clip out of bounds y values:
     yval(yval > ymax) = ymax;
     yval(yval < ymin) = ymin;
-    ft_plot_vector(xval, yval, 'width', chanWidth(m), 'height', chanHeight(m), 'hpos', chanX(m), 'vpos', chanY(m), 'hlim', [xmin xmax], 'vlim', [ymin ymax], 'color', linecolor, 'style', cfg.linestyle{1}, 'linewidth', cfg.linewidth, 'axis', cfg.axes, 'highlight', mask, 'highlightstyle', cfg.maskstyle, 'facealpha', cfg.maskfacealpha);
+    ft_plot_vector(xval, yval, 'width', chanWidth(m), 'height', chanHeight(m), 'hpos', chanX(m), 'vpos', chanY(m), 'hlim', [xmin xmax], 'vlim', [ymin ymax], 'color', permute(linecolor(m,:,1:2), [3 2 1]), 'style', cfg.linestyle{1}, 'linewidth', cfg.linewidth, 'axis', cfg.axes, 'highlight', mask, 'highlightstyle', cfg.maskstyle, 'facealpha', cfg.maskfacealpha);
   else
     % loop over the conditions, plot them on top of each other
     for i=1:Ndata
@@ -552,7 +552,7 @@ if isfield(cfg.layout, 'layout')
   ax1 = gca;
   pos = get(ax1, 'position');
   ax2 = axes('position', [pos(1) pos(2)+pos(4)-0.2 0.2 0.2]);
-  ft_plot_layout(cfg.layout.layout, 'box', 'no', 'label', 'off', 'spatial_colors', cfg.spatial_colors, 'pointsize', 5);
+  ft_plot_layout(cfg.layout.layout, 'box', 'no', 'label', 'off', 'pointcolor', linecolor, 'pointsize', 5, 'pointsymbol', 'o');
   set(gcf, 'CurrentAxes', ax1);
 end
 

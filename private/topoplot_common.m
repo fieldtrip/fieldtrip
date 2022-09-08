@@ -794,7 +794,7 @@ ident       = get(gca, 'tag');
 info        = guidata(gcf);
 cfg         = info.(ident).cfg;
 datvarargin = info.(ident).datvarargin;
-linecolor   = ft_getopt(info.(ident), 'linecolor', linecolor_common(cfg, datvarargin{:}));
+linecolor   = ft_getopt(info.(ident), 'linecolor', lineattributes_common(cfg, datvarargin{:}));
 
 if ~isempty(label)
   cfg = removefields(cfg, 'inputfile');       % the reading has already been done and varargin contains the data
