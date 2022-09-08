@@ -179,8 +179,10 @@ Lbl    = layout.label;
 if point
   if ~isempty(pointsymbol) && ~isempty(pointcolor) && ~isempty(pointsize) % if they're all non-empty, don't use the default
     if size(pointcolor, 1) == numel(X)
+      if numel(pointsymbol)==1, pointsymbol = repmat(pointsymbol, [numel(X) 1]); end
+      if numel(pointsize)==1, pointsize = repmat(pointsize, [numel(X) 1]); end  
       for k = 1:numel(X)
-        plot(X(k), Y(k), 'marker', pointsymbol, 'markerfacecolor', pointcolor(k, :), 'markersize', pointsize, 'color', [0 0 0]);
+        plot(X(k), Y(k), 'marker', pointsymbol(k), 'markerfacecolor', pointcolor(k, :), 'markersize', pointsize(k), 'color', [0 0 0]);
       end
     else
       plot(X, Y, 'marker', pointsymbol, 'color', pointcolor, 'markersize', pointsize, 'linestyle', 'none');

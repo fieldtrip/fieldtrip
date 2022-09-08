@@ -383,7 +383,7 @@ switch highlightstyle
       % plot all lines with the same color
       h = plot(hdat, vdat, style, 'LineWidth', linewidth, 'Color', color, 'markersize', markersize, 'markerfacecolor', markerfacecolor);
     elseif isnumeric(color) && isequal(size(color), [1 3])
-      % plot all lines with the same RGB color
+      % plot all lines with the same RGB color -> this is as of 2022 the most likely use case
       h = plot(hdat, vdat, style, 'LineWidth', linewidth, 'Color', color, 'markersize', markersize, 'markerfacecolor', markerfacecolor);
     elseif ischar(color) && numel(color)==nline
       % plot each line with its own color
@@ -391,9 +391,19 @@ switch highlightstyle
         h(i) = plot(hdat, vdat(i,:), style, 'LineWidth', linewidth, 'Color', color(i), 'markersize', markersize, 'markerfacecolor', markerfacecolor);
       end
     elseif isnumeric(color) && size(color,1)==nline
-      % the color is specified as Nx3 matrix with RGB values for each line
+      % the color is specified as Nx3 matrix with RGB values for each line  -> this is as of 2022 the second likely use case
       for i=1:size(vdat,1)
-        h(i) = plot(hdat, vdat(i,:), style, 'LineWidth', linewidth, 'Color', color(i,:), 'markersize', markersize, 'markerfacecolor', markerfacecolor);
+        if numel(style)>1
+          style_i = style{i}; 
+        else
+          style_i = style; 
+        end
+        if numel(linewidth)>1
+          linewidth_i = linewidth(i);
+        else
+          linewidth_i = linewidth;
+        end
+        h(i) = plot(hdat, vdat(i,:), style_i, 'LineWidth', linewidth_i, 'Color', color(i,:), 'markersize', markersize, 'markerfacecolor', markerfacecolor);
       end
     elseif isnumeric(color) && size(color,1)==npos
       % the color is specified as Nx3 matrix with RGB values and varies over the length of the line
