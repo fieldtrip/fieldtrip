@@ -49,8 +49,8 @@ function [cfg] = ft_multiplotER(cfg, varargin)
 %   cfg.linestyle     = linestyle/marker type, see options of the PLOT function (default = '-')
 %                       can be a single style for all datasets, or a cell-array containing one style for each dataset
 %   cfg.linewidth     = linewidth in points (default = 0.5)
-%   cfg.linecolor     = color(s) used for plotting the dataset(s) (default = customized lines map with 15 colors)
-%                       alternatively, colors can be specified as Nx3 matrix of RGB values
+%   cfg.linecolor     = color(s) used for plotting the dataset(s). The default is defined in LINEATTRIBUTES_COMMON, see
+%                       the help of this function for more information
 %   cfg.directionality = '', 'inflow' or 'outflow' specifies for connectivity measures whether the
 %                       inflow into a node, or the outflow from a node is plotted. The (default) behavior
 %                       of this option depends on the dimord of the input data (see below).
@@ -428,7 +428,7 @@ end
 
 % Read or create the layout that will be used for plotting
 tmpcfg = keepfields(cfg, {'layout', 'channel', 'rows', 'columns', 'commentpos', 'skipcomnt', 'scalepos', 'skipscale', 'projection', 'viewpoint', 'rotate', 'width', 'height', 'elec', 'grad', 'opto', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
-tmpcfg = ft_setopt(tmpcfg, 'pointcolor', cfg.linecolor);
+tmpcfg = ft_setopt(tmpcfg, 'color', cfg.linecolor);
 if isequal(cfg.viewmode, 'butterfly')
   if isfield(tmpcfg, 'layout')
     tmpcfg.layouttopo = tmpcfg.layout;

@@ -72,6 +72,8 @@ function [layout, cfg] = ft_prepare_layout(cfg, data)
 %                      specificies channels to use for determining channel box size (default = 'all', recommended for MEG/EEG, a selection is recommended for iEEG)
 %   cfg.skipscale   = 'yes' or 'no', whether the scale should be included in the layout or not (default = 'no')
 %   cfg.skipcomnt   = 'yes' or 'no', whether the comment should be included in the layout or not (default = 'no')
+%   cfg.color       = 'spatial', Nx3 matrix, or [] (default). If not empty, an Nx3 color matrix will be added to the layout, based on the 
+%                     positions of the electrodes, or based on the specified matrix
 %
 % If you use cfg.headshape or cfg.mri to create a headshape outline, the input
 % geometry should be expressed in the same units and coordinate system as the input
@@ -96,7 +98,7 @@ function [layout, cfg] = ft_prepare_layout(cfg, data)
 %
 % For a butterfly layout, the option cfg.layouttopo will add an extra field to the layout, containing the spatial layout
 % of the sensor array. This can be used to plot the spatial distribution of the color-coded channels, as in ft_multiplotER
-% with cfg.layout = 'butterfly'. If it's defined empty, but if the input data argument contains a sensor description, then it 
+% with cfg.viewmode = 'butterfly'. If it's defined empty, but if the input data argument contains a sensor description, then it 
 % will be created from this
 %
 % For an sEEG shaft the option cfg.layout='vertical' or 'horizontal' is useful to
@@ -206,7 +208,7 @@ cfg.width        = ft_getopt(cfg, 'width',      []);
 cfg.height       = ft_getopt(cfg, 'height',     []);
 cfg.commentpos   = ft_getopt(cfg, 'commentpos', 'layout');
 cfg.scalepos     = ft_getopt(cfg, 'scalepos',   'layout');
-cfg.pointcolor   = ft_getopt(cfg, 'pointcolor');
+cfg.color        = ft_getopt(cfg, 'color');
 cfg.layouttopo   = ft_getopt(cfg, 'layouttopo', []);
 
 if isempty(cfg.skipscale)
@@ -392,7 +394,7 @@ elseif isequal(cfg.layout, 'butterfly')
     layout.layout = tmplayout;  
   end
   
-  if isequal(cfg.pointcolor, 'spatial') && exist('tmplayout', 'var')
+  if isequal(cfg.color, 'spatial') && exist('tmplayout', 'var')
     % this requires the 'normal' layout, so that the
     % sensor positions can be used for the color coding
     [chanindx1, chanindx2] = match_str(layout.label, tmplayout.label);
@@ -1225,7 +1227,7 @@ elseif ~isempty(cfg.output) && strcmpi(cfg.style, '3d')
   ft_error('writing a 3D layout to an output file is not supported');
 end
 
-if isequal(cfg.pointcolor, 'spatial') && ~isfield(layout, 'color')
+if isequal(cfg.color, 'spatial') && ~isfield(layout, 'color')
   % create a channel specific rgb-value based on their X/Y positions and a
   % computed Z position, assuming the channels on the positive half sphere
   sel = match_str(layout.label, setdiff(layout.label,{'COMNT';'SCALE'}));
@@ -1238,8 +1240,8 @@ if isequal(cfg.pointcolor, 'spatial') && ~isfield(layout, 'color')
   
   layout.color = ones(numel(layout.label), 3);
   layout.color(sel, :) = rgb;
-elseif size(cfg.pointcolor,1) == numel(layout.label)
-  layout.color = pointcolor;
+elseif size(cfg.color,1) == numel(layout.label)
+  layout.color = color;
 end
 
 % do the general cleanup and bookkeeping at the end of the function

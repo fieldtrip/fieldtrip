@@ -33,6 +33,11 @@ function [linecolor, linestyle, linewidth] = lineattributes_common(cfg, varargin
 %   cfg.linecolor   = char, Nx3 matrix, or Nx3xM matrix
 %   cfg.linestyle   = char, or cell-array
 %   cfg.linewidth   = scalar, or NxM matrix
+%
+% If cfg.linecolor is a char, it should either be a sequence of characters that can be translated into
+% and rgb value (i.e. any of 'rbgcmykw'), or it can be 'spatial', in which case a color will be assigned
+% based on the layout.color field. Typically, this will be a color that is based on the x/y/z position of 
+% the corresponding sensor.
 
 % Copyright (C) 2022, Donders Centre for Cognitive Neuroimaging
 %

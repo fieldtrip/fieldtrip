@@ -14,25 +14,25 @@ cfg.layout = 'CTF275_helmet.mat';
 ft_multiplotER(cfg, t);
 
 cfg = [];
-cfg.spatial_colors = 'yes';
+cfg.linecolor = 'spatial';
 cfg.layout = 'butterfly';
 ft_multiplotER(cfg, t); % ->monochrome because spatial information of the sensors is not known (grad missing)
 
 cfg = [];
-cfg.spatial_colors = 'yes';
+cfg.linecolor = 'spatial';
 cfg.layout = 'CTF275_helmet.mat';
 cfg.linewidth = 2;
 ft_multiplotER(cfg, t); 
 
 cfg = [];
-cfg.spatial_colors = 'yes';
-cfg.layout = 'butterfly';
-cfg.layouttopo = 'CTF275_helmet.mat';
+cfg.linecolor = 'spatial';
+cfg.viewmode = 'butterfly';
+cfg.layout = 'CTF275_helmet.mat';
 ft_multiplotER(cfg, t);
 
 cfg = [];
-cfg.layout = 'butterfly';
-cfg.layouttopo = 'CTF275_helmet.mat';
+cfg.viewmode = 'butterfly';
+cfg.layout = 'CTF275_helmet.mat';
 cfg.colorgroups = 'labelchar3';
 ft_multiplotER(cfg, t);
 
