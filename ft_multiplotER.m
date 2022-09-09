@@ -59,6 +59,8 @@ function [cfg] = ft_multiplotER(cfg, varargin)
 %                       with multiple input arguments determines the
 %                       pre-selection of the data that is considered for
 %                       plotting.
+%   cfg.viewmode      = 'layout', or 'butterfly' (default = 'layout'), using the spatial layout as in cfg.layout for the 
+%                       visualisation, or a butterfly plot
 
 % The following options for the scaling of the EEG, EOG, ECG, EMG, MEG and NIRS channels
 % is optional and can be used to bring the absolute numbers of the different
@@ -222,11 +224,10 @@ cfg.frequency      = ft_getopt(cfg, 'frequency',      'all'); % needed for frequ
 cfg.latency        = ft_getopt(cfg, 'latency',        'all'); % needed for latency selection with TFR data, FIXME, probably not used
 cfg.renderer       = ft_getopt(cfg, 'renderer');              % let MATLAB decide on the default
 cfg.select         = ft_getopt(cfg, 'select',         'intersect'); % for ft_selectdata
-cfg.layouttopo     = ft_getopt(cfg, 'layouttopo');
-cfg.spatial_colors = ft_getopt(cfg, 'spatial_colors', 'no');
+cfg.viewmode       = ft_getopt(cfg, 'viewmode',       'layout');
 
 % some options constrain the default value for other options
-if istrue(cfg.spatial_colors)
+if isequal(cfg.linecolor, 'spatial')
   cfg.colorgroups = ft_getopt(cfg, 'colorgroups', 'sequential');
 else
   cfg.colorgroups = ft_getopt(cfg, 'colorgroups', 'condition');
@@ -235,10 +236,12 @@ end
 % some options have constrained values with multiple data inputs
 if Ndata>1
   cfg = ft_checkconfig(cfg, 'allowedval', {'colorgroups', 'condition'});
-  cfg = ft_checkconfig(cfg, 'allowedval', {'spatial_colors', 'no', 0, false});
+  if isequal(cfg.linecolor, 'spatial')
+    ft_error('with multiple data inputs cfg.linecolor=''spatial'' is not permitted');
+  end
 end
 
-if isfield(cfg, 'layout') && isequal(cfg.layout, 'butterfly') && istrue(cfg.showscale)
+if isfield(cfg, 'layout') && (isequal(cfg.layout, 'butterfly')||isequal(cfg.viewmode, 'butterfly')) && istrue(cfg.showscale)
   cfg.skipscale = 'no'; % this is used in ft_prepare_layout
 end
 
@@ -424,7 +427,14 @@ end
 %% Section 3: select the data to be plotted and determine min/max range
 
 % Read or create the layout that will be used for plotting
-tmpcfg = keepfields(cfg, {'layout', 'channel', 'rows', 'columns', 'commentpos', 'skipcomnt', 'scalepos', 'skipscale', 'projection', 'viewpoint', 'rotate', 'width', 'height', 'elec', 'grad', 'opto', 'spatial_colors', 'layouttopo', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+tmpcfg = keepfields(cfg, {'layout', 'channel', 'rows', 'columns', 'commentpos', 'skipcomnt', 'scalepos', 'skipscale', 'projection', 'viewpoint', 'rotate', 'width', 'height', 'elec', 'grad', 'opto', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+tmpcfg = ft_setopt(tmpcfg, 'pointcolor', cfg.linecolor);
+if isequal(cfg.viewmode, 'butterfly')
+  if isfield(tmpcfg, 'layout')
+    tmpcfg.layouttopo = tmpcfg.layout;
+  end
+  tmpcfg.layout     = 'butterfly';
+end
 cfg.layout = ft_prepare_layout(tmpcfg, varargin{1});
 
 % Take the subselection of channels that is contained in the layout, this is the same in all datasets
@@ -549,11 +559,13 @@ end % for number of channels
 % plot the layout, labels and outline
 ft_plot_layout(cfg.layout, 'box', cfg.box, 'label', cfg.showlabels, 'outline', cfg.showoutline, 'point', 'no', 'mask', 'no', 'fontsize', cfg.fontsize, 'labelyoffset', 1.4*median(cfg.layout.height/2), 'labelalignh', 'center', 'chanindx', find(~ismember(cfg.layout.label, {'COMNT', 'SCALE'})), 'interpreter', cfg.interpreter);
 if isfield(cfg.layout, 'layout')
-  ax1 = gca;
-  pos = get(ax1, 'position');
-  ax2 = axes('position', [pos(1) pos(2)+pos(4)-0.2 0.2 0.2]);
-  ft_plot_layout(cfg.layout.layout, 'box', 'no', 'label', 'off', 'pointcolor', linecolor, 'pointsize', 5, 'pointsymbol', 'o');
-  set(gcf, 'CurrentAxes', ax1);
+  hlim = get(gca, 'xlim');
+  vlim = get(gca, 'ylim');
+  hpos = hlim(1)+diff(hlim)*0.1;
+  vpos = vlim(1)+diff(vlim)*0.9;
+  h    = 0.2*diff(vlim);
+  w    = 0.2*diff(hlim);
+  ft_plot_layout(cfg.layout.layout, 'box', 'no', 'label', 'off', 'point', 'yes', 'pointcolor', linecolor, 'pointsize', 5, 'pointsymbol', 'o', 'hpos', hpos, 'vpos', vpos, 'height', h, 'width', w);
 end
 
 % write comment

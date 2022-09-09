@@ -50,7 +50,7 @@ function [cfg] = ft_singleplotER(cfg, varargin)
 %                       pre-selection of the data that is considered for
 %                       plotting.
 %   cfg.showlocations = 'no' (default), or 'yes'. plot a small spatial layout of all sensors, highlighting the specified subset
-%   cfg.layouttopo    = filename, or struct (see FT_PREPARE_LAYOUT) used for showing the locations with cfg.showloactions = 'yes' 
+%   cfg.layouttopo    = filename, or struct (see FT_PREPARE_LAYOUT) used for showing the locations with cfg.showlocations = 'yes' 
 %
 % The following options for the scaling of the EEG, EOG, ECG, EMG, MEG and NIRS channels
 % is optional and can be used to bring the absolute numbers of the different
@@ -375,9 +375,10 @@ end
 
 if istrue(cfg.showlocations)
   % Read or create the layout that will be used for plotting, if specified
-  tmpcfg = keepfields(cfg, {'rows', 'columns', 'commentpos', 'scalepos', 'projection', 'viewpoint', 'rotate', 'width', 'height', 'elec', 'grad', 'opto', 'spatial_colors', 'layouttopo', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+  tmpcfg = keepfields(cfg, {'rows', 'columns', 'commentpos', 'scalepos', 'projection', 'viewpoint', 'rotate', 'width', 'height', 'elec', 'grad', 'opto', 'layouttopo', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
   tmpcfg.skipcomnt = 'yes';
   tmpcfg.skipscale = 'yes';
+  tmpcfg.pointcolor = cfg.linecolor; % switch of name for ft_prepare_layout
   if ~isempty(cfg.layouttopo)
     tmpcfg.layout = cfg.layouttopo;
   elseif isfield(cfg, 'layout') && ~isempty(cfg.layout)
@@ -565,15 +566,15 @@ if isempty(get(gcf, 'Name'))
 end
 
 if istrue(cfg.showlocations)
-  ax1 = gca;
-  pos = get(ax1, 'position');
-  ax2 = axes('position', [pos(1) pos(2)+pos(4)-0.2 0.2 0.2]);
+  hpos = xmin+(xmax-xmin)*0.1;
+  vpos = ymin+(ymax-ymin)*0.9;
+  h    = 0.2*(ymax-ymin);
+  w    = 0.2*(xmax-xmin);
   pointcolor  = zeros(numel(cfg.layouttopo.label),3);
   pointsize   = ones(numel(cfg.layouttopo.label),2);
   pointsize(selchan) = 4;
   pointsymbol = 'o';
-  ft_plot_layout(cfg.layouttopo, 'box', 'no', 'label', 'off', 'pointsize', pointsize, 'pointcolor', pointcolor, 'pointsymbol', pointsymbol);
-  set(gcf, 'CurrentAxes', ax1);
+  ft_plot_layout(cfg.layouttopo, 'box', 'no', 'label', 'off', 'pointsize', pointsize, 'pointcolor', pointcolor, 'pointsymbol', pointsymbol, 'hpos', hpos, 'vpos', vpos, 'width', w, 'height', h);
 end
 
 % make the figure interactive

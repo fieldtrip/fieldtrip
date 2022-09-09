@@ -206,7 +206,7 @@ cfg.width        = ft_getopt(cfg, 'width',      []);
 cfg.height       = ft_getopt(cfg, 'height',     []);
 cfg.commentpos   = ft_getopt(cfg, 'commentpos', 'layout');
 cfg.scalepos     = ft_getopt(cfg, 'scalepos',   'layout');
-cfg.spatial_colors = ft_getopt(cfg, 'spatial_colors', 'no');
+cfg.pointcolor   = ft_getopt(cfg, 'pointcolor');
 cfg.layouttopo   = ft_getopt(cfg, 'layouttopo', []);
 
 if isempty(cfg.skipscale)
@@ -392,14 +392,12 @@ elseif isequal(cfg.layout, 'butterfly')
     layout.layout = tmplayout;  
   end
   
-  if istrue(cfg.spatial_colors) && exist('tmplayout', 'var')
+  if isequal(cfg.pointcolor, 'spatial') && exist('tmplayout', 'var')
     % this requires the 'normal' layout, so that the
     % sensor positions can be used for the color coding
     [chanindx1, chanindx2] = match_str(layout.label, tmplayout.label);
-    layout.color = zeros(nchan, 3);
+    layout.color = zeros(numel(layout.label), 3);
     layout.color(chanindx1, :) = tmplayout.color(chanindx2, :);
-  elseif istrue(cfg.spatial_colors)
-    ft_warning('cannot add color information to the layout due to missing information');
   end
     
 
@@ -1227,7 +1225,7 @@ elseif ~isempty(cfg.output) && strcmpi(cfg.style, '3d')
   ft_error('writing a 3D layout to an output file is not supported');
 end
 
-if istrue(cfg.spatial_colors) && ~isfield(layout, 'color')
+if isequal(cfg.pointcolor, 'spatial') && ~isfield(layout, 'color')
   % create a channel specific rgb-value based on their X/Y positions and a
   % computed Z position, assuming the channels on the positive half sphere
   sel = match_str(layout.label, setdiff(layout.label,{'COMNT';'SCALE'}));
@@ -1240,6 +1238,8 @@ if istrue(cfg.spatial_colors) && ~isfield(layout, 'color')
   
   layout.color = ones(numel(layout.label), 3);
   layout.color(sel, :) = rgb;
+elseif size(cfg.pointcolor,1) == numel(layout.label)
+  layout.color = pointcolor;
 end
 
 % do the general cleanup and bookkeeping at the end of the function

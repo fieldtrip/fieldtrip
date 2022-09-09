@@ -34,13 +34,32 @@ function [linecolor, linestyle, linewidth] = lineattributes_common(cfg, varargin
 %   cfg.linestyle   = char, or cell-array
 %   cfg.linewidth   = scalar, or NxM matrix
 
+% Copyright (C) 2022, Donders Centre for Cognitive Neuroimaging
+%
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
+% for the documentation and details.
+%
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
+%
+% $Id$
+
 cfg.linecolor      = ft_getopt(cfg, 'linecolor',   []);
 cfg.linestyle      = ft_getopt(cfg, 'linestyle',   '-');
 cfg.linewidth      = ft_getopt(cfg, 'linewidth',   0.5);
 cfg.colorgroups    = ft_getopt(cfg, 'colorgroups', 'condition'); 
 cfg.stylegroups    = ft_getopt(cfg, 'stylegroups', 'condition');
 cfg.widthgroups    = ft_getopt(cfg, 'widthgroups', 'condition');
-cfg.spatial_colors = ft_getopt(cfg, 'spatial_colors', 'no');
 
 % it is assumed here that all datasets have the same channels
 label = varargin{1}.label;
@@ -59,7 +78,7 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % linecolor
-if isempty(cfg.linecolor) && ~istrue(cfg.spatial_colors)
+if ~isequal(cfg.linecolor, 'spatial')
   cfg.linecolor = [
     0    0    1
     0.75 0    0
@@ -76,7 +95,7 @@ if isempty(cfg.linecolor) && ~istrue(cfg.spatial_colors)
     1    0    0.4
     0    0.69 0.31
     0    0.44 0.75];
-elseif isempty(cfg.linecolor) && istrue(cfg.spatial_colors)
+elseif isequal(cfg.linecolor, 'spatial')
   if isfield(cfg, 'layout') && isfield(cfg.layout, 'color')
     cfg.linecolor = cfg.layout.color;
   else

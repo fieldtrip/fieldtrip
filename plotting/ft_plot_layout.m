@@ -74,7 +74,6 @@ verbose      = ft_getopt(varargin, 'verbose',      false);
 pointsymbol  = ft_getopt(varargin, 'pointsymbol');
 pointcolor   = ft_getopt(varargin, 'pointcolor');
 pointsize    = ft_getopt(varargin, 'pointsize');
-spatial_colors = ft_getopt(varargin, 'spatial_colors', 'no');
 
 % these have to do with the font
 fontcolor   = ft_getopt(varargin, 'fontcolor', 'k'); % default is black
@@ -98,20 +97,6 @@ label   = istrue(label);
 mask    = istrue(mask);
 outline = istrue(outline);
 verbose = istrue(verbose);
-
-% color management
-if istrue(spatial_colors)
-  if ~isfield(layout, 'color')
-    ft_error('the layout should have a color-field, if spatialcolors is ''yes''');
-  end
-  pointcolor = layout.color;
-  if isempty(pointsize)
-    pointsize   = 12;
-  end
-  if isempty(pointsymbol)
-    pointsymbol = 'o';
-  end
-end
 
 if ischar(pointcolor) && exist([pointcolor '.m'], 'file')
   pointcolor = eval(pointcolor);
@@ -257,9 +242,11 @@ if mask && isfield(layout, 'mask')
   end
 end
 
-axis auto
-axis equal
-axis off
+if isempty(width) && isempty(height)
+  axis auto
+  axis equal
+  axis off
+end
 
 if ~holdflag
   hold off
