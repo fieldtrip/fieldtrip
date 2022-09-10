@@ -23,7 +23,7 @@ function [cfg] = ft_badchannel(cfg, data)
 % of the neighbours.
 %
 % Use as
-%   cfg = ft_badchannel(cfg, data)
+%   [cfg] = ft_badchannel(cfg, data)
 % where the input data corresponds to the output from FT_PREPROCESSING.
 %
 % The configuration should contain
@@ -240,4 +240,3 @@ ft_postamble hastoolbox
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function tf = most(x)
 tf = sum(x(:)==true)>(numel(x)/2);
-

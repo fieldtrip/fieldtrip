@@ -7,8 +7,8 @@ function [cfg] = ft_databrowser(cfg, data)
 % the artifacts.
 %
 % Use as
-%   cfg = ft_databrowser(cfg)
-%   cfg = ft_databrowser(cfg, data)
+%   [cfg] = ft_databrowser(cfg)
+%   [cfg] = ft_databrowser(cfg, data)
 % If you only specify the configuration structure, it should contain the name of the
 % dataset on your hard disk (see below). If you specify input data, it should be a
 % data structure as obtained from FT_PREPROCESSING or from FT_COMPONENTANALYSIS.
@@ -192,7 +192,7 @@ cfg.selfun              = ft_getopt(cfg, 'selfun');                    % default
 cfg.selcfg              = ft_getopt(cfg, 'selcfg');                    % defaulting done below, requires layouts/etc to be processed
 cfg.seldat              = ft_getopt(cfg, 'seldat', 'current');
 cfg.colorgroups         = ft_getopt(cfg, 'colorgroups', 'sequential');
-cfg.linecolor           = ft_getopt(cfg, 'linecolor', [0.75 0 0; 0 0 1; 0 1 0; 0.44 0.19 0.63; 0 0.13 0.38;0.5 0.5 0.5;1 0.75 0; 1 0 0; 0.89 0.42 0.04; 0.85 0.59 0.58; 0.57 0.82 0.31; 0 0.69 0.94; 1 0 0.4; 0 0.69 0.31; 0 0.44 0.75]);
+cfg.linecolor           = ft_getopt(cfg, 'linecolor', []); % the default is defined in lineattributes_common
 cfg.linestyle           = ft_getopt(cfg, 'linestyle', '-');
 cfg.linewidth           = ft_getopt(cfg, 'linewidth', 0.5);
 cfg.eegscale            = ft_getopt(cfg, 'eegscale');
@@ -514,9 +514,9 @@ end
 
 % determine the coloring of channels
 if hasdata
-  linecolor = linecolor_common(cfg, data);
+  linecolor = lineattributes_common(cfg, data);
 else
-  linecolor = linecolor_common(cfg, hdr);
+  linecolor = lineattributes_common(cfg, hdr);
 end
 
 % collect the artifacts from cfg.artfctdef.xxx.artifact
@@ -604,6 +604,7 @@ elseif isempty(cfg.selfun) && isempty(cfg.selcfg)
   cfg.selcfg{2} = [];
   cfg.selcfg{2}.linecolor = linecolor;
   cfg.selcfg{2}.layout = cfg.layout;
+  cfg.selcfg{2}.colorgroups = 'sequential';
   cfg.selfun{2} = 'multiplotER';
   % topoplotER
   cfg.selcfg{3} = [];
@@ -900,7 +901,7 @@ end % function cb_datacursortext
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION see also linecolor_common
+% SUBFUNCTION see also lineattributes_common
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function color = colorcheck(color, n)
 % define the mapping between color characters and RGB values
@@ -1194,6 +1195,11 @@ else
   else
     funcfg.figurename = sprintf('%s : trial %d/%d: segment: %d/%d , time from %g to %g s', cmenulab, opt.trllock, size(opt.trlorg,1), opt.trlop, size(opt.trlvis,1), seldata.time{1}(1), seldata.time{1}(end));
   end
+  
+  % the function that is executed does not know that only a subset of the channels will be passed in the input, 
+  % make sure that the funcfg's linecolor is consistent with this selection
+  selchan = match_str(opt.orgdata.label, seldata.label);
+  if isfield(funcfg, 'linecolor'), funcfg.linecolor = opt.linecolor(selchan, :); end
   feval(funhandle, funcfg, seldata);
 end
 

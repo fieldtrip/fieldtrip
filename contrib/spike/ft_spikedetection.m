@@ -4,7 +4,7 @@ function [cfg, spike] = ft_spikedetection(cfg)
 % function writes the unsorted spike waveforms to disk in another file.
 %
 % Use as
-%   cfg = ft_spikedetection(cfg)
+%   [cfg] = ft_spikedetection(cfg)
 %
 % The configuration options can contain
 %   cfg.dataset             = string with the input dataset
