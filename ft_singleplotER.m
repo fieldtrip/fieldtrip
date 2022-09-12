@@ -166,7 +166,6 @@ cfg = ft_checkconfig(cfg, 'deprecated', {'xparam'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'newfigure',      'figure'});
 
 % set the defaults
-cfg.viewmode        = ft_getopt(cfg, 'viewmode',      'average'); % average or butterfly
 cfg.baseline        = ft_getopt(cfg, 'baseline',      'no');
 cfg.trials          = ft_getopt(cfg, 'trials',        'all', 1);
 cfg.xlim            = ft_getopt(cfg, 'xlim',          'maxmin');
@@ -421,12 +420,8 @@ if ~isnumeric(cfg.ylim)
   ymax = -inf;
   for i=1:Ndata
     % select the channels in the data that match with the layout and that are selected for plotting
-    switch cfg.viewmode
-      case 'average'
-        dat = nanmean(varargin{i}.(cfg.parameter)(selchan, selx), 1); % mean over channels
-      case 'butterfly'
-        dat = varargin{i}.(cfg.parameter)(selchan,selx);
-    end
+    dat = nanmean(varargin{i}.(cfg.parameter)(selchan, selx), 1); % mean over channels
+    
     ymin = min(ymin, min(dat(:)));
     ymax = max(ymax, max(dat(:)));
   end
