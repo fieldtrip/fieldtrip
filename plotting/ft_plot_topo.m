@@ -242,10 +242,10 @@ end
 
 if ~isempty(maskimage)
   % make boolean
-  maskimage      = maskimage~=0;
+  maskimage_bool      = maskimage~=0;
   % apply mask to the data to hide parts of the interpolated data (outside the circle) and channels that were specified to be masked
   % this combines the input options mask and maskdat
-  Zi(~maskimage) = NaN;
+  Zi(~maskimage_bool) = NaN;
 end
 
 % The topography should be plotted prior to the isolines to ensure that it is exported correctly, see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2496
@@ -276,7 +276,7 @@ elseif strcmp(style, 'imsat') || strcmp(style, 'imsatiso')
   end
   
   cmap    = get(gcf, 'colormap');
-  rgbcdat = cdat2rgb(Zi, cmap, clim, maskimage);
+  rgbcdat = cdat2rgb(Zi, cmap, clim, maskimage_bool);
   
   h = imagesc(xi, yi, rgbcdat, clim);
   set(h, 'tag', tag);
@@ -293,10 +293,10 @@ elseif strcmp(style, 'colormix')
     % use maskimagetmp in combination with maskimage, maskimagetmp is
     % scaled between 0 and 1
     maskimagetmp = maskimagetmp./max(maskimagetmp(:));
-    Zmask        = double(maskimage);
+    Zmask        = double(maskimage_bool);
     Zmask(Zmask>0) = maskimagetmp(Zmask>0);
   else
-    Zmask        = double(maskimage);
+    Zmask        = double(maskimage_bool);
   end
   
   cmap    = get(gcf, 'colormap');
