@@ -129,7 +129,7 @@ end
 
 if isfield(input, 'chantype')
   % start with the provided channel types
-  chantype = input.chantype(:);
+  chantype = lower(input.chantype(:));
 else
   % start with unknown chantype for all channels
   chantype = repmat({'unknown'}, numchan, 1);
@@ -739,7 +739,7 @@ if nargin>1
     % search for the different types of trigger channels
     chantype = contains(chantype, desired);
   else
-    % search for an exact match
+    % search for an exact, case sensitive match
     chantype = strcmp(desired, chantype);
   end
 end
