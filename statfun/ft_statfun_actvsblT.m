@@ -40,7 +40,7 @@ function [s, cfg] = ft_statfun_actvsblT(cfg, dat, design)
 %
 % See also FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS
 
-% Copyright (C) 2006, Eric Maris
+% Copyright (C) 2006-2022, Eric Maris and Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -76,6 +76,11 @@ end
 
 % calculate the number of time samples
 switch cfg.dimord
+  case 'chan_time'
+    nchan = cfg.dim(1);
+    nfreq = 1;
+    ntime = cfg.dim(2);
+    [nsmpls,nrepl] = size(dat);
   case 'chan_freq_time'
     nchan = cfg.dim(1);
     nfreq = cfg.dim(2);
@@ -120,10 +125,22 @@ if strcmp(cfg.computestat,'yes')
   % calculate the differences between the conditions
   diffmat = dat(:,poslabelsperunit(:,1))-timeavgdat(:,poslabelsperunit(:,2));
 
+%   % calculate the dependent samples t-statistics
+%   avgdiff = nanmean(diffmat,2);
+%   vardiff = nanvar(diffmat,0,2);
+%   s.stat = sqrt(nunits)*avgdiff./sqrt(vardiff);
+
   % calculate the dependent samples t-statistics
-  avgdiff = nanmean(diffmat,2);
-  vardiff = nanvar(diffmat,0,2);
-  s.stat = sqrt(nunits)*avgdiff./sqrt(vardiff);
+  if any(isnan(diffmat(:)))
+    avgdiff = nanmean(diffmat,2);
+    vardiff = nanvar(diffmat,0,2);
+    nunits  = sum(~isnan(diffmat),2);
+    s.stat  = (sqrt(nunits).*avgdiff)./sqrt(vardiff);
+  else
+    avgdiff = mean(diffmat,2);
+    vardiff = var(diffmat,0,2);
+    s.stat  = sqrt(nunits)*avgdiff./sqrt(vardiff);
+  end
 end
 
 if strcmp(cfg.computecritval, 'yes')

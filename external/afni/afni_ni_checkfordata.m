@@ -1,6 +1,6 @@
 function [err,data] = afni_ni_checkfordata()
    global comm;
-   
+
    data = [];
    err = 1;
    if (comm.sockcon < 0),
@@ -10,7 +10,7 @@ function [err,data] = afni_ni_checkfordata()
          return;
       end
       if (comm.dbg ),
-         fprintf(1,  'have new socket connection %d\n', comm.sockcon); 
+         fprintf(1,  'have new socket connection %d\n', comm.sockcon);
       end
    else
       if (comm.dbg > 1) fprintf(1,'have socket %d\n', comm.sockcon); end
@@ -25,18 +25,18 @@ function [err,data] = afni_ni_checkfordata()
       if (comm.dbg > 1) fprintf(1,'have connection handle %d\n', comm.con); end
    end
    status = pnet(comm.con,'status');
-   if (status == 0), 
+   if (status == 0),
       % bad status, perhaps disconnected or first time, reopen socket
       fprintf(2,'Stream closed, attempt to reopen on second pass.\n');
       comm.con = -1;
       err = 0;
-      return;    
+      return;
    else
       if (comm.dbg > 1) fprintf(2,'status %d\n', status); end
    end
 
    %have connection, get data
-   pnet(comm.con,'setreadtimeout',0.25); 
+   pnet(comm.con,'setreadtimeout',0.25);
       % Don't wait forever, I had 3 seconds but that was too slow
       % 0.25 worked just fine on localhost 127.0.0.1
 

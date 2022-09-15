@@ -621,8 +621,18 @@ switch cfg.method
     
   case 'pca'
     % compute data cross-covariance matrix
-    C = (dat*dat')./(size(dat,2)-1);
-    
+    if iscell(dat)
+      C  = zeros(size(dat{1},1));
+      nC = 0;
+      for k = 1:numel(dat)
+        C  = C + (dat{k}*dat{k}');
+        nC = nC + size(dat{k},2);
+      end
+      C = C./(nC-1);
+    else
+      C = (dat*dat')./(size(dat,2)-1);
+    end
+
     % eigenvalue decomposition (EVD)
     [E,D] = eig(C);
     
@@ -691,12 +701,17 @@ switch cfg.method
     params         = removefields(struct(cfg.dss), {'V' 'dV' 'W' 'indx'});
     params.denf.h  = str2func(cfg.dss.denf.function);
     params.preprocf.h = str2func(cfg.dss.preprocf.function);
-    if ~ischar(cfg.numcomponent)
-      params.sdim = cfg.numcomponent;
-    end
     if isfield(cfg.dss, 'wdim') && ~isempty(cfg.dss.wdim)
       params.wdim = cfg.dss.wdim;
     end
+    if ~ischar(cfg.numcomponent)
+      params.sdim = cfg.numcomponent;
+      if isfield(params, 'wdim')
+        params.sdim = min(params.sdim, params.wdim);
+      end
+    end
+    
+
     if isfield(params.denf, 'params') && isfield(params.denf.params, 'artifact')
       % this may require the sampleinfo in the params structure, to keep the sampling bookkeeping correct
       params.denf.params.sampleinfo = data.sampleinfo;

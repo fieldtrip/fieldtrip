@@ -12,13 +12,14 @@ function [Zi, h] = ft_plot_topo(chanX, chanY, dat, varargin)
 %   'mask'          = cell-array with line segments that forms the mask (see FT_PREPARE_LAYOUT)
 %   'outline'       = cell-array with line segments that for the outline (see  FT_PREPARE_LAYOUT)
 %   'isolines'      = vector with values for isocontour lines (default = [])
-%   'interplim'    = string, 'electrodes' or 'mask' (default = 'electrodes')
+%   'interplim'     = string, 'electrodes' or 'mask' (default = 'electrodes')
 %   'interpmethod'  = string, 'nearest', 'linear', 'natural', 'cubic' or 'v4' (default = 'v4')
 %   'style'         = can be 'surf', 'iso', 'isofill', 'surfiso', 'imsat', 'imsatiso', 'colormix'
 %   'clim'          = [min max], limits for color scaling
 %   'shading'       = string, 'none', 'flat', 'interp' (default = 'flat')
 %   'parent'        = handle which is set as the parent for all plots
 %   'tag'           = string, the name assigned to the object. All tags with the same name can be deleted in a figure, without deleting other parts of the figure.
+%   'box'           = draw a box around the local axes, can be 'yes' or 'no'
 %
 % It is possible to plot the object in a local pseudo-axis (c.f. subplot), which is specfied as follows
 %   'hpos'          = horizontal position of the lower left corner of the local axes
@@ -30,7 +31,7 @@ function [Zi, h] = ft_plot_topo(chanX, chanY, dat, varargin)
 %
 % See also FT_PLOT_TOPO3D, FT_PLOT_LAYOUT, FT_TOPOPLOTER, FT_TOPOPLOTTFR
 
-% Copyrights (C) 2009-2013, Giovanni Piantoni, Robert Oostenveld
+% Copyrights (C) 2009-2022, Giovanni Piantoni, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -53,8 +54,6 @@ function [Zi, h] = ft_plot_topo(chanX, chanY, dat, varargin)
 % these are for speeding up the plotting on subsequent calls
 persistent previous_argin previous_maskimage
 
-ws = ft_warning('on', 'MATLAB:divideByZero');
-
 % get the optional input arguments
 hpos          = ft_getopt(varargin, 'hpos',         0);
 vpos          = ft_getopt(varargin, 'vpos',         0);
@@ -72,6 +71,10 @@ mask          = ft_getopt(varargin, 'mask');
 outline       = ft_getopt(varargin, 'outline');
 clim          = ft_getopt(varargin, 'clim', []);
 parent        = ft_getopt(varargin, 'parent', []);
+box           = ft_getopt(varargin, 'box', false);
+
+% convert the yes/no strings into boolean values
+box = istrue(box);
 
 % check for nans in the data, they can be still left incase people want to mask non channels.
 if any(isnan(dat))
@@ -133,7 +136,7 @@ chanY = chanY(:) * yScaling + vpos;
 if strcmp(interplim, 'electrodes')
   hlim = [min(chanX) max(chanX)];
   vlim = [min(chanY) max(chanY)];
-elseif (strcmp(interplim, 'mask') || strcmp(interplim, 'mask_individual')) && ~isempty(mask),
+elseif (strcmp(interplim, 'mask') || strcmp(interplim, 'mask_individual')) && ~isempty(mask)
   hlim = [inf -inf];
   vlim = [inf -inf];
   for i=1:length(mask)
@@ -149,7 +152,6 @@ end
 newpoints = [];
 if length(mask)==1
   % which channels are outside
-  outside = false(length(chanX), 1);
   inside  = inside_contour([chanX chanY], mask{1});
   outside = ~inside;
   newpoints = [chanX(outside) chanY(outside)];
@@ -162,7 +164,7 @@ if isequal(current_argin, previous_argin)
   % don't construct the binary image, but reuse it from the previous call
   maskimage = previous_maskimage;
 elseif ~isempty(mask)
-  % convert the mask into a binary image
+  % convert the mask into an indexed image
   maskimage = zeros(gridscale); %false(gridscale);
   %hlim      = [min(chanX) max(chanX)];
   %vlim      = [min(chanY) max(chanY)];
@@ -238,11 +240,9 @@ else
 end
 
 if ~isempty(maskimage)
-  % make boolean  
-  maskimage      = maskimage~=0;
   % apply mask to the data to hide parts of the interpolated data (outside the circle) and channels that were specified to be masked
   % this combines the input options mask and maskdat
-  Zi(~maskimage) = NaN;
+  Zi(maskimage==0) = NaN;
 end
 
 % The topography should be plotted prior to the isolines to ensure that it is exported correctly, see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2496
@@ -273,7 +273,7 @@ elseif strcmp(style, 'imsat') || strcmp(style, 'imsatiso')
   end
   
   cmap    = get(gcf, 'colormap');
-  rgbcdat = cdat2rgb(Zi, cmap, clim, maskimage);
+  rgbcdat = cdat2rgb(Zi, cmap, clim, maskimage~=0);
   
   h = imagesc(xi, yi, rgbcdat, clim);
   set(h, 'tag', tag);
@@ -290,10 +290,10 @@ elseif strcmp(style, 'colormix')
     % use maskimagetmp in combination with maskimage, maskimagetmp is
     % scaled between 0 and 1
     maskimagetmp = maskimagetmp./max(maskimagetmp(:));
-    Zmask        = double(maskimage);
+    Zmask        = double(maskimage~=0);
     Zmask(Zmask>0) = maskimagetmp(Zmask>0);
   else
-    Zmask        = double(maskimage);
+    Zmask        = double(maskimage~=0);
   end
   
   cmap    = get(gcf, 'colormap');
@@ -331,6 +331,16 @@ if strcmp(style, 'isofill') && ~isempty(isolines)
   end
 end
 
+if box
+  % this plots a box around the original hpos/vpos with appropriate width/height
+  boxposition = zeros(1,4);
+  boxposition(1) = hpos - width/2;
+  boxposition(2) = hpos + width/2;
+  boxposition(3) = vpos - height/2;
+  boxposition(4) = vpos + height/2;
+  ft_plot_box(boxposition);
+end
+
 % apply clim if it was given
 if ~isempty(clim)
   caxis(clim)
@@ -344,5 +354,3 @@ previous_maskimage = maskimage;
 if ~holdflag
   hold off
 end
-
-ft_warning(ws); % revert to original state

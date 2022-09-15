@@ -25,7 +25,7 @@ function headmodel = ft_headmodel_concentricspheres(mesh, varargin)
 %
 % See also FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD
 
-% Copyright (C) 2012-2018, Donders Centre for Cognitive Neuroimaging, Nijmegen, NL
+% Copyright (C) 2012-2022, Donders Centre for Cognitive Neuroimaging, Nijmegen, NL
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -68,21 +68,45 @@ end
 mesh = fixpos(mesh);
 
 if ~isstruct(mesh) || ~isfield(mesh, 'pos')
-  ft_error('the input mesh should be a set of points or a single triangulated surface')
+  ft_error('the input mesh should be a set of points or a triangulated surface')
 end
-
-% start with an empty volume conductor
-headmodel = [];
-
-% ensure that the mesh has units, estimate them if needed
-mesh = ft_determine_units(mesh);
-
-% copy the geometrical units into the volume conductor
-headmodel.unit = mesh(1).unit;
 
 if isequal(fitind, 'all')
   fitind = 1:numel(mesh);
 end
+
+% only keep the meshes that need to be fitted
+mesh = mesh(fitind);
+
+% assign the default conductivities
+if isempty(conductivity)
+  % this assumes that the meshes are ordered 'insidefirst'
+  defaultconductivity = true;
+  switch length(mesh)
+    case 1
+      conductivity = 1;                        % brain
+    case 3
+      conductivity = [0.3300   0.0042 0.3300]; % brain, skull, scalp
+    case 4
+      conductivity = [0.3300 1 0.0042 0.3300]; % brain, csf, skull, scalp
+    otherwise
+      ft_error('conductivity values should be specified for each tissue type');
+  end
+else
+  % this assumes that the meshes are ordered consistently with the user-specified conductivity
+  defaultconductivity = false;
+end
+
+if length(mesh) ~= length(conductivity)
+  ft_error('the number of mesh geometries does not match the number of conductivity values');
+end
+
+% ensure that the mesh has units, estimate them if needed
+mesh = ft_determine_units(mesh);
+
+% start with an empty volume conductor, copy the units and coordsys over (if available)
+headmodel = keepfields(mesh(1), {'unit', 'coordsys'});
+headmodel.type = 'concentricspheres';
 
 % concatenate the vertices of all surfaces
 pos = {mesh.pos};
@@ -92,41 +116,35 @@ pos = cat(1, pos{:});
 pos  = unique(pos, 'rows');
 npos = size(pos, 1);
 
-% fit a single sphere to all combined headshape points
+% fit a single sphere to all combined headshape points, this is used for the center of the spheres
 [single_o, single_r] = fitsphere(pos);
 fprintf('initial sphere: number of unique surface points = %d\n', npos);
 fprintf('initial sphere: center = [%.1f %.1f %.1f]\n', single_o(1), single_o(2), single_o(3));
 fprintf('initial sphere: radius = %.1f\n', single_r);
 
-% fit the radius of each concentric sphere to the corresponding surface points
+% fit the radius of a single sphere to the corresponding surface points of each mesh
 for i = 1:numel(mesh)
   npos     = size(mesh(i).pos,1);
   dist     = sqrt(sum(((mesh(i).pos - repmat(single_o, npos, 1)).^2), 2));
-  headmodel.r(i) = mean(dist);
+  headmodel.r(i)    = mean(dist);
+  headmodel.cond(i) = conductivity(i);
 end
 
-headmodel.o    = single_o;              % specify the center of the spheres
-headmodel.cond = conductivity;          % specify the conductivity of the spheres, can be empty up to here
-headmodel.type = 'concentricspheres';
+% specify the center of the spheres
+headmodel.o = single_o;
 
 % sort the spheres from the smallest to the largest
-[headmodel.r, indx] = sort(headmodel.r);
-
-if isempty(headmodel.cond)
-  % it being empty indicates that the user did not specify a conductivity, use a default instead
-  if length(headmodel.r)==1
-    headmodel.cond = 1;                        % brain
-  elseif length(headmodel.r)==3
-    headmodel.cond = [0.3300   0.0042 0.3300]; % brain,      skull, skin
-  elseif length(headmodel.r)==4
-    headmodel.cond = [0.3300 1 0.0042 0.3300]; % brain, csf, skull, skin
-  else
-    ft_error('conductivity values should be specified for each tissue type');
-  end
-else
-  % the conductivity as specified by the user should be in the same order as the geometries
-  % sort the spheres from the smallest to the largest ('insidefirst' order)
+[dum, indx] = sort(headmodel.r);
+if any(diff(indx)<1)
+  ft_warning('reordering spheres from smallest to largest')
+end
+% order the spheres from the smallest to the largest ('insidefirst' order)
+headmodel.r    = headmodel.r(indx);
+if ~defaultconductivity
+  % assume that the specified conductivities are in the same order as the meshes
   headmodel.cond = headmodel.cond(indx);
+else
+  % the conductivities are already ordered 'insidefirst'
 end
 
 for i=1:numel(mesh)

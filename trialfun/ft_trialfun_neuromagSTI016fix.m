@@ -15,19 +15,25 @@ function [trl, event] = ft_trialfun_neuromagSTI016fix(cfg)
 %
 % See also FT_DEFINETRIAL, FT_TRIALFUN_GENERAL
 
+% Undocumented option:
+%  cfg.checkmaxfilter      = check that MaxFilter has run (default = yes).
+
 % Get only specific event type
 cfg.trialdef.eventtype = ft_getopt(cfg.trialdef, 'eventtype', 'STI101');
 cfg.trialdef.eventvalue = ft_getopt(cfg.trialdef, 'eventvalue', []);
 
+% MaxFilter option
+cfg.checkmaxfilter = ft_getopt(cfg.trialdef, 'checkmaxfilter');
+
 % read the header information, needed for the sampling rate and channel labels
-hdr = ft_read_header(cfg.dataset);
+hdr = ft_read_header(cfg.dataset, 'checkmaxfilter', cfg.checkmaxfilter);
 
 % Read trigger channels
 chanindx = find(not(cellfun('isempty', strfind(hdr.label,'STI0'))));
-event = ft_read_event(cfg.dataset, 'chanindx', chanindx);
-
+event = ft_read_event(cfg.dataset, 'chanindx', chanindx, 'checkmaxfilter', cfg.checkmaxfilter);
+    
 % Manually make combined trigger channel
-dat = ft_read_data(cfg.dataset , 'chanindx', chanindx); % Read the trigger data
+dat = ft_read_data(cfg.dataset , 'chanindx', chanindx, 'checkmaxfilter', cfg.checkmaxfilter); % Read the trigger data
 allsti = dat(1:16,:)==5;
 trig = allsti(1,:)*2^0 + ...
   allsti(2,:)*2^1 + ...

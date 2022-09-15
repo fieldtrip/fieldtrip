@@ -27,7 +27,7 @@ function [nearest, distance] = find_nearest(pnt1, pnt2, npart, gridflag)
 %
 % $Id$
 
-% this can be used for printing detailled user feedback
+% this can be used for printing detailed user feedback
 fb = false;
 
 if nargin<4
@@ -74,7 +74,7 @@ while ~isempty(sel)
   [pnear, pdist] = find_nearest_partition(pnt1(sel,:), pnt2, npart);
   better = pdist<=distance(sel);
   nearest(sel(better)) = pnear(better);
-  distance(sel(better)) = distance(better);
+  distance(sel(better)) = pdist(better);
   sel = find(nearest<0);
   npart = floor(npart/2);
 end
@@ -82,7 +82,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [nearest, distance] = find_nearest_partition(pnt1, pnt2, npart)
 
-% this can be used for printing detailled user feedback
+% this can be used for printing detailed user feedback
 fb = false;
 
 if isempty(fb)
@@ -150,8 +150,8 @@ for p=1:(npart^3)
     if partlim(p,2)>pmin(2), seln = seln & (pdist < (pnt1s(:,2) - partlim(p,2))); end
     if partlim(p,3)>pmin(3), seln = seln & (pdist < (pnt1s(:,3) - partlim(p,3))); end
     if partlim(p,1)<pmin(1), seln = seln & (pdist < (partlim(p,1)) + dx - pnt1s(:,1)); end
-    if partlim(p,2)<pmin(2), seln = seln & (pdist < (partlim(p,2)) + dx - pnt1s(:,2)); end
-    if partlim(p,3)<pmin(3), seln = seln & (pdist < (partlim(p,3)) + dx - pnt1s(:,3)); end
+    if partlim(p,2)<pmin(2), seln = seln & (pdist < (partlim(p,2)) + dy - pnt1s(:,2)); end
+    if partlim(p,3)<pmin(3), seln = seln & (pdist < (partlim(p,3)) + dz - pnt1s(:,3)); end
   end
 
   % the results have to be re-indexed

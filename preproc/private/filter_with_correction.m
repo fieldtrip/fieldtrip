@@ -82,10 +82,7 @@ switch dir
   case 'onepass-zerophase'
     filt = fir_filterdcpadded(B, A, dat', 0, usefftfilt)';
   case 'onepass-reverse-zerophase'
-    offset = dat(:,end);
-    dat  = fliplr(dat) - repmat(offset,1,nsample);
-    filt = fir_filterdcpadded(B, A, dat', 0, usefftfilt)';
-    filt = fliplr(filt) + repmat(dcGain*offset, 1, nsample);
+    filt = fliplr(fir_filterdcpadded(B, A, fliplr(dat)', 0, usefftfilt)');
   case 'onepass-minphase'
     filt = fir_filterdcpadded(B, A, dat', 1, usefftfilt)';
   otherwise

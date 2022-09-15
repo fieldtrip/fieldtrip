@@ -166,6 +166,7 @@ trigindx         = ft_getopt(varargin, 'trigindx');                  % deprecate
 triglabel        = ft_getopt(varargin, 'triglabel');                 % deprecated, use chanindx instead
 password         = ft_getopt(varargin, 'password', struct([]));
 readbids         = ft_getopt(varargin, 'readbids', 'ifmakessense');
+combinebinary    = ft_getopt(varargin, 'combinebinary'); % this is a sub-option for yokogawa data
 
 % for backward compatibility, added by Robert in Sept 2019
 if ~isempty(trigindx)
@@ -1118,24 +1119,51 @@ switch eventformat
     else
       asc = read_eyelink_asc(filename);
     end
+    
+    % the input events are handled differently (because they already
+    % contain a timestamp and value, as per read_eyelink_asc
     if ~isempty(asc.input)
-      timestamp = [asc.input(:).timestamp];
-      value     = [asc.input(:).value];
-    else
-      timestamp = [];
-      value = [];
-    end
-    % note that in this dataformat the first input trigger can be before
-    % the start of the data acquisition
-    for i=1:length(timestamp)
-      event(end+1).type       = 'INPUT';
-      event(end  ).sample     = (timestamp(i)-hdr.FirstTimeStamp)/hdr.TimeStampPerSample + 1;
-      event(end  ).timestamp  = timestamp(i);
-      event(end  ).value      = value(i);
-      event(end  ).duration   = 1;
-      event(end  ).offset     = 0;
+      timestamp = asc.input.timestamp;
+      value     = asc.input.value;
+      sample    = (timestamp-hdr.FirstTimeStamp)/hdr.TimeStampPerSample + 1;
+      
+      % note that in this dataformat the first input trigger can be before
+      % the start of the data acquisition
+      for i=1:length(timestamp)
+        event(end+1).type       = 'INPUT';
+        event(end  ).sample     = sample(i);
+        event(end  ).timestamp  = timestamp(i);
+        event(end  ).value      = value(i);
+        event(end  ).duration   = 1;
+        event(end  ).offset     = 0;
+      end
     end
     
+    % these fields are dealt with a bit differently, the 'e' -events
+    % contain more information than the 's' -events
+    fnames = {'eblink', 'efix', 'esacc'};
+    tnames = {'BLINK',  'FIX',  'SACC'};
+    for k=1:length(fnames)
+      if isfield(asc, fnames{k}) && ~isempty(asc.(fnames{k}))
+        bfs = asc.(fnames{k});
+
+        timestamp = bfs.stime;
+        sample    = (timestamp-hdr.FirstTimeStamp)/hdr.TimeStampPerSample + 1;
+        value     = bfs.eye;
+        duration  = bfs.dur;
+
+        % note that in this dataformat the first input trigger can be before
+        % the start of the data acquisition
+        for i=1:length(timestamp)
+          event(end+1).type       = tnames{k};
+          event(end  ).sample     = sample(i);
+          event(end  ).timestamp  = timestamp(i);
+          event(end  ).value      = value(i);
+          event(end  ).duration   = duration(i);
+          event(end  ).offset     = 0;
+        end
+      end
+    end
   case 'fcdc_global'
     event = event_queue;
     
@@ -2235,13 +2263,16 @@ switch eventformat
     % the user should be able to specify the analog threshold, but the code falls back to '1.6' as default
     % the user should be able to specify the trigger channels
     % the user should be able to specify the flank, but the code falls back to 'up' as default
+    % the user can specify combinebinary to be true, in which case the individual binarized trigger channels
+    % will be combined into a single trigger code
+    % the user may need to specify a trigshift~=0 to ensure that unintended asynchronicity in the TTL-pulses is avoided
     if isempty(detectflank)
       detectflank = 'up';
     end
     if isempty(threshold)
       threshold = 1.6;
     end
-    event = read_yokogawa_event(filename, 'detectflank', detectflank, 'chanindx', chanindx, 'threshold', threshold);
+    event = read_yokogawa_event(filename, 'detectflank', detectflank, 'chanindx', chanindx, 'threshold', threshold, 'combinebinary', combinebinary, 'trigshift', trigshift);
     
   case {'yorkinstruments_hdf5'}
     if isempty(hdr)

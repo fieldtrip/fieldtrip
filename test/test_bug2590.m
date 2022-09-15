@@ -7,7 +7,7 @@ function test_bug2590
 clear all
 close all
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data'));
+cd(dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf'));
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% start by constructing an averaged ECG template

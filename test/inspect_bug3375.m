@@ -2,11 +2,11 @@ function inspect_bug3375
 
 % WALLTIME 00:10:00
 % MEM 3gb
-% DEPENDENCY
-
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug3375'));
+% DEPENDENCY ft_realtime_headlocalizer
 
 %%
+
+cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug3375'));
 
 mri = ft_read_mri('ctf/T1/o20150923_103128t1mpragesagiso1mmwselnfps004a1001.img');
 

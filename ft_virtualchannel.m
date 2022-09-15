@@ -279,8 +279,9 @@ for i = 1:nvc
         if isfreq
           tmp = ft_checkdata(data, 'cmbstyle', 'fullfast');
           C   = tmp.crsspctrm;
-          if size(C,3)>1
-            C = mean(C,3);
+          if ndims(C)>2
+            siz = size(C);
+            C = mean(reshape(C, [siz(1) siz(2) prod(siz(3:end))]),3);
           end
         else
           tmpcfg = [];

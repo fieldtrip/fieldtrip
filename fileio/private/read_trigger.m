@@ -42,7 +42,7 @@ endsample    = ft_getopt(varargin, 'endsample'          );
 chanindx     = ft_getopt(varargin, 'chanindx'           ); % specify -1 in case you don't want to detect triggers
 detectflank  = ft_getopt(varargin, 'detectflank'        ); % can be up, updiff, down, downdiff, both, any, biton, bitoff
 denoise      = ft_getopt(varargin, 'denoise',      true );
-trigshift    = ft_getopt(varargin, 'trigshift',    false); % causes the value of the trigger to be obtained from a sample that is shifted N samples away from the actual flank
+trigshift    = ft_getopt(varargin, 'trigshift',    0); % causes the value of the trigger to be obtained from a sample that is shifted N samples away from the actual flank
 trigpadding  = ft_getopt(varargin, 'trigpadding',  true );
 fixctf       = ft_getopt(varargin, 'fixctf',       false);
 fixneuromag  = ft_getopt(varargin, 'fixneuromag',  false);
@@ -51,6 +51,7 @@ fixbiosemi   = ft_getopt(varargin, 'fixbiosemi',   false);
 fixartinis   = ft_getopt(varargin, 'fixartinis',   false);
 fixstaircase = ft_getopt(varargin, 'fixstaircase', false);
 fixhomer     = ft_getopt(varargin, 'fixhomer',     false);
+combinebinary = ft_getopt(varargin, 'combinebinary', false);
 threshold    = ft_getopt(varargin, 'threshold'          );
 
 if isempty(hdr)
@@ -224,6 +225,17 @@ if ~isempty(threshold)
   end
 end
 
+if combinebinary
+  % this can only be done after thresholding
+  % combines the single binary channels into a numbered trigger
+  newdat = zeros(1, size(dat,2));
+  for i = 1:size(dat,1)
+    newdat = newdat + dat(i,:).*2^(i-1);
+  end
+  dat = newdat; clear newdat
+  hdr.label{chanindx(1)} = 'combined_binary_trigger';
+end
+
 if isempty(dat)
   % either no trigger channels were selected, or no samples
   return
@@ -239,7 +251,7 @@ if isempty(detectflank)
   end
 end
 
-for i=1:length(chanindx)
+for i = 1:size(dat,1)
   % process each trigger channel independently
   channel = hdr.label{chanindx(i)};
   trig    = dat(i,:);

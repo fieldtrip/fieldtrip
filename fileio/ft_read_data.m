@@ -219,19 +219,18 @@ end
 
 % read the header if it is not provided
 if isempty(hdr)
-  hdr = ft_read_header(filename, 'headerformat', headerformat, 'chanindx', chanindx, 'checkmaxfilter', checkmaxfilter, 'password', password);
-  if isempty(chanindx)
-    chanindx = 1:hdr.nChans;
-  end
-else
-  % set the default channel selection, which is all channels
-  if isempty(chanindx)
-    chanindx = 1:hdr.nChans;
-  end
-  % test whether the requested channels can be accomodated
-  if min(chanindx)<1 || max(chanindx)>hdr.nChans
-    ft_error('FILEIO:InvalidChanIndx', 'selected channels are not present in the data');
-  end
+  % note that the chanindx option should not be passed here, see https://github.com/fieldtrip/fieldtrip/pull/2048
+  hdr = ft_read_header(filename, 'headerformat', headerformat, 'checkmaxfilter', checkmaxfilter, 'password', password, 'cache', cache);
+end
+
+% set the default channel selection, which is all channels
+if isempty(chanindx)
+  chanindx = 1:hdr.nChans;
+end
+
+% test whether the requested channels can be accomodated
+if min(chanindx)<1 || max(chanindx)>hdr.nChans
+  ft_error('FILEIO:InvalidChanIndx', 'selected channels are not present in the data');
 end
 
 % read until the end of the file if the endsample is "inf"

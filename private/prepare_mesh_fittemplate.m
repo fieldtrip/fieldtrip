@@ -1,9 +1,8 @@
-function M = prepare_mesh_fittemplate(headshape,template)
+function M = prepare_mesh_fittemplate(mesh1,mesh2)
 
 % PREPARE_MESH_FITTEMPLATE computes an affine transformation matrix between 2 point clouds 
 %
 % This function relies on cpd toolbox from  Myronenko, see https://sites.google.com/site/myronenko/research/cpd
-%
 %
 % See also FT_PREPARE_MESH
 
@@ -38,7 +37,20 @@ opt.fgt = 0;
 opt.tol = 10e-12;
 opt.outliers = 0.0;
 opt.outliers = 0;
-[transform,dum] = cpd_register(headshape,template, opt);
+
+figure
+axis equal
+axis vis3d
+
+[transform,dum] = cpd_register(mesh1,mesh2, opt);
+
+% figure
+% plot3(mesh1(:,1), mesh1(:,2), mesh1(:,3), 'r.');
+% hold on
+% plot3(mesh2(:,1), mesh2(:,2), mesh2(:,3), 'bo');
+% plot3(transform.Y(:,1), transform.Y(:,2), transform.Y(:,3), 'b.');
+% axis equal
+% axis vis3d
 
 M = eye(4,4);
 M(1:3,1:3) = transform.R;

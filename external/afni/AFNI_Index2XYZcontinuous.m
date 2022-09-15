@@ -3,35 +3,44 @@ function [err,XYZdic] = AFNI_Index2XYZcontinuous (Indx, Info, CoordCode)
 %   [err,XYZdic] = AFNI_Index2XYZcontinuous (Indx, Info, [CoordCode])
 %
 %Purpose:
-%   Change from voxel XYZindex (called Voxel Coords in AFNI) to XYZ in mm 
-%   The mm and voxel coordinates refer to the values displayed 
+%   Change from voxel XYZindex (called Voxel Coords in AFNI) to XYZ in mm
+%   The mm and voxel coordinates refer to the values displayed
 %   on the top left corner of AFNI controller.
 %   CoordCode is the one you'd set from the Coord Order plugin
-%   
-%   
+%
+%
 %Input Parameters:
 %   Indx an Mx3 matrix or an  Mx1 vector containing the voxel indices to be
 %        transformed to voxel coordinates.  (indices start at 0)
 %   Info is the output of BrikInfo
 %   CoordCode is an optional parameter used to specify the coordinates system of the output
-%      if empty or not specified, the default is 'RAI'. The code can be either a string or a vector 
+%      if empty or not specified, the default is 'RAI'. The code can be either a string or a vector
 %      of numbers (see AFNI_CoordChange for more on that)
 %
 %Output Parameters:
 %   err : 0 No Problem
 %       : 1 Mucho Problems
 %   XYZdic : The continuous coordinates corresponding to Indx
-%       The coordnate system output is in RAI (DICOM) 
+%       The coordnate system output is in RAI (DICOM)
 %       unless otherwise specified by CoordCode
-%   
-%      
+%
+%
 %Key Terms:
-%   
+%
 %More Info :
 %   BrikInfo
 %   Test_AFNI_Index2XYZcontinuous
 %   AFNI_XYZcontinuous2Index
 %   Test_AFNI_XYZcontinuous2Index
+%
+% You can also go from index to XYZ using the header field IJK_TO_DICOM_REAL
+%  For instance, say you have voxel indices 12, 2, 4 (matlab indexing 13, 3, 5)
+%  to go from AFNI index to AFNI DICOM RAI you can do:
+%     M = [reshape(Info.IJK_TO_DICOM_REAL, 4, 3)' ; 0 0 0 1];
+%     I = [12 2 4 1]';
+%     X = M*I;
+%     To go from AFNI DICOM RAI to AFNI indices:
+%     I = inv(M)*X;
 %
 %     Author : Ziad Saad
 %     Date : Tue Sep 5 21:48:06 PDT 2000           Latest Modification: Feb 18 04
@@ -48,7 +57,7 @@ ChangeCoord = 0;
 if (nargin == 3)
 	if (~isempty(CoordCode)),
 		ChangeCoord = 1;
-	end   
+	end
 end
 
 
@@ -56,7 +65,7 @@ end
 err = 1;
 XYZmm = [];
 
-%make sure Indx is the right size 
+%make sure Indx is the right size
 switch size(Indx,2),
 	case 1, %change 1D index to XYZ index
 		[err, Indx] = AfniIndex2AfniXYZ (Indx, Info.DATASET_DIMENSIONS(1), Info.DATASET_DIMENSIONS(2))
@@ -68,8 +77,8 @@ end
 
 XYZmm = Indx;
 
-	%The equations that would change the indices to coordinate system result in a coordinate system that 
-	% may be any permutation of RAI (like IRA or AIR or IAR or RIA or ARI) so one only needs to find the 
+	%The equations that would change the indices to coordinate system result in a coordinate system that
+	% may be any permutation of RAI (like IRA or AIR or IAR or RIA or ARI) so one only needs to find the
 	%dimension permutation needed to bring the final result to RAI.
 
 	%determine the ordering map to go from any permutation of RAI to RAI
@@ -82,7 +91,7 @@ XYZmm = Indx;
 		%XYZmm(:, maploc(2)) = Info.ORIGIN(2) + Indx(:,2) .* Info.DELTA(2);
 		%XYZmm(:, maploc(3)) = Info.ORIGIN(3) + Indx(:,3) .* Info.DELTA(3);
 
-	%post - Wed May 23 18:20:56 PDT 2001 - WRONG! 
+	%post - Wed May 23 18:20:56 PDT 2001 - WRONG!
 		%XYZmm(:, 1) = Info.ORIGIN(maploc(1)) + Indx(:,maploc(1)) .* Info.DELTA(maploc(1));
 		%XYZmm(:, 2) = Info.ORIGIN(maploc(2)) + Indx(:,maploc(2)) .* Info.DELTA(maploc(2));
 		%XYZmm(:, 3) = Info.ORIGIN(maploc(3)) + Indx(:,maploc(3)) .* Info.DELTA(maploc(3));

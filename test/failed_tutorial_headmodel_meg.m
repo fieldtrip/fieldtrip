@@ -6,11 +6,7 @@ function failed_tutorial_headmodel_meg(datadir)
 
 % intial version by Lilla Magyari
 
-if nargin==0
-  datadir = dccnpath('/home/common/matlab/fieldtrip/data/');
-end
-
-mri = ft_read_mri([datadir,'ftp/tutorial/beamformer/Subject01.mri']);
+mri = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.mri']);
 
 cfg           = [];
 cfg.output    = 'brain';
@@ -18,10 +14,10 @@ segmentedmri  = ft_volumesegment(cfg, mri);
 
 % check if segmentation is equivalent with segmentation on the ftp site
 
-segmentedmri2 = load([datadir,'ftp/tutorial/headmodel_meg/segmentedmri']);
-segmentedmri=rmfield(segmentedmri,'cfg');
-segmentedmri2=rmfield(segmentedmri2.segmentedmri,'cfg');
-assert(isequal(segmentedmri2,segmentedmri),'The segmentation does not match the segmentation stored on the ftp site');
+segmentedmri2 = load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/headmodel_meg/segmentedmri.mat'));
+segmentedmri  = rmfield(segmentedmri,'cfg');
+segmentedmri2 = rmfield(segmentedmri2.segmentedmri,'cfg');
+assert(isequal(segmentedmri2, segmentedmri), 'The segmentation does not match the segmentation stored on the ftp site');
 
 %
 
@@ -31,7 +27,7 @@ vol = ft_prepare_headmodel(cfg, segmentedmri);
 
 % check if vol is equivalent with vol on the ftp site
 
-vol2 = load([datadir,'ftp/tutorial/headmodel_meg/vol']);
+vol2 = load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/headmodel_meg/vol.mat']);
 vol2 = vol2.vol; % copy it over
 
 vol  = tryrmfield(vol, 'cfg');
@@ -50,7 +46,7 @@ assert(isalmostequal(vol,vol2,'abstol',0.0001),'The headmodel does not match the
 
 %
 
-sens = ft_read_sens([datadir,'/Subject01.ds']);
+sens = ft_read_sens(dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds'));
 
 vol = ft_convert_units(vol,'cm');
 
@@ -69,7 +65,3 @@ function s = tryrmsubfield(s, f)
 if issubfield(s, f)
   s = rmsubfield(s, f);
 end
-
-
-
-

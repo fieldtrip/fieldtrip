@@ -4,7 +4,7 @@ function inspect_ft_trialfun_general
 % MEM 2gb
 % DEPENDENCY ft_trialfun_general ft_trialfun_gui ft_trialfun_show
 
-dataset = dccnpath('/home/common/matlab/fieldtrip/data/Subject01.ds');
+dataset = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds');
 
 %%
 

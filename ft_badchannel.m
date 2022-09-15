@@ -1,4 +1,4 @@
-function cfg = ft_badchannel(cfg, data)
+function [cfg] = ft_badchannel(cfg, data)
 
 % FT_BADCHANNEL tries to identify bad channels in a MEG or EEG dataset. Different
 % methods are implemented to identify bad channels, these are largely shared with
@@ -23,7 +23,7 @@ function cfg = ft_badchannel(cfg, data)
 % of the neighbours.
 %
 % Use as
-%   cfg = ft_badchannel(cfg, data)
+%   [cfg] = ft_badchannel(cfg, data)
 % where the input data corresponds to the output from FT_PREPROCESSING.
 %
 % The configuration should contain
@@ -225,6 +225,7 @@ end % for each trial
 
 ft_info('identified %d out of %d channels as bad\n', sum(badchannel), length(badchannel));
 
+% keep track of bad channels
 cfg.badchannel = data.label(badchannel);
 
 % do the general cleanup and bookkeeping at the end of the function
@@ -239,4 +240,3 @@ ft_postamble hastoolbox
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function tf = most(x)
 tf = sum(x(:)==true)>(numel(x)/2);
-

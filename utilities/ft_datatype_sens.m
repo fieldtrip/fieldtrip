@@ -117,7 +117,7 @@ function [sens] = ft_datatype_sens(sens, varargin)
 %   distance      = string, can be 'm', 'cm' or 'mm'
 %   scaling       = string, can be 'amplitude' or 'amplitude/distance'
 
-% these are for remembering the type on subsequent calls with the same input arguments
+% these are for speeding up subsequent calls with the same input arguments
 persistent previous_argin previous_argout
 
 current_argin = [{sens} varargin];
@@ -178,7 +178,10 @@ switch version
     % update it to the previous standard version
     new_argin = ft_setopt(varargin, 'version', '2019');
     sens      = ft_datatype_sens(sens, new_argin{:});
-    
+    if isfield(sens, 'coordsys')
+      sens = fixcoordsys(sens);
+    end
+
     if isnirs
       sens = renamefields(sens, 'transmits', 'tra'); % this makes it more consistent with EEG and MEG
       sens = removefields(sens, {'laserstrength'});

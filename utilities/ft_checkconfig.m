@@ -438,6 +438,8 @@ if ~isempty(createsubcfg)
           'pos'
           'tri'
           'dim'
+          'time'
+          'signal'
           };
 
       case 'dics'
@@ -584,12 +586,6 @@ if ~isempty(createsubcfg)
           'init'
           'checkconvergence'
           'stabilityfix'
-          };
-
-      case 'dip'
-        fieldname = {
-          'time'
-          'signal'
           };
 
       otherwise

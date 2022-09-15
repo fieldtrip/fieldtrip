@@ -1,4 +1,5 @@
 function inspect_bug2588
+
 % DEPENDENCY ft_databrowser
 
 data = [];

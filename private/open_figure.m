@@ -3,6 +3,8 @@ function h = open_figure(cfg)
 % OPEN_FIGURE is a helper function to open a figure with some specific settings
 % consistent over all FieldTrip functions that do plotting and/or that show a
 % graphical user interface.
+%
+% See also GCA, GCF, GROOT, 
 
 cfg.figure      = ft_getopt(cfg, 'figure', 'yes');
 cfg.visible     = ft_getopt(cfg, 'visible', 'yes');

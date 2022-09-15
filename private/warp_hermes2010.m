@@ -29,7 +29,7 @@ function [coord_snapped] = warp_hermes2010(cfg, elec, surf)
 %
 % $Id$
 
-disp('using warp algorithm described in Hermes et al. 2010: doi:10.1016/j.jneumeth.2009.10.005')
+disp('using warp algorithm described in Hermes et al. 2010, https://doi.org/10.1016/j.jneumeth.2009.10.005')
 
 % determine grid dimensions (1st dim: number of arrays, 2nd dim: number of elecs in an array)
 GridDim = determine_griddim(elec);

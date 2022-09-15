@@ -7,7 +7,7 @@ function test_beamformer_sam(dataset)
 % this function creates a set of source-structures to be used for testing
 
 if nargin==0
-  dataset = dccnpath('/home/common/matlab/fieldtrip/data/Subject01.ds');
+  dataset = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds');
 end
 
 % get volume conductor model

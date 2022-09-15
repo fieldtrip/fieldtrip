@@ -106,6 +106,14 @@ dtype = ft_datatype(input);
 switch dtype
   case 'grad'
     if globalrescale || axesrescale, ft_error('only a rigid body transformation without rescaling is allowed'); end
+  case 'mesh'
+    if length(input)>1
+      % there are multiple meshes
+      for i=1:length(input)
+        output(i) = ft_transform_geometry(transform, input(i));
+      end
+      return
+    end
   otherwise
     % could be a volume conductor model with constrained transformation possibilities
     if ft_headmodeltype(input, 'singleshell') && isfield(input, 'forwpar') && (globalrescale || axesrescale)

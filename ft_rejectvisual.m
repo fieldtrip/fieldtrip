@@ -223,7 +223,7 @@ switch cfg.method
       fprintf('showing the data per channel, all trials at once\n');
     end
     [chansel, trlsel, cfg] = rejectvisual_channel(cfg, tmpdata);
-    
+
   case 'trial'
     if scaled
       fprintf('showing the scaled per trial, all channels at once\n');
@@ -231,7 +231,7 @@ switch cfg.method
       fprintf('showing the data per trial, all channels at once\n');
     end
     [chansel, trlsel, cfg] = rejectvisual_trial(cfg, tmpdata);
-    
+
   case 'summary'
     if scaled
       fprintf('showing a summary of the scaled data for all channels and trials\n');
@@ -239,7 +239,7 @@ switch cfg.method
       fprintf('showing a summary of the data for all channels and trials\n');
     end
     [chansel, trlsel, cfg] = rejectvisual_summary(cfg, tmpdata);
-    
+
   otherwise
     ft_error('unsupported method %s', cfg.method);
 end % switch method
@@ -247,43 +247,49 @@ end % switch method
 fprintf('after GUI interaction: %d trials marked to INCLUDE, %d trials marked to EXCLUDE\n', sum(trlsel), sum(~trlsel));
 fprintf('after GUI interaction: %d channels marked to INCLUDE, %d channels marked to EXCLUDE\n', sum(chansel), sum(~chansel));
 
-chans_removed = tmpdata.label(~chansel);
-trl_removed = find(~trlsel);
+% these are to be removed, filled with nan/zero, or kept in the output
+badchannel = tmpdata.label(~chansel);
+badsegment = find(~trlsel);
 
 if ~all(chansel)
   switch cfg.keepchannel
     case 'yes'
       % keep all channels, also when they are not selected
       fprintf('no channels were removed from the data\n');
-      
+
     case 'no'
       % show the user which channels are removed
       fprintf('the following channels were removed: ');
-      
+
     case 'nan'
-      % show the user which channels are removed
+      % show the user which channels are nan-filled
       fprintf('the following channels were filled with NaNs: ');
-      
+
       % mark the selection as nan
       for i=1:length(data.trial)
         data.trial{i}(~chansel,:) = nan;
       end
-      
+
     case 'zero'
-      % show the user which channels are removed
+      % show the user which channels are zero-filled
       fprintf('the following channels were filled with zeros: ');
-      
+
       % mark the selection as zero
       for i=1:length(data.trial)
-        data.trial{i}(~chansel,:) = 0;;
+        data.trial{i}(~chansel,:) = 0;
       end
-      
+
     case 'repair'
       % create cfg struct for call to FT_CHANNELREPAIR
       orgcfg = cfg;
       tmpcfg = [];
-      tmpcfg.trials = 'all';
-      tmpcfg.badchannel = find(~chansel);
+      if isfield(data, 'grad') || isfield(data, 'elec') || isfield(data, 'opto')
+        tmpcfg.method = 'weighted';
+      else
+        tmpcfg.method = 'average';
+      end
+      tmpcfg.trials = 'all'; % here we are only dealing with bad channels, bad trials will be removed further down (if applicable)
+      tmpcfg.badchannel = data.label(~chansel);
       tmpcfg.neighbours = cfg.neighbours;
       if isfield(cfg, 'grad')
         tmpcfg.grad = cfg.grad;
@@ -294,25 +300,25 @@ if ~all(chansel)
       % repair the channels that were selected as bad
       data = ft_channelrepair(tmpcfg, data);
       % restore the provenance information
-      [cfg, data] = rollback_provenance(cfg, data);
+      [orgcfg, data] = rollback_provenance(orgcfg, data);
       % restore the original trials parameter, it should not be 'all'
       cfg = copyfields(orgcfg, cfg, {'trials'});
-      
+
       % show which channels were repaired
       fprintf('the following channels were repaired using FT_CHANNELREPAIR: ');
-      
+
     otherwise
       ft_error('invalid specification of cfg.keepchannel')
   end % case
-  
+
   % provide the channel feedback
   if any(strcmp({'no', 'nan', 'repair'}, cfg.keepchannel))
-    for i=1:(length(chans_removed)-1)
-      fprintf('%s, ', chans_removed{i});
+    for i=1:(length(badchannel)-1)
+      fprintf('%s, ', badchannel{i});
     end
-    fprintf('%s\n', chans_removed{end});
+    fprintf('%s\n', badchannel{end});
   end
-  
+
 end % if ~all(chansel)
 
 if ~all(trlsel)
@@ -320,49 +326,55 @@ if ~all(trlsel)
     case 'yes'
       % keep all trials, also when they are not selected
       fprintf('no trials were removed from the data\n');
-      
+
     case 'no'
       % show the user which channels are removed
       fprintf('the following trials were removed: ');
-      
+
     case 'nan'
-      % show the user which trials are removed
+      % show the user which trials are nan-filled
       fprintf('the following trials were filled with NaNs: ');
 
       % mark the selection as nan
-      for i = trl_removed
+      for i = badsegment
         data.trial{i}(:,:) = nan;
       end
-      
+
     case 'zero'
-      % show the user which trials are removed
+      % show the user which trials are zero-filled
       fprintf('the following trials were filled with zeros: ');
 
       % mark the selection as zero
-      for i = trl_removed
-        data.trial{i}(:,:) = 0;;
+      for i = badsegment
+        data.trial{i}(:,:) = 0;
       end
-      
+
     otherwise
       ft_error('invalid specification of cfg.keeptrial')
   end % case
-  
+
   % provide the trial feedback
   if any(strcmp({'no', 'nan', 'repair'}, cfg.keeptrial))
-    for i=1:(length(trl_removed)-1)
-      fprintf('%d, ', trl_removed(i));
+    for i=1:(length(badsegment)-1)
+      fprintf('%d, ', badsegment(i));
     end
-    fprintf('%d\n', trl_removed(end));
+    fprintf('%d\n', badsegment(end));
   end
 end % if ~all(trlsel)
 
+% keep track of bad segments
 if isfield(data, 'sampleinfo')
-  % construct the matrix with sample numbers prior to making the selection
-  cfg.artfctdef.(cfg.method).artifact = data.sampleinfo(trl_removed,:);
+  % this format is consistent with that of other artifact detection functions
+  % construct the artifact matrix prior to making the selection
+  cfg.artfctdef.(cfg.method).artifact = data.sampleinfo(badsegment,:);
 end
 
-cfg.trials = find(trlsel);
+% keep track of bad channels
+cfg.badchannel = badchannel;
+
+% these represent the channels and trials that are retained in the output
 cfg.channel = data.label(chansel);
+cfg.trials = find(trlsel);
 
 % perform the actual selection of channels and trials
 tmpcfg = [];

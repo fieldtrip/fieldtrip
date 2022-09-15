@@ -1,4 +1,4 @@
-function output = ft_connectivity_mutualinformation(input, varargin)
+function output = ft_connectivity_mutualinformation(inputdata, varargin)
 
 % FT_CONNECTIVITY_MUTUALINFORMATION computes mutual information using either the
 % information breakdown toolbox (ibtb), as described in Magri et al., BMC
@@ -6,7 +6,7 @@ function output = ft_connectivity_mutualinformation(input, varargin)
 % approach (gcmi).
 %
 % Use as
-%   mi = ft_connectivity_mutualinformation(data, ...)
+%   mi = ft_connectivity_mutualinformation(inputdata, ...)
 %
 % The input data should be a Nchan x Nobservations matrix.
 %
@@ -69,7 +69,7 @@ if ~isempty(tra)
     error('method ''ibtb'' in combination with a non-identity ''tra'' is not possible');
   end
 else
-  tra = eye(size(input,1))>0;
+  tra = eye(size(inputdata,1))>0;
 end
 
 % ensure that the refindx is numeric, defaults to 1:size(input,1), i.e. do
@@ -109,10 +109,10 @@ switch method
     opts.bias   = ft_getopt(opts, 'bias',   'pt');
     
     % deal with NaNs in the input data, e.g. trial boundaries
-    finitevals = isfinite(input);
+    finitevals = isfinite(inputdata);
     
     nchans = size(tra,1);
-    n      = size(input, 2);
+    n      = size(inputdata, 2);
     output = zeros(nchans, numel(refindx), numel(lags)) + nan;
     
     % for each lag
@@ -129,11 +129,11 @@ switch method
       
       for p = 1:numel(refindx)
         tmprefdata = nan(sum(tra(refindx(p),:)),n);
-        tmprefdata(:, beg1:end1) = input(tra(refindx(p),:), beg2:end2);
+        tmprefdata(:, beg1:end1) = inputdata(tra(refindx(p),:), beg2:end2);
         
         finitevals2 = sum(finitevals,1)&sum(isfinite(tmprefdata),1); % this conservatively takes only the non-nan samples across all input data channels
         
-        tmpinput    = input(:,finitevals2);
+        tmpinput    = inputdata(:,finitevals2);
         tmprefdata  = tmprefdata(:,finitevals2);
         
         % discretize signal1
@@ -164,11 +164,11 @@ switch method
     cmplx = ft_getopt(varargin, 'complex', 'complex'); % this is only used if data are complex-valued
     
     % deal with NaNs in the input data, e.g. trial boundaries
-    finitevals = isfinite(input);
+    finitevals = isfinite(inputdata);
     
     % verify whether data is complex-valued, check the inputs, and adjust
     % the input data
-    if ~all(imag(input(:))==0)
+    if ~all(imag(inputdata(:))==0)
       % a tra deviating from I is currently not supported: ask Robin how to
       % deal with this, if possible at all
       if ~isequal(tra,eye(size(tra,1))>0)
@@ -178,21 +178,21 @@ switch method
         case 'complex'
           % tease apart the real/imag parts, treat as 2D-variable, and
           % ensure the nans to behave
-          complexrows = sum(imag(input)~=0,2)>0;
-          input(~finitevals) = nan+1i.*nan;
-          input = cat(1, real(input), imag(input(complexrows,:)));
+          complexrows = sum(imag(inputdata)~=0,2)>0;
+          inputdata(~finitevals) = nan+1i.*nan;
+          inputdata = cat(1, real(inputdata), imag(inputdata(complexrows,:)));
           tra   = cat(2, tra, tra(:,complexrows));
           finitevals = cat(1, finitevals, finitevals(complexrows,:));
         case 'abs'
           % take the amplitude
-          input = abs(input);
+          inputdata = abs(inputdata);
         case 'angle'
           % tease apart the real/imag parts, after amplitude normalization,
           % and ensure the nans to behave
-          complexrows = sum(imag(input)~=0,2)>0;
-          input(~finitevals) = nan+1i.*nan;
-          input(complexrows,:) = input(complexrows,:)./abs(input(complexrows,:));
-          input = cat(1, real(input), imag(input(complexrows,:)));
+          complexrows = sum(imag(inputdata)~=0,2)>0;
+          inputdata(~finitevals) = nan+1i.*nan;
+          inputdata(complexrows,:) = inputdata(complexrows,:)./abs(inputdata(complexrows,:));
+          inputdata = cat(1, real(inputdata), imag(inputdata(complexrows,:)));
           tra   = cat(2, tra, tra(:,complexrows));
           finitevals = cat(1, finitevals, finitevals(complexrows,:));
         otherwise
@@ -208,7 +208,7 @@ switch method
     end
     
     nchans = size(tra,1);
-    n      = size(input, 2);
+    n      = size(inputdata, 2);
     if ~isempty(featureindx)
       if isempty(sourcelags)
         sourcelags = lags;
@@ -219,10 +219,10 @@ switch method
     end
     
     if precondition
-      finitevalstmp = sum(isfinite(input))==size(input,1);
-      input(:,finitevalstmp) = copnorm(input(:,finitevalstmp)')';
-      input(:,~finitevalstmp) = nan;
-      finitevals = isfinite(input);
+      finitevalstmp = sum(isfinite(inputdata))==size(inputdata,1);
+      inputdata(:,finitevalstmp) = copnorm(inputdata(:,finitevalstmp)')';
+      inputdata(:,~finitevalstmp) = nan;
+      finitevals = isfinite(inputdata);
     end
     
     % for each lag if combinelags is false
@@ -244,19 +244,19 @@ switch method
           
           if ~isequal(tra, eye(size(tra,1)))
             tmpsource = nan(sum(tra(refindx(p),:)),n);
-            tmpsource(:, beg1:end1) = input(tra(refindx(p),:), beg2:end2);
+            tmpsource(:, beg1:end1) = inputdata(tra(refindx(p),:), beg2:end2);
           else
             tmpsource = nan(size(refindx,2),n);
-            tmpsource(:, beg1:end1) = input(refindx(p,:), beg2:end2);
+            tmpsource(:, beg1:end1) = inputdata(refindx(p,:), beg2:end2);
           end
           
           finitevals2 = sum(finitevals,1)&sum(isfinite(tmpsource),1); % this conservatively takes only the non-nan samples across all input data channels
           
           if ~precondition
-            tmptarget  = copnorm(input(:,finitevals2)')';
+            tmptarget  = copnorm(inputdata(:,finitevals2)')';
             tmpsource  = copnorm(tmpsource(:,finitevals2)')';
           else
-            tmptarget  = input(:,finitevals2);
+            tmptarget  = inputdata(:,finitevals2);
             tmpsource  = tmpsource(:,finitevals2);
           end
           
@@ -284,8 +284,8 @@ switch method
         end1 = beg1+n1-1;
         end2 = beg2+n1-1;
         
-        target_shifted                 = nan(size(input,1),n,numel(otherlags)+1);
-        target_shifted(:, beg1:end1,1) = input(:, beg2:end2);
+        target_shifted                 = nan(size(inputdata,1),n,numel(otherlags)+1);
+        target_shifted(:, beg1:end1,1) = inputdata(:, beg2:end2);
         for k = 1:numel(otherlags)
           % get the samples for the relative shifts for the given lag,
           % accumulate the lags
@@ -295,7 +295,7 @@ switch method
           
           otherend1 = otherbeg1+n1-1;
           otherend2 = otherbeg2+n1-1;
-          target_shifted(:,otherbeg1:otherend1,k+1) = input(:, otherbeg2:otherend2);
+          target_shifted(:,otherbeg1:otherend1,k+1) = inputdata(:, otherbeg2:otherend2);
         end
         finitevals2    = sum(finitevals,1)>0&sum(sum(isfinite(target_shifted),3),1)>0; % this conservatively takes only the non-nan samples across all input data channels
         
@@ -303,10 +303,10 @@ switch method
         % the conditioning all shifted versions of the target signal are
         % needed anyway, this bypasses the use of the gcmi toolbox
         if ~precondition
-          target = copnorm(input(:,finitevals2)');
+          target = copnorm(inputdata(:,finitevals2)');
           target = bsxfun(@minus,target,mean(target,1));
         else
-          target = input(:,finitevals2)';
+          target = inputdata(:,finitevals2)';
           target = bsxfun(@minus, target, mean(target,1));
         end
         
@@ -383,8 +383,8 @@ switch method
         
         % time-lagged version of the target signal,
         % positive lags here mean shifted w.r.t. feature
-        target                   = nan(size(input,1),n);
-        target(:, t_beg2:t_end2) = input(:, t_beg1:t_end1);
+        target                   = nan(size(inputdata,1),n);
+        target(:, t_beg2:t_end2) = inputdata(:, t_beg1:t_end1);
         
         for mm = 1:numel(sourcelags)
           if sourcelags(mm)>=lags(m)
@@ -398,11 +398,11 @@ switch method
           s_end2 = n + 1 - s_beg1;
           
           % feature data
-          feature = input(tra(featureindx,:),:);
+          feature = inputdata(tra(featureindx,:),:);
           
           % shifted target signals at the time lag of the source
-          target_shifted                   = nan(size(input,1),n);
-          target_shifted(:, s_beg2:s_end2) = input(:, s_beg1:s_end1);
+          target_shifted                   = nan(size(inputdata,1),n);
+          target_shifted(:, s_beg2:s_end2) = inputdata(:, s_beg1:s_end1);
           
           finitevals2 = sum(finitevals,1)>0&sum(isfinite(target),1)>0&sum(isfinite(target_shifted),1)>0&sum(isfinite(feature),1)>0; % this conservatively takes only the non-nan samples across all input data channels
           
@@ -513,8 +513,8 @@ switch method
         
         % time-lagged version of the target signal,
         % positive lags here mean shifted w.r.t. feature
-        target                   = nan(size(input,1),n);
-        target(:, t_beg2:t_end2) = input(:, t_beg1:t_end1);
+        target                   = nan(size(inputdata,1),n);
+        target(:, t_beg2:t_end2) = inputdata(:, t_beg1:t_end1);
         
         % if copula is done here, it's not fully correct (because of
         % nanning of shifted values...
@@ -536,13 +536,13 @@ switch method
           s_end2 = n+1-s_beg1;
           
           % feature data
-          feature = input(tra(featureindx,:),:);
+          feature = inputdata(tra(featureindx,:),:);
           
           % time-lagged version of the source signal,
           %source                   = nan(sum(tra(refindx,:)),n);
           %source(:, s_beg2:s_end2) = input(tra(refindx,:), s_beg1:s_end1);
-          source                   = nan(size(input,1),n);
-          source(:, s_beg2:s_end2) = input(:, s_beg1:s_end1);
+          source                   = nan(size(inputdata,1),n);
+          source(:, s_beg2:s_end2) = inputdata(:, s_beg1:s_end1);
           
           finitevals2    = sum(finitevals,1)>0&sum(isfinite(target),1)>0&sum(isfinite(source),1)>0&sum(isfinite(feature),1)>0; % this conservatively takes only the non-nan samples across all input data channels
           

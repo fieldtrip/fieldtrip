@@ -41,13 +41,13 @@ function [hs] = ft_plot_mesh(mesh, varargin)
 % You can plot an additional contour around specified areas using
 %   'contour'           = inside of contour per vertex, either 0 or 1
 %   'contourcolor'      = string, color specification
-%   'contourlinestyle'  = string, line specification 
+%   'contourlinestyle'  = string, line specification
 %   'contourlinewidth'  = number
 %
 % See also FT_PLOT_HEADSHAPE, FT_PLOT_HEADMODEL, TRIMESH, PATCH
 
 % Copyright (C) 2009, Cristiano Micheli
-% Copyright (C) 2009-2021, Robert Oostenveld
+% Copyright (C) 2009-2022, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -66,8 +66,6 @@ function [hs] = ft_plot_mesh(mesh, varargin)
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
 % $Id$
-
-ws = ft_warning('on', 'MATLAB:divideByZero');
 
 % rename pnt into pos
 mesh = fixpos(mesh);
@@ -106,7 +104,7 @@ material_     = ft_getopt(varargin, 'material');        % note the underscore, t
 tag           = ft_getopt(varargin, 'tag',         '');
 surfaceonly   = ft_getopt(varargin, 'surfaceonly');     % default is handled below
 unit          = ft_getopt(varargin, 'unit');
-axes_         = ft_getopt(varargin, 'axes', false);     % do not confuse with built-in (/Applications/MATLAB_R2020b.app/toolbox/matlab/graphics/axis/axes)
+axes_         = ft_getopt(varargin, 'axes', false);     % do not confuse with built-in function
 clim          = ft_getopt(varargin, 'clim');
 alphalim      = ft_getopt(varargin, 'alphalim');
 alphamapping  = ft_getopt(varargin, 'alphamap', 'rampup');
@@ -526,11 +524,15 @@ if istrue(axes_)
   ft_plot_axes(mesh);
 end
 
-if ~nargout
-  clear hs
+if isfield(mesh, 'coordsys')
+  % add a context sensitive menu to change the 3d viewpoint to top|bottom|left|right|front|back
+  menu_viewpoint(gca, mesh.coordsys)
 end
+
 if ~holdflag
   hold off
 end
 
-ft_warning(ws); % revert to original state
+if ~nargout
+  clear hs
+end

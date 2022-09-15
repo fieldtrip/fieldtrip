@@ -28,7 +28,7 @@ function [spectrum, freqoi, timeoi] = ft_specest_hilbert(dat, time, varargin)
 %
 % See also FT_FREQANALYSIS, FT_SPECEST_MTMFFT, FT_SPECEST_TFR, FT_SPECEST_MTMCONVOL, FT_SPECEST_WAVELET
 
-% Copyright (C) 2010, Robert Oostenveld
+% Copyright (C) 2010-2022, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -66,6 +66,10 @@ polyorder  = ft_getopt(varargin, 'polyorder',  0);
 fbopt      = ft_getopt(varargin, 'feedback');
 verbose    = ft_getopt(varargin, 'verbose',    true);
 edgeartnan = ft_getopt(varargin, 'edgeartnan', false);
+
+% these should be Boolean
+verbose    = istrue(verbose);
+edgeartnan = istrue(edgeartnan);
 
 if isempty(fbopt)
   fbopt.i = 1;

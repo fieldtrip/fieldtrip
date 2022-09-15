@@ -1,7 +1,7 @@
 function [imageVol, lastfile] = GE_readVolume(startDir, passnum, volSize, depth, im_offset)
 %
 %GE_readVolume
-% 
+%
 % [imageVol, lastfile] = GE_readVolume(startDir, passnum, [nX nY nZ], depth, im_offset)
 %
 % reads the volume for passnum from the series which is stored

@@ -1,13 +1,13 @@
-function [h, coordsys] = ft_headcoordinates(fid1, fid2, fid3, fid4, coordsys)
+function [transform, coordsys] = ft_headcoordinates(fid1, fid2, fid3, fid4, coordsys)
 
 % FT_HEADCOORDINATES returns the homogeneous coordinate transformation matrix
 % that converts the specified fiducials in any coordinate system (e.g. MRI)
 % into the rotated and translated headcoordinate system.
 %
 % Use as
-%   [h, coordsys] = ft_headcoordinates(fid1, fid2, fid3, coordsys)
+%   [transform, coordsys] = ft_headcoordinates(fid1, fid2, fid3, coordsys)
 % or
-%   [h, coordsys] = ft_headcoordinates(fid1, fid2, fid3, fid4, coordsys)
+%   [transform, coordsys] = ft_headcoordinates(fid1, fid2, fid3, fid4, coordsys)
 %
 % Depending on the desired coordinate system, the order of the fiducials is
 % interpreted as follows
@@ -91,9 +91,9 @@ function [h, coordsys] = ft_headcoordinates(fid1, fid2, fid3, fid4, coordsys)
 %   the y-axis points from dorsal to ventral, i.e. from inferior to superior
 %   the z-axis passes through bregma and lambda and points from cranial to caudal, i.e. from anterior to posterior
 %
-% See also FT_ELECTRODEREALIGN, FT_VOLUMEREALIGN, FT_INTERACTIVEREALIGN, COORDSYS2LABEL
+% See also FT_ELECTRODEREALIGN, FT_VOLUMEREALIGN, FT_INTERACTIVEREALIGN, FT_AFFINECOORDINATES, COORDSYS2LABEL
 
-% Copyright (C) 2003-2021 Robert Oostenveld
+% Copyright (C) 2003-2022, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -250,5 +250,5 @@ rot(1:3,1:3) = inv(eye(3) / [dirx; diry; dirz]);
 % compute the translation matrix
 tra = eye(4);
 tra(1:4,4)   = [-origin(:); 1];
-% compute the full homogeneous transformation matrix from these two
-h = rot * tra;
+% combine these to compute the full homogeneous transformation matrix
+transform = rot * tra;

@@ -6,7 +6,7 @@ function data = fixcoordsys(data)
 %
 % See also FT_DETERMINE_COORDSYS
 
-% Copyright (C) 2017, Robert Oostenveld
+% Copyright (C) 2017-2022, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -35,4 +35,6 @@ elseif any(strcmpi(data.coordsys, {'ctf', '4d', 'bti', 'eeglab'}))
   data.coordsys = 'ctf';
 elseif any(strcmpi(data.coordsys, {'dicom', 'scanlps'}))
   data.coordsys = 'dicom';
+elseif any(strcmpi(data.coordsys, {'other'}))
+  data.coordsys = 'unknown';
 end

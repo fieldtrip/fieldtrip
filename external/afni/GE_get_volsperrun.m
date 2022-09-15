@@ -5,7 +5,7 @@ function [ volsperrun ] = GE_get_volsperrun(inDir)
 % A utility to find the number of volumes per run in an ADW scan.
 % inDir is the starting directory for the I.* files.
 %
-% Souheil J. Inati  
+% Souheil J. Inati
 % Dartmouth College
 % July 2001
 % souheil.inati@dartmouth.edu
@@ -44,13 +44,13 @@ nimg = 0;
 for idir = 1:ndir
   curdir = fullfile(GE_data_root, ser_dirnames(idir,:));
   subd = dir(curdir);
-  
+
   dirmat = char(subd.name);
   good_idx = strmatch('I.', dirmat);
   nfiles = length(good_idx);
-  
+
   disp(sprintf('Found %d image files in directory %s', nfiles, curdir))
-  
+
   flist = sort(cellstr(char(subd(good_idx).name)));
 
   % Loop through and read the run number from the header of each file

@@ -84,7 +84,7 @@ end
 
 if useartifact + usetr + usetime > 1
   error('ambiguous input in parameter structure for denoise_avg2');
-elseif ~useartifact && ~usetr
+elseif ~useartifact && ~usetr && ~usetime
   error('parameter structure for denoise_avg2 requires either ''artifact'' and ''sampleinfo'', ''tr''/''pre''/''pst'', or ''time''');
 end
 
@@ -364,7 +364,7 @@ for k = 1:n
     aindx = peaks_indx(indx);
     aindx = aindx(p{k}(m));
     
-    ix = artifact2boolvec(artifact(aindx,1:2), 'endsample', nsmp)&s;
+    ix = artifact2boolvec(artifact(aindx,1:2), 'endsample', nsmp);
     ix = ix(indx);
     ix = boolvec2artifact(ix);
     

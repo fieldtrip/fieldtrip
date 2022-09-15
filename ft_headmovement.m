@@ -49,7 +49,7 @@ function [varargout] = ft_headmovement(cfg)
 % The updatesens method and related methods are described by Stolk et al., Online and
 % offline tools for head movement compensation in MEG. NeuroImage, 2012.
 %
-% See also FT_REGRESSCONFOUND FT_REALTIME_HEADLOCALIZER
+% See also FT_REGRESSCONFOUND, FT_REALTIME_HEADLOCALIZER
 
 % Copyright (C) 2008-2018, Jan-Mathijs Schoffelen, Robert Oostenveld
 %

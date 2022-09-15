@@ -10,7 +10,7 @@ function [cfg] = ft_singleplotTFR(cfg, data)
 % power or coherence that was computed using the FT_FREQANALYSIS function.
 %
 % The configuration can have the following parameters:
-%   cfg.parameter      = field to be plotted on z-axis, e.g. 'powspcrtrm' (default depends on data.dimord)
+%   cfg.parameter      = field to be plotted on z-axis, e.g. 'powspctrm' (default depends on data.dimord)
 %   cfg.maskparameter  = field in the data to be used for masking of data, can be logical (e.g. significant data points) or numerical (e.g. t-values).
 %                        (not possible for mean over multiple channels, or when input contains multiple subjects
 %                        or trials)

@@ -4,25 +4,25 @@ function [err, Vo, DS] = AFNI_OrientCode (V)
 %
 %Purpose:
 %   Changes the orientation code from number to letters and vice versa
-%   
-%   
+%
+%
 %Input Parameters:
 %   V, a 3x1 vector of numbers or characters
 %      like [0 2 4] or 'RPI'
-%   
-%   
+%
+%
 %Output Parameters:
 %   err : 0 No Problem
 %       : 1 Mucho Problems
 %   Vo, a 3x1 vector of numbers or characters corresponding to the input
-%   DirSign: is a 3x1 vector of +1 or -1 indicating whether the ith 
-%       dimension of Vo is of the same direction (+1) or not (-1) 
+%   DirSign: is a 3x1 vector of +1 or -1 indicating whether the ith
+%       dimension of Vo is of the same direction (+1) or not (-1)
 %       with AFNI's colinear equivalent in the R A I convention.
-%       
-%   
-%      
+%
+%
+%
 %Key Terms:
-%   
+%
 %More Info :
 %   AFNI .HEAD files
 %   BrikInfo
@@ -55,7 +55,7 @@ if (ischar(V)),
 	for (i=1:1:3),
 		switch V(i),
 			case 'R'
-				Vo(i) = 0; 
+				Vo(i) = 0;
 				DS(i) = 1;
 			case 'L'
 				Vo(i) = 1;

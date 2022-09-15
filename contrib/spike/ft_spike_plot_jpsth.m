@@ -110,7 +110,7 @@ end
 isNaN = 1;
 k = 1;
 while isNaN
-  if any(isnan(jpsth.psth(cmbindx,k))), 
+  if any(isnan(jpsth.psth(cmbindx,k)))
     disp('deleting NaNs at the borders')
     jpsth.psth(:,k) = [];
     dens(k,:) = [];
@@ -124,7 +124,7 @@ end
 isNaN = 1;
 k = size(jpsth.psth,2);
 while isNaN
-  if any(isnan(jpsth.psth(cmbindx,k))), 
+  if any(isnan(jpsth.psth(cmbindx,k)))
     disp('deleting NaNs at the borders')
     jpsth.psth(:,k) = [];
     dens(k,:) = [];

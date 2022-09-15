@@ -4,25 +4,25 @@ function [l, sh] = TellAfni_Commands (f, fpart )
 %
 %Purpose:
 %   Extract, all the commands from README.driver
-%   No guarantee that you'll get all the commands extracted, 
+%   No guarantee that you'll get all the commands extracted,
 %   Use this as a guide but read the entire README.driver for the full picture
-%   
+%
 %Input Parameters:
 %   f: Full path and name of README.driver file
 %      pass no parameters if you want the function to try and
-%      locate the file automatically. 
+%      locate the file automatically.
 %      Use '' if you want to look for the file interactively.
-%   field: Particular command of interest. 
-%          If specified, the help section from README.driver 
-%          is returned in sh.  
-%   
+%   field: Particular command of interest.
+%          If specified, the help section from README.driver
+%          is returned in sh.
+%
 %Output Parameters:
 %   l a cell string of the possible parameters
 %   sh: help string corresponding to field
-%   
-%      
+%
+%
 %Key Terms:
-%   
+%
 %More Info :
 %    TellAfni
 %    TellAfni_Commands
@@ -66,7 +66,7 @@ if (~isempty(f)),
       fprintf(2,'Failed to find README file %s\n', f);
       return;
    end
-else 
+else
    f = '';
 end
 
@@ -83,7 +83,7 @@ if (fid < 0),
    fprintf(2,'Failed to read %s\n', f);
    return;
 end
-   
+
 s = fscanf(fid,'%c');
 ns = length(s);
 fclose(fid);
@@ -122,7 +122,7 @@ end
 
 [l, ilu] = unique(cellstr (S(1:cnt-1,:)));
 ils = sl(ilu);
- 
+
 %do they want particular info ?
 sh = '';
 if (~isempty(fpart)),
@@ -133,7 +133,7 @@ if (~isempty(fpart)),
       if (~isempty(findstr(char(l(cnt)),fpart))), %(strncmp(char(l(cnt)),fpart,length(fpart))),
          fnd = cnt;
          %find location of next command
-         dils = (ils - ils(cnt)); dils(find(dils<=0)) = max(dils + 1); [jj,imin] = min(dils); 
+         dils = (ils - ils(cnt)); dils(find(dils<=0)) = max(dils + 1); [jj,imin] = min(dils);
          %here is the string
          sh = [sh s(ils(cnt)+1:min(ils(imin), length(s)))];
       end
@@ -142,7 +142,7 @@ if (~isempty(fpart)),
    if (~fnd),
       fprintf(2,'Failed to find help for %s.\n', fpart);
       return;
-   end   
+   end
 end
 
 return;

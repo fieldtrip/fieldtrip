@@ -77,6 +77,11 @@ else
   hdr.chanunit = ft_chanunit(data);
 end
 
+% retain the original header details
+if isfield(data, 'hdr') && isfield(data.hdr, 'orig')
+  hdr.orig = data.hdr.orig;
+end
+
 % determine hdr.nSamples, hdr.nSamplesPre, hdr.nTrials
 % always pretend that it is continuous data
 hdr.nSamples    = max(trl(:,2));

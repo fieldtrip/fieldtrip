@@ -48,7 +48,10 @@ while ischar(line) || isempty(line)
       else
         % the line looks like "MkXXX=YYY", which is ok
         % the interesting part now is in the YYY, i.e. the second token
-        tok = strsplit(tok{2}, ',');
+        %tok = strsplit(tok{2}, ','); % this is not robust if there are
+        %empty spaces between the ',', see github issue 2026
+        tok = tokenize(tok{2}, ',');
+        
         if isempty(tok{1})
           tok{1}  = [];
         end

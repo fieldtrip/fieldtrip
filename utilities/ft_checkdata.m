@@ -1426,18 +1426,9 @@ end
 % make inside a volume
 data = fixinside(data, 'logical');
 
-% remove the fields that are represented as cell array, such as filter, mom, etc.
-fn = fieldnames(data);
-fn = setdiff(fn, {'pos', 'dim', 'transform', 'xgrid', 'ygrid', 'zgrid', 'tri', 'tet', 'hex'});
-% for k=1:numel(fn)
-%   if iscell(data.(fn{k}))
-%     data = rmfield(data, fn{k});
-%   end
-% end
-
 % only process the fields for which the dimord starts with 'pos_'
 fn = fieldnames(data);
-fn = setdiff(fn, {'pos', 'dim', 'transform', 'xgrid', 'ygrid', 'zgrid', 'tri', 'tet', 'hex'});
+fn = setdiff(fn, {'cfg', 'pos', 'dim', 'transform', 'unit', 'xgrid', 'ygrid', 'zgrid', 'tri', 'tet', 'hex'});
 keep = false(size(fn));
 for k=1:numel(fn)
   keep(k) = ~endsWith(fn{k}, 'dimord') && (startsWith(getdimord(data, fn{k}), 'pos_') || startsWith(getdimord(data, fn{k}), '{pos}_'));

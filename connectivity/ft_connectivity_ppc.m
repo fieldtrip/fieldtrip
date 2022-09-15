@@ -1,4 +1,4 @@
-function [c, v, n] = ft_connectivity_ppc(input, varargin)
+function [c, v, n] = ft_connectivity_ppc(inputdata, varargin)
 
 % FT_CONNECTIVITY_PPC computes pairwise phase consistency or weighted pairwise phase
 % consistency from a data-matrix containing a cross-spectral density. This implements
@@ -7,9 +7,9 @@ function [c, v, n] = ft_connectivity_ppc(input, varargin)
 % synchronization. Neuroimage. 2010 May 15;51(1):112-22.
 %
 % Use as
-%   [c, v, n] = ft_connectivity_ppc(input, ...)
+%   [c, v, n] = ft_connectivity_ppc(inputdata, ...)
 %
-% The input data input should be organized as:
+% Where the input data input should be organized as:
 %   Repetitions x Channel x Channel (x Frequency) (x Time)
 % or
 %   Repetitions x Channelcombination (x Frequency) (x Time)
@@ -52,18 +52,18 @@ feedback    = ft_getopt(varargin, 'feedback', 'none');
 weighted    = ft_getopt(varargin, 'weighted');
 dojack      = ft_getopt(varargin, 'dojack', false);
 
-siz = size(input);
+siz = size(inputdata);
 n = siz(1);
 ft_progress('init', feedback, 'computing metric...');
 if n>1
   if ~weighted
-    input    = input./abs(input);  % normalize the crosspectrum
-    outsum   = nansum(input);      % compute the sum; this is 1 x size(2:end)
+    inputdata    = inputdata./abs(inputdata);  % normalize the crosspectrum
+    outsum   = nansum(inputdata);      % compute the sum; this is 1 x size(2:end)
     c        = (outsum.*conj(outsum) - n)./(n*(n-1)); % do the pairwise thing in a handy way
   else
-    outsum   = nansum(input); % normalization of the WPLI
-    outssq   = nansum(input.*conj(input));
-    outsumw  = nansum(abs(input));
+    outsum   = nansum(inputdata); % normalization of the WPLI
+    outssq   = nansum(inputdata.*conj(inputdata));
+    outsumw  = nansum(abs(inputdata));
     c        = (outsum.*conj(outsum) - outssq)./(outsumw.*conj(outsumw) - outssq); % do the pairwise thing in a handy way
   end
   c          = reshape(c,siz(2:end)); % remove the first singular dimension
@@ -76,13 +76,13 @@ end
 if dojack && n>2 % n needs to be larger than 2 to get a meaningful variance
   for k = 1:n
     % this code works with both formats of input, also if it is 5-D
-    s       = outsum - input(k,:,:,:,:,:,:); % index up to 7-D, this also works for 5-D then
+    s       = outsum - inputdata(k,:,:,:,:,:,:); % index up to 7-D, this also works for 5-D then
     if ~weighted
       num   = s.*conj(s) - (n-2);
       denom = (n-1)*(n-2);
     else
-      sq    = outssq  - input(k,:,:,:,:,:,:).*conj(input(k,:,:,:,:,:,:));
-      sw    = outsumw - abs(input(k,:,:,:,:,:,:));
+      sq    = outssq  - inputdata(k,:,:,:,:,:,:).*conj(inputdata(k,:,:,:,:,:,:));
+      sw    = outsumw - abs(inputdata(k,:,:,:,:,:,:));
       num   = s.*conj(s)   - sq;
       denom = sw.*conj(sw) - sq;
     end

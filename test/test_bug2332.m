@@ -7,7 +7,7 @@ function test_bug2332
 %% read some data
 
 cfg = [];
-cfg.dataset = dccnpath('/home/common/matlab/fieldtrip/data/Subject01.ds');
+cfg.dataset = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds');
 cfg.trl     = [1 1200 0];
 cfg.continuous = 'yes';
 cfg.channel = {'meg', 'megref'};
