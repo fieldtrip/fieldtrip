@@ -195,19 +195,33 @@ else
       % on brainvision these are called 'S  1' for stimuli or 'R  1' for responses
       trlval = str2double(event(i).value(2:end));
     else
-      trlval = nan;
+      % the following depends on cfg.representation
+      if isequal(cfg.representation, 'numeric')
+        trlval = nan;
+      else
+        trlval = event(i).value;
+      end
     end
     
     % add the trial only if all samples are in the dataset
     if trlbeg>0 && trlend<=hdr.nSamples*hdr.nTrials
-      thistrl = [trlbeg trlend trloff trlval];
+      if isnumeric(trlval)
+        % create a numeric array
+        thistrl = [trlbeg trlend trloff trlval];
+      else
+        thistrl = cell2table({trlbeg trlend trloff trlval});
+      end
       trl = cat(1, trl, thistrl);
     end
   end
   
-  if ~isempty(trl) && all(isnan(trl(:,4)))
+  if ~isempty(trl) && ~istable(trl) && all(isnan(trl(:,4)))
     % the values are not informative, remove them
     trl = trl(:,1:3);
+  elseif ~isempty(trl) && istable(trl)
+    % add names to the columns of the table
+    trl.Properties.VariableNames = {'begsample', 'endsample', 'offset', 'eventvalue'};
   end
+  
   
 end
