@@ -369,7 +369,12 @@ end
 
 % build dimord from result struct
 if has_dimord
-  dimord = strrep(result.perf_dimension_names, ' ', '');
+  if ~iscell(perf)
+    dimord = strrep(result.perf_dimension_names, ' ', '');
+  else 
+    % more than one output metric is requested, use the first one for the dimord
+    dimord = strrep(result.perf_dimension_names{1}, ' ', '');
+  end
   if iscell(dimord), dimord = strjoin(dimord, '_'); end
 end
 
