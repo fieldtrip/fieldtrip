@@ -183,14 +183,14 @@ if ~isempty(coilaccuracy)
     grad.chantype(sel) = {'mcg'};
   end
   for sel=find([orig.chs.kind]==3)' %Stim channels
-    if any([orig.chs(sel).logno] == 101) %new systems: 101 (and 102, if enabled) are digital; low numbers are 'pseudo-analog' (if enabled)
+    if any(ismember([orig.chs(sel).logno], [101 102])) % new systems: 101 (and 102, if enabled) are digital; low numbers are 'pseudo-analog' (if enabled)
       grad.chantype(sel([orig.chs(sel).logno] == 101)) = {'digital trigger'};
       grad.chantype(sel([orig.chs(sel).logno] == 102)) = {'digital trigger'};
       grad.chantype(sel([orig.chs(sel).logno] <= 32))  = {'analog trigger'};
       others = [orig.chs(sel).logno] > 32 & [orig.chs(sel).logno] ~= 101 & ...
         [orig.chs(sel).logno] ~= 102;
       grad.chantype(sel(others)) = {'other trigger'};
-    elseif any([orig.chs(sel).logno] == 14) %older systems: STI 014/015/016 are digital; lower numbers 'pseudo-analog'(if enabled)
+    elseif any(ismember([orig.chs(sel).logno], [14 15 16])) % older systems: STI 014/015/016 are digital; lower numbers 'pseudo-analog'(if enabled)
       grad.chantype(sel([orig.chs(sel).logno] == 14)) = {'digital trigger'};
       grad.chantype(sel([orig.chs(sel).logno] == 15)) = {'digital trigger'};
       grad.chantype(sel([orig.chs(sel).logno] == 16)) = {'digital trigger'};
