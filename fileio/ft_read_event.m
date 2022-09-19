@@ -1618,11 +1618,10 @@ switch eventformat
       events_id = split(split(hdr.orig.epochs.event_id, ';'), ':');
       if all(cellfun(@ischar, events_id(:, 1)))
         events_label = events_id(:, 1);
-        maxLength = max(cellfun(@length,events_id(:, 2)));
-        events_code = str2num(cell2mat(cellfun(@pad,events_id(:, 2),num2cell(repmat(maxLength,size(events_id(:, 2)))),'UniformOutput',false)));
+        events_code = str2num(char(events_id(:, 2)));
       elseif all(cellfun(@isnumeric, events_id(:, 1)))
         events_label = cell2mat(events_id(:, 1));
-        events_code = str2num(cell2mat(events_id(:, 2)));
+        events_code = str2num(char(events_id(:, 2)));
       end
       for i=1:hdr.nTrials
         event(end+1).type      = 'trial';
