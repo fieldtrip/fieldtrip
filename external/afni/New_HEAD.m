@@ -6,18 +6,18 @@ function [err,Info, opt] = New_HEAD (opt)
 %   A function for the likes of Greg Detre.
 %   It makes the creation of an AFNI dataset
 %   from a 3 or 4 dimensional matrix in matlab a breeze.
-%   
-%   
-%   
+%
+%
+%
 %Input Parameters:
 %   opt is an options structure with the following fields:
 %     .prefix: A string containg the AFNI dataset's prefix
-%              .prefix and one of .dimen or .master must 
+%              .prefix and one of .dimen or .master must
 %              be used.
 %     .dimen: A string or array containing the dimensions of
 %             the dataset (at least 3 dimensions need be present).
-%     The following four options are from 3dUndump. See 3dUndump -help   
-%     .view:    '+orig' (default) or '+acpc' or '+tlrc' 
+%     The following four options are from 3dUndump. See 3dUndump -help
+%     .view:    '+orig' (default) or '+acpc' or '+tlrc'
 %               If you choose +tlrc, the resultant volume
 %               will fit the Talairach box.
 %     .master: Name of an existing AFNI dataset that would
@@ -25,13 +25,13 @@ function [err,Info, opt] = New_HEAD (opt)
 %              Do not mix .master with .dimen
 %     .datum:  'byte', 'short' (default), or 'float'
 %     .orient: Orientation of data in matrix. Default in 'RAI'
-% 
+%
 %     .tr: a float specifying the TR in seconds.
 %          The presence of such a field necessitates a 4 dimensional
 %     .scale: 0/1 This is only meaningful with 'short' data where it
 %             defaults to 1. It defaults to 0 for other types. It is
 %             used when storing float data as shorts to minimize disk
-%             use while preserving numeric percision.      
+%             use while preserving numeric percision.
 %     .Overwrite: y/[n] allow header to be created even if one with
 %                 similar name is found on disk
 %Output Parameters:
@@ -41,10 +41,10 @@ function [err,Info, opt] = New_HEAD (opt)
 %   Opt: A modified version of the input Opt. It will be passed
 %        along with the data array to WriteBrik for writing the
 %        dataset to disk. (See Examples below)
-%      
-%Examples: 
-%     Run New_HEAD('test') or see Test_New_HEAD.m for examples. 
-%   
+%
+%Examples:
+%     Run New_HEAD('test') or see Test_New_HEAD.m for examples.
+%
 %More Info :
 %     AFNI programs 3drefit and 3dAttribute are your friends
 %     BrikLoad, BrikInfo, WriteBrik
@@ -77,7 +77,7 @@ if (nargout == 2),
    fprintf(1, ' %s but these changes are not reflected in the Opt structure you\n', FuncName);
    fprintf(1, ' will be passing to WriteBrik.\n');
    fprintf(1, ' If this makes no sense to you, just use:\n');
-   fprintf(1, '    [err, Info, Opt] = New_HEAD(Opt);\n'); 
+   fprintf(1, '    [err, Info, Opt] = New_HEAD(Opt);\n');
 end
 
 %work options
@@ -146,26 +146,26 @@ if (~isfield(opt,'view') | ~strcmp(opt.view,'+tlrc') | isfield(opt,'master')),
    [e,w] = unix(sopt);
    if (e),
       fprintf(1,'Error %s:\nHeader creating command %s failed.\nSee this function''s help and 3dUndump -help\n3dUndump''s output was:\n%s\n', ...
-               FuncName, sopt, w); 
-      New_HEAD_CLEAN(tmp_suf); 
-      return;  
+               FuncName, sopt, w);
+      New_HEAD_CLEAN(tmp_suf);
+      return;
    end
 
    [err,Info]  = BrikInfo(sprintf('%s%s', ohead,mView));
-   New_HEAD_CLEAN(tmp_suf); 
-else %have +tlrc and no master  
+   New_HEAD_CLEAN(tmp_suf);
+else %have +tlrc and no master
    mView = '+tlrc';
    [e,d] = unix('which afni');
    if (e),
       fprintf(1,'Error %s:\nFailed to find afni!\n', FuncName);
-      return;  
+      return;
    end
    [e,pt] = GetPath(d);
    templ = sprintf('%s/TT_N27+tlrc.HEAD', pt);
    [e,Info] = BrikInfo(templ);
    if (e),
       fprintf(1,'Error %s:\nFailed to get header of %s!\n', FuncName, templ);
-      return;  
+      return;
    end
    %recalculate the origin (res. of template is 1x1x1mm)
    oOrig = Info.ORIGIN;
@@ -202,8 +202,8 @@ if (isfield(opt,'scale')),
       fprintf(1,'Warning %s:\n .scale option is only for ''short'' type data.\n Resetting it to 0.\n', FuncName);
       opt.scale = 0;
    end
-else 
-   if (strcmp(opt.datum,'short')), 
+else
+   if (strcmp(opt.datum,'short')),
       opt.scale = 1;
    else
       opt.scale = 0;
@@ -223,7 +223,7 @@ if (strcmp(mView, opt.view) == 0), %different
    else
       fprintf(1,'Error %s:\nBad view %s\n', FuncName, opt.view);
       return;
-   end 
+   end
 end
 
 %take care of 4th dimen
@@ -246,7 +246,7 @@ if (isfield(opt,'tr')),
    Info.TAXIS_FLOATS(3) = 0; %duration of acquisition
    Info.TAXIS_FLOATS(4) = 0; %no time offset please
    Info.TAXIS_FLOATS(5) = 0; %no time offset please
-   
+
    Info.TAXIS_OFFSETS = zeros(1,Info.TAXIS_NUMS(1));  %no bloody time offset
 end
 

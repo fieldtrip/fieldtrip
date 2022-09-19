@@ -63,15 +63,21 @@ switch class(a)
       % warning, this is a recursive call to traverse nested structures
       for i=1:length(fna)
         fn = fna{i};
-        ra = getfield(a(j), fn);
+        ra = a(j).(fn);
         ra = convert(ra, depth+1, maxdepth);
-        a(j) = setfield(a(j), fn, ra);
+        a(j).(fn) = ra;
       end
     end
     
   case 'cell'
     % process all elements of the cell-array recursively
     % warning, this is a recursive call to traverse nested structures
+    
+    % the recursion is only needed if the maxdepth allows it
+    if depth+1>maxdepth
+      return
+    end
+    
     for i=1:length(a(:))
       a{i} = convert(a{i}, depth+1, maxdepth);
     end

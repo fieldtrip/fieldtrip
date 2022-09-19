@@ -125,8 +125,9 @@ end
 data = ft_checkdata(data, 'datatype', 'raw', 'hassampleinfo', 'yes');
 
 % check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'renamed', {'blc', 'demean'});
-cfg = ft_checkconfig(cfg, 'renamed', {'blcwindow', 'baselinewindow'});
+cfg = ft_checkconfig(cfg, 'forbidden',  {'channels'}); % prevent accidental typos, see issue 1729
+cfg = ft_checkconfig(cfg, 'renamed',    {'blc', 'demean'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'blcwindow', 'baselinewindow'});
 
 % set default configuration options
 cfg.method     = ft_getopt(cfg, 'method', 'biosig');
@@ -169,7 +170,7 @@ switch cfg.method
     ft_hastoolbox('bsmart', 1);
     nnans = 0;
   otherwise
-    ft_error('toolbox %s is not yet supported', cfg.method);
+    ft_error('toolbox %s is not supported', cfg.method);
 end
 
 if isempty(cfg.toi) && isempty(cfg.t_ftimwin)
@@ -184,18 +185,18 @@ if isempty(cfg.toi) && isempty(cfg.t_ftimwin)
   end
   
   if ~ismember(cfg.method, oktoolbox)
-    error('fitting the mvar-model is not possible with the ''%s'' toolbox',cfg.method);
+    ft_error('fitting the mvar-model is not possible with the ''%s'' toolbox',cfg.method);
   end
   latency = [-inf inf];
 elseif ~isempty(cfg.toi) && ~isempty(cfg.t_ftimwin)
   % do sliding window approach
+  latency = zeros(numel(cfg.toi),2) + nan;
   for k = 1:numel(cfg.toi)
     latency(k,:) = cfg.toi(k) + cfg.t_ftimwin.*[-0.5 0.5] + [0 -1./data.fsample];
   end
 else
   ft_error('cfg should contain both cfg.toi and cfg.t_ftimwin');
 end
-
 
 keeprpt  = istrue(cfg.keeptrials);
 keeptap  = istrue(cfg.keeptapers);
@@ -215,7 +216,6 @@ if ~dobvar
   nchan    = length(chanindx);
   label    = data.label(chanindx);
   
-  ncmb     = nchan*nchan;
   cmbindx1 = repmat(chanindx(:),  [1 nchan]);
   cmbindx2 = repmat(chanindx(:)', [nchan 1]);
   labelcmb = [data.label(cmbindx1(:)) data.label(cmbindx2(:))];
@@ -226,14 +226,10 @@ else
     [tmp, cmbindx(k,:)] = match_str(cfg.channelcmb(k,:)', data.label);
   end
   
-  
   nchan    = 2;
-  label    = data.label(cmbindx);
-  
-  ncmb     = nchan*nchan;
+  label    = data.label(cmbindx);  
   labelcmb = cell(0,2);
   cmb      = cfg.channelcmb;
-  
   for k = 1:size(cmbindx,1)
     labelcmb{end+1,1} = [cmb{k,1},'[',cmb{k,1},cmb{k,2},']'];
     labelcmb{end  ,2} = [cmb{k,1},'[',cmb{k,1},cmb{k,2},']'];
@@ -284,7 +280,7 @@ end
 %---ensemble mean subtraction
 if strcmp(cfg.ems, 'yes')
   % to be implemented
-  error('ensemble mean subtraction is not yet implemented here');
+  ft_error('ensemble mean subtraction is not yet implemented here');
 end
 
 %---zscore
@@ -335,7 +331,7 @@ elseif dobvar
   coeffs   = zeros(1, 2*nchan,  size(cmbindx,1), cfg.order, ntoi, ntap);
   noisecov = zeros(1, 2*nchan,  size(cmbindx,1),            ntoi, ntap);
 elseif dounivariate && (keeprpt || dojack)
-  error('doing univariate model fits in combination with multiple replicates is not yet possible');
+  ft_error('doing univariate model fits in combination with multiple replicates is not yet possible');
 elseif dounivariate
   coeffs   = zeros(1, nchan, cfg.order, ntoi, ntap);
   noisecov = zeros(1, nchan,            ntoi, ntap);
@@ -357,31 +353,41 @@ for j = 1:ntoi
     tmpcfg.toilim = latency(j,:);
     tmpdata = ft_redefinetrial(tmpcfg, data);
   else
-    tmpdata = data;
+    tmpdata = data; % this means a single window, could be different length across trials.
   end
   
   tmpnsmp = cellfun('size', tmpdata.trial, 2);
-  tfwin   = tmpnsmp(1);
-  %---think whether this makes sense at all
-  if strcmp(cfg.taper, 'dpss')
-    % create a sequence of DPSS (Slepian) tapers
-    % ensure that the input arguments are double precision
-    tap = double_dpss(tfwin,tfwin*(cfg.tapsmofrq./tmpdata.fsample))';
-    tap = tap(1,:); %only use first 'zero-order' taper
-  elseif strcmp(cfg.taper, 'sine')
-    tap = sine_taper(tfwin, tfwin*(cfg.tapsmofrq./tmpdata.fsample))';
-    tap = tap(1,:);
+  if all(tmpnsmp==tmpnsmp(1))
+    tfwin   = tmpnsmp(1);
+    %---think whether this makes sense at all
+    if strcmp(cfg.taper, 'dpss')
+      % create a sequence of DPSS (Slepian) tapers
+      % ensure that the input arguments are double precision
+      tap = double_dpss(tfwin,tfwin*(cfg.tapsmofrq./tmpdata.fsample))';
+      tap = tap(1,:); %only use first 'zero-order' taper
+    elseif strcmp(cfg.taper, 'sine')
+      tap = sine_taper(tfwin, tfwin*(cfg.tapsmofrq./tmpdata.fsample))';
+      tap = tap(1,:);
+    else
+      tap = window(cfg.taper, tfwin)';
+      tap = tap./norm(tap);
+    end
+    ntap = size(tap,1);
   else
-    tap = window(cfg.taper, tfwin)';
-    tap = tap./norm(tap);
+    if strcmp(cfg.taper, 'rectwin')
+      % this is OK
+      tap  = zeros(1,0);
+      ntap = 1;
+    else
+      ft_error('only a rectwin as implicit taper is allowed in case trials are of variable length');
+    end
   end
-  ntap = size(tap,1);
-
+    
   
   if ntoi>1 && strcmp(cfg.method, 'bsmart')
     % ensure all segments to be of equal length
     if ~all(tmpnsmp==tmpnsmp(1))
-      error('the epochs are of unequal length, possibly due to numerical time axis issues, or due to partial artifacts, use cfg.method=''biosig''');
+      ft_error('the epochs are of unequal length, possibly due to numerical time axis issues, or due to partial artifacts, use cfg.method=''biosig''');
     end
     ix         = find(tmpnsmp==mode(tmpnsmp), 1, 'first');
     cfg.toi(j) = mean(tmpdata.time{ix}([1 end]))+0.5./data.fsample; %FIXME think about this
@@ -551,10 +557,10 @@ switch cfg.output
     
   case {'model' 'residual'}
     if keeprpt || dojack
-      error('reconstruction of the residuals with keeprpt or dojack is not yet implemented');
+      ft_error('reconstruction of the residuals with keeprpt or dojack is not yet implemented');
     end
     
-    dataout = keepfields(data, {'hdr','grad','fsample','trialinfo','label','cfg'});
+    dataout = keepfields(data, {'hdr','grad','elec','opto','fsample','trialinfo','label','cfg'});
     trial   = cell(1,numel(data.trial));
     time    = cell(1,numel(data.time));
     for k = 1:numel(data.trial)
@@ -585,7 +591,7 @@ switch cfg.output
     cfg.noisecov = mvardata.noisecov;
     mvardata     = dataout; clear dataout;
   otherwise
-    error('output ''%s'' is not supported', cfg.output);
+    ft_error('output ''%s'' is not supported', cfg.output);
 end
 
 % do the general cleanup and bookkeeping at the end of the function

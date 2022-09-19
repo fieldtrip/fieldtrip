@@ -25,22 +25,19 @@ function [cfg, artifact] = ft_artifact_ecg(cfg, data)
 %   cfg.continuous = 'yes' or 'no' whether the file contains continuous data
 % and
 %   cfg.artfctdef.ecg.channel = Nx1 cell-array with selection of channels, see FT_CHANNELSELECTION for details
-%   cfg.artfctdef.ecg.pretim  = 0.05; pre-artifact rejection-interval in seconds
-%   cfg.artfctdef.ecg.psttim  = 0.3;  post-artifact rejection-interval in seconds
-%   cfg.artfctdef.ecg.method  = 'zvalue'; peak-detection method
-%   cfg.artfctdef.ecg.cutoff  = 3; peak-threshold
-%   cfg.artfctdef.ecg.inspect = Nx1 list of channels which will be shown in a QRS-locked average
+%   cfg.artfctdef.ecg.pretim  = pre-artifact rejection interval in seconds (default = 0.05)
+%   cfg.artfctdef.ecg.psttim  = post-artifact rejection interval in seconds (default = 0.3)
+%   cfg.artfctdef.ecg.cutoff  = peak threshold (default = 3)
+%   cfg.artfctdef.ecg.inspect = Nx1 list of channels which will be shown as a QRS-locked average
 %
-% The output argument "artifact" is a Nx2 matrix comparable to the
-% "trl" matrix of FT_DEFINETRIAL. The first column of which specifying the
-% beginsamples of an artifact period, the second column contains the
-% endsamples of the artifactperiods.
+% The output argument "artifact" is a Nx2 matrix comparable to the "trl" matrix of
+% FT_DEFINETRIAL. The first column of which specifying the begin samples of an
+% artifact period, the second column contains the end samples of the QRS periods.
 %
-% To facilitate data-handling and distributed computing you can use
+% To facilitate data-handling and distributed computing, you can use
 %   cfg.inputfile   =  ...
-% If you specify this option the input data will be read from a *.mat
-% file on disk. This mat files should contain only a single variable named 'data',
-% corresponding to the input structure.
+% to read the input data from a *.mat file on disk. This mat files should contain
+% only a single variable named 'data', corresponding to the input structure.
 %
 % See also FT_REJECTARTIFACT, FT_REMOVETEMPLATEARTIFACT, FT_ARTIFACT_CLIP, FT_ARTIFACT_ECG,
 % FT_ARTIFACT_EOG, FT_ARTIFACT_JUMP, FT_ARTIFACT_MUSCLE, FT_ARTIFACT_THRESHOLD,
@@ -86,25 +83,25 @@ end
 cfg = ft_checkconfig(cfg, 'renamed',    {'datatype', 'continuous'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'continuous', 'continuous', 'yes'});
 
-% this subfield is required
-if ~isfield(cfg, 'artfctdef'),              cfg.artfctdef               = [];            end
-if ~isfield(cfg.artfctdef, 'ecg'),          cfg.artfctdef.ecg           = [];            end
+% set the default options
+cfg.continuous      = ft_getopt(cfg, 'continuous',   []);
+cfg.headerformat    = ft_getopt(cfg, 'headerformat', []);
+cfg.dataformat      = ft_getopt(cfg, 'dataformat',   []);
+cfg.feedback        = ft_getopt(cfg, 'feedback',   'text');
+cfg.representation  = ft_getopt(cfg, 'representation', 'numeric'); % numeric or table
 
-cfg.artfctdef = ft_checkconfig(cfg.artfctdef, 'renamed',    {'blc', 'demean'});
-cfg.artfctdef = ft_checkconfig(cfg.artfctdef, 'renamed',    {'blcwindow' 'baselinewindow'});
-
-% set default rejection parameters for eog artifacts if necessary.
-if ~isfield(cfg.artfctdef.ecg, 'channel'),  cfg.artfctdef.ecg.channel   = {'ECG'};       end
-if ~isfield(cfg.artfctdef.ecg, 'method'),   cfg.artfctdef.ecg.method    = 'zvalue';      end
-if ~isfield(cfg.artfctdef.ecg, 'cutoff'),   cfg.artfctdef.ecg.cutoff    = 3;             end
-if ~isfield(cfg.artfctdef.ecg, 'padding'),  cfg.artfctdef.ecg.padding   = 0.5;           end
-if ~isfield(cfg.artfctdef.ecg, 'inspect'),  cfg.artfctdef.ecg.inspect   = {'MLT' 'MRT'}; end
-if ~isfield(cfg.artfctdef.ecg, 'pretim'),   cfg.artfctdef.ecg.pretim    = 0.05;          end
-if ~isfield(cfg.artfctdef.ecg, 'psttim'),   cfg.artfctdef.ecg.psttim    = 0.3;           end
-if ~isfield(cfg.artfctdef.ecg, 'mindist'),  cfg.artfctdef.ecg.mindist   = 0.5;           end
-if ~isfield(cfg.artfctdef.ecg, 'feedback'), cfg.artfctdef.ecg.feedback = 'yes';   end
-if ~isfield(cfg, 'headerformat'),           cfg.headerformat            = [];            end
-if ~isfield(cfg, 'dataformat'),             cfg.dataformat              = [];            end
+% set the default artifact detection parameters
+cfg.artfctdef               = ft_getopt(cfg, 'artfctdef',              []);
+cfg.artfctdef.ecg           = ft_getopt(cfg.artfctdef, 'ecg',          []);
+cfg.artfctdef.ecg.channel   = ft_getopt(cfg.artfctdef.ecg, 'channel',  {'ECG'});
+cfg.artfctdef.ecg.method    = ft_getopt(cfg.artfctdef.ecg, 'method',   'zvalue');
+cfg.artfctdef.ecg.cutoff    = ft_getopt(cfg.artfctdef.ecg, 'cutoff',   3);
+cfg.artfctdef.ecg.padding   = ft_getopt(cfg.artfctdef.ecg, 'padding',  0.5);
+cfg.artfctdef.ecg.inspect   = ft_getopt(cfg.artfctdef.ecg, 'inspect',  {'MLT' 'MRT'});
+cfg.artfctdef.ecg.pretim    = ft_getopt(cfg.artfctdef.ecg, 'pretim',   0.05);
+cfg.artfctdef.ecg.psttim    = ft_getopt(cfg.artfctdef.ecg, 'psttim',   0.3);
+cfg.artfctdef.ecg.mindist   = ft_getopt(cfg.artfctdef.ecg, 'mindist',  0.5);
+cfg.artfctdef.ecg.feedback  = ft_getopt(cfg.artfctdef.ecg, 'feedback', 'yes');
 
 if ~strcmp(cfg.artfctdef.ecg.method, 'zvalue')
   ft_error('method "%s" is not applicable', cfg.artfctdef.ecg.method);
@@ -117,38 +114,14 @@ if ~hasdata
   cfg = ft_checkconfig(cfg, 'dataset2files', 'yes');
   cfg = ft_checkconfig(cfg, 'required', {'headerfile', 'datafile'});
   hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat);
-  trl = cfg.trl;
 else
   data = ft_checkdata(data, 'datatype', 'raw', 'hassampleinfo', 'yes');
   cfg  = ft_checkconfig(cfg, 'forbidden', {'dataset', 'headerfile', 'datafile'});
   hdr  = ft_fetch_header(data);
-  if isfield(data, 'sampleinfo')
-    trl = data.sampleinfo;
-    for k = 1:numel(data.trial)
-      trl(k,3) = time2offset(data.time{k}, data.fsample);
-    end
-  else
-    ft_error('the input data does not contain a valid description of the sampleinfo');
-  end
-end
-
-artfctdef         = cfg.artfctdef.ecg;
-ntrl              = size(trl,1);
-artfctdef.trl     = trl;
-artfctdef.channel = ft_channelselection(artfctdef.channel, hdr.label);
-artfctdef.demean  = 'yes';
-sgnind            = match_str(hdr.label, artfctdef.channel);
-numecgsgn         = length(sgnind);
-fltpadding        = 0;
-
-if numecgsgn<1
-  ft_error('no ECG channels selected');
-elseif numecgsgn>1
-  ft_error('only one ECG channel can be selected');
 end
 
 % set default cfg.continuous
-if ~isfield(cfg, 'continuous')
+if isempty(cfg.continuous)
   if hdr.nTrials==1
     cfg.continuous = 'yes';
   else
@@ -156,75 +129,66 @@ if ~isfield(cfg, 'continuous')
   end
 end
 
-% read in the ecg-channel and do demean and squaring
-if hasdata
-  % this list originates from ft_checkconfig
-  fieldname = {
-    'reref'
-    'refchannel'
-    'implicitref'
-    'detrend'
-    'bpfiltdir'
-    'bpfilter'
-    'bpfiltord'
-    'bpfilttype'
-    'bpfreq'
-    'bsfiltdir'
-    'bsfilter'
-    'bsfiltord'
-    'bsfilttype'
-    'bsfreq'
-    'demean'
-    'baselinewindow'
-    'denoise'
-    'dftfilter'
-    'dftfreq'
-    'hpfiltdir'
-    'hpfilter'
-    'hpfiltord'
-    'hpfilttype'
-    'hpfreq'
-    'lpfiltdir'
-    'lpfilter'
-    'lpfiltord'
-    'lpfilttype'
-    'lpfreq'
-    'medianfilter'
-    'medianfiltord'
-    'hilbert'
-    'derivative'
-    'rectify'
-    'boxcar'
-    'absdiff'
-    };
-  
-  tmpcfg = keepfields(artfctdef, fieldname);
-  tmpcfg.channel = artfctdef.channel;
-  ecgdata = ft_preprocessing(tmpcfg, data);
-  ecg     = ecgdata.trial;
-end
-
-for j = 1:ntrl
-  if ~hasdata
-    ecg{j} = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', trl(j,1), 'endsample', trl(j,2), 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous, 'no'), 'dataformat', cfg.dataformat);
-    currtime = offset2time(trl(j,3), hdr.Fs, size(ecg{j},2));
-    ecg{j} = preproc(ecg{j}, artfctdef.channel, currtime, artfctdef, fltpadding, fltpadding);
-    ecg{j} = ecg{j}.^2;
-  else
-    ecg{j} = preproc(ecg{j}, artfctdef.channel, ecgdata.time{j}, artfctdef, fltpadding, fltpadding);
-    ecg{j} = ecg{j}.^2;
+% get the specification of the data segments that should be scanned for artifacts
+if ~isfield(cfg, 'trl') && hasdata
+  trl = data.sampleinfo;
+  for k = 1:numel(data.trial)
+    trl(k,3) = time2offset(data.time{k}, data.fsample);
   end
+elseif isfield(cfg, 'trl') && ischar(cfg.trl)
+  trl = loadvar(cfg.trl, 'trl');
+elseif isfield(cfg, 'trl') && isnumeric(cfg.trl)
+  trl = cfg.trl;
+else
+  ft_error('cannot determine which segments of data to scan for artifacts');
 end
 
-tmp   = cell2mat(ecg);
-stmp  =  std(tmp, 0, 2);
+% get the remaining settings
+artfctdef         = cfg.artfctdef.ecg;
+artfctdef.trl     = trl;
+artfctdef.demean  = 'yes';
+artfctdef.channel = ft_channelselection(artfctdef.channel, hdr.label);
+chanindx          = match_str(hdr.label, artfctdef.channel);
+nchan             = length(chanindx);
+fltpadding        = 0;
+numtrl            = size(trl,1);
+
+if length(chanindx)<1
+  ft_error('no ECG channels selected');
+elseif length(chanindx)>1
+  ft_error('only one ECG channel can be selected');
+end
+
+% these are the settings for filtering, rectifying, etc.
+fltcfg = removefields(artfctdef, {'pretim', 'psttim', 'method', 'cutoff', 'inspect'});
+
+ft_progress('init', cfg.feedback, ['searching for artifacts in ' num2str(nchan) ' channels']);
+for trlop=1:numtrl
+  ft_progress(trlop/numtrl, 'searching in trial %d from %d\n', trlop, numtrl);
+  if hasdata
+    dat = ft_fetch_data(data,        'header', hdr, 'begsample', trl(trlop,1), 'endsample', trl(trlop,2), 'chanindx', chanindx, 'checkboundary', strcmp(cfg.continuous, 'no'));
+  else
+    dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', trl(trlop,1), 'endsample', trl(trlop,2), 'chanindx', chanindx, 'checkboundary', strcmp(cfg.continuous, 'no'), 'dataformat', cfg.dataformat);
+  end
+  if size(trl,2)>2
+    fltdata.time{trlop} = offset2time(trl(trlop,3), hdr.Fs, size(dat,2));
+  else
+    fltdata.time{trlop} = offset2time(0, hdr.Fs, size(dat,2));
+  end
+  fltdata.trial{trlop} = preproc(dat, artfctdef.channel, fltdata.time{trlop}, fltcfg, fltpadding, fltpadding);
+  fltdata.trial{trlop} = fltdata.trial{trlop}.^2;
+end % for trlop
+ft_progress('close');
+
+tmp   = cell2mat(fltdata.trial);
+stmp  = std(tmp, 0, 2);
 mtmp  = mean(tmp, 2);
 Nsmp  = max(trl(:,2));
-trace = zeros(1,Nsmp);
+trace = zeros(1, Nsmp);
 
 % standardise the ecg
-for j = 1:ntrl
-  trace(trl(j,1):trl(j,2)) = (ecg{j}-mtmp)./stmp;
+for trlop=1:numtrl
+  trace(trl(trlop,1):trl(trlop,2)) = (fltdata.trial{trlop}-mtmp)./stmp;
 end
 
 accept = strcmp(cfg.artfctdef.ecg.feedback, 'no');
@@ -263,40 +227,39 @@ mindist       = round(cfg.artfctdef.ecg.mindist.*hdr.Fs);
 %pval          = pval(sel);
 artfctdef.qrs = pindx;
 
-%---------------------------------------
-% create trials for qrs-triggered average
+% create a trial around each QRS peak
 trl = [];
 trl(:,1) = pindx(:) - round(artfctdef.padding*(hdr.Fs))  ;
 trl(:,2) = pindx(:) + round(artfctdef.padding*(hdr.Fs))-1;
 trl(:,3) = -round(artfctdef.padding*(hdr.Fs));
 trl(trl(:,1)<1,:) = [];
 trl(trl(:,2)>hdr.nSamples.*hdr.nTrials,:) = [];
-%------------
 
 % ---------------------
-% qrs-triggered average
-% FIXME, at present this only works for continuous data: the assumption can
-% be made that all trials are equally long.
+% compute a QRS-triggered average
+% FIXME, at present this only works for continuous data: the assumption can be made that all trials are equally long.
 sgn    = ft_channelselection(artfctdef.inspect, hdr.label);
 megind = match_str(hdr.label, sgn);
-sgnind = [megind(:); sgnind];
-dat    = zeros(length(sgnind), trl(1,2)-trl(1,1)+1);
-ntrl   = size(trl,1);
+chanindx = [megind(:); chanindx];
+dat    = zeros(length(chanindx), trl(1,2)-trl(1,1)+1);
+numtrl   = size(trl,1);
 
-if ~isempty(sgnind)
+if ~isempty(chanindx)
   ntrlok = 0;
-  for j = 1:ntrl
-    fprintf('reading and preprocessing trial %d of %d\n', j, ntrl);
+  for trlop=1:numtrl
     if ~hasdata
-      dum = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', trl(j,1), 'endsample', trl(j,2), 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous, 'no'), 'dataformat', cfg.dataformat);
+      fprintf('reading and preprocessing heartbeat %d of %d\n', trlop, numtrl);
+      dum = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', trl(trlop,1), 'endsample', trl(trlop,2), 'chanindx', chanindx, 'checkboundary', strcmp(cfg.continuous, 'no'), 'dataformat', cfg.dataformat);
       dat = dat + ft_preproc_baselinecorrect(dum);
       ntrlok = ntrlok + 1;
     elseif hasdata
-      dum = ft_fetch_data(data, 'header', hdr, 'begsample', trl(j,1), 'endsample', trl(j,2), 'chanindx', sgnind, 'checkboundary', strcmp(cfg.continuous, 'no'), 'docheck', 0);
+      fprintf('preprocessing heartbeat %d of %d\n', trlop, numtrl);
+      dum = ft_fetch_data(data, 'header', hdr, 'begsample', trl(trlop,1), 'endsample', trl(trlop,2), 'chanindx', chanindx, 'checkboundary', strcmp(cfg.continuous, 'no'), 'docheck', 0);
       if any(~isfinite(dum(:)))
+        % do not add this segment to the sum
       else
-        ntrlok = ntrlok + 1;
         dat    = dat + ft_preproc_baselinecorrect(dum);
+        ntrlok = ntrlok + 1;
       end
     end
   end
@@ -359,7 +322,27 @@ end
 artifact(:,1) = trl(:,1) - trl(:,3) - round(artfctdef.pretim*hdr.Fs);
 artifact(:,2) = trl(:,1) - trl(:,3) + round(artfctdef.psttim*hdr.Fs);
 
-% remember the details that were used here
+if strcmp(cfg.representation, 'numeric') && istable(artifact)
+  if isempty(artifact)
+    % an empty table does not have columns
+    artifact = zeros(0,2);
+  else
+    % convert the table to a numeric array with the columns begsample and endsample
+    artifact = table2array(artifact(:,1:2));
+  end
+elseif strcmp(cfg.representation, 'table') && isnumeric(artifact)
+  if isempty(artifact)
+    % an empty table does not have columns
+    artifact = table();
+  else
+    % convert the numeric array to a table with the columns begsample and endsample
+    begsample = artifact(:,1);
+    endsample = artifact(:,2);
+    artifact = table(begsample, endsample);
+  end
+end
+
+% remember the details that were used here and store the detected artifacts
 cfg.artfctdef.ecg          = artfctdef;
 cfg.artfctdef.ecg.artifact = artifact;
 

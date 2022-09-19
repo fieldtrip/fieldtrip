@@ -50,7 +50,7 @@ else
   fullname = filename;
 end
 
-if isempty(previous_fullname) || ~isequal(fullname, previous_fullname)
+if isempty(previous_fullname) || ~isequal(fullname, previous_fullname) || isempty(c3d)
   % remember the full filename including path
   previous_fullname = fullname;
   % read the header and data
@@ -62,20 +62,25 @@ end
 if needhdr
   %% parse the header
   
+  % In release version 1.1.0 of ezc3d the c3d.parameters.POINT.LABELS field
+  % was a cell-array. In version 1.2.4 it became a structure, that contains
+  % a subfield DATA as a cell-array. Also the numeric fields in 1.2.4 have the DATA
+  % subfield.
+  
   hdr = [];
   hdr.label = {};
-  for i=1:numel(c3d.parameters.POINT.LABELS)
-    hdr.label{end+1} = [c3d.parameters.POINT.LABELS{i} '_x'];
-    hdr.label{end+1} = [c3d.parameters.POINT.LABELS{i} '_y'];
-    hdr.label{end+1} = [c3d.parameters.POINT.LABELS{i} '_z'];
+  for i=1:numel(c3d.parameters.POINT.LABELS.DATA)
+    hdr.label{end+1} = [c3d.parameters.POINT.LABELS.DATA{i} '_x'];
+    hdr.label{end+1} = [c3d.parameters.POINT.LABELS.DATA{i} '_y'];
+    hdr.label{end+1} = [c3d.parameters.POINT.LABELS.DATA{i} '_z'];
   end
   hdr.nChans      = numel(hdr.label);
-  hdr.nSamples    = c3d.parameters.POINT.FRAMES;
+  hdr.nSamples    = c3d.parameters.POINT.FRAMES.DATA;
   hdr.nSamplesPre = 0; % continuous data
   hdr.nTrials     = 1; % continuous data
-  hdr.Fs          = c3d.parameters.POINT.RATE;
+  hdr.Fs          = c3d.parameters.POINT.RATE.DATA;
   hdr.chantype    = repmat({'motion'}, size(hdr.label));
-  hdr.chanunit    = repmat(c3d.parameters.POINT.UNITS, size(hdr.label));
+  hdr.chanunit    = repmat(c3d.parameters.POINT.UNITS.DATA, size(hdr.label));
   
   % keep a copy of the original header details
   hdr.orig = c3d.parameters;
@@ -85,8 +90,12 @@ if needhdr
   
 elseif needdat
   %% parse the data
-  nchan   = numel(c3d.parameters.POINT.LABELS)*3;
-  nsample = c3d.parameters.POINT.FRAMES;
+  
+  % this only deals with one type of data, the file format itself is much
+  % more complex
+  
+  nchan   = numel(c3d.parameters.POINT.LABELS.DATA)*3;
+  nsample = c3d.parameters.POINT.FRAMES.DATA;
   dat = reshape(c3d.data.points, [nchan nsample]);
   dat = dat(chanindx, begsample:endsample);
   
@@ -95,6 +104,9 @@ elseif needdat
   
 elseif needevt
   %% parse the events
-  ft_error('not yet implemented');
+  ft_warning('reading of events is not yet implemented');
+  
+  % return the events
+  varargout = {[]};
   
 end

@@ -1,8 +1,7 @@
 function test_bug3359
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_connectivityanalysis ft_topoplotER 
 
 % first create some data
@@ -47,10 +46,10 @@ cfg.foilim = [0 80];
 cfg.taper  = 'hanning';
 cfg.pad    = 1;
 freq = ft_freqanalysis(cfg, data);
-freq = ft_checkdata(freq, 'cmbrepresentation', 'fullfast');
+freq = ft_checkdata(freq, 'cmbstyle', 'fullfast');
 
 freq_sim = ft_freqanalysis(cfg, data_sim);
-freq_sim = ft_checkdata(freq_sim, 'cmbrepresentation', 'fullfast');
+freq_sim = ft_checkdata(freq_sim, 'cmbstyle', 'fullfast');
 
 cfg = [];
 cfg.method = 'psi';

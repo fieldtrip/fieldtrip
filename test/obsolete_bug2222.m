@@ -1,8 +1,7 @@
 function test_bug2222
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_freqcomparison ft_math
 
 % the bug reported by Izabela triggered a short discussion, concluding that

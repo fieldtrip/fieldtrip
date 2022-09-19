@@ -23,7 +23,7 @@ function dat = read_spike6mat_data(filename, varargin)
 if nargin < 1
     help read_spike6mat_data;
     return;
-end;
+end
 
 header    = ft_getopt(varargin, 'header');
 begsample = ft_getopt(varargin, 'begsample');
@@ -34,8 +34,8 @@ if isempty(header)
     header = read_spike6mat_header(filename);
 end
 
-if isempty(begsample), begsample = 1; end;
-if isempty(endsample), endsample = header.nSamples; end;
+if isempty(begsample), begsample = 1; end
+if isempty(endsample), endsample = header.nSamples; end
 
 try
     vars = struct2cell(load(filename));

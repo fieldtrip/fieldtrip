@@ -34,13 +34,13 @@ function header = read_erplabheader(filename)
 if nargin < 1
   help read_erplabheader;
   return;
-end;
+end
 
 if ~isstruct(filename)
   load('-mat', filename);
 else
   ERP = filename;
-end;
+end
 
 header.Fs          = ERP.srate;
 header.nChans      = ERP.nchan;
@@ -64,8 +64,8 @@ for i = 1:length( ERP.chanlocs )
         header.elec.pnt(ind,2) = ERP.chanlocs(i).Y;
         header.elec.pnt(ind,3) = ERP.chanlocs(i).Z;
         ind = ind+1;
-    end;
-end;
+    end
+end
 
 header.orig = ERP;
 

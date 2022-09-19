@@ -2,7 +2,6 @@ function test_bug2220(datainfo)
 
 % MEM 2gb
 % WALLTIME 00:20:00
-
 % DEPENDENCY ft_preprocessing ft_preproc_padding preproc
 
 

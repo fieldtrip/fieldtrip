@@ -86,5 +86,3 @@ drawnow
 cfg.axisratio = 'data';
 ft_sourceplot(cfg, mri);
 drawnow
-
-

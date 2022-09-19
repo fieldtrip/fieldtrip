@@ -1,7 +1,7 @@
 function [mesh_realigned] = ft_meshrealign(cfg, mesh)
 
-% FT_MESHREALIGN rotates, translates and optionally scales electrode positions. The
-% different methods are described in detail below.
+% FT_MESHREALIGN rotates, translates and optionally scales a surface description of
+% the head or of the cortex. The different methods are described in detail below.
 %
 % INTERACTIVE - You can display the mesh surface together with axis coordinate
 % system, and manually (using the graphical user interface) adjust the rotation,
@@ -17,13 +17,16 @@ function [mesh_realigned] = ft_meshrealign(cfg, mesh)
 % where the mesh input argument comes from FT_READ_HEADSHAPE or FT_PREPARE_MESH and
 % cfg is a configuration structure that should contain
 %
-%  cfg.method    = string, can be 'interactive' or fiducial' (default = 'interactive')
+%   cfg.method          = string, can be 'interactive' or fiducial' (default = 'interactive')
 %
 % The configuration can furthermore contain
-%   cfg.coordsys        = string, can be 'ctf', 'neuromag', '4d', 'bti', 'itab'
-%   cfg.fiducial.nas    = [x y z], position of nasion
-%   cfg.fiducial.lpa    = [x y z], position of LPA
-%   cfg.fiducial.rpa    = [x y z], position of RPA
+%   cfg.coordsys       = string specifying the origin and the axes of the coordinate
+%                        system. Supported coordinate systems are 'ctf', '4d', 'bti', 
+%                        'eeglab', 'neuromag', 'itab', 'yokogawa', 'asa', 'acpc',
+%                        and 'paxinos'. See http://tinyurl.com/ojkuhqz
+%   cfg.fiducial.nas   = [x y z], position of nasion
+%   cfg.fiducial.lpa   = [x y z], position of LPA
+%   cfg.fiducial.rpa   = [x y z], position of RPA
 %
 % The fiducials should be expressed in the coordinates and units of the input mesh.
 %
@@ -37,7 +40,7 @@ function [mesh_realigned] = ft_meshrealign(cfg, mesh)
 %
 % See also FT_READ_HEADSHAPE, FT_PREPARE_MESH, FT_ELECTRODEREALIGN, FT_VOLUMEREALIGN
 
-% Copyrights (C) 2017, Robert Oostenveld
+% Copyrights (C) 2017-2022, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -86,9 +89,9 @@ end
 mesh = ft_checkdata(mesh, 'datatype', 'mesh', 'feedback', 'yes', 'hasunit', 'yes', 'hascoordsys', 'no');
 
 % get the options
-cfg.method    = ft_getopt(cfg, 'method', 'interactive');
-cfg.coordsys  = ft_getopt(cfg, 'coordsys');
-cfg.fiducial = ft_getopt(cfg, 'fiducial');
+cfg.method       = ft_getopt(cfg, 'method', 'interactive');
+cfg.coordsys     = ft_getopt(cfg, 'coordsys');
+cfg.fiducial     = ft_getopt(cfg, 'fiducial');
 cfg.fiducial.nas = ft_getopt(cfg.fiducial, 'nas');
 cfg.fiducial.lpa = ft_getopt(cfg.fiducial, 'lpa');
 cfg.fiducial.rpa = ft_getopt(cfg.fiducial, 'rpa');
@@ -99,16 +102,19 @@ cfg.fiducial.rpa = ft_getopt(cfg.fiducial, 'rpa');
 
 % start with a copy
 mesh_realigned = keepfields(mesh, {'pos', 'tri', 'tet', 'hex', 'unit', 'line', 'edge', 'color', 'curv', 'sulc'});
+% ensure that its units are specified
+mesh_realigned = ft_determine_units(mesh_realigned);
 
 switch cfg.method
   case 'interactive'
-    
+
     tmpcfg = [];
+    tmpcfg.unit = mesh_realigned.unit;
     tmpcfg.template.axes = 'yes';
-    tmpcfg.template.headshape.pos       = zeros(3,3); % three vertices
-    tmpcfg.template.headshape.tri       = [1 2 3];    % one triangle
-    tmpcfg.template.headshape.unit      = 'mm';
-    tmpcfg.template.headshape.coordsys  = cfg.coordsys;
+    tmpcfg.template.headshape.pos       = zeros(3,3);           % three vertices
+    tmpcfg.template.headshape.tri       = [1 2 3];              % one triangle
+    tmpcfg.template.headshape.unit      = mesh_realigned.unit;  % give it the same units
+    tmpcfg.template.headshape.coordsys  = cfg.coordsys;         % this is the target coordsys
     tmpcfg.template.headshapestyle = {'vertexcolor', 'none', 'edgecolor', 'none', 'facecolor', 'none'};
     tmpcfg.individual.headshape = mesh_realigned;
     tmpcfg = ft_interactiverealign(tmpcfg);
@@ -136,7 +142,7 @@ switch cfg.method
       mri = [];
       
       switch cfg.coordsys
-        case {'ctf' '4d' 'bti' 'yokogawa' 'asa' 'itab' 'neuromag'}
+        case {'ctf', '4d', 'bti', 'eeglab', 'neuromag', 'itab', 'yokogawa', 'asa'}
           fidlabel  = {'nas', 'lpa', 'rpa', 'zpoint'};
           fidletter = {'n', 'l', 'r', 'z'};
           fidexplanation1 = '      press n for nas, l for lpa, r for rpa\n';
@@ -216,7 +222,6 @@ switch cfg.method
     
     % compute the homogenous transformation
     transform = ft_headcoordinates(cfg.fiducial.nas, cfg.fiducial.lpa, cfg.fiducial.rpa, cfg.coordsys);
-    
     
   otherwise
     ft_error('unsupported method "%s"', cfg.method);
@@ -879,4 +884,3 @@ while p~=0
   h = p;
   p = get(h, 'parent');
 end
-

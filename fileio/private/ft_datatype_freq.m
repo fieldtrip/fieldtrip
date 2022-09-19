@@ -27,10 +27,10 @@ function [freq] = ft_datatype_freq(freq, varargin)
 %          cfg: [1x1 struct]         the configuration used by the function that generated this data structure
 %
 % Required fields:
-%   - label, dimord, freq
+%   - freq, dimord, label or labelcmb
 %
 % Optional fields:
-%   - powspctrm, fouriesspctrm, csdspctrm, cohspctrm, time, labelcmb, grad, elec, cumsumcnt, cumtapcnt, trialinfo
+%   - powspctrm, fouriesspctrm, csdspctrm, cohspctrm, time, grad, elec, cumsumcnt, cumtapcnt, trialinfo
 %
 % Deprecated fields:
 %   - <none>
@@ -88,6 +88,13 @@ if isempty(freq)
   return;
 end
 
+% do some sanity checks
+assert(isfield(freq, 'freq') && (isfield(freq, 'label') || isfield(freq, 'labelcmb')), 'inconsistent freq data structure, some field is missing');
+if isfield(freq, 'label')
+  % it could also be that it has labelcmb instead of label
+  assert(length(unique(freq.label))==length(freq.label), 'channel labels must be unique');
+end
+
 % ensure consistency between the dimord string and the axes that describe the data dimensions
 freq = fixdimord(freq);
 
@@ -118,28 +125,36 @@ switch version
     if isfield(freq, 'opto')
       freq.opto = ft_datatype_sens(freq.opto);
     end
-    
+
     if isfield(freq, 'foi') && ~isfield(freq, 'freq')
       % this was still the case in early 2006
       freq.freq = freq.foi;
       freq = rmfield(freq, 'foi');
     end
-    
+
     if isfield(freq, 'toi') && ~isfield(freq, 'time')
       % this was still the case in early 2006
       freq.time = freq.toi;
       freq = rmfield(freq, 'toi');
     end
-    
+
     if isfield(freq, 'cumtapcnt') && isvector(freq.cumtapcnt)
       % ensure that it is a column vector
       freq.cumtapcnt = freq.cumtapcnt(:);
     end
-    
+
     if isfield(freq, 'cumsumcnt') && isvector(freq.cumsumcnt)
       % ensure that it is a column vector
       freq.cumsumcnt = freq.cumsumcnt(:);
     end
+
+    % ensure that the structure has all required fields
+    % note that dimord is listed as required field, but it might also be xxxdimord, or dynamically determined with GETDIMORD
+    for required={'freq'}
+      assert(isfield(freq, required), 'required field "%s" is missing', required{:});
+    end
+    % either label or labelcmb should be present
+    assert(any(ismember({'label', 'labelcmb'}, fieldnames(freq))), 'required field "label" or "labelcmb" is missing');
 
   case '2008'
     % there are no known conversions for backward or forward compatibility support

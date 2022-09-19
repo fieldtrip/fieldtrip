@@ -38,11 +38,11 @@ function [tap] = hanning(n, str)
 %
 % $Id$
 
-if nargin==1,
+if nargin==1
   str = 'symmetric';
 end
   
-switch str,
+switch str
 case 'periodic'
    % Includes the first zero sample
    tap = [0; hanningX(n-1)];

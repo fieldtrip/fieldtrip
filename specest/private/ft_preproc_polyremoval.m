@@ -14,7 +14,7 @@ function [dat,beta,x] = ft_preproc_polyremoval(dat, order, begsample, endsample,
 %              vectors from the first-order basis vector (and the beta
 %              weights). This is to avoid numerical problems with the
 %              inversion of the covariance when the polynomial is of high
-%              order/number of samples is large
+%              order/number of samples is large.
 %
 % If begsample and endsample are not specified, it will use the whole
 % window to estimate the polynomial.
@@ -24,6 +24,9 @@ function [dat,beta,x] = ft_preproc_polyremoval(dat, order, begsample, endsample,
 % removes the mean value from each channel and
 %   ft_preproc_polyremoval(dat, 1)
 % removes the mean and the linear trend.
+%
+% If the data contains NaNs, these are ignored for the computation, but
+% retained in the output.
 %
 % See also FT_PREPROC_BASELINECORRECT, FT_PREPROC_DETREND
 

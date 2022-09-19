@@ -5,9 +5,11 @@ function cfg = save_large_cfg_fields(cfg, highest_ft, reproducescript_dir, nowti
 
 fn = ignorefields('recursesize');
 for i=1:numel(fn)
-  if isfield(cfg.callinfo.usercfg, fn{i}) && isstruct((cfg.callinfo.usercfg.(fn{i})))
+  % we should store to disk any field that is listed in fn (see
+  % ignorefields) and that is not already provided as a string
+  if isfield(cfg.callinfo.usercfg, fn{i}) && ~ischar((cfg.callinfo.usercfg.(fn{i})))
     outputfile = make_or_fetch_inputfile(reproducescript_dir,...
-      sprintf('%s_%s_input_%s.mat', nowtime, highest_ft, ...
+      sprintf('%s_%s_largecfginput_%s.mat', nowtime, highest_ft, ...
       fn{i}), fn{i}, cfg.callinfo.usercfg.(fn{i}));
     cfg.callinfo.usercfg.(fn{i})  = outputfile;
   end

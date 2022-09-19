@@ -1,7 +1,7 @@
 function test_bug103
 
+% MEM 2gb
 % WALLTIME 00:10:00
-% MEM 1500mb
 % DEPENDENCY ft_singleplotER
 
 freq.freq       = 1:1:100;

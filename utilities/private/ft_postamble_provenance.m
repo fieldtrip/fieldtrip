@@ -38,42 +38,27 @@
 % $Id$
 
 if isfield(cfg, 'trackcallinfo') && ~istrue(cfg.trackcallinfo)
-  % do not track the call information
+  % do not track any call information
   return
 end
 
-% the proctime, procmem and calltime rely on three cryptical variables that were
-% created and added to the function workspace by the ft_preamble_callinfo script.
-cfg.callinfo.proctime = toc(ftohDiW7th_FuncTimer);
-cfg.callinfo.procmem  = memtoc(ftohDiW7th_FuncMem);
+% the proctime and procmem rely on cryptical variables that were created and added to
+% the function workspace by the ft_preamble_callinfo script.
+if exist('ftohDiW7th_FuncTimer', 'var')
+  cfg.callinfo.proctime = toc(ftohDiW7th_FuncTimer);
+end
 
-if istrue(ft_getopt(cfg, 'showcallinfo', 'yes'))
-  % print some feedback on screen, this is meant to educate the user about
-  % the requirements of certain computations and to use that knowledge in
-  % distributed computing
-  
-  stack = dbstack('-completenames');
-  % stack(1) is this script
-  % stack(2) is the calling ft_postamble function
-  % stack(3) is the main FieldTrip function that we are interested in
-  stack = stack(3);
-  
-  if ispc()
-    % don't print memory usage info under Windows; this does not work (yet)
-    fprintf('the call to "%s" took %d seconds\n', stack.name, round(cfg.callinfo.proctime));
-  else
-    fprintf('the call to "%s" took %d seconds and required the additional allocation of an estimated %d MB\n', stack.name, round(cfg.callinfo.proctime), round(cfg.callinfo.procmem/(1024*1024)));
-  end
-end % if showcallinfo=yes
-clear stack
+if exist('ftohDiW7th_FuncMem', 'var')
+  cfg.callinfo.procmem  = memtoc(ftohDiW7th_FuncMem);
+end
 
-if isfield(cfg, 'trackdatainfo') && istrue(cfg.trackdatainfo)
+if istrue(ft_getopt(cfg, 'trackdatainfo', 'yes'))
   % compute the MD5 hash of each of the output arguments
   % temporarily remove the cfg field for getting the hash (creating a duplicate of the data, but still has the same mem ref, so no extra mem needed)
-  if isequal(iW1aenge_postamble, {'varargin'})
+  if isequal(postamble_argin, {'varargin'})
     tmpargout = varargout;
   else
-    tmpargout = cellfun(@eval, iW1aenge_postamble, 'UniformOutput', false);
+    tmpargout = cellfun(@eval, postamble_argin, 'UniformOutput', false);
   end
   cfg.callinfo.outputhash = cell(1,numel(tmpargout));
   for iargout = 1:numel(tmpargout)
@@ -97,6 +82,28 @@ if isfield(cfg, 'trackdatainfo') && istrue(cfg.trackdatainfo)
   end
   clear tmpargout iargout tmparg bytenum; % remove the extra references
 end
+
+if istrue(ft_getopt(cfg, 'showcallinfo', 'yes'))
+  % print some feedback on screen, this is meant to educate the user about
+  % the requirements of certain computations and to use that knowledge in
+  % distributed computing
+  
+  stack = dbstack('-completenames');
+  % stack(1) is this script
+  % stack(2) is the calling ft_postamble function
+  % stack(3) is the main FieldTrip function that we are interested in
+  
+  if issubfield(cfg.callinfo, 'proctime') && issubfield(cfg.callinfo, 'procmem')
+    ft_info('the call to "%s" took %d seconds and required the additional allocation of an estimated %d MB\n', stack(3).name, round(cfg.callinfo.proctime), round(cfg.callinfo.procmem/(1024*1024)));
+  elseif issubfield(cfg.callinfo, 'procmem')
+    ft_info('the call to "%s" required the additional allocation of an estimated %d MB\n', stack(3).name, round(cfg.callinfo.procmem/(1024*1024)));
+  elseif issubfield(cfg.callinfo, 'proctime')
+    ft_info('the call to "%s" took %d seconds\n', stack(3).name, round(cfg.callinfo.proctime));
+  else
+    % nothing is to be printed
+  end
+  clear stack
+end % if showcallinfo=yes
 
 clear ftohDiW7th_FuncTimer
 clear ftohDiW7th_FuncMem

@@ -6,17 +6,18 @@ function s = ismatch(x, y)
 
 if isempty(x) || isempty(y)
   s = false;
+  
 elseif ischar(x) && ischar(y)
   y = sprintf('%s%s%s', '^', regexptranslate('wildcard',y), '$');
   s = ~isempty(regexp(x, y, 'once'));
+  
 elseif isnumeric(x) && isnumeric(y)
   s = ismember(x, y);
-elseif ischar(x) && iscell(y)
+  
+elseif ischar(x) && iscellstr(y)
   y = y(strcmp(class(x), cellfun(@class, y, 'UniformOutput', false)));
   s = ismember(x, y);
-  
-  % one or more of the elements in y can contain a wildcard, only proceed if
-  % s=false
+  % one or more of the elements in y can contain a wildcard, only proceed if s=false
   if ~s && any(contains(y, '*'))
     y = y(contains(y, '*'));
     for i = 1:numel(y)
@@ -25,11 +26,21 @@ elseif ischar(x) && iscell(y)
       if s, return; end
     end
   end
-elseif isnumeric(x) && iscell(y) && all(cellfun(@isnumeric, y))
+  
+elseif isnumeric(x) && iscell(y)
+  % this works if y contains both numbers and strings
   s = false;
   for i=1:numel(y)
     s = s || ismember(x, y{i});
   end
+  
+elseif ischar(x) && iscell(y)
+  % this works if y contains both numbers and strings
+  s = false;
+  for i=1:numel(y)
+    s = s || strcmp(x, y{i});
+  end
+  
 else
   s = false;
 end

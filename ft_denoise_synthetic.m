@@ -9,6 +9,7 @@ function [data] = ft_denoise_synthetic(cfg, data)
 %   cfg.gradient = 'none', 'G1BR', 'G2BR' or 'G3BR' specifies the gradiometer
 %                  type to which the data should be changed
 %   cfg.trials   = 'all' or a selection given as a 1xN vector (default = 'all')
+%   cfg.updatesens = 'no' or 'yes' (default = 'yes')
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
@@ -18,9 +19,9 @@ function [data] = ft_denoise_synthetic(cfg, data)
 % files should contain only a single variable, corresponding with the
 % input/output structure.
 %
-% See also FT_PREPROCESSING, FT_DENOISE_PCA
+% See also FT_PREPROCESSING, FT_DENOISE_PCA, FT_DENOISE_SSP
 
-% Copyright (C) 2004-2008, Robert Oostenveld
+% Copyright (C) 2004-2022, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -59,10 +60,12 @@ if ft_abort
 end
 
 % check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'required', {'gradient'});
+cfg = ft_checkconfig(cfg, 'forbidden',  {'trial'}); % prevent accidental typos, see issue 1729
+cfg = ft_checkconfig(cfg, 'required',   {'gradient'});
 
 % set the defaults
-cfg.trials = ft_getopt(cfg, 'trials', 'all', 1);
+cfg.trials     = ft_getopt(cfg, 'trials', 'all', 1);
+cfg.updatesens = ft_getopt(cfg, 'updatesens', 'yes');
 
 % store the original type of the input data
 dtype = ft_datatype(data);
@@ -83,7 +86,7 @@ if ~hasref
 end
 
 % select trials of interest
-tmpcfg = keepfields(cfg, {'trials', 'showcallinfo'});
+tmpcfg = keepfields(cfg, {'trials', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
 data   = ft_selectdata(tmpcfg, data);
 % restore the provenance information
 [cfg, data] = rollback_provenance(cfg, data);
@@ -102,10 +105,13 @@ if ~strcmp(current, 'none')
   catch
     ft_error('unknown balancing for input data');
   end
-  fprintf('converting from "%s" to "none"\n', current);
-  data.grad = ft_apply_montage(data.grad, current_montage, 'keepunused', 'yes', 'inverse', 'yes');
-  data      = ft_apply_montage(data     , current_montage, 'keepunused', 'yes', 'inverse', 'yes');
-  data.grad.balance.current = 'none';
+  fprintf('converting the data from "%s" to "none"\n', current);
+  data = ft_apply_montage(data, current_montage, 'keepunused', 'yes', 'inverse', 'yes');
+  if istrue(cfg.updatesens)
+    fprintf('converting the sensor description from "%s" to "none"\n', current);
+    data.grad = ft_apply_montage(data.grad, current_montage, 'keepunused', 'yes', 'inverse', 'yes');
+    data.grad.balance.current = 'none';
+  end
 end % if current
 
 if ~strcmp(desired, 'none')
@@ -115,9 +121,12 @@ if ~strcmp(desired, 'none')
   catch
     ft_error('unknown balancing for input data');
   end
-  fprintf('converting from "none" to "%s"\n', desired);
-  data.grad = ft_apply_montage(data.grad, desired_montage, 'keepunused', 'yes', 'balancename', desired);
-  data      = ft_apply_montage(data     , desired_montage, 'keepunused', 'yes', 'balancename', desired);
+  fprintf('converting the data from "none" to "%s"\n', desired);
+  data = ft_apply_montage(data, desired_montage, 'keepunused', 'yes', 'balancename', desired);
+  if istrue(cfg.updatesens)
+    fprintf('converting the sensor description from "none" to "%s"\n', desired);
+    data.grad = ft_apply_montage(data.grad, desired_montage, 'keepunused', 'yes', 'balancename', desired);
+  end
 end % if desired
 
 % reorder the channels to stay close to the original ordering
@@ -146,3 +155,4 @@ ft_postamble previous   data
 ft_postamble provenance data
 ft_postamble history    data
 ft_postamble savevar    data
+

@@ -104,10 +104,22 @@ switch version
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % ensure that it has individual source positions
     source = fixpos(source);
-
-    % ensure that it is always logical
-    source = fixinside(source, 'logical');
-
+    
+    if isfield(source, 'inside')
+      % ensure that it is always logical
+      source = fixinside(source, 'logical');
+    end
+    
+    if isfield(source, 'coordsys')
+      % ensure that it is in lower case
+      source.coordsys = lower(source.coordsys);
+    end
+    
+    if isfield(source, 'unit')
+      % ensure that it is in lower case
+      source.unit = lower(source.unit);
+    end
+    
     % remove obsolete fields
     if isfield(source, 'method')
       source = rmfield(source, 'method');
@@ -124,13 +136,13 @@ switch version
     if isfield(source, 'zgrid')
       source = rmfield(source, 'zgrid');
     end
-
+    
     if isfield(source, 'avg') && isstruct(source.avg) && isfield(source, 'trial') && isstruct(source.trial) && ~isempty(intersect(fieldnames(source.avg), fieldnames(source.trial)))
       % it is not possible to convert both since they have the same field names
       ft_warning('removing ''avg'', keeping ''trial''');
       source = rmfield(source, 'avg');
     end
-
+    
     if isfield(source, 'avg') && isstruct(source.avg)
       % move the average fields to the main structure
       fn = fieldnames(source.avg);
@@ -145,39 +157,34 @@ switch version
       end % j
       source = rmfield(source, 'avg');
     end
-
-    if isfield(source, 'inside')
-      % the inside is by definition logically indexed
-      probe = find(source.inside, 1, 'first');
-    else
-      % just take the first source position
-      probe = 1;
-    end
-
+    
     if isfield(source, 'trial') && isstruct(source.trial)
       npos = size(source.pos,1);
-
+      
       % concatenate the fields for each trial and move them to the main structure
       fn = fieldnames(source.trial);
-
+      
       for i=1:length(fn)
         % some fields are descriptive and hence identical over trials
-        if strcmp(fn{i}, 'csdlabel')
-          source.csdlabel = dat;
+        if any(strcmp(fn{i}, {'csdlabel' 'label' 'filterdimord' 'leadfielddimord'}))
+          source.(fn{i}) = source.trial(1).(fn{i});
           continue
         end
-
+        
         % start with the first trial
         dat    = source.trial(1).(fn{i});
         datsiz = getdimsiz(source, fn{i});
         nrpt   = datsiz(1);
         datsiz = datsiz(2:end);
-
-
+        
         if iscell(dat)
           datsiz(1) = nrpt; % swap the size of pos with the size of rpt
           val  = cell(npos,1);
-          indx = find(source.inside);
+          if isfield(source, 'inside')
+            indx = find(source.inside);
+          else
+            indx = 1:npos;
+          end
           for k=1:length(indx)
             val{indx(k)}          = nan(datsiz);
             val{indx(k)}(1,:,:,:) = dat{indx(k)};
@@ -188,10 +195,10 @@ switch version
             for k=1:length(indx)
               val{indx(k)}(j,:,:,:) = dat{indx(k)};
             end
-
+            
           end % for all trials
           source.(fn{i}) = val;
-
+          
         else
           % concatenate all data as pos_rpt_etc
           val = nan([datsiz(1) nrpt datsiz(2:end)]);
@@ -201,33 +208,59 @@ switch version
             val(:,j,:,:,:) = dat(:,:,:,:);
           end % for all trials
           source.(fn{i}) = val;
-
-%         else
-%           siz = size(dat);
-%           if prod(siz)==npos
-%             siz = [npos nrpt];
-%           elseif siz(1)==npos
-%             siz = [npos nrpt siz(2:end)];
-%           end
-%           val = nan(siz);
-%           % concatenate all data as pos_rpt_etc
-%           val(:,1,:,:,:) = dat(:);
-%           for j=2:length(source.trial)
-%             dat = source.trial(j).(fn{i});
-%             val(:,j,:,:,:) = dat(:);
-%           end % for all trials
-%           source.(fn{i}) = val;
-
+          
+          %         else
+          %           siz = size(dat);
+          %           if prod(siz)==npos
+          %             siz = [npos nrpt];
+          %           elseif siz(1)==npos
+          %             siz = [npos nrpt siz(2:end)];
+          %           end
+          %           val = nan(siz);
+          %           % concatenate all data as pos_rpt_etc
+          %           val(:,1,:,:,:) = dat(:);
+          %           for j=2:length(source.trial)
+          %             dat = source.trial(j).(fn{i});
+          %             val(:,j,:,:,:) = dat(:);
+          %           end % for all trials
+          %           source.(fn{i}) = val;
+          
         end
       end % for each field
-
+      
       source = rmfield(source, 'trial');
-
+      
     end % if trial
-
+    
     % ensure that it has a dimord (or multiple for the different fields)
     source = fixdimord(source);
-
+    
+    if isfield(source, 'inside')
+      % ensure that for positions outside the brain it is [], not nan
+      if isfield(source, 'leadfield')
+        source.leadfield(~source.inside) = {[]};
+      end
+      if isfield(source, 'filter')
+        source.filter(~source.inside) = {[]};
+      end
+    end
+   
+    if isfield(source, 'leadfield') && ~isfield(source, 'label') && isfield(source, 'cfg')
+      % try to determine the channel labels from the cfg
+      label = ft_findcfg(source.cfg, 'channel');
+      if ~isempty(label)
+        source.label = label;
+      end
+    end
+    
+    if isfield(source, 'filter') && ~isfield(source, 'label') && isfield(source, 'cfg')
+      % try to determine the channel labels from the cfg
+      label = ft_findcfg(source.cfg, 'channel');
+      if ~isempty(label)
+        source.label = label;
+      end
+    end
+    
     % ensure that all data fields have the correct dimensions
     fn = getdatfield(source);
     for i=1:numel(fn)
@@ -243,13 +276,17 @@ switch version
         end
       end
     end
-
-
+    
+    % ensure that the structure has all required fields
+    for required={'pos'}
+      assert(isfield(source, required), 'required field "%s" is missing', required{:});
+    end
+    
   case '2011'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % ensure that it has individual source positions
     source = fixpos(source);
-
+    
     % remove obsolete fields
     if isfield(source, 'xgrid')
       source = rmfield(source, 'xgrid');
@@ -263,15 +300,15 @@ switch version
     if isfield(source, 'transform')
       source = rmfield(source, 'transform');
     end
-
+    
     % ensure that it has a dimord (or multiple for the different fields)
     source = fixdimord(source);
-
+    
   case '2010'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % ensure that it has individual source positions
     source = fixpos(source);
-
+    
     % remove obsolete fields
     if isfield(source, 'xgrid')
       source = rmfield(source, 'xgrid');
@@ -282,15 +319,15 @@ switch version
     if isfield(source, 'zgrid')
       source = rmfield(source, 'zgrid');
     end
-
+    
     % ensure that it has a dimord (or multiple for the different fields)
     source = fixdimord(source);
-
+    
   case '2007'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % ensure that it has individual source positions
     source = fixpos(source);
-
+    
     % remove obsolete fields
     if isfield(source, 'dimord')
       source = rmfield(source, 'dimord');
@@ -304,13 +341,13 @@ switch version
     if isfield(source, 'zgrid')
       source = rmfield(source, 'zgrid');
     end
-
+    
   case '2003'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     if isfield(source, 'dimord')
       source = rmfield(source, 'dimord');
     end
-
+    
     if ~isfield(source, 'xgrid') || ~isfield(source, 'ygrid') || ~isfield(source, 'zgrid')
       if isfield(source, 'dim')
         minx = min(source.pos(:,1));
@@ -324,7 +361,7 @@ switch version
         source.zgrid = linspace(minz, maxz, source.dim(3));
       end
     end
-
+    
   otherwise
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     ft_error('unsupported version "%s" for source datatype', version);

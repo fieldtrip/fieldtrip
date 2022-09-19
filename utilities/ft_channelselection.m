@@ -1,14 +1,17 @@
 function [channel] = ft_channelselection(desired, datachannel, senstype)
 
-% FT_CHANNELSELECTION makes a selection of EEG and/or MEG channel labels.
-% This function translates the user-specified list of channels into channel
-% labels as they occur in the data. This channel selection procedure can be
-% used throughout FieldTrip.
+% FT_CHANNELSELECTION makes a selection of EEG and/or MEG channel labels. This
+% function translates the user-specified list of channels into channel labels as they
+% occur in the data. This channel selection procedure can be used throughout
+% FieldTrip.
 %
-% You can specify a mixture of real channel labels and of special strings,
-% or index numbers that will be replaced by the corresponding channel
-% labels. Channels that are not present in the raw datafile are
-% automatically removed from the channel list.
+% You can specify a mixture of real channel labels and of special strings, or index
+% numbers that will be replaced by the corresponding channel labels. Channels that
+% are not present in the raw datafile are automatically removed from the channel
+% list.
+%
+% The order of the channels in the list that is returned corresponds to the order in
+% the data.
 %
 % E.g. the desired input specification can be:
 %   'all'        is replaced by all channels in the datafile
@@ -47,10 +50,7 @@ function [channel] = ft_channelselection(desired, datachannel, senstype)
 % See also FT_PREPROCESSING, FT_SENSLABEL, FT_MULTIPLOTER, FT_MULTIPLOTTFR,
 % FT_SINGLEPLOTER, FT_SINGLEPLOTTFR
 
-% Note that the order of channels that is returned should correspond with
-% the order of the channels in the data.
-
-% Copyright (C) 2003-2016, Robert Oostenveld
+% Copyright (C) 2003-2021, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -77,22 +77,18 @@ if isempty(recursion)
   recursion = false;
 end
 
-if isempty(desired)
-  % ensure this is an empty cell-array, not an empty numeric array
-  desired = {};
+if nargin<3
+  % the actual senstype will be determined further down
+  % postponing the detection speeds up some common use patterns, such as 'all' and []
+  senstype = [];
 end
-
-if nargin<3 || isempty(senstype)
-  senstype = ft_senstype(datachannel);
-end
-
-% this will be specified further down
-datachantype = [];
 
 if iscell(datachannel)
-  % this is the expected input
+  % this is the expected format of the input
+  datachantype = {};
 elseif ischar(datachannel)
   datachannel = {datachannel};
+  datachantype = {};
 elseif isstruct(datachannel) && isfield(datachannel, 'label')
   % it looks like a header structure
   hdr = datachannel;
@@ -102,13 +98,6 @@ else
   ft_error('please specify the data channels as a cell-array');
 end
 
-if ~ischar(desired) && ~isnumeric(desired) && ~iscell(desired)
-  ft_error('please specify the desired channels as a cell-array or a string');
-end
-
-% start with the list of desired channels, this will be pruned/expanded
-channel = desired;
-
 if length(datachannel)~=length(unique(datachannel))
   ft_warning('discarding non-unique channel names');
   sel = false(size(datachannel));
@@ -116,26 +105,35 @@ if length(datachannel)~=length(unique(datachannel))
     sel(i) = sum(strcmp(datachannel, datachannel{i}))==1;
   end
   datachannel = datachannel(sel);
+  if ~isempty(datachantype)
+    datachantype = datachantype(sel);
+  end
 end
 
-if any(size(channel) == 0)
-  % there is nothing to do if it is empty
+if isempty(desired)
+  % return an empty selection
+  channel = {};
   return
-end
-
-if isnumeric(channel)
-  % remove channels tha fall outside the range
-  channel = channel(channel>=1 & channel<=numel(datachannel));
-  % change index into channelname
-  channel = datachannel(channel);
+elseif isequal(desired, 'all') || isequal(desired, {'all'})
+  % this is a very common use pattern that can be dealt with quickly
+  % ensure that the output is a column vector
+  channel = datachannel(:);
   return
-end
-
-if ~iscell(channel)
+elseif isnumeric(desired)
+  % remove channels that fall outside the range
+  desired = desired(desired>=1 & desired<=numel(datachannel));
+  % change the numeric index into the channel name
+  channel = datachannel(desired);
+  return
+elseif ischar(desired)
   % ensure that a single input argument like 'all' also works
-  % the case of a vector with channel indices has already been dealt with
-  channel = {channel};
+  desired = {desired};
+elseif ~iscell(desired)
+  ft_error('please specify the desired channels as a cell-array or a string');
 end
+
+% start with the list of desired channels, this will be pruned/expanded further down
+channel = desired;
 
 % ensure that both inputs are column vectors
 channel     = channel(:);
@@ -155,6 +153,52 @@ if length(chanindx)==length(channel)
   return
 end
 
+% initialize all the system-specific variables to empty
+labelall       = {};
+labelreg       = {};
+labelmeg       = {};
+labelecg       = {};
+labelemg       = {};
+labeleeg       = {};
+label102       = {};
+label101       = {};
+label100       = {};
+labelchwilla   = {};
+labelbha       = {};
+labelref       = {};
+labelmegref    = {};
+labelmeggrad   = {};
+labelmegplanar = {};
+labelmegmag    = {};
+labelmegrefa   = {};
+labelmegrefc   = {};
+labelmegrefg   = {};
+labelmegrefl   = {};
+labelmegrefr   = {};
+labelmegrefm   = {};
+labeleog       = {};
+labelmz        = {};
+labelml        = {};
+labelmr        = {};
+labelmlc       = {};
+labelmlf       = {};
+labelmlo       = {};
+labelmlp       = {};
+labelmlt       = {};
+labelmrc       = {};
+labelmrf       = {};
+labelmro       = {};
+labelmrp       = {};
+labelmrt       = {};
+labelmzc       = {};
+labelmzf       = {};
+labelmzo       = {};
+labelmzp       = {};
+labellfp       = {};
+labelmua       = {};
+labelspike     = {};
+labelnirs      = {};
+
 % define the known groups with channel labels
 labelall    = datachannel;
 label1020   = ft_senslabel('eeg1020'); % use external helper function
@@ -170,7 +214,12 @@ labelemg    = datachannel(strncmp('EMG', datachannel, length('EMG')));
 labellfp    = datachannel(strncmp('lfp', datachannel, length('lfp')));
 labelmua    = datachannel(strncmp('mua', datachannel, length('mua')));
 labelspike  = datachannel(strncmp('spike', datachannel, length('spike')));
-labelnirs   = datachannel(~cellfun(@isempty, regexp(datachannel, sprintf('%s%s', regexptranslate('wildcard','Rx*-Tx*[*]'), '$'))));
+% for NIRS there are multiple options, either using the terminology transmitter/receiver versus source/detector, and then with either order of the two
+option1 = ~cellfun(@isempty, regexp(datachannel, sprintf('%s%s', regexptranslate('wildcard','Rx*-Tx*[*]'), '$')));
+option2 = ~cellfun(@isempty, regexp(datachannel, sprintf('%s%s', regexptranslate('wildcard','Tx*-Rx*[*]'), '$')));
+option3 = ~cellfun(@isempty, regexp(datachannel, sprintf('%s%s', regexptranslate('wildcard','D*-S*[*]'), '$')));
+option4 = ~cellfun(@isempty, regexp(datachannel, sprintf('%s%s', regexptranslate('wildcard','S*-D*[*]'), '$')));
+labelnirs = datachannel(option1 | option2 | option3 | option4);
 
 % use regular expressions to deal with the wildcards
 labelreg = false(size(datachannel));
@@ -198,13 +247,9 @@ if ~isempty(findreg)
   labelreg = datachannel(labelreg);
 end
 
-% initialize all the system-specific variables to empty
-labelmeg       = [];
-labelmeggrad   = [];
-labelmegref    = [];
-labelmegmag    = [];
-labelmegplanar = [];
-labeleeg       = [];
+if isempty(senstype)
+  senstype = ft_senstype(datachannel);
+end
 
 switch senstype
   
@@ -317,7 +362,23 @@ switch senstype
   case {'itab153' 'itab28' 'itab28_old'}
     % all itab MEG channels start with MAG
     labelmeg = datachannel(strncmp('MAG', datachannel, length('MAG')));
-    
+
+  case{'qzfm_gen2'}        
+      % This is for use with QZFM_Gen2 Optically Pumped Magnetometers
+      % manufactured by QuSpin Inc.
+      % SPECS: https://quspin.com/qzfm-gen-2-update/
+
+      labelmeg  = datachannel(strncmp('meg', datachantype, 3));
+      labelmegref = datachannel(strncmp('refmag', datachantype, 3));
+      
+      % All channels measuring tangential fields are end with TAN
+      % All channels measuring radial fields are end with RAD
+
+      % This is specific to data collected from UCL. Also see:
+      % https://www.fieldtriptoolbox.org/getting_started/opm_fil/
+      labelmegtan = labelmeg(~cellfun(@isempty, regexp(labelmeg, '.*TAN$')));
+      labelmegrad = labelmeg(~cellfun(@isempty, regexp(labelmeg, '.*RAD$')));
+
   otherwise
     if ~isempty(datachantype)
       labelmeg = datachannel(strncmp('meg', datachantype, 3));
@@ -359,6 +420,8 @@ findmegrefg    = find(strcmpi(channel, 'MEGREFG'));
 findmegrefl    = find(strcmpi(channel, 'MEGREFL'));
 findmegrefr    = find(strcmpi(channel, 'MEGREFR'));
 findmegrefm    = find(strcmpi(channel, 'MEGREFM'));
+findmegtan     = find(strcmpi(channel, 'MEGTAN'));
+findmegrad     = find(strcmpi(channel, 'MEGRAD'));
 findeog        = find(strcmpi(channel, 'EOG'));
 findmz         = find(strcmp(channel, 'MZ' ));
 findml         = find(strcmp(channel, 'ML' ));
@@ -449,6 +512,8 @@ if findmegrefg,    channel = [channel; labelmegrefg]; end
 if findmegrefl,    channel = [channel; labelmegrefl]; end
 if findmegrefr,    channel = [channel; labelmegrefr]; end
 if findmegrefm,    channel = [channel; labelmegrefm]; end
+if findmegtan,     channel = [channel; labelmegtan]; end
+if findmegrad,     channel = [channel; labelmegrad]; end
 if findeog,        channel = [channel; labeleog]; end
 if findmz ,        channel = [channel; labelmz ]; end
 if findml ,        channel = [channel; labelml ]; end

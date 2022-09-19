@@ -1,7 +1,7 @@
 function [cfg, artifact] = ft_artifact_tms(cfg, data)
 
-% FT_ARTIFACT_TMS reads the data segments of interest from file and identifies artefacts in
-% EEG recordings that were done during TMS stimulation.
+% FT_ARTIFACT_TMS reads the data segments of interest from file and identifies
+% artefacts in EEG recordings that were done during TMS stimulation.
 %
 % Use as
 %   [cfg, artifact] = ft_artifact_tms(cfg)
@@ -39,34 +39,32 @@ function [cfg, artifact] = ft_artifact_tms(cfg, data)
 %   cfg.artfctdef.tms.trlpadding  = 0.1
 %   cfg.artfctdef.tms.fltpadding  = 0.1
 %   cfg.artfctdef.tms.artpadding  = 0.01
-% Be aware that if one artifact falls within this specified range of another artifact, both
-% artifact will be counted as one. Depending on cfg.prestim and cfg.poststim you may not mark
-% enough data as artifactual.
+% Be aware that if one artifact falls within this specified range of another
+% artifact, both artifact will be counted as one. Depending on cfg.prestim and
+% cfg.poststim you may not mark enough data as artifactual.
 %
-% With cfg.method='marker', TMS-artifact onsets and offsets are based on markers/triggers that
-% are written into the EEG dataset. This method acts as a wrapper around FT_DEFINETRIAL to
-% determine on- and offsets of TMS pulses by reading markers in the EEG.
+% With cfg.method='marker', TMS-artifact onsets and offsets are based on
+% markers/triggers that are written into the EEG dataset. This method acts as a
+% wrapper around FT_DEFINETRIAL to determine on- and offsets of TMS pulses by reading
+% markers in the EEG.
 %   cfg.trialfun            = function name, see below (default = 'ft_trialfun_general')
 %   cfg.trialdef.eventtype  = 'string'
 %   cfg.trialdef.eventvalue = number, string or list with numbers or strings
-% The cfg.trialfun option is a string containing the name of a function that you wrote
-% yourself and that FT_ARTIFACT_TMS will call. The function should take the cfg-structure as
-% input and should give a NxM matrix with M equal to or larger than 3) in the same format as
-% "trl" as the output. You can add extra custom fields to the configuration structure to
-% pass as arguments to your own trialfun.  Furthermore, inside the trialfun you can use the
-% FT_READ_EVENT function to get the event information from your data file.
+% The cfg.trialfun option is a string containing the name of a function that you
+% wrote yourself and that FT_ARTIFACT_TMS will call. The function should take the
+% cfg-structure as input and should give a NxM matrix with M>=3 in the same format as
+% "trl" as the output. You can add extra custom fields to the configuration structure
+% to pass as arguments to your own trialfun. Furthermore, inside the trialfun you can
+% use the FT_READ_EVENT function to get the event information from your data file.
 %
-% The output argument "artifact" is a Nx2 matrix comparable to the
-% "trl" matrix of FT_DEFINETRIAL. The first column of which specifying the
-% beginsamples of an artifact period, the second column contains the
-% endsamples of the artifactperiods.
+% The output argument "artifact" is a Nx2 matrix comparable to the "trl" matrix of
+% FT_DEFINETRIAL. The first column of which specifying the beginsamples of an
+% artifact period, the second column contains the endsamples of the artifactperiods.
 %
-% To facilitate data-handling and distributed computing with the peer-to-peer
-% module, this function has the following option:
+% To facilitate data-handling and distributed computing, you can use
 %   cfg.inputfile   =  ...
-% If you specify this option the input data will be read from a *.mat
-% file on disk. This mat files should contain only a single variable named 'data',
-% corresponding to the input structure.
+% to read the input data from a *.mat file on disk. This mat files should contain
+% only a single variable named 'data', corresponding to the input structure.
 %
 % See also FT_REJECTARTIFACT, FT_ARTIFACT_CLIP, FT_ARTIFACT_ECG, FT_ARTIFACT_EOG,
 % FT_ARTIFACT_JUMP, FT_ARTIFACT_MUSCLE, FT_ARTIFACT_THRESHOLD, FT_ARTIFACT_ZVALUE
@@ -111,8 +109,8 @@ cfg = ft_checkconfig(cfg, 'allowedval', {'method', 'detect', 'marker'});
 
 % set default rejection parameters
 if ~isfield(cfg, 'artfctdef'),                       cfg.artfctdef                   = [];        end
-if ~isfield(cfg, 'method'),                          cfg.method                      = 'detect';  end
 if ~isfield(cfg.artfctdef, 'tms'),                   cfg.artfctdef.tms               = [];        end
+if ~isfield(cfg, 'method'),                          cfg.method                      = 'detect';  end
 if ~isfield(cfg, 'prestim'),                         cfg.prestim                     = 0.005;     end
 if ~isfield(cfg, 'poststim'),                        cfg.poststim                    = 0.010;     end
 
@@ -133,31 +131,22 @@ switch cfg.method
     if ~isfield(cfg.artfctdef.tms, 'fltpadding'), cfg.artfctdef.tms.fltpadding  = 0.1;         end
     if ~isfield(cfg.artfctdef.tms, 'artpadding'), cfg.artfctdef.tms.artpadding  = 0.01;        end
     if ~isfield(cfg.artfctdef.tms, 'cutoff'),     cfg.artfctdef.tms.cutoff      = 4;           end
-    % construct a temporary configuration that can be passed onto artifact_zvalue
-    tmpcfg                  = [];
-    tmpcfg.trl              = cfg.trl;
-    tmpcfg.artfctdef.zvalue = cfg.artfctdef.tms;
-    if isfield(cfg, 'continuous'),   tmpcfg.continuous       = cfg.continuous;    end
-    if isfield(cfg, 'dataformat'),   tmpcfg.dataformat       = cfg.dataformat;    end
-    if isfield(cfg, 'headerformat'), tmpcfg.headerformat     = cfg.headerformat;  end
-    % call the zvalue artifact detection function
     
     % the data is either passed into the function by the user or read from file with cfg.inputfile
     hasdata = exist('data', 'var');
     
+    % construct a temporary configuration that can be passed onto artifact_zvalue
+    tmpcfg = keepfields(cfg, {'trl', 'continuous', 'dataset', 'datafile', 'headerfile', 'dataformat', 'headerformat'});
+    tmpcfg.artfctdef.zvalue = cfg.artfctdef.tms;
+    
     if hasdata
-      % read the header
-      cfg = ft_checkconfig(cfg, 'forbidden', {'dataset', 'headerfile', 'datafile'});
-      fsample = data.fsample;
+      fsample = data.fsample; % get the sampling rate from the data structure
       [tmpcfg, artifact] = ft_artifact_zvalue(tmpcfg, data);
     else
-      cfg = ft_checkconfig(cfg, 'dataset2files', 'yes');
-      cfg = ft_checkconfig(cfg, 'required', {'headerfile', 'datafile'});
-      hdr = ft_read_header(cfg.headerfile);
-      fsample = hdr.Fs;
-      tmpcfg.datafile    = cfg.datafile;
-      tmpcfg.headerfile  = cfg.headerfile;
       [tmpcfg, artifact] = ft_artifact_zvalue(tmpcfg);
+      % FT_ARTIFACT_ZVALUE will call FT_CHECKCONFIG with the dataset2files option
+      hdr = ft_read_header(tmpcfg.headerfile, 'headerformat', tmpcfg.headerformat);
+      fsample = hdr.Fs; % get the sampling rate from the file on disk
     end
     cfg.artfctdef.tms = tmpcfg.artfctdef.zvalue;
     

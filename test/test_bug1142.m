@@ -1,17 +1,15 @@
 function test_bug1142
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
+% DEPENDENCY ft_definetrial ft_preprocessing ft_rejectvisual ft_rejectartifact ft_artifact_clip ft_artifact_eog ft_artifact_muscle ft_artifact_zvalue ft_artifact_ecg ft_artifact_jump ft_artifact_threshold
 
 % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1142
-%
-% DEPENDENCY ft_definetrial ft_preprocessing ft_rejectvisual ft_rejectartifact
-% DEPENDENCY ft_artifact_clip ft_artifact_eog ft_artifact_muscle ft_artifact_zvalue ft_artifact_ecg ft_artifact_jump ft_artifact_threshold
 
 % the script is not yet finished, so at this moment it should not proceed to give an error
 return
 
-datadir = dccnpath('/home/common/matlab/fieldtrip/data');
+datadir = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf');
 
 artifact_type = {
   'clip'
@@ -98,4 +96,3 @@ for i=1:numorder
   data_all{i,2} = ft_rejectartifact(cfg_v2, data);
   
 end
-

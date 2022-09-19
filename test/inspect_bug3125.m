@@ -1,5 +1,9 @@
 function insspect_bug3125
 
+% WALLTIME 00:10:00
+% MEM 1gb
+% DEPENDENCY
+
 cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug3125'))
 
 load('bnd4_1922_corrected_fiducials.mat')

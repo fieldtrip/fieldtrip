@@ -2,6 +2,7 @@ function test_bug3150
 
 % WALLTIME 00:10:00
 % MEM 2gb
+% DEPENDENCY
 
 condition1 = {};
 condition2 = {};

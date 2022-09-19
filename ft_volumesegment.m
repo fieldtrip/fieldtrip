@@ -14,7 +14,7 @@ function [segmented] = ft_volumesegment(cfg, mri)
 % The configuration structure can contain
 %   cfg.output         = string or cell-array of strings, see below (default = 'tpm')
 %   cfg.spmversion     = string, 'spm2', 'spm8', 'spm12' (default = 'spm12')
-%   cfg.spmmethod      = string, 'old', 'new', 'mars' (default = 'old'). This pertains 
+%   cfg.spmmethod      = string, 'old', 'new', 'mars' (default = 'old'). This pertains
 %                        to the algorithm used when cfg.spmversion='spm12', see below.
 %   cfg.opts           = struct, containing spm-version specific options. See
 %                        the code and/or the SPM-documentation for more detail.
@@ -87,11 +87,11 @@ function [segmented] = ft_volumesegment(cfg, mri)
 %                because it doesn't require to create the tissue probabilty maps before creating
 %                the mask.
 %
-% It is not possible to request tissue-probability map (tpm)  in combination with binary masks
-% (brain, scalp or skull) or skull-stripped anatomy. The output will return only the probabilistic
+% It is not possible to request tissue-probability maps (tpm) in combination with binary masks
+% (brain, scalp or skull) or with a skull-stripped anatomy. The output will return only the probabilistic
 % maps in segmented.gray, white and csf. However, when a segmentation with the probabilistic gray, white
-% and csf representations is available, it is possible to use it as input for brain or skull binary mask.
-% For example:
+% and csf representations is available, it is possible to use it as input to create the brain or skull
+% binary mask. For example:
 %   cfg           = [];
 %   cfg.output    = {'tpm'};
 %   segment_tpm   = ft_volumesegment(cfg, mri);
@@ -111,10 +111,6 @@ function [segmented] = ft_volumesegment(cfg, mri)
 %   z-axis pointing to the top of the head
 %   origin in the anterior commissure.
 % Note that the segmentation only works if the template MRI is in SPM coordinates.
-%
-% If the input mri is a string pointing to a CTF *.mri file, the x-axis is assumed to point to the
-% nose, and the origin is assumed to be on the interauricular line. In this specific case, when
-% ft_read_mri is used to read in the mri, the coordsys field is automatically attached.
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
@@ -168,17 +164,13 @@ if ischar(mri)
   ft_error('please use cfg.inputfile instead of specifying the input variable as a string');
 end
 
-% ensure that old and unsupported options are not being relied on by the end-user's script
-% instead of specifying cfg.coordsys, the user should specify the coordsys in the data
-cfg = ft_checkconfig(cfg, 'forbidden', {'units', 'inputcoordsys', 'coordinates'});
-cfg = ft_checkconfig(cfg, 'deprecated',{'coordsys', 'keepintermediate'});
-% as of march 2017 keepintermediate is deprecated, does not seem to be
-% used, nor sensible. If result files are to be kept, use cfg.write
-
-cfg = ft_checkconfig(cfg, 'renamedval', {'output', 'skin', 'scalp'});
-
 % check if the input data is valid for this function
 mri = ft_checkdata(mri, 'datatype', 'volume', 'feedback', 'yes', 'hasunit', 'yes', 'hascoordsys', 'yes');
+
+% ensure that old and unsupported options are not being relied on by the end-user's script
+% instead of specifying cfg.coordsys, the user should specify the coordsys in the data
+cfg = ft_checkconfig(cfg, 'forbidden', {'units', 'coordsys', 'inputcoord', 'inputcoordsys', 'coordinates'});
+cfg = ft_checkconfig(cfg, 'renamedval', {'output', 'skin', 'scalp'});
 
 % set the defaults
 cfg.output           = ft_getopt(cfg, 'output',         'tpm');
@@ -222,7 +214,7 @@ end
 % then set defaults again
 cfg.brainsmooth      = ft_getopt(cfg, 'brainsmooth',      5);
 cfg.scalpsmooth      = ft_getopt(cfg, 'scalpsmooth',      5);
-cfg.skullsmooth      = ft_getopt(cfg, 'skullsmooth',      5); 
+cfg.skullsmooth      = ft_getopt(cfg, 'skullsmooth',      5);
 cfg.brainthreshold   = ft_getopt(cfg, 'brainthreshold',   0.5);
 cfg.scalpthreshold   = ft_getopt(cfg, 'scalpthreshold',   0.1);
 cfg.skullthreshold   = ft_getopt(cfg, 'skullthreshold',   0.5);
@@ -276,7 +268,7 @@ end
 
 if cfg.downsample~=1
   % optionally downsample the anatomical and/or functional volumes
-  tmpcfg = keepfields(cfg, {'downsample', 'spmversion', 'showcallinfo'});
+  tmpcfg = keepfields(cfg, {'downsample', 'spmversion', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
   tmpcfg.smooth = 'no'; % smoothing is done in ft_volumesegment itself
   mri = ft_volumedownsample(tmpcfg, mri);
   % restore the provenance information
@@ -309,27 +301,27 @@ if dotpm
   else
     mri = ft_convert_coordsys(mri, 'acpc');
   end
-
+  
   % flip and permute the 3D volume itself, so that the voxel and
   % headcoordinates approximately correspond this improves the convergence
   % of the segmentation algorithm
   [mri, permutevec, flipflags] = align_ijk2xyz(mri);
-
+  
   switch lower(cfg.spmversion)
     case 'spm2'
       cfg.template = ft_getopt(cfg, 'template', fullfile(spm('Dir'), 'templates', 'T1.mnc'));
       opts          = ft_getopt(cfg, 'opts');
       opts.estimate = ft_getopt(opts, 'estimate');
       opts.write    = ft_getopt(opts, 'write');
-      opts.estimate.affreg = ft_getopt(opts.estimate, 'affreg');      
-
+      opts.estimate.affreg = ft_getopt(opts.estimate, 'affreg');
+      
       VF = ft_write_mri([cfg.name, '.img'], mri.anatomy, 'transform', mri.transform, 'spmversion', cfg.spmversion, 'dataformat', 'analyze_img');
-
+      
       % set the spm segmentation defaults (from /opt/spm2/spm_defaults.m script)
       opts.estimate.priors = ft_getopt(opts.estimate, 'priors', ...
         char(fullfile(spm('Dir'), 'apriori', 'gray.mnc'),...
-             fullfile(spm('Dir'), 'apriori', 'white.mnc'),...
-             fullfile(spm('Dir'), 'apriori', 'csf.mnc')));
+        fullfile(spm('Dir'), 'apriori', 'white.mnc'),...
+        fullfile(spm('Dir'), 'apriori', 'csf.mnc')));
       opts.estimate.reg    = ft_getopt(opts.estimate, 'reg',    0.01);
       opts.estimate.cutoff = ft_getopt(opts.estimate, 'cutoff', 30);
       opts.estimate.samp   = ft_getopt(opts.estimate, 'samp',   3);
@@ -339,15 +331,15 @@ if dotpm
       opts.estimate.affreg.weight  = ft_getopt(opts.estimate.affreg, 'weight', '');
       opts.write.cleanup   = ft_getopt(opts.write, 'cleanup', 1);
       opts.write.wrt_cor   = ft_getopt(opts.write, 'wrt_cor', 1);
-
+      
       % perform the segmentation
       fprintf('performing the segmentation on the specified volume\n');
       spm_segment(VF, cfg.template, opts);
       
       % generate the list of filenames that contains the segmented volumes
       filenames = {[cfg.name, '_seg1.img'];...
-                   [cfg.name, '_seg2.img'];...
-                   [cfg.name, '_seg3.img']};
+        [cfg.name, '_seg2.img'];...
+        [cfg.name, '_seg3.img']};
       
       
     case 'spm8'
@@ -355,20 +347,20 @@ if dotpm
       cfg.tpm = char(cfg.tpm(:));
       if isempty(cfg.tpm)
         cfg.tpm = char(fullfile(spm('Dir'),'tpm','grey.nii'),...
-             fullfile(spm('Dir'),'tpm','white.nii'),...
-             fullfile(spm('Dir'),'tpm','csf.nii'));
+          fullfile(spm('Dir'),'tpm','white.nii'),...
+          fullfile(spm('Dir'),'tpm','csf.nii'));
       end
       px.tpm = cfg.tpm;
       
       VF = ft_write_mri([cfg.name, '.img'], mri.anatomy, 'transform', mri.transform, 'spmversion', cfg.spmversion, 'dataformat', 'nifti_spm');
-
+      
       fprintf('performing the segmentation on the specified volume\n');
       p         = spm_preproc(VF, px);
       [po, dum] = spm_prep2sn(p);
       
       % this writes a mat file, may be needed for Dartel, not sure yet
       save([cfg.name '_sn.mat'],'-struct','po');
-
+      
       % These settings were taken from a batch
       opts     = ft_getopt(cfg, 'opts');
       opts.GM  = [0 0 1];
@@ -379,13 +371,13 @@ if dotpm
       
       % write the segmented volumes, -> this can probably be done differently
       spm_preproc_write(po, opts);
-
+      
       % generate the list of filenames that contains the segmented volumes
       [pathstr, name] = fileparts(cfg.name);
       filenames = {fullfile(pathstr,['c1', name, '.img']);...
-                   fullfile(pathstr,['c2', name, '.img']);...
-                   fullfile(pathstr,['c3', name, '.img'])};
-
+        fullfile(pathstr,['c2', name, '.img']);...
+        fullfile(pathstr,['c3', name, '.img'])};
+      
     case 'spm12'
       addpath(fullfile(spm('Dir'),'toolbox/OldSeg'));
       if strcmp(cfg.spmmethod, 'old')
@@ -397,13 +389,13 @@ if dotpm
             fullfile(spm('Dir'),'toolbox/OldSeg','csf.nii'));
         end
         px.tpm = cfg.tpm;
-      
+        
         VF = ft_write_mri([cfg.name, '.nii'], mri.anatomy, 'transform', mri.transform, 'spmversion', cfg.spmversion, 'dataformat', 'nifti_spm');
         
         fprintf('performing the segmentation on the specified volume, using the old-style segmentation\n');
         p         = spm_preproc(VF, px);
         [po, dum] = spm_prep2sn(p);
-      
+        
         % this write a mat file, may be needed for Dartel, not sure yet
         save([cfg.name '_sn.mat'],'-struct','po');
         
@@ -421,8 +413,8 @@ if dotpm
         % generate the list of filenames that contains the segmented volumes
         [pathstr, name] = fileparts(cfg.name);
         filenames = {fullfile(pathstr,['c1', name, '.nii']);...
-                     fullfile(pathstr,['c2', name, '.nii']);...
-                     fullfile(pathstr,['c3', name, '.nii'])};
+          fullfile(pathstr,['c2', name, '.nii']);...
+          fullfile(pathstr,['c3', name, '.nii'])};
         
         
       elseif strcmp(cfg.spmmethod, 'new') || strcmp(cfg.spmmethod, 'mars')
@@ -469,22 +461,22 @@ if dotpm
         % this writes a mat file, may be needed for Dartel, not sure yet
         save([cfg.name '_seg8.mat'],'-struct','p');
         
-       
+        
         [pathstr, name] = fileparts(cfg.name);
         filenames = {fullfile(pathstr,['c1', name, '.nii']);...
-                     fullfile(pathstr,['c2', name, '.nii']);...
-                     fullfile(pathstr,['c3', name, '.nii']);...
-                     fullfile(pathstr,['c4', name, '.nii']);...
-                     fullfile(pathstr,['c5', name, '.nii']);...
-                     fullfile(pathstr,['c6', name, '.nii'])};
+          fullfile(pathstr,['c2', name, '.nii']);...
+          fullfile(pathstr,['c3', name, '.nii']);...
+          fullfile(pathstr,['c4', name, '.nii']);...
+          fullfile(pathstr,['c5', name, '.nii']);...
+          fullfile(pathstr,['c6', name, '.nii'])};
         
       else
         ft_error('cfg.spmmethod should be either ''old'', ''new'' or ''mars''');
       end
-            
+      
     otherwise
       ft_error('unsupported SPM version');
-
+      
   end
   
   for k = 1:numel(filenames)
@@ -525,7 +517,7 @@ if dotpm
   if length(V)>4, segmented.softtissue = V(5).dat; end
   if length(V)>5, segmented.air        = V(6).dat; end
   segmented.anatomy   = mri.anatomy;
-
+  
   % flip the volumes back according to the changes introduced by align_ijk2xyz
   fn = fieldnames(segmented);
   fn = fn(ismember(fn, {'anatomy', 'gray', 'white', 'csf', 'bone', 'softtissue', 'air'}));
@@ -536,14 +528,14 @@ if dotpm
       end
     end
   end
-
+  
   if ~all(permutevec == [1 2 3])
     for j = 1:numel(fn)
       segmented.(fn{j}) = ipermute(segmented.(fn{j}), permutevec);
     end
     segmented.dim  = size(segmented.(fn{1}));
   end
-
+  
 else
   % rename the data
   segmented = mri;
@@ -589,14 +581,14 @@ outp = cfg.output;
 
 if ~isempty(intersect(outp, 'tpm'))
   % output: probability tissue maps
-  remove = intersect(remove, {'anatomy'}); 
+  remove = intersect(remove, {'anatomy'});
 elseif  ~isempty(intersect(outp, {'white' 'gray' 'csf' 'brain' 'skull' 'scalp' 'skullstrip'}))
-
+  
   createoutputs = true;
   while createoutputs
     % create scalpmask - no tpm or brainmask is required to create it
     if any(strcmp('scalp', outp))
-
+      
       fprintf('creating scalpmask ... ');
       % let the softtissue mask take precedence
       if isfield(segmented, 'softtissue')
@@ -620,30 +612,30 @@ elseif  ~isempty(intersect(outp, {'white' 'gray' 'csf' 'brain' 'skull' 'scalp' '
       else
         fprintf('no threshold applied on %s for scalp segmentation\n',fname);
       end
-
+      
       % fill the slices along each dimension (because using a single one is
       % just arbitrary, and behavior depends on how the voxeldata is in the
       % volume.
       a1 = volumefillholes(anatomy, 1);
       a2 = volumefillholes(anatomy, 2);
       a3 = volumefillholes(anatomy, 3);
-
+      
       % anatomy = volumefillholes(anatomy, 2); % FIXME why along the second dimension?
       % scalpmask = anatomy>0;
       scalpmask = a1 | a2 | a3;
       clear anatomy a1 a2 a3
-
+      
       % threshold again to remove little parts outside of head
       scalpmask = volumethreshold(scalpmask);
-
+      
       % output: scalp (cummulative) (if this is the only requested output)
       if numel(outp)==1
         segmented.scalp = scalpmask;
-		    remove(strcmp(remove,'scalp'))=[];
+        remove(strcmp(remove,'scalp'))=[];
         break
       end
     end   % end scalp
-
+    
     % create the brain from the tpm
     fprintf('creating brainmask ... using the summation of gray, white and csf tpms\n');
     brain = segmented.gray + segmented.white + segmented.csf;
@@ -657,7 +649,7 @@ elseif  ~isempty(intersect(outp, {'white' 'gray' 'csf' 'brain' 'skull' 'scalp' '
     else
       fprintf('no threshold applied on brainmask\n')
     end
-
+    
     % output: skullstrip
     if any(strcmp('skullstrip', outp))
       if ~isfield(segmented, 'anatomy'), ft_error('no anatomy field present'); end
@@ -666,24 +658,24 @@ elseif  ~isempty(intersect(outp, {'white' 'gray' 'csf' 'brain' 'skull' 'scalp' '
       segmented.anatomy = segmented.anatomy.*brain_ss;
       clear brain_ss
       remove(strcmp(remove,'skullstrip')) = [];
-	    remove(strcmp(remove,'anatomy'))    = [];
+      remove(strcmp(remove,'anatomy'))    = [];
       if numel(outp)==1
         break
       end
     end % if skullstrip
-
+    
     % make binary mask from brain
     brainmask = brain>0;
     clear brain
-
+    
     % output: brain
     if any(strcmp(outp, 'brain'))
       segmented.brain = brainmask;
-	  remove(strcmp(remove,'brain'))=[];
+      remove(strcmp(remove,'brain'))=[];
       if numel(outp)==1
         break
       end
-
+      
       % output: gray, white, csf
     elseif any(strcmp(outp, 'gray')) || any(strcmp(outp, 'white')) || any(strcmp(outp, 'csf'))
       [dum, tissuetype] = max(cat(4, segmented.csf, segmented.gray, segmented.white), [], 4);
@@ -700,9 +692,9 @@ elseif  ~isempty(intersect(outp, {'white' 'gray' 'csf' 'brain' 'skull' 'scalp' '
         segmented.csf = (tissuetype == 1) & brainmask;
         remove(strcmp(remove,'csf'))=[];
       end
-
+      
     end % if brain or gray/while/csf
-
+    
     if any(strcmp('skull', outp)) || any(strcmp('scalp', outp))
       % create skull from brain mask FIXME check this (e.g. strel_bol)
       fprintf('creating skullmask ... ');
@@ -728,7 +720,7 @@ elseif  ~isempty(intersect(outp, {'white' 'gray' 'csf' 'brain' 'skull' 'scalp' '
         a1 = volumefillholes(skull, 1);
         a2 = volumefillholes(skull, 2);
         a3 = volumefillholes(skull, 3);
-
+        
         skullmask = a1 | a2 | a3;
         skullmask = volumethreshold(skullmask);
         skullmask = skullmask & ~brainmask;
@@ -737,7 +729,7 @@ elseif  ~isempty(intersect(outp, {'white' 'gray' 'csf' 'brain' 'skull' 'scalp' '
       end
       if any(strcmp(outp, 'skull'))
         segmented.skull = skullmask;
-		remove(strcmp(remove,'skull'))=[];
+        remove(strcmp(remove,'skull'))=[];
         if numel(outp)==1
           break
         end
@@ -750,14 +742,14 @@ elseif  ~isempty(intersect(outp, {'white' 'gray' 'csf' 'brain' 'skull' 'scalp' '
         scalpmask(skullmask>0)=0;
         clear skullmask
         segmented.scalp=scalpmask;
-		remove(strcmp(remove,'scalp'))=[];
+        remove(strcmp(remove,'scalp'))=[];
         clear scalpmask
       end
     end
-
+    
     createoutputs = false; % exit the while loop
   end % while createoutputs
-
+  
 else
   ft_error('unknown output %s requested\n', cfg.output{:});
 end

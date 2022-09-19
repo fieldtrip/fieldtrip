@@ -1,8 +1,7 @@
 function test_old_buffer_latency_bandwidth
 
-% MEM 1gb
+% MEM 2gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_create_buffer
 
 is_octave=~ft_platform_supports('matlabversion',1,inf);
@@ -37,7 +36,7 @@ hdr.nChans = 10;
 hdr.nSamples = 0;
 hdr.nSamplesPre = 0;
 hdr.Fs = 1000;
-hdr.label = {'1', '2', '3', '4', '5', '6', '7', '8', '9', '10'};
+hdr.label = arrayfun(@num2str, 1:hdr.nChans, 'UniformOutput', false);
 
 ft_write_data(filename, [], 'header', hdr, 'append', 0);
 

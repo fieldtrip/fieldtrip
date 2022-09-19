@@ -22,7 +22,7 @@ function h = ft_plot_line(X, Y, varargin)
 %
 % See also FT_PLOT_BOX, FT_PLOT_CROSSHAIR
 
-% Copyrights (C) 2009-2011, Robert Oostenveld
+% Copyrights (C) 2009-2022, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -42,8 +42,6 @@ function h = ft_plot_line(X, Y, varargin)
 %
 % $Id$
 
-ws = warning('on', 'MATLAB:divideByZero');
-
 % get the optional input arguments
 hpos        = ft_getopt(varargin, 'hpos');
 vpos        = ft_getopt(varargin, 'vpos');
@@ -59,6 +57,8 @@ tag         = ft_getopt(varargin, 'tag',        '');
 % color management
 if ischar(color) && exist([color '.m'], 'file')
   color = eval(color);
+elseif ischar(color) && ismember(color, htmlcolors)
+  color = htmlcolors(color);
 end
 
 if isempty(hlim) && isempty(vlim) && isempty(hpos) && isempty(vpos) && isempty(height) && isempty(width)
@@ -113,5 +113,3 @@ end % shortcut
 
 h = line(X, Y, 'Color', color, 'LineStyle', linestyle, 'LineWidth', linewidth);
 set(h, 'tag', tag);
-
-warning(ws); % revert to original state

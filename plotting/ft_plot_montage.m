@@ -11,7 +11,7 @@ function ft_plot_montage(dat, varargin)
 % 
 % Additional options should be specified in key-value pairs and can be
 %   'transform'     = 4x4 homogeneous transformation matrix specifying the mapping from voxel space to the coordinate system in which the data are plotted.
-%   'location'      = 1x3 vector specifying a point on the plane which will be plotted the coordinates are expressed in the coordinate system in which the data will be plotted. location defines the origin of the plane
+%   'location'      = 1x3 vector specifying a point on the plane which will be plotted, the coordinates are expressed in the coordinate system in which the data will be plotted. location defines the origin of the plane
 %   'orientation'   = 1x3 vector specifying the direction orthogonal through the plane which will be plotted (default = [0 0 1])
 %   'srange'        = 
 %   'slicesize'     = 

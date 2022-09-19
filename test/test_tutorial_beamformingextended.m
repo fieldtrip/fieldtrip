@@ -29,6 +29,7 @@ cfg = [];
 data_cmb = ft_appenddata(cfg, data_bsl, data_exp);
 % code the trial: 0 = baseline, 1 = experimental condition
 data_cmb.trialinfo = [zeros(length(data_bsl.trial), 1); ones(length(data_exp.trial), 1)];
+
 %% calculating the cross spectral density matrix
 cfg = [];
 cfg.method        = 'mtmfft';
@@ -53,19 +54,19 @@ freq_exp.cumsumcnt = freq_cmb.cumsumcnt(cfg.trials);
 mri = ft_read_mri(fullfile(mridir, 'subjectK.mri'));
 % cfg = [];
 % [segmentedmri] = ft_volumesegment(cfg, mri);
-% 
+%
 oldsegmented = load(fullfile(mridir, 'segmentedmri.mat'));
 segmentedmri = oldsegmented.segmentedmri;
-% 
+%
 % % check whether the segmentation gives results of more than 99% consistency
 % assert(max(abs(oldsegmented.segmentedmri.gray(:)-segmentedmri.gray(:))) < .01, 'Gray matter segmentation differs from stored data')
 % assert(max(abs(oldsegmented.segmentedmri.csf(:)-segmentedmri.csf(:))) < .01, 'CSF segmentation differs from stored data')
 % assert(max(abs(oldsegmented.segmentedmri.white(:)-segmentedmri.white(:))) < .01, 'White matter segmentation differs from stored data')
 % % transformation should be absolutely identical
 % assert(isequal(oldsegmented.segmentedmri.transform, segmentedmri.transform), 'Transform differs from stored data')
-% 
+%
 % %save segmentedmri segmentedmri
-% 
+%
 % % add anatomical information to the segmentation
 % segmentedmri.transform = mri.transform;
 % segmentedmri.anatomy   = mri.anatomy;
@@ -81,7 +82,8 @@ hdm = ft_prepare_headmodel(cfg, segmentedmri);
 
 
 template = load(fullfile(templatedir, 'standard_sourcemodel3d8mm'));
-% inverse-warp the subject specific grid to the template grid cfg = [];
+% inverse-warp the subject specific grid to the template grid
+cfg = [];
 cfg.sourcemodel.warpmni   = 'yes';
 cfg.sourcemodel.template  = template.sourcemodel;
 cfg.sourcemodel.nonlinear = 'yes'; % use non-linear normalization
@@ -113,7 +115,8 @@ cfg.frequency         = freq_cmb.freq;
 cfg.grad              = freq_cmb.grad;
 cfg.method            = 'dics';
 cfg.keeptrials        = 'yes';
-cfg.sourcemodel              = sourcemodel_lf;
+cfg.channel           = 'MEG';
+cfg.sourcemodel       = sourcemodel_lf;
 cfg.headmodel         = hdm;
 cfg.keeptrials        = 'yes';
 cfg.dics.lambda       = '5%';
@@ -123,6 +126,7 @@ cfg.dics.realfilter   = 'yes';
 source  = ft_sourceanalysis(cfg, freq_cmb);
 
 % beam pre- and poststim by using the common filter
+cfg.sourcemodel.label    = source.avg.label;
 cfg.sourcemodel.filter   = source.avg.filter;
 source_bsl  = ft_sourceanalysis(cfg, freq_bsl);
 source_exp  = ft_sourceanalysis(cfg, freq_exp);
@@ -152,7 +156,7 @@ cfg.opacitymap    = 'rampup';
 ft_sourceplot(cfg,source_diff_int);
 
 cfg.method = 'ortho';
-cfg.atlas           = dccnpath('/home/common/matlab/fieldtrip/template/atlas/aal/ROI_MNI_V4.nii');
+cfg.atlas  = dccnpath('/home/common/matlab/fieldtrip/template/atlas/aal/ROI_MNI_V4.nii');
 ft_sourceplot(cfg,source_diff_int);
 
 cfg.method = 'surface';
@@ -186,7 +190,7 @@ cfg.method          = 'dics';
 cfg.refchan         = 'EMGlft';
 cfg.frequency       = 20;
 cfg.headmodel       = hdm;
-cfg.sourcemodel            = sourcemodel;
+cfg.sourcemodel     = sourcemodel;
 source_coh_lft      = ft_sourceanalysis(cfg, freq_csd);
 
 source_coh_lft.pos = template.sourcemodel.pos;
@@ -216,4 +220,3 @@ cfg.opacitymap    = 'rampup';
 cfg.atlas         = dccnpath('/home/common/matlab/fieldtrip/template/atlas/aal/ROI_MNI_V4.nii');
 
 ft_sourceplot(cfg, source_coh_int);
-

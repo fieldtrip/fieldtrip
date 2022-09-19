@@ -12,13 +12,16 @@ function [source] = ft_appendsource(cfg, varargin)
 %
 % If the source reconstructions were computed on the same source positions, but for
 % different frequencies and/or latencies, e.g. for time-frequency spectrally
-% decomposed data, the data will be concatenared along the frequency and/or time
-% dimension.
+% decomposed data, the data will be concatenated along the frequency and/or time
+% dimension, but only of the frequency or time axes are well-behaved, i.e. all data
+% points along the dimension of interest should be sortable across data objects;
+% interleaving across data objects is not possible.
 %
 % See also FT_SOURCEANALYSIS, FT_DATATYPE_SOURCE, FT_APPENDDATA, FT_APPENDTIMELOCK,
 % FT_APPENDFREQ
 
-% Copyright (C) 2011, Robert Oostenveld
+% Copyright (C) 2011-2021, Robert Oostenveld
+% Copyright (C) 2022-, Jan-Mathijs Schoffelen and Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -66,7 +69,7 @@ cfg = ft_checkconfig(cfg, 'required', 'parameter');
 
 % set the defaults
 cfg.appenddim  = ft_getopt(cfg, 'appenddim',  'auto');
-cfg.tolerance  = ft_getopt(cfg, 'tolerance',  1e-5);
+cfg.tolerance  = ft_getopt(cfg, 'tolerance',  1e-5); % this is passed to ft_selectdata
 
 % do a basic check to see whether the dimords match
 Ndata = length(varargin);
@@ -85,57 +88,48 @@ source = [];
 
 tol    = cfg.tolerance;
 dimtok = tokenize(dimord{1}, '_');
-switch cfg.appenddim
-  case 'auto'
 
-    % only allow to append across observations if these are present in the data
-    if any(strcmp(dimtok, 'rpt'))
-      cfg.appenddim = 'rpt';
-    elseif any(strcmp(dimtok, 'rpttap'))
-      cfg.appenddim = 'rpttap';
-    elseif any(strcmp(dimtok, 'subj'))
-      cfg.appenddim = 'subj';
-    else
-      % we need to check whether the other dimensions are the same.
-      % if not, consider some tolerance.
-      boolval1 = checkpos(varargin{:}, 'identical');
-      if isfield(varargin{1}, 'freq')
-        boolval2 = checkfreq(varargin{:}, 'identical', tol);
-      else
-        boolval2 = true;
+matchpos  = checkpos(varargin{:}, 'identical', tol);
+matchfreq = true;
+matchtime = true;
+if isfield(varargin{1}, 'freq'), matchfreq = checkfreq(varargin{:}, 'identical', tol); end
+if isfield(varargin{1}, 'time'), matchtime = checktime(varargin{:}, 'identical', tol); end
+
+if strcmp(cfg.appenddim, 'auto')
+  % if there are observations in the data, only allow to append across observations
+  if any(strcmp(dimtok, 'rpt'))
+    cfg.appenddim = 'rpt';
+  elseif any(strcmp(dimtok, 'rpttap'))
+    cfg.appenddim = 'rpttap';
+  elseif any(strcmp(dimtok, 'subj'))
+    cfg.appenddim = 'subj';
+  else
+    % try to guess the appenddim
+    if matchpos
+      % append across either time or freq, provided one of the other match
+      if matchfreq && matchtime
+        cfg.appenddim = 'rpt';
+      elseif ~matchfreq && matchtime
+        cfg.appenddim = 'freq';
+      elseif matchfreq && ~matchtime
+        cfg.appenddim = 'time';
+      elseif ~matchfreq && ~matchtimee
+        ft_error('the input datasets have multiple non-identical dimensions, this function only appends one dimension at a time');
       end
-
-      if isfield(varargin{1}, 'time')
-        boolval3 = checktime(varargin{:}, 'identical', tol);
-        if boolval1 && boolval2 && boolval3
-          % each of the input datasets contains a single repetition (perhaps an average), these can be concatenated
-          cfg.appenddim = 'rpt';
-        elseif ~boolval1 && boolval2 && boolval3
-          cfg.appenddim = 'pos';
-        elseif boolval1 && ~boolval2 && boolval3
-          cfg.appenddim = 'freq';
-        elseif boolval1 && boolval2 && ~boolval3
-          cfg.appenddim = 'time';
-        else
-          ft_error('the input datasets have multiple non-identical dimensions, this function only appends one dimension at a time');
-        end
+    elseif ~matchpos
+      % append across pos, provided time/freq (if present) are matched
+      if matchfreq && matchtime
+        cfg.appenddim = 'pos';
       else
-        if boolval1 && boolval2
-          % each of the input datasets contains a single repetition (perhaps an average), these can be concatenated
-          cfg.appenddim = 'rpt';
-        elseif ~boolval1 && boolval2
-          cfg.appenddim = 'pos';
-        elseif boolval1 && ~boolval2
-          cfg.appenddim = 'freq';
-        end
+        ft_error('the input datasets have multiple non-identical dimensions, this function only appends one dimension at a time');
       end
+    end
+  end % determine the dimension for appending
+end % if auto
 
-    end % determine the dimension for appending
-end
-
+catdim = find(ismember(dimtok, cfg.appenddim));
 switch cfg.appenddim
   case {'rpt' 'rpttap' 'subj'}
-    catdim = find(ismember(dimtok, {'rpt' 'rpttap' 'subj'}));
     if numel(catdim)==0
       catdim = 0;
     elseif numel(catdim)==1
@@ -143,39 +137,24 @@ switch cfg.appenddim
     elseif numel(catdim)>1
       ft_error('ambiguous dimord for concatenation');
     end
-
+    
     % if any of these are present, concatenate
     % if not prepend the dimord with rpt (and thus shift the dimensions)
-
+    
     % here we need to check whether the other dimensions are the same. if
     % not, consider some tolerance.
-    boolval1 = checkpos(varargin{:}, 'identical', tol);
-    if isfield(varargin{1}, 'freq')
-      boolval2 = checkfreq(varargin{:}, 'identical', tol);
-    else
-      boolval2 = true;
-    end
-
-    if isfield(varargin{1}, 'time')
-      boolval3 = checktime(varargin{:}, 'identical', tol);
-    else
-      boolval3 = true;
-    end
-
-    if any([boolval1 boolval2 boolval3]==false)
+    if any([matchpos matchfreq matchtime]==false)
       ft_error('appending across observations is not possible, because the spatial, spectral and/or temporal dimensions are incompatible');
     end
-
-    % select and reorder the channels that are in every dataset
-    tmpcfg           = [];
-    %tmpcfg.channel   = cfg.channel;
-    tmpcfg.tolerance = cfg.tolerance;
-    [varargin{:}]    = ft_selectdata(tmpcfg, varargin{:});
+    
+    % determine the union of all input data
+    tmpcfg = keepfields(cfg, {'tolerance', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+    [varargin{:}] = ft_selectdata(tmpcfg, varargin{:});
     for i=1:Ndata
       [cfg_rolledback, varargin{i}] = rollback_provenance(cfg, varargin{i});
     end
     cfg = cfg_rolledback;
-
+    
     % update the dimord
     if catdim==0
       source.dimord = ['rpt_',dimord{1}];
@@ -185,29 +164,17 @@ switch cfg.appenddim
       % before append cumtapcnt cumsumcnt trialinfo check if there's a
       % subfield in each dataset. Append fields of different dataset might
       % lead in empty and/or non-existing fields in a particular dataset
-      hascumsumcnt = [];
-      hascumtapcnt = [];
-      hastrialinfo = [];
+      hascumsumcnt = false(1, Ndata);
+      hascumtapcnt = false(1, Ndata);
+      hastrialinfo = false(1, Ndata);
       for i=1:Ndata
-        if isfield(varargin{i}, 'cumsumcnt')
-          hascumsumcnt(end+1) = 1;
-        else
-          hascumsumcnt(end+1) = 0;
-        end
-        if isfield(varargin{i}, 'cumtapcnt')
-          hascumtapcnt(end+1) = 1;
-        else
-          hascumtapcnt(end+1) = 0;
-        end
-        if isfield(varargin{i}, 'trialinfo')
-          hastrialinfo(end+1) = 1;
-        else
-          hastrialinfo(end+1) = 0;
-        end
+        if isfield(varargin{i}, 'cumsumcnt'), hascumsumcnt(i) = true; end
+        if isfield(varargin{i}, 'cumtapcnt'), hascumtapcnt(i) = true; end
+        if isfield(varargin{i}, 'trialinfo'), hastrialinfo(i) = true; end
       end
-
+      
       % screen concatenable fields
-      if ~checkfreq(varargin{:}, 'identical', tol)
+      if ~matchfreq
         ft_error('the freq fields of the input data structures are not equal');
       else
         source.freq=varargin{1}.freq;
@@ -227,7 +194,7 @@ switch cfg.appenddim
       else
         istrialinfo=unique(hastrialinfo);
       end
-
+      
       % concatenating fields
       for i=1:Ndata
         if iscumsumcnt
@@ -240,7 +207,7 @@ switch cfg.appenddim
           trialinfo{i}=varargin{i}.trialinfo;
         end
       end
-
+      
       % fill in the rest of the descriptive fields
       if iscumsumcnt
         source.cumsumcnt = cat(catdim,cumsumcnt{:});
@@ -255,24 +222,101 @@ switch cfg.appenddim
         clear trialinfo;
       end
     end
-
-    source.pos   = varargin{1}.pos;
+    
+    source.pos = varargin{1}.pos;
     if isfield(varargin{1}, 'freq'), source.freq = varargin{1}.freq; end
     if isfield(varargin{1}, 'time'), source.time = varargin{1}.time; end
-    if isfield(varargin{1}, 'tri'),  source.tri  = varargin{1}.tri;  end
-
+    if isfield(varargin{1}, 'tri'),  source.tri  = varargin{1}.tri;  end % FIXME assumed equal
+    if isfield(varargin{1}, 'dim'),  source.dim  = varargin{1}.dim;  end % FIXME assumed equal
+    
   case 'pos'
-    % FIXME
-    ft_error('this functionality does not work.....yet');
+    % ensure that the positions are in the same units
+    if ~isfield(varargin{1}, 'unit')
+      varargin{1} = ft_determine_units(varargin{1});
+    end
 
+    if ~matchfreq || ~matchtime
+      ft_error('when appending across positions, all other dimensions should match');
+    end
+    
+    pos = cell(Ndata,1);
+    tri = cell(0,1);
+    Ntotal = 0;
+    for i=1:Ndata
+      varargin{i} = ft_convert_units(varargin{i}, varargin{1}.unit);
+      pos{i} = varargin{i}.pos;
+      if isfield(varargin{i}, 'tri')
+        tri{end+1} = varargin{i}.tri + Ntotal;
+      end
+      Ntotal = Ntotal + size(varargin{i}.pos,1);
+    end
+    source = keepfields(varargin{1}, {'time' 'freq'});
+    source.pos = cat(1, pos{:});
+    if ~isempty(tri)
+      source.tri = cat(1, tri{:});
+    end
 
   case 'freq'
-    % FIXME
-    ft_error('this functionality does not work.....yet');
+    
+    if ~matchtime || ~matchpos
+      ft_error('when appending across time, all other dimensions should match');
+    end
+
+    % ensure that contatenation along the freq dimension can be done by a
+    % simple cat operation along the specified dimension, i.e. the
+    % individual frequency axes should not be interleaved, and unique
+    freq = cell(Ndata, 1);
+    freqbounds = zeros(Ndata, 2);
+    for i=1:Ndata
+      freq{i} = varargin{i}.freq;
+      freqbounds(i,:) = [freq{i}(1) freq{i}(end)];
+    end
+    ok = double(freqbounds(:,1)>freqbounds(:,2)') + double(freqbounds(:,2)<freqbounds(:,1)');
+
+    if any(ok(:)==1)
+      ft_error('when appending across freq, there should be no overlap in the individual frequency axes');
+    end
+
+    [srt, ix] = sort(freqbounds(:,1));
+    if ~isequal(ix(:), (1:Ndata)')
+      ft_warning('reordering the input data arguments to get a well-behaved frequency axis');
+      varargin = varargin(ix);
+      freq     = freq(ix);
+    end
+
+    source = keepfields(varargin{1}, {'pos' 'dim' 'time' 'tri'});
+    source.freq = cat(2, freq{:});
 
   case 'time'
-    % FIXME
-    ft_error('this functionality does not work.....yet');
+   
+    if ~matchfreq || ~matchpos
+      ft_error('when appending across time, all other dimensions should match');
+    end
+    
+    % ensure that contatenation along the time dimension can be done by a
+    % simple cat operation along the specified dimension, i.e. the
+    % individual time axes should not be interleaved, and unique
+    time = cell(1,Ndata);
+    timebounds = zeros(Ndata, 2);
+    for i=1:Ndata
+      time{i} = varargin{i}.time;
+      timebounds(i,:) = [time{i}(1) time{i}(end)];
+    end
+    ok = double(timebounds(:,1)>timebounds(:,2)') + double(timebounds(:,2)<timebounds(:,1)');
+    
+    if any(ok(:)==2) || all(ok(:)==0) 
+      ft_error('when appending across time, there should be no overlap in the individual time axes');
+    end
+
+    [srt, ix] = sort(timebounds(:,1));
+    if ~isequal(ix(:), (1:Ndata)')
+      ft_warning('reordering the input data arguments to get a well-behaved time axis');
+      varargin = varargin(ix);
+      time     = time(ix);
+    end
+
+    source = keepfields(varargin{1}, {'pos' 'dim' 'freq' 'tri'});
+    source.time = cat(2, time{:});
 
   otherwise
     ft_error('it is not allowed to concatenate across dimension %s',cfg.appenddim);
@@ -290,12 +334,12 @@ tmp = cell(1,Ndata);
 
 % get the numeric data 'param{k}' if present
 for m = 1:Ndata
-
+  
   if ~isfield(varargin{m}, param)
     ft_error('parameter %s is not present in all data sets', param);
   end
   tmp{m} = varargin{m}.(param);
-
+  
 end
 
 if catdim==0

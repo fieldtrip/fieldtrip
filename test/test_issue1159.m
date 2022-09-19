@@ -51,7 +51,7 @@ ft_senstype(comp.grad) % this originally fails
 % try the same thing with a CTF dataset
 
 cfg = [];
-cfg.dataset = dccnpath('/home/common/matlab/fieldtrip/data/Subject01.ds');
+cfg.dataset = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds');
 cfg.trl = [1 9000 0]; % 30 seconds @300Hz
 cfg.continuous = 'yes';
 data = ft_preprocessing(cfg);

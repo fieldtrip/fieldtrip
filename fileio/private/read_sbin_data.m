@@ -47,23 +47,23 @@ if version < 7
     endian = 'ieee-be';
   elseif cEndian == 'L'
     endian = 'ieee-le';
-  end;
+  end
 elseif (version > 6) && ~bitand(version,6)
   if cEndian == 'B'
     endian = 'ieee-le';
   elseif cEndian == 'L'
     endian = 'ieee-be';
-  end;
+  end
   version = swapbytes(uint32(version)); %hdr.orig.header_array is already byte-swapped
 else
     ft_error('ERROR:  This is not a simple binary file.  Note that NetStation does not successfully directly convert EGIS files to simple binary format.\n');
-end;
+end
 
 if bitand(version,1) == 0
     unsegmented = 1;
 else
     unsegmented = 0;
-end;
+end
 
 precision = bitand(version,6);
 NChan=hdr.nChans;
@@ -88,20 +88,20 @@ if unsegmented
     status = fseek(fh, 36+Nevent*4, 'bof'); %skip over header
     if status==-1
         ft_error('Failure to skip over header of simple binary file.')
-    end;
+    end
     status = fseek(fh, ((begtrial-1)*(hdr.nChans+Nevent)*dataLength), 'cof'); %skip previous trials
     if status==-1
         ft_error('Failure to skip over previous trials of simple binary file.')
-    end;
+    end
     if (hdr.orig.header_array(14))==0 && (hdr.orig.header_array(15) > 1) %epoch-marked simple binary file format
         status = fseek(fh, 30, 'bof'); %skip over header
         if status==-1
             ft_error('Failure to skip over header of simple binary file.')
-        end;
+        end
         status = fseek(fh, ((begtrial-1)*(hdr.nChans+Nevent)*dataLength), 'cof'); %skip previous trials
         if status==-1
             ft_error('Failure to skip over previous trials of simple binary file.')
-        end;
+        end
         NSamples    = fread(fh,1,'int32',endian);
         NEvent      = fread(fh,1,'int16',endian);
         for j = 1:Nevent
@@ -126,26 +126,26 @@ if unsegmented
                     startSample=1;
                 else
                     startSample=sum(segmentLengths(1:iSegment-1))+1;
-                end;
+                end
                 trialData(:,1:segmentLengths(iSegment),iSegment-begtrial+1) = temp(1:hdr.nChans,startSample:sum(segmentLengths(1:iSegment))); %data zero-padded to maximum epoch length
-            end;
-        end;
+            end
+        end
     else
         nSamples  = endtrial-begtrial+1;    %interpret begtrial and endtrial as sample indices
-        [trialData count] = fread(fh, [hdr.nChans+Nevent, nSamples],dataType,endian);
+        [trialData, count] = fread(fh, [hdr.nChans+Nevent, nSamples],dataType,endian);
         if count < ((hdr.nChans+Nevent) * nSamples)
             ft_error('Failure to read all samples of simple binary file.')
-        end;
-    end;
+        end
+    end
 else
     status = fseek(fh, 40+length(hdr.orig.CatLengths)+sum(hdr.orig.CatLengths)+Nevent*4, 'bof'); %skip over header
     if status==-1
         ft_error('Failure to skip over header of simple binary file.')
-    end;
+    end
     status = fseek(fh, (begtrial-1)*trialLength, 'cof'); %skip over initial segments
     if status==-1
         ft_error('Failure to skip over previous trials of simple binary file.')
-    end;
+    end
     
     trialData=zeros(hdr.nChans,hdr.nSamples,endtrial-begtrial+1);
     
@@ -153,12 +153,12 @@ else
         status = fseek(fh, 6, 'cof'); %skip over segment info
         if status==-1
             ft_error('Failure to skip over segment info of simple binary file.')
-        end;
+        end
         
-        [temp count] = fread(fh, [(hdr.nChans+Nevent), hdr.nSamples],dataType,endian);
+        [temp, count] = fread(fh, [(hdr.nChans+Nevent), hdr.nSamples],dataType,endian);
         if count < ((hdr.nChans+Nevent) * hdr.nSamples)
             ft_error('Failure to read all samples of simple binary file.')
-        end;
+        end
         trialData(:,:,segment) = temp(1:hdr.nChans,:);
     end
 end
@@ -166,4 +166,4 @@ trialData=trialData(chanindx, :,:);
 status = fclose(fh);
 if status==-1
     ft_error('Failure to close simple binary file.')
-end;
+end

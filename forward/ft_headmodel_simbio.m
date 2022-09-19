@@ -88,8 +88,4 @@ end
 
 
 headmodel.stiff = sb_calc_stiff(headmodel);
-headmodel.type = 'simbio';
-
-
-
-end
+headmodel.type  = 'simbio';

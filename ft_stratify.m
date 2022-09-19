@@ -78,6 +78,9 @@ end
 % dimensionality of input1 (2) = chan x rpt. If nchan>1, do a "double"
 % stratification
 
+% check if the input cfg is valid for this function
+cfg = ft_checkconfig(cfg, 'forbidden',  {'channels'}); % prevent accidental typos, see issue 1729
+
 % set the defaults
 cfg.method       = ft_getopt(cfg, 'method', 'histogram');
 cfg.equalbinavg  = ft_getopt(cfg, 'equalbinavg', 'yes');

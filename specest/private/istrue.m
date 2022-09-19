@@ -35,8 +35,13 @@ if ischar(x)
   else
     error('cannot determine whether "%s" should be interpreted as true or false', x);
   end
-else
+elseif isnumeric(x) && numel(x)==1
   % convert numerical value to boolean
   y = logical(x);
+elseif islogical(x) && numel(x)==1
+  % keep as it is
+  y = x;
+else
+  ft_error('ambiguous input, cannot determine whether it is true or false');
 end
 

@@ -1,8 +1,7 @@
 function test_bug1811
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_analysispipeline
 
 % loading meg + eyelink channels data appended with function_handle variable

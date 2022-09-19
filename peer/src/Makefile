@@ -88,7 +88,7 @@ endif
 endif
 
 ifeq "$(PLATFORM)" "mingw32"
-	# this is only for the peerslave command line executable -> 32-bit Matlab on Windows 7 (DCCN511)
+	# this is only for the peerworker command line executable -> 32-bit Matlab on Windows 7 (DCCN511)
 	MATLABARCH = exe
 	MATLABPATH = "C:\Program Files (x86)\Matlab\R2009b32bit"
 	MATLABLIBS = $(MATLABPATH)/bin/win32/libeng.dll $(MATLABPATH)/bin/win32/libmx.dll
@@ -98,7 +98,7 @@ ifeq "$(PLATFORM)" "mingw32"
 endif
 
 ifeq "$(PLATFORM)" "x86_64-w64-mingw32"
-	# this is only for the peerslave command line executable -> 32-bit Matlab on Windows 7 (DCCN511)
+	# this is only for the peerworker command line executable -> 32-bit Matlab on Windows 7 (DCCN511)
 	MATLABARCH = w64.exe
 	MATLABPATH = "C:\Program Files\Matlab\R2009b"
 	MATLABLIBS = $(MATLABPATH)/bin/win64/libeng.dll $(MATLABPATH)/bin/win64/libmx.dll
@@ -110,7 +110,7 @@ endif
 LD_LIBRARY_PATH := $(MATLABPATH)/bin/$(MATLABARCH)
 export LD_LIBRARY_PATH
 
-TARGET   = peerslave.$(MATLABARCH)
+TARGET   = peerworker.$(MATLABARCH)
 
 ##############################################################################
 
@@ -122,10 +122,10 @@ libpeer.a: tcpserver.o udsserver.o tcpsocket.o discover.o announce.o expire.o ut
 peer: peer.o libpeer.a
 	$(CC) $(CFLAGS) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LIBS)
 
-peerslave.$(MATLABARCH): peerslave.o libpeer.a
+peerworker.$(MATLABARCH): peerworker.o libpeer.a
 	$(CC) $(CFLAGS) $(LIBPATH) $(MATLABLIBS) -o $(BINDIR)/$@ $^ $(LIBS)
 
-test_peerslave: test_peerslave.o
+test_peerworker: test_peerworker.o
 	$(CC) $(CFLAGS) $(LIBPATH) $(MATLABLIBS) -o $@ $^ $(LIBS)
 
 test_engine: test_engine.o
@@ -161,10 +161,10 @@ test_parser: test_parser.o
 %.o: %.c peer.h extern.h
 	$(CC) $(CFLAGS) $(INCPATH) -c $*.c
 
-peerslave.o: peerslave.c peer.h extern.h libpeer.a
+peerworker.o: peerworker.c peer.h extern.h libpeer.a
 	$(CC) $(CFLAGS) $(INCPATH) $(MATLABINC) -c $*.c
 
-test_peerslave.o: test_peerslave.c peer.h extern.h libpeer.a
+test_peerworker.o: test_peerworker.c peer.h extern.h libpeer.a
 	$(CC) $(CFLAGS) $(INCPATH) $(MATLABINC) -c $*.c
 
 test_engine.o: test_engine.c
@@ -174,10 +174,10 @@ clean:
 	rm -f core *.o *.obj *.a *~
 
 distclean: clean
-	rm -f ../peerslave.glnx86
-	rm -f ../peerslave.glnxa64
-	rm -f ../peerslave.maci
-	rm -f ../peerslave.maci64
+	rm -f ../peerworker.glnx86
+	rm -f ../peerworker.glnxa64
+	rm -f ../peerworker.maci
+	rm -f ../peerworker.maci64
 
 %.o: %.c buffer.h message.h swapbytes.h socket_includes.h unix_includes.h
 	$(CC) $(CFLAGS) -c $*.c

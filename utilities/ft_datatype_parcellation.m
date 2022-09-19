@@ -98,25 +98,22 @@ end
 
 switch parcelversion
   case '2012'
+    % ensure that it has individual source positions
+    parcellation = fixpos(parcellation);
 
-    if isfield(parcellation, 'pnt')
-      parcellation.pos = parcellation.pnt;
-      parcellation = rmfield(parcellation, 'pnt');
-    end
-
-    % convert the inside/outside fields, they should be logical rather than an index
     if isfield(parcellation, 'inside')
+      % ensure that it is always logical
       parcellation = fixinside(parcellation, 'logical');
     end
 
     dim = size(parcellation.pos,1);
 
-    % make a list of fields that represent a parcellation
+    % make a list of fields that possibly represent a parcellation
     fn = fieldnames(parcellation);
     fn = setdiff(fn, 'inside'); % exclude the inside field from any conversions
     sel = false(size(fn));
     for i=1:numel(fn)
-      sel(i) = isnumeric(parcellation.(fn{i})) && numel(parcellation.(fn{i}))==dim;
+      sel(i) = (isnumeric(parcellation.(fn{i})) || islogical(parcellation.(fn{i}))) && numel(parcellation.(fn{i}))==dim;
     end
     % only consider numeric fields of the correct size
     fn = fn(sel);

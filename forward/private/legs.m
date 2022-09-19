@@ -81,7 +81,7 @@ for in=1:n; for im=1:n+1
     end;end;
 for in=1:n
     shiftminusfactors(in,1)=1;
-end;
+end
 
 
 leg0=zeros(n,n+1,n1);

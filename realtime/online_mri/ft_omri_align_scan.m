@@ -36,7 +36,7 @@ for iter=1:64,
 	end
 
 	F          = spm_bsplins(V, y1(msk),y2(msk),y3(msk),model.deg);
-	if ~isempty(model.wt), F = F.*model.wt(msk); end;
+	if ~isempty(model.wt), F = F.*model.wt(msk); end
 
 	A          = model.A0(msk,:);
 	b1         = model.b(msk);
@@ -57,14 +57,14 @@ for iter=1:64,
 		countdown = 2;
 	end;
 	if countdown ~= -1,
-		if countdown==0, break; end;
+		if countdown==0, break; end
 		countdown = countdown -1;
 	end;
 	if toc(startTime) > model.time
 		warning 'Timeout for realignment - returning suboptimal solution';
 		break;
 	end
-end;
+end
 
 mat_r = mat_a/model.mat;
 

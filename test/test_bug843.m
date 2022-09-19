@@ -1,15 +1,14 @@
 function test_bug843
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_topoplotTFR
 
 % it has been reported that the linearly indexed connectivity metrics don't
 % behave robustly in combination with a specified refchannel; also
 % directionality needs to be documented
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/preproc_ctf275'));
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/preproc_ctf275.mat'));
 
 % constrain to MEG channels
 cfg = [];
@@ -48,5 +47,3 @@ cfg.directionality = 'inflow';
 figure;ft_topoplotTFR(cfg,freq);
 cfg.directionality = 'outflow';
 figure;ft_topoplotTFR(cfg,freq);
-
-

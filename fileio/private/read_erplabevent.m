@@ -37,7 +37,7 @@ function event = read_erplabevent(filename, varargin)
 if nargin < 1
   help read_erplabheader;
   return;
-end;
+end
 
 hdr = ft_getopt(varargin, 'header');
 

@@ -1,7 +1,7 @@
 function test_pull1229
 
+% MEM 8gb
 % WALLTIME 00:20:00
-% MEM 3gb
 % DEPENDENCY ft_read_header ft_read_data ft_read_event
 
 % this is dataset "d-18-s-3" from https://osf.io/52gy7/

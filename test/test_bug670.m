@@ -1,8 +1,7 @@
 function test_bug670
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_channelselection ft_channelcombination
 
 datachannel = {'a1', 'a2', 'a3', 'b1', 'b2', 'b3'};
@@ -30,4 +29,3 @@ assert(length(ft_channelselection(1:7, datachannel))==6);
 assert(size(ft_channelcombination({'a*', 'b*'}, datachannel),1)==9);
 assert(size(ft_channelcombination({'all', 'b*'}, datachannel),1)==(5+4+3));
 assert(size(ft_channelcombination({'all', 'all'}, datachannel),1)==(6*5/2));
-

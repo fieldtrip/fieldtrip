@@ -14,9 +14,9 @@ function s=mergestruct(s1,s2)
 %      s: the merged struct object. fields in s1 and s2 will be combined in s.
 %
 % license:
-%     BSD License, see LICENSE_BSD.txt files for details 
+%     BSD or GPL version 3, see LICENSE_{BSD,GPLv3}.txt files for details 
 %
-% -- this function is part of jsonlab toolbox (http://iso2mesh.sf.net/cgi-bin/index.cgi?jsonlab)
+% -- this function is part of JSONLab toolbox (http://iso2mesh.sf.net/cgi-bin/index.cgi?jsonlab)
 %
 
 if(~isstruct(s1) || ~isstruct(s2))
@@ -27,7 +27,7 @@ if(length(s1)>1 || length(s2)>1)
 end
 fn=fieldnames(s2);
 s=s1;
-for i=1:length(fn)              
-    s=setfield(s,fn{i},getfield(s2,fn{i}));
+for i=1:length(fn)
+    s.(fn{i})=s2.(fn{i});
 end
 

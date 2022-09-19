@@ -160,7 +160,7 @@ if needkappa
     semilogy(1:m, s,'o-');
     title('Please specify kappa by clicking in the figure');
     fprintf('Please specify kappa by clicking in the figure.');
-    [kappa,~] = ginput(1);
+    [kappa,dum] = ginput(1);
     if kappa<0
       kappa = 0;
     end

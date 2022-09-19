@@ -1,7 +1,8 @@
 function test_tutorial_eventrelatedaveraging20130308
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
+% DEPENDENCY
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -49,7 +50,7 @@ function test_tutorial_eventrelatedaveraging20130308
 % 
 % The ft_definetrial and ft_preprocessing functions require the original MEG dataset, which is available from ftp://ftp.fieldtriptoolbox.org/pub/fieldtrip/tutorial/Subject01.zip.
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data'));
+cd(dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf'));
 
 % find the interesting segments of data
 cfg = [];                                           % empty configuration

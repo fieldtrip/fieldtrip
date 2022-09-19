@@ -2,7 +2,6 @@ function test_ft_plot_topo
 
 % MEM 1gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_plot_topo
 
 x = randn(30,1);

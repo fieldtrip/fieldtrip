@@ -3,37 +3,37 @@ function [err] = DisplayAfniSlice (Slc, Opt)
 %   [err] = DisplayAfniSlice (Slc, Opt)
 %
 %Purpose:
-%      
+%
 %    OBSOLETE,  see DispAFNISlice
 %    the function is left here for backward compatibility
 %
 %   Display slices a la AFNI.
-%   
-%   
+%
+%
 %Input Parameters:
 %   Slc is a structure obtained from the output of function GetAfniSlice
-%       
+%
 %   Opt is a structure wth the following fields
 %      .fhandle: figure handle, default is current figure
 %      .subplot: (2x1 integer vector) number of images per figure
 %      .colrange: (2x1 vector) the percentile of values to map to the color
-%             maps. A la Afni, [0 0]  for min-max, [2 98] to match afni's window 
+%             maps. A la Afni, [0 0]  for min-max, [2 98] to match afni's window
 %      .plane string containing the plane displayed (same as in GetAfniSlice).
 %      .Info is the structure returned from BrikInfo
-%      .iSlc is the vector containing the slice indices used by GetAfniSlice       
-%  
+%      .iSlc is the vector containing the slice indices used by GetAfniSlice
+%
 %Output Parameters:
 %   err : 0 No Problem
 %       : 1 Mucho Problems
-%   
-%   
-%      
+%
+%
+%
 %Key Terms:
-%   
+%
 %More Info :
 %   GetAfniSlice
 %   Test_GetAfniSlice
-%   
+%
 %  DispAFNISlice, quite better.
 %
 %     Author : Ziad Saad
@@ -66,7 +66,7 @@ switch Opt.plane,
 		planename = 'Sagittal';
 	case 'Co',
 		planename = 'Coronal';
-end 
+end
 
 %number of slices
 	szslc = size(Slc.M);
@@ -83,12 +83,12 @@ end
 %from 0 to the number of colors in the map
 	map = colormap;
 	nmap = max(size(map));
-	lb = 0; 
+	lb = 0;
 	nM = prod(szslc);
 	
 	if (Opt.colrange(1) | Opt.colrange(2)), %not all points are to be scaled
 		M = reshape(Slc.M,[nM 1]);
-		[Msort, iMsort] = sort(M); 
+		[Msort, iMsort] = sort(M);
 		lbval = Msort(round(Opt.colrange(1).*nM./100));
 		ubval = Msort(round(Opt.colrange(2).*nM./100));
 		iToScale = find (Msort >= lbval & Msort <= ubval);

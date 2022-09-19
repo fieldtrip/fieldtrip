@@ -15,6 +15,8 @@ function [connmat] = triangle2connectivity(tri, pos)
 % If you specify the vertex positions in the second input argument as Nx3
 % matrix, the output will be a sparse matrix with the lengths of the
 % edges between the connected vertices.
+%
+% See also CHANNELCONNECTIVIY
 
 % Copyright (C) 2015, Jan-Mathijs Schoffelen
 %

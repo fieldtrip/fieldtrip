@@ -1,8 +1,7 @@
 function test_bug2004
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_connectivityanalysis ft_connectivity_corr ft_connectivity_powcorr_ortho
 
 %% test the functionality of ft_connectivityanalysis with respect to source level data (pcc)
@@ -30,8 +29,9 @@ load(filename);
 cfg                             = [];
 cfg.frequency                   = fdata.freq;
 cfg.headmodel                   = sourceVol;
-cfg.sourcemodel                        = leadfieldModel;
-cfg.sourcemodel.filter                 = spatialFilters.avg.filter;
+cfg.sourcemodel                 = leadfieldModel;
+cfg.sourcemodel.filter          = spatialFilters.avg.filter;
+cfg.sourcemodel.label           = spatialFilters.avg.label;
 cfg.keeptrials                  = 'no';
 cfg.method                      = 'pcc';
 cfg.(cfg.method).keepfilter     = 'yes';

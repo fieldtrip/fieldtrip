@@ -2,7 +2,7 @@ function outstr = GE_dumpExamHeader(exam)
 %
 % outstr = GE_dumpExamHeader(exam)
 %
-% Writes the exam header to the string outstr 
+% Writes the exam header to the string outstr
 %
 % Souheil J. Inati
 % Dartmouth College

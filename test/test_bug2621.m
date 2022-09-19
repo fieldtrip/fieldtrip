@@ -1,13 +1,12 @@
 function test_bug2621
 
-% MEM 2gb
+% MEM 3gb
 % WALLTIME 01:00:00
-
 % DEPENDENCY ft_volumesegment
 
 
 %read in the mri
-mri = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/Subject01.mri'));
+mri = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.mri'));
 
 %segment the mri
 cfg.output = 'brain';

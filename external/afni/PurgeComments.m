@@ -4,31 +4,31 @@ function [CnoCom, Com] = PurgeComments (C, ch)
 %
 %Purpose:
 %   purges all matlab coments from character array
-%   
-%   
+%
+%
 %Input Parameters:
 %   C : character array
 %   ch : is the character indicating a comment line, default is '%'
-%   
+%
 %Output Parameters:
 %   err : 0 No Problem
 %       : 1 Mucho Problems
 %   CnoCom : comment purged caharacter array
 %   Com : Comment array
-%      
+%
 %More Info :
-%   
+%
 %  SkipMatlabHelp
 %  FindChar
 %	NextString
-%   
+%
 %   C = sprintf (...
 %  '%%Hello \n%%Couci Couci \nAbc = 00\n%%Wald\njon\n%%ert\nMlk\n%%brt%%crt\nflp\n%%kr\n\nko=6\n%%bizz\n%%Bozz\n\nfly')
 %   [CnoCom] = PurgeComments (C)
-%   
+%
 %
 %     Author : Ziad Saad
-%     Date : Sat Mar 27 15:42:11 CST 1999 
+%     Date : Sat Mar 27 15:42:11 CST 1999
 
 
 %Define the function name for easy referencing
@@ -76,13 +76,13 @@ if (~isempty(Loc_1)),
 			Com = [Com Cnext];
          lop = 0;
 			if (cnt < length(Loc_1))
-				if (cend+1 == Loc_1(cnt+1)), 
-					lop = 1; 
+				if (cend+1 == Loc_1(cnt+1)),
+					lop = 1;
 				end
 			end
 		end
 
-		%copy the next good piece, 
+		%copy the next good piece,
 		%if you did not run out of cnt in the looping condition above
 		if (cnt < length(Loc_1)),
 			GoodChunk = C(cend+1:Loc_1(cnt+1)-1);
@@ -108,7 +108,7 @@ if (~isempty(Loc_1)),
 		end
 
 		CnoCom = CnoCom(1:nCnoCom);
-       
+
 		%fprintf ('\n***\nFinal CnoCom\n***\n');
 		%fprintf ('%c', CnoCom(1:nCnoCom));
 else %no comments

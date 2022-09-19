@@ -4,8 +4,8 @@ function [err, slc, slcDisp] = GetAfniSlice (Brik, BrikInfo, Opt)
 %
 %Purpose:
 %   Display a slice as it appears in the AFNI window
-%   
-%   
+%
+%
 %Input Parameters:
 %   Brik: is a vector or a matrix containing the brik values
 %   BrikInfo is a structure containing Header info
@@ -14,26 +14,26 @@ function [err, slc, slcDisp] = GetAfniSlice (Brik, BrikInfo, Opt)
 %    .plane is the slicing plane. Choose from 'Ax', 'Sa' and 'Co' for axial, sagittal and coronal
 %    .iSlc is an Nx1 vector with slice indices to show (a la AFNI, first slice is indexed 0)
 %    .index is the sub-brick index, default is 0
-%   
+%
 %Output Parameters:
 %   err : 0 No Problem
 %       : 1 Mucho Problems
 %   slc is a structure containing the slices
 %    .M   [N x M x k] , k being the number of slices requested in Opt.i*
-%    .orientax a 2x2 character matrix. The 1st and 2nd rows indicates the orientation 
+%    .orientax a 2x2 character matrix. The 1st and 2nd rows indicates the orientation
 %          of the voxels in the 1st  and 2nd dimension of .M, respectively.
-%          for example: if orientax is [RL; AP] or 
+%          for example: if orientax is [RL; AP] or
 %          RL
 %          AP
-%          This means that the pixels in slc.M go from Right to Left along the 1st dimension of the 
+%          This means that the pixels in slc.M go from Right to Left along the 1st dimension of the
 %          matrix (ie along columns, top to bottom). Pixels go from Anterior to Posterior along the second
 %          dimension of the matrix (ie along rows, left to right).
-%  
-%   slcDisp is a structure similar to slc and containing the slices oriented as they would be displayed in AFNI's window   
-%   
-%      
+%
+%   slcDisp is a structure similar to slc and containing the slices oriented as they would be displayed in AFNI's window
+%
+%
 %Key Terms:
-%   
+%
 %More Info :
 %   Test_GetAfniSliceTriplet
 %   GetAfniSlice
@@ -76,7 +76,7 @@ indx = Opt.index+1;
 
 DispManip = AFNI_SliceDispManip (BrikInfo);		
 
-if (DispManip(iplane).zflip), 
+if (DispManip(iplane).zflip),
 			%added -1 on Mon Aug 27 13:29:42 PDT 2001
 	Opt.iSlc = BrikInfo.DATASET_DIMENSIONS(DispManip(iplane).SliceDim) - Opt.iSlc -1;
 end
@@ -84,7 +84,7 @@ end
 	nz = length(Opt.iSlc);
 	if (nz),
 		%allocate enough space
-			slc.M = zeros(BrikInfo.DATASET_DIMENSIONS(DispManip(iplane).d(1)), BrikInfo.DATASET_DIMENSIONS(DispManip(iplane).d(2)), nz); 
+			slc.M = zeros(BrikInfo.DATASET_DIMENSIONS(DispManip(iplane).d(1)), BrikInfo.DATASET_DIMENSIONS(DispManip(iplane).d(2)), nz);
 			bufslc = zeros(BrikInfo.DATASET_DIMENSIONS(DispManip(iplane).d(1)), BrikInfo.DATASET_DIMENSIONS(DispManip(iplane).d(2)));
 			if (DispManip(iplane).orpermute),
 				slcDisp.M = zeros(BrikInfo.DATASET_DIMENSIONS(DispManip(iplane).d(2)), BrikInfo.DATASET_DIMENSIONS(DispManip(iplane).d(1)), nz);
@@ -108,7 +108,7 @@ end
 				end
 		end %switch DispManip(iplane).SliceDim,
 		
-		%now manipulate them to have them display properly 
+		%now manipulate them to have them display properly
 		for (j=1:1:nz),
 			bufslc = slc.M(:,:,j); %this is inefficient, might want to dump this step
 			if (DispManip(iplane).orpermute), bufslc = permute(bufslc,[2 1]);	end

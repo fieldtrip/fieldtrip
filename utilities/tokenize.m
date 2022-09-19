@@ -16,7 +16,7 @@ function [tok] = tokenize(str, sep, rep)
 % spaces between two words). The default is rep=1, i.e. repeated
 % separators are treated as one.
 %
-% See also SPLIT, STRTOK, TEXTSCAN
+% See also STRSPLIT, SPLIT, STRTOK, TEXTSCAN
 
 % Copyright (C) 2003-2019, Robert Oostenveld
 %
@@ -38,7 +38,7 @@ function [tok] = tokenize(str, sep, rep)
 %
 % $Id$
 
-% these are for remembering the type on subsequent calls with the same input arguments
+% these are for speeding up subsequent calls with the same input arguments
 persistent previous_argin previous_argout
 
 str = str(:)';

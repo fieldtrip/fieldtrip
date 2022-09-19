@@ -11,12 +11,12 @@ function available = buffer_wait_dat(selection, host, port)
 %
 % It returns a structure with the available nsamples and nevents.
 
-selection(1) = selection(1)-1;
-selection(2) = selection(2)-1;
-selection(3) = selection(3)*1000; % in miliseconds
-
 % check if backwards compatibilty mode is required
 try
+  selection(1) = selection(1)-1;
+  selection(2) = selection(2)-1;
+  selection(3) = selection(3)*1000; % in miliseconds
+
   % the WAIT_DAT request waits until it has more samples or events
   % the following should work for buffer version 2
   available = buffer('WAIT_DAT', selection, host, port);
@@ -25,7 +25,9 @@ catch
   % the error means that the buffer is version 1, which does not support the WAIT_DAT request
   % the wait_dat can be implemented by polling the buffer
   
-  timeout   = selection(3)*1000; % in seconds
+  nsamples  = selection(1);
+  nevents   = selection(2);
+  timeout   = selection(3); % in seconds
   stopwatch = tic;
   
   % results are retrieved in the order written to the buffer

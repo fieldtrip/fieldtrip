@@ -9,15 +9,15 @@ function split = split_string(in, sep, varargin)
 % that strcat(P{1}, D, P{2}, D, ...,D, P{n}) == S.
 %
 % Extended syntax (Jan 2010):
-% 
-% Pi=SPLIT_STRING(S,D,I) returns the I-th element from S, that is 
+%
+% Pi=SPLIT_STRING(S,D,I) returns the I-th element from S, that is
 % P{i} if used with the syntax above
 %
 % S=SPLIT_STRING(S,D1,I1,D2,I2,...) yields the same as
 % SPLIT_STRING(SPLIT_STRING(S,D1,I1),D2,I2,...).
 %
-% Examples: 
-%   split_string('a,b;c,d;e,f',';')            returns {'a,b','c,d','e,f'} 
+% Examples:
+%   split_string('a,b;c,d;e,f',';')            returns {'a,b','c,d','e,f'}
 %   split_string('a,b;c,d;e,f',';',2)          returns 'c,d'
 %   split_string('a,b;c,d;e,f',';',2,',')      returns {'c','d'}
 %

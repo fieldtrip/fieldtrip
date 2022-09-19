@@ -39,9 +39,38 @@ needdat = (nargin==5);
 streams = load_xdf(filename);
 
 iscontinuous = false(size(streams));
+
 % figure out which streams contain continuous/regular and discrete/irregular data
 for i=1:numel(streams)
-  iscontinuous(i) = isfield(streams{i}.info, 'effective_srate');
+    
+    % if the nominal srate is non-zero, the stream is considered continuous
+    if ~strcmpi(streams{i}.info.nominal_srate, '0')
+        
+       iscontinuous(i) =  true;  
+       
+       if ~isfield(streams{i}.info, 'effective_srate') 
+          
+           % in case effective srate field value is missing, add one
+           num_samples  = numel(streams{i}.time_stamps);
+           t_begin      = streams{i}.time_stamps(1);
+           t_end        = streams{i}.time_stamps(end);
+           duration     = t_end - t_begin;
+           streams{i}.info.effective_srate = (num_samples - 1) / duration;
+           
+           
+       elseif isempty(streams{i}.info.effective_srate)
+           
+           % in case effective srate field value is missing, add one
+           num_samples  = numel(streams{i}.time_stamps);
+           t_begin      = streams{i}.time_stamps(1);
+           t_end        = streams{i}.time_stamps(end);
+           duration     = t_end - t_begin;
+           streams{i}.info.effective_srate = (num_samples - 1) / duration;
+           
+       end 
+       
+    end
+
 end
 
 % determine the stream with the highest sampling rate
@@ -51,7 +80,7 @@ for i=1:numel(streams)
     srate(i) = streams{i}.info.effective_srate;
   end
 end
-[~, indx] = max(srate);
+[dum, indx] = max(srate);
 
 % only keep the stream with the maximum sampling rate
 % this is probably the EEG stream
@@ -59,25 +88,46 @@ stream = streams{indx};
 
 if needhdr
   % this section of code is shared with xdf2fieldtrip
-  hdr             = [];
-  hdr.Fs          = stream.info.effective_srate;
-  hdr.nChans      = numel(stream.info.desc.channels.channel);
-  hdr.nSamplesPre = 0;
-  hdr.nSamples    = length(stream.time_stamps);
-  hdr.nTrials     = 1;
+  hdr = [];
+  if isfield(stream.info, 'effective_srate')
+    % the stream contains continuously sampled data
+    hdr.Fs                  = stream.info.effective_srate;
+    hdr.nSamplesPre         = 0;
+    hdr.nSamples            = length(stream.time_stamps);
+    hdr.nTrials             = 1;
+    hdr.FirstTimeStamp      = stream.time_stamps(1);
+    hdr.TimeStampPerSample  = (stream.time_stamps(end)-stream.time_stamps(1)) / (length(stream.time_stamps) - 1);
+  else
+    % the stream does not contain continuously sampled data
+    hdr.Fs                  = NaN;
+    hdr.nSamplesPre         = NaN;
+    hdr.nSamples            = NaN;
+    hdr.nTrials             = NaN;
+    hdr.FirstTimeStamp      = NaN;
+    hdr.TimeStampPerSample  = NaN;
+  end
+  if isfield(stream.info.desc, 'channels')
+    hdr.nChans    = numel(stream.info.desc.channels.channel);
+  else
+    hdr.nChans    = str2double(stream.info.channel_count);
+  end
   hdr.label       = cell(hdr.nChans, 1);
   hdr.chantype    = cell(hdr.nChans, 1);
   hdr.chanunit    = cell(hdr.nChans, 1);
   
   prefix = stream.info.name;
-  for i=1:hdr.nChans
-    hdr.label{i} = [prefix '_' stream.info.desc.channels.channel{i}.label];
-    hdr.chantype{i} = stream.info.desc.channels.channel{i}.type;
-    hdr.chanunit{i} = stream.info.desc.channels.channel{i}.unit;
+  for j=1:hdr.nChans
+    if isfield(stream.info.desc, 'channels')
+      hdr.label{j} = [prefix '_' stream.info.desc.channels.channel{j}.label];
+      hdr.chantype{j} = stream.info.desc.channels.channel{j}.type;
+      hdr.chanunit{j} = stream.info.desc.channels.channel{j}.unit;
+    else
+      % the stream does not contain continuously sampled data
+      hdr.label{j} = num2str(j);
+      hdr.chantype{j} = 'unknown';
+      hdr.chanunit{j} = 'unknown';
+    end
   end
-  
-  hdr.FirstTimeStamp     = stream.time_stamps(1);
-  hdr.TimeStampPerSample = (stream.time_stamps(end)-stream.time_stamps(1)) / (length(stream.time_stamps) - 1);
   
   % keep the original header details
   hdr.orig = stream.info;

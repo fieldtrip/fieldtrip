@@ -22,7 +22,7 @@ function [jobid, puttime] = peerfeval(varargin)
 %   argout = peerget(jobid, 'timeout', inf);
 %   disp(argout);
 %
-% See also PEERGET, PEERCELLFUN, PEERMASTER, PEERSLAVE, FEVAL, BATCH
+% See also PEERGET, PEERCELLFUN, PEERCONTROLLER, PEERWORKER, FEVAL, BATCH
 
 % -----------------------------------------------------------------------
 % Copyright (C) 2010, Robert Oostenveld
@@ -47,7 +47,7 @@ function [jobid, puttime] = peerfeval(varargin)
 % the same input arguments (e.g. from peercellfun)
 persistent previous_argin
 
-% the peer server must be running in master mode
+% the peer server must be running in controller mode
 peer('status', 1);
 
 % check the current status of the maintenance threads
@@ -129,9 +129,9 @@ randomseed = rand(1)*double(intmax);
 options = {'pwd', getcustompwd, 'path', getcustompath, 'global', getglobal, 'diary', diary, 'memreq', memreq, 'cpureq', cpureq, 'timreq', timreq, 'randomseed', randomseed, 'nargout', numargout};
 
 % status = 0 means zombie mode, don't accept anything
-% status = 1 means master mode, accept everything
-% status = 2 means idle slave, accept only a single job
-% status = 3 means busy slave, don't accept a new job
+% status = 1 means controller mode, accept everything
+% status = 2 means idle worker, accept only a single job
+% status = 3 means busy worker, don't accept a new job
 
 while isempty(jobid)
 
@@ -148,36 +148,36 @@ while isempty(jobid)
     list = list(ismember([list.hostid], hostid));
   end
 
-  % only peers that are currently in idle or busy slave mode are interesting
+  % only peers that are currently in idle or busy worker mode are interesting
   list = list([list.status]==2 | [list.status]==3);
   if isempty(list)
-    error('there is no peer available as slave');
+    error('there is no peer available as worker');
   end
 
   % only peers with enough memory are interesting
   list = list([list.memavail] >= memreq);
   if isempty(list)
-    error('there are no slave peers available that meet the memory requirements');
+    error('there are no worker peers available that meet the memory requirements');
   end
 
   % only peers with enough CPU speed are interesting
   list = list([list.cpuavail] >= cpureq);
   if isempty(list)
-    error('there are no slave peers available that meet the CPU requirements');
+    error('there are no worker peers available that meet the CPU requirements');
   end
 
   % only peers with enough time for a single job are interesting
   list = list([list.timavail] >= timreq);
   if isempty(list)
-    error('there are no slave peers available to execute a job of this duration');
+    error('there are no worker peers available to execute a job of this duration');
   end
 
-  % only the idle slaves are interesting from now on
-  % the busy slaves may again become relevant on the next attempt
+  % only the idle workers are interesting from now on
+  % the busy workers may again become relevant on the next attempt
   list = list([list.status] == 2);
 
   if isempty(list)
-    % at the moment all the appropriate slaves are busy
+    % at the moment all the appropriate workers are busy
     % give the peer network some time to recover
     pause(sleep);
     continue;
@@ -210,7 +210,7 @@ while isempty(jobid)
 end % while isempty(jobid)
 
 if isempty(jobid)
-  warning('FieldTrip:peer:noSlaveAvailable', 'none of the slave peers was willing to accept the job');
+  warning('FieldTrip:peer:noSlaveAvailable', 'none of the worker peers was willing to accept the job');
 end
 
 % remember the input arguments to speed up subsequent calls

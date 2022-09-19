@@ -10,14 +10,12 @@ function [combined] = ft_appendlayout(cfg, varargin)
 %   cfg.direction = string, 'horizontal' or 'vertical' (default = 'horizontal')
 %   cfg.align     = string, 'center', 'left', 'right', 'top' or 'bottom' (default = 'center')
 %   cfg.distance  = number, distance between layouts (default is automatic)
+%   cfg.xscale    = number, scaling to apply to input layouts along the horizontal direction (default = 1)
+%   cfg.yscale    = number, scaling to apply to input layouts along the vertical direction (default = 1)
 %
 % See also FT_PREPARE_LAYOUT, FT_LAYOUTPLOT, FT_APPENDSENS
 
-% Undocumented options
-%   cfg.xscale    = number, scaling to apply to input layouts along the horizontal direction (default = 1)
-%   cfg.yscale    = number, scaling to apply to input layouts along the vertical direction (default = 1)
-
-% Copyright (C) 2019, Robert Oostenveld
+% Copyright (C) 2019-2020, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -109,12 +107,12 @@ yrange(end+1) = nan;
 
 % these are needed to automatically determine the distance
 width = varargin{1}.width(:);
-for i=1:numel(varargin)
+for i=2:numel(varargin)
   width = cat(1, width, varargin{i}.width(:));
 end
 height = varargin{1}.height(:);
-for i=1:numel(varargin)
-  width = cat(1, height, varargin{i}.height(:));
+for i=2:numel(varargin)
+  height = cat(1, height, varargin{i}.height(:));
 end
 
 % set the first target point, it will be updated if we go along
@@ -123,6 +121,8 @@ ytarget = 0;
 
 % shift the anchor point of each of the layouts to its target position
 switch cfg.direction
+
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   case 'horizontal'
     if isempty(cfg.distance)
       % determine the distance between layouts
@@ -161,6 +161,7 @@ switch cfg.direction
         ft_error('invalid value for cfg.align');
     end % switch align
     
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   case 'vertical'
     if isempty(cfg.distance)
       % determine the distance between layouts
@@ -199,6 +200,46 @@ switch cfg.direction
         ft_error('invalid value for cfg.align');
     end % switch align
     
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  case 'overlapping'
+    if isempty(cfg.distance)
+      % determine the distance between layouts
+      distance = 0;
+    else
+      % use the specified distance
+      distance = cfg.distance;
+    end
+    
+    switch cfg.align
+      case 'center'
+        for i=1:numel(varargin)
+          dx = xtarget - xcenter(i);
+          dy = ytarget - ycenter(i);
+          varargin{i} = shiftlayout(varargin{i}, dx, dy);
+          xtarget = xtarget + distance;
+        end % for varargin
+        
+      case 'top'
+        for i=1:numel(varargin)
+          dx = xtarget - xcenter(i);
+          dy = ytarget - ymax(i);
+          varargin{i} = shiftlayout(varargin{i}, dx, dy);
+          xtarget = xtarget + distance;
+        end % for varargin
+        
+      case 'bottom'
+        for i=1:numel(varargin)
+          dx = xtarget - xcenter(i);
+          dy = ytarget - ymin(i);
+          varargin{i} = shiftlayout(varargin{i}, dx, dy);
+          xtarget = xtarget + distance;
+        end % for varargin
+        
+      otherwise
+        ft_error('invalid value for cfg.align');
+    end % switch align
+  
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   otherwise
     ft_error('invalid value for cfg.direction');
 end % switch direction

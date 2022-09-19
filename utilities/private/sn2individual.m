@@ -8,7 +8,7 @@ function [warped]= sn2individual(P, input)
 % modified from code originally written by John Ashburner:
 % http://www.sph.umich.edu/~nichols/JG2/get_orig_coord2.m
 
-% Copyright (C) 2013-2017, Jan-Mathijs Schoffelen
+% Copyright (C) 2013-2021, Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -80,15 +80,16 @@ else
   
   fname  = [tempname,'.nii'];
   V      = nifti;
-  V.dat  = file_array(fname, P.image(1).dim(1:3), [spm_type('float32') spm_platform('bigend')], 0, 1, 0);
-  V.mat  = P.image(1).mat;
-  V.mat0 = P.image(1).mat;
-  V.descrip = 'dummy volume';
+  V.dat  = file_array(fname, P.image.dim(1:3), [spm_type('float32') spm_platform('bigend')], 0, 1, 0);
+  V.mat  = P.image.mat;
+  if isfield(P.image, 'mat0') 
+    V.mat0 = P.image.mat0;
+  end
+  V.descrip = 'deformation field';
   create(V);
-  V.dat(:) = 0;
-  P.image(1).private = V;
-  P.image(1).fname   = fname;
+  V.dat(:) = 0; % this is necessary, otherwise SPM fails: image too small
   
+  P.image  = spm_vol(fname);
   spm_preproc_write8(P, zeros(6,4), [0 0], [0 1], 1, 1, nan(2,3), nan);
   
   [pth,nam,ext] = fileparts(fname);

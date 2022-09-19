@@ -7,12 +7,15 @@ function [dat, state] = ft_preproc_standardize(dat, begsample, endsample, state)
 % Use as
 %   [dat] = ft_preproc_standardize(dat, begsample, endsample)
 % where
-%   dat        data matrix (Nchans dat Ntime)
+%   dat        data matrix (Nchans x Ntime)
 %   begsample  index of the begin sample for the mean and stdev estimate
 %   endsample  index of the end sample for the mean and stdev estimate
 %
 % If no begin and end sample are specified, it will be estimated on the
 % complete data.
+%
+% If the data contains NaNs, these are ignored for the computation, but
+% retained in the output.
 %
 % See also PREPROC
 
@@ -57,7 +60,8 @@ end
 y = dat(:,begsample:endsample);
 
 % determine the size of the selected data: nChans dat nSamples
-[m, n] = size(y);
+n = sum(isfinite(y),2);
+y(~isfinite(y)) = 0;
 
 % compute the sum and sum of squares
 s  = sum(y,2);

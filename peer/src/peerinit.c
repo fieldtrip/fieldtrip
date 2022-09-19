@@ -141,7 +141,7 @@ void peerinit(void *arg) {
 		pthread_mutex_lock(&mutexwatchdog);
 		watchdog.enabled  = 0;
 		watchdog.evidence = 0;
-		watchdog.masterid = 0;
+		watchdog.controllerid = 0;
 		watchdog.memory   = 0;
 		watchdog.time     = 0;
 		pthread_mutex_unlock(&mutexwatchdog);
@@ -202,7 +202,7 @@ void peerexit(void *arg) {
 		pthread_mutex_lock(&mutexwatchdog);
 		watchdog.enabled  = 0;
 		watchdog.evidence = 0;
-		watchdog.masterid = 0;
+		watchdog.controllerid = 0;
 		watchdog.memory   = 0;
 		watchdog.time     = 0;
 		pthread_mutex_unlock(&mutexwatchdog);

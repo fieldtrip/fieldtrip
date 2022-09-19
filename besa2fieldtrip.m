@@ -1,13 +1,13 @@
-function data = besa2fieldtrip(input)
+function data = besa2fieldtrip(varargin)
 
 % BESA2FIELDTRIP reads and converts various BESA datafiles into a FieldTrip
 % data structure, which subsequently can be used for statistical analysis
 % or other analysis methods implemented in Fieldtrip.
 %
 % Use as
-%   [data] = besa2fieldtrip(filename)
-% where the filename should point to a BESA datafile (or data that
-% was exported by BESA). The output is a MATLAB structure that is
+%   [output] = besa2fieldtrip(input)
+% where the input should be a string specifying the BESA file, or a MATLAB structure
+% with data that was exported by BESA. The output is a MATLAB structure that is
 % compatible with FieldTrip.
 %
 % The format of the output structure depends on the type of datafile:
@@ -18,13 +18,13 @@ function data = besa2fieldtrip(input)
 %   *.dat is converted to a structure similar to the output of FT_SOURCANALYSIS
 %   *.dat combined with a *.gen or *.generic is converted to a structure similar to the output of FT_PREPROCESSING
 %
-% (*) If the BESA toolbox by Karsten Hochstatter is found on your
-% MATLAB path, the readBESAxxx functions will be used (where xxx=tfc/swf),
-% alternatively the private functions from FieldTrip will be used.
+% (*) If the BESA toolbox by Karsten Hochstatter is found on your MATLAB path, the
+% readBESAxxx functions will be used (where xxx=tfc/swf), alternatively the private
+% functions from FieldTrip will be used.
 %
 % See also EEGLAB2FIELDTRIP, SPM2FIELDTRIP
 
-% Copyright (C) 2005-2010, Robert Oostenveld
+% Copyright (C) 2005-2022, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -44,25 +44,33 @@ function data = besa2fieldtrip(input)
 %
 % $Id$
 
-if isstruct(input) && numel(input)>1
-  % use a recursive call to convert multiple inputs
-  data = cell(size(input));
-  for i=1:numel(input)
-    data{i} = besa2fieldtrip(input(i));
+if numel(varargin)>1
+  % use a recursive call to convert multiple inputs passed as cell-array
+  data = cell(size(varargin));
+  for i=1:numel(varargin)
+    data{i} = besa2fieldtrip(varargin{i});
+  end
+  return
+elseif isstruct(varargin{1}) && numel(varargin{1})>1
+  % use a recursive call to convert multiple inputs passed as struct-array
+  data = cell(size(varargin));
+  for i=1:numel(varargin{1})
+    data{i} = besa2fieldtrip(varargin{1}(i));
   end
   return
 end
 
-if isstruct(input)
+% from here on we know that there is only a single input
+if isstruct(varargin{1})
   fprintf('besa2fieldtrip: converting structure\n');
 
   %---------------------TFC-------------------------------------------------%
-  if strcmp(input.structtype, 'besa_tfc')
+  if strcmp(varargin{1}.structtype, 'besa_tfc')
     %fprintf('BESA tfc\n');
 
-    data.time   = input.latencies;
-    data.freq   = input.frequencies;
-    temp_chans  = char(input.channellabels');
+    data.time   = varargin{1}.latencies;
+    data.freq   = varargin{1}.frequencies;
+    temp_chans  = char(varargin{1}.channellabels');
     Nchan       = size(temp_chans,1);
     %{
     if strcmp(input.type, 'COHERENCE_SQUARED')
@@ -82,21 +90,21 @@ if isstruct(input)
     for i=1:Nchan
       data.label{i,1} = deblank(temp_chans(i,:));
     end
-    data.powspctrm = input.data;
+    data.powspctrm = varargin{1}.data;
     data.dimord    = 'chan_freq_time';
-    data.condition = input.condition; %not original Fieldtrip fieldname
+    data.condition = varargin{1}.condition; %not original Fieldtrip fieldname
 
     %end
 
     clear temp;
 
     %--------------------Image------------------------------------------------%
-  elseif strcmp(input.structtype, 'besa_image')
+  elseif strcmp(varargin{1}.structtype, 'besa_image')
     %fprintf('BESA image\n');
-    data.avg.pow  = input.data;
-    xTemp         = input.xcoordinates;
-    yTemp         = input.ycoordinates;
-    zTemp         = input.zcoordinates;
+    data.avg.pow  = varargin{1}.data;
+    xTemp         = varargin{1}.xcoordinates;
+    yTemp         = varargin{1}.ycoordinates;
+    zTemp         = varargin{1}.zcoordinates;
     data.xgrid    = xTemp;
     data.ygrid    = yTemp;
     data.zgrid    = zTemp;
@@ -111,27 +119,27 @@ if isstruct(input)
     data.outside  = [];
 
     %--------------------Source Waveform--------------------------------------%
-  elseif strcmp(input.structtype, 'besa_sourcewaveforms')
+  elseif strcmp(varargin{1}.structtype, 'besa_sourcewaveforms')
     %fprintf('BESA source waveforms\n');
-    data.label         = input.labels'; %not the same as Fieldtrip!
+    data.label         = varargin{1}.labels'; %not the same as Fieldtrip!
     data.dimord        = 'chan_time';
-    data.fsample       = input.samplingrate;
-    data.time          = input.latencies / 1000.0;
-    data.avg           = input.waveforms';
-    data.cfg.filename  = input.datafile;
+    data.fsample       = varargin{1}.samplingrate;
+    data.time          = varargin{1}.latencies / 1000.0;
+    data.avg           = varargin{1}.waveforms';
+    data.cfg.filename  = varargin{1}.datafile;
 
     %--------------------Data Export------------------------------------------%
-  elseif strcmp(input.structtype, 'besa_channels')
+  elseif strcmp(varargin{1}.structtype, 'besa_channels')
     %fprintf('BESA data export\n');
 
-    if isfield(input, 'datatype')
-      switch input.ft_datatype
+    if isfield(varargin{1}, 'datatype')
+      switch varargin{1}.datatype
         case {'Raw_Data', 'Epoched_Data', 'Segment'}
-          data.fsample    = input.samplingrate;
-          data.label      = input.channellabels';
-          for k=1:size(input.data,2)
-            data.time{1,k}  = input.data(k).latencies / 1000.0';
-            data.trial{1,k} = input.data(k).amplitudes';
+          data.fsample    = varargin{1}.samplingrate;
+          data.label      = varargin{1}.channellabels';
+          for k=1:size(varargin{1}.data,2)
+            data.time{1,k}  = varargin{1}.data(k).latencies / 1000.0';
+            data.trial{1,k} = varargin{1}.data(k).amplitudes';
           end
         otherwise
           fprintf('ft_datatype other than Raw_Data, Epoched or Segment');
@@ -145,7 +153,7 @@ if isstruct(input)
     ft_error('unrecognized format of the input structure');
   end
 
-elseif ischar(input)
+elseif ischar(varargin{1})
   fprintf('besa2fieldtrip: reading from file\n');
 
   % This function can either use the reading functions included in FieldTrip
@@ -154,13 +162,13 @@ elseif ischar(input)
   % official toolbox have precedence.
   hasbesa = ft_hastoolbox('besa',1, 1);
 
-  type = ft_filetype(input);
+  type = ft_filetype(varargin{1});
 
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   if strcmp(type, 'besa_avr') && hasbesa
     fprintf('reading ERP/ERF\n');
     % this should be similar to the output of TIMELOCKANALYSIS
-    tmp = readBESAavr(input);
+    tmp = readBESAavr(varargin{1});
     % convert into a TIMELOCKANALYSIS compatible data structure
     data = [];
     data.label = [];
@@ -174,7 +182,7 @@ elseif ischar(input)
   elseif strcmp(type, 'besa_avr') && ~hasbesa
     fprintf('reading ERP/ERF\n');
     % this should be similar to the output of TIMELOCKANALYSIS
-    tmp = read_besa_avr(input);
+    tmp = read_besa_avr(varargin{1});
     % convert into a TIMELOCKANALYSIS compatible data structure
     data = [];
     data.label   = fixlabels(tmp.label);
@@ -188,7 +196,7 @@ elseif ischar(input)
   elseif strcmp(type, 'besa_mul') && hasbesa
     fprintf('reading ERP/ERF\n');
     % this should be similar to the output of TIMELOCKANALYSIS
-    tmp = readBESAmul(input);
+    tmp = readBESAmul(varargin{1});
     % convert into a TIMELOCKANALYSIS compatible data structure
     data = [];
     data.label    = tmp.ChannelLabels(:);
@@ -200,7 +208,7 @@ elseif ischar(input)
   elseif strcmp(type, 'besa_mul') && ~hasbesa
     fprintf('reading ERP/ERF\n');
     % this should be similar to the output of TIMELOCKANALYSIS
-    tmp = read_besa_mul(input);
+    tmp = read_besa_mul(varargin{1});
     % convert into a TIMELOCKANALYSIS compatible data structure
     data = [];
     data.label   = tmp.label(:);
@@ -212,15 +220,14 @@ elseif ischar(input)
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   elseif strcmp(type, 'besa_sb')
-    if hasbesa
-      fprintf('reading preprocessed channel data using BESA toolbox\n');
-    else
+    if ~hasbesa
       ft_error('this data format requires the BESA toolbox');
     end
-    [p, f, x] = fileparts(input);
-    input = fullfile(p, [f '.dat']);
-    [time,buf,ntrial] = readBESAsb(input);
-    time  = time/1000;                 % convert from ms to sec
+    fprintf('reading preprocessed channel data\n');
+    [p, f, x] = fileparts(varargin{1});
+    varargin{1} = fullfile(p, [f '.dat']);
+    [time,buf,ntrial] = readBESAsb(varargin{1});
+    time  = time/1000;   % convert from ms to sec
     nchan = size(buf,1);
     ntime = size(buf,3);
 
@@ -232,7 +239,7 @@ elseif ischar(input)
       data.trial{i} = reshape(buf(:,i,:), [nchan, ntime]);
       data.time{i} = time;
     end
-    data.label   = {};
+    data.label = {};
     for i=1:size(buf,1)
       data.label{i,1} = sprintf('chan%03d', i);
     end
@@ -242,7 +249,7 @@ elseif ischar(input)
   elseif strcmp(type, 'besa_tfc') && hasbesa
     fprintf('reading time-frequency representation using BESA toolbox\n');
     % this should be similar to the output of FREQANALYSIS
-    tfc = readBESAtfc(input);
+    tfc = readBESAtfc(varargin{1});
     Nchan = size(tfc.ChannelLabels,1);
     % convert into a FREQANALYSIS compatible data structure
     data = [];
@@ -272,7 +279,7 @@ elseif ischar(input)
   elseif strcmp(type, 'besa_tfc') && ~hasbesa
     fprintf('reading time-frequency representation\n');
     % this should be similar to the output of FREQANALYSIS
-    [ChannelLabels, Time, Frequency, Data, Info] = read_besa_tfc(input);
+    [ChannelLabels, Time, Frequency, Data, Info] = read_besa_tfc(varargin{1});
     Nchan = size(ChannelLabels,1);
     % convert into a FREQANALYSIS compatible data structure
     data = [];
@@ -300,7 +307,7 @@ elseif ischar(input)
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   elseif strcmp(type, 'besa_swf') && hasbesa
     fprintf('reading source waveform using BESA toolbox\n');
-    swf = readBESAswf(input);
+    swf = readBESAswf(varargin{1});
     % convert into a TIMELOCKANALYSIS compatible data structure
     data         = [];
     data.label   = fixlabels(swf.waveName);
@@ -313,7 +320,7 @@ elseif ischar(input)
   elseif strcmp(type, 'besa_swf') && ~hasbesa
     fprintf('reading source waveform\n');
     % hmm, I guess that this should be similar to the output of TIMELOCKANALYSIS
-    tmp = read_besa_swf(input);
+    tmp = read_besa_swf(varargin{1});
     % convert into a TIMELOCKANALYSIS compatible data structure
     data = [];
     data.label   = fixlabels(tmp.label);
@@ -325,7 +332,7 @@ elseif ischar(input)
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   elseif strcmp(type, 'besa_src') && hasbesa
-    src = readBESAimage(input);
+    src = readBESAimage(varargin{1});
     data.xgrid = src.Coordinates.X;
     data.ygrid = src.Coordinates.Y;
     data.zgrid = src.Coordinates.Z;
@@ -336,8 +343,9 @@ elseif ischar(input)
     % cannot determine which voxels are inside the brain volume
     data.inside = 1:prod(data.dim);
     data.outside = [];
+
   elseif strcmp(type, 'besa_src') && ~hasbesa
-    src = read_besa_src(input);
+    src = read_besa_src(varargin{1});
     data.xgrid = linspace(src.X(1), src.X(2), src.X(3));
     data.ygrid = linspace(src.Y(1), src.Y(2), src.Y(3));
     data.zgrid = linspace(src.Z(1), src.Z(2), src.Z(3));
@@ -348,6 +356,11 @@ elseif ischar(input)
     % cannot determine which voxels are inside the brain volume
     data.inside = 1:prod(data.dim);
     data.outside = [];
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  elseif strcmp(type, 'besa_elp')
+    % this contains electrode positions that can be read with FT_READ_SENS
+    data = ft_read_sens(varargin{1});
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   elseif strcmp(type, 'besa_pdg')
@@ -380,6 +393,7 @@ elseif iscell(labels) && length(labels)==1
     newlabels = labels;
   end
 elseif ischar(labels) && any(size(labels)==1)
+  labels = strtrim(labels); % remove whitespace at the edges
   newlabels = tokenize(labels(:)', ' '); % also ensure that it is a row-string
 elseif ischar(labels) && ~any(size(labels)==1)
   for i=1:size(labels)
@@ -388,6 +402,7 @@ elseif ischar(labels) && ~any(size(labels)==1)
 end
 % convert to column
 newlabels = newlabels(:);
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION

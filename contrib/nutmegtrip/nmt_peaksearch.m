@@ -65,13 +65,13 @@ fun(excludeindices,:,:,:) = NaN; % NaN out values outside search range
 if(~isfield(cfg,'time') && ~isfield(cfg,'vox'))
     switch(cfg.peaktype)
         case 'max'
-            [~,peakind] = max(fun(:));
+            [dum,peakind] = max(fun(:));
             [peakvoxind,peaktimeind] = ind2sub(size(fun),peakind);
         case 'mag'
-            [~,peakind] = max(abs(fun(:)));
+            [dum,peakind] = max(abs(fun(:)));
             [peakvoxind,peaktimeind] = ind2sub(size(fun),peakind);
         case 'min'
-            [~,peakind] = min(fun(:));
+            [dum,peakind] = min(fun(:));
             [peakvoxind,peaktimeind] = ind2sub(size(fun),peakind);
     end
     t_idx = peaktimeind;

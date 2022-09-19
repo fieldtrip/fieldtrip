@@ -1,8 +1,7 @@
 function test_bug46
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_connectivityanalysis univariate2bivariate ft_checkdata
 
 % the problem reported was that ft_connectivityanalysis crashes with input is freq-data containing fourierspectra and two channels
@@ -36,7 +35,7 @@ coh        = ft_connectivityanalysis(cfg, freq);
 %    data = fixcsd(data, cmbrepresentation, channelcmb);
 %
 %Error in ==> ft_connectivityanalysis>univariate2bivariate at 992
-%      data    = checkdata(data, 'cmbrepresentation', 'sparse', 'channelcmb',
+%      data    = checkdata(data, 'cmbstyle', 'sparse', 'channelcmb',
 %      cmb);
 %
 %Error in ==> ft_connectivityanalysis at 138

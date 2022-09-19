@@ -90,6 +90,24 @@ for iType = 1:length(uniqueType)
         if isfield(events, 'status')
             segmentObj.setStatus(  events(trials(iTrial)).status );
         end
+        if isfield(events, 'mffkeysbackup')
+            % if additional keys are present -> average (not sure this heuristic is always correct)
+            segmentObj.setName( 'Average' );
+            
+            if ~isempty(events(trials(iTrial)).mffkeysbackup)
+                jListKeys = javaObject('java.util.ArrayList');
+                tmpKeys = eval(events(trials(iTrial)).mffkeysbackup);
+                for iKey = 1:length(tmpKeys);
+                    keyObj = javaObject('com.egi.services.mff.api.Key');
+                    keyObj.setCode(tmpKeys(iKey).code);
+                    keyObj.setData(tmpKeys(iKey).data);
+                    keyObj.setDataType(tmpKeys(iKey).datatype);
+                    keyObj.setDescription(tmpKeys(iKey).description);
+                    jListKeys.add(keyObj);
+                end
+                segmentObj.setKeys(jListKeys);
+            end
+        end
         
         % check epoch length
         epochLenTmp = segmentObj.getEndTime() - segmentObj.getBeginTime();

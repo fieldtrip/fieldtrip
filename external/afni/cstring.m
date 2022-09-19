@@ -12,7 +12,7 @@ end
 
 if i==1
   str = char(0);
-else 
+else
   str = char(x(1:i-1));
 end
 

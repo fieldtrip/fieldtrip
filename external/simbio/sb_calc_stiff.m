@@ -1,4 +1,4 @@
-function [stiff diinsy cols sysmat] = sb_calc_stiff(vol)
+function [stiff, diinsy, cols, sysmat] = sb_calc_stiff(vol)
 
 % SB_CALC_STIFF
 %
@@ -71,29 +71,27 @@ elem = int32(elem);
 % check whether the nodes have right orientation
 
 if isfield(vol,'tet')
-    if ~sb_test_ori(node,elem(1:4,:)')
-        error('Elements have wrong orientation, consider exchanging node 3 and 4');
-        return;
-    end
+  if ~sb_test_ori(node,elem(1:4,:)')
+    error('Elements have wrong orientation, consider exchanging node 3 and 4');
+  end
 elseif isfield(vol,'hex')
-    if ~sb_test_ori(node,elem')
-        error('Elements have wrong orientation or are degenerated');
-        return
-    end
+  if ~sb_test_ori(node,elem')
+    error('Elements have wrong orientation or are degenerated');
+  end
 end
 
 try
-    [diinsy,cols,sysmat] = calc_stiff_matrix_val(node,elem,cond,mele);
+  [diinsy,cols,sysmat] = calc_stiff_matrix_val(node,elem,cond,mele);
 catch err
-    if ispc && strcmp(err.identifier,'MATLAB:invalidMEXFile')
-        error('Error executing mex-file. Microsoft Visual C++ 2008 Redistributables and Intel Visual Fortran Redistributables are required.')
-    else
-        rethrow(err)
-    end
+  if ispc && strcmp(err.identifier,'MATLAB:invalidMEXFile')
+    error('Error executing mex-file. Microsoft Visual C++ 2008 Redistributables and Intel Visual Fortran Redistributables are required.')
+  else
+    rethrow(err)
+  end
 end
-npnt = double(npnt);
+npnt   = double(npnt);
 diinsy = double(diinsy);
-cols = double(cols);
-rows = sb_sparse_to_mat(diinsy);
-stiff = sparse(rows,cols,sysmat,npnt,npnt,length(sysmat));
+cols   = double(cols);
+rows   = sb_sparse_to_mat(diinsy);
+stiff  = sparse(rows,cols,sysmat,npnt,npnt,length(sysmat));
 end

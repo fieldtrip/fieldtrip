@@ -14,7 +14,7 @@ function [wave, spike] = ft_spike_waveform(cfg, spike)
 %   cfg.rejectonpeak     = 'yes' (default) or 'no': takes away waveforms with too late peak, and no
 %                           rising AP towards peak of other waveforms
 %   cfg.rejectclippedspikes = 'yes' (default) or 'no': removes spikes that
-%                           saturated the voltage range. 
+%                           saturated the voltage range.
 %   cfg.normalize        = 'yes' (default) or 'no': normalizes all
 %   waveforms
 %                           to have peak-to-through amp of 2
@@ -104,36 +104,36 @@ for iUnit = 1:nUnits
   fprintf('Processing waveforms for the unit %d \n', iUnit);
   % check if we should get the first dimension first
   spikeindx = spikesel(iUnit);
-  waves     = spike.waveform{spikeindx};  
-  [nLeads nSamples nSpikes] = size(waves);
+  waves     = spike.waveform{spikeindx};
+  [nLeads, nSamples, nSpikes] = size(waves);
   samples = 0:nSamples-1;
   
   % detect if we need to invert the waveform or not
-  maxSample = round(2*nSamples/3);
-  mn        = nanmean(nanmean(waves,3),1); % nLeads by nSamples
-  [vl,iup]   = nanmax(mn(1:maxSample));
-  [vl,idown] = nanmin(mn(1:maxSample));
+  maxSample   = round(2*nSamples/3);
+  mn          = nanmean(nanmean(waves,3),1); % nLeads by nSamples
+  [vl, iup]   = nanmax(mn(1:maxSample));
+  [vl, idown] = nanmin(mn(1:maxSample));
   if iup>idown, waves = -waves; end % if maximum follows after minimum, invert.
   
-  maxSample = round(2*nSamples/3);
-  mn        = nanmean(nanmean(waves,3),1); % nLeads by nSamples
-  [vl,iup]   = nanmax(mn(1:maxSample));
-  [vl,idown] = nanmin(mn(1:maxSample));
+  maxSample   = round(2*nSamples/3);
+  mn          = nanmean(nanmean(waves,3),1); % nLeads by nSamples
+  [vl, iup]   = nanmax(mn(1:maxSample));
+  [vl, idown] = nanmin(mn(1:maxSample));
 
   % discard waveforms where derivative is not positive until peak index
-  if strcmp(cfg.rejectonpeak,'yes') && idown>iup   
+  if strcmp(cfg.rejectonpeak,'yes') && idown>iup
     
     fprintf('Removing spikes with strange rise and late peak\n')
     
     % reject the ones that do not have a rising potential to the peak index
-    mnOverLead = nanmean(waves,1); % do this for all four leads at the same time    
-    d = squeeze(nansum(diff(mnOverLead(:,1:iup,:),[],2),2));    
+    mnOverLead = nanmean(waves,1); % do this for all four leads at the same time
+    d = squeeze(nansum(diff(mnOverLead(:,1:iup,:),[],2),2));
     rm1 = find(d<0);
     
     % these have a later max than min: reject, this removes late peaks.
-    mnOverLead = nanmean(waves,1);        
-    [vl,iu]   = nanmax(mnOverLead,[],2);
-    [vl,id]   = nanmin(mnOverLead,[],2);
+    mnOverLead = nanmean(waves,1);
+    [vl, iu]   = nanmax(mnOverLead,[],2);
+    [vl, id]   = nanmin(mnOverLead,[],2);
     rm2 = find(iu>id);
   else
     rm1 = [];
@@ -147,10 +147,10 @@ for iUnit = 1:nUnits
     % reject clipped spikes
     dl = [];
     for iWave = 1:nSpikes
-      mnOverLead = nanmean(waves(:,:,iWave),1);            
+      mnOverLead = nanmean(waves(:,:,iWave),1);
       df         = diff(mnOverLead);
       idx        = find(df==0)+1;
-      if ~isempty(idx), 
+      if ~isempty(idx)
         if all(nanmax(mnOverLead(idx))>=mnOverLead) || all(nanmin(mnOverLead(idx))<=mnOverLead)
           dl = [dl iWave];
         end
@@ -159,11 +159,11 @@ for iUnit = 1:nUnits
     rm3 = dl;
   else
     rm3 = [];
-  end    
+  end
   toRemove = unique([rm1(:); rm2(:); rm3(:)]);
-  waves(:,:,toRemove) = [];    
+  waves(:,:,toRemove) = [];
   fprintf('Removing %d spikes from unit %s\n', length(toRemove), spike.label{spikeindx});
-  [nLeads nSamples nSpikes] = size(waves);          
+  [nLeads, nSamples, nSpikes] = size(waves);
   fprintf('Keeping %d spikes from unit %s\n', nSpikes, spike.label{spikeindx});
   
   % align the waveforms automatically to the peak index
@@ -172,9 +172,9 @@ for iUnit = 1:nUnits
     if strcmp(cfg.rejectonpeak,'no')
       warning('aligning without rejecting outliers is dangerous');
     end
-    mnWave             = nanmean(waves,1);
-    [ignore,alignIndx] = nanmax(mnWave(:,:,:),[],2); % maximum across units
-    padLen       = nSamples+1 ;
+    mnWave              = nanmean(waves,1);
+    [ignore, alignIndx] = nanmax(mnWave(:,:,:),[],2); % maximum across units
+    padLen       = nSamples+1;
     samplesShift = -padLen:padLen;
     wavesShift   = NaN(nLeads,length(samplesShift),nSpikes);
     peakIndx     = nearest(samplesShift,0);
@@ -191,7 +191,7 @@ for iUnit = 1:nUnits
     time = samples/cfg.fsample;
   end
   
-  % interpolate waveforms 
+  % interpolate waveforms
   if cfg.interpolate > 1
      t2 = linspace(time(1), time(end), round(length(time)*cfg.interpolate));
      Wn = zeros(nLeads,length(t2),nSpikes);
@@ -207,12 +207,12 @@ for iUnit = 1:nUnits
   end
   
   dof = sum(~isnan(waves),3);
-  sd  = nanstd(waves,[],3);  
-  mn         = nanmean(nanmean(waves,3),1); % nLeads by nSamples
-  [vl,iup]   = nanmax(mn(1:end));
-  [vl,idown] = nanmin(mn(1:end));
-  mn         = nanmean(waves,3); % nLeads by nSamples
-  [nLeads nSamples nSpikes] = size(waves);          
+  sd  = nanstd(waves,[],3);
+  mn          = nanmean(nanmean(waves,3),1); % nLeads by nSamples
+  [vl, iup]   = nanmax(mn(1:end));
+  [vl, idown] = nanmin(mn(1:end));
+  mn          = nanmean(waves,3); % nLeads by nSamples
+  [nLeads, nSamples, nSpikes] = size(waves);
 
   % --- normalize amplitude ratio of spike waveforms if requested
   if strcmp(cfg.normalize,'yes')
@@ -229,28 +229,28 @@ for iUnit = 1:nUnits
   if nargout==2
     spike.waveform{spikeindx} = waves;
     spike.waveformtime = time;
-    try, spike.timestamp{spikeindx}(toRemove) = [];end    
-    try, 
-      if isfield(spike,'trial'), spike.trial{spikeindx}(toRemove) = []; end, 
-    end    
-    try, 
-      if isfield(spike,'unit'), spike.unit{spikeindx}(toRemove) = []; end, 
-    end    
+    try, spike.timestamp{spikeindx}(toRemove) = [];end
+    try,
+      if isfield(spike,'trial'), spike.trial{spikeindx}(toRemove) = []; end
+    end
+    try,
+      if isfield(spike,'unit'), spike.unit{spikeindx}(toRemove) = []; end
+    end
         
-    try, 
-      if isfield(spike,'time'), spike.time{spikeindx}(toRemove) = []; end,     
-    end    
-    try, 
-      if isfield(spike,'fourierspctrm'), spike.fourierspctrm{spikeindx}(toRemove,:,:) = []; end,     
-    end    
+    try,
+      if isfield(spike,'time'), spike.time{spikeindx}(toRemove) = []; end
+    end
+    try,
+      if isfield(spike,'fourierspctrm'), spike.fourierspctrm{spikeindx}(toRemove,:,:) = []; end
+    end
   end
 end
     
-wave.time  = time;
-wave.avg   = mnWaveform;
-wave.dof   = dofWaveform;
-wave.var   = varWaveform;
-wave.label = spike.label(spikesel);
+wave.time   = time;
+wave.avg    = mnWaveform;
+wave.dof    = dofWaveform;
+wave.var    = varWaveform;
+wave.label  = spike.label(spikesel);
 wave.dimord = 'chan_lead_time';
 
 % do the general cleanup and bookkeeping at the end of the function
@@ -258,4 +258,3 @@ ft_postamble trackconfig
 ft_postamble previous   spike
 ft_postamble provenance wave spike
 ft_postamble history    wave spike
-

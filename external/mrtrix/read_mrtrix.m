@@ -26,6 +26,8 @@ while 1
     disp (['invalid line in header: ''' L ''' - ignored']);
   else
     key = lower(strtrim(L(1:d(1)-1)));
+    key = strrep(key, '-', '_'); % replace unpermitted '-' character in matlab fieldnames with '_'
+    key = strrep(key, ' ', '_'); % replace unpermitted ' ' 
     value = strtrim(L(d(1)+1:end));
     if strcmp(key, 'dim')
       image.dim = str2num(char(split_strings (value, ',')))';

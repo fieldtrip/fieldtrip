@@ -1,11 +1,12 @@
 function failed_fairsurface
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
+% DEPENDENCY
 
 ft_defaults
 
-hdmfile  = dccnpath('/home/common/matlab/fieldtrip/data/Subject01.shape');
+hdmfile  = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.shape');
 shape = ft_read_headshape(hdmfile);
 
 tmpcfg             = [];

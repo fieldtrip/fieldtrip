@@ -2,7 +2,7 @@ This is the FieldTrip PREPROC module. It contains functions for the
 preprocessing of MEG, EEG and other time-series data, such as filtering,
 baseline correction and re-referencing.
 
-For more information please visit http://www.fieldtriptoolbox.org/modules/preproc
+For more information please visit https://www.fieldtriptoolbox.org/development/module
 
 -------------------------------------------------------------------------------
 Copyright (C) 2008-2009, Donders Institute for Brain, Cognition and Behaviour, The Netherlands (DCCN)

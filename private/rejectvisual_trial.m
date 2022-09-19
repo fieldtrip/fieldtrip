@@ -3,12 +3,22 @@ function [chansel, trlsel, cfg] = rejectvisual_trial(cfg, data)
 % SUBFUNCTION for ft_rejectvisual
 
 % determine the initial selection of trials
-ntrl   = numel(data.trial);
-trlsel = true(1, ntrl);
+ntrl = length(data.trial);
+if isequal(cfg.trials, 'all') % support specification like 'all'
+  cfg.trials = 1:ntrl;
+elseif isempty(cfg.trials)
+  cfg.trials = 1:ntrl;
+elseif isnumeric(cfg.trials)
+  % use the selection as it is
+end
+trlsel = false(1, ntrl);
+trlsel(cfg.trials) = true;
 
 % determine the initial selection of channels
-nchan   = numel(data.label);
-chansel = true(1, nchan);
+nchan = length(data.label);
+cfg.channel = ft_channelselection(cfg.channel, data.label); % support specification like 'all'
+chansel = false(1, nchan);
+chansel(match_str(data.label, cfg.channel)) = true;
 
 % compute the sampling frequency from the first two timepoints
 fsample = 1/mean(diff(data.time{1}));
@@ -28,92 +38,45 @@ if (isfield(cfg, 'preproc') && ~isempty(cfg.preproc))
   ft_progress('close');
 end
 
+% select the specified latency window from the data
+% this is done AFTER the filtering to prevent edge artifacts
 if ischar(cfg.latency)
   cfg.latency(1) = min(cellfun(@min, data.time));
   cfg.latency(2) = max(cellfun(@max, data.time));
 end
 
-h = figure;
-axis([0 1 0 1]);
-axis off
-
 % the info structure will be attached to the figure
 % and passed around between the callback functions
-if strcmp(cfg.plotlayout,'1col') % hidden config option for plotting trials differently
-  info         = [];
-  info.ncols   = 1;
-  info.nrows   = nchan;
-  info.chanlop = 1;
-  info.trlop   = 1;
-  info.ltrlop  = 0;
-  info.quit    = 0;
-  info.ntrl    = ntrl;
-  info.nchan   = nchan;
-  info.data    = data;
-  info.cfg     = cfg;
-  info.offset  = offset;
-  info.chansel = chansel;
-  info.trlsel  = trlsel;
-  % determine the position of each subplot within the axis
-  for row=1:info.nrows
-    for col=1:info.ncols
-      indx = (row-1)*info.ncols + col;
-      if indx>info.nchan
-        continue
-      end
-      info.x(indx)     = (col-0.9)/info.ncols;
-      info.y(indx)     = 1 - (row-0.45)/(info.nrows+1);
-    end
-  end
-  info.label = info.data.label;
-elseif strcmp(cfg.plotlayout,'square')
-  info         = [];
-  info.ncols   = ceil(sqrt(nchan));
-  info.nrows   = ceil(sqrt(nchan));
-  info.chanlop = 1;
-  info.trlop   = 1;
-  info.ltrlop  = 0;
-  info.quit    = 0;
-  info.ntrl    = ntrl;
-  info.nchan   = nchan;
-  info.data    = data;
-  info.cfg     = cfg;
-  info.offset  = offset;
-  info.chansel = chansel;
-  info.trlsel  = trlsel;
-  % determine the position of each subplot within the axis
-  for row=1:info.nrows
-    for col=1:info.ncols
-      indx = (row-1)*info.ncols + col;
-      if indx>info.nchan
-        continue
-      end
-      info.x(indx)     = (col-0.9)/info.ncols;
-      info.y(indx)     = 1 - (row-0.45)/(info.nrows+1);
-    end
-  end
-  info.label = info.data.label;
-end
+info.trlop   = 1;
+info.chanlop = 1;
+info.quit    = 0;
+info.ntrl    = ntrl;
+info.nchan   = nchan;
+info.data    = data;
+info.cfg     = cfg;
+info.offset  = offset;
+info.chansel = chansel;
+info.trlsel  = trlsel;
 
-info.ui.quit        = uicontrol(h,'units','pixels','position',[  5 5 40 18],'String','quit','Callback',@stop);
-info.ui.prev        = uicontrol(h,'units','pixels','position',[ 50 5 25 18],'String','<','Callback',@prev);
-info.ui.next        = uicontrol(h,'units','pixels','position',[ 75 5 25 18],'String','>','Callback',@next);
-info.ui.prev10      = uicontrol(h,'units','pixels','position',[105 5 25 18],'String','<<','Callback',@prev10);
-info.ui.next10      = uicontrol(h,'units','pixels','position',[130 5 25 18],'String','>>','Callback',@next10);
-info.ui.bad         = uicontrol(h,'units','pixels','position',[160 5 50 18],'String','bad','Callback',@markbad);
-info.ui.good        = uicontrol(h,'units','pixels','position',[210 5 50 18],'String','good','Callback',@markgood);
-info.ui.badnext     = uicontrol(h,'units','pixels','position',[270 5 50 18],'String','bad>','Callback',@markbad_next);
-info.ui.goodnext    = uicontrol(h,'units','pixels','position',[320 5 50 18],'String','good>','Callback',@markgood_next);
-set(gcf, 'WindowButtonUpFcn', @button);
-set(gcf, 'KeyPressFcn', @key);
+tmpcfg = [];
+tmpcfg.layout = 'ordered';
+tmpcfg.skipscale = 'yes';
+tmpcfg.skipcomnt = 'yes';
+tmpcfg.channel = data.label;
+info.layout = ft_prepare_layout(tmpcfg);
 
-guidata(h,info);
+minx = min(info.layout.pos(:,1) - info.layout.width/2);
+maxx = max(info.layout.pos(:,1) + info.layout.width/2);
+miny = min(info.layout.pos(:,2) - info.layout.height/2);
+maxy = max(info.layout.pos(:,2) + info.layout.height/2);
 
-interactive = 1;
-while interactive && ishandle(h)
-  redraw(h);
+h = create_figure([minx maxx miny maxy], info);
+
+% Maintain focus while GUI is open
+while ishandle(h)
+  drawnow
   info = guidata(h);
-  if info.quit == 0,
+  if info.quit == 0
     uiwait;
   else
     chansel = info.chansel;
@@ -121,201 +84,333 @@ while interactive && ishandle(h)
     delete(h);
     break
   end
-end % while interactive
+end % while ishandle(h)
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function h = create_figure(limits, info)
+% Creates the GUI and plots the data for the first time.
+% All additional changes are done by manipulating the properties of the
+% specific graphical objects
+%
+% Input:
+% limits - limits of the area where the trials are plotted
+% info   - the struct that is attched to figure using guidata
+h = open_figure(keepfields(info.cfg, {'figure', 'position', 'visible', 'renderer', 'figurename', 'title'}));
+axis('off')
+axis(limits);
+
+% Set buttons and callback functions
+info.ui.quit        = uicontrol(h,'units','pixels','position',[  5 5 40 18],'String','quit','Callback',@stop);
+info.ui.prev        = uicontrol(h,'units','pixels','position',[ 50 5 25 18],'String','<','Callback',{@step_trial, -1});
+info.ui.next        = uicontrol(h,'units','pixels','position',[ 75 5 25 18],'String','>','Callback',{@step_trial, 1});
+info.ui.prev10      = uicontrol(h,'units','pixels','position',[105 5 25 18],'String','<<','Callback',{@step_trial, -10});
+info.ui.next10      = uicontrol(h,'units','pixels','position',[130 5 25 18],'String','>>','Callback',{@step_trial, 10});
+info.ui.exclude     = uicontrol(h,'units','pixels','position',[160 5 70 18],'String','exclude','Callback',@markexclude);
+info.ui.include     = uicontrol(h,'units','pixels','position',[230 5 70 18],'String','include','Callback',@markinclude);
+info.ui.excludenext = uicontrol(h,'units','pixels','position',[310 5 70 18],'String','exclude >','Callback',@markexclude_next);
+info.ui.includenext = uicontrol(h,'units','pixels','position',[380 5 70 18],'String','include >','Callback',@markinclude_next);
+set(h, 'WindowButtonUpFcn', @button);
+set(h, 'KeyPressFcn', @key);
+
+% Determine the y-axis limits for this channel for all included trials
+[ymin, ymax] = get_ylim(info);
+
+% Plot individual channels
+hold('on')
+color = 'k';
+tim = info.data.time{info.trlop};
+for chanindx=1:info.nchan  
+  dat = info.data.trial{info.trlop}(chanindx,:);
+  info.h_chan(chanindx) = ft_plot_vector(tim, dat, 'hpos', info.layout.pos(chanindx,1), 'vpos', info.layout.pos(chanindx,2), 'width', info.layout.width(chanindx), 'height', info.layout.height(chanindx), 'vlim', [ymin ymax], 'box', istrue(info.cfg.box), 'color', color, 'label', info.layout.label{chanindx}, 'labelpos', 'lowerleft');
+end
+
+% Only blank excluded channels if the trial is included
+if info.trlsel(info.trlop)
+  set(info.h_chan(~info.chansel), 'Color', 'none');
+else % If channel is excluded blank out everything
+  set(info.h_chan, 'Color', 'none');
+end
+hold('off')
+
+% Enable or disable buttons as appropriate
+check_buttons_status(info);
+
+% Add title
+title(description_trial(info),'interpreter','none');
+
+% Update the GUI
+guidata(h, info);
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function varargout = markbad_next(varargin)
-markbad(varargin{:});
-next(varargin{:});
-
-function varargout = markgood_next(varargin)
-markgood(varargin{:});
-next(varargin{:});
-
-function varargout = next(h, eventdata, handles, varargin)
+function step_trial(h, event, step)
 info = guidata(h);
-info.ltrlop = info.trlop;
-if info.trlop < info.ntrl,
-  info.trlop = info.trlop + 1;
-end;
-guidata(h,info);
-uiresume;
-
-function varargout = prev(h, eventdata, handles, varargin)
-info = guidata(h);
-info.ltrlop = info.trlop;
-if info.trlop > 1,
-  info.trlop = info.trlop - 1;
-end;
-guidata(h,info);
-uiresume;
-
-function varargout = next10(h, eventdata, handles, varargin)
-info = guidata(h);
-info.ltrlop = info.trlop;
-if info.trlop < info.ntrl - 10,
-  info.trlop = info.trlop + 10;
+if info.trlop == 1 && step < 0
+  fprintf('At first trial\n');
+elseif info.trlop == info.ntrl && step > 0
+  fprintf('At last trial\n');
 else
-  info.trlop = info.ntrl;
-end;
-guidata(h,info);
+  trls = (1:info.ntrl);
+  info.trlop = trls(nearest(trls, info.trlop + step));  
+  % Update plots
+  new_plots(info);
+end
+guidata(h, info);
 uiresume;
+end
 
-function varargout = prev10(h, eventdata, handles, varargin)
+function markexclude_next(h, event)
+markexclude(h, event);
+step_trial(h, event, 1);
+end
+
+function markinclude_next(h, event)
+markinclude(h, event);
+step_trial(h, event, 1);
+end
+
+function markinclude(h, event)
 info = guidata(h);
-info.ltrlop = info.trlop;
-if info.trlop > 10,
-  info.trlop = info.trlop - 10;
-else
-  info.trlop = 1;
-end;
-guidata(h,info);
+% Include trial if it's not already included
+if ~info.trlsel(info.trlop)
+  info.trlsel(info.trlop) = 1;
+  fprintf(description_trial(info));
+  title(description_trial(info));
+  % Color in black all channels that are included (excluded remain blank)
+  set(info.h_chan(info.chansel), 'Color', 'k');
+  guidata(h,info);
+end
 uiresume;
+end
 
-function varargout = markgood(h, eventdata, handles, varargin)
+function markexclude(h, event)
 info = guidata(h);
-info.trlsel(info.trlop) = 1;
-fprintf(description_trial(info));
-title(description_trial(info));
-guidata(h,info);
-% uiresume;
+% Exclude channel if it's not already excluded
+if info.trlsel(info.trlop)
+  info.trlsel(info.trlop) = 0;
+  fprintf(description_trial(info));
+  title(description_trial(info));
+  % Blank all channels
+  set(info.h_chan(info.chansel), 'Color', 'none');
+  guidata(h,info);
+end
+uiresume;
+end
 
-function varargout = markbad(h, eventdata, handles, varargin)
-info = guidata(h);
-info.trlsel(info.trlop) = 0;
-fprintf(description_trial(info));
-title(description_trial(info));
-guidata(h,info);
-% uiresume;
+function key(h, event)
 
-function varargout = key(h, eventdata, handles, varargin)
-info = guidata(h);
-switch lower(eventdata.Key)
+switch lower(event.Key)
   case 'rightarrow'
-    if info.trlop ~= info.ntrl
-      next(h);
-    else
-      fprintf('at last trial\n');
-    end
+    step_trial(h, event, 1);
   case 'leftarrow'
-    if info.trlop ~= 1
-      prev(h);
-    else
-      fprintf('at first trial\n');
-    end
+    step_trial(h, event, -1);
   case 'g'
-    markgood(h);
+    markinclude(h, event);
   case 'b'
-    markbad(h);
+    markexclude(h, event);
   case 'q'
     stop(h);
   otherwise
     fprintf('unknown key pressed\n');
 end
+end
 
-function varargout = button(h, eventdata, handles, varargin)
+function button(h, event)
+% Find selected trial
 pos = get(gca, 'CurrentPoint');
 x = pos(1,1);
 y = pos(1,2);
 info = guidata(h);
-dx = info.x - x;
-dy = info.y - y;
+dx = info.layout.pos(:,1) - x;
+dy = info.layout.pos(:,2) - y;
 dd = sqrt(dx.^2 + dy.^2);
 [d, i] = min(dd);
-if d<0.5/max(info.nrows, info.ncols) && i<=info.nchan
+threshold = median(sqrt(info.layout.width.^2 + info.layout.height.^2)/2);
+if d<threshold && i<=info.nchan
+  % Toggle
   info.chansel(i) = ~info.chansel(i); % toggle
   info.chanlop = i;
-  fprintf(description_channel(info));
   guidata(h,info);
-  uiresume;
+    
+  % Print to command window
+  fprintf(description_channel(info));
+  
+  % Update plots
+  update_plots(info);
+  
+  % Update trial color
+  if strcmp(info.h_chan(i).Color, 'none') % channel is toggled to include
+    info.h_chan(i).Color = 'k';
+  else % channel is toggled to exclude
+    info.h_chan(i).Color = 'none';
+  end
 else
   fprintf('button clicked\n');
-  return
+end
+uiresume;
 end
 
-function varargout = stop(h, eventdata, handles, varargin)
+function stop(h, event)
 info = guidata(h);
 info.quit = 1;
 guidata(h,info);
 uiresume;
+end
 
 function str = description_channel(info)
 if info.chansel(info.chanlop)
-  str = sprintf('channel %s marked as GOOD\n', info.data.label{info.chanlop});
+  str = sprintf('channel %s marked to INCLUDE\n', info.data.label{info.chanlop});
 else
-  str = sprintf('channel %s marked as BAD\n', info.data.label{info.chanlop});
+  str = sprintf('channel %s marked to EXCLUDE\n', info.data.label{info.chanlop});
+end
 end
 
 function str = description_trial(info)
 if info.trlsel(info.trlop)
-  str = sprintf('trial %d marked as GOOD\n', info.trlop);
+  str = sprintf('trial %d marked to INCLUDE\n', info.trlop);
 else
-  str = sprintf('trial %d marked as BAD\n', info.trlop);
+  str = sprintf('trial %d marked to EXCLUDE\n', info.trlop);
+end
 end
 
-function redraw(h)
-if ~ishandle(h)
-  return
-end
-info = guidata(h);
-fprintf(description_trial(info));
-cla;
-title('');
-drawnow
-hold on
-dat  = info.data.trial{info.trlop};
-time = info.data.time{info.trlop};
-if ~isempty(info.cfg.alim)
-  % use fixed amplitude limits for amplitude scaling
-  amax = info.cfg.alim;
-else
-  % use automatic amplitude limits for scaling, these are different for each trial
-  amax = max(max(abs(dat(info.chansel,:))));
-end
-tmin = time(1);
-tmax = time(end);
-% scale the time values between 0.1 and 0.9
-time = 0.1 + 0.8*(time-tmin)/(tmax-tmin);
-% scale the amplitude values between -0.5 and 0.5, offset should not be removed
-dat = dat ./ (2*amax);
-for row=1:info.nrows
-  for col=1:info.ncols
-    chanindx = (row-1)*info.ncols + col;
-    if chanindx>info.nchan || ~info.chansel(chanindx)
-      continue
-    end
-    % scale the time values for this subplot
-    tim = (col-1)/info.ncols + time/info.ncols;
-    % scale the amplitude values for this subplot
-    amp = dat(chanindx,:)./info.nrows + 1 - row/(info.nrows+1);
-    plot(tim, amp, 'k')
+function [ymin, ymax] = get_ylim(info)
+% Determines the y-axis limits for one trial for all included channels
+
+if ~isnumeric(info.cfg.ylim)
+  ymin = nan(1,info.nchan);
+  ymax = nan(1,info.nchan);
+  for chanindx = find(info.chansel)
+    dat = info.data.trial{info.trlop}(chanindx,:);
+    ymin(chanindx) = min(dat);
+    ymax(chanindx) = max(dat);
   end
-end
-% enable or disable buttons as appropriate
-if info.trlop == 1
-    set(info.ui.prev,   'Enable', 'off');
-    set(info.ui.prev10, 'Enable', 'off');
+  ymin = min(ymin);
+  ymax = max(ymax);
+  if strcmp(info.cfg.ylim, 'maxabs') % handle maxabs, make y-axis center on 0
+    ymax = max(abs(ymax), abs(ymin));
+    ymin = -ymax;
+  elseif strcmp(info.cfg.ylim, 'zeromax')
+    ymin = 0;
+  elseif strcmp(info.cfg.ylim, 'minzero')
+    ymax = 0;
+  end
 else
-    set(info.ui.prev,   'Enable', 'on');
-    set(info.ui.prev10, 'Enable', 'on');
+  ymin = info.cfg.ylim(1);
+  ymax = info.cfg.ylim(2);
+end
+end
+
+function update_plots(info)
+% Updates the trial plots after inclusion/exclusion of trials
+%
+% Input:
+% info     - info struct with all the data attched to the GUI
+
+[ymin, ymax] = get_ylim(info);
+
+% Get positions and heights
+v_centers = info.layout.pos(:, 2);
+heights   = info.layout.height;
+
+for chanindx = find(info.chansel)
+  % Shift the vertical axis to zero
+  vdat = info.data.trial{info.trlop}(chanindx, :); 
+  % Scale to length 1 of the new data
+  vdat = vdat ./ (ymax - ymin);
+  % Scale by availabe plot area
+  vdat = vdat .* heights(chanindx);
+  % Shift to the vertical position
+  vdat = vdat + v_centers(chanindx);
+  % Update
+  info.h_chan(chanindx).YData = vdat;
+end
+end
+
+function new_plots(info)
+% Updates the trial plots after channel change
+%
+% Input:
+% info - info struct with all the data attched to the GUI
+
+[ymin, ymax] = get_ylim(info);
+
+% Get positions and heights
+v_centers = info.layout.pos(:, 2);
+h_centers = info.layout.pos(:, 1);
+heights   = info.layout.height;
+widths    = info.layout.width;
+
+% Update data of ALL channels, also excluded channels
+xmin = min(info.data.time{info.trlop});
+xmax = max(info.data.time{info.trlop});
+for chanindx = 1:info.nchan
+  % Shift the horizontal axis to zero
+  hdat = info.data.time{info.trlop} - (xmin + xmax)/2;
+  % Scale to length 1 of the new data
+  hdat = hdat ./ (xmax - xmin);
+  % Scale by availabe plot area
+  hdat = hdat .* widths(chanindx);
+  % Shift to the horizontal position
+  hdat = hdat + h_centers(chanindx);
+
+  % Shift the vertical axis to zero
+  vdat = info.data.trial{info.trlop}(chanindx, :); 
+  % Scale to length 1 of the new data
+  vdat = vdat ./ (ymax - ymin);
+  % Scale by availabe plot area
+  vdat = vdat .* heights(chanindx);
+  % Shift to the vertical position
+  vdat = vdat + v_centers(chanindx);
+  % Update
+  set(info.h_chan(chanindx), {'XData', 'YData'}, {hdat, vdat});
+end
+
+% Blank excluded channels
+if info.trlsel(info.trlop) % channel is included
+  set(info.h_chan(info.chansel), 'Color', 'k');
+  set(info.h_chan(~info.chansel), 'Color', 'none');
+else % if channel is excluded blank out everything
+  set(info.h_chan, 'Color', 'none');
+end
+
+% Enable or disable buttons as appropriate
+check_buttons_status(info);
+
+% Update title
+title(description_trial(info),'interpreter','none');
+end
+
+function check_buttons_status(info)
+% Updates buttons status if required
+%
+% Input:
+% info - info struct with all the data attched to the GUI
+
+if info.trlop == 1
+  info.ui.prev.Enable   = 'off';
+  info.ui.prev10.Enable = 'off';
+else
+  info.ui.prev.Enable   = 'on';
+  info.ui.prev10.Enable = 'on';
 end
 if info.trlop == info.ntrl
-    set(info.ui.next,   'Enable', 'off');
-    set(info.ui.next10, 'Enable', 'off');
+  info.ui.next.Enable   = 'off';
+  info.ui.next10.Enable = 'off';
 else
-    set(info.ui.next,   'Enable', 'on');
-    set(info.ui.next10, 'Enable', 'on');
+  info.ui.next.Enable   = 'on';
+  info.ui.next10.Enable = 'on';
 end
-if info.ltrlop == info.trlop && info.trlop == info.ntrl
-    set(info.ui.badnext,'Enable', 'off');
-    set(info.ui.goodnext,'Enable', 'off');
+if info.trlop == info.ntrl
+  info.ui.excludenext.Enable = 'off';
+  info.ui.includenext.Enable = 'off';
 else
-    set(info.ui.badnext,'Enable', 'on');
-    set(info.ui.goodnext,'Enable', 'on');
+  info.ui.excludenext.Enable = 'on';
+  info.ui.includenext.Enable = 'on';
 end
-text(info.x, info.y, info.label);
-title(description_trial(info));
-hold off
+end

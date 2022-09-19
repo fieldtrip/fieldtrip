@@ -1,17 +1,22 @@
-function [timelock] = ft_timelocksimulation(cfg)
+function [data] = ft_timelocksimulation(cfg)
 
-% FT_TIMELOCKSIMULATION computes a simulated signal that resembles an
-% event-related potential or field
+% FT_TIMELOCKSIMULATION computes simulated data that consists of multiple trials in
+% with each trial contains an event-related potential or field. Following
+% construction of the time-locked signal in each trial by this function, the signals
+% can be passed into FT_TIMELOCKANALYSIS to obtain the average and the variance.
 %
 % Use as
-%   timelock = ft_timelockstatistics(cfg)
-% which will return a datastructure that resembles the output of
-% FT_TIMELOCKANALYSIS.
+%   [data] = ft_timelockstatistics(cfg)
+% which will return a raw data structure that resembles the output of
+% FT_PREPROCESSING.
 %
+% The number of trials and the time axes of the trials can be specified by
 %   cfg.fsample    = simulated sample frequency (default = 1000)
 %   cfg.trllen     = length of simulated trials in seconds (default = 1)
 %   cfg.numtrl     = number of simulated trials (default = 10)
 %   cfg.baseline   = number (default = 0.3)
+% or by
+%   cfg.time       = cell-array with one time axis per trial, which are for example obtained from an existing dataset
 %
 % The signal is constructed from three underlying functions. The shape is
 % controlled with
@@ -22,19 +27,17 @@ function [timelock] = ft_timelocksimulation(cfg)
 %   cfg.s3.numcycli = number (default = 4)
 %   cfg.s3.ampl     = number (default = 0.2)
 %   cfg.noise.ampl  = number (default = 0.1)
-%
 % Specifying numcycli=1 results in a monophasic signal, numcycli=2 is a biphasic,
 % etc. The three signals are scaled to the indicated amplitude, summed up and a
 % certain amount of noise is added.
 %
-% Following construction of the signal in each trial according to the
-% specification, the signals are averaged over trials. Both the average, the
-% variance and the individual trial signals are returned.
+% Other configuration options include
+%   cfg.numchan     = number (default = 5) 
 %
 % See also FT_TIMELOCKANALYSIS, FT_TIMELOCKSTATISTICS, FT_FREQSIMULATION,
 % FT_DIPOLESIMULATION, FT_CONNECTIVITYSIMULATION
 
-% Copyright (C) 2016, Robert Oostenveld
+% Copyright (C) 2016-2020, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -85,11 +88,18 @@ if ft_abort
 end
 
 % get the options
-cfg.fsample = ft_getopt(cfg, 'fsample', 1000);
-cfg.trllen  = ft_getopt(cfg, 'trllen', 1);
-cfg.numchan = ft_getopt(cfg, 'numchan', 5);
-cfg.numtrl  = ft_getopt(cfg, 'numtrl', 10);
-cfg.baseline = ft_getopt(cfg, 'baseline', 0.3);
+cfg.numchan   = ft_getopt(cfg, 'numchan', 5);
+cfg.time      = ft_getopt(cfg, 'time', []);
+if isempty(cfg.time)
+  cfg.fsample   = ft_getopt(cfg, 'fsample', 1000);
+  cfg.trllen    = ft_getopt(cfg, 'trllen', 1);
+  cfg.numtrl    = ft_getopt(cfg, 'numtrl', 10);
+  cfg.baseline  = ft_getopt(cfg, 'baseline', 0.3);
+else
+  cfg.trllen    = length(cfg.time{1});        % must be identical for all trials
+  cfg.fsample   = 1/mean(diff(cfg.time{1}));  % determine from time-axis
+  cfg.numtrl    = length(cfg.time);
+end
 
 cfg.s1 = ft_getopt(cfg, 's1');
 cfg.s2 = ft_getopt(cfg, 's2');
@@ -108,66 +118,81 @@ cfg.noise.ampl  = ft_getopt(cfg.noise, 'ampl', 0.1);
 % construct the simulated timeseries
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-nsample   = round(cfg.trllen*cfg.fsample);
-nbaseline = round(cfg.baseline*cfg.fsample);
-sel = (nbaseline+1):nsample;
+if ~isempty(cfg.time)
+  % use the user-supplied time vectors
+  timevec = cfg.time;
+else
+  % give the user some feedback
+  ft_debug('using %f as samping frequency', cfg.fsample);
+  ft_debug('using %d trials of %f seconds long', cfg.numtrl, cfg.trllen);
+  nsample = round(cfg.trllen*cfg.fsample);
+  timevec = cell(1, cfg.numtrl);
+  for iTr = 1:cfg.numtrl
+    timevec{iTr} = (((1:nsample)-1)/cfg.fsample) - cfg.baseline;
+  end
+end
 
 data = [];
 data.label = {};
 for i=1:cfg.numchan
   data.label{i} = sprintf('%d', i);
 end
-data.trial = cell(1, cfg.numtrl);
-data.time  = cell(1, cfg.numtrl);
+data.time  = timevec;
+data.trial = cell(1, numel(data.time));
 
-% start with a prototype monophasic signal
-% it will become multiphasic by taking the n-th derivative
-signal = gausswin(nsample-nbaseline, 4)';
-signal = signal .* hanning(nsample-nbaseline)';
-signal = signal-signal(1);
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% construct each of the trials
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-if ~isempty(cfg.s1)
-  signal1 = signal;
-  countdown = cfg.s1.numcycli;
-  while countdown>1
-    signal1 = gradient(signal1);
-    signal1 = signal1-signal1(1);
-    countdown = countdown - 1;
+for i=1:numel(data.time)
+  nsample   = length(data.time{i});
+  nbaseline = sum(data.time{i}<0);
+  sel       = (nbaseline+1):nsample;
+  
+  % start with a prototype monophasic signal
+  % it will become multiphasic by taking the n-th derivative
+  signal = gausswin(nsample-nbaseline, 4)';
+  signal = signal .* hanning(nsample-nbaseline)';
+  signal = signal-signal(1);
+  
+  if ~isempty(cfg.s1)
+    signal1 = signal;
+    countdown = cfg.s1.numcycli;
+    while countdown>1
+      signal1 = gradient(signal1);
+      signal1 = signal1-signal1(1);
+      countdown = countdown - 1;
+    end
+    signal1 = signal1/max(abs(signal1)) * cfg.s1.ampl;
+    % figure; plot(signal1); title('signal 1')
   end
-  signal1 = signal1/max(abs(signal1)) * cfg.s1.ampl;
-  figure; plot(signal1); title('signal 1')
-end
-
-if ~isempty(cfg.s2)
-  signal2 = signal;
-  countdown = cfg.s2.numcycli;
-  while countdown>1
-    signal2 = gradient(signal2);
-    signal2 = signal2-signal2(1);
-    countdown = countdown - 1;
+  
+  if ~isempty(cfg.s2)
+    signal2 = signal;
+    countdown = cfg.s2.numcycli;
+    while countdown>1
+      signal2 = gradient(signal2);
+      signal2 = signal2-signal2(1);
+      countdown = countdown - 1;
+    end
+    signal2 = signal2/max(abs(signal2)) * cfg.s2.ampl;
+    % figure; plot(signal2); title('signal 2')
   end
-  signal2 = signal2/max(abs(signal2)) * cfg.s2.ampl;
-  figure; plot(signal2); title('signal 2')
-end
-
-if ~isempty(cfg.s3)
-  signal3 = signal;
-  countdown = cfg.s3.numcycli;
-  while countdown>1
-    signal3 = gradient(signal3);
-    signal3 = signal3-signal3(1);
-    countdown = countdown - 1;
+  
+  if ~isempty(cfg.s3)
+    signal3 = signal;
+    countdown = cfg.s3.numcycli;
+    while countdown>1
+      signal3 = gradient(signal3);
+      signal3 = signal3-signal3(1);
+      countdown = countdown - 1;
+    end
+    signal3 = signal3/max(abs(signal3)) * cfg.s3.ampl;
+    % figure; plot(signal3); title('signal 3')
   end
-  signal3 = signal3/max(abs(signal3)) * cfg.s3.ampl;
-  figure; plot(signal3); title('signal 3')
-end
-
-% the time axis is identical for all trials
-time = (((1:nsample)-1)/cfg.fsample) - cfg.baseline;
-
-for i=1:cfg.numtrl
+  
   % start with an empty data matrix for this trial
-  dat = zeros(cfg.numchan, nsample);
+  dat = zeros(numel(data.label), nsample);
   
   for j=1:cfg.numchan
     if ~isempty(cfg.s1)
@@ -186,15 +211,8 @@ for i=1:cfg.numtrl
   end % for numchan
   
   data.trial{i} = dat;
-  data.time{i} = time;
-end % for numtrl
-
-% compute the average and variance, keep the individual trials
-tmpcfg = [];
-tmpcfg.keeptrials = 'yes';
-timelock = ft_timelockanalysis(tmpcfg, data);
-% restore the provenance information
-[cfg, timelock] = rollback_provenance(cfg, timelock);
+  data.time{i} = timevec{i};
+end % for each trial
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % do the bookkeeping at the end
@@ -202,6 +220,6 @@ timelock = ft_timelockanalysis(tmpcfg, data);
 
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble provenance timelock
-ft_postamble history    timelock
-ft_postamble savevar    timelock
+ft_postamble provenance data
+ft_postamble history    data
+ft_postamble savevar    data

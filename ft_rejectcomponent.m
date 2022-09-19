@@ -127,11 +127,7 @@ end
 
 % set the rejected component amplitudes to zero
 ft_info('removing %d components\n', length(reject));
-if ~hasdata
-  ft_info('keeping %d components\n',  ncomps-length(reject));
-else
-  ft_info('keeping %d components\n',  nchans-length(reject));
-end
+ft_info('keeping %d components\n',  ncomps-length(reject));
 
 % create a projection matrix by subtracting the subspace spanned by the
 % topographies of the to-be-removed components from identity
@@ -169,7 +165,7 @@ else
   
   keepunused = 'no'; % don't need to keep the original rejected components
   bname = 'invcomp';
-
+  
   % create the initial data structure, remove all component details
   data = keepfields(comp, {'trial', 'time', 'label', 'fsample', 'grad', 'elec', 'opto', 'trialinfo', 'sampleinfo'});
 end % if hasdata
@@ -177,63 +173,70 @@ end % if hasdata
 % apply the linear projection to the data
 data = ft_apply_montage(data, montage, 'keepunused', keepunused, 'feedback', cfg.feedback, 'showcallinfo', cfg.showcallinfo);
 
+sensfield = cell(0,1);
 if isfield(data, 'grad')
-  sensfield = 'grad';
-elseif isfield(data, 'elec')
-  sensfield = 'elec';
-elseif isfield(data, 'opto')
-  sensfield = 'opto';
-else
-  sensfield = [];
+  sensfield{end+1} = 'grad';
+end
+if isfield(data, 'elec')
+  sensfield{end+1} = 'elec';
+end
+if isfield(data, 'opto')
+  sensfield{end+1} = 'opto';
 end
 
 % apply the linear projection also to the sensor description
 if ~isempty(sensfield)
   if  strcmp(cfg.updatesens, 'yes')
-    ft_info('also applying the backprojection matrix to the %s structure\n', sensfield);
 
-    % the balance field is needed to keep the sequence of linear projections
-    if ~isfield(data.(sensfield), 'balance')
-      data.(sensfield).balance.current = 'none';
-    end
-    
-    % keepunused = 'yes' is required to get back e.g. reference or otherwise
-    % unused sensors in the sensor description. the unused components need to
-    % be removed in a second step
-    sens = ft_apply_montage(data.(sensfield), montage, 'keepunused', 'yes', 'balancename', bname, 'feedback', cfg.feedback);
-    
-    % remove the unused channels from the grad/elec/opto
-    [junk, remove]    = match_str(comp.label, sens.label);
-    sens.tra(remove,:) = [];
-    sens.label(remove) = [];
-    sens.chanpos(remove,:) = [];
-    if isfield(sens, 'chanori')
-      sens.chanori(remove,:) = [];
-    end
-    
-    % there could have been sequential subspace projections, so the
-    % invcomp-field may have been renamed into invcompX. If this it the case,
-    % take the one with the highest suffix
-    invcompfield = bname;
-    if  ~isfield(sens.balance, invcompfield)
-      for k = 10:-1:1
-        if isfield(sens.balance, [bname num2str(k)])
-          invcompfield = [invcompfield num2str(k)];
-          break;
+    for m = 1:numel(sensfield)
+      ft_info('also applying the backprojection matrix to the %s structure\n', sensfield{m});
+      
+      % the balance field is needed to keep the sequence of linear projections
+      if ~isfield(data.(sensfield{m}), 'balance')
+        data.(sensfield{m}).balance.current = 'none';
+      end
+      
+      % keepunused = 'yes' is required to get back e.g. reference or otherwise
+      % unused sensors in the sensor description. the unused components need to
+      % be removed in a second step
+      sens = ft_apply_montage(data.(sensfield{m}), montage, 'keepunused', 'yes', 'balancename', bname, 'feedback', cfg.feedback);
+      
+      % remove the unused channels from the grad/elec/opto
+      [junk, remove]    = match_str(comp.label, sens.label);
+      sens.tra(remove,:) = [];
+      sens.label(remove) = [];
+      sens.chanpos(remove,:) = [];
+      if isfield(sens, 'chanori')
+        sens.chanori(remove,:) = [];
+      end
+      
+      % there could have been sequential subspace projections, so the
+      % invcomp-field may have been renamed into invcompX. If this it the case,
+      % take the one with the highest suffix
+      invcompfield = bname;
+      if  ~isfield(sens.balance, invcompfield)
+        for k = 10:-1:1
+          if isfield(sens.balance, [bname num2str(k)])
+            invcompfield = [invcompfield num2str(k)];
+            break;
+          end
+
         end
       end
+      
+      % remove the unused components from the balancing
+      [junk, remove]    = match_str(comp.label, sens.balance.(invcompfield).labelnew);
+      sens.balance.(invcompfield).tra(remove, :)   = [];
+      sens.balance.(invcompfield).labelnew(remove) = [];
+      data.(sensfield{m})  = sens;
     end
     
-    % remove the unused components from the balancing
-    [junk, remove]    = match_str(comp.label, sens.balance.(invcompfield).labelnew);
-    sens.balance.(invcompfield).tra(remove, :)   = [];
-    sens.balance.(invcompfield).labelnew(remove) = [];
-    data.(sensfield)  = sens;
-    
   else
-    ft_info('not applying the backprojection matrix to the %s structure\n', sensfield);
-    % simply copy it over
-    comp.(sensfield) = data.(sensfield);
+    for m = 1:numel(sensfield)
+      ft_info('not applying the backprojection matrix to the %s structure\n', sensfield{m});
+      % simply copy it over
+      comp.(sensfield{m}) = data.(sensfield{m});
+    end
   end
 end % if sensfield
 

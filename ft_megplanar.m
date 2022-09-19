@@ -8,11 +8,11 @@ function [data] = ft_megplanar(cfg, data)
 % Use as
 %    [interp] = ft_megplanar(cfg, data)
 % where the input data corresponds to the output from FT_PREPROCESSING,
-% FT_TIMELOCKANALYSIS or FT_FREQANALYSIS (with output='fourierspcrm').
+% FT_TIMELOCKANALYSIS or FT_FREQANALYSIS (with output='fourier').
 %
 % The configuration should contain
 %   cfg.planarmethod   = string, can be 'sincos', 'orig', 'fitplane', 'sourceproject' (default = 'sincos')
-%   cfg.channel        =  Nx1 cell-array with selection of channels (default = 'MEG'), see FT_CHANNELSELECTION for details
+%   cfg.channel        =  Nx1 cell-array with selection of channels (default = 'all'), see FT_CHANNELSELECTION for details
 %   cfg.trials         = 'all' or a selection given as a 1xN vector (default = 'all')
 %
 % The methods orig, sincos and fitplane are all based on a neighbourhood interpolation.
@@ -26,14 +26,23 @@ function [data] = ft_megplanar(cfg, data)
 % 'sourceproject' method is not supported for frequency domain data.
 %
 % A dipole layer representing the brain surface must be specified with
-%   cfg.inwardshift = depth of the source layer relative to the head model surface (default = 2.5 cm, which is appropriate for a skin-based head model)
+%   cfg.inwardshift = depth of the source layer relative to the head model surface ,
+%                     (default = 2.5 cm, which is appropriate for a skin-based head model)
 %   cfg.spheremesh  = number of dipoles in the source layer (default = 642)
-%   cfg.pruneratio  = for singular values, default is 1e-3
+%   cfg.tolerance   = tolerance ratio for leadfield matrix inverse based on a truncated svd,
+%                     reflects the relative magnitude of the largest singular value
+%                     to retain (default = 1e-3)
 %   cfg.headshape   = a filename containing headshape, a structure containing a
 %                     single triangulated boundary, or a Nx3 matrix with surface
 %                     points
 % If no headshape is specified, the dipole layer will be based on the inner compartment
 % of the volume conduction model.
+%
+% Optionally, you can modify the leadfields by reducing the rank, i.e. remove the weakest orientation
+%   cfg.reducerank    = 'no', or number (default = 3 for EEG, 2 for MEG)
+%   cfg.backproject   = 'yes' or 'no',  determines when reducerank is applied whether the 
+%                       lower rank leadfield is projected back onto the original linear 
+%                       subspace, or not (default = 'yes')
 %
 % The volume conduction model of the head should be specified as
 %   cfg.headmodel     = structure with volume conduction model, see FT_PREPARE_HEADMODEL
@@ -51,7 +60,8 @@ function [data] = ft_megplanar(cfg, data)
 %
 % See also FT_COMBINEPLANAR, FT_PREPARE_NEIGHBOURS
 
-% Copyright (C) 2004, Robert Oostenveld
+% Copyright (C) 2004-2019, Robert Oostenveld
+% Copyright (C) 2020-      Robert Oostenveld and Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -100,12 +110,16 @@ if isfreq
   if ~isfield(data, 'fourierspctrm'), ft_error('freq data should contain Fourier spectra'); end
 end
 
-cfg = ft_checkconfig(cfg, 'renamed', {'hdmfile', 'headmodel'});
-cfg = ft_checkconfig(cfg, 'renamed', {'vol',     'headmodel'});
-cfg = ft_checkconfig(cfg, 'renamed', {'grid',    'sourcemodel'});
+% check if the input cfg is valid for this function
+cfg = ft_checkconfig(cfg, 'forbidden',  {'channels', 'trial'}); % prevent accidental typos, see issue 1729
+cfg = ft_checkconfig(cfg, 'renamed',    {'hdmfile', 'headmodel'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'vol',     'headmodel'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'grid',    'sourcemodel'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'pruneratio', 'tolerance'});
 
 % set the default configuration
-cfg.channel      = ft_getopt(cfg, 'channel',      'MEG');
+cfg.channel      = ft_getopt(cfg, 'channel',      'all');
+cfg.tolerance    = ft_getopt(cfg, 'tolerance',    1e-3);
 cfg.trials       = ft_getopt(cfg, 'trials',       'all', 1);
 cfg.planarmethod = ft_getopt(cfg, 'planarmethod', 'sincos');
 cfg.feedback     = ft_getopt(cfg, 'feedback',     'text');
@@ -116,7 +130,7 @@ cfg = ft_checkconfig(cfg, 'renamedval',  {'headshape', 'headmodel', []});
 if ~strcmp(cfg.planarmethod, 'sourceproject')
   % this is limited to reading neighbours from disk and/or selecting channels
   % the user should call FT_PREPARE_NEIGHBOURS directly for the actual construction
-  tmpcfg = keepfields(cfg, {'neighbours', 'channel', 'showcallinfo'});
+  tmpcfg = keepfields(cfg, {'neighbours', 'channel', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
   cfg.neighbours = ft_prepare_neighbours(tmpcfg);
 end
 
@@ -140,7 +154,7 @@ cfg = ft_checkconfig(cfg, 'createsubcfg', {'sourcemodel'});
 cfg = ft_checkconfig(cfg, 'createtopcfg', {'sourcemodel'});
 
 % select trials of interest
-tmpcfg = keepfields(cfg, {'trials', 'channel', 'showcallinfo'});
+tmpcfg = keepfields(cfg, {'trials', 'channel', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'}); % don't keep tolerance, it is used differently here
 data = ft_selectdata(tmpcfg, data);
 % restore the provenance information
 [cfg, data] = rollback_provenance(cfg, data);
@@ -162,33 +176,42 @@ if strcmp(cfg.planarmethod, 'sourceproject')
     ft_error('the method ''sourceproject'' is not supported for frequency data as input');
   end
   
-  Nchan   = length(data.label);
-  Ntrials = length(data.trial);
-  
-  % FT_PREPARE_VOL_SENS will match the data labels, the gradiometer labels and the
+  % PREPARE_HEADMODEL will match the data labels, the gradiometer labels and the
   % volume model labels (in case of a localspheres model) and result in a gradiometer
-  % definition that only contains the gradiometers that are present in the data.
-  [headmodel, axial.grad, cfg] = prepare_headmodel(cfg, data);
+  % definition that only contains the gradiometers that are present in the
+  % data. This should exclude the non-MEG channels, so the user-defined
+  % cfg.channel should be overruled
+  tmpcfg = cfg;
+  tmpcfg.channel = ft_channelselection('MEG', cfg.channel);
+  [headmodel, axial.grad, tmpcfg] = prepare_headmodel(tmpcfg, data);
   
+  % construct the low-level options for the leadfield computation as key-value pairs, these are passed to FT_COMPUTE_LEADFIELD
+  leadfieldopt = {};
+  leadfieldopt = ft_setopt(leadfieldopt, 'reducerank',     ft_getopt(cfg, 'reducerank'));
+  leadfieldopt = ft_setopt(leadfieldopt, 'backproject',    ft_getopt(cfg, 'backproject'));
+  leadfieldopt = ft_setopt(leadfieldopt, 'normalize',      ft_getopt(cfg, 'normalize'));
+  leadfieldopt = ft_setopt(leadfieldopt, 'normalizeparam', ft_getopt(cfg, 'normalizeparam'));
+  leadfieldopt = ft_setopt(leadfieldopt, 'weight',         ft_getopt(cfg, 'weight'));
+
   % copy all options that are potentially used in FT_PREPARE_SOURCEMODEL
-  tmpcfg           = keepfields(cfg, {'sourcemodel', 'mri', 'headshape', 'symmetry', 'smooth', 'threshold', 'spheremesh', 'inwardshift', 'xgrid' 'ygrid', 'zgrid', 'resolution', 'tight', 'warpmni', 'template', 'showcallinfo'});
+  tmpcfg           = keepfields(cfg, {'sourcemodel', 'mri', 'headshape', 'symmetry', 'smooth', 'threshold', 'spheremesh', 'inwardshift', 'xgrid' 'ygrid', 'zgrid', 'resolution', 'tight', 'warpmni', 'template', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
   tmpcfg.headmodel = headmodel;
   tmpcfg.grad      = axial.grad;
   % determine the dipole layer that represents the surface of the brain
   sourcemodel = ft_prepare_sourcemodel(tmpcfg);
   
   % compute the forward model for the axial gradiometers
-  fprintf('computing forward model for %d dipoles\n', size(sourcemodel.pos,1));
-  lfold = ft_compute_leadfield(sourcemodel.pos, axial.grad, headmodel);
+  ft_info('computing forward model for %d dipoles\n', size(sourcemodel.pos,1));
+  lfold = ft_compute_leadfield(sourcemodel.pos, axial.grad, headmodel, leadfieldopt{:});
   
   % construct the planar gradient definition and compute its forward model
   % this will not work for a localspheres model, compute_leadfield will catch
   % the error
   planar.grad = constructplanargrad([], axial.grad);
-  lfnew = ft_compute_leadfield(sourcemodel.pos, planar.grad, headmodel);
+  lfnew = ft_compute_leadfield(sourcemodel.pos, planar.grad, headmodel, leadfieldopt{:});
   
   % compute the interpolation matrix
-  transform = lfnew * prunedinv(lfold, cfg.pruneratio);
+  transform = lfnew * ft_inv(lfold, 'method', 'tsvd', 'tolerance', cfg.tolerance);
   
   planarmontage = [];
   planarmontage.tra      = transform;
@@ -210,7 +233,7 @@ if strcmp(cfg.planarmethod, 'sourceproject')
   
   %   % interpolate the data towards the planar gradiometers
   %   for i=1:Ntrials
-  %     fprintf('interpolating trial %d to planar gradiometer\n', i);
+  %     ft_info('interpolating trial %d to planar gradiometer\n', i);
   %     interp.trial{i} = transform * data.trial{i}(dataindx,:);
   %   end % for Ntrials
   %
@@ -253,8 +276,8 @@ else
   cfg.neighbours = cfg.neighbours(neighbsel);
   cfg.neighbsel = channelconnectivity(cfg);
   
-  % determine
-  fprintf('average number of neighbours is %.2f\n', mean(sum(cfg.neighbsel)));
+  assert(any(cfg.neighbsel(:)), 'no neighbours found')
+  ft_info('average number of neighbours is %.2f\n', mean(sum(cfg.neighbsel)));
   
   Ngrad = length(sens.label);
   distance = zeros(Ngrad,Ngrad);
@@ -266,8 +289,8 @@ else
     distance(j,i) = d;
   end
   
-  fprintf('minimum distance between neighbours is %6.2f %s\n', min(distance(distance~=0)), sens.unit);
-  fprintf('maximum distance between gradiometers is %6.2f %s\n', max(distance(distance~=0)), sens.unit);
+  ft_info('minimum distance between neighbours is %6.2f %s\n', min(distance(distance~=0)), sens.unit);
+  ft_info('maximum distance between gradiometers is %6.2f %s\n', max(distance(distance~=0)), sens.unit);
   
   % The following does not work when running in deployed mode because the
   % private functions that compute the planar montage are not recognized as
@@ -358,15 +381,3 @@ data = interp;
 ft_postamble provenance data
 ft_postamble history    data
 ft_postamble savevar    data
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION that computes the inverse using a pruned SVD
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [lfi] = prunedinv(lf, r)
-[u, s, v] = svd(lf);
-p = find(s<(s(1,1)*r) & s~=0);
-fprintf('pruning %d out of %d singular values\n', length(p), min(size(s)));
-s(p) = 0;
-s(find(s~=0)) = 1./s(find(s~=0));
-lfi = v * s' * u';

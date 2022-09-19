@@ -1,14 +1,199 @@
 function test_ft_channelcombination
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_channelcombination
 
 % this function tests the new implementation of ft_channelcombination
 
-load(fullfile(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/meg'),'preproc_ctf151.mat'));
-label = data.label; clear data;
+
+label = {'STIM'
+    'SCLK01'
+    'BG1'   
+    'BG2'   
+    'BG3'   
+    'BP1'   
+    'BP2'   
+    'BP3'   
+    'BQ1'   
+    'BQ2'   
+    'BQ3'   
+    'BR1'   
+    'BR2'   
+    'BR3'   
+    'G11'   
+    'G12'   
+    'G13'   
+    'G22'   
+    'G23'   
+    'P11'   
+    'P12'   
+    'P13'   
+    'P22'   
+    'P23'   
+    'Q11'   
+    'Q12'   
+    'Q13'   
+    'Q21'   
+    'Q22'   
+    'Q23'   
+    'R11'   
+    'R12'   
+    'R13'   
+    'R22'   
+    'R23'   
+    'MLC11' 
+    'MLC12' 
+    'MLC13' 
+    'MLC14' 
+    'MLC15' 
+    'MLC21' 
+    'MLC22' 
+    'MLC23' 
+    'MLC24' 
+    'MLC31' 
+    'MLC32' 
+    'MLC33' 
+    'MLC41' 
+    'MLC42' 
+    'MLC43' 
+    'MLF11' 
+    'MLF12' 
+    'MLF21' 
+    'MLF22' 
+    'MLF23' 
+    'MLF31' 
+    'MLF32' 
+    'MLF33' 
+    'MLF34' 
+    'MLF41' 
+    'MLF42' 
+    'MLF43' 
+    'MLF44' 
+    'MLF45' 
+    'MLF51' 
+    'MLF52' 
+    'MLO11' 
+    'MLO12' 
+    'MLO21' 
+    'MLO22' 
+    'MLO31' 
+    'MLO32' 
+    'MLO33' 
+    'MLO41' 
+    'MLO42' 
+    'MLO43' 
+    'MLP11' 
+    'MLP12' 
+    'MLP13' 
+    'MLP21' 
+    'MLP22' 
+    'MLP31' 
+    'MLP32' 
+    'MLP33' 
+    'MLP34' 
+    'MLT11' 
+    'MLT12' 
+    'MLT13' 
+    'MLT14' 
+    'MLT15' 
+    'MLT16' 
+    'MLT21' 
+    'MLT22' 
+    'MLT23' 
+    'MLT24' 
+    'MLT25' 
+    'MLT26' 
+    'MLT31' 
+    'MLT32' 
+    'MLT33' 
+    'MLT34' 
+    'MLT35' 
+    'MLT41' 
+    'MLT42' 
+    'MLT43' 
+    'MLT44' 
+    'MRC11' 
+    'MRC12' 
+    'MRC13' 
+    'MRC14' 
+    'MRC15' 
+    'MRC21' 
+    'MRC22' 
+    'MRC23' 
+    'MRC24' 
+    'MRC31' 
+    'MRC32' 
+    'MRC33' 
+    'MRC41' 
+    'MRC42' 
+    'MRC43' 
+    'MRF11' 
+    'MRF12' 
+    'MRF21' 
+    'MRF22' 
+    'MRF23' 
+    'MRF31' 
+    'MRF32' 
+    'MRF33' 
+    'MRF34' 
+    'MRF41' 
+    'MRF42' 
+    'MRF43' 
+    'MRF44' 
+    'MRF45' 
+    'MRF51' 
+    'MRF52' 
+    'MRO11' 
+    'MRO12' 
+    'MRO21' 
+    'MRO22' 
+    'MRO31' 
+    'MRO32' 
+    'MRO33' 
+    'MRO41' 
+    'MRO42' 
+    'MRO43' 
+    'MRP11' 
+    'MRP12' 
+    'MRP13' 
+    'MRP21' 
+    'MRP22' 
+    'MRP31' 
+    'MRP32' 
+    'MRP33' 
+    'MRP34' 
+    'MRT11' 
+    'MRT12' 
+    'MRT13' 
+    'MRT14' 
+    'MRT15' 
+    'MRT16' 
+    'MRT21' 
+    'MRT22' 
+    'MRT23' 
+    'MRT24' 
+    'MRT25' 
+    'MRT26' 
+    'MRT31' 
+    'MRT32' 
+    'MRT33' 
+    'MRT34' 
+    'MRT35' 
+    'MRT41' 
+    'MRT42' 
+    'MRT43' 
+    'MRT44' 
+    'MZC01' 
+    'MZC02' 
+    'MZF01' 
+    'MZF02' 
+    'MZF03' 
+    'MZO01' 
+    'MZO02' 
+    'MZP01' 
+    'MZP02'
+    'EOG'};
 
 x = ft_channelcombination({'all' 'all'}, label);
 y = ft_channelcombination_old({'all' 'all'}, label);
@@ -24,7 +209,12 @@ assert(isequal(x,y));
 
 x = ft_channelcombination({{'MLC12' 'MLC13'} {'MRO11' 'MRO12' 'MRO21'}}, label);
 y = ft_channelcombination_old({{'MLC12' 'MLC13'} {'MRO11' 'MRO12' 'MRO21'}}, label);
-assert(isequal(x,y));
+assert(~isequal(x,y)); % the correct behavior has changed since the update 
+% PR 1664 to ft_channelcombination.
+% the default behavior should be not to return the auto-combinations, yet
+% the old behavior in this case was to actually return the
+% auto-combinations, which is incorrect, resulting in a y of 11x2, rather
+% then a 6x2
 
 % test the new functionality
 x = ft_channelcombination({'MLT' 'MRC'}, label, 0, 0);
@@ -33,6 +223,63 @@ z = ft_channelcombination({'MLT' 'MRC'}, label, 0, 2);
 assert(isequal(x, y(:,[2 1]))); % the columns should be swapped
 assert(numel(z)==2*numel(x));
 
+lab{1,1} = {'a';'b';'c'};
+lab{2,1} = {'b';'c';'d'};
+lab{3,1} = {'d';'e'};
+
+opts1 = [0 1]; %includeauto
+opts2 = [0 1 2]; %dirflag
+
+labx{1} = [1 2 3];
+labx{2} = [2 3 4];
+labx{3} = [4 5];
+cmb     = false(5,5);
+dat = zeros(0,5);
+for k = 1:numel(lab)
+  for m = 1:numel(opts1)
+    for p = 1:numel(opts2)
+      
+      % this implements what I think should be the behavior of
+      % ft_channelcombination
+      cmb(:) = false;
+      cmb(labx{1},labx{k}) = true;
+      if opts2(p)<2
+        ix = intersect(labx{1},labx{k});
+        cmb(ix,ix) = cmb(ix,ix) & tril(ones(numel(ix)),-1)>0;
+      end
+
+      if opts2(p)==2
+        cmb(labx{k},labx{1}) = true;
+      elseif opts2(p)==1
+        cmb = cmb';
+      end
+
+      if opts1(m)==0
+        cmb = cmb & (ones(5)-eye(5))>0;
+      elseif opts1(m)==1
+        tmp = zeros(5,1);
+        tmp(union(labx{1},labx{k})) = 1;
+        cmb = cmb | diag(tmp)>0;
+      end
+      %imagesc(cmb);pause;
+
+      X{k,m,p} = ft_channelcombination({lab{1},lab{k}},union(lab{1},lab{k}), opts1(m), opts2(p));
+      
+      dat(end+1,:) = [k m p size(X{k,m,p},1) sum(cmb(:))];
+    
+      if k==1
+        % with fully overlapping lists of labels, ft_channelcombination
+        % behaves as expected
+        assert(isequal(sum(cmb(:)),size(X{k,m,p},1)));
+      elseif k==2
+        assert(isequal(sum(cmb(:)),size(X{k,m,p},1)));
+      elseif k==3
+        assert(isequal(sum(cmb(:)),size(X{k,m,p},1)));
+      end
+      
+    end
+  end
+end
 
 %%%%%%%%%%
 % Below is the old code

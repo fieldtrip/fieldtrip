@@ -13,35 +13,34 @@ function [s, cfg] = ft_statfun_actvsblT(cfg, dat, design)
 %   [stat] = ft_timelockstatistics(cfg, timelock1, timelock2, ...)
 %   [stat] = ft_freqstatistics(cfg, freq1, freq2, ...)
 %   [stat] = ft_sourcestatistics(cfg, source1, source2, ...)
-% with the following configuration option
+% with the following configuration option:
 %   cfg.statistic = 'ft_statfun_actvsblT'
 %
-% Configuration options
+% You can specify the following configuration options:
 %   cfg.computestat    = 'yes' or 'no', calculate the statistic (default='yes')
 %   cfg.computecritval = 'yes' or 'no', calculate the critical values of the test statistics (default='no')
 %   cfg.computeprob    = 'yes' or 'no', calculate the p-values (default='no')
 %
-% The following options are relevant if cfg.computecritval='yes' and/or
-% cfg.computeprob='yes'.
+% The following options are relevant if cfg.computecritval='yes' and/or cfg.computeprob='yes':
 %   cfg.alpha = critical alpha-level of the statistical test (default=0.05)
 %   cfg.tail  = -1, 0, or 1, left, two-sided, or right (default=1)
 %               cfg.tail in combination with cfg.computecritval='yes'
 %               determines whether the critical value is computed at
 %               quantile cfg.alpha (with cfg.tail=-1), at quantiles
 %               cfg.alpha/2 and (1-cfg.alpha/2) (with cfg.tail=0), or at
-%               quantile (1-cfg.alpha) (with cfg.tail=1).
+%               quantile (1-cfg.alpha) (with cfg.tail=1)
 %
-% Design specification
-%   cfg.ivar  = row number of the design that contains the labels of the conditions that must be
-%               compared (default=1). The first condition, indicated by 1, corresponds to the
-%               activation period and the second, indicated by 2, corresponds to the baseline period.
-%   cfg.uvar  = row number of design that contains the labels of the units-of-observation (subjects or trials)
-%               (default=2). The labels are assumed to be integers ranging from 1 to
-%               the number of units-of-observation.
+% The experimental design is specified as:
+%   cfg.ivar  = independent variable, row number of the design that contains the labels of the conditions to be compared (default=1)
+%   cfg.uvar  = unit variable, row number of design that contains the labels of the units-of-observation, i.e. subjects or trials (default=2)
+%
+% The first condition, indicated by 1, corresponds to the activation period and the second,
+% indicated by 2, corresponds to the baseline period. The labels for the unit of observation
+% should be integers ranging from 1 to the number of observations (subjects or trials).
 %
 % See also FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS
 
-% Copyright (C) 2006, Eric Maris
+% Copyright (C) 2006-2022, Eric Maris and Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -61,12 +60,14 @@ function [s, cfg] = ft_statfun_actvsblT(cfg, dat, design)
 %
 % $Id$
 
-% set defaults
-if ~isfield(cfg, 'computestat'),       cfg.computestat='yes';     end
-if ~isfield(cfg, 'computecritval'),    cfg.computecritval='no';   end
-if ~isfield(cfg, 'computeprob'),       cfg.computeprob='no';      end
-if ~isfield(cfg, 'alpha'),             cfg.alpha=0.05;            end
-if ~isfield(cfg, 'tail'),              cfg.tail=1;                end
+% set the defaults
+cfg.computestat    = ft_getopt(cfg, 'computestat', 'yes');
+cfg.computecritval = ft_getopt(cfg, 'computecritval', 'no');
+cfg.computeprob    = ft_getopt(cfg, 'computeprob', 'no');
+cfg.alpha          = ft_getopt(cfg, 'alpha', 0.05);
+cfg.tail           = ft_getopt(cfg, 'tail', 1);
+cfg.ivar           = ft_getopt(cfg, 'ivar', 1);
+cfg.uvar           = ft_getopt(cfg, 'uvar', 2);
 
 % perform some checks on the configuration
 if strcmp(cfg.computeprob,'yes') && strcmp(cfg.computestat,'no')
@@ -75,13 +76,18 @@ end
 
 % calculate the number of time samples
 switch cfg.dimord
+  case 'chan_time'
+    nchan = cfg.dim(1);
+    nfreq = 1;
+    ntime = cfg.dim(2);
+    [nsmpls,nrepl] = size(dat);
   case 'chan_freq_time'
     nchan = cfg.dim(1);
     nfreq = cfg.dim(2);
     ntime = cfg.dim(3);
     [nsmpls,nrepl] = size(dat);
   otherwise
-    ft_error('Inappropriate dimord for the statistics function FT_STATFUN_ACTVSBLT.');
+    ft_error('Inappropriate dimord.');
 end
 
 sel1 = find(design(cfg.ivar,:)==1);
@@ -94,7 +100,7 @@ end
 nunits = max(design(cfg.uvar,:));
 df = nunits - 1;
 if nunits<2
-  ft_error('The data must contain at least two units (trials or subjects).')
+  ft_error('The data must contain at least two units of observation (trials or subjects).')
 end
 if (nunits*2)~=(n1+n2)
   ft_error('Invalid specification of the design array.');
@@ -106,26 +112,38 @@ if strcmp(cfg.computestat,'yes')
   % for all units-of-observation.
   meanreshapeddat=nanmean(reshape(dat,nchan,nfreq,ntime,nrepl),3);
   timeavgdat=repmat(reshape(meanreshapeddat,(nchan*nfreq),nrepl),ntime,1);
-  
+
   % store the positions of the 1-labels and the 2-labels in a nunits-by-2 array
   poslabelsperunit=zeros(nunits,2);
   poslabel1=find(design(cfg.ivar,:)==1);
   poslabel2=find(design(cfg.ivar,:)==2);
-  [dum,i]=sort(design(cfg.uvar,poslabel1),'ascend');
+  [dum,i]=sort(design(cfg.uvar,poslabel1), 'ascend');
   poslabelsperunit(:,1)=poslabel1(i);
-  [dum,i]=sort(design(cfg.uvar,poslabel2),'ascend');
+  [dum,i]=sort(design(cfg.uvar,poslabel2), 'ascend');
   poslabelsperunit(:,2)=poslabel2(i);
-  
+
   % calculate the differences between the conditions
-  diffmat=dat(:,poslabelsperunit(:,1))-timeavgdat(:,poslabelsperunit(:,2));
-  
+  diffmat = dat(:,poslabelsperunit(:,1))-timeavgdat(:,poslabelsperunit(:,2));
+
+%   % calculate the dependent samples t-statistics
+%   avgdiff = nanmean(diffmat,2);
+%   vardiff = nanvar(diffmat,0,2);
+%   s.stat = sqrt(nunits)*avgdiff./sqrt(vardiff);
+
   % calculate the dependent samples t-statistics
-  avgdiff=nanmean(diffmat,2);
-  vardiff=nanvar(diffmat,0,2);
-  s.stat=sqrt(nunits)*avgdiff./sqrt(vardiff);
+  if any(isnan(diffmat(:)))
+    avgdiff = nanmean(diffmat,2);
+    vardiff = nanvar(diffmat,0,2);
+    nunits  = sum(~isnan(diffmat),2);
+    s.stat  = (sqrt(nunits).*avgdiff)./sqrt(vardiff);
+  else
+    avgdiff = mean(diffmat,2);
+    vardiff = var(diffmat,0,2);
+    s.stat  = sqrt(nunits)*avgdiff./sqrt(vardiff);
+  end
 end
 
-if strcmp(cfg.computecritval,'yes')
+if strcmp(cfg.computecritval, 'yes')
   % also compute the critical values
   s.df      = df;
   if cfg.tail==-1
@@ -137,7 +155,7 @@ if strcmp(cfg.computecritval,'yes')
   end
 end
 
-if strcmp(cfg.computeprob,'yes')
+if strcmp(cfg.computeprob, 'yes')
   % also compute the p-values
   s.df      = df;
   if cfg.tail==-1

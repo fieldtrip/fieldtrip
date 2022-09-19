@@ -39,7 +39,19 @@ function w = flattopwin (L, sym)
     end
   end % if
     
-  x = 2*pi*[0:L-1]'/divisor;
-  w = (1-1.93*cos(x)+1.29*cos(2*x)-0.388*cos(3*x)+0.0322*cos(4*x))/4.6402;
-  
+  x = 2*pi*(0:(L-1))'/divisor;
+  if L==1
+    w = 1;
+  else
+    % these coefficients come from wikipedia, and match better with what
+    % matlab outputs (JM)
+    a0 = 0.21557895;
+    a1 = 0.41663158;
+    a2 = 0.277263158;
+    a3 = 0.083578947;
+    a4 = 0.006947368;
+    w = a0 - a1*cos(x) + a2*cos(2*x) - a3*cos(3*x) + ...
+            a4*cos(4*x);
+    %w = (1-1.93*cos(x)+1.29*cos(2*x)-0.388*cos(3*x)+0.0322*cos(4*x))/4.6402;
+  end
 end

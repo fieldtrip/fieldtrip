@@ -2,7 +2,6 @@ function test_bug1514
 
 % WALLTIME 00:10:00
 % MEM 1gb
-
 % DEPENDENCY ft_spike_select ft_selectdata
 
 % the following structure corresponds to the one explained in

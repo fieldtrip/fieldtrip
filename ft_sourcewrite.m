@@ -9,10 +9,10 @@ function ft_sourcewrite(cfg, source)
 % where source is a source structure obtained from FT_SOURCEANALYSIS and
 % cfg is a structure that should contain
 %
-%  cfg.filename  = string, filename without the extension
-%  cfg.filetype  = string, can be 'nifti', 'gifti' or 'cifti' (default is automatic)
-%  cfg.parameter = string, functional parameter to be written to file
-%  cfg.precision = string, can be 'single', 'double', etc.
+%   cfg.filename  = string, filename without the extension
+%   cfg.filetype  = string, can be 'nifti', 'gifti' or 'cifti' (default is automatic)
+%   cfg.parameter = string, functional parameter to be written to file
+%   cfg.precision = string, can be 'single', 'double', etc.
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...

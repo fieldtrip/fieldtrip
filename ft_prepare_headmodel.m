@@ -27,13 +27,13 @@ function [headmodel, cfg] = ft_prepare_headmodel(cfg, data)
 % a segmented anatomical MRI that was obtained from FT_VOLUMESEGMENT.
 %
 % The cfg argument is a structure that can contain:
-%   cfg.method         string that specifies the forward solution, see below
-%   cfg.conductivity   a number or a vector containing the conductivities of the compartments
-%   cfg.tissue         a string or integer, to be used in combination with a 'seg' for the
-%                      second intput. If 'brain', 'skull', and 'scalp' are fields
-%                      present in 'seg', then cfg.tissue need not be specified, as
-%                      these are defaults, depending on cfg.method. Otherwise,
-%                      cfg.tissue should refer to which field(s) of seg should be used.
+%   cfg.method         = string that specifies the forward solution, see below
+%   cfg.conductivity   = a number or a vector containing the conductivities of the compartments
+%   cfg.tissue         = a string or integer, to be used in combination with a 'seg' for the
+%                          second intput. If 'brain', 'skull', and 'scalp' are fields
+%                          present in 'seg', then cfg.tissue need not be specified, as
+%                          these are defaults, depending on cfg.method. Otherwise,
+%                          cfg.tissue should refer to which field(s) of seg should be used.
 %
 % For EEG the following methods are available:
 %   singlesphere       analytical single sphere model
@@ -43,6 +43,7 @@ function [headmodel, cfg] = ft_prepare_headmodel(cfg, data)
 %   dipoli             boundary element method, based on the implementation from Thom Oostendorp
 %   asa                boundary element method, based on the (commercial) ASA software
 %   simbio             finite element method, based on the SimBio software
+%   duneuro            finite element method, based on duneuro software
 %   fns                finite difference method, based on the FNS software
 %   infinite           electric dipole in an infinite homogenous medium
 %   halfspace          infinite homogenous medium on one side, vacuum on the other
@@ -61,6 +62,8 @@ function [headmodel, cfg] = ft_prepare_headmodel(cfg, data)
 % BEMCP, DIPOLI, OPENMEEG
 %   cfg.tissue            see above; in combination with 'seg' input
 %   cfg.isolatedsource    (optional)
+%   cfg.tempdir           (optional)
+%   cfg.tempname          (optional)
 %
 % CONCENTRICSPHERES
 %   cfg.tissue            see above; in combination with 'seg' input
@@ -77,6 +80,12 @@ function [headmodel, cfg] = ft_prepare_headmodel(cfg, data)
 %
 % SIMBIO
 %   cfg.conductivity
+%
+% DUNEURO
+%   cfg.conductivity      An array with the conductivities must be provided. (see above)
+%   cfg.grid_filename     Alternatively,  a filename for the grid and a filename for the conductivities can be passed.
+%   cfg.tensors_filename  "
+%   cfg.duneuro_settings  (optional) Additional settings can be provided for duneuro (see http://www.duneuro.org).
 %
 % SINGLESHELL
 %   cfg.tissue            see above; in combination with 'seg' input; default options are 'brain' or 'scalp'
@@ -114,7 +123,7 @@ function [headmodel, cfg] = ft_prepare_headmodel(cfg, data)
 % FT_HEADMODEL_SIMBIO, FT_HEADMODEL_FNS, FT_HEADMODEL_HALFSPACE,
 % FT_HEADMODEL_INFINITE, FT_HEADMODEL_OPENMEEG, FT_HEADMODEL_SINGLESPHERE,
 % FT_HEADMODEL_CONCENTRICSPHERES, FT_HEADMODEL_LOCALSPHERES,
-% FT_HEADMODEL_SINGLESHELL, FT_HEADMODEL_INTERPOLATE
+% FT_HEADMODEL_SINGLESHELL, FT_HEADMODEL_INTERPOLATE, FT_HEADMODEL_DUNEURO
 
 % Copyright (C) 2011, Cristiano Micheli
 % Copyright (C) 2011-2012, Jan-Mathijs Schoffelen, Robert Oostenveld
@@ -182,21 +191,25 @@ cfg.smooth          = ft_getopt(cfg, 'smooth');
 cfg.threshold       = ft_getopt(cfg, 'threshold');
 
 % other options
-cfg.numvertices     = ft_getopt(cfg, 'numvertices');
-cfg.isolatedsource  = ft_getopt(cfg, 'isolatedsource'); % used for dipoli and openmeeg
-cfg.point           = ft_getopt(cfg, 'point');          % used for halfspace
-cfg.submethod       = ft_getopt(cfg, 'submethod');      % used for halfspace
+cfg.isolatedsource  = ft_getopt(cfg, 'isolatedsource');   % used for dipoli and openmeeg
+cfg.tempdir         = ft_getopt(cfg, 'tempdir');          % used for dipoli
+cfg.tempname        = ft_getopt(cfg, 'tempname');         % used for dipoli
+cfg.point           = ft_getopt(cfg, 'point');            % used for halfspace
+cfg.submethod       = ft_getopt(cfg, 'submethod');        % used for halfspace
 cfg.feedback        = ft_getopt(cfg, 'feedback');
 cfg.radius          = ft_getopt(cfg, 'radius');
 cfg.maxradius       = ft_getopt(cfg, 'maxradius');
 cfg.baseline        = ft_getopt(cfg, 'baseline');
 cfg.singlesphere    = ft_getopt(cfg, 'singlesphere');
-cfg.tissueval       = ft_getopt(cfg, 'tissueval');      % used for simbio
+cfg.grid_filename   = ft_getopt(cfg, 'grid_filename');    % used for duneuro
+cfg.tensors_filename= ft_getopt(cfg, 'tensors_filename'); % used for duneuro
+cfg.duneuro_settings= ft_getopt(cfg, 'duneuro_settings');
+cfg.tissueval       = ft_getopt(cfg, 'tissueval');        % used for simbio
 cfg.transform       = ft_getopt(cfg, 'transform');
-cfg.siunits         = ft_getopt(cfg, 'siunits', 'no');  % yes/no, convert the input and continue with SI units
+cfg.siunits         = ft_getopt(cfg, 'siunits', 'no');    % yes/no, convert the input and continue with SI units
 cfg.unit            = ft_getopt(cfg, 'unit');
-cfg.smooth          = ft_getopt(cfg, 'smooth');         % used for interpolate
-cfg.headmodel       = ft_getopt(cfg, 'headmodel');      % can contain CTF localspheres model
+cfg.smooth          = ft_getopt(cfg, 'smooth');           % used for interpolate
+cfg.headmodel       = ft_getopt(cfg, 'headmodel');        % can contain CTF localspheres model
 
 % the data can be passed as input arguments or can be read from disk
 hasdata = exist('data', 'var');
@@ -276,11 +289,11 @@ switch cfg.method
   case {'bemcp' 'dipoli' 'openmeeg'}
     % the low-level functions all need a mesh
     if isfield(data, 'pos') && isfield(data, 'tri')
-      if isempty(cfg.numvertices) || isequal(cfg.numvertices, arrayfun(@(x) size(x.pos, 1), data))
+      if ~isfield(cfg, 'numvertices') || isempty(cfg.numvertices) || isequal(cfg.numvertices, arrayfun(@(x) size(x.pos, 1), data))
         % copy the input data
         geometry = data;
       else
-        % retriangulate the input data
+        % retriangulate the input to the user-specified number of vertices
         tmpcfg.method = 'headshape';
         tmpcfg.headshape = data;
         tmpcfg.numvertices = cfg.numvertices;
@@ -305,7 +318,7 @@ switch cfg.method
         headmodel = ft_headmodel_bemcp(geometry, 'conductivity', cfg.conductivity);
       end
     elseif strcmp(cfg.method, 'dipoli')
-      headmodel = ft_headmodel_dipoli(geometry, 'conductivity', cfg.conductivity, 'isolatedsource', cfg.isolatedsource);
+      headmodel = ft_headmodel_dipoli(geometry, 'conductivity', cfg.conductivity, 'isolatedsource', cfg.isolatedsource, 'tempdir', cfg.tempdir, 'tempname', cfg.tempname);
     else
       headmodel = ft_headmodel_openmeeg(geometry, 'conductivity', cfg.conductivity, 'isolatedsource', cfg.isolatedsource, 'tissue', cfg.tissue);
     end
@@ -466,6 +479,14 @@ switch cfg.method
     end
     headmodel = ft_headmodel_simbio(geometry, 'conductivity', cfg.conductivity);
 
+  case {'duneuro'}
+    if input_mesh
+      geometry = data; % more serious checks of validity of the mesh occur inside ft_headmodel_duneuro
+    else
+      error('You must provide a mesh with tetrahedral or hexahedral elements, where each element has a scalar or tensor conductivity');
+    end
+    headmodel = ft_headmodel_duneuro(geometry, 'grid_filename', cfg.grid_filename, 'tensors_filename', cfg.tensors_filename,...
+      'conductivity', cfg.conductivity, 'duneuro_settings', cfg.duneuro_settings);
   case {'fns'}
     if input_seg
       data = ft_datatype_segmentation(data, 'segmentationstyle', 'indexed');

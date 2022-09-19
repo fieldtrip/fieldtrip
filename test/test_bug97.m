@@ -1,8 +1,7 @@
 function test_bug97
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_preprocessing ft_selectdata
 
 % This script tests the solution to bug 97, where selectdata is working in an
@@ -32,4 +31,3 @@ datax      = ft_preprocessing(cfg, data); % this reproduces the behavior
 
 % after adjusting selectdata
 datay      = ft_preprocessing(cfg, data);
-

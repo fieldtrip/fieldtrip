@@ -1,8 +1,7 @@
 function test_ft_senstype
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_senstype
 
 % ft_senstype can work on different input data structures. Here, use the

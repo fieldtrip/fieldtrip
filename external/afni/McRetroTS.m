@@ -13,10 +13,10 @@ function [R] = McRetroTS(varargin)
 % old arguments: (Respfile, Cardfile, VolTR, Nslices, PhysFS, ShowGraphs)
 % Version of RetroTS made for Matlab compiler
 %   No variables predefined and takes simple options on command line
-% 
+%
 % function [Opt, R, E] = RetroTS(SN)
 %    [Opt, OptR, OptE] = RetroTS(Opt)
-%This function creates slice-based regressors for regressing out 
+%This function creates slice-based regressors for regressing out
 % components of heart rate, respiration and respiration volume per time.
 %
 %  Opt is the options structure with the following fields
@@ -32,18 +32,18 @@ function [R] = McRetroTS(varargin)
 %     Prefix: Prefix of output file
 %     SliceOffset: Vector of slice acquisition time offsets.
 %                  (default is equivalent of alt+z)
-%     RVTshifts: Vector of shifts in seconds of RVT signal. 
+%     RVTshifts: Vector of shifts in seconds of RVT signal.
 %                (default is [0:5:20])
 %     RespCutoffFreq: Cut off frequency in Hz for respiratory lowpass filter
 %                     (default 3 Hz)
 %     CardCutoffFreq: Cut off frequency in Hz for cardiac lowpass filter
 %                     (default 3 Hz)
-%     ResamKernel: Resampling kernel. 
+%     ResamKernel: Resampling kernel.
 %                 (default is 'linear', see help interp1 for more options)
 %     FIROrder: Order of FIR filter. (default is 40)
 %     Quiet: 1/0  flag. (defaut is 1)
 %     Demo: 1/0 flag. (default is 0)
-%     
+%
 %Example:
 %
 %  Opt.Respfile = 'Resp_epiRT_scan_14.dat'
@@ -56,17 +56,17 @@ function [R] = McRetroTS(varargin)
 
 %Implementation Notes:
 %%%%%%%%%%%%%%%%%%%%%%
-% The script is intended as a prototype for development in C or Python 
+% The script is intended as a prototype for development in C or Python
 % The important routines are:
 %    hilbert: Easily implemented with fft and ifft
 %    interp1: A table lookup interpolation
 %    fir: Tool for designing filters (we can just take it's coefficients)
 %    filter: function to apply fir filter parameters (easy)
-%    
+%
 % All of the above can be easily implemented in C. However, I find it
 % very useful to be able to plot the various steps in the process as we
-% will undoubtedly face problems in the future. So I would vote for 
-% Python, assuming library vintage is not an issue. It looks like the 
+% will undoubtedly face problems in the future. So I would vote for
+% Python, assuming library vintage is not an issue. It looks like the
 %
 
 if (nargin < 1),
@@ -107,7 +107,7 @@ end
 Opt.Quiet = 1;
 Opt.Demo = 0;
 
-% check if this is old school 
+% check if this is old school
 %  get exactly 6 inputs that do not start with Opt.
 if(sum(~strncmp(varargin, 'Opt.', 4)) == 6)
     num_in(1:6) = 0;
@@ -125,7 +125,7 @@ if(sum(~strncmp(varargin, 'Opt.', 4)) == 6)
     Opt.Nslices = num_in(4);
     Opt.PhysFS = num_in(5);
     Opt.ShowGraphs = num_in(6);
-    
+
 %     Opt.Respfile = Respfile;
 %     Opt.Cardfile = Cardfile;
 %     if (ischar(VolTR))
@@ -138,13 +138,13 @@ if(sum(~strncmp(varargin, 'Opt.', 4)) == 6)
 %     else
 %        Opt.Nslices = Nslices
 %     end
-% 
+%
 %     if (ischar(PhysFS))
 %        Opt.PhysFS = str2num(PhysFS);
 %     else
 %        Opt.PhysFS = PhysFS;
 %     end
-% 
+%
 %     if (ischar(ShowGraphs))
 %        Opt.ShowGraphs = str2num(ShowGraphs);
 %     else

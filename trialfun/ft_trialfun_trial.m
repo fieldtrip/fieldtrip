@@ -1,16 +1,15 @@
 function [trl, event] = ft_trialfun_trial(cfg)
 
-% FT_TRIALFUN_TRIAL creates a trial definition that corresponds to the
-% events that are returned by FT_READ_EVENT with type='trial'
+% FT_TRIALFUN_TRIAL creates a trial definition that corresponds to the events that
+% are returned by FT_READ_EVENT with type='trial'
 %
-% You can use this function as follows
-%   cfg           = [];   
-%   cfg.dataset   = string, containing filename or directory
-%   cfg.trialfun  = 'ft_trialfun_trial';
-%   cfg           = definetrial(cfg);
-%   data          = preprocessing(cfg);
+% Use this function by calling
+%   [cfg] = ft_definetrial(cfg)
+% where the configuration structure should contain
+%   cfg.dataset           = string with the filename
+%   cfg.trialfun          = 'ft_trialfun_trial'
 %
-% See also FT_DEFINETRIAL, FT_PREPROCESSING
+% See also FT_DEFINETRIAL, FT_TRIALFUN_GENERAL
 
 % Copyright (C) 2012, Donders Centre for Cognitive Neuroimaging, Nijmegen, NL
 %
@@ -50,7 +49,7 @@ for i=1:length(sel)
   begsample = event(sel(i)).sample;
   endsample = begsample + event(sel(i)).duration - 1;
   offset    = event(sel(i)).offset;
-
+  
   tmpsel    = find(smp==smp(sel(i))-offset);
   tmpval    = zeros(1,0);
   for k=1:length(tmpsel)

@@ -2,7 +2,6 @@ function test_bug2585
 
 % WALLTIME 00:10:00
 % MEM 1gb
-
 % DEPENDENCY ft_componentanalysis ft_preamble_randomseed
 
 p = 5;

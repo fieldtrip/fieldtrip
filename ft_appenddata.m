@@ -97,15 +97,23 @@ try
   end
 end % try
 
+haschantype = false;
+haschanunit = false;
+for i=1:length(varargin)
+  % if one of them has chantype or chanunit, we want it for the others as well
+  haschantype = haschantype || isfield(varargin{i}, 'chantype');
+  haschanunit = haschanunit || isfield(varargin{i}, 'chanunit');
+end
+
 % ensure that the input data is valid for this function
 for i=1:length(varargin)
-  varargin{i} = ft_checkdata(varargin{i}, 'datatype', {'raw', 'raw+comp'}, 'feedback', 'no', 'hassampleinfo', cfg.keepsampleinfo);
+  varargin{i} = ft_checkdata(varargin{i}, 'datatype', {'raw', 'raw+comp'}, 'feedback', 'no', 'haschantype', haschantype, 'haschanunit', haschanunit, 'hassampleinfo', cfg.keepsampleinfo);
 end
 
 % set the defaults
 cfg.appendsens = ft_getopt(cfg, 'appendsens', 'no');
 cfg.appenddim  = ft_getopt(cfg, 'appenddim', []);
-cfg.tolerance  = ft_getopt(cfg, 'tolerance', 1e-5);
+cfg.tolerance  = ft_getopt(cfg, 'tolerance', 1e-5); % this is passed to append_common, which passes it to ft_selectdata
 
 isequaltime  = true;
 isequallabel = true;
@@ -135,9 +143,14 @@ ft_info('concatenating over the "%s" dimension\n', cfg.appenddim);
 % possible to concatenate raw and comp data. Note that in append_common the
 % topo etc. is removed anyhow, when appenddim = 'chan'
 dummy = cell(size(varargin));
+hastopo     = false;
+hasunmixing = false;
 for i=1:numel(varargin)
-  dummy{i} = removefields(varargin{i}, {'trial', 'time'});
+  dummy{i}    = removefields(varargin{i}, {'trial', 'time'});
+  hastopo     = isfield(dummy{i}, 'topo');
+  hasunmixing = isfield(dummy{i}, 'unmixing'); 
   if strcmp(cfg.appenddim, 'chan')
+    % this avoids a bunch of confusing warnings in append_common
     dummy{i} = removefields(dummy{i}, {'topo', 'unmixing', 'topolabel'});
   end
   % add a dummy data field, this causes the datatype to become 'chan'
@@ -159,15 +172,63 @@ switch cfg.appenddim
       ntrl = length(varargin{1}.trial);
       dat = varargin{1}.trial;
       lab = varargin{1}.label(:);
+      if hastopo && isfield(varargin{1}, 'topo')
+        topo    = varargin{1}.topo;
+        topolab = varargin{1}.topolabel(:);
+      else
+        topo    = eye(numel(varargin{1}.label));
+        topolab = varargin{1}.label(:);
+      end
+      if hasunmixing && isfield(varargin{1}, 'unmixing')
+        unmixing = varargin{1}.unmixing;
+      else
+        unmixing = eye(numel(varargin{1}.label));
+      end
+      
       for i=2:numel(varargin)
         for j=1:ntrl
           dat{j} = cat(1, dat{j}, varargin{i}.trial{j});
         end
         lab = cat(1, lab, varargin{i}.label(:));
+        
+        if hastopo && isfield(varargin{i}, 'topo')
+          topo    = blkdiag(topo, varargin{i}.topo);
+          topolab = cat(1, topolab, varargin{i}.topolabel); 
+        else
+          topo    = blkdiag(topo, eye(numel(varargin{i}.label)));
+          topolab = cat(1, topolab, varargin{i}.label(:));
+        end
+        if hasunmixing && isfield(varargin{i}, 'unmixing')
+          unmixing = blkdiag(unmixing, varargin{i}.unmixing);
+        else
+          unmixing = blkdiag(unmixing, eye(numel(varargin{i}.label)));
+        end
+        
       end
+      data.label = lab; % replace the one from append_common
       data.trial = dat;
       data.time  = varargin{1}.time;
-      data.label = lab; % replace the one from append_common
+      if haschantype
+        chantype = varargin{1}.chantype(:);
+        for i=2:numel(varargin)
+          chantype = cat(1, chantype, varargin{i}.chantype(:));
+        end
+        data.chantype = chantype;
+      end
+      if haschanunit
+        chanunit = varargin{1}.chanunit(:);
+        for i=2:numel(varargin)
+          chanunit = cat(1, chanunit, varargin{i}.chanunit(:));
+        end
+        data.chanunit = chanunit;
+      end
+      
+      if isfield(varargin{1}, 'topodimord'),     data.topodimord     = varargin{1}.topodimord;     end
+      if isfield(varargin{1}, 'unmixingdimord'), data.unmixingdimord = varargin{1}.unmixingdimord; end
+      if hastopo,     data.topo      = topo;    end
+      if hastopo,     data.topolabel = topolab; end
+      if hasunmixing, data.unmixing  = unmixing; end 
+      
     else
       ft_error('data has different time, cannot append over channels');
     end

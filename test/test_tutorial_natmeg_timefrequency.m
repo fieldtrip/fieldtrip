@@ -2,6 +2,7 @@ function test_tutorial_natmeg_timefrequency
 
 % WALLTIME 00:30:00
 % MEM 4gb
+% DEPENDENCY
 
 % this script executes the MATLAB content from
 % http://www.fieldtriptoolbox.org/tutorial/natmeg/timefrequency
@@ -11,7 +12,7 @@ function test_tutorial_natmeg_timefrequency
 clear all
 close all
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/natmeg'));
+cd(dccnpath('/home/common/matlab/fieldtrip/data/ftp/workshop/natmeg'));
 
 cfg = [];
 cfg.dataset = 'oddball1_mc_downsampled.fif';

@@ -27,7 +27,7 @@ function [nearest, distance] = find_nearest(pnt1, pnt2, npart, gridflag)
 %
 % $Id$
 
-% this can be used for printing detailled user feedback
+% this can be used for printing detailed user feedback
 fb = false;
 
 if nargin<4
@@ -74,7 +74,7 @@ while ~isempty(sel)
   [pnear, pdist] = find_nearest_partition(pnt1(sel,:), pnt2, npart);
   better = pdist<=distance(sel);
   nearest(sel(better)) = pnear(better);
-  distance(sel(better)) = distance(better);
+  distance(sel(better)) = pdist(better);
   sel = find(nearest<0);
   npart = floor(npart/2);
 end
@@ -82,7 +82,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [nearest, distance] = find_nearest_partition(pnt1, pnt2, npart)
 
-% this can be used for printing detailled user feedback
+% this can be used for printing detailed user feedback
 fb = false;
 
 if isempty(fb)
@@ -100,10 +100,10 @@ if npnt1==0
   return
 end
 
-minpnt1 = min(pnt1,1);
-minpnt2 = min(pnt2,1);
-maxpnt1 = max(pnt1,1);
-maxpnt2 = max(pnt2,1);
+minpnt1 = min(pnt1,[],1);
+minpnt2 = min(pnt2,[],1);
+maxpnt1 = max(pnt1,[],1);
+maxpnt2 = max(pnt2,[],1);
 pmin = min([minpnt1; minpnt2]) - eps;
 pmax = max([maxpnt1; maxpnt2]) + eps;
 dx = (pmax(1)-pmin(1))/npart;
@@ -147,11 +147,11 @@ for p=1:(npart^3)
   seln = true(nsel1, 1);
   if npart>1
     if partlim(p,1)>pmin(1), seln = seln & (pdist < (pnt1s(:,1) - partlim(p,1))); end
-    if partlim(p,1)>pmin(2), seln = seln & (pdist < (pnt1s(:,2) - partlim(p,2))); end
-    if partlim(p,1)>pmin(3), seln = seln & (pdist < (pnt1s(:,3) - partlim(p,3))); end
+    if partlim(p,2)>pmin(2), seln = seln & (pdist < (pnt1s(:,2) - partlim(p,2))); end
+    if partlim(p,3)>pmin(3), seln = seln & (pdist < (pnt1s(:,3) - partlim(p,3))); end
     if partlim(p,1)<pmin(1), seln = seln & (pdist < (partlim(p,1)) + dx - pnt1s(:,1)); end
-    if partlim(p,2)<pmin(2), seln = seln & (pdist < (partlim(p,2)) + dx - pnt1s(:,2)); end
-    if partlim(p,3)<pmin(3), seln = seln & (pdist < (partlim(p,3)) + dx - pnt1s(:,3)); end
+    if partlim(p,2)<pmin(2), seln = seln & (pdist < (partlim(p,2)) + dy - pnt1s(:,2)); end
+    if partlim(p,3)<pmin(3), seln = seln & (pdist < (partlim(p,3)) + dz - pnt1s(:,3)); end
   end
 
   % the results have to be re-indexed
@@ -162,7 +162,7 @@ for p=1:(npart^3)
   distance(dum1)       = pdist;
 end
 
-% handle the points that ly in empty target partitions
+% handle the points that lie in empty target partitions
 sel = (nearest==0);
 if any(sel)
   if fb, fprintf('%d points in empty target partition\n', sum(sel)); end

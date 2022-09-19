@@ -2,7 +2,6 @@ function test_bug1408
 
 % MEM 4gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_preprocessing preproc ft_preproc_bandpassfilter ft_preproc_bandstopfilter ft_preproc_dftfilter ft_preproc_highpassfilter ft_preproc_lowpassfilter
 
 nchans   = 200;

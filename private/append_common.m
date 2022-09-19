@@ -89,12 +89,13 @@ switch cfg.appenddim
     end
     
     % determine the union of all input data
-    tmpcfg = keepfields(cfg, {'tolerance', 'channel', 'showcallinfo'});
+    tmpcfg = keepfields(cfg, {'tolerance', 'channel', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
     tmpcfg.select = 'union';
     [varargin{:}] = ft_selectdata(tmpcfg, varargin{:});
     for i=1:numel(varargin)
-      [cfg, varargin{i}] = rollback_provenance(cfg, varargin{i});
+      [cfg_rolledback, varargin{i}] = rollback_provenance(cfg, varargin{i});
     end
+    cfg = cfg_rolledback;
     
     % start with the union of all input data
     data = keepfields(varargin{1}, {'label', 'time', 'freq', 'dimord'});
@@ -130,15 +131,15 @@ switch cfg.appenddim
             chansel = match_str(varargin{j}.label, oldlabel{j});
             data.(cfg.parameter{i})(:,chansel,chansel) = varargin{j}.(cfg.parameter{i})(:,chansel,chansel);
           end
-          
-        case {'chan' 'chan_time' 'chan_freq'}
+           
+        case {'chan' 'chan_time' 'chan_freq' 'chan_freq_time'}
           data.(cfg.parameter{i}) = nan(dimsiz);
           for j=1:numel(varargin)
             chansel = match_str(varargin{j}.label, oldlabel{j});
-            data.(cfg.parameter{i})(chansel,:) = varargin{j}.(cfg.parameter{i})(chansel,:);
+            data.(cfg.parameter{i})(chansel,:,:) = varargin{j}.(cfg.parameter{i})(chansel,:,:);
           end
           
-        case {'rpt_chan_time' 'subj_chan_time' 'rpt_chan_freq' 'subj_chan_freq'}
+        case {'rpt_chan_time' 'subj_chan_time' 'rpt_chan_freq' 'rpttap_chan_freq' 'subj_chan_freq'}
           data.(cfg.parameter{i}) = nan(dimsiz);
           for j=1:numel(varargin)
             chansel = match_str(varargin{j}.label, oldlabel{j});
@@ -175,7 +176,7 @@ switch cfg.appenddim
     end
     
     % determine the union of all input data
-    tmpcfg = keepfields(cfg, {'tolerance', 'channel', 'showcallinfo'});
+    tmpcfg = keepfields(cfg, {'tolerance', 'channel', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
     tmpcfg.select = 'union';
     [varargin{:}] = ft_selectdata(tmpcfg, varargin{:});
     for i=1:numel(varargin)
@@ -258,7 +259,7 @@ switch cfg.appenddim
   case 'rpt'
     
     % determine the intersection of all input data
-    tmpcfg = keepfields(cfg, {'tolerance', 'channel', 'showcallinfo'});
+    tmpcfg = keepfields(cfg, {'tolerance', 'channel', 'channelcmb', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
     tmpcfg.select = 'intersect';
     [varargin{:}] = ft_selectdata(tmpcfg, varargin{:});
     for i=1:numel(varargin)
@@ -266,10 +267,10 @@ switch cfg.appenddim
     end
     
     % start with the intersection of all input data
-    data = keepfields(varargin{1}, {'label', 'time', 'freq', 'dimord', 'topo', 'unmixing', 'topolabel'});
+    data = keepfields(varargin{1}, {'label', 'time', 'freq', 'dimord', 'topo', 'unmixing', 'topolabel', 'labelcmb'});
     if numel(cfg.parameter)>0
       % this check should not be done if there is no data to append, this happens when called from ft_appenddata
-      assert(numel(data.label)>0);
+      assert((isfield(data, 'label') && numel(data.label)>0) || (isfield(data, 'labelcmb') && size(data.labelcmb,1)>0));
     end
     if hastime, assert(numel(data.time)>0); end
     if hasfreq, assert(numel(data.freq)>0); end
@@ -283,7 +284,7 @@ switch cfg.appenddim
     for i=1:numel(cfg.parameter)
       dimsiz = getdimsiz(varargin{1}, cfg.parameter{i});
       switch getdimord(varargin{1}, cfg.parameter{i})
-        case {'chan' 'chan_time' 'chan_freq' 'chan_chan' 'chan_freq_time' 'chan_chan_freq' 'chan_chan_time' 'chan_chan_freq_time'}
+        case {'chan' 'chan_time' 'chan_freq' 'chan_chan' 'chan_freq_time' 'chan_chan_freq' 'chan_chan_time' 'chan_chan_freq_time' 'chancmb' 'chancmb_time' 'chancmb_freq' 'chancmb_freq_time'}
           dat = cell(size(varargin));
           for j=1:numel(varargin)
             % add a singleton dimension to the beginning
@@ -331,19 +332,20 @@ if hasgrad || haselec || hasopto
       opto{j} = varargin{j}.opto;
     end
   end
-  % see test_pull393.m for a description of the expected behavior
+  % see TEST_PULL393 for a description of the expected behavior
   if strcmp(cfg.appendsens, 'yes')
-    fprintf('concatenating sensor information across input arguments\n');
+    ft_notice('concatenating sensor information across input arguments\n');
     % append the sensor descriptions, skip the empty ones
     if hasgrad, data.grad = ft_appendsens([], grad{~cellfun(@isempty, grad)}); end
     if haselec, data.elec = ft_appendsens([], elec{~cellfun(@isempty, elec)}); end
     if hasopto, data.opto = ft_appendsens([], opto{~cellfun(@isempty, opto)}); end
   else
-    % discard sensor information when it is inconsistent across the input arguments
+    % discard sensor information when any of the input arguments does not have it
     removegrad = any(cellfun(@isempty, grad));
     removeelec = any(cellfun(@isempty, elec));
     removeopto = any(cellfun(@isempty, opto));
     for j=2:length(varargin)
+      % discard sensor information when it is inconsistent across the input arguments
       removegrad = removegrad || ~isequaln(grad{j}, grad{1});
       removeelec = removeelec || ~isequaln(elec{j}, elec{1});
       removeopto = removeopto || ~isequaln(opto{j}, opto{1});
@@ -351,5 +353,8 @@ if hasgrad || haselec || hasopto
     if hasgrad && ~removegrad, data.grad = grad{1}; end
     if haselec && ~removeelec, data.elec = elec{1}; end
     if hasopto && ~removeopto, data.opto = opto{1}; end
+    if hasgrad && removegrad, ft_notice('discarding inconsistent grad structure\n'); end
+    if haselec && removeelec, ft_notice('discarding inconsistent elec structure\n'); end
+    if hasopto && removeopto, ft_notice('discarding inconsistent opto structure\n'); end
   end
 end

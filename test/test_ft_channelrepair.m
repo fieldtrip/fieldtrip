@@ -2,7 +2,6 @@ function test_ft_channelrepair
 
 % MEM 3gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_channelrepair ft_datatype_sens fixsens ft_prepare_neighbours
 
 datainfo = ref_datasets;
@@ -23,6 +22,23 @@ cfg = [];
 cfg.badchannel = data.label(100);
 cfg.neighbours = neighbours;
 newdata = ft_channelrepair(cfg, data);
+
+% now, also check whether an absent sensor array description works, as per
+% issue 1774 it doesn't
+try
+  newdata = ft_channelrepair(cfg, removefields(data, {'elec', 'grad'}));
+catch
+  fprintf('running a ''weighted'' interpolation without sensor info does not work\n');
+end
+cfg.method = 'average';
+newdata = ft_channelrepair(cfg, removefields(data, {'elec', 'grad'}));
+
+% rumour has it, that this should work: it indeed did at some point, but
+% shouldn't work. This has been changed by an explicit call to
+% ft_checkconfig
+% cfg.method = 'weighted';
+% cfg.layout = '4D248_helmet.mat';
+% newdata   = ft_channelrepair(cfg, removefields(data, {'elec', 'grad'}));
 
 % % do the EEG processing: this does not work, because there's no example EEG data
 % with sensor positions 
@@ -47,6 +63,7 @@ load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug941.mat'));
 
 % treat as a bad channel
 data_eeg_clean.elec = elec_new;
+
 cfg = [];
 cfg.badchannel = {'25'};
 cfg.neighbours = neighbours;

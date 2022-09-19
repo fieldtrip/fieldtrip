@@ -41,7 +41,7 @@ if ~isfield(cfg, 'headerfile')
 end
 
 if ~isempty(cfg.dataset)
-  if strcmp(cfg.dataset, 'gui');
+  if strcmp(cfg.dataset, 'gui')
     d = uigetdir;
     if d==0
       [f, p] = uigetfile;
@@ -53,8 +53,6 @@ if ~isempty(cfg.dataset)
     end
     cfg.dataset = d;
   end
-  
-    
   
   switch ft_filetype(cfg.dataset)
     case 'ctf_ds'
@@ -78,15 +76,21 @@ if ~isempty(cfg.dataset)
       [path, file, ext] = fileparts(cfg.dataset);
       cfg.headerfile = fullfile(path, [file '.vhdr']);
       cfg.datafile   = fullfile(path, [file '.seg']);
+    case {'physionet_dat', 'physionet_hea'}
+      [path, file, ext] = fileparts(cfg.dataset);
+      cfg.headerfile = fullfile(path, [file '.hea']);
+      cfg.datafile   = fullfile(path, [file '.dat']);
     otherwise
       % convert dataset into filenames, assume that the header and data are the same
       cfg.datafile   = cfg.dataset;
       cfg.headerfile = cfg.dataset;
   end
-elseif ~isempty(cfg.datafile) && isempty(cfg.headerfile);
+  
+elseif ~isempty(cfg.datafile) && isempty(cfg.headerfile)
   % assume that  the datafile also contains the header
   cfg.headerfile = cfg.datafile;
-elseif isempty(cfg.datafile) && ~isempty(cfg.headerfile);
+
+elseif isempty(cfg.datafile) && ~isempty(cfg.headerfile)
   % assume that  the headerfile also contains the data
   cfg.datafile = cfg.headerfile;
 end

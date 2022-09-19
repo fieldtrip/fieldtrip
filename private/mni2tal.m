@@ -7,9 +7,6 @@ function outpoints = mni2tal(inpoints)
 % outpoints is the coordinate matrix with Talairach points
 % Matthew Brett 10/8/99
 
-% ensure that SPM is available, needed for spm_matrix
-hasspm = ft_hastoolbox('spm8up', 3) || ft_hastoolbox('spm2', 1);
-
 dimdim = find(size(inpoints) == 3);
 if isempty(dimdim)
   ft_error('input must be a N by 3 or 3 by N matrix')
@@ -19,8 +16,19 @@ if dimdim == 2
 end
 
 % Transformation matrices, different zooms above/below AC
-upT   = spm_matrix([0 0 0 0.05 0 0 0.99 0.97 0.92]);
-downT = spm_matrix([0 0 0 0.05 0 0 0.99 0.97 0.84]);
+upT = [
+    0.9900    0.0000    0.0000    0.0000
+    0.0000    0.9688    0.0460    0.0000
+    0.0000   -0.0485    0.9189    0.0000
+    0.0000    0.0000    0.0000    1.0000
+      ];
+
+downT = [
+    0.9900    0.0000    0.0000    0.0000
+    0.0000    0.9688    0.0420    0.0000
+    0.0000   -0.0485    0.8390    0.0000
+    0.0000    0.0000    0.0000    1.0000
+    ];
 
 tmp = inpoints(3,:)<0;  % 1 if below AC
 inpoints = [inpoints; ones(1, size(inpoints, 2))];
@@ -30,7 +38,4 @@ outpoints = inpoints(1:3, :);
 if dimdim == 2
   outpoints = outpoints';
 end
-
-
-
 

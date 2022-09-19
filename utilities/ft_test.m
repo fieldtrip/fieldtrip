@@ -80,7 +80,7 @@ function [result] = ft_test(varargin)
 %
 % See also FT_VERSION
 
-% Copyright (C) 2016-2019, Robert oostenveld
+% Copyright (C) 2016-2019, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/donders/fieldtrip
 % for the documentation and details.

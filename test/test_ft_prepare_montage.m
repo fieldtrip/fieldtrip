@@ -2,6 +2,7 @@ function test_ft_prepare_montage
 
 % WALLTIME 00:10:00
 % MEM 2gb
+% DEPENDENCY
 
 %%
 
@@ -94,4 +95,33 @@ cfg.montage = montage;
 data4b = ft_preprocessing(cfg, comp);
 % FIXME I would expect the output not to contain topo/unmixing/topolabel
 
+%%
+
+fsample = 1000;
+ntrial = 20;
+nsample = 1000;
+
+data1020 = [];
+data1020.label = ft_senslabel('eeg1020');
+
+nchan = length(data1020.label);
+
+for i=1:ntrial
+  data1020.time{i}  = (1:nsample)./fsample;
+  data1020.trial{i} = randn(nchan, nsample);
+end
+
+cfg = [];
+cfg.reref = 'yes';
+cfg.refmethod = 'doublebanana';
+data1020_doublebanana = ft_preprocessing(cfg, data1020);
+
+cfg.refmethod = 'longitudinal';
+data1020_longitudinal = ft_preprocessing(cfg, data1020);
+
+cfg.refmethod = 'transverse';
+data1020_transverse = ft_preprocessing(cfg, data1020);
+
+cfg.refmethod = 'circumferential';
+data1020_circumferential = ft_preprocessing(cfg, data1020);
 

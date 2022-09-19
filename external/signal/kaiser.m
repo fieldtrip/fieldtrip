@@ -51,7 +51,11 @@ else
   m = L - 1;
   k = (0 : m)';
   k = 2 * beta / m * sqrt (k .* (m - k));
-  w = besseli (0, k) / besseli (0, beta);
+  if m==0
+    w = 1;
+  else
+    w = besseli (0, k) / besseli (0, beta);
+  end
 end % if
 
 end

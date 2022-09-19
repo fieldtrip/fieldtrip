@@ -1,8 +1,7 @@
 function test_bug367
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_megrealign ft_read_sens ft_dipolesimulation ft_timelockanalysis ft_multiplotER
 
 % this test script is for http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=367
@@ -66,5 +65,3 @@ title('Interpolated from 151 to 151');
 cfg = [];
 figure; ft_multiplotER(cfg, avg151, avg151_151, avg275_151);
 figure; ft_multiplotER(cfg, avg275, avg275_275, avg151_275);
-
-

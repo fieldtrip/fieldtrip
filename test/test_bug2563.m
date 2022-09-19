@@ -1,5 +1,4 @@
 function test_bug2563
-
 % DEPENDENCY ft_selectdata getdimord
 
 % WALLTIME 00:10:00

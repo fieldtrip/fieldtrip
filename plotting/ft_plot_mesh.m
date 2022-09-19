@@ -1,9 +1,10 @@
 function [hs] = ft_plot_mesh(mesh, varargin)
 
-% FT_PLOT_MESH visualizes a surface or volumetric mesh, for example describing the
-% realistic shape of the head. Surface meshes should be described by triangles and
-% contain the fields "pos" and "tri". Volumetric meshes should be described with
-% tetraheders or hexaheders and have the fields "pos" and "tet" or "hex".
+% FT_PLOT_MESH visualizes a surface or volumetric mesh, for example with the cortical
+% folding of the brain, or the scalp surface of the head. Surface meshes are
+% described by triangles and consist of a structure with the fields "pos" and "tri".
+% Volumetric meshes are described with tetraheders or hexaheders and have the fields
+% "pos" and "tet" or "hex".
 %
 % Use as
 %   ft_plot_mesh(mesh, ...)
@@ -22,8 +23,9 @@ function [hs] = ft_plot_mesh(mesh, varargin)
 %   'vertexmarker' = character, e.g. '.', 'o' or 'x' (default = '.')
 %   'vertexsize'   = scalar or vector with the size for each vertex (default = 10)
 %   'unit'         = string, convert to the specified geometrical units (default = [])
+%   'axes'          = boolean, whether to plot the axes of the 3D coordinate system (default = false)
 %   'maskstyle',   = 'opacity' or 'colormix', if the latter is specified, opacity masked color values
-%                    are converted (in combination with a background color) to rgb. This bypasses
+%                    are converted (in combination with a background color) to RGB. This bypasses
 %                    openGL functionality, which behaves unpredictably on some platforms (e.g. when
 %                    using software opengl)
 %
@@ -39,13 +41,13 @@ function [hs] = ft_plot_mesh(mesh, varargin)
 % You can plot an additional contour around specified areas using
 %   'contour'           = inside of contour per vertex, either 0 or 1
 %   'contourcolor'      = string, color specification
-%   'contourlinestyle'  = string, line specification 
+%   'contourlinestyle'  = string, line specification
 %   'contourlinewidth'  = number
 %
 % See also FT_PLOT_HEADSHAPE, FT_PLOT_HEADMODEL, TRIMESH, PATCH
 
 % Copyright (C) 2009, Cristiano Micheli
-% Copyright (C) 2009-2015, Robert Oostenveld
+% Copyright (C) 2009-2022, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -64,8 +66,6 @@ function [hs] = ft_plot_mesh(mesh, varargin)
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
 % $Id$
-
-ws = ft_warning('on', 'MATLAB:divideByZero');
 
 % rename pnt into pos
 mesh = fixpos(mesh);
@@ -93,23 +93,24 @@ else
   facecolor    = ft_getopt(varargin, 'facecolor',   'white');
   edgecolor    = ft_getopt(varargin, 'edgecolor',   'k');
 end
-faceindex    = ft_getopt(varargin, 'faceindex',   false);
-vertexindex  = ft_getopt(varargin, 'vertexindex', false);
-vertexsize   = ft_getopt(varargin, 'vertexsize',  10);
-vertexmarker = ft_getopt(varargin, 'vertexmarker', '.');
-facealpha    = ft_getopt(varargin, 'facealpha',   1);
-edgealpha    = ft_getopt(varargin, 'edgealpha',   1);
+faceindex     = ft_getopt(varargin, 'faceindex',   false);
+vertexindex   = ft_getopt(varargin, 'vertexindex', false);
+vertexsize    = ft_getopt(varargin, 'vertexsize',  10);
+vertexmarker  = ft_getopt(varargin, 'vertexmarker', '.');
+facealpha     = ft_getopt(varargin, 'facealpha',   1);
+edgealpha     = ft_getopt(varargin, 'edgealpha',   1);
 edgelinewidth = ft_getopt(varargin, 'edgelinewidth', .5);
-material_    = ft_getopt(varargin, 'material');
-tag          = ft_getopt(varargin, 'tag',         '');
-surfaceonly  = ft_getopt(varargin, 'surfaceonly');  % default is handled below
-unit         = ft_getopt(varargin, 'unit');
-clim         = ft_getopt(varargin, 'clim');
-alphalim     = ft_getopt(varargin, 'alphalim');
-alphamapping = ft_getopt(varargin, 'alphamap', 'rampup');
-cmap         = ft_getopt(varargin, 'colormap');
-maskstyle    = ft_getopt(varargin, 'maskstyle', 'opacity');
-contour      = ft_getopt(varargin, 'contour',   []);
+material_     = ft_getopt(varargin, 'material');        % note the underscore, there is also a material function
+tag           = ft_getopt(varargin, 'tag',         '');
+surfaceonly   = ft_getopt(varargin, 'surfaceonly');     % default is handled below
+unit          = ft_getopt(varargin, 'unit');
+axes_         = ft_getopt(varargin, 'axes', false);     % do not confuse with built-in function
+clim          = ft_getopt(varargin, 'clim');
+alphalim      = ft_getopt(varargin, 'alphalim');
+alphamapping  = ft_getopt(varargin, 'alphamap', 'rampup');
+cmap          = ft_getopt(varargin, 'colormap');
+maskstyle     = ft_getopt(varargin, 'maskstyle', 'opacity');
+contour       = ft_getopt(varargin, 'contour',   []);
 
 contourcolor      = ft_getopt(varargin, 'contourcolor',     'k');
 contourlinewidth  = ft_getopt(varargin, 'contourlinewidth', 3);
@@ -120,17 +121,19 @@ hastri   = isfield(mesh, 'tri');   % triangles   as a Mx3 matrix with vertex ind
 hastet   = isfield(mesh, 'tet');   % tetraheders as a Mx4 matrix with vertex indices
 hashex   = isfield(mesh, 'hex');   % hexaheders  as a Mx8 matrix with vertex indices
 hasline  = isfield(mesh, 'line');  % line segments in 3-D
-haspoly  = isfield(mesh, 'poly');  % polynomial surfaces in 3-D
+haspoly  = isfield(mesh, 'poly');  % polygons describing a surface in 3-D
 hascolor = isfield(mesh, 'color'); % color code for vertices
 
-if hastet && isempty(surfaceonly)
-  ft_warning('only visualizing the outer surface of the tetrahedral mesh, see the "surfaceonly" option')
-  surfaceonly = true;
-elseif hashex && isempty(surfaceonly)
-  ft_warning('only visualizing the outer surface of the hexahedral mesh, see the "surfaceonly" option')
-  surfaceonly = true;
-else
-  surfaceonly = false;
+if isempty(surfaceonly)
+  if hastet
+    ft_warning('only visualizing the outer surface of the tetrahedral mesh, see the "surfaceonly" option')
+    surfaceonly = true;
+  elseif hashex
+    ft_warning('only visualizing the outer surface of the hexahedral mesh, see the "surfaceonly" option')
+    surfaceonly = true;
+  else
+    surfaceonly = false;
+  end
 end
 
 if ~isempty(unit)
@@ -143,6 +146,7 @@ if surfaceonly
   hastri   = isfield(mesh, 'tri');  % triangles   as a Mx3 matrix with vertex indices
   hastet   = isfield(mesh, 'tet');  % tetraheders as a Mx4 matrix with vertex indices
   hashex   = isfield(mesh, 'hex');  % hexaheders  as a Mx8 matrix with vertex indices
+  haspoly  = isfield(mesh, 'poly'); % polygons
 end
 
 % convert string into boolean values
@@ -172,24 +176,32 @@ end
 
 % color management
 if ischar(vertexcolor) && exist([vertexcolor '.m'], 'file')
-  vertexcolor = eval(vertexcolor);
+  vertexcolor = feval(vertexcolor);
+elseif ischar(vertexcolor) && ismember(vertexcolor, htmlcolors)
+  vertexcolor = htmlcolors(vertexcolor);
 elseif ischar(vertexcolor) && isequal(vertexcolor, 'curv') % default of ft_sourceplot method surface
   if isfield(mesh, 'curv')
-    cortex_light = eval('cortex_light');
-    cortex_dark  = eval('cortex_dark');
+    cortex_light = feval('cortex_light');
+    cortex_dark  = feval('cortex_dark');
     % the curvature determines the color of gyri and sulci
     vertexcolor = mesh.curv(:) * cortex_dark + (1-mesh.curv(:)) * cortex_light;
   else
-    cortex_light = eval('cortex_light');
+    cortex_light = feval('cortex_light');
     vertexcolor = repmat(cortex_light, size(mesh.pos,1), 1);
     ft_warning('no curv field present in the mesh structure, using cortex_light as vertexcolor')
   end
 end
+
 if ischar(facecolor) && exist([facecolor '.m'], 'file')
-  facecolor = eval(facecolor);
+  facecolor = feval(facecolor);
+elseif ischar(facecolor) && ismember(facecolor, htmlcolors)
+  facecolor = htmlcolors(facecolor);
 end
+
 if ischar(edgecolor) && exist([edgecolor '.m'], 'file')
-  edgecolor = eval(edgecolor);
+  edgecolor = feval(edgecolor);
+elseif ischar(edgecolor) && ismember(edgecolor, htmlcolors)
+  edgecolor = htmlcolors(edgecolor);
 end
 
 % everything is added to the current figure
@@ -286,13 +298,13 @@ switch maskstyle
       set(hs, 'FaceVertexCData', vertexcolor, 'FaceColor', 'interp');
       if numel(vertexcolor)==size(pos,1)
         if ~isempty(clim), set(gca, 'clim', clim); end
-        if ~isempty(cmap), colormap(cmap); end
+        if ~isempty(cmap), ft_colormap(cmap); end
       end
     elseif facepotential
       set(hs, 'FaceVertexCData', facecolor, 'FaceColor', 'flat');
       if numel(facecolor)==size(tri,1)
         if ~isempty(clim), set(gca, 'clim', clim); end
-        if ~isempty(cmap), colormap(cmap); end
+        if ~isempty(cmap), ft_colormap(cmap); end
       end
     else
       % the color is indicated as a single character or as a single RGB triplet
@@ -507,11 +519,20 @@ axis off
 axis vis3d
 axis equal
 
-if ~nargout
-  clear hs
+if istrue(axes_)
+  % plot the 3D axes, this depends on the units and coordsys
+  ft_plot_axes(mesh);
 end
+
+if isfield(mesh, 'coordsys')
+  % add a context sensitive menu to change the 3d viewpoint to top|bottom|left|right|front|back
+  menu_viewpoint(gca, mesh.coordsys)
+end
+
 if ~holdflag
   hold off
 end
 
-ft_warning(ws); % revert to original state
+if ~nargout
+  clear hs
+end

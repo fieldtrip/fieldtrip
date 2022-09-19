@@ -1,12 +1,8 @@
 function test_bug1407
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
-
-% DEPENDENCY ft_read_header ft_read_data ft_read_event
-
-% the following are from the fieldtrip/external/egi directory
-% DEPENDENCY read_mff_header read_mff_data read_mff_event mff_getEEGFilename mff_getSummaryInfo mff_getObject mff_micros2Sample
+% DEPENDENCY ft_read_header ft_read_data ft_read_event read_mff_header read_mff_data read_mff_event mff_getEEGFilename mff_getSummaryInfo mff_getObject mff_micros2Sample
 
 ft_hastoolbox('egi_mff_v2', 1);
 

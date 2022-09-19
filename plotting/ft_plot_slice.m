@@ -71,8 +71,15 @@ persistent dim X Y Z
 if isequal(dim, size(dat(:,:,:,1,1)))
   % reuse the persistent variables to speed up subsequent calls with the same input
 else
-  dim       = size(dat);
+  dim       = size(dat); 
+  if numel(dim)<3
+    dim(3) = 1; % add 1 to catch size(dat,3) is singleton
+  end
   [X, Y, Z] = ndgrid(1:dim(1), 1:dim(2), 1:dim(3));
+end
+
+if any(dim==1)
+  ft_error('it is not possible to plot a volume with a dimensionality of 1 in one of its dimensions');
 end
 
 % parse first input argument(s). it is either
@@ -99,6 +106,7 @@ cmap                = ft_getopt(varargin, 'colormap');
 clim                = ft_getopt(varargin, 'clim');
 doscale             = ft_getopt(varargin, 'doscale', true); % only scale when necessary (time consuming), i.e. when plotting as grayscale image & when the values are not between 0 and 1
 h                   = ft_getopt(varargin, 'surfhandle', []);
+p                   = ft_getopt(varargin, 'patchhandle', []);
 
 mesh                = ft_getopt(varargin, 'intersectmesh');
 intersectcolor      = ft_getopt(varargin, 'intersectcolor', 'yrgbmyrgbm');
@@ -297,7 +305,7 @@ use_interpn = ~isequal(transform, eye(4)) || ~isequal(interpmethod, 'nearest') |
 get_slice   = ~use_interpn && all([islineXi islineYi islineZi]) && all([isintegerXi isintegerYi isintegerZi]);
 if use_interpn
   V  = interpn(X, Y, Z, dat, Xi, Yi, Zi, interpmethod);
-  if domask,       Vmask = interpn(X, Y, Z, datmask,       Xi, Yi, Zi, interpmethod); end
+  if domask,       Vmask = interpn(X, Y, Z, datmask,    Xi, Yi, Zi, interpmethod); end
   if dobackground, Vback = interpn(X, Y, Z, background, Xi, Yi, Zi, interpmethod); end
 elseif get_slice 
   %something more efficient than an interpolation can be done
@@ -462,6 +470,7 @@ elseif domask
     
     case 'colormix'
       if isempty(cmap), error('using ''colormix'' as maskstyle requires an explicitly defined colormap'); end
+      if ischar(cmap),  cmap = strrep(cmap, 'default', 'parula'); cmap = ft_colormap(cmap); end
       V = bg_rgba2rgb(Vback,V,cmap,clim,Vmask,'rampup',opacitylim);
       if isempty(h)
         % create surface object
@@ -492,16 +501,20 @@ if dointersect
     
     % draw each individual line segment of the intersection
     if ~isempty(xmesh)
-      p = patch(xmesh', ymesh', zmesh', nan(1, size(xmesh,1)));
-      if ~isempty(intersectcolor),     set(p, 'EdgeColor', intersectcolor(k)); end
-      if ~isempty(intersectlinewidth), set(p, 'LineWidth', intersectlinewidth); end
-      if ~isempty(intersectlinestyle), set(p, 'LineStyle', intersectlinestyle); end
+      if isempty(p)
+        p = patch(xmesh', ymesh', zmesh', nan(1, size(xmesh,1)));
+        if ~isempty(intersectcolor),     set(p, 'EdgeColor', intersectcolor(k));  end
+        if ~isempty(intersectlinewidth), set(p, 'LineWidth', intersectlinewidth); end
+        if ~isempty(intersectlinestyle), set(p, 'LineStyle', intersectlinestyle); end
+      else
+        set(p, 'XData', xmesh', 'YData', ymesh', 'ZData', zmesh', 'FaceVertexCdata', nan(size(xmesh,1),1));
+      end
     end
   end
 end
 
-if ~isempty(cmap) && ~isequal(cmap, 'rgb')
-  colormap(cmap);
+if ~isempty(cmap) && ~isequal(cmap, 'rgb') && ~isequal(maskstyle, 'colormix')
+  ft_colormap(cmap);
   if ~isempty(clim)
     caxis(clim);
   end

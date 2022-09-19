@@ -1,8 +1,7 @@
 function test_example_simulate_forward_dipolefit
 
-% MEM 1gb
+% MEM 2gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_dipolesimulation ft_timelockanalysis ft_dipolefitting
 
 % see http://www.fieldtriptoolbox.org/example/compute_forward_simulated_data_and_apply_a_dipole_fit/

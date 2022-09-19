@@ -30,9 +30,11 @@ function [cfg] = ft_layoutplot(cfg, data)
 %   cfg.output      = filename to which the layout will be written (default = [])
 %   cfg.montage     = 'no' or a montage structure (default = 'no')
 %   cfg.image       = filename, use an image to construct a layout (e.g. usefull for ECoG grids)
-%   cfg.visible     = string, 'yes' or 'no' whether figure will be visible (default = 'yes')
 %   cfg.box         = string, 'yes' or 'no' whether box should be plotted around electrode (default = 'yes')
 %   cfg.mask        = string, 'yes' or 'no' whether the mask should be plotted (default = 'yes')
+%   cfg.visible     = string, 'on' or 'off' whether figure will be visible (default = 'on')
+%   cfg.position    = location and size of the figure, specified as a vector of the form [left bottom width height]
+%   cfg.renderer    = string, 'opengl', 'zbuffer', 'painters', see MATLAB Figure Properties. If this function crashes, you should try 'painters'.
 %
 % Alternatively the layout can be constructed from either
 %   data.elec     structure with electrode positions
@@ -104,19 +106,17 @@ end
 cfg = ft_checkconfig(cfg, 'renamed', {'elecfile', 'elec'});
 cfg = ft_checkconfig(cfg, 'renamed', {'gradfile', 'grad'});
 cfg = ft_checkconfig(cfg, 'renamed', {'optofile', 'opto'});
+cfg = ft_checkconfig(cfg, 'renamed', {'newfigure', 'figure'});
 
 % set the defaults
-cfg.visible  = ft_getopt(cfg, 'visible', 'yes');
-cfg.box      = ft_getopt(cfg, 'box', 'yes');
-cfg.mask     = ft_getopt(cfg, 'mask', 'yes');
-cfg.renderer = ft_getopt(cfg, 'renderer'); % let MATLAB decide on the default
-
+cfg.box       = ft_getopt(cfg, 'box', 'yes');
+cfg.mask      = ft_getopt(cfg, 'mask', 'yes');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % extract or generate the layout information
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-tmpcfg = keepfields(cfg, {'layout', 'rows', 'columns', 'commentpos', 'scalepos', 'elec', 'grad', 'opto', 'showcallinfo'});
+tmpcfg = keepfields(cfg, {'layout', 'channel', 'rows', 'columns', 'commentpos', 'skipcomnt', 'scalepos', 'skipscale', 'projection', 'viewpoint', 'rotate', 'width', 'height', 'elec', 'grad', 'opto', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
 if hasdata
   layout = ft_prepare_layout(tmpcfg, data);
 else
@@ -126,11 +126,9 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % plot all details pertaining to the layout in one figure
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if istrue(cfg.visible)
-  f = figure('visible', 'on');
-else
-  f = figure('visible', 'off');
-end
+
+% open a new figure with the specified settings
+h = open_figure(keepfields(cfg, {'figure', 'position', 'visible', 'renderer'}));
 
 if isfield(cfg, 'image') && ~isempty(cfg.image)
   % start with the background image
@@ -154,7 +152,7 @@ if isfield(cfg, 'image') && ~isempty(cfg.image)
   axis xy
 end
 
-ft_plot_layout(layout, 'point', true, 'box', istrue(cfg.box), 'label', true, 'mask', istrue(cfg.mask), 'outline', true);
+ft_plot_layout(layout, 'point', true, 'box', cfg.box, 'label', true, 'mask', cfg.mask, 'outline', true);
 
 % the following code can be used to verify a bipolar montage, given the
 % layout of the monopolar channels
@@ -199,16 +197,11 @@ end
 
 % set the figure window title
 if ~isempty(dataname)
-  set(gcf, 'Name', sprintf('%d: %s: %s', double(gcf), mfilename, join_str(', ', dataname)));
+  set(h, 'Name', sprintf('%d: %s: %s', double(h), mfilename, join_str(', ', dataname)));
 else
-  set(gcf, 'Name', sprintf('%d: %s', double(gcf), mfilename));
+  set(h, 'Name', sprintf('%d: %s', double(h), mfilename));
 end
-set(gcf, 'NumberTitle', 'off');
-
-% set renderer if specified
-if ~isempty(cfg.renderer)
-  set(gcf, 'renderer', cfg.renderer)
-end
+set(h, 'NumberTitle', 'off');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % deal with the output

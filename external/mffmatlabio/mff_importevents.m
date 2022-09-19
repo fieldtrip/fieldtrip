@@ -61,6 +61,8 @@ for iEvent = 1:length(eventFile)
     
     if eventtrackObj.loadResource()
         
+        name      = eventtrackObj.getName();
+        trackType = eventtrackObj.getTrackType();
         eventlist = eventtrackObj.getEvents();
         nevents = eventlist.size();
         fprintf('Importing %d events from file %s...\n', nevents, eventFile(iEvent).name);
@@ -90,6 +92,8 @@ for iEvent = 1:length(eventFile)
                 events(eventCount).label        = char(eventObj.getLabel());
                 events(eventCount).relativebegintime = eventObj.getRelativeBeginTime();
                 events(eventCount).sourcedevice = char(eventObj.getSourceDevice());
+                events(eventCount).name         = char(name);
+                events(eventCount).tracktype    = char(trackType);
                 
                 % compute latency in days with ms -> convert to samples
                 % eventCount = 1; 
@@ -103,30 +107,7 @@ for iEvent = 1:length(eventFile)
                 
                 % import keys
                 keylist = eventObj.getKeys();
-                events(eventCount).mffkeys = char(keylist);
-                eventkeycount = keylist.size;
-                keyVals = [];
-                for q = 0:eventkeycount-1
-                    theKey = keylist.get(q);
-                    keyVals(q+1).code = char(theKey.getCode);
-                    keyVals(q+1).data = char(theKey.getData);
-                    keyVals(q+1).datatype = char(theKey.getDataType);
-                    keyVals(q+1).description = char(theKey.getDescription);
-                    cleancode = keyVals(q+1).code;
-                    cleancode( cleancode < 48 ) = []; % invalid char
-                    cleancode( cleancode > 57 & cleancode < 64 ) = []; % invalid char
-                    try
-                        events(eventCount).( [ 'mffkey_' cleancode ]) = keyVals(q+1).data;
-                    catch
-                        if showWarning
-                            disp('Warning: issue when converting MFF event key ************');
-                            showWarning = false;
-                        end
-                    end
-                end
-                if eeglabExport
-                    events(eventCount).mffkeysbackup = vararg2str(keyVals); % for exporting
-                end
+                events = mff_importkeys(events, eventCount, keylist, eeglabExport);
                 
                 eventCount = eventCount+1;
                 

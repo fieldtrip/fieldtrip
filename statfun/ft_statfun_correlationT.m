@@ -2,33 +2,34 @@ function [s, cfg] = ft_statfun_correlationT(cfg, dat, design)
 
 % FT_STATFUN_CORRELATIONT calculates correlation coefficient T-statistics on the
 % biological data in dat (the dependent variable), using the information on the
-% independent variable (predictor) in design. The correlation coefficients are stored
-% in the rho field of output s.
+% independent variable (predictor) in design. The correlation coefficients themselves
+% are stored in the output structure as rho.
 %
 % Use this function by calling one of the high-level statistics functions as
 %   [stat] = ft_timelockstatistics(cfg, timelock1, timelock2, ...)
 %   [stat] = ft_freqstatistics(cfg, freq1, freq2, ...)
 %   [stat] = ft_sourcestatistics(cfg, source1, source2, ...)
-% with the following configuration option
+% with the following configuration option:
 %   cfg.statistic = 'ft_statfun_correlationT'
 %
-% Configuration options
+% You can specify the following configuration options:
 %   cfg.computestat    = 'yes' or 'no', calculate the statistic (default='yes')
 %   cfg.computecritval = 'yes' or 'no', calculate the critical values of the test statistics (default='no')
 %   cfg.computeprob    = 'yes' or 'no', calculate the p-values (default='no')
-% The following options are relevant if cfg.computecritval='yes' and/or
-% cfg.computeprob='yes'.
+%
+% The following options are relevant if cfg.computecritval='yes' and/or cfg.computeprob='yes':
 %   cfg.alpha = critical alpha-level of the statistical test (default=0.05)
 %   cfg.tail  = -1, 0, or 1, left, two-sided, or right (default=1)
 %               cfg.tail in combination with cfg.computecritval='yes'
 %               determines whether the critical value is computed at
 %               quantile cfg.alpha (with cfg.tail=-1), at quantiles
 %               cfg.alpha/2 and (1-cfg.alpha/2) (with cfg.tail=0), or at
-%               quantile (1-cfg.alpha) (with cfg.tail=1).
-%   cfg.type  = 'Pearson' to compute Pearson's correlation (default), see 'help corr' for other options.
+%               quantile (1-cfg.alpha) (with cfg.tail=1)
+%   cfg.type  = 'Pearson' to compute Pearson's correlation (default),
+%                see 'help corr' for other options.
 %
-% Design specification
-%   cfg.ivar  = row number of the design that contains the independent variable (default=1)
+% The experimental design is specified as:
+%   cfg.ivar  = row number of the design that contains the independent variable, i.e. the predictor (default=1)
 %
 % See also FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS
 
@@ -52,42 +53,38 @@ function [s, cfg] = ft_statfun_correlationT(cfg, dat, design)
 %
 % $Id$
 
-% set defaults
-if ~isfield(cfg, 'computestat'),       cfg.computestat='yes';     end
-if ~isfield(cfg, 'computecritval'),    cfg.computecritval='no';   end
-if ~isfield(cfg, 'computeprob'),       cfg.computeprob='no';      end
-if ~isfield(cfg, 'alpha'),             cfg.alpha=0.05;            end
-if ~isfield(cfg, 'tail'),              cfg.tail=1;                end
-if ~isfield(cfg, 'type'),              cfg.type           = 'Pearson'; end
+% set the defaults
+cfg.computestat    = ft_getopt(cfg, 'computestat', 'yes');
+cfg.computecritval = ft_getopt(cfg, 'computecritval', 'no');
+cfg.computeprob    = ft_getopt(cfg, 'computeprob', 'no');
+cfg.alpha          = ft_getopt(cfg, 'alpha', 0.05);
+cfg.tail           = ft_getopt(cfg, 'tail', 1);
+cfg.type           = ft_getopt(cfg, 'type', 'Pearson'); % 'Pearson', 'Kendall' or 'Spearman'
+cfg.ivar           = ft_getopt(cfg, 'ivar', 1);
 
 % perform some checks on the configuration
-if strcmp(cfg.computeprob,'yes') && strcmp(cfg.computestat,'no')
+if strcmp(cfg.computeprob, 'yes') && strcmp(cfg.computestat, 'no')
   ft_error('P-values can only be calculated if the test statistics are calculated.');
 end
-if isfield(cfg,'uvar') && ~isempty(cfg.uvar)
-  ft_error('cfg.uvar should not exist for a correlation statistic');
-end
 
-[nsmpl,nrepl] = size(dat);
+[nsmpl, nrepl] = size(dat);
 df = nrepl - 1;
 if df<1
-  ft_error('Insufficient error degrees of freedom for this analysis.')
+  ft_error('Insufficient degrees of freedom for this analysis.')
 end
 
-if strcmp(cfg.computestat,'yes') % compute the statistic
+if strcmp(cfg.computestat, 'yes') % compute the statistic
   % calculate the correlation coefficient between the dependent variable and the predictor
   rho = corr(dat', design', 'type', cfg.type);
-  clear dat
-  
+
   % convert correlation coefficient to t-statistic (for MCP correction): t^2 = DF*R^2 / (1-R^2)
   tstat = rho*(sqrt(nrepl-2))./sqrt((1-rho.^2));
-  
-  s.stat = tstat; % store t values in s.stat variable for use with ft_statistics_montecarlo.m
-  s.rho = rho; % store r values in s.rho variable (these are the actual correlation coefficients)
-  clear rho tstat
+
+  s.stat = tstat; % store t values in s.stat variable, these are used for the inference in FT_STATISTICS_MONTECARLO
+  s.rho = rho;    % store r values in s.rho variable, these are the actual correlation coefficients
 end
 
-if strcmp(cfg.computecritval,'yes')
+if strcmp(cfg.computecritval, 'yes')
   % also compute the critical values
   s.df      = df;
   if cfg.tail==-1
@@ -99,7 +96,7 @@ if strcmp(cfg.computecritval,'yes')
   end
 end
 
-if strcmp(cfg.computeprob,'yes')
+if strcmp(cfg.computeprob, 'yes')
   % also compute the p-values
   s.df      = df;
   if cfg.tail==-1

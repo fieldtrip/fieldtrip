@@ -73,6 +73,7 @@ ori       = ft_getopt(varargin(sellist), 'orientation', eye(3));
 if strcmp(style, 'subplot')
   parents    = ft_getopt(varargin(sellist), 'parents');
   surfhandle = ft_getopt(varargin(sellist), 'surfhandle');
+  patchhandle = ft_getopt(varargin(sellist), 'patchhandle');
   update     = ft_getopt(varargin(sellist), 'update', [true true true]);
   if ~isempty(surfhandle) && ~isempty(parents)
     ft_error('if specifying handles, you should either specify handles to the axes or to the surface objects, not both');
@@ -116,6 +117,9 @@ switch style
       if ~isempty(surfhandle) && update(1)
         varargin(sellist) = ft_setopt(varargin(sellist), 'surfhandle', surfhandle(1));
       end
+      if ~isempty(patchhandle) && update(1)
+        varargin(sellist) = ft_setopt(varargin(sellist), 'patchhandle', patchhandle(1));
+      end
       % swap the first 2 dimensions because of meshgrid vs ndgrid issues
       varargin{2*sel} = ori(2,:);
       set(gcf,'currentaxes',Hx);
@@ -131,6 +135,9 @@ switch style
       if ~isempty(surfhandle) && update(2)
         varargin(sellist) = ft_setopt(varargin(sellist), 'surfhandle', surfhandle(2));
       end
+      if ~isempty(patchhandle) && update(2)
+        varargin(sellist) = ft_setopt(varargin(sellist), 'patchhandle', patchhandle(2));
+      end
       varargin{2*sel} = ori(1,:);
       set(gcf,'currentaxes',Hy);
       hy = ft_plot_slice(dat, varargin{:});
@@ -144,6 +151,9 @@ switch style
     if ~isempty(Hz)
       if ~isempty(surfhandle) && update(3)
         varargin(sellist) = ft_setopt(varargin(sellist), 'surfhandle', surfhandle(3));
+      end
+      if ~isempty(patchhandle) && update(3)
+        varargin(sellist) = ft_setopt(varargin(sellist), 'patchhandle', patchhandle(3));
       end
       varargin{2*sel} = ori(3,:);
       set(gcf,'currentaxes',Hz);

@@ -220,7 +220,7 @@ int smartcpu_update(void) {
 		}
 
 		pthread_mutex_lock(&mutexpeerlist);
-		/* count the number of idle slave peers on this computer */
+		/* count the number of idle worker peers on this computer */
 		peer = peerlist;
 		while(peer) {
 				ok = 1;
@@ -240,8 +240,8 @@ int smartcpu_update(void) {
 				return -1;
 		}
 
-		/* the numer of idle slaves should not exceed the available free CPUs */
-		/* to avoid a race condition with the other idle slaves, the decision is based on multiple observations */
+		/* the numer of idle workers should not exceed the available free CPUs */
+		/* to avoid a race condition with the other idle workers, the decision is based on multiple observations */
 		if (host->status==STATUS_IDLE && ((float)ProcessorCount-(float)NumPeers-CpuLoad) < (0-SMARTCPU_TOLERANCE))
 				/* increase the evidence to switch from idle to zombie */
 				smartcpu.evidence--;

@@ -1,12 +1,14 @@
 function [data] = ft_freqsimulation(cfg)
 
-% FT_FREQSIMULATION makes simulated data in FieldTrip format. The data is
-% built up from fifferent frequencies and can contain a signal in which the
-% different frequencies interact (i.e. cross-frequency coherent). Different
-% methods are possible to make data with special properties.
+% FT_FREQSIMULATION simulates channel-level time-series data . The data is built up
+% from different frequencies and can contain a signal in which the different
+% frequencies interact (i.e. cross-frequency coherent). Different methods are
+% possible to make data with specific properties.
 %
 % Use as
 %   [data] = ft_freqsimulation(cfg)
+% which will return a raw data structure that resembles the output of
+% FT_PREPROCESSING.
 %
 % The configuration options can include
 %   cfg.method     = The methods are explained in more detail below, but they can be
@@ -20,9 +22,10 @@ function [data] = ft_freqsimulation(cfg)
 %   cfg.randomseed = 'yes' or a number or vector with the seed value (default = 'yes')
 %
 % The number of trials and the time axes of the trials can be specified by
-%   cfg.fsample    = simulated sample frequency
-%   cfg.trllen     = length of simulated trials in seconds
-%   cfg.numtrl     = number of simulated trials
+%   cfg.fsample    = simulated sample frequency (default = 1200)
+%   cfg.trllen     = length of simulated trials in seconds (default = 1)
+%   cfg.numtrl     = number of simulated trials (default = 1)
+%   cfg.baseline   = number (default = 0)
 % or by
 %   cfg.time       = cell-array with one time axis per trial, which are for example obtained from an existing dataset
 %
@@ -181,13 +184,14 @@ if ~isfield(cfg, 'output'),        cfg.output = 'all';                    end
 if ~isfield(cfg, 'time'),          cfg.time = [];                         end
 
 if isempty(cfg.time)
-  if ~isfield(cfg, 'fsample'),       cfg.fsample = 1200;                    end
-  if ~isfield(cfg, 'trllen'),        cfg.trllen = 1;                        end
-  if ~isfield(cfg, 'numtrl'),        cfg.numtrl = 1;                        end
+  cfg.fsample   = ft_getopt(cfg, 'fsample', 1200);
+  cfg.trllen    = ft_getopt(cfg, 'trllen', 1);
+  cfg.numtrl    = ft_getopt(cfg, 'numtrl', 1);
+  cfg.baseline  = ft_getopt(cfg, 'baseline', 0);
 else
-  cfg.trllen = [];                                    % can be variable
+  cfg.trllen  = [];                         % can be variable
   cfg.fsample = 1/mean(diff(cfg.time{1}));  % determine from time-axis
-  cfg.numtrl = length(cfg.time);
+  cfg.numtrl  = length(cfg.time);
 end
 
 if strcmp(cfg.method, 'superimposed')
@@ -275,26 +279,27 @@ if ~isempty(cfg.time)
   % use the user-supplied time vectors
   timevec = cfg.time;
 else
-  Nsamp_tr = cfg.fsample * cfg.trllen;
-  for iTr = 1 : cfg.numtrl
-    timevec{iTr} = (1:Nsamp_tr)/cfg.fsample;
+  % give the user some feedback
+  ft_debug('using %f as samping frequency', cfg.fsample);
+  ft_debug('using %d trials of %f seconds long', cfg.numtrl, cfg.trllen);
+  nsample = round(cfg.trllen*cfg.fsample);
+  timevec = cell(1, cfg.numtrl);
+  for iTr = 1:cfg.numtrl
+    timevec{iTr} = (((1:nsample)-1)/cfg.fsample) - cfg.baseline;
   end
 end
 
 % give the user some feedback
 ft_info('simulating data using %s method', cfg.method);
-ft_debug('using %f as samping frequency', cfg.fsample);
-ft_debug('using %d trials of %f seconds long', cfg.numtrl, cfg.trllen);
-
 
 %%%%%%% SUPERIMPOSED, SIMPLY ADD THE SIGNALS %%%%%%%%%
 if strcmp(cfg.method, 'superimposed')
   
   % make data
-  for iTr = 1 : length(timevec)
-    if ischar(cfg.s1.phase); phase_s1 = rand * 2 *pi; else phase_s1 = cfg.s1.phase; end
-    if ischar(cfg.s2.phase); phase_s2 = rand * 2 *pi; else phase_s2 = cfg.s2.phase; end
-    if ischar(cfg.s3.phase); phase_s3 = rand * 2 *pi; else phase_s3 = cfg.s3.phase; end
+  for iTr = 1:length(timevec)
+    if ischar(cfg.s1.phase); phase_s1 = rand * 2 * pi; else phase_s1 = cfg.s1.phase; end
+    if ischar(cfg.s2.phase); phase_s2 = rand * 2 * pi; else phase_s2 = cfg.s2.phase; end
+    if ischar(cfg.s3.phase); phase_s3 = rand * 2 * pi; else phase_s3 = cfg.s3.phase; end
     
     s1    = cfg.s1.ampl*cos(2*pi*cfg.s1.freq*timevec{iTr} + phase_s1);
     s2    = cfg.s2.ampl*cos(2*pi*cfg.s2.freq*timevec{iTr} + phase_s2);
@@ -325,7 +330,7 @@ if strcmp(cfg.method, 'superimposed')
 elseif strcmp(cfg.method, 'broadband')
   
   % make data
-  for iTr = 1 : length(timevec)
+  for iTr = 1:length(timevec)
     n1    = ft_preproc_bandpassfilter(cfg.n1.ampl*randn(size(timevec{iTr})), cfg.fsample, cfg.n1.bpfreq);
     n2    = ft_preproc_bandpassfilter(cfg.n2.ampl*randn(size(timevec{iTr})), cfg.fsample, cfg.n2.bpfreq);
     noise = cfg.noise.ampl*randn(size(timevec{iTr}));
@@ -366,16 +371,16 @@ elseif strcmp(cfg.method, 'phalow_amphigh')
   end
   
   % make data
-  for iTr = 1 : length(timevec)
+  for iTr = 1:length(timevec)
     
-    if ischar(cfg.s1.phase); phase_AM = rand * 2 *pi;  else phase_AM = cfg.s1.phase;  end
-    if ischar(cfg.s2.phase); phase_high = rand * 2 *pi; else phase_high = cfg.s2.phase; end
-    if ischar(cfg.s3.phase); phase_DC = rand * 2 *pi;   else phase_DC = cfg.s3.phase;   end
+    if ischar(cfg.s1.phase); phase_AM   = rand * 2 * pi; else phase_AM   = cfg.s1.phase;  end
+    if ischar(cfg.s2.phase); phase_high = rand * 2 * pi; else phase_high = cfg.s2.phase; end
+    if ischar(cfg.s3.phase); phase_DC   = rand * 2 * pi; else phase_DC   = cfg.s3.phase;   end
     high  = cfg.s2.ampl*cos(2*pi*cfg.s2.freq*timevec{iTr} + phase_high);
-    AM   = cfg.s1.ampl*cos(2*pi*cfg.s1.freq*timevec{iTr} + phase_AM);
+    AM    = cfg.s1.ampl*cos(2*pi*cfg.s1.freq*timevec{iTr} + phase_AM);
     DC    = cfg.s3.ampl*cos(2*pi*0*timevec{iTr} + phase_DC);
     noise = cfg.noise.ampl*randn(size(timevec{iTr}));
-    mix = ((AM + DC) .* high) + noise;
+    mix   = ((AM + DC) .* high) + noise;
     
     data.trial{iTr}(1,:) = mix;
     if strcmp(cfg.output, 'all')
@@ -414,12 +419,12 @@ elseif strcmp(cfg.method, 'amplow_amphigh')
   end
   
   % make data
-  for iTr = 1 : length(timevec)
+  for iTr = 1:length(timevec)
     
-    if ischar(cfg.s1.phase); phase_low = rand * 2 *pi;    else phase_low = cfg.s1.phase;    end
-    if ischar(cfg.s2.phase); phase_high = rand * 2 *pi;   else phase_high = cfg.s2.phase;   end
-    if ischar(cfg.s3.phase); phase_DC = rand * 2 *pi;     else phase_DC = cfg.s3.phase;     end
-    if ischar(cfg.s4.phase); phase_AM = rand * 2 *pi;     else phase_AM = cfg.s4.phase; end
+    if ischar(cfg.s1.phase); phase_low  = rand * 2 * pi; else phase_low = cfg.s1.phase;    end
+    if ischar(cfg.s2.phase); phase_high = rand * 2 * pi; else phase_high = cfg.s2.phase;   end
+    if ischar(cfg.s3.phase); phase_DC   = rand * 2 * pi; else phase_DC = cfg.s3.phase;     end
+    if ischar(cfg.s4.phase); phase_AM   = rand * 2 * pi; else phase_AM = cfg.s4.phase; end
     high     = cfg.s2.ampl*cos(2*pi*cfg.s2.freq*timevec{iTr} + phase_high);
     low      = cfg.s1.ampl*cos(2*pi*cfg.s1.freq*timevec{iTr} + phase_low);
     AM       = cfg.s4.ampl*cos(2*pi*cfg.s4.freq*timevec{iTr} + phase_AM);
@@ -463,10 +468,10 @@ elseif strcmp(cfg.method, 'phalow_freqhigh')
   end
   
   % make data
-  for iTr = 1 : length(timevec)
+  for iTr = 1:length(timevec)
     
-    if ischar(cfg.s1.phase); phase_s1  = rand * 2 *pi;    else phase_s1 = cfg.s1.phase;    end
-    if ischar(cfg.s2.phase); phase_s2 = rand * 2 *pi;     else phase_s2= cfg.s2.phase;    end
+    if ischar(cfg.s1.phase); phase_s1 = rand * 2 * pi; else phase_s1 = cfg.s1.phase;    end
+    if ischar(cfg.s2.phase); phase_s2 = rand * 2 * pi; else phase_s2= cfg.s2.phase;    end
     s1            = cfg.s1.ampl .* cos(2*pi*cfg.s1.freq * timevec{iTr} + phase_s1); % to be modulated signal
     s2            = cfg.s2.ampl .* cos(2*pi*cfg.s2.freq * timevec{iTr} + phase_s2); % modulation of instantaneous phase
     inst_pha_base = 2*pi*cfg.s1.freq * timevec{iTr} + phase_s1; % unmodulated instantaneous phase s1 (linear)
@@ -502,7 +507,7 @@ elseif strcmp(cfg.method, 'phalow_freqhigh')
 elseif strcmp(cfg.method, 'asymmetric')
   
   % make data
-  for iTr = 1 : length(timevec)
+  for iTr = 1:length(timevec)
     if ischar(cfg.s1.phase); phase_s1 = rand * 2 *pi; else phase_s1 = cfg.s1.phase; end
     
     s1    = cfg.s1.ampl*cos(2*pi*cfg.s1.freq*timevec{iTr} + phase_s1);

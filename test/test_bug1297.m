@@ -1,6 +1,6 @@
 function test_bug1297
 
-% MEM 2500mb
+% MEM 3gb
 % WALLTIME 00:30:00
 % DEPENDENCY ft_volumesegment
 

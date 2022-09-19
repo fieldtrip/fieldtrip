@@ -72,7 +72,7 @@ pthread_mutex_t mutexwatchdog = PTHREAD_MUTEX_INITIALIZER;
 struct {
 		int enabled;
 		int evidence;
-		UINT32_T masterid;
+		UINT32_T controllerid;
 		time_t time;
 		UINT64_T memory;
 } watchdog;

@@ -37,6 +37,11 @@ handles = definehandles;
 chanindx    = ft_getopt(varargin, 'chanindx');
 threshold   = ft_getopt(varargin, 'threshold');
 detectflank = ft_getopt(varargin, 'detectflank');
+combinebinary = ft_getopt(varargin, 'combinebinary', false);
+trigshift   = ft_getopt(varargin, 'trigshift');
+if isempty(combinebinary)
+  combinebinary = false;
+end
 
 % ensure that the required toolbox is on the path
 if ft_hastoolbox('yokogawa_meg_reader')
@@ -76,7 +81,6 @@ if ft_hastoolbox('yokogawa_meg_reader')
 
   elseif hdr.orig.acq_type==handles.AcqTypeContinuousRaw
     % Events annotated by users during measurements
-    bookmark_tmp = [];
     bookmark_tmp = getYkgwHdrBookmark(filename);
     if ~isempty(bookmark_tmp)
       for i = 1:length(bookmark_tmp)
@@ -93,7 +97,7 @@ if ft_hastoolbox('yokogawa_meg_reader')
     clear bookmark_tmp;
   end
 
-elseif ft_hastoolbox('yokogawa');
+elseif ft_hastoolbox('yokogawa')
 
   % read the dataset header
   hdr = read_yokogawa_header(filename);
@@ -133,12 +137,12 @@ elseif ft_hastoolbox('yokogawa');
   end
 
 else
-    ft_error('cannot determine, whether Yokogawa toolbox is present');
+  ft_error('cannot determine whether the required Yokogawa toolbox is present');
 end
 
 % read the trigger channels and detect the flanks
 if ~isempty(chanindx)
-  trigger = read_trigger(filename, 'header', hdr, 'denoise', false, 'chanindx', chanindx, 'detectflank', detectflank, 'threshold', threshold);
+  trigger = read_trigger(filename, 'header', hdr, 'denoise', false, 'chanindx', chanindx, 'detectflank', detectflank, 'threshold', threshold, 'combinebinary', combinebinary, 'trigshift', trigshift);
   % combine the triggers and the other events
   event = appendstruct(event, trigger);
 end

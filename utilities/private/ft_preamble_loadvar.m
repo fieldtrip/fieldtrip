@@ -43,12 +43,12 @@ if (isfield(cfg, 'inputfile') && ~isempty(cfg.inputfile)) || exist('Fief7bee_rep
     % the script, input and output files are written to a directory
     
     % write the function input variables to a MATLAB file
-    if isequal(iW1aenge_preamble, {'varargin'})
+    if isequal(preamble_argin, {'varargin'})
       cfg.inputfile = {};
       iW1aenge_now = datestr(now, 30);
       for i=1:(ft_nargin-1)
         cfg.inputfile{i} = make_or_fetch_inputfile(Fief7bee_reproducescript,...
-          sprintf('%s_%s_input_varargin_%d.mat', FjmoT6aA_highest_ft, iW1aenge_now, i),...
+          sprintf('%s_%s_input_varargin_%d.mat', iW1aenge_now, FjmoT6aA_highest_ft, i),...
           'data', varargin{i}); 
       end
     else
@@ -56,8 +56,8 @@ if (isfield(cfg, 'inputfile') && ~isempty(cfg.inputfile)) || exist('Fief7bee_rep
       iW1aenge_now = datestr(now, 30);
       for i=1:(ft_nargin-1)
         cfg.inputfile{i} = make_or_fetch_inputfile(Fief7bee_reproducescript,...
-          sprintf('%s_%s_input_%s.mat', iW1aenge_now, FjmoT6aA_highest_ft, iW1aenge_preamble{i}),...
-          iW1aenge_preamble{i}, eval(iW1aenge_preamble{i}));
+          sprintf('%s_%s_input_%s.mat', iW1aenge_now, FjmoT6aA_highest_ft, preamble_argin{i}),...
+          preamble_argin{i}, eval(preamble_argin{i}));
       end
     end
   
@@ -69,13 +69,13 @@ if (isfield(cfg, 'inputfile') && ~isempty(cfg.inputfile)) || exist('Fief7bee_rep
     mutexlock(cfg.inputlock);
   end
   
-  if isequal(iW1aenge_preamble, {'varargin'}) && ~iscell(cfg.inputfile)
+  if isequal(preamble_argin, {'varargin'}) && ~iscell(cfg.inputfile)
     % this should be a cell-array, otherwise it cannot be assigned to varargin
     cfg.inputfile = {cfg.inputfile};
   end
   
   if iscell(cfg.inputfile)
-    if isequal(iW1aenge_preamble, {'varargin'})
+    if isequal(preamble_argin, {'varargin'})
       % read multiple inputs and copy them into varargin
       tmp = {};
       for i=1:length(cfg.inputfile)
@@ -84,15 +84,15 @@ if (isfield(cfg, 'inputfile') && ~isempty(cfg.inputfile)) || exist('Fief7bee_rep
       assign('varargin', tmp);
       clear i tmp
     else
-      % iW1aenge_preamble is a cell-array containing the variable names
+      % preamble_argin is a cell-array containing the variable names
       for i=1:length(cfg.inputfile)
-        assign(iW1aenge_preamble{i}, loadvar(cfg.inputfile{i}, iW1aenge_preamble{i}));
+        assign(preamble_argin{i}, loadvar(cfg.inputfile{i}, preamble_argin{i}));
       end % for
       clear i
     end
   else
-    % iW1aenge_preamble{1} contains the name of the only variable
-    assign(iW1aenge_preamble{1}, loadvar(cfg.inputfile, iW1aenge_preamble{1}));
+    % preamble_argin{1} contains the name of the only variable
+    assign(preamble_argin{1}, loadvar(cfg.inputfile, preamble_argin{1}));
   end
   
   if isfield(cfg, 'inputlock') && ~isempty(cfg.inputlock)

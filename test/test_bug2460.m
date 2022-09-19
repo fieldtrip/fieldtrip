@@ -2,7 +2,6 @@ function test_bug2460
 
 % WALLTIME 00:10:00
 % MEM 1gb
-
 % DEPENDENCY ft_checkdata
 
 % the following makes it impossible to auto-detect the correct data dimension

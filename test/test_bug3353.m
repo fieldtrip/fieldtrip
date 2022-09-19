@@ -1,8 +1,7 @@
 function test_bug3353
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_sourceparcellate test_bug3353
 
 %% file path

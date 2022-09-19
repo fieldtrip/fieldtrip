@@ -1,8 +1,8 @@
 function [cfg, artifact] = ft_artifact_threshold(cfg, data)
 
-% FT_ARTIFACT_THRESHOLD scans for trials in which the range, i.e. the minimum, the
-% maximum or the range (min-max difference) of the signal in any channel exceeds a
-% specified threshold.
+% FT_ARTIFACT_THRESHOLD scans data segments of interest for channels in which the
+% signal exceeds a specified minimum or maximum value, or in which the peak-to-peak
+% range within the trial exceeds a specified threshold.
 %
 % Use as
 %   [cfg, artifact] = ft_artifact_threshold(cfg)
@@ -22,47 +22,38 @@ function [cfg, artifact] = ft_artifact_threshold(cfg, data)
 % In both cases the configuration should also contain
 %   cfg.trl        = structure that defines the data segments of interest, see FT_DEFINETRIAL
 %   cfg.continuous = 'yes' or 'no' whether the file contains continuous data
-%
-% The following configuration options can be specified
+% and
 %   cfg.artfctdef.threshold.channel   = cell-array with channel labels
 %   cfg.artfctdef.threshold.bpfilter  = 'no' or 'yes' (default = 'yes')
 %   cfg.artfctdef.threshold.bpfreq    = [0.3 30]
 %   cfg.artfctdef.threshold.bpfiltord = 4
 %
-% It is also possible to use other filter (lpfilter, hpfilter,
-% bsfilter, dftfilter or medianfilter) instead of a bpfilter for
-% preprocessing, see FT_PREPROCESSING
+% In the same way as specifying the options for band-pass filtering, it is also
+% possible to specify lpfilter, hpfilter, bsfilter, dftfilter or medianfilter, see
+% FT_PREPROCESSING.
 %
 % The detection of artifacts is done according to the following settings,
 % you should specify at least one of these thresholds
-%   cfg.artfctdef.threshold.range     = value in uV or T, default  inf
 %   cfg.artfctdef.threshold.min       = value in uV or T, default -inf
 %   cfg.artfctdef.threshold.max       = value in uV or T, default  inf
 %   cfg.artfctdef.threshold.onset     = value in uV or T, default  inf
 %   cfg.artfctdef.threshold.offset    = value in uV or T, default  inf
-%
-% When cfg.artfctdef.threshold.range is used, the within-channel peak-to-peak range
-% is checked against the specified maximum range (so not the overall range across
-% channels). In this case the whole trial will be marked as an artifact.
 %
 % When cfg.artfctdef.threshold.onset and offset are used, the rising and falling
 % flank are thresholded with different values. In case onset and offset are both
 % positive, the data will be thresholded above their values. In case both onset and
 % offset are negative, the data will be thresholded below their values.
 %
-% Note that this function does not support artifact- or filterpadding.
+% Note that this function does not support artifactpadding or filterpadding.
 %
-% The output argument "artifact" is a Nx2 matrix comparable to the
-% "trl" matrix of FT_DEFINETRIAL. The first column of which specifying the
-% beginsamples of an artifact period, the second column contains the
-% endsamples of the artifactperiods.
+% The output argument "artifact" is a Nx2 matrix comparable to the "trl" matrix of
+% FT_DEFINETRIAL. The first column of which specifying the beginsamples of an
+% artifact period, the second column contains the endsamples of the artifactperiods.
 %
-% To facilitate data-handling and distributed computing you can use
+% To facilitate data-handling and distributed computing, you can use
 %   cfg.inputfile   =  ...
-% If you specify one of these (or both) the input data will be read from a *.mat
-% file on disk and/or the output data will be written to a *.mat file. These mat
-% files should contain only a single variable, corresponding with the
-% input/output structure.
+% to read the input data from a *.mat file on disk. This mat files should contain
+% only a single variable named 'data', corresponding to the input structure.
 %
 % See also FT_REJECTARTIFACT, FT_ARTIFACT_CLIP, FT_ARTIFACT_ECG, FT_ARTIFACT_EOG,
 % FT_ARTIFACT_JUMP, FT_ARTIFACT_MUSCLE, FT_ARTIFACT_THRESHOLD, FT_ARTIFACT_ZVALUE
@@ -107,44 +98,28 @@ end
 cfg = ft_checkconfig(cfg, 'renamed',    {'datatype', 'continuous'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'continuous', 'continuous', 'yes'});
 
-% set default rejection parameters for clip artifacts if necessary
-if ~isfield(cfg, 'artfctdef'),           cfg.artfctdef            = [];  end
-if ~isfield(cfg.artfctdef, 'threshold'), cfg.artfctdef.threshold  = [];  end
-if ~isfield(cfg, 'headerformat'),        cfg.headerformat         = [];  end
-if ~isfield(cfg, 'dataformat'),          cfg.dataformat           = [];  end
-
-% copy the specific configuration for this function out of the master cfg
-artfctdef = cfg.artfctdef.threshold;
-
-% rename some cfg fields for backward compatibility
-if isfield(artfctdef, 'sgn') && ~isfield(artfctdef, 'channel')
-  artfctdef.channel = artfctdef.sgn;
-  artfctdef         = rmfield(artfctdef, 'sgn');
-end
-if isfield(artfctdef, 'cutoff') && ~isfield(artfctdef, 'range')
-  artfctdef.range = artfctdef.cutoff;
-  artfctdef       = rmfield(artfctdef, 'cutoff');
-end
-
-% set default preprocessing parameters if necessary
-if ~isfield(artfctdef, 'channel'),   artfctdef.channel   = 'all';    end
-if ~isfield(artfctdef, 'bpfilter'),  artfctdef.bpfilter  = 'yes';    end
-if ~isfield(artfctdef, 'bpfreq'),    artfctdef.bpfreq    = [0.3 30]; end
-if ~isfield(artfctdef, 'bpfiltord'), artfctdef.bpfiltord = 4;        end
+% set the default options
+cfg.continuous      = ft_getopt(cfg, 'continuous',   []);
+cfg.headerformat    = ft_getopt(cfg, 'headerformat', []);
+cfg.dataformat      = ft_getopt(cfg, 'dataformat',   []);
+cfg.feedback        = ft_getopt(cfg, 'feedback', 'text');
+cfg.representation  = ft_getopt(cfg, 'representation', 'numeric'); % numeric or table
 
 % set the default artifact detection parameters
-if ~isfield(artfctdef, 'range'),    artfctdef.range = inf;           end
-if ~isfield(artfctdef, 'min'),      artfctdef.min =  -inf;           end
-if ~isfield(artfctdef, 'max'),      artfctdef.max =   inf;           end
-if ~isfield(artfctdef, 'onset'),    artfctdef.onset  = [];           end
-if ~isfield(artfctdef, 'offset'),   artfctdef.offset = [];           end
+cfg.artfctdef                         = ft_getopt(cfg, 'artfctdef');
+cfg.artfctdef.threshold               = ft_getopt(cfg.artfctdef, 'threshold');
+cfg.artfctdef.threshold.channel       = ft_getopt(cfg.artfctdef.threshold, 'channel',     'all');
+cfg.artfctdef.threshold.bpfilter      = ft_getopt(cfg.artfctdef.threshold, 'bpfilter',     'yes');
+cfg.artfctdef.threshold.bpfreq        = ft_getopt(cfg.artfctdef.threshold, 'bpfreq',      [0.3 30]);
+cfg.artfctdef.threshold.bpfiltord     = ft_getopt(cfg.artfctdef.threshold, 'bpfiltord',   4);
+cfg.artfctdef.threshold.range         = ft_getopt(cfg.artfctdef.threshold, 'range',       inf);
+cfg.artfctdef.threshold.min           = ft_getopt(cfg.artfctdef.threshold, 'min',         -inf);
+cfg.artfctdef.threshold.max           = ft_getopt(cfg.artfctdef.threshold, 'max',         inf);
+cfg.artfctdef.threshold.onset         = ft_getopt(cfg.artfctdef.threshold, 'onset',       []);
+cfg.artfctdef.threshold.offset        = ft_getopt(cfg.artfctdef.threshold, 'offset',      []);
 
 % the data is either passed into the function by the user or read from file with cfg.inputfile
 hasdata = exist('data', 'var');
-
-if hasdata
-  data = ft_checkdata(data, 'datatype', 'raw', 'hassampleinfo', 'yes');
-end
 
 % read the header, or get it from the input data
 if ~hasdata
@@ -152,14 +127,13 @@ if ~hasdata
   cfg = ft_checkconfig(cfg, 'required', {'headerfile', 'datafile'});
   hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat);
 else
-  % data given as input
-  data = ft_checkdata(data, 'hassampleinfo', 'yes');
-  cfg = ft_checkconfig(cfg, 'forbidden', {'dataset', 'headerfile', 'datafile'});
-  hdr = ft_fetch_header(data);
+  data = ft_checkdata(data, 'datatype', 'raw', 'hassampleinfo', 'yes');
+  cfg  = ft_checkconfig(cfg, 'forbidden', {'dataset', 'headerfile', 'datafile'});
+  hdr  = ft_fetch_header(data);
 end
 
 % set default cfg.continuous
-if ~isfield(cfg, 'continuous')
+if isempty(cfg.continuous)
   if hdr.nTrials==1
     cfg.continuous = 'yes';
   else
@@ -167,22 +141,24 @@ if ~isfield(cfg, 'continuous')
   end
 end
 
-if ~isfield(cfg, 'trl')
-  % get it from the data itself
-  cfg.trl = data.sampleinfo;
-  cfg.trl(:,3) = 0;
+% get the specification of the data segments that should be scanned for artifacts
+if ~isfield(cfg, 'trl') && hasdata
+  trl = data.sampleinfo;
+  for k = 1:numel(data.trial)
+    trl(k,3) = time2offset(data.time{k}, data.fsample);
+  end
+elseif isfield(cfg, 'trl') && ischar(cfg.trl)
+  trl = loadvar(cfg.trl, 'trl');
+elseif isfield(cfg, 'trl') && isnumeric(cfg.trl)
+  trl = cfg.trl;
+else
+  ft_error('cannot determine which segments of data to scan for artifacts');
 end
 
-% get the remaining settings
-numtrl      = size(cfg.trl,1);
-channel     = ft_channelselection(artfctdef.channel, hdr.label);
-channelindx = match_str(hdr.label,channel);
-artifact    = zeros(0,3);
-
-if ~isempty(artfctdef.onset) || ~isempty(artfctdef.offset)
-  if artfctdef.onset>0 && artfctdef.offset>0
+if ~isempty(cfg.artfctdef.threshold.onset) || ~isempty(cfg.artfctdef.threshold.offset)
+  if cfg.artfctdef.threshold.onset>0 && cfg.artfctdef.threshold.offset>0
     direction = 'up';
-  elseif artfctdef.onset<0 && artfctdef.offset<0
+  elseif cfg.artfctdef.threshold.onset<0 && cfg.artfctdef.threshold.offset<0
     direction = 'down';
   else
     error('incorrect specification of onset and offset');
@@ -191,99 +167,158 @@ else
   direction = 'none';
 end
 
+% get the remaining settings
+artfctdef     = cfg.artfctdef.threshold;
+artfctdef.trl = trl;
+ntrial        = size(trl,1);
+label         = ft_channelselection(artfctdef.channel, hdr.label);
+chanindx      = match_str(hdr.label, label);
+nchan         = length(chanindx);
+artifact      = table();
 
-for trlop = 1:numtrl
+% only print this once
+ft_notice once FieldTrip:applyingPreprocessing
+
+ft_progress('init', cfg.feedback, ['searching for artifacts in ' num2str(nchan) ' channels']);
+for trlop=1:ntrial
+  ft_progress(trlop/ntrial, 'searching in trial %d from %d\n', trlop, ntrial);
   if hasdata
-    dat = ft_fetch_data(data,        'header', hdr, 'begsample', cfg.trl(trlop,1), 'endsample', cfg.trl(trlop,2), 'chanindx', channelindx, 'checkboundary', strcmp(cfg.continuous, 'no'));
+    dat = ft_fetch_data(data,        'header', hdr, 'begsample', trl(trlop,1), 'endsample', trl(trlop,2), 'chanindx', chanindx, 'checkboundary', strcmp(cfg.continuous, 'no'));
   else
-    dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', cfg.trl(trlop,1), 'endsample', cfg.trl(trlop,2), 'chanindx', channelindx, 'checkboundary', strcmp(cfg.continuous, 'no'), 'dataformat', cfg.dataformat);
+    dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', trl(trlop,1), 'endsample', trl(trlop,2), 'chanindx', chanindx, 'checkboundary', strcmp(cfg.continuous, 'no'), 'dataformat', cfg.dataformat);
   end
   
-  % only do the preprocessing if there is an option that suggests to have an effect
+  % determine the length of the data in this trial
+  nsample = trl(trlop,2)-trl(trlop,1)+1;
+  
+  if size(trl,2)>2
+    time = offset2time(trl(trlop,3), hdr.Fs, nsample);
+  else
+    time = offset2time(0, hdr.Fs, nsample);
+  end
+  
+  % only do the preprocessing and filtering if there is an option that suggests to have an effect
   status = struct2cell(artfctdef);
   status = status(cellfun(@(x) ischar(x), status));
   if any(ismember(status, {'yes', 'abs', 'complex', 'real', 'imag', 'absreal', 'absimag', 'angle'}))
-    dat = preproc(dat, channel, offset2time(cfg.trl(trlop,3), hdr.Fs, size(dat,2)), artfctdef);
+    ft_notice('FieldTrip:applyingPreprocessing', 'applying preprocessing options')
+    dat = preproc(dat, label, time, artfctdef);
   end
   
-  % make a vector that indicates for each sample whether there is an artifact
-  artval = false(1,  size(dat,2));
-  artval = artval | any(dat<=artfctdef.min,1);
-  artval = artval | any(dat>=artfctdef.max,1);
-  
-  % compute the range as the maximum of the peak-to-peak values for each channel
-  ptpval = max(dat, [], 2) - min(dat, [], 2);
-  if any(ptpval>=artfctdef.range)
-    artval(:) = true; % mark the whole segment as bad
-  end
-  
-  % this is when a different onset and offset are specified
-  switch direction
-    case 'up'
-      onset  = find(diff([0 any(dat>=artfctdef.onset,1)])>0); % find the rising flank
-      offset = nan(size(onset));
-      for i=1:numel(onset)
-        rem = dat(:,onset(i):end); % this is the remaining data following the artifact onset
-        offset(i) = find(diff([any(rem<=artfctdef.offset,1) 0])>0, 1, 'first'); % find the falling flank
-        offset(i) = offset(i) + onset(i);
-        % add it to the other artifacts in the boolean vector
-        artval(onset(i):offset(i)) = true;
-      end
-      
-    case 'down'
-      onset  = find(diff([0 any(dat<=artfctdef.onset,1)])>0); % find the rising flank
-      offset = nan(size(onset));
-      for i=1:numel(onset)
-        rem = dat(:,onset(i):end); % this is the remaining data following the artifact onset
-        offset(i) = find(diff([any(rem>=artfctdef.offset,1) 0])>0, 1, 'first'); % find the falling flank
-        offset(i) = offset(i) + onset(i);
-        % add it to the other artifacts in the boolean vector
-        artval(onset(i):offset(i)) = true;
-      end
-      
-    case 'none'
-      % nothing to do
-  end
-  
-  if any(artval)
-    begsample = find(diff([false artval])>0) + cfg.trl(trlop,1) - 1;
-    endsample = find(diff([artval false])<0) + cfg.trl(trlop,1) - 1;
-    offset    = nan(size(begsample));
+  for sgnlop=1:nchan
+    % make a vector that indicates for each sample whether it exceeds the threshold
+    artval = false(1, nsample);
+    artval = artval | any(dat(sgnlop,:)<=artfctdef.min,1);
+    artval = artval | any(dat(sgnlop,:)>=artfctdef.max,1);
     
-    if size(dat,1)==1
-      % determine the offset of the peak value, this only works in case of a single channel
-      for i=1:numel(begsample)
-        seg = dat(begsample(i):endsample(i)); % get the segment of data
-        if all(seg>=artfctdef.max) || strcmp(direction, 'up')
-          [dum, indx] = max(seg);
-          offset(i)   = 1 - indx; % relative to the start of the segment, 0 is the first sample, -1 is the 2nd, etc.
-        elseif all(seg<=artfctdef.min) || strcmp(direction, 'down')
-          [dum, indx] = min(seg);
-          offset(i)   = 1 - indx; % relative to the start of the segment, 0 is the first sample, -1 is the 2nd, etc.
-        end % if up or down
-      end % for each artifact in this trial
-    end % if single channel
+    % compute the range as the maximum of the peak-to-peak values for each channel
+    ptpval = max(dat(sgnlop,:)) - min(dat(sgnlop,:));
+    if any(ptpval>=artfctdef.range)
+      artval(:) = true; % mark the whole segment as bad
+    end
     
-    artifact  = cat(1, artifact, [begsample(:) endsample(:) offset(:)]);
-  end
-  
-end % for trllop
+    % this is when a different onset and offset are specified
+    switch direction
+      case 'up'
+        onset  = find(diff([0 dat(sgnlop,:)>=artfctdef.onset])>0); % find all rising flanks
+        offset = nan(size(onset));
+        for i=1:numel(onset)
+          rem = dat(sgnlop,onset(i)+1:end); % this is the remaining data following the artifact onset
+          rem = (rem<=artfctdef.offset);   % threshold for the offset
+          if any(rem)
+            offset(i) = find(rem, 1, 'first'); % find the falling flank
+          else
+            offset(i) = length(rem); % take the last sample
+          end
+          offset(i) = offset(i) + onset(i);
+          % add it to the other artifacts in the boolean vector
+          artval(onset(i):offset(i)) = true;
+        end
+        
+      case 'down'
+        onset  = find(diff([0 dat(sgnlop,:)<=artfctdef.onset])>0); % find all rising flanks
+        offset = nan(size(onset));
+        for i=1:numel(onset)
+          rem = dat(sgnlop,onset(i)+1:end); % this is the remaining data following the artifact onset
+          rem = (rem>=artfctdef.offset);
+          if any(rem)
+            offset(i) = find(rem, 1, 'first'); % find the falling flank
+          else
+            offset(i) = length(rem); % take the last sample
+          end
+          offset(i) = offset(i) + onset(i);
+          % add it to the other artifacts in the boolean vector
+          artval(onset(i):offset(i)) = true;
+        end
+        
+      case 'none'
+        % nothing to do
+    end
+    
+    % to avoid confusion with the offset that is used further down
+    clear onset offset
+    
+    begsample = find(diff([0 artval])>0)';
+    endsample = find(diff([artval 0])<0)';
+    offset    = nan(size(begsample)); % the offset of the peak relative to the segment, just like in FT_DEFINETRIAL
+    channel   = repmat(label(sgnlop), size(begsample));
+    
+    % determine the sample at which the signal peaks
+    for i=1:numel(begsample)
+      seg = dat(sgnlop,begsample(i):endsample(i)); % get the segment of data
+      if all(seg>=artfctdef.max) || strcmp(direction, 'up')
+        [dum, indx] = max(seg);
+        offset(i)   = 1 - indx; % relative to the start of the segment, 0 is the first sample, -1 is the 2nd, etc.
+      elseif all(seg<=artfctdef.min) || strcmp(direction, 'down')
+        [dum, indx] = min(seg);
+        offset(i)   = 1 - indx; % relative to the start of the segment, 0 is the first sample, -1 is the 2nd, etc.
+      end % if up or down
+    end % for each artifact in this trial
+    
+    % express them relative to the start of the data, not the start of the trial
+    begsample = begsample + trl(trlop,1) - 1;
+    endsample = endsample + trl(trlop,1) - 1;
+    
+    % remember the parts where this channel exceeds the threshold as artifacts
+    if ~isempty(begsample)
+      artifact = vertcat(artifact, table(begsample, endsample, offset, channel));
+    end
+    
+  end % for sgnlop
+end % for trlop
+ft_progress('close');
 
-if any(isnan(artifact(:,3)))
-  % don't keep the offset if it cannot be determined consistently
-  artifact = artifact(:,[1 2]);
+% reset it to the default 
+ft_notice on FieldTrip:applyingPreprocessing
+
+if strcmp(cfg.representation, 'numeric') && istable(artifact)
+  if isempty(artifact)
+    % an empty table does not have columns
+    artifact = zeros(0,3);
+  else
+    % convert the table to a numeric array with the columns begsample, endsample and offset
+    artifact = table2array(artifact(:,1:3));
+  end
+elseif strcmp(cfg.representation, 'table') && isnumeric(artifact)
+  if isempty(artifact)
+    % an empty table does not have columns
+    artifact = table();
+  else
+    % convert the numeric array to a table with the columns begsample, endsample and offset
+    begsample = artifact(:,1);
+    endsample = artifact(:,2);
+    offset    = artifact(:,3);
+    artifact = table(begsample, endsample, offset);
+  end
 end
 
-ft_info('detected %d artifacts\n', size(artifact,1));
-
-% remember the details that were used here
+% remember the details that were used here and store the detected artifacts
 cfg.artfctdef.threshold          = artfctdef;
-cfg.artfctdef.threshold.trl      = cfg.trl;         % trialdefinition prior to rejection
-cfg.artfctdef.threshold.channel  = channel;         % exact channels used for detection
-cfg.artfctdef.threshold.artifact = artifact;        % detected artifacts
+cfg.artfctdef.threshold.artifact = artifact;
+
+ft_notice('detected %d artifacts\n', size(artifact,1));
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble provenance
 ft_postamble previous data
 ft_postamble savevar
-

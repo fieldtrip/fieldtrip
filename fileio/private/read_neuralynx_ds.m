@@ -54,7 +54,7 @@ if needhdr
   for i=1:length(ls)
     fname{i} = fullfile(dirname, ls(i).name);
   end
-
+  
   ftype = zeros(length(fname), 1);
   for i=1:length(fname)
     if     ft_filetype(fname{i}, 'neuralynx_ncs')
@@ -65,18 +65,18 @@ if needhdr
       ftype(i) = 3;
     end
   end
-
+  
   % only remember the filenames that are relevant
   fname = fname(ftype>0);
   ftype = ftype(ftype>0);
   ftype_ncs = find(ftype==1);
   ftype_nse = find(ftype==2);
   ftype_nts = find(ftype==3);
-
+  
   if length(fname)==0
     ft_error('the dataset directory contains no supported files');
   end
-
+  
   for i=1:length(fname)
     % this will only work if all files within a dataset return a similar header structure
     switch ftype(i)
@@ -90,7 +90,7 @@ if needhdr
         ft_error('unsupported');
     end
   end
-
+  
   % combine the information from the different files in a single header
   for i=1:length(orig)
     if isfield(orig(i).hdr, 'NLX_Base_Class_Name')
@@ -98,11 +98,13 @@ if needhdr
     else
       label{i}           = orig(i).hdr.AcqEntName;
     end
-    if isfield(orig(i).hdr, 'SubSamplingInterleave')
-      SamplingFrequency(i) = orig(i).hdr.SamplingFrequency / orig(i).hdr.SubSamplingInterleave;
-    else
-      SamplingFrequency(i) = orig(i).hdr.SamplingFrequency;
+    if isfield(orig(i).hdr, 'SubSamplingInterleave') && orig(i).hdr.SubSamplingInterleave~=1
+      % see https://github.com/fieldtrip/fieldtrip/issues/1780
+      msgId = 'FieldTrip:fileio:SubSamplingInterleave';
+      ft_notice('once', msgId);
+      ft_notice(msgId, 'assuming that SamplingFrequency already takes the SubSamplingInterleave into account, see https://github.com/fieldtrip/fieldtrip/issues/1780');
     end
+    SamplingFrequency(i) = orig(i).hdr.SamplingFrequency;
     ADBitVolts(i)        = orig(i).hdr.ADBitVolts;
     FirstTimeStamp(i)    = orig(i).hdr.FirstTimeStamp;
     LastTimeStamp(i)     = orig(i).hdr.LastTimeStamp;
@@ -110,7 +112,7 @@ if needhdr
     % Note that the last timestamp corresponds with the first sample of the last
     % record and not with the last sample in the file.
   end
-
+  
   for i=1:length(orig)
     % timestamps are measured in units of approximately 1us
     % in case of 32556 Hz sampling rate, there are approximately 30.7 timestamps per sample
@@ -132,11 +134,11 @@ if needhdr
     TimeStampPerSample(i) = double(LastTimeStamp(i)-FirstTimeStamp(i))/((NRecords(i)-1)*recordsize);  % this should be in double precision, since it can be fractional
     LastTimeStamp(i)      = LastTimeStamp(i) + uint64((recordsize-1)*TimeStampPerSample(i));          % this should be in uint64 precision
   end % for length(orig)
-
+  
   if any(SamplingFrequency~=SamplingFrequency(1))
     ft_warning('not all channels have the same sampling rate');
   end
-
+  
   if ~isempty(ftype_ncs)
     if any(FirstTimeStamp(ftype_ncs)~=FirstTimeStamp(ftype_ncs(1)))
       % there seems to be a matlab bug (observed in Matlab75 on windows) which causes this uint64 comparison to fail if there are exactly 8 files
@@ -156,7 +158,7 @@ if needhdr
       ft_warning('not all continuous channels have the same number of records');
     end
   end % if ftype_ncs
-
+  
   % construct the header that applies to all channels combined
   hdr.nChans         = length(label);
   hdr.label          = label;
@@ -164,7 +166,7 @@ if needhdr
   hdr.nTrials        = 1;                           % it is continuous
   hdr.Fs             = SamplingFrequency(1);
   hdr.nSamplesPre    = 0;                           % it is continuous
-
+  
   if ~isempty(ftype_ncs)
     % these elements are only relevant for continuously sampled channels
     hdr.nSamples           = NRecords(1) * 512;
@@ -172,13 +174,13 @@ if needhdr
     hdr.LastTimeStamp      = LastTimeStamp(1);
     hdr.TimeStampPerSample = TimeStampPerSample(1);
   end
-
+  
   % remember the original header details
   hdr.orig = orig(:);
-
+  
   % return the header
   dat = hdr;
-
+  
 else
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % read the data of the selected channels (i.e. files)
@@ -190,38 +192,38 @@ else
   nchan   = length(chanindx);
   nsample = endsample-begsample+1;
   dat     = zeros(nchan, nsample);
-
+  
   for i=1:nchan
     thischan = chanindx(i);
     thisfile = hdr.filename{thischan};
     switch ft_filetype(thisfile)
-    case 'neuralynx_ncs'
-      % determine the records that contain the sample numbers of the requested segment
-      begrecord  = ceil(begsample/512);
-      endrecord  = ceil(endsample/512);
-      ncs = read_neuralynx_ncs(thisfile, begrecord, endrecord);
-      % copy the selected samples into the output
-      begsel = begsample - (begrecord-1)*512;
-      endsel = endsample - (begrecord-1)*512;
-      dat(i,:) = ncs.dat(begsel:endsel);
-
-    case 'neuralynx_nse'
-      % read all spike waveforms and timestamps
-      nse = read_neuralynx_nse(thisfile);
-      % convert the timestamps into samples
-      fprintf('%d timstamps\n', length(nse.TimeStamp));
-      sample = double(nse.TimeStamp-hdr.FirstTimeStamp)/hdr.TimeStampPerSample + 1;
-      sample = sample(sample>=begsample & sample<=endsample) - begsample + 1;
-      dat(i,sample) = dat(i,sample) + 1;
-
-    case 'neuralynx_nts'
-      % read all timestamps
-      nts = read_neuralynx_nts(thisfile);
-      % convert the timestamps into samples
-      sample = double(nse.TimeStamp-hdr.FirstTimeStamp)/hdr.TimeStampPerSample + 1;
-      sample = sample(sample>=begsample & sample<=endsample) - begsample + 1;
-      dat(i,sample) = dat(i,sample) + 1;
-
+      case 'neuralynx_ncs'
+        % determine the records that contain the sample numbers of the requested segment
+        begrecord  = ceil(begsample/512);
+        endrecord  = ceil(endsample/512);
+        ncs = read_neuralynx_ncs(thisfile, begrecord, endrecord);
+        % copy the selected samples into the output
+        begsel = begsample - (begrecord-1)*512;
+        endsel = endsample - (begrecord-1)*512;
+        dat(i,:) = ncs.dat(begsel:endsel);
+        
+      case 'neuralynx_nse'
+        % read all spike waveforms and timestamps
+        nse = read_neuralynx_nse(thisfile);
+        % convert the timestamps into samples
+        fprintf('%d timstamps\n', length(nse.TimeStamp));
+        sample = double(nse.TimeStamp-hdr.FirstTimeStamp)/hdr.TimeStampPerSample + 1;
+        sample = sample(sample>=begsample & sample<=endsample) - begsample + 1;
+        dat(i,sample) = dat(i,sample) + 1;
+        
+      case 'neuralynx_nts'
+        % read all timestamps
+        nts = read_neuralynx_nts(thisfile);
+        % convert the timestamps into samples
+        sample = double(nse.TimeStamp-hdr.FirstTimeStamp)/hdr.TimeStampPerSample + 1;
+        sample = sample(sample>=begsample & sample<=endsample) - begsample + 1;
+        dat(i,sample) = dat(i,sample) + 1;
+        
     end % switch ft_filetype
   end % for nchan
 end % reading data

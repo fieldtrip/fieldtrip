@@ -1,18 +1,19 @@
-function [x, ut, ori, sin_val] = svdfft(f, n, trltapcnt)
+function [fr, ut, u1, s] = svdfft(f, n, trltapcnt)
 
-% SVDFFT computes a rotated FFT matrix, using the real part of the
-% cross-spectral density matrix. This rotation ensures that the phase
-% relationship of the underlying sources does not change, while rotating
-% the channels such that the first channel contains the maximal amplitude
-% signal.
+% SVDFFT computes a rotated FFT matrix, using the real part of the cross-spectral
+% density matrix. This rotation ensures that the phase relationship of the underlying
+% sources does not change, while rotating the channels such that the first channel
+% contains the maximal amplitude signal.
 %
 % Use as
-%   [x, ut] = svdfft(f, n, trltapcnt);
+%   [fr, ut] = svdfft(f, n, trltapcnt);
 % where
-%   n           number of components (orientations) to keep in the output (e.g. 1 or 3)
+%   n           number of components (orientations) to keep in the output (e.g. 1, 2 or 3)
 %   trltapcnt   vector of length Ntrials with the number of tapers
+%
+% See also SVD
 
-% Copyright (C) 2005-2007, Robert Oostenveld & Jan-Mathijs Schoffelen
+% Copyright (C) 2005-2020, Robert Oostenveld & Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -32,41 +33,42 @@ function [x, ut, ori, sin_val] = svdfft(f, n, trltapcnt)
 %
 % $Id$
 
-if nargin == 1,
+if nargin == 1
   n         = size(f,1);
   trltapcnt = ones(size(f,1),1);
-elseif nargin == 2,
+elseif nargin == 2
   trltapcnt = ones(size(f,1),1);
-elseif nargin == 3,
-  if isempty(n), n = size(f,1); end 
+elseif nargin == 3
+  if isempty(n), n = size(f,1); end
 end
 
-if all(trltapcnt==trltapcnt(1)),
-  c = f * f';  
+if all(trltapcnt==trltapcnt(1))
+  c = f * f';
 else
   trltapcnt = trltapcnt(:);
   sumtapcnt = cumsum([0;trltapcnt]);
   c         = zeros(size(f,1), size(f,1));
   for j = 1:length(sumtapcnt)-1
-    c = c + [f(:, sumtapcnt(j)+1:sumtapcnt(j+1)) * f(:, sumtapcnt(j)+1:sumtapcnt(j+1))']./trltapcnt(j);
+    ftap = f(:, sumtapcnt(j)+1:sumtapcnt(j+1));
+    c = c + ftap * ftap' ./ trltapcnt(j);
   end
 end
 
-if n==size(f,1),
+if n==size(f,1)
   % do a complete decomposition
-  [u, s, v] = svd(real(c));
-elseif n<1,
-  % do a complete decomposition and only keep the biggest components which together explain n percent of the variance 
-  [u, s, v] = svd(real(c)); 
-  s         = cumsum(diag(s))./sum(diag(s));
-  n         = length(find(s<=n));
-  u         = u(:, 1:n);
+  [u, s] = svd(real(c));
+elseif n<1
+  % do a complete decomposition and only keep the biggest components which together explain n percent of the variance
+  [u, s] = svd(real(c));
+  s      = cumsum(diag(s))./sum(diag(s));
+  n      = length(find(s<=n));
+  u      = u(:, 1:n);
 else
   % only decompose the first n components
-  [u, s, v] = svds(real(c),n);
+  [u, s] = svds(real(c),n);
 end
 
-ut = u';      % this rotates the data in the direction of the maximum power
-x  = ut * f;  % apply the rotation on the data
-sin_val = diag(s);
-ori = u(:,1);
+ut  = u';      % this rotates the data in the direction of the maximum power
+fr  = ut * f;  % apply the rotation on the data
+u1  = u(:,1);
+s   = diag(s);

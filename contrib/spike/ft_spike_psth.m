@@ -11,7 +11,7 @@ function [psth] = ft_spike_psth(cfg, spike)
 % the raw datatype is converted to the spike datatype.
 %
 % Configurations:
-%   cfg.binsize          =  [binsize] in sec or string. 
+%   cfg.binsize          =  [binsize] in sec or string.
 %                          If 'scott', we estimate the optimal bin width
 %                          using Scott's formula (1979). If 'sqrt', we take
 %                          the number of bins as the square root of the
@@ -50,8 +50,8 @@ function [psth] = ft_spike_psth(cfg, spike)
 %   Psth is a timelock datatype (see FT_DATATYPE_TIMELOCK)
 %     Psth.time        = center histogram bin points
 %	    Psth.fsample     = 1/binsize;
-%     Psth.avg         = contains average PSTH per unit 
-%     Psth.trial       = contains PSTH per unit per trial 
+%     Psth.avg         = contains average PSTH per unit
+%     Psth.trial       = contains PSTH per unit per trial
 %     Psth.var         = contains variance of PSTH per unit across trials
 %
 % For subsequent processing you can use
@@ -108,7 +108,7 @@ cfg = ft_checkopt(cfg,'outputunit',   'char',  {'rate', 'spikecount'});
 cfg = ft_checkopt(cfg,'binsize',     {'char',  'doublescalar'});
 cfg = ft_checkopt(cfg,'spikechannel',{'cell',  'char', 'double'});
 cfg = ft_checkopt(cfg,'latency',     {'char',  'ascendingdoublebivector'});
-cfg = ft_checkopt(cfg,'trials',      {'char',  'doublevector', 'logical'}); 
+cfg = ft_checkopt(cfg,'trials',      {'char',  'doublevector', 'logical'});
 cfg = ft_checkopt(cfg,'vartriallen' , 'char', {'yes', 'no'});
 cfg = ft_checkopt(cfg,'keeptrials'  , 'char', {'yes', 'no'});
 
@@ -123,7 +123,7 @@ spikesel         = match_str(spike.label, cfg.spikechannel);
 nUnits           = length(spikesel);
 if nUnits==0, error('no spikechannel selected by means of cfg.spikechannel'); end
 
-% determine the duration of each trial 
+% determine the duration of each trial
 begTrialLatency = spike.trialtime(cfg.trials,1); % remember: already selected on trial here
 endTrialLatency = spike.trialtime(cfg.trials,2);
 trialDur 	    	= endTrialLatency - begTrialLatency;
@@ -141,20 +141,20 @@ if ischar(cfg.binsize)
     % automatically determine an 'optimal' binwidth
     N              = sum(spikesInWin);
     if strcmp(cfg.binsize,'scott')
-      sd           = nanstd(spike.time{unitIndx}(spikesInWin));          
+      sd           = nanstd(spike.time{unitIndx}(spikesInWin));
       h(iUnit)     = 3.49*sd./(N^(1/3));
     elseif strcmp(cfg.binsize,'sqrt')
       k            = ceil(sqrt(N));
       h(iUnit)     = (cfg.latency(2)-cfg.latency(1))/k;
     else
-      error('unsupported option for cfg.binsize'); 
+      error('unsupported option for cfg.binsize');
     end
   end
   cfg.binsize = nanmean(h);
 end
 
 % do some error checking on the binsize
-if cfg.binsize<=0 || cfg.binsize>(cfg.latency(2)-cfg.latency(1)),
+if cfg.binsize<=0 || cfg.binsize>(cfg.latency(2)-cfg.latency(1))
   error('cfg.binsize should be greater than zero and not exceed the trialduration');
 end
 
@@ -192,7 +192,7 @@ else
   dof = ones(1,nBins-1)*nTrials; % if all exceed latency, then this is dof
 end
 
-for iTrial = 1:nTrials 
+for iTrial = 1:nTrials
   origTrial = cfg.trials(iTrial);
   if  ~ (allStartEarlier && allEndLater) % select bins and count dof + 1
     binSel = begTrialLatency(iTrial)<=bins(1:end-1) & endTrialLatency(iTrial)>=bins(2:end);
@@ -212,10 +212,10 @@ for iTrial = 1:nTrials
     if isempty(trialPsth), trialPsth = zeros(1,length(bins)); end
     
     % convert to firing rates if requested, with spikecount do nothing
-    if strcmp(cfg.outputunit,'rate'), 
-      trialPsth = trialPsth/cfg.binsize; 
-    elseif strcmp(cfg.outputunit,'proportion'), 
-      trialPsth = trialPsth./nansum(trialPsth); 
+    if strcmp(cfg.outputunit,'rate'),
+      trialPsth = trialPsth/cfg.binsize;
+    elseif strcmp(cfg.outputunit,'proportion'),
+      trialPsth = trialPsth./nansum(trialPsth);
     end
     
     % compute the sum and the sum of squares for the var and the mean on the fly
@@ -234,7 +234,7 @@ psth.avg       = s ./ dof;
 psth.var       = (ss - s.^2./dof)./(dof-1); % since sumPsth.^2 ./ dof = dof .* (sumPsth/dof).^2
 psth.dof       = dof; % combined with psth.var we can get SEM
 psth.fsample   = 1/(cfg.binsize);   % might be more compatible with feeding psth in other funcs
-psth.time      = bins(1:end-1) + 0.5*cfg.binsize; 
+psth.time      = bins(1:end-1) + 0.5*cfg.binsize;
 psth.label     = spike.label(spikesel);
 if (strcmp(cfg.keeptrials,'yes'))
   psth.trial  = singleTrials;
@@ -282,10 +282,7 @@ elseif islogical(cfg.trials) || all(cfg.trials==0 | cfg.trials==1)
   cfg.trials = find(cfg.trials);
 end
 cfg.trials = sort(cfg.trials(:));
-if max(cfg.trials)>nTrials, 
-  error('maximum trial number in cfg.trials should not exceed number of rows of spike.trialtime'); 
+if max(cfg.trials)>nTrials,
+  error('maximum trial number in cfg.trials should not exceed number of rows of spike.trialtime');
 end
 if isempty(cfg.trials), error('No trials were selected by you, rien ne va plus'); end
-
-
-

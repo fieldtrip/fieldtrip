@@ -1,8 +1,7 @@
 function test_ft_prepare_localspheres
 
-% MEM 2500mb
+% MEM 3gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_headmodel_localspheres ft_prepare_headmodel ft_prepare_localspheres
 
 % function to test ft_headmodel_localspheres. this function is called
@@ -26,7 +25,7 @@ success = true;
 % get the data which is needed
 
 % read in the gradiometer information
-hdr  = ft_read_header(dccnpath('/home/common/matlab/fieldtrip/data/Subject01.ds'));
+hdr  = ft_read_header(dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds'));
 grad = hdr.grad;
 
 % read in the segmented mri
@@ -36,7 +35,7 @@ load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/segmen
 segmentedmri = ft_convert_units(segmentedmri,'cm');
 
 % specify the file for the headshape
-hdmfile  = dccnpath('/home/common/matlab/fieldtrip/data/Subject01.shape');
+hdmfile  = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.shape');
 
 % read in the headshape
 shape = ft_read_headshape(hdmfile);

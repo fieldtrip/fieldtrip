@@ -13,12 +13,12 @@ function [headmodel, sens, cfg] = prepare_headmodel(cfg, data)
 % the skin surface of a BEM head model.
 %
 % This function will return the electrodes/gradiometers in an order that is
-% consistent with the order in cfg.channel, or in case that is empty in the
-% order of the input electrode/gradiometer definition.
+% consistent with the order in cfg.channel, or - in case that is empty - in
+% the order of the input electrode/gradiometer definition.
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% Copyright (C) 2004-2012, Robert Oostenveld
+% Copyright (C) 2004-2020, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -39,10 +39,18 @@ function [headmodel, sens, cfg] = prepare_headmodel(cfg, data)
 % $Id$
 
 cfg = ft_checkconfig(cfg, 'forbidden', 'order');
+cfg = ft_checkconfig(cfg, 'required', 'headmodel');
 
 % set the defaults
 cfg.channel  = ft_getopt(cfg, 'channel', 'all');
 cfg.siunits  = ft_getopt(cfg, 'siunits', 'no');   % yes/no, ensure that SI units are used consistently
+
+% set the defaults for leadfield computation
+cfg.reducerank      = ft_getopt(cfg, 'reducerank');     % the default is handled below
+cfg.backproject     = ft_getopt(cfg, 'backproject');
+cfg.normalize       = ft_getopt(cfg, 'normalize');      % this is better not used in single dipole models
+cfg.normalizeparam  = ft_getopt(cfg, 'normalizeparam'); % this is better not used in single dipole models
+cfg.weight          = ft_getopt(cfg, 'weight');         % this is better not used in single dipole models
 
 hasdata = (nargin>1);
 
@@ -76,6 +84,15 @@ else
   sens = ft_fetch_sens(cfg);
 end
 
+if isempty(cfg.reducerank)
+  % set the default for reducing the rank of the leadfields
+  if ft_senstype(sens, 'eeg')
+    cfg.reducerank = ft_getopt(cfg, 'reducerank', 3);
+  else
+    cfg.reducerank = ft_getopt(cfg, 'reducerank', 2);
+  end
+end
+
 if istrue(cfg.siunits)
   % ensure that the geometrical units are in SI units
   sens       = ft_convert_units(sens,       'm', 'feedback', true);
@@ -89,7 +106,7 @@ else
     % convert it to the units of the source model
     sens       = ft_convert_units(sens,       cfg.sourcemodel.unit, 'feedback', true);
     headmodel  = ft_convert_units(headmodel,  cfg.sourcemodel.unit, 'feedback', true);
-  else
+  elseif isfield(headmodel, 'unit')
     % convert it to the units of the head model
     sens = ft_convert_units(sens, headmodel.unit, 'feedback', true);
   end
@@ -109,17 +126,27 @@ else
   cfg.channel = ft_channelselection(cfg.channel, sens.label);
 end
 
-% ensure that these are a struct, which may be required in case configuration tracking is used
-% FIXME this fails for combined EEG+MEG
-% headmodel = struct(headmodel);
-% sens      = struct(sens);
-
 % the prepare_vol_sens function from the forwinv module does most of the actual work
 [headmodel, sens] = ft_prepare_vol_sens(headmodel, sens, 'channel', cfg.channel);
 
+if ~ischar(cfg.headmodel)
+  % update the headmodel in the configuration
+  cfg.headmodel = headmodel;
+end
+
+if isfield(cfg, 'grad') && ~ischar(cfg.grad) && ft_senstype(sens, 'meg')
+  % update the gradiometer definition in the configuration
+  cfg.grad = sens;
+elseif isfield(cfg, 'elec') && ~ischar(cfg.elec) && ft_senstype(sens, 'eeg')
+  % update the electrode definition in the configuration
+  cfg.elec = sens;
+else
+  % the gradiometer or electrode definition was specified in the data or read from file
+end
+
 % update the selected channels in the configuration
 if iscell(sens)
-  % this represents combined EEG, ECoG and/or MEG
+  % this represents combined EEG, iEEG and/or MEG
   cfg.channel = {};
   for i=1:numel(sens)
     cfg.channel = cat(1, cfg.channel, sens{i}.label(:));

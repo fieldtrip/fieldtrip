@@ -1,11 +1,10 @@
 function test_bug1956
 
 % WALLTIME 02:00:00
-% MEM 2gb
-
+% MEM 3gb
 % DEPENDENCY ft_volumesegment ft_prepare_sourcemodel volumesmooth
 
-mri = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/Subject01.mri'));
+mri = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.mri'));
 mri.coordsys = 'ctf'; % this can also be determined with ft_determine_coordsys
 
 cfg = [];

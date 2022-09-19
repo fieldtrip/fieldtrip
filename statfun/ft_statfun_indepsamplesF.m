@@ -8,27 +8,28 @@ function [s, cfg] = ft_statfun_indepsamplesF(cfg, dat, design)
 %   [stat] = ft_timelockstatistics(cfg, timelock1, timelock2, ...)
 %   [stat] = ft_freqstatistics(cfg, freq1, freq2, ...)
 %   [stat] = ft_sourcestatistics(cfg, source1, source2, ...)
-% with the following configuration option
+% with the following configuration option:
 %   cfg.statistic = 'ft_statfun_indepsamplesF'
 %
-% Configuration options
-%   cfg.computestat    = 'yes' or 'no', calculate the statistic (default='yes')
+% You can specify the following configuration options:
+%   cfg.computestat    = 'yes' or 'no', calculate the statistic (default= 'yes')
 %   cfg.computecritval = 'yes' or 'no', calculate the critical values of the test statistics (default='no')
 %   cfg.computeprob    = 'yes' or 'no', calculate the p-values (default='no')
 %
-% The following options are relevant if cfg.computecritval='yes' and/or
-% cfg.computeprob='yes'.
+% The following options are relevant if cfg.computecritval='yes' and/or cfg.computeprob='yes':
 %   cfg.alpha = critical alpha-level of the statistical test (default=0.05)
 %   cfg.tail  = -1, 0, or 1, left, two-sided, or right (default=1)
 %               cfg.tail in combination with cfg.computecritval='yes'
 %               determines whether the critical value is computed at
 %               quantile cfg.alpha (with cfg.tail=-1), at quantiles
 %               cfg.alpha/2 and (1-cfg.alpha/2) (with cfg.tail=0), or at
-%               quantile (1-cfg.alpha) (with cfg.tail=1).
+%               quantile (1-cfg.alpha) (with cfg.tail=1)
 %
-% Design specification
-%   cfg.ivar  = row number of the design that contains the labels of the conditions that must be 
-%               compared (default=1). The labels range from 1 to the number of conditions.
+% The experimental design is specified as:
+%   cfg.ivar  = independent variable, row number of the design that contains the labels of the conditions to be compared (default=1)
+%
+% The labels for the independent variable should be specified as numbers ranging
+% from 1 to the number of conditions.
 %
 % See also FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS
 
@@ -53,32 +54,33 @@ function [s, cfg] = ft_statfun_indepsamplesF(cfg, dat, design)
 % $Id$
 
 % set the defaults
-if ~isfield(cfg, 'computestat'),       cfg.computestat='yes';     end
-if ~isfield(cfg, 'computecritval'),    cfg.computecritval='no';   end
-if ~isfield(cfg, 'computeprob'),       cfg.computeprob='no';      end
-if ~isfield(cfg, 'alpha'),             cfg.alpha=0.05;            end
-if ~isfield(cfg, 'tail'),              cfg.tail=1;                end
+cfg.computestat    = ft_getopt(cfg, 'computestat', 'yes');
+cfg.computecritval = ft_getopt(cfg, 'computecritval', 'no');
+cfg.computeprob    = ft_getopt(cfg, 'computeprob', 'no');
+cfg.alpha          = ft_getopt(cfg, 'alpha', 0.05);
+cfg.tail           = ft_getopt(cfg, 'tail', 1);
+cfg.ivar           = ft_getopt(cfg, 'ivar', 1);
 
 % perform some checks on the configuration
 if strcmp(cfg.computeprob,'yes') && strcmp(cfg.computestat,'no')
-    ft_error('P-values can only be calculated if the test statistics are calculated.');
+  ft_error('P-values can only be calculated if the test statistics are calculated.');
 end
 if isfield(cfg,'uvar') && ~isempty(cfg.uvar)
-    ft_error('cfg.uvar should not exist for an independent samples statistic');
+  ft_error('cfg.uvar should not exist for an independent samples statistic');
 end
-    
-ncond=length(unique(design(cfg.ivar,:)));
-nrepl=0;
+
+ncond = length(unique(design(cfg.ivar,:)));
+nrepl = 0;
 for condindx=1:ncond
-    nrepl=nrepl+length(find(design(cfg.ivar,:)==condindx));
+  nrepl=nrepl+length(find(design(cfg.ivar,:)==condindx));
 end
 if nrepl<size(design,2)
   ft_error('Invalid specification of the independent variable in the design array.');
 end
 if nrepl<=ncond
-    ft_error('The must be more trials/subjects than levels of the independent variable.');
+  ft_error('The must be more trials/subjects than levels of the independent variable.');
 end
-dfnum = ncond - 1;
+dfnum   = ncond - 1;
 dfdenom = nrepl - ncond;
 
 nsmpls = size(dat,1);
@@ -89,10 +91,10 @@ if strcmp(cfg.computestat, 'yes')
   avgs = zeros(nsmpls,ncond);
   pooledvar = zeros(nsmpls,1);
   for condindx=1:ncond
-      sel=find(design(cfg.ivar,:)==condindx);
-      nobspercell(condindx)=length(sel);
-      avgs(:,condindx)=mean(dat(:,sel),2);
-      pooledvar = pooledvar + nobspercell(condindx)*var(dat(:,sel),1,2);
+    sel=find(design(cfg.ivar,:)==condindx);
+    nobspercell(condindx)=length(sel);
+    avgs(:,condindx)=mean(dat(:,sel),2);
+    pooledvar = pooledvar + nobspercell(condindx)*var(dat(:,sel),1,2);
   end
   pooledvar = pooledvar/dfdenom;
   globalavg = mean(dat,2);
@@ -105,10 +107,10 @@ if strcmp(cfg.computecritval,'yes')
   s.dfnum   = dfnum;
   s.dfdenom = dfdenom;
   if cfg.tail==-1
-      ft_error('For an independent samples F-statistic, it does not make sense to calculate a left tail critical value.');
+    ft_error('For an independent samples F-statistic, it does not make sense to calculate a left tail critical value.');
   end
   if cfg.tail==0
-      ft_error('For an independent samples F-statistic, it does not make sense to calculate a two-sided critical value.');
+    ft_error('For an independent samples F-statistic, it does not make sense to calculate a two-sided critical value.');
   end
   if cfg.tail==1
     s.critval = finv(1-cfg.alpha,s.dfnum,s.dfdenom);
@@ -120,13 +122,12 @@ if strcmp(cfg.computeprob,'yes')
   s.dfnum   = dfnum;
   s.dfdenom = dfdenom;
   if cfg.tail==-1
-      ft_error('For an independent samples F-statistic, it does not make sense to calculate a left tail p-value.');
+    ft_error('For an independent samples F-statistic, it does not make sense to calculate a left tail p-value.');
   end
   if cfg.tail==0
-      ft_error('For an independent samples F-statistic, it does not make sense to calculate a two-sided p-value.');
+    ft_error('For an independent samples F-statistic, it does not make sense to calculate a two-sided p-value.');
   end
   if cfg.tail==1
     s.prob = 1-fcdf(s.stat,s.dfnum,s.dfdenom);
   end
 end
-

@@ -1,24 +1,22 @@
 function [timelock] = ft_timelockanalysis(cfg, data)
 
-% FT_TIMELOCKANALYSIS computes the timelocked average ERP/ERF and
-% optionally computes the covariance matrix. 
+% FT_TIMELOCKANALYSIS computes the timelocked average ERP/ERF and optionally computes
+% the covariance matrix over the specified time window.
 %
 % Use as
 %   [timelock] = ft_timelockanalysis(cfg, data)
 %
-% The data should be organised in a structure as obtained from the
-% FT_PREPROCESSING function. The configuration should be according to
-%
-%   cfg.channel            = Nx1 cell-array with selection of channels (default = 'all'),
-%                            see FT_CHANNELSELECTION for details
+% The data should be organised in a structure as obtained from the FT_PREPROCESSING
+% function. The configuration should be according to
+%   cfg.channel            = Nx1 cell-array with selection of channels (default = 'all'), see FT_CHANNELSELECTION for details
+%   cfg.latency            = [begin end] in seconds, or 'all', 'minperiod', 'maxperiod', 'prestim', 'poststim' (default = 'all')
 %   cfg.trials             = 'all' or a selection given as a 1xN vector (default = 'all')
-%   cfg.latency            = [begin end] in seconds, or 'all', 'minperiod', 'maxperiod',
-%                            'prestim', 'poststim' (default = 'all')
-%   cfg.covariance         = 'no' or 'yes' (default = 'no')
-%   cfg.covariancewindow   = [begin end] in seconds, or 'all', 'minperiod', 'maxperiod',
-%                            'prestim', 'poststim' (default = 'all')
 %   cfg.keeptrials         = 'yes' or 'no', return individual trials or average (default = 'no')
-%   cfg.removemean         = 'no' or 'yes' for covariance computation (default = 'yes')
+%   cfg.nanmean            = string, can be 'yes' or 'no' (default = 'yes')
+%   cfg.normalizevar       = 'N' or 'N-1' (default = 'N-1')
+%   cfg.covariance         = 'no' or 'yes' (default = 'no')
+%   cfg.covariancewindow   = [begin end] in seconds, or 'all', 'minperiod', 'maxperiod', 'prestim', 'poststim' (default = 'all')
+%   cfg.removemean         = 'yes' or 'no', for the covariance computation (default = 'yes')
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
@@ -30,36 +28,21 @@ function [timelock] = ft_timelockanalysis(cfg, data)
 %
 % See also FT_TIMELOCKGRANDAVERAGE, FT_TIMELOCKSTATISTICS
 
-% Guidelines for use in an analysis pipeline:
-% after FT_TIMELOCKANALYSIS you will have timelocked data - i.e., event-related
-% fields (ERFs) or potentials (ERPs) - represented as the average and/or
-% covariance over trials.
-% This usually serves as input for one of the following functions:
-%    * FT_TIMELOCKBASELINE      to perform baseline normalization
-%    * FT_TIMELOCKGRANDAVERAGE  to compute the ERP/ERF average and variance over multiple subjects
-%    * FT_TIMELOCKSTATISTICS    to perform parametric or non-parametric statistical tests
-% Furthermore, the data can be visualised using the various plotting
-% functions, including:
-%    * FT_SINGLEPLOTER          to plot the ERP/ERF of a single channel or the average over multiple channels
-%    * FT_TOPOPLOTER            to plot the topographic distribution over the head
-%    * FT_MULTIPLOTER           to plot ERPs/ERFs in a topographical layout
-
 % FIXME if input is one raw trial, the covariance is not computed correctly
 %
 % Undocumented local options:
-% cfg.feedback
-% cfg.preproc
+%   cfg.feedback
+%   cfg.preproc
 %
 % Deprecated options:
-% cfg.blcovariance
-% cfg.blcovariancewindow
-% cfg.normalizevar
-% cfg.normalizecov
-% cfg.vartrllength
+%   cfg.blcovariance
+%   cfg.blcovariancewindow
+%   cfg.normalizecov
+%   cfg.vartrllength
 
 % Copyright (C) 2018, Jan-Mathijs Schoffelen
 % Copyright (C) 2003-2006, Markus Bauer
-% Copyright (C) 2003-2006, Robert Oostenveld
+% Copyright (C) 2003-2022, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -101,22 +84,25 @@ end
 data = ft_checkdata(data, 'datatype', {'raw+comp', 'raw'}, 'feedback', 'yes', 'hassampleinfo', 'yes');
 
 % check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'forbidden',  {'normalizecov', 'normalizevar'});
+cfg = ft_checkconfig(cfg, 'forbidden',  {'channels', 'trial'}); % prevent accidental typos, see issue 1729
+cfg = ft_checkconfig(cfg, 'forbidden',  {'normalizecov'});
 cfg = ft_checkconfig(cfg, 'forbidden',  {'blcovariance', 'blcovariancewindow'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'blc', 'demean'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'blcwindow', 'baselinewindow'});
 
 % set the defaults
-cfg.latency      = ft_getopt(cfg, 'latency',     'all');
-cfg.trials       = ft_getopt(cfg, 'trials',      'all', 1);
-cfg.channel      = ft_getopt(cfg, 'channel',     'all');
-cfg.keeptrials   = ft_getopt(cfg, 'keeptrials',  'no');
-cfg.vartrllength = ft_getopt(cfg, 'vartrllength', 0);
-cfg.feedback     = ft_getopt(cfg, 'feedback',     'text');
-cfg.preproc      = ft_getopt(cfg, 'preproc',      []);
-cfg.covariance       = ft_getopt(cfg, 'covariance',      'no');
-cfg.covariancewindow = ft_getopt(cfg, 'covariancewindow', 'all');
-cfg.removemean       = ft_getopt(cfg, 'removemean',      'yes');
+cfg.preproc           = ft_getopt(cfg, 'preproc'          , []);
+cfg.channel           = ft_getopt(cfg, 'channel'          , 'all');
+cfg.latency           = ft_getopt(cfg, 'latency'          , 'all');
+cfg.trials            = ft_getopt(cfg, 'trials'           , 'all', 1);
+cfg.keeptrials        = ft_getopt(cfg, 'keeptrials'       , 'no');
+cfg.vartrllength      = ft_getopt(cfg, 'vartrllength'     , 0);
+cfg.nanmean           = ft_getopt(cfg, 'nanmean'          , 'yes');
+cfg.normalizevar      = ft_getopt(cfg, 'normalizevar'     , 'N-1');
+cfg.covariance        = ft_getopt(cfg, 'covariance'       , 'no');
+cfg.covariancewindow  = ft_getopt(cfg, 'covariancewindow' , 'all');
+cfg.removemean        = ft_getopt(cfg, 'removemean'       , 'yes');
+cfg.feedback          = ft_getopt(cfg, 'feedback'         , 'text');
 
 % create logical flags for convenience
 keeptrials = istrue(cfg.keeptrials);
@@ -136,24 +122,24 @@ end
 
 % compute the covariance matrix, if requested
 if computecov
-  tmpcfg = keepfields(cfg, {'trials', 'channel'});
+  tmpcfg = keepfields(cfg, {'trials', 'channel', 'tolerance', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
   tmpcfg.latency = cfg.covariancewindow;
   datacov = ft_selectdata(tmpcfg, data);
   % restore the provenance information
-  [~, datacov] = rollback_provenance(cfg, datacov); % not sure what to do here
+  [dum, datacov] = rollback_provenance(cfg, datacov); % not sure what to do here
   datacov      = ft_checkdata(datacov, 'datatype', 'timelock');
-  
+
   if isfield(datacov, 'trial')
-    [nrpt, nchan, nsmp] = size(datacov.trial);
+    [nrpt, nchan, ntime] = size(datacov.trial);
   else
     % if the data structure has only a single trial
     nrpt = 1;
-    [nchan, nsmp] = size(datacov.avg);
+    [nchan, ntime] = size(datacov.avg);
     datacov.trial = shiftdim(datacov.avg, -1);
     datacov       = rmfield(datacov, 'avg');
     datacov.dimord = 'rpt_chan_time';
   end
-  
+
   % pre-allocate memory space for the covariance matrices
   if keeptrials
     covsig = nan(nrpt, nchan, nchan);
@@ -161,10 +147,10 @@ if computecov
     covsig = zeros(nchan, nchan);
     allsmp = 0;
   end
-  
+
   % compute the covariance per trial
   for k = 1:nrpt
-    dat    = reshape(datacov.trial(k,:,:), [nchan nsmp]);
+    dat    = reshape(datacov.trial(k,:,:), [nchan ntime]);
     datsmp = isfinite(dat);
     if ~all(ismember(sum(datsmp,1), [0 nchan]))
       ft_error('channel specific NaNs are not supported for covariance computation');
@@ -184,17 +170,20 @@ if computecov
       % normalisation will be done after the for-loop
     end
   end
-  
-  if ~keeptrials 
+
+  if ~keeptrials
     covsig = covsig./allsmp;
   end
 end
 
 % select trials and channels of interest
-tmpcfg = keepfields(cfg, {'trials', 'channel', 'latency'});
+orgcfg = cfg;
+tmpcfg = keepfields(cfg, {'trials', 'channel', 'tolerance', 'latency', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
 data   = ft_selectdata(tmpcfg, data);
 % restore the provenance information
 [cfg, data] = rollback_provenance(cfg, data);
+% do not use the default option returned by FT_SELECTDATA, but the original one for this function
+cfg.nanmean = orgcfg.nanmean;
 
 % convert to a timelock structure with trials kept and NaNs for missing
 % data points, when there's only a single trial in the input data
@@ -203,15 +192,37 @@ data   = ft_selectdata(tmpcfg, data);
 if isfield(data, 'trialinfo'), trialinfo = data.trialinfo; end
 data = ft_checkdata(data, 'datatype', {'timelock+comp' 'timelock'});
 
+% whether to normalize the variance with N or N-1, see VAR
+normalizewithN = strcmpi(cfg.normalizevar, 'N');
+
+% whether nans should persist in the output or be treated as missing values
+if istrue(cfg.nanmean)
+  mymean = @nanmean;
+  myvar  = @nanvar;
+  mysum  = @nansum;
+else
+  mymean = @mean;
+  myvar  = @var;
+  mysum  = @sum;
+end
+
 if ~keeptrials && isfield(data, 'trial')
-  [nrpt, nchan, nsmp] = size(data.trial);
-  avg = reshape(nanmean(data.trial,1),       [nchan nsmp]);
-  dof = reshape(sum(isfinite(data.trial),1), [nchan nsmp]);
-  var = reshape(nanvar(data.trial,0,1),      [nchan nsmp]);
+  [nrpt, nchan, ntime] = size(data.trial);
+  avgmat = reshape(mymean(data.trial,1),               [nchan ntime]);
+  varmat = reshape(myvar(data.trial,normalizewithN,1), [nchan ntime]);
+  dofmat = reshape(sum(isfinite(data.trial),1),        [nchan ntime]);
+  if normalizewithN
+    % just to be sure
+    varmat(dofmat<=0) = NaN;
+  else
+    % see https://stats.stackexchange.com/questions/4068/how-should-one-define-the-sample-variance-for-scalar-input
+    % the fieldtrip/external/stats/nanvar implementation behaves differently here than Mathworks VAR and NANVAR implementations
+    varmat(dofmat<=1) = NaN;
+  end
 elseif ~keeptrials && ~isfield(data, 'trial')
-  avg = data.avg;
-  var = nan(size(data.avg));
-  dof = double(isfinite(data.avg));
+  avgmat = data.avg;
+  varmat = nan(size(data.avg));
+  dofmat = double(isfinite(data.avg));
 elseif keeptrials && isfield(data, 'trial')
   % nothing required here
 elseif keeptrials && ~isfield(data, 'trial')
@@ -220,7 +231,7 @@ elseif keeptrials && ~isfield(data, 'trial')
   if exist('trialinfo', 'var')
     data.trialinfo = trialinfo;
   end
-end  
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % collect the results
@@ -228,9 +239,9 @@ end
 
 timelock = keepfields(data, {'time' 'grad', 'elec', 'opto', 'topo', 'topodimord', 'topolabel', 'unmixing', 'unmixingdimord', 'label'});
 if ~keeptrials
-  timelock.avg        = avg;
-  timelock.var        = var;
-  timelock.dof        = dof;
+  timelock.avg        = avgmat;
+  timelock.var        = varmat;
+  timelock.dof        = dofmat;
   timelock.dimord     = 'chan_time';
 else
   timelock        = copyfields(data, timelock, {'trial' 'sampleinfo', 'trialinfo'});

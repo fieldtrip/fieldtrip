@@ -61,6 +61,8 @@ end
 if ~isempty(color)
   if ischar(color) && exist([color '.m'], 'file')
     color = eval(color);
+  elseif ischar(color) && ismember(color, htmlcolors)
+    color = htmlcolors(color);
   end
   varargin = ft_setopt(varargin, 'color', color);
 end

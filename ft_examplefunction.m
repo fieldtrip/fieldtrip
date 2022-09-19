@@ -9,9 +9,9 @@ function [dataout] = ft_examplefunction(cfg, datain)
 %
 % <<note that the cfg list should be indented with two spaces
 %
-%  cfg.option1    = value, explain the value here (default = something)
-%  cfg.option2    = value, describe the value here and if needed
-%                   continue here to allow automatic parsing of the help
+%   cfg.option1    = value, explain the value here (default = something)
+%   cfg.option2    = value, describe the value here and if needed
+%                    continue here to allow automatic parsing of the help
 %
 % The configuration can optionally contain
 %   cfg.option3   = value, explain it here (default is automatic)
@@ -75,9 +75,10 @@ cfg = ft_checkconfig(cfg, 'required', {'method', 'foi', 'tapsmofrq'});
 cfg = ft_checkopt(cfg, 'vartrllen', 'double', {0, 1, 2});
 cfg = ft_checkopt(cfg, 'method', 'char', {'mtm', 'convol'});
 
-% get the options
-method    = ft_getopt(cfg, 'method');        % there is no default
-vartrllen = ft_getopt(cfg, 'vartrllen', 2);  % the default is 2
+% check the user-supplied options or set the defaults
+% store them in cfg, so that they end up in dataout.cfg
+cfg.method    = ft_getopt(cfg, 'method');        % there is no default, this wil be []
+cfg.vartrllen = ft_getopt(cfg, 'vartrllen', 2);  % the default is 2
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % the actual computation is done in the middle part

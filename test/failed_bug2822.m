@@ -2,20 +2,17 @@ function failed_bug2822
 
 % WALLTIME 00:45:00
 % MEM 6gb
+% DEPENDENCY
 
 % this is to test the implementation of the frequency domain MNE reconstruction
 
 %% Start-up
-%path_ft = '/home/electromag/lucamb/fieldtrip-dev';
-%addpath(path_ft)
 
 %% Load data (dataFIC)
-path_to_load = dccnpath('/home/common/matlab/fieldtrip');
-%load(dccnpath([path_to_load, '/data/test/dataFIC.mat']))
 
 % find the interesting segments of data
 cfg = [];
-cfg.dataset                 = dccnpath('/home/common/matlab/fieldtrip/data/Subject01.ds');       % name of CTF dataset
+cfg.dataset                 = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds');       % name of CTF dataset
 cfg.trialdef.eventtype      = 'backpanel trigger';
 cfg.trialdef.prestim        = 1;
 cfg.trialdef.poststim       = 2;
@@ -43,12 +40,12 @@ freq = ft_freqanalysis(cfg, dataFIC);
 
 %% Fake Headmodel and leadfield
 
-load(dccnpath([path_to_load, '/template/headmodel/standard_singleshell.mat']))
+load(dccnpath('/home/common/matlab/fieldtrip/template/headmodel/standard_singleshell.mat'))
 
 % use 'icosahedron' private function to generate the mash
 mesh = [];
 [mesh.pnt, mesh.tri] = icosahedron642;
-mesh.pnt = 5*mesh.pnt - repmat([ 0 3 -1.5],size(mesh.pnt,1),1) ;
+mesh.pnt = 5*mesh.pnt - repmat([ 0 3 -1.5],size(mesh.pnt,1),1);
 
 %% Plot head model
 

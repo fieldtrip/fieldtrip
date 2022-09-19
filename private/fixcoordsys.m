@@ -6,7 +6,7 @@ function data = fixcoordsys(data)
 %
 % See also FT_DETERMINE_COORDSYS
 
-% Copyright (C) 2017, Robert Oostenveld
+% Copyright (C) 2017-2022, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -28,10 +28,13 @@ function data = fixcoordsys(data)
 
 data.coordsys = lower(data.coordsys);
 
-% see also http://www.fieldtriptoolbox.org/faq/how_are_the_different_head_and_mri_coordinate_systems_defined
-if strcmpi(data.coordsys, 'mni') || strcmpi(data.coordsys, 'spm')
+% see also http://www.fieldtriptoolbox.org/faq/coordsys
+if any(strcmpi(data.coordsys, {'mni', 'mni152', 'spm'}))
   data.coordsys = 'mni';
-elseif strcmpi(data.coordsys, 'ctf') || strcmpi(data.coordsys, '4d') || strcmpi(data.coordsys, 'bti')
+elseif any(strcmpi(data.coordsys, {'ctf', '4d', 'bti', 'eeglab'}))
   data.coordsys = 'ctf';
+elseif any(strcmpi(data.coordsys, {'dicom', 'scanlps'}))
+  data.coordsys = 'dicom';
+elseif any(strcmpi(data.coordsys, {'other'}))
+  data.coordsys = 'unknown';
 end
-

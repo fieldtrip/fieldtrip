@@ -12,16 +12,21 @@ function [comp] = ft_componentanalysis(cfg, data)
 % FT_PREPROCESSING or from FT_TIMELOCKANALYSIS.
 %
 % The configuration should contain
-%   cfg.method       = 'runica', 'fastica', 'binica', 'pca', 'svd', 'jader', 'varimax', 'dss', 'cca', 'sobi', 'white' or 'csp' (default = 'runica')
-%   cfg.channel      = cell-array with channel selection (default = 'all'), see FT_CHANNELSELECTION for details
+%   cfg.method       = 'runica', 'fastica', 'binica', 'pca', 'svd', 'jader',
+%                      'varimax', 'dss', 'cca', 'sobi', 'white' or 'csp' 
+%                      (default = 'runica')
+%   cfg.channel      = cell-array with channel selection (default = 'all'),
+%                      see FT_CHANNELSELECTION for details
+%   cfg.split        = cell-array of channel types between which covariance
+%                      is split, it can also be 'all' or 'no' (default = 'no')
 %   cfg.trials       = 'all' or a selection given as a 1xN vector (default = 'all')
 %   cfg.numcomponent = 'all' or number (default = 'all')
 %   cfg.demean       = 'no' or 'yes', whether to demean the input data (default = 'yes')
 %   cfg.updatesens   = 'no' or 'yes' (default = 'yes')
 %   cfg.feedback     = 'no', 'text', 'textbar', 'gui' (default = 'text')
 %
-% The runica method supports the following method-specific options. The values that
-% these options can take can be found with HELP RUNICA.
+% The runica method supports the following method-specific options. The
+% values that these options can take can be found with HELP RUNICA.
 %   cfg.runica.extended
 %   cfg.runica.pca
 %   cfg.runica.sphering
@@ -40,8 +45,8 @@ function [comp] = ft_componentanalysis(cfg, data)
 %   cfg.runica.logfile
 %   cfg.runica.interput
 %
-% The fastica method supports the following method-specific options. The values that
-% these options can take can be found with HELP FASTICA.
+% The fastica method supports the following method-specific options. The 
+% values that these options can take can be found with HELP FASTICA.
 %   cfg.fastica.approach
 %   cfg.fastica.numOfIC
 %   cfg.fastica.g
@@ -68,8 +73,8 @@ function [comp] = ft_componentanalysis(cfg, data)
 %   cfg.fastica.dewhiteMat
 %   cfg.fastica.only
 %
-% The binica method supports the following method-specific options. The values that
-% these options can take can be found with HELP BINICA.
+% The binica method supports the following method-specific options. The
+% values that these options can take can be found with HELP BINICA.
 %   cfg.binica.extended
 %   cfg.binica.pca
 %   cfg.binica.sphering
@@ -87,13 +92,13 @@ function [comp] = ft_componentanalysis(cfg, data)
 %   cfg.binica.momentum
 %
 % The dss method requires the following method-specific option and supports
-% a whole lot of other options. The values that these options can take can be
-% found with HELP DSS_CREATE_STATE.
+% a whole lot of other options. The values that these options can take can 
+% be found with HELP DSS_CREATE_STATE.
 %   cfg.dss.denf.function
 %   cfg.dss.denf.params
 %
-% The sobi method supports the following method-specific options. The values that
-% these options can take can be found with HELP SOBI.
+% The sobi method supports the following method-specific options. The 
+% values that these options can take can be found with HELP SOBI.
 %   cfg.sobi.n_sources
 %   cfg.sobi.p_correlations
 %
@@ -180,6 +185,7 @@ istimelock = ft_datatype(data, 'timelock');
 data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes');
 
 % check if the input cfg is valid for this function
+cfg = ft_checkconfig(cfg, 'forbidden',  {'channels', 'trial'}); % prevent accidental typos, see issue 1729
 cfg = ft_checkconfig(cfg, 'forbidden',  {'detrend'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'blc', 'demean'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'method', 'predetermined mixing matrix', 'predetermined unmixing matrix'});
@@ -190,6 +196,7 @@ cfg.method          = ft_getopt(cfg, 'method',       'runica');
 cfg.demean          = ft_getopt(cfg, 'demean',       'yes');
 cfg.trials          = ft_getopt(cfg, 'trials',       'all', 1);
 cfg.channel         = ft_getopt(cfg, 'channel',      'all');
+cfg.split           = ft_getopt(cfg, 'split',        'no');
 cfg.numcomponent    = ft_getopt(cfg, 'numcomponent', 'all');
 cfg.normalisesphere = ft_getopt(cfg, 'normalisesphere', 'yes');
 cfg.cellmode        = ft_getopt(cfg, 'cellmode',     'no');
@@ -252,7 +259,7 @@ switch cfg.method
     % additional options, see BINICA for details
     cfg.binica       = ft_getopt(cfg,        'binica',  []);
     cfg.binica.lrate = ft_getopt(cfg.binica, 'lrate',   0.001);
-  case {'dss' 'dss2'} % JM at present has his own dss, that can deal with cell-array input, specify as dds2
+  case 'dss'
     % additional options, see DSS for details
     cfg.dss               = ft_getopt(cfg,          'dss',      []);
     cfg.dss.denf          = ft_getopt(cfg.dss,      'denf',     []);
@@ -279,10 +286,35 @@ switch cfg.method
 end
 
 % select trials of interest
-tmpcfg = keepfields(cfg, {'trials', 'channel', 'showcallinfo'});
+tmpcfg = keepfields(cfg, {'trials', 'channel', 'tolerance', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
 data   = ft_selectdata(tmpcfg, data);
 % restore the provenance information
 [cfg, data] = rollback_provenance(cfg, data);
+
+% deal with different chantypes if requested
+if isequal(cfg.split, 'no')
+  chantype = {};
+elseif isequal(cfg.split, 'all')
+  chantype = unique(ft_chantype(data.label));
+else
+  chantype = cfg.split;
+end
+
+if numel(chantype)>0
+  % recurse per specified chantype
+  tmpdata = cell(1, numel(chantype));
+  for k = 1:numel(chantype)
+    tmpcfg         = cfg;
+    tmpcfg.channel = data.label(ft_chantype(data.label, lower(chantype{k})));
+    tmpcfg.split   = 'no';
+    tmpcfg.chantype = lower(chantype{k}); % makes the output labels unique, to allow appending later on
+    tmpdata{1,k}   = ft_componentanalysis(tmpcfg, data);
+  end    
+  comp = ft_appenddata([], tmpdata{:});
+  return;
+else
+  %   
+end
 
 Ntrials  = length(data.trial);
 Nchans   = length(data.label);
@@ -315,7 +347,12 @@ end
 if strcmp(cfg.doscale, 'yes')
   % determine the scaling of the data, scale it to approximately unity
   % this will improve the performance of some methods, esp. fastica
-  tmp                 = data.trial{1};
+  trlidx = 1;
+  tmp    = data.trial{trlidx};
+  while all(isnan(tmp(:))) % if all data in this trial is NaN
+      trlidx  = trlidx + 1; % try next trial
+      tmp     = data.trial{trlidx}; % overwrite tmp with next trial
+  end
   tmp(~isfinite(tmp)) = 0; % ensure that the scaling is a finite value
   scale = norm((tmp*tmp')./size(tmp,2)); clear tmp;
   scale = sqrt(scale);
@@ -374,20 +411,27 @@ elseif ~strcmp(cfg.method, 'predetermined unmixing matrix') && strcmp(cfg.cellmo
   ft_info('concatenating data');
   
   dat = zeros(Nchans, sum(Nsamples));
+  ft_progress('init', cfg.feedback, 'concatenating trials...');
   for trial=1:Ntrials
-    ft_info('.');
+    ft_progress(trial/Ntrials, 'Concatenating trial %d from %d', trial, Ntrials);
     begsample = sum(Nsamples(1:(trial-1))) + 1;
     endsample = sum(Nsamples(1:trial));
     dat(:,begsample:endsample) = data.trial{trial};
   end
-  ft_info('\n');
+  ft_progress('close')
   ft_info('concatenated data matrix size %dx%d\n', size(dat,1), size(dat,2));
   
   hasdatanans = any(~isfinite(dat(:)));
-  if hasdatanans
-    ft_info('data contains nans, only using the non-nan samples\n');
+  if hasdatanans && strcmp(cfg.method, 'dss')
+    ft_error('DSS does not work with nans or inf in the data');
+  elseif hasdatanans
+    ft_info('data contains nan or inf, only using the samples without nan or inf\n');
     finitevals = sum(~isfinite(dat))==0;
-    dat        = dat(:,finitevals);
+    if ~any(finitevals)
+      ft_error('no samples remaining');
+    else
+      dat = dat(:,finitevals);
+    end
   end
 else
   ft_info('not concatenating data\n');
@@ -577,8 +621,18 @@ switch cfg.method
     
   case 'pca'
     % compute data cross-covariance matrix
-    C = (dat*dat')./(size(dat,2)-1);
-    
+    if iscell(dat)
+      C  = zeros(size(dat{1},1));
+      nC = 0;
+      for k = 1:numel(dat)
+        C  = C + (dat{k}*dat{k}');
+        nC = nC + size(dat{k},2);
+      end
+      C = C./(nC-1);
+    else
+      C = (dat*dat')./(size(dat,2)-1);
+    end
+
     % eigenvalue decomposition (EVD)
     [E,D] = eig(C);
     
@@ -644,32 +698,44 @@ switch cfg.method
     % see http://www.cis.hut.fi/projects/dss
     ft_hastoolbox('dss', 1);
     
-    params         = struct(cfg.dss);
+    params         = removefields(struct(cfg.dss), {'V' 'dV' 'W' 'indx'});
     params.denf.h  = str2func(cfg.dss.denf.function);
     params.preprocf.h = str2func(cfg.dss.preprocf.function);
-    if ~ischar(cfg.numcomponent)
-      params.sdim = cfg.numcomponent;
-    end
     if isfield(cfg.dss, 'wdim') && ~isempty(cfg.dss.wdim)
       params.wdim = cfg.dss.wdim;
     end
-    if isfield(cfg.dss, 'V') && ~isempty(cfg.dss.V)
-      params.Y = params.V*dat;
+    if ~ischar(cfg.numcomponent)
+      params.sdim = cfg.numcomponent;
+      if isfield(params, 'wdim')
+        params.sdim = min(params.sdim, params.wdim);
+      end
+    end
+    
+
+    if isfield(params.denf, 'params') && isfield(params.denf.params, 'artifact')
+      % this may require the sampleinfo in the params structure, to keep the sampling bookkeeping correct
+      params.denf.params.sampleinfo = data.sampleinfo;
     end
     
     % create the state
     state   = dss_create_state(dat, params);
     if isfield(cfg.dss, 'V') && ~isempty(cfg.dss.V)
       state.V = cfg.dss.V;
+      state.Y = cfg.dss.V*dat;
     end
     if isfield(cfg.dss, 'dV') && ~isempty(cfg.dss.dV)
       state.dV = cfg.dss.dV;
+    end
+    if isfield(cfg.dss, 'W') && ~isempty(cfg.dss.W)
+      state.W = cfg.dss.W;
+    end
+    if isfield(cfg.dss, 'indx') && ~isempty(cfg.dss.indx)
+      state.indx = cfg.dss.indx; %may be needed for dss_core_mim
     end
     
     % increase the amount of information that is displayed on screen
     % state.verbose = 3;
     % start the decomposition
-    % state   = dss(state);  % this is for the DSS toolbox version 0.6 beta
     state   = denss(state);  % this is for the DSS toolbox version 1.0
     
     mixing   = state.A;
@@ -764,7 +830,8 @@ switch cfg.method
     [unmixing, mixing, rho, compdata, time] = bsscca(dat, optarg{:});
     data.trial = mixing*compdata;
     data.time  = time;
-    
+    data       = removefields(data, 'sampleinfo');
+ 
     if size(mixing,1)>numel(data.label)
       for m = 1:(size(mixing,1)-numel(data.label))
         data.label{end+1} = sprintf('refchan%03d',m);
@@ -804,9 +871,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % collect the results and construct data structure
 
-comp = [];
-if isfield(data, 'fsample'), comp.fsample = data.fsample; end
-if isfield(data, 'time'),    comp.time    = data.time;    end
+comp = keepfields(data, {'time' 'fsample'});
 
 % make sure we don't return more components than were requested
 % (some methods respect the maxcomponent parameters, others just always
@@ -840,42 +905,56 @@ else
   prefix = cfg.method;
 end
 
+st = dbstack;
+if numel(st)>1 && isequal(st(2).name, 'ft_componentanalysis')
+  % this is a recursive call, as per the cfg.split option, add something
+  % extra to the prefix
+  chantype = ft_getopt(cfg, 'chantype', '');
+  prefix   = [prefix chantype];
+end
+
 for k = 1:size(comp.topo,2)
   comp.label{k,1} = sprintf('%s%03d', prefix, k);
 end
 comp.topolabel = data.label(:);
 
+sensfield = cell(0,1);
 if isfield(data, 'grad')
-  sensfield = 'grad';
-elseif isfield(data, 'elec')
-  sensfield = 'elec';
-elseif isfield(data, 'opto')
-  sensfield = 'opto';
-else
-  sensfield = [];
+  sensfield{end+1} = 'grad';
+end
+if isfield(data, 'elec')
+  sensfield{end+1} = 'elec';
+end
+if isfield(data, 'opto')
+  sensfield{end+1} = 'opto';
 end
 
 % apply the linear projection also to the sensor description
 if ~isempty(sensfield)
   if  strcmp(cfg.updatesens, 'yes')
-    ft_info('also applying the unmixing matrix to the %s structure\n', sensfield);
     % construct a montage and apply it to the sensor description
     montage          = [];
     montage.labelold = data.label;
     montage.labelnew = comp.label;
     montage.tra      = unmixing;
-    comp.(sensfield) = ft_apply_montage(data.(sensfield), montage, 'balancename', 'comp', 'keepunused', 'yes');
     
-    % The output sensor array cannot simply be interpreted as the input
-    % sensor array, hence the type should be removed to allow autodetection
-    % See also http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1806
-    if isfield(comp.(sensfield), 'type')
-      comp.(sensfield) = rmfield(comp.(sensfield), 'type');
+    for m = 1:numel(sensfield)
+      ft_info('also applying the unmixing matrix to the %s structure\n', sensfield{m});
+      comp.(sensfield{m}) = ft_apply_montage(data.(sensfield{m}), montage, 'balancename', 'comp', 'keepunused', 'yes');
+      
+      % The output sensor array cannot simply be interpreted as the input
+      % sensor array, hence the type should be removed to allow autodetection
+      % See also http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1806
+      if isfield(comp.(sensfield{m}), 'type')
+        comp.(sensfield{m}) = rmfield(comp.(sensfield{m}), 'type');
+      end
     end
   else
-    ft_info('not applying the unmixing matrix to the %s structure\n', sensfield);
-    % simply copy it over
-    comp.(sensfield) = data.(sensfield);
+    for m = 1:numel(sensfield)
+      ft_info('not applying the unmixing matrix to the %s structure\n', sensfield{m});
+      % simply copy it over
+      comp.(sensfield{m}) = data.(sensfield{m});
+    end
   end
 end % if sensfield
 

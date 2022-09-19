@@ -2,7 +2,7 @@ function ExamineXmat(fname, polort, dt, nrun, nmot)
 %  ExamineXmat([XMAT])
 %
 %  A function to aid in examining the design matrix output by 3dDeconvolve
-%  
+%
 % XMAT: Name of xmat file, such as EA.xmat.1D. If unspecified,
 %        function will open a file browser to pick one.
 % The function will begin by displaying all the columns (regressors)
@@ -17,15 +17,15 @@ function ExamineXmat(fname, polort, dt, nrun, nmot)
 %      plotted columns only (Viewed)
 %
 % Labels of various columns are printed to the left, if there are not
-% too many columns displayed. Labels contain the column index and the label, 
+% too many columns displayed. Labels contain the column index and the label,
 % separated by a ":"
 %
 % The function will prompt you for column selections, which would allow
-% you to examine a section of the design matrix at a time. Looking at 
+% you to examine a section of the design matrix at a time. Looking at
 % the 'Viewed' condition number would help you find which task
-% regressors may be causing multicollinearity. Column selection 
-% can be done using strings that match one or a set of regressors or 
-% using column indices. The prompt interface has selection examples. 
+% regressors may be causing multicollinearity. Column selection
+% can be done using strings that match one or a set of regressors or
+% using column indices. The prompt interface has selection examples.
 %
 
 % old use: ExamineXmat(fname, polort, dt, nrun, nmot)
@@ -57,15 +57,15 @@ if (nargin < 2),
       if (strncmp(d,'TR:',3)),
          [tt,dt] = strread(d,'%s%f','delimiter',':');
       elseif (~isempty(strfind(d,'Run#'))),
-         [col,tt] = strread(d,'%d%s','delimiter',':'); 
-         if (strncmp(tt,'Run#1',5)), 
-            polort = polort+1;   
+         [col,tt] = strread(d,'%d%s','delimiter',':');
+         if (strncmp(tt,'Run#1',5)),
+            polort = polort+1;
          elseif (strncmp(tt,'Run#',4)),
             nrun = nrun+1;
          elseif (strncmp(tt(length(tt):-1:1),'0#',2)),
             cntstims = cntstims+1;
             csstims(cntstims) = cellstr(tt);
-         end 
+         end
          cs(cnt) = cellstr(d);
          cnt = cnt + 1;
       elseif ( ~isempty(strfind(d,'roll#'))  ||...
@@ -80,16 +80,16 @@ if (nargin < 2),
                ~isempty(strfind(d,'yx-shear#'))||...
                ~isempty(strfind(d,'zx-shear#'))||...
                ~isempty(strfind(d,'zy-shear#'))),
-         [col,tt] = strread(d,'%d%s','delimiter',':'); 
+         [col,tt] = strread(d,'%d%s','delimiter',':');
          imot = [imot col];
          cs(cnt) = cellstr(d);
          cnt = cnt + 1;
       elseif (~isempty(strfind(d,'#'))),
          if (strncmp(d([length(d):-1:1]),'0#',2)),
             cntstims = cntstims+1;
-            [col,tt] = strread(d,'%d%s','delimiter',':'); 
+            [col,tt] = strread(d,'%d%s','delimiter',':');
             csstims(cntstims) = cellstr(tt);
-         end 
+         end
          cs(cnt) = cellstr(d);
          cnt = cnt + 1;
       end
@@ -103,19 +103,19 @@ if (polort < 0),
       polort = input('Enter polort: ');
    end
 end
-if (dt < 0.0),   
+if (dt < 0.0),
    dt = [];
    while(isempty(dt) | ~isnumeric(dt) | dt < 0.0),
       dt = input('Enter dt: ');
    end
 end
-if (nrun < 0.0),   
+if (nrun < 0.0),
    nrun = [];
    while(isempty(nrun) | ~isnumeric(nrun) | nrun < 0.0),
       nrun = input('Enter number of runs: ');
    end
 end
-if (nmot < 0.0),   
+if (nmot < 0.0),
    nmot = [];
    while(isempty(nmot) | ~isnumeric(nmot) | nmot < 0.0),
       nmot = input('Enter number of motion regressors (assumed at the very end): ');
@@ -140,7 +140,7 @@ CondFull = cond(Xabi);
 CondNoMotion = cond(Xabi(:, [1:size(Xabi,2)-nmot]));
 CondNoMotionNoBase = cond(Xabi(:,[1+(polort+1)*nrun:size(Xabi,2)-nmot]));
 
-mshow = Xabi;  
+mshow = Xabi;
 UseMult = 1;
 dogui = 1;
 
@@ -190,7 +190,7 @@ while (~isempty(s)),
          if (~isempty(cs) & length(v)<20),
             %ylabel(char(cs(v(i))), 'interpreter', 'none');
             str = char(cs(v(i)));
-         else 
+         else
             %ylabel(sprintf('R%d', v(i)+1),  'interpreter', 'none');
             str = sprintf('R%d', v(i)+1);
          end
@@ -249,15 +249,15 @@ while (~isempty(s)),
              fname, dt, length(v), s, CondFull, CondNoMotion,...
              CondNoMotionNoBase, cond(mshow(:, [v])),...
              cond(mshow(:, [inz]))),...
-            'interpreter', 'none'); 
-   
+            'interpreter', 'none');
+
    if (1), %show correlation matrix for Assaf
       figure(2); clf
-      ccm = corrcoef(mshow(:,v)); 
+      ccm = corrcoef(mshow(:,v));
       ccm = ccm.*(1-diag(diag(ccm,0)));
       mmm = max(abs(ccm(:)));
       imagesc(ccm, [-mmm , mmm]); colorbar;
-      ima = gca; 
+      ima = gca;
       title('Correlation matrix of selected regressors. Diagonal set to 0');
       set (ima, 'YTick', [1:1:size(ccm,1)]');
       set (ima, 'YTickLabel', cellstr(cs(v)));
@@ -265,7 +265,7 @@ while (~isempty(s)),
       set (ima, 'XTickLabel', cellstr(cs(v)));
       xticklabel_rotate([], 90);
    end
-   
+
    smpl = char(csstims(1));
    if (length(csstims)>2),
       sss =  char(csstims(length(csstims)));
@@ -306,19 +306,19 @@ while (~isempty(s)),
       else,
          Opt.Resize='on';
          Opt.WindowStyle='normal';
-         s = zdeblank(char(zinputdlg(cellstr(sprompt),...
+         s = zdeblank(char(inputdlg(cellstr(sprompt),...
                                     'Select Regressors',...
                                     1,...
                                     cellstr(''),...
                                     Opt)));
-      end 
+      end
       ipunc = find (s == ',');
       s(ipunc) = ' ';
-      if (isempty(s)), 
+      if (isempty(s)),
          return;
       else
-         if (isdigit(s(1)) | s(1) == '[' | s(1) == '(')
-            eval(sprintf('v=%s;', s)); 
+         if (afni_isdigit(s(1)) | s(1) == '[' | s(1) == '(')
+            eval(sprintf('v=%s;', s));
             if (0 & isempty(v)),
                return;
             end

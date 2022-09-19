@@ -17,7 +17,7 @@ function header = read_spmeeg_header(filename)
 if nargin < 1
   help read_spmeeg_header;
   return;
-end;
+end
 
 try
     D = load(filename, 'D');

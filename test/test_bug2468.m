@@ -1,8 +1,7 @@
 function test_bug2468
 
-% MEM 1gb
+% MEM 2gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_sourcedescriptives
 
 % this test function tests the functionality to do projectmom on the output
@@ -12,7 +11,7 @@ filename = dccnpath('/home/common/matlab/fieldtrip/data/test/bug2468.mat');
 load(filename);
 
 % this is a dirty fix which is intended to be fixed upstream in the
-% analysis pipeline, i.e. in beamformer_pcc
+% analysis pipeline, i.e. in ft_inverse_pcc
 for k = 1:numel(sdata.avg.mom)
   csdlabel{k,1} = repmat({'scandip'}, [1 size(sdata.avg.mom{k},1)]);
 end

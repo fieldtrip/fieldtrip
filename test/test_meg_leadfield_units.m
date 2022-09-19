@@ -1,8 +1,7 @@
 function test_meg_leadfield_units
 
-% MEM 2000mb
+% MEM 2gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_convert_units ft_datatype_sens ft_convert_vol_sens ft_compute_leadfield current_dipole
 
 %% do a forward computation for a single vector magnetometer
@@ -106,7 +105,7 @@ plot([lf0(:,3) lf1(:,3)]);
 %% do a forward computation for a CTF151 sensor layout
 clear all
 
-grad = ft_read_sens(dccnpath('/home/common/matlab/fieldtrip/data/Subject01.ds'), 'senstype', 'meg');
+grad = ft_read_sens(dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds'), 'senstype', 'meg');
 
 vol0 = [];
 vol0.type = 'infinite_currentdipole';
@@ -156,7 +155,7 @@ plot([lf0(:,3) lf1(:,3)]);
 %% do a forward computation for a CTF151 sensor layout
 clear all
 
-grad = ft_read_sens(dccnpath('/home/common/matlab/fieldtrip/data/Subject01.ds'), 'senstype', 'meg');
+grad = ft_read_sens(dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds'), 'senstype', 'meg');
 
 [pnt, tri] = mesh_sphere(162);
 

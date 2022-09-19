@@ -15,25 +15,39 @@ function ft_volumewrite(cfg, volume)
 %
 % The configuration structure should contain the following elements
 %   cfg.parameter     = string, describing the functional data to be processed,
-%                         e.g. 'pow', 'coh', 'nai' or 'anatomy'
+%                       e.g. 'pow', 'coh', 'nai' or 'anatomy'
 %   cfg.filename      = filename without the extension
-%   cfg.filetype      = 'analyze', 'nifti', 'nifti_img', 'analyze_spm', 'mgz',
-%                         'vmp' or 'vmr'
-%   cfg.vmpversion    = 1 or 2 (default) version of the vmp-format to use
 %
-% The default filetype is 'nifti', which means that a single *.nii file
-% will be written using the SPM8 toolbox. The 'nifti_img' filetype uses SPM8 for
-% a dual file (*.img/*.hdr) nifti-format file.
-% The analyze, analyze_spm, nifti, nifti_img and mgz filetypes support a homogeneous
-% transformation matrix, the other filetypes do not support a homogeneous transformation
-% matrix and hence will be written in their native coordinate system.
+% To determine the file format, the following option can be specified 
+%   cfg.filetype      = 'analyze_old', 'nifti' (default), 'nifti_img', 'analyze_spm',
+%                       'nifti_spm', 'nifti_gz', 'mgz', 'mgh', 'vmp' or 'vmr'
 %
-% You can specify the datatype for the analyze_spm and analyze formats using
-%   cfg.datatype      = 'bit1', 'uint8', 'int16', 'int32', 'float' or 'double'
+% Depending on the filetype, the cfg should also contain
+%   cfg.vmpversion    = 1 or 2, version of the vmp format to use (default = 2)
+%   cfg.spmversion    = string, version of SPM to be used (default = 'spm12')
+%
+% The default filetype is 'nifti', which means that a single *.nii file will be
+% written using code from the freesurfer toolbox. The 'nifti_img' filetype uses SPM
+% for a dual file (*.img/*.hdr) nifti-format file. The 'nifti_spm' filetype uses SPM
+% for a single 'nifti' file.
+%
+% The analyze, analyze_spm, nifti, nifti_img, nifti_spm and mgz filetypes support a
+% homogeneous transformation matrix, the other filetypes do not support a homogeneous
+% transformation matrix and hence will be written in their native coordinate system.
+%
+% You can specify the datatype for the nifti, analyze_spm and analyze_old
+% formats. If not specified, the class of the input data will be preserved,
+% if the file format allows. Although the higher level function may make an
+% attempt to typecast the data, only the nifti fileformat preserves the
+% datatype. Also, only when filetype = 'nifti', the slope and intercept
+% parameters are stored in the file, so that, when reading the data from
+% file, the original values are restored (up to the bit resolution).
+%   cfg.datatype      = 'uint8', 'int8', 'int16', 'int32', 'single' or 'double'
 %
 % By default, integer datatypes will be scaled to the maximum value of the
 % physical or statistical parameter, floating point datatypes will not be
-% scaled. This can be modified with
+% scaled. This can be modified, for instance if the data contains only integers with
+% indices into a parcellation, by
 %   cfg.scaling       = 'yes' or 'no'
 %
 % Optional configuration items are
@@ -57,7 +71,7 @@ function ft_volumewrite(cfg, volume)
 % cfg.parameter
 
 % Copyright (C) 2003-2006, Robert Oostenveld, Markus Siegel
-% Copyright (C) 2011, Jan-Mathijs Schoffelen
+% Copyright (C) 2011-2021, Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -100,25 +114,26 @@ volume = ft_checkdata(volume, 'datatype', 'volume', 'feedback', 'yes');
 
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'forbidden', {'coordsys'});  % the coordinate system should be specified in the data
-cfg = ft_checkconfig(cfg, 'required', {'filename', 'parameter'});
-cfg = ft_checkconfig(cfg, 'renamed',  {'coordinates', 'coordsys'});
+cfg = ft_checkconfig(cfg, 'required',  {'filename', 'parameter'});
+cfg = ft_checkconfig(cfg, 'renamed',   {'coordinates', 'coordsys'});
+cfg = ft_checkconfig(cfg, 'renamedval', {'datatype', 'bit1', 'logical'});
+cfg = ft_checkconfig(cfg, 'renamedval', {'datatype', 'float', 'single'});
+cfg = ft_checkconfig(cfg, 'renamedval', {'filetype', 'analyze', 'analyze_old'});
 
 % set the defaults
 cfg.filetype     = ft_getopt(cfg, 'filetype',     'nifti');
-cfg.datatype     = ft_getopt(cfg, 'datatype',     'int16');
 cfg.downsample   = ft_getopt(cfg, 'downsample',   1);
 cfg.markorigin   = ft_getopt(cfg, 'markorigin',   'no');
 cfg.markfiducial = ft_getopt(cfg, 'markfiducial', 'no');
 cfg.markcorner   = ft_getopt(cfg, 'markcorner',   'no');
-cfg.scaling      = ft_getopt(cfg, 'scaling',      'no');
+cfg.spmversion   = ft_getopt(cfg, 'spmversion',   'spm12');
+cfg.datatype     = ft_getopt(cfg, 'datatype');
+cfg.scaling      = ft_getopt(cfg, 'scaling');
 
-if any(strmatch(cfg.datatype, {'int8', 'int16', 'int32'}))
-  cfg.scaling = 'yes';
-end
-
-if ~isfield(cfg, 'vmpversion') && strcmp(cfg.filetype, 'vmp');
-  fprintf('using BrainVoyager version 2 VMP format\n');
-  cfg.vmpversion = 2;
+if any(strcmp(cfg.datatype, {'logical' 'uint8','int8', 'int16', 'int32'})) && isempty(cfg.scaling)
+  cfg.scaling = 'yes';  
+elseif isempty(cfg.scaling)
+  cfg.scaling = 'no';    
 end
 
 % select the parameter that should be written
@@ -131,7 +146,7 @@ end
 
 if cfg.downsample~=1
   % optionally downsample the anatomical and/or functional volumes
-  tmpcfg = keepfields(cfg, {'downsample', 'parameter', 'showcallinfo'});
+  tmpcfg = keepfields(cfg, {'downsample', 'parameter', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
   volume = ft_volumedownsample(tmpcfg, volume);
   % restore the provenance information
   [cfg, volume] = rollback_provenance(cfg, volume);
@@ -139,12 +154,10 @@ end
 
 % copy the data and convert into double values so that it can be scaled later
 transform = volume.transform;
-data      = double(getsubfield(volume, cfg.parameter));
-maxval    = max(data(:));
-% ensure that the original volume is not used any more
-clear volume
+data      = getsubfield(volume, cfg.parameter);
 
 if strcmp(cfg.markfiducial, 'yes')
+  % FIXME THIS DOES NOT WORK, SINCE MINXYZ ETC IS NOT DEFINED
   % FIXME determine the voxel index of the fiducials
   nas = cfg.fiducial.nas;
   lpa = cfg.fiducial.lpa;
@@ -171,6 +184,7 @@ if strcmp(cfg.markfiducial, 'yes')
 end
 
 if strcmp(cfg.markorigin, 'yes')
+  % FIXME THIS DOES NOT WORK, SINCE MINXYZ ETC IS NOT DEFINED
   % FIXME determine the voxel index of the coordinate system origin
   ori = [0 0 0];
   if any(ori<minxyz) || any(ori>maxxyz)
@@ -192,271 +206,188 @@ end
 % set not-a-number voxels to zero
 data(isnan(data)) = 0;
 
-if strcmp(cfg.scaling, 'yes')
+datatype = class(data);
+if isempty(cfg.datatype)
+  cfg.datatype = datatype;
+end
+if ~isequal(datatype, cfg.datatype)
+  ft_info('datatype of input data is %s, requested output datatype is %s', datatype, cfg.datatype);
+end
+if isequal(cfg.datatype, 'logical')
+  ft_warning('output datatype of logical is not supported, the data will be stored as uint8');
+  cfg.datatype = 'uint8';
+end
+if istrue(cfg.scaling)
+  ft_info('scaling the data and typecasting from %s to %s', datatype, cfg.datatype);
+  data   = double(data);
+  maxval = max(abs(data(:)));
+  minval = min(data(:));
+  
   % scale the data so that it fits in the desired numerical data format
-  switch lower(cfg.datatype)
-    case 'bit1'
-      data = (data~=0);
+  switch lower(cfg.datatype)    
     case 'uint8'
-      data = uint8((2^8-1) * data./maxval);
+      scl_slope = (maxval-minval)/(2^8-1);
+      scl_inter = minval; 
+    case 'int8'
+      scl_slope = maxval/(2^7-1);
+      scl_inter = 0;
     case 'int16'
-      data = int16((2^15-1) * data./maxval);
+      scl_slope = maxval/(2^15-1);
+      scl_inter = 0;
     case 'int32'
-      data = int32((2^31-1) * data./maxval);
-    case {'single' 'float'}
-      data = single(data ./ maxval);
+      scl_slope = maxval/(2^31-1);
+      scl_inter = 0;
+    case 'single'
+      scl_slope = maxval;
+      scl_inter = 0;
     case 'double'
-      data = double(data ./ maxval);
+      scl_slope = maxval;
+      scl_inter = 0;
     otherwise
       ft_error('unknown datatype');
   end
+  data = (data - scl_inter)./scl_slope;
+else
+  % these are parameters that can be written to a nifti file, and can be
+  % used to get the data back (close to) its original values
+  scl_slope = [];
+  scl_inter = [];
 end
 
-% The coordinate system employed by the ANALYZE programs is left-handed,
-% with the coordinate origin in the lower left corner. Thus, with the
-% subject lying supine, the coordinate origin is on the right side of
-% the body (x), at the back (y), and at the feet (z).
-
-% Analyze   x = right-left
-% Analyze   y = post-ant
-% Analyze   z = inf-sup
-
-% SPM/MNI   x = left-right
-% SPM/MNI   y = post-ant
-% SPM/MNI   z = inf-sup
-
-% CTF       x = post-ant
-% CTF       y = right-left
-% CTF       z = inf-sup
+if ~isequal(datatype, cfg.datatype)
+  ft_info('typecasting the numeric data from %s to %s', datatype, cfg.datatype);
+  data = cast(data, cfg.datatype);
+end
 
 % The BrainVoyager and Analyze format do not support the specification of
-% the coordinate system using a homogenous transformation axis, therefore
+% the coordinate system using a homogeneous transformation axis, therefore
 % the dimensions of the complete volume has to be reordered by flipping and
 % permuting to correspond with their native coordinate system.
 switch cfg.filetype
   case {'vmp', 'vmr'}
+    if ~isfield(cfg, 'vmpversion')
+      fprintf('using BrainVoyager version 2 VMP format\n');
+      cfg.vmpversion = 2;
+    end
+
     % the reordering for BrainVoyager has been figured out by Markus Siegel
-    if any(strcmp(volume.coordsys, {'ctf', '4d', 'bti'}))
+    if any(strcmp(volume.coordsys, {'als', 'ctf', '4d', 'bti', 'eeglab'}))
       data = permute(data, [2 3 1]);
-    elseif any(strcmp(volume.coordsys, {'acpc', 'spm', 'mni', 'tal'}))
+    elseif any(strcmp(volume.coordsys, {'ras', 'acpc', 'spm', 'mni', 'tal', 'neuromag', 'itab'}))
       data = permute(data, [2 3 1]);
-      data = flipdim(data, 1);
-      data = flipdim(data, 2);
+      data = flip(data, 1);
+      data = flip(data, 2);
     else
       ft_error('unsupported coordinate system ''%s''', volume.coordsys);
     end
-    siz = size(data);
-  case 'analyze'
+  case 'analyze_old'
+    % The coordinate system employed by the ANALYZE programs is left-handed,
+    % with the coordinate origin in the lower left corner. Thus, with the
+    % subject lying supine, the coordinate origin is on the right side of
+    % the body (x), at the back (y), and at the feet (z).
+    
+    % Analyze   x = right-left
+    % Analyze   y = post-ant
+    % Analyze   z = inf-sup
+    
+    % SPM/MNI   x = left-right
+    % SPM/MNI   y = post-ant
+    % SPM/MNI   z = inf-sup
+    
+    % CTF       x = post-ant
+    % CTF       y = right-left
+    % CTF       z = inf-sup
+
     % the reordering of the Analyze format is according to documentation from Darren Webber
-    if any(strcmp(volume.coordsys, {'ctf', '4d', 'bti'}))
+    if any(strcmp(volume.coordsys, {'als', 'ctf', '4d', 'bti', 'eeglab'}))
       data = permute(data, [2 1 3]);
-    elseif any(strcmp(volume.coordsys, {'acpc', 'spm', 'mni', 'tal'}))
-      data = flipdim(data, 1);
+    elseif any(strcmp(volume.coordsys, {'ras', 'acpc', 'spm', 'mni', 'tal', 'neuromag', 'itab'}))
+      data = flip(data, 1);
     else
       ft_error('unsupported coordinate system ''%s''', volume.coordsys);
     end
-    siz = size(data);
-  case {'analyze_spm', 'nifti', 'nifti_img' 'mgz' 'mgh'}
+    
+  case {'analyze_spm' 'nifti' 'nifti_img' 'nifti_spm' 'nifti_gz' 'mgz' 'mgh'}
     % this format supports a homogenous transformation matrix
     % nothing needs to be changed
   otherwise
     ft_warning('unknown fileformat\n');
 end
 
+[p, f, ext] = fileparts(cfg.filename);
+
 % write the volume data to file
 switch cfg.filetype
-  case 'vmp'
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % write in BrainVoyager VMP format
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    fid = fopen(sprintf('%s.vmp', cfg.filename),'w');
-    if fid < 0
-      ft_error('Cannot write to file %s.vmp\n',cfg.filename);
+  case {'vmr' 'vmp'}
+    ft_write_mri(cfg.filename, data, 'dataformat', cfg.filetype, 'vmpversion', cfg.vmpversion);
+
+  case 'analyze_old'
+    if isempty(ext)
+      cfg.filename = sprintf('%s.img', cfg.filename);
     end
-
-    switch cfg.vmpversion
-      case 1
-        % write the header
-        fwrite(fid, 1, 'short');      % version
-        fwrite(fid, 1, 'short');      % number of maps
-        fwrite(fid, 1, 'short');      % map type
-        fwrite(fid, 0, 'short');      % lag
-
-        fwrite(fid, 0, 'short');      % cluster size
-        fwrite(fid, 1, 'float');      % thresh min
-        fwrite(fid, maxval, 'float'); % thresh max
-        fwrite(fid, 0, 'short');      % df1
-        fwrite(fid, 0, 'short');      % df2
-        fwrite(fid, 0, 'char');       % name
-
-        fwrite(fid, siz, 'short');    % size
-        fwrite(fid, 0, 'short');
-        fwrite(fid, siz(1)-1, 'short');
-        fwrite(fid, 0, 'short');
-        fwrite(fid, siz(2)-1, 'short');
-        fwrite(fid, 0, 'short');
-        fwrite(fid, siz(3)-1, 'short');
-        fwrite(fid, 1, 'short');      % resolution
-
-        % write the data
-        fwrite(fid, data, 'float');
-      case 2
-        % determine relevant subvolume
-        % FIXME, this is not functional at the moment, since earlier in this function all nans have been replaced by zeros
-        minx = min(find(~isnan(max(max(data,[],3),[],2))));
-        maxx = max(find(~isnan(max(max(data,[],3),[],2))));
-        miny = min(find(~isnan(max(max(data,[],3),[],1))));
-        maxy = max(find(~isnan(max(max(data,[],3),[],1))));
-        minz = min(find(~isnan(max(max(data,[],1),[],2))));
-        maxz = max(find(~isnan(max(max(data,[],1),[],2))));
-
-        % write the header
-        fwrite(fid, 2, 'short');      % version
-        fwrite(fid, 1, 'int');        % number of maps
-        fwrite(fid, 1, 'int');        % map type
-        fwrite(fid, 0, 'int');        % lag
-
-        fwrite(fid, 0, 'int');        % cluster size
-        fwrite(fid, 0, 'char');       % cluster enable
-        fwrite(fid, 1, 'float');      % thresh
-        fwrite(fid, maxval, 'float'); % thresh
-        fwrite(fid, 0, 'int');        % df1
-        fwrite(fid, 0, 'int');        % df2
-        fwrite(fid, 0, 'int');        % bonf
-        fwrite(fid, [255,0,0], 'uchar');   % col1
-        fwrite(fid, [255,255,0], 'uchar'); % col2
-        fwrite(fid, 1, 'char');       % enable SMP
-        fwrite(fid, 1, 'float');      % transparency
-        fwrite(fid, 0, 'char');       % name
-
-        fwrite(fid, siz, 'int');      % original size
-        fwrite(fid, minx-1, 'int');
-        fwrite(fid, maxx-1, 'int');
-        fwrite(fid, miny-1, 'int');
-        fwrite(fid, maxy-1, 'int');
-        fwrite(fid, minz-1, 'int');
-        fwrite(fid, maxz-1, 'int');
-        fwrite(fid, 1, 'int');        % resolution
-
-        % write the data
-        fwrite(fid, data(minx:maxx,miny:maxy,minz:maxz), 'float');
-    end
-    fclose(fid);
-
-  case 'vmr'
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % write in BrainVoyager VMR format
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    fid = fopen(sprintf('%s.vmr',cfg.filename),'w');
-    if fid < 0
-      ft_error('Cannot write to file %s.vmr\n',cfg.filename);
-    end
-
-    % data should be scaled between 0 and 225
-    data = data - min(data(:));
-    data = round(225*data./max(data(:)));
-
-    % write the header
-    fwrite(fid, siz, 'ushort');
-    % write the data
-    fwrite(fid, data, 'uint8');
-    fclose(fid);
-  case 'analyze'
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % write in Analyze format, using some functions from Darren Webbers toolbox
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    avw = avw_hdr_make;
-
-    % specify the image data and dimensions
-    avw.hdr.dime.dim(2:4) = siz;
-    avw.img = data;
-
-    % orientation 0 means transverse unflipped (axial, radiological)
-    % X direction first,  ft_progressing from patient right to left,
-    % Y direction second, ft_progressing from patient posterior to anterior,
-    % Z direction third,  ft_progressing from patient inferior to superior.
-    avw.hdr.hist.orient = 0;
-
-    % specify voxel size
-    avw.hdr.dime.pixdim(2:4) = [1 1 1];
-    % FIXME, this currently does not work due to all flipping and permuting
-    % resx = x(2)-x(1);
-    % resy = y(2)-y(1);
-    % resz = z(2)-z(1);
-    % avw.hdr.dime.pixdim(2:4) = [resy resx resz];
-
-    % specify the data type
-    switch lower(cfg.datatype)
-      case 'bit1'
-        avw.hdr.dime.datatype = 1;
-        avw.hdr.dime.bitpix   = 1;
-      case 'uint8'
-        avw.hdr.dime.datatype = 2;
-        avw.hdr.dime.bitpix   = 8;
-      case 'int16'
-        avw.hdr.dime.datatype = 4;
-        avw.hdr.dime.bitpix   = 16;
-      case 'int32'
-        avw.hdr.dime.datatype = 8;
-        avw.hdr.dime.bitpix   = 32;
-      case 'float'
-        avw.hdr.dime.datatype = 16;
-        avw.hdr.dime.bitpix   = 32;
-      case 'double'
-        avw.hdr.dime.datatype = 64;
-        avw.hdr.dime.bitpix   = 64;
-      otherwise
-        ft_error('unknown datatype');
-    end
-
-    % write the header and image data
-    avw_img_write(avw, cfg.filename, [], 'ieee-le');
+    ft_write_mri(cfg.filename, data, 'dataformat', 'analyze_old');
 
   case 'nifti'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % write in nifti format, using functions from  the SPM8 toolbox
-    % this format supports a homogenous transformation matrix
+    % write in nifti format, using functions from  the freesurfer toolbox
+    % this format supports a homogeneous transformation matrix
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    [pathstr, name, ext] = fileparts(cfg.filename);
     if isempty(ext)
-      cfg.filename = [cfg.filename,'.nii'];
+      cfg.filename = sprintf('%s.nii', cfg.filename);
     end
-    ft_write_mri(cfg.filename, data, 'dataformat', 'nifti', 'transform', transform, 'spmversion', 'SPM8');
+    ft_write_mri(cfg.filename, data, 'dataformat', 'nifti', 'transform', transform, 'scl_slope', scl_slope, 'scl_inter', scl_inter);
+  
+  case 'nifti_gz'
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % write in zipped nifti format, using functions from  the freesurfer toolbox
+    % this format supports a homogeneous transformation matrix
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    if isempty(ext)
+      cfg.filename = sprintf('%s.nii.gz', cfg.filename);
+    end
+    ft_write_mri(cfg.filename, data, 'dataformat', 'nifti_gz', 'transform', transform, 'scl_slope', scl_slope, 'scl_inter', scl_inter);
 
   case 'nifti_img'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % write in nifti dual file format, using functions from  the SPM8 toolbox
-    % this format supports a homogenous transformation matrix
+    % write in nifti dual file format, using functions from  the SPM toolbox
+    % this format supports a homogeneous transformation matrix
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    [pathstr, name, ext] = fileparts(cfg.filename);
     if isempty(ext)
-      cfg.filename = [cfg.filename,'.img'];
+      cfg.filename = sprintf('%s.img', cfg.filename);
     end
-    ft_write_mri(cfg.filename, data, 'dataformat', 'nifti', 'transform', transform, 'spmversion', 'SPM8');
+    ft_write_mri(cfg.filename, data, 'dataformat', 'nifti_img', 'transform', transform, 'spmversion', cfg.spmversion);
+
+  case 'nifti_spm'
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % write in nifti single file format, using functions from  the SPM toolbox
+    % this format supports a homogeneous transformation matrix
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    if isempty(ext)
+      cfg.filename = sprintf('%s.nii', cfg.filename);
+    end
+    ft_write_mri(cfg.filename, data, 'dataformat', 'nifti_spm', 'transform', transform, 'spmversion', cfg.spmversion);
 
   case 'analyze_spm'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % write in analyze format, using functions from  the SPM8 toolbox
-    % this format supports a homogenous transformation matrix
+    % write in analyze format, using functions from  the SPM toolbox
+    % this format supports a homogeneous transformation matrix
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    [pathstr, name, ext] = fileparts(cfg.filename);
     if isempty(ext)
-      cfg.filename = [cfg.filename,'.img'];
+      cfg.filename = sprintf('%s.img', cfg.filename);
     end
-    ft_write_mri(cfg.filename, data, 'dataformat', 'analyze', 'transform', transform, 'spmversion', 'SPM2');
+    ft_write_mri(cfg.filename, data, 'dataformat', 'analyze', 'transform', transform, 'spmversion', cfg.spmversion);
 
   case {'mgz' 'mgh'}
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % write in freesurfer_mgz format, using functions from  the freesurfer toolbox
-    % this format supports a homogenous transformation matrix
+    % this format supports a homogeneous transformation matrix
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     if ispc && strcmp(cfg.filetype, 'mgz')
       ft_warning('Saving in .mgz format is not possible on a PC, saving in .mgh format instead');
       cfg.filetype = 'mgh';
     end
-    [pathstr, name, ext] = fileparts(cfg.filename);
     if isempty(ext)
-      cfg.filename = [cfg.filename,'.',cfg.filetype];
+      cfg.filename = sprintf('%s.%s', cfg.filename, cfg.filetype);
     end
     ft_write_mri(cfg.filename, data, 'dataformat', cfg.filetype, 'transform', transform);
 

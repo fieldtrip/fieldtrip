@@ -1,4 +1,4 @@
-function test_bug1995
+function inspect_bug1995
 
 % DEPENDENCY ft_voumerealign ft_sourceplot
 
@@ -11,6 +11,5 @@ ft_volumerealign(cfg, mri);
 
 cfg =[];
 cfg.method = 'ortho';
-%cfg.interactive = 'yes';
+% cfg.interactive = 'yes';
 ft_sourceplot(cfg, mri);
-

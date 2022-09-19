@@ -158,21 +158,21 @@ void check_watchdog() {
 
 		/*
 		   fprintf(stderr, "watchdog: time = %d, now = %d\n", watchdog.time, time(NULL));
-		   fprintf(stderr, "watchdog: masterid = %d\n", watchdog.masterid);
+		   fprintf(stderr, "watchdog: controllerid = %d\n", watchdog.controllerid);
 		 */
 
-		/* check whether the watchdog should be triggered for the masterid */
-		if (watchdog.masterid) {
+		/* check whether the watchdog should be triggered for the controllerid */
+		if (watchdog.controllerid) {
 				found = 0;
 
 				pthread_mutex_lock(&mutexpeerlist);
 
-				/* look whether the same peer is still available as master */
+				/* look whether the same peer is still available as controller */
 				peer = peerlist;
 				while(peer && !found) {
 						found = 1;
-						found = found && (peer->host->id == watchdog.masterid);
-						found = found && (peer->host->status == STATUS_MASTER);
+						found = found && (peer->host->id == watchdog.controllerid);
+						found = found && (peer->host->status == STATUS_CONTROLLER);
 						peer = peer->next;
 				}
 
@@ -184,8 +184,8 @@ void check_watchdog() {
 						watchdog.evidence==0;
 
 				if (watchdog.evidence>2) {
-						/* the master is not available any more */
-						DEBUG(LOG_CRIT, "expire: watchdog triggered (master)");
+						/* the controller is not available any more */
+						DEBUG(LOG_CRIT, "expire: watchdog triggered (controller)");
 						exit(0);
 				}
 

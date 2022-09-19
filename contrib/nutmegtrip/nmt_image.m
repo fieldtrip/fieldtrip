@@ -54,7 +54,7 @@ switch(op)
             set(st.nmt.gui.beamin,'String',sprintf('%+g',blobintensity));
             
             if(~isempty(st.nmt.cfg.atlas))
-                atlas_labels = atlas_lookup(st.nmt.cfg.atlas,posmrimm,'inputcoord','mni','queryrange',3);
+                atlas_labels = atlas_lookup(st.nmt.cfg.atlas,posmrimm,'coordsys','mni','queryrange',3);
                 set(st.nmt.gui.mnilabel,'String',atlas_labels);
             end
 

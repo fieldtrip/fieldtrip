@@ -1,18 +1,17 @@
-function bnd = prepare_mesh_segmentation(cfg, mri)
+function mesh = prepare_mesh_segmentation(cfg, mri)
 
 % PREPARE_MESH_SEGMENTATION
 %
-% The following configuration options can be specified if cfg.method = iso2mesh:
+% The following configuration options can be specified for the iso2mesh method
 %   cfg.maxsurf     = 1 = only use the largest disjointed surface
 %                     0 = use all surfaces for that levelset
-%   cfg.radbound    = a scalar indicating the radius of the target surface 
+%   cfg.radbound    = a scalar indicating the radius of the target surface
 %                     mesh element bounding sphere
 %
-% See also PREPARE_MESH_MANUAL, PREPARE_MESH_HEADSHAPE,
-% PREPARE_MESH_HEXAHEDRAL, PREPARE_MESH_TETRAHEDRAL
+% See also PREPARE_MESH_MANUAL, PREPARE_MESH_HEADSHAPE, PREPARE_MESH_HEXAHEDRAL,
+% PREPARE_MESH_TETRAHEDRAL
 
-
-% Copyrights (C) 2009, Robert Oostenveld
+% Copyrights (C) 2009-2021, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -36,11 +35,12 @@ function bnd = prepare_mesh_segmentation(cfg, mri)
 mri = ft_checkdata(mri, 'datatype', {'volume', 'segmentation'}, 'hasunit', 'yes');
 
 % get the default options
-cfg.spmversion    = ft_getopt(cfg, 'spmversion', 'spm8');
+cfg.spmversion    = ft_getopt(cfg, 'spmversion', 'spm12');
 cfg.method        = ft_getopt(cfg, 'method', 'projectmesh');
 cfg.maxsurf       = ft_getopt(cfg, 'maxsurf', 1);
 cfg.radbound      = ft_getopt(cfg, 'radbound', 3);
 if all(isfield(mri, {'gray', 'white', 'csf'}))
+  % the default in this case is to combine gray, white and csf into brain, and segment that with 3000 vertices
   cfg.tissue      = ft_getopt(cfg, 'tissue', 'brain');    % set the default
   cfg.numvertices = ft_getopt(cfg, 'numvertices', 3000);  % set the default
 else
@@ -56,7 +56,8 @@ ft_hastoolbox(cfg.spmversion, 1);
 % try to determine the tissue (if not specified)
 
 % special exceptional case first
-if isempty(cfg.tissue) && numel(cfg.numvertices)==1 && isfield(mri,'white') && isfield(mri,'gray') && isfield(mri,'csf')
+if isempty(cfg.tissue) && numel(cfg.numvertices)==1 && isfield(mri, 'gray') && isfield(mri, 'white') && isfield(mri, 'csf')
+  % combine the gray, white and csf into a single brain segmentation
   mri = ft_datatype_segmentation(mri, 'segmentationstyle', 'probabilistic', 'hasbrain', 'yes');
   cfg.tissue = 'brain';
 end
@@ -104,35 +105,48 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % do the mesh extraction
 
-for i =1:numel(cfg.tissue)
+for i=1:numel(cfg.tissue)
+  
   if iscell(cfg.tissue)
-    % the code below assumes that it is a probabilistic representation
-    % for example {'brain', 'skull', scalp'}
+    % the code below assumes that it is a probabilistic representation, for example {'brain', 'skull', scalp'}
     try
       seg = mri.(fixname(cfg.tissue{i}));
     catch
       ft_error('Please specify cfg.tissue to correspond to tissue types in the segmented MRI')
     end
-    tissue = cfg.tissue{i};
-  else
-    % this assumes that it is an indexed representation
-    % for example [3 2 1]
+    seglabel = cfg.tissue{i};
+  elseif isnumeric(cfg.tissue) && isfield(mri, 'seg')
+    % for backward compatibility with hard-coded seg field
+    % this assumes that it is an indexed representation, for example [3 2 1]
     seg = (mri.seg==cfg.tissue(i));
     if isfield(mri, 'seglabel')
       try
-        tissue = mri.seglabel{cfg.tissue(i)};
+        seglabel = mri.seglabel{cfg.tissue(i)};
       catch
-        ft_error('Please specify cfg.tissue to correspond to (the name or number of) tissue types in the segmented MRI')
+        ft_error('specify cfg.tissue as the tissue name or tissue number')
       end
     else
-      tissue = sprintf('tissue %d', i);
+      seglabel = sprintf('tissue %d', i);
+    end
+  elseif isnumeric(cfg.tissue) && isfield(mri, 'tissue')
+    % for backward compatibility with hard-coded tissue field
+    % this assumes that it is an indexed representation, for example [3 2 1]
+    seg = (mri.tissue==cfg.tissue(i));
+    if isfield(mri, 'tissuelabel')
+      try
+        seglabel = mri.tissuelabel{cfg.tissue(i)};
+      catch
+        ft_error('specify cfg.tissue as the tissue name or tissue number')
+      end
+    else
+      seglabel = sprintf('tissue %d', i);
     end
   end
   
   if strcmp(cfg.method, 'isosurface')
-    fprintf('triangulating the outer boundary of compartment %d (%s) with the isosurface method\n', i, tissue);
+    fprintf('triangulating the outer boundary of compartment %d (%s) with the isosurface method\n', i, seglabel);
   else
-    fprintf('triangulating the outer boundary of compartment %d (%s) with %d vertices\n', i, tissue, cfg.numvertices(i));
+    fprintf('triangulating the outer boundary of compartment %d (%s) with %d vertices\n', i, seglabel, cfg.numvertices(i));
   end
   
   % in principle it is possible to do volumesmooth and volumethreshold, but
@@ -140,9 +154,23 @@ for i =1:numel(cfg.tissue)
   % seg = volumesmooth(seg, nan, nan);
   
   % ensure that the segmentation is binary and that there is a single contiguous region
-  seg = volumethreshold(seg, 0.5, tissue);
+  seg = volumethreshold(seg, 0.5, seglabel);
   
-  % the function that generates the mesh will fail if there is a hole in the middle
+  % add a layer on all sides to ensure that the tissue can be meshed all the way up to the edges
+  % this also ensures that the mesh at the bottom of the neck will be closed
+  seg = volumepad(seg);
+  
+  % update the dimensions of the segmented volume to accomodate the padding
+  dim = mri.dim+2;
+  
+  % update the homogenous transformation matrix to accomodate the shift that is due to the padding
+  transform = mri.transform;
+  shift = ft_warp_apply(transform, [1 1 1]) - ft_warp_apply(transform, [0 0 0]);
+  transform(1,4) = transform(1,4) - shift(1);
+  transform(2,4) = transform(2,4) - shift(2);
+  transform(3,4) = transform(3,4) - shift(3);
+  
+  % the mesh generation will fail if there is a hole in the middle
   seg = volumefillholes(seg);
   
   switch cfg.method
@@ -159,10 +187,10 @@ for i =1:numel(cfg.tissue)
       % this requires the external iso2mesh toolbox
       ft_hastoolbox('iso2mesh', 1);
       
-       opt = [];
-       opt.radbound = cfg.radbound; % set the target surface mesh element bounding sphere be <3 pixels in radius
-       opt.maxnode = cfg.numvertices(i);
-       opt.maxsurf = cfg.maxsurf;
+      opt = [];
+      opt.radbound = cfg.radbound; % set the target surface mesh element bounding sphere be <3 pixels in radius
+      opt.maxnode  = cfg.numvertices(i);
+      opt.maxsurf  = cfg.maxsurf;
       
       method = 'cgalsurf';
       isovalues = 0.5;
@@ -173,7 +201,7 @@ for i =1:numel(cfg.tissue)
       tri = tri(:,1:3);
       
     case 'projectmesh'
-      [mrix, mriy, mriz] = ndgrid(1:mri.dim(1), 1:mri.dim(2), 1:mri.dim(3));
+      [mrix, mriy, mriz] = ndgrid(1:dim(1), 1:dim(2), 1:dim(3));
       ori(1) = mean(mrix(seg(:)));
       ori(2) = mean(mriy(seg(:)));
       ori(3) = mean(mriz(seg(:)));
@@ -186,34 +214,31 @@ for i =1:numel(cfg.tissue)
   
   numvoxels(i) = sum(find(seg(:))); % the number of voxels in this tissue
   
-  bnd(i).pos = ft_warp_apply(mri.transform, pos);
-  bnd(i).tri = tri;
-  bnd(i).unit = mri.unit;
+  mesh(i).pos  = ft_warp_apply(transform, pos);
+  mesh(i).tri  = tri;
+  mesh(i).unit = mri.unit;
   
 end % for each tissue
 
 if strcmp(cfg.method, 'iso2surf')
   % order outside in (trying to be smart here)
-  [dum, order] = sort(numvoxels,'descend');
-  bnd = bnd(order);
+  [dum, order] = sort(numvoxels, 'descend');
+  mesh = mesh(order);
   % clean up the triangulated meshes
-  bnd = decouplesurf(bnd);
+  mesh = decouplesurf(mesh);
   % put them back in the original order
   [dum, order] = sort(order);
-  bnd = bnd(order);
+  mesh = mesh(order);
 end
-
-end % function
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function bnd = decouplesurf(bnd)
-for ii = 1:length(bnd)-1
+function mesh = decouplesurf(mesh)
+for ii = 1:length(mesh)-1
   % Despite what the instructions for surfboolean says, surfaces should be ordered from inside-out!!
-  [newnode, newelem] = surfboolean(bnd(ii+1).pos,bnd(ii+1).tri,'decouple',bnd(ii).pos,bnd(ii).tri);
-  bnd(ii+1).tri = newelem(newelem(:,4)==2,1:3) - size(bnd(ii+1).pos,1);
-  bnd(ii+1).pos = newnode(newnode(:,4)==2,1:3);
+  [newnode, newelem] = surfboolean(mesh(ii+1).pos, mesh(ii+1).tri, 'decouple', mesh(ii).pos,mesh(ii).tri);
+  mesh(ii+1).tri = newelem(newelem(:,4)==2,1:3) - size(mesh(ii+1).pos,1);
+  mesh(ii+1).pos = newnode(newnode(:,4)==2,1:3);
 end % for
-end % function

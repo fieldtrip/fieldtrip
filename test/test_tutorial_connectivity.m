@@ -1,8 +1,7 @@
 function test_tutorial_connectivity
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_connectivityanalysis ft_connectivitysimulation ft_freqanalysis ft_connectivityplot ft_mvaranalysis
 
 % This is the first section of the connectivity tutorial, which
@@ -106,7 +105,7 @@ freq          = ft_freqanalysis(cfg, data);
 figure;
 cfg = [];
 cfg.channel = 'signal001';
-ft_singleplotER(cfg, ft_checkdata(freq, 'cmbrepresentation', 'sparsewithpow'))
+ft_singleplotER(cfg, ft_checkdata(freq, 'cmbstyle', 'sparsewithpow'))
 %% connectivityanalysis
 cfg           = [];
 cfg.method    = 'coh';

@@ -1,18 +1,27 @@
 function [s, cfg] = ft_statfun_diff(cfg, dat, design)
 
-% FT_STATFUN_DIFF computes the difference of the mean in two conditions. Although it
-% can be used for statistical testing, it is not very usefull since it will have
-% rather limited sensitivity.
-% 
-% The purpose of this function is to show you an example on how to write a statfun
-% that expresses the difference in the data between two conditions. You can use such
-% a function with the statistical framework in FieldTrip to perform a simple (or more
-% complex) permutation test, without having to worry about the representation of the
-% data.
+% FT_STATFUN_DIFF demonstrates how to compute the difference of the mean in two
+% conditions. Although it can be used for statistical testing, it will have rather
+% limited sensitivity and is not really suited for inferential testing.
 %
-% See also FT_STATFUN_MEAN for another example function
+% This function serves as an example for a statfun. You can use such a function with
+% the statistical framework in FieldTrip using FT_TIMELOCKSTATISTICS,
+% FT_FREQSTATISTICS or FT_SOURCESTATISTICS to perform a statistical test, without
+% having to worry about the representation of the data.
+%
+% Use this function by calling the high-level statistic functions as
+%   [stat] = ft_freqstatistics(cfg, freq1, freq2, ...)
+% with the following configuration option:
+%   cfg.statistic = 'ft_statfun_diff_itc'
+%
+% The experimental design is specified as:
+%   cfg.ivar  = independent variable, row number of the design that contains the labels of the conditions to be compared (default=1)
+%
+% The labels for the independent variable should be specified as the number 1 and 2.
+%
+% See also FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS, and see FT_STATFUN_MEAN for a similar example
 
-% Copyright (C) 2006, Robert Oostenveld 
+% Copyright (C) 2006, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -32,20 +41,22 @@ function [s, cfg] = ft_statfun_diff(cfg, dat, design)
 %
 % $Id$
 
-selA = find(design(cfg.ivar,:)==1); % selecton condition 1 or A
-selB = find(design(cfg.ivar,:)==2); % selecton condition 2 or B
-dfA  = length(selA);
-dfB  = length(selB);
-if (dfA+dfB)<size(design, 2)
+% set the defaults
+cfg.ivar           = ft_getopt(cfg, 'ivar', 1);
+
+sel1 = find(design(cfg.ivar,:)==1); % select replications that belong to condition 1
+sel2 = find(design(cfg.ivar,:)==2); % select replications that belong to condition 2
+n1  = length(sel1);
+n2  = length(sel2);
+
+if (n1+n2)<size(design, 2)
   % there are apparently replications that belong neither to condition 1, nor to condition 2
   ft_warning('inappropriate design, it should only contain 1''s and 2''s');
 end
+
 % compute the averages and the difference
-avgA = nanmean(dat(:,selA), 2);
-avgB = nanmean(dat(:,selB), 2);
-s.stat = avgA - avgB;
+avg1 = nanmean(dat(:,sel1), 2);
+avg2 = nanmean(dat(:,sel2), 2);
 
-% the stat field is used in STATISTICS_MONTECARLO to make the
-% randomization distribution, but you can also return other fields
-% which will be passed on to the command line in the end.
-
+% return the difference in the means as statistic of interest
+s.stat = avg1 - avg2;

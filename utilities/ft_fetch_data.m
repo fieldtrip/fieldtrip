@@ -29,12 +29,6 @@ function [dat] = ft_fetch_data(data, varargin)
 %
 % $Id$
 
-% check whether input is data
-skipcheckdata = ft_getopt(varargin, 'skipcheckdata');
-if isempty(skipcheckdata) || skipcheckdata ~= 1
-  data = ft_checkdata(data, 'datatype', 'raw', 'hassampleinfo', 'yes');
-end
-
 % get the options
 if true
   p = inputParser;
@@ -44,21 +38,30 @@ if true
   addOptional(p, 'endsample', []);
   addOptional(p, 'chanindx', []);
   addOptional(p, 'allowoverlap', false);
+  addOptional(p, 'skipcheckdata', false);
   parse(p,varargin{:});
   hdr           = p.Results.header;
   begsample     = p.Results.begsample;
   endsample     = p.Results.endsample;
   chanindx      = p.Results.chanindx;
   allowoverlap  = p.Results.allowoverlap;
+  skipcheckdata = p.Results.skipcheckdata;
 else
-  hdr          = ft_getopt(varargin, 'header');
-  begsample    = ft_getopt(varargin, 'begsample');
-  endsample    = ft_getopt(varargin, 'endsample');
-  chanindx     = ft_getopt(varargin, 'chanindx');
-  allowoverlap = ft_getopt(varargin, 'allowoverlap', false);
+  hdr           = ft_getopt(varargin, 'header');
+  begsample     = ft_getopt(varargin, 'begsample');
+  endsample     = ft_getopt(varargin, 'endsample');
+  chanindx      = ft_getopt(varargin, 'chanindx');
+  allowoverlap  = ft_getopt(varargin, 'allowoverlap', false);
+  skipcheckdata = ft_getopt(varargin, 'skipcheckdata', false);
 end
 
+% these should be booleans
 allowoverlap = istrue(allowoverlap);
+skipcheckdata = istrue(skipcheckdata);
+
+if ~skipcheckdata
+  data = ft_checkdata(data, 'datatype', 'raw', 'hassampleinfo', 'yes');
+end
 
 if isempty(hdr)
   hdr = ft_fetch_header(data);
@@ -150,25 +153,26 @@ if trlnum>1
   
   % check if all samples are present and are not present twice or more
   if any(count>1)
-    if ~allowoverlap
-      % ft_error('some of the requested samples occur twice in the data');
-      % this  can be considered OK if the overlap has exactly identical values
-      sel = find(count>1); % must be row vector
-      for smplop=sel
-        % find in which trials the sample occurs
-        seltrl = find(smplop>=trl(:,1) + 1 - begsample & ... 
-                      smplop<=trl(:,2) + 1 - begsample);  % which trials, requires the adjustment with begsample, if different from 1, JM 20180116
-        selsmp = smplop - trl(seltrl,1) + begsample; % which sample in each of the trials, requires the adjustment with begsample, rather than 1
-        for i=2:length(seltrl)
-          % compare all occurences to the first one
-          % consider also mutual occurring NaNs as equal values
-          if ~all(isequaln(data.trial{seltrl(i)}(:,selsmp(i)), data.trial{seltrl(1)}(:,selsmp(1))))
+    % Lists the repeated (overlapped) samples.
+    sel = find(count>1);
+    for smplop=sel
+      % find in which trials the sample occurs
+      seltrl = find(smplop>=trl(:,1) + 1 - begsample & ... 
+                    smplop<=trl(:,2) + 1 - begsample);  % which trials, requires the adjustment with begsample, if different from 1, JM 20180116
+      selsmp = smplop - trl(seltrl,1) + begsample; % which sample in each of the trials, requires the adjustment with begsample, rather than 1
+      for i=2:length(seltrl)
+        eqsamp = all(isequaln(data.trial{seltrl(i)}(:,selsmp(i)), data.trial{seltrl(1)}(:,selsmp(1))));
+        if ~eqsamp
+          % If overlap is not allowed, rises an error.
+          if ~allowoverlap
             ft_error('some of the requested samples occur twice in the data and have conflicting values');
           end
+          % Otherwise rises a warning and exits the loop.
+          ft_warning('some of the requested samples occur twice in the data and have conflicting values, using only the last occurence of each sample');
+          break
         end
       end
-    else
-      ft_warning('samples present in multiple trials, using only the last occurence of each sample')
+      if ~eqsamp, break, end
     end
   end
   

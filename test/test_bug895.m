@@ -1,13 +1,14 @@
 function test_bug895
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
+% DEPENDENCY
 
 % using statfun_indepsamplesZcoh results in an output structure that
 % contains 'chan' in the dimord, rather than 'chancmb'
 
 % load some data
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/preproc_ctf275'));
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/preproc_ctf275.mat'));
 
 % do spectral transformation
 cfg = [];
