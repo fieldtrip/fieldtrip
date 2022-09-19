@@ -248,7 +248,7 @@ end
 stat.var        = varOut;
 stat.dof        = df;
 stat.time       = psth.time;
-stat.psth       = shiftdim(mean(psth.trial(:,chanSel,:), 1), 1); % the input is single-trials, compute the mean over selected trials
+stat.psth       = shiftdim(nanmean(psth.trial(:,chanSel,:), 1), 1); % the input is single-trials, compute the mean over selected trials
 stat.label      = psth.label(chanSel); % keep this as reference for JPSTH.avg
 if (strcmp(cfg.keeptrials,'yes'))
   stat.trial = singleTrials;

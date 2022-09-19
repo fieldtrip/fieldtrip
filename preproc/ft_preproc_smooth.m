@@ -5,10 +5,15 @@ function [datsmooth] = ft_preproc_smooth(dat, n, tol)
 % half the boxcar length at the edges of the data segment.
 %
 % Use as
-%   datsmooth = ft_preproc_smooth(dat, n)
+%   [dat] = ft_preproc_smooth(dat, n)
 %
-% Where dat is an Nchan x Ntimepoints data matrix, and n the length
+% Where dat is an Nchan x Ntime data matrix, and n is the length
 % of the boxcar smoothing kernel
+%
+% If the data contains NaNs, these are ignored for the computation, but
+% retained in the output.
+%
+% See also PREPROC
 
 % Undocumented options:
 %  n can also be a vector containing a custom smoothing kernel
@@ -76,7 +81,6 @@ function out = smooth_regularised(dat, tol)
 
 tol = tol.*std(dat(:));
 n   = size(dat, 2);
-
 B    = eye(n);
 
 % create Toeplitz matrix F

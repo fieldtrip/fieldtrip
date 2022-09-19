@@ -1,4 +1,4 @@
-% mff_exportevents - export MFF EEG event from EEGLAB structure to 
+% mff_exportevents - export MFF EEG event from EEGLAB structure to
 %                    'Events_exported_from_EEGLAB.xml' file
 % Usage:
 %   mff_exportevents(EEG, mffFile);
@@ -30,14 +30,15 @@ warning('off', 'MATLAB:Java:DuplicateClass');
 javaaddpath(fullfile(p, 'MFF-1.2.2-jar-with-dependencies.jar'));
 warning('on', 'MATLAB:Java:DuplicateClass');
 
-events   = EEG.event;
 if isfield(EEG.etc, 'recordingtime')
-     begTime = EEG.etc.recordingtime;
-else begTime = now;
+    begTime = EEG.etc.recordingtime;
+else
+    begTime = now;
 end
 if isfield(EEG.etc, 'timezone')
-     timeZone = EEG.etc.timezone;
-else timeZone = '00:00';
+    timeZone = EEG.etc.timezone;
+else
+    timeZone = '00:00';
 end
 srate    = EEG.srate;
 
@@ -45,69 +46,108 @@ srate    = EEG.srate;
 mfffactorydelegate = javaObject('com.egi.services.mff.api.LocalMFFFactoryDelegate');
 mfffactory = javaObject('com.egi.services.mff.api.MFFFactory', mfffactorydelegate);
 
-% Create Signal object and read in event track file.
-fileName = 'Events_exported_from_EEGLAB.xml';
-eventtrackfilename = fullfile(mffFile, fileName);
-eventtracktype = javaObject('com.egi.services.mff.api.MFFResourceType', javaMethod('valueOf', 'com.egi.services.mff.api.MFFResourceType$MFFResourceTypes', 'kMFF_RT_EventTrack'));
-if mfffactory.createResourceAtURI(eventtrackfilename, eventtracktype)
-    disp('Success at creating the event file');
+% determine the number of files
+events   = EEG.event;
+if isfield(EEG.event, 'name')
+    allNames = { events.name };
+    allNames = cellfun(@num2str, allNames, 'UniformOutput', false);
+    uniqueNames = unique( allNames );
 else
-    disp('Could not create event file');
+    uniqueNames = { '' };
 end
 
-fprintf('Exporting %d events...\n', length(events));
-eventtrackObj = mfffactory.openResourceAtURI(eventtrackfilename, eventtracktype);
-
-jList = javaObject('java.util.ArrayList');
-addLatency = 0;
-multiplier = 24*60*60*srate;
-keyWarning = true;
-for iEvent = 1:length(events)
-    if strcmpi(events(iEvent).type, 'boundary') % do not export boundary events
-        addLatency = addLatency + events(iEvent).duration;
+tracktype = '';
+for iFile = 1:length(uniqueNames)
+    
+    % Create Signal object and read in event track file.
+    fileName = 'Events_exported_from_EEGLAB.xml';
+    if length(uniqueNames) > 1
+        eventtrackfilename = fullfile(mffFile, [ fileName(1:end-4) '_' num2str(iFile) '.xml' ]);
+        indEvents = strmatch( uniqueNames{iFile}, allNames, 'exact');
+        if isfield(events, 'tracktype')
+            tracktype = events(indEvents(1)).tracktype;
+        end
     else
-        eventObj = javaObject('com.egi.services.mff.api.Event');
-
-        % Get keys for event and display key codes
-        if isfield(events(iEvent), 'code')
-            eventObj.setCode(        events(iEvent).code );
+        eventtrackfilename = fullfile(mffFile, fileName);
+        if isfield(events, 'tracktype')
+            tracktype = events(1).tracktype;
+        end
+        indEvents = 1:length(events);
+    end
+    
+    if ~all(cellfun(@(x)isequal(x, 'boundary'), {events(indEvents).type}))
+        eventtracktype = javaObject('com.egi.services.mff.api.MFFResourceType', javaMethod('valueOf', 'com.egi.services.mff.api.MFFResourceType$MFFResourceTypes', 'kMFF_RT_EventTrack'));
+        if mfffactory.createResourceAtURI(eventtrackfilename, eventtracktype)
+            disp('Success at creating the event file');
         else
-            eventObj.setCode(num2str(events(iEvent).type));
+            disp('Could not create event file');
         end
-        if isfield(events(iEvent), 'description'),  eventObj.setDescription( events(iEvent).description ); end
-        if isfield(events(iEvent), 'duration'   ),  eventObj.setDuration(    events(iEvent).duration ); end
-        if isfield(events(iEvent), 'label'),        eventObj.setLabel(       events(iEvent).label ); end
-        if isfield(events(iEvent), 'sourcedevice'), eventObj.setSourceDevice(events(iEvent).sourcedevice ); end
-        
-        if isfield(events, 'mffkeysbackup') && ~isempty(events(iEvent).mffkeysbackup)
-            jListKeys = javaObject('java.util.ArrayList');
-            tmpKeys = eval(events(iEvent).mffkeysbackup);
-            for iKey = 1:length(tmpKeys);
-                keyObj = javaObject('com.egi.services.mff.api.Key');
-                keyObj.setCode(tmpKeys(iKey).code);
-                keyObj.setData(tmpKeys(iKey).data);
-                keyObj.setDataType(tmpKeys(iKey).datatype);
-                keyObj.setDescription(tmpKeys(iKey).description);
-                jListKeys.add(keyObj);
-            end
-            eventObj.setKeys(jListKeys);
-        elseif keyWarning
-            disp('Warning: no MFF backup key structure found - MFF keys not exported');
-            disp('         import keys when loading the data to be able to export them');
-            keyWarning = false;
-        end
-        
-        realLatency = (events(iEvent).latency + addLatency)/multiplier+begTime;
-        tmp = mff_encodetime(realLatency, timeZone);
-        if isfield(events(iEvent), 'begintime')
-            if ~isequal(events(iEvent).begintime, tmp) && ~isempty(events(iEvent).begintime)
-                fprintf('Note: exported event time %d differ from original one %s vs %s\n', iEvent, events(iEvent).begintime, tmp);
-            end
-        end
-        eventObj.setBeginTime(mff_encodetime(realLatency, timeZone));
 
-        jList.add(eventObj);
+        fprintf('Exporting %d events...\n', length(events));
+        eventtrackObj = mfffactory.openResourceAtURI(eventtrackfilename, eventtracktype);
+        if isfield(events, 'name') && ~isempty(uniqueNames{iFile})
+            eventtrackObj.setName(events(1).name);
+        end
+        if isfield(events, 'tracktype') && ~isempty(tracktype)
+            eventtrackObj.setTrackType(tracktype);
+        end
+
+        jList = javaObject('java.util.ArrayList');
+        addLatency = 0;
+        multiplier = 24*60*60*srate;
+        keyWarning = true;
+        for iEvent = 1:length(events)
+            if strcmpi(events(iEvent).type, 'boundary') % do not export boundary events
+                addLatency = addLatency + events(iEvent).duration;
+            else
+                if ~isfield(events, 'name') || strcmpi(events(iEvent).name, uniqueNames{iFile})
+                    eventObj = javaObject('com.egi.services.mff.api.Event');
+
+                    % Get keys for event and display key codes
+                    if isfield(events(iEvent), 'code')
+                        eventObj.setCode(        events(iEvent).code );
+                    else
+                        eventObj.setCode(num2str(events(iEvent).type));
+                    end
+                    if isfield(events(iEvent), 'description'),  eventObj.setDescription( events(iEvent).description ); end
+                    if isfield(events(iEvent), 'duration'   ),  eventObj.setDuration(    events(iEvent).duration ); end
+                    if isfield(events(iEvent), 'label'),        eventObj.setLabel(       events(iEvent).label ); end
+                    if isfield(events(iEvent), 'sourcedevice'), eventObj.setSourceDevice(events(iEvent).sourcedevice ); end
+
+                    if isfield(events, 'mffkeysbackup') && ~isempty(events(iEvent).mffkeysbackup)
+                        jListKeys = javaObject('java.util.ArrayList');
+                        tmpmffkeysbackup = events(iEvent).mffkeysbackup;
+                        tmpmffkeysbackup(tmpmffkeysbackup == 10) = ' '; % remove carriage return
+                        tmpKeys = eval(tmpmffkeysbackup);
+                        for iKey = 1:length(tmpKeys);
+                            keyObj = javaObject('com.egi.services.mff.api.Key');
+                            keyObj.setCode(tmpKeys(iKey).code);
+                            keyObj.setData(tmpKeys(iKey).data);
+                            keyObj.setDataType(tmpKeys(iKey).datatype);
+                            keyObj.setDescription(tmpKeys(iKey).description);
+                            jListKeys.add(keyObj);
+                        end
+                        eventObj.setKeys(jListKeys);
+                    elseif keyWarning
+                        disp('Warning: no MFF backup key structure found - MFF keys not exported');
+                        disp('         import keys when loading the data to be able to export them');
+                        keyWarning = false;
+                    end
+
+                    realLatency = (events(iEvent).latency + addLatency)/multiplier+begTime;
+                    tmp = mff_encodetime(realLatency, timeZone);
+                    if isfield(events(iEvent), 'begintime')
+                        if ~isequal(events(iEvent).begintime, tmp) && ~isempty(events(iEvent).begintime)
+                            fprintf('Note: exported event time %d differ from original one %s vs %s\n', iEvent, events(iEvent).begintime, tmp);
+                        end
+                    end
+                    eventObj.setBeginTime(mff_encodetime(realLatency, timeZone));
+
+                    jList.add(eventObj);
+                end
+            end
+        end
+        eventtrackObj.setEvents(jList);
+        eventtrackObj.saveResource();
     end
 end
-eventtrackObj.setEvents(jList);
-eventtrackObj.saveResource();

@@ -33,58 +33,74 @@ function K = compKernel(X,Z,kerType,varargin)
 % implied
 
 
-if (nargin < 3) % check correct number of arguments
-  error('Insufficient arguments'); return;
+if nargin < 3 % check correct number of arguments
+  error('Insufficient arguments'); 
 end
-if ( isinteger(X) ) X=single(X); end % need floats for products!
+if isinteger(X)
+  X = single(X); 
+end % need floats for products!
 % empty Z means use X
-isgram=false;
-dir   =1;  % Assume row vectors in X
-if ( isempty(Z) ) Z=X; isgram=true; elseif ( isinteger(Z) ) Z=single(Z); end;
-
-if ( isstr(kerType) )
- switch lower(kerType)
-
-  case {'linear','nlinear'}; % linear
-   K = linKer(X,Z,dir);
-
-  case {'poly','npoly'};     % polynomial
-   if(numel(varargin)<2) varargin{2}=1;end;
-   K = (linKer(X,Z,dir)+varargin{2}).^varargin{1};
-
-  case {'rbf','nrbf'};       % Radial basis function, a.k.a. gaussian
-   K = sqDist(X,Z,dir); % pairwise distance
-   K = exp( - .5 * K / varargin{1} ) ;
-   if(isgram) K=.5*(K+K'); end % to avoid rounding error problems....
-
-  case 'precomp';            % Given in the input
-   if ( all( size(varargin) == [size(X1,1) size(X2,1)] ) )
-     K=varargin{1};
-   else
-     error('Kernel matrix does not match input dimensions');
-   end
-
-  otherwise;
-   if ( exist(kerType)>1 )   % String which specifies function on the path
-      K=feval(kerType,X,Z,varargin{:});
-   else
-     error(['Unrecognised kernel type : ' kerType]);
-   end
- end
-
-elseif ( isa(kerType,'function_handle') ) % function handle
- % use this handle
- K=feval(kerType,X,Z,varargin{:});
-else
-  error('Unknown kernel type');return
+isgram = false;
+dir    = 1;  % Assume row vectors in X
+if isempty(Z)
+  Z      = X; 
+  isgram = true;
+elseif isinteger(Z)
+  Z      = single(Z);
 end
 
-if ( isequal(kerType(1),'n') ) % normalise computed kernel
-  if ( isgram ) % Need to compute K(X,X)_i,i and K(Z,Z)_j,j
-     Nr = diag(K); Nc = diag(K);
+if ischar(kerType)
+  switch lower(kerType)
+    
+    case {'linear','nlinear'} % linear
+      K = linKer(X,Z,dir);
+      
+    case {'poly','npoly'} % polynomial
+      if numel(varargin)<2
+        varargin{2}=1;
+      end
+      K = (linKer(X,Z,dir)+varargin{2}).^varargin{1};
+      
+    case {'rbf','nrbf'} % Radial basis function, a.k.a. gaussian
+      K = sqDist(X,Z,dir); % pairwise distance
+      K = exp( - .5 * K / varargin{1} );
+      if(isgram) 
+        K = .5*(K+K'); 
+      end % to avoid rounding error problems....
+      
+    case 'precomp' % Given in the input
+%       if ~all( size(varargin{1}) == [size(X,1) size(Z,1)] )
+%         warning('Kernel matrix does not match input dimensions');
+%       end
+      K = varargin{1};
+      
+    otherwise
+      if exist(kerType)>1   % String which specifies function on the path
+        K=feval(kerType,X,Z,varargin{:});
+      else
+        error(['Unrecognised kernel type : ' kerType]);
+      end
+  end
+  
+elseif isa(kerType,'function_handle') % function handle
+  % use this handle
+  K = feval(kerType,X,Z,varargin{:});
+else
+  error('Unknown kernel type');
+end
+
+if isequal(kerType(1),'n') % normalise computed kernel
+  if isgram % Need to compute K(X,X)_i,i and K(Z,Z)_j,j
+    Nr = diag(K); Nc = diag(K);
   else
-     for i=1:size(X,1); Nr(i,1)=compKernel(X(i,:),[],kerType,varargin{:});end;
-     for i=1:size(Z,1); Nc(i,1)=compKernel(Z(i,:),[],kerType,varargin{:});end;
+    Nr = zeros(size(X,1),1);
+    for i=1:size(X,1)
+      Nr(i,1)=compKernel(X(i,:),[],kerType,varargin{:});
+    end
+    Nc = zeros(size(Z,1),1);
+    for i=1:size(Z,1)
+      Nc(i,1)=compKernel(Z(i,:),[],kerType,varargin{:});
+    end
   end
   K = repop(repop(K,sqrt(Nr),'./'),sqrt(Nc)','./');
 end;

@@ -587,7 +587,7 @@ if strcmp(sli, '2d')
     zsmax(s) = max(zcmax); zsmin(s) = min(zcmin);
     
     % color settings
-    colormap(cmap);
+    ft_colormap(cmap);
     if ~isempty(clim) && clim(2)>clim(1)
       caxis(gca, clim);
     end
@@ -748,7 +748,7 @@ else % plot 3d cloud
   axis equal
   
   % color settings
-  colormap(cmap);
+  ft_colormap(cmap);
   if ~isempty(clim) && clim(2)>clim(1)
     caxis(gca, clim);
   end

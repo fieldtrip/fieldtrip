@@ -1,5 +1,4 @@
 function test_bug2639
-
 % DEPENDENCY ft_checkdata
 
 % MEM 2gb
@@ -48,39 +47,39 @@ assert(isequal(freq2o.fourierspctrm(:,selo,:), freq2r.fourierspctrm(:,selr,:)));
 
 %% full, sparse, fourier, sparsewithpow, fullfast
 
-freq2o = ft_checkdata(freq1o, 'cmbrepresentation', 'fourier');
-freq2r = ft_checkdata(freq1r, 'cmbrepresentation', 'fourier');
+freq2o = ft_checkdata(freq1o, 'cmbstyle', 'fourier');
+freq2r = ft_checkdata(freq1r, 'cmbstyle', 'fourier');
 [selo, selr] = match_str(freq2o.label, freq2r.label);
 assert(isequal(freq2o.fourierspctrm(:,selo,:), freq2r.fourierspctrm(:,selr,:)));
 
 assert( isequal(freq1r.label,freq2r.label));
 assert(~isequal(freq2o.label,freq2r.label));
 
-freq2o = ft_checkdata(freq1o, 'cmbrepresentation', 'full');
-freq2r = ft_checkdata(freq1r, 'cmbrepresentation', 'full');
+freq2o = ft_checkdata(freq1o, 'cmbstyle', 'full');
+freq2r = ft_checkdata(freq1r, 'cmbstyle', 'full');
 [selo, selr] = match_str(freq2o.label, freq2r.label);
 assert(isequal(freq2o.crsspctrm(selo,selo), freq2r.crsspctrm(selr,selr)));
 
 assert( isequal(freq1r.label,freq2r.label));
 assert(~isequal(freq2o.label,freq2r.label));
 
-freq2o = ft_checkdata(freq1o, 'cmbrepresentation', 'fullfast');
-freq2r = ft_checkdata(freq1r, 'cmbrepresentation', 'fullfast');
+freq2o = ft_checkdata(freq1o, 'cmbstyle', 'fullfast');
+freq2r = ft_checkdata(freq1r, 'cmbstyle', 'fullfast');
 [selo, selr] = match_str(freq2o.label, freq2r.label);
 assert(isequal(freq2o.crsspctrm(selo,selo), freq2r.crsspctrm(selr,selr)));
 
 assert( isequal(freq1r.label,freq2r.label));
 assert(~isequal(freq2o.label,freq2r.label));
 
-freq2o = ft_checkdata(freq1o, 'cmbrepresentation', 'sparse', 'channelcmb', channelcmb);
-freq2r = ft_checkdata(freq1r, 'cmbrepresentation', 'sparse', 'channelcmb', channelcmb);
+freq2o = ft_checkdata(freq1o, 'cmbstyle', 'sparse', 'channelcmb', channelcmb);
+freq2r = ft_checkdata(freq1r, 'cmbstyle', 'sparse', 'channelcmb', channelcmb);
 [selo, selr] = match_strcmb(freq2o.labelcmb, freq2r.labelcmb);
 assert(isequal(freq2o.crsspctrm(selo,:), freq2r.crsspctrm(selr,:)));
 
 assert( isequal(freq2o.labelcmb,freq2r.labelcmb));
 
-freq2o = ft_checkdata(freq1o, 'cmbrepresentation', 'sparsewithpow', 'channelcmb', channelcmb);
-freq2r = ft_checkdata(freq1r, 'cmbrepresentation', 'sparsewithpow', 'channelcmb', channelcmb);
+freq2o = ft_checkdata(freq1o, 'cmbstyle', 'sparsewithpow', 'channelcmb', channelcmb);
+freq2r = ft_checkdata(freq1r, 'cmbstyle', 'sparsewithpow', 'channelcmb', channelcmb);
 [selo, selr] = match_strcmb(freq2o.labelcmb, freq2r.labelcmb);
 assert(isequal(freq2o.crsspctrm(selo,:), freq2r.crsspctrm(selr,:)));
 [selo, selr] = match_str(freq2o.label, freq2r.label);
@@ -121,16 +120,16 @@ assert(isequal(freq2o.powspctrm(selo,:), freq2r.powspctrm(selr,:)));
 [selo, selr] = match_strcmb(freq2o.labelcmb, freq2r.labelcmb);
 assert(isequal(freq2o.crsspctrm(selo,:), freq2r.crsspctrm(selr,:)));
 
-freq2o = ft_checkdata(freq1o, 'cmbrepresentation', 'full');
-freq2r = ft_checkdata(freq1r, 'cmbrepresentation', 'full');
+freq2o = ft_checkdata(freq1o, 'cmbstyle', 'full');
+freq2r = ft_checkdata(freq1r, 'cmbstyle', 'full');
 [selo, selr] = match_str(freq2o.label, freq2r.label);
 assert(isequal(freq2o.crsspctrm(selo,selo), freq2r.crsspctrm(selr,selr)));
 
 % assert( isequal(freq1r.label,freq2r.label)); % this is where the channel reordering becomes clear
 % assert(~isequal(freq2o.label,freq2r.label)); % this is where the channel reordering becomes clear
 
-freq2o = ft_checkdata(freq1o, 'cmbrepresentation', 'fullfast');
-freq2r = ft_checkdata(freq1r, 'cmbrepresentation', 'fullfast');
+freq2o = ft_checkdata(freq1o, 'cmbstyle', 'fullfast');
+freq2r = ft_checkdata(freq1r, 'cmbstyle', 'fullfast');
 [selo, selr] = match_str(freq2o.label, freq2r.label);
 assert(isequal(freq2o.crsspctrm(selo,selo), freq2r.crsspctrm(selr,selr))); % this is where another problem appears
 
@@ -145,4 +144,3 @@ for i=1:size(chancmb2,1)
   chan2{i} = sprintf('%s_%s', chancmb2{i,:});
 end
 [sel1, sel2] = match_str(chan1, chan2);
-

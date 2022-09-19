@@ -1,5 +1,9 @@
 function inspect_bug2892
 
+% WALLTIME 00:10:00
+% MEM 1gb
+% DEPENDENCY
+
 %% [p, f, x] = fileparts(mfilename('fullpath'));
 p = tempname; 
 mkdir(p);

@@ -3,17 +3,17 @@
 %
 %
 %Purpose:
-%   Run 3dDeconvolve in an interactive user-friendly way.  
-%   
+%   Run 3dDeconvolve in an interactive user-friendly way.
+%
 %Input:
 %   Major ones are done through keyboard, while rare ones such as -censor , -nforist, etc. are left for user to implement.
-%   
+%
 %Output:
 %	Wave functions from waver;
 %  Various output files from 3dDeconvolve
-%      
+%
 %Key Terms:
-%   
+%
 %More Info :
 %
 %     Author : Gang Chen (with help from Ziad Saad)
@@ -40,7 +40,7 @@ while flg1 == 0,
    end
 end
 
-%Use Ziad's AfniPrefix.m, which uses RemoveExtension.m 
+%Use Ziad's AfniPrefix.m, which uses RemoveExtension.m
 [InBrikPrefix, InBrikView, InBrikExt] =  AfniPrefix (InBrik);
 
 flg2 = 0;
@@ -94,9 +94,9 @@ end
 	
 if (N_runs == 1),	
    run(1).first = 0;
-end   
+end
 	
-%Get the concatenation points and create a concatenation file 
+%Get the concatenation points and create a concatenation file
 if (N_runs > 1),
    fprintf('After concatenation, the 1st run usually starts at 0.\n');
 	Concat_fn = sprintf('%s_concat.1D', InBrikPrefix);
@@ -124,7 +124,7 @@ if (N_runs > 1),
 	end
 end
 
-%Numer of TR's for the whole dataset including concatenated ones 
+%Numer of TR's for the whole dataset including concatenated ones
 flg6 = 0;
 while flg6 == 0,
    N_TR = input('Number of TRs for the whole dataset (run 3dinfo on the dataset if you are not sure): ');
@@ -306,7 +306,7 @@ if (Run_Type == 2),     %for regression
 	      else flg10 = 1;
          end
       end		
-	   
+	
    end
 		
    flg10 = 0;
@@ -314,7 +314,7 @@ if (Run_Type == 2),     %for regression
 	   if (strcmp (lower(BasisFunc),'gam') | strcmp (lower(BasisFunc),'mgh') | strcmp (lower(BasisFunc),'spm1')), N_basis = 1;
 		   elseif (strcmp (lower(BasisFunc),'spm2')), N_basis = 2;
          else N_basis = input('Number of basis functions: ');
-		end  
+		end
 		if (isnumeric(N_basis) == 0 | isempty(N_basis)),
 		   flg10 = 0; fprintf(2,'Error: the input is not a number. Please try it again.\n');
 	   else flg10 = 1;
@@ -353,7 +353,7 @@ while flg10 == 0,
 	fprintf('1. Regular timing indexed with 0s and 1s (TR-locked));\n');
 	fprintf('2. Irregular timing (not synchronized with TR).\n');
    Stim_Type = input('\nType of stimulus time files (1 - Regular; 2 - Irregular): ');
-	if (Stim_Type ~= 1 & Stim_Type ~= 2), 
+	if (Stim_Type ~= 1 & Stim_Type ~= 2),
 	   flg10 = 0; fprintf(2,'Error: the input has to be 0 or 1. Please try it again.\n');
 	else flg10 = 1;
 	end
@@ -403,7 +403,7 @@ fprintf('\nso that the finalthe final full F is interpreted as baseline + pure n
 flg10 = 0;
 while flg10 == 0,
    base = input('\n\nDo you want to add some covariates? (1 - yes; 0 - no) ');
-	if (base ~= 0 & base ~= 1), 
+	if (base ~= 0 & base ~= 1),
 	   flg10 = 0; fprintf(2,'Error: the input is not a number. Please try it again.\n');
 	   else flg10 = 1;
 	end
@@ -448,7 +448,7 @@ end % if (base == 1)
 flg10 = 0;
 while flg10 == 0,
    contrast = input('\nDo you want to run contrast test? (1 - yes; 0 - no) ');
-	if (contrast ~= 0 & contrast ~= 1), 
+	if (contrast ~= 0 & contrast ~= 1),
 	   flg10 = 0; fprintf(2,'Error: the input is not a number. Please try it again.\n');
 	   else flg10 = 1;
 	end
@@ -486,7 +486,7 @@ if (contrast == 1),
             end
          end
 
-         if ((contr(i).expr(1) ~= '+') | (contr(i).expr(1) ~= '-')), 
+         if ((contr(i).expr(1) ~= '+') | (contr(i).expr(1) ~= '-')),
             contr(i).expr =['+' contr(i).expr];	   %add + in front of the first label if it does not have one
          end
       end
@@ -581,7 +581,7 @@ if (Run_Type == 2),   %for regression
          end
       %	p(1) - delay of response (relative to onset)	   6        -gamd  in waver -GAM
       %	p(2) - delay of undershoot (relative to onset)    16
-      %	p(3) - dispersion of response			   1   
+      %	p(3) - dispersion of response			   1
       %	p(4) - dispersion of undershoot			   1   X
       %	p(5) - ratio of response to undershoot		   6   X
       %	p(6) - onset (seconds)				   0     -gamd
@@ -589,7 +589,7 @@ if (Run_Type == 2),   %for regression
 
 %      p      = [6 16 1 1 6 0 32];   %default parameters
 %	   [bf1 p]         = spm_hrf(TR,p);      %get gamma hrf from SPM function spm_hrf
-%	   dp     = 1;   
+%	   dp     = 1;
 %	   p(6)   = p(6) + dp;    %for calculating time derivative
 %	   bf2    = (bf1 - spm_hrf(TR,p))/dp;
 %		D      = (bf(:,1) - spm_hrf(TR,p))/dp;   %time derivative
@@ -613,9 +613,9 @@ if (Run_Type == 2),   %for regression
                fprintf(2,'Error running spm_bf: Failed in running spm_bf.\n');
                while (1); fprintf(2,'Halted: Ctrl+c to exit');pause; end
             end
-			   irr_vec = zeros(N_TR*TR/WAV_dt, 1);    %Make finer stimulus vector 
+			   irr_vec = zeros(N_TR*TR/WAV_dt, 1);    %Make finer stimulus vector
    			for (i = 1:1:length(vec)),
-	   		   irr_vec(round(vec(i)/WAV_dt)+1) = 1;   %Only at those moments (i.e., 1.5 sec) it is set to 1. 
+	   		   irr_vec(round(vec(i)/WAV_dt)+1) = 1;   %Only at those moments (i.e., 1.5 sec) it is set to 1.
 		   	end
 			   reg_f1 = conv(bf(:,1), irr_vec);    %use the convolution function in Matlab
    		   reg_f2 = conv(bf(:,2), irr_vec);
@@ -625,7 +625,7 @@ if (Run_Type == 2),   %for regression
 			
       	end			
          [err1, Task(iT).Name(1).str] = wryte3(reg1(1:N_TR), Task(iT).Name(1).str);   %Ziad's routine for writing a matrix into a file
-		   if (strcmp(lower(BasisFunc),'spm2')), [err2, Task(iT).Name(2).str] = wryte3(reg2(1:N_TR), Task(iT).Name(2).str); 
+		   if (strcmp(lower(BasisFunc),'spm2')), [err2, Task(iT).Name(2).str] = wryte3(reg2(1:N_TR), Task(iT).Name(2).str);
 			else err2 = 0; end
 	      if (err1 | err2),
             fprintf(2,'Error %s: failed to write into %s\n',Task(iT).Name(1).str);
@@ -634,7 +634,7 @@ if (Run_Type == 2),   %for regression
 	   	Task(iT).StimReg(1,:) = load(Task(iT).Name(1).str);  %this is for calculating condition number
 		   if (strcmp(lower(BasisFunc),'spm2')), Task(iT).StimReg(2,:) = load(Task(iT).Name(2).str); end
    	end
-  
+
    else    %for other basis function options
       for (iT = 1:1:N_tasks),
          fprintf (1,'Creating regressor(s) for task %d...\n', iT);
@@ -651,7 +651,7 @@ if (Run_Type == 2),   %for regression
             end
             Noext = RemoveExtension(Task(iT).StimTime, '.1D|.txt');
             Task(iT).Name(iB).str = sprintf('%s_resp%d.1D', Noext, iB);
-      
+
       %form the command for waver, Probably better to put in a modular function later?
 		      if (Stim_Type == 2),   %Irregular timing
 				   if (strcmp (lower(BasisFunc),'gam') | strcmp (lower(BasisFunc),'mgh')),
@@ -667,7 +667,7 @@ if (Run_Type == 2),   %for regression
 				   if (strcmp (lower(BasisFunc),'gam') | strcmp (lower(BasisFunc),'mgh')),
                   comm_Waver = sprintf('waver -dt %g %s -gamb %g -gamc %g -gamd %g -peak 1 -numout %d -input %s > %s',...
                      TR, Task(iT).BasisOpt_struct(iB).opt, Task(iT).BasisOpt_struct.power, Task(iT).BasisOpt_struct.scale, ...
-							Task(iT).BasisOpt_struct.delay, N_TR, Task(iT).StimTime, Task(iT).Name(iB).str); 
+							Task(iT).BasisOpt_struct.delay, N_TR, Task(iT).StimTime, Task(iT).Name(iB).str);
 					elseif (strcmp (lower(BasisFunc),'tent')),
 					   comm_Waver = sprintf('waver -dt %g %s -peak 1 -numout %d -input %s > %s',...
                      TR, Task(iT).BasisOpt_struct(iB).opt, N_TR, Task(iT).StimTime, Task(iT).Name(iB).str);
@@ -697,7 +697,7 @@ if (Run_Type == 2),   %for regression
          while (1); fprintf(2,'Halted: Ctrl+c to exit'); pause; end
       case 'Yes',
          Continue = 1;
-   end   
+   end
 
 
 %fprintf(1,'Check the regressors now, and hit Enter key if you want to continue ...\n');
@@ -714,7 +714,7 @@ if (Run_Type == 2),   %for regression
          while (1); fprintf(2,'Halted: Ctrl+c to exit'); pause; end
       case 'Yes',
          Continue = 1;
-   end   
+   end
 
 end
 
@@ -734,7 +734,7 @@ end
 if (Censor == 1),
    Mandatory_opt1 =sprintf('%s   -censor %s \\\n', Mandatory_opt1, Censor_fn);
 end	
-									 
+									
 Mandatory_opt2 = '';
 Mandatory_opt3 = '';
 Mandatory_opt4 = '';
@@ -746,7 +746,7 @@ for (iT=1:1:N_tasks),
          Mandatory_opt3 = sprintf('%s   -stim_label %d %s \\\n',...
                      Mandatory_opt3, (iT-1)*N_basis+iB, sprintf('%s_b%d', Task(iT).Label, iB));
          Mandatory_opt4 = sprintf('%s   -stim_minlag %d %d -stim_maxlag %d %d \\\n',...
-                     Mandatory_opt4, (iT-1)*N_basis+iB, Task(iT).BasisOpt_struct(iB).minlag,... 
+                     Mandatory_opt4, (iT-1)*N_basis+iB, Task(iT).BasisOpt_struct(iB).minlag,...
                      (iT-1)*N_basis+iB, Task(iT).BasisOpt_struct(iB).maxlag);
 		end					
 	elseif (Run_Type == 1),	%for deconvolution				
@@ -772,7 +772,7 @@ end
 %here we assume the user implicitly wants to test all tasks
 %first generate glt files by calling function TaskTest.m
 
-% Only for regression(Run_Type == 2); No need for deconvolution (Run_Type == 1) 
+% Only for regression(Run_Type == 2); No need for deconvolution (Run_Type == 1)
 % since 3dDeconvolve is supposed to automatically take care of that?
 
 gltopt1 = '';
@@ -780,11 +780,11 @@ if (Run_Type == 2),   %for regression
    if (N_basis ~= 1);
       [err,taskfile] = TaskTest(N_runs, polort, N_basis, N_tasks, Task, N_base);
 		gltopt1 = sprintf('%s   -num_glt %i\\\n', gltopt1, N_tasks+N_contr);
-      for (i = 1:1:N_tasks),		   
+      for (i = 1:1:N_tasks),		
 %         gltopt1 = sprintf('%s   -glt 1 %s   -glt_label %i %s\\\n', gltopt1, taskfile(i).name, i, Task(i).Label);
 			gltopt1 = sprintf('%s   -glt %i %s   -glt_label %i %s\\\n', gltopt1, N_basis, taskfile(i).name, i, Task(i).Label);
 			% Here a matrix with N_basis rows is set for testing each task
-      end   
+      end
 	end	
 end
 
@@ -796,16 +796,16 @@ if (contrast)
 	if (err),
       fprintf(2,'Error %s: Failed in ContrastTest.\n', contrfile);
       while (1); fprintf(2,'Halted: Ctrl+c to exit'); pause; end
-   end  
+   end
 	if (N_basis == 1), gltopt2 = sprintf('%s   -num_glt %i\\\n', gltopt2, N_contr); end
-	% The reason for adding the above line is that with N_bais ~= 1 there has been an option of 
+	% The reason for adding the above line is that with N_bais ~= 1 there has been an option of
 	% -num_glt already implemented in gltopt1 above to get task effects
-	if (Run_Type == 1),   %only for deconvolution	      
+	if (Run_Type == 1),   %only for deconvolution	
       for (i = 1:1:N_contr),
          gltopt2 = sprintf('%s   -glt 1 %s   -glt_label %i %s\\\n', gltopt2, contrfile(i).name, i, contr(i).label);
       end
-	elseif (Run_Type == 2),   %only for regression	 
-	   if (N_basis ~= 1); 
+	elseif (Run_Type == 2),   %only for regression	
+	   if (N_basis ~= 1);
 	      for (i = 1:1:N_contr),
             gltopt2 = sprintf('%s   -glt 1 %s   -glt_label %i %s\\\n', gltopt2, contrfile(i).name, i+N_tasks, contr(i).label);
 			end
@@ -818,9 +818,9 @@ end
 
 fitsprefix = sprintf('%s_fits', InBrikPrefix); statprefix = sprintf('%s_stat', InBrikPrefix);
 FitOpts = sprintf('   -fitts %s\\\n   -fout -tout -full_first -bucket %s\\\n',...
-                  fitsprefix, statprefix);                                  
+                  fitsprefix, statprefix);
 comm_3dDecon = sprintf ('3dDeconvolve %s %s %s %s %s %s %s',...
-                 Mandatory_opt1, Mandatory_opt2,  Mandatory_opt3, Mandatory_opt4, gltopt1, gltopt2, FitOpts);               
+                 Mandatory_opt1, Mandatory_opt2,  Mandatory_opt3, Mandatory_opt4, gltopt1, gltopt2, FitOpts);
 
 %log the command
 fprintf(foutid_log, '%s\n', comm_3dDecon);
@@ -837,8 +837,8 @@ if (PrefixStatus (sprintf('%s%s', statprefix, InBrikView)) ~= 1 | PrefixStatus (
          while (1); fprintf(2,'Halted: Ctrl+c to exit'); pause; end
       case 'Yes',
          Skip = 1;
-   end   
-end   
+   end
+end
 
 tic,
 if (~Skip),
@@ -896,47 +896,47 @@ if (N_basis>1),
 		
       %remove trailing +
          expr_str = expr_str(1:length(expr_str)-1);
-   
+
       %create the junk.1D file
       %   fidout = fopen('junk.1D', 'w');
       %   for (i=1:1:BasisOpt.tSpan./Recon_dt+1),
       %     fprintf(fidout,'%g\n', i);
       %   end
       %   fclose(fidout);
-         %augment input_str with other options   
+         %augment input_str with other options
          input_str = sprintf('%s   -dt %g -datum float\\\n', input_str, Recon_dt);
 		
 		
-      else 
+      else
 	      for (iB=1:1:N_basis),
             input_str = sprintf('%s   -%c ''%s%s[%d]'' \\\n',...
                            input_str, 96+iB, statprefix, InBrikView, Task(iT).indx(iB) - 1);
             expr_str = sprintf('%s%c*%s+',...
                           expr_str, 96+iB,Task(iT).BasisOpt_struct(iB).BareOpt);
          end
-   
+
          %remove trailing +
          expr_str = expr_str(1:length(expr_str)-1);
-   
+
          %create the junk.1D file
          fidout = fopen('junk.1D', 'w');
          for (i=1:1:BasisOpt.tSpan./Recon_dt+1),
             fprintf(fidout,'%g\n', i);
          end
          fclose(fidout);
-         %augment input_str with junk.1D   
+         %augment input_str with junk.1D
          input_str = sprintf('%s   -%c junk.1D \\\n   -dt %g -datum float\\\n', input_str, 96+N_basis+1, Recon_dt);
 		end
 		
-   
+
       %prefix of output for this task
       Task(iT).IRFprefix = sprintf('%s_irf', Task(iT).Label);
-   
+
       %for the 3dcalc command
       comm_3dcalc = sprintf('3dcalc %s   -prefix %s \\\n   -expr ''%s''\n',...
                   input_str, Task(iT).IRFprefix, expr_str);
-   
-      %execute the command              
+
+      %execute the command
       %add command to log file
       fprintf(foutid_log, '%s\n', comm_3dcalc);
       fprintf (1,'%s: Now running 3dcalc command (see %s)...\n', FuncName, FoutName_log);
@@ -945,9 +945,9 @@ if (N_basis>1),
          fprintf(2,'Error %s: calling 3dcalc.\n\n%s\n\n',FuncName,w);
          while (1); fprintf(2,'Halted: Ctrl+c to exit'); pause; end
       end
-   
+
       %for the refit
-      comm_refit = sprintf('3drefit -epan %s%s', Task(iT).IRFprefix, InBrikView); 
+      comm_refit = sprintf('3drefit -epan %s%s', Task(iT).IRFprefix, InBrikView);
       %add command to log file
       fprintf(foutid_log, '%s\n', comm_refit);
       fprintf (1,'%s: Now running 3drefit command (see %s)...\n', FuncName, FoutName_log);

@@ -2,9 +2,9 @@ function test_ft_read_mri
 
 % WALLTIME 00:10:00
 % MEM 2gb
+% DEPENDENCY ft_read_mri
 
-% DEPENDENCY TEST_FT_READ_MRI
-% DEPENDENCY FT_READ_MRI
+%%
 
 files = {
   'afni/anat+orig.BRIK'
@@ -27,3 +27,24 @@ for k = 1:numel(files)
   filename = dccnpath(fullfile(datadir,files{k}));
   ft_read_mri(filename);
 end
+
+%%
+
+[v, p] = ft_version;
+filename = fullfile(p, 'template', 'anatomy', 'single_subj_T1.nii');
+
+mri0 = ft_read_mri(filename, 'dataformat', 'nifti');
+
+rmpath(fileparts(which('spm')))
+mri1 = ft_read_mri(filename, 'dataformat', 'nifti_spm', 'spmversion', 'spm8');
+
+rmpath(fileparts(which('spm')))
+mri2 = ft_read_mri(filename, 'dataformat', 'nifti_spm', 'spmversion', 'spm12');
+
+% they should all be the same
+assert(isequal(mri0.anatomy, mri1.anatomy));
+assert(isequal(mri0.anatomy, mri2.anatomy));
+
+% they should all be the same
+assert(isequal(mri0.transform, mri1.transform));
+assert(isequal(mri0.transform, mri2.transform));

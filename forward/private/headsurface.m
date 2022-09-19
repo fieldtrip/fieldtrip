@@ -195,6 +195,10 @@ elseif ft_headmodeltype(headmodel, 'bem') ||  ft_headmodeltype(headmodel, 'singl
     otherwise
       ft_error('other surfaces cannot be constructed this way');
   end
+
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+else
+    ft_error('headmodel or headshape required')
 end
 
 % retriangulate the skin/brain/cortex surface to the desired number of vertices

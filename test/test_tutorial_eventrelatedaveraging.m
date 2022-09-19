@@ -1,8 +1,7 @@
 function test_tutorial_eventrelatedaveraging(dataset)
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_preprocessing ft_timelockanalysis ft_multiplotER ft_singleplotER ft_topoplotER ft_megplanar ft_combineplanar
 
 % see http://www.fieldtriptoolbox.org/tutorial/eventrelatedaveraging
@@ -10,7 +9,7 @@ function test_tutorial_eventrelatedaveraging(dataset)
 
 if nargin<1
   % use the tutorial dataset from home/common
-  dataset = dccnpath('/home/common/matlab/fieldtrip/data/Subject01.ds');
+  dataset = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds');
 else
   % use the dataset specified in the input, but check that it is called
   % Subject01.ds
@@ -22,17 +21,19 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Preprocessing
 
-% find the interesting segments of data
-cfg = [];                                           % empty configuration
-cfg.dataset                 = dataset;       % name of CTF dataset
+cfg                         = [];
+cfg.dataset                 = dataset;
+cfg.trialfun                = 'ft_trialfun_general'; % this is the default
 cfg.trialdef.eventtype      = 'backpanel trigger';
-cfg.trialdef.prestim        = 1;
-cfg.trialdef.poststim       = 2;
-cfg.trialdef.eventvalue     = 3;                    % trigger value for fully incongruent (FIC)
+cfg.trialdef.eventvalue     = [3 5 9]; % the values of the stimulus trigger for the three conditions
+% 3 = fully incongruent (FIC), 5 = initially congruent (IC), 9 = fully congruent (FC)
+cfg.trialdef.prestim        = 1; % in seconds
+cfg.trialdef.poststim       = 2; % in seconds
+
 cfg = ft_definetrial(cfg);
 
 % remove the trials that have artifacts from the trl
-cfg.trl([15, 36, 39, 42, 43, 49, 50, 81, 82, 84],:) = [];
+cfg.trl([2, 5, 6, 8, 9, 10, 12, 39, 43, 46, 49, 52, 58, 84, 102, 107, 114, 115, 116, 119, 121, 123, 126, 127, 128, 133, 137, 143, 144, 147, 149, 158, 181, 229, 230, 233, 241, 243, 245, 250, 254, 260],:) = [];
 
 % preprocess the data
 cfg.channel    = {'MEG', '-MLP31', '-MLO12'};        % read all MEG channels except MLP31 and MLO12
@@ -41,51 +42,26 @@ cfg.baselinewindow  = [-0.2 0];
 cfg.lpfilter   = 'yes';                              % apply lowpass filter
 cfg.lpfreq     = 35;                                 % lowpass at 35 Hz.
 
-dataFIC_LP = ft_preprocessing(cfg);
+data_all = ft_preprocessing(cfg);
 
-plot(dataFIC_LP.time{1}, dataFIC_LP.trial{1}(130,:))
 
-% find the interesting segments of data
-cfg = [];                                           % empty configuration
-cfg.dataset                 = dataset;       % name of CTF dataset
-cfg.trialdef.eventtype      = 'backpanel trigger';
-cfg.trialdef.prestim        = 1;
-cfg.trialdef.poststim       = 2;
-cfg.trialdef.eventvalue     = 9;                    % trigger value for fully congruent (FC)
-cfg = ft_definetrial(cfg);
 
-% remove the trials that have artifacts from the trl
-cfg.trl([2, 3, 4, 30, 39, 40, 41, 45, 46, 47, 51, 53, 59, 77, 85],:) = [];
+cfg        = [];
+cfg.trials = data_all.trialinfo == 3;
+dataFIC_LP = ft_redefinetrial(cfg, data_all);
 
-% preprocess the data
-cfg.channel    = {'MEG', '-MLP31', '-MLO12'};       % read all MEG channels except MLP31 and MLO12
-cfg.demean     = 'yes';
-cfg.baselinewindow  = [-0.2 0];
-cfg.lpfilter   = 'yes';                              % apply lowpass filter
-cfg.lpfreq     = 35;                                 % lowpass at 35 Hz.
+cfg        = [];
+cfg.trials = data_all.trialinfo == 5;
+dataIC_LP = ft_redefinetrial(cfg, data_all);
 
-dataFC_LP = ft_preprocessing(cfg);
+cfg = [];
+cfg.trials = data_all.trialinfo == 9;
+dataFC_LP = ft_redefinetrial(cfg, data_all);
 
-% find the interesting segments of data
-cfg = [];                                           % empty configuration
-cfg.dataset                 = dataset;       % name of CTF dataset
-cfg.trialdef.eventtype      = 'backpanel trigger';
-cfg.trialdef.prestim        = 1;
-cfg.trialdef.poststim       = 2;
-cfg.trialdef.eventvalue     = 5;                    % trigger value for initially congruent (IC)
-cfg = ft_definetrial(cfg);
+%save dataFIC_LP dataFIC_LP
+%save dataFC_LP dataFC_LP
+%save dataIC_LP dataIC_LP
 
-% remove the trials that have artifacts from the trl
-cfg.trl([1, 2, 3, 4, 14, 15, 16, 17, 20, 35, 39, 40, 47, 78, 79, 80, 86],:) = [];
-
-% preprocess the data
-cfg.channel    = {'MEG', '-MLP31', '-MLO12'};        % read all MEG channels except MLP31 and MLO12
-cfg.demean     = 'yes';
-cfg.baselinewindow  = [-0.2 0];
-cfg.lpfilter   = 'yes';                              % apply lowpass filter
-cfg.lpfreq     = 35;                                 % lowpass at 35 Hz.
-
-dataIC_LP = ft_preprocessing(cfg);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Timelockanalysis
@@ -98,14 +74,14 @@ avgIC = ft_timelockanalysis(cfg, dataIC_LP);
 cfg = [];
 cfg.showlabels = 'yes';
 cfg.fontsize = 6;
-cfg.layout = 'CTF151.lay';
+cfg.layout = 'CTF151_helmet.mat';
 cfg.ylim = [-3e-13 3e-13];
 ft_multiplotER(cfg, avgFIC);
 
 cfg = [];
 cfg.showlabels = 'no';
 cfg.fontsize = 6;
-cfg.layout = 'CTF151.lay';
+cfg.layout = 'CTF151_helmet.mat';
 cfg.baseline = [-0.2 0];
 cfg.xlim = [-0.2 1.0];
 cfg.ylim = [-3e-13 3e-13];
@@ -149,11 +125,11 @@ subplot(121);
 cfg.xlim = [0.3 0.5];
 cfg.zlim = 'maxmin';
 cfg.colorbar = 'yes';
-cfg.layout = 'CTF151.lay';
+cfg.layout = 'CTF151_helmet.mat';
 ft_topoplotER(cfg,avgFIC)
 colorbar;
 subplot(122);
 cfg.zlim = 'maxabs';
-cfg.layout = 'CTF151.lay';
+cfg.layout = 'CTF151_helmet.mat';
 ft_topoplotER(cfg,avgFICplanarComb);
 

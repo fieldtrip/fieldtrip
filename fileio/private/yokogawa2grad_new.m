@@ -85,7 +85,7 @@ handles    = definehandles;
 %isref = (type==handles.RefferenceAxialGradioMeter | type==handles.RefferencePlannerGradioMeter |  ...
 %    type==handles.RefferenceMagnetoMeter);
 %for i = 1: hdr.channel_count
-%    if isref(i) &&  sum( ch_info( i ).data.x^2 + ch_info( i ).data.y^2 + ch_info( i ).data.z^2 ) > 0.0, isgrad(i) = 1; end;
+%    if isref(i) &&  sum( ch_info( i ).data.x^2 + ch_info( i ).data.y^2 + ch_info( i ).data.z^2 ) > 0.0, isgrad(i) = 1; end
 %end
 
 

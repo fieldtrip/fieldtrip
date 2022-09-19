@@ -37,11 +37,13 @@ for trllop=1:trlnum
   trllen(trllop) = size(data.trial{trllop},2);
 end
 
-% try to get trial definition according to original data file
 if isfield(data, 'sampleinfo')
+  % construct the trial definition according to thew samples from the original data file
   trl = data.sampleinfo;
+  trl(:,3) = 0;
 else
-  trl = [1 sum(trllen)];
+  % construct the trial definition as if it is a continuous piece of data
+  trl = [1 sum(trllen) 0];
 end
 
 % fill in some header details
@@ -49,23 +51,36 @@ hdr.Fs     = data.fsample;
 hdr.label  = data.label(:);
 hdr.nChans = numel(data.label);
 
-% fill in the channel type and units
-if isfield(data, 'hdr')
+% fill in the channel type
+if isfield(data, 'chantype')
+  hdr.chantype = data.chantype(:);
+elseif isfield(data, 'hdr') && isfield(data.hdr, 'chantype')
   % keep them ordered according to the FieldTrip data structure, which might differ from the original header
   [datindx, hdrindx] = match_str(data.label, data.hdr.label);
   hdr.chantype = repmat({'unknown'}, hdr.nChans, 1);
-  if isfield(data.hdr, 'chantype')
-    hdr.chantype(datindx) = data.hdr.chantype(hdrindx);
-  end
-  hdr.chanunit = repmat({'unknown'}, hdr.nChans, 1);
-  if isfield(data.hdr, 'chanunit')
-    hdr.chanunit(datindx) = data.hdr.chanunit(hdrindx);
-  end
+  hdr.chantype(datindx) = data.hdr.chantype(hdrindx);
+else
+  % try to determine them on the basis of heuristics
+  hdr.chantype = ft_chantype(data);
 end
 
-% try to determine them on the basis of heuristics, when already present they will stay the same
-hdr.chantype = ft_chantype(hdr);
-hdr.chanunit = ft_chanunit(hdr);
+% fill in the channel unit
+if isfield(data, 'chanunit')
+  hdr.chanunit = data.chanunit(:);
+elseif isfield(data, 'hdr') && isfield(data.hdr, 'chanunit')
+  % keep them ordered according to the FieldTrip data structure, which might differ from the original header
+  [datindx, hdrindx] = match_str(data.label, data.hdr.label);
+  hdr.chanunit = repmat({'unknown'}, hdr.nChans, 1);
+  hdr.chanunit(datindx) = data.hdr.chanunit(hdrindx);
+else
+  % try to determine them on the basis of heuristics
+  hdr.chanunit = ft_chanunit(data);
+end
+
+% retain the original header details
+if isfield(data, 'hdr') && isfield(data.hdr, 'orig')
+  hdr.orig = data.hdr.orig;
+end
 
 % determine hdr.nSamples, hdr.nSamplesPre, hdr.nTrials
 % always pretend that it is continuous data

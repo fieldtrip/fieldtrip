@@ -1,4 +1,4 @@
-function id = defaultId
+function id = defaultId(stack)
 
 % DEFAULTID returns a string that can serve as warning or error identifier,
 % for example 'FieldTip:ft_read_header:line345'.
@@ -25,35 +25,38 @@ function id = defaultId
 %
 % $Id$
 
-stack = dbstack('-completenames');
-
-% remove the functions that pertain to the notification system itself
-keep = true(size(stack));
-keep(strcmp({stack.name}, 'defaultId'))       = false; % this function itself
-keep(strcmp({stack.name}, 'ft_notification')) = false; % this one is doing the work underneath ft_error/ft_warning/ft_notice/etc.
-keep(strcmp({stack.name}, 'ft_error'))        = false;
-keep(strcmp({stack.name}, 'ft_warning'))      = false;
-keep(strcmp({stack.name}, 'ft_notice'))       = false;
-keep(strcmp({stack.name}, 'ft_info'))         = false;
-keep(strcmp({stack.name}, 'ft_debug'))        = false;
-stack = stack(keep);
-
-% remove the non-FieldTrip functions from the path, these should not be part of the default message identifier
-keep = true(size(stack));
-p = fileparts(mfilename('fullpath'));
-% strip away '/utilities/private' where this function is located
-p = p(1:end-18);
-for i=1:numel(stack)
-  keep(i) = strncmp(p, stack(i).file, length(p));
-end
-stack = stack(keep);
-
-if ~isempty(stack)
-  % it is called from within a function
-  stack = flipud(stack);
-  name  = {stack.name};
-  id    = ['FieldTrip' sprintf(':%s', name{:}) ':line' num2str(stack(end).line)];
+if nargin==1
+  % stack is already in input, and assumed to be properly pruned
 else
-  % it is called from the command line
-  id = 'FieldTrip:commandline';
+  stack = dbstack('-completenames');
+  
+  % stack(1).name is defaultId
+  % stack(2).name is ft_notification
+  % stack(3).name is ft_error, ft_warning, ft_notice, ft_info or ft_debug
+  
+  % remove the functions that pertain to the notification system itself
+  stack = stack(4:end);
+  
+  % remove the non-FieldTrip functions and scripts, these should not be part of the message identifier
+  [v, p] = ft_version;
+  keep   = startsWith({stack.file}, p);
+  stack  = stack(keep);
 end
+
+switch numel(stack)
+  case 0
+    % it is called from the command line
+    id = 'FieldTrip:commandline';
+  case 1
+    id = sprintf('FieldTrip:%s:line%d', stack(1).name, stack(1).line);
+  case 2
+    id = sprintf('FieldTrip:%s:%s:line%d', stack(2).name, stack(1).name, stack(1).line);
+  otherwise
+    % it is called from within a function
+    name = sprintf('%s:', stack(end:-1:1).name); % this creates something like fun1:fun2:fun3:
+    id   = sprintf('FieldTrip:%sline%d', name, stack(1).line);
+end
+
+% slashes occur when using nested functions, but are not allowed in the identifier
+id(id=='/') = ':';
+id(id=='\') = ':';

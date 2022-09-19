@@ -13,7 +13,7 @@ function varargout = peercellfun(fname, varargin)
 %   UniformOutput  = boolean (default = false)
 %   StopOnError    = boolean (default = true)
 %   RetryOnError   = number, number of retries for failed jobs expressed as ratio (default = 0.05)
-%   MaxBusy        = number, amount of slaves allowed to be busy (default = inf)
+%   MaxBusy        = number, amount of workers allowed to be busy (default = inf)
 %   diary          = string, can be 'always', 'never', 'warning', 'error' (default = 'error')
 %   timreq         = number, initial estimate for the time required to run a single job (default = 3600)
 %   mintimreq      = number, minimum time required to run a single job (default is automatic)
@@ -27,7 +27,7 @@ function varargout = peercellfun(fname, varargin)
 %   x2    = {2, 2, 2, 2, 2};
 %   y     = peercellfun(fname, x1, x2);
 %
-% See also PEERMASTER, PEERSLAVE, PEERLIST, PEERINFO, PEERFEVAL, CELLFUN, BATCH
+% See also PEERCONTROLLER, PEERWORKER, PEERLIST, PEERINFO, PEERFEVAL, CELLFUN, BATCH
 
 % -----------------------------------------------------------------------
 % Copyright (C) 2010, Robert Oostenveld
@@ -81,7 +81,7 @@ elseif isempty(timreq)
   % it will be auto-adjusted to larger values, not to smaller values
   timreq    = mintimreq;
 elseif isempty(mintimreq)
-  % jobs will be killed by the slave if they take more than 3 times the estimated time at submission
+  % jobs will be killed by the worker if they take more than 3 times the estimated time at submission
   % use the user-supplied initial value, the minimum should not be less than 1/3 of that
   mintimreq = timreq/3;
 end
@@ -96,7 +96,7 @@ elseif isempty(memreq)
   % it will be auto-adjusted to larger values, not to smaller values
   memreq    = minmemreq;
 elseif isempty(minmemreq)
-  % jobs will be killed by the slave if they take more than 1.5 times the estimated time at submission
+  % jobs will be killed by the worker if they take more than 1.5 times the estimated time at submission
   % use the user-supplied initial value, the minimum should not be less than 1/1.5 times that
   minmemreq = memreq/1.5;
 end
@@ -160,11 +160,11 @@ for i=1:numargin
   end
 end
 
-% check the availability of peer slaves
+% check the availability of peer workers
 list = peerlist;
 list = list([list.status]==2 | [list.status]==3);
 if isempty(list)
-  warning('there is no peer available as slave, reverting to local cellfun');
+  warning('there is no peer available as worker, reverting to local cellfun');
   % prepare the output arguments
   varargout = cell(1,numargout);
   % use the standard cellfun
@@ -252,7 +252,7 @@ while ~all(submitted) || ~all(collected)
     % submit the job for execution
     ws = warning('off', 'FieldTrip:peer:noSlaveAvailable');
     % peerfeval will give a warning if the submission timed out
-    [curjobid curputtime] = peerfeval(fname, argin{:}, 'timeout', 5, 'memreq', memreq, 'timreq', timreq, 'diary', diary, 'nargout', numargout);
+    [curjobid, curputtime] = peerfeval(fname, argin{:}, 'timeout', 5, 'memreq', memreq, 'timreq', timreq, 'diary', diary, 'nargout', numargout);
     warning(ws);
 
     if ~isempty(curjobid)
@@ -340,7 +340,7 @@ while ~all(submitted) || ~all(collected)
       % the "catch me" syntax is broken on MATLAB74, this fixes it
       peerget_err = lasterror;
 
-      % the peerslave command line executable itself can return a number of errors
+      % the peerworker command line executable itself can return a number of errors
       %  1) could not start the MATLAB engine
       %  2) failed to execute the job (argin)
       %  3) failed to execute the job (optin)
@@ -463,7 +463,7 @@ while ~all(submitted) || ~all(collected)
   % end
 
   % search for jobs that were submitted but that are still not busy after 60 seconds
-  % this happens if the peerslave is not able to get a MATLAB license
+  % this happens if the peerworker is not able to get a MATLAB license
   elapsed = toc(stopwatch) - submittime;
   elapsed(~submitted)       = 0;
   elapsed(collected)        = 0;
@@ -499,7 +499,7 @@ while ~all(submitted) || ~all(collected)
   % use an estimate of the time it requires a job to complete
 
   % assume that it will not take more than 3x the required time
-  % this is also what is used by the peerslave to kill the job
+  % this is also what is used by the peerworker to kill the job
   estimated = 3*timreq;
 
   % add some time to allow the MATLAB engine to start

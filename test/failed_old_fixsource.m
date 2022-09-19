@@ -2,6 +2,7 @@ function failed_old_fixsource
 
 % MEM 1gb
 % WALLTIME 00:10:00
+% DEPENDENCY
 
 % this script tests the fixsource function which is part of ft_checkdata
 
@@ -129,7 +130,7 @@ for k = 1:numel(insidevec)
   kk = insidevec(k);
   cfgs.sourcemodel.mom(:,kk) = sdics2.ori{kk};
 end
-%FIXME there's an issue here with mom being expected to be Nx3 and 3xN in beamformer_pcc
+%FIXME there's an issue here with mom being expected to be Nx3 and 3xN in ft_inverse_pcc
 source = ft_sourceanalysis(cfgs, freq);
 try,
   spcc2f = ft_checkdata(source, 'sourcerepresentation', 'new', 'haspow', 'yes');

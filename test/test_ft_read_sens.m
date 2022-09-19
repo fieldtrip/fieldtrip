@@ -1,8 +1,7 @@
 function test_ft_read_sens(datainfo, writeflag, version)
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:20:00
-
 % DEPENDENCY ft_read_sens
 
 % writeflag determines whether the output should be saved to disk

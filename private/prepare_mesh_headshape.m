@@ -2,15 +2,17 @@ function mesh = prepare_mesh_headshape(cfg)
 
 % PREPARE_MESH_HEADSHAPE
 %
-% Configuration options:
+% Configuration options should include
 %   cfg.headshape   = a filename containing headshape, a Nx3 matrix with surface
 %                     points, or a structure with a single or multiple boundaries
 %   cfg.smooth      = a scalar indicating the number of non-shrinking
 %                     smoothing iterations (default = no smoothing)
+%   cfg.numvertices = numeric vector, should have same number of elements as the
+%                     number of tissues
 %
 % See also PREPARE_MESH_MANUAL, PREPARE_MESH_SEGMENTATION
 
-% Copyrights (C) 2009, Robert Oostenveld
+% Copyrights (C) 2009-2020, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -32,7 +34,8 @@ function mesh = prepare_mesh_headshape(cfg)
 
 % get the specific options
 cfg.headshape    = ft_getopt(cfg, 'headshape');
-cfg.smooth       = ft_getopt(cfg, 'smooth');   % no default
+cfg.smooth       = ft_getopt(cfg, 'smooth');
+cfg.numvertices  = ft_getopt(cfg, 'numvertices');
 
 if isa(cfg, 'config')
   % convert the config-object back into a normal structure
@@ -211,8 +214,8 @@ XYZmm = ts.XYZmm;
 %--------------------------------------------------------------------------
 for j=1:N
   
-  XYZmm_o = zeros(3,ts.nr(1)) ;
-  XYZmm_o2 = zeros(3,ts.nr(1)) ;
+  XYZmm_o = zeros(3,ts.nr(1));
+  XYZmm_o2 = zeros(3,ts.nr(1));
   
   for i=1:ts.nr(1)
     ln = find(M_con(:,i));

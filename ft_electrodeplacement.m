@@ -132,8 +132,12 @@ end
 
 % ensure that old and unsupported options are not being relied on by the end-user's script
 % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2837
-cfg = ft_checkconfig(cfg, 'renamed', {'viewdim', 'axisratio'});
+
+% check if the input cfg is valid for this function
+cfg = ft_checkconfig(cfg, 'forbidden',  {'channels'}); % prevent accidental typos, see issue 1729
+cfg = ft_checkconfig(cfg, 'renamed',    {'viewdim', 'axisratio'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'method', 'mri', 'volume'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'newfigure', 'figure'});
 
 % set the defaults
 cfg.method        = ft_getopt(cfg, 'method');                  % volume, headshape, 1020, shaft
@@ -359,16 +363,14 @@ switch cfg.method
     
   case 'headshape'
     % start building the figure
-    h = figure(...
-      'Name', mfilename,...
-      'Units', 'normalized', ...
-      'Color', [1 1 1], ...
-      'Visible', 'on');
+    h = open_figure(keepfields(cfg, {'figure', 'position', 'visible', 'renderer', 'figurename', 'title'}));
+    set(h, 'Name', mfilename);
+    set(h, 'Units', 'normalized');
+    set(h, 'Color', [1 1 1]);
     set(h, 'windowbuttondownfcn', @cb_buttonpress);
     set(h, 'windowbuttonupfcn',   @cb_buttonrelease);
     set(h, 'windowkeypressfcn',   @cb_keyboard);
     set(h, 'CloseRequestFcn',     @cb_quit);
-    set(h, 'renderer', cfg.renderer);
     
     % electrode listbox
     h1 = uicontrol('Style', 'listbox', ...
@@ -389,7 +391,7 @@ switch cfg.method
       'BackgroundColor', [1 1 1], ...
       'HandleVisibility', 'on', ...
       'Callback', @cb_surfacebutton);
-
+    
     h8 = uicontrol('Style', 'checkbox', ...
       'Parent', h, ...
       'Value', 0, ...
@@ -463,17 +465,15 @@ switch cfg.method
   case 'volume'
     
     % start building the figure
-    h = figure(...
-      'MenuBar', 'none',...
-      'Name', mfilename,...
-      'Units', 'normalized', ...
-      'Color', [1 1 1], ...
-      'Visible', 'on');
+    h = open_figure(keepfields(cfg, {'figure', 'position', 'visible', 'renderer', 'figurename', 'title'}));
+    set(h, 'Name', mfilename);
+    set(h, 'Units', 'normalized');
+    set(h, 'Color', [1 1 1]);
+    set(h, 'MenuBar', 'none');
     set(h, 'windowbuttondownfcn', @cb_buttonpress);
     set(h, 'windowbuttonupfcn',   @cb_buttonrelease);
     set(h, 'windowkeypressfcn',   @cb_keyboard);
     set(h, 'CloseRequestFcn',     @cb_quit);
-    set(h, 'renderer', cfg.renderer);
     
     % volume-dependent axis settings
     for v = 1:numel(mri)
@@ -675,7 +675,7 @@ switch cfg.method
       '   a. click an electrode label in the list to assign it to the crosshair location, or\n',...
       '   b. doubleclick a previously assigned electrode label to remove its marker\n',...
       '3. To finalize, close the window or press q on the keyboard\n', ...
-      '4. See Stolk, Griffin et al. (2017) for further electrode processing options\n'));
+      '4. See Stolk, Griffin et al. Nature Protocols 2018 for further electrode processing options\n'));
     
     % create structure to be passed to gui
     opt               = [];
@@ -786,6 +786,8 @@ function cb_redraw(h, eventdata)
 h   = getparent(h);
 opt = getappdata(h, 'opt');
 
+% determine current axes
+set(0, 'CurrentFigure', opt.mainfig);
 curr_ax = get(h, 'currentaxes');
 tag = get(curr_ax, 'tag');
 
@@ -810,7 +812,9 @@ if opt.init
   % for zooming purposes
   opt.axis = zeros(1,6);
   opt.axis = [opt.axes(1).XLim opt.axes(1).YLim opt.axes(1).ZLim];
-else
+  opt.redrawmarkers = true;
+  opt.reinit = false;
+elseif opt.reinit
   ft_plot_ortho(opt.ana, 'transform', opt.mri{opt.currmri}.transform, 'location', opt.pos, 'style', 'subplot', 'surfhandle', opt.anahandles, 'update', opt.update, 'doscale', false, 'clim', opt.clim, 'unit', opt.mri{opt.currmri}.unit);
   
   fprintf('==================================================================================\n');
@@ -825,12 +829,7 @@ else
     otherwise
       fprintf('%10s at [%f %f %f] %s\n', lab, opt.pos, opt.mri{opt.currmri}.unit);
   end
-end
-
-% make the last current axes current again
-sel = findobj('type', 'axes', 'tag',tag);
-if ~isempty(sel)
-  set(opt.mainfig, 'currentaxes', sel(1));
+  opt.reinit = false;
 end
 
 % zoom
@@ -854,7 +853,6 @@ if opt.init
   hch2 = ft_plot_crosshair([xi+xhiadj yi zi], 'parent', h2, 'color', 'yellow'); % was [opt.dim(1) yi zi], now corrected for zoom
   hch3 = ft_plot_crosshair([xi yi zi], 'parent', h3, 'color', 'yellow'); % was [xi yi opt.dim(3)], now corrected for zoom
   opt.handlescross  = [hch1(:)';hch2(:)';hch3(:)'];
-  opt.redrawmarker = 1;
 else
   % update the existing crosshairs, don't change the handles
   ft_plot_crosshair([xi yi-yloadj zi], 'handle', opt.handlescross(1, :));
@@ -869,21 +867,21 @@ else
 end
 
 % draw markers
-delete(findobj(h, 'Type', 'Line', 'Marker', '+')); % remove previous markers
-delete(findobj(h, 'Type', 'text')); % remove previous labels
-if opt.showmarkers
+if opt.showmarkers && opt.redrawmarkers
+  delete(findobj(opt.mainfig, 'Type', 'Line', 'Marker', '+')); % remove previous markers
+  delete(findobj(opt.mainfig, 'Type', 'text')); % remove previous labels
   idx = find(~cellfun(@isempty,opt.markerlab)); % non-empty markers
   if ~isempty(idx)
     for i=1:numel(idx)
-      opt.markerlab_sel{i,1} = opt.markerlab{idx(i),1};
-      opt.markerpos_sel(i,:) = opt.markerpos{idx(i),1};
+      markerlab_sel{i,1} = opt.markerlab{idx(i),1};
+      markerpos_sel(i,:) = opt.markerpos{idx(i),1};
     end
     
-    tmp1 = opt.markerpos_sel(:,1);
-    tmp2 = opt.markerpos_sel(:,2);
-    tmp3 = opt.markerpos_sel(:,3);
+    tmp1 = markerpos_sel(:,1);
+    tmp2 = markerpos_sel(:,2);
+    tmp3 = markerpos_sel(:,3);
     
-    subplot(h1);
+    subplot(opt.axes(1));
     if ~opt.global % filter markers distant to the current slice (N units and further)
       posj_idx = find( abs(tmp2 - repmat(yi,size(tmp2))) < opt.markerdist);
       posi = tmp1(posj_idx);
@@ -900,13 +898,13 @@ if opt.showmarkers
       plot3(posi, repmat(yi-yloadj,size(posj)), posk, 'marker', '+', 'linestyle', 'none', 'color', 'r'); % [xi yi-yloadj zi]
       if opt.showlabels
         for i=1:numel(posj_idx)
-          text(posi(i), yi-yloadj, posk(i), opt.markerlab_sel{posj_idx(i),1}, 'color', [1 .5 0]);
+          text(posi(i), yi-yloadj, posk(i), markerlab_sel{posj_idx(i),1}, 'color', [1 .5 0], 'clipping', 'on');
         end
       end
       hold off
     end
     
-    subplot(h2);
+    subplot(opt.axes(2));
     if ~opt.global % filter markers distant to the current slice (N units and further)
       posi_idx = find( abs(tmp1 - repmat(xi,size(tmp1))) < opt.markerdist);
       posi = tmp1(posi_idx);
@@ -923,13 +921,13 @@ if opt.showmarkers
       plot3(repmat(xi+xhiadj,size(posi)), posj, posk, 'marker', '+', 'linestyle', 'none', 'color', 'r'); % [xi+xhiadj yi zi]
       if opt.showlabels
         for i=1:numel(posi_idx)
-          text(posi(i)+xhiadj, posj(i), posk(i), opt.markerlab_sel{posi_idx(i),1}, 'color', [1 .5 0]);
+          text(posi(i)+xhiadj, posj(i), posk(i), markerlab_sel{posi_idx(i),1}, 'color', [1 .5 0], 'clipping', 'on');
         end
       end
       hold off
     end
     
-    subplot(h3);
+    subplot(opt.axes(3));
     if ~opt.global % filter markers distant to the current slice (N units and further)
       posk_idx = find( abs(tmp3 - repmat(zi,size(tmp3))) < opt.markerdist);
       posi = tmp1(posk_idx);
@@ -946,24 +944,31 @@ if opt.showmarkers
       plot3(posi, posj, repmat(zi,size(posk)), 'marker', '+', 'linestyle', 'none', 'color', 'r'); % [xi yi zi]
       if opt.showlabels
         for i=1:numel(posk_idx)
-          text(posi(i), posj(i), zi, opt.markerlab_sel{posk_idx(i),1}, 'color', [1 .5 0]);
+          text(posi(i), posj(i), zi, markerlab_sel{posk_idx(i),1}, 'color', [1 .5 0], 'clipping', 'on');
         end
       end
       hold off
     end
-  end % for all markers
+    clear markerlab_sel markerpos_sel
+    opt.redrawmarkers = false;
+    opt.redrawscattermarkers = true;
+  end % if idx
 end % if showmarkers
+
+% also update the scatter appendix
+if opt.scatter
+  cb_scatterredraw(h);
+end
+
+% make the last current axes current again
+sel = findobj('type', 'axes', 'tag', tag);
+if ~isempty(sel)
+  set(opt.mainfig, 'currentaxes', sel(1));
+end
 
 % do not initialize on the next call
 opt.init = false;
 setappdata(h, 'opt', opt);
-set(h, 'currentaxes', curr_ax);
-
-% also update the appendix
-if isfield(opt, 'scatterfig')
-  cb_scatterredraw(h);
-  figure(h); % this switches back to mainfig
-end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
@@ -973,112 +978,116 @@ function cb_scatterredraw(h, eventdata)
 h   = getparent(h);
 opt = getappdata(h, 'opt');
 
-if opt.scatter % radiobutton on
-  if ~isfield(opt, 'scatterfig') % if the figure does not yet exist, initiate
-    opt.scatterfig = figure(...
-      'Name', [mfilename ' appendix'],...
-      'Units', 'normalized', ...
-      'Color', [1 1 1], ...
-      'Visible', 'on');
-    set(opt.scatterfig, 'CloseRequestFcn', @cb_scattercleanup);
-    opt.scatterfig_h1 = axes('position', [0.02 0.02 0.96 0.96]);
-    set(opt.scatterfig_h1, 'DataAspectRatio', get(opt.axes(1), 'DataAspectRatio'));
-    axis square; axis tight; axis off; view([90 0]);
-    xlabel('x'); ylabel('y'); zlabel('z');
-    
-    % scatter range sliders
-    opt.scatterfig_h23text = uicontrol('Style', 'text',...
-      'String', 'Intensity',...
-      'Units', 'normalized', ...
-      'Position', [.85+0.03 .26 .1 0.04],...
-      'BackgroundColor', [1 1 1], ...
-      'HandleVisibility', 'on');
-    
-    opt.scatterfig_h2 = uicontrol('Style', 'slider', ...
-      'Parent', opt.scatterfig, ...
-      'Min', 0, 'Max', 1, ...
-      'Value', opt.slim(1), ...
-      'Units', 'normalized', ...
-      'Position', [.85+.02 .06 .05 .2], ...
-      'Callback', @cb_scatterminslider);
-    
-    opt.scatterfig_h3 = uicontrol('Style', 'slider', ...
-      'Parent', opt.scatterfig, ...
-      'Min', 0, 'Max', 1, ...
-      'Value', opt.slim(2), ...
-      'Units', 'normalized', ...
-      'Position', [.85+.07 .06 .05 .2], ...
-      'Callback', @cb_scattermaxslider);
-    
-    hskullstrip = uicontrol('Style', 'togglebutton', ...
-      'Parent', opt.scatterfig, ...
-      'String', 'Skullstrip', ...
-      'Value', 0, ...
-      'Units', 'normalized', ...
-      'Position', [.88 .88 .1 .1], ...
-      'HandleVisibility', 'on', ...
-      'Callback', @cb_skullstrip);
-    
-    % datacursor mode options
-    opt.scatterfig_dcm = datacursormode(opt.scatterfig);
-    set(opt.scatterfig_dcm, ...
-      'DisplayStyle', 'datatip', ...
-      'SnapToDataVertex', 'off', ...
-      'Enable', 'on', ...
-      'UpdateFcn', @cb_scatter_dcm);
-    
-    % draw the crosshair for the first time
-    opt.handlescross2 = ft_plot_crosshair(opt.pos, 'parent', opt.scatterfig_h1, 'color', 'blue');
-    
-    % instructions to the user
-    fprintf(strcat(...
-      '5. Scatterplot viewing options:\n',...
-      '   a. use the Data Cursor, Rotate 3D, Pan, and Zoom tools to navigate to electrodes in 3D space\n'));
-    
-    opt.redrawscatter = 1;
-    opt.redrawmarker = 1;
+if ~isfield(opt, 'scatterfig') % initiate in case the figure does not yet exist
+  opt.scatterfig = figure(...
+    'Name', [mfilename ' appendix'],...
+    'Units', 'normalized', ...
+    'Color', [1 1 1], ...
+    'Visible', 'on');
+  set(opt.scatterfig, 'CloseRequestFcn', @cb_scattercleanup);
+  opt.scatterfig_h1 = axes('position', [0.02 0.02 0.96 0.96]);
+  set(opt.scatterfig_h1, 'DataAspectRatio', get(opt.axes(1), 'DataAspectRatio'));
+  axis square; axis tight; axis off; view([90 0]);
+  xlabel('x'); ylabel('y'); zlabel('z');
+  
+  % scatter range sliders
+  opt.scatterfig_h23text = uicontrol('Style', 'text',...
+    'String', 'Intensity',...
+    'Units', 'normalized', ...
+    'Position', [.85+0.03 .26 .1 0.04],...
+    'BackgroundColor', [1 1 1], ...
+    'HandleVisibility', 'on');
+  
+  opt.scatterfig_h2 = uicontrol('Style', 'slider', ...
+    'Parent', opt.scatterfig, ...
+    'Min', 0, 'Max', 1, ...
+    'Value', opt.slim(1), ...
+    'Units', 'normalized', ...
+    'Position', [.85+.02 .06 .05 .2], ...
+    'Callback', @cb_scatterminslider);
+  
+  opt.scatterfig_h3 = uicontrol('Style', 'slider', ...
+    'Parent', opt.scatterfig, ...
+    'Min', 0, 'Max', 1, ...
+    'Value', opt.slim(2), ...
+    'Units', 'normalized', ...
+    'Position', [.85+.07 .06 .05 .2], ...
+    'Callback', @cb_scattermaxslider);
+  
+  hskullstrip = uicontrol('Style', 'togglebutton', ...
+    'Parent', opt.scatterfig, ...
+    'String', 'Skullstrip', ...
+    'Value', 0, ...
+    'Units', 'normalized', ...
+    'Position', [.88 .88 .1 .1], ...
+    'HandleVisibility', 'on', ...
+    'Callback', @cb_skullstrip);
+  
+  % datacursor mode options
+  opt.scatterfig_dcm = datacursormode(opt.scatterfig);
+  set(opt.scatterfig_dcm, ...
+    'DisplayStyle', 'datatip', ...
+    'SnapToDataVertex', 'off', ...
+    'Enable', 'on', ...
+    'UpdateFcn', @cb_scatter_dcm);
+  
+  % draw the crosshair for the first time
+  opt.handlescross2 = ft_plot_crosshair(opt.pos, 'parent', opt.scatterfig_h1, 'color', 'blue');
+  
+  % instructions to the user
+  fprintf(strcat(...
+    '5. Scatterplot viewing options:\n',...
+    '   a. use the Data Cursor, Rotate 3D, Pan, and Zoom tools to navigate to electrodes in 3D space\n'));
+  
+  opt.redrawscatter = 1;
+  opt.redrawscattermarkers = 1;
+else
+  set(0, 'CurrentFigure', opt.scatterfig) % make current figure (needed for ft_plot_crosshair)
+end
+
+if opt.redrawscatter
+  delete(findobj(opt.scatterfig, 'type', 'scatter')); % remove previous scatters
+  msize = round(2000/opt.mri{opt.currmri}.dim(3)); % headsize (20 cm) / z slices
+  inc = abs(opt.slim(2)-opt.slim(1))/4; % color increments
+  for r = 1:4 % 4 color layers to encode peaks
+    lim1 = opt.slim(1) + r*inc - inc;
+    lim2 = opt.slim(1) + r*inc;
+    voxind = find(opt.ana>lim1 & opt.ana<lim2);
+    [x,y,z] = ind2sub(opt.mri{opt.currmri}.dim, voxind);
+    pos = ft_warp_apply(opt.mri{opt.currmri}.transform, [x,y,z]);
+    hold on; scatter3(opt.scatterfig_h1, pos(:,1),pos(:,2),pos(:,3),msize, 'Marker', 's', 'MarkerEdgeColor', 'none', 'MarkerFaceColor', [.8-(r*.2) .8-(r*.2) .8-(r*.2)]);
   end
-  
-  figure(opt.scatterfig); % make current figure
-  
-  if opt.redrawscatter
-    delete(findobj('type', 'scatter')); % remove previous scatters
-    msize = round(2000/opt.mri{opt.currmri}.dim(3)); % headsize (20 cm) / z slices
-    inc = abs(opt.slim(2)-opt.slim(1))/4; % color increments
-    for r = 1:4 % 4 color layers to encode peaks
-      lim1 = opt.slim(1) + r*inc - inc;
-      lim2 = opt.slim(1) + r*inc;
-      voxind = find(opt.ana>lim1 & opt.ana<lim2);
-      [x,y,z] = ind2sub(opt.mri{opt.currmri}.dim, voxind);
-      pos = ft_warp_apply(opt.mri{opt.currmri}.transform, [x,y,z]);
-      hold on; scatter3(pos(:,1),pos(:,2),pos(:,3),msize, 'Marker', 's', 'MarkerEdgeColor', 'none', 'MarkerFaceColor', [.8-(r*.2) .8-(r*.2) .8-(r*.2)]);
+  opt.redrawscatter = 0;
+end
+
+if opt.showmarkers && opt.redrawscattermarkers % plot the markers
+  delete(findobj(opt.scatterfig, 'Type', 'line', 'Marker', '+')); % remove all scatterfig markers
+  delete(findobj(opt.scatterfig, 'Type', 'text')); % remove all scatterfig labels
+  idx = find(~cellfun(@isempty,opt.markerlab)); % non-empty markers
+  if ~isempty(idx)
+    for i=1:numel(idx)
+      markerlab_sel{i,1} = opt.markerlab{idx(i),1};
+      markerpos_sel(i,:) = opt.markerpos{idx(i),1};
     end
-    opt.redrawscatter = 0;
-  end
-  
-  if opt.redrawmarker
-    delete(findobj(opt.scatterfig, 'Type', 'line', 'Marker', '+')); % remove all scatterfig markers
-    delete(findobj(opt.scatterfig, 'Type', 'text')); % remove all scatterfig labels
-    if opt.showmarkers && isfield(opt, 'markerpos_sel') % plot the markers
-      plot3(opt.markerpos_sel(:,1),opt.markerpos_sel(:,2),opt.markerpos_sel(:,3), 'marker', '+', 'linestyle', 'none', 'color', 'r'); % plot the markers
-      if opt.showlabels
-        for i=1:size(opt.markerpos_sel,1)
-          text(opt.markerpos_sel(i,1), opt.markerpos_sel(i,2), opt.markerpos_sel(i,3), opt.markerlab_sel{i,1}, 'color', [1 .5 0]);
-        end
+    plot3(opt.scatterfig_h1, markerpos_sel(:,1),markerpos_sel(:,2),markerpos_sel(:,3), 'marker', '+', 'linestyle', 'none', 'color', 'r'); % plot the markers
+    if opt.showlabels
+      for i=1:size(markerpos_sel,1)
+        text(opt.scatterfig_h1, markerpos_sel(i,1), markerpos_sel(i,2), markerpos_sel(i,3), markerlab_sel{i,1}, 'color', [1 .5 0]);
       end
     end
-    opt.redrawmarker = 0;
-  end
-  
-  % update the existing crosshairs, don't change the handles
-  ft_plot_crosshair([opt.pos], 'handle', opt.handlescross2);
-  if opt.showcrosshair
-    set(opt.handlescross2, 'Visible', 'on');
-  else
-    set(opt.handlescross2, 'Visible', 'off');
-  end
-  
+    clear markerlab_sel markerpos_sel
+  end % if idx
+  opt.redrawscattermarkers = false;
 end
+
+% update the existing crosshairs, don't change the handles
+ft_plot_crosshair(opt.pos, 'handle', opt.handlescross2);
+if opt.showcrosshair
+  set(opt.handlescross2, 'Visible', 'on');
+else
+  set(opt.handlescross2, 'Visible', 'off');
+end
+
 setappdata(h, 'opt', opt);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1095,7 +1104,7 @@ delete(findobj(h, 'Type', 'line')); % remove all lines and markers
 delete(findobj(h, 'Type', 'text')); % remove all labels
 delete(findall(h, 'Type','light'))
 delete(findobj(h, 'tag', 'headshape')); % remove the headshape
-  
+
 % plot the faces of the 2D or 3D triangulation
 if ~opt.showsurface
   ft_plot_mesh(removefields(opt.headshape, 'color'), 'tag', 'headshape', 'facecolor', 'none', 'edgecolor', 'none', 'vertexcolor', 'none');
@@ -1193,6 +1202,7 @@ switch key
       opt.global = 0;
       set(opt.axes(9), 'Value', 0);
     end
+    opt.redrawmarkers = true; % draw markers
     setappdata(h, 'opt', opt);
     cb_redraw(h);
     
@@ -1204,7 +1214,7 @@ switch key
       opt.showlabels = 0;
       set(opt.axes(8), 'Value', 0);
     end
-    opt.redrawmarker = 1;
+    opt.redrawmarkers = true; % draw markers
     setappdata(h, 'opt', opt);
     cb_redraw(h);
     
@@ -1237,6 +1247,7 @@ switch key
     end
     opt.pos = min(opt.pos(:)', opt.axis([2 4 6])); % avoid out-of-bounds
     opt.pos = max(opt.pos(:)', opt.axis([1 3 5]));
+    opt.reinit = true; % redraw orthoplots
     
     setappdata(h, 'opt', opt);
     cb_redraw(h);
@@ -1271,7 +1282,6 @@ switch key
     
   case 102 % 'f' for fiducials
     opt.showmarkers = ~opt.showmarkers;
-    opt.redrawmarker = 1;
     setappdata(h, 'opt', opt);
     cb_redraw(h);
     
@@ -1388,9 +1398,11 @@ if strcmp(opt.method, 'volume')
     opt.pos = min(opt.pos(:)', opt.axis([2 4 6])); % avoid out-of-bounds
     opt.pos = max(opt.pos(:)', opt.axis([1 3 5]));
   end
-  if opt.magradius>0 % magnetize
+  if opt.magradius>0
     opt = magnetize(opt);
   end
+  opt.reinit = true; % redraw orthoplots
+  opt.redrawmarkers = true; % draw markers
 elseif strcmp(opt.method, 'headshape')
   h2 = get(gca, 'children'); % get the object handles
   iscorrect = false(size(h2));
@@ -1449,7 +1461,9 @@ newlim = get(h4, 'value');
 h = getparent(h4);
 opt = getappdata(h, 'opt');
 opt.clim(1) = newlim;
-fprintf('contrast limits updated to [%.03f %.03f]\n', opt.clim);
+opt.reinit = true; % redraw orthoplots
+fprintf('==================================================================================\n');
+fprintf(' contrast limits updated to [%.03f %.03f]\n', opt.clim);
 setappdata(h, 'opt', opt);
 cb_redraw(h);
 
@@ -1462,7 +1476,9 @@ newlim = get(h5, 'value');
 h = getparent(h5);
 opt = getappdata(h, 'opt');
 opt.clim(2) = newlim;
-fprintf('contrast limits updated to [%.03f %.03f]\n', opt.clim);
+opt.reinit = true; % redraw orthoplots
+fprintf('==================================================================================\n');
+fprintf(' contrast limits updated to [%.03f %.03f]\n', opt.clim);
 setappdata(h, 'opt', opt);
 cb_redraw(h);
 
@@ -1503,19 +1519,25 @@ if ~isempty(elecidx)
   
   % toggle electrode status and assign markers
   if contains(eleclab, 'silver') % not yet, check
-    fprintf('assigning marker %s\n', opt.label{elecidx,1});
+    fprintf('==================================================================================\n');
+    fprintf(' assigning marker %s\n', opt.label{elecidx,1});
     eleclab = regexprep(eleclab, '"silver"', '"black"'); % replace font color
     opt.markerlab{elecidx,1} = opt.label(elecidx,1); % assign marker label
     opt.markerpos{elecidx,1} = opt.pos; % assign marker position
-  elseif contains(eleclab, 'black') % already chosen before, move cusor to marker or uncheck
+    opt.redrawmarkers = true; % draw markers
+  elseif contains(eleclab, 'black') % already chosen before, move cursor to marker or uncheck
     if strcmp(get(h, 'SelectionType'), 'normal') % single click to move cursor to
-      fprintf('moving cursor to marker %s\n', opt.label{elecidx,1});
+      fprintf('==================================================================================\n');
+      fprintf(' moving cursor to marker %s\n', opt.label{elecidx,1});
       opt.pos = opt.markerpos{elecidx,1}; % move cursor to marker position
+      opt.reinit = true; % redraw orthoplots
     elseif strcmp(get(h, 'SelectionType'), 'open') % double click to uncheck
-      fprintf('removing marker %s\n', opt.label{elecidx,1});
+      fprintf('==================================================================================\n');
+      fprintf(' removing marker %s\n', opt.label{elecidx,1});
       eleclab = regexprep(eleclab, '"black"', '"silver"'); % replace font color
       opt.markerlab{elecidx,1} = {}; % assign marker label
       opt.markerpos{elecidx,1} = []; % assign marker position
+      opt.redrawmarkers = true; % remove markers
     end
   end
   
@@ -1523,7 +1545,6 @@ if ~isempty(elecidx)
   eleclis{elecidx} = eleclab;
   set(h6, 'String', eleclis);
   set(h6, 'ListboxTop', listtopidx); % ensure listbox does not move upon label selec
-  opt.redrawmarker = 1;
   setappdata(h, 'opt', opt);
   if strcmp(opt.method, 'volume')
     cb_redraw(h);
@@ -1541,6 +1562,7 @@ h = getparent(h7);
 opt = getappdata(h, 'opt');
 radii = get(h7, 'String');
 opt.magradius = str2double(radii{get(h7, 'value')});
+fprintf('==================================================================================\n');
 fprintf(' changed magnet radius to %.1f %s\n', opt.magradius, opt.mri{opt.currmri}.unit);
 setappdata(h, 'opt', opt);
 
@@ -1621,7 +1643,7 @@ function cb_labelsbutton(h8, eventdata)
 h = getparent(h8);
 opt = getappdata(h, 'opt');
 opt.showlabels = get(h8, 'value');
-opt.redrawmarker = 1;
+opt.redrawmarkers = true; % draw markers
 setappdata(h, 'opt', opt);
 if strcmp(opt.method, 'volume')
   cb_redraw(h);
@@ -1637,7 +1659,6 @@ function cb_colorsbutton(h9, eventdata)
 h = getparent(h9);
 opt = getappdata(h, 'opt');
 opt.showcolors = get(h9, 'value');
-opt.redrawmarker = 1;
 setappdata(h, 'opt', opt);
 if strcmp(opt.method, 'volume')
   cb_redraw(h);
@@ -1653,7 +1674,6 @@ function cb_surfacebutton(h9, eventdata)
 h = getparent(h9);
 opt = getappdata(h, 'opt');
 opt.showsurface = get(h9, 'value');
-opt.redrawmarker = 1;
 setappdata(h, 'opt', opt);
 if strcmp(opt.method, 'volume')
   cb_redraw(h);
@@ -1669,6 +1689,7 @@ function cb_globalbutton(h9, eventdata)
 h = getparent(h9);
 opt = getappdata(h, 'opt');
 opt.global = get(h9, 'value');
+opt.redrawmarkers = true; % draw markers
 setappdata(h, 'opt', opt);
 cb_redraw(h);
 
@@ -1680,6 +1701,7 @@ function cb_zoomslider(h10, eventdata)
 h = getparent(h10);
 opt = getappdata(h, 'opt');
 opt.zoom = round(get(h10, 'value')*10)/10;
+opt.redrawmarkers = true; % draw markers while ensuring they dont fall outside the bounding box
 setappdata(h, 'opt', opt);
 cb_redraw(h);
 
@@ -1720,7 +1742,8 @@ function cb_scatterminslider(h2, eventdata)
 h = findobj('type', 'figure', 'name',mfilename);
 opt = getappdata(h, 'opt');
 opt.slim(1) = get(h2, 'value');
-fprintf('scatter limits updated to [%.03f %.03f]\n', opt.slim);
+fprintf('==================================================================================\n');
+fprintf(' scatter limits updated to [%.03f %.03f]\n', opt.slim);
 opt.redrawscatter = 1;
 setappdata(h, 'opt', opt);
 cb_scatterredraw(h);
@@ -1733,7 +1756,8 @@ function cb_scattermaxslider(h3, eventdata)
 h = findobj('type', 'figure', 'name',mfilename);
 opt = getappdata(h, 'opt');
 opt.slim(2) = get(h3, 'value');
-fprintf('scatter limits updated to [%.03f %.03f]\n', opt.slim);
+fprintf('==================================================================================\n');
+fprintf(' scatter limits updated to [%.03f %.03f]\n', opt.slim);
 opt.redrawscatter = 1;
 setappdata(h, 'opt', opt);
 cb_scatterredraw(h);
@@ -1746,14 +1770,11 @@ function dcm_txt = cb_scatter_dcm(hObject, eventdata)
 h = findobj('type', 'figure', 'name', mfilename);
 opt = getappdata(h, 'opt');
 opt.pos = get(eventdata, 'Position'); % current datamarker position
-if strcmp(opt.method, 'volume') && opt.magradius>0 % magnetize
-  opt = magnetize(opt);
-end
+opt.reinit = true; % redraw orthoplots
 dcm_txt = ['']; % ['index = [' num2str(opt.pos) ']'];
 
 if strcmp(get(opt.scatterfig_dcm, 'Enable'), 'on') % update appl and figures
   setappdata(h, 'opt', opt);
-  figure(h);
   if strcmp(opt.method, 'volume')
     cb_redraw(h);
   elseif strcmp(opt.method, 'headshape')
@@ -1769,7 +1790,8 @@ function cb_skullstrip(hObject, eventdata)
 h = findobj('type', 'figure', 'name',mfilename);
 opt = getappdata(h, 'opt');
 if get(hObject, 'value') && ~isfield(opt.mri{opt.currmri}, 'dat_strip') % skullstrip
-  fprintf('stripping the skull - this could take a few minutes\n')
+  fprintf('==================================================================================\n');
+  fprintf(' stripping the skull - this may take a few minutes\n')
   tmp = keepfields(opt.mri{opt.currmri}, {'anatomy', 'dim', 'coordsys', 'unit', 'transform'});
   cfg = [];
   cfg.output = 'skullstrip';
@@ -1815,4 +1837,3 @@ opt.init = true;
 
 setappdata(h, 'opt', opt);
 cb_redraw(h);
-

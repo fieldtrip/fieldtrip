@@ -37,7 +37,12 @@ if nargin < 1
 end
 
 if ~isstruct(filename)
-  load('-mat', filename, 'EEG');
+  s = whos('-file', filename);
+  if any(strcmp({s.name}', 'EEG'))
+    load('-mat', filename, 'EEG');
+  else % EEGLAB > 2021.0 saves content of EEG as default
+    EEG = load('-mat', filename);
+  end
 else
   EEG = filename;
 end
@@ -67,12 +72,26 @@ for i = 1:length( EEG.chanlocs )
   end
 end
 
+if ind>1 && isfield(EEG, 'chaninfo') && isfield(EEG.chaninfo, 'nosedir') && ~isempty(EEG.chaninfo.nosedir)
+  switch EEG.chaninfo.nosedir
+    case '+X'
+      header.elec.coordsys = 'ctf';
+    case '-X'
+      header.elec.coordsys = 'pls';
+    case '+Y'
+      header.elec.coordsys = 'ras';
+    case '-Y'
+      header.elec.coordsys = 'lpi';
+    otherwise
+  end
+end
+
 % remove data
 % -----------
 %if isfield(EEG, 'datfile')
 %    if ~isempty(EEG.datfile)
 %        EEG.data = EEG.datfile;
-%    end;
+%    end
 %else
 %    EEG.data = 'in set file';
 %end;

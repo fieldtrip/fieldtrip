@@ -13,9 +13,8 @@ function [dat] = read_ricoh_data(filename, hdr, begsample, endsample, chanindx)
 %%
 %% See also READ_RICOH_HEADER, READ_RICOH_EVENT
 
-if ~ft_hastoolbox('ricoh_meg_reader')
-    ft_error('cannot determine whether Ricoh toolbox is present');
-end
+% ensure that the required toolbox is on the path
+ft_hastoolbox('ricoh_meg_reader', 1);
 
 hdr = hdr.orig; % use the original Ricoh header, not the FieldTrip header
 
@@ -34,7 +33,7 @@ switch hdr.acq_type
     epoch_count   = 1;
     start_epoch   = 0;
     dat = getRData(filename, start_sample, sample_length);
-
+    
   case handles.AcqTypeContinuousRaw
     % dat is returned as double
     start_sample  = begsample - 1; % samples start at 0
@@ -42,9 +41,9 @@ switch hdr.acq_type
     epoch_count   = 1;
     start_epoch   = 0;
     dat = getRData(filename, start_sample, sample_length);
-
-  % Unlike Yokogawa system, "AcqTypeEvokedRaw" is not supported for Ricoh system.
-
+    
+    % Unlike Yokogawa system, "AcqTypeEvokedRaw" is not supported for Ricoh system.
+    
   otherwise
     ft_error('unknown data type');
 end

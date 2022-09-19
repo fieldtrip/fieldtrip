@@ -1,8 +1,7 @@
 function test_bug1914
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_filetype ft_read_header ft_read_data ft_read_event
 
 %%

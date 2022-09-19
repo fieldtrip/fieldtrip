@@ -64,6 +64,13 @@ mri.vox2head      = neuromagvox2acpchead;
 mri.head2headOrig = acpchead2neuromaghead;
 mri.coordsys      = 'acpc';
 
+if method>0
+  % this requires SPM to be on the path. However, this is not the proper place to
+  % choose between SPM versions. The user can either use cfg.spmversion in a high-level
+  % function, or has to add the path to the desired SPM version by hand.
+  ft_hastoolbox('spm', -1);
+end
+
 %--------------------------------------------------------------------------
 % Do a second round of affine registration (rigid body) to get improved
 % alignment with ACPC coordinate system. this is needed because there may be

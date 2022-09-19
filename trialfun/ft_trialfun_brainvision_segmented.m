@@ -3,12 +3,11 @@ function [trl, event] = ft_trialfun_brainvision_segmented(cfg)
 % FT_TRIALFUN_BRAINVISION_SEGMENTED creates trials for a Brain Vision Analyzer
 % dataset that was segmented in the BVA software.
 %
-% Use as 
-%   cfg          = [];
-%   cfg.dataset  = 'filename.vhdr';
-%   cfg.trialfun = 'ft_trialfun_brainvision_segmented';
-%   cfg  = ft_definetrial(cfg);
-%   data = ft_preprocessing(cfg);
+% Use this function by calling 
+%   [cfg] = ft_definetrial(cfg)
+% where the configuration structure should contain
+%   cfg.dataset  = string with the filename
+%   cfg.trialfun = 'ft_trialfun_brainvision_segmented'
 %
 % Optionally, you can specify:
 %   cfg.stimformat = 'S %d'

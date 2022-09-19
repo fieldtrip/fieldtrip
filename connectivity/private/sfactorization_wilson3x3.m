@@ -49,7 +49,7 @@ if nargin<5
   ft_error('FieldTrip:connectivity:sfactorization_wilson3x3', 'when requesting multiple triplet-wise spectral decomposition, ''cmbindx'' needs to be specified');
 end
 if nargin<4, tol        = 1e-8;   end
-if nargin<3, Niterations = 1000;  end;
+if nargin<3, Niterations = 1000;  end
 
 dfreq = round(diff(freq)*1e5)./1e5; % allow for some numeric issues
 if ~all(dfreq==dfreq(1))

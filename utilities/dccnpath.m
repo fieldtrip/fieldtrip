@@ -1,26 +1,25 @@
-function file = dccnpath(filename)
+function filename = dccnpath(filename)
 
-% DCCNPATH updates the path in the filename of a test file located on DCCN central
-% storage. It helps to read test file from Linux, Windows or macOS computers in the
-% DCCN.
+% DCCNPATH manages the filename and path for test files. It helps to locate and read
+% test file from Linux, Windows or macOS computers both inside and outside the DCCN.
 %
 % Use as
 %  filename = dccnpath(filename)
 %
-% The function assumes that on a Windows machine the DCCN home network drive is
-% mapped to the H: drive on Windows, or that it is mounted on /Volume/home for macOS.
+% The default location for FieldTrip and its test data is '/home/common/matlab/fieldtrip'.
+% This function will search-and-replace this string by the location that applies to
+% your computer. It will replace '/home' by 'H:' and will replace forward by backward slashes.
 %
-% Similar functionality as this function could be realized with an anonymous function
-% like this:
+% In case you have a local copy, you can override the default location by
+%   global ft_default
+%   ft_default.dccnpath = '/your/copy';
 %
-% if ispc
-%   dccnpath = @(filename) strrep(strrep(filename,'/home','H:'),'/','\');
-% else
-%   dccnpath = @(filename) strrep(strrep(filename,'H:','/home'),'\','/');
-% end
+% Note that most test scripts expect data located at /home/common/matlab/fieldtrip/data/ftp
+% or /home/common/matlab/fieldtrip/data/test, hence you should organize your local
+% copy of the data under /your/copy/data/ftp and /your/copy/data/test.
+%
+% Copyright (C) 2012-2022, Donders Centre for Cognitive Neuroimaging, Nijmegen, NL
 
-% Copyright (C) 2012-2019, Donders Centre for Cognitive Neuroimaging, Nijmegen, NL
-%
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
@@ -39,33 +38,43 @@ function file = dccnpath(filename)
 %
 % $Id$
 
+global ft_default
+
+% switch between linux and windows paths
 if ispc
-  file = strrep(filename,'/home','H:');
-  file = strrep(file,'/','\');
+  filename = strrep(filename,'/home','H:');
+  filename = strrep(filename,'/','\');
 else
-  file = strrep(filename,'H:','/home');
-  file = strrep(file,'\','/');
+  filename = strrep(filename,'H:','/home');
+  filename = strrep(filename,'\','/');
 end
 
-[p, f, x] = fileparts(file);
+% alternative1 alllows to test with local files in the present working directory
+% this is often convenient when initially setting up a new test script while the data is not yet uploaded
+[p, f, x] = fileparts(filename);
+alternative1 = [f x];
 
-alternative1 = [f x]; % this should not be used when it is only "test", since that is too generic
-alternative2 = strrep(filename, '/home/common/matlab/fieldtrip', '/Volumes/home/common/matlab/fieldtrip');
-alternative3 = strrep(filename, '/home/common/matlab/fieldtrip', '/Volumes/128GB/data/test');
-
-% exist(alternative1, 'file') returns 7 in case the present working directory matches alternative1
-if endsWith(pwd, alternative1)
-  % it is not a valid match
+if strcmp(alternative1, 'test')
+  % this should not be used when the filename is only "test", since that is too generic
+  alternative1 = '';
+elseif endsWith(pwd, alternative1)
+  % exist(alternative1, 'file') also returns 7 in case the present working directory name matches alternative1
+  % this is not the match we want
   alternative1 = '';
 end
 
-if ~exist(file, 'file') && exist(alternative1, 'file') && ~strcmp(alternative1, 'test')
-  warning('using local copy %s instead of %s', alternative1, file);
-  file = alternative1;
-elseif ~exist(file, 'file') && exist(alternative2, 'file')
-  warning('using local copy %s instead of %s', alternative2, file);
-  file = alternative2;
-elseif ~exist(file, 'file') && exist(alternative3, 'file')
-  warning('using local copy %s instead of %s', alternative3, file);
-  file = alternative3;
+% alternative2 allows for the user to specify the path in the global ft_default variable
+% see https://github.com/fieldtrip/fieldtrip/issues/1998
+if isfield(ft_default, 'dccnpath')
+  alternative2 = strrep(filename, '/home/common/matlab/fieldtrip', ft_default.dccnpath);
+else
+  alternative2 = '';
+end
+
+if ~exist(filename, 'file') && exist(alternative1, 'file')
+  warning('using local copy %s instead of %s', alternative1, filename);
+  filename = alternative1;
+elseif ~exist(filename, 'file') && exist(alternative2, 'file')
+  warning('using local copy %s instead of %s', alternative2, filename);
+  filename = alternative2;
 end

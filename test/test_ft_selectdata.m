@@ -1,8 +1,7 @@
 function test_ft_selectdata
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_selectdata ft_selectdata_old ft_selectdata_new ft_appendfreq
 
 timelock1 = [];
@@ -301,3 +300,25 @@ if false
   assert(size(output.crsspctrm, 3)==3, 'incorrect size'); % freq
 end
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% this part of the script tests the functionality of ft_selectdata with union/intersect on raw data
+
+data = [];
+data.trial{1} = randn(2,10);
+data.time{1}  = -5:4;
+data.trial{2} = randn(2,10);
+data.time{2}  = 1:10;
+data.label    = {'chan01';'chan02'};
+
+cfg = [];
+cfg.select = 'intersect';
+datasel1 = ft_selectdata(cfg, data);
+
+cfg.select = 'union';
+ok = true;
+try
+  datasel2 = ft_selectdata(cfg, data);
+catch
+  ok = false;
+end
+assert(~ok, 'ft_selectdata with raw input and union selection should fail');

@@ -2,7 +2,6 @@ function test_curry
 
 % MEM 3gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_filetype ft_read_header ft_read_data ft_read_event
 
 %%

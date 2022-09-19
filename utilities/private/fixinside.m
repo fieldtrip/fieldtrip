@@ -1,4 +1,4 @@
-function [source] = fixinside(source, opt)
+function [source] = fixinside(source, target)
 
 % FIXINSIDE ensures that the region of interest (which is indicated by the
 % field "inside") is consistently defined for source structures and volume
@@ -29,18 +29,24 @@ function [source] = fixinside(source, opt)
 %
 % $Id$
 
-
 if nargin<2
-  opt = 'logical';
+  target = 'logical';
 end
 
 if ~isfield(source, 'inside')
-  if isfield(source, 'pos')
+  if isfield(source, 'leadfield')
+    % determine the positions outside the brain on basis of the empty cells
+    source.inside = ~cellfun(@isempty, source.leadfield);
+  elseif isfield(source, 'filter')
+    % determine the positions outside the brain on basis of the empty cells
+    source.inside = ~cellfun(@isempty, source.filter);
+  elseif isfield(source, 'pos')
     % assume that all positions are inside the region of interest
     source.inside  = [1:size(source.pos,1)]';
     source.outside = [];
-  elseif isfield(source, 'dim')
-    source.inside  = [1:prod(source.dim)]';
+  elseif isfield(source, 'dim') && isfield(source, 'transform')
+    % assume that all positions are inside the region of interest
+    source.inside  = [1:prod(source.dim(1:3))]';
     source.outside = [];
   end
 end
@@ -52,35 +58,47 @@ end
 
 % determine the format
 if isa(source.inside, 'logical')
-  logicalfmt = 1;
+  current = 'logical';
 elseif all(source.inside(:)==0 | source.inside(:)==1)
   source.inside = logical(source.inside);
-  logicalfmt = 1;
+  current = 'logical';
 else
-  logicalfmt = 0;
+  current = 'indexed';
 end
 
-if ~logicalfmt && strcmp(opt, 'logical')
-  % convert to a logical array
-  if ~isfield(source, 'outside')
-    source.outside = [];
-  end
-  if isfield(source, 'pos')
-    tmp  = false(size(source.pos,1),1);
-  elseif isfield(source, 'dim')
-    tmp  = false(prod(source.dim),1);
-  end
-  tmp(source.inside) = true;
+
+if strcmp(current, 'indexed') && strcmp(target, 'indexed')
+  % nothing to do
+elseif strcmp(current, 'logical') && strcmp(target, 'logical')
+  % nothing to do
+elseif strcmp(current, 'indexed') && strcmp(target, 'logical')
+  % remove outside
   if isfield(source, 'outside')
-    tmp(source.outside) = false;
     source = rmfield(source, 'outside');
   end
-  source.inside = tmp(:);
-elseif logicalfmt && strcmp(opt, 'index')
+  % convert inside to a logical array
+  if isfield(source, 'pos')
+    tmp = false(size(source.pos,1), 1);
+  elseif isfield(source, 'dim') && isfield(source, 'transform')
+    tmp = false(source.dim(1:3));
+  end
+  tmp(source.inside) = true;
+  source.inside = tmp;
+elseif strcmp(current, 'logical') && strcmp(target, 'index')
   % convert to a vectors with indices
   tmp = source.inside;
   source.inside  = find( tmp(:));
   source.outside = find(~tmp(:));
 else
-  % nothing to do
+  ft_error('incorrect specification of the insidestyle')
+end
+
+if strcmp(target, 'logical')
+  if isfield(source, 'pos')
+    % reshape it so that it matches the positions
+    source.inside = reshape(source.inside, size(source.pos,1), 1);
+  elseif isfield(source, 'dim') && isfield(source, 'transform')
+    % reshape it so that it matches the volume dimensions
+    source.inside = reshape(source.inside, source.dim(1:3));
+  end
 end

@@ -242,7 +242,7 @@ dof      = zeros(nUnits, length(s));
 
 % preallocate, depending on whether nargout is 1 or 2
 if (strcmp(cfg.keeptrials,'yes')), singleTrials = zeros(nTrials,nUnits,size(s,2)); end
-if nargout==2, [sdfdata.trial(1:nTrials) sdfdata.time(1:nTrials)] = deal({[]}); end
+if nargout==2, [sdfdata.trial(1:nTrials), sdfdata.time(1:nTrials)] = deal({[]}); end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %                           compute the spike density

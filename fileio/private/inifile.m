@@ -479,7 +479,7 @@ try
             end
             if ~subSecsExist(ii) && ~isempty(keysIn(ii,2))
                 if ~isempty( keysIn{ii,2})
-                    if secsExist(ii); tab = tab1;  end;
+                    if secsExist(ii); tab = tab1;  end
                     datain = [datain sprintf(['%s' NL_CHAR],[tab '{' keysIn{ii,2} '}'])];
                 end
                 % Key-indices with the same section AND subsection as this, ii-th key (even empty sections and subsections are considered)
@@ -488,8 +488,8 @@ try
                 subSecsExist(ind) = 1;
             end
         end
-        if secsExist(ii) && (~isempty(keysIn{ii,1})); tab = tab1;  end;
-        if subSecsExist(ii) && (~isempty(keysIn{ii,2})); tab = [tab tab1];  end;
+        if secsExist(ii) && (~isempty(keysIn{ii,1})); tab = tab1;  end
+        if subSecsExist(ii) && (~isempty(keysIn{ii,2})); tab = [tab tab1];  end
         datain = [datain sprintf(['%s' NL_CHAR],[tab keysIn{ii,3} ' = ' values{ii}])];
     end
     from = eo(ii);

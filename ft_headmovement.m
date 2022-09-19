@@ -9,17 +9,16 @@ function [varargout] = ft_headmovement(cfg)
 %
 % where the configuration should contain
 %   cfg.dataset      = string with the filename
-%   cfg.method       = 'updatesens' (default), 'cluster', 'avgoverrpt',
-%                        'pertrial_cluster', 'pertrial'
+%   cfg.method       = string, 'updatesens' (default), 'cluster', 'avgoverrpt',
+%                      'pertrial_cluster', 'pertrial' (default = 'updatesens')
 %
 % optional arguments are
-%   cfg.trl          = empty (default), or Nx3 matrix with the trial 
-%                        definition, can be empty.see FT_DEFINETRIAL. If
-%                        defined empty, the whole recording is used
+%   cfg.trl          = empty (default), or Nx3 matrix with the trial
+%                      definition (see FT_DEFINETRIAL). When specified as empty,
+%                      the whole recording is used.
 %   cfg.numclusters  = number of segments with constant headposition in
-%                        which to split the data (default = 10). This
-%                        argument is used in some of the methods only (see
-%                        below), and is used in a kmeans clustering scheme.
+%                      which to split the data (default = 10). This argument
+%                      is only used for the clustering methods.
 %
 % If cfg.method = 'updatesens', the grad in the single output structure has
 % a specification of the coils expanded as per the centroids of the position
@@ -50,10 +49,9 @@ function [varargout] = ft_headmovement(cfg)
 % The updatesens method and related methods are described by Stolk et al., Online and
 % offline tools for head movement compensation in MEG. NeuroImage, 2012.
 %
-% See also FT_REGRESSCONFOUND FT_REALTIME_HEADLOCALIZER
+% See also FT_REGRESSCONFOUND, FT_REALTIME_HEADLOCALIZER
 
-% Copyright (C) 2008-2017, Jan-Mathijs Schoffelen, Robert Oostenveld
-% Copyright (C) 2018, Jan-Mathijs Schoffelen
+% Copyright (C) 2008-2018, Jan-Mathijs Schoffelen, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -105,8 +103,7 @@ else
   dokmeans = false;
 end
 
-% read the header information and check whether it's a CTF dataset with HLC
-% information.
+% read the header information and check whether it's a CTF dataset with HLC information
 hdr = ft_read_header(cfg.headerfile);
 assert(numel(intersect(hdr.label, {'HLC0011' 'HLC0012' 'HLC0013' 'HLC0021' 'HLC0022' 'HLC0023' 'HLC0031' 'HLC0032' 'HLC0033'}))==9, 'the data does not contain the expected head localizer channels');
 
@@ -118,29 +115,26 @@ grad_dewar   = ft_datatype_sens(grad_dewar); % ensure up-to-date sensor descript
 grad = grad_dewar; % we want to work with dewar coordinates, ...
 grad.chanpos = grad_head.chanpos;
 
-% read HLC-channels
+% read the HLC-channels
 % HLC0011 HLC0012 HLC0013 x, y, z coordinates of nasion-coil in m.
 % HLC0021 HLC0022 HLC0023 x, y, z coordinates of lpa-coil in m.
 % HLC0031 HLC0032 HLC0033 x, y, z coordinates of rpa-coil in m.
-if ~isfield(cfg, 'trl')
+if ~isfield(cfg, 'trl') || isempty(cfg.trl)
   cfg.trl = [1 hdr.nTrials.*hdr.nSamples 0];
 end
-tmpcfg              = [];
-tmpcfg.dataset      = cfg.dataset;
-tmpcfg.trl          = cfg.trl;
+tmpcfg              = removefields(cfg, {'method' 'numclusters'});
 tmpcfg.channel      = {'HLC0011' 'HLC0012' 'HLC0013' 'HLC0021' 'HLC0022' 'HLC0023' 'HLC0031' 'HLC0032' 'HLC0033'};
 tmpcfg.continuous   = 'yes';
 data                = ft_preprocessing(tmpcfg);
-data                = removefields(data, 'elec'); % this slows down a great
-                        % rendering the persistent variable trick useless.
-                        % we don't need the elec anyway
+data                = removefields(data, 'elec'); % this slows down a great deal
+% rendering the persistent variable trick useless.
+% we don't need the elec anyway
 
 wdat                = cellfun('size', data.time, 2); % weights for weighted average
 
 trial_index = cell(1,numel(data.trial));
 for k = 1:numel(data.trial)
-  % it sometimes happens that data are numerically 0, which causes problems
-  % downstream, replace with nans
+  % it sometimes happens that data are numerically 0, which causes problems downstream, replace with nans
   data.trial{k}(:,sum(data.trial{k}==0)==9) = nan;
   
   % create a bookkeeping cell-array, indexing the trial-indx
@@ -160,7 +154,9 @@ else
   % concatenate across trials and scale the units
   dat = cat(2, data.trial{:});
 end
-dat = dat * ft_scalingfactor('m', grad.unit); % scale in units of the gradiometer definition, which is probably cm
+
+% scale in units of the gradiometer definition, which is probably cm
+dat = dat * ft_scalingfactor('m', grad.unit);
 
 if isequal(cfg.method, 'pertrial_cluster')
   trl_idx = 1:numel(data.trial);
@@ -177,15 +173,14 @@ end
 if dokmeans && ~isequal(cfg.method, 'pertrial_cluster')
   [tmpdata, dum, ic] = unique(dat', 'rows');
   dat = tmpdata';
-
+  
   % count how often each position occurs
-  wdat = hist(ic, unique(ic));  
+  wdat = hist(ic, unique(ic));
 end
 
 % perform the clustering if needed
 if dokmeans
   % compute the cluster means
-  dat_orig   = dat';
   [bin, dat] = kmeans(dat', cfg.numclusters, 'EmptyAction', 'drop');
   
   % create a cell-array 1xnrpt with time specific indices of cluster id
@@ -206,7 +201,7 @@ else
   bin = 1:size(dat,2);
   dat = dat';
 end
-  
+
 % find the three channels for each fiducial
 selnas = match_str(data.label,{'HLC0011';'HLC0012';'HLC0013'});
 sellpa = match_str(data.label,{'HLC0021';'HLC0022';'HLC0023'});
@@ -225,6 +220,7 @@ for k = 1:length(ubin)
 end
 
 hc = read_ctf_hc([cfg.datafile(1:end-4),'hc']);
+
 if istrue(cfg.feedback)
   % plot some stuff
   figure; hold on;
@@ -256,7 +252,7 @@ if isequal(cfg.method, 'updatesens')
   for m = 1:npos
     tmptransform                                  = dewar2head(:,:,m);
     gradnew.coilpos((m-1)*ncoils+1:(m*ncoils), :) = ft_warp_apply(tmptransform, grad.coilpos); % back to head coordinates
-    tmptransform(1:3, 4)                          = 0; % keep rotation only
+    tmptransform(1:3, 4)                          = 0; % keep only the rotation
     gradnew.coilori((m-1)*ncoils+1:(m*ncoils), :) = ft_warp_apply(tmptransform, grad.coilori);
     gradnew.tra(:, (m-1)*ncoils+1:(m*ncoils))     = grad.tra.*(numperbin(m)./sum(numperbin));
   end
@@ -268,6 +264,7 @@ else
   end
 end
 
+% prepare the output data
 switch cfg.method
   case 'cluster'
     varargout     = cell(1,numel(grad));
@@ -275,13 +272,14 @@ switch cfg.method
     tmpdata.trial = cluster_id;
     tmpdata.label = {'cluster_id'};
     data          = ft_appenddata([],data,tmpdata);
+    
     for k = 1:numel(grad)
-      
       tmpcfg = [];
       tmpcfg.artfctdef.bpfilter = 'no';
       tmpcfg.artfctdef.threshold.channel   = {'cluster_id'};
       tmpcfg.artfctdef.threshold.min       = 0.9+k-1;
       tmpcfg.artfctdef.threshold.max       = 1.1+k-1;
+      tmpcfg.artfctdef.threshold.bpfilter  = 'no';
       tmpcfg = ft_artifact_threshold(tmpcfg, tmpdata);
       artifacts = tmpcfg.artfctdef.threshold.artifact;
       
@@ -293,11 +291,14 @@ switch cfg.method
       
       varargout{k} = tmpdata_clus;
     end
+    
   case {'avgoverrpt' 'updatesens'}
     data.grad    = grad;
     varargout{1} = data;
+    
   case 'pertrial'
-    ft_error('still to do');
+    ft_error('not yet implemented');
+    
   case 'pertrial_cluster'
     varargout     = cell(1,numel(grad));
     tmpdata       = data;
@@ -315,7 +316,8 @@ switch cfg.method
       
       varargout{k} = tmpdata_clus;
     end
-end
+end % switch method
+
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig

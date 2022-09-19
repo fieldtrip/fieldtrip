@@ -10,7 +10,7 @@ function [cfg] = ft_singleplotTFR(cfg, data)
 % power or coherence that was computed using the FT_FREQANALYSIS function.
 %
 % The configuration can have the following parameters:
-%   cfg.parameter      = field to be plotted on z-axis, e.g. 'powspcrtrm' (default depends on data.dimord)
+%   cfg.parameter      = field to be plotted on z-axis, e.g. 'powspctrm' (default depends on data.dimord)
 %   cfg.maskparameter  = field in the data to be used for masking of data, can be logical (e.g. significant data points) or numerical (e.g. t-values).
 %                        (not possible for mean over multiple channels, or when input contains multiple subjects
 %                        or trials)
@@ -18,7 +18,7 @@ function [cfg] = ft_singleplotTFR(cfg, data)
 %                        'outline' can only be used with a logical cfg.maskparameter
 %                        use 'saturation' or 'outline' when saving to vector-format (like *.eps) to avoid all sorts of image-problems
 %   cfg.maskalpha      = alpha value between 0 (transparent) and 1 (opaque) used for masking areas dictated by cfg.maskparameter (default = 1)
-%                        (will be ignored in case of numeric cfg.maskparameter or if cfg.maskstyle = 'outline')   
+%                        (will be ignored in case of numeric cfg.maskparameter or if cfg.maskstyle = 'outline')
 %   cfg.masknans       = 'yes' or 'no' (default = 'yes')
 %   cfg.xlim           = 'maxmin' or [xmin xmax] (default = 'maxmin')
 %   cfg.ylim           = 'maxmin' or [ymin ymax] (default = 'maxmin')
@@ -32,10 +32,10 @@ function [cfg] = ft_singleplotTFR(cfg, data)
 %   cfg.refchannel     = name of reference channel for visualising connectivity, can be 'gui'
 %   cfg.fontsize       = font size of title (default = 8)
 %   cfg.hotkeys        = enables hotkeys (leftarrow/rightarrow/uparrow/downarrow/pageup/pagedown/m) for dynamic zoom and translation (ctrl+) of the axes and color limits
-%   cfg.colormap       = any sized colormap, see COLORMAP
+%   cfg.colormap       = string, or Nx3 matrix, see FT_COLORMAP
 %   cfg.colorbar       = 'yes', 'no' (default = 'yes')
-%   cfg.colorbartext   =  string indicating the text next to colorbar
-%   cfg.interactive    = Interactive plot 'yes' or 'no' (default = 'yes')
+%   cfg.colorbartext   = string indicating the text next to colorbar
+%   cfg.interactive    = interactive plot 'yes' or 'no' (default = 'yes')
 %                        In a interactive plot you can select areas and produce a new
 %                        interactive plot when a selected area is clicked. Multiple areas
 %                        can be selected by holding down the SHIFT key.
@@ -135,6 +135,7 @@ end
 data = ft_checkdata(data, 'datatype', 'freq');
 
 % check if the input cfg is valid for this function
+cfg = ft_checkconfig(cfg, 'forbidden',  {'channels', 'trial'}); % prevent accidental typos, see issue 1729
 cfg = ft_checkconfig(cfg, 'unused',      {'cohtargetchannel'});
 cfg = ft_checkconfig(cfg, 'renamed',     {'matrixside',     'directionality'});
 cfg = ft_checkconfig(cfg, 'renamedval',  {'zlim', 'absmax', 'maxabs'});
@@ -144,6 +145,7 @@ cfg = ft_checkconfig(cfg, 'renamed',     {'channelindex',   'channel'});
 cfg = ft_checkconfig(cfg, 'renamed',     {'channelname',    'channel'});
 cfg = ft_checkconfig(cfg, 'renamed',     {'cohrefchannel',  'refchannel'});
 cfg = ft_checkconfig(cfg, 'renamed',	   {'zparam',         'parameter'});
+cfg = ft_checkconfig(cfg, 'renamed',     {'newfigure',      'figure'});
 
 % Set the defaults
 cfg.baseline       = ft_getopt(cfg, 'baseline',      'no');
@@ -154,10 +156,10 @@ cfg.ylim           = ft_getopt(cfg, 'ylim',          'maxmin');
 cfg.zlim           = ft_getopt(cfg, 'zlim',          'maxmin');
 cfg.fontsize       = ft_getopt(cfg, 'fontsize',       8);
 cfg.colorbar       = ft_getopt(cfg, 'colorbar',      'yes');
-cfg.colorbartext   = ft_getopt(cfg, 'colorbartext',   '');
+cfg.colormap       = ft_getopt(cfg, 'colormap',       'default');
+cfg.colorbartext   = ft_getopt(cfg, 'colorbartext',  '');
 cfg.interactive    = ft_getopt(cfg, 'interactive',   'yes');
 cfg.hotkeys        = ft_getopt(cfg, 'hotkeys',       'yes');
-cfg.renderer       = ft_getopt(cfg, 'renderer',       []); % let MATLAB decide on the default
 cfg.maskalpha      = ft_getopt(cfg, 'maskalpha',      1);
 cfg.maskparameter  = ft_getopt(cfg, 'maskparameter',  []);
 cfg.maskstyle      = ft_getopt(cfg, 'maskstyle',     'opacity');
@@ -167,6 +169,7 @@ cfg.masknans       = ft_getopt(cfg, 'masknans',      'yes');
 cfg.directionality = ft_getopt(cfg, 'directionality', []);
 cfg.figurename     = ft_getopt(cfg, 'figurename',     []);
 cfg.parameter      = ft_getopt(cfg, 'parameter',     'powspctrm');
+cfg.renderer       = ft_getopt(cfg, 'renderer',       []); % let MATLAB decide on the default
 
 % this is needed for the figure title
 if isfield(cfg, 'dataname') && ~isempty(cfg.dataname)
@@ -200,7 +203,7 @@ else
   assert(~isempty(cfg.trials), 'empty specification of cfg.trials for data with repetitions');
 end
 
-% parse cfg.channel 
+% parse cfg.channel
 if isfield(cfg, 'channel') && isfield(data, 'label')
   cfg.channel = ft_channelselection(cfg.channel, data.label);
 elseif isfield(cfg, 'channel') && isfield(data, 'labelcmb')
@@ -222,7 +225,7 @@ if ~strcmp(cfg.baseline, 'no')
 end
 
 % channels should NOT be selected and averaged here, since a topoplot might follow in interactive mode
-tmpcfg = keepfields(cfg, {'showcallinfo', 'trials'});
+tmpcfg = keepfields(cfg, {'trials', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
 if hasrpt
   tmpcfg.avgoverrpt = 'yes';
 else
@@ -273,11 +276,20 @@ if startsWith(dimord, 'chan_chan_') || startsWith(dimord, 'chancmb_')
   return
 end
 
+
 % Apply channel-type specific scaling
 fn = fieldnames(cfg);
-tmpcfg = keepfields(cfg, fn(endsWith(fn, 'scale') | startsWith(fn, 'mychan') | strcmp(fn, 'channel') | strcmp(fn, 'parameter')));
-[data] = chanscale_common(tmpcfg, data);
-
+fn = setdiff(fn, {'skipscale', 'showscale', 'gridscale'}); % these are for the layout and plotting, not for CHANSCALE_COMMON
+fn = fn(endsWith(fn, 'scale') | startsWith(fn, 'mychan') | strcmp(fn, 'channel') | strcmp(fn, 'parameter'));
+tmpcfg = keepfields(cfg, fn);
+if ~isempty(tmpcfg)
+  data = chanscale_common(tmpcfg, data);
+  % remove the scaling fields from the configuration, to prevent them from being called again in interactive mode
+  % but keep the parameter and channel field
+  cfg = removefields(cfg, setdiff(fn, {'parameter', 'channel'}));
+else
+  % do nothing
+end
 
 %% Section 3: select the data to be plotted and determine min/max range
 
@@ -365,8 +377,9 @@ end
 
 %% Section 4: do the actual plotting
 
-cla
-hold on
+% open a new figure, or add it to the existing one
+% note that in general adding a TFR to an existing one does not make sense, since they will overlap
+open_figure(keepfields(cfg, {'figure', 'position', 'visible', 'renderer', 'figurename', 'title'}));
 
 zval = mean(datamatrix, 1); % over channels
 zval = reshape(zval, size(zval,2), size(zval,3));
@@ -407,21 +420,16 @@ else
   ft_plot_matrix(xval, yval, zval, 'clim', [zmin zmax], 'tag', 'cip')
 end
 
-% set colormap
-if isfield(cfg, 'colormap')
-  if ~isnumeric(cfg.colormap)
-    cfg.colormap = colormap(cfg.colormap);
-  end
-  if size(cfg.colormap,2)~=3
+% check if the colormap is in the proper format and set it
+if ~isequal(cfg.colormap, 'default')
+  if ischar(cfg.colormap)
+    cfg.colormap = ft_colormap(cfg.colormap);
+  elseif iscell(cfg.colormap)
+    cfg.colormap = ft_colormap(cfg.colormap{:});
+  elseif isnumeric(cfg.colormap) && size(cfg.colormap,2)~=3
     ft_error('colormap must be a Nx3 matrix');
-  else
-    set(gcf, 'colormap', cfg.colormap);
   end
-end
-
-% Set renderer if specified
-if ~isempty(cfg.renderer)
-  set(gcf, 'renderer', cfg.renderer)
+  set(gcf, 'colormap', cfg.colormap);
 end
 
 axis xy
@@ -469,7 +477,6 @@ if isempty(get(gcf, 'Name'))
 end
 
 axis tight
-hold off
 
 % Make the figure interactive
 if strcmp(cfg.interactive, 'yes')
@@ -524,7 +531,8 @@ if ~isempty(range)
   fprintf('selected cfg.xlim = [%f %f]\n', cfg.xlim(1), cfg.xlim(2));
   fprintf('selected cfg.ylim = [%f %f]\n', cfg.ylim(1), cfg.ylim(2));
   % ensure that the new figure appears at the same position
-  f = figure('Position', get(gcf, 'Position'));
+  cfg.figure = 'yes';
+  cfg.position = get(gcf, 'Position');
   ft_topoplotTFR(cfg, data);
 end
 

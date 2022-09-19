@@ -1,17 +1,17 @@
 function data = read_artinis_oxy4(filename, header, begsample, endsample, chanindx)
 % reads Artinix oxy4-files into FieldTrip format
+%
 % use as
 %   header = read_artinis_oxy4(filename)
 % or 
 %   event  = read_artinis_oxy4(filename, read_event)
-% where read_event is a boolean. If 'true', the function returns events. 
-% If 'false' the function returns the header. 
-% or 
+% where read_event is a Boolean with the value true, or  
 %   data   = read_artinis_oxy4(filename, header, [begsample], [endsample], [chanindx])
-% where begsample, endsample and chanindx are optional. The returned
-% variables will be in FieldTrip style. 
+% where begsample, endsample and chanindx are optional.
 %
-% See also FT_READ_HEADER, FT_READ_DATA
+% The returned variables will be in FieldTrip style. 
+%
+% See also FT_READ_HEADER, FT_READ_DATA, READ_ARTINIS_OXY4
 
 % You are using the FieldTrip NIRS toolbox developed and maintained by 
 % Artinis Medical Systems (http://www.artinis.com). For more information
@@ -63,20 +63,28 @@ end
 
 if nargin == 1 || nargin == 2 && islogical(header) && ~header    
   data = read_oxy4_header(filename);
+  if isfield(data, 'opto')
+    % ensure that the optode definition is according to the latest standards
+    data.opto = ft_datatype_sens(data.opto);
+  end
 elseif nargin == 2  && islogical(header) && header
   data = read_oxy3_event(filename);
-else % nargin > 1 && ~islogical(header)
-  data = read_oxy4_data(filename);
-  
+else % nargin > 1 && ~islogical(header)  
   if nargin < 5
-    chanindx = 1:size(data, 1);
+    chanindx = 1:header.nChans;
     if nargin < 4
-      endsample = size(data, 2);    
+      endsample = header.nSamples;
       if nargin < 3
         begsample = 1;
       end
     end
+  end  
+  data = read_oxy4_data(filename, 0, header.nSamples); % sample subselection does not work yet
+  
+  if endsample > size(data, 2)
+    warning('Cannot deliver all requested samples, nan''ing %d sample(s)', endsample-size(data, 2));
+    data(:, end:endsample) = nan;
   end
-        
+  
   data = data(chanindx, begsample:endsample);
 end

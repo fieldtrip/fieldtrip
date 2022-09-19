@@ -1,8 +1,7 @@
 function test_bug255
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_timelockanalysis ft_prepare_layout ft_timelockstatistics ft_topoplotER
 
 % this script tests the functionality of ft_topoplotER with respect to

@@ -9,8 +9,6 @@ The following files are copied from freesurfer version 5.1:
 isdicomfile.m
 load_dicom_fl.m
 load_dicom_series.m
-load_nifti.m
-load_mgh.m
 read_annotation.m
 read_fscolorlut.m
 Simple_surface_labels2009.txt
@@ -21,28 +19,29 @@ The following files are copied from freesurfer version 5.1:
 write_surf.m
 fwrite3.m
 
-
-As of 20190918 the files below have been diff'ed against the version of the code
-in freesurfer version 6.0. 
-
-The following files are copied from freesurfer version 6.0:
-fread3.m
 fsgettmppath.m -> the preferred order of /scratch vs. /tmp is reversed
+
+As of 20201221 the files below have been diff'ed against the version of the code
+in freesurfer version 7.1. 
+
+The following files are copied from freesurfer version 7.1:
+fread3.m
 fwrite3.m
 isdicomfile.m
 load_analyze_hdr.m
 load_analyze.m
-load_mgh.m -> adjusted by JMS to output data in datatype in file (open PR on freesurfer github)
+load_mgh.m
 load_nifti_hdr.m
-load_nifti.m -> adjusted by JMS to output data in datatype in file (open PR on freesurfer github)
+load_nifti.m -> some small change locally by JMS for wider datatype support
 MRIfspec.m
-MRIread.m
-MRIwrite.m
+MRIread.m -> some small changes locally, pending PR 
+MRIwrite.m -> some small changes locally, pending PR 
 read_annotation.m
 read_curv.m
 read_fscolorlut.m
 read_label.m
 save_mgh.m
+save_nifti.m -> some small changes locally, pending PR with freesurfer repo
 strlen.m
 vox2ras_*.m
 vox2rasToQform.m
@@ -51,5 +50,7 @@ vox2rasToQform.m
 The following files are from an unspecified older version, and locally adjusted
 load_dicom_fl.m
 load_dicom_series.m
-read_surf.m
+read_surf.m -> in contrast to the freesurfer version, it reads the ASCII formatted transformation information at the bottom of the binary file, and applies the translation (which anecdotally matches the required transformation in order to align the surface coordinate system with the coordinate system of the MRI from which the surface was derived).
 write_surf.m
+
+

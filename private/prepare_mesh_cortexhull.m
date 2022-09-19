@@ -213,7 +213,7 @@ fwrite(fid, vert,'float32');
 % reshape face into column array and write
 face = reshape(face',size(face,1)*size(face,2),1);
 fwrite(fid, face,'int32');
-fclose(fid) ;
+fclose(fid);
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -293,7 +293,7 @@ for n = 1:heavytest+1,
   % Randomize
   if n>1,
     v=rand(1,3);D=rotmatrix(v/norm(v),rand*180/pi);vertices=VER*D;testp = TESTP*D;
-  else,
+  else
     vertices=VER;
   end
   
@@ -335,7 +335,7 @@ for n = 1:heavytest+1,
   
   if n==1,
     inreturn = in;  % Starting guess
-  else,
+  else
     % if ALWAYS inside, use as inside!
     %        I = find(inreturn ~= in);
     %        inreturn(I(in(I)==0)) = 0;
@@ -580,7 +580,7 @@ if deg~=0,
   D=[ca+v1*v1*(1-ca),v1*v2*(1-ca)-v3*sa,v1*v3*(1-ca)+v2*sa;
     v2*v1*(1-ca)+v3*sa,ca+v2*v2*(1-ca),v2*v3*(1-ca)-v1*sa;
     v3*v1*(1-ca)-v2*sa,v3*v2*(1-ca)+v1*sa,ca+v3*v3*(1-ca)];
-else,
+else
   D=eye(3,3);
 end
 

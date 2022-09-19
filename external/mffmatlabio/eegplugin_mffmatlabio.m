@@ -70,7 +70,7 @@
 function versionstr = eegplugin_mffmatlabio(fig, trystrs, catchstrs)
 
     %global EEG
-    versionstr = '2.01';
+    versionstr = '3.4';
     if nargin < 3
         disp('eegplugin_mffmatlabio requires 3 arguments');
         return
@@ -96,5 +96,5 @@ function versionstr = eegplugin_mffmatlabio(fig, trystrs, catchstrs)
     
     % create menus (CHANGING THESE MENUS AFFECTS THE MAIN eeglab.m FUNCTION)
     % ------------
-    submenu = uimenu( menui, 'Label', 'Import Philips .mff file', 'separator', 'on', 'CallBack', comload);
-    submenu = uimenu( menue, 'Label', 'Export Philips .mff file', 'separator', 'on', 'CallBack', comwrite);
+    submenu = uimenu( menui, 'Label', 'Import EGI/Philips .mff file', 'separator', 'on', 'CallBack', comload);
+    submenu = uimenu( menue, 'Label', 'Export EGI/Philips .mff file', 'separator', 'on', 'CallBack', comwrite);

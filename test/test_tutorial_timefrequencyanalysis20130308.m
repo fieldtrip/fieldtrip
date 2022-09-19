@@ -1,8 +1,7 @@
 function test_tutorial_timefrequencyanalysis20130308
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:20:00
-
 % DEPENDENCY ft_freqanalysis ft_preprocessing ft_multiplotTFR ft_singleplotTFR
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -57,7 +56,7 @@ function test_tutorial_timefrequencyanalysis20130308
 % 
 % Ft_definetrial and ft_preprocessing require the original MEG dataset, which is available from ftp://ftp.fieldtriptoolbox.org/pub/fieldtrip/tutorial/Subject01.zip.
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data'));
+cd(dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf'));
 
 % find the interesting segments of data
 cfg = [];                                           % empty configuration
@@ -355,5 +354,5 @@ ft_multiplotTFR(cfg, TFRwave)
 % 2) Mitra and Pesaran (1999) Analysis of dynamic brain imaging data. Biophys J. 76(2):691-708
 % 3) Percival and Walden, 1993 Spectral analysis for physical applications: multitaper and conventional univariate techniques. Cambridge, UK: Cambridge UP.
 % Logged in as: Robert Oostenveld (robert)
-% tutorial/timefrequencyanalysis.txt · Last modified: 2012/07/24 15:44 by 192.87.10.82
+% tutorial/timefrequencyanalysis.txt ï¿½ Last modified: 2012/07/24 15:44 by 192.87.10.82
 

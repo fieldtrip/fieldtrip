@@ -9,45 +9,45 @@ function [cfg] = ft_movieplotTFR(cfg, data)
 % configuration is a structure that can contain
 %   cfg.parameter    = string, parameter that is color coded (default = 'avg')
 %   cfg.xlim         = selection boundaries over first dimension in data (e.g., time)
-%                          'maxmin' or [xmin xmax] (default = 'maxmin')
+%                      'maxmin' or [xmin xmax] (default = 'maxmin')
 %   cfg.ylim         = selection boundaries over second dimension in data (e.g., freq)
-%                          'maxmin' or [xmin xmax] (default = 'maxmin')
+%                      'maxmin' or [xmin xmax] (default = 'maxmin')
 %   cfg.zlim         = plotting limits for color dimension, 'maxmin',
-%                          'maxabs', 'zeromax', 'minzero', or [zmin zmax] (default = 'maxmin')
-%   cfg.samperframe  = number, samples per fram (default = 1)
-%   cfg.framespersec = number, frames per second (default = 5)
-%   cfg.framesfile   = [] (optional), no file saved, or 'string', filename of saved frames.mat (default = []);
-%   cfg.moviefreq    = number, movie frames are all time points at the fixed frequency moviefreq (default = []);
-%   cfg.movietime    = number, movie frames are all frequencies at the fixed time movietime (default = []);
+%                      'maxabs', 'zeromax', 'minzero', or [zmin zmax] (default = 'maxmin')
+%   cfg.speed        = number, initial speed for interactive mode (default = 1)
+%   cfg.samperframe  = number, samples per frame for non-interactive mode (default = 1)
+%   cfg.framespersec = number, frames per second for non-interactive mode (default = 5)
+%   cfg.framesfile   = 'string' or empty, filename of saved frames.mat (default = [])
+%   cfg.moviefreq    = number, movie frames are all time points at the fixed frequency moviefreq (default = [])
+%   cfg.movietime    = number, movie frames are all frequencies at the fixed time movietime (default = [])
 %   cfg.layout       = specification of the layout, see below
 %   cfg.interactive  = 'no' or 'yes', make it interactive
 %   cfg.baseline     = 'yes','no' or [time1 time2] (default = 'no'), see FT_TIMELOCKBASELINE or FT_FREQBASELINE
 %   cfg.baselinetype = 'absolute', 'relative', 'relchange', 'normchange', 'db' or 'zscore' (default = 'absolute')
 %   cfg.colorbar     = 'yes', 'no' (default = 'no')
-%   cfg.colorbartext =  string indicating the text next to colorbar
+%   cfg.colorbartext = string indicating the text next to colorbar
 %
-% the layout defines how the channels are arranged. you can specify the
+% The layout defines how the channels are arranged. You can specify the
 % layout in a variety of ways:
 %  - you can provide a pre-computed layout structure (see prepare_layout)
 %  - you can give the name of an ascii layout file with extension *.mat
 %  - you can give the name of an electrode file
 %  - you can give an electrode definition, i.e. "elec" structure
 %  - you can give a gradiometer definition, i.e. "grad" structure
-% if you do not specify any of these and the data structure contains an
+% If you do not specify any of these and the data structure contains an
 % electrode or gradiometer structure, that will be used for creating a
-% layout. if you want to have more fine-grained control over the layout
+% layout. If you want to have more fine-grained control over the layout
 % of the subplots, you should create your own layout file.
 %
-% to facilitate data-handling and distributed computing you can use
+% To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
-% if you specify this option the input data will be read from a *.mat
+% If you specify this option the input data will be read from a *.mat
 % file on disk. this mat files should contain only a single variable named 'data',
 % corresponding to the input structure.
 %
 % See also FT_MULTIPLOTTFR, FT_TOPOPLOTTFR, FT_SINGLEPLOTTFR, FT_MOVIEPLOTER, FT_SOURCEMOVIE
 
-% Copyright (c) 2009, Ingrid Nieuwenhuis
-% Copyright (c) 2011, Jan-Mathijs Schoffelen, Robert Oostenveld, Cristiano Micheli
+% Copyright (c) 2009-2022, Ingrid Nieuwenhuis, Jan-Mathijs Schoffelen, Robert Oostenveld, Cristiano Micheli
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -93,6 +93,7 @@ data = ft_checkdata(data, 'datatype', {'timelock', 'freq'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'zlim',  'absmax',  'maxabs'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'zparam', 'parameter'});
 cfg = ft_checkconfig(cfg, 'deprecated', {'xparam'});
+cfg = ft_checkconfig(cfg, 'renamed', {'newfigure', 'figure'});
 
 % set the defaults
 cfg.xlim          = ft_getopt(cfg, 'xlim',          'maxmin');
@@ -100,6 +101,7 @@ cfg.ylim          = ft_getopt(cfg, 'ylim',          'maxmin');
 cfg.zlim          = ft_getopt(cfg, 'zlim',          'maxmin');
 cfg.parameter     = ft_getopt(cfg, 'parameter',     'powspctrm'); % use power as default
 cfg.inputfile     = ft_getopt(cfg, 'inputfile',     []);
+cfg.speed         = ft_getopt(cfg, 'speed',         1);
 cfg.samperframe   = ft_getopt(cfg, 'samperframe',   1);
 cfg.framespersec  = ft_getopt(cfg, 'framespersec',  5);
 cfg.framesfile    = ft_getopt(cfg, 'framesfile',    []);
@@ -107,11 +109,14 @@ cfg.moviefreq     = ft_getopt(cfg, 'moviefreq',     []);
 cfg.movietime     = ft_getopt(cfg, 'movietime',     []);
 cfg.movierpt      = ft_getopt(cfg, 'movierpt',      1);
 cfg.baseline      = ft_getopt(cfg, 'baseline',      'no');
+cfg.colormap      = ft_getopt(cfg, 'colormap',      'default');
 cfg.colorbar      = ft_getopt(cfg, 'colorbar',      'no');
 cfg.colorbartext  = ft_getopt(cfg, 'colorbartext',  '');
-cfg.renderer      = ft_getopt(cfg, 'renderer',      []); % let MATLAB decide on the default
 cfg.interactive   = ft_getopt(cfg, 'interactive',   'yes');
-dointeractive     = istrue(cfg.interactive);
+cfg.visible       = ft_getopt(cfg, 'visible',       'on');
+cfg.renderer      = ft_getopt(cfg, 'renderer',      []); % let MATLAB decide on the default
+
+dointeractive = istrue(cfg.interactive);
 
 xparam = 'time';
 if isfield(data, 'freq')
@@ -119,12 +124,12 @@ if isfield(data, 'freq')
 end
 
 % read or create the layout that will be used for plotting:
-tmpcfg = keepfields(cfg, {'layout', 'rows', 'columns', 'commentpos', 'scalepos', 'elec', 'grad', 'opto', 'showcallinfo'});
+tmpcfg = keepfields(cfg, {'layout', 'channel', 'rows', 'columns', 'commentpos', 'skipcomnt', 'scalepos', 'skipscale', 'projection', 'viewpoint', 'rotate', 'width', 'height', 'elec', 'grad', 'opto', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
 layout = ft_prepare_layout(tmpcfg, data);
 
 % apply optional baseline correction
 if ~strcmp(cfg.baseline, 'no')
-  tmpcfg = keepfields(cfg, {'baseline', 'baselinetype', 'parameter', 'showcallinfo'});
+  tmpcfg = keepfields(cfg, {'baseline', 'baselinetype', 'parameter', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
   data = ft_freqbaseline(tmpcfg, data);
   [cfg, data] = rollback_provenance(cfg, data);
 end
@@ -230,9 +235,25 @@ elseif ischar(cfg.zlim) && strcmp(cfg.zlim,'minzero')
   cfg.zlim(2)  = 0;
 end
 
-h = gcf;
-pos = get(gcf, 'position');
+% check if the colormap is in the proper format
+if ~isequal(cfg.colormap, 'default')
+  if ischar(cfg.colormap)
+    cfg.colormap = ft_colormap(cfg.colormap);
+  elseif iscell(cfg.colormap)
+    cfg.colormap = ft_colormap(cfg.colormap{:});
+  elseif isnumeric(cfg.colormap) && size(cfg.colormap,2)~=3
+    ft_error('cfg.colormap must be Nx3');
+  end
+  % the actual colormap will be set below
+end
+
+% open a new figure with the specified settings
+h = open_figure(keepfields(cfg, {'figure', 'position', 'visible', 'renderer'}));
 set(h, 'toolbar', 'figure');
+
+if ~isempty(cfg.colormap)
+  set(gcf,  'colormap', cfg.colormap);
+end
 
 if dointeractive
 
@@ -261,6 +282,8 @@ if dointeractive
   set(button_faster, 'position', [100 100 20 20]);
   set(button_faster, 'string', '+')
   set(button_faster, 'callback', @cb_zlim);
+
+  pos = get(h, 'position');
 
   sx = uicontrol('style', 'slider');
   set(sx, 'position', [20 5 pos(3)-160 20]);
@@ -303,7 +326,7 @@ if dointeractive
   opt.yparam   = yparam;
   opt.dat      = parameter;
   opt.zlim     = cfg.zlim;
-  opt.speed    = 1;
+  opt.speed    = cfg.speed;
   opt.cfg      = cfg;
   opt.sx       = sx; % slider freq
   opt.sy       = sy; % slider time
@@ -344,8 +367,11 @@ if dointeractive
   % from now it is safe to hand over the control to the callback function
   set(p, 'callback', @cb_playbutton);
 
+  % start playing immediately
+  cb_playbutton(p);
+
 else
-  % non interactive mode
+  % non-interactive mode
   [tmp, hs] = ft_plot_topo(chanx, chany, zeros(numel(chanx),1), 'mask', layout.mask, 'outline', layout.outline, 'interpmethod', 'v4');
   caxis(cfg.zlim);
   axis off;
@@ -415,15 +441,10 @@ else
 end
 set(gcf, 'NumberTitle', 'off');
 
-% set renderer if specified
-if ~isempty(cfg.renderer)
-  set(gcf, 'renderer', cfg.renderer)
-end
-
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
-ft_postamble previous   data
+ft_postamble previous data
 ft_postamble provenance
 ft_postamble savefig
 
@@ -440,16 +461,16 @@ end
 % subfunction
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_slider(h, eventdata)
-  opt = guidata(h);
+opt = guidata(h);
 
-  xdim = opt.timdim;
-  valx = get(opt.sx, 'value');
-  valx = round(valx*(size(opt.dat,xdim)-1))+1;
-  valx = min(valx, size(opt.dat,xdim));
-  valx = max(valx, 1);
-  if valx>size(opt.dat,opt.timdim)
-    valx = size(opt.dat,opt.timdim)-1;
-  end
+xdim = opt.timdim;
+valx = get(opt.sx, 'value');
+valx = round(valx*(size(opt.dat,xdim)-1))+1;
+valx = min(valx, size(opt.dat,xdim));
+valx = max(valx, 1);
+if valx>size(opt.dat,opt.timdim)
+  valx = size(opt.dat,opt.timdim)-1;
+end
 
 if length(size(opt.dat))>2
   ydim = 2;
@@ -495,7 +516,7 @@ if ~ishandle(h)
   return
 end
 opt = guidata(h);
-delta = opt.speed/size(opt.dat,opt.timdim);
+delta = opt.speed/size(opt.dat, opt.timdim);
 val = get(opt.sx, 'value');
 val = val + delta;
 % to avoid the slider to go out of range when the speed is too high
@@ -538,6 +559,5 @@ switch get(h, 'string')
     opt.speed = opt.speed*sqrt(2);
   case '-'
     opt.speed = opt.speed/sqrt(2);
-%     opt.speed = max(opt.speed, 1); % should not be smaller than 1
 end % switch
 guidata(h, opt);

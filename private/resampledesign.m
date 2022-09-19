@@ -46,7 +46,7 @@ function [resample] = resampledesign(cfg, design)
 %
 % See also FT_STATISTICS_MONTECARLO
 
-% Copyright (C) 2005-2011, Robert Oostenveld
+% Copyright (C) 2005-2020, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -206,29 +206,39 @@ elseif ~isempty(cfg.uvar) && strcmp(cfg.resampling, 'permutation')
     fprintf('repeated measurement in mutiple variables over %d levels\n', length(unitlevel));
     fprintf('number of repeated measurements in each level is '); fprintf('%d ', unitlen); fprintf('\n');
   end
+  fprintf('the maximum number of unique permutations is %d\n', prod(unitlen));
   
   if ischar(cfg.numrandomization) && strcmp(cfg.numrandomization, 'all')
     % create all possible permutations by systematic assignment
     if any(unitlen~=2)
+      % it would be possible to also implement it for other cases
+      % but so far ther has not been a concrete need for it
       ft_error('cfg.numrandomization=''all'' is only supported for two repeated measurements');
     end
     Nperm = 2^(length(unitlevel));
-    fprintf('creating all possible permutations (%d)\n', 2^(length(unitlevel)));
     resample = zeros(Nperm, Nrepl);
     for i=1:Nperm
       flip  = dec2bin( i-1, length(unitlevel));
       for j=1:length(unitlevel)
-        if     strcmp('0', flip(j)),
+        if     strcmp('0', flip(j))
           resample(i, unitsel{j}(1)) = unitsel{j}(1);
           resample(i, unitsel{j}(2)) = unitsel{j}(2);
-        elseif strcmp('1', flip(j)),
+        elseif strcmp('1', flip(j))
           resample(i, unitsel{j}(1)) = unitsel{j}(2);
           resample(i, unitsel{j}(2)) = unitsel{j}(1);
         end
       end
     end
+    fprintf('generated all %d possible permutations\n', 2^(length(unitlevel)));
     
   elseif ~ischar(cfg.numrandomization)
+    % see https://github.com/fieldtrip/fieldtrip/issues/1313
+    if cfg.numrandomization > prod(unitlen)
+      ft_warning('the number of randomizations (%d) is larger than the maximum number of unique permutations (%d), better use cfg.numrandomization=''all''', cfg.numrandomization, prod(unitlen))
+    elseif cfg.numrandomization/prod(unitlen) > 0.5
+      ft_warning('the number of randomizations (%d) is close to the maximum number of unique permutations (%d), better use cfg.numrandomization=''all''', cfg.numrandomization, prod(unitlen))
+    end
+    
     % create the desired number of permutations by random shuffling
     resample = zeros(cfg.numrandomization, Nrepl);
     for i=1:cfg.numrandomization
@@ -236,9 +246,10 @@ elseif ~isempty(cfg.uvar) && strcmp(cfg.resampling, 'permutation')
         resample(i, unitsel{j}) = unitsel{j}(randperm(length(unitsel{j})));
       end
     end
+    fprintf('generated %d random permutations\n', cfg.numrandomization);
   end
   
-elseif length(cfg.uvar)==1 && strcmp(cfg.resampling, 'bootstrap') && isempty(cfg.cvar),
+elseif length(cfg.uvar)==1 && strcmp(cfg.resampling, 'bootstrap') && isempty(cfg.cvar)
   % randomly draw with replacement, keeping the number of elements the same in each class
   % only the test under the null-hypothesis (h0) is explicitely implemented here
   % but the h1 test can be achieved using a control variable
@@ -256,14 +267,14 @@ elseif length(cfg.uvar)==1 && strcmp(cfg.resampling, 'bootstrap') && isempty(cfg
   %sanity check on number of repetitions
   if any(Nrep~=Nrep(1)), ft_error('all units of observation should have an equal number of repetitions'); end
   
-  if max(units(:))<20,
+  if max(units(:))<20
     ft_warning('fewer than 20 units warrants explicit checking of double occurrences of ''bootstraps''');
     checkunique = 1;
   else
     checkunique = 0;
   end
   
-  if ~checkunique,
+  if ~checkunique
     for i=1:cfg.numrandomization
       tmp           = randsample(1:Nrepl/Nrep(1), Nrepl/Nrep(1), true);
       for k=1:size(indx,1)
@@ -353,4 +364,3 @@ if strcmp(efficient, 'yes')
     fprintf('the reduced set has different relative frequencies of the conditions, retaining the original permutations\n')
   end
 end % if efficient
-

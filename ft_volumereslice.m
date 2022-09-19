@@ -18,10 +18,10 @@ function [resliced] = ft_volumereslice(cfg, mri)
 % also be interpolated on a regular voxel grid.
 %
 % For the interpolation methods you should specify
-%   cfg.resolution = number, in physical units
-%   cfg.xrange     = [min max], in physical units
-%   cfg.yrange     = [min max], in physical units
-%   cfg.zrange     = [min max], in physical units
+%   cfg.resolution = number, in units of distance (e.g. mm)
+%   cfg.xrange     = [min max], in units of distance (e.g. mm)
+%   cfg.yrange     = [min max], in units of distance (e.g. mm)
+%   cfg.zrange     = [min max], in units of distance (e.g. mm)
 % or alternatively with
 %   cfg.dim        = [nx ny nz], size of the volume in each direction
 %
@@ -39,7 +39,7 @@ function [resliced] = ft_volumereslice(cfg, mri)
 %
 % See also FT_VOLUMEREALIGN, FT_VOLUMEDOWNSAMPLE, FT_SOURCEINTERPOLATE, FT_SOURCEPLOT
 
-% Copyright (C) 2010-2017, Robert Oostenveld & Jan-Mathijs Schoffelen
+% Copyright (C) 2010-2020, Robert Oostenveld & Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -79,7 +79,7 @@ end
 
 % check if the input data is valid for this function and ensure that the structures correctly describes a volume
 if isfield(mri, 'inside')
-  mri = ft_checkdata(mri, 'datatype', 'volume', 'feedback', 'yes', 'hasunit', 'yes', 'inside', 'logical');
+  mri = ft_checkdata(mri, 'datatype', 'volume', 'feedback', 'yes', 'hasunit', 'yes', 'insidestyle', 'logical');
 else
   mri = ft_checkdata(mri, 'datatype', 'volume', 'feedback', 'yes', 'hasunit', 'yes');
 end
@@ -97,21 +97,21 @@ else
   cfg.xrange     = ft_getopt(cfg, 'xrange', []);
   cfg.yrange     = ft_getopt(cfg, 'yrange', []);
   cfg.zrange     = ft_getopt(cfg, 'zrange', []);
-  cfg.dim        = ft_getopt(cfg, 'dim', []); % alternatively use ceil(mri.dim./cfg.resolution)
+  cfg.dim        = ft_getopt(cfg, 'dim', []);
   
   if isfield(mri, 'coordsys')
     % use some prior knowledge to optimize the location of the bounding box
     % with respect to the origin of the coordinate system
     switch mri.coordsys
-      case {'ctf' '4d' 'bti'}
+      case {'ctf', '4d', 'bti', 'eeglab'}
         xshift = 30./cfg.resolution;
         yshift = 0;
         zshift = 40./cfg.resolution;
-      case {'itab' 'neuromag'}
+      case {'neuromag', 'itab'}
         xshift = 0;
         yshift = 30./cfg.resolution;
         zshift = 40./cfg.resolution;
-      case {'acpc' 'spm' 'mni' 'tal'}
+      case {'acpc', 'spm', 'mni', 'tal'}
         ft_warning('FIXME, the bounding box needs a better default');
         xshift = 0;
         yshift = 0;
@@ -153,7 +153,7 @@ end % if method~=fip
 
 if cfg.downsample~=1
   % optionally downsample the anatomical and/or functional volumes
-  tmpcfg = keepfields(cfg, {'downsample', 'showcallinfo'});
+  tmpcfg = keepfields(cfg, {'downsample', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
   mri = ft_volumedownsample(tmpcfg, mri);
   % restore the provenance information
   [cfg, mri] = rollback_provenance(cfg, mri);

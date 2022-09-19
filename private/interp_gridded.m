@@ -12,7 +12,7 @@ function varargout = interp_gridded(transform, val, pos_to, varargin)
 %   val        3-D matrix with the values in the volume
 %   pos        Mx3 matrix with the vertex positions onto which the data should
 %              be interpolated
-% 
+%
 % Optional arguments are specified in key-value pairs and can be
 %    projmethod   = 'nearest', 'sphere_avg', 'sphere_weighteddistance'
 %    sphereradius = number
@@ -75,7 +75,7 @@ if isempty(distmat)
         distmat = distmat(:, inside);
       end
 
-    case {'sphere_avg', 'sphere_weighteddistance', 'sphere_weightedprojection'}
+    case {'sphere_avg', 'sphere_weighteddistance'}
       if isempty(sphereradius)
         ft_error('sphereradius should be specified');
       end

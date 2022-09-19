@@ -2,7 +2,6 @@ function test_ft_plot_vector
 
 % MEM 1gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_plot_vector
 
 mask = zeros(1, 100)

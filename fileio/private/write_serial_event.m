@@ -80,7 +80,7 @@ end
 %         % set s to the (first) matching port if present (and open if necessary)
 %         if ~isempty(i2)
 %           s = temp(i2(1));
-%           if ~strcmp(s.Status,'open'), fopen(s); end;
+%           if ~strcmp(s.Status,'open'), fopen(s); end
 %         end
 %       end
 %     end
@@ -88,7 +88,7 @@ end
 %     % create, configure a serial port object if necessary and open the port
 %     if ~isa(s,'serial')
 %       s = serial(port);
-%       if ~isempty(opt) && iscell(opt), s = set(s,opt); end;
+%       if ~isempty(opt) && iscell(opt), s = set(s,opt); end
 %       fopen(s);
 %     end
 % 

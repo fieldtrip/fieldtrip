@@ -80,8 +80,8 @@ run_title    = char(fread(fid,256,'uint8')');
 instruments  = char(fread(fid,32,'uint8')');
 coll_desc    = char(fread(fid,32,'uint8')');
 subj_id      = char(fread(fid,32,'uint8')');
-operator     = char(fread(fid,32,'uint8')') ;
-sensFilename = char(fread(fid,60,'uint8')') ;
+operator     = char(fread(fid,32,'uint8')');
+sensFilename = char(fread(fid,60,'uint8')');
 
 % not nececssary to seek, the file pointer is already at the desired location
 % fseek(fid,1836,'bof');

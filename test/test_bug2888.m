@@ -2,7 +2,6 @@ function test_bug2888
 
 % WALLTIME 00:10:00
 % MEM 1gb
-
 % DEPENDENCY ft_filetype ft_read_header dataset2files
 
 filename = {

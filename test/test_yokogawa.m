@@ -1,8 +1,7 @@
 function test_yokogawa
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY hasyokogawa read_yokogawa_data read_yokogawa_event read_yokogawa_header yokogawa2grad yokogawa2headmodel
 
 % this script tests some files from the three different types of yokogawa MEG systems

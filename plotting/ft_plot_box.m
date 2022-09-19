@@ -28,7 +28,7 @@ function [varargout] = ft_plot_box(position, varargin)
 %
 % See also FT_PLOT_LINE, FT_PLOT_CROSSHAIR
 
-% Copyrights (C) 2009-2011, Robert Oostenveld
+% Copyrights (C) 2009-2022, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -48,8 +48,6 @@ function [varargout] = ft_plot_box(position, varargin)
 %
 % $Id$
 
-ws = warning('on', 'MATLAB:divideByZero');
-
 % get the optional input arguments
 hpos        = ft_getopt(varargin, 'hpos');
 vpos        = ft_getopt(varargin, 'vpos');
@@ -65,10 +63,10 @@ parent      = ft_getopt(varargin, 'parent', []);
 
 % color management
 if ischar(facecolor) && exist([facecolor '.m'], 'file')
-	facecolor = eval(facecolor);
+	facecolor = feval(facecolor);
 end
 if ischar(edgecolor) && exist([edgecolor '.m'], 'file')
-	edgecolor = eval(edgecolor);
+	edgecolor = feval(edgecolor);
 end
 
 % convert the two cornerpoints into something that the patch function understands
@@ -147,6 +145,3 @@ end
 if nargout == 1
   varargout{1} = h;
 end
-
-warning(ws); % revert to original state
-

@@ -42,7 +42,7 @@ else
   % colormap handling
   cmap = varargin{1};
   if ischar(cmap)
-    cmap = colormap(cmap);
+    cmap = ft_colormap(cmap);
   elseif size(cmap,2)~=3
     error('invalid specification of colormap, should be nx3');
   end

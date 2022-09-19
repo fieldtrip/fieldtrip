@@ -95,7 +95,7 @@ for index = 1:length(cheetahObjects)
     fprintf('FAILED to open stream for %s', char(cheetahObjects(index)));
     break;
   end
-end;
+end
 if succeeded == 1
   disp 'PASSED open stream for all current objects'
 end

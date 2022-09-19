@@ -34,6 +34,7 @@ function [shape] = ft_read_headshape(filename, varargin)
 %   'vtk'          Visualization ToolKit file format, for use with Paraview
 %   'vtk_xml'      Visualization ToolKit file format
 %   'tck'          Mrtrix track file
+%   'trk'          Trackvis trk file
 %   'mne_*'        MNE surface description in ASCII format ('mne_tri') or MNE source grid in ascii format, described as 3D points ('mne_pos')
 %   'obj'          Wavefront .obj file obtained with the structure.io
 %   'off'
@@ -43,6 +44,7 @@ function [shape] = ft_read_headshape(filename, varargin)
 %   '4d_*'
 %   'neuromag_*'
 %   'yokogawa_*'
+%   'yorkinstruments_hdf5'
 %   'polhemus_*'
 %   'freesurfer_*'
 %   'mne_source'
@@ -201,13 +203,19 @@ end % if iscell
 
 % checks if there exists a .jpg file of 'filename'
 [pathstr,name]  = fileparts(filename);
-if exist(fullfile(pathstr,[name,'.jpg'])) && useimage
-  image    = fullfile(pathstr,[name,'.jpg']);
-  hasimage = true;
+if useimage
+  if exist(fullfile(pathstr,[name,'.jpg']), 'file')
+    image    = fullfile(pathstr,[name,'.jpg']);
+    hasimage = true;
+  elseif exist(fullfile(pathstr,[name,'.png']), 'file')
+    image    = fullfile(pathstr,[name,'.png']);
+    hasimage = true;
+  else
+    hasimage = false;
+  end
 else
   hasimage = false;
 end
-
 
 % optionally get the data from the URL and make a temporary local copy
 filename = fetch_url(filename);
@@ -258,9 +266,9 @@ switch fileformat
     orig = read_ctf_shape(filename);
     shape.pos = orig.pos;
     
-    % The file also contains fiducial information, but those are in MRI voxels and 
+    % The file also contains fiducial information, but those are in MRI voxels and
     % inconsistent with the headshape itself.
-    % 
+    %
     % shape.fid.label = {'NASION', 'LEFT_EAR', 'RIGHT_EAR'};
     % shape.fid.pos = zeros(0,3); % start with an empty array
     % for i = 1:numel(shape.fid.label)
@@ -345,7 +353,7 @@ switch fileformat
     filename    = strrep(filename, '.surf.', '.shape.');
     filename    = strrep(filename, '.topo.', '.shape.');
     filename    = strrep(filename, '.coord.', '.shape.');
-
+    
     [p,f,e]     = fileparts(filename);
     tok         = tokenize(f, '.');
     if length(tok)>2
@@ -383,7 +391,7 @@ switch fileformat
     else
       seltopo = 1;
     end
-      
+    
     % recursively call ft_read_headshape
     tmp1 = ft_read_headshape(coordfiles{selcoord});
     tmp2 = ft_read_headshape(topofiles{seltopo});
@@ -839,7 +847,35 @@ switch fileformat
     end
     
     fclose(fid);
-    
+   
+   case 'yorkinstruments_hdf5'
+    acquisition='default';
+    try
+       shape.pos=transpose(h5read(filename,  '/geometry/head_shape/head_shape'));
+    catch
+      error('Headshape data not found.');
+    end
+    shape.unit='mm';
+    temp=h5info(filename,  '/geometry/fiducials/');
+    Nfids=length(temp.Groups);
+      for i=1:Nfids
+      [null, shape.fid.label{i}, null]= fileparts(temp.Groups(i).Name);
+      shape.fid.pos(i,1:3)=h5read(filename, strcat('/geometry/fiducials/',shape.fid.label{i} ,'/location'));
+      end
+    if isempty(coordsys)
+      coordsys='dewar'
+    end
+    if strcmp(coordsys,'dewar')
+      try
+         tCCStoMegscanScs = h5read(filename,[strcat('/acquisitions/',char(string(acquisition))) '/ccs_to_scs_transform']);
+         T = maketform('affine',tCCStoMegscanScs);
+         shape.pos=tforminv(T,shape.pos(:,1),shape.pos(:,2),shape.pos(:,3));
+         shape.fid.pos=tforminv(T,shape.fid.pos(:,1),shape.fid.pos(:,2),shape.fid.pos(:,3));
+      catch
+        error('No head to dewar transform available in hdf5 file');
+      end
+    end
+
   case 'ply'
     [vert, face] = read_ply(filename);
     shape.pos = [vert.x vert.y vert.z];
@@ -949,51 +985,96 @@ switch fileformat
   case 'obj'
     ft_hastoolbox('wavefront', 1);
     % Only tested for structure.io .obj thus far
-    [vertex, faces, texture, ~] = read_obj_new(filename);
+    [pos, tri, texture, textureIdx] = read_obj_new(filename);
     
-    shape.pos   = vertex;
-    shape.pos   = shape.pos - repmat(sum(shape.pos)/length(shape.pos),...
-        [length(shape.pos),1]); %centering vertices
-    shape.tri   = faces(1:end-1,:,:); % remove the last row which is zeros
-    
-    if hasimage      
-      % Refines the mesh and textures to increase resolution of the colormapping
-      [shape.pos, shape.tri, texture] = refine(shape.pos, shape.tri,...
-          'banks', texture);
-      
-      picture = imread(image);
-      color   = (zeros(length(shape.pos),3));
-      for i=1:length(shape.pos)
-        color(i,1:3) = picture(floor((1-texture(i,2))*length(picture)),...
-            1+floor(texture(i,1)*length(picture)),1:3);
-      end
-      
-      % If color is specified as 0-255 rather than 0-1 correct by dividing
-      % by 255
-      if range(color(:)) > 1
-          color = color./255;
-      end
-      
-      shape.color = color;
-
-    elseif size(vertex,2)==6
-      % the vertices also contain RGB colors
-      
-      color = vertex(:,4:6);
-      % If color is specified as 0-255 rather than 0-1 correct by dividing
-      % by 255
-      if range(color(:)) > 1
-          color = color./255;
-      end
-      
-      shape.color = color;
+    % check if the texture is defined per vertex, in which case the texture can be refined below
+    if size(texture, 1)==size(pos, 1)
+      texture_per_vert = true;
+    else
+      texture_per_vert = false;
     end
     
+    % remove the triangles with 0's first
+    allzeros = sum(tri==0,2)==3;
+    tri(allzeros, :)        = [];
+    textureIdx(allzeros, :) = [];
+    
+    % check whether all vertices belong to a triangle. If not, then prune the vertices and keep the faces consistent.
+    utriIdx = unique(tri(:));
+    remove  = setdiff((1:size(pos, 1))', utriIdx);
+    if ~isempty(remove)
+      [pos, tri] = remove_vertices(pos, tri, remove);
+      if texture_per_vert
+        % also remove the removed vertices from the texture
+        texture(remove, :) = [];
+      end
+    end
+    
+    if hasimage
+      % there is an image with color information
+
+      if texture_per_vert
+        % Refines the mesh and textures to increase resolution of the colormapping
+        [pos, tri, texture] = refine(pos, tri, 'banks', texture);
+        
+        picture = imread(image);
+        color   = zeros(size(pos, 1), 3);
+        for i = 1:size(pos, 1)
+          color(i,1:3) = picture(floor((1-texture(i,2))*length(picture)),1+floor(texture(i,1)*length(picture)),1:3);
+        end
+      else
+        % do the texture to color mapping in a different way, without additional refinement
+        picture      = flip(imread(image),1);
+        [sy, sx, sz] = size(picture);
+        picture      = reshape(picture, sy*sx, sz);
+        
+        % make image 3D if grayscale
+        if sz == 1
+          picture = repmat(picture, 1, 3);
+        end
+        [dum, ix]  = unique(tri);
+        textureIdx = textureIdx(ix);
+        
+        % get the indices into the image
+        x     = abs(round(texture(:,1)*(sx-1)))+1;
+        y     = abs(round(texture(:,2)*(sy-1)))+1;
+        xy    = sub2ind([sy sx], y, x);
+        sel   = xy(textureIdx);
+        color = double(picture(sel,:))/255;
+      end
+      
+      % If color is specified as 0-255 rather than 0-1 correct by dividing by 255
+      if range(color(:)) > 1
+        color = color./255;
+      end
+      
+    elseif size(pos, 2)==6
+      % the vertices also contain RGB colors
+      
+      color = pos(:, 4:6);
+      pos   = pos(:, 1:3);
+      
+      % If color is specified as 0-255 rather than 0-1 correct by dividing by 255
+      if range(color(:)) > 1
+        color = color./255;
+      end
+      
+    else
+      % there is no color information
+      color = [];
+    end
+    
+    shape.pos   = pos - repmat(mean(pos,1), [size(pos, 1),1]); % centering vertices
+    shape.tri   = tri;
+    if ~isempty(color)
+      shape.color = color;
+    end
+
   case 'vtk'
     [pos, tri] = read_vtk(filename);
     shape.pos = pos;
     shape.tri = tri;
-  
+    
   case 'vtk_xml'
     data = read_vtk_xml(filename);
     shape.orig = data;
@@ -1001,11 +1082,14 @@ switch fileformat
     if isfield(data, 'Lines')
       shape.line = data.Lines;
     end
-  
+    
   case 'mrtrix_tck'
     ft_hastoolbox('mrtrix', 1);
     shape = read_tck(filename);
-  
+    
+  case 'trackvis_trk'
+    shape = read_trk(filename);
+    
   case 'off'
     [pos, plc] = read_off(filename);
     shape.pos  = pos;
@@ -1051,10 +1135,10 @@ switch fileformat
   case 'tet'
     % the toolbox from Gabriel Peyre has a function for this
     ft_hastoolbox('toolbox_graph', 1);
-    [vertex, face] = read_tet(filename);
+    [vertexline, face] = read_tet(filename);
     %     'vertex' is a '3 x nb.vert' array specifying the position of the vertices.
     %     'face' is a '4 x nb.face' array specifying the connectivity of the tet mesh.
-    shape.pos = vertex';
+    shape.pos = vertexline';
     shape.tet = face';
     
   case 'tetgen_ele'
@@ -1188,10 +1272,10 @@ switch fileformat
     shape.fid.pos   = elec.chanpos;
     shape.fid.label = elec.label;
     
-    npos = read_asa(filename, 'NumberHeadShapePoints=', '%d');
+    npos = read_ini(filename, 'NumberHeadShapePoints=', '%d');
     if ~isempty(npos) && npos>0
-      origunit = read_asa(filename, 'UnitHeadShapePoints', '%s', 1);
-      pos = read_asa(filename, 'HeadShapePoints', '%f', npos, ':');
+      origunit = read_ini(filename, 'UnitHeadShapePoints', '%s', 1);
+      pos = read_ini(filename, 'HeadShapePoints', '%f', npos, ':');
       pos = ft_scalingfactor(origunit, 'mm')*pos;
       
       shape.pos = pos;
@@ -1208,16 +1292,55 @@ switch fileformat
     shape.pos = pos(:,1:3); % vertex positions
     shape.nrm = pos(:,4:6); % vertex normals
     shape.tri = tri;
+
+  case 'duneuro_dgf'
+    lines = readlines(filename);
+    lines = cellstr(lines);
+    % remove comments
+    sel = startsWith(lines, '#');
+    lines(sel) = [];
+    % remove empty lines
+    sel = cellfun(@isempty, lines);
+    lines(sel) = [];
+    
+    vertexline = find(strcmp(lines, 'Vertex'));
+    cubeline   = find(strcmp(lines, 'Cube'));
+    paramline  = find(startsWith(lines, 'parameters'));
+    
+    % parse this line to determine the number of parameters, and thereby the number of additional columns
+    numparam = sscanf(lines{paramline}, 'parameters %d');
+    
+    npos = cubeline - vertexline - 1;
+    shape.pos = nan(npos, 3);
+    for i=1:npos
+      shape.pos(i,:) = str2num(lines{vertexline+i});
+    end
+    
+    nhex = length(lines)-paramline;
+    shape.hex = nan(nhex, 8+numparam);
+    for i=1:nhex
+      shape.hex(i,:) = str2num(lines{paramline+i});
+    end
+    
+    if numparam==1
+      % assume that this is the tissue class
+      shape.tissue = shape.hex(:,9);
+      shape.tissue = shape.tissue + 1; % this should be one-offset
+    end
+    
+    % remove the parameter columns
+    shape.hex = shape.hex(:,1:8);
+    shape.hex = shape.hex + 1; % this should be one-offset
+
     
   otherwise
     % try reading it from an electrode of volume conduction model file
     success = false;
     
     if ~success
-      % try reading it as electrode positions
-      % and treat those as fiducials
+      % try reading it as electrode positions and treat those as fiducials
       try
-        elec = ft_read_sens(filename);
+        elec = ft_read_sens(filename, 'senstype', 'eeg');
         if ~ft_senstype(elec, 'eeg')
           ft_error('headshape information can not be read from MEG gradiometer file');
         else
@@ -1280,4 +1403,3 @@ shape = fixpos(shape);
 
 % ensure that the numerical arrays are represented in double precision and not as integers
 shape = ft_struct2double(shape);
-end

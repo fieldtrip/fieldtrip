@@ -36,7 +36,7 @@ else
   dim      = [];
 end
 
-if numel(varargin>=1)
+if numel(varargin)>=1
   flag = varargin{1};
 else
   flag = 1;

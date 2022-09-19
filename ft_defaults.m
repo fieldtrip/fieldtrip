@@ -14,16 +14,17 @@ function ft_defaults
 %   ft_default.checkconfig       = string, can be 'pedantic', 'loose', 'silent' (default = 'loose')
 %   ft_default.checkpath         = string, can be 'pedantic', 'once', 'no' (default = 'pedantic')
 %   ft_default.checksize         = number in bytes, can be inf (default = 1e5)
+%   ft_default.showlogo          = string, can be 'yes' or 'no' (default = 'yes')
 %   ft_default.showcallinfo      = string, can be 'yes' or 'no' (default = 'yes')
+%   ft_default.trackcallinfo     = string, can be 'yes' or 'no' (default = 'yes')
 %   ft_default.trackconfig       = string, can be 'cleanup', 'report', 'off' (default = 'off')
 %   ft_default.trackusage        = false, or string with salt for one-way encryption of identifying information (by default this is enabled and an automatic salt is created)
 %   ft_default.trackdatainfo     = string, can be 'yes' or 'no' (default = 'no')
-%   ft_default.trackcallinfo     = string, can be 'yes' or 'no' (default = 'yes')
 %   ft_default.outputfilepresent = string, can be 'keep', 'overwrite', 'error' (default = 'overwrite')
 %   ft_default.debug             = string, can be 'display', 'displayonerror', 'displayonsuccess', 'save', 'saveonerror', saveonsuccess' or 'no' (default = 'no')
-%   ft_default.toolbox.signal    = string, can be 'compat' or 'matlab' (default = 'compat')
-%   ft_default.toolbox.stats     = string, can be 'compat' or 'matlab' (default = 'compat')
-%   ft_default.toolbox.images    = string, can be 'compat' or 'matlab' (default = 'compat')
+%   ft_default.toolbox.signal    = string, can be 'compat' or 'matlab' (default is automatic, see below)
+%   ft_default.toolbox.stats     = string, can be 'compat' or 'matlab' (default is automatic, see below)
+%   ft_default.toolbox.images    = string, can be 'compat' or 'matlab' (default is automatic, see below)
 %   ft_default.reproducescript   = string, directory to which the script and intermediate data are written (default = [])
 %
 % If you want to overrule these default settings, you can add something like this in your startup.m script
@@ -33,16 +34,20 @@ function ft_defaults
 %   ft_default.option2 = value2
 %
 % The toolbox option for signal, stats and images allows you to specify whether you
-% want to use a compatible drop-in to be used for these MathWorks toolboxes, or the
-% original version from MathWorks.  The default is 'compat', which has the advantage
-% that you do not need a license for these toolboxes.
+% want to use the original version from MathWorks or a compatible drop-in to be used.
+% When you use the Radboud University license server, i.e. at the Donders, the
+% default is 'compat'. This has the advantage that you do not need a license for
+% these toolboxes; we do not have that many licenses and parallel computations on our
+% Donders compute cluster would otherwise use all licenses. In all other cases, the
+% default is 'matlab' when the toolbox is available, and 'compat' when it is not
+% available.
 %
-% See also FT_HASTOOLBOX, FT_CHECKCONFIG, FT_TRACKUSAGE
+% See also FT_HASTOOLBOX, FT_CHECKCONFIG, FT_TRACKUSAGE, LICENSE
 
 % undocumented options
 %   ft_default.siunits        = 'yes' or 'no'
 
-% Copyright (C) 2009-2018, Robert Oostenveld
+% Copyright (C) 2009-2022, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -84,7 +89,7 @@ end
 fieldtripprefs = fullfile(prefdir, 'fieldtripprefs.mat');
 if exist(fieldtripprefs, 'file')
   prefs       = load(fieldtripprefs); % the file contains multiple fields
-  ft_default  = mergeconfig(ft_default, prefs);
+  ft_default  = mergestruct(ft_default, prefs);
 end
 
 % Set the defaults in a global variable, ft_checkconfig will copy these over into the local configuration.
@@ -95,6 +100,7 @@ if ~isfield(ft_default, 'trackconfig'),       ft_default.trackconfig    = 'off';
 if ~isfield(ft_default, 'checkconfig'),       ft_default.checkconfig    = 'loose';    end % pedantic, loose, silent
 if ~isfield(ft_default, 'checkpath'),         ft_default.checkpath      = 'pedantic'; end % pedantic, once, no
 if ~isfield(ft_default, 'checksize'),         ft_default.checksize      = 1e5;        end % number in bytes, can be inf
+if ~isfield(ft_default, 'showlogo'),          ft_default.showlogo       = 'yes';      end % yes or no, this is relevant for SPM and EEGLAB
 if ~isfield(ft_default, 'showcallinfo'),      ft_default.showcallinfo   = 'yes';      end % yes or no, this is used in ft_pre/postamble_provenance
 if ~isfield(ft_default, 'debug'),             ft_default.debug          = 'no';       end % no, save, saveonerror, display, displayonerror, this is used in ft_pre/postamble_debug
 if ~isfield(ft_default, 'outputfilepresent'), ft_default.outputfilepresent = 'overwrite'; end % can be keep, overwrite, error
@@ -102,12 +108,33 @@ if ~isfield(ft_default, 'outputfilepresent'), ft_default.outputfilepresent = 'ov
 % These options allow to disable parts of the provenance
 if ~isfield(ft_default, 'trackcallinfo'),  ft_default.trackcallinfo  = 'yes';    end % yes or no
 if ~isfield(ft_default, 'trackdatainfo'),  ft_default.trackdatainfo  = 'no';     end % yes or no
+if ~isfield(ft_default, 'tracktimeinfo'),  ft_default.tracktimeinfo  = 'yes';    end % yes or no
+if ~isfield(ft_default, 'trackmeminfo')
+  if ispc()
+    % don't track memory usage info under Windows; this does not work (yet)
+    ft_default.trackmeminfo   = 'no';
+  else
+    ft_default.trackmeminfo   = 'yes';
+  end
+end
+
+if strcmp(license(), '38957')
+  % within the Donders and Radboud University the default is compat, since we do not have that many licenses
+  default_images = 'compat';
+  default_stats  = 'compat';
+  default_signal = 'compat';
+else
+  % in this case it will still check whether the Mathworks toolbox is available and if not, the compatible version will be added
+  default_images = 'matlab';
+  default_stats  = 'matlab';
+  default_signal = 'matlab';
+end
 
 % These options allow to prefer the MATLAB toolbox implementations ('matlab') over the drop-in replacements ('compat').
 if ~isfield(ft_default, 'toolbox'), ft_default.toolbox  = []; end
-if ~isfield(ft_default.toolbox, 'images'), ft_default.toolbox.images  = 'compat'; end % matlab or compat
-if ~isfield(ft_default.toolbox, 'stats') , ft_default.toolbox.stats   = 'compat'; end % matlab or compat
-if ~isfield(ft_default.toolbox, 'signal'), ft_default.toolbox.signal  = 'compat'; end % matlab or compat
+if ~isfield(ft_default.toolbox, 'images'), ft_default.toolbox.images  = default_images; end % matlab or compat
+if ~isfield(ft_default.toolbox, 'stats') , ft_default.toolbox.stats   = default_stats;  end % matlab or compat
+if ~isfield(ft_default.toolbox, 'signal'), ft_default.toolbox.signal  = default_signal; end % matlab or compat
 
 % Some people mess up their path settings and then have stuff on the path that should not be there.
 % The following will issue a warning
@@ -138,6 +165,36 @@ else
   prevcleanup = {};
 end
 
+if strcmp(ft_default.showlogo, 'yes')
+  % show a welcome message
+  fprintf([
+    '-------------------------------------------------------------------------------------------' ...
+    '\nFieldTrip is developed by members and collaborators of the Donders Institute for Brain,' ...
+    '\nCognition and Behaviour at Radboud University, Nijmegen, the Netherlands.' ...
+    '\n'...
+    '\n                          --------------------------'...
+    '\n                        /                            \\'...
+    '\n                     ------------------------------------'...
+    '\n                    /                                    \\'...
+    '\n          -------------------------------------------------'...
+    '\n         /                            /\\/\\/\\/\\/\\ '...
+    '\n         ---------------------------------------------------'...
+    '\n                  |        F  i  e  l  d  T  r  i  p       |'...
+    '\n                  ------------------------------------------'...
+    '\n                   \\                                      /'...
+    '\n                     ------------------------------------'...
+    '\n                          \\            /'...
+    '\n                            ----------'...
+    '\n' ...
+    '\nPlease cite the FieldTrip reference paper when you have used FieldTrip in your study.' ...
+    '\nRobert Oostenveld, Pascal Fries, Eric Maris, and Jan-Mathijs Schoffelen. FieldTrip: Open' ...
+    '\nSource Software for Advanced Analysis of MEG, EEG, and Invasive Electrophysiological Data.' ...
+    '\nComputational Intelligence and Neuroscience, vol. 2011, Article ID 156869, 9 pages, 2011.' ...
+    '\ndoi:10.1155/2011/156869.' ...
+    '\n-------------------------------------------------------------------------------------------\n'
+    ]);
+end % if showlogo
+
 % Ensure that the path containing ft_defaults is on the path.
 % This allows people to do "cd path_to_fieldtrip; ft_defaults"
 ftPath = fileparts(mfilename('fullpath')); % get the full path to this function, strip away 'ft_defaults'
@@ -149,7 +206,7 @@ end
 
 if ~isdeployed
 
-  if isempty(which('ft_test')) || isempty(which('ft_notice'))
+  if isempty(which('ft_hastoolbox')) || isempty(which('ft_warning'))
     % the fieldtrip/utilities directory contains the ft_hastoolbox and ft_warning
     % functions, which are required for the remainder of this script
     addpath(fullfile(fileparts(which('ft_defaults')), 'utilities'));
@@ -190,6 +247,8 @@ if ~isdeployed
     % external/signal contains alternative implementations of some signal processing functions
     if ~ft_platform_supports('signal') || ~strcmp(ft_default.toolbox.signal, 'matlab') || ~ft_hastoolbox('signal')
       addpath(fullfile(fileparts(which('ft_defaults')), 'external', 'signal'));
+    else
+      rmpath(fullfile(fileparts(which('ft_defaults')), 'external', 'signal'));
     end
   end
 
@@ -197,6 +256,8 @@ if ~isdeployed
     % external/stats contains alternative implementations of some statistics functions
     if ~ft_platform_supports('stats') || ~strcmp(ft_default.toolbox.stats, 'matlab') || ~ft_hastoolbox('stats')
       addpath(fullfile(fileparts(which('ft_defaults')), 'external', 'stats'));
+    else
+      rmpath(fullfile(fileparts(which('ft_defaults')), 'external', 'stats'));
     end
   end
 
@@ -204,6 +265,8 @@ if ~isdeployed
     % external/images contains alternative implementations of some image processing functions
     if ~ft_platform_supports('images') || ~strcmp(ft_default.toolbox.images, 'matlab') || ~ft_hastoolbox('images')
       addpath(fullfile(fileparts(which('ft_defaults')), 'external', 'images'));
+    else
+      rmpath(fullfile(fileparts(which('ft_defaults')), 'external', 'images'));
     end
   end
 
@@ -240,6 +303,14 @@ if ~isdeployed
     if ft_platform_supports('matlabversion', -inf, '2019b'), ft_hastoolbox('compat/matlablt2020a', 3, 1); end
     if ft_platform_supports('matlabversion', -inf, '2020a'), ft_hastoolbox('compat/matlablt2020b', 3, 1); end
     if ft_platform_supports('matlabversion', -inf, '2020b'), ft_hastoolbox('compat/matlablt2021a', 3, 1); end
+    if ft_platform_supports('matlabversion', -inf, '2021a'), ft_hastoolbox('compat/matlablt2021b', 3, 1); end
+    if ft_platform_supports('matlabversion', -inf, '2021b'), ft_hastoolbox('compat/matlablt2022a', 3, 1); end
+    if ft_platform_supports('matlabversion', -inf, '2022a'), ft_hastoolbox('compat/matlablt2022b', 3, 1); end
+    if ft_platform_supports('matlabversion', -inf, '2022b'), ft_hastoolbox('compat/matlablt2023a', 3, 1); end
+    if ft_platform_supports('matlabversion', -inf, '2023a'), ft_hastoolbox('compat/matlablt2023b', 3, 1); end
+    if ft_platform_supports('matlabversion', -inf, '2023b'), ft_hastoolbox('compat/matlablt2024a', 3, 1); end
+    if ft_platform_supports('matlabversion', -inf, '2024a'), ft_hastoolbox('compat/matlablt2024b', 3, 1); end
+    if ft_platform_supports('matlabversion', -inf, '2024b'), ft_hastoolbox('compat/matlablt2025a', 3, 1); end
     % this deals with compatibility with all OCTAVE versions
     if ft_platform_supports('octaveversion', -inf, +inf),    ft_hastoolbox('compat/octave', 3, 1); end
   end

@@ -122,7 +122,7 @@ hdr.nSamplesPre = 0;
 hdr.nTrials     = 1;
 % also store the original ascii header details
 hdr.orig        = orig(:);
-[hdr.chanunit hdr.chantype] = deal(cell(length(label),1));
+[hdr.chanunit, hdr.chantype] = deal(cell(length(label),1));
 hdr.chantype(:) = {'evolution (neurosim)'};
 hdr.chanunit(:) = {'unknown'};
 
@@ -130,7 +130,7 @@ function y=rmspace(x)
 % remove double spaces from string
 % (c) Bart Gips 2012
 y=strtrim(x);
-[sbeg send]=regexp(y,' \s+');
+[sbeg, send]=regexp(y,' \s+');
 for n=1:length(sbeg)
     y(sbeg(n):send(n)-1)=[];
 end

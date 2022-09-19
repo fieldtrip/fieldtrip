@@ -1,8 +1,7 @@
 function test_bug2404
 
 % WALLTIME 00:10:00
-% MEM 1500mb
-
+% MEM 2gb
 % DEPENDENCY ft_channelrepair
 
 data = [];

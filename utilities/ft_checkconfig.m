@@ -31,22 +31,23 @@ function [cfg] = ft_checkconfig(cfg, varargin)
 % Optional input arguments should be specified as key-value pairs and can include
 %   renamed         = {'old',  'new'}        % list the old and new option
 %   renamedval      = {'opt',  'old', 'new'} % list option and old and new value
-%   allowedval      = {'opt', 'allowed1'...} % list of allowed values for a particular option, anything else will throw an error
+%   allowedtype     = {'opt', 'allowed1', ...} % list of allowed data type classes for a particular option, anything else will throw an error
+%   allowedval      = {'opt', 'allowed1', ...} % list of allowed values for a particular option, anything else will throw an error
 %   required        = {'opt1', 'opt2', etc.} % list the required options
 %   allowed         = {'opt1', 'opt2', etc.} % list the allowed options, all other options are forbidden
 %   forbidden       = {'opt1', 'opt2', etc.} % list the forbidden options, these result in an error
 %   deprecated      = {'opt1', 'opt2', etc.} % list the deprecated options
 %   unused          = {'opt1', 'opt2', etc.} % list the unused options, these will be removed and a warning is issued
-%   createsubcfg    = {'subname', etc.}      % list the names of the sub-configuration
-%   createtopcfg    = {'topname', etc.}      % list the names of the top-configuration
+%   createsubcfg    = {'subname', etc.}      % list the names of the sub-configuration items
+%   createtopcfg    = {'subname', etc.}      % list the names of the sub-configuration items
 %   dataset2files   = 'yes', 'no'            % converts dataset into headerfile and datafile
 %   inside2logical  = 'yes', 'no'            % converts cfg.inside or cfg.sourcemodel.inside into logical representation
 %   checksize       = 'yes', 'no'            % remove large fields from the cfg
 %   trackconfig     = 'on', 'off'            % start/end config tracking
 %
-% See also FT_CHECKDATA, FT_DEFAULTS
+% See also FT_CHECKDATA, FT_CHECKOPT, FT_DEFAULTS
 
-% Copyright (C) 2007-2014, Robert Oostenveld, Saskia Haegens
+% Copyright (C) 2007-2020, Robert Oostenveld, Saskia Haegens
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -73,12 +74,13 @@ deprecated      = ft_getopt(varargin, 'deprecated');
 unused          = ft_getopt(varargin, 'unused');
 forbidden       = ft_getopt(varargin, 'forbidden');
 renamedval      = ft_getopt(varargin, 'renamedval');
+allowedtype     = ft_getopt(varargin, 'allowedtype');
 allowedval      = ft_getopt(varargin, 'allowedval');
 createsubcfg    = ft_getopt(varargin, 'createsubcfg');
 createtopcfg    = ft_getopt(varargin, 'createtopcfg');
-checkfilenames  = ft_getopt(varargin, 'dataset2files');
-checkinside     = ft_getopt(varargin, 'inside2logical', 'off');
-checksize       = ft_getopt(varargin, 'checksize', 'off');
+checkfilenames  = ft_getopt(varargin, 'dataset2files', 'no');
+checkinside     = ft_getopt(varargin, 'inside2logical', 'no');
+checksize       = ft_getopt(varargin, 'checksize', 'no');
 trackconfig     = ft_getopt(varargin, 'trackconfig');
 
 if ~isempty(trackconfig) && strcmp(trackconfig, 'on')
@@ -136,14 +138,17 @@ end
 % rename old to new value, give warning
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if ~isempty(renamedval) && issubfield(cfg, renamedval{1})
-  if strcmpi(getsubfield(cfg, renamedval{1}), renamedval{2})
+  if isequaln(getsubfield(cfg, renamedval{1}), renamedval{2})
     cfg = setsubfield(cfg, renamedval{1}, renamedval{3});
+    % format the values as a string, regardless of their type
+    str2 = printstruct([], renamedval{2}, 'lastnewline', false, 'lastsemicolon', false);
+    str3 = printstruct([], renamedval{3}, 'lastnewline', false, 'lastsemicolon', false);
     if silent
       % don't mention it
     elseif loose
-      ft_warning('use cfg.%s=''%s'' instead of cfg.%s=''%s''', renamedval{1}, renamedval{3}, renamedval{1}, renamedval{2});
+      ft_warning('use cfg.%s=%s instead of cfg.%s=%s', renamedval{1}, str3, renamedval{1}, str2);
     elseif pedantic
-      ft_error('use cfg.%s=''%s'' instead of cfg.%s=''%s''', renamedval{1}, renamedval{3}, renamedval{1}, renamedval{2});
+      ft_error('use cfg.%s=%s instead of cfg.%s=%s', renamedval{1}, str3, renamedval{1}, str2);
     end
   end
 end
@@ -229,16 +234,13 @@ if ~isempty(forbidden)
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% check for allowed values, give error if non-allowed value is specified
+% check for allowed types and values, give error if incorrect
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if ~isempty(allowedval) && isfield(cfg, allowedval{1}) ...
-    && ~any(strcmp(cfg.(allowedval{1}), allowedval(2:end)))
-  s = ['The only allowed values for cfg.' allowedval{1} ' are: '];
-  for k = 2:numel(allowedval)
-    s = [s allowedval{k} ', '];
-  end
-  s = s(1:end-2); % strip last comma
-  ft_error(s);
+if ~isempty(allowedtype)
+  ft_checkopt(cfg, allowedtype{1}, allowedtype(2:end), {});
+end
+if ~isempty(allowedval)
+  ft_checkopt(cfg, allowedval{1}, {}, allowedval(2:end));
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -271,27 +273,27 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % createtopcfg
 %
-% This collects the optional arguments for some of the low-level
-% functions and moves them from the separate substructure to the top level. 
+% This collects the optional arguments for some of the low-level functions and moves
+% them from the separate substructure to the top level.
 %
 % This is to ensure backward compatibility of end-user scripts, FieldTrip functions
-% and documentation that use an obsolete nested configuration where a flat 
+% and documentation that use an obsolete nested configuration where a flat
 % configuration should be used.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if ~isempty(createtopcfg)
   for j=1:length(createtopcfg)
-    topname = createtopcfg{j};
+    subname = createtopcfg{j};
 
-    if isfield(cfg, topname)
-      % get the options that are already specified in the topstructure
-      topcfg = cfg.(topname);
+    if isfield(cfg, subname)
+      % get the options that are already specified in the substructure
+      subcfg = cfg.(subname);
     else
-      % start with an empty topstructure
-      topcfg = [];
+      % start with an empty substructure
+      subcfg = [];
     end
     
-    % move all relevant options from the topstructure to the top
-    switch topname
+    % move all relevant options from the substructure to the top
+    switch subname
       case 'sourcemodel'
         fieldname = {
           'xgrid'
@@ -302,34 +304,72 @@ if ~isempty(createtopcfg)
           'warpmni'
           'template'
           };
-    end % switch topname
+
+      case {'dics' 'eloreta' 'harmony' 'lcmv' 'mne' 'music' 'mvl' 'pcc' 'rv' 'sam' 'sloreta'}
+        fieldname = {
+          'keepleadfield'
+          'backproject'
+          'reducerank'
+          'normalize'
+          'normalizeparam'
+          'weight'
+          };
+      
+      case {'superlet'}
+        fieldname = {
+          'basewidth'
+          'gwidth'
+          'combine'
+          'order'
+          };
+        
+      otherwise
+        ft_error('unexpected name of the subfunction');
+    end % switch subname
     
     for i=1:length(fieldname)
-      if ~isfield(cfg, fieldname{i}) && isfield(topcfg, fieldname{i})
+      if ~isfield(cfg, fieldname{i}) && isfield(subcfg, fieldname{i})
 
         if silent
           % don't mention it
         elseif loose
-          ft_warning('The field cfg.%s.%s is deprecated, pleae use cfg.%s\n', topname, fieldname{i}, fieldname{i});
+          ft_warning('The field cfg.%s.%s is deprecated, pleae use cfg.%s\n', subname, fieldname{i}, fieldname{i});
         elseif pedantic
-          ft_error('The field cfg.%s.%s is not longer supported, please use cfg.%s\n', topname, fieldname{i}, fieldname{i});
+          ft_error('The field cfg.%s.%s is not longer supported, please use cfg.%s\n', subname, fieldname{i}, fieldname{i});
         end
 
-        cfg = setfield(cfg, fieldname{i}, getfield(topcfg, fieldname{i}));  % set it in the top-configuration
-        topcfg = rmfield(topcfg, fieldname{i});                             % remove it from the sub-configuration
+        cfg.(fieldname{i}) = subcfg.(fieldname{i});  % set it in the top-configuration
+        subcfg = rmfield(subcfg, fieldname{i});      % remove it from the sub-configuration
+
+      elseif isfield(cfg, fieldname{i}) && isfield(subcfg, fieldname{i})
+
+        if silent
+          % don't mention it
+        elseif loose
+          ft_warning('The field cfg.%s.%s is deprecated, pleae use cfg.%s\n', subname, fieldname{i}, fieldname{i});
+        elseif pedantic
+          ft_error('The field cfg.%s.%s is not longer supported, please use cfg.%s\n', subname, fieldname{i}, fieldname{i});
+        end
+
+        if isequal(cfg.(fieldname{i}), subcfg.(fieldname{i}))
+          subcfg = rmfield(subcfg, fieldname{i}); % remove it from the sub-configuration
+        else
+          ft_error('The field cfg.%s.%s is conflicting with cfg.%s\n', subname, fieldname{i}, fieldname{i});
+        end
+        
       end
     end
 
-    % copy the topstructure back into the main configuration structure
-    cfg = setfield(cfg, topname, topcfg);
+    % copy the substructure back into the main configuration structure
+    cfg.(subname) = subcfg;
   end
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % createsubcfg
 %
-% This collects the optional arguments for some of the low-level
-% functions and puts them in a separate substructure. 
+% This collects the optional arguments for some of the low-level functions and puts
+% them in a separate substructure.
 %
 % This is to ensure backward compatibility of end-user scripts, FieldTrip functions
 % and documentation that do not use the nested detailled configuration but that use a
@@ -396,7 +436,10 @@ if ~isempty(createsubcfg)
           'inside'
           'outside'
           'pos'
+          'tri'
           'dim'
+          'time'
+          'signal'
           };
 
       case 'dics'
@@ -411,11 +454,8 @@ if ~isempty(createsubcfg)
           'kappa'
           'tolerance'
           'invmethod'
-          'normalize'
-          'normalizeparam'
           'powmethod'
           'projectnoise'
-          'reducerank'
           'realfilter'
           'subspace'
           };
@@ -426,9 +466,6 @@ if ~isempty(createsubcfg)
           'keepmom'
           'lambda'
           'kappa'
-          'normalize'
-          'normalizeparam'
-          'reducerank'
           };
 
       case 'sloreta'
@@ -443,12 +480,9 @@ if ~isempty(createsubcfg)
           'kappa'
           'tolerance'
           'invmethod'
-          'normalize'
-          'normalizeparam'
           'powmethod'
           'projectnoise'
           'projectmom'
-          'reducerank'
           'subspace'
           };
 
@@ -464,12 +498,9 @@ if ~isempty(createsubcfg)
           'kappa'
           'tolerance'
           'invmethod'
-          'normalize'
-          'normalizeparam'
           'powmethod'
           'projectnoise'
           'projectmom'
-          'reducerank'
           'subspace'
           };
 
@@ -482,11 +513,8 @@ if ~isempty(createsubcfg)
           'kappa'
           'tolerance'
           'invmethod'
-          'normalize'
-          'normalizeparam'
           %'powmethod'
           'projectnoise'
-          'reducerank'
           'keepcsd'
           'realfilter'
           'fixedori'
@@ -537,9 +565,9 @@ if ~isempty(createsubcfg)
           'tolerance'
           'invmethod'
           'fixedori'
-          'reducerank'
-          'normalize'
-          'normalizeparam'
+          'noisecov'
+          'toi'
+          'latency_ori'
           };
 
       case 'mvl'
@@ -567,7 +595,7 @@ if ~isempty(createsubcfg)
 
     for i=1:length(fieldname)
       if ~isfield(subcfg, fieldname{i}) && isfield(cfg, fieldname{i})
-
+        
         if silent
           % don't mention it
         elseif loose
@@ -575,14 +603,32 @@ if ~isempty(createsubcfg)
         elseif pedantic
           ft_error('The field cfg.%s is not longer supported, please use cfg.%s.%s\n', fieldname{i}, subname, fieldname{i});
         end
+        
+        subcfg.(fieldname{i}) = cfg.(fieldname{i});  % set it in the sub-configuration
+        cfg = rmfield(cfg, fieldname{i});            % remove it from the top-configuration
+        
+      elseif isfield(subcfg, fieldname{i}) && isfield(cfg, fieldname{i})
+        
+        if silent
+          % don't mention it
+        elseif loose
+          ft_warning('The field cfg.%s is deprecated, pleae use cfg.%s.%s\n', fieldname{i}, subname, fieldname{i});
+        elseif pedantic
+          ft_error('The field cfg.%s is not longer supported, please use cfg.%s.%s\n', fieldname{i}, subname, fieldname{i});
+        end
+        
+        if isequal(subcfg.(fieldname{i}), cfg.(fieldname{i}))
+          cfg = rmfield(cfg, fieldname{i}); % remove it from the top-configuration
+        else
+          ft_error('The field cfg.%s is conflicting with cfg.%s.%s\n', fieldname{i}, subname, fieldname{i});
+        end
 
-        subcfg = setfield(subcfg, fieldname{i}, getfield(cfg, fieldname{i}));  % set it in the sub-configuration
-        cfg = rmfield(cfg, fieldname{i});                                      % remove it from the top-configuration
       end
+      
     end
-
+    
     % copy the substructure back into the main configuration structure
-    cfg = setfield(cfg, subname, subcfg);
+    cfg.(subname) = subcfg;
   end
 end
 

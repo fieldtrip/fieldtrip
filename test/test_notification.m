@@ -2,8 +2,7 @@ function test_notification
 
 % WALLTIME 00:10:00
 % MEM 1gb
-
-% DEPENDENCY ft_debug ft_info ft_notice ft_warning ft_notification
+% DEPENDENCY ft_debug ft_info ft_notice ft_warning ft_error ft_notification
 
 subfunction(@ft_debug)
 subfunction(@ft_info)
@@ -12,6 +11,24 @@ subfunction(@ft_warning)
 
 % ft_error cannot be tested the same way, since the error stops everything
 errortest
+
+oncetest(@ft_debug)
+oncetest(@ft_info)
+oncetest(@ft_notice)
+oncetest(@ft_warning)
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function oncetest(notice)
+
+global ft_default
+ft_default = [];
+
+for i=1:10
+  msgId = 'FieldTrip:test:test_notification:suboncetest';
+  notice('once', msgId)
+  notice(msgId, 'this should be printed only once for each notification level')
+end
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function errortest

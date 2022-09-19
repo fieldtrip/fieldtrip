@@ -1,8 +1,7 @@
 function test_bug168
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_realtime_topography
  
 [ftver, ftpath] = ft_version;
@@ -98,10 +97,8 @@ end
 % end
 %
 % cfg = [];
-% cfg.dataset = dccnpath('/home/common/matlab/fieldtrip/data/Subject01.ds');
+% cfg.dataset = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds');
 % cfg.bufferdata = 'first';
 % cfg.layout = 'CTF151.lay';
 %
 % ft_realtime_topography(cfg);
-
-

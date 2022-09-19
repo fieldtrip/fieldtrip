@@ -1,20 +1,21 @@
 function [stat, cfg] = ft_statistics_analytic(cfg, dat, design)
 
-% FT_STATISTICS_ANALYTIC performs a parametric statistical test on the
-% data, based on a known (i.e. analytic) distribution of the test
-% statistic. This function should not be called directly, instead
-% you should call the function that is associated with the type of
-% data on which you want to perform the test.
+% FT_STATISTICS_ANALYTIC performs a parametric statistical test on the data, based on
+% a known (i.e. analytic) distribution of the test statistic. This function should
+% not be called directly, instead you should call the function that is associated
+% with the type of data on which you want to perform the test.
 %
 % Use as
 %   stat = ft_timelockstatistics(cfg, data1, data2, data3, ...)
 %   stat = ft_freqstatistics    (cfg, data1, data2, data3, ...)
 %   stat = ft_sourcestatistics  (cfg, data1, data2, data3, ...)
-% where the data is obtained from FT_TIMELOCKANALYSIS, FT_FREQANALYSIS
-% or FT_SOURCEANALYSIS respectively, or from FT_TIMELOCKGRANDAVERAGE,
-% FT_FREQGRANDAVERAGE or FT_SOURCEGRANDAVERAGE respectively.
 %
-% The configuration can contain
+% where the data is obtained from FT_TIMELOCKANALYSIS, FT_FREQANALYSIS or
+% FT_SOURCEANALYSIS respectively, or from FT_TIMELOCKGRANDAVERAGE,
+% FT_FREQGRANDAVERAGE or FT_SOURCEGRANDAVERAGE respectively 
+% and with cfg.method = 'analytic'
+%
+% The configuration options that can be specified are:
 %   cfg.statistic        = string, statistic to compute for each sample or voxel (see below)
 %   cfg.correctm         = string, apply multiple-comparison correction, 'no', 'bonferroni', 'holm', 'hochberg', 'fdr' (default = 'no')
 %   cfg.alpha            = number, critical value for rejecting the null-hypothesis (default = 0.05)
@@ -37,6 +38,8 @@ function [stat, cfg] = ft_statistics_analytic(cfg, dat, design)
 % or you can specify your own low-level statistical function.
 %
 % See also FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS, FT_SOURCESTATISTICS
+% FT_STATISTICS_MONTECARLO, FT_STATISTICS_STATS, FT_STATISTICS_MVPA,
+% FT_STATISTICS_CROSSVALIDATE
 
 % Copyright (C) 2006-2015, Robert Oostenveld
 %
@@ -79,7 +82,7 @@ statfun = ft_getuserfun(cfg.statistic, 'statfun');
 if isempty(statfun)
   ft_error('could not locate the appropriate statistics function');
 else
-  fprintf('using "%s" for the single-sample statistics\n', func2str(statfun));
+  ft_info('using "%s" for the single-sample statistics\n', func2str(statfun));
 end
 
 % tell the low-level statfun to compute the statistic, critical values, and the probability
@@ -102,13 +105,13 @@ if ~isfield(stat, 'prob')
 else
   switch lower(cfg.correctm)
     case 'bonferroni'
-      fprintf('performing Bonferoni correction for multiple comparisons\n');
-      fprintf('the returned probabilities are uncorrected, the thresholded mask is corrected\n');
+      ft_notice('performing Bonferoni correction for multiple comparisons\n');
+      ft_notice('the returned probabilities are uncorrected, the thresholded mask is corrected\n');
       stat.mask = stat.prob<=(cfg.alpha ./ numel(stat.prob));
     case 'holm'
       % test the most significatt significance probability against alpha/N, the second largest against alpha/(N-1), etc.
-      fprintf('performing Holm-Bonferroni correction for multiple comparisons\n');
-      fprintf('the returned probabilities are uncorrected, the thresholded mask is corrected\n');
+      ft_notice('performing Holm-Bonferroni correction for multiple comparisons\n');
+      ft_notice('the returned probabilities are uncorrected, the thresholded mask is corrected\n');
       [pvals, indx] = sort(stat.prob(:));                                   % this sorts the significance probabilities from smallest to largest
       k = find(pvals > (cfg.alpha ./ ((length(pvals):-1:1)')), 1, 'first'); % compare each significance probability against its individual threshold
       mask = (1:length(pvals))'<k;
@@ -116,19 +119,19 @@ else
       stat.mask(indx) = mask;
     case 'hochberg'
       % test the most significant significance probability against alpha/N, the second largest against alpha/(N-1), etc.
-      fprintf('performing Hochberg''s correction for multiple comparisons (this is *not* the Benjamini-Hochberg FDR procedure!)\n');
-      fprintf('the returned probabilities are uncorrected, the thresholded mask is corrected\n');
+      ft_notice('performing Hochberg''s correction for multiple comparisons (this is *not* the Benjamini-Hochberg FDR procedure!)\n');
+      ft_notice('the returned probabilities are uncorrected, the thresholded mask is corrected\n');
       [pvals, indx] = sort(stat.prob(:));                                   % this sorts the significance probabilities from smallest to largest
       k = find(pvals <= (cfg.alpha ./ ((length(pvals):-1:1)')), 1, 'last'); % compare each significance probability against its individual threshold
       mask = (1:length(pvals))'<=k;
       stat.mask = zeros(size(stat.prob));
       stat.mask(indx) = mask;
     case 'fdr'
-      fprintf('performing FDR correction for multiple comparisons\n');
-      fprintf('the returned probabilities are uncorrected, the thresholded mask is corrected\n');
+      ft_notice('performing FDR correction for multiple comparisons\n');
+      ft_notice('the returned probabilities are uncorrected, the thresholded mask is corrected\n');
       stat.mask = fdr(stat.prob, cfg.alpha);
     case 'no'
-      fprintf('not performing a correction for multiple comparisons\n');
+      ft_notice('not performing a correction for multiple comparisons\n');
       stat.mask = stat.prob<=cfg.alpha;
     otherwise
       ft_error('unsupported option "%s" for cfg.correctm', cfg.correctm);

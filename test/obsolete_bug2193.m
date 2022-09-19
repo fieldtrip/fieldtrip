@@ -1,8 +1,7 @@
 function test_bug2193
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:20:00
-
 % DEPENDENCY ft_read_atlas
 
 %%%%%% from http://fmri.wfubmc.edu

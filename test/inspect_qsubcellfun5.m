@@ -1,5 +1,9 @@
 function inspect_qsubcellfun5
 
+% WALLTIME 00:10:00
+% MEM 1gb
+% DEPENDENCY
+
 % this test script pertains to
 % http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1255
 

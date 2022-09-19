@@ -10,6 +10,9 @@ function dat = ft_preproc_medianfilter(dat, order)
 %   dat        data matrix (Nchans X Ntime)
 %   order      number, the length of the median filter kernel (default = 25)
 %
+% If the data contains NaNs, these are ignored for the computation, but
+% retained in the output.
+%
 % See also PREPROC
 
 % Copyright (C) 2008, Robert Oostenveld

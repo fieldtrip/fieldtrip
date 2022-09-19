@@ -16,16 +16,16 @@ function [montage, cfg] = ft_nirs_prepare_ODtransformation(cfg, data)
 % in transformation.
 %
 % The configuration should contain
-%  cfg.channel            = Nx1 cell-array with selection of channels
-%                           (default = 'nirs'), see FT_CHANNELSELECTION for
-%                           more details
+%   cfg.channel            = Nx1 cell-array with selection of channels
+%                            (default = 'nirs'), see FT_CHANNELSELECTION for
+%                            more details
 %
 % Optional configuration settings are
-%  cfg.age                = scalar, age of the subject (necessary to
-%                           automatically select the appropriate DPF, or
-%  cfg.dpf                = scalar, differential path length factor
-%  cfg.dpffile            = string, location to a lookup table for the
-%                           relation between participant age and DPF
+%   cfg.age                = scalar, age of the subject (necessary to
+%                            automatically select the appropriate DPF, or
+%   cfg.dpf                = scalar, differential path length factor
+%   cfg.dpffile            = string, location to a lookup table for the
+%                            relation between participant age and DPF
 %
 % Note that the DPF might be different across channels, and is usually
 % contained in the optode structure contained in the data.
@@ -122,16 +122,7 @@ cfg.age     = ft_getopt(cfg, 'age', []);
 cfg.dpf     = ft_getopt(cfg, 'dpf', []);
 
 % get the optode definition
-sens = [];
-if ~isfield(data, 'opto')
-  if ~isfield(data, 'hdr') && ~isfield(data.hdr, 'opto')
-    error('no optode structure found in the data');
-  else
-    sens = data.hdr.opto;
-  end
-else
-  sens = data.opto;
-end
+opto = ft_fetch_sens(cfg, data);
 
 % select the appropriate channels
 if isfield(data, 'topolabel')
@@ -145,7 +136,7 @@ elseif isfield(data, 'label')
   cfg.channel = ft_channelselection(cfg.channel, data.label);
 else
   % update the selected channels based on the optode definition
-  cfg.channel = ft_channelselection(cfg.channel, sens.label);
+  cfg.channel = ft_channelselection(cfg.channel, opto.label);
 end
 cfg.channel = ft_channelselection('nirs', cfg.channel); % only NIRS valid
 
@@ -157,12 +148,11 @@ illegalidx = cellfun(@isempty, typeidx);
 cfg.channel(illegalidx) = [];
 
 if isempty(cfg.channel)
-  warning('no valid NIRS channels found')
-  return;
+  ft_error('no valid NIRS channels found')
 end
 
 % channel indices wrt optode structure
-chanidx     = match_str(sens.label, cfg.channel);
+chanidx     = match_str(opto.label, cfg.channel);
 
 % check on DPF values
 if ~isempty(cfg.age) && ~isempty(cfg.dpf)
@@ -170,9 +160,17 @@ if ~isempty(cfg.age) && ~isempty(cfg.dpf)
 elseif ~isempty(cfg.age)
   error('the use of cfg.age is not implemented, yet');
 elseif ~isempty(cfg.dpf)
+  % this is where they should be
   dpfs = repmat(cfg.dpf, size(cfg.channel));
-else
-  dpfs = sens.DPF(chanidx);
+elseif isfield(opto, 'DPF')
+  % this is for backward compatibility
+  dpfs = opto.DPF(chanidx);
+elseif isfield(data, 'opto') && isfield(data.opto, 'DPF')
+  % this is for backward compatibility
+  dpfs = data.opto.DPF(chanidx);
+elseif isfield(data, 'hdr') && isfield(data.hdr, 'opto') && isfield(data.hdr.opto, 'DPF')
+  % this is for backward compatibility
+  dpfs = data.hdr.opto.DPF(chanidx);
 end
 
 % which chromophores are desired
@@ -181,18 +179,18 @@ chromophoreName = {'O2Hb' 'HHb'};
 
 %% transform to concentrations or to OD
 % read in the coefficient table
-% TODO FIXME put this into an own function to read this out
+% FIXME put this into an own function to read this out
 fid = fopen(fullfile(fileparts(mfilename('fullpath')), 'private', 'Cope_ext_coeff_table.txt'));
 coefs = cell2mat(textscan(fid, '%f %f %f %f %f'));
 
-% extract all transceivers that are relevant here
-transceivers   = sens.transmits(chanidx, :);
-transmitteridx = transceivers>0;
-receiveridx    = transceivers<0;
-optodeidx      = transmitteridx | receiveridx;
+% extract all optode combinations that are relevant here
+tratra         = opto.tra(chanidx, :)';
+transmitteridx = tratra>0;
+receiveridx    = tratra<0;
+optodeidx      = (transmitteridx | receiveridx)'; % transpose to get back to tra order
 
 % extract the wavelengths
-wavelengths  = sens.wavelength(transceivers(transmitteridx));
+wavelengths = opto.wavelength(tratra(transmitteridx));
 wlidx = bsxfun(@minus, coefs(:, 1), wavelengths);
 
 % find the relevant channel combinations
@@ -206,26 +204,28 @@ for c=1:numel(chanidx)
   % compute the channel combinations
   tupletidx = sum(bsxfun(@minus, optodeidx, optodeidx(c, :))~=0, 2)==0;
   chanUsed = chanUsed|tupletidx;
-  chancmb(:, end+1) = tupletidx;
+  chancmb(:, end+1) = tupletidx;  
 end
 
 % do the transformation
 tra      = zeros(size(chancmb, 2)*numel(chromophoreIdx), size(cfg.channel, 1));
-labelnew = cell(1, size(chancmb, 2)*numel(chromophoreIdx));
+labelnew = cell(size(chancmb, 2)*numel(chromophoreIdx), 1);
 
 % transformation has to be done per channel combination
-chanidx = []; % we will use this variable here
+chanidx = []; % we will use this variable here for indexing channels (Rx-Tx cmbs)
+optoidx = []; % we will use this variable here for indexing optodes (individual Rx and Tx)
 for c=1:size(chancmb, 2)
 
-  % find all other channels of the same transmitter / receiver pair
+  % find all other channels of the exact same transmitter / receiver pair
   chanidx = chancmb(:, c);
 
   % extract coefficient idx of these channels
   [coefidx, colidx] = find(wlidx(:, chanidx)==0);
 
   % compute the transmitter/receiver distance in cm
-  dist = sqrt(sum(diff(sens.optopos(optodeidx(c, :), :)).^2));
-
+  optoidx = find(chanidx, 1, 'first'); % we can take 'first' because the transmitter-optodes have to be physically in the exact same spot to form "one" channel
+  dist = sqrt(sum(diff(opto.optopos(optodeidx(optoidx, :), :)).^2));
+    
   % select dpf
   dpf = mean(dpfs(chanidx));
 
@@ -249,6 +249,8 @@ end
 
 %% create output
 montage = [];
-montage.labelorg = cfg.channel;
+montage.labelorg = cfg.channel(:)';
 montage.labelnew = labelnew;
 montage.tra      = tra;
+
+

@@ -2,6 +2,7 @@ function failed_tutorial_ecog_human_anatomy
 
 % MEM 5gb
 % WALLTIME 00:10:00
+% DEPENDENCY
 
 datadir = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/human_ecog');
 subj = 'SubjectUCI29';

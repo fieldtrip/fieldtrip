@@ -1,6 +1,6 @@
 function filt = filter_with_correction(B,A,dat,dir,usefftfilt)
 
-% FILTER_WITH_CORRECTION applies a to the data and corrects
+% FILTER_WITH_CORRECTION applies the filter to the data and corrects
 % edge-artifacts for one-pass filtering.
 %
 % Use as
@@ -56,18 +56,18 @@ end
 
 dcGain = sum(B)/sum(A);
 
-[d,N] = size(dat);
+[nchan,nsample] = size(dat);
 
 switch dir
   case 'onepass'
     offset = dat(:,1);
-    dat = dat - repmat(offset,1,N);
-    filt = filter(B, A, dat')' + repmat(dcGain*offset, 1, N);
+    dat = dat - repmat(offset,1,nsample);
+    filt = filter(B, A, dat')' + repmat(dcGain*offset, 1, nsample);
   case 'onepass-reverse'
     offset = dat(:,end);
-    dat  = fliplr(dat) - repmat(offset,1,N);
+    dat  = fliplr(dat) - repmat(offset,1,nsample);
     filt = filter(B, A, dat')';
-    filt = fliplr(filt) + repmat(dcGain*offset, 1, N);
+    filt = fliplr(filt) + repmat(dcGain*offset, 1, nsample);
   case 'twopass'
     % filtfilt does the correction for us
     filt = filtfilt(B, A, dat')';
@@ -82,10 +82,7 @@ switch dir
   case 'onepass-zerophase'
     filt = fir_filterdcpadded(B, A, dat', 0, usefftfilt)';
   case 'onepass-reverse-zerophase'
-    offset = dat(:,end);
-    dat  = fliplr(dat) - repmat(offset,1,N);
-    filt = fir_filterdcpadded(B, A, dat', 0, usefftfilt)';
-    filt = fliplr(filt) + repmat(dcGain*offset, 1, N);
+    filt = fliplr(fir_filterdcpadded(B, A, fliplr(dat)', 0, usefftfilt)');
   case 'onepass-minphase'
     filt = fir_filterdcpadded(B, A, dat', 1, usefftfilt)';
   otherwise

@@ -167,7 +167,7 @@ else
   for iElec = 1 : header.Num_Chan
          data(iElec,:) = ((data(iElec,:)-header.elec(iElec).LogicGnd)/(header.elec(iElec).LogicMax-header.elec(iElec).LogicMin+1)) ...
         *(header.elec(iElec).PhysMax-header.elec(iElec).PhysMin);
-  end;
+  end
   output = data;
   % FIXME why is this value of -32768 subtracted?
   % FIXME some sort of calibration should be applied to get it into microvolt

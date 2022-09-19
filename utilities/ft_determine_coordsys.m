@@ -6,9 +6,10 @@ function [data] = ft_determine_coordsys(data, varargin)
 %
 % Use as
 %   [dataout] = ft_determine_coordsys(datain, ...)
-% where the input data structure can be
+% where the input data structure can be either
 %  - an anatomical MRI
-%  - an electrode or gradiometer definition
+%  - a cortical or head surface mesh
+%  - an electrode, gradiometer or optode definition
 %  - a volume conduction model of the head
 % or most other FieldTrip structures that represent geometrical information.
 %
@@ -25,12 +26,17 @@ function [data] = ft_determine_coordsys(data, varargin)
 % see the figure from all angles. To change the anatomical labels of the
 % coordinate system, you should press the corresponding keyboard button.
 %
-% Recognized and supported coordinate systems include: ctf, 4d, bti, itab,
-% neuromag, spm, mni, tal, acpc, als, ras, paxinos.
+% Recognized and supported coordinate systems are 'ctf', 'bti', '4d', 'yokogawa',
+% 'eeglab', 'neuromag', 'itab', 'acpc', 'spm', 'mni', 'fsaverage', 'tal', 'scanras',
+% 'scanlps', 'dicom'.
+% 
+% Furthermore, supported coordinate systems that do not specify the origin are 'ras',
+% 'als', 'lps', etc. See https://www.fieldtriptoolbox.org/faq/coordsys for more
+% details.
 %
-% See also FT_VOLUMEREALIGN, FT_VOLUMERESLICE, FT_PLOT_ORTHO, FT_PLOT_AXES
+% See also FT_CONVERT_COORDSYS, FT_DETERMINE_UNITS, FT_CONVERT_UNITS, FT_PLOT_AXES, FT_PLOT_XXX
 
-% Copyright (C) 2015, Jan-Mathijs Schoffelen
+% Copyright (C) 2015-2021, Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -51,8 +57,9 @@ function [data] = ft_determine_coordsys(data, varargin)
 % $Id$
 
 dointeractive = ft_getopt(varargin, 'interactive', 'yes');
-axisscale     = ft_getopt(varargin, 'axisscale', 1); % this is used to scale the axmax and rbol
-clim          = ft_getopt(varargin, 'clim', [0 1]); % this is used to scale the orthoplot
+axisscale     = ft_getopt(varargin, 'axisscale', 1);  % this is used to scale the axmax and rbol
+clim          = ft_getopt(varargin, 'clim', [0 1]);   % this is used to scale the orthoplot
+fontsize      = ft_getopt(varargin, 'fontsize');      % this is passed to ft_plot_axes
 
 data  = ft_checkdata(data, 'hasunit', 'yes');
 dtype = ft_datatype(data);
@@ -122,7 +129,7 @@ switch dtype
     [corner_vox, corner_head] = cornerpoints(data.dim, data.transform);
     diagonal_head = norm(range(corner_head));
     diagonal_vox  = norm(range(corner_vox));
-    resolution    = diagonal_head/diagonal_vox; % this is in units of "data.unit"
+    resolution    = (diagonal_head+eps)/(diagonal_vox+eps); % this is in units of "data.unit"
     
     % scale funparam between 0 and 1
     if ~isa(funparam, 'double') % avoid integer datatypes to allow for scaling
@@ -162,7 +169,7 @@ switch dtype
     ft_plot_headmodel(data);
     camlight;
 
-  case {'grad' 'elec' 'sens'}
+  case {'grad' 'elec' 'opto' 'sens'}
     ft_plot_sens(data, 'label', 'label');
     camlight;
 
@@ -172,6 +179,8 @@ switch dtype
       ft_plot_sens(data.grad);
     elseif isfield(data, 'elec')
       ft_plot_sens(data.elec, 'label', 'label');
+    elseif isfield(data, 'opto')
+      ft_plot_sens(data.opto, 'label', 'label');
     end
 
   case 'unknown'
@@ -184,7 +193,7 @@ if isfield(data, 'tri')
 end
 
 % plot the 3-D axes, labels, and sphere at the origin
-ft_plot_axes(data, 'axisscale', axisscale);
+ft_plot_axes(data, 'axisscale', axisscale, 'fontsize', fontsize);
 
 if istrue(dointeractive)
 
@@ -214,18 +223,23 @@ if istrue(dointeractive)
 
   % interactively determine origin
   origin = ' ';
-  while ~any(strcmp(origin, {'a', 'i', 'n'}))
-    origin = input('Is the origin of the coordinate system at the a(nterior commissure), i(nterauricular), n(ot a landmark)? ', 's');
+  while ~any(strcmp(origin, {'a', 'i', 's', 'n'}))
+    origin = input('Is the origin of the coordinate system at the a(nterior commissure), i(nterauricular), s(scanner origin), n(ot a landmark)? ', 's');
   end
 
+  % some coordinate systems are identical or very similar, see https://www.fieldtriptoolbox.org/faq/coordsys
   if origin=='a' && strcmp(orientation, 'ras')
     coordsys = 'acpc'; % also used for spm, mni, tal
   elseif origin=='i' && strcmp(orientation, 'als')
-    coordsys = 'ctf'; % also used for 4d, bti
+    coordsys = 'ctf'; % also used for 4d, bti, eeglab
   elseif origin=='i' && strcmp(orientation, 'ras')
     coordsys = 'neuromag'; % also used for itab
+  elseif origin=='s' && strcmp(orientation, 'ras')
+    coordsys = 'scanras'; % also used for nifti
+  elseif origin=='s' && strcmp(orientation, 'lps')
+    coordsys = 'scanlps'; % also used for dicom
   else
-    % just use the orientation
+    % only use the orientation, not the origin
     coordsys = orientation;
   end
 

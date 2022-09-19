@@ -139,7 +139,7 @@ int smartmem_update(void) {
 		DEBUG(LOG_DEBUG, "smartmem: Cached         = %llu (%f GB)", Cached      , ((float)Cached      )/(1024*1024*1024));
 
 		pthread_mutex_lock(&mutexpeerlist);
-		/* determine the amount of memory that is reserved by the idle slaves on this computer */
+		/* determine the amount of memory that is reserved by the idle workers on this computer */
 		peer = peerlist;
 		while(peer) {
 				ok = 1;
@@ -184,10 +184,10 @@ int smartmem_update(void) {
 						break;
 		} /* switch */
 
-		/* the reserved memory by the other idle slaves should not be more than the available memory */
+		/* the reserved memory by the other idle workers should not be more than the available memory */
 		MemReserved  = (MemReserved > MemFree ? MemFree : MemReserved );
 
-		/* determine the suggested amount of memory for this slave */
+		/* determine the suggested amount of memory for this worker */
 		/* this asymptotically approaches the free memory          */
 		MemSuggested = ((float)(MemFree - MemReserved)) / (1.0 + scale);
 

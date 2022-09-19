@@ -1,18 +1,15 @@
-function [stimulus, response, segment, timezero] = read_brainvision_vmrk(filename)
+function event = read_brainvision_vmrk(filename)
 
 % READ_BRAINVISION_VMRK reads the markers and latencies
 % it returns the stimulus/response code and latency in ms.
 %
 % Use as
-%   [stim, resp, segment, timezero] = read_brainvision_vmrk(filename)
-%
-% This function needs to read the header from a separate file and
-% assumes that it is located at the same location.
+%   event = read_brainvision_vmrk(filename)
 %
 % See also READ_BRAINVISION_VHDR, READ_BRAINVISION_EEG
 
-% original M. Schulte 31.07.2003
-% modifications R. Oostenveld 14.08.2003
+% Copyright (C) 2003, Michael Schulte
+% Copyright (C) 2003-2021 Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -32,50 +29,49 @@ function [stimulus, response, segment, timezero] = read_brainvision_vmrk(filenam
 %
 % $Id$
 
-stimulus=[];
-response=[];
-segment=[];
-timezero=[];
 
-% read the header belonging to this marker file
-hdr=read_brainvision_vhdr([filename(1:(end-4)) 'vhdr']);
+fid = fopen_or_error(filename, 'rt');
 
-fid=fopen_or_error(filename,'rt');
+event = [];
+line  = [];
 
-line=1;
-while line~=-1,
-  line=fgetl(fid);
-  % pause
-  if ~isempty(line),
-    if contains(line,'Mk')
-      if contains(line,'Stimulus')
-        [token,rem] = strtok(line,',');
-        type=sscanf(rem,',S %i');
-        [token,rem] = strtok(rem,',');
-        time=(sscanf(rem,', %i')-1)/hdr.Fs*1000;
-        stimulus=[stimulus; type time(1)];
+readTime = ft_platform_supports('datetime');
 
-      elseif contains(line,'Response')
-        [token,rem] = strtok(line,',');
-        type=sscanf(rem,',R %i');
-        [token,rem] = strtok(rem,',');
-        time=(sscanf(rem,', %i')-1)/hdr.Fs*1000;
-        response=[response; type, time(1)];
-
-      elseif contains(line,'New Segment')
-        [token,rem] = strtok(line,',');
-        time=(sscanf(rem,',,%i')-1)/hdr.Fs*1000;
-        segment=[segment; time(1)];
-
-      elseif contains(line,'Time 0')
-        [token,rem] = strtok(line,',');
-        time=(sscanf(rem,',,%i')-1)/hdr.Fs*1000;
-        timezero=[timezero; time(1)];
-
+while ischar(line) || isempty(line)
+  line = fgetl(fid);
+  if ~isempty(line) && ~(isnumeric(line) && line==-1)
+    if startsWith(line, 'Mk')
+      % this line starts with "Mk", so it probably contains a marker
+      tok = strsplit(line, '=');
+      if length(tok)~=2
+        ft_warning('skipping unexpected formatted line in BrainVision marker file');
+      else
+        % the line looks like "MkXXX=YYY", which is ok
+        % the interesting part now is in the YYY, i.e. the second token
+        %tok = strsplit(tok{2}, ','); % this is not robust if there are
+        %empty spaces between the ',', see github issue 2026
+        tok = tokenize(tok{2}, ',');
+        
+        if isempty(tok{1})
+          tok{1}  = [];
+        end
+        if isempty(tok{2})
+          tok{2}  = [];
+        end
+        event(end+1).type     = tok{1};
+        event(end  ).value    = tok{2};
+        event(end  ).sample   = str2double(tok{3});
+        event(end  ).duration = str2double(tok{4});
+        if numel(tok)>5 && readTime
+          try
+            event(end).timestamp = datetime(tok{6}, 'InputFormat', 'yyyyMMddHHmmssSSSSSS');
+          catch
+            ft_warning('skipping invalid datetime in BrainVision marker file');
+            readTime = false;
+          end
+        end
       end
     end
-  else
-    line=1;
   end
 end
 

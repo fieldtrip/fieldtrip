@@ -4,14 +4,14 @@ function [Stat] = VectStat (M)
 %
 %Purpose:
 %   calculates very basic stats of vectors
-%   
-%   
+%
+%
 %Input Parameters:
-%   M : MxN matrix  
+%   M : MxN matrix
 %      NAN or Inf values are not considered and the user is warned of their existence
-%   
+%
 %Output Parameters:
-%   
+%
 %   Stat is an Mx1 vector of structures with the following fields
 %     Each Stat(i) has the following structures
 %      .N : the number of elements in M(i,:)
@@ -24,12 +24,12 @@ function [Stat] = VectStat (M)
 %
 %     if the input vector is empty , NaN values are returned in Stat
 %More Info :
-%   
-%   
-%   
+%
+%
+%
 %
 %     Author : Ziad Saad
-%     Date : Tue Apr 20 17:13:23 CDT 1999 
+%     Date : Tue Apr 20 17:13:23 CDT 1999
 
 
 %Define the function name for easy referencing
@@ -65,7 +65,7 @@ end
 for (i=1:1:sZ),
 	igood = find(isfinite(M(i,:)));
 	N_igood = length(igood);
-	if (N_igood < sz2), 
+	if (N_igood < sz2),
 		stmp = sprintf ('%s Warning: Inf or Nan ignored in row %g\n', FuncName, i);
 	end
 	

@@ -93,6 +93,20 @@ if ~isempty(EEG.chanlocs) && ~isempty(EEG.chanlocs(1).X)
     data.elec.pnt = data.elec.elecpos;
 end
 
+if isfield(EEG, 'chaninfo') && isfield(EEG.chaninfo, 'nosedir') && ~isempty(EEG.chaninfo.nosedir)
+    switch EEG.chaninfo.nosedir
+        case '+X'
+            data.elec.coordsys = 'ctf';
+        case '-X'
+            data.elec.coordsys = 'pls';
+        case '+Y'
+            data.elec.coordsys = 'ras';
+        case '-Y'
+            data.elec.coordsys = 'lpi';
+        otherwise
+    end
+end
+
 if nargin > 2
     if strcmpi(transform, 'dipfit')
         if ~isempty(EEG.dipfit.coord_transform)
@@ -120,7 +134,7 @@ switch fieldbox
             data.trialinfo = struct2table(res.datasetinfo.trialinfo);
         else
             res = struct('subject', EEG.subject, 'condition', EEG.condition, 'group', EEG.group, 'session', EEG.session);
-            data.trialinfo = struct2table(res);
+            data.trialinfo = struct2table(res, 'AsArray', true);
             if isempty(data.trialinfo)
                 data = rmfield(data, 'trialinfo');
             end
@@ -182,6 +196,7 @@ function label = getchanlabels(tmpchanlocs, indices)
 if ~isempty(tmpchanlocs)
     label   = { tmpchanlocs.labels };
 else
+    label = cell(numel(indices), 1);
     for iChan = indices
         label{iChan} = num2str(iChan);
     end

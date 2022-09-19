@@ -1,7 +1,7 @@
 function [collect] = ft_channelcombination(channelcmb, datachannel, includeauto, dirflag)
 
-% FT_CHANNELCOMBINATION creates a cell-array with combinations of EEG/MEG
-% channels for subsequent cross-spectral-density and coherence analysis
+% FT_CHANNELCOMBINATION creates a cell-array with combinations of EEG/MEG channels
+% for subsequent cross-spectral-density, coherence and/or connectivity ananalysis
 %
 % You should specify channel combinations as a two-column cell-array,
 %   cfg.channelcmb = {  'EMG' 'MLF31'
@@ -72,29 +72,11 @@ if size(channelcmb,1)==2 && size(channelcmb,2)~=2
   channelcmb = channelcmb';
 end
 
-% allow for channelcmb to be a 1x2 cell-array containing cells
-if numel(channelcmb)==2 && iscell(channelcmb{1}) && iscell(channelcmb{2})
-  channelcmb{1} = ft_channelselection(channelcmb{1}, datachannel);
-  channelcmb{2} = ft_channelselection(channelcmb{2}, datachannel);
-  n1  = numel(channelcmb{1});
-  n2  = numel(channelcmb{2});
-  tmp = cell(n1*n2+n1+n2,2);
-  for k = 1:n1
-    tmp((k-1)*n2+(1:n2), 1) = channelcmb{1}(k);
-    tmp((k-1)*n2+(1:n2), 2) = channelcmb{2};
-    tmp(n2*k+(1:n1),     1) = channelcmb{1};
-    tmp(n2*k+(1:n1),     2) = channelcmb{1};
-    tmp(n2*k+n1+(1:n2),  1) = channelcmb{2};
-    tmp(n2*k+n1+(1:n2),  2) = channelcmb{2};
-  end
-  collect = tmp;
-  return;
-end
-
-if isempty(setdiff(channelcmb(:), datachannel))
+if ~(numel(channelcmb)==2 && iscell(channelcmb{1}) && iscell(channelcmb{2})) &&...
+    isempty(setdiff(channelcmb(:), datachannel))
   % there is not much to do, since there are no channelgroups with special names
   % each element of the input therefore already contains a proper channel name
-
+  
   switch dirflag
     case 0
       % nothing to do
@@ -107,32 +89,42 @@ if isempty(setdiff(channelcmb(:), datachannel))
       ft_error('unknown value for input argument ''dirflag''');
   end
   collect = channelcmb;
-
+  
   if includeauto
     autochannel = unique(channelcmb(:));
     for ch=1:numel(autochannel)
       collect = cat(1, collect, [autochannel(ch) autochannel(ch)]);
     end
   end
-
+  
 else
   % a combination is made for each row of the input selection after
   % translating the channel group (such as 'all') to the proper channel names
   % and within each set, double occurences and autocombinations are removed
-
+  
   selmat = false(numel(datachannel));
   for sel=1:size(channelcmb,1)
     % translate both columns and subsequently make all combinations
-    channelcmb1 = ft_channelselection(channelcmb(sel,1), datachannel);
-    channelcmb2 = ft_channelselection(channelcmb(sel,2), datachannel);
-
+    if iscell(channelcmb(sel,1)) && iscell(channelcmb(sel,2)) 
+    % - channelcmb is a 1x2 cell-array containing cells
+      channelcmb1 = ft_channelselection(channelcmb{sel,1}, datachannel);
+      channelcmb2 = ft_channelselection(channelcmb{sel,2}, datachannel);
+    else
+    % - channelgroups with special names
+      channelcmb1 = ft_channelselection(channelcmb(sel,1), datachannel);
+      channelcmb2 = ft_channelselection(channelcmb(sel,2), datachannel);
+    end
     % translate both columns and subsequently make all combinations
     list1 = match_str(datachannel, channelcmb1);
     list2 = match_str(datachannel, channelcmb2);
-
+    
     selmat(list1,list2) = true;
-
-    if ~includeauto,
+    if dirflag==2
+      % also fill the other 'direction'
+      selmat(list2,list1) = true;
+    end
+    
+    if ~includeauto
       % exclude the auto-combinations
       selmat = selmat & ~eye(size(selmat));
     else
@@ -141,19 +133,15 @@ else
       autovec([list1(:);list2(:)]) = true;
       selmat = selmat | diag(autovec);
     end
-
-    if dirflag==2,
-      % also fill the other 'direction'
-      selmat(list2,list1) = true;
-    end
+    
   end
-
+  
   if dirflag<2
     % remove double occurrences
     selmat   = selmat & ~tril(selmat, -1)';
   end
   [i1, i2] = find(selmat);
-
+  
   switch dirflag
     case 0
       % original behavior,
@@ -165,10 +153,14 @@ else
     case 2
       % both
       indx = [i1 i2];
-
+      
     otherwise
       ft_error('unknown value for input argument ''dirflag''');
   end
-
-  collect = [datachannel(indx(:,1)) datachannel(indx(:,2))];
+  
+  if isempty(indx)
+    collect = cell(0,2);
+  else
+    collect = [datachannel(indx(:,1)) datachannel(indx(:,2))];
+  end
 end

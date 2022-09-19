@@ -1,7 +1,8 @@
 function test_old_trialdef
 
-% MEM 1gb
+% MEM 2gb
 % WALLTIME 00:10:00
+% DEPENDENCY
 
 
 % This script tests the implementation of the new representation of trial

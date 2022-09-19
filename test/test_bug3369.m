@@ -1,14 +1,13 @@
-% function test_bug3369
+function test_bug3369
 
 % WALLTIME 00:20:00
 % MEM 2gb
-
 % DEPENDENCY read_neuromag_maxfilterlog
 
 cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug3369'));
 
 file0 = 'tactile_stim_raw.fif_tsss_mc.log';
-file1 = 'tactile_stim_raw-1.fif_tsss_mc.log';	
+file1 = 'tactile_stim_raw-1.fif_tsss_mc.log';
 file2 = 'tactile_stim_raw-2.fif_tsss_mc.log';
 
 %%
@@ -38,5 +37,3 @@ cfg = [];
 cfg.viewmode = 'vertical';
 cfg.preproc.demean = 'yes';
 ft_databrowser(cfg, data);
-
-

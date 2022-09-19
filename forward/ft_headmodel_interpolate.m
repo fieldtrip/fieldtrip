@@ -60,7 +60,7 @@ end
 filename = fullfile(p, f);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% PART ONE (optional), read the pre-computed besa leadfield
+% PART ONE (optional), read the pre-computed BESA leadfield
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if ischar(sourcemodel)
@@ -160,6 +160,9 @@ if isfield(sourcemodel, 'leadfield')
   
   % ensure that it is represented as 3-D volume
   sourcemodel = ft_checkdata(sourcemodel, 'datatype', 'volume');
+
+  % determine the indices of the positions in the source compartment
+  insideindx = find(sourcemodel.inside);
   
   nchan = length(sens.label);
   if size(sourcemodel.leadfield{insideindx(1)},1)~=nchan
@@ -210,15 +213,15 @@ if isfield(sourcemodel, 'leadfield')
     
     if istrue(smooth)
       if i == 1
-        ft_write_mri(masklf,~~dat(:, :, :, 1), 'transform', sourcemodel.transform, 'spmversion', 'SPM12', 'dataformat', 'nifti_spm');
+        ft_write_mri(masklf,~~dat(:, :, :, 1), 'transform', sourcemodel.transform, 'spmversion', 'spm12', 'dataformat', 'nifti_spm');
         spm_smooth(masklf, smasklf, sourcemodel.transform(1,1)*[1 1 1]);
         mask = spm_read_vols(spm_vol(smasklf));
         
         spm_unlink(masklf);
         spm_unlink(smasklf);
       end
-      
-      ft_write_mri(rawlf, dat, 'transform', sourcemodel.transform, 'spmversion', 'SPM12', 'dataformat', 'nifti_spm');
+
+      ft_write_mri(rawlf, dat, 'transform', sourcemodel.transform, 'spmversion', 'spm12', 'dataformat', 'nifti_spm');
       spm_smooth(rawlf, srawlf, sourcemodel.transform(1,1)*[1 1 1]);
       dat = spm_read_vols(spm_vol(srawlf));
       dat = dat./repmat(mask, [1 1 1, size(dat, 4)]);
@@ -238,9 +241,9 @@ if isfield(sourcemodel, 'leadfield')
         dat(:, :, :, k+3) = spm_bsplinc(dat(:, :, :, k), [4 4 4 0 0 0]);
       end
     end
-    
-    ft_write_mri(headmodel.filename{i}, dat , 'transform', sourcemodel.transform, 'spmversion', 'SPM12', 'dataformat', 'nifti_spm');
-    
+
+    ft_write_mri(headmodel.filename{i}, dat , 'transform', sourcemodel.transform, 'spmversion', 'spm12', 'dataformat', 'nifti_spm');
+
   end
   
   filename = sprintf('%s.mat', filename);
@@ -255,11 +258,13 @@ elseif isfield(sourcemodel, 'filename')
   inputvol = sourcemodel;
   
   if ~isfield(sens, 'tra')
-    sens.tra = eye(length(sens.label));
+    % the EEG forward model should be average referenced in the absense of an explicit montage
+    sens.tra = eye(length(sens.label)) - 1/length(sens.label);
   end
   
   if ~isfield(inputvol.sens, 'tra')
-    inputvol.sens.tra = eye(length(inputvol.sens.label));
+    % the EEG forward model should be average referenced in the absense of an explicit montage
+    inputvol.sens.tra = eye(length(inputvol.sens.label)) - 1/length(inputvol.sens.label);
   end
   
   % create a 2D projection and triangulation
@@ -344,7 +349,7 @@ elseif isfield(sourcemodel, 'filename')
     end
     outputvol.filename{i} = sprintf('%s_%s.nii', filename, sens.label{i});
     fprintf('writing single channel leadfield to %s\n', outputvol.filename{i})
-    ft_write_mri(outputvol.filename{i}, dat, 'transform', outputvol.transform, 'spmversion', 'SPM12', 'dataformat', 'nifti_spm');
+    ft_write_mri(outputvol.filename{i}, dat, 'transform', outputvol.transform, 'spmversion', 'spm12', 'dataformat', 'nifti_spm');
   end
   
   % update the volume conductor

@@ -1,7 +1,7 @@
 function segmentation = fixsegmentation(segmentation, fn, style)
 
 % FIXSEGMENTATION is a helper function that ensures the segmentation to be internally
-% consistent. It is used by ft_datatype_segmentation and ft_datatype_parcellation.
+% consistent. It is used by FT_DATATYPE_SEGMENTATION and FT_DATATYPE_PARCELLATION.
 %
 % % See also CONVERT_SEGMENTATIONSTYLE, DETERMINE_SEGMENTATIONSTYLE
 
@@ -9,17 +9,19 @@ switch style
   case 'indexed'
     
     for i=1:length(fn)
-      indexval = unique(segmentation.(fn{i})(:));  % find the unique tissue types
-      indexval = indexval(indexval~=0&isfinite(indexval));            % these are the only ones that matter
+      indexval = unique(segmentation.(fn{i})(:));           % find the unique tissue types
+      indexval = indexval(indexval~=0&isfinite(indexval));  % these are the only ones that matter
       
       if any(indexval<0)
         ft_error('an indexed representation cannot contain negative numbers');
       end
       
       if ~isfield(segmentation, [fn{i} 'label'])
+        ft_warning('creating default labels for "%s"', fn{i});
         % ensure that the tissues have labels
         indexlabel = cell(size(indexval));
         for j=1:length(indexval)
+          % this is consistent with FT_READ_ATLAS
           indexlabel{indexval(j)} = sprintf('tissue %d', indexval(j));
         end
         segmentation.([fn{i} 'label']) = indexlabel;

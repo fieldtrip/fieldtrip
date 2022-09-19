@@ -33,6 +33,7 @@ transfer = zeros(length(vol.elecnodes),size(vol.pos,1));
 %TODO: add possibility for parallel computation
 %matlabpool local 2;
 for i=2:length(vol.elecnodes)
+    % NOTE: the loop starts at 2, which seems intentional, because the reference is the first electrode
     str = ['Electrode ',num2str(i),' of ',num2str(size(vol.elecnodes,1))];
     disp(str)
     vecb = zeros(size(vol.stiff,1),1);

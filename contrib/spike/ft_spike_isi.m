@@ -2,8 +2,8 @@ function [isih] = ft_spike_isi(cfg, spike)
 
 % FT_SPIKE_ISI computes the interspike interval histogram
 %
-% The input SPIKE should be organised as 
-% a) the spike datatype, obtained from FT_SPIKE_MAKETRIALS 
+% The input SPIKE should be organised as
+% a) the spike datatype, obtained from FT_SPIKE_MAKETRIALS
 % b) the raw datatype, containing binary spike trains, obtained from
 % FT_APPENDSPIKE or FT_CHECKDATA. In this case the raw datatype is
 % converted to the spike datatype.
@@ -72,7 +72,7 @@ ft_preamble init
 ft_preamble provenance spike
 ft_preamble trackconfig
 
-% check if data is of proper format 
+% check if data is of proper format
 spike = ft_checkdata(spike,'datatype', 'spike', 'feedback', 'yes');
 
 % get the default options
@@ -89,7 +89,7 @@ cfg = ft_checkopt(cfg,'outputunit','char', {'spikecount', 'proportion'});
 cfg = ft_checkopt(cfg,'bins', 'ascendingdoublevector');
 cfg = ft_checkopt(cfg,'spikechannel',{'cell', 'char', 'double'});
 cfg = ft_checkopt(cfg,'latency', {'char', 'ascendingdoublebivector'});
-cfg = ft_checkopt(cfg,'trials', {'char', 'doublevector', 'logical'}); 
+cfg = ft_checkopt(cfg,'trials', {'char', 'doublevector', 'logical'});
 cfg = ft_checkopt(cfg,'keeptrials', 'char', {'yes', 'no'});
 cfg = ft_checkopt(cfg,'param', 'char', {'gamfit', 'coeffvar', 'lv'});
 
@@ -151,7 +151,7 @@ for iUnit = 1:nUnits
   isi(trialJump) = NaN;
   
   switch cfg.param
-  case 'coeffvar'      
+  case 'coeffvar'
     out(iUnit) = nanstd(isi)./nanmean(isi);
   case 'gamfit'
     data = isi(~isnan(isi));  % remove the nans from isiSpike
@@ -174,7 +174,7 @@ for iUnit = 1:nUnits
 end
 
 isihist(:,end) = []; % the last number is only an equality to a bin edge
-if strcmp(cfg.outputunit,'proportion'),
+if strcmp(cfg.outputunit,'proportion')
   isihist = isihist./repmat(nansum(isihist,2),1,size(isihist,2));
 end
 
@@ -192,5 +192,3 @@ ft_postamble trackconfig
 ft_postamble previous   spike
 ft_postamble provenance isih
 ft_postamble history    isih
-
-

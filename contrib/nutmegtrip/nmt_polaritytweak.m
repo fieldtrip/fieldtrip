@@ -1,4 +1,4 @@
-function source = nmt_polaritytweak(cfg,source);
+function source = nmt_polaritytweak(cfg,source)
 
 inside_idx = find(source.inside);
 
@@ -9,11 +9,11 @@ if(isfield(cfg,'toilim'))
     tsel = dsearchn(source.time',cfg.toilim');
     tsel = tsel(1):tsel(2);
 else
-    [~,tsel]=max(max(abs(s)));
+    [dum,tsel]=max(max(abs(s)));
 end
 
 % flip based on polarity of voxel with maximum power in desired time window
-[~,b]=max(nmt_rownorm(s(:,tsel)));
+[dum,b]=max(nmt_rownorm(s(:,tsel)));
 flipper=sign(s(b,tsel)*s(:,tsel)').*speye(size(s,1)); 
 s = flipper*s;
 ori = ori*flipper; 

@@ -37,6 +37,10 @@ if nargin < 1
     return;
 end
 
+if exist('eegplugin_mffimport')
+    error('MFFimport plugin conflict detected, remove plugin and call back this function/menu');
+end
+
 p = fileparts(which('mff_importsignal.m'));
 warning('off', 'MATLAB:Java:DuplicateClass');
 javaaddpath(fullfile(p, 'MFF-1.2.2-jar-with-dependencies.jar'));

@@ -1,8 +1,7 @@
 function test_bug1527
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_sourceplot
 
 load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1527.mat'));

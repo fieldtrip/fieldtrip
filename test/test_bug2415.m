@@ -2,7 +2,6 @@ function test_bug2415(updatereference)
 
 % MEM 3gb
 % WALLTIME 00:15:00
-
 % DEPENDENCY ft_read_event
 
 % http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2409

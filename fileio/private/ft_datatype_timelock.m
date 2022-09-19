@@ -87,6 +87,10 @@ if isempty(timelock)
   return;
 end
 
+% do some sanity checks
+assert(isfield(timelock, 'time') && isfield(timelock, 'label'), 'inconsistent timelock data structure, some field is missing');
+assert(length(unique(timelock.label))==length(timelock.label), 'channel labels must be unique');
+
 % ensure consistency between the dimord string and the axes that describe the data dimensions
 timelock = fixdimord(timelock);
 
@@ -120,6 +124,7 @@ switch version
     
     fn = fieldnames(timelock);
     fn = setdiff(fn, ignorefields('appendtimelock'));
+    fn = fn(~endsWith(fn, 'dimord'));
     dimord = cell(size(fn));
     hasrpt = false(size(fn));
     for i=1:numel(fn)
@@ -138,6 +143,7 @@ switch version
       if isfield(timelock, 'dimord') && ~ismember(timelock.dimord, dimord(hasrpt))
         % the dimord does not apply to any of the existing fields any more
         timelock = rmfield(timelock, 'dimord');
+        timelock = fixdimord(timelock);
       end
     end
     
@@ -156,6 +162,12 @@ switch version
     
     % this field can be present in raw data, but is not desired in timelock data
     timelock = removefields(timelock, {'fsample'});
+    
+    % ensure that the structure has all required fields
+    % note that dimord is listed as required field, but it might also be xxxdimord, or dynamically determined with GETDIMORD
+    for required={'label' 'time'}
+      assert(isfield(timelock, required), 'required field "%s" is missing', required{:});
+    end
     
   case '2011v2'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -3,11 +3,11 @@ function [err, Itrans] = AFNI_IndexChange (Info, Iorig, Direction, DispOrient)
 %   [err, Itrans] = AFNI_IndexChange (Info, Iorig, Direction, [DispOrient])
 %
 %Purpose:
-%   Change the AFNI Index system between the display's and AFNI's coordinate system 
-%   
-%   
+%   Change the AFNI Index system between the display's and AFNI's coordinate system
+%
+%
 %Input Parameters:
-%   Info: The data structure output from BrikInfo 
+%   Info: The data structure output from BrikInfo
 %   Iorig : anNx3 matrix containing the Ix Iy Iz indices of N points
 %   Direction : A string : either 'A2D' or 'D2A' meaning Afni to Display or vice versa
 %   DispOrient : The orientation string (or vector) for AFNI's display. This parameter is optional
@@ -17,16 +17,16 @@ function [err, Itrans] = AFNI_IndexChange (Info, Iorig, Direction, DispOrient)
 %   err : 0 No Problem
 %       : 1 Mucho Problems
 %   Itrans: if Iorig is specified, Itrans is Iorig in the new coordinate system
-%   
-%   
-%      
+%
+%
+%
 %Key Terms:
-%   
+%
 %More Info :
 %   Test_AFNI_IndexChange
-%   
+%
 %   see also AFNI_CoordChange
-%   
+%
 %
 %     Author : Ziad Saad
 %     Date : Fri Sep 8 12:21:01 PDT 2000

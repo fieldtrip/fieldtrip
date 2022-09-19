@@ -165,7 +165,7 @@ ver = version;
 ver = str2num(ver(1));
 if ver < 6,
   tmp = fread(fid,inf,sprintf('%s',precision));
-else,
+else
   tmp = fread(fid,inf,sprintf('%s=>double',precision));
 end
 fclose(fid);
@@ -236,7 +236,7 @@ if ~isempty(IMGorient),
   else
     avw.hdr.hist.orient = uint8(IMGorient);
   end
-end,
+end
 
 if isempty(avw.hdr.hist.orient),
   msg = [ '...unspecified avw.hdr.hist.orient, using default 0\n',...

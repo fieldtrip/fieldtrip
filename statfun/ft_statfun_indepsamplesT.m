@@ -8,16 +8,15 @@ function [s, cfg] = ft_statfun_indepsamplesT(cfg, dat, design)
 %   [stat] = ft_timelockstatistics(cfg, timelock1, timelock2, ...)
 %   [stat] = ft_freqstatistics(cfg, freq1, freq2, ...)
 %   [stat] = ft_sourcestatistics(cfg, source1, source2, ...)
-% with the following configuration option
+% with the following configuration option:
 %   cfg.statistic = 'ft_statfun_indepsamplesT'
 %
-% Configuration options
+% You can specify the following configuration options:
 %   cfg.computestat    = 'yes' or 'no', calculate the statistic (default='yes')
 %   cfg.computecritval = 'yes' or 'no', calculate the critical values of the test statistics (default='no')
 %   cfg.computeprob    = 'yes' or 'no', calculate the p-values (default='no')
 %
-% The following options are relevant if cfg.computecritval='yes' and/or
-% cfg.computeprob='yes'.
+% The following options are relevant if cfg.computecritval='yes' and/or cfg.computeprob='yes':
 %   cfg.alpha = critical alpha-level of the statistical test (default=0.05)
 %   cfg.tail  = -1, 0, or 1, left, two-sided, or right (default=1)
 %               cfg.tail in combination with cfg.computecritval='yes'
@@ -26,9 +25,10 @@ function [s, cfg] = ft_statfun_indepsamplesT(cfg, dat, design)
 %               cfg.alpha/2 and (1-cfg.alpha/2) (with cfg.tail=0), or at
 %               quantile (1-cfg.alpha) (with cfg.tail=1).
 %
-% Design specification
-%   cfg.ivar  = row number of the design that contains the labels of the conditions that must be
-%               compared (default=1). The labels are the numbers 1 and 2.
+% The experimental design is specified as:
+%   cfg.ivar  = independent variable, row number of the design that contains the labels of the conditions to be compared (default=1)
+%
+% The labels for the independent variable should be specified as the number 1 and 2.
 %
 % See also FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS
 
@@ -58,6 +58,7 @@ cfg.computecritval = ft_getopt(cfg, 'computecritval', 'no');
 cfg.computeprob    = ft_getopt(cfg, 'computeprob', 'no');
 cfg.alpha          = ft_getopt(cfg, 'alpha', 0.05);
 cfg.tail           = ft_getopt(cfg, 'tail', 1);
+cfg.ivar           = ft_getopt(cfg, 'ivar', 1);
 
 % perform some checks on the configuration
 if strcmp(cfg.computeprob,'yes') && strcmp(cfg.computestat,'no')
@@ -83,7 +84,7 @@ end
 df = nrepl - 2;
 
 if strcmp(cfg.computestat, 'yes')
-  % compute the statistic use nanmean only if necessary
+  % compute the statistic, use nanmean only if necessary
   if hasnans1
     avg1 = nanmean(dat(:,sel1), 2);
     var1 = nanvar(dat(:,sel1), 0, 2);
@@ -102,12 +103,12 @@ if strcmp(cfg.computestat, 'yes')
     % the following achieves the same as the line above, but faster
     var2 = (sum(dat(:,sel2).^2,2)-(avg2.^2).*nreplc2)./(nreplc2-1);
   end
-  
+
   varc = (1./nreplc1 + 1./nreplc2).*((nreplc1-1).*var1 + (nreplc2-1).*var2)./df;
-  
-  % in the case of non-equal triallengths, and tfrs as input-data nreplc are
-  % vectors with different values. when the triallengths are equal, and the
-  % input is a tfr, nreplc are vectors with either zeros (all trials contain nan
+
+  % in the case of non-equal trial lengths, and TFRs as input-data, nreplc are
+  % vectors with different values. When the trial lengths are equal, and the
+  % input is a TFR, nreplc are vectors with either zeros (all trials contain nan
   % meaning that t_ftimwin did not fit around data), or the number of trials
   s.stat = (avg1 - avg2)./sqrt(varc);
 end

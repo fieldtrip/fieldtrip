@@ -1,8 +1,7 @@
 function test_ft_regressconfound
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_regressconfound
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -150,7 +149,5 @@ assert(isequal(size(source4_out.pow), size(source4.pow)));
 for t = 1:10
   betas = cfg.confound \ transpose(source4.pow(:,:,t));
   desired = transpose(transpose(source4.pow(:,:,t)) - cfg.confound * betas);
-  assert(isequal(source4_out.pow(:,:,t), desired));
+  assert(isalmostequal(source4_out.pow(:,:,t), desired, 'abstol', 1e-12));
 end
-
-

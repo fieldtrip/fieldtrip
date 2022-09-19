@@ -1,8 +1,7 @@
 function test_bug931
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_appendfreq
 
 freq1.label = {'1'};
@@ -26,6 +25,3 @@ try
 catch
   disp('it produced the expected error');
 end
-
-
-

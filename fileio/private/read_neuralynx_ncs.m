@@ -47,20 +47,21 @@ isMexv6 = false;
 isMexv3 = false;
 if ispc
   % first look for Neuralynx version 6 libs
-  isMexv6 = ft_hastoolbox('neuralynx_v6', 2); % let's leave warnings for debug
+  isMexv6 = ft_hastoolbox('neuralynx_v6', 3);   % don't give warning
   if ~isMexv6
     % look for Ueli's libs as alternative
-    isMexv3 = ft_hastoolbox('neuralynx_v3', 2); % let's leave warnings for debug
+    isMexv3 = ft_hastoolbox('neuralynx_v3', 3); % don't give warning
   end
 elseif ismac || isunix
   % look for Ueli's libs only
-  isMexv3 = ft_hastoolbox('neuralynx_v3', 2); % let's leave warnings for debug
+  isMexv3 = ft_hastoolbox('neuralynx_v3', 3);   % don't give warning
 end
 
-% if ~isMexv6 && ~mexWarning
-%   ft_warning('Reading Neuralynx CSC files is faster if you install the MATLAB importer mex files, see http://neuralynx.com/research_software/file_converters_and_utilities/');
-%   mexWarning = true;
-% end
+if ~isMexv6 && ~isMexv3
+  msgId = 'FieldTrip:fileio:neuralynx_mex';
+  ft_warning('once', msgId);
+  ft_warning(msgId, 'reading Neuralynx CSC files is faster if you install the MATLAB importer mex files, see http://neuralynx.com/research_software/file_converters_and_utilities/ or https://www.urut.ch/new/serendipity/index.php?/pages/nlxtomatlab.html');
+end
 
 if isMexv6 || isMexv3
   % Neuralynx mex files use C-style flags, so let's name them for convinience
@@ -101,7 +102,7 @@ if NRecords>0
   elseif isMexv3
     % note that the indexing in the mex file is 0-offset (C++ style) rather than 1-offset (MATLAB style)
     [TimeStamp, ChanNumber, SampFreq] = Nlx2MatCSC_v3(filename, READ_TST+READ_CHAN+READ_FREQ, HEADER_NO, EXTRACT_RECORD_RANGE, [0, NRecords_to_read-1]);
-    TimeStamp = uint64(TimeStamp); % to match signature of ft_read_... output, as mex gives us doubles      
+    TimeStamp = uint64(TimeStamp); % to match signature of ft_read_... output, as mex gives us doubles
   else
     TimeStamp        = zeros(1, NRecords_to_read, 'uint64');
     ChanNumber       = zeros(1, NRecords_to_read);
@@ -133,8 +134,7 @@ if NRecords>0
   % explain the jump (which is always > one block)
   Fs       = mode(double(SampFreq));
   if abs(Fs/hdr.SamplingFrequency-1)>0.01
-    ft_warning('the sampling frequency as read out from the header equals %2.2f and differs from the mode sampling frequency as read out from the data %2.2f\n', ...
-      hdr.SamplingFrequency, Fs);
+    ft_warning('the sampling frequency as read out from the header equals %2.2f and differs from the mode sampling frequency as read out from the data %2.2f\n', hdr.SamplingFrequency, Fs);
     
     % check which one was correct
     d = double(TimeStamp(2:end)-TimeStamp(1:end-1));
@@ -165,8 +165,7 @@ if NRecords>0
   ts_range_predicted = (NRecords-1)*512*gapCorrectedTimeStampPerSample;
   ts_range_observed  = double(tsE-ts1);
   if abs(ts_range_predicted-ts_range_observed)>minJump
-    ft_warning('discontinuous recording, predicted number of timestamps and observed number of timestamps differ by %2.2f \n Please consult the wiki on http://www.fieldtriptoolbox.org/getting_started/neuralynx?&#discontinuous_recordings',...
-      abs(ts_range_predicted-ts_range_observed) );
+    ft_warning('discontinuous recording, predicted number of timestamps and observed number of timestamps differ by %2.2f\nPlease consult http://www.fieldtriptoolbox.org/faq/discontinuous_neuralynx', abs(ts_range_predicted-ts_range_observed) );
   end
   
 else

@@ -116,5 +116,3 @@ joblist3 = qsubfeval(@ft_freqgrandaverage, cfg3,'memreq',1*(1024^3),'timreq',60,
 
 cd(prevdir);
 rmdir(tmpdir, 's');
-
-

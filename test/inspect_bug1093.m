@@ -1,4 +1,4 @@
-function cfgnew = test_bug1093
+function inspect_bug1093
 
 % DEPENDENCY ft_artifact_zvalue
 

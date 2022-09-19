@@ -119,7 +119,7 @@ switch ft_headmodeltype(headmodel)
     [pos, tri] = headsurface(headmodel, [], 'inwardshift', inwardshift, 'surface', 'brain');
     inside = bounding_mesh(dippos, pos, tri);
 
-  case {'simbio'}
+  case {'simbio', 'duneuro'}
     % this is a model with hexaheders or tetraheders
     if isfield(headmodel, 'tet')
       % the subsequent code works both for tetraheders or hexaheders, but assumes the volume elements to be called "hex"
@@ -133,7 +133,8 @@ switch ft_headmodeltype(headmodel)
     numdip = size(dippos,1);
 
     % FIXME we have to rethink which tissue types should be flagged as inside
-    tissue = intersect({'gray', 'white', 'csf', 'brain'}, headmodel.tissuelabel);
+    %tissue = intersect({'gray', 'white', 'csf', 'brain'}, headmodel.tissuelabel);
+    tissue = intersect({'gm', 'gray', 'brain'}, headmodel.tissuelabel);
 
     % determine all hexaheders that are labeled as brain
     insidehex = false(size(headmodel.tissue));
@@ -176,17 +177,15 @@ switch ft_headmodeltype(headmodel)
     insidedip  = find( insidedip);
     dippos = dippos(insidedip,:);
 
-    % find the nearest vertex for each of the dipoles
-    dsearchn(headmodel.pos, dippos(1,:)); % call it once to precompile
-    stopwatch = tic;
-    dsearchn(headmodel.pos, dippos(1,:)); % call it once to estimate the time
-    t = toc(stopwatch);
-    fprintf('determining inside points, this takes an estimates %d seconds\n', round(numdip*t));
-    posindx = dsearchn(headmodel.pos, dippos);
+    % find the nearest vertex for each of the dipoles, dsearchn is slow
+    % when there are many points, knnsearch is much faster, but is in the
+    % stats-toolbox. So, use a drop-in replacement that performs in between
+    % in terms of speed.
+    posindx = my_dsearchn(headmodel.pos, dippos);
 
     % The following code is only guaranteed to work with convex elements. Regular
     % hexahedra and tetrahedra are convex, and the adapted hexahedra we can use with
-    % SIMBIO have to be convex as well.
+    % SIMBIO/Duneuro have to be convex as well.
 
     inside = false(1, numdip);
     % for each dipole determine whether it is inside one of the neighbouring hexaheders
@@ -212,3 +211,85 @@ end
 % ensure that it is a boolean column vector
 inside(isnan(inside(:))) = 0;
 inside = logical(inside(:));
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% local subfunction that is much faster than dsearchn
+
+function indx = my_dsearchn(pos1, pos2, flag)
+
+% indx = zeros(size(pos2,1),1);
+% mind = inf(size(pos2,1),1);
+% for k = 1:size(pos1,1)
+%   dpos = bsxfun(@minus, pos2, pos1(k,:));
+%   thisd = sum(dpos.^2,2);
+%   issmaller = thisd<mind;
+%   mind(issmaller) = thisd(issmaller);
+%   indx(issmaller) = k;
+% end
+
+% the idea is that the distance between 2 points is:
+% 
+% sqrt(sum((p1(x,y,z)-p2(x,y,z)).^2)
+% 
+% since we are dealing with relative distances, we can get rid of the sqrt:
+% so we need to compute: 
+%
+% sum((p1(x,y,z)-p2(x,y,z)).^2)
+%
+% this is the same as:
+%
+% (p1x-p2x)^2 + (p1y-p2y)^2 + (p1z-p2z)^2
+%
+% or, equivalently:
+%
+% p1x^2 + p2x^2 - 2*p1x*p2x+ ... 
+% 
+% reordering:
+%
+% (p1x^2 + p1y^2 + p1z^2) + cross-terms + (p2x^2 + p2y^2 + p2z^2)
+%
+% the last term between brackets is the same for each position-of-interest:
+% so it does not change the relative distance, and the first term between
+% brackets only needs to be computed once (below denoted as the 'offset'
+% variable.
+
+if nargin<3
+  flag = true;
+end
+
+if flag && exist('knnsearch', 'file')
+  % use much faster knnsearch if available on the path
+  indx = knnsearch(pos1, pos2);
+  return;
+end
+
+offset = (pos1.^2)*[1;1;1];
+
+% not sure whether this speeds up things, but it does not hurt do the
+% operations in order of overall offset (i.e. absolute distance of the
+% headmodel points to the origin)
+[srt, ix] = sort(-offset);
+indx   = zeros(size(pos2,1),1);
+mind   = inf(1,size(pos2,1));
+
+% transpose once, to speed up matrix computations
+pos2 = pos2';
+
+chunksize = 250; % just a number, could be optimized
+chunks    = [(0:chunksize:(numel(offset)-1)) numel(offset)];
+
+% loop across blocks of headmodel points, and iteratively update the
+% index to the nearest sourcemodel point, based on the shortcut heuristic
+% explained above
+
+for k = 1:(numel(chunks)-1)
+  iy = ix((chunks(k)+1):chunks(k+1));
+  
+  %thisd = offset(k) - 2.*(pos2(:,1).*pos1(k,1)+pos2(:,2).*pos1(k,2)+pos2(:,3).*pos1(k,3));
+  thisd  = offset(iy)./2 - pos1(iy,:)*pos2;%pos2(:,1)*pos1(k,1)-pos2(:,2)*pos1(k,2)-pos2(:,3)*pos1(k,3);
+  [m, i] = min(thisd, [], 1);
+  issmaller = m<mind;
+  mind(issmaller) = m(issmaller);
+  indx(issmaller) = iy(i(issmaller));
+end

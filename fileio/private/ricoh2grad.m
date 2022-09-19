@@ -7,11 +7,9 @@ function grad = ricoh2grad(hdr)
 %% See also FT_READ_HEADER, CTF2GRAD, BTI2GRAD, FIF2GRAD, YOKOGAWA2GRAD_NEW
 %
 
-% The following line is only a safety measure: No function of the toolbox
-% is actually called in this routine.
-if ~ft_hastoolbox('ricoh_meg_reader')
-    ft_error('cannot determine whether Ricoh toolbox is present');
-end
+% The following line is only a safety measure:
+% No function of the toolbox is actually called in this routine.
+ft_hastoolbox('ricoh_meg_reader', 1);
 
 if isfield(hdr, 'label')
   label = hdr.label; % keep for later use

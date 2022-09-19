@@ -1,7 +1,8 @@
 function test_bug2789
 
 % WALLTIME 00:10:00
-% MEM 1500mb
+% MEM 2gb
+% DEPENDENCY
 
 load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2789.mat'));
 

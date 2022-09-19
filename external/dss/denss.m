@@ -38,7 +38,9 @@ state = contract_dim(state, 'Y');
 state = contract_dim(state, 'S');
 
 % read the version information
-VERSION = fopen('VERSION','r');
+P = mfilename('fullpath');
+[p,f,e] = fileparts(P);
+VERSION = fopen(fullfile(p,'VERSION'),'r');
 
 if VERSION ~= -1
   version = fgets(VERSION);

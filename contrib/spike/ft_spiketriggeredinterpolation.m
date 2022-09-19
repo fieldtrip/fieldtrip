@@ -148,7 +148,7 @@ for i=1:ntrial
       % interpolate the data around the spike
       xall  = [begsmp_interp          : endsmp_interp];
       x     = [begsmp_interp:begsmp-1   endsmp+1:endsmp_interp];
-      y     =  data.trial{i}(chansel,x) ;
+      y     =  data.trial{i}(chansel,x);
       if length(chansel) > 1; y = y'; end %our channels are in rows but interp1 need cols
       yi    = interp1(x,y,xall,cfg.method);
       if length(chansel) > 1; yi = yi'; end %get us back to rows

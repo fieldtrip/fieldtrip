@@ -8,6 +8,8 @@ function [H] = translate(f)
 % where
 %   T   [tx, ty, tz] translation along each of the axes
 %   H   corresponding homogenous transformation matrix
+%
+% See also ROTATE, SCALE, QUATERNION, HOMOGENOUS2TRADITIONAL
 
 % Copyright (C) 2000-2005, Robert Oostenveld
 %

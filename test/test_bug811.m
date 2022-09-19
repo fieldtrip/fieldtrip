@@ -1,8 +1,7 @@
 function test_bug811
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_checkdata spm2fieldtrip
 
 addpath(dccnpath('/home/common/matlab/spm8'));
@@ -15,4 +14,3 @@ E = clone(D, fnamedat);
 
 data = spm2fieldtrip(E);
 ft_checkdata(data, 'datatype', 'raw');
-

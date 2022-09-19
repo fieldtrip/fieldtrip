@@ -1,12 +1,12 @@
 function failed_bug1794
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_prepare_sourcemodel ft_determine_units ft_convert_units ft_prepare_leadfield
 
 load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/vol.mat'))
-load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/dataFIC'))
-load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/segmentedmri'))
+load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/dataFIC.mat'))
+load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/segmentedmri.mat'))
 
 cfg = [];
 cfg.resolution = 1;

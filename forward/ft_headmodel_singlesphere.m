@@ -4,9 +4,12 @@ function headmodel = ft_headmodel_singlesphere(mesh, varargin)
 % head by fitting a spherical model to a set of points that describe
 % the head surface.
 %
-% For MEG this implements Cuffin BN, Cohen D.  "Magnetic fields of
-% a dipole in special volume conductor shapes" IEEE Trans Biomed Eng.
-% 1977 Jul;24(4):372-81.
+% For MEG this implements Cuffin BN, Cohen D.  "Magnetic fields of a dipole in
+% special volume conductor shapes" IEEE Trans Biomed Eng. 1977 Jul;24(4):372-81.
+%
+% For EEG this implements R. Kavanagh, T. M. Darccey, D. Lehmann, and D. H. Fender.
+% Evaluation of methods for three-dimensional localization of electric sources in the
+% human brain. IEEE Trans Biomed Eng, 25:421-429, 1978.
 %
 % Use as
 %   headmodel = ft_headmodel_singlesphere(mesh, ...)
@@ -18,7 +21,7 @@ function headmodel = ft_headmodel_singlesphere(mesh, varargin)
 
 % FIXME document both EEG and MEG case
 
-% Copyright (C) 2012-2013, Donders Centre for Cognitive Neuroimaging, Nijmegen, NL
+% Copyright (C) 2012-2022, Donders Centre for Cognitive Neuroimaging, Nijmegen, NL
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.

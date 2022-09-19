@@ -36,38 +36,38 @@ void trimline(char *s) {
 
 void initconfig(config_t *cconf) {
 		if (cconf) {
-				cconf->pid         = 0;
-				cconf->next        = NULL;
+				cconf->pid          = 0;
+				cconf->next         = NULL;
 				/* these should either be NULL or point to a string */
-				cconf->memavail    = NULL;
-				cconf->cpuavail    = NULL;
-				cconf->timavail    = NULL;
-				cconf->allowuser   = NULL;
-				cconf->allowgroup  = NULL;
-				cconf->allowhost   = NULL;
+				cconf->memavail     = NULL;
+				cconf->cpuavail     = NULL;
+				cconf->timavail     = NULL;
+				cconf->allowuser    = NULL;
+				cconf->allowgroup   = NULL;
+				cconf->allowhost    = NULL;
 				cconf->refuseuser   = NULL;
 				cconf->refusegroup  = NULL;
 				cconf->refusehost   = NULL;
-				cconf->group       = NULL;
-				cconf->hostname    = NULL;
-				cconf->matlab      = NULL;
-				cconf->timeout     = NULL;
-				cconf->smartshare  = NULL;
-				cconf->smartmem    = NULL;
-				cconf->smartcpu    = NULL;
-				cconf->udsserver   = NULL;
-				cconf->verbose     = NULL;
+				cconf->group        = NULL;
+				cconf->hostname     = NULL;
+				cconf->matlab       = NULL;
+				cconf->timeout      = NULL;
+				cconf->smartshare   = NULL;
+				cconf->smartmem     = NULL;
+				cconf->smartcpu     = NULL;
+				cconf->udsserver    = NULL;
+				cconf->verbose      = NULL;
 		}
 }
 
-/* parseline gets a textline and if it finds a key=value pair, 
- * the value will be put in newly allocated memory and 
+/* parseline gets a textline and if it finds a key=value pair,
+ * the value will be put in newly allocated memory and
  * the pointer to it returned, if not found, return NULL */
 char* parseline(char* line, char* key) {
 		char* keyp = NULL;
 		char* keyis;
 		char* valp;
-		char* valcpy=NULL; /* will be return value */
+		char* valcpy = NULL; /* will be return value */
 
 		/* make a copy of the key combined with '=' */
 		keyis = malloc((strlen(key) + 2) * sizeof(char));
@@ -86,7 +86,7 @@ char* parseline(char* line, char* key) {
 }
 
 /* parsefile takes a filename as input and returns a linked list
- * with the configuration for the peer slaves
+ * with the configuration for the peer workers
  * config is a pointer to the start of the configuration list */
 int parsefile(char* fname, config_t** config) {
 		char line[LINELENGTH];
@@ -114,35 +114,35 @@ int parsefile(char* fname, config_t** config) {
 						}
 						else if (cconf) {
 								/* fill the current configuration structure with specific key=value pairs */
-								if (!cconf->memavail) 
+								if (!cconf->memavail)
 										cconf->memavail    = parseline(line, "memavail");
-								if (!cconf->cpuavail) 
+								if (!cconf->cpuavail)
 										cconf->cpuavail    = parseline(line, "cpuavail");
-								if (!cconf->timavail) 
+								if (!cconf->timavail)
 										cconf->timavail    = parseline(line, "timavail");
-								if (!cconf->allowhost) 
+								if (!cconf->allowhost)
 										cconf->allowhost   = parseline(line, "allowhost");
-								if (!cconf->allowuser) 
+								if (!cconf->allowuser)
 										cconf->allowuser   = parseline(line, "allowuser");
-								if (!cconf->allowgroup) 
+								if (!cconf->allowgroup)
 										cconf->allowgroup  = parseline(line, "allowgroup");
-								if (!cconf->group) 
+								if (!cconf->group)
 										cconf->group       = parseline(line, "group");
-								if (!cconf->hostname) 
+								if (!cconf->hostname)
 										cconf->hostname    = parseline(line, "hostname");
-								if (!cconf->matlab) 
+								if (!cconf->matlab)
 										cconf->matlab      = parseline(line, "matlab");
-								if (!cconf->timeout) 
+								if (!cconf->timeout)
 										cconf->timeout     = parseline(line, "timeout");
-								if (!cconf->smartshare) 
+								if (!cconf->smartshare)
 										cconf->smartshare  = parseline(line, "smartshare");
-								if (!cconf->smartmem) 
+								if (!cconf->smartmem)
 										cconf->smartmem    = parseline(line, "smartmem");
-								if (!cconf->smartcpu) 
+								if (!cconf->smartcpu)
 										cconf->smartcpu    = parseline(line, "smartcpu");
-								if (!cconf->udsserver) 
+								if (!cconf->udsserver)
 										cconf->udsserver   = parseline(line, "udsserver");
-								if (!cconf->verbose) 
+								if (!cconf->verbose)
 										cconf->verbose     = parseline(line, "verbose");
 						}
 
@@ -160,6 +160,5 @@ int parsefile(char* fname, config_t** config) {
 				numread++;
 				pconf= pconf->next;
 		}
-		return numread;				
+		return numread;
 }
-

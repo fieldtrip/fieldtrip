@@ -2,6 +2,7 @@ function failed_old_specest_vs_oldimplementation
 
 % MEM 1gb
 % WALLTIME 00:10:00
+% DEPENDENCY
 
 % read in data from /home/common/testdata (I just my own testdata)
 % data = .....

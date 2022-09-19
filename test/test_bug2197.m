@@ -2,7 +2,6 @@ function test_bug2197
 
 % MEM 1gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_selectdata
 
 freq = [];

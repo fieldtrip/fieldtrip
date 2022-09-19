@@ -1,8 +1,7 @@
 function test_ft_topoplotER
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_topoplotER ft_topoplotTFR ft_topoplotIC
 
 % this script tests the functionality of ft_topoplotER with respect to the
@@ -97,10 +96,10 @@ cfg.parameter = 'cohspctrm';
 % cfg.refchannel = 'gui';
 cfg.refchannel = freq2.label{5};
 
-coh2 = ft_checkdata(coh2, 'cmbrepresentation', 'full');
+coh2 = ft_checkdata(coh2, 'cmbstyle', 'full');
 figure; ft_topoplotER(cfg, coh2);drawnow
 
-coh2 = ft_checkdata(coh2, 'cmbrepresentation', 'sparse');
+coh2 = ft_checkdata(coh2, 'cmbstyle', 'sparse');
 figure; ft_topoplotER(cfg, coh2);drawnow
 
 %create connectivity-data with very sparse linear indexing
@@ -117,11 +116,11 @@ coh4 = ft_connectivityanalysis(cfgc2, freq2);
 %plot
 cfg.refchannel = freq2.label{5};
 
-coh2 = ft_checkdata(coh2, 'cmbrepresentation', 'full');
+coh2 = ft_checkdata(coh2, 'cmbstyle', 'full');
 figure; ft_topoplotER(cfg, coh4);drawnow
 
 %plot: this works
-coh2 = ft_checkdata(coh2, 'cmbrepresentation', 'sparse');
+coh2 = ft_checkdata(coh2, 'cmbstyle', 'sparse');
 figure; ft_topoplotER(cfg, coh4);drawnow
 
 %create connectivity-data with asymmetry

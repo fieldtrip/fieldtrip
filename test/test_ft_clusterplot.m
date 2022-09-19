@@ -1,7 +1,8 @@
 function test_ft_clusterplot
 
-% MEM 8gb
+% MEM 12gb
 % WALLTIME 00:20:00
+% DEPENDENCY ft_clusterplot ft_statistics_montecarlo ft_timelockstatistics clusterstat findcluster
 
 cd(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/eventrelatedstatistics'));
 
@@ -28,7 +29,7 @@ cfg.statistic   = 'ft_statfun_depsamplesT';
 cfg.alpha       = 0.05;
 cfg.correctm    = 'cluster';
 cfg.correcttail = 'prob';
-cfg.numrandomization = 1000;
+cfg.numrandomization = 'all';
 cfg.minnbchan        = 2; % minimal neighbouring channels
 Nsub = 10;
 cfg.design(1,1:2*Nsub)  = [ones(1,Nsub) 2*ones(1,Nsub)];
@@ -46,11 +47,12 @@ cfg.markersymbol = '.';
 cfg.alpha = 0.05;
 cfg.parameter='stat';
 cfg.zlim = [-5 5];
-
+cfg.toi  = [-0.1:0.1:0.9];
 ft_clusterplot(cfg,stat);
 
 %% chan_freq
 stat.freq = 1:376;
+cfg.toi = [20:20:200];
 stat = rmfield(stat, 'time');
 stat.dimord = 'chan_freq';
 
@@ -59,6 +61,7 @@ ft_clusterplot(cfg,stat);
 %% chan_freq_time with singleton time
 stat.time = 1;
 stat.dimord = 'chan_freq_time';
+cfg.toi = [20:20:200];
 
 ft_clusterplot(cfg,stat);
 
@@ -76,6 +79,7 @@ stat.mask     = reshape(stat.mask,    [151 1 376]);
 stat.stat     = reshape(stat.stat,    [151 1 376]);
 stat.ref      = reshape(stat.ref,     [151 1 376]);
                     
+cfg.toi = [20:20:200];
 
 ft_clusterplot(cfg,stat);
 

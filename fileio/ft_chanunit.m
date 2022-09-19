@@ -44,7 +44,7 @@ function chanunit = ft_chanunit(input, desired)
 %
 % $Id$
 
-% these are for remembering the type on subsequent calls with the same input arguments
+% these are for speeding up subsequent calls with the same input arguments
 persistent previous_argin previous_argout
 
 if nargin<2
@@ -126,9 +126,9 @@ end
 if ft_senstype(input, 'unknown')
   % don't bother doing all subsequent checks to determine the type of sensor array
 
-elseif isheader && ft_senstype(input, 'eeg')
+elseif isheader && ft_senstype(input, 'eeg') && isfield(input, 'chantype')
   % until now in all stand-alone EEG systems examined the data was in uV
-  chanunit(strcmp('eeg',              input.chantype)) = {'uV'};
+  chanunit(strcmp('eeg', input.chantype)) = {'uV'};
 
 elseif isheader && (ft_senstype(input, 'neuromag') || ft_senstype(input, 'babysquid74')) && issubfield(input, 'orig.chs')
   for i = 1:numchan % make a cell-array of units for each channel
@@ -173,7 +173,7 @@ elseif isgrad && (ft_senstype(input, 'neuromag') || ft_senstype(input, 'babysqui
           ft_warning('assuming that planar MEG channel units are %s', assumption);
         end
       else
-        sel = strcmp('megplanar', input.chantype) & strcmp('unknown', input.chanunit);
+        sel = strcmp('megplanar', input.chantype) & strcmp('unknown', chanunit);
         if any(sel)
           ft_warning('cannot determine the units for the planar MEG channels');
         end
@@ -198,7 +198,7 @@ elseif (ft_senstype(input, 'neuromag') || ft_senstype(input, 'babysquid74')) && 
       ft_warning('assuming that planar MEG channel units are %s, consistent with the geometrical units', assumption);
     end
   else
-    sel = strcmp('megplanar', input.chantype) & strcmp('unknown', input.chanunit);
+    sel = strcmp('megplanar', input.chantype) & strcmp('unknown', chanunit);
     if any(sel)
       ft_warning('cannot determine the units for the planar MEG channels');
     end

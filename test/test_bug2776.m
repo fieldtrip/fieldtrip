@@ -2,6 +2,7 @@ function test_bug2776
 
 % WALLTIME 00:10:00
 % MEM 1gb
+% DEPENDENCY
 
 % see http://nl.mathworks.com/help/signal/ug/psd-estimate-using-fft.html
 

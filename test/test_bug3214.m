@@ -2,6 +2,7 @@ function test_bug3214
 
 % WALLTIME 00:20:00
 % MEM 2gb
+% DEPENDENCY
 
 %% try to simulate some data
 

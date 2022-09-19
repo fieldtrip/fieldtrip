@@ -1,10 +1,9 @@
-
 function ft_realtime_headlocalizer(cfg)
 
 % FT_REALTIME_HEADLOCALIZER is a real-time application for online visualization of
-% the head position for the CTF275 and the Neuromag/Elekta systems. This uses the
+% the head position for the CTF275 and the Neuromag/Elekta/Megin systems. This uses the
 % continuous head localization (in CTF terminology, i.e. CHL) or position indicator
-% (in Neuromag/Elekta terminology, i.e. cHPI) information.
+% (in Neuromag/Elekta/Megin terminology, i.e. cHPI) information.
 %
 % Repositioning the subject to a previous recording session can be done by specifying
 % the previous dataset as cfg.template = 'subject01xxx.ds', or by pointing to a text
@@ -35,7 +34,7 @@ function ft_realtime_headlocalizer(cfg)
 %   cfg.polhemus        = filename or mesh, description of the head shape recorded with the Polhemus (default is automatic)
 %   cfg.headshape       = filename or mesh, description of the head shape recorded with the Structure Sensor
 %
-% The following options only apply to data from the Neuromag/Elekta system
+% The following options only apply to data from the Neuromag/Elekta/Megin system
 %   cfg.headmovement    = string, name or location of the .pos file created by MaxFilter which describes the location of the head relative to the dewar
 %   cfg.coilfreq        = single number in Hz or list of numbers (default = [293, 307, 314, 321, 328])
 %
@@ -146,7 +145,7 @@ if ischar(cfg.polhemus) && exist(cfg.polhemus, 'file')
   cfg.polhemus = ft_read_headshape(cfg.polhemus);
 elseif isneuromag
   fprintf('reading polhemus data from file %s\n', cfg.dataset);
-  % Neuromag/Elekta dataset will contain head shape
+  % Neuromag/Elekta/Megin dataset will contain head shape
   cfg.polhemus = ft_read_headshape(cfg.dataset);
 elseif isctf
   fprintf('reading polhemus data from file %s\n', cfg.dataset);
@@ -168,6 +167,7 @@ if ~isempty(cfg.dewar)
   cfg.dewar = ft_convert_units(cfg.dewar, 'cm');
 end
 
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % read template head position, to reposition to, if template file is specified
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -187,7 +187,7 @@ if isctf
   else
     template = [];
   end
-
+  
   % remove CTF REF sensors, for plotting purposes
   chansel = match_str(hdr.grad.chantype, 'meggrad');
   hdr.grad.chanpos  = hdr.grad.chanpos(chansel,:);
@@ -195,7 +195,7 @@ if isctf
   hdr.grad.chantype = hdr.grad.chantype(chansel,:);
   hdr.grad.label    = hdr.grad.label(chansel,:);
   hdr.grad.tra      = hdr.grad.tra(chansel,:);
-
+  
 elseif isneuromag
   if ~isempty(cfg.template)
     [p, f, x] = fileparts(cfg.template);
@@ -210,7 +210,7 @@ elseif isneuromag
   else
     template = [];
   end
-
+  
 else
   ft_error('the data does not resemble ctf, nor neuromag')
 end % if ctf or neuromag
@@ -225,7 +225,7 @@ if isctf
   dip  = [];
   vol  = [];
   coilsignal = [];
-
+  
 elseif isneuromag
   shape = ft_read_headshape(cfg.headerfile, 'coordsys', 'dewar', 'format', 'neuromag_fif', 'unit', 'cm');
   for i = 1:min(size(shape.pos,1),length(cfg.coilfreq)) % for as many digitized or specified coils
@@ -237,21 +237,18 @@ elseif isneuromag
   if ~exist('dip', 'var')
     ft_error('head localization requires digitized positions for Neuromag systems')
   end
-
+  
   % prepare the forward model and the sensor array for subsequent fitting
   % note that the forward model is a magnetic dipole in an infinite vacuum
-  %cfg.channel = ft_channelselection('MEG', hdr.label); % because we want to planars as well (previously only magnetometers)
   cfg.channel = ft_channelselection('MEGMAG', hdr.label); % old
-  %cfg.channel = setdiff(ft_channelselection('MEG', hdr.label),ft_channelselection('MEGMAG', hdr.label)); % just trying out (planar mags)
-  %cfg.channel = ft_channelselection('IAS*',hdr.label); % internal active shielding
   [vol, sens] = ft_prepare_vol_sens([], hdr.grad, 'channel', cfg.channel);
   sens = ft_datatype_sens(sens, 'scaling', 'amplitude/distance', 'distance', 'cm'); % ensure SI units
   coilsignal = [];
-
+  
   % update distances, given that sensor units are m an not cm
   cfg.accuracy_green = cfg.accuracy_green/100;
   cfg.accuracy_orange = cfg.accuracy_orange/100;
-
+  
 else
   ft_error('the data does not resemble ctf, nor neuromag')
 end % if ctf or neuromag
@@ -262,32 +259,32 @@ end % if ctf or neuromag
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if isctf
   [dum, chanindx] = match_str('headloc', hdr.chantype);
-
+  
 elseif isneuromag
   % depending on wether movement compensation was done or only head position
   % estimation, the fif file that results from Maxfilter will contain 9 channels that
   % start with QUAT or with CHPI
-
+  
   if ~isempty(cfg.headmovement)
     % load the head position information from cfg.headmovement
     tmpcfg = [];
     tmpcfg.dataset = cfg.headmovement;
     tmpcfg.channel = 'QUAT*';
     data_movement  = ft_preprocessing(tmpcfg);
-
+    
     % ensure that it is regularly sampled
     tmpcfg = [];
     tmpcfg.time{1} = (1:data_movement.hdr.nSamples)/data_movement.hdr.Fs;
     data_movement  = ft_resampledata(tmpcfg, data_movement);
-
+    
   elseif sum(startsWith(hdr.label, 'QUAT'))==9
     % the data only contains the estimated position, but has not been movement corrected
     chanindx = find(startsWith(hdr.label, 'QUAT'));
-
+    
   elseif sum(startsWith(hdr.label, 'CHPI'))==9
     % this is movement corrected data
     chanindx = find(startsWith(hdr.label, 'CHPI'));
-
+    
   else
     % select the 102 magnetometers for fitting of the HPI coils
     [dum, chanindx] = match_str('megmag', hdr.chantype);
@@ -326,47 +323,47 @@ uicontrol_sub(hMainFig);
 % this is the general BCI loop where realtime incoming data is handled
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 while ishandle(hMainFig) && info.continue % while the flag is one, the loop continues
-
+  
   % get the potentially updated information from the main window
   info = guidata(hMainFig);
-
+  
   % determine number of samples available in buffer
   info.hdr = ft_read_header(info.cfg.headerfile, 'cache', true, 'coordsys', 'dewar');
-
+  
   % see whether new samples are available
   newsamples = (info.hdr.nSamples*info.hdr.nTrials-prevSample);
-
+  
   if newsamples>=info.blocksize
-
+    
     if strcmp(info.cfg.bufferdata, 'last')
       begsample  = info.hdr.nSamples*info.hdr.nTrials - info.blocksize + 1;
       endsample  = info.hdr.nSamples*info.hdr.nTrials;
     elseif strcmp(info.cfg.bufferdata, 'first')
       begsample  = prevSample + 1;
-      endsample  = prevSample + info.blocksize ;
+      endsample  = prevSample + info.blocksize;
     else
       ft_error('unsupported value for cfg.bufferdata');
     end
-
+    
     % remember up to where the data was read
     prevSample  = endsample;
     count       = count + 1;
     fprintf('processing segment %d from sample %d to %d\n', count, begsample, endsample);
-
+    
     % read data segment from buffer
     dat = ft_read_data(info.cfg.datafile, 'header', info.hdr, 'begsample', begsample, 'endsample', endsample, 'chanindx', chanindx, 'checkboundary', false);
-
+    
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % from here onward it is specific to the head localization
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+    
     % put the data in a fieldtrip-like raw structure
     data.trial{1} = double(dat);
     data.time{1}  = offset2time(begsample, info.hdr.Fs, endsample-begsample+1);
     data.label    = info.hdr.label(chanindx);
     data.hdr      = info.hdr;
     data.fsample  = info.hdr.Fs;
-
+    
     if ~isempty(info.cfg.headmovement) && info.isneuromag
       if ~all(startsWith(data.label, 'QUAT')) || ~all(startsWith(data.label, 'CHPI'))
         data.trial{1} = data_movement.trial{1}(1:size(data_movement.trial{1}),begsample:endsample);
@@ -375,7 +372,7 @@ while ishandle(hMainFig) && info.continue % while the flag is one, the loop cont
         fprintf('Channels for head localisation already in the .fif file, will use data form the .fif file')
       end
     end
-
+    
     if info.isneuromag && size(coilsignal,2)~=info.blocksize
       % construct the reference signal for each of the coils
       % this needs to be updated if the blocksize changes
@@ -391,64 +388,64 @@ while ishandle(hMainFig) && info.continue % while the flag is one, the loop cont
         end
       end
     end
-
+    
     % compute the HPI coil positions, this takes some time
     [hpi, info.dip] = data2hpi(data, info.dip, info.vol, info.sens, coilsignal, info.isctf, info.isneuromag); % for neuromag datasets this is relatively slow
-
+    
     guidata(hMainFig, info);
-
+    
     if ~ishandle(hMainFig)
       % the figure has been closed
       break
     end
-
+    
     % get the potentially updated information from the main window
     info = guidata(hMainFig);
     % update the info
     info.hpi = hpi;
-
+    
     % store the updated gui variables
     guidata(hMainFig, info);
-
+    
     % DRAW LEFT PANEL - TOP VIEW
     a = subplot(1,2,1);
     h = get(a, 'children');
     hold on;
-
+    
     if ~isempty(h)
       % done on every iteration
       delete(h);
     end
-
+    
     % draw the color-coded head and distances from the templates
     draw_sub(hMainFig);
-
+    
     % show current timesample
     title(sprintf('top view, runtime = %d s\n', round(mean(data.time{1}))));
-
+    
     % not needed any more
     clear data;
-
+    
     % viewing angle
     if info.isctf
       view(-45, 90)
     elseif info.isneuromag
       view(0, 90)
     end
-
+    
     % DRAW RIGHT PANEL - FRONT/REAR VIEW
     b = subplot(1,2,2);
     i = get(b, 'children');
     hold on;
-
+    
     if ~isempty(i)
       % done on every iteration
       delete(i);
     end
-
+    
     % draw the color-coded head and distances from the templates
     draw_sub(hMainFig);
-
+    
     % viewing angle
     if get(info.hViewMirrorButton, 'Value') == 1
       if info.isctf
@@ -469,10 +466,10 @@ while ishandle(hMainFig) && info.continue % while the flag is one, the loop cont
       end
       title(sprintf('Normal view, clock time %s', datestr(now))); % show current data & time
     end
-
+    
     % force Matlab to update the figure
     drawnow
-
+    
   end % if enough new samples
 end % while true
 
@@ -643,12 +640,12 @@ if isctf
   [dum, x3] = match_str('HLC0031', data.label);
   [dum, y3] = match_str('HLC0032', data.label);
   [dum, z3] = match_str('HLC0033', data.label);
-
+  
   % convert from meter to cm and assign to the resp. coil
   hpi{1} = data.trial{1}([x1 y1 z1],end) * 100;
   hpi{2} = data.trial{1}([x2 y2 z2],end) * 100;
   hpi{3} = data.trial{1}([x3 y3 z3],end) * 100;
-
+  
 elseif isneuromag
   if all(startsWith(data.label, 'QUAT'))
     q1 = data.trial{1}(strcmp(data.label, 'QUAT001'),:);
@@ -658,11 +655,12 @@ elseif isneuromag
     q5 = -data.trial{1}(strcmp(data.label, 'QUAT005'),:);
     q6 = -data.trial{1}(strcmp(data.label, 'QUAT006'),:);
     q = [q1(1) q2(1) q3(1) q4(1) q5(1) q6(1)];
-
+    
     % compute the anatomical landmark location in cm
     hpi{1} = ft_warp_apply(q(end,:), data.hdr.orig.dig(1).r' , 'quaternion')'*100;
     hpi{2} = ft_warp_apply(q(end,:), data.hdr.orig.dig(2).r' , 'quaternion')'*100;
     hpi{3} = ft_warp_apply(q(end,:), data.hdr.orig.dig(3).r' , 'quaternion')'*100;
+    
   elseif all(startsWith(data.label, 'CHPI'))
     q1 = data.trial{1}(strcmp(data.label, 'CHPI001'),:);
     q2 = data.trial{1}(strcmp(data.label, 'CHPI002'),:);
@@ -671,12 +669,12 @@ elseif isneuromag
     q5 = -data.trial{1}(strcmp(data.label, 'CHPI005'),:);
     q6 = -data.trial{1}(strcmp(data.label, 'CHPI006'),:);
     q = [q1(1) q2(1) q3(1) q4(1) q5(1) q6(1)];
-
+    
     % compute the anatomical landmark location in cm
     hpi{1} = ft_warp_apply(q(end,:), data.hdr.orig.dig(1).r' , 'quaternion')'*100;
     hpi{2} = ft_warp_apply(q(end,:), data.hdr.orig.dig(2).r' , 'quaternion')'*100;
     hpi{3} = ft_warp_apply(q(end,:), data.hdr.orig.dig(3).r' , 'quaternion')'*100;
-
+    
   else
     % estimate the complex-valued MEG topography for each coil
     % this implements a discrete Fourier transform (DFT)
@@ -684,21 +682,21 @@ elseif isneuromag
     %[x, ut] = svdfft( data.trial{1} );
     %data.trial{1} = x;
     topo = ft_preproc_detrend(data.trial{1}) * ctranspose(coilsignal);
-
+    
     % ignore the out-of-phase spectral component in the topography
     topo = real(topo); % THIS SEEMS TO BE CRUCIAL
-
+    
     % fit a magnetic dipole to each of the topographies
     constr.sequential = true; % for BTI systems this would be 'false' as all coils have the same frequency
     constr.rigidbody = true;
-
+    
     % fit the coils together
     dipall = [];
     ncoil = numel(dip);
     for i=1:ncoil
       dipall.pos(i,:) = dip(i).pos;
     end
-    dipall = dipole_fit(dipall, sens, vol, topo, 'constr', constr, 'display', 'off');
+    dipall = ft_inverse_dipolefit(dipall, sens, vol, topo, 'constr', constr, 'display', 'off');
     for i=1:ncoil
       sel = (1:3) + 3*(i-1);
       dip(i).pos = dipall.pos(i,:);
@@ -796,7 +794,7 @@ if get(info.hCoilCheckBox, 'Value')
       plot3(info.hpi{1}(1),info.hpi{1}(2), info.hpi{1}(3), 'r^', 'MarkerFaceColor', [1 0 0], 'MarkerSize', 25)
       head1 = false;
     end
-
+    
     % draw left ear position
     if ~isempty(info.template)
       if abs(info.template(2,1))-info.cfg.accuracy_green < abs(info.hpi{2}(1)) && abs(info.hpi{2}(1)) < abs(info.template(2,1))+info.cfg.accuracy_green ...
@@ -817,7 +815,7 @@ if get(info.hCoilCheckBox, 'Value')
       plot3(info.hpi{2}(1),info.hpi{2}(2), info.hpi{2}(3), 'ro', 'MarkerFaceColor', [1 0 0], 'MarkerSize', 25)
       head2 = false;
     end
-
+    
     % draw right ear position
     if ~isempty(info.template)
       if abs(info.template(3,1))-info.cfg.accuracy_green < abs(info.hpi{3}(1)) && abs(info.hpi{3}(1)) < abs(info.template(3,1))+info.cfg.accuracy_green  ...
@@ -859,7 +857,7 @@ if get(info.hCoilCheckBox, 'Value')
       plot3(info.hpi{1}(1),info.hpi{1}(2), info.hpi{1}(3), 'ro', 'MarkerFaceColor', [1 0 0], 'MarkerSize', 25)
       head1 = false;
     end
-
+    
     % draw left ear position
     if ~isempty(info.template)
       if abs(info.template(2,1))-info.cfg.accuracy_green < abs(info.hpi{2}(1)) && abs(info.hpi{2}(1)) < abs(info.template(2,1))+info.cfg.accuracy_green ...
@@ -880,7 +878,7 @@ if get(info.hCoilCheckBox, 'Value')
       plot3(info.hpi{2}(1),info.hpi{2}(2), info.hpi{2}(3), 'r^', 'MarkerFaceColor', [1 0 0], 'MarkerSize', 25)
       head2 = false;
     end
-
+    
     % draw right ear position
     if ~isempty(info.template)
       if abs(info.template(3,1))-info.cfg.accuracy_green < abs(info.hpi{3}(1)) && abs(info.hpi{3}(1)) < abs(info.template(3,1))+info.cfg.accuracy_green  ...
@@ -910,7 +908,7 @@ if ~isempty(info.template)
     plot3(info.template(1,1), info.template(1,2), info.template(1,3), 'k^', 'MarkerSize', 27, 'LineWidth', 2); % chan X pos
     plot3(info.template(2,1), info.template(2,2), info.template(2,3), 'ko', 'MarkerSize', 27, 'LineWidth', 2);
     plot3(info.template(3,1), info.template(3,2), info.template(3,3), 'ko', 'MarkerSize', 27, 'LineWidth', 2);
-
+    
     text(-8,8, info.template(2,3), 'Left', 'FontSize', 15);
     text(6,-6, info.template(3,3), 'Right', 'FontSize', 15);
   elseif info.isneuromag
@@ -1010,12 +1008,12 @@ switch eventdata.Key
     for j = 1:numel(info.hpi)
       info.template(j,:) = info.hpi{j}(:); % chan X pos
     end
-
+    
     % write template position to text file for later re-positioning
     template_time = [date datestr(now, '-HH-MM-SS')];
     fprintf('writing to %s.txt \n', template_time);
     dlmwrite([template_time '.txt'], info.template, ' ');
-
+    
   case 'q'
     % stop the application
     fprintf('stopping the application \n')

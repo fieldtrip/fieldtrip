@@ -1,8 +1,7 @@
 %function test_ft_eventtiminganalysis
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:15:00
-
 % DEPENDENCY ft_eventtiminganalysis
 
 load(dccnpath('/home/common/matlab/fieldtrip/data/test/test_ft_eventtiminganalysis.mat'));

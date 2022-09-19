@@ -5,10 +5,10 @@ function [srf] = readsrf(filename, NoNeg)
 % filename: filename of .srf surface file
 % NoNeg: Optional parameter for dealing with nodes that should not be
 %        displayed
-%        1 (default) tells the function to remove triangles containing 
+%        1 (default) tells the function to remove triangles containing
 %                    such nodes from the mesh
 %        0           leaves mesh untouched.
-% 
+%
 % readsrf attempts to read the BrainVoyagerQX v. 4 srf surface files
 % To display:
 % colormap(srf.cmap)
@@ -17,31 +17,31 @@ function [srf] = readsrf(filename, NoNeg)
 % get the idea you could do
 % trisurf(srf.triangles(1:100:end), srf.VX, srf.VY, srf.VZ, srf.mesh_color)
 %
-% BrainVoyager flags nodes that should not be displayed. The default 
+% BrainVoyager flags nodes that should not be displayed. The default
 % behavior of this function is to remove triangles containing such nodes
 % from the triangle list. If you do not like that, set NoNeg to 0.
 %
 % Kate Fissell 3/06
-% Modified by ZSS, SSCC/NIMH/NIH 
-% With thanks to Hester Breman 
+% Modified by ZSS, SSCC/NIMH/NIH
+% With thanks to Hester Breman
 
 if (nargin == 1) NoNeg = 1; end
 
 fp = fopen(filename,'r');
-if (fp == -1) 
+if (fp == -1)
 	fprintf(1,'\nError opening %s\n',filename);
 	return;
 end
 
 
-%% read some header fields 
+%% read some header fields
 srf.version = fread(fp,1,'float32',0,'ieee-le');
 srf.reserve = fread(fp,1,'int32',0,'ieee-le');
 srf.numvert = fread(fp,1,'int32',0,'ieee-le');
 srf.numtri = fread(fp,1,'int32',0,'ieee-le');
 srf.meshcenXYZ = fread(fp,3,'float32',0,'ieee-le');
 
-%% print some header fields 
+%% print some header fields
 fprintf(1,'\nVersion: %.6f',srf.version);
 fprintf(1,'\nNumber of vertices: %d',srf.numvert);
 fprintf(1,'\nNumber of srf.triangles: %d',srf.numtri);
@@ -96,7 +96,7 @@ srf.triangles = fread(fp,srf.numtri*3,'int32',0,'ieee-le');
 srf.triangles = reshape(srf.triangles, [3 srf.numtri]);
 srf.triangles = srf.triangles' + 1;	%% matlab uses 1 based indices so inc vertex indices
 
-%% Remove triangles having negative colors 
+%% Remove triangles having negative colors
 ipos = find (srf.mesh_color >= 0);
 OK = zeros(length(srf.mesh_color),1);
 OK(ipos) = 1;
@@ -133,7 +133,7 @@ fprintf(1,'\n\n');
 
 
 [omega cnt] = fread(fp,1,'uchar',0,'ieee-le');
-if (cnt ~= 0) 
+if (cnt ~= 0)
 	fprintf(1,'\nWarning: extra elements at end of file.');
 
 	c = 0;

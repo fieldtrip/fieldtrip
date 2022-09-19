@@ -12,7 +12,7 @@ function str = fixname(str, version)
 % identifiers, but this particular implementation also works with
 % older MATLAB versions.
 %
-% See also DEBLANK
+% See also DEBLANK, STRIP, PAD
 
 % Copyright (C) 2012-2017, Robert Oostenveld
 %

@@ -1,8 +1,8 @@
 function test_bug2336
 
-% these settings are needed to execute the test script on out cluster
 % WALLTIME 00:30:00
 % MEM 4gb
+% DEPENDENCY
 
 % script to test the integration of FEM output files created by BESA MRI.
 %

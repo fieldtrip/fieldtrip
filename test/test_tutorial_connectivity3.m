@@ -2,7 +2,6 @@ function test_tutorial_connectivity3(datadir)
 
 % MEM 6gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_timelockanalysis ft_sourceanalysis ft_connectivityanalysis ft_prepare_sourcemodel headsurface
 
 % This is the third section of the connectivity tutorial, which

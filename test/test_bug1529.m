@@ -1,15 +1,14 @@
 function test_bug1529
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_plot_ortho
 
 [ftver, ftpath] = ft_version;
 
 %% Load the SPMtemplate 
 mritem = ft_read_mri([ftpath '/external/spm8/templates/T1.nii']);
-% mrichecked = ft_determine_coordsys(mritem) ;
+% mrichecked = ft_determine_coordsys(mritem);
 mritem.coordsys = 'spm'; % define the coordinate system (why is this not part of ft_read_mri?)
 
 %% Display the Anatomy via plot_ortho (defaults)

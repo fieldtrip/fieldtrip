@@ -415,7 +415,7 @@ end
 %       nrpt = nrpt(nrpt==round(nrpt));
 %       dim(i) = max(nrpt);
 %     end
-%     if numel(dim)==1, dim(1,2) = 1; end;
+%     if numel(dim)==1, dim(1,2) = 1; end
 %   end
 %
 % end

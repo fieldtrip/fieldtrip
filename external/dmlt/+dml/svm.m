@@ -23,13 +23,14 @@ classdef svm < dml.method
     
     C % regularization parameter
     
+    kernel = 'linear'; % type of kernel
+    
     Ktrain % precomputed kernel for training data
     Ktest  % precomputed kernel for test data
     
     distance = false; % return distance from decision boundary instead of class label
-    
-    native = false; % uses native Bioinformatics toolbox SVM implementation if true
-    
+    native   = false; % uses native Bioinformatics toolbox SVM implementation if true
+    issqrtmK = false;
   end
   
   methods
@@ -42,6 +43,8 @@ classdef svm < dml.method
     
     function obj = train(obj,X,Y)
    
+      opts = {'verb' -1};
+        
       % handle multiple datasets
       if iscell(X)
         obj = dml.ndata('method',obj);
@@ -50,34 +53,45 @@ classdef svm < dml.method
       end
       
       if obj.native
-        obj.Ktrain = svmtrain(X,Y);
+        obj.Ktrain = fitcsvm(X,Y);
         return
       end
       
       if obj.restart || isempty(obj.dual)
         
-        obj.Ktrain = compKernel(X,X,'linear');
+        obj.X      = X;
+        obj.Ktrain = compKernel(X,X,obj.kernel,obj.Ktrain);
+        obj.Ktest  = [];
         
         if isempty(obj.C)
-          obj.C = .1*(mean(diag(obj.Ktrain))-mean(obj.Ktrain(:)));
+          if obj.issqrtmK
+            % the actual kernel will be K*K'
+            diagK = sum(obj.Ktrain.^2,2);
+            meanK = mean(reshape(obj.Ktrain*obj.Ktrain',[],1));
+          else
+            diagK = diag(obj.Ktrain);
+            meanK = mean(obj.Ktrain(:));
+          end
+          obj.C = .1*(mean(diagK)-meanK);
           if obj.verbose, fprintf('using default C=%.2f\n',obj.C); end
         end
         
-        obj.X = X;
-        
-        obj.Ktest = [];
-        
-        obj.dual = l2svm_cg(obj.Ktrain,2*(Y-1)-1,obj.C,'verb',-1);
+        if obj.issqrtmK
+          opts = cat(2, opts, {'issqrtmK' true});
+        end
+        obj.dual = l2svm_cg(obj.Ktrain,2*(Y-1)-1,obj.C, opts);
         
       else
         
         % facilitate warm restarts
-        obj.dual = l2svm_cg(obj.Ktrain,2*(Y-1)-1,obj.C,'verb',-1); %,'alphab',obj.dual);
+        obj.dual = l2svm_cg(obj.Ktrain,2*(Y-1)-1,obj.C, opts); %,'alphab',obj.dual);
         
       end
       
       obj.primal = 0;
-      for j=1:size(X,1), obj.primal = obj.primal + obj.dual(j)*X(j,:); end
+      for j = 1:size(X,1) 
+        obj.primal = obj.primal + obj.dual(j)*X(j,:);
+      end
       
     end
     

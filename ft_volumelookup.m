@@ -20,7 +20,6 @@ function [output] = ft_volumelookup(cfg, volume)
 %   stat   is the output of FT_SOURCESTATISTICS
 %
 % The configuration options for a mask according to an atlas:
-%   cfg.inputcoord          = 'mni' or 'tal', coordinate system of the mri/source/stat
 %   cfg.atlas               = string, filename of atlas to use, see FT_READ_ATLAS
 %   cfg.roi                 = string or cell-array of strings, ROI from anatomical atlas
 %
@@ -32,7 +31,6 @@ function [output] = ft_volumelookup(cfg, volume)
 %                             and box/sphere is centered around coordinates of that voxel
 %
 % The configuration options for labels from a mask:
-%   cfg.inputcoord          = 'mni' or 'tal', coordinate system of the mri/source/stat
 %   cfg.atlas               = string, filename of atlas to use, see FT_READ_ATLAS
 %   cfg.maskparameter       = string, field in volume to be looked up, data in field should be logical
 %   cfg.minqueryrange       = number, should be odd and <= to maxqueryrange (default = 1)
@@ -42,7 +40,6 @@ function [output] = ft_volumelookup(cfg, volume)
 %   cfg.output              = 'single' always outputs one label; if several POI are provided, they are considered together as describing a ROI (default)
 %                             'multiple' outputs one label per POI (e.g., choose to get labels for different electrodes)
 %   cfg.roi                 = Nx3 vector, coordinates of the POI
-%   cfg.inputcoord          = 'mni' or 'tal', coordinate system of the mri/source/stat
 %   cfg.atlas               = string, filename of atlas to use, see FT_READ_ATLAS
 %   cfg.minqueryrange       = number, should be odd and <= to maxqueryrange (default = 1)
 %   cfg.maxqueryrange       = number, should be odd and >= to minqueryrange (default = 1)
@@ -108,17 +105,23 @@ if ft_abort
   return
 end
 
-% the handling of the default cfg options is done further down
-% the checking of the input data is done further down
+% check if the input data is valid for this function
+% additional checking of the input data is done further down
+volume = ft_checkdata(volume, 'datatype', {'volume', 'source'}, 'feedback', 'yes', 'hasunit', 'yes', 'hascoordsys', 'yes');
 
+% the handling of the default cfg options is done further down
 cfg.minqueryrange      = ft_getopt(cfg,'minqueryrange', 1);
 cfg.maxqueryrange      = ft_getopt(cfg,'maxqueryrange', 1);
 cfg.output             = ft_getopt(cfg,'output', []); % in future, cfg.output could be extended to support both 'label' and 'mask'
+
+% ensure that old and unsupported options are not being relied on by the end-user's script
+% instead of specifying cfg.coordsys, the user should specify the coordsys in the data
+cfg = ft_checkconfig(cfg, 'forbidden', {'units', 'coordsys', 'inputcoord', 'inputcoordsys', 'coordinates'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'output', 'label', 'single'});
 
 roi2mask   = 0;
 mask2label = 0;
-roi2label = 0;
+roi2label  = 0;
 if isfield(cfg, 'roi') && ~isempty(cfg.output)
   roi2label = 1;
 elseif isfield(cfg, 'roi')
@@ -132,37 +135,37 @@ end
 if roi2mask
   % only for volume data
   volume = ft_checkdata(volume, 'datatype', 'volume');
-  
+
   cfg.round2nearestvoxel = ft_getopt(cfg, 'round2nearestvoxel', 'no');
-  
+
   isatlas = iscell(cfg.roi) || ischar(cfg.roi);
   ispoi   = isnumeric(cfg.roi);
   if isatlas+ispoi ~= 1
     ft_error('do not understand cfg.roi')
   end
-  
+
   if isatlas
-    ft_checkconfig(cfg, 'forbidden', {'sphere', 'box'}, 'required',  {'atlas', 'inputcoord'});
+    ft_checkconfig(cfg, 'forbidden', {'sphere', 'box'}, 'required',  {'atlas'});
   elseif ispoi
-    ft_checkconfig(cfg, 'forbidden', {'atlas' 'inputcoord'});
+    ft_checkconfig(cfg, 'forbidden', {'atlas'});
     if isempty(ft_getopt(cfg, 'sphere')) && isempty(ft_getopt(cfg, 'box'))
       ft_error('you should either specify cfg.sphere or cfg.box')
     end
   end
-  
+
 elseif mask2label || roi2label
-  % convert to source representation (easier to work with)
+  % convert to source representation, this is easier to work with
   volume = ft_checkdata(volume, 'datatype', 'source');
-  ft_checkconfig(cfg, 'required', {'atlas', 'inputcoord'});
-  
+  ft_checkconfig(cfg, 'required', {'atlas'});
+
   if cfg.minqueryrange > cfg.maxqueryrange
     ft_error('maxqueryrange should be superior or equal to minqueryrange');
   end
-  
+
   if rem(cfg.minqueryrange, 2) == 0 || rem(cfg.maxqueryrange, 2) == 0
     ft_error('incorrect query range, should be odd numbers');
   end
-  
+
   cfg.round2nearestvoxel = ft_getopt(cfg, 'round2nearestvoxel', 'yes');
   cfg.querymethod        = ft_getopt(cfg, 'querymethod', 'sphere');
 end
@@ -178,7 +181,7 @@ if roi2mask
   ijk = [I(:) J(:) K(:) ones(prod(dim),1)]';
   % determine location of each anatomical voxel in head coordinates
   xyz = volume.transform * ijk; % note that this is 4xN
-  
+
   if isatlas
     if ischar(cfg.atlas)
       % assume it to represent a filename
@@ -188,7 +191,7 @@ if roi2mask
       % into a config object
       atlas = struct(cfg.atlas);
     end
-    
+
     % determine which field(s) to use to look up the labels,
     % and whether these are boolean or indexed
     fn = fieldnames(atlas);
@@ -210,11 +213,11 @@ if roi2mask
       fn = fn(isboolean);
       isindexed = 0;
     end
-    
+
     if ischar(cfg.roi)
       cfg.roi = {cfg.roi};
     end
-    
+
     if isindexed
       sel = zeros(0,2);
       for m = 1:length(fn)
@@ -224,46 +227,46 @@ if roi2mask
         end
       end
       fprintf('found %d matching anatomical labels\n', size(sel,1));
-      
+
       % this is to accommodate for multiple parcellations:
       % the brick refers to the parcellationname
       % the value refers to the value within the given parcellation
       brick = sel(:,2);
       value = sel(:,1);
-      
+
       % convert between MNI head coordinates and TAL head coordinates
       % coordinates should be expressed compatible with the atlas
-      if     strcmp(cfg.inputcoord, 'mni') && strcmp(atlas.coordsys, 'tal')
+      if     strcmp(volume.coordsys, 'mni') && strcmp(atlas.coordsys, 'tal')
         xyz(1:3,:) = mni2tal(xyz(1:3,:));
-      elseif strcmp(cfg.inputcoord, 'mni') && strcmp(atlas.coordsys, 'mni')
+      elseif strcmp(volume.coordsys, 'mni') && strcmp(atlas.coordsys, 'mni')
         % nothing to do
-      elseif strcmp(cfg.inputcoord, 'tal') && strcmp(atlas.coordsys, 'tal')
+      elseif strcmp(volume.coordsys, 'tal') && strcmp(atlas.coordsys, 'tal')
         % nothing to do
-      elseif strcmp(cfg.inputcoord, 'tal') && strcmp(atlas.coordsys, 'mni')
+      elseif strcmp(volume.coordsys, 'tal') && strcmp(atlas.coordsys, 'mni')
         xyz(1:3,:) = tal2mni(xyz(1:3,:));
-      elseif ~strcmp(cfg.inputcoord, atlas.coordsys)
-        ft_error('there is a mismatch between the coordinate system in the atlas and the coordinate system in the data, which cannot be resolved');
+      elseif ~strcmp(volume.coordsys, atlas.coordsys)
+        ft_error('the mismatch between the coordinate system in the atlas and the coordinate system in the data cannot be resolved');
       end
-      
+
       % determine location of each anatomical voxel in atlas voxel coordinates
       ijk = atlas.transform \ xyz;
       ijk = round(ijk(1:3,:))';
-      
+
       inside_vol = ijk(:,1)>=1 & ijk(:,1)<=atlas.dim(1) & ...
         ijk(:,2)>=1 & ijk(:,2)<=atlas.dim(2) & ...
         ijk(:,3)>=1 & ijk(:,3)<=atlas.dim(3);
       inside_vol = find(inside_vol);
-      
+
       % convert the selection inside the atlas volume into linear indices
       ind = sub2ind(atlas.dim, ijk(inside_vol,1), ijk(inside_vol,2), ijk(inside_vol,3));
-      
+
       brick_val = cell(1,numel(brick));
       % search the bricks for the value of each voxel
       for i=1:numel(brick_val)
         brick_val{i} = zeros(prod(dim),1);
         brick_val{i}(inside_vol) = atlas.(fn{brick(i)})(ind);
       end
-      
+
       mask = zeros(prod(dim),1);
       for i=1:numel(brick_val)
         %fprintf('constructing mask for %s\n', atlas.descr.name{sel(i)});
@@ -271,18 +274,17 @@ if roi2mask
       end
     else
       ft_error('support for atlases that have a probabilistic segmentationstyle is not supported yet');
-      % NOTE: this may be very straightforward indeed: the mask is just the
-      % logical or of the specified rois.
+      % NOTE: this may be very straightforward indeed: the mask is just the logical "or" of the specified ROIs.
     end
-    
+
   elseif ispoi
-    
+
     if istrue(cfg.round2nearestvoxel)
       for i=1:size(cfg.roi,1)
         cfg.roi(i,:) = poi2voi(cfg.roi(i,:), xyz);
       end
     end
-    
+
     % sphere(s)
     if isfield(cfg, 'sphere')
       mask = zeros(1,prod(dim));
@@ -301,11 +303,11 @@ if roi2mask
       end
     end
   end
-  
+
   mask = reshape(mask, dim);
   fprintf('%i voxels in mask, which is %.3f %% of total volume\n', sum(mask(:)), 100*mean(mask(:)));
   output = mask;
-  
+
 elseif mask2label || roi2label
   if ischar(cfg.atlas)
     % assume it to represent a filename
@@ -315,7 +317,7 @@ elseif mask2label || roi2label
     % into a config object
     atlas = struct(cfg.atlas);
   end
-  
+
   % determine which field(s) to use to look up the labels,
   % and whether these are boolean or indexed
   fn = fieldnames(atlas);
@@ -337,7 +339,7 @@ elseif mask2label || roi2label
     fn = fn(isboolean);
     isindexed = 0;
   end
-  
+
   labels.name = cell(0,1);
   for k = 1:numel(fn)
     % ensure that they are concatenated as column
@@ -349,7 +351,7 @@ elseif mask2label || roi2label
   for iLab = 1:length(labels.name)
     labels.usedqueryrange{iLab} = [];
   end
-  
+
   if mask2label
     sel = find(volume.(cfg.maskparameter)(:));
   elseif roi2label
@@ -373,17 +375,17 @@ elseif mask2label || roi2label
       label = {};
       for qr = cfg.minqueryrange:2:cfg.maxqueryrange
           if isempty(label)
-              label = atlas_lookup(atlas, volume.pos(sel(iVox), :), 'inputcoord', cfg.inputcoord, 'queryrange', qr, 'method', cfg.querymethod);
+              label = atlas_lookup(atlas, volume.pos(sel(iVox), :), 'coordsys', volume.coordsys, 'queryrange', qr, 'method', cfg.querymethod);
               usedQR = qr;
           end
       end
-      
+
       if isempty(label)
           label = {'no_label_found'};
       elseif length(label) == 1
           label = {label};
       end
-      
+
       if strcmp(cfg.output, 'multiple')
           iLabOut = iVox;
       else
@@ -394,7 +396,7 @@ elseif mask2label || roi2label
           ind_lab = find(strcmp(label{iLab}, labels(iLabOut).name));
           labels(iLabOut).count(ind_lab) = labels(iLabOut).count(ind_lab)+1; % labels.count should give the number of times a label was found within a query range
       end
-      
+
       %     labels.count(ind_lab) = labels.count(ind_lab) + (1/length(ind_lab));
       %     ^this gives each label a weight depending on the number of
       %     labels found within the query range. Using this method, all labels
@@ -408,9 +410,9 @@ elseif mask2label || roi2label
           end
       end
   end %iVox
-  
+
   output = labels;
-  
+
 end
 
 % do the general cleanup and bookkeeping at the end of the function

@@ -1,7 +1,7 @@
 function list = peerlist(status)
 
 % PEERLIST gives information about all peers in the network, e.g. the
-% number of slaves, their network configuration, etc.
+% number of workers, their network configuration, etc.
 %
 % Use as
 %   peerlist
@@ -55,7 +55,7 @@ end
 if nargout==0
   % this requires a complete list of all peers
   list = peer('peerlist');
-  % the current field contains the job details on the busy slaves
+  % the current field contains the job details on the busy workers
   current = [list.current];
   if isempty(current)
     membusy = 0;
@@ -68,11 +68,11 @@ if nargout==0
   sel = 1:numel(list);
   fprintf('there are %3d peers running in total (%d hosts, %d users)\n',length(sel), length(unique({list(sel).hostname})), length(unique({list(sel).user})));
   sel = find([list.status]==1);
-  fprintf('there are %3d peers running on %2d hosts as master\n', length(sel), length(unique({list(sel).hostname})));
+  fprintf('there are %3d peers running on %2d hosts as controller\n', length(sel), length(unique({list(sel).hostname})));
   sel = find([list.status]==2);
-  fprintf('there are %3d peers running on %2d hosts as idle slave with %s memory available\n', length(sel), length(unique({list(sel).hostname})), print_mem(sum([list(sel).memavail])));
+  fprintf('there are %3d peers running on %2d hosts as idle worker with %s memory available\n', length(sel), length(unique({list(sel).hostname})), print_mem(sum([list(sel).memavail])));
   sel = find([list.status]==3);
-  fprintf('there are %3d peers running on %2d hosts as busy slave with %s and %s required\n', length(sel), length(unique({list(sel).hostname})), print_mem(membusy), print_tim(timbusy));
+  fprintf('there are %3d peers running on %2d hosts as busy worker with %s and %s required\n', length(sel), length(unique({list(sel).hostname})), print_mem(membusy), print_tim(timbusy));
   sel = find([list.status]==0);
   fprintf('there are %3d peers running on %2d hosts as zombie\n', length(sel), length(unique({list(sel).hostname})));
 end
@@ -82,7 +82,7 @@ if nargin>0
   switch status
     case 'zombie'
       list = peer('peerlist', 0);
-    case 'master'
+    case 'controller'
       list = peer('peerlist', 1);
     case 'idle'
       list = peer('peerlist', 2);
@@ -112,11 +112,11 @@ if nargout==0
       case 0
         strlist{i} = sprintf('zombie     at %s@%s:%d\n', list(i).user, list(i).hostname, list(i).port);
       case 1
-        strlist{i} = sprintf('master     at %s@%s:%d\n', list(i).user, list(i).hostname, list(i).port);
+        strlist{i} = sprintf('controller     at %s@%s:%d\n', list(i).user, list(i).hostname, list(i).port);
       case 2
-        strlist{i} = sprintf('idle slave at %s@%s:%d, memavail = %5s, timavail = %s\n', list(i).user, list(i).hostname, list(i).port, print_mem(list(i).memavail), print_tim(list(i).timavail));
+        strlist{i} = sprintf('idle worker at %s@%s:%d, memavail = %5s, timavail = %s\n', list(i).user, list(i).hostname, list(i).port, print_mem(list(i).memavail), print_tim(list(i).timavail));
       case 3
-        strlist{i} = sprintf('busy slave at %s@%s:%d, working for %s, memreq = %5s, timreq = %s\n', list(i).user, list(i).hostname, list(i).port, list(i).current.user, print_mem(list(i).current.memreq), print_tim(list(i).current.timreq));
+        strlist{i} = sprintf('busy worker at %s@%s:%d, working for %s, memreq = %5s, timreq = %s\n', list(i).user, list(i).hostname, list(i).port, list(i).current.user, print_mem(list(i).current.memreq), print_tim(list(i).current.timreq));
       otherwise
         error('unknown status');
     end

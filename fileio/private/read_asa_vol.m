@@ -26,16 +26,16 @@ function vol = read_asa_vol(fn)
 %
 % $Id$
 
-Nbnd  = read_asa(fn, 'NumberBoundaries=', '%d');
-UnitC = read_asa(fn, 'UnitConduct', '%s');
-UnitP = read_asa(fn, 'UnitPosition', '%s');
-cond  = read_asa(fn, 'Conductivities', '%f');
-radii = read_asa(fn, 'Radii', '%f');
-pos   = read_asa(fn, 'Positions', '%f');
-bnd1  = read_asa(fn, 'Boundary1', '%s');
-bnd2  = read_asa(fn, 'Boundary2', '%s');
-bnd3  = read_asa(fn, 'Boundary3', '%s');
-bnd4  = read_asa(fn, 'Boundary4', '%s');
+Nbnd  = read_ini(fn, 'NumberBoundaries=', '%d');
+UnitC = read_ini(fn, 'UnitConduct', '%s');
+UnitP = read_ini(fn, 'UnitPosition', '%s');
+cond  = read_ini(fn, 'Conductivities', '%f');
+radii = read_ini(fn, 'Radii', '%f');
+pos   = read_ini(fn, 'Positions', '%f');
+bnd1  = read_ini(fn, 'Boundary1', '%s');
+bnd2  = read_ini(fn, 'Boundary2', '%s');
+bnd3  = read_ini(fn, 'Boundary3', '%s');
+bnd4  = read_ini(fn, 'Boundary4', '%s');
 
 if ~isempty(radii) || ~isempty(pos)
   % this appears to be a spherical volume conductor
@@ -88,11 +88,11 @@ else
   end
 
   % if there is a precomputed matrix, read it from an external file
-  mat_file = read_asa(fn, 'Matrix', '%s');
+  mat_file = read_ini(fn, 'Matrix', '%s');
   if ~isempty(mat_file)
-    nr = read_asa(fullfile(path, mat_file), 'NumberRows=', '%d');
-    nc = read_asa(fullfile(path, mat_file), 'NumberColumns=', '%d');
-    mab_file = read_asa(fullfile(path, mat_file), 'Matrix', '%s');
+    nr = read_ini(fullfile(path, mat_file), 'NumberRows=', '%d');
+    nc = read_ini(fullfile(path, mat_file), 'NumberColumns=', '%d');
+    mab_file = read_ini(fullfile(path, mat_file), 'Matrix', '%s');
     fid = fopen_or_error(fullfile(path, mab_file), 'rb', 'ieee-le');
     vol.mat = fread(fid, [nr nc], 'float32');
     fclose(fid);

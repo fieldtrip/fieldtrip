@@ -32,14 +32,14 @@ function data = ft_denoise_pca(cfg, varargin)
 % if 0 < cfg.truncate < 1, the singular value spectrum will be thresholded at the
 % fraction cfg.truncate of the largest singular value.
 %
-% See also FT_PREPROCESSING, FT_DENOISE_SYNTHETIC
+% See also FT_PREPROCESSING, FT_DENOISE_SYNTHETIC, FT_DENOISE_SSP
 
 % Undocumented cfg-option: cfg.pca the output structure of an earlier call
 % to the function. Can be used regress out the reference channels from
 % another data set.
 
 % Copyright (c) 2008-2009, Jan-Mathijs Schoffelen, CCNi Glasgow
-% Copyright (c) 2010-2011, Jan-Mathijs Schoffelen, DCCN Nijmegen
+% Copyright (c) 2010-2022, Jan-Mathijs Schoffelen, DCCN Nijmegen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -81,6 +81,9 @@ for i=1:length(varargin)
   varargin{i} = ft_checkdata(varargin{i}, 'datatype', 'raw');
 end
 
+% check if the input cfg is valid for this function
+cfg = ft_checkconfig(cfg, 'forbidden',  {'channels', 'trial'}); % prevent accidental typos, see issue 1729
+
 % set the defaults
 cfg.refchannel = ft_getopt(cfg, 'refchannel', 'MEGREF');
 cfg.channel    = ft_getopt(cfg, 'channel',    'MEG');
@@ -91,17 +94,19 @@ cfg.pertrial   = ft_getopt(cfg, 'pertrial',   'no');
 cfg.feedback   = ft_getopt(cfg, 'feedback',   'none');
 cfg.updatesens = ft_getopt(cfg, 'updatesens', 'yes');
 
-
-if strcmp(cfg.pertrial, 'yes')
+if istrue(cfg.pertrial)
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % iterate over trials
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-  tmpcfg  = keepfields(cfg, {'trials', 'showcallinfo'});
+  tmpcfg  = keepfields(cfg, {'trials', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
   % select trials of interest
   for i=1:numel(varargin)
     varargin{i}        = ft_selectdata(tmpcfg, varargin{i});
-    [cfg, varargin{i}] = rollback_provenance(cfg, varargin{i});
+    [dum, varargin{i}] = rollback_provenance(cfg, varargin{i});
+    if i==1
+      cfg = dum;
+    end
   end
 
   tmp             = cell(numel(varargin{1}.trial),1);
@@ -122,49 +127,43 @@ else
 
   computeweights = ~isfield(cfg, 'pca');
 
+  % select trials of interest
+  tmpcfg  = keepfields(cfg, {'trials', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
   if length(varargin)==1
     % channel data and reference channel data are in 1 data structure
-    data    = varargin{1};
-    megchan = ft_channelselection(cfg.channel, data.label);
-    refchan = ft_channelselection(cfg.refchannel, data.label);
-
-    % split data into data and refdata
-    tmpcfg  = [];
+    megchan = ft_channelselection(cfg.channel,    varargin{1}.label);
+    refchan = ft_channelselection(cfg.refchannel, varargin{1}.label);
+      
     tmpcfg.channel = refchan;
-    tmpcfg.feedback = cfg.feedback;
-    refdata = ft_preprocessing(tmpcfg, data);
+    refdata        = ft_selectdata(tmpcfg, varargin{1});
+    [dum,refdata]  = rollback_provenance(cfg, refdata);
     tmpcfg.channel = megchan;
-    data    = ft_preprocessing(tmpcfg, data);
-
+    data           = ft_selectdata(tmpcfg, varargin{1});
+    [cfg, data]    = rollback_provenance(cfg, data);
+  
   else
     % channel data and reference channel data are in 2 data structures
-    data    = varargin{1};
-    refdata = varargin{2};
-    megchan = ft_channelselection(cfg.channel, data.label);
-    refchan = ft_channelselection(cfg.refchannel, refdata.label);
-
-    % split data into data and refdata
-    tmpcfg  = [];
+    megchan = ft_channelselection(cfg.channel,    varargin{1}.label);
+    refchan = ft_channelselection(cfg.refchannel, varargin{2}.label);
+    
+    % throw a warning if some of the specified reference channels are also
+    % in the first data argument
+    if ~isempty(ft_channelselection(cfg.refchannel, varargin{1}.label))
+      ft_warning('some of the specified reference channels are also present in the first data argument, this information will not be used for the cleaning of the data');
+    end
+    
     tmpcfg.channel = refchan;
-    tmpcfg.feedback = cfg.feedback;
-    refdata = ft_preprocessing(tmpcfg, refdata);
+    refdata        = ft_selectdata(tmpcfg, varargin{2});
+    [dum, refdata] = rollback_provenance(cfg, refdata);
     tmpcfg.channel = megchan;
-    data    = ft_preprocessing(tmpcfg, data);
-
-    % FIXME do compatibility check on data vs refdata with respect to dimensions (time-trials)
+    data           = ft_selectdata(tmpcfg, varargin{1});
+    [cfg, data]    = rollback_provenance(cfg, data);
+    
   end
-
-  % select trials of interest
-  tmpcfg  = keepfields(cfg, {'trials', 'showcallinfo'});
-  data    = ft_selectdata(tmpcfg, data);
-  refdata = ft_selectdata(tmpcfg, refdata);
-  % restore the provenance information
-  [cfg, data]    = rollback_provenance(cfg, data);
-  [dum, refdata] = rollback_provenance(cfg, refdata);
-
-  refchan = ft_channelselection(cfg.refchannel, refdata.label);
+  
+  refchan = ft_channelselection(cfg.refchannel, refdata.label, ft_senstype(refdata));
   refindx = match_str(refdata.label, refchan);
-  megchan = ft_channelselection(cfg.channel, data.label);
+  megchan = ft_channelselection(cfg.channel, data.label, ft_senstype(data));
   megindx = match_str(data.label, megchan);
 
   nref = length(refindx);
@@ -183,9 +182,6 @@ else
   data.trial    = cellvecadd(data.trial,    -m);
   m             = cellmean(refdata.trial,    2);
   refdata.trial = cellvecadd(refdata.trial, -m);
-
-  % compute std of data before the regression
-  stdpre = cellstd(data.trial, 2);
 
   if computeweights
 
@@ -263,9 +259,6 @@ else
     pca = cfg.pca;
 
   end
-
-  % compute std of data after
-  stdpst = cellstd(data.trial, 2);
 
   % demean FIXME is this needed
   m          = cellmean(data.trial, 2);

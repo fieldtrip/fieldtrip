@@ -8,10 +8,6 @@ function [M_V] = vox2ras_dfmeas(str_filename, varargin)
 %%
 %%	Rudolph Pienaar
 %%
-%% VERSION
-%%
-%%	$Id: vox2ras_dfmeas.m,v 1.10 2011/03/02 00:04:13 nicks Exp $
-%%
 %% SYNOPSIS
 %%
 %%      [M_V] = vox2ras_dfmeas(str_filename, ch_override, ...
@@ -124,10 +120,6 @@ function [M_V] = vox2ras_dfmeas(str_filename, varargin)
 % vox2ras_dfmeas.m
 %
 % Original Author: Rudolph Pienaar
-% CVS Revision Info:
-%    $Author: nicks $
-%    $Date: 2011/03/02 00:04:13 $
-%    $Revision: 1.10 $
 %
 % Copyright © 2011 The General Hospital Corporation (Boston, MA) "MGH"
 %

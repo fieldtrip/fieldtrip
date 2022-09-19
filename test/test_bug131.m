@@ -1,8 +1,7 @@
 function test_bug131
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_prepare_leadfield
 
 % test the issue related to the scaling of the leadfields in the different implementations
@@ -60,4 +59,3 @@ lf2 = grid2.leadfield{1};
 % yet, this in my understanding then only holds for geometrical objects
 % defined in SI-units, i.e. in meters. This should then be enforced by the
 % higher level function to be able to interpret the units correctly
-

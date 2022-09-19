@@ -1,10 +1,14 @@
 function [dat] = read_neuralynx_cds(filename, hdr, begsample, endsample, chanindx)
 
-% READ_NEURALYNX_CDS reads selected samples and channels from a  combined Neuralynx dataset with separate subdirectories for the LFP, MUA and spike channels
+% READ_NEURALYNX_CDS reads selected samples and channels from a combined Neuralynx dataset with separate subdirectories for the LFP, MUA and spike channels
 %
 % Use as
 %    hdr = read_neuralynx_cds(parentdir)
 %    dat = read_neuralynx_cds(parentdir, hdr, begsample, endsample, chanindx)
+%
+% This is not a formal Neuralynx file format, but at the F.C. Donders
+% Centre we use it as a directory/file organization in conjunction
+% with Neuralynx, SPIKESPLITTING and SPIKEDOWNSAMPLE.
 
 % Copyright (C) 2006, Robert Oostenveld
 %

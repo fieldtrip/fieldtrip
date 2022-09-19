@@ -36,7 +36,7 @@ for k = 1:hdr.n_count
   offset  = offset+(3+hdr.n_scalars)*npos(k)+hdr.n_properties;
 end
 pos = cat(1,dat{:});
-pos = pos*hdr.vox_to_ras(1:3,1:3)' + hdr.vox_to_ras(1:3,4*ones(1,size(pos,1)))';
+%pos = pos*hdr.vox_to_ras(1:3,1:3)' + hdr.vox_to_ras(1:3,4*ones(1,size(pos,1)))'; % I am not sure whether this needs to be applied by default
 
 % convert the tracks to lines
 maxnpos = max(npos);

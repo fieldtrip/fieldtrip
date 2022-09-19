@@ -18,6 +18,7 @@ function [data] = ft_math(cfg, varargin)
 % Rather than specifying the operation as a string that is evaluated, you can also
 % specify it as a single operation. The advantage is that it is computed faster.
 %    cfg.operation = string, can be 'add', 'subtract', 'divide', 'multiply', 'log10', 'abs'
+%                     'sqrt', 'square'
 % If you specify only a single input data structure and the operation is 'add',
 % 'subtract', 'divide' or 'multiply', the configuration should also contain:
 %   cfg.scalar    = scalar value to be used in the operation
@@ -182,7 +183,7 @@ end
 data = keepfields(varargin{1}, [dimordfields {'label', 'labelcmb', 'freq', 'time', 'pos', 'dim', 'transform'}]);
 
 for p = 1:length(cfg.parameter)
-  fprintf('selecting %s from the first input argument\n', cfg.parameter{p});
+  ft_info('selecting %s from the first input argument\n', cfg.parameter{p});
   % create the local variables x1, x2, ...
   for i=1:length(varargin)
     assign_var(sprintf('x%i', i), getsubfield(varargin{i}, cfg.parameter{p}));
@@ -222,9 +223,9 @@ for p = 1:length(cfg.parameter)
     switch cfg.operation
       case 'add'
         if isscalar(s)
-          fprintf('adding %f to the %s\n', s, cfg.parameter{p});
+          ft_info('adding %f to the %s\n', s, cfg.parameter{p});
         else
-          fprintf('adding the contents of cfg.matrix to the %s\n', cfg.parameter{p});
+          ft_info('adding the contents of cfg.matrix to the %s\n', cfg.parameter{p});
         end
         if iscell(x1)
           y = cellplus(x1, s);
@@ -234,9 +235,9 @@ for p = 1:length(cfg.parameter)
 
       case 'subtract'
         if isscalar(s)
-          fprintf('subtracting %f from the %s\n', s, cfg.parameter{p});
+          ft_info('subtracting %f from the %s\n', s, cfg.parameter{p});
         else
-          fprintf('subtracting the contents of cfg.matrix from the %s\n', cfg.parameter{p});
+          ft_info('subtracting the contents of cfg.matrix from the %s\n', cfg.parameter{p});
         end
         if iscell(x1)
           y = cellminus(x1, s);
@@ -246,11 +247,11 @@ for p = 1:length(cfg.parameter)
 
       case 'multiply'
         if isscalar(s)
-          fprintf('multiplying %s with %f\n', cfg.parameter{p}, s);
+          ft_info('multiplying %s with %f\n', cfg.parameter{p}, s);
         else
-          fprintf('multiplying %s with the content of cfg.matrix\n', cfg.parameter{p});
+          ft_info('multiplying %s with the content of cfg.matrix\n', cfg.parameter{p});
         end
-        fprintf('multiplying %s with %f\n', cfg.parameter{p}, s);
+        ft_info('multiplying %s with %f\n', cfg.parameter{p}, s);
         if iscell(x1)
           y = celltimes(x1, s);
         else
@@ -259,9 +260,9 @@ for p = 1:length(cfg.parameter)
 
       case 'divide'
         if isscalar(s)
-          fprintf('dividing %s by %f\n', cfg.parameter{p}, s);
+          ft_info('dividing %s by %f\n', cfg.parameter{p}, s);
         else
-          fprintf('dividing %s by the content of cfg.matrix\n', cfg.parameter{p});
+          ft_info('dividing %s by the content of cfg.matrix\n', cfg.parameter{p});
         end
         if iscell(x1)
           y = cellrdivide(x1, s);
@@ -271,7 +272,7 @@ for p = 1:length(cfg.parameter)
 
       case 'log10'
         assert(isempty(s), sprintf('cfg.scalar or cfg.matrix are not supported for %s', cfg.operation));
-        fprintf('taking the log10 of %s\n', cfg.parameter{p});
+        ft_info('taking the log10 of %s\n', cfg.parameter{p});
         if iscell(x1)
           y = celllog10(x1);
         else
@@ -280,13 +281,31 @@ for p = 1:length(cfg.parameter)
 
       case 'abs'
         assert(isempty(s), sprintf('cfg.scalar or cfg.matrix are not supported for %s', cfg.operation));
-        fprintf('taking the abs of %s\n', cfg.parameter{p});
+        ft_info('taking the abs of %s\n', cfg.parameter{p});
         if iscell(x1)
           y = cellabs(x1);
         else
           y = abs(x1);
         end
 
+      case 'square'
+        assert(isempty(s), sprintf('cfg.scalar or cfg.matrix are not supported for %s', cfg.operation));
+        ft_info('taking the square of %s\n', cfg.parameter{p});
+        if iscell(x1)
+          y = cellsquare(x1);
+        else
+          y = x1.^2;
+        end
+        
+      case 'sqrt'
+        assert(isempty(s), sprintf('cfg.scalar or cfg.matrix are not supported for %s', cfg.operation));
+        ft_info('taking the sqrt of %s\n', cfg.parameter{p});
+        if iscell(x1)
+          y = cellsqrt(x1);
+        else
+          y = sqrt(x1);
+        end
+        
       otherwise
         % assume that the operation is descibed as a string, e.g. x1^s
         % where x1 is the first argument and s is obtained from cfg.scalar
@@ -334,7 +353,7 @@ for p = 1:length(cfg.parameter)
     switch cfg.operation
       case 'add'
         for i=2:length(varargin)
-          fprintf('adding the %s input argument\n', nth(i));
+          ft_info('adding the %s input argument\n', nth(i));
           if iscell(x1)
             y = cellplus(x1, varargin{i}.(cfg.parameter{p}));
           else
@@ -344,7 +363,7 @@ for p = 1:length(cfg.parameter)
 
       case 'multiply'
         for i=2:length(varargin)
-          fprintf('multiplying with the %s input argument\n', nth(i));
+          ft_info('multiplying with the %s input argument\n', nth(i));
           if iscell(x1)
             y = celltimes(x1, varargin{i}.(cfg.parameter{p}));
           else
@@ -356,7 +375,7 @@ for p = 1:length(cfg.parameter)
         if length(varargin)>2
           ft_error('the operation "%s" requires exactly 2 input arguments', cfg.operation);
         end
-        fprintf('subtracting the 2nd input argument from the 1st\n');
+        ft_info('subtracting the 2nd input argument from the 1st\n');
         if iscell(x1)
           y = cellminus(x1, varargin{2}.(cfg.parameter{p}));
         else
@@ -367,7 +386,7 @@ for p = 1:length(cfg.parameter)
         if length(varargin)>2
           ft_error('the operation "%s" requires exactly 2 input arguments', cfg.operation);
         end
-        fprintf('dividing the 1st input argument by the 2nd\n');
+        ft_info('dividing the 1st input argument by the 2nd\n');
         if iscell(x1)
           y = cellrdivide(x1, varargin{2}.(cfg.parameter{p}));
         else
@@ -378,9 +397,15 @@ for p = 1:length(cfg.parameter)
         if length(varargin)>2
           ft_error('the operation "%s" requires exactly 2 input arguments', cfg.operation);
         end
-        fprintf('taking the log difference between the 2nd input argument and the 1st\n');
+        ft_info('taking the log difference between the 2nd input argument and the 1st\n');
         y = log10(x1 ./ varargin{2}.(cfg.parameter{p}));
-
+        
+      case 'square'
+        ft_error(sprintf('operation %s is not supported with multiple input arguments', cfg.operation));
+        
+      case 'sqrt'
+        ft_error(sprintf('operation %s is not supported with multiple input arguments', cfg.operation));
+        
       otherwise
         % assume that the operation is descibed as a string, e.g. (x1-x2)/(x1+x2)
 
@@ -432,7 +457,7 @@ for p = 1:length(cfg.parameter)
 end % p over length(cfg.parameter)
 
 % certain fields should remain in the output, but only if they are identical in all inputs
-keepfield = {'grad', 'elec', 'opto', 'inside', 'trialinfo', 'sampleinfo', 'tri'};
+keepfield = {'grad', 'elec', 'opto', 'inside', 'trialinfo', 'sampleinfo', 'tri', 'brainordinate'};
 for j=1:numel(keepfield)
   if isfield(varargin{1}, keepfield{j})
     tmp  = varargin{1}.(keepfield{j});
@@ -519,3 +544,9 @@ z = cellfun(@log10, x, 'UniformOutput', false);
 
 function z = cellabs(x)
 z = cellfun(@abs, x, 'UniformOutput', false);
+
+function z = cellsquare(x)
+z = cellfun(@power, x, repmat({2}, size(x)), 'UniformOutput', false);
+
+function z = cellsqrt(x)
+z = cellfun(@sqrt, x, 'UniformOutput', false);

@@ -308,7 +308,7 @@ if(isa(tmp,'function_handle')) % this happens only with raw SPM8 ButtonDownFcn
 end
 set(SPM_axes_obj,'ButtonDownFcn',('nmt_image(''shopos'')'));
 
-%[~,mrifile]=fileparts(cfg.mripath);
+%[dum,mrifile]=fileparts(cfg.mripath);
 % if( isfield(coreg,'norm_mripath') || strcmp(mrifile(1),'w') || strcmp(mrifile,'T1') || strncmp(mrifile,'avg',3) )
 %     rivets.TalDB = load('talairachDB');
 % end

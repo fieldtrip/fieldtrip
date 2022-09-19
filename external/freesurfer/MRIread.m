@@ -1,5 +1,5 @@
-function mri = MRIread(fstring,headeronly)
-% mri = MRIread(fstring,headeronly)
+function mri = MRIread(fstring,headeronly,permuteflag)
+% mri = MRIread(fstring,headeronly,permuteflag)
 %
 % Reads in a volume based on the fstring. fstring can be:
 %  1. A stem, in which case the format and full file name is determined
@@ -29,6 +29,12 @@ function mri = MRIread(fstring,headeronly)
 % So if you simply load in a matrix and view it with imagesc, 
 % it will appear to be transposed.
 %
+% Note: you can load unpermuted data with permuteflag=0. If you 
+% leave out this flag or set it to anything non-zero, then 
+% it will be permuted. The permuteflag will not affect the vox2ras
+% info. If you used permuteflag=0, then use the same when 
+% running MRIwrite().
+%
 % If headeronly=1, then the pixel data are not read in.
 %
 % If the input is a bhdr, then mri.srcbext is set to either bshort
@@ -45,10 +51,6 @@ function mri = MRIread(fstring,headeronly)
 % MRIread.m
 %
 % Original Author: Doug Greve
-% CVS Revision Info:
-%    $Author: greve $
-%    $Date: 2012/02/14 21:59:33 $
-%    $Revision: 1.25 $
 %
 % Copyright © 2011 The General Hospital Corporation (Boston, MA) "MGH"
 %
@@ -64,11 +66,12 @@ function mri = MRIread(fstring,headeronly)
 
 mri = [];
 
-if(nargin < 1 | nargin > 2)
-  fprintf('mri = MRIread(fstring,headeronly)\n');
+if(nargin < 1 | nargin > 3)
+  fprintf('mri = MRIread(fstring,headeronly,permuteflag)\n');
   return;
 end
-if(exist('headeronly')~=1) headeronly = 0; end
+if(exist('headeronly') ~=1) headeronly = 0; end
+if(exist('permuteflag')~=1) permuteflag = 1; end
 
 [fspec fstem fmt] = MRIfspec(fstring);
 if(isempty(fspec))
@@ -91,12 +94,13 @@ switch(fmt)
     return;
   end
   if(~headeronly)
-    mri.vol = permute(mri.vol,[2 1 3 4]);
+    if(permuteflag) mri.vol = permute(mri.vol,[2 1 3 4]); end
     volsz = size(mri.vol);
   else
     mri.vol = [];
     volsz(1:2) = [volsz(2) volsz(1)];
   end
+  if(isempty(mr_parms)) mr_parms = zeros(4,1); end
   tr = mr_parms(1);
   flip_angle = mr_parms(2);
   te = mr_parms(3);
@@ -142,8 +146,10 @@ switch(fmt)
   indnz = find(volsz~=0);
   volsz = volsz(indnz);
   volsz = volsz(:)'; % just make sure it's a row vect  
-  if(~headeronly) mri.vol = permute(hdr.vol,[2 1 3 4]);
-  else            mri.vol = [];
+  if(~headeronly) 
+    if(permuteflag) mri.vol = permute(hdr.vol,[2 1 3 4]); end
+  else            
+    mri.vol = [];
   end
   volsz([1 2]) = volsz([2 1]); % Make consistent. No effect when rows=cols
   tr = 1000*hdr.dime.pixdim(5); % msec
@@ -169,7 +175,11 @@ switch(fmt)
   % Just puts all data into dim 4.
   if(~headeronly) 
     hdr.vol = reshape(hdr.vol,[volsz(1) volsz(2) volsz(3) prod(volsz(4:end))]);
-    mri.vol = permute(hdr.vol,[2 1 3 4]);
+    if(permuteflag) 
+      mri.vol = permute(hdr.vol,[2 1 3 4]); 
+    else
+      mri.vol = hdr.vol;
+    end
   else mri.vol = [];
   end
   volsz([1 2]) = volsz([2 1]); % Make consistent. No effect when rows=cols

@@ -9,10 +9,10 @@ function [S0,S1,S2,S3] = shear_decomp(A)
 
 
 A0 = A(1:3,1:3);
-if any(abs(svd(A0)-1)>1e-7), ft_error('Can''t decompose matrix'); end;
+if any(abs(svd(A0)-1)>1e-7), ft_error('Can''t decompose matrix'); end
 
 
-t  = A0(2,3); if t==0, t=eps; end;
+t  = A0(2,3); if t==0, t=eps; end
 a0 = pinv(A0([1 2],[2 3])')*[(A0(3,2)-(A0(2,2)-1)/t) (A0(3,3)-1)]';
 S0 = [1 0 0; 0 1 0; a0(1) a0(2) 1];
 A1 = S0\A0;  a1 = pinv(A1([2 3],[2 3])')*A1(1,[2 3])';  S1 = [1 a1(1) a1(2); 0 1 0; 0 0 1];

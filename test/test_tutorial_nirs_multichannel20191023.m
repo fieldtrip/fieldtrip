@@ -1,7 +1,7 @@
-% function test_tutorial_nirs_multichannel20191023
+function test_tutorial_nirs_multichannel20191023
 
 % WALLTIME 00:10:00
-% MEM 3gb
+% MEM 4gb
 % DEPENDENCY ft_datatype_sens ft_nirs_transform_ODs ft_nirs_prepare_ODtransformation
 
 %%
@@ -162,6 +162,7 @@ cfg.showlabels        = 'yes';
 cfg.layout            = lay;
 cfg.interactive       = 'yes';
 cfg.graphcolor        = 'rb';
+cfg.colorgroups       = ones(numel(timelockDEV.label),1);
 cfg.colorgroups(contains(timelockDEV.label, 'O2Hb')) = 1; % these will be red
 cfg.colorgroups(contains(timelockDEV.label, 'HHb'))  = 2; % these will be blue
 ft_multiplotER(cfg, timelockDEV);

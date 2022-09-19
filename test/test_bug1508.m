@@ -1,8 +1,7 @@
 function test_bug1508
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_freqanalysis
 
 % Stan reported a strange error caused by the following:

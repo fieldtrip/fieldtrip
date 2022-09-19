@@ -2,6 +2,7 @@ function test_old_preproc_resample
 
 % MEM 1gb
 % WALLTIME 00:10:00
+% DEPENDENCY
 
 
 %this script tests the anti-aliasing filter in the resample function as used by ft_preproc_resample

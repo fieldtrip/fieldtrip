@@ -93,6 +93,8 @@ physMin{2} = sprintf('%-8.6g', double(minV) ./ scale);
 physMin{3} = sprintf('%-8.5g', double(minV) ./ scale);
 physMin{4} = sprintf('%-8.4g', double(minV) ./ scale);
 physMin{5} = sprintf('%-8.3g', double(minV) ./ scale);
+physMin{6} = sprintf('%-8.2g', double(minV) ./ scale);
+physMin{7} = sprintf('%-8.1g', double(minV) ./ scale);
 % take the first (most detailled) one that fits within the character space
 physMin = physMin{find(cellfun(@length, physMin)==nChans*8, 1, 'first')};
 
@@ -100,7 +102,9 @@ physMax{1} = sprintf('%-8.7g', double(maxV) ./ scale);
 physMax{2} = sprintf('%-8.6g', double(maxV) ./ scale);
 physMax{3} = sprintf('%-8.5g', double(maxV) ./ scale);
 physMax{4} = sprintf('%-8.4g', double(maxV) ./ scale);
-physMax{5} = sprintf('%-8.5g', double(maxV) ./ scale);
+physMax{5} = sprintf('%-8.3g', double(maxV) ./ scale);
+physMax{6} = sprintf('%-8.2g', double(maxV) ./ scale);
+physMax{7} = sprintf('%-8.1g', double(maxV) ./ scale);
 % take the first (most detailled) one that fits within the character space
 physMax = physMax{find(cellfun(@length, physMax)==nChans*8, 1, 'first')};
 

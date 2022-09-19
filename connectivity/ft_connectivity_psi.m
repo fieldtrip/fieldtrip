@@ -1,14 +1,14 @@
-function [c, v, n] = ft_connectivity_psi(input, varargin)
+function [c, v, n] = ft_connectivity_psi(inputdata, varargin)
 
-% FT_CONNECTIVITY_PSI computes the phase slope index from a data-matrix
-% containing the cross-spectral density. It implements the method described
-% in: Nolte et al., Robustly estimating the flow direction of information
-% in complex physical systems. Physical Review Letters, 2008; 100; 234101.
+% FT_CONNECTIVITY_PSI computes the phase slope index from a data-matrix containing
+% the cross-spectral density. This implements the method described in Nolte et al.,
+% Robustly estimating the flow direction of information in complex physical systems.
+% Physical Review Letters, 2008; 100; 234101.
 %
 % Use as
-%   [c, v, n] = ft_connectivity_psi(input, ...)
+%   [c, v, n] = ft_connectivity_psi(inputdata, ...)
 %
-% The input data input should be organized as
+% Where the input data input should be organized as
 %   Repetitions x Channel x Channel (x Frequency) (x Time)
 % or
 %   Repetitions x Channelcombination (x Frequency) (x Time)
@@ -16,25 +16,21 @@ function [c, v, n] = ft_connectivity_psi(input, varargin)
 % The first dimension should be singleton if the input already contains an
 % average.
 %
+% The output p contains the phase slope index, v is a variance estimate which only
+% can be computed if the data contains leave-one-out samples, and n is the number of
+% repetitions in the input data. If the phase slope index is positive, then the first
+% chan (1st dim) becomes more leading (or less lagged) with higher frequency,
+% indicating that it is causally driving the second channel (2nd dim).
+%
 % Additional optional input arguments come as key-value pairs:
-%   nbin			=	scalar, half-bandwidth parameter: the number of frequency bins
-%								across which to integrate
-%   hasjack		= 0 or 1, specifying whether the repetitions represent
-%               leave-one-out samples (allowing for a variance estimate)
-%   feedback	= 'none', 'text', 'textbar' type of feedback showing progress of
-%               computation
-%   dimord		= string, specifying how the input matrix should be interpreted
-%   powindx   =
-%   normalize =
+%   'nbin'			=	scalar, half-bandwidth parameter: the number of frequency bins across which to integrate
+%   'hasjack'		= boolean, specifying whether the repetitions represent leave-one-out samples (allowing for a variance estimate)
+%   'feedback'  = 'none', 'text', 'textbar', 'dial', 'etf', 'gui' type of feedback showing progress of computation, see FT_PROGRESS
+%   'dimord'		= string, specifying how the input matrix should be interpreted
+%   'powindx'   = ?
+%   'normalize' = ?
 %
-% The output p contains the phase slope index, v is a variance estimate
-% which only can be computed if the data contains leave-one-out samples,
-% and n is the number of repetitions in the input data. If the phase slope
-% index is positive, then the first chan (1st dim) becomes more lagged (or
-% less leading) with higher frequency, indicating that it is causally
-% driven by the second channel (2nd dim)
-%
-% See also FT_CONNECTIVITYANALYSIS
+% See also CONNECTIVITY, FT_CONNECTIVITYANALYSIS
 
 % Copyright (C) 2009-2010 Donders Institute, Jan-Mathijs Schoffelen
 %
@@ -58,7 +54,7 @@ function [c, v, n] = ft_connectivity_psi(input, varargin)
 
 % FIXME: interpretation of the slope
 
-hasjack   = ft_getopt(varargin, 'hasjack', 0);
+hasjack   = ft_getopt(varargin, 'hasjack', false);
 feedback  = ft_getopt(varargin, 'feedback', 'none');
 dimord    = ft_getopt(varargin, 'dimord');
 powindx   = ft_getopt(varargin, 'powindx');
@@ -71,47 +67,47 @@ end
 
 if (length(strfind(dimord, 'chan'))~=2 || contains(dimord, 'pos')>0) && ~isempty(powindx)
   %crossterms are not described with chan_chan_therest, but are linearly indexed
-  
-  siz = size(input);
-  
+
+  siz = size(inputdata);
+
   outsum = zeros(siz(2:end));
   outssq = zeros(siz(2:end));
   pvec   = [2 setdiff(1:numel(siz),2)];
-  
+
   ft_progress('init', feedback, 'computing metric...');
   %first compute coherency and then phaseslopeindex
   for j = 1:siz(1)
     ft_progress(j/siz(1), 'computing metric for replicate %d from %d\n', j, siz(1));
-    c      = reshape(input(j,:,:,:,:), siz(2:end));
-    p1     = abs(reshape(input(j,powindx(:,1),:,:,:), siz(2:end)));
-    p2     = abs(reshape(input(j,powindx(:,2),:,:,:), siz(2:end)));
-    
+    c      = reshape(inputdata(j,:,:,:,:), siz(2:end));
+    p1     = abs(reshape(inputdata(j,powindx(:,1),:,:,:), siz(2:end)));
+    p2     = abs(reshape(inputdata(j,powindx(:,2),:,:,:), siz(2:end)));
+
     p      = ipermute(phaseslope(permute(c./sqrt(p1.*p2), pvec), nbin, normalize), pvec);
-    
+
     outsum = outsum + p;
     outssq = outssq + p.^2;
   end
   ft_progress('close');
-  
+
 elseif length(strfind(dimord, 'chan'))==2 || length(strfind(dimord, 'pos'))==2
   %crossterms are described by chan_chan_therest
-  
-  siz = size(input);
-  
+
+  siz = size(inputdata);
+
   outsum = zeros(siz(2:end));
   outssq = zeros(siz(2:end));
   pvec   = [3 setdiff(1:numel(siz),3)];
-  
+
   ft_progress('init', feedback, 'computing metric...');
   for j = 1:siz(1)
     ft_progress(j/siz(1), 'computing metric for replicate %d from %d\n', j, siz(1));
     p1  = zeros([siz(2) 1 siz(4:end)]);
     p2  = zeros([1 siz(3) siz(4:end)]);
     for k = 1:siz(2)
-      p1(k,1,:,:,:,:) = input(j,k,k,:,:,:,:);
-      p2(1,k,:,:,:,:) = input(j,k,k,:,:,:,:);
+      p1(k,1,:,:,:,:) = inputdata(j,k,k,:,:,:,:);
+      p2(1,k,:,:,:,:) = inputdata(j,k,k,:,:,:,:);
     end
-    c      = reshape(input(j,:,:,:,:,:,:), siz(2:end));
+    c      = reshape(inputdata(j,:,:,:,:,:,:), siz(2:end));
     p1     = p1(:,ones(1,siz(3)),:,:,:,:);
     p2     = p2(ones(1,siz(2)),:,:,:,:,:);
     p      = ipermute(phaseslope(permute(c./sqrt(p1.*p2), pvec), nbin, normalize), pvec);
@@ -120,14 +116,14 @@ elseif length(strfind(dimord, 'chan'))==2 || length(strfind(dimord, 'pos'))==2
     outssq = outssq + p.^2;
   end
   ft_progress('close');
-  
+
 end
 
 n = siz(1);
 c = outsum./n;
 
 if n>1
-  n = shiftdim(sum(~isnan(input),1),1);
+  n = shiftdim(sum(~isnan(inputdata),1),1);
   if hasjack
     bias = (n-1).^2;
   else
@@ -142,7 +138,7 @@ end
 
 function [y] = phaseslope(x, n, norm)
 
-m   = size(x, 1); %total number of frequency bins
+m   = size(x, 1); % total number of frequency bins
 y   = zeros(size(x));
 x(1:end-1,:,:,:,:) = conj(x(1:end-1,:,:,:,:)).*x(2:end,:,:,:,:);
 

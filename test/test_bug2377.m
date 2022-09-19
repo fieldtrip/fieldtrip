@@ -1,8 +1,7 @@
 function test_bug2377
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_datatype_sens ft_compute_leadfield
 
 load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2377/eeg_lf_scaling.mat'));

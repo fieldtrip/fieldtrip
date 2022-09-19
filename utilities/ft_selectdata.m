@@ -33,25 +33,30 @@ function [varargout] = ft_selectdata(cfg, varargin)
 %   cfg.avgoverfreq = string, can be 'yes' or 'no' (default = 'no')
 %   cfg.nanmean     = string, can be 'yes' or 'no' (default = 'no')
 %
-% If multiple input arguments are provided, FT_SELECTDATA will adjust the individual inputs
-% such that either the intersection across inputs is retained (i.e. only the channel, time,
-% and frequency points that are shared across all input arguments), or that the union across
-% inputs is retained (replacing missing data with nans). In either case, the order (e.g. of
-% the channels) is made consistent across inputs.  The behavior can be specified with
+% When you average over a dimension, you can choose whether to keep that dimension in
+% the data representation or remove it alltogether.
+%   cfg.keeprptdim     = 'yes' or 'no' (default is automatic)
+%   cfg.keepchandim    = 'yes' or 'no' (default = 'yes')
+%   cfg.keepchancmbdim = 'yes' or 'no' (default = 'yes')
+%   cfg.keeptimedim    = 'yes' or 'no' (default = 'yes')
+%   cfg.keepfreqdim    = 'yes' or 'no' (default = 'yes')
+%
+% If multiple input arguments are provided, FT_SELECTDATA will adjust the individual
+% inputs such that either the INTERSECTION across inputs is retained (i.e. only the
+% channel, time, and frequency points that are shared across all input arguments), or
+% that the UNION across inputs is retained (replacing missing data with nans). In
+% either case, the order of the channels is made consistent across inputs. The
+% behavior can be specified with
 %   cfg.select      = string, can be 'intersect' or 'union' (default = 'intersect')
+% For raw data structures you cannot make the union.
 %
 % See also FT_DATATYPE, FT_CHANNELSELECTION, FT_CHANNELCOMBINATION
 
 % Undocumented options
-%   cfg.keeprptdim     = 'yes' or 'no'
-%   cfg.keepposdim     = 'yes' or 'no'
-%   cfg.keepchandim    = 'yes' or 'no'
-%   cfg.keepchancmbdim = 'yes' or 'no'
-%   cfg.keepfreqdim    = 'yes' or 'no'
-%   cfg.keeptimedim    = 'yes' or 'no'
 %   cfg.avgoverpos
+%   cfg.keepposdim     = 'yes' or 'no' (default = 'yes')
 
-% Copyright (C) 2012-2014, Robert Oostenveld & Jan-Mathijs Schoffelen
+% Copyright (C) 2012-2022, Robert Oostenveld & Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -110,6 +115,9 @@ cfg = ft_checkconfig(cfg, 'renamedval', {'parameter', 'trial.nai', 'nai'});
 
 cfg.tolerance = ft_getopt(cfg, 'tolerance', 1e-5);        % default tolerance for checking equality of time/freq axes
 cfg.select    = ft_getopt(cfg, 'select',   'intersect');  % default is to take intersection, alternative 'union'
+if isequal(dtype, 'raw') && isequal(cfg.select, 'union')
+  ft_error('using cfg.select=''union'' in combination with ''raw'' datatype is not supported');
+end
 
 if strcmp(dtype, 'volume') || strcmp(dtype, 'segmentation')
   % it must be a source representation, not a volume representation
@@ -526,6 +534,10 @@ switch selmode
   case 'union'
     if ~isempty(selindx) && all(isnan(selindx))
       % no selection needs to be made
+    elseif isequal(seldim,1) && any(strcmp({'time' 'freq'}, datfield))
+      % treat this as an exception, because these fields should only be
+      % unionized along the second dimension, so here also no selection
+      % needs to be made
     else
       tmp = data.(datfield);
       siz = size(tmp);
@@ -645,27 +657,48 @@ varargin = varargin(1:ndata);
 chanindx = cell(ndata,1);
 label    = cell(1,0);
 
-for k = 1:ndata
-  if isfield(varargin{k}, 'grad') && isfield(varargin{k}.grad, 'type')
-    % this makes channel selection more robust
-    selchannel = ft_channelselection(cfg.channel, varargin{k}.label, varargin{k}.grad.type);
-  elseif isfield(varargin{k}, 'elec') && isfield(varargin{k}.elec, 'type')
-    % this makes channel selection more robust
-    selchannel = ft_channelselection(cfg.channel, varargin{k}.label, varargin{k}.elec.type);
-  else
-    selchannel = ft_channelselection(cfg.channel, varargin{k}.label);
-  end
-  label      = union(label, selchannel);
-end
-label = label(:);   % ensure column array
+if ndata==1 && (isequal(cfg.channel, 'all') || isequal(cfg.channel, varargin{1}.label))
+  % the loop across data arguments, as well as the expensive calls to
+  % FT_CHANNELSELECTION can be avoided if there is only a single data
+  % argument and if 'all' channels are to be returned in the output
+  label = varargin{1}.label(:);
 
-% this call to match_str ensures that that labels are always in the
-% order of the first input argument see bug_2917, but also temporarily keep
-% the labels from the other data structures not present in the first one
-% (in case selmode = 'union')
-[ix, iy] = match_str(varargin{1}.label, label);
-label1   = varargin{1}.label(:); % ensure column array
-label    = [label1(ix); label(setdiff(1:numel(label),iy))];
+else
+  for k = 1:ndata
+    selchannel      = cell(0,1);
+    selgrad         = [];
+    selelec         = [];
+    selopto         = [];
+    if isfield(varargin{k}, 'grad') && isfield(varargin{k}.grad, 'type')
+      % this makes channel selection more robust, e.g. when using wildcards in cfg.channel
+      [selgrad, dum] = match_str(varargin{k}.label, varargin{k}.grad.label);
+      selchannel     = cat(1, selchannel, ft_channelselection(cfg.channel, varargin{k}.label(selgrad), varargin{k}.grad.type));
+    end
+    if isfield(varargin{k}, 'elec') && isfield(varargin{k}.elec, 'type')
+      % this makes channel selection more robust, e.g. when using wildcards in cfg.channel
+      [selelec, dum] = match_str(varargin{k}.label, varargin{k}.elec.label);
+      selchannel     = cat(1, selchannel, ft_channelselection(cfg.channel, varargin{k}.label(selelec), varargin{k}.elec.type));
+    end
+    if isfield(varargin{k}, 'opto') && isfield(varargin{k}.opto, 'type')
+      % this makes channel selection more robust, e.g. when using wildcards in cfg.channel
+      [selopto, dum] = match_str(varargin{k}.label, varargin{k}.opto.label);
+      selchannel     = cat(1, selchannel, ft_channelselection(cfg.channel, varargin{k}.label(selopto), varargin{k}.opto.type));
+    end
+    selrest    = setdiff((1:numel(varargin{k}.label))', [selgrad; selelec; selopto]);
+    selchannel = cat(1, selchannel, ft_channelselection(cfg.channel, varargin{k}.label(selrest)));
+    label      = union(label, selchannel);
+  end
+  label = label(:);   % ensure that this is a column array
+  
+  % this call to match_str ensures that that labels are always in the
+  % order of the first input argument see bug_2917, but also temporarily keep
+  % the labels from the other data structures not present in the first one
+  % (in case selmode = 'union')
+  [ix, iy] = match_str(varargin{1}.label, label);
+  label1   = varargin{1}.label(:); % ensure column array
+  label    = [label1(ix); label(setdiff(1:numel(label),iy))];
+
+end % if ndata==1 and all channels are to be returned
 
 indx = nan+zeros(numel(label), ndata);
 for k = 1:ndata
@@ -732,26 +765,39 @@ else
   
   switch selmode
     case 'intersect'
+      haslabel = false(ndata,1);
       for k=1:ndata
-        if ~isfield(varargin{k}, 'label')
-          cfg.channelcmb = ft_channelcombination(cfg.channelcmb, unique(varargin{k}.labelcmb(:)));
-        else
+        haslabel = isfield(varargin{k}, 'label');
+      end
+      if all(haslabel)
+        for k=1:ndata
           cfg.channelcmb = ft_channelcombination(cfg.channelcmb, varargin{k}.label);
         end
-      end
-      
-      ncfgcmb = size(cfg.channelcmb,1);
-      cfgcmb  = cell(ncfgcmb, 1);
-      for i=1:ncfgcmb
-        cfgcmb{i} = sprintf('%s&%s', cfg.channelcmb{i,1}, cfg.channelcmb{i,2});
+        cfgcmb = cellfun(@sprintf,repmat({'%s_%s'},size(cfg.channelcmb,1),1),cfg.channelcmb(:,1),cfg.channelcmb(:,2),'UniformOutput',false);
+      elseif all(~haslabel)
+        % the data already has labelcmb, and thus needs a slightly different way to
+        % preset the cfg.channelcmb
+        chancmb = cellfun(@sprintf,repmat({'%s_%s'},size(varargin{1}.labelcmb,1),1),varargin{1}.labelcmb(:,1),varargin{1}.labelcmb(:,2),'UniformOutput',false);
+        for k=2:ndata
+          tmp = cellfun(@sprintf,repmat({'%s_%s'},size(varargin{k}.labelcmb,1),1),varargin{k}.labelcmb(:,1),varargin{k}.labelcmb(:,2),'UniformOutput',false);
+          chancmb = intersect(chancmb, tmp);
+        end
+        cfgcmb = unique(chancmb);
+        
+        if isequal(cfg.channelcmb, {'all' 'all'})
+          % nothing needed here
+        else
+          cfg.channelcmb = cellfun(@sprintf,repmat({'%s_%s'},size(cfg.channelcmb,1),1),cfg.channelcmb(:,1),cfg.channelcmb(:,2),'UniformOutput',false);
+        
+          cfgcmb = intersect(cfg.channelcmb, cfgcmb);
+        end
+        
+      else
+        ft_error('a combination of data with and without label field is not possible');
       end
       
       for k=1:ndata
-        ndatcmb = size(varargin{k}.labelcmb,1);
-        datcmb = cell(ndatcmb, 1);
-        for i=1:ndatcmb
-          datcmb{i} = sprintf('%s&%s', varargin{k}.labelcmb{i,1}, varargin{k}.labelcmb{i,2});
-        end
+        datcmb = cellfun(@sprintf,repmat({'%s_%s'},size(varargin{k}.labelcmb,1),1),varargin{k}.labelcmb(:,1),varargin{k}.labelcmb(:,2),'UniformOutput',false);
         
         % return the order according to the (joint) configuration, not according to the (individual) data
         % FIXME this should adhere to the general code guidelines, where
@@ -1208,8 +1254,8 @@ for i=(numel(siz)+1):numel(dim)
   % all trailing singleton dimensions have length 1
   siz(i) = 1;
 end
-if isvector(x)
-  % there is no harm to keep it as it is
+if isvector(x) && ~(isrow(x) && dim(1) && numel(x)>1)
+  % there is no harm to keep it as it is, unless the data matrix is 1xNx1x1
 elseif istable(x)
   % there is no harm to keep it as it is
 else
@@ -1327,6 +1373,18 @@ if iscell(x)
       x{i} = average(x{i}, seldim-1);
     end % for
   end
+elseif istable(x)
+  try
+    % try to convert to an array, depending on the table content this might fail
+    x = average(table2array(x), seldim);
+  catch
+    % construct an appropriately sized array with NaN values
+    s = size(x);
+    s(seldim) = 1;
+    x = nan(s);
+  end
+  % convert back to table
+  x = array2table(x);
 else
   x = average(x, seldim);
 end

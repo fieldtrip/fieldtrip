@@ -27,6 +27,11 @@ else
     '/usr/local/openmeeg/bin'
     '/opt/bin'
     '/opt/openmeeg/bin'
+    '/opt/openmeeg/2.4.1/bin'
+    '/opt/openmeeg/2.4.0/bin'
+    '/opt/openmeeg/2.3.0/bin'
+    '/opt/openmeeg/2.2.0/bin'
+    '/opt/openmeeg/2.1.0/bin'
     };
   
   % start with an empty return value

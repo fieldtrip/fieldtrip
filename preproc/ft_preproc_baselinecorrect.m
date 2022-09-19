@@ -13,6 +13,9 @@ function [dat,baseline] = ft_preproc_baselinecorrect(dat, begsample, endsample)
 % If no begin and end sample are specified for the baseline estimate, it
 % will be estimated on the complete data.
 %
+% If the data contains NaNs, these are ignored for the computation, but
+% retained in the output.
+%
 % See also FT_PREPROC_DETREND, FT_PREPROC_POLYREMOVAL
 
 % Copyright (C) 1998-2014, Robert Oostenveld

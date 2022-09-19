@@ -2,7 +2,6 @@ function test_ft_prepare_singleshell
 
 % MEM 2gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_headmodel_singleshell ft_prepare_headmodel ft_prepare_singleshell
 
 % function to test ft_headmodel_singleshell. this function is called
@@ -21,7 +20,7 @@ load(fullfile(datadir, 'segmentedmri.mat'));
 mri = segmentedmri; clear segmentedmri;
 
 % specify the file for the headshape
-hdmfile  = dccnpath('/home/common/matlab/fieldtrip/data/Subject01.shape');
+hdmfile  = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.shape');
 
 % read in the headshape
 shape = ft_read_headshape(hdmfile);

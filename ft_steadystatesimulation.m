@@ -47,9 +47,9 @@ function [data] = ft_steadystatesimulation(cfg)
 %   cfg.stimulus2.onset           = in seconds, first stimulus relative to the start of the trial (default = 0.7)
 %   cfg.stimulus2.onsetjitter     = in seconds, max jitter that is added to the onset (default = 0.2)
 %   cfg.stimulus2.isi             = in seconds as the interstimulus interval (default = 0.7)
-%   cfg.stimulus2.isijitter       = in seconds, max jitter relative to the previous stimulus ((default = 0.2)
+%   cfg.stimulus2.isijitter       = in seconds, max jitter relative to the previous stimulus (default = 0.2)
 %   cfg.stimulus2.condition       = 1xM vector with condition codes for each transient within a trial (default = [1 1 2 2])
-%   cfg.stimulus2.gain            = 1xM vector with gain for each condition for each transient within a trial(default = [1 1 1 1])
+%   cfg.stimulus2.gain            = 1xM vector with gain for each condition for each transient within a trial (default = [1 1 1 1])
 %   cfg.stimulus2.kernelshape     = 'hanning'
 %   cfg.stimulus2.kernelduration  = in seconds (default = 0.75*isi)
 %

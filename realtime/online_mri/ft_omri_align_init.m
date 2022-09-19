@@ -82,7 +82,7 @@ function model = ft_omri_align_init(Vr,flags)
 % $Id$
 
 
-if nargin==0, return; end;
+if nargin==0, return; end
 
 model = struct('quality',1,'fwhm',5,'sep',4,'interp',2,'wrap',[0 0 0],'rtm',0,'PW','','lkp',1:6, 'mat', eye(4), 'time', 2);
 if nargin > 1,
@@ -90,9 +90,9 @@ if nargin > 1,
     for i=1:length(fnms),
         if isfield(flags,fnms{i}),
             model.(fnms{i}) = flags.(fnms{i});
-        end;
-    end;
-end;
+        end
+    end
+end
 
 
 % assume reference volume is not scaled or anything
@@ -109,7 +109,7 @@ else
     x1   = x1 + rand(size(x1))*0.5;
     x2   = x2 + rand(size(x2))*0.5;
     x3   = x3 + rand(size(x3))*0.5; 
-end;
+end
 
 x1   = x1(:);
 x2   = x2(:);
@@ -127,7 +127,7 @@ if ~isempty(model.PW),
     wt  = wt(msk);
 else
     wt = [];
-end;
+end
 
 % Compute rate of change of chi2 w.r.t changes in parameters (matrix A)
 %-----------------------------------------------------------------------
@@ -139,7 +139,7 @@ clear V
 A0 = make_A(model.mat,x1,x2,x3,dG1,dG2,dG3,wt,model.lkp);
 
 b  = G;
-if ~isempty(wt), b = b.*wt; end;
+if ~isempty(wt), b = b.*wt; end
 
     % Remove voxels that contribute very little to the final estimate.
     % Simulated annealing or something similar could be used to
@@ -166,12 +166,12 @@ while det1/det0 > model.quality,
 	A0(msk,:) = [];   b(msk,:) = [];   G(msk,:) = [];
 	x1(msk,:) = [];  x2(msk,:) = [];  x3(msk,:) = [];
 	dG1(msk,:) = []; dG2(msk,:) = []; dG3(msk,:) = [];
-	if ~isempty(wt),  wt(msk,:) = []; end;
+	if ~isempty(wt),  wt(msk,:) = []; end
 	Alpha = [A0 b];
 	Alpha = Alpha'*Alpha;
 	det1  = det(Alpha);
 %	spm_chi2_plot('Set',single(det1/det0));
-end;
+end
 
 model.deg = deg;
 model.x1 = x1;

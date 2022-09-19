@@ -13,14 +13,20 @@ function state = dss_core_symm(state)
 % Copyright (C) 2004, 2005 DSS MATLAB package team (dss@cis.hut.fi).
 % Distributed by Laboratory of Computer and Information Science,
 % Helsinki University of Technology. http://www.cis.hut.fi/projects/dss/.
-% $Id$
+% $Id: dss_core_symm.m,v 1.23 2005/12/02 12:23:18 jaakkos Exp $
 
 dss_message(state,2,'Extracting components in symmetric DSS\n');
 
 % -- Initialize local variables
 start_time = cputime;
 user_interrupt = 0;
-wdim = size(state.Y, 1);
+
+% Dimension of the whitened data
+if iscell(state.Y)
+  wdim = size(state.Y{1},1);
+else
+  wdim = size(state.Y, 1);
+end
 sdim = state.sdim;
 
 if isfield(state,'iteration')
@@ -84,7 +90,17 @@ while 1
   % ---- calculate new w
   state.W_old = state.W;
   % -- re-estimate projection
-  state.W = state.S * state.Y';
+  if iscell(state.Y)
+    
+    state.W = state.S * cellctranspose(state.Y);
+    tmp     = state.W{1};
+    for k = 2:numel(state.W)
+      tmp = state.W{2}+tmp;
+    end
+    state.W = tmp;
+  else
+    state.W = state.S * state.Y';
+  end
   
   % -- orthogonalization
   [state.orthof.params, state.W] = feval(state.orthof.h, state.orthof.params, state.W);

@@ -1,9 +1,8 @@
 function [headmodel, sens] = ft_prepare_vol_sens(headmodel, sens, varargin)
 
-% FT_PREPARE_VOL_SENS does some bookkeeping to ensure that the volume
-% conductor model and the sensor array are ready for subsequent forward
-% leadfield computations. It takes care of some pre-computations that can
-% be done efficiently prior to the leadfield calculations.
+% FT_PREPARE_VOL_SENS does some bookkeeping to ensure that the volume conductor model
+% and the sensor array are ready for subsequent forward leadfield computations and
+% takes care of some pre-computations to make the calculations more efficient.
 %
 % Use as
 %   [headmodel, sens] = ft_prepare_vol_sens(headmodel, sens, ...)
@@ -37,7 +36,7 @@ function [headmodel, sens] = ft_prepare_vol_sens(headmodel, sens, varargin)
 %
 % See also FT_COMPUTE_LEADFIELD, FT_READ_HEADMODEL, FT_READ_SENS
 
-% Copyright (C) 2004-2015, Robert Oostenveld
+% Copyright (C) 2004-2020, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -300,7 +299,24 @@ elseif ismeg
       end
 
     case  'openmeeg'
-        % don't do anything, h2em or h2mm generated later in ft_prepare_leadfield
+      % don't do anything, h2em or h2mm generated later in ft_prepare_leadfield
+
+    case 'duneuro'
+           
+      %compute transfer matrix
+      if(~isfield(headmodel,'meg_transfer'))
+
+        % set coils and projections
+        coils = sens.coilpos;
+        projections = sens.coilori;
+        headmodel.driver.set_coils_and_projections(coils', projections');
+
+        % compute transfer matrix
+        cfg = [];
+        cfg.solver.reduction   = headmodel.reduction;
+        cfg.solver.intorderadd = headmodel.intorderadd;
+        headmodel.meg_transfer = headmodel.driver.compute_meg_transfer_matrix(cfg);
+      end
 
     case 'simbio'
       ft_error('MEG not yet supported with simbio');
@@ -477,7 +493,7 @@ elseif iseeg
         end
       end
     case  'openmeeg'
-        % don't do anything, h2em or h2mm generated later in ft_prepare_leadfield
+      % don't do anything, h2em or h2mm generated later in ft_prepare_leadfield
 
     case 'fns'
       if isfield(headmodel,'bnd')
@@ -501,20 +517,36 @@ elseif iseeg
       end
 
       if (isfield(headmodel,'transfer') && isfield(headmodel,'elec'))
-          if all(ismember(sens.label,headmodel.elec.label))
-              [sensmember, senslocation] = ismember(sens.label,headmodel.elec.label);
-              if (norm(sens.elecpos - headmodel.elec.elecpos(senslocation,:))<1e-8)
-                  headmodel.transfer = headmodel.transfer(senslocation,:);
-                  headmodel.elec = sens;
-              else
-                  ft_error('Electrode positions do not fit to the given transfer matrix!');
-              end
+        if all(ismember(sens.label,headmodel.elec.label))
+          [sensmember, senslocation] = ismember(sens.label,headmodel.elec.label);
+          if (norm(sens.elecpos - headmodel.elec.elecpos(senslocation,:))<1e-8)
+            headmodel.transfer = headmodel.transfer(senslocation,:);
+            headmodel.elec = sens;
           else
-              ft_error('Transfer matrix does not fit the given set of electrodes!');
+            ft_error('Electrode positions do not fit to the given transfer matrix!');
           end
+        else
+          ft_error('Transfer matrix does not fit the given set of electrodes!');
+        end
       else
-          headmodel.transfer = sb_transfer(headmodel,sens);
-          headmodel.elec = sens;
+        headmodel.transfer = sb_transfer(headmodel,sens);
+        headmodel.elec = sens;
+      end
+
+    case 'duneuro'
+      ft_hastoolbox('duneuro', 1);
+
+      if(~isfield(headmodel,'eeg_transfer'))
+        % set electrodes
+        cfg = [];
+        cfg.type = headmodel.electrodes;
+        cfg.codims = headmodel.subentities;
+        headmodel.driver.set_electrodes(sens.elecpos', cfg);
+        
+        % compute transfer matrix
+        cfg = [];
+        cfg.solver.reduction = headmodel.reduction;
+        headmodel.eeg_transfer = headmodel.driver.compute_eeg_transfer_matrix(cfg);
       end
 
     case 'interpolate'
@@ -528,7 +560,7 @@ elseif iseeg
 
       matchlab = isequal(sens.label, headmodel.sens.label);
       matchpos = isequal(sens.elecpos, headmodel.sens.elecpos);
-      matchtra = (~isfield(sens, 'tra') && ~isfield(headmodel.sens, 'tra')) || isequal(sens.tra, headmodel.sens.tra);
+      matchtra = (~isfield(sens, 'tra') && ~isfield(headmodel.sens, 'tra')) || (isfield(sens, 'tra') && isfield(headmodel.sens, 'tra') && isequal(sens.tra, headmodel.sens.tra));
 
       if matchlab && matchpos && matchtra
         % the input sensor array matches precisely with the forward model
@@ -552,11 +584,13 @@ elseif iseeg
       ft_error('unsupported volume conductor model for EEG');
   end
 
-  % FIXME this needs careful thought to ensure that the average referencing which is now done here and there, and that the linear interpolation in case of BEM are all dealt with consistently
-  % % always ensure that there is a linear transfer matrix for
-  % % rereferencing the EEG potential
+  % FIXME this needs careful thought to ensure that the average referencing which is
+  % now done here and there, and that the linear interpolation in case of BEM are all
+  % dealt with consistently always ensure that there is a linear transfer matrix for
+  % rereferencing the EEG potential
+  %
   % if ~isfield(sens, 'tra');
-  %   sens.tra = eye(length(sens.label));
+  %   sens.tra = eye(length(sens.label)) - 1/length(sens.label);
   % end
 
   % update the channel positions as the electrodes were projected to the skin surface

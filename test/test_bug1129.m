@@ -1,8 +1,7 @@
 function test_bug1129
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_preprocessing ft_preproc_bandpassfilter ft_preproc_bandstopfilter ft_preproc_lowpassfilter ft_preproc_highpassfilter
 
 % change filter order for 'fir' (fir1) filter type, rather than 25 by
@@ -79,8 +78,7 @@ for N=[199 432 1000] % test 'firls' option
 end
 
 %% high-level ft_preprocessing
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test'))
-load bug1129.mat
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1129.mat'));
 
 cfg = [];
 cfg.bpfreq = [8 12];
@@ -237,7 +235,3 @@ figure;plot(linspace(0,1000,1000),abs(fft(y1)));axis([0 40 0 inf])
 
 figure;plot(linspace(0,1000,1000),abs(fft(y5)));axis([0 40 0 inf])
 % hold on;plot(linspace(0,1000,1000),abs(fft(y6)),'r');axis([0 40 0 inf])
-
-
-
-

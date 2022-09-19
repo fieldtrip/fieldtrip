@@ -28,7 +28,7 @@ function ft_trackusage(event, varargin)
 %
 % See also FT_DEFAULTS
 
-% Copyright (C) 2015, Robert oostenveld
+% Copyright (C) 2015, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/donders/fieldtrip
 % for the documentation and details.
@@ -85,7 +85,7 @@ try
     % read options from the preferences file
     if exist(fieldtripprefs, 'file')
       prefs      = load(fieldtripprefs); % the file contains multiple fields
-      ft_default = mergeconfig(ft_default, prefs);
+      ft_default = mergestruct(ft_default, prefs);
     end
   end
   

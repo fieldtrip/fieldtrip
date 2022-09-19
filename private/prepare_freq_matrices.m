@@ -2,10 +2,15 @@ function [Cf, Cr, Pr, Ntrials, cfg] = prepare_freq_matrices(cfg, freq)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION that converts a freq structure into Cf, Cr and Pr
-% this is used in sourecanalysis
+% this is used in FT_SOURCEANALYSIS
 %
 % This function returns data matrices with a channel order that is consistent
 % with the original channel order in the data.
+%
+% The order of the channels in the output data is according to the input cfg.channel,
+% which therefore must be specified as a cell-array with actual labels, not as an
+% input like 'all' that still needs to be interpreted by FT_CHANNELSELECTION.
+%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Copyright (C) 2015, Jan-Mathijs Schoffelen
@@ -30,9 +35,12 @@ function [Cf, Cr, Pr, Ntrials, cfg] = prepare_freq_matrices(cfg, freq)
 
 % set the defaults
 cfg = ft_checkconfig(cfg, 'deprecated', 'dicsfix');
-if ~isfield(cfg, 'keeptrials'), cfg.keeptrials = 1;     end
-if ~isfield(cfg, 'refchan'),    cfg.refchan    = [];    end
-if ~isfield(cfg, 'rawtrial'),   cfg.rawtrial   = [];    end
+cfg = ft_checkconfig(cfg, 'forbidden', {'frequency', 'latency'});
+cfg = ft_checkconfig(cfg, 'required', 'channel'); % this should be a full list
+
+cfg.keeptrials = ft_getopt(cfg, 'keeptrials', 'yes');
+cfg.rawtrial   = ft_getopt(cfg, 'rawtrial', 'no');
+cfg.refchan    = ft_getopt(cfg, 'refchan');
 
 keeptrials = istrue(cfg.keeptrials) || istrue(cfg.rawtrial);
 
@@ -40,77 +48,49 @@ Cf = [];
 Cr = [];
 Pr = [];
 
-tok = tokenize(freq.dimord, '_');
-if any(strcmp(tok, 'rpttap'))
-  Ntrials = size(freq.cumtapcnt,1);
-elseif any(strcmp(tok, 'rpt'))
+if startsWith(freq.dimord, 'rpt')
   Ntrials = size(freq.cumtapcnt,1);
 else
   Ntrials = 1;
 end
 
-% select from the frequency dimension
-if any(strcmp(tok, 'freq')),
-  % select the frequency of interest
-  tmpcfg             = [];
-  tmpcfg.frequency   = cfg.frequency;
-  tmpcfg.avgoverfreq = 'yes';
-  freq               = ft_selectdata(tmpcfg, freq);
-
-  % update the cfg
-  cfg.frequency      = freq.freq;
-end
-
-% select from the time dimension
-if any(strcmp(tok, 'time')),
-  % select the latency of interest for time-frequency data
-  tmpcfg         = [];
-  tmpcfg.latency = cfg.latency;
-  tmpcfg.avgovertime = 'yes';
-  freq           = ft_selectdata(tmpcfg, freq);
-  
-  % update the cfg
-  cfg.latency    = freq.time;
-end  
-
 % create a square csd-matrix, if necessary
 hasfull = false;
 if isfield(freq, 'crsspctrm')
-	dimtok  = tokenize(getdimord(freq, 'crsspctrm'),'_');
-	hasfull = sum(strcmp(dimtok, 'chan'))==2;
+  dimtok  = tokenize(getdimord(freq, 'crsspctrm'),'_');
+  hasfull = sum(strcmp(dimtok, 'chan'))==2;
 end
-if ~hasfull,
-	if keeptrials,
-		freq = ft_checkdata(freq, 'cmbrepresentation', 'full');
-	else
-		freq = ft_checkdata(freq, 'cmbrepresentation', 'fullfast');
-		Ntrials = 1;
-	end
+if ~hasfull
+  if keeptrials
+    freq = ft_checkdata(freq, 'cmbstyle', 'full');
+  else
+    freq = ft_checkdata(freq, 'cmbstyle', 'fullfast');
+    Ntrials = 1;
+  end
 end
-tok = tokenize(freq.dimord, '_');
 
-% extract the csd-matrix for the channels-of-interest
+% extract the csd-matrix for the channels-of-interest, order them according to cfg.channel
 [dum, chanindx] = match_str(cfg.channel, freq.label);
 
 % update the cfg
-cfg.channel     = freq.label(chanindx);
-if any(strncmp(tok, 'rpt', 3)),
-  Cf = freq.crsspctrm(:,chanindx,chanindx);
+cfg.channel = freq.label(chanindx);
+if startsWith(freq.dimord, 'rpt')
+  Cf = freq.crsspctrm(:,chanindx,chanindx,:,:);
 else
-  Cf = freq.crsspctrm(chanindx,chanindx);
+  Cf = freq.crsspctrm(chanindx,chanindx,:,:);
 end
 
-if isfield(cfg, 'refchan') && ~isempty(cfg.refchan)
+if ~isempty(cfg.refchan)
   refindx = match_str(freq.label, cfg.refchan);
-  if isempty(refindx),
+  if isempty(refindx)
     ft_error('the requested reference channel is not found in the data');
   end
-  if any(strncmp(tok, 'rpt', 3)),
-    Cr = freq.crsspctrm(:,chanindx,refindx);
-    Pr = freq.crsspctrm(:,refindx,refindx);
+  if startsWith(freq.dimord, 'rpt')
+    Cr = freq.crsspctrm(:,chanindx,refindx,:,:);
+    Pr = freq.crsspctrm(:,refindx,refindx,:,:);
   else
-    Cr = freq.crsspctrm(chanindx,refindx);
-    Pr = freq.crsspctrm(refindx,refindx);
+    Cr = freq.crsspctrm(chanindx,refindx,:,:);
+    Pr = freq.crsspctrm(refindx,refindx,:,:);
   end
 end  
 
@@ -121,4 +101,3 @@ end
 if any(isnan(Cr(:)))
   ft_error('The cross-spectral-density with the reference channel is not complete');
 end
-

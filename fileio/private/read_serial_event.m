@@ -57,7 +57,7 @@ if ~isempty(s.BytesAvailable) && s.BytesAvailable~=0
   %% transmitted)
   event.sample=1;
   event.duration=[];
-end;
+end
 
 
 %% this is the old code
@@ -77,14 +77,14 @@ end;
 %         % set s to the (first) matching port if present (and open if necessary)
 %         if ~isempty(i2)
 %           s = temp(i2(1));
-%           if ~strcmp(s.Status,'open'), fopen(s); end;
+%           if ~strcmp(s.Status,'open'), fopen(s); end
 %         end
 %       end
 %     end
 %     % create, configure a serial port object if necessary and open the port
 %     if ~isa(s,'serial')
 %       s = serial(port);
-%       if ~isempty(opt) && iscell(opt), s = set(s,opt); end;
+%       if ~isempty(opt) && iscell(opt), s = set(s,opt); end
 %       fopen(s);
 %     end
 %     % try to read a message from the serial port
@@ -93,6 +93,6 @@ end;
 %     % "newline" character (ascii character 10)
 %     try
 %       msg = fscanf(s,'%s\n');
-%     end;
+%     end
 %     % convert message to event structure
 %     event = msg2struct(msg);

@@ -61,13 +61,13 @@ function [spike] = ft_datatype_spike(spike, varargin)
 %
 %         label:           {'unit1'  'unit2'  'unit3'}
 %         timestamp:       {[1x504 double] [1x50 double] [1x101 double]}
+%         timestampdimord: '{chan}_spike'
 %         time:            {[1x504 double] [1x50 double] [1x101 double]}
 %         trial:           {[1x504 double] [1x50 double] [1x101 double]}
 %         trialtime:       [100x2 double]
 %         sampleinfo:      [100x2 double]
 %         waveform:        {[1x32x504 double] [1x32x50 double] [1x32x101 double]}
 %         waveformdimord: '{chan}_lead_time_spike'
-%         cfg
 %
 % For analysing the relation between the spikes and the local field
 % potential (e.g. phase-locking), the SPIKE structure can have additional
@@ -75,27 +75,29 @@ function [spike] = ft_datatype_spike(spike, varargin)
 %
 % For example, from the structure above we may obtain
 %
-%         label:          {'unit1'  'unit2'  'unit3'}
-%         timestamp:      {[1x504 double] [1x50 double] [1x101 double]}
-%         time:           {[1x504 double] [1x50 double] [1x101 double]}
-%         trial:          {[1x504 double] [1x50 double] [1x101 double]}
-%         trialtime:      [100x2 double]
-%         waveform:       {[1x32x504 double] [1x32x50 double] [1x32x101 double]}
-%         waveformdimord: '{chan}_lead_time_spike'
-%         fourierspctrm:  {504x2x20, 50x2x20, 101x2x20}
+%         label:               {'unit1'  'unit2'  'unit3'}
+%         time:                {[1x504 double] [1x50 double] [1x101 double]}
+%         trial:               {[1x504 double] [1x50 double] [1x101 double]}
+%         trialtime:           [100x2 double]
+%         timestamp:           {[1x504 double] [1x50 double] [1x101 double]}
+%         timestampdimord:     '{chan}_spike'
+%         waveform:            {[1x32x504 double] [1x32x50 double] [1x32x101 double]}
+%         waveformdimord:      '{chan}_lead_time_spike'
+%         fourierspctrm:       {504x2x20, 50x2x20, 101x2x20}
 %         fourierspctrmdimord: '{chan}_spike_lfplabel_freq'
-%         lfplabel:       {'lfpchan1', 'lfpchan2'}
-%         freq:           [1x20 double]
+%         lfplabel:            {'lfpchan1', 'lfpchan2'}
+%         freq:                [1x20 double]
 %
 % Required fields:
 %   - label
 %   - timestamp
 %
 % Optional fields:
-%   - unit
 %   - time, trial, trialtime
+%   - timestampdimord
+%   - unit, unitdimord
 %   - waveform, waveformdimord
-%   - fourierspctrm, fourierspctrmdimord, freq, lfplabel  (these are extra outputs from FT_SPIKETRIGGEREDSPECTRUM and FT_SPIKE_TRIGGEREDSPECTRUM)
+%   - fourierspctrm, fourierspctrmdimord, freq, lfplabel (these are extra outputs from FT_SPIKETRIGGEREDSPECTRUM and FT_SPIKE_TRIGGEREDSPECTRUM)
 %   - hdr
 %   - cfg
 %
@@ -107,10 +109,12 @@ function [spike] = ft_datatype_spike(spike, varargin)
 %
 % Revision history:
 %
+% (2020/latest) Add an explicit xxxdimord for each of the known fields.
+%
 % (2012) Changed the dimensionality of the waveform to allow both
 % stereotrode and tetrode data to be represented.
-% 
-% (2011/latest) Defined a consistent spike data representation that can
+%
+% (2011) Defined a consistent spike data representation that can
 % also contain the Fourier spectrum and other fields. Use the xxxdimord
 % to indicate the dimensions of the field.
 %
@@ -120,7 +124,7 @@ function [spike] = ft_datatype_spike(spike, varargin)
 %
 % See also FT_DATATYPE, FT_DATATYPE_RAW, FT_DATATYPE_FREQ, FT_DATATYPE_TIMELOCK
 
-% Copyright (C) 2011-2014, Robert Oostenveld & Martin Vinck
+% Copyright (C) 2011-2020, Robert Oostenveld & Martin Vinck
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -140,12 +144,11 @@ function [spike] = ft_datatype_spike(spike, varargin)
 %
 % $Id$
 
-
 % get the optional input arguments, which should be specified as key-value pairs
 version = ft_getopt(varargin, 'version', 'latest');
 
 if strcmp(version, 'latest')
-  version = '2011';
+  version = '2020';
 end
 
 if isempty(spike)
@@ -153,14 +156,37 @@ if isempty(spike)
 end
 
 switch version
-  case '2011'
+  case '2020'
+    % ensure it is up to date with the previous version, which incoreporates changes from 2011 and 2012
+    spike = ft_datatype_spike(spike, 'version', '2012');
+    
+    % remove the general dimord
+    if isfield(spike, 'dimord')
+      spike = rmfield(spike, 'dimord');
+    end
+    
+    % add explicit dimords for the known fields
+    if isfield(spike, 'timestamp') && ~isfield(spike, 'timestampdimord')
+      spike.timestampdimord = '{chan}_spike';
+    end
+    if isfield(spike, 'unit') && ~isfield(spike, 'unitdimord')
+      spike.unitdimord = '{chan}_spike';
+    end
+    if isfield(spike, 'waveform') && ~isfield(spike, 'waveformdimord')
+      spike.waveformdimord = '{chan}_lead_time_spike';
+    end
+    if isfield(spike, 'fourierspctrm') && ~isfield(spike, 'fourierspctrmdimord')
+      spike.fourierspctrmdimord = '{chan}_spike_lfplabel_freq';
+    end
+    
+  case '2012'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
     if isfield(spike,'origtrial') && isfield(spike,'origtime')
       % this was the old spiketriggered spectrum output
       ft_warning('The spike datatype format you are using is depreciated. Converting to newer spike format');
       spike.trial = {spike.origtrial};
-      spike       = rmfield(spike,'origtrial');      
+      spike       = rmfield(spike,'origtrial');
       spike.time  = {spike.origtime};
       spike       = rmfield(spike,'origtime');
       if ~isa(spike.fourierspctrm, 'cell')
@@ -168,7 +194,7 @@ switch version
       end
       if ~isfield(spike, 'trialtime')
         % determine from the data itself
-        ft_warning('Reconstructing the field trialtime from spike.origtime and spike.origtrial. This is not the original representation');        
+        ft_warning('Reconstructing the field trialtime from spike.origtime and spike.origtrial. This is not the original representation');
         tmax  = nanmax(spike.trial{1});
         tsmin = nanmin(spike.time{1});
         tsmax = nanmax(spike.time{1});
@@ -203,7 +229,7 @@ switch version
         for iUnit = 1:nUnits
           dim = size(spike.waveform{iUnit});
           if length(dim)==2 && ~isempty(spike.waveform{iUnit})
-            nSpikes = length(spike.timestamp{iUnit}); % check what's the spike dimension from the timestamps            
+            nSpikes = length(spike.timestamp{iUnit}); % check what's the spike dimension from the timestamps
             spikedim = dim==nSpikes;
             if isempty(spikedim)
               ft_error('waveforms contains data but number of waveforms does not match number of spikes');
@@ -212,10 +238,10 @@ switch version
               spike.waveform{iUnit} = permute(spike.waveform{iUnit},[3 2 1]);
             else
               spike.waveform{iUnit} = permute(spike.waveform{iUnit},[3 1 2]);
-            end    
+            end
             
           elseif length(dim)==3 && ~isempty(spike.waveform{iUnit})
-            nSpikes = length(spike.timestamp{iUnit}); % check what's the spike dimension from the timestamps                                      
+            nSpikes = length(spike.timestamp{iUnit}); % check what's the spike dimension from the timestamps
             spikedim = dim==nSpikes;
             % determine from the remaining dimensions which is the lead
             leaddim  = dim<6 & dim~=nSpikes;
@@ -223,11 +249,11 @@ switch version
             if isempty(spikedim)
               ft_error('waveforms contains data but number of waveforms does not match number of spikes');
             end
-            if sum(leaddim)~=1 || sum(sampdim)~=1, continue,end % in this case we do not know what to do                        
+            if sum(leaddim)~=1 || sum(sampdim)~=1, continue,end % in this case we do not know what to do
             if find(spikedim)~=3 && find(leaddim)~=1 && find(sampdim)~=2
-                spike.waveform{iUnit} = permute(spike.waveform{iUnit}, [find(leaddim) find(sampdim) find(spikedim)]);
+              spike.waveform{iUnit} = permute(spike.waveform{iUnit}, [find(leaddim) find(sampdim) find(spikedim)]);
             end
-          end                        
+          end
         end
         
       end
@@ -251,7 +277,7 @@ switch version
         end
       end
     end
-        
+    
     if isfield(spike,'timestamp')
       for iUnit = 1:length(spike.timestamp)
         if size(spike.timestamp{iUnit},2)==1
@@ -260,18 +286,27 @@ switch version
       end
     end
     
-     if isfield(spike,'unit')
+    if isfield(spike,'unit')
       for iUnit = 1:length(spike.unit)
         if size(spike.unit{iUnit},2)==1
           spike.unit{iUnit} = spike.unit{iUnit}(:)';
         end
       end
     end
-        
+    
   otherwise
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     ft_error('unsupported version "%s" for spike datatype', version);
 end
 
+spike = sortfields(spike);
 
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function s2 = sortfields(s1)
+s2 = struct();
+fn = sort(fieldnames(s1));
+for i=1:numel(fn)
+  s2.(fn{i}) = s1.(fn{i});
+end

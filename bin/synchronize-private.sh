@@ -46,11 +46,27 @@ ARRAY+=(fileio/private/appendstruct.m)
 sync ${ARRAY[*]}
 
 ################################################################################
+# artifact2boolvec.m
+
+ARRAY=()
+ARRAY+=(private/artifact2boolvec.m)
+ARRAY+=(external/dss/private/artifact2boolvec.m)
+sync ${ARRAY[*]}
+
+################################################################################
+# artifact2trl.m
+
+ARRAY=()
+ARRAY+=(private/artifact2trl.m)
+ARRAY+=(external/dss/private/artifact2trl.m)
+sync ${ARRAY[*]}
+################################################################################
 # atlas_lookup.m
 
 ARRAY=()
 ARRAY+=(contrib/nutmegtrip/private/atlas_lookup.m)
 ARRAY+=(private/atlas_lookup.m)
+ARRAY+=(plotting/private/atlas_lookup.m)
 sync ${ARRAY[*]}
 
 ################################################################################
@@ -67,6 +83,22 @@ sync ${ARRAY[*]}
 ARRAY=()
 ARRAY+=(plotting/private/bg_rgba2rgb.m)
 ARRAY+=(private/bg_rgba2rgb.m)
+sync ${ARRAY[*]}
+
+################################################################################
+# bids_sidecar.m
+
+ARRAY=()
+ARRAY+=(fileio/private/bids_sidecar.m)
+ARRAY+=(trialfun/private/bids_sidecar.m)
+sync ${ARRAY[*]}
+
+################################################################################
+# boolvec2artifact.m
+
+ARRAY=()
+ARRAY+=(private/boolvec2artifact.m)
+ARRAY+=(external/dss/private/boolvec2artifact.m)
 sync ${ARRAY[*]}
 
 ################################################################################
@@ -206,6 +238,14 @@ ARRAY=()
 ARRAY+=(engine/private/compiler.h)
 ARRAY+=(peer/src/compiler.h)
 ARRAY+=(src/compiler.h)
+sync ${ARRAY[*]}
+
+################################################################################
+# contains.m
+
+ARRAY=()
+ARRAY+=(matlablt2016b/contains.m)
+ARRAY+=(octave/contains.m)
 sync ${ARRAY[*]}
 
 ################################################################################
@@ -385,6 +425,14 @@ ARRAY+=(src/det3x3.mexw64)
 sync ${ARRAY[*]}
 
 ################################################################################
+# determine_segmentationstyle.m
+
+ARRAY=()
+ARRAY+=(private/determine_segmentationstyle.m)
+ARRAY+=(utilities/private/determine_segmentationstyle.m)
+sync ${ARRAY[*]}
+
+################################################################################
 # dimindex.m
 
 ARRAY=()
@@ -419,6 +467,14 @@ ARRAY=()
 ARRAY+=(fileio/private/encode_nifti1.m)
 ARRAY+=(realtime/example/private/encode_nifti1.m)
 ARRAY+=(realtime/online_mri/private/encode_nifti1.m)
+sync ${ARRAY[*]}
+
+################################################################################
+# endsWith.m
+
+ARRAY=()
+ARRAY+=(matlablt2016b/endsWith.m)
+ARRAY+=(octave/endsWith.m)
 sync ${ARRAY[*]}
 
 ################################################################################
@@ -487,12 +543,54 @@ ARRAY+=(private/find_triangle_neighbours.m)
 sync ${ARRAY[*]}
 
 ################################################################################
+# fir_df.m
+
+ARRAY=()
+ARRAY+=(preproc/private/fir_df.m)
+ARRAY+=(specest/private/fir_df.m)
+sync ${ARRAY[*]}
+
+################################################################################
+# fir_filterdcpadded.m
+
+ARRAY=()
+ARRAY+=(preproc/private/fir_filterdcpadded.m)
+ARRAY+=(specest/private/fir_filterdcpadded.m)
+sync ${ARRAY[*]}
+
+################################################################################
+# firws.m
+
+ARRAY=()
+ARRAY+=(preproc/private/firws.m)
+ARRAY+=(specest/private/firws.m)
+sync ${ARRAY[*]}
+
+################################################################################
+# firwsord.m
+
+ARRAY=()
+ARRAY+=(preproc/private/firwsord.m)
+ARRAY+=(specest/private/firwsord.m)
+sync ${ARRAY[*]}
+
+################################################################################
 # fitsphere.m
 
 ARRAY=()
 ARRAY+=(forward/private/fitsphere.m)
 ARRAY+=(plotting/private/fitsphere.m)
 ARRAY+=(private/fitsphere.m)
+sync ${ARRAY[*]}
+
+################################################################################
+# fixcoordsys.m
+
+ARRAY=()
+ARRAY+=(fileio/private/fixcoordsys.m)
+ARRAY+=(forward/private/fixcoordsys.m)
+ARRAY+=(plotting/private/fixcoordsys.m)
+ARRAY+=(utilities/fixcoordsys.m)
 sync ${ARRAY[*]}
 
 ################################################################################
@@ -517,6 +615,7 @@ sync ${ARRAY[*]}
 # fixinside.m
 
 ARRAY=()
+ARRAY+=(inverse/private/fixinside.m)
 ARRAY+=(fileio/private/fixinside.m)
 ARRAY+=(private/fixinside.m)
 ARRAY+=(utilities/private/fixinside.m)
@@ -749,6 +848,15 @@ ARRAY+=(utilities/ft_fetch_header.m)
 sync ${ARRAY[*]}
 
 ################################################################################
+# ft_fetch_sens.m
+
+ARRAY=()
+ARRAY+=(private/ft_fetch_sens.m)
+ARRAY+=(test/private/ft_fetch_sens.m)
+ARRAY+=(external/artinis/private/ft_fetch_sens.m)
+sync ${ARRAY[*]}
+
+################################################################################
 # ft_findcfg.m
 
 ARRAY=()
@@ -899,6 +1007,16 @@ ARRAY+=(utilities/ft_headcoordinates.m)
 sync ${ARRAY[*]}
 
 ################################################################################
+# ft_headmodeltype.m
+
+ARRAY=()
+ARRAY+=(fileio/private/ft_headmodeltype.m)
+ARRAY+=(forward/ft_headmodeltype.m)
+ARRAY+=(inverse/private/ft_headmodeltype.m)
+ARRAY+=(plotting/private/ft_headmodeltype.m)
+sync ${ARRAY[*]}
+
+################################################################################
 # ft_inside_headmodel.m
 
 ARRAY=()
@@ -1004,13 +1122,11 @@ ARRAY+=(plotting/private/ft_senstype.m)
 sync ${ARRAY[*]}
 
 ################################################################################
-# ft_headmodeltype.m
+# ft_setopt.m
 
 ARRAY=()
-ARRAY+=(fileio/private/ft_headmodeltype.m)
-ARRAY+=(forward/ft_headmodeltype.m)
-ARRAY+=(inverse/private/ft_headmodeltype.m)
-ARRAY+=(plotting/private/ft_headmodeltype.m)
+ARRAY+=(inverse/private/ft_setopt.m)
+ARRAY+=(utilities/ft_setopt.m)
 sync ${ARRAY[*]}
 
 ################################################################################
@@ -1069,12 +1185,12 @@ sync ${ARRAY[*]}
 # getdimord.m
 
 ARRAY=()
-ARRAY+=(contrib/nutmegtrip/private/getdimord.m)
 ARRAY+=(fileio/private/getdimord.m)
 ARRAY+=(forward/private/getdimord.m)
 ARRAY+=(private/getdimord.m)
 ARRAY+=(test/private/getdimord.m)
 ARRAY+=(utilities/private/getdimord.m)
+ARRAY+=(contrib/spike/private/getdimord.m)
 sync ${ARRAY[*]}
 
 ################################################################################
@@ -1087,6 +1203,7 @@ ARRAY+=(forward/private/getdimsiz.m)
 ARRAY+=(private/getdimsiz.m)
 ARRAY+=(test/private/getdimsiz.m)
 ARRAY+=(utilities/private/getdimsiz.m)
+ARRAY+=(contrib/spike/private/getdimsiz.m)
 sync ${ARRAY[*]}
 
 ################################################################################
@@ -1105,6 +1222,14 @@ ARRAY=()
 ARRAY+=(qsub/private/gethostname.m)
 ARRAY+=(test/private/gethostname.m)
 ARRAY+=(utilities/private/gethostname.m)
+sync ${ARRAY[*]}
+
+################################################################################
+# getorthoviewpos.m
+
+ARRAY=()
+ARRAY+=(private/getorthoviewpos.m)
+ARRAY+=(fileio/private/getorthoviewpos.m)
 sync ${ARRAY[*]}
 
 ################################################################################
@@ -1193,11 +1318,21 @@ ARRAY+=(private/headsurface.m)
 sync ${ARRAY[*]}
 
 ################################################################################
+# htmlcolors.m
+
+ARRAY=()
+ARRAY+=(private/htmlcolors.m)
+ARRAY+=(plotting/private/htmlcolors.m)
+sync ${ARRAY[*]}
+
+################################################################################
 # ignorefields.m
 
 ARRAY=()
 ARRAY+=(private/ignorefields.m)
 ARRAY+=(utilities/private/ignorefields.m)
+ARRAY+=(fileio/private/ignorefields.m)
+ARRAY+=(contrib/misc/private/ignorefields.m)
 sync ${ARRAY[*]}
 
 ################################################################################
@@ -1206,6 +1341,14 @@ sync ${ARRAY[*]}
 ARRAY=()
 ARRAY+=(plotting/private/inside_contour.m)
 ARRAY+=(private/inside_contour.m)
+sync ${ARRAY[*]}
+
+################################################################################
+# intersect_line.m
+
+ARRAY=()
+ARRAY+=(plotting/private/intersect_line.m)
+ARRAY+=(private/intersect_line.m)
 sync ${ARRAY[*]}
 
 ################################################################################
@@ -1323,6 +1466,14 @@ ARRAY+=(src/inv3x3.mexw64)
 sync ${ARRAY[*]}
 
 ################################################################################
+# invfirwsord.m
+
+ARRAY=()
+ARRAY+=(preproc/private/invfirwsord.m)
+ARRAY+=(specest/private/invfirwsord.m)
+sync ${ARRAY[*]}
+
+################################################################################
 # isdir_or_mkdir.m
 
 ARRAY=()
@@ -1336,6 +1487,8 @@ sync ${ARRAY[*]}
 ARRAY=()
 ARRAY+=(test/private/isalmostequal.m)
 ARRAY+=(private/isalmostequal.m)
+ARRAY+=(preproc/private/isalmostequal.m)
+ARRAY+=(specest/private/isalmostequal.m)
 sync ${ARRAY[*]}
 
 ################################################################################
@@ -1418,6 +1571,14 @@ sync ${ARRAY[*]}
 ARRAY=()
 ARRAY+=(fileio/private/jaga16_packet.m)
 ARRAY+=(realtime/example/private/jaga16_packet.m)
+sync ${ARRAY[*]}
+
+################################################################################
+# kaiserbeta.m
+
+ARRAY=()
+ARRAY+=(preproc/private/kaiserbeta.m)
+ARRAY+=(specest/private/kaiserbeta.m)
 sync ${ARRAY[*]}
 
 ################################################################################
@@ -1624,6 +1785,14 @@ ARRAY+=(src/ltrisect.mexw64)
 sync ${ARRAY[*]}
 
 ################################################################################
+# makessense.m
+
+ARRAY=()
+ARRAY+=(utilities/private/makessense.m)
+ARRAY+=(fileio/private/makessense.m)
+sync ${ARRAY[*]}
+
+################################################################################
 # match_str.m
 
 ARRAY=()
@@ -1738,12 +1907,12 @@ ARRAY+=(utilities/private/memprofile.mexmaci64)
 sync ${ARRAY[*]}
 
 ################################################################################
-# mergeconfig.m
+# mergestruct.m
 
 ARRAY=()
-ARRAY+=(private/mergeconfig.m)
-ARRAY+=(test/private/mergeconfig.m)
-ARRAY+=(utilities/private/mergeconfig.m)
+ARRAY+=(private/mergestruct.m)
+ARRAY+=(test/private/mergestruct.m)
+ARRAY+=(utilities/private/mergestruct.m)
 sync ${ARRAY[*]}
 
 ################################################################################
@@ -1787,9 +1956,9 @@ sync ${ARRAY[*]}
 # mesh_sphere.m
 
 ARRAY=()
-ARRAY+=(external/openmeeg/mesh_sphere.m)
 ARRAY+=(external/bemcp/mesh_sphere.m)
 ARRAY+=(external/dipoli/mesh_sphere.m)
+ARRAY+=(external/openmeeg/mesh_sphere.m)
 ARRAY+=(forward/private/mesh_sphere.m)
 ARRAY+=(plotting/private/mesh_sphere.m)
 ARRAY+=(private/mesh_sphere.m)
@@ -1923,6 +2092,14 @@ sync ${ARRAY[*]}
 ARRAY=()
 ARRAY+=(connectivity/private/mtimes3x3.mexw64)
 ARRAY+=(src/mtimes3x3.mexw64)
+sync ${ARRAY[*]}
+
+################################################################################
+# multivariate_decomp.m
+
+ARRAY=()
+ARRAY+=(connectivity/private/multivariate_decomp.m)
+ARRAY+=(private/multivariate_decomp.m)
 sync ${ARRAY[*]}
 
 ################################################################################
@@ -2349,6 +2526,14 @@ ARRAY+=(private/ndgrid.m)
 sync ${ARRAY[*]}
 
 ################################################################################
+# nearest.m
+
+ARRAY=()
+ARRAY+=(utilities/nearest.m)
+ARRAY+=(preproc/private/nearest.m)
+sync ${ARRAY[*]}
+
+################################################################################
 # neuralynx_crc.m
 
 ARRAY=()
@@ -2544,6 +2729,14 @@ sync ${ARRAY[*]}
 ARRAY=()
 ARRAY+=(contrib/spike/private/preproc.m)
 ARRAY+=(private/preproc.m)
+sync ${ARRAY[*]}
+
+################################################################################
+# printor.m
+
+ARRAY=()
+ARRAY+=(utilities/private/printor.m)
+ARRAY+=(fileio/private/printor.m)
 sync ${ARRAY[*]}
 
 ################################################################################
@@ -2872,12 +3065,23 @@ sync ${ARRAY[*]}
 # refine.m
 
 ARRAY=()
+ARRAY+=(external/bemcp/refine.m)
+ARRAY+=(external/dipoli/private/refine.m)
 ARRAY+=(external/openmeeg/private/refine.m)
+ARRAY+=(forward/private/refine.m)
 ARRAY+=(plotting/private/refine.m)
 ARRAY+=(fileio/private/refine.m)
 ARRAY+=(private/refine.m)
 ARRAY+=(test/private/refine.m)
 ARRAY+=(utilities/private/refine.m)
+sync ${ARRAY[*]}
+
+################################################################################
+# remove_vertices.m
+
+ARRAY=()
+ARRAY+=(private/remove_vertices.m)
+ARRAY+=(fileio/private/remove_vertices.m)
 sync ${ARRAY[*]}
 
 ################################################################################
@@ -2968,6 +3172,14 @@ ARRAY+=(specest/private/rmsubfield.m)
 ARRAY+=(statfun/private/rmsubfield.m)
 ARRAY+=(test/private/rmsubfield.m)
 ARRAY+=(utilities/rmsubfield.m)
+sync ${ARRAY[*]}
+
+################################################################################
+# rollback_provenance.m
+
+ARRAY=()
+ARRAY+=(private/rollback_provenance.m)
+ARRAY+=(contrib/misc/private/rollback_provenance.m)
 sync ${ARRAY[*]}
 
 ################################################################################
@@ -3286,6 +3498,14 @@ ARRAY+=(utilities/setsubfield.m)
 sync ${ARRAY[*]}
 
 ################################################################################
+# setviewpoint.m
+
+ARRAY=()
+ARRAY+=(private/setviewpoint.m)
+ARRAY+=(plotting/private/setviewpoint.m)
+sync ${ARRAY[*]}
+
+################################################################################
 # sine_taper.m
 
 ARRAY=()
@@ -3426,6 +3646,15 @@ ARRAY+=(private/standardise.m)
 sync ${ARRAY[*]}
 
 ################################################################################
+# startsWith.m
+
+ARRAY=()
+ARRAY+=(matlablt2016b/startsWith.m)
+ARRAY+=(octave/startsWith.m)
+sync ${ARRAY[*]}
+
+
+################################################################################
 # strel_bol.m
 
 ARRAY=()
@@ -3471,6 +3700,14 @@ ARRAY+=(utilities/private/traditional.m)
 sync ${ARRAY[*]}
 
 ################################################################################
+# transfer2coeffs.m
+
+ARRAY=()
+ARRAY+=(private/transfer2coeffs.m)
+ARRAY+=(connectivity/private/transfer2coeffs.m)
+sync ${ARRAY[*]}
+
+################################################################################
 # translate.m
 
 ARRAY=()
@@ -3496,6 +3733,14 @@ sync ${ARRAY[*]}
 ARRAY=()
 ARRAY+=(forward/private/triangle4pt.m)
 ARRAY+=(private/triangle4pt.m)
+sync ${ARRAY[*]}
+
+################################################################################
+# trl2boolvec.m
+
+ARRAY=()
+ARRAY+=(private/trl2boolvec.m)
+ARRAY+=(external/dss/private/trl2boolvec.m)
 sync ${ARRAY[*]}
 
 ################################################################################
@@ -3595,6 +3840,14 @@ sync ${ARRAY[*]}
 ARRAY=()
 ARRAY+=(peer/private/watchdog.mexmaci64)
 ARRAY+=(qsub/private/watchdog.mexmaci64)
+sync ${ARRAY[*]}
+
+################################################################################
+# windows.m
+
+ARRAY=()
+ARRAY+=(preproc/private/windows.m)
+ARRAY+=(specest/private/windows.m)
 sync ${ARRAY[*]}
 
 ################################################################################

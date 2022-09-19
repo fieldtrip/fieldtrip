@@ -1,5 +1,5 @@
 %% OpenMEEG for MEG from Fieldtrip demo script
-%
+
 % This script provides an example of how to compute an MEG leadfield with
 % OpenMEEG in the Fieldtrip toolbox.
 %
@@ -32,60 +32,60 @@ c = [1 1/80 1];
 % [pos, tri] = mesh_sphere(642);
 
 %% Create a set of magnetometers outside the outer surface
-sens.pos = max(r) * pos * 1.2;
-sens.ori = pos;
+sens.coilpos = max(r) * pos * 1.2;
+sens.coilori = pos;
 sens.label = {};
-nsens = size(sens.pos, 1);
+nsens = size(sens.coilpos, 1);
 for ii=1:nsens
-    sens.label{ii} = sprintf('vertex%03d', ii);
+  sens.label{ii} = sprintf('vertex%03d', ii);
 end
-
-%% Set the position of the probe dipole
-pos = [0 0 70];
 
 %% Create a BEM volume conduction model
 vol = [];
 vol1 = [];
 for ii=1:length(r)
-    vol.bnd(ii).pos = pos * r(ii);
-    vol.bnd(ii).tri = tri;
-    if (ii==1);
-        vol1.bnd(ii).pos = pos * r(ii);
-        vol1.bnd(ii).tri = tri;
-    end
+  vol.bnd(ii).pos = pos * r(ii);
+  vol.bnd(ii).tri = tri;
+  if (ii==1)
+    vol1.bnd(ii).pos = pos * r(ii);
+    vol1.bnd(ii).tri = tri;
+  end
 end
 vol.cond = c;
 vol1.cond = c(1);
+
+%% Set the position of the probe dipole
+pos = [0 0 70];
 
 %% choose MEG implementation (Nolte, OpenMEEG)
 
 % Compute the BEM
 cfg.method = 'openmeeg';
-vol = ft_prepare_bemmodel(cfg, vol);
+vol = ft_prepare_headmodel(cfg, vol);
 
 cfg.headmodel = vol;
-cfg.grid.pos = pos;
+cfg.sourcemodel.pos = pos;
 cfg.grad = sens;
 cfg.reducerank = 'no';
-grid = ft_prepare_leadfield(cfg);
-lf_openmeeg = grid.leadfield{1};
+sourcemodel = ft_prepare_leadfield(cfg);
+lf_openmeeg = sourcemodel.leadfield{1};
 
 % choose MEG Nolte
 clear cfg;
 cfg.method = 'singleshell';
-cfg.grid.pos = pos;
+cfg.sourcemodel.pos = pos;
 cfg.grad = sens;
 vol1.type = 'singleshell';
-[vol1,sens] = ft_prepare_vol_sens(vol1, sens);
+[vol1, sens] = ft_prepare_vol_sens(vol1, sens);
 cfg.headmodel = vol1;
 cfg.reducerank = 'no';
-grid = ft_prepare_leadfield(cfg);
-lf_singleshell = grid.leadfield{1};
+sourcemodel = ft_prepare_leadfield(cfg);
+lf_singleshell = sourcemodel.leadfield{1};
 
 %% Plot both OpenMEEG and analytic leadfield for visual inspection
 figure
 hold on
-plot(lf_openmeeg(:,1),'bx-','linewidth',2)
-plot(lf_singleshell(:,1),'r--','linewidth',2)
+plot(lf_openmeeg(:, 1), 'bx-', 'linewidth', 2)
+plot(lf_singleshell(:, 1), 'r--', 'linewidth', 2)
 hold off
 legend({'OpenMEEG' 'Nolte'})

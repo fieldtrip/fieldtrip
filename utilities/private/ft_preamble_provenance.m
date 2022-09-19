@@ -42,7 +42,7 @@
 % variable name clashes.
 
 if (isfield(cfg, 'trackcallinfo') && ~istrue(cfg.trackcallinfo))
-  % do not track the call information
+  % do not track any call information
   return
 end
 
@@ -50,14 +50,22 @@ end
 % some fields are for internal use only and should not be stored
 cfg.callinfo.usercfg = removefields(cfg, ignorefields('provenance'));
 
-if isfield(cfg, 'trackdatainfo') && istrue(cfg.trackdatainfo)
+if istrue(ft_getopt(cfg, 'tracktimeinfo', 'yes'))
+  ftohDiW7th_FuncTimer = tic();
+end
+
+if istrue(ft_getopt(cfg, 'trackmeminfo', 'yes'))
+  ftohDiW7th_FuncMem = memtic();
+end
+
+if istrue(ft_getopt(cfg, 'trackdatainfo', 'yes'))
   % compute the MD5 hash of each of the input arguments
   % temporarily remove the cfg field for getting the hash (creating a duplicate of the data, but still has the same mem ref, so no extra mem needed)
-  if isequal(iW1aenge_preamble, {'varargin'})
+  if isequal(preamble_argin, {'varargin'})
     tmpargin = varargin;
   else
-    isvar = cellfun(@(x) exist(x, 'var')==1, iW1aenge_preamble);
-    tmpargin = cellfun(@eval, iW1aenge_preamble(isvar), 'UniformOutput', false);
+    isvar = cellfun(@(x) exist(x, 'var')==1, preamble_argin);
+    tmpargin = cellfun(@eval, preamble_argin(isvar), 'UniformOutput', false);
     tmpargin( isvar) = tmpargin;
     tmpargin(~isvar) = {[]};
     clear isvar
@@ -85,12 +93,6 @@ if isfield(cfg, 'trackdatainfo') && istrue(cfg.trackdatainfo)
   clear tmpargin iargin tmparg bytenum; % remove the extra references
 end
 
-stack = dbstack('-completenames');
-% stack(1) is this script
-% stack(2) is the calling ft_postamble function
-% stack(3) is the main FieldTrip function that we are interested in
-stack = stack(3);
-
 % add information about the FieldTrip and MATLAB version used to the configuration
 try
   cfg.callinfo.fieldtrip = ft_version();
@@ -107,7 +109,11 @@ cfg.callinfo.pwd      = pwd;
 cfg.callinfo.calltime = clock();
 
 % add information about the function filename and revision to the configuration
-cfg.version.name = stack.file;
+stack = dbstack('-completenames');
+% stack(1) is this script
+% stack(2) is the calling ft_postamble function
+% stack(3) is the main FieldTrip function that we are interested in
+cfg.version.name = stack(3).file;
 clear stack
 
 % the revision number is maintained by SVN in the ft_revision variable in the calling function
@@ -116,6 +122,3 @@ if ~exist('ft_revision', 'var')
 else
   cfg.version.id   = ft_revision;
 end
-
-ftohDiW7th_FuncTimer = tic();
-ftohDiW7th_FuncMem   = memtic();

@@ -53,7 +53,7 @@ case {'channel','signal combination','channels','sgncmb','chan'}
     dim='chan';
 case {'trial','trials'}
     dim='rpt';
-end;
+end
 
 num=find(strcmp(dims,dim)); % find the number of the specified dimension.
 

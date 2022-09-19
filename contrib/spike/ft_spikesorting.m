@@ -7,12 +7,12 @@ function [spike] = ft_spikesorting(cfg, spike)
 %   [spike] = ft_spikesorting(cfg, spike)
 %
 % The configuration can contain
-%   cfg.channel         cell-array with channel selection (default = 'all'), see FT_CHANNELSELECTION for details
-%   cfg.method          'kmeans', 'ward'
-%   cfg.feedback        'no', 'text', 'textbar', 'gui' (default = 'textbar')
-%   cfg.kmeans          substructure with additional low-level options for this method
-%   cfg.ward            substructure with additional low-level options for this method
-%   cfg.ward.distance   'L1', 'L2', 'correlation', 'cosine'
+%   cfg.channel         = cell-array with channel selection (default = 'all'), see FT_CHANNELSELECTION for details
+%   cfg.method          = 'kmeans', 'ward'
+%   cfg.feedback        = 'no', 'text', 'textbar', 'gui' (default = 'textbar')
+%   cfg.kmeans          = substructure with additional low-level options for this method
+%   cfg.ward            = substructure with additional low-level options for this method
+%   cfg.ward.distance   = 'L1', 'L2', 'correlation', 'cosine'
 %
 % The input spike structure can be imported using READ_FCDC_SPIKE and should contain
 %   spike.label     = 1 x Nchans cell-array, with channel labels

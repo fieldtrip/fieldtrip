@@ -1,8 +1,12 @@
 function test_issue1184
 
-% MEM 2gb
-% WALLTIME 00:20:00
+% MEM 8gb
+% WALLTIME 00:30:00
 % DEPENDENCY ft_resampledata
+
+global ft_default
+ft_default.toolbox.signal = 'matlab'; % do not use the compat version, its resample/firls is too slow
+clear ft_defaults % ensure the path setup to be repeated
 
 data = [];
 data.time{1} = (1:228864) * 1/1200;

@@ -1,8 +1,7 @@
 function test_bug798
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY ft_freqstatistics ft_selectdata ft_datatype_freq ft_appendfreq
 
 % note that this bug is related to bug 921

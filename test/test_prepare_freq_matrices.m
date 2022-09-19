@@ -2,31 +2,39 @@ function test_prepare_freq_matrices
 
 % MEM 8gb
 % WALLTIME 00:10:00
-
 % DEPENDENCY prepare_freq_matrices ft_sourceanalysis
 
 datadir = dccnpath('/home/common/matlab/fieldtrip/data/test/latest/freq/meg');
 
-cd(dccnpath('/home/common/matlab/fieldtrip/private'));
+[ftver, ftpath] = ft_version;
+cd(fullfile(ftpath, 'private'));
 
 % fourier data, multiple trials
 load(fullfile(datadir,'freq_mtmfft_fourier_trl_ctf275.mat'));
 
+% note JM: with a recent change 20200624 in prepare_freq_matrices, the
+% frequency and latency selection has been disabled in the low-level
+% function. Therefore, all old/new comparisons are bound to fail, unless
+% the frequency selection is performed, prior to running the new version of
+% prepare_freq_matrices. Here, this will be accommodated by running the
+% inserted subfunction prepare_freq_matrices_after_selectdata, rather than
+% only prepare_freq_matrices
+
 cfg           = [];
 cfg.frequency = 5;
 cfg.channel   = ft_channelselection('MEG',freq.label);
-[a1,a2,a3,a4] = prepare_freq_matrices(cfg, freq);
+[a1,a2,a3,a4] = prepare_freq_matrices_after_selectdata(cfg, freq);
 [b1,b2,b3,b4] = prepare_freq_matrices_old(cfg, freq);
 assert(isequal(a1,b1));
 
 cfg.frequency = 5.4;
-[a1,a2,a3,a4,cfg1] = prepare_freq_matrices(cfg, freq);
+[a1,a2,a3,a4,cfg1] = prepare_freq_matrices_after_selectdata(cfg, freq);
 [b1,b2,b3,b4,cfg2] = prepare_freq_matrices_old(cfg, freq);
 assert(isequal(a1,b1));
 
 cfg.frequency = 10;
 cfg.refchan   = 'BR1';
-[a1,a2,a3,a4,cfg1] = prepare_freq_matrices(cfg, freq);
+[a1,a2,a3,a4,cfg1] = prepare_freq_matrices_after_selectdata(cfg, freq);
 [b1,b2,b3,b4,cfg2] = prepare_freq_matrices_old(cfg, freq);
 assert(isequal(a1,b1));
 assert(isequal(a2,b2) ||  norm(a2-b2)<eps^2);
@@ -34,7 +42,7 @@ assert(isequal(a3,b3) ||  norm(a3-b3)<eps^2);
 
 cfg.frequency = 10.6;
 cfg.refchan   = 'BR1';
-[a1,a2,a3,a4,cfg1] = prepare_freq_matrices(cfg, freq);
+[a1,a2,a3,a4,cfg1] = prepare_freq_matrices_after_selectdata(cfg, freq);
 [b1,b2,b3,b4,cfg2] = prepare_freq_matrices_old(cfg, freq);
 assert(isequal(a1,b1));
 assert(isequal(a2,b2) ||  norm(a2-b2)<eps^2);
@@ -46,18 +54,18 @@ load(fullfile(datadir,'freq_mtmfft_powandcsd_trl_ctf275.mat'));
 cfg           = [];
 cfg.frequency = 5;
 cfg.channel   = ft_channelselection('MEG',freq.label);
-[a1,a2,a3,a4] = prepare_freq_matrices(cfg, freq);
+[a1,a2,a3,a4] = prepare_freq_matrices_after_selectdata(cfg, freq);
 [b1,b2,b3,b4] = prepare_freq_matrices_old(cfg, freq);
 assert(isequal(a1,b1));
 
 cfg.frequency = 5.4;
-[a1,a2,a3,a4,cfg1] = prepare_freq_matrices(cfg, freq);
+[a1,a2,a3,a4,cfg1] = prepare_freq_matrices_after_selectdata(cfg, freq);
 [b1,b2,b3,b4,cfg2] = prepare_freq_matrices_old(cfg, freq);
 assert(isequal(a1,b1));
 
 cfg.frequency = 10;
 cfg.refchan   = 'BR1';
-[a1,a2,a3,a4,cfg1] = prepare_freq_matrices(cfg, freq);
+[a1,a2,a3,a4,cfg1] = prepare_freq_matrices_after_selectdata(cfg, freq);
 [b1,b2,b3,b4,cfg2] = prepare_freq_matrices_old(cfg, freq);
 assert(isequal(a1,b1));
 assert(isequal(a2,b2));
@@ -65,7 +73,7 @@ assert(isequal(a3,b3));
 
 cfg.frequency = 10.6;
 cfg.refchan   = 'BR1';
-[a1,a2,a3,a4,cfg1] = prepare_freq_matrices(cfg, freq);
+[a1,a2,a3,a4,cfg1] = prepare_freq_matrices_after_selectdata(cfg, freq);
 [b1,b2,b3,b4,cfg2] = prepare_freq_matrices_old(cfg, freq);
 assert(isequal(a1,b1));
 assert(isequal(a2,b2));
@@ -78,25 +86,25 @@ cfg           = [];
 cfg.frequency = 6;
 cfg.latency   = 0.5;
 cfg.channel   = ft_channelselection('MEG',freq.label);
-[a1,a2,a3,a4] = prepare_freq_matrices(cfg, freq);
+[a1,a2,a3,a4] = prepare_freq_matrices_after_selectdata(cfg, freq);
 [b1,b2,b3,b4] = prepare_freq_matrices_old(cfg, freq);
 assert(isequal(a1,b1));
 
 cfg.frequency = 5.5;
-[a1,a2,a3,a4,cfg1] = prepare_freq_matrices(cfg, freq);
+[a1,a2,a3,a4,cfg1] = prepare_freq_matrices_after_selectdata(cfg, freq);
 [b1,b2,b3,b4,cfg2] = prepare_freq_matrices_old(cfg, freq);
 assert(isequal(a1,b1));
 
 cfg.frequency = 6;
 cfg.latency   = 0.54;
-[a1,a2,a3,a4,cfg1] = prepare_freq_matrices(cfg, freq);
+[a1,a2,a3,a4,cfg1] = prepare_freq_matrices_after_selectdata(cfg, freq);
 [b1,b2,b3,b4,cfg2] = prepare_freq_matrices_old(cfg, freq);
 assert(isequal(a1,b1));
 
 
 cfg.frequency = 10;
 cfg.refchan   = 'BR1';
-[a1,a2,a3,a4,cfg1] = prepare_freq_matrices(cfg, freq);
+[a1,a2,a3,a4,cfg1] = prepare_freq_matrices_after_selectdata(cfg, freq);
 [b1,b2,b3,b4,cfg2] = prepare_freq_matrices_old(cfg, freq);
 assert(isequal(a1,b1));
 assert(isequal(a2,b2));
@@ -104,7 +112,7 @@ assert(isequal(a3,b3));
 
 cfg.frequency = 10.6;
 cfg.refchan   = 'BR1';
-[a1,a2,a3,a4,cfg1] = prepare_freq_matrices(cfg, freq);
+[a1,a2,a3,a4,cfg1] = prepare_freq_matrices_after_selectdata(cfg, freq);
 [b1,b2,b3,b4,cfg2] = prepare_freq_matrices_old(cfg, freq);
 assert(isequal(a1,b1));
 assert(isequal(a2,b2));
@@ -117,25 +125,25 @@ cfg           = [];
 cfg.frequency = 6;
 cfg.latency   = 0.5;
 cfg.channel   = ft_channelselection('MEG',freq.label);
-[a1,a2,a3,a4] = prepare_freq_matrices(cfg, freq);
+[a1,a2,a3,a4] = prepare_freq_matrices_after_selectdata(cfg, freq);
 [b1,b2,b3,b4] = prepare_freq_matrices_old(cfg, freq);
 assert(isequal(a1,b1));
 
 cfg.frequency = 5.5;
-[a1,a2,a3,a4,cfg1] = prepare_freq_matrices(cfg, freq);
+[a1,a2,a3,a4,cfg1] = prepare_freq_matrices_after_selectdata(cfg, freq);
 [b1,b2,b3,b4,cfg2] = prepare_freq_matrices_old(cfg, freq);
 assert(isequal(a1,b1));
 
 cfg.frequency = 6;
 cfg.latency   = 0.54;
-[a1,a2,a3,a4,cfg1] = prepare_freq_matrices(cfg, freq);
+[a1,a2,a3,a4,cfg1] = prepare_freq_matrices_after_selectdata(cfg, freq);
 [b1,b2,b3,b4,cfg2] = prepare_freq_matrices_old(cfg, freq);
 assert(isequal(a1,b1));
 
 
 cfg.frequency = 10;
 cfg.refchan   = 'BR1';
-[a1,a2,a3,a4,cfg1] = prepare_freq_matrices(cfg, freq);
+[a1,a2,a3,a4,cfg1] = prepare_freq_matrices_after_selectdata(cfg, freq);
 [b1,b2,b3,b4,cfg2] = prepare_freq_matrices_old(cfg, freq);
 assert(isalmostequal(a1,b1,'reltol',1e-9));
 assert(isalmostequal(a2,b2,'reltol',1e-9));
@@ -143,7 +151,7 @@ assert(isalmostequal(a3,b3,'reltol',1e-9));
 
 cfg.frequency = 10.6;
 cfg.refchan   = 'BR1';
-[a1,a2,a3,a4,cfg1] = prepare_freq_matrices(cfg, freq);
+[a1,a2,a3,a4,cfg1] = prepare_freq_matrices_after_selectdata(cfg, freq);
 [b1,b2,b3,b4,cfg2] = prepare_freq_matrices_old(cfg, freq);
 assert(isalmostequal(a1,b1,'reltol',1e-9));
 assert(isalmostequal(a2,b2,'reltol',1e-9));
@@ -330,7 +338,7 @@ elseif isfield(freq, 'crsspctrm')
   % think of incorporating 'quickflag' to speed up the
   % computation from fourierspectra when single trial
   % estimates are not required...
-  freq = ft_checkdata(freq, 'cmbrepresentation', 'full');
+  freq = ft_checkdata(freq, 'cmbstyle', 'full');
   
   [dum, sensindx] = match_str(cfg.channel, freq.label);
   powspctrmindx = sensindx;
@@ -416,3 +424,9 @@ end
 cfg.frequency = freq.freq(fbin);
 cfg.channel   = freq.label(powspctrmindx);
 
+function [Cf, Cr, Pr, Ntrials, cfg] = prepare_freq_matrices_after_selectdata(cfg, freq)
+
+tmpcfg = keepfields(cfg, {'latency' 'frequency'});
+freq   = ft_selectdata(tmpcfg, freq);
+tmpcfg = removefields(cfg, {'latency', 'frequency'});
+[Cf, Cr, Pr, Ntrials, cfg] = prepare_freq_matrices(tmpcfg, freq);

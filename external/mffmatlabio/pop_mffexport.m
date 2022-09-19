@@ -24,7 +24,7 @@
 % You should have received a copy of the GNU General Public License
 % along with mffmatlabio.  If not, see <https://www.gnu.org/licenses/>.
 
-function com = pop_mffexport(EEG)
+function com = pop_mffexport(EEG, fileName)
 
 com = '';
 if nargin < 1

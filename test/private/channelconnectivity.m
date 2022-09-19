@@ -3,7 +3,7 @@ function [connectivity] = channelconnectivity(cfg, data)
 % CHANNELCONNECTIVIY creates a NxN matrix that describes whether channels
 % are connected as neighbours
 %
-% See also FT_PREPARE_NEIGHBOURS
+% See also FT_PREPARE_NEIGHBOURS, TRIANGLE2CONNECTIVITY
 
 if (isfield(cfg, 'avgoverchan') && strcmp(cfg.avgoverchan, 'yes')) || isempty(cfg.neighbours)
   if nargin < 2
@@ -44,7 +44,7 @@ else
     % the following code should be equivalent:
     
     if numel(neighbours) < nchan/4
-      ft_error('channelconnectivity only works when at least 1/4th of all channels has neighbours defined (or with neighbours = [])');
+      ft_error('this only works when at least 1/4th of all channels has neighbours defined, or with neighbours = []');
       % FIXME the above error is true (or maybe with <1/5th) but I don't
       % understand why, ES 25-nov-2013
       % the above error will cause the code to fall through to the catch

@@ -1,12 +1,11 @@
 function test_tutorial_networkanalysis(datadirs)
 
 % WALLTIME 00:30:00
-% MEM 9gb
-
+% MEM 10gb
 % DEPENDENCY ft_networkanalysis
 
 if nargin==0,
-    datadirs{1} = dccnpath('/home/common/matlab/fieldtrip/data');
+    datadirs{1} = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf');
     datadirs{2} = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/networkanalysis');
 end
 

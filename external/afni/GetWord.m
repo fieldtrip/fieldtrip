@@ -5,27 +5,27 @@ function [err,Word] = GetWord (S,n,D)
 %Purpose:
 %   Extracts the nth word from S using one of the characters in
 %   D as a delimiter.
-%   
-%   
+%
+%
 %Input Parameters:
 %   S : String such as 'Hello Jim | Munch', trailing blanks are removed
 %   n : the word number. if n is greater than the total number of words,
 %       an error message is spat out.
-%   D : (optional string)the delimiter(s) such as '|' or 'l |' 
+%   D : (optional string)the delimiter(s) such as '|' or 'l |'
 %       (the last one uses, l, a space or | as delimiters).
 %        The default delimiter is a space character.
-%   
+%
 %Output Parameters:
 %   err : 0 No Problem
 %       : 1 Mucho Problems
-%   
+%
 %   Word : the word number n as specified by the delimiters
-%      
+%
 %More Info :
-%   
+%
 %   strtok
 %   example:
-%      [err,Word] = GetWord ('Hello Jim | Munch',2)  
+%      [err,Word] = GetWord ('Hello Jim | Munch',2)
 %				Word = Jim
 %      [err,Word] = GetWord ('Hello Jim | Munch',2,'|')
 %           Word = Munch
@@ -34,7 +34,7 @@ function [err,Word] = GetWord (S,n,D)
 %
 %
 %     Author : Ziad Saad
-%     Date : Mon Apr 06 15:14:49 CDT 1998 
+%     Date : Mon Apr 06 15:14:49 CDT 1998
 
 
 %Define the function name for easy referencing

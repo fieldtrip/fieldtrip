@@ -1,16 +1,15 @@
 function s = appendstruct(varargin)
 
-% APPENDSTRUCT appends a structure to a structure or struct-array.
-% It also works if the initial structure is an empty structure or
-% an empty double array. It also works if the input structures have
-% different fields.
+% APPENDSTRUCT appends a structure or a struct-array to another structure or
+% struct-array. It also works if the initial structure is an empty structure or an
+% empty double array. It also works if the input structures have different fields.
 %
 % Use as
 %   ab = appendstruct(a, b)
 %
-% See also PRINTSTRUCT, COPYFIELDS, KEEPFIELDS, REMOVEFIELDS
+% See also PRINTSTRUCT, MERGESTRUCT, COPYFIELDS, KEEPFIELDS, REMOVEFIELDS
 
-% Copyright (C) 2015-2019, Robert Oostenveld
+% Copyright (C) 2015-2022, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -38,10 +37,9 @@ end
 
 if nargin>2
   % use recursion to append multiple structures
-  s1 = varargin{1};
+  s = varargin{1};
   for i=2:nargin
-    s2 = varargin{i};
-    s1 = appendstruct(s1, s2);
+    s = appendstruct(s, varargin{i});
   end
   return
 else

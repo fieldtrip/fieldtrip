@@ -47,7 +47,7 @@ powscale      = ft_getopt(cfg, 'powscale', 'log10');
 zlim          = ft_getopt(cfg, 'zlim', 'maxmin');
 path          = ft_getopt(cfg, 'path', pwd);
 prefix        = ft_getopt(cfg, 'prefix', 'ICA');
-colormap      = ft_getopt(cfg, 'colormap', []);
+colormap      = ft_getopt(cfg, 'colormap', 'default');
 outputfile    = ft_getopt(cfg, 'outputfile', []);
 showcallinfo  = ft_getopt(cfg, 'showcallinfo', 'no');
 

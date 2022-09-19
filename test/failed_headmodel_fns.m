@@ -1,6 +1,6 @@
 function failed_headmodel_fns
 
-% MEM 1500mb
+% MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_compute_leadfield ft_headmodel_fns ft_prepare_vol_sens ft_compute_leadfield
 

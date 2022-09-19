@@ -16,7 +16,7 @@ function ft_audiovideobrowser(cfg, data)
 %   cfg.audiofile   = string with the filename
 %   cfg.videofile   = string with the filename
 %   cfg.trl         = Nx3 matrix, expressed in the MEG/EEG data samples, see FT_DEFINETRIAL
-%   cfg.anonimize   = [x1 x2 y1 y2], range in pixels for placing a bar over the eyes (default = [])
+%   cfg.anonymize   = [x1 x2 y1 y2], range in pixels for placing a bar over the eyes (default = [])
 %   cfg.interactive = 'yes' or 'no' (default = 'yes')
 %
 % If you do NOT specify cfg.datahdr, the header must be present in the input data.
@@ -73,9 +73,13 @@ if hasdata
   data = ft_checkdata(data, 'datatype', {'raw+comp', 'raw'}, 'feedback', 'yes', 'hassampleinfo', 'yes');
 end
 
+% check if the input cfg is valid for this function
+cfg = ft_checkconfig(cfg, 'renamed', {'anonimize', 'anonymize'}); % fix typo in previous version of the code
+cfg = ft_checkconfig(cfg, 'renamed', {'anonymise', 'anonymize'}); % use North American and Oxford British spelling
+
 % get the options from the user or set defaults
 cfg.interactive = ft_getopt(cfg, 'interactive', 'yes');
-cfg.anonimize   = ft_getopt(cfg, 'anonimize');
+cfg.anonymize   = ft_getopt(cfg, 'anonymize');
 % the headers contain the information required for synchronization
 cfg.datahdr     = ft_getopt(cfg, 'datahdr');
 cfg.audiohdr    = ft_getopt(cfg, 'audiohdr');
@@ -104,15 +108,16 @@ end
 assert(isfield(datahdr, 'FirstTimeStamp'), 'sycnhronization information is missing in the data header');
 assert(isfield(datahdr, 'TimeStampPerSample'), 'sycnhronization information is missing in the data header');
 
-% determine the begin and end samples of the data segments, the corresponding audio and video fragments will be displayes
-if isfield(cfg, 'trl')
-  fprintf('using cfg.trl\n');
-  trl = cfg.trl;
-elseif hasdata && isfield(data, 'sampleinfo')
-  fprintf('using data.sampleinfo\n');
-  trl = data.sampleinfo;
+% determine the begin and end samples of the EEG/MEG data segments, the corresponding audio and video fragments will be displayed
+if hasdata && isfield(data, 'sampleinfo')
+  % construct the trial definition from the sampleinfo and the trialinfo
+  trl = sampleinfo2trl(data);
+elseif isfield(cfg, 'trl') && ischar(cfg.trl)
+  % load the trial information from file
+  trl = loadvar(cfg.trl, 'trl');
 else
-  ft_error('the EEG/MEG data segments should be specified');
+  % use the trial information that was specified
+  trl = cfg.trl;
 end
 
 numtrl = size(trl,1);
@@ -157,9 +162,9 @@ while (true)
       begsample = 1;
       ft_notice('padding the beginning of the audio with %d silent samples', begpad);
     end
-    if endsample>videohdr.nTrials*videohdr.nSamples
-      endpad = endsample-videohdr.nTrials*videohdr.nSamples;
-      endsample = videohdr.nTrials*videohdr.nSamples;
+    if endsample>audiohdr.nTrials*audiohdr.nSamples
+      endpad = endsample-videohdr.nTrials*audiohdr.nSamples;
+      endsample = audiohdr.nTrials*audiohdr.nSamples;
       ft_notice('padding the end of the audio with %d silent samples', endpad);
     end
     
@@ -237,9 +242,9 @@ while (true)
     videodat = uint8(videodat);
     videodat = reshape(videodat, dim);
     
-    if ~isempty(cfg.anonimize)
+    if ~isempty(cfg.anonymize)
       % place a bar over the eyes
-      videodat(cfg.anonimize(1):cfg.anonimize(2), cfg.anonimize(3):cfg.anonimize(4), :) = 0;
+      videodat(cfg.anonymize(1):cfg.anonymize(2), cfg.anonymize(3):cfg.anonymize(4), :) = 0;
     end
     
     % remember the header details to speed up subsequent calls

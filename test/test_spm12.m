@@ -2,6 +2,7 @@ function test_spm12
 
 % MEM 4gb
 % WALLTIME 00:10:00
+% DEPENDENCY
 
 % currently (Jan, 2017) SPM12 support for:
 % - ft_volumerealign
@@ -18,81 +19,92 @@ function test_spm12
 % - ft_volumesegment
 
 
-mrifile = dccnpath('/home/common/matlab/fieldtrip/data/test/latest/mri/freesurfer/T1.mgz');
-mri     = ft_read_mri(mrifile);
-%mri = ft_read_mri('/Users/arjsto/Projects/Ecog/data/IR29/freesurfer/mri/T1.mgz');
-mri.coordsys = 'tal';
+mrifile1 = dccnpath('/home/common/matlab/fieldtrip/data/test/latest/mri/freesurfer/T1.mgz');
+mri1     = ft_read_mri(mrifile1);
+mri1.coordsys = 'tal'; % I don't think this is technically correct, it should be fsaverage aka mni305
+
 mrifile2 = dccnpath('/home/common/matlab/fieldtrip/data/test/latest/mri/nifti/single_subj_T1.nii');
 mri2     = ft_read_mri(mrifile2);
-%mri2 = ft_read_mri('/Users/arjsto/Projects/Ecog/data/template/single_subj_T1_1mm.nii');
 mri2.coordsys = 'mni';
 
+mrifile3 = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.mri');
+mri3     = ft_read_mri(mrifile3);
+mri3.coordsys = 'ctf';
 
 %----------------------------- SPM12 -----------------------------------
 
 %ft_convert_coordsys: currently uses OldNorm sub-toolbox (i.e. SPM8)
 ft_hastoolbox('spm12',1)
-mri.coordsys = 'ctf';
-c2a = ft_convert_coordsys(mri, 'tal', 1);
-c2b = ft_convert_coordsys(mri, 'tal', 2);
+c2a = ft_convert_coordsys(mri3, 'tal', 1);
+c2b = ft_convert_coordsys(mri3, 'tal', 2);
 
-rmpath(spm('dir'));
+try
+  rmpath(spm('dir'));
+end
 
 %ft_volumerealign: coregistration (used in human ecog tutorial)
-mri.coordsys = 'tal';
-cfg             = [];
-cfg.method      = 'spm';
-cfg.spmversion  = 'spm12';
-cfg.spm.coostfun = 'nmi';
-cfg.coordsys    = 'tal';
-r12 = ft_volumerealign(cfg, mri, mri2);
+cfg               = [];
+cfg.method        = 'spm';
+cfg.spmversion    = 'spm12';
+cfg.spm.cost_fun  = 'nmi';
+r12 = ft_volumerealign(cfg, mri1, mri2);
 
-rmpath(spm('dir'));
+try
+  rmpath(spm('dir'));
+end
 
 %ft_volumedownsample
 tmp            = randn(256,256,256);
-mri.pow        = tmp;
-mri.pow(1)     = 0;
+mri1.pow        = tmp;
+mri1.pow(1)     = 0;
 cfg            = [];
 cfg.downsample = 2;
 cfg.spmversion = 'spm12';
 cfg.smooth     = 'no';
-d12            = ft_volumedownsample(cfg, mri);
+d12            = ft_volumedownsample(cfg, mri1);
 cfg.smooth     = 5;
-d12s           = ft_volumedownsample(cfg, mri);
+d12s           = ft_volumedownsample(cfg, mri1);
 
-rmpath(spm('dir'));
+try
+  rmpath(spm('dir'));
+end
 
 %mni2tal and tal2mni
-cd ~/matlab/fieldtrip/private
+[v, p] = ft_version;
+cd(fullfile(p, 'private'));
+
 inpoints  = randn(100,3);
 outpoints = mni2tal(inpoints);
 
-rmpath(spm('dir'));
+try
+  rmpath(spm('dir'));
+end
 
 inpoints = tal2mni(outpoints);
 
 %----------------------------- SPM8 COMPAT -----------------------------
 
-rmpath(spm('dir'));
+try
+  rmpath(spm('dir'));
+end
 
 %ft_volumenormalise
 cfg            = [];
 cfg.nonlinear  = 'no';
-cfg.coordinates = 'tal';
 cfg.spmversion = 'spm8';
-n8 = ft_volumenormalise(cfg, mri);
+n8 = ft_volumenormalise(cfg, mri1);
 
 %ft_warp_apply with spm12
 elecpos = ft_warp_apply(n8.params, [4 4 4; 1 1 1], 'individual2sn');
 
-rmpath(spm('dir'));
+try
+  rmpath(spm('dir'));
+end
 
 %ft_volumesegment
 cfg             = [];
-cfg.coordinates = 'tal';
 cfg.spmversion  = 'spm8';
-s8 = ft_volumesegment(cfg, mri);
+s8 = ft_volumesegment(cfg, mri1);
 
 
 %-----------------------------------------------------------------------
