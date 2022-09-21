@@ -218,8 +218,9 @@ elseif ~keeptrials
   % construct general time-axis
   time = linspace(begtime,endtime,nsmp);
   
-  nchan = numel(data.label);
-  
+  nchan  = numel(data.label);
+  ntrial = numel(data.trial);
+
   % placeholder for running sums
   tmpsum = zeros(nchan, length(time));
   tmpssq = tmpsum;
@@ -263,11 +264,12 @@ end
 % collect the results
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-timelock = keepfields(data, {'time' 'grad', 'elec', 'opto', 'topo', 'topodimord', 'topolabel', 'unmixing', 'unmixingdimord', 'label'});
+timelock = keepfields(data, {'grad', 'elec', 'opto', 'topo', 'topodimord', 'topolabel', 'unmixing', 'unmixingdimord', 'label'});
 if ~keeptrials
   timelock.avg        = avgmat;
   timelock.var        = varmat;
   timelock.dof        = dofmat;
+  timelock.time       = time;
   timelock.dimord     = 'chan_time';
 else
   timelock        = copyfields(data, timelock, {'trial' 'sampleinfo', 'trialinfo'});
