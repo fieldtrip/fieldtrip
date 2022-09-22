@@ -264,7 +264,7 @@ end
 % collect the results
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-timelock = keepfields(data, {'grad', 'elec', 'opto', 'topo', 'topodimord', 'topolabel', 'unmixing', 'unmixingdimord', 'label'});
+timelock = keepfields(data, {'time', 'grad', 'elec', 'opto', 'topo', 'topodimord', 'topolabel', 'unmixing', 'unmixingdimord', 'label'});
 if ~keeptrials
   timelock.avg        = avgmat;
   timelock.var        = varmat;
