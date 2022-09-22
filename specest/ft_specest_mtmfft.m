@@ -65,6 +65,7 @@ if isempty(fbopt)
   fbopt.i = 1;
   fbopt.n = 1;
 end
+useftprogress = ft_getopt(fbopt, 'useftprogress', false);
 
 % throw errors for required input
 if isempty(tapsmofrq) && (strcmp(taper, 'dpss') || strcmp(taper, 'sine'))
@@ -259,9 +260,8 @@ end
 % compute fft
 if ~((strcmp(taper,'dpss') || strcmp(taper,'sine')) && numel(tapsmofrq)>1) % ariable number of slepian tapers not requested
   str = sprintf('nfft: %d samples, datalength: %d samples, %d tapers',endnsample,ndatsample,ntaper(1));
-  [st, cws] = dbstack;
-  if length(st)>1 && strcmp(st(2).name, 'ft_freqanalysis')
-    % specest_mtmfft has been called by ft_freqanalysis, meaning that ft_progress has been initialised
+  if useftprogress
+    % ft_progress has been initialised
     ft_progress(fbopt.i./fbopt.n, ['processing trial %d/%d ',str,'\n'], fbopt.i, fbopt.n);
   elseif verbose
     fprintf([str, '\n']);
@@ -291,9 +291,8 @@ else % variable number of slepian tapers requested
       spectrum = complex(NaN([max(ntaper) nchan nfreqoi]));
       for ifreqoi = 1:nfreqoi
         str = sprintf('nfft: %d samples, datalength: %d samples, frequency %d (%.2f Hz), %d tapers',endnsample,ndatsample,ifreqoi,freqoi(ifreqoi),ntaper(ifreqoi));
-        [st, cws] = dbstack;
-        if length(st)>1 && strcmp(st(2).name, 'ft_freqanalysis') && verbose
-          % specest_mtmconvol has been called by ft_freqanalysis, meaning that ft_progress has been initialised
+        if useftprogress && verbose
+          % ft_progress has been initialised
           ft_progress(fbopt.i./fbopt.n, ['processing trial %d, ',str,'\n'], fbopt.i);
         elseif verbose
           fprintf([str, '\n']);
@@ -324,9 +323,8 @@ else % variable number of slepian tapers requested
       spectrum = complex(zeros([nchan sum(ntaper)]));
       for ifreqoi = 1:nfreqoi
         str = sprintf('nfft: %d samples, datalength: %d samples, frequency %d (%.2f Hz), %d tapers',endnsample,ndatsample,ifreqoi,freqoi(ifreqoi),ntaper(ifreqoi));
-        [st, cws] = dbstack;
-        if length(st)>1 && strcmp(st(2).name, 'ft_freqanalysis') && verbose
-          % specest_mtmconvol has been called by ft_freqanalysis, meaning that ft_progress has been initialised
+        if useftprogress && verbose
+          % ft_progress has been initialised
           ft_progress(fbopt.i./fbopt.n, ['processing trial %d, ',str,'\n'], fbopt.i);
         elseif verbose
           fprintf([str, '\n']);

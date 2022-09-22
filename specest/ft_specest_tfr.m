@@ -58,6 +58,7 @@ if isempty(fbopt)
   fbopt.i = 1;
   fbopt.n = 1;
 end
+useftprogress = ft_getopt(fbopt, 'useftprogress', false);
 
 % Set n's
 [nchan,ndatsample] = size(dat);
@@ -207,9 +208,8 @@ end
 spectrum = complex(nan(nchan,nfreqoi,ntimeboi),nan(nchan,nfreqoi,ntimeboi));
 for ifreqoi = 1:nfreqoi
   str = sprintf('frequency %d (%.2f Hz)', ifreqoi,freqoi(ifreqoi));
-  [st, cws] = dbstack;
-  if length(st)>1 && strcmp(st(2).name, 'ft_freqanalysis') && verbose
-    % specest_convol has been called by ft_freqanalysis, meaning that ft_progress has been initialised
+  if useftprogress && verbose
+    % ft_progress has been initialised
     ft_progress(fbopt.i./fbopt.n, ['trial %d, ',str,'\n'], fbopt.i);
   elseif verbose
     fprintf([str, '\n']);

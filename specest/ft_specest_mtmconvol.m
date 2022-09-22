@@ -70,6 +70,7 @@ if isempty(fbopt)
   fbopt.i = 1;
   fbopt.n = 1;
 end
+useftprogress = ft_getopt(fbopt, 'useftprogress', false);
 
 % throw errors for required input
 if ismember(taper, {'dpss', 'sine', 'sine_old'}) && isempty(tapsmofrq)
@@ -290,9 +291,8 @@ switch dimord
     spectrum = cell(max(ntaper), nfreqoi);
     for ifreqoi = 1:nfreqoi
       str = sprintf('frequency %d (%.2f Hz), %d tapers', ifreqoi,freqoi(ifreqoi),ntaper(ifreqoi));
-      [st, cws] = dbstack;
-      if length(st)>1 && strcmp(st(2).name, 'ft_freqanalysis') && verbose
-        % specest_mtmconvol has been called by ft_freqanalysis, meaning that ft_progress has been initialised
+      if useftprogress && verbose
+        % ft_progress has been initialised
         ft_progress(fbopt.i./fbopt.n, ['trial %d, ',str,'\n'], fbopt.i);
       elseif verbose
         fprintf([str, '\n']);
@@ -333,9 +333,8 @@ switch dimord
     spectrum = complex(zeros([nchan ntimeboi sum(ntaper)]));
     for ifreqoi = 1:nfreqoi
       str = sprintf('frequency %d (%.2f Hz), %d tapers', ifreqoi,freqoi(ifreqoi),ntaper(ifreqoi));
-      [st, cws] = dbstack;
-      if length(st)>1 && strcmp(st(2).name, 'ft_freqanalysis') && verbose
-        % specest_mtmconvol has been called by ft_freqanalysis, meaning that ft_progress has been initialised
+      if useftprogress && verbose
+        % ft_progress has been initialised
         ft_progress(fbopt.i./fbopt.n, ['trial %d, ',str,'\n'], fbopt.i);
       elseif verbose
         fprintf([str, '\n']);
