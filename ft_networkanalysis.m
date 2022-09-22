@@ -84,6 +84,7 @@ end
 cfg = ft_checkconfig(cfg, 'required', {'method' 'parameter'});
 
 cfg.threshold = ft_getopt(cfg, 'threshold', []);
+cfg.parformaxworkers  = ft_getopt(cfg, 'parformaxworkers' , Inf);
 
 % ensure that the bct-toolbox is on the path
 ft_hastoolbox('BCT', 1);
@@ -110,10 +111,15 @@ if strcmp(cfg.method, 'charpath') && ~strcmp(cfg.parameter, 'distance')
   ft_error('characteristic path length can only be computed on distance matrices');
 end
 
+% Only call size function once.
+inputsize = size(input);
+% Make sure there are four values in the vector
+inputsize(length(inputsize)+1:4) = 1;
+
 % check for binary or not
 isbinary = true;
-for k = 1:size(input,3)
-  for m = 1:size(input,4)
+for k = 1:inputsize(3)
+  for m = 1:inputsize(4)
     tmp = input(:,:,k,m);
     isbinary = all(ismember(tmp(:), [0 1]));
     if ~isbinary
@@ -129,9 +135,9 @@ end
 
 if ~isbinary && ~isempty(cfg.threshold)
   fprintf('thresholding the input graph at a value of %d\n', cfg.threshold);
-  newinput = false(size(input));
-  for k = 1:size(input,3)
-    for m = 1:size(input,4)
+  newinput = false(inputsize);
+  for k = 1:inputsize(3)
+    for m = 1:inputsize(4)
       tmp = input(:,:,k,m);
       newinput(:,:,k,m) = tmp>cfg.threshold;
     end
@@ -142,8 +148,8 @@ end
 
 % check for directed or not
 isdirected = true;
-for k = 1:size(input,3)
-  for m = 1:size(input,4)
+for k = 1:inputsize(3)
+  for m = 1:inputsize(4)
     tmp = input(:,:,k,m);
     isdirected = ~all(all(tmp==tmp.'));
     if ~isdirected
@@ -159,23 +165,21 @@ end
 
 fprintf('computing %s\n', cfg.method);
 % allocate memory
-needlabel = true;
 switch cfg.method
   case {'assortativity' 'charpath' 'density'  'transitivity'}
     % 1 value per connection matrix
-    outsiz = [size(input) 1];
-    outsiz(1:2) = [];
+    outsiz = inputsize;
+    outsiz(1:2) = 1;
     output = zeros(outsiz);
     if strcmp(dimord(1:3), 'pos')
       dimord = dimord(9:end);
     elseif strcmp(dimord(1:4), 'chan')
       dimord = dimord(11:end);
     end
-    needlabel = false;
   case {'betweenness' 'clustering_coef' 'degrees'}
     % 1 value per node
-    outsiz = [size(input) 1];
-    outsiz(1) = [];
+    outsiz = inputsize;
+    outsiz(1) = 1;
     output = zeros(outsiz);
     if strcmp(dimord(1:3), 'pos')
       dimord = dimord(5:end);
@@ -184,64 +188,68 @@ switch cfg.method
     end
   case {'distance' 'edge_betweenness'}
     % 1 value per node pair
-    outsiz = [size(input) 1];
+    outsiz = inputsize;
     output = zeros(outsiz);
-    dimord = dimord;
+    % Full dimord used
 end
+
+% Prepare for parfor loop
+siz_4 = inputsize(4); % Make clear to parfor that the inner loop stop variable is a static value
+cfg_method = cfg.method; % Avoid sending full cfg struct to each parallel worker
 
 binarywarning = 'weights are not taken into account and graph is converted to binary values by thresholding';
 
-for k = 1:size(input, 3)
-  for m = 1:size(input, 4)
+parfor (k = 1:inputsize(3), cfg.parformaxworkers)
+  for m = 1:siz_4
 
     % switch to the appropriate function from the BCT
-    switch cfg.method
+    switch cfg_method
       case 'assortativity'
         if ~isbinary, ft_warning(binarywarning); end
 
         if isdirected
-          output(k,m) = assortativity(input(:,:,k,m), 1);
+          output(:,:,k,m) = assortativity(input(:,:,k,m), 1);
         elseif ~isdirected
-          output(k,m) = assortativity(input(:,:,k,m), 0);
+          output(:,:,k,m) = assortativity(input(:,:,k,m), 0);
         end
       case 'betweenness'
         if isbinary
-          output(:,k,m) = betweenness_bin(input(:,:,k,m));
+         output(:,:,k,m) = betweenness_bin(input(:,:,k,m));
         elseif ~isbinary
-          output(:,k,m) = betweenness_wei(input(:,:,k,m));
+          output(:,:,k,m) = betweenness_wei(input(:,:,k,m));
         end
       case 'breadthdist'
         ft_error('not yet implemented');
       case 'charpath'
         % this needs the distance matrix as input, this is dealt with
         % above
-        output(:,k) = charpath(input(:,:,k,m))';
+        output(:,:,k,m) = charpath(input(:,:,k,m))';
       case 'clustering_coef'
         if isbinary && isdirected
-          output(:,k,m) = clustering_coef_bd(input(:,:,k,m));
+          output(:,:,k,m) = clustering_coef_bd(input(:,:,k,m));
         elseif isbinary && ~isdirected
-          output(:,k,m) = clustering_coef_bu(input(:,:,k,m));
+          output(:,:,k,m) = clustering_coef_bu(input(:,:,k,m));
         elseif ~isbinary && isdirected
-          output(:,k,m) = clustering_coef_wd(input(:,:,k,m));
+          output(:,:,k,m) = clustering_coef_wd(input(:,:,k,m));
         elseif ~isbinary && ~isdirected
-          output(:,k,m) = clustering_coef_wu(input(:,:,k,m));
+          output(:,:,k,m) = clustering_coef_wu(input(:,:,k,m));
         end
       case 'degrees'
         if ~isbinary, ft_warning(binarywarning); end
 
         if isdirected
-          [in, out, output(:,k,m)] = degrees_dir(input(:,:,k,m));
+          [~, ~, output(:,:,k,m)] = degrees_dir(input(:,:,k,m));
           % FIXME do something here
         elseif ~isdirected
-          output(:,k,m) = degrees_und(input(:,:,k,m));
+          output(:,:,k,m) = degrees_und(input(:,:,k,m));
         end
       case 'density'
         if ~isbinary, ft_warning(binarywarning); end
 
         if isdirected
-          output(k,m) = density_dir(input(:,:,k,m));
+          output(:,:,k,m) = density_dir(input(:,:,k,m));
         elseif ~isdirected
-          output(k,m) = density_und(input(:,:,k,m));
+         output(:,:,k,m) = density_und(input(:,:,k,m));
         end
       case 'distance'
         if isbinary
@@ -263,13 +271,13 @@ for k = 1:size(input, 3)
         ft_error('not yet implemented');
       case 'transitivity'
         if isbinary && isdirected
-          output(k,m) = transitivity_bd(input(:,:,k,m));
+          output(:,:,k,m) = transitivity_bd(input(:,:,k,m));
         elseif isbinary && ~isdirected
-          output(k,m) = transitivity_bu(input(:,:,k,m));
+          output(:,:,k,m) = transitivity_bu(input(:,:,k,m));
         elseif ~isbinary && isdirected
-          output(k,m) = transitivity_wd(input(:,:,k,m));
+          output(:,:,k,m) = transitivity_wd(input(:,:,k,m));
         elseif ~isbinary && ~isdirected
-          output(k,m) = transitivity_wu(input(:,:,k,m));
+          output(:,:,k,m) = transitivity_wu(input(:,:,k,m));
         end
       otherwise
         ft_error('unsupported connectivity metric %s requested');
@@ -278,11 +286,25 @@ for k = 1:size(input, 3)
   end % for m
 end % for k
 
+% For parfor, indexing into output needs to be the same throughout the loop. Thus, all assignments
+% inside the loop are to output(:,:,k,m), even when the first dimension(s) have size 1 and it could
+% have been output(k,m). After the parfor loop, can reshape to the expected output size.
+switch cfg.method
+  case {'assortativity' 'charpath' 'density'  'transitivity'}
+    % 1 value per connection matrix
+    output = reshape(output, outsiz(3:4));
+  case {'betweenness' 'clustering_coef' 'degrees'}
+    % 1 value per node
+    output = reshape(output, outsiz(2:4));
+  case {'distance' 'edge_betweenness'}
+    % 1 value per node pair
+    output = reshape(output, outsiz(1:4));
+end
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % create the output structure
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-stat              = [];
 stat = keepfields(data, {'label', 'freq', 'time', 'grad', 'elec', 'opto', 'dof', 'pos', 'tri', 'inside', 'brainordinate'});
 stat.(cfg.method) = output;
 stat.dimord       = dimord;
