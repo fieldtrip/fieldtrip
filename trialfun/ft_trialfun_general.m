@@ -191,12 +191,19 @@ else
     
     if isnumeric(event(i).value) && ~isempty(event(i).value)
       trlval = event(i).value;
-    elseif ischar(event(i).value) && numel(event(i).value)>1 && (event(i).value(1)=='S'|| event(i).value(1)=='R')
-      % on brainvision these are called 'S  1' for stimuli or 'R  1' for responses
-      trlval = str2double(event(i).value(2:end));
+    elseif ischar(event(i).value) && ~isempty(regexp(event(i).value, '^[SR]+[\s]*+[1-9]{1,3}$'))
+      % This looks like Brainvision event markers. For backward compatibility, convert
+      % the strings into the numerals following the 'S' or 'R', unless the user has specified
+      % the cfg.representation to be a table
+      if ~isequal(cfg.representation, 'table')
+        ft_warning('Brainvision markers are converted to numeric representation, if you want tabular output please specify cfg.representation=''table''');
+        trlval = str2double(event(i).value(2:end));
+      else
+        trlval = event(i).value;
+      end
     else
       % the following depends on cfg.representation
-      if isequal(cfg.representation, 'numeric')
+      if isequal(cfg.representation, 'numeric') || isempty(cfg.representation)
         trlval = nan;
       else
         trlval = event(i).value;
