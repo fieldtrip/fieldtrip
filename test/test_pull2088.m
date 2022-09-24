@@ -17,6 +17,7 @@ cfg.trialdef.eventvalue = { 'standard' 'oddball_with_reponse' };
 cfg.trialdef.prestim        = 1; % in seconds
 cfg.trialdef.poststim       = 2; % in seconds
 cfg = ft_definetrial(cfg);
+cfg.trl = cfg.trl(1:50,:);
 
 % Baseline-correction options
 cfg.demean          = 'yes';

@@ -81,6 +81,7 @@ cfg.trialdef.combinebinary = ft_getopt(cfg.trialdef, 'combinebinary');
 cfg.eventformat   = ft_getopt(cfg, 'eventformat');
 cfg.headerformat  = ft_getopt(cfg, 'headerformat');
 cfg.dataformat    = ft_getopt(cfg, 'dataformat');
+cfg.representation = ft_getopt(cfg, 'representation');
 
 % get the header, this is among others for the sampling frequency
 if isfield(cfg, 'hdr')
@@ -201,6 +202,8 @@ else
       else
         trlval = event(i).value;
       end
+    elseif ischar(event(i).value) && ~isequal(cfg.representation, 'numeric')
+      trlval = event(i).value;
     else
       % the following depends on cfg.representation
       if isequal(cfg.representation, 'numeric') || isempty(cfg.representation)
