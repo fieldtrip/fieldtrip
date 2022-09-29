@@ -83,7 +83,17 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % linecolor
-if ~isequal(cfg.linecolor, 'spatial')
+if isnumeric(cfg.linecolor) && size(cfg.linecolor,2)==3
+  % overrule the default colors, because it seems to be Nx3 numeric
+elseif ischar(cfg.linecolor) && all(ismember(cfg.linecolor, 'rgbcmykw'))
+  % this is handled below
+elseif isequal(cfg.linecolor, 'spatial')
+  if isfield(cfg, 'layout') && isfield(cfg.layout, 'color')
+    cfg.linecolor = cfg.layout.color;
+  else
+    ft_error('this does not work yet'); % FIXME in principle the color can be derived from the 3D chanpos if present in the data
+  end
+elseif isempty(cfg.linecolor)
   cfg.linecolor = [
     0    0    1
     0.75 0    0
@@ -100,12 +110,6 @@ if ~isequal(cfg.linecolor, 'spatial')
     1    0    0.4
     0    0.69 0.31
     0    0.44 0.75];
-elseif isequal(cfg.linecolor, 'spatial')
-  if isfield(cfg, 'layout') && isfield(cfg.layout, 'color')
-    cfg.linecolor = cfg.layout.color;
-  else
-    ft_error('this does not work yet'); % FIXME in principle the color can be derived from the 3D chanpos if present in the data
-  end
 end
 
 if ischar(cfg.linecolor)
