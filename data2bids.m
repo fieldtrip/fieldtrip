@@ -1413,8 +1413,9 @@ if need_channels_tsv
   channels_tsv.type(strcmpi(channels_tsv.type, 'respiration')) = {'RESP'};
   channels_tsv.type(strcmpi(channels_tsv.type, 'headloc'))     = {'HLU'};
   channels_tsv.type(strcmpi(channels_tsv.type, 'headloc_gof')) = {'FITERR'};
-  channels_tsv.type(strcmpi(channels_tsv.type, 'trigger'))     = {'TRIG'};
   channels_tsv.type(strcmpi(channels_tsv.type, 'ori'))         = {'ORNT'};
+  % trigger, analog trigger, and digital trigger all have to be renamed to TRIG
+  channels_tsv.type(contains(channels_tsv.type, 'trigger', 'IgnoreCase', true)) = {'TRIG'};
 
   % channel types in BIDS must be in upper case
   channels_tsv.type = upper(channels_tsv.type);
