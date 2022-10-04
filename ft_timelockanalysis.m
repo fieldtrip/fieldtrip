@@ -228,6 +228,8 @@ elseif ~keeptrials
   
   begsmp = nan(ntrial, 1);
   endsmp = nan(ntrial, 1);
+
+  % do a 2-pass running sum, sacrificing speed for numeric stability
   for i=1:ntrial
     begsmp(i) = nearest(time, data.time{i}(1));
     endsmp(i) = nearest(time, data.time{i}(end));
@@ -239,12 +241,25 @@ elseif ~keeptrials
       tmp(~isfinite(tmp)) = 0;
     end  
     tmpsum(:,begsmp(i):endsmp(i)) = tmp    + tmpsum(:,begsmp(i):endsmp(i));
+  end
+  avgmat = tmpsum ./ tmpdof;
+
+  tmpsum = zeros(nchan, length(time));
+  for i=1:ntrial
+    tmp = data.trial{i};
+    
+    tmp = tmp - avgmat(:,begsmp(i):endsmp(i));
+
+    if istrue(cfg.nanmean)
+      tmp(~isfinite(tmp)) = 0;
+    end  
+    tmpsum(:,begsmp(i):endsmp(i)) = tmp    + tmpsum(:,begsmp(i):endsmp(i));
     tmpssq(:,begsmp(i):endsmp(i)) = tmp.^2 + tmpssq(:,begsmp(i):endsmp(i));
     
   end
   
   dofmat = tmpdof;
-  avgmat = tmpsum ./ tmpdof;
+  %avgmat = tmpsum ./ tmpdof;
   varmat = tmpssq ./ tmpdof - (tmpsum ./ tmpdof).^2;
   if normalizewithN
     
@@ -264,7 +279,7 @@ end
 % collect the results
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-timelock = keepfields(data, {'grad', 'elec', 'opto', 'topo', 'topodimord', 'topolabel', 'unmixing', 'unmixingdimord', 'label'});
+timelock = keepfields(data, {'time', 'grad', 'elec', 'opto', 'topo', 'topodimord', 'topolabel', 'unmixing', 'unmixingdimord', 'label'});
 if ~keeptrials
   timelock.avg        = avgmat;
   timelock.var        = varmat;
