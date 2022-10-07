@@ -565,7 +565,8 @@ if isfield(cfg.layout, 'layout')
   vpos = vlim(1)+diff(vlim)*0.9;
   h    = 0.2*diff(vlim);
   w    = 0.2*diff(hlim);
-  ft_plot_layout(cfg.layout.layout, 'box', 'no', 'label', 'off', 'point', 'yes', 'pointcolor', linecolor, 'pointsize', 5, 'pointsymbol', 'o', 'hpos', hpos, 'vpos', vpos, 'height', h, 'width', w);
+  [i1, i2] = match_str(cfg.channel, cfg.layout.layout.label);
+  ft_plot_layout(cfg.layout.layout, 'box', 'no', 'label', 'off', 'point', 'yes', 'pointcolor', linecolor(i1, :), 'pointsize', 5, 'pointsymbol', 'o', 'hpos', hpos, 'vpos', vpos, 'height', h, 'width', w);
 end
 
 % write comment
@@ -656,11 +657,16 @@ if strcmp(cfg.interactive, 'yes')
   info.(ident).linecolor = linecolor;
   guidata(gcf, info);
   
-  set(gcf, 'WindowButtonUpFcn',  {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotER}, 'event', 'WindowButtonUpFcn'});
-  set(gcf, 'WindowButtonDownFcn', {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotER}, 'event', 'WindowButtonDownFcn'});
-  set(gcf, 'WindowButtonMotionFcn', {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotER}, 'event', 'WindowButtonMotionFcn'});
+  if isequal(cfg.viewmode, 'butterfly')
+    set(gcf, 'windowbuttonupfcn',     {@ft_select_range, 'multiple', false, 'yrange', false, 'callback', {@select_topoplotER}, 'event', 'windowbuttonupfcn'});
+    set(gcf, 'windowbuttondownfcn',   {@ft_select_range, 'multiple', false, 'yrange', false, 'callback', {@select_topoplotER}, 'event', 'windowbuttondownfcn'});
+    set(gcf, 'windowbuttonmotionfcn', {@ft_select_range, 'multiple', false, 'yrange', false, 'callback', {@select_topoplotER}, 'event', 'windowbuttonmotionfcn'});
+  else
+    set(gcf, 'WindowButtonUpFcn',     {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotER}, 'event', 'WindowButtonUpFcn'});
+    set(gcf, 'WindowButtonDownFcn',   {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotER}, 'event', 'WindowButtonDownFcn'});
+    set(gcf, 'WindowButtonMotionFcn', {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotER}, 'event', 'WindowButtonMotionFcn'});
+  end
 end
-
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble trackconfig
@@ -727,4 +733,35 @@ if ~isempty(label)
   selchan = match_str(datvarargin{1}.label, cfg.channel);
   cfg.linecolor = linecolor(selchan, :, :); % make a subselection for the correct inheritance of the line colors
   ft_singleplotER(cfg, datvarargin{:});
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION which is called after selecting a time range with cfg.viewmode = 'butterfly'
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function select_topoplotER(range, varargin)
+
+% fetch cfg/data based on axis indentifier given as tag
+ident    = get(gca, 'tag');
+info     = guidata(gcf);
+cfg      = info.(ident).cfg;
+varargin = info.(ident).varargin;
+if ~isempty(range)
+  cfg = removefields(cfg, 'inputfile');   % the reading has already been done and varargin contains the data
+  cfg = removefields(cfg, 'showlabels');  % this is not allowed in topoplotER
+  cfg.baseline = 'no';                    % make sure the next function does not apply a baseline correction again
+  cfg.dataname = info.(ident).dataname;   % put data name in here, this cannot be resolved by other means
+  cfg.channel = 'all';                    % make sure the topo displays all channels, not just the ones in this singleplot
+  cfg.comment = 'auto';
+  cfg.trials = 'all';                     % trial selection has already been taken care of
+  cfg.xlim = range(1:2);
+  % if user specified a ylim, copy it over to the zlim of topoplot
+  if isfield(cfg, 'ylim')
+    cfg.zlim = cfg.ylim;
+    cfg = rmfield(cfg, 'ylim');
+  end
+  fprintf('selected cfg.xlim = [%f %f]\n', cfg.xlim(1), cfg.xlim(2));
+  % ensure that the new figure appears at the same position
+  cfg.figure = 'yes';
+  cfg.position = get(gcf, 'Position');
+  ft_topoplotER(cfg, varargin{:});
 end
