@@ -39,7 +39,7 @@ function [data] = ft_dipolesimulation(cfg)
 %   cfg.channel    = Nx1 cell-array with selection of channels (default = 'all'),
 %                    see FT_CHANNELSELECTION for details
 %   cfg.dipoleunit = units for dipole amplitude (default nA*m)
-%   cfg.chanunit   = units for the channel data
+%   cfg.chanunit   = Nx1 cell-array with units for the channel data
 %
 % Optionally, you can modify the leadfields by reducing the rank, i.e. remove the weakest orientation
 %   cfg.reducerank    = 'no', or number (default = 3 for EEG, 2 for MEG)
@@ -255,7 +255,7 @@ ft_progress('close');
 
 if ft_senstype(sens, 'meg')
   data.grad = sens;
-elseif ft_senstype(sens, 'meg')
+elseif ft_senstype(sens, 'eeg')
   data.elec = sens;
 end
 
