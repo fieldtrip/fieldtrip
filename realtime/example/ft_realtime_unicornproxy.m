@@ -100,7 +100,8 @@ start_acq      = hex2dec({'0x61' '0x7C' '0x87'})';
 start_response = hex2dec({'0x00' '0x00' '0x00'})';
 stop_acq       = hex2dec({'0x63' '0x5C' '0xC5'})';
 stop_response  = hex2dec({'0x00' '0x00' '0x00'})';
-start_sequence = hex2dec({'0x0C0' '0x00'})';
+start_sequence = hex2dec({'0xC0' '0x00'})';
+stop_sequence  = hex2dec({'0x0D' '0x0A'})';
 
 %%
 % start the data stream
@@ -146,23 +147,30 @@ start = dat(1:2);
 start_sequence = hex2dec({'0x0C0' '0x00'})';
 assert(isequal(start, start_sequence))
 
+% four bits
 battery = bitand(dat(3), 0x0F);
-battery = (100/1.3) * 1.3 * double(battery) / 15;
+battery = (100/15) * double(battery);
 
+% big-endian, 24 bits
 eeg = zeros(1,8);
 for ch=1:8
   offset = (ch-1)*3;
-  eeg1 = bitshift(int32(dat(offset+4)), 16);
-  eeg2 = bitshift(int32(dat(offset+5)), 8);
-  eeg3 = bitshift(int32(dat(offset+6)), 0);
+  eeg1 = bitshift(uint32(dat(offset+4)), 16);
+  eeg2 = bitshift(uint32(dat(offset+5)), 8);
+  eeg3 = bitshift(uint32(dat(offset+6)), 0);
   %bitget(eeg1, 32:-1:1)
   %bitget(eeg2, 32:-1:1)
   %bitget(eeg3, 32:-1:1)
   eegv = bitor(bitor(eeg1, eeg2), eeg3);
+  if bitget(eegv, 24)
+    eegv = bitor(uint32(hex2dec('0xff000000')), eegv);
+  end
+  eegv = int32(eegv);
   %bitget(eeg, 32:-1:1)
   eeg(ch) = (4500000/50331642)*double(eegv);
 end
 
+% little-endian, 16 bits
 accel = zeros(1,3);
 for ch=1:3
   offset = (ch-1)*2;
@@ -172,6 +180,7 @@ for ch=1:3
   accel(ch) = (1/4096)*double(accelv);
 end
 
+% little-endian, 16 bits
 gyro = zeros(1,3);
 for ch=1:3
   offset = (ch-1)*2;
@@ -181,10 +190,11 @@ for ch=1:3
   gyro(ch) = (1/32.8)*double(gyrov);
 end
 
-counter1 = bitshift(int32(dat(40)), 0);
-counter2 = bitshift(int32(dat(41)), 8);
-counter3 = bitshift(int32(dat(42)), 16);
-counter4 = bitshift(int32(dat(43)), 24);
+% little-endian, 32 bits
+counter1 = bitshift(uint32(dat(40)), 0);
+counter2 = bitshift(uint32(dat(41)), 8);
+counter3 = bitshift(uint32(dat(42)), 16);
+counter4 = bitshift(uint32(dat(43)), 24);
 counter = double(bitor(counter1, bitor(counter2, bitor(counter3, counter4))));
 
 % construct a representation that we can write to the FieldTrip buffer
