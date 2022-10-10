@@ -32,12 +32,16 @@ cfg = [];
 % cfg.event               = eve;
 cfg.dataset             = filename;
 cfg.trialfun            = 'ft_trialfun_general';
-cfg.trialdef.eventtype  = 'STI101';
+cfg.trialdef.eventtype  = 'STI101';%'Trigger'
 cfg.trialdef.prestim    = 2.5;
 cfg.trialdef.poststim   = 2.5;
-cfg.trialdef.eventvalue = values;
+cfg.trialdef.eventvalue = values;%-14592;
 
 cfg2 = ft_definetrial(cfg);
 
-assert(isequal(cfg1.trl, cfg2.trl));
+cfg.trialdef.detectflank = 'up';
 
+cfg3 = ft_definetrial(cfg);
+
+assert(isequal(cfg1.trl, cfg3.trl));
+assert(isequal(cfg1.trl, cfg2.trl));
