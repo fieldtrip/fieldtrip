@@ -192,7 +192,7 @@ else
     
     if isnumeric(event(i).value) && ~isempty(event(i).value)
       trlval = event(i).value;
-    elseif ischar(event(i).value) && ~isempty(regexp(event(i).value, '^[SR]+[\s]*+[1-9]{1,3}$'))
+    elseif ischar(event(i).value) && ~isempty(regexp(event(i).value, '^[SR]+[\s]*+[0-9]{1,3}$'))
       % This looks like Brainvision event markers. For backward compatibility, convert
       % the strings into the numerals following the 'S' or 'R', unless the user has specified
       % the cfg.representation to be a table
