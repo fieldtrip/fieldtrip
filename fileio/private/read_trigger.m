@@ -242,12 +242,14 @@ if isempty(dat)
 end
 
 if isempty(detectflank)
-  % look at the first value in the trigger channel to determine whether the trigger is pulled up or down
-  % this fails if the first sample is zero and if the trigger values are negative
-  if all(dat(:,1)==0)
+  if all((dat(:,1)-mode(dat,2))>=0)
+    % the occasional TTL pulses are upward going
     detectflank = 'up';
-  else
+  elseif all((dat(:,1)-mode(dat,2))<=0)
+    % the occasional TTL pulses are downward going
     detectflank = 'down';
+  else
+    ft_error('cannot determine ''detectflank'' automatically, please specify this option in cfg.trialdef.detectflank');
   end
 end
 
