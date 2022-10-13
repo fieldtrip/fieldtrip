@@ -44,6 +44,8 @@ function [normalised] = ft_volumenormalise(cfg, mri)
 %   cfg.spmparams        = you can feed in the parameters from a prior normalisation, for example
 %                          to apply the parameters determined from an aantomical MRI to an
 %                          interpolated source resontruction
+%   cfg.initial          = optional hard-coded alignment between target and template, the default is
+%                          to use FT_CONVERT_COORDSYS to estimate it based on the data (default = [])
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
@@ -56,6 +58,7 @@ function [normalised] = ft_volumenormalise(cfg, mri)
 % See also FT_READ_MRI, FT_VOLUMEDOWNSAMPLE, FT_SOURCEINTERPOLATE, FT_SOURCEPLOT
 
 % Copyright (C) 2004-2020, Jan-Mathijs Schoffelen
+% Copyright (C) 2021-2022, Mikkel Vinding
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -154,7 +157,7 @@ if ~any(strcmp(template_ftype, {'analyze_hdr', 'analyze_img', 'minc', 'nifti'}))
   ft_error('the template anatomy should be stored in an SPM-compatible file');
 end
 
-if isfield(cfg, 'templatemask') || ~isempty(cfg.templatemask)
+if isfield(cfg, 'templatemask') && ~isempty(cfg.templatemask)
   templatemsk_ftype = ft_filetype(cfg.templatemask);
   if ~any(strcmp(templatemsk_ftype, {'analyze_hdr', 'analyze_img', 'minc', 'nifti'}))
     ft_error('the template mask should be stored in an SPM-compatible file');
@@ -384,9 +387,6 @@ end
 for k=1:length(Vout)
   normalised = setsubfield(normalised, cfg.parameter{k}, spm_read_vols(Vout(k)));
 end
-
-% determine the affine coordinate transformation from individual head coordinates to template coordinates
-final = VG.mat * inv(params.Affine) * inv(VF(1).mat) * initial;
 
 normalised.transform = Vout(1).mat;
 normalised.dim       = size(normalised.anatomy);

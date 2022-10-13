@@ -10,8 +10,10 @@ distractorChange = 12000;
 targetChange     = 12001;
 attCnds          = 20001:20004; % att in/out by target change first/second
 E          = struct2cell(event);
-samples    = cell2mat(E(1,:)); % now in vector form
-value      = cell2mat(E(2,:));
+sel        = ~cellfun('isempty', E(2,:)); % events with empty values should not be considered
+samples    = cell2mat(E(1,sel));
+value      = cell2mat(E(2,sel));
+
 begmark    = find(value==begintrial); % loop through the trial beginnings
 endmark    = find(value==endtrial); % loop through the trial beginnings
 trl        = []; % initialize the cfg.trl

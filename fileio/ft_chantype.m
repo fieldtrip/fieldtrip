@@ -49,7 +49,7 @@ function chantype = ft_chantype(input, desired)
 %
 % $Id$
 
-% these are for remembering the type on subsequent calls with the same input arguments
+% these are for speeding up subsequent calls with the same input arguments
 persistent previous_argin previous_argout
 
 % this is to avoid a recursion loop
@@ -129,7 +129,7 @@ end
 
 if isfield(input, 'chantype')
   % start with the provided channel types
-  chantype = input.chantype(:);
+  chantype = lower(input.chantype(:));
 else
   % start with unknown chantype for all channels
   chantype = repmat({'unknown'}, numchan, 1);
@@ -202,7 +202,7 @@ elseif isheader && issubfield(input, 'orig.chs.coil_type')
     chantype(sel) = {'mcg'};
   end
   for sel=find([input.orig.chs.kind]==3)'   % Stim channels
-    if any([input.orig.chs(sel).logno] == 101) % new systems: 101 (and 102, if enabled) are digital; low numbers are 'pseudo-analog' (if enabled)
+    if any(ismember([input.orig.chs(sel).logno], [101 102])) % new systems: 101 (and 102, if enabled) are digital; low numbers are 'pseudo-analog' (if enabled)
       chantype(sel([input.orig.chs(sel).logno] == 101)) = {'digital trigger'};
       chantype(sel([input.orig.chs(sel).logno] == 102)) = {'digital trigger'};
       chantype(sel([input.orig.chs(sel).logno] <= 32))  = {'analog trigger'};
@@ -392,21 +392,6 @@ elseif ft_senstype(input, 'bti')
     end
   end
   
-elseif ft_senstype(input, 'itab') && isheader
-  origtype = [input.orig.ch.type];
-  chantype(origtype==0) = {'unknown'};
-  chantype(origtype==1) = {'ele'};
-  chantype(origtype==2) = {'mag'}; % might be magnetometer or gradiometer, look at the number of coils
-  chantype(origtype==4) = {'ele ref'};
-  chantype(origtype==8) = {'mag ref'};
-  chantype(origtype==16) = {'aux'};
-  chantype(origtype==32) = {'param'};
-  chantype(origtype==64) = {'digit'};
-  chantype(origtype==128) = {'flag'};
-  % these are the channels that are visible to FieldTrip
-  chansel = 1:input.orig.nchan;
-  chantype = chantype(chansel);
-  
 elseif ft_senstype(input, 'yokogawa') && isheader
   % This is to recognize Yokogawa channel types from the original header
   % This is from the original documentation
@@ -576,20 +561,20 @@ elseif ft_senstype(input, 'yokogawa') && islabel
   chantype(sel) = {'etc'};
   
 elseif ft_senstype(input, 'itab') && isheader
-  sel = ([input.orig.ch.type]==0);
-  chantype(sel) = {'unknown'};
-  sel = ([input.orig.ch.type]==1);
-  chantype(sel) = {'unknown'};
-  sel = ([input.orig.ch.type]==2);
-  chantype(sel) = {'megmag'};
-  sel = ([input.orig.ch.type]==8);
-  chantype(sel) = {'megref'};
-  sel = ([input.orig.ch.type]==16);
-  chantype(sel) = {'aux'};
-  sel = ([input.orig.ch.type]==64);
-  chantype(sel) = {'digital'};
+  
+  origtype = [input.orig.ch.type];
+  chantype(origtype==0)   = {'unknown'};
+  chantype(origtype==1)   = {'unknown'};%{'ele'};
+  chantype(origtype==2)   = {'meg'};%{'mag'}; % might actually be magnetometer or gradiometer, look at the number of coils
+  chantype(origtype==4)   = {'unknown'};%{'ele ref'};
+  chantype(origtype==8)   = {'megref'};%{'mag ref'};
+  chantype(origtype==16)  = {'aux'};
+  chantype(origtype==32)  = {'param'};
+  chantype(origtype==64)  = {'digital'};%{'digit'};
+  chantype(origtype==128) = {'flag'};
+    
   % not all channels are actually processed by FieldTrip, so only return
-  % the types fopr the ones that read_header and read_data return
+  % the types for the ones that read_header and read_data return
   chantype = chantype(input.orig.chansel);
   
 elseif ft_senstype(input, 'itab') && isgrad
@@ -739,7 +724,7 @@ if nargin>1
     % search for the different types of trigger channels
     chantype = contains(chantype, desired);
   else
-    % search for an exact match
+    % search for an exact, case sensitive match
     chantype = strcmp(desired, chantype);
   end
 end

@@ -25,7 +25,7 @@ function Show_RVT_Peak(R,fg),
             plot( R(icol).tR, R(icol).ntraceR,'y');
          end
          if (  isfield(R(icol), 'RVTRS')),
-               plot( R(icol).tR,... 
+               plot( R(icol).tR,...
                      zscale(  R(icol).RVTRS, max(R(icol).ptrace),...
                               min(R(icol).ptrace) ),...
                      'k.');
@@ -34,7 +34,7 @@ function Show_RVT_Peak(R,fg),
       xlabel('time (sec)');
       title (R(icol).vname, 'Interpreter', 'None');
 
-      subplot (413); 
+      subplot (413);
       vn = real(R(icol).X)./(abs(R(icol).X)+eps);
       plot (R(icol).t, vn, 'g'); hold on
 
@@ -45,7 +45,7 @@ function Show_RVT_Peak(R,fg),
       xlabel('time (sec)');
       title ('Scaled by magnitude of analytical signal', 'Interpreter', 'None');
       legend({'Scaled signal','phase'});
-      
+
       subplot (414);
       plot (R(icol).tst, R(icol).phz_slc(:,1), 'ro', ...
             R(icol).tst, R(icol).phz_slc(:,2), 'bo', ...
@@ -55,7 +55,7 @@ function Show_RVT_Peak(R,fg),
       xlabel('time (sec)');
       title ('Phase sampled at slice acquisition time');
       legend({'slice 0', 'slice 1', 'slice 1', 'original phase'});
-      plotsign2(fg); 
+      plotsign2(fg);
       drawnow;
    end
 return;

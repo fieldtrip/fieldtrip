@@ -321,6 +321,10 @@ if strcmp(readbids, 'yes') || strcmp(readbids, 'ifmakessense')
     if ~isempty(sidecar)
       optodes_tsv = ft_read_tsv(sidecar);
     end
+    sidecar = bids_sidecar(filename, 'coordsystem');
+    if ~isempty(sidecar)
+      coordsystem_json = ft_read_json(sidecar);
+    end
   end
 end
 
@@ -418,12 +422,8 @@ switch headerformat
     if isempty(chanindx)
       hdr = read_besa_besa(filename);
     else
-      hdr = read_besa_besa(filename,[],1);
-      if chanindx > hdr.orig.channel_info.orig_n_channels
-        ft_error('FILEIO:InvalidChanIndx', 'selected channels are not present in the data');
-      else
-        hdr = read_besa_besa(filename,[],chanindx);
-      end
+      % this will keep the non-selected channels hidden from the user
+      hdr = read_besa_besa(filename, [], chanindx);
     end
     
   case 'besa_avr'
@@ -853,12 +853,8 @@ switch headerformat
     if isempty(chanindx)
       hdr = read_edf(filename);
     else
-      hdr = read_edf(filename,[],1);
-      if chanindx > hdr.orig.NS
-        ft_error('FILEIO:InvalidChanIndx', 'selected channels are not present in the data');
-      else
-        hdr = read_edf(filename,[],chanindx);
-      end
+      % this will keep the non-selected channels hidden from the user
+      hdr = read_edf(filename, [], chanindx);
     end
     
   case 'eep_avr'
@@ -915,7 +911,7 @@ switch headerformat
     hdr.nSamplesPre         = 0;
     hdr.nTrials             = 1;
     hdr.FirstTimeStamp      = asc.dat(1,1);
-    hdr.TimeStampPerSample  = mean(diff(asc.dat(1,:)));
+    hdr.TimeStampPerSample  = median(diff(asc.dat(1,:)));
     hdr.Fs                  = 1000/hdr.TimeStampPerSample;  % these timestamps are in miliseconds
     % give this warning only once
     ft_warning('creating fake channel names');
@@ -923,11 +919,12 @@ switch headerformat
       hdr.label{i} = sprintf('%d', i);
     end
     
-    % remember the original header details
-    hdr.orig.header = asc.header;
     % remember all header and data details upon request
     if cache
       hdr.orig = asc;
+    else
+      % remember the original header details
+      hdr.orig = removefields(asc, 'dat');
     end
     
   case  'spmeeg_mat'
@@ -1679,7 +1676,7 @@ switch headerformat
     
   case 'mayo_mef30'
     ft_hastoolbox('mayo_mef', 1); % make sure mayo_mef exists
-    hdr = read_mayo_mef30(filename, password, sortchannel);
+    hdr = read_mayo_mef30(filename, password);
     
   case 'mayo_mef21'
     ft_hastoolbox('mayo_mef', 1); % make sure mayo_mef exists
@@ -2701,7 +2698,7 @@ switch headerformat
   case {'yokogawa_ave', 'yokogawa_con', 'yokogawa_raw', 'yokogawa_mrk'}
     % header can be read with two toolboxes: Yokogawa MEG Reader and Yokogawa MEG160 (old inofficial toolbox)
     % newest toolbox takes precedence.
-    if ft_hastoolbox('yokogawa_meg_reader', 3); % stay silent if it cannot be added
+    if ft_hastoolbox('yokogawa_meg_reader', 3) % stay silent if it cannot be added
       hdr = read_yokogawa_header_new(filename);
       % add a gradiometer structure for forward and inverse modelling
       hdr.grad = yokogawa2grad_new(hdr);
@@ -2885,6 +2882,27 @@ if (strcmp(readbids, 'yes') || strcmp(readbids, 'ifmakessense')) && isbids
       hdr.opto         = [];
       hdr.opto.label   = optodes_tsv.name;
       hdr.opto.optopos = [optodes_tsv.x optodes_tsv.y optodes_tsv.z];
+    end
+    if exist('coordsystem_json', 'var') && ~isempty(coordsystem_json)
+      if isfield(hdr, 'grad')
+        if strcmp(coordsys, 'dewar')
+          % the sensors will be in dewar coordinates, regardless of the coordsystem_json
+        else
+          % the coordsystem_json overrules the coordinate system 
+          hdr.grad.coordsys = coordsystem_json.MEGCoordinateSystem;
+        end
+        % the units of the grad structure will be correct, they differ between MEG systems, and may depend on coilaccuracy
+        % convert them to the units specified in coordsystem_json
+        hdr.grad = ft_convert_units(hdr.grad, coordsystem_json.MEGCoordinateUnits);
+      end
+      if isfield(hdr, 'elec')
+        hdr.elec.coordsys = coordsystem_json.EEGCoordinateSystem;
+        hdr.elec.unit     = coordsystem_json.EEGCoordinateUnits;
+      end
+      if isfield(hdr, 'opto')
+        hdr.opto.coordsys = coordsystem_json.NIRSCoordinateSystem;
+        hdr.opto.unit     = coordsystem_json.NIRSCoordinateUnits;
+      end
     end
   catch ME
     if strcmp(readbids, 'yes')

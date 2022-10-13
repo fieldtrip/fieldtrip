@@ -1,18 +1,18 @@
 function ShowCmap(M, h)
 % ShowCmap(M, h)
 % a function to display and examine a colormap
-% M (nx3): color map 
+% M (nx3): color map
 % h: figure handle
-% 
+%
 % see also readXcol, ROIcmap, rgbdectohex, and ScaleToMap
 %
    figure(h); clf
    subplot (211);
    colormap(M);
-   image ([1:1:size(M,1)]);  
+   image ([1:1:size(M,1)]);
    str = sprintf('%d colors color map. Pick colors with mouse\nHit "enter" to quit', size(M,1));
    title(str, 'fontsize',14);
-   drawnow; 
+   drawnow;
 
    i = 0;
    subplot (269);cla

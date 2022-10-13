@@ -1,7 +1,7 @@
 function [su_hdr,ex_hdr,se_hdr,im_hdr,pix_hdr,im_offset] = GE_readHeader(IFileName)
 %
 % [su_hdr,ex_hdr,se_hdr,im_hdr,pix_hdr,im_offset] = GE_readHeader(IFileName)
-% Reads the header info from a GE lx2 or 5.X file 
+% Reads the header info from a GE lx2 or 5.X file
 %
 %
 % Souheil J. Inati

@@ -59,33 +59,6 @@ function [realign, snap] = ft_volumerealign(cfg, mri, target)
 %   cfg.viewresult     = string, 'yes' or 'no', whether or not to visualize aligned volume(s)
 %                        after realignment (default = 'no')
 %
-% When cfg.method = 'fiducial' and a coordinate system that is based on external
-% facial anatomical landmarks (common for EEG and MEG), the following is required to
-% specify the voxel indices of the fiducials:
-%   cfg.fiducial.nas    = [i j k], position of nasion
-%   cfg.fiducial.lpa    = [i j k], position of LPA
-%   cfg.fiducial.rpa    = [i j k], position of RPA
-%   cfg.fiducial.zpoint = [i j k], a point on the positive z-axis. This is
-%                         an optional 'fiducial', and can be used to determine
-%                         whether the input voxel coordinate axes are left-handed
-%                         (i.e. flipped in one of the dimensions). If this additional
-%                         point is specified, and the voxel coordinate axes are left
-%                         handed, the volume is flipped to yield right handed voxel
-%                         axes.
-%
-% When cfg.method = 'fiducial' and cfg.coordsys = 'acpc', the following
-% is required to specify the voxel indices of the fiducials:
-%   cfg.fiducial.ac      = [i j k], position of anterior commissure
-%   cfg.fiducial.pc      = [i j k], position of posterior commissure
-%   cfg.fiducial.xzpoint = [i j k], point on the midsagittal-plane with a
-%                          positive Z-coordinate, i.e. an interhemispheric
-%                          point above ac and pc
-% The coordinate system will be according to the RAS_Tal convention i.e.
-% the origin corresponds with the anterior commissure the Y-axis is along
-% the line from the posterior commissure to the anterior commissure the
-% Z-axis is towards the vertex, in between the hemispheres the X-axis is
-% orthogonal to the YZ-plane, positive to the right
-%
 % When cfg.method = 'interactive', a user interface allows for the specification of
 % the fiducials or landmarks using the mouse, cursor keys and keyboard.The fiducials
 % can be specified by pressing the corresponding key on the keyboard (n/l/r or
@@ -101,6 +74,41 @@ function [realign, snap] = ft_volumerealign(cfg, mri, target)
 %                      the filename for the snapshots, including the path. If no path
 %                      is given the files are saved to the pwd. The consecutive
 %                      figures will be numbered and saved as png-file.
+%
+% When cfg.method = 'fiducial' and a coordinate system that is based on external
+% facial anatomical landmarks, as is common for EEG and MEG, the following is
+% required to specify the voxel indices of the fiducials:
+%   cfg.fiducial.nas    = [i j k], position of nasion
+%   cfg.fiducial.lpa    = [i j k], position of LPA
+%   cfg.fiducial.rpa    = [i j k], position of RPA
+%   cfg.fiducial.zpoint = [i j k], a point on the positive z-axis. This is
+%                         an optional 'fiducial', and can be used to determine
+%                         whether the input voxel coordinate axes are left-handed
+%                         (i.e. flipped in one of the dimensions). If this additional
+%                         point is specified, and the voxel coordinate axes are left
+%                         handed, the volume is flipped to yield right handed voxel
+%                         axes.
+%
+% When cfg.method = 'fiducial' and cfg.coordsys = 'acpc', as is common for fMRI,
+% the following is required to specify the voxel indices of the fiducials:
+%   cfg.fiducial.ac      = [i j k], position of anterior commissure
+%   cfg.fiducial.pc      = [i j k], position of posterior commissure
+%   cfg.fiducial.xzpoint = [i j k], point on the midsagittal-plane with a
+%                          positive Z-coordinate, i.e. an interhemispheric
+%                          point above ac and pc
+% The coordinate system will be according to the RAS_Tal convention, i.e.
+% the origin corresponds with the anterior commissure the Y-axis is along
+% the line from the posterior commissure to the anterior commissure the
+% Z-axis is towards the vertex, in between the hemispheres the X-axis is
+% orthogonal to the YZ-plane, positive to the right
+%
+% With the 'interactive' and 'fiducial' methods it is possible to define an
+% additional point (with the key 'z'), which should be a point on the positive side
+% of the xy-plane, i.e. with a positive z-coordinate in world coordinates. This point
+% will subsequently be used to check whether the input coordinate system is left or
+% right-handed. For the 'interactive' method you can also specify an additional
+% control point (with the key 'r'), that should be a point with a positive coordinate
+% on the left-right axis, i.e.', a point on the right of the head.
 %
 % When cfg.method = 'headshape', the function extracts the scalp surface from the
 % anatomical MRI, and aligns this surface with the user-supplied headshape.
@@ -120,20 +128,6 @@ function [realign, snap] = ft_volumerealign(cfg, mri, target)
 %                                  based on the icp-algorithm. If both 'interactive'
 %                                  and 'icp' are executed, the icp step follows the
 %                                  interactive realignment step (default = 'yes')
-%
-% When cfg.method is 'fsl', a third input argument is required. The input volume is
-% coregistered to this target volume, using FSL-flirt. Additional options pertaining
-% to this method should be defined in the sub-structure  cfg.fsl and can include:
-%   cfg.fsl.path         = string, specifying the path to fsl
-%   cfg.fsl.costfun      = string, specifying the cost-function used for
-%                          coregistration
-%   cfg.fsl.interpmethod = string, specifying the interpolation method, can be
-%                          'trilinear', 'nearestneighbour', or 'sinc'
-%   cfg.fsl.dof          = scalar, specifying the number of parameters for the
-%                          affine transformation. 6 (rigid body), 7 (global
-%                          rescale), 9 (traditional) or 12.
-%   cfg.fsl.reslice      = string, specifying whether the output image will be
-%                          resliced conform the target image (default = 'yes')
 %
 % When cfg.method = 'spm', a third input argument is required. The input volume is
 % coregistered to this target volume, using SPM. You can specify the version of
@@ -155,13 +149,19 @@ function [realign, snap] = ft_volumerealign(cfg, mri, target)
 %   cfg.spm.tol          = tolerences for accuracy of each param, default: [0.02 0.02 0.02 0.001 0.001 0.001]
 %   cfg.spm.fwhm         = smoothing to apply to 256x256 joint histogram, default: [7 7]
 %
-% With the 'interactive' and 'fiducial' methods it is possible to define an
-% additional point (with the key 'z'), which should be a point on the positive side
-% of the xy-plane, i.e. with a positive z-coordinate in world coordinates. This point
-% will subsequently be used to check whether the input coordinate system is left or
-% right-handed. For the 'interactive' method you can also specify an additional
-% control point (with the key 'r'), that should be a point with a positive coordinate
-% on the left-right axis.
+% When cfg.method is 'fsl', a third input argument is required. The input volume is
+% coregistered to this target volume, using FSL-flirt. Additional options pertaining
+% to this method should be defined in the sub-structure  cfg.fsl and can include:
+%   cfg.fsl.path         = string, specifying the path to fsl
+%   cfg.fsl.costfun      = string, specifying the cost-function used for
+%                          coregistration
+%   cfg.fsl.interpmethod = string, specifying the interpolation method, can be
+%                          'trilinear', 'nearestneighbour', or 'sinc'
+%   cfg.fsl.dof          = scalar, specifying the number of parameters for the
+%                          affine transformation. 6 (rigid body), 7 (global
+%                          rescale), 9 (traditional) or 12.
+%   cfg.fsl.reslice      = string, specifying whether the output image will be
+%                          resliced conform the target image (default = 'yes')
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
@@ -181,7 +181,7 @@ function [realign, snap] = ft_volumerealign(cfg, mri, target)
 % specified, weights are put on points with z-coordinate<0 (assuming those to be eye
 % rims and nose ridges, i.e. important points.
 
-% Copyright (C) 2006-2014, Robert Oostenveld, Jan-Mathijs Schoffelen
+% Copyright (C) 2006-2022, Robert Oostenveld, Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -342,6 +342,7 @@ switch cfg.method
     % the actual coordinate transformation will be done further down
     
   case 'interactive'
+    % this requires the user to click the anatomical landmarks or fiducials
     
     switch cfg.viewmode
       
@@ -413,7 +414,8 @@ switch cfg.method
         yc = round(mri.dim(2)/2);
         zc = round(mri.dim(3)/2);
         
-        dat = double(mri.(cfg.parameter));
+        % enhance the contrast of the volumetric data, see also FT_DEFACEVOLUME
+        dat  = double(mri.(cfg.parameter));
         dmin = min(dat(:));
         dmax = max(dat(:));
         dat  = (dat-dmin)./(dmax-dmin);
@@ -432,12 +434,12 @@ switch cfg.method
           cfg.clim = [min(dat(:)) min([.5 max(dat(:))])]; %
         end
         
-        % determine apprioriate [left bottom width height] of intensity range sliders
+        % determine the apprioriate [left bottom width height] position of the intensity range sliders
         posbase = [];
         posbase(1) = h1size(1) + h2size(1)/2 + 0.06*2; % horizontal center of the second plot
-        posbase(2) = h3size(2)/2 + 0.06; % vertical center of the third plot
-        posbase(3) = 0.01; % width of the sliders is not so important, if it falls below a certain value, it's a vertical slider, otherwise a horizontal one
-        posbase(4) = h3size(2)/3 + 0.06; % a third of the height of the third plot
+        posbase(2) = h3size(2)/2 + 0.06;               % vertical center of the third plot
+        posbase(3) = 0.01;                             % width of the sliders is not so important, if it falls below a certain value, it's a vertical slider, otherwise a horizontal one
+        posbase(4) = h3size(2)/3 + 0.06;               % one-third of the height of the third plot
         %
         posh45text = [posbase(1)-posbase(3)*5 posbase(2)-.1 posbase(3)*10 posbase(4)+0.07];
         posh4text  = [posbase(1)-.04-posbase(3)*2 posbase(2)-.1 posbase(3)*5 posbase(4)+0.035];
@@ -446,22 +448,16 @@ switch cfg.method
         posh5slid  = [posbase(1)+.04 posbase(2)-.1 posbase(3) posbase(4)];
         
         % intensity range sliders
-        h45text = uicontrol('Style', 'text',...
-          'String', 'Intensity',...
+        uicontrol('Style', 'text',...
+          'String', 'Intensity', ...
           'Units', 'normalized', ...
-          'Position',posh45text,... % text is centered, so height adjust vertical position
+          'Position', posh45text, ...
           'HandleVisibility', 'on');
         
         h4text = uicontrol('Style', 'text',...
-          'String', 'Min',...
+          'String', 'Min', ...
           'Units', 'normalized', ...
-          'Position',posh4text,...
-          'HandleVisibility', 'on');
-        
-        h5text = uicontrol('Style', 'text',...
-          'String', 'Max',...
-          'Units', 'normalized', ...
-          'Position',posh5text,...
+          'Position', posh4text, ...  % text is centered, so height adjust vertical position
           'HandleVisibility', 'on');
         
         h4 = uicontrol('Style', 'slider', ...
@@ -471,6 +467,12 @@ switch cfg.method
           'Units', 'normalized', ...
           'Position', posh4slid, ...
           'Callback', @cb_minslider);
+        
+        h5text = uicontrol('Style', 'text',...
+          'String', 'Max',...
+          'Units', 'normalized', ...
+          'Position',posh5text, ...  % text is centered, so height adjust vertical position
+          'HandleVisibility', 'on');
         
         h5 = uicontrol('Style', 'slider', ...
           'Parent', h, ...

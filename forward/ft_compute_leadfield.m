@@ -429,7 +429,7 @@ elseif iseeg
       end
 
       if isfield(headmodel, 'o')
-        % shift the origin of the spheres, electrodes and dipole
+        % shift the center of the spheres to the origin, also do this for the electrodes and dipole
         sens.elecpos = sens.elecpos - repmat(headmodel.o, size(sens.elecpos, 1), 1);
         dippos = dippos - repmat(headmodel.o, Ndipoles, 1);
       end
@@ -648,6 +648,6 @@ if ~isempty(chanunit)
 end
 
 if ~isempty(dipoleunit)
-  scale = ft_scalingfactor('A*m', dipoleunit); % compue the scaling factor from A*m to the desired dipoleunit
+  scale = ft_scalingfactor('A*m', dipoleunit); % compute the scaling factor from A*m to the desired dipoleunit
   lf    = lf/scale;                         % the leadfield is expressed in chanunit per dipoleunit, i.e. chanunit/dipoleunit
 end

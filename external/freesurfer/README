@@ -50,7 +50,7 @@ vox2rasToQform.m
 The following files are from an unspecified older version, and locally adjusted
 load_dicom_fl.m
 load_dicom_series.m
-read_surf.m
+read_surf.m -> in contrast to the freesurfer version, it reads the ASCII formatted transformation information at the bottom of the binary file, and applies the translation (which anecdotally matches the required transformation in order to align the surface coordinate system with the coordinate system of the MRI from which the surface was derived).
 write_surf.m
 
 

@@ -193,8 +193,12 @@ end
 
 dataout = ft_selectdata(tmpcfg, dataout);
 
-% append the extra data
-data = ft_appenddata([], dataout, dataextra);
+if length(dataextra.label)>0
+  % append the extra data
+  data = ft_appenddata([], dataout, dataextra);
+else
+  data = dataout;
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

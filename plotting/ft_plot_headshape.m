@@ -28,7 +28,7 @@ function hs = ft_plot_headshape(headshape, varargin)
 % See also FT_PLOT_MESH, FT_PLOT_ORTHO
 
 % Copyright (C) 2009, Cristiano Micheli
-% Copyright (C) 2009-2021, Robert Oostenveld
+% Copyright (C) 2009-2022, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -47,8 +47,6 @@ function hs = ft_plot_headshape(headshape, varargin)
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
 % $Id$
-
-ws = warning('on', 'MATLAB:divideByZero');
 
 % rename pnt into pos
 headshape = fixpos(headshape);
@@ -135,6 +133,3 @@ end
 if ~holdflag
   hold off
 end
-
-warning(ws); % revert to original state
-

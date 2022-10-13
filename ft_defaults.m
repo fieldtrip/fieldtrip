@@ -22,9 +22,9 @@ function ft_defaults
 %   ft_default.trackdatainfo     = string, can be 'yes' or 'no' (default = 'no')
 %   ft_default.outputfilepresent = string, can be 'keep', 'overwrite', 'error' (default = 'overwrite')
 %   ft_default.debug             = string, can be 'display', 'displayonerror', 'displayonsuccess', 'save', 'saveonerror', saveonsuccess' or 'no' (default = 'no')
-%   ft_default.toolbox.signal    = string, can be 'compat' or 'matlab' (default = 'compat')
-%   ft_default.toolbox.stats     = string, can be 'compat' or 'matlab' (default = 'compat')
-%   ft_default.toolbox.images    = string, can be 'compat' or 'matlab' (default = 'compat')
+%   ft_default.toolbox.signal    = string, can be 'compat' or 'matlab' (default is automatic, see below)
+%   ft_default.toolbox.stats     = string, can be 'compat' or 'matlab' (default is automatic, see below)
+%   ft_default.toolbox.images    = string, can be 'compat' or 'matlab' (default is automatic, see below)
 %   ft_default.reproducescript   = string, directory to which the script and intermediate data are written (default = [])
 %
 % If you want to overrule these default settings, you can add something like this in your startup.m script
@@ -34,11 +34,15 @@ function ft_defaults
 %   ft_default.option2 = value2
 %
 % The toolbox option for signal, stats and images allows you to specify whether you
-% want to use a compatible drop-in to be used for these MathWorks toolboxes, or the
-% original version from MathWorks.  The default is 'compat', which has the advantage
-% that you do not need a license for these toolboxes.
+% want to use the original version from MathWorks or a compatible drop-in to be used.
+% When you use the Radboud University license server, i.e. at the Donders, the
+% default is 'compat'. This has the advantage that you do not need a license for
+% these toolboxes; we do not have that many licenses and parallel computations on our
+% Donders compute cluster would otherwise use all licenses. In all other cases, the
+% default is 'matlab' when the toolbox is available, and 'compat' when it is not
+% available.
 %
-% See also FT_HASTOOLBOX, FT_CHECKCONFIG, FT_TRACKUSAGE
+% See also FT_HASTOOLBOX, FT_CHECKCONFIG, FT_TRACKUSAGE, LICENSE
 
 % undocumented options
 %   ft_default.siunits        = 'yes' or 'no'
@@ -85,7 +89,7 @@ end
 fieldtripprefs = fullfile(prefdir, 'fieldtripprefs.mat');
 if exist(fieldtripprefs, 'file')
   prefs       = load(fieldtripprefs); % the file contains multiple fields
-  ft_default  = mergeconfig(ft_default, prefs);
+  ft_default  = mergestruct(ft_default, prefs);
 end
 
 % Set the defaults in a global variable, ft_checkconfig will copy these over into the local configuration.
@@ -114,11 +118,23 @@ if ~isfield(ft_default, 'trackmeminfo')
   end
 end
 
+if strcmp(license(), '38957')
+  % within the Donders and Radboud University the default is compat, since we do not have that many licenses
+  default_images = 'compat';
+  default_stats  = 'compat';
+  default_signal = 'compat';
+else
+  % in this case it will still check whether the Mathworks toolbox is available and if not, the compatible version will be added
+  default_images = 'matlab';
+  default_stats  = 'matlab';
+  default_signal = 'matlab';
+end
+
 % These options allow to prefer the MATLAB toolbox implementations ('matlab') over the drop-in replacements ('compat').
 if ~isfield(ft_default, 'toolbox'), ft_default.toolbox  = []; end
-if ~isfield(ft_default.toolbox, 'images'), ft_default.toolbox.images  = 'compat'; end % matlab or compat
-if ~isfield(ft_default.toolbox, 'stats') , ft_default.toolbox.stats   = 'compat'; end % matlab or compat
-if ~isfield(ft_default.toolbox, 'signal'), ft_default.toolbox.signal  = 'compat'; end % matlab or compat
+if ~isfield(ft_default.toolbox, 'images'), ft_default.toolbox.images  = default_images; end % matlab or compat
+if ~isfield(ft_default.toolbox, 'stats') , ft_default.toolbox.stats   = default_stats;  end % matlab or compat
+if ~isfield(ft_default.toolbox, 'signal'), ft_default.toolbox.signal  = default_signal; end % matlab or compat
 
 % Some people mess up their path settings and then have stuff on the path that should not be there.
 % The following will issue a warning
@@ -189,13 +205,13 @@ if isempty(regexp(path, [ftPath pathsep '|' ftPath '$'], 'once'))
 end
 
 if ~isdeployed
-  
+
   if isempty(which('ft_hastoolbox')) || isempty(which('ft_warning'))
     % the fieldtrip/utilities directory contains the ft_hastoolbox and ft_warning
     % functions, which are required for the remainder of this script
     addpath(fullfile(fileparts(which('ft_defaults')), 'utilities'));
   end
-  
+
   % Some people mess up their path settings and then have different versions of certain toolboxes on the path.
   % The following will issue a warning
   checkMultipleToolbox('FieldTrip',           'ft_defaults.m');
@@ -226,33 +242,39 @@ if ~isdeployed
   checkMultipleToolbox('yokogawa_meg_reader', 'getYkgwHdrEvent.p');
   checkMultipleToolbox('biosig',              'sopen.m');
   checkMultipleToolbox('icasso',              'icassoEst.m');
-  
+
   try
     % external/signal contains alternative implementations of some signal processing functions
     if ~ft_platform_supports('signal') || ~strcmp(ft_default.toolbox.signal, 'matlab') || ~ft_hastoolbox('signal')
       addpath(fullfile(fileparts(which('ft_defaults')), 'external', 'signal'));
+    else
+      rmpath(fullfile(fileparts(which('ft_defaults')), 'external', 'signal'));
     end
   end
-  
+
   try
     % external/stats contains alternative implementations of some statistics functions
     if ~ft_platform_supports('stats') || ~strcmp(ft_default.toolbox.stats, 'matlab') || ~ft_hastoolbox('stats')
       addpath(fullfile(fileparts(which('ft_defaults')), 'external', 'stats'));
+    else
+      rmpath(fullfile(fileparts(which('ft_defaults')), 'external', 'stats'));
     end
   end
-  
+
   try
     % external/images contains alternative implementations of some image processing functions
     if ~ft_platform_supports('images') || ~strcmp(ft_default.toolbox.images, 'matlab') || ~ft_hastoolbox('images')
       addpath(fullfile(fileparts(which('ft_defaults')), 'external', 'images'));
+    else
+      rmpath(fullfile(fileparts(which('ft_defaults')), 'external', 'images'));
     end
   end
-  
+
   try
     % this directory contains various functions that were obtained from elsewere, e.g. MATLAB file exchange
     ft_hastoolbox('fileexchange', 3, 1); % not required
   end
-  
+
   try
     % these directories deal with compatibility with older MATLAB versions
     if ft_platform_supports('matlabversion', -inf, '2008a'), ft_hastoolbox('compat/matlablt2008b', 3, 1); end
@@ -292,7 +314,7 @@ if ~isdeployed
     % this deals with compatibility with all OCTAVE versions
     if ft_platform_supports('octaveversion', -inf, +inf),    ft_hastoolbox('compat/octave', 3, 1); end
   end
-  
+
   try
     % these contains template layouts, neighbour structures, MRIs and cortical meshes
     ft_hastoolbox('template/layout',      1, 1);
@@ -302,67 +324,67 @@ if ~isdeployed
     ft_hastoolbox('template/neighbours',  1, 1);
     ft_hastoolbox('template/sourcemodel', 1, 1);
   end
-  
+
   try
     % this is used in ft_statistics
     ft_hastoolbox('statfun', 1, 1);
   end
-  
+
   try
     % this is used in ft_definetrial
     ft_hastoolbox('trialfun', 1, 1);
   end
-  
+
   try
     % this contains the low-level reading functions
     ft_hastoolbox('fileio', 1, 1);
   end
-  
+
   try
     % this is for filtering etc. on time-series data
     ft_hastoolbox('preproc', 1, 1);
   end
-  
+
   try
     % this contains forward models for the EEG and MEG volume conductor
     ft_hastoolbox('forward', 1, 1);
   end
-  
+
   try
     % this contains inverse source estimation methods
     ft_hastoolbox('inverse', 1, 1);
   end
-  
+
   try
     % this contains intermediate-level plotting functions, e.g. multiplots and 3-d objects
     ft_hastoolbox('plotting', 1, 1);
   end
-  
+
   try
     % this contains intermediate-level functions for spectral analysis
     ft_hastoolbox('specest', 1, 1);
   end
-  
+
   try
     % this contains the functions to compute connectivity metrics
     ft_hastoolbox('connectivity', 1, 1);
   end
-  
+
   try
     % this contains test scripts
     ft_hastoolbox('test', 1, 1);
   end
-  
+
   try
     % this contains the functions for spike and spike-field analysis
     ft_hastoolbox('contrib/spike', 1, 1);
   end
-  
+
   try
     % this contains user contributed functions
     ft_hastoolbox('contrib/misc', 1, 1);
   end
-  
+
   try
     % this contains specific code and examples for realtime processing
     ft_hastoolbox('realtime/example', 3, 1);    % not required
@@ -370,7 +392,7 @@ if ~isdeployed
     ft_hastoolbox('realtime/online_meg', 3, 1); % not required
     ft_hastoolbox('realtime/online_eeg', 3, 1); % not required
   end
-  
+
 end
 
 % the toolboxes added by this function should not be removed by FT_POSTAMBLE_HASTOOLBOX

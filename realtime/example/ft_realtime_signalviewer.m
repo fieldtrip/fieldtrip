@@ -78,7 +78,7 @@ cfg.olfreq       = ft_getopt(cfg, 'olfreq',       [2 45]);
 cfg.offset       = ft_getopt(cfg, 'offset',       []);      % in units of the data, e.g. uV for the OpenBCI board
 cfg.dftfilter    = ft_getopt(cfg, 'dftfilter',    'no');
 cfg.dftfreq      = ft_getopt(cfg, 'dftfreq',      [50 100 150]);
-
+cfg.ylim         = ft_getopt(cfg, 'ylim',         []);
 
 if ~isfield(cfg, 'dataset') && ~isfield(cfg, 'header') && ~isfield(cfg, 'datafile')
   cfg.dataset = 'buffer://localhost:1972';
@@ -214,6 +214,9 @@ while true
   % plot the data
   plot(time, dat);
   xlim([time(1) time(end)]);
+  if ~isempty(cfg.ylim)
+    ylim(cfg.ylim);
+  end
   
   if strcmp(cfg.readevent, 'yes')
     for i=1:length(evt)

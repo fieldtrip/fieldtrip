@@ -2,24 +2,24 @@ function [err,FigHndls] = DispIVSurf (NodeList,FaceSetList,UsedNodeSet,ITvect,Fi
 %
 % [err,FigHndls] = DispIVSurf (NodeList,FaceSetList,UsedNodeSet,ITvect,FigHandle,[DispOpt])
 %
-% NodeList is a Nx3 matrix containing the node index and the 
+% NodeList is a Nx3 matrix containing the node index and the
 %  XYZ coordinates of each of the N nodes that form the surface model.
 %  You can also send in a row major vector of Nx3 elements.
 %  IT USED TO BE (Pre Oct 21 04):
-%     NodeList is a Nx4 matrix containing the node index and the 
+%     NodeList is a Nx4 matrix containing the node index and the
 %        XYZ coordinates of each of the N nodes that form the surface model.
 %     but that is no longer useful although it is still supported
-%          
-% FaceSetList is an Mx3 matrix, where M is the total number of 
+%
+% FaceSetList is an Mx3 matrix, where M is the total number of
 %  facesets forming the surface. Each row holds a triplet of
 %  node indices that form the triangular faceset. You can also send
 %  in a row major vector
-% 
+%
 % ITvect is the intensity (.it file) vector that assigns to each node
 %  in NodeList an intensity. If you have no such info, just pass one value
-%  which will be assigned to all nodes. 
+%  which will be assigned to all nodes.
 %  For unknown reasons, we end up with some meshes having an extra node,
-%  Normally, the function should refuse to display this, but for now 
+%  Normally, the function should refuse to display this, but for now
 %  it will add a 0 to the end of ITvect (or remove the last point
 %   if ITvect is too big) to make ITvect match in size with NodeList.
 %   That's what the Inventor tools that Seth wrote did anyway. The function
@@ -27,7 +27,7 @@ function [err,FigHndls] = DispIVSurf (NodeList,FaceSetList,UsedNodeSet,ITvect,Fi
 %   of this mess.
 %
 % UsedNodeSet is a vector that holds the indices of the nodes
-%  that take part of the FaceSetList. It's only required with the 
+%  that take part of the FaceSetList. It's only required with the
 %  stupid 3D plot display. You can send in [] if you don't want to use plot3
 %
 % FigHandle is the number of the figure to display in, if you set it to zero
@@ -38,32 +38,32 @@ function [err,FigHndls] = DispIVSurf (NodeList,FaceSetList,UsedNodeSet,ITvect,Fi
 % DispOpt has the following fields
 %  .GraphType  GraphType is a string that specifies the display type required
 %             choose from the following (match the case for the strings):
-%             Mesh : Displays the mesh with colors specified by ITvect 
+%             Mesh : Displays the mesh with colors specified by ITvect
 %             Surf : Displays the patched mesh with colors specified by ITvect
 %             The default is Surf.
 %  .Shade  choose from 'flat' or 'interp' when not using .OpenGL
-%          .OpenGL forces the use of 'interp'. This field is meaningless 
+%          .OpenGL forces the use of 'interp'. This field is meaningless
 %          for Mesh type display. default is 'interp'
-%          
+%
 %  .AxesSize  (specify [left bottom width height])
 %                 (default is [])
-%  .TrueColor flag (0/1) set to 1 if you are using true color. 
+%  .TrueColor flag (0/1) set to 1 if you are using true color.
 %    (ie ITvect is an Nx3 matrix with each row specifying a true color (RGB, 0-1).
-%    (actually, you should fix this to have the option of turning ITvect 
+%    (actually, you should fix this to have the option of turning ITvect
 %     into a true color vector even if it is sent as an Nx1. It's easy, using
 %     ScaleToMap function)
-%    default is 0. 
+%    default is 0.
 %  .ColBarSize (specify [left bottom width height])
 %                 (default is [])
-%  .ColMap : An Nx3 matrix specifying N different colors. (just like what 
+%  .ColMap : An Nx3 matrix specifying N different colors. (just like what
 %            you get with cmap = colormap; set to [] for using the current colour map
 %                 (default is [])
 %  .ColMapRange : Index determining the range of colors to use in ColMap like [1 64]
 %            to go from the first colour to 64. Set to [] if you want to use the whole colourmap,
 %                 (default is [])
-%  .MaskValue : 1x1 If you send an ITvect vector (not just one value), you can specify 
+%  .MaskValue : 1x1 If you send an ITvect vector (not just one value), you can specify
 %      a value to be a mask.(default is [])
-%  .MaskColor : 1x3 vector. That is a color assigned to values in ITvect that should be 
+%  .MaskColor : 1x3 vector. That is a color assigned to values in ITvect that should be
 %              masked (.MaskValue) . This color is added to the bottom of the color map.
 %              This value has no effect unless .MaskValue is used. (default is [])
 %  .DataRange : 1x2 vector. If ITvect contains data to be pseudocolored,
@@ -71,16 +71,16 @@ function [err,FigHndls] = DispIVSurf (NodeList,FaceSetList,UsedNodeSet,ITvect,Fi
 %               to be mapped to the last and first colours in the colormap
 %               If you do so, then for different ITvect with different values,
 %               The colors will look different. So, to keep the color significance
-%               constant across data sets you can specify [min max] in 
-%               .DataRange so that the first color is always min and the 
-%               last color is always max. 
+%               constant across data sets you can specify [min max] in
+%               .DataRange so that the first color is always min and the
+%               last color is always max.
 %               NOTE: The limits in DataRange are overrun by values in the
-%               Data set that are lower than min or higher than max. 
+%               Data set that are lower than min or higher than max.
 %               (default is [])
 %  .AxesUnits (choose from : pixels normalized inches centimeters points)(default is '')
-%  .Xlim : [min max] limits for x axis 
-%  .Ylim : [min max] 
-%  .Zlim : [min max] 
+%  .Xlim : [min max] limits for x axis
+%  .Ylim : [min max]
+%  .Zlim : [min max]
 %     if all the above fields are empty or non specified, then matlab's automatic settings are used
 %  .Hold      (choose from: on off ' ' <- a space character for toggling )(default is '')
 %          This is applied after the figure is redrawn
@@ -90,7 +90,7 @@ function [err,FigHndls] = DispIVSurf (NodeList,FaceSetList,UsedNodeSet,ITvect,Fi
 %  .View  if specified, this option supersedes .Dim
 %      pass along any parameters that are normally passed to matlab's view function
 %
-%  .DispMode (choose from 'New' or 'Add'). 
+%  .DispMode (choose from 'New' or 'Add').
 %          If you choose New, then old figure is cleared and colorbars are updated.
 %          If you choose Add, then new figure is placed on top of old one. Colorbars are not modified
 %          default is 'New'
@@ -107,7 +107,7 @@ function [err,FigHndls] = DispIVSurf (NodeList,FaceSetList,UsedNodeSet,ITvect,Fi
 %  err = 0 no problem
 %  err = 1 Error somewhere
 %
-% FigHndls is a structure containing handles to the various relevant obejects in the figure window 
+% FigHndls is a structure containing handles to the various relevant obejects in the figure window
 %  The fields of FigHndls are :
 %     Fig (The whole window)
 %     Patch (The patches handle)
@@ -122,7 +122,7 @@ FuncName = 'DispIVSurf';
 err = 1;
 FigHndls = [];
 
-%setup defualts 
+%setup defualts
 	if (nargin < 6),
 		DispOpt = [];
 	end
@@ -193,7 +193,7 @@ FigHndls = [];
 		DispOpt.Grid = [1 1 1];
 	end
 		
-	if (~isfield(DispOpt,'View')), 
+	if (~isfield(DispOpt,'View')),
 		DispOpt.View = [];
 	end
 
@@ -216,7 +216,7 @@ FigHndls = [];
 	
 	if (~eq_str(DispOpt.DispMode,'New') & ~eq_str(DispOpt.DispMode,'Add')),
 		err = ErrEval(FuncName,'Err_DispMode field can only be New or Add.');	return;	
-	end 
+	end
 
 	if (~isempty(DispOpt.Zoom) & eq_str(DispOpt,'3D')),
 		err = ErrEval('DispIVSurf','Err_You can not use zoom option with 3D displays'); return
@@ -231,10 +231,10 @@ FigHndls = [];
 	end
 	
    if (size(NodeList,2) == 1),
-      NodeList = reshape (NodeList, 3, length(NodeList)/3); NodeList = NodeList'; 
+      NodeList = reshape (NodeList, 3, length(NodeList)/3); NodeList = NodeList';
    end
    if (size(FaceSetList,2) == 1),
-      FaceSetList = reshape (FaceSetList, 3, length(FaceSetList)/3); FaceSetList = FaceSetList'; 
+      FaceSetList = reshape (FaceSetList, 3, length(FaceSetList)/3); FaceSetList = FaceSetList';
    end
 	if (size(NodeList,2) ~= 4 & size(NodeList,2) ~= 3),
 		err = ErrEval(FuncName,'Err_Bad Size for NodeList.');	return
@@ -307,7 +307,7 @@ FigHndls = [];
 				%scale data to fit the map
 				[err,ITvect,ColMap] = ScaleToMap (ITvect,ColMap,Opt);
 
-				%Now you must add the new color map (has a mask color added) to what's left over from the full map 
+				%Now you must add the new color map (has a mask color added) to what's left over from the full map
 				if (DispOpt.ColMapRange(1) > 1),
 					NewFullMap = DispOpt.ColMap(1:DispOpt.ColMapRange(1)-1,:);
 					NewFullMap = [NewFullMap;ColMap];
@@ -329,7 +329,7 @@ FigHndls = [];
 			hold off;
 			cla;
 			if (DispOpt.verbose),	fprintf (1,'%s verbose: Set hold to off\n', FuncName);	end
-		else 
+		else
 			hold on;	
 			if (DispOpt.verbose),	fprintf (1,'%s verbose: Set hold to on\n', FuncName);	end
 	end
@@ -462,7 +462,7 @@ if (isfield(DispOpt,'Zoom') & ~isempty(DispOpt.Zoom)),
 	eval(['zoom ' DispOpt.Zoom ';']);	end
 			
 %set the lighting
-			set(FigHndls.Patch,'FaceLighting', 'gouraud', 'AmbientStrength', 1); 
+			set(FigHndls.Patch,'FaceLighting', 'gouraud', 'AmbientStrength', 1);
 			if (0),
 			xl = get(FigHndls.Axes, 'Xlim');
 			yl = get(FigHndls.Axes, 'Ylim');

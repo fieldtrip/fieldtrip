@@ -28,35 +28,21 @@ function [timelock] = ft_timelockanalysis(cfg, data)
 %
 % See also FT_TIMELOCKGRANDAVERAGE, FT_TIMELOCKSTATISTICS
 
-% Guidelines for use in an analysis pipeline:
-% after FT_TIMELOCKANALYSIS you will have timelocked data - i.e., event-related
-% fields (ERFs) or potentials (ERPs) - represented as the average and/or
-% covariance over trials.
-% This usually serves as input for one of the following functions:
-%    * FT_TIMELOCKBASELINE      to perform baseline normalization
-%    * FT_TIMELOCKGRANDAVERAGE  to compute the ERP/ERF average and variance over multiple subjects
-%    * FT_TIMELOCKSTATISTICS    to perform parametric or non-parametric statistical tests
-% Furthermore, the data can be visualised using the various plotting
-% functions, including:
-%    * FT_SINGLEPLOTER          to plot the ERP/ERF of a single channel or the average over multiple channels
-%    * FT_TOPOPLOTER            to plot the topographic distribution over the head
-%    * FT_MULTIPLOTER           to plot ERPs/ERFs in a topographical layout
-
 % FIXME if input is one raw trial, the covariance is not computed correctly
 %
 % Undocumented local options:
-% cfg.feedback
-% cfg.preproc
+%   cfg.feedback
+%   cfg.preproc
 %
 % Deprecated options:
-% cfg.blcovariance
-% cfg.blcovariancewindow
-% cfg.normalizecov
-% cfg.vartrllength
+%   cfg.blcovariance
+%   cfg.blcovariancewindow
+%   cfg.normalizecov
+%   cfg.vartrllength
 
 % Copyright (C) 2018, Jan-Mathijs Schoffelen
 % Copyright (C) 2003-2006, Markus Bauer
-% Copyright (C) 2003-2021, Robert Oostenveld
+% Copyright (C) 2003-2022, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -142,7 +128,7 @@ if computecov
   % restore the provenance information
   [dum, datacov] = rollback_provenance(cfg, datacov); % not sure what to do here
   datacov      = ft_checkdata(datacov, 'datatype', 'timelock');
-  
+
   if isfield(datacov, 'trial')
     [nrpt, nchan, ntime] = size(datacov.trial);
   else
@@ -153,7 +139,7 @@ if computecov
     datacov       = rmfield(datacov, 'avg');
     datacov.dimord = 'rpt_chan_time';
   end
-  
+
   % pre-allocate memory space for the covariance matrices
   if keeptrials
     covsig = nan(nrpt, nchan, nchan);
@@ -161,7 +147,7 @@ if computecov
     covsig = zeros(nchan, nchan);
     allsmp = 0;
   end
-  
+
   % compute the covariance per trial
   for k = 1:nrpt
     dat    = reshape(datacov.trial(k,:,:), [nchan ntime]);
@@ -175,7 +161,7 @@ if computecov
       numsmp = max(numsmp-1,1);
     end
     dat(~datsmp)  = 0;
-    
+
     if keeptrials
       covsig(k,:,:) = dat*dat'./numsmp;
     else
@@ -184,7 +170,7 @@ if computecov
       % normalisation will be done after the for-loop
     end
   end
-  
+
   if ~keeptrials
     covsig = covsig./allsmp;
   end
@@ -199,63 +185,106 @@ data   = ft_selectdata(tmpcfg, data);
 % do not use the default option returned by FT_SELECTDATA, but the original one for this function
 cfg.nanmean = orgcfg.nanmean;
 
-% convert to a timelock structure with trials kept and NaNs for missing
-% data points, when there's only a single trial in the input data
-% structure, this leads to an 'avg' field, rather than a 'trial' field,
-% and also the trialinfo is removed, so keep separate before conversion
-if isfield(data, 'trialinfo'), trialinfo = data.trialinfo; end
-data = ft_checkdata(data, 'datatype', {'timelock+comp' 'timelock'});
+if keeptrials
+  % convert to a timelock structure with trials kept and NaNs for missing data points, when there's only a single trial in the input data
+  % structure, this leads to an 'avg' field, rather than a 'trial' field, and also the trialinfo is removed, so keep separate before conversion
+  if isfield(data, 'trialinfo'), trialinfo = data.trialinfo; end
+  data = ft_checkdata(data, 'datatype', {'timelock+comp' 'timelock'});
+  
+  if keeptrials && isfield(data, 'trial')
+    % nothing required here
+  elseif keeptrials && ~isfield(data, 'trial')
+    % don't know whether this is a use case
+    data.trial = shiftdim(data.avg, -1);
+    if exist('trialinfo', 'var')
+      data.trialinfo = trialinfo;
+    end
+  end
+  
+elseif ~keeptrials
+  % whether to normalize the variance with N or N-1, see VAR
+  normalizewithN = strcmpi(cfg.normalizevar, 'N');
+  
+  % compute a running sum average/var etc. to save memory
+  
+  % the code below tries to construct a general time-axis where samples of all trials can fall on
+  % find the earliest beginning and latest ending
+  begtime = min(cellfun(@min, data.time));
+  endtime = max(cellfun(@max, data.time));
+  % find 'common' sampling rate
+  fsample = 1./nanmean(cellfun(@mean, cellfun(@diff,data.time, 'uniformoutput', false)));
+  % estimate number of samples
+  nsmp = round((endtime-begtime)*fsample) + 1; % numerical round-off issues should be dealt with by this round, as they will/should never cause an extra sample to appear
+  % construct general time-axis
+  time = linspace(begtime,endtime,nsmp);
+  
+  nchan  = numel(data.label);
+  ntrial = numel(data.trial);
 
-% whether to normalize the variance with N or N-1, see VAR
-normalizewithN = strcmpi(cfg.normalizevar, 'N');
+  % placeholder for running sums
+  tmpsum = zeros(nchan, length(time));
+  tmpssq = tmpsum;
+  tmpdof = tmpsum;
+  
+  begsmp = nan(ntrial, 1);
+  endsmp = nan(ntrial, 1);
 
-% whether nans should persist in the output or be treated as missing values
-if istrue(cfg.nanmean)
-  mymean = @nanmean;
-  myvar  = @nanvar;
-  mysum  = @nansum;
-else
-  mymean = @mean;
-  myvar  = @var;
-  mysum  = @sum;
-end
+  % do a 2-pass running sum, sacrificing speed for numeric stability
+  for i=1:ntrial
+    begsmp(i) = nearest(time, data.time{i}(1));
+    endsmp(i) = nearest(time, data.time{i}(end));
+    
+    tmp = data.trial{i};
+    
+    tmpdof(:,begsmp(i):endsmp(i)) = isfinite(tmp) + tmpdof(:,begsmp(i):endsmp(i));
+    if istrue(cfg.nanmean)
+      tmp(~isfinite(tmp)) = 0;
+    end  
+    tmpsum(:,begsmp(i):endsmp(i)) = tmp    + tmpsum(:,begsmp(i):endsmp(i));
+  end
+  avgmat = tmpsum ./ tmpdof;
 
-if ~keeptrials && isfield(data, 'trial')
-  [nrpt, nchan, ntime] = size(data.trial);
-  avgmat = reshape(mymean(data.trial,1),               [nchan ntime]);
-  varmat = reshape(myvar(data.trial,normalizewithN,1), [nchan ntime]);
-  dofmat = reshape(sum(isfinite(data.trial),1),        [nchan ntime]);
+  tmpsum = zeros(nchan, length(time));
+  for i=1:ntrial
+    tmp = data.trial{i};
+    
+    tmp = tmp - avgmat(:,begsmp(i):endsmp(i));
+
+    if istrue(cfg.nanmean)
+      tmp(~isfinite(tmp)) = 0;
+    end  
+    tmpsum(:,begsmp(i):endsmp(i)) = tmp    + tmpsum(:,begsmp(i):endsmp(i));
+    tmpssq(:,begsmp(i):endsmp(i)) = tmp.^2 + tmpssq(:,begsmp(i):endsmp(i));
+    
+  end
+  
+  dofmat = tmpdof;
+  %avgmat = tmpsum ./ tmpdof;
+  varmat = tmpssq ./ tmpdof - (tmpsum ./ tmpdof).^2;
   if normalizewithN
+    
     % just to be sure
     varmat(dofmat<=0) = NaN;
   else
+    varmat = varmat .* (dofmat ./ (dofmat-1));
+    
     % see https://stats.stackexchange.com/questions/4068/how-should-one-define-the-sample-variance-for-scalar-input
     % the fieldtrip/external/stats/nanvar implementation behaves differently here than Mathworks VAR and NANVAR implementations
     varmat(dofmat<=1) = NaN;
   end
-elseif ~keeptrials && ~isfield(data, 'trial')
-  avgmat = data.avg;
-  varmat = nan(size(data.avg));
-  dofmat = double(isfinite(data.avg));
-elseif keeptrials && isfield(data, 'trial')
-  % nothing required here
-elseif keeptrials && ~isfield(data, 'trial')
-  % don't know whether this is a use case
-  data.trial = shiftdim(data.avg, -1);
-  if exist('trialinfo', 'var')
-    data.trialinfo = trialinfo;
-  end
+  
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % collect the results
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-timelock = keepfields(data, {'time' 'grad', 'elec', 'opto', 'topo', 'topodimord', 'topolabel', 'unmixing', 'unmixingdimord', 'label'});
+timelock = keepfields(data, {'time', 'grad', 'elec', 'opto', 'topo', 'topodimord', 'topolabel', 'unmixing', 'unmixingdimord', 'label'});
 if ~keeptrials
   timelock.avg        = avgmat;
   timelock.var        = varmat;
   timelock.dof        = dofmat;
+  timelock.time       = time;
   timelock.dimord     = 'chan_time';
 else
   timelock        = copyfields(data, timelock, {'trial' 'sampleinfo', 'trialinfo'});

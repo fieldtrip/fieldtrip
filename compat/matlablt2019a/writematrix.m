@@ -12,11 +12,18 @@ function writematrix(datamatrix, filename, varargin)
 
 % Copyright (C) 2022 Jan-Mathijs Schoffelen
 
-sel = find(strcmpi(varargin, 'filetype'));
-if isempty(sel)
-  filetype = 'text';
-else
-  filetype = varargin{sel+1};
+sel = find(strcmpi(varargin, 'FileType'));
+if ~isempty(sel)
+  % remove the new-style argument
   varargin([sel sel+1]) = [];
 end
+
+sel = find(strcmpi(varargin, 'WriteMode'));
+if ~isempty(sel)
+  % remove the new-style argument
+  varargin([sel sel+1]) = [];
+  % prepend the old-style argument
+  varargin = ['-append', varargin];
+end
+
 dlmwrite(filename, datamatrix, varargin{:})

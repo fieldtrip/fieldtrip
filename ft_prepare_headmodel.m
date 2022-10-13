@@ -27,13 +27,13 @@ function [headmodel, cfg] = ft_prepare_headmodel(cfg, data)
 % a segmented anatomical MRI that was obtained from FT_VOLUMESEGMENT.
 %
 % The cfg argument is a structure that can contain:
-%   cfg.method         string that specifies the forward solution, see below
-%   cfg.conductivity   a number or a vector containing the conductivities of the compartments
-%   cfg.tissue         a string or integer, to be used in combination with a 'seg' for the
-%                      second intput. If 'brain', 'skull', and 'scalp' are fields
-%                      present in 'seg', then cfg.tissue need not be specified, as
-%                      these are defaults, depending on cfg.method. Otherwise,
-%                      cfg.tissue should refer to which field(s) of seg should be used.
+%   cfg.method         = string that specifies the forward solution, see below
+%   cfg.conductivity   = a number or a vector containing the conductivities of the compartments
+%   cfg.tissue         = a string or integer, to be used in combination with a 'seg' for the
+%                          second intput. If 'brain', 'skull', and 'scalp' are fields
+%                          present in 'seg', then cfg.tissue need not be specified, as
+%                          these are defaults, depending on cfg.method. Otherwise,
+%                          cfg.tissue should refer to which field(s) of seg should be used.
 %
 % For EEG the following methods are available:
 %   singlesphere       analytical single sphere model

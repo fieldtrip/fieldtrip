@@ -6,7 +6,7 @@ function test_ft_combineplanar
 
 % template loading should be modified once template MEG data are available
 % (cf.issue #1834)
-subjectfilename = dccnpath('/home/common/matlab/fieldtrip/data/Subject01.ds');
+subjectfilename = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds');
 
 cfg            = [];
 cfg.dataset    = subjectfilename;

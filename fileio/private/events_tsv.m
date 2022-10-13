@@ -49,7 +49,7 @@ if needhdr
     ft_info('reading header information from ''%s''', jsonfile);
   end
   
-  json = read_json(jsonfile);
+  json = ft_read_json(jsonfile);
   
   % The FieldTrip header has
   %   Fs, nSamples, nSamplesPre, nTrials, nChans, label, chantype, chanunit
@@ -251,16 +251,6 @@ end % if needevt
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function bool = iscolumn(tsv, name)
 bool = ismember(name, tsv.Properties.VariableNames);
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function json = read_json(filename)
-ft_hastoolbox('jsonlab', 1);
-json = loadjson(filename);
-json = ft_struct2char(json); % convert strings into char-arrays
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION

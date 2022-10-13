@@ -1,6 +1,6 @@
 function [varargout] = ft_plot_patch(hdat, vdat, varargin)
 
-% FT_PLOT_PATCH plot a colored shape, similar to the MATLAB patch() function. It is 
+% FT_PLOT_PATCH plot a colored shape, similar to the MATLAB patch() function. It is
 % similar in usage as ft_plot_vector, and they can be combined, for example,
 % to plot an area equivalent to a SEM or STD-DEV around a line.
 %
@@ -12,11 +12,11 @@ function [varargout] = ft_plot_patch(hdat, vdat, varargin)
 %   'axis'            = draw the local axis,  can be 'yes', 'no', 'xy', 'x' or 'y'
 %   'box'             = draw a box around the local axes, can be 'yes' or 'no'
 %   'tag'             = string, the name assigned to the object. All tags with the same name can be deleted in a figure, without deleting other parts of the figure.
-%   'facecolor'       = see MATLAB standard patch properties 
+%   'facecolor'       = see MATLAB standard patch properties
 %   'facealpha'       = see MATLAB standard patch properties (note, approx. transparency can be achieved using 'facecolor')
 %   'edgecolor'       = see MATLAB standard patch properties (default is 'none') (equivalent to 'linecolor' in PLOT)
-%   'linestyle'       = see MATLAB standard patch properties 
-%   'linewidth'       = see MATLAB standard patch properties 
+%   'linestyle'       = see MATLAB standard patch properties
+%   'linewidth'       = see MATLAB standard patch properties
 %
 % The color of the patchand the edges (i.e. border lines) can be specified in a variety of ways
 %   - as a string with one character per line that you want to plot. Supported colors are the same as in PATCH, i.e. 'bgrcmykw'.
@@ -40,6 +40,7 @@ function [varargout] = ft_plot_patch(hdat, vdat, varargin)
 % See also FT_PLOT_VECTOR, PATCH, PLOT
 
 % Copyrights (C) 2015, Roemer van der Meij
+% Copyrights (C) 2015-2022, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -58,8 +59,6 @@ function [varargout] = ft_plot_patch(hdat, vdat, varargin)
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
 % $Id$
-
-ws = warning('on', 'MATLAB:divideByZero');
 
 % get the optional input arguments
 hpos            = ft_getopt(varargin, 'hpos');
@@ -259,5 +258,3 @@ end
 if ~holdflag
   hold off
 end
-
-warning(ws); % revert to original state

@@ -1,4 +1,4 @@
-function r = range(x, dim);
+function r = range(x, dim)
 
 % RANGE computes the range (i.e. difference between min and max) for a vector
 % or an N-dimensional array. 

@@ -4,7 +4,7 @@ function test_tutorial_MNE
 % WALLTIME 00:30:00
 % DEPENDENCY ft_volumereslice ft_volumerealign ft_volumesegment
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data'));
+cd(dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf'));
 mri = ft_read_mri('Subject01.mri');
 
 cfg        = [];

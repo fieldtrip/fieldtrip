@@ -55,4 +55,4 @@ for k=1:n %number 3 did not work as it's an ROI dataset
     afni_niml_write(newfn,p);
     
 end
-    
+

@@ -46,7 +46,7 @@ if ~isempty(coordsys) && ~strcmp(coordsys, 'unknown')
   
   % the coordsys consists of three letters for the direction of the positive axes
   % or of a string that relates to external software, an atlas or a template
-  if length(coordsys)==3 && length(intersect(coordsys, 'rlasif'))==3
+  if length(coordsys)==3 && length(intersect(coordsys, 'rlapis'))==3
     axis = 'XYZ';
     label = cell(1,3);
     for i=1:3

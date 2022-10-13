@@ -4,11 +4,11 @@ function R = RVT_from_PeakFinder(R, Opt)
    end
 
    if (Opt.Demo),
-      Opt.Quiet = 0; 
-   else 
-      pause off 
+      Opt.Quiet = 0;
+   else
+      pause off
    end
-   for (icol=1:1:length(R)),      
+   for (icol=1:1:length(R)),
       %calculate RVT
       if (length(R(icol).ptrace) ~= length(R(icol).ntrace)),
          dd = abs(length(R(icol).ptrace)-length(R(icol).ntrace));
@@ -19,21 +19,21 @@ function R = RVT_from_PeakFinder(R, Opt)
                     ' Peak trace lengths differ by %d\n',...
                     ' This is unusual, please upload data\n',...
                     ' sample to afni.nimh.nih.gov\n',...
-                    '\n'],...                  
+                    '\n'],...
                   dd );
             %keyboard;
             return;
-         else, %just a difference of 1, happens sometimes, seems ok to 
+         else, %just a difference of 1, happens sometimes, seems ok to
                %discard one sample
             fprintf(2,...
                    ['\n',...
                     'Notice RVT_from_PeakFinder:\n',...
                     ' Peak trace lengths differ by %d\n',...
                     ' Clipping longer trace.\n',...
-                    '\n'],...                  
+                    '\n'],...
                   dd );
             dm = min([length(R(icol).ptrace), length(R(icol).ntrace)]);
-            if (length(R(icol).ptrace) ~= dm), 
+            if (length(R(icol).ptrace) ~= dm),
                R(icol).ptrace = R(icol).ptrace(1:dm);
                R(icol).tptrace = R(icol).tptrace(1:dm);
             else
@@ -42,30 +42,30 @@ function R = RVT_from_PeakFinder(R, Opt)
             end
          end
       end
-      R(icol).RV = (R(icol).ptrace-R(icol).ntrace); 
+      R(icol).RV = (R(icol).ptrace-R(icol).ntrace);
                            %NEED TO consider which starts first and
                            %Whether to initialize first two vlues by means
-                           %and also, what to do when we are left with one 
+                           %and also, what to do when we are left with one
                            %incomplete pair at the end
-      
+
       nptrc = length(R(icol).tptrace);
       R(icol).RVT = R(icol).RV(1:nptrc-1)./R(icol).prd';
       if (isfield(R(icol),'ptraceR')),
-         R(icol).RVR = (R(icol).ptraceR-R(icol).ntraceR); 
+         R(icol).RVR = (R(icol).ptraceR-R(icol).ntraceR);
          R(icol).RVTR = R(icol).RVR./R(icol).prdR;
          %smooth RVT so that we can resample it at VolTR later
          fnyq = Opt.PhysFS./2; %nyquist of physio signal
-         fcut = 2./Opt.VolTR ; %cut below nyquist for volume TR
+         fcut = 2./Opt.VolTR ;%cut below nyquist for volume TR
          w = Opt.fcutoff/fnyq;    % cut off frequency normalized
-         b = fir1(Opt.FIROrder, w) ;    
-         v = R(icol).RVTR; mv  =   mean(v);  
+         b = fir1(Opt.FIROrder, w) ;
+         v = R(icol).RVTR; mv  =   mean(v);
          %remove the mean
          v = (v - mv);
          %filter both ways to cancel phase shift
          v = filter(b,1,v); v = flipud(v); v = filter(b,1,v); v = flipud(v);
          R(icol).RVTRS = v+mv;
       end
-      
+
       %create RVT regressors
       R(icol).RVTRS_slc = zeros(length(R(icol).tst), length(Opt.RVTshifts));
       for (i=1:1:length(Opt.RVTshifts)),

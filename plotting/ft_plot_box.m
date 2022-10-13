@@ -28,7 +28,7 @@ function [varargout] = ft_plot_box(position, varargin)
 %
 % See also FT_PLOT_LINE, FT_PLOT_CROSSHAIR
 
-% Copyrights (C) 2009-2011, Robert Oostenveld
+% Copyrights (C) 2009-2022, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -47,8 +47,6 @@ function [varargout] = ft_plot_box(position, varargin)
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
 % $Id$
-
-ws = warning('on', 'MATLAB:divideByZero');
 
 % get the optional input arguments
 hpos        = ft_getopt(varargin, 'hpos');
@@ -147,6 +145,3 @@ end
 if nargout == 1
   varargout{1} = h;
 end
-
-warning(ws); % revert to original state
-

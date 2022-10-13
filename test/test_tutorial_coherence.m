@@ -4,13 +4,12 @@ function test_tutorial_coherence
 % WALLTIME 00:20:00
 % DEPENDENCY ft_freqanalysis ft_connectivityanalysis ft_multiplotER ft_singleplotER ft_topoplotER ft_sourceanalysis ft_sourceinterpolate ft_prepare_sourcemodel headsurface
 
-addpath(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/coherence'));
-addpath(dccnpath('/home/common/matlab/fieldtrip/data/'));
+addpath(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/coherence')); % this contains the trial function
 
 % find the interesting epochs of data
 cfg = [];
 cfg.trialfun                  = 'trialfun_left';
-cfg.dataset                   = dccnpath('/home/common/matlab/fieldtrip/data/SubjectCMC.ds');
+cfg.dataset                   = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/SubjectCMC.ds');
 cfg = ft_definetrial(cfg);
 
 % detect EOG artifacts in the MEG data
@@ -177,7 +176,7 @@ cfg.tapsmofrq  = 5;
 cfg.keeptrials = 'yes';
 cfg.channel    = {'MEG' 'EMGlft'};
 cfg.channelcmb = {'MEG' 'EMGlft'};
-cfg.trials     = 1:50;  
+cfg.trials     = 1:50;
 freq50         = ft_freqanalysis(cfg,data);
 
 cfg            = [];
@@ -207,13 +206,13 @@ cfg           = [];
 cfg.method    = 'dics';
 cfg.refchan   = 'EMGlft';
 cfg.frequency = 18;
-cfg.headmodel = 'SubjectCMC.hdm';
-cfg.inwardshift     = 1;
+cfg.headmodel = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/SubjectCMC.hdm');
+cfg.inwardshift = 1;
 cfg.sourcemodel.resolution = 1;
 cfg.sourcemodel.unit       = 'cm';
 source        = ft_sourceanalysis(cfg, freq);
 
-mri = ft_read_mri('SubjectCMC.mri');
+mri = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/SubjectCMC.mri'));
 mri = ft_volumereslice([], mri);
 
 cfg            = [];
@@ -232,7 +231,7 @@ figure; ft_sourceplot(cfg, interp);
 function trl = trialfun_left(cfg)
 
 % read in the triggers and create a trial-matrix
-% consisting of 1-second data segments, in which 
+% consisting of 1-second data segments, in which
 % left ECR-muscle is active.
 
 event = ft_read_event(cfg.dataset);

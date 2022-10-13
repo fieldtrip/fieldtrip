@@ -13,7 +13,7 @@ if readfromdisk
 else
   % this is the original code to create the segmentation
   % create a 3 layered segmentation
-  mri = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/Subject01.mri'));
+  mri = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.mri'));
   
   % this speeds up the subsequent stuff
   cfg = [];

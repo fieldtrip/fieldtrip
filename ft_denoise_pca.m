@@ -32,14 +32,14 @@ function data = ft_denoise_pca(cfg, varargin)
 % if 0 < cfg.truncate < 1, the singular value spectrum will be thresholded at the
 % fraction cfg.truncate of the largest singular value.
 %
-% See also FT_PREPROCESSING, FT_DENOISE_SYNTHETIC
+% See also FT_PREPROCESSING, FT_DENOISE_SYNTHETIC, FT_DENOISE_SSP
 
 % Undocumented cfg-option: cfg.pca the output structure of an earlier call
 % to the function. Can be used regress out the reference channels from
 % another data set.
 
 % Copyright (c) 2008-2009, Jan-Mathijs Schoffelen, CCNi Glasgow
-% Copyright (c) 2010-2011, Jan-Mathijs Schoffelen, DCCN Nijmegen
+% Copyright (c) 2010-2022, Jan-Mathijs Schoffelen, DCCN Nijmegen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -183,9 +183,6 @@ else
   m             = cellmean(refdata.trial,    2);
   refdata.trial = cellvecadd(refdata.trial, -m);
 
-  % compute std of data before the regression
-  stdpre = cellstd(data.trial, 2);
-
   if computeweights
 
     % zscore
@@ -262,9 +259,6 @@ else
     pca = cfg.pca;
 
   end
-
-  % compute std of data after
-  stdpst = cellstd(data.trial, 2);
 
   % demean FIXME is this needed
   m          = cellmean(data.trial, 2);

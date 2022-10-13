@@ -75,11 +75,13 @@ cfg.trialdef.trigshift    = ft_getopt(cfg.trialdef, 'trigshift');
 cfg.trialdef.chanindx     = ft_getopt(cfg.trialdef, 'chanindx');
 cfg.trialdef.threshold    = ft_getopt(cfg.trialdef, 'threshold');
 cfg.trialdef.tolerance    = ft_getopt(cfg.trialdef, 'tolerance');
+cfg.trialdef.combinebinary = ft_getopt(cfg.trialdef, 'combinebinary');
 
 % specify the default file formats
 cfg.eventformat   = ft_getopt(cfg, 'eventformat');
 cfg.headerformat  = ft_getopt(cfg, 'headerformat');
 cfg.dataformat    = ft_getopt(cfg, 'dataformat');
+cfg.representation = ft_getopt(cfg, 'representation');
 
 % get the header, this is among others for the sampling frequency
 if isfield(cfg, 'hdr')
@@ -97,7 +99,7 @@ if isfield(cfg, 'event')
   event = cfg.event;
 else
   ft_info('reading the events from ''%s''\n', cfg.headerfile);
-  event = ft_read_event(cfg.headerfile, 'headerformat', cfg.headerformat, 'eventformat', cfg.eventformat, 'dataformat', cfg.dataformat,  'detectflank', cfg.trialdef.detectflank, 'trigshift', cfg.trialdef.trigshift, 'chanindx', cfg.trialdef.chanindx, 'threshold', cfg.trialdef.threshold, 'tolerance', cfg.trialdef.tolerance);
+  event = ft_read_event(cfg.headerfile, 'headerformat', cfg.headerformat, 'eventformat', cfg.eventformat, 'dataformat', cfg.dataformat,  'detectflank', cfg.trialdef.detectflank, 'trigshift', cfg.trialdef.trigshift, 'chanindx', cfg.trialdef.chanindx, 'threshold', cfg.trialdef.threshold, 'tolerance', cfg.trialdef.tolerance, 'combinebinary', cfg.trialdef.combinebinary);
 end
 
 if ~isempty(cfg.trialdef.length) && ~isinf(cfg.trialdef.length)
@@ -190,23 +192,46 @@ else
     
     if isnumeric(event(i).value) && ~isempty(event(i).value)
       trlval = event(i).value;
-    elseif ischar(event(i).value) && numel(event(i).value)>1 && (event(i).value(1)=='S'|| event(i).value(1)=='R')
-      % on brainvision these are called 'S  1' for stimuli or 'R  1' for responses
-      trlval = str2double(event(i).value(2:end));
+    elseif ischar(event(i).value) && ~isempty(regexp(event(i).value, '^[SR]+[\s]*+[0-9]{1,3}$'))
+      % This looks like Brainvision event markers. For backward compatibility, convert
+      % the strings into the numerals following the 'S' or 'R', unless the user has specified
+      % the cfg.representation to be a table
+      if ~isequal(cfg.representation, 'table')
+        ft_warning('Brainvision markers are converted to numeric representation, if you want tabular output please specify cfg.representation=''table''');
+        trlval = str2double(event(i).value(2:end));
+      else
+        trlval = event(i).value;
+      end
+    elseif ischar(event(i).value) && ~isequal(cfg.representation, 'numeric')
+      trlval = event(i).value;
     else
-      trlval = nan;
+      % the following depends on cfg.representation
+      if isequal(cfg.representation, 'numeric') || isempty(cfg.representation)
+        trlval = nan;
+      else
+        trlval = event(i).value;
+      end
     end
     
     % add the trial only if all samples are in the dataset
     if trlbeg>0 && trlend<=hdr.nSamples*hdr.nTrials
-      thistrl = [trlbeg trlend trloff trlval];
+      if isnumeric(trlval)
+        % create a numeric array
+        thistrl = [trlbeg trlend trloff trlval];
+      else
+        thistrl = cell2table({trlbeg trlend trloff trlval});
+      end
       trl = cat(1, trl, thistrl);
     end
   end
   
-  if ~isempty(trl) && all(isnan(trl(:,4)))
+  if ~isempty(trl) && ~istable(trl) && all(isnan(trl(:,4)))
     % the values are not informative, remove them
     trl = trl(:,1:3);
+  elseif ~isempty(trl) && istable(trl)
+    % add names to the columns of the table
+    trl.Properties.VariableNames = {'begsample', 'endsample', 'offset', 'eventvalue'};
   end
+  
   
 end

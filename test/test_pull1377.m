@@ -324,7 +324,7 @@ perform_source_analysis
     
     %% 3.c OpenMEEG leadfield for EEG
     
-    load(dccnpath('/home/common/matlab/fieldtrip/data/SubjectSEF_vol.mat'), 'vol')
+    load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/SubjectSEF_vol.mat'), 'vol')
     bnd_openmeeg = vol;
     
     cfg = [];

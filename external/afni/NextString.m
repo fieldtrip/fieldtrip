@@ -4,8 +4,8 @@ function [err, Cnext, cend] = NextString (C, Delim, cpos, Opt)
 % or [Cnext, cend] = NextString (C, Delim, cpos, Opt)
 %Purpose:
 %   gets the next string in charachter array C that is delimited by Delim
-%   
-%   
+%
+%
 %Input Parameters:
 %   C : a character array
 %   Delim : delimitation character, see FindChar for special characters
@@ -17,11 +17,11 @@ function [err, Cnext, cend] = NextString (C, Delim, cpos, Opt)
 %Output Parameters:
 %   err : 0 No Problem
 %       : 1 Mucho Problems
-%	Cnext : C(pos:'location of next Delim')   
+%	Cnext : C(pos:'location of next Delim')
 %  cend is such that Cnext = C(cpos:cend);
 %   Warning : cend is not affected for Deblanking, the equality on
 %      the previous line is before deblanking is done on Cnext
-%      
+%
 %More Info :
 %   FindChar
 %   SkipMatlabHelp
@@ -30,10 +30,10 @@ function [err, Cnext, cend] = NextString (C, Delim, cpos, Opt)
 % example
 % ks = sprintf ('I am hyper, Yes Oh Yes I am.\nHow about You\tLaddy. Are You hyper ?\n')
 % [err, Cnext, cend] = NextString (ks,'.',1)
-% or 
+% or
 % [err, Cnext, cend] = NextString (ks,'.',29)
 % [err, Cnext, cend] = NextString (ks,'?',29)
-% or 
+% or
 % [err, Cnext, cend] = NextString (ks,'v',1)
 % or
 % [err, Cnext, cend] = NextString (ks,',',1)
@@ -45,7 +45,7 @@ function [err, Cnext, cend] = NextString (C, Delim, cpos, Opt)
 % You get the idea right ?
 %
 %     Author : Ziad Saad
-%     Date : Sat Mar 27 14:38:45 CST 1999 
+%     Date : Sat Mar 27 14:38:45 CST 1999
 
 
 %Define the function name for easy referencing
@@ -119,9 +119,9 @@ end
 
 err = 0;
 
-if (nargout < 3), 
-   err = Cnext; 
-   Cnext = cend; 
+if (nargout < 3),
+   err = Cnext;
+   Cnext = cend;
 end
 
 return;

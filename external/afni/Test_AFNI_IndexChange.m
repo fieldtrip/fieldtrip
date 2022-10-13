@@ -3,25 +3,25 @@
 %
 %
 %Purpose:
-%   
-%   
-%   
+%
+%
+%
 %Input:
-%   
-%   
-%   
+%
+%
+%
 %Output:
 %
 %
-%   
-%   
-%      
+%
+%
+%
 %Key Terms:
-%   
+%
 %More Info :
-%   
-%   
-%   
+%
+%
+%
 %
 %     Author : Ziad Saad
 %     Date : Fri Sep 8 14:02:23 PDT 2000
@@ -34,12 +34,12 @@ DBG = 1;
 clear all
 
 %create a colormap
-OptMap.Range = 1; OptMap.SkipLast = 0; OptMap.Showme = 0; 
+OptMap.Range = 1; OptMap.SkipLast = 0; OptMap.Showme = 0;
 [err, ColMap] = MakeColorMap ([0 0 0; 1 1 1], 256, OptMap);
-colormap(ColMap); 
+colormap(ColMap);
 
 %load the brik
-[err, V, Info] = BrikLoad('ARzs_CW_avvr+orig.HEAD'); 
+[err, V, Info] = BrikLoad('ARzs_CW_avvr+orig.HEAD');
 
 Opt.plane = 'Ax';
 Opt.iSlc = [2 11]; %as shown in the AFNI slider bar
@@ -73,4 +73,4 @@ OptDisp.iSlc = Opt.iSlc;
   Itrans
   [err, Itrans] = AFNI_IndexChange (Info, Itrans, 'A2D') ;
    Itrans
-                                                                                                                          
+

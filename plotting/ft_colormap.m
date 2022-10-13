@@ -2,7 +2,8 @@ function cmap = ft_colormap(varargin)
 
 % FT_COLORMAP is a wrapper function with the same usage as the normal COLORMAP
 % function, but it also knows about the colormaps from BREWERMAP and some colormaps
-% from MATPLOTLIB.
+% from MATPLOTLIB. The recommended colormaps include 'parula', 'cividis', 'balance',
+% and '*RdBu'.
 %
 % Use as
 %   ft_colormap(name)
@@ -22,19 +23,33 @@ function cmap = ft_colormap(varargin)
 % The colormaps from MATPLOTLIB include 'cividis', 'inferno', 'magma', 'plasma',
 % 'tab10', 'tab20', 'tab20b', 'tab20c', 'twilight', and 'viridis'.
 %
-% The colormaps from CMOCEAN include 'thermal', 'haline', 'solar', 'ice', 'oxy',
-% 'deep', 'dense' 'algae', 'matter', 'turbid', 'speed', 'amp', 'tempo', 'rain', 
-% 'delta', 'curl', 'diff', 'tarn', 'phase', and 'topo'. 
+% The colormaps from BREWERMAP include 'BrBG', 'PRGn', 'PiYG', 'PuOr', 'RdBu',
+% 'RdGy', 'RdYlBu', 'RdYlGn', 'Spectral', 'Accent', 'Dark2', 'Paired', 'Pastel1',
+% 'Pastel2', 'Set1', 'Set2', 'Set3', 'Blues', 'BuGn', 'BuPu', 'GnBu', 'Greens',
+% 'Greys', 'OrRd', 'Oranges', 'PuBu', 'PuBuGn', 'PuRd', 'Purples', 'RdPu', 'Reds',
+% 'YlGn', 'YlGnBu', 'YlOrBr', and 'YlOrRd', plus their reverse when prefixed with '*'.
 %
-% To reverse these colormaps, specify them with minus sign in front, e.g. '-topo'
+% The colormaps from CMOCEAN include 'thermal', 'haline', 'solar', 'ice', 'gray',
+% 'oxy', 'deep', 'dense', 'algae', 'matter', 'turbid', 'speed', 'amp', 'tempo',
+% 'rain', 'phase', 'topo', 'balance', 'delta', 'curl', 'diff', and 'tarn'.
 %
-% The colormaps from BREWERMAP can be specified as a string, e.g. 'RdBu' or with an
-% asterisk (e.g. '*RdBu' to reverse the colormap, like '*RdBu'. See BREWERMAP for more 
-% information, or execute the interactive BREWERMAP_VIEW function to see them in detail.
+% The colormaps from COLORCET include 'blueternary', 'coolwarm', 'cyclicgrey',
+% 'depth', 'divbjy', 'fire', 'geographic', 'geographic2', 'gouldian', 'gray',
+% 'greenternary', 'grey', 'heat', 'phase2', 'phase4', 'rainbow', 'rainbow2',
+% 'rainbow3', 'rainbow4', 'redternary', 'reducedgrey', 'yellowheat', and all the ones
+% with symbolic names.
 %
-% See also COLORMAP, COLORMAPEDITOR, BREWERMAP, MATPLOTLIB, CMOCEAN
+% To reverse any of these these colormaps you can add a minus sign in front, like
+% '-phase', '-balance' or '-RdBu'.
+%
+% Relevant publications:
+% - Crameri et al. 2020. The misuse of colour in science communication. https://doi.org/10.1038/s41467-020-19160-7
+% - Cooper et al. 2021. Over the rainbow: Guidelines for meaningful use of colour maps in neurophysiology. https://doi.org/10.1016/j.neuroimage.2021.118628
+% - Kovesi 2015, Good colour maps: How to design them. https://doi.org/10.48550/arXiv.1509.03700
+%
+% See also COLORMAP, COLORMAPEDITOR, BREWERMAP, MATPLOTLIB, CMOCEAN, COLORCET
 
-% Copyright (C) 2020, Jan-Mathijs Schoffelen, Robert Oostenveld
+% Copyright (C) 2022, Jan-Mathijs Schoffelen, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -57,6 +72,8 @@ function cmap = ft_colormap(varargin)
 ft_hastoolbox('brewermap', 2);  % check and give a warning if it cannot be added
 ft_hastoolbox('matplotlib', 2); % check and give a warning if it cannot be added
 ft_hastoolbox('cmocean', 2);
+ft_hastoolbox('colorcet', 2);
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % interpret the input arguments
@@ -69,43 +86,43 @@ if nargin==0
   handle = gcf;
   name   = 'default';
   n      = 64;
-  
+
 elseif nargin==1 && isnumeric(varargin{1})
   % the user specified an Nx3 array as colormap
   handle = gcf;
   name   = varargin{1}; % note that this is not a string, it is dealt with below
   n      = nan;
-  
+
 elseif nargin==1 && all(ishandle(varargin{1}))
   % apply the default colormap on the specified handle
   handle = varargin{1};
   name   = 'default';
   n      = 64;
-  
+
 elseif nargin==1 && ischar(varargin{1})
   % apply the specified colormap on the current figure
   handle = gcf;
   name   = varargin{1};
   n      = 64;
-  
+
 elseif nargin==2 && all(ishandle(varargin{1}))
   % apply the specified colormap on the specified handle
   handle = varargin{1};
   name   = varargin{2};
   n      = 64;
-  
+
 elseif nargin==2 && ischar(varargin{1})
   % apply the specified colormap with specified N on the current figure
   handle = gcf;
   name   = varargin{1};
   n      = varargin{2};
-  
+
 elseif nargin==3 && all(ishandle(varargin{1}))
   % apply the specified colormap with specified N on the specified handle
   handle = varargin{1};
   name   = varargin{2};
   n      = varargin{3};
-  
+
 else
   ft_error('incorrect input arguments');
 end
@@ -117,16 +134,67 @@ end
 brewerlist = repmat(brewermap('list'), [2 1]);
 % also include the reverse ones
 for k = 1:numel(brewerlist)/2
-  brewerlist{k} = sprintf('*%s',brewerlist{k});
+  brewerlist{k} = sprintf('*%s', brewerlist{k});
 end
 
 % the ones from cmocean are not m-files on disk
-cmoceanlist = {'thermal', 'haline', 'solar', 'ice', 'oxy', ...
-               'deep', 'dense' 'algae', 'matter', 'turbid',...
-               'speed', 'amp', 'tempo', 'rain', 'delta',   ...
-               'curl', 'diff', 'tarn', 'phase', 'topo'};
+cmoceanlist = {
+  'thermal'
+  'haline'
+  'solar'
+  'ice'
+  'gray'
+  'oxy'
+  'deep'
+  'dense'
+  'algae'
+  'matter'
+  'turbid'
+  'speed'
+  'amp'
+  'tempo'
+  'rain'
+  'phase'
+  'topo'
+  'balance'
+  'delta'
+  'curl'
+  'diff'
+  'tarn'
+  };
+% also include the reverse ones
 for k = 1:numel(cmoceanlist)
-  cmoceanlist{end+1} = sprintf('-%s',cmoceanlist{k});
+  cmoceanlist{end+1} = sprintf('-%s', cmoceanlist{k});
+end
+
+% the ones from colorcet are not m-files on disk
+colorcetlist = {
+  'blueternary'
+  'coolwarm'
+  'cyclicgrey'
+  'depth'
+  'divbjy'
+  'fire'
+  'geographic'
+  'geographic2'
+  'gouldian'
+  'gray'
+  'greenternary'
+  'grey'
+  'heat'
+  'phase2'
+  'phase4'
+  'rainbow'
+  'rainbow2'
+  'rainbow3'
+  'rainbow4'
+  'redternary'
+  'reducedgrey'
+  'yellowheat'
+  };
+% also include the reverse ones
+for k = 1:numel(colorcetlist)
+  colorcetlist{end+1} = sprintf('-%s', colorcetlist{k});
 end
 
 if isnumeric(name)
@@ -134,8 +202,14 @@ if isnumeric(name)
   cmap = name;
 elseif ismember(name, brewerlist)
   cmap = brewermap(n, name);
+elseif startsWith(name, '-') && ismember(name(2:end), brewerlist)
+  cmap = brewermap(n, strrep(name, '-', '*'));
 elseif ismember(name, cmoceanlist)
   cmap = cmocean(name, n);
+elseif ismember(name, colorcetlist)
+  cmap = colorcet(name, 'n', n, 'reverse', false);
+elseif startsWith(name, '-') && ismember(name(2:end), colorcetlist)
+  cmap = colorcet(name(2:end), 'n', n, 'reverse', true);
 elseif isequal(name, 'default')
   % requires separate handling, because there's no function called default,
   % the default is taken care of by colormap

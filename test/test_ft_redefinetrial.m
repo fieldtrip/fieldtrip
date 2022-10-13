@@ -5,7 +5,7 @@ function test_ft_redefinetrial
 % DEPENDENCY
 
 %% use 10 trials from the ctf151 data structure
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/preproc_ctf151'));
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/preproc_ctf151.mat'));
 
 data.trialinfo = (1:10)';
 
@@ -99,9 +99,3 @@ cfg = [];
 cfg.continuous = 'yes';
 data_continuous = ft_redefinetrial(cfg, data_segmented);
 assert(length(data_continuous.trial)==2);
-
-
-
-
-
-

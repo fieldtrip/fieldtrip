@@ -3,9 +3,9 @@ function [err] = m3dReorder (Input, Prefix, Mapfile, Opt)
 %   [err] = m3dReorder (Input, Prefix, Mapfile, Opt)
 %
 %Purpose:
-%   Reorders a time series data set (3D+time) a la AFNI plugin Reorder   
-%   
-%   
+%   Reorders a time series data set (3D+time) a la AFNI plugin Reorder
+%
+%
 %Input Parameters:
 %
 %   Input: Input of 3d+time brick
@@ -13,23 +13,23 @@ function [err] = m3dReorder (Input, Prefix, Mapfile, Opt)
 %   Mapfile: Name of map file
 %   Opt is the options structure with the following fields
 %   	.Dup : [Col]/Ave Collate(default) or Average the multiple
-%             instances in the map file. 
-%     .Detrend : 0/1/[2] Linear trend removal. 0 for none, 
-%                1 for mean only, 2 for linear trend (default)  
+%             instances in the map file.
+%     .Detrend : 0/1/[2] Linear trend removal. 0 for none,
+%                1 for mean only, 2 for linear trend (default)
 %     .Verbose : [0]/1 verbosity of function ...
 %
 %Output Parameters:
 %   err : 0 No Problem
 %       : 1 Mucho Problems
-%   
-%   
-%      
+%
+%
+%
 %Key Terms:
-%   
+%
 %More Info :
-%   
+%
 %   help button in Reorder plugin
-%   
+%
 %
 %     Author : Ziad Saad
 %     Date : Tue Sep 18 10:39:36 EDT 2001
@@ -58,7 +58,7 @@ err = 1;
 	end
 
 %check the prefix
-	[status, Prefix] = PrefixStatus(Prefix); 
+	[status, Prefix] = PrefixStatus(Prefix);
 	if (status == 0), err = ErrEval(FuncName,'Err_Bad Prefix'); return; end
 	
 %check and read the input file
@@ -78,7 +78,7 @@ err = 1;
 	for (i = 1:1:N_inl),
 		iend = inl(i) -1;
 		sword = sall(ipos:iend);
-		if (sall(ipos) ~= '#' & ~isempty(sword)), %Not a comment 
+		if (sall(ipos) ~= '#' & ~isempty(sword)), %Not a comment
 				%vertically concatenate the strings
 				vsall = strvcat(vsall, sword);
 		end
@@ -93,22 +93,22 @@ err = 1;
 	imap = i_sort(ikeep);
 	%vsall_sort(1:20,:)
 	%ikeep(1:5)
-	%length(imap) 
+	%length(imap)
 	
 %load the data set
 	%make sure that this is a 3D+time
 	[err, Info] = BrikInfo(Input);
-	if (err), 
-		err = ErrEval(FuncName,'Err_error in BrikInfo. Check Input Brick Name'); return; 
+	if (err),
+		err = ErrEval(FuncName,'Err_error in BrikInfo. Check Input Brick Name'); return;
 	end
-	if (Info.SCENE_DATA(2) ~= 2), 
+	if (Info.SCENE_DATA(2) ~= 2),
 		err = ErrEval(FuncName,sprintf('Err_%s is not an EPI type', Input)); return;
 	end
 	%make sure length of time series is OK
 	if (Info.DATASET_RANK(2) ~= size(vsall,1)),
 		err = ErrEval(FuncName,...
 		sprintf('Err_Length mismatch between time series (%g) and Mapfile(%g)',...
-		 Info.DATASET_RANK(2),size(vsall,1))); return;  
+		 Info.DATASET_RANK(2),size(vsall,1))); return;
 	end
 	
 	
@@ -118,7 +118,7 @@ err = 1;
 	[err, V, Info, ErrMessage] = BrikLoad (Input, OptR);
 	if (err), err = ErrEval(FuncName,'Err_error in BrikLoad'); return; end
 	
-	%figure(1);clf; subplot (211);  plot (V(1,:), 'b'); 
+	%figure(1);clf; subplot (211);  plot (V(1,:), 'b');
 	
 	%detrend ?
 	if (Opt.Detrend == 1),

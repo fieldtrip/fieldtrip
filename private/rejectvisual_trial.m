@@ -62,9 +62,7 @@ tmpcfg = [];
 tmpcfg.layout = 'ordered';
 tmpcfg.skipscale = 'yes';
 tmpcfg.skipcomnt = 'yes';
-for i=1:nchan
-  tmpcfg.channel{i} = sprintf('channel %s', data.label{i});
-end
+tmpcfg.channel = data.label;
 info.layout = ft_prepare_layout(tmpcfg);
 
 minx = min(info.layout.pos(:,1) - info.layout.width/2);
@@ -90,18 +88,66 @@ end % while ishandle(h)
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function h = create_figure(limits, info)
+% Creates the GUI and plots the data for the first time.
+% All additional changes are done by manipulating the properties of the
+% specific graphical objects
+%
+% Input:
+% limits - limits of the area where the trials are plotted
+% info   - the struct that is attched to figure using guidata
+h = open_figure(keepfields(info.cfg, {'figure', 'position', 'visible', 'renderer', 'figurename', 'title'}));
+axis('off')
+axis(limits);
+
+% Set buttons and callback functions
+info.ui.quit        = uicontrol(h,'units','pixels','position',[  5 5 40 18],'String','quit','Callback',@stop);
+info.ui.prev        = uicontrol(h,'units','pixels','position',[ 50 5 25 18],'String','<','Callback',{@step_trial, -1});
+info.ui.next        = uicontrol(h,'units','pixels','position',[ 75 5 25 18],'String','>','Callback',{@step_trial, 1});
+info.ui.prev10      = uicontrol(h,'units','pixels','position',[105 5 25 18],'String','<<','Callback',{@step_trial, -10});
+info.ui.next10      = uicontrol(h,'units','pixels','position',[130 5 25 18],'String','>>','Callback',{@step_trial, 10});
+info.ui.exclude     = uicontrol(h,'units','pixels','position',[160 5 70 18],'String','exclude','Callback',@markexclude);
+info.ui.include     = uicontrol(h,'units','pixels','position',[230 5 70 18],'String','include','Callback',@markinclude);
+info.ui.excludenext = uicontrol(h,'units','pixels','position',[310 5 70 18],'String','exclude >','Callback',@markexclude_next);
+info.ui.includenext = uicontrol(h,'units','pixels','position',[380 5 70 18],'String','include >','Callback',@markinclude_next);
+set(h, 'WindowButtonUpFcn', @button);
+set(h, 'KeyPressFcn', @key);
+
+% Determine the y-axis limits for this channel for all included trials
+[ymin, ymax] = get_ylim(info);
+
+% Plot individual channels
+hold('on')
+color = 'k';
+tim = info.data.time{info.trlop};
+for chanindx=1:info.nchan  
+  dat = info.data.trial{info.trlop}(chanindx,:);
+  info.h_chan(chanindx) = ft_plot_vector(tim, dat, 'hpos', info.layout.pos(chanindx,1), 'vpos', info.layout.pos(chanindx,2), 'width', info.layout.width(chanindx), 'height', info.layout.height(chanindx), 'vlim', [ymin ymax], 'box', istrue(info.cfg.box), 'color', color, 'label', info.layout.label{chanindx}, 'labelpos', 'lowerleft');
+end
+
+% Only blank excluded channels if the trial is included
+if info.trlsel(info.trlop)
+  set(info.h_chan(~info.chansel), 'Color', 'none');
+else % If channel is excluded blank out everything
+  set(info.h_chan, 'Color', 'none');
+end
+hold('off')
+
+% Enable or disable buttons as appropriate
+check_buttons_status(info);
+
+% Add title
+title(description_trial(info),'interpreter','none');
+
+% Update the GUI
+guidata(h, info);
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-function markexclude_next(h, event)
-markexclude(h, event);
-step_trial(h, event, 1);
-end
-
-function markinclude_next(h, event)
-markinclude(h, event);
-step_trial(h, event, 1);
-end
 
 function step_trial(h, event, step)
 info = guidata(h);
@@ -117,6 +163,16 @@ else
 end
 guidata(h, info);
 uiresume;
+end
+
+function markexclude_next(h, event)
+markexclude(h, event);
+step_trial(h, event, 1);
+end
+
+function markinclude_next(h, event)
+markinclude(h, event);
+step_trial(h, event, 1);
 end
 
 function markinclude(h, event)
@@ -221,63 +277,6 @@ if info.trlsel(info.trlop)
 else
   str = sprintf('trial %d marked to EXCLUDE\n', info.trlop);
 end
-end
-
-function h = create_figure(limits, info)
-% Creates the GUI and plots the data for the first time.
-% All additional changes are done by manipulating the properties of the
-% specific graphical objects
-%
-% Input:
-% limits - limits of the area where the trials are plotted
-% info   - the struct that is attched to figure using guidata
-
-% Create figure
-h = figure();
-axis('off')
-axis(limits);
-
-% Set buttons and callback functions
-info.ui.quit        = uicontrol(h,'units','pixels','position',[  5 5 40 18],'String','quit','Callback',@stop);
-info.ui.prev        = uicontrol(h,'units','pixels','position',[ 50 5 25 18],'String','<','Callback',{@step_trial, -1});
-info.ui.next        = uicontrol(h,'units','pixels','position',[ 75 5 25 18],'String','>','Callback',{@step_trial, 1});
-info.ui.prev10      = uicontrol(h,'units','pixels','position',[105 5 25 18],'String','<<','Callback',{@step_trial, -10});
-info.ui.next10      = uicontrol(h,'units','pixels','position',[130 5 25 18],'String','>>','Callback',{@step_trial, 10});
-info.ui.exclude     = uicontrol(h,'units','pixels','position',[160 5 70 18],'String','exclude','Callback',@markexclude);
-info.ui.include     = uicontrol(h,'units','pixels','position',[230 5 70 18],'String','include','Callback',@markinclude);
-info.ui.excludenext = uicontrol(h,'units','pixels','position',[310 5 70 18],'String','exclude >','Callback',@markexclude_next);
-info.ui.includenext = uicontrol(h,'units','pixels','position',[380 5 70 18],'String','include >','Callback',@markinclude_next);
-set(h, 'WindowButtonUpFcn', @button);
-set(h, 'KeyPressFcn', @key);
-
-% Determine the y-axis limits for this channel for all included trials
-[ymin, ymax] = get_ylim(info);
-
-% Plot individual channels
-hold('on')
-color = 'k';
-tim = info.data.time{info.trlop};
-for chanindx=1:info.nchan  
-  dat = info.data.trial{info.trlop}(chanindx,:);
-  info.h_chan(chanindx) = ft_plot_vector(tim, dat, 'hpos', info.layout.pos(chanindx,1), 'vpos', info.layout.pos(chanindx,2), 'width', info.layout.width(chanindx), 'height', info.layout.height(chanindx), 'vlim', [ymin ymax], 'box', istrue(info.cfg.box), 'color', color, 'label', info.layout.label{chanindx}, 'labelpos', 'lowerleft');
-end
-
-% Only blank excluded channels if the trial is included
-if info.trlsel(info.trlop)
-  set(info.h_chan(~info.chansel), 'Color', 'none');
-else % If channel is excluded blank out everything
-  set(info.h_chan, 'Color', 'none');
-end
-hold('off')
-
-% Enable or disable buttons as appropriate
-check_buttons_status(info);
-
-% Add title
-title(description_trial(info),'interpreter','none');
-
-% Update the GUI
-guidata(h, info);
 end
 
 function [ymin, ymax] = get_ylim(info)

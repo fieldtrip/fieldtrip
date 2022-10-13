@@ -4,7 +4,7 @@ function test_tutorial_headmodel_eeg_fem
 % MEM 12gb
 % DEPENDENCY ft_prepare_headmodel ft_prepare_mesh ft_datatype_segmentation
 
-mri = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/Subject01.mri'));
+mri = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.mri'));
 
 % this needs to be done before reslicing
 nas = mri.hdr.fiducial.mri.nas;

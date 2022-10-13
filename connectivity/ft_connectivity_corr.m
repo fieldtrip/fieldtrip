@@ -1,4 +1,4 @@
-function [c, v, outcnt] = ft_connectivity_corr(input, varargin)
+function [c, v, outcnt] = ft_connectivity_corr(inputdata, varargin)
 
 % FT_CONNECTIVITY_CORR computes correlation, coherence or a related quantity from a
 % data-matrix containing a covariance or cross-spectral density. This implements the
@@ -20,7 +20,7 @@ function [c, v, outcnt] = ft_connectivity_corr(input, varargin)
 % Neurophysiology, 2004; 115; 2292-2307
 %
 % Use as
-%   [c, v, n] = ft_connectivity_corr(input, ...)
+%   [c, v, n] = ft_connectivity_corr(inputdata, ...)
 %
 % The input data should be a covariance or cross-spectral density array organized as
 %   Repetitions x Channel x Channel (x Frequency) (x Time)
@@ -92,14 +92,14 @@ if isempty(dimord)
   ft_error('input parameters should contain a dimord');
 end
 
-siz = [size(input) 1];
+siz = [size(inputdata) 1];
 
 % do partialisation if necessary
 if ~isempty(pchanindx) && isempty(powindx)
   % partial spectra are computed as in Rosenberg JR et al (1998) J.Neuroscience Methods, equation 38
   
   npchanindx = numel(pchanindx);
-  chan   = setdiff(1:size(input,2), pchanindx);
+  chan   = setdiff(1:size(inputdata,2), pchanindx);
   nchan  = numel(chan);
   newsiz = siz;
   newsiz(2:3) = numel(chan); % size of partialised csd
@@ -107,16 +107,16 @@ if ~isempty(pchanindx) && isempty(powindx)
   A = zeros(newsiz);
   
   for j = 1:siz(1) % loop over rpt
-    AA = reshape(input(j, chan,  chan, : ),         [nchan  nchan      prod(siz(4:end))]); % fold freq_time into one dimension
-    AB = reshape(input(j, chan,  pchanindx,: ),     [nchan  npchanindx prod(siz(4:end))]);
-    BA = reshape(input(j, pchanindx, chan, : ),     [npchanindx nchan  prod(siz(4:end))]);
-    BB = reshape(input(j, pchanindx, pchanindx, :), [npchanindx npchanindx prod(siz(4:end))]);
+    AA = reshape(inputdata(j, chan,  chan, : ),         [nchan  nchan      prod(siz(4:end))]); % fold freq_time into one dimension
+    AB = reshape(inputdata(j, chan,  pchanindx,: ),     [nchan  npchanindx prod(siz(4:end))]);
+    BA = reshape(inputdata(j, pchanindx, chan, : ),     [npchanindx nchan  prod(siz(4:end))]);
+    BB = reshape(inputdata(j, pchanindx, pchanindx, :), [npchanindx npchanindx prod(siz(4:end))]);
     for k = 1:prod(siz(4:end)) % loop over freq or freq_time
       A(j,:,:,k) = AA(:,:,k) - AB(:,:,k)/(BB(:,:,k))*BA(:,:,k);
     end
   end
-  input = A;
-  siz = [size(input) 1];
+  inputdata = A;
+  siz = [size(inputdata) 1];
   
 elseif ~isempty(pchanindx)
   % linearly indexed crossspectra require some more complicated handling
@@ -124,7 +124,7 @@ elseif ~isempty(pchanindx)
     ft_error('more than one channel for partialisation with linearly indexed crossspectra is currently not implemented');
   end
   
-  p_input = input;
+  p_input = inputdata;
   for k = 1:size(powindx,1)
     % we need to look for the combi's (and take conjugates if needed), to
     % achieve F_ab\p = F_ab - F_ap*inv(F_p)*F_pb;
@@ -132,26 +132,26 @@ elseif ~isempty(pchanindx)
     this = powindx(k,:);
     sela = powindx(:,1)==this(1)&powindx(:,2)==pchanindx;
     if any(sela)
-      F_ap = input(:,sela,:,:);
+      F_ap = inputdata(:,sela,:,:);
     else
       sela = powindx(:,2)==this(1)&powindx(:,1)==pchanindx;
-      F_ap = conj(input(:,sela,:,:));
+      F_ap = conj(inputdata(:,sela,:,:));
     end
     
     selb = powindx(:,2)==this(2)&powindx(:,1)==pchanindx;
     if any(selb)
-      F_pb = input(:,selb,:,:);
+      F_pb = inputdata(:,selb,:,:);
     else
       selb = powindx(:,1)==this(2)&powindx(:,2)==pchanindx;
-      F_pb = conj(input(:,selb,:,:));
+      F_pb = conj(inputdata(:,selb,:,:));
     end
     selp = powindx(:,1)==pchanindx&powindx(:,2)==pchanindx;
-    F_pp = input(:,selp,:,:);
+    F_pp = inputdata(:,selp,:,:);
     
-    p_input(:,k,:,:) = input(:,k,:,:) - F_ap.*(1./F_pp).*F_pb;
+    p_input(:,k,:,:) = inputdata(:,k,:,:) - F_ap.*(1./F_pp).*F_pb;
     
   end
-  input = p_input; clear p_input;
+  inputdata = p_input; clear p_input;
 else
   % do nothing
 end
@@ -167,13 +167,13 @@ if (length(strfind(dimord, 'chan'))~=2 || contains(dimord, 'pos')) && ~isempty(p
   for j = 1:siz(1)
     ft_progress(j/siz(1), 'computing metric for replicate %d from %d\n', j, siz(1));
     if pownorm
-      p1    = reshape(input(j,powindx(:,1),:,:,:), siz(2:end));
-      p2    = reshape(input(j,powindx(:,2),:,:,:), siz(2:end));
+      p1    = reshape(inputdata(j,powindx(:,1),:,:,:), siz(2:end));
+      p2    = reshape(inputdata(j,powindx(:,2),:,:,:), siz(2:end));
       denom = sqrt(p1.*p2); clear p1 p2
     else
       denom = 1;
     end
-    tmp    = complexeval(reshape(input(j,:,:,:,:), siz(2:end))./denom, cmplx);
+    tmp    = complexeval(reshape(inputdata(j,:,:,:,:), siz(2:end))./denom, cmplx);
     outsum = outsum + tmp;
     outssq = outssq + tmp.^2;
     outcnt = outcnt + double(~isnan(tmp));
@@ -192,8 +192,8 @@ elseif length(strfind(dimord, 'chan'))==2 || length(strfind(dimord, 'pos'))==2
       p1  = zeros([siz(2) 1 siz(4:end)]);
       p2  = zeros([1 siz(3) siz(4:end)]);
       for k = 1:siz(2)
-        p1(k,1,:,:,:,:) = input(j,k,k,:,:,:,:);
-        p2(1,k,:,:,:,:) = input(j,k,k,:,:,:,:);
+        p1(k,1,:,:,:,:) = inputdata(j,k,k,:,:,:,:);
+        p2(1,k,:,:,:,:) = inputdata(j,k,k,:,:,:,:);
       end
       p1    = p1(:,ones(1,siz(3)),:,:,:,:);
       p2    = p2(ones(1,siz(2)),:,:,:,:,:);
@@ -201,7 +201,7 @@ elseif length(strfind(dimord, 'chan'))==2 || length(strfind(dimord, 'pos'))==2
     else
       denom = 1;
     end
-    tmp    = complexeval(reshape(input(j,:,:,:,:,:,:), siz(2:end))./denom, cmplx); % added this for nan support marvin
+    tmp    = complexeval(reshape(inputdata(j,:,:,:,:,:,:), siz(2:end))./denom, cmplx); % added this for nan support marvin
     %tmp(isnan(tmp)) = 0; % added for nan support
     outsum = outsum + tmp;
     outssq = outssq + tmp.^2;

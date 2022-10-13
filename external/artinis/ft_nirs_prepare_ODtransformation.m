@@ -122,16 +122,7 @@ cfg.age     = ft_getopt(cfg, 'age', []);
 cfg.dpf     = ft_getopt(cfg, 'dpf', []);
 
 % get the optode definition
-% FIXME this should use FT_FETCH_SENS
-if ~isfield(data, 'opto')
-  if ~isfield(data, 'hdr') && ~isfield(data.hdr, 'opto')
-    error('no optode structure found in the data');
-  else
-    opto = data.hdr.opto;
-  end
-else
-  opto = data.opto;
-end
+opto = ft_fetch_sens(cfg, data);
 
 % select the appropriate channels
 if isfield(data, 'topolabel')
@@ -169,9 +160,17 @@ if ~isempty(cfg.age) && ~isempty(cfg.dpf)
 elseif ~isempty(cfg.age)
   error('the use of cfg.age is not implemented, yet');
 elseif ~isempty(cfg.dpf)
+  % this is where they should be
   dpfs = repmat(cfg.dpf, size(cfg.channel));
-else
+elseif isfield(opto, 'DPF')
+  % this is for backward compatibility
   dpfs = opto.DPF(chanidx);
+elseif isfield(data, 'opto') && isfield(data.opto, 'DPF')
+  % this is for backward compatibility
+  dpfs = data.opto.DPF(chanidx);
+elseif isfield(data, 'hdr') && isfield(data.hdr, 'opto') && isfield(data.hdr.opto, 'DPF')
+  % this is for backward compatibility
+  dpfs = data.hdr.opto.DPF(chanidx);
 end
 
 % which chromophores are desired

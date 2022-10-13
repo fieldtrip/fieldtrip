@@ -22,7 +22,7 @@ function test_bug2518a
 
 % prepare some data
 cfg = [];
-cfg.dataset = dccnpath('/home/common/matlab/fieldtrip/data/Subject01.ds');
+cfg.dataset = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds');
 cfg.demean = 'yes';
 cfg.channel = 'MEG';
 raw = ft_preprocessing(cfg);
