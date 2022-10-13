@@ -2355,6 +2355,18 @@ switch eventformat
   case 'presentation_log'
     event = read_presentation_log(filename);
     
+  case 'events_tsv'
+    if isbids
+       eventTable = readtable(filename, 'Delimiter', 'tab', 'FileType', 'text');
+       for k=1:height(eventTable)
+         event(k).type      = eventTable.type{k};
+         event(k).sample    = eventTable.sample(k);
+         event(k).value     = eventTable.value(k);
+         event(k).duration  = eventTable.duration{k};
+         event(k).offset    = [];
+       end
+    end
+    
   otherwise
     if exist(eventformat, 'file')
       % attempt to run "eventformat" as a function, this allows the user to specify an external reading function
