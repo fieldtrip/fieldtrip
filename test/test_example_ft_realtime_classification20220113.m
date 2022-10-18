@@ -1,7 +1,7 @@
 function test_example_realtime_classification
 
 % MEM 8gb
-% WALLTIME 03:00:00
+% WALLTIME 06:00:00
 
 %
 %% Example real-time classification
