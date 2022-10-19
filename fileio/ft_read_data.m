@@ -1582,10 +1582,11 @@ switch dataformat
     blocksize = hdr.orig.header.SamplePeriodsPerBlock;
     begtrial = floor((begsample-1)/blocksize) + 1;
     endtrial = floor((endsample-1)/blocksize) + 1;
-    dat = read_tmsi_poly5(filename, hdr.orig, begtrial, endtrial);
+    dat = read_tmsi_poly5(filename, hdr.orig, begtrial, endtrial, chanindx);
     offset = (begtrial-1)*blocksize;
     % select the desired samples and channels
-    dat = dat(chanindx, (begsample-offset):(endsample-offset));
+    %dat = dat(chanindx, (begsample-offset):(endsample-offset));
+    dat = dat(:, (begsample-offset):(endsample-offset));
     
   case 'videomeg_aud'
     dat = read_videomeg_aud(filename, hdr, begsample, endsample);
