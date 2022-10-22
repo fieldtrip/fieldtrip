@@ -2240,6 +2240,8 @@ switch eventformat
     event = read_ricoh_event(filename, 'detectflank', detectflank, 'chanindx', chanindx, 'threshold', threshold);
     
   case 'tmsi_poly5'
+    threshold = ft_getopt(varargin, 'threshold'); % needed to read in poly5 files acquired at TUE, don't know whether this is a generic feature
+    
     if isempty(hdr)
       hdr = ft_read_header(filename);
     end
@@ -2252,7 +2254,7 @@ switch eventformat
       detectflank = 'downdiff';
     end
     if ~isempty(chanindx)
-      event = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', chanindx, 'detectflank', detectflank, 'denoise', denoise, 'trigshift', trigshift, 'trigpadding', trigpadding);
+      event = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', chanindx, 'detectflank', detectflank, 'denoise', denoise, 'trigshift', trigshift, 'trigpadding', trigpadding, 'threshold', threshold);
     end
     
   case {'yokogawa_ave', 'yokogawa_con', 'yokogawa_raw'}
