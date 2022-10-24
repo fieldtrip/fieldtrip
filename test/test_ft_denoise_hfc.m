@@ -8,7 +8,9 @@ switch nargin
     case 0
         locate_function = which('test_ft_denoise_hfc');
         % load data
-        load(fullfile(locate_function,'..','data_UCL_OPM.mat'));
+        load(fullfile(locate_function,'..','..','..','project_zeus',...
+            'data_UCL_OPM.mat'));
+        %load('D:\Github\project_zeus\data_UCL_OPM.mat')
     case 1
         % If user inputs a filename, use path specific for DCCN
         % Find this data: https://doi.org/10.17605/OSF.IO/CJNXH
