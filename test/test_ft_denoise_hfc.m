@@ -10,7 +10,6 @@ switch nargin
         % load data
         load(fullfile(locate_function,'..','..','..','project_zeus',...
             'data_UCL_OPM.mat'));
-        %load('D:\Github\project_zeus\data_UCL_OPM.mat')
     case 1
         % If user inputs a filename, use path specific for DCCN
         % Find this data: https://doi.org/10.17605/OSF.IO/CJNXH
