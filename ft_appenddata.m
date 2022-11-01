@@ -92,7 +92,7 @@ try
     hassampleinfo(i) = isfield(varargin{i}, 'sampleinfo');
   end
   if ~all(strcmp(dataset, dataset{1})) && ~strcmp(cfg.keepsampleinfo, 'no')
-    ft_warning('the data originates from different recordings on disk');
+    ft_warning('the data has overlapping segments or originates from different recordings on disk');
     ft_warning('please consider specifying cfg.keepsampleinfo=''no''')
   end
 end % try
