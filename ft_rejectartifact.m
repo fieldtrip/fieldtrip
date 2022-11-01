@@ -573,10 +573,24 @@ if isempty(cfg.trl)
   ft_error('No trials left after artifact rejection.')
 else
   if hasdata && ~any(strcmp(cfg.artfctdef.reject, {'nan', 'zero', 'value'})) % Skip this step to avoid removing parts that were filled with NaNs or zeros
-    % apply the updated trial definition on the data
-    tmpcfg      = keepfields(cfg, {'trl', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
-    data        = removefields(data, {'trialinfo'});
-    data        = ft_redefinetrial(tmpcfg, data);
+    % if the input data consists of partially overlapping trials, ft_redefinetrial (ft_fetch_data) will throw an error, 
+    % because it does not know that it is fine to allow for overlap in this situation, because the new 
+    % trl matrix is either a subset of the old trl matrix (complete rejection) or the new trl matrix 
+    % only contains all-inclusive snippets from the original input data.
+    
+    % for complete rejection, an error due to overlapping data can be avoided by selecting the trials, no ft_redefinetrial is needed
+    if isequal(cfg.artfctdef.reject, 'complete')
+      tmpcfg = keepfields(cfg, {'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+      tmpcfg.trials = number(:);
+      data   = ft_selectdata(tmpcfg, data);
+
+    elseif isequal(cfg.artfctdef.reject, 'partial')
+      % apply the updated trial definition to the data, this might fail with overlapping trials
+      tmpcfg      = keepfields(cfg, {'trl', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+      data        = removefields(data, {'trialinfo'}); % this cannot be retained
+      data        = ft_redefinetrial(tmpcfg, data);
+    end
+
     % restore the provenance information
     [cfg, data] = rollback_provenance(cfg, data);
   end
