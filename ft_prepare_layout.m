@@ -1241,7 +1241,8 @@ if isequal(cfg.color, 'spatial') && ~isfield(layout, 'color')
   layout.color = ones(numel(layout.label), 3);
   layout.color(sel, :) = rgb;
 elseif size(cfg.color,1) == numel(layout.label)
-  layout.color = color;
+  % copy the specified colors over
+  layout.color = cfg.color;
 end
 
 % do the general cleanup and bookkeeping at the end of the function
