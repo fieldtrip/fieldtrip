@@ -1196,10 +1196,13 @@ else
     funcfg.figurename = sprintf('%s : trial %d/%d: segment: %d/%d , time from %g to %g s', cmenulab, opt.trllock, size(opt.trlorg,1), opt.trlop, size(opt.trlvis,1), seldata.time{1}(1), seldata.time{1}(end));
   end
   
-  % the function that is executed does not know that only a subset of the channels will be passed in the input, 
-  % make sure that the funcfg's linecolor is consistent with this selection
-  selchan = match_str(opt.orgdata.label, seldata.label);
-  if isfield(funcfg, 'linecolor'), funcfg.linecolor = opt.linecolor(selchan, :); end
+  if ~isempty(opt.orgdata) && isfield(funcfg, 'linecolor')
+    % the function that is executed does not know that only a subset of the channels will be passed in the input,
+    % make sure that the funcfg's linecolor is consistent with this selection
+    selchan = match_str(opt.orgdata.label, seldata.label);
+    funcfg.linecolor = opt.linecolor(selchan, :);
+  end
+
   feval(funhandle, funcfg, seldata);
 end
 
