@@ -938,10 +938,10 @@ for k = 1:numel(alltimecell)
   indx(ix,k) = iy;
 end
 
-if iscell(varargin{1}.time) && ischar(cfg.latency)&& ~strcmp(cfg.latency, 'minperiod')
+if iscell(varargin{1}.time) && ~isequal(cfg.latency, 'minperiod')
   % if the input data arguments are of type 'raw', temporarily set the
   % selmode to union, otherwise the potentially different length trials
-  % will be truncated to the shorted epoch, prior to latency selection.
+  % will be truncated to the shortest epoch, prior to latency selection.
   selmode = 'union';
 elseif ischar(cfg.latency) && strcmp(cfg.latency, 'minperiod')
   % enforce intersect
