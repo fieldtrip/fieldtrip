@@ -2437,9 +2437,14 @@ if ~isempty(event)
     end
     % check whether string event values can be converted to numeric values
     if ischar(event(i).value)
-      value = str2double(event(i).value);
-      if ~isnan(value)
-        event(i).value = value;
+      if strcmpi(event(i).value, 'n/a')
+        % this applies to nan values in a BIDS events.tsv file
+        event(i).value = NaN;
+      else
+        value = str2double(event(i).value);
+        if ~isnan(value)
+          event(i).value = value;
+        end
       end
     end
     % samples can be either empty or should be numeric values
