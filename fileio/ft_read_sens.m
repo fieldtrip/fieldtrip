@@ -28,7 +28,7 @@ function [sens] = ft_read_sens(filename, varargin)
 %
 % See also FT_READ_HEADER, FT_DATATYPE_SENS, FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD,
 
-% Copyright (C) 2005-2021 Robert Oostenveld
+% Copyright (C) 2005-2022 Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -546,7 +546,7 @@ switch fileformat
     sens.chanpos = [x y z];
     
   case '3dslicer_fscv'
-    csvData = readtable(filename,'FileType','text');
+    csvData = readtable(filename, 'FileType', 'text');
     sens.label = csvData.label;
     sens.elecpos = [csvData.x,csvData.y,csvData.z];
     
@@ -591,14 +591,14 @@ switch fileformat
     sens.tra  = eye(sens_i);
     sens.type= 'yorkinstruments248';
     if isempty(coordsys)
-      coordsys='dewar';
+      coordsys = 'dewar';
     end
-    if strcmp(coordsys,'head')
+    if strcmp(coordsys, 'head')
       try
-        tCCStoMegscanScs = h5read(filename,[strcat('/acquisitions/',char(string(acquisition))) '/ccs_to_scs_transform']);
-        T = maketform('affine',tCCStoMegscanScs);
-        sens.coilpos=tformfwd(T,sens.chanpos(:,1),sens.chanpos(:,2),sens.coilpos(:,3));
-        R = tCCStoMegscanScs(1:3,1:3); %(mm)
+        tCCStoMegscanScs = h5read(filename, [strcat('/acquisitions/', char(string(acquisition))) '/ccs_to_scs_transform']);
+        T = maketform('affine', tCCStoMegscanScs);
+        sens.coilpos = tformfwd(T, sens.chanpos(:,1), sens.chanpos(:,2), sens.coilpos(:,3));
+        R = tCCStoMegscanScs(1:3,1:3); % (mm)
         sens.coilori =  sens.coilori * R;
         sens.chanpos=sens.coilpos;
         sens.chanori=sens.coilori;
