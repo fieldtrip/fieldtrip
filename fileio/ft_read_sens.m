@@ -162,10 +162,17 @@ switch fileformat
     fid = fopen_or_error(filename);
     % these files seem to come in different formats with 3, 4 or 5 columns
     % see http://wiki.besa.de/index.php?title=Channel_Definition_File_Formats
-    % read the first line to determine the number of columns
-    format = length(strsplit(strtrim(fgetl(fid))));
+    % read the first two lines to determine the number of columns
+    columns1 = length(strsplit(strtrim(fgetl(fid))));
+    columns2 = length(strsplit(strtrim(fgetl(fid))));
     fseek(fid, 0, 'bof');
-    switch format
+    if columns1==1 && columns2>1
+      % EEGLAB includes ELP files that start with a line with the number of electrodes 
+      % skip the first line
+      columns1 = columns2;
+      fgetl(fid);
+    end
+    switch columns1
       case 3
         % 3-column: label, azimuth, elevation
         tmp = textscan(fid, '%s%f%f');
@@ -562,8 +569,8 @@ switch fileformat
     sens_i=0;
     for i=1:hdr.nChans
       if string(hdr.chantype{i})==upper(senstype)
-        sens_i=sens_i+1;
-        sens.chantype{sens_i,1}=hdr.chantype{i};
+        sens_i = sens_i+1;
+        sens.chantype{sens_i,1} = hdr.chantype{i};
         try
           sens.chanpos(sens_i,1:3) =  h5read(filename,['/config/channels/' hdr.label{i} '/position']);
           sens.chanori(sens_i,1:3) =  h5read(filename,['/config/channels/' hdr.label{i} '/orientation']);
