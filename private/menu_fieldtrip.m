@@ -2,7 +2,7 @@ function menu_fieldtrip(handle, cfg, allowsubplot)
 
 % MENU_FIELDTRIP adds a FieldTrip-specific menu to a figure.
 %
-% See also MENU_ABOUT, MENU_PIPELINE
+% See also MENU_VIEWPOINT
 
 if nargin<2
   cfg = [];
@@ -25,7 +25,23 @@ if ft_platform_supports('uimenu')
   % add the menu with callbacks
   ftmenu = uimenu(handle, 'Label', 'FieldTrip');
   if ~isempty(cfg)
-    uimenu(ftmenu, 'Label', 'Show pipeline', 'Callback', {@menu_pipeline, cfg});
+    uimenu(ftmenu, 'Label', 'Show pipeline', 'Callback', {@cb_pipeline, cfg});
   end
-  uimenu(ftmenu, 'Label', 'About', 'Callback', @menu_about);
+  uimenu(ftmenu, 'Label', 'About', 'Callback', @cb_about);
 end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function cb_pipeline(handle, eventdata, varargin)
+ft_analysispipeline([], varargin{1});
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function cb_about(handle, eventdata, varargin)
+msgbox( {
+  'FieldTrip is the MATLAB toolbox for MEG and EEG analysis that is being developed at the Centre for Cognitive Neuroimaging of the Donders Institute for Brain, Cognition and Behaviour together with collaborating institutes. The FieldTrip software is released as open source under the GNU general public license.'
+  ''
+  sprintf('This is FieldTrip, version %s', ft_version)
+  } );
