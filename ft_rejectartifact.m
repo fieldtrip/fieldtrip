@@ -598,7 +598,6 @@ else
         if ~hasoverlap
           % apply the updated trial definition to the data
           tmpcfg      = keepfields(cfg, {'trl', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
-          data        = removefields(data, {'trialinfo'}); % this cannot be retained
           data        = ft_redefinetrial(tmpcfg, data);
           % restore the provenance information
           [cfg, data] = rollback_provenance(cfg, data);
@@ -606,11 +605,13 @@ else
           % loop over individual trials
           singletrial = cell(1, numel(data.trial));
           for i=1:numel(data.trial)
-            singletrial{i} = removefields(data, {'time', 'trial', 'trialinfo'}); % trialinfo cannot be retained
+            singletrial{i} = removefields(data, {'time', 'trial'});
             singletrial{i}.time  = data.time(i);
             singletrial{i}.trial = data.trial(i);
             singletrial{i}.sampleinfo = data.sampleinfo(i,:);
-
+            if isfield(singletrial{i}, 'trialinfo')
+              singletrial{i}.trialinfo = singletrial{i}.trialinfo(i,:);
+            end
             tmpcfg = keepfields(cfg, {'trl', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
             tmpcfg.showcallinfo = 'no';
             singletrial{i} = ft_redefinetrial(tmpcfg, singletrial{i});
