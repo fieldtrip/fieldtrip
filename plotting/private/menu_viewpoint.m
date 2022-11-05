@@ -1,5 +1,9 @@
 function menu_viewpoint(h, coordsys)
 
+% MENU_VIEWPOINT adds a context menu to a 3D figure.
+%
+% See also MENU_FIELDTRIP
+
 h = getparent(h);
 
 if ~ishandle(h) || ~ft_platform_supports('uimenu')
@@ -14,10 +18,10 @@ for i=1:length(viewpoint)
   uimenu(cm, 'Label', viewpoint{i}, 'callback', @cb_viewpoint);
 end
 
-try
-  % this works for R2021b
+if isa(h, 'matlab.ui.Figure') && isprop(h, 'ContextMenu')
+  % this works for R2021b and up
   h.ContextMenu = cm;
-catch
+else
   % FIXME it would be nice to get this to work on older MATLAB versions
   % (e.g.) 2018b has h.UIContextMenu, but it seems to work a bit
   % differently, but it's worth a shot as fallback option

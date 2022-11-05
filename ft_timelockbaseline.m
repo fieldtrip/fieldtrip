@@ -27,7 +27,7 @@ function [timelock] = ft_timelockbaseline(cfg, timelock)
 %   cfg.previous
 %   cfg.version
 
-% Copyright (C) 2006, Robert Oostenveld
+% Copyright (C) 2022, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -125,7 +125,6 @@ if ischar(cfg.baseline)
     % is input consistent?
   elseif strcmp(cfg.baseline, 'no')
     ft_warning('no baseline correction done');
-    return;
   end
 end
 

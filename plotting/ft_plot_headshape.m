@@ -127,9 +127,16 @@ if isfield(headshape, 'fid')
   end
 end
 
+if isfield(headshape, 'coordsys')
+  % add a context sensitive menu to change the 3d viewpoint to top|bottom|left|right|front|back
+  menu_viewpoint(gca, headshape.coordsys)
+end
+
 if nargout==0
   clear hs
 end
+
 if ~holdflag
   hold off
 end
+
