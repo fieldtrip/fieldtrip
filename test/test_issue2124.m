@@ -17,15 +17,24 @@ data.time{2}  = (0:99)./100;
 data.time{3}  = (0:99)./100;
 data.label    = {'label'};
 data.sampleinfo = [1 100;51 150;81 180];
+data.trialinfo = [1 2 3]';
 
 cfg = [];
 cfg.artfctdef.reject   = 'complete';
 cfg.artfctdef.zvalue.artifact = [11 20];
 dataout = ft_rejectartifact(cfg, data);
 
-
 cfg = [];
 cfg.artfctdef.reject   = 'partial';
 cfg.artfctdef.zvalue.artifact = [11 20];
 cfg.artfctdef.minaccepttim = 0.05;
 dataout = ft_rejectartifact(cfg, data);
+assert(numel(dataout.trial)==4);
+
+cfg = [];
+cfg.artfctdef.reject   = 'partial';
+cfg.artfctdef.zvalue.artifact = [11 20;111 120];
+cfg.artfctdef.minaccepttim = 0.05;
+dataout = ft_rejectartifact(cfg, data);
+assert(numel(dataout.trial)==6);
+

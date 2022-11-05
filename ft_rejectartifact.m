@@ -612,10 +612,13 @@ else
             if isfield(singletrial{i}, 'trialinfo')
               singletrial{i}.trialinfo = singletrial{i}.trialinfo(i,:);
             end
-            tmpcfg = keepfields(cfg, {'trl', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+            tmpcfg = keepfields(cfg, {'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
             tmpcfg.showcallinfo = 'no';
+            tmpcfg.trl = cfg.trl(number==i, :);
             singletrial{i} = ft_redefinetrial(tmpcfg, singletrial{i});
-            [cfg, singletrial{i}] = rollback_provenance(cfg, singletrial{i});
+            [tmpcfg, singletrial{i}] = rollback_provenance(cfg, singletrial{i});
+            tmpcfg.trl = cfg.trl;
+            cfg        = tmpcfg; % needed to keep the original cfg.trl
           end
           data = ft_appenddata([], singletrial{:});
           % restore the provenance information
