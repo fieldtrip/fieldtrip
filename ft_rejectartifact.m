@@ -228,18 +228,18 @@ end
 
 % ensure the crittoilim input argument is valid
 if ~isempty(cfg.artfctdef.crittoilim)
-  
+
   if (size(cfg.artfctdef.crittoilim,2) ~= 2 ...
       || (size(cfg.artfctdef.crittoilim,1) ~= size(trl,1) ...
       && size(cfg.artfctdef.crittoilim,1) ~= 1))
     ft_error('if specified, cfg.artfctdef.crittoilim should be a 1x2 or Nx2 vector');
   end
-  
+
   % if specified as 1x2 vector, expand into Nx2
   if (size(cfg.artfctdef.crittoilim,1) == 1)
     cfg.artfctdef.crittoilim = repmat(cfg.artfctdef.crittoilim,size(trl,1),1);
   end
-  
+
   checkCritToi = 1; % flag for convenience
 else
   checkCritToi = 0;
@@ -342,7 +342,7 @@ if strcmp(cfg.artfctdef.feedback, 'yes')
     timebeg(i) = time{i}(1);
     timeend(i) = time{i}(end);
   end
-  
+
   figure
   title('linear display of the continuous data')
   xlabel('sample number');
@@ -364,7 +364,7 @@ if strcmp(cfg.artfctdef.feedback, 'yes')
   smpend = fn(end) + hdr.Fs;
   axis([smpbeg smpend 0 1]);
   legend([{'defined trials'}, cfg.artfctdef.type(:)']);
-  
+
   figure
   title('individual trials aligned to time-zero')
   xlabel('time (s)');
@@ -421,52 +421,52 @@ end
 % remove the trials that (partially) coincide with a rejection mark
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if any(strcmp(cfg.artfctdef.reject, {'partial', 'complete', 'nan', 'zero', 'value'}))
-  
+
   count_complete_reject = 0;
   count_partial_reject  = 0;
   count_nan             = 0;
   count_zero            = 0;
   count_value           = 0;
   count_outsidecrit     = 0;
-  
+
   trlCompletelyRemovedInd = [];
   trlPartiallyRemovedInd  = [];
-  
+
   % add a 4th column with the original trial number
   trl(:,4) = 1:size(trl,1);
-  
+
   trlnew = [];
   for trial=1:size(trl,1)
     % cut out the part of the rejection-axis corresponding with this trial
     rejecttrial = rejectall(trl(trial,1):trl(trial,2));
-    
+
     if all(not(rejecttrial))
       % the whole trial is good
       trlnew = [trlnew; trl(trial,:)];
-      
+
     elseif all(rejecttrial) && strcmp(cfg.artfctdef.reject, 'nan')
       % the whole trial is bad, but it is requested to be replaced with NaNs
       data.trial{trial}(:,rejecttrial) = nan;
       trlnew = [trlnew; trl(trial,:)]; % Mark the trial as good as nothing will be removed
       count_nan = count_nan + 1;
-      
+
     elseif all(rejecttrial) && strcmp(cfg.artfctdef.reject, 'zero')
       % the whole trial is bad, but it is requested to be replaced with zeros
       data.trial{trial}(:,rejecttrial) = 0;
       trlnew = [trlnew; trl(trial,:)]; % Mark the trial as good as nothing will be removed
       count_zero = count_zero + 1;
-      
+
     elseif all(rejecttrial) && strcmp(cfg.artfctdef.reject, 'value')
       % the whole trial is bad, but it is requested to be replaced with a specific value
       data.trial{trial}(:,rejecttrial) = cfg.artfctdef.value;
       trlnew = [trlnew; trl(trial,:)]; % Mark the trial as good as nothing will be removed
       count_value = count_value + 1;
-      
+
     elseif all(rejecttrial)
       % the whole trial is bad
       count_complete_reject = count_complete_reject + 1;
       trlCompletelyRemovedInd = [trlCompletelyRemovedInd trial];
-      
+
     elseif any(rejecttrial) && strcmp(cfg.artfctdef.reject, 'complete')
       % some part of the trial is bad, check if within crittoilim?
       if (checkCritToi)
@@ -484,7 +484,7 @@ if any(strcmp(cfg.artfctdef.reject, {'partial', 'complete', 'nan', 'zero', 'valu
         trlCompletelyRemovedInd = [trlCompletelyRemovedInd trial];
         continue;
       end
-      
+
     elseif any(rejecttrial) && strcmp(cfg.artfctdef.reject, 'partial')
       % some part of the trial is bad, reject only the bad part
       partial = [];
@@ -503,28 +503,28 @@ if any(strcmp(cfg.artfctdef.reject, {'partial', 'complete', 'nan', 'zero', 'valu
       trlnew = [trlnew; partial];
       count_partial_reject = count_partial_reject + 1;
       trlPartiallyRemovedInd = [trlPartiallyRemovedInd trial];
-      
+
     elseif any(rejecttrial) && strcmp(cfg.artfctdef.reject, 'nan')
       % Some part of the trial is bad, replace bad part with NaNs
       data.trial{trial}(:,rejecttrial) = nan;
       trlnew = [trlnew; trl(trial,:)]; % Mark the trial as good as nothing will be removed
       count_nan = count_nan + 1;
-      
+
     elseif any(rejecttrial) && strcmp(cfg.artfctdef.reject, 'zero')
       % Some part of the trial is bad, replace bad part with zeros
       data.trial{trial}(:,rejecttrial) = 0;
       trlnew = [trlnew; trl(trial,:)]; % Mark the trial as good as nothing will be removed
       count_zero = count_zero + 1;
-      
+
     elseif any(rejecttrial) && strcmp(cfg.artfctdef.reject, 'value')
       % Some part of the trial is bad, replace bad part with specified value
       data.trial{trial}(:,rejecttrial) = cfg.artfctdef.value;
       trlnew = [trlnew; trl(trial,:)]; % Mark the trial as good as nothing will be removed
       count_value = count_value + 1;
-      
+
     end
   end % for each trial
-  
+
   ft_info('rejected %3d trials completely\n', count_complete_reject);
   ft_info('rejected %3d trials partially\n', count_partial_reject);
   ft_info('filled parts of %3d trials with NaNs\n', count_nan);
@@ -559,10 +559,10 @@ if any(strcmp(cfg.artfctdef.reject, {'partial', 'complete', 'nan', 'zero', 'valu
     % concatenate the additional columns from the original trial definition
     trlnew = [begsample endsample offset trlold(number, 4:end)];
   end
-  
+
   cfg.trlold = trlold;  % return the original trial definition in the configuration
   cfg.trl    = trlnew;  % return the cleaned trial definition in the configuration
-    
+
 else
   cfg.trlold = trlold;  % return the original trial definition in the configuration
   cfg.trl    = trlold;  % return the original trial definition in the configuration
@@ -572,14 +572,67 @@ end
 if isempty(cfg.trl)
   ft_error('No trials left after artifact rejection.')
 else
-  if hasdata && ~any(strcmp(cfg.artfctdef.reject, {'nan', 'zero', 'value'})) % Skip this step to avoid removing parts that were filled with NaNs or zeros
-    % apply the updated trial definition on the data
-    tmpcfg      = keepfields(cfg, {'trl', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
-    data        = removefields(data, {'trialinfo'});
-    data        = ft_redefinetrial(tmpcfg, data);
-    % restore the provenance information
-    [cfg, data] = rollback_provenance(cfg, data);
-  end
+  if hasdata
+    switch (cfg.artfctdef.reject)
+      case 'complete'
+        % only keep the trials without any artifacts
+        tmpcfg = keepfields(cfg, {'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+        tmpcfg.trials = number(:);
+        data   = ft_selectdata(tmpcfg, data);
+        % restore the provenance information
+        [cfg, data] = rollback_provenance(cfg, data);
+
+      case 'partial'
+        if isfield(data, 'sampleinfo')
+          tmp = sortrows(data.sampleinfo, 1);
+          begsample = tmp(:,1);
+          endsample = tmp(:,2);
+          hasoverlap = any(endsample(1:end-1)>=begsample(2:end));
+        else
+          hasoverlap = false;
+        end
+
+        % if the input data consists of partially overlapping trials, ft_redefinetrial->ft_fetch_data will throw an error
+        % this is avoided by looking over individual trials
+
+        if ~hasoverlap
+          % apply the updated trial definition to the data
+          tmpcfg      = keepfields(cfg, {'trl', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+          data        = ft_redefinetrial(tmpcfg, data);
+          % restore the provenance information
+          [cfg, data] = rollback_provenance(cfg, data);
+        else
+          % loop over individual trials
+          singletrial = cell(1, numel(data.trial));
+          for i=1:numel(data.trial)
+            singletrial{i} = removefields(data, {'time', 'trial'});
+            singletrial{i}.time  = data.time(i);
+            singletrial{i}.trial = data.trial(i);
+            singletrial{i}.sampleinfo = data.sampleinfo(i,:);
+            if isfield(singletrial{i}, 'trialinfo')
+              singletrial{i}.trialinfo = singletrial{i}.trialinfo(i,:);
+            end
+            tmpcfg = keepfields(cfg, {'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+            tmpcfg.showcallinfo = 'no';
+            tmpcfg.trl = cfg.trl(number==i, :);
+            singletrial{i} = ft_redefinetrial(tmpcfg, singletrial{i});
+            [tmpcfg, singletrial{i}] = rollback_provenance(cfg, singletrial{i});
+            tmpcfg.trl = cfg.trl;
+            cfg        = tmpcfg; % needed to keep the original cfg.trl
+          end
+          data = ft_appenddata([], singletrial{:});
+          % restore the provenance information
+          [cfg, data] = rollback_provenance(cfg, data);
+        end % hasoverlap
+
+      case {'nan', 'zero', 'value'}
+        % do not remove the parts that were filled with NaNs or zeros
+
+      otherwise
+        ft_error('unsupported cfg.artfctdef.reject');
+    end % switch
+
+  end % hasdata
 end
 
 % do the general cleanup and bookkeeping at the end of the function
