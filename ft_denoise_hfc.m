@@ -82,7 +82,7 @@ if ~isfield(data,'grad')
 end
 
 % set the defaults
-cfg.L               = ft_getopt(cfg, 'L', 1);
+cfg.order           = ft_getopt(cfg, 'order', 1);
 cfg.channel         = ft_getopt(cfg, 'channel', 'all', 1);
 cfg.trials          = ft_getopt(cfg, 'trials', 'all', 1);
 cfg.updatesens      = ft_getopt(cfg, 'updatesens', 'yes');
@@ -118,7 +118,7 @@ ft_hastoolbox('OPM', 1);
 
 % generate harmonic basis set
 opt = [];
-opt.li = cfg.L;
+opt.li = cfg.order;
 opt.v = data.grad.coilpos(x,:);
 opt.o = data.grad.coilori(x,:);
 N = spm_opm_vslm(opt);
