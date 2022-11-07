@@ -11,8 +11,10 @@ function [data] = ft_denoise_hfc(cfg,data)
 %
 % Where cfg is a configuration structure that contains:
 %   cfg.channel         = channels for HFC (default = 'all')
-% 	cfg.L               = spherical harmonic order, L=1 is a homogenous field.
-%                           L=2 includes gradients, L=3 quadratic terms etc.
+% 	cfg.order           = spherical harmonic order: 
+%                           order = 1 is a homogenous field; order = 2 
+%                           includes gradients; order = 3 includes 
+%                           quadratic terms etc. (default = 1)
 %   cfg.trials          = which trials do you want to denoise?
 %                           (default = 'all')
 %   cfg.updatesens      = do you want to update sensor info with projector?
@@ -21,7 +23,7 @@ function [data] = ft_denoise_hfc(cfg,data)
 %   cfg.residualcheck   = do you want to check channel residuals
 %                          (default = 'yes')
 %   cfg.residualthresh  = (in pT) what level of residual signal is fine for
-%                           quality assurance (default=50)
+%                           quality assurance (default = 50)
 % See also FT_DENOISE_SYNTHETIC, FT_DENOISE_PCA, FT_DENOISE_DSSP, FT_DENOISE_TSP
 
 % Copyright (C) 2021-22, Tim Tierney, George O'Neill, Robert Seymour
