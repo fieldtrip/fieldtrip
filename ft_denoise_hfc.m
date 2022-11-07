@@ -112,13 +112,10 @@ if num_mismatch > 0 && istrue(cfg.feedback)
         'Harmonic Field Correction']);
 end
 
-<<<<<<< HEAD
 % Check for Dr. Tim Tierney's OPM toolbox on the path, and add if needed
 % See: https://github.com/tierneytim/OPM
 ft_hastoolbox('opm', 1);
 
-=======
->>>>>>> parent of b7bad827c (move spm_opm_vslm to external toolbox)
 % generate harmonic basis set
 opt = [];
 opt.li = cfg.order;
