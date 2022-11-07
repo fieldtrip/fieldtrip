@@ -114,7 +114,7 @@ end
 
 % Check for Dr. Tim Tierney's OPM toolbox on the path, and add if needed
 % See: https://github.com/tierneytim/OPM
-ft_hastoolbox('OPM', 1);
+ft_hastoolbox('opm', 1);
 
 % generate harmonic basis set
 opt = [];
