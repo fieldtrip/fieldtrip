@@ -112,6 +112,10 @@ if num_mismatch > 0 && istrue(cfg.feedback)
         'Harmonic Field Correction']);
 end
 
+% Check for Dr. Tim Tierney's OPM toolbox on the path, and add if needed
+% See: https://github.com/tierneytim/OPM
+ft_hastoolbox('OPM', 1);
+
 % generate harmonic basis set
 opt = [];
 opt.li = cfg.L;
