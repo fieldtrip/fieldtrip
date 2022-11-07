@@ -38,7 +38,7 @@ The functions in the FieldTrip toolbox are copyrighted by their respective autho
   - Vladimir Litvak, UCL
   - and many others ...
 
-Copyright (C) 2008-2021, Donders Institute for Brain, Cognition and Behaviour, Radboud University, The Netherlands (DCCN, DCC, DCN)
+Copyright (C) 2008-2022, Donders Institute for Brain, Cognition and Behaviour, Radboud University, The Netherlands (DCCN, DCC, DCN)
 
 Copyright (C) 2014-2018, Karolinska Institute, Stockholm, Sweden (NatMEG)
 
