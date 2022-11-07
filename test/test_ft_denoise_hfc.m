@@ -19,25 +19,25 @@ end
 
 % Test of Harmonic Field Correction (HFC) where L = 1
 cfg               = [];
-cfg.L             = 1;
+cfg.order         = 1;
 cfg.residualcheck = 'yes';
 [data_out]        = ft_denoise_hfc(cfg,data);
 
 % Check L = 2
 cfg               = [];
-cfg.L             = 2;
+cfg.order         = 2;
 cfg.residualcheck = 'yes';
 [data_out]        = ft_denoise_hfc(cfg,data);
 
 % Check L = 3
 cfg               = [];
-cfg.L             = 3;
+cfg.order         = 3;
 cfg.residualcheck = 'yes';
 [data_out]        = ft_denoise_hfc(cfg,data);
 
 % Check L = 1 without residual check
 cfg               = [];
-cfg.L             = 1;
+cfg.order         = 1;
 cfg.residualcheck = 'no';
 [data_out]        = ft_denoise_hfc(cfg,data);
 
