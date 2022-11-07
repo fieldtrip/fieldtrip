@@ -625,7 +625,7 @@ else
           [cfg, data] = rollback_provenance(cfg, data);
         end % hasoverlap
 
-      case {'nan', 'zero', 'value'}
+      case {'nan', 'zero', 'value', 'none'}
         % do not remove the parts that were filled with NaNs or zeros
 
       otherwise
