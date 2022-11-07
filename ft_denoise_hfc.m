@@ -62,8 +62,8 @@ ft_preamble trackconfig
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
-    % do not continue function execution in case the outputfile is present and the user indicated to keep it
-    return
+  % do not continue function execution in case the outputfile is present and the user indicated to keep it
+  return
 end
 
 % check if the input cfg is valid for this function
@@ -78,7 +78,7 @@ cfg = ft_checkconfig(cfg, 'forbidden',  {'channels'}); % prevent accidental typo
 
 % Check if the data has a grad structure
 if ~isfield(data,'grad')
-    error(['Data needs a grad structure']);
+  error(['Data needs a grad structure']);
 end
 
 % set the defaults
@@ -107,9 +107,9 @@ data   = ft_selectdata(tmpcfg, data);
 num_mismatch = sum(x(:) == 0);
 
 if num_mismatch > 0 && istrue(cfg.feedback)
-    ft_warning(['Found ' num2str(num_mismatch) ' channels in grad structure'...
-        ' not present in cfg.channel. These channels will NOT be used for '...
-        'Harmonic Field Correction']);
+  ft_warning(['Found ' num2str(num_mismatch) ' channels in grad structure'...
+    ' not present in cfg.channel. These channels will NOT be used for '...
+    'Harmonic Field Correction']);
 end
 
 % Check for Dr. Tim Tierney's OPM toolbox on the path, and add if needed
@@ -139,33 +139,33 @@ labelold = data.label;
 % Tell the user
 data = ft_apply_montage(data,montage,'keepunused','yes');
 if istrue(cfg.feedback)
-    disp('Applied HFC to the data');
+  disp('Applied HFC to the data');
 end
 
 % Update the tra to account for the g. Essential to correct the lead
 % fields going forward.
 if istrue(cfg.updatesens)
-    data.grad = ft_apply_montage(data.grad, montage, 'keepunused',...
-        'yes', 'balancename', 'hfc','warning',false);
-    if istrue(cfg.feedback)
-        disp('Converted the sensor description to HFC');
-    end  
+  data.grad = ft_apply_montage(data.grad, montage, 'keepunused',...
+    'yes', 'balancename', 'hfc','warning',false);
+  if istrue(cfg.feedback)
+    disp('Converted the sensor description to HFC');
+  end
 end
 
 % reorder the channels to stay close to the original ordering
 [~, selnew] = match_str(montage.labelold, data.label);
 if numel(selnew)==numel(labelold)
-    for i=1:numel(data.trial)
-        data.trial{i} = data.trial{i}(selnew,:);
-    end
-    data.label = data.label(selnew);
+  for i=1:numel(data.trial)
+    data.trial{i} = data.trial{i}(selnew,:);
+  end
+  data.label = data.label(selnew);
 else
-    ft_warning('channel ordering might have changed');
+  ft_warning('channel ordering might have changed');
 end
 
 % Perform running variance check to identify odd channels
 if strcmp(cfg.residualcheck,'yes')
-    residual_check(cfg.residualthresh,data,montage.labelold)
+  residual_check(cfg.residualthresh,data,montage.labelold)
 end
 
 % do the general cleanup and bookkeeping at the end of the function
@@ -176,7 +176,6 @@ ft_postamble provenance data
 ft_postamble history    data
 ft_postamble savevar    data
 
-end
 
 function residual_check(residualthresh,data,oldlabels)
 % Script to determine residual variance post HFC
@@ -186,18 +185,18 @@ function residual_check(residualthresh,data,oldlabels)
 
 trvar = [];
 for ii = 1:numel(data.trial)
-    tmp = data.trial{ii}(selnew2,:);
-    Mk =  tmp(:,1);
-    Sk = zeros(size(Mk));
-    count = 1;
-    for jj = 1:size(tmp,2)
-        Xk = tmp(:,jj);
-        Mkprev = Mk;
-        Mk = Mkprev +(Xk-Mkprev)/count;
-        Sk=Sk+(Xk-Mkprev).*(Xk-Mk) ;
-        count=count+1;
-    end
-    trvar(:,ii)=Sk/(count-1);
+  tmp = data.trial{ii}(selnew2,:);
+  Mk =  tmp(:,1);
+  Sk = zeros(size(Mk));
+  count = 1;
+  for jj = 1:size(tmp,2)
+    Xk = tmp(:,jj);
+    Mkprev = Mk;
+    Mk = Mkprev +(Xk-Mkprev)/count;
+    Sk=Sk+(Xk-Mkprev).*(Xk-Mk) ;
+    count=count+1;
+  end
+  trvar(:,ii)=Sk/(count-1);
 end
 
 % Identify the most common chanunit
@@ -206,20 +205,20 @@ chanunit = ft_chanunit(data);
 chanunit = s{mode(j)};
 
 switch chanunit % some of this are silly, but safety first!
-    case 'fT'
-        scale = 1e-3;
-    case 'pT'
-        scale = 1;
-    case 'nT'
-        scale = 1e3;
-    case 'uT'
-        scale = 1e6;
-    case 'mT'
-        scale = 1e9;
-    case {'T','T/m'}
-        scale = 1e12;
-    otherwise
-        ft_error('Cannot check residuals due to unknown sensor units!')
+  case 'fT'
+    scale = 1e-3;
+  case 'pT'
+    scale = 1;
+  case 'nT'
+    scale = 1e3;
+  case 'uT'
+    scale = 1e6;
+  case 'mT'
+    scale = 1e9;
+  case {'T','T/m'}
+    scale = 1e12;
+  otherwise
+    ft_error('Cannot check residuals due to unknown sensor units!')
 end
 
 SD = mean(sqrt(trvar),2)*scale;
@@ -227,20 +226,18 @@ SD = mean(sqrt(trvar),2)*scale;
 fprintf('Checking for unsual channels post-corrections\n')
 count = 0;
 for ii = 1:length(SD)
-    index = selnew2(ii);
-    if SD(ii) > residualthresh
-        count = count + 1;
-        if strcmp(chanunit,'fT')
-            fprintf(['Residual on channel ' num2str(index) ', '...
-                data.label{index} ': %3.2f pT\n'], SD(ii));
-        else
-            fprintf(['Residual on channel ' num2str(index) ', '...
-                data.label{index} ': %3.2f' chanunit '\n'], SD(ii));
-        end
+  index = selnew2(ii);
+  if SD(ii) > residualthresh
+    count = count + 1;
+    if strcmp(chanunit,'fT')
+      fprintf(['Residual on channel ' num2str(index) ', '...
+        data.label{index} ': %3.2f pT\n'], SD(ii));
+    else
+      fprintf(['Residual on channel ' num2str(index) ', '...
+        data.label{index} ': %3.2f' chanunit '\n'], SD(ii));
     end
+  end
 end
 if ~count
-    fprintf('No unusual channel residuals found!\n')
-end
-
+  fprintf('No unusual channel residuals found!\n')
 end
