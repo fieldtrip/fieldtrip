@@ -1301,6 +1301,7 @@ switch dataformat
     for i=1:hdr.nChans
       v=double(hdr.orig.orig.(hdr.label{i}));
       v=v*hdr.orig.orig.(char(strcat(hdr.label{i},'_BitResolution')));
+      v=v/hdr.orig.orig.(char(strcat(hdr.label{i},'_Gain')));
       dat(i,:)=v(begsample:endsample); %channels sometimes have small differences in samples
     end
     
