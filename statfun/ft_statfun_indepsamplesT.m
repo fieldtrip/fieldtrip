@@ -79,7 +79,7 @@ hasnans1 = any(nreplc1<sum(sel1));
 hasnans2 = any(nreplc2<sum(sel2));
 
 if any(nrepl<size(design,2))
-  repsused=sum(nrepl>size(design,2));
+  repsused=sum(nrepl==size(design,2));
   ft_warning(['Using only ',num2str(repsused),' out of ',num2str(length(nrepl)),' replications for the computation of the statistic!']);
 end
 df = nrepl - 2;
