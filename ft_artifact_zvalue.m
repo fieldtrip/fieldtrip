@@ -377,7 +377,7 @@ for trlop = 1:numtrl
       options_getdata = cat(2, options_getdata, {'dataformat', cfg.dataformat});
       thisdat = ft_read_data(cfg.datafile, options_getdata{:});
     end
-    thisdat = preproc(thisdat, cfg.artfctdef.zvalue.channel, offset2time(0, hdr.Fs, size(dat,2)), cfg.artfctdef.zvalue, fltpadding, fltpadding);
+    thisdat = preproc(thisdat, cfg.artfctdef.zvalue.channel, offset2time(0, hdr.Fs, size(thisdat,2)), cfg.artfctdef.zvalue, fltpadding, fltpadding);
   else
     thisdat = dat{trlop};
   end
