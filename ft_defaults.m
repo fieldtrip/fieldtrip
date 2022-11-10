@@ -245,28 +245,31 @@ if ~isdeployed
 
   try
     % external/signal contains alternative implementations of some signal processing functions
+    external_signal = fullfile(fileparts(which('ft_defaults')), 'external', 'signal');
     if ~ft_platform_supports('signal') || ~strcmp(ft_default.toolbox.signal, 'matlab') || ~ft_hastoolbox('signal')
-      addpath(fullfile(fileparts(which('ft_defaults')), 'external', 'signal'));
-    else
-      rmpath(fullfile(fileparts(which('ft_defaults')), 'external', 'signal'));
+      addpath(external_signal);
+    elseif contains(path, external_signal)
+      rmpath(external_signal);
     end
   end
 
   try
     % external/stats contains alternative implementations of some statistics functions
+    external_stats = fullfile(fileparts(which('ft_defaults')), 'external', 'stats');
     if ~ft_platform_supports('stats') || ~strcmp(ft_default.toolbox.stats, 'matlab') || ~ft_hastoolbox('stats')
-      addpath(fullfile(fileparts(which('ft_defaults')), 'external', 'stats'));
-    else
-      rmpath(fullfile(fileparts(which('ft_defaults')), 'external', 'stats'));
+      addpath(external_stats);
+    elseif contains(path, external_stats)
+      rmpath(external_stats);
     end
   end
 
   try
     % external/images contains alternative implementations of some image processing functions
+    external_images = fullfile(fileparts(which('ft_defaults')), 'external', 'images');
     if ~ft_platform_supports('images') || ~strcmp(ft_default.toolbox.images, 'matlab') || ~ft_hastoolbox('images')
-      addpath(fullfile(fileparts(which('ft_defaults')), 'external', 'images'));
-    else
-      rmpath(fullfile(fileparts(which('ft_defaults')), 'external', 'images'));
+      addpath(external_images);
+    elseif contains(path, external_images)
+      rmpath(external_images);
     end
   end
 
