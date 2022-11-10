@@ -66,7 +66,7 @@ ft_preamble init
 ft_preamble debug
 ft_preamble loadvar varargin
 ft_preamble provenance varargin
-ft_preamble trackconfig
+
 ft_preamble randomseed
 
 % the ft_abort variable is set to true or false in ft_preamble_init
@@ -104,7 +104,7 @@ for i=1:length(varargin)
 end
 
 % ensure that the data in all inputs has the same channels, time-axis, etc.
-tmpcfg = keepfields(cfg, {'frequency', 'avgoverfreq', 'latency', 'avgovertime', 'avgoverpos', 'parameter', 'select', 'nanmean', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+tmpcfg = keepfields(cfg, {'frequency', 'avgoverfreq', 'latency', 'avgovertime', 'avgoverpos', 'parameter', 'select', 'nanmean', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
 [varargin{:}] = ft_selectdata(tmpcfg, varargin{:});
 % restore the provenance information
 [cfg, varargin{:}] = rollback_provenance(cfg, varargin{:});
@@ -238,7 +238,7 @@ cfg = removefields(cfg, {'dimord', 'tri', 'dim', 'origdim', 'inside', 'originsid
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble randomseed
-ft_postamble trackconfig
+
 ft_postamble previous   varargin
 ft_postamble provenance stat
 ft_postamble history    stat

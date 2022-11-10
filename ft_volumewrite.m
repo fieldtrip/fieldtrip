@@ -102,7 +102,7 @@ ft_preamble init
 ft_preamble debug
 ft_preamble loadvar volume
 ft_preamble provenance volume
-ft_preamble trackconfig
+
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -146,7 +146,7 @@ end
 
 if cfg.downsample~=1
   % optionally downsample the anatomical and/or functional volumes
-  tmpcfg = keepfields(cfg, {'downsample', 'parameter', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+  tmpcfg = keepfields(cfg, {'downsample', 'parameter', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
   volume = ft_volumedownsample(tmpcfg, volume);
   % restore the provenance information
   [cfg, volume] = rollback_provenance(cfg, volume);
@@ -398,6 +398,6 @@ end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-ft_postamble trackconfig
+
 ft_postamble previous volume
 ft_postamble provenance

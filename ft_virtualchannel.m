@@ -75,7 +75,7 @@ ft_preamble init
 ft_preamble debug
 ft_preamble loadvar data source parcellation
 ft_preamble provenance data source parcellation
-ft_preamble trackconfig
+
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -141,7 +141,7 @@ end
 
 % select channels and trials of interest, by default this will select all channels and trials
 [i1, i2] = match_str(data.label, source.label);
-tmpcfg   = keepfields(cfg, {'trials', 'tolerance', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+tmpcfg   = keepfields(cfg, {'trials', 'tolerance', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
 tmpcfg.channel = data.label(i1);
 data   = ft_selectdata(tmpcfg, data);
 % restore the provenance information
@@ -410,7 +410,7 @@ data_vc.brainordinate = brainordinate;
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-ft_postamble trackconfig
+
 ft_postamble previous   data source parcellation
 ft_postamble provenance data_vc
 ft_postamble history    data_vc

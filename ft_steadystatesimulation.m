@@ -106,7 +106,7 @@ ft_defaults
 ft_preamble init
 ft_preamble debug
 ft_preamble provenance
-ft_preamble trackconfig
+
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -384,7 +384,7 @@ data.sampleinfo(:,1) = data.sampleinfo(:,1) + transpose((1:ntrial)-1)*round(cfg.
 data.sampleinfo(:,2) = data.sampleinfo(:,2) + transpose((1:ntrial)-1)*round(cfg.iti*cfg.fsample);
 
 ft_postamble debug
-ft_postamble trackconfig
+
 ft_postamble provenance data
 ft_postamble history    data
 ft_postamble savevar    data

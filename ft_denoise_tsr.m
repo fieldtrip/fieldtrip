@@ -109,7 +109,7 @@ ft_defaults
 ft_preamble init
 ft_preamble debug
 ft_preamble provenance varargin
-ft_preamble trackconfig
+
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -208,7 +208,7 @@ end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-ft_postamble trackconfig
+
 ft_postamble previous varargin
 
 ft_postamble provenance dataout
@@ -219,7 +219,7 @@ ft_postamble savevar    dataout
 function dataout = ft_denoise_tsr_core(cfg, varargin)
 
 % create a separate structure for the reference data
-tmpcfg  = keepfields(cfg, {'trials', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+tmpcfg  = keepfields(cfg, {'trials', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
 tmpcfg.channel = cfg.refchannel;
 if numel(varargin)>1
   fprintf('selecting reference channel data from the second data input argument\n');
@@ -231,7 +231,7 @@ end
 [dum, refdata] = rollback_provenance(cfg, refdata);
 
 % keep the requested channels from the data
-tmpcfg  = keepfields(cfg, {'trials', 'channel', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+tmpcfg  = keepfields(cfg, {'trials', 'channel', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
 data    = ft_selectdata(tmpcfg, varargin{1});
 [cfg, data] = rollback_provenance(cfg, data);
 

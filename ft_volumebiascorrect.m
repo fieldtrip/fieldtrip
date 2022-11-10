@@ -49,7 +49,7 @@ ft_preamble init
 ft_preamble debug
 ft_preamble loadvar     mri
 ft_preamble provenance  mri
-ft_preamble trackconfig
+
 
 if ft_abort
   % do not continue function execution in case the outputfile is present and the user indicated to keep it
@@ -187,7 +187,7 @@ if ~all(permutevec == [1 2 3])
 end
     
 ft_postamble debug
-ft_postamble trackconfig
+
 ft_postamble previous   mri
 ft_postamble provenance mri_unbias
 ft_postamble history    mri_unbias

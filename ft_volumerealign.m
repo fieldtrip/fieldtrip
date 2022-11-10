@@ -212,7 +212,7 @@ ft_preamble init
 ft_preamble debug
 ft_preamble loadvar mri
 ft_preamble provenance mri
-ft_preamble trackconfig
+
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -702,9 +702,6 @@ switch cfg.method
       M      = tmpcfg.m;
       cfg.transform_interactive = M;
       
-      % touch it to survive trackconfig
-      cfg.transform_interactive;
-      
       % update the relevant geometrical info
       scalp  = ft_transform_geometry(M, scalp);
     end % dointeractive
@@ -770,9 +767,6 @@ switch cfg.method
       cfg.icpinfo = info;
       cfg.transform_icp = M2;
       
-      % touch it to survive trackconfig
-      cfg.icpinfo;
-      cfg.transform_icp;
     else
       % compute the distance between the corresponding points, prior to icp:
       % this corresponds to the final result after interactive only
@@ -809,9 +803,6 @@ switch cfg.method
     % update the cfg
     cfg.headshape.headshape    = shape;
     cfg.headshape.headshapemri = scalp;
-    
-    % touch it to survive trackconfig
-    cfg.headshape;
     
     if doicp && dointeractive
       transform = M2*M;
@@ -1313,7 +1304,7 @@ end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-ft_postamble trackconfig
+
 ft_postamble previous   mri
 ft_postamble provenance realign
 ft_postamble history    realign

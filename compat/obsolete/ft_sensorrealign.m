@@ -125,7 +125,7 @@ ft_defaults
 ft_preamble init
 ft_preamble debug
 ft_preamble provenance elec_original
-ft_preamble trackconfig
+
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -568,7 +568,7 @@ end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-ft_postamble trackconfig
+
 ft_postamble previous   elec_original
 ft_postamble provenance elec_realigned
 ft_postamble history    elec_realigned

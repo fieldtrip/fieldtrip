@@ -101,7 +101,7 @@ ft_preamble init
 ft_preamble debug
 ft_preamble loadvar data
 ft_preamble provenance data
-ft_preamble trackconfig
+
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -576,7 +576,7 @@ else
     switch (cfg.artfctdef.reject)
       case 'complete'
         % only keep the trials without any artifacts
-        tmpcfg = keepfields(cfg, {'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+        tmpcfg = keepfields(cfg, {'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
         tmpcfg.trials = number(:);
         data   = ft_selectdata(tmpcfg, data);
         % restore the provenance information
@@ -597,7 +597,7 @@ else
 
         if ~hasoverlap
           % apply the updated trial definition to the data
-          tmpcfg      = keepfields(cfg, {'trl', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+          tmpcfg      = keepfields(cfg, {'trl', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
           data        = ft_redefinetrial(tmpcfg, data);
           % restore the provenance information
           [cfg, data] = rollback_provenance(cfg, data);
@@ -612,7 +612,7 @@ else
             if isfield(singletrial{i}, 'trialinfo')
               singletrial{i}.trialinfo = singletrial{i}.trialinfo(i,:);
             end
-            tmpcfg = keepfields(cfg, {'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+            tmpcfg = keepfields(cfg, {'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
             tmpcfg.showcallinfo = 'no';
             tmpcfg.trl = cfg.trl(number==i, :);
             singletrial{i} = ft_redefinetrial(tmpcfg, singletrial{i});
@@ -637,7 +637,7 @@ end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-ft_postamble trackconfig
+
 ft_postamble provenance
 if hasdata
   ft_postamble previous data

@@ -54,7 +54,7 @@ ft_preamble init
 ft_preamble debug
 ft_preamble loadvar source
 ft_preamble provenance source
-ft_preamble trackconfig
+
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -155,6 +155,6 @@ switch (cfg.filetype)
 end % switch filetype
 
 ft_postamble debug
-ft_postamble trackconfig
+
 ft_postamble previous source
 ft_postamble provenance

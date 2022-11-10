@@ -88,7 +88,7 @@ ft_preamble init
 ft_preamble debug
 ft_preamble loadvar freqlow freqhigh
 ft_preamble provenance freqlow freqhi
-ft_preamble trackconfig
+
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -326,7 +326,7 @@ else
 end
 
 ft_postamble debug
-ft_postamble trackconfig
+
 ft_postamble previous   freqlow freqhigh
 ft_postamble provenance crossfreq
 ft_postamble history    crossfreq

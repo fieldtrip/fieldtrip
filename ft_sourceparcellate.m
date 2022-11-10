@@ -59,7 +59,7 @@ ft_preamble init
 ft_preamble debug
 ft_preamble loadvar source parcellation
 ft_preamble provenance source parcellation
-ft_preamble trackconfig
+
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -365,7 +365,7 @@ for i=1:numel(fn)
 end
 
 ft_postamble debug
-ft_postamble trackconfig
+
 ft_postamble previous   source parcellation
 ft_postamble provenance parcel
 ft_postamble history    parcel
