@@ -53,11 +53,6 @@ if ~isfield(cfg, 'feedback'),      cfg.feedback = 'yes';           end
 if ~isfield(cfg, 'conductivity'),  cfg.conductivity = [];          end % this should be specified by the user
 if ~isfield(cfg, 'numvertices'),   cfg.numvertices = 'same';       end
 
-if isfield(cfg, 'headshape') && isa(cfg.headshape, 'config')
-  % convert the nested config-object back into a normal structure
-  cfg.headshape = struct(cfg.headshape);
-end
-
 % get the surface describing the head shape
 headshape = prepare_mesh_headshape(cfg);
 

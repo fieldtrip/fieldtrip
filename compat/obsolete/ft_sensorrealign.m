@@ -149,11 +149,6 @@ cfg.casesensitive = ft_getopt(cfg, 'casesensitive', 'yes');
 cfg.warp          = ft_getopt(cfg, 'warp',          'rigidbody');
 cfg.label         = ft_getopt(cfg, 'label',         'off');
 
-if isfield(cfg, 'headshape') && isa(cfg.headshape, 'config')
-  % convert the nested config-object back into a normal structure
-  cfg.headshape = struct(cfg.headshape);
-end
-
 if ~isempty(cfg.coordsys)
   switch lower(cfg.coordsys)
     case 'ctf'

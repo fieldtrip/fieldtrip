@@ -238,16 +238,6 @@ if strcmp(cfg.method, 'fiducial') && isfield(cfg, 'warp') && ~isequal(cfg.warp, 
   cfg.warp = 'rigidbody';
 end
 
-if isfield(cfg, 'headshape') && isa(cfg.headshape, 'config')
-  % convert the nested config-object back into a normal structure
-  cfg.headshape = struct(cfg.headshape);
-end
-
-if isfield(cfg, 'target') && isa(cfg.target, 'config')
-  % convert the nested config-object back into a normal structure
-  cfg.target = struct(cfg.target);
-end
-
 % the data can be passed as input arguments or can be read from disk
 hasdata = exist('elec_original', 'var');
 
@@ -727,7 +717,7 @@ switch cfg.method
       elec_realigned.coordsys = normalise.coordsys;
     else
       elec_realigned.coordsys = 'mni';
-    end  
+    end
   otherwise
     ft_error('unknown method');
 end
