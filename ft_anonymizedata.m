@@ -79,11 +79,6 @@ cfg.keepvalue   = ft_getopt(cfg, 'keepvalue', {});
 cfg.removevalue = ft_getopt(cfg, 'removevalue', {});
 cfg.keepnumeric = ft_getopt(cfg, 'keepnumeric', 'yes');
 
-if isfield(data, 'cfg')
-  % ensure that it is a structure, not a config object
-  data.cfg = struct(data.cfg);
-end
-
 % determine the name and value of each element in the structure
 [name, value] = splitstruct('data', data);
 

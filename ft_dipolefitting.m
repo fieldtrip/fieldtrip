@@ -479,10 +479,10 @@ elseif strcmp(cfg.gridsearch, 'no')
   % use the initial guess supplied in the configuration for the remainder
   switch cfg.model
     case 'regional'
-      dip = struct(cfg.dip);      % ensure that it is a struct, not a config object
+      dip = cfg.dip;
     case 'moving'
       for t=1:ntime
-        dip(t) = struct(cfg.dip); % ensure that it is a struct, not a config object
+        dip(t) = cfg.dip;
       end
     otherwise
       ft_error('unsupported cfg.model');
