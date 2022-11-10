@@ -68,7 +68,6 @@ ft_preamble init
 ft_preamble debug
 ft_preamble provenance
 
-
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
   return
@@ -237,7 +236,6 @@ delete(fig);
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-
 ft_postamble provenance
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

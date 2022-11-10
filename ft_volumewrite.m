@@ -18,7 +18,7 @@ function ft_volumewrite(cfg, volume)
 %                       e.g. 'pow', 'coh', 'nai' or 'anatomy'
 %   cfg.filename      = filename without the extension
 %
-% To determine the file format, the following option can be specified 
+% To determine the file format, the following option can be specified
 %   cfg.filetype      = 'analyze_old', 'nifti' (default), 'nifti_img', 'analyze_spm',
 %                       'nifti_spm', 'nifti_gz', 'mgz', 'mgh', 'vmp' or 'vmr'
 %
@@ -103,7 +103,6 @@ ft_preamble debug
 ft_preamble loadvar volume
 ft_preamble provenance volume
 
-
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
   return
@@ -131,9 +130,9 @@ cfg.datatype     = ft_getopt(cfg, 'datatype');
 cfg.scaling      = ft_getopt(cfg, 'scaling');
 
 if any(strcmp(cfg.datatype, {'logical' 'uint8','int8', 'int16', 'int32'})) && isempty(cfg.scaling)
-  cfg.scaling = 'yes';  
+  cfg.scaling = 'yes';
 elseif isempty(cfg.scaling)
-  cfg.scaling = 'no';    
+  cfg.scaling = 'no';
 end
 
 % select the parameter that should be written
@@ -224,10 +223,10 @@ if istrue(cfg.scaling)
   minval = min(data(:));
   
   % scale the data so that it fits in the desired numerical data format
-  switch lower(cfg.datatype)    
+  switch lower(cfg.datatype)
     case 'uint8'
       scl_slope = (maxval-minval)/(2^8-1);
-      scl_inter = minval; 
+      scl_inter = minval;
     case 'int8'
       scl_slope = maxval/(2^7-1);
       scl_inter = 0;
@@ -398,6 +397,5 @@ end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-
 ft_postamble previous volume
 ft_postamble provenance

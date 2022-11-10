@@ -60,7 +60,6 @@ ft_preamble debug
 ft_preamble loadvar source parcellation
 ft_preamble provenance source parcellation
 
-
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
   return
@@ -364,8 +363,8 @@ for i=1:numel(fn)
   end
 end
 
+% do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-
 ft_postamble previous   source parcellation
 ft_postamble provenance parcel
 ft_postamble history    parcel

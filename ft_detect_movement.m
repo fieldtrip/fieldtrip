@@ -216,7 +216,7 @@ for i=1:ntrial
 end % for each trial
 ft_progress('close');
 
-
+% do the general cleanup and bookkeeping at the end of the function
 ft_postamble provenance
 ft_postamble debug
 ft_postamble previous data

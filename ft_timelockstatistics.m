@@ -241,7 +241,6 @@ cfg = removefields(cfg, {'dim', 'dimord'});
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble randomseed
-
 ft_postamble previous   varargin
 ft_postamble provenance stat
 ft_postamble history    stat

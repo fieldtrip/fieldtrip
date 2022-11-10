@@ -59,7 +59,6 @@ ft_preamble debug
 ft_preamble loadvar data template
 ft_preamble provenance data template
 
-
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
   % do not continue function execution in case the outputfile is present and the user indicated to keep it
@@ -145,7 +144,6 @@ ft_progress('close');
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-
 ft_postamble previous   data template
 ft_postamble provenance data
 ft_postamble history    data

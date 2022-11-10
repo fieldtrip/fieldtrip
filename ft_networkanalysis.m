@@ -75,7 +75,6 @@ ft_preamble debug
 ft_preamble loadvar data
 ft_preamble provenance data
 
-
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
   return
@@ -289,7 +288,6 @@ stat.dimord       = dimord;
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-
 ft_postamble previous   data
 ft_postamble provenance stat
 ft_postamble history    stat

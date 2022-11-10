@@ -79,7 +79,7 @@ cfg = ft_checkconfig(cfg, 'required',    {'method', 'design'});
 cfg = ft_checkconfig(cfg, 'renamed',     {'approach',   'method'});
 cfg = ft_checkconfig(cfg, 'forbidden',   {'transform'});
 cfg = ft_checkconfig(cfg, 'forbidden',   {'trials'}); % this used to be present until 24 Dec 2014, but was deemed too confusing by Robert
-cfg = ft_checkconfig(cfg, 'forbidden',   {'channel'}); 
+cfg = ft_checkconfig(cfg, 'forbidden',   {'channel'});
 
 % check if the input data is valid for this function
 for i=1:length(varargin)
@@ -238,7 +238,6 @@ cfg = removefields(cfg, {'dimord', 'tri', 'dim', 'origdim', 'inside', 'originsid
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble randomseed
-
 ft_postamble previous   varargin
 ft_postamble provenance stat
 ft_postamble history    stat

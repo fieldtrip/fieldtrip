@@ -55,7 +55,6 @@ ft_preamble debug
 ft_preamble loadvar    datain
 ft_preamble provenance datain
 
-
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
   % do not continue function execution in case the outputfile is present and the user indicated to keep it
@@ -200,8 +199,8 @@ if hasopto
   dataout.opto = ft_apply_montage(datain.opto, prewhiten, 'balancename', 'prewhiten');
 end
 
+% do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-
 ft_postamble previous   datain
 ft_postamble provenance dataout
 ft_postamble history    dataout

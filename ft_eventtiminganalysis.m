@@ -1,6 +1,6 @@
 function [dataout] = ft_eventtiminganalysis(cfg, data)
 
-% FT_EVENTTIMINGANALYSIS computes a model of single trial event- related activity, 
+% FT_EVENTTIMINGANALYSIS computes a model of single trial event- related activity,
 % by estimating per trial the latency (and amplitude) of event-related signal
 % components.
 %
@@ -103,7 +103,6 @@ ft_preamble init
 ft_preamble debug
 ft_preamble loadvar    data
 ft_preamble provenance data
-
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -395,7 +394,6 @@ dataout.cfg    = cfg;
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-
 ft_postamble previous   data
 ft_postamble provenance dataout
 ft_postamble history    dataout

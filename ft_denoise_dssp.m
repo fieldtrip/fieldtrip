@@ -57,7 +57,6 @@ ft_preamble debug
 ft_preamble loadvar    datain
 ft_preamble provenance datain
 
-
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
   % do not continue function execution in case the outputfile is present and the user indicated to keep it
@@ -147,8 +146,8 @@ end
 dataout       = keepfields(datain, {'label', 'time', 'fsample', 'trialinfo', 'sampleinfo', 'grad', 'elec', 'opto'}); % grad can be kept and does not need to be balanced, since the cleaned data is a mixture over time, not space.
 dataout.trial = trial;
 
+% do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-
 ft_postamble previous   datain
 ft_postamble provenance dataout
 ft_postamble history    dataout

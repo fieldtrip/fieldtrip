@@ -167,7 +167,6 @@ ft_preamble debug
 ft_preamble provenance
 ft_preamble randomseed
 
-
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
   return
@@ -542,7 +541,6 @@ end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-
 ft_postamble randomseed
 ft_postamble provenance data
 ft_postamble history    data

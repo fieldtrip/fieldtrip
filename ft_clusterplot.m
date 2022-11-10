@@ -66,7 +66,6 @@ ft_preamble debug
 ft_preamble loadvar stat
 ft_preamble provenance stat
 
-
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
   return
@@ -446,7 +445,6 @@ set(gcf, 'NumberTitle', 'off');
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-
 ft_postamble previous stat
 ft_postamble provenance
 ft_postamble savefig

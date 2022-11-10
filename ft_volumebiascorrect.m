@@ -185,9 +185,9 @@ if ~all(permutevec == [1 2 3])
   mri_unbias.anatomy = ipermute(mri_unbias.anatomy, permutevec);
   mri_unbias.dim     = size(mri_unbias.anatomy);
 end
-    
-ft_postamble debug
 
+% do the general cleanup and bookkeeping at the end of the function
+ft_postamble debug
 ft_postamble previous   mri
 ft_postamble provenance mri_unbias
 ft_postamble history    mri_unbias

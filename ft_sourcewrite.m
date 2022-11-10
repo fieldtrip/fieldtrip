@@ -154,7 +154,7 @@ switch (cfg.filetype)
     ft_error('unsupported output format "%s"', cfg.filetype);
 end % switch filetype
 
+% do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-
 ft_postamble previous source
 ft_postamble provenance

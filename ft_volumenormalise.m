@@ -90,7 +90,6 @@ ft_preamble debug
 ft_preamble loadvar mri
 ft_preamble provenance mri
 
-
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
   return

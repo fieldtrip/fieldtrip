@@ -361,7 +361,6 @@ delete(h);
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-
 ft_postamble previous source
 ft_postamble provenance
 

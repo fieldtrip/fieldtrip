@@ -506,7 +506,6 @@ if ~ft_headmodeltype(headmodel, 'infinite')
 end
 
 % do the general cleanup and bookkeeping at the end of the function
-
 ft_postamble provenance
 ft_postamble previous data
 ft_postamble history headmodel

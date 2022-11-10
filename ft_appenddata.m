@@ -76,7 +76,6 @@ ft_preamble debug
 ft_preamble loadvar    varargin
 ft_preamble provenance varargin
 
-
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
   return
@@ -148,7 +147,7 @@ hasunmixing = false;
 for i=1:numel(varargin)
   dummy{i}    = removefields(varargin{i}, {'trial', 'time'});
   hastopo     = isfield(dummy{i}, 'topo');
-  hasunmixing = isfield(dummy{i}, 'unmixing'); 
+  hasunmixing = isfield(dummy{i}, 'unmixing');
   if strcmp(cfg.appenddim, 'chan')
     % this avoids a bunch of confusing warnings in append_common
     dummy{i} = removefields(dummy{i}, {'topo', 'unmixing', 'topolabel'});
@@ -193,7 +192,7 @@ switch cfg.appenddim
         
         if hastopo && isfield(varargin{i}, 'topo')
           topo    = blkdiag(topo, varargin{i}.topo);
-          topolab = cat(1, topolab, varargin{i}.topolabel); 
+          topolab = cat(1, topolab, varargin{i}.topolabel);
         else
           topo    = blkdiag(topo, eye(numel(varargin{i}.label)));
           topolab = cat(1, topolab, varargin{i}.label(:));
@@ -227,7 +226,7 @@ switch cfg.appenddim
       if isfield(varargin{1}, 'unmixingdimord'), data.unmixingdimord = varargin{1}.unmixingdimord; end
       if hastopo,     data.topo      = topo;    end
       if hastopo,     data.topolabel = topolab; end
-      if hasunmixing, data.unmixing  = unmixing; end 
+      if hasunmixing, data.unmixing  = unmixing; end
       
     else
       ft_error('data has different time, cannot append over channels');
@@ -272,7 +271,6 @@ end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-
 ft_postamble previous varargin
 ft_postamble provenance data
 ft_postamble history    data

@@ -74,7 +74,6 @@ ft_preamble debug
 ft_preamble loadvar data
 ft_preamble provenance data
 
-
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
   return
@@ -239,7 +238,7 @@ elseif ~keeptrials
     tmpdof(:,begsmp(i):endsmp(i)) = isfinite(tmp) + tmpdof(:,begsmp(i):endsmp(i));
     if istrue(cfg.nanmean)
       tmp(~isfinite(tmp)) = 0;
-    end  
+    end
     tmpsum(:,begsmp(i):endsmp(i)) = tmp    + tmpsum(:,begsmp(i):endsmp(i));
   end
   avgmat = tmpsum ./ tmpdof;
@@ -252,7 +251,7 @@ elseif ~keeptrials
 
     if istrue(cfg.nanmean)
       tmp(~isfinite(tmp)) = 0;
-    end  
+    end
     tmpsum(:,begsmp(i):endsmp(i)) = tmp    + tmpsum(:,begsmp(i):endsmp(i));
     tmpssq(:,begsmp(i):endsmp(i)) = tmp.^2 + tmpssq(:,begsmp(i):endsmp(i));
     
@@ -296,7 +295,6 @@ end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-
 ft_postamble previous   data
 ft_postamble provenance timelock
 ft_postamble history    timelock

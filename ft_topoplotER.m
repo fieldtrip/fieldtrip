@@ -24,7 +24,7 @@ function [cfg] = ft_topoplotER(cfg, varargin)
 %   cfg.baseline           = 'yes','no' or [time1 time2] (default = 'no'), see FT_TIMELOCKBASELINE or FT_FREQBASELINE
 %   cfg.baselinetype       = 'absolute' or 'relative' (default = 'absolute')
 %   cfg.trials             = 'all' or a selection given as a 1xN vector (default = 'all')
-%   cfg.colormap           = string, or Nx3 matrix, see FT_COLORMAP 
+%   cfg.colormap           = string, or Nx3 matrix, see FT_COLORMAP
 %   cfg.marker             = 'on', 'labels', 'numbers', 'off'
 %   cfg.markersymbol       = channel marker symbol (default = 'o')
 %   cfg.markercolor        = channel marker color (default = [0 0 0] (black))
@@ -177,7 +177,6 @@ ft_preamble debug
 ft_preamble loadvar varargin
 ft_preamble provenance varargin
 
-
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
   return
@@ -210,7 +209,6 @@ cfg = removefields(cfg, 'funcname');
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-
 ft_postamble previous varargin
 ft_postamble provenance
 ft_postamble savefig

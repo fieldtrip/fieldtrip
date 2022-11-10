@@ -53,7 +53,6 @@ ft_preamble debug
 ft_preamble loadvar freq
 ft_preamble provenance freq
 
-
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
   return
@@ -99,7 +98,6 @@ end % for each frequency range
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-
 ft_postamble previous   freq
 ft_postamble provenance freq
 ft_postamble history    freq

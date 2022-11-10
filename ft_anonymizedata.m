@@ -67,7 +67,6 @@ ft_preamble debug
 ft_preamble loadvar data
 ft_preamble provenance data
 
-
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
   return
@@ -249,7 +248,6 @@ fprintf('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % deal with the output
 ft_postamble debug
-
 ft_postamble previous data
 ft_postamble provenance data
 ft_postamble history data

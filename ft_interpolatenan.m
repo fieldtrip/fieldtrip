@@ -64,7 +64,6 @@ ft_preamble debug
 ft_preamble loadvar    datain
 ft_preamble provenance datain
 
-
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
   return
@@ -158,7 +157,6 @@ ft_progress('close');
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 ft_postamble debug
-
 ft_postamble previous   datain
 ft_postamble provenance dataout
 ft_postamble history    dataout
