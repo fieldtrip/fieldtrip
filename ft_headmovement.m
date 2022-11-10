@@ -122,7 +122,7 @@ grad.chanpos = grad_head.chanpos;
 if ~isfield(cfg, 'trl') || isempty(cfg.trl)
   cfg.trl = [1 hdr.nTrials.*hdr.nSamples 0];
 end
-tmpcfg              = removefields(cfg, {'method' 'numclusters'});
+tmpcfg              = keepfields(cfg, {'datafile' 'trl'});
 tmpcfg.channel      = {'HLC0011' 'HLC0012' 'HLC0013' 'HLC0021' 'HLC0022' 'HLC0023' 'HLC0031' 'HLC0032' 'HLC0033'};
 tmpcfg.continuous   = 'yes';
 data                = ft_preprocessing(tmpcfg);
