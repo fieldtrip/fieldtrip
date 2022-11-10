@@ -10,7 +10,7 @@ function dataout = ft_nirs_scalpcouplingindex(cfg, datain)
 % densities, ODs) that is represented according to the output of FT_PREPROCESSING.
 %
 % The configuration should contain the following options
-%   cfg.threshold   = scalar, the correlation value which has to be exceeded to be 
+%   cfg.threshold   = scalar, the correlation value which has to be exceeded to be
 %                     labelled a 'good' channel (default = 0.75)
 %   cfg.keepchannel = string, determines how to deal with channels that are not selected, can be
 %                     'no'  completely remove deselected channels from the data (default)
@@ -100,7 +100,6 @@ ft_preamble init              % this will reset ft_warning and show the function
 ft_preamble debug             % this allows for displaying or saving the function name and input arguments upon an error
 ft_preamble loadvar    datain % this reads the input data in case the user specified the cfg.inputfile option
 ft_preamble provenance datain % this records the time and memory usage at the beginning of the function
-ft_preamble trackconfig       % this converts the cfg structure in a config object, which tracks the cfg options that are being used
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -244,7 +243,6 @@ end
 % fieldtrip/utility/private that are able to modify the local workspace
 
 ft_postamble debug               % this clears the onCleanup function used for debugging in case of an error
-ft_postamble trackconfig         % this converts the config object back into a struct and can report on the unused fields
 ft_postamble previous   datain   % this copies the datain.cfg structure into the cfg.previous field. You can also use it for multiple inputs, or for "varargin"
 ft_postamble provenance dataout  % this records the time and memory at the end of the function, prints them on screen and adds this information together with the function name and MATLAB version etc. to the output cfg
 ft_postamble history    dataout  % this adds the local cfg structure to the output data structure, i.e. dataout.cfg = cfg

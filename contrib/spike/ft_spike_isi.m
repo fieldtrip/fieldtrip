@@ -70,7 +70,7 @@ ft_nargout  = nargout;
 ft_defaults
 ft_preamble init
 ft_preamble provenance spike
-ft_preamble trackconfig
+
 
 % check if data is of proper format
 spike = ft_checkdata(spike,'datatype', 'spike', 'feedback', 'yes');
@@ -188,7 +188,7 @@ param = cfg.param;
 isih.(param) = out;
 
 % do the general cleanup and bookkeeping at the end of the function
-ft_postamble trackconfig
+
 ft_postamble previous   spike
 ft_postamble provenance isih
 ft_postamble history    isih

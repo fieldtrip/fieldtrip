@@ -31,8 +31,8 @@ function [freq] = ft_freqanalysis(cfg, data)
 %                       covariance matrix of the innovation noise.
 %                     'superlet', combines Morlet-wavelet based
 %                       decompositions, see below.
-%                     'irasa', implements Irregular-Resampling Auto-Spectral 
-%                       Analysis (IRASA), to separate the fractal components 
+%                     'irasa', implements Irregular-Resampling Auto-Spectral
+%                       Analysis (IRASA), to separate the fractal components
 %                       from the periodicities in the signal.
 %                     'hilbert', implements the filter-Hilbert method, see
 %                       below.
@@ -166,12 +166,12 @@ function [freq] = ft_freqanalysis(cfg, data)
 %   cfg.width     = scalar, or vector (default: 1), specifying the half bandwidth of the filter;
 %   cfg.edgartnan = 'no' (default) or 'yes', replace filter edges with nans, works only for finite impulse response (FIR) filters, and
 %                     requires a user specification of the filter order
-%   
-% For the bandpass filtering the following options can be specified, the default values are as in FT_PREPROC_BANDPASSFILTER, for more 
+%
+% For the bandpass filtering the following options can be specified, the default values are as in FT_PREPROC_BANDPASSFILTER, for more
 % information see the help of FT_PREPROCESSING
 %   cfg.bpfilttype
 %   cfg.bpfiltord        = (optional) scalar, or vector 1 x numfoi;
-%   cfg.bpfiltdir        
+%   cfg.bpfiltdir
 %   cfg.bpinstabilityfix
 %   cfg.bpfiltdf
 %   cfg.bpfiltwintype
@@ -233,7 +233,6 @@ ft_preamble init
 ft_preamble debug
 ft_preamble loadvar data
 ft_preamble provenance data
-ft_preamble trackconfig
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -263,7 +262,7 @@ cfg.trials      = ft_getopt(cfg, 'trials',     'all', 1);
 cfg.channel     = ft_getopt(cfg, 'channel',    'all');
 
 % select channels and trials of interest, by default this will select all channels and trials
-tmpcfg = keepfields(cfg, {'trials', 'channel', 'tolerance', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+tmpcfg = keepfields(cfg, {'trials', 'channel', 'tolerance', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
 data = ft_selectdata(tmpcfg, data);
 % restore the provenance information
 [cfg, data] = rollback_provenance(cfg, data);
@@ -991,7 +990,7 @@ if powflg
     opt.aperiodic_mode      = ft_getopt(opt, 'aperiodic_mode',    opts_bst.apermode.Value);
     opt.peak_threshold      = ft_getopt(opt, 'peak_threshold',    2);   % 2 std dev: parameter for interface simplification
     opt.return_spectrum     = ft_getopt(opt, 'return_spectrum',   1);   % SPM/FT: set to 1
-    opt.border_threshold    = ft_getopt(opt, 'border_threshold',  1);   % 1 std dev: proximity to edge of spectrum, static in Python 
+    opt.border_threshold    = ft_getopt(opt, 'border_threshold',  1);   % 1 std dev: proximity to edge of spectrum, static in Python
     % Matlab-only options
     opt.power_line          = ft_getopt(opt, 'power_line',        '50'); % for some reason it should be a string, if you don't want a notch, use 'inf'. Brainstorm's default is '60'
     opt.peak_type           = ft_getopt(opt, 'peak_type',         opts_bst.peaktype.Value);
@@ -1092,7 +1091,6 @@ end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-ft_postamble trackconfig
 ft_postamble previous   data
 ft_postamble provenance freq
 ft_postamble history    freq

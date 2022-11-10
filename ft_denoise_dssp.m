@@ -56,7 +56,6 @@ ft_preamble init
 ft_preamble debug
 ft_preamble loadvar    datain
 ft_preamble provenance datain
-ft_preamble trackconfig
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -85,7 +84,7 @@ cfg.dssp.n_intersect  = ft_getopt(cfg.dssp, 'n_intersect', 0.9); % dimensionalit
 cfg.output            = ft_getopt(cfg, 'output', 'original');
 
 % select channels and trials of interest, by default this will select all channels and trials
-tmpcfg = keepfields(cfg, {'trials', 'channel', 'tolerance', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+tmpcfg = keepfields(cfg, {'trials', 'channel', 'tolerance', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
 datain = ft_selectdata(tmpcfg, datain);
 % restore the provenance information
 [cfg, datain] = rollback_provenance(cfg, datain);
@@ -147,8 +146,8 @@ end
 dataout       = keepfields(datain, {'label', 'time', 'fsample', 'trialinfo', 'sampleinfo', 'grad', 'elec', 'opto'}); % grad can be kept and does not need to be balanced, since the cleaned data is a mixture over time, not space.
 dataout.trial = trial;
 
+% do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-ft_postamble trackconfig
 ft_postamble previous   datain
 ft_postamble provenance dataout
 ft_postamble history    dataout

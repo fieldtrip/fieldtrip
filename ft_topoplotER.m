@@ -24,7 +24,7 @@ function [cfg] = ft_topoplotER(cfg, varargin)
 %   cfg.baseline           = 'yes','no' or [time1 time2] (default = 'no'), see FT_TIMELOCKBASELINE or FT_FREQBASELINE
 %   cfg.baselinetype       = 'absolute' or 'relative' (default = 'absolute')
 %   cfg.trials             = 'all' or a selection given as a 1xN vector (default = 'all')
-%   cfg.colormap           = string, or Nx3 matrix, see FT_COLORMAP 
+%   cfg.colormap           = string, or Nx3 matrix, see FT_COLORMAP
 %   cfg.marker             = 'on', 'labels', 'numbers', 'off'
 %   cfg.markersymbol       = channel marker symbol (default = 'o')
 %   cfg.markercolor        = channel marker color (default = [0 0 0] (black))
@@ -176,7 +176,6 @@ ft_preamble init
 ft_preamble debug
 ft_preamble loadvar varargin
 ft_preamble provenance varargin
-ft_preamble trackconfig
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -199,7 +198,7 @@ cfg.funcname = mfilename;
 cfg.dataname = dataname;
 
 % prepare the layout, this should be done only once
-tmpcfg = keepfields(cfg, {'layout', 'channel', 'rows', 'columns', 'commentpos', 'skipcomnt', 'scalepos', 'skipscale', 'projection', 'viewpoint', 'rotate', 'width', 'height', 'elec', 'grad', 'opto', 'linecolor', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+tmpcfg = keepfields(cfg, {'layout', 'channel', 'rows', 'columns', 'commentpos', 'skipcomnt', 'scalepos', 'skipscale', 'projection', 'viewpoint', 'rotate', 'width', 'height', 'elec', 'grad', 'opto', 'linecolor', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
 cfg.layout = ft_prepare_layout(tmpcfg, varargin{1});
 
 % call the common function that is shared between ft_topoplotER and ft_topoplotTFR
@@ -210,7 +209,6 @@ cfg = removefields(cfg, 'funcname');
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-ft_postamble trackconfig
 ft_postamble previous varargin
 ft_postamble provenance
 ft_postamble savefig

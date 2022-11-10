@@ -53,7 +53,6 @@ ft_preamble init
 ft_preamble debug
 ft_preamble loadvar datain
 ft_preamble provenance datain
-ft_preamble trackconfig
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -68,12 +67,10 @@ dataout = datain;
 
 
 % this line is meant to provide some information
-% but also to ensure that trackconfig does not remove the cfg.comment field
 fprintf('adding the comment: %s\n', cfg.comment);
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-ft_postamble trackconfig
 ft_postamble previous datain
 ft_postamble provenance dataout
 ft_postamble history dataout

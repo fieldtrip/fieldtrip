@@ -40,8 +40,8 @@ function [data] = ft_megplanar(cfg, data)
 %
 % Optionally, you can modify the leadfields by reducing the rank, i.e. remove the weakest orientation
 %   cfg.reducerank    = 'no', or number (default = 3 for EEG, 2 for MEG)
-%   cfg.backproject   = 'yes' or 'no',  determines when reducerank is applied whether the 
-%                       lower rank leadfield is projected back onto the original linear 
+%   cfg.backproject   = 'yes' or 'no',  determines when reducerank is applied whether the
+%                       lower rank leadfield is projected back onto the original linear
 %                       subspace, or not (default = 'yes')
 %
 % The volume conduction model of the head should be specified as
@@ -92,7 +92,6 @@ ft_preamble init
 ft_preamble debug
 ft_preamble loadvar data
 ft_preamble provenance data
-ft_preamble trackconfig
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -130,18 +129,8 @@ cfg = ft_checkconfig(cfg, 'renamedval',  {'headshape', 'headmodel', []});
 if ~strcmp(cfg.planarmethod, 'sourceproject')
   % this is limited to reading neighbours from disk and/or selecting channels
   % the user should call FT_PREPARE_NEIGHBOURS directly for the actual construction
-  tmpcfg = keepfields(cfg, {'neighbours', 'channel', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+  tmpcfg = keepfields(cfg, {'neighbours', 'channel', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
   cfg.neighbours = ft_prepare_neighbours(tmpcfg);
-end
-
-if isfield(cfg, 'headshape') && isa(cfg.headshape, 'config')
-  % convert the nested config-object back into a normal structure
-  cfg.headshape = struct(cfg.headshape);
-end
-
-if isfield(cfg, 'neighbours') && isa(cfg.neighbours, 'config')
-  % convert the nested config-object back into a normal structure
-  cfg.neighbours = struct(cfg.neighbours);
 end
 
 % put the low-level options pertaining to the dipole grid in their own field
@@ -154,7 +143,7 @@ cfg = ft_checkconfig(cfg, 'createsubcfg', {'sourcemodel'});
 cfg = ft_checkconfig(cfg, 'createtopcfg', {'sourcemodel'});
 
 % select trials of interest
-tmpcfg = keepfields(cfg, {'trials', 'channel', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'}); % don't keep tolerance, it is used differently here
+tmpcfg = keepfields(cfg, {'trials', 'channel', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'}); % don't keep tolerance, it is used differently here
 data = ft_selectdata(tmpcfg, data);
 % restore the provenance information
 [cfg, data] = rollback_provenance(cfg, data);
@@ -194,7 +183,7 @@ if strcmp(cfg.planarmethod, 'sourceproject')
   leadfieldopt = ft_setopt(leadfieldopt, 'weight',         ft_getopt(cfg, 'weight'));
 
   % copy all options that are potentially used in FT_PREPARE_SOURCEMODEL
-  tmpcfg           = keepfields(cfg, {'sourcemodel', 'mri', 'headshape', 'symmetry', 'smooth', 'threshold', 'spheremesh', 'inwardshift', 'xgrid' 'ygrid', 'zgrid', 'resolution', 'tight', 'warpmni', 'template', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+  tmpcfg           = keepfields(cfg, {'sourcemodel', 'mri', 'headshape', 'symmetry', 'smooth', 'threshold', 'spheremesh', 'inwardshift', 'xgrid' 'ygrid', 'zgrid', 'resolution', 'tight', 'warpmni', 'template', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
   tmpcfg.headmodel = headmodel;
   tmpcfg.grad      = axial.grad;
   % determine the dipole layer that represents the surface of the brain
@@ -372,7 +361,6 @@ end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-ft_postamble trackconfig
 ft_postamble previous data
 
 % rename the output variable to accomodate the savevar postamble
