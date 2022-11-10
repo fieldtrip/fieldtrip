@@ -101,7 +101,7 @@ data   = ft_selectdata(tmpcfg, data);
 [cfg, data] = rollback_provenance(cfg, data);
 
 % Check match between input data chans and grad chans
-[x, ~] = ismember(data.grad.label,data.label);
+[x, dummy] = ismember(data.grad.label,data.label);
 
 % Warn the user if there are chans in grad not in data
 num_mismatch = sum(x(:) == 0);
@@ -153,7 +153,7 @@ if istrue(cfg.updatesens)
 end
 
 % reorder the channels to stay close to the original ordering
-[~, selnew] = match_str(montage.labelold, data.label);
+[dummy, selnew] = match_str(montage.labelold, data.label);
 if numel(selnew)==numel(labelold)
   for i=1:numel(data.trial)
     data.trial{i} = data.trial{i}(selnew,:);
@@ -181,7 +181,7 @@ function residual_check(residualthresh,data,oldlabels)
 % Script to determine residual variance post HFC
 
 % find corrected channels in the output data
-[~, selnew2] = match_str(oldlabels, data.label);
+[dummy, selnew2] = match_str(oldlabels, data.label);
 
 trvar = [];
 for ii = 1:numel(data.trial)
@@ -201,7 +201,7 @@ end
 
 % Identify the most common chanunit
 chanunit = ft_chanunit(data);
-[s,~,j]=unique(chanunit);
+[s,dummy,j]=unique(chanunit);
 chanunit = s{mode(j)};
 
 switch chanunit % some of this are silly, but safety first!
