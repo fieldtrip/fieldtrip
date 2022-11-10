@@ -309,6 +309,11 @@ elseif ft_headmodeltype(headmodel, 'duneuro')
       sourcemodel.leadfield{thisindx} = sourcemodel.leadfield{thisindx} * sourcemodel.mom(:,thisindx);
     end
   end % for all grid locations inside the brain
+
+elseif ft_headmodeltype(headmodel, 'interpolate')
+
+  lf = ft_compute_leadfield(sourcemodel.pos(insideindx,:), sens, headmodel, leadfieldopt{:});
+  sourcemodel.leadfield(insideindx) = mat2cell(lf, 3, 3.*ones(1,numel(insideindx)));
   
 else
   ft_progress('init', cfg.feedback, 'computing leadfield');
