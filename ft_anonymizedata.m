@@ -66,7 +66,6 @@ ft_preamble init
 ft_preamble debug
 ft_preamble loadvar data
 ft_preamble provenance data
-ft_preamble trackconfig
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -79,11 +78,6 @@ cfg.removefield = ft_getopt(cfg, 'removefield', {});
 cfg.keepvalue   = ft_getopt(cfg, 'keepvalue', {});
 cfg.removevalue = ft_getopt(cfg, 'removevalue', {});
 cfg.keepnumeric = ft_getopt(cfg, 'keepnumeric', 'yes');
-
-if isfield(data, 'cfg')
-  % ensure that it is a structure, not a config object
-  data.cfg = struct(data.cfg);
-end
 
 % determine the name and value of each element in the structure
 [name, value] = splitstruct('data', data);
@@ -249,7 +243,6 @@ fprintf('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % deal with the output
 ft_postamble debug
-ft_postamble trackconfig
 ft_postamble previous data
 ft_postamble provenance data
 ft_postamble history data

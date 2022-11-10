@@ -21,7 +21,7 @@ function [mesh_realigned] = ft_meshrealign(cfg, mesh)
 %
 % The configuration can furthermore contain
 %   cfg.coordsys       = string specifying the origin and the axes of the coordinate
-%                        system. Supported coordinate systems are 'ctf', '4d', 'bti', 
+%                        system. Supported coordinate systems are 'ctf', '4d', 'bti',
 %                        'eeglab', 'neuromag', 'itab', 'yokogawa', 'asa', 'acpc',
 %                        and 'paxinos'. See http://tinyurl.com/ojkuhqz
 %   cfg.fiducial.nas   = [x y z], position of nasion
@@ -75,7 +75,6 @@ ft_preamble init
 ft_preamble debug
 ft_preamble loadvar    mesh
 ft_preamble provenance mesh
-ft_preamble trackconfig
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -240,9 +239,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % do the general cleanup and bookkeeping at the end of the function
-
 ft_postamble debug
-ft_postamble trackconfig
 ft_postamble previous   mesh
 ft_postamble provenance mesh_realigned
 ft_postamble history    mesh_realigned

@@ -39,7 +39,6 @@ function ft_postamble(cmd, varargin)
 % dependencies when using the MATLAB compiler
 %
 %#function ft_postamble_debug
-%#function ft_postamble_trackconfig
 %#function ft_postamble_provenance
 %#function ft_postamble_previous
 %#function ft_postamble_history

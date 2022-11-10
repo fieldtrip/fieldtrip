@@ -78,7 +78,7 @@ ft_nargout  = nargout;
 ft_defaults
 ft_preamble init
 ft_preamble provenance data spike
-ft_preamble trackconfig
+
 
 % check input data structure
 data = ft_checkdata(data,'datatype', 'raw', 'feedback', 'yes');
@@ -280,7 +280,7 @@ sts.trialtime = spike.trialtime;
 sts.label     = spike.label(spikesel);
 
 % do the general cleanup and bookkeeping at the end of the function
-ft_postamble trackconfig
+
 ft_postamble previous   data
 ft_postamble provenance sts
 ft_postamble history    sts

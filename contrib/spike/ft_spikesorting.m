@@ -51,7 +51,7 @@ ft_nargout  = nargout;
 ft_defaults
 ft_preamble init
 ft_preamble provenance spike
-ft_preamble trackconfig
+
 
 % these were supported in the past, but are not any more (for consistency with other spike functions)
 cfg = ft_checkconfig(cfg, 'forbidden', 'inputfile', ...
@@ -121,7 +121,7 @@ for chanlop=1:nchan
 end
 
 % do the general cleanup and bookkeeping at the end of the function
-ft_postamble trackconfig
+
 ft_postamble previous   spike
 ft_postamble provenance spike
 ft_postamble history    spike

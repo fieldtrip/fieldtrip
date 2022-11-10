@@ -58,7 +58,7 @@ ft_nargout  = nargout;
 ft_defaults
 ft_preamble init
 ft_preamble provenance data
-ft_preamble trackconfig
+
 
 % check input data structure
 data = ft_checkdata(data,'datatype', 'raw', 'feedback', 'yes');
@@ -167,7 +167,7 @@ end % for each trial
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % do the general cleanup and bookkeeping at the end of the function
-ft_postamble trackconfig
+
 ft_postamble previous   data
 ft_postamble provenance data
 ft_postamble history    data

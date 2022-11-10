@@ -110,7 +110,6 @@ ft_preamble init
 ft_preamble debug
 ft_preamble loadvar data
 ft_preamble provenance data
-ft_preamble trackconfig
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -163,7 +162,7 @@ tmpcfg.senstype = 'EEG';
 elec = ft_fetch_sens(tmpcfg, data);
 
 % select channels and trials of interest
-tmpcfg = keepfields(cfg, {'trials', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+tmpcfg = keepfields(cfg, {'trials', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
 tmpcfg.channel = elec.label;
 data = ft_selectdata(tmpcfg, data);
 % restore the provenance information
@@ -291,7 +290,6 @@ end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-ft_postamble trackconfig
 ft_postamble previous data
 
 % rename the output variable to accomodate the savevar postamble

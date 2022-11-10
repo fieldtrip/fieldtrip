@@ -75,7 +75,6 @@ ft_preamble init
 ft_preamble debug
 ft_preamble loadvar freq
 ft_preamble provenance freq
-ft_preamble trackconfig
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -129,7 +128,7 @@ if ~hasrpt && ~strcmp(cfg.trials, 'all'), ft_error('trial selection requires inp
 if ~varflg && jckflg,                     varflg = 1; end
 
 % select data of interest
-tmpcfg = keepfields(cfg, {'trials', 'channel', 'latency', 'frequency', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+tmpcfg = keepfields(cfg, {'trials', 'channel', 'latency', 'frequency', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
 freq = ft_selectdata(tmpcfg, freq);
 % restore the provenance information
 [cfg, freq] = rollback_provenance(cfg, freq);
@@ -214,7 +213,6 @@ end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-ft_postamble trackconfig
 ft_postamble previous freq
 
 % rename the output variable to accomodate the savevar postamble

@@ -11,9 +11,9 @@ function [data] = ft_denoise_hfc(cfg,data)
 %
 % Where cfg is a configuration structure that contains:
 %   cfg.channel         = channels for HFC (default = 'all')
-% 	cfg.order           = spherical harmonic order: 
-%                           order = 1 is a homogenous field; order = 2 
-%                           includes gradients; order = 3 includes 
+% 	cfg.order           = spherical harmonic order:
+%                           order = 1 is a homogenous field; order = 2
+%                           includes gradients; order = 3 includes
 %                           quadratic terms etc. (default = 1)
 %   cfg.trials          = which trials do you want to denoise?
 %                           (default = 'all')
@@ -58,7 +58,6 @@ ft_preamble init
 ft_preamble debug
 ft_preamble loadvar    data
 ft_preamble provenance data
-ft_preamble trackconfig
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -170,7 +169,6 @@ end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-ft_postamble trackconfig
 ft_postamble previous   data
 ft_postamble provenance data
 ft_postamble history    data
