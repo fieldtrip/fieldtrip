@@ -1,7 +1,7 @@
 function [cfg] = ft_multiplotER(cfg, varargin)
 
 % FT_MULTIPLOTER plots the event-related potentials or event-related fields
-% versus time, or the oscillatory activity (power or coherence) versus frequency. 
+% versus time, or the oscillatory activity (power or coherence) versus frequency.
 % Multiple datasets can be overlayed. The plots are arranged according to
 % the location of the channels specified in the layout.
 %
@@ -59,7 +59,7 @@ function [cfg] = ft_multiplotER(cfg, varargin)
 %                       with multiple input arguments determines the
 %                       pre-selection of the data that is considered for
 %                       plotting.
-%   cfg.viewmode      = 'layout', or 'butterfly' (default = 'layout'), using the spatial layout as in cfg.layout for the 
+%   cfg.viewmode      = 'layout', or 'butterfly' (default = 'layout'), using the spatial layout as in cfg.layout for the
 %                       visualisation, or a butterfly plot
 
 % The following options for the scaling of the EEG, EOG, ECG, EMG, MEG and NIRS channels
@@ -164,7 +164,6 @@ ft_preamble init
 ft_preamble debug
 ft_preamble loadvar varargin
 ft_preamble provenance varargin
-ft_preamble trackconfig
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -350,7 +349,7 @@ if ~strcmp(cfg.baseline, 'no')
 end
 
 % channels SHOULD be selected here, as no interactive action produces a new multiplot
-tmpcfg = keepfields(cfg, {'channel', 'trials', 'select', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+tmpcfg = keepfields(cfg, {'channel', 'trials', 'select', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
 if hasrpt
   tmpcfg.avgoverrpt = 'yes';
 else
@@ -427,7 +426,7 @@ end
 %% Section 3: select the data to be plotted and determine min/max range
 
 % Read or create the layout that will be used for plotting
-tmpcfg = keepfields(cfg, {'layout', 'channel', 'rows', 'columns', 'commentpos', 'skipcomnt', 'scalepos', 'skipscale', 'projection', 'viewpoint', 'rotate', 'width', 'height', 'elec', 'grad', 'opto', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+tmpcfg = keepfields(cfg, {'layout', 'channel', 'rows', 'columns', 'commentpos', 'skipcomnt', 'scalepos', 'skipscale', 'projection', 'viewpoint', 'rotate', 'width', 'height', 'elec', 'grad', 'opto', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
 tmpcfg = ft_setopt(tmpcfg, 'color', cfg.linecolor);
 if isequal(cfg.viewmode, 'butterfly')
   if isfield(tmpcfg, 'layout')
@@ -669,7 +668,6 @@ if strcmp(cfg.interactive, 'yes')
 end
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-ft_postamble trackconfig
 ft_postamble previous varargin
 ft_postamble provenance
 ft_postamble savefig

@@ -17,7 +17,6 @@ function ft_defaults
 %   ft_default.showlogo          = string, can be 'yes' or 'no' (default = 'yes')
 %   ft_default.showcallinfo      = string, can be 'yes' or 'no' (default = 'yes')
 %   ft_default.trackcallinfo     = string, can be 'yes' or 'no' (default = 'yes')
-%   ft_default.trackconfig       = string, can be 'cleanup', 'report', 'off' (default = 'off')
 %   ft_default.trackusage        = false, or string with salt for one-way encryption of identifying information (by default this is enabled and an automatic salt is created)
 %   ft_default.trackdatainfo     = string, can be 'yes' or 'no' (default = 'no')
 %   ft_default.outputfilepresent = string, can be 'keep', 'overwrite', 'error' (default = 'overwrite')
@@ -96,7 +95,6 @@ end
 % NOTE ft_getopt might not be available on the path at this moment and can therefore not yet be used.
 % NOTE all options here should be explicitly listed as allowed in ft_checkconfig
 
-if ~isfield(ft_default, 'trackconfig'),       ft_default.trackconfig    = 'off';      end % cleanup, report, off
 if ~isfield(ft_default, 'checkconfig'),       ft_default.checkconfig    = 'loose';    end % pedantic, loose, silent
 if ~isfield(ft_default, 'checkpath'),         ft_default.checkpath      = 'pedantic'; end % pedantic, once, no
 if ~isfield(ft_default, 'checksize'),         ft_default.checksize      = 1e5;        end % number in bytes, can be inf

@@ -40,7 +40,6 @@ function ft_preamble(cmd, varargin)
 %
 %#function ft_preamble_init
 %#function ft_preamble_debug
-%#function ft_preamble_trackconfig
 %#function ft_preamble_provenance
 %#function ft_preamble_loadvar
 %#function ft_preamble_randomseed
@@ -81,4 +80,3 @@ if ~cmd_exists
 end
 
 evalin('caller', full_cmd);
-
