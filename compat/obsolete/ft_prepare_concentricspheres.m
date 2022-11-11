@@ -37,7 +37,7 @@ ft_defaults
 ft_preamble init
 ft_preamble debug
 ft_preamble provenance
-ft_preamble trackconfig
+
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -52,11 +52,6 @@ if ~isfield(cfg, 'fitind'),        cfg.fitind = 'all';             end
 if ~isfield(cfg, 'feedback'),      cfg.feedback = 'yes';           end
 if ~isfield(cfg, 'conductivity'),  cfg.conductivity = [];          end % this should be specified by the user
 if ~isfield(cfg, 'numvertices'),   cfg.numvertices = 'same';       end
-
-if isfield(cfg, 'headshape') && isa(cfg.headshape, 'config')
-  % convert the nested config-object back into a normal structure
-  cfg.headshape = struct(cfg.headshape);
-end
 
 % get the surface describing the head shape
 headshape = prepare_mesh_headshape(cfg);
@@ -147,6 +142,6 @@ headmodel = ft_determine_units(headmodel);
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-ft_postamble trackconfig
+
 ft_postamble provenance headmodel
 ft_postamble history    headmodel

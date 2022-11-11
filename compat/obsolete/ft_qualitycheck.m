@@ -64,7 +64,7 @@ ft_defaults
 ft_preamble init
 ft_preamble debug
 ft_preamble provenance
-ft_preamble trackconfig
+
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -342,7 +342,7 @@ end % end of visualization
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-ft_postamble trackconfig
+
 ft_postamble provenance
 ft_postamble history timelock   % add the input cfg to multiple outputs
 ft_postamble history freq       % add the input cfg to multiple outputs

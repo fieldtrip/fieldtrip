@@ -89,7 +89,6 @@ ft_preamble init
 ft_preamble debug
 ft_preamble loadvar mri
 ft_preamble provenance mri
-ft_preamble trackconfig
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -208,7 +207,7 @@ else
   ft_notice('Skipping the initial alignment, using the alignment specified in the configuration');
   initial = cfg.initial;
   % apply the initial rigid body transformation to the input data
-  mri.transform = initial * mri.transform; 
+  mri.transform = initial * mri.transform;
 end
 
 % use NIFTI whenever possible
@@ -421,18 +420,14 @@ if strcmp(cfg.keepintermediate, 'no')
   end
 end
 
-% do the general cleanup and bookkeeping at the end of the function
-ft_postamble debug
-ft_postamble trackconfig
-
 % Remember the initial and normalisation parameters in the configuration, this allows
 % redoing the transformations without any computations (e.g. estimating them on a T1
 % and applying them on a T2)
-%
-% they are added only here to prevent them to be removed when doing the trackconfig
 cfg.initial   = initial;
 cfg.spmparams = params;
 
+% do the general cleanup and bookkeeping at the end of the function
+ft_postamble debug
 ft_postamble previous   mri
 ft_postamble provenance normalised
 ft_postamble history    normalised

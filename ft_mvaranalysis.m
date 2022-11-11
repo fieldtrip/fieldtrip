@@ -114,7 +114,6 @@ ft_preamble init
 ft_preamble debug
 ft_preamble loadvar data
 ft_preamble provenance data
-ft_preamble trackconfig
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -227,7 +226,7 @@ else
   end
   
   nchan    = 2;
-  label    = data.label(cmbindx);  
+  label    = data.label(cmbindx);
   labelcmb = cell(0,2);
   cmb      = cfg.channelcmb;
   for k = 1:size(cmbindx,1)
@@ -596,7 +595,6 @@ end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-ft_postamble trackconfig
 ft_postamble previous   data
 ft_postamble provenance mvardata
 ft_postamble history    mvardata

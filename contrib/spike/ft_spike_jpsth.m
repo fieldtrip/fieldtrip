@@ -62,7 +62,7 @@ ft_nargout  = nargout;
 ft_defaults
 ft_preamble init
 ft_preamble provenance psth
-ft_preamble trackconfig
+
 
 psth = ft_checkdata(psth, 'datatype', 'timelock', 'hastrials', 'yes', 'feedback', 'yes');
 
@@ -258,7 +258,7 @@ else
 end
 
 % do the general cleanup and bookkeeping at the end of the function
-ft_postamble trackconfig
+
 ft_postamble previous   psth
 ft_postamble provenance stat
 ft_postamble history    stat

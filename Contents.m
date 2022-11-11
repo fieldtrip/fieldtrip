@@ -41,7 +41,7 @@
 %   Vladimir Litvak, UCL
 %   and many others ...
 %
-% Copyright (C) 2008-2021, Donders Institute, Radboud University, The Netherlands (DCCN, DCC, DCN, DCMN)
+% Copyright (C) 2008-2022, Donders Institute, Radboud University, The Netherlands (DCCN, DCC, DCN, DCMN)
 % Copyright (C) 2014-2018, Karolinska Institute, Stockholm, Sweden (NatMEG)
 % Copyright (C) 2012-2016, Max Planck Institute for Psycholinguistics, The Netherlands (MPI)
 % Copyright (C) 2010-2013, Swammerdam Institute for Life Sciences, University of Amsterdam (SILS)

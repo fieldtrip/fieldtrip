@@ -88,7 +88,7 @@ ft_nargout  = nargout;
 ft_defaults
 ft_preamble init
 ft_preamble provenance
-ft_preamble trackconfig
+
 
 % set the general defaults
 if ~isfield(cfg, 'dataset'),            cfg.dataset = [];             end
@@ -476,5 +476,5 @@ for i=chansel(:)'
 end % for each file
 
 % do the general cleanup and bookkeeping at the end of the function
-ft_postamble trackconfig
+
 ft_postamble provenance
