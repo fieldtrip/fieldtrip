@@ -170,7 +170,7 @@ switch cmd
             retval = 1;
           else
             retval = strcmp(strtrim(jobstatus) ,'C');
-            retval = retval | ~isempty(strfind(jobstatus, 'Unknown Job Id'));
+            retval = retval | contains(jobstatus, 'Unknown Job Id');
           end
         case 'lsf'
           [dum, jobstatus] = system(['bjobs "' pbsid '" | awk ''NR==2'' | awk ''{print $3}'' ']);
@@ -187,7 +187,7 @@ switch cmd
           else
             % if the file is there, we can use squeue to verify that the job really left the queue
             [dum, jobstatus] = system(['squeue -j "' pbsid '" -h -o %T']);
-            retval = isempty(jobstatus);
+            retval = isempty(jobstatus) | contains(jobstatus, 'Invalid job id');
           end
         case {'local','system'}
           % only return the status based on the presence of the output files
