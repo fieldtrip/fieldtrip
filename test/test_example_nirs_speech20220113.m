@@ -40,8 +40,8 @@ function test_example_nirs_speech
 %% # Building a MATLAB analysis script
 %
 
-t = tempdir;
-filenames = unzip('https://md-datasets-cache-zipfiles-prod.s3.eu-west-1.amazonaws.com/4cjgvyg5p2-1.zip', t);
+% t = tempdir;
+% filenames = unzip('https://md-datasets-cache-zipfiles-prod.s3.eu-west-1.amazonaws.com/4cjgvyg5p2-1.zip', t);
 
 % filenames = {
 %   'S1001_run01.nirs'
@@ -84,7 +84,9 @@ filenames = unzip('https://md-datasets-cache-zipfiles-prod.s3.eu-west-1.amazonaw
 %   'S1040_run01.nirs'
 %   };
 
-filename = filenames{1};
+% filename = filenames{1};
+
+filename = dccnpath('/home/common/matlab/fieldtrip/data/ftp/example/nirs_speech/S1001_run01.nirs');
 
 %% # Exploring the files that hold the NIRS data
 %
