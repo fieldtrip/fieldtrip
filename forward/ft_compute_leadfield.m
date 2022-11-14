@@ -359,6 +359,14 @@ elseif ismeg
         lf = sens.tra * lf;
       end
  
+    case 'interpolate'
+      % note that the electrode information is contained in the headmodel
+      lf = leadfield_interpolate(dippos, headmodel);
+      % the leadfield is already correctly referenced, i.e. it represents the
+      % channel values rather than the electrode values. Prevent that the
+      % referencing is done once more.
+      sens.tra = speye(length(headmodel.filename));
+
     otherwise
       ft_error('unsupported volume conductor model for MEG');
   end % switch type for MEG
