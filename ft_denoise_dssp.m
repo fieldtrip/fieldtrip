@@ -25,7 +25,7 @@ function [dataout] = ft_denoise_dssp(cfg, datain)
 %
 % See also FT_DENOISE_PCA, FT_DENOISE_SYNTHETIC, FT_DENOISE_TSR
 
-% Copyright (C) 2018, Jan-Mathijs Schoffelen
+% Copyright (C) 2018-2022, Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -65,6 +65,9 @@ end
 
 % check the input data
 datain = ft_checkdata(datain, 'datatype', {'raw'}); % FIXME how about timelock and freq?
+
+% ensure the external cellfunction toolbox is on the path
+ft_hastoolbox('cellfunction', 1);
 
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'forbidden',  {'channels', 'trial'}); % prevent accidental typos, see issue 1729
@@ -111,9 +114,9 @@ end
 lf = cat(2, sourcemodel.leadfield{:});
 G  = lf*lf';
 
-dat     = cat(2,datain.trial{:});
-[dum, Ae, N, Nspace, Sout, Sin, Sspace, S] = dssp(dat, G, cfg.dssp.n_in, cfg.dssp.n_out, cfg.dssp.n_space, cfg.dssp.n_intersect);
-datAe   = dat*Ae; % the projection is a right multiplication
+%dat     = cat(2,datain.trial{:});
+[Bclean, Ae, N, Nspace, Sout, Sin, Sspace, S] = dssp(datain.trial, G, cfg.dssp.n_in, cfg.dssp.n_out, cfg.dssp.n_space, cfg.dssp.n_intersect);
+% datAe   = datain.trial*cellfun(@transpose, Ae, 'UniformOutput', false); % the projection is a right multiplication
 % with a matrix (eye(size(Ae,1))-Ae*Ae'), since Ae*Ae' can become quite
 % sizeable, it's computed slightly differently here.
 
@@ -126,18 +129,19 @@ cfg.dssp.S_intersect    = S;
 cfg.dssp.n_intersect    = N;
 
 % compute the cleaned data and put in a cell-array
-nsmp  = cellfun(@numel, datain.time);
-csmp  = cumsum([0 nsmp]);
-trial = cell(size(datain.trial));
 switch cfg.output
   case 'original'
-    for k = 1:numel(datain.trial)
-      trial{k} = datain.trial{k} - datAe*Ae((csmp(k)+1):csmp(k+1),:)';
-    end
+%     for k = 1:numel(datain.trial)
+%       trial{k} = datain.trial{k} - datAe*Ae((csmp(k)+1):csmp(k+1),:)';
+%     end
+    % trial = datain.trial - datAe*Ae; % this should be the same as dum
+    trial = Bclean;
   case 'complement'
-    for k = 1:numel(datain.trial)
-      trial{k} = datAe*Ae((csmp(k)+1):csmp(k+1),:)';
-    end
+%     for k = 1:numel(datain.trial)
+%       trial{k} = datAe*Ae((csmp(k)+1):csmp(k+1),:)';
+%     end
+    % trial = datAe*Ae;
+    trial = datain.trial-Bclean;
   otherwise
     ft_error(sprintf('cfg.output = ''%s'' is not implemented',cfg.output));
 end
@@ -179,39 +183,49 @@ function [Bclean, Ae, Nee, Nspace, Sout, Sin, Sspace, S] = dssp(B, G, Nin, Nout,
 
 % eigen decomposition of the Gram matrix, matrix describing the spatial
 % components
-[U,S]   = eig(G);
-Sspace  = abs(diag(S));
+
+fprintf('Computing the spatial subspace projection\n');
+[Uspace,S] = eig(G);
+Sspace     = abs(diag(S));
 
 [Sspace, iorder] = sort(-Sspace);
 Sspace           = -Sspace;
-U(:,:)           = U(:,iorder);
+Uspace(:,:)      = Uspace(:,iorder);
 
 if isempty(Nspace)
   ttext = 'enter the spatial dimension: ';
   Nspace    = input(ttext);
 elseif ischar(Nspace) && isequal(Nspace, 'interactive')
-  figure, plot(log10(Sspace),'-o');
-  Nspace = input('enter spatial dimension of the ROI subspace: ');
+  figure, plot(log10(Sspace),'-o'); drawnow
+  Nspace = input('enter spatial dimension of the subspace: ');
 elseif ischar(Nspace) && isequal(Nspace, 'all')
   Nspace = find(Sspace./Sspace(1)>1e5*eps, 1, 'last');
 end
 fprintf('Using %d spatial dimensions\n', Nspace);
 
 % spatial subspace projector
-Us   = U(:,1:Nspace);
+Us   = Uspace(:,1:Nspace);
 USUS = Us*Us';
 
-% Bin and Bout creations
-Bin  =                  USUS  * B;
-Bout = (eye(size(USUS))-USUS) * B;
+% Bin and Bout creation
+%Bin  =                  USUS  * B;
+%Bout = (eye(size(USUS))-USUS) * B;
+
+% computationally more efficient
+fprintf('Applying the spatial subspace projector\n');
+Bin  = Us*(Us'*B);
+Bout = B - Bin; 
 
 % create the temporal subspace projector and apply it to the data
 %[AeAe, Nee] = CSP01(Bin, Bout, Nout, Nin, Nee);
 %Bclean      = B*(eye(size(AeAe))-AeAe);
 
+fprintf('Computing the temporal subspace projector\n');
 [Ae, Nee, Sout, Sin, S] = CSP01(Bin, Bout, Nin, Nout, Nee);
-Bclean    = B - (B*Ae)*Ae'; % avoid computation of Ae*Ae'
 
+fprintf('Applying the temporal subspace projector\n');
+%Bclean    = B - (B*Ae)*Ae'; % avoid computation of Ae*Ae'
+Bclean = B - (B*cellfun(@transpose, Ae, 'UniformOutput', false))*Ae;
 
 function [Ae, Nee, Sout, Sin, S] = CSP01(Bin, Bout, Nin, Nout, Nee)
 %
@@ -231,7 +245,7 @@ function [Ae, Nee, Sout, Sin, S] = CSP01(Bin, Bout, Nin, Nout, Nee)
 % outputs
 % Ae = matrix from which the projector onto the intersection can
 %      be obtained:
-% AeAe: projector onto the intersection, which is equal to the
+% AeAe': projector onto the intersection, which is equal to the
 %       interference subspace.
 % Nee: dimension of the intersection
 %  ------------------------------------------------------------
@@ -240,8 +254,8 @@ function [Ae, Nee, Sout, Sin, S] = CSP01(Bin, Bout, Nin, Nout, Nee)
 % -------------------------------------------------------------
 %
 
-[dum,Sout,Vout] = svd(Bout,'econ');
-[dum,Sin, Vin]  = svd(Bin, 'econ');
+[Uout,Sout,Vout] = svd(cat(2, Bout{:}),'econ');
+[Uin, Sin, Vin]  = svd(cat(2, Bin{:}), 'econ');
 Sout = diag(Sout);
 Sin  = diag(Sin);
 
@@ -249,7 +263,7 @@ if isempty(Nout)
   ttext = 'enter the spatial dimension for the outside field: ';
   Nout  = input(ttext);
 elseif ischar(Nout) && isequal(Nout, 'interactive')
-  figure, plot(Sout,'-o');
+  figure, plot(Sout,'-o'); drawnow
   Nout = input('enter dimension of the outside field: ');
 elseif ischar(Nout) && isequal(Nout, 'all')
   Nout = find(Sout./Sout(1)>1e5*eps, 1, 'last');
@@ -257,34 +271,42 @@ end
 fprintf('Using %d spatial dimensions for the outside field\n', Nout);
 
 if isempty(Nin)
-  ttext = 'enter the spatial dimension for the inside field: ';
+  ttext = 'Enter the spatial dimension for the inside field: ';
   Nin  = input(ttext);
 elseif ischar(Nin) && isequal(Nin, 'interactive')
-  figure, plot(log10(Sin),'-o');
-  Nin = input('enter dimension of the inside field: ');
+  figure, plot(log10(Sin),'-o'); drawnow
+  Nin = input('Enter dimension of the inside field: ');
 elseif ischar(Nin) && isequal(Nin, 'all')
   Nin = find(Sin./Sin(1)>1e5*eps, 1, 'last');
 end
 fprintf('Using %d spatial dimensions for the inside field\n', Nin);
 
-Qout = Vout(:,1:Nout);
-Qin  = Vin(:, 1:Nin);
+% Qout = Vout(:,1:Nout);
+% Qin  = Vin(:, 1:Nin);
+% C    = Qin'*Qout;
 
-C     = Qin'*Qout;
+Qout = diag(1./Sout(1:Nout))*Uout(:,1:Nout)'*Bout; % keep it in cell representation
+Qin  = diag(1./Sin(1:Nin)  )* Uin(:,1:Nin)' *Bin;
+C    = Qin * cellfun(@transpose, Qout, 'UniformOutput', false);
+C    = sum(cat(3, C{:}), 3);
+
 [U,S] = svd(C);
 S     = diag(S);
 if (ischar(Nee) && strcmp(Nee, 'auto'))
-  ft_error('automatic determination of intersection dimension is not supported');
+  ft_error('Automatic determination of intersection dimension is not supported');
 elseif ischar(Nee) && strcmp(Nee, 'interactive')
-  figure, plot(S,'-o');
-  Nee  = input('enter dimension of the intersection: ');
+  figure, plot(S,'-o'); drawnow
+  Nee  = input('Enter dimension of the intersection: ');
 elseif Nee<1
   % treat a numeric value < 1 as a threshold
   Nee = find(S>Nee,1,'last');
   if isempty(Nee), Nee = 1; end
 end
-fprintf('Using %d dimensions for the interaction\n', Nee);
+fprintf('Using %d dimensions for the intersection\n', Nee);
 
-Ae   = Qin*U;
-Ae   = Ae(:,1:Nee);
-%AeAe = Ae*Ae';
+% Ae   = Qin*U;
+% Ae   = Ae(:,1:Nee);
+% %AeAe = Ae*Ae';
+
+Ae = U'*Qin;
+Ae = cellrowselect(Ae, 1:Nee);
