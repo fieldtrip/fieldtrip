@@ -28,4 +28,4 @@ function tsv = ft_read_tsv(filename)
 % $Id$
 
 ft_info('reading ''%s''\n', filename);
-tsv = readtable(filename, 'Delimiter', 'tab', 'FileType', 'text', 'TreatAsEmpty', 'n/a', 'ReadVariableNames', true);
+tsv = readtable(filename, 'Delimiter', 'tab', 'FileType', 'text', 'TreatAsEmpty', 'n/a', 'ReadVariableNames', true, 'DatetimeType','text');
