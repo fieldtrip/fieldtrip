@@ -324,7 +324,7 @@ cfg.coordsystem   = ft_getopt(cfg, 'coordsystem');
 cfg.dataset_description                     = ft_getopt(cfg, 'dataset_description'                       );
 cfg.dataset_description.writesidecar        = ft_getopt(cfg.dataset_description, 'writesidecar', 'yes'   );
 cfg.dataset_description.Name                = ft_getopt(cfg.dataset_description, 'Name'                  ); % REQUIRED. Name of the dataset.
-cfg.dataset_description.BIDSVersion         = ft_getopt(cfg.dataset_description, 'BIDSVersion', '1.6'    ); % REQUIRED. The version of the BIDS standard that was used.
+cfg.dataset_description.BIDSVersion         = ft_getopt(cfg.dataset_description, 'BIDSVersion', '1.8'    ); % REQUIRED. The version of the BIDS standard that was used.
 cfg.dataset_description.DatasetType         = ft_getopt(cfg.dataset_description, 'DatasetType', 'raw'    ); % RECOMMENDED. The interpretaton of the dataset. MUST be one of "raw" or "derivative". For backwards compatibility, the default value is "raw".
 cfg.dataset_description.License             = ft_getopt(cfg.dataset_description, 'License'               ); % RECOMMENDED. What license is this dataset distributed under? The use of license name abbreviations is suggested for specifying a license. A list of common licenses with suggested abbreviations can be found in Appendix II.
 cfg.dataset_description.Authors             = ft_getopt(cfg.dataset_description, 'Authors'               ); % OPTIONAL. List of individuals who contributed to the creation/curation of the dataset.
@@ -510,7 +510,7 @@ cfg.exg.SamplingFrequency                 = ft_getopt(cfg.exg, 'SamplingFrequenc
 cfg.exg.RecordingDuration                 = ft_getopt(cfg.exg, 'RecordingDuration'                 );
 cfg.exg.RecordingType                     = ft_getopt(cfg.exg, 'RecordingType'                     );
 
-%% NIRS is not part of the official BIDS specification
+%% NIRS specific fields
 cfg.nirs.CapManufacturer                   = ft_getopt(cfg.nirs, 'CapManufacturer'                   );
 cfg.nirs.CapManufacturersModelName         = ft_getopt(cfg.nirs, 'CapManufacturersModelName'         );
 cfg.nirs.SamplingFrequency                 = ft_getopt(cfg.nirs, 'SamplingFrequency'                 );
@@ -529,6 +529,7 @@ cfg.nirs.DCOffsetCorrection                = ft_getopt(cfg.nirs, 'DCOffsetCorrec
 cfg.nirs.HeadCircumference                 = ft_getopt(cfg.nirs, 'HeadCircumference'                 );
 cfg.nirs.HardwareFilters                   = ft_getopt(cfg.nirs, 'HardwareFilters'                   );
 cfg.nirs.SoftwareFilters                   = ft_getopt(cfg.nirs, 'SoftwareFilters'                   );
+cfg.nirs.SubjectArtefactDescription        = ft_getopt(cfg.nirs, 'SubjectArtefactDescription'        );
 
 %% audio is not part of the official BIDS specification
 cfg.audio.SampleRate                      = ft_getopt(cfg.audio, 'SampleRate'        );
@@ -639,7 +640,7 @@ cfg.channels.wavelength_emission_actual = ft_getopt(cfg.channels, 'wavelength_em
 cfg.channels.short_channel              = ft_getopt(cfg.channels, 'short_channel'               , nan);
 % specific options for motion channels
 cfg.channels.sampling_frequency         = ft_getopt(cfg.channels, 'sampling_frequency'          , nan);
-cfg.channels.component                  = ft_getopt(cfg.channels, 'component'                   , nan);
+cfg.channels.orientation_component      = ft_getopt(cfg.channels, 'component'                   , nan);
 cfg.channels.tracked_point              = ft_getopt(cfg.channels, 'tracked_point'               , nan);
 
 %% columns in the electrodes.tsv
@@ -1033,9 +1034,6 @@ if need_emg_json
   cfg.dataset_description.BIDSVersion = 'n/a';
 elseif need_exg_json
   ft_warning('EXG data is not yet part of the official BIDS specification');
-  cfg.dataset_description.BIDSVersion = 'n/a';
-elseif need_nirs_json
-  ft_warning('NIRS data is not yet part of the official BIDS specification');
   cfg.dataset_description.BIDSVersion = 'n/a';
 elseif need_audio_json
   ft_warning('audio data is not yet part of the official BIDS specification');
