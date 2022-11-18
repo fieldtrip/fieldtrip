@@ -2,7 +2,7 @@ function [neighbours, cfg] = ft_prepare_neighbours(cfg, data)
 
 % FT_PREPARE_NEIGHBOURS finds the channel neighbours for spatial clustering
 % or interpolation of bad channels. Using the 'distance' method, neighbours
-% are based on a minimum neighbourhood distance (in cfg.neighbourdist). 
+% are based on a minimum neighbourhood distance (in cfg.neighbourdist).
 % Using the 'triangulation' method calculates a triangulation based on a 2D
 % projection of the sensor positions. The 'template' method loads a default
 % template for the given data type. Alternatively, using the 'parcellation'
@@ -15,7 +15,7 @@ function [neighbours, cfg] = ft_prepare_neighbours(cfg, data)
 %   neighbours = ft_prepare_neighbours(cfg)
 % or
 %   neighbours = ft_prepare_neighbours(cfg, data)
-% with an input data structure with the channels of interest and that 
+% with an input data structure with the channels of interest and that
 % contains a sensor description, or represents an atlas, see FT_READ_ATLAS
 %
 % The configuration can contain
@@ -24,7 +24,7 @@ function [neighbours, cfg] = ft_prepare_neighbours(cfg, data)
 %   cfg.template      = name of the template file, e.g. CTF275_neighb.mat
 %   cfg.neighbourdist = number, maximum distance between neighbouring sensors
 %                       (only for 'distance', default is 40 mm)
-%   cfg.compress      = 'yes' or 'no', add extra edges by compressing in the 
+%   cfg.compress      = 'yes' or 'no', add extra edges by compressing in the
 %                       x- and y-direction (only for 'triangulation', default is yes)
 %   cfg.feedback      = 'yes' or 'no' (default = 'no')
 %
@@ -86,7 +86,6 @@ ft_preamble init
 ft_preamble debug
 ft_preamble loadvar    data
 ft_preamble provenance data
-ft_preamble trackconfig
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -95,7 +94,7 @@ end
 
 % the data can be passed as input arguments or can be read from disk
 hasdata  = exist('data', 'var');
-hasatlas = hasdata && (ft_datatype(data, 'mesh+label') || ft_datatype(data, 'volume+label') || ft_datatype(data, 'source+label')); 
+hasatlas = hasdata && (ft_datatype(data, 'mesh+label') || ft_datatype(data, 'volume+label') || ft_datatype(data, 'source+label'));
 
 % these undocumented methods are needed to support some of the high-level FT functions that call this function
 if ~isfield(cfg, 'method')
@@ -160,7 +159,7 @@ if strcmp(cfg.method, 'distance') || strcmp(cfg.method, 'triangulation')
     % get 2D positions from the layout
     tmpcfg  = keepfields(cfg, {'layout', 'channel',   'rows', 'columns', 'commentpos', ...
                'skipcomnt', 'scalepos',  'skipscale', 'projection', 'viewpoint', ...
-               'rotate',    'width',     'height',    'elec', 'grad', 'opto', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+               'rotate',    'width',     'height',    'elec', 'grad', 'opto', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
     tmpcfg.skipscale = 'yes';
     tmpcfg.skipcomnt = 'yes';
     layout  = ft_prepare_layout(tmpcfg);
@@ -311,7 +310,7 @@ switch cfg.method
         uboundary = unique(boundary, 'rows');
         %uboundary = unique([boundary; boundary(:,[2 1])], 'rows');
         
-        % count 
+        % count
         nboundary = zeros(size(uboundary, 1), 1);
         for k = 1:numel(nboundary)
           nboundary(k) = sum(boundary(:,1)==uboundary(k,1) & boundary(:,2)==uboundary(k,2));
@@ -394,7 +393,7 @@ end
 
 if strcmp(cfg.feedback, 'yes') && ~hasatlas
   % give some graphical feedback
-  tmpcfg = keepfields(cfg, {'layout', 'rows', 'columns', 'commentpos', 'skipcomnt', 'scalepos', 'skipscale', 'projection', 'viewpoint', 'rotate', 'width', 'height', 'elec', 'grad', 'opto', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+  tmpcfg = keepfields(cfg, {'layout', 'rows', 'columns', 'commentpos', 'skipcomnt', 'scalepos', 'skipscale', 'projection', 'viewpoint', 'rotate', 'width', 'height', 'elec', 'grad', 'opto', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
   tmpcfg.neighbours = neighbours;
   if hasdata
     tmpcfg.senstype = cfg.senstype;
@@ -408,7 +407,6 @@ end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-ft_postamble trackconfig
 ft_postamble previous   data
 ft_postamble provenance neighbours
 ft_postamble history    neighbours

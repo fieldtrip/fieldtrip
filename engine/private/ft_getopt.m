@@ -22,7 +22,7 @@ function val = ft_getopt(opt, key, default, emptymeaningful)
 % If emptymeaningful==true, then the empty array will be returned.
 % If emptymeaningful==false, then the specified default will be returned.
 %
-% See also FT_SETOPT, FT_CHECKOPT
+% See also FT_SETOPT, FT_CHECKOPT, INPUTPARSER
 
 % Copyright (C) 2011-2012, Robert Oostenveld
 %
@@ -52,7 +52,7 @@ if nargin < 4
   emptymeaningful = false;
 end
 
-if isa(opt, 'struct') || isa(opt, 'config')
+if isa(opt, 'struct')
   % get the key-value from the structure
   fn = fieldnames(opt);
   if ~any(strcmp(key, fn))

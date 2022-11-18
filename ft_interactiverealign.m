@@ -37,6 +37,7 @@ function [cfg] = ft_interactiverealign(cfg)
 % FT_READ_SENS, FT_READ_HEADMODEL, FT_READ_HEADSHAPE
 
 % Copyright (C) 2008, Vladimir Litvak
+% Copyright (C) 2022, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -66,7 +67,6 @@ ft_defaults
 ft_preamble init
 ft_preamble debug
 ft_preamble provenance
-ft_preamble trackconfig
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -80,6 +80,8 @@ cfg.individual = ft_checkconfig(cfg.individual, 'renamed', {'volstyle', 'headmod
 cfg.template   = ft_checkconfig(cfg.template, 'renamed', {'vol', 'headmodel'});
 cfg.template   = ft_checkconfig(cfg.template, 'renamed', {'volstyle', 'headmodelstyle'});
 
+% get the options
+cfg.unit                      = ft_getopt(cfg, 'unit', 'mm');
 cfg.individual.elec           = ft_getopt(cfg.individual, 'elec', []);
 cfg.individual.elecstyle      = ft_getopt(cfg.individual, 'elecstyle', {}); % key-value pairs
 cfg.individual.grad           = ft_getopt(cfg.individual, 'grad', []);
@@ -141,17 +143,15 @@ originalunit = cell(size(fn));
 for i=1:length(fn)
   if ~isempty(individual.(fn{i}))
     hasindividual(i) = true;
-    individual.(fn{i}) = ft_determine_units(individual.(fn{i})); % ensure that it has units
     originalunit{i} = individual.(fn{i}).unit;
-    individual.(fn{i}) = ft_convert_units(individual.(fn{i}), 'mm'); % ensure that the units are all in mm
+    individual.(fn{i}) = ft_convert_units(individual.(fn{i}), cfg.unit); % ensure that the units are known and all the same
   end
 end
 hastemplate = false(size(fn));
 for i=1:length(fn)
   if ~isempty(template.(fn{i}))
-    template.(fn{i}) = ft_determine_units(template.(fn{i})); % ensure that it has units
     hastemplate(i) = true;
-    template.(fn{i}) = ft_convert_units(template.(fn{i}), 'mm'); % ensure that the units are all in mm
+    template.(fn{i}) = ft_convert_units(template.(fn{i}), cfg.unit); % ensure that the units are known and all the same
   end
 end
 
@@ -193,17 +193,19 @@ set(fig, 'windowkeypressfcn',  @cb_keyboard);
 set(gca, 'position', [0.05 0.15 0.75 0.75]);
 
 % add the data to the figure
-setappdata(fig, 'individual',  individual);
-setappdata(fig, 'template',    template);
-setappdata(fig, 'transform',   eye(4));
-setappdata(fig, 'cleanup',     false);
-setappdata(fig, 'coordsys',    coordsys); % can be unknown
+setappdata(fig, 'individual',    individual);
+setappdata(fig, 'template',      template);
+setappdata(fig, 'transform',     eye(4));
+setappdata(fig, 'cleanup',       false);
+setappdata(fig, 'coordsys',      coordsys); % can be unknown
+setappdata(fig, 'unit',          cfg.unit);
 setappdata(fig, 'toggle_labels', true);
-setappdata(fig, 'toggle_axes', true);
-setappdata(fig, 'toggle_grid', true);
+setappdata(fig, 'toggle_axes',   true);
+setappdata(fig, 'toggle_grid',   true);
 
 % add the GUI elements
-axis([-150 150 -150 150 -150 150]);
+axmax = 150 * ft_scalingfactor('mm', cfg.unit);
+axis([-axmax axmax -axmax axmax -axmax axmax]);
 cb_creategui(gcf);
 cb_redraw(gcf);
 rotate3d on
@@ -234,7 +236,6 @@ delete(fig);
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-ft_postamble trackconfig
 ft_postamble provenance
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -309,6 +310,7 @@ individual = getappdata(fig, 'individual');
 template   = getappdata(fig, 'template');
 transform  = getappdata(fig, 'transform');
 coordsys   = getappdata(fig, 'coordsys');
+unit       = getappdata(fig, 'unit');
 
 % get the transformation details
 rx = str2double(get(findobj(fig, 'tag', 'rx'), 'string'));
@@ -358,7 +360,7 @@ if ~isempty(individual.mri)
 end
 
 if istrue(template.axes)
-  ft_plot_axes([], 'unit', 'mm', 'coordsys', coordsys);
+  ft_plot_axes([], 'unit', unit, 'coordsys', coordsys);
 end
 
 if ~isempty(template.elec)
@@ -420,9 +422,9 @@ if strcmp(get(h, 'tag'), 'toggle labels')
 end
 
 if getappdata(fig, 'toggle_labels')
-  xlabel('x (mm)')
-  ylabel('y (mm)')
-  zlabel('z (mm)')
+  xlabel(sprintf('x (%s)', unit))
+  ylabel(sprintf('y (%s)', unit))
+  zlabel(sprintf('z (%s)', unit))
 else
   xlabel('')
   ylabel('')

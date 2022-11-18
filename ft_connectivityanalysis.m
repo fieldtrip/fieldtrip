@@ -138,7 +138,6 @@ ft_preamble init
 ft_preamble debug
 ft_preamble loadvar data
 ft_preamble provenance data
-ft_preamble trackconfig
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -172,7 +171,7 @@ normpow = 1; % default, has to be overruled e.g. in csd
 
 % select trials of interest
 if ~strcmp(cfg.trials, 'all')
-  tmpcfg = keepfields(cfg, {'trials', 'tolerance', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+  tmpcfg = keepfields(cfg, {'trials', 'tolerance', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
   data = ft_selectdata(tmpcfg, data);
   [cfg, data] = rollback_provenance(cfg, data);
 end
@@ -258,13 +257,21 @@ switch cfg.method
   
   case {'wpli'}
     data = ft_checkdata(data, 'datatype', {'freqmvar' 'freq'});
-    inparam = 'crsspctrm';
+    if isfield(data, 'fourierspctrm')
+      inparam = 'fourierspctrm';
+    else
+      inparam = 'crsspctrm';
+    end
     outparam = 'wplispctrm';
     if hasjack, ft_error('to compute wpli, data should be in rpt format'); end
   
   case {'wpli_debiased'}
     data = ft_checkdata(data, 'datatype', {'freqmvar' 'freq'});
-    inparam = 'crsspctrm';
+    if isfield(data, 'fourierspctrm')
+        inparam = 'fourierspctrm';
+    else
+        inparam = 'crsspctrm';
+    end
     outparam = 'wpli_debiasedspctrm';
     if hasjack, ft_error('to compute wpli, data should be in rpt format'); end
   
@@ -671,8 +678,11 @@ switch cfg.method
   case {'wpli' 'wpli_debiased'}
     % weighted pli or debiased weighted phase lag index.
     optarg = {'feedback', cfg.feedback, 'dojack', dojack, 'debias', strcmp(cfg.method, 'wpli_debiased')};
+    if isequal(inparam, 'fourierspctrm')
+      optarg = cat(2, optarg, {'isunivariate' 1 'cumtapcnt' data.cumtapcnt});
+    end
     [datout, varout, nrpt] = ft_connectivity_wpli(data.(inparam), optarg{:});
-    
+    data.dimord = strrep(data.dimord, 'chan', 'chan_chan'); % needed for data structure consistency
   case {'wppc' 'ppc'}
     % weighted pairwise phase consistency or pairwise phase consistency
     optarg = {'feedback', cfg.feedback, 'dojack', dojack, 'weighted', strcmp(cfg.method, 'wppc')};
@@ -1304,7 +1314,6 @@ if exist('dof', 'var'), stat.dof = dof; end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-ft_postamble trackconfig
 ft_postamble previous   data
 ft_postamble provenance stat
 ft_postamble history    stat

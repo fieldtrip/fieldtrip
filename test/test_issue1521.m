@@ -32,7 +32,7 @@ cfg.headmodel.r = 12;
 cfg.headmodel.cond = 1;
 cfg.headmodel.unit = 'cm';
 cfg.channel = 'MEGGRAD';
-cfg.grad = ft_read_sens(dccnpath('/home/common/matlab/fieldtrip/data/Subject01.ds'), 'senstype', 'meg');
+cfg.grad = ft_read_sens(dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds'), 'senstype', 'meg');
 raw = ft_dipolesimulation(cfg);
 
 cfg = [];

@@ -1,6 +1,6 @@
 function test_bug27
 
-% MEM 2gb
+% MEM 8gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_preproc_lowpassfilter ft_resampledata ft_resampledata ft_datatype_raw fixtimeaxes
 

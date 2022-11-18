@@ -4,7 +4,7 @@ function [val] = filetype_check_header(filename, head, offset)
 % by reading the first number of bytes of a file and comparing them
 % to a known string (c.f. magic number).
 
-% Copyright (C) 2003-2006 Robert Oostenveld
+% Copyright (C) 2003-2022 Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -24,26 +24,19 @@ function [val] = filetype_check_header(filename, head, offset)
 %
 % $Id$
 
-% these are for remembering the type on subsequent calls with the same input arguments
-persistent previous_argin previous_argout cache
+% these are for speeding up subsequent calls with the same input arguments
+persistent previous_argin previous_argout
 
 if nargin<3
   offset = 0;
 end
 
-if isempty(cache)
-  cache = false;
-end
-
 current_argin = {filename, head, offset};
-if isequal(current_argin, previous_argin) && cache
+if ~isempty(previous_argin) && isequal(current_argin, previous_argin)
   % don't do the detection again, but return the previous value from cache
   val = previous_argout;
   return
 end
-
-% from here on it should use the persistent variables as cache to speed up repeated calls
-cache = true;
 
 if iscell(filename)
   % compare the header of multiple files
@@ -55,7 +48,7 @@ elseif isfolder(filename)
   % a directory cannot have a header
   val = false;
 elseif ~exist(filename, 'file')
-  val = false;  
+  val = false;
   cache = false; % the file does not exist now, but can exist later
 else
   % read the first few bytes from the file and compare them to the desired header

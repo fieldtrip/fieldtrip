@@ -103,7 +103,7 @@ ft_defaults
 ft_preamble init
 ft_preamble loadvar     data
 ft_preamble provenance  data
-ft_preamble trackconfig
+
 ft_preamble debug
 
 % the ft_abort variable is set to true or false in ft_preamble_init
@@ -193,14 +193,18 @@ end
 
 dataout = ft_selectdata(tmpcfg, dataout);
 
-% append the extra data
-data = ft_appenddata([], dataout, dataextra);
+if length(dataextra.label)>0
+  % append the extra data
+  data = ft_appenddata([], dataout, dataextra);
+else
+  data = dataout;
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-ft_postamble trackconfig
+
 ft_postamble previous    data
 ft_postamble provenance  data
 ft_postamble history     data

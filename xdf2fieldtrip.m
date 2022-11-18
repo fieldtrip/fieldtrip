@@ -202,9 +202,21 @@ for i=1:numel(streams)
   prefix = stream.info.name;
   for j=1:hdr.nChans
     if isfield(stream.info.desc, 'channels')
-      hdr.label{j} = [prefix '_' stream.info.desc.channels.channel{j}.label];
-      hdr.chantype{j} = stream.info.desc.channels.channel{j}.type;
-      hdr.chanunit{j} = stream.info.desc.channels.channel{j}.unit;
+      if isfield(stream.info.desc.channels.channel{j}, 'label')
+        hdr.label{j} = [prefix '_' stream.info.desc.channels.channel{j}.label];
+      else
+        hdr.label{j} = num2str(j);
+      end
+      if isfield(stream.info.desc.channels.channel{j}, 'type')
+        hdr.chantype{j} = stream.info.desc.channels.channel{j}.type;
+      else
+        hdr.chantype{j} = 'unknown';
+      end
+      if isfield(stream.info.desc.channels.channel{j}, 'unit')
+        hdr.chanunit{j} = stream.info.desc.channels.channel{j}.unit;
+      else
+        hdr.chanunit{j} = 'unknown';
+      end
     else
       % the stream does not contain continuously sampled data
       hdr.label{j} = num2str(j);

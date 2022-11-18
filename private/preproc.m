@@ -324,7 +324,7 @@ if strcmp(cfg.reref, 'yes')
       dat   = ft_preproc_rereference(dat, refindx, cfg.refmethod, [], G); % re-referencing
       label = label(refindx); % re-referenced channel labels
       
-    case {'bipolar', 'laplace'}
+    case {'bipolar', 'laplace', 'doublebanana', 'longitudinal', 'circumferential', 'transverse'}
       % this is implemented as a montage that the user does not get to see
       tmpcfg = keepfields(cfg, {'refmethod', 'implicitref', 'refchannel', 'channel', 'groupchans'});
       tmpcfg.showcallinfo = 'no';

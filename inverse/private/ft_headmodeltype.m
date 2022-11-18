@@ -54,7 +54,7 @@ function [type] = ft_headmodeltype(headmodel, desired)
 %
 % $Id$
 
-% these are for remembering the type on subsequent calls with the same input arguments
+% these are for speeding up subsequent calls with the same input arguments
 persistent previous_argin previous_argout
 
 if iscell(headmodel)

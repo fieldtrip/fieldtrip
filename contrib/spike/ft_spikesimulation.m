@@ -38,7 +38,7 @@ ft_nargout  = nargout;
 ft_defaults
 ft_preamble init
 ft_preamble provenance
-ft_preamble trackconfig
+
 
 % set the defaults
 if ~isfield(cfg, 'trlduration'),  cfg.trlduration = 1;  end %  in seconds
@@ -109,7 +109,7 @@ for t=1:cfg.ntrial
 end
 
 % do the general cleanup and bookkeeping at the end of the function
-ft_postamble trackconfig
+
 ft_postamble provenance data
 ft_postamble history    data
 

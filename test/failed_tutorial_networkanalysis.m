@@ -6,7 +6,7 @@ function test_tutorial_networkanalysis
 
 %% read the continuous data and segment into 2 seconds epochs
 cfg = [];
-cfg.dataset              = dccnpath(fullfile('/home/common/matlab/fieldtrip/data','SubjectRest.ds')); 
+cfg.dataset              = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/SubjectRest.ds');
 cfg.trialdef.triallength = 2;
 cfg.trialdef.ntrials     = Inf;
 
@@ -46,7 +46,7 @@ datads = ft_resampledata(cfg, dataclean);
 
 %% use ICA in order to identify cardiac and blink components
 cfg = [];
-cfg.method          = 'runica'; 
+cfg.method          = 'runica';
 cfg.runica.maxsteps = 50;
 cfg.randomseed      = 0;
 comp = ft_componentanalysis(cfg, datads);
@@ -54,12 +54,12 @@ comp = ft_componentanalysis(cfg, datads);
 
 %% visualize components
 
-% these were the indices of the bad components that were identified 
+% these were the indices of the bad components that were identified
 % they may be different if you re-run the ICA decomposition
-badcomp = [1 3 8 23]; 
+badcomp = [1 3 8 23];
 
-cfg = []; 
-cfg.channel    = badcomp; 
+cfg = [];
+cfg.channel    = badcomp;
 cfg.layout     = 'CTF275.lay';
 cfg.compscale  = 'local';
 cfg.continuous = 'yes';
@@ -74,8 +74,8 @@ cfg              = [];
 cfg.output       = 'pow';
 cfg.method       = 'mtmfft';
 cfg.taper        = 'dpss';
-cfg.foilim       = [1 20];                          
-cfg.tapsmofrq    = 2;             
+cfg.foilim       = [1 20];
+cfg.tapsmofrq    = 2;
 cfg.keeptrials   = 'no';
 fft_data = ft_freqanalysis(cfg, dataica);
 
@@ -96,8 +96,8 @@ cfg              = [];
 cfg.output       = 'pow';
 cfg.method       = 'mtmfft';
 cfg.taper        = 'dpss';
-cfg.foilim       = [1 20];                          
-cfg.tapsmofrq    = 2;             
+cfg.foilim       = [1 20];
+cfg.tapsmofrq    = 2;
 cfg.keeptrials   = 'no';
 fft_data_planar = ft_freqanalysis(cfg, planar);
 
@@ -117,11 +117,11 @@ subplot(2,1,2); ft_singleplotER(cfg, fft_data);
 %% load the required geometrical information
 
 %% load the template source model, which is in MNI coordinates
-%template = load('standard_sourcemodel3d2cm.mat'); 
+%template = load('standard_sourcemodel3d2cm.mat');
 % load mri % individual mri
 % load hdm % individual volume model
-% 
-% %% compute the source model 
+%
+% %% compute the source model
 % cfg = [];
 % cfg.sourcemodel.warpmni   = 'yes';
 % cfg.sourcemodel.template  = template.sourcemodel;
@@ -137,7 +137,7 @@ figure;
 
 % make the headmodel surface transparent
 ft_plot_headmodel(hdm, 'edgecolor', 'none');
-alpha 0.4           
+alpha 0.4
 
 % add the source model positions and sensors
 ft_plot_mesh(ft_convert_units(sourcemodel, 'cm'),'vertexcolor',sourcemodel.sulc);
@@ -183,7 +183,7 @@ source_proj = ft_sourcedescriptives(cfg,source);
 source_proj.dim = template.sourcemodel.dim;
 source_proj.pos = template.sourcemodel.pos;
 
-[ftver, ftdir] = ft_version; 
+[ftver, ftdir] = ft_version;
 if isunix
    templatefile = [ftdir '/template/anatomy/single_subj_T1.nii'];
 elseif ispc
@@ -203,8 +203,8 @@ cfg.method        = 'ortho';
 cfg.funparameter  = 'nai';
 cfg.maskparameter = cfg.funparameter;
 cfg.funcolorlim   = [0.0 10];
-cfg.opacitylim    = [3 10]; 
-cfg.opacitymap    = 'rampup';  
+cfg.opacitylim    = [3 10];
+cfg.opacitymap    = 'rampup';
 cfg.funcolormap   = 'jet';
 ft_sourceplot(cfg, source_int);
 
@@ -214,12 +214,12 @@ cfg.funparameter  = 'nai';
 cfg.location      = [16 -80 -2];
 cfg.maskparameter = cfg.funparameter;
 cfg.funcolorlim   = [0.0 10];
-cfg.opacitylim    = [3 10]; 
-cfg.opacitymap    = 'rampup';  
+cfg.opacitylim    = [3 10];
+cfg.opacitymap    = 'rampup';
 cfg.funcolormap   = 'jet';
 ft_sourceplot(cfg,source_int);
 
-%% add the scalp topographies to the figure 
+%% add the scalp topographies to the figure
 
 cfg = [];
 cfg.layout = 'CTF275.lay';
@@ -241,8 +241,8 @@ cfg              = [];
 cfg.output       = 'pow';
 cfg.method       = 'mtmfft';
 cfg.taper        = 'dpss';
-cfg.foilim       = [8 12];                          
-cfg.tapsmofrq    = 2;             
+cfg.foilim       = [8 12];
+cfg.tapsmofrq    = 2;
 cfg.keeptrials   = 'yes';
 fft_data = ft_freqanalysis(cfg, dataica);
 
@@ -268,15 +268,15 @@ cfg              = [];
 cfg.output       = 'pow';
 cfg.method       = 'mtmfft';
 cfg.taper        = 'dpss';
-cfg.foilim       = [1 20];                          
-cfg.tapsmofrq    = 2;             
+cfg.foilim       = [1 20];
+cfg.tapsmofrq    = 2;
 cfg.keeptrials   = 'no';
 
-cfg.trials       = indlow; 
+cfg.trials       = indlow;
 tmp = ft_freqanalysis(cfg, planar);
 fft_data_planar_low = ft_combineplanar([], tmp);
 
-cfg.trials       = indhigh; 
+cfg.trials       = indhigh;
 tmp = ft_freqanalysis(cfg, planar);
 fft_data_planar_high = ft_combineplanar([], tmp);
 
@@ -285,13 +285,13 @@ cfg              = [];
 cfg.output       = 'pow';
 cfg.method       = 'mtmfft';
 cfg.taper        = 'dpss';
-cfg.foilim       = [1 20];                          
-cfg.tapsmofrq    = 2;             
+cfg.foilim       = [1 20];
+cfg.tapsmofrq    = 2;
 cfg.keeptrials   = 'no';
-cfg.trials       = indlow; 
+cfg.trials       = indlow;
 fft_data_low = ft_freqanalysis(cfg,dataica);
 
-cfg.trials       = indhigh; 
+cfg.trials       = indhigh;
 fft_data_high = ft_freqanalysis(cfg,dataica);
 
 %% compute the difference between high and low
@@ -330,10 +330,10 @@ cfg.keeptrials = 'yes';
 cfg.tapsmofrq  = 2;
 cfg.foi        = 10;
 
-cfg.trials     = indlow; 
+cfg.trials     = indlow;
 freq_low = ft_freqanalysis(cfg, dataica);
 
-cfg.trials     = indhigh; 
+cfg.trials     = indhigh;
 freq_high = ft_freqanalysis(cfg, dataica);
 
 %% compute the beamformer filters based on the entire data
@@ -349,7 +349,7 @@ cfg.pcc.projectnoise  = 'yes';
 cfg.pcc.keepfilter    = 'yes';
 source = ft_sourceanalysis(cfg, freq);
 
-% use the precomputed filters 
+% use the precomputed filters
 cfg                   = [];
 cfg.frequency         = freq.freq;
 cfg.grad              = freq.grad;
@@ -374,7 +374,7 @@ source_proj_low.dim  = template.sourcemodel.dim;
 source_proj_low.pos  = template.sourcemodel.pos;
 
 %% interpolate the results onto an anatomical brain template
-[ftver, ftdir] = ft_version; 
+[ftver, ftdir] = ft_version;
 if isunix
    templatefile = [ftdir '/template/anatomy/single_subj_T1.nii'];
 elseif ispc
@@ -482,7 +482,7 @@ load standard_sourcemodel3d2cm.mat
 
 node = zeros(372,6);
 node(:,1:3) = sourcemodel.pos(sourcemodel.inside,:);
-node(:,4)   = 4; 
+node(:,4)   = 4;
 node(:,5)   = network.degrees(network.inside);
 node(:,6)   = 0;
 node(:,1:3) = node(:,1:3)*10;
@@ -510,5 +510,3 @@ cfg.method = 'degrees';
 cfg.parameter = fn{4};
 cfg.threshold = .5;
 deg = ft_networkanalysis(cfg,source_conn_full);
-
-

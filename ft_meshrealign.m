@@ -21,7 +21,7 @@ function [mesh_realigned] = ft_meshrealign(cfg, mesh)
 %
 % The configuration can furthermore contain
 %   cfg.coordsys       = string specifying the origin and the axes of the coordinate
-%                        system. Supported coordinate systems are 'ctf', '4d', 'bti', 
+%                        system. Supported coordinate systems are 'ctf', '4d', 'bti',
 %                        'eeglab', 'neuromag', 'itab', 'yokogawa', 'asa', 'acpc',
 %                        and 'paxinos'. See http://tinyurl.com/ojkuhqz
 %   cfg.fiducial.nas   = [x y z], position of nasion
@@ -40,7 +40,7 @@ function [mesh_realigned] = ft_meshrealign(cfg, mesh)
 %
 % See also FT_READ_HEADSHAPE, FT_PREPARE_MESH, FT_ELECTRODEREALIGN, FT_VOLUMEREALIGN
 
-% Copyrights (C) 2017-2021, Robert Oostenveld
+% Copyrights (C) 2017-2022, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -75,7 +75,6 @@ ft_preamble init
 ft_preamble debug
 ft_preamble loadvar    mesh
 ft_preamble provenance mesh
-ft_preamble trackconfig
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -89,9 +88,9 @@ end
 mesh = ft_checkdata(mesh, 'datatype', 'mesh', 'feedback', 'yes', 'hasunit', 'yes', 'hascoordsys', 'no');
 
 % get the options
-cfg.method    = ft_getopt(cfg, 'method', 'interactive');
-cfg.coordsys  = ft_getopt(cfg, 'coordsys');
-cfg.fiducial = ft_getopt(cfg, 'fiducial');
+cfg.method       = ft_getopt(cfg, 'method', 'interactive');
+cfg.coordsys     = ft_getopt(cfg, 'coordsys');
+cfg.fiducial     = ft_getopt(cfg, 'fiducial');
 cfg.fiducial.nas = ft_getopt(cfg.fiducial, 'nas');
 cfg.fiducial.lpa = ft_getopt(cfg.fiducial, 'lpa');
 cfg.fiducial.rpa = ft_getopt(cfg.fiducial, 'rpa');
@@ -102,16 +101,19 @@ cfg.fiducial.rpa = ft_getopt(cfg.fiducial, 'rpa');
 
 % start with a copy
 mesh_realigned = keepfields(mesh, {'pos', 'tri', 'tet', 'hex', 'unit', 'line', 'edge', 'color', 'curv', 'sulc'});
+% ensure that its units are specified
+mesh_realigned = ft_determine_units(mesh_realigned);
 
 switch cfg.method
   case 'interactive'
-    
+
     tmpcfg = [];
+    tmpcfg.unit = mesh_realigned.unit;
     tmpcfg.template.axes = 'yes';
-    tmpcfg.template.headshape.pos       = zeros(3,3); % three vertices
-    tmpcfg.template.headshape.tri       = [1 2 3];    % one triangle
-    tmpcfg.template.headshape.unit      = 'mm';
-    tmpcfg.template.headshape.coordsys  = cfg.coordsys;
+    tmpcfg.template.headshape.pos       = zeros(3,3);           % three vertices
+    tmpcfg.template.headshape.tri       = [1 2 3];              % one triangle
+    tmpcfg.template.headshape.unit      = mesh_realigned.unit;  % give it the same units
+    tmpcfg.template.headshape.coordsys  = cfg.coordsys;         % this is the target coordsys
     tmpcfg.template.headshapestyle = {'vertexcolor', 'none', 'edgecolor', 'none', 'facecolor', 'none'};
     tmpcfg.individual.headshape = mesh_realigned;
     tmpcfg = ft_interactiverealign(tmpcfg);
@@ -220,7 +222,6 @@ switch cfg.method
     % compute the homogenous transformation
     transform = ft_headcoordinates(cfg.fiducial.nas, cfg.fiducial.lpa, cfg.fiducial.rpa, cfg.coordsys);
     
-    
   otherwise
     ft_error('unsupported method "%s"', cfg.method);
 end
@@ -238,9 +239,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % do the general cleanup and bookkeeping at the end of the function
-
 ft_postamble debug
-ft_postamble trackconfig
 ft_postamble previous   mesh
 ft_postamble provenance mesh_realigned
 ft_postamble history    mesh_realigned

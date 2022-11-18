@@ -6,10 +6,10 @@ function [H] = scale(f)
 % Use as
 %   [H] = translate(S)
 % where
-%   S       [sx, sy, sz] scaling along each of the axes
+%   S   [sx, sy, sz] scaling along each of the axes
 %   H   corresponding homogenous transformation matrix
 %
-% See also TRANSLATE, ROTATE, QUATERNION
+% See also TRANSLATE, ROTATE, QUATERNION, HOMOGENOUS2TRADITIONAL
 
 % Copyright (C) 2000-2005, Robert Oostenveld
 %

@@ -7,7 +7,7 @@ function [data] = ft_resampledata(cfg, data)
 %
 % The data should be organised in a structure as obtained from the FT_PREPROCESSING
 % function. The configuration should contain
-%   cfg.resamplefs      = frequency at which the data will be resampled (default = 256 Hz)
+%   cfg.resamplefs      = frequency at which the data will be resampled
 %   cfg.detrend         = 'no' or 'yes', detrend the data prior to resampling (no default specified, see below)
 %   cfg.demean          = 'no' or 'yes', whether to apply baseline correction (default = 'no')
 %   cfg.baselinewindow  = [begin end] in seconds, the default is the complete trial (default = 'all')
@@ -16,20 +16,29 @@ function [data] = ft_resampledata(cfg, data)
 %   cfg.sampleindex     = 'no' or 'yes', add a channel with the original sample indices (default = 'no')
 %
 % Instead of specifying cfg.resamplefs, you can also specify a time axis on which you
-% want the data to be resampled. This is usefull for merging data from two acquisition
+% want the data to be resampled. This is useful for merging data from two acquisition
 % devices, after resampledata you can call FT_APPENDDATA to concatenate the channels
 % from the different acquisition devices.
 %   cfg.time        = cell-array with one time axis per trial (i.e. from another dataset)
 %   cfg.method      = interpolation method, see INTERP1 (default = 'pchip')
 %   cfg.extrapval   = extrapolation behaviour, scalar value or 'extrap' (default = as in INTERP1)
 %
-% Previously this function used to detrend the data by default. The motivation for
-% this is that the data is filtered prior to resampling to avoid aliassing and
-% detrending prevents occasional edge artifacts of the filters. Detrending is fine
-% for removing slow drifts in data prior to frequency analysis, but not good if you
-% subsequently want to look at the evoked fields. Therefore the old default value
-% 'yes' has been removed and you now explicitely have to specify whether you want to
-% detrend.
+% When you specify cfg.method='resample' an implicit anti-aliasing low pass filter is applied prior
+% to the resampling. You can also explicitly specify an anti-aliasing low pass filter. This is adviced
+% when downsampling using any other method than 'resample', but also when strong noise components are
+% present just above the new Nyquist frequency.
+%   cfg.lpfilter    = 'yes' or 'no' (default = 'no')
+%   cfg.lpfreq      = scalar value for low pass frequency (there is no default, so needs to be always specified)
+%   cfg.lpfilttype  = string, filter type (default is set in ft_preproc_lowpassfilter)
+%   cfg.lpfiltord   = scalar, filter order (default is set in ft_preproc_lowpassfilter)
+%
+% More documentation about anti-alias filtering can be found in this <a href="matlab:
+% web('https://www.fieldtriptoolbox.org/faq/resampling_lowpassfilter')">FAQ</a> on the FieldTrip website.
+%
+% Previously this function used to detrend the data by default to avoid edge artifacts fue to the
+% anti-aliassing filter. Detrending is fine for removing slow drifts in data prior to frequency analysis,
+% but not recommended if you want to look at ERPs or ERFs. Therefore the old default value 'yes' has been
+% removed; you now explicitly have to specify whether you want to detrend or not.
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
@@ -39,10 +48,11 @@ function [data] = ft_resampledata(cfg, data)
 % files should contain only a single variable, corresponding with the
 % input/output structure.
 %
-% See also FT_PREPROCESSING, FT_APPENDDATA, RESAMPLE, DOWNSAMPLE, INTERP1
+% See also FT_PREPROCESSING, FT_APPENDDATA, FT_PREPROC_LOWPASSFILTER, ESAMPLE, DOWNSAMPLE, INTERP1
 
 % Copyright (C) 2003-2006, FC Donders Centre, Markus Siegel
-% Copyright (C) 2004-2019, FC Donders Centre, Robert Oostenveld
+% Copyright (C) 2004-2022, FC Donders Centre, Robert Oostenveld
+% Copyright (C) 2022, DCCN, Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -73,7 +83,6 @@ ft_preamble init
 ft_preamble debug
 ft_preamble loadvar data
 ft_preamble provenance data
-ft_preamble trackconfig
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -83,7 +92,7 @@ end
 % ft_checkdata is done further down
 
 % check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'forbidden',  {'trial'}); % prevent accidental typos, see issue 1729
+cfg = ft_checkconfig(cfg, 'forbidden', {'trial'}); % prevent accidental typos, see issue 1729
 cfg = ft_checkconfig(cfg, 'renamed', {'blc', 'demean'});
 cfg = ft_checkconfig(cfg, 'renamed', {'resamplemethod', 'method'});
 cfg = ft_checkconfig(cfg, 'renamed', {'fsample', 'resamplefs'});
@@ -100,6 +109,7 @@ cfg.trials           = ft_getopt(cfg, 'trials',          'all', 1);
 cfg.method           = ft_getopt(cfg, 'method',          []);
 cfg.sampleindex      = ft_getopt(cfg, 'sampleindex',     'no');
 cfg.extrapval        = ft_getopt(cfg, 'extrapval',       []);
+cfg.lpfilter         = ft_getopt(cfg, 'lpfilter');
 
 % store original datatype
 convert = ft_datatype(data);
@@ -119,7 +129,7 @@ usefsample = any(strcmp(cfg.method, {'resample', 'downsample', 'decimate', 'mean
 usetime    = ~usefsample;
 
 % select trials of interest
-tmpcfg = keepfields(cfg, {'trials', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+tmpcfg = keepfields(cfg, {'trials', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
 data   = ft_selectdata(tmpcfg, data);
 % restore the provenance information
 [cfg, data] = rollback_provenance(cfg, data);
@@ -148,6 +158,14 @@ cfg.origfs = double(data.fsample);
 
 % set this to nan, it will be updated later on
 data.fsample = nan;
+
+if isempty(cfg.lpfilter), cfg.lpfilter = 'no'; end
+dolpfilt = istrue(cfg.lpfilter);
+if dolpfilt
+  cfg.lpfilttype = ft_getopt(cfg, 'lpfilttype');
+  cfg.lpfiltord  = ft_getopt(cfg, 'lpfiltord');
+  cfg            = ft_checkconfig(cfg, 'required', 'lpfreq');
+end
 
 if usefsample
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -208,6 +226,10 @@ if usefsample
       [olddat, bsl] = ft_preproc_baselinecorrect(olddat, nearest(oldtim, cfg.baselinewindow(1)), nearest(oldtim, cfg.baselinewindow(2)));
     else
       [olddat, bsl] = ft_preproc_baselinecorrect(olddat);
+    end
+
+    if istrue(cfg.lpfilter)
+      olddat = ft_preproc_lowpassfilter(olddat, cfg.origfs, cfg.lpfreq, cfg.lpfiltord, cfg.lpfilttype);
     end
 
     % pad the data with zeros on both sides
@@ -280,7 +302,7 @@ if usefsample
       newtim = newtim(   sel);
       newdat = newdat(:, sel);
     end
-    
+
     data.time{itr}  = newtim;
     data.trial{itr} = newdat;
 
@@ -301,7 +323,7 @@ elseif usetime
       cfg.extrapval = nan;
     end
   end
-       
+
   ntr = length(data.trial);
 
   ft_progress('init', cfg.feedback, 'resampling data');
@@ -325,6 +347,10 @@ elseif usetime
       [olddat, bsl] = ft_preproc_baselinecorrect(olddat, nearest(oldtim, cfg.baselinewindow(1)), nearest(oldtim, cfg.baselinewindow(2)));
     else
       [olddat, bsl] = ft_preproc_baselinecorrect(olddat);
+    end
+
+    if istrue(cfg.lpfilter)
+      olddat = ft_preproc_lowpassfilter(olddat, cfg.origfs, cfg.lpfreq, cfg.lpfiltord, cfg.lpfilttype);
     end
 
     % perform the resampling
@@ -366,7 +392,6 @@ end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-ft_postamble trackconfig
 ft_postamble previous   data
 ft_postamble provenance data
 ft_postamble history    data

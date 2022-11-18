@@ -4,8 +4,8 @@ function [err] = TellAfni (cs, opt)
 %
 %Purpose:
 %   Drive AFNI
-%   
-%   
+%
+%
 %Input Parameters:
 %   cs: An Nx1 vector of communication command structures
 %       It is obtained using NewCs structure
@@ -15,15 +15,15 @@ function [err] = TellAfni (cs, opt)
 %Output Parameters:
 %   err : 0 No Problem
 %       : N  N Problems
-%   
-%      
+%
+%
 %More Info :
-%   
+%
 %     NewCs
 %     TellAfni_Commands
 %     Test_TellAfni
 %     AFNI's README.driver  file and the program plugout_drive
-%     
+%
 %     Author : Ziad Saad
 %     Date : Tue Dec 6 10:38:23 EST 2005
 %     SSCC/NIMH/ National Institutes of Health, Bethesda Maryland
@@ -67,7 +67,7 @@ for (i=1:1:ncs),
          cs(i).c = '';
       end
    end
-   
+
    if (cs(i).c),
       switch (cs(i).c),
          case 'START_AFNI',
@@ -80,7 +80,7 @@ for (i=1:1:ncs),
             end
             scom = sprintf('afni -yesplugouts %s |& tee %s &', cs(i).v, LogFile);
             [s,w] = unix(scom);
-            if (opt.Verbose & ~isempty(w)), 
+            if (opt.Verbose & ~isempty(w)),
                fprintf(1,'Command output:\n%s\n', w);
             end
             if (s),
@@ -138,9 +138,9 @@ if (~isempty(com)),
          fprintf(2,'Warning: %d out of %d commands failed in AFNI.\n', b, ncom);
       end
    end
-   if (opt.Verbose > 1), 
+   if (opt.Verbose > 1),
       fprintf(1,'Command output:\n%s\n', w);
-   end   
+   end
    if (s),
       fprintf(2,'Error telling afni\n');
       return;
@@ -161,28 +161,28 @@ err = 1;
       %no log file!
       return;
    end
-   
+
    fid = fopen(LogFile,'r');
    if (fid < 0) return, end
    c = fscanf(fid, '%c');
    l = strfind(c,'Can''t bind? tcp_listen[bind]: Address already in use');
    fclose(fid);
-   if (~isempty(l)), 
-      if (verb) 
+   if (~isempty(l)),
+      if (verb)
          fprintf(2,'Warning: Can''t listen. You probably have another AFNI listening.\nCommunication might fail.\nOnly one AFNI can communicate via plugouts\n');
       end
-      return; 
+      return;
    end
    l = strfind(c,'Plugouts');
-   if (~isempty(l)), 
+   if (~isempty(l)),
          l = strfind(c,'= listening for connections');
-         if (isempty(l)), 
+         if (isempty(l)),
             if (verb) fprintf(2,'Warning: pugouts not enabled. Communication might fail.\n'); end
-            return; 
+            return;
          end
-   else 
+   else
       %not there yet
-      return;      
+      return;
    end
 err = 0;
 return;

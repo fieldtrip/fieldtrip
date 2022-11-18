@@ -7,12 +7,12 @@ function [spike] = ft_spikesorting(cfg, spike)
 %   [spike] = ft_spikesorting(cfg, spike)
 %
 % The configuration can contain
-%   cfg.channel         cell-array with channel selection (default = 'all'), see FT_CHANNELSELECTION for details
-%   cfg.method          'kmeans', 'ward'
-%   cfg.feedback        'no', 'text', 'textbar', 'gui' (default = 'textbar')
-%   cfg.kmeans          substructure with additional low-level options for this method
-%   cfg.ward            substructure with additional low-level options for this method
-%   cfg.ward.distance   'L1', 'L2', 'correlation', 'cosine'
+%   cfg.channel         = cell-array with channel selection (default = 'all'), see FT_CHANNELSELECTION for details
+%   cfg.method          = 'kmeans', 'ward'
+%   cfg.feedback        = 'no', 'text', 'textbar', 'gui' (default = 'textbar')
+%   cfg.kmeans          = substructure with additional low-level options for this method
+%   cfg.ward            = substructure with additional low-level options for this method
+%   cfg.ward.distance   = 'L1', 'L2', 'correlation', 'cosine'
 %
 % The input spike structure can be imported using READ_FCDC_SPIKE and should contain
 %   spike.label     = 1 x Nchans cell-array, with channel labels
@@ -51,7 +51,7 @@ ft_nargout  = nargout;
 ft_defaults
 ft_preamble init
 ft_preamble provenance spike
-ft_preamble trackconfig
+
 
 % these were supported in the past, but are not any more (for consistency with other spike functions)
 cfg = ft_checkconfig(cfg, 'forbidden', 'inputfile', ...
@@ -121,7 +121,7 @@ for chanlop=1:nchan
 end
 
 % do the general cleanup and bookkeeping at the end of the function
-ft_postamble trackconfig
+
 ft_postamble previous   spike
 ft_postamble provenance spike
 ft_postamble history    spike

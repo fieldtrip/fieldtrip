@@ -4,31 +4,31 @@ function [err,ErrMessage, NameList] = zglobb (Identifiers, Opt)
 %or
 %   [List] =  zglobb (Identifiers, [Opt])
 %Purpose:
-%  returns the list of files specified in Identifiers 
-%   
-%   
+%  returns the list of files specified in Identifiers
+%
+%
 %Input Parameters:
 %   Identifiers is a cellstr identifying which briks to use
-%     Identifiers = {'ADzst2r*ir.alnd2AAzs+orig.HEAD' , 'AFzst2r*ir.alnd2AAzs+orig.HEAD'} 
+%     Identifiers = {'ADzst2r*ir.alnd2AAzs+orig.HEAD' , 'AFzst2r*ir.alnd2AAzs+orig.HEAD'}
 %   Opt is an optional Options structure
 %   	.LsType : type of output List
 %         'l' --> (default) Create a Nx1 structure vector with fields identical to those returned by dir
 %         '|' --> Create a | delimited string with al the filenames in it
 %     .NoExt : (default is '') a string containing a | delimited list of filename extensions to remove
 %            example '.HEAD|.BRIK'
-%   
+%
 %Output Parameters:
 %   err : 0 No Problem
 %       : 1 Mucho Problems
 %   ErrMessage : Any error or warning messages
 %   List is the list of files with a format depending on Opt.LsType
-%      
+%
 %Key Terms:
-%   
+%
 %More Info :
 %   ? as a wildcard now works on unix/OSX machines
-%   
-%   
+%
+%
 %
 %     Author : Ziad Saad
 %     Date : Fri Feb 09 09:55:01 EST 2001
@@ -57,13 +57,13 @@ end
 
 switch Opt.LsType,
 	case 'l',
-		NameList = []; 
+		NameList = [];
 	case '|',
 		NameList = '';
 	otherwise,
 		ErrMessage = sprintf('%s is an unknown Opt.LsType value', Opt.LsType);
 		err = 1;
-		return;  
+		return;
 end
 
 if (ischar(Identifiers)),
@@ -89,7 +89,7 @@ while (i<=length(Identifiers)),
          continue;
       end
       cl = zstr2cell(ll);
-      
+
       if (length(Identifiers)>=i+1),
          Identifiers = [  Identifiers(1:i-1) ...
                            cl ...
@@ -98,17 +98,17 @@ while (i<=length(Identifiers)),
          Identifiers = [  Identifiers(1:i-1) ...
                            cl ];
       end
-   end 
+   end
    sd = dir (char(Identifiers(i)));
 	ns = length(sd);
 	for (j=1:1:ns)
 		if (~strcmp(sd(j).name, '.') & ~strcmp(sd(j).name, '..'))
 			cnt = cnt + 1;
-			if (~isempty(Opt.NoExt)), 
+			if (~isempty(Opt.NoExt)),
 				sd(j).name = RemoveExtension (sd(j).name, Opt.NoExt);
 			end
 			switch Opt.LsType,
-				case 'l', 
+				case 'l',
 					NameList(cnt).name =  sd(j).name;
 					NameList(cnt).date =  sd(j).date;
 					NameList(cnt).bytes = sd(j).bytes;
@@ -122,7 +122,7 @@ while (i<=length(Identifiers)),
                                      NameList,ppp,sd(j).name);
 			      end
          end
-		end 
+		end
 	end
    i = i + 1;
 end
@@ -152,5 +152,5 @@ function cl = zstr2cell(ll)
       cl(i) = cellstr(ll(strt:sp(i)-1));
       strt = sp(i)+1;
    end
-   
+
 return;

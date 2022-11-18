@@ -5,7 +5,7 @@ function test_patchsvd(datadirs)
 % DEPENDENCY ft_prepare_leadfield
 
 %if nargin==0
-    datadirs{1} = dccnpath('/home/common/matlab/fieldtrip/data');
+    datadirs{1} = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf');
     datadirs{2} = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/networkanalysis');
 %end
 

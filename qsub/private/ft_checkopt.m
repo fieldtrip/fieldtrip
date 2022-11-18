@@ -19,6 +19,7 @@ function opt = ft_checkopt(opt, key, allowedtype, allowedval)
 %   'cell'
 %   'struct'
 %   'function_handle'
+%
 % Furthermore, the following custom types can be specified
 %   'empty'
 %   'doublescalar'
@@ -42,7 +43,7 @@ function opt = ft_checkopt(opt, key, allowedtype, allowedval)
 %
 % See also FT_GETOPT, FT_SETOPT
 
-% Copyright (C) 2011-2020, Robert Oostenveld
+% Copyright (C) 2011-2022, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.

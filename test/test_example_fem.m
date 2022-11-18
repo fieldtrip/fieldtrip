@@ -7,7 +7,7 @@ function test_example_fem
 [ftver, ftpath] = ft_version;
 
 %% read mri
-mri = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/Subject01.mri'));
+mri = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.mri'));
 
 %% segmentation
 cfg          = [];

@@ -37,6 +37,12 @@ function ft_realtime_classification(cfg)
 %
 % To stop the realtime function, you have to press Ctrl-C
 
+% Undocumented options:
+%   cfg.timeout = scalar, time in seconds after which the function stops.
+%                 Default value is inf, but may be set to a finite number
+%                 (so that it stops executing when running without user
+%                 interaction).
+
 % Copyright (C) 2009, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
@@ -61,11 +67,12 @@ function ft_realtime_classification(cfg)
 ft_hastoolbox('prtools', 1);
 
 % set the default configuration options
-if ~isfield(cfg, 'dataformat'),     cfg.dataformat = [];      end % default is detected automatically
-if ~isfield(cfg, 'headerformat'),   cfg.headerformat = [];    end % default is detected automatically
-if ~isfield(cfg, 'eventformat'),    cfg.eventformat = [];     end % default is detected automatically
-if ~isfield(cfg, 'channel'),        cfg.channel = 'all';      end
-if ~isfield(cfg, 'bufferdata'),     cfg.bufferdata = 'last';  end % first or last
+cfg.dataformat   = ft_getopt(cfg, 'dataformat',   []); % default is detected automatically
+cfg.headerformat = ft_getopt(cfg, 'headerformat', []); % default is detected automatically
+cfg.eventformat  = ft_getopt(cfg, 'eventformat', []);  % default is detected automatically
+cfg.channel      = ft_getopt(cfg, 'channel',    'all');
+cfg.bufferdata   = ft_getopt(cfg, 'bufferdata', 'last'); % first or last
+cfg.timeout      = ft_getopt(cfg, 'timeout',    inf);
 
 % translate dataset into datafile+headerfile
 cfg = ft_checkconfig(cfg, 'dataset2files', 'yes');
@@ -104,7 +111,7 @@ clear(cfg.trialfun);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % this is the general BCI loop where realtime incoming data is handled
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-while true
+while t(end)<cfg.timeout
 
   % determine latest header and event information
   event     = ft_read_event(cfg.dataset, 'minsample', prevSample+1);  % only consider events that are later than the data processed sofar
@@ -213,7 +220,6 @@ while true
         train_class = cat(1, train_class, class);
       end
     end % if train
-
   end % looping over new trials
 end % while true
 

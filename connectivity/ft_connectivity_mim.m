@@ -1,4 +1,4 @@
-function [M] = ft_connectivity_mim(input, varargin)
+function [M] = ft_connectivity_mim(inputdata, varargin)
 
 % FT_CONNECTIVITY_MIM computes the multivariate interaction measure from a
 % data-matrix containing the cross-spectral density. This implements the method
@@ -7,7 +7,7 @@ function [M] = ft_connectivity_mim(input, varargin)
 % 476:488.
 %
 % Use as
-%   [m] = hcp_connectivity_mim(input, ...)
+%   [m] = hcp_connectivity_mim(inputdata, ...)
 %
 % The input data should be an array organized as
 %   Channel x Channel x Frequency
@@ -45,12 +45,12 @@ function [M] = ft_connectivity_mim(input, varargin)
 
 indices = ft_getopt(varargin, 'indices');
 
-if isempty(indices) && isequal(size(input(:,:,1)), [2 2])
+if isempty(indices) && isequal(size(inputdata(:,:,1)), [2 2])
   % simply assume two channels
   indices = [1 1 2 2];
 end
 
-sizein  = size(input);
+sizein  = size(inputdata);
 sizeout = [sizein 1];
 sizeout(1:2) = max(indices);
 
@@ -58,7 +58,7 @@ sizeout(1:2) = max(indices);
 invC = cell(sizeout(1),sizeout(3));
 for kk = 1:sizeout(3)
   for k = 1:sizeout(1)
-    invC{k,kk} = pinv(real(input(indices==k,indices==k,kk)));
+    invC{k,kk} = pinv(real(inputdata(indices==k,indices==k,kk)));
   end
 end
 
@@ -70,7 +70,7 @@ for kk = 1:sizeout(3)
       indx2 = indices==m;
       %cs_aa_re = real(input(indx1,indx1));
       %cs_bb_re = real(input(indx2,indx2));
-      cs_ab_im = imag(input(indx1,indx2,kk));
+      cs_ab_im = imag(inputdata(indx1,indx2,kk));
       
       %inv_cs_bb_re = pinv(cs_bb_re);
       %inv_cs_aa_re = pinv(cs_aa_re);

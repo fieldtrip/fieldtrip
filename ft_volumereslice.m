@@ -70,7 +70,6 @@ ft_preamble init
 ft_preamble debug
 ft_preamble loadvar    mri
 ft_preamble provenance mri
-ft_preamble trackconfig
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -153,7 +152,7 @@ end % if method~=fip
 
 if cfg.downsample~=1
   % optionally downsample the anatomical and/or functional volumes
-  tmpcfg = keepfields(cfg, {'downsample', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+  tmpcfg = keepfields(cfg, {'downsample', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
   mri = ft_volumedownsample(tmpcfg, mri);
   % restore the provenance information
   [cfg, mri] = rollback_provenance(cfg, mri);
@@ -223,7 +222,6 @@ end % if method=flip or interpolate
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-ft_postamble trackconfig
 ft_postamble previous   mri
 ft_postamble provenance resliced
 ft_postamble history    resliced

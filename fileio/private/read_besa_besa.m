@@ -21,7 +21,6 @@ function [data] = read_besa_besa(filename, header, begsample, endsample, chanind
 % where
 %    filename        name of the datafile, including the .besa extension
 %    chanindx        index of channels to read (optional, default is all)
-%                    Note that since 
 % This returns a header structure with the following elements
 %   header.Fs           sampling frequency
 %   header.nChans       number of channels
@@ -64,11 +63,12 @@ function [data] = read_besa_besa(filename, header, begsample, endsample, chanind
 
 switch nargin
   case 1
-    chanindx=[];
+    chanindx = [];
   case 2
-    chanindx=[];
+    chanindx = [];
   case 3
-    chanindx=begsample;
+    chanindx = begsample;
+    clear begsample
   case 4
     ft_error('ReadBesaMatlab:ErrorInput','Number of input arguments should be 1,2,3, or 5');
 end
@@ -112,6 +112,10 @@ end
 % Empty chanindx means we want all channels
 if isempty(chanindx)
   chanindx = 1:header.nChans;
+else
+  if any(chanindx>header.nChans)
+    error('The selected channels are not present in the data');
+  end
 end
 
 %% Determine channels to pull from data

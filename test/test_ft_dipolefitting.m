@@ -28,10 +28,18 @@ for i=1:nchan
 end
 data.elec.chanpos = data.elec.elecpos;
 
+% make an explicit geometry with 4 surfaces 
+% the radius of each follows the BESA defaults
 geometry = [];
-geometry.pos = data.elec.elecpos;
-geometry.unit = data.elec.unit;
-% fit a 4-sphere concentric model to the geometry
+geometry(1).pos  = data.elec.elecpos*71/85; % brain
+geometry(1).unit = data.elec.unit;
+geometry(2).pos  = data.elec.elecpos*72/85; % csf
+geometry(2).unit = data.elec.unit;
+geometry(3).pos  = data.elec.elecpos*79/85; % skull
+geometry(3).unit = data.elec.unit;
+geometry(4).pos  = data.elec.elecpos*85/85; % scalp
+geometry(4).unit = data.elec.unit;
+% fit a 4-sphere concentric model to the geometries
 headmodel = ft_headmodel_concentricspheres(geometry, 'conductivity', [0.33 1.00 0.042 0.33]);
 
 % test for comp type

@@ -52,7 +52,7 @@ cfg.trialdef.poststim   = 0.5; %sec
 cfg = ft_definetrial(cfg);
 trl = cfg.trl;
 
-if length(trl(:,1))~=100
+if size(trl,1)~=100
   error('could not define trials appropriately');
 end
 

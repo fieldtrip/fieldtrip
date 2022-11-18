@@ -1,10 +1,11 @@
 function mesh = ft_defacemesh(cfg, mesh)
 
 % FT_DEFACEMESH allows you to de-identify a scalp surface mesh by erasing specific
-% regions, such as the face and ears. The graphical user interface allows you to
-% position a box over the anatomical data inside which all vertices will be removed.
-% You might have to call this function multiple times when both face and ears need to
-% be removed. Following defacing, you should check the result with FT_PLOT_MESH.
+% regions, such as the face and ears. The interactive graphical user interface allows
+% you to position a box over the anatomical data inside which all vertices will be
+% removed. You might have to call this function multiple times when both face and
+% ears need to be removed. Following defacing, you should check the result with
+% FT_PLOT_MESH.
 %
 % Use as
 %   mesh = ft_defacevolume(cfg, mesh)
@@ -13,11 +14,11 @@ function mesh = ft_defacemesh(cfg, mesh)
 %   cfg.translate  = initial position of the center of the box (default = [0 0 0])
 %   cfg.scale      = initial size of the box along each dimension (default is automatic)
 %   cfg.rotate     = initial rotation of the box (default = [0 0 0])
-%   cfg.selection  = which voxels to keep, can be 'inside' or 'outside' (default = 'outside')
+%   cfg.selection  = which vertices to keep, can be 'inside' or 'outside' (default = 'outside')
 %
 % See also FT_ANONYMIZEDATA, FT_DEFACEVCOLUME, FT_ANALYSISPIPELINE, FT_PLOT_MESH
 
-% Copyright (C) 2015-2016, Robert Oostenveld
+% Copyright (C) 2015-2022, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -48,7 +49,6 @@ ft_preamble init
 ft_preamble debug
 ft_preamble loadvar    mesh
 ft_preamble provenance mesh
-ft_preamble trackconfig
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -58,6 +58,7 @@ end
 % the actual work is done by FT_DEFACEVOLUME
 tmpcfg = cfg;
 tmpcfg.showcallinfo = 'no';
+tmpcfg.method = 'interactive';
 mesh = ft_defacevolume(tmpcfg, mesh);
 % restore provenance information and put back cfg.callinfo
 tmpcallinfo = cfg.showcallinfo;
@@ -66,7 +67,6 @@ cfg.showcallinfo = tmpcallinfo;
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-ft_postamble trackconfig
 ft_postamble previous mesh
 ft_postamble provenance mesh
 ft_postamble history mesh

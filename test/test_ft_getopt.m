@@ -21,16 +21,6 @@ success = success && isequal(ft_getopt({'key1', []}, 'key1'), []);
 success = success && isequal(ft_getopt({'key1', []}, 'key1', 'default'), 'default');
 
 cfg      = [];
-cfg.key1 = 'val1';
-cfg = config(cfg);
-success = success && isequal(ft_getopt(cfg, 'key1'), 'val1');
-success = success && isequal(ft_getopt(cfg, 'key2'), []);
-success = success && isequal(ft_getopt(cfg, 'key2', 'default'), 'default');
-success = success && isequal(ft_getopt(cfg, 'key2', 'default'), 'default');
-success = success && isequal(ft_getopt({'key1', []}, 'key1'), []);
-success = success && isequal(ft_getopt({'key1', []}, 'key1', 'default'), 'default');
-
-cfg      = [];
 cfg.key1 = [];
 success = success && isequal(ft_getopt(cfg, 'key1'), []);
 success = success && isequal(ft_getopt(cfg, 'key1', 'default'), 'default');

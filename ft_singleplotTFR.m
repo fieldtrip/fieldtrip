@@ -10,7 +10,7 @@ function [cfg] = ft_singleplotTFR(cfg, data)
 % power or coherence that was computed using the FT_FREQANALYSIS function.
 %
 % The configuration can have the following parameters:
-%   cfg.parameter      = field to be plotted on z-axis, e.g. 'powspcrtrm' (default depends on data.dimord)
+%   cfg.parameter      = field to be plotted on z-axis, e.g. 'powspctrm' (default depends on data.dimord)
 %   cfg.maskparameter  = field in the data to be used for masking of data, can be logical (e.g. significant data points) or numerical (e.g. t-values).
 %                        (not possible for mean over multiple channels, or when input contains multiple subjects
 %                        or trials)
@@ -124,7 +124,6 @@ ft_preamble init
 ft_preamble debug
 ft_preamble loadvar data
 ft_preamble provenance data
-ft_preamble trackconfig
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -225,7 +224,7 @@ if ~strcmp(cfg.baseline, 'no')
 end
 
 % channels should NOT be selected and averaged here, since a topoplot might follow in interactive mode
-tmpcfg = keepfields(cfg, {'trials', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+tmpcfg = keepfields(cfg, {'trials', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
 if hasrpt
   tmpcfg.avgoverrpt = 'yes';
 else
@@ -495,7 +494,6 @@ end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-ft_postamble trackconfig
 ft_postamble previous data
 ft_postamble provenance
 ft_postamble savefig

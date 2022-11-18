@@ -63,7 +63,7 @@ ft_nargout  = nargout;
 ft_defaults
 ft_preamble init
 ft_preamble provenance jpsth
-ft_preamble trackconfig
+
 
 % get the default options
 cfg.channelcmb  = ft_getopt(cfg,'channelcmb', 'all');
@@ -110,7 +110,7 @@ end
 isNaN = 1;
 k = 1;
 while isNaN
-  if any(isnan(jpsth.psth(cmbindx,k))), 
+  if any(isnan(jpsth.psth(cmbindx,k)))
     disp('deleting NaNs at the borders')
     jpsth.psth(:,k) = [];
     dens(k,:) = [];
@@ -124,7 +124,7 @@ end
 isNaN = 1;
 k = size(jpsth.psth,2);
 while isNaN
-  if any(isnan(jpsth.psth(cmbindx,k))), 
+  if any(isnan(jpsth.psth(cmbindx,k)))
     disp('deleting NaNs at the borders')
     jpsth.psth(:,k) = [];
     dens(k,:) = [];
@@ -320,7 +320,7 @@ set(zoom,'ActionPostCallback',{@mypostcallback,ax,cfg.latency,psthLim});
 set(pan,'ActionPostCallback',{@mypostcallback,ax,cfg.latency,psthLim});
 
 % do the general cleanup and bookkeeping at the end of the function
-ft_postamble trackconfig
+
 ft_postamble previous jpsth
 ft_postamble provenance
 

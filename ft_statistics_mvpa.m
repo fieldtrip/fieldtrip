@@ -340,9 +340,10 @@ elseif ~isempty(cfg.neighbours)
     % keep label unchanged
     label = cfg.channel;
   else
+    selchan = find(strcmp(dimtok_search, 'chan'));
     % merge neighbours into combined channels
     for ix = 1:numel(label)
-      chan_ix = cfg.neighbours(ix,:);
+      chan_ix = cfg.mvpa.neighbours{selchan}(ix,:)>0;
       if sum(chan_ix)>1
         label{ix} = sprintf('combined(%s)', strjoin(cfg.channel(chan_ix), ','));
       else
@@ -368,7 +369,12 @@ end
 
 % build dimord from result struct
 if has_dimord
-  dimord = strrep(result.perf_dimension_names, ' ', '');
+  if ~iscell(perf)
+    dimord = strrep(result.perf_dimension_names, ' ', '');
+  else 
+    % more than one output metric is requested, use the first one for the dimord
+    dimord = strrep(result.perf_dimension_names{1}, ' ', '');
+  end
   if iscell(dimord), dimord = strjoin(dimord, '_'); end
 end
 

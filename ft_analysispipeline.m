@@ -48,6 +48,12 @@ function [pipeline] = ft_analysispipeline(cfg, data)
 % you can click on one of the steps to see the configuration details of
 % that pipeline(i).
 %
+% Example use:
+%   data     = ft_timelocksimulation([]);
+%   data_bl  = ft_timelockbaseline([], data);
+%   data_avg = ft_timelockanalysis([], data_bl);
+%   ft_analysispipeline([], data_avg)
+%
 % Note that the nested cfg and cfg.previous in your data might not contain
 % all details that are required to reconstruct a complete and valid
 % analysis script.
@@ -60,7 +66,7 @@ function [pipeline] = ft_analysispipeline(cfg, data)
 % See also FT_PREPROCESSING, FT_TIMELOCKANALYSIS, FT_FREQANALYSIS, FT_SOURCEANALYSIS,
 % FT_CONNECTIVITYANALYSIS, FT_NETWORKANALYSIS
 
-% Copyright (C) 2014-2015, Robert Oostenveld
+% Copyright (C) 2014-2022, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -95,7 +101,6 @@ ft_preamble init
 ft_preamble debug
 ft_preamble loadvar    data
 ft_preamble provenance data
-ft_preamble trackconfig
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -110,7 +115,6 @@ cfg.feedback    = ft_getopt(cfg, 'feedback', 'text');
 cfg.prune       = ft_getopt(cfg, 'prune', 'yes');
 cfg.filetype    = ft_getopt(cfg, 'filetype');
 cfg.fontsize    = ft_getopt(cfg, 'fontsize', 10);
-
 
 if isempty(cfg.filetype) && ~isempty(cfg.filename)
   [p, f, x] = fileparts(cfg.filename);
@@ -176,17 +180,14 @@ elseif ~iscell(cfg.showinfo)
   cfg.showinfo = {cfg.showinfo};
 end
 
-% we are only interested in the cfg-part of the data
-if isfield(data, 'cfg')
-  datacfg = data.cfg;
-else
-  datacfg = data;
+if ~isfield(data, 'cfg')
+  % assume that the user only passed the cfg instead of a complete data structure
+  data = struct('cfg', data);
 end
-clear data
 
 % walk the tree, gather information about each node
 ft_progress('init', cfg.feedback, 'parsing provenance...');
-pipeline = walktree(datacfg);
+pipeline = walktree(data.cfg);
 ft_progress('close');
 
 % convert the cell-array into a structure array
@@ -251,6 +252,18 @@ else
   end
 end
 
+% do the general cleanup and bookkeeping at the end of the function
+ft_postamble debug
+ft_postamble previous data
+ft_postamble provenance
+ft_postamble savefig
+
+if isempty(cfg.filename)
+  % add a menu to the figure, note that the menu makes FT_ANALYSISPIPELINE recursive
+  menu_fieldtrip(gcf, cfg);
+end
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION for recursive walking along the cfg.previous.previous info
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -293,6 +306,7 @@ drawnow
 % the order of the output elements matters for the recursion
 info = [{this} branch previous];
 
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION for gathering the information about each pipeline
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -314,6 +328,7 @@ else
   node.parent   = {};
 end
 
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -323,6 +338,7 @@ if issubfield(s, f)
 else
   v = 'unknown';
 end
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
@@ -334,6 +350,7 @@ else
   filename(filename=='\') = filesep;
 end
 [p, f, x] = fileparts(filename);
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
@@ -477,22 +494,6 @@ for i=1:numel(pipeline)
 end % for numel(info)
 
 set(fig, 'WindowButtonUpFcn', @button);
-% set(fig, 'KeyPressFcn', @key);
-
-% add a context menu to the figure
-% ftmenu = uicontextmenu; set(gcf, 'uicontextmenu', ftmenu)
-
-% add a regular menu item to the figure
-ftmenu  = uimenu(fig, 'Label', 'FieldTrip');
-% ftmenu1 = uimenu(ftmenu, 'Label', 'Save pipeline');
-% ftmenu2 = uimenu(ftmenu, 'Label', 'Share pipeline');
-uimenu(ftmenu, 'Label', 'About',  'Separator', 'on', 'Callback', @menu_about);
-% uimenu(ftmenu1, 'Label', 'Save as MATLAB script');
-% uimenu(ftmenu1, 'Label', 'Save as PSOM pipeline');
-% uimenu(ftmenu1, 'Label', 'Save as HTML page');
-% uimenu(ftmenu2, 'Label', 'Share within DCCN');
-% uimenu(ftmenu2, 'Label', 'Share on PasteBin.com');
-% uimenu(ftmenu2, 'Label', 'Share on MyExperiment.org');
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -583,6 +584,7 @@ for k = 1:numel(showinfo)
   end
 end % for numel(showinfo)
 
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -631,6 +633,7 @@ fid = fopen(filename, 'wb');
 fprintf(fid, '%s', script);
 fclose(fid);
 
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -671,6 +674,7 @@ end
 fprintf(fid, '}\n');
 
 fclose(fid);
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
@@ -731,7 +735,7 @@ for k = 1:numel(pipeline)
 end
 ft_progress('close');
 
-html = [html(1:end-2) sprintf('\n')];
+html = [html(1:end-2) newline];
 
 % load the skeleton and put in the html code
 thispath = fileparts(mfilename('fullpath'));
@@ -748,6 +752,7 @@ htmlfile = strrep(htmlfile, '${PROCTIME}', proctimestr);
 fid = fopen(filename, 'w');
 fwrite(fid, htmlfile, 'uchar');
 fclose(fid);
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION

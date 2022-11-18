@@ -30,7 +30,7 @@ cfg        = [];
 cfg.method = 'singleshell';
 hdm        = ft_prepare_headmodel(cfg, segmentedmri);
 
-template = load(dccnpath('/home/common/matlab/fieldtrip/template/sourcemodel/standard_sourcemodel3d8mm'));
+template = load(dccnpath('/home/common/matlab/fieldtrip/template/sourcemodel/standard_sourcemodel3d8mm.mat'));
 
 % inverse-warp the subject specific grid to the template grid
 cfg                = [];

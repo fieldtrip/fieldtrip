@@ -6,11 +6,9 @@ function test_issue856
 
 %%
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data/'));
-
-mri0 = ft_read_mri('Subject01.mri');
-grad0 = ft_read_sens('Subject01.ds', 'senstype', 'meg');
-headmodel0 = ft_read_headmodel('Subject01.hdm');
+mri0 = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.mri'));
+grad0 = ft_read_sens(dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds'), 'senstype', 'meg');
+headmodel0 = ft_read_headmodel(dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.hdm'));
 
 ft_hastoolbox('spm12', 1);
 
@@ -41,7 +39,7 @@ mri3 = ft_convert_coordsys(mri2, 'acpc', method);
 grad3 = ft_convert_coordsys(grad2, 'acpc', method);
 headmodel3 = ft_convert_coordsys(headmodel2, 'acpc', method);
 
-%% 
+%%
 % convert to millimeter
 
 target = 'mm';

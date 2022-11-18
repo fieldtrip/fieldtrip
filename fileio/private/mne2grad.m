@@ -183,14 +183,14 @@ if ~isempty(coilaccuracy)
     grad.chantype(sel) = {'mcg'};
   end
   for sel=find([orig.chs.kind]==3)' %Stim channels
-    if any([orig.chs(sel).logno] == 101) %new systems: 101 (and 102, if enabled) are digital; low numbers are 'pseudo-analog' (if enabled)
+    if any(ismember([orig.chs(sel).logno], [101 102])) % new systems: 101 (and 102, if enabled) are digital; low numbers are 'pseudo-analog' (if enabled)
       grad.chantype(sel([orig.chs(sel).logno] == 101)) = {'digital trigger'};
       grad.chantype(sel([orig.chs(sel).logno] == 102)) = {'digital trigger'};
       grad.chantype(sel([orig.chs(sel).logno] <= 32))  = {'analog trigger'};
       others = [orig.chs(sel).logno] > 32 & [orig.chs(sel).logno] ~= 101 & ...
         [orig.chs(sel).logno] ~= 102;
       grad.chantype(sel(others)) = {'other trigger'};
-    elseif any([orig.chs(sel).logno] == 14) %older systems: STI 014/015/016 are digital; lower numbers 'pseudo-analog'(if enabled)
+    elseif any(ismember([orig.chs(sel).logno], [14 15 16])) % older systems: STI 014/015/016 are digital; lower numbers 'pseudo-analog'(if enabled)
       grad.chantype(sel([orig.chs(sel).logno] == 14)) = {'digital trigger'};
       grad.chantype(sel([orig.chs(sel).logno] == 15)) = {'digital trigger'};
       grad.chantype(sel([orig.chs(sel).logno] == 16)) = {'digital trigger'};
@@ -437,6 +437,20 @@ if nEEG>0
   
   % multiply by 100 to get cm
   elec.elecpos = 100*elec.elecpos;
+end
+
+% construct SSP projectors, these can be applied later to the data and grad
+% structure using FT_DENOISE_SSP
+grad.balance = [];
+grad.balance.current = 'none';
+
+for i = 1:length(hdr.projs)
+  hdr.projs(i).active = 'true';
+  montage = [];
+  montage.tra = mne_make_projector(hdr.projs(i), hdr.ch_names, []);
+  montage.labelorg = hdr.ch_names;
+  montage.labelnew = hdr.ch_names;
+  grad.balance.(fixname(hdr.projs(i).desc)) = montage;
 end
 
 % remove grad if completely empty

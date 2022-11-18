@@ -1,7 +1,7 @@
 function [cfg] = ft_multiplotER(cfg, varargin)
 
 % FT_MULTIPLOTER plots the event-related potentials or event-related fields
-% versus time, or the oscillatory activity (power or coherence) versus frequency. 
+% versus time, or the oscillatory activity (power or coherence) versus frequency.
 % Multiple datasets can be overlayed. The plots are arranged according to
 % the location of the channels specified in the layout.
 %
@@ -40,17 +40,17 @@ function [cfg] = ft_multiplotER(cfg, varargin)
 %   cfg.limittext     = add user-defined text instead of cfg.comment, (default = cfg.comment)
 %   cfg.fontsize      = font size of comment and labels (default = 8)
 %   cfg.interactive   = 'yes' or 'no', make the plot interactive (default = 'yes')
-%                       In a interactive plot you can select areas and produce a new
+%                       In an interactive plot you can select areas and produce a new
 %                       interactive plot when a selected area is clicked. Multiple areas
 %                       can be selected by holding down the SHIFT key.
 %   cfg.renderer      = 'painters', 'zbuffer', ' opengl' or 'none' (default = [])
 %   cfg.colorgroups   = 'sequential', 'allblack', 'labelcharN' (N = Nth character in label), 'chantype' or a vector
-%                       with the length of the number of channels defining the groups (default = 'sequential')
+%                       with the length of the number of channels defining the groups (default = 'condition')
 %   cfg.linestyle     = linestyle/marker type, see options of the PLOT function (default = '-')
 %                       can be a single style for all datasets, or a cell-array containing one style for each dataset
 %   cfg.linewidth     = linewidth in points (default = 0.5)
-%   cfg.linecolor     = color(s) used for plotting the dataset(s) (default = 'brgkywrgbkywrgbkywrgbkyw')
-%                       alternatively, colors can be specified as Nx3 matrix of RGB values
+%   cfg.linecolor     = color(s) used for plotting the dataset(s). The default is defined in LINEATTRIBUTES_COMMON, see
+%                       the help of this function for more information
 %   cfg.directionality = '', 'inflow' or 'outflow' specifies for connectivity measures whether the
 %                       inflow into a node, or the outflow from a node is plotted. The (default) behavior
 %                       of this option depends on the dimord of the input data (see below).
@@ -59,6 +59,8 @@ function [cfg] = ft_multiplotER(cfg, varargin)
 %                       with multiple input arguments determines the
 %                       pre-selection of the data that is considered for
 %                       plotting.
+%   cfg.viewmode      = 'layout', or 'butterfly' (default = 'layout'), using the spatial layout as in cfg.layout for the
+%                       visualisation, or a butterfly plot
 
 % The following options for the scaling of the EEG, EOG, ECG, EMG, MEG and NIRS channels
 % is optional and can be used to bring the absolute numbers of the different
@@ -115,13 +117,12 @@ function [cfg] = ft_multiplotER(cfg, varargin)
 % FT_TOPOPLOTTFR, FT_PREPARE_LAYOUT
 
 % Undocumented local options:
-% cfg.layoutname
 % cfg.preproc
 % cfg.orient = landscape/portrait
 
 % Copyright (C) 2003-2006, Ole Jensen
 % Copyright (C) 2007-2011, Roemer van der Meij & Jan-Mathijs Schoffelen
-% Copyright (C) 2012-2017, F.C. Donders Centre
+% Copyright (C) 2012-2022, Donders Centre for Cognitive Neuroimaging
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -163,7 +164,6 @@ ft_preamble init
 ft_preamble debug
 ft_preamble loadvar varargin
 ft_preamble provenance varargin
-ft_preamble trackconfig
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -192,38 +192,57 @@ cfg = ft_checkconfig(cfg, 'renamed',    {'newfigure', 'figure'});
 % cfg = ft_checkconfig(cfg, 'deprecated', {'xparam'});
 
 % set the defaults
-cfg.baseline       = ft_getopt(cfg, 'baseline', 'no');
-cfg.trials         = ft_getopt(cfg, 'trials', 'all', 1);
-cfg.xlim           = ft_getopt(cfg, 'xlim', 'maxmin');
-cfg.ylim           = ft_getopt(cfg, 'ylim', 'maxmin');
-cfg.comment        = ft_getopt(cfg, 'comment', date);
-cfg.limittext      = ft_getopt(cfg, 'limittext', 'default');
-cfg.axes           = ft_getopt(cfg, 'axes', 'yes');
-cfg.showlabels     = ft_getopt(cfg, 'showlabels', 'no');
-cfg.showoutline    = ft_getopt(cfg, 'showoutline', 'no');
-cfg.showscale      = ft_getopt(cfg, 'showscale',   'yes');
-cfg.showcomment    = ft_getopt(cfg, 'showcomment', 'yes');
-cfg.box            = ft_getopt(cfg, 'box', 'no');
-cfg.fontsize       = ft_getopt(cfg, 'fontsize', 8);
+cfg.baseline       = ft_getopt(cfg, 'baseline',       'no');
+cfg.trials         = ft_getopt(cfg, 'trials',         'all', 1);
+cfg.xlim           = ft_getopt(cfg, 'xlim',           'maxmin');
+cfg.ylim           = ft_getopt(cfg, 'ylim',           'maxmin');
+cfg.comment        = ft_getopt(cfg, 'comment',        date);
+cfg.limittext      = ft_getopt(cfg, 'limittext',      'default');
+cfg.axes           = ft_getopt(cfg, 'axes',           'yes');
+cfg.showlabels     = ft_getopt(cfg, 'showlabels',     'no');
+cfg.showoutline    = ft_getopt(cfg, 'showoutline',    'no');
+cfg.showscale      = ft_getopt(cfg, 'showscale',      'yes');
+cfg.showcomment    = ft_getopt(cfg, 'showcomment',    'yes');
+cfg.box            = ft_getopt(cfg, 'box',            'no');
+cfg.fontsize       = ft_getopt(cfg, 'fontsize',       8);
 cfg.fontweight     = ft_getopt(cfg, 'fontweight');
-cfg.interpreter    = ft_getopt(cfg, 'interpreter', 'none');  % none, tex or latex
-cfg.interactive    = ft_getopt(cfg, 'interactive', 'yes');
-cfg.orient         = ft_getopt(cfg, 'orient', 'landscape');
+cfg.interpreter    = ft_getopt(cfg, 'interpreter',    'none');  % none, tex or latex
+cfg.interactive    = ft_getopt(cfg, 'interactive',    'yes');
+cfg.orient         = ft_getopt(cfg, 'orient',         'landscape');
 cfg.maskparameter  = ft_getopt(cfg, 'maskparameter');
-cfg.colorgroups    = ft_getopt(cfg, 'colorgroups', 'condition');
-cfg.linecolor      = ft_getopt(cfg, 'linecolor', 'brgkywrgbkywrgbkywrgbkyw');
-cfg.linestyle      = ft_getopt(cfg, 'linestyle', '-');
-cfg.linewidth      = ft_getopt(cfg, 'linewidth', 0.5);
-cfg.maskstyle      = ft_getopt(cfg, 'maskstyle', 'box');
-cfg.maskfacealpha  = ft_getopt(cfg, 'maskfacealpha', 1);
-cfg.channel        = ft_getopt(cfg, 'channel', 'all');
+cfg.linecolor      = ft_getopt(cfg, 'linecolor',      []); % the default is handled somewhere else
+cfg.linestyle      = ft_getopt(cfg, 'linestyle',      '-');
+cfg.linewidth      = ft_getopt(cfg, 'linewidth',      0.5);
+cfg.maskstyle      = ft_getopt(cfg, 'maskstyle',      'box');
+cfg.maskfacealpha  = ft_getopt(cfg, 'maskfacealpha',  1);
+cfg.channel        = ft_getopt(cfg, 'channel',        'all');
 cfg.directionality = ft_getopt(cfg, 'directionality', '');
 cfg.figurename     = ft_getopt(cfg, 'figurename');
 cfg.preproc        = ft_getopt(cfg, 'preproc');
-cfg.frequency      = ft_getopt(cfg, 'frequency', 'all'); % needed for frequency selection with TFR data
-cfg.latency        = ft_getopt(cfg, 'latency', 'all'); % needed for latency selection with TFR data, FIXME, probably not used
-cfg.renderer       = ft_getopt(cfg, 'renderer'); % let MATLAB decide on the default
-cfg.select         = ft_getopt(cfg, 'select', 'intersect'); % for ft_selectdata
+cfg.frequency      = ft_getopt(cfg, 'frequency',      'all'); % needed for frequency selection with TFR data
+cfg.latency        = ft_getopt(cfg, 'latency',        'all'); % needed for latency selection with TFR data, FIXME, probably not used
+cfg.renderer       = ft_getopt(cfg, 'renderer');              % let MATLAB decide on the default
+cfg.select         = ft_getopt(cfg, 'select',         'intersect'); % for ft_selectdata
+cfg.viewmode       = ft_getopt(cfg, 'viewmode',       'layout');
+
+% some options constrain the default value for other options
+if isequal(cfg.linecolor, 'spatial')
+  cfg.colorgroups = ft_getopt(cfg, 'colorgroups', 'sequential');
+else
+  cfg.colorgroups = ft_getopt(cfg, 'colorgroups', 'condition');
+end
+
+% some options have constrained values with multiple data inputs
+if Ndata>1
+  cfg = ft_checkconfig(cfg, 'allowedval', {'colorgroups', 'condition'});
+  if isequal(cfg.linecolor, 'spatial')
+    ft_error('with multiple data inputs cfg.linecolor=''spatial'' is not permitted');
+  end
+end
+
+if isfield(cfg, 'layout') && (isequal(cfg.layout, 'butterfly')||isequal(cfg.viewmode, 'butterfly')) && istrue(cfg.showscale)
+  cfg.skipscale = 'no'; % this is used in ft_prepare_layout
+end
 
 % check for linestyle being a cell-array
 if ischar(cfg.linestyle)
@@ -330,7 +349,7 @@ if ~strcmp(cfg.baseline, 'no')
 end
 
 % channels SHOULD be selected here, as no interactive action produces a new multiplot
-tmpcfg = keepfields(cfg, {'channel', 'trials', 'select', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+tmpcfg = keepfields(cfg, {'channel', 'trials', 'select', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
 if hasrpt
   tmpcfg.avgoverrpt = 'yes';
 else
@@ -407,7 +426,14 @@ end
 %% Section 3: select the data to be plotted and determine min/max range
 
 % Read or create the layout that will be used for plotting
-tmpcfg = keepfields(cfg, {'layout', 'channel', 'rows', 'columns', 'commentpos', 'skipcomnt', 'scalepos', 'skipscale', 'projection', 'viewpoint', 'rotate', 'width', 'height', 'elec', 'grad', 'opto', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+tmpcfg = keepfields(cfg, {'layout', 'channel', 'rows', 'columns', 'commentpos', 'skipcomnt', 'scalepos', 'skipscale', 'projection', 'viewpoint', 'rotate', 'width', 'height', 'elec', 'grad', 'opto', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+tmpcfg = ft_setopt(tmpcfg, 'color', cfg.linecolor);
+if isequal(cfg.viewmode, 'butterfly')
+  if isfield(tmpcfg, 'layout')
+    tmpcfg.layouttopo = tmpcfg.layout;
+  end
+  tmpcfg.layout     = 'butterfly';
+end
 cfg.layout = ft_prepare_layout(tmpcfg, varargin{1});
 
 % Take the subselection of channels that is contained in the layout, this is the same in all datasets
@@ -500,16 +526,10 @@ chanLabel  = cfg.layout.label(sellay);
 %% Section 4: do the actual plotting
 
 % determine the coloring of channels/conditions
-linecolor = linecolor_common(cfg, varargin{:});
+[linecolor, linestyle, linewidth] = lineattributes_common(cfg, varargin{:});
 
 % open a new figure, or add it to the existing one
 open_figure(keepfields(cfg, {'figure', 'position', 'visible', 'renderer', 'figurename', 'title'}));
-
-if ischar(linecolor)
-  set(gca, 'ColorOrder', char2rgb(linecolor))
-elseif isnumeric(linecolor)
-  set(gca, 'ColorOrder', linecolor)
-end
 
 % Plot the data
 for m=1:length(selchan)
@@ -520,7 +540,7 @@ for m=1:length(selchan)
     % Clip out of bounds y values:
     yval(yval > ymax) = ymax;
     yval(yval < ymin) = ymin;
-    ft_plot_vector(xval, yval, 'width', chanWidth(m), 'height', chanHeight(m), 'hpos', chanX(m), 'vpos', chanY(m), 'hlim', [xmin xmax], 'vlim', [ymin ymax], 'color', linecolor, 'style', cfg.linestyle{1}, 'linewidth', cfg.linewidth, 'axis', cfg.axes, 'highlight', mask, 'highlightstyle', cfg.maskstyle, 'facealpha', cfg.maskfacealpha);
+    ft_plot_vector(xval, yval, 'width', chanWidth(m), 'height', chanHeight(m), 'hpos', chanX(m), 'vpos', chanY(m), 'hlim', [xmin xmax], 'vlim', [ymin ymax], 'color', permute(linecolor(m,:,1:2), [3 2 1]), 'style', cfg.linestyle{1}, 'linewidth', cfg.linewidth, 'axis', cfg.axes, 'highlight', mask, 'highlightstyle', cfg.maskstyle, 'facealpha', cfg.maskfacealpha);
   else
     % loop over the conditions, plot them on top of each other
     for i=1:Ndata
@@ -529,11 +549,7 @@ for m=1:length(selchan)
       yval(yval > ymax) = ymax;
       yval(yval < ymin) = ymin;
       % select the color for the channel/condition
-      if strcmp(cfg.colorgroups, 'condition')
-        color = linecolor(i,:);
-      else
-        color = linecolor(m,:);
-      end
+      color = linecolor(m,:,i);
       ft_plot_vector(xval, yval, 'width', chanWidth(m), 'height', chanHeight(m), 'hpos', chanX(m), 'vpos', chanY(m), 'hlim', [xmin xmax], 'vlim', [ymin ymax], 'color', color, 'style', cfg.linestyle{i}, 'linewidth', cfg.linewidth, 'axis', cfg.axes, 'highlight', mask, 'highlightstyle', cfg.maskstyle, 'facealpha', cfg.maskfacealpha);
     end
   end
@@ -541,6 +557,16 @@ end % for number of channels
 
 % plot the layout, labels and outline
 ft_plot_layout(cfg.layout, 'box', cfg.box, 'label', cfg.showlabels, 'outline', cfg.showoutline, 'point', 'no', 'mask', 'no', 'fontsize', cfg.fontsize, 'labelyoffset', 1.4*median(cfg.layout.height/2), 'labelalignh', 'center', 'chanindx', find(~ismember(cfg.layout.label, {'COMNT', 'SCALE'})), 'interpreter', cfg.interpreter);
+if isfield(cfg.layout, 'layout')
+  hlim = get(gca, 'xlim');
+  vlim = get(gca, 'ylim');
+  hpos = hlim(1)+diff(hlim)*0.1;
+  vpos = vlim(1)+diff(vlim)*0.9;
+  h    = 0.2*diff(vlim);
+  w    = 0.2*diff(hlim);
+  [i1, i2] = match_str(cfg.channel, cfg.layout.layout.label);
+  ft_plot_layout(cfg.layout.layout, 'box', 'no', 'label', 'off', 'point', 'yes', 'pointcolor', linecolor(i1, :), 'pointsize', 5, 'pointsymbol', 'o', 'hpos', hpos, 'vpos', vpos, 'height', h, 'width', w);
+end
 
 % write comment
 if istrue(cfg.showcomment)
@@ -551,7 +577,7 @@ if istrue(cfg.showcomment)
       if ischar(linecolor)
         colorLabels = [colorLabels '\n' dataname{i} '='         linecolor(i)     ];
       elseif isnumeric(linecolor)
-        colorLabels = [colorLabels '\n' dataname{i} '=' num2str(linecolor(i, :)) ];
+        colorLabels = sprintf('%s\n%s=[%.3g %.3g %.3g]',colorLabels, dataname{i}, linecolor(1,1,i), linecolor(1,2,i), linecolor(1,3,i));
       end
     end
   end
@@ -611,6 +637,12 @@ set(gcf, 'NumberTitle', 'off');
 
 % Make the figure interactive
 if strcmp(cfg.interactive, 'yes')
+  if all(cfg.layout.pos(:,1)==cfg.layout.pos(1,1) & cfg.layout.pos(:,2)==cfg.layout.pos(2,2)) && isfield(cfg.layout, 'layout')
+    % it's a butterfly layout, which does not work well in interactive
+    % mode, replace it with the one that (hopefully) has topographical
+    % information
+    cfg.layout = cfg.layout.layout;
+  end
   % add the cfg/data/channel information to the figure under identifier linked to this axis
   ident                 = ['axh' num2str(round(sum(clock.*1e6)))]; % unique identifier for this axis
   set(gca, 'tag', ident);
@@ -621,16 +653,21 @@ if strcmp(cfg.interactive, 'yes')
   info.(ident).dataname = dataname;
   info.(ident).cfg      = cfg;
   info.(ident).varargin = varargin;
+  info.(ident).linecolor = linecolor;
   guidata(gcf, info);
   
-  set(gcf, 'WindowButtonUpFcn',  {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotER}, 'event', 'WindowButtonUpFcn'});
-  set(gcf, 'WindowButtonDownFcn', {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotER}, 'event', 'WindowButtonDownFcn'});
-  set(gcf, 'WindowButtonMotionFcn', {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotER}, 'event', 'WindowButtonMotionFcn'});
+  if isequal(cfg.viewmode, 'butterfly')
+    set(gcf, 'windowbuttonupfcn',     {@ft_select_range, 'multiple', false, 'yrange', false, 'callback', {@select_topoplotER}, 'event', 'windowbuttonupfcn'});
+    set(gcf, 'windowbuttondownfcn',   {@ft_select_range, 'multiple', false, 'yrange', false, 'callback', {@select_topoplotER}, 'event', 'windowbuttondownfcn'});
+    set(gcf, 'windowbuttonmotionfcn', {@ft_select_range, 'multiple', false, 'yrange', false, 'callback', {@select_topoplotER}, 'event', 'windowbuttonmotionfcn'});
+  else
+    set(gcf, 'WindowButtonUpFcn',     {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotER}, 'event', 'WindowButtonUpFcn'});
+    set(gcf, 'WindowButtonDownFcn',   {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotER}, 'event', 'WindowButtonDownFcn'});
+    set(gcf, 'WindowButtonMotionFcn', {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotER}, 'event', 'WindowButtonMotionFcn'});
+  end
 end
-
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-ft_postamble trackconfig
 ft_postamble previous varargin
 ft_postamble provenance
 ft_postamble savefig
@@ -679,6 +716,7 @@ ident       = get(gca,'tag');
 info        = guidata(gcf);
 cfg         = info.(ident).cfg;
 datvarargin = info.(ident).varargin;
+linecolor   = info.(ident).linecolor;
 if ~isempty(label)
   cfg = removefields(cfg, 'inputfile');   % the reading has already been done and varargin contains the data
   cfg.baseline = 'no';                    % make sure the next function does not apply a baseline correction again
@@ -689,5 +727,39 @@ if ~isempty(label)
   % ensure that the new figure appears at the same position
   cfg.figure = 'yes';
   cfg.position = get(gcf, 'Position');
+  
+  selchan = match_str(datvarargin{1}.label, cfg.channel);
+  cfg.linecolor = linecolor(selchan, :, :); % make a subselection for the correct inheritance of the line colors
   ft_singleplotER(cfg, datvarargin{:});
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION which is called after selecting a time range with cfg.viewmode = 'butterfly'
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function select_topoplotER(range, varargin)
+
+% fetch cfg/data based on axis indentifier given as tag
+ident    = get(gca, 'tag');
+info     = guidata(gcf);
+cfg      = info.(ident).cfg;
+varargin = info.(ident).varargin;
+if ~isempty(range)
+  cfg = removefields(cfg, 'inputfile');   % the reading has already been done and varargin contains the data
+  cfg = removefields(cfg, 'showlabels');  % this is not allowed in topoplotER
+  cfg.baseline = 'no';                    % make sure the next function does not apply a baseline correction again
+  cfg.dataname = info.(ident).dataname;   % put data name in here, this cannot be resolved by other means
+  cfg.channel = 'all';                    % make sure the topo displays all channels, not just the ones in this singleplot
+  cfg.comment = 'auto';
+  cfg.trials = 'all';                     % trial selection has already been taken care of
+  cfg.xlim = range(1:2);
+  % if user specified a ylim, copy it over to the zlim of topoplot
+  if isfield(cfg, 'ylim')
+    cfg.zlim = cfg.ylim;
+    cfg = rmfield(cfg, 'ylim');
+  end
+  fprintf('selected cfg.xlim = [%f %f]\n', cfg.xlim(1), cfg.xlim(2));
+  % ensure that the new figure appears at the same position
+  cfg.figure = 'yes';
+  cfg.position = get(gcf, 'Position');
+  ft_topoplotER(cfg, varargin{:});
 end

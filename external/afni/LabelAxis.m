@@ -3,7 +3,7 @@ function LabelAxis(ha, xlbls, ylbls)
 %example:
 %figure(1); plot ([1 2], [4 5]);
 %LabelAxis(gca,{'Low' 'Hi'}, {'four' 'five'})
- 
+
 if (~isempty(xlbls) & ~iscellstr(xlbls)),
    fprintf(2,'Need array of cellstrings for x input');
 end

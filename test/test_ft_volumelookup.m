@@ -19,8 +19,8 @@ mask2     = ft_volumelookup(cfg,mri);
 cfg.roi   = {'Precentral Gyrus';'Brodmann area 47'};
 mask3     = ft_volumelookup(cfg,mri);
 
-assert(isequal(sum(mask1(:)),8213));
-assert(isequal(sum(mask2(:)),2093));
+assert(isequal(sum(mask1(:)),8144));%8213));
+assert(isequal(sum(mask2(:)),2096));%2093));
 assert(isequal(sum(mask3(:)&(mask2(:)|mask1(:))),sum(mask3(:))));
 
 

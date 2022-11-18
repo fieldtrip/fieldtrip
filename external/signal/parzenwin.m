@@ -19,7 +19,7 @@
 % @seealso{rectwin,  bartlett}
 % @end deftypefn
 
-function w = parzenwin (L)
+function w = parzenwin(L)
   if(nargin ~= 1)
     help(mfilename);
   elseif(L < 0)
@@ -32,9 +32,9 @@ function w = parzenwin (L)
 
   N = L-1;
   n = -(N/2):N/2;
-  n1 = n(find(abs(n) <= N/4));
-  n2 = n(find(n > N/4));
-  n3 = n(find(n < -N/4));
+  n1 = n(abs(n) <= N/4);
+  n2 = n(n > N/4);
+  n3 = n(n < -N/4);
 
   w1 = 1 -6.*(abs(n1)./(L/2)).^2 + 6*(abs(n1)./(L/2)).^3;
   w2 = 2.*(1-abs(n2)./(L/2)).^3;

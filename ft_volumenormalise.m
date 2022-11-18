@@ -19,9 +19,12 @@ function [normalised] = ft_volumenormalise(cfg, mri)
 %                          template MRI specified in cfg.template.
 %   cfg.opts             = structure with normalisation options, see SPM documentation for details
 %   cfg.template         = string, filename of the template anatomical MRI (default = 'T1.mnc'
-%                          for SPM2 or 'T1.nii' for SPM8 and SPM12).
+%                          for spm2 or 'T1.nii' for spm8 and for spm12).
 %   cfg.templatecoordsys = the coordinate system of the template when using a template other
 %                          than the default
+%   cfg.templatemask     = string, filename of a mask for the template
+%                          anatomical MRI spcified in cfg.template, e.g. a
+%                          brain mask (optional).
 %   cfg.tpm              = string, file name of the SPM tissue probablility map to use in
 %                          case spmversion is 'spm12' and spmmethod is 'new' or 'mars'
 %   cfg.write            = 'yes' or 'no' (default = 'no'), writes the segmented volumes to SPM2
@@ -41,6 +44,8 @@ function [normalised] = ft_volumenormalise(cfg, mri)
 %   cfg.spmparams        = you can feed in the parameters from a prior normalisation, for example
 %                          to apply the parameters determined from an aantomical MRI to an
 %                          interpolated source resontruction
+%   cfg.initial          = optional hard-coded alignment between target and template, the default is
+%                          to use FT_CONVERT_COORDSYS to estimate it based on the data (default = [])
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
@@ -53,6 +58,7 @@ function [normalised] = ft_volumenormalise(cfg, mri)
 % See also FT_READ_MRI, FT_VOLUMEDOWNSAMPLE, FT_SOURCEINTERPOLATE, FT_SOURCEPLOT
 
 % Copyright (C) 2004-2020, Jan-Mathijs Schoffelen
+% Copyright (C) 2021-2022, Mikkel Vinding
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -83,7 +89,6 @@ ft_preamble init
 ft_preamble debug
 ft_preamble loadvar mri
 ft_preamble provenance mri
-ft_preamble trackconfig
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -119,6 +124,7 @@ cfg.keepintermediate = ft_getopt(cfg, 'keepintermediate', 'no');
 cfg.nonlinear        = ft_getopt(cfg, 'nonlinear',        'yes');
 cfg.smooth           = ft_getopt(cfg, 'smooth',           'no');
 cfg.templatecoordsys = ft_getopt(cfg, 'templatecoordsys', 'spm'); % assume is that the template comes from SPM
+cfg.templatemask     = ft_getopt(cfg, 'templatemask',     []);
 
 % ensure that the requested method works with the specified SPM version
 if ~strcmp(cfg.spmversion, 'spm12') && (strcmp(cfg.spmmethod, 'new') || strcmp(cfg.spmmethod, 'mars'))
@@ -148,6 +154,13 @@ end
 template_ftype = ft_filetype(cfg.template);
 if ~any(strcmp(template_ftype, {'analyze_hdr', 'analyze_img', 'minc', 'nifti'}))
   ft_error('the template anatomy should be stored in an SPM-compatible file');
+end
+
+if isfield(cfg, 'templatemask') && ~isempty(cfg.templatemask)
+  templatemsk_ftype = ft_filetype(cfg.templatemask);
+  if ~any(strcmp(templatemsk_ftype, {'analyze_hdr', 'analyze_img', 'minc', 'nifti'}))
+    ft_error('the template mask should be stored in an SPM-compatible file');
+  end
 end
 
 if strcmp(cfg.keepinside, 'yes')
@@ -181,6 +194,7 @@ end
 
 % Ensure that the input MRI has interpretable units and that it is expressed in a
 % coordinate system which is in approximate agreement with the template.
+ft_notice('Doing initial alignment...')
 mri  = ft_convert_units(mri, 'mm'); % this assumes that the template is expressed in mm
 
 if ~isfield(cfg, 'initial')
@@ -193,7 +207,7 @@ else
   ft_notice('Skipping the initial alignment, using the alignment specified in the configuration');
   initial = cfg.initial;
   % apply the initial rigid body transformation to the input data
-  mri.transform = initial * mri.transform; 
+  mri.transform = initial * mri.transform;
 end
 
 % use NIFTI whenever possible
@@ -234,6 +248,20 @@ switch template_ftype
     ft_error('Unknown template');
 end
 
+% read the template mask anatomical volume
+if ~isempty(cfg.templatemask)
+  switch templatemsk_ftype
+    case 'minc'
+      VWG = spm_vol_minc(cfg.templatemask);
+    case {'analyze_img', 'analyze_hdr', 'nifti'}
+      VWG = spm_vol(cfg.templatemask);
+    otherwise
+      ft_error('Unknown templatemask');
+  end
+else
+  VWG = [];
+end
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % compute the normalisation parameters, if needed
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -244,13 +272,13 @@ if ~isfield(cfg, 'spmparams')
   if strcmp(cfg.spmmethod, 'old') && strcmp(cfg.nonlinear, 'yes')
     ft_info('Warping the individual anatomy to the template anatomy, using non-linear transformations');
     % compute the parameters by warping the individual anatomy
-    params = spm_normalise(VG, VF(1));
+    params = spm_normalise(VG, VF(1), [], VWG);
     
   elseif strcmp(cfg.spmmethod, 'old') && strcmp(cfg.nonlinear, 'no')
     ft_info('Warping the individual anatomy to the template anatomy, using only linear transformations');
     % compute the parameters by warping the individual anatomy
     cfg.opts.nits = ft_getopt(cfg.opts, 'nits', 0); % put number of non-linear iterations to zero
-    params = spm_normalise(VG, VF(1), [], [], [], cfg.opts);
+    params = spm_normalise(VG, VF(1), [], VWG, [], cfg.opts);
     
   elseif strcmp(cfg.spmmethod, 'new') || strcmp(cfg.spmmethod, 'mars')
     ft_info('Warping the individual anatomy to the template anatomy, using the %s-style segmentation', cfg.spmmethod);
@@ -259,6 +287,8 @@ if ~isfield(cfg, 'spmparams')
       spmpath = spm('dir');
       cfg.tpm = fullfile(spmpath, 'tpm', 'TPM.nii');
       ft_notice('Using default SPM tissue probability maps ''%s''', cfg.tpm);
+    else
+      ft_notice('Using user specified tissue probability maps ''%s''', cfg.tpm);
     end
     
     % create the structure that is required for spm_preproc8
@@ -272,8 +302,14 @@ if ~isfield(cfg, 'spmparams')
     opts.samp     = ft_getopt(opts, 'samp',     3);
     opts.fwhm     = ft_getopt(opts, 'fwhm',     1);
     
-    Affine = spm_maff8(opts.image(1),3,32,opts.tpm,eye(4),'mni');
-    Affine = spm_maff8(opts.image(1),3, 1,opts.tpm,Affine,'mni');
+    if strcmp(cfg.templatecoordsys, 'mni')
+      regtyp = 'mni';
+    else
+      regtyp = 'subj';
+    end
+    
+    Affine = spm_maff8(opts.image(1), 3, 32, opts.tpm, eye(4), regtyp);
+    Affine = spm_maff8(opts.image(1), 3, 1, opts.tpm, Affine, regtyp);
     opts.Affine = Affine;
     
     % run the segmentation
@@ -282,7 +318,7 @@ if ~isfield(cfg, 'spmparams')
     ft_info('Writing the deformation field to file');
     switch cfg.spmmethod
       case 'new'
-        bb        = spm_get_bbox(opts.tpm.V(1));
+        bb          = spm_get_bbox(opts.tpm.V(1));
         spm_preproc_write8(params, zeros(6,4), [0 0], [0 1], 1, 1, bb, cfg.downsample);
       case 'mars'
         ft_hastoolbox('mars', 1);
@@ -384,18 +420,14 @@ if strcmp(cfg.keepintermediate, 'no')
   end
 end
 
-% do the general cleanup and bookkeeping at the end of the function
-ft_postamble debug
-ft_postamble trackconfig
-
 % Remember the initial and normalisation parameters in the configuration, this allows
 % redoing the transformations without any computations (e.g. estimating them on a T1
 % and applying them on a T2)
-%
-% they are added only here to prevent them to be removed when doing the trackconfig
 cfg.initial   = initial;
 cfg.spmparams = params;
 
+% do the general cleanup and bookkeeping at the end of the function
+ft_postamble debug
 ft_postamble previous   mri
 ft_postamble provenance normalised
 ft_postamble history    normalised

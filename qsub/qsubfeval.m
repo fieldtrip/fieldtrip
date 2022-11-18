@@ -12,7 +12,7 @@ function [jobid, puttime] = qsubfeval(varargin)
 % input arguments (including other key-value pairs) will be passed to the
 % function to be evaluated.
 %   memreq      = number in bytes, how much memory does the job require (no default)
-%   memoverhead = number in bytes, how much memory to account for MATLAB itself (default = 1024^3, i.e. 1GB)
+%   memoverhead = number in bytes, how much memory to account for MATLAB itself (default depends on the MATLAB version)
 %   timreq      = number in seconds, how much time does the job require (no default)
 %   timoverhead = number in seconds, how much time to allow MATLAB to start (default = 180 seconds)
 %   backend     = string, can be 'torque', 'sge', 'slurm', 'lsf', 'system', 'local' (default is automatic)
@@ -96,7 +96,11 @@ diary         = ft_getopt(optarg, 'diary');
 batch         = ft_getopt(optarg, 'batch', 1);
 batchid       = ft_getopt(optarg, 'batchid');
 timoverhead   = ft_getopt(optarg, 'timoverhead', 180);            % allow some overhead to start up the MATLAB executable
-memoverhead   = ft_getopt(optarg, 'memoverhead', 1024*1024*1024); % allow some overhead for the MATLAB executable in memory
+if ft_platform_supports('matlabversion', '2022b', inf)
+  memoverhead = ft_getopt(optarg, 'memoverhead', 2.5*(1024^3));   % allow some overhead for the MATLAB executable in memory
+else
+  memoverhead = ft_getopt(optarg, 'memoverhead', 1.5*(1024^3));   % allow some overhead for the MATLAB executable in memory
+end
 backend       = ft_getopt(optarg, 'backend', []);                 % the defaultbackend helper function will be used to determine the default
 queue         = ft_getopt(optarg, 'queue', []);                   % the default is specified further down in the code
 submitoptions = ft_getopt(optarg, 'options', []);

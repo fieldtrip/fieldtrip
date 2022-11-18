@@ -27,7 +27,7 @@ mrifile2 = dccnpath('/home/common/matlab/fieldtrip/data/test/latest/mri/nifti/si
 mri2     = ft_read_mri(mrifile2);
 mri2.coordsys = 'mni';
 
-mrifile3 = dccnpath('/home/common/matlab/fieldtrip/data/Subject01.mri');
+mrifile3 = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.mri');
 mri3     = ft_read_mri(mrifile3);
 mri3.coordsys = 'ctf';
 

@@ -89,7 +89,7 @@ ft_nargout  = nargout;
 ft_defaults
 ft_preamble init
 ft_preamble provenance spike
-ft_preamble trackconfig
+
 
 % control input spike structure and convert to spike if raw structure
 spike = ft_checkdata(spike,'datatype', 'spike', 'feedback', 'yes');
@@ -246,7 +246,7 @@ if isfield(spike,'sampleinfo'), psth.sampleinfo = spike.sampleinfo(cfg.trials,:)
 if isfield(spike,'trialinfo'),  psth.trialinfo  = spike.trialinfo(cfg.trials,:);  end
 
 % do the general cleanup and bookkeeping at the end of the function
-ft_postamble trackconfig
+
 ft_postamble previous   spike
 ft_postamble provenance psth
 ft_postamble history    psth

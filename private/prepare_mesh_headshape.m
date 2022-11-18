@@ -37,16 +37,6 @@ cfg.headshape    = ft_getopt(cfg, 'headshape');
 cfg.smooth       = ft_getopt(cfg, 'smooth');
 cfg.numvertices  = ft_getopt(cfg, 'numvertices');
 
-if isa(cfg, 'config')
-  % convert the config-object back into a normal structure
-  cfg = struct(cfg);
-end
-
-if isa(cfg.headshape, 'config')
-  % convert the nested config-object back into a normal structure
-  cfg.headshape = struct(cfg.headshape);
-end
-
 % get the surface describing the head shape
 if isstruct(cfg.headshape) && numel(cfg.headshape)>1
   % this applies for multilayer BEM models and concentric sphere models

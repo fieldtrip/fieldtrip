@@ -9,24 +9,25 @@ function [data] = ft_dipolesimulation(cfg)
 % FT_PREPROCESSING.
 %
 % The dipoles position and orientation have to be specified with
-%   cfg.dip.pos     = [Rx Ry Rz] (size Nx3)
-%   cfg.dip.mom     = [Qx Qy Qz] (size 3xN)
-%
-% The number of trials and the time axes of the trials can be specified by
-%   cfg.fsample    = simulated sample frequency (default = 1000)
-%   cfg.trllen     = length of simulated trials in seconds (default = 1)
-%   cfg.numtrl     = number of simulated trials (default = 10)
-%   cfg.baseline   = number (default = 0.3)
-% or by
-%   cfg.time       = cell-array with one time axis per trial, for example obtained from an existing dataset
+%   cfg.sourcemodel.pos        = [Rx Ry Rz] (size Nx3)
+%   cfg.sourcemodel.mom        = [Qx Qy Qz] (size 3xN)
+%   cfg.sourcemodel.unit       = string, can be 'mm', 'cm', 'm' (default is automatic)
 %
 % The timecourse of the dipole activity is given as a cell-array with one
 % dipole signal per trial
-%   cfg.dip.signal     = cell-array with one dipole signal per trial
+%   cfg.sourcemodel.signal     = cell-array with one dipole signal per trial
 % or by specifying the parameters of a sine-wave signal
-%   cfg.dip.frequency  =   in Hz
-%   cfg.dip.phase      =   in radians
-%   cfg.dip.amplitude  =   per dipole
+%   cfg.sourcemodel.frequency  =   in Hz
+%   cfg.sourcemodel.phase      =   in radians
+%   cfg.sourcemodel.amplitude  =   per dipole
+%
+% The number of trials and the time axes of the trials can be specified by
+%   cfg.fsample     = simulated sample frequency (default = 1000)
+%   cfg.trllen      = length of simulated trials in seconds (default = 1)
+%   cfg.numtrl      = number of simulated trials (default = 10)
+%   cfg.baseline    = number (default = 0.3)
+% or by
+%   cfg.time        = cell-array with one time axis per trial, for example obtained from an existing dataset
 %
 % Random white noise can be added to the data in each trial, either by
 % specifying an absolute or a relative noise level
@@ -38,12 +39,12 @@ function [data] = ft_dipolesimulation(cfg)
 %   cfg.channel    = Nx1 cell-array with selection of channels (default = 'all'),
 %                    see FT_CHANNELSELECTION for details
 %   cfg.dipoleunit = units for dipole amplitude (default nA*m)
-%   cfg.chanunit   = units for the channel data
+%   cfg.chanunit   = Nx1 cell-array with units for the channel data
 %
 % Optionally, you can modify the leadfields by reducing the rank, i.e. remove the weakest orientation
 %   cfg.reducerank    = 'no', or number (default = 3 for EEG, 2 for MEG)
-%   cfg.backproject   = 'yes' or 'no',  determines when reducerank is applied whether the 
-%                       lower rank leadfield is projected back onto the original linear 
+%   cfg.backproject   = 'yes' or 'no',  determines when reducerank is applied whether the
+%                       lower rank leadfield is projected back onto the original linear
 %                       subspace, or not (default = 'yes')
 %
 % The volume conduction model of the head should be specified as
@@ -92,7 +93,6 @@ ft_preamble init
 ft_preamble debug
 ft_preamble provenance
 ft_preamble randomseed
-ft_preamble trackconfig
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -106,25 +106,26 @@ cfg = ft_checkconfig(cfg, 'renamed',    {'gradfile', 'grad'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'optofile', 'opto'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'hdmfile', 'headmodel'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'vol',     'headmodel'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'dip',    'sourcemodel'});
 
 % for consistency with FT_TIMELOCKSIMULUATION and FT_FREQSIMULATION
-cfg = ft_checkconfig(cfg, 'createsubcfg', 'dip');
+cfg = ft_checkconfig(cfg, 'createsubcfg', 'sourcemodel');
 cfg = ft_checkconfig(cfg, 'renamed', {'ntrials', 'numtrl'});
 cfg = ft_checkconfig(cfg, 'renamed', {'triallength', 'trllen'});
 
 % set the defaults
-cfg.dip         = ft_getopt(cfg, 'dip', []);
-cfg.dip.pos     = ft_getopt(cfg.dip, 'pos', [-5 0 15]);
-cfg.dip.mom     = ft_getopt(cfg.dip, 'mom', [1 0 0]');
-cfg.dip.time    = ft_getopt(cfg.dip, 'time', {});
-cfg.dip.signal  = ft_getopt(cfg.dip, 'signal', {});
-cfg.fsample     = ft_getopt(cfg, 'fsample', 250);
-cfg.relnoise    = ft_getopt(cfg, 'relnoise', 0);
-cfg.absnoise    = ft_getopt(cfg, 'absnoise', 0);
-cfg.feedback    = ft_getopt(cfg, 'feedback', 'text');
-cfg.channel     = ft_getopt(cfg, 'channel',  'all');
-cfg.dipoleunit  = ft_getopt(cfg, 'dipoleunit', 'nA*m');
-cfg.chanunit    = ft_getopt(cfg, 'chanunit', {});
+cfg.sourcemodel         = ft_getopt(cfg, 'sourcemodel', []);
+cfg.sourcemodel.pos     = ft_getopt(cfg.sourcemodel, 'pos', [-5 0 15]);
+cfg.sourcemodel.mom     = ft_getopt(cfg.sourcemodel, 'mom', [1 0 0]');
+cfg.sourcemodel.time    = ft_getopt(cfg.sourcemodel, 'time', {});
+cfg.sourcemodel.signal  = ft_getopt(cfg.sourcemodel, 'signal', {});
+cfg.fsample             = ft_getopt(cfg, 'fsample', 250);
+cfg.relnoise            = ft_getopt(cfg, 'relnoise', 0);
+cfg.absnoise            = ft_getopt(cfg, 'absnoise', 0);
+cfg.feedback            = ft_getopt(cfg, 'feedback', 'text');
+cfg.channel             = ft_getopt(cfg, 'channel',  'all');
+cfg.dipoleunit          = ft_getopt(cfg, 'dipoleunit', 'nA*m');
+cfg.chanunit            = ft_getopt(cfg, 'chanunit', {});
 
 % collect and preprocess the electrodes/gradiometer and head model
 % this will also update cfg.channel to match the electrodes/gradiometers
@@ -138,25 +139,25 @@ leadfieldopt = ft_setopt(leadfieldopt, 'normalize',      ft_getopt(cfg, 'normali
 leadfieldopt = ft_setopt(leadfieldopt, 'normalizeparam', ft_getopt(cfg, 'normalizeparam'));
 leadfieldopt = ft_setopt(leadfieldopt, 'weight',         ft_getopt(cfg, 'weight'));
 
-cfg.dip = fixdipole(cfg.dip);
-Ndipoles = size(cfg.dip.pos,1);
+cfg.sourcemodel = fixdipole(cfg.sourcemodel);
+Ndipoles = size(cfg.sourcemodel.pos,1);
 
 % in case no time or signal was given, set some additional defaults
-if ~isempty(cfg.dip.time) && ~isempty(cfg.dip.signal)
-  assert(length(cfg.dip.signal)==length(cfg.dip.time)); % these must match
-  cfg.numtrl    = length(cfg.dip.time);
-  cfg.fsample   = 1/mean(diff(cfg.dip.time{1}));  % determine from time-axis
-  cfg.trllen    = length(cfg.dip.time{1})/cfg.fsample;
-  cfg.baseline  = -cfg.dip.time{1}(1);
-elseif ~isempty(cfg.dip.time)
-  cfg.numtrl    = length(cfg.dip.time);
-  cfg.fsample   = 1/mean(diff(cfg.dip.time{1}));  % determine from time-axis
-  cfg.trllen    = length(cfg.dip.time{1})/cfg.fsample;
-  cfg.baseline  = -cfg.dip.time{1}(1);
-elseif ~isempty(cfg.dip.signal)
-  cfg.numtrl    = length(cfg.dip.signal);
+if ~isempty(cfg.sourcemodel.time) && ~isempty(cfg.sourcemodel.signal)
+  assert(length(cfg.sourcemodel.signal)==length(cfg.sourcemodel.time)); % these must match
+  cfg.numtrl    = length(cfg.sourcemodel.time);
+  cfg.fsample   = 1/mean(diff(cfg.sourcemodel.time{1}));  % determine from time-axis
+  cfg.trllen    = length(cfg.sourcemodel.time{1})/cfg.fsample;
+  cfg.baseline  = -cfg.sourcemodel.time{1}(1);
+elseif ~isempty(cfg.sourcemodel.time)
+  cfg.numtrl    = length(cfg.sourcemodel.time);
+  cfg.fsample   = 1/mean(diff(cfg.sourcemodel.time{1}));  % determine from time-axis
+  cfg.trllen    = length(cfg.sourcemodel.time{1})/cfg.fsample;
+  cfg.baseline  = -cfg.sourcemodel.time{1}(1);
+elseif ~isempty(cfg.sourcemodel.signal)
+  cfg.numtrl    = length(cfg.sourcemodel.signal);
   cfg.fsample   = ft_getopt(cfg, 'fsample', 1000);
-  cfg.trllen    = length(cfg.dip.signal{1})/cfg.fsample;
+  cfg.trllen    = length(cfg.sourcemodel.signal{1})/cfg.fsample;
   cfg.baseline  = ft_getopt(cfg, 'baseline', 0);
 else
   cfg.numtrl    = ft_getopt(cfg, 'numtrl', 10);
@@ -166,25 +167,25 @@ else
 end
 
 % no signal was given, set some additional defaults
-if isempty(cfg.dip.signal)
-  cfg.dip.frequency   = ft_getopt(cfg.dip, 'frequency', ones(Ndipoles,1)*10);
-  cfg.dip.phase       = ft_getopt(cfg.dip, 'phase', zeros(Ndipoles,1));
-  cfg.dip.amplitude   = ft_getopt(cfg.dip, 'amplitude', ones(Ndipoles,1));
+if isempty(cfg.sourcemodel.signal)
+  cfg.sourcemodel.frequency   = ft_getopt(cfg, 'frequency', ones(Ndipoles,1)*10);
+  cfg.sourcemodel.phase       = ft_getopt(cfg, 'phase', zeros(Ndipoles,1));
+  cfg.sourcemodel.amplitude   = ft_getopt(cfg, 'amplitude', ones(Ndipoles,1));
 end
 
-if isfield(cfg.dip, 'frequency')
+if isfield(cfg.sourcemodel, 'frequency')
   % this should be a column vector
-  cfg.dip.frequency = cfg.dip.frequency(:);
+  cfg.sourcemodel.frequency = cfg.sourcemodel.frequency(:);
 end
 
-if isfield(cfg.dip, 'phase')
+if isfield(cfg.sourcemodel, 'phase')
   % this should be a column vector
-  cfg.dip.phase = cfg.dip.phase(:);
+  cfg.sourcemodel.phase = cfg.sourcemodel.phase(:);
 end
 
-if ~isempty(cfg.dip.time)
+if ~isempty(cfg.sourcemodel.time)
   % use the user-supplied time vectors
-  diptime = cfg.dip.time;
+  diptime = cfg.sourcemodel.time;
 else
   % construct a time axis for every trial
   nsample = round(cfg.trllen*cfg.fsample);
@@ -194,21 +195,21 @@ else
   end
 end
 
-if ~isempty(cfg.dip.signal)
+if ~isempty(cfg.sourcemodel.signal)
   % use the user-supplied signal for the dipoles
-  dipsignal = cfg.dip.signal;
+  dipsignal = cfg.sourcemodel.signal;
 else
   dipsignal = cell(1, cfg.numtrl);
   for iTr = 1:cfg.numtrl
     % compute a cosine signal with the desired frequency, phase and amplitude for each dipole
     for i=1:Ndipoles
-      dipsignal{iTr}(i,:) = cos(cfg.dip.frequency(i)*diptime{iTr}*2*pi + cfg.dip.phase(i)) * cfg.dip.amplitude(i);
+      dipsignal{iTr}(i,:) = cos(cfg.sourcemodel.frequency(i)*diptime{iTr}*2*pi + cfg.sourcemodel.phase(i)) * cfg.sourcemodel.amplitude(i);
     end
   end
 end
 
-dippos = cfg.dip.pos;
-dipmom = cfg.dip.mom;
+dippos = cfg.sourcemodel.pos;
+dipmom = cfg.sourcemodel.mom;
 
 if ~iscell(dipmom)
   dipmom = {dipmom};
@@ -245,15 +246,15 @@ for trial=1:cfg.numtrl
   nchannels = size(lf,1);
   data.trial{trial} = zeros(nchannels,nsamples);
   for i = 1:3
-    data.trial{trial} = data.trial{trial} + lf(:,i:3:end) * ...
-      (repmat(dipmom{trial}(i:3:end),1,nsamples) .* dipsignal{trial});
+    data.trial{trial} = data.trial{trial} + ...
+      lf(:,i:3:end) * (repmat(dipmom{trial}(i:3:end),1,nsamples) .* dipsignal{trial});
   end
 end
 ft_progress('close');
 
 if ft_senstype(sens, 'meg')
   data.grad = sens;
-elseif ft_senstype(sens, 'meg')
+elseif ft_senstype(sens, 'eeg')
   data.elec = sens;
 end
 
@@ -279,7 +280,6 @@ data.label   = sens.label;
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-ft_postamble trackconfig
 ft_postamble randomseed
 ft_postamble provenance data
 ft_postamble history    data

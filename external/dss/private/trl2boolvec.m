@@ -70,8 +70,13 @@ elseif istable(trl)
     boolvec(1, begsample(j):endsample(j)) = true;
   end
 elseif iscell(trl)
-  % use recursion
-  for i=1:numel(trl)
-    boolvec(i,:) = trl2boolvec(trl{i}, varargin{:});
+  if ~isempty(trl)
+    % use recursion
+    for i=1:numel(trl)
+      boolvec(i,:) = trl2boolvec(trl{i}, varargin{:});
+    end
+  else
+    % return an empty array of the expected length
+    boolvec = zeros(0, endsample);
   end
 end

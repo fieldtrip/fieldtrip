@@ -29,7 +29,7 @@ function ft_plot_headmodel(headmodel, varargin)
 % See also FT_PREPARE_HEADMODEL, FT_PLOT_MESH, FT_PLOT_SENS
 
 % Copyright (C) 2009, Cristiano Micheli
-% Copyright (C) 2009-2021, Robert Oostenveld
+% Copyright (C) 2009-2022, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -48,8 +48,6 @@ function ft_plot_headmodel(headmodel, varargin)
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
 % $Id$
-
-ws = ft_warning('on', 'MATLAB:divideByZero');
 
 % ensure that the volume conduction model description is up-to-date (Dec 2012)
 headmodel = ft_datatype_headmodel(headmodel);
@@ -161,5 +159,7 @@ for i=1:length(mesh)
     'facealpha', facealpha, 'edgealpha', edgealpha, 'surfaceonly', surfaceonly, 'axes', axes_);
 end
 
-% revert to original state
-ft_warning(ws);
+if isfield(headmodel, 'coordsys')
+  % add a context sensitive menu to change the 3d viewpoint to top|bottom|left|right|front|back
+  menu_viewpoint(gca, headmodel.coordsys)
+end

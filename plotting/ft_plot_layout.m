@@ -36,7 +36,7 @@ function ft_plot_layout(layout, varargin)
 %
 % See also FT_PREPARE_LAYOUT, FT_PLOT_TOPO
 
-% Copyright (C) 2009, Robert Oostenveld
+% Copyright (C) 2009-2022, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -55,8 +55,6 @@ function ft_plot_layout(layout, varargin)
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
 % $Id$
-
-ws = warning('on', 'MATLAB:divideByZero');
 
 % get the optional input arguments
 chanindx     = ft_getopt(varargin, 'chanindx',     []);
@@ -90,7 +88,7 @@ interpreter  = ft_getopt(varargin, 'interpreter', 'tex'); % none, tex or latex
 labelrotate   = ft_getopt(varargin, 'labelrotate',  0);
 labelalignh   = ft_getopt(varargin, 'labelalignh',  'center');
 labelalignv   = ft_getopt(varargin, 'labelalignv',  'middle');
-labelcolor    = ft_getopt(varargin, 'labelcolor', 'k');
+labelcolor    = ft_getopt(varargin, 'labelcolor',   'k');
 
 % convert between true/false/yes/no etc. statements
 point   = istrue(point);
@@ -100,7 +98,6 @@ mask    = istrue(mask);
 outline = istrue(outline);
 verbose = istrue(verbose);
 
-% color management
 if ischar(pointcolor) && exist([pointcolor '.m'], 'file')
   pointcolor = eval(pointcolor);
 end
@@ -166,7 +163,15 @@ Lbl    = layout.label;
 
 if point
   if ~isempty(pointsymbol) && ~isempty(pointcolor) && ~isempty(pointsize) % if they're all non-empty, don't use the default
-    plot(X, Y, 'marker', pointsymbol, 'color', pointcolor, 'markersize', pointsize, 'linestyle', 'none');
+    if size(pointcolor, 1) == numel(X)
+      if numel(pointsymbol)==1, pointsymbol = repmat(pointsymbol, [numel(X) 1]); end
+      if numel(pointsize)==1, pointsize = repmat(pointsize, [numel(X) 1]); end  
+      for k = 1:numel(X)
+        plot(X(k), Y(k), 'marker', pointsymbol(k), 'markerfacecolor', pointcolor(k, :), 'markersize', pointsize(k), 'color', [0 0 0]);
+      end
+    else
+      plot(X, Y, 'marker', pointsymbol, 'color', pointcolor, 'markersize', pointsize, 'linestyle', 'none');
+    end
   else
     plot(X, Y, 'marker', '.', 'color', 'b', 'linestyle', 'none');
     plot(X, Y, 'marker', 'o', 'color', 'y', 'linestyle', 'none');
@@ -237,12 +242,12 @@ if mask && isfield(layout, 'mask')
   end
 end
 
-axis auto
-axis equal
-axis off
+if isempty(width) && isempty(height)
+  axis auto
+  axis equal
+  axis off
+end
 
 if ~holdflag
   hold off
 end
-
-warning(ws); %revert to original state

@@ -224,8 +224,12 @@ if needhdr
   
   if isempty(chanindx)
     chanindx=1:EDF.NS;
+  else
+    if any(chanindx>EDF.NS)
+      error('The selected channels are not present in the data');
+    end
   end
-  
+
   EDF.AS.spb = sum(EDF.SPR);    % Samples per Block
   bi=[0;cumsum(EDF.SPR)];
   
@@ -433,7 +437,7 @@ end
 % SUBFUNCTION for reading the 16 bit values
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function buf = readLowLevel(filename, offset, numwords)
-is_below_2GB = offset < 2*1024^2;
+is_below_2GB = offset < 2*1024^3;
 read_16bit_success = true;
 if is_below_2GB
   % use the external mex file, only works for <2GB

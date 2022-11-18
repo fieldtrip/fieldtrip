@@ -1,6 +1,6 @@
 function [Opt, R, E] = RetroTS(SN)
 %    [Opt, OptR, OptE] = RetroTS(Opt)
-%This function creates slice-based regressors for regressing out 
+%This function creates slice-based regressors for regressing out
 % components of heart rate, respiration and respiration volume per time.
 %
 %  Opt is the options structure with the following fields
@@ -16,13 +16,13 @@ function [Opt, R, E] = RetroTS(SN)
 %     Prefix: Prefix of output file
 %     SliceOffset: Vector of slice acquisition time offsets in seconds.
 %                  (default is equivalent of alt+z)
-%     RVTshifts: Vector of shifts in seconds of RVT signal. 
+%     RVTshifts: Vector of shifts in seconds of RVT signal.
 %                (default is [0:5:20])
 %     RespCutoffFreq: Cut off frequency in Hz for respiratory lowpass filter
 %                     (default 3 Hz)
 %     CardCutoffFreq: Cut off frequency in Hz for cardiac lowpass filter
 %                     (default 3 Hz)
-%     ResamKernel: Resampling kernel. 
+%     ResamKernel: Resampling kernel.
 %                 (default is 'linear', see help interp1 for more options)
 %     FIROrder: Order of FIR filter. (default is 40)
 %     Quiet: [1]/0  flag. (defaut is 1) Show talkative progress as the program runs
@@ -57,27 +57,27 @@ function [Opt, R, E] = RetroTS(SN)
 %
 % Output:
 %  Opt: Structure of options including default settings.
-% 
-      
+%
+
 % This option is not to be used because window width calculations do not use it
 %     ResampFS: Frequency of resampled signal (default is same as PhysFS)
 
 %Implementation Notes:
 %%%%%%%%%%%%%%%%%%%%%%
-% The script is intended as a prototype for development in C or Python 
+% The script is intended as a prototype for development in C or Python
 % The important routines are:
 %    hilbert: Easily implemented with fft and ifft
 %    interp1: A table lookup interpolation
 %    fir: Tool for designing filters (we can just take it's coefficients)
 %    filter: function to apply fir filter parameters (easy)
-%    
+%
 % All of the above can be easily implemented in C. However, I find it
 % very useful to be able to plot the various steps in the process as we
-% will undoubtedly face problems in the future. So I would vote for 
-% Python, assuming library vintage is not an issue. It looks like the 
+% will undoubtedly face problems in the future. So I would vote for
+% Python, assuming library vintage is not an issue.
 %
 
-if (nargin < 1), 
+if (nargin < 1),
    fprintf(2,'Need some input.\n');
    return;
 end
@@ -94,11 +94,11 @@ if (~isstruct(SN)), %mode 1, toy mode
 
    %Get some info from header file and set params
    f = fopen(lll(3).name, 'r');
-   s = fscanf(f,'%c');             
+   s = fscanf(f,'%c');
    fclose(f);
    ns = length(s);
-   pat = 'RT Physio:\W*sampling\W*';                 
-   Opt.PhysFS = 1000/str2num(strtok(s(regexp(s,pat,'end'):ns)));        
+   pat = 'RT Physio:\W*sampling\W*';
+   Opt.PhysFS = 1000/str2num(strtok(s(regexp(s,pat,'end'):ns)));
    Opt.Nslices = 20;
    Opt.VolTR = 2;
    Opt.SliceMajor = 1;
@@ -114,8 +114,8 @@ if (~isstruct(SN)), %mode 1, toy mode
    Opt.CardCutoffFreq = 3;
    Opt.Respfile = lll(1).name;
    Opt.Cardfile = lll(1).name;
-   Opt.SliceOffset = ... 
-      [0:Opt.VolTR./Opt.Nslices:Opt.VolTR-Opt.VolTR./Opt.Nslices]; 
+   Opt.SliceOffset = ...
+      [0:Opt.VolTR./Opt.Nslices:Opt.VolTR-Opt.VolTR./Opt.Nslices];
    Opt.Prefix = sprintf('%d',iscan);
    Opt.SepDups = 0;
    clear ('s');
@@ -166,7 +166,7 @@ else,
    if ( ~isfield(Opt,'ResamKernel') | isempty(Opt.ResamKernel)),
       Opt.ResamKernel='linear';
    end
-   
+
    if ( ~isfield(Opt,'FIROrder') | isempty(Opt.FIROrder)),
       Opt.FIROrder=40;
    end
@@ -178,7 +178,7 @@ else,
    end
    if ( ~isfield(Opt,'Prefix') | isempty(Opt.Prefix)),
       Opt.Prefix = 'oba';
-   end   
+   end
    if ( ~isfield(Opt,'Resp_out') | isempty(Opt.Resp_out)),
       Opt.Resp_out = 1;
    end
@@ -194,17 +194,17 @@ else,
 
    dtt = Opt.VolTR/Opt.Nslices; tt = 0.0;
 
-   % & ~isfield(Opt, 'SliceOffset') 
+   % & ~isfield(Opt, 'SliceOffset')
    % & (Opt.SliceOrder ~= 'alt+z')
 
-      % default slice offset times are for alt+z (alternating slice timing)        
+      % default slice offset times are for alt+z (alternating slice timing)
    if ( ~isfield(Opt,'SliceOffset') | isempty(Opt.SliceOffset))
       Opt.SliceOffset=zeros(Opt.Nslices,1);
    end
    if(~isfield(Opt,'SliceOrder'))
       Opt.SliceOrder = 'alt+z'
    end
-      
+
    if (isfield(Opt,'SliceOrder'))
       Opt.SliceOffset=zeros(Opt.Nslices,1);
       if(strcmpi(Opt.SliceOrder,'alt+z'))
@@ -249,15 +249,15 @@ else,
          end
       end
    end
-   if(~Opt.Quiet) 
+   if(~Opt.Quiet)
       fprintf('Slice timing:'); Opt.SliceOffset
    end
    if ( ~isfield(Opt,'ShowGraphs') | isempty(Opt.ShowGraphs)),
       Opt.ShowGraphs = 1; % show graphs by default
-   end   
+   end
 end
 
-if (Opt.SepDups), 
+if (Opt.SepDups),
    fprintf(1,'WARNING: SepDups should not be used\n');
    fprintf(1,'         It is kept in the code for debugging\n');
    fprintf(1,'         purposes.\n');
@@ -265,20 +265,20 @@ end
 
 
 %create option copy for each type of signal
-   OptR = Opt; 
-      OptR.fcutoff = Opt.RespCutoffFreq;  
+   OptR = Opt;
+      OptR.fcutoff = Opt.RespCutoffFreq;
       OptR.AmpPhase = 1;   %amplitude based phase for respiration
       %OptR.as_percover = 50; %percent overlap of windows for fft
       %OptR.as_windwidth = 0; %window width in seconds for fft, 0 for full window
       %OptR.as_fftwin = 0 ; %1 == hamming window. 0 == no windowing
-   OptE = Opt; 
-      OptE.fcutoff = Opt.CardCutoffFreq;  
+   OptE = Opt;
+      OptE.fcutoff = Opt.CardCutoffFreq;
       OptE.AmpPhase = 0;   %time based phase for cardiac signal
-   
+
 
 %Get the peaks for R and E
 if (~isempty(Opt.Respfile)),
-   [R,e]= PeakFinder(Opt.Respfile,OptR); 
+   [R,e]= PeakFinder(Opt.Respfile,OptR);
    if (e), fprintf(2,'Died in PeakFinder\n'); return; end
 else
    R = struct([]);
@@ -344,7 +344,7 @@ if ( ~Opt.Card_out & ~Opt.Resp_out & ~Opt.RVT_out ),
    fprintf(2, 'Options Card_out, Resp_out, and RVT_out all 0.\nNo output required.\n');
    return;
 end
-Opt.RemlOut = zeros(  nn,... 
+Opt.RemlOut = zeros(  nn,...
                   Opt.Nslices .* ...
                      (  (Opt.RVT_out~=0) .*nRv + ...
                         (Opt.Resp_out~=0).*nRp + ...
@@ -366,7 +366,7 @@ if (Opt.SliceMajor == 0), %old approach, not handy for 3dREMLfit
       for (j=1:1:size(R.RVTRS_slc,2)),
          for (i=1:1:Opt.Nslices),
             cnt = cnt + 1;
-            Opt.RemlOut(:,cnt) = R.RVTRS_slc(:,j); %same for each slice 
+            Opt.RemlOut(:,cnt) = R.RVTRS_slc(:,j); %same for each slice
             label = sprintf('%s s%d.RVT%d ;', label, i-1, j-1);
           end
       end
@@ -398,7 +398,7 @@ else
          %RVT
          for (j=1:1:size(R.RVTRS_slc,2)),
             cnt = cnt + 1;
-            Opt.RemlOut(:,cnt) = R.RVTRS_slc(:,j); %same regressor for each slice 
+            Opt.RemlOut(:,cnt) = R.RVTRS_slc(:,j); %same regressor for each slice
             label = sprintf('%s s%d.RVT%d ;', label, i-1, j-1);
          end
       end

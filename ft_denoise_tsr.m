@@ -49,9 +49,17 @@ function dataout = ft_denoise_tsr(cfg, varargin)
 %                            separately per channel
 %   cfg.output             = string, 'model' or 'residual' (defaul = 'model'),
 %                            specifies what is outputed in .trial field in <dataout>
-%   cfg.performance        = string, 'Pearson' or 'r-squared' (default =
-%                            'Pearson'), indicating what performance metric is outputed in .weights(k).performance
+%   cfg.performance        = string, 'pearson' or 'r-squared' (default =
+%                            'pearson'), indicating what performance metric is outputed in .weights(k).performance
 %                            field of <dataout> for the k-th fold
+%   cfg.covmethod          = string, 'finite', or 'overlapfinite' (default
+%                            = 'finite'), compute covariance for the auto
+%                            terms on the finite datapoints per channel, or
+%                            only on the datapoints that are finite for the
+%                            cross terms. If there is a large number of
+%                            unshared nans across datasets, and if this number
+%                            is large in comparison to the total number of
+%                            datapoints the 'finite' method may become unstable.
 %
 % If cfg.threshold is 1 x 2 integer array, the cfg.threshold(1) parameter scales
 % uniformly in the dimension of predictor variable and cfg.threshold(2) in the
@@ -101,7 +109,6 @@ ft_defaults
 ft_preamble init
 ft_preamble debug
 ft_preamble provenance varargin
-ft_preamble trackconfig
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -138,7 +145,8 @@ cfg.perchannel         = ft_getopt(cfg, 'perchannel',         'yes');
 cfg.method             = ft_getopt(cfg, 'method',             'mlr');
 cfg.threshold          = ft_getopt(cfg, 'threshold',          0);
 cfg.output             = ft_getopt(cfg, 'output',             'model');
-cfg.performance        = ft_getopt(cfg, 'performance',        'Pearson');
+cfg.performance        = ft_getopt(cfg, 'performance',        'pearson');
+cfg.covmethod          = ft_getopt(cfg, 'covmethod',          'finite');
 
 if ~iscell(cfg.refchannel)
   cfg.refchannel = {cfg.refchannel};
@@ -199,9 +207,7 @@ end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-ft_postamble trackconfig
-ft_postamble previous varargin
-
+ft_postamble previous   varargin
 ft_postamble provenance dataout
 ft_postamble history    dataout
 ft_postamble savevar    dataout
@@ -210,7 +216,7 @@ ft_postamble savevar    dataout
 function dataout = ft_denoise_tsr_core(cfg, varargin)
 
 % create a separate structure for the reference data
-tmpcfg  = keepfields(cfg, {'trials', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+tmpcfg  = keepfields(cfg, {'trials', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
 tmpcfg.channel = cfg.refchannel;
 if numel(varargin)>1
   fprintf('selecting reference channel data from the second data input argument\n');
@@ -222,7 +228,7 @@ end
 [dum, refdata] = rollback_provenance(cfg, refdata);
 
 % keep the requested channels from the data
-tmpcfg  = keepfields(cfg, {'trials', 'channel', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+tmpcfg  = keepfields(cfg, {'trials', 'channel', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
 data    = ft_selectdata(tmpcfg, varargin{1});
 [cfg, data] = rollback_provenance(cfg, data);
 
@@ -294,7 +300,6 @@ end
 data.trial = cellshift(data.trial, 0, 2, [abs(min(reflags)) abs(max(reflags))], 'overlap');
 data.time  = cellshift(data.time,  0, 2, [abs(min(reflags)) abs(max(reflags))], 'overlap');
 
-
 % only keep the trials that have > 0 samples
 tmpcfg        = [];
 tmpcfg.trials = find(cellfun('size',data.trial,2)>0);
@@ -334,12 +339,27 @@ fprintf('computing the covariance\n');
 nref  = size(refdata.trial{1},1);
 nchan = numel(data.label);
 
-C = nan(nchan,nchan);
-C(1:nchan,1:nchan)        = nancov(data.trial,    data.trial, 1, 2, 1);
-C(1:nchan,nchan+(1:nref)) = nancov(data.trial, refdata.trial, 1, 2, 1);
-C(nchan+(1:nref),1:nchan) = C(1:nchan,nchan+(1:nref)).';
-C(nchan+(1:nref),nchan+(1:nref)) = nancov(refdata.trial, refdata.trial, 1, 2, 1);
-
+switch cfg.covmethod
+  case 'finite'
+    C = nan(nchan,nchan);
+    C(1:nchan,1:nchan)        = nancov(data.trial,    data.trial, 1, 2, 1);
+    C(1:nchan,nchan+(1:nref)) = nancov(data.trial, refdata.trial, 1, 2, 1);
+    C(nchan+(1:nref),1:nchan) = C(1:nchan,nchan+(1:nref)).';
+    C(nchan+(1:nref),nchan+(1:nref)) = nancov(refdata.trial, refdata.trial, 1, 2, 1);
+  case 'overlapfinite'
+    % also only use the non-overlapping finite samples for the
+    % autocovariance estimates
+    C   = nan(nchan,nchan);
+    f1  = cellfun(@sum,isfinite(data.trial),'UniformOutput',false)==numel(data.label);
+    f2  = cellfun(@sum,isfinite(refdata.trial),'UniformOutput',false)==numel(refdata.label);
+    sel = f1&f2;
+    C(1:nchan,1:nchan)        = nancov(cellcolselect(data.trial, sel),    cellcolselect(data.trial, sel), 1, 2, 1);
+    C(1:nchan,nchan+(1:nref)) = nancov(cellcolselect(data.trial, sel), cellcolselect(refdata.trial, sel), 1, 2, 1);
+    C(nchan+(1:nref),1:nchan) = C(1:nchan,nchan+(1:nref)).';
+    C(nchan+(1:nref),nchan+(1:nref)) = nancov(cellcolselect(refdata.trial, sel), cellcolselect(refdata.trial, sel), 1, 2, 1);
+  otherwise
+    ft_error('cfg.covmethod = ''%s'' is not implemented', cfg.covmethod);
+end
 % compute the regression
 if istrue(cfg.perchannel)
   beta_ref  = zeros(nchan, nref);
@@ -366,8 +386,8 @@ end
 refdata.trial = cellvecmult(refdata.trial, std_refdata);
 data.trial    = cellvecmult(data.trial, std_data);
 if exist('beta_data', 'var')
-  beta_ref  = beta_ref'*diag(std_refdata); 
-  beta_data = diag(std_data)*beta_data;
+  beta_ref  = (beta_ref*diag(1./std_refdata))';
+  beta_data = diag(1./std_data)*beta_data;
 else
   beta_ref = diag(std_data)*beta_ref*diag(1./std_refdata);
 end
@@ -406,8 +426,12 @@ if usetestdata
   [dum,testrefdata] = rollback_provenance(cfg, testrefdata);
 
   predicted = beta_ref*testrefdata.trial;
-  observed  = testdata.trial;
-  
+  if exist('beta_data', 'var')
+    observed = beta_data'*testdata.trial;
+  else
+    observed = testdata.trial;
+  end
+
   % create output data structure
   dataout      = keepfields(testdata, {'cfg' 'label' 'grad' 'elec' 'opto' 'fsample' 'trialinfo'});
   dataout.time = testdata.time;
@@ -439,8 +463,13 @@ weights.rho  = rho;
 weights.covariance = C;
 weights.std        = [std_data;std_refdata];
 if exist('beta_data', 'var')
-  weights.mixing = beta_data; 
-  weights.beta   = beta_ref;
+  weights.unmixing = beta_data';
+  weights.beta     = beta_ref;
+
+  % compute the mixing weights as per Haufe 2013
+  W = weights.unmixing;
+  A = (C(1:nchan, 1:nchan) * W')*pinv(W * C(1:nchan,1:nchan) * W');
+  weights.mixing = A;
 else
   % a per channel approach has been done, the beta weights reflect
   % (channelxtime-lag) -> reshape
@@ -456,8 +485,8 @@ end
 
 % Compute performance statistics
 fprintf('Computing performance metric\n');
-switch cfg.performance
-  case 'Pearson'
+switch lower(cfg.performance)
+  case 'pearson'
     for k = 1:size(observed{1}, 1)
       tmp = nancov(cellcat(1, cellrowselect(observed,k), cellrowselect(predicted,k)), 1, 2, 1);
       weights.performance(k,1) = tmp(1,2)./sqrt(tmp(1,1).*tmp(2,2));

@@ -69,8 +69,8 @@ function [source] = ft_dipolefitting(cfg, data)
 %
 % Optionally, you can modify the leadfields by reducing the rank, i.e. remove the weakest orientation
 %   cfg.reducerank    = 'no', or number (default = 3 for EEG, 2 for MEG)
-%   cfg.backproject   = 'yes' or 'no',  determines when reducerank is applied whether the 
-%                       lower rank leadfield is projected back onto the original linear 
+%   cfg.backproject   = 'yes' or 'no',  determines when reducerank is applied whether the
+%                       lower rank leadfield is projected back onto the original linear
 %                       subspace, or not (default = 'yes')
 %
 % The volume conduction model of the head should be specified as
@@ -136,7 +136,6 @@ ft_preamble init
 ft_preamble debug
 ft_preamble loadvar data
 ft_preamble provenance data
-ft_preamble trackconfig
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -389,7 +388,7 @@ if strcmp(cfg.gridsearch, 'yes')
     ft_notice('computing the leadfields for the gridsearch on the fly');
     
     % construct the dipole positions on which the source reconstruction will be done
-    tmpcfg           = keepfields(cfg, {'sourcemodel', 'mri', 'headshape', 'symmetry', 'smooth', 'threshold', 'spheremesh', 'inwardshift', 'xgrid' 'ygrid', 'zgrid', 'resolution', 'tight', 'warpmni', 'template', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+    tmpcfg           = keepfields(cfg, {'sourcemodel', 'mri', 'headshape', 'symmetry', 'smooth', 'threshold', 'spheremesh', 'inwardshift', 'xgrid' 'ygrid', 'zgrid', 'resolution', 'tight', 'warpmni', 'template', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
     tmpcfg.headmodel = headmodel;
     if ft_senstype(sens, 'eeg')
       tmpcfg.elec = sens;
@@ -398,7 +397,7 @@ if strcmp(cfg.gridsearch, 'yes')
     end
     sourcemodel = ft_prepare_sourcemodel(tmpcfg);
     
-  end % if precomputed leadfield or not 
+  end % if precomputed leadfield or not
 
   ngrid = size(sourcemodel.pos,1);
   
@@ -480,10 +479,10 @@ elseif strcmp(cfg.gridsearch, 'no')
   % use the initial guess supplied in the configuration for the remainder
   switch cfg.model
     case 'regional'
-      dip = struct(cfg.dip);      % ensure that it is a struct, not a config object
+      dip = cfg.dip;
     case 'moving'
       for t=1:ntime
-        dip(t) = struct(cfg.dip); % ensure that it is a struct, not a config object
+        dip(t) = cfg.dip;
       end
     otherwise
       ft_error('unsupported cfg.model');
@@ -659,7 +658,6 @@ end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-ft_postamble trackconfig
 ft_postamble previous   data
 ft_postamble provenance source
 ft_postamble history    source
