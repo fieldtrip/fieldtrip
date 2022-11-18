@@ -65,7 +65,7 @@ ft_nargout  = nargout;
 ft_defaults
 ft_preamble init
 ft_preamble provenance isih
-ft_preamble trackconfig
+
 
 % get the default options
 cfg.spikechannel = ft_getopt(cfg, 'spikechannel', isih.label{1});
@@ -235,7 +235,7 @@ set(zoom,'ActionPostCallback',{@mypostcallback,ax,[0 max(isih.time)],limIsi});
 set(pan,'ActionPostCallback',{@mypostcallback,ax,[0 max(isih.time)],limIsi});
 
 % do the general cleanup and bookkeeping at the end of the function
-ft_postamble trackconfig
+
 ft_postamble previous isih
 ft_postamble provenance
 

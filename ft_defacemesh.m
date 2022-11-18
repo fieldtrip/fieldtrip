@@ -49,7 +49,6 @@ ft_preamble init
 ft_preamble debug
 ft_preamble loadvar    mesh
 ft_preamble provenance mesh
-ft_preamble trackconfig
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -68,7 +67,6 @@ cfg.showcallinfo = tmpcallinfo;
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-ft_postamble trackconfig
 ft_postamble previous mesh
 ft_postamble provenance mesh
 ft_postamble history mesh

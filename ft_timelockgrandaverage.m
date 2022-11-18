@@ -74,7 +74,6 @@ ft_preamble init
 ft_preamble debug
 ft_preamble loadvar varargin
 ft_preamble provenance varargin
-ft_preamble trackconfig
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -126,7 +125,7 @@ end
 
 % select trials and channels of interest
 orgcfg = cfg;
-tmpcfg = keepfields(cfg, {'parameter', 'channel', 'tolerance', 'latency', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+tmpcfg = keepfields(cfg, {'parameter', 'channel', 'tolerance', 'latency', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
 [varargin{:}] = ft_selectdata(tmpcfg, varargin{:});
 % restore the provenance information
 [cfg, varargin{:}] = rollback_provenance(cfg, varargin{:});
@@ -259,7 +258,6 @@ end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-ft_postamble trackconfig
 ft_postamble previous   varargin
 ft_postamble provenance grandavg
 ft_postamble history    grandavg

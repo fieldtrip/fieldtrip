@@ -17,7 +17,7 @@ function [layout, cfg] = ft_prepare_layout(cfg, data)
 %   layout.height  = Nx1 vector with the height of each box for multiplotting
 %   layout.mask    = optional cell-array with line segments that determine the area for topographic interpolation
 %   layout.outline = optional cell-array with line segments that represent the head, nose, ears, sulci or other anatomical features
-%   layout.color   = optional Nx3 matrix with rgb values for the channels' color, for fine-grained color behavior 
+%   layout.color   = optional Nx3 matrix with rgb values for the channels' color, for fine-grained color behavior
 %
 % There are several ways in which a 2-D layout can be made:
 % 1) it can be read directly from a layout file
@@ -72,7 +72,7 @@ function [layout, cfg] = ft_prepare_layout(cfg, data)
 %                      specificies channels to use for determining channel box size (default = 'all', recommended for MEG/EEG, a selection is recommended for iEEG)
 %   cfg.skipscale   = 'yes' or 'no', whether the scale should be included in the layout or not (default = 'no')
 %   cfg.skipcomnt   = 'yes' or 'no', whether the comment should be included in the layout or not (default = 'no')
-%   cfg.color       = 'spatial', Nx3 matrix, or [] (default). If not empty, an Nx3 color matrix will be added to the layout, based on the 
+%   cfg.color       = 'spatial', Nx3 matrix, or [] (default). If not empty, an Nx3 color matrix will be added to the layout, based on the
 %                     positions of the electrodes, or based on the specified matrix
 %
 % If you use cfg.headshape or cfg.mri to create a headshape outline, the input
@@ -98,7 +98,7 @@ function [layout, cfg] = ft_prepare_layout(cfg, data)
 %
 % For a butterfly layout, the option cfg.layouttopo will add an extra field to the layout, containing the spatial layout
 % of the sensor array. This can be used to plot the spatial distribution of the color-coded channels, as in ft_multiplotER
-% with cfg.viewmode = 'butterfly'. If it's defined empty, but if the input data argument contains a sensor description, then it 
+% with cfg.viewmode = 'butterfly'. If it's defined empty, but if the input data argument contains a sensor description, then it
 % will be created from this
 %
 % For an sEEG shaft the option cfg.layout='vertical' or 'horizontal' is useful to
@@ -293,11 +293,6 @@ end
 skipscale = istrue(cfg.skipscale); % in general a scale is desired
 skipcomnt = istrue(cfg.skipcomnt); % in general a comment desired
 
-if isa(cfg.layout, 'config')
-  % convert the nested config-object back into a normal structure
-  cfg.layout = struct(cfg.layout);
-end
-
 % ensure that there is a label field in the data, which is needed for
 % ordered/vertical//horizontal/butterfly modes
 if hasdata && ~isfield(data, 'label') && isfield(data, 'labelcmb')
@@ -389,9 +384,9 @@ elseif isequal(cfg.layout, 'butterfly')
   end
   try
     % failure may happen if the tmpcfg.layout = [], and if the data does
-    % not contain a sensor description. 
+    % not contain a sensor description.
     tmplayout = ft_prepare_layout(tmpcfg, data);
-    layout.layout = tmplayout;  
+    layout.layout = tmplayout;
   end
   
   if isequal(cfg.color, 'spatial') && exist('tmplayout', 'var')

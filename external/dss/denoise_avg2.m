@@ -82,7 +82,7 @@ if isfield(params, 'time') && iscell(s) && numel(s)==numel(params.time)
   usetime = true;
 end
 
-if useartifact + usetr + usetime > 1
+if useartifact && (usetr || usetime)
   error('ambiguous input in parameter structure for denoise_avg2');
 elseif ~useartifact && ~usetr && ~usetime
   error('parameter structure for denoise_avg2 requires either ''artifact'' and ''sampleinfo'', ''tr''/''pre''/''pst'', or ''time''');

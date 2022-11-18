@@ -17,7 +17,6 @@ function ft_defaults
 %   ft_default.showlogo          = string, can be 'yes' or 'no' (default = 'yes')
 %   ft_default.showcallinfo      = string, can be 'yes' or 'no' (default = 'yes')
 %   ft_default.trackcallinfo     = string, can be 'yes' or 'no' (default = 'yes')
-%   ft_default.trackconfig       = string, can be 'cleanup', 'report', 'off' (default = 'off')
 %   ft_default.trackusage        = false, or string with salt for one-way encryption of identifying information (by default this is enabled and an automatic salt is created)
 %   ft_default.trackdatainfo     = string, can be 'yes' or 'no' (default = 'no')
 %   ft_default.outputfilepresent = string, can be 'keep', 'overwrite', 'error' (default = 'overwrite')
@@ -96,7 +95,6 @@ end
 % NOTE ft_getopt might not be available on the path at this moment and can therefore not yet be used.
 % NOTE all options here should be explicitly listed as allowed in ft_checkconfig
 
-if ~isfield(ft_default, 'trackconfig'),       ft_default.trackconfig    = 'off';      end % cleanup, report, off
 if ~isfield(ft_default, 'checkconfig'),       ft_default.checkconfig    = 'loose';    end % pedantic, loose, silent
 if ~isfield(ft_default, 'checkpath'),         ft_default.checkpath      = 'pedantic'; end % pedantic, once, no
 if ~isfield(ft_default, 'checksize'),         ft_default.checksize      = 1e5;        end % number in bytes, can be inf
@@ -245,28 +243,31 @@ if ~isdeployed
 
   try
     % external/signal contains alternative implementations of some signal processing functions
+    external_signal = fullfile(fileparts(which('ft_defaults')), 'external', 'signal');
     if ~ft_platform_supports('signal') || ~strcmp(ft_default.toolbox.signal, 'matlab') || ~ft_hastoolbox('signal')
-      addpath(fullfile(fileparts(which('ft_defaults')), 'external', 'signal'));
-    else
-      rmpath(fullfile(fileparts(which('ft_defaults')), 'external', 'signal'));
+      addpath(external_signal);
+    elseif contains(path, external_signal)
+      rmpath(external_signal);
     end
   end
 
   try
     % external/stats contains alternative implementations of some statistics functions
+    external_stats = fullfile(fileparts(which('ft_defaults')), 'external', 'stats');
     if ~ft_platform_supports('stats') || ~strcmp(ft_default.toolbox.stats, 'matlab') || ~ft_hastoolbox('stats')
-      addpath(fullfile(fileparts(which('ft_defaults')), 'external', 'stats'));
-    else
-      rmpath(fullfile(fileparts(which('ft_defaults')), 'external', 'stats'));
+      addpath(external_stats);
+    elseif contains(path, external_stats)
+      rmpath(external_stats);
     end
   end
 
   try
     % external/images contains alternative implementations of some image processing functions
+    external_images = fullfile(fileparts(which('ft_defaults')), 'external', 'images');
     if ~ft_platform_supports('images') || ~strcmp(ft_default.toolbox.images, 'matlab') || ~ft_hastoolbox('images')
-      addpath(fullfile(fileparts(which('ft_defaults')), 'external', 'images'));
-    else
-      rmpath(fullfile(fileparts(which('ft_defaults')), 'external', 'images'));
+      addpath(external_images);
+    elseif contains(path, external_images)
+      rmpath(external_images);
     end
   end
 

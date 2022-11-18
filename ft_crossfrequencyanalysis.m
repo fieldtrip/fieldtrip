@@ -29,7 +29,7 @@ function crossfreq = ft_crossfrequencyanalysis(cfg, freqlow, freqhigh)
 % describing the pairs of channel combinations as
 %   {'chanlow01' 'chanhigh01'
 %    'chanlow01' 'chanhigh02'
-%    ... 
+%    ...
 %    'chanlow02' 'chanhigh01'
 %    'chanlow02' 'chanhigh02'
 %    ...
@@ -88,7 +88,6 @@ ft_preamble init
 ft_preamble debug
 ft_preamble loadvar freqlow freqhigh
 ft_preamble provenance freqlow freqhi
-ft_preamble trackconfig
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -325,8 +324,8 @@ else
   crossfreq.label    = cfg.channel;
 end
 
+% do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-ft_postamble trackconfig
 ft_postamble previous   freqlow freqhigh
 ft_postamble provenance crossfreq
 ft_postamble history    crossfreq

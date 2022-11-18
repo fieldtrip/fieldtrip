@@ -82,7 +82,7 @@ ft_preamble init
 ft_preamble debug
 ft_preamble loadvar data
 ft_preamble provenance data
-ft_preamble trackconfig
+
 
 % ensure that the input data is valid for this function, this will also do
 % backward-compatibility conversions of old data that for example was
@@ -121,7 +121,7 @@ switch cfg.method
 end % switch method
 
 % select channels and trials of interest, by default this will select all channels and trials
-tmpcfg = keepfields(cfg, {'trials', 'channel', 'tolerance', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+tmpcfg = keepfields(cfg, {'trials', 'channel', 'tolerance', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
 data = ft_selectdata(tmpcfg, data);
 [cfg, data] = rollback_provenance(cfg, data);
 
@@ -216,7 +216,7 @@ for i=1:ntrial
 end % for each trial
 ft_progress('close');
 
-ft_postamble trackconfig
+% do the general cleanup and bookkeeping at the end of the function
 ft_postamble provenance
 ft_postamble debug
 ft_postamble previous data

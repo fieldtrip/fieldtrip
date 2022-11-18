@@ -81,7 +81,6 @@ ft_defaults
 ft_preamble init
 ft_preamble debug
 ft_preamble provenance
-ft_preamble trackconfig
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -122,7 +121,7 @@ grad.chanpos = grad_head.chanpos;
 if ~isfield(cfg, 'trl') || isempty(cfg.trl)
   cfg.trl = [1 hdr.nTrials.*hdr.nSamples 0];
 end
-tmpcfg              = removefields(cfg, {'method' 'numclusters'});
+tmpcfg              = keepfields(cfg, {'datafile' 'trl'});
 tmpcfg.channel      = {'HLC0011' 'HLC0012' 'HLC0013' 'HLC0021' 'HLC0022' 'HLC0023' 'HLC0031' 'HLC0032' 'HLC0033'};
 tmpcfg.continuous   = 'yes';
 data                = ft_preprocessing(tmpcfg);
@@ -320,9 +319,7 @@ end % switch method
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-ft_postamble trackconfig
 ft_postamble provenance
 ft_postamble previous varargout
 ft_postamble history varargout
 ft_postamble savevar varargout
-

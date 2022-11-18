@@ -52,7 +52,6 @@ ft_preamble init
 ft_preamble debug
 ft_preamble loadvar varargin
 ft_preamble provenance varargin
-ft_preamble trackconfig
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -148,7 +147,7 @@ switch cfg.appenddim
     end
     
     % determine the union of all input data
-    tmpcfg = keepfields(cfg, {'tolerance', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+    tmpcfg = keepfields(cfg, {'tolerance', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
     [varargin{:}] = ft_selectdata(tmpcfg, varargin{:});
     for i=1:Ndata
       [cfg_rolledback, varargin{i}] = rollback_provenance(cfg, varargin{i});
@@ -304,7 +303,7 @@ switch cfg.appenddim
     end
     ok = double(timebounds(:,1)>timebounds(:,2)') + double(timebounds(:,2)<timebounds(:,1)');
     
-    if any(ok(:)==2) || all(ok(:)==0) 
+    if any(ok(:)==2) || all(ok(:)==0)
       ft_error('when appending across time, there should be no overlap in the individual time axes');
     end
 
@@ -352,7 +351,6 @@ end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-ft_postamble trackconfig
 ft_postamble previous varargin
 ft_postamble provenance source
 ft_postamble history source
