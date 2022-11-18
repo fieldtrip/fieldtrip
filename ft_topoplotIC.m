@@ -13,7 +13,7 @@ function [cfg] = ft_topoplotIC(cfg, comp)
 %   cfg.layout             = specification of the layout, see below
 %
 % The configuration can have the following parameters:
-%   cfg.colormap           = string, or Nx3 matrix, see FT_COLORMAP 
+%   cfg.colormap           = string, or Nx3 matrix, see FT_COLORMAP
 %   cfg.zlim               = plotting limits for color dimension, 'maxmin', 'maxabs', 'zeromax', 'minzero', or [zmin zmax] (default = 'maxmin')
 %   cfg.marker             = 'on', 'labels', 'numbers', 'off'
 %   cfg.markersymbol       = channel marker symbol (default = 'o')
@@ -111,7 +111,6 @@ ft_preamble init
 ft_preamble debug
 ft_preamble loadvar    comp
 ft_preamble provenance comp
-ft_preamble trackconfig
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -138,7 +137,7 @@ end
 cfg.interactive = 'no';
 
 % prepare the layout, this should be done only once
-tmpcfg = keepfields(cfg, {'layout', 'channel', 'rows', 'columns', 'commentpos', 'skipcomnt', 'scalepos', 'skipscale', 'projection', 'viewpoint', 'rotate', 'width', 'height', 'elec', 'grad', 'opto', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+tmpcfg = keepfields(cfg, {'layout', 'channel', 'rows', 'columns', 'commentpos', 'skipcomnt', 'scalepos', 'skipscale', 'projection', 'viewpoint', 'rotate', 'width', 'height', 'elec', 'grad', 'opto', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
 cfg.layout = ft_prepare_layout(tmpcfg);
 
 % this is needed for the figure title
@@ -203,7 +202,6 @@ cfg.showcallinfo = tmpshowcallinfo;
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-ft_postamble trackconfig
 ft_postamble previous comp
 ft_postamble provenance
 ft_postamble savefig
@@ -215,4 +213,3 @@ if ~ft_nargout
   % don't return anything
   clear cfg
 end
-

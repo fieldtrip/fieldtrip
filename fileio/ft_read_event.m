@@ -1738,10 +1738,10 @@ switch eventformat
       events_id = split(split(hdr.orig.epochs.event_id, ';'), ':');
       if all(cellfun(@ischar, events_id(:, 1)))
         events_label = events_id(:, 1);
-        events_code = str2num(cell2mat(events_id(:, 2)));
+        events_code = str2num(char(events_id(:, 2)));
       elseif all(cellfun(@isnumeric, events_id(:, 1)))
         events_label = cell2mat(events_id(:, 1));
-        events_code = str2num(cell2mat(events_id(:, 2)));
+        events_code = str2num(char(events_id(:, 2)));
       end
       for i=1:hdr.nTrials
         event(end+1).type      = 'trial';
@@ -1751,7 +1751,7 @@ switch eventformat
         event(end  ).duration  = hdr.nSamples;
       end
     end
-    
+
     % check whether the *.fif file is accompanied by an *.eve file
     [p, f, x] = fileparts(filename);
     evefile = fullfile(p, [f '.eve']);
@@ -2240,6 +2240,8 @@ switch eventformat
     event = read_ricoh_event(filename, 'detectflank', detectflank, 'chanindx', chanindx, 'threshold', threshold);
     
   case 'tmsi_poly5'
+    threshold = ft_getopt(varargin, 'threshold'); % needed to read in poly5 files acquired at TUE, don't know whether this is a generic feature
+    
     if isempty(hdr)
       hdr = ft_read_header(filename);
     end
@@ -2252,7 +2254,7 @@ switch eventformat
       detectflank = 'downdiff';
     end
     if ~isempty(chanindx)
-      event = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', chanindx, 'detectflank', detectflank, 'denoise', denoise, 'trigshift', trigshift, 'trigpadding', trigpadding);
+      event = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', chanindx, 'detectflank', detectflank, 'denoise', denoise, 'trigshift', trigshift, 'trigpadding', trigpadding, 'threshold', threshold);
     end
     
   case {'yokogawa_ave', 'yokogawa_con', 'yokogawa_raw'}
@@ -2435,9 +2437,14 @@ if ~isempty(event)
     end
     % check whether string event values can be converted to numeric values
     if ischar(event(i).value)
-      value = str2double(event(i).value);
-      if ~isnan(value)
-        event(i).value = value;
+      if strcmpi(event(i).value, 'n/a')
+        % this applies to nan values in a BIDS events.tsv file
+        event(i).value = NaN;
+      else
+        value = str2double(event(i).value);
+        if ~isnan(value)
+          event(i).value = value;
+        end
       end
     end
     % samples can be either empty or should be numeric values

@@ -71,7 +71,9 @@ function [cfg] = data2bids(cfg, varargin)
 % scans.tsv files. For example:
 %   cfg.participants.age        = scalar
 %   cfg.participants.sex        = string, 'm' or 'f'
-%   cfg.scans.acq_time          = string, should be formatted according to  RFC3339 as '2019-05-22T15:13:38'
+%   cfg.scans.acq_time          = string, should be formatted according to RFC3339 as '2019-05-22T15:13:38'
+%   cfg.sessions.acq_time       = string, should be formatted according to RFC3339 as '2019-05-22T15:13:38'
+%   cfg.sessions.pathology      = string, recommended when different from healthy
 % In case any of these values is specified as empty (i.e. []) or as nan, it will be
 % written to the tsv file as 'n/a'.
 %
@@ -234,6 +236,10 @@ cfg = ft_checkconfig(cfg, 'renamed', {'channels.writesidecar', 'writejson'});
 cfg = ft_checkconfig(cfg, 'renamed', {'electrodes.writesidecar', 'writejson'});
 cfg = ft_checkconfig(cfg, 'renamed', {'coordsystem.writesidecar', 'writejson'});
 cfg = ft_checkconfig(cfg, 'renamed', {'event', 'events'}); % cfg.event is used elsewhere in FieldTrip, but here it should be cfg.events with an s
+
+% prevent some common errors
+cfg = ft_checkconfig(cfg, 'forbidden', {'acq_time'});                 % this should be in cfg.scans or in cfg.sessions
+cfg = ft_checkconfig(cfg, 'forbidden', {'scan', 'session', 'event'}); % these should end with an "s"
 
 % get the options and set the defaults
 cfg.method                  = ft_getopt(cfg, 'method');                     % default is handled below
@@ -666,6 +672,9 @@ cfg.participants = ft_getopt(cfg, 'participants', struct());
 
 %% information for the scans.tsv
 cfg.scans = ft_getopt(cfg, 'scans', struct());
+
+%% information for the sessions.tsv
+cfg.sessions = ft_getopt(cfg, 'sessions', struct());
 
 %% sanity checks and determine the default method/outputfile
 
@@ -1413,8 +1422,9 @@ if need_channels_tsv
   channels_tsv.type(strcmpi(channels_tsv.type, 'respiration')) = {'RESP'};
   channels_tsv.type(strcmpi(channels_tsv.type, 'headloc'))     = {'HLU'};
   channels_tsv.type(strcmpi(channels_tsv.type, 'headloc_gof')) = {'FITERR'};
-  channels_tsv.type(strcmpi(channels_tsv.type, 'trigger'))     = {'TRIG'};
   channels_tsv.type(strcmpi(channels_tsv.type, 'ori'))         = {'ORNT'};
+  % trigger, analog trigger, and digital trigger all have to be renamed to TRIG
+  channels_tsv.type(contains(channels_tsv.type, 'trigger', 'IgnoreCase', true)) = {'TRIG'};
 
   % channel types in BIDS must be in upper case
   channels_tsv.type = upper(channels_tsv.type);
@@ -2130,7 +2140,7 @@ if ~isempty(cfg.bidsroot)
 
   if isfile(filename)
     scans_tsv = ft_read_tsv(filename);
-    % the scans.tsv is always merged
+    % the scans.tsv is always merged, use the filename column as the corresponding key
     scans_tsv = mergetable(scans_tsv, this, 'filename');
   else
     scans_tsv = this;
@@ -2141,6 +2151,39 @@ if ~isempty(cfg.bidsroot)
 
   % write the updated file back to disk
   ft_write_tsv(filename, scans_tsv);
+
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  % update the sessions.tsv, only when sessions are specified
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  if ~isempty(cfg.ses)
+    % construct the output filename
+    filename = fullfile(cfg.bidsroot, ['sub-' cfg.sub], ['sub-' cfg.sub '_sessions.tsv']);
+
+    % construct session identifier
+    this = table();
+    session_id = ['ses-' cfg.ses];
+    this.session_id = session_id;
+
+    fn = fieldnames(cfg.sessions);
+    for i=1:numel(fn)
+      % write [] as 'n/a'
+      % write nan as 'n/a'
+      % write boolean as 'True' or 'False'
+      this.(fn{i}) = output_compatible(cfg.sessions.(fn{i}));
+    end
+
+    if isfile(filename)
+      sessions_tsv = ft_read_tsv(filename);
+      % the sessions.tsv is always merged, use the session_id column as the corresponding key
+      sessions_tsv = mergetable(sessions_tsv, this, 'session_id');
+    else
+      sessions_tsv = this;
+    end
+
+    % write the updated file back to disk
+    ft_write_tsv(filename, sessions_tsv);
+
+  end % if not empty cfg.ses
 
 end % if bidsroot
 

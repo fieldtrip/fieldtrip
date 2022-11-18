@@ -151,7 +151,6 @@ ft_preamble init
 ft_preamble debug
 ft_preamble loadvar data
 ft_preamble provenance data
-ft_preamble trackconfig
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -305,7 +304,7 @@ end
 
 if strcmp(cfg.viewmode, 'component')
   % read or create the topographic layout that will be used for the topoplots
-  tmpcfg = keepfields(cfg, {'layout', 'rows', 'columns', 'commentpos', 'skipcomnt', 'scalepos', 'skipscale', 'projection', 'viewpoint', 'rotate', 'width', 'height', 'elec', 'grad', 'opto', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+  tmpcfg = keepfields(cfg, {'layout', 'rows', 'columns', 'commentpos', 'skipcomnt', 'scalepos', 'skipscale', 'projection', 'viewpoint', 'rotate', 'width', 'height', 'elec', 'grad', 'opto', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
   if hasdata
     % select those channels from the layout that are relevant for the
     % decomposition that is being plotted
@@ -841,7 +840,6 @@ end % if nargout
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-ft_postamble trackconfig
 ft_postamble previous data
 ft_postamble provenance
 
@@ -1196,10 +1194,13 @@ else
     funcfg.figurename = sprintf('%s : trial %d/%d: segment: %d/%d , time from %g to %g s', cmenulab, opt.trllock, size(opt.trlorg,1), opt.trlop, size(opt.trlvis,1), seldata.time{1}(1), seldata.time{1}(end));
   end
   
-  % the function that is executed does not know that only a subset of the channels will be passed in the input, 
-  % make sure that the funcfg's linecolor is consistent with this selection
-  selchan = match_str(opt.orgdata.label, seldata.label);
-  if isfield(funcfg, 'linecolor'), funcfg.linecolor = opt.linecolor(selchan, :); end
+  if ~isempty(opt.orgdata) && isfield(funcfg, 'linecolor')
+    % the function that is executed does not know that only a subset of the channels will be passed in the input,
+    % make sure that the funcfg's linecolor is consistent with this selection
+    selchan = match_str(opt.orgdata.label, seldata.label);
+    funcfg.linecolor = opt.linecolor(selchan, :);
+  end
+
   feval(funhandle, funcfg, seldata);
 end
 
@@ -1884,7 +1885,7 @@ if strcmp(cfg.viewmode, 'butterfly')
 else
   % the timecourse layout needs to be reconstructed whenever the channel selection changes
   if changedchanflg % trigger for redrawing channel labels and preparing layout again (see bug 2065 and 2878)
-    tmpcfg = keepfields(cfg, {'channel', 'columns', 'rows', 'commentpos', 'scalepos', 'elec', 'grad', 'opto', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+    tmpcfg = keepfields(cfg, {'channel', 'columns', 'rows', 'commentpos', 'scalepos', 'elec', 'grad', 'opto', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
     tmpcfg.layout = 'vertical';
     tmpcfg.skipcomnt = 'yes';
     tmpcfg.skipscale = 'yes';

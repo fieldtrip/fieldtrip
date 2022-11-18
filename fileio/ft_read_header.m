@@ -911,7 +911,7 @@ switch headerformat
     hdr.nSamplesPre         = 0;
     hdr.nTrials             = 1;
     hdr.FirstTimeStamp      = asc.dat(1,1);
-    hdr.TimeStampPerSample  = mean(diff(asc.dat(1,:)));
+    hdr.TimeStampPerSample  = median(diff(asc.dat(1,:)));
     hdr.Fs                  = 1000/hdr.TimeStampPerSample;  % these timestamps are in miliseconds
     % give this warning only once
     ft_warning('creating fake channel names');
@@ -2079,8 +2079,8 @@ switch headerformat
       chantype={'micro'};
     end
     
-    chantype_dict={'micro','macro',     'analog', 'micro_lfp','macro_lfp','micro_hp','add_analog','emg', 'eeg';...
-      'CRAW', 'CMacro_RAW','CANALOG', 'CLFP',     'CMacro_LFP',   'CSPK' ,'CADD_ANALOG','CEMG', 'CEEG'};
+    chantype_dict={'micro','macro',     'analog', 'micro_lfp','macro_lfp','micro_hp','add_analog','emg', 'eeg', 'ecog';...
+      'CRAW', 'CMacro_RAW','CANALOG', 'CLFP',     'CMacro_LFP',   'CSPK' ,'CADD_ANALOG','CEMG', 'CEEG', 'CECOG'};
     neuroomega_param={'_KHz','_KHz_Orig','_Gain','_BitResolution','_TimeBegin','_TimeEnd'};
     
     %identifying channels to be loaded

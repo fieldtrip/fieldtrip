@@ -51,7 +51,7 @@ ft_nargout  = nargout;
 ft_defaults
 ft_preamble init
 ft_preamble provenance spike
-ft_preamble trackconfig
+
 
 % control input spike structure
 spike = ft_checkdata(spike,'datatype', 'spike', 'feedback', 'yes');
@@ -152,7 +152,7 @@ else
 end
     
 % do the general cleanup and bookkeeping at the end of the function
-ft_postamble trackconfig
+
 ft_postamble previous   spike
 ft_postamble provenance spike
 ft_postamble history    spike

@@ -13,7 +13,7 @@ function [comp] = ft_componentanalysis(cfg, data)
 %
 % The configuration should contain
 %   cfg.method       = 'runica', 'fastica', 'binica', 'pca', 'svd', 'jader',
-%                      'varimax', 'dss', 'cca', 'sobi', 'white' or 'csp' 
+%                      'varimax', 'dss', 'cca', 'sobi', 'white' or 'csp'
 %                      (default = 'runica')
 %   cfg.channel      = cell-array with channel selection (default = 'all'),
 %                      see FT_CHANNELSELECTION for details
@@ -45,7 +45,7 @@ function [comp] = ft_componentanalysis(cfg, data)
 %   cfg.runica.logfile
 %   cfg.runica.interput
 %
-% The fastica method supports the following method-specific options. The 
+% The fastica method supports the following method-specific options. The
 % values that these options can take can be found with HELP FASTICA.
 %   cfg.fastica.approach
 %   cfg.fastica.numOfIC
@@ -92,12 +92,12 @@ function [comp] = ft_componentanalysis(cfg, data)
 %   cfg.binica.momentum
 %
 % The dss method requires the following method-specific option and supports
-% a whole lot of other options. The values that these options can take can 
+% a whole lot of other options. The values that these options can take can
 % be found with HELP DSS_CREATE_STATE.
 %   cfg.dss.denf.function
 %   cfg.dss.denf.params
 %
-% The sobi method supports the following method-specific options. The 
+% The sobi method supports the following method-specific options. The
 % values that these options can take can be found with HELP SOBI.
 %   cfg.sobi.n_sources
 %   cfg.sobi.p_correlations
@@ -172,7 +172,6 @@ ft_preamble init
 ft_preamble debug
 ft_preamble loadvar data
 ft_preamble provenance data
-ft_preamble trackconfig
 ft_preamble randomseed
 
 % the ft_abort variable is set to true or false in ft_preamble_init
@@ -286,7 +285,7 @@ switch cfg.method
 end
 
 % select trials of interest
-tmpcfg = keepfields(cfg, {'trials', 'channel', 'tolerance', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+tmpcfg = keepfields(cfg, {'trials', 'channel', 'tolerance', 'showcallinfo', 'trackcallinfo', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
 data   = ft_selectdata(tmpcfg, data);
 % restore the provenance information
 [cfg, data] = rollback_provenance(cfg, data);
@@ -309,11 +308,11 @@ if numel(chantype)>0
     tmpcfg.split   = 'no';
     tmpcfg.chantype = lower(chantype{k}); % makes the output labels unique, to allow appending later on
     tmpdata{1,k}   = ft_componentanalysis(tmpcfg, data);
-  end    
+  end
   comp = ft_appenddata([], tmpdata{:});
   return;
 else
-  %   
+  %
 end
 
 Ntrials  = length(data.trial);
@@ -975,7 +974,6 @@ end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-ft_postamble trackconfig
 ft_postamble randomseed
 ft_postamble previous   data
 ft_postamble provenance comp

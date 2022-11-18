@@ -112,7 +112,7 @@ ft_nargout  = nargout;
 ft_defaults
 ft_preamble init
 ft_preamble provenance data spike
-ft_preamble trackconfig
+
 
 % check if the input data is valid for this function
 data  = ft_checkdata(data, 'datatype', {'raw'}, 'feedback', 'yes');
@@ -377,7 +377,7 @@ sts.dimord = '{chan}_spike_lfpchan_freq';
 sts.trialtime = spike.trialtime;
   
 % do the general cleanup and bookkeeping at the end of the function
-ft_postamble trackconfig
+
 ft_postamble previous   data spike
 ft_postamble provenance sts
 ft_postamble history    sts

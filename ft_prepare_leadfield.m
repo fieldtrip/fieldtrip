@@ -111,7 +111,6 @@ ft_preamble init
 ft_preamble debug
 ft_preamble loadvar data
 ft_preamble provenance data
-ft_preamble trackconfig
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -170,7 +169,7 @@ end
 [headmodel, sens, cfg] = prepare_headmodel(cfg, data);
 
 % construct the sourcemodel for which the leadfield will be computed
-tmpcfg           = keepfields(cfg, {'sourcemodel', 'mri', 'headshape', 'symmetry', 'smooth', 'threshold', 'spheremesh', 'inwardshift', 'xgrid' 'ygrid', 'zgrid', 'resolution', 'tight', 'warpmni', 'template', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+tmpcfg           = keepfields(cfg, {'sourcemodel', 'mri', 'headshape', 'symmetry', 'smooth', 'threshold', 'spheremesh', 'inwardshift', 'xgrid' 'ygrid', 'zgrid', 'resolution', 'tight', 'warpmni', 'template', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
 tmpcfg.headmodel = headmodel;
 if ft_senstype(sens, 'eeg')
   tmpcfg.elec = sens;
@@ -310,6 +309,11 @@ elseif ft_headmodeltype(headmodel, 'duneuro')
       sourcemodel.leadfield{thisindx} = sourcemodel.leadfield{thisindx} * sourcemodel.mom(:,thisindx);
     end
   end % for all grid locations inside the brain
+
+elseif ft_headmodeltype(headmodel, 'interpolate')
+
+  lf = ft_compute_leadfield(sourcemodel.pos(insideindx,:), sens, headmodel, leadfieldopt{:});
+  sourcemodel.leadfield(insideindx) = mat2cell(lf, 3, 3.*ones(1,numel(insideindx)));
   
 else
   ft_progress('init', cfg.feedback, 'computing leadfield');
@@ -362,7 +366,6 @@ end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-ft_postamble trackconfig
 ft_postamble previous   data
 ft_postamble provenance sourcemodel
 ft_postamble history    sourcemodel

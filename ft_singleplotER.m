@@ -50,7 +50,7 @@ function [cfg] = ft_singleplotER(cfg, varargin)
 %                       pre-selection of the data that is considered for
 %                       plotting.
 %   cfg.showlocations = 'no' (default), or 'yes'. plot a small spatial layout of all sensors, highlighting the specified subset
-%   cfg.layouttopo    = filename, or struct (see FT_PREPARE_LAYOUT) used for showing the locations with cfg.showlocations = 'yes' 
+%   cfg.layouttopo    = filename, or struct (see FT_PREPARE_LAYOUT) used for showing the locations with cfg.showlocations = 'yes'
 %
 % The following options for the scaling of the EEG, EOG, ECG, EMG, MEG and NIRS channels
 % is optional and can be used to bring the absolute numbers of the different
@@ -137,7 +137,6 @@ ft_preamble init
 ft_preamble debug
 ft_preamble loadvar varargin
 ft_preamble provenance varargin
-ft_preamble trackconfig
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -293,7 +292,7 @@ end
 
 
 % channels should NOT be selected and averaged here, since a topoplot might follow in interactive mode
-tmpcfg = keepfields(cfg, {'trials', 'select', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+tmpcfg = keepfields(cfg, {'trials', 'select', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
 if hasrpt
   tmpcfg.avgoverrpt = 'yes';
 else
@@ -374,7 +373,7 @@ end
 
 if istrue(cfg.showlocations)
   % Read or create the layout that will be used for plotting, if specified
-  tmpcfg = keepfields(cfg, {'rows', 'columns', 'commentpos', 'scalepos', 'projection', 'viewpoint', 'rotate', 'width', 'height', 'elec', 'grad', 'opto', 'layouttopo', 'showcallinfo', 'trackcallinfo', 'trackconfig', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+  tmpcfg = keepfields(cfg, {'rows', 'columns', 'commentpos', 'scalepos', 'projection', 'viewpoint', 'rotate', 'width', 'height', 'elec', 'grad', 'opto', 'layouttopo', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
   tmpcfg.skipcomnt = 'yes';
   tmpcfg.skipscale = 'yes';
   tmpcfg.pointcolor = cfg.linecolor; % switch of name for ft_prepare_layout
@@ -592,7 +591,6 @@ end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-ft_postamble trackconfig
 ft_postamble previous varargin
 ft_postamble provenance
 ft_postamble savefig

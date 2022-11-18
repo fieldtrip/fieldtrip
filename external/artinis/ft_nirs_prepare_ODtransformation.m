@@ -105,7 +105,6 @@ ft_preamble init              % this will reset ft_warning and show the function
 ft_preamble debug             % this allows for displaying or saving the function name and input arguments upon an error
 ft_preamble loadvar    data   % this reads the input data in case the user specified the cfg.inputfile option
 ft_preamble provenance data   % this records the time and memory usage at the beginning of the function
-ft_preamble trackconfig       % this converts the cfg structure in a config object, which tracks the cfg options that are being used
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -204,7 +203,7 @@ for c=1:numel(chanidx)
   % compute the channel combinations
   tupletidx = sum(bsxfun(@minus, optodeidx, optodeidx(c, :))~=0, 2)==0;
   chanUsed = chanUsed|tupletidx;
-  chancmb(:, end+1) = tupletidx;  
+  chancmb(:, end+1) = tupletidx;
 end
 
 % do the transformation
@@ -252,5 +251,3 @@ montage = [];
 montage.labelorg = cfg.channel(:)';
 montage.labelnew = labelnew;
 montage.tra      = tra;
-
-

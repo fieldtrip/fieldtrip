@@ -49,12 +49,6 @@ if nargin==1
   name = inputname(1);
 end
 
-if isa(val, 'config')
-  % This is FieldTrip specific: the @config object resembles a structure but tracks
-  % the access to each field. In this case it is to be treated as a normal structure.
-  val = struct(val);
-end
-
 % get the options and set defaults
 transposed    = ft_getopt(varargin, 'transposed', false);     % print a column as a transposed row, or a row as a transposed column
 linebreaks    = ft_getopt(varargin, 'linebreaks', true);      % print with or without linebreaks

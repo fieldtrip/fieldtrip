@@ -158,3 +158,8 @@ for i=1:length(mesh)
     'facecolor', facecolor, 'edgecolor', edgecolor, 'vertexcolor', vertexcolor, ...
     'facealpha', facealpha, 'edgealpha', edgealpha, 'surfaceonly', surfaceonly, 'axes', axes_);
 end
+
+if isfield(headmodel, 'coordsys')
+  % add a context sensitive menu to change the 3d viewpoint to top|bottom|left|right|front|back
+  menu_viewpoint(gca, headmodel.coordsys)
+end

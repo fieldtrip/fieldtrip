@@ -30,7 +30,7 @@ function opt = ft_setopt(opt, key, val)
 %
 % $Id$
 
-if isa(opt, 'struct') || isa(opt, 'config')
+if isa(opt, 'struct')
 
   % just replace or add the option
   opt.(key) = val;

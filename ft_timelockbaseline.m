@@ -27,7 +27,7 @@ function [timelock] = ft_timelockbaseline(cfg, timelock)
 %   cfg.previous
 %   cfg.version
 
-% Copyright (C) 2006, Robert Oostenveld
+% Copyright (C) 2022, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -58,7 +58,6 @@ ft_preamble init
 ft_preamble debug
 ft_preamble loadvar timelock
 ft_preamble provenance timelock
-ft_preamble trackconfig
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -125,7 +124,6 @@ if ischar(cfg.baseline)
     % is input consistent?
   elseif strcmp(cfg.baseline, 'no')
     ft_warning('no baseline correction done');
-    return;
   end
 end
 
@@ -202,7 +200,6 @@ end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-ft_postamble trackconfig
 ft_postamble previous   timelock
 ft_postamble provenance timelock
 ft_postamble history    timelock

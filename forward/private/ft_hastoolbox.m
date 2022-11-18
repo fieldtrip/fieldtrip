@@ -162,6 +162,7 @@ url = {
   'NPMK'                                  'see https://github.com/BlackrockMicrosystems/NPMK'
   'NWAY'                                  'see http://www.models.kvl.dk/source/nwaytoolbox'
   'OPENMEEG'                              'see http://openmeeg.github.io and http://www.fieldtriptoolbox.org/faq/how_do_i_install_the_openmeeg_binaries'
+  'OPM'                                   'see https://github.com/tierneytim/OPM'
   'OPTIM'                                 'see http://www.mathworks.com/products/optim'
   'PEER'                                  'see http://www.fieldtriptoolbox.org'
   'PEER'                                  'see http://www.fieldtriptoolbox.org/development/peer'
@@ -443,6 +444,8 @@ switch toolbox
     dependency = {'SnirfClass' 'DataClass' 'AuxClass' 'MeasListClass' 'MetaDataTagsClass' 'ProbeClass' 'StimClass'};
   case 'DUNEURO'
     dependency = {'duneuro_meeg', 'duneuro_function', 'compute_B_primary'};
+  case 'OPM'
+    dependency = {'spm_opm_vslm'};
 
     % the following are FieldTrip modules or toolboxes
   case 'FILEIO'
