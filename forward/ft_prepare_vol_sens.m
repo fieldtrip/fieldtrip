@@ -488,7 +488,7 @@ elseif iseeg
         if size(headmodel.mat,1)~=size(headmodel.mat,2) && size(headmodel.mat,1)==length(sens.elecpos)
           fprintf('electrode transfer and system matrix were already combined\n');
         else
-          fprintf('projecting electrodes on skin surface\n');
+          fprintf('projecting electrodes on triangulated skin surface\n');
           % compute linear interpolation from triangle vertices towards electrodes
           [el, prj] = project_elec(sens.elecpos, headmodel.bnd(headmodel.skin_surface).pos, headmodel.bnd(headmodel.skin_surface).tri);
           tra       = transfer_elec(headmodel.bnd(headmodel.skin_surface).pos, headmodel.bnd(headmodel.skin_surface).tri, el);
