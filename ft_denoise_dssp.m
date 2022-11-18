@@ -81,8 +81,8 @@ cfg.channel           = ft_getopt(cfg, 'channel', 'all');
 cfg.sourcemodel       = ft_getopt(cfg, 'sourcemodel');
 cfg.dssp              = ft_getopt(cfg, 'dssp');         % sub-structure to hold the parameters
 cfg.dssp.n_space      = ft_getopt(cfg.dssp, 'n_space', 'all'); % number of spatial components to retain from the Gram matrix
-cfg.dssp.n_in         = ft_getopt(cfg.dssp, 'n_in', 'all');    % dimensionality of the Bin subspace to be used for the computation of the intersection
-cfg.dssp.n_out        = ft_getopt(cfg.dssp, 'n_out', 'all');   % dimensionality of the Bout subspace to be used for the computation of the intersection
+cfg.dssp.n_in         = ft_getopt(cfg.dssp, 'n_in',    'all'); % dimensionality of the Bin subspace to be used for the computation of the intersection
+cfg.dssp.n_out        = ft_getopt(cfg.dssp, 'n_out',   'all'); % dimensionality of the Bout subspace to be used for the computation of the intersection
 cfg.dssp.n_intersect  = ft_getopt(cfg.dssp, 'n_intersect', 0.9); % dimensionality of the intersection
 cfg.output            = ft_getopt(cfg, 'output', 'original');
 
@@ -115,18 +115,13 @@ lf = cat(2, sourcemodel.leadfield{:});
 G  = lf*lf';
 
 %dat     = cat(2,datain.trial{:});
-[Bclean, Ae, N, Nspace, Sout, Sin, Sspace, S] = dssp(datain.trial, G, cfg.dssp.n_in, cfg.dssp.n_out, cfg.dssp.n_space, cfg.dssp.n_intersect);
+[Bclean, Ae, subspace] = dssp(datain.trial, G, cfg.dssp.n_in, cfg.dssp.n_out, cfg.dssp.n_space, cfg.dssp.n_intersect);
 % datAe   = datain.trial*cellfun(@transpose, Ae, 'UniformOutput', false); % the projection is a right multiplication
 % with a matrix (eye(size(Ae,1))-Ae*Ae'), since Ae*Ae' can become quite
 % sizeable, it's computed slightly differently here.
 
 % put some diagnostic information in the output cfg.
-cfg.dssp.S_space        = Sspace;
-cfg.dssp.n_space        = Nspace;
-cfg.dssp.S_out          = Sout;
-cfg.dssp.S_in           = Sin;
-cfg.dssp.S_intersect    = S;
-cfg.dssp.n_intersect    = N;
+cfg.dssp.subspace = subspace;
 
 % compute the cleaned data and put in a cell-array
 switch cfg.output
@@ -160,7 +155,7 @@ ft_postamble savevar    dataout
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % subfunctions for the computation of the projection matrix
 % kindly provided by Kensuke, and adjusted a bit by Jan-Mathijs
-function [Bclean, Ae, Nee, Nspace, Sout, Sin, Sspace, S] = dssp(B, G, Nin, Nout, Nspace, Nee)
+function [Bclean, Ae, subspace] = dssp(B, G, Nin, Nout, Nspace, Nintersect)
 
 % Nc: number of sensors
 % Nt: number of time points
@@ -171,7 +166,7 @@ function [Bclean, Ae, Nee, Nspace, Sout, Sin, Sspace, S] = dssp(B, G, Nin, Nout,
 % recom_Nspace: recommended value for the dimension of the pseudo-signal subspace
 % outputs
 % Bclean(Nc,Nt): cleaned sensor data
-% Nee: dimension of the intersection
+% Nintersect: dimension of the intersection
 % Nspace: dimension of the pseudo-signal subspace
 %  ------------------------------------------------------------
 %  programmed by K. Sekihara,  Signal Analysis Inc.
@@ -181,10 +176,9 @@ function [Bclean, Ae, Nee, Nspace, Sout, Sin, Sspace, S] = dssp(B, G, Nin, Nout,
 % The code below is modified by Jan-Mathijs, no functional changes
 % merely cosmetics
 
-% eigen decomposition of the Gram matrix, matrix describing the spatial
-% components
-
+% eigen decomposition of the Gram matrix, matrix describing the spatial components of the defined 'in' compartment
 fprintf('Computing the spatial subspace projection\n');
+fprintf('Eigenvalue decomposition of the Gram matrix\n');
 [Uspace,S] = eig(G);
 Sspace     = abs(diag(S));
 
@@ -201,33 +195,38 @@ elseif ischar(Nspace) && isequal(Nspace, 'interactive')
 elseif ischar(Nspace) && isequal(Nspace, 'all')
   Nspace = find(Sspace./Sspace(1)>1e5*eps, 1, 'last');
 end
-fprintf('Using %d spatial dimensions\n', Nspace);
+fprintf('Retaining %d spatial dimensions\n', Nspace);
 
 % spatial subspace projector
 Us   = Uspace(:,1:Nspace);
-USUS = Us*Us';
 
-% Bin and Bout creation
+%USUS = Us*Us';
+% % Bin and Bout creation
 %Bin  =                  USUS  * B;
 %Bout = (eye(size(USUS))-USUS) * B;
 
-% computationally more efficient
+% computationally more efficient than the above
 fprintf('Applying the spatial subspace projector\n');
 Bin  = Us*(Us'*B);
 Bout = B - Bin; 
 
 % create the temporal subspace projector and apply it to the data
-%[AeAe, Nee] = CSP01(Bin, Bout, Nout, Nin, Nee);
+%[AeAe, Nintersect] = CSP01(Bin, Bout, Nout, Nin, Nintersect);
 %Bclean      = B*(eye(size(AeAe))-AeAe);
 
 fprintf('Computing the temporal subspace projector\n');
-[Ae, Nee, Sout, Sin, S] = CSP01(Bin, Bout, Nin, Nout, Nee);
+[Ae, subspace] = CSP01(Bin, Bout, Nin, Nout, Nintersect);
+
+% add the first spatial subspace projection information as well
+subspace.S.U = Uspace;
+subspace.S.S = Sspace;
+subspace.S.n = Nspace;
 
 fprintf('Applying the temporal subspace projector\n');
 %Bclean    = B - (B*Ae)*Ae'; % avoid computation of Ae*Ae'
 Bclean = B - (B*cellfun(@transpose, Ae, 'UniformOutput', false))*Ae;
 
-function [Ae, Nee, Sout, Sin, S] = CSP01(Bin, Bout, Nin, Nout, Nee)
+function [Ae, subspace] = CSP01(Bin, Bout, Nin, Nout, Nintersect)
 %
 % interference rejection by removing the common temporal subspace of the two subspaces
 % K. Sekihara,  March 28, 2012
@@ -241,13 +240,13 @@ function [Ae, Nee, Sout, Sin, S] = CSP01(Bin, Bout, Nin, Nout, Nee)
 %  ypost(1:Nc,1:Nt): denoised data
 %  Nout: dimension of the interference subspace
 %  Nin: dimension of the signal plus interference subspace
-%  Nee: dimension of the intersection of the two subspaces
+%  Nintersect: dimension of the intersection of the two subspaces
 % outputs
 % Ae = matrix from which the projector onto the intersection can
 %      be obtained:
 % AeAe': projector onto the intersection, which is equal to the
 %       interference subspace.
-% Nee: dimension of the intersection
+% Nintersect: dimension of the intersection
 %  ------------------------------------------------------------
 %  programmed by K. Sekihara,  Signal Analysis Inc.
 %  All right reserved by Signal Analysis Inc.
@@ -290,23 +289,36 @@ Qin  = diag(1./Sin(1:Nin)  )* Uin(:,1:Nin)' *Bin;
 C    = Qin * cellfun(@transpose, Qout, 'UniformOutput', false);
 C    = sum(cat(3, C{:}), 3);
 
+% store the subspace information
+subspace.Sin.U  = Uin;
+subspace.Sin.S  = Sin;
+subspace.Sin.n  = Nin;
+subspace.Sout.U = Uout;
+subspace.Sout.S = Sout;
+subspace.Sout.n = Nout;
+
 [U,S] = svd(C);
 S     = diag(S);
-if (ischar(Nee) && strcmp(Nee, 'auto'))
+if (ischar(Nintersect) && strcmp(Nintersect, 'auto'))
   ft_error('Automatic determination of intersection dimension is not supported');
-elseif ischar(Nee) && strcmp(Nee, 'interactive')
+elseif ischar(Nintersect) && strcmp(Nintersect, 'interactive')
   figure, plot(S,'-o'); drawnow
-  Nee  = input('Enter dimension of the intersection: ');
-elseif Nee<1
+  Nintersect  = input('Enter dimension of the intersection: ');
+elseif Nintersect<1
   % treat a numeric value < 1 as a threshold
-  Nee = find(S>Nee,1,'last');
-  if isempty(Nee), Nee = 1; end
+  Nintersect = find(S>Nintersect,1,'last');
+  if isempty(Nintersect), Nintersect = 1; end
 end
-fprintf('Using %d dimensions for the intersection\n', Nee);
+fprintf('Using %d dimensions for the intersection\n', Nintersect);
 
 % Ae   = Qin*U;
-% Ae   = Ae(:,1:Nee);
+% Ae   = Ae(:,1:Nintersect);
 % %AeAe = Ae*Ae';
 
 Ae = U'*Qin;
-Ae = cellrowselect(Ae, 1:Nee);
+Ae = cellrowselect(Ae, 1:Nintersect);
+
+% keep the subspace information
+subspace.T.U = U;
+subspace.T.S = S;
+subspace.T.n = Nintersect;
