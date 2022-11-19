@@ -45,7 +45,7 @@ event = tsv;
 % make a selection based on the HED tags
 if any(strcmp(fieldnames(tsv), 'HED'))
   hedtags = tsv.HED;
-elseif any(strcmp(fieldnames(tsv), 'HED')) && ~isempty(jsonfile)
+elseif ~isempty(jsonfile)
   warning('assembling the HED tags on the fly');
   hedtags = hed_assemble(tsvfile, jsonfile);
 else
