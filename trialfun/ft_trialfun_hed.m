@@ -52,6 +52,11 @@ else
   error('there are no HED tags')
 end
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% the following code uses a regular expression to select events
+% you may want to change this and use another mechanism to define the trials/epochs
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 % find the HED tags that match the regular expression
 sel = find(~cellfun(@isempty, regexp(hedtags, cfg.trialdef.regexp)));
 
