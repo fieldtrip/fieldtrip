@@ -112,8 +112,29 @@ erp3 = ft_timelockanalysis(cfg, rawdata3);
 assert(sum(erp3.cfg.trials)==9);
 
 %%
-% all three ERPs should be the same
+% now using a trialfun that is specialized in HED tags
+% it will assemble the HED tags when not present in the file
+
+cfg = [];
+cfg.dataset = filename2;
+cfg.trialfun = 'ft_trialfun_hed';
+cfg.trialdef.regexp = '.*,Target,\(Character,Label/[ABC]\),.*';
+cfg.trialdef.prestim = 0.3;
+cfg.trialdef.poststim = 0.7;
+cfg = ft_definetrial(cfg);
+
+cfg.baselinewindow = [-inf 0];
+cfg.demean = 'yes';
+rawdata4 = ft_preprocessing(cfg);
+
+% make an average, it would be possible to make a selection using rawdata4.trialinfo
+cfg = [];
+erp4 = ft_timelockanalysis(cfg, rawdata4);
+
+%%
+% all ERPs should be the same
 
 assert(isequal(erp1.avg, erp2.avg));
 assert(isequal(erp1.avg, erp3.avg));
+assert(isequal(erp1.avg, erp4.avg));
 
