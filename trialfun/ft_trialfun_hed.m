@@ -47,7 +47,10 @@ if any(strcmp(fieldnames(tsv), 'HED'))
   hedtags = tsv.HED;
 elseif ~isempty(jsonfile)
   warning('assembling the HED tags on the fly');
-  hedtags = hed_assemble(tsvfile, jsonfile);
+  % this requires functions from an external toolbox, see https://hed-examples.readthedocs.io/en/latest/HedMatlabTools.html
+  ft_hastoolbox('hedtools', 1);
+  tsv = hed_assemble(tsvfile, jsonfile);
+  hedtags = tsv.HED;
 else
   error('there are no HED tags')
 end

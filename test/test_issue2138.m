@@ -113,10 +113,9 @@ assert(sum(erp3.cfg.trials)==9);
 
 %%
 % now using a trialfun that is specialized in HED tags
-% it will assemble the HED tags when not present in the file
 
 cfg = [];
-cfg.dataset = filename2;
+cfg.dataset = filename2; % this has complete tags
 cfg.trialfun = 'ft_trialfun_hed';
 cfg.trialdef.regexp = '.*,Target,\(Character,Label/[ABC]\),.*';
 cfg.trialdef.prestim = 0.3;
@@ -131,6 +130,25 @@ rawdata4 = ft_preprocessing(cfg);
 cfg = [];
 erp4 = ft_timelockanalysis(cfg, rawdata4);
 
+%%
+% assemble the HED tags when not present in the file
+
+cfg = [];
+cfg.dataset = filename1; % HED tags need to be assembled
+cfg.trialfun = 'ft_trialfun_hed';
+cfg.trialdef.regexp = '.*,Target,\(Character,Label/[ABC]\),.*';
+cfg.trialdef.prestim = 0.3;
+cfg.trialdef.poststim = 0.7;
+cfg = ft_definetrial(cfg);
+
+cfg.baselinewindow = [-inf 0];
+cfg.demean = 'yes';
+rawdata5 = ft_preprocessing(cfg);
+
+% make an average, it would be possible to make a selection using rawdata4.trialinfo
+cfg = [];
+erp5 = ft_timelockanalysis(cfg, rawdata5);
+
 %% 
 % just to demonstrate that reading+filtering and segmenting can also be done the other way around
 
@@ -138,7 +156,7 @@ cfg = [];
 cfg.dataset = filename2;
 cfg.hpfreq = 0.2;
 cfg.hpfilter = 'yes';
-rawdata5_continuous = ft_preprocessing(cfg);
+rawdata6_continuous = ft_preprocessing(cfg);
 
 % determine the selection of epochs
 cfg = [];
@@ -150,7 +168,7 @@ cfg.trialdef.poststim = 0.7;
 cfg = ft_definetrial(cfg);
 
 % make the selection of epochs
-rawdata5_epoched = ft_redefinetrial(cfg, rawdata5_continuous);
+rawdata6_epoched = ft_redefinetrial(cfg, rawdata6_continuous);
 
 % make an average
 cfg = [];
@@ -162,5 +180,6 @@ erp5 = ft_timelockanalysis(cfg, rawdata5_epoched);
 assert(isequal(erp1.avg, erp2.avg));
 assert(isequal(erp1.avg, erp3.avg));
 assert(isequal(erp1.avg, erp4.avg));
-% assert(isequal(erp1.avg, erp5.avg)); % this has been preprocessed differently
+assert(isequal(erp1.avg, erp5.avg));
+% assert(isequal(erp1.avg, erp6.avg)); % this has been preprocessed differently
 
