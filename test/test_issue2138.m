@@ -131,10 +131,36 @@ rawdata4 = ft_preprocessing(cfg);
 cfg = [];
 erp4 = ft_timelockanalysis(cfg, rawdata4);
 
+%% 
+% just to demonstrate that reading+filtering and segmenting can also be done the other way around
+
+cfg = [];
+cfg.dataset = filename2;
+cfg.hpfreq = 0.2;
+cfg.hpfilter = 'yes';
+rawdata5_continuous = ft_preprocessing(cfg);
+
+% determine the selection of epochs
+cfg = [];
+cfg.dataset = filename2;
+cfg.trialfun = 'ft_trialfun_hed';
+cfg.trialdef.regexp = '.*,Target,\(Character,Label/[ABC]\),.*';
+cfg.trialdef.prestim = 0.3;
+cfg.trialdef.poststim = 0.7;
+cfg = ft_definetrial(cfg);
+
+% make the selection of epochs
+rawdata5_epoched = ft_redefinetrial(cfg, rawdata5_continuous);
+
+% make an average
+cfg = [];
+erp5 = ft_timelockanalysis(cfg, rawdata5_epoched);
+
 %%
 % all ERPs should be the same
 
 assert(isequal(erp1.avg, erp2.avg));
 assert(isequal(erp1.avg, erp3.avg));
 assert(isequal(erp1.avg, erp4.avg));
+% assert(isequal(erp1.avg, erp5.avg)); % this has been preprocessed differently
 
