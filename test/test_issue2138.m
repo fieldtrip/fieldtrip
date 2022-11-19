@@ -57,17 +57,18 @@ cfg = ft_definetrial(cfg);
 
 cfg.baselinewindow = [-inf 0];
 cfg.demean = 'yes';
-rawdata = ft_preprocessing(cfg);
+rawdata1 = ft_preprocessing(cfg);
 
 % make a selective average
 cfg = [];
-cfg.trials = ismember(rawdata.trialinfo.eventvalue, {'A' 'B' 'C'});
-erp = ft_timelockanalysis(cfg, rawdata);
+cfg.trials = ismember(rawdata1.trialinfo.eventvalue, {'A' 'B' 'C'});
+erp1 = ft_timelockanalysis(cfg, rawdata1);
 
-assert(sum(erp.cfg.trials)==9);
+assert(sum(erp1.cfg.trials)==9);
 
 %%
-% this is the same analysis for a dataset that also contains HED tags
+% this is exactly the same analysis for a dataset that also contains HED tags
+% but it does not use those HED tags
 
 cfg = [];
 cfg.dataset = filename2;
@@ -79,17 +80,17 @@ cfg = ft_definetrial(cfg);
 
 cfg.baselinewindow = [-inf 0];
 cfg.demean = 'yes';
-rawdata = ft_preprocessing(cfg);
+rawdata2 = ft_preprocessing(cfg);
 
 % make a selective average
 cfg = [];
-cfg.trials = ismember(rawdata.trialinfo.eventvalue, {'A' 'B' 'C'});
-erp = ft_timelockanalysis(cfg, rawdata);
+cfg.trials = ismember(rawdata2.trialinfo.eventvalue, {'A' 'B' 'C'});
+erp2 = ft_timelockanalysis(cfg, rawdata2);
 
-assert(sum(erp.cfg.trials)==9);
+assert(sum(erp2.cfg.trials)==9);
 
 %%
-% this is a similar analysis, but now using HED tags
+% this is the same analysis, now using the HED tags
 
 cfg = [];
 cfg.dataset = filename2;
@@ -101,15 +102,18 @@ cfg = ft_definetrial(cfg);
 
 cfg.baselinewindow = [-inf 0];
 cfg.demean = 'yes';
-rawdata = ft_preprocessing(cfg);
+rawdata3 = ft_preprocessing(cfg);
 
-% make selective averages
+% make a selective average
 cfg = [];
-cfg.trials = contains(table2cell(rawdata.trialinfo), 'Items-to-memorize,Item-count,Target,Label/3');
-erp_load3 = ft_timelockanalysis(cfg, rawdata);
+cfg.trials = ~cellfun(@isempty, regexp(rawdata3.trialinfo.eventvalue, '(Character,Label/[ABC])'));
+erp3 = ft_timelockanalysis(cfg, rawdata3);
 
-cfg.trials = contains(table2cell(rawdata.trialinfo), 'Items-to-memorize,Item-count,Target,Label/5');
-erp_load5 = ft_timelockanalysis(cfg, rawdata);
+assert(sum(erp3.cfg.trials)==9);
 
-cfg.trials = contains(table2cell(rawdata.trialinfo), 'Items-to-memorize,Item-count,Target,Label/7');
-erp_load7 = ft_timelockanalysis(cfg, rawdata);
+%%
+% all three ERPs should be the same
+
+assert(isequal(erp1.avg, erp2.avg));
+assert(isequal(erp1.avg, erp3.avg));
+
