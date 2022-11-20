@@ -106,8 +106,8 @@ figure; ft_plot_cloud(pos, val, 'mesh', mesh1, 'slice', '3d', 'nslices', 3);
 figure; ft_plot_cloud(pos, val, 'mesh', mesh1, 'slice', '2d', 'nslices', 3);
 
 % increasing minspace should spread the slices out
-figure; ft_plot_cloud(pos, val, 'mesh', mesh1, 'slice', '3d', 'nslices', 3, 'minspace', 15);
-figure; ft_plot_cloud(pos, val, 'mesh', mesh1, 'slice', '2d', 'nslices', 3, 'minspace', 15);
+figure; ft_plot_cloud(pos, val, 'mesh', mesh1, 'slice', '3d', 'nslices', 3, 'minspace', 20);
+figure; ft_plot_cloud(pos, val, 'mesh', mesh1, 'slice', '2d', 'nslices', 3, 'minspace', 20);
 
 % test 'slicepos'
 figure; ft_plot_cloud(pos, val, 'mesh', mesh1, 'slice', '3d', 'slicepos', 33);
