@@ -317,8 +317,10 @@ end
 cmid   = size(cmapsc,1)/2;                          % colorbar middle
 colscf = 2*( (val-clim(1)) / (clim(2)-clim(1)) )-1; % color between -1 and 1, bottom vs. top colorbar
 colscf(colscf>1)=1; colscf(colscf<-1)=-1;           % clip values outside the [-1 1] range
-radscf = val-(min(abs(val)) * sign(max(val)));      % radius between 0 and 1, small vs. large pos/neg effect
-radscf = abs( radscf / max(abs(radscf)) );
+
+radscf = abs(val-min(abs(val)) * sign(max(val)));   % 'vdown' representation
+radscf = 2*( radscf / (clim(2)-clim(1)) );          % radius between 0 and 1, small vs. large pos/neg effect
+radscf(radscf>1)=1; radscf(radscf<0)=0;             % clip values outside the [0 1] range
 
 if strcmp(scalerad, 'yes')
   rmax = rmin+(radius-rmin)*radscf; % maximum radius of the clouds
