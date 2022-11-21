@@ -86,8 +86,13 @@ cfg.dssp.n_out        = ft_getopt(cfg.dssp, 'n_out',   'all'); % dimensionality 
 cfg.dssp.n_intersect  = ft_getopt(cfg.dssp, 'n_intersect', 0.9); % dimensionality of the intersection
 cfg.output            = ft_getopt(cfg, 'output', 'original');
 
+pertrial = isequal(cfg.trials, 'pertrial');
+
 % select channels and trials of interest, by default this will select all channels and trials
 tmpcfg = keepfields(cfg, {'trials', 'channel', 'tolerance', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+if pertrial
+  tmpcfg.trials = 'all';
+end
 datain = ft_selectdata(tmpcfg, datain);
 % restore the provenance information
 [cfg, datain] = rollback_provenance(cfg, datain);
@@ -115,7 +120,7 @@ lf = cat(2, sourcemodel.leadfield{:});
 G  = lf*lf';
 
 %dat     = cat(2,datain.trial{:});
-[Bclean, Ae, subspace] = dssp(datain.trial, G, cfg.dssp.n_in, cfg.dssp.n_out, cfg.dssp.n_space, cfg.dssp.n_intersect);
+[Bclean, Ae, subspace] = dssp(datain.trial, G, cfg.dssp.n_in, cfg.dssp.n_out, cfg.dssp.n_space, cfg.dssp.n_intersect, pertrial);
 % datAe   = datain.trial*cellfun(@transpose, Ae, 'UniformOutput', false); % the projection is a right multiplication
 % with a matrix (eye(size(Ae,1))-Ae*Ae'), since Ae*Ae' can become quite
 % sizeable, it's computed slightly differently here.
@@ -126,16 +131,8 @@ cfg.dssp.subspace = subspace;
 % compute the cleaned data and put in a cell-array
 switch cfg.output
   case 'original'
-%     for k = 1:numel(datain.trial)
-%       trial{k} = datain.trial{k} - datAe*Ae((csmp(k)+1):csmp(k+1),:)';
-%     end
-    % trial = datain.trial - datAe*Ae; % this should be the same as dum
     trial = Bclean;
   case 'complement'
-%     for k = 1:numel(datain.trial)
-%       trial{k} = datAe*Ae((csmp(k)+1):csmp(k+1),:)';
-%     end
-    % trial = datAe*Ae;
     trial = datain.trial-Bclean;
   otherwise
     ft_error(sprintf('cfg.output = ''%s'' is not implemented',cfg.output));
@@ -155,7 +152,7 @@ ft_postamble savevar    dataout
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % subfunctions for the computation of the projection matrix
 % kindly provided by Kensuke, and adjusted a bit by Jan-Mathijs
-function [Bclean, Ae, subspace] = dssp(B, G, Nin, Nout, Nspace, Nintersect)
+function [Bclean, Ae, subspace] = dssp(B, G, Nin, Nout, Nspace, Nintersect, pertrial)
 
 % Nc: number of sensors
 % Nt: number of time points
@@ -174,7 +171,8 @@ function [Bclean, Ae, subspace] = dssp(B, G, Nin, Nout, Nspace, Nintersect)
 % -------------------------------------------------------------
 %
 % The code below is modified by Jan-Mathijs, no functional changes
-% merely cosmetics
+% merely cosmetics, added the possibility to run the temporal subspace per
+% trial
 
 % eigen decomposition of the Gram matrix, matrix describing the spatial components of the defined 'in' compartment
 fprintf('Computing the spatial subspace projection\n');
@@ -185,17 +183,7 @@ Sspace     = abs(diag(S));
 [Sspace, iorder] = sort(-Sspace);
 Sspace           = -Sspace;
 Uspace(:,:)      = Uspace(:,iorder);
-
-if isempty(Nspace)
-  ttext = 'enter the spatial dimension: ';
-  Nspace    = input(ttext);
-elseif ischar(Nspace) && isequal(Nspace, 'interactive')
-  figure, plot(log10(Sspace),'-o'); drawnow
-  Nspace = input('enter spatial dimension of the subspace: ');
-elseif ischar(Nspace) && isequal(Nspace, 'all')
-  Nspace = find(Sspace./Sspace(1)>1e5*eps, 1, 'last');
-end
-fprintf('Retaining %d spatial dimensions\n', Nspace);
+Nspace           = getN(Nspace, Sspace, 'spatial');
 
 % spatial subspace projector
 Us   = Uspace(:,1:Nspace);
@@ -210,23 +198,19 @@ fprintf('Applying the spatial subspace projector\n');
 Bin  = Us*(Us'*B);
 Bout = B - Bin; 
 
-% create the temporal subspace projector and apply it to the data
-%[AeAe, Nintersect] = CSP01(Bin, Bout, Nout, Nin, Nintersect);
-%Bclean      = B*(eye(size(AeAe))-AeAe);
-
-fprintf('Computing the temporal subspace projector\n');
-[Ae, subspace] = CSP01(Bin, Bout, Nin, Nout, Nintersect);
+fprintf('Computing the subspace projector based on signal correlations\n');
+[Ae, subspace] = CSP01(Bin, Bout, Nin, Nout, Nintersect, pertrial);
 
 % add the first spatial subspace projection information as well
 subspace.S.U = Uspace;
 subspace.S.S = Sspace;
 subspace.S.n = Nspace;
 
-fprintf('Applying the temporal subspace projector\n');
+fprintf('Applying the subspace projector\n');
 %Bclean    = B - (B*Ae)*Ae'; % avoid computation of Ae*Ae'
 Bclean = B - (B*cellfun(@transpose, Ae, 'UniformOutput', false))*Ae;
 
-function [Ae, subspace] = CSP01(Bin, Bout, Nin, Nout, Nintersect)
+function [Ae, subspace] = CSP01(Bin, Bout, Nin, Nout, Nintersect, pertrial)
 %
 % interference rejection by removing the common temporal subspace of the two subspaces
 % K. Sekihara,  March 28, 2012
@@ -237,88 +221,90 @@ function [Ae, subspace] = CSP01(Bin, Bout, Nin, Nout, Nintersect)
 % inputs
 %  Bout(1:Nc,1:Nt): interference data
 %  Bin(1:Nc,1:Nt): signal plus interference data
-%  ypost(1:Nc,1:Nt): denoised data
 %  Nout: dimension of the interference subspace
 %  Nin: dimension of the signal plus interference subspace
 %  Nintersect: dimension of the intersection of the two subspaces
 % outputs
 % Ae = matrix from which the projector onto the intersection can
 %      be obtained:
-% AeAe': projector onto the intersection, which is equal to the
-%       interference subspace.
-% Nintersect: dimension of the intersection
+% subspace: struct containing information about the different subspace
+%      projections
 %  ------------------------------------------------------------
 %  programmed by K. Sekihara,  Signal Analysis Inc.
 %  All right reserved by Signal Analysis Inc.
 % -------------------------------------------------------------
 %
 
-[Uout,Sout,Vout] = svd(cat(2, Bout{:}),'econ');
-[Uin, Sin, Vin]  = svd(cat(2, Bin{:}), 'econ');
-Sout = diag(Sout);
-Sin  = diag(Sin);
+if ~pertrial
+  % compute the projection across trials
+  trllist = 1:numel(Bout);
+else
+  % compute the projection per trial
+  trllist = (1:numel(Bout))';
+end  
 
-if isempty(Nout)
-  ttext = 'enter the spatial dimension for the outside field: ';
-  Nout  = input(ttext);
-elseif ischar(Nout) && isequal(Nout, 'interactive')
-  figure, plot(Sout,'-o'); drawnow
-  Nout = input('enter dimension of the outside field: ');
-elseif ischar(Nout) && isequal(Nout, 'all')
-  Nout = find(Sout./Sout(1)>1e5*eps, 1, 'last');
+for k = 1:size(trllist,1)
+  indx = trllist(k,:); % this is either a scalar, or a vector
+  [Uout,Sout,Vout] = svd(cat(2, Bout{indx}),'econ');
+  [Uin, Sin, Vin]  = svd(cat(2, Bin{indx}), 'econ');
+  Sout = diag(Sout);
+  Sin  = diag(Sin);
+
+  Nout = getN(Nout, Sout, 'outside');
+  Nin  = getN(Nin,  Sin,  'inside');
+  
+  % compute unit-norm time courses
+  Qout = diag(1./Sout(1:Nout))*Uout(:,1:Nout)'*Bout(indx); % keep it in cell representation
+  Qin  = diag(1./Sin(1:Nin)  )* Uin(:,1:Nin)' *Bin(indx);
+  C    = Qin * cellfun(@transpose, Qout, 'UniformOutput', false);
+  C    = sum(cat(3, C{:}), 3);
+
+  % store the subspace information that is used in the next step
+  subspace.Sin(k).U  = Uin;
+  subspace.Sin(k).S  = Sin;
+  subspace.Sin(k).n  = Nin;
+  subspace.Sout(k).U = Uout;
+  subspace.Sout(k).S = Sout;
+  subspace.Sout(k).n = Nout;
+
+  % covariance matrix of unit-norm 'components' -> how does this relate to
+  % multivariate decomp? This is I guess equivalent mathematically
+  [U,S] = svd(C);
+  S     = diag(S);
+  if (ischar(Nintersect) && strcmp(Nintersect, 'auto'))
+    ft_error('Automatic determination of intersection dimension is not supported');
+  elseif ischar(Nintersect) && strcmp(Nintersect, 'interactive')
+    figure, plot(S,'-o'); drawnow
+    Nintersect  = input('Enter dimension of the intersection: ');
+  elseif Nintersect<1
+    % treat a numeric value < 1 as a threshold
+    Nintersect = find(S>Nintersect,1,'last');
+    if isempty(Nintersect), Nintersect = 1; end
+  end
+  fprintf('Using %d dimensions for the intersection\n', Nintersect);
+
+  % Ae   = Qin*U;
+  % Ae   = Ae(:,1:Nintersect);
+  % %AeAe = Ae*Ae';
+
+  Ae(indx) = U(:, 1:Nintersect)'*Qin;
+
+  % keep the subspace information
+  subspace.T(k).U = U;
+  subspace.T(k).S = S;
+  subspace.T(k).C = C; clear C;
+  subspace.T(k).n = Nintersect;
 end
-fprintf('Using %d spatial dimensions for the outside field\n', Nout);
 
-if isempty(Nin)
-  ttext = 'Enter the spatial dimension for the inside field: ';
-  Nin  = input(ttext);
-elseif ischar(Nin) && isequal(Nin, 'interactive')
-  figure, plot(log10(Sin),'-o'); drawnow
-  Nin = input('Enter dimension of the inside field: ');
-elseif ischar(Nin) && isequal(Nin, 'all')
-  Nin = find(Sin./Sin(1)>1e5*eps, 1, 'last');
+function N = getN(N, S, name)
+
+ttext = sprintf('enter the spatial dimension for the %s field: ', name);
+if isempty(N)
+  N  = input(ttext);
+elseif ischar(N) && isequal(N, 'interactive')
+  figure, plot(log10(S),'-o'); drawnow
+  N = input(ttest);
+elseif ischar(N) && isequal(N, 'all')
+  N = find(S./S(1)>1e5*eps, 1, 'last');
 end
-fprintf('Using %d spatial dimensions for the inside field\n', Nin);
-
-% Qout = Vout(:,1:Nout);
-% Qin  = Vin(:, 1:Nin);
-% C    = Qin'*Qout;
-
-Qout = diag(1./Sout(1:Nout))*Uout(:,1:Nout)'*Bout; % keep it in cell representation
-Qin  = diag(1./Sin(1:Nin)  )* Uin(:,1:Nin)' *Bin;
-C    = Qin * cellfun(@transpose, Qout, 'UniformOutput', false);
-C    = sum(cat(3, C{:}), 3);
-
-% store the subspace information
-subspace.Sin.U  = Uin;
-subspace.Sin.S  = Sin;
-subspace.Sin.n  = Nin;
-subspace.Sout.U = Uout;
-subspace.Sout.S = Sout;
-subspace.Sout.n = Nout;
-
-[U,S] = svd(C);
-S     = diag(S);
-if (ischar(Nintersect) && strcmp(Nintersect, 'auto'))
-  ft_error('Automatic determination of intersection dimension is not supported');
-elseif ischar(Nintersect) && strcmp(Nintersect, 'interactive')
-  figure, plot(S,'-o'); drawnow
-  Nintersect  = input('Enter dimension of the intersection: ');
-elseif Nintersect<1
-  % treat a numeric value < 1 as a threshold
-  Nintersect = find(S>Nintersect,1,'last');
-  if isempty(Nintersect), Nintersect = 1; end
-end
-fprintf('Using %d dimensions for the intersection\n', Nintersect);
-
-% Ae   = Qin*U;
-% Ae   = Ae(:,1:Nintersect);
-% %AeAe = Ae*Ae';
-
-Ae = U'*Qin;
-Ae = cellrowselect(Ae, 1:Nintersect);
-
-% keep the subspace information
-subspace.T.U = U;
-subspace.T.S = S;
-subspace.T.n = Nintersect;
+fprintf('Using %d spatial dimensions for the %s field\n', N, name);
