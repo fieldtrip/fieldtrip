@@ -1270,8 +1270,10 @@ if need_nirs_json
     nirs_json.EpochLength             = hdr.nSamples/hdr.Fs;
   end
   nirs_json.NIRSChannelCount          = sum(strcmpi(hdr.chantype, 'nirs'));
-  %   nirs_json.AUXChannelCount           = sum(strcmpi(hdr.chantype, 'aux')); % not yet supported
-  %   nirs_json.MiscChannelCount          = sum(strcmpi(hdr.chantype, 'misc') | strcmpi(hdr.chantype, 'unknown'));
+  nirs_json.ACCELChannelCount         = sum(strcmpi(hdr.chantype, 'accel'));
+  nirs_json.GYROChannelCount          = sum(strcmpi(hdr.chantype, 'gyro'));
+  nirs_json.MAGNChannelCount          = sum(strcmpi(hdr.chantype, 'magn'));
+  nirs_json.MISCChannelCount          = sum(strcmpi(hdr.chantype, 'misc') | strcmpi(hdr.chantype, 'unknown') | strcmpi(hdr.chantype, 'aux'));
   [opto_labels, opto_idx]             = unique(hdr.opto.optolabel); % select unique optodes
   nirs_json.NIRSSourceOptodeCount     = sum(strcmpi(hdr.opto.optotype(opto_idx), 'transmitter'));
   nirs_json.NIRSDetectorOptodeCount   = sum (strcmpi(hdr.opto.optotype(opto_idx), 'receiver'));
