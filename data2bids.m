@@ -2316,7 +2316,7 @@ if length(unique(wavelength))>2
   ft_warning('Assuming that the given wavelengths are actual wavelengths.')
   wavelength_actual = wavelength;
   % try to find the nominal wavelengths:
-    split = median(wavelength);
+    split = nanmedian(wavelength);
     WL1.values = wavelength(wavelength<split);
     WL2.values = wavelength(wavelength>split);
     WL1.nominal = round(median(WL1.values),-1);
