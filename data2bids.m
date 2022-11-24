@@ -2502,7 +2502,7 @@ if isempty(s)
   return
 elseif isstruct(s)
   fn = fieldnames(s);
-  fn = fn(structfun(@isempty, s));
+  fn = fn(structfun(@isempty, s) | ~structfun(@any, s));
   s = removefields(s, fn);
 elseif istable(s)
   remove = false(1,size(s,2));
