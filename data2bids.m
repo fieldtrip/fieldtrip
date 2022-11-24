@@ -2314,7 +2314,7 @@ elseif any(strcmpi(hdr.chantype, 'nirs'))
 end
 
 % distinguish between nominal and actual wavelength
-if length(unique(wavelength))>2
+if sum(~isnan(unique(wavelength)))>2
   ft_warning('Assuming that the given wavelengths are actual wavelengths.')
   wavelength_actual = wavelength;
   % try to find the nominal wavelengths:

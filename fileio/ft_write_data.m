@@ -845,7 +845,7 @@ switch dataformat
     tra_t = tra'; % transpose tra matrix to get indices of wavelength by row (thus by channel)
     wl_idx = find(tra_t>0);
     all_wavelengths = hdr.opto.wavelength(tra_t(wl_idx));
-    split = median(all_wavelengths);
+    split = nanmedian(all_wavelengths);
     WL1.values = all_wavelengths(all_wavelengths<split);
     WL2.values = all_wavelengths(all_wavelengths>split);
     WL1.nominal = round(median(WL1.values),-1);
