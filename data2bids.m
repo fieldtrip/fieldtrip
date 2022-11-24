@@ -1398,7 +1398,11 @@ if need_channels_tsv
   channels_tsv = mergetable(channels_tsv, cfg.channels, 'name');
 
   % columns should appear in a specific order
-  required = {'name', 'type', 'units', 'low_cutoff', 'high_cutoff'};
+  if need_nirs_json
+    required = {'name', 'type', 'source', 'detector', 'wavelength_nominal', 'units'};
+  else
+    required = {'name', 'type', 'units', 'low_cutoff', 'high_cutoff'};
+  end
   optional = setdiff(channels_tsv.Properties.VariableNames, required, 'stable');
   channels_tsv = sort_columns(channels_tsv, [required, optional]);
 
