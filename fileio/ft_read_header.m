@@ -2892,7 +2892,9 @@ if (strcmp(readbids, 'yes') || strcmp(readbids, 'ifmakessense')) && isbids
       hdr.opto.wavelength = unique(channels_tsv.wavelength_nominal)';
       if exist('channels_tsv', 'var')
         hdr.opto.label = channels_tsv.name;
-        hdr.opto.unit = coordsystem_json.NIRSCoordinateUnites;
+        if exist('coordsystem_json', 'var') && ~isempty(coordsystem_json)
+          hdr.opto.unit = coordsystem_json.NIRSCoordinateUnites;
+        end
         M = height(channels_tsv);
         N = height(optodes_tsv);
         hdr.opto.tra = zeros(M, N);
@@ -2927,7 +2929,7 @@ if (strcmp(readbids, 'yes') || strcmp(readbids, 'ifmakessense')) && isbids
     end
   catch ME
     if strcmp(readbids, 'yes')
-      ft_error(ME.message);
+      rethrow(ME);
     else
       ft_warning(ME.message);
     end
