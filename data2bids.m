@@ -324,7 +324,7 @@ cfg.coordsystem   = ft_getopt(cfg, 'coordsystem');
 cfg.dataset_description                     = ft_getopt(cfg, 'dataset_description'                       );
 cfg.dataset_description.writesidecar        = ft_getopt(cfg.dataset_description, 'writesidecar', 'yes'   );
 cfg.dataset_description.Name                = ft_getopt(cfg.dataset_description, 'Name'                  ); % REQUIRED. Name of the dataset.
-cfg.dataset_description.BIDSVersion         = ft_getopt(cfg.dataset_description, 'BIDSVersion', '1.6'    ); % REQUIRED. The version of the BIDS standard that was used.
+cfg.dataset_description.BIDSVersion         = ft_getopt(cfg.dataset_description, 'BIDSVersion', '1.8'    ); % REQUIRED. The version of the BIDS standard that was used.
 cfg.dataset_description.DatasetType         = ft_getopt(cfg.dataset_description, 'DatasetType', 'raw'    ); % RECOMMENDED. The interpretaton of the dataset. MUST be one of "raw" or "derivative". For backwards compatibility, the default value is "raw".
 cfg.dataset_description.License             = ft_getopt(cfg.dataset_description, 'License'               ); % RECOMMENDED. What license is this dataset distributed under? The use of license name abbreviations is suggested for specifying a license. A list of common licenses with suggested abbreviations can be found in Appendix II.
 cfg.dataset_description.Authors             = ft_getopt(cfg.dataset_description, 'Authors'               ); % OPTIONAL. List of individuals who contributed to the creation/curation of the dataset.
@@ -510,7 +510,7 @@ cfg.exg.SamplingFrequency                 = ft_getopt(cfg.exg, 'SamplingFrequenc
 cfg.exg.RecordingDuration                 = ft_getopt(cfg.exg, 'RecordingDuration'                 );
 cfg.exg.RecordingType                     = ft_getopt(cfg.exg, 'RecordingType'                     );
 
-%% NIRS is not part of the official BIDS specification
+%% NIRS specific fields
 cfg.nirs.CapManufacturer                   = ft_getopt(cfg.nirs, 'CapManufacturer'                   );
 cfg.nirs.CapManufacturersModelName         = ft_getopt(cfg.nirs, 'CapManufacturersModelName'         );
 cfg.nirs.SamplingFrequency                 = ft_getopt(cfg.nirs, 'SamplingFrequency'                 );
@@ -529,6 +529,7 @@ cfg.nirs.DCOffsetCorrection                = ft_getopt(cfg.nirs, 'DCOffsetCorrec
 cfg.nirs.HeadCircumference                 = ft_getopt(cfg.nirs, 'HeadCircumference'                 );
 cfg.nirs.HardwareFilters                   = ft_getopt(cfg.nirs, 'HardwareFilters'                   );
 cfg.nirs.SoftwareFilters                   = ft_getopt(cfg.nirs, 'SoftwareFilters'                   );
+cfg.nirs.SubjectArtefactDescription        = ft_getopt(cfg.nirs, 'SubjectArtefactDescription'        );
 
 %% audio is not part of the official BIDS specification
 cfg.audio.SampleRate                      = ft_getopt(cfg.audio, 'SampleRate'        );
@@ -633,15 +634,13 @@ cfg.channels.status_description         = ft_getopt(cfg.channels, 'status_descri
 % specific options for NIRS channels
 cfg.channels.source                     = ft_getopt(cfg.channels, 'source'                      , nan);
 cfg.channels.detector                   = ft_getopt(cfg.channels, 'detector'                    , nan);
-cfg.channels.wavelength                 = ft_getopt(cfg.channels, 'wavelength'                  , nan);
 cfg.channels.wavelength_nominal         = ft_getopt(cfg.channels, 'wavelength_nominal'          , nan);
-cfg.channels.orientation_component      = ft_getopt(cfg.channels, 'orientation_component'       , nan);
 cfg.channels.wavelength_actual          = ft_getopt(cfg.channels, 'wavelength_actual'           , nan);
 cfg.channels.wavelength_emission_actual = ft_getopt(cfg.channels, 'wavelength_emission_actual'  , nan);
 cfg.channels.short_channel              = ft_getopt(cfg.channels, 'short_channel'               , nan);
 % specific options for motion channels
 cfg.channels.sampling_frequency         = ft_getopt(cfg.channels, 'sampling_frequency'          , nan);
-cfg.channels.component                  = ft_getopt(cfg.channels, 'component'                   , nan);
+cfg.channels.orientation_component      = ft_getopt(cfg.channels, 'component'                   , nan);
 cfg.channels.tracked_point              = ft_getopt(cfg.channels, 'tracked_point'               , nan);
 
 %% columns in the electrodes.tsv
@@ -661,7 +660,7 @@ cfg.optodes.y                   = ft_getopt(cfg.optodes, 'y'                   ,
 cfg.optodes.z                   = ft_getopt(cfg.optodes, 'z'                   , nan);  % REQUIRED. Recorded position along the z-axis. n/a if not available
 cfg.optodes.template_x          = ft_getopt(cfg.optodes, 'template_x'          , nan);  % OPTIONAL. Assumed or ideal position along the x axis
 cfg.optodes.template_y          = ft_getopt(cfg.optodes, 'template_y'          , nan);  % OPTIONAL. Assumed or ideal position along the x axis
-cfg.optodes.template_z          = ft_getopt(cfg.optodes, 'template_x'          , nan);  % OPTIONAL. Assumed or ideal position along the x axis
+cfg.optodes.template_z          = ft_getopt(cfg.optodes, 'template_z'          , nan);  % OPTIONAL. Assumed or ideal position along the x axis
 cfg.optodes.description         = ft_getopt(cfg.optodes, 'description'         , nan);  % OPTIONAL.	string	Free-form text description of the optode, or other information of interest.
 cfg.optodes.detector_type       = ft_getopt(cfg.optodes, 'detector_type'       , nan);  % OPTIONAL.	string	The type of detector. Only to be used if the field DetectorType in *_nirs.json is set to mixed.
 cfg.optodes.source_type         = ft_getopt(cfg.optodes, 'source_type'         , nan);  % OPTIONAL.	string	The type of source. Only to be used if the field SourceType in *_nirs.json is set to mixed.
@@ -1036,9 +1035,6 @@ if need_emg_json
 elseif need_exg_json
   ft_warning('EXG data is not yet part of the official BIDS specification');
   cfg.dataset_description.BIDSVersion = 'n/a';
-elseif need_nirs_json
-  ft_warning('NIRS data is not yet part of the official BIDS specification');
-  cfg.dataset_description.BIDSVersion = 'n/a';
 elseif need_audio_json
   ft_warning('audio data is not yet part of the official BIDS specification');
   cfg.dataset_description.BIDSVersion = 'n/a';
@@ -1165,7 +1161,7 @@ if need_meg_json
   meg_json.MiscChannelCount           = sum(strcmpi(hdr.chantype, 'misc') | strcmpi(hdr.chantype, 'unknown'));
   meg_json.TriggerChannelCount        = sum(contains(lower(hdr.chantype), 'trigger'));
   meg_json.RecordingDuration          = (hdr.nTrials*hdr.nSamples)/hdr.Fs;
-  
+
   if hdr.nTrials>1
     meg_json.EpochLength              = hdr.nSamples/hdr.Fs;
   end
@@ -1274,8 +1270,10 @@ if need_nirs_json
     nirs_json.EpochLength             = hdr.nSamples/hdr.Fs;
   end
   nirs_json.NIRSChannelCount          = sum(strcmpi(hdr.chantype, 'nirs'));
-  %   nirs_json.AUXChannelCount           = sum(strcmpi(hdr.chantype, 'aux')); % not yet supported
-  %   nirs_json.MiscChannelCount          = sum(strcmpi(hdr.chantype, 'misc') | strcmpi(hdr.chantype, 'unknown'));
+  nirs_json.ACCELChannelCount         = sum(strcmpi(hdr.chantype, 'accel'));
+  nirs_json.GYROChannelCount          = sum(strcmpi(hdr.chantype, 'gyro'));
+  nirs_json.MAGNChannelCount          = sum(strcmpi(hdr.chantype, 'magn'));
+  nirs_json.MISCChannelCount          = sum(strcmpi(hdr.chantype, 'misc') | strcmpi(hdr.chantype, 'unknown') | strcmpi(hdr.chantype, 'aux'));
   [opto_labels, opto_idx]             = unique(hdr.opto.optolabel); % select unique optodes
   nirs_json.NIRSSourceOptodeCount     = sum(strcmpi(hdr.opto.optotype(opto_idx), 'transmitter'));
   nirs_json.NIRSDetectorOptodeCount   = sum (strcmpi(hdr.opto.optotype(opto_idx), 'receiver'));
@@ -1400,7 +1398,11 @@ if need_channels_tsv
   channels_tsv = mergetable(channels_tsv, cfg.channels, 'name');
 
   % columns should appear in a specific order
-  required = {'name', 'type', 'units', 'low_cutoff', 'high_cutoff'};
+  if need_nirs_json
+    required = {'name', 'type', 'source', 'detector', 'wavelength_nominal', 'units'};
+  else
+    required = {'name', 'type', 'units', 'low_cutoff', 'high_cutoff'};
+  end
   optional = setdiff(channels_tsv.Properties.VariableNames, required, 'stable');
   channels_tsv = sort_columns(channels_tsv, [required, optional]);
 
@@ -1425,7 +1427,7 @@ if need_channels_tsv
   channels_tsv.type(strcmpi(channels_tsv.type, 'ori'))         = {'ORNT'};
   % trigger, analog trigger, and digital trigger all have to be renamed to TRIG
   channels_tsv.type(contains(channels_tsv.type, 'trigger', 'IgnoreCase', true)) = {'TRIG'};
-
+  channels_tsv.type(contains(channels_tsv.type, 'nirs'))       = {'unknown'}; % depends on the type of measurement and should be provided by the user
   % channel types in BIDS must be in upper case
   channels_tsv.type = upper(channels_tsv.type);
 
@@ -1446,7 +1448,7 @@ if need_channels_tsv
     type_json = motion_json;
   end
   fn = fieldnames(type_json);
-  fn = fn(endsWith(fn, 'ChannelCount'));
+  fn = fn(endsWith(fn, 'ChannelCount') & ~contains(fn,'ShortChannel'));
   jsoncount = 0;
   for i=1:numel(fn)
     if ~isempty(type_json.(fn{i}))
@@ -1876,10 +1878,10 @@ switch cfg.method
             if any(strcmp(cfg.datatype, {'motion', 'physio'}))
               % with headers, the JSON will be written further down
               writecell(hdr.label', cfg.outputfile, 'FileType', 'text', 'Delimiter', '\t');
-              writematrix(dat', cfg.outputfile, 'FileType', 'text', 'Delimiter', '\t', 'WriteMode','append'); 
+              writematrix(dat', cfg.outputfile, 'FileType', 'text', 'Delimiter', '\t', 'WriteMode','append');
             else
               % without headers, the JSON will be written further down
-              writematrix(dat', cfg.outputfile, 'FileType', 'text', 'Delimiter', '\t'); 
+              writematrix(dat', cfg.outputfile, 'FileType', 'text', 'Delimiter', '\t');
             end
 
           case {'events'}
@@ -2282,9 +2284,7 @@ if isfield(hdr, 'opto')
       end
     end
   end
-  % add these columns to the table
-  tab = horzcat(tab, table(source, detector, wavelength));
-
+  
 elseif any(strcmpi(hdr.chantype, 'nirs'))
   % deduce the NIRS-specific information from the channel name
   % which typical is something like 'Rx*-Tx* [*wavelength*] or 'S*-D* [*wavelength*]
@@ -2315,9 +2315,35 @@ elseif any(strcmpi(hdr.chantype, 'nirs'))
       continue
     end
   end
-  % add these columns to the table
-  tab = horzcat(tab, table(source, detector, wavelength));
 end
+
+% distinguish between nominal and actual wavelength
+if sum(~isnan(unique(wavelength)))>2
+  ft_warning('Assuming that the given wavelengths are actual wavelengths.')
+  wavelength_actual = wavelength;
+  % try to find the nominal wavelengths:
+    split = nanmedian(wavelength);
+    WL1.values = wavelength(wavelength<split);
+    WL2.values = wavelength(wavelength>split);
+    WL1.nominal = round(median(WL1.values),-1);
+    WL2.nominal = round(median(WL2.values),-1);
+    ft_warning('assuming that the nominal wavelengths are %d and %d nm', WL1.nominal, WL2.nominal)
+    wavelength_nominal = nan(size(wavelength));
+    for i=1:length(wavelength)
+      if any(wavelength(i)==WL1.values)
+        wavelength_nominal(i) = WL1.nominal;
+      elseif any(wavelength(i)==WL2.values)
+        wavelength_nominal(i) = WL2.nominal;
+      end
+    end
+else
+  ft_warning('Assuming that the given wavelengths are nominal wavelengths.')
+  wavelength_nominal = wavelength;
+  wavelength_actual = nan(size(wavelength));
+end
+
+  % add these columns to the table
+  tab = horzcat(tab, table(source, detector, wavelength_nominal, wavelength_actual));
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2342,6 +2368,11 @@ if isempty(opto)
   tab = table();
 else
   name = opto.optolabel(:);
+  type = cell(size(name));
+  idx_source = find(contains(opto.optotype, {'transmitter', 'source'}));
+  idx_detector = find(contains(opto.optotype, {'receiver', 'detector'}));
+  type(idx_source) = {'source'};
+  type(idx_detector) = {'detector'};
   if all(opto.optopos(:,3)==0) % these are probably template positions
     ft_info('assuming the optode positions are template positions');
     x=nan(length(name),1);
@@ -2359,7 +2390,7 @@ else
     template_y=nan(length(name),1);
     template_z=nan(length(name),1);
   end
-  tab = table(name, x, y, z, template_x, template_y,template_z);
+  tab = table(name, type, x, y, z, template_x, template_y,template_z);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2471,7 +2502,7 @@ if isempty(s)
   return
 elseif isstruct(s)
   fn = fieldnames(s);
-  fn = fn(structfun(@isempty, s));
+  fn = fn(structfun(@isempty, s) | ~structfun(@any, s));
   s = removefields(s, fn);
 elseif istable(s)
   remove = false(1,size(s,2));
