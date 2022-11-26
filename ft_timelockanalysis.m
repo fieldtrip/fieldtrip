@@ -184,6 +184,15 @@ data   = ft_selectdata(tmpcfg, data);
 % do not use the default option returned by FT_SELECTDATA, but the original one for this function
 cfg.nanmean = orgcfg.nanmean;
 
+% do a sanity check
+if isempty(data.trial)
+  if ~isempty(cfg.trials)
+    ft_error('there are no trials selected');
+  else
+    ft_error('there are no trials in the input data');
+  end
+end
+
 if keeptrials
   % convert to a timelock structure with trials kept and NaNs for missing data points, when there's only a single trial in the input data
   % structure, this leads to an 'avg' field, rather than a 'trial' field, and also the trialinfo is removed, so keep separate before conversion
@@ -215,7 +224,7 @@ elseif ~keeptrials
   % estimate number of samples
   nsmp = round((endtime-begtime)*fsample) + 1; % numerical round-off issues should be dealt with by this round, as they will/should never cause an extra sample to appear
   % construct general time-axis
-  time = linspace(begtime,endtime,nsmp);
+  time = linspace(begtime, endtime, nsmp);
   
   nchan  = numel(data.label);
   ntrial = numel(data.trial);

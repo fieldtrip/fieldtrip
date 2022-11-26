@@ -42,19 +42,19 @@ needevt = (nargin==2);
 if needhdr
   % find the data file and coresponding json file, these are needed for the sampling rate
   [datafile, jsonfile] = bids_datafile(filename);
-  
+
   if isempty(jsonfile)
     ft_error('cannot find header information correspoding to ''%s''', filename);
   else
     ft_info('reading header information from ''%s''', jsonfile);
   end
-  
+
   json = ft_read_json(jsonfile);
-  
+
   % The FieldTrip header has
   %   Fs, nSamples, nSamplesPre, nTrials, nChans, label, chantype, chanunit
   % and an optional json, elec, grad and opto field
-  
+
   if isfield(json, 'SamplingFrequency')
     % this is for MEG, EEG and iEEG
     hdr.Fs = json.SamplingFrequency;
@@ -67,7 +67,7 @@ if needhdr
   else
     hdr.Fs = nan;
   end
-  
+
   if isfield(json, 'RecordingDuration')
     % this is for MEG, EEG and iEEG
     hdr.nSamples = round(json.RecordingDuration*hdr.Fs);
@@ -80,14 +80,14 @@ if needhdr
   else
     hdr.nSamples = nan;
   end
-  
+
   hdr.nSamplesPre  = 0;   % assume continuous
   hdr.nTrials      = 1;   % assume continuous
   hdr.nChans       = 0;   % number of channels
   hdr.label        = {};  % Nx1 cell-array with the label of each channel
   hdr.chantype     = {};  % Nx1 cell-array with the channel type, see FT_CHANTYPE
   hdr.chanunit     = {};  % Nx1 cell-array with the physical units, see FT_CHANUNIT
-  
+
   fn = fieldnames(json);
   sel = find(endsWith(fn, 'ChannelCount'));
   for i=1:numel(sel)
@@ -98,10 +98,10 @@ if needhdr
     hdr.chantype{i} = 'unknown';
     hdr.chanunit{i} = 'unknown';
   end
-  
+
   % keep the jsoninal header details
   hdr.json = json;
-  
+
   % return the header
   varargout = {hdr};
 end % if needhdr
@@ -143,17 +143,17 @@ if needevt
   if any(strcmp(opts.VariableNames, 'stim_value'))
     opts = setvartype(opts, 'event_value', 'char');
   end
-  
+
   % this keeps the type and value column as string, and castst others into doubles right away
   tsv = readtable(filename, opts);
-  
+
   % The FieldTrip event structure should have
   %    type, value, sample, offset, duration
   % and an optional timestamp field.
-  
+
   % start with an empty structure
   event = struct();
-  
+
   % the event type should be a string
   if iscolumn(tsv, 'type')
     for k = 1:size(tsv,1)
@@ -175,7 +175,7 @@ if needevt
     % assign the type for all events as empty
     event(1).type = [];
   end
-  
+
   % the event value can be a string or numeric
   % when possible, the conversion of string to numeric will be done in FT_READ_EVENT
   if iscolumn(tsv, 'value')
@@ -194,7 +194,7 @@ if needevt
     % assign the value for all events as empty
     event(1).value = [];
   end
-  
+
   if iscolumn(tsv, 'sample')
     % use the specified sample number, these are assumed to be one-offset
     for k = 1:size(tsv,1)
@@ -209,7 +209,7 @@ if needevt
     % we don't know the sampling rate, so cannot determine the sample number
     event(1).sample = [];
   end
-  
+
   if iscolumn(tsv, 'offset')
     for k = 1:size(tsv,1)
       event(k).offset = tsv.offset(k);
@@ -218,7 +218,7 @@ if needevt
     % assign the offset for all events as empty
     event(1).offset = [];
   end
-  
+
   if iscolumn(tsv, 'duration')
     for k = 1:size(tsv,1)
       % the onset and duration in the BIDS events.tsv file are expressed in samples, not in seconds
@@ -228,7 +228,7 @@ if needevt
     % assign the duration for all events as empty
     event(1).duration = [];
   end
-  
+
   if iscolumn(tsv, 'timestamp')
     % use the specified timestamp, which is un unknown units
     for k = 1:size(tsv,1)
@@ -240,7 +240,21 @@ if needevt
       event(k).timestamp = tsv.onset(k);
     end
   end
-  
+
+  if iscolumn(tsv, 'HED')
+    % each column also has a HED tag
+    % duplicate all events with HED as type and the tag as value
+    hedevent = event;
+    for k = 1:size(tsv,1)
+      hedevent(k).type = 'HED';
+      hedevent(k).value = tsv.HED(k);
+    end
+    event = cat(1, event(:), hedevent(:));
+    % sort them so that the odd ones are the originals, the even ones the HED tags
+    index = [1:2:length(event) 2:2:length(event)];
+    event = event(index);
+  end
+
   % return the events
   varargout = {event};
 end % if needevt
