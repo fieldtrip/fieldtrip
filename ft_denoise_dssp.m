@@ -10,6 +10,7 @@ function [dataout] = ft_denoise_dssp(cfg, datain)
 % where cfg is a configuration structure that contains
 %   cfg.channel          = Nx1 cell-array with selection of channels (default = 'all'), see FT_CHANNELSELECTION for details
 %   cfg.trials           = 'all' or a selection given as a 1xN vector (default = 'all')
+%   cfg.pertrial         = 'no', or 'yes', compute the temporal projection per trial (default = 'no')
 %   cfg.sourcemodel      = structure, source model with precomputed leadfields, see FT_PREPARE_LEADFIELD
 %   cfg.dssp             = structure with parameters that determine the behavior of the algorithm
 %   cfg.dssp.n_space     = 'all', or scalar. Number of dimensions for the
@@ -78,6 +79,7 @@ cfg = ft_checkconfig(cfg, 'renamed',    {'grid',    'sourcemodel'});
 % set the defaults
 cfg.trials            = ft_getopt(cfg, 'trials',  'all', 1);
 cfg.channel           = ft_getopt(cfg, 'channel', 'all');
+cfg.pertrial          = ft_getopt(cfg, 'pertrial', 'no');
 cfg.sourcemodel       = ft_getopt(cfg, 'sourcemodel');
 cfg.dssp              = ft_getopt(cfg, 'dssp');         % sub-structure to hold the parameters
 cfg.dssp.n_space      = ft_getopt(cfg.dssp, 'n_space', 'all'); % number of spatial components to retain from the Gram matrix
@@ -86,13 +88,10 @@ cfg.dssp.n_out        = ft_getopt(cfg.dssp, 'n_out',   'all'); % dimensionality 
 cfg.dssp.n_intersect  = ft_getopt(cfg.dssp, 'n_intersect', 0.9); % dimensionality of the intersection
 cfg.output            = ft_getopt(cfg, 'output', 'original');
 
-pertrial = isequal(cfg.trials, 'pertrial');
+pertrial = istrue(cfg.pertrial);
 
 % select channels and trials of interest, by default this will select all channels and trials
 tmpcfg = keepfields(cfg, {'trials', 'channel', 'tolerance', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
-if pertrial
-  tmpcfg.trials = 'all';
-end
 datain = ft_selectdata(tmpcfg, datain);
 % restore the provenance information
 [cfg, datain] = rollback_provenance(cfg, datain);
