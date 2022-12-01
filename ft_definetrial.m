@@ -7,7 +7,8 @@ function [cfg] = ft_definetrial(cfg)
 % sample at which the trigger is detected) is for that trial or segment.
 %
 % Use as
-%   [cfg] = ft_definetrial(cfg)
+%   [cfg]  = ft_definetrial(cfg)
+%   [data] = ft_definetrial(cfg, data)
 % where the configuration structure should contain
 %   cfg.trialdef       = structure with the details of trial definition, see below
 %   cfg.trialfun       = string with the function name, see below (default = 'ft_trialfun_general')
@@ -82,7 +83,7 @@ function [cfg] = ft_definetrial(cfg)
 %
 % See also FT_PREPROCESSING, FT_READ_HEADER, FT_READ_EVENT, FT_TRIALFUN_GENERAL,
 % FT_TRIALFUN_GUI, FT_TRIALFUN_SHOW, FT_TRIALFUN_BIDS, FT_TRIALFUN_EXAMPLE1,
-% FT_TRIALFUN_EXAMPLE2
+% FT_TRIALFUN_EXAMPLE2, FT_REDEFINETRIAL
 
 % Undocumented local options:
 % cfg.datafile
@@ -125,6 +126,12 @@ ft_preamble provenance
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
   return
+end
+
+if nargin > 1
+    cfg = ft_definetrial(cfg);
+    data = ft_redefinetrial(cfg,data);
+    return
 end
 
 % check if the input cfg is valid for this function
