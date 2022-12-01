@@ -1,4 +1,4 @@
-function [cfg] = ft_definetrial(cfg)
+function [cfg] = ft_definetrial(cfg, data)
 
 % FT_DEFINETRIAL defines the trials or segments of data that will be used for further
 % processing and analysis, i.e. the pieces of data that will be read in by
