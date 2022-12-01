@@ -194,8 +194,6 @@ else
     elseif ischar(event(i).value) && numel(event(i).value)>1 && (event(i).value(1)=='S'|| event(i).value(1)=='R')
       % on brainvision these are called 'S  1' for stimuli or 'R  1' for responses
       trlval = str2double(event(i).value(2:end));
-    elseif ischar(event(i).value) && numel(event(i).value)>1 && ~isempty(cfg.trialdef.eventvalue)
-        trlval = strmatch(event(i).value, cfg.trialdef.eventvalue);
     else
       trlval = nan;
     end
