@@ -1119,24 +1119,51 @@ switch eventformat
     else
       asc = read_eyelink_asc(filename);
     end
+    
+    % the input events are handled differently (because they already
+    % contain a timestamp and value, as per read_eyelink_asc
     if ~isempty(asc.input)
-      timestamp = [asc.input(:).timestamp];
-      value     = [asc.input(:).value];
-    else
-      timestamp = [];
-      value = [];
-    end
-    % note that in this dataformat the first input trigger can be before
-    % the start of the data acquisition
-    for i=1:length(timestamp)
-      event(end+1).type       = 'INPUT';
-      event(end  ).sample     = (timestamp(i)-hdr.FirstTimeStamp)/hdr.TimeStampPerSample + 1;
-      event(end  ).timestamp  = timestamp(i);
-      event(end  ).value      = value(i);
-      event(end  ).duration   = 1;
-      event(end  ).offset     = 0;
+      timestamp = asc.input.timestamp;
+      value     = asc.input.value;
+      sample    = (timestamp-hdr.FirstTimeStamp)/hdr.TimeStampPerSample + 1;
+      
+      % note that in this dataformat the first input trigger can be before
+      % the start of the data acquisition
+      for i=1:length(timestamp)
+        event(end+1).type       = 'INPUT';
+        event(end  ).sample     = sample(i);
+        event(end  ).timestamp  = timestamp(i);
+        event(end  ).value      = value(i);
+        event(end  ).duration   = 1;
+        event(end  ).offset     = 0;
+      end
     end
     
+    % these fields are dealt with a bit differently, the 'e' -events
+    % contain more information than the 's' -events
+    fnames = {'eblink', 'efix', 'esacc'};
+    tnames = {'BLINK',  'FIX',  'SACC'};
+    for k=1:length(fnames)
+      if isfield(asc, fnames{k}) && ~isempty(asc.(fnames{k}))
+        bfs = asc.(fnames{k});
+
+        timestamp = bfs.stime;
+        sample    = (timestamp-hdr.FirstTimeStamp)/hdr.TimeStampPerSample + 1;
+        value     = bfs.eye;
+        duration  = bfs.dur;
+
+        % note that in this dataformat the first input trigger can be before
+        % the start of the data acquisition
+        for i=1:length(timestamp)
+          event(end+1).type       = tnames{k};
+          event(end  ).sample     = sample(i);
+          event(end  ).timestamp  = timestamp(i);
+          event(end  ).value      = value(i);
+          event(end  ).duration   = duration(i);
+          event(end  ).offset     = 0;
+        end
+      end
+    end
   case 'fcdc_global'
     event = event_queue;
     
@@ -1711,10 +1738,10 @@ switch eventformat
       events_id = split(split(hdr.orig.epochs.event_id, ';'), ':');
       if all(cellfun(@ischar, events_id(:, 1)))
         events_label = events_id(:, 1);
-        events_code = str2num(cell2mat(events_id(:, 2)));
+        events_code = str2num(char(events_id(:, 2)));
       elseif all(cellfun(@isnumeric, events_id(:, 1)))
         events_label = cell2mat(events_id(:, 1));
-        events_code = str2num(cell2mat(events_id(:, 2)));
+        events_code = str2num(char(events_id(:, 2)));
       end
       for i=1:hdr.nTrials
         event(end+1).type      = 'trial';
@@ -1724,7 +1751,7 @@ switch eventformat
         event(end  ).duration  = hdr.nSamples;
       end
     end
-    
+
     % check whether the *.fif file is accompanied by an *.eve file
     [p, f, x] = fileparts(filename);
     evefile = fullfile(p, [f '.eve']);
@@ -2213,6 +2240,8 @@ switch eventformat
     event = read_ricoh_event(filename, 'detectflank', detectflank, 'chanindx', chanindx, 'threshold', threshold);
     
   case 'tmsi_poly5'
+    threshold = ft_getopt(varargin, 'threshold'); % needed to read in poly5 files acquired at TUE, don't know whether this is a generic feature
+    
     if isempty(hdr)
       hdr = ft_read_header(filename);
     end
@@ -2225,7 +2254,7 @@ switch eventformat
       detectflank = 'downdiff';
     end
     if ~isempty(chanindx)
-      event = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', chanindx, 'detectflank', detectflank, 'denoise', denoise, 'trigshift', trigshift, 'trigpadding', trigpadding);
+      event = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', chanindx, 'detectflank', detectflank, 'denoise', denoise, 'trigshift', trigshift, 'trigpadding', trigpadding, 'threshold', threshold);
     end
     
   case {'yokogawa_ave', 'yokogawa_con', 'yokogawa_raw'}
@@ -2408,9 +2437,14 @@ if ~isempty(event)
     end
     % check whether string event values can be converted to numeric values
     if ischar(event(i).value)
-      value = str2double(event(i).value);
-      if ~isnan(value)
-        event(i).value = value;
+      if strcmpi(event(i).value, 'n/a')
+        % this applies to nan values in a BIDS events.tsv file
+        event(i).value = NaN;
+      else
+        value = str2double(event(i).value);
+        if ~isnan(value)
+          event(i).value = value;
+        end
       end
     end
     % samples can be either empty or should be numeric values

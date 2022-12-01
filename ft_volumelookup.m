@@ -98,7 +98,6 @@ ft_preamble init
 ft_preamble debug
 ft_preamble loadvar volume
 ft_preamble provenance volume
-ft_preamble trackconfig
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -187,9 +186,8 @@ if roi2mask
       % assume it to represent a filename
       atlas = ft_read_atlas(cfg.atlas);
     else
-      % assume cfg.atlas to be a struct, but it may have been converted
-      % into a config object
-      atlas = struct(cfg.atlas);
+      % assume cfg.atlas to be a struct
+      atlas = cfg.atlas;
     end
 
     % determine which field(s) to use to look up the labels,
@@ -313,9 +311,8 @@ elseif mask2label || roi2label
     % assume it to represent a filename
     atlas = ft_read_atlas(cfg.atlas);
   else
-    % assume cfg.atlas to be a struct, but it may have been converted
-    % into a config object
-    atlas = struct(cfg.atlas);
+    % assume cfg.atlas to be a struct
+    atlas = cfg.atlas;
   end
 
   % determine which field(s) to use to look up the labels,
@@ -417,7 +414,6 @@ end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-ft_postamble trackconfig
 ft_postamble provenance
 
 

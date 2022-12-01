@@ -172,7 +172,7 @@ ft_nargout  = nargout;
 ft_defaults
 ft_preamble init
 ft_preamble provenance
-ft_preamble trackconfig
+
 ft_preamble debug
 ft_preamble loadvar functional
 

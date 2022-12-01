@@ -17,6 +17,7 @@ function [layout, cfg] = ft_prepare_layout(cfg, data)
 %   layout.height  = Nx1 vector with the height of each box for multiplotting
 %   layout.mask    = optional cell-array with line segments that determine the area for topographic interpolation
 %   layout.outline = optional cell-array with line segments that represent the head, nose, ears, sulci or other anatomical features
+%   layout.color   = optional Nx3 matrix with rgb values for the channels' color, for fine-grained color behavior
 %
 % There are several ways in which a 2-D layout can be made:
 % 1) it can be read directly from a layout file
@@ -71,6 +72,8 @@ function [layout, cfg] = ft_prepare_layout(cfg, data)
 %                      specificies channels to use for determining channel box size (default = 'all', recommended for MEG/EEG, a selection is recommended for iEEG)
 %   cfg.skipscale   = 'yes' or 'no', whether the scale should be included in the layout or not (default = 'no')
 %   cfg.skipcomnt   = 'yes' or 'no', whether the comment should be included in the layout or not (default = 'no')
+%   cfg.color       = 'spatial', Nx3 matrix, or [] (default). If not empty, an Nx3 color matrix will be added to the layout, based on the
+%                     positions of the electrodes, or based on the specified matrix
 %
 % If you use cfg.headshape or cfg.mri to create a headshape outline, the input
 % geometry should be expressed in the same units and coordinate system as the input
@@ -91,6 +94,12 @@ function [layout, cfg] = ft_prepare_layout(cfg, data)
 %   cfg.layout = 'circular'   will distribute the channels on a circle
 %   cfg.width  = scalar (default is automatic)
 %   cfg.height = scalar (default is automatic)
+%   cfg.layouttopo = filename or struct (default is empty)
+%
+% For a butterfly layout, the option cfg.layouttopo will add an extra field to the layout, containing the spatial layout
+% of the sensor array. This can be used to plot the spatial distribution of the color-coded channels, as in ft_multiplotER
+% with cfg.viewmode = 'butterfly'. If it's defined empty, but if the input data argument contains a sensor description, then it
+% will be created from this
 %
 % For an sEEG shaft the option cfg.layout='vertical' or 'horizontal' is useful to
 % represent the channels in a linear sequence . In this case you can also specify the
@@ -199,6 +208,8 @@ cfg.width        = ft_getopt(cfg, 'width',      []);
 cfg.height       = ft_getopt(cfg, 'height',     []);
 cfg.commentpos   = ft_getopt(cfg, 'commentpos', 'layout');
 cfg.scalepos     = ft_getopt(cfg, 'scalepos',   'layout');
+cfg.color        = ft_getopt(cfg, 'color');
+cfg.layouttopo   = ft_getopt(cfg, 'layouttopo', []);
 
 if isempty(cfg.skipscale)
   if ischar(cfg.layout) && any(strcmp(cfg.layout, {'ordered', 'vertical', 'horizontal', 'butterfly', 'circular'}))
@@ -282,11 +293,6 @@ end
 skipscale = istrue(cfg.skipscale); % in general a scale is desired
 skipcomnt = istrue(cfg.skipcomnt); % in general a comment desired
 
-if isa(cfg.layout, 'config')
-  % convert the nested config-object back into a normal structure
-  cfg.layout = struct(cfg.layout);
-end
-
 % ensure that there is a label field in the data, which is needed for
 % ordered/vertical//horizontal/butterfly modes
 if hasdata && ~isfield(data, 'label') && isfield(data, 'labelcmb')
@@ -349,7 +355,7 @@ elseif isequal(cfg.layout, 'circular')
   
 elseif isequal(cfg.layout, 'butterfly')
   if hasdata && ~isempty(data)
-    % look at the data to determine the overlapping channels
+    % look at the data to determine the channels to be plotted
     cfg.channel  = ft_channelselection(cfg.channel, data.label);
     chanindx     = match_str(data.label, cfg.channel);
     nchan        = length(data.label(chanindx));
@@ -365,6 +371,33 @@ elseif isequal(cfg.layout, 'butterfly')
   layout.mask    = {};
   layout.outline = {};
   
+  layout.label{end+1}  = 'SCALE';
+  layout.pos(end+1, :) = layout.pos(1,:);
+  layout.width(end+1)  = layout.width(1);
+  layout.height(end+1) = layout.height(1);
+  
+  tmpcfg = removefields(cfg, {'layout' 'layouttopo'});
+  tmpcfg.skipscale = 'yes';
+  tmpcfg.skipcmnt  = 'yes';
+  if ~isempty(cfg.layouttopo)
+    tmpcfg.layout = cfg.layouttopo;
+  end
+  try
+    % failure may happen if the tmpcfg.layout = [], and if the data does
+    % not contain a sensor description.
+    tmplayout = ft_prepare_layout(tmpcfg, data);
+    layout.layout = tmplayout;
+  end
+  
+  if isequal(cfg.color, 'spatial') && exist('tmplayout', 'var')
+    % this requires the 'normal' layout, so that the
+    % sensor positions can be used for the color coding
+    [chanindx1, chanindx2] = match_str(layout.label, tmplayout.label);
+    layout.color = zeros(numel(layout.label), 3);
+    layout.color(chanindx1, :) = tmplayout.color(chanindx2, :);
+  end
+    
+
 elseif isequal(cfg.layout, 'vertical') || isequal(cfg.layout, 'horizontal')
   assert(iscell(cfg.channel), 'cfg.channel should be a cell-array of strings');
   nchan        = length(cfg.channel);
@@ -972,10 +1005,14 @@ if (~isfield(layout, 'outline') || ~isfield(layout, 'mask')) && ~strcmpi(cfg.sty
       % the following centers all electrodes around zero
       xrange = range(x);
       yrange = range(y);
+      shiftx = min(x);
+      shifty = min(y);
     else
       % the following prevent topography distortion in case electrodes are not evenly distributed over the whole head
       xrange = 2*( max(max(x),abs(min(x)) ));
       yrange = 2*( max(max(y),abs(min(y)) ));
+      shiftx = ( max(max(x),abs(min(x)) )).*sign(min(x));
+      shifty = ( max(max(y),abs(min(y)) )).*sign(min(y));
     end
     if xrange==0
       xrange = 1;
@@ -987,8 +1024,8 @@ if (~isfield(layout, 'outline') || ~isfield(layout, 'mask')) && ~strcmpi(cfg.sty
     layout.width  = layout.width./xrange;
     layout.height = layout.height./yrange;
     % Then shift and scale the electrode positions
-    layout.pos(:,1) = 0.8*((layout.pos(:,1)-min(x))/xrange-0.5);
-    layout.pos(:,2) = 0.8*((layout.pos(:,2)-min(y))/yrange-0.5);
+    layout.pos(:,1) = 0.8*((layout.pos(:,1)-shiftx)/xrange-0.5);
+    layout.pos(:,2) = 0.8*((layout.pos(:,2)-shifty)/yrange-0.5);
   end
   
   if ~isfield(layout, 'outline') && ischar(cfg.outline)
@@ -1183,6 +1220,24 @@ elseif ~isempty(cfg.output) && strcmpi(cfg.style, '3d')
   % the layout file format does not support 3D positions, furthermore for
   % a 3D layout the width and height are currently set to NaN
   ft_error('writing a 3D layout to an output file is not supported');
+end
+
+if isequal(cfg.color, 'spatial') && ~isfield(layout, 'color')
+  % create a channel specific rgb-value based on their X/Y positions and a
+  % computed Z position, assuming the channels on the positive half sphere
+  sel = match_str(layout.label, setdiff(layout.label,{'COMNT';'SCALE'}));
+  xy  = sqrt(sum(layout.pos(sel,:).^2,2));
+  z   = sqrt(max(xy).^2 - xy.^2);
+  
+  xyz = [layout.pos(sel,:) z];
+  xyz = xyz - min(xyz, [], 1);
+  rgb = xyz./(max(xyz, [], 1)+10*eps);
+  
+  layout.color = ones(numel(layout.label), 3);
+  layout.color(sel, :) = rgb;
+elseif size(cfg.color,1) == numel(layout.label)
+  % copy the specified colors over
+  layout.color = cfg.color;
 end
 
 % do the general cleanup and bookkeeping at the end of the function

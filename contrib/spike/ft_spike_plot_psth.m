@@ -52,7 +52,7 @@ ft_nargout  = nargout;
 ft_defaults
 ft_preamble init
 ft_preamble provenance psth
-ft_preamble trackconfig
+
 
 % check the psth datatype
 psth = ft_checkdata(psth, 'datatype', 'timelock', 'feedback', 'yes');
@@ -171,7 +171,7 @@ set(zoom,'ActionPostCallback',{@mypostcallback,cfg.ylim,cfg.latency});
 set(pan,'ActionPostCallback',{@mypostcallback,cfg.ylim,cfg.latency});
 
 % do the general cleanup and bookkeeping at the end of the function
-ft_postamble trackconfig
+
 ft_postamble previous psth
 ft_postamble provenance
 

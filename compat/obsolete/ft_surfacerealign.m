@@ -59,7 +59,7 @@ ft_preamble init
 ft_preamble debug
 ft_preamble loadvar    surface_original
 ft_preamble provenance surface_original
-ft_preamble trackconfig
+
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort

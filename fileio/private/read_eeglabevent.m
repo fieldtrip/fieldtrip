@@ -17,6 +17,7 @@
 %123456789012345678901234567890123456789012345678901234567890123456789012
 
 % Copyright (C) 2008 Arnaud Delorme, SCCN, INC, UCSD, arno@salk.edu
+% Copyright (C) 2022 Jan-Mathijs Schoffelen, DCCN
 %
 % This program is free software; you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by
@@ -35,7 +36,7 @@
 function event = read_eeglabevent(filename, varargin)
 
 if nargin < 1
-  help read_eeglabheader
+  help read_eeglabevent
   return
 end
 
@@ -74,6 +75,10 @@ for index = 1:length(oldevent)
   
   % this is the sample number of the concatenated data to which the event corresponds
   sample = oldevent(index).latency;
+  if round(sample)~=sample
+    ft_warning('rounding sample index to nearest integer');
+    sample = round(sample);
+  end
   
   % a non-zero offset only applies to trial-events, i.e. in case the data is
   % segmented and each data segment needs to be represented as event. In

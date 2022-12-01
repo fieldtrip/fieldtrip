@@ -84,7 +84,7 @@ ft_nargout  = nargout;
 ft_defaults
 ft_preamble init
 ft_preamble debug
-ft_preamble trackconfig
+
 ft_preamble loadvar varargin
 ft_preamble provenance varargin
 
@@ -455,7 +455,7 @@ end
 varargout = varargin;
 
 ft_postamble debug
-ft_postamble trackconfig
+
 ft_postamble previous varargin
 ft_postamble provenance varargout
 ft_postamble history varargout
@@ -938,10 +938,10 @@ for k = 1:numel(alltimecell)
   indx(ix,k) = iy;
 end
 
-if iscell(varargin{1}.time) && ischar(cfg.latency)&& ~strcmp(cfg.latency, 'minperiod')
+if iscell(varargin{1}.time) && ~isequal(cfg.latency, 'minperiod')
   % if the input data arguments are of type 'raw', temporarily set the
   % selmode to union, otherwise the potentially different length trials
-  % will be truncated to the shorted epoch, prior to latency selection.
+  % will be truncated to the shortest epoch, prior to latency selection.
   selmode = 'union';
 elseif ischar(cfg.latency) && strcmp(cfg.latency, 'minperiod')
   % enforce intersect

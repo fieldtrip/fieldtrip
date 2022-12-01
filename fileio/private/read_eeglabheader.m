@@ -72,6 +72,20 @@ for i = 1:length( EEG.chanlocs )
   end
 end
 
+if ind>1 && isfield(EEG, 'chaninfo') && isfield(EEG.chaninfo, 'nosedir') && ~isempty(EEG.chaninfo.nosedir)
+  switch EEG.chaninfo.nosedir
+    case '+X'
+      header.elec.coordsys = 'ctf';
+    case '-X'
+      header.elec.coordsys = 'pls';
+    case '+Y'
+      header.elec.coordsys = 'ras';
+    case '-Y'
+      header.elec.coordsys = 'lpi';
+    otherwise
+  end
+end
+
 % remove data
 % -----------
 %if isfield(EEG, 'datfile')

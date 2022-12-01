@@ -47,7 +47,8 @@ function [output] = ft_warp_apply(M, input, method, tol)
 % 'scale', 'rigidbody', 'globalrescale', 'traditional', 'affine', 'perspective',
 % 'quaternion'.
 %
-% See also FT_AFFINECOORDINATES, FT_HEADCOORDINATES, FT_WARP_OPTIM, FT_WARP_ERROR
+% See also FT_AFFINECOORDINATES, FT_HEADCOORDINATES, FT_WARP_OPTIM, FT_WARP_ERROR, 
+% MAKETFORM, AFFINE2D, AFFINE3D
 
 % Copyright (C) 2000-2022, Robert Oostenveld
 %

@@ -9,16 +9,16 @@ function [varargout] = ft_plot_vector(varargin)
 % where X and Y are similar as the input to the MATLAB plot function.
 %
 % Optional arguments should come in key-value pairs and can include
-%   'axis'            = draw the local axis,  can be 'yes', 'no', 'xy', 'x' or 'y'
-%   'highlight'       = a logical vector of size Y, where 1 means that the corresponding values in Y are highlighted (according to the highlightstyle)
-%   'highlightstyle'  = can be 'box', 'thickness', 'saturation', 'difference' (default='box')
 %   'color'           = see MATLAB standard line properties and see below
-%   'facecolor'       = color for the highlighted box/difference (default = [0.6 0.6 0.6])
-%   'facealpha'       = transparency for the highlighted box, between 0 and 1 (default = 1)
+%   'style'           = see MATLAB standard line properties
 %   'linewidth'       = see MATLAB standard line properties
 %   'markersize'      = see MATLAB standard line properties
 %   'markerfacecolor' = see MATLAB standard line properties
-%   'style'           = see MATLAB standard line properties
+%   'axis'            = draw the local axis,  can be 'yes', 'no', 'xy', 'x' or 'y'
+%   'highlight'       = a logical vector of size Y, where 1 means that the corresponding values in Y are highlighted (according to the highlightstyle)
+%   'highlightstyle'  = can be 'box', 'thickness', 'saturation', 'difference' (default='box')
+%   'facecolor'       = color for the highlighted box/difference (default = [0.6 0.6 0.6])
+%   'facealpha'       = transparency for the highlighted box/difference, between 0 and 1 (default = 1)
 %   'tag'             = string, the name assigned to the object. All tags with the same name can be deleted in a figure, without deleting other parts of the figure.
 %   'box'             = draw a box around the local axes, can be 'yes' or 'no'
 %
@@ -72,7 +72,7 @@ function [varargout] = ft_plot_vector(varargin)
 %
 % See also FT_PLOT_MATRIX, PLOT
 
-% Copyrights (C) 2009-2013, Robert Oostenveld
+% Copyrights (C) 2009-2022, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -383,7 +383,7 @@ switch highlightstyle
       % plot all lines with the same color
       h = plot(hdat, vdat, style, 'LineWidth', linewidth, 'Color', color, 'markersize', markersize, 'markerfacecolor', markerfacecolor);
     elseif isnumeric(color) && isequal(size(color), [1 3])
-      % plot all lines with the same RGB color
+      % plot all lines with the same RGB color -> this is as of 2022 the most likely use case
       h = plot(hdat, vdat, style, 'LineWidth', linewidth, 'Color', color, 'markersize', markersize, 'markerfacecolor', markerfacecolor);
     elseif ischar(color) && numel(color)==nline
       % plot each line with its own color
@@ -391,9 +391,19 @@ switch highlightstyle
         h(i) = plot(hdat, vdat(i,:), style, 'LineWidth', linewidth, 'Color', color(i), 'markersize', markersize, 'markerfacecolor', markerfacecolor);
       end
     elseif isnumeric(color) && size(color,1)==nline
-      % the color is specified as Nx3 matrix with RGB values for each line
+      % the color is specified as Nx3 matrix with RGB values for each line  -> this is as of 2022 the second likely use case
       for i=1:size(vdat,1)
-        h(i) = plot(hdat, vdat(i,:), style, 'LineWidth', linewidth, 'Color', color(i,:), 'markersize', markersize, 'markerfacecolor', markerfacecolor);
+        if numel(style)>1
+          style_i = style{i}; 
+        else
+          style_i = style; 
+        end
+        if numel(linewidth)>1
+          linewidth_i = linewidth(i);
+        else
+          linewidth_i = linewidth;
+        end
+        h(i) = plot(hdat, vdat(i,:), style_i, 'LineWidth', linewidth_i, 'Color', color(i,:), 'markersize', markersize, 'markerfacecolor', markerfacecolor);
       end
     elseif isnumeric(color) && size(color,1)==npos
       % the color is specified as Nx3 matrix with RGB values and varies over the length of the line

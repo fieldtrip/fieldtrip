@@ -27,13 +27,13 @@ function [headmodel, cfg] = ft_prepare_headmodel(cfg, data)
 % a segmented anatomical MRI that was obtained from FT_VOLUMESEGMENT.
 %
 % The cfg argument is a structure that can contain:
-%   cfg.method         string that specifies the forward solution, see below
-%   cfg.conductivity   a number or a vector containing the conductivities of the compartments
-%   cfg.tissue         a string or integer, to be used in combination with a 'seg' for the
-%                      second intput. If 'brain', 'skull', and 'scalp' are fields
-%                      present in 'seg', then cfg.tissue need not be specified, as
-%                      these are defaults, depending on cfg.method. Otherwise,
-%                      cfg.tissue should refer to which field(s) of seg should be used.
+%   cfg.method         = string that specifies the forward solution, see below
+%   cfg.conductivity   = a number or a vector containing the conductivities of the compartments
+%   cfg.tissue         = a string or integer, to be used in combination with a 'seg' for the
+%                          second intput. If 'brain', 'skull', and 'scalp' are fields
+%                          present in 'seg', then cfg.tissue need not be specified, as
+%                          these are defaults, depending on cfg.method. Otherwise,
+%                          cfg.tissue should refer to which field(s) of seg should be used.
 %
 % For EEG the following methods are available:
 %   singlesphere       analytical single sphere model
@@ -155,7 +155,7 @@ ft_nargout  = nargout;
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble trackconfig
+
 ft_preamble provenance data
 
 % the ft_abort variable is set to true or false in ft_preamble_init
@@ -506,7 +506,6 @@ if ~ft_headmodeltype(headmodel, 'infinite')
 end
 
 % do the general cleanup and bookkeeping at the end of the function
-ft_postamble trackconfig
 ft_postamble provenance
 ft_postamble previous data
 ft_postamble history headmodel

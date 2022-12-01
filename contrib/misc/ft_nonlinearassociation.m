@@ -40,7 +40,7 @@ function [association] = ft_nonlinearassociation(cfg, data)
 % (for which small epoch lengths are necessary).
 % 
 % Use as
-%   [association] = nonlinearassociation(cfg, data)
+%   [association] = ft_nonlinearassociation(cfg, data)
 %
 % The input data should be organised in a structure as obtained from
 % the PREPROCESSING function.

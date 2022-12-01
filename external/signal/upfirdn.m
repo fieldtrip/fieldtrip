@@ -39,5 +39,8 @@ if(floor(p) ~= p || floor(q) ~= q || p < 1 || q < 1)
 end
 	
 yout = upsample(xin,p);
-yout = convn(yout, h); % original was filter(h, 1, yout);
+yout = convn(yout, h).*p; % original was filter(h, 1, yout);
+% the scaling with p is needed as per github issue 2085, causing the output
+% to be scaled by the value of p, with this change, the compat/matlab
+% versions will give an output that is about equal (scaled with about 0.9993)
 yout = downsample(yout,q);

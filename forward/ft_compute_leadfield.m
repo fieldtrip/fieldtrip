@@ -359,6 +359,14 @@ elseif ismeg
         lf = sens.tra * lf;
       end
  
+    case 'interpolate'
+      % note that the electrode information is contained in the headmodel
+      lf = leadfield_interpolate(dippos, headmodel);
+      % the leadfield is already correctly referenced, i.e. it represents the
+      % channel values rather than the electrode values. Prevent that the
+      % referencing is done once more.
+      sens.tra = speye(length(headmodel.filename));
+
     otherwise
       ft_error('unsupported volume conductor model for MEG');
   end % switch type for MEG
@@ -648,6 +656,6 @@ if ~isempty(chanunit)
 end
 
 if ~isempty(dipoleunit)
-  scale = ft_scalingfactor('A*m', dipoleunit); % compue the scaling factor from A*m to the desired dipoleunit
+  scale = ft_scalingfactor('A*m', dipoleunit); % compute the scaling factor from A*m to the desired dipoleunit
   lf    = lf/scale;                         % the leadfield is expressed in chanunit per dipoleunit, i.e. chanunit/dipoleunit
 end

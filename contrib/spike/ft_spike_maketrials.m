@@ -79,7 +79,6 @@ ft_nargout  = nargout;
 ft_defaults
 ft_preamble init            % this will show the function help if nargin==0 and return an error
 ft_preamble provenance      % this records the time and memory usage at the beginning of the function
-ft_preamble trackconfig     % this converts the cfg structure in a config object, which tracks the cfg options that are being used
 ft_preamble debug           % this allows for displaying or saving the function name and input arguments upon an error
 
 % check if input data is indeed spikeraw format
@@ -298,7 +297,6 @@ end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug            % this clears the onCleanup function used for debugging in case of an error
-ft_postamble trackconfig      % this converts the config object back into a struct and can report on the unused fields
 ft_postamble provenance       % this records the time and memory at the end of the function, prints them on screen and adds this information together with the function name and matlab version etc. to the output cfg
 ft_postamble previous spike
 ft_postamble history spike

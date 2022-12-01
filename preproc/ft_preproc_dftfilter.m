@@ -70,7 +70,7 @@ function [filt] = ft_preproc_dftfilter(dat, Fs, Fl, varargin)
 %
 % When using spectral interpolation, additional arguments are:
 %
-%   dftbandwidth      bandwidth of line noise frequencies, applies to spectrum interpolation, in Hz
+%   dftbandwidth      half bandwidth of line noise frequency bands, applies to spectrum interpolation, in Hz
 %   dftneighbourwidth width of frequencies neighbouring line noise frequencies, applies to spectrum interpolation (dftreplace = 'neighbour'), in Hz
 % 
 % If the data contains NaNs, the output of the affected channel(s) will be

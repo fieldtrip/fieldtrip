@@ -59,7 +59,7 @@ end
 ft_preamble debug
 ft_preamble loadvar source
 ft_preamble provenance source
-ft_preamble trackconfig
+
 
 % ensure that the input data is valid for this function, this will also do
 % backward-compatibility conversions of old data that for example was
@@ -361,7 +361,6 @@ delete(h);
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-ft_postamble trackconfig
 ft_postamble previous source
 ft_postamble provenance
 

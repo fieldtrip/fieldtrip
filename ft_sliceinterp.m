@@ -11,39 +11,34 @@ function [outim] = ft_sliceinterp(cfg, ininterp)
 % where interp is the output of sourceinterpolate and cfg is a structure
 % with any of the following fields:
 %
-% cfg.funparameter  string with the functional parameter of interest (default = 'source')
-% cfg.maskparameter parameter used as opacity mask (default = 'none')
-% cfg.clipmin       value or 'auto' (clipping of source data)
-% cfg.clipmax       value or 'auto' (clipping of source data)
-% cfg.clipsym       'yes' or 'no' (default) symmetrical clipping
-% cfg.colormap      colormap for source overlay (default is jet(128))
-% cfg.colmin        source value mapped to the lowest color (default = 'auto')
-% cfg.colmax        source value mapped to the highest color (default = 'auto')
-% cfg.maskclipmin   value or 'auto' (clipping of mask data)
-% cfg.maskclipmax   value or 'auto' (clipping of mask data)
-% cfg.maskclipsym   'yes' or 'no' (default) symmetrical clipping
-% cfg.maskmap       opacitymap for source overlay
-%                   (default is linspace(0,1,128))
-% cfg.maskcolmin    mask value mapped to the lowest opacity, i.e.
-%                   completely transparent (default ='auto')
-% cfg.maskcolmin    mask value mapped to the highest opacity, i.e.
-%                   non-transparent (default = 'auto')
-% cfg.alpha         value between 0 and 1 or 'adaptive' (default)
-% cfg.nslices       integer value, default is 20
-% cfg.dim           integer value, default is 3 (dimension to slice)
-% cfg.spacemin      'auto' (default) or integer (first slice position)
-% cfg.spacemax      'auto' (default) or integer (last slice position)
-% cfg.resample      integer value, default is 1 (for resolution reduction)
-% cfg.rotate        number of ccw 90 deg slice rotations (default = 0)
-% cfg.title         optional title (default is '')
-% cfg.whitebg       'yes' or 'no' (default = 'yes')
-% cfg.flipdim       flip data along the sliced dimension, 'yes' or 'no'
-%                   (default = 'no')
-% cfg.marker        [Nx3] array defining N marker positions to display
-% cfg.markersize    radius of markers (default = 5);
-% cfg.markercolor   [1x3] marker color in RGB (default = [1 1 1], i.e. white)
-% cfg.interactive   'yes' or 'no' (default), interactive coordinates
-%                   and source values
+% cfg.funparameter  = string with the functional parameter of interest (default = 'source')
+% cfg.maskparameter = parameter used as opacity mask (default = 'none')
+% cfg.clipmin       = value or 'auto' (clipping of source data)
+% cfg.clipmax       = value or 'auto' (clipping of source data)
+% cfg.clipsym       = 'yes' or 'no' (default) symmetrical clipping
+% cfg.colormap      = colormap for source overlay (default is jet(128))
+% cfg.colmin        = source value mapped to the lowest color (default = 'auto')
+% cfg.colmax        = source value mapped to the highest color (default = 'auto')
+% cfg.maskclipmin   = value or 'auto' (clipping of mask data)
+% cfg.maskclipmax   = value or 'auto' (clipping of mask data)
+% cfg.maskclipsym   = 'yes' or 'no' (default) symmetrical clipping
+% cfg.maskmap       = opacitymap for source overlay (default is linspace(0,1,128))
+% cfg.maskcolmin    = mask value mapped to the lowest opacity, i.e. completely transparent (default ='auto')
+% cfg.maskcolmin    = mask value mapped to the highest opacity, i.e. non-transparent (default = 'auto')
+% cfg.alpha         = value between 0 and 1 or 'adaptive' (default)
+% cfg.nslices       = integer value, default is 20
+% cfg.dim           = integer value, default is 3 (dimension to slice)
+% cfg.spacemin      = 'auto' (default) or integer (first slice position)
+% cfg.spacemax      = 'auto' (default) or integer (last slice position)
+% cfg.resample      = integer value, default is 1 (for resolution reduction)
+% cfg.rotate        = number of ccw 90 deg slice rotations (default = 0)
+% cfg.title         = optional title (default is '')
+% cfg.whitebg       = 'yes' or 'no' (default = 'yes')
+% cfg.flipdim       = flip data along the sliced dimension, 'yes' or 'no' (default = 'no')
+% cfg.marker        = [Nx3] array defining N marker positions to display
+% cfg.markersize    = radius of markers (default = 5);
+% cfg.markercolor   = [1x3] marker color in RGB (default = [1 1 1], i.e. white)
+% cfg.interactive   = 'yes' or 'no' (default), interactive coordinates and source values
 %
 % if cfg.alpha is set to 'adaptive' the opacity of the source overlay
 % linearly follows the source value: maxima are opaque and minima are
@@ -114,7 +109,6 @@ ft_preamble init
 ft_preamble debug
 ft_preamble loadvar ininterp
 ft_preamble provenance ininterp
-ft_preamble trackconfig
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -471,7 +465,6 @@ end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-ft_postamble trackconfig
 ft_postamble history ininterp
 ft_postamble provenance
 
