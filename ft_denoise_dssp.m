@@ -302,7 +302,7 @@ if isempty(N)
   N  = input(ttext);
 elseif ischar(N) && isequal(N, 'interactive')
   figure, plot(log10(S),'-o'); drawnow
-  N = input(ttest);
+  N = input(ttext);
 elseif ischar(N) && isequal(N, 'all')
   N = find(S./S(1)>1e5*eps, 1, 'last');
 end
