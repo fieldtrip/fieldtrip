@@ -99,15 +99,15 @@ L = add_mex_source(L,'src','combineClusters');
 L = add_mex_source(L,'external/fileexchange','CalcMD5',[],[],'CFLAGS=''-std=c99 -fPIC''');
 
 % this one depends on the MATLAB version
-%if ft_platform_supports('libmx_c_interface')
+if ft_platform_supports('libmx_c_interface')
   % use the C interface
   L = add_mex_source(L,'src','mxSerialize_c');
   L = add_mex_source(L,'src','mxDeserialize_c');
-% else
-%   % use the C++ interface
-%   L = add_mex_source(L,'src','mxSerialize_cpp');
-%   L = add_mex_source(L,'src','mxDeserialize_cpp');
-% end
+else
+  % use the C++ interface
+  L = add_mex_source(L,'src','mxSerialize_cpp');
+  L = add_mex_source(L,'src','mxDeserialize_cpp');
+end
 
 oldDir = pwd;
 try
