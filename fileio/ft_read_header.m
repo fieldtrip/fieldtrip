@@ -2869,10 +2869,10 @@ if (strcmp(readbids, 'yes') || strcmp(readbids, 'ifmakessense')) && isbids
       assert(length(channels_tsv.name)  == hdr.nChans, 'number of channels is not consistent with the BIDS channels.tsv');
       assert(length(channels_tsv.type)  == hdr.nChans, 'number of channels is not consistent with the BIDS channels.tsv');
       assert(length(channels_tsv.units) == hdr.nChans, 'number of channels is not consistent with the BIDS channels.tsv');
-      hdr.label     = channels_tsv.name;
+      hdr.label    = channels_tsv.name;
       hdr.chantype = repmat({'unknown'}, [length(hdr.label), 1]);
       hdr.chantype(contains(channels_tsv.type, 'NIRS')) = {'nirs'};
-      hdr.chanunit  = channels_tsv.units;
+      hdr.chanunit = channels_tsv.units;
     end
     if exist('electrodes_tsv', 'var')
       hdr.elec         = [];
@@ -2880,9 +2880,9 @@ if (strcmp(readbids, 'yes') || strcmp(readbids, 'ifmakessense')) && isbids
       hdr.elec.elecpos = [electrodes_tsv.x electrodes_tsv.y electrodes_tsv.z];
     end
     if exist('optodes_tsv', 'var')
-      hdr.opto         = [];
-      hdr.opto.optolabel   = optodes_tsv.name;
-      hdr.opto.optopos = [optodes_tsv.x optodes_tsv.y optodes_tsv.z];
+      hdr.opto           = [];
+      hdr.opto.optolabel = optodes_tsv.name;
+      hdr.opto.optopos   = [optodes_tsv.x optodes_tsv.y optodes_tsv.z];
       if all(all(isnan(hdr.opto.optopos)))
         try
           hdr.opto.optopos = [optodes_tsv.template_x optodes_tsv.template_y optodes_tsv.template_z];

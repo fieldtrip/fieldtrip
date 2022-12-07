@@ -131,7 +131,7 @@ if needevt
     opts = setvartype(opts, 'event_type', 'char');
   end
   if any(strcmp(opts.VariableNames, 'stim_type'))
-    opts = setvartype(opts, 'event_type', 'char');
+    opts = setvartype(opts, 'stim_type', 'char');
   end
   % initially keep the value as a string, when possible it will be converted to a number later
   if any(strcmp(opts.VariableNames, 'value'))
@@ -141,7 +141,7 @@ if needevt
     opts = setvartype(opts, 'event_value', 'char');
   end
   if any(strcmp(opts.VariableNames, 'stim_value'))
-    opts = setvartype(opts, 'event_value', 'char');
+    opts = setvartype(opts, 'stim_value', 'char');
   end
 
   % this keeps the type and value column as string, and castst others into doubles right away

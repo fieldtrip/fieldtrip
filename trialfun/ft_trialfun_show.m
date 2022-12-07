@@ -35,17 +35,23 @@ function [trl, event] = ft_trialfun_show(cfg)
 % most defaults are in trialdef
 cfg.trialdef = ft_getopt(cfg, 'trialdef', struct());
 
-% these options get passed to FT_READ_EVENT
-cfg.trialdef.detectflank  = ft_getopt(cfg.trialdef, 'detectflank');
-cfg.trialdef.trigshift    = ft_getopt(cfg.trialdef, 'trigshift');
-cfg.trialdef.chanindx     = ft_getopt(cfg.trialdef, 'chanindx');
-cfg.trialdef.threshold    = ft_getopt(cfg.trialdef, 'threshold');
-cfg.trialdef.tolerance    = ft_getopt(cfg.trialdef, 'tolerance');
-
 % specify the default file formats
 cfg.eventformat   = ft_getopt(cfg, 'eventformat');
 cfg.headerformat  = ft_getopt(cfg, 'headerformat');
 cfg.dataformat    = ft_getopt(cfg, 'dataformat');
+
+% construct the low-level options as key-value pairs, these are passed to FT_READ_EVENT
+eventopt = {};
+eventopt = ft_setopt(eventopt, 'headerformat',  ft_getopt(cfg, 'headerformat'));        % is passed to low-level function, empty implies autodetection
+eventopt = ft_setopt(eventopt, 'dataformat',    ft_getopt(cfg, 'dataformat'));          % is passed to low-level function, empty implies autodetection
+eventopt = ft_setopt(eventopt, 'eventformat',   ft_getopt(cfg, 'eventformat'));         % is passed to low-level function, empty implies autodetection
+eventopt = ft_setopt(eventopt, 'readbids',      ft_getopt(cfg, 'readbids'));
+eventopt = ft_setopt(eventopt, 'detectflank',   ft_getopt(cfg.trialdef, 'detectflank'));
+eventopt = ft_setopt(eventopt, 'trigshift',     ft_getopt(cfg.trialdef, 'trigshift'));
+eventopt = ft_setopt(eventopt, 'chanindx',      ft_getopt(cfg.trialdef, 'chanindx'));
+eventopt = ft_setopt(eventopt, 'threshold',     ft_getopt(cfg.trialdef, 'threshold'));
+eventopt = ft_setopt(eventopt, 'tolerance',     ft_getopt(cfg.trialdef, 'tolerance'));
+eventopt = ft_setopt(eventopt, 'combinebinary', ft_getopt(cfg.trialdef, 'combinebinary'));
 
 % get the events
 if isfield(cfg, 'event')
@@ -53,7 +59,7 @@ if isfield(cfg, 'event')
   event = cfg.event;
 else
   ft_info('reading the events from ''%s''\n', cfg.headerfile);
-  event = ft_read_event(cfg.headerfile, 'headerformat', cfg.headerformat, 'eventformat', cfg.eventformat, 'dataformat', cfg.dataformat,  'detectflank', cfg.trialdef.detectflank, 'trigshift', cfg.trialdef.trigshift, 'chanindx', cfg.trialdef.chanindx, 'threshold', cfg.trialdef.threshold, 'tolerance', cfg.trialdef.tolerance);
+  event = ft_read_event(cfg.headerfile, eventopt{:});
 end
 
 if isempty(event)
