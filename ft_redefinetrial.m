@@ -316,7 +316,11 @@ elseif ~isempty(cfg.length)
   % create dummy trl-matrix and recursively call ft_redefinetrial
   nsmp    = round(cfg.length*data.fsample);
   nshift  = round((1-cfg.overlap)*nsmp);
-  
+
+  if nshift<=0
+    ft_error('the overlap is too large');
+  end
+ 
   newtrl = zeros(0,4);
   for k = 1:numel(data.trial)
     begsample = data.sampleinfo(k,1);
