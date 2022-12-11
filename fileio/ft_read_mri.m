@@ -19,7 +19,7 @@ function [mri] = ft_read_mri(filename, varargin)
 %   'indexfile'   = string, pointing to a fixel index file, if not present in the same directory
 %                   as the functional data (only for 'mrtrix_mif')
 %   'spmversion'  = string, version of SPM to be used (default = 'spm12')
-%   'readbids'    = string, 'yes', no', or 'ifmakessense', whether to read information from 
+%   'readbids'    = string, 'yes', no', or 'ifmakessense', whether to read information from
 %                   the BIDS sidecar files (default = 'ifmakessense')
 %
 % The supported dataformats are
@@ -155,7 +155,7 @@ if strcmp(dataformat, 'compressed') || (strcmp(dataformat, 'freesurfer_mgz') && 
   % the file is compressed, unzip on the fly,
   % -freesurfer mgz files get special treatment only on a pc
   % -compressed AFNI BRIKS also need the HEAD copied over to the temp dir
-  
+
   filename_old = filename;
   filename    = inflate_file(filename_old);
   if strcmp(dataformat, 'freesurfer_mgz')
@@ -189,10 +189,38 @@ switch dataformat
     transform = hdr.transformMRI2Head;
     coordsys  = 'ctf';
 
+    if issubfield(hdr, 'fiducial.head')
+      fid.label = fieldnames(hdr.fiducial.head);
+      for i=1:length(fid.label)
+        fid.pos(i,:) = hdr.fiducial.head.(fid.label{i});
+      end
+    elseif issubfield(hdr, 'fiducial.mri')
+      fid.label = fieldnames(hdr.fiducial.mri);
+      for i=1:length(fid.label)
+        fid.pos(i,:) = hdr.fiducial.mri.(fid.label{i});
+      end
+      % convert from voxel to headcoordinates
+      fid.pos = ft_warp_apply(transform, fid.pos);
+    end
+
   case 'ctf_mri4'
     [img, hdr] = read_ctf_mri4(filename);
     transform = hdr.transformMRI2Head;
     coordsys  = 'ctf';
+
+    if issubfield(hdr, 'fiducial.head')
+      fid.label = fieldnames(hdr.fiducial.head);
+      for i=1:length(fid.label)
+        fid.pos(i,:) = hdr.fiducial.head.(fid.label{i});
+      end
+    elseif issubfield(hdr, 'fiducial.mri')
+      fid.label = fieldnames(hdr.fiducial.mri);
+      for i=1:length(fid.label)
+        fid.pos(i,:) = hdr.fiducial.mri.(fid.label{i});
+      end
+      % convert from voxel to headcoordinates
+      fid.pos = ft_warp_apply(transform, fid.pos);
+    end
 
   case 'ctf_svl'
     [img, hdr] = read_ctf_svl(filename);
@@ -202,7 +230,7 @@ switch dataformat
     [img, seg, hdr] = read_asa_mri(filename);
     transform = hdr.transformMRI2Head;
     if isempty(seg)
-      % in case seg exists it will be added to the output
+      % in case seg exists, it will be added to the output
       clear seg
     end
 
@@ -218,7 +246,7 @@ switch dataformat
 
   case 'nifti_spm'
     if ~(hasspm5 || hasspm8 || hasspm12)
-      fprintf('the SPM5 or newer toolbox is required to read *.nii files\n');
+      fprintf('the SPM5 or later toolbox is required to read *.nii files\n');
       ft_hastoolbox(spmversion, 1);
     end
     volumes = ft_getopt(varargin, 'volumes', []);
@@ -296,8 +324,8 @@ switch dataformat
     ft_hastoolbox('afni', 1);    % see http://afni.nimh.nih.gov/
 
     [err, hdr] = BrikInfo(filename);
-    
-    % check the precision of the data, and if scaling is required. If the precision is other than float, 
+
+    % check the precision of the data, and if scaling is required. If the precision is other than float,
     %and no scaling is required, then return the data in its native precision, let the low level code take
     % care of that
     if any(hdr.BRICK_FLOAT_FACS~=0)
@@ -320,10 +348,10 @@ switch dataformat
       % afni volume info
       orient = 'LPI'; % hope for the best
     end
-        
+
     % origin and basis vectors in world space
     [unused, ix] = AFNI_Index2XYZcontinuous([0 0 0; eye(3)], hdr, orient);
-    
+
     % basis vectors in voxel space
     e1 = ix(2,:) - ix(1,:);
     e2 = ix(3,:) - ix(1,:);
@@ -335,7 +363,7 @@ switch dataformat
     % create matrix
     transform = [e1;e2;e3;o]';
     transform = cat(1, transform, [0 0 0 1]);
-    
+
     coordsys = lower(hdr.Orientation(:,2)');
     if contains(filename, 'TTatlas') || (isfield(hdr, 'TEMPLATE_SPACE') && ~isempty(hdr.TEMPLATE_SPACE))
       if isfield(hdr, 'TEMPLATE_SPACE') && ~isempty(hdr.TEMPLATE_SPACE)
@@ -721,7 +749,7 @@ switch dataformat
     end
 
     % ensure that this is double precision and not uint8
-     mri.transform = double(mri.transform);
+    mri.transform = double(mri.transform);
 
     % these are already part of the output structure and should not be reassigned
     clear coordsys transform unit
@@ -748,6 +776,11 @@ end
 if exist('hdr', 'var')
   % store the header with all file format specific details
   mri.hdr = hdr;
+end
+
+if exist('fid', 'var')
+  % store the fiducial details 
+  mri.fid = fid;
 end
 
 if exist('transform', 'var')
