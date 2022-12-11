@@ -778,11 +778,6 @@ if exist('hdr', 'var')
   mri.hdr = hdr;
 end
 
-if exist('fid', 'var')
-  % store the fiducial details 
-  mri.fid = fid;
-end
-
 if exist('transform', 'var')
   % store the homogeneous transformation matrix if present
   mri.transform = transform;
@@ -811,7 +806,28 @@ end
 
 if (strcmp(readbids, 'yes') || strcmp(readbids, 'ifmakessense')) && isbids
   % the BIDS sidecar files extend/overrule the information that is present in the file header itself
-  % FIXME, see https://github.com/fieldtrip/fieldtrip/issues/2159
+  if exist('mri_json', 'var')
+    fid =[];
+    if isfield(mri_json, 'AnatomicalLandmarkCoordinates')
+      fid.label = fieldnames(mri_json.AnatomicalLandmarkCoordinates);
+      for i=1:length(fid.label)
+        fid.pos(i,:) = mri_json.AnatomicalLandmarkCoordinates.(fid.label{i});
+      end
+      if isfield(mri_json, 'AnatomicalLandmarkCoordinateSystem') && isfield(mri_json, 'AnatomicalLandmarkCoordinateUnits')
+        fid.coordsys = mri_json.AnatomicalLandmarkCoordinateSystem;
+        fid.unit     = mri_json.AnatomicalLandmarkCoordinateUnits;
+      else
+        % assume that it is according to https://bids-specification.readthedocs.io/en/stable/glossary.html#anatomicallandmarkcoordinates-sense-2-metadata
+        fid.pos = fid.pos+1;                             % convert from 0 to 1 offset
+        fid.pos = ft_warp_apply(mri.transform, fid.pos); % convert from voxel to head coordinates
+      end
+    end % if fiducials present
+  end % if mri_json
+end % if readbids
+
+if exist('fid', 'var')
+  % store the fiducial details
+  mri.fid = fid;
 end
 
 if inflated
