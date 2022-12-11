@@ -15,10 +15,12 @@ function [mri] = ft_read_mri(filename, varargin)
 %   'outputfield' = string specifying the name of the field in the structure in which the
 %                   numeric data is stored (only for 'mrtrix_mif', default = 'anatomy')
 %   'fixel2voxel' = string, the operation to apply to the fixels belonging to the
-%                  same voxel, can be 'max', 'min', 'mean' (only for 'mrtrix_mif', default = 'max')
+%                   same voxel, can be 'max', 'min', 'mean' (only for 'mrtrix_mif', default = 'max')
 %   'indexfile'   = string, pointing to a fixel index file, if not present in the same directory
 %                   as the functional data (only for 'mrtrix_mif')
 %   'spmversion'  = string, version of SPM to be used (default = 'spm12')
+%   'readbids'    = string, 'yes', no', or 'ifmakessense', whether to read information from 
+%                   the BIDS sidecar files (default = 'ifmakessense')
 %
 % The supported dataformats are
 %   'afni_head'/'afni_brik'      uses AFNI code
@@ -64,10 +66,10 @@ function [mri] = ft_read_mri(filename, varargin)
 % coordinates of each voxel (in xgrid/ygrid/zgrid) into head coordinates.
 %
 % If the input file is a 4D nifti, and you wish to load in just a subset of the
-% volumes (e.g. due to memory constraints), you should use as dataformat 'nifti_spm',
+% volumes, for example due to memory constraints, you should use as dataformat 'nifti_spm',
 % which uses the optional key-value pair 'volumes' = vector, with the indices of the
-% to-be-read volumes, the order of the indices is ignored, and the volumes will be
-% sorted according to the numeric indices, i.e. [1:10] yields the same as [10:-1:1]
+% to-be-read volumes. The order of the indices is ignored, and the volumes will be
+% sorted according to the original numeric indices, i.e., 1:10 yields the same as 10:-1:1
 %
 % See also FT_DATATYPE_VOLUME, FT_WRITE_MRI, FT_READ_DATA, FT_READ_HEADER, FT_READ_EVENT
 
@@ -98,6 +100,7 @@ filename = fetch_url(filename);
 dataformat  = ft_getopt(varargin, 'dataformat');
 outputfield = ft_getopt(varargin, 'outputfield', 'anatomy');
 spmversion  = ft_getopt(varargin, 'spmversion');
+readbids    = ft_getopt(varargin, 'readbids', 'ifmakessense');
 
 % use the version that is on the path, or default to spm12
 if ~ft_hastoolbox('spm') && isempty(spmversion)
@@ -113,9 +116,39 @@ if ~isempty(format)
   end
 end
 
+% for backward compatibility with https://github.com/fieldtrip/fieldtrip/issues/1585
+if islogical(readbids)
+  % it should be either yes/no/ifmakessense
+  if readbids
+    readbids = 'yes';
+  else
+    readbids = 'no';
+  end
+end
+
+% test whether the file exists
+if ~exist(filename, 'file')
+  ft_error('file ''%s'' does not exist', filename);
+end
+
 if isempty(dataformat)
   % only do the autodetection if the format was not specified
   dataformat = ft_filetype(filename);
+end
+
+% deal with data that is organized according to BIDS
+% this has to happen prior to the unzipping of the file
+if strcmp(readbids, 'yes') || strcmp(readbids, 'ifmakessense')
+  [p, f, x] = fileparts(filename);
+  % check whether it is a BIDS dataset with a json sidecar file
+  isbids = startsWith(f, 'sub-');
+  if isbids
+    % try to read the metadata from the BIDS sidecar files
+    sidecar = bids_sidecar(filename);
+    if ~isempty(sidecar)
+      mri_json = ft_read_json(sidecar);
+    end
+  end
 end
 
 if strcmp(dataformat, 'compressed') || (strcmp(dataformat, 'freesurfer_mgz') && ispc) || any(filetype_check_extension(filename, {'gz', 'zip', 'tar', 'tgz'}))
@@ -142,11 +175,6 @@ if strcmp(dataformat, 'compressed') || (strcmp(dataformat, 'freesurfer_mgz') && 
   inflated = true;
 else
   inflated = false;
-end
-
-% test whether the file exists
-if ~exist(filename, 'file')
-  ft_error('file ''%s'' does not exist', filename);
 end
 
 % test for the presence of some external functions from other toolboxes
@@ -700,7 +728,7 @@ switch dataformat
 
   otherwise
     ft_error('unrecognized filetype ''%s'' for ''%s''', dataformat, filename);
-end
+end % switch dataformat
 
 if exist('img', 'var')
   % determine the size of the volume in voxels
@@ -746,6 +774,11 @@ if exist('xxx2ras', 'var') && xxx2ras==true
   % be ras, in order for the tal/mni coordsys to make sense
   mri = ft_convert_coordsys(mri, 'ras', 0);
   mri.coordsys = space;
+end
+
+if (strcmp(readbids, 'yes') || strcmp(readbids, 'ifmakessense')) && isbids
+  % the BIDS sidecar files extend/overrule the information that is present in the file header itself
+  % FIXME, see https://github.com/fieldtrip/fieldtrip/issues/2159
 end
 
 if inflated
