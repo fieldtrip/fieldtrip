@@ -148,15 +148,15 @@ if iscell(filename)
         [p,f,e]               = fileparts(filename{h});
         
         % do an educated guess, otherwise default to the filename
-        iscortexright = ~isempty(strfind(f,'rh'));
-        iscortexright = iscortexright || ~isempty(strfind(f,'.R.'));
-        iscortexright = iscortexright || ~isempty(strfind(f,'Right'));
-        iscortexright = iscortexright || ~isempty(strfind(f,'RIGHT'));
+        iscortexright = contains(f,'rh');
+        iscortexright = iscortexright || contains(f,'.R.');
+        iscortexright = iscortexright || contains(f,'Right');
+        iscortexright = iscortexright || contains(f,'RIGHT');
         
-        iscortexleft = ~isempty(strfind(f,'lh'));
-        iscortexleft = iscortexleft || ~isempty(strfind(f,'.L.'));
-        iscortexleft = iscortexleft || ~isempty(strfind(f,'Left'));
-        iscortexleft = iscortexleft || ~isempty(strfind(f,'LEFT'));
+        iscortexleft = contains(f,'lh');
+        iscortexleft = iscortexleft || contains(f,'.L.');
+        iscortexleft = iscortexleft || contains(f,'Left');
+        iscortexleft = iscortexleft || contains(f,'LEFT');
         
         if iscortexright && iscortexleft
           % something strange is going on, default to the filename and let the user take care of this
@@ -178,14 +178,14 @@ if iscell(filename)
     else
       shape = [];
       if sum(haspos==1)==1
-        fprintf('Using the vertex positions from %s\n', filename{find(haspos==1)});
+        fprintf('Using the vertex positions from %s\n', filename{haspos==1});
         shape.pos  = bnd(haspos==1).pos;
         shape.unit = bnd(haspos==1).unit;
       else
         ft_error('Don''t know what to do');
       end
       if sum(hastri==1)==1
-        fprintf('Using the faces definition from %s\n', filename{find(hastri==1)});
+        fprintf('Using the faces definition from %s\n', filename{hastri==1});
         shape.tri = bnd(hastri==1).tri;
       end
       if max(shape.tri(:))~=size(shape.pos,1)
@@ -294,7 +294,7 @@ switch fileformat
     
     shape.fid.pos = fid([NZ L R rest], :);
     shape.fid.label = {'NZ', 'L', 'R'};
-    if ~isempty(rest),
+    if ~isempty(rest)
       for i = 4:size(fid,1)
         shape.fid.label{i} = ['fiducial' num2str(i)];
         % in a 5 coil configuration this corresponds with Cz and Inion
@@ -407,7 +407,7 @@ switch fileformat
     
   case 'neuromag_mex'
     [co,ki,nu] = hpipoints(filename);
-    fid = co(:,find(ki==1))';
+    fid = co(:,ki==1)';
     
     [junk, NZ] = max(fid(:,2));
     [junk, L]  = min(fid(:,1));
