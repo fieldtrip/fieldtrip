@@ -14,7 +14,13 @@ function output = ft_connectivity_mutualinformation(inputdata, varargin)
 % the reference channels.
 %
 % Additional input arguments come as key-value pairs:
-%   method     = string, 'ibtb' or 'gcmi' (default = 'ibtb')
+%   method     = string, 'ibtb' or 'gcmi' (default = 'gcmi')
+%
+% The default method has changed from 'ibtb' to 'gcmi' in December 2022. The former method
+% is based on an external toolbox that is not actively supported anymore. Moreover, the
+% Gaussian-Copula based Mutual Information does not depend on a binning strategy, and may
+% provide reasonable results also in the presence of low amounts of data. The change in 
+% default reflects the default defined in ft_connectivityanalysis.
 %
 % Additional input arguments for the 'ibtb' method:
 %   'histmethod' = The way that histograms are generated from the data. Possible values
