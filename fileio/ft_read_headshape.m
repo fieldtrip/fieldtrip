@@ -10,14 +10,12 @@ function [shape] = ft_read_headshape(filename, varargin)
 %   [shape] = ft_read_headshape({filename1, filename2}, ...)
 %
 % If you specify the filename as a cell-array, the following situations are supported:
-%  - a two-element cell-array with the file names for the left and
-%    right hemisphere, e.g. FreeSurfer's {'lh.orig' 'rh.orig'}, or
-%    Caret's {'X.L.Y.Z.surf.gii' 'X.R.Y.Z.surf.gii'}
-%  - a two-element cell-array points to files that represent
-%    the coordinates and topology in separate files, e.g.
-%    Caret's {'X.L.Y.Z.coord.gii' 'A.L.B.C.topo.gii'};
-% By default all information from the two files will be concatenated (i.e. assumed to
-% be the shape of left and right hemispeheres). The option 'concatenate' can be set
+%  - a two-element cell-array with the file names for the left and right hemisphere,
+%    e.g., FreeSurfer's {'lh.orig' 'rh.orig'}, or Caret's {'X.L.Y.Z.surf.gii' 'X.R.Y.Z.surf.gii'}
+%  - a two-element cell-array points to files that represent the coordinates and topology 
+%    in separate files, e.g., Caret's {'X.L.Y.Z.coord.gii' 'A.L.B.C.topo.gii'}
+% By default all information from the two files will be assumed to correspond to the
+% left and right hemispeheres and concatenated. The option 'concatenate' can be set
 % to 'no' to prevent them from being concatenated in a single structure.
 %
 % Additional options should be specified in key-value pairs and can include
@@ -63,7 +61,7 @@ function [shape] = ft_read_headshape(filename, varargin)
 %
 % See also FT_READ_HEADMODEL, FT_READ_SENS, FT_READ_ATLAS, FT_WRITE_HEADSHAPE
 
-% Copyright (C) 2008-2019 Robert Oostenveld
+% Copyright (C) 2008-2022, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -90,7 +88,7 @@ concatenate    = ft_getopt(varargin, 'concatenate', 'yes');
 coordsys       = ft_getopt(varargin, 'coordsys', 'head');    % for ctf or neuromag_mne coil positions, the alternative is dewar
 fileformat     = ft_getopt(varargin, 'format');
 unit           = ft_getopt(varargin, 'unit');
-image          = ft_getopt(varargin, 'image', [100, 100 ,100]); % path to .jpeg file
+image          = ft_getopt(varargin, 'image', [100, 100 ,100]); % path to .jpg file
 surface        = ft_getopt(varargin, 'surface');
 
 % Check the input, if filename is a cell-array, call ft_read_headshape recursively and combine the outputs.
@@ -107,7 +105,7 @@ if iscell(filename)
     bnd(i) = tmp;
   end
   
-  % Concatenate the bnds (only if 'concatenate' = 'yes' ) and if all
+  % Concatenate the meshes (only if 'concatenate' = 'yes' ) and if all
   % structures have non-empty vertices and triangles. If not, the input filenames
   % may have been caret-style coord and topo, which needs combination of
   % the pos and tri.
@@ -148,15 +146,15 @@ if iscell(filename)
         [p,f,e]               = fileparts(filename{h});
         
         % do an educated guess, otherwise default to the filename
-        iscortexright = ~isempty(strfind(f,'rh'));
-        iscortexright = iscortexright || ~isempty(strfind(f,'.R.'));
-        iscortexright = iscortexright || ~isempty(strfind(f,'Right'));
-        iscortexright = iscortexright || ~isempty(strfind(f,'RIGHT'));
+        iscortexright = contains(f,'rh');
+        iscortexright = iscortexright || contains(f,'.R.');
+        iscortexright = iscortexright || contains(f,'Right');
+        iscortexright = iscortexright || contains(f,'RIGHT');
         
-        iscortexleft = ~isempty(strfind(f,'lh'));
-        iscortexleft = iscortexleft || ~isempty(strfind(f,'.L.'));
-        iscortexleft = iscortexleft || ~isempty(strfind(f,'Left'));
-        iscortexleft = iscortexleft || ~isempty(strfind(f,'LEFT'));
+        iscortexleft = contains(f,'lh');
+        iscortexleft = iscortexleft || contains(f,'.L.');
+        iscortexleft = iscortexleft || contains(f,'Left');
+        iscortexleft = iscortexleft || contains(f,'LEFT');
         
         if iscortexright && iscortexleft
           % something strange is going on, default to the filename and let the user take care of this
@@ -178,14 +176,14 @@ if iscell(filename)
     else
       shape = [];
       if sum(haspos==1)==1
-        fprintf('Using the vertex positions from %s\n', filename{find(haspos==1)});
+        fprintf('Using the vertex positions from %s\n', filename{haspos==1});
         shape.pos  = bnd(haspos==1).pos;
         shape.unit = bnd(haspos==1).unit;
       else
         ft_error('Don''t know what to do');
       end
       if sum(hastri==1)==1
-        fprintf('Using the faces definition from %s\n', filename{find(hastri==1)});
+        fprintf('Using the faces definition from %s\n', filename{hastri==1});
         shape.tri = bnd(hastri==1).tri;
       end
       if max(shape.tri(:))~=size(shape.pos,1)
@@ -226,12 +224,12 @@ if isempty(fileformat)
 end
 
 if ~isempty(annotationfile) && ~strcmp(fileformat, 'mne_source')
-  ft_error('at present extracting annotation information only works in conjunction with mne_source files');
+  ft_error('extracting annotation information only works for ''mne_source'' files');
 end
 
 % start with an empty structure
-shape           = [];
-shape.pos       = [];
+shape     = [];
+shape.pos = [];
 
 switch fileformat
   case {'ctf_ds', 'ctf_hc', 'ctf_meg4', 'ctf_res4', 'ctf_old'}
@@ -294,7 +292,7 @@ switch fileformat
     
     shape.fid.pos = fid([NZ L R rest], :);
     shape.fid.label = {'NZ', 'L', 'R'};
-    if ~isempty(rest),
+    if ~isempty(rest)
       for i = 4:size(fid,1)
         shape.fid.label{i} = ['fiducial' num2str(i)];
         % in a 5 coil configuration this corresponds with Cz and Inion
@@ -407,7 +405,7 @@ switch fileformat
     
   case 'neuromag_mex'
     [co,ki,nu] = hpipoints(filename);
-    fid = co(:,find(ki==1))';
+    fid = co(:,ki==1)';
     
     [junk, NZ] = max(fid(:,2));
     [junk, L]  = min(fid(:,1));

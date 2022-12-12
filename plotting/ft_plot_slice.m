@@ -46,7 +46,7 @@ function [h, T2] = ft_plot_slice(dat, varargin)
 %   'markercolor'
 
 % Copyrights (C) 2010-2014, Jan-Mathijs Schoffelen
-% Copyrights (C) 2014-2016, Robert Oostenveld and Jan-Mathijs Schoffelen
+% Copyrights (C) 2014-2022, Robert Oostenveld and Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -68,6 +68,20 @@ function [h, T2] = ft_plot_slice(dat, varargin)
 
 persistent dim X Y Z
 
+if isstruct(dat) && isfield(dat, 'anatomy') && isfield(dat, 'transform')
+  % the input is an MRI structure, call this function recursively
+  varargin = ft_setopt(varargin, 'transform', dat.transform);
+  if isfield(dat, 'coordsys')
+    varargin = ft_setopt(varargin, 'coordsys', dat.coordsys);
+  end
+  if isfield(dat, 'unit')
+    varargin = ft_setopt(varargin, 'unit', dat.unit);
+  end
+  dat = dat.anatomy;
+  [h, T2] = ft_plot_slice(dat, varargin{:});
+  return
+end
+
 if isequal(dim, size(dat(:,:,:,1,1)))
   % reuse the persistent variables to speed up subsequent calls with the same input
 else
@@ -86,6 +100,7 @@ end
 % (dat, varargin)
 % (dat, msk, varargin)
 % (dat, [], varargin)
+
 if numel(varargin)>0 && (isempty(varargin{1}) || isnumeric(varargin{1}) || islogical(varargin{1}))
   msk      = varargin{1};
   varargin = varargin(2:end);

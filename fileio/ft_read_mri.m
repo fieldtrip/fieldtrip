@@ -15,10 +15,12 @@ function [mri] = ft_read_mri(filename, varargin)
 %   'outputfield' = string specifying the name of the field in the structure in which the
 %                   numeric data is stored (only for 'mrtrix_mif', default = 'anatomy')
 %   'fixel2voxel' = string, the operation to apply to the fixels belonging to the
-%                  same voxel, can be 'max', 'min', 'mean' (only for 'mrtrix_mif', default = 'max')
+%                   same voxel, can be 'max', 'min', 'mean' (only for 'mrtrix_mif', default = 'max')
 %   'indexfile'   = string, pointing to a fixel index file, if not present in the same directory
 %                   as the functional data (only for 'mrtrix_mif')
 %   'spmversion'  = string, version of SPM to be used (default = 'spm12')
+%   'readbids'    = string, 'yes', no', or 'ifmakessense', whether to read information from
+%                   the BIDS sidecar files (default = 'ifmakessense')
 %
 % The supported dataformats are
 %   'afni_head'/'afni_brik'      uses AFNI code
@@ -64,10 +66,10 @@ function [mri] = ft_read_mri(filename, varargin)
 % coordinates of each voxel (in xgrid/ygrid/zgrid) into head coordinates.
 %
 % If the input file is a 4D nifti, and you wish to load in just a subset of the
-% volumes (e.g. due to memory constraints), you should use as dataformat 'nifti_spm',
+% volumes, for example due to memory constraints, you should use as dataformat 'nifti_spm',
 % which uses the optional key-value pair 'volumes' = vector, with the indices of the
-% to-be-read volumes, the order of the indices is ignored, and the volumes will be
-% sorted according to the numeric indices, i.e. [1:10] yields the same as [10:-1:1]
+% to-be-read volumes. The order of the indices is ignored, and the volumes will be
+% sorted according to the original numeric indices, i.e., 1:10 yields the same as 10:-1:1
 %
 % See also FT_DATATYPE_VOLUME, FT_WRITE_MRI, FT_READ_DATA, FT_READ_HEADER, FT_READ_EVENT
 
@@ -98,6 +100,7 @@ filename = fetch_url(filename);
 dataformat  = ft_getopt(varargin, 'dataformat');
 outputfield = ft_getopt(varargin, 'outputfield', 'anatomy');
 spmversion  = ft_getopt(varargin, 'spmversion');
+readbids    = ft_getopt(varargin, 'readbids', 'ifmakessense');
 
 % use the version that is on the path, or default to spm12
 if ~ft_hastoolbox('spm') && isempty(spmversion)
@@ -113,16 +116,46 @@ if ~isempty(format)
   end
 end
 
+% for backward compatibility with https://github.com/fieldtrip/fieldtrip/issues/1585
+if islogical(readbids)
+  % it should be either yes/no/ifmakessense
+  if readbids
+    readbids = 'yes';
+  else
+    readbids = 'no';
+  end
+end
+
+% test whether the file exists
+if ~exist(filename, 'file')
+  ft_error('file ''%s'' does not exist', filename);
+end
+
 if isempty(dataformat)
   % only do the autodetection if the format was not specified
   dataformat = ft_filetype(filename);
+end
+
+% deal with data that is organized according to BIDS
+% this has to happen prior to the unzipping of the file
+if strcmp(readbids, 'yes') || strcmp(readbids, 'ifmakessense')
+  [p, f, x] = fileparts(filename);
+  % check whether it is a BIDS dataset with a json sidecar file
+  isbids = startsWith(f, 'sub-');
+  if isbids
+    % try to read the metadata from the BIDS sidecar files
+    sidecar = bids_sidecar(filename);
+    if ~isempty(sidecar)
+      mri_json = ft_read_json(sidecar);
+    end
+  end
 end
 
 if strcmp(dataformat, 'compressed') || (strcmp(dataformat, 'freesurfer_mgz') && ispc) || any(filetype_check_extension(filename, {'gz', 'zip', 'tar', 'tgz'}))
   % the file is compressed, unzip on the fly,
   % -freesurfer mgz files get special treatment only on a pc
   % -compressed AFNI BRIKS also need the HEAD copied over to the temp dir
-  
+
   filename_old = filename;
   filename    = inflate_file(filename_old);
   if strcmp(dataformat, 'freesurfer_mgz')
@@ -144,11 +177,6 @@ else
   inflated = false;
 end
 
-% test whether the file exists
-if ~exist(filename, 'file')
-  ft_error('file ''%s'' does not exist', filename);
-end
-
 % test for the presence of some external functions from other toolboxes
 hasspm2  = ft_hastoolbox('spm2');    % see http://www.fil.ion.ucl.ac.uk/spm/
 hasspm5  = ft_hastoolbox('spm5');    % see http://www.fil.ion.ucl.ac.uk/spm/
@@ -161,10 +189,38 @@ switch dataformat
     transform = hdr.transformMRI2Head;
     coordsys  = 'ctf';
 
+    if issubfield(hdr, 'fiducial.head')
+      fid.label = fieldnames(hdr.fiducial.head);
+      for i=1:length(fid.label)
+        fid.pos(i,:) = hdr.fiducial.head.(fid.label{i});
+      end
+    elseif issubfield(hdr, 'fiducial.mri')
+      fid.label = fieldnames(hdr.fiducial.mri);
+      for i=1:length(fid.label)
+        fid.pos(i,:) = hdr.fiducial.mri.(fid.label{i});
+      end
+      % convert from voxel to headcoordinates
+      fid.pos = ft_warp_apply(transform, fid.pos);
+    end
+
   case 'ctf_mri4'
     [img, hdr] = read_ctf_mri4(filename);
     transform = hdr.transformMRI2Head;
     coordsys  = 'ctf';
+
+    if issubfield(hdr, 'fiducial.head')
+      fid.label = fieldnames(hdr.fiducial.head);
+      for i=1:length(fid.label)
+        fid.pos(i,:) = hdr.fiducial.head.(fid.label{i});
+      end
+    elseif issubfield(hdr, 'fiducial.mri')
+      fid.label = fieldnames(hdr.fiducial.mri);
+      for i=1:length(fid.label)
+        fid.pos(i,:) = hdr.fiducial.mri.(fid.label{i});
+      end
+      % convert from voxel to headcoordinates
+      fid.pos = ft_warp_apply(transform, fid.pos);
+    end
 
   case 'ctf_svl'
     [img, hdr] = read_ctf_svl(filename);
@@ -174,7 +230,7 @@ switch dataformat
     [img, seg, hdr] = read_asa_mri(filename);
     transform = hdr.transformMRI2Head;
     if isempty(seg)
-      % in case seg exists it will be added to the output
+      % in case seg exists, it will be added to the output
       clear seg
     end
 
@@ -190,7 +246,7 @@ switch dataformat
 
   case 'nifti_spm'
     if ~(hasspm5 || hasspm8 || hasspm12)
-      fprintf('the SPM5 or newer toolbox is required to read *.nii files\n');
+      fprintf('the SPM5 or later toolbox is required to read *.nii files\n');
       ft_hastoolbox(spmversion, 1);
     end
     volumes = ft_getopt(varargin, 'volumes', []);
@@ -268,8 +324,8 @@ switch dataformat
     ft_hastoolbox('afni', 1);    % see http://afni.nimh.nih.gov/
 
     [err, hdr] = BrikInfo(filename);
-    
-    % check the precision of the data, and if scaling is required. If the precision is other than float, 
+
+    % check the precision of the data, and if scaling is required. If the precision is other than float,
     %and no scaling is required, then return the data in its native precision, let the low level code take
     % care of that
     if any(hdr.BRICK_FLOAT_FACS~=0)
@@ -292,10 +348,10 @@ switch dataformat
       % afni volume info
       orient = 'LPI'; % hope for the best
     end
-        
+
     % origin and basis vectors in world space
     [unused, ix] = AFNI_Index2XYZcontinuous([0 0 0; eye(3)], hdr, orient);
-    
+
     % basis vectors in voxel space
     e1 = ix(2,:) - ix(1,:);
     e2 = ix(3,:) - ix(1,:);
@@ -307,7 +363,7 @@ switch dataformat
     % create matrix
     transform = [e1;e2;e3;o]';
     transform = cat(1, transform, [0 0 0 1]);
-    
+
     coordsys = lower(hdr.Orientation(:,2)');
     if contains(filename, 'TTatlas') || (isfield(hdr, 'TEMPLATE_SPACE') && ~isempty(hdr.TEMPLATE_SPACE))
       if isfield(hdr, 'TEMPLATE_SPACE') && ~isempty(hdr.TEMPLATE_SPACE)
@@ -693,14 +749,14 @@ switch dataformat
     end
 
     % ensure that this is double precision and not uint8
-     mri.transform = double(mri.transform);
+    mri.transform = double(mri.transform);
 
     % these are already part of the output structure and should not be reassigned
     clear coordsys transform unit
 
   otherwise
     ft_error('unrecognized filetype ''%s'' for ''%s''', dataformat, filename);
-end
+end % switch dataformat
 
 if exist('img', 'var')
   % determine the size of the volume in voxels
@@ -746,6 +802,32 @@ if exist('xxx2ras', 'var') && xxx2ras==true
   % be ras, in order for the tal/mni coordsys to make sense
   mri = ft_convert_coordsys(mri, 'ras', 0);
   mri.coordsys = space;
+end
+
+if (strcmp(readbids, 'yes') || strcmp(readbids, 'ifmakessense')) && isbids
+  % the BIDS sidecar files extend/overrule the information that is present in the file header itself
+  if exist('mri_json', 'var')
+    fid =[];
+    if isfield(mri_json, 'AnatomicalLandmarkCoordinates')
+      fid.label = fieldnames(mri_json.AnatomicalLandmarkCoordinates);
+      for i=1:length(fid.label)
+        fid.pos(i,:) = mri_json.AnatomicalLandmarkCoordinates.(fid.label{i});
+      end
+      if isfield(mri_json, 'AnatomicalLandmarkCoordinateSystem') && isfield(mri_json, 'AnatomicalLandmarkCoordinateUnits')
+        fid.coordsys = mri_json.AnatomicalLandmarkCoordinateSystem;
+        fid.unit     = mri_json.AnatomicalLandmarkCoordinateUnits;
+      else
+        % assume that it is according to https://bids-specification.readthedocs.io/en/stable/glossary.html#anatomicallandmarkcoordinates-sense-2-metadata
+        fid.pos = fid.pos+1;                             % convert from 0 to 1 offset
+        fid.pos = ft_warp_apply(mri.transform, fid.pos); % convert from voxel to head coordinates
+      end
+    end % if fiducials present
+  end % if mri_json
+end % if readbids
+
+if exist('fid', 'var')
+  % store the fiducial details
+  mri.fid = fid;
 end
 
 if inflated

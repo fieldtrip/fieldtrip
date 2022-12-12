@@ -1031,6 +1031,10 @@ if ~isempty(transform) && ~any(isnan(transform(:)))
   realign.transformorig = mri.transform;
   realign.transform     = transform * mri.transform;
   realign.coordsys      = coordsys;
+  if isfield(realign, 'fid')
+    % also apply the transformation on the fiducials
+    realign.fid.pos = ft_warp_apply(transform, realign.fid.pos);
+  end
 else
   ft_warning('no coordinate system realignment has been done');
 end

@@ -2860,7 +2860,7 @@ if isfield(hdr, 'opto')
 end
 
 if (strcmp(readbids, 'yes') || strcmp(readbids, 'ifmakessense')) && isbids
-  % the BIDS sidecar files overrule the information that is present in the file header itself
+  % the BIDS sidecar files extend/overrule the information that is present in the file header itself
   try
     if exist('data_json', 'var')
       hdr.Fs = data_json.SamplingFrequency;

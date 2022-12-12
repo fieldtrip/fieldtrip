@@ -34,6 +34,7 @@ function [hx, hy, hz] = ft_plot_ortho(dat, varargin)
 % See also FT_PLOT_SLICE, FT_PLOT_MONTAGE, FT_SOURCEPLOT
 
 % Copyrights (C) 2010, Jan-Mathijs Schoffelen
+% Copyrights (C) 2022, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -52,6 +53,20 @@ function [hx, hy, hz] = ft_plot_ortho(dat, varargin)
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
 % $Id$
+
+if isstruct(dat) && isfield(dat, 'anatomy') && isfield(dat, 'transform')
+  % the input is an MRI structure, call this function recursively
+  varargin = ft_setopt(varargin, 'transform', dat.transform);
+  if isfield(dat, 'coordsys')
+    varargin = ft_setopt(varargin, 'coordsys', dat.coordsys);
+  end
+  if isfield(dat, 'unit')
+    varargin = ft_setopt(varargin, 'unit', dat.unit);
+  end
+  dat = dat.anatomy;
+  [hx, hy, hz] = ft_plot_ortho(dat, varargin{:});
+  return
+end
 
 % parse first input argument(s). it is either
 % (dat, varargin)

@@ -338,9 +338,10 @@ if isempty(ori)
       Fn = Fn * (1/sqrt(sum(Fn.^2,2))); % normalize
       ori(i,:) = Fn;
     end % for
-    
+
   elseif ~any(isnan(pos(:))) && size(pos,1)>2
     % determine orientations based on a surface triangulation of the sensors
+    % this only works if all positions are defined
     tri = projecttri(pos, 'delaunay');
     ori = normals(pos, tri);
     
@@ -464,7 +465,7 @@ end % switch
 
 if ~isempty(label) && ~any(strcmp(label, {'off', 'no'}))
   
-  % determine the amount of offset for the labels
+  % determine the offset for the labels
   if strcmp(sensshape, 'point')
     % determine the median of the distance to the nearest neighbour
     sensdist = triu(dist(sens.chanpos'),1);
@@ -473,6 +474,8 @@ if ~isempty(label) && ~any(strcmp(label, {'off', 'no'}))
     sensdist = median(sensdist);
     % the offset is based on distance between sensors
     offset = 0.5 * sensdist;
+    % it should not be larger than 20 mm
+    offset = min(offset, 20*ft_scalingfactor('mm', sens.unit));
   else
     % the offset is based on size of the sensors
     offset = 1.5 * senssize;
@@ -480,7 +483,7 @@ if ~isempty(label) && ~any(strcmp(label, {'off', 'no'}))
   
   if isinf(offset)
     % this happens in case there is only one sensor and the size has not been specified
-    offset = ft_scalingfactor('mm', sens.unit)*10; % displace the label by 10 mm
+    offset = 10*ft_scalingfactor('mm', sens.unit); % displace the label by 10 mm
   end
   
   for i=1:size(pos,1)
