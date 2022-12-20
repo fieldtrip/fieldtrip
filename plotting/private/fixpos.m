@@ -3,7 +3,7 @@ function mesh = fixpos(mesh, recurse)
 % FIXPOS helper function to ensure that meshes are described properly
 
 if nargin==1
-  recurse = 1;
+  recurse = true;
 end
 
 if isa(mesh, 'delaunayTriangulation')
@@ -19,7 +19,7 @@ if isnumeric(mesh) && size(mesh,2)==3
 end
 
 if ~isa(mesh, 'struct')
-  return;
+  return
 end
 
 if numel(mesh)>1
