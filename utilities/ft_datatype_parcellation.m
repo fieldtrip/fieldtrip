@@ -44,7 +44,8 @@ function [parcellation] = ft_datatype_parcellation(parcellation, varargin)
 %   - pos
 %
 % Optional fields:
-%   - tri, coordsys, unit
+%   - any field with dimensions that are consistent with pos
+%   - unit, coordsys, fid, tri
 %
 % Deprecated fields:
 %   - none
