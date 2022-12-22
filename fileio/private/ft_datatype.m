@@ -53,7 +53,7 @@ issegmentation =   check_segmentation(data);
 isparcellation =   check_parcellation(data);
 ismontage      =   isfield(data, 'labelold') && isfield(data, 'labelnew') && isfield(data, 'tra');
 isevent        =   isfield(data, 'type') && isfield(data, 'value') && isfield(data, 'sample') && isfield(data, 'offset') && isfield(data, 'duration');
-isheadmodel    =   isfield(data, 'type') && ismember(data.type, {'bemcp', 'concentricspheres', 'dipoli', 'duneuro', 'fns', 'halfspace', 'halfspace_monopole', 'infinite', 'infinite_currentdipole', 'infinite_magneticdipole', 'infinite_monopole', 'interpolate', 'localspheres', 'openmeeg', 'simbio', 'singleshell', 'singlesphere', 'slab_monopole'});
+isheadmodel    =   isfield(data, 'type') && ischar(data.type) && ismember(data.type, {'bemcp', 'concentricspheres', 'dipoli', 'duneuro', 'fns', 'halfspace', 'halfspace_monopole', 'infinite', 'infinite_currentdipole', 'infinite_magneticdipole', 'infinite_monopole', 'interpolate', 'localspheres', 'openmeeg', 'simbio', 'singleshell', 'singlesphere', 'slab_monopole'});
 islayout       =   all(isfield(data, {'label', 'pos', 'width', 'height'})); % mask and outline are optional
 
 if issource && isstruct(data) && numel(data)>1
