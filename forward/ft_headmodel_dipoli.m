@@ -238,7 +238,9 @@ delete(exefile);
 % remember that it is a dipoli model
 headmodel.type = 'dipoli';
 
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function ok = checknormals(bnd)
 % checks if the normals are inward oriented
 pos = bnd.pos;

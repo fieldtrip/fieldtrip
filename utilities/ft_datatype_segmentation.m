@@ -1,15 +1,15 @@
 function [segmentation] = ft_datatype_segmentation(segmentation, varargin)
 
 % FT_DATATYPE_SEGMENTATION describes the FieldTrip MATLAB structure for segmented
-% voxel-based data and atlasses. A segmentation can either be indexed or probabilistic
-% (see below).
+% voxel-based data and atlasses. A segmentation can either be indexed or
+% probabilistic (see below).
 %
-% A segmentation is a volumetric description which is usually derived from an anatomical
-% MRI, which describes for each voxel the tissue type. It for example distinguishes
-% between white matter, grey matter, csf, skull and skin. It is mainly used for masking
-% in visualization, construction of volume conduction models and for construction of
-% cortical sheets. An volume-based atlas is basically a very detailed segmentation with
-% an anatomical label for each voxel.
+% A segmentation is a volumetric description which is usually derived from an
+% anatomical MRI, which describes for each voxel the tissue type. It for example
+% distinguishes between white matter, grey matter, csf, skull and skin. It is mainly
+% used for masking in visualization, construction of volume conduction models and for
+% construction of cortical sheets. An volume-based atlas is basically a very detailed
+% segmentation with an anatomical label for each voxel.
 %
 % For example, the AFNI TTatlas+tlrc segmented brain atlas (which can be created
 % with FT_READ_ATLAS) looks like this
@@ -23,44 +23,44 @@ function [segmentation] = ft_datatype_segmentation(segmentation, varargin)
 %      brick0label: {Nx1 cell}
 %      brick1label: {Mx1 cell}
 %
-%
 % An example segmentation with binary values that can be used for construction of a
 % BEM volume conduction model of the head looks like this
 %
-%           dim: [256 256 256]         the dimensionality of the 3D volume
-%     transform: [4x4 double]          affine transformation matrix for mapping the voxel coordinates to head coordinate system
-%      coordsys: 'ctf'                 the transformation matrix maps the voxels into this (head) coordinate system
-%          unit: 'mm'                  the units in which the coordinate system is expressed
-%         brain: [256x256x256 logical] binary map representing the voxels which belong to the brain
-%         scalp: [256x256x256 logical] binary map representing the voxels which belong to the scalp
-%         skull: [256x256x256 logical] binary map representing the voxels which belong to the skull
+%           dim: [256 256 256]           the dimensionality of the 3D volume
+%     transform: [4x4 double]            affine transformation matrix for mapping the voxel coordinates to head coordinate system
+%      coordsys: 'ctf'                   the transformation matrix maps the voxels into this (head) coordinate system
+%          unit: 'mm'                    the units in which the coordinate system is expressed
+%         brain: [256x256x256 logical]   binary map representing the voxels which belong to the brain
+%         skull: [256x256x256 logical]   binary map representing the voxels which belong to the skull
+%         scalp: [256x256x256 logical]   binary map representing the voxels which belong to the scalp
 %
 % An example of a whole-brain anatomical MRI that was segmented using FT_VOLUMESEGMENT
 % looks like this
 %
-%         dim: [256 256 256]         the size of the 3D volume in voxels
-%   transform: [4x4 double]          affine transformation matrix for mapping the voxel coordinates to head coordinate system
-%    coordsys: 'ctf'                 the transformation matrix maps the voxels into this (head) coordinate system
-%        unit: 'mm'                  the units in which the coordinate system is expressed
-%        gray: [256x256x256 double]  probabilistic map of the gray matter
-%       white: [256x256x256 double]  probabilistic map of the white matter
-%         csf: [256x256x256 double]  probabilistic map of the cerebrospinal fluid
+%         dim: [256 256 256]             the size of the 3D volume in voxels
+%   transform: [4x4 double]              affine transformation matrix for mapping the voxel coordinates to head coordinate system
+%    coordsys: 'ctf'                     the transformation matrix maps the voxels into this (head) coordinate system
+%        unit: 'mm'                      the units in which the coordinate system is expressed
+%        gray: [256x256x256 double]      probabilistic map of the gray matter
+%       white: [256x256x256 double]      probabilistic map of the white matter
+%         csf: [256x256x256 double]      probabilistic map of the cerebrospinal fluid
 %
-% The examples above demonstrate that a segmentation can be indexed, i.e. consisting of
-% subsequent integer numbers (1, 2, ...) or probabilistic, consisting of real numbers
-% ranging from 0 to 1 that represent probabilities between 0% and 100%. An extreme case
-% is one where the probability is either 0 or 1, in which case the probability can be
-% represented as a binary or logical array.
+% The examples above demonstrate that a segmentation can be indexed, i.e. consisting
+% of subsequent integer numbers (1, 2, ...) or probabilistic, consisting of real
+% numbers ranging from 0 to 1 that represent probabilities between 0% and 100%. An
+% extreme case is one where the probability is either 0 or 1, in which case the
+% probability can be represented as a binary or logical array.
 %
 % The only difference to the volume data representation is that the segmentation
-% structure contains the additional fields xxx and xxxlabel. See FT_DATATYPE_VOLUME for
-% further details.
+% structure contains the additional fields xxx and xxxlabel. See FT_DATATYPE_VOLUME
+% for further details.
 %
 % Required fields:
 %   - dim, transform
 %
 % Optional fields:
-%   - coordsys, unit
+%   - brain, skull, scalp, gray, white, csf, or any other field with dimensions that are consistent with dim
+%   - unit, coordsys, fid
 %
 % Deprecated fields:
 %   - none
