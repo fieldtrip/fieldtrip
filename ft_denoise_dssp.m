@@ -242,6 +242,7 @@ else
   trllist = (1:numel(Bout))';
 end  
 
+Ae = cell(size(Bin));
 for k = 1:size(trllist,1)
   indx = trllist(k,:); % this is either a scalar, or a vector
   [Uout,Sout,Vout] = svd(cat(2, Bout{indx}),'econ');
@@ -252,7 +253,7 @@ for k = 1:size(trllist,1)
   Nout = getN(Nout, Sout, 'outside');
   Nin  = getN(Nin,  Sin,  'inside');
   
-  % compute unit-norm time courses
+  % compute unit-norm orthogonal time courses
   Qout = diag(1./Sout(1:Nout))*Uout(:,1:Nout)'*Bout(indx); % keep it in cell representation
   Qin  = diag(1./Sin(1:Nin)  )* Uin(:,1:Nin)' *Bin(indx);
   C    = Qin * cellfun(@transpose, Qout, 'UniformOutput', false);
@@ -281,10 +282,6 @@ for k = 1:size(trllist,1)
     if isempty(Nintersect), Nintersect = 1; end
   end
   fprintf('Using %d dimensions for the intersection\n', Nintersect);
-
-  % Ae   = Qin*U;
-  % Ae   = Ae(:,1:Nintersect);
-  % %AeAe = Ae*Ae';
 
   Ae(indx) = U(:, 1:Nintersect)'*Qin;
 
