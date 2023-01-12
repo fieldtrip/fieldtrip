@@ -82,7 +82,7 @@ cfg.method    = ft_getopt(cfg, 'method', 'perchannel'); % or acrosschannel
 
 if ~strcmp(cfg.channel, 'all') || ~strcmp(cfg.trials, 'all')
   % select channels and trials of interest
-  tmpcfg = keepfields(cfg, {'trials', 'channel', 'tolerance', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+  tmpcfg = keepfields(cfg, {'trials', 'channel', 'tolerance', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
   data   = ft_selectdata(tmpcfg, data);
   % restore the provenance information
   [cfg, data] = rollback_provenance(cfg, data);

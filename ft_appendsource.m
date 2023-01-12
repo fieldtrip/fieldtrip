@@ -147,7 +147,7 @@ switch cfg.appenddim
     end
     
     % determine the union of all input data
-    tmpcfg = keepfields(cfg, {'tolerance', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+    tmpcfg = keepfields(cfg, {'tolerance', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
     [varargin{:}] = ft_selectdata(tmpcfg, varargin{:});
     for i=1:Ndata
       [cfg_rolledback, varargin{i}] = rollback_provenance(cfg, varargin{i});
