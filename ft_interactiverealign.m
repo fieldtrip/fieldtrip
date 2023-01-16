@@ -119,6 +119,23 @@ cfg.individual.headshapestyle = updatestyle(cfg.individual.headshapestyle);
 cfg.template.headmodelstyle   = updatestyle(cfg.template.headmodelstyle);
 cfg.individual.headmodelstyle = updatestyle(cfg.individual.headmodelstyle);
 
+if ~isempty(cfg.individual.headshape) && isfield(cfg.individual.headshape, 'color')
+  if isfield(cfg.individual.headshape, 'tri') && size(cfg.individual.headshape.tri,1)==size(cfg.individual.headshape.color,1)
+    cfg.individual.headshapestyle = ft_setopt(cfg.individual.headshapestyle, 'facecolor', cfg.individual.headshape.color);
+  elseif size(cfg.individual.headshape.pos,1)==size(cfg.individual.headshape.color,1)
+    cfg.individual.headshapestyle = ft_setopt(cfg.individual.headshapestyle, 'vertexcolor', cfg.individual.headshape.color);
+  end
+end
+
+if ~isempty(cfg.template.headshape) && isfield(cfg.template.headshape, 'color')
+  if isfield(cfg.template.headshape, 'tri') && size(cfg.template.headshape.tri,1)==size(cfg.template.headshape.color,1)
+    cfg.template.headshapestyle = ft_setopt(cfg.template.headshapestyle, 'facecolor', cfg.template.headshape.color);
+  elseif size(cfg.template.headshape.pos,1)==size(cfg.template.headshape.color,1)
+    cfg.template.headshapestyle = ft_setopt(cfg.template.headshapestyle, 'vertexcolor', cfg.template.headshape.color);
+  end
+end
+
+
 template   = struct(cfg.template);
 individual = struct(cfg.individual);
 
