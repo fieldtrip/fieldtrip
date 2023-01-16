@@ -7,7 +7,7 @@ function [elec] = ft_electrodeplacement(cfg, varargin)
 % assign an electrode label to the current crosshair location by clicking on a label
 % in the eletrode list. You can undo the selection by clicking on the same label
 % again. The electrode labels shown in the list can be prespecified using cfg.channel
-% when calling ft_electrodeplacement. The zoom slider allows zoomi/ng in at the
+% when calling ft_electrodeplacement. The zoom slider allows zooming in at the
 % location of the crosshair. The intensity sliders allow thresholding the image's low
 % and high values. The magnet feature transports the crosshair to the nearest peak
 % intensity voxel, within a certain voxel radius of the selected location. The labels
@@ -418,20 +418,9 @@ switch cfg.method
       'SliderStep', [.1 .1], ...
       'Callback', @cb_zoomslider);
 
-    % instructions to the user
-    fprintf(strcat(...
-      '1. Orthoplot viewing options:\n',...
-      '   a. use the left mouse button to navigate the image, or\n',...
-      '   b. use the arrow keys to increase or decrease the slice number by one\n',...
-      '2. Orthoplot placement options:\n',...
-      '   a. click an electrode label in the list to assign it to the crosshair location, or\n',...
-      '   b. doubleclick a previously assigned electrode label to remove its marker\n',...
-      '3. To finalize, close the window or press q on the keyboard\n', ...
-      '4. See Stolk, Griffin et al. Nature Protocols 2018 for further electrode processing options\n'));
-
     % create structure to be passed to gui
     opt               = [];
-    opt.method        = 'volume'; % this is to use the same functionalities across volume and headshape
+    opt.method        = 'volume'; % this is to distinguish between volume and headshape in the callbacks
     opt.label         = chanlabel;
     opt.axes          = [mri{1}.axes(1) mri{1}.axes(2) mri{1}.axes(3) h4 h5 h6 h7 h8 h9 h10 hscatter hscan];
     opt.mainfig       = h;
@@ -463,6 +452,7 @@ switch cfg.method
 
     setappdata(h, 'opt', opt);
     cb_redraw(h);
+    cb_help(h);
 
     while(opt.quit==0)
       uiwait(h);
@@ -538,15 +528,9 @@ switch cfg.method
         'Callback', @cb_colorsbutton);
     end
 
-    % give the user instructions
-    disp('Use the mouse to click on the desired position for the electrode');
-    disp('Subsequently use the mouse to click on the corresponding electrode label');
-    disp('Press "v" to update the light position');
-    disp('Press "q" when you are done');
-
     % create structure to be passed to gui
     opt               = [];
-    opt.method        = 'headshape'; % this is to use the same functionalities across volume and headshape
+    opt.method        = 'headshape'; % this is to distinguish between volume and headshape in the callbacks
     opt.headshape     = headshape;
     opt.label         = chanlabel;
     opt.axes          = [h1 h8];
@@ -564,6 +548,7 @@ switch cfg.method
     opt.markerdist    = cfg.markerdist; % hidden option
 
     setappdata(h, 'opt', opt);
+    cb_help(h);
     cb_headshaperedraw(h);
     view([90, 0]);
 
@@ -790,6 +775,38 @@ ft_postamble savevar    elec
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function cb_help(h, eventdata)
+
+h   = getparent(h);
+opt = getappdata(h, 'opt');
+
+switch opt.method
+  case 'volume'
+    disp('==================================================================================');
+    disp('0. Press "h" to show this help');
+    disp('1. Options for viewing:');
+    disp('   a. use the left mouse button to navigate in the image, or');
+    disp('   b. use the arrow keys to increase or decrease the slice number by one');
+    disp('2. Options for electrode placement:');
+    disp('   a. click an electrode label in the list to assign it to the crosshair location, or');
+    disp('   b. doubleclick a previously assigned electrode label to remove its marker');
+    disp('3. Press "q" on the keyboard or close the window when you are done');
+    disp('4. See Stolk, Griffin et al. Nature Protocols 2018 for further electrode processing options');
+
+  case 'headshape'
+    disp('==================================================================================');
+    disp('0. Press "h" to show this help');
+    disp('1. Options for electrode placement:');
+    disp('   a. Use the mouse to click on the desired position for an electrode');
+    disp('   b. Click on the corresponding electrode label');
+    disp('2. Press "v" to update the light position');
+    disp('3. Press "q" or close the window when you are done');
+
+end % switch
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_redraw(h, eventdata)
 
 h   = getparent(h);
@@ -823,6 +840,7 @@ if opt.init
   opt.axis = [opt.axes(1).XLim opt.axes(1).YLim opt.axes(1).ZLim];
   opt.redrawmarkers = true;
   opt.reinit = false;
+
 elseif opt.reinit
   ft_plot_ortho(opt.ana, 'transform', opt.mri{opt.currmri}.transform, 'location', opt.pos, 'style', 'subplot', 'surfhandle', opt.anahandles, 'update', opt.update, 'doscale', false, 'clim', opt.clim, 'unit', opt.mri{opt.currmri}.unit);
 
@@ -1122,13 +1140,15 @@ elseif isfield(opt.headshape, 'color') && opt.showcolors
 else
   ft_plot_mesh(removefields(opt.headshape, 'color'), 'tag', 'headshape', 'facecolor', 'skin', 'material', 'dull', 'edgecolor', 'none', 'facealpha', 1);
 end
+
 lighting gouraud
-l = lightangle(0, 90);  set(l, 'Color', [1 1 1]/2)
-l = lightangle(  0, 0); set(l, 'Color', [1 1 1]/3)
-l = lightangle( 90, 0); set(l, 'Color', [1 1 1]/3)
-l = lightangle(180, 0); set(l, 'Color', [1 1 1]/3)
-l = lightangle(270, 0); set(l, 'Color', [1 1 1]/3)
-alpha 0.9
+l = lightangle(0,  90); set(l, 'Color', 0.5*[1 1 1])
+l = lightangle(0, -90); set(l, 'Color', 0.5*[1 1 1])
+l = lightangle(  0, 0); set(l, 'Color', 0.5*[1 1 1])
+l = lightangle( 90, 0); set(l, 'Color', 0.5*[1 1 1])
+l = lightangle(180, 0); set(l, 'Color', 0.5*[1 1 1])
+l = lightangle(270, 0); set(l, 'Color', 0.5*[1 1 1])
+% alpha 0.9
 
 if opt.showmarkers
   idx = find(~cellfun(@isempty,opt.markerlab)); % find the non-empty markers
@@ -1185,165 +1205,196 @@ if isempty(key)
   key = '';
 end
 
+
 % the following code is largely shared by FT_SOURCEPLOT, FT_VOLUMEREALIGN, FT_INTERACTIVEREALIGN, FT_MESHREALIGN, FT_ELECTRODEPLACEMENT
-switch key
-  case {'' 'shift+shift' 'alt-alt' 'control+control' 'command-0'}
-    % do nothing
-
-  case '1'
-    subplot(opt.axes(1));
-
-  case '2'
-    subplot(opt.axes(2));
-
-  case '3'
-    subplot(opt.axes(3));
-
-  case 'q'
-    setappdata(h, 'opt', opt);
-    cb_quit(h);
-
-  case 'g' % global/local elec view (h9) toggle
-    if isequal(opt.global, 0)
-      opt.global = 1;
-      set(opt.axes(9), 'Value', 1);
-    elseif isequal(opt.global, 1)
-      opt.global = 0;
-      set(opt.axes(9), 'Value', 0);
-    end
-    opt.redrawmarkers = true; % draw markers
-    setappdata(h, 'opt', opt);
-    cb_redraw(h);
-
-  case 'l' % elec label view (h8) toggle
-    if isequal(opt.showlabels, 0)
-      opt.showlabels = 1;
-      set(opt.axes(8), 'Value', 1);
-    elseif isequal(opt.showlabels, 1)
-      opt.showlabels = 0;
-      set(opt.axes(8), 'Value', 0);
-    end
-    opt.redrawmarkers = true; % draw markers
-    setappdata(h, 'opt', opt);
-    cb_redraw(h);
-
-  case 'm' % magnet (h7) toggle
-    if isequal(opt.magnet, 0)
-      opt.magnet = 1;
-      set(opt.axes(7), 'Value', 1);
-    elseif isequal(opt.magnet, 1)
-      opt.magnet = 0;
-      set(opt.axes(7), 'Value', 0);
-    end
-    setappdata(h, 'opt', opt);
-
-  case {28 29 30 31 'leftarrow' 'rightarrow' 'uparrow' 'downarrow'}
-    % update the view to a new position
-    if     strcmp(tag, 'ik') && (strcmp(key, 'i') || strcmp(key, 'uparrow')    || isequal(key, 30)), opt.pos(3) = opt.pos(3)+1; opt.update = [1 1 1]; %[0 0 1];
-    elseif strcmp(tag, 'ik') && (strcmp(key, 'j') || strcmp(key, 'leftarrow')  || isequal(key, 28)), opt.pos(1) = opt.pos(1)-1; opt.update = [1 1 1]; %[0 1 0];
-    elseif strcmp(tag, 'ik') && (strcmp(key, 'k') || strcmp(key, 'rightarrow') || isequal(key, 29)), opt.pos(1) = opt.pos(1)+1; opt.update = [1 1 1]; %[0 1 0];
-    elseif strcmp(tag, 'ik') && (strcmp(key, 'm') || strcmp(key, 'downarrow')  || isequal(key, 31)), opt.pos(3) = opt.pos(3)-1; opt.update = [1 1 1]; %[0 0 1];
-    elseif strcmp(tag, 'ij') && (strcmp(key, 'i') || strcmp(key, 'uparrow')    || isequal(key, 30)), opt.pos(2) = opt.pos(2)+1; opt.update = [1 1 1]; %[1 0 0];
-    elseif strcmp(tag, 'ij') && (strcmp(key, 'j') || strcmp(key, 'leftarrow')  || isequal(key, 28)), opt.pos(1) = opt.pos(1)-1; opt.update = [1 1 1]; %[0 1 0];
-    elseif strcmp(tag, 'ij') && (strcmp(key, 'k') || strcmp(key, 'rightarrow') || isequal(key, 29)), opt.pos(1) = opt.pos(1)+1; opt.update = [1 1 1]; %[0 1 0];
-    elseif strcmp(tag, 'ij') && (strcmp(key, 'm') || strcmp(key, 'downarrow')  || isequal(key, 31)), opt.pos(2) = opt.pos(2)-1; opt.update = [1 1 1]; %[1 0 0];
-    elseif strcmp(tag, 'jk') && (strcmp(key, 'i') || strcmp(key, 'uparrow')    || isequal(key, 30)), opt.pos(3) = opt.pos(3)+1; opt.update = [1 1 1]; %[0 0 1];
-    elseif strcmp(tag, 'jk') && (strcmp(key, 'j') || strcmp(key, 'leftarrow')  || isequal(key, 28)), opt.pos(2) = opt.pos(2)-1; opt.update = [1 1 1]; %[1 0 0];
-    elseif strcmp(tag, 'jk') && (strcmp(key, 'k') || strcmp(key, 'rightarrow') || isequal(key, 29)), opt.pos(2) = opt.pos(2)+1; opt.update = [1 1 1]; %[1 0 0];
-    elseif strcmp(tag, 'jk') && (strcmp(key, 'm') || strcmp(key, 'downarrow')  || isequal(key, 31)), opt.pos(3) = opt.pos(3)-1; opt.update = [1 1 1]; %[0 0 1];
-    else
+if strcmp(opt.method, 'volume')
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  switch key
+    case {'' 'shift+shift' 'alt-alt' 'control+control' 'command-0'}
       % do nothing
-    end
-    opt.pos = min(opt.pos(:)', opt.axis([2 4 6])); % avoid out-of-bounds
-    opt.pos = max(opt.pos(:)', opt.axis([1 3 5]));
-    opt.reinit = true; % redraw orthoplots
 
-    setappdata(h, 'opt', opt);
-    cb_redraw(h);
+    case 'h'
+      cb_help(h)
 
-    % contrast scaling
-  case {43 'add' 'shift+equal'}  % + or numpad +
-    if isempty(opt.clim)
-      opt.clim = [min(opt.ana(:)) max(opt.ana(:))];
-    end
-    % reduce color scale range by 10%
-    cscalefactor = (opt.clim(2)-opt.clim(1))/10;
-    %opt.clim(1) = opt.clim(1)+cscalefactor;
-    opt.clim(2) = opt.clim(2)-cscalefactor;
-    setappdata(h, 'opt', opt);
-    cb_redraw(h);
+    case 'q'
+      setappdata(h, 'opt', opt);
+      cb_quit(h);
 
-  case {45 'subtract' 'hyphen' 'shift+hyphen'} % - or numpad -
-    if isempty(opt.clim)
-      opt.clim = [min(opt.ana(:)) max(opt.ana(:))];
-    end
-    % increase color scale range by 10%
-    cscalefactor = (opt.clim(2)-opt.clim(1))/10;
-    %opt.clim(1) = opt.clim(1)-cscalefactor;
-    opt.clim(2) = opt.clim(2)+cscalefactor;
-    setappdata(h, 'opt', opt);
-    cb_redraw(h);
+    case 'v' % camlight angle reset
+      delete(findall(h,'Type','light')) % shut out the lights
+      % add a new light from the current camera position
+      lighting gouraud
+      material shiny
+      camlight
 
-  case 99  % 'c'
-    opt.showcrosshair = ~opt.showcrosshair;
-    setappdata(h, 'opt', opt);
-    cb_redraw(h);
+    case '1'
+      subplot(opt.axes(1));
 
-  case 102 % 'f' for fiducials
-    opt.showmarkers = ~opt.showmarkers;
-    setappdata(h, 'opt', opt);
-    cb_redraw(h);
+    case '2'
+      subplot(opt.axes(2));
 
-  case 'v' % camlight angle reset
-    delete(findall(h,'Type','light')) % shut out the lights
-    % add a new light from the current camera position
-    lighting gouraud
-    material shiny
-    camlight
+    case '3'
+      subplot(opt.axes(3));
 
-  case 3 % right mouse click
-    % add point to a list
-    l1 = get(get(gca, 'xlabel'), 'string');
-    l2 = get(get(gca, 'ylabel'), 'string');
-    switch l1
-      case 'i'
-        xc = d1;
-      case 'j'
-        yc = d1;
-      case 'k'
-        zc = d1;
-    end
-    switch l2
-      case 'i'
-        xc = d2;
-      case 'j'
-        yc = d2;
-      case 'k'
-        zc = d2;
-    end
-    pnt = [pnt; xc yc zc];
+    case 'g' % global/local elec view (h9) toggle
+      if isequal(opt.global, 0)
+        opt.global = 1;
+        set(opt.axes(9), 'Value', 1);
+      elseif isequal(opt.global, 1)
+        opt.global = 0;
+        set(opt.axes(9), 'Value', 0);
+      end
+      opt.redrawmarkers = true; % draw markers
+      setappdata(h, 'opt', opt);
+      cb_redraw(h);
 
-  case 2 % middle mouse click
-    l1 = get(get(gca, 'xlabel'), 'string');
-    l2 = get(get(gca, 'ylabel'), 'string');
+    case 'l' % elec label view (h8) toggle
+      if isequal(opt.showlabels, 0)
+        opt.showlabels = 1;
+        set(opt.axes(8), 'Value', 1);
+      elseif isequal(opt.showlabels, 1)
+        opt.showlabels = 0;
+        set(opt.axes(8), 'Value', 0);
+      end
+      opt.redrawmarkers = true; % draw markers
+      setappdata(h, 'opt', opt);
+      cb_redraw(h);
 
-    % remove the previous point
-    if size(pnt,1)>0
-      pnt(end,:) = [];
-    end
+    case 'm' % magnet (h7) toggle
+      if isequal(opt.magnet, 0)
+        opt.magnet = 1;
+        set(opt.axes(7), 'Value', 1);
+      elseif isequal(opt.magnet, 1)
+        opt.magnet = 0;
+        set(opt.axes(7), 'Value', 0);
+      end
+      setappdata(h, 'opt', opt);
 
-    if l1=='i' && l2=='j'
-      updatepanel = [1 2 3];
-    elseif l1=='i' && l2=='k'
-      updatepanel = [2 3 1];
-    elseif l1=='j' && l2=='k'
-      updatepanel = [3 1 2];
-    end
+    case {28 29 30 31 'leftarrow' 'rightarrow' 'uparrow' 'downarrow'}
+      % update the view to a new position
+      if     strcmp(tag, 'ik') && (strcmp(key, 'i') || strcmp(key, 'uparrow')    || isequal(key, 30)), opt.pos(3) = opt.pos(3)+1; opt.update = [1 1 1]; %[0 0 1];
+      elseif strcmp(tag, 'ik') && (strcmp(key, 'j') || strcmp(key, 'leftarrow')  || isequal(key, 28)), opt.pos(1) = opt.pos(1)-1; opt.update = [1 1 1]; %[0 1 0];
+      elseif strcmp(tag, 'ik') && (strcmp(key, 'k') || strcmp(key, 'rightarrow') || isequal(key, 29)), opt.pos(1) = opt.pos(1)+1; opt.update = [1 1 1]; %[0 1 0];
+      elseif strcmp(tag, 'ik') && (strcmp(key, 'm') || strcmp(key, 'downarrow')  || isequal(key, 31)), opt.pos(3) = opt.pos(3)-1; opt.update = [1 1 1]; %[0 0 1];
+      elseif strcmp(tag, 'ij') && (strcmp(key, 'i') || strcmp(key, 'uparrow')    || isequal(key, 30)), opt.pos(2) = opt.pos(2)+1; opt.update = [1 1 1]; %[1 0 0];
+      elseif strcmp(tag, 'ij') && (strcmp(key, 'j') || strcmp(key, 'leftarrow')  || isequal(key, 28)), opt.pos(1) = opt.pos(1)-1; opt.update = [1 1 1]; %[0 1 0];
+      elseif strcmp(tag, 'ij') && (strcmp(key, 'k') || strcmp(key, 'rightarrow') || isequal(key, 29)), opt.pos(1) = opt.pos(1)+1; opt.update = [1 1 1]; %[0 1 0];
+      elseif strcmp(tag, 'ij') && (strcmp(key, 'm') || strcmp(key, 'downarrow')  || isequal(key, 31)), opt.pos(2) = opt.pos(2)-1; opt.update = [1 1 1]; %[1 0 0];
+      elseif strcmp(tag, 'jk') && (strcmp(key, 'i') || strcmp(key, 'uparrow')    || isequal(key, 30)), opt.pos(3) = opt.pos(3)+1; opt.update = [1 1 1]; %[0 0 1];
+      elseif strcmp(tag, 'jk') && (strcmp(key, 'j') || strcmp(key, 'leftarrow')  || isequal(key, 28)), opt.pos(2) = opt.pos(2)-1; opt.update = [1 1 1]; %[1 0 0];
+      elseif strcmp(tag, 'jk') && (strcmp(key, 'k') || strcmp(key, 'rightarrow') || isequal(key, 29)), opt.pos(2) = opt.pos(2)+1; opt.update = [1 1 1]; %[1 0 0];
+      elseif strcmp(tag, 'jk') && (strcmp(key, 'm') || strcmp(key, 'downarrow')  || isequal(key, 31)), opt.pos(3) = opt.pos(3)-1; opt.update = [1 1 1]; %[0 0 1];
+      else
+        % do nothing
+      end
+      opt.pos = min(opt.pos(:)', opt.axis([2 4 6])); % avoid out-of-bounds
+      opt.pos = max(opt.pos(:)', opt.axis([1 3 5]));
+      opt.reinit = true; % redraw orthoplots
 
-  otherwise
-    % do nothing
+      setappdata(h, 'opt', opt);
+      cb_redraw(h);
 
-end % switch key
+      % contrast scaling
+    case {43 'add' 'shift+equal'}  % + or numpad +
+      if isempty(opt.clim)
+        opt.clim = [min(opt.ana(:)) max(opt.ana(:))];
+      end
+      % reduce color scale range by 10%
+      cscalefactor = (opt.clim(2)-opt.clim(1))/10;
+      %opt.clim(1) = opt.clim(1)+cscalefactor;
+      opt.clim(2) = opt.clim(2)-cscalefactor;
+      setappdata(h, 'opt', opt);
+      cb_redraw(h);
+
+    case {45 'subtract' 'hyphen' 'shift+hyphen'} % - or numpad -
+      if isempty(opt.clim)
+        opt.clim = [min(opt.ana(:)) max(opt.ana(:))];
+      end
+      % increase color scale range by 10%
+      cscalefactor = (opt.clim(2)-opt.clim(1))/10;
+      %opt.clim(1) = opt.clim(1)-cscalefactor;
+      opt.clim(2) = opt.clim(2)+cscalefactor;
+      setappdata(h, 'opt', opt);
+      cb_redraw(h);
+
+    case 'c' % for crosshair
+      opt.showcrosshair = ~opt.showcrosshair;
+      setappdata(h, 'opt', opt);
+      cb_redraw(h);
+
+    case 'f' % for fiducials
+      opt.showmarkers = ~opt.showmarkers;
+      setappdata(h, 'opt', opt);
+      cb_redraw(h);
+
+    case 3 % right mouse click
+      % add point to a list
+      l1 = get(get(gca, 'xlabel'), 'string');
+      l2 = get(get(gca, 'ylabel'), 'string');
+      switch l1
+        case 'i'
+          xc = d1;
+        case 'j'
+          yc = d1;
+        case 'k'
+          zc = d1;
+      end
+      switch l2
+        case 'i'
+          xc = d2;
+        case 'j'
+          yc = d2;
+        case 'k'
+          zc = d2;
+      end
+      pnt = [pnt; xc yc zc];
+
+    case 2 % middle mouse click
+      l1 = get(get(gca, 'xlabel'), 'string');
+      l2 = get(get(gca, 'ylabel'), 'string');
+
+      % remove the previous point
+      if size(pnt,1)>0
+        pnt(end,:) = [];
+      end
+
+      if l1=='i' && l2=='j'
+        updatepanel = [1 2 3];
+      elseif l1=='i' && l2=='k'
+        updatepanel = [2 3 1];
+      elseif l1=='j' && l2=='k'
+        updatepanel = [3 1 2];
+      end
+
+    otherwise
+      % do nothing
+  end % switch key
+
+elseif strcmp(opt.method, 'headshape')
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  switch key
+    case {'' 'shift+shift' 'alt-alt' 'control+control' 'command-0'}
+      % do nothing
+
+    case 'h'
+      cb_help(h)
+
+    case 'q'
+      setappdata(h, 'opt', opt);
+      cb_quit(h);
+
+    case 'v' % camlight angle reset
+      delete(findall(h,'Type','light')) % shut out the lights
+      % add a new light from the current camera position
+      lighting gouraud
+      material shiny
+      camlight
+
+    otherwise
+      % do nothing
+  end % switch key
+end % if method
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
