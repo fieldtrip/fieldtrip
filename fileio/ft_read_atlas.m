@@ -25,13 +25,13 @@ function atlas = ft_read_atlas(filename, varargin)
 % The output atlas will be represented as structure according to
 % FT_DATATYPE_SEGMENTATION or FT_DATATYPE_PARCELLATION.
 %
-% The "lines" and the "colorcube" colormaps are useful for plotting the different
+% The 'lines' and the 'colorcube' colormaps are useful for plotting the different
 % patches, for example using FT_PLOT_MESH.
 %
 % See also FT_READ_MRI, FT_READ_HEADSHAPE, FT_PREPARE_SOURCEMODEL, FT_SOURCEPARCELLATE, FT_PLOT_MESH
 
 % Copyright (C) 2005-2019, Robert Oostenveld, Ingrid Nieuwenhuis, Jan-Mathijs Schoffelen, Arjen Stolk
-%
+% 
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
@@ -968,9 +968,8 @@ switch fileformat
     
   case 'yeo17'
     % this uses Yeo2011_17Networks_MNI152_FreeSurferConformed1mm_LiberalMask_colin27.nii, which is
-    % the 17 network parcelation from https://surfer.nmr.mgh.harvard.edu/fswiki/CorticalParcellation_Yeo2011 
-    % aligned to the colin27 template (skull-stripped version of single_subj_T1_1mm.nii) 
-    % using AFNI's 3dQwarp and 3dNwarpApply
+    % the 17 network parcellation from https://surfer.nmr.mgh.harvard.edu/fswiki/CorticalParcellation_Yeo2011 
+    % aligned to the colin27 template (skull-stripped version of single_subj_T1_1mm.nii) using AFNI's 3dQwarp and 3dNwarpApply
     atlas = ft_read_mri(filename);
     atlas.tissue = atlas.anatomy;
     atlas = rmfield(atlas, 'anatomy');
