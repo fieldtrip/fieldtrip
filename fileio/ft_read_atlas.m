@@ -50,7 +50,8 @@ function atlas = ft_read_atlas(filename, varargin)
 %
 % $Id$
 
-% deal with multiple filenames
+% deal with multiple filenames, if the geometry and labels are stored
+% in different files, as with freesurfer/caret
 if isa(filename, 'cell')
   if numel(filename)==2
     filenamemesh = filename{2};
@@ -100,9 +101,9 @@ elseif ft_filetype(filename, 'caret_label')
 elseif contains(filename, 'MPM')
   % assume to be from the spm_anatomy toolbox
   format = 'spm_anatomy';
-elseif contains(filename, 'final_tissues_LUT')
+elseif contains(filename, 'final_tissues')
   % assume to be from SimNIBS version 4
-  format = 'SimNIBS_v4';
+  format = 'simnibs_v4';
 elseif strcmp(x, '.xml') && (isfolder(strtok(fullfile(p,f), '_')) || isfolder(strtok(fullfile(p,f), '-')))
   % fsl-format atlas, this is assumed to consist of an .xml file that
   % specifies the labels, as well as the filenames of the files with the actual data stored
@@ -599,13 +600,26 @@ switch fileformat
     atlas.parcellation      = new_brick0;
     atlas.parcellationlabel = label(:);
     
-  case {'freesurfer_volume'}
-    fscolorlut = ft_getopt(varargin, 'fscolorlut', []);
-    if isempty(fscolorlut)
-      [ftver, ftpath] = ft_version;
-      fscolorlut  = fullfile(ftpath, 'external/freesurfer', 'FreeSurferColorLUT.txt');
+  case {'freesurfer_volume' 'simnibs_v4'}
+    % ensure freesurfer on the path and get the info how to get from value to label, which can be specified
+    % by supplying an explicit LUT filename, or by clever guessing 
+    ft_hastoolbox('freesurfer', 1);
+
+    lookuptable = ft_getopt(varargin, 'lookuptable', []);
+    if isequal(fileformat, 'freesurfer_volume')
+      if isempty(lookuptable)
+        % use the version for freesurfer that is in fieldtrip/external/freesurfer
+        [ftver, ftpath] = ft_version;
+        lookuptable  = fullfile(ftpath, 'external/freesurfer', 'FreeSurferColorLUT.txt');
+      end
+      fieldname = 'aparc';
+    elseif isequal(fileformat, 'simnibs_v4')
+      if isempty(lookuptable)
+        lookuptable = fullfile(p, 'final_tissues_LUT.txt');
+      end
+      fieldname = 'tissue';
     end
-    [value, label, rgbv] = read_fscolorlut(fscolorlut);
+    [value, label, rgbv] = read_fscolorlut(lookuptable);
     label = cellstr(label);
     
     % read in the volume
@@ -635,8 +649,8 @@ switch fileformat
         rgba(cnt,:)       = rgbv(k,:);
       end
     end
-    atlas.aparc      = aparc;
-    atlas.aparclabel = aparclabel;
+    atlas.(fieldname) = aparc;
+    atlas.(sprintf('%slabel',fieldname)) = aparclabel;
     atlas.rgba       = rgba;
     
   case {'freesurfer_a2009s' 'freesurfer_aparc' 'freesurfer_ba'}
@@ -802,35 +816,6 @@ switch fileformat
     elseif ~isfield(atlas, 'coordsys')
       atlas.coordsys = 'unknown';
     end
-
-  case 'SimNIBS_v4'
-    tmp = ft_read_mri(filenamemesh);
-    lookuptable = readtable(filename);
-    n_tissues = size(lookuptable, 1);
-    tissue_ids = zeros(1, n_tissues);
-    tissuelabels = cell(1, n_tissues);
-    for tissue_index = 1:n_tissues
-      tissue_ids(tissue_index) = table2array(lookuptable(tissue_index, 1)); % first is identifier
-      tissuelabel = table2array(lookuptable(tissue_index, 2));
-      tissuelabels{tissue_index} = tissuelabel{1};
-    end
-    atlas = [];
-    atlas.unit = tmp.unit;
-    atlas.transform = tmp.transform;
-    atlas.dim = tmp.dim;
-    atlas.tissue = tmp.anatomy;
-    max_index = max(tissue_ids);
-    atlas.tissuelabels = repmat({''}, 1, max_index);
-
-    tissue_counter = 1;
-    for index = 1:max_index
-      if any(tissue_ids == index)
-        atlas.tissuelabels{index} = tissuelabels{tissue_counter};
-        tissue_counter = tissue_counter + 1;
-      end
-    end
-
-
     
   case 'spm_anatomy'
     ft_hastoolbox('spm8up', 1);

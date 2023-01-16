@@ -1,17 +1,17 @@
-%% INITIALISE
+function test_issue2151
 
-clear variables
-restoredefaultpath
+% WALLTIME 00:20:00
+% MEM 2gb
+% DEPENDENCY ft_read_atlas
 
-addpath /home/lau/matlab/fieldtrip
-ft_defaults
+% this is a test function to check whether ft_read_atlas manages to read in
+% a SimNIBS based segmented volume
 
-%% READ ATLAS
 
-path =  '/home/lau/simnibs_examples/v4/ernie/m2m_ernie';
-atlas_filenamelabels = 'final_tissues_LUT.txt';
-atlas_filenamemesh = 'final_tissues.nii.gz';
+%path =  '/home/lau/simnibs_examples/v4/ernie/m2m_ernie';
+%atlas_filenamelabels = 'final_tissues_LUT.txt';
 
-atlas = ft_read_atlas(fullfile(path, ...
-                     {atlas_filenamelabels atlas_filenamemesh}));
+path = '/home/common/matlab/fieldtrip/data/test/pull2156';
+atlas_filename = 'final_tissues.nii.gz';
 
+atlas = ft_read_atlas(fullfile(path, atlas_filename));
