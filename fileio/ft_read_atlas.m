@@ -17,7 +17,7 @@ function atlas = ft_read_atlas(filename, varargin)
 %   'map'         = string, 'maxprob' (default), or 'prob', for FSL-based atlases, providing 
 %                   either a probabilistic segmentation or a maximum a posterior probability map
 %
-% For individual surface-based atlases from FreeSurfer and SimNIBS you should specify two
+% For individual surface-based atlases from FreeSurfer you should specify two
 % filenames as a cell-array: the first points to the file that contains information
 % with respect to the parcels' labels, the second points to the file that defines the
 % mesh on which the parcellation is defined.
