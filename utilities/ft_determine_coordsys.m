@@ -196,6 +196,9 @@ end
 ft_plot_axes(data, 'axisscale', axisscale, 'fontsize', fontsize);
 
 if istrue(dointeractive)
+  % ensure the figure is updated prior to asking the question
+  % this was needed for FT_ELECTRODEPLACEMENT in combination with MATLAB 2022a
+  drawnow
 
   if ~isfield(data, 'coordsys') || isempty(data.coordsys)
     % default is yes
