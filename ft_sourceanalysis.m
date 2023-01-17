@@ -306,7 +306,7 @@ cfg.channel = ft_channelselection([cfg.channel(:); cfg.supchan(:)], data.label);
 source = [];
 
 if istimelock
-  tmpcfg = keepfields(cfg, {'channel', 'latency', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+  tmpcfg = keepfields(cfg, {'channel', 'latency', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
   % keep the time axis in the output
   tmpcfg.avgovertime = 'no';
   data = ft_selectdata(tmpcfg, data);
@@ -317,7 +317,7 @@ if istimelock
   source = copyfields(data, source, {'time'});
   
 elseif isfreq
-  tmpcfg = keepfields(cfg, {'channel', 'latency', 'frequency', 'nanmean', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+  tmpcfg = keepfields(cfg, {'channel', 'latency', 'frequency', 'nanmean', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
   
   if ismember(cfg.method, {'pcc' 'dics'})
     tmpcfg.avgoverfreq = 'yes';
@@ -377,7 +377,7 @@ if ~isempty(cfg.refdip) || ~isempty(cfg.supdip)
   [headmodel, sens, cfg] = prepare_headmodel(cfg, data);
   
   % construct the dipole positions on which the source reconstruction will be done
-  tmpcfg           = keepfields(cfg, {'sourcemodel', 'mri', 'headshape', 'symmetry', 'smooth', 'threshold', 'spheremesh', 'inwardshift', 'xgrid', 'ygrid', 'zgrid', 'resolution', 'tight', 'warpmni', 'template', 'reducerank', 'backproject', 'normalize', 'normalizeparam', 'weight', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+  tmpcfg           = keepfields(cfg, {'sourcemodel', 'mri', 'headshape', 'symmetry', 'smooth', 'threshold', 'spheremesh', 'inwardshift', 'xgrid', 'ygrid', 'zgrid', 'resolution', 'tight', 'warpmni', 'template', 'reducerank', 'backproject', 'normalize', 'normalizeparam', 'weight', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
   tmpcfg.headmodel = headmodel;
   if ft_senstype(sens, 'eeg')
     tmpcfg.elec = sens;
@@ -463,7 +463,7 @@ elseif istrue(cfg.keepleadfield) || istrue(cfg.permutation) || istrue(cfg.random
   [headmodel, sens, cfg] = prepare_headmodel(cfg, data);
   
   % construct the dipole positions on which the source reconstruction will be done
-  tmpcfg           = keepfields(cfg, {'sourcemodel', 'mri', 'headshape', 'symmetry', 'smooth', 'threshold', 'spheremesh', 'inwardshift', 'xgrid', 'ygrid', 'zgrid', 'resolution', 'tight', 'warpmni', 'template', 'reducerank', 'backproject', 'normalize', 'normalizeparam', 'weight', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+  tmpcfg           = keepfields(cfg, {'sourcemodel', 'mri', 'headshape', 'symmetry', 'smooth', 'threshold', 'spheremesh', 'inwardshift', 'xgrid', 'ygrid', 'zgrid', 'resolution', 'tight', 'warpmni', 'template', 'reducerank', 'backproject', 'normalize', 'normalizeparam', 'weight', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
   tmpcfg.headmodel = headmodel;
   if ft_senstype(sens, 'eeg')
     tmpcfg.elec = sens;
@@ -484,7 +484,7 @@ else
   [headmodel, sens, cfg] = prepare_headmodel(cfg, data);
   
   % construct the dipole positions on which the source reconstruction will be done
-  tmpcfg           = keepfields(cfg, {'sourcemodel', 'mri', 'headshape', 'symmetry', 'smooth', 'threshold', 'spheremesh', 'inwardshift', 'xgrid', 'ygrid', 'zgrid', 'resolution', 'tight', 'warpmni', 'template', 'reducerank', 'backproject', 'normalize', 'normalizeparam', 'weight', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+  tmpcfg           = keepfields(cfg, {'sourcemodel', 'mri', 'headshape', 'symmetry', 'smooth', 'threshold', 'spheremesh', 'inwardshift', 'xgrid', 'ygrid', 'zgrid', 'resolution', 'tight', 'warpmni', 'template', 'reducerank', 'backproject', 'normalize', 'normalizeparam', 'weight', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
   tmpcfg.headmodel = headmodel;
   if ft_senstype(sens, 'eeg')
     tmpcfg.elec = sens;

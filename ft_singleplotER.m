@@ -292,7 +292,7 @@ end
 
 
 % channels should NOT be selected and averaged here, since a topoplot might follow in interactive mode
-tmpcfg = keepfields(cfg, {'trials', 'select', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+tmpcfg = keepfields(cfg, {'trials', 'select', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
 if hasrpt
   tmpcfg.avgoverrpt = 'yes';
 else
@@ -373,7 +373,7 @@ end
 
 if istrue(cfg.showlocations)
   % Read or create the layout that will be used for plotting, if specified
-  tmpcfg = keepfields(cfg, {'rows', 'columns', 'commentpos', 'scalepos', 'projection', 'viewpoint', 'rotate', 'width', 'height', 'elec', 'grad', 'opto', 'layouttopo', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+  tmpcfg = keepfields(cfg, {'rows', 'columns', 'commentpos', 'scalepos', 'projection', 'viewpoint', 'rotate', 'width', 'height', 'elec', 'grad', 'opto', 'layouttopo', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
   tmpcfg.skipcomnt = 'yes';
   tmpcfg.skipscale = 'yes';
   tmpcfg.pointcolor = cfg.linecolor; % switch of name for ft_prepare_layout

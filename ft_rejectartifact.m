@@ -575,7 +575,7 @@ else
     switch (cfg.artfctdef.reject)
       case 'complete'
         % only keep the trials without any artifacts
-        tmpcfg = keepfields(cfg, {'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+        tmpcfg = keepfields(cfg, {'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
         tmpcfg.trials = number(:);
         data   = ft_selectdata(tmpcfg, data);
         % restore the provenance information
@@ -596,7 +596,7 @@ else
 
         if ~hasoverlap
           % apply the updated trial definition to the data
-          tmpcfg      = keepfields(cfg, {'trl', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+          tmpcfg      = keepfields(cfg, {'trl', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
           data        = ft_redefinetrial(tmpcfg, data);
           % restore the provenance information
           [cfg, data] = rollback_provenance(cfg, data);
@@ -611,7 +611,7 @@ else
             if isfield(singletrial{i}, 'trialinfo')
               singletrial{i}.trialinfo = singletrial{i}.trialinfo(i,:);
             end
-            tmpcfg = keepfields(cfg, {'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+            tmpcfg = keepfields(cfg, {'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
             tmpcfg.showcallinfo = 'no';
             tmpcfg.trl = cfg.trl(number==i, :);
             singletrial{i} = ft_redefinetrial(tmpcfg, singletrial{i});
