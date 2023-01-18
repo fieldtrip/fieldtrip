@@ -2,9 +2,10 @@ function atlas = ft_read_atlas(filename, varargin)
 
 % FT_READ_ATLAS reads an template/individual segmentation or parcellation from disk.
 % The volumetric segmentation or the surface-based parcellation can either represent
-% a template atlas (eg. AAL or the Talairach Daemon), it can represent an
+% a template atlas (e.g. AAL or the Talairach Daemon), it can represent an
 % individualized atlas (e.g. obtained from FreeSurfer) or it can represent an
-% unlabeled parcellation obtained from the individual's DTi or resting state fMRI.
+% unlabeled parcellation/segmentation obtained from an individual's DTi, anatomical,
+% or resting state fMRI scan.
 %
 % Use as
 %   atlas = ft_read_atlas(filename, ...)
@@ -86,7 +87,7 @@ elseif strcmp(x, '.nii') && exist(fullfile(p, [f '.txt']), 'file')
   if strcmp(l1(1),'[') && strcmp(l1(end),']')
     format = 'aal_ext';
   elseif strcmp(l1,'Brainnetome Atlas')
-    format= 'brainnetome';
+    format = 'brainnetome';
   else
     format = 'aal';
   end
@@ -105,9 +106,8 @@ elseif contains(filename, 'final_tissues')
   % assume to be from SimNIBS version 4
   format = 'simnibs_v4';
 elseif strcmp(x, '.xml') && (isfolder(strtok(fullfile(p,f), '_')) || isfolder(strtok(fullfile(p,f), '-')))
-  % fsl-format atlas, this is assumed to consist of an .xml file that
-  % specifies the labels, as well as the filenames of the files with the actual data stored
-  % in a directory with the of the strtok'ed (with '-' or '_') file name.
+  % fsl-style atlas, this is assumed to consist of an .xml file that specifies the labels, as well as the filename
+  % of the files with the actual data stored in a directory with the of the strtok'ed (with '-' or '_') filename.
   format = 'fsl';
 elseif strcmp(x, '.mat')
   format = 'mat';
