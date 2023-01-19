@@ -1499,12 +1499,16 @@ else
 end
 
 % set the figure window title
-if ~isempty(dataname)
-  set(gcf, 'Name', sprintf('%d: %s: %s', double(gcf), mfilename, join_str(', ', dataname)));
+if ~isempty(cfg.figurename)
+  set(gcf, 'Name', cfg.figurename);
 else
-  set(gcf, 'Name', sprintf('%d: %s', double(gcf), mfilename));
+    if ~isempty(dataname)
+      set(gcf, 'Name', sprintf('%d: %s: %s', double(gcf), mfilename, join_str(', ', dataname)));
+    else
+      set(gcf, 'Name', sprintf('%d: %s', double(gcf), mfilename));
+    end
+    set(gcf, 'NumberTitle', 'off');
 end
-set(gcf, 'NumberTitle', 'off');
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
