@@ -96,6 +96,27 @@ ft_sourceplot(cfg, atlas);
 cfg.method = 'surface';
 ft_sourceplot(cfg, atlas, pial.mesh)
 
+% read and plot simnibs
+atlas = ft_read_atlas(fullfile(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/atlas/volume'), 'final_tissues.nii.gz'));
+
+% read and plot volumetric freesurfer
+atlas = ft_read_atlas(fullfile(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/atlas/volume'), 'aparc.a2009s+aseg.mgz'));
+
+% read and plot freesurfer_annot based atlas
+sdir = dccnpath('/home/common/matlab/fieldtrip/data/test/latest/atlas/surface');
+atlas = ft_read_atlas({fullfile(sdir, 'lh.aparc.a2009s.annot') fullfile(sdir, 'lh.pial')});
+
+% read and plot caret_label type atlas
+sdir = dccnpath('/home/common/matlab/fieldtrip/data/test/latest/atlas/surface');
+atlas = ft_read_atlas({fullfile(sdir, 'sub-008.L.aparc.a2009s.8k_fs_LR.label.gii') fullfile(sdir, 'sub-008.L.midthickness.8k_fs_LR.surf.gii')});
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% check whether fsl-atlases work
+vdir = dccnpath('/home/common/matlab/fieldtrip/data/test/latest/atlas/volume');
+atlas = ft_read_atlas(fullfile(vdir, 'Cerebellum_MNIflirt.xml'));
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % check whether some other AFNI atlases can be read as well
@@ -150,4 +171,6 @@ ok = true;
 %  ok = false;
 %end
 %assert(ok==1);
+
+
 
