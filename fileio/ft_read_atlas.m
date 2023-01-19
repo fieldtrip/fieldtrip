@@ -17,22 +17,64 @@ function atlas = ft_read_atlas(filename, varargin)
 %   'unit'        = string, e.g. 'mm' (default is to keep it in the native units of the file)
 %   'map'         = string, 'maxprob' (default), or 'prob', for FSL-based atlases, providing 
 %                   either a probabilistic segmentation or a maximum a posterior probability map
+%   'labelfile'   = string, point to a (generic) text or xml file for interpretation of the values in the atlas 
 %
 % For individual surface-based atlases from FreeSurfer you should specify two
 % filenames as a cell-array: the first points to the file that contains information
 % with respect to the parcels' labels, the second points to the file that defines the
 % mesh on which the parcellation is defined.
 %
-% The output atlas will be represented as structure according to
-% FT_DATATYPE_SEGMENTATION or FT_DATATYPE_PARCELLATION.
+% The 'format' variable, if not specified, will be determined automatically. In general
+% it will not be needed to specify it. The following formats are supported:
 %
-% The 'lines' and the 'colorcube' colormaps are useful for plotting the different
-% patches, for example using FT_PLOT_MESH.
+% Volumetric atlases based on a (gzipped) nifti-file with an companion txt-file for interpretation
+%   'aal'               assumes filename starting with 'ROI_MNI'
+%   'brainnetome'       assumes companion lookuptable txt-file starting with 'Brainnetome Atlas'
+%   'simnibs_v4'        assumes filename starting with 'final_tissues', with companion freesurfer-style lookuptable txt-file
+%   'wfu'               assumes specific formatting of companion lookuptable txt-file
+%
+% Volumetric atlases based on a (gzipped) nifti-file with hard coded assumption on the labels
+%   'yeo7' 
+%   'yeo17'
+%
+% Volumetric atlases based on a folder with (gzipped) nifti-files with a companion xml-file for interpretation
+%   'fsl'               assumes path to folder with data mentioned in the xml-file. Use xml-file as filename 
+%
+% Volumetric atlases based on the freesurfer mgz format with standard lookuptable txt-file for interpretation
+%   'freesurfer_volume' assumes the freesurfer LUT file for interpretation, and assumes aparc or aseg in the 
+%                       filename, used for subject-specific parcellations
+%   
+% Volumetric atlases based on the afni software
+%   'afni'              assumes filename containing BRIK or HEAD, assumes generic interpretation of the labels 
+%                       for the TTatlas+tlrc, or otherwise the interpretation should be in the file
+%   
+% Volumetric atlas based on the spm_anatomy toolbox
+%   'spm_anatomy'       pair of .hdr/.img files, and an associated mat-file for the interpretation
+%                       Specify the associated mat-file with MPM in filename 
+%
+% Surface based atlases, requiring a pair of files, containing the labels, and the associated geometry
+%   'caret_label'       hcp-workbench/caret style .gii, with .label. in filename, requires additional file describing the geometry
+%   'freesurfer_surface' freesurfer style annotation file, requires additional file describing the geometry 
+%
+% Miscellaneous formats
+%   'mat'               mat-file, with FieldTrip style struct, other matlab data that FieldTrip knows to handle, can also be 
+%                       Brainstorm derived surfaces
+%   'vtpm'
+%
+% For volume data for whicth the format cannot be automatically detected, or if the volume data does not have a companion file 
+% for the interpretation of the labels, a list of 'fake' labels will be generated.
+%
+% The output atlas will be represented as structure according to FT_DATATYPE_SEGMENTATION or
+% FT_DATATYPE_PARCELLATION.
+%
+% The 'lines' and the 'colorcube' colormaps may be useful for plotting the different
+% patches, for example using FT_PLOT_MESH, or FT_SOURCEPLOT.
 %
 % See also FT_READ_MRI, FT_READ_HEADSHAPE, FT_PREPARE_SOURCEMODEL, FT_SOURCEPARCELLATE, FT_PLOT_MESH
 
 % Copyright (C) 2005-2019, Robert Oostenveld, Ingrid Nieuwenhuis, Jan-Mathijs Schoffelen, Arjen Stolk
-% 
+% Copyright (C) 2023, Jan-Mathijs Schoffelen
+%
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
@@ -62,61 +104,128 @@ if isa(filename, 'cell')
   end % if precisely two input files
 end % iscell
 
-% optionally get the data from the URL and make a temporary local copy
+% optionally get the data from an URL and make a temporary local copy
 filename = fetch_url(filename);
 
 [p, f, x] = fileparts(filename);
 
-if contains(filename, 'BRIK') || contains(filename, 'HEAD')
+labelfile = ft_getopt(varargin, 'labelfile', []);
+ftype     = ft_filetype(filename);    
+
+% if the original file was a .gz
+if isequal(x,'.gz')
+  [p, f, x] = fileparts(filename(1:end-3));
+end
+
+% do an educated guess of the format based on the input, ensure that the
+% required additional functions are available, and specify the companion labelfile 
+if startsWith(ftype, 'afni')
+  ft_hastoolbox('afni', 1);
+
   % this is robust for both compressed or uncompressed afni atlases. 
-  format = 'afni';
-elseif strcmp(x, '.nii') && exist(fullfile(p, [f '.txt']), 'file')
-  % This is a combination of nii+txt file, where the txt file may contain three columns like this
-  %   FAG	Precentral_L	2001
-  %   FAD	Precentral_R	2002
-  %   F1G	Frontal_Sup_L	2101
-  %   F1D	Frontal_Sup_R	2102
-  %   F1OG	Frontal_Sup_Orb_L	2111
-  %   ...
-  % Alternatively, the txt file may contain a header line with the atlas name between square brackets
-  % and then a variable number of column text info, where the first column
-  % is the index, and the second column the label.
-  labelfile = fullfile(p, [f '.txt']);
-  fid = fopen_or_error(labelfile, 'rt');
-  l1  = fgetl(fid);
-  if strcmp(l1(1),'[') && strcmp(l1(end),']')
-    format = 'aal_ext';
-  elseif strcmp(l1,'Brainnetome Atlas')
-    format = 'brainnetome';
-  else
-    format = 'aal';
+  format = 'afni';  
+elseif startsWith(ftype, 'nifti')
+
+  % first handle the ones for which the labels are implicit in the filename
+  if contains(f, 'Yeo2011_7Networks')
+    % assume to be conform the shared atlas, with hardcoded index-to-label mapping
+    format = 'yeo7';
+  elseif contains(f, 'Yeo2011_17Networks')
+    % assume to be conform the shared atlas, with hardcoded index-to-label mapping
+    format = 'yeo17';
   end
-  fclose(fid);
-elseif strcmp(x, '.mgz') && contains(f, 'aparc') || contains(f, 'aseg')
+
+  % try for different conventions of the naming of a potential companion labelfile
+  if isempty(labelfile)
+    labelfile = fullfile(p, sprintf('%s.txt', f));
+    if ~exist(labelfile, 'file')
+      % in case the volume was zipped, and the txt only replaced the gz
+      labelfile = fullfile(p, sprintf('%s.nii.txt', f));
+    end
+    if ~exist(labelfile, 'file')
+      labelfile = ''; % revert back to empty
+    end
+  end
+
+  if ~isempty(labelfile)
+    % do a quick check on the companion labelfile to specify the format
+    fid = fopen_or_error(labelfile, 'rt');
+    l1  = fgetl(fid);
+    if strcmp(l1(1),'[') && strcmp(l1(end),']')
+      % specific to this one is that some of the wakeforest atlases contain non-human data, so no fixed coordsys can be assumed
+      format   = 'wfu';
+      coordsys = 'unknown';
+    elseif strcmp(l1,'Brainnetome Atlas')
+      % specific to this one is the coordinate system it seems
+      format   = 'brainnetome';
+      coordsys = 'rai'; % radiological convention 
+    elseif contains(filename, 'ROI_MNI') || contains(filename, 'AAL')
+      % newer versions of AAL also exist with a companion .xml file, this is not yet supported
+      format   = 'aal';
+      coordsys = 'mni';
+    end
+    fclose(fid);
+  end
+  if contains(filename, 'final_tissues')
+    ft_hastoolbox('freesurfer', 1); % required to read lookuptable
+
+    % assume to be from SimNIBS version 4
+    format = 'simnibs_v4';
+
+    labelfile = fullfile(p, sprintf('%s_LUT.txt', f));
+  end
+  
+  if isempty(labelfile)
+    % just a nifti file without interpretation of labels
+    format = 'nifti_no_label';
+  end
+
+elseif isequal(ftype, 'freesurfer_mgz') && contains(f, 'aparc') || contains(f, 'aseg')
+  ft_hastoolbox('freesurfer', 1);
+
   % individual volume based segmentation from freesurfer
   format = 'freesurfer_volume';
-elseif ft_filetype(filename, 'caret_label')
-  % this is a gifti file that contains both the values for a set of
-  % vertices as well as the labels.
+  
+  if isempty(labelfile)
+    % use the version for freesurfer that is in fieldtrip/external/freesurfer
+    [ftver, ftpath] = ft_version;
+    labelfile  = fullfile(ftpath, 'external/freesurfer', 'FreeSurferColorLUT.txt');
+  end
+
+elseif isequal(ftype, 'freesurfer_annot')
+  ft_hastoolbox('freesurfer', 1);
+
+  % individual volume based segmentation from freesurfer
+  format = 'freesurfer_surface';
+  
+elseif isequal(ftype, 'caret_label')
+  ft_hastoolbox('gifti', 1);
+
+  % this is a gifti file that contains both the values for a set of vertices as well as the labels.
   format = 'caret_label';
-elseif contains(filename, 'MPM')
+  
+elseif contains(filename, 'MPM.mat')
+  ft_hastoolbox('spm8up', 1);
+
   % assume to be from the spm_anatomy toolbox
   format = 'spm_anatomy';
-elseif contains(filename, 'final_tissues')
-  % assume to be from SimNIBS version 4
-  format = 'simnibs_v4';
-elseif strcmp(x, '.xml') && (isfolder(strtok(fullfile(p,f), '_')) || isfolder(strtok(fullfile(p,f), '-')))
-  % fsl-style atlas, this is assumed to consist of an .xml file that specifies the labels, as well as the filename
-  % of the files with the actual data stored in a directory with the of the strtok'ed (with '-' or '_') filename.
+
+elseif strcmp(x, '.xml')
+  ft_hastoolbox('gifti', 1); % required to read the xml
+
+  % fsl-style atlas, this is assumed to consist of an .xml file that specifies the labels, as well as a pointer
+  % to the file/folder with the volume data.
   format = 'fsl';
+
+  labelfile = fullfile(p, sprintf('%s.xml',f));
+
 elseif strcmp(x, '.mat')
+  % mat-file to contain a well-defined structure
   format = 'mat';
-elseif strcmp(x, '.nii') && contains(f, 'Yeo2011_7Networks')
-  format = 'yeo7';
-elseif strcmp(x, '.nii') && contains(f, 'Yeo2011_17Networks')
-  format = 'yeo17';
+
 else
-  format = 'wfu';
+
+  format = 'unknown';
 end
 
 % get the optional input arguments
@@ -124,83 +233,111 @@ fileformat = ft_getopt(varargin, 'format', format);
 unit       = ft_getopt(varargin, 'unit');
 
 switch fileformat
-  case 'aal'
-    labelfile = fullfile(p, [f '.txt']);
-    fid = fopen_or_error(labelfile, 'rt');
-    C = textscan(fid, '%s%s%d');
-    lab = C{2};
-    idx = C{3};
-    fclose(fid);
+  case {'aal' 'brainnetome' 'freesurfer_volume' 'nifti_no_label' 'simnibs_v4' 'wfu'}
+    atlas = ft_read_mri(filename, 'outputfield', 'tissue');
     
-    atlas = ft_read_mri(filename);
-    atlas.tissue = atlas.anatomy;
-    atlas = rmfield(atlas, 'anatomy');
-    atlas.tissuelabel       = {};
-    atlas.tissuelabel(idx)  = lab;
-    atlas.coordsys = 'mni';
-    % The original contains a rather sparse labeling, since not all indices
-    % are being used (it starts at 2001) The question is whether it is more
-    % important to keep the original numbers or to make the list with
-    % labels compact. This could be made optional.
-    compact = true;
-    if compact && ~isempty(atlas.tissuelabel)
-      [a, i, j] = unique(atlas.tissue);
-      atlas.tissue = reshape(j-1, atlas.dim);
-      atlas.tissuelabel = atlas.tissuelabel(a(a~=0));
+    % interpret the format specific labelfile
+    if isequal(fileformat, 'aal')
+      % The labelfile is a combination of nii+txt file, where the txt file may contain three columns like this
+      %   FAG	Precentral_L	2001
+      %   FAD	Precentral_R	2002
+      %   ...
+   
+      fid = fopen_or_error(labelfile, 'rt');
+      C = textscan(fid, '%s%s%d');
+      lab = C{2};
+      idx = C{3};
+      fclose(fid);
+    elseif isequal(fileformat, 'wfu')
+      % the download from http://fmri.wfubmc.edu comes with pairs of nii and txt files
+      % the text file looks like this, with tabs between the colums
+      % the section at the end with three times 191 does not always exist
+      %
+      % [ TD Labels]
+      % 53	Angular Gyrus         191 191 191
+      % 39	Anterior Cingulate		191 191 191
+      % ...
+
+      fid = fopen_or_error(labelfile, 'rt');
+      C = textscan(fid, '%d%s%*[^\n]', 'HeaderLines', 1, 'Delimiter', '\t');
+      lab = C{2};
+      idx = C{1};
+      fclose(fid);
+    elseif any(strcmp(fileformat, {'simnibs_v4' 'freesurfer_volume'}))
+      [idx, lab, rgba] = read_fscolorlut(labelfile);
+      lab = cellstr(lab);
+    elseif isequal(fileformat, 'brainnetome')
+      % Brainnetome Atlas: L. Fan, et al.The Human Brainnetome Atlas: A New Brain Atlas Based on
+      % Connectional Architecture. Cereb Cortex 2016; 26 (8): 3508-3526. doi: 10.1093/cercor/bhw157
+      fid = fopen_or_error(labelfile, 'rt');
+      fgetl(fid); % this reads: 'Brainnetome Atlas'
+      lab = cell(246,1);
+      for i=1:246
+        lab{i,1}=fgetl(fid);
+      end
+      idx = (1:246)';
+      fclose(fid);
+     
+    elseif isequal(fileformat, 'nifti_no_label')
+      % the file does not exist
+      ft_warning('cannot locate a labelfile, making default tissue labels');
+      
+      idx = (1:max(atlas.tissue(:)))';
+      lab = cell(size(idx));
+      for i = 1:numel(lab)
+        % this is consistent with FIXSEGMENTATION
+        lab{i} = sprintf('tissue %d', i);
+      end
     end
     
-  case 'aal_ext'
-    labelfile = fullfile(p, [f '.txt']);
-    fid = fopen_or_error(labelfile, 'rt');
-    C = textscan(fid, '%d%s%*[^\n]', 'HeaderLines', 1, 'Delimiter', '\t');
-    lab = C{2};
-    idx = C{1};
-    fclose(fid);
-    
-    atlas = ft_read_mri(filename);
-    atlas.tissue = atlas.anatomy;
-    atlas = rmfield(atlas, 'anatomy');
-    atlas.tissuelabel       = {};
-    atlas.tissuelabel(idx)  = lab;
-    atlas.coordsys = 'mni';
-    % The original contains a rather sparse labeling, since not all indices
-    % are being used (it starts at 2001) The question is whether it is more
-    % important to keep the original numbers or to make the list with
-    % labels compact. This could be made optional.
-    compact = true;
-    if compact && ~isempty(atlas.tissuelabel)
-      [a, i, j] = unique(atlas.tissue);
-      atlas.tissue = reshape(j-1, atlas.dim);
-      atlas.tissuelabel = atlas.tissuelabel(a(a~=0));
+    if ~isfield(atlas, 'coordsys') && exist('coordsys', 'var')
+      atlas.coordsys = coordsys;
     end
     
-  case 'brainnetome'
-    % Brainnetome Atlas
-    % L. Fan, et al.The Human Brainnetome Atlas: A New Brain Atlas Based on
-    % Connectional Architecture. Cereb Cortex 2016; 26 (8): 3508-3526.
-    % doi: 10.1093/cercor/bhw157
-    atlas = ft_read_mri(filename);
-    atlas.tissue = atlas.anatomy;
-    atlas = rmfield(atlas, 'anatomy');
-    atlas.coordsys = 'mni';
-    
-    %Brainnetome atlas comes as radiological view convention.
-    %change to neurological view: patient Left->image Left.
-    atlas.transform(1,1)=-atlas.transform(1,1);
-    atlas.transform(1,4)=-atlas.transform(1,4);
-    
-    %labels
-    atlas.tissuelabel = cell(1,246);
-    fid = fopen_or_error(labelfile, 'rt');
-    lab  = fgetl(fid); %lab='Brainnetome Atlas'
-    for label_i=1:246
-      atlas.tissuelabel{1,label_i}=fgetl(fid);
+    uval = unique(atlas.tissue(:));
+    sel  = find(ismember(idx, uval));
+    fprintf('subselecting %d labels from the total list of %d\n', numel(sel), numel(lab));
+    idx  = idx(sel);
+    lab  = lab(sel);
+    if exist('rgba', 'var') 
+      tmprgba = rgba(sel,:);
+      rgba = zeros(0,4);
     end
-    fclose(fid);
+
+    % remap the values in the data, if needed
+    if ~isequal(idx(:)', 1:numel(idx))
+      dat = zeros(atlas.dim);
+      cnt = 0;
+      for k = 1:numel(idx)
+        sel = atlas.tissue==idx(k);
+        if sum(sel(:))
+          cnt = cnt+1;
+          fprintf('re-indexing label %s to a value of %d (was %d)\n', lab{k}, cnt, idx(k));
+          dat(sel)           = cnt;
+          tissuelabel{cnt,1} = lab{k};
+          if exist('rgba', 'var')
+            rgba(cnt,:) = tmprgba(k,:);
+          end
+        end
+      end
+      atlas.tissue = dat;
+    else
+      tissuelabel = lab;
+    end
+
+    atlas.tissuelabel = tissuelabel;
+    if exist('rgba', 'var'), atlas.rgba = rgba; end
     
+    % reduce memory footprint
+    if numel(tissuelabel)<=intmax('uint8')
+      atlas.tissue = uint8(atlas.tissue);
+    elseif numel(tissuelabel)<=intmax('uint16')
+      atlas.tissue = uint16(atlas.tissue);
+    elseif numel(tissuelabel)<=intmax('uint32')
+      atlas.tissue = uint32(atlas.tissue);
+    end
+
   case 'afni'
-    % check whether the required AFNI toolbox is available
-    ft_hastoolbox('afni', 1);
     
     tmp     = ft_read_mri(filename);
     if isfield(tmp, 'coordsys') && ~strcmp(tmp.coordsys, 'unknown')
@@ -224,252 +361,9 @@ switch fileformat
       
     elseif contains(filename, 'TTatlas+tlrc')
       isprobabilistic = false;
-
-      % the following information is from https://sscc.nimh.nih.gov/afni/doc/misc/afni_ttatlas/index_html
-      values = [
-        68
-        71
-        20
-        21
-        22
-        24
-        25
-        26
-        27
-        28
-        29
-        30
-        31
-        32
-        33
-        34
-        35
-        36
-        37
-        39
-        40
-        41
-        42
-        43
-        44
-        45
-        46
-        47
-        48
-        49
-        50
-        51
-        52
-        70
-        72
-        73
-        74
-        75
-        76
-        77
-        124
-        125
-        126
-        128
-        129
-        130
-        131
-        132
-        133
-        134
-        135
-        136
-        137
-        138
-        144
-        145
-        151
-        146
-        147
-        148
-        149
-        81
-        82
-        83
-        84
-        85
-        86
-        87
-        88
-        89
-        90
-        91
-        93
-        94
-        95
-        96
-        97
-        98
-        99
-        100
-        101
-        102
-        103
-        104
-        105
-        106
-        107
-        108
-        109
-        110
-        111
-        112
-        113
-        114
-        115
-        116
-        117
-        118
-        119
-        120
-        121
-        122
-        123
-        53
-        54
-        55
-        56
-        57
-        58
-        59
-        60
-        61
-        62
-        63
-        66
-        65
-        127
-        64
-        67
-        ];
       
-      labels = {
-        'Hippocampus'
-        'Amygdala'
-        'Posterior Cingulate'
-        'Anterior Cingulate'
-        'Subcallosal Gyrus'
-        'Transverse Temporal Gyrus'
-        'Uncus'
-        'Rectal Gyrus'
-        'Fusiform Gyrus'
-        'Inferior Occipital Gyrus'
-        'Inferior Temporal Gyrus'
-        'Insula'
-        'Parahippocampal Gyrus'
-        'Lingual Gyrus'
-        'Middle Occipital Gyrus'
-        'Orbital Gyrus'
-        'Middle Temporal Gyrus'
-        'Superior Temporal Gyrus'
-        'Superior Occipital Gyrus'
-        'Inferior Frontal Gyrus'
-        'Cuneus'
-        'Angular Gyrus'
-        'Supramarginal Gyrus'
-        'Cingulate Gyrus'
-        'Inferior Parietal Lobule'
-        'Precuneus'
-        'Superior Parietal Lobule'
-        'Middle Frontal Gyrus'
-        'Paracentral Lobule'
-        'Postcentral Gyrus'
-        'Precentral Gyrus'
-        'Superior Frontal Gyrus'
-        'Medial Frontal Gyrus'
-        'Lentiform Nucleus'
-        'Hypothalamus'
-        'Red Nucleus'
-        'Substantia Nigra'
-        'Claustrum'
-        'Thalamus'
-        'Caudate'
-        'Caudate Tail'
-        'Caudate Body'
-        'Caudate Head'
-        'Ventral Anterior Nucleus'
-        'Ventral Posterior Medial Nucleus'
-        'Ventral Posterior Lateral Nucleus'
-        'Medial Dorsal Nucleus'
-        'Lateral Dorsal Nucleus'
-        'Pulvinar'
-        'Lateral Posterior Nucleus'
-        'Ventral Lateral Nucleus'
-        'Midline Nucleus'
-        'Anterior Nucleus'
-        'Mammillary Body'
-        'Medial Globus Pallidus'
-        'Lateral Globus Pallidus'
-        'Putamen'
-        'Nucleus Accumbens'
-        'Medial Geniculum Body'
-        'Lateral Geniculum Body'
-        'Subthalamic Nucleus'
-        'Brodmann area 1'
-        'Brodmann area 2'
-        'Brodmann area 3'
-        'Brodmann area 4'
-        'Brodmann area 5'
-        'Brodmann area 6'
-        'Brodmann area 7'
-        'Brodmann area 8'
-        'Brodmann area 9'
-        'Brodmann area 10'
-        'Brodmann area 11'
-        'Brodmann area 13'
-        'Brodmann area 17'
-        'Brodmann area 18'
-        'Brodmann area 19'
-        'Brodmann area 20'
-        'Brodmann area 21'
-        'Brodmann area 22'
-        'Brodmann area 23'
-        'Brodmann area 24'
-        'Brodmann area 25'
-        'Brodmann area 27'
-        'Brodmann area 28'
-        'Brodmann area 29'
-        'Brodmann area 30'
-        'Brodmann area 31'
-        'Brodmann area 32'
-        'Brodmann area 33'
-        'Brodmann area 34'
-        'Brodmann area 35'
-        'Brodmann area 36'
-        'Brodmann area 37'
-        'Brodmann area 38'
-        'Brodmann area 39'
-        'Brodmann area 40'
-        'Brodmann area 41'
-        'Brodmann area 42'
-        'Brodmann area 43'
-        'Brodmann area 44'
-        'Brodmann area 45'
-        'Brodmann area 46'
-        'Brodmann area 47'
-        'Uvula of Vermis'
-        'Pyramis of Vermis'
-        'Tuber of Vermis'
-        'Declive of Vermis'
-        'Culmen of Vermis'
-        'Cerebellar Tonsil'
-        'Inferior Semi-Lunar Lobule'
-        'Fastigium'
-        'Nodule'
-        'Uvula'
-        'Pyramis'
-        'Culmen'
-        'Declive'
-        'Dentate'
-        'Tuber'
-        'Cerebellar Lingual'
-        };
-
+      [labels, values] = TTatlas_labels;
+      
     else
       ft_error('no information about the atlas labels is available');
     end
@@ -509,190 +403,27 @@ switch fileformat
         
     end
 
-  case 'wfu'
+  case {'freesurfer_surface'}
     
-    atlas        = ft_read_mri(filename);
-    brick0       = atlas.anatomy;
-    atlas        = rmfield(atlas, 'anatomy');
-    
-    % FIXME the human WFU atlas contains a single volume at 2mm resolution in
-    % MNI space, but the coordinates will not be guaranteed to be MNI
-    % compatible, for example for the rhesus or mouse atlas.
-    
-    % atlas.coordsys  = 'mni';
-    atlas.coordsys = 'unknown';
-    
-    [p, f, x] = fileparts(filename);
-    
-    % if the original file was a .gz
-    if isequal(x,'.gz')
-      [p, f, x] = fileparts(filename(1:end-3));
-    end
-    
-    % this is a mat file that Ingrid apparently discovered somewhere
-    % filename1 = fullfile(p, [f '_List.mat']);
-    
-    filename2 = fullfile(p, [f '.txt']);
-    if exist(filename2, 'file')
-      
-      % the download from http://fmri.wfubmc.edu comes with pairs of nii and txt files
-      % the text file looks like this, with tabs between the colums
-      % the section at the end with three times 191 does not always exist
-      %
-      % [ TD Labels]
-      % 53	Angular Gyrus         191 191 191
-      % 39	Anterior Cingulate		191 191 191
-      % 36	Caudate               191 191 191
-      % 27	Cerebellar Lingual		191 191 191
-      % 2	  Cerebellar Tonsil		  191 191 191
-      % 52	Cingulate Gyrus			  191 191 191
-      % ...
-      
-      
-      fid = fopen_or_error(filename2);
-      i = 1;
-      value = [];
-      label = {};
-      while true
-        tline = fgetl(fid);
-        if ~ischar(tline), break, end
-        % use TAB as deliniter
-        [num, rem] = strtok(tline, 9);
-        [str, rem] = strtok(rem, 9);
-        num = str2double(num);
-        if ~isnan(num)
-          value(i) = num;
-          label{i} = str;
-          i = i+1;
-        end % if num
-      end % while
-      fclose(fid);
-      
-    else
-      % the file does not exist
-      ft_warning('cannot locate %s, making default tissue labels', filename2);
-      
-      value = [];
-      label = {};
-      for i=1:max(brick0(:))
-        % this is consistent with FIXSEGMENTATION
-        value(i) = i;
-        label{i} = sprintf('tissue %d', i);
-      end
-    end
-    
-    % this is loosely modeled after the AFNI implementation, hence the "brick0" naming
-    if numel(label)<=intmax('uint8')
-      new_brick0 = zeros(atlas.dim, 'uint8');
-    elseif numel(label)<=intmax('uint16')
-      new_brick0 = zeros(atlas.dim, 'uint16');
-    elseif numel(label)<=intmax('uint32')
-      new_brick0 = zeros(atlas.dim, 'uint32');
-    else
-      new_brick0 = zeros(atlas.dim);
-    end
-    for i=1:numel(label)
-      % replace the original values with numbers from 1 to N
-      new_brick0(brick0==value(i)) = i;
-    end
-    
-    % replace the original brick with interspersed integers with one that contains contiguous integets
-    atlas.parcellation      = new_brick0;
-    atlas.parcellationlabel = label(:);
-    
-  case {'freesurfer_volume' 'simnibs_v4'}
-    % ensure freesurfer on the path and get the info how to get from value to label, which can be specified
-    % by supplying an explicit LUT filename, or by clever guessing 
-    ft_hastoolbox('freesurfer', 1);
-
-    lookuptable = ft_getopt(varargin, 'lookuptable', []);
-    if isequal(fileformat, 'freesurfer_volume')
-      if isempty(lookuptable)
-        % use the version for freesurfer that is in fieldtrip/external/freesurfer
-        [ftver, ftpath] = ft_version;
-        lookuptable  = fullfile(ftpath, 'external/freesurfer', 'FreeSurferColorLUT.txt');
-      end
-      fieldname = 'aparc';
-    elseif isequal(fileformat, 'simnibs_v4')
-      if isempty(lookuptable)
-        lookuptable = fullfile(p, 'final_tissues_LUT.txt');
-      end
-      fieldname = 'tissue';
-    end
-    [value, label, rgbv] = read_fscolorlut(lookuptable);
-    label = cellstr(label);
-    
-    % read in the volume
-    atlas = ft_read_mri(filename);
-    dat   = atlas.anatomy;
-    atlas = rmfield(atlas, 'anatomy');
-    
-    % get the unique values to save time later on
-    uval = unique(dat(:));
-    sel  = find(ismember(value, uval));
-    fprintf('subselecting %d labels from the total list of %d\n', numel(sel), numel(label));
-    value = value(sel);
-    label = label(sel);
-    rgbv  = rgbv(sel,:);
-
-    % remap the values in the data
-    aparc = zeros(size(dat));
-    rgba  = zeros(0,4);
-    cnt   = 0;
-    for k = 1:numel(value)
-      sel = dat==value(k);
-      if sum(sel(:))
-        cnt = cnt+1;
-        fprintf('re-indexing label %s to a value of %d (was %d)\n', label{k}, cnt, value(k));
-        aparc(sel)        = cnt;
-        aparclabel{cnt,1} = label{k};
-        rgba(cnt,:)       = rgbv(k,:);
-      end
-    end
-    atlas.(fieldname) = aparc;
-    atlas.(sprintf('%slabel',fieldname)) = aparclabel;
-    atlas.rgba       = rgba;
-    
-  case {'freesurfer_a2009s' 'freesurfer_aparc' 'freesurfer_ba'}
-    % ensure freesurfer on the path and get the info how to get from value to label
-    ft_hastoolbox('freesurfer', 1);
-    
-    if strcmp(fileformat, 'freesurfer_a2009s')
+    if contains(filename, 'a2009s')
       parcelfield = 'a2009s';
-    elseif strcmp(fileformat, 'freesurfer_aparc')
+    elseif contains(filename, 'aparc')
       parcelfield = 'aparc';
-    elseif strcmp(fileformat, 'freesurfer_ba')
+    elseif contains(filename, 'ba')
       parcelfield = 'BA';
     else
-      ft_error('unknown freesurfer parcellation method requested');
-      %[index, label, rgb] = read_fscolorlut(lookuptable);
-      %label = cellstr(label);
-      %rgb = rand(length(label),3);
+      ft_error('unknown freesurfer parcellation type requested');
     end
-    %rgb = rgb(:,1) + rgb(:,2)*256 + rgb(:,3)*256*256;
     
     % read the labels
-    switch ft_filetype(filename)
-      %case 'caret_label'
-      %  p = gifti(filename);
-      %  p = p.cdata;
-      case 'freesurfer_annot'
-        [v, p, c] = read_annotation(filename);
-        
-        label = c.struct_names;
-        rgba  = c.table(:,1:4);
-        rgb   = c.table(:,5); % compound value that is used for the indexing in vector p
-        index = ((1:c.numEntries)-1)';
-      otherwise
-        ft_error('unsupported fileformat for parcel file');
-    end
+    [v, p, c] = read_annotation(filename);
+
+    label = c.struct_names;
+    rgba  = c.table(:,1:4);
+    rgb   = c.table(:,5); % compound value that is used for the indexing in vector p
+    index = ((1:c.numEntries)-1)';
     
     switch ft_filetype(filenamemesh)
-      %case {'caret_surf' 'gifti'}
-      %  tmp = gifti(filenamemesh);
-      %  bnd.pos = ft_warp_apply(tmp.mat, tmp.vertices);
-      %  bnd.tri = tmp.faces;
-      %  reindex = false;
       case 'freesurfer_triangle_binary'
         [pos, tri] = read_surf(filenamemesh);
         
@@ -724,7 +455,7 @@ switch fileformat
       end
     else
       uniquep = unique(p);
-      if uniquep(1)<0,
+      if uniquep(1)<0
         p(p<0) = 0;
       end
       newp   = p;
@@ -738,7 +469,7 @@ switch fileformat
     atlas       = ft_determine_units(atlas);
     
   case 'caret_label'
-    ft_hastoolbox('gifti', 1);
+    
     g = gifti(filename);
     
     rgba = [];
@@ -818,15 +549,13 @@ switch fileformat
     end
     
   case 'spm_anatomy'
-    ft_hastoolbox('spm8up', 1);
     
     % load the map, this is assumed to be the struct-array MAP
     load(filename);
     [p,f,e]      = fileparts(filename);
     mrifilename  = fullfile(p,[strrep(f, '_MPM',''),'.img']);
-    atlas        = ft_read_mri(mrifilename, 'dataformat', 'analyze_img');
-    tissue       = round(atlas.anatomy); % I don't know why the values are non-integer
-    atlas        = rmfield(atlas, 'anatomy');
+    atlas        = ft_read_mri(mrifilename, 'dataformat', 'analyze_img', 'outputfield', 'tissue');
+    tissue       = round(atlas.tissue); % I don't know why the values are non-integer
     label        = {MAP.name}';
     idx          = [MAP.GV]';
     
@@ -872,9 +601,7 @@ switch fileformat
     % this uses the thresholded image
     switch map
       case 'maxprob'
-        atlas        = ft_read_mri(fullfile(p, mrifilename));
-        atlas.tissue = atlas.anatomy;
-        atlas        = rmfield(atlas, 'anatomy');
+        atlas        = ft_read_mri(fullfile(p, mrifilename), 'outputfield', 'tissue');
         atlas.tissuelabel = hdr.data.label(:);
         atlas.coordsys    = 'mni';
       case 'prob'
@@ -892,7 +619,7 @@ switch fileformat
             % single precision, do single precision to save memory
             atlas.(fn) = single(atlas.(fn));
           end
-          if any(atlas.(fn)(:)>1) & all(atlas.(fn)(:)<=100)
+          if any(atlas.(fn)(:)>1) && all(atlas.(fn)(:)<=100)
             % convert to probability values, assuming 100 to be max
             atlas.(fn) = atlas.(fn)./100;
           end
@@ -900,7 +627,6 @@ switch fileformat
         atlas.coordsys = 'mni';
         atlas.dim      = atlas.dim(1:3);
     end
-    
     
   case 'mat'
     tmp = load(filename);
@@ -943,9 +669,9 @@ switch fileformat
     % the 7 network parcellation from https://surfer.nmr.mgh.harvard.edu/fswiki/CorticalParcellation_Yeo2011 
     % aligned to the colin27 template (skull-stripped version of single_subj_T1_1mm.nii) 
     % using AFNI's 3dQwarp and 3dNwarpApply
-    atlas = ft_read_mri(filename);
-    atlas.tissue = atlas.anatomy;
-    atlas = rmfield(atlas, 'anatomy');
+    atlas = ft_read_mri(filename, 'outputfield', 'tissue');
+    
+    atlas.coordsys    = 'mni';
     atlas.tissuelabel = {
       '7Networks_1'
       '7Networks_2'
@@ -955,7 +681,7 @@ switch fileformat
       '7Networks_6'
       '7Networks_7'
       };
-    atlas.coordsys = 'mni';
+    
     colors = [
       120 18 134;
       70 130 180;
@@ -970,9 +696,9 @@ switch fileformat
     % this uses Yeo2011_17Networks_MNI152_FreeSurferConformed1mm_LiberalMask_colin27.nii, which is
     % the 17 network parcellation from https://surfer.nmr.mgh.harvard.edu/fswiki/CorticalParcellation_Yeo2011 
     % aligned to the colin27 template (skull-stripped version of single_subj_T1_1mm.nii) using AFNI's 3dQwarp and 3dNwarpApply
-    atlas = ft_read_mri(filename);
-    atlas.tissue = atlas.anatomy;
-    atlas = rmfield(atlas, 'anatomy');
+    atlas = ft_read_mri(filename, 'outputfield', 'tissue');
+    
+    atlas.coordsys    = 'mni';
     atlas.tissuelabel = {
       '17Networks_1'
       '17Networks_2'
@@ -992,7 +718,6 @@ switch fileformat
       '17Networks_16'
       '17Networks_17'
       };
-    atlas.coordsys = 'mni';
     colors = [
       120 18 134;
       255 0 0;
@@ -1018,7 +743,6 @@ switch fileformat
     
 end % switch fileformat
 
-
 if ~isempty(unit)
   % ensure the atlas is in the desired units
   atlas = ft_convert_units(atlas, unit);
@@ -1030,3 +754,252 @@ else
     % ft_determine_units will fail for triangle-only gifties.
   end
 end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% TTatlas labels moved to a subfunction for readability of the above code
+function [labels, values] = TTatlas_labels
+
+% the following information is from https://sscc.nimh.nih.gov/afni/doc/misc/afni_ttatlas/index_html
+values = [
+  68
+  71
+  20
+  21
+  22
+  24
+  25
+  26
+  27
+  28
+  29
+  30
+  31
+  32
+  33
+  34
+  35
+  36
+  37
+  39
+  40
+  41
+  42
+  43
+  44
+  45
+  46
+  47
+  48
+  49
+  50
+  51
+  52
+  70
+  72
+  73
+  74
+  75
+  76
+  77
+  124
+  125
+  126
+  128
+  129
+  130
+  131
+  132
+  133
+  134
+  135
+  136
+  137
+  138
+  144
+  145
+  151
+  146
+  147
+  148
+  149
+  81
+  82
+  83
+  84
+  85
+  86
+  87
+  88
+  89
+  90
+  91
+  93
+  94
+  95
+  96
+  97
+  98
+  99
+  100
+  101
+  102
+  103
+  104
+  105
+  106
+  107
+  108
+  109
+  110
+  111
+  112
+  113
+  114
+  115
+  116
+  117
+  118
+  119
+  120
+  121
+  122
+  123
+  53
+  54
+  55
+  56
+  57
+  58
+  59
+  60
+  61
+  62
+  63
+  66
+  65
+  127
+  64
+  67
+  ];
+
+labels = {
+  'Hippocampus'
+  'Amygdala'
+  'Posterior Cingulate'
+  'Anterior Cingulate'
+  'Subcallosal Gyrus'
+  'Transverse Temporal Gyrus'
+  'Uncus'
+  'Rectal Gyrus'
+  'Fusiform Gyrus'
+  'Inferior Occipital Gyrus'
+  'Inferior Temporal Gyrus'
+  'Insula'
+  'Parahippocampal Gyrus'
+  'Lingual Gyrus'
+  'Middle Occipital Gyrus'
+  'Orbital Gyrus'
+  'Middle Temporal Gyrus'
+  'Superior Temporal Gyrus'
+  'Superior Occipital Gyrus'
+  'Inferior Frontal Gyrus'
+  'Cuneus'
+  'Angular Gyrus'
+  'Supramarginal Gyrus'
+  'Cingulate Gyrus'
+  'Inferior Parietal Lobule'
+  'Precuneus'
+  'Superior Parietal Lobule'
+  'Middle Frontal Gyrus'
+  'Paracentral Lobule'
+  'Postcentral Gyrus'
+  'Precentral Gyrus'
+  'Superior Frontal Gyrus'
+  'Medial Frontal Gyrus'
+  'Lentiform Nucleus'
+  'Hypothalamus'
+  'Red Nucleus'
+  'Substantia Nigra'
+  'Claustrum'
+  'Thalamus'
+  'Caudate'
+  'Caudate Tail'
+  'Caudate Body'
+  'Caudate Head'
+  'Ventral Anterior Nucleus'
+  'Ventral Posterior Medial Nucleus'
+  'Ventral Posterior Lateral Nucleus'
+  'Medial Dorsal Nucleus'
+  'Lateral Dorsal Nucleus'
+  'Pulvinar'
+  'Lateral Posterior Nucleus'
+  'Ventral Lateral Nucleus'
+  'Midline Nucleus'
+  'Anterior Nucleus'
+  'Mammillary Body'
+  'Medial Globus Pallidus'
+  'Lateral Globus Pallidus'
+  'Putamen'
+  'Nucleus Accumbens'
+  'Medial Geniculum Body'
+  'Lateral Geniculum Body'
+  'Subthalamic Nucleus'
+  'Brodmann area 1'
+  'Brodmann area 2'
+  'Brodmann area 3'
+  'Brodmann area 4'
+  'Brodmann area 5'
+  'Brodmann area 6'
+  'Brodmann area 7'
+  'Brodmann area 8'
+  'Brodmann area 9'
+  'Brodmann area 10'
+  'Brodmann area 11'
+  'Brodmann area 13'
+  'Brodmann area 17'
+  'Brodmann area 18'
+  'Brodmann area 19'
+  'Brodmann area 20'
+  'Brodmann area 21'
+  'Brodmann area 22'
+  'Brodmann area 23'
+  'Brodmann area 24'
+  'Brodmann area 25'
+  'Brodmann area 27'
+  'Brodmann area 28'
+  'Brodmann area 29'
+  'Brodmann area 30'
+  'Brodmann area 31'
+  'Brodmann area 32'
+  'Brodmann area 33'
+  'Brodmann area 34'
+  'Brodmann area 35'
+  'Brodmann area 36'
+  'Brodmann area 37'
+  'Brodmann area 38'
+  'Brodmann area 39'
+  'Brodmann area 40'
+  'Brodmann area 41'
+  'Brodmann area 42'
+  'Brodmann area 43'
+  'Brodmann area 44'
+  'Brodmann area 45'
+  'Brodmann area 46'
+  'Brodmann area 47'
+  'Uvula of Vermis'
+  'Pyramis of Vermis'
+  'Tuber of Vermis'
+  'Declive of Vermis'
+  'Culmen of Vermis'
+  'Cerebellar Tonsil'
+  'Inferior Semi-Lunar Lobule'
+  'Fastigium'
+  'Nodule'
+  'Uvula'
+  'Pyramis'
+  'Culmen'
+  'Declive'
+  'Dentate'
+  'Tuber'
+  'Cerebellar Lingual'
+  };
