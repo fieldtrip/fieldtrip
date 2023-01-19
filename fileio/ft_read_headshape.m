@@ -199,28 +199,34 @@ if iscell(filename)
   return
 end % if iscell
 
-% checks if there exists a .jpg file of 'filename'
-[pathstr,name]  = fileparts(filename);
-if useimage
-  if exist(fullfile(pathstr,[name,'.jpg']), 'file')
-    image    = fullfile(pathstr,[name,'.jpg']);
-    hasimage = true;
-  elseif exist(fullfile(pathstr,[name,'.png']), 'file')
-    image    = fullfile(pathstr,[name,'.png']);
-    hasimage = true;
-  else
-    hasimage = false;
-  end
-else
-  hasimage = false;
-end
-
 % optionally get the data from the URL and make a temporary local copy
 filename = fetch_url(filename);
 
 if isempty(fileformat)
   % only do the autodetection if the format was not specified
   fileformat = ft_filetype(filename);
+end
+
+% checks if there exists a .jpg file of 'filename'
+[pathstr,name]  = fileparts(filename);
+if useimage
+  if exist(fullfile(pathstr,[name,'.jpg']), 'file')
+    image    = fullfile(pathstr,[name,'.jpg']);
+    hasimage = true;
+  elseif exist(fullfile(pathstr,[name,'.JPG']), 'file')
+    image    = fullfile(pathstr,[name,'.JPG']);
+    hasimage = true;
+  elseif exist(fullfile(pathstr,[name,'.png']), 'file')
+    image    = fullfile(pathstr,[name,'.png']);
+    hasimage = true;
+  elseif exist(fullfile(pathstr,[name,'.PNG']), 'file')
+    image    = fullfile(pathstr,[name,'.PNG']);
+    hasimage = true;
+  else
+    hasimage = false;
+  end
+else
+  hasimage = false;
 end
 
 if ~isempty(annotationfile) && ~strcmp(fileformat, 'mne_source')
