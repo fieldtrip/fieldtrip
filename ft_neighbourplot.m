@@ -14,7 +14,8 @@ function [cfg] = ft_neighbourplot(cfg, data)
 %   cfg.neighbours    = neighbourhood structure, see FT_PREPARE_NEIGHBOURS (optional)
 %   cfg.enableedit    = string, 'yes' or 'no', allows you to interactively add or remove edges between vertices (default = 'no')
 %   cfg.visible       = string, 'on' or 'off' whether figure will be visible (default = 'on')
-%   cfg.position      = location and size of the figure, specified as a vector of the form [left bottom width height]
+%   cfg.figure        = 'yes' or 'no', whether to open a new figure. You can also specify a figure handle from FIGURE, GCF or SUBPLOT. (default = 'yes')
+%   cfg.position      = location and size of the figure, specified as [left bottom width height] (default is automatic)
 %   cfg.renderer      = string, 'opengl', 'zbuffer', 'painters', see MATLAB Figure Properties. If this function crashes, you should try 'painters'.
 %
 % and either one of the following options
