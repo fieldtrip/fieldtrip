@@ -119,7 +119,8 @@ end
 
 % do an educated guess of the format based on the input, ensure that the
 % required additional functions are available, and specify the companion labelfile 
-if startsWith(ftype, 'afni')
+if contains(filename, 'BRIK') || contains(filename, 'HEAD')
+  % the above is needed to correctly detect zipped files
   ft_hastoolbox('afni', 1);
 
   % this is robust for both compressed or uncompressed afni atlases. 
