@@ -158,7 +158,9 @@ elseif startsWith(ftype, 'nifti')
     elseif strcmp(l1,'Brainnetome Atlas')
       % specific to this one is the coordinate system it seems
       format   = 'brainnetome';
-      coordsys = 'rai'; % radiological convention 
+      coordsys = 'mni'; % apparently the image is in radiological convention,
+      % so the voxel-axes are left-handed. The even valued parcels should end
+      % up in the right hemisphere
     elseif contains(filename, 'ROI_MNI') || contains(filename, 'AAL')
       % newer versions of AAL also exist with a companion .xml file, this is not yet supported
       format   = 'aal';
