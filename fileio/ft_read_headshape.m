@@ -25,6 +25,7 @@ function [shape] = ft_read_headshape(filename, varargin)
 %   'concatenate' = 'no' or 'yes' (default = 'yes')
 %   'image'       = path to .jpg file
 %   'surface'     = specific surface to be read (only for caret spec files)
+%   'refine'      = number, used for refining Structure Sensor meshes (default = 1)
 %
 % Supported input file formats include
 %   'matlab'       containing FieldTrip or BrainStorm headshapes or cortical meshes
@@ -34,7 +35,7 @@ function [shape] = ft_read_headshape(filename, varargin)
 %   'tck'          Mrtrix track file
 %   'trk'          Trackvis trk file
 %   'mne_*'        MNE surface description in ASCII format ('mne_tri') or MNE source grid in ascii format, described as 3D points ('mne_pos')
-%   'obj'          Wavefront .obj file obtained with the structure.io
+%   'obj'          Wavefront .obj file obtained with the Structure Sensor
 %   'off'
 %   'ply'
 %   'itab_asc'
@@ -61,7 +62,7 @@ function [shape] = ft_read_headshape(filename, varargin)
 %
 % See also FT_READ_HEADMODEL, FT_READ_SENS, FT_READ_ATLAS, FT_WRITE_HEADSHAPE
 
-% Copyright (C) 2008-2022, Robert Oostenveld
+% Copyright (C) 2008-2023, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -83,13 +84,14 @@ function [shape] = ft_read_headshape(filename, varargin)
 
 % get the options
 annotationfile = ft_getopt(varargin, 'annotationfile');
-useimage       = ft_getopt(varargin, 'useimage', true); % use image if hasimage
+useimage       = ft_getopt(varargin, 'useimage', true);      % use image if hasimage
 concatenate    = ft_getopt(varargin, 'concatenate', 'yes');
 coordsys       = ft_getopt(varargin, 'coordsys', 'head');    % for ctf or neuromag_mne coil positions, the alternative is dewar
 fileformat     = ft_getopt(varargin, 'format');
 unit           = ft_getopt(varargin, 'unit');
-image          = ft_getopt(varargin, 'image', [100, 100 ,100]); % path to .jpg file
+image          = ft_getopt(varargin, 'image');               % path to .jpg file
 surface        = ft_getopt(varargin, 'surface');
+refine_        = ft_getopt(varargin, 'refine', 1);           % do not confuse with the private/refine function
 
 % Check the input, if filename is a cell-array, call ft_read_headshape recursively and combine the outputs.
 % This is used to read the left and right hemisphere of a Freesurfer cortical segmentation.
@@ -1018,27 +1020,35 @@ switch fileformat
       % there is an image with color information
 
       if texture_per_vert
-        % Refines the mesh and textures to increase resolution of the colormapping
-        [pos, tri, texture] = refine(pos, tri, 'banks', texture);
-        
-        picture = imread(image);
-        color   = zeros(size(pos, 1), 3);
-        for i = 1:size(pos, 1)
-          color(i,1:3) = picture(floor((1-texture(i,2))*length(picture)),1+floor(texture(i,1)*length(picture)),1:3);
+        % refine the mesh and texture mapping to increase the resolution
+        for i=1:refine_
+          [pos, tri, texture] = refine(pos, tri, 'banks', texture);
         end
+
+        % do the texture to color mapping
+        picture = imread(image);
+        [sy, sx, sz] = size(picture);
+
+        color = zeros(size(pos, 1), 3);
+        for i = 1:size(pos, 1)
+          x = floor((1-texture(i,2))*sx);
+          y = 1+floor(texture(i,1)*sy);
+          color(i,1:3) = picture(x,y,1:3);
+        end
+
       else
-        % do the texture to color mapping in a different way, without additional refinement
+        % do the texture to color mapping based on the textureIdx
         picture      = flip(imread(image),1);
         [sy, sx, sz] = size(picture);
         picture      = reshape(picture, sy*sx, sz);
-        
+
         % make image 3D if grayscale
         if sz == 1
           picture = repmat(picture, 1, 3);
         end
         [dum, ix]  = unique(tri);
         textureIdx = textureIdx(ix);
-        
+
         % get the indices into the image
         x     = abs(round(texture(:,1)*(sx-1)))+1;
         y     = abs(round(texture(:,2)*(sy-1)))+1;
@@ -1046,32 +1056,27 @@ switch fileformat
         sel   = xy(textureIdx);
         color = double(picture(sel,:))/255;
       end
-      
-      % If color is specified as 0-255 rather than 0-1 correct by dividing by 255
-      if range(color(:)) > 1
-        color = color./255;
-      end
-      
+
     elseif size(pos, 2)==6
-      % the vertices also contain RGB colors
-      
+      % there is no separate image, but the vertices also contain RGB colors
       color = pos(:, 4:6);
       pos   = pos(:, 1:3);
-      
-      % If color is specified as 0-255 rather than 0-1 correct by dividing by 255
-      if range(color(:)) > 1
-        color = color./255;
-      end
-      
+
     else
       % there is no color information
       color = [];
     end
-    
-    shape.pos   = pos - repmat(mean(pos,1), [size(pos, 1),1]); % centering vertices
-    shape.tri   = tri;
+
+    shape.pos = pos - repmat(mean(pos,1), [size(pos, 1),1]); % centering vertices
+    shape.tri = tri;
+
     if ~isempty(color)
-      shape.color = color;
+      if range(color(:)) > 1
+        % color should be specified between 0 and 1
+        shape.color = color./255;
+      else
+        shape.color = color;
+      end
     end
 
   case 'vtk'
