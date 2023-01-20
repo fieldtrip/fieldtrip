@@ -13,7 +13,7 @@ function [mri] = ft_read_mri(filename, varargin)
 %                   it is determined automatically from the filename.
 %   'volumes'     = vector with the volume indices to read from a 4D nifti (only for 'nifti_spm')
 %   'outputfield' = string specifying the name of the field in the structure in which the
-%                   numeric data is stored (only for 'mrtrix_mif', default = 'anatomy')
+%                   numeric data is stored (default = 'anatomy')
 %   'fixel2voxel' = string, the operation to apply to the fixels belonging to the
 %                   same voxel, can be 'max', 'min', 'mean' (only for 'mrtrix_mif', default = 'max')
 %   'indexfile'   = string, pointing to a fixel index file, if not present in the same directory
@@ -684,7 +684,7 @@ switch dataformat
     jnii = loadjnifti(filename);
 
     mri.hdr     = jnii.NIFTIHeader;
-    mri.anatomy = jnii.NIFTIData;
+    mri.(outputfield) = jnii.NIFTIData;
     mri.dim     = jnii.NIFTIHeader.Dim;
     mri.unit    = jnii.NIFTIHeader.Unit.L; % units of length
 
