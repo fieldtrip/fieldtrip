@@ -213,6 +213,16 @@ elseif contains(filename, 'MPM.mat')
   % assume to be from the spm_anatomy toolbox
   format = 'spm_anatomy';
 
+elseif exist(fullfile(p, [f '_MPM.mat']), 'file')
+    ft_warning('please specify the corresponding MPM.mat file as the filename');
+    filename = fullfile(p, [f '_MPM.mat']); % update the filename
+    [p, f, x] = fileparts(filename);
+
+    ft_hastoolbox('spm8up', 1);
+
+    % assume to be from the spm_anatomy toolbox
+    format = 'spm_anatomy';
+
 elseif strcmp(x, '.xml')
   ft_hastoolbox('gifti', 1); % required to read the xml
 
