@@ -40,11 +40,17 @@ needdat = (nargin==5);
 [p, f, x] = fileparts(filename);
 assert(isfile(filename), sprintf('file "%s" not found', filename));
 
-channelsfile  = fullfile(p, 'channels.tsv');
-coordsysfile  = fullfile(p, 'coordsystem.json');
-datafile      = fullfile(p, 'meg.bin');
-headerfile    = fullfile(p, 'meg.json');
-positionsfile = fullfile(p, 'positions.tsv');
+% Remove the _meg part of the filename
+if strcmp(f(end-3:end),'_meg')
+    f = f(1:end-4);
+end
+
+% Get the BIDS compliant files
+channelsfile  = fullfile(p,[f '_channels.tsv']);
+coordsysfile  = fullfile(p,[f '_coordsystem.json']);
+datafile      = fullfile(p,[f '_meg.bin']);
+headerfile    = fullfile(p,[f '_meg.json']);
+positionsfile = fullfile(p,[f '_positions.tsv']);
 
 precision = 'double';
 switch precision
@@ -57,10 +63,13 @@ end
 
 if needhdr
   %% read the header
-  
-  fid = fopen(headerfile, 'rt');
-  header = jsondecode(fread(fid, [1 inf], 'char=>char'));
-  fclose(fid);
+  try
+      fid = fopen(headerfile, 'rt');
+      header = jsondecode(fread(fid, [1 inf], 'char=>char'));
+      fclose(fid);
+  catch
+      ft_warning('Cannot open header');
+  end
   
   channels  = readtable(channelsfile, 'Delimiter', 'tab', 'FileType', 'text');
   
