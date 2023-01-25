@@ -54,6 +54,9 @@ function [elec] = ft_electrodeplacement(cfg, varargin)
 %                        '1020'            automatically locate electrodes on a head surface according to the 10-20 system
 %                        'shaft'           automatically locate electrodes along a linear sEEG shaft
 %                        'grid'            automatically locate electrodes on a MxN ECoG grid
+%   cfg.figure         = 'yes' or 'no', whether to open a new figure. You can also specify a figure handle from FIGURE, GCF or SUBPLOT. (default = 'yes')
+%   cfg.position       = location and size of the figure, specified as [left bottom width height] (default is automatic)
+%   cfg.renderer       = string, 'opengl', 'zbuffer', 'painters', see RENDERERINFO (default = 'opengl')
 %
 % The following options apply to the 'volume' method
 %   cfg.parameter      = string, field in data (default = 'anatomy' if present in data)
@@ -1155,7 +1158,7 @@ if opt.showmarkers
   if ~isempty(idx)
     elec = keepfields(opt.headshape, {'unit', 'coordsys'});
     elec.elecpos = cat(1, opt.markerpos{idx});
-    elec.label   = cat(1, opt.markerlab{idx});
+    elec.label   = opt.markerlab(idx);
     elec.elecori = elec.elecpos;
     elec.elecori(:,1) = elec.elecori(:,1) - mean(opt.headshape.pos(:,1));
     elec.elecori(:,2) = elec.elecori(:,2) - mean(opt.headshape.pos(:,2));

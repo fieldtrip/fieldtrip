@@ -202,9 +202,11 @@ if istrue(dointeractive)
 
   if ~isfield(data, 'coordsys') || isempty(data.coordsys)
     % default is yes
+    fprintf('The coordinate system is not specified.\n')
     value = smartinput('Do you want to change the anatomical labels for the axes [Y, n]? ', 'y');
   else
     % default is no
+    fprintf('The coordinate system is specified as "%s".\n', data.coordsys)
     value = smartinput('Do you want to change the anatomical labels for the axes [y, N]? ', 'n');
   end
 

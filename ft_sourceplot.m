@@ -51,8 +51,9 @@ function [cfg] = ft_sourceplot(cfg, functional, anatomical)
 %   cfg.atlas         = string, filename of atlas to use (default = []) see FT_READ_ATLAS
 %                        for ROI masking (see 'masking' below) or for orthogonal plots (see method='ortho' below)
 %   cfg.visible       = string, 'on' or 'off' whether figure will be visible (default = 'on')
-%   cfg.position      = location and size of the figure, specified as a vector of the form [left bottom width height]
-%   cfg.renderer      = string, 'opengl', 'zbuffer', 'painters', see MATLAB Figure Properties. If this function crashes, you should try 'painters'.
+%   cfg.figure        = 'yes' or 'no', whether to open a new figure. You can also specify a figure handle from FIGURE, GCF or SUBPLOT. (default = 'yes')
+%   cfg.position      = location and size of the figure, specified as [left bottom width height] (default is automatic)
+%   cfg.renderer      = string, 'opengl', 'zbuffer', 'painters', see RENDERERINFO. The OpenGL renderer is required when using opacity (default = 'opengl')
 %
 % The following parameters can be used for the functional data:
 %   cfg.funcolormap   = colormap for functional data, see COLORMAP (default = 'auto')
@@ -162,8 +163,6 @@ function [cfg] = ft_sourceplot(cfg, functional, anatomical)
 %
 % The following parameters apply to cfg.method='surface' irrespective of whether an interpolation is required
 %   cfg.camlight       = 'yes' or 'no' (default = 'yes')
-%   cfg.renderer       = 'painters', 'zbuffer', ' opengl' or 'none' (default = 'opengl')
-%                        note that when using opacity the OpenGL renderer is required.
 %   cfg.facecolor      = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r',
 %                        or an Nx3 or Nx1 array where N is the number of faces
 %   cfg.vertexcolor    = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r',

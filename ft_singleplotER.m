@@ -34,7 +34,9 @@ function [cfg] = ft_singleplotER(cfg, varargin)
 %                       in a interactive plot you can select areas and produce a new
 %                       interactive plot when a selected area is clicked. multiple areas
 %                       can be selected by holding down the shift key.
-%   cfg.renderer      = 'painters', 'zbuffer', ' opengl' or 'none' (default = [])
+%   cfg.figure        = 'yes' or 'no', whether to open a new figure. You can also specify a figure handle from FIGURE, GCF or SUBPLOT. (default = 'yes')
+%   cfg.position      = location and size of the figure, specified as [left bottom width height] (default is automatic)
+%   cfg.renderer      = string, 'opengl', 'zbuffer', 'painters', see RENDERERINFO (default is automatic, try 'painters' when it crashes)
 %   cfg.linestyle     = linestyle/marker type, see options of the PLOT function (default = '-')
 %                       can be a single style for all datasets, or a cell-array containing one style for each dataset
 %   cfg.linewidth     = linewidth in points (default = 0.5)

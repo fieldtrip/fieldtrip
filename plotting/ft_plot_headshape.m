@@ -29,7 +29,7 @@ function hs = ft_plot_headshape(headshape, varargin)
 % See also FT_PLOT_MESH, FT_PLOT_ORTHO
 
 % Copyright (C) 2009, Cristiano Micheli
-% Copyright (C) 2009-2022, Robert Oostenveld
+% Copyright (C) 2009-2023, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -62,25 +62,37 @@ end
 % the default behavior depends on whether there is a triangulated surface or not
 hastri = isfield(headshape, 'tri');
 
-% get the optional input arguments
-if hastri
-  vertexcolor = ft_getopt(varargin, 'vertexcolor',  'none');
-  facecolor   = ft_getopt(varargin, 'facecolor',    [1 1 1]/2);
-  edgecolor   = ft_getopt(varargin, 'edgecolor',    'none');
+if isfield(headshape, 'color') && size(headshape.color,1)==size(headshape.pos,1)
+  defaultvertexcolor = headshape.color;
+  defaultfacecolor   = 'none';
+  defaultedgecolor   = 'none';
+elseif isfield(headshape, 'color') && size(headshape.color,1)==size(headshape.tri,1)
+  defaultvertexcolor = 'none';
+  defaultfacecolor   = headshape.color;
+  defaultedgecolor   = 'none';
+elseif hastri
+  defaultvertexcolor = 'none';
+  defaultfacecolor   = [1 1 1]/2;
+  defaultedgecolor   = 'none';
 else
-  vertexcolor = ft_getopt(varargin, 'vertexcolor',  'r');
-  facecolor   = ft_getopt(varargin, 'facecolor',    'none');
-  edgecolor   = ft_getopt(varargin, 'edgecolor',    'none');
+  defaultvertexcolor = 'r';
+  defaultfacecolor   = 'none';
+  defaultedgecolor   = 'none';
 end
-vertexsize    = ft_getopt(varargin, 'vertexsize',   10);
-material_     = ft_getopt(varargin, 'material');            % do not confuse with /Applications/MATLAB_R2020b.app/toolbox/matlab/graph3d/material.m
-tag           = ft_getopt(varargin, 'tag',         '');
-fidcolor      = ft_getopt(varargin, 'fidcolor',     'g');
-fidmarker     = ft_getopt(varargin, 'fidmarker',    '*');
-fidlabel      = ft_getopt(varargin, 'fidlabel',     true);
-transform     = ft_getopt(varargin, 'transform');
-unit          = ft_getopt(varargin, 'unit');
-axes_         = ft_getopt(varargin, 'axes', false);         % do not confuse with built-in (/Applications/MATLAB_R2020b.app/toolbox/matlab/graphics/axis/axes)
+
+% get the optional input arguments
+vertexcolor = ft_getopt(varargin, 'vertexcolor',  defaultvertexcolor);
+facecolor   = ft_getopt(varargin, 'facecolor',    defaultfacecolor);
+edgecolor   = ft_getopt(varargin, 'edgecolor',    defaultedgecolor);
+vertexsize  = ft_getopt(varargin, 'vertexsize',   10);
+material_   = ft_getopt(varargin, 'material');            % do not confuse with /Applications/MATLAB_R2020b.app/toolbox/matlab/graph3d/material.m
+tag         = ft_getopt(varargin, 'tag',         '');
+fidcolor    = ft_getopt(varargin, 'fidcolor',     'g');
+fidmarker   = ft_getopt(varargin, 'fidmarker',    '*');
+fidlabel    = ft_getopt(varargin, 'fidlabel',     true);
+transform   = ft_getopt(varargin, 'transform');
+unit        = ft_getopt(varargin, 'unit');
+axes_       = ft_getopt(varargin, 'axes', false);         % do not confuse with built-in (/Applications/MATLAB_R2020b.app/toolbox/matlab/graphics/axis/axes)
 
 if ~isempty(unit)
   headshape = ft_convert_units(headshape, unit);
@@ -90,6 +102,7 @@ end
 if ischar(fidcolor) && exist([fidcolor '.m'], 'file')
   fidcolor = eval(fidcolor);
 end
+
 
 % start with empty return values
 hs = [];

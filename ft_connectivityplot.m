@@ -72,8 +72,6 @@ cfg.xlim        = ft_getopt(cfg, 'xlim',      'maxmin');
 cfg.linecolor   = ft_getopt(cfg, 'linecolor', 'brgkywrgbkywrgbkywrgbkyw');
 cfg.linestyle   = ft_getopt(cfg, 'linestyle', '-');
 cfg.linewidth   = ft_getopt(cfg, 'linewidth', 0.5);
-cfg.visible     = ft_getopt(cfg, 'visible',   'on');
-cfg.renderer    = ft_getopt(cfg, 'renderer',  []); % let MATLAB decide on the default
 
 % check if the input data is valid for this function
 % ensure that the input is correct

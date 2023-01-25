@@ -16,8 +16,8 @@ function [cfg] = ft_clusterplot(cfg, stat)
 %   cfg.subplotsize             = layout of subplots ([h w], default [3 5])
 %   cfg.saveaspng               = string, filename of the output figures (default = 'no')
 %   cfg.visible                 = string, 'on' or 'off' whether figure will be visible (default = 'on')
-%   cfg.position                = location and size of the figure, specified as a vector of the form [left bottom width height]
-%   cfg.renderer                = string, 'opengl', 'zbuffer', 'painters', see MATLAB Figure Properties. If this function crashes, you should try 'painters'.
+%   cfg.position                = location and size of the figure, specified as [left bottom width height] (default is automatic)
+%   cfg.renderer                = string, 'opengl', 'zbuffer', 'painters', see RENDERERINFO (default is automatic, try 'painters' when it crashes)
 %   cfg.toi                     = vector, or 'all' (default) indicates which time
 %                                 points (or frequency bins) are to be plotted. If specified as 'all' only the
 %                                 data points with identified clusters are plotted

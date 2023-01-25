@@ -58,9 +58,9 @@ function [cfg] = ft_topoplotIC(cfg, comp)
 %                            'title' to place comment as title
 %                            'layout' to place comment as specified for COMNT in layout
 %                            [x y] coordinates
-%   cfg.title              = string or 'auto' or 'off', specify a figure
-%                            title, or use 'component N' (auto) as the
-%                            title
+%   cfg.title              = string or 'auto' or 'off', specify a figure title, or use 'component N' (default) as the title
+%   cfg.figure             = 'yes' or 'no', whether to open a new figure. You can also specify a figure handle from FIGURE, GCF or SUBPLOT. (default = 'yes')
+%   cfg.renderer           = string, 'opengl', 'zbuffer', 'painters', see RENDERERINFO (default is automatic, try 'painters' when it crashes)
 %
 % The layout defines how the channels are arranged. You can specify the
 % layout in a variety of ways:
