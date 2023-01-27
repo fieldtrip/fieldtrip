@@ -25,14 +25,13 @@ function [cfg] = ft_sourceplot(cfg, functional, anatomical)
 % coordinate system, you can reslice the data using FT_VOLUMERESLICE. See http://bit.ly/1OkDlVF
 %
 % The configuration should contain:
-%   cfg.method        = 'slice',      plots the data on a number of slices in the same plane
-%                       'ortho',      plots the data on three orthogonal slices
+%   cfg.method        = 'ortho',      plots the data on three orthogonal slices
+%                       'slice',      plots the data on a number of slices in the same plane
 %                       'surface',    plots the data on a 3D brain surface
 %                       'glassbrain', plots a max-projection through the brain
 %                       'vertex',     plots the grid points or vertices scaled according to the functional value
 %                       'cloud',      plot the data as clouds, spheres, or points scaled according to the functional value
-%
-%
+% and
 %   cfg.anaparameter  = string, field in data with the anatomical data (default = 'anatomy' if present in data)
 %   cfg.funparameter  = string, field in data with the functional parameter of interest (default = [])
 %   cfg.maskparameter = string, field in the data to be used for opacity masking of fun data (default = [])
@@ -288,6 +287,7 @@ cfg.funparameter  = ft_getopt(cfg, 'funparameter',  []);
 cfg.maskparameter = ft_getopt(cfg, 'maskparameter', []);
 cfg.maskstyle     = ft_getopt(cfg, 'maskstyle',     'opacity');
 cfg.downsample    = ft_getopt(cfg, 'downsample',    1);
+cfg.flip          = ft_getopt(cfg, 'flip',          'yes');
 cfg.title         = ft_getopt(cfg, 'title',         []);
 cfg.figurename    = ft_getopt(cfg, 'figurename',    []);
 cfg.atlas         = ft_getopt(cfg, 'atlas',         []);
@@ -358,9 +358,6 @@ if isfield(functional, 'dim') && isfield(functional, 'transform')
   % this is a regular 3D functional volume
   isUnstructuredFun = false;
 
-  % align the volume's coordinate system approximately to the voxels axes, this puts the box upright
-  functional = align_ijk2xyz(functional);
-
 elseif isfield(functional, 'dim') && isfield(functional, 'pos')
   % these are positions that can be mapped onto a 3D regular grid
   isUnstructuredFun  = false;
@@ -369,6 +366,18 @@ elseif isfield(functional, 'dim') && isfield(functional, 'pos')
 else
   % this is functional data on irregular positions, such as a cortical sheet
   isUnstructuredFun = true;
+end
+
+if ~isUnstructuredFun && strcmp(cfg.flip, 'yes')
+  % align the anatomical volume approximately to coordinate system, this puts it upright
+  origmethod = cfg.method;
+  tmpcfg = [];
+  tmpcfg.method = 'flip';
+  tmpcfg.trackcallinfo = 'no';
+  tmpcfg.showcallinfo = 'no';
+  functional = ft_volumereslice(tmpcfg, functional);
+  [cfg, functional] = rollback_provenance(cfg, functional);
+  cfg.method = origmethod;
 end
 
 % this only relates to the dimensions of the geometry, which is npos*1 or nx*ny*nz
@@ -895,7 +904,8 @@ switch cfg.method
         set(hc, 'YLim', [fcolmin fcolmax]);
         ylabel(hc, cfg.colorbartext);
       else
-        ft_warning('no colorbar possible without functional data')
+        ft_warning('no colorbar possible without functional data');
+        cfg.colorbar = 'no'; % prevent the warning from apearing twice
       end
     end
     
@@ -1091,6 +1101,8 @@ switch cfg.method
       for m = 1:numel(cfg.intersectmesh)
         opt.intersectmesh{m} = ft_transform_geometry(inv(functional.transform), cfg.intersectmesh{m});
       end
+    else
+      opt.intersectmesh = [];
     end
     
     %% do the actual plotting
@@ -1290,7 +1302,8 @@ switch cfg.method
           % functional values have been transformed to be scaled
         end
       else
-        ft_warning('no colorbar possible without functional data')
+        ft_warning('no colorbar possible without functional data');
+        cfg.colorbar = 'no'; % prevent the warning from apearing twice
       end
     end
     
@@ -1626,16 +1639,18 @@ else
 end
 
 if opt.hasana
-  options = {'transform', eye(4),     'location', opt.ijk, 'style', 'subplot',...
-             'update',    opt.update, 'doscale',  false,   'clim',  opt.clim};
-  if isfield(opt, 'intersectmesh')
-    options = cat(2, options, 'intersectmesh', opt.intersectmesh);
-  end
+  plotopt = {};
+  plotopt = ft_setopt(plotopt, 'transform', eye(4));
+  plotopt = ft_setopt(plotopt, 'location', opt.ijk);
+  plotopt = ft_setopt(plotopt, 'style', 'subplot');
+  plotopt = ft_setopt(plotopt, 'update', opt.update);
+  plotopt = ft_setopt(plotopt, 'doscale', false);
+  plotopt = ft_setopt(plotopt, 'clim', opt.clim);
+  plotopt = ft_setopt(plotopt, 'intersectmesh', opt.intersectmesh);
   
   if opt.init
-    tmph  = [h1 h2 h3];
-    options = cat(2, options, {'parents', tmph});
-    ft_plot_ortho(opt.ana, options{:});
+    plotopt = ft_setopt(plotopt, 'parents', [h1 h2 h3]);
+    ft_plot_ortho(opt.ana, plotopt{:});
     
     opt.anahandles = findobj(opt.handlesfigure, 'type', 'surface')';
     for i=1:length(opt.anahandles)
@@ -1645,24 +1660,31 @@ if opt.hasana
     opt.anahandles = opt.anahandles(i3(i2)); % seems like swapping the order
     opt.anahandles = opt.anahandles(:)';
     set(opt.anahandles, 'tag', 'ana');
-    if isfield(opt, 'intersectmesh')
+    if ~isempty(opt.intersectmesh)
       opt.patchhandles = findobj(opt.handlesfigure, 'type', 'patch');
       opt.patchhandles = opt.patchhandles(i3(i2));
       opt.patchhandles = opt.patchhandles(:)';
       set(opt.patchhandles, 'tag', 'patch');
     end
   else
-    options = cat(2, options, {'surfhandle', opt.anahandles});
-    if isfield(opt, 'intersectmesh')
-      options = cat(2, options, {'patchhandle', opt.patchhandles});
+    plotopt = cat(2, plotopt, {'surfhandle', opt.anahandles});
+    if ~isempty(opt.intersectmesh)
+      plotopt = cat(2, plotopt, {'patchhandle', opt.patchhandles});
     end
-    ft_plot_ortho(opt.ana, options{:});
+    ft_plot_ortho(opt.ana, plotopt{:});
   end
 end
 
 if opt.hasfun
+  plotopt = {};
+  plotopt = ft_setopt(plotopt, 'transform', eye(4));
+  plotopt = ft_setopt(plotopt, 'location', opt.ijk);
+  plotopt = ft_setopt(plotopt, 'style', 'subplot');
+  plotopt = ft_setopt(plotopt, 'update', opt.update);
+  plotopt = ft_setopt(plotopt, 'clim', [opt.fcolmin opt.fcolmax]);
+  plotopt = ft_setopt(plotopt, 'colormap', opt.funcolormap);
+
   if opt.init
-    tmph  = [h1 h2 h3];
     if isequal(opt.funcolormap, 'rgb')
       tmpfun = opt.fun;
       if opt.hasmsk
@@ -1676,21 +1698,23 @@ if opt.hasfun
       end
     end
     
-    plotoptions = {'transform', eye(4), 'location', opt.ijk, ...
-      'style', 'subplot', 'parents', tmph, 'update', opt.update, ...
-      'colormap', opt.funcolormap, 'clim', [opt.fcolmin opt.fcolmax]};
     if opt.hasmsk
-      plotoptions = cat(2, plotoptions, {'datmask', tmpmask, 'opacitylim', [opt.opacmin opt.opacmax]});
+      plotopt = ft_setopt(plotopt, 'datmask', tmpmask);
+      plotopt = ft_setopt(plotopt, 'opacitylim', [opt.opacmin opt.opacmax]);
     elseif opt.hasbackground
-      % there's a background, in the absence of the mask, the fun should be
-      % plotted with an opacity value of 0.5
-      plotoptions = cat(2, plotoptions, {'datmask', ones(size(tmpfun))./2, 'opacitylim', [0 1]});
+      % there's a background, in the absence of the mask, the fun should be plotted with an opacity value of 0.5
+      plotopt = ft_setopt(plotopt, 'datmask', ones(size(tmpfun))./2);
+      plotopt = ft_setopt(plotopt, 'opacitylim', [0 1]);
     end
     if opt.hasbackground
       % the background should always be added, independent of the mask
-      plotoptions = cat(2, plotoptions, {'background', opt.background, 'maskstyle', 'colormix'});
+      plotopt = ft_setopt(plotopt, 'background', opt.background);
+      plotopt = ft_setopt(plotopt, 'maskstyle', 'colormix');
     end
-    ft_plot_ortho(tmpfun, plotoptions{:});
+
+    plotopt = ft_setopt(plotopt, 'parents', [h1 h2 h3]);
+    ft_plot_ortho(tmpfun, plotopt{:});
+
     % After the first call, the handles to the functional surfaces exist.
     % Create a variable containing these, and sort according to the parents.
     opt.funhandles = findobj(opt.handlesfigure, 'type', 'surface');
@@ -1705,9 +1729,9 @@ if opt.hasfun
     set(opt.funhandles, 'tag', 'fun');
     
     if ~opt.hasmsk && opt.hasfun && opt.hasana
-      set(opt.funhandles(1), 'facealpha',0.5);
-      set(opt.funhandles(2), 'facealpha',0.5);
-      set(opt.funhandles(3), 'facealpha',0.5);
+      set(opt.funhandles(1), 'facealpha', 0.5);
+      set(opt.funhandles(2), 'facealpha', 0.5);
+      set(opt.funhandles(3), 'facealpha', 0.5);
     end
 
   else
@@ -1723,91 +1747,86 @@ if opt.hasfun
         tmpmask = opt.msk(:,:,:,tmpqi(1),tmpqi(2));
       end
     end
-    
-    plotoptions = {'transform', eye(4), 'location', opt.ijk, ...
-        'style', 'subplot', 'surfhandle', opt.funhandles, 'update', opt.update, ...
-        'colormap', opt.funcolormap, 'clim', [opt.fcolmin opt.fcolmax]};
+
     if opt.hasmsk
-      plotoptions = cat(2, plotoptions, {'datmask', tmpmask, 'opacitylim', [opt.opacmin opt.opacmax]});
+      plotopt = ft_setopt(plotopt, 'datmask', tmpmask);
+      plotopt = ft_setopt(plotopt, 'opacitylim', [opt.opacmin opt.opacmax]);
     elseif opt.hasbackground
-      % there's a background, in the absence of the mask, the fun should be
-      % plotted with an opacity value of 0.5
-      plotoptions = cat(2, plotoptions, {'datmask', ones(size(tmpfun))./2, 'opacitylim', [0 1]});
+      % there's a background, in the absence of the mask, the fun should be plotted with an opacity value of 0.5
+      plotopt = ft_setopt(plotopt, 'datmask', ones(size(tmpfun))./2);
+      plotopt = ft_setopt(plotopt, 'opacitylim', [0 1]);
     end
     if opt.hasbackground
       % the background should always be added, independent of the mask
-      plotoptions = cat(2, plotoptions, {'background', opt.background, 'maskstyle', 'colormix'});
+      plotopt = ft_setopt(plotopt, 'background', opt.background);
+      plotopt = ft_setopt(plotopt, 'maskstyle', 'colormix');
     end
-    ft_plot_ortho(tmpfun, plotoptions{:});
+
+    plotopt = ft_setopt(plotopt, 'surfhandle', opt.funhandles);
+    ft_plot_ortho(tmpfun, plotopt{:});
   end
 end
+
 set(opt.handlesaxes(1), 'Visible', opt.axis);
 set(opt.handlesaxes(2), 'Visible', opt.axis);
 set(opt.handlesaxes(3), 'Visible', opt.axis);
 
-if opt.init
-  if showcoordsys
-    % add L/R label in the relevant panels
-    ijk = 'ijk';
-    [ind_ijk, ind_left] = find(strcmp(dirijk, 'left'));
-
-    lr_tag = ijk(ind_ijk);
-    lr_dir = [ind_left 3-ind_left];
-    lr_str = 'LR';
-    lr_str = lr_str(lr_dir);
-
-    % by construction the handlesAxes 1/2/3 are ordered according to 'ik', 'jk', 'ij'
-    for k = 1:3
-      tag = get(opt.handlesaxes(k), 'Tag');
-      if contains(tag, lr_tag)
-        textcoord = [0 0 0; 0 0 0];
-        [x, y]    = find(tag(:)==ijk);
-        if find(tag==lr_tag)==2
-          y = flip(y);
-        end
-        for kk = 1:2
-          switch y(kk)
-            case 1
-              lims = get(opt.handlesaxes(k), 'Xlim');
-            case 2
-              lims = get(opt.handlesaxes(k), 'Ylim');
-            case 3
-              lims = get(opt.handlesaxes(k), 'Zlim');
-          end
-          if kk==1
-            textcoord(1, y(kk)) = lims(1) + 14;
-            textcoord(2, y(kk)) = lims(2) - 24;
-          else
-            textcoord(1, y(kk)) = lims(1) + 14;
-            textcoord(2, y(kk)) = lims(1) + 14;
-          end
-        end
-        last = setdiff(1:3, y);
-        switch last
-          case 1
-            lims = get(opt.handlesaxes(k), 'Xlim');
-          case 2
-            lims = get(opt.handlesaxes(k), 'Ylim');
-          case 3
-            lims = get(opt.handlesaxes(k), 'Zlim');
-        end
-        if k==1
-          lastval = -1;
-        else
-          lastval = lims(2)+1;
-        end
-        textcoord(1, last) = lastval;
-        textcoord(2, last) = lastval;
-        text(opt.handlesaxes(k), textcoord(:,1), textcoord(:,2), textcoord(:,3), ...
-          lr_str(:), 'color', 'w', 'fontweight', 'bold');
-
-      else
-        continue;
-      end
-    end
-  end
+% determine the labels of the x, y, z-axes
+[label(1,:), label(2,:), label(3,:)] = coordsys2label(functional.coordsys, 0, 1);
+% the i, j, k-axes of the volume could be permuted and/or flipped relative to the x, y, z-axes
+[dum, permutevec, flipvec] = align_ijk2xyz(functional);
+% flip the labels to make them consistent with the i, j, k-axes
+if flipvec(1)
+  label(1,:) = fliplr(label(1,:));
 end
+if flipvec(2)
+  label(2,:) = fliplr(label(2,:));
+end
+if flipvec(3)
+  label(3,:) = fliplr(label(3,:));
+end
+% permute the labels to make them consistent with the i, j, k-axes
+label = label(permutevec,:);
 
+% only keep the label for R and L, the others are plotted as empty string
+label(~strcmp(label, 'R') & ~strcmp(label, 'L')) = {''};
+
+% determine the positions of the labels
+position{1,1} = 0.05 * functional.dim(1);
+position{1,2} = 0.95 * functional.dim(1);
+position{2,1} = 0.05 * functional.dim(2);
+position{2,2} = 0.95 * functional.dim(2);
+position{3,1} = 0.05 * functional.dim(3);
+position{3,2} = 0.95 * functional.dim(3);
+
+for i=1:3
+  % remove old labels from this subplot
+  subplot(opt.handlesaxes(i))
+  delete(findall(opt.handlesaxes(i), 'Tag', 'label'))
+
+  % add new labels to this subplot
+  tag = get(opt.handlesaxes(i), 'Tag');
+  switch tag
+    case 'ik'
+      % add labels for the i and k axes
+      text(opt.handlesaxes(i), position{1,1}, opt.ijk(2), opt.dim(3)/2, label{1,1}, 'Color', 'w', 'FontWeight', 'bold', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'label');
+      text(opt.handlesaxes(i), position{1,2}, opt.ijk(2), opt.dim(3)/2, label{1,2}, 'Color', 'w', 'FontWeight', 'bold', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'label');
+      text(opt.handlesaxes(i), opt.dim(1)/2, opt.ijk(2), position{3,1}, label{3,1}, 'Color', 'w', 'FontWeight', 'bold', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'label');
+      text(opt.handlesaxes(i), opt.dim(1)/2, opt.ijk(2), position{3,2}, label{3,2}, 'Color', 'w', 'FontWeight', 'bold', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'label');
+    case 'jk'
+      % add labels for the j and k axes
+      text(opt.handlesaxes(i), opt.ijk(1), opt.dim(2)/2, position{3,1}, label{3,1}, 'Color', 'w', 'FontWeight', 'bold', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'label');
+      text(opt.handlesaxes(i), opt.ijk(1), opt.dim(2)/2, position{3,2}, label{3,2}, 'Color', 'w', 'FontWeight', 'bold', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'label');
+      text(opt.handlesaxes(i), opt.ijk(1), position{2,1}, opt.dim(3)/2, label{2,1}, 'Color', 'w', 'FontWeight', 'bold', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'label');
+      text(opt.handlesaxes(i), opt.ijk(1), position{2,2}, opt.dim(3)/2, label{2,2}, 'Color', 'w', 'FontWeight', 'bold', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'label');
+    case 'ij'
+      % add labels for the i and j axes
+      text(opt.handlesaxes(i), position{1,1}, opt.dim(2)/2, opt.ijk(3), label{1,1}, 'Color', 'w', 'FontWeight', 'bold', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'label');
+      text(opt.handlesaxes(i), position{1,2}, opt.dim(2)/2, opt.ijk(3), label{1,2}, 'Color', 'w', 'FontWeight', 'bold', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'label');
+      text(opt.handlesaxes(i), opt.dim(1)/2, position{2,1}, opt.ijk(3), label{2,1}, 'Color', 'w', 'FontWeight', 'bold', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'label');
+      text(opt.handlesaxes(i), opt.dim(1)/2, position{2,2}, opt.ijk(3), label{2,2}, 'Color', 'w', 'FontWeight', 'bold', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'label');
+  end % switch
+end % for each subplot
 
 if opt.hasfreq && opt.hastime && opt.hasfun
   h4 = subplot(2,2,4);
@@ -1845,6 +1864,7 @@ elseif strcmp(opt.colorbar,  'yes') && ~isfield(opt, 'hc')
     end
   else
     ft_warning('no colorbar possible without functional data');
+    opt.colorbar = 'no'; % prevent the warning from apearing twice
   end
 end
 
