@@ -160,7 +160,7 @@ end
 
 % determine the fields to reslice
 fn = fieldnames(mri);
-fn = setdiff(fn, {'pos', 'tri', 'inside', 'outside', 'time', 'freq', 'dim', 'transform', 'unit', 'coordsys', 'cfg', 'hdr'}); % remove fields that do not represent the data
+fn = setdiff(fn, {'pos', 'tri', 'inside', 'outside', 'time', 'freq', 'dim', 'transform', 'unit', 'coordsys', 'fid', 'cfg', 'hdr'}); % remove fields that do not represent the data
 dimord = cell(size(fn));
 for i=1:numel(fn)
   dimord{i} = getdimord(mri, fn{i});
