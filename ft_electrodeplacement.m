@@ -1144,13 +1144,14 @@ else
   ft_plot_mesh(removefields(opt.headshape, 'color'), 'tag', 'headshape', 'facecolor', 'skin', 'material', 'dull', 'edgecolor', 'none', 'facealpha', 1);
 end
 
+% apply uniform light from all angles
 lighting gouraud
-l = lightangle(0,  90); set(l, 'Color', 0.5*[1 1 1])
-l = lightangle(0, -90); set(l, 'Color', 0.5*[1 1 1])
-l = lightangle(  0, 0); set(l, 'Color', 0.5*[1 1 1])
-l = lightangle( 90, 0); set(l, 'Color', 0.5*[1 1 1])
-l = lightangle(180, 0); set(l, 'Color', 0.5*[1 1 1])
-l = lightangle(270, 0); set(l, 'Color', 0.5*[1 1 1])
+l = lightangle(0,  90); set(l, 'Color', 0.45*[1 1 1])
+l = lightangle(0, -90); set(l, 'Color', 0.45*[1 1 1])
+l = lightangle(  0, 0); set(l, 'Color', 0.45*[1 1 1])
+l = lightangle( 90, 0); set(l, 'Color', 0.45*[1 1 1])
+l = lightangle(180, 0); set(l, 'Color', 0.45*[1 1 1])
+l = lightangle(270, 0); set(l, 'Color', 0.45*[1 1 1])
 % alpha 0.9
 
 if opt.showmarkers

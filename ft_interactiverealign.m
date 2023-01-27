@@ -426,13 +426,15 @@ if isstruct(individual.headshape) && isfield(individual.headshape, 'pos') && ~is
   ft_plot_headshape(individual.headshape, individual.headshapestyle{:})
 end
 
-alpha(str2double(get(findobj(fig, 'tag', 'alpha'), 'string')));
+% apply uniform light from all angles
 lighting gouraud
-l = lightangle(0, 90);  set(l, 'Color', [1 1 1]/2)
-l = lightangle(  0, 0); set(l, 'Color', [1 1 1]/3)
-l = lightangle( 90, 0); set(l, 'Color', [1 1 1]/3)
-l = lightangle(180, 0); set(l, 'Color', [1 1 1]/3)
-l = lightangle(270, 0); set(l, 'Color', [1 1 1]/3)
+l = lightangle(0,  90); set(l, 'Color', 0.45*[1 1 1])
+l = lightangle(0, -90); set(l, 'Color', 0.45*[1 1 1])
+l = lightangle(  0, 0); set(l, 'Color', 0.45*[1 1 1])
+l = lightangle( 90, 0); set(l, 'Color', 0.45*[1 1 1])
+l = lightangle(180, 0); set(l, 'Color', 0.45*[1 1 1])
+l = lightangle(270, 0); set(l, 'Color', 0.45*[1 1 1])
+alpha(str2double(get(findobj(fig, 'tag', 'alpha'), 'string')));
 
 if strcmp(get(h, 'tag'), 'toggle labels')
   setappdata(fig, 'toggle_labels', ~getappdata(fig, 'toggle_labels'))
