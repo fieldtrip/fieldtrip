@@ -214,9 +214,11 @@ if ~isequal(feedback, 'no') % can be 'yes' or 'text'
   elseif isvolume
     if issegmentation
       ft_info('the input is segmented volume data with dimensions [%d %d %d]\n', data.dim(1), data.dim(2), data.dim(3));
-      print_segmentedvolumes(data)
+      print_voxelinfo(data)
+      print_segmentationinfo(data)
     else
       ft_info('the input is volume data with dimensions [%d %d %d]\n', data.dim(1), data.dim(2), data.dim(3));
+      print_voxelinfo(data)
     end
   elseif issource
     data = fixpos(data); % ensure that positions are in pos, not in pnt
@@ -1812,11 +1814,10 @@ end
 spikeTimes(multiSpikes) = [];
 spikeTimes              = sort([spikeTimes(:); addTimes(:)]);
 
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function print_segmentedvolumes(segmentation)
+function print_segmentationinfo(segmentation)
 % give feedback about the volume of tissue compartments
 
 fn = fieldnames(segmentation);
@@ -1885,3 +1886,26 @@ elseif all(probabilistic)
   ft_info('%s : %8.0f %s (%6.2f %%)', pad('total volume',    width), totalvolume, voxelunit, 100*totalvolume/totalvolume);
   
 end % if all inxexed or probabilistic
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function print_voxelinfo(mri)
+% give feedback about the size and volume of voxels
+
+if isfield(mri, 'transform') && isfield(mri, 'unit')
+  voxelpos = [
+    1 1 1
+    2 1 1 % shifted by one voxel along 1st dimension
+    1 2 1 % shifted by one voxel along 2nd dimension
+    1 1 2 % shifted by one voxel along 3rd dimension
+    ];
+
+  headpos = ft_warp_apply(mri.transform, voxelpos);
+
+  fprintf('voxel size along 1st dimension (i) : %f %s\n', norm(headpos(2,:)-headpos(1,:)), mri.unit);
+  fprintf('voxel size along 2nd dimension (j) : %f %s\n', norm(headpos(3,:)-headpos(1,:)), mri.unit);
+  fprintf('voxel size along 3rd dimension (k) : %f %s\n', norm(headpos(4,:)-headpos(1,:)), mri.unit);
+  fprintf('volume per voxel                   : %f %s^3\n', det(mri.transform(1:3,1:3)), mri.unit);
+end % if hasfield
+
