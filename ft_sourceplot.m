@@ -302,6 +302,7 @@ cfg.visible       = ft_getopt(cfg, 'visible',       'on');
 cfg.clim          = ft_getopt(cfg, 'clim',          [0 1]); % this is used to scale the orthoplot
 cfg.intersectmesh = ft_getopt(cfg, 'intersectmesh');
 cfg.renderer      = ft_getopt(cfg, 'renderer',      'opengl');
+cfg.interactive   = ft_getopt(cfg, 'interactive',   'yes'); % used to disable interaction for method=glassbrain
 
 if ~isfield(cfg, 'anaparameter')
   if isfield(functional, 'anatomy')
@@ -1092,6 +1093,7 @@ switch cfg.method
     opt.queryrange    = cfg.queryrange;
     opt.funcolormap   = cfg.funcolormap;
     opt.crosshair     = istrue(cfg.crosshair);
+    opt.interactive   = istrue(cfg.interactive);
     if ~isempty(cfg.intersectmesh)
       % the data will be plotted in voxel space, so transform the meshes
       % accordingly, assuming the same coordinate system as the anatomical
@@ -1108,12 +1110,7 @@ switch cfg.method
     %% do the actual plotting
     setappdata(h, 'opt', opt);
     cb_redraw(h);
-    
-    fprintf('\n');
-    fprintf('click left mouse button to reposition the cursor\n');
-    fprintf('click and hold right mouse button to update the position while moving the mouse\n');
-    fprintf('use the arrowkeys to navigate in the current axis\n');
-    
+    cb_help(h);
     
   case 'surface'
     assert(~hastime, 'method "%s" does not support time', cfg.method);
@@ -1315,7 +1312,7 @@ switch cfg.method
     % structure. The functional volume is replaced by a volume in which the maxima
     % are projected to the "edge" of the volume.
     
-    tmpfunctional = keepfields(functional, {'dim', 'transform'});
+    tmpfunctional = keepfields(functional, {'dim', 'transform', 'unit', 'coordsys'});
     
     if hasfun
       if isfield(functional, 'inside')
@@ -1341,6 +1338,7 @@ switch cfg.method
     tmpcfg.method               = 'ortho';
     tmpcfg.location             = [1 1 1];
     tmpcfg.locationcoordinates  = 'voxel';
+    tmpcfg.interactive          = 'no';
     ft_sourceplot(tmpcfg, tmpfunctional);
     
   case 'vertex'
@@ -1495,7 +1493,6 @@ switch cfg.method
       ylabel(c, cfg.colorbartext);
     end
     
-    
   otherwise
     ft_error('unsupported method "%s"', cfg.method);
 end
@@ -1542,7 +1539,12 @@ function cb_redraw(h, eventdata)
 h   = getparent(h);
 opt = getappdata(h, 'opt');
 
-curr_ax = get(h,       'currentaxes');
+if ~opt.interactive && ~opt.init
+  % this applies with method=glassbrain when calling cb_redraw for the 2nd time
+  return
+end
+
+curr_ax = get(h, 'currentaxes');
 tag = get(curr_ax, 'tag');
 
 functional = opt.functional;
@@ -1780,62 +1782,66 @@ set(opt.handlesaxes(1), 'Visible', opt.axis);
 set(opt.handlesaxes(2), 'Visible', opt.axis);
 set(opt.handlesaxes(3), 'Visible', opt.axis);
 
-% determine the labels of the x, y, z-axes
-[label(1,:), label(2,:), label(3,:)] = coordsys2label(functional.coordsys, 0, 1);
-% the i, j, k-axes of the volume could be permuted and/or flipped relative to the x, y, z-axes
-[dum, permutevec, flipvec] = align_ijk2xyz(functional);
-% flip the labels to make them consistent with the i, j, k-axes
-if flipvec(1)
-  label(1,:) = fliplr(label(1,:));
-end
-if flipvec(2)
-  label(2,:) = fliplr(label(2,:));
-end
-if flipvec(3)
-  label(3,:) = fliplr(label(3,:));
-end
-% permute the labels to make them consistent with the i, j, k-axes
-label = label(permutevec,:);
+if isfield(functional, 'coordsys')
+  % try to indicate in the appropriate slices what left and right is
+  
+  % determine the labels of the x, y, z-axes
+  [label(1,:), label(2,:), label(3,:)] = coordsys2label(functional.coordsys, 0, 1);
+  % the i, j, k-axes of the volume could be permuted and/or flipped relative to the x, y, z-axes
+  [dum, permutevec, flipvec] = align_ijk2xyz(functional);
+  % flip the labels to make them consistent with the i, j, k-axes
+  if flipvec(1)
+    label(1,:) = fliplr(label(1,:));
+  end
+  if flipvec(2)
+    label(2,:) = fliplr(label(2,:));
+  end
+  if flipvec(3)
+    label(3,:) = fliplr(label(3,:));
+  end
+  % permute the labels to make them consistent with the i, j, k-axes
+  label = label(permutevec,:);
 
-% only keep the label for R and L, the others are plotted as empty string
-label(~strcmp(label, 'R') & ~strcmp(label, 'L')) = {''};
+  % only keep the label for R and L, the others are plotted as empty string
+  label(~strcmp(label, 'R') & ~strcmp(label, 'L')) = {''};
 
-% determine the positions of the labels
-position{1,1} = 0.05 * functional.dim(1);
-position{1,2} = 0.95 * functional.dim(1);
-position{2,1} = 0.05 * functional.dim(2);
-position{2,2} = 0.95 * functional.dim(2);
-position{3,1} = 0.05 * functional.dim(3);
-position{3,2} = 0.95 * functional.dim(3);
+  % determine the positions of the labels
+  position{1,1} = 0.05 * functional.dim(1);
+  position{1,2} = 0.95 * functional.dim(1);
+  position{2,1} = 0.05 * functional.dim(2);
+  position{2,2} = 0.95 * functional.dim(2);
+  position{3,1} = 0.05 * functional.dim(3);
+  position{3,2} = 0.95 * functional.dim(3);
 
-for i=1:3
-  % remove old labels from this subplot
-  subplot(opt.handlesaxes(i))
-  delete(findall(opt.handlesaxes(i), 'Tag', 'label'))
+  for i=1:3
+    % remove old labels from this subplot
+    subplot(opt.handlesaxes(i))
+    delete(findall(opt.handlesaxes(i), 'Tag', 'label'))
 
-  % add new labels to this subplot
-  tag = get(opt.handlesaxes(i), 'Tag');
-  switch tag
-    case 'ik'
-      % add labels for the i and k axes
-      text(opt.handlesaxes(i), position{1,1}, opt.ijk(2), opt.dim(3)/2, label{1,1}, 'Color', 'w', 'FontWeight', 'bold', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'label');
-      text(opt.handlesaxes(i), position{1,2}, opt.ijk(2), opt.dim(3)/2, label{1,2}, 'Color', 'w', 'FontWeight', 'bold', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'label');
-      text(opt.handlesaxes(i), opt.dim(1)/2, opt.ijk(2), position{3,1}, label{3,1}, 'Color', 'w', 'FontWeight', 'bold', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'label');
-      text(opt.handlesaxes(i), opt.dim(1)/2, opt.ijk(2), position{3,2}, label{3,2}, 'Color', 'w', 'FontWeight', 'bold', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'label');
-    case 'jk'
-      % add labels for the j and k axes
-      text(opt.handlesaxes(i), opt.ijk(1), opt.dim(2)/2, position{3,1}, label{3,1}, 'Color', 'w', 'FontWeight', 'bold', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'label');
-      text(opt.handlesaxes(i), opt.ijk(1), opt.dim(2)/2, position{3,2}, label{3,2}, 'Color', 'w', 'FontWeight', 'bold', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'label');
-      text(opt.handlesaxes(i), opt.ijk(1), position{2,1}, opt.dim(3)/2, label{2,1}, 'Color', 'w', 'FontWeight', 'bold', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'label');
-      text(opt.handlesaxes(i), opt.ijk(1), position{2,2}, opt.dim(3)/2, label{2,2}, 'Color', 'w', 'FontWeight', 'bold', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'label');
-    case 'ij'
-      % add labels for the i and j axes
-      text(opt.handlesaxes(i), position{1,1}, opt.dim(2)/2, opt.ijk(3), label{1,1}, 'Color', 'w', 'FontWeight', 'bold', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'label');
-      text(opt.handlesaxes(i), position{1,2}, opt.dim(2)/2, opt.ijk(3), label{1,2}, 'Color', 'w', 'FontWeight', 'bold', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'label');
-      text(opt.handlesaxes(i), opt.dim(1)/2, position{2,1}, opt.ijk(3), label{2,1}, 'Color', 'w', 'FontWeight', 'bold', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'label');
-      text(opt.handlesaxes(i), opt.dim(1)/2, position{2,2}, opt.ijk(3), label{2,2}, 'Color', 'w', 'FontWeight', 'bold', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'label');
-  end % switch
-end % for each subplot
+    % add new labels to this subplot
+    tag = get(opt.handlesaxes(i), 'Tag');
+    switch tag
+      case 'ik'
+        % add labels for the i and k axes
+        text(opt.handlesaxes(i), position{1,1}, opt.ijk(2), opt.dim(3)/2, label{1,1}, 'Color', 'w', 'FontWeight', 'bold', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'label');
+        text(opt.handlesaxes(i), position{1,2}, opt.ijk(2), opt.dim(3)/2, label{1,2}, 'Color', 'w', 'FontWeight', 'bold', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'label');
+        text(opt.handlesaxes(i), opt.dim(1)/2, opt.ijk(2), position{3,1}, label{3,1}, 'Color', 'w', 'FontWeight', 'bold', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'label');
+        text(opt.handlesaxes(i), opt.dim(1)/2, opt.ijk(2), position{3,2}, label{3,2}, 'Color', 'w', 'FontWeight', 'bold', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'label');
+      case 'jk'
+        % add labels for the j and k axes
+        text(opt.handlesaxes(i), opt.ijk(1), opt.dim(2)/2, position{3,1}, label{3,1}, 'Color', 'w', 'FontWeight', 'bold', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'label');
+        text(opt.handlesaxes(i), opt.ijk(1), opt.dim(2)/2, position{3,2}, label{3,2}, 'Color', 'w', 'FontWeight', 'bold', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'label');
+        text(opt.handlesaxes(i), opt.ijk(1), position{2,1}, opt.dim(3)/2, label{2,1}, 'Color', 'w', 'FontWeight', 'bold', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'label');
+        text(opt.handlesaxes(i), opt.ijk(1), position{2,2}, opt.dim(3)/2, label{2,2}, 'Color', 'w', 'FontWeight', 'bold', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'label');
+      case 'ij'
+        % add labels for the i and j axes
+        text(opt.handlesaxes(i), position{1,1}, opt.dim(2)/2, opt.ijk(3), label{1,1}, 'Color', 'w', 'FontWeight', 'bold', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'label');
+        text(opt.handlesaxes(i), position{1,2}, opt.dim(2)/2, opt.ijk(3), label{1,2}, 'Color', 'w', 'FontWeight', 'bold', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'label');
+        text(opt.handlesaxes(i), opt.dim(1)/2, position{2,1}, opt.ijk(3), label{2,1}, 'Color', 'w', 'FontWeight', 'bold', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'label');
+        text(opt.handlesaxes(i), opt.dim(1)/2, position{2,2}, opt.ijk(3), label{2,2}, 'Color', 'w', 'FontWeight', 'bold', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'label');
+    end % switch
+  end % for each subplot
+end % if has coordsys
 
 if opt.hasfreq && opt.hastime && opt.hasfun
   h4 = subplot(2,2,4);
@@ -1925,6 +1931,21 @@ set(h, 'currentaxes', curr_ax);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function cb_help(h, eventdata)
+
+h   = getparent(h);
+opt = getappdata(h, 'opt');
+
+if opt.interactive
+  fprintf('\n');
+  fprintf('click left mouse button to reposition the cursor\n');
+  fprintf('click and hold right mouse button to update the position while moving the mouse\n');
+  fprintf('use the arrowkeys to navigate in the current axis\n');
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_keyboard(h, eventdata)
 
 if isempty(eventdata)
@@ -1966,7 +1987,10 @@ switch key
     
   case '3'
     subplot(opt.handlesaxes(3));
-    
+
+  case 'h'
+    cb_help(h);
+
   case 'q'
     setappdata(h, 'opt', opt);
     cb_quit(h);
