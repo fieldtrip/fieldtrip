@@ -1,4 +1,4 @@
-function [volume, permutevec, flipflags, transform] = align_ijk2xyz(volume)
+function [volume, permutevec, flipvec, transform] = align_ijk2xyz(volume)
 
 % ALIGN_IJK2XYZ flips and permutes the 3D volume data such that the axes of
 % the voxel indices and the headcoordinates approximately correspond. The
@@ -10,13 +10,16 @@ function [volume, permutevec, flipflags, transform] = align_ijk2xyz(volume)
 % First, the volume is permuted in order to get the largest (absolute)
 % values on the diagonal of the transformation matrix. This permutation is
 % reflected by the second output argument.
+%
 % Second, the volumes are flipped along the dimensions for which the main
 % diagonal elements of the transformation matrix are negative. This is
 % reflected by the third output argument.
 %
-% The second and third argument are in the output in order to be able to
-% reverse the operation. Note that in such case first the data have to be
-% 'unflipped', and then 'unpermuted' (using ipermute, rather than permute).
+% The second and third argument returned to allow you to reverse the operation. 
+% Note that first the data have to be 'unflipped', and then 'unpermuted' (using 
+% ipermute, rather than permute).
+%
+% See also VOLUMEPERMUTE, VOLUMEFLIP
 
 % Copyright (C) 2012-2022, Jan-Mathijs Schoffelen and Robert Oostenveld
 %
@@ -86,12 +89,12 @@ if isfield(volume, 'xgrid')
 end
 
 % subsequently flip the volume along each direction, so that the diagonal of the transformation matrix is positive
-flipflags = zeros(1,3);
+flipvec = zeros(1,3);
 flipx = eye(4); flipx(1,1) = -1; flipx(1,4) = volume.dim(1)+1;
 flipy = eye(4); flipy(2,2) = -1; flipy(2,4) = volume.dim(2)+1;
 flipz = eye(4); flipz(3,3) = -1; flipz(3,4) = volume.dim(3)+1;
 if volume.transform(1,1)<0
-  flipflags(1) = 1;
+  flipvec(1) = 1;
   for i=1:length(param)
     volume = setsubfield(volume, param{i}, flip(getsubfield(volume, param{i}), 1));
   end
@@ -99,7 +102,7 @@ if volume.transform(1,1)<0
   transform        = transform * flipx;
 end
 if volume.transform(2,2)<0
-  flipflags(2) = 1;
+  flipvec(2) = 1;
   for i=1:length(param)
     volume = setsubfield(volume, param{i}, flip(getsubfield(volume, param{i}), 2));
   end
@@ -107,7 +110,7 @@ if volume.transform(2,2)<0
   transform        = transform * flipy;
 end
 if volume.transform(3,3)<0
-  flipflags(3) = 1;
+  flipvec(3) = 1;
   for i=1:length(param)
     volume = setsubfield(volume, param{i}, flip(getsubfield(volume, param{i}), 3));
   end

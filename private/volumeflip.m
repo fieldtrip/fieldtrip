@@ -1,8 +1,8 @@
-function [volume, flipvec] = volumeflip(volume, flipvecin)
+function [volume, flipvecout] = volumeflip(volume, flipvecin)
 
 % VOLUMEFLIP
 %
-% See also VOLUMEPERMUTE
+% See also VOLUMEPERMUTE, ALIGN_IJK2XYZ
 
 if nargin<2
   flipvecin = 'auto';
@@ -56,17 +56,17 @@ end
 fnames = fnames(sel);
 
 % pre-allocate
-flipvec = false(1,3);
+flipvecout = false(1,3);
 
 % do the flipping on the numeric data and transformation matrix
 for m = 1:3
   if ischar(flipvecin)
-    flipvec(m) = T(m,m)<0;
+    flipvecout(m) = T(m,m)<0;
   else
-    flipvec(m) = flipvecin(m);
+    flipvecout(m) = flipvecin(m);
   end
   
-  if flipvec(m)
+  if flipvecout(m)
     % get the reflection matrix
     flipmat = eye(4); flipmat(m,m) = -1; flipmat(m,4) = dim(m)+1;
     for k = 1:numel(fnames)
