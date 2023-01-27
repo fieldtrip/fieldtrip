@@ -1,6 +1,7 @@
 function [hx, hy, hz] = ft_plot_ortho(dat, varargin)
 
-% FT_PLOT_ORTHO plots 3 orthographic slices through a 3-D volume and interpolates if needed
+% FT_PLOT_ORTHO plots three orthographic slices through a 3-D volume and interpolates
+% the data if needed.
 %
 % Use as
 %   ft_plot_ortho(dat, ...)

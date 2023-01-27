@@ -1,6 +1,7 @@
 function [h, T2] = ft_plot_slice(dat, varargin)
 
-% FT_PLOT_SLICE plots a 2-D cut through a 3-D volume and interpolates if needed
+% FT_PLOT_SLICE plots a single slice that cuts through a 3-D volume and interpolates
+% the data if needed.
 %
 % Use as
 %   ft_plot_slice(dat, ...)
@@ -17,6 +18,7 @@ function [h, T2] = ft_plot_slice(dat, varargin)
 %   'orientation'  = 1x3 vector specifying the direction orthogonal through the plane
 %                    which will be plotted (default = [0 0 1])
 %   'unit'         = string, can be 'm', 'cm' or 'mm (default is automatic)
+%   'coordsys'     = string, assume the data to be in the specified coordinate system (default = 'unknown')
 %   'resolution'   = number (default = 1 mm)
 %   'datmask'      = 3D-matrix with the same size as the data matrix, serving as opacitymap
 %                    If the second input argument to the function contains a matrix, this
@@ -27,7 +29,6 @@ function [h, T2] = ft_plot_slice(dat, varargin)
 %                    grayscale image that provides the background
 %   'opacitylim'   = 1x2 vector specifying the limits for opacity masking
 %   'interpmethod' = string specifying the method for the interpolation, see INTERPN (default = 'nearest')
-%   'style'        = string, 'flat' or '3D'
 %   'colormap'     = string, see COLORMAP
 %   'clim'         = 1x2 vector specifying the min and max for the colorscale
 %
@@ -35,7 +36,7 @@ function [h, T2] = ft_plot_slice(dat, varargin)
 % with a triangulated surface mesh (e.g. a cortical sheet) using
 %   'intersectmesh'       = triangulated mesh, see FT_PREPARE_MESH
 %   'intersectcolor'      = string, color specification
-%   'intersectlinestyle'  = string, line specification 
+%   'intersectlinestyle'  = string, line specification
 %   'intersectlinewidth'  = number
 %
 % See also FT_PLOT_ORTHO, FT_PLOT_MONTAGE, FT_SOURCEPLOT
@@ -85,7 +86,7 @@ end
 if isequal(dim, size(dat(:,:,:,1,1)))
   % reuse the persistent variables to speed up subsequent calls with the same input
 else
-  dim       = size(dat); 
+  dim       = size(dat);
   if numel(dim)<3
     dim(3) = 1; % add 1 to catch size(dat,3) is singleton
   end
@@ -110,6 +111,7 @@ end
 transform           = ft_getopt(varargin, 'transform', eye(4));
 loc                 = ft_getopt(varargin, 'location');
 ori                 = ft_getopt(varargin, 'orientation', [0 0 1]);
+coordsys            = ft_getopt(varargin, 'coordsys');
 unit                = ft_getopt(varargin, 'unit');       % the default will be determined further down
 resolution          = ft_getopt(varargin, 'resolution'); % the default depends on the units and will be determined further down
 datmask             = ft_getopt(varargin, 'datmask');
@@ -322,7 +324,7 @@ if use_interpn
   V  = interpn(X, Y, Z, dat, Xi, Yi, Zi, interpmethod);
   if domask,       Vmask = interpn(X, Y, Z, datmask,    Xi, Yi, Zi, interpmethod); end
   if dobackground, Vback = interpn(X, Y, Z, background, Xi, Yi, Zi, interpmethod); end
-elseif get_slice 
+elseif get_slice
   %something more efficient than an interpolation can be done
   % just select the appropriate plane, and permute to get the orientation
   % right in the plots, something to do with ndgrid vs meshgrid I think
@@ -425,14 +427,14 @@ if isempty(cmap)
     clear dmin dmax
   end
   V(~isfinite(V)) = 0;
-  
+
   % deal with clim for RGB data here, where the purpose is to increase the
   % contrast range, rather than shift the average grey value
   if ~isempty(clim)
     V = (V-clim(1))./clim(2);
     V(V>1)=1;
   end
-  
+
   % convert into RGB values, e.g. for the plotting of anatomy
   V = cat(3, V, V, V);
 end
@@ -482,7 +484,7 @@ elseif domask
       if ~isempty(opacitylim)
         alim(opacitylim)
       end
-    
+
     case 'colormix'
       if isempty(cmap), error('using ''colormix'' as maskstyle requires an explicitly defined colormap'); end
       if ischar(cmap),  cmap = strrep(cmap, 'default', 'parula'); cmap = ft_colormap(cmap); end
@@ -498,8 +500,8 @@ elseif domask
         set(h, 'Ydata', Yh);
         set(h, 'Zdata', Zh);
       end
-  otherwise
-    error('unsupported maskstyle');
+    otherwise
+      error('unsupported maskstyle');
   end
 end
 
@@ -510,10 +512,10 @@ if dointersect
   v1 = loc + inplane(1,:);
   v2 = loc + inplane(2,:);
   v3 = loc + inplane(3,:);
-  
+
   for k = 1:numel(mesh)
     [xmesh, ymesh, zmesh] = intersect_plane(mesh{k}.pos, mesh{k}.tri, v1, v2, v3);
-    
+
     % draw each individual line segment of the intersection
     if ~isempty(xmesh)
       if isempty(p)
@@ -564,7 +566,7 @@ else
   set(gca,'xlim',[min(Xh(:))-0.5*resolution max(Xh(:))+0.5*resolution]);
   set(gca,'ylim',[min(Yh(:))-0.5*resolution max(Yh(:))+0.5*resolution]);
   set(gca,'zlim',[min(Zh(:))-0.5*resolution max(Zh(:))+0.5*resolution]);
-  
+
   set(gca,'dataaspectratio',[1 1 1]);
   % axis equal; % this for some reason does not work robustly when drawing intersections, replaced by the above
   axis vis3d
