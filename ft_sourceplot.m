@@ -1938,9 +1938,12 @@ opt = getappdata(h, 'opt');
 
 if opt.interactive
   fprintf('\n');
-  fprintf('click left mouse button to reposition the cursor\n');
-  fprintf('click and hold right mouse button to update the position while moving the mouse\n');
-  fprintf('use the arrowkeys to navigate in the current axis\n');
+  fprintf('==================================================================================\n');
+  fprintf('Press "h" to show this help.\n');
+  fprintf('Press "1", "2", or "3" to switch to the corresponding subplot.\n');
+  fprintf('Use the arrow keys to navigate in the current axis.\n');
+  fprintf('Click left mouse button to reposition the cursor.\n');
+  fprintf('Click and hold right mouse button to update the position while moving the mouse.\n');
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
