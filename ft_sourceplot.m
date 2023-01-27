@@ -1569,41 +1569,40 @@ elseif opt.usepos
 end
 opt.ijk = opt.ijk(1:3);
 
-% construct a string with user feedback
-str1 = sprintf('voxel %d\nindices [%d %d %d]', sub2ind(functional.dim(1:3), xi, yi, zi), opt.ijk);
+% construct a number of strings that will be shown in the lower right panel
+str0 = sprintf('voxel number %d', sub2ind(functional.dim(1:3), xi, yi, zi));
+str1 = sprintf('voxel indices [%d %d %d]', opt.ijk);
 
-if isfield(functional, 'coordsys')
-  cstr = sprintf('%s coordinates', functional.coordsys);
-  [dirijk(1,:), dirijk(2,:), dirijk(3,:)] = coordsys2label(functional.coordsys, 1, 1);
-  showcoordsys = ~isempty(functional.coordsys) && ~isequal(functional.coordsys, 'unknown');
-else
-  cstr = 'location';
-  showcoordsys = false;
-end
 if isfield(functional, 'unit')
-  switch functional.unit
-    case 'm'
-      ustr = sprintf('[%.3f %.3f %.3f] m', xyz(1:3));
-    case 'cm'
-      ustr = sprintf('[%.1f %.1f %.1f] cm', xyz(1:3));
-    case 'mm'
-      ustr = sprintf('[%.0f %.0f %.0f] mm', xyz(1:3));
-    otherwise
-      ustr = sprintf('[%f %f %f] %s', xyz(1:3), functional.unit);
+  if isfield(functional, 'coordsys') && ~isempty(functional.coordsys) && ~isequal(functional.coordsys, 'unknown')
+    switch functional.unit
+      case 'm'
+        str2 = sprintf('location in %s coordinates : [%.3f %.3f %.3f] m', functional.coordsys, xyz(1:3));
+      case 'cm'
+        str2 = sprintf('location in %s coordinates : [%.1f %.1f %.1f] cm', functional.coordsys, xyz(1:3));
+      case 'mm'
+        str2 = sprintf('location in %s coordinates : [%.0f %.0f %.0f] mm', functional.coordsys, xyz(1:3));
+      otherwise
+        str2 = sprintf('location in %s coordinates : [%f %f %f] %s', functional.coordsys, xyz(1:3), functional.unit);
+    end
+  else
+    switch functional.unit
+      case 'm'
+        str2 = sprintf('location : [%.3f %.3f %.3f] m', xyz(1:3));
+      case 'cm'
+        str2 = sprintf('location : [%.1f %.1f %.1f] cm', xyz(1:3));
+      case 'mm'
+        str2 = sprintf('location : [%.0f %.0f %.0f] mm', xyz(1:3));
+      otherwise
+        str2 = sprintf('location : [%f %f %f] %s', xyz(1:3), functional.unit);
+    end
   end
 else
-  ustr = sprintf('[%.3f %.3f %.3f]', xyz(1:3));
-end
-str2 = sprintf('%s %s', cstr, ustr);
-
-if opt.hasfreq && opt.hastime
-  str3 = sprintf('%.1f s, %.1f Hz', functional.time(opt.qi(2)), functional.freq(opt.qi(1)));
-elseif ~opt.hasfreq && opt.hastime
-  str3 = sprintf('%.1f s', functional.time(opt.qi(1)));
-elseif opt.hasfreq && ~opt.hastime
-  str3 = sprintf('%.1f Hz', functional.freq(opt.qi(1)));
-else
-  str3 = '';
+  if isfield(functional, 'coordsys') && ~isempty(functional.coordsys) && ~isequal(functional.coordsys, 'unknown')
+    str2 = sprintf('location in %s coordinates : [%f %f %f]', functional.coordsys, xyz(1:3));
+  else
+    str2 = sprintf('location : [%f %f %f]', xyz(1:3));
+  end
 end
 
 if opt.hasfun
@@ -1616,7 +1615,17 @@ if opt.hasfun
   elseif opt.hasfreq && opt.hastime
     val = opt.fun(xi, yi, zi, opt.qi(1), opt.qi(2));
   end
-  str4 = sprintf('value %f', val);
+  str3 = sprintf('value %f', val);
+else
+  str3 = '';
+end
+
+if opt.hasfreq && opt.hastime
+  str4 = sprintf('%.1f s, %.1f Hz', functional.time(opt.qi(2)), functional.freq(opt.qi(1)));
+elseif ~opt.hasfreq && opt.hastime
+  str4 = sprintf('%.1f s', functional.time(opt.qi(1)));
+elseif opt.hasfreq && ~opt.hastime
+  str4 = sprintf('%.1f Hz', functional.freq(opt.qi(1)));
 else
   str4 = '';
 end
@@ -1625,17 +1634,17 @@ if opt.hasatlas
   % determine the anatomical label of the current position
   lab = atlas_lookup(opt.atlas, (xyz(1:3)), 'coordsys', functional.coordsys, 'queryrange', opt.queryrange);
   if isempty(lab)
-    lab = 'NA';
+    str5 = sprintf('atlas label: n/a');
   else
     lab = unique(lab);
     tmp = sprintf('%s', strrep(lab{1}, '_', ' '));
     for i=2:length(lab)
       tmp = [tmp sprintf(', %s', strrep(lab{i}, '_', ' '))];
     end
-    lab = tmp;
+    str5 = sprintf('atlas label: %s', tmp);
   end
 else
-  lab = 'NA';
+  str5 = '';
 end
 
 if opt.hasana
@@ -1872,17 +1881,19 @@ if ~((opt.hasfreq && numel(functional.freq)>1) || opt.hastime)
   if opt.init
     ht = subplot('position',[0.06+0.06+opt.h1size(1) 0.06 opt.h2size(1) opt.h3size(2)]);
     set(ht, 'visible', 'off');
-    opt.ht1=text(0,0.65,str1);
-    opt.ht2=text(0,0.5,str2);
-    opt.ht3=text(0,0.4,str4);
-    opt.ht4=text(0,0.3,str3);
-    opt.ht5=text(0,0.2,['atlas label: ' lab]);
+    opt.ht0 = text(0, 0.7, str0);
+    opt.ht1 = text(0, 0.6, str1);
+    opt.ht2 = text(0, 0.5, str2);
+    opt.ht3 = text(0, 0.4, str3);
+    opt.ht4 = text(0, 0.3, str4);
+    opt.ht5 = text(0, 0.2, str5);
   else
-    set(opt.ht1, 'string',str1);
-    set(opt.ht2, 'string',str2);
-    set(opt.ht3, 'string',str4);
-    set(opt.ht4, 'string',str3);
-    set(opt.ht5, 'string',['atlas label: ' lab]);
+    opt.ht0 = text(0, 0.7, str0);
+    opt.ht1 = text(0, 0.6, str1);
+    opt.ht2 = text(0, 0.5, str2);
+    opt.ht3 = text(0, 0.4, str3);
+    opt.ht4 = text(0, 0.3, str4);
+    opt.ht5 = text(0, 0.2, str5);
   end
 end
 
