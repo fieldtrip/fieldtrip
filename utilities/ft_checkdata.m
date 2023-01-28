@@ -1906,6 +1906,6 @@ if isfield(mri, 'transform') && isfield(mri, 'unit')
   fprintf('voxel size along 1st dimension (i) : %f %s\n', norm(headpos(2,:)-headpos(1,:)), mri.unit);
   fprintf('voxel size along 2nd dimension (j) : %f %s\n', norm(headpos(3,:)-headpos(1,:)), mri.unit);
   fprintf('voxel size along 3rd dimension (k) : %f %s\n', norm(headpos(4,:)-headpos(1,:)), mri.unit);
-  fprintf('volume per voxel                   : %f %s^3\n', det(mri.transform(1:3,1:3)), mri.unit);
+  fprintf('volume per voxel                   : %f %s^3\n', abs(det(mri.transform(1:3,1:3))), mri.unit);
 end % if hasfield
 
