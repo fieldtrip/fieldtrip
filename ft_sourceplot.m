@@ -1658,7 +1658,7 @@ if opt.hasana
   plotopt = ft_setopt(plotopt, 'doscale', false);
   plotopt = ft_setopt(plotopt, 'clim', opt.clim);
   plotopt = ft_setopt(plotopt, 'intersectmesh', opt.intersectmesh);
-  
+
   if opt.init
     plotopt = ft_setopt(plotopt, 'parents', [h1 h2 h3]);
     ft_plot_ortho(opt.ana, plotopt{:});
@@ -1800,7 +1800,7 @@ if isfield(functional, 'coordsys')
     label(3,:) = fliplr(label(3,:));
   end
   % permute the labels to make them consistent with the i, j, k-axes
-  label = label(permutevec,:);
+  label(permutevec,:) = label;
 
   % only keep the label for R and L, the others are plotted as empty string
   label(~strcmp(label, 'R') & ~strcmp(label, 'L')) = {''};
@@ -1884,22 +1884,22 @@ elseif strcmp(opt.colorbar,  'yes') && ~isfield(opt, 'hc')
 end
 
 if ~((opt.hasfreq && numel(functional.freq)>1) || opt.hastime)
+  ht = subplot('position',[0.06+0.06+opt.h1size(1) 0.06 opt.h2size(1) opt.h3size(2)]);
+  set(ht, 'visible', 'off');
   if opt.init
-    ht = subplot('position',[0.06+0.06+opt.h1size(1) 0.06 opt.h2size(1) opt.h3size(2)]);
-    set(ht, 'visible', 'off');
-    opt.ht0 = text(0, 0.7, str0);
-    opt.ht1 = text(0, 0.6, str1);
-    opt.ht2 = text(0, 0.5, str2);
-    opt.ht3 = text(0, 0.4, str3);
-    opt.ht4 = text(0, 0.3, str4);
-    opt.ht5 = text(0, 0.2, str5);
+    opt.ht0 = text(ht, 0, 0.7, str0);
+    opt.ht1 = text(ht, 0, 0.6, str1);
+    opt.ht2 = text(ht, 0, 0.5, str2);
+    opt.ht3 = text(ht, 0, 0.4, str3);
+    opt.ht4 = text(ht, 0, 0.3, str4);
+    opt.ht5 = text(ht, 0, 0.2, str5);
   else
-    opt.ht0 = text(0, 0.7, str0);
-    opt.ht1 = text(0, 0.6, str1);
-    opt.ht2 = text(0, 0.5, str2);
-    opt.ht3 = text(0, 0.4, str3);
-    opt.ht4 = text(0, 0.3, str4);
-    opt.ht5 = text(0, 0.2, str5);
+    set(opt.ht0, 'String', str0);
+    set(opt.ht1, 'String', str1);
+    set(opt.ht2, 'String', str2);
+    set(opt.ht3, 'String', str3);
+    set(opt.ht4, 'String', str4);
+    set(opt.ht5, 'String', str5);
   end
 end
 
