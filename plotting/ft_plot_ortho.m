@@ -197,7 +197,7 @@ switch style
     
     varargin{2*sel} = ori(3,:);
     hz = ft_plot_slice(dat, varargin{:});
-    axis equal; axis tight; axis off;axis vis3d
+    axis equal; axis tight; axis vis3d; axis off
     view(3);
     
     if ~holdflag

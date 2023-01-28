@@ -611,7 +611,7 @@ axis(ax([1 4 2 5 3 6])); % reorder into [xmin xmax ymin ymaz zmin zmax]
 
 st = dbstack;
 if numel(st)>1
-  % ft_plot_slice has been called from another function
+  % ft_plot_slice has been called from another function, probably ft_plot_ortho
   % assume the remainder of the axis settings to be handled there
 else
   set(gca,'xlim',[min(Xh(:))-0.5*resolution max(Xh(:))+0.5*resolution]);
