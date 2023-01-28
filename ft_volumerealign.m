@@ -1246,6 +1246,7 @@ if viewresult
 
   % create structure to be passed to gui
   opt               = [];
+  opt.viewmode      = cfg.viewmode;
   opt.viewresult    = true; % flag to use for certain keyboard/redraw calls
   opt.dim           = basevol.dim;
   opt.ijk           = [xc yc zc];
@@ -1420,8 +1421,17 @@ end
 if opt.init
   % create the initial figure
   if ~opt.viewresult
+    if isfield(mri, 'coordsys')
+      % determine the coordsys that matches the volume with an (approximate) identity transform
+      % this allows for plotting L/R labels for a DICOM or unprocessed NIFTI file
+      dum = align_xyz2ijk(mri);
+      coordsys = dum.coordsys;
+    else
+      coordsys = [];
+    end
+
     % if realigning, plotting is done in voxel space
-    ft_plot_ortho(opt.ana, 'transform', eye(4), 'location', [xi yi zi], 'style', 'subplot', 'parents', [h1 h2 h3], 'update', opt.update, 'doscale', false, 'clim', opt.clim);
+    ft_plot_ortho(opt.ana, 'transform', eye(4), 'coordsys', coordsys, 'location', [xi yi zi], 'style', 'subplot', 'parents', [h1 h2 h3], 'update', opt.update, 'doscale', false, 'clim', opt.clim);
   else
     % if viewing result, plotting is done in head coordinate system space
     if ~opt.twovol
