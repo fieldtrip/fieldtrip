@@ -58,7 +58,7 @@ function [realign, snap] = ft_volumerealign(cfg, mri, target)
 %                        after realignment (default = 'no')
 %
 % When cfg.method = 'interactive', a user interface allows for the specification of
-% the fiducials or landmarks using the mouse, cursor keys and keyboard.The fiducials
+% the fiducials or landmarks using the mouse, cursor keys and keyboard. The fiducials
 % can be specified by pressing the corresponding key on the keyboard (n/l/r or
 % a/p/z). When pressing q the interactive mode will stop and the transformation
 % matrix is computed. This method supports the following options:
@@ -238,7 +238,8 @@ cfg = ft_checkconfig(cfg, 'renamed', {'viewdim', 'axisratio'});
 
 % set the defaults
 cfg.coordsys      = ft_getopt(cfg, 'coordsys',  []);
-cfg.method        = ft_getopt(cfg, 'method',    []); % deal with this below
+cfg.method        = ft_getopt(cfg, 'method',    []); % the default is set below
+cfg.flip          = ft_getopt(cfg, 'flip',      []); % the default is set below
 cfg.fiducial      = ft_getopt(cfg, 'fiducial',  []);
 cfg.parameter     = ft_getopt(cfg, 'parameter', 'anatomy');
 cfg.clim          = ft_getopt(cfg, 'clim',      []);
@@ -249,7 +250,6 @@ cfg.spmversion    = ft_getopt(cfg, 'spmversion', 'spm12');
 cfg.voxelratio    = ft_getopt(cfg, 'voxelratio', 'data'); % display size of the voxel, 'data' or 'square'
 cfg.axisratio     = ft_getopt(cfg, 'axisratio',  'data'); % size of the axes of the three orthoplots, 'square', 'voxel', or 'data'
 cfg.viewresult    = ft_getopt(cfg, 'viewresult', 'no');
-cfg.flip          = ft_getopt(cfg, 'flip', 'no');
 
 viewresult = istrue(cfg.viewresult);
 
@@ -263,6 +263,14 @@ if isempty(cfg.method)
   end
 end
 
+if isempty(cfg.flip)
+  if strcmp(cfg.method, 'interactive')
+    cfg.flip = 'yes';
+  else
+    cfg.flip = 'no';
+  end
+end
+
 if isempty(cfg.coordsys)
   if     isstruct(cfg.fiducial) && all(ismember(fieldnames(cfg.fiducial), {'lpa', 'rpa', 'nas', 'zpoint'}))
     cfg.coordsys = 'ctf';
@@ -270,10 +278,8 @@ if isempty(cfg.coordsys)
     cfg.coordsys = 'acpc';
   elseif strcmp(cfg.method, 'interactive')
     cfg.coordsys = 'ctf';
-  else
-    %ft_error('you should specify the desired head coordinate system in cfg.coordsys')
   end
-  ft_warning('defaulting to %s coordinate system', cfg.coordsys);
+  ft_warning('defaulting to "%s" coordinate system', cfg.coordsys);
 end
 
 % these two have to be simultaneously true for a snapshot to be taken
@@ -305,15 +311,19 @@ elseif iscell(cfg.parameter) && isempty(cfg.parameter)
 end
 
 if strcmp(cfg.flip, 'yes')
-  % align the anatomical volume approximately to coordinate system, this puts it upright
-  origmethod = cfg.method;
-  tmpcfg = [];
-  tmpcfg.method = 'flip';
-  tmpcfg.trackcallinfo = 'no';
-  tmpcfg.showcallinfo = 'no';
-  mri = ft_volumereslice(tmpcfg, mri);
-  [cfg, mri] = rollback_provenance(cfg, mri);
-  cfg.method = origmethod;
+  if strcmp(cfg.method, 'interactive')
+    % align the anatomical volume approximately to coordinate system, this puts it upright
+    origmethod = cfg.method;
+    tmpcfg = [];
+    tmpcfg.method = 'flip';
+    tmpcfg.trackcallinfo = 'no';
+    tmpcfg.showcallinfo = 'no';
+    mri = ft_volumereslice(tmpcfg, mri);
+    [cfg, mri] = rollback_provenance(cfg, mri);
+    cfg.method = origmethod;
+  else
+    ft_error('flipping is only supported for method="interactive", please use FT_VOLUMERESLICE');
+  end
 end
 
 % start with an empty transform and coordsys

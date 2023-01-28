@@ -287,7 +287,7 @@ cfg.funparameter  = ft_getopt(cfg, 'funparameter',  []);
 cfg.maskparameter = ft_getopt(cfg, 'maskparameter', []);
 cfg.maskstyle     = ft_getopt(cfg, 'maskstyle',     'opacity');
 cfg.downsample    = ft_getopt(cfg, 'downsample',    1);
-cfg.flip          = ft_getopt(cfg, 'flip',          'yes');
+cfg.flip          = ft_getopt(cfg, 'flip',          []); % the default is set below
 cfg.title         = ft_getopt(cfg, 'title',         []);
 cfg.figurename    = ft_getopt(cfg, 'figurename',    []);
 cfg.atlas         = ft_getopt(cfg, 'atlas',         []);
@@ -303,6 +303,14 @@ cfg.clim          = ft_getopt(cfg, 'clim',          [0 1]); % this is used to sc
 cfg.intersectmesh = ft_getopt(cfg, 'intersectmesh');
 cfg.renderer      = ft_getopt(cfg, 'renderer',      'opengl');
 cfg.interactive   = ft_getopt(cfg, 'interactive',   'yes'); % used to disable interaction for method=glassbrain
+
+if isempty(cfg.flip)
+  if strcmp(cfg.method, 'ortho')
+    cfg.flip = 'yes';
+  else
+    cfg.flip = 'no';
+  end
+end
 
 if ~isfield(cfg, 'anaparameter')
   if isfield(functional, 'anatomy')
