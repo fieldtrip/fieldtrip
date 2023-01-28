@@ -69,7 +69,7 @@ if isstruct(dat) && isfield(dat, 'anatomy') && isfield(dat, 'transform')
   return
 end
 
-% parse first input argument(s). it is either
+% parse first input argument(s), it is either
 % (dat, varargin)
 % (dat, msk, varargin)
 % (dat, [], varargin)

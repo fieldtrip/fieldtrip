@@ -19,7 +19,7 @@ function [volume, permutevec, flipvec, transform] = align_ijk2xyz(volume)
 % Note that first the data have to be 'unflipped', and then 'unpermuted' (using 
 % ipermute, rather than permute).
 %
-% See also VOLUMEPERMUTE, VOLUMEFLIP
+% See also ALIGN_XYZ2IJK, VOLUMEPERMUTE, VOLUMEFLIP
 
 % Copyright (C) 2012-2022, Jan-Mathijs Schoffelen and Robert Oostenveld
 %

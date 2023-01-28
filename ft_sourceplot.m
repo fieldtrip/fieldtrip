@@ -1651,13 +1651,19 @@ end
 
 if opt.hasana
   plotopt = {};
-  plotopt = ft_setopt(plotopt, 'transform', eye(4));
-  plotopt = ft_setopt(plotopt, 'location', opt.ijk);
+  plotopt = ft_setopt(plotopt, 'transform', eye(4)); % use an identity transform
+  plotopt = ft_setopt(plotopt, 'location', opt.ijk); % the position is expressed in voxels
   plotopt = ft_setopt(plotopt, 'style', 'subplot');
   plotopt = ft_setopt(plotopt, 'update', opt.update);
   plotopt = ft_setopt(plotopt, 'doscale', false);
   plotopt = ft_setopt(plotopt, 'clim', opt.clim);
   plotopt = ft_setopt(plotopt, 'intersectmesh', opt.intersectmesh);
+
+  if isfield(functional, 'coordsys')
+    % determine the coordsys that matches the volume with an (approximate) identity transform
+    dum = align_xyz2ijk(functional);
+    plotopt = ft_setopt(plotopt, 'coordsys', dum.coordsys);
+  end
 
   if opt.init
     plotopt = ft_setopt(plotopt, 'parents', [h1 h2 h3]);
@@ -1781,67 +1787,6 @@ end
 set(opt.handlesaxes(1), 'Visible', opt.axis);
 set(opt.handlesaxes(2), 'Visible', opt.axis);
 set(opt.handlesaxes(3), 'Visible', opt.axis);
-
-if isfield(functional, 'coordsys')
-  % try to indicate in the appropriate slices what left and right is
-  
-  % determine the labels of the x, y, z-axes
-  [label(1,:), label(2,:), label(3,:)] = coordsys2label(functional.coordsys, 0, 1);
-  % the i, j, k-axes of the volume could be permuted and/or flipped relative to the x, y, z-axes
-  [dum, permutevec, flipvec] = align_ijk2xyz(functional);
-  % flip the labels to make them consistent with the i, j, k-axes
-  if flipvec(1)
-    label(1,:) = fliplr(label(1,:));
-  end
-  if flipvec(2)
-    label(2,:) = fliplr(label(2,:));
-  end
-  if flipvec(3)
-    label(3,:) = fliplr(label(3,:));
-  end
-  % permute the labels to make them consistent with the i, j, k-axes
-  label(permutevec,:) = label;
-
-  % only keep the label for R and L, the others are plotted as empty string
-  label(~strcmp(label, 'R') & ~strcmp(label, 'L')) = {''};
-
-  % determine the positions of the labels
-  position{1,1} = 0.05 * functional.dim(1);
-  position{1,2} = 0.95 * functional.dim(1);
-  position{2,1} = 0.05 * functional.dim(2);
-  position{2,2} = 0.95 * functional.dim(2);
-  position{3,1} = 0.05 * functional.dim(3);
-  position{3,2} = 0.95 * functional.dim(3);
-
-  for i=1:3
-    % remove old labels from this subplot
-    subplot(opt.handlesaxes(i))
-    delete(findall(opt.handlesaxes(i), 'Tag', 'label'))
-
-    % add new labels to this subplot
-    tag = get(opt.handlesaxes(i), 'Tag');
-    switch tag
-      case 'ik'
-        % add labels for the i and k axes
-        text(opt.handlesaxes(i), position{1,1}, opt.ijk(2), opt.dim(3)/2, label{1,1}, 'Color', 'w', 'FontWeight', 'bold', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'label');
-        text(opt.handlesaxes(i), position{1,2}, opt.ijk(2), opt.dim(3)/2, label{1,2}, 'Color', 'w', 'FontWeight', 'bold', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'label');
-        text(opt.handlesaxes(i), opt.dim(1)/2, opt.ijk(2), position{3,1}, label{3,1}, 'Color', 'w', 'FontWeight', 'bold', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'label');
-        text(opt.handlesaxes(i), opt.dim(1)/2, opt.ijk(2), position{3,2}, label{3,2}, 'Color', 'w', 'FontWeight', 'bold', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'label');
-      case 'jk'
-        % add labels for the j and k axes
-        text(opt.handlesaxes(i), opt.ijk(1), opt.dim(2)/2, position{3,1}, label{3,1}, 'Color', 'w', 'FontWeight', 'bold', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'label');
-        text(opt.handlesaxes(i), opt.ijk(1), opt.dim(2)/2, position{3,2}, label{3,2}, 'Color', 'w', 'FontWeight', 'bold', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'label');
-        text(opt.handlesaxes(i), opt.ijk(1), position{2,1}, opt.dim(3)/2, label{2,1}, 'Color', 'w', 'FontWeight', 'bold', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'label');
-        text(opt.handlesaxes(i), opt.ijk(1), position{2,2}, opt.dim(3)/2, label{2,2}, 'Color', 'w', 'FontWeight', 'bold', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'label');
-      case 'ij'
-        % add labels for the i and j axes
-        text(opt.handlesaxes(i), position{1,1}, opt.dim(2)/2, opt.ijk(3), label{1,1}, 'Color', 'w', 'FontWeight', 'bold', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'label');
-        text(opt.handlesaxes(i), position{1,2}, opt.dim(2)/2, opt.ijk(3), label{1,2}, 'Color', 'w', 'FontWeight', 'bold', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'label');
-        text(opt.handlesaxes(i), opt.dim(1)/2, position{2,1}, opt.ijk(3), label{2,1}, 'Color', 'w', 'FontWeight', 'bold', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'label');
-        text(opt.handlesaxes(i), opt.dim(1)/2, position{2,2}, opt.ijk(3), label{2,2}, 'Color', 'w', 'FontWeight', 'bold', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'label');
-    end % switch
-  end % for each subplot
-end % if has coordsys
 
 if opt.hasfreq && opt.hastime && opt.hasfun
   h4 = subplot(2,2,4);

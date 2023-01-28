@@ -86,7 +86,7 @@ end
 if isequal(dim, size(dat(:,:,:,1,1)))
   % reuse the persistent variables to speed up subsequent calls with the same input
 else
-  dim       = size(dat);
+  dim = size(dat);
   if numel(dim)<3
     dim(3) = 1; % add 1 to catch size(dat,3) is singleton
   end
@@ -94,10 +94,10 @@ else
 end
 
 if any(dim==1)
-  ft_error('it is not possible to plot a volume with a dimensionality of 1 in one of its dimensions');
+  ft_error('it is not possible to plot a volume that consists of a single slice');
 end
 
-% parse first input argument(s). it is either
+% parse first input argument(s), it is either
 % (dat, varargin)
 % (dat, msk, varargin)
 % (dat, [], varargin)
@@ -216,8 +216,8 @@ end
 % voxel_edge_vc = [Xe(:) Ye(:) Ze(:)];
 % voxel_edge_hc = ft_warp_apply(transform, voxel_edge_vc);
 
-% determine the corner points of the box encompassing the whole data block
-% extend the box with half a voxel  in all directions to get the outer edge
+% determine the corner points of the box that encompasses the whole data
+% extend the box with half a voxel in all directions to get the outer edge
 corner_vc = [
   0.5        0.5        0.5
   0.5+dim(1) 0.5        0.5
@@ -254,7 +254,6 @@ dointerp = dointerp || ~(resolution==round(resolution));
 % this is necessary for the correct allocation of the persistent variables
 st = dbstack;
 if ~dointerp && numel(st)>1 && strcmp(st(2).name, 'ft_plot_montage'), dointerp = true; end
-
 
 
 % define 'x' and 'y' axis in projection plane, the definition of x and y is more or less arbitrary
@@ -325,9 +324,9 @@ if use_interpn
   if domask,       Vmask = interpn(X, Y, Z, datmask,    Xi, Yi, Zi, interpmethod); end
   if dobackground, Vback = interpn(X, Y, Z, background, Xi, Yi, Zi, interpmethod); end
 elseif get_slice
-  %something more efficient than an interpolation can be done
+  % something more efficient than an interpolation can be done:
   % just select the appropriate plane, and permute to get the orientation
-  % right in the plots, something to do with ndgrid vs meshgrid I think
+  % right in the plots, this has something to do with ndgrid vs meshgrid I think
   permutevec = [2 1];
   if ndims(dat)>3
     permutevec = [permutevec 3:ndims(dat)];
@@ -484,7 +483,6 @@ elseif domask
       if ~isempty(opacitylim)
         alim(opacitylim)
       end
-
     case 'colormix'
       if isempty(cmap), error('using ''colormix'' as maskstyle requires an explicitly defined colormap'); end
       if ischar(cmap),  cmap = strrep(cmap, 'default', 'parula'); cmap = ft_colormap(cmap); end
@@ -504,6 +502,59 @@ elseif domask
       error('unsupported maskstyle');
   end
 end
+
+if ~isempty(coordsys) && ~strcmp(coordsys, 'unknown')
+  % convert 'neuromag' to 'ras', etc.
+  coordsys = generic(coordsys);
+
+  % determine the center of each of the 6 faces of the box that encompasses the whole data
+  % shift all of them inward by about 5%
+  center_vc = [
+    dim(1)*0.05 dim(2)*0.50 dim(3)*0.50
+    dim(1)*0.95 dim(2)*0.50 dim(3)*0.50
+    dim(1)*0.50 dim(2)*0.05 dim(3)*0.50
+    dim(1)*0.50 dim(2)*0.95 dim(3)*0.50
+    dim(1)*0.50 dim(2)*0.50 dim(3)*0.05
+    dim(1)*0.50 dim(2)*0.50 dim(3)*0.95
+    ];
+  center_hc = ft_warp_apply(transform, center_vc);
+
+  % the order of the center points is arbitrary and does not match coordsys/xyz
+  % hence we have to determine them for each x/y/z direction
+  minx = min(center_hc(:,1));
+  maxx = max(center_hc(:,1));
+  miny = min(center_hc(:,2));
+  maxy = max(center_hc(:,2));
+  minz = min(center_hc(:,3));
+  maxz = max(center_hc(:,3));
+  % also compute the midpoints, i.e. the center of the cube itself
+  midx = mean(center_hc(:,1));
+  midy = mean(center_hc(:,2));
+  midz = mean(center_hc(:,3));
+
+  if isequal(ori, [1 0 0])
+    % the slice is perpendicular to the x-axis
+    delete(findall(gca, 'Tag', 'coordsys_label_100')) % remove the labels from the previous call
+    text(loc(1), miny, midz, upper(flipletter(coordsys(2))), 'Color', 'y', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'coordsys_label_100');
+    text(loc(1), maxy, midz, upper(           coordsys(2) ), 'Color', 'y', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'coordsys_label_100');
+    text(loc(1), midy, minz, upper(flipletter(coordsys(3))), 'Color', 'y', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'coordsys_label_100');
+    text(loc(1), midy, maxz, upper(           coordsys(3) ), 'Color', 'y', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'coordsys_label_100');
+  elseif isequal(ori, [0 1 0])
+    % the slice is perpendicular to the y-axis
+    delete(findall(gca, 'Tag', 'coordsys_label_010')) % remove the labels from the previous call
+    text(minx, loc(2), midz, upper(flipletter(coordsys(1))), 'Color', 'y', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'coordsys_label_010');
+    text(maxx, loc(2), midz, upper(           coordsys(1) ), 'Color', 'y', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'coordsys_label_010');
+    text(midx, loc(2), minz, upper(flipletter(coordsys(3))), 'Color', 'y', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'coordsys_label_010');
+    text(midx, loc(2), maxz, upper(           coordsys(3) ), 'Color', 'y', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'coordsys_label_010');
+  elseif isequal(ori, [0 0 1])
+    % the slice is perpendicular to the z-axis
+    delete(findall(gca, 'Tag', 'coordsys_label_001')) % remove the labels from the previous call
+    text(minx, midy, loc(3), upper(flipletter(coordsys(1))), 'Color', 'y', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'coordsys_label_001');
+    text(maxx, midy, loc(3), upper(           coordsys(1) ), 'Color', 'y', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'coordsys_label_001');
+    text(midx, miny, loc(3), upper(flipletter(coordsys(2))), 'Color', 'y', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'coordsys_label_001');
+    text(midx, maxy, loc(3), upper(           coordsys(2) ), 'Color', 'y', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'coordsys_label_001');
+  end
+end % if coordsys
 
 % plot the intersection with a mesh
 if dointersect
@@ -613,3 +664,54 @@ else
   bool = false;
 end
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function letter = flipletter(letter)
+switch letter
+  case 'a'
+    letter = 'p';
+  case 'p'
+    letter = 'a';
+  case 'l'
+    letter = 'r';
+  case 'r'
+    letter = 'l';
+  case 'i'
+    letter = 's';
+  case 's'
+    letter = 'i';
+  otherwise
+    ft_error('incorrect letter')
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function coordsys = generic(coordsys)
+mapping = {
+  'ctf',       'als'
+  'bti',       'als'
+  '4d',        'als'
+  'yokogawa',  'als'
+  'eeglab',    'als'
+  'neuromag',  'ras'
+  'itab',      'ras'
+  'acpc',      'ras'
+  'spm',       'ras'
+  'mni',       'ras'
+  'fsaverage', 'ras'
+  'tal',       'ras'
+  'scanras',   'ras'
+  'scanlps',   'lps'
+  'dicom',     'lps'
+  };
+
+sel = find(strcmp(mapping(:,1), coordsys));
+if length(sel)==1
+  coordsys = mapping{sel,2};
+end
+
+if ~all(ismember(coordsys, 'lrapis'))
+  ft_error('cannot convert "%s" to a generic coordinate system label', coordsys);
+end

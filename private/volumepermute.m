@@ -2,7 +2,7 @@ function [volume, permutevec] = volumepermute(volume, permutevec)
 
 % VOLUMEPERMUTE
 %
-% See also VOLUMEFLIP, ALIGN_IJK2XYZ
+% See also VOLUMEFLIP, ALIGN_IJK2XYZ, ALIGN_XYZ2IJK
 
 % do a low-level check on the input data
 if ~isfield(volume, 'transform'), ft_error('the input volume needs a transformation matrix'); end
