@@ -32,7 +32,7 @@ function mesh = prepare_mesh_segmentation(cfg, mri)
 % $Id$
 
 % ensure that the input is consistent with what this function expects
-mri = ft_checkdata(mri, 'datatype', {'volume', 'segmentation'}, 'hasunit', 'yes');
+mri = ft_checkdata(mri, 'datatype', {'volume', 'segmentation'});
 
 % get the default options
 cfg.spmversion    = ft_getopt(cfg, 'spmversion', 'spm12');
@@ -216,7 +216,6 @@ for i=1:numel(cfg.tissue)
   
   mesh(i).pos  = ft_warp_apply(transform, pos);
   mesh(i).tri  = tri;
-  mesh(i).unit = mri.unit;
   
 end % for each tissue
 
