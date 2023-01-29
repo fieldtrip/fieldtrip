@@ -109,15 +109,14 @@ for i=1:numel(cfg.tissue)
   
   if iscell(cfg.tissue)
     % the code below assumes that it is a probabilistic representation, for example {'brain', 'skull', scalp'}
-    try
-      seg = mri.(fixname(cfg.tissue{i}));
-    catch
-      ft_error('Please specify cfg.tissue to correspond to tissue types in the segmented MRI')
+    if ~isfield(mri, fixname(cfg.tissue{i}))
+      ft_error('the %s segmentation is missing', fixname(cfg.tissue{i}));
     end
+    seg = mri.(fixname(cfg.tissue{i}));
     seglabel = cfg.tissue{i};
   elseif isnumeric(cfg.tissue) && isfield(mri, 'seg')
-    % for backward compatibility with hard-coded seg field
-    % this assumes that it is an indexed representation, for example [3 2 1]
+    % for backward compatibility with hard-coded seg field without labels
+    % this assumes that it is an indexed representation, for example [1 2 3]
     seg = (mri.seg==cfg.tissue(i));
     if isfield(mri, 'seglabel')
       try
@@ -144,9 +143,9 @@ for i=1:numel(cfg.tissue)
   end
   
   if strcmp(cfg.method, 'isosurface')
-    fprintf('triangulating the outer boundary of compartment %d (%s) with the isosurface method\n', i, seglabel);
+    fprintf('triangulating the boundary of compartment %d (%s) with the isosurface method\n', i, seglabel);
   else
-    fprintf('triangulating the outer boundary of compartment %d (%s) with %d vertices\n', i, seglabel, cfg.numvertices(i));
+    fprintf('triangulating the boundary of compartment %d (%s) with %d vertices\n', i, seglabel, cfg.numvertices(i));
   end
   
   % in principle it is possible to do volumesmooth and volumethreshold, but
