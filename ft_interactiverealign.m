@@ -14,21 +14,23 @@ function [cfg] = ft_interactiverealign(cfg)
 %   cfg.individual.headmodel      = structure, see FT_PREPARE_HEADMODEL
 %   cfg.individual.headshape      = structure, see FT_READ_HEADSHAPE
 %   cfg.individual.mri            = structure, see FT_READ_MRI
+%   cfg.individual.mesh           = structure
 % You can specify the style with which the objects are displayed using
 %   cfg.individual.headmodelstyle = 'vertex', 'edge', 'surface' or 'both' (default = 'edge')
 %   cfg.individual.headshapestyle = 'vertex', 'edge', 'surface' or 'both' (default = 'vertex')
 %
 % The configuration structure should also contain the geometrical object of a
 % template that serves as target
-%   cfg.template.axes           = string, 'yes' or 'no (default = 'no')
-%   cfg.template.elec           = structure
-%   cfg.template.grad           = structure
-%   cfg.template.headmodel      = structure, see FT_PREPARE_HEADMODEL
-%   cfg.template.headshape      = structure, see FT_READ_HEADSHAPE
-%   cfg.template.mri            = structure, see FT_READ_MRI
+%   cfg.template.axes             = string, 'yes' or 'no (default = 'no')
+%   cfg.template.elec             = structure
+%   cfg.template.grad             = structure
+%   cfg.template.headmodel        = structure, see FT_PREPARE_HEADMODEL
+%   cfg.template.headshape        = structure, see FT_READ_HEADSHAPE
+%   cfg.template.mri              = structure, see FT_READ_MRI
+%   cfg.template.mesh             = structure
 % You can specify the style with which the objects are displayed using
-%   cfg.template.headmodelstyle = 'vertex', 'edge', 'surface' or 'both' (default = 'edge')
-%   cfg.template.headshapestyle = 'vertex', 'edge', 'surface' or 'both' (default = 'vertex')
+%   cfg.template.headmodelstyle   = 'vertex', 'edge', 'surface' or 'both' (default = 'edge')
+%   cfg.template.headshapestyle   = 'vertex', 'edge', 'surface' or 'both' (default = 'vertex')
 %
 % You can specify one or multiple individual objects which will all be realigned and
 % one or multiple template objects.
@@ -37,7 +39,7 @@ function [cfg] = ft_interactiverealign(cfg)
 % FT_READ_SENS, FT_READ_HEADMODEL, FT_READ_HEADSHAPE
 
 % Copyright (C) 2008, Vladimir Litvak
-% Copyright (C) 2022, Robert Oostenveld
+% Copyright (C) 2022-2023, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -80,7 +82,12 @@ cfg.individual = ft_checkconfig(cfg.individual, 'renamed', {'volstyle', 'headmod
 cfg.template   = ft_checkconfig(cfg.template, 'renamed', {'vol', 'headmodel'});
 cfg.template   = ft_checkconfig(cfg.template, 'renamed', {'volstyle', 'headmodelstyle'});
 
-% get the options
+% allow to pass an initial transformation, this is used by FT_DEFACEVOLUME
+cfg.rotate     = ft_getopt(cfg, 'rotate', [0 0 0]);
+cfg.scale      = ft_getopt(cfg, 'scale', [1 1 1]);
+cfg.translate  = ft_getopt(cfg, 'translate', [0 0 0]);
+
+% get the other options
 cfg.unit                      = ft_getopt(cfg, 'unit', 'mm');
 cfg.individual.elec           = ft_getopt(cfg.individual, 'elec', []);
 cfg.individual.elecstyle      = ft_getopt(cfg.individual, 'elecstyle', {}); % key-value pairs
@@ -96,6 +103,8 @@ cfg.individual.headmodel      = ft_getopt(cfg.individual, 'headmodel', []);
 cfg.individual.headmodelstyle = ft_getopt(cfg.individual, 'headmodelstyle', 'edge');
 cfg.individual.mri            = ft_getopt(cfg.individual, 'mri', []);
 cfg.individual.mristyle       = ft_getopt(cfg.individual, 'mristyle', {});
+cfg.individual.mesh           = ft_getopt(cfg.individual, 'mesh', []);
+cfg.individual.meshstyle      = ft_getopt(cfg.individual, 'meshstyle', {});
 
 cfg.template.axes             = ft_getopt(cfg.template, 'axes', 'no');
 cfg.template.elec             = ft_getopt(cfg.template, 'elec', []);
@@ -112,12 +121,26 @@ cfg.template.headmodel        = ft_getopt(cfg.template, 'headmodel', []);
 cfg.template.headmodelstyle   = ft_getopt(cfg.template, 'headmodelstyle', 'edge');
 cfg.template.mri              = ft_getopt(cfg.template, 'mri', []);
 cfg.template.mristyle         = ft_getopt(cfg.template, 'mristyle', {});
+cfg.template.mesh             = ft_getopt(cfg.template, 'mesh', []);
+cfg.template.meshstyle        = ft_getopt(cfg.template, 'meshstyle', {});
 
 % convert the string that describes the style to a cell-array
 cfg.template.headshapestyle   = updatestyle(cfg.template.headshapestyle);
 cfg.individual.headshapestyle = updatestyle(cfg.individual.headshapestyle);
 cfg.template.headmodelstyle   = updatestyle(cfg.template.headmodelstyle);
 cfg.individual.headmodelstyle = updatestyle(cfg.individual.headmodelstyle);
+
+% ensure that these are keyval cell-arrays, not cfg structures
+for fn1={'individual', 'template'}
+  fn1 = fn1{1};
+  for fn2={'elecstyle', 'gradstyle', 'headshapestyle', 'headmodelstyle', 'mristyle', 'meshstyle'}
+    fn2 = fn2{1};
+    style = cfg.(fn1).(fn2);
+    if isstruct(style)
+      cfg.(fn1).(fn2) = ft_cfg2keyval(style);
+    end
+  end
+end
 
 if ~isempty(cfg.individual.headshape) && isfield(cfg.individual.headshape, 'color')
   if isfield(cfg.individual.headshape, 'tri') && size(cfg.individual.headshape.tri,1)==size(cfg.individual.headshape.color,1)
@@ -135,6 +158,16 @@ if ~isempty(cfg.template.headshape) && isfield(cfg.template.headshape, 'color')
   end
 end
 
+% only use a global alpha level if it is not specified for any of the individual objects
+usealpha = true;
+for fn1={'individual', 'template'}
+  fn1 = fn1{1};
+  for fn2={'elecstyle', 'gradstyle', 'headshapestyle', 'headmodelstyle', 'mristyle', 'meshstyle'}
+    fn2 = fn2{1};
+    style = cfg.(fn1).(fn2);
+    usealpha = usealpha & ~any(endsWith(style(1:2:end), 'alpha'));
+  end
+end
 
 template   = struct(cfg.template);
 individual = struct(cfg.individual);
@@ -154,7 +187,7 @@ if ~isempty(individual.headshape)
 end
 
 % convert the coordinates of all geometrical objects into mm
-fn = {'elec', 'grad', 'headshape', 'headmodel', 'mri'};
+fn = {'elec', 'grad', 'headshape', 'headmodel', 'mri', 'mesh'};
 hasindividual = false(size(fn));
 originalunit = cell(size(fn));
 for i=1:length(fn)
@@ -193,7 +226,6 @@ if ~isempty(template.headshape)
     template.headshape.tri = projecttri(template.headshape.pos);
   end
 end
-
 if ~isempty(individual.headshape)
   if ~isfield(individual.headshape, 'tri') || isempty(individual.headshape.tri)
     individual.headshape.tri = projecttri(individual.headshape.pos);
@@ -209,16 +241,20 @@ set(fig, 'CloseRequestFcn',    @cb_quit);
 set(fig, 'windowkeypressfcn',  @cb_keyboard);
 set(gca, 'position', [0.05 0.15 0.75 0.75]);
 
-% add the data to the figure
-setappdata(fig, 'individual',    individual);
-setappdata(fig, 'template',      template);
-setappdata(fig, 'transform',     eye(4));
-setappdata(fig, 'cleanup',       false);
-setappdata(fig, 'coordsys',      coordsys); % can be unknown
-setappdata(fig, 'unit',          cfg.unit);
-setappdata(fig, 'toggle_labels', true);
-setappdata(fig, 'toggle_axes',   true);
-setappdata(fig, 'toggle_grid',   true);
+% add the data and the settings to the figure
+setappdata(fig, 'individual',     individual);
+setappdata(fig, 'template',       template);
+setappdata(fig, 'transform',      eye(4));
+setappdata(fig, 'cleanup',        false);
+setappdata(fig, 'rotate',         cfg.rotate);
+setappdata(fig, 'scale',          cfg.scale);
+setappdata(fig, 'translate',      cfg.translate);
+setappdata(fig, 'coordsys',       coordsys); % can be unknown
+setappdata(fig, 'unit',           cfg.unit);
+setappdata(fig, 'usealpha',       usealpha);
+setappdata(fig, 'toggle_labels',  true);
+setappdata(fig, 'toggle_axes',    true);
+setappdata(fig, 'toggle_grid',    true);
 
 % add the GUI elements
 axmax = 150 * ft_scalingfactor('mm', cfg.unit);
@@ -245,9 +281,11 @@ while ~cleanup
   cleanup = getappdata(fig, 'cleanup');
 end
 
-% remember the transform and touch it
-cfg.m = getappdata(fig, 'transform');
-cfg.m;
+% remember the details of the transformation
+cfg.m         = getappdata(fig, 'transform');
+cfg.rotate    = getappdata(fig, 'rotate');
+cfg.scale     = getappdata(fig, 'scale');
+cfg.translate = getappdata(fig, 'translate');
 
 delete(fig);
 
@@ -255,11 +293,19 @@ delete(fig);
 ft_postamble debug
 ft_postamble provenance
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_creategui(h, eventdata, handles)
 
 % define the position of each GUI element
 fig = getparent(h);
+
+% get the initial values
+rotate    = getappdata(fig, 'rotate');
+scale     = getappdata(fig, 'scale');
+translate = getappdata(fig, 'translate');
 
 % constants
 CONTROL_WIDTH  = 0.04;
@@ -269,9 +315,9 @@ CONTROL_VOFFSET = 0.5;
 
 % rotateui
 uicontrol('tag', 'rotateui', 'parent',  fig, 'units', 'normalized', 'style', 'text', 'string', 'rotate', 'callback', [])
-uicontrol('tag', 'rx',   'parent',  fig, 'units', 'normalized', 'style', 'edit', 'string', '0', 'callback', @cb_redraw)
-uicontrol('tag', 'ry',   'parent',  fig, 'units', 'normalized', 'style', 'edit', 'string', '0', 'callback', @cb_redraw)
-uicontrol('tag', 'rz',   'parent',  fig, 'units', 'normalized', 'style', 'edit', 'string', '0', 'callback', @cb_redraw)
+uicontrol('tag', 'rx',   'parent',  fig, 'units', 'normalized', 'style', 'edit', 'string', rotate(1), 'callback', @cb_redraw)
+uicontrol('tag', 'ry',   'parent',  fig, 'units', 'normalized', 'style', 'edit', 'string', rotate(2), 'callback', @cb_redraw)
+uicontrol('tag', 'rz',   'parent',  fig, 'units', 'normalized', 'style', 'edit', 'string', rotate(3), 'callback', @cb_redraw)
 ft_uilayout(fig, 'tag', 'rotateui', 'BackgroundColor', [0.8 0.8 0.8], 'width',  2*CONTROL_WIDTH, 'height',  CONTROL_HEIGHT, 'hpos',  CONTROL_HOFFSET,                 'vpos',  CONTROL_VOFFSET+CONTROL_HEIGHT);
 ft_uilayout(fig, 'tag', 'rx',   'BackgroundColor', [0.8 0.8 0.8], 'width',  CONTROL_WIDTH,   'height',  CONTROL_HEIGHT, 'hpos',  CONTROL_HOFFSET+3*CONTROL_WIDTH, 'vpos',  CONTROL_VOFFSET+CONTROL_HEIGHT);
 ft_uilayout(fig, 'tag', 'ry',   'BackgroundColor', [0.8 0.8 0.8], 'width',  CONTROL_WIDTH,   'height',  CONTROL_HEIGHT, 'hpos',  CONTROL_HOFFSET+4*CONTROL_WIDTH, 'vpos',  CONTROL_VOFFSET+CONTROL_HEIGHT);
@@ -279,9 +325,9 @@ ft_uilayout(fig, 'tag', 'rz',   'BackgroundColor', [0.8 0.8 0.8], 'width',  CONT
 
 % scaleui
 uicontrol('tag', 'scaleui', 'parent',  fig, 'units', 'normalized', 'style', 'text', 'string', 'scale', 'callback', [])
-uicontrol('tag', 'sx',  'parent',  fig, 'units', 'normalized', 'style', 'edit', 'string', '1', 'callback', @cb_redraw)
-uicontrol('tag', 'sy',  'parent',  fig, 'units', 'normalized', 'style', 'edit', 'string', '1', 'callback', @cb_redraw)
-uicontrol('tag', 'sz',  'parent',  fig, 'units', 'normalized', 'style', 'edit', 'string', '1', 'callback', @cb_redraw)
+uicontrol('tag', 'sx',  'parent',  fig, 'units', 'normalized', 'style', 'edit', 'string', scale(1), 'callback', @cb_redraw)
+uicontrol('tag', 'sy',  'parent',  fig, 'units', 'normalized', 'style', 'edit', 'string', scale(2), 'callback', @cb_redraw)
+uicontrol('tag', 'sz',  'parent',  fig, 'units', 'normalized', 'style', 'edit', 'string', scale(3), 'callback', @cb_redraw)
 ft_uilayout(fig, 'tag', 'scaleui', 'BackgroundColor', [0.8 0.8 0.8], 'width',  2*CONTROL_WIDTH, 'height',  CONTROL_HEIGHT, 'hpos',  CONTROL_HOFFSET,                 'vpos',  CONTROL_VOFFSET-0*CONTROL_HEIGHT);
 ft_uilayout(fig, 'tag', 'sx',  'BackgroundColor', [0.8 0.8 0.8], 'width',  CONTROL_WIDTH,   'height',  CONTROL_HEIGHT, 'hpos',  CONTROL_HOFFSET+3*CONTROL_WIDTH, 'vpos',  CONTROL_VOFFSET-0*CONTROL_HEIGHT);
 ft_uilayout(fig, 'tag', 'sy',  'BackgroundColor', [0.8 0.8 0.8], 'width',  CONTROL_WIDTH,   'height',  CONTROL_HEIGHT, 'hpos',  CONTROL_HOFFSET+4*CONTROL_WIDTH, 'vpos',  CONTROL_VOFFSET-0*CONTROL_HEIGHT);
@@ -289,9 +335,9 @@ ft_uilayout(fig, 'tag', 'sz',  'BackgroundColor', [0.8 0.8 0.8], 'width',  CONTR
 
 % translateui
 uicontrol('tag', 'translateui', 'parent',  fig, 'units', 'normalized', 'style', 'text', 'string', 'translate', 'callback', [])
-uicontrol('tag', 'tx',      'parent',  fig, 'units', 'normalized', 'style', 'edit', 'string', '0', 'callback', @cb_redraw)
-uicontrol('tag', 'ty',      'parent',  fig, 'units', 'normalized', 'style', 'edit', 'string', '0', 'callback', @cb_redraw)
-uicontrol('tag', 'tz',      'parent',  fig, 'units', 'normalized', 'style', 'edit', 'string', '0', 'callback', @cb_redraw)
+uicontrol('tag', 'tx',      'parent',  fig, 'units', 'normalized', 'style', 'edit', 'string', translate(1), 'callback', @cb_redraw)
+uicontrol('tag', 'ty',      'parent',  fig, 'units', 'normalized', 'style', 'edit', 'string', translate(2), 'callback', @cb_redraw)
+uicontrol('tag', 'tz',      'parent',  fig, 'units', 'normalized', 'style', 'edit', 'string', translate(3), 'callback', @cb_redraw)
 ft_uilayout(fig, 'tag', 'translateui', 'BackgroundColor', [0.8 0.8 0.8], 'width',  2*CONTROL_WIDTH, 'height',  CONTROL_HEIGHT, 'hpos',  CONTROL_HOFFSET,                 'vpos',  CONTROL_VOFFSET-1*CONTROL_HEIGHT);
 ft_uilayout(fig, 'tag', 'tx',      'BackgroundColor', [0.8 0.8 0.8], 'width',  CONTROL_WIDTH,   'height',  CONTROL_HEIGHT, 'hpos',  CONTROL_HOFFSET+3*CONTROL_WIDTH, 'vpos',  CONTROL_VOFFSET-1*CONTROL_HEIGHT);
 ft_uilayout(fig, 'tag', 'ty',      'BackgroundColor', [0.8 0.8 0.8], 'width',  CONTROL_WIDTH,   'height',  CONTROL_HEIGHT, 'hpos',  CONTROL_HOFFSET+4*CONTROL_WIDTH, 'vpos',  CONTROL_VOFFSET-1*CONTROL_HEIGHT);
@@ -313,42 +359,47 @@ ft_uilayout(fig, 'tag', 'toggle axes',    'BackgroundColor', [0.8 0.8 0.8], 'wid
 ft_uilayout(fig, 'tag', 'toggle grid',    'BackgroundColor', [0.8 0.8 0.8], 'width',  6*CONTROL_WIDTH, 'height',  CONTROL_HEIGHT, 'vpos',  CONTROL_VOFFSET-8*CONTROL_HEIGHT, 'hpos',  CONTROL_HOFFSET);
 ft_uilayout(fig, 'tag', 'quitbtn',        'BackgroundColor', [0.8 0.8 0.8], 'width',  6*CONTROL_WIDTH, 'height',  CONTROL_HEIGHT, 'vpos',  CONTROL_VOFFSET-9*CONTROL_HEIGHT, 'hpos',  CONTROL_HOFFSET);
 
-% alpha ui (somehow not implemented, facealpha is fixed at 0.7
-uicontrol('tag', 'alphaui', 'parent',  fig, 'units', 'normalized', 'style', 'text', 'string', 'alpha', 'value', [], 'callback', []);
-uicontrol('tag', 'alpha',   'parent',  fig, 'units', 'normalized', 'style', 'edit', 'string', '0.6', 'value', [], 'callback', @cb_redraw);
-ft_uilayout(fig, 'tag', 'alphaui',  'BackgroundColor', [0.8 0.8 0.8], 'width',  3*CONTROL_WIDTH, 'height',  CONTROL_HEIGHT, 'vpos',  CONTROL_VOFFSET-3*CONTROL_HEIGHT, 'hpos',  CONTROL_HOFFSET);
-ft_uilayout(fig, 'tag', 'alpha',    'BackgroundColor', [0.8 0.8 0.8], 'width',  3*CONTROL_WIDTH, 'height',  CONTROL_HEIGHT, 'vpos',  CONTROL_VOFFSET-3*CONTROL_HEIGHT, 'hpos',  CONTROL_HOFFSET+3*CONTROL_WIDTH);
+if getappdata(fig, 'usealpha')
+  % alpha ui
+  uicontrol('tag', 'alphaui', 'parent',  fig, 'units', 'normalized', 'style', 'text', 'string', 'alpha', 'value', [], 'callback', []);
+  uicontrol('tag', 'alpha',   'parent',  fig, 'units', 'normalized', 'style', 'edit', 'string', '0.6', 'value', [], 'callback', @cb_redraw);
+  ft_uilayout(fig, 'tag', 'alphaui',  'BackgroundColor', [0.8 0.8 0.8], 'width',  3*CONTROL_WIDTH, 'height',  CONTROL_HEIGHT, 'vpos',  CONTROL_VOFFSET-3*CONTROL_HEIGHT, 'hpos',  CONTROL_HOFFSET);
+  ft_uilayout(fig, 'tag', 'alpha',    'BackgroundColor', [0.8 0.8 0.8], 'width',  3*CONTROL_WIDTH, 'height',  CONTROL_HEIGHT, 'vpos',  CONTROL_VOFFSET-3*CONTROL_HEIGHT, 'hpos',  CONTROL_HOFFSET+3*CONTROL_WIDTH);
+end
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_redraw(h, eventdata, handles)
 
-fig        = getparent(h);
-individual = getappdata(fig, 'individual');
-template   = getappdata(fig, 'template');
-transform  = getappdata(fig, 'transform');
-coordsys   = getappdata(fig, 'coordsys');
-unit       = getappdata(fig, 'unit');
+fig            = getparent(h);
+individual     = getappdata(fig, 'individual');
+template       = getappdata(fig, 'template');
+transform      = getappdata(fig, 'transform');
+coordsys       = getappdata(fig, 'coordsys');
+unit           = getappdata(fig, 'unit');
 
 % get the transformation details
 rx = str2double(get(findobj(fig, 'tag', 'rx'), 'string'));
 ry = str2double(get(findobj(fig, 'tag', 'ry'), 'string'));
 rz = str2double(get(findobj(fig, 'tag', 'rz'), 'string'));
-tx = str2double(get(findobj(fig, 'tag', 'tx'), 'string'));
-ty = str2double(get(findobj(fig, 'tag', 'ty'), 'string'));
-tz = str2double(get(findobj(fig, 'tag', 'tz'), 'string'));
 sx = str2double(get(findobj(fig, 'tag', 'sx'), 'string'));
 sy = str2double(get(findobj(fig, 'tag', 'sy'), 'string'));
 sz = str2double(get(findobj(fig, 'tag', 'sz'), 'string'));
+tx = str2double(get(findobj(fig, 'tag', 'tx'), 'string'));
+ty = str2double(get(findobj(fig, 'tag', 'ty'), 'string'));
+tz = str2double(get(findobj(fig, 'tag', 'tz'), 'string'));
 
+% create the transformation matrix
 R = rotate   ([rx ry rz]);
-T = translate([tx ty tz]);
 S = scale    ([sx sy sz]);
+T = translate([tx ty tz]);
+% combine the transformation from the GUI with the one that has been previously applied
 H = S * T * R;
-% combine the present transform according to the GUI with the one that has been previously applied
 transform = H * transform;
 
-axis vis3d; cla
-
+axis vis3d
+cla
 hold on
 
 % the "individual" struct is a local copy, so it is safe to change it here
@@ -367,17 +418,21 @@ end
 if ~isempty(individual.mri)
   individual.mri = ft_transform_geometry(transform, individual.mri);
 end
+if ~isempty(individual.mesh)
+  individual.mesh = ft_transform_geometry(transform, individual.mesh);
+end
+
+% plot all the template and individual objects
+if istrue(template.axes)
+  ft_plot_axes([], 'unit', unit, 'coordsys', coordsys);
+end
 
 if ~isempty(template.mri)
-  ft_plot_ortho(template.mri.anatomy, 'transform',  template.mri.transform, 'style', 'intersect', 'intersectmesh', individual.headshape, individual.mristyle{:});
+  ft_plot_ortho(template.mri.anatomy, 'transform', template.mri.transform, 'unit', template.mri.unit, 'style', 'intersect', 'intersectmesh', individual.headshape, individual.mristyle{:});
 end
 
 if ~isempty(individual.mri)
-  ft_plot_ortho(individual.mri.anatomy, 'transform',  individual.mri.transform, 'style', 'intersect', 'intersectmesh', template.headshape, template.mristyle{:});
-end
-
-if istrue(template.axes)
-  ft_plot_axes([], 'unit', unit, 'coordsys', coordsys);
+  ft_plot_ortho(individual.mri.anatomy, 'transform', individual.mri.transform, 'unit', individual.mri.unit, 'style', 'intersect', 'intersectmesh', template.headshape, template.mristyle{:});
 end
 
 if ~isempty(template.elec)
@@ -426,7 +481,18 @@ if isstruct(individual.headshape) && isfield(individual.headshape, 'pos') && ~is
   ft_plot_headshape(individual.headshape, individual.headshapestyle{:})
 end
 
+if isstruct(template.mesh) && isfield(template.mesh, 'pos') && ~isempty(template.mesh.pos)
+  % there can be multiple meshes as a struct-array
+  ft_plot_mesh(template.mesh, template.meshstyle{:});
+end
+
+if isstruct(individual.mesh) && isfield(individual.mesh, 'pos') && ~isempty(individual.mesh.pos)
+  % there can be multiple meshes as a struct-array
+  ft_plot_mesh(individual.mesh, individual.meshstyle{:});
+end
+
 % apply uniform light from all angles
+delete(findall(fig, 'Type', 'light')) % shut out previous lights
 lighting gouraud
 l = lightangle(0,  90); set(l, 'Color', 0.45*[1 1 1])
 l = lightangle(0, -90); set(l, 'Color', 0.45*[1 1 1])
@@ -434,7 +500,10 @@ l = lightangle(  0, 0); set(l, 'Color', 0.45*[1 1 1])
 l = lightangle( 90, 0); set(l, 'Color', 0.45*[1 1 1])
 l = lightangle(180, 0); set(l, 'Color', 0.45*[1 1 1])
 l = lightangle(270, 0); set(l, 'Color', 0.45*[1 1 1])
-alpha(str2double(get(findobj(fig, 'tag', 'alpha'), 'string')));
+
+if getappdata(fig, 'usealpha')
+  alpha(str2double(get(findobj(fig, 'tag', 'alpha'), 'string')));
+end
 
 if strcmp(get(h, 'tag'), 'toggle labels')
   setappdata(fig, 'toggle_labels', ~getappdata(fig, 'toggle_labels'))
@@ -471,6 +540,8 @@ else
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_apply(h, eventdata, handles)
 
 fig       = getparent(h);
@@ -480,36 +551,42 @@ transform = getappdata(fig, 'transform');
 rx = str2double(get(findobj(fig, 'tag', 'rx'), 'string'));
 ry = str2double(get(findobj(fig, 'tag', 'ry'), 'string'));
 rz = str2double(get(findobj(fig, 'tag', 'rz'), 'string'));
-tx = str2double(get(findobj(fig, 'tag', 'tx'), 'string'));
-ty = str2double(get(findobj(fig, 'tag', 'ty'), 'string'));
-tz = str2double(get(findobj(fig, 'tag', 'tz'), 'string'));
 sx = str2double(get(findobj(fig, 'tag', 'sx'), 'string'));
 sy = str2double(get(findobj(fig, 'tag', 'sy'), 'string'));
 sz = str2double(get(findobj(fig, 'tag', 'sz'), 'string'));
+tx = str2double(get(findobj(fig, 'tag', 'tx'), 'string'));
+ty = str2double(get(findobj(fig, 'tag', 'ty'), 'string'));
+tz = str2double(get(findobj(fig, 'tag', 'tz'), 'string'));
 
-% create the transformation matrix;
+% create the transformation matrix
 R = rotate   ([rx ry rz]);
-T = translate([tx ty tz]);
 S = scale    ([sx sy sz]);
+T = translate([tx ty tz]);
+% combine the transformation from the GUI with the one that has been previously applied
 H = S * T * R;
 transform = H * transform;
 
 set(findobj(fig, 'tag', 'rx'), 'string',  0);
 set(findobj(fig, 'tag', 'ry'), 'string',  0);
 set(findobj(fig, 'tag', 'rz'), 'string',  0);
-set(findobj(fig, 'tag', 'tx'), 'string',  0);
-set(findobj(fig, 'tag', 'ty'), 'string',  0);
-set(findobj(fig, 'tag', 'tz'), 'string',  0);
 set(findobj(fig, 'tag', 'sx'), 'string',  1);
 set(findobj(fig, 'tag', 'sy'), 'string',  1);
 set(findobj(fig, 'tag', 'sz'), 'string',  1);
+set(findobj(fig, 'tag', 'tx'), 'string',  0);
+set(findobj(fig, 'tag', 'ty'), 'string',  0);
+set(findobj(fig, 'tag', 'tz'), 'string',  0);
 
 setappdata(fig, 'transform',  transform);
+setappdata(fig, 'rotate',     [rx ry rz]);
+setappdata(fig, 'scale',      [sx sy sz]);
+setappdata(fig, 'translate',  [tx ty tz]);
 
 if ~getappdata(fig, 'cleanup')
   cb_redraw(h);
 end
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_keyboard(h, eventdata)
 
@@ -555,7 +632,8 @@ switch key
     
 end % switch key
 
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_viewpoint(h, eventdata)
 
@@ -571,6 +649,8 @@ setviewpoint(gca, coordsys, viewpoint{val});
 uiresume;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_quit(h, eventdata)
 
 fig = getparent(h);
@@ -582,6 +662,8 @@ cb_apply(h);
 uiresume;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function h = getparent(h)
 p = h;
 while p~=0
@@ -589,6 +671,8 @@ while p~=0
   p = get(h, 'parent');
 end
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function style = updatestyle(style)
 if ischar(style)
@@ -605,3 +689,4 @@ if ischar(style)
       ft_error('unsupported style "%s"', style);
   end % switch
 end % if
+
