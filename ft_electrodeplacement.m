@@ -145,7 +145,7 @@ cfg = ft_checkconfig(cfg, 'renamedval', {'method', 'mri', 'volume'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'newfigure', 'figure'});
 
 % set the defaults
-cfg.method        = ft_getopt(cfg, 'method');                  % volume, headshape, 1020, shaft
+cfg.method        = ft_getopt(cfg, 'method',              []); % volume, headshape, 1020, shaft
 cfg.feedback      = ft_getopt(cfg, 'feedback',         'yes');
 cfg.parameter     = ft_getopt(cfg, 'parameter',    'anatomy');
 cfg.channel       = ft_getopt(cfg, 'channel',             []); % default will be determined further down {'1', '2', ...}
@@ -156,7 +156,7 @@ cfg.renderer      = ft_getopt(cfg, 'renderer',      'opengl');
 cfg.clim          = ft_getopt(cfg, 'clim',             [0 1]); % initial volume intensity limit voxels
 cfg.markerdist    = ft_getopt(cfg, 'markerdist',           5); % marker-slice distance view when ~global
 % magnet options
-cfg.magtype       = ft_getopt(cfg, 'magtype',         'peakweighted'); % detect weighted peaks or troughs
+cfg.magtype       = ft_getopt(cfg, 'magtype', 'peakweighted'); % detect weighted peaks or troughs
 cfg.magradius     = ft_getopt(cfg, 'magradius',            3); % specify the physical unit radius
 cfg.voxelratio    = ft_getopt(cfg, 'voxelratio',      'data'); % display size of the voxel, 'data' or 'square'
 cfg.axisratio     = ft_getopt(cfg, 'axisratio',       'data'); % size of the axes of the three orthoplots, 'square', 'voxel', or 'data'
@@ -189,7 +189,7 @@ switch cfg.method
     end
   case  {'headshape', '1020'}
     headshape = fixpos(varargin{1});
-    headshape = ft_checkdata(headshape, 'hascoordsys', 'yes');
+    headshape = ft_checkdata(headshape, 'hascoordsys', 'yes', 'hasunit', 'yes');
 end
 
 if strcmp(cfg.flip, 'yes')
@@ -206,9 +206,11 @@ if strcmp(cfg.flip, 'yes')
   end
 end
 
-% set-up channels labels if possible
-chanlabel = {}; chanstring = {};
-markerlab = {}; markerpos = {};
+% setup electrode labels if possible
+chanlabel = {}; 
+chanstring = {};
+markerlab = {}; 
+markerpos = {};
 if ~isempty(cfg.elec) % re-use previously placed (cfg.elec) electrodes
   for e = 1:numel(cfg.elec.label)
     chanlabel{end+1,1} = cfg.elec.label{e};
@@ -1204,7 +1206,7 @@ if opt.showmarkers
   if ~isempty(idx)
     elec = keepfields(opt.headshape, {'unit', 'coordsys'});
     elec.elecpos = cat(1, opt.markerpos{idx});
-    elec.label   = opt.markerlab(idx);
+    elec.label   = cat(1, opt.markerlab{idx});
     elec.elecori = elec.elecpos;
     elec.elecori(:,1) = elec.elecori(:,1) - mean(opt.headshape.pos(:,1));
     elec.elecori(:,2) = elec.elecori(:,2) - mean(opt.headshape.pos(:,2));
