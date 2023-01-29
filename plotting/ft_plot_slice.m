@@ -83,7 +83,7 @@ if isstruct(dat) && isfield(dat, 'anatomy') && isfield(dat, 'transform')
   return
 end
 
-if isequal(dim, size(dat(:,:,:,1,1)))
+if isequal(dim, size(dat))
   % reuse the persistent variables to speed up subsequent calls with the same input
 else
   dim = size(dat);
@@ -159,16 +159,16 @@ end
 % shift the location to be along the orientation vector
 loc = ori*dot(loc,ori);
 
-% it should be a cell-array
+dointersect = ~isempty(mesh);
+
+% the mesh should be a cell-array
 if isstruct(mesh)
   tmp = mesh;
   mesh = cell(size(tmp));
   for i=1:numel(tmp)
     mesh{i} = tmp(i);
   end
-elseif iscell(mesh)
-  % do nothing
-else
+elseif isempty(mesh)
   mesh = {};
 end
 
@@ -177,20 +177,17 @@ for k = 1:numel(mesh)
   mesh{k} = fixpos(mesh{k});
 end
 
-dointersect = ~isempty(mesh);
-if dointersect
-  for k = 1:numel(mesh)
-    if ~isfield(mesh{k}, 'pos') || ~isfield(mesh{k}, 'tri')
-      % ft_error('the mesh should be a structure with pos and tri');
-      mesh{k}.pos = [];
-      mesh{k}.tri = [];
-    end
+% the mesh should be a structure with both pos and tri
+for k = 1:numel(mesh)
+  if ~isfield(mesh{k}, 'pos') || ~isfield(mesh{k}, 'tri')
+    mesh{k}.pos = [];
+    mesh{k}.tri = [];
   end
 end
 
-% check whether the mask is ok
 domask = ~isempty(datmask);
 if domask
+  % check whether the mask is ok
   if ~isequal(size(dat), size(datmask)) && ~isequal(cmap, 'rgb')
     % the exception is when the functional data is to be interpreted as rgb
     ft_error('the mask data should have the same dimensions as the functional data');
@@ -199,6 +196,7 @@ end
 
 dobackground = ~isempty(background);
 if dobackground
+  % check whether the background is ok
   if ~isequal(size(dat), size(background))
     error('the background data should have the same dimensions as the functional data');
   end
@@ -239,6 +237,7 @@ if isempty(unit)
     unit = 'mm';
   end
 end
+
 if isempty(resolution)
   % the default resolution is 1 mm
   resolution = ft_scalingfactor('mm', unit);
@@ -254,7 +253,6 @@ dointerp = dointerp || ~(resolution==round(resolution));
 % this is necessary for the correct allocation of the persistent variables
 st = dbstack;
 if ~dointerp && numel(st)>1 && strcmp(st(2).name, 'ft_plot_montage'), dointerp = true; end
-
 
 % define 'x' and 'y' axis in projection plane, the definition of x and y is more or less arbitrary
 [x, y] = projplane(ori);
@@ -564,18 +562,29 @@ if dointersect
   v2 = loc + inplane(2,:);
   v3 = loc + inplane(3,:);
 
+  if isempty(p) || length(p)~=length(mesh)
+    % try to find the handles of all patches
+    p = findall(gca, 'type', 'patch');
+  end
+
+  if length(p)~=length(mesh)
+    % the patchhandles do not make sense, start from scratch
+    delete(findall(gca, 'type', 'patch'))
+    p = nan(size(mesh));
+  end
+
   for k = 1:numel(mesh)
     [xmesh, ymesh, zmesh] = intersect_plane(mesh{k}.pos, mesh{k}.tri, v1, v2, v3);
 
     % draw each individual line segment of the intersection
     if ~isempty(xmesh)
-      if isempty(p)
-        p = patch(xmesh', ymesh', zmesh', nan(1, size(xmesh,1)));
-        if ~isempty(intersectcolor),     set(p, 'EdgeColor', intersectcolor(k));  end
-        if ~isempty(intersectlinewidth), set(p, 'LineWidth', intersectlinewidth); end
-        if ~isempty(intersectlinestyle), set(p, 'LineStyle', intersectlinestyle); end
+      if ~ishandle(p(k))
+        p(k) = patch(xmesh', ymesh', zmesh', nan(1, size(xmesh, 1)));
+        if ~isempty(intersectcolor),     set(p(k), 'EdgeColor', intersectcolor(k));  end
+        if ~isempty(intersectlinewidth), set(p(k), 'LineWidth', intersectlinewidth); end
+        if ~isempty(intersectlinestyle), set(p(k), 'LineStyle', intersectlinestyle); end
       else
-        set(p, 'XData', xmesh', 'YData', ymesh', 'ZData', zmesh', 'FaceVertexCdata', nan(size(xmesh,1),1));
+        set(p(k), 'XData', xmesh', 'YData', ymesh', 'ZData', zmesh', 'FaceVertexCdata', nan(size(xmesh,1),1));
       end
     end
   end
