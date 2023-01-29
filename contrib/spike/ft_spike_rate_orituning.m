@@ -53,7 +53,7 @@ ft_nargout  = nargout;
 ft_defaults
 ft_preamble init
 ft_preamble provenance varargin
-ft_preamble trackconfig
+
 
 % ensure that the required options are present
 cfg = ft_checkconfig(cfg, 'required', {'stimuli', 'method'});
@@ -129,7 +129,7 @@ end
 Stat.label   = Tune.label;
 
 % do the general cleanup and bookkeeping at the end of the function
-ft_postamble trackconfig
+
 ft_postamble previous   Tune
 ft_postamble provenance Stat
 ft_postamble history    Stat

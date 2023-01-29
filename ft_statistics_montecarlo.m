@@ -1,24 +1,24 @@
 function [stat, cfg] = ft_statistics_montecarlo(cfg, dat, design, varargin)
 
 % FT_STATISTICS_MONTECARLO performs a nonparametric statistical test by calculating
-% Monte-Carlo estimates of the significance probabilities and/or critical values
-% from the permutation distribution. This function should not be called
-% directly, instead you should call the function that is associated with the
-% type of data on which you want to perform the test.
+% Monte-Carlo estimates of the significance probabilities and/or critical values from
+% the permutation distribution. This function should not be called directly, instead
+% you should call the function that is associated with the type of data on which you
+% want to perform the test.
 %
 % Use as
 %   stat = ft_timelockstatistics(cfg, data1, data2, data3, ...)
 %   stat = ft_freqstatistics    (cfg, data1, data2, data3, ...)
 %   stat = ft_sourcestatistics  (cfg, data1, data2, data3, ...)
 %
-% Where the data is obtained from FT_TIMELOCKANALYSIS, FT_FREQANALYSIS
-% or FT_SOURCEANALYSIS respectively, or from FT_TIMELOCKGRANDAVERAGE,
-% FT_FREQGRANDAVERAGE or FT_SOURCEGRANDAVERAGE respectively and with
-% cfg.method = 'montecarlo'
+% where the data is obtained from FT_TIMELOCKANALYSIS, FT_FREQANALYSIS or
+% FT_SOURCEANALYSIS respectively, or from FT_TIMELOCKGRANDAVERAGE,
+% FT_FREQGRANDAVERAGE or FT_SOURCEGRANDAVERAGE respectively 
+% and with cfg.method = 'montecarlo'
 %
 % The configuration options that can be specified are:
 %   cfg.numrandomization = number of randomizations, can be 'all'
-%   cfg.correctm         = string, apply multiple-comparison correction, 'no', 'max', cluster', 'bonferroni', 'holm', 'hochberg', 'fdr' (default = 'no')
+%   cfg.correctm         = string, apply multiple-comparison correction, 'no', 'max', cluster', 'tfce', 'bonferroni', 'holm', 'hochberg', 'fdr' (default = 'no')
 %   cfg.alpha            = number, critical value for rejecting the null-hypothesis per tail (default = 0.05)
 %   cfg.tail             = number, -1, 1 or 0 (default = 0)
 %   cfg.correcttail      = string, correct p-values or alpha-values when doing a two-sided test, 'alpha','prob' or 'no' (default = 'no')
@@ -29,10 +29,9 @@ function [stat, cfg] = ft_statistics_montecarlo(cfg, dat, design, varargin)
 %   cfg.feedback         = string, 'gui', 'text', 'textbar' or 'no' (default = 'text')
 %   cfg.randomseed       = string, 'yes', 'no' or a number (default = 'yes')
 %
-% If you use a cluster-based statistic, you can specify the following
-% options that determine how the single-sample or single-voxel
-% statistics will be thresholded and combined into one statistical
-% value per cluster.
+% If you use a cluster-based statistic, you can specify the following options that
+% determine how the single-sample or single-voxel statistics will be thresholded and
+% combined into one statistical value per cluster.
 %   cfg.clusterstatistic = how to combine the single samples that belong to a cluster, 'maxsum', 'maxsize', 'wcm' (default = 'maxsum')
 %                          the option 'wcm' refers to 'weighted cluster mass', a statistic that combines cluster size and intensity; 
 %                          see Hayasaka & Nichols (2004) NeuroImage for details
@@ -41,7 +40,7 @@ function [stat, cfg] = ft_statistics_montecarlo(cfg, dat, design, varargin)
 %   cfg.clustercritval   = for parametric thresholding (default is determined by the statfun)
 %   cfg.clustertail      = -1, 1 or 0 (default = 0)
 %
-% To include the channel dimension for clustering, you should specify
+% To include the channel dimension for clustering of channel level data, you should specify
 %   cfg.neighbours       = neighbourhood structure, see FT_PREPARE_NEIGHBOURS
 % If you specify an empty neighbourhood structure, clustering will only be done
 % over frequency and/or time and not over neighbouring channels.
@@ -58,16 +57,17 @@ function [stat, cfg] = ft_statistics_montecarlo(cfg, dat, design, varargin)
 %                         'actvsblT'                activation versus baseline T-statistic.
 % or you can specify your own low-level statistical function.
 %
-% You can also use a custom statistic of your choise that is sensitive
-% to the expected effect in the data. You can implement the statistic
-% in a "statfun" that will be called for each randomization. The
-% requirements on a custom statistical function is that the function
-% is called statfun_xxx, and that the function returns a structure
-% with a "stat" field containing the single sample statistical values.
-% Check the private functions statfun_xxx (e.g.  with xxx=tstat) for
-% the correct format of the input and output.
+% You can also use a custom statistic of your choice that is sensitive to the
+% expected effect in the data. You can implement the statistic in a "statfun" that
+% will be called for each randomization. The requirements on a custom statistical
+% function is that the function is called ft_statfun_xxx, and that the function returns
+% a structure with a "stat" field containing the single sample statistical values.
+% Have a look at the functions in the fieldtrip/statfun directory (e.g. 
+% FT_STATFUN_INDEPSAMPLEST) for the correct format of the input and output.
 %
-% See also FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS, FT_SOURCESTATISTICS
+% See also FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS, FT_SOURCESTATISTICS,
+% FT_STATISTICS_ANALYTIC, FT_STATISTICS_STATS, FT_STATISTICS_MVPA,
+% FT_STATISTICS_CROSSVALIDATE
 
 % Undocumented local options:
 %   cfg.resampling       permutation, bootstrap
@@ -134,6 +134,18 @@ if strcmp(cfg.correcttail, 'yes')
   ft_error('cfg.correcttail = ''yes'' is not allowed, use either ''prob'', ''alpha'' or ''no''')
 end
 
+if strcmp(cfg.correctm, 'tfce')
+  % TODO this could require some better defaults
+  cfg.connectivity = ft_getopt(cfg, 'connectivity', []);
+  cfg.tfce_h0      = ft_getopt(cfg, 'tfce_h0', 0);
+  cfg.tfce_H       = ft_getopt(cfg, 'tfce_H',  2);
+  cfg.tfce_E       = ft_getopt(cfg, 'tfce_E',  0.5);
+  cfg.tfce_nsteps  = ft_getopt(cfg, 'tfce_nsteps', 100);
+else
+  % these options only apply to tfce, to ensure appropriate configs they are forbidden when _not_ clustering
+  cfg = ft_checkconfig(cfg, 'unused', {'tfce_h0', 'tfce_H', 'tfce_E', 'tfce_nsteps'});
+end
+
 if strcmp(cfg.correctm, 'cluster')
   % set the defaults for clustering
   cfg.clusterstatistic = ft_getopt(cfg, 'clusterstatistic', 'maxsum');
@@ -142,6 +154,13 @@ if strcmp(cfg.correctm, 'cluster')
   cfg.clustercritval   = ft_getopt(cfg, 'clustercritval',   []);
   cfg.clustertail      = ft_getopt(cfg, 'clustertail',      cfg.tail);
   cfg.connectivity     = ft_getopt(cfg, 'connectivity',     []); % the default is dealt with below
+else
+  % these options only apply to clustering, to ensure appropriate configs they are forbidden when _not_ clustering
+  cfg = ft_checkconfig(cfg, 'unused', {'clusterstatistic', 'clusteralpha', 'clustercritval', 'clusterthreshold', 'clustertail'});
+end
+
+if any(strcmp(cfg.correctm, {'cluster' 'tfce'}))
+  % these options might require a spatial neighbourhood matrix
   
   % deal with the neighbourhood of the channels/triangulation/voxels
   if isempty(cfg.connectivity)
@@ -149,9 +168,6 @@ if strcmp(cfg.correctm, 'cluster')
       % input data can be reshaped into a 3D volume, use bwlabeln/spm_bwlabel rather than clusterstat
       ft_info('using connectivity of voxels in 3-D volume\n');
       cfg.connectivity = nan;
-      %if isfield(cfg, 'inside')
-      %  cfg = fixinside(cfg, 'index');
-      %end
     elseif isfield(cfg, 'tri')
       % input data describes a surface along which neighbours can be defined
       ft_info('using connectivity of vertices along triangulated surface\n');
@@ -170,12 +186,11 @@ if strcmp(cfg.correctm, 'cluster')
       cfg.connectivity = false(size(dat,1));
     end
   else
-    % use the specified connectivity: op hoop van zegen
+    % use the specified connectivity: this is not fully robust because
+    % there is no guarantee that the order of the spatial elements in the
+    % data is the same as the order of the spatial elements in the
+    % adjacency matrix
   end
-  
-else
-  % these options only apply to clustering, to ensure appropriate configs they are forbidden when _not_ clustering
-  cfg = ft_checkconfig(cfg, 'unused', {'clusterstatistic', 'clusteralpha', 'clustercritval', 'clusterthreshold', 'clustertail', 'neighbours'});
 end
 
 % for backward compatibility and other warnings relating correcttail
@@ -219,22 +234,15 @@ ws = ft_warning('off', 'MATLAB:warn_r14_stucture_assignment');
 if strcmp(cfg.correctm, 'cluster')
   % determine the critical value for cluster thresholding
   if strcmp(cfg.clusterthreshold, 'nonparametric_individual') || strcmp(cfg.clusterthreshold, 'nonparametric_common')
-    ft_info('using a nonparmetric threshold for clustering\n');
+    ft_info('using a nonparametric threshold for clustering\n');
     cfg.clustercritval = [];  % this will be determined later
   elseif strcmp(cfg.clusterthreshold, 'parametric') && isempty(cfg.clustercritval)
     ft_info('computing a parametric threshold for clustering\n');
-    tmpcfg = [];
-    tmpcfg.dimord         = cfg.dimord;
-    if isfield(cfg, 'dim'), tmpcfg.dim            = cfg.dim; end
-    tmpcfg.alpha          = cfg.clusteralpha;
-    tmpcfg.tail           = cfg.clustertail;
-    tmpcfg.ivar           = cfg.ivar;
-    tmpcfg.uvar           = cfg.uvar;
-    tmpcfg.cvar           = cfg.cvar;
-    tmpcfg.wvar           = cfg.wvar;
-    if isfield(cfg, 'contrastcoefs'), tmpcfg.contrastcoefs = cfg.contrastcoefs; end % needed for Erics F-test statfun
+    tmpcfg = cfg; % the next line does not pass on non-standard options that a statfun might use
+    % tmpcfg = keepfields(cfg, {'dim' 'dimord' 'clusteralpha' 'clustertail' 'ivar' 'uvar' 'cvar' 'wvar' 'contrastcoefs'});
     tmpcfg.computecritval = 'yes';  % explicitly request the computation of the crtitical value
     tmpcfg.computestat    = 'no';   % skip the computation of the statistic
+    tmpcfg.alpha          = cfg.clusteralpha; % the statfun uses cfg.alpha most likely 
     try
       cfg.clustercritval    = getfield(statfun(tmpcfg, dat, design), 'critval');
     catch
@@ -278,10 +286,10 @@ if isstruct(statobs)
   % remember all details for later reference, continue to work with the statistic
   statfull = statobs;
   statobs  = statobs.stat;
-else
-  % remember the statistic for later reference, continue to work with the statistic
-  statfull.stat = statobs;
 end
+
+% remember the statistic for later reference, continue to work with the statistic
+statfull.stat = statobs;
 
 time_eval = cputime - time_pre;
 ft_info('estimated time per randomization is %.2f seconds\n', time_eval);
@@ -300,14 +308,14 @@ if strcmp(cfg.precondition, 'after')
   [tmpstat, tmpcfg, dat] = statfun(tmpcfg, dat, design);
 end
 
-if strcmp(cfg.correctm, 'max')
+if any(strcmp(cfg.correctm, {'tfce' 'max'}))
   % pre-allocate the memory to hold the distribution of most extreme positive (right) and negative (left) statistical values
   posdistribution = nan(1,Nrand);
   negdistribution = nan(1,Nrand);
 end
 
 % compute the statistic for the randomized data and count the outliers
-for i=1:Nrand
+for i = 1:Nrand
   ft_progress(i/Nrand, 'computing statistic %d from %d\n', i, Nrand);
   if strcmp(cfg.resampling, 'permutation')
     tmpdesign = design(:,resample(i,:));     % the columns in the design matrix are reshufled by means of permutation
@@ -319,7 +327,7 @@ for i=1:Nrand
     tmpdesign = design;                     % the design matrix is not shuffled
     tmpdat    = dat(:,resample(i,:));        % the columns of the data are resampled by means of bootstrapping
   end
-  if strcmp(cfg.correctm, 'cluster')
+  if any(strcmp(cfg.correctm, {'cluster' 'tfce'}))
     % keep each randomization in memory for cluster postprocessing
     dum = statfun(cfg, tmpdat, tmpdesign);
     if isstruct(dum)
@@ -333,6 +341,7 @@ for i=1:Nrand
     if isstruct(statrand)
       statrand = statrand.stat;
     end
+   
     % the following line is for debugging
     % stat.statkeep(:,i) = statrand;
     if strcmp(cfg.correctm, 'max')
@@ -353,6 +362,8 @@ ft_progress('close');
 if strcmp(cfg.correctm, 'cluster')
   % do the cluster postprocessing
   [stat, cfg] = clusterstat(cfg, statrand, statobs);
+elseif strcmp(cfg.correctm, 'tfce')
+  [stat, cfg] = tfcestat(cfg, statrand, statobs);
 else
   if ~isequal(cfg.numrandomization, 'all')
     % in case of random permutations (i.e., montecarlo sample, and NOT full
@@ -446,6 +457,10 @@ else
       stat.mask = stat.prob<=cfg.alpha;
       stat.posdistribution = posdistribution;
       stat.negdistribution = negdistribution;
+    case 'tfce'
+      ft_notice('using a threshold free cluster enhancement based method for multiple comparison correction\n');
+      ft_notice('the returned probabilities and the thresholded mask are corrected for multiple comparisons\n');
+      stat.mask = stat.prob<=cfg.alpha;
     case 'cluster'
       % the correction is implicit in the method
       ft_notice('using a cluster-based method for multiple comparison correction\n');

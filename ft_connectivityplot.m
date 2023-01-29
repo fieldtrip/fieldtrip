@@ -13,12 +13,9 @@ function [cfg] = ft_connectivityplot(cfg, varargin)
 %
 % The configuration can have the following options
 %   cfg.parameter   = string, the functional parameter to be plotted (default = 'cohspctrm')
-%   cfg.xlim        = selection boundaries over first dimension in data (e.g., freq)
-%                     'maxmin' or [xmin xmax] (default = 'maxmin')
-%   cfg.ylim        = selection boundaries over second dimension in data
-%                     (i.e. ,time, if present), 'maxmin', or [ymin ymax]
-%                     (default = 'maxmin')
-%   cfg.zlim        = plotting limits for color dimension, 'maxmin', 'maxabs' or [zmin zmax] (default = 'maxmin')
+%   cfg.xlim        = 'maxmin', 'maxabs', 'zeromax', 'minzero', or [xmin xmax] (default = 'maxmin')
+%   cfg.ylim        = 'maxmin', 'maxabs', 'zeromax', 'minzero', or [ymin ymax] (default = 'maxmin')
+%   cfg.zlim        = plotting limits for color dimension, 'maxmin', 'maxabs', 'zeromax', 'minzero', or [zmin zmax] (default = 'maxmin')
 %   cfg.channel     = list of channels to be included for the plotting (default = 'all'), see FT_CHANNELSELECTION for details
 %
 % See also FT_CONNECTIVITYANALYSIS, FT_CONNECTIVITYSIMULATION, FT_MULTIPLOTCC, FT_TOPOPLOTCC
@@ -54,7 +51,6 @@ ft_preamble init
 ft_preamble debug
 ft_preamble loadvar varargin
 ft_preamble provenance varargin
-ft_preamble trackconfig
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -62,9 +58,10 @@ if ft_abort
 end
 
 % check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'renamed', {'zparam',     'parameter'});
-cfg = ft_checkconfig(cfg, 'renamed', {'color',      'linecolor'});
-cfg = ft_checkconfig(cfg, 'renamed', {'graphcolor', 'linecolor'});
+cfg = ft_checkconfig(cfg, 'forbidden',  {'channels'}); % prevent accidental typos, see issue 1729
+cfg = ft_checkconfig(cfg, 'renamed',    {'zparam',     'parameter'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'color',      'linecolor'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'graphcolor', 'linecolor'});
 
 % set the defaults
 cfg.channel     = ft_getopt(cfg, 'channel',   'all');
@@ -75,8 +72,6 @@ cfg.xlim        = ft_getopt(cfg, 'xlim',      'maxmin');
 cfg.linecolor   = ft_getopt(cfg, 'linecolor', 'brgkywrgbkywrgbkywrgbkyw');
 cfg.linestyle   = ft_getopt(cfg, 'linestyle', '-');
 cfg.linewidth   = ft_getopt(cfg, 'linewidth', 0.5);
-cfg.visible     = ft_getopt(cfg, 'visible',   'on');
-cfg.renderer    = ft_getopt(cfg, 'renderer',  []); % let MATLAB decide on the default
 
 % check if the input data is valid for this function
 % ensure that the input is correct
@@ -113,7 +108,7 @@ for k = 1:Ndata
       % that's ok
     case {'chancmb_freq' 'chancmb_freq_time'}
       % convert into 'chan_chan_freq'
-      varargin{k} = ft_checkdata(varargin{k}, 'cmbrepresentation', 'full');
+      varargin{k} = ft_checkdata(varargin{k}, 'cmbstyle', 'full');
     otherwise
       ft_error('the data should have a dimord of %s or %s', 'chan_chan_freq', 'chancmb_freq');
   end
@@ -148,7 +143,7 @@ elseif isnumeric(cfg.linecolor)
 end
 
 % ensure that the data in all inputs has the same channels, time-axis, etc.
-tmpcfg = keepfields(cfg, {'channel', 'showcallinfo'});
+tmpcfg = keepfields(cfg, {'channel', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
 [varargin{:}] = ft_selectdata(tmpcfg, varargin{:});
 % restore the provenance information
 [cfg, varargin{:}] = rollback_provenance(cfg, varargin{:});
@@ -170,53 +165,86 @@ elseif hastime
   yparam = '';
 end
 
-
-
-% Get physical min/max range of x:
-if ischar(cfg.xlim) && strcmp(cfg.xlim, 'maxmin')
-  xmin = inf;
+% Get physical min/max range of x, i.e. time
+if ~isnumeric(cfg.xlim)
+  % Find maxmin throughout all varargins
+  xmin = +inf;
   xmax = -inf;
-  for k = 1:Ndata
-    xmin = min(xmin,varargin{k}.(xparam)(1));
-    xmax = max(xmax,varargin{k}.(xparam)(end));
+  for i=1:Ndata
+    xmin = nanmin([xmin varargin{i}.(xparam)]);
+    xmax = nanmax([xmax varargin{i}.(xparam)]);
   end
+  switch cfg.xlim
+    case 'maxmin'
+      % keep them as they are
+    case 'maxabs'
+      xmax = max(abs(xmax), abs(xmin));
+      xmin = -xmax;
+    case 'zeromax'
+      xmin = 0;
+    case 'minzero'
+      xmax = 0;
+    otherwise
+      ft_error('invalid specification of cfg.xlim');
+  end % switch
 else
   xmin = cfg.xlim(1);
   xmax = cfg.xlim(2);
 end
 cfg.xlim = [xmin xmax];
 
-% Get physical min/max range of y:
-if ischar(cfg.ylim) && strcmp(cfg.ylim, 'maxmin') && ~isempty(yparam)
-  ymin = inf;
-  ymax = -inf;
-  for k = 1:Ndata
-    ymin = min(ymin,varargin{k}.(yparam)(1));
-    ymax = max(ymax,varargin{k}.(yparam)(end));
-  end
-elseif ~isempty(yparam)
-  ymin = cfg.ylim(1);
-  ymax = cfg.ylim(2);
-elseif isempty(yparam)
+% Get physical min/max range of y, i.e. freq
+if isempty(yparam)
   ymin = [];
   ymax = [];
+elseif ~isnumeric(cfg.ylim)
+  % Find maxmin throughout all varargins
+  ymin = +inf;
+  ymax = -inf;
+  for i=1:Ndata
+    ymin = nanmin([ymin varargin{i}.(yparam)]);
+    ymax = nanmax([ymax varargin{i}.(yparam)]);
+  end
+  switch cfg.ylim
+    case 'maxmin'
+      % keep them as they are
+    case 'maxabs'
+      ymax = max(abs(ymax), abs(ymin));
+      ymin = -ymax;
+    case 'zeromax'
+      ymin = 0;
+    case 'minzero'
+      ymax = 0;
+    otherwise
+      ft_error('invalid specification of cfg.ylim');
+  end % switch
+else
+  ymin = cfg.ylim(1);
+  ymax = cfg.ylim(2);
 end
 cfg.ylim = [ymin ymax];
 
 % Get physical min/max range of z, which is the functional data:
-if ischar(cfg.zlim) && strcmp(cfg.zlim, 'maxmin')
-  zmin = inf;
+if ~isnumeric(cfg.zlim)
+  zmin = +inf;
   zmax = -inf;
   for k = 1:Ndata
-    zmin = min(zmin,min(varargin{k}.(cfg.parameter{k})(:)));
-    zmax = max(zmax,max(varargin{k}.(cfg.parameter{k})(:)));
+    zmin = nanmin([zmin min(varargin{k}.(cfg.parameter{k})(:))]);
+    zmax = nanmax([zmax max(varargin{k}.(cfg.parameter{k})(:))]);
   end
-elseif ischar(cfg.zlim) && strcmp(cfg.zlim, 'maxabs')
-  zmax = -inf;
-  for k = 1:Ndata
-    zmax = max(zmax,max(abs(varargin{k}.(cfg.parameter{k})(:))));
-  end
-  zmin = -zmax;
+  switch cfg.zlim
+    case 'maxmin'
+      % keep them as they are
+    case 'maxabs'
+      zmax = max(abs(zmax), abs(zmin));
+      zmin = -zmax;
+    case 'zeromax'
+      zmin = 0;
+    case 'minzero'
+      zmax = 0;
+    otherwise
+      ft_error('invalid specification of cfg.ylim');
+  end % switch
 else
   zmin = cfg.zlim(1);
   zmax = cfg.zlim(2);
@@ -298,7 +326,7 @@ for k = 1:nchan
       ix  = k;
       iy  = nchan - m + 1;
       % use the convention of the row-channel causing the column-channel
-      if hastime && hasfreq
+      if hastime && hasfreq && ntime>1
         tmp = reshape(dat(m,k,:,:), [nfreq ntime]);
         ft_plot_matrix(tmp, 'width', 1, 'height', 1, 'hpos', ix.*1.2, 'vpos', iy.*1.2, 'clim', cfg.zlim, 'box', 'yes');
       elseif hasfreq
@@ -309,7 +337,7 @@ for k = 1:nchan
       end
       if k==1
         % first column, plot scale on y axis
-        if hastime && hasfreq
+        if hastime && hasfreq && ntime>1
           val1 = cfg.ylim(1);
           val2 = cfg.ylim(2);
         elseif hasfreq
@@ -367,7 +395,6 @@ set(gcf, 'NumberTitle', 'off');
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-ft_postamble trackconfig
 ft_postamble previous varargin
 ft_postamble provenance
 ft_postamble savefig

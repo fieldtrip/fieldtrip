@@ -8,7 +8,7 @@ function test_bug1254
 return
 % DEPENDENCY qsubcompile qsubcellfun
 
-dataset = dccnpath('/home/common/matlab/fieldtrip/data/Subject01.ds');
+dataset = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds');
 
 cfg = [];
 cfg.dataset = dataset;

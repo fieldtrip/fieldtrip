@@ -36,7 +36,7 @@ hdr.nChans = 10;
 hdr.nSamples = 0;
 hdr.nSamplesPre = 0;
 hdr.Fs = 1000;
-hdr.label = {'1', '2', '3', '4', '5', '6', '7', '8', '9', '10'};
+hdr.label = arrayfun(@num2str, 1:hdr.nChans, 'UniformOutput', false);
 
 ft_write_data(filename, [], 'header', hdr, 'append', 0);
 

@@ -87,6 +87,8 @@ function [err,Info, BRIKinfo] = BrikInfo (BrickName)
 %      .HISTORY_NOTE
 %      .NOTES_COUNT
 %      .NOTE_NUMBER_xxx
+%      .TEMPLATE_SPACE
+%      .ATLAS_LABEL_TABLE
 %      
 %  To implement in the future,
 %      VOLREG_MATVEC_xxxxxx , VOLREG_ROTCOM_xxxxxx
@@ -95,6 +97,8 @@ function [err,Info, BRIKinfo] = BrikInfo (BrickName)
 %      .FileFormat: 'BRIK' ('1D' is allowed for 1D files but 1D files do not use BrikInfo)
 %      .Extension_1D: The extension of the 1D filename
 %  BrikLoad and WriteBrik now read and write 1D files
+%
+%  If the .HEAD contains a TEMPLATE_SPACE and ATLAS_LABEL_TABLE, these are added as well
 %
 %Key Terms:
 %   The 1st, second and third dimensions refer to the dimensions the slices were entered into to3d 
@@ -118,13 +122,13 @@ Info = [];
 %check if this is a 1D file ..
 is1D = 0;
 [St, xtr] = Remove1DExtension(BrickName);
-if (~isempty(xtr)),
+if (~isempty(xtr))
    is1D = 1;
 end
 
-if (is1D), % 1D land
+if (is1D) % 1D land
    [err, V, Info] = Read_1D(BrickName, 1);
-   if (err), 
+   if (err) 
       ErrMessage = sprintf ('%s: Failed to read %s file', FuncName, BrickName);
       err = ErrEval(FuncName,'Err_1D file could not be read');
       return;
@@ -135,17 +139,17 @@ end
 
 	
 	vtmp = findstr(BrickName,'.BRIK');
-	if (~isempty(vtmp)), %remove .BRIK
+	if (~isempty(vtmp)) %remove .BRIK
 		BrickName = BrickName(1:vtmp(1)-1);
 	end
 	
 	vtmp = findstr(BrickName,'.HEAD');
-	if (isempty(vtmp)), %add .HEAD
+	if (isempty(vtmp)) %add .HEAD
 		BrickName = sprintf('%s.HEAD',BrickName);
 	end
 	
 	
-	if (exist(BrickName) ~= 2),
+	if (exist(BrickName) ~= 2)
 		err = ErrEval(FuncName,'Err_Could not find data set');
 		return;
 	end
@@ -158,8 +162,7 @@ end
 	if (fidin < 0),	err = ErrEval(FuncName,'Err_Could not read .HEAD file'); return;	end
 		BRIKinfo = fscanf(fidin,'%c');
 	fclose(fidin);
-	N_BRIKinfo = length(BRIKinfo);
-
+	
 %get subBrik info
 	%Nx, Ny, Nz
 		[err,Info.DATASET_DIMENSIONS] = BrikInfo_SectionValue (BRIKinfo, 'DATASET_DIMENSIONS');
@@ -266,8 +269,14 @@ end
 	%VOLREG_ROTCOM_NUM
 		[err, Info.VOLREG_ROTCOM_NUM] = BrikInfo_SectionValue(BRIKinfo, 'VOLREG_ROTCOM_NUM');	
 	
-	if (~err),
-		for (i=1:1:Info.VOLREG_ROTCOM_NUM),
+   %Inbal's matrix, 
+   %TO get AFNI's RAI coords from AFNI i, j, k, indices (start at 0):
+   % M = reshape(Info.IJK_TO_DICOM_REAL, 4, 3)'; I = [i j k 1]';
+   % X = M*I
+      [err, Info.IJK_TO_DICOM_REAL ] = BrikInfo_SectionValue(BRIKinfo, 'IJK_TO_DICOM_REAL');	
+      
+	if (~err)
+		for i=1:1:Info.VOLREG_ROTCOM_NUM
 			sp = pad_strn(num2str(i-1), '0', 6, 1);
 			spad = sprintf('[err, Info.VOLREG_MATVEC_%s] = BrikInfo_SectionValue(BRIKinfo, ''VOLREG_MATVEC_%s'');' , sp, sp);
 			eval([ spad ]);
@@ -334,8 +343,8 @@ end
 	%NOTES_COUNT
 		%[err, Info.NOTES_COUNT] = BrikInfo_SectionValue(BRIKinfo, 'NOTES_COUNT');	
 	
-	if (~err),
-		for (i=1:1:Info.NOTES_COUNT),
+	if (~err)
+		for i=1:1:Info.NOTES_COUNT
 			sp = pad_strn(num2str(i), '0', 3, 1);
 			spad = sprintf('[err, Info.NOTE_NUMBER_%s] = BrikInfo_SectionValue(BRIKinfo, ''NOTE_NUMBER_%s'');' , sp, sp);
 			eval([ spad ]);
@@ -354,12 +363,22 @@ end
 	%FWHM
 		[err, Info.WORSLEY_FWHM] = BrikInfo_SectionValue(BRIKinfo, 'WORSLEY_FWHM');	
 	
-	itype = unique(Info.BRICK_TYPES);
+        %TEMPLATE_SPACE
+		[err, Info.TEMPLATE_SPACE] = BrikInfo_SectionValue(BRIKinfo, 'TEMPLATE_SPACE');	
+	
+        %ATLAS_LABEL_TABLE (if present)
+                [err, atlastable] = BrikInfo_SectionValue(BRIKinfo, 'ATLAS_LABEL_TABLE');	  
+  
+    try
+      Info.ATLAS_LABEL_TABLE = parse_atlastable(atlastable);
+    end
+    
+    itype = unique(Info.BRICK_TYPES);
  
- 	if (length(itype) > 1),
+ 	if (length(itype) > 1)
 		Info.TypeName = 'Mutliple Types';
 	else
-		switch itype,
+		switch itype
 			case 0
 				Info.TypeName = 'byte';
 				Info.TypeBytes = 1;
@@ -378,13 +397,13 @@ end
 		end
 	end
 
-	 if (isempty(Info.BYTEORDER_STRING)), %field not found go native
+	 if (isempty(Info.BYTEORDER_STRING)) %field not found go native
 	 	Info.ByteOrder = 'unspecified';
 	 else
-		 if (~isempty(strmatch('MSB_FIRST', Info.BYTEORDER_STRING))),
+		 if (~isempty(strmatch('MSB_FIRST', Info.BYTEORDER_STRING)))
 				Info.ByteOrder = 'ieee-be'; %Big Endian
 		else 
-			if (~isempty(strmatch('LSB_FIRST', Info.BYTEORDER_STRING))),
+			if (~isempty(strmatch('LSB_FIRST', Info.BYTEORDER_STRING)))
 					Info.ByteOrder = 'ieee-le'; %Little Endian
 			else
 				err = ErrEval(FuncName,'Err_Could not understand BYTEORDER_STRING'); 
@@ -393,7 +412,7 @@ end
 		end
 	 end
 	
-	for (i=1:1:3),
+	for i=1:1:3
 		switch Info.ORIENT_SPECIFIC(i)
 			case 0
 				Info.Orientation(i,:) = 'RL';	%right to left 
@@ -407,7 +426,7 @@ end
 				Info.Orientation(i,:) = 'IS';
 			case 5
 				Info.Orientation(i,:) = 'SI';
-			otherwise,
+      otherwise
 				err = ErrEval(FuncName,'Err_Cannot understand Orientation code');
 				return;
 		end
@@ -418,3 +437,65 @@ end
 err = 0;
 return;
 
+function T = parse_atlastable(atlastable)
+
+% subfunction to convert a string (read from an afni .HEAD file) with
+% atlastable information into a struct
+
+% assume that the string is well-behaved, and that it consists of a series
+% of atlas points that has the attributes STRUCT, VAL, OKEY, GYoAR, COG
+ap = regexp(atlastable, '<ATLAS_POINT');
+st = regexp(atlastable, 'STRUCT');
+v  = regexp(atlastable, 'VAL');
+o  = regexp(atlastable, 'OKEY');
+g  = regexp(atlastable, 'GYoAR');
+c  = regexp(atlastable, 'COG');
+
+% the sub-brick label is optional, only present for probabilistic atlases 
+s  = regexp(atlastable, 'SB_LABEL'); 
+isprobabilistic = ~isempty(s);
+
+assert(numel(ap)==numel(st));
+assert(numel(ap)==numel(v));
+assert(numel(ap)==numel(o));
+assert(numel(ap)==numel(g));
+assert(numel(ap)==numel(c));
+if isprobabilistic
+  assert(numel(ap)==numel(s));
+end
+
+ap(end+1) = numel(atlastable);
+
+T = [];
+for k = 1:numel(st)
+  T(k,1).struct = getcontent(atlastable(st(k):(v(k)-1)));
+  T(k,1).val    = str2double(getcontent(atlastable(v(k):(o(k)-1))));
+  T(k,1).okey   = str2double(getcontent(atlastable(o(k):(g(k)-1))));
+  T(k,1).gyoar  = str2double(getcontent(atlastable(g(k):(c(k)-1))));
+  if isprobabilistic
+    T(k,1).cog = str2num(getcontent(atlastable(c(k):(s(k)-1))));
+    tmp        = getcontent(atlastable(s(k):(ap(k+1)-1)));
+    % the sub-brick label can be numeric, or string
+    if ~isempty(str2num(tmp))
+      T(k,1).sb_label = str2num(tmp);
+    else
+      T(k,1).sb_label = tmp;
+    end
+  else
+    T(k,1).cog = str2num(getcontent(atlastable(c(k):(ap(k+1)-1))));
+  end
+end
+
+function out = getcontent(substring)
+
+% anecdotally, I have come across 2 situations: one with the values between
+% double quotation marks, or without, try to accommodate both situations
+sel = regexp(substring, '"');
+if isempty(sel)
+  sel = regexp(substring, '=');
+  out = deblank(substring((sel+1):end));
+elseif numel(sel)>=2
+  out = substring((sel(1)+1):(sel(2)-1));
+else
+  error('something unexpected happened');
+end

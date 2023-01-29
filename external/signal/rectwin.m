@@ -20,6 +20,8 @@
 % @end deftypefn
 
 function w = rectwin(L)
-  if (nargin < 1); help(mfilename); end
+  if (nargin < 1)
+    help(mfilename);
+  end
   w = ones(round(L),1);
 end

@@ -1,8 +1,13 @@
 function [varargout] = ft_headmovement(cfg)
 
-% FT_HEADMOVEMENT creates a raw data structure, or cell-array of datastructures
-% containing the HLC-coil data, which have a grad structure that has the
-% head position information incorporated.
+% FT_HEADMOVEMENT outputs a raw data structure, or cell-array of data structures
+% reflecting the variability in the subject's head poisition relative to the 
+% MEG sensors, based on continuous head position information. Current support is
+% only for CTF-data. The output timeseries contain the raw HLC data, and a
+% parametrization of the head movement in terms of translation and
+% rotations in 3D space. The grad structure(s) have head position information
+% incorporated in the coils' position/orientation and/or in the tra
+% matrix, depending on the method used.
 %
 % Use as
 %   data = ft_headmovement(cfg)
@@ -18,12 +23,14 @@ function [varargout] = ft_headmovement(cfg)
 %                      the whole recording is used.
 %   cfg.numclusters  = number of segments with constant headposition in
 %                      which to split the data (default = 10). This argument
-%                      is only used for the clustering methods.
+%                      is only used for the methods that use clustering ('updatesens',
+%                       'cluster', 'pertrial_cluster').
 %
 % If cfg.method = 'updatesens', the grad in the single output structure has
 % a specification of the coils expanded as per the centroids of the position
-% clusters. The balancing matrix is s a weighted concatenation of the
-% original tra-matrix. This method requires cfg.numclusters to be specified
+% clusters (obtained by kmeans clustering of the HLC time series). The balancing matrix 
+% is a weighted concatenation of the original tra-matrix. This method requires 
+% cfg.numclusters to be specified
 %
 % If cfg.method = 'avgoverrpt', the grad in the single output structure has
 % a specification of the coils according to the average head position
@@ -49,7 +56,7 @@ function [varargout] = ft_headmovement(cfg)
 % The updatesens method and related methods are described by Stolk et al., Online and
 % offline tools for head movement compensation in MEG. NeuroImage, 2012.
 %
-% See also FT_REGRESSCONFOUND FT_REALTIME_HEADLOCALIZER
+% See also FT_REGRESSCONFOUND, FT_REALTIME_HEADLOCALIZER
 
 % Copyright (C) 2008-2018, Jan-Mathijs Schoffelen, Robert Oostenveld
 %
@@ -81,7 +88,6 @@ ft_defaults
 ft_preamble init
 ft_preamble debug
 ft_preamble provenance
-ft_preamble trackconfig
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -105,14 +111,13 @@ end
 
 % read the header information and check whether it's a CTF dataset with HLC information
 hdr = ft_read_header(cfg.headerfile);
+assert(startsWith(ft_senstype(hdr), 'ctf'), 'currently only CTF MEG data is supported');
 assert(numel(intersect(hdr.label, {'HLC0011' 'HLC0012' 'HLC0013' 'HLC0021' 'HLC0022' 'HLC0023' 'HLC0031' 'HLC0032' 'HLC0033'}))==9, 'the data does not contain the expected head localizer channels');
 
-grad_head    = ctf2grad(hdr.orig, 0);
-grad_head    = ft_datatype_sens(grad_head);  % ensure up-to-date sensor description (Oct 2011)
-grad_dewar   = ctf2grad(hdr.orig, 1);
-grad_dewar   = ft_datatype_sens(grad_dewar); % ensure up-to-date sensor description (Oct 2011)
+grad_head    = ft_datatype_sens(ctf2grad(hdr.orig, 0));
+grad_dewar   = ft_datatype_sens(ctf2grad(hdr.orig, 1));
 
-grad = grad_dewar; % we want to work with dewar coordinates, ...
+grad = grad_dewar; % we work with dewar coordinates, ...
 grad.chanpos = grad_head.chanpos;
 
 % read the HLC-channels
@@ -122,15 +127,12 @@ grad.chanpos = grad_head.chanpos;
 if ~isfield(cfg, 'trl') || isempty(cfg.trl)
   cfg.trl = [1 hdr.nTrials.*hdr.nSamples 0];
 end
-tmpcfg              = [];
-tmpcfg.dataset      = cfg.dataset;
-tmpcfg.trl          = cfg.trl;
+tmpcfg              = keepfields(cfg, {'datafile' 'trl'});
 tmpcfg.channel      = {'HLC0011' 'HLC0012' 'HLC0013' 'HLC0021' 'HLC0022' 'HLC0023' 'HLC0031' 'HLC0032' 'HLC0033'};
 tmpcfg.continuous   = 'yes';
 data                = ft_preprocessing(tmpcfg);
-data                = removefields(data, 'elec'); % this slows down a great
-% rendering the persistent variable trick useless.
-% we don't need the elec anyway
+data                = removefields(data, 'elec'); % this slows down a great deal
+% rendering the persistent variable trick useless. We don't need the elec anyway
 
 wdat                = cellfun('size', data.time, 2); % weights for weighted average
 
@@ -204,7 +206,7 @@ else
   dat = dat';
 end
 
-% find the three channels for each fiducial
+% find the three channels for each head localizer coil
 selnas = match_str(data.label,{'HLC0011';'HLC0012';'HLC0013'});
 sellpa = match_str(data.label,{'HLC0021';'HLC0022';'HLC0023'});
 selrpa = match_str(data.label,{'HLC0031';'HLC0032';'HLC0033'});
@@ -320,11 +322,87 @@ switch cfg.method
     end
 end % switch method
 
+for k = 1:numel(varargout)
+  for m = 1:numel(varargout{k}.trial)
+    nas = varargout{k}.trial{m}(selnas,:);
+    lpa = varargout{k}.trial{m}(sellpa,:);
+    rpa = varargout{k}.trial{m}(selrpa,:);
+    cc  = circumcenter(nas, lpa, rpa);
+    varargout{k}.trial{m} = cat(1, varargout{k}.trial{m}, cc);
+  end
+  varargout{k}.label  = cat(1, varargout{k}.label, {'cc_xpos';'cc_ypos';'cc_zpos';'cc_xrot';'cc_yrot';'cc_zrot'});
+end
+
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-ft_postamble trackconfig
 ft_postamble provenance
 ft_postamble previous varargout
 ft_postamble history varargout
 ft_postamble savevar varargout
 
+function [cc] = circumcenter(coil1, coil2, coil3)
+
+% CIRCUMCENTER determines the position and orientation of the circumcenter
+% of the three fiducial markers (MEG headposition coils).
+%
+% Input: X,y,z-coordinates of the 3 coils [3 X N],[3 X N],[3 X N] where N
+% is timesamples/trials.
+%
+% Output: X,y,z-coordinates of the circumcenter [1-3 X N], and the
+% orientations to the x,y,z-axes [4-6 X N].
+%
+% A. Stolk, 2012
+
+% number of timesamples/trials
+N = size(coil1,2);
+
+% x-, y-, and z-coordinates of the circumcenter: use coordinates relative to point 'a' of the triangle
+xba = coil2(1,:) - coil1(1,:);
+yba = coil2(2,:) - coil1(2,:);
+zba = coil2(3,:) - coil1(3,:);
+xca = coil3(1,:) - coil1(1,:);
+yca = coil3(2,:) - coil1(2,:);
+zca = coil3(3,:) - coil1(3,:);
+
+% squares of lengths of the edges incident to 'a'
+balength = xba .* xba + yba .* yba + zba .* zba;
+calength = xca .* xca + yca .* yca + zca .* zca;
+
+% cross product of these edges
+xcrossbc = yba .* zca - yca .* zba;
+ycrossbc = zba .* xca - zca .* xba;
+zcrossbc = xba .* yca - xca .* yba;
+
+% calculate the denominator of the formulae
+denominator = 0.5 ./ (xcrossbc .* xcrossbc + ycrossbc .* ycrossbc + zcrossbc .* zcrossbc);
+
+% calculate offset (from 'a') of circumcenter
+xcirca = ((balength .* yca - calength .* yba) .* zcrossbc - (balength .* zca - calength .* zba) .* ycrossbc) .* denominator;
+ycirca = ((balength .* zca - calength .* zba) .* xcrossbc - (balength .* xca - calength .* xba) .* zcrossbc) .* denominator;
+zcirca = ((balength .* xca - calength .* xba) .* ycrossbc - (balength .* yca - calength .* yba) .* xcrossbc) .* denominator;
+
+% add the offset back to get the position of the origin over time.
+cc(1,:) = xcirca + coil1(1,:);
+cc(2,:) = ycirca + coil1(2,:);
+cc(3,:) = zcirca + coil1(3,:);
+
+% orientation of the circumcenter with respect to the x-, y-, and z-axis coordinates
+v  = [cc(1,:)',    cc(2,:)',    cc(3,:)'   ];
+vx = [zeros(1,N)', cc(2,:)',    cc(3,:)'   ]; % on the x-axis
+vy = [cc(1,:)',    zeros(1,N)', cc(3,:)'   ]; % on the y-axis
+vz = [cc(1,:)',    cc(2,:)',    zeros(1,N)']; % on the z-axis
+
+thetax = zeros(1,N);
+thetay = zeros(1,N);
+thetaz = zeros(1,N);
+for j = 1:N
+  % find the angles of two vectors opposing the axes
+  thetax(j) = acos(dot(v(j,:),vx(j,:))/(norm(v(j,:))*norm(vx(j,:))));
+  thetay(j) = acos(dot(v(j,:),vy(j,:))/(norm(v(j,:))*norm(vy(j,:))));
+  thetaz(j) = acos(dot(v(j,:),vz(j,:))/(norm(v(j,:))*norm(vz(j,:))));
+
+  % convert to degrees
+  cc(4,j) = (thetax(j) * (180/pi));
+  cc(5,j) = (thetay(j) * (180/pi));
+  cc(6,j) = (thetaz(j) * (180/pi));
+end

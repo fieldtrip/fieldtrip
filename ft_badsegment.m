@@ -93,7 +93,6 @@ ft_preamble init
 ft_preamble debug
 ft_preamble loadvar data
 ft_preamble provenance
-ft_preamble trackconfig
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -103,8 +102,9 @@ end
 % check if the input data is valid for this function
 data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes');
 
-% ensure that the configuration is consistent
-cfg = ft_checkconfig(cfg, 'required', 'metric');
+% check if the input cfg is valid for this function
+cfg = ft_checkconfig(cfg, 'forbidden',  {'channels', 'trial'}); % prevent accidental typos, see issue 1729
+cfg = ft_checkconfig(cfg, 'required',   'metric');
 
 % ensure that the preproc specific options are located in the cfg.preproc substructure
 cfg = ft_checkconfig(cfg, 'createsubcfg',  {'preproc'});
@@ -131,7 +131,7 @@ if isempty(cfg.thresholdside)
 end
 
 % select trials and channels of interest
-tmpcfg = keepfields(cfg, {'trials', 'channel', 'tolerance', 'latency', 'showcallinfo'});
+tmpcfg = keepfields(cfg, {'trials', 'channel', 'tolerance', 'latency', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
 data   = ft_selectdata(tmpcfg, data);
 % restore the provenance information
 [cfg, data] = rollback_provenance(cfg, data);
@@ -223,13 +223,13 @@ end % for each trial
 
 ft_info('identified %d out of %d trials as bad\n', sum(badsegment), length(badsegment));
 
-% the output is consistent with that of other artifact detection functions
+% keep track of bad segments
+% this format is consistent with that of other artifact detection functions
 artifact = data.sampleinfo(badsegment,:);
 cfg.artfctdef.badsegment.artifact = artifact;
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-ft_postamble trackconfig
 ft_postamble previous data
 ft_postamble provenance
 ft_postamble hastoolbox

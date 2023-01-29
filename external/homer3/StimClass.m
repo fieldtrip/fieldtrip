@@ -7,7 +7,7 @@ classdef StimClass < matlab.mixin.Copyable
     end
     
     % Non-SNIRF class properties
-    properties
+    properties (Access = private)
         filename
         fileformat
     end
@@ -55,8 +55,8 @@ classdef StimClass < matlab.mixin.Copyable
                 t        = varargin{2};
                 CondName = varargin{3};
                 obj.name = CondName;
-                k = s>0;
-                obj.data = [t(k), 5*ones(length(t(k)),1), ones(length(t(k)),1)];
+                k = s>0 | s==-1 | s==-2;  % Include stim marks with these values
+                obj.data = [t(k), 5*ones(length(t(k)),1), s(k)];
             elseif nargin==0
                 obj.name = '';
                 obj.data = [];

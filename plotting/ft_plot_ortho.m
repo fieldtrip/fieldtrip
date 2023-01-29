@@ -14,6 +14,7 @@ function [hx, hy, hz] = ft_plot_ortho(dat, varargin)
 %   'parents'      = (optional) 3-element vector containing the handles of the axes for the subplots (when style = 'subplot')
 %   'surfhandle'   = (optional) 3-element vector containing the handles of the surfaces for each of the sublots (when style = 'subplot'). Parents and surfhandle are mutually exclusive
 %   'update'       = (optional) 3-element boolean vector with the axes that should be updated (default = [true true true])
+%   'coordsys'     = string, assume the data to be in the specified coordinate system (default = 'unknown')
 %
 % The following options are supported and passed on to FT_PLOT_SLICE
 %   'clim'                = [min max], lower and upper color limits
@@ -33,6 +34,7 @@ function [hx, hy, hz] = ft_plot_ortho(dat, varargin)
 % See also FT_PLOT_SLICE, FT_PLOT_MONTAGE, FT_SOURCEPLOT
 
 % Copyrights (C) 2010, Jan-Mathijs Schoffelen
+% Copyrights (C) 2022, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -52,6 +54,20 @@ function [hx, hy, hz] = ft_plot_ortho(dat, varargin)
 %
 % $Id$
 
+if isstruct(dat) && isfield(dat, 'anatomy') && isfield(dat, 'transform')
+  % the input is an MRI structure, call this function recursively
+  varargin = ft_setopt(varargin, 'transform', dat.transform);
+  if isfield(dat, 'coordsys')
+    varargin = ft_setopt(varargin, 'coordsys', dat.coordsys);
+  end
+  if isfield(dat, 'unit')
+    varargin = ft_setopt(varargin, 'unit', dat.unit);
+  end
+  dat = dat.anatomy;
+  [hx, hy, hz] = ft_plot_ortho(dat, varargin{:});
+  return
+end
+
 % parse first input argument(s). it is either
 % (dat, varargin)
 % (dat, msk, varargin)
@@ -66,15 +82,16 @@ if ~isempty(sellist)
 end
 
 % get the optional input arguments
-% other options such as location and transform are passed along to ft_plot_slice
+% other options such as location and transform are passed along to FT_PLOT_SLICE
 style     = ft_getopt(varargin(sellist), 'style', 'subplot');
 ori       = ft_getopt(varargin(sellist), 'orientation', eye(3));
+coordsys  = ft_getopt(varargin, 'coordsys');
 
 if strcmp(style, 'subplot')
-  parents    = ft_getopt(varargin(sellist), 'parents');
-  surfhandle = ft_getopt(varargin(sellist), 'surfhandle');
+  parents     = ft_getopt(varargin(sellist), 'parents');
+  surfhandle  = ft_getopt(varargin(sellist), 'surfhandle');
   patchhandle = ft_getopt(varargin(sellist), 'patchhandle');
-  update     = ft_getopt(varargin(sellist), 'update', [true true true]);
+  update      = ft_getopt(varargin(sellist), 'update', [true true true]);
   if ~isempty(surfhandle) && ~isempty(parents)
     ft_error('if specifying handles, you should either specify handles to the axes or to the surface objects, not both');
   end
@@ -184,6 +201,11 @@ switch style
     
     if ~holdflag
       hold off
+    end
+
+    if ~isempty(coordsys)
+      % add a context sensitive menu to change the 3d viewpoint to top|bottom|left|right|front|back
+      menu_viewpoint(gca, coordsys)
     end
     
   otherwise

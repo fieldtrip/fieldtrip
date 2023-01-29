@@ -59,7 +59,6 @@ ft_preamble init
 ft_preamble debug
 ft_preamble loadvar    datain
 ft_preamble provenance datain
-ft_preamble trackconfig
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -69,6 +68,9 @@ end
 
 % check if the input data is valid for this function, the input data must be raw
 datain = ft_checkdata(datain, 'datatype', 'raw', 'feedback', 'yes');
+
+% check if the input cfg is valid for this function
+cfg = ft_checkconfig(cfg, 'forbidden',  {'channels'}); % prevent accidental typos, see issue 1729
 
 % set the default options
 cfg.channel        = ft_getopt(cfg, 'channel', {});
@@ -126,7 +128,6 @@ end % for trllop
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 ft_postamble debug
-ft_postamble trackconfig
 ft_postamble previous   datain
 ft_postamble provenance dataout
 ft_postamble history    dataout

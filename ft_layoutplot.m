@@ -33,8 +33,9 @@ function [cfg] = ft_layoutplot(cfg, data)
 %   cfg.box         = string, 'yes' or 'no' whether box should be plotted around electrode (default = 'yes')
 %   cfg.mask        = string, 'yes' or 'no' whether the mask should be plotted (default = 'yes')
 %   cfg.visible     = string, 'on' or 'off' whether figure will be visible (default = 'on')
-%   cfg.position    = location and size of the figure, specified as a vector of the form [left bottom width height]
-%   cfg.renderer    = string, 'opengl', 'zbuffer', 'painters', see MATLAB Figure Properties. If this function crashes, you should try 'painters'.
+%   cfg.figure      = 'yes' or 'no', whether to open a new figure. You can also specify a figure handle from FIGURE, GCF or SUBPLOT. (default = 'yes')
+%   cfg.position    = location and size of the figure, specified as [left bottom width height] (default is automatic)
+%   cfg.renderer    = string, 'opengl', 'zbuffer', 'painters', see RENDERERINFO (default is automatic, try 'painters' when it crashes)
 %
 % Alternatively the layout can be constructed from either
 %   data.elec     structure with electrode positions
@@ -87,7 +88,6 @@ ft_preamble init
 ft_preamble debug
 ft_preamble loadvar data
 ft_preamble provenance data
-ft_preamble trackconfig
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -116,7 +116,7 @@ cfg.mask      = ft_getopt(cfg, 'mask', 'yes');
 % extract or generate the layout information
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-tmpcfg = keepfields(cfg, {'layout', 'channel', 'rows', 'columns', 'commentpos', 'skipcomnt', 'scalepos', 'skipscale', 'projection', 'viewpoint', 'rotate', 'width', 'height', 'elec', 'grad', 'opto', 'showcallinfo'});
+tmpcfg = keepfields(cfg, {'layout', 'channel', 'rows', 'columns', 'commentpos', 'skipcomnt', 'scalepos', 'skipscale', 'projection', 'viewpoint', 'rotate', 'width', 'height', 'elec', 'grad', 'opto', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
 if hasdata
   layout = ft_prepare_layout(tmpcfg, data);
 else
@@ -209,7 +209,6 @@ set(h, 'NumberTitle', 'off');
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-ft_postamble trackconfig
 ft_postamble previous data
 ft_postamble provenance
 ft_postamble savefig

@@ -40,13 +40,12 @@ function ft_preamble(cmd, varargin)
 %
 %#function ft_preamble_init
 %#function ft_preamble_debug
-%#function ft_preamble_trackconfig
 %#function ft_preamble_provenance
 %#function ft_preamble_loadvar
 %#function ft_preamble_randomseed
 
 % this is a trick to pass the input arguments into the ft_preamble_xxx script
-assignin('caller', 'iW1aenge_preamble', varargin);
+assignin('caller', 'preamble_argin', varargin);
 
 full_cmd = ['ft_preamble_' cmd];
 cmd_exists = false;
@@ -81,4 +80,3 @@ if ~cmd_exists
 end
 
 evalin('caller', full_cmd);
-

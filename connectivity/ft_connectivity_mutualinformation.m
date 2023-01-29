@@ -1,33 +1,38 @@
-function output = ft_connectivity_mutualinformation(input, varargin)
+function output = ft_connectivity_mutualinformation(inputdata, varargin)
 
-% FT_CONNECTIVITY_MUTUALINFORMATION computes mutual information using
-% either the information breakdown toolbox (ibtb), as described in Magri
-% et al., BMC Neuroscience 2009, 1471-2202, or Robin Ince's Gaussian copula
-% based parametric approach (gcmi). The function is a helper function for
-% FT_CONNECTIVITYANALYSIS. As a standalone function, it could be used as
-% follows:
+% FT_CONNECTIVITY_MUTUALINFORMATION computes mutual information using either the
+% information breakdown toolbox (ibtb), as described in Magri et al., BMC
+% Neuroscience 2009, 1471-2202, or Robin Ince's Gaussian copula based parametric
+% approach (gcmi).
 %
 % Use as
-%   mi = ft_connectivity_mutualinformation(data, ...)
+%   mi = ft_connectivity_mutualinformation(inputdata, ...)
 %
 % The input data should be a Nchan x Nobservations matrix.
 %
+% The output mi contains the estimated mutual information between all channels and
+% the reference channels.
+%
 % Additional input arguments come as key-value pairs:
-%   method     = string, 'ibtb' (default), or 'gcmi'.
+%   method     = string, 'ibtb' or 'gcmi' (default = 'gcmi')
 %
-% The following arguments pertain to the 'ibtb' method:
-%   histmethod = The way that histograms are generated from the data. Possible values
-%                are 'eqpop' (default), 'eqspace', 'ceqspace', 'gseqspace'.
-%                See the help of the 'binr' function in the ibtb toolbox for more information.
-%   numbin     = scalar value. The number of bins used to create the histograms needed for
-%                the entropy computations
-%   opts       = structure that is passed on to the 'information' function in the ibtb
-%                toolbox. See the help of that function for more information.
-%   refindx    = scalar value or 'all'. The channel that is used as 'reference channel'.
+% The default method has changed from 'ibtb' to 'gcmi' in December 2022. The former method
+% is based on an external toolbox that is not actively supported anymore. Moreover, the
+% Gaussian-Copula based Mutual Information does not depend on a binning strategy, and may
+% provide reasonable results also in the presence of low amounts of data. The change in 
+% default reflects the default defined in ft_connectivityanalysis.
 %
-% The output contains the estimated mutual information between all channels and the reference channel(s).
+% Additional input arguments for the 'ibtb' method:
+%   'histmethod' = The way that histograms are generated from the data. Possible values
+%                  are 'eqpop' (default), 'eqspace', 'ceqspace', 'gseqspace'.
+%                  See the help of the 'binr' function in the ibtb toolbox for more information.
+%   'numbin'     = scalar value. The number of bins used to create the histograms needed for
+%                  the entropy computations
+%   'opts'       = structure that is passed on to the 'information' function in the ibtb
+%                  toolbox. See the help of that function for more information.
+%   'refindx'    = scalar value or 'all'. The channel that is used as 'reference channel'.
 %
-% See also FT_CONNECTIVITYANALYSIS
+% See also CONNECTIVITY, FT_CONNECTIVITYANALYSIS
 
 % Copyright (C) 2016 Donders Institute, Jan-Mathijs Schoffelen
 %
@@ -49,14 +54,14 @@ function output = ft_connectivity_mutualinformation(input, varargin)
 %
 % $Id$
 
-method      = ft_getopt(varargin, 'method',  'ibtb'); % can be gcmi
-refindx     = ft_getopt(varargin, 'refindx', 'all', 1);
-featureindx = ft_getopt(varargin, 'featureindx'); % this is only function if gcmi is the method
-lags        = ft_getopt(varargin, 'lags',    0);  % shift of target w.r.t. source, in samples
-sourcelags  = ft_getopt(varargin, 'sourcelags', []);
-tra         = ft_getopt(varargin, 'tra',     []); % 1/0-matrix for multivariate combination Nnew x Norg, where Norg = size(input,1)
-conditional = istrue(ft_getopt(varargin, 'conditional', false)); % this is only functional if gcmi is the method
-combinelags = istrue(ft_getopt(varargin, 'combinelags', false)); % this is only functional if gcmi is the method, with di/dfi
+method       = ft_getopt(varargin, 'method', 'ibtb');              % can be gcmi
+refindx      = ft_getopt(varargin, 'refindx', 'all', 1);
+featureindx  = ft_getopt(varargin, 'featureindx');                 % this only applies to gcmi
+lags         = ft_getopt(varargin, 'lags', 0);                     % shift of target w.r.t. source, in samples
+sourcelags   = ft_getopt(varargin, 'sourcelags');
+tra          = ft_getopt(varargin, 'tra');                         % 1/0-matrix for multivariate combination Nnew x Norg, where Norg = size(input,1)
+conditional  = istrue(ft_getopt(varargin, 'conditional', false));  % this is only functional if gcmi is the method
+combinelags  = istrue(ft_getopt(varargin, 'combinelags', false));  % this is only functional if gcmi is the method, with di/dfi
 precondition = istrue(ft_getopt(varargin, 'precondition', false)); % this copnorms only once, this is strictly speaking incorrect, but numerical difference are minor
 
 if conditional && ~strcmp(method, 'gcmi')
@@ -70,7 +75,7 @@ if ~isempty(tra)
     error('method ''ibtb'' in combination with a non-identity ''tra'' is not possible');
   end
 else
-  tra = eye(size(input,1))>0;
+  tra = eye(size(inputdata,1))>0;
 end
 
 % ensure that the refindx is numeric, defaults to 1:size(input,1), i.e. do
@@ -110,10 +115,10 @@ switch method
     opts.bias   = ft_getopt(opts, 'bias',   'pt');
     
     % deal with NaNs in the input data, e.g. trial boundaries
-    finitevals = isfinite(input);
+    finitevals = isfinite(inputdata);
     
-    nchans = size(tra,1); 
-    n      = size(input, 2);
+    nchans = size(tra,1);
+    n      = size(inputdata, 2);
     output = zeros(nchans, numel(refindx), numel(lags)) + nan;
     
     % for each lag
@@ -124,25 +129,25 @@ switch method
       beg1 = max(0, lags(m))  + 1;
       beg2 = max(0, -lags(m)) + 1;
       n1   = n-abs(lags(m));
-        
+      
       end1 = beg1+n1-1;
       end2 = beg2+n1-1;
       
       for p = 1:numel(refindx)
         tmprefdata = nan(sum(tra(refindx(p),:)),n);
-        tmprefdata(:, beg1:end1) = input(tra(refindx(p),:), beg2:end2);
+        tmprefdata(:, beg1:end1) = inputdata(tra(refindx(p),:), beg2:end2);
         
         finitevals2 = sum(finitevals,1)&sum(isfinite(tmprefdata),1); % this conservatively takes only the non-nan samples across all input data channels
         
-        tmpinput    = input(:,finitevals2);
+        tmpinput    = inputdata(:,finitevals2);
         tmprefdata  = tmprefdata(:,finitevals2);
-      
+        
         % discretize signal1
         tmprefdata = binr(tmprefdata, sum(finitevals2), numbin, histmethod);
-      
+        
         for k = setdiff(1:size(tmpinput,1),refindx(p))
           signal2 = tmpinput(k,:);
-        
+          
           % represent signal2 in bins according to signal1's discretization
           R = zeros(1,3,numbin);
           for j = 1:numbin
@@ -150,7 +155,7 @@ switch method
             opts.nt(j) = sum(nr);
             R(1, 1:opts.nt(j),j) = signal2(nr);
           end
-        
+          
           % discretize signal2 and compute mi
           R2 = binr(R, opts.nt', numbin, histmethod);
           output(k,p,m) = information(R2, opts, 'I'); % this computes mutual information
@@ -163,13 +168,13 @@ switch method
     
     % set some options
     cmplx = ft_getopt(varargin, 'complex', 'complex'); % this is only used if data are complex-valued
-
+    
     % deal with NaNs in the input data, e.g. trial boundaries
-    finitevals = isfinite(input);
+    finitevals = isfinite(inputdata);
     
     % verify whether data is complex-valued, check the inputs, and adjust
     % the input data
-    if ~all(imag(input(:))==0)
+    if ~all(imag(inputdata(:))==0)
       % a tra deviating from I is currently not supported: ask Robin how to
       % deal with this, if possible at all
       if ~isequal(tra,eye(size(tra,1))>0)
@@ -179,28 +184,28 @@ switch method
         case 'complex'
           % tease apart the real/imag parts, treat as 2D-variable, and
           % ensure the nans to behave
-          complexrows = sum(imag(input)~=0,2)>0;
-          input(~finitevals) = nan+1i.*nan;
-          input = cat(1, real(input), imag(input(complexrows,:)));
+          complexrows = sum(imag(inputdata)~=0,2)>0;
+          inputdata(~finitevals) = nan+1i.*nan;
+          inputdata = cat(1, real(inputdata), imag(inputdata(complexrows,:)));
           tra   = cat(2, tra, tra(:,complexrows));
           finitevals = cat(1, finitevals, finitevals(complexrows,:));
         case 'abs'
           % take the amplitude
-          input = abs(input);
+          inputdata = abs(inputdata);
         case 'angle'
           % tease apart the real/imag parts, after amplitude normalization,
           % and ensure the nans to behave
-          complexrows = sum(imag(input)~=0,2)>0;
-          input(~finitevals) = nan+1i.*nan;
-          input(complexrows,:) = input(complexrows,:)./abs(input(complexrows,:));
-          input = cat(1, real(input), imag(input(complexrows,:)));
+          complexrows = sum(imag(inputdata)~=0,2)>0;
+          inputdata(~finitevals) = nan+1i.*nan;
+          inputdata(complexrows,:) = inputdata(complexrows,:)./abs(inputdata(complexrows,:));
+          inputdata = cat(1, real(inputdata), imag(inputdata(complexrows,:)));
           tra   = cat(2, tra, tra(:,complexrows));
           finitevals = cat(1, finitevals, finitevals(complexrows,:));
         otherwise
           error('unsupported value for ''complex''');
       end
     end
-  
+    
     if combinelags
       otherlags = lags(2:end);
       lags      = lags(1);
@@ -208,22 +213,22 @@ switch method
       otherlags = [];
     end
     
-    nchans = size(tra,1); 
-    n      = size(input, 2);
+    nchans = size(tra,1);
+    n      = size(inputdata, 2);
     if ~isempty(featureindx)
       if isempty(sourcelags)
         sourcelags = lags;
       end
-      output = zeros(size(refindx,1), nchans, numel(sourcelags), numel(lags)) + nan;  
+      output = zeros(size(refindx,1), nchans, numel(sourcelags), numel(lags)) + nan;
     else
       output = zeros(size(refindx,1), nchans, numel(lags)) + nan;
     end
     
     if precondition
-      finitevalstmp = sum(isfinite(input))==size(input,1);
-      input(:,finitevalstmp) = copnorm(input(:,finitevalstmp)')';
-      input(:,~finitevalstmp) = nan;
-      finitevals = isfinite(input);
+      finitevalstmp = sum(isfinite(inputdata))==size(inputdata,1);
+      inputdata(:,finitevalstmp) = copnorm(inputdata(:,finitevalstmp)')';
+      inputdata(:,~finitevalstmp) = nan;
+      finitevals = isfinite(inputdata);
     end
     
     % for each lag if combinelags is false
@@ -245,19 +250,19 @@ switch method
           
           if ~isequal(tra, eye(size(tra,1)))
             tmpsource = nan(sum(tra(refindx(p),:)),n);
-            tmpsource(:, beg1:end1) = input(tra(refindx(p),:), beg2:end2);
-          else 
+            tmpsource(:, beg1:end1) = inputdata(tra(refindx(p),:), beg2:end2);
+          else
             tmpsource = nan(size(refindx,2),n);
-            tmpsource(:, beg1:end1) = input(refindx(p,:), beg2:end2);
+            tmpsource(:, beg1:end1) = inputdata(refindx(p,:), beg2:end2);
           end
-            
+          
           finitevals2 = sum(finitevals,1)&sum(isfinite(tmpsource),1); % this conservatively takes only the non-nan samples across all input data channels
           
           if ~precondition
-            tmptarget  = copnorm(input(:,finitevals2)')';
+            tmptarget  = copnorm(inputdata(:,finitevals2)')';
             tmpsource  = copnorm(tmpsource(:,finitevals2)')';
           else
-            tmptarget  = input(:,finitevals2);
+            tmptarget  = inputdata(:,finitevals2);
             tmpsource  = tmpsource(:,finitevals2);
           end
           
@@ -274,7 +279,7 @@ switch method
         
         % condition on the time-lagged version of the target signal, this
         % amounts to what cfg.method = 'di' in ft_connectivityanalysis, it
-        % conditions mi between the target and the past of the source 
+        % conditions mi between the target and the past of the source
         % on the past of the target signal
         
         % get the samples for the relative shifts for the given lag
@@ -285,8 +290,8 @@ switch method
         end1 = beg1+n1-1;
         end2 = beg2+n1-1;
         
-        target_shifted                 = nan(size(input,1),n,numel(otherlags)+1);
-        target_shifted(:, beg1:end1,1) = input(:, beg2:end2);
+        target_shifted                 = nan(size(inputdata,1),n,numel(otherlags)+1);
+        target_shifted(:, beg1:end1,1) = inputdata(:, beg2:end2);
         for k = 1:numel(otherlags)
           % get the samples for the relative shifts for the given lag,
           % accumulate the lags
@@ -296,7 +301,7 @@ switch method
           
           otherend1 = otherbeg1+n1-1;
           otherend2 = otherbeg2+n1-1;
-          target_shifted(:,otherbeg1:otherend1,k+1) = input(:, otherbeg2:otherend2);
+          target_shifted(:,otherbeg1:otherend1,k+1) = inputdata(:, otherbeg2:otherend2);
         end
         finitevals2    = sum(finitevals,1)>0&sum(sum(isfinite(target_shifted),3),1)>0; % this conservatively takes only the non-nan samples across all input data channels
         
@@ -304,10 +309,10 @@ switch method
         % the conditioning all shifted versions of the target signal are
         % needed anyway, this bypasses the use of the gcmi toolbox
         if ~precondition
-          target = copnorm(input(:,finitevals2)');
+          target = copnorm(inputdata(:,finitevals2)');
           target = bsxfun(@minus,target,mean(target,1));
         else
-          target = input(:,finitevals2)';
+          target = inputdata(:,finitevals2)';
           target = bsxfun(@minus, target, mean(target,1));
         end
         
@@ -324,7 +329,7 @@ switch method
           % versions only once, and then reorganize into a (Ntarget x
           % Nref) x 3 x 3 matrix
           C = transpose([target, target_shifted])*[target, target_shifted];
-          C = C./(size(target,1)-1); 
+          C = C./(size(target,1)-1);
           
           nt   = size(target,2);
           ns   = numel(refindx);
@@ -345,7 +350,7 @@ switch method
             Cxyz(ix,3,2) = C(nt+(1:nt), nt+ixp);
             Cxyz(ix,1,3) = Cxyz(ix,3,1);
             Cxyz(ix,2,3) = Cxyz(ix,3,2);
-            Cxyz(ix,3,3) = cTs;   
+            Cxyz(ix,3,3) = cTs;
           end
           I = cov2cmi_ggg(Cxyz, size(target,1), true, [1 1 1]);
           output(:,:,m) = reshape(I,[],ns).';
@@ -367,7 +372,7 @@ switch method
         end
       elseif conditional && ~isempty(featureindx)
         fprintf('computing directed feature information for time lag in samples %d\n', lags(m));
-  
+        
         % a featureindx has been specified, this refers to dfi
         % I(A(t1);F|B(t1)) + I(B(t2);F|B(t1)) - I(A(t1) B(t2);F|B(t1))
         if ~isempty(otherlags)
@@ -377,33 +382,33 @@ switch method
         %if numel(refindx)>1
         %  error('only a single refindx allowed');
         %end
-        t_beg1 = max(0,  lags(m)) + 1; 
+        t_beg1 = max(0,  lags(m)) + 1;
         t_beg2 = max(0, -lags(m)) + 1;
         t_end1 = n + 1 - t_beg2;
         t_end2 = n + 1 - t_beg1;
         
         % time-lagged version of the target signal,
         % positive lags here mean shifted w.r.t. feature
-        target                   = nan(size(input,1),n);
-        target(:, t_beg2:t_end2) = input(:, t_beg1:t_end1);
-             
+        target                   = nan(size(inputdata,1),n);
+        target(:, t_beg2:t_end2) = inputdata(:, t_beg1:t_end1);
+        
         for mm = 1:numel(sourcelags)
           if sourcelags(mm)>=lags(m)
             continue;
           end
           % we have an unshifted feature, a shifted target (with lags(m)),
           % and a shifted source (with sourcelags(mm))
-          s_beg1 = max(0,  sourcelags(mm)) + 1; 
+          s_beg1 = max(0,  sourcelags(mm)) + 1;
           s_beg2 = max(0, -sourcelags(mm)) + 1;
           s_end1 = n + 1 - s_beg2;
           s_end2 = n + 1 - s_beg1;
           
           % feature data
-          feature = input(tra(featureindx,:),:);
-                    
+          feature = inputdata(tra(featureindx,:),:);
+          
           % shifted target signals at the time lag of the source
-          target_shifted                   = nan(size(input,1),n);
-          target_shifted(:, s_beg2:s_end2) = input(:, s_beg1:s_end1);
+          target_shifted                   = nan(size(inputdata,1),n);
+          target_shifted(:, s_beg2:s_end2) = inputdata(:, s_beg1:s_end1);
           
           finitevals2 = sum(finitevals,1)>0&sum(isfinite(target),1)>0&sum(isfinite(target_shifted),1)>0&sum(isfinite(feature),1)>0; % this conservatively takes only the non-nan samples across all input data channels
           
@@ -412,20 +417,20 @@ switch method
             % needs to be done each time
             tmptarget  = copnorm(target(:,finitevals2)'); % allow for the original target variable to be kept
             tmptarget  = bsxfun(@minus,tmptarget,mean(tmptarget,1))';
-          
+            
             target_shifted = copnorm(target_shifted(:,finitevals2)');
             target_shifted = bsxfun(@minus,target_shifted,mean(target_shifted,1))';
-          
+            
             % feature signal
             feature = copnorm(feature(:,finitevals2)');
             feature = bsxfun(@minus,feature,mean(feature,1))';
           else
             tmptarget  = target(:,finitevals2);
             tmptarget  = bsxfun(@minus,tmptarget,mean(tmptarget,2));
-          
+            
             target_shifted = target_shifted(:,finitevals2);
             target_shifted = bsxfun(@minus,target_shifted,mean(target_shifted,2));
-          
+            
             % feature signal
             feature = feature(:,finitevals2);
             feature = bsxfun(@minus,feature,mean(feature,2));
@@ -433,7 +438,7 @@ switch method
           
           % time-lagged version of the source signal,
           %source = target_shifted(:,tra(refindx,:));
-            
+          
           if ~isequal(tra,eye(size(tra,1)))
             %  not implemented
             error('computation of directed information is not implemented if not all signals are univariate');
@@ -484,29 +489,29 @@ switch method
             I2 = cov2cmi_ggg(Cxyz(:,[2 4 3],[2 4 3]), size(tmptarget,2), true, [1 1 1]); % S,F
             I3 = cov2cmi_ggg(Cxyz(:,[1 2 4 3],[1 2 4 3]), size(tmptarget,2), true, [2 1 1]);
             output(:,:,mm,m) = reshape(I1+I2-I3,[],ns).'; % equation 4 in Robin Ince's scientific reports paper.
-          
-%             % compute the three information components, exclude the source
-%             % and feature 'channels' to avoid potential numerical issues
-%             sel = tra(refindx,:)==0&tra(featureindx,:)==0;
-%             I1  = cmi_ggg_vec(source,           feature, target_shifted(:,sel), true, true);
-%             I2  = cmi_ggg_vec(tmptarget(:,sel), feature, target_shifted(:,sel), true, true);
-%             I3  = cmi_ggg_vec(cat(3, tmptarget(:,sel), repmat(source, 1, sum(sel))), feature, target_shifted(:,sel), true, true);
+            
+            %             % compute the three information components, exclude the source
+            %             % and feature 'channels' to avoid potential numerical issues
+            %             sel = tra(refindx,:)==0&tra(featureindx,:)==0;
+            %             I1  = cmi_ggg_vec(source,           feature, target_shifted(:,sel), true, true);
+            %             I2  = cmi_ggg_vec(tmptarget(:,sel), feature, target_shifted(:,sel), true, true);
+            %             I3  = cmi_ggg_vec(cat(3, tmptarget(:,sel), repmat(source, 1, sum(sel))), feature, target_shifted(:,sel), true, true);
           end
         end
         
       elseif ~conditional && ~isempty(featureindx)
         fprintf('computing co-information for time lag in samples %d\n', lags(m));
-  
+        
         % using a feature without conditioning will lead to the computation
         % of co-information; I(A(t1);F) + I(B(t2);F) - I(A(t1) B(t2);F) ->
         % positive values: redundancy, negative values: synergy
         if any(lags<0)
           error('only lags >=0 allowed');
         end
-%         if numel(refindx)>1
-%           error('only a single refindx allowed');
-%         end
-        t_beg1 = max(0,  lags(m)) + 1; 
+        %         if numel(refindx)>1
+        %           error('only a single refindx allowed');
+        %         end
+        t_beg1 = max(0,  lags(m)) + 1;
         t_beg2 = max(0, -lags(m)) + 1;
         
         t_end1 = n+1-t_beg2;
@@ -514,8 +519,8 @@ switch method
         
         % time-lagged version of the target signal,
         % positive lags here mean shifted w.r.t. feature
-        target                   = nan(size(input,1),n);
-        target(:, t_beg2:t_end2) = input(:, t_beg1:t_end1);
+        target                   = nan(size(inputdata,1),n);
+        target(:, t_beg2:t_end2) = inputdata(:, t_beg1:t_end1);
         
         % if copula is done here, it's not fully correct (because of
         % nanning of shifted values...
@@ -530,20 +535,20 @@ switch method
           
           % we have an unshifted feature, a shifted target (with lags(m)),
           % and a shifted source (with lags(mm))
-          s_beg1 = max(0,  lags(mm)) + 1; 
-          s_beg2 = max(0, -lags(mm)) + 1; 
+          s_beg1 = max(0,  lags(mm)) + 1;
+          s_beg2 = max(0, -lags(mm)) + 1;
           
           s_end1 = n+1-s_beg2;
           s_end2 = n+1-s_beg1;
           
           % feature data
-          feature = input(tra(featureindx,:),:);
+          feature = inputdata(tra(featureindx,:),:);
           
           % time-lagged version of the source signal,
           %source                   = nan(sum(tra(refindx,:)),n);
           %source(:, s_beg2:s_end2) = input(tra(refindx,:), s_beg1:s_end1);
-          source                   = nan(size(input,1),n);
-          source(:, s_beg2:s_end2) = input(:, s_beg1:s_end1);
+          source                   = nan(size(inputdata,1),n);
+          source(:, s_beg2:s_end2) = inputdata(:, s_beg1:s_end1);
           
           finitevals2    = sum(finitevals,1)>0&sum(isfinite(target),1)>0&sum(isfinite(source),1)>0&sum(isfinite(feature),1)>0; % this conservatively takes only the non-nan samples across all input data channels
           
@@ -552,20 +557,20 @@ switch method
             % needs to be done each time
             tmptarget  = copnorm(target(:,finitevals2)'); % allow for the original target variable to be kept
             tmptarget  = bsxfun(@minus,tmptarget,mean(tmptarget,1));
-          
+            
             source = copnorm(source(:,finitevals2)');
             source = bsxfun(@minus,source,mean(source,1));
-          
+            
             % feature signal
             feature = copnorm(feature(:,finitevals2)');
             feature = bsxfun(@minus,feature,mean(feature,1));
           else
             tmptarget  = target(:,finitevals2)';
             tmptarget  = bsxfun(@minus,tmptarget,mean(tmptarget,1));
-          
+            
             source = source(:,finitevals2)';
             source = bsxfun(@minus,source,mean(source,1));
-          
+            
             % feature signal
             feature = feature(:,finitevals2)';
             feature = bsxfun(@minus,feature,mean(feature,1));
@@ -618,11 +623,11 @@ switch method
             I3 = cov2mi_gg(Cxy(:,[1 2 3],[1 2 3]), size(tmptarget,1), true, [2 1]);
             output(:,:,mm,m) = reshape(I1+I2-I3,[],ns).'; % equation 4 in Robin Ince's scientific reports paper.
             
-%             % compute the three information components
-%             I1 = mi_gg_vec(source,    feature, true, true);
-%             I2 = mi_gg_vec(tmptarget, feature, true, true);
-%             I3 = mi_gg_vec(cat(3, tmptarget, repmat(source, 1, size(tmptarget,2))), feature, true, true);
-%             output(1,:,mm,m) = I1+I2-I3;
+            %             % compute the three information components
+            %             I1 = mi_gg_vec(source,    feature, true, true);
+            %             I2 = mi_gg_vec(tmptarget, feature, true, true);
+            %             I3 = mi_gg_vec(cat(3, tmptarget, repmat(source, 1, size(tmptarget,2))), feature, true, true);
+            %             output(1,:,mm,m) = I1+I2-I3;
           end
         end
       end
@@ -637,7 +642,7 @@ end
 
 function I = cov2mi_gg(Cxy, N, biascorrect, xy_ind)
 
-% subfunction that computes mutual information, where the covariances have 
+% subfunction that computes mutual information, where the covariances have
 % already been computed.
 %  Cxy = covariance, MxNsgnxNsgn
 %  N = number of samples for covariance computation (needed for bias
@@ -667,15 +672,15 @@ HXY  = sum(log(vecdiag(chCxy)), 2); % + 0.5*(Nvary+Nvarz)*log(2*pi*exp(1));
 
 ln2 = log(2);
 if biascorrect
-    nX  = numel(xindx);
-    nY  = numel(yindx);
-    nXY = numel(yindx)+numel(xindx);
-    
-    psiterms = psi((N - (1:nXY))/2) / 2;
-    dterm = (ln2 - log(N-1)) / 2;
-    HX   = (HX   - nX*dterm    - sum(psiterms(1:nX)));
-    HY   = (HY   - nY*dterm    - sum(psiterms(1:nY)));
-    HXY  = (HXY  - nXY*dterm   - sum(psiterms(1:nXY)));
+  nX  = numel(xindx);
+  nY  = numel(yindx);
+  nXY = numel(yindx)+numel(xindx);
+  
+  psiterms = psi((N - (1:nXY))/2) / 2;
+  dterm = (ln2 - log(N-1)) / 2;
+  HX   = (HX   - nX*dterm    - sum(psiterms(1:nX)));
+  HY   = (HY   - nY*dterm    - sum(psiterms(1:nY)));
+  HXY  = (HXY  - nXY*dterm   - sum(psiterms(1:nXY)));
 end
 
 % convert to bits
@@ -716,17 +721,17 @@ HXYZ = sum(log(vecdiag(chCxyz)),2); % + 0.5*(Nvarx+Nvary+Nvarz)*log(2*pi*exp(1))
 
 ln2 = log(2);
 if biascorrect
-    nZ = numel(zindx);
-    nXZ = numel(zindx)+numel(xindx);
-    nYZ = numel(zindx)+numel(yindx);
-    nXYZ = numel(zindx)+numel(yindx)+numel(xindx);
+  nZ = numel(zindx);
+  nXZ = numel(zindx)+numel(xindx);
+  nYZ = numel(zindx)+numel(yindx);
+  nXYZ = numel(zindx)+numel(yindx)+numel(xindx);
   
-    psiterms = psi((N - (1:nXYZ))/2) / 2;
-    dterm = (ln2 - log(N-1)) / 2;
-    HZ   = (HZ   - dterm       - sum(psiterms(1:nZ)));
-    HXZ  = (HXZ  - nXZ*dterm   - sum(psiterms(1:nXZ)));
-    HYZ  = (HYZ  - nYZ*dterm   - sum(psiterms(1:nYZ)));
-    HXYZ = (HXYZ - nXYZ*dterm  - sum(psiterms));
+  psiterms = psi((N - (1:nXYZ))/2) / 2;
+  dterm = (ln2 - log(N-1)) / 2;
+  HZ   = (HZ   - dterm       - sum(psiterms(1:nZ)));
+  HXZ  = (HXZ  - nXZ*dterm   - sum(psiterms(1:nXZ)));
+  HYZ  = (HYZ  - nYZ*dterm   - sum(psiterms(1:nYZ)));
+  HXYZ = (HXYZ - nXYZ*dterm  - sum(psiterms));
 end
 
 % convert to bits
@@ -739,4 +744,3 @@ out = zeros(size(in,1),n);
 for k = 1:n
   out(:,k) = in(:,k,k);
 end
-

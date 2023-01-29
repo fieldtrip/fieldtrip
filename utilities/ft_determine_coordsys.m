@@ -8,7 +8,8 @@ function [data] = ft_determine_coordsys(data, varargin)
 %   [dataout] = ft_determine_coordsys(datain, ...)
 % where the input data structure can be either
 %  - an anatomical MRI
-%  - an electrode or gradiometer definition
+%  - a cortical or head surface mesh
+%  - an electrode, gradiometer or optode definition
 %  - a volume conduction model of the head
 % or most other FieldTrip structures that represent geometrical information.
 %
@@ -25,12 +26,17 @@ function [data] = ft_determine_coordsys(data, varargin)
 % see the figure from all angles. To change the anatomical labels of the
 % coordinate system, you should press the corresponding keyboard button.
 %
-% Recognized and supported coordinate systems are 'ctf', '4d', 'bti', 'eeglab',
-% 'neuromag', 'itab', 'acpc', 'spm', 'mni', 'tal', 'als', 'ras', 'paxinos'.
+% Recognized and supported coordinate systems are 'ctf', 'bti', '4d', 'yokogawa',
+% 'eeglab', 'neuromag', 'itab', 'acpc', 'spm', 'mni', 'fsaverage', 'tal', 'scanras',
+% 'scanlps', 'dicom'.
+% 
+% Furthermore, supported coordinate systems that do not specify the origin are 'ras',
+% 'als', 'lps', etc. See https://www.fieldtriptoolbox.org/faq/coordsys for more
+% details.
 %
 % See also FT_CONVERT_COORDSYS, FT_DETERMINE_UNITS, FT_CONVERT_UNITS, FT_PLOT_AXES, FT_PLOT_XXX
 
-% Copyright (C) 2015, Jan-Mathijs Schoffelen
+% Copyright (C) 2015-2021, Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -190,12 +196,17 @@ end
 ft_plot_axes(data, 'axisscale', axisscale, 'fontsize', fontsize);
 
 if istrue(dointeractive)
+  % ensure the figure is updated prior to asking the question
+  % this was needed for FT_ELECTRODEPLACEMENT in combination with MATLAB 2022a
+  drawnow
 
   if ~isfield(data, 'coordsys') || isempty(data.coordsys)
     % default is yes
+    fprintf('The coordinate system is not specified.\n')
     value = smartinput('Do you want to change the anatomical labels for the axes [Y, n]? ', 'y');
   else
     % default is no
+    fprintf('The coordinate system is specified as "%s".\n', data.coordsys)
     value = smartinput('Do you want to change the anatomical labels for the axes [y, N]? ', 'n');
   end
 
@@ -217,18 +228,23 @@ if istrue(dointeractive)
 
   % interactively determine origin
   origin = ' ';
-  while ~any(strcmp(origin, {'a', 'i', 'n'}))
-    origin = input('Is the origin of the coordinate system at the a(nterior commissure), i(nterauricular), n(ot a landmark)? ', 's');
+  while ~any(strcmp(origin, {'a', 'i', 's', 'n'}))
+    origin = input('Is the origin of the coordinate system at the a(nterior commissure), i(nterauricular), s(scanner origin), n(ot a landmark)? ', 's');
   end
 
+  % some coordinate systems are identical or very similar, see https://www.fieldtriptoolbox.org/faq/coordsys
   if origin=='a' && strcmp(orientation, 'ras')
     coordsys = 'acpc'; % also used for spm, mni, tal
   elseif origin=='i' && strcmp(orientation, 'als')
     coordsys = 'ctf'; % also used for 4d, bti, eeglab
   elseif origin=='i' && strcmp(orientation, 'ras')
     coordsys = 'neuromag'; % also used for itab
+  elseif origin=='s' && strcmp(orientation, 'ras')
+    coordsys = 'scanras'; % also used for nifti
+  elseif origin=='s' && strcmp(orientation, 'lps')
+    coordsys = 'scanlps'; % also used for dicom
   else
-    % just use the orientation
+    % only use the orientation, not the origin
     coordsys = orientation;
   end
 

@@ -4,8 +4,8 @@ function test_ft_redefinetrial
 % WALLTIME 00:10:00
 % DEPENDENCY
 
-
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/preproc_ctf151'));
+%% use 10 trials from the ctf151 data structure
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/preproc_ctf151.mat'));
 
 data.trialinfo = (1:10)';
 
@@ -72,4 +72,30 @@ cfg.toilim = repmat([0.2 0.8], numel(data.trial), 1);
 data9      = ft_redefinetrial(cfg, data);
 assert(all(data9.sampleinfo(:,1)==[61:300:2761]') && all(data9.sampleinfo(:,2)==[241:300:2941]'));
 
+%% construct a continuous data structure
 
+data_orig = [];
+data_orig.label = {'1'};
+data_orig.time{1} = ((1:10000)-1)./1000; % 10 seconds
+data_orig.trial{1} = randn(1, 10000);
+data_orig.sampleinfo = [1 100000];
+data_orig.trialinfo = [1];
+
+cfg = [];
+cfg.length = 1;
+data_segmented = ft_redefinetrial(cfg, data_orig);
+assert(length(data_segmented.trial)==10);
+
+cfg = [];
+cfg.continuous = 'yes';
+data_continuous = ft_redefinetrial(cfg, data_segmented);
+assert(length(data_continuous.trial)==1);
+
+cfg = [];
+cfg.trials = setdiff(1:10, 5); % remove one trial
+data_segmented = ft_selectdata(cfg, data_segmented);
+
+cfg = [];
+cfg.continuous = 'yes';
+data_continuous = ft_redefinetrial(cfg, data_segmented);
+assert(length(data_continuous.trial)==2);

@@ -6,7 +6,7 @@ function [stiff,rhs] = sb_set_bndcon(stiff,rhs,dirinode,dirival)
 
 dia = diag(stiff);
 stiff = stiff - diag(dia);
-[indexi indexj s] = find(stiff);
+[indexi, indexj, s] = find(stiff);
 clear stiff;
 dind = find(dirinode > 0);
 indi = find(ismember(indexi,dind));

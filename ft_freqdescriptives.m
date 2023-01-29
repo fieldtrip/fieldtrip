@@ -75,15 +75,20 @@ ft_preamble init
 ft_preamble debug
 ft_preamble loadvar freq
 ft_preamble provenance freq
-ft_preamble trackconfig
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
   return
 end
 
+% check if the input data is valid for this function
+freq = ft_checkdata(freq, 'datatype', {'freq', 'freqmvar'}, 'feedback', 'yes');
+% get data in the correct representation, it should only have power
+freq = ft_checkdata(freq, 'cmbstyle', 'sparsewithpow', 'channelcmb', {});
+
 % check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'renamed', {'jacknife', 'jackknife'});
+cfg = ft_checkconfig(cfg, 'forbidden',  {'channels', 'trial'}); % prevent accidental typos, see issue 1729
+cfg = ft_checkconfig(cfg, 'renamed',    {'jacknife', 'jackknife'});
 
 % throw warnings for the deprecated options
 cfg = ft_checkconfig(cfg, 'deprecated', 'biascorrect');
@@ -108,11 +113,6 @@ cfg.frequency  = ft_getopt(cfg, 'frequency',  'all');
 cfg.latency    = ft_getopt(cfg, 'latency',    'all');
 cfg.keeptrials = ft_getopt(cfg, 'keeptrials', 'no');
 
-% check if the input data is valid for this function
-freq = ft_checkdata(freq, 'datatype', {'freq', 'freqmvar'}, 'feedback', cfg.feedback);
-% get data in the correct representation, it should only have power
-freq = ft_checkdata(freq, 'cmbrepresentation', 'sparsewithpow', 'channelcmb', {});
-
 % determine some specific details of the input data
 hasrpt   = ~isempty(strfind(freq.dimord, 'rpt')) || ~isempty(strfind(freq.dimord, 'subj'));
 hastim   = ~isempty(strfind(freq.dimord, 'time'));
@@ -128,7 +128,7 @@ if ~hasrpt && ~strcmp(cfg.trials, 'all'), ft_error('trial selection requires inp
 if ~varflg && jckflg,                     varflg = 1; end
 
 % select data of interest
-tmpcfg = keepfields(cfg, {'trials', 'channel', 'latency', 'frequency', 'showcallinfo'});
+tmpcfg = keepfields(cfg, {'trials', 'channel', 'latency', 'frequency', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
 freq = ft_selectdata(tmpcfg, freq);
 % restore the provenance information
 [cfg, freq] = rollback_provenance(cfg, freq);
@@ -213,7 +213,6 @@ end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-ft_postamble trackconfig
 ft_postamble previous freq
 
 % rename the output variable to accomodate the savevar postamble

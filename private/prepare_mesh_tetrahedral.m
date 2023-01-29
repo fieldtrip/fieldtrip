@@ -79,8 +79,8 @@ else
   % probably a remnant of old code.
   mri = ft_datatype_segmentation(mri, 'segmentationstyle', 'indexed');
   % keep the tissue types as they are
-  seg      = mri.seg;
-  seglabel = mri.seglabel;
+  seg      = mri.tissue;
+  seglabel = mri.tissuelabel;
 end
 
 % this requires the external iso2mesh toolbox

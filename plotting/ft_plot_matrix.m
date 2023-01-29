@@ -39,7 +39,7 @@ function ft_plot_matrix(varargin)
 %
 % See also FT_PLOT_VECTOR, IMAGESC, SURF
 
-% Copyrights (C) 2009-2011, Robert Oostenveld
+% Copyrights (C) 2009-2022, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -58,8 +58,6 @@ function ft_plot_matrix(varargin)
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
 % $Id$
-
-ws = warning('on', 'MATLAB:divideByZero');
 
 if nargin>2 && all(cellfun(@isnumeric, varargin(1:3)))
   % the function was called like imagesc(x, y, c, ...)
@@ -331,5 +329,3 @@ if box
   boxposition(4) = vpos + height/2;
   ft_plot_box(boxposition);
 end
-
-warning(ws); % revert to original state

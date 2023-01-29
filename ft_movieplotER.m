@@ -11,14 +11,15 @@ function [cfg] = ft_movieplotER(cfg, data)
 %   cfg.xlim         = 'maxmin' or [xmin xmax] (default = 'maxmin')
 %   cfg.zlim         = plotting limits for color dimension, 'maxmin',
 %                      'maxabs', 'zeromax', 'minzero', or [zmin zmax] (default = 'maxmin')
-%   cfg.samperframe  = number, samples per frame (default = 1)
-%   cfg.framespersec = number, frames per second (default = 5)
-%   cfg.framesfile   = [], no file saved, or 'string', filename of saved frames.mat (default = []);
+%   cfg.speed        = number, initial speed for interactive mode (default = 1)
+%   cfg.samperframe  = number, samples per frame for non-interactive mode (default = 1)
+%   cfg.framespersec = number, frames per second for non-interactive mode (default = 5)%   cfg.framesfile   = 'string' or empty, filename of saved frames.mat (default = [])
 %   cfg.layout       = specification of the layout, see below
 %   cfg.baseline     = 'yes','no' or [time1 time2] (default = 'no'), see FT_TIMELOCKBASELINE
 %   cfg.baselinetype = 'absolute' or 'relative' (default = 'absolute')
 %   cfg.colorbar     = 'yes', 'no' (default = 'no')
 %   cfg.colorbartext = string indicating the text next to colorbar
+%   cfg.renderer     = string, 'opengl', 'zbuffer', 'painters', see RENDERERINFO (default is automatic, try 'painters' when it crashes)
 %
 % The layout defines how the channels are arranged. You can specify the
 % layout in a variety of ways:
@@ -40,8 +41,7 @@ function [cfg] = ft_movieplotER(cfg, data)
 %
 % See also FT_MULTIPLOTER, FT_TOPOPLOTER, FT_SINGLEPLOTER, FT_MOVIEPLOTTFR, FT_SOURCEMOVIE
 
-% Copyright (C) 2009, Ingrid Nieuwenhuis
-% Copyright (C) 2011, Jan-Mathijs Schoffelen, Robert Oostenveld, Cristiano Micheli
+% Copyright (C) 2009-2022, Ingrid Nieuwenhuis, Jan-Mathijs Schoffelen, Robert Oostenveld, Cristiano Micheli
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -72,7 +72,6 @@ ft_preamble init
 ft_preamble debug
 ft_preamble loadvar data
 ft_preamble provenance data
-ft_preamble trackconfig
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -91,7 +90,7 @@ cfg.renderer    = ft_getopt(cfg, 'renderer'); % let MATLAB decide on the default
 
 % apply optional baseline correction
 if ~strcmp(cfg.baseline, 'no')
-  tmpcfg = keepfields(cfg, {'baseline', 'baselinetype', 'parameter', 'showcallinfo'});
+  tmpcfg = keepfields(cfg, {'baseline', 'baselinetype', 'parameter', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
   data = ft_timelockbaseline(tmpcfg, data);
   [cfg, data] = rollback_provenance(cfg, data);
 end
@@ -121,7 +120,6 @@ set(gcf, 'NumberTitle', 'off');
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-ft_postamble trackconfig
 ft_postamble previous data
 ft_postamble provenance
 ft_postamble savefig
@@ -133,4 +131,3 @@ if ~ft_nargout
   % don't return anything
   clear cfg
 end
-

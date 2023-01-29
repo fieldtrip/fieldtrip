@@ -4,7 +4,7 @@ function test_bug2401
 % WALLTIME 00:10:00
 % DEPENDENCY ft_prepare_headmodel ft_prepare_vol_sens ft_read_headmodel read_ctf_hdm
 
-hdr = ft_read_header(dccnpath('/home/common/matlab/fieldtrip/data/Subject01.ds'));
+hdr = ft_read_header(dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds'));
 sens = hdr.grad;
 
 chansel1 = 1:184;
@@ -14,7 +14,7 @@ chansel4 = [27 130 100 33 25 89 147 20 44 26 28 23 63 58 101 38 75 41 51 140 46 
 
 cfg = [];
 cfg.method = 'localspheres';
-cfg.hdmfile = dccnpath('/home/common/matlab/fieldtrip/data/Subject01.ds/default.hdm');
+cfg.hdmfile = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds/default.hdm');
 cfg.channel = hdr.label(chansel1);
 vol = ft_prepare_headmodel(cfg); % this basically reads it from file
 

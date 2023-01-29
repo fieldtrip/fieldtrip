@@ -3,25 +3,25 @@ function [err, Bstrct] = WaverBasisOption (BasisFunc, N_Basis, BasisOpt)
 %   [err,] = WaverBasisOption ()
 %
 %Purpose:
-%   
-%   
-%   
+%
+%
+%
 %Input Parameters:
-%   
-%   
-%   
+%
+%
+%
 %Output Parameters:
 %   err : 0 No Problem
 %       : 1  Problems
-%   
-%   
-%      
+%
+%
+%
 %Key Terms:
-%   
+%
 %More Info :
-%   
-%   
-%   
+%
+%
+%
 %
 %     Author : Ziad Saad
 %     Date : Fri Jul 18 14:35:24 EDT 2003
@@ -38,7 +38,7 @@ DBG = 1;
 err = 1;
 Bstrct = [];
 
-if (strcmp (lower(BasisFunc),'tent')), 
+if (strcmp (lower(BasisFunc),'tent')),
    if (~isfield(BasisOpt,'tSpan') | isempty(BasisOpt.tSpan)),
       fprintf (2,'Error %s: tSpan must be set with tent option.\n',...
          FuncName);
@@ -46,20 +46,20 @@ if (strcmp (lower(BasisFunc),'tent')),
    end
 
    for (i=1:1:N_Basis),
-      Bstrct(i).BareOpt = sprintf ('tent((t-%g)/%g)',... 
-         (i-1).*BasisOpt.tSpan./N_Basis, BasisOpt.tSpan./N_Basis); 
-      Bstrct(i).opt = sprintf ('-EXPR ''%s''',... 
-         Bstrct(i).BareOpt); 
+      Bstrct(i).BareOpt = sprintf ('tent((t-%g)/%g)',...
+         (i-1).*BasisOpt.tSpan./N_Basis, BasisOpt.tSpan./N_Basis);
+      Bstrct(i).opt = sprintf ('-EXPR ''%s''',...
+         Bstrct(i).BareOpt);
       Bstrct(i).minlag = 0;
       Bstrct(i).maxlag = 0;
    end
    err = 0;
    return;
-elseif (strcmp (lower(BasisFunc),'gam') | strcmp (lower(BasisFunc),'mgh')), 
+elseif (strcmp (lower(BasisFunc),'gam') | strcmp (lower(BasisFunc),'mgh')),
    if (N_Basis ~= 1),
      fprintf (2,'Error %s: Only 1 basis for GAM or MGH\n', FuncName);
      return;
-   end 
+   end
    Bstrct(1).BareOpt = '';
    Bstrct(1).opt = '-GAM';
 	Bstrct(1).power = BasisOpt.gamb;
@@ -71,7 +71,7 @@ elseif (strcmp (lower(BasisFunc),'gam') | strcmp (lower(BasisFunc),'mgh')),
    Bstrct(1).maxlag = BasisOpt.maxlag;
    err = 0;
    return;
-else 
+else
    if (strcmp (lower(BasisFunc),'spm1') | strcmp (lower(BasisFunc),'spm2')),
 	   for (i=1:1:N_Basis),
          Bstrct(i).BareOpt = '';

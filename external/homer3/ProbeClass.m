@@ -21,7 +21,7 @@ classdef ProbeClass < matlab.mixin.Copyable
     end
     
     % Non-SNIRF class properties
-    properties
+    properties (Access = private)
         filename
         fileformat
     end
@@ -40,10 +40,17 @@ classdef ProbeClass < matlab.mixin.Copyable
                     SD = varargin{1};
                     obj.wavelengths = SD.Lambda;
                     obj.wavelengthsEmission  = [];
-                    obj.sourcePos2D  = SD.SrcPos;
-                    obj.detectorPos2D  = SD.DetPos;
-                    obj.sourcePos3D  = [];
-                    obj.detectorPos3D  = [];
+                    if size(SD.SrcPos, 2) == 3 & SD.SrcPos(1, 3) ~= 0
+                        obj.sourcePos3D  = SD.SrcPos;
+                        obj.detectorPos3D  = SD.DetPos;
+                        obj.sourcePos2D  = [];
+                        obj.detectorPos2D  = [];
+                    else
+                        obj.sourcePos2D  = SD.SrcPos;
+                        obj.detectorPos2D  = SD.DetPos;
+                        obj.sourcePos3D  = [];
+                        obj.detectorPos3D  = [];
+                    end
                     obj.frequencies  = 1;
                     obj.timeDelays  = 0;
                     obj.timeDelayWidths  = 0;
@@ -194,8 +201,14 @@ classdef ProbeClass < matlab.mixin.Copyable
             end     
             hdf5write_safe(fileobj, [location, '/wavelengths'], obj.wavelengths);
             hdf5write_safe(fileobj, [location, '/wavelengthsEmission'], obj.wavelengthsEmission);
-            hdf5write_safe(fileobj, [location, '/sourcePos2D'], obj.sourcePos2D(:,1:2), 'rw:2D');
-            hdf5write_safe(fileobj, [location, '/detectorPos2D'], obj.detectorPos2D(:,1:2), 'rw:2D');
+            if ~isempty(obj.sourcePos2D)
+                hdf5write_safe(fileobj, [location, '/sourcePos2D'], obj.sourcePos2D(:,1:2), 'rw:2D');
+                hdf5write_safe(fileobj, [location, '/detectorPos2D'], obj.detectorPos2D(:,1:2), 'rw:2D');
+            end
+            if ~isempty(obj.sourcePos3D)
+                hdf5write_safe(fileobj, [location, '/sourcePos3D'], obj.sourcePos3D(:,1:3), 'rw:2D');
+                hdf5write_safe(fileobj, [location, '/detectorPos3D'], obj.detectorPos3D(:,1:3), 'rw:2D');
+            end
             hdf5write_safe(fileobj, [location, '/frequencies'], obj.frequencies);
             hdf5write_safe(fileobj, [location, '/timeDelays'], obj.timeDelays);
             hdf5write_safe(fileobj, [location, '/timeDelayWidths'], obj.timeDelayWidths);

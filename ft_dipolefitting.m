@@ -69,8 +69,8 @@ function [source] = ft_dipolefitting(cfg, data)
 %
 % Optionally, you can modify the leadfields by reducing the rank, i.e. remove the weakest orientation
 %   cfg.reducerank    = 'no', or number (default = 3 for EEG, 2 for MEG)
-%   cfg.backproject   = 'yes' or 'no',  determines when reducerank is applied whether the 
-%                       lower rank leadfield is projected back onto the original linear 
+%   cfg.backproject   = 'yes' or 'no',  determines when reducerank is applied whether the
+%                       lower rank leadfield is projected back onto the original linear
 %                       subspace, or not (default = 'yes')
 %
 % The volume conduction model of the head should be specified as
@@ -136,7 +136,6 @@ ft_preamble init
 ft_preamble debug
 ft_preamble loadvar data
 ft_preamble provenance data
-ft_preamble trackconfig
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -147,26 +146,27 @@ end
 data = ft_checkdata(data, 'datatype', {'comp', 'timelock', 'freq'}, 'feedback', 'yes');
 
 % check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'renamed', {'elecfile', 'elec'});
-cfg = ft_checkconfig(cfg, 'renamed', {'gradfile', 'grad'});
-cfg = ft_checkconfig(cfg, 'renamed', {'optofile', 'opto'});
-cfg = ft_checkconfig(cfg, 'renamed', {'hdmfile', 'headmodel'});
-cfg = ft_checkconfig(cfg, 'renamed', {'vol',     'headmodel'});
-cfg = ft_checkconfig(cfg, 'renamed', {'grid',    'sourcemodel'});
+cfg = ft_checkconfig(cfg, 'forbidden',  {'channels'}); % prevent accidental typos, see issue 1729
+cfg = ft_checkconfig(cfg, 'renamed',    {'elecfile', 'elec'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'gradfile', 'grad'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'optofile', 'opto'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'hdmfile', 'headmodel'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'vol',     'headmodel'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'grid',    'sourcemodel'});
 
 % get the defaults
 cfg.channel         = ft_getopt(cfg, 'channel', 'all');
-cfg.component       = ft_getopt(cfg, 'component', 'all');        % for comp input
-cfg.frequency       = ft_getopt(cfg, 'frequency');        % for freq input
-cfg.latency         = ft_getopt(cfg, 'latency', 'all');   % for timeclock input
+cfg.component       = ft_getopt(cfg, 'component', 'all');   % for comp input
+cfg.frequency       = ft_getopt(cfg, 'frequency');          % for freq input
+cfg.latency         = ft_getopt(cfg, 'latency', 'all');     % for timelock input
 cfg.feedback        = ft_getopt(cfg, 'feedback', 'text');
 cfg.gridsearch      = ft_getopt(cfg, 'gridsearch', 'yes');
 cfg.nonlinear       = ft_getopt(cfg, 'nonlinear', 'yes');
 cfg.symmetry        = ft_getopt(cfg, 'symmetry');
 cfg.dipfit          = ft_getopt(cfg, 'dipfit', []);     % the default for this is handled below
 
-cfg = ft_checkconfig(cfg, 'renamed', {'tightgrid', 'tight'}); % this is moved to cfg.sourcemodel.tight by the subsequent createsubcfg
-cfg = ft_checkconfig(cfg, 'renamed', {'sourceunits', 'unit'}); % this is moved to cfg.sourcemodel.unit by the subsequent createsubcfg
+cfg = ft_checkconfig(cfg, 'renamed',    {'tightgrid', 'tight'});  % this is moved to cfg.sourcemodel.tight by the subsequent createsubcfg
+cfg = ft_checkconfig(cfg, 'renamed',    {'sourceunits', 'unit'}); % this is moved to cfg.sourcemodel.unit  by the subsequent createsubcfg
 
 % put the low-level options pertaining to the sourcemodel in their own field
 cfg = ft_checkconfig(cfg, 'createsubcfg', {'sourcemodel'});
@@ -388,7 +388,7 @@ if strcmp(cfg.gridsearch, 'yes')
     ft_notice('computing the leadfields for the gridsearch on the fly');
     
     % construct the dipole positions on which the source reconstruction will be done
-    tmpcfg           = keepfields(cfg, {'sourcemodel', 'mri', 'headshape', 'symmetry', 'smooth', 'threshold', 'spheremesh', 'inwardshift', 'xgrid' 'ygrid', 'zgrid', 'resolution', 'tight', 'warpmni', 'template', 'showcallinfo'});
+    tmpcfg           = keepfields(cfg, {'sourcemodel', 'mri', 'headshape', 'symmetry', 'smooth', 'threshold', 'spheremesh', 'inwardshift', 'xgrid' 'ygrid', 'zgrid', 'resolution', 'tight', 'warpmni', 'template', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
     tmpcfg.headmodel = headmodel;
     if ft_senstype(sens, 'eeg')
       tmpcfg.elec = sens;
@@ -397,7 +397,7 @@ if strcmp(cfg.gridsearch, 'yes')
     end
     sourcemodel = ft_prepare_sourcemodel(tmpcfg);
     
-  end % if precomputed leadfield or not 
+  end % if precomputed leadfield or not
 
   ngrid = size(sourcemodel.pos,1);
   
@@ -459,7 +459,7 @@ if strcmp(cfg.gridsearch, 'yes')
       for t=1:ntime
         % find the source position with the minimum error
         [err, indx] = min(sourcemodel.error(:,t));
-        dip(t).pos = sourcemodel.pos(indx,:);                        % note that for a symmetric dipole pair this results in a vector
+        dip(t).pos = sourcemodel.pos(indx,:);                 % note that for a symmetric dipole pair this results in a vector
         dip(t).pos = reshape(dip(t).pos,3,cfg.numdipoles)';   % convert to a Nx3 array
         dip(t).mom = zeros(cfg.numdipoles*3,1);               % set the dipole moment to zero
         if cfg.numdipoles==1
@@ -479,10 +479,10 @@ elseif strcmp(cfg.gridsearch, 'no')
   % use the initial guess supplied in the configuration for the remainder
   switch cfg.model
     case 'regional'
-      dip = struct(cfg.dip);      % ensure that it is a struct, not a config object
+      dip = cfg.dip;
     case 'moving'
       for t=1:ntime
-        dip(t) = struct(cfg.dip); % ensure that it is a struct, not a config object
+        dip(t) = cfg.dip;
       end
     otherwise
       ft_error('unsupported cfg.model');
@@ -658,7 +658,6 @@ end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-ft_postamble trackconfig
 ft_postamble previous   data
 ft_postamble provenance source
 ft_postamble history    source

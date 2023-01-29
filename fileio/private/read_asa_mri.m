@@ -33,22 +33,22 @@ function [mri, seg, hdr] = read_asa_mri(fn)
 %
 % $Id$
 
-hdr.Nrows     = read_asa(fn, 'NumberRows=', '%d');
-hdr.Ncolumns  = read_asa(fn, 'NumberColumns=', '%d');
-hdr.Nslices   = read_asa(fn, 'NumberSlices=', '%d');
-hdr.rows      = read_asa(fn, 'Rows=', '%s');
-hdr.columns   = read_asa(fn, 'Columns=', '%s');
-hdr.slices    = read_asa(fn, 'Slices=', '%s');
-hdr.distance  = read_asa(fn, 'Distance=', '%f', 3);
-hdr.mrifile   = read_asa(fn, 'Matrix', '%s');
-hdr.segfile   = read_asa(fn, 'Segmentation', '%s');
-hdr.posy      = read_asa(fn, 'PointOnPositiveYAxis', '%f', 3);
-hdr.negy      = read_asa(fn, 'PointOnNegativeYAxis', '%f', 3);
-hdr.posx      = read_asa(fn, 'PointOnPositiveXAxis', '%f', 3);
-hdr.voxposy   = read_asa(fn, 'VoxelOnPositiveYAxis', '%f', 3);
-hdr.voxnegy   = read_asa(fn, 'VoxelOnNegativeYAxis', '%f', 3);
-hdr.voxposx   = read_asa(fn, 'VoxelOnPositiveXAxis', '%f', 3);
-hdr.segfile   = read_asa(fn, 'Segmentation', '%s', 1);
+hdr.Nrows     = read_ini(fn, 'NumberRows=', '%d');
+hdr.Ncolumns  = read_ini(fn, 'NumberColumns=', '%d');
+hdr.Nslices   = read_ini(fn, 'NumberSlices=', '%d');
+hdr.rows      = read_ini(fn, 'Rows=', '%s');
+hdr.columns   = read_ini(fn, 'Columns=', '%s');
+hdr.slices    = read_ini(fn, 'Slices=', '%s');
+hdr.distance  = read_ini(fn, 'Distance=', '%f', 3);
+hdr.mrifile   = read_ini(fn, 'Matrix', '%s');
+hdr.segfile   = read_ini(fn, 'Segmentation', '%s');
+hdr.posy      = read_ini(fn, 'PointOnPositiveYAxis', '%f', 3);
+hdr.negy      = read_ini(fn, 'PointOnNegativeYAxis', '%f', 3);
+hdr.posx      = read_ini(fn, 'PointOnPositiveXAxis', '%f', 3);
+hdr.voxposy   = read_ini(fn, 'VoxelOnPositiveYAxis', '%f', 3);
+hdr.voxnegy   = read_ini(fn, 'VoxelOnNegativeYAxis', '%f', 3);
+hdr.voxposx   = read_ini(fn, 'VoxelOnPositiveXAxis', '%f', 3);
+hdr.segfile   = read_ini(fn, 'Segmentation', '%s', 1);
 
 dim = [hdr.Ncolumns hdr.Nrows hdr.Nslices];
 mri = [];

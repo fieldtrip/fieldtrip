@@ -1,15 +1,20 @@
 function dataout = ft_nirs_scalpcouplingindex(cfg, datain)
 
-% FT_NIRS_SCALPCOUPLINGINDEX computes the zero-lag cross-correlation
-% between pairs of raw NIRS-channels to identify bad channels.
+% FT_NIRS_SCALPCOUPLINGINDEX computes the zero-lag cross-correlation between pairs of
+% raw NIRS-channels to identify bad channels. In the output data structure the bad
+% channels are removed, or filled with NaNs.
 %
 % Use as
 %   [outdata] = ft_scalpcouplingindex(cfg, indata)
-% where indata is raw NIRS-data (in optical densities, ODs)
-% and cfg is a configuration structure that should contain
+% where cfg is a configuration structure and indata is raw NIRS-data (in optical
+% densities, ODs) that is represented according to the output of FT_PREPROCESSING.
 %
-%   cfg.threshold    = scalar, the correlation value which has to be
-%                      exceeded to be labelled a 'good' channel (default = 0.75)
+% The configuration should contain the following options
+%   cfg.threshold   = scalar, the correlation value which has to be exceeded to be
+%                     labelled a 'good' channel (default = 0.75)
+%   cfg.keepchannel = string, determines how to deal with channels that are not selected, can be
+%                     'no'  completely remove deselected channels from the data (default)
+%                     'nan' fill the channels that are deselected with NaNs
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
@@ -26,7 +31,7 @@ function dataout = ft_nirs_scalpcouplingindex(cfg, datain)
 %
 % Please cite accordingly. Thank you!
 %
-% See also FT_NIRS_TRANSFORM_ODS
+% See also FT_NIRS_SIGNALQUALITYINDEX, FT_NIRS_REFERENCECHANNELSUBTRACTION, FT_NIRS_TRANSFORM_ODS
 
 % You are using the FieldTrip NIRS toolbox developed and maintained by
 % Artinis Medical Systems (http://www.artinis.com). For more information
@@ -95,7 +100,6 @@ ft_preamble init              % this will reset ft_warning and show the function
 ft_preamble debug             % this allows for displaying or saving the function name and input arguments upon an error
 ft_preamble loadvar    datain % this reads the input data in case the user specified the cfg.inputfile option
 ft_preamble provenance datain % this records the time and memory usage at the beginning of the function
-ft_preamble trackconfig       % this converts the cfg structure in a config object, which tracks the cfg options that are being used
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -110,6 +114,7 @@ datain = ft_checkdata(datain, 'datatype', 'raw', 'senstype', 'nirs');
 
 % get the options
 cfg.threshold    = ft_getopt(cfg, 'threshold', 0.75);
+cfg.keepchannel = ft_getopt(cfg, 'keepchannel', 'no');
 
 % ensure that the options are valid
 cfg = ft_checkopt(cfg, 'threshold', 'doublescalar');
@@ -180,23 +185,50 @@ while i<nChans
         sci(cidxA) = sci(cidxA) + rsum/(numel(chanidx)-1);
         sci(cidxB) = sci(cidxB) + rsum/(numel(chanidx)-1);
       end % end for:cb
-            
+      
       % mark this channel as 'done'
       skipChan(cidxA) = true;
     end % end for:ca
     
     % skip the last channel as it's either 'done' or has no 'companion'
     skipChan(chanidx(end)) = true;
-
+    
   end % end if:skipChan
   
 end
 
-% remove the bad channels on the original datain
+% remove the bad channels on the original datain (default) or replaces with
+% nans
 chanidx = sci > cfg.threshold;
-selcfg = [];
-selcfg.channel = datain.label(chanidx);
-dataout = ft_selectdata(selcfg, datain);
+goodchannel = datain.label( chanidx);
+badchannel  = datain.label(~chanidx);
+
+if ~isempty(badchannel)
+  switch cfg.keepchannel
+    case 'no'
+      selcfg = [];
+      selcfg.channel = goodchannel;
+      dataout = ft_selectdata(selcfg, datain);
+      fprintf('the following channels were removed: '); % to be continued below ...
+    case 'nan'
+      dataout = datain;
+      for i = 1:length(datain.trial)
+        dataout.trial{i}(~chanidx,:) = nan;
+      end
+      fprintf('the following channels were filled with NaNs: '); % to be continued below ...
+    otherwise
+      error('invalid option for cfg.keepchannel');
+  end
+  
+  % show which channels were removed or filled with NaNs
+  for i=1:(length(badchannel)-1)
+    fprintf('\n%s', badchannel{i});
+  end
+  fprintf('\n%s\n', badchannel{end});
+  
+else
+  dataout=datain;
+end
 
 % this might involve more active checking of whether the input options
 % are consistent with the data and with each other
@@ -211,7 +243,6 @@ dataout = ft_selectdata(selcfg, datain);
 % fieldtrip/utility/private that are able to modify the local workspace
 
 ft_postamble debug               % this clears the onCleanup function used for debugging in case of an error
-ft_postamble trackconfig         % this converts the config object back into a struct and can report on the unused fields
 ft_postamble previous   datain   % this copies the datain.cfg structure into the cfg.previous field. You can also use it for multiple inputs, or for "varargin"
 ft_postamble provenance dataout  % this records the time and memory at the end of the function, prints them on screen and adds this information together with the function name and MATLAB version etc. to the output cfg
 ft_postamble history    dataout  % this adds the local cfg structure to the output data structure, i.e. dataout.cfg = cfg

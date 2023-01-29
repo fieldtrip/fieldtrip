@@ -1,17 +1,17 @@
 function mri = ft_defacevolume(cfg, mri)
 
 % FT_DEFACEVOLUME allows you to de-identify an anatomical MRI by erasing specific
-% regions, such as the face and ears. The graphical user interface allows you to
-% position a box over the anatomical data inside which all anatomical voxel values will
-% be replaced by zero. You might have to call this function multiple times when both
-% face and ears need to be removed. Following defacing, you should check the result
-% with FT_SOURCEPLOT.
+% regions, such as the face and ears. The interactive graphical user interface allows
+% you to position a box over the anatomical data inside which all anatomical voxel
+% values will be replaced by zero. You might have to call this function multiple
+% times when both face and ears need to be removed. Following defacing, you should
+% check the result with FT_SOURCEPLOT.
 %
 % Use as
 %   mri = ft_defacevolume(cfg, mri)
 %
 % The configuration can contain the following options
-%   cfg.method     = 'box', 'spm' (default = 'box')
+%   cfg.method     = 'interactive', 'spm' (default = 'interactive')
 %
 % If you specify the box method, the following options apply
 %   cfg.translate  = initial position of the center of the box (default = [0 0 0])
@@ -31,7 +31,7 @@ function mri = ft_defacevolume(cfg, mri)
 %
 % See also FT_ANONYMIZEDATA, FT_DEFACEMESH, FT_ANALYSISPIPELINE, FT_SOURCEPLOT
 
-% Copyright (C) 2015-2018, Robert Oostenveld
+% Copyright (C) 2015-2022, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -62,15 +62,17 @@ ft_preamble init
 ft_preamble debug
 ft_preamble loadvar    mri
 ft_preamble provenance mri
-ft_preamble trackconfig
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
   return
 end
 
+% for backward compatibility
+cfg = ft_checkconfig(cfg, 'renamedval', {'method', 'box', 'interactive'});
+
 % set the defaults
-cfg.method    = ft_getopt(cfg, 'method', 'box');
+cfg.method    = ft_getopt(cfg, 'method', 'interactive');
 cfg.rotate    = ft_getopt(cfg, 'rotate', [0 0 0]);
 cfg.scale     = ft_getopt(cfg, 'scale'); % the automatic default is determined further down
 cfg.translate = ft_getopt(cfg, 'translate', [0 0 0]);
@@ -124,7 +126,7 @@ switch cfg.method
     delete(filename1{1});
     delete(filename2{1});
     
-  case 'box'
+  case 'interactive'
     % determine the size of the "unit" sphere in the origin and the length of the axes
     switch mri.unit
       case 'mm'
@@ -133,11 +135,14 @@ switch cfg.method
       case 'cm'
         axmax = 15;
         rbol  = 0.5;
+      case 'dm'
+        axmax = 1.5;
+        rbol  = 0.05;
       case 'm'
         axmax = 0.15;
         rbol  = 0.005;
       otherwise
-        ft_error('unknown units "%s"', unit);
+        ft_error('unknown units "%s"', mri.unit);
     end
     
     figHandle = figure;
@@ -154,14 +159,15 @@ switch cfg.method
       diagonal_vox  = norm(range(corner_vox));
       resolution    = diagonal_head/diagonal_vox; % this is in units of "mri.unit"
       
-      % create a contrast enhanced version of the anatomy
-      mri.anatomy = double(mri.anatomy);
-      dum = unique(mri.anatomy(:));
-      clim(1) = dum(round(0.05*numel(dum)));
-      clim(2) = dum(round(0.95*numel(dum)));
-      anatomy = (mri.anatomy-clim(1))/(clim(2)-clim(1));
+      % enhance the contrast of the volumetric data, see also FT_VOLUMEREALIGN
+      dat  = double(mri.anatomy);
+      dum  = unique(dat(:));
+      dmin = dum(round(0.05*numel(dum))); % take the 5% value of the histogram
+      dmax = dum(round(0.95*numel(dum))); % take the 95% value of the histogram
+      dat  = (dat-dmin)./(dmax-dmin);
       
-      ft_plot_ortho(anatomy, 'transform', mri.transform, 'unit', mri.unit, 'resolution', resolution, 'style', 'intersect');
+      ft_plot_ortho(dat, 'transform', mri.transform, 'unit', mri.unit, 'resolution', resolution, 'style', 'intersect');
+
     elseif ismesh
       if isfield(mri, 'hex')
         ft_plot_mesh(mri, 'surfaceonly', 'yes');
@@ -171,8 +177,9 @@ switch cfg.method
     end
     
     axis vis3d
-    view([110 36]);
-    
+    view(110, 36);
+    rotate3d on
+
     % shift the axes to the left
     ax = get(gca, 'position');
     ax(1) = 0;
@@ -342,7 +349,6 @@ end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-ft_postamble trackconfig
 ft_postamble previous mri
 ft_postamble provenance mri
 ft_postamble history mri

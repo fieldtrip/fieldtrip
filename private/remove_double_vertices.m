@@ -1,39 +1,41 @@
-function [posR, triR, keeppos] = remove_double_vertices(pos, tri)
+function [pos, tri] = remove_double_vertices(pos, tri)
 
-% REMOVE_DOUBLE_VERTICES removes double vertices from a triangular mesh
-% renumbering the vertex-indices for the triangles and removing all
-% triangles with one of the specified vertices.
+% REMOVE_DOUBLE_VERTICES removes double vertices from a triangular mesh,
+% renumbering the vertex-indices for the triangles.
 %
 % Use as
 %   [pos, tri] = remove_double_vertices(pos, tri)
 
-[pos1,i1,i2] = unique(pos, 'rows');
-%keeppos   = find(ismember(pos,pos1,'rows'));
-%removepos = setdiff([1:size(pos,1)],keeppos);
-keeppos   = i1;
-removepos = setdiff(1:size(pos,1), keeppos);
+% Copyright (C) 2004-2022, Robert Oostenveld and Jan-Mathijs Schoffelen
+%
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
+% for the documentation and details.
+%
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
+%
+% $Id$
 
-npos = size(pos,1);
-ntri = size(tri,1);
+npos = size(pos, 1);
+[dum, keeppos, i2] = unique(pos, 'rows');
+clear dum
 
-if all(removepos==0 | removepos==1)
-  removepos = find(removepos);
-end
-
-% remove the vertices and determine the new numbering (indices) in numb
-keeppos = setdiff(1:npos, removepos);
 numb    = zeros(1,npos);
 numb(keeppos) = 1:length(keeppos);
 
-% look for triangles referring to removed vertices
-removetri = false(ntri,1);
-removetri(ismember(tri(:,1), removepos)) = true;
-removetri(ismember(tri(:,2), removepos)) = true;
-removetri(ismember(tri(:,3), removepos)) = true;
+% re-index the indices in tri
+tri = keeppos(i2(tri));
+tri = numb(tri);
 
 % remove the vertices and triangles
-posR = pos(keeppos, :);
-triR = tri(~removetri,:);
-
-% renumber the vertex indices for the triangles
-triR = numb(triR);
+pos = pos(keeppos, :);

@@ -1,12 +1,12 @@
-function test_ft_electroderealign
+function inspect_ft_electroderealign
 
 % MEM 3gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_electroderealign ft_read_mri ft_read_sens ft_prepare_mesh ft_warp_apply
 
 %% load mri, segmentation and electrode definition
-mri = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/Subject01.mri'));
-load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/headmodel_eeg/segmentedmri'));
+mri = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.mri'));
+load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/headmodel_eeg/segmentedmri.mat'));
 elec = ft_read_sens(dccnpath('/home/common/matlab/fieldtrip/template/electrode/standard_1020.elc'));
 temp = ft_read_sens(dccnpath('/home/common/matlab/fieldtrip/template/electrode/standard_1005.elc'));
 
@@ -88,4 +88,3 @@ elec_realigned4 = ft_electroderealign(cfg);
 figure
 ft_plot_sens(elec_realigned4, 'label', 'on');
 ft_plot_axes(elec_realigned4, 'fontcolor', 'k');
-

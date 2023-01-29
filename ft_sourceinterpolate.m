@@ -11,27 +11,26 @@ function [interp] = ft_sourceinterpolate(cfg, functional, anatomical)
 % and the anatomical volume that can be visualized using FT_SOURCEPLOT or written to
 % file using FT_SOURCEWRITE.
 %
-% The following scenarios are possible:
+% The following scenarios can be considered:
 %
 % - Both functional data and anatomical data are defined on 3D regular grids, for
 %   example with a low-res grid for the functional data and a high-res grid for the
 %   anatomy.
 %
-% - The functional data is defined on a 3D regular grid of source positions
-%   and the anatomical data is defined on an irregular point cloud, which can be a
-%   2D triangulated mesh.
+% - The functional data is defined on a 3D regular grid and the anatomical data is
+%   defined on an irregular point cloud, which can be a 2D triangulated surface mesh.
 %
 % - The functional data is defined on an irregular point cloud, which can be a 2D
-%   triangulated mesh, and the anatomical data is defined on a 3D regular grid.
+%   triangulated surface mesh, and the anatomical data is defined on a 3D regular grid.
 %
-% - Both the functional and the anatomical data are defined on an irregular
-%   point cloud, which can be a 2D triangulated mesh.
+% - Both the functional and the anatomical data are defined on an irregular point
+%   cloud, which can be a 2D triangulated mesh.
 %
-% - The functional data is defined on a low resolution 2D triangulated mesh and the
-%   anatomical data is defined on a high resolution mesh, where the low-res vertices
-%   form a subset of the high-res vertices. This allows for mesh based interpolation.
-%   The algorithm currently implemented is so-called 'smudging' as it is also applied
-%   by the MNE-suite software.
+% - The functional data is defined on a low-resolution 2D triangulated surface mesh and the
+%   anatomical data is defined on a high-resolution 2D triangulated surface mesh, where the
+%   low-res vertices form a subset of the high-res vertices. This allows for mesh-based
+%   interpolation. The algorithm currently implemented is so-called 'smudging' as it is
+%   also applied by the MNE-suite software.
 %
 % Use as
 %   [interp] = ft_sourceinterpolate(cfg, source, anatomy)
@@ -39,17 +38,19 @@ function [interp] = ft_sourceinterpolate(cfg, functional, anatomical)
 % where
 %   source  is the output of FT_SOURCEANALYSIS
 %   stat    is the output of FT_SOURCESTATISTICS
-%   anatomy is the output of FT_READ_MRI or one of the FT_VOLUMExxx functions,
-%           a cortical sheet that was read with FT_READ_HEADSHAPE, or a regular
-%           3D grid created with FT_PREPARE_SOURCEMODEL.
-% and cfg is a structure with any of the following fields
-%   cfg.parameter     = string (or cell-array) of the parameter(s) to be interpolated
-%   cfg.downsample    = integer number (default = 1, i.e. no downsampling)
-%   cfg.interpmethod  = string, can be 'nearest', 'linear', 'cubic',  'spline', 'sphere_avg' or 'smudge' (default = 'linear for interpolating two 3D volumes, 'nearest' for all other cases)
+%   anatomy is the output of FT_READ_MRI, or one of the FT_VOLUMExxx functions,
+%           or a cortical sheet that was read with FT_READ_HEADSHAPE,
+%           or a regular 3D grid created with FT_PREPARE_SOURCEMODEL.
 %
-% The supported interpolation methods are 'nearest', 'linear', 'cubic' or 'spline'
-% for interpolating two 3D volumes onto each other. For all other cases the supported
-% interpolation methods are 'nearest', 'sphere_avg' or 'smudge'.
+% The configuration should contain:
+%   cfg.parameter     = string or cell-array with the functional parameter(s) to be interpolated
+%   cfg.downsample    = integer number (default = 1, i.e. no downsampling)
+%   cfg.interpmethod  = string, can be 'nearest', 'linear', 'cubic',  'spline', 'sphere_avg', 'sphere_weighteddistance', or 'smudge' (default = 'linear for interpolating two 3D volumes, 'nearest' for all other cases)
+%
+% For interpolating two 3D regular grids or volumes onto each other the supported
+% interpolation methods are 'nearest', 'linear', 'cubic' or 'spline'. For all other
+% cases the supported interpolation methods are 'nearest', 'sphere_avg',
+% 'sphere_weighteddistance' or 'smudge'.
 %
 % The functional and anatomical data should be expressed in the same
 % coordinate sytem, i.e. either both in MEG headcoordinates (NAS/LPA/RPA)
@@ -98,7 +99,6 @@ ft_preamble init
 ft_preamble debug
 ft_preamble loadvar functional anatomical
 ft_preamble provenance functional anatomical
-ft_preamble trackconfig
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -120,15 +120,15 @@ cfg = ft_checkconfig(cfg, 'renamedval', {'parameter', 'avg.mom', 'mom'});
 
 % set the defaults
 cfg.downsample   = ft_getopt(cfg, 'downsample', 1);
-cfg.feedback     = ft_getopt(cfg, 'feedback',   'text');
+cfg.feedback     = ft_getopt(cfg, 'feedback', 'text');
 cfg.interpmethod = ft_getopt(cfg, 'interpmethod', []);   % cfg.interpmethod depends on how the interpolation should be done and actual defaults will be specified below
 
 % replace pnt by pos
 anatomical = fixpos(anatomical);
 functional = fixpos(functional);
 
-% ensure the functional data to be in double precision
-functional = ft_struct2double(functional);
+% ensure the functional data to be in double precision, the maxdepth parameter ensure double precision up to the content of functional.avg.mom{:}, avoiding too much recursion
+functional = ft_struct2double(functional, 3);
 
 if (strcmp(cfg.interpmethod, 'nearest') || strcmp(cfg.interpmethod, 'mode')) && (ft_datatype(functional, 'volume+label') || ft_datatype(functional, 'source+label') || ft_datatype(functional, 'mesh+label'))
   % the first input argument describes a parcellation or segmentation with tissue labels
@@ -159,34 +159,19 @@ else
 end
 
 if isUnstructuredAna
-  anatomical = ft_checkdata(anatomical, 'datatype', {'source', 'source+label', 'mesh'}, 'inside', 'logical', 'feedback', 'yes', 'hasunit', 'yes');
+  anatomical = ft_checkdata(anatomical, 'datatype', {'source', 'source+label', 'mesh'}, 'insidestyle', 'logical', 'feedback', 'yes', 'hasunit', 'yes');
 else
-  anatomical = ft_checkdata(anatomical, 'datatype', {'volume', 'volume+label'}, 'inside', 'logical', 'feedback', 'yes', 'hasunit', 'yes');
+  anatomical = ft_checkdata(anatomical, 'datatype', {'volume', 'volume+label'}, 'insidestyle', 'logical', 'feedback', 'yes', 'hasunit', 'yes');
 end
 
 if isUnstructuredFun
-  functional = ft_checkdata(functional, 'datatype', 'source', 'inside', 'logical', 'feedback', 'yes', 'hasunit', 'yes');
+  functional = ft_checkdata(functional, 'datatype', 'source', 'insidestyle', 'logical', 'feedback', 'yes', 'hasunit', 'yes');
 else
-  functional = ft_checkdata(functional, 'datatype', 'volume', 'inside', 'logical', 'feedback', 'yes', 'hasunit', 'yes');
+  functional = ft_checkdata(functional, 'datatype', 'volume', 'insidestyle', 'logical', 'feedback', 'yes', 'hasunit', 'yes');
 end
 
-if ~isa(cfg.parameter, 'cell')
-  cfg.parameter = {cfg.parameter};
-end
-
-% try to select all relevant parameters present in the data
-if any(strcmp(cfg.parameter, 'all'))
-  cfg.parameter = parameterselection('all', functional);
-  for k = numel(cfg.parameter):-1:1
-    % check whether the field is numeric
-    tmp = getsubfield(functional, cfg.parameter{k});
-    if iscell(tmp)
-      cfg.parameter(k) = [];
-    elseif strcmp(cfg.parameter{k}, 'pos')
-      cfg.parameter(k) = [];
-    end
-  end
-end
+% select the parameters from the data, this needs to be done here, because after running checkdata, the parameterselection fails if the numeric data has nfreq/ntime/etc>1
+cfg.parameter = parameterselection(cfg.parameter, functional);
 
 % ensure that the functional data has the same unit as the anatomical data
 functional = ft_convert_units(functional, anatomical.unit);
@@ -199,7 +184,7 @@ end
 
 if ~isUnstructuredAna && cfg.downsample~=1
   % downsample the anatomical volume
-  tmpcfg = keepfields(cfg, {'downsample', 'showcallinfo'});
+  tmpcfg = keepfields(cfg, {'downsample', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
   tmpcfg.parameter = 'anatomy';
   anatomical = ft_volumedownsample(tmpcfg, anatomical);
   % restore the provenance information and put back cfg.parameter
@@ -475,7 +460,7 @@ elseif ~isUnstructuredFun && isUnstructuredAna
         for m=1:dimf(5)
           fv    = double_ifnot(dat_array{i}(:,:,:,k,m)); % ensure double precision to allow sparse multiplication
           fv    = fv(functional.inside(:));
-          av    = interpmat*fv; 
+          av    = interpmat*fv;
           allav(:,k,m) = av;
         end
       end
@@ -538,6 +523,7 @@ elseif ~isUnstructuredFun && ~isUnstructuredAna
     
   elseif isequal(cfg.interpmethod, 'mode') && ~isAtlasFun
     ft_error('the interpolation method ''mode'' is only supported for parcellations');
+
   else
     % start with an empty structure, keep some fields
     interp = keepfields(functional, {'time', 'freq'});
@@ -640,6 +626,10 @@ elseif ~isUnstructuredFun && ~isUnstructuredAna
         allav = reshape(allav, prod(anatomical.dim), dimf(4), dimf(5));
       end
       interp = setsubfield(interp, dat_name{i}, allav);
+      % keep the description of the labels in the segmentation/parcellation
+      if strcmp(cfg.interpmethod, 'nearest') && isfield(functional, [dat_name{i} 'label'])
+        interp.([dat_name{i} 'label']) = functional.([dat_name{i} 'label']);
+      end
     end
     
   end
@@ -674,7 +664,6 @@ end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-ft_postamble trackconfig
 ft_postamble previous   functional anatomical
 ft_postamble provenance interp
 ft_postamble history    interp

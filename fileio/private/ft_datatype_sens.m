@@ -76,7 +76,7 @@ function [sens] = ft_datatype_sens(sens, varargin)
 % (2010) Added support for bipolar or otherwise more complex linear combinations
 %  of EEG electrodes using sens.tra, similar to MEG.
 %
-% (2009) Noice reduction has been added for MEG systems in the balance field.
+% (2009) Noise reduction has been added for MEG systems in the balance field.
 %
 % (2006) The optional fields sens.type and sens.unit were added.
 %
@@ -117,12 +117,12 @@ function [sens] = ft_datatype_sens(sens, varargin)
 %   distance      = string, can be 'm', 'cm' or 'mm'
 %   scaling       = string, can be 'amplitude' or 'amplitude/distance'
 
-% these are for remembering the type on subsequent calls with the same input arguments
+% these are for speeding up subsequent calls with the same input arguments
 persistent previous_argin previous_argout
 
 current_argin = [{sens} varargin];
 if isequal(current_argin, previous_argin)
-  % don't do the whole cheking again, but return the previous output from cache
+  % don't do the whole checking again, but return the previous output from cache
   sens = previous_argout{1};
   return
 end
@@ -178,7 +178,10 @@ switch version
     % update it to the previous standard version
     new_argin = ft_setopt(varargin, 'version', '2019');
     sens      = ft_datatype_sens(sens, new_argin{:});
-    
+    if isfield(sens, 'coordsys')
+      sens = fixcoordsys(sens);
+    end
+
     if isnirs
       sens = renamefields(sens, 'transmits', 'tra'); % this makes it more consistent with EEG and MEG
       sens = removefields(sens, {'laserstrength'});
@@ -417,7 +420,18 @@ switch version
         sens.elecpos = sens.pnt; sens = rmfield(sens, 'pnt');
       end
     end
-    
+
+    if isfield(sens, 'pos')
+      if ismeg
+        % sensor description is a MEG sensor-array, containing oriented coils
+        sens.coilpos = sens.pos; sens = rmfield(sens, 'pos');
+        sens.coilori = sens.ori; sens = rmfield(sens, 'ori');
+      else
+        % sensor description is something else, EEG/ECoG/sEEG, etc
+        sens.elecpos = sens.pos; sens = rmfield(sens, 'pos');
+      end
+    end
+
     if ~isfield(sens, 'chanpos')
       if ismeg
         % sensor description is a MEG sensor-array, containing oriented coils

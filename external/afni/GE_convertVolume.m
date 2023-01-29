@@ -15,7 +15,7 @@ function status = GE_convertVolume(inDir,runnum,outName)
 %
 % Modified to use spm functions
 %
-% Souheil J. Inati  
+% Souheil J. Inati
 % Dartmouth College
 % September 2001
 % souheil.inati@dartmouth.edu

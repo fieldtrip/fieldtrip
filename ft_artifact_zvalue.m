@@ -1,15 +1,20 @@
 function [cfg, artifact] = ft_artifact_zvalue(cfg, data)
 
-% FT_ARTIFACT_ZVALUE scans data segments of interest for artifacts by means of
-% thresholding the z-transformed value of the preprocessed raw data. Depending on the
-% preprocessing options, this method will be sensitive to EOG, muscle or jump
-% artifacts.  This procedure only works on continuously recorded data.
+% FT_ARTIFACT_ZVALUE scans data segments of interest for artifacts, by means of
+% thresholding the z-scored values of signals that have been preprocessed,
+% using heuristics that increase the sensitivity to detect certain types of artifacts.
+% Depending on the preprocessing options, this method will be sensitive to EOG, muscle 
+% or SQUID jump artifacts. The z-scoring is applied in order to make the threshold
+% independent of the phsyical units in the data.
 %
 % Use as
 %   [cfg, artifact] = ft_artifact_zvalue(cfg)
 % with the configuration options
 %   cfg.trl        = structure that defines the data segments of interest, see FT_DEFINETRIAL
-%   cfg.continuous = 'yes' or 'no' whether the file contains continuous data
+%   cfg.continuous = 'yes' or 'no' whether the file contains continuous data.
+%                    If the data has not been recorded continuously, then the cfg.trl should
+%                    stricly observe the boundaries of the discontinuous segments, and the 
+%                    permitted values padding options (described below) are restricted to 0. 
 %   cfg.dataset    = string with the filename
 % or
 %   cfg.headerfile = string with the filename
@@ -20,7 +25,8 @@ function [cfg, artifact] = ft_artifact_zvalue(cfg, data)
 %
 % Alternatively you can use it as
 %   [cfg, artifact] = ft_artifact_zvalue(cfg, data)
-% where the input data is a structure as obtained from FT_PREPROCESSING.
+% where the input data is a structure as obtained from FT_PREPROCESSING. Any preprocessing options
+% defined in the cfg will be applied to the data before the z-scoring and thresholding.
 %
 % In both cases the configuration should also contain
 %   cfg.trl        = structure that defines the data segments of interest, see FT_DEFINETRIAL
@@ -39,18 +45,27 @@ function [cfg, artifact] = ft_artifact_zvalue(cfg, data)
 %   cfg.artfctdef.zvalue.artfctpeak       = 'yes' or 'no'
 %   cfg.artfctdef.zvalue.artfctpeakrange  = [begin end]
 %   cfg.artfctdef.zvalue.interactive      = 'yes' or 'no'
+%   cfg.artfctdef.zvalue.zscore           = 'yes' (default) or 'no'   
 %
-% If you specify cfg.artfctdef.zvalue.artfctpeak='yes', the maximum value of the
-% artifact within its range will be found and saved into cfg.artfctdef.zvalue.peaks.
+% If you specify cfg.artfctdef.zvalue.artfctpeak='yes', a peak detection on the suprathreshold
+% z-scores will be performed, and the artifact will be defined relative to
+% the peak, where the begin and end points will be defined by
+% cfg.artfctdef.zvalue artfctpeakrange, rather than by the time points that
+% exceed the threshold.
 %
 % You can specify cfg.artfctdef.zvalue.artfctpeakrange if you want to use the
 % detected artifacts as input to the DSS method of FT_COMPONENTANALYSIS. The result
-% is saved into cfg.artfctdef.zvalue.dssartifact. The range will automatically
+% is saved into cfg.artfctdef.zvalue.artifact. The range will automatically
 % respect the trial boundaries, i.e. it will be shorter if peak is near the beginning
 % or end of a trial. Samples between trials will be removed, thus this will not match
 % the sampleinfo of the data structure.
 %
-% If you specify cfg.artfctdef.zvalue.interactive='yes', a graphical user interface
+% If you specify cfg.artfctdef.zvalue.zscore = 'no', the data will NOT be z-scored prior
+% to thresholding. This goes a bit against the name of the function, but it may be useful
+% if the threshold is to be defined in meaningful physical units, e.g. degrees of visual
+% angle for eye position data.
+%
+% If you specify cfg.artfctdef.zvalue.interactive = 'yes', a graphical user interface
 % will show in which you can manually accept/reject the detected artifacts, and/or
 % change the threshold. To control the graphical interface via keyboard, use the
 % following keys:
@@ -175,6 +190,7 @@ cfg.artfctdef.zvalue.interactive = ft_getopt(cfg.artfctdef.zvalue, 'interactive'
 cfg.artfctdef.zvalue.cumulative  = ft_getopt(cfg.artfctdef.zvalue, 'cumulative',   'yes');
 cfg.artfctdef.zvalue.artfctpeak  = ft_getopt(cfg.artfctdef.zvalue, 'artfctpeak',   'no');
 cfg.artfctdef.zvalue.artfctpeakrange  = ft_getopt(cfg.artfctdef.zvalue, 'artfctpeakrange',[0 0]);
+cfg.artfctdef.zvalue.zscore      = ft_getopt(cfg.artfctdef.zvalue, 'zscore',       'yes');
 
 if isfield(cfg.artfctdef.zvalue, 'artifact')
   ft_notice('zvalue artifact detection has already been done, retaining artifacts\n');
@@ -273,76 +289,47 @@ if nchan<1
 end
 
 % read the data and apply preprocessing options
-sumval = zeros(nchan, 1);
-sumsqr = zeros(nchan, 1);
-numsmp = zeros(nchan, 1);
+if ~pertrial
+  sumval = zeros(nchan, 1);
+  sumsqr = zeros(nchan, 1);
+  numsmp = zeros(nchan, 1);
+else
+  sumval = zeros(nchan, numtrl);
+  sumsqr = zeros(nchan, numtrl);
+  numsmp = zeros(nchan, numtrl);
+end
+
+if strcmp(cfg.memory, 'high') % store data in memory, saving computation time below
+  dat = cell(1, numtrl);
+end
+
 ft_progress('init', cfg.feedback, ['searching for artifacts in ' num2str(nchan) ' channels']);
 for trlop=1:numtrl
-  ft_progress(trlop/numtrl, 'searching in trial %d from %d\n', trlop, numtrl);
-  
-  if strcmp(cfg.memory, 'low') % store nothing in memory
-    if hasdata
-      dat = ft_fetch_data(data,        'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', chanindx, 'checkboundary', strcmp(cfg.continuous, 'no'), 'skipcheckdata', 1);
-    else
-      dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', chanindx, 'checkboundary', strcmp(cfg.continuous, 'no'), 'dataformat', cfg.dataformat);
-    end
-    dat = preproc(dat, cfg.artfctdef.zvalue.channel, offset2time(0, hdr.Fs, size(dat,2)), cfg.artfctdef.zvalue, fltpadding, fltpadding);
-    
-    if trlop==1 && ~pertrial
-      sumval = zeros(size(dat,1), 1);
-      sumsqr = zeros(size(dat,1), 1);
-      numsmp = zeros(size(dat,1), 1);
-      nchan = size(dat,1);
-    elseif trlop==1 && pertrial
-      sumval = zeros(size(dat,1), numtrl);
-      sumsqr = zeros(size(dat,1), numtrl);
-      numsmp = zeros(size(dat,1), numtrl);
-      nchan = size(dat,1);
-    end
-    
-    if ~pertrial
-      % accumulate the sum and the sum-of-squares
-      sumval = sumval + nansum(dat,2);
-      sumsqr = sumsqr + nansum(dat.^2,2);
-      numsmp = numsmp + size(dat,2);
-    else
-      % store per trial the sum and the sum-of-squares
-      sumval(:,trlop) = sum(dat,2);
-      sumsqr(:,trlop) = sum(dat.^2,2);
-      numsmp(:,trlop) = size(dat,2);
-    end
-  else % store all data in memory, saves computation time
-    if hasdata
-      dat{trlop} = ft_fetch_data(data,        'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', chanindx, 'checkboundary', strcmp(cfg.continuous, 'no'), 'skipcheckdata', 1);
-    else
-      dat{trlop} = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', chanindx, 'checkboundary', strcmp(cfg.continuous, 'no'), 'dataformat', cfg.dataformat);
-    end
-    dat{trlop} = preproc(dat{trlop}, cfg.artfctdef.zvalue.channel, offset2time(0, hdr.Fs, size(dat{trlop},2)), cfg.artfctdef.zvalue, fltpadding, fltpadding);
-    
-    if trlop==1 && ~pertrial
-      sumval = zeros(size(dat{1},1), 1);
-      sumsqr = zeros(size(dat{1},1), 1);
-      numsmp = zeros(size(dat{1},1), 1);
-      nchan = size(dat{1},1);
-    elseif trlop==1 && pertrial
-      sumval = zeros(size(dat{1},1), numtrl);
-      sumsqr = zeros(size(dat{1},1), numtrl);
-      numsmp = zeros(size(dat{1},1), numtrl);
-      nchan = size(dat{1},1);
-    end
-    
-    if ~pertrial
-      % accumulate the sum and the sum-of-squares
-      sumval = sumval + nansum(dat{trlop},2);
-      sumsqr = sumsqr + nansum(dat{trlop}.^2,2);
-      numsmp = numsmp + size(dat{trlop},2);
-    else
-      % store per trial the sum and the sum-of-squares
-      sumval(:,trlop) = sum(dat{trlop},2);
-      sumsqr(:,trlop) = sum(dat{trlop}.^2,2);
-      numsmp(:,trlop) = size(dat{trlop},2);
-    end
+
+  ft_progress(trlop/numtrl, 'processing trial %d from %d\n', trlop, numtrl);
+  if hasdata
+    thisdat = ft_fetch_data(data,        'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', chanindx, 'checkboundary', strcmp(cfg.continuous, 'no'), 'skipcheckdata', 1);
+  else
+    thisdat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', chanindx, 'checkboundary', strcmp(cfg.continuous, 'no'), 'dataformat', cfg.dataformat);
   end
+  thisdat = preproc(thisdat, cfg.artfctdef.zvalue.channel, offset2time(0, hdr.Fs, size(thisdat,2)), cfg.artfctdef.zvalue, fltpadding, fltpadding);
+ 
+  if ~pertrial
+    % accumulate the sum and the sum-of-squares
+    sumval = sumval + nansum(thisdat,2);
+    sumsqr = sumsqr + nansum(thisdat.^2,2);
+    numsmp = numsmp + sum(isfinite(thisdat),2);
+  else
+    % store per trial the sum and the sum-of-squares
+    sumval(:,trlop) = nansum(thisdat,2);
+    sumsqr(:,trlop) = nansum(thisdat.^2,2);
+    numsmp(:,trlop) = sum(isfinite(thisdat),2);
+  end
+  
+  if strcmp(cfg.memory, 'high') % store data in memory, saving computation time below
+    dat{trlop} = thisdat;
+  end
+
 end % for trlop
 ft_progress('close');
 
@@ -353,120 +340,69 @@ if pertrial>1
 end
 
 % compute the average and the standard deviation
-datavg = sumval./numsmp;
-datstd = sqrt(sumsqr./numsmp - (sumval./numsmp).^2);
+if strcmp(cfg.artfctdef.zvalue.zscore, 'yes')
+  datavg = sumval./numsmp;
+  datstd = sqrt(sumsqr./numsmp - (sumval./numsmp).^2);
+else
+  ft_warning('not performing z-scoring, note that the defined threshold has physical units');
+  datavg = zeros(size(sumval));
+  datstd = ones(size(sumval));
+end
 
 if strcmp(cfg.memory, 'low')
   ft_info('\n');
 end
 
-zmax = cell(1, numtrl);
-zsum = cell(1, numtrl);
+zmax  = cell(1, numtrl);
+zsum  = cell(1, numtrl);
 zindx = cell(1, numtrl);
 
 % create a vector that indexes the trials, or is all 1, in order to a per trial
-% z-scoring, or use a static std and mean (used in lines 317 and 328)
+% z-scoring, or use a static std and mean
 if pertrial
   indvec = 1:numtrl;
 else
   indvec = ones(1,numtrl);
 end
+
+ft_progress('init', cfg.feedback, ['processing data in ' num2str(nchan) ' channels']);
 for trlop = 1:numtrl
-  if strcmp(cfg.memory, 'low') % store nothing in memory (note that we need to preproc AGAIN... *yawn*)
-    ft_info('.');
-    if hasdata
-      dat = ft_fetch_data(data,        'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', chanindx, 'checkboundary', strcmp(cfg.continuous, 'no'));
-    else
-      dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', chanindx, 'checkboundary', strcmp(cfg.continuous, 'no'), 'dataformat', cfg.dataformat);
-    end
-    dat = preproc(dat, cfg.artfctdef.zvalue.channel, offset2time(0, hdr.Fs, size(dat,2)), cfg.artfctdef.zvalue, fltpadding, fltpadding);
-    zmax{trlop}  = -inf + zeros(1,size(dat,2));
-    zsum{trlop}  = zeros(1,size(dat,2));
-    zindx{trlop} = zeros(1,size(dat,2));
-    
-    nsmp          = size(dat,2);
-    zdata         = (dat - datavg(:,indvec(trlop)*ones(1,nsmp)))./datstd(:,indvec(trlop)*ones(1,nsmp));  % convert the filtered data to z-values
-    zsum{trlop}   = nansum(zdata,1);                % accumulate the z-values over channels
-    [zmax{trlop},ind] = max(zdata,[],1);            % find the maximum z-value and remember it
-    zindx{trlop}      = chanindx(ind);              % also remember the channel number that has the largest z-value
-  else
-    % initialize some matrices
-    zmax{trlop}  = -inf + zeros(1,size(dat{trlop},2));
-    zsum{trlop}  = zeros(1,size(dat{trlop},2));
-    zindx{trlop} = zeros(1,size(dat{trlop},2));
-    
-    nsmp          = size(dat{trlop},2);
-    zdata         = (dat{trlop} - datavg(:,indvec(trlop)*ones(1,nsmp)))./datstd(:,indvec(trlop)*ones(1,nsmp));  % convert the filtered data to z-values
-    zsum{trlop}   = nansum(zdata,1);                  % accumulate the z-values over channels
-    [zmax{trlop},ind] = max(zdata,[],1);              % find the maximum z-value and remember it
-    zindx{trlop}      = chanindx(ind);                % also remember the channel number that has the largest z-value
-  end
   
-  % This alternative code does the same, but it is much slower
-  %   for i=1:size(zmax{trlop},2)
-  %       if zdata{trlop}(i)>zmax{trlop}(i)
-  %         % update the maximum value and channel index
-  %         zmax{trlop}(i)  = zdata{trlop}(i);
-  %         zindx{trlop}(i) = chanindx(sgnlop);
-  %       end
-  %     end
+  if strcmp(cfg.memory, 'low') % store nothing in memory (note that we need to fetch/read and preproc AGAIN... *yawn*)
+    ft_progress(trlop/numtrl, 'processing trial %d from %d\n', trlop, numtrl);
+    options_getdata = {'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', chanindx, 'checkboundary', strcmp(cfg.continuous, 'no')};
+    if hasdata
+      thisdat = ft_fetch_data(data, options_getdata{:});
+    else
+      options_getdata = cat(2, options_getdata, {'dataformat', cfg.dataformat});
+      thisdat = ft_read_data(cfg.datafile, options_getdata{:});
+    end
+    thisdat = preproc(thisdat, cfg.artfctdef.zvalue.channel, offset2time(0, hdr.Fs, size(thisdat,2)), cfg.artfctdef.zvalue, fltpadding, fltpadding);
+  else
+    thisdat = dat{trlop};
+  end
+
+  nsmp    = size(thisdat,2);
+
+  zmax{trlop}  = -inf + zeros(1, nsmp);
+  zsum{trlop}  =        zeros(1, nsmp);
+  zindx{trlop} =        zeros(1, nsmp);
+        
+  ix           = indvec(trlop) * ones(1,nsmp);           % indexing vector dependent on the pertrial setting 
+  zdata        = (thisdat - datavg(:,ix))./datstd(:,ix); % convert the filtered data to z-values
+  zsum{trlop}  = nansum(zdata,1);      % sum the z-values across channels
+  [zmax{trlop},ind] = max(zdata,[],1); % find the maximum z-value and remember it
+  zindx{trlop}      = chanindx(ind);   % also remember the channel number that has the largest z-value
+
 end % for trlop
+ft_progress('close');
 
 if demeantrial
   for trlop = 1:numtrl
-    zmax{trlop} = zmax{trlop}-mean(zmax{trlop},2);
-    zsum{trlop} = zsum{trlop}-mean(zsum{trlop},2);
+    zmax{trlop} = zmax{trlop}-nanmean(zmax{trlop},2);
+    zsum{trlop} = zsum{trlop}-nanmean(zsum{trlop},2);
   end
 end
-
-%for sgnlop=1:nchan
-%  % read the data and apply preprocessing options
-%  sumval = 0;
-%  sumsqr = 0;
-%  numsmp = 0;
-%  ft_info('searching channel %s ', cfg.artfctdef.zvalue.channel{sgnlop});
-%  for trlop = 1:numtrl
-%    ft_info('.');
-%    if hasdata
-%      dat{trlop} = ft_fetch_data(data,        'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', chanindx(sgnlop), 'checkboundary', strcmp(cfg.continuous, 'no'));
-%    else
-%      dat{trlop} = read_data(cfg.datafile, 'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', chanindx(sgnlop), 'checkboundary', strcmp(cfg.continuous, 'no'));
-%    end
-%    dat{trlop} = preproc(dat{trlop}, cfg.artfctdef.zvalue.channel(sgnlop), hdr.Fs, cfg.artfctdef.zvalue, [], fltpadding, fltpadding);
-%    % accumulate the sum and the sum-of-squares
-%    sumval = sumval + sum(dat{trlop},2);
-%    sumsqr = sumsqr + sum(dat{trlop}.^2,2);
-%    numsmp = numsmp + size(dat{trlop},2);
-%  end % for trlop
-%
-%  % compute the average and the standard deviation
-%  datavg = sumval./numsmp;
-%  datstd = sqrt(sumsqr./numsmp - (sumval./numsmp).^2);
-%
-%  for trlop = 1:numtrl
-%    if sgnlop==1
-%      % initialize some matrices
-%      zdata{trlop} = zeros(size(dat{trlop}));
-%      zmax{trlop}  = -inf + zeros(size(dat{trlop}));
-%      zsum{trlop}  = zeros(size(dat{trlop}));
-%      zindx{trlop} = zeros(size(dat{trlop}));
-%    end
-%    zdata{trlop}  = (dat{trlop} - datavg)./datstd;              % convert the filtered data to z-values
-%    zsum{trlop}   = zsum{trlop} + zdata{trlop};                 % accumulate the z-values over channels
-%    zmax{trlop}   = max(zmax{trlop}, zdata{trlop});             % find the maximum z-value and remember it
-%    zindx{trlop}(zmax{trlop}==zdata{trlop}) = chanindx(sgnlop);   % also remember the channel number that has the largest z-value
-%
-%    % This alternative code does the same, but it is much slower
-%    %   for i=1:size(zmax{trlop},2)
-%    %       if zdata{trlop}(i)>zmax{trlop}(i)
-%    %         % update the maximum value and channel index
-%    %         zmax{trlop}(i)  = zdata{trlop}(i);
-%    %         zindx{trlop}(i) = chanindx(sgnlop);
-%    %       end
-%    %     end
-%  end
-%  ft_info('\n');
-%end % for sgnlop
 
 for trlop = 1:numtrl
   zsum{trlop} = zsum{trlop} ./ sqrt(nchan);
@@ -576,51 +512,48 @@ end
 h   = getparent(h);
 opt = getappdata(h, 'opt');
 
-% convert to one long vector
-dum = zeros(1,max(opt.trl(:,2)));
+% convert the artifact values per trial to one long boolean vector
+boolvec = zeros(1,max(opt.trl(:,2)));
 for trlop=1:opt.numtrl
-  dum(opt.trl(trlop,1):opt.trl(trlop,2)) = opt.artval{trlop};
+  boolvec(opt.trl(trlop,1):opt.trl(trlop,2)) = opt.artval{trlop};
 end
-artval = dum;
 
 % find the padded artifacts and put them in a Nx2 trl-like matrix
-artbeg = find(diff([0 artval])== 1);
-artend = find(diff([artval 0])==-1);
-artifact = [artbeg(:) artend(:)];
+artifact = boolvec2artifact(boolvec);
 
 if strcmp(cfg.artfctdef.zvalue.artfctpeak, 'yes')
-  cnt    = 1;
-  offset = 0;
-  shift = opt.trl(1,1)-1;
-  tind  = cell(1,opt.numtrl);
-  peaks_ind = cell(1,opt.numtrl);
-  for tt=1:opt.numtrl
-    offset = offset;
-    if tt==1
-      tind{tt} = find(artifact(:,2)<opt.trl(tt,2));
-    else
-      tind{tt} = intersect(find(artifact(:,2)<opt.trl(tt,2)),find(artifact(:,2)>opt.trl(tt-1,2)));
+  % this is a re-implementation of the peak-detection stuff, to make the
+  % overall code behavior more consistent. artifact will be adjusted
+  % according to the specifications of the user, i.e. the peak index for
+  % each identified artifact will be identified, and used for an offset
+  % column. the peak_indx, peaks, and dssartifact fields are be obsoleted
+  pre = round(cfg.artfctdef.zvalue.artfctpeakrange(1)*hdr.Fs);
+  pst = round(cfg.artfctdef.zvalue.artfctpeakrange(2)*hdr.Fs);
+  for k = 1:size(artifact,1)
+    % identify the corresponding trl for the current artifact, the artifact
+    % can either be fully within the trl, or overlapping at one (or
+    % both) edges
+    current = artifact(k,:);
+    seltrl  = find(current(2)>=opt.trl(:,1) & current(1)<=opt.trl(:,2));
+     
+    % in case the artifact is in more than one trial a for-loop is needed
+    mx     = [];
+    mx_idx = [];
+    for m = 1:numel(seltrl)
+      idx = current - opt.trl(seltrl(m),1) + 1;
+      idx(1) = max(idx(1),1);
+      idx(2) = min(idx(2),size(opt.zval{seltrl(m)},2));
+      [mx(m), mx_idx(m)] = max(opt.zval{seltrl(m)}(idx(1):idx(2)));
     end
-    artbegend = [(artifact(tind{tt},1)-opt.trl(tt,1)+1) (artifact(tind{tt},2)-opt.trl(tt,1)+1)];
-    for rr = 1:size(artbegend,1)
-      [mx,mxnd]  = max(opt.zval{tt}(artbegend(rr,1):artbegend(rr,2)));
-      peaks(cnt) = artifact(tind{tt}(rr),1)+mxnd-1;
-      dssartifact(cnt,1) = max(peaks(cnt) + cfg.artfctdef.zvalue.artfctpeakrange(1)*hdr.Fs,opt.trl(tt,1));
-      dssartifact(cnt,2) = min(peaks(cnt) + cfg.artfctdef.zvalue.artfctpeakrange(2)*hdr.Fs,opt.trl(tt,2));
-      peaks(cnt)         = peaks(cnt) - shift;
-      dssartifact(cnt,:) = dssartifact(cnt,:) - shift;
-      cnt = cnt+1;
-    end
-    peaks_ind{tt} = peaks(offset+(1:size(artbegend,1))) - opt.trl(tt,1) + 1;
-    offset = offset + size(artbegend,1);
-    if tt<opt.numtrl
-      shift = shift+opt.trl(tt+1,1)-opt.trl(tt,2)-1;
-    end
-    clear artbegend
+    
+    [maxtrl, maxtrl_idx] = max(mx);
+    seltrl = seltrl(maxtrl_idx);
+    peak   = current(1) + mx_idx(maxtrl_idx) - 1;
+    
+    artifact(k,1) = max(peak+pre, opt.trl(seltrl,1));
+    artifact(k,2) = min(peak+pst, opt.trl(seltrl,2));
+    artifact(k,3) = artifact(k,1) - peak;
   end
-  cfg.artfctdef.zvalue.peaks       = peaks(:);
-  cfg.artfctdef.zvalue.dssartifact = dssartifact;
-  cfg.artfctdef.zvalue.peaks_indx  = peaks_ind;
 end
 
 if strcmp(cfg.representation, 'numeric') && istable(artifact)
@@ -629,7 +562,7 @@ if strcmp(cfg.representation, 'numeric') && istable(artifact)
     artifact = zeros(0,2);
   else
     % convert the table to a numeric array with the columns begsample and endsample
-    artifact = table2array(artifact(:,1:2));
+    artifact = table2array(artifact);
   end
 elseif strcmp(cfg.representation, 'table') && isnumeric(artifact)
   if isempty(artifact)
@@ -639,7 +572,12 @@ elseif strcmp(cfg.representation, 'table') && isnumeric(artifact)
     % convert the numeric array to a table with the columns begsample and endsample
     begsample = artifact(:,1);
     endsample = artifact(:,2);
-    artifact = table(begsample, endsample);
+    if size(artifact,2)==3
+      offset   = artifact(:,3);
+      artifact = table(begsample, endsample, offset);
+    else
+      artifact = table(begsample, endsample);
+    end
   end
 end
 

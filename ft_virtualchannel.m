@@ -1,46 +1,48 @@
 function [data_vc] = ft_virtualchannel(cfg, data, source, parcellation)
 
-% FT_VIRTUALCHANNEL creates virtual channel data, combining numeric data 
-% from a data structure defined at the channel level with spatial filter
-% information from a source data structure, and optional parcellation
-% information.
+% FT_VIRTUALCHANNEL creates virtual channel data, combining numeric data from a data
+% structure defined at the channel level with spatial filter information from a
+% source data structure, and optional parcellation information.
 %
 % Use as
 %    output = ft_virtualchannel(cfg, data, source)
-% or 
+% or
 %    output = ft_virtualchannel(cfg, data, source, parcellation)
 %
-% where the input "data" is a channel level data that contains data that can
-% be linearly mapped onto the virtual channel level, e.g. a raw data
-% structure obtained with FT_PREPROCESSING, a timelock structure, obtained
-% with FT_TIMELOCKANALYSIS, or a freq structure with fourierspectra,
-% obtained with FT_FREQANALYSIS. The input "source" is a source structure
-% that has been obtained with FT_SOURCEANALYSIS, and which contains spatial
-% filter information for at least one dipole location, in the
-% source.filter, or source.avg.filter field. The optional input
-% "parcellation" is described in detail in FT_DATATYPE_PARCELLATION (2-D) or 
-% FT_DATATYPE_SEGMENTATION (3-D) and can be obtained from FT_READ_ATLAS or
-% from a custom parcellation/segmentation for your individual subject.
-% Alternatively, the input "source" can already contain a parcellation.
+% where the input "data" is a channel-level data structure that can be linearly
+% mapped onto the virtual channel level, e.g. a raw data structure obtained with
+% FT_PREPROCESSING, a timelock structure, obtained with FT_TIMELOCKANALYSIS, or a
+% freq structure with fourierspectra, obtained with FT_FREQANALYSIS.
+%
+% The input "source" is a source structure that has been obtained with
+% FT_SOURCEANALYSIS, and which contains spatial filter information for at least one
+% dipole location, in the source.filter, or source.avg.filter field.
+%
+% The optional input "parcellation" is described in detail in
+% FT_DATATYPE_PARCELLATION (2-D) or FT_DATATYPE_SEGMENTATION (3-D) and can be
+% obtained from FT_READ_ATLAS or from a custom parcellation/segmentation for your
+% individual subject. Alternatively, the input "source" can already contain a
+% parcellation.
 %
 % The configuration "cfg" is a structure that should either contain
-%   cfg.pos    = Nx3 matrix containing the dipole positions for the virtual
-%                  channel(s). These positions should match the entries in
-%                  the source.pos field. (default = [])
+%   cfg.pos           = Nx3 matrix containing the dipole positions for the virtual
+%                       channel(s). These positions should match the entries in
+%                       the source.pos field. (default = [])
 % or
-%   cfg.parcellation = string, name of the field that is used for the
-%                  parcel labels. (default = [])
-%   cfg.parcel = string, or cell-array of strings, specifying for which
-%                  parcels to return the output. (default = 'all')
+%   cfg.parcellation  = string, name of the field that is used for the
+%                       parcel labels. (default = [])
+%   cfg.parcel        = string, or cell-array of strings, specifying for which
+%                       parcels to return the output. (default = 'all')
 %
 % Moreover, the cfg structure can contain
-%   cfg.method = string, determines how the components of the specified virtual
-%                channel(s) are to to be combined. 'svd' (default), 'none', 'pca', 
-%                'runica', 'fastica', 'dss'.
-%   cfg.numcomponent = scalar (or 'all'), determines the number of components per virtual
-%                channel in the output. (default = 1)
+%   cfg.method        = string, determines how the components of the specified virtual
+%                       channel(s) are to to be combined. 'svd' (default), 'none', 'pca',
+%                       'runica', 'fastica', 'dss'.
+%   cfg.numcomponent  = scalar (or 'all'), determines the number of components per virtual
+%                       channel in the output. (default = 1)
 %
-% See also FT_SOURCEANALYSIS, FT_DATATYPE_PARCELLATION, FT_DATATYPE_SEGMENTATION, FT_SOURCEPARCELLATE, FT_COMPONENTANALYSIS
+% See also FT_SOURCEANALYSIS, FT_DATATYPE_PARCELLATION, FT_DATATYPE_SEGMENTATION,
+% FT_SOURCEPARCELLATE, FT_COMPONENTANALYSIS
 
 % Copyright (C) 2020, Jan-Mathijs Schoffelen and Robert Oostenveld
 %
@@ -73,12 +75,25 @@ ft_preamble init
 ft_preamble debug
 ft_preamble loadvar data source parcellation
 ft_preamble provenance data source parcellation
-ft_preamble trackconfig
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
   return
 end
+
+% FIXME for now support only raw-type data structures, this should be extended to
+% also allow freq (with Fourier) and timelock structures, although the latter is
+% probably already covered by the call to checkdata, it should be checked how this is
+% done in ft_megplanar.
+
+% store the original input representation of the data, this is used later on to convert it back
+isfreq = ft_datatype(data, 'freq');
+istlck = ft_datatype(data, 'timelock');  % this will be temporary converted into raw
+data   = ft_checkdata(data, 'datatype', {'raw', 'raw+comp', 'mvar' 'freq'}, 'feedback', 'yes');
+
+% ensure that the source input is a source structure , not a volume structure
+% this will also return source.filter, rather than source.avg.filter
+source = ft_checkdata(source, 'datatype', 'source', 'insidestyle', 'logical', 'hasunit', 'yes');
 
 % get the defaults
 cfg.pos          = ft_getopt(cfg, 'pos');
@@ -111,34 +126,21 @@ else
   ft_error('you should either specify cfg.pos, or a valid cfg.parcellation');
 end
 
-% ensure that the source input is a source, not a volume, and this should also return the
-% source.filter, rather than source.avg.filter
-source = ft_checkdata(source, 'datatype', 'source', 'inside', 'logical', 'hasunit', 'yes');
 if ~isfield(source, 'filter')
   ft_error('the input source needs a ''filter'' field');
   % FIXME how about the output of ft_dipolefitting?
 end
 
-% store the original input representation of the data, this is used later on to convert it back
-isfreq = ft_datatype(data, 'freq');
-istlck = ft_datatype(data, 'timelock');  % this will be temporary converted into raw
-
-% FIXME for now support only raw-type data structures, this should be
-% extended to also allow freq (with fourier) and timelock structures,
-% although the latter is probably already covered by the call to checkdata,
-% it should be checked how this is done in ft_megplanar.
-data     = ft_checkdata(data, 'datatype', {'raw', 'raw+comp', 'mvar' 'freq'}, 'feedback', cfg.feedback);
-
 if isfreq
   % some restrictions apply to frequency data
   if ~isfield(data, 'fourierspctrm'), ft_error('freq data should contain Fourier spectra'); end
-  if numel(data.freq)>1, ft_error('with spectral input data only a single frequency bin is supported'); end
+  %if numel(data.freq)>1, ft_error('with spectral input data only a single frequency bin is supported'); end
   if ~any(strcmp({'svd' 'none'}, cfg.method)), ft_error('with spectral input data only ''svd'' or ''none'' are supported methods'); end
 end
 
 % select channels and trials of interest, by default this will select all channels and trials
 [i1, i2] = match_str(data.label, source.label);
-tmpcfg   = keepfields(cfg, {'trials', 'tolerance', 'showcallinfo'});
+tmpcfg   = keepfields(cfg, {'trials', 'tolerance', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
 tmpcfg.channel = data.label(i1);
 data   = ft_selectdata(tmpcfg, data);
 % restore the provenance information
@@ -192,15 +194,16 @@ elseif useparcellation
   end
   
   % ensure it is a parcellation, not a segmentation
-  parcellation = ft_checkdata(parcellation, 'datatype', 'parcellation', 'parcel lationstyle', 'indexed');
+  parcellation = ft_checkdata(parcellation, 'datatype', 'parcellation', 'parcellationstyle', 'indexed');
   
   % keep the transformation matrix
   if ~isempty(transform)
     parcellation.transform = transform;
   end
- 
+  
   % ensure that the source and the parcellation are anatomically consistent
-  if ~isalmostequal(source.pos, parcellation.pos, 'abstol', 1000000*eps)
+  tolerance = 0.1 * ft_scalingfactor('mm', source.unit);
+  if ~isalmostequal(source.pos, parcellation.pos, 'abstol', tolerance)
     ft_error('the source positions are not consistent with the parcellation, please use FT_SOURCEINTERPOLATE');
   end
   
@@ -213,13 +216,13 @@ elseif useparcellation
   
   nvc = numel(cfg.parcel);
   
-  bname = cfg.parcellation; 
+  bname = cfg.parcellation;
   
 end
 
 % Create a montage for each of the dipoles/parcels, and use ft_apply_montage,
-% on the data, followed by a dimensionality reduction step, using 
-% ft_componentanalysis. Also, keep in mind that this is essentially a 
+% on the data, followed by a dimensionality reduction step, using
+% ft_componentanalysis. Also, keep in mind that this is essentially a
 % two-step montage application, so keep the individual steps in mind, to be
 % able to combine it also to the sensor description (which will broadcast
 % the unmixing to the output data structure, so that it can be used later
@@ -268,13 +271,17 @@ for i = 1:nvc
   % data representation.
   switch cfg.method
     case 'svd'
-     
+      
       if ~exist('C', 'var')
         % create a covariance, or csd matrix that is to be used for the
         % svd. this needs to be computed only once.
-        if isfreq          
-          tmp = ft_checkdata(data, 'cmbrepresentation', 'fullfast');
+        if isfreq
+          tmp = ft_checkdata(data, 'cmbstyle', 'fullfast');
           C   = tmp.crsspctrm;
+          if ndims(C)>2
+            siz = size(C);
+            C = mean(reshape(C, [siz(1) siz(2) prod(siz(3:end))]),3);
+          end
         else
           tmpcfg = [];
           tmpcfg.covariance = 'yes';
@@ -293,6 +300,11 @@ for i = 1:nvc
       
       if isequal(cfg.numcomponent, 'all')
         ncomp = size(u,2);
+      elseif ischar(cfg.numcomponent) && isequal(cfg.numcomponent(end), '%')
+        % return number of components that explain x% of variance
+        perc  = sscanf(cfg.numcomponent, '%f%%')./100;
+        diags = diag(s);
+        ncomp = find(cumsum(diags)./sum(diags) > perc, 1, 'first');
       else
         if size(u,2)>=cfg.numcomponent
           ncomp = cfg.numcomponent;
@@ -348,7 +360,7 @@ for i = 1:nvc
           tmpdata.label{k} = sprintf('%s_%03d', str, k);
         end
       end
-      label_out{1, i} = tmpdata.label; 
+      label_out{1, i} = tmpdata.label;
       
     otherwise
       ft_error('currently not yet supported');
@@ -376,7 +388,7 @@ sensfields = {'grad' 'elec' 'opto'};
 for k = 1:numel(sensfields)
   if isfield(data_vc, sensfields{k})
     ft_info(sprintf('applying the montage to the %s structure\n', sensfields{k}));
-    data_vc.(sensfields{k}) = ft_apply_montage(data.grad, montage, 'feedback', 'none', 'keepunused', 'yes', 'balancename', bname);
+    data_vc.(sensfields{k}) = ft_apply_montage(data.(sensfields{k}), montage, 'feedback', 'none', 'keepunused', 'yes', 'balancename', bname);
   end
 end
 
@@ -397,8 +409,7 @@ data_vc.brainordinate = brainordinate;
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-ft_postamble trackconfig
-ft_postamble previous   data source parcellation 
+ft_postamble previous   data source parcellation
 ft_postamble provenance data_vc
 ft_postamble history    data_vc
 ft_postamble savevar    data_vc

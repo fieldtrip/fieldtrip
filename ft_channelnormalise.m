@@ -58,12 +58,20 @@ ft_preamble init
 ft_preamble debug
 ft_preamble loadvar data
 ft_preamble provenance data
-ft_preamble trackconfig
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
   return
 end
+
+% store the original datatype
+dtype = ft_datatype(data);
+
+% check if the input data is valid for this function
+data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes');
+
+% check if the input cfg is valid for this function
+cfg = ft_checkconfig(cfg, 'forbidden',  {'channels', 'trial'}); % prevent accidental typos, see issue 1729
 
 % set the defaults
 cfg.channel   = ft_getopt(cfg, 'channel', 'all');
@@ -72,19 +80,14 @@ cfg.scale     = ft_getopt(cfg, 'scale', 1);
 cfg.demean    = ft_getopt(cfg, 'demean', 'yes');
 cfg.method    = ft_getopt(cfg, 'method', 'perchannel'); % or acrosschannel
 
-% store original datatype
-dtype = ft_datatype(data);
-
-% check if the input data is valid for this function
-data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes');
-
 if ~strcmp(cfg.channel, 'all') || ~strcmp(cfg.trials, 'all')
   % select channels and trials of interest
-  tmpcfg = keepfields(cfg, {'trials', 'channel', 'tolerance', 'showcallinfo'});
+  tmpcfg = keepfields(cfg, {'trials', 'channel', 'tolerance', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
   data   = ft_selectdata(tmpcfg, data);
   % restore the provenance information
   [cfg, data] = rollback_provenance(cfg, data);
 end
+
 % initialise some variables
 nchan  = numel(data.label);
 ntrl   = numel(data.trial);
@@ -159,7 +162,6 @@ end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-ft_postamble trackconfig
 ft_postamble previous   data
 ft_postamble provenance dataout
 ft_postamble history    dataout

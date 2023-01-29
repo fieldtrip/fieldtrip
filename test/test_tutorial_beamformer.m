@@ -47,7 +47,7 @@ freqPost = ft_freqanalysis(cfg, dataPost);
   cfg.write        = 'no';
   [segmentedmri] = ft_volumesegment(cfg, mri);
 %catch
-%  mri = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/Subject01.mri'));
+%  mri = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.mri'));
 %  load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/segmentedmri.mat'));
 %end
 

@@ -19,9 +19,9 @@ function [data] = ft_denoise_synthetic(cfg, data)
 % files should contain only a single variable, corresponding with the
 % input/output structure.
 %
-% See also FT_PREPROCESSING, FT_DENOISE_PCA
+% See also FT_PREPROCESSING, FT_DENOISE_PCA, FT_DENOISE_SSP
 
-% Copyright (C) 2004-2008, Robert Oostenveld
+% Copyright (C) 2004-2022, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -52,7 +52,6 @@ ft_preamble init
 ft_preamble debug
 ft_preamble loadvar data
 ft_preamble provenance data
-ft_preamble trackconfig
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -60,7 +59,8 @@ if ft_abort
 end
 
 % check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'required', {'gradient'});
+cfg = ft_checkconfig(cfg, 'forbidden',  {'trial'}); % prevent accidental typos, see issue 1729
+cfg = ft_checkconfig(cfg, 'required',   {'gradient'});
 
 % set the defaults
 cfg.trials     = ft_getopt(cfg, 'trials', 'all', 1);
@@ -85,7 +85,7 @@ if ~hasref
 end
 
 % select trials of interest
-tmpcfg = keepfields(cfg, {'trials', 'showcallinfo'});
+tmpcfg = keepfields(cfg, {'trials', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
 data   = ft_selectdata(tmpcfg, data);
 % restore the provenance information
 [cfg, data] = rollback_provenance(cfg, data);
@@ -149,9 +149,7 @@ end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-ft_postamble trackconfig
 ft_postamble previous   data
 ft_postamble provenance data
 ft_postamble history    data
 ft_postamble savevar    data
-

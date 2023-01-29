@@ -53,6 +53,11 @@ persistent issvn
 persistent isgit
 persistent ftver
 persistent ftpath
+persistent is_pc
+
+if isempty(is_pc)
+  is_pc = ispc;
+end
 
 if isempty(ftpath)
   ftpath = fileparts(mfilename('fullpath'));
@@ -63,7 +68,7 @@ end
 clean = 'no';
 branch = 'unknown';
 
-if ispc
+if is_pc
   % this requires a file extension
   ext = '.exe';
 else
@@ -82,7 +87,7 @@ if isempty(isgit)
   if isgit
     [status, output] = system(sprintf('git%s --version', ext));
     if status>0
-      if ~ispc
+      if ~is_pc
         % the git command line executable will probably not be available on windows
         ft_warning('you seem to have an GIT development copy of FieldTrip, yet ''git'' does not work as expected');
       end
@@ -103,7 +108,7 @@ elseif issvn
   % use svn system call to determine latest revision
   [status, output] = system(sprintf('cd %s && svn%s info', ftpath, ext));
   if status > 0
-    if ~ispc
+    if ~is_pc
       % the command line tools will probably not be available on windows
       ft_warning('you seem to have an SVN development copy of FieldTrip, yet ''svn info'' does not work as expected');
     end

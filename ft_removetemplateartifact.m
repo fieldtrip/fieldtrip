@@ -58,7 +58,6 @@ ft_preamble init
 ft_preamble debug
 ft_preamble loadvar data template
 ft_preamble provenance data template
-ft_preamble trackconfig
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -72,8 +71,11 @@ end
 data     = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes', 'hassampleinfo', 'yes');
 template = ft_checkdata(template, 'datatype', 'timelock');
 
-% get the options
-cfg.channel = ft_getopt(cfg, 'method', data.label);
+% check if the input cfg is valid for this function
+cfg = ft_checkconfig(cfg, 'forbidden',  {'channels'}); % prevent accidental typos, see issue 1729
+
+% set the defaults
+cfg.channel = ft_getopt(cfg, 'channel', 'all');
 cfg.feedback = ft_getopt(cfg, 'method', 'text');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -142,7 +144,6 @@ ft_progress('close');
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-ft_postamble trackconfig
 ft_postamble previous   data template
 ft_postamble provenance data
 ft_postamble history    data

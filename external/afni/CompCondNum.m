@@ -3,25 +3,25 @@ function [err,CondNum] = CompCondNum (N_tasks, N_basis, Task, N_TR, polort)
 %   [err,] = CondNum ()
 %
 %Purpose:
-%   
-%   
-%   
+%
+%
+%
 %Input Parameters:
-%   
-%   
-%   
+%
+%
+%
 %Output Parameters:
 %   err : 0 No Problem
 %       : 1  Problems
-%   
-%   
-%      
+%
+%
+%
 %Key Terms:
-%   
+%
 %More Info :
-%   
-%   
-%   
+%
+%
+%
 %
 %     Author : Gang Chen
 %     Date : Wed Aug 20 15:46:08 EDT 2003
@@ -49,11 +49,11 @@ for (i=1:1:N_tasks),
       if (i==1 & j==1),
          Xm = X(:);
          stmp = sprintf('%s ', Task(i).Name(j).str);
-      else 
+      else
          Xm = [Xm X(:)];
          stmp = sprintf('%s %s', stmp, Task(i).Name(j).str);
       end
-      
+
    end
 %     t = [0:1:(length(X)-1)];
 %      plot (t, Xm);  title (stmp, 'Interpreter', 'none');
@@ -66,7 +66,7 @@ for (i = 1:N_TR),  %create the coloumn(s) for the drifting
       slope(i, j) = (i-1)^j;
 	end	
 end
-%design matrix  
+%design matrix
 Dsgn = [one slope Xm];
 %check condition number of the design matrix
 %M = Dsgn'*Dsgn;

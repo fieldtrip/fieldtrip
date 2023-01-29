@@ -1,10 +1,11 @@
 function [timelock] = ft_timelockbaseline(cfg, timelock)
 
-% FT_TIMELOCKBASELINE performs baseline correction for ERF and ERP data
+% FT_TIMELOCKBASELINE performs baseline correction for ERF and ERP data. To apply
+% baseline correction to data that is not timelocked, use ft_preprocessing instead.
 %
 % Use as
 %    [timelock] = ft_timelockbaseline(cfg, timelock)
-% where the timelock data comes from FT_TIMELOCKANALYSIS and the
+% where the timelock data is the output from FT_TIMELOCKANALYSIS, and the
 % configuration should contain
 %   cfg.baseline     = [begin end] (default = 'no')
 %   cfg.channel      = cell-array, see FT_CHANNELSELECTION
@@ -19,14 +20,14 @@ function [timelock] = ft_timelockbaseline(cfg, timelock)
 % files should contain only a single variable, corresponding with the
 % input/output structure.
 %
-% See also FT_TIMELOCKANALYSIS, FT_FREQBASELINE, FT_TIMELOCKGRANDAVERAGE
+% See also FT_TIMELOCKANALYSIS, FT_FREQBASELINE, FT_TIMELOCKGRANDAVERAGE, FT_DATATYPE_TIMELOCK
 
 % Undocumented local options:
 %   cfg.baselinewindow
 %   cfg.previous
 %   cfg.version
 
-% Copyright (C) 2006, Robert Oostenveld
+% Copyright (C) 2022, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -57,7 +58,6 @@ ft_preamble init
 ft_preamble debug
 ft_preamble loadvar timelock
 ft_preamble provenance timelock
-ft_preamble trackconfig
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -65,13 +65,19 @@ if ft_abort
 end
 
 % check if the input data is valid for this function
-timelock = ft_checkdata(timelock, 'datatype',...
-  {'timelock+comp', 'timelock'}, 'feedback', 'yes');
+israw = ft_datatype(timelock, 'raw');
+iscomp = ft_datatype(timelock, 'comp');
+if israw || iscomp
+  % the type 'raw' also captures component data
+  ft_warning('The input data is expected to be of datatype ''timelock''. Consider using ft_preprocessing instead, to avoid unexpected sideeffects. The datatype will be temporarily converted.');
+end
+timelock = ft_checkdata(timelock, 'datatype', {'timelock+comp', 'timelock'}, 'feedback', 'yes');
 
 % check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'renamed', {'blc', 'demean'});
-cfg = ft_checkconfig(cfg, 'renamed', {'blcwindow', 'baselinewindow'});
-cfg = ft_checkconfig(cfg, 'forbidden', 'baselinetype');
+cfg = ft_checkconfig(cfg, 'forbidden',  {'channels'}); % prevent accidental typos, see issue 1729
+cfg = ft_checkconfig(cfg, 'renamed',    {'blc', 'demean'});
+cfg = ft_checkconfig(cfg, 'renamed',    {'blcwindow', 'baselinewindow'});
+cfg = ft_checkconfig(cfg, 'forbidden',  'baselinetype');
 
 % set the defaults
 cfg.baseline  = ft_getopt(cfg, 'baseline',  'no');
@@ -118,7 +124,6 @@ if ischar(cfg.baseline)
     % is input consistent?
   elseif strcmp(cfg.baseline, 'no')
     ft_warning('no baseline correction done');
-    return;
   end
 end
 
@@ -177,6 +182,13 @@ if ~(ischar(cfg.baseline) && strcmp(cfg.baseline, 'no'))
 
 end % ~strcmp(cfg.baseline, 'no')
 
+if iscomp
+  timelock = ft_checkdata(timelock, 'datatype', 'raw+comp');
+elseif israw
+  % convert the timelock structure back into a raw structure
+  timelock = ft_checkdata(timelock, 'datatype', 'raw');
+end
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Output scaffolding
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -188,7 +200,6 @@ end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-ft_postamble trackconfig
 ft_postamble previous   timelock
 ft_postamble provenance timelock
 ft_postamble history    timelock

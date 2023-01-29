@@ -219,19 +219,18 @@ end
 
 % read the header if it is not provided
 if isempty(hdr)
-  hdr = ft_read_header(filename, 'headerformat', headerformat, 'chanindx', chanindx, 'checkmaxfilter', checkmaxfilter, 'password', password);
-  if isempty(chanindx)
-    chanindx = 1:hdr.nChans;
-  end
-else
-  % set the default channel selection, which is all channels
-  if isempty(chanindx)
-    chanindx = 1:hdr.nChans;
-  end
-  % test whether the requested channels can be accomodated
-  if min(chanindx)<1 || max(chanindx)>hdr.nChans
-    ft_error('FILEIO:InvalidChanIndx', 'selected channels are not present in the data');
-  end
+  % note that the chanindx option should not be passed here, see https://github.com/fieldtrip/fieldtrip/pull/2048
+  hdr = ft_read_header(filename, 'headerformat', headerformat, 'checkmaxfilter', checkmaxfilter, 'password', password, 'cache', cache);
+end
+
+% set the default channel selection, which is all channels
+if isempty(chanindx)
+  chanindx = 1:hdr.nChans;
+end
+
+% test whether the requested channels can be accomodated
+if min(chanindx)<1 || max(chanindx)>hdr.nChans
+  ft_error('FILEIO:InvalidChanIndx', 'selected channels are not present in the data');
 end
 
 % read until the end of the file if the endsample is "inf"
@@ -1302,6 +1301,7 @@ switch dataformat
     for i=1:hdr.nChans
       v=double(hdr.orig.orig.(hdr.label{i}));
       v=v*hdr.orig.orig.(char(strcat(hdr.label{i},'_BitResolution')));
+      v=v/hdr.orig.orig.(char(strcat(hdr.label{i},'_Gain')));
       dat(i,:)=v(begsample:endsample); %channels sometimes have small differences in samples
     end
     
@@ -1376,6 +1376,10 @@ switch dataformat
   case 'artinis_oxy4'
     ft_hastoolbox('artinis', 1);
     dat = read_artinis_oxy4(filename, hdr, begsample, endsample, chanindx);
+    
+  case 'artinis_oxy5'
+    ft_hastoolbox('artinis', 1);
+    dat = read_artinis_oxy5(filename, hdr, begsample, endsample, chanindx);
     
   case 'plexon_ds'
     dat = read_plexon_ds(filename, hdr, begsample, endsample, chanindx);
@@ -1579,10 +1583,11 @@ switch dataformat
     blocksize = hdr.orig.header.SamplePeriodsPerBlock;
     begtrial = floor((begsample-1)/blocksize) + 1;
     endtrial = floor((endsample-1)/blocksize) + 1;
-    dat = read_tmsi_poly5(filename, hdr.orig, begtrial, endtrial);
+    dat = read_tmsi_poly5(filename, hdr.orig, begtrial, endtrial, chanindx);
     offset = (begtrial-1)*blocksize;
     % select the desired samples and channels
-    dat = dat(chanindx, (begsample-offset):(endsample-offset));
+    %dat = dat(chanindx, (begsample-offset):(endsample-offset));
+    dat = dat(:, (begsample-offset):(endsample-offset));
     
   case 'videomeg_aud'
     dat = read_videomeg_aud(filename, hdr, begsample, endsample);
@@ -1610,7 +1615,11 @@ switch dataformat
       ft_hastoolbox('yokogawa', 1); % error if it cannot be added
       dat = read_yokogawa_data(filename, hdr, begsample, endsample, chanindx);
     end
-    
+
+  case 'yorkinstruments_hdf5'
+    dat = h5read(filename,['/acquisitions/default/data/']);
+    dat = dat(chanindx,begsample:endsample);
+
   otherwise
     if exist(dataformat, 'file')
       % attempt to run "dataformat" as a function, this allows the user to specify an external reading function

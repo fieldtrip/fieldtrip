@@ -118,11 +118,11 @@ is_perspective = strcmp(get(ax,'projection'),'perspective');
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % syntax not supported in old versions of MATLAB
-[a b] = view(ax); 
+[a, b] = view(ax); 
 xform = viewmtx(a,b);
 if is_perspective
-    ft_warning('%s does not support perspective axes projection.',mfilename);
-    d = norm(camtarget(ax)-campos(ax))
+    ft_warning('%s does not support perspective axes projection', mfilename);
+    d = norm(camtarget(ax)-campos(ax));
     P = [1 0 0 0; 
          0 1 0 0;
          0 0 1 0;
@@ -241,11 +241,11 @@ if isline
     % Ignoring line width and marker attributes, find closest 
     % vertex in 2-D view space.
     d = xvert(1,:).*xvert(1,:) + xvert(2,:).*xvert(2,:);
-    [val i] = min(d);
+    [val, i] = min(d);
     i = i(1); % enforce only one output
     
     % Assign output
-    vout = [ xdata(i) ydata(i) zdata(i)];
+    vout = [xdata(i) ydata(i) zdata(i)];
     viout = i;
     
     return % Bail out early
@@ -258,8 +258,7 @@ end
 % Find all vertices that have y components less than zero
 vert_with_negative_y = zeros(size(faces));
 face_y_vert = xvert(2,faces);
-ind_vert_with_negative_y = find(face_y_vert<0); 
-vert_with_negative_y(ind_vert_with_negative_y) = true;
+vert_with_negative_y(face_y_vert<0) = true;
 
 % Find all the line segments that span the x axis
 is_line_segment_spanning_x = abs(diff([vert_with_negative_y, vert_with_negative_y(:,1)],1,2));
@@ -349,7 +348,7 @@ B = sum(B,1);
 t = (-dp-B)./A;
 
 % Find "best" distance (smallest)
-[tbest ind_best] = min(t);
+[tbest, ind_best] = min(t);
 
 % Determine intersection point
 pout = cp1 + tbest .* d;
@@ -367,9 +366,8 @@ if nargout>1
     facexv = xvert(:,faces(faceiout,:));
     dist = sqrt(facexv(1,:).*facexv(1,:) +  facexv(2,:).*facexv(2,:));
     min_dist = min(dist);
-    min_index = find(dist==min_dist);
     
     % Get closest vertex index and vertex
-    viout = faces(faceiout,min_index);
+    viout = faces(faceiout, dist==min_dist);
     vout = vert(:,viout);
 end

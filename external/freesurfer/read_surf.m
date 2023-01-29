@@ -1,12 +1,32 @@
-function [vertex_coords, faces, magic] = read_surf(fname)
+function [vertex_coords, faces, magic] = read_surf(fname, flag)
 %
 % [vertex_coords, faces] = read_surf(fname)
+%
+% or 
+%
+% [vertex_coords, faces] = read_surf(fname, flag)
+%
 % reads a the vertex coordinates and face lists from a surface file
 % note that reading the faces from a quad file can take a very long
 % time due to the goofy format that they are stored in. If the faces
 % output variable is not specified, they will not be read so it
 % should execute pretty quickly.
-%
+% 
+% if a second optional boolean flag is specified to be true, this will determine whether
+% the ASCII formatted coregistration information is read from the bottom of the file.
+% This coregistration information is applied to the vertex_coords, to represent the 
+% surface in the coordinate system of the corresponding volume. The function's default
+% is not to use this coregistration information.
+
+% changes:
+%  - 20220518: also optionally read the transformation information that is present as
+%    ASCII text at the bottom of the binary file. I could not find documentation
+%    online about this, but based on some limited trial and error it seems that
+%    the translation information (i.e. a shift of the origin), and possibly the 
+%    voxel scaling can be used to represent the vertex coordinates in the coordinate
+%    system of the volume from which the surface was derived. This option makes sense
+%    if the surface is to be directly related to a volume, without the resulting 
+%    headaches of mismatching coordinate systems.
 %
 % read_surf.m
 %
@@ -27,6 +47,9 @@ function [vertex_coords, faces, magic] = read_surf(fname)
 % Reporting: freesurfer@nmr.mgh.harvard.edu
 %
 
+if nargin<2
+  flag = false;
+end
 
 %fid = fopen(fname, 'r') ;
 %nvertices = fscanf(fid, '%d', 1);
@@ -50,14 +73,14 @@ if (fid < 0)
 end
 magic = fread3(fid) ;
 
-if((magic == QUAD_FILE_MAGIC_NUMBER) | (magic == NEW_QUAD_FILE_MAGIC_NUMBER))
+if((magic == QUAD_FILE_MAGIC_NUMBER) || (magic == NEW_QUAD_FILE_MAGIC_NUMBER))
   vnum = fread3(fid) ;
   fnum = fread3(fid) ;
   vertex_coords = fread(fid, vnum*3, 'int16') ./ 100 ;
   if (nargout > 1)
     for i=1:fnum
       for n=1:4
-  faces(i,n) = fread3(fid) ;
+        faces(i,n) = fread3(fid) ;
       end
     end
   end
@@ -87,4 +110,38 @@ else
 end
 
 vertex_coords = reshape(vertex_coords, 3, vnum)' ;
-fclose(fid) ;
+
+if flag
+  % JM the below is based a bit on trial and error, but tries to extract
+  % coregistration information, that may be present as plain text at the
+  % bottom of the file. I could not find any documentation online about this,
+  % but anecdotally this info can be used to align the mesh with the
+  % specified volume. Note that only a translation seems to be required, I am
+  % not sure about the voxelsize scaling
+  tline = fgetl(fid);
+  if ~isempty(strfind(tline, 'volume info valid'))
+    while tline~=-1
+      tline = fgetl(fid);
+      
+      % the following assumes that the text lines are of a structure: 
+      % something = something else
+      if ischar(tline)
+        [v, rest] = strtok(tline);
+        [equalsign, rest] = strtok(rest);
+        if isequal(v, 'filename')
+          [r, rest] = strtok(rest);
+          eval(sprintf('%s = ''%s'';', v, rest));
+        else
+          eval(sprintf('%s = [%s];', v, rest));
+        end
+      end
+    end
+    R = diag(voxelsize); % not sure about this
+    M = [R cras';0 0 0 1];
+    tmp = [vertex_coords ones(size(vertex_coords,1),1)] * M';
+    vertex_coords = tmp(:,1:3);
+  end
+end
+
+fclose(fid);
+

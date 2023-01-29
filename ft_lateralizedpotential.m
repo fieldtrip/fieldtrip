@@ -79,7 +79,6 @@ ft_preamble init
 ft_preamble debug
 ft_preamble loadvar avgL avgR
 ft_preamble provenance avgL avgR
-ft_preamble trackconfig
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -89,6 +88,9 @@ end
 % check if the input data is valid for this function
 avgL = ft_checkdata(avgL, 'datatype', 'timelock');
 avgR = ft_checkdata(avgR, 'datatype', 'timelock');
+
+% check if the input cfg is valid for this function
+cfg = ft_checkconfig(cfg, 'forbidden',  {'channels'}); % prevent accidental typos, see issue 1729
 
 % set the defaults
 if ~isfield(cfg, 'channelcmb')
@@ -126,7 +128,7 @@ else
 end
 
 % compute the lateralized potentials
-Nchan = size(cfg.channelcmb);
+Nchan = size(cfg.channelcmb,1);
 for i=1:Nchan
   % here the channel names "C3" and "C4" are used to clarify the
   % computation of the lateralized potential on all channel pairs
@@ -147,7 +149,6 @@ end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-ft_postamble trackconfig
 ft_postamble previous   avgL avgR
 ft_postamble provenance lrp
 ft_postamble history    lrp

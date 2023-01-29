@@ -62,7 +62,7 @@ ft_nargout  = nargout;
 ft_defaults
 ft_preamble init
 ft_preamble provenance psth
-ft_preamble trackconfig
+
 
 psth = ft_checkdata(psth, 'datatype', 'timelock', 'hastrials', 'yes', 'feedback', 'yes');
 
@@ -248,7 +248,7 @@ end
 stat.var        = varOut;
 stat.dof        = df;
 stat.time       = psth.time;
-stat.psth       = shiftdim(mean(psth.trial(:,chanSel,:), 1), 1); % the input is single-trials, compute the mean over selected trials
+stat.psth       = shiftdim(nanmean(psth.trial(:,chanSel,:), 1), 1); % the input is single-trials, compute the mean over selected trials
 stat.label      = psth.label(chanSel); % keep this as reference for JPSTH.avg
 if (strcmp(cfg.keeptrials,'yes'))
   stat.trial = singleTrials;
@@ -258,7 +258,7 @@ else
 end
 
 % do the general cleanup and bookkeeping at the end of the function
-ft_postamble trackconfig
+
 ft_postamble previous   psth
 ft_postamble provenance stat
 ft_postamble history    stat

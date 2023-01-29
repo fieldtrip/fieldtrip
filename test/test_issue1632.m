@@ -10,13 +10,13 @@ function test_issue1632
 % Subsequently, it will show that ft_sourceanalysis lines 437-443 truncate
 % the leadfield matrix, removing all lines beyond the number of sensors.
 
-% The mat-file includes: 
+% The mat-file includes:
 % data (emptied except for grad and label) from ftp://ftp.fieldtriptoolbox.org/pub/fieldtrip/tutorial/beamformer_lcmv/
 % headmodel created with ft_prepare_mesh and ft_prepare_headmodel with
 % method 'openmeeg', based on segmentedmri.mat from ftp://ftp.fieldtriptoolbox.org/pub/fieldtrip/tutorial/beamformer_lcmv/
 % Author: B Knipscheer 13-01-2021
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/test_issue1632.mat'));
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/issue1632.mat'));
 
 cfg                  = [];
 cfg.grad             = data.grad;

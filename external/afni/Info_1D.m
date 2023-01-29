@@ -3,9 +3,9 @@ function [err, Info] = Info_1D(v, fname)
 % [err, Info] = Info_1D(M, name);
 % an Info structure for a 1D file. To use with WriteBrik
 %
-% Specify name if you want Info.RootName and Info.Extension_1D to be filled out 
+% Specify name if you want Info.RootName and Info.Extension_1D to be filled out
 % otherwise, you can do that on your own later.
-% 
+%
 % see also Read_1D, BrikLoad, and BrikInfo
 %     Ziad S. Saad saadz@mail.nih.gov, SSCC/NIMH/NIH/USA
 
@@ -21,7 +21,7 @@ end
 
 %some fake Info stuff
 if (nargin == 2),
-   [Info.RootName, Info.Extension_1D] = Remove1DExtension(fname); 
+   [Info.RootName, Info.Extension_1D] = Remove1DExtension(fname);
 else
    fname = '';
    Info.RootName = '';

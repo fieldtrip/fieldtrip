@@ -306,7 +306,7 @@ for i=1:size(sourcemodel.pos,1)
           
         else
           % select eigenvector with biggest eigenvalue
-          [~, ori_inx] = sort(diag(S), 'descend');
+          [dum, ori_inx] = sort(diag(S), 'descend');
           ori = U(:,ori_inx(1));
           opt_vox_or = ori/norm(ori);
         end

@@ -13,7 +13,7 @@ function [cfg] = ft_topoplotIC(cfg, comp)
 %   cfg.layout             = specification of the layout, see below
 %
 % The configuration can have the following parameters:
-%   cfg.colormap           = any sized colormap, see COLORMAP
+%   cfg.colormap           = string, or Nx3 matrix, see FT_COLORMAP
 %   cfg.zlim               = plotting limits for color dimension, 'maxmin', 'maxabs', 'zeromax', 'minzero', or [zmin zmax] (default = 'maxmin')
 %   cfg.marker             = 'on', 'labels', 'numbers', 'off'
 %   cfg.markersymbol       = channel marker symbol (default = 'o')
@@ -58,9 +58,9 @@ function [cfg] = ft_topoplotIC(cfg, comp)
 %                            'title' to place comment as title
 %                            'layout' to place comment as specified for COMNT in layout
 %                            [x y] coordinates
-%   cfg.title              = string or 'auto' or 'off', specify a figure
-%                            title, or use 'component N' (auto) as the
-%                            title
+%   cfg.title              = string or 'auto' or 'off', specify a figure title, or use 'component N' (default) as the title
+%   cfg.figure             = 'yes' or 'no', whether to open a new figure. You can also specify a figure handle from FIGURE, GCF or SUBPLOT. (default = 'yes')
+%   cfg.renderer           = string, 'opengl', 'zbuffer', 'painters', see RENDERERINFO (default is automatic, try 'painters' when it crashes)
 %
 % The layout defines how the channels are arranged. You can specify the
 % layout in a variety of ways:
@@ -109,9 +109,8 @@ ft_nargout  = nargout;
 ft_defaults
 ft_preamble init
 ft_preamble debug
-ft_preamble loadvar comp
+ft_preamble loadvar    comp
 ft_preamble provenance comp
-ft_preamble trackconfig
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -138,7 +137,7 @@ end
 cfg.interactive = 'no';
 
 % prepare the layout, this should be done only once
-tmpcfg = keepfields(cfg, {'layout', 'channel', 'rows', 'columns', 'commentpos', 'skipcomnt', 'scalepos', 'skipscale', 'projection', 'viewpoint', 'rotate', 'width', 'height', 'elec', 'grad', 'opto', 'showcallinfo'});
+tmpcfg = keepfields(cfg, {'layout', 'channel', 'rows', 'columns', 'commentpos', 'skipcomnt', 'scalepos', 'skipscale', 'projection', 'viewpoint', 'rotate', 'width', 'height', 'elec', 'grad', 'opto', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
 cfg.layout = ft_prepare_layout(tmpcfg);
 
 % this is needed for the figure title
@@ -169,7 +168,7 @@ if nplots>1
   nyplot = ceil(sqrt(nplots));
   nxplot = ceil(nplots./nyplot);
   for i = 1:length(selcomp)
-    subplot(nxplot, nyplot, i);
+    cfg.figure = subplot(nxplot, nyplot, i);
     cfg.component = selcomp(i);
 
     % call the common function that is shared with ft_topoplotER and ft_topoplotTFR
@@ -203,7 +202,6 @@ cfg.showcallinfo = tmpshowcallinfo;
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-ft_postamble trackconfig
 ft_postamble previous comp
 ft_postamble provenance
 ft_postamble savefig
@@ -215,4 +213,3 @@ if ~ft_nargout
   % don't return anything
   clear cfg
 end
-

@@ -4,8 +4,8 @@ function [source] = ft_datatype_source(source, varargin)
 % represented at the source level. This is typically obtained with a beamformer of
 % minimum-norm source reconstruction using FT_SOURCEANALYSIS.
 %
-% An example of a source structure obtained after performing DICS (a frequency
-% domain beamformer scanning method) is shown here
+% An example of a source structure obtained after performing DICS (a frequency domain
+% beamformer scan) is shown here
 %
 %           pos: [6732x3 double]       positions at which the source activity could have been estimated
 %        inside: [6732x1 logical]      boolean vector that indicates at which positions the source activity was estimated
@@ -23,7 +23,8 @@ function [source] = ft_datatype_source(source, varargin)
 %   - pos
 %
 % Optional fields:
-%   - time, freq, pow, coh, eta, mom, ori, cumtapcnt, dim, transform, inside, cfg, dimord, other fields with a dimord
+%   - inside, pow, coh, eta, mom, ori, leadfield, filter, or any other field with dimensions that are consistent with pos or dim
+%   - dim, transform, unit, coordsys, time, freq, cumtapcnt, dimord 
 %
 % Deprecated fields:
 %   - method, outside
@@ -105,8 +106,20 @@ switch version
     % ensure that it has individual source positions
     source = fixpos(source);
     
-    % ensure that it is always logical
-    source = fixinside(source, 'logical');
+    if isfield(source, 'inside')
+      % ensure that it is always logical
+      source = fixinside(source, 'logical');
+    end
+    
+    if isfield(source, 'coordsys')
+      % ensure that it is in lower case
+      source.coordsys = lower(source.coordsys);
+    end
+    
+    if isfield(source, 'unit')
+      % ensure that it is in lower case
+      source.unit = lower(source.unit);
+    end
     
     % remove obsolete fields
     if isfield(source, 'method')
@@ -146,14 +159,6 @@ switch version
       source = rmfield(source, 'avg');
     end
     
-    if isfield(source, 'inside')
-      % the inside is by definition logically indexed
-      probe = find(source.inside, 1, 'first');
-    else
-      % just take the first source position
-      probe = 1;
-    end
-    
     if isfield(source, 'trial') && isstruct(source.trial)
       npos = size(source.pos,1);
       
@@ -176,7 +181,11 @@ switch version
         if iscell(dat)
           datsiz(1) = nrpt; % swap the size of pos with the size of rpt
           val  = cell(npos,1);
-          indx = find(source.inside);
+          if isfield(source, 'inside')
+            indx = find(source.inside);
+          else
+            indx = 1:npos;
+          end
           for k=1:length(indx)
             val{indx(k)}          = nan(datsiz);
             val{indx(k)}(1,:,:,:) = dat{indx(k)};

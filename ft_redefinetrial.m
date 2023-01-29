@@ -6,11 +6,11 @@ function [data] = ft_redefinetrial(cfg, data)
 % into shorter fragments.
 %
 % Use as
-%   data = ft_redefinetrial(cfg, data)
-% where the input data should correspond to the output of FT_PREPROCESSING and
-% the configuration should be specified as explained below. Note that some
-% options are mutually exclusive, and require two calls to this function to
-% avoid confusion about the order in which they are applied.
+%   [data] = ft_redefinetrial(cfg, data)
+% where the input data should correspond to the output of FT_PREPROCESSING and the
+% configuration should be specified as explained below. Note that some options are
+% mutually exclusive. If you want to use both,  you neew two calls to this function
+% to avoid confusion about the order in which they are applied.
 %
 % For selecting a subset of trials you can specify
 %   cfg.trials    = 'all' or a selection given as a 1xN vector (default = 'all')
@@ -39,8 +39,16 @@ function [data] = ft_redefinetrial(cfg, data)
 % Alternatively you can specify the data to be cut into (non-)overlapping
 % segments, starting from the beginning of each trial. This may lead to loss
 % of data at the end of the trials
-%   cfg.length    = single number (in unit of time, typically seconds) of the required snippets
-%   cfg.overlap   = single number (between 0 and 1 (exclusive)) specifying the fraction of overlap between snippets (0 = no overlap)
+%   cfg.length    = number (in seconds) that specifies the length of the required snippets
+%   cfg.overlap   = number between 0 and 1 (exclusive) specifying the fraction of overlap between snippets (0 = no overlap)
+%
+% Alternatively you can merge or stitch pseudo-continuous segmented data back into a
+% continuous representation. This requires that the data has a valid sampleinfo field
+% and that there are no jumps in the signal in subsequent trials (e.g. due to
+% filtering or demeaning). If there are missing segments (e.g. due to artifact
+% rejection), the output data will have one trial for each section where the data is
+% continuous.
+%   cfg.continuous = 'yes'
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
@@ -52,7 +60,7 @@ function [data] = ft_redefinetrial(cfg, data)
 %
 % See also FT_DEFINETRIAL, FT_RECODEEVENT, FT_PREPROCESSING
 
-% Copyright (C) 2006-2008, Robert Oostenveld
+% Copyright (C) 2006-2021, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -83,37 +91,38 @@ ft_preamble init
 ft_preamble debug
 ft_preamble loadvar data
 ft_preamble provenance data
-ft_preamble trackconfig
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
   return
 end
 
-% ft_checkdata is done further down
-
-% set the defaults
-cfg.offset       = ft_getopt(cfg, 'offset',    []);
-cfg.toilim       = ft_getopt(cfg, 'toilim',    []);
-cfg.begsample    = ft_getopt(cfg, 'begsample', []);
-cfg.endsample    = ft_getopt(cfg, 'endsample', []);
-cfg.minlength    = ft_getopt(cfg, 'minlength', []);
-cfg.trials       = ft_getopt(cfg, 'trials',    'all', 1);
-cfg.feedback     = ft_getopt(cfg, 'feedback',  'yes');
-cfg.trl          = ft_getopt(cfg, 'trl',       []);
-cfg.length       = ft_getopt(cfg, 'length',    []);
-cfg.overlap      = ft_getopt(cfg, 'overlap',   0);
-
 % store original datatype
 dtype = ft_datatype(data);
 
 % deal with the special case of timelock rpt_chan_time with 1 trial
-oneRptTimelock = (strcmp(dtype, 'timelock') &&...
-  strcmp(data.dimord, 'rpt_chan_time') &&...
+oneRptTimelock = (strcmp(dtype, 'timelock') && ...
+  strcmp(data.dimord, 'rpt_chan_time') && ...
   size(data.trial, 1) == 1);
 
 % check if the input data is valid for this function, this will convert it to raw if needed
-data = ft_checkdata(data, 'datatype', {'raw+comp', 'raw'}, 'feedback', cfg.feedback);
+data = ft_checkdata(data, 'datatype', {'raw+comp', 'raw'}, 'feedback', 'yes');
+
+% check if the input cfg is valid for this function
+cfg = ft_checkconfig(cfg, 'forbidden',  {'trial'}); % prevent accidental typos, see issue 1729
+
+% set the defaults
+cfg.offset       = ft_getopt(cfg, 'offset',     []);
+cfg.toilim       = ft_getopt(cfg, 'toilim',     []);
+cfg.begsample    = ft_getopt(cfg, 'begsample',  []);
+cfg.endsample    = ft_getopt(cfg, 'endsample',  []);
+cfg.minlength    = ft_getopt(cfg, 'minlength',  []);
+cfg.trials       = ft_getopt(cfg, 'trials',     'all', 1);
+cfg.feedback     = ft_getopt(cfg, 'feedback',   'yes');
+cfg.trl          = ft_getopt(cfg, 'trl',        []);
+cfg.length       = ft_getopt(cfg, 'length',     []);
+cfg.overlap      = ft_getopt(cfg, 'overlap',    0);
+cfg.continuous   = ft_getopt(cfg, 'continuous', 'no');
 
 % select trials of interest
 if ~strcmp(cfg.trials, 'all')
@@ -124,7 +133,7 @@ if ~strcmp(cfg.trials, 'all')
   end
   
   % select trials of interest
-  tmpcfg = keepfields(cfg, {'trials', 'showcallinfo'});
+  tmpcfg = keepfields(cfg, {'trials', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
   data   = ft_selectdata(tmpcfg, data);
   % restore the provenance information
   [cfg, data] = rollback_provenance(cfg, data);
@@ -143,7 +152,7 @@ end
 Ntrial = numel(data.trial);
 
 % check the input arguments, only one method for processing is allowed
-numoptions = ~isempty(cfg.toilim) + ~isempty(cfg.offset) + (~isempty(cfg.begsample) || ~isempty(cfg.endsample)) + ~isempty(cfg.trl) + ~isempty(cfg.length);
+numoptions = ~isempty(cfg.toilim) + ~isempty(cfg.offset) + (~isempty(cfg.begsample) || ~isempty(cfg.endsample)) + ~isempty(cfg.trl) + ~isempty(cfg.length) + istrue(cfg.continuous);
 if numoptions>1
   ft_error('you should specify only one of the options for redefining the data segments');
 end
@@ -196,6 +205,7 @@ elseif ~isempty(cfg.offset)
   % shift the time axis from each trial
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   offset = cfg.offset(:);
+  offset = round(offset); % this is in samples and hence it must be expressed as integers
   if length(cfg.offset)==1
     offset = repmat(offset, Ntrial, 1);
   end
@@ -231,7 +241,6 @@ elseif ~isempty(cfg.trl)
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % select new trials from the existing data
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  
   if ischar(cfg.trl)
     % load the trial information from file
     newtrl = loadvar(cfg.trl, 'trl');
@@ -302,13 +311,16 @@ elseif ~isempty(cfg.length)
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % cut the existing trials into segments of the specified length
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  
   data = ft_checkdata(data, 'hassampleinfo', 'yes');
   
   % create dummy trl-matrix and recursively call ft_redefinetrial
   nsmp    = round(cfg.length*data.fsample);
   nshift  = round((1-cfg.overlap)*nsmp);
-  
+
+  if nshift<=0
+    ft_error('the overlap is too large');
+  end
+ 
   newtrl = zeros(0,4);
   for k = 1:numel(data.trial)
     begsample = data.sampleinfo(k,1);
@@ -324,7 +336,7 @@ elseif ~isempty(cfg.length)
   end
   clear begsample endsample offset
   
-  tmpcfg = keepfields(cfg, {'showcallinfo', 'feedback'});
+  tmpcfg = keepfields(cfg, {'feedback', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
   tmpcfg.trl = newtrl;
   
   if isfield(data, 'trialinfo') && ~istable(data.trialinfo)
@@ -342,6 +354,30 @@ elseif ~isempty(cfg.length)
   end
   
   data   = removefields(data, {'trialinfo'}); % these are in the additional columns of tmpcfg.trl
+  data   = ft_redefinetrial(tmpcfg, data);
+  % restore the provenance information
+  [cfg, data] = rollback_provenance(cfg, data);
+  
+elseif istrue(cfg.continuous)
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  % identify consecutive segments that can be glued back together
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  data = ft_checkdata(data, 'hassampleinfo', 'yes');
+  
+  boolvec = artifact2boolvec(data.sampleinfo);
+  newtrl = boolvec2trl(boolvec);
+  
+  % In general: An offset of 0 means that the first sample of the trial corresponds
+  % to the trigger. A positive offset indicates that the first sample is later than
+  % the trigger.
+  
+  % here we want to use the start of the recording as t=0
+  newtrl(:,3) = newtrl(:,1) - 1;
+  
+  tmpcfg = keepfields(cfg, {'feedback', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
+  tmpcfg.trl = newtrl;
+  
+  data   = removefields(data, {'trialinfo'}); % the trialinfo does not apply any more
   data   = ft_redefinetrial(tmpcfg, data);
   % restore the provenance information
   [cfg, data] = rollback_provenance(cfg, data);
@@ -386,7 +422,6 @@ end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-ft_postamble trackconfig
 ft_postamble previous   data
 ft_postamble provenance data
 ft_postamble history    data

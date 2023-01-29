@@ -50,7 +50,7 @@ if ~isfolder(oldname)
 end
 
 if isfolder(newname)
-  ft_error('directory "%s" already exists', oldname);
+  ft_error('directory "%s" already exists', newname);
 end
 
 [po, fo, xo] = fileparts(oldname);

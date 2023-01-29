@@ -132,7 +132,7 @@ if unsegmented
         end
     else
         nSamples  = endtrial-begtrial+1;    %interpret begtrial and endtrial as sample indices
-        [trialData count] = fread(fh, [hdr.nChans+Nevent, nSamples],dataType,endian);
+        [trialData, count] = fread(fh, [hdr.nChans+Nevent, nSamples],dataType,endian);
         if count < ((hdr.nChans+Nevent) * nSamples)
             ft_error('Failure to read all samples of simple binary file.')
         end
@@ -155,7 +155,7 @@ else
             ft_error('Failure to skip over segment info of simple binary file.')
         end
         
-        [temp count] = fread(fh, [(hdr.nChans+Nevent), hdr.nSamples],dataType,endian);
+        [temp, count] = fread(fh, [(hdr.nChans+Nevent), hdr.nSamples],dataType,endian);
         if count < ((hdr.nChans+Nevent) * hdr.nSamples)
             ft_error('Failure to read all samples of simple binary file.')
         end

@@ -84,7 +84,6 @@ ft_preamble init
 ft_preamble debug
 ft_preamble loadvar    datain
 ft_preamble provenance datain
-ft_preamble trackconfig
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -98,9 +97,10 @@ datain = ft_checkdata(datain, 'datatype', 'raw', 'feedback', 'yes');
 % ensure that users with old scripts are aware of changes
 cfg = ft_checkconfig(cfg, 'forbidden', 'medianwindow');
 
-% for backward compatibility
-cfg = ft_checkconfig(cfg, 'renamed', {'ectopicbeat_corr', 'ectopicbeatcorrect'});
-cfg = ft_checkconfig(cfg, 'renamed', {'corr_threshold', 'ectopicbeatthreshold'});
+% check if the input cfg is valid for this function
+cfg = ft_checkconfig(cfg, 'forbidden',  {'channels'}); % prevent accidental typos, see issue 1729
+cfg = ft_checkconfig(cfg, 'renamed',    {'ectopicbeat_corr', 'ectopicbeatcorrect'}); % for backward compatibility
+cfg = ft_checkconfig(cfg, 'renamed',    {'corr_threshold', 'ectopicbeatthreshold'}); % for backward compatibility
 
 % set the default options
 cfg.channel          = ft_getopt(cfg, 'channel', 'all');
@@ -302,7 +302,6 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 ft_postamble debug
-ft_postamble trackconfig
 ft_postamble previous   datain
 ft_postamble provenance dataout
 ft_postamble history    dataout

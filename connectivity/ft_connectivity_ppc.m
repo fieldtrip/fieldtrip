@@ -1,4 +1,4 @@
-function [c, v, n] = ft_connectivity_ppc(input, varargin)
+function [c, v, n] = ft_connectivity_ppc(inputdata, varargin)
 
 % FT_CONNECTIVITY_PPC computes pairwise phase consistency or weighted pairwise phase
 % consistency from a data-matrix containing a cross-spectral density. This implements
@@ -7,9 +7,9 @@ function [c, v, n] = ft_connectivity_ppc(input, varargin)
 % synchronization. Neuroimage. 2010 May 15;51(1):112-22.
 %
 % Use as
-%   [c, v, n] = ft_connectivity_ppc(input, ...)
+%   [c, v, n] = ft_connectivity_ppc(inputdata, ...)
 %
-% The input data input should be organized as:
+% Where the input data input should be organized as:
 %   Repetitions x Channel x Channel (x Frequency) (x Time)
 % or
 %   Repetitions x Channelcombination (x Frequency) (x Time)
@@ -17,16 +17,16 @@ function [c, v, n] = ft_connectivity_ppc(input, varargin)
 % The first dimension should contain repetitions and should not contain an average
 % already. Also, it should not consist of leave-one-out averages.
 %
-% Additional optional input arguments come as key-value pairs:
-%   feedback  = 'none', 'text', 'textbar' type of feedback showing progress  of computation
-%   weighted  = 1 (or true) or 0 (or false), we compute unweighted ppc or
-%               weighted ppc, the weighting is according to the magnitude of
-%               the cross-spectrum
-%
 % The output c contains the ppc, v is a leave-one-out variance estimate which is only
 % computed if dojack = 1,and n is the number of repetitions in the input data.
 %
-% See also FT_CONNECTIVITYANALYSIS
+% Additional optional input arguments come as key-value pairs:
+%   'dojack'    = boolean specifying whether the repetitions represent leave-one-out samples
+%   'weighted'  = boolean, whether to compute unweighted ppc or weighted ppc, the weighting
+%                 is according to the magnitude of the cross-spectrum
+%   'feedback'  = 'none', 'text', 'textbar', 'dial', 'etf', 'gui' type of feedback showing progress of computation, see FT_PROGRESS
+%
+% See also CONNECTIVITY, FT_CONNECTIVITYANALYSIS
 
 % Copyright (C) 2011, Martin Vinck
 %
@@ -50,20 +50,20 @@ function [c, v, n] = ft_connectivity_ppc(input, varargin)
 
 feedback    = ft_getopt(varargin, 'feedback', 'none');
 weighted    = ft_getopt(varargin, 'weighted');
-dojack      = ft_getopt(varargin, 'dojack');
+dojack      = ft_getopt(varargin, 'dojack', false);
 
-siz = size(input);
+siz = size(inputdata);
 n = siz(1);
 ft_progress('init', feedback, 'computing metric...');
 if n>1
   if ~weighted
-    input    = input./abs(input);  % normalize the crosspectrum
-    outsum   = nansum(input);      % compute the sum; this is 1 x size(2:end)
+    inputdata    = inputdata./abs(inputdata);  % normalize the crosspectrum
+    outsum   = nansum(inputdata);      % compute the sum; this is 1 x size(2:end)
     c        = (outsum.*conj(outsum) - n)./(n*(n-1)); % do the pairwise thing in a handy way
   else
-    outsum   = nansum(input); % normalization of the WPLI
-    outssq   = nansum(input.*conj(input));
-    outsumw  = nansum(abs(input));
+    outsum   = nansum(inputdata); % normalization of the WPLI
+    outssq   = nansum(inputdata.*conj(inputdata));
+    outsumw  = nansum(abs(inputdata));
     c        = (outsum.*conj(outsum) - outssq)./(outsumw.*conj(outsumw) - outssq); % do the pairwise thing in a handy way
   end
   c          = reshape(c,siz(2:end)); % remove the first singular dimension
@@ -76,13 +76,13 @@ end
 if dojack && n>2 % n needs to be larger than 2 to get a meaningful variance
   for k = 1:n
     % this code works with both formats of input, also if it is 5-D
-    s       = outsum - input(k,:,:,:,:,:,:); % index up to 7-D, this also works for 5-D then.
+    s       = outsum - inputdata(k,:,:,:,:,:,:); % index up to 7-D, this also works for 5-D then
     if ~weighted
       num   = s.*conj(s) - (n-2);
       denom = (n-1)*(n-2);
     else
-      sq    = outssq  - input(k,:,:,:,:,:,:).*conj(input(k,:,:,:,:,:,:));
-      sw    = outsumw - abs(input(k,:,:,:,:,:,:));
+      sq    = outssq  - inputdata(k,:,:,:,:,:,:).*conj(inputdata(k,:,:,:,:,:,:));
+      sw    = outsumw - abs(inputdata(k,:,:,:,:,:,:));
       num   = s.*conj(s)   - sq;
       denom = sw.*conj(sw) - sq;
     end
@@ -90,7 +90,7 @@ if dojack && n>2 % n needs to be larger than 2 to get a meaningful variance
     leave1outssq = leave1outssq + (num./denom).^2;
   end
   % compute the sem here
-  v = (n-1).^2*(leave1outssq - (leave1outsum.^2)./n)./(n - 1); % 11.5 efron, sqrt and 1/n done in ft_connectivityanalysis
+  v = (n-1).^2*(leave1outssq - (leave1outsum.^2)./n)./(n - 1); % 11.5 efron, sqrt and 1/n done in FT_CONNECTIVITYANALYSIS
   v = reshape(v,siz(2:end)); % remove the first singular dimension
 elseif dojack && n<=2
   v = NaN(siz(2:end));

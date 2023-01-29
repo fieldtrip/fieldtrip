@@ -1,8 +1,8 @@
 function [err, Indx] = AfniXYZ2AfniIndex (XYZ, Nxx, Nyy)
 %
 %    [err, Indx] = AfniXYZ2AfniIndex (XYZ, Nxx, Nyy)
-%  
-% Returns  the AFNI index of an AFNI voxel with coordinates XYZ   
+%
+% Returns  the AFNI index of an AFNI voxel with coordinates XYZ
 %
 % XYZ : is the XYZ triplets matrix Nx3
 %  If the data in XYZ is not integers, it will
@@ -15,7 +15,7 @@ function [err, Indx] = AfniXYZ2AfniIndex (XYZ, Nxx, Nyy)
 % err = 1 input Matrix size problems
 %
 %
-%      Ziad Saad   Sun Mar 15 19:24:39 CST 1998 
+%      Ziad Saad   Sun Mar 15 19:24:39 CST 1998
 
 	[n1,m1] = size(XYZ);	
 	
@@ -23,7 +23,7 @@ function [err, Indx] = AfniXYZ2AfniIndex (XYZ, Nxx, Nyy)
 		fprintf (1,'\a\nError in AfniXYZ2AfniIndex : Bad size for XYZ\n\n');
 		err = 1;
 		return;
-	end 
+	end
 	
 	XYZ = round (XYZ);
 		

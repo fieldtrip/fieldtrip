@@ -3,7 +3,7 @@ function ft_plot_axes(object, varargin)
 % FT_PLOT_AXES adds three axes of 150 mm and a 10 mm sphere at the origin to the
 % present 3-D figure. The axes and sphere are scaled according to the units of the
 % geometrical object that is passed to this function. Furthermore, when possible,
-% the axes labels will represent the aanatomical labels corresponding to the
+% the axes labels will represent the anatomical labels corresponding to the
 % specified coordinate system.
 %
 % Use as
@@ -11,8 +11,8 @@ function ft_plot_axes(object, varargin)
 %
 % Additional optional input arguments should be specified as key-value pairs
 % and can include
+%   'unit'         = string, plot axes that are suitable for the specified geometrical units (default = [])
 %   'axisscale'    = scaling factor for the reference axes and sphere (default = 1)
-%   'unit'         = string, convert the data to the specified geometrical units (default = [])
 %   'coordsys'     = string, assume the data to be in the specified coordinate system (default = 'unknown')
 %   'transform'    = empty or 4x4 homogenous transformation matrix (default = [])
 %   'fontcolor'    = string, color specification (default = [1 .5 0], i.e. orange)
@@ -23,7 +23,7 @@ function ft_plot_axes(object, varargin)
 %
 % See also FT_PLOT_SENS, FT_PLOT_MESH, FT_PLOT_ORTHO, FT_PLOT_HEADSHAPE, FT_PLOT_DIPOLE, FT_PLOT_HEADMODEL
 
-% Copyright (C) 2015, Jan-Mathijs Schoffelen
+% Copyright (C) 2015-2021, Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -80,7 +80,7 @@ end
 
 if ~isempty(object) && ~isempty(coordsys)
   % check the user specified coordinate system with the one in the object
-  assert(strcmp(coordsys, unit.coordsys), 'coordsys is inconsistent with the object')
+  assert(strcmp(coordsys, object.coordsys), 'coordsys is inconsistent with the object')
 elseif ~isempty(object) &&  isempty(coordsys)
   % take the coordinate system from the object
   coordsys = object.coordsys;
@@ -98,8 +98,8 @@ rbol  =   5 * ft_scalingfactor('mm', unit);
 axmax = axisscale*axmax;
 rbol  = axisscale*rbol;
 
-fprintf('The axes are %g %s long in each direction\n', axmax, unit);
-fprintf('The diameter of the sphere at the origin is %g %s\n', 2*rbol, unit);
+ft_info('The axes are %g %s long in each direction\n', axmax, unit);
+ft_info('The diameter of the sphere at the origin is %g %s\n', 2*rbol, unit);
 
 % get the xyz-axes
 xdat  = [-axmax 0 0; axmax 0 0];
@@ -176,4 +176,9 @@ text(xdat(2,3), ydat(2,3), zdat(2,3), labelz{2}, 'linewidth', 2, 'color', fontco
 
 if ~prevhold
   hold off
+end
+
+if isfield(object, 'coordsys')
+  % add a context sensitive menu to change the 3d viewpoint to top|bottom|left|right|front|back
+  menu_viewpoint(gca, object.coordsys)
 end

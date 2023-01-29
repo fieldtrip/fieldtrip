@@ -40,8 +40,15 @@ function boolvec = event2boolvec(event, varargin)
 
 % get the optional input arguments or set defaults
 endsample = ft_getopt(varargin, 'endsample', []); % see below for the default
-type      = ft_getopt(varargin, 'type', unique({event.type}));
-value     = ft_getopt(varargin, 'value', {});     % see below for the default
+type      = ft_getopt(varargin, 'type', {}); 
+value     = ft_getopt(varargin, 'value', {});
+
+if isempty(type) && isempty(value)
+  % the default is to make one row per event type
+  type = unique({event.type});
+elseif ~isempty(type) && ~isempty(value)
+  ft_error('you should specify either type or value, but not both');
+end
 
 for i=1:numel(event)
   if isempty(event(i).duration) || event(i).duration < 1

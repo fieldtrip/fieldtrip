@@ -1,32 +1,25 @@
 function [cfg] = ft_checkconfig(cfg, varargin)
 
 % FT_CHECKCONFIG checks the input cfg of the main FieldTrip functions
-% in three steps.
 %
-% 1: It checks whether the cfg contains all the required options, it gives
+% It checks whether the cfg contains all the required options, it gives
 % a warning when renamed or deprecated options are used, and it makes sure
 % no forbidden options are used. If necessary and possible, this function
 % will adjust the cfg to the input requirements. If the input cfg does NOT
 % correspond to the requirements, this function gives an elaborate warning
 % message.
 %
-% 2: It controls the relevant cfg options that are being passed on to other
+% It controls the relevant cfg options that are being passed on to other
 % functions, by putting them into substructures or converting them into the
 % required format.
-%
-% 3: It controls the output cfg (data.cfg) such that it only contains
-% relevant and used fields. The size of fields in the output cfg is also
-% controlled: fields exceeding a certain maximum size are emptied.
-% This part of the functionality is still under construction!
 %
 % Use as
 %   [cfg] = ft_checkconfig(cfg, ...)
 %
-% The behavior of checkconfig can be controlled by the following cfg options,
-% which can be set as global FieldTrip defaults (see FT_DEFAULTS)
-%   cfg.checkconfig = 'pedantic', 'loose' or 'silent' (control the feedback behavior of checkconfig)
-%   cfg.trackconfig = 'cleanup', 'report' or 'off'
-%   cfg.checksize   = number in bytes, can be inf (set max size allowed for output cfg fields)
+% The behavior of checkconfig can be controlled by the following cfg options, which
+% can be set as global FieldTrip defaults (see FT_DEFAULTS)
+%   cfg.checkconfig = 'pedantic', 'loose' or 'silent', this controls the how strict this function is
+%   cfg.checksize   = number in bytes (can be inf), this controls the maximum size of output cfg fields
 %
 % Optional input arguments should be specified as key-value pairs and can include
 %   renamed         = {'old',  'new'}        % list the old and new option
@@ -43,11 +36,10 @@ function [cfg] = ft_checkconfig(cfg, varargin)
 %   dataset2files   = 'yes', 'no'            % converts dataset into headerfile and datafile
 %   inside2logical  = 'yes', 'no'            % converts cfg.inside or cfg.sourcemodel.inside into logical representation
 %   checksize       = 'yes', 'no'            % remove large fields from the cfg
-%   trackconfig     = 'on', 'off'            % start/end config tracking
 %
 % See also FT_CHECKDATA, FT_CHECKOPT, FT_DEFAULTS
 
-% Copyright (C) 2007-2020, Robert Oostenveld, Saskia Haegens
+% Copyright (C) 2007-2022, Robert Oostenveld, Saskia Haegens
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -81,23 +73,6 @@ createtopcfg    = ft_getopt(varargin, 'createtopcfg');
 checkfilenames  = ft_getopt(varargin, 'dataset2files', 'no');
 checkinside     = ft_getopt(varargin, 'inside2logical', 'no');
 checksize       = ft_getopt(varargin, 'checksize', 'no');
-trackconfig     = ft_getopt(varargin, 'trackconfig');
-
-if ~isempty(trackconfig) && strcmp(trackconfig, 'on')
-  if ft_platform_supports('matlabversion', '2015a', inf)
-    % disable config tracking for the time being, due to a known bug (3187)
-    % ft_warning('disabling cfg tracking for the time being, due to a matlab version related issue');
-    trackconfig = [];
-    cfg.trackconfig = 'off';
-  end
-
-  % infer from the user configuration whether tracking should be enabled
-  if isfield(cfg, 'trackconfig') && (strcmp(cfg.trackconfig, 'report') || strcmp(cfg.trackconfig, 'cleanup'))
-    trackconfig = 'on'; % turn on configtracking if user requests report/cleanup
-  else
-    trackconfig = []; % disable configtracking if user doesn't request report/cleanup
-  end
-end
 
 % these should be cell arrays and not strings
 if ischar(required),     required     = {required};      end
@@ -138,14 +113,17 @@ end
 % rename old to new value, give warning
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if ~isempty(renamedval) && issubfield(cfg, renamedval{1})
-  if strcmpi(getsubfield(cfg, renamedval{1}), renamedval{2})
+  if isequaln(getsubfield(cfg, renamedval{1}), renamedval{2})
     cfg = setsubfield(cfg, renamedval{1}, renamedval{3});
+    % format the values as a string, regardless of their type
+    str2 = printstruct([], renamedval{2}, 'lastnewline', false, 'lastsemicolon', false);
+    str3 = printstruct([], renamedval{3}, 'lastnewline', false, 'lastsemicolon', false);
     if silent
       % don't mention it
     elseif loose
-      ft_warning('use cfg.%s=''%s'' instead of cfg.%s=''%s''', renamedval{1}, renamedval{3}, renamedval{1}, renamedval{2});
+      ft_warning('use cfg.%s=%s instead of cfg.%s=%s', renamedval{1}, str3, renamedval{1}, str2);
     elseif pedantic
-      ft_error('use cfg.%s=''%s'' instead of cfg.%s=''%s''', renamedval{1}, renamedval{3}, renamedval{1}, renamedval{2});
+      ft_error('use cfg.%s=%s instead of cfg.%s=%s', renamedval{1}, str3, renamedval{1}, str2);
     end
   end
 end
@@ -311,6 +289,14 @@ if ~isempty(createtopcfg)
           'normalizeparam'
           'weight'
           };
+      
+      case {'superlet'}
+        fieldname = {
+          'basewidth'
+          'gwidth'
+          'combine'
+          'order'
+          };
         
       otherwise
         ft_error('unexpected name of the subfunction');
@@ -427,6 +413,8 @@ if ~isempty(createsubcfg)
           'pos'
           'tri'
           'dim'
+          'time'
+          'signal'
           };
 
       case 'dics'
@@ -575,12 +563,6 @@ if ~isempty(createsubcfg)
           'stabilityfix'
           };
 
-      case 'dip'
-        fieldname = {
-          'time'
-          'signal'
-          };
-
       otherwise
         ft_error('unexpected name of the subfunction');
 
@@ -720,110 +702,11 @@ if istrue(checkfilenames)
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% configtracking
-%
-% switch configuration tracking on/off
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if ~isempty(trackconfig)
-  try
-    if strcmp(trackconfig, 'on')
-      if isa(cfg, 'struct')
-        % turn ON configuration tracking
-        cfg = config(cfg);
-        % remember that configtracking has been turned on
-        cfg = access(cfg, 'set', 'counter', 1);
-      elseif isa(cfg, 'config')
-        % remember how many times trackconfig has been turned on
-        cfg = access(cfg, 'set', 'counter', access(cfg, 'get', 'counter')+1); % count the 'ONs'
-      end
-    end
-
-    if strcmp(trackconfig, 'off') && isa(cfg, 'config')
-      % turn OFF configuration tracking, optionally give report and/or cleanup
-      cfg = access(cfg, 'set', 'counter', access(cfg, 'get', 'counter')-1); % count(down) the 'OFFs'
-
-      if access(cfg, 'get', 'counter')==0
-        % only proceed when number of 'ONs' matches number of 'OFFs'
-
-        if strcmp(cfg.trackconfig, 'report') || strcmp(cfg.trackconfig, 'cleanup')
-          % gather information about the tracked results
-          r = access(cfg, 'reference');
-          o = access(cfg, 'original');
-
-          % this uses a helper function to identify the fields that should be ignored
-          key          = fieldnames(cfg);
-          key          = key(:)';
-          skipsel      = match_str(key, ignorefields('trackconfig'));
-          key(skipsel) = [];
-
-          used     = zeros(size(key));
-          original = zeros(size(key));
-
-          for i=1:length(key)
-            used(i)     = (r.(key{i})>0);
-            original(i) = (o.(key{i})>0);
-          end
-
-          if ~silent
-            % give report on screen
-            fprintf('\nThe following config fields were specified by YOU and were USED\n');
-            sel = find(used & original);
-            if numel(sel)
-              fprintf('  cfg.%s\n', key{sel});
-            else
-              fprintf('  <none>\n');
-            end
-
-            fprintf('\nThe following config fields were specified by YOU and were NOT USED\n');
-            sel = find(~used & original);
-            if numel(sel)
-              fprintf('  cfg.%s\n', key{sel});
-            else
-              fprintf('  <none>\n');
-            end
-
-            fprintf('\nThe following config fields were set to DEFAULTS and were USED\n');
-            sel = find(used & ~original);
-            if numel(sel)
-              fprintf('  cfg.%s\n', key{sel});
-            else
-              fprintf('  <none>\n');
-            end
-
-            fprintf('\nThe following config fields were set to DEFAULTS and were NOT USED\n');
-            sel = find(~used & ~original);
-            if numel(sel)
-              fprintf('  cfg.%s\n', key{sel});
-            else
-              fprintf('  <none>\n');
-            end
-          end % report
-        end % report/cleanup
-
-        if strcmp(cfg.trackconfig, 'cleanup')
-          % remove the unused options from the configuration
-          unusedkey = key(~used);
-          for i=1:length(unusedkey)
-            cfg = rmfield(cfg, unusedkey{i});
-          end
-        end
-
-        % convert the configuration back to a struct
-        cfg = struct(cfg);
-      end
-    end % off
-
-  catch
-    disp(lasterr);
-  end
-end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % check the size of fields in the cfg, remove large fields
 % the max allowed size should be specified in cfg.checksize (this can be
 % set with ft_defaults)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if strcmp(checksize, 'yes') && ~isinf(cfg.checksize)
+if strcmp(checksize, 'yes') && isfield(cfg, 'checksize') && ~isinf(cfg.checksize)
   cfg = checksizefun(cfg, cfg.checksize);
 end
 

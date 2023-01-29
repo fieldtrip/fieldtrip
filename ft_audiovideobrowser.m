@@ -59,7 +59,6 @@ ft_preamble init
 ft_preamble debug
 ft_preamble loadvar data
 ft_preamble provenance data
-ft_preamble trackconfig
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -162,9 +161,9 @@ while (true)
       begsample = 1;
       ft_notice('padding the beginning of the audio with %d silent samples', begpad);
     end
-    if endsample>videohdr.nTrials*videohdr.nSamples
-      endpad = endsample-videohdr.nTrials*videohdr.nSamples;
-      endsample = videohdr.nTrials*videohdr.nSamples;
+    if endsample>audiohdr.nTrials*audiohdr.nSamples
+      endpad = endsample-videohdr.nTrials*audiohdr.nSamples;
+      endsample = audiohdr.nTrials*audiohdr.nSamples;
       ft_notice('padding the end of the audio with %d silent samples', endpad);
     end
     
@@ -307,6 +306,5 @@ end % while true
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-ft_postamble trackconfig
 ft_postamble previous data
 ft_postamble provenance

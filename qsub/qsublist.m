@@ -164,19 +164,19 @@ switch cmd
       % only perform the more expensive check once the log files exist
       switch backend
         case 'torque'
-          [dum, jobstatus] = system(['qstat ' pbsid ' -f1 | grep job_state | grep -o "= [A-Z]" | grep -o "[A-Z]"']);
+          [dum, jobstatus] = system(['qstat "' pbsid '" -f1 | grep job_state | grep -o "= [A-Z]" | grep -o "[A-Z]"']);
           if isempty(jobstatus)
             warning('cannot determine the status for pbsid %s', pbsid);
             retval = 1;
           else
             retval = strcmp(strtrim(jobstatus) ,'C');
-            retval = retval | ~isempty(strfind(jobstatus, 'Unknown Job Id'));
+            retval = retval | contains(jobstatus, 'Unknown Job Id');
           end
         case 'lsf'
-          [dum, jobstatus] = system(['bjobs ' pbsid ' | awk ''NR==2'' | awk ''{print $3}'' ']);
+          [dum, jobstatus] = system(['bjobs "' pbsid '" | awk ''NR==2'' | awk ''{print $3}'' ']);
           retval = strcmp(strtrim(jobstatus), 'DONE');
         case 'sge'
-          [dum, jobstatus] = system(['qstat -s z | grep ' pbsid ' | awk ''{print $5}''']);
+          [dum, jobstatus] = system(['qstat -s z | grep "' pbsid '" | awk ''{print $5}''']);
           retval = strcmp(strtrim(jobstatus), 'z') | strcmp(strtrim(jobstatus), 'qw');
         case 'slurm'
           if ~isfile(outputfile)
@@ -186,8 +186,8 @@ switch cmd
             retval = 0;
           else
             % if the file is there, we can use squeue to verify that the job really left the queue
-            [dum, jobstatus] = system(['squeue -j ' pbsid ' -h -o %T']);
-            retval = isempty(jobstatus);
+            [dum, jobstatus] = system(['squeue -j "' pbsid '" -h -o %T']);
+            retval = isempty(jobstatus) | contains(jobstatus, 'Invalid job id');
           end
         case {'local','system'}
           % only return the status based on the presence of the output files

@@ -14,7 +14,7 @@ elseif ~isempty(getenv('TORQUEHOME')) || ~isempty(getenv('PBS_VERSION'))
 elseif ~isempty(getenv('CONDOR_ARCH'))
   % this has not been tested and I am not 100% sure that this is the right variable to probe
   systembackend = 'condor';
-elseif ~isempty(getenv('SLURM_ENABLE'))
+elseif ~isempty(getenv('SLURM_ENABLE')) || ~isempty(getenv('SLURM_SUBMIT_HOST'))
   systembackend = 'slurm';
 elseif ~isempty(getenv('LSF_ENVDIR'))
   systembackend = 'lsf';

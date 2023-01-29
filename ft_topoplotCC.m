@@ -13,8 +13,9 @@ function [cfg] = ft_topoplotCC(cfg, freq)
 %   cfg.alphaparam    = string, parameter to be used to control the opacity (see below)
 %   cfg.colorparam    = string, parameter to be used to control the line color
 %   cfg.visible       = string, 'on' or 'off' whether figure will be visible (default = 'on')
-%   cfg.position      = location and size of the figure, specified as a vector of the form [left bottom width height]
-%   cfg.renderer      = string, 'opengl', 'zbuffer', 'painters', see MATLAB Figure Properties. If this function crashes, you should try 'painters'.
+%   cfg.figure        = 'yes' or 'no', whether to open a new figure. You can also specify a figure handle from FIGURE, GCF or SUBPLOT. (default = 'yes')
+%   cfg.position      = location and size of the figure, specified as [left bottom width height] (default is automatic)
+%   cfg.renderer      = string, 'opengl', 'zbuffer', 'painters', see RENDERERINFO (default is automatic, try 'painters' when it crashes)
 %
 % The widthparam should be indicated in pixels, e.g. usefull numbers are 1 and
 % larger.
@@ -69,7 +70,6 @@ ft_preamble init
 ft_preamble debug
 ft_preamble loadvar freq
 ft_preamble provenance freq
-ft_preamble trackconfig
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -77,7 +77,7 @@ if ft_abort
 end
 
 % check if the input data is valid for this function
-freq = ft_checkdata(freq, 'cmbrepresentation', 'sparse');
+freq = ft_checkdata(freq, 'cmbstyle', 'sparse');
 
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'required', {'foi', 'layout'});
@@ -93,10 +93,10 @@ cfg.arrowsize   = ft_getopt(cfg, 'arrowsize',   nan);     % length of the arrow 
 cfg.arrowoffset = ft_getopt(cfg, 'arrowoffset', nan);     % absolute, should be in figure units, i.e. the same units as the layout
 cfg.arrowlength = ft_getopt(cfg, 'arrowlength', 0.8);     % relative to the complete line
 cfg.linestyle   = ft_getopt(cfg, 'linestyle',   []);
-cfg.colormap    = ft_getopt(cfg, 'colormap',    []);
+cfg.colormap    = ft_getopt(cfg, 'colormap',    'default');
 cfg.renderer    = ft_getopt(cfg, 'renderer'); % let MATLAB decide on the default
 
-tmpcfg = keepfields(cfg, {'layout', 'channel', 'rows', 'columns', 'commentpos', 'skipcomnt', 'scalepos', 'skipscale', 'projection', 'viewpoint', 'rotate', 'width', 'height', 'elec', 'grad', 'opto', 'showcallinfo'});
+tmpcfg = keepfields(cfg, {'layout', 'channel', 'rows', 'columns', 'commentpos', 'skipcomnt', 'scalepos', 'skipscale', 'projection', 'viewpoint', 'rotate', 'width', 'height', 'elec', 'grad', 'opto', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
 lay = ft_prepare_layout(tmpcfg, freq);
 
 beglabel = freq.labelcmb(:,1);
@@ -336,7 +336,6 @@ axis tight
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-ft_postamble trackconfig
 ft_postamble previous freq
 ft_postamble provenance
 ft_postamble savefig

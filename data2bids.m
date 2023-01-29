@@ -1,10 +1,10 @@
-function cfg = data2bids(cfg, varargin)
+function [cfg] = data2bids(cfg, varargin)
 
-% DATA2BIDS is a helper function to convert MEG, EEG, iEEG or MRI data to the Brain
-% Imaging Data Structure. The overall idea is that you write a MATLAB script in which
-% you call this function multiple times, once for each individually recorded data
-% file (or data set). It will write the corresponding sidecar JSON and TSV files for
-% each data file.
+% DATA2BIDS is a helper function to convert MRI, MEG, EEG, iEEG or NIRS data to the
+% Brain Imaging Data Structure. The overall idea is that you write a MATLAB script in
+% which you call this function multiple times, once for each individually recorded
+% data file (or data set). It will write the corresponding sidecar JSON and TSV files
+% for each data file.
 %
 % Use as
 %   data2bids(cfg)
@@ -62,13 +62,18 @@ function cfg = data2bids(cfg, varargin)
 %   cfg.mod                     = string
 %   cfg.echo                    = string
 %   cfg.proc                    = string
+%   cfg.tracksys                = string
+%   cfg.space                   = string
+%   cfg.desc                    = string
 %
 % When specifying the output directory in cfg.bidsroot, you can also specify
 % additional information to be added as extra columns in the participants.tsv and
 % scans.tsv files. For example:
 %   cfg.participants.age        = scalar
 %   cfg.participants.sex        = string, 'm' or 'f'
-%   cfg.scans.acq_time          = string, should be formatted according to  RFC3339 as '2019-05-22T15:13:38'
+%   cfg.scans.acq_time          = string, should be formatted according to RFC3339 as '2019-05-22T15:13:38'
+%   cfg.sessions.acq_time       = string, should be formatted according to RFC3339 as '2019-05-22T15:13:38'
+%   cfg.sessions.pathology      = string, recommended when different from healthy
 % In case any of these values is specified as empty (i.e. []) or as nan, it will be
 % written to the tsv file as 'n/a'.
 %
@@ -105,6 +110,7 @@ function cfg = data2bids(cfg, varargin)
 % FT_DATATYPE_SENS as an "elec" field in the input data, or you can specify it as
 % cfg.elec or you can specify a filename with electrode information.
 %   cfg.elec                    = structure with electrode positions or filename, see FT_READ_SENS
+%
 % For NIRS data you can specify an optode definition according to
 % FT_DATATYPE_SENS as an "opto" field in the input data, or you can specify
 % it as cfg.opto or you can specify a filename with optode information.
@@ -156,9 +162,9 @@ function cfg = data2bids(cfg, varargin)
 %   cfg.electrodes.someoption       = cell-array, please check the MATLAB code
 %   cfg.optodes.someoption          = cell-array, please check the MATLAB code
 %
-% The implementation in this function corresponds to BIDS version 1.2.0. See
-% https://bids-specification.readthedocs.io/ for the full specification and
-% http://bids.neuroimaging.io/ for further details.
+% The implementation in this function aims to correspond to the latest BIDS version.
+% See https://bids-specification.readthedocs.io/ for the full specification
+% and http://bids.neuroimaging.io/ for further details.
 %
 % See also FT_DATAYPE_RAW, FT_DATAYPE_VOLUME, FT_DATATYPE_SENS, FT_DEFINETRIAL,
 % FT_PREPROCESSING, FT_READ_MRI, FT_READ_EVENT
@@ -210,8 +216,8 @@ ft_preamble init
 ft_preamble debug
 
 if ft_abort
-  % do not continue function execution in case the outputfile is present and the user indicated to keep it
-  return
+    % do not continue function execution in case the outputfile is present and the user indicated to keep it
+    return
 end
 
 % ensure backward compatibility
@@ -230,6 +236,10 @@ cfg = ft_checkconfig(cfg, 'renamed', {'channels.writesidecar', 'writejson'});
 cfg = ft_checkconfig(cfg, 'renamed', {'electrodes.writesidecar', 'writejson'});
 cfg = ft_checkconfig(cfg, 'renamed', {'coordsystem.writesidecar', 'writejson'});
 cfg = ft_checkconfig(cfg, 'renamed', {'event', 'events'}); % cfg.event is used elsewhere in FieldTrip, but here it should be cfg.events with an s
+
+% prevent some common errors
+cfg = ft_checkconfig(cfg, 'forbidden', {'acq_time'});                 % this should be in cfg.scans or in cfg.sessions
+cfg = ft_checkconfig(cfg, 'forbidden', {'scan', 'session', 'event'}); % these should end with an "s"
 
 % get the options and set the defaults
 cfg.method                  = ft_getopt(cfg, 'method');                     % default is handled below
@@ -251,6 +261,7 @@ cfg.bidsroot  = ft_getopt(cfg, 'bidsroot');
 cfg.sub       = ft_getopt(cfg, 'sub');
 cfg.ses       = ft_getopt(cfg, 'ses');
 cfg.task      = ft_getopt(cfg, 'task');
+cfg.tracksys  = ft_getopt(cfg, 'tracksys');
 cfg.acq       = ft_getopt(cfg, 'acq');
 cfg.ce        = ft_getopt(cfg, 'ce');
 cfg.rec       = ft_getopt(cfg, 'rec');
@@ -259,26 +270,29 @@ cfg.run       = ft_getopt(cfg, 'run');
 cfg.mod       = ft_getopt(cfg, 'mod');
 cfg.echo      = ft_getopt(cfg, 'echo');
 cfg.proc      = ft_getopt(cfg, 'proc');
+cfg.space     = ft_getopt(cfg, 'space');
+cfg.desc      = ft_getopt(cfg, 'desc');
 cfg.datatype  = ft_getopt(cfg, 'datatype');
 
 % do a sanity check on the fields that form the filename as key-value pair
-fn = {'sub', 'ses', 'task', 'acq', 'ce', 'rec', 'dir', 'run', 'mod', 'echo', 'proc'};
+fn = {'sub', 'ses', 'task', 'tracksys', 'acq', 'ce', 'rec', 'dir', 'run', 'mod', 'echo', 'proc', 'space', 'desc'};
+
 for i=1:numel(fn)
-  if ischar(cfg.(fn{i})) && any(cfg.(fn{i})=='-')
-    ft_error('the field cfg.%s cannot contain a "-"', fn{i});
-  end
+    if ischar(cfg.(fn{i})) && any(cfg.(fn{i})=='-')
+        ft_error('the field cfg.%s cannot contain a "-"', fn{i});
+    end
 end
 
 if isempty(cfg.datatype)
-  modality = {'meg', 'eeg', 'ieeg', 'emg', 'exg', 'audio', 'video', 'eyetracker', 'physio', 'stim', 'motion', 'nirs'};
-  for i=1:numel(modality)
-    if isfield(cfg, modality{i}) && ~isempty(cfg.(modality{i}))
-      % the user specified modality-specific options, assume that the datatype matches
-      cfg.datatype = modality{i};
-      ft_notice('assuming that the datatype is %s', cfg.datatype);
-      continue
-    end
-  end % for each modality
+    modality = {'meg', 'eeg', 'ieeg', 'emg', 'exg', 'audio', 'video', 'eyetracker', 'physio', 'stim', 'motion', 'nirs'};
+    for i=1:numel(modality)
+        if isfield(cfg, modality{i}) && ~isempty(cfg.(modality{i}))
+            % the user specified modality-specific options, assume that the datatype matches
+            cfg.datatype = modality{i};
+            ft_notice('assuming that the datatype is %s', cfg.datatype);
+            continue
+        end
+    end % for each modality
 end
 
 cfg.dicomfile     = ft_getopt(cfg, 'dicomfile');                      % get header details from the specified DICOM files
@@ -310,7 +324,7 @@ cfg.coordsystem   = ft_getopt(cfg, 'coordsystem');
 cfg.dataset_description                     = ft_getopt(cfg, 'dataset_description'                       );
 cfg.dataset_description.writesidecar        = ft_getopt(cfg.dataset_description, 'writesidecar', 'yes'   );
 cfg.dataset_description.Name                = ft_getopt(cfg.dataset_description, 'Name'                  ); % REQUIRED. Name of the dataset.
-cfg.dataset_description.BIDSVersion         = ft_getopt(cfg.dataset_description, 'BIDSVersion', 1.2      ); % REQUIRED. The version of the BIDS standard that was used.
+cfg.dataset_description.BIDSVersion         = ft_getopt(cfg.dataset_description, 'BIDSVersion', '1.8'    ); % REQUIRED. The version of the BIDS standard that was used.
 cfg.dataset_description.DatasetType         = ft_getopt(cfg.dataset_description, 'DatasetType', 'raw'    ); % RECOMMENDED. The interpretaton of the dataset. MUST be one of "raw" or "derivative". For backwards compatibility, the default value is "raw".
 cfg.dataset_description.License             = ft_getopt(cfg.dataset_description, 'License'               ); % RECOMMENDED. What license is this dataset distributed under? The use of license name abbreviations is suggested for specifying a license. A list of common licenses with suggested abbreviations can be found in Appendix II.
 cfg.dataset_description.Authors             = ft_getopt(cfg.dataset_description, 'Authors'               ); % OPTIONAL. List of individuals who contributed to the creation/curation of the dataset.
@@ -496,22 +510,26 @@ cfg.exg.SamplingFrequency                 = ft_getopt(cfg.exg, 'SamplingFrequenc
 cfg.exg.RecordingDuration                 = ft_getopt(cfg.exg, 'RecordingDuration'                 );
 cfg.exg.RecordingType                     = ft_getopt(cfg.exg, 'RecordingType'                     );
 
-%% NIRS is not part of the official BIDS specification
+%% NIRS specific fields
+cfg.nirs.CapManufacturer                   = ft_getopt(cfg.nirs, 'CapManufacturer'                   );
+cfg.nirs.CapManufacturersModelName         = ft_getopt(cfg.nirs, 'CapManufacturersModelName'         );
 cfg.nirs.SamplingFrequency                 = ft_getopt(cfg.nirs, 'SamplingFrequency'                 );
-cfg.nirs.RecordingDuration                 = ft_getopt(cfg.nirs, 'RecordingDuration'                 );
-% cfg.nirs.RecordingType                     = ft_getopt(cfg.nirs, 'RecordingType'                     ); % not integrated yet
-cfg.nirs.SourceType                        = ft_getopt(cfg.nirs, 'SourceType'                        );
-cfg.nirs.DetectorType                      = ft_getopt(cfg.nirs, 'DetectorType'                      );
 cfg.nirs.NIRSChannelCount                  = ft_getopt(cfg.nirs, 'NIRSChannelCount'                  );
 cfg.nirs.NIRSSourceOptodeCount             = ft_getopt(cfg.nirs, 'NIRSSourceOptodeCount'             );
 cfg.nirs.NIRSDetectorOptodeCount           = ft_getopt(cfg.nirs, 'NIRSDetectorOptodeCount'           );
-cfg.nirs.HeadCircumference                 = ft_getopt(cfg.nirs, 'HeadCircumference'                 );
+cfg.nirs.ACCELChannelCount                 = ft_getopt(cfg.nirs, 'ACCELChannelCount'                 );
+cfg.nirs.GYROChannelCount                  = ft_getopt(cfg.nirs, 'GYROChannelCount'                  );
+cfg.nirs.MAGNChannelCount                  = ft_getopt(cfg.nirs, 'MAGNChannelCount'                  );
+cfg.nirs.SourceType                        = ft_getopt(cfg.nirs, 'SourceType'                        );
+cfg.nirs.DetectorType                      = ft_getopt(cfg.nirs, 'DetectorType'                      );
+cfg.nirs.ShortChannelCount                 = ft_getopt(cfg.nirs, 'ShortChannelCount'                 );
 cfg.nirs.NIRSPlacementScheme               = ft_getopt(cfg.nirs, 'NIRSPlacementScheme'               );
-cfg.nirs.SubjectArtefactDescription        = ft_getopt(cfg.nirs, 'SubjectArtefactDescription'        );
-cfg.nirs.CapManufacturer                   = ft_getopt(cfg.nirs, 'CapManufacturer'                   );
-cfg.nirs.CapManufacturersModelName         = ft_getopt(cfg.nirs, 'CapManufacturersModelName'         );
+cfg.nirs.RecordingDuration                 = ft_getopt(cfg.nirs, 'RecordingDuration'                 );
+cfg.nirs.DCOffsetCorrection                = ft_getopt(cfg.nirs, 'DCOffsetCorrection'                );
+cfg.nirs.HeadCircumference                 = ft_getopt(cfg.nirs, 'HeadCircumference'                 );
 cfg.nirs.HardwareFilters                   = ft_getopt(cfg.nirs, 'HardwareFilters'                   );
-% cfg.nirs.SoftwareFilters                   = ft_getopt(cfg.nirs, 'SoftwareFilters'        % not specified in the current BEP030            );
+cfg.nirs.SoftwareFilters                   = ft_getopt(cfg.nirs, 'SoftwareFilters'                   );
+cfg.nirs.SubjectArtefactDescription        = ft_getopt(cfg.nirs, 'SubjectArtefactDescription'        );
 
 %% audio is not part of the official BIDS specification
 cfg.audio.SampleRate                      = ft_getopt(cfg.audio, 'SampleRate'        );
@@ -545,13 +563,24 @@ cfg.eyetracker.StartTime                  = ft_getopt(cfg.eyetracker, 'StartTime
 cfg.eyetracker.SamplingFrequency          = ft_getopt(cfg.eyetracker, 'SamplingFrequency'    );
 
 %% motion is not part of the official BIDS specification
-% this follows https://bids-specification.readthedocs.io/en/stable/04-modality-specific-files/06-physiological-and-other-continuous-recordings.html
-cfg.motion.Columns                        = ft_getopt(cfg.motion, 'Columns'              );
-cfg.motion.StartTime                      = ft_getopt(cfg.motion, 'StartTime'            );
-cfg.motion.SamplingFrequency              = ft_getopt(cfg.motion, 'SamplingFrequency'    );
-cfg.motion.RecordingDuration              = ft_getopt(cfg.motion, 'RecordingDuration'    );
+% this follows extension proposal 029 https://bids.neuroimaging.io/bep029
+cfg.motion.EpochLength                    = ft_getopt(cfg.motion, 'EpochLength'               );
+cfg.motion.RecordingType                  = ft_getopt(cfg.motion, 'RecordingType'             );
+cfg.motion.SubjectArtefactDescription     = ft_getopt(cfg.motion, 'SubjectArtefactDescription');
+cfg.motion.TrackingSystemName             = ft_getopt(cfg.motion, 'TrackingSystemName'        );
+cfg.motion.DeviceSerialNumber             = ft_getopt(cfg.motion, 'DeviceSerialNumber'        );
+cfg.motion.SoftwareVersions               = ft_getopt(cfg.motion, 'SoftwareVersions'          );
+cfg.motion.ExternalSoftwareVersions       = ft_getopt(cfg.motion, 'ExternalSoftwareVersions'  );
+cfg.motion.Manufacturer                   = ft_getopt(cfg.motion, 'Manufacturer'              );
+cfg.motion.ManufacturersModelName         = ft_getopt(cfg.motion, 'ManufacturersModelName'    );
+cfg.motion.SamplingFrequency              = ft_getopt(cfg.motion, 'SamplingFrequency'         );
+cfg.motion.SamplingFrequencyEffective     = ft_getopt(cfg.motion, 'SamplingFrequencyEffective');
+cfg.motion.RecordingDuration              = ft_getopt(cfg.motion, 'RecordingDuration'         );
+cfg.motion.SpatialAxes                    = ft_getopt(cfg.motion, 'SpatialAxes'               );
+cfg.motion.RotationRule                   = ft_getopt(cfg.motion, 'RotationRule'              );
+cfg.motion.RotationOrder                  = ft_getopt(cfg.motion, 'RotationOrder'             );
 
-%% information for the coordsystem.json file for MEG, EEG and iEEG
+%% information for the coordsystem.json file for MEG, EEG, iEEG, and motion
 cfg.coordsystem.MEGCoordinateSystem                             = ft_getopt(cfg.coordsystem, 'MEGCoordinateSystem'                            ); % REQUIRED. Defines the coordinate system for the MEG sensors. See Appendix VIII: preferred names of Coordinate systems. If "Other", provide definition of the coordinate system in [MEGCoordinateSystemDescription].
 cfg.coordsystem.MEGCoordinateUnits                              = ft_getopt(cfg.coordsystem, 'MEGCoordinateUnits'                             ); % REQUIRED. Units of the coordinates of MEGCoordinateSystem. MUST be ???m???, ???cm???, or ???mm???.
 cfg.coordsystem.MEGCoordinateSystemDescription                  = ft_getopt(cfg.coordsystem, 'MEGCoordinateSystemDescription'                 ); % OPTIONAL. Freeform text description or link to document describing the MEG coordinate system system in detail.
@@ -575,6 +604,9 @@ cfg.coordsystem.NIRSCoordinateSystem                            = ft_getopt(cfg.
 cfg.coordsystem.NIRSCoordinateUnits                             = ft_getopt(cfg.coordsystem, 'NIRSCoordinateUnits'                            ); % REQUIRED. Units of the _optodes.tsv, MUST be "m", "mm", "cm" or "pixels".
 cfg.coordsystem.NIRSCoordinateSystemDescription                 = ft_getopt(cfg.coordsystem, 'NIRSCoordinateSystemDescription'                ); % RECOMMENDED. Freeform text description or link to document describing the NIRS coordinate system system in detail (e.g., "Coordinate system with the origin at anterior commissure (AC), negative y-axis going through the posterior commissure (PC), z-axis going to a mid-hemisperic point which lies superior to the AC-PC line, x-axis going to the right").
 cfg.coordsystem.NIRSCoordinateProcessingDescription             = ft_getopt(cfg.coordsystem, 'NIRSCoordinateProcessingDescription'            ); % RECOMMENDED. Has any post-processing (such as projection) been done on the optode positions (e.g., "surface_projection", "none").
+cfg.coordsystem.MotionCoordinateSystem              	          = ft_getopt(cfg.coordsystem, 'MotionCoordinateSystem'                         ); % REQUIRED.
+cfg.coordsystem.MotionRotationRule              	              = ft_getopt(cfg.coordsystem, 'MotionRotationRule'                             ); % OPTIONAL.
+cfg.coordsystem.MotionRotationOrder              	              = ft_getopt(cfg.coordsystem, 'MotionRotationOrder'                            ); % OPTIONAL.
 cfg.coordsystem.IntendedFor                                     = ft_getopt(cfg.coordsystem, 'IntendedFor'                                    ); % OPTIONAL. Path or list of path relative to the subject subfolder pointing to the structural MRI, possibly of different types if a list is specified, to be used with the MEG recording. The path(s) need(s) to use forward slashes instead of backward slashes (e.g. "ses-<label>/anat/sub-01_T1w.nii.gz").
 cfg.coordsystem.AnatomicalLandmarkCoordinates                   = ft_getopt(cfg.coordsystem, 'AnatomicalLandmarkCoordinates'                  ); % OPTIONAL. Key:value pairs of the labels and 3-D digitized locations of anatomical landmarks, interpreted following the AnatomicalLandmarkCoordinateSystem, e.g., {"NAS": [12.7,21.3,13.9], "LPA": [5.2,11.3,9.6], "RPA": [20.2,11.3,9.1]}.
 cfg.coordsystem.AnatomicalLandmarkCoordinateSystem              = ft_getopt(cfg.coordsystem, 'AnatomicalLandmarkCoordinateSystem'             ); % OPTIONAL. Defines the coordinate system for the anatomical landmarks. See Appendix VIII: preferred names of Coordinate systems. If "Other", provide definition of the coordinate system in AnatomicalLandmarkCoordinateSystemDescripti on.
@@ -587,23 +619,29 @@ cfg.coordsystem.FiducialsCoordinateUnits                        = ft_getopt(cfg.
 cfg.coordsystem.FiducialsCoordinateSystemDescription            = ft_getopt(cfg.coordsystem, 'FiducialsCoordinateSystemDescription'           ); % RECOMMENDED. Free-form text description of the coordinate system. May also include a link to a documentation page or paper describing the system in greater detail.
 
 %% columns in the channels.tsv
-cfg.channels.name               = ft_getopt(cfg.channels, 'name'               , nan);  % REQUIRED. Channel name (e.g., MRT012, MEG023)
-cfg.channels.type               = ft_getopt(cfg.channels, 'type'               , nan);  % REQUIRED. Type of channel; MUST use the channel types listed below.
-cfg.channels.units              = ft_getopt(cfg.channels, 'units'              , nan);  % REQUIRED. Physical unit of the data values recorded by this channel in SI (see Appendix V: Units for allowed symbols).
-% specific options for EEG/MEG channels
-cfg.channels.sampling_frequency = ft_getopt(cfg.channels, 'sampling_frequency' , nan);  % OPTIONAL. Sampling rate of the channel in Hz.
-cfg.channels.description        = ft_getopt(cfg.channels, 'description'        , nan);  % OPTIONAL. Brief free-text description of the channel, or other information of interest. See examples below.
-cfg.channels.low_cutoff         = ft_getopt(cfg.channels, 'low_cutoff'         , nan);  % OPTIONAL. Frequencies used for the high-pass filter applied to the channel in Hz. If no high-pass filter applied, use n/a.
-cfg.channels.high_cutoff        = ft_getopt(cfg.channels, 'high_cutoff'        , nan);  % OPTIONAL. Frequencies used for the low-pass filter applied to the channel in Hz. If no low-pass filter applied, use n/a. Note that hardware anti-aliasing in A/D conversion of all MEG/EEG electronics applies a low-pass filter; specify its frequency here if applicable.
-cfg.channels.notch              = ft_getopt(cfg.channels, 'notch'              , nan);  % OPTIONAL. Frequencies used for the notch filter applied to the channel, in Hz. If no notch filter applied, use n/a.
-cfg.channels.software_filters   = ft_getopt(cfg.channels, 'software_filters'   , nan);  % OPTIONAL. List of temporal and/or spatial software filters applied (e.g. "SSS", "SpatialCompensation"). Note that parameters should be defined in the general MEG sidecar .json file. Indicate n/a in the absence of software filters applied.
-cfg.channels.status             = ft_getopt(cfg.channels, 'status'             , nan);  % OPTIONAL. Data quality observed on the channel (good/bad). A channel is considered bad if its data quality is compromised by excessive noise. Description of noise type SHOULD be provided in [status_description].
-cfg.channels.status_description = ft_getopt(cfg.channels, 'status_description' , nan);  % OPTIONAL. Freeform text description of noise or artifact affecting data quality on the channel. It is meant to explain why the channel was declared bad in [status].
+cfg.channels.name                       = ft_getopt(cfg.channels, 'name'                        , nan);  % REQUIRED. Channel name (e.g., MRT012, MEG023)
+cfg.channels.type                       = ft_getopt(cfg.channels, 'type'                        , nan);  % REQUIRED. Type of channel; MUST use the channel types listed below.
+cfg.channels.units                      = ft_getopt(cfg.channels, 'units'                       , nan);  % REQUIRED. Physical unit of the data values recorded by this channel in SI (see Appendix V: Units for allowed symbols).
+% specific options for EEG/MEG/iEEG channels
+cfg.channels.sampling_frequency         = ft_getopt(cfg.channels, 'sampling_frequency'          , nan);  % OPTIONAL. Sampling rate of the channel in Hz.
+cfg.channels.description                = ft_getopt(cfg.channels, 'description'                 , nan);  % OPTIONAL. Brief free-text description of the channel, or other information of interest. See examples below.
+cfg.channels.low_cutoff                 = ft_getopt(cfg.channels, 'low_cutoff'                  , nan);  % OPTIONAL. Frequencies used for the high-pass filter applied to the channel in Hz. If no high-pass filter applied, use n/a.
+cfg.channels.high_cutoff                = ft_getopt(cfg.channels, 'high_cutoff'                 , nan);  % OPTIONAL. Frequencies used for the low-pass filter applied to the channel in Hz. If no low-pass filter applied, use n/a. Note that hardware anti-aliasing in A/D conversion of all MEG/EEG electronics applies a low-pass filter; specify its frequency here if applicable.
+cfg.channels.notch                      = ft_getopt(cfg.channels, 'notch'                       , nan);  % OPTIONAL. Frequencies used for the notch filter applied to the channel, in Hz. If no notch filter applied, use n/a.
+cfg.channels.software_filters           = ft_getopt(cfg.channels, 'software_filters'            , nan);  % OPTIONAL. List of temporal and/or spatial software filters applied (e.g. "SSS", "SpatialCompensation"). Note that parameters should be defined in the general MEG sidecar .json file. Indicate n/a in the absence of software filters applied.
+cfg.channels.status                     = ft_getopt(cfg.channels, 'status'                      , nan);  % OPTIONAL. Data quality observed on the channel (good/bad). A channel is considered bad if its data quality is compromised by excessive noise. Description of noise type SHOULD be provided in [status_description].
+cfg.channels.status_description         = ft_getopt(cfg.channels, 'status_description'          , nan);  % OPTIONAL. Freeform text description of noise or artifact affecting data quality on the channel. It is meant to explain why the channel was declared bad in [status].
 % specific options for NIRS channels
-% FIXME optional nirs channel fields (e.g. frequencies for frequency domain NIRS) should still be added here
-cfg.channels.source             = ft_getopt(cfg.channels, 'source'             , nan);  % REQUIRED. Name of the source as specified in the *_optodes.tsv file. n/a for channels that do not contain NIRS signals (acceleration).
-cfg.channels.detector           = ft_getopt(cfg.channels, 'detector'           , nan);  % REQUIRED. Name of the detector as specified in the *_optodes.tsv file. n/a for channels that do not contain NIRS signals (acceleration).
-cfg.channels.wavelength         = ft_getopt(cfg.channels, 'wavelength'         , nan);  % REQUIRED. Wavelength of light in nm. n/a for channels that do not contain raw NIRS signals (acceleration).
+cfg.channels.source                     = ft_getopt(cfg.channels, 'source'                      , nan);
+cfg.channels.detector                   = ft_getopt(cfg.channels, 'detector'                    , nan);
+cfg.channels.wavelength_nominal         = ft_getopt(cfg.channels, 'wavelength_nominal'          , nan);
+cfg.channels.wavelength_actual          = ft_getopt(cfg.channels, 'wavelength_actual'           , nan);
+cfg.channels.wavelength_emission_actual = ft_getopt(cfg.channels, 'wavelength_emission_actual'  , nan);
+cfg.channels.short_channel              = ft_getopt(cfg.channels, 'short_channel'               , nan);
+% specific options for motion channels
+cfg.channels.sampling_frequency         = ft_getopt(cfg.channels, 'sampling_frequency'          , nan);
+cfg.channels.orientation_component      = ft_getopt(cfg.channels, 'component'                   , nan);
+cfg.channels.tracked_point              = ft_getopt(cfg.channels, 'tracked_point'               , nan);
 
 %% columns in the electrodes.tsv
 cfg.electrodes.name             = ft_getopt(cfg.electrodes, 'name'             , nan);  % REQUIRED. Name of the electrode
@@ -616,13 +654,17 @@ cfg.electrodes.impedance        = ft_getopt(cfg.electrodes, 'impedance'        ,
 
 %% columns in the optodes.tsv
 cfg.optodes.name                = ft_getopt(cfg.optodes, 'name'                , nan);  % REQUIRED. Name of the optode must be unique
+cfg.optodes.type                = ft_getopt(cfg.optodes, 'type'                , nan);  % REQUIRED. Either source or detector
 cfg.optodes.x                   = ft_getopt(cfg.optodes, 'x'                   , nan);  % REQUIRED. Recorded position along the x-axis. n/a if not available
 cfg.optodes.y                   = ft_getopt(cfg.optodes, 'y'                   , nan);  % REQUIRED. Recorded position along the y-axis. n/a if not available
 cfg.optodes.z                   = ft_getopt(cfg.optodes, 'z'                   , nan);  % REQUIRED. Recorded position along the z-axis. n/a if not available
-cfg.optodes.type                = ft_getopt(cfg.optodes, 'type'                , nan);  % REQUIRED. Either source or detector
 cfg.optodes.template_x          = ft_getopt(cfg.optodes, 'template_x'          , nan);  % OPTIONAL. Assumed or ideal position along the x axis
 cfg.optodes.template_y          = ft_getopt(cfg.optodes, 'template_y'          , nan);  % OPTIONAL. Assumed or ideal position along the x axis
-cfg.optodes.template_z          = ft_getopt(cfg.optodes, 'template_x'          , nan);  % OPTIONAL. Assumed or ideal position along the x axis
+cfg.optodes.template_z          = ft_getopt(cfg.optodes, 'template_z'          , nan);  % OPTIONAL. Assumed or ideal position along the x axis
+cfg.optodes.description         = ft_getopt(cfg.optodes, 'description'         , nan);  % OPTIONAL.	string	Free-form text description of the optode, or other information of interest.
+cfg.optodes.detector_type       = ft_getopt(cfg.optodes, 'detector_type'       , nan);  % OPTIONAL.	string	The type of detector. Only to be used if the field DetectorType in *_nirs.json is set to mixed.
+cfg.optodes.source_type         = ft_getopt(cfg.optodes, 'source_type'         , nan);  % OPTIONAL.	string	The type of source. Only to be used if the field SourceType in *_nirs.json is set to mixed.
+
 
 %% information for the participants.tsv
 cfg.participants = ft_getopt(cfg, 'participants', struct());
@@ -630,97 +672,102 @@ cfg.participants = ft_getopt(cfg, 'participants', struct());
 %% information for the scans.tsv
 cfg.scans = ft_getopt(cfg, 'scans', struct());
 
+%% information for the sessions.tsv
+cfg.sessions = ft_getopt(cfg, 'sessions', struct());
+
 %% sanity checks and determine the default method/outputfile
 
 % the task is both part of the file name (cfg.task) and is also one of the general JSON metadata fields (cfg.TaskName)
 if isempty(cfg.task) && isempty(cfg.TaskName)
-  % this is fine
+    % this is fine
 elseif ~isempty(cfg.task) && isempty(cfg.TaskName)
-  cfg.TaskName = cfg.task;
+    cfg.TaskName = cfg.task;
 elseif isempty(cfg.task) && ~isempty(cfg.TaskName)
-  cfg.task = cfg.TaskName;
+    cfg.task = cfg.TaskName;
 elseif ~isempty(cfg.task) && ~isempty(cfg.TaskName)
-  if ~strcmp(cfg.task, cfg.TaskName)
-    ft_error('cfg.task and cfg.TaskName should be identical');
-  end
+    if ~strcmp(cfg.task, cfg.TaskName)
+        ft_error('cfg.task and cfg.TaskName should be identical');
+    end
 end
 
 % construct the output directory and file name
 if isempty(cfg.outputfile)
-  if isempty(cfg.method) && isempty(cfg.bidsroot) && ~isempty(cfg.dataset)
-    cfg.outputfile = cfg.dataset;
-    cfg.method = 'decorate';
-    ft_notice('using cfg.outputfile=''%s'' and cfg.method=''%s''', cfg.outputfile, cfg.method);
-  elseif isempty(cfg.bidsroot)
-    ft_error('cfg.bidsroot is required to construct BIDS output directory and file');
-  elseif isempty(cfg.sub)
-    ft_error('cfg.sub is required to construct BIDS output directory and file');
-  elseif isempty(cfg.datatype)
-    ft_error('cfg.datatype is required to construct BIDS output directory and file');
-  else
-    dirname = datatype2dirname(cfg.datatype);
-    filename = ['sub-' cfg.sub];
-    filename = add_entity(filename, 'ses',  cfg.ses);
-    filename = add_entity(filename, 'task', cfg.task);
-    filename = add_entity(filename, 'acq',  cfg.acq);
-    filename = add_entity(filename, 'ce',   cfg.ce);
-    filename = add_entity(filename, 'rec',  cfg.rec);
-    filename = add_entity(filename, 'dir',  cfg.dir);
-    filename = add_entity(filename, 'run',  cfg.run);
-    filename = add_entity(filename, 'mod',  cfg.mod);
-    filename = add_entity(filename, 'echo', cfg.echo);
-    filename = add_entity(filename, 'proc', cfg.proc);
-    filename = add_datatype(filename, cfg.datatype);
-    if ~isempty(cfg.ses)
-      % construct the output filename, with session directory
-      cfg.outputfile = fullfile(cfg.bidsroot, ['sub-' cfg.sub], ['ses-' cfg.ses], dirname, filename);
+    if isempty(cfg.method) && isempty(cfg.bidsroot) && ~isempty(cfg.dataset)
+        cfg.outputfile = cfg.dataset;
+        cfg.method = 'decorate';
+        ft_notice('using cfg.outputfile=''%s'' and cfg.method=''%s''', cfg.outputfile, cfg.method);
+    elseif isempty(cfg.bidsroot)
+        ft_error('cfg.bidsroot is required to construct BIDS output directory and file');
+    elseif isempty(cfg.sub)
+        ft_error('cfg.sub is required to construct BIDS output directory and file');
+    elseif isempty(cfg.datatype)
+        ft_error('cfg.datatype is required to construct BIDS output directory and file');
     else
-      % construct the output filename, without session directory
-      cfg.outputfile = fullfile(cfg.bidsroot, ['sub-' cfg.sub], dirname, filename);
+        dirname = datatype2dirname(cfg.datatype);
+        filename = ['sub-' cfg.sub];
+        filename = add_entity(filename, 'ses',  cfg.ses);
+        filename = add_entity(filename, 'task', cfg.task);
+        filename = add_entity(filename, 'tracksys', cfg.tracksys);
+        filename = add_entity(filename, 'acq',  cfg.acq);
+        filename = add_entity(filename, 'ce',   cfg.ce);
+        filename = add_entity(filename, 'rec',  cfg.rec);
+        filename = add_entity(filename, 'dir',  cfg.dir);
+        filename = add_entity(filename, 'run',  cfg.run);
+        filename = add_entity(filename, 'mod',  cfg.mod);
+        filename = add_entity(filename, 'echo', cfg.echo);
+        filename = add_entity(filename, 'proc', cfg.proc);
+        filename = add_entity(filename, 'desc', cfg.desc);
+        filename = add_datatype(filename, cfg.datatype);
+        if ~isempty(cfg.ses)
+            % construct the output filename, with session directory
+            cfg.outputfile = fullfile(cfg.bidsroot, ['sub-' cfg.sub], ['ses-' cfg.ses], dirname, filename);
+        else
+            % construct the output filename, without session directory
+            cfg.outputfile = fullfile(cfg.bidsroot, ['sub-' cfg.sub], dirname, filename);
+        end
+        if strcmp(cfg.method, 'copy') && ~isempty(cfg.dataset)
+            % copy the file extension from the input dataset
+            [p, f, x] = fileparts(cfg.dataset);
+            cfg.outputfile = [cfg.outputfile x];
+        end
     end
-    if strcmp(cfg.method, 'copy') && ~isempty(cfg.dataset)
-      % copy the file extension from the input dataset
-      [~, ~, x] = fileparts(cfg.dataset);
-      cfg.outputfile = [cfg.outputfile x];
-    end
-  end
 end
 
 % set the default method
 if isempty(cfg.method)
-  if ~isempty(cfg.dataset) && ~isequal(cfg.dataset, cfg.outputfile)
-    cfg.method = 'convert';
-  elseif isempty(cfg.dataset) && ~isempty(varargin)
-    cfg.method = 'convert';
-  else
-    cfg.method = 'decorate';
-  end
-  ft_notice('using cfg.method=''%s''', cfg.method);
+    if ~isempty(cfg.dataset) && ~isequal(cfg.dataset, cfg.outputfile)
+        cfg.method = 'convert';
+    elseif isempty(cfg.dataset) && ~isempty(varargin)
+        cfg.method = 'convert';
+    else
+        cfg.method = 'decorate';
+    end
+    ft_notice('using cfg.method=''%s''', cfg.method);
 end
 
 % do some sanity checks on the input and the method
 if istrue(cfg.deface) && ~strcmp(cfg.method, 'convert')
-  ft_error('defacing only works in combination with cfg.method=''convert''');
+    ft_error('defacing only works in combination with cfg.method=''convert''');
 elseif ft_nargin>1 && ~strcmp(cfg.method, 'convert')
-  ft_error('input data only works in combination with cfg.method=''convert''');
+    ft_error('input data only works in combination with cfg.method=''convert''');
 end
 
 % do some more sanity checks on the input and the method
 switch cfg.method
-  case 'decorate'
-    if ~isempty(cfg.outputfile) && ~isempty(cfg.dataset) && ~isequal(cfg.dataset, cfg.outputfile)
-      ft_error('cfg.dataset and cfg.outputfile should be the same');
-    end
-  case 'convert'
-    if ~isempty(cfg.outputfile) && isequal(cfg.dataset, cfg.outputfile)
-      ft_error('cfg.dataset and cfg.outputfile should not be the same');
-    end
-  case 'copy'
-    if ~isempty(cfg.outputfile) && isequal(cfg.dataset, cfg.outputfile)
-      ft_error('cfg.dataset and cfg.outputfile should not be the same');
-    end
-  otherwise
-    ft_error('unsupported value for cfg.method')
+    case 'decorate'
+        if ~isempty(cfg.outputfile) && ~isempty(cfg.dataset) && ~isequal(cfg.dataset, cfg.outputfile)
+            ft_error('cfg.dataset and cfg.outputfile should be the same');
+        end
+    case 'convert'
+        if ~isempty(cfg.outputfile) && isequal(cfg.dataset, cfg.outputfile)
+            ft_error('cfg.dataset and cfg.outputfile should not be the same');
+        end
+    case 'copy'
+        if ~isempty(cfg.outputfile) && isequal(cfg.dataset, cfg.outputfile)
+            ft_error('cfg.dataset and cfg.outputfile should not be the same');
+        end
+    otherwise
+        ft_error('unsupported value for cfg.method')
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -729,19 +776,19 @@ end
 
 % convert dataset to headerfile and datafile
 if nargin>1
-  % input data was specified
-  varargin{1} = ft_checkdata(varargin{1}, 'datatype', {'raw', 'volume'});
-  typ = ft_datatype(varargin{1});
+    % input data was specified
+    varargin{1} = ft_checkdata(varargin{1}, 'datatype', {'raw', 'volume'});
+    typ = ft_datatype(varargin{1});
 elseif ~isempty(cfg.dataset)
-  % data should be read from disk
-  cfg = ft_checkconfig(cfg, 'dataset2files', 'yes');
-  if isfield(cfg, 'headerfile')
-    typ = ft_filetype(cfg.headerfile);
-  else
-    typ = ft_filetype(cfg.presentationfile);
-  end
+    % data should be read from disk
+    cfg = ft_checkconfig(cfg, 'dataset2files', 'yes');
+    if isfield(cfg, 'headerfile')
+        typ = ft_filetype(cfg.headerfile);
+    else
+        typ = ft_filetype(cfg.presentationfile);
+    end
 else
-  typ = 'unknown';
+    typ = 'unknown';
 end
 
 % determine the json files that are required
@@ -761,268 +808,245 @@ need_motion_json        = false;
 need_coordsystem_json   = false;
 % determine the tsv files that are required
 need_events_tsv         = false; % for functional and behavioral experiments
-need_channels_tsv       = false; % only needed for MEG/EEG/iEEG/EMG/NIRS
+need_channels_tsv       = false; % only needed for MEG/EEG/iEEG/EMG/NIRS/motion
 need_electrodes_tsv     = false; % only needed when actually present as cfg.electrodes, data.elec or as cfg.elec
 need_optodes_tsv        = false; % only needed when actually present as cfg.optodes, data.opto or as cfg.opto
 
 switch typ
-  case {'nifti', 'nifti2', 'nifti_fsl'}
-    mri = ft_read_mri(cfg.dataset);
-    if ~isempty(cfg.dicomfile)
-      % read the header details from the matching DICOM file specified by the user
-      dcm = dicominfo(cfg.dicomfile);
-    else
-      dcm = [];
-    end
-    need_mri_json = true;
-    
-  case 'dicom'
-    mri = ft_read_mri(cfg.dataset);
-    dcm = dicominfo(cfg.dataset);
-    need_mri_json = true;
-    
-  case 'volume'
-    % the input data structure represents imaging data
-    mri = varargin{1};
-    if ~isempty(cfg.dicomfile)
-      % read the header details from the dicom matching file that was specified by the user
-      dcm = dicominfo(cfg.dicomfile);
-    elseif isfield(mri, 'hdr') && numel(mri.hdr)>1
-      % it looks like an MRI read in using FT_READ_MRI using the FreeSurfer code
-      % take the DICOM details from the first slice
-      dcm = mri.hdr(1);
-    else
-      dcm = [];
-    end
-    need_mri_json = true;
-    
-  case {'ctf_ds', 'ctf_meg4', 'ctf_res4', 'ctf151', 'ctf275', 'neuromag_fif', 'neuromag122', 'neuromag306'}
-    % it is MEG data from disk and in a supported format
-    hdr = ft_read_header(cfg.headerfile, 'checkmaxfilter', false, 'readbids', false);
-    if strcmp(cfg.method, 'convert')
-      % the data should be converted and written to disk
-      dat = ft_read_data(cfg.datafile, 'header', hdr, 'checkboundary', false, 'begsample', 1, 'endsample', hdr.nSamples*hdr.nTrials);
-    end
-    % read the triggers from disk
-    trigger = ft_read_event(cfg.datafile, 'header', hdr, 'readbids', false);
-    need_meg_json = true;
-    
-  case {'brainvision_vhdr', 'edf', 'eeglab_set', 'biosemi_bdf'}
-    % the file on disk contains ExG data in a BIDS compiant format
-    hdr = ft_read_header(cfg.headerfile, 'checkmaxfilter', false, 'readbids', false);
-    if strcmp(cfg.method, 'convert')
-      % the data should be converted and written to disk
-      dat = ft_read_data(cfg.datafile, 'header', hdr, 'checkboundary', false, 'begsample', 1, 'endsample', hdr.nSamples*hdr.nTrials);
-    end
-    % read the triggers from disk
-    trigger = ft_read_event(cfg.datafile, 'header', hdr, 'readbids', false);
-    if isequal(cfg.datatype, 'eeg')
-      need_eeg_json = true;
-    elseif isequal(cfg.datatype, 'ieeg')
-      need_ieeg_json = true;
-    elseif isequal(cfg.datatype, 'emg')
-      need_emg_json = true;
-    elseif isequal(cfg.datatype, 'exg')
-      need_exg_json = true;
-    else
-      ft_warning('assuming that the dataset represents EEG');
-      need_eeg_json = true;
-    end
-    
-  case 'presentation_log'
-    trigger = ft_read_event(cfg.dataset);
-    need_events_tsv = true;
-    
-  case {'audio_wav', 'audio_ogg', 'audio_flac', 'audio_au', 'audio_aiff', 'audio_aif', 'audio_aifc', 'audio_mp3', 'audio_m4a', 'audio_mp4'}
-    % the file on disk contains audio
-    need_audio_json = true;
-    try
-      audio = audioinfo(cfg.dataset);
-    catch
-      ft_warning('audio format is unsupported on this MATLAB version and/or operating system');
-      audio = struct('SampleRate', nan, 'Duration', nan, 'NumChannels', nan);
-    end
-    
-  case 'video'
-    % the file on disk contains not only video, but also audio
-    need_video_json = true;
-    try
-      video = VideoReader(cfg.dataset);
-    catch
-      ft_warning('video format is unsupported on this MATLAB version and/or operating system');
-      video = struct('FrameRate', nan, 'Width', nan, 'Height', nan, 'Duration', nan);
-    end
-    try
-      audio = audioinfo(cfg.dataset);
-    catch
-      ft_warning('audio format is unsupported on this MATLAB version and/or operating system');
-      audio = struct('SampleRate', nan, 'Duration', nan, 'NumChannels', nan);
-    end
-    
-  case 'raw'
-    % the input data structure contains raw timeseries data
-    if isequal(cfg.datatype, 'meg')
-      need_meg_json = true;
-    elseif isequal(cfg.datatype, 'eeg')
-      need_eeg_json = true;
-    elseif isequal(cfg.datatype, 'ieeg')
-      need_ieeg_json = true;
-    elseif isequal(cfg.datatype, 'emg')
-      need_emg_json = true;
-    elseif isequal(cfg.datatype, 'exg')
-      need_exg_json = true;
-    elseif isequal(cfg.datatype, 'nirs')
-      need_nirs_json = true;
-    elseif isequal(cfg.datatype, 'physio')
-      need_physio_json = true;
-    elseif isequal(cfg.datatype, 'stim')
-      need_stim_json = true;
-    elseif isequal(cfg.datatype, 'eyetracker')
-      need_eyetracker_json = true;
-    elseif isequal(cfg.datatype, 'motion')
-      need_motion_json = true;
-    else
-      ft_error('cannot determine the type of the data, please specify cfg.dataype');
-    end
-    
-    hdr = ft_fetch_header(varargin{1});
-    if strcmp(cfg.method, 'convert')
-      % the data should be written to disk
-      dat     = ft_fetch_data(varargin{1}, 'checkboundary', false, 'begsample', 1, 'endsample', hdr.nSamples*hdr.nTrials);
-      % the events should be writen to disk
-      trigger = ft_fetch_event(varargin{1});
-    end
-    
-    try
-      % try to get the electrode definition, either from the data or from the configuration
-      tmpcfg = keepfields(cfg, {'elec'});
-      tmpcfg.senstype = 'eeg';
-      elec = ft_fetch_sens(tmpcfg, varargin{1});
-      need_electrodes_tsv = true;
-    catch
-      need_electrodes_tsv = false;
-    end
-    
-    if ft_senstype(varargin{1}, 'ctf') || ft_senstype(varargin{1}, 'neuromag')
-      % use the subsequent MEG-specific metadata handling for the JSON and TSV sidecar files
-      typ = ft_senstype(varargin{1});
-    end
-    
-  otherwise
-    % assume that the file on disk contains raw timeseries data that can be read by FieldTrip
-    if isequal(cfg.datatype, 'meg')
-      need_meg_json = true;
-    elseif isequal(cfg.datatype, 'eeg')
-      need_eeg_json = true;
-    elseif isequal(cfg.datatype, 'ieeg')
-      need_ieeg_json = true;
-    elseif isequal(cfg.datatype, 'emg')
-      need_emg_json = true;
-    elseif isequal(cfg.datatype, 'exg')
-      need_exg_json = true;
-    elseif isequal(cfg.datatype, 'nirs')
-      need_nirs_json = true;
-    elseif isequal(cfg.datatype, 'physio')
-      need_physio_json = true;
-    elseif isequal(cfg.datatype, 'stim')
-      need_stim_json = true;
-    elseif isequal(cfg.datatype, 'eyetracker')
-      need_eyetracker_json = true;
-    elseif isequal(cfg.datatype, 'motion')
-      need_motion_json = true;
-    elseif isequal(cfg.datatype, 'events')
-      need_events_tsv = true;
-    else
-      ft_error('cannot determine the type of the data, please specify cfg.datatype');
-    end
-    
-    % construct the low-level options as key-value pairs, these are passed to FT_READ_HEADER, FT_READ_DATA and FT_READ_EVENT
-    headeropt = {};
-    headeropt = ft_setopt(headeropt, 'headerformat',   ft_getopt(cfg, 'headerformat'));        % is passed to low-level function, empty implies autodetection
-    headeropt = ft_setopt(headeropt, 'chantype',       ft_getopt(cfg, 'chantype', {}));        % 2017.10.10 AB required for NeuroOmega files
-    headeropt = ft_setopt(headeropt, 'checkmaxfilter', false);
-    headeropt = ft_setopt(headeropt, 'readbids',       false);
-    
-    dataopt   = {};
-    dataopt   = ft_setopt(dataopt, 'checkboundary',    false);
-    dataopt   = ft_setopt(dataopt, 'dataformat',       ft_getopt(cfg, 'dataformat'));          % is passed to low-level function, empty implies autodetection
-    
-    eventopt  = {};
-    eventopt  = ft_setopt(eventopt, 'readbids',        false);
-    eventopt  = ft_setopt(eventopt, 'eventformat',     ft_getopt(cfg, 'eventformat'));         % is passed to low-level function, empty implies autodetection
-    
-    if ~isempty(cfg.dataset)
-      hdr = ft_read_header(cfg.headerfile, headeropt{:});
-      if strcmp(cfg.method, 'convert')
-        % the data should be converted and written to disk
-        dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', 1, 'endsample', hdr.nSamples*hdr.nTrials, dataopt{:});
-        trigger = ft_read_event(cfg.datafile, 'header', hdr, eventopt{:});
-      end
-      % FIXME try to get the electrode definition, either from the data or from the configuration
-    end
-    
+    case {'nifti', 'nifti2', 'nifti_gz'}
+        mri = ft_read_mri(cfg.dataset);
+        if ~isempty(cfg.dicomfile)
+            % read the header details from the matching DICOM file specified by the user
+            dcm = dicominfo(cfg.dicomfile);
+        else
+            dcm = [];
+        end
+        need_mri_json = true;
+
+    case 'dicom'
+        mri = ft_read_mri(cfg.dataset);
+        dcm = dicominfo(cfg.dataset);
+        need_mri_json = true;
+
+    case 'volume'
+        % the input data structure represents imaging data
+        mri = varargin{1};
+        if ~isempty(cfg.dicomfile)
+            % read the header details from the dicom matching file that was specified by the user
+            dcm = dicominfo(cfg.dicomfile);
+        elseif isfield(mri, 'hdr') && numel(mri.hdr)>1
+            % it looks like an MRI read in using FT_READ_MRI using the FreeSurfer code
+            % take the DICOM details from the first slice
+            dcm = mri.hdr(1);
+        else
+            dcm = [];
+        end
+        need_mri_json = true;
+
+    case {'ctf_ds', 'ctf_meg4', 'ctf_res4', 'ctf151', 'ctf275', 'neuromag_fif', 'neuromag122', 'neuromag306'}
+        % it is MEG data from disk and in a supported format
+        hdr = ft_read_header(cfg.headerfile, 'checkmaxfilter', false, 'readbids', false);
+        if strcmp(cfg.method, 'convert')
+            % the data should be converted and written to disk
+            dat = ft_read_data(cfg.datafile, 'header', hdr, 'checkboundary', false, 'begsample', 1, 'endsample', hdr.nSamples*hdr.nTrials);
+        end
+        % read the triggers from disk
+        trigger = ft_read_event(cfg.datafile, 'header', hdr, 'readbids', false);
+        need_meg_json = true;
+
+    case {'brainvision_vhdr', 'edf', 'eeglab_set', 'biosemi_bdf'}
+        % the file on disk contains ExG data in a BIDS compiant format
+        hdr = ft_read_header(cfg.headerfile, 'checkmaxfilter', false, 'readbids', false);
+        if strcmp(cfg.method, 'convert')
+            % the data should be converted and written to disk
+            dat = ft_read_data(cfg.datafile, 'header', hdr, 'checkboundary', false, 'begsample', 1, 'endsample', hdr.nSamples*hdr.nTrials);
+        end
+        % read the triggers from disk
+        trigger = ft_read_event(cfg.datafile, 'header', hdr, 'readbids', false);
+        if isequal(cfg.datatype, 'eeg')
+            need_eeg_json = true;
+        elseif isequal(cfg.datatype, 'ieeg')
+            need_ieeg_json = true;
+        elseif isequal(cfg.datatype, 'emg')
+            need_emg_json = true;
+        elseif isequal(cfg.datatype, 'exg')
+            need_exg_json = true;
+        else
+            ft_warning('assuming that the dataset represents EEG');
+            need_eeg_json = true;
+        end
+
+    case 'presentation_log'
+        trigger = ft_read_event(cfg.dataset);
+        need_events_tsv = true;
+
+    case {'audio_wav', 'audio_ogg', 'audio_flac', 'audio_au', 'audio_aiff', 'audio_aif', 'audio_aifc', 'audio_mp3', 'audio_m4a', 'audio_mp4'}
+        % the file on disk contains audio
+        need_audio_json = true;
+        try
+            audio = audioinfo(cfg.dataset);
+        catch
+            ft_warning('audio format is unsupported on this MATLAB version and/or operating system');
+            audio = struct('SampleRate', nan, 'Duration', nan, 'NumChannels', nan);
+        end
+
+    case 'video'
+        % the file on disk contains not only video, but also audio
+        need_video_json = true;
+        try
+            video = VideoReader(cfg.dataset);
+        catch
+            ft_warning('video format is unsupported on this MATLAB version and/or operating system');
+            video = struct('FrameRate', nan, 'Width', nan, 'Height', nan, 'Duration', nan);
+        end
+        try
+            audio = audioinfo(cfg.dataset);
+        catch
+            ft_warning('audio format is unsupported on this MATLAB version and/or operating system');
+            audio = struct('SampleRate', nan, 'Duration', nan, 'NumChannels', nan);
+        end
+
+    case 'raw'
+        % the input data structure contains raw timeseries data
+        if isequal(cfg.datatype, 'meg')
+            need_meg_json = true;
+        elseif isequal(cfg.datatype, 'eeg')
+            need_eeg_json = true;
+        elseif isequal(cfg.datatype, 'ieeg')
+            need_ieeg_json = true;
+        elseif isequal(cfg.datatype, 'emg')
+            need_emg_json = true;
+        elseif isequal(cfg.datatype, 'exg')
+            need_exg_json = true;
+        elseif isequal(cfg.datatype, 'nirs')
+            need_nirs_json = true;
+        elseif isequal(cfg.datatype, 'physio')
+            need_physio_json = true;
+        elseif isequal(cfg.datatype, 'stim')
+            need_stim_json = true;
+        elseif isequal(cfg.datatype, 'eyetracker')
+            need_eyetracker_json = true;
+        elseif isequal(cfg.datatype, 'motion')
+            need_motion_json = true;
+        else
+            ft_error('cannot determine the type of the data, please specify cfg.dataype');
+        end
+
+        hdr = ft_fetch_header(varargin{1});
+        if strcmp(cfg.method, 'convert')
+            % the data should be written to disk
+            dat     = ft_fetch_data(varargin{1}, 'checkboundary', false, 'begsample', 1, 'endsample', hdr.nSamples*hdr.nTrials);
+            % the events should be writen to disk
+            trigger = ft_fetch_event(varargin{1});
+        end
+
+        if ft_senstype(varargin{1}, 'ctf') || ft_senstype(varargin{1}, 'neuromag')
+            % use the subsequent MEG-specific metadata handling for the JSON and TSV sidecar files
+            typ = ft_senstype(varargin{1});
+        end
+
+    otherwise
+        % assume that the file on disk contains raw timeseries data that can be read by FieldTrip
+        if isequal(cfg.datatype, 'meg')
+            need_meg_json = true;
+        elseif isequal(cfg.datatype, 'eeg')
+            need_eeg_json = true;
+        elseif isequal(cfg.datatype, 'ieeg')
+            need_ieeg_json = true;
+        elseif isequal(cfg.datatype, 'emg')
+            need_emg_json = true;
+        elseif isequal(cfg.datatype, 'exg')
+            need_exg_json = true;
+        elseif isequal(cfg.datatype, 'nirs')
+            need_nirs_json = true;
+        elseif isequal(cfg.datatype, 'physio')
+            need_physio_json = true;
+        elseif isequal(cfg.datatype, 'stim')
+            need_stim_json = true;
+        elseif isequal(cfg.datatype, 'eyetracker')
+            need_eyetracker_json = true;
+        elseif isequal(cfg.datatype, 'motion')
+            need_motion_json = true;
+        elseif isequal(cfg.datatype, 'events')
+            need_events_tsv = true;
+        else
+            ft_error('cannot determine the type of the data, please specify cfg.datatype');
+        end
+
+        % construct the low-level options as key-value pairs, these are passed to FT_READ_HEADER, FT_READ_DATA and FT_READ_EVENT
+        headeropt = {};
+        headeropt = ft_setopt(headeropt, 'headerformat',   ft_getopt(cfg, 'headerformat'));        % is passed to low-level function, empty implies autodetection
+        headeropt = ft_setopt(headeropt, 'chantype',       ft_getopt(cfg, 'chantype', {}));        % 2017.10.10 AB required for NeuroOmega files
+        headeropt = ft_setopt(headeropt, 'checkmaxfilter', false);
+        headeropt = ft_setopt(headeropt, 'readbids',       false);
+
+        dataopt   = {};
+        dataopt   = ft_setopt(dataopt, 'checkboundary',    false);
+        dataopt   = ft_setopt(dataopt, 'dataformat',       ft_getopt(cfg, 'dataformat'));          % is passed to low-level function, empty implies autodetection
+
+        eventopt  = {};
+        eventopt  = ft_setopt(eventopt, 'readbids',        false);
+        eventopt  = ft_setopt(eventopt, 'eventformat',     ft_getopt(cfg, 'eventformat'));         % is passed to low-level function, empty implies autodetection
+
+        if ~isempty(cfg.dataset)
+            hdr = ft_read_header(cfg.headerfile, headeropt{:});
+            if strcmp(cfg.method, 'convert')
+                % the data should be converted and written to disk
+                dat     = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', 1, 'endsample', hdr.nSamples*hdr.nTrials, dataopt{:});
+                trigger = ft_read_event(cfg.datafile, 'header', hdr, eventopt{:});
+            end
+        end
+
 end % switch typ
 
 if need_meg_json || need_eeg_json || need_ieeg_json
-  try
-    % try to get the electrode definition, either from data.elec or from cfg.elec
-    tmpcfg = keepfields(cfg, {'elec'});
-    tmpcfg.senstype = 'eeg';
-    if ~isempty(varargin)
-      elec = ft_fetch_sens(tmpcfg, varargin{1});
+    % determine whether an electrode definition is available
+    if isfield(cfg, 'elec') && ~isempty(cfg.elec)
+        need_electrodes_tsv = true;
+    elseif exist('hdr', 'var') && isfield(hdr, 'elec')
+        need_electrodes_tsv = true;
+    elseif ~isempty(varargin) && isfield(varargin{1}, 'elec') && ~isempty(varargin{1}.elec)
+        need_electrodes_tsv = true;
     else
-      elec = ft_fetch_sens(tmpcfg);
+        need_electrodes_tsv = ~isequaln(cfg.electrodes.name, nan);
     end
-    need_electrodes_tsv = true;
-  catch
-    % electrodes can also be specified as cfg.electrodes
-    need_electrodes_tsv = ~isnan(cfg.electrodes.name);
-  end
 end
 
 if need_nirs_json
-  try
-    % try to get the optode definition, either from data.opto or from
-    % cfg.optodes
-    tmpcfg = keepfields(cfg, {'opto'});
-    tmpcfg.senstype='nirs';
-    if ~isempty(varargin)
-      opto = ft_fetch_sens(tmpcfg, varargin{1});
+    % determine whether an optode definition is available
+    if isfield(cfg, 'opto') && ~isempty(cfg.opto)
+        need_optodes_tsv = true;
+    elseif exist('hdr', 'var') && isfield(hdr, 'opto')
+        need_optodes_tsv = true;
+    elseif ~isempty(varargin) && isfield(varargin{1}, 'opto') && ~isempty(varargin{1}.opto)
+        need_optodes_tsv = true;
     else
-      opto = ft_fetch_sens(tmpcfg);
+        need_optodes_tsv = ~isequaln(cfg.optodes.name, nan);
     end
-    need_optodes_tsv = true;
-  catch
-    % optodes can also be specified as cfg.optodes
-    need_optodes_tsv= ~isnan(cfg.optodes.name);
-  end
 end
 
 need_events_tsv       = need_events_tsv       || need_meg_json || need_eeg_json || need_ieeg_json || need_emg_json || need_exg_json || need_nirs_json || need_eyetracker_json || need_motion_json || (contains(cfg.outputfile, 'task') || ~isempty(cfg.TaskName) || ~isempty(cfg.task)) || ~isempty(cfg.events);
-need_channels_tsv     = need_channels_tsv     || need_meg_json || need_eeg_json || need_ieeg_json || need_emg_json || need_exg_json || need_nirs_json;
-need_coordsystem_json = need_coordsystem_json || need_meg_json || need_electrodes_tsv || need_nirs_json;
+need_channels_tsv     = need_channels_tsv     || need_meg_json || need_eeg_json || need_ieeg_json || need_emg_json || need_exg_json || need_nirs_json || need_motion_json ;
+need_coordsystem_json = need_coordsystem_json || need_meg_json || need_electrodes_tsv || need_nirs_json ;
 
 if need_emg_json
-  ft_warning('EMG data is not yet part of the official BIDS specification');
-  cfg.dataset_description.BIDSVersion = 'n/a';
+    ft_warning('EMG data is not yet part of the official BIDS specification');
+    cfg.dataset_description.BIDSVersion = 'n/a';
 elseif need_exg_json
-  ft_warning('EXG data is not yet part of the official BIDS specification');
-  cfg.dataset_description.BIDSVersion = 'n/a';
-elseif need_nirs_json
-  ft_warning('NIRS data is not yet part of the official BIDS specification');
-  cfg.dataset_description.BIDSVersion = 'n/a';
+    ft_warning('EXG data is not yet part of the official BIDS specification');
+    cfg.dataset_description.BIDSVersion = 'n/a';
 elseif need_audio_json
-  ft_warning('audio data is not yet part of the official BIDS specification');
-  cfg.dataset_description.BIDSVersion = 'n/a';
+    ft_warning('audio data is not yet part of the official BIDS specification');
+    cfg.dataset_description.BIDSVersion = 'n/a';
 elseif need_video_json
-  ft_warning('video data is not yet part of the official BIDS specification');
-  cfg.dataset_description.BIDSVersion = 'n/a';
+    ft_warning('video data is not yet part of the official BIDS specification');
+    cfg.dataset_description.BIDSVersion = 'n/a';
 elseif need_eyetracker_json
-  ft_warning('eyetracker data is not yet part of the official BIDS specification');
-  cfg.dataset_description.BIDSVersion = 'n/a';
+    ft_warning('eyetracker data is not yet part of the official BIDS specification');
+    cfg.dataset_description.BIDSVersion = 'n/a';
 elseif need_motion_json
-  ft_warning('motion data is not yet part of the official BIDS specification');
-  cfg.dataset_description.BIDSVersion = 'n/a';
+    ft_warning('motion data is not yet part of the official BIDS specification');
+    cfg.dataset_description.BIDSVersion = 'n/a';
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1115,517 +1139,649 @@ coordsystem_settings = keepfields(cfg.coordsystem, fn);
 
 %% need_mri_json
 if need_mri_json
-  % start with the information from the DICOM header
-  mri_json = keepfields(dcm, [fieldnames(mri_settings); fieldnames(generic_settings)]);
-  % merge the information specified by the user with that from the data
-  % in case fields appear in both, the first input overrules the second
-  mri_json = mergeconfig(mri_settings,     mri_json, false);
-  mri_json = mergeconfig(generic_settings, mri_json, false);
+    % start with the information from the DICOM header
+    mri_json = keepfields(dcm, [fieldnames(mri_settings); fieldnames(generic_settings)]);
+    % merge the information specified by the user with that from the data
+    % in case fields appear in both, the first input overrules the second
+    mri_json = mergestruct(mri_settings,     mri_json, false);
+    mri_json = mergestruct(generic_settings, mri_json, false);
 end % if need_mri_json
 
 %% need_meg_json
 if need_meg_json
-  meg_json.SamplingFrequency          = hdr.Fs;
-  meg_json.MEGChannelCount            = sum(strcmpi(hdr.chantype, 'megmag') | strcmpi(hdr.chantype, 'meggrad') | strcmpi(hdr.chantype, 'megplanar') | strcmpi(hdr.chantype, 'megaxial'));
-  meg_json.MEGREFChannelCount         = sum(strcmpi(hdr.chantype, 'refmag') | strcmpi(hdr.chantype, 'refgrad') | strcmpi(hdr.chantype, 'refplanar') | strcmpi(hdr.chantype, 'ref'));
-  meg_json.EEGChannelCount            = sum(strcmpi(hdr.chantype, 'eeg'));
-  meg_json.ECOGChannelCount           = sum(strcmpi(hdr.chantype, 'ecog'));
-  meg_json.SEEGChannelCount           = sum(strcmpi(hdr.chantype, 'seeg'));
-  meg_json.EOGChannelCount            = sum(strcmpi(hdr.chantype, 'eog'));
-  meg_json.ECGChannelCount            = sum(strcmpi(hdr.chantype, 'ecg'));
-  meg_json.EMGChannelCount            = sum(strcmpi(hdr.chantype, 'emg'));
-  meg_json.MiscChannelCount           = sum(strcmpi(hdr.chantype, 'misc') | strcmpi(hdr.chantype, 'unknown'));
-  meg_json.TriggerChannelCount        = sum(strcmpi(hdr.chantype, 'trigger'));
-  meg_json.RecordingDuration          = (hdr.nTrials*hdr.nSamples)/hdr.Fs;
-  if hdr.nTrials>1
-    meg_json.EpochLength              = hdr.nSamples/hdr.Fs;
-  end
-  if ft_senstype(hdr.grad, 'ctf151')
-    meg_json.ContinuousHeadLocalization = any(strcmp(hdr.chantype, 'headloc')); % CTF specific
-    meg_json.Manufacturer             = 'CTF';
-    meg_json.ManufacturersModelName   = 'CTF-151';
-  elseif ft_senstype(hdr.grad, 'ctf275')
-    meg_json.ContinuousHeadLocalization = any(strcmp(hdr.chantype, 'headloc')); % CTF specific
-    meg_json.Manufacturer             = 'CTF';
-    meg_json.ManufacturersModelName   = 'CTF-275';
-  elseif ft_senstype(hdr.grad, 'neuromag122')
-    meg_json.Manufacturer             = 'Neuromag/Elekta/Megin';
-    meg_json.ManufacturersModelName   = 'Neuromag-122';
-  elseif ft_senstype(hdr.grad, 'neuromag306')
-    meg_json.Manufacturer             = 'Neuromag/Elekta/Megin';
-    % the ManufacturersModelName could be either Vectorview or Triux
-  end
-  
-  % merge the information specified by the user with that from the data
-  % in case fields appear in both, the first input overrules the second
-  meg_json = mergeconfig(meg_settings,     meg_json, false);
-  meg_json = mergeconfig(generic_settings, meg_json, false);
+    meg_json.SamplingFrequency          = hdr.Fs;
+    meg_json.MEGChannelCount            = sum(strcmpi(hdr.chantype, 'megmag') | strcmpi(hdr.chantype, 'meggrad') | strcmpi(hdr.chantype, 'megplanar') | strcmpi(hdr.chantype, 'megaxial'));
+    meg_json.MEGREFChannelCount         = sum(strcmpi(hdr.chantype, 'refmag') | strcmpi(hdr.chantype, 'refgrad') | strcmpi(hdr.chantype, 'refplanar') | strcmpi(hdr.chantype, 'ref'));
+    meg_json.EEGChannelCount            = sum(strcmpi(hdr.chantype, 'eeg'));
+    meg_json.ECOGChannelCount           = sum(strcmpi(hdr.chantype, 'ecog'));
+    meg_json.SEEGChannelCount           = sum(strcmpi(hdr.chantype, 'seeg') | strcmpi(hdr.chantype, 'dbs'));
+    meg_json.EOGChannelCount            = sum(strcmpi(hdr.chantype, 'eog'));
+    meg_json.ECGChannelCount            = sum(strcmpi(hdr.chantype, 'ecg'));
+    meg_json.EMGChannelCount            = sum(strcmpi(hdr.chantype, 'emg'));
+    meg_json.MiscChannelCount           = sum(strcmpi(hdr.chantype, 'misc') | strcmpi(hdr.chantype, 'unknown'));
+    meg_json.TriggerChannelCount        = sum(contains(lower(hdr.chantype), 'trigger'));
+    meg_json.RecordingDuration          = (hdr.nTrials*hdr.nSamples)/hdr.Fs;
+
+    if hdr.nTrials>1
+        meg_json.EpochLength              = hdr.nSamples/hdr.Fs;
+    end
+    if ft_senstype(hdr.grad, 'ctf151')
+        meg_json.ContinuousHeadLocalization = any(strcmpi(hdr.chantype, 'headloc')); % CTF specific
+        meg_json.Manufacturer             = 'CTF';
+        meg_json.ManufacturersModelName   = 'CTF-151';
+    elseif ft_senstype(hdr.grad, 'ctf275')
+        meg_json.ContinuousHeadLocalization = any(strcmpi(hdr.chantype, 'headloc')); % CTF specific
+        meg_json.Manufacturer             = 'CTF';
+        meg_json.ManufacturersModelName   = 'CTF-275';
+    elseif ft_senstype(hdr.grad, 'neuromag122')
+        meg_json.Manufacturer             = 'Neuromag/Elekta/Megin';
+        meg_json.ManufacturersModelName   = 'Neuromag-122';
+    elseif ft_senstype(hdr.grad, 'neuromag306')
+        meg_json.Manufacturer             = 'Neuromag/Elekta/Megin';
+        % the ManufacturersModelName could be either Vectorview or Triux
+    end
+
+    % merge the information specified by the user with that from the data
+    % in case fields appear in both, the first input overrules the second
+    meg_json = mergestruct(meg_settings,     meg_json, false);
+    meg_json = mergestruct(generic_settings, meg_json, false);
 end % if need_meg_json
 
 %% need_eeg_json
 if need_eeg_json
-  eeg_json.SamplingFrequency          = hdr.Fs;
-  eeg_json.EEGChannelCount            = sum(strcmpi(hdr.chantype, 'eeg'));
-  eeg_json.EOGChannelCount            = sum(strcmpi(hdr.chantype, 'eog'));
-  eeg_json.ECGChannelCount            = sum(strcmpi(hdr.chantype, 'ecg'));
-  eeg_json.EMGChannelCount            = sum(strcmpi(hdr.chantype, 'emg'));
-  eeg_json.TriggerChannelCount        = sum(strcmpi(hdr.chantype, 'trigger'));
-  eeg_json.MiscChannelCount           = sum(strcmpi(hdr.chantype, 'misc') | strcmpi(hdr.chantype, 'unknown'));
-  eeg_json.RecordingDuration          = (hdr.nTrials*hdr.nSamples)/hdr.Fs;
-  if hdr.nTrials>1
-    eeg_json.EpochLength              = hdr.nSamples/hdr.Fs;
-  end
-  
-  % merge the information specified by the user with that from the data
-  % in case fields appear in both, the first input overrules the second
-  eeg_json = mergeconfig(eeg_settings,     eeg_json, false);
-  eeg_json = mergeconfig(generic_settings, eeg_json, false);
+    eeg_json.SamplingFrequency          = hdr.Fs;
+    eeg_json.EEGChannelCount            = sum(strcmpi(hdr.chantype, 'eeg'));
+    eeg_json.EOGChannelCount            = sum(strcmpi(hdr.chantype, 'eog'));
+    eeg_json.ECGChannelCount            = sum(strcmpi(hdr.chantype, 'ecg'));
+    eeg_json.EMGChannelCount            = sum(strcmpi(hdr.chantype, 'emg'));
+    eeg_json.TriggerChannelCount        = sum(strcmpi(hdr.chantype, 'trigger'));
+    eeg_json.MiscChannelCount           = sum(strcmpi(hdr.chantype, 'misc') | strcmpi(hdr.chantype, 'unknown'));
+    eeg_json.RecordingDuration          = (hdr.nTrials*hdr.nSamples)/hdr.Fs;
+    if hdr.nTrials>1
+        eeg_json.EpochLength              = hdr.nSamples/hdr.Fs;
+    end
+
+    % merge the information specified by the user with that from the data
+    % in case fields appear in both, the first input overrules the second
+    eeg_json = mergestruct(eeg_settings,     eeg_json, false);
+    eeg_json = mergestruct(generic_settings, eeg_json, false);
 end % if need_eeg_json
 
 %% need_ieeg_json
 if need_ieeg_json
-  ieeg_json.SamplingFrequency          = hdr.Fs;
-  ieeg_json.ECOGChannelCount           = sum(strcmpi(hdr.chantype, 'ecog'));
-  ieeg_json.SEEGChannelCount           = sum(strcmpi(hdr.chantype, 'seeg'));
-  ieeg_json.EEGChannelCount            = sum(strcmpi(hdr.chantype, 'eeg'));
-  ieeg_json.EOGChannelCount            = sum(strcmpi(hdr.chantype, 'eog'));
-  ieeg_json.ECGChannelCount            = sum(strcmpi(hdr.chantype, 'ecg'));
-  ieeg_json.EMGChannelCount            = sum(strcmpi(hdr.chantype, 'emg'));
-  ieeg_json.TriggerChannelCount        = sum(strcmpi(hdr.chantype, 'trigger'));
-  ieeg_json.MiscChannelCount           = sum(strcmpi(hdr.chantype, 'misc') | strcmpi(hdr.chantype, 'unknown'));
-  ieeg_json.RecordingDuration          = (hdr.nTrials*hdr.nSamples)/hdr.Fs;
-  if hdr.nTrials>1
-    ieeg_json.EpochLength              = hdr.nSamples/hdr.Fs;
-  end
-  
-  % merge the information specified by the user with that from the data
-  % in case fields appear in both, the first input overrules the second
-  ieeg_json = mergeconfig(ieeg_settings,    ieeg_json, false);
-  ieeg_json = mergeconfig(generic_settings, ieeg_json, false);
+    ieeg_json.SamplingFrequency          = hdr.Fs;
+    ieeg_json.ECOGChannelCount           = sum(strcmpi(hdr.chantype, 'ecog'));
+    ieeg_json.SEEGChannelCount           = sum(strcmpi(hdr.chantype, 'seeg') | strcmpi(hdr.chantype, 'dbs'));
+    ieeg_json.EEGChannelCount            = sum(strcmpi(hdr.chantype, 'eeg'));
+    ieeg_json.EOGChannelCount            = sum(strcmpi(hdr.chantype, 'eog'));
+    ieeg_json.ECGChannelCount            = sum(strcmpi(hdr.chantype, 'ecg'));
+    ieeg_json.EMGChannelCount            = sum(strcmpi(hdr.chantype, 'emg'));
+    ieeg_json.TriggerChannelCount        = sum(strcmpi(hdr.chantype, 'trigger'));
+    ieeg_json.MiscChannelCount           = sum(strcmpi(hdr.chantype, 'misc') | strcmpi(hdr.chantype, 'unknown'));
+    ieeg_json.RecordingDuration          = (hdr.nTrials*hdr.nSamples)/hdr.Fs;
+    if hdr.nTrials>1
+        ieeg_json.EpochLength              = hdr.nSamples/hdr.Fs;
+    end
+
+    % merge the information specified by the user with that from the data
+    % in case fields appear in both, the first input overrules the second
+    ieeg_json = mergestruct(ieeg_settings,    ieeg_json, false);
+    ieeg_json = mergestruct(generic_settings, ieeg_json, false);
 end
 
 %% need_emg_json
 if need_emg_json
-  emg_json.SamplingFrequency          = hdr.Fs;
-  emg_json.EOGChannelCount            = sum(strcmpi(hdr.chantype, 'eog'));
-  emg_json.ECGChannelCount            = sum(strcmpi(hdr.chantype, 'ecg'));
-  emg_json.EMGChannelCount            = sum(strcmpi(hdr.chantype, 'emg'));
-  emg_json.TriggerChannelCount        = sum(strcmpi(hdr.chantype, 'trigger'));
-  emg_json.MiscChannelCount           = sum(strcmpi(hdr.chantype, 'misc') | strcmpi(hdr.chantype, 'unknown'));
-  emg_json.RecordingDuration          = (hdr.nTrials*hdr.nSamples)/hdr.Fs;
-  if hdr.nTrials>1
-    emg_json.EpochLength              = hdr.nSamples/hdr.Fs;
-  end
-  
-  % merge the information specified by the user with that from the data
-  % in case fields appear in both, the first input overrules the second
-  emg_json = mergeconfig(emg_settings,     emg_json, false);
-  emg_json = mergeconfig(generic_settings, emg_json, false);
+    emg_json.SamplingFrequency          = hdr.Fs;
+    emg_json.EOGChannelCount            = sum(strcmpi(hdr.chantype, 'eog'));
+    emg_json.ECGChannelCount            = sum(strcmpi(hdr.chantype, 'ecg'));
+    emg_json.EMGChannelCount            = sum(strcmpi(hdr.chantype, 'emg'));
+    emg_json.TriggerChannelCount        = sum(strcmpi(hdr.chantype, 'trigger'));
+    emg_json.MiscChannelCount           = sum(strcmpi(hdr.chantype, 'misc') | strcmpi(hdr.chantype, 'unknown'));
+    emg_json.RecordingDuration          = (hdr.nTrials*hdr.nSamples)/hdr.Fs;
+    if hdr.nTrials>1
+        emg_json.EpochLength              = hdr.nSamples/hdr.Fs;
+    end
+
+    % merge the information specified by the user with that from the data
+    % in case fields appear in both, the first input overrules the second
+    emg_json = mergestruct(emg_settings,     emg_json, false);
+    emg_json = mergestruct(generic_settings, emg_json, false);
 end
 
 %% need_exg_json
 if need_exg_json
-  exg_json.SamplingFrequency          = hdr.Fs;
-  exg_json.RecordingDuration          = (hdr.nTrials*hdr.nSamples)/hdr.Fs;
-  if hdr.nTrials>1
-    exg_json.EpochLength              = hdr.nSamples/hdr.Fs;
-  end
-  
-  % merge the information specified by the user with that from the data
-  % in case fields appear in both, the first input overrules the second
-  exg_json = mergeconfig(exg_settings,     exg_json, false);
-  exg_json = mergeconfig(generic_settings, exg_json, false);
+    exg_json.SamplingFrequency          = hdr.Fs;
+    exg_json.RecordingDuration          = (hdr.nTrials*hdr.nSamples)/hdr.Fs;
+    if hdr.nTrials>1
+        exg_json.EpochLength              = hdr.nSamples/hdr.Fs;
+    end
+
+    % merge the information specified by the user with that from the data
+    % in case fields appear in both, the first input overrules the second
+    exg_json = mergestruct(exg_settings,     exg_json, false);
+    exg_json = mergestruct(generic_settings, exg_json, false);
 end
 
 %% need_nirs_json
 if need_nirs_json
-  nirs_json.SamplingFrequency         = hdr.Fs;
-  nirs_json.RecordingDuration         = (hdr.nTrials*hdr.nSamples)/hdr.Fs;
-  if hdr.nTrials>1
-    nirs_json.EpochLength             = hdr.nSamples/hdr.Fs;
-  end
-  nirs_json.NIRSChannelCount          = sum(strcmpi(hdr.chantype, 'nirs'));
-  %   nirs_json.AUXChannelCount           = sum(strcmpi(hdr.chantype, 'aux')); % not yet supported
-  %   nirs_json.MiscChannelCount          = sum(strcmpi(hdr.chantype, 'misc') | strcmpi(hdr.chantype, 'unknown'));
-  [opto_labels, opto_idx]             = unique(hdr.opto.optolabel); % select unique optodes
-  nirs_json.NIRSSourceOptodeCount     = sum(strcmpi(hdr.opto.optotype(opto_idx), 'transmitter'));
-  nirs_json.NIRSDetectorOptodeCount   = sum (strcmpi(hdr.opto.optotype(opto_idx), 'receiver'));
-  
-  % merge the information specified by the user with that from the data
-  % in case fields appear in both, the first input overrules the second
-  nirs_json = mergeconfig(nirs_settings,    nirs_json, false);
-  nirs_json = mergeconfig(generic_settings, nirs_json, false);
+    nirs_json.SamplingFrequency         = hdr.Fs;
+    nirs_json.RecordingDuration         = (hdr.nTrials*hdr.nSamples)/hdr.Fs;
+    if hdr.nTrials>1
+        nirs_json.EpochLength             = hdr.nSamples/hdr.Fs;
+    end
+    nirs_json.NIRSChannelCount          = sum(strcmpi(hdr.chantype, 'nirs'));
+    nirs_json.ACCELChannelCount         = sum(strcmpi(hdr.chantype, 'accel'));
+    nirs_json.GYROChannelCount          = sum(strcmpi(hdr.chantype, 'gyro'));
+    nirs_json.MAGNChannelCount          = sum(strcmpi(hdr.chantype, 'magn'));
+    nirs_json.MISCChannelCount          = sum(strcmpi(hdr.chantype, 'misc') | strcmpi(hdr.chantype, 'unknown') | strcmpi(hdr.chantype, 'aux'));
+    [opto_labels, opto_idx]             = unique(hdr.opto.optolabel); % select unique optodes
+    nirs_json.NIRSSourceOptodeCount     = sum(strcmpi(hdr.opto.optotype(opto_idx), 'transmitter'));
+    nirs_json.NIRSDetectorOptodeCount   = sum (strcmpi(hdr.opto.optotype(opto_idx), 'receiver'));
+
+    % merge the information specified by the user with that from the data
+    % in case fields appear in both, the first input overrules the second
+    nirs_json = mergestruct(nirs_settings,    nirs_json, false);
+    nirs_json = mergestruct(generic_settings, nirs_json, false);
 end
 
 %% need_audio_json
 if need_audio_json
-  audio_json.SampleRate         = audio.SampleRate;
-  audio_json.RecordingDuration  = audio.Duration; % please note that this is not consistent with VideoDuration/AudioDuration for a video file, but it is consistent with MEG/EEG/iEEG
-  audio_json.ChannelCount       = audio.NumChannels;
-  
-  % merge the information specified by the user with that from the data
-  % in case fields appear in both, the first input overrules the second
-  audio_json = mergeconfig(audio_settings,   audio_json, false);
-  audio_json = mergeconfig(generic_settings, audio_json, false);
+    audio_json.SampleRate         = audio.SampleRate;
+    audio_json.RecordingDuration  = audio.Duration; % please note that this is not consistent with VideoDuration/AudioDuration for a video file, but it is consistent with MEG/EEG/iEEG
+    audio_json.ChannelCount       = audio.NumChannels;
+
+    % merge the information specified by the user with that from the data
+    % in case fields appear in both, the first input overrules the second
+    audio_json = mergestruct(audio_settings,   audio_json, false);
+    audio_json = mergestruct(generic_settings, audio_json, false);
 end
 
 %% need_video_json
 if need_video_json
-  video_json.FrameRate          = video.FrameRate;
-  video_json.Width              = video.Width;
-  video_json.Height             = video.Height;
-  video_json.VideoDuration      = video.Duration; % to distinguish it from the audio duration
-  video_json.AudioDuration      = audio.Duration; % to distinguish it from the video duration
-  video_json.AudioSampleRate    = audio.SampleRate;
-  video_json.AudioChannelCount  = audio.NumChannels;
-  
-  % merge the information specified by the user with that from the data
-  % in case fields appear in both, the first input overrules the second
-  video_json = mergeconfig(video_settings,   video_json, false);
-  video_json = mergeconfig(generic_settings, video_json, false);
+    video_json.FrameRate          = video.FrameRate;
+    video_json.Width              = video.Width;
+    video_json.Height             = video.Height;
+    video_json.VideoDuration      = video.Duration; % to distinguish it from the audio duration
+    video_json.AudioDuration      = audio.Duration; % to distinguish it from the video duration
+    video_json.AudioSampleRate    = audio.SampleRate;
+    video_json.AudioChannelCount  = audio.NumChannels;
+
+    % merge the information specified by the user with that from the data
+    % in case fields appear in both, the first input overrules the second
+    video_json = mergestruct(video_settings,   video_json, false);
+    video_json = mergestruct(generic_settings, video_json, false);
 end
 
 %% need_physio_json
 if need_physio_json
-  physio_json.SamplingFrequency = hdr.Fs;
-  physio_json.StartTime = nan;
-  physio_json.Columns = hdr.label;
-  
-  % merge the information specified by the user with that from the data
-  % in case fields appear in both, the first input overrules the second
-  physio_json = mergeconfig(physio_settings,  physio_json, false);
-  physio_json = mergeconfig(generic_settings, physio_json, false);
+    physio_json.SamplingFrequency = hdr.Fs;
+    physio_json.StartTime = nan;
+    physio_json.Columns = hdr.label;
+
+    % merge the information specified by the user with that from the data
+    % in case fields appear in both, the first input overrules the second
+    physio_json = mergestruct(physio_settings,  physio_json, false);
+    physio_json = mergestruct(generic_settings, physio_json, false);
 end
 
 %% need_stim_json
 if need_stim_json
-  stim_json.SamplingFrequency = hdr.Fs;
-  stim_json.StartTime = nan;
-  stim_json.Columns = hdr.label;
-  
-  % merge the information specified by the user with that from the data
-  % in case fields appear in both, the first input overrules the second
-  stim_json = mergeconfig(stim_settings,    stim_json, false);
-  stim_json = mergeconfig(generic_settings, stim_json, false);
+    stim_json.SamplingFrequency = hdr.Fs;
+    stim_json.StartTime = nan;
+    stim_json.Columns = hdr.label;
+
+    % merge the information specified by the user with that from the data
+    % in case fields appear in both, the first input overrules the second
+    stim_json = mergestruct(stim_settings,    stim_json, false);
+    stim_json = mergestruct(generic_settings, stim_json, false);
 end
 
 %% need_eyetracker_json
 if need_eyetracker_json
-  eyetracker_json.SamplingFrequency = hdr.Fs;
-  eyetracker_json.StartTime = nan;
-  eyetracker_json.Columns = hdr.label;
-  
-  % merge the information specified by the user with that from the data
-  % in case fields appear in both, the first input overrules the second
-  eyetracker_json = mergeconfig(eyetracker_settings,  eyetracker_json, false);
-  eyetracker_json = mergeconfig(generic_settings,     eyetracker_json, false);
+    eyetracker_json.SamplingFrequency = hdr.Fs;
+    eyetracker_json.StartTime = nan;
+    eyetracker_json.Columns = hdr.label;
+
+    % merge the information specified by the user with that from the data
+    % in case fields appear in both, the first input overrules the second
+    eyetracker_json = mergestruct(eyetracker_settings,  eyetracker_json, false);
+    eyetracker_json = mergestruct(generic_settings,     eyetracker_json, false);
 end
 
 %% need_motion_json
 if need_motion_json
-  motion_json.SamplingFrequency = hdr.Fs;
-  motion_json.StartTime = nan;
-  motion_json.Columns = hdr.label;
-  motion_json.RecordingDuration = (hdr.nSamples*hdr.nTrials)/hdr.Fs;
-  
-  % merge the information specified by the user with that from the data
-  % in case fields appear in both, the first input overrules the second
-  motion_json = mergeconfig(motion_settings,  motion_json, false);
-  motion_json = mergeconfig(generic_settings, motion_json, false);
-end
+    motion_json.SamplingFrequency     = hdr.Fs;
+    motion_json.StartTime             = nan;
+    motion_json.MotionChannelCount    = hdr.nChans;
+    motion_json.RecordingDuration     = (hdr.nSamples*hdr.nTrials)/hdr.Fs;
+    motion_json.SamplingFrequencyEffective = size(dat,2)/motion_json.RecordingDuration;
+    motion_json.POSChannelCount       = sum(strcmpi(hdr.chantype, 'POS'));
+    motion_json.ORNTChannelCount      = sum(strcmpi(hdr.chantype, 'ORNT'));
+    motion_json.VELChannelCount       = sum(strcmpi(hdr.chantype, 'VEL'));
+    motion_json.ANGVELChannelCount    = sum(strcmpi(hdr.chantype, 'ANGVEL'));
+    motion_json.ACCChannelCount       = sum(strcmpi(hdr.chantype, 'ACC'));
+    motion_json.ANGACCChannelCount    = sum(strcmpi(hdr.chantype, 'ANGACC'));
+    motion_json.MAGNChannelCount      = sum(strcmpi(hdr.chantype, 'MAGN'));
+    motion_json.JNTANGChannelCount    = sum(strcmpi(hdr.chantype, 'JNTANG'));
+    if isfield(cfg, 'channels') && isfield(cfg.channels, 'tracked_point')
+        motion_json.TrackedPointsCount  = numel(setdiff(unique(cfg.channels.tracked_point), 'n/a'));
+    end
+
+    % merge the information specified by the user with that from the data
+    % in case fields appear in both, the first input overrules the second
+    motion_json = mergestruct(motion_settings,  motion_json, false);
+    motion_json = mergestruct(generic_settings, motion_json, false);
+
+end % if need_motion_json
 
 %% need_channels_tsv
 if need_channels_tsv
-  
-  if isstruct(cfg.channels)
-    % remove fields with non-informative defaults
-    fn = fieldnames(cfg.channels);
+
+    if isstruct(cfg.channels)
+        % remove fields with non-informative defaults
+        fn = fieldnames(cfg.channels);
+        for i=1:numel(fn)
+            if isequaln(cfg.channels.(fn{i}), nan)
+                % a single nan means that it was set as default
+                cfg.channels = rmfield(cfg.channels, fn{i});
+            end
+        end
+        try
+            cfg.channels = convert_table(cfg.channels);
+        catch
+            ft_error('incorrect specification of cfg.channels');
+        end
+    end
+
+    % channel information can come from the header and from cfg.channels
+    channels_tsv = hdr2table(hdr);
+    channels_tsv = mergetable(channels_tsv, cfg.channels, 'name');
+
+    % columns should appear in a specific order
+    if need_nirs_json
+        required = {'name', 'type', 'source', 'detector', 'wavelength_nominal', 'units'};
+    else
+        required = {'name', 'type', 'units', 'low_cutoff', 'high_cutoff'};
+    end
+    optional = setdiff(channels_tsv.Properties.VariableNames, required, 'stable');
+    channels_tsv = sort_columns(channels_tsv, [required, optional]);
+
+    % the default for cfg.channels consists of one row where all values are nan, this needs to be removed
+    keep = false(size(channels_tsv.name));
+    for i=1:numel(channels_tsv.name)
+        keep(i) = ischar(channels_tsv.name{i});
+    end
+    channels_tsv = channels_tsv(keep,:);
+
+    % there are some chanel types used in FieldTrip that are named differently in BIDS
+    channels_tsv.type(strcmpi(channels_tsv.type, 'unknown'))     = {'OTHER'};
+    channels_tsv.type(strcmpi(channels_tsv.type, 'clock'))       = {'SYSCLOCK'};
+    channels_tsv.type(strcmpi(channels_tsv.type, 'meggrad'))     = {'MEGGRADAXIAL'};
+    channels_tsv.type(strcmpi(channels_tsv.type, 'megplanar'))   = {'MEGGRADPLANAR'};
+    channels_tsv.type(strcmpi(channels_tsv.type, 'refmag'))      = {'MEGREFMAG'};
+    channels_tsv.type(strcmpi(channels_tsv.type, 'refgrad'))     = {'MEGREFGRADAXIAL'};
+    channels_tsv.type(strcmpi(channels_tsv.type, 'refplanar'))   = {'MEGREFGRADPLANAR'};
+    channels_tsv.type(strcmpi(channels_tsv.type, 'respiration')) = {'RESP'};
+    channels_tsv.type(strcmpi(channels_tsv.type, 'headloc'))     = {'HLU'};
+    channels_tsv.type(strcmpi(channels_tsv.type, 'headloc_gof')) = {'FITERR'};
+    channels_tsv.type(strcmpi(channels_tsv.type, 'ori'))         = {'ORNT'};
+    % trigger, analog trigger, and digital trigger all have to be renamed to TRIG
+    channels_tsv.type(contains(channels_tsv.type, 'trigger', 'IgnoreCase', true)) = {'TRIG'};
+    channels_tsv.type(contains(channels_tsv.type, 'nirs'))       = {'unknown'}; % depends on the type of measurement and should be provided by the user
+    % channel types in BIDS must be in upper case
+    channels_tsv.type = upper(channels_tsv.type);
+
+    % do a sanity check on the number of channels for the electrophysiology data types
+    if need_meg_json
+        type_json = meg_json;
+    elseif need_eeg_json
+        type_json = eeg_json;
+    elseif need_ieeg_json
+        type_json = ieeg_json;
+    elseif need_emg_json
+        type_json = emg_json;
+    elseif need_exg_json
+        type_json = exg_json;
+    elseif need_nirs_json
+        type_json = nirs_json;
+    elseif need_motion_json
+        type_json = motion_json;
+    end
+    fn = fieldnames(type_json);
+    fn = fn(endsWith(fn, 'ChannelCount') & ~contains(fn,'ShortChannel'));
+    jsoncount = 0;
     for i=1:numel(fn)
-      if isequaln(cfg.channels.(fn{i}), nan)
-        % a single nan means that it was set as default
-        cfg.channels = rmfield(cfg.channels, fn{i});
-      end
+        if ~isempty(type_json.(fn{i}))
+            jsoncount = jsoncount + type_json.(fn{i});
+        end
     end
-    try
-      cfg.channels = convert_table(cfg.channels);
-    catch
-      ft_error('incorrect specification of cfg.channels');
+    if size(channels_tsv,1)~=jsoncount
+        ft_warning('inconsistent specification of the channel count: %d in the json, %d in the tsv', jsoncount, size(channels_tsv,1));
     end
-  end
-  
-  % channel information can come from the header and from cfg.channels
-  channels_tsv = hdr2table(hdr);
-  channels_tsv = merge_table(channels_tsv, cfg.channels, 'name');
-  
-  % the default for cfg.channels consists of one row where all values are nan, this needs to be removed
-  keep = false(size(channels_tsv.name));
-  for i=1:numel(channels_tsv.name)
-    keep(i) = ischar(channels_tsv.name{i});
-  end
-  channels_tsv = channels_tsv(keep,:);
-  
-  % do a sanity check on the number of channels for the electrophysiology data types
-  if need_meg_json
-    type_json = meg_json;
-  elseif need_eeg_json
-    type_json = eeg_json;
-  elseif need_ieeg_json
-    type_json = ieeg_json;
-  elseif need_emg_json
-    type_json = emg_json;
-  elseif need_exg_json
-    type_json = exg_json;
-  elseif need_nirs_json
-    type_json = nirs_json;
-  end
-  fn = fieldnames(type_json);
-  fn = fn(endsWith(fn, 'ChannelCount'));
-  jsoncount = 0;
-  for i=1:numel(fn)
-    if ~isempty(type_json.(fn{i}))
-      jsoncount = jsoncount + type_json.(fn{i});
-    end
-  end
-  if size(channels_tsv,1)~=jsoncount
-    ft_warning('incorrect specification of the channel count: %d in the json, %d in the tsv', jsoncount, size(channels_tsv,1));
-  end
 end % if need_channels_tsv
 
 %% need_electrodes_tsv
 if need_electrodes_tsv
-  
-  if isstruct(cfg.electrodes)
-    % remove fields with non-informative defaults
-    fn = fieldnames(cfg.electrodes);
-    for i=1:numel(fn)
-      if isequaln(cfg.electrodes.(fn{i}), nan)
-        % a single nan means that it was set as default
-        cfg.electrodes = rmfield(cfg.electrodes, fn{i});
-      end
-    end
+
+    % try to get the elec structure from the configuration or data
     try
-      cfg.electrodes = convert_table(cfg.electrodes);
+        tmpcfg = keepfields(cfg, {'elec'});
+        tmpcfg.senstype = 'eeg';
+        if ~isempty(varargin)
+            elec = ft_fetch_sens(tmpcfg, varargin{1});
+        elseif exist('hdr', 'var') && isfield(hdr, 'elec')
+            elec = hdr.elec;
+        else
+            elec = ft_fetch_sens(tmpcfg);
+        end
     catch
-      ft_error('incorrect specification of cfg.electrodes.%s', fn{i});
+        elec = [];
     end
-  end
-  
-  % electrode details can be specified in cfg.elec, data.elec or in cfg.electrodes
-  electrodes_tsv = elec2table(elec);
-  electrodes_tsv = merge_table(electrodes_tsv, cfg.electrodes, 'name');
-  
-  % the default for cfg.electrodes consists of one row where all values are nan, this needs to be removed
-  keep = false(size(electrodes_tsv.name));
-  for i=1:numel(electrodes_tsv.name)
-    keep(i) = ischar(electrodes_tsv.name{i});
-  end
-  electrodes_tsv = electrodes_tsv(keep,:);
-  
+
+    if isstruct(cfg.electrodes)
+        % remove fields with non-informative defaults
+        fn = fieldnames(cfg.electrodes);
+        for i=1:numel(fn)
+            if isequaln(cfg.electrodes.(fn{i}), nan)
+                % a single nan means that it was set as default
+                cfg.electrodes = rmfield(cfg.electrodes, fn{i});
+            end
+        end
+        try
+            cfg.electrodes = convert_table(cfg.electrodes);
+        catch
+            ft_error('incorrect specification of cfg.electrodes.%s', fn{i});
+        end
+    end
+
+    % electrode details can be specified in cfg.elec, data.elec or in cfg.electrodes
+    electrodes_tsv = elec2table(elec);                                    % this includes the cfg.elec and data.elec
+    electrodes_tsv = mergetable(electrodes_tsv, cfg.electrodes, 'name'); % this includes the cfg.electrodes
+
+    % the default for cfg.electrodes consists of one row where all values are nan, this needs to be removed
+    keep = false(size(electrodes_tsv.name));
+    for i=1:numel(electrodes_tsv.name)
+        keep(i) = ischar(electrodes_tsv.name{i});
+    end
+    electrodes_tsv = electrodes_tsv(keep,:);
+
 end % need_electrodes_tsv
 
 %% need_optodes_tsv
 if need_optodes_tsv
-  
-  if isstruct(cfg.optodes)
-    % remove fields with non-informative defaults
-    fn = fieldnames(cfg.optodes);
-    for i=1:numel(fn)
-      if isequaln(cfg.optodes.(fn{i}), nan)
-        % a single nan means that it was set as default
-        cfg.optodes = rmfield(cfg.optodes, fn{i});
-      end
-    end
+
+    % try to get the opto structure from the configuration or data
     try
-      cfg.optodes = convert_table(cfg.optodes);
+        tmpcfg = keepfields(cfg, {'opto'});
+        tmpcfg.senstype='nirs';
+        if ~isempty(varargin)
+            opto = ft_fetch_sens(tmpcfg, varargin{1});
+        elseif exist('hdr', 'var') && isfield(hdr, 'opto')
+            opto = hdr.opto;
+        else
+            opto = ft_fetch_sens(tmpcfg);
+        end
     catch
-      ft_error('incorrect specification of cfg.optodes.');
+        opto = [];
     end
-  end
-  
-  % optode details can be specified in cfg.opto, data.opto or cfg.optodes
-  optodes_tsv=opto2table(opto); % this includes the cfg.opto and data.opto
-  optodes_tsv=merge_table(optodes_tsv, cfg.optodes, 'name'); % this includes the cfg.optodes
-  
-  % the default for cfg.electrodes consists of one row where all values are nan, this needs to be removed
-  keep = false(size(optodes_tsv.name));
-  for i=1:numel(optodes_tsv.name)
-    keep(i) = ischar(optodes_tsv.name{i});
-  end
-  optodes_tsv = optodes_tsv(keep,:);
-  
+
+    if isstruct(cfg.optodes)
+        % remove fields with non-informative defaults
+        fn = fieldnames(cfg.optodes);
+        for i=1:numel(fn)
+            if isequaln(cfg.optodes.(fn{i}), nan)
+                % a single nan means that it was set as default
+                cfg.optodes = rmfield(cfg.optodes, fn{i});
+            end
+        end
+        try
+            cfg.optodes = convert_table(cfg.optodes);
+        catch
+            ft_error('incorrect specification of cfg.optodes.');
+        end
+    end
+
+    % optode details can be specified in cfg.opto, data.opto or cfg.optodes
+    optodes_tsv = opto2table(opto);                              % this includes the cfg.opto and data.opto
+    optodes_tsv = mergetable(optodes_tsv, cfg.optodes, 'name'); % this includes the cfg.optodes
+
+    % the default for cfg.electrodes consists of one row where all values are nan, this needs to be removed
+    keep = false(size(optodes_tsv.name));
+    for i=1:numel(optodes_tsv.name)
+        keep(i) = ischar(optodes_tsv.name{i});
+    end
+    optodes_tsv = optodes_tsv(keep,:);
+
 end % need_optodes_tsv
 
 %% need_coordsystem_json
 if need_coordsystem_json
-  if isfield(hdr, 'grad') && ft_senstype(hdr.grad, 'ctf')
-    % coordinate system for MEG sensors
-    coordsystem_json.MEGCoordinateSystem            = 'CTF';
-    coordsystem_json.MEGCoordinateUnits             = 'cm';
-    coordsystem_json.MEGCoordinateSystemDescription = 'CTF head coordinates, orientation ALS, origin between the ears';
-    % coordinate system for head localization coils
-    coordsystem_json.HeadCoilCoordinates                 = []; % see below
-    coordsystem_json.HeadCoilCoordinateSystem            = 'CTF';
-    coordsystem_json.HeadCoilCoordinateUnits             = 'cm';
-    coordsystem_json.HeadCoilCoordinateSystemDescription = 'CTF head coordinates, orientation ALS, origin between the ears';
-    if isempty(coordsystem_json.HeadCoilCoordinates)
-      % get the positions from the dataset header
-      label = cellstr(hdr.orig.hc.names);
-      position = hdr.orig.hc.head;
-      for i=1:numel(label)
-        coordsystem_json.HeadCoilCoordinates.(fixname(label{i})) = position(:,i)';
-      end
+    if isfield(hdr, 'grad') && ft_senstype(hdr.grad, 'ctf')
+
+        % CTF empty-room recordings use the standard positions of the coils, as if they were measured
+        emptyroom = all(hdr.orig.hc.standard == hdr.orig.hc.dewar, [1 2]);
+        if emptyroom
+            ft_notice('this seems to be an empty room recording')
+        end
+
+        if ~emptyroom
+            % coordinate system for MEG sensors
+            coordsystem_json.MEGCoordinateSystem                 = 'CTF';
+            coordsystem_json.MEGCoordinateUnits                  = 'cm';
+            coordsystem_json.MEGCoordinateSystemDescription      = 'CTF head coordinates, orientation ALS, origin between the ears';
+            % coordinate system for head localization coils
+            coordsystem_json.HeadCoilCoordinates                 = []; % see below
+            coordsystem_json.HeadCoilCoordinateSystem            = 'CTF';
+            coordsystem_json.HeadCoilCoordinateUnits             = 'cm';
+            coordsystem_json.HeadCoilCoordinateSystemDescription = 'CTF head coordinates, orientation ALS, origin between the ears';
+            if isempty(coordsystem_json.HeadCoilCoordinates)
+                % get the positions from the dataset header
+                label = cellstr(hdr.orig.hc.names);
+                position = hdr.orig.hc.head;
+                for i=1:numel(label)
+                    coordsystem_json.HeadCoilCoordinates.(fixname(label{i})) = position(:,i)';
+                end
+            end
+        else
+            % coordinate system for MEG sensors
+            coordsystem_json.MEGCoordinateSystem                 = 'Other';
+            coordsystem_json.MEGCoordinateUnits                  = 'cm';
+            coordsystem_json.MEGCoordinateSystemDescription      = 'CTF head coordinates with standard coil positions relative to dewar, orientation ALS';
+        end % if ~emptyroom
+
+    elseif isfield(hdr, 'grad') && ft_senstype(hdr.grad, 'neuromag')
+
+        % Neuromag empty-room recordings do not have digitizer information
+        emptyroom = isempty(hdr.orig.dig);
+        if emptyroom
+            ft_notice('this seems to be an empty room recording')
+        end
+
+        if ~emptyroom
+            % coordinate system for MEG sensors
+            coordsystem_json.MEGCoordinateSystem                 = 'ElektaNeuromag';
+            coordsystem_json.MEGCoordinateUnits                  = 'm';
+            coordsystem_json.MEGCoordinateSystemDescription      = 'ElektaNeuromag head coordinates, orientation RAS, origin between the ears';
+            % coordinate system for head localization coils
+            coordsystem_json.HeadCoilCoordinates                 = []; % see below
+            coordsystem_json.HeadCoilCoordinateSystem            = 'ElektaNeuromag';
+            coordsystem_json.HeadCoilCoordinateUnits             = 'm';
+            coordsystem_json.HeadCoilCoordinateSystemDescription = 'ElektaNeuromag head coordinates, orientation RAS, origin between the ears';
+            if isempty(coordsystem_json.HeadCoilCoordinates)
+                idxHPI = find([hdr.orig.dig.kind] == 2); % count the kind==2 (HLU in the Elekta/Megin system), usually 4 or 5
+                for i=1:length(idxHPI)
+                    % the coils do not have a name but are numbered
+                    coordsystem_json.HeadCoilCoordinates.(['coil' num2str(i)]) = hdr.orig.dig(idxHPI(i)).r';
+                end
+            end
+            % coordinates of the anatomical landmarks (LPA/RPA/NAS)
+            coordsystem_json.AnatomicalLandmarkCoordinates                 = []; % see below
+            coordsystem_json.AnatomicalLandmarkCoordinateSystem            = 'ElektaNeuromag';
+            coordsystem_json.AnatomicalLandmarkCoordinateUnits             = 'm';
+            coordsystem_json.AnatomicalLandmarkCoordinateSystemDescription = 'ElektaNeuromag head coordinates, orientation RAS, origin between the ears';
+            if isempty(coordsystem_json.AnatomicalLandmarkCoordinates)
+                coordsystem_json = rmfield(coordsystem_json, 'AnatomicalLandmarkCoordinates'); % needed to set the names afterwards
+                coordsystem_json.AnatomicalLandmarkCoordinates.lpa = hdr.orig.dig(1).r';
+                coordsystem_json.AnatomicalLandmarkCoordinates.rpa = hdr.orig.dig(2).r';
+                coordsystem_json.AnatomicalLandmarkCoordinates.nas = hdr.orig.dig(3).r';
+            else
+                coordsystem_json.AnatomicalLandmarkCoordinates = nan;
+            end
+        else
+            % coordinate system for MEG sensors
+            coordsystem_json.MEGCoordinateSystem                 = 'Other';
+            coordsystem_json.MEGCoordinateUnits                  = 'm';
+            coordsystem_json.MEGCoordinateSystemDescription      = 'ElektaNeuromag dewar coordinates, orientation RAS';
+        end % if ~emptyroom
+
+    else
+        ft_warning('automatic coordsystem handling not yet supported for this data, you MUST specify cfg.coordsystem');
+        coordsystem_json = table();
     end
-  elseif isfield(hdr, 'grad') && ft_senstype(hdr.grad, 'neuromag')
-    % coordinate system for MEG sensors
-    coordsystem_json.MEGCoordinateSystem            = 'Neuromag';
-    coordsystem_json.MEGCoordinateUnits             = 'm';
-    coordsystem_json.MEGCoordinateSystemDescription = 'Neuromag head coordinates, orientation RAS, origin between the ears';
-    % coordinate system for head localization coils
-    coordsystem_json.HeadCoilCoordinates                 = []; % FIXME it might be possible to get these from the dataset header
-    coordsystem_json.HeadCoilCoordinateSystem            = 'Neuromag';
-    coordsystem_json.HeadCoilCoordinateUnits             = 'm';
-    coordsystem_json.HeadCoilCoordinateSystemDescription = 'Neuromag head coordinates, orientation RAS, origin between the ears';
-  else
-    ft_warning('coordsystem handling not yet supported for this data, you MUST specify cfg.coordsystem');
-    coordsystem_json = table();
-  end
-  
-  % merge the information specified by the user with that from the data
-  % in case fields appear in both, the first input overrules the second
-  coordsystem_json = mergeconfig(coordsystem_settings, coordsystem_json, false); % FIXME the order of precedence is different here
+
+    % merge the information specified by the user with that from the data
+    % in case fields appear in both, the first input overrules the second
+    coordsystem_json = mergestruct(coordsystem_settings, coordsystem_json, false); % FIXME the order of precedence is different here
 end % if need_coordsystem_json
+
+
 
 %% need_events_tsv
 if need_events_tsv
-  
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  %% align the presentation events with BOLD volumes or MEG/EEG triggers
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  
-  if ~isempty(cfg.presentationfile) && need_mri_json
-    % the code can either align presentation and BOLD volumes, or use the user-supplied events that must be aligned
-    assert(isempty(cfg.events) || (isstruct(cfg.events) && numel(fieldnames(cfg.events))==0), 'this is mutually exclusive with specifying cfg.events')
-    
-    % read the events from the presentation file
-    presentation = ft_read_event(cfg.presentationfile);
-    
-    % merge the information with the json sidecar file
-    % in case fields appear in both, the first input overrules the second
-    tmp = mergeconfig(mri_json, read_json(corresponding_json(cfg.outputfile)), false);
-    assert(~isempty(tmp.RepetitionTime), 'you must specify cfg.mri.RepetitionTime');
-    
-    % create a header structure that represents the fMRI timeseries
-    hdr.Fs = 1/tmp.RepetitionTime;
-    hdr.nSamples = mri.dim(4);
-    
-    % create a event structure with one trigger for each BOLD volume
-    trigger = [];
-    for i=1:hdr.nSamples
-      trigger(i).type   = 'volume';
-      trigger(i).sample = i;
-    end
-    
-    % align the presentation events with the triggers
-    cfg.events = align_presentation(presentation, cfg.presentation, trigger, cfg.trigger, hdr, istrue(cfg.feedback));
-    
-  elseif ~isempty(cfg.presentationfile) && (need_meg_json || need_eeg_json || need_ieeg_json || need_emg_json || need_exg_json || need_nirs_json)
-    % the code can either align presentation and trigger channel, or use the user-supplied events that must be aligned
-    assert(isempty(cfg.events) || (isstruct(cfg.events) && numel(fieldnames(cfg.events))==0), 'this is mutually exclusive with specifying cfg.events')
-    
-    % read the events from the presentation file
-    presentation = ft_read_event(cfg.presentationfile);
-    
-    % align the presentation events with the triggers
-    cfg.events = align_presentation(presentation, cfg.presentation, trigger, cfg.trigger, hdr, istrue(cfg.feedback));
-    
-    % also include all triggers from the MEG/EEG dataset as events
-    cfg.events = appendstruct(cfg.events, trigger);
-    
-  end % if presentationfile
-  
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  %% convert the events into a table
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  
-  if istable(cfg.events) && all(ismember({'onset', 'duration'}, fieldnames(cfg.events)))
-    % use the events table as it is
-    events_tsv = cfg.events;
-  elseif istable(cfg.events) && all(ismember({'begsample', 'endsample', 'offset'}, fieldnames(cfg.events)))
-    % it is a "trl" matrix formatted as table, use it as it is, but add
-    % onset and duration
-    events_tsv = cfg.events;
-    begsample                   = table2array(events_tsv(:,{'begsample'}));
-    endsample                   = table2array(events_tsv(:,{'endsample'}));
-    onset                       = (begsample-1)./hdr.Fs;
-    duration                    = (endsample-begsample+1)./hdr.Fs;
-    table_onset_duration        = table(onset, duration);
-    events_tsv                  = [table_onset_duration events_tsv];
-    
-  elseif isstruct(cfg.events) && ~isempty(cfg.events) && numel(fieldnames(cfg.events))>0
-    % it is the output from FT_READ_EVENT
-    if exist('hdr', 'var')
-      events_tsv = event2table(hdr, cfg.events);
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %% align the presentation events with BOLD volumes or MEG/EEG triggers
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    if ~isempty(cfg.presentationfile) && need_mri_json
+        % the code can either align presentation and BOLD volumes, or use the user-supplied events that must be aligned
+        assert(isempty(cfg.events) || (isstruct(cfg.events) && numel(fieldnames(cfg.events))==0), 'this is mutually exclusive with specifying cfg.events')
+
+        % read the events from the presentation file
+        presentation = ft_read_event(cfg.presentationfile);
+
+        % merge the information with the json sidecar file
+        % in case fields appear in both, the first input overrules the second
+        tmp = mergestruct(mri_json, ft_read_json(corresponding_json(cfg.outputfile)), false);
+        assert(~isempty(tmp.RepetitionTime), 'you must specify cfg.mri.RepetitionTime');
+
+        % create a header structure that represents the fMRI timeseries
+        hdr.Fs = 1/tmp.RepetitionTime;
+        hdr.nSamples = size(mri.anatomy, 4);
+
+        % create a event structure with one trigger for each BOLD volume
+        trigger = [];
+        for i=1:hdr.nSamples
+            trigger(i).type   = 'volume';
+            trigger(i).sample = i;
+        end
+
+        % align the presentation events with the triggers
+        cfg.events = align_presentation(presentation, cfg.presentation, trigger, cfg.trigger, hdr, istrue(cfg.feedback));
+
+    elseif ~isempty(cfg.presentationfile) && (need_meg_json || need_eeg_json || need_ieeg_json || need_emg_json || need_exg_json || need_nirs_json)
+        % the code can either align presentation and trigger channel, or use the user-supplied events that must be aligned
+        assert(isempty(cfg.events) || (isstruct(cfg.events) && numel(fieldnames(cfg.events))==0), 'this is mutually exclusive with specifying cfg.events')
+
+        % read the events from the presentation file
+        presentation = ft_read_event(cfg.presentationfile);
+
+        % align the presentation events with the triggers
+        cfg.events = align_presentation(presentation, cfg.presentation, trigger, cfg.trigger, hdr, istrue(cfg.feedback));
+
+        % also include all triggers from the MEG/EEG dataset as events
+        cfg.events = appendstruct(cfg.events, trigger);
+
+    end % if presentationfile
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %% convert the events into a table
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    if istable(cfg.events) && all(ismember({'onset', 'duration'}, fieldnames(cfg.events)))
+        % use the events table as it is
+        events_tsv = cfg.events;
+
+    elseif istable(cfg.events) && all(ismember({'begsample', 'endsample', 'offset'}, fieldnames(cfg.events)))
+        % it is a "trl" matrix formatted as table, use it as it is, but add onset and duration
+        events_tsv = cfg.events;
+        begsample                   = table2array(events_tsv(:,{'begsample'}));
+        endsample                   = table2array(events_tsv(:,{'endsample'}));
+        onset                       = (begsample-1)./hdr.Fs;
+        duration                    = (endsample-begsample+1)./hdr.Fs;
+        table_onset_duration        = table(onset, duration);
+        events_tsv                  = [table_onset_duration events_tsv];
+
+    elseif istable(cfg.events) && ~isempty(cfg.events)
+        ft_error('cannot interpret cfg.events');
+
+    elseif isstruct(cfg.events) && ~isempty(cfg.events) && numel(fieldnames(cfg.events))>0
+        % it is the structure output from FT_READ_EVENT
+        if exist('hdr', 'var')
+            events_tsv = event2table(hdr, cfg.events);
+        else
+            events_tsv = event2table([], cfg.events);
+        end
+
+    elseif isnumeric(cfg.events) && ~isempty(cfg.events)
+        % it is a "trl" matrix formatted as numeric array, convert it to an events table
+        begsample = cfg.events(:,1);
+        endsample = cfg.events(:,2);
+        offset    = cfg.events(:,3); % this is not used for the events.tsv
+        if size(cfg.events, 2)>3
+            ft_warning('additional columns in the trl matrix are ignored');
+        end
+        % convert to the required fields
+        onset     = (begsample-1)/hdr.Fs;
+        duration  = (endsample-begsample+1)/hdr.Fs;
+        events_tsv = table(onset, duration, begsample, endsample, offset);
+
+    elseif isempty(cfg.events) && exist('trigger', 'var')
+        % convert the triggers from FT_READ_EVENT into a table
+        if exist('hdr', 'var')
+            events_tsv = event2table(hdr, trigger);
+        else
+            events_tsv = event2table([], trigger);
+        end
+
+    elseif ~isempty(cfg.presentationfile)
+        % read the presentation file and convert into a table
+        events_tsv = event2table([], ft_read_event(cfg.presentationfile));
+
     else
-      events_tsv = event2table([], cfg.events);
+        ft_warning('no events were specified');
+        % make an empty table with columns for onset and duration
+        onset                   = [];
+        duration                = [];
+        begsample               = [];
+        endsample               = [];
+        offset                  = [];
+
+        events_tsv = table(onset, duration, begsample, endsample, offset);
     end
-  elseif isnumeric(cfg.events) && ~isempty(cfg.events)
-    % it is a "trl" matrix formatted as numeric array, convert it to an events table
-    begsample = cfg.events(:,1);
-    endsample = cfg.events(:,2);
-    offset    = cfg.events(:,3); % this is not used for the events.tsv
-    if size(cfg.events, 2)>3
-      ft_warning('additional columns in the trl matrix are ignored');
-    end
-    % convert to the required fields
-    onset     = (begsample-1)/hdr.Fs;
-    duration  = (endsample-begsample+1)/hdr.Fs;
-    events_tsv = table(onset, duration, begsample, endsample, offset);
-  elseif exist('trigger', 'var')
-    % convert the triggers from FT_READ_EVENT into a table
-    if exist('hdr', 'var')
-      events_tsv = event2table(hdr, trigger);
+
+    if isempty(events_tsv)
+        ft_warning('no events found');
+        need_events_tsv = false;
+
     else
-      events_tsv = event2table([], trigger);
+        % ensure that column names are in lower case
+        events_tsv.Properties.VariableNames = lower(events_tsv.Properties.VariableNames);
+
+        % ensure that the onset and duration appear as the first two columns
+        required = {'onset', 'duration'};
+        optional = setdiff(events_tsv.Properties.VariableNames, required, 'stable');
+        events_tsv = sort_columns(events_tsv, [required, optional]);
+
+        % sort the events ascending on the onset
+        events_tsv = sortrows(events_tsv, 'onset');
     end
-  elseif ~isempty(cfg.presentationfile)
-    % read the presentation file and convert into a table
-    events_tsv = event2table([], ft_read_event(cfg.presentationfile));
-  else
-    ft_warning('no events were specified');
-    % make an empty table with columns for onset and duration
-    onset                   = [];
-    duration                = [];
-    begsample               = [];
-    endsample               = [];
-    offset                  = [];
-    
-    events_tsv = table(onset, duration, begsample, endsample, offset);
-  end
-  
-  if isempty(events_tsv)
-    ft_warning('no events found');
-    need_events_tsv = false;
-    
-  else
-    % ensure that column names are in lower case
-    events_tsv.Properties.VariableNames = lower(events_tsv.Properties.VariableNames);
-    
-    % ensure that the onset and duration appear as the first two columns
-    order = nan(1, size(events_tsv,2));
-    order(1) = find(strcmp(events_tsv.Properties.VariableNames, 'onset'));
-    order(2) = find(strcmp(events_tsv.Properties.VariableNames, 'duration'));
-    order(3:end) = setdiff(1:size(events_tsv,2), order([1 2]));
-    events_tsv = events_tsv(:,order);
-    
-    % sort the events ascending on the onset
-    events_tsv = sortrows(events_tsv, 'onset');
-  end
-  
-  if ~isempty(cfg.presentationfile) && need_mri_json
-    % rename the column 'sample' into 'volume'
-    events_tsv.Properties.VariableNames('sample') = {'volume'};
-  end
-  
+
+    if ~isempty(cfg.presentationfile) && need_mri_json
+        % rename the column 'sample' into 'volume'
+        events_tsv.Properties.VariableNames('sample') = {'volume'};
+    end
+
 end % if need_events_tsv
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1636,127 +1792,139 @@ end % if need_events_tsv
 isdir_or_mkdir(p);
 
 switch cfg.method
-  case 'decorate'
-    % look at the user's specification of cfg.datatype
-    if strcmp(cfg.datatype, 'events')
-      % add the TSV file extension, this is needed for behavioral data represented in scans.tsv
-      % the events.tsv file will be written further down
-      [p, f, x] = fileparts(cfg.outputfile);
-      cfg.outputfile = fullfile(p, [f '.tsv']);
-    end
-    
-  case 'convert'
-    % the output depends on the type of input data
-    switch typ
-      case {'nifti', 'nifti2', 'nifti_fsl', 'dicom', 'volume'}
-        [p, f, x] = fileparts(cfg.outputfile);
-        if ~isequal(x, '.nii')
-          cfg.outputfile = fullfile(p, [f '.nii']);
-        end
-        if istrue(cfg.deface)
-          % deface the anatomical MRI
-          ft_info('defacing anatomical MRI');
-          if istrue(cfg.feedback)
-            tmpcfg = [];
-            tmpcfg.figurename = sprintf('ORIGINAL - %s', f);
-            tmpcfg.showcallinfo = 'no';
-            tmpcfg.colorbar = 'no';
-            ft_sourceplot(tmpcfg, mri);
-          end
-          tmpcfg = [];
-          tmpcfg.method = 'spm';
-          if ~isfield(mri, 'coordsys')
-            % try to determine it from the BIDS filename
-            coordsys = get_token(cfg.outputfile, 'space');
-            if ~isempty(coordsys)
-              mri.coordsys = coordsys;
-            else
-              mri.coordsys = 'unknown';
-            end
-          end
-          mri = ft_defacevolume(tmpcfg, mri);
-          if istrue(cfg.feedback)
-            tmpcfg = [];
-            tmpcfg.figurename = sprintf('DEFACED - %s', f);
-            tmpcfg.showcallinfo = 'no';
-            tmpcfg.colorbar = 'no';
-            ft_sourceplot(tmpcfg, mri);
-          end
-        end
-        ft_info('writing %s\n', cfg.outputfile);
-        ft_write_mri(cfg.outputfile, mri, 'dataformat', 'nifti');
-        
-      case {'ctf_ds', 'ctf_meg4', 'ctf_res4', 'ctf151', 'ctf275', 'neuromag_fif', 'neuromag122', 'neuromag306'}
-        ft_error('please use a system specific tool for converting MEG datasets');
-        
-      case {'presentation_log'}
-        % the events.tsv file will be written further down
-        [p, f, x] = fileparts(cfg.outputfile);
-        cfg.outputfile = fullfile(p, [f '.tsv']);
-        
-      otherwise
+    case 'decorate'
         % look at the user's specification of cfg.datatype
-        switch cfg.datatype
-          case {'eeg', 'ieeg', 'emg', 'exg'}
-            % write the data in BrainVision core file format
-            [p, f, x] = fileparts(cfg.outputfile);
-            cfg.outputfile = fullfile(p, [f '.vhdr']);
-            ft_info('writing %s\n', cfg.outputfile);
-            ft_write_data(cfg.outputfile, dat, 'dataformat', 'brainvision_eeg', 'header', hdr, 'event', trigger);
-          case {'nirs'}
-            % write the data in SNIRF file format
-            [p, f, x] = fileparts(cfg.outputfile);
-            cfg.outputfile = fullfile(p, [f '.snirf']);
-            ft_info('writing %s\n', cfg.outputfile);
-            ft_write_data(cfg.outputfile, dat, 'dataformat', 'snirf', 'header', hdr, 'event', trigger);
-          case {'physio', 'stim', 'eyetracker', 'motion'}
-            % write the data according to the Stim and Physio format as specified at
-            % https://bids-specification.readthedocs.io/en/stable/04-modality-specific-files/06-physiological-and-other-continuous-recordings.html
-            [p, f, x] = fileparts(cfg.outputfile);
-            cfg.outputfile = fullfile(p, [f '.tsv']);
-            ft_info('writing %s\n', cfg.outputfile);
-            writematrix(dat', cfg.outputfile, 'FileType', 'text', 'Delimiter', '\t'); % without headers, the JSON will be written further down
-          case {'events'}
+        if strcmp(cfg.datatype, 'events')
             % add the TSV file extension, this is needed for behavioral data represented in scans.tsv
             % the events.tsv file will be written further down
             [p, f, x] = fileparts(cfg.outputfile);
             cfg.outputfile = fullfile(p, [f '.tsv']);
-          otherwise
-            ft_error('cannot determine how to write the data')
         end
-    end % switch typ
-    
-  case 'copy'
-    [~, ~, xin] = fileparts(cfg.dataset);
-    [p, ~, xout] = fileparts(cfg.outputfile);
-    if ~strcmp(xin, xout)
-      ft_error('input and output filename extension do not match');
-    end
-    
-    switch typ
-      case {'dicom'}
-        ft_error('DICOM files must be converted to NIfTI for BIDS compliance');
-        
-      case {'eyelink_edf', 'eyelink_asc'}
-        ft_error('Eyelink files must be converted to TSV for BIDS compliance');
-        
-      case {'ctf_ds', 'ctf_meg4', 'ctf_res4', 'ctf151', 'ctf275'}
-        % the data consists of a directory with multiple files inside
-        ft_info('copying ''%s'' to ''%s''\n', cfg.dataset, cfg.outputfile);
-        copy_ctf_files(cfg.dataset, cfg.outputfile, false);
-        
-      case {'brainvision_vhdr', 'brainvision_vmrk', 'brainvision_eeg', 'brainvision_dat', 'brainvision_seg'}
-        % the data consists of three files and the header file contains pointers to the markers and data
-        ft_info('copying ''%s'' to ''%s''\n', cfg.dataset, cfg.outputfile);
-        copy_brainvision_files(cfg.dataset, cfg.outputfile, false);
-        
-      otherwise
-        ft_info('copying ''%s'' to ''%s''\n', cfg.dataset, cfg.outputfile);
-        copyfile(cfg.dataset, cfg.outputfile);
-    end
-    
-  otherwise
-    ft_error('unsupported value for cfg.method')
+
+    case 'convert'
+        % the output depends on the type of input data
+        switch typ
+            case {'nifti', 'nifti2', 'nifti_fsl', 'dicom', 'volume'}
+                [p, f, x] = fileparts(cfg.outputfile);
+                if ~isequal(x, '.nii')
+                    cfg.outputfile = fullfile(p, [f '.nii']);
+                end
+                if istrue(cfg.deface)
+                    % deface the anatomical MRI
+                    ft_info('defacing anatomical MRI');
+                    if istrue(cfg.feedback)
+                        tmpcfg = [];
+                        tmpcfg.figurename = sprintf('ORIGINAL - %s', f);
+                        tmpcfg.showcallinfo = 'no';
+                        tmpcfg.colorbar = 'no';
+                        ft_sourceplot(tmpcfg, mri);
+                    end
+                    tmpcfg = [];
+                    tmpcfg.method = 'spm';
+                    if ~isfield(mri, 'coordsys')
+                        % try to determine it from the BIDS filename
+                        coordsys = get_token(cfg.outputfile, 'space');
+                        if ~isempty(coordsys)
+                            mri.coordsys = coordsys;
+                        else
+                            mri.coordsys = 'unknown';
+                        end
+                    end
+                    mri = ft_defacevolume(tmpcfg, mri);
+                    if istrue(cfg.feedback)
+                        tmpcfg = [];
+                        tmpcfg.figurename = sprintf('DEFACED - %s', f);
+                        tmpcfg.showcallinfo = 'no';
+                        tmpcfg.colorbar = 'no';
+                        ft_sourceplot(tmpcfg, mri);
+                    end
+                end
+                ft_info('writing ''%s''\n', cfg.outputfile);
+                ft_write_mri(cfg.outputfile, mri, 'dataformat', 'nifti');
+
+            case {'ctf_ds', 'ctf_meg4', 'ctf_res4', 'ctf151', 'ctf275', 'neuromag_fif', 'neuromag122', 'neuromag306'}
+                % we cannot write MEG data back to its native format
+                ft_error('please use a system specific tool for converting MEG datasets');
+
+            case {'presentation_log'}
+                % the events.tsv file will be written further down
+                [p, f, x] = fileparts(cfg.outputfile);
+                cfg.outputfile = fullfile(p, [f '.tsv']);
+
+            otherwise
+                % look at the user's specification of cfg.datatype
+                switch cfg.datatype
+                    case {'eeg', 'ieeg', 'emg', 'exg'}
+                        % write the data in BrainVision core file format
+                        [p, f, x] = fileparts(cfg.outputfile);
+                        cfg.outputfile = fullfile(p, [f '.vhdr']);
+
+                        ft_info('writing ''%s''\n', cfg.outputfile);
+                        ft_write_data(cfg.outputfile, dat, 'dataformat', 'brainvision_eeg', 'header', hdr, 'event', trigger);
+                    case {'nirs'}
+                        % write the data in SNIRF file format
+                        [p, f, x] = fileparts(cfg.outputfile);
+                        cfg.outputfile = fullfile(p, [f '.snirf']);
+                        ft_info('writing ''%s''\n', cfg.outputfile);
+                        ft_write_data(cfg.outputfile, dat, 'dataformat', 'snirf', 'header', hdr, 'event', trigger);
+                    case {'physio', 'stim', 'eyetracker', 'motion'}
+                        % write the data according to the Stim and Physio format as specified at
+                        % https://bids-specification.readthedocs.io/en/stable/04-modality-specific-files/06-physiological-and-other-continuous-recordings.html
+                        [p, f, x] = fileparts(cfg.outputfile);
+                        cfg.outputfile = fullfile(p, [f '.tsv']);
+
+                        ft_info('writing %s\n', cfg.outputfile);
+
+                        if any(strcmp(cfg.datatype, {'motion', 'physio'}))
+                            % with headers, the JSON will be written further down
+                            writecell(hdr.label', cfg.outputfile, 'FileType', 'text', 'Delimiter', '\t');
+                            writematrix(dat', cfg.outputfile, 'FileType', 'text', 'Delimiter', '\t', 'WriteMode','append');
+                        else
+                            % without headers, the JSON will be written further down
+                            writematrix(dat', cfg.outputfile, 'FileType', 'text', 'Delimiter', '\t');
+                        end
+
+                    case {'events'}
+                        % add the TSV file extension, this is needed for behavioral data represented in scans.tsv
+                        % the events.tsv file will be written further down
+                        [p, f, x] = fileparts(cfg.outputfile);
+                        cfg.outputfile = fullfile(p, [f '.tsv']);
+                    otherwise
+                        ft_error('cannot determine how to write the data')
+                end
+        end % switch typ
+
+    case 'copy'
+        [p, f, xin] = fileparts(cfg.dataset);
+        [p, f, xout] = fileparts(cfg.outputfile);
+        if ~strcmp(xin, xout)
+            ft_error('input and output filename extension do not match');
+        end
+
+        switch typ
+            case {'dicom'}
+                ft_error('DICOM files must be converted to NIfTI for BIDS compliance');
+
+            case {'eyelink_edf', 'eyelink_asc'}
+                ft_error('Eyelink files must be converted to TSV for BIDS compliance');
+
+            case {'ctf_ds', 'ctf_meg4', 'ctf_res4', 'ctf151', 'ctf275'}
+                % the data consists of a directory with multiple files inside
+                ft_info('copying ''%s'' to ''%s''\n', cfg.dataset, cfg.outputfile);
+                copy_ctf_files(cfg.dataset, cfg.outputfile, false);
+
+            case {'brainvision_vhdr', 'brainvision_vmrk', 'brainvision_eeg', 'brainvision_dat', 'brainvision_seg'}
+                % the data consists of three files and the header file contains pointers to the markers and data
+                ft_info('copying ''%s'' to ''%s''\n', cfg.dataset, cfg.outputfile);
+                copy_brainvision_files(cfg.dataset, cfg.outputfile, false);
+
+            otherwise
+                ft_info('copying ''%s'' to ''%s''\n', cfg.dataset, cfg.outputfile);
+                copyfile(cfg.dataset, cfg.outputfile);
+        end
+
+    otherwise
+        ft_error('unsupported value for cfg.method')
 end % switch method
 
 
@@ -1767,52 +1935,56 @@ end % switch method
 % each of these has a corresponding json file
 modality = {'mri', 'meg', 'eeg', 'ieeg', 'nirs', 'physio', 'stim', 'emg', 'exg', 'audio', 'video', 'eyetracker', 'motion', 'coordsystem'};
 for i=1:numel(modality)
-  if eval(sprintf('need_%s_json', modality{i}))
-    modality_json = eval(sprintf('%s_json', modality{i}));
-    modality_json = remove_empty(modality_json);
-    
-    if strcmp(modality{i}, 'coordsystem')
-      [p, f] = fileparts(cfg.outputfile);
-      f = remove_entity(f, 'task');     % remove _task-something
-      f = remove_entity(f, 'acq');      % remove _acq-something
-      f = remove_entity(f, 'ce');       % remove _ce-something
-      f = remove_entity(f, 'rec');      % remove _rec-something
-      f = remove_entity(f, 'dir');      % remove _dir-something
-      f = remove_entity(f, 'run');      % remove _run-something
-      f = remove_entity(f, 'mod');      % remove _mod-something
-      f = remove_entity(f, 'echo');     % remove _echo-something
-      f = remove_entity(f, 'proc');     % remove _proc-something
-      f = remove_datatype(f);           % remove _meg, _eeg, etc.
-      filename = fullfile(p, [f '_coordsystem.json']);
-    else
-      % just replace the extension with json
-      filename = corresponding_json(cfg.outputfile);
-    end
-    
-    if isfile(filename)
-      existing = read_json(filename);
-    else
-      existing = [];
-    end
-    
-    switch cfg.writejson
-      case 'yes'
-        if ~isempty(existing)
-          ft_warning('not overwriting the existing and non-empty file ''%s''', filename);
+    if eval(sprintf('need_%s_json', modality{i}))
+        modality_json = eval(sprintf('%s_json', modality{i}));
+        modality_json = remove_empty(modality_json);
+
+        if strcmp(modality{i}, 'coordsystem')
+            [p, f] = fileparts(cfg.outputfile);
+            f = remove_entity(f, 'task');     % remove _task-something
+            f = remove_entity(f, 'acq');      % remove _acq-something
+            f = remove_entity(f, 'ce');       % remove _ce-something
+            f = remove_entity(f, 'rec');      % remove _rec-something
+            f = remove_entity(f, 'dir');      % remove _dir-something
+            f = remove_entity(f, 'run');      % remove _run-something
+            f = remove_entity(f, 'mod');      % remove _mod-something
+            f = remove_entity(f, 'echo');     % remove _echo-something
+            f = remove_entity(f, 'proc');     % remove _proc-something
+            f = remove_entity(f, 'desc');     % remove _desc-something
+            f = remove_datatype(f);           % remove _meg, _eeg, etc.
+            if ismember(modality{i}, {'mri', 'meg', 'motion', 'coordsystem'})
+                f = add_entity(f, 'space', cfg.space);
+            end
+            filename = fullfile(p, [f '_coordsystem.json']);
         else
-          write_json(filename, modality_json);
+            % just replace the extension with json
+            filename = corresponding_json(cfg.outputfile);
         end
-      case 'replace'
-        write_json(filename, modality_json);
-      case 'merge'
-        write_json(filename, mergeconfig(modality_json, existing, false))
-      case 'no'
-        % do nothing
-        ft_info('not writing %s\n', filename);
-      otherwise
-        ft_error('incorrect option for cfg.writejson');
-    end % switch writejson
-  end % if need_xxx_json
+
+        if isfile(filename)
+            existing = ft_read_json(filename);
+        else
+            existing = [];
+        end
+
+        switch cfg.writejson
+            case 'yes'
+                if ~isempty(existing)
+                    ft_warning('not overwriting the existing and non-empty file ''%s''', filename);
+                else
+                    ft_write_json(filename, modality_json);
+                end
+            case 'replace'
+                ft_write_json(filename, modality_json);
+            case 'merge'
+                ft_write_json(filename, mergestruct(modality_json, existing, false))
+            case 'no'
+                % do nothing
+                ft_info('not writing ''%s''\n', filename);
+            otherwise
+                ft_error('incorrect option for cfg.writejson');
+        end % switch writejson
+    end % if need_xxx_json
 end % for each modality
 
 
@@ -1823,160 +1995,203 @@ end % for each modality
 % each of these has a corresponding tsv file
 modality = {'channels', 'electrodes', 'optodes', 'events'};
 for i=1:numel(modality)
-  if eval(sprintf('need_%s_tsv', modality{i}))
-    modality_tsv = eval(sprintf('%s_tsv', modality{i}));
-    modality_tsv = remove_empty(modality_tsv);
-    
-    if any(strcmp(modality{i}, {'electrodes', 'optodes'}))
-      [p, f] = fileparts(cfg.outputfile);
-      f = remove_entity(f, 'task');     % remove _task-something
-      f = remove_entity(f, 'acq');      % remove _acq-something
-      f = remove_entity(f, 'ce');       % remove _ce-something
-      f = remove_entity(f, 'rec');      % remove _rec-something
-      f = remove_entity(f, 'dir');      % remove _dir-something
-      f = remove_entity(f, 'run');      % remove _run-something
-      f = remove_entity(f, 'mod');      % remove _mod-something
-      f = remove_entity(f, 'echo');     % remove _echo-something
-      f = remove_entity(f, 'proc');     % remove _proc-something
-      f = remove_datatype(f);           % remove _meg, _eeg, etc.
-      filename = fullfile(p, sprintf('%s_%s.tsv', f, modality{i}));
-    else
-      [p, f] = fileparts(cfg.outputfile);
-      f = remove_datatype(f); % remove _bold, _meg, etc.
-      filename = fullfile(p, sprintf('%s_%s.tsv', f, modality{i}));
-    end
-    
-    if isfile(filename)
-      existing = read_tsv(filename);
-    else
-      existing = [];
-    end
-    
-    switch cfg.writetsv
-      case 'yes'
-        if ~isempty(existing)
-          ft_warning('not overwriting the existing and non-empty file ''%s''', filename);
+    if eval(sprintf('need_%s_tsv', modality{i}))
+        modality_tsv = eval(sprintf('%s_tsv', modality{i}));
+        modality_tsv = remove_empty(modality_tsv);
+
+        if any(strcmp(modality{i}, {'electrodes', 'optodes'}))
+            [p, f] = fileparts(cfg.outputfile);
+            f = remove_entity(f, 'task');     % remove _task-something
+            f = remove_entity(f, 'acq');      % remove _acq-something
+            f = remove_entity(f, 'tracksys'); % remove _tracksys-something
+            f = remove_entity(f, 'ce');       % remove _ce-something
+            f = remove_entity(f, 'rec');      % remove _rec-something
+            f = remove_entity(f, 'dir');      % remove _dir-something
+            f = remove_entity(f, 'run');      % remove _run-something
+            f = remove_entity(f, 'mod');      % remove _mod-something
+            f = remove_entity(f, 'echo');     % remove _echo-something
+            f = remove_entity(f, 'proc');     % remove _proc-something
+            f = remove_entity(f, 'desc');     % remove _desc-something
+            f = remove_datatype(f);           % remove _meg, _eeg, etc.
+            if ismember(modality{i}, {'electrodes', 'optodes'})
+                f = add_entity(f, 'space', cfg.space);
+            end
+            filename = fullfile(p, sprintf('%s_%s.tsv', f, modality{i}));
         else
-          write_tsv(filename, modality_tsv);
+            [p, f] = fileparts(cfg.outputfile);
+            f = remove_datatype(f); % remove _bold, _meg, etc.
+            filename = fullfile(p, sprintf('%s_%s.tsv', f, modality{i}));
         end
-      case 'replace'
-        write_tsv(filename, modality_tsv);
-      case 'merge'
-        if ~isempty(existing)
-          modality_tsv  = output_compatible(modality_tsv);
-          existing      = output_compatible(existing);
-          if strcmp(modality{i}, 'events')
-            % merge complete rows
-            modality_tsv = merge_table(modality_tsv, existing);
-          else
-            % use the channel name as the unique key
-            modality_tsv = merge_table(modality_tsv, existing, 'name');
-          end
+
+        if isfile(filename)
+            existing = ft_read_tsv(filename);
+        else
+            existing = [];
         end
-        write_tsv(filename, modality_tsv);
-      case 'no'
-        % do nothing
-        ft_info('not writing %s\n', filename);
-      otherwise
-        ft_error('incorrect option for cfg.writetsv');
-    end % switch
-  end % if needd_xxx_tsv
+
+        switch cfg.writetsv
+            case 'yes'
+                if ~isempty(existing)
+                    ft_warning('not overwriting the existing and non-empty file ''%s''', filename);
+                else
+                    ft_write_tsv(filename, modality_tsv);
+                end
+            case 'replace'
+                ft_write_tsv(filename, modality_tsv);
+            case 'merge'
+                if ~isempty(existing)
+                    modality_tsv  = output_compatible(modality_tsv);
+                    existing      = output_compatible(existing);
+                    if strcmp(modality{i}, 'events')
+                        % merge complete rows
+                        modality_tsv = mergetable(modality_tsv, existing);
+                    else
+                        % use the channel name as the unique key
+                        modality_tsv = mergetable(modality_tsv, existing, 'name');
+                    end
+                end
+                ft_write_tsv(filename, modality_tsv);
+            case 'no'
+                % do nothing
+                ft_info('not writing ''%s''\n', filename);
+            otherwise
+                ft_error('incorrect option for cfg.writetsv');
+        end % switch
+    end % if needd_xxx_tsv
 end % for each modality
 
 
 if ~isempty(cfg.bidsroot)
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  % update the dataset_description
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  filename = fullfile(cfg.bidsroot, 'dataset_description.json');
-  
-  if isfile(filename)
-    existing = read_json(filename);
-  else
-    existing = [];
-  end
-  
-  switch cfg.writejson
-    case 'yes'
-      if ~isempty(existing)
-        ft_warning('not overwriting the existing and non-empty file ''%s''', filename);
-      else
-        write_json(filename, dataset_description_settings);
-      end
-    case 'replace'
-      write_json(filename, dataset_description_settings);
-    case 'merge'
-      write_json(filename, mergeconfig(dataset_description_settings, existing, false));
-    case 'no'
-      % do nothing
-    otherwise
-      ft_error('incorrect option for cfg.writejson');
-  end % switch
-  
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  % update the participants.tsv
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  
-  this = table();
-  this.participant_id = {['sub-' cfg.sub]};
-  fn = fieldnames(cfg.participants);
-  for i=1:numel(fn)
-    % write [] as 'n/a'
-    % write nan as 'n/a'
-    % write boolean as 'True' or 'False'
-    this.(fn{i}) = output_compatible(cfg.participants.(fn{i}));
-  end
-  
-  filename = fullfile(cfg.bidsroot, 'participants.tsv');
-  if isfile(filename)
-    participants = read_tsv(filename);
-    % the participants.tsv is always merged
-    participants = merge_table(participants, this, 'participant_id');
-  else
-    participants = this;
-  end
-  
-  % write the updated file back to disk
-  write_tsv(filename, participants);
-  
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  % update the scans.tsv
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  if ~isempty(cfg.ses)
-    % construct the output filename, with session directory
-    filename = fullfile(cfg.bidsroot, ['sub-' cfg.sub], ['ses-' cfg.ses], ['sub-' cfg.sub '_' 'ses-' cfg.ses '_scans.tsv']);
-  else
-    % construct the output filename, without session directory
-    filename = fullfile(cfg.bidsroot, ['sub-' cfg.sub], ['sub-' cfg.sub '_scans.tsv']);
-  end
-  
-  this = table();
-  [~, f, x] = fileparts(cfg.outputfile);
-  this.filename = {fullfile(datatype2dirname(cfg.datatype), [f x])};
-  fn = fieldnames(cfg.scans);
-  for i=1:numel(fn)
-    % write [] as 'n/a'
-    % write nan as 'n/a'
-    % write boolean as 'True' or 'False'
-    this.(fn{i}) = output_compatible(cfg.scans.(fn{i}));
-  end
-  
-  if isfile(filename)
-    scans_tsv = read_tsv(filename);
-    % the scans.tsv is always merged
-    scans_tsv = merge_table(scans_tsv, this, 'filename');
-  else
-    scans_tsv = this;
-  end
-  
-  % write the updated file back to disk
-  write_tsv(filename, scans_tsv);
-  
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % update the dataset_description
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    filename = fullfile(cfg.bidsroot, 'dataset_description.json');
+
+    if isfile(filename)
+        existing = ft_read_json(filename);
+    else
+        existing = [];
+    end
+
+    switch cfg.writejson
+        case 'yes'
+            if ~isempty(existing)
+                ft_warning('not overwriting the existing and non-empty file ''%s''', filename);
+            else
+                ft_write_json(filename, dataset_description_settings);
+            end
+        case 'replace'
+            ft_write_json(filename, dataset_description_settings);
+        case 'merge'
+            ft_write_json(filename, mergestruct(dataset_description_settings, existing, false));
+        case 'no'
+            % do nothing
+        otherwise
+            ft_error('incorrect option for cfg.writejson');
+    end % switch
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % update the participants.tsv
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    this = table();
+    this.participant_id = {['sub-' cfg.sub]};
+    fn = fieldnames(cfg.participants);
+    for i=1:numel(fn)
+        % write [] as 'n/a'
+        % write nan as 'n/a'
+        % write boolean as 'True' or 'False'
+        this.(fn{i}) = output_compatible(cfg.participants.(fn{i}));
+    end
+
+    filename = fullfile(cfg.bidsroot, 'participants.tsv');
+    if isfile(filename)
+        participants = ft_read_tsv(filename);
+        % the participants.tsv is always merged
+        participants = mergetable(participants, this, 'participant_id');
+    else
+        participants = this;
+    end
+
+    % write the updated file back to disk
+    ft_write_tsv(filename, participants);
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % update the scans.tsv
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    if ~isempty(cfg.ses)
+        % construct the output filename, with session directory
+        filename = fullfile(cfg.bidsroot, ['sub-' cfg.sub], ['ses-' cfg.ses], ['sub-' cfg.sub '_' 'ses-' cfg.ses '_scans.tsv']);
+    else
+        % construct the output filename, without session directory
+        filename = fullfile(cfg.bidsroot, ['sub-' cfg.sub], ['sub-' cfg.sub '_scans.tsv']);
+    end
+
+    % get filename
+    this = table();
+    [p, f, x] = fileparts(cfg.outputfile);
+    this.filename = {fullfile(datatype2dirname(cfg.datatype), [f x])};
+
+    fn = fieldnames(cfg.scans);
+    for i=1:numel(fn)
+        % write [] as 'n/a'
+        % write nan as 'n/a'
+        % write boolean as 'True' or 'False'
+        this.(fn{i}) = output_compatible(cfg.scans.(fn{i}));
+    end
+
+    if isfile(filename)
+        scans_tsv = ft_read_tsv(filename);
+        % the scans.tsv is always merged, use the filename column as the corresponding key
+        scans_tsv = mergetable(scans_tsv, this, 'filename');
+    else
+        scans_tsv = this;
+    end
+
+    % the filename should have forward slashes, see #1957 and #1959
+    scans_tsv.filename = strrep(scans_tsv.filename, '\', '/');
+
+    % write the updated file back to disk
+    ft_write_tsv(filename, scans_tsv);
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % update the sessions.tsv, only when sessions are specified
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    if ~isempty(cfg.ses)
+        % construct the output filename
+        filename = fullfile(cfg.bidsroot, ['sub-' cfg.sub], ['sub-' cfg.sub '_sessions.tsv']);
+
+        % construct session identifier
+        this = table();
+        session_id = ['ses-' cfg.ses];
+        this.session_id = session_id;
+
+        fn = fieldnames(cfg.sessions);
+        for i=1:numel(fn)
+            % write [] as 'n/a'
+            % write nan as 'n/a'
+            % write boolean as 'True' or 'False'
+            this.(fn{i}) = output_compatible(cfg.sessions.(fn{i}));
+        end
+
+        if isfile(filename)
+            sessions_tsv = ft_read_tsv(filename);
+            % the sessions.tsv is always merged, use the session_id column as the corresponding key
+            sessions_tsv = mergetable(sessions_tsv, this, 'session_id');
+        else
+            sessions_tsv = this;
+        end
+
+        % write the updated file back to disk
+        ft_write_tsv(filename, sessions_tsv);
+
+    end % if not empty cfg.ses
+
 end % if bidsroot
 
 % do not return an output variable if not requested
 if ~ft_nargout
-  clear cfg
+    clear cfg
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1988,10 +2203,10 @@ function val = get_token(f, tok)
 pieces = tokenize(f, '_');
 val = '';
 for i=1:numel(pieces)
-  if startsWith([pieces{i} '-'], tok)
-    val = pieces{i}((numel(tok)+2):end);
-    return
-  end
+    if startsWith([pieces{i} '-'], tok)
+        val = pieces{i}((numel(tok)+2):end);
+        return
+    end
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1999,19 +2214,19 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function f = add_entity(f, key, val)
 if ~isempty(val)
-  if isscalar(val)
-    % this applies specifically to run
-    val = num2str(val);
-  end
-  f = [f '_' key '-' val];
+    if isscalar(val)
+        % this applies specifically to run
+        val = num2str(val);
+    end
+    f = [f '_' key '-' val];
 end
 
 function f = remove_entity(f, key)
-part = regexp(f, sprintf('_%s-[a-zA-Z0-9]*', key), 'split');
+part = regexp(f, sprintf('_%s-[a-zA-Z0-9+]*', key), 'split');
 if numel(part)>1 && ~isempty(part{2})
-  f = [part{1} part{2}];
+    f = [part{1} part{2}];
 else
-  f = part{1};
+    f = part{1};
 end
 
 function f = add_datatype(f, typ)
@@ -2020,10 +2235,10 @@ f = [f '_' typ];
 function f = remove_datatype(f)
 typ = {'FLAIR', 'FLASH', 'PD', 'PDT2', 'PDmap', 'T1map', 'T1rho', 'T1w', 'T2map', 'T2star', 'T2w', 'angio', 'audio', 'bold', 'bval', 'bvec', 'channels', 'coordsystem', 'defacemask', 'dwi', 'eeg', 'emg', 'epi', 'events', 'exg', 'eyetracker', 'fieldmap', 'headshape', 'ieeg', 'inplaneT1', 'inplaneT2', 'magnitude', 'magnitude1', 'magnitude2', 'meg', 'motion', 'nirs', 'phase1', 'phase2', 'phasediff', 'photo', 'physio', 'sbref', 'stim', 'video'};
 for i=1:numel(typ)
-  if endsWith(f, ['_' typ{i}])
-    f = f(1:end-length(typ{i})-1); % also the '_'
-    return
-  end
+    if endsWith(f, ['_' typ{i}])
+        f = f(1:end-length(typ{i})-1); % also the '_'
+        return
+    end
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2031,9 +2246,9 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function tab = hdr2table(hdr)
 if isempty(hdr)
-  % return an empty table
-  tab = table();
-  return
+    % return an empty table
+    tab = table();
+    return
 end
 
 % construct the table, this part applies to all modalities
@@ -2045,65 +2260,91 @@ tab = table(name, type, units, sampling_frequency);
 
 % NIRS requires some additional columns
 if isfield(hdr, 'opto')
-  % use the opto structure to determine the source name, detector name and wavelength
-  source     = cell(length(name), 1);
-  detector   = cell(length(name), 1);
-  wavelength = nan(length(name),1); % empty columns will be removed in a later step
-  for i=1:length(name)
-    labelidx=find(strcmp(hdr.opto.label, name{i}));
-    if isempty(labelidx)
-      continue
-    else
-      [~, optoidx, wavelengthidx]=find(hdr.opto.tra(labelidx,:));
-      for k=optoidx
-        if any(strcmp(hdr.opto.optotype{k}, {'receiver', 'detector'}))
-          detector{i}=hdr.opto.optolabel{k};
-        elseif any(strcmp(hdr.opto.optotype{k}, {'transmitter', 'source'}))
-          source{i}=hdr.opto.optolabel{k};
+    % use the opto structure to determine the source name, detector name and wavelength
+    source     = cell(length(name), 1);
+    detector   = cell(length(name), 1);
+    wavelength = nan(length(name),1); % empty columns will be removed in a later step
+    for i=1:length(name)
+        labelidx=find(strcmp(hdr.opto.label, name{i}));
+        if isempty(labelidx)
+            continue
+        else
+            [dum, optoidx, wavelengthidx]=find(hdr.opto.tra(labelidx,:));
+            for k=optoidx
+                if any(strcmp(hdr.opto.optotype{k}, {'receiver', 'detector'}))
+                    detector{i}=hdr.opto.optolabel{k};
+                elseif any(strcmp(hdr.opto.optotype{k}, {'transmitter', 'source'}))
+                    source{i}=hdr.opto.optolabel{k};
+                end
+            end
+            if abs(wavelengthidx(1))~= abs(wavelengthidx(2))
+                warning('tra matrix is not consistent; ignoring wavelength')
+            else
+                wavelength(i)=hdr.opto.wavelength(abs(wavelengthidx(1)));
+            end
         end
-      end
-      if abs(wavelengthidx(1))~= abs(wavelengthidx(2))
-        warning('tra matrix is not consistent; ignoring wavelength')
-      else
-        wavelength(i)=hdr.opto.wavelength(abs(wavelengthidx(1)));
-      end
     end
-  end
-  % add these columns to the table
-  tab = horzcat(tab, table(source, detector, wavelength));
-  
-elseif ft_chantype(hdr, 'nirs')
-  % deduce the NIRS-specific information from the channel name
-  % which typical is something like 'Rx*-Tx* [*wavelength*] or 'S*-D* [*wavelength*]
-  source     = cell(length(name), 1);
-  detector   = cell(length(name), 1);
-  wavelength = nan(length(name),1); % empty columns will be removed in a later step
-  for i=1:length(name)
-    if regexp(name{i}, 'Rx(\w+)-Tx(\w+) \[(\d+)nm\]')
-      parts=regexp(name{i}, 'Rx(?<detectorID>\w+)-Tx(?<sourceID>\w+) \[(?<wavelength>\d+)nm\]', 'names');
-      source{i}=sprintf('Tx%s', parts.sourceID);
-      detector{i}=sprintf('Rx%s', parts.detectorID);
-      wavelength(i)=str2num(parts.wavelength);
-    elseif regexp(name{i}, 'Rx(\w+)-Tx(\w+)')
-      parts=regexp(name{i}, 'Rx(?<detectorID>\w+)-Tx(?<sourceID>\w+)', 'names');
-      source{i}=sprintf('Tx%s', parts.sourceID);
-      detector{i}=sprintf('Rx%s', parts.detectorID);
-    elseif regexp(name{i}, 'S(\w+)-D(\w+) \[(\d+)nm\]')
-      parts=regexp(name{i}, 'S(?sourceID>\w+)-D(?<detectorID>\w+) \[(?<wavelength>\d+)nm\]', 'names');
-      source{i}=sprintf('S%s', parts.sourceID);
-      detector{i}=sprintf('D%s',parts.detectorID);
-      wavelength(i)=str2num(parts.wavelength);
-    elseif regexp(name{i}, 'S(\w+)-D(\w+)')
-      parts=regexp(name{i}, 'S(?sourceID>\w+)-D(?<detectorID>\w+', 'names');
-      source{i}=sprintf('S%s', parts.sourceID);
-      detector{i}=sprintf('D%s',parts.detectorID);
+
+elseif any(strcmpi(hdr.chantype, 'nirs'))
+    % deduce the NIRS-specific information from the channel name
+    % which typical is something like 'Rx*-Tx* [*wavelength*] or 'S*-D* [*wavelength*]
+    source     = cell(length(name), 1);
+    detector   = cell(length(name), 1);
+    wavelength = nan(length(name),1); % empty columns will be removed in a later step
+    for i=1:length(name)
+        if regexp(name{i}, 'Rx(\w+)-Tx(\w+) \[(\d+)nm\]')
+            parts=regexp(name{i}, 'Rx(?<detectorID>\w+)-Tx(?<sourceID>\w+) \[(?<wavelength>\d+)nm\]', 'names');
+            source{i}=sprintf('Tx%s', parts.sourceID);
+            detector{i}=sprintf('Rx%s', parts.detectorID);
+            wavelength(i)=str2num(parts.wavelength);
+        elseif regexp(name{i}, 'Rx(\w+)-Tx(\w+)')
+            parts=regexp(name{i}, 'Rx(?<detectorID>\w+)-Tx(?<sourceID>\w+)', 'names');
+            source{i}=sprintf('Tx%s', parts.sourceID);
+            detector{i}=sprintf('Rx%s', parts.detectorID);
+        elseif regexp(name{i}, 'S(\w+)-D(\w+) \[(\d+)nm\]')
+            parts=regexp(name{i}, 'S(?sourceID>\w+)-D(?<detectorID>\w+) \[(?<wavelength>\d+)nm\]', 'names');
+            source{i}=sprintf('S%s', parts.sourceID);
+            detector{i}=sprintf('D%s',parts.detectorID);
+            wavelength(i)=str2num(parts.wavelength);
+        elseif regexp(name{i}, 'S(\w+)-D(\w+)')
+            parts=regexp(name{i}, 'S(?sourceID>\w+)-D(?<detectorID>\w+', 'names');
+            source{i}=sprintf('S%s', parts.sourceID);
+            detector{i}=sprintf('D%s',parts.detectorID);
+        else
+            % this channel is not recognized as a nirs channel
+            continue
+        end
+    end
+end
+
+if isfield(hdr, 'opto') || any(strcmpi(hdr.chantype, 'nirs'))
+    % distinguish between nominal and actual wavelength
+    if sum(~isnan(unique(wavelength)))>2
+        ft_warning('Assuming that the given wavelengths are actual wavelengths.')
+        wavelength_actual = wavelength;
+        % try to find the nominal wavelengths:
+        split = nanmedian(wavelength);
+        WL1.values = wavelength(wavelength<split);
+        WL2.values = wavelength(wavelength>split);
+        WL1.nominal = round(median(WL1.values),-1);
+        WL2.nominal = round(median(WL2.values),-1);
+        ft_warning('assuming that the nominal wavelengths are %d and %d nm', WL1.nominal, WL2.nominal)
+        wavelength_nominal = nan(size(wavelength));
+        for i=1:length(wavelength)
+            if any(wavelength(i)==WL1.values)
+                wavelength_nominal(i) = WL1.nominal;
+            elseif any(wavelength(i)==WL2.values)
+                wavelength_nominal(i) = WL2.nominal;
+            end
+        end
     else
-      % this channel is not recognized as a nirs channel
-      continue
+        ft_warning('Assuming that the given wavelengths are nominal wavelengths.')
+        wavelength_nominal = wavelength;
+        wavelength_actual = nan(size(wavelength));
     end
-  end
-  % add these columns to the table
-  tab = horzcat(tab, table(source, detector, wavelength));
+
+    % add the source, detector and wavelength columns to the table
+    tab = horzcat(tab, table(source, detector, wavelength_nominal, wavelength_actual));
 end
 
 
@@ -2112,13 +2353,13 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function tab = elec2table(elec)
 if isempty(elec)
-  tab = table();
+    tab = table();
 else
-  name = elec.label(:);
-  x = elec.elecpos(:,1);
-  y = elec.elecpos(:,2);
-  z = elec.elecpos(:,3);
-  tab = table(name, x, y, z);
+    name = elec.label(:);
+    x = elec.elecpos(:,1);
+    y = elec.elecpos(:,2);
+    z = elec.elecpos(:,3);
+    tab = table(name, x, y, z);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2126,27 +2367,32 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function tab = opto2table(opto)
 if isempty(opto)
-  tab = table();
+    tab = table();
 else
-  name = opto.optolabel(:);
-  if all(opto.optopos(:,3)==0) % these are probably template positions
-    ft_info('assuming the optode positions are template positions');
-    x=nan(length(name),1);
-    y=nan(length(name),1);
-    z=nan(length(name),1);
-    template_x=opto.optopos(:,1);
-    template_y=opto.optopos(:,2);
-    template_z=opto.optopos(:,3);
-  else % these are probably recorded optode positions
-    ft_info('assuming the optodes are recorded positions')
-    x = opto.optopos(:,1);
-    y = opto.optopos(:,2);
-    z = opto.optopos(:,3);
-    template_x=nan(length(name),1);
-    template_y=nan(length(name),1);
-    template_z=nan(length(name),1);
-  end
-  tab = table(name, x, y, z, template_x, template_y,template_z);
+    name = opto.optolabel(:);
+    type = cell(size(name));
+    idx_source = find(contains(opto.optotype, {'transmitter', 'source'}));
+    idx_detector = find(contains(opto.optotype, {'receiver', 'detector'}));
+    type(idx_source) = {'source'};
+    type(idx_detector) = {'detector'};
+    if all(opto.optopos(:,3)==0) % these are probably template positions
+        ft_info('assuming the optode positions are template positions');
+        x=nan(length(name),1);
+        y=nan(length(name),1);
+        z=nan(length(name),1);
+        template_x=opto.optopos(:,1);
+        template_y=opto.optopos(:,2);
+        template_z=opto.optopos(:,3);
+    else % these are probably recorded optode positions
+        ft_info('assuming the optodes are recorded positions')
+        x = opto.optopos(:,1);
+        y = opto.optopos(:,2);
+        z = opto.optopos(:,3);
+        template_x=nan(length(name),1);
+        template_y=nan(length(name),1);
+        template_z=nan(length(name),1);
+    end
+    tab = table(name, type, x, y, z, template_x, template_y,template_z);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2154,94 +2400,47 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function tab = event2table(hdr, event)
 if isempty(event)
-  tab = table();
+    tab = table();
 else
-  for i=1:numel(event)
-    % normalize missing values
-    if isempty(event(i).sample)
-      event(i).sample = NaN;
+    for i=1:numel(event)
+        % normalize missing values
+        if isempty(event(i).sample)
+            event(i).sample = NaN;
+        end
+        if isempty(event(i).duration)
+            event(i).duration = NaN;
+        end
+        if isempty(event(i).value)
+            event(i).value = NaN;
+        end
     end
-    if isempty(event(i).duration)
-      event(i).duration = NaN;
+    if isempty(hdr) && isfield(event, 'timestamp')
+        ft_warning('assuming a timestamp resolution of 0.1 milliseconds');
+        onset        = ([event.timestamp]/10000)';     % the resolution is 0.1 milliseconds
+        duration     = zeros(size(onset));             % in seconds
+        type         = {event.type}';
+        value        = {event.value}';
+    else
+        onset        = (([event.sample]-1)/hdr.Fs)';   % in seconds
+        duration     = ([event.duration]/hdr.Fs)';     % in seconds
+        sample       = ([event.sample])';              % in samples, the first sample of the file is 1
+        type         = {event.type}';
+        value        = {event.value}';
     end
-    if isempty(event(i).value)
-      event(i).value = NaN;
+    if all(cellfun(@isnumeric, type))
+        % this can be an array of strings or values
+        type = cell2mat(type);
     end
-  end
-  if isempty(hdr) && isfield(event, 'timestamp')
-    ft_warning('assuming a timestamp resolution of 0.1 milliseconds');
-    onset        = ([event.timestamp]/10000)';     % the resolution is 0.1 milliseconds
-    duration     = zeros(size(onset));             % in seconds
-    type         = {event.type}';
-    value        = {event.value}';
-  else
-    onset        = (([event.sample]-1)/hdr.Fs)';   % in seconds
-    duration     = ([event.duration]/hdr.Fs)';     % in seconds
-    sample       = ([event.sample])';              % in samples, the first sample of the file is 1
-    type         = {event.type}';
-    value        = {event.value}';
-  end
-  if all(cellfun(@isnumeric, type))
-    % this can be an array of strings or values
-    type = cell2mat(type);
-  end
-  if all(cellfun(@isnumeric, value))
-    % this can be an array of strings or values
-    value = cell2mat(value);
-  end
-  if exist('sample', 'var')
-    tab = table(onset, duration, sample, type, value);
-  else
-    tab = table(onset, duration, type, value);
-  end
+    if all(cellfun(@isnumeric, value))
+        % this can be an array of strings or values
+        value = cell2mat(value);
+    end
+    if exist('sample', 'var')
+        tab = table(onset, duration, sample, type, value);
+    else
+        tab = table(onset, duration, type, value);
+    end
 end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function tsv = read_tsv(filename)
-ft_info('reading ''%s''\n', filename);
-tsv = readtable(filename, 'Delimiter', 'tab', 'FileType', 'text', 'TreatAsEmpty', 'n/a', 'ReadVariableNames', true);
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function write_tsv(filename, tsv)
-ft_info('writing ''%s''\n', filename);
-fn = tsv.Properties.VariableNames;
-for i=1:numel(fn)
-  % write [] as 'n/a'
-  % write nan as 'n/a'
-  % write boolean as 'True' or 'False'
-  tsv.(fn{i}) = output_compatible(tsv.(fn{i}));
-end
-writetable(tsv, filename, 'Delimiter', 'tab', 'FileType', 'text');
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function json = read_json(filename)
-ft_info('reading ''%s''\n', filename);
-ft_hastoolbox('jsonlab', 1);
-json = loadjson(filename);
-json = ft_struct2char(json); % convert strings into char-arrays
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function write_json(filename, json)
-ft_info('writing ''%s''\n', filename);
-json = remove_empty(json);
-json = sort_fields(json);
-json = ft_struct2char(json); % convert strings into char-arrays
-ft_hastoolbox('jsonlab', 1);
-% see also the output_compatible helper function
-% write nan as 'n/a'
-% write boolean as True/False
-str = savejson('', json, 'NaN', '"n/a"', 'ParseLogical', true);
-fid = fopen_or_error(filename, 'w');
-fwrite(fid, str);
-fclose(fid);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
@@ -2249,8 +2448,8 @@ fclose(fid);
 function filename = corresponding_json(filename)
 [p, f, x] = fileparts(filename);
 if isequal(x, '.gz') && endsWith(f, '.nii')
-  % it is a gzip compressed NIfTI file, remove the .nii from the file name
-  f = f(1:end-4);
+    % it is a gzip compressed NIfTI file, remove the .nii from the file name
+    f = f(1:end-4);
 end
 filename = fullfile(p, [f '.json']);
 
@@ -2260,18 +2459,18 @@ filename = fullfile(p, [f '.json']);
 function x = merge_vector(x, y)
 assert(isequal(size(x), size(y)));
 for i=1:numel(x)
-  if isnumeric(x) && isnumeric(y) && isnan(x(i)) && ~isnan(y(i))
-    x(i) = y(i);
-  end
-  if iscell(x) && iscell(y) && isempty(x{i}) && ~isempty(y{i})
-    x{i} = y{i};
-  end
-  if iscell(x) && isnumeric(y) && isempty(x{i}) && ~isnan(y{i})
-    x{i} = y(i);
-  end
-  if iscell(x) && iscell(y) && isequal(x{i}, 'unknown') && ~isequal(y{i}, 'unknown')
-    x{i} = y{i};
-  end
+    if isnumeric(x) && isnumeric(y) && isnan(x(i)) && ~isnan(y(i))
+        x(i) = y(i);
+    end
+    if iscell(x) && iscell(y) && isempty(x{i}) && ~isempty(y{i})
+        x{i} = y{i};
+    end
+    if iscell(x) && isnumeric(y) && isempty(x{i}) && ~isnan(y{i})
+        x{i} = y(i);
+    end
+    if iscell(x) && iscell(y) && isequal(x{i}, 'unknown') && ~isequal(y{i}, 'unknown')
+        x{i} = y{i};
+    end
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2285,16 +2484,16 @@ sel = true(1, length(event)); % this should be a row vector
 
 % select all events of the specified type
 if ~isempty(eventtype)
-  for i=1:numel(event)
-    sel(i) = sel(i) && ismatch(event(i).type, eventtype);
-  end
+    for i=1:numel(event)
+        sel(i) = sel(i) && ismatch(event(i).type, eventtype);
+    end
 end
 
 % select all events with the specified value
 if ~isempty(eventvalue)
-  for i=1:numel(event)
-    sel(i) = sel(i) && ismatch(event(i).value, eventvalue);
-  end
+    for i=1:numel(event)
+        sel(i) = sel(i) && ismatch(event(i).value, eventvalue);
+    end
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2302,29 +2501,50 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function s = remove_empty(s)
 if isempty(s)
-  return
+    return
 elseif isstruct(s)
-  fn = fieldnames(s);
-  fn = fn(structfun(@isempty, s));
-  s = removefields(s, fn);
+    fn = fieldnames(s);
+    fn = fn(structfun(@isempty, s));
+    s = removefields(s, fn);
 elseif istable(s)
-  remove = false(1,size(s,2));
-  for i=1:size(s,2)
-    % find columns that are non-numeric and where all elements are []
-    remove(i) = ~isnumeric(s{:,i}) && all(cellfun(@isempty, s{:,i}));
-  end
-  s = s(:,~remove);
+    remove = false(1,size(s,2));
+    for i=1:size(s,2)
+        % find columns that are non-numeric and where all elements are []
+        remove(i) = ~isnumeric(s{:,i}) && all(cellfun(@isempty, s{:,i}));
+    end
+    s = s(:,~remove);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function y = sort_fields(x)
-fn = fieldnames(x);
-fn = sort(fn);
+function y = sort_columns(x, desired)
+original = x.Properties.VariableNames;
+if nargin<2
+    % sort alphabetically
+    desired = sort(original);
+else
+    % only keep the desired columns that are actually present
+    desired = intersect(desired, original, 'stable');
+end
+[dum, order] = ismember(desired, original);
+y = x(:, order);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function y = sort_fields(x, desired)
+original = fieldnames(x);
+if nargin<2
+    % sort alphabetically
+    desired = sort(original);
+else
+    % only keep the desired fields that are actually present
+    desired = intersect(desired, original, 'stable');
+end
 y = struct();
-for i=1:numel(fn)
-  y.(fn{i}) = x.(fn{i});
+for i=1:numel(desired)
+    y.(desired{i}) = x.(desired{i});
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2334,26 +2554,29 @@ function dir = datatype2dirname(typ)
 % see https://bids-specification.readthedocs.io/en/stable/99-appendices/04-entity-table.html
 % nirs, emg, exg, eyetracker, motion, audio, and video are not part of the official specification
 switch typ
-  case {'T1w' 'T2w' 'T1rho' 'T1map' 'T2map' 'T2star' 'FLAIR' 'FLASH' 'PD' 'PDmap' 'PDT2' 'inplaneT1' 'inplaneT2' 'angio' 'defacemask'}
-    dir = 'anat';
-  case {'bold' 'sbref'} % this could also include 'events' or other non-brain data
-    dir = 'func';
-  case {'dwi' 'bvec' 'bval'}
-    dir = 'dwi';
-  case {'phasediff' 'phase1' 'phase2' 'magnitude1' 'magnitude2' 'magnitude' 'fieldmap' 'epi'}
-    dir = 'fmap';
-  case {'events' 'stim' 'physio' 'emg' 'exg' 'eyetracker' 'motion' 'audio' 'video'} % these could also all be stored in 'func' or one of the other directories with brain data
-    dir = 'beh';
-  case {'meg'} % this could also include 'events' or other non-brain data
-    dir = 'meg';
-  case {'eeg'} % this could also include 'events' or other non-brain data
-    dir = 'eeg';
-  case {'ieeg'} % this could also include 'events' or other non-brain data
-    dir = 'ieeg';
-  case {'nirs'} % this is not part of the official specification
-    dir = 'nirs';
-  otherwise
-    ft_error('unrecognized data type ''%s''', typ);
+    case {'T1w' 'T2w' 'T1rho' 'T1map' 'T2map' 'T2star' 'FLAIR' 'FLASH' 'PD' 'PDmap' 'PDT2' 'inplaneT1' 'inplaneT2' 'angio' 'defacemask'}
+        dir = 'anat';
+    case {'bold' 'sbref'} % this could also include 'events' or other non-brain data
+        dir = 'func';
+    case {'dwi' 'bvec' 'bval'}
+        dir = 'dwi';
+    case {'phasediff' 'phase1' 'phase2' 'magnitude1' 'magnitude2' 'magnitude' 'fieldmap' 'epi'}
+        dir = 'fmap';
+    case {'events' 'stim' 'physio' 'emg' 'exg' 'eyetracker' 'audio' 'video'} % these could also all be stored in 'func' or one of the other directories with brain data
+        dir = 'beh';
+    case {'meg'} % this could also include 'events' or other non-brain data
+        dir = 'meg';
+    case {'eeg'} % this could also include 'events' or other non-brain data
+        dir = 'eeg';
+    case {'ieeg'} % this could also include 'events' or other non-brain data
+        dir = 'ieeg';
+    case {'motion'} % this is not part of the official specification
+        dir = 'motion';
+    case {'nirs'} % this is not part of the official specification
+        dir = 'nirs';
+
+    otherwise
+        ft_error('unrecognized data type ''%s''', typ);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2361,32 +2584,35 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function val = output_compatible(val)
 if istable(val)
-  fn = val.Properties.VariableNames;
-  for i=1:numel(fn)
-    val.(fn{i}) = output_compatible(val.(fn{i}));
-  end
-elseif iscell(val)
-  % use recursion to make all elements compatible
-  val = cellfun(@output_compatible, val, 'UniformOutput', false);
-elseif isnumeric(val) && numel(val)>1 && any(isnan(val))
-  % convert and use recursion to make all elements compatible
-  val = num2cell(val);
-  val = cellfun(@output_compatible, val, 'UniformOutput', false);
-else
-  % write [] as 'n/a'
-  % write nan as 'n/a'
-  % write boolean as 'True' or 'False'
-  if isempty(val)
-    val = 'n/a';
-  elseif isnan(val)
-    val = 'n/a';
-  elseif islogical(val)
-    if val
-      val = 'True';
-    else
-      val = 'False';
+    fn = val.Properties.VariableNames;
+    for i=1:numel(fn)
+        val.(fn{i}) = output_compatible(val.(fn{i}));
     end
-  end
+elseif iscell(val)
+    % use recursion to make all elements compatible
+    val = cellfun(@output_compatible, val, 'UniformOutput', false);
+elseif isnumeric(val) && numel(val)>1 && any(isnan(val))
+    % convert and use recursion to make all elements compatible
+    val = num2cell(val);
+    val = cellfun(@output_compatible, val, 'UniformOutput', false);
+elseif isdatetime(val)
+    % see https://bids-specification.readthedocs.io/en/stable/02-common-principles.html#units
+    val = datestr(val, 'yyyy-mm-ddTHH:MM:SS');
+else
+    % write [] as 'n/a'
+    % write nan as 'n/a'
+    % write boolean as 'True' or 'False'
+    if isempty(val)
+        val = 'n/a';
+    elseif isnan(val)
+        val = 'n/a';
+    elseif islogical(val)
+        if val
+            val = 'True';
+        else
+            val = 'False';
+        end
+    end
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2397,15 +2623,15 @@ assert(isstruct(s));
 assert(numel(s)==1);
 fn = fieldnames(s);
 for i=1:numel(fn)
-  if ischar(s.(fn{i}))
-    % convert to cell-array
-    s.(fn{i}) = {s.(fn{i})};
-  elseif iscell(s.(fn{i}))
-    % ensure it is a column
-    s.(fn{i}) = s.(fn{i})(:);
-  elseif isnumeric(s.(fn{i}))
-    % ensure it is a column
-    s.(fn{i}) = s.(fn{i})(:);
-  end
+    if ischar(s.(fn{i}))
+        % convert to cell-array
+        s.(fn{i}) = {s.(fn{i})};
+    elseif iscell(s.(fn{i}))
+        % ensure it is a column
+        s.(fn{i}) = s.(fn{i})(:);
+    elseif isnumeric(s.(fn{i}))
+        % ensure it is a column
+        s.(fn{i}) = s.(fn{i})(:);
+    end
 end
 t = struct2table(s);

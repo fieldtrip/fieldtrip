@@ -13,7 +13,7 @@ function [comp] = ft_componentanalysis(cfg, data)
 %
 % The configuration should contain
 %   cfg.method       = 'runica', 'fastica', 'binica', 'pca', 'svd', 'jader',
-%                      'varimax', 'dss', 'cca', 'sobi', 'white' or 'csp' 
+%                      'varimax', 'dss', 'cca', 'sobi', 'white' or 'csp'
 %                      (default = 'runica')
 %   cfg.channel      = cell-array with channel selection (default = 'all'),
 %                      see FT_CHANNELSELECTION for details
@@ -45,7 +45,7 @@ function [comp] = ft_componentanalysis(cfg, data)
 %   cfg.runica.logfile
 %   cfg.runica.interput
 %
-% The fastica method supports the following method-specific options. The 
+% The fastica method supports the following method-specific options. The
 % values that these options can take can be found with HELP FASTICA.
 %   cfg.fastica.approach
 %   cfg.fastica.numOfIC
@@ -92,12 +92,12 @@ function [comp] = ft_componentanalysis(cfg, data)
 %   cfg.binica.momentum
 %
 % The dss method requires the following method-specific option and supports
-% a whole lot of other options. The values that these options can take can 
+% a whole lot of other options. The values that these options can take can
 % be found with HELP DSS_CREATE_STATE.
 %   cfg.dss.denf.function
 %   cfg.dss.denf.params
 %
-% The sobi method supports the following method-specific options. The 
+% The sobi method supports the following method-specific options. The
 % values that these options can take can be found with HELP SOBI.
 %   cfg.sobi.n_sources
 %   cfg.sobi.p_correlations
@@ -172,7 +172,6 @@ ft_preamble init
 ft_preamble debug
 ft_preamble loadvar data
 ft_preamble provenance data
-ft_preamble trackconfig
 ft_preamble randomseed
 
 % the ft_abort variable is set to true or false in ft_preamble_init
@@ -185,6 +184,7 @@ istimelock = ft_datatype(data, 'timelock');
 data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes');
 
 % check if the input cfg is valid for this function
+cfg = ft_checkconfig(cfg, 'forbidden',  {'channels', 'trial'}); % prevent accidental typos, see issue 1729
 cfg = ft_checkconfig(cfg, 'forbidden',  {'detrend'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'blc', 'demean'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'method', 'predetermined mixing matrix', 'predetermined unmixing matrix'});
@@ -285,7 +285,7 @@ switch cfg.method
 end
 
 % select trials of interest
-tmpcfg = keepfields(cfg, {'trials', 'channel', 'tolerance', 'showcallinfo'});
+tmpcfg = keepfields(cfg, {'trials', 'channel', 'tolerance', 'showcallinfo', 'trackcallinfo', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
 data   = ft_selectdata(tmpcfg, data);
 % restore the provenance information
 [cfg, data] = rollback_provenance(cfg, data);
@@ -308,11 +308,11 @@ if numel(chantype)>0
     tmpcfg.split   = 'no';
     tmpcfg.chantype = lower(chantype{k}); % makes the output labels unique, to allow appending later on
     tmpdata{1,k}   = ft_componentanalysis(tmpcfg, data);
-  end    
+  end
   comp = ft_appenddata([], tmpdata{:});
   return;
 else
-  %   
+  %
 end
 
 Ntrials  = length(data.trial);
@@ -346,7 +346,12 @@ end
 if strcmp(cfg.doscale, 'yes')
   % determine the scaling of the data, scale it to approximately unity
   % this will improve the performance of some methods, esp. fastica
-  tmp                 = data.trial{1};
+  trlidx = 1;
+  tmp    = data.trial{trlidx};
+  while all(isnan(tmp(:))) % if all data in this trial is NaN
+      trlidx  = trlidx + 1; % try next trial
+      tmp     = data.trial{trlidx}; % overwrite tmp with next trial
+  end
   tmp(~isfinite(tmp)) = 0; % ensure that the scaling is a finite value
   scale = norm((tmp*tmp')./size(tmp,2)); clear tmp;
   scale = sqrt(scale);
@@ -416,7 +421,9 @@ elseif ~strcmp(cfg.method, 'predetermined unmixing matrix') && strcmp(cfg.cellmo
   ft_info('concatenated data matrix size %dx%d\n', size(dat,1), size(dat,2));
   
   hasdatanans = any(~isfinite(dat(:)));
-  if hasdatanans
+  if hasdatanans && strcmp(cfg.method, 'dss')
+    ft_error('DSS does not work with nans or inf in the data');
+  elseif hasdatanans
     ft_info('data contains nan or inf, only using the samples without nan or inf\n');
     finitevals = sum(~isfinite(dat))==0;
     if ~any(finitevals)
@@ -613,8 +620,18 @@ switch cfg.method
     
   case 'pca'
     % compute data cross-covariance matrix
-    C = (dat*dat')./(size(dat,2)-1);
-    
+    if iscell(dat)
+      C  = zeros(size(dat{1},1));
+      nC = 0;
+      for k = 1:numel(dat)
+        C  = C + (dat{k}*dat{k}');
+        nC = nC + size(dat{k},2);
+      end
+      C = C./(nC-1);
+    else
+      C = (dat*dat')./(size(dat,2)-1);
+    end
+
     % eigenvalue decomposition (EVD)
     [E,D] = eig(C);
     
@@ -683,11 +700,20 @@ switch cfg.method
     params         = removefields(struct(cfg.dss), {'V' 'dV' 'W' 'indx'});
     params.denf.h  = str2func(cfg.dss.denf.function);
     params.preprocf.h = str2func(cfg.dss.preprocf.function);
-    if ~ischar(cfg.numcomponent)
-      params.sdim = cfg.numcomponent;
-    end
     if isfield(cfg.dss, 'wdim') && ~isempty(cfg.dss.wdim)
       params.wdim = cfg.dss.wdim;
+    end
+    if ~ischar(cfg.numcomponent)
+      params.sdim = cfg.numcomponent;
+      if isfield(params, 'wdim')
+        params.sdim = min(params.sdim, params.wdim);
+      end
+    end
+    
+
+    if isfield(params.denf, 'params') && isfield(params.denf.params, 'artifact')
+      % this may require the sampleinfo in the params structure, to keep the sampling bookkeeping correct
+      params.denf.params.sampleinfo = data.sampleinfo;
     end
     
     % create the state
@@ -948,7 +974,6 @@ end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-ft_postamble trackconfig
 ft_postamble randomseed
 ft_postamble previous   data
 ft_postamble provenance comp

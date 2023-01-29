@@ -19,24 +19,45 @@
 % @seealso{blackman, blackmanharris}
 % @end deftypefn
 
-function [w] = nuttallwin(L)
-  if (nargin ~= 1); help(mfilename); end
+function [w] = nuttallwin(L, opt)
+  if nargin < 1
+    help(mfilename);
+  end
 
-  if(L < 0)
+  if L < 0 
     error('L must be positive');
   end
 
-  if(L ~= floor(L))
+  if L ~= floor(L)
     L = round(L);
     warning('L rounded to the nearest integer.');
   end
 
-  N = L-1;
-  a0 = 0.355768;
-  a1 = 0.487396;
-  a2 = 0.144232;
-  a3 = 0.012604;
-  n = -N/2:N/2;
-  w = a0 + a1.*cos(2.*pi.*n./N) + a2.*cos(4.*pi.*n./N) + a3.*cos(6.*pi.*n./N);
-  w = w';
+  N = L - 1;
+  if nargin == 2 
+    switch (opt)
+      case 'periodic'
+        N = L;
+      case 'symmetric'
+        N = L - 1;
+      otherwise
+        error ('nuttallwin: window type must be either ''periodic'' or ''symmetric''');
+    end %switch
+  end %if
+
+  a0 = 0.3635819;
+  a1 = 0.4891775;
+  a2 = 0.1365995;
+  a3 = 0.0106411; % coefficients from wikipedia to better match matlab output
+%   a0 = 0.355768; % original coefficients don't match matlab output
+%   a1 = 0.487396;
+%   a2 = 0.144232;
+%   a3 = 0.012604;
+  if L==1
+    w = 1;
+  else
+    n = -N/2:(L-1)/2;
+    w = a0 + a1.*cos(2.*pi.*n./N) + a2.*cos(4.*pi.*n./N) + a3.*cos(6.*pi.*n./N);
+    w = w';
+  end
 end

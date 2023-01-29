@@ -46,7 +46,7 @@ ft_nargout  = nargout;
 ft_defaults
 ft_preamble init
 ft_preamble provenance data
-ft_preamble trackconfig
+
 
 % check input data structure
 data = ft_checkdata(data,'datatype', 'raw', 'feedback', 'yes');
@@ -137,7 +137,10 @@ if (cfg.latency(2) > max(endTrialLatency)), cfg.latency(2) = max(endTrialLatency
 end
 
 cfgSelect = [];
-cfgSelect.trials  = cfg.trials;
+cfgSelect.toilim = cfg.latency;
+data = ft_redefinetrial(cfgSelect, data); % ft_selectdata is not sufficiently robust for variable trial lengths
+
+cfgSelect = keepfields(cfg, {'trials'});
 data = ft_selectdata(cfgSelect,data);
 ntrial = length(data.trial);
 
@@ -241,7 +244,7 @@ else
 end
 
 % do the general cleanup and bookkeeping at the end of the function
-ft_postamble trackconfig
+
 ft_postamble previous   data
 ft_postamble provenance timelock
 ft_postamble history    timelock

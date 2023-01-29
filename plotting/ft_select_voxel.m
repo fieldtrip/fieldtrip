@@ -55,13 +55,12 @@ function ft_select_voxel(handle, eventdata, varargin)
 
 % get optional input arguments
 callback = ft_getopt(varargin, 'callback');
-event    = ft_getopt(varargin, 'event');
 
 % get the clicked position from the figure
 % voxel = get(gca, 'CurrentPoint');
 
 % the select3d function also takes care of projections
-[p v vi face facei] = select3d(gca);
+[p, v, vi, face, facei] = select3d(gca);
 voxel = p';
 
 if isempty(voxel)

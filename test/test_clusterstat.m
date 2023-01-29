@@ -2,7 +2,65 @@ function test_clusterstat
 
 % MEM 2gb
 % WALLTIME 00:10:00
-% DEPENDENCY findcluster, clusterstat, ft_statistics_montecarlo
+% DEPENDENCY findcluster clusterstat ft_statistics_montecarlo
+
+%%%%%%%%5
+% some code -> this relates to issue 1732
+pattern = [...
+    1 1 1 1 0 1 1 1 1 1;...
+    1 0 0 0 0 0 0 1 0 0;...
+    1 1 1 0 0 0 0 1 0 0;...
+    1 0 0 0 0 0 0 1 0 0;...
+    1 0 0 0 0 0 0 1 0 0;...
+    ]; % FT
+
+%% 0D (per channel)
+% make fake dataset
+data = cell(1,10);
+for idat = 1:10
+  data{idat}.label = {'ch1' 'ch2' 'ch3' 'ch4' 'ch5'}';
+  data{idat}.dimord = 'chan_freq';
+  data{idat}.parameter = rand(5,1);
+  if idat <= 5
+    data{idat}.parameter = data{idat}.parameter + 2*pattern(:,2);
+  end
+end
+
+% do stats - montecarlo
+cfg = [];
+cfg.method      = 'montecarlo';
+cfg.statistic   = 'ft_statfun_depsamplesT';
+cfg.alpha       = 0.05; 
+cfg.numrandomization = 'all';
+cfg.design = [ones(1,5) ones(1,5).*2; 1:5 1:5;];
+cfg.ivar   = 1;
+cfg.uvar   = 2;
+
+% - data
+cfg.parameter = 'parameter';
+cfg.channel = data{1}.label;
+cfg.connectivity = [...
+  false true  false false false;...
+  true  false false false false;...
+  false false false true  false;...
+  false false true  false false;...
+  false false false false false;...
+  ]; % neighbours: ch1 - ch2, ch3 - ch4
+
+cfg.dim = size(data{1}.(cfg.parameter));
+cfg.dimord = data{1}.dimord;
+dat = cell2mat(cellfun(@(x) x.(cfg.parameter)(:), data, 'UniformOutput', false));
+
+% - run
+cfg.correctm = 'cluster';
+stat = ft_statistics_montecarlo(cfg,dat,cfg.design);
+cfg.correctm = 'tfce';
+stat = ft_statistics_montecarlo(cfg,dat,cfg.design);
+
+
+%%%%%%%%%%%%%5
+% some other code
+
 
 pattern = [...
     1 1 1 1 0 1 1 1 1 1;...

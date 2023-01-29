@@ -3,25 +3,25 @@ function p = Rrank(R,tol)
 %   [err,] = Rrank.m ()
 %
 %Purpose:
-%   
-%   
-%   
+%
+%
+%
 %Input Parameters:
-%   
-%   
-%   
+%
+%
+%
 %Output Parameters:
 %   err : 0 No Problem
 %       : 1  Problems
-%   
-%   
-%      
+%
+%
+%
 %Key Terms:
-%   
+%
 %More Info :
-%   
-%   
-%   
+%
+%
+%
 %
 %     Author : Gang Chen
 %     Date : Tue Mar 23 16:31:43 EST 2004

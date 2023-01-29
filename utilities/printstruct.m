@@ -49,19 +49,15 @@ if nargin==1
   name = inputname(1);
 end
 
-if isa(val, 'config')
-  % This is FieldTrip specific: the @config object resembles a structure but tracks
-  % the access to each field. In this case it is to be treated as a normal structure.
-  val = struct(val);
-end
-
 % get the options and set defaults
 transposed    = ft_getopt(varargin, 'transposed', false);     % print a column as a transposed row, or a row as a transposed column
 linebreaks    = ft_getopt(varargin, 'linebreaks', true);      % print with or without linebreaks
 lastnewline   = ft_getopt(varargin, 'lastnewline', false);    % end with a newline
+lastsemicolon = ft_getopt(varargin, 'lastsemicolon', true);   % end with a semicolon
 
-% when called recursively, it should keep the last newline intact
+% when called recursively, it should keep the last newline and semicolon intact
 varargin = ft_setopt(varargin, 'lastnewline', true);
+varargin = ft_setopt(varargin, 'lastsemicolon', true);
 
 % Note that because we don't know the final size of the string, iteratively appending
 % is actually faster than creating a cell-array and subsequently doing a cat(2,
@@ -143,6 +139,11 @@ end
 
 if str(end)==newline && ~lastnewline
   % remove the last newline
+  str = str(1:end-1);
+end
+
+if str(end)==';' && ~lastsemicolon
+  % remove the last semicolon
   str = str(1:end-1);
 end
 

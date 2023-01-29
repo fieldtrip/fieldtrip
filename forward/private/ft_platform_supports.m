@@ -1,4 +1,4 @@
-function tf = ft_platform_supports(what,varargin)
+function tf = ft_platform_supports(what, varargin)
 
 % FT_PLATFORM_SUPPORTS returns a boolean indicating whether the current platform
 % supports a specific capability
@@ -42,7 +42,7 @@ function tf = ft_platform_supports(what,varargin)
 %
 % See also FT_VERSION, VERSION, VER, VERLESSTHAN
 
-% Copyright (C) 2006, Robert Oostenveld
+% Copyright (C) 2006-2021, Robert Oostenveld
 % Copyright (C) 2010, Eelke Spaak
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
@@ -63,6 +63,15 @@ function tf = ft_platform_supports(what,varargin)
 %
 % $Id$
 
+% these are for remembering the output on subsequent calls that have the same input arguments
+persistent previous_argin previous_argout
+
+current_argin = {what, varargin};
+if isequal(current_argin, previous_argin)
+  % return the previous output from cache
+  tf = previous_argout{1};
+  return
+end
 
 if ~ischar(what)
   error('first argument must be a string');
@@ -192,6 +201,12 @@ switch what
     error('unsupported value for first argument: %s', what);
     
 end % switch
+
+% remember the current input and output arguments, so that they can be
+% reused on a subsequent call in case the same input argument is given
+current_argout = {tf};
+previous_argin  = current_argin;
+previous_argout = current_argout;
 
 end % function
 

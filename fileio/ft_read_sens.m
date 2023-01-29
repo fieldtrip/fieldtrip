@@ -23,11 +23,12 @@ function [sens] = ft_read_sens(filename, varargin)
 %   asa_elc besa_elp besa_pos besa_sfp yokogawa_ave yokogawa_con yokogawa_raw 4d
 %   4d_pdf 4d_m4d 4d_xyz ctf_ds ctf_res4 itab_raw itab_mhd netmeg neuromag_fif
 %   neuromag_mne neuromag_mne_elec neuromag_mne_grad polhemus_fil polhemus_pos
-%   zebris_sfp spmeeg_mat eeglab_set localite_pos artinis_oxy3 artinis_oxyproj matlab
+%   zebris_sfp spmeeg_mat eeglab_set localite_pos artinis_oxy3 artinis_oxy4 
+%   artinis_oxy5 artinis_oxyproj yorkinstruments_hdf5 matlab
 %
 % See also FT_READ_HEADER, FT_DATATYPE_SENS, FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD,
 
-% Copyright (C) 2005-2021 Robert Oostenveld
+% Copyright (C) 2005-2022 Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -80,7 +81,7 @@ if strcmp(readbids, 'yes') || strcmp(readbids, 'ifmakessense')
     tsvfile = bids_sidecar(filename, 'electrodes');
     if ~isempty(tsvfile) && (isempty(senstype) || strcmp(senstype, 'eeg'))
       % read the electrodes.tsv file
-      electrodes_tsv = read_tsv(tsvfile);
+      electrodes_tsv = ft_read_tsv(tsvfile);
       sens         = [];
       sens.label   = electrodes_tsv.name;
       sens.elecpos = [electrodes_tsv.x electrodes_tsv.y electrodes_tsv.z];
@@ -89,7 +90,7 @@ if strcmp(readbids, 'yes') || strcmp(readbids, 'ifmakessense')
       [p, f] = fileparts(tsvfile);
       jsonfile = fullfile(p, [f '.json']);
       if exist(jsonfile, 'file')
-        electrodes_json = read_json(jsonfile);
+        electrodes_json = ft_read_json(jsonfile);
         ft_warning('the content of the electrodes.json is not used')
         % FIXME do something with the content
       end
@@ -97,7 +98,7 @@ if strcmp(readbids, 'yes') || strcmp(readbids, 'ifmakessense')
       % also read the coordsystem.json file
       coordsysfile = bids_sidecar(filename, 'coordsystem');
       if exist(coordsysfile, 'file')
-        coordsys_json = read_json(coordsysfile);
+        coordsys_json = ft_read_json(coordsysfile);
         ft_warning('the content of the coordsystem.json is not used')
         % FIXME do something with the content
       end
@@ -140,7 +141,7 @@ switch fileformat
     % optode information is mostly stored in the header of the NIRS dataset
     % hence we use the standard fieldtrip/fileio ft_read_header function
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  case {'homer_nirs', 'snirf', 'artinis_oxy3', 'artinis_oxy4', 'artinis_oxyproj', 'nirx_wl1', 'nirx_wl2', 'nirx_tpl'}
+  case {'homer_nirs', 'snirf', 'artinis_oxy3', 'artinis_oxy4', 'artinis_oxy5', 'artinis_oxyproj', 'nirx_wl1', 'nirx_wl2', 'nirx_tpl'}
     hdr = ft_read_header(filename, 'headerformat', fileformat, 'coordsys', coordsys, 'readbids', readbids);
     if isfield(hdr, 'opto')
       sens = hdr.opto;
@@ -153,39 +154,70 @@ switch fileformat
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   case 'asa_elc'
     sens = read_asa_elc(filename);
-    
-  case 'artinis_oxy3'
-    ft_hastoolbox('artinis', 1);
-    hdr = read_artinis_oxy3(filename, false);
-    sens = hdr.opto;
-    
-  case 'artinis_oxy4'
-    ft_hastoolbox('artinis', 1);
-    hdr = read_artinis_oxy4(filename, false);
-    sens = hdr.opto;
-    
-  case 'artinis_oxyproj'
-    ft_hastoolbox('artinis', 1);
-    hdr = read_artinis_oxyproj(filename);
-    sens = hdr.opto;
-    
+   
   case 'polhemus_pos'
     sens = read_polhemus_pos(filename);
     
   case 'besa_elp'
-    ft_error('unknown fileformat for electrodes or gradiometers');
-    % the code below does not yet work
     fid = fopen_or_error(filename);
-    % the ascii file contains: type, label, angle, angle
-    tmp = textscan(fid, '%s%s%f%f');
+    % these files seem to come in different formats with 3, 4 or 5 columns
+    % see http://wiki.besa.de/index.php?title=Channel_Definition_File_Formats
+    % read the first two lines to determine the number of columns
+    columns1 = length(strsplit(strtrim(fgetl(fid))));
+    columns2 = length(strsplit(strtrim(fgetl(fid))));
+    fseek(fid, 0, 'bof');
+    if columns1==1 && columns2>1
+      % EEGLAB includes ELP files that start with a line with the number of electrodes 
+      % skip the first line
+      columns1 = columns2;
+      fgetl(fid);
+    end
+    switch columns1
+      case 3
+        % 3-column: label, azimuth, elevation
+        tmp = textscan(fid, '%s%f%f');
+        type      = repmat({'EEG'}, size(tmp{1}));
+        label     = tmp{1};
+        theta     = tmp{2};
+        phi       = tmp{3};
+        radius    = repmat(85, size(tmp{1}));
+      ft_warning('assuming a head radius of 85 mm');
+      case 4
+        % 4-column: type, label, azimuth, elevation
+        tmp = textscan(fid, '%s%s%f%f');
+        type      = tmp{1};
+        label     = tmp{2};
+        theta     = tmp{3};
+        phi       = tmp{4};
+        radius    = repmat(85, size(label));
+      ft_warning('assuming a head radius of 85 mm');
+      case 5
+        % 5-column: type, label, azimuth, elevation, radius
+        tmp = textscan(fid, '%s%s%f%f%f');
+        type      = tmp{1};
+        label     = tmp{2};
+        theta     = tmp{3};
+        phi       = tmp{4};
+        radius    = tmp{5};
+      otherwise
+        ft_error('unsupported file format for .elp');
+    end
     fclose(fid);
-    sel = strcmpi(tmp{1}, 'EEG');  % type can be EEG or POS
-    sens.label = tmp{2}(sel);
-    az = tmp{3}(sel) * pi/180;
-    el = tmp{4}(sel) * pi/180;
-    r  = ones(size(el));
-    [x, y, z] = sph2cart(az, el, r);
-    sens.chanpos = [x y z];
+
+    radians = @(degree) degree*pi/180;
+    x = radius .* cos(radians(phi))   .* sin(radians(theta));
+    y = radius .* sin(radians(theta)) .* sin(radians(phi));
+    z = radius .* cos(radians(theta));
+    sel = strcmpi(type, 'EEG') | strcmpi(type, 'SCP') | strcmpi(type, 'REF');
+    sens.elecpos = [x(sel) y(sel) z(sel)];
+    sens.chanpos = [x(sel) y(sel) z(sel)];
+    sens.label   = label(sel);
+    sens.unit    = 'mm';
+    sel = strcmpi(type, 'FID');
+    if any(sel)
+      sens.fid.pos    = [x(sel) y(sel) z(sel)];
+      sens.fid.label  = label(sel);
+    end
     
   case 'besa_pos'
     tmp = importdata(filename);
@@ -445,11 +477,11 @@ switch fileformat
       sens.label = tmp{1}(2:end);
       theta = cellfun(@str2double, tmp{2}(2:end));
       phi   = cellfun(@str2double, tmp{3}(2:end));
-      radians = @(x) pi*x/180;
+      radians = @(degree) degree*pi/180;
       ft_warning('assuming a head radius of 85 mm');
-      x = 85*cos(radians(phi)).*sin(radians(theta));
-      y = 85*sin(radians(theta)).*sin(radians(phi));
-      z = 85*cos(radians(theta));
+      x = 85 * cos(radians(phi))   .* sin(radians(theta));
+      y = 85 * sin(radians(theta)) .* sin(radians(phi));
+      z = 85 * cos(radians(theta));
       sens.unit = 'mm';
       sens.elecpos = [x y z];
       sens.chanpos = [x y z];
@@ -514,7 +546,7 @@ switch fileformat
     sens.chanpos = [x y z];
     
   case '3dslicer_fscv'
-    csvData = readtable(filename,'FileType','text');
+    csvData = readtable(filename, 'FileType', 'text');
     sens.label = csvData.label;
     sens.elecpos = [csvData.x,csvData.y,csvData.z];
     
@@ -524,6 +556,56 @@ switch fileformat
     warning(ws); % revert to the previous warning state
     sens.label   = txtData{:,1};
     sens.elecpos = [txtData.Loc_X txtData.Loc_Y txtData.Loc_Z];
+    
+  case 'yorkinstruments_hdf5'
+    acquisition='default';
+    if isempty(senstype)
+      % set the default
+      ft_warning('both electrode and gradiometer information is present, returning the electrode information by default');
+      senstype = 'eeg';
+    end
+    hdr=ft_read_header(filename);
+    %i will be the channel index, sens_i is the sensor index
+    sens_i=0;
+    for i=1:hdr.nChans
+      if string(hdr.chantype{i})==upper(senstype)
+        sens_i = sens_i+1;
+        sens.chantype{sens_i,1} = hdr.chantype{i};
+        try
+          sens.chanpos(sens_i,1:3) =  h5read(filename,['/config/channels/' hdr.label{i} '/position']);
+          sens.chanori(sens_i,1:3) =  h5read(filename,['/config/channels/' hdr.label{i} '/orientation']);
+          sens.chanunit{sens_i,1}  =  hdr.chanunit{i};
+          sens.coilori(sens_i,1:3) =  sens.chanori(sens_i,1:3);
+          sens.coilpos(sens_i,1:3) =  sens.chanpos(sens_i,1:3);
+          sens.label{sens_i,1}     =  hdr.label{i};
+        catch
+          error('Error reading channel %i sensor details.',i);
+        end
+      else
+        continue
+      end
+    end
+    if sens_i<1
+      error('No data corresponding to the chosen sensor type (%s) found.',senstype);
+    end
+    sens.tra  = eye(sens_i);
+    sens.type= 'yorkinstruments248';
+    if isempty(coordsys)
+      coordsys = 'dewar';
+    end
+    if strcmp(coordsys, 'head')
+      try
+        tCCStoMegscanScs = h5read(filename, [strcat('/acquisitions/', char(string(acquisition))) '/ccs_to_scs_transform']);
+        T = maketform('affine', tCCStoMegscanScs);
+        sens.coilpos = tformfwd(T, sens.chanpos(:,1), sens.chanpos(:,2), sens.coilpos(:,3));
+        R = tCCStoMegscanScs(1:3,1:3); % (mm)
+        sens.coilori =  sens.coilori * R;
+        sens.chanpos=sens.coilpos;
+        sens.chanori=sens.coilori;
+      catch
+        error('No dewar to head transform available in hdf5 file');
+      end
+    end
     
   otherwise
     if ~isempty(sens)
@@ -548,17 +630,3 @@ elseif strcmpi(senstype, 'nirs')
 else
   % it is empty if not specified by the user, in that case either one is fine
 end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION this is shared with DATA2BIDS
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function tsv = read_tsv(filename)
-tsv = readtable(filename, 'Delimiter', 'tab', 'FileType', 'text', 'TreatAsEmpty', 'n/a', 'ReadVariableNames', true);
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION this is shared with DATA2BIDS
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function json = read_json(filename)
-ft_hastoolbox('jsonlab', 1);
-json = loadjson(filename);
-json = ft_struct2char(json); % convert strings into char-arrays

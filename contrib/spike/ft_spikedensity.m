@@ -93,7 +93,7 @@ ft_nargout  = nargout;
 ft_defaults
 ft_preamble init
 ft_preamble provenance data
-ft_preamble trackconfig
+
 
 % get the default options
 if isfield(cfg,'trials') && isempty(cfg.trials), error('no trials were selected'); end % empty should result in error, not in default
@@ -242,7 +242,7 @@ dof      = zeros(nUnits, length(s));
 
 % preallocate, depending on whether nargout is 1 or 2
 if (strcmp(cfg.keeptrials,'yes')), singleTrials = zeros(nTrials,nUnits,size(s,2)); end
-if nargout==2, [sdfdata.trial(1:nTrials) sdfdata.time(1:nTrials)] = deal({[]}); end
+if nargout==2, [sdfdata.trial(1:nTrials), sdfdata.time(1:nTrials)] = deal({[]}); end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %                           compute the spike density
@@ -332,7 +332,7 @@ if nargout==2
 end
 
 % do the general cleanup and bookkeeping at the end of the function
-ft_postamble trackconfig
+
 ft_postamble previous data
 ft_postamble provenance sfd
 ft_postamble history    sdf

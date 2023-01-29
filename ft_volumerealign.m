@@ -49,7 +49,7 @@ function [realign, snap] = ft_volumerealign(cfg, mri, target)
 %                        'spm'         match to template anatomical MRI
 %                        'fsl'         match to template anatomical MRI
 %   cfg.coordsys       = string specifying the origin and the axes of the coordinate
-%                        system. Supported coordinate systems are 'ctf', '4d', 'bti', 
+%                        system. Supported coordinate systems are 'ctf', '4d', 'bti',
 %                        'eeglab', 'neuromag', 'itab', 'yokogawa', 'asa', 'acpc',
 %                        and 'paxinos'. See http://tinyurl.com/ojkuhqz
 %   cfg.clim           = [min max], scaling of the anatomy color (default
@@ -58,33 +58,6 @@ function [realign, snap] = ft_volumerealign(cfg, mri, target)
 %                         visualization
 %   cfg.viewresult     = string, 'yes' or 'no', whether or not to visualize aligned volume(s)
 %                        after realignment (default = 'no')
-%
-% When cfg.method = 'fiducial' and a coordinate system that is based on external
-% facial anatomical landmarks (common for EEG and MEG), the following is required to
-% specify the voxel indices of the fiducials:
-%   cfg.fiducial.nas    = [i j k], position of nasion
-%   cfg.fiducial.lpa    = [i j k], position of LPA
-%   cfg.fiducial.rpa    = [i j k], position of RPA
-%   cfg.fiducial.zpoint = [i j k], a point on the positive z-axis. This is
-%                         an optional 'fiducial', and can be used to determine
-%                         whether the input voxel coordinate axes are left-handed
-%                         (i.e. flipped in one of the dimensions). If this additional
-%                         point is specified, and the voxel coordinate axes are left
-%                         handed, the volume is flipped to yield right handed voxel
-%                         axes.
-%
-% When cfg.method = 'fiducial' and cfg.coordsys = 'acpc', the following
-% is required to specify the voxel indices of the fiducials:
-%   cfg.fiducial.ac      = [i j k], position of anterior commissure
-%   cfg.fiducial.pc      = [i j k], position of posterior commissure
-%   cfg.fiducial.xzpoint = [i j k], point on the midsagittal-plane with a
-%                          positive Z-coordinate, i.e. an interhemispheric
-%                          point above ac and pc
-% The coordinate system will be according to the RAS_Tal convention i.e.
-% the origin corresponds with the anterior commissure the Y-axis is along
-% the line from the posterior commissure to the anterior commissure the
-% Z-axis is towards the vertex, in between the hemispheres the X-axis is
-% orthogonal to the YZ-plane, positive to the right
 %
 % When cfg.method = 'interactive', a user interface allows for the specification of
 % the fiducials or landmarks using the mouse, cursor keys and keyboard.The fiducials
@@ -101,6 +74,41 @@ function [realign, snap] = ft_volumerealign(cfg, mri, target)
 %                      the filename for the snapshots, including the path. If no path
 %                      is given the files are saved to the pwd. The consecutive
 %                      figures will be numbered and saved as png-file.
+%
+% When cfg.method = 'fiducial' and a coordinate system that is based on external
+% facial anatomical landmarks, as is common for EEG and MEG, the following is
+% required to specify the voxel indices of the fiducials:
+%   cfg.fiducial.nas    = [i j k], position of nasion
+%   cfg.fiducial.lpa    = [i j k], position of LPA
+%   cfg.fiducial.rpa    = [i j k], position of RPA
+%   cfg.fiducial.zpoint = [i j k], a point on the positive z-axis. This is
+%                         an optional 'fiducial', and can be used to determine
+%                         whether the input voxel coordinate axes are left-handed
+%                         (i.e. flipped in one of the dimensions). If this additional
+%                         point is specified, and the voxel coordinate axes are left
+%                         handed, the volume is flipped to yield right handed voxel
+%                         axes.
+%
+% When cfg.method = 'fiducial' and cfg.coordsys = 'acpc', as is common for fMRI,
+% the following is required to specify the voxel indices of the fiducials:
+%   cfg.fiducial.ac      = [i j k], position of anterior commissure
+%   cfg.fiducial.pc      = [i j k], position of posterior commissure
+%   cfg.fiducial.xzpoint = [i j k], point on the midsagittal-plane with a
+%                          positive Z-coordinate, i.e. an interhemispheric
+%                          point above ac and pc
+% The coordinate system will be according to the RAS_Tal convention, i.e.
+% the origin corresponds with the anterior commissure the Y-axis is along
+% the line from the posterior commissure to the anterior commissure the
+% Z-axis is towards the vertex, in between the hemispheres the X-axis is
+% orthogonal to the YZ-plane, positive to the right
+%
+% With the 'interactive' and 'fiducial' methods it is possible to define an
+% additional point (with the key 'z'), which should be a point on the positive side
+% of the xy-plane, i.e. with a positive z-coordinate in world coordinates. This point
+% will subsequently be used to check whether the input coordinate system is left or
+% right-handed. For the 'interactive' method you can also specify an additional
+% control point (with the key 'r'), that should be a point with a positive coordinate
+% on the left-right axis, i.e.', a point on the right of the head.
 %
 % When cfg.method = 'headshape', the function extracts the scalp surface from the
 % anatomical MRI, and aligns this surface with the user-supplied headshape.
@@ -120,20 +128,6 @@ function [realign, snap] = ft_volumerealign(cfg, mri, target)
 %                                  based on the icp-algorithm. If both 'interactive'
 %                                  and 'icp' are executed, the icp step follows the
 %                                  interactive realignment step (default = 'yes')
-%
-% When cfg.method is 'fsl', a third input argument is required. The input volume is
-% coregistered to this target volume, using FSL-flirt. Additional options pertaining
-% to this method should be defined in the sub-structure  cfg.fsl and can include:
-%   cfg.fsl.path         = string, specifying the path to fsl
-%   cfg.fsl.costfun      = string, specifying the cost-function used for
-%                          coregistration
-%   cfg.fsl.interpmethod = string, specifying the interpolation method, can be
-%                          'trilinear', 'nearestneighbour', or 'sinc'
-%   cfg.fsl.dof          = scalar, specifying the number of parameters for the
-%                          affine transformation. 6 (rigid body), 7 (global
-%                          rescale), 9 (traditional) or 12.
-%   cfg.fsl.reslice      = string, specifying whether the output image will be
-%                          resliced conform the target image (default = 'yes')
 %
 % When cfg.method = 'spm', a third input argument is required. The input volume is
 % coregistered to this target volume, using SPM. You can specify the version of
@@ -155,13 +149,19 @@ function [realign, snap] = ft_volumerealign(cfg, mri, target)
 %   cfg.spm.tol          = tolerences for accuracy of each param, default: [0.02 0.02 0.02 0.001 0.001 0.001]
 %   cfg.spm.fwhm         = smoothing to apply to 256x256 joint histogram, default: [7 7]
 %
-% With the 'interactive' and 'fiducial' methods it is possible to define an
-% additional point (with the key 'z'), which should be a point on the positive side
-% of the xy-plane, i.e. with a positive z-coordinate in world coordinates. This point
-% will subsequently be used to check whether the input coordinate system is left or
-% right-handed. For the 'interactive' method you can also specify an additional
-% control point (with the key 'r'), that should be a point with a positive coordinate
-% on the left-right axis.
+% When cfg.method is 'fsl', a third input argument is required. The input volume is
+% coregistered to this target volume, using FSL-flirt. Additional options pertaining
+% to this method should be defined in the sub-structure  cfg.fsl and can include:
+%   cfg.fsl.path         = string, specifying the path to fsl
+%   cfg.fsl.costfun      = string, specifying the cost-function used for
+%                          coregistration
+%   cfg.fsl.interpmethod = string, specifying the interpolation method, can be
+%                          'trilinear', 'nearestneighbour', or 'sinc'
+%   cfg.fsl.dof          = scalar, specifying the number of parameters for the
+%                          affine transformation. 6 (rigid body), 7 (global
+%                          rescale), 9 (traditional) or 12.
+%   cfg.fsl.reslice      = string, specifying whether the output image will be
+%                          resliced conform the target image (default = 'yes')
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
@@ -181,7 +181,7 @@ function [realign, snap] = ft_volumerealign(cfg, mri, target)
 % specified, weights are put on points with z-coordinate<0 (assuming those to be eye
 % rims and nose ridges, i.e. important points.
 
-% Copyright (C) 2006-2014, Robert Oostenveld, Jan-Mathijs Schoffelen
+% Copyright (C) 2006-2022, Robert Oostenveld, Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -212,7 +212,6 @@ ft_preamble init
 ft_preamble debug
 ft_preamble loadvar mri
 ft_preamble provenance mri
-ft_preamble trackconfig
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -291,7 +290,7 @@ elseif iscell(cfg.parameter) && isempty(cfg.parameter)
   % volume (e.g. DTI data) is in the input. This needs to be patched in a
   % more structural way at some point, but for the time being we'll use a
   % workaround here.
-  
+
   % assume anatomy to be the parameter of interest
   siz = size(mri.anatomy);
   if all(siz(1:3)==mri.dim) && numel(siz)==4
@@ -326,7 +325,7 @@ if any(strcmp(cfg.method, {'fiducial', 'interactive'}))
     otherwise
       ft_error('unknown coordinate system "%s"', cfg.coordsys);
   end
-  
+
   for i=1:length(fidlabel)
     if ~isfield(cfg.fiducial, fidlabel{i}) || isempty(cfg.fiducial.(fidlabel{i}))
       cfg.fiducial.(fidlabel{i}) = [nan nan nan];
@@ -337,20 +336,21 @@ end % interactive or fiducial
 switch cfg.method
   case 'fiducial'
     % the actual coordinate transformation will be done further down
-    
+
   case 'landmark'
     % the actual coordinate transformation will be done further down
-    
+
   case 'interactive'
-    
+    % this requires the user to click the anatomical landmarks or fiducials
+
     switch cfg.viewmode
-      
+
       case 'ortho'
         % start building the figure
         h = figure;
         %set(h, 'color', [1 1 1]);
         set(h, 'visible', 'on');
-        
+
         % axes settings
         if strcmp(cfg.axisratio, 'voxel')
           % determine the number of voxels to be plotted along each axis
@@ -369,7 +369,7 @@ switch cfg.method
           axlen2 = 1;
           axlen3 = 1;
         end
-        
+
         % this is the size reserved for subplot h1, h2 and h3
         h1size(1) = 0.82*axlen1/(axlen1 + axlen2);
         h1size(2) = 0.82*axlen3/(axlen2 + axlen3);
@@ -377,7 +377,7 @@ switch cfg.method
         h2size(2) = 0.82*axlen3/(axlen2 + axlen3);
         h3size(1) = 0.82*axlen1/(axlen1 + axlen2);
         h3size(2) = 0.82*axlen2/(axlen2 + axlen3);
-        
+
         if strcmp(cfg.voxelratio, 'square')
           voxlen1 = 1;
           voxlen2 = 1;
@@ -389,35 +389,36 @@ switch cfg.method
           voxlen2 = norm(cp_head(4,:)-cp_head(1,:))/norm(cp_voxel(4,:)-cp_voxel(1,:));
           voxlen3 = norm(cp_head(5,:)-cp_head(1,:))/norm(cp_voxel(5,:)-cp_voxel(1,:));
         end
-        
+
         %% the figure is interactive, add callbacks
         set(h, 'windowbuttondownfcn', @cb_buttonpress);
         set(h, 'windowbuttonupfcn',   @cb_buttonrelease);
         set(h, 'windowkeypressfcn',   @cb_keyboard);
         set(h, 'CloseRequestFcn',     @cb_quit);
-        
+
         % axis handles will hold the anatomical functional if present, along with labels etc.
         h1 = axes('position', [0.06                0.06+0.06+h3size(2) h1size(1) h1size(2)]);
         h2 = axes('position', [0.06+0.06+h1size(1) 0.06+0.06+h3size(2) h2size(1) h2size(2)]);
         h3 = axes('position', [0.06                0.06                h3size(1) h3size(2)]);
-        
+
         set(h1, 'Tag', 'ik', 'Visible', 'off', 'XAxisLocation', 'top');
         set(h2, 'Tag', 'jk', 'Visible', 'off', 'YAxisLocation', 'right'); % after rotating in ft_plot_ortho this becomes top
         set(h3, 'Tag', 'ij', 'Visible', 'off');
-        
+
         set(h1, 'DataAspectRatio', 1./[voxlen1 voxlen2 voxlen3]);
         set(h2, 'DataAspectRatio', 1./[voxlen1 voxlen2 voxlen3]);
         set(h3, 'DataAspectRatio', 1./[voxlen1 voxlen2 voxlen3]);
-        
+
         xc = round(mri.dim(1)/2); % start with center view
         yc = round(mri.dim(2)/2);
         zc = round(mri.dim(3)/2);
-        
-        dat = double(mri.(cfg.parameter));
+
+        % enhance the contrast of the volumetric data, see also FT_DEFACEVOLUME
+        dat  = double(mri.(cfg.parameter));
         dmin = min(dat(:));
         dmax = max(dat(:));
         dat  = (dat-dmin)./(dmax-dmin);
-        
+
         if isfield(cfg, 'pnt')
           pnt = cfg.pnt;
         else
@@ -426,44 +427,38 @@ switch cfg.method
         markerpos   = zeros(0,3);
         markerlabel = {};
         markercolor = {};
-        
+
         % determine clim if empty (setting to [0 1] could be done at the top, but not sure yet if it interacts with the other visualizations -roevdmei)
         if isempty(cfg.clim)
           cfg.clim = [min(dat(:)) min([.5 max(dat(:))])]; %
         end
-        
-        % determine apprioriate [left bottom width height] of intensity range sliders
+
+        % determine the apprioriate [left bottom width height] position of the intensity range sliders
         posbase = [];
         posbase(1) = h1size(1) + h2size(1)/2 + 0.06*2; % horizontal center of the second plot
-        posbase(2) = h3size(2)/2 + 0.06; % vertical center of the third plot
-        posbase(3) = 0.01; % width of the sliders is not so important, if it falls below a certain value, it's a vertical slider, otherwise a horizontal one
-        posbase(4) = h3size(2)/3 + 0.06; % a third of the height of the third plot
+        posbase(2) = h3size(2)/2 + 0.06;               % vertical center of the third plot
+        posbase(3) = 0.01;                             % width of the sliders is not so important, if it falls below a certain value, it's a vertical slider, otherwise a horizontal one
+        posbase(4) = h3size(2)/3 + 0.06;               % one-third of the height of the third plot
         %
         posh45text = [posbase(1)-posbase(3)*5 posbase(2)-.1 posbase(3)*10 posbase(4)+0.07];
         posh4text  = [posbase(1)-.04-posbase(3)*2 posbase(2)-.1 posbase(3)*5 posbase(4)+0.035];
         posh5text  = [posbase(1)+.04-posbase(3)*2 posbase(2)-.1 posbase(3)*5 posbase(4)+0.035];
         posh4slid  = [posbase(1)-.04 posbase(2)-.1 posbase(3) posbase(4)];
         posh5slid  = [posbase(1)+.04 posbase(2)-.1 posbase(3) posbase(4)];
-        
+
         % intensity range sliders
-        h45text = uicontrol('Style', 'text',...
-          'String', 'Intensity',...
+        uicontrol('Style', 'text',...
+          'String', 'Intensity', ...
           'Units', 'normalized', ...
-          'Position',posh45text,... % text is centered, so height adjust vertical position
+          'Position', posh45text, ...
           'HandleVisibility', 'on');
-        
+
         h4text = uicontrol('Style', 'text',...
-          'String', 'Min',...
+          'String', 'Min', ...
           'Units', 'normalized', ...
-          'Position',posh4text,...
+          'Position', posh4text, ...  % text is centered, so height adjust vertical position
           'HandleVisibility', 'on');
-        
-        h5text = uicontrol('Style', 'text',...
-          'String', 'Max',...
-          'Units', 'normalized', ...
-          'Position',posh5text,...
-          'HandleVisibility', 'on');
-        
+
         h4 = uicontrol('Style', 'slider', ...
           'Parent', h, ...
           'Min', 0, 'Max', 1, ...
@@ -471,7 +466,13 @@ switch cfg.method
           'Units', 'normalized', ...
           'Position', posh4slid, ...
           'Callback', @cb_minslider);
-        
+
+        h5text = uicontrol('Style', 'text',...
+          'String', 'Max',...
+          'Units', 'normalized', ...
+          'Position',posh5text, ...  % text is centered, so height adjust vertical position
+          'HandleVisibility', 'on');
+
         h5 = uicontrol('Style', 'slider', ...
           'Parent', h, ...
           'Min', 0, 'Max', 1, ...
@@ -479,7 +480,7 @@ switch cfg.method
           'Units', 'normalized', ...
           'Position', posh5slid, ...
           'Callback', @cb_maxslider);
-        
+
         % instructions to the user
         fprintf(strcat(...
           '1. To change the slice viewed in one plane, either:\n',...
@@ -496,7 +497,7 @@ switch cfg.method
           '   b. press f on keyboard to toggle fiducial visibility\n',...
           '   c. press + or - on (numeric) keyboard to change the color range''s upper limit\n',...
           '4. To finalize markers and quit interactive mode, press q on keyboard\n'));
-        
+
         % create structure to be passed to gui
         opt               = [];
         opt.viewresult    = false; % flag to use for certain keyboard/redraw calls
@@ -527,17 +528,17 @@ switch cfg.method
         else
           opt.unit = '';        % this is not shown
         end
-        
+
         setappdata(h, 'opt', opt);
         cb_redraw(h);
-        
+
       case 'surface'
-        
+
         % make a mesh from the skin surface
         cfg.headshape = ft_getopt(cfg, 'headshape');
         cfg.headshape.scalpsmooth    = ft_getopt(cfg.headshape, 'scalpsmooth',    2, 1); % empty is OK
         cfg.headshape.scalpthreshold = ft_getopt(cfg.headshape, 'scalpthreshold', 0.1);
-        
+
         if ~isfield(mri, 'scalp') || ~islogical(mri.scalp)
           % extract the scalp surface from the anatomical image
           tmpcfg        = [];
@@ -552,7 +553,7 @@ switch cfg.method
           % use the scalp segmentation that is provided
           seg = mri;
         end
-        
+
         tmpcfg             = [];
         tmpcfg.tissue      = 'scalp';
         tmpcfg.method      = 'isosurface';
@@ -560,7 +561,7 @@ switch cfg.method
         tmpcfg.numvertices = inf;
         scalp              = ft_prepare_mesh(tmpcfg, seg);
         scalp              = ft_convert_units(scalp, 'mm');
-        
+
         fprintf('\n');
         fprintf(strcat(...
           '1. To change the orientation of the head surface, use the\n',...
@@ -570,7 +571,7 @@ switch cfg.method
           '   b. specify it by pressing the letter corresponding to the fiducial/landmark:\n', fidexplanation1, fidexplanation2, ...
           '   You can mark the fiducials multiple times, until you are satisfied with the positions.\n',...
           '3. To finalize markers and quit interactive mode, press q on keyboard\n'));
-        
+
         % start building the figure
         h = figure;
         set(h, 'color', [1 1 1]);
@@ -578,10 +579,10 @@ switch cfg.method
         % add callbacks
         set(h, 'windowkeypressfcn',   @cb_keyboard_surface);
         set(h, 'CloseRequestFcn',     @cb_quit);
-        
+
         % create figure handles
         h1 = axes;
-        
+
         % create structure to be passed to gui
         opt                 = [];
         opt.viewresult      = false; % flag to use for certain keyboard/redraw calls
@@ -604,27 +605,24 @@ switch cfg.method
         else
           opt.unit = '';        % this is not shown
         end
-        
+
         setappdata(h, 'opt', opt);
         cb_redraw_surface(h);
-        
+
     end % switch viewmode
-    
+
     while(opt.quit==0)
       uiwait(h);
       opt = getappdata(h, 'opt');
     end
     delete(h);
-    
+
     % store the interactively determined fiducials in the configuration
     % the actual coordinate transformation will be done further down
     cfg.fiducial = opt.fiducial;
-    
+
   case 'headshape'
-    if isa(cfg.headshape, 'config')
-      cfg.headshape = struct(cfg.headshape);
-    end
-    
+
     if ischar(cfg.headshape)
       % old-style specification, convert cfg into new representation
       cfg.headshape = struct('headshape', cfg.headshape);
@@ -636,7 +634,7 @@ switch cfg.method
         cfg.headshape.scalpthreshold = cfg.scalpthreshold;
         cfg = rmfield(cfg, 'scalpthreshold');
       end
-      
+
     elseif isstruct(cfg.headshape) && isfield(cfg.headshape, 'pos')
       % old-style specification, convert into new representation
       cfg.headshape = struct('headshape', cfg.headshape);
@@ -653,22 +651,22 @@ switch cfg.method
     else
       ft_error('incorrect specification of cfg.headshape');
     end
-    
+
     if ischar(cfg.headshape.headshape)
       shape = ft_read_headshape(cfg.headshape.headshape);
     else
       shape = cfg.headshape.headshape;
     end
     shape = ft_convert_units(shape, mri.unit); % make the units of the headshape consistent with the MRI
-    
+
     cfg.headshape.interactive    = ft_getopt(cfg.headshape, 'interactive', true);
     cfg.headshape.icp            = ft_getopt(cfg.headshape, 'icp',         true);
     cfg.headshape.scalpsmooth    = ft_getopt(cfg.headshape, 'scalpsmooth',    2, 1); % empty is OK
     cfg.headshape.scalpthreshold = ft_getopt(cfg.headshape, 'scalpthreshold', 0.1);
-    
+
     dointeractive = istrue(cfg.headshape.interactive);
     doicp         = istrue(cfg.headshape.icp);
-    
+
     if ~isfield(mri, 'scalp') || ~islogical(mri.scalp)
       % extract the scalp surface from the anatomical image
       tmpcfg        = [];
@@ -684,14 +682,14 @@ switch cfg.method
       % use the scalp segmentation that is provided
       seg = mri;
     end
-    
+
     tmpcfg             = [];
     tmpcfg.tissue      = 'scalp';
     tmpcfg.method      = 'projectmesh'; %'isosurface';
     tmpcfg.spmversion  = cfg.spmversion;
     tmpcfg.numvertices = 20000;
     scalp              = ft_prepare_mesh(tmpcfg, seg);
-    
+
     if dointeractive
       fprintf('doing interactive realignment with headshape\n');
       tmpcfg                           = [];
@@ -702,14 +700,11 @@ switch cfg.method
       tmpcfg = ft_interactiverealign(tmpcfg);
       M      = tmpcfg.m;
       cfg.transform_interactive = M;
-      
-      % touch it to survive trackconfig
-      cfg.transform_interactive;
-      
+
       % update the relevant geometrical info
       scalp  = ft_transform_geometry(M, scalp);
     end % dointeractive
-    
+
     % always perform an icp-step, because this will give an estimate of the
     % initial distance of the corresponding points. depending on the value
     % for doicp, deal with the output differently
@@ -718,7 +713,7 @@ switch cfg.method
     else
       numiter = 1;
     end
-    
+
     if ~isfield(cfg, 'weights')
       w = ones(size(shape.pos,1),1);
     else
@@ -727,35 +722,35 @@ switch cfg.method
         ft_error('number of weights should be equal to the number of points in the headshape');
       end
     end
-    
+
     % the icp function wants this as a function handle.
     weights = @(x)assignweights(x,w);
-    
+
     ft_hastoolbox('fileexchange',1);
-    
+
     % construct the coregistration matrix
     nrm = normals(scalp.pos, scalp.tri, 'vertex');
     [R, t, err, dummy, info] = icp(scalp.pos', shape.pos', numiter, 'Minimize', 'plane', 'Normals', nrm', 'Weight', weights, 'Extrapolation', true, 'WorstRejection', 0.05);
-    
+
     if doicp
       fprintf('doing iterative closest points realignment with headshape\n');
       % create the additional transformation matrix and compute the
       % distance between the corresponding points, both prior and after icp
-      
+
       % this one transforms from scalp 'headspace' to shape 'headspace'
       M2 = inv([R t;0 0 0 1]);
-      
+
       % warp the extracted scalp points to the new positions
       scalp.pos = ft_warp_apply(M2, scalp.pos);
-      
+
       target        = scalp;
       target.pos    = target.pos;
       target.inside = (1:size(target.pos,1))';
-      
+
       functional          = rmfield(shape, 'pos');
       functional.distance = info.distanceout(:);
       functional.pos      = info.qout';
-      
+
       tmpcfg              = [];
       tmpcfg.parameter    = 'distance';
       tmpcfg.interpmethod = 'sphere_avg';
@@ -763,57 +758,51 @@ switch cfg.method
       tmpcfg.feedback     = 'none';
       smoothdist          = ft_sourceinterpolate(tmpcfg, functional, target);
       scalp.distance      = smoothdist.distance(:);
-      
+
       functional.pow      = info.distancein(:);
       smoothdist          = ft_sourceinterpolate(tmpcfg, functional, target);
       scalp.distancein    = smoothdist.distance(:);
-      
+
       cfg.icpinfo = info;
       cfg.transform_icp = M2;
-      
-      % touch it to survive trackconfig
-      cfg.icpinfo;
-      cfg.transform_icp;
+
     else
       % compute the distance between the corresponding points, prior to icp:
       % this corresponds to the final result after interactive only
-      
+
       M2 = eye(4); % this is needed later on
-      
+
       target        = scalp;
       target.pos    = target.pos;
       target.inside = (1:size(target.pos,1))';
-      
+
       functional     = rmfield(shape, 'pos');
       functional.pow = info.distancein(:);
       functional.pos = info.qout';
-      
+
       tmpcfg              = [];
       tmpcfg.parameter    = 'pow';
       tmpcfg.interpmethod = 'sphere_avg';
       tmpcfg.sphereradius = 10;
       smoothdist          = ft_sourceinterpolate(tmpcfg, functional, target);
       scalp.distance      = smoothdist.pow(:);
-      
+
     end % doicp
-    
+
     % create headshape structure for mri-based surface point cloud
     if isfield(mri, 'coordsys')
       scalp.coordsys = mri.coordsys;
-      
+
       % coordsys is the same as input mri
       coordsys = mri.coordsys;
     else
       coordsys  = 'unknown';
     end
-    
+
     % update the cfg
     cfg.headshape.headshape    = shape;
     cfg.headshape.headshapemri = scalp;
-    
-    % touch it to survive trackconfig
-    cfg.headshape;
-    
+
     if doicp && dointeractive
       transform = M2*M;
     elseif doicp
@@ -821,7 +810,7 @@ switch cfg.method
     elseif dointeractive
       transform = M;
     end
-    
+
   case 'fsl'
     if ~isfield(cfg, 'fsl'), cfg.fsl = []; end
     cfg.fsl.path         = ft_getopt(cfg.fsl, 'path',         '');
@@ -830,14 +819,14 @@ switch cfg.method
     cfg.fsl.dof          = ft_getopt(cfg.fsl, 'dof',          6);
     cfg.fsl.reslice      = ft_getopt(cfg.fsl, 'reslice',      'yes');
     cfg.fsl.searchrange  = ft_getopt(cfg.fsl, 'searchrange',  [-180 180]);
-    
+
     % write the input and target to a temporary file
     % and create some additional temporary file names to contain the output
     filename_mri    = tempname;
     filename_target = tempname;
     filename_output = tempname;
     filename_mat    = tempname;
-    
+
     tmpcfg           = [];
     tmpcfg.parameter = 'anatomy';
     tmpcfg.filename  = filename_mri;
@@ -847,7 +836,7 @@ switch cfg.method
     tmpcfg.filename  = filename_target;
     fprintf('writing the  target volume to a temporary file: %s\n', [filename_target, '.nii']);
     ft_volumewrite(tmpcfg, target);
-    
+
     % create the command to call flirt
     fprintf('using flirt for the coregistration\n');
     r1  = num2str(cfg.fsl.searchrange(1));
@@ -855,23 +844,23 @@ switch cfg.method
     str = sprintf('%s/flirt -in %s -ref %s -out %s -omat %s -bins 256 -cost %s -searchrx %s %s -searchry %s %s -searchrz %s %s -dof %s -interp %s',...
       cfg.fsl.path, filename_mri, filename_target, filename_output, filename_mat, cfg.fsl.costfun, r1, r2, r1, r2, r1, r2, num2str(cfg.fsl.dof), cfg.fsl.interpmethod);
     if isempty(cfg.fsl.path), str = str(2:end); end % remove the first filesep, assume path to flirt to be known
-    
+
     % system call
     system(str);
-    
+
     % process the output
     if ~istrue(cfg.fsl.reslice)
       % get the transformation that corresponds to the coregistration and
       % reconstruct the mapping from the target's world coordinate system
       % to the input's voxel coordinate system
-      
+
       fid = fopen(filename_mat);
       flirtmat = textscan(fid, '%f');
       fclose(fid);
-      
+
       % this contains the coregistration information in FSL convention
       flirtmat = reshape(flirtmat{1},4,4)';
-      
+
       % The following chunck of code is from Ged Ridgway's
       % flirtmat2worldmat code
       % src = inv(flirtmat) * trg
@@ -900,7 +889,7 @@ switch cfg.method
       % AND, Flirt's voxels are zero-based, while SPM's are one-based...
       addone = eye(4);
       addone(:, 4) = 1;
-      
+
       fslvoxmat  = inv(scl_mri) * inv(flirtmat) * scl_target;
       spmvoxmat  = addone * (fslvoxmat / addone);
       target2mri = mri.transform * (spmvoxmat / target.transform);
@@ -911,14 +900,14 @@ switch cfg.method
       else
         coordsys = 'unknown';
       end
-      
+
     else
       % get the updated anatomy
       mrinew        = ft_read_mri([filename_output, '.nii.gz']);
       mri.anatomy   = mrinew.anatomy;
       mri.transform = mrinew.transform;
       mri.dim       = mrinew.dim;
-      
+
       transform = eye(4);
       if isfield(target, 'coordsys')
         coordsys = target.coordsys;
@@ -930,18 +919,18 @@ switch cfg.method
     delete([filename_target, '.nii']);
     delete([filename_output, '.nii.gz']);
     delete(filename_mat);
-    
+
   case 'spm'
     % check that the preferred SPM version is on the path
     ft_hastoolbox(cfg.spmversion, 1);
-    
+
     if strcmpi(cfg.spmversion, 'spm2') || strcmpi(cfg.spmversion, 'spm8')
-      
+
       if ~isfield(cfg, 'spm'), cfg.spm = []; end
       cfg.spm.regtype = ft_getopt(cfg.spm, 'regtype', 'subj');
       cfg.spm.smosrc  = ft_getopt(cfg.spm, 'smosrc',  2);
       cfg.spm.smoref  = ft_getopt(cfg.spm, 'smoref',  2);
-      
+
       if ~isfield(mri,    'coordsys')
         mri = ft_determine_coordsys(mri);
       else
@@ -962,45 +951,45 @@ switch cfg.method
           ft_error('The coordinate systems of the input and target volumes are different, coregistration is not possible');
         end
       end
-      
+
       % flip and permute the 3D volume itself, so that the voxel and
       % headcoordinates approximately correspond
       [tmp,    pvec_mri,    flip_mri, T] = align_ijk2xyz(mri);
       [target]                           = align_ijk2xyz(target);
-      
+
       tname1 = [tempname, '.img'];
       tname2 = [tempname, '.img'];
       V1 = ft_write_mri(tname1, mri.anatomy,    'transform', mri.transform,    'spmversion', spm('ver'), 'dataformat', 'nifti_spm');
       V2 = ft_write_mri(tname2, target.anatomy, 'transform', target.transform, 'spmversion', spm('ver'), 'dataformat', 'nifti_spm');
-      
+
       flags         = cfg.spm;
       flags.nits    = 0; %set number of non-linear iterations to zero
       params        = spm_normalise(V2,V1, [], [], [],flags);
       %mri.transform = (target.transform/params.Affine)/T;
       transform     = (target.transform/params.Affine)/T/mri.transform;
       % transform     = eye(4);
-      
+
     elseif strcmpi(cfg.spmversion, 'spm12')
-      
+
       if ~isfield(cfg, 'spm'), cfg.spm = []; end
-      
+
       tname1 = [tempname, '.nii'];
       tname2 = [tempname, '.nii'];
       V1 = ft_write_mri(tname1, mri.anatomy, 'transform', mri.transform, 'spmversion', spm('ver'), 'dataformat', 'nifti_spm'); % source (moved) image
       V2 = ft_write_mri(tname2, target.anatomy, 'transform', target.transform, 'spmversion', spm('ver'), 'dataformat', 'nifti_spm'); % reference image
-      
+
       flags         = cfg.spm;
       x             = spm_coreg(V2,V1,flags); % spm_realign does within modality rigid body movement parameter estimation
       transform     = inv(spm_matrix(x(:)')); % from V1 to V2, to be multiplied still with the original transform (mri.transform), see below
-      
+
     end
-    
+
     if isfield(target, 'coordsys')
       coordsys = target.coordsys;
     else
       coordsys = 'unknown';
     end
-    
+
     % delete the temporary files
     delete(tname1);
     delete(tname2);
@@ -1009,7 +998,7 @@ switch cfg.method
 end
 
 if any(strcmp(cfg.method, {'fiducial', 'interactive'}))
-  
+
   % the fiducial locations are specified in voxels, convert them to head
   % coordinates according to the existing transform matrix
   fid1_vox  = cfg.fiducial.(fidlabel{1});
@@ -1018,7 +1007,7 @@ if any(strcmp(cfg.method, {'fiducial', 'interactive'}))
   fid1_head = ft_warp_apply(mri.transform, fid1_vox);
   fid2_head = ft_warp_apply(mri.transform, fid2_vox);
   fid3_head = ft_warp_apply(mri.transform, fid3_vox);
-  
+
   if length(fidlabel)>3
     % the 4th point is optional
     fid4_vox  = cfg.fiducial.(fidlabel{4});
@@ -1026,7 +1015,7 @@ if any(strcmp(cfg.method, {'fiducial', 'interactive'}))
   else
     fid4_head = [nan nan nan];
   end
-  
+
   if ~any(isnan(fid4_head))
     [transform, coordsys] = ft_headcoordinates(fid1_head, fid2_head, fid3_head, fid4_head, cfg.coordsys);
   else
@@ -1042,13 +1031,16 @@ if ~isempty(transform) && ~any(isnan(transform(:)))
   realign.transformorig = mri.transform;
   realign.transform     = transform * mri.transform;
   realign.coordsys      = coordsys;
+  if isfield(realign, 'fid')
+    % also apply the transformation on the fiducials
+    realign.fid.pos = ft_warp_apply(transform, realign.fid.pos);
+  end
 else
-  ft_warning('no coordinate system realignment has been done');
+  ft_warning('no coordinate system realignment was done');
 end
 
-% visualize result
 % all plotting for the realignment is done in voxel space
-% for view the results however, it needs be in coordinate system space (necessary for the two volume case below)
+% to view the results however, it needs be in coordinate system space (necessary for the two volume case below)
 % to be able to reuse all the plotting code, several workarounds are in place, which convert the indices
 % from voxel space to the target coordinate system space
 if viewresult
@@ -1060,13 +1052,12 @@ if viewresult
     twovol  = false; % input was one volumes, base is called realign
     basevol = realign;
   end
-  
-  
+
   % input was a single vol
   % start building the figure
   h = figure('numbertitle', 'off', 'name', 'realignment result');
   set(h, 'visible', 'on');
-  
+
   % axes settings
   if strcmp(cfg.axisratio, 'voxel')
     % determine the number of voxels to be plotted along each axis
@@ -1085,7 +1076,7 @@ if viewresult
     axlen2 = 1;
     axlen3 = 1;
   end
-  
+
   % this is the size reserved for subplot h1, h2 and h3
   h1size(1) = 0.82*axlen1/(axlen1 + axlen2);
   h1size(2) = 0.82*axlen3/(axlen2 + axlen3);
@@ -1093,7 +1084,7 @@ if viewresult
   h2size(2) = 0.82*axlen3/(axlen2 + axlen3);
   h3size(1) = 0.82*axlen1/(axlen1 + axlen2);
   h3size(2) = 0.82*axlen2/(axlen2 + axlen3);
-  
+
   if strcmp(cfg.voxelratio, 'square')
     voxlen1 = 1;
     voxlen2 = 1;
@@ -1105,31 +1096,31 @@ if viewresult
     voxlen2 = norm(cp_head(4,:)-cp_head(1,:))/norm(cp_voxel(4,:)-cp_voxel(1,:));
     voxlen3 = norm(cp_head(5,:)-cp_head(1,:))/norm(cp_voxel(5,:)-cp_voxel(1,:));
   end
-  
+
   %% the figure is interactive, add callbacks
   set(h, 'windowbuttondownfcn', @cb_buttonpress);
   set(h, 'windowbuttonupfcn',   @cb_buttonrelease);
   set(h, 'windowkeypressfcn',   @cb_keyboard);
   set(h, 'CloseRequestFcn',     @cb_quit);
-  
+
   % axis handles will hold the anatomical functional if present, along with labels etc.
   h1 = axes('position', [0.06                0.06+0.06+h3size(2) h1size(1) h1size(2)]);
   h2 = axes('position', [0.06+0.06+h1size(1) 0.06+0.06+h3size(2) h2size(1) h2size(2)]);
   h3 = axes('position', [0.06                0.06                h3size(1) h3size(2)]);
-  
+
   set(h1, 'Tag', 'ij', 'Visible', 'off', 'XAxisLocation', 'top');
   set(h2, 'Tag', 'jk', 'Visible', 'off', 'YAxisLocation', 'right'); % after rotating in ft_plot_ortho this becomes top
   set(h3, 'Tag', 'ik', 'Visible', 'off');
-  
+
   set(h1, 'DataAspectRatio', 1./[voxlen1 voxlen2 voxlen3]);
   set(h2, 'DataAspectRatio', 1./[voxlen1 voxlen2 voxlen3]);
   set(h3, 'DataAspectRatio', 1./[voxlen1 voxlen2 voxlen3]);
-  
+
   % start with center view
   xc = round(basevol.dim(1)/2);
   yc = round(basevol.dim(2)/2);
   zc = round(basevol.dim(3)/2);
-  
+
   % normalize data to go from 0 to 1
   dat = double(basevol.(cfg.parameter));
   dmin = min(dat(:));
@@ -1141,7 +1132,7 @@ if viewresult
     dmax = max(realigndat(:));
     realigndat  = (realigndat-dmin)./(dmax-dmin);
   end
-  
+
   if isfield(cfg, 'pnt')
     pnt = cfg.pnt;
   else
@@ -1150,12 +1141,12 @@ if viewresult
   markerpos   = zeros(0,3);
   markerlabel = {};
   markercolor = {};
-  
+
   % determine clim if empty (setting to [0 1] could be done at the top, but not sure yet if it interacts with the other visualizations -roevdmei)
   if isempty(cfg.clim)
     cfg.clim = [min(dat(:)) min([.5 max(dat(:))])]; %
   end
-  
+
   % determine apprioriate [left bottom width height] of intensity range sliders
   posbase = [];
   posbase(1) = h1size(1) + h2size(1)/2 + 0.06*2; % horizontal center of the second plot
@@ -1168,7 +1159,7 @@ if viewresult
   posh5text  = [posbase(1)+.04-posbase(3)*2 posbase(2)-.1 posbase(3)*5 posbase(4)+0.035];
   posh4slid  = [posbase(1)-.04 posbase(2)-.1 posbase(3) posbase(4)];
   posh5slid  = [posbase(1)+.04 posbase(2)-.1 posbase(3) posbase(4)];
-  
+
   % intensity range sliders
   if twovol
     h45texttar = uicontrol('Style', 'text',...
@@ -1176,19 +1167,19 @@ if viewresult
       'Units', 'normalized', ...
       'Position',posh45text,...
       'HandleVisibility', 'on');
-    
+
     h4texttar = uicontrol('Style', 'text',...
       'String', 'Min',...
       'Units', 'normalized', ...
       'Position',posh4text,...
       'HandleVisibility', 'on');
-    
+
     h5texttar = uicontrol('Style', 'text',...
       'String', 'Max',...
       'Units', 'normalized', ...
       'Position',posh5text,...
       'HandleVisibility', 'on');
-    
+
     h4tar = uicontrol('Style', 'slider', ...
       'Parent', h, ...
       'Min', 0, 'Max', 1, ...
@@ -1197,7 +1188,7 @@ if viewresult
       'Position', posh4slid, ...
       'Callback', @cb_minslider,...
       'tag', 'tar');
-    
+
     h5tar = uicontrol('Style', 'slider', ...
       'Parent', h, ...
       'Min', 0, 'Max', 1, ...
@@ -1207,7 +1198,7 @@ if viewresult
       'Callback', @cb_maxslider,...
       'tag', 'tar');
   end
-  
+
   % intensity range sliders
   if ~twovol
     str = 'Intensity realigned volume';
@@ -1219,19 +1210,19 @@ if viewresult
     'Units', 'normalized', ...
     'Position',posh45text,...
     'HandleVisibility', 'on');
-  
+
   h4textrel = uicontrol('Style', 'text',...
     'String', 'Min',...
     'Units', 'normalized', ...
     'Position',posh4text,...
     'HandleVisibility', 'on');
-  
+
   h5textrel = uicontrol('Style', 'text',...
     'String', 'Max',...
     'Units', 'normalized', ...
     'Position',posh5text,...
     'HandleVisibility', 'on');
-  
+
   h4rel = uicontrol('Style', 'slider', ...
     'Parent', h, ...
     'Min', 0, 'Max', 1, ...
@@ -1240,7 +1231,7 @@ if viewresult
     'Position', posh4slid, ...
     'Callback', @cb_minslider,...
     'tag', 'rel');
-  
+
   h5rel = uicontrol('Style', 'slider', ...
     'Parent', h, ...
     'Min', 0, 'Max', 1, ...
@@ -1249,7 +1240,7 @@ if viewresult
     'Position', posh5slid, ...
     'Callback', @cb_maxslider,...
     'tag', 'rel');
-  
+
   % create structure to be passed to gui
   opt               = [];
   opt.twovol        = twovol;
@@ -1304,17 +1295,15 @@ if viewresult
   else
     opt.unit = '';        % this is not shown
   end
-  
+
   % add to figure and start initial draw
   setappdata(h, 'opt', opt);
   cb_redraw(h);
-  
-end
 
+end % if viewresult
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-ft_postamble trackconfig
 ft_postamble previous   mri
 ft_postamble provenance realign
 ft_postamble history    realign
@@ -1416,7 +1405,6 @@ end
 
 uiresume(h);
 
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1481,7 +1469,7 @@ if opt.init
       end
     end
   end % if ~opt.viewresult
-  
+
   % fetch surf objects, set ana tag, and put in surfhandles
   if ~opt.viewresult || (opt.viewresult && ~opt.twovol)
     opt.anahandles = findobj(opt.handlesfigure, 'type', 'surface')';
@@ -1529,13 +1517,13 @@ else
       end
     end
   end % if ~opt.viewresult
-  
+
   % display current location
   if ~opt.viewresult
     % if realigning, plotting is done in voxel space
     if all(round([xi yi zi])<=mri.dim) && all(round([xi yi zi])>0)
       fprintf('==================================================================================\n');
-      
+
       lab = 'crosshair';
       vox = [xi yi zi];
       ind = sub2ind(mri.dim(1:3), round(vox(1)), round(vox(2)), round(vox(3)));
@@ -1551,7 +1539,7 @@ else
           fprintf('%10s: voxel %9d, index = [%3d %3d %3d], head = [%f %f %f] %s\n', lab, ind, vox, pos, opt.unit);
       end
     end
-    
+
     for i=1:length(opt.fidlabel)
       lab = opt.fidlabel{i};
       vox = opt.fiducial.(lab);
@@ -1568,7 +1556,7 @@ else
           fprintf('%10s: voxel %9d, index = [%3d %3d %3d], head = [%f %f %f] %s\n', lab, ind, vox, pos, opt.unit);
       end
     end
-    
+
   else
     % if viewing result, plotting is done in head coordinate system space
     lab = 'crosshair';
@@ -1584,7 +1572,7 @@ else
         fprintf('%10s: head = [%f %f %f] %s\n', lab, pos, opt.unit);
     end
   end % if ~opt.viewresult
-  
+
 end % if opt.init
 
 set(opt.handlesaxes(1), 'Visible', 'on');
@@ -1595,7 +1583,6 @@ if opt.viewresult
   set(opt.handlesaxes(2), 'color', [.94 .94 .94]);
   set(opt.handlesaxes(3), 'color', [.94 .94 .94]);
 end
-
 
 % make the last current axes current again
 sel = findobj('type', 'axes', 'tag',tag);
@@ -1663,21 +1650,21 @@ if ~opt.viewresult
     %   if any(isnan(pos))
     %     continue
     %   end
-    
+
     posi = pos(1);
     posj = pos(2);
     posk = pos(3);
-    
+
     subplot(h1);
     hold on
     opt.handlesmarker(i,1) = plot3(posi, 1, posk, 'marker', 'o', 'color', markercolor{i});
     hold off
-    
+
     subplot(h2);
     hold on
     opt.handlesmarker(i,2) = plot3(opt.dim(1), posj, posk, 'marker', 'o', 'color', markercolor{i});
     hold off
-    
+
     subplot(h3);
     hold on
     opt.handlesmarker(i,3) = plot3(posi, posj, opt.dim(3), 'marker', 'o', 'color', markercolor{i});
@@ -1696,7 +1683,6 @@ setappdata(h, 'opt', opt);
 set(h, 'currentaxes', curr_ax);
 
 uiresume
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
@@ -1732,16 +1718,16 @@ end
 switch key
   case {'' 'shift+shift' 'alt-alt' 'control+control' 'command-0'}
     % do nothing
-    
+
   case '1'
     subplot(opt.handlesaxes(1));
-    
+
   case '2'
     subplot(opt.handlesaxes(2));
-    
+
   case '3'
     subplot(opt.handlesaxes(3));
-    
+
   case opt.fidletter
     if ~opt.viewresult
       sel = strcmp(key, opt.fidletter);
@@ -1751,11 +1737,11 @@ switch key
       setappdata(h, 'opt', opt);
       cb_redraw(h);
     end
-    
+
   case 'q'
     setappdata(h, 'opt', opt);
     cb_quit(h);
-    
+
   case {'i' 'j' 'k' 'm' 28 29 30 31 'leftarrow' 'rightarrow' 'uparrow' 'downarrow'} % TODO FIXME use leftarrow rightarrow uparrow downarrow
     % update the view to a new position
     if     strcmp(tag,'ik') && (strcmp(key,'i') || strcmp(key,'uparrow')    || isequal(key, 30)), opt.ijk(3) = opt.ijk(3)+1; opt.update = [0 0 1];
@@ -1773,10 +1759,10 @@ switch key
     else
       % do nothing
     end
-    
+
     setappdata(h, 'opt', opt);
     cb_redraw(h);
-    
+
   case {43 'add' 'shift+equal'}  % + or numpad +
     % contrast scaling
     % disable if viewresult
@@ -1791,7 +1777,7 @@ switch key
       setappdata(h, 'opt', opt);
       cb_redraw(h);
     end
-    
+
   case {45 'subtract' 'hyphen' 'shift+hyphen'} % - or numpad -
     % contrast scaling
     % disable if viewresult
@@ -1806,19 +1792,19 @@ switch key
       setappdata(h, 'opt', opt);
       cb_redraw(h);
     end
-    
+
   case 99  % 'c'
     opt.showcrosshair = ~opt.showcrosshair;
     setappdata(h, 'opt', opt);
     cb_redraw(h);
-    
+
   case 102 % 'f'
     if ~opt.viewresult
       opt.showmarkers = ~opt.showmarkers;
       setappdata(h, 'opt', opt);
       cb_redraw(h);
     end
-    
+
   case 3 % right mouse click
     % add point to a list
     l1 = get(get(gca, 'xlabel'), 'string');
@@ -1840,16 +1826,16 @@ switch key
         zc = d2;
     end
     pnt = [pnt; xc yc zc];
-    
+
   case 2 % middle mouse click
     l1 = get(get(gca, 'xlabel'), 'string');
     l2 = get(get(gca, 'ylabel'), 'string');
-    
+
     % remove the previous point
     if size(pnt,1)>0
       pnt(end,:) = [];
     end
-    
+
     if l1=='i' && l2=='j'
       updatepanel = [1 2 3];
     elseif l1=='i' && l2=='k'
@@ -1857,14 +1843,16 @@ switch key
     elseif l1=='j' && l2=='k'
       updatepanel = [3 1 2];
     end
-    
+
   otherwise
     % do nothing
-    
+
 end % switch key
+
 if ~opt.viewresult
   uiresume(h)
 end
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1902,7 +1890,6 @@ cb_getposition(h);
 cb_redraw(h);
 uiresume
 
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1913,8 +1900,7 @@ opt = getappdata(h, 'opt');
 
 curr_ax = get(h,       'currentaxes');
 pos     = mean(get(curr_ax, 'currentpoint'));
-
-tag = get(curr_ax, 'tag');
+tag     = get(curr_ax, 'tag');
 
 % transform pos from coordinate system space to voxel space if viewing results
 if opt.viewresult

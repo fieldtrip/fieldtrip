@@ -75,7 +75,6 @@ ft_preamble init
 ft_preamble debug
 ft_preamble loadvar source
 ft_preamble provenance source
-ft_preamble trackconfig
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -295,7 +294,7 @@ if ispccdata
       % create rotation-matrix
       rotmat = zeros(0, length(source.avg.csdlabel{i}));
       if ~isempty(rmom)
-        rotmat = [rotmat; rmom zeros(numel(refsel)+numel(supsel),1)];
+        rotmat = [rotmat; rmom zeros(1,numel(refsel)+numel(supsel))];
       end
       if ~isempty(rref)
         rotmat = [rotmat; zeros(1, numel(dipsel)), rref, zeros(1,numel(refchansel)+numel(supsel))];
@@ -460,11 +459,15 @@ if ispccdata
         case 'chan_dip'
           supindx = [supdipsel supchansel];
           if i==insideindx(1), refsel  = refsel - length(supdipsel); end % adjust index only once
+          refchanselcell{i} = refchanselcell{i} - length(supdipsel);
+          refdipselcell{i}  = refdipselcell{i} - length(supdipsel);
         case 'chan'
           supindx = supchansel;
         case 'dip'
           supindx = supdipsel;
           if i==insideindx(1), refsel  = refsel - length(supdipsel); end
+          refchanselcell{i} = refchanselcell{i} - length(supdipsel);
+          refdipselcell{i}  = refdipselcell{i} - length(supdipsel);
         case 'none'
           % do nothing
           supindx = [];
@@ -508,7 +511,11 @@ if ispccdata
     
     for i=insideindx
       dipsel = dipselcell{i};
-      refsel = [refchanselcell{i} refdipselcell{i}];
+      refchansel = refchanselcell{i};
+      refdipsel  = refdipselcell{i};
+      refsel     = [refchansel refdipsel];
+      supchansel = supchanselcell{i};
+
       
       % compute the power of each source component
       if strcmp(cfg.projectmom, 'yes') && cfg.numcomp>1
@@ -518,9 +525,9 @@ if ispccdata
       end
       
       if hasrefdip,  source.avg.refdippow(i)  = powmethodfun(source.avg.csd{i}(refdipsel,refdipsel));   end
-      if hassupdip,  source.avg.supdippow(i)  = powmethodfun(source.avg.csd{i}(supdipsel,supdipsel));   end
+      %if hassupdip,  source.avg.supdippow(i)  = powmethodfun(source.avg.csd{i}(supdipsel,supdipsel));   end
       if hasrefchan, source.avg.refchanpow(i) = powmethodfun(source.avg.csd{i}(refchansel,refchansel)); end
-      if hassupchan, source.avg.supchanpow(i) = powmethodfun(source.avg.csd{i}(supchansel,supchansel)); end
+      %if hassupchan, source.avg.supchanpow(i) = powmethodfun(source.avg.csd{i}(supchansel,supchansel)); end
       if isnoise
         % compute the power of the noise projected on each source component
         if strcmp(cfg.projectmom, 'yes') && cfg.numcomp>1
@@ -545,15 +552,16 @@ if ispccdata
             Cdr               = csd(dipsel, refsel);
             source.avg.coh(i) = (Cdr.^2) ./ (Pd*Pr);
           case 'lambda1'
-            %compute coherence on Joachim Gross' way
+            % compute coherence the Joachim Gross' way
             Pd                = lambda1(csd(dipsel, dipsel));
             Pr                = lambda1(csd(refsel, refsel));
             Cdr               = lambda1(csd(dipsel, refsel));
             source.avg.coh(i) = abs(Cdr).^2 ./ (Pd*Pr);
           case 'canonical'
-            [ccoh, c2, v1, v2] = ft_connectivity_cancorr(csd, dipsel, refsel);
-            [cmax, indmax]     = max(ccoh);
-            source.avg.coh(i)  = ccoh(indmax);
+            % compute canonical coherence
+            
+            ccoh = ft_connectivity_cancorr(csd([dipsel refsel],[dipsel refsel]), 'indices', [ones(1,numel(dipsel)) ones(1,numel(refsel))*2]);
+            source.avg.coh(i)  = ccoh(1,2);
           otherwise
             ft_error('unsupported cohmethod');
         end % cohmethod
@@ -631,7 +639,7 @@ elseif ismneavg
   
   if flipori
     tmpmom = cat(1, source.avg.mom{source.inside});
-    [u, ~, ~] = svd(tmpmom, 'econ');
+    [u, s, v] = svd(tmpmom, 'econ');
     flip( source.inside) = sign(u(:,1));
     flip(~source.inside) = nan;
     for i=1:numel(source.inside)
@@ -704,7 +712,7 @@ elseif islcmvavg
   
   if flipori
     tmpmom = cat(1, source.avg.mom{source.inside});
-    [u, ~, ~] = svd(tmpmom, 'econ');
+    [u, s, v] = svd(tmpmom, 'econ');
     flip( source.inside) = sign(u(:,1));
     flip(~source.inside) = nan;
     for i=1:numel(source.inside)
@@ -1099,7 +1107,6 @@ end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-ft_postamble trackconfig
 ft_postamble previous   source
 ft_postamble provenance source
 ft_postamble history    source

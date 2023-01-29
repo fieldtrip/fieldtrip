@@ -10,14 +10,12 @@ function [shape] = ft_read_headshape(filename, varargin)
 %   [shape] = ft_read_headshape({filename1, filename2}, ...)
 %
 % If you specify the filename as a cell-array, the following situations are supported:
-%  - a two-element cell-array with the file names for the left and
-%    right hemisphere, e.g. FreeSurfer's {'lh.orig' 'rh.orig'}, or
-%    Caret's {'X.L.Y.Z.surf.gii' 'X.R.Y.Z.surf.gii'}
-%  - a two-element cell-array points to files that represent
-%    the coordinates and topology in separate files, e.g.
-%    Caret's {'X.L.Y.Z.coord.gii' 'A.L.B.C.topo.gii'};
-% By default all information from the two files will be concatenated (i.e. assumed to
-% be the shape of left and right hemispeheres). The option 'concatenate' can be set
+%  - a two-element cell-array with the file names for the left and right hemisphere,
+%    e.g., FreeSurfer's {'lh.orig' 'rh.orig'}, or Caret's {'X.L.Y.Z.surf.gii' 'X.R.Y.Z.surf.gii'}
+%  - a two-element cell-array points to files that represent the coordinates and topology 
+%    in separate files, e.g., Caret's {'X.L.Y.Z.coord.gii' 'A.L.B.C.topo.gii'}
+% By default all information from the two files will be assumed to correspond to the
+% left and right hemispeheres and concatenated. The option 'concatenate' can be set
 % to 'no' to prevent them from being concatenated in a single structure.
 %
 % Additional options should be specified in key-value pairs and can include
@@ -27,6 +25,7 @@ function [shape] = ft_read_headshape(filename, varargin)
 %   'concatenate' = 'no' or 'yes' (default = 'yes')
 %   'image'       = path to .jpg file
 %   'surface'     = specific surface to be read (only for caret spec files)
+%   'refine'      = number, used for refining Structure Sensor meshes (default = 1)
 %
 % Supported input file formats include
 %   'matlab'       containing FieldTrip or BrainStorm headshapes or cortical meshes
@@ -36,7 +35,7 @@ function [shape] = ft_read_headshape(filename, varargin)
 %   'tck'          Mrtrix track file
 %   'trk'          Trackvis trk file
 %   'mne_*'        MNE surface description in ASCII format ('mne_tri') or MNE source grid in ascii format, described as 3D points ('mne_pos')
-%   'obj'          Wavefront .obj file obtained with the structure.io
+%   'obj'          Wavefront .obj file obtained with the Structure Sensor
 %   'off'
 %   'ply'
 %   'itab_asc'
@@ -44,6 +43,7 @@ function [shape] = ft_read_headshape(filename, varargin)
 %   '4d_*'
 %   'neuromag_*'
 %   'yokogawa_*'
+%   'yorkinstruments_hdf5'
 %   'polhemus_*'
 %   'freesurfer_*'
 %   'mne_source'
@@ -62,7 +62,7 @@ function [shape] = ft_read_headshape(filename, varargin)
 %
 % See also FT_READ_HEADMODEL, FT_READ_SENS, FT_READ_ATLAS, FT_WRITE_HEADSHAPE
 
-% Copyright (C) 2008-2019 Robert Oostenveld
+% Copyright (C) 2008-2023, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -84,13 +84,14 @@ function [shape] = ft_read_headshape(filename, varargin)
 
 % get the options
 annotationfile = ft_getopt(varargin, 'annotationfile');
-useimage       = ft_getopt(varargin, 'useimage', true); % use image if hasimage
+useimage       = ft_getopt(varargin, 'useimage', true);      % use image if hasimage
 concatenate    = ft_getopt(varargin, 'concatenate', 'yes');
 coordsys       = ft_getopt(varargin, 'coordsys', 'head');    % for ctf or neuromag_mne coil positions, the alternative is dewar
 fileformat     = ft_getopt(varargin, 'format');
 unit           = ft_getopt(varargin, 'unit');
-image          = ft_getopt(varargin, 'image', [100, 100 ,100]); % path to .jpeg file
+image          = ft_getopt(varargin, 'image');               % path to .jpg file
 surface        = ft_getopt(varargin, 'surface');
+refine_        = ft_getopt(varargin, 'refine', 1);           % do not confuse with the private/refine function
 
 % Check the input, if filename is a cell-array, call ft_read_headshape recursively and combine the outputs.
 % This is used to read the left and right hemisphere of a Freesurfer cortical segmentation.
@@ -106,7 +107,7 @@ if iscell(filename)
     bnd(i) = tmp;
   end
   
-  % Concatenate the bnds (only if 'concatenate' = 'yes' ) and if all
+  % Concatenate the meshes (only if 'concatenate' = 'yes' ) and if all
   % structures have non-empty vertices and triangles. If not, the input filenames
   % may have been caret-style coord and topo, which needs combination of
   % the pos and tri.
@@ -147,15 +148,15 @@ if iscell(filename)
         [p,f,e]               = fileparts(filename{h});
         
         % do an educated guess, otherwise default to the filename
-        iscortexright = ~isempty(strfind(f,'rh'));
-        iscortexright = iscortexright || ~isempty(strfind(f,'.R.'));
-        iscortexright = iscortexright || ~isempty(strfind(f,'Right'));
-        iscortexright = iscortexright || ~isempty(strfind(f,'RIGHT'));
+        iscortexright = contains(f,'rh');
+        iscortexright = iscortexright || contains(f,'.R.');
+        iscortexright = iscortexright || contains(f,'Right');
+        iscortexright = iscortexright || contains(f,'RIGHT');
         
-        iscortexleft = ~isempty(strfind(f,'lh'));
-        iscortexleft = iscortexleft || ~isempty(strfind(f,'.L.'));
-        iscortexleft = iscortexleft || ~isempty(strfind(f,'Left'));
-        iscortexleft = iscortexleft || ~isempty(strfind(f,'LEFT'));
+        iscortexleft = contains(f,'lh');
+        iscortexleft = iscortexleft || contains(f,'.L.');
+        iscortexleft = iscortexleft || contains(f,'Left');
+        iscortexleft = iscortexleft || contains(f,'LEFT');
         
         if iscortexright && iscortexleft
           % something strange is going on, default to the filename and let the user take care of this
@@ -177,14 +178,14 @@ if iscell(filename)
     else
       shape = [];
       if sum(haspos==1)==1
-        fprintf('Using the vertex positions from %s\n', filename{find(haspos==1)});
+        fprintf('Using the vertex positions from %s\n', filename{haspos==1});
         shape.pos  = bnd(haspos==1).pos;
         shape.unit = bnd(haspos==1).unit;
       else
         ft_error('Don''t know what to do');
       end
       if sum(hastri==1)==1
-        fprintf('Using the faces definition from %s\n', filename{find(hastri==1)});
+        fprintf('Using the faces definition from %s\n', filename{hastri==1});
         shape.tri = bnd(hastri==1).tri;
       end
       if max(shape.tri(:))~=size(shape.pos,1)
@@ -200,22 +201,6 @@ if iscell(filename)
   return
 end % if iscell
 
-% checks if there exists a .jpg file of 'filename'
-[pathstr,name]  = fileparts(filename);
-if useimage
-  if exist(fullfile(pathstr,[name,'.jpg']), 'file')
-    image    = fullfile(pathstr,[name,'.jpg']);
-    hasimage = true;
-  elseif exist(fullfile(pathstr,[name,'.png']), 'file')
-    image    = fullfile(pathstr,[name,'.png']);
-    hasimage = true;
-  else
-    hasimage = false;
-  end
-else
-  hasimage = false;
-end
-
 % optionally get the data from the URL and make a temporary local copy
 filename = fetch_url(filename);
 
@@ -224,13 +209,35 @@ if isempty(fileformat)
   fileformat = ft_filetype(filename);
 end
 
+% checks if there exists a .jpg file of 'filename'
+[pathstr,name]  = fileparts(filename);
+if useimage
+  if exist(fullfile(pathstr,[name,'.jpg']), 'file')
+    image    = fullfile(pathstr,[name,'.jpg']);
+    hasimage = true;
+  elseif exist(fullfile(pathstr,[name,'.JPG']), 'file')
+    image    = fullfile(pathstr,[name,'.JPG']);
+    hasimage = true;
+  elseif exist(fullfile(pathstr,[name,'.png']), 'file')
+    image    = fullfile(pathstr,[name,'.png']);
+    hasimage = true;
+  elseif exist(fullfile(pathstr,[name,'.PNG']), 'file')
+    image    = fullfile(pathstr,[name,'.PNG']);
+    hasimage = true;
+  else
+    hasimage = false;
+  end
+else
+  hasimage = false;
+end
+
 if ~isempty(annotationfile) && ~strcmp(fileformat, 'mne_source')
-  ft_error('at present extracting annotation information only works in conjunction with mne_source files');
+  ft_error('extracting annotation information only works for ''mne_source'' files');
 end
 
 % start with an empty structure
-shape           = [];
-shape.pos       = [];
+shape     = [];
+shape.pos = [];
 
 switch fileformat
   case {'ctf_ds', 'ctf_hc', 'ctf_meg4', 'ctf_res4', 'ctf_old'}
@@ -293,7 +300,7 @@ switch fileformat
     
     shape.fid.pos = fid([NZ L R rest], :);
     shape.fid.label = {'NZ', 'L', 'R'};
-    if ~isempty(rest),
+    if ~isempty(rest)
       for i = 4:size(fid,1)
         shape.fid.label{i} = ['fiducial' num2str(i)];
         % in a 5 coil configuration this corresponds with Cz and Inion
@@ -406,7 +413,7 @@ switch fileformat
     
   case 'neuromag_mex'
     [co,ki,nu] = hpipoints(filename);
-    fid = co(:,find(ki==1))';
+    fid = co(:,ki==1)';
     
     [junk, NZ] = max(fid(:,2));
     [junk, L]  = min(fid(:,1));
@@ -846,7 +853,35 @@ switch fileformat
     end
     
     fclose(fid);
-    
+   
+   case 'yorkinstruments_hdf5'
+    acquisition='default';
+    try
+       shape.pos=transpose(h5read(filename,  '/geometry/head_shape/head_shape'));
+    catch
+      error('Headshape data not found.');
+    end
+    shape.unit='mm';
+    temp=h5info(filename,  '/geometry/fiducials/');
+    Nfids=length(temp.Groups);
+      for i=1:Nfids
+      [null, shape.fid.label{i}, null]= fileparts(temp.Groups(i).Name);
+      shape.fid.pos(i,1:3)=h5read(filename, strcat('/geometry/fiducials/',shape.fid.label{i} ,'/location'));
+      end
+    if isempty(coordsys)
+      coordsys='dewar'
+    end
+    if strcmp(coordsys,'dewar')
+      try
+         tCCStoMegscanScs = h5read(filename,[strcat('/acquisitions/',char(string(acquisition))) '/ccs_to_scs_transform']);
+         T = maketform('affine',tCCStoMegscanScs);
+         shape.pos=tforminv(T,shape.pos(:,1),shape.pos(:,2),shape.pos(:,3));
+         shape.fid.pos=tforminv(T,shape.fid.pos(:,1),shape.fid.pos(:,2),shape.fid.pos(:,3));
+      catch
+        error('No head to dewar transform available in hdf5 file');
+      end
+    end
+
   case 'ply'
     [vert, face] = read_ply(filename);
     shape.pos = [vert.x vert.y vert.z];
@@ -956,100 +991,94 @@ switch fileformat
   case 'obj'
     ft_hastoolbox('wavefront', 1);
     % Only tested for structure.io .obj thus far
-    [vertex, faces, texture, textureIdx] = read_obj_new(filename);
+    [pos, tri, texture, textureIdx] = read_obj_new(filename);
     
-    % the rest of the code assumes the texture to be defined on the vertices
-    % and the faces/vertices to be self contained, i.e. not more vertices
-    % than faces
-    if size(texture,1)==size(vertex,1)
+    % check if the texture is defined per vertex, in which case the texture can be refined below
+    if size(texture, 1)==size(pos, 1)
       texture_per_vert = true;
     else
       texture_per_vert = false;
     end
     
-    % prune the vertices and keep the faces consistent, remove the faces
-    % with 0's first
-    allzeros = sum(faces==0,2)==3;
-    faces(allzeros, :)      = [];
+    % remove the triangles with 0's first
+    allzeros = sum(tri==0,2)==3;
+    tri(allzeros, :)        = [];
     textureIdx(allzeros, :) = [];
-    ufacesIdx = unique(faces(:));
-    remove = setdiff((1:size(vertex,1))', ufacesIdx);
+    
+    % check whether all vertices belong to a triangle. If not, then prune the vertices and keep the faces consistent.
+    utriIdx = unique(tri(:));
+    remove  = setdiff((1:size(pos, 1))', utriIdx);
     if ~isempty(remove)
-      [vertex, faces] = remove_vertices(vertex, faces, remove);
+      [pos, tri] = remove_vertices(pos, tri, remove);
+      if texture_per_vert
+        % also remove the removed vertices from the texture
+        texture(remove, :) = [];
+      end
     end
     
-    %     if fixtexture
-    %       texture_old = texture;
-    %       texture     = zeros(size(vertex,1), size(texture_old,2));
-    %
-    %       % create the vertex-based texture as an average across the faces that
-    %       % contain the vertex
-    %       for k = 1:size(vertex,1)
-    %         sel = textureIdx(faces==k);
-    %         texture(k,:) = mean(texture_old(mode(sel),:));
-    %       end
-    %     end
-    
-    shape.pos   = vertex;
-    shape.pos   = shape.pos - repmat(sum(shape.pos)/length(shape.pos),...
-      [length(shape.pos),1]); %centering vertices
-    shape.tri   = faces; % remove the last row which is zeros
-    
     if hasimage
+      % there is an image with color information
+
       if texture_per_vert
-        % Refines the mesh and textures to increase resolution of the colormapping
-        [shape.pos, shape.tri, texture] = refine(shape.pos, shape.tri,...
-          'banks', texture);
-        
-        picture = imread(image);
-        color   = (zeros(length(shape.pos),3));
-        for i=1:length(shape.pos)
-          color(i,1:3) = picture(floor((1-texture(i,2))*length(picture)),...
-            1+floor(texture(i,1)*length(picture)),1:3);
+        % refine the mesh and texture mapping to increase the resolution
+        for i=1:refine_
+          [pos, tri, texture] = refine(pos, tri, 'banks', texture);
         end
-      else
-        % do the texture to color mapping in a different way, without
-        % additional refinement
-        picture = flip(imread(image),1);
+
+        % do the texture to color mapping
+        picture = imread(image);
         [sy, sx, sz] = size(picture);
-        picture = reshape(picture, sy*sx, sz);
-        
+
+        color = zeros(size(pos, 1), 3);
+        for i = 1:size(pos, 1)
+          x = floor((1-texture(i,2))*sx);
+          y = 1+floor(texture(i,1)*sy);
+          color(i,1:3) = picture(x,y,1:3);
+        end
+
+      else
+        % do the texture to color mapping based on the textureIdx
+        picture      = flip(imread(image),1);
+        [sy, sx, sz] = size(picture);
+        picture      = reshape(picture, sy*sx, sz);
+
         % make image 3D if grayscale
         if sz == 1
           picture = repmat(picture, 1, 3);
         end
-        [uniq_vert, ix] = unique(shape.tri);
-        texture_ix = textureIdx(ix);
-        
+        [dum, ix]  = unique(tri);
+        textureIdx = textureIdx(ix);
+
         % get the indices into the image
-        x   = abs(round(texture(:,1)*(sx-1)))+1;
-        y   = abs(round(texture(:,2)*(sy-1)))+1;
-        xy  = sub2ind([sy sx],y,x);
-        sel = xy(texture_ix);
+        x     = abs(round(texture(:,1)*(sx-1)))+1;
+        y     = abs(round(texture(:,2)*(sy-1)))+1;
+        xy    = sub2ind([sy sx], y, x);
+        sel   = xy(textureIdx);
         color = double(picture(sel,:))/255;
       end
-      
-      % If color is specified as 0-255 rather than 0-1 correct by dividing
-      % by 255
-      if range(color(:)) > 1
-        color = color./255;
-      end
-      
-      shape.color = color;
-      
-    elseif size(vertex,2)==6
-      % the vertices also contain RGB colors
-      
-      color = vertex(:,4:6);
-      % If color is specified as 0-255 rather than 0-1 correct by dividing
-      % by 255
-      if range(color(:)) > 1
-        color = color./255;
-      end
-      
-      shape.color = color;
+
+    elseif size(pos, 2)==6
+      % there is no separate image, but the vertices also contain RGB colors
+      color = pos(:, 4:6);
+      pos   = pos(:, 1:3);
+
+    else
+      % there is no color information
+      color = [];
     end
-    
+
+    shape.pos = pos - repmat(mean(pos,1), [size(pos, 1),1]); % centering vertices
+    shape.tri = tri;
+
+    if ~isempty(color)
+      if range(color(:)) > 1
+        % color should be specified between 0 and 1
+        shape.color = color./255;
+      else
+        shape.color = color;
+      end
+    end
+
   case 'vtk'
     [pos, tri] = read_vtk(filename);
     shape.pos = pos;
@@ -1115,10 +1144,10 @@ switch fileformat
   case 'tet'
     % the toolbox from Gabriel Peyre has a function for this
     ft_hastoolbox('toolbox_graph', 1);
-    [vertex, face] = read_tet(filename);
+    [vertexline, face] = read_tet(filename);
     %     'vertex' is a '3 x nb.vert' array specifying the position of the vertices.
     %     'face' is a '4 x nb.face' array specifying the connectivity of the tet mesh.
-    shape.pos = vertex';
+    shape.pos = vertexline';
     shape.tet = face';
     
   case 'tetgen_ele'
@@ -1252,10 +1281,10 @@ switch fileformat
     shape.fid.pos   = elec.chanpos;
     shape.fid.label = elec.label;
     
-    npos = read_asa(filename, 'NumberHeadShapePoints=', '%d');
+    npos = read_ini(filename, 'NumberHeadShapePoints=', '%d');
     if ~isempty(npos) && npos>0
-      origunit = read_asa(filename, 'UnitHeadShapePoints', '%s', 1);
-      pos = read_asa(filename, 'HeadShapePoints', '%f', npos, ':');
+      origunit = read_ini(filename, 'UnitHeadShapePoints', '%s', 1);
+      pos = read_ini(filename, 'HeadShapePoints', '%f', npos, ':');
       pos = ft_scalingfactor(origunit, 'mm')*pos;
       
       shape.pos = pos;
@@ -1272,6 +1301,46 @@ switch fileformat
     shape.pos = pos(:,1:3); % vertex positions
     shape.nrm = pos(:,4:6); % vertex normals
     shape.tri = tri;
+
+  case 'duneuro_dgf'
+    lines = readlines(filename);
+    lines = cellstr(lines);
+    % remove comments
+    sel = startsWith(lines, '#');
+    lines(sel) = [];
+    % remove empty lines
+    sel = cellfun(@isempty, lines);
+    lines(sel) = [];
+    
+    vertexline = find(strcmp(lines, 'Vertex'));
+    cubeline   = find(strcmp(lines, 'Cube'));
+    paramline  = find(startsWith(lines, 'parameters'));
+    
+    % parse this line to determine the number of parameters, and thereby the number of additional columns
+    numparam = sscanf(lines{paramline}, 'parameters %d');
+    
+    npos = cubeline - vertexline - 1;
+    shape.pos = nan(npos, 3);
+    for i=1:npos
+      shape.pos(i,:) = str2num(lines{vertexline+i});
+    end
+    
+    nhex = length(lines)-paramline;
+    shape.hex = nan(nhex, 8+numparam);
+    for i=1:nhex
+      shape.hex(i,:) = str2num(lines{paramline+i});
+    end
+    
+    if numparam==1
+      % assume that this is the tissue class
+      shape.tissue = shape.hex(:,9);
+      shape.tissue = shape.tissue + 1; % this should be one-offset
+    end
+    
+    % remove the parameter columns
+    shape.hex = shape.hex(:,1:8);
+    shape.hex = shape.hex + 1; % this should be one-offset
+
     
   otherwise
     % try reading it from an electrode of volume conduction model file

@@ -108,14 +108,20 @@ ft_preamble init
 ft_preamble debug
 ft_preamble loadvar data
 ft_preamble provenance data
-ft_preamble trackconfig
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
   return
 end
 
+% store the original datatype
+dtype = ft_datatype(data);
+
+% check if the input data is valid for this function
+data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes', 'hassampleinfo', 'yes', 'ismeg', 'yes');
+
 % check if the input cfg is valid for this function
+cfg = ft_checkconfig(cfg, 'forbidden',  {'channels', 'trial'}); % prevent accidental typos, see issue 1729
 cfg = ft_checkconfig(cfg, 'renamed',    {'plot3d',      'feedback'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'headshape',   'headmodel', []});
 cfg = ft_checkconfig(cfg, 'required',   {'inwardshift', 'template'});
@@ -133,12 +139,6 @@ cfg.feedback   = ft_getopt(cfg, 'feedback',   'yes');
 cfg.trials     = ft_getopt(cfg, 'trials',     'all', 1);
 cfg.channel    = ft_getopt(cfg, 'channel',    'MEG');
 cfg.topoparam  = ft_getopt(cfg, 'topoparam',  'rms');
-
-% store original datatype
-dtype = ft_datatype(data);
-
-% check if the input data is valid for this function
-data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes', 'hassampleinfo', 'yes', 'ismeg', 'yes');
 
 % do realignment per trial
 pertrial = all(ismember({'nasX';'nasY';'nasZ';'lpaX';'lpaY';'lpaZ';'rpaX';'rpaY';'rpaZ'}, data.label));
@@ -161,7 +161,7 @@ end
 % elsewhere, these will be added back to the transformed data later.
 
 % select trials and channels of interest, first of the non-MEG channels, then of the MEG channels
-tmpcfg = keepfields(cfg, {'trials', 'showcallinfo'}); % don't keep tolerance, it is used differently here
+tmpcfg = keepfields(cfg, {'trials', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'}); % don't keep tolerance, it is used differently here
 tmpcfg.channel = setdiff(data.label, ft_channelselection(cfg.channel, data.label), 'stable');
 rest = ft_selectdata(tmpcfg, data);
 tmpcfg.channel = ft_channelselection(cfg.channel, data.label);
@@ -246,7 +246,7 @@ else
 end
 
 % copy all options that are potentially used in ft_prepare_sourcemodel
-tmpcfg           = keepfields(cfg, {'sourcemodel', 'mri', 'headshape', 'symmetry', 'smooth', 'threshold', 'spheremesh', 'inwardshift', 'xgrid' 'ygrid', 'zgrid', 'resolution', 'tight', 'warpmni', 'template', 'showcallinfo'});
+tmpcfg           = keepfields(cfg, {'sourcemodel', 'mri', 'headshape', 'symmetry', 'smooth', 'threshold', 'spheremesh', 'inwardshift', 'xgrid' 'ygrid', 'zgrid', 'resolution', 'tight', 'warpmni', 'template', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
 tmpcfg.headmodel = volold;
 tmpcfg.grad      = data.grad;
 % create the source positions on which the data will be projected
@@ -401,7 +401,6 @@ end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-ft_postamble trackconfig
 ft_postamble previous data
 
 % rename the output variable to accomodate the savevar postamble

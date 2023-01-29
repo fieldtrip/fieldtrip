@@ -18,6 +18,7 @@ function [data] = ft_math(cfg, varargin)
 % Rather than specifying the operation as a string that is evaluated, you can also
 % specify it as a single operation. The advantage is that it is computed faster.
 %    cfg.operation = string, can be 'add', 'subtract', 'divide', 'multiply', 'log10', 'abs'
+%                     'sqrt', 'square'
 % If you specify only a single input data structure and the operation is 'add',
 % 'subtract', 'divide' or 'multiply', the configuration should also contain:
 %   cfg.scalar    = scalar value to be used in the operation
@@ -92,7 +93,6 @@ ft_preamble init
 ft_preamble debug
 ft_preamble loadvar varargin
 ft_preamble provenance varargin
-ft_preamble trackconfig
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -287,6 +287,24 @@ for p = 1:length(cfg.parameter)
           y = abs(x1);
         end
 
+      case 'square'
+        assert(isempty(s), sprintf('cfg.scalar or cfg.matrix are not supported for %s', cfg.operation));
+        ft_info('taking the square of %s\n', cfg.parameter{p});
+        if iscell(x1)
+          y = cellsquare(x1);
+        else
+          y = x1.^2;
+        end
+        
+      case 'sqrt'
+        assert(isempty(s), sprintf('cfg.scalar or cfg.matrix are not supported for %s', cfg.operation));
+        ft_info('taking the sqrt of %s\n', cfg.parameter{p});
+        if iscell(x1)
+          y = cellsqrt(x1);
+        else
+          y = sqrt(x1);
+        end
+        
       otherwise
         % assume that the operation is descibed as a string, e.g. x1^s
         % where x1 is the first argument and s is obtained from cfg.scalar
@@ -380,7 +398,13 @@ for p = 1:length(cfg.parameter)
         end
         ft_info('taking the log difference between the 2nd input argument and the 1st\n');
         y = log10(x1 ./ varargin{2}.(cfg.parameter{p}));
-
+        
+      case 'square'
+        ft_error(sprintf('operation %s is not supported with multiple input arguments', cfg.operation));
+        
+      case 'sqrt'
+        ft_error(sprintf('operation %s is not supported with multiple input arguments', cfg.operation));
+        
       otherwise
         % assume that the operation is descibed as a string, e.g. (x1-x2)/(x1+x2)
 
@@ -456,7 +480,6 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 ft_postamble debug
-ft_postamble trackconfig
 ft_postamble previous   varargin
 ft_postamble provenance data
 ft_postamble history    data
@@ -519,3 +542,9 @@ z = cellfun(@log10, x, 'UniformOutput', false);
 
 function z = cellabs(x)
 z = cellfun(@abs, x, 'UniformOutput', false);
+
+function z = cellsquare(x)
+z = cellfun(@power, x, repmat({2}, size(x)), 'UniformOutput', false);
+
+function z = cellsqrt(x)
+z = cellfun(@sqrt, x, 'UniformOutput', false);

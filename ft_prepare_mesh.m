@@ -109,7 +109,6 @@ ft_preamble init
 ft_preamble debug
 ft_preamble loadvar data
 ft_preamble provenance data
-ft_preamble trackconfig
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -141,7 +140,7 @@ end
 
 if hasdata && cfg.downsample~=1
   % optionally downsample the anatomical volume and/or tissue segmentations
-  tmpcfg = keepfields(cfg, {'downsample', 'showcallinfo'});
+  tmpcfg = keepfields(cfg, {'downsample', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
   data = ft_volumedownsample(tmpcfg, data);
   % restore the provenance information and put back cfg.smooth
   tmpsmooth = cfg.smooth;
@@ -198,10 +197,8 @@ switch cfg.method
     mesh = prepare_mesh_cortexhull(cfg);
     
   case 'fittemplate'
-    M   = prepare_mesh_fittemplate(cfg.headshape.pos, cfg.template.pos);
-    orig.mri = data;
-    orig = ft_transform_geometry(M, orig);
-    mesh = orig.data;
+    M    = prepare_mesh_fittemplate(cfg.headshape.pos, cfg.template.pos);
+    mesh = ft_transform_geometry(M, data);
     
   otherwise
     ft_error('unsupported cfg.method')
@@ -225,7 +222,7 @@ end
 
 % smooth the mesh
 if ~isempty(cfg.smooth)
-  tmpcfg = keepfields(cfg, {'smooth', 'showcallinfo'});
+  tmpcfg = keepfields(cfg, {'smooth', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
   tmpcfg.numvertices = []; % the number of vertices should not be changed
   tmpcfg.headshape = mesh;
   mesh = prepare_mesh_headshape(tmpcfg);
@@ -233,7 +230,6 @@ end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-ft_postamble trackconfig
 ft_postamble previous   data
 ft_postamble provenance mesh
 ft_postamble history    mesh

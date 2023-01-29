@@ -2,9 +2,10 @@ function atlas = ft_read_atlas(filename, varargin)
 
 % FT_READ_ATLAS reads an template/individual segmentation or parcellation from disk.
 % The volumetric segmentation or the surface-based parcellation can either represent
-% a template atlas (eg. AAL or the Talairach Daemon), it can represent an
+% a template atlas (e.g. AAL or the Talairach Daemon), it can represent an
 % individualized atlas (e.g. obtained from FreeSurfer) or it can represent an
-% unlabeled parcellation obtained from the individual's DTi or resting state fMRI.
+% unlabeled parcellation/segmentation obtained from an individual's DTi, anatomical,
+% or resting state fMRI scan.
 %
 % Use as
 %   atlas = ft_read_atlas(filename, ...)
@@ -16,21 +17,63 @@ function atlas = ft_read_atlas(filename, varargin)
 %   'unit'        = string, e.g. 'mm' (default is to keep it in the native units of the file)
 %   'map'         = string, 'maxprob' (default), or 'prob', for FSL-based atlases, providing 
 %                   either a probabilistic segmentation or a maximum a posterior probability map
+%   'labelfile'   = string, point to a (generic) text or xml file for interpretation of the values in the atlas 
 %
 % For individual surface-based atlases from FreeSurfer you should specify two
 % filenames as a cell-array: the first points to the file that contains information
 % with respect to the parcels' labels, the second points to the file that defines the
 % mesh on which the parcellation is defined.
 %
-% The output atlas will be represented as structure according to
-% FT_DATATYPE_SEGMENTATION or FT_DATATYPE_PARCELLATION.
+% The 'format' variable, if not specified, will be determined automatically. In general
+% it will not be needed to specify it. The following formats are supported:
 %
-% The "lines" and the "colorcube" colormaps are useful for plotting the different
-% patches, for example using FT_PLOT_MESH.
+% Volumetric atlases based on a (gzipped) nifti-file with an companion txt-file for interpretation
+%   'aal'               assumes filename starting with 'ROI_MNI'
+%   'brainnetome'       assumes companion lookuptable txt-file starting with 'Brainnetome Atlas'
+%   'simnibs_v4'        assumes filename starting with 'final_tissues', with companion freesurfer-style lookuptable txt-file
+%   'wfu'               assumes specific formatting of companion lookuptable txt-file
+%
+% Volumetric atlases based on a (gzipped) nifti-file with hard coded assumption on the labels
+%   'yeo7' 
+%   'yeo17'
+%
+% Volumetric atlases based on a folder with (gzipped) nifti-files with a companion xml-file for interpretation
+%   'fsl'               assumes path to folder with data mentioned in the xml-file. Use xml-file as filename 
+%
+% Volumetric atlases based on the freesurfer mgz format with standard lookuptable txt-file for interpretation
+%   'freesurfer_volume' assumes the freesurfer LUT file for interpretation, and assumes aparc or aseg in the 
+%                       filename, used for subject-specific parcellations
+%   
+% Volumetric atlases based on the afni software
+%   'afni'              assumes filename containing BRIK or HEAD, assumes generic interpretation of the labels 
+%                       for the TTatlas+tlrc, or otherwise the interpretation should be in the file
+%   
+% Volumetric atlas based on the spm_anatomy toolbox
+%   'spm_anatomy'       pair of .hdr/.img files, and an associated mat-file for the interpretation
+%                       Specify the associated mat-file with MPM in filename 
+%
+% Surface based atlases, requiring a pair of files, containing the labels, and the associated geometry
+%   'caret_label'       hcp-workbench/caret style .gii, with .label. in filename, requires additional file describing the geometry
+%   'freesurfer_surface' freesurfer style annotation file, requires additional file describing the geometry 
+%
+% Miscellaneous formats
+%   'mat'               mat-file, with FieldTrip style struct, other matlab data that FieldTrip knows to handle, can also be 
+%                       Brainstorm derived surfaces
+%   'vtpm'
+%
+% For volume data for whicth the format cannot be automatically detected, or if the volume data does not have a companion file 
+% for the interpretation of the labels, a list of 'fake' labels will be generated.
+%
+% The output atlas will be represented as structure according to FT_DATATYPE_SEGMENTATION or
+% FT_DATATYPE_PARCELLATION.
+%
+% The 'lines' and the 'colorcube' colormaps may be useful for plotting the different
+% patches, for example using FT_PLOT_MESH, or FT_SOURCEPLOT.
 %
 % See also FT_READ_MRI, FT_READ_HEADSHAPE, FT_PREPARE_SOURCEMODEL, FT_SOURCEPARCELLATE, FT_PLOT_MESH
 
 % Copyright (C) 2005-2019, Robert Oostenveld, Ingrid Nieuwenhuis, Jan-Mathijs Schoffelen, Arjen Stolk
+% Copyright (C) 2023, Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -50,7 +93,8 @@ function atlas = ft_read_atlas(filename, varargin)
 %
 % $Id$
 
-% deal with multiple filenames
+% deal with multiple filenames, if the geometry and labels are stored
+% in different files, as with freesurfer/caret
 if isa(filename, 'cell')
   if numel(filename)==2
     filenamemesh = filename{2};
@@ -60,58 +104,141 @@ if isa(filename, 'cell')
   end % if precisely two input files
 end % iscell
 
-% optionally get the data from the URL and make a temporary local copy
+% optionally get the data from an URL and make a temporary local copy
 filename = fetch_url(filename);
 
 [p, f, x] = fileparts(filename);
 
-if strcmp(f, 'TTatlas+tlrc')
-  format = 'afni';
-elseif strcmp(x, '.nii') && exist(fullfile(p, [f '.txt']), 'file')
-  % This is a combination of nii+txt file, where the txt file may contain three columns like this
-  %   FAG	Precentral_L	2001
-  %   FAD	Precentral_R	2002
-  %   F1G	Frontal_Sup_L	2101
-  %   F1D	Frontal_Sup_R	2102
-  %   F1OG	Frontal_Sup_Orb_L	2111
-  %   ...
-  % Alternatively, the txt file may contain a header line with the atlas name between square brackets
-  % and then a variable number of column text info, where the first column
-  % is the index, and the second column the label.
-  labelfile = fullfile(p, [f '.txt']);
-  fid = fopen_or_error(labelfile, 'rt');
-  l1  = fgetl(fid);
-  if strcmp(l1(1),'[') && strcmp(l1(end),']')
-    format = 'aal_ext';
-  elseif strcmp(l1,'Brainnetome Atlas')
-    format= 'brainnetome';
-  else
-    format = 'aal';
+labelfile = ft_getopt(varargin, 'labelfile', []);
+ftype     = ft_filetype(filename);    
+
+% if the original file was a .gz
+if isequal(x,'.gz')
+  [p, f, x] = fileparts(filename(1:end-3));
+end
+
+% do an educated guess of the format based on the input, ensure that the
+% required additional functions are available, and specify the companion labelfile 
+if contains(filename, 'BRIK') || contains(filename, 'HEAD')
+  % the above is needed to correctly detect zipped files
+  ft_hastoolbox('afni', 1);
+
+  % this is robust for both compressed or uncompressed afni atlases. 
+  format = 'afni';  
+elseif startsWith(ftype, 'nifti')
+
+  % first handle the ones for which the labels are implicit in the filename
+  if contains(f, 'Yeo2011_7Networks')
+    % assume to be conform the shared atlas, with hardcoded index-to-label mapping
+    format = 'yeo7';
+  elseif contains(f, 'Yeo2011_17Networks')
+    % assume to be conform the shared atlas, with hardcoded index-to-label mapping
+    format = 'yeo17';
   end
-  fclose(fid);
-elseif strcmp(x, '.mgz') && ~isempty(strfind(f, 'aparc')) || ~isempty(strfind(f, 'aseg'))
+
+  % try for different conventions of the naming of a potential companion labelfile
+  if isempty(labelfile)
+    labelfile = fullfile(p, sprintf('%s.txt', f));
+    if ~exist(labelfile, 'file')
+      % in case the volume was zipped, and the txt only replaced the gz
+      labelfile = fullfile(p, sprintf('%s.nii.txt', f));
+    end
+    if ~exist(labelfile, 'file')
+      labelfile = ''; % revert back to empty
+    end
+  end
+
+  if ~isempty(labelfile)
+    % do a quick check on the companion labelfile to specify the format
+    fid = fopen_or_error(labelfile, 'rt');
+    l1  = fgetl(fid);
+    if strcmp(l1(1),'[') && strcmp(l1(end),']')
+      % specific to this one is that some of the wakeforest atlases contain non-human data, so no fixed coordsys can be assumed
+      format   = 'wfu';
+      coordsys = 'unknown';
+    elseif strcmp(l1,'Brainnetome Atlas')
+      % specific to this one is the coordinate system it seems
+      format   = 'brainnetome';
+      coordsys = 'mni'; % apparently the image is in radiological convention,
+      % so the voxel-axes are left-handed. The even valued parcels should end
+      % up in the right hemisphere
+    elseif contains(filename, 'ROI_MNI') || contains(filename, 'AAL')
+      % newer versions of AAL also exist with a companion .xml file, this is not yet supported
+      format   = 'aal';
+      coordsys = 'mni';
+    end
+    fclose(fid);
+  end
+  if contains(filename, 'final_tissues')
+    ft_hastoolbox('freesurfer', 1); % required to read lookuptable
+
+    % assume to be from SimNIBS version 4
+    format = 'simnibs_v4';
+
+    labelfile = fullfile(p, sprintf('%s_LUT.txt', f));
+  end
+  
+  if isempty(labelfile)
+    % just a nifti file without interpretation of labels
+    format = 'nifti_no_label';
+  end
+
+elseif isequal(ftype, 'freesurfer_mgz') && contains(f, 'aparc') || contains(f, 'aseg')
+  ft_hastoolbox('freesurfer', 1);
+
   % individual volume based segmentation from freesurfer
   format = 'freesurfer_volume';
-elseif ft_filetype(filename, 'caret_label')
-  % this is a gifti file that contains both the values for a set of
-  % vertices as well as the labels.
+  
+  if isempty(labelfile)
+    % use the version for freesurfer that is in fieldtrip/external/freesurfer
+    [ftver, ftpath] = ft_version;
+    labelfile  = fullfile(ftpath, 'external/freesurfer', 'FreeSurferColorLUT.txt');
+  end
+
+elseif isequal(ftype, 'freesurfer_annot')
+  ft_hastoolbox('freesurfer', 1);
+
+  % individual volume based segmentation from freesurfer
+  format = 'freesurfer_surface';
+  
+elseif isequal(ftype, 'caret_label')
+  ft_hastoolbox('gifti', 1);
+
+  % this is a gifti file that contains both the values for a set of vertices as well as the labels.
   format = 'caret_label';
-elseif ~isempty(strfind(filename, 'MPM'))
+  
+elseif contains(filename, 'MPM.mat')
+  ft_hastoolbox('spm8up', 1);
+
   % assume to be from the spm_anatomy toolbox
   format = 'spm_anatomy';
-elseif strcmp(x, '.xml') && (isfolder(strtok(fullfile(p,f), '_')) || isfolder(strtok(fullfile(p,f), '-')))
-  % fsl-format atlas, this is assumed to consist of an .xml file that
-  % specifies the labels, as well as the filenames of the files with the actual data stored
-  % in a directory with the of the strtok'ed (with '-' or '_') file name.
+
+elseif exist(fullfile(p, [f '_MPM.mat']), 'file')
+    ft_warning('please specify the corresponding MPM.mat file as the filename');
+    filename = fullfile(p, [f '_MPM.mat']); % update the filename
+    [p, f, x] = fileparts(filename);
+
+    ft_hastoolbox('spm8up', 1);
+
+    % assume to be from the spm_anatomy toolbox
+    format = 'spm_anatomy';
+
+elseif strcmp(x, '.xml')
+  ft_hastoolbox('gifti', 1); % required to read the xml
+
+  % fsl-style atlas, this is assumed to consist of an .xml file that specifies the labels, as well as a pointer
+  % to the file/folder with the volume data.
   format = 'fsl';
+
+  labelfile = fullfile(p, sprintf('%s.xml',f));
+
 elseif strcmp(x, '.mat')
+  % mat-file to contain a well-defined structure
   format = 'mat';
-elseif strcmp(x, '.nii') && ~isempty(strfind(f, 'Yeo2011_7Networks'))
-  format = 'yeo7';
-elseif strcmp(x, '.nii') && ~isempty(strfind(f, 'Yeo2011_17Networks'))
-  format = 'yeo17';
+
 else
-  format = 'wfu';
+
+  format = 'unknown';
 end
 
 % get the optional input arguments
@@ -119,532 +246,22 @@ fileformat = ft_getopt(varargin, 'format', format);
 unit       = ft_getopt(varargin, 'unit');
 
 switch fileformat
-  case 'aal'
-    labelfile = fullfile(p, [f '.txt']);
-    fid = fopen_or_error(labelfile, 'rt');
-    C = textscan(fid, '%s%s%d');
-    lab = C{2};
-    idx = C{3};
-    fclose(fid);
+  case {'aal' 'brainnetome' 'freesurfer_volume' 'nifti_no_label' 'simnibs_v4' 'wfu'}
+    atlas = ft_read_mri(filename, 'outputfield', 'tissue');
     
-    atlas = ft_read_mri(filename);
-    atlas.tissue = atlas.anatomy;
-    atlas = rmfield(atlas, 'anatomy');
-    atlas.tissuelabel       = {};
-    atlas.tissuelabel(idx)  = lab;
-    atlas.coordsys = 'mni';
-    % The original contains a rather sparse labeling, since not all indices
-    % are being used (it starts at 2001) The question is whether it is more
-    % important to keep the original numbers or to make the list with
-    % labels compact. This could be made optional.
-    compact = true;
-    if compact && ~isempty(atlas.tissuelabel)
-      [a, i, j] = unique(atlas.tissue);
-      atlas.tissue = reshape(j-1, atlas.dim);
-      atlas.tissuelabel = atlas.tissuelabel(a(a~=0));
-    end
-    
-  case 'aal_ext'
-    labelfile = fullfile(p, [f '.txt']);
-    fid = fopen_or_error(labelfile, 'rt');
-    C = textscan(fid, '%d%s%*[^\n]', 'HeaderLines', 1, 'Delimiter', '\t');
-    lab = C{2};
-    idx = C{1};
-    fclose(fid);
-    
-    atlas = ft_read_mri(filename);
-    atlas.tissue = atlas.anatomy;
-    atlas = rmfield(atlas, 'anatomy');
-    atlas.tissuelabel       = {};
-    atlas.tissuelabel(idx)  = lab;
-    atlas.coordsys = 'mni';
-    % The original contains a rather sparse labeling, since not all indices
-    % are being used (it starts at 2001) The question is whether it is more
-    % important to keep the original numbers or to make the list with
-    % labels compact. This could be made optional.
-    compact = true;
-    if compact && ~isempty(atlas.tissuelabel)
-      [a, i, j] = unique(atlas.tissue);
-      atlas.tissue = reshape(j-1, atlas.dim);
-      atlas.tissuelabel = atlas.tissuelabel(a(a~=0));
-    end
-    
-  case 'brainnetome'
-    % Brainnetome Atlas
-    % L. Fan, et al.The Human Brainnetome Atlas: A New Brain Atlas Based on
-    % Connectional Architecture. Cereb Cortex 2016; 26 (8): 3508-3526.
-    % doi: 10.1093/cercor/bhw157
-    atlas = ft_read_mri(filename);
-    atlas.tissue = atlas.anatomy;
-    atlas = rmfield(atlas, 'anatomy');
-    atlas.coordsys = 'mni';
-    
-    %Brainnetome atlas comes as radiological view convention.
-    %change to neurological view: patient Left->image Left.
-    atlas.transform(1,1)=-atlas.transform(1,1);
-    atlas.transform(1,4)=-atlas.transform(1,4);
-    
-    %labels
-    atlas.tissuelabel = cell(1,246);
-    fid = fopen_or_error(labelfile, 'rt');
-    lab  = fgetl(fid); %lab='Brainnetome Atlas'
-    for label_i=1:246
-      atlas.tissuelabel{1,label_i}=fgetl(fid);
-    end
-    fclose(fid);
-    
-  case 'afni'
-    % check whether the required AFNI toolbox is available
-    ft_hastoolbox('afni', 1);
-    
-    atlas = ft_read_mri(filename);
-    
-    % the AFNI atlas contains two volumes at 1mm resolution
-    atlas.brick0   = atlas.anatomy(:,:,:,1);
-    atlas.brick1   = atlas.anatomy(:,:,:,2);
-    atlas          = rmfield(atlas, 'anatomy');
-    atlas.dim      = atlas.dim([1 2 3]);
-    atlas.coordsys = 'tal';
-    
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % the following information is from https://afni.nimh.nih.gov/afni/doc/misc/ttatlas_tlrc
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    
-    atlas.descr.brick = [
-      1
-      1
-      0
-      0
-      0
-      0
-      0
-      0
-      0
-      0
-      0
-      0
-      0
-      0
-      0
-      0
-      0
-      0
-      0
-      0
-      0
-      0
-      0
-      0
-      0
-      0
-      0
-      0
-      0
-      0
-      0
-      0
-      0
-      0
-      1
-      1
-      1
-      0
-      0
-      0
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      1
-      0
-      0
-      0
-      0
-      0
-      0
-      0
-      0
-      0
-      0
-      0
-      0
-      0
-      1
-      0
-      0
-      ];
-    
-    atlas.descr.value = [
-      68
-      71
-      20
-      21
-      22
-      24
-      25
-      26
-      27
-      28
-      29
-      30
-      31
-      32
-      33
-      34
-      35
-      36
-      37
-      39
-      40
-      41
-      42
-      43
-      44
-      45
-      46
-      47
-      48
-      49
-      50
-      51
-      52
-      70
-      72
-      73
-      74
-      75
-      76
-      77
-      124
-      125
-      126
-      128
-      129
-      130
-      131
-      132
-      133
-      134
-      135
-      136
-      137
-      138
-      144
-      145
-      151
-      146
-      147
-      148
-      149
-      81
-      82
-      83
-      84
-      85
-      86
-      87
-      88
-      89
-      90
-      91
-      93
-      94
-      95
-      96
-      97
-      98
-      99
-      100
-      101
-      102
-      103
-      104
-      105
-      106
-      107
-      108
-      109
-      110
-      111
-      112
-      113
-      114
-      115
-      116
-      117
-      118
-      119
-      120
-      121
-      122
-      123
-      53
-      54
-      55
-      56
-      57
-      58
-      59
-      60
-      61
-      62
-      63
-      66
-      65
-      127
-      64
-      67
-      ];
-    
-    atlas.descr.name = {
-      'Hippocampus'
-      'Amygdala'
-      'Posterior Cingulate'
-      'Anterior Cingulate'
-      'Subcallosal Gyrus'
-      'Transverse Temporal Gyrus'
-      'Uncus'
-      'Rectal Gyrus'
-      'Fusiform Gyrus'
-      'Inferior Occipital Gyrus'
-      'Inferior Temporal Gyrus'
-      'Insula'
-      'Parahippocampal Gyrus'
-      'Lingual Gyrus'
-      'Middle Occipital Gyrus'
-      'Orbital Gyrus'
-      'Middle Temporal Gyrus'
-      'Superior Temporal Gyrus'
-      'Superior Occipital Gyrus'
-      'Inferior Frontal Gyrus'
-      'Cuneus'
-      'Angular Gyrus'
-      'Supramarginal Gyrus'
-      'Cingulate Gyrus'
-      'Inferior Parietal Lobule'
-      'Precuneus'
-      'Superior Parietal Lobule'
-      'Middle Frontal Gyrus'
-      'Paracentral Lobule'
-      'Postcentral Gyrus'
-      'Precentral Gyrus'
-      'Superior Frontal Gyrus'
-      'Medial Frontal Gyrus'
-      'Lentiform Nucleus'
-      'Hypothalamus'
-      'Red Nucleus'
-      'Substantia Nigra'
-      'Claustrum'
-      'Thalamus'
-      'Caudate'
-      'Caudate Tail'
-      'Caudate Body'
-      'Caudate Head'
-      'Ventral Anterior Nucleus'
-      'Ventral Posterior Medial Nucleus'
-      'Ventral Posterior Lateral Nucleus'
-      'Medial Dorsal Nucleus'
-      'Lateral Dorsal Nucleus'
-      'Pulvinar'
-      'Lateral Posterior Nucleus'
-      'Ventral Lateral Nucleus'
-      'Midline Nucleus'
-      'Anterior Nucleus'
-      'Mammillary Body'
-      'Medial Globus Pallidus'
-      'Lateral Globus Pallidus'
-      'Putamen'
-      'Nucleus Accumbens'
-      'Medial Geniculum Body'
-      'Lateral Geniculum Body'
-      'Subthalamic Nucleus'
-      'Brodmann area 1'
-      'Brodmann area 2'
-      'Brodmann area 3'
-      'Brodmann area 4'
-      'Brodmann area 5'
-      'Brodmann area 6'
-      'Brodmann area 7'
-      'Brodmann area 8'
-      'Brodmann area 9'
-      'Brodmann area 10'
-      'Brodmann area 11'
-      'Brodmann area 13'
-      'Brodmann area 17'
-      'Brodmann area 18'
-      'Brodmann area 19'
-      'Brodmann area 20'
-      'Brodmann area 21'
-      'Brodmann area 22'
-      'Brodmann area 23'
-      'Brodmann area 24'
-      'Brodmann area 25'
-      'Brodmann area 27'
-      'Brodmann area 28'
-      'Brodmann area 29'
-      'Brodmann area 30'
-      'Brodmann area 31'
-      'Brodmann area 32'
-      'Brodmann area 33'
-      'Brodmann area 34'
-      'Brodmann area 35'
-      'Brodmann area 36'
-      'Brodmann area 37'
-      'Brodmann area 38'
-      'Brodmann area 39'
-      'Brodmann area 40'
-      'Brodmann area 41'
-      'Brodmann area 42'
-      'Brodmann area 43'
-      'Brodmann area 44'
-      'Brodmann area 45'
-      'Brodmann area 46'
-      'Brodmann area 47'
-      'Uvula of Vermis'
-      'Pyramis of Vermis'
-      'Tuber of Vermis'
-      'Declive of Vermis'
-      'Culmen of Vermis'
-      'Cerebellar Tonsil'
-      'Inferior Semi-Lunar Lobule'
-      'Fastigium'
-      'Nodule'
-      'Uvula'
-      'Pyramis'
-      'Culmen'
-      'Declive'
-      'Dentate'
-      'Tuber'
-      'Cerebellar Lingual'
-      };
-    
-    % the following is basically the conversion from the 2005 format to the 2012 format
-    sel0   = (atlas.descr.brick==0);
-    label0 = atlas.descr.name(sel0);
-    value0 = atlas.descr.value(sel0);
-    % construct a new array with parcel or atlas values
-    if numel(label0)<=intmax('uint8')
-      new_brick0 = zeros(atlas.dim, 'uint8');
-    elseif numel(label0)<=intmax('uint16')
-      new_brick0 = zeros(atlas.dim, 'uint16');
-    elseif numel(label0)<=intmax('uint32')
-      new_brick0 = zeros(atlas.dim, 'uint32');
-    else
-      new_brick0 = zeros(atlas.dim);
-    end
-    for i=1:numel(label0)
-      % replace the original values with numbers from 1 to N
-      new_brick0(atlas.brick0==value0(i)) = i;
-    end
-    
-    sel1   = (atlas.descr.brick==1);
-    label1 = atlas.descr.name(sel1);
-    value1 = atlas.descr.value(sel1);
-    % construct a new array with parcel or atlas values
-    if numel(label1)<=intmax('uint8')
-      new_brick1 = zeros(atlas.dim, 'uint8');
-    elseif numel(label1)<=intmax('uint16')
-      new_brick1 = zeros(atlas.dim, 'uint16');
-    elseif numel(label1)<=intmax('uint32')
-      new_brick1 = zeros(atlas.dim, 'uint32');
-    else
-      new_brick1 = zeros(atlas.dim);
-    end
-    for i=1:numel(label1)
-      % replace the original values with numbers from 1 to N
-      new_brick1(atlas.brick1==value1(i)) = i;
-    end
-    
-    atlas = rmfield(atlas, {'brick0', 'brick1', 'descr'});
-    atlas.brick0      = new_brick0;
-    atlas.brick0label = label0;
-    atlas.brick1      = new_brick1;
-    atlas.brick1label = label1;
-    
-  case 'wfu'
-    
-    atlas        = ft_read_mri(filename);
-    brick0       = atlas.anatomy;
-    atlas        = rmfield(atlas, 'anatomy');
-    
-    % FIXME the human WFU atlas contains a single volume at 2mm resolution in
-    % MNI space, but the coordinates will not be guaranteed to be MNI
-    % compatible, for example for the rhesus or mouse atlas.
-    
-    % atlas.coordsys  = 'mni';
-    atlas.coordsys = 'unknown';
-    
-    [p, f, x] = fileparts(filename);
-    
-    % if the original file was a .gz
-    if isequal(x,'.gz')
-      [p, f, x] = fileparts(filename(1:end-3));
-    end
-    
-    % this is a mat file that Ingrid apparently discovered somewhere
-    % filename1 = fullfile(p, [f '_List.mat']);
-    
-    filename2 = fullfile(p, [f '.txt']);
-    if exist(filename2, 'file')
-      
+    % interpret the format specific labelfile
+    if isequal(fileformat, 'aal')
+      % The labelfile is a combination of nii+txt file, where the txt file may contain three columns like this
+      %   FAG	Precentral_L	2001
+      %   FAD	Precentral_R	2002
+      %   ...
+   
+      fid = fopen_or_error(labelfile, 'rt');
+      C = textscan(fid, '%s%s%d');
+      lab = C{2};
+      idx = C{3};
+      fclose(fid);
+    elseif isequal(fileformat, 'wfu')
       % the download from http://fmri.wfubmc.edu comes with pairs of nii and txt files
       % the text file looks like this, with tabs between the colums
       % the section at the end with three times 191 does not always exist
@@ -652,1153 +269,174 @@ switch fileformat
       % [ TD Labels]
       % 53	Angular Gyrus         191 191 191
       % 39	Anterior Cingulate		191 191 191
-      % 36	Caudate               191 191 191
-      % 27	Cerebellar Lingual		191 191 191
-      % 2	  Cerebellar Tonsil		  191 191 191
-      % 52	Cingulate Gyrus			  191 191 191
       % ...
-      
-      
-      fid = fopen_or_error(filename2);
-      i = 1;
-      value = [];
-      label = {};
-      while true
-        tline = fgetl(fid);
-        if ~ischar(tline), break, end
-        % use TAB as deliniter
-        [num, rem] = strtok(tline, 9);
-        [str, rem] = strtok(rem, 9);
-        num = str2double(num);
-        if ~isnan(num)
-          value(i) = num;
-          label{i} = str;
-          i = i+1;
-        end % if num
-      end % while
+
+      fid = fopen_or_error(labelfile, 'rt');
+      C = textscan(fid, '%d%s%*[^\n]', 'HeaderLines', 1, 'Delimiter', '\t');
+      lab = C{2};
+      idx = C{1};
       fclose(fid);
-      
-    else
+    elseif any(strcmp(fileformat, {'simnibs_v4' 'freesurfer_volume'}))
+      [idx, lab, rgba] = read_fscolorlut(labelfile);
+      lab = cellstr(lab);
+    elseif isequal(fileformat, 'brainnetome')
+      % Brainnetome Atlas: L. Fan, et al.The Human Brainnetome Atlas: A New Brain Atlas Based on
+      % Connectional Architecture. Cereb Cortex 2016; 26 (8): 3508-3526. doi: 10.1093/cercor/bhw157
+      fid = fopen_or_error(labelfile, 'rt');
+      fgetl(fid); % this reads: 'Brainnetome Atlas'
+      lab = cell(246,1);
+      for i=1:246
+        lab{i,1}=fgetl(fid);
+      end
+      idx = (1:246)';
+      fclose(fid);
+     
+    elseif isequal(fileformat, 'nifti_no_label')
       % the file does not exist
-      ft_warning('cannot locate %s, making default tissue labels', filename2);
+      ft_warning('cannot locate a labelfile, making default tissue labels');
       
-      value = [];
-      label = {};
-      for i=1:max(brick0(:))
+      idx = (1:max(atlas.tissue(:)))';
+      lab = cell(size(idx));
+      for i = 1:numel(lab)
         % this is consistent with FIXSEGMENTATION
-        value(i) = i;
-        label{i} = sprintf('tissue %d', i);
+        lab{i} = sprintf('tissue %d', i);
       end
     end
     
-    % this is loosely modeled after the AFNI implementation, hence the "brick0" naming
-    if numel(label)<=intmax('uint8')
-      new_brick0 = zeros(atlas.dim, 'uint8');
-    elseif numel(label)<=intmax('uint16')
-      new_brick0 = zeros(atlas.dim, 'uint16');
-    elseif numel(label)<=intmax('uint32')
-      new_brick0 = zeros(atlas.dim, 'uint32');
+    if ~isfield(atlas, 'coordsys') && exist('coordsys', 'var')
+      atlas.coordsys = coordsys;
+    end
+    
+    uval = unique(atlas.tissue(:));
+    sel  = find(ismember(idx, uval));
+    fprintf('subselecting %d labels from the total list of %d\n', numel(sel), numel(lab));
+    idx  = idx(sel);
+    lab  = lab(sel);
+    if exist('rgba', 'var') 
+      tmprgba = rgba(sel,:);
+      rgba = zeros(0,4);
+    end
+
+    % remap the values in the data, if needed
+    if ~isequal(idx(:)', 1:numel(idx))
+      dat = zeros(atlas.dim);
+      cnt = 0;
+      for k = 1:numel(idx)
+        sel = atlas.tissue==idx(k);
+        if sum(sel(:))
+          cnt = cnt+1;
+          fprintf('re-indexing label %s to a value of %d (was %d)\n', lab{k}, cnt, idx(k));
+          dat(sel)           = cnt;
+          tissuelabel{cnt,1} = lab{k};
+          if exist('rgba', 'var')
+            rgba(cnt,:) = tmprgba(k,:);
+          end
+        end
+      end
+      atlas.tissue = dat;
     else
-      new_brick0 = zeros(atlas.dim);
+      tissuelabel = lab;
     end
-    for i=1:numel(label)
-      % replace the original values with numbers from 1 to N
-      new_brick0(brick0==value(i)) = i;
+
+    atlas.tissuelabel = tissuelabel;
+    if exist('rgba', 'var'), atlas.rgba = rgba; end
+    
+    % reduce memory footprint
+    if numel(tissuelabel)<=intmax('uint8')
+      atlas.tissue = uint8(atlas.tissue);
+    elseif numel(tissuelabel)<=intmax('uint16')
+      atlas.tissue = uint16(atlas.tissue);
+    elseif numel(tissuelabel)<=intmax('uint32')
+      atlas.tissue = uint32(atlas.tissue);
     end
+
+  case 'afni'
     
-    % replace the original brick with interspersed integers with one that contains contiguous integets
-    atlas.parcellation      = new_brick0;
-    atlas.parcellationlabel = label(:);
-    
-  case {'freesurfer_volume'}
-    % numeric values in the volume correspond to a label that can be found
-    % in a lookup table. The lookup table is provided here and has been
-    % copied from FreeSurferColorLUT.txt (v5.1)
-    
-    
-    % Below is the color table for the cortical labels of the seg volume
-    % created by mri_aparc2aseg (with --a2009s flag) in which the aseg
-    % cortex label is replaced by the labels in the aparc.a2009s. The
-    % cortical labels are the same as in Simple_surface_labels2009.txt,
-    % except that left hemisphere has 11100 added to the index and the
-    % right has 12100 added.  The label names are also prepended with
-    % ctx_lh_, ctx_rh_, wm_lh_ and wm_rh_ (note usage of _ instead of -
-    % to differentiate from a2005s labels).
-    
-    
-    value =[
-      1
-      2
-      3
-      4
-      5
-      6
-      7
-      8
-      9
-      10
-      11
-      12
-      13
-      14
-      15
-      16
-      17
-      18
-      19
-      20
-      21
-      22
-      23
-      24
-      25
-      26
-      27
-      28
-      29
-      30
-      31
-      32
-      33
-      34
-      35
-      36
-      37
-      38
-      39
-      40
-      41
-      42
-      43
-      44
-      45
-      46
-      47
-      48
-      49
-      50
-      51
-      52
-      53
-      54
-      55
-      56
-      57
-      58
-      59
-      60
-      61
-      62
-      63
-      64
-      65
-      66
-      67
-      68
-      69
-      70
-      71
-      72
-      73
-      74
-      75
-      76
-      77
-      78
-      79
-      80
-      81
-      82
-      83
-      84
-      85
-      86
-      96
-      97
-      98
-      250
-      251
-      252
-      253
-      254
-      255
-      1000
-      1001
-      1002
-      1003
-      1004
-      1005
-      1006
-      1007
-      1008
-      1009
-      1010
-      1011
-      1012
-      1013
-      1014
-      1015
-      1016
-      1017
-      1018
-      1019
-      1020
-      1021
-      1022
-      1023
-      1024
-      1025
-      1026
-      1027
-      1028
-      1029
-      1030
-      1031
-      1032
-      1033
-      1034
-      1035
-      1100
-      1101
-      1102
-      1103
-      1104
-      1200
-      1201
-      1202
-      1205
-      1206
-      1207
-      1210
-      1211
-      1212
-      1105
-      1106
-      1107
-      1108
-      1109
-      1110
-      1111
-      1112
-      1113
-      1114
-      1115
-      1116
-      1117
-      1118
-      1119
-      1120
-      1121
-      1122
-      1123
-      1124
-      1125
-      1126
-      1127
-      1128
-      1129
-      1130
-      1131
-      1132
-      1133
-      1134
-      1135
-      1136
-      1137
-      1138
-      1139
-      1140
-      1141
-      1142
-      1143
-      1144
-      1145
-      1146
-      1147
-      1148
-      1149
-      1150
-      1151
-      1152
-      1153
-      1154
-      1155
-      1156
-      1157
-      1158
-      1159
-      1160
-      1161
-      1162
-      1163
-      1164
-      1165
-      1166
-      1167
-      1168
-      1169
-      1170
-      1171
-      1172
-      1173
-      1174
-      1175
-      1176
-      1177
-      1178
-      1179
-      1180
-      1181
-      2000
-      2001
-      2002
-      2003
-      2004
-      2005
-      2006
-      2007
-      2008
-      2009
-      2010
-      2011
-      2012
-      2013
-      2014
-      2015
-      2016
-      2017
-      2018
-      2019
-      2020
-      2021
-      2022
-      2023
-      2024
-      2025
-      2026
-      2027
-      2028
-      2029
-      2030
-      2031
-      2032
-      2033
-      2034
-      2035
-      2100
-      2101
-      2102
-      2103
-      2104
-      2105
-      2106
-      2107
-      2108
-      2109
-      2110
-      2111
-      2112
-      2113
-      2114
-      2115
-      2116
-      2117
-      2118
-      2119
-      2120
-      2121
-      2122
-      2123
-      2124
-      2125
-      2126
-      2127
-      2128
-      2129
-      2130
-      2131
-      2132
-      2133
-      2134
-      2135
-      2136
-      2137
-      2138
-      2139
-      2140
-      2141
-      2142
-      2143
-      2144
-      2145
-      2146
-      2147
-      2148
-      2149
-      2150
-      2151
-      2152
-      2153
-      2154
-      2155
-      2156
-      2157
-      2158
-      2159
-      2160
-      2161
-      2162
-      2163
-      2164
-      2165
-      2166
-      2167
-      2168
-      2169
-      2170
-      2171
-      2172
-      2173
-      2174
-      2175
-      2176
-      2177
-      2178
-      2179
-      2180
-      2181
-      2200
-      2201
-      2202
-      2205
-      2206
-      2207
-      2210
-      2211
-      2212
-      11100
-      11101
-      11102
-      11103
-      11104
-      11105
-      11106
-      11107
-      11108
-      11109
-      11110
-      11111
-      11112
-      11113
-      11114
-      11115
-      11116
-      11117
-      11118
-      11119
-      11120
-      11121
-      11122
-      11123
-      11124
-      11125
-      11126
-      11127
-      11128
-      11129
-      11130
-      11131
-      11132
-      11133
-      11134
-      11135
-      11136
-      11137
-      11138
-      11139
-      11140
-      11141
-      11142
-      11143
-      11144
-      11145
-      11146
-      11147
-      11148
-      11149
-      11150
-      11151
-      11152
-      11153
-      11154
-      11155
-      11156
-      11157
-      11158
-      11159
-      11160
-      11161
-      11162
-      11163
-      11164
-      11165
-      11166
-      11167
-      11168
-      11169
-      11170
-      11171
-      11172
-      11173
-      11174
-      11175
-      12100
-      12101
-      12102
-      12103
-      12104
-      12105
-      12106
-      12107
-      12108
-      12109
-      12110
-      12111
-      12112
-      12113
-      12114
-      12115
-      12116
-      12117
-      12118
-      12119
-      12120
-      12121
-      12122
-      12123
-      12124
-      12125
-      12126
-      12127
-      12128
-      12129
-      12130
-      12131
-      12132
-      12133
-      12134
-      12135
-      12136
-      12137
-      12138
-      12139
-      12140
-      12141
-      12142
-      12143
-      12144
-      12145
-      12146
-      12147
-      12148
-      12149
-      12150
-      12151
-      12152
-      12153
-      12154
-      12155
-      12156
-      12157
-      12158
-      12159
-      12160
-      12161
-      12162
-      12163
-      12164
-      12165
-      12166
-      12167
-      12168
-      12169
-      12170
-      12171
-      12172
-      12173
-      12174
-      12175];
-    
-    label = {
-      'Left-Cerebral-Exterior'
-      'Left-Cerebral-White-Matter'
-      'Left-Cerebral-Cortex'
-      'Left-Lateral-Ventricle'
-      'Left-Inf-Lat-Vent'
-      'Left-Cerebellum-Exterior'
-      'Left-Cerebellum-White-Matter'
-      'Left-Cerebellum-Cortex'
-      'Left-Thalamus'
-      'Left-Thalamus-Proper'
-      'Left-Caudate'
-      'Left-Putamen'
-      'Left-Pallidum'
-      '3rd-Ventricle'
-      '4th-Ventricle'
-      'Brain-Stem'
-      'Left-Hippocampus'
-      'Left-Amygdala'
-      'Left-Insula'
-      'Left-Operculum'
-      'Line-1'
-      'Line-2'
-      'Line-3'
-      'CSF'
-      'Left-Lesion'
-      'Left-Accumbens-area'
-      'Left-Substancia-Nigra'
-      'Left-VentralDC'
-      'Left-undetermined'
-      'Left-vessel'
-      'Left-choroid-plexus'
-      'Left-F3orb'
-      'Left-lOg'
-      'Left-aOg'
-      'Left-mOg'
-      'Left-pOg'
-      'Left-Stellate'
-      'Left-Porg'
-      'Left-Aorg'
-      'Right-Cerebral-Exterior'
-      'Right-Cerebral-White-Matter'
-      'Right-Cerebral-Cortex'
-      'Right-Lateral-Ventricle'
-      'Right-Inf-Lat-Vent'
-      'Right-Cerebellum-Exterior'
-      'Right-Cerebellum-White-Matter'
-      'Right-Cerebellum-Cortex'
-      'Right-Thalamus'
-      'Right-Thalamus-Proper'
-      'Right-Caudate'
-      'Right-Putamen'
-      'Right-Pallidum'
-      'Right-Hippocampus'
-      'Right-Amygdala'
-      'Right-Insula'
-      'Right-Operculum'
-      'Right-Lesion'
-      'Right-Accumbens-area'
-      'Right-Substancia-Nigra'
-      'Right-VentralDC'
-      'Right-undetermined'
-      'Right-vessel'
-      'Right-choroid-plexus'
-      'Right-F3orb'
-      'Right-lOg'
-      'Right-aOg'
-      'Right-mOg'
-      'Right-pOg'
-      'Right-Stellate'
-      'Right-Porg'
-      'Right-Aorg'
-      '5th-Ventricle'
-      'Left-Interior'
-      'Right-Interior'
-      'Left-Lateral-Ventricles'
-      'Right-Lateral-Ventricles'
-      'WM-hypointensities'
-      'Left-WM-hypointensities'
-      'Right-WM-hypointensities'
-      'non-WM-hypointensities'
-      'Left-non-WM-hypointensities'
-      'Right-non-WM-hypointensities'
-      'Left-F1'
-      'Right-F1'
-      'Optic-Chiasm'
-      'Corpus_Callosum'
-      'Left-Amygdala-Anterior'
-      'Right-Amygdala-Anterior'
-      'Dura'
-      'Fornix'
-      'CC_Posterior'
-      'CC_Mid_Posterior'
-      'CC_Central'
-      'CC_Mid_Anterior'
-      'CC_Anterior'
-      'ctx-lh-unknown'
-      'ctx-lh-bankssts'
-      'ctx-lh-caudalanteriorcingulate'
-      'ctx-lh-caudalmiddlefrontal'
-      'ctx-lh-corpuscallosum'
-      'ctx-lh-cuneus'
-      'ctx-lh-entorhinal'
-      'ctx-lh-fusiform'
-      'ctx-lh-inferiorparietal'
-      'ctx-lh-inferiortemporal'
-      'ctx-lh-isthmuscingulate'
-      'ctx-lh-lateraloccipital'
-      'ctx-lh-lateralorbitofrontal'
-      'ctx-lh-lingual'
-      'ctx-lh-medialorbitofrontal'
-      'ctx-lh-middletemporal'
-      'ctx-lh-parahippocampal'
-      'ctx-lh-paracentral'
-      'ctx-lh-parsopercularis'
-      'ctx-lh-parsorbitalis'
-      'ctx-lh-parstriangularis'
-      'ctx-lh-pericalcarine'
-      'ctx-lh-postcentral'
-      'ctx-lh-posteriorcingulate'
-      'ctx-lh-precentral'
-      'ctx-lh-precuneus'
-      'ctx-lh-rostralanteriorcingulate'
-      'ctx-lh-rostralmiddlefrontal'
-      'ctx-lh-superiorfrontal'
-      'ctx-lh-superiorparietal'
-      'ctx-lh-superiortemporal'
-      'ctx-lh-supramarginal'
-      'ctx-lh-frontalpole'
-      'ctx-lh-temporalpole'
-      'ctx-lh-transversetemporal'
-      'ctx-lh-insula'
-      'ctx-lh-Unknown'
-      'ctx-lh-Corpus_callosum'
-      'ctx-lh-G_and_S_Insula_ONLY_AVERAGE'
-      'ctx-lh-G_cingulate-Isthmus'
-      'ctx-lh-G_cingulate-Main_part'
-      'ctx-lh-G_cingulate-caudal_ACC'
-      'ctx-lh-G_cingulate-rostral_ACC'
-      'ctx-lh-G_cingulate-posterior'
-      'ctx-lh-S_cingulate-caudal_ACC'
-      'ctx-lh-S_cingulate-rostral_ACC'
-      'ctx-lh-S_cingulate-posterior'
-      'ctx-lh-S_pericallosal-caudal'
-      'ctx-lh-S_pericallosal-rostral'
-      'ctx-lh-S_pericallosal-posterior'
-      'ctx-lh-G_cuneus'
-      'ctx-lh-G_frontal_inf-Opercular_part'
-      'ctx-lh-G_frontal_inf-Orbital_part'
-      'ctx-lh-G_frontal_inf-Triangular_part'
-      'ctx-lh-G_frontal_middle'
-      'ctx-lh-G_frontal_superior'
-      'ctx-lh-G_frontomarginal'
-      'ctx-lh-G_insular_long'
-      'ctx-lh-G_insular_short'
-      'ctx-lh-G_and_S_occipital_inferior'
-      'ctx-lh-G_occipital_middle'
-      'ctx-lh-G_occipital_superior'
-      'ctx-lh-G_occipit-temp_lat-Or_fusiform'
-      'ctx-lh-G_occipit-temp_med-Lingual_part'
-      'ctx-lh-G_occipit-temp_med-Parahippocampal_part'
-      'ctx-lh-G_orbital'
-      'ctx-lh-G_paracentral'
-      'ctx-lh-G_parietal_inferior-Angular_part'
-      'ctx-lh-G_parietal_inferior-Supramarginal_part'
-      'ctx-lh-G_parietal_superior'
-      'ctx-lh-G_postcentral'
-      'ctx-lh-G_precentral'
-      'ctx-lh-G_precuneus'
-      'ctx-lh-G_rectus'
-      'ctx-lh-G_subcallosal'
-      'ctx-lh-G_subcentral'
-      'ctx-lh-G_temporal_inferior'
-      'ctx-lh-G_temporal_middle'
-      'ctx-lh-G_temp_sup-G_temp_transv_and_interm_S'
-      'ctx-lh-G_temp_sup-Lateral_aspect'
-      'ctx-lh-G_temp_sup-Planum_polare'
-      'ctx-lh-G_temp_sup-Planum_tempolare'
-      'ctx-lh-G_and_S_transverse_frontopolar'
-      'ctx-lh-Lat_Fissure-ant_sgt-ramus_horizontal'
-      'ctx-lh-Lat_Fissure-ant_sgt-ramus_vertical'
-      'ctx-lh-Lat_Fissure-post_sgt'
-      'ctx-lh-Medial_wall'
-      'ctx-lh-Pole_occipital'
-      'ctx-lh-Pole_temporal'
-      'ctx-lh-S_calcarine'
-      'ctx-lh-S_central'
-      'ctx-lh-S_central_insula'
-      'ctx-lh-S_cingulate-Main_part_and_Intracingulate'
-      'ctx-lh-S_cingulate-Marginalis_part'
-      'ctx-lh-S_circular_insula_anterior'
-      'ctx-lh-S_circular_insula_inferior'
-      'ctx-lh-S_circular_insula_superior'
-      'ctx-lh-S_collateral_transverse_ant'
-      'ctx-lh-S_collateral_transverse_post'
-      'ctx-lh-S_frontal_inferior'
-      'ctx-lh-S_frontal_middle'
-      'ctx-lh-S_frontal_superior'
-      'ctx-lh-S_frontomarginal'
-      'ctx-lh-S_intermedius_primus-Jensen'
-      'ctx-lh-S_intraparietal-and_Parietal_transverse'
-      'ctx-lh-S_occipital_anterior'
-      'ctx-lh-S_occipital_middle_and_Lunatus'
-      'ctx-lh-S_occipital_superior_and_transversalis'
-      'ctx-lh-S_occipito-temporal_lateral'
-      'ctx-lh-S_occipito-temporal_medial_and_S_Lingual'
-      'ctx-lh-S_orbital-H_shapped'
-      'ctx-lh-S_orbital_lateral'
-      'ctx-lh-S_orbital_medial-Or_olfactory'
-      'ctx-lh-S_paracentral'
-      'ctx-lh-S_parieto_occipital'
-      'ctx-lh-S_pericallosal'
-      'ctx-lh-S_postcentral'
-      'ctx-lh-S_precentral-Inferior-part'
-      'ctx-lh-S_precentral-Superior-part'
-      'ctx-lh-S_subcentral_ant'
-      'ctx-lh-S_subcentral_post'
-      'ctx-lh-S_suborbital'
-      'ctx-lh-S_subparietal'
-      'ctx-lh-S_supracingulate'
-      'ctx-lh-S_temporal_inferior'
-      'ctx-lh-S_temporal_superior'
-      'ctx-lh-S_temporal_transverse'
-      'ctx-rh-unknown'
-      'ctx-rh-bankssts'
-      'ctx-rh-caudalanteriorcingulate'
-      'ctx-rh-caudalmiddlefrontal'
-      'ctx-rh-corpuscallosum'
-      'ctx-rh-cuneus'
-      'ctx-rh-entorhinal'
-      'ctx-rh-fusiform'
-      'ctx-rh-inferiorparietal'
-      'ctx-rh-inferiortemporal'
-      'ctx-rh-isthmuscingulate'
-      'ctx-rh-lateraloccipital'
-      'ctx-rh-lateralorbitofrontal'
-      'ctx-rh-lingual'
-      'ctx-rh-medialorbitofrontal'
-      'ctx-rh-middletemporal'
-      'ctx-rh-parahippocampal'
-      'ctx-rh-paracentral'
-      'ctx-rh-parsopercularis'
-      'ctx-rh-parsorbitalis'
-      'ctx-rh-parstriangularis'
-      'ctx-rh-pericalcarine'
-      'ctx-rh-postcentral'
-      'ctx-rh-posteriorcingulate'
-      'ctx-rh-precentral'
-      'ctx-rh-precuneus'
-      'ctx-rh-rostralanteriorcingulate'
-      'ctx-rh-rostralmiddlefrontal'
-      'ctx-rh-superiorfrontal'
-      'ctx-rh-superiorparietal'
-      'ctx-rh-superiortemporal'
-      'ctx-rh-supramarginal'
-      'ctx-rh-frontalpole'
-      'ctx-rh-temporalpole'
-      'ctx-rh-transversetemporal'
-      'ctx-rh-insula'
-      'ctx-rh-Unknown'
-      'ctx-rh-Corpus_callosum'
-      'ctx-rh-G_and_S_Insula_ONLY_AVERAGE'
-      'ctx-rh-G_cingulate-Isthmus'
-      'ctx-rh-G_cingulate-Main_part'
-      'ctx-rh-G_cuneus'
-      'ctx-rh-G_frontal_inf-Opercular_part'
-      'ctx-rh-G_frontal_inf-Orbital_part'
-      'ctx-rh-G_frontal_inf-Triangular_part'
-      'ctx-rh-G_frontal_middle'
-      'ctx-rh-G_frontal_superior'
-      'ctx-rh-G_frontomarginal'
-      'ctx-rh-G_insular_long'
-      'ctx-rh-G_insular_short'
-      'ctx-rh-G_and_S_occipital_inferior'
-      'ctx-rh-G_occipital_middle'
-      'ctx-rh-G_occipital_superior'
-      'ctx-rh-G_occipit-temp_lat-Or_fusiform'
-      'ctx-rh-G_occipit-temp_med-Lingual_part'
-      'ctx-rh-G_occipit-temp_med-Parahippocampal_part'
-      'ctx-rh-G_orbital'
-      'ctx-rh-G_paracentral'
-      'ctx-rh-G_parietal_inferior-Angular_part'
-      'ctx-rh-G_parietal_inferior-Supramarginal_part'
-      'ctx-rh-G_parietal_superior'
-      'ctx-rh-G_postcentral'
-      'ctx-rh-G_precentral'
-      'ctx-rh-G_precuneus'
-      'ctx-rh-G_rectus'
-      'ctx-rh-G_subcallosal'
-      'ctx-rh-G_subcentral'
-      'ctx-rh-G_temporal_inferior'
-      'ctx-rh-G_temporal_middle'
-      'ctx-rh-G_temp_sup-G_temp_transv_and_interm_S'
-      'ctx-rh-G_temp_sup-Lateral_aspect'
-      'ctx-rh-G_temp_sup-Planum_polare'
-      'ctx-rh-G_temp_sup-Planum_tempolare'
-      'ctx-rh-G_and_S_transverse_frontopolar'
-      'ctx-rh-Lat_Fissure-ant_sgt-ramus_horizontal'
-      'ctx-rh-Lat_Fissure-ant_sgt-ramus_vertical'
-      'ctx-rh-Lat_Fissure-post_sgt'
-      'ctx-rh-Medial_wall'
-      'ctx-rh-Pole_occipital'
-      'ctx-rh-Pole_temporal'
-      'ctx-rh-S_calcarine'
-      'ctx-rh-S_central'
-      'ctx-rh-S_central_insula'
-      'ctx-rh-S_cingulate-Main_part_and_Intracingulate'
-      'ctx-rh-S_cingulate-Marginalis_part'
-      'ctx-rh-S_circular_insula_anterior'
-      'ctx-rh-S_circular_insula_inferior'
-      'ctx-rh-S_circular_insula_superior'
-      'ctx-rh-S_collateral_transverse_ant'
-      'ctx-rh-S_collateral_transverse_post'
-      'ctx-rh-S_frontal_inferior'
-      'ctx-rh-S_frontal_middle'
-      'ctx-rh-S_frontal_superior'
-      'ctx-rh-S_frontomarginal'
-      'ctx-rh-S_intermedius_primus-Jensen'
-      'ctx-rh-S_intraparietal-and_Parietal_transverse'
-      'ctx-rh-S_occipital_anterior'
-      'ctx-rh-S_occipital_middle_and_Lunatus'
-      'ctx-rh-S_occipital_superior_and_transversalis'
-      'ctx-rh-S_occipito-temporal_lateral'
-      'ctx-rh-S_occipito-temporal_medial_and_S_Lingual'
-      'ctx-rh-S_orbital-H_shapped'
-      'ctx-rh-S_orbital_lateral'
-      'ctx-rh-S_orbital_medial-Or_olfactory'
-      'ctx-rh-S_paracentral'
-      'ctx-rh-S_parieto_occipital'
-      'ctx-rh-S_pericallosal'
-      'ctx-rh-S_postcentral'
-      'ctx-rh-S_precentral-Inferior-part'
-      'ctx-rh-S_precentral-Superior-part'
-      'ctx-rh-S_subcentral_ant'
-      'ctx-rh-S_subcentral_post'
-      'ctx-rh-S_suborbital'
-      'ctx-rh-S_subparietal'
-      'ctx-rh-S_supracingulate'
-      'ctx-rh-S_temporal_inferior'
-      'ctx-rh-S_temporal_superior'
-      'ctx-rh-S_temporal_transverse'
-      'ctx-rh-G_cingulate-caudal_ACC'
-      'ctx-rh-G_cingulate-rostral_ACC'
-      'ctx-rh-G_cingulate-posterior'
-      'ctx-rh-S_cingulate-caudal_ACC'
-      'ctx-rh-S_cingulate-rostral_ACC'
-      'ctx-rh-S_cingulate-posterior'
-      'ctx-rh-S_pericallosal-caudal'
-      'ctx-rh-S_pericallosal-rostral'
-      'ctx-rh-S_pericallosal-posterior'
-      'ctx_lh_Unknown'
-      'ctx_lh_G_and_S_frontomargin'
-      'ctx_lh_G_and_S_occipital_inf'
-      'ctx_lh_G_and_S_paracentral'
-      'ctx_lh_G_and_S_subcentral'
-      'ctx_lh_G_and_S_transv_frontopol'
-      'ctx_lh_G_and_S_cingul-Ant'
-      'ctx_lh_G_and_S_cingul-Mid-Ant'
-      'ctx_lh_G_and_S_cingul-Mid-Post'
-      'ctx_lh_G_cingul-Post-dorsal'
-      'ctx_lh_G_cingul-Post-ventral'
-      'ctx_lh_G_cuneus'
-      'ctx_lh_G_front_inf-Opercular'
-      'ctx_lh_G_front_inf-Orbital'
-      'ctx_lh_G_front_inf-Triangul'
-      'ctx_lh_G_front_middle'
-      'ctx_lh_G_front_sup'
-      'ctx_lh_G_Ins_lg_and_S_cent_ins'
-      'ctx_lh_G_insular_short'
-      'ctx_lh_G_occipital_middle'
-      'ctx_lh_G_occipital_sup'
-      'ctx_lh_G_oc-temp_lat-fusifor'
-      'ctx_lh_G_oc-temp_med-Lingual'
-      'ctx_lh_G_oc-temp_med-Parahip'
-      'ctx_lh_G_orbital'
-      'ctx_lh_G_pariet_inf-Angular'
-      'ctx_lh_G_pariet_inf-Supramar'
-      'ctx_lh_G_parietal_sup'
-      'ctx_lh_G_postcentral'
-      'ctx_lh_G_precentral'
-      'ctx_lh_G_precuneus'
-      'ctx_lh_G_rectus'
-      'ctx_lh_G_subcallosal'
-      'ctx_lh_G_temp_sup-G_T_transv'
-      'ctx_lh_G_temp_sup-Lateral'
-      'ctx_lh_G_temp_sup-Plan_polar'
-      'ctx_lh_G_temp_sup-Plan_tempo'
-      'ctx_lh_G_temporal_inf'
-      'ctx_lh_G_temporal_middle'
-      'ctx_lh_Lat_Fis-ant-Horizont'
-      'ctx_lh_Lat_Fis-ant-Vertical'
-      'ctx_lh_Lat_Fis-post'
-      'ctx_lh_Medial_wall'
-      'ctx_lh_Pole_occipital'
-      'ctx_lh_Pole_temporal'
-      'ctx_lh_S_calcarine'
-      'ctx_lh_S_central'
-      'ctx_lh_S_cingul-Marginalis'
-      'ctx_lh_S_circular_insula_ant'
-      'ctx_lh_S_circular_insula_inf'
-      'ctx_lh_S_circular_insula_sup'
-      'ctx_lh_S_collat_transv_ant'
-      'ctx_lh_S_collat_transv_post'
-      'ctx_lh_S_front_inf'
-      'ctx_lh_S_front_middle'
-      'ctx_lh_S_front_sup'
-      'ctx_lh_S_interm_prim-Jensen'
-      'ctx_lh_S_intrapariet_and_P_trans'
-      'ctx_lh_S_oc_middle_and_Lunatus'
-      'ctx_lh_S_oc_sup_and_transversal'
-      'ctx_lh_S_occipital_ant'
-      'ctx_lh_S_oc-temp_lat'
-      'ctx_lh_S_oc-temp_med_and_Lingual'
-      'ctx_lh_S_orbital_lateral'
-      'ctx_lh_S_orbital_med-olfact'
-      'ctx_lh_S_orbital-H_Shaped'
-      'ctx_lh_S_parieto_occipital'
-      'ctx_lh_S_pericallosal'
-      'ctx_lh_S_postcentral'
-      'ctx_lh_S_precentral-inf-part'
-      'ctx_lh_S_precentral-sup-part'
-      'ctx_lh_S_suborbital'
-      'ctx_lh_S_subparietal'
-      'ctx_lh_S_temporal_inf'
-      'ctx_lh_S_temporal_sup'
-      'ctx_lh_S_temporal_transverse'
-      'ctx_rh_Unknown'
-      'ctx_rh_G_and_S_frontomargin'
-      'ctx_rh_G_and_S_occipital_inf'
-      'ctx_rh_G_and_S_paracentral'
-      'ctx_rh_G_and_S_subcentral'
-      'ctx_rh_G_and_S_transv_frontopol'
-      'ctx_rh_G_and_S_cingul-Ant'
-      'ctx_rh_G_and_S_cingul-Mid-Ant'
-      'ctx_rh_G_and_S_cingul-Mid-Post'
-      'ctx_rh_G_cingul-Post-dorsal'
-      'ctx_rh_G_cingul-Post-ventral'
-      'ctx_rh_G_cuneus'
-      'ctx_rh_G_front_inf-Opercular'
-      'ctx_rh_G_front_inf-Orbital'
-      'ctx_rh_G_front_inf-Triangul'
-      'ctx_rh_G_front_middle'
-      'ctx_rh_G_front_sup'
-      'ctx_rh_G_Ins_lg_and_S_cent_ins'
-      'ctx_rh_G_insular_short'
-      'ctx_rh_G_occipital_middle'
-      'ctx_rh_G_occipital_sup'
-      'ctx_rh_G_oc-temp_lat-fusifor'
-      'ctx_rh_G_oc-temp_med-Lingual'
-      'ctx_rh_G_oc-temp_med-Parahip'
-      'ctx_rh_G_orbital'
-      'ctx_rh_G_pariet_inf-Angular'
-      'ctx_rh_G_pariet_inf-Supramar'
-      'ctx_rh_G_parietal_sup'
-      'ctx_rh_G_postcentral'
-      'ctx_rh_G_precentral'
-      'ctx_rh_G_precuneus'
-      'ctx_rh_G_rectus'
-      'ctx_rh_G_subcallosal'
-      'ctx_rh_G_temp_sup-G_T_transv'
-      'ctx_rh_G_temp_sup-Lateral'
-      'ctx_rh_G_temp_sup-Plan_polar'
-      'ctx_rh_G_temp_sup-Plan_tempo'
-      'ctx_rh_G_temporal_inf'
-      'ctx_rh_G_temporal_middle'
-      'ctx_rh_Lat_Fis-ant-Horizont'
-      'ctx_rh_Lat_Fis-ant-Vertical'
-      'ctx_rh_Lat_Fis-post'
-      'ctx_rh_Medial_wall'
-      'ctx_rh_Pole_occipital'
-      'ctx_rh_Pole_temporal'
-      'ctx_rh_S_calcarine'
-      'ctx_rh_S_central'
-      'ctx_rh_S_cingul-Marginalis'
-      'ctx_rh_S_circular_insula_ant'
-      'ctx_rh_S_circular_insula_inf'
-      'ctx_rh_S_circular_insula_sup'
-      'ctx_rh_S_collat_transv_ant'
-      'ctx_rh_S_collat_transv_post'
-      'ctx_rh_S_front_inf'
-      'ctx_rh_S_front_middle'
-      'ctx_rh_S_front_sup'
-      'ctx_rh_S_interm_prim-Jensen'
-      'ctx_rh_S_intrapariet_and_P_trans'
-      'ctx_rh_S_oc_middle_and_Lunatus'
-      'ctx_rh_S_oc_sup_and_transversal'
-      'ctx_rh_S_occipital_ant'
-      'ctx_rh_S_oc-temp_lat'
-      'ctx_rh_S_oc-temp_med_and_Lingual'
-      'ctx_rh_S_orbital_lateral'
-      'ctx_rh_S_orbital_med-olfact'
-      'ctx_rh_S_orbital-H_Shaped'
-      'ctx_rh_S_parieto_occipital'
-      'ctx_rh_S_pericallosal'
-      'ctx_rh_S_postcentral'
-      'ctx_rh_S_precentral-inf-part'
-      'ctx_rh_S_precentral-sup-part'
-      'ctx_rh_S_suborbital'
-      'ctx_rh_S_subparietal'
-      'ctx_rh_S_temporal_inf'
-      'ctx_rh_S_temporal_sup'
-      'ctx_rh_S_temporal_transverse'};
-    
-    % read in the volume
-    atlas = ft_read_mri(filename);
-    dat   = atlas.anatomy;
-    atlas = rmfield(atlas, 'anatomy');
-    
-    % get the unique values to save time later on
-    uval = unique(dat(:));
-    sel  = find(ismember(value, uval));
-    fprintf('subselecting %d labels from the total list of %d\n', numel(sel), numel(label));
-    value = value(sel);
-    label = label(sel);
-    
-    % remap the values in the data
-    aparc = zeros(size(dat));
-    cnt   = 0;
-    for k = 1:numel(value)
-      sel = dat==value(k);
-      if sum(sel(:))
-        cnt = cnt+1;
-        fprintf('re-indexing label %s to a value of %d (was %d)\n', label{k}, cnt, value(k));
-        aparc(sel)      = cnt;
-        aparclabel{cnt,1} = label{k};
+    tmp     = ft_read_mri(filename);
+    if isfield(tmp, 'coordsys') && ~strcmp(tmp.coordsys, 'unknown')
+      coordsys = tmp.coordsys;
+    elseif isfield(tmp.hdr, 'TEMPLATE_SPACE') && ~isempty(tmp.hdr.TEMPLATE_SPACE)
+      coordsys = lower(tmp.hdr.TEMPLATE_SPACE); % FIXME this is based on AFNI conventions, not easily decodable by FT
+    else
+      coordsys = 'tal'; % FIXME could be different in other atlases
+    end
+
+    if isfield(tmp.hdr, 'ATLAS_LABEL_TABLE') && ~isempty(tmp.hdr.ATLAS_LABEL_TABLE)
+      if isfield(tmp.hdr.ATLAS_LABEL_TABLE(1), 'sb_label') && ~all(tmp.anatomy(:)==round(tmp.anatomy(:)))
+        % probabilistic atlas
+        isprobabilistic = true;
+      else
+        % indexed atlas
+        isprobabilistic = false;
       end
+      labels  = {tmp.hdr.ATLAS_LABEL_TABLE.struct}';
+      values  = [tmp.hdr.ATLAS_LABEL_TABLE.val]';
+      
+    elseif contains(filename, 'TTatlas+tlrc')
+      isprobabilistic = false;
+      
+      [labels, values] = TTatlas_labels;
+      
+    else
+      ft_error('no information about the atlas labels is available');
     end
-    atlas.aparc      = aparc;
-    atlas.aparclabel = aparclabel;
     
-  case {'freesurfer_a2009s' 'freesurfer_aparc' 'freesurfer_ba'}
-    % ensure freesurfer on the path and get the info how to get from value to label
-    ft_hastoolbox('freesurfer', 1);
+    atlas     = [];
+    atlas.dim = tmp.dim(1:3);
+    atlas.transform = tmp.transform;
+    atlas.hdr = tmp.hdr;
+    atlas.coordsys = coordsys;
     
-    if strcmp(fileformat, 'freesurfer_a2009s')
+    nbrick  = size(tmp.anatomy,4);
+    for k = 1:nbrick
+      
+      if ~isprobabilistic
+        brickname = sprintf('brick%d',k-1);
+        brick     = tmp.anatomy(:,:,:,k);
+        ulabel    = setdiff(unique(brick(:)), 0);
+        label     = cell(size(ulabel));
+        nlabel    = numel(label);
+        
+        % renumber the brick from 1:N and keep track of the label
+        newbrick  = zeros(size(brick));
+        for i = 1:nlabel
+          sel = find(values==ulabel(i));
+          if ~isempty(sel)
+            label(i) = labels(sel);
+            newbrick(brick==ulabel(i)) = i;
+          else
+            ft_warning('the value %d does not have a label according to the ATLAS_LABEL_TABLE and will be discarded', ulabel(i));
+          end
+        end
+        atlas.(brickname) = newbrick;
+        atlas.([brickname 'label']) = label;
+      else
+        atlas.(labels{k}) = tmp.anatomy(:,:,:,values(k)+1); % indexing is 0-based in this case
+      end
+        
+    end
+
+  case {'freesurfer_surface'}
+    
+    if contains(filename, 'a2009s')
       parcelfield = 'a2009s';
-    elseif strcmp(fileformat, 'freesurfer_aparc')
+    elseif contains(filename, 'aparc')
       parcelfield = 'aparc';
-    elseif strcmp(fileformat, 'freesurfer_ba')
+    elseif contains(filename, 'ba')
       parcelfield = 'BA';
     else
-      ft_error('unknown freesurfer parcellation method requested');
-      %[index, label, rgb] = read_fscolorlut(lookuptable);
-      %label = cellstr(label);
-      %rgb = rand(length(label),3);
+      ft_error('unknown freesurfer parcellation type requested');
     end
-    %rgb = rgb(:,1) + rgb(:,2)*256 + rgb(:,3)*256*256;
     
     % read the labels
-    switch ft_filetype(filename)
-      %case 'caret_label'
-      %  p = gifti(filename);
-      %  p = p.cdata;
-      case 'freesurfer_annot'
-        [v, p, c] = read_annotation(filename);
-        
-        label = c.struct_names;
-        rgba  = c.table(:,1:4);
-        rgb   = c.table(:,5); % compound value that is used for the indexing in vector p
-        index = ((1:c.numEntries)-1)';
-      otherwise
-        ft_error('unsupported fileformat for parcel file');
-    end
+    [v, p, c] = read_annotation(filename);
+
+    label = c.struct_names;
+    rgba  = c.table(:,1:4);
+    rgb   = c.table(:,5); % compound value that is used for the indexing in vector p
+    index = ((1:c.numEntries)-1)';
     
     switch ft_filetype(filenamemesh)
-      %case {'caret_surf' 'gifti'}
-      %  tmp = gifti(filenamemesh);
-      %  bnd.pos = ft_warp_apply(tmp.mat, tmp.vertices);
-      %  bnd.tri = tmp.faces;
-      %  reindex = false;
       case 'freesurfer_triangle_binary'
         [pos, tri] = read_surf(filenamemesh);
         
@@ -1830,7 +468,7 @@ switch fileformat
       end
     else
       uniquep = unique(p);
-      if uniquep(1)<0,
+      if uniquep(1)<0
         p(p<0) = 0;
       end
       newp   = p;
@@ -1844,7 +482,7 @@ switch fileformat
     atlas       = ft_determine_units(atlas);
     
   case 'caret_label'
-    ft_hastoolbox('gifti', 1);
+    
     g = gifti(filename);
     
     rgba = [];
@@ -1924,15 +562,13 @@ switch fileformat
     end
     
   case 'spm_anatomy'
-    ft_hastoolbox('spm8up', 1);
     
     % load the map, this is assumed to be the struct-array MAP
     load(filename);
     [p,f,e]      = fileparts(filename);
     mrifilename  = fullfile(p,[strrep(f, '_MPM',''),'.img']);
-    atlas        = ft_read_mri(mrifilename, 'dataformat', 'analyze_img');
-    tissue       = round(atlas.anatomy); % I don't know why the values are non-integer
-    atlas        = rmfield(atlas, 'anatomy');
+    atlas        = ft_read_mri(mrifilename, 'dataformat', 'analyze_img', 'outputfield', 'tissue');
+    tissue       = round(atlas.tissue); % I don't know why the values are non-integer
     label        = {MAP.name}';
     idx          = [MAP.GV]';
     
@@ -1978,9 +614,7 @@ switch fileformat
     % this uses the thresholded image
     switch map
       case 'maxprob'
-        atlas        = ft_read_mri(fullfile(p, mrifilename));
-        atlas.tissue = atlas.anatomy;
-        atlas        = rmfield(atlas, 'anatomy');
+        atlas        = ft_read_mri(fullfile(p, mrifilename), 'outputfield', 'tissue');
         atlas.tissuelabel = hdr.data.label(:);
         atlas.coordsys    = 'mni';
       case 'prob'
@@ -1998,7 +632,7 @@ switch fileformat
             % single precision, do single precision to save memory
             atlas.(fn) = single(atlas.(fn));
           end
-          if any(atlas.(fn)(:)>1) & all(atlas.(fn)(:)<=100)
+          if any(atlas.(fn)(:)>1) && all(atlas.(fn)(:)<=100)
             % convert to probability values, assuming 100 to be max
             atlas.(fn) = atlas.(fn)./100;
           end
@@ -2006,7 +640,6 @@ switch fileformat
         atlas.coordsys = 'mni';
         atlas.dim      = atlas.dim(1:3);
     end
-    
     
   case 'mat'
     tmp = load(filename);
@@ -2049,9 +682,9 @@ switch fileformat
     % the 7 network parcellation from https://surfer.nmr.mgh.harvard.edu/fswiki/CorticalParcellation_Yeo2011 
     % aligned to the colin27 template (skull-stripped version of single_subj_T1_1mm.nii) 
     % using AFNI's 3dQwarp and 3dNwarpApply
-    atlas = ft_read_mri(filename);
-    atlas.tissue = atlas.anatomy;
-    atlas = rmfield(atlas, 'anatomy');
+    atlas = ft_read_mri(filename, 'outputfield', 'tissue');
+    
+    atlas.coordsys    = 'mni';
     atlas.tissuelabel = {
       '7Networks_1'
       '7Networks_2'
@@ -2061,7 +694,7 @@ switch fileformat
       '7Networks_6'
       '7Networks_7'
       };
-    atlas.coordsys = 'mni';
+    
     colors = [
       120 18 134;
       70 130 180;
@@ -2074,12 +707,11 @@ switch fileformat
     
   case 'yeo17'
     % this uses Yeo2011_17Networks_MNI152_FreeSurferConformed1mm_LiberalMask_colin27.nii, which is
-    % the 17 network parcelation from https://surfer.nmr.mgh.harvard.edu/fswiki/CorticalParcellation_Yeo2011 
-    % aligned to the colin27 template (skull-stripped version of single_subj_T1_1mm.nii) 
-    % using AFNI's 3dQwarp and 3dNwarpApply
-    atlas = ft_read_mri(filename);
-    atlas.tissue = atlas.anatomy;
-    atlas = rmfield(atlas, 'anatomy');
+    % the 17 network parcellation from https://surfer.nmr.mgh.harvard.edu/fswiki/CorticalParcellation_Yeo2011 
+    % aligned to the colin27 template (skull-stripped version of single_subj_T1_1mm.nii) using AFNI's 3dQwarp and 3dNwarpApply
+    atlas = ft_read_mri(filename, 'outputfield', 'tissue');
+    
+    atlas.coordsys    = 'mni';
     atlas.tissuelabel = {
       '17Networks_1'
       '17Networks_2'
@@ -2099,7 +731,6 @@ switch fileformat
       '17Networks_16'
       '17Networks_17'
       };
-    atlas.coordsys = 'mni';
     colors = [
       120 18 134;
       255 0 0;
@@ -2125,7 +756,6 @@ switch fileformat
     
 end % switch fileformat
 
-
 if ~isempty(unit)
   % ensure the atlas is in the desired units
   atlas = ft_convert_units(atlas, unit);
@@ -2137,3 +767,252 @@ else
     % ft_determine_units will fail for triangle-only gifties.
   end
 end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% TTatlas labels moved to a subfunction for readability of the above code
+function [labels, values] = TTatlas_labels
+
+% the following information is from https://sscc.nimh.nih.gov/afni/doc/misc/afni_ttatlas/index_html
+values = [
+  68
+  71
+  20
+  21
+  22
+  24
+  25
+  26
+  27
+  28
+  29
+  30
+  31
+  32
+  33
+  34
+  35
+  36
+  37
+  39
+  40
+  41
+  42
+  43
+  44
+  45
+  46
+  47
+  48
+  49
+  50
+  51
+  52
+  70
+  72
+  73
+  74
+  75
+  76
+  77
+  124
+  125
+  126
+  128
+  129
+  130
+  131
+  132
+  133
+  134
+  135
+  136
+  137
+  138
+  144
+  145
+  151
+  146
+  147
+  148
+  149
+  81
+  82
+  83
+  84
+  85
+  86
+  87
+  88
+  89
+  90
+  91
+  93
+  94
+  95
+  96
+  97
+  98
+  99
+  100
+  101
+  102
+  103
+  104
+  105
+  106
+  107
+  108
+  109
+  110
+  111
+  112
+  113
+  114
+  115
+  116
+  117
+  118
+  119
+  120
+  121
+  122
+  123
+  53
+  54
+  55
+  56
+  57
+  58
+  59
+  60
+  61
+  62
+  63
+  66
+  65
+  127
+  64
+  67
+  ];
+
+labels = {
+  'Hippocampus'
+  'Amygdala'
+  'Posterior Cingulate'
+  'Anterior Cingulate'
+  'Subcallosal Gyrus'
+  'Transverse Temporal Gyrus'
+  'Uncus'
+  'Rectal Gyrus'
+  'Fusiform Gyrus'
+  'Inferior Occipital Gyrus'
+  'Inferior Temporal Gyrus'
+  'Insula'
+  'Parahippocampal Gyrus'
+  'Lingual Gyrus'
+  'Middle Occipital Gyrus'
+  'Orbital Gyrus'
+  'Middle Temporal Gyrus'
+  'Superior Temporal Gyrus'
+  'Superior Occipital Gyrus'
+  'Inferior Frontal Gyrus'
+  'Cuneus'
+  'Angular Gyrus'
+  'Supramarginal Gyrus'
+  'Cingulate Gyrus'
+  'Inferior Parietal Lobule'
+  'Precuneus'
+  'Superior Parietal Lobule'
+  'Middle Frontal Gyrus'
+  'Paracentral Lobule'
+  'Postcentral Gyrus'
+  'Precentral Gyrus'
+  'Superior Frontal Gyrus'
+  'Medial Frontal Gyrus'
+  'Lentiform Nucleus'
+  'Hypothalamus'
+  'Red Nucleus'
+  'Substantia Nigra'
+  'Claustrum'
+  'Thalamus'
+  'Caudate'
+  'Caudate Tail'
+  'Caudate Body'
+  'Caudate Head'
+  'Ventral Anterior Nucleus'
+  'Ventral Posterior Medial Nucleus'
+  'Ventral Posterior Lateral Nucleus'
+  'Medial Dorsal Nucleus'
+  'Lateral Dorsal Nucleus'
+  'Pulvinar'
+  'Lateral Posterior Nucleus'
+  'Ventral Lateral Nucleus'
+  'Midline Nucleus'
+  'Anterior Nucleus'
+  'Mammillary Body'
+  'Medial Globus Pallidus'
+  'Lateral Globus Pallidus'
+  'Putamen'
+  'Nucleus Accumbens'
+  'Medial Geniculum Body'
+  'Lateral Geniculum Body'
+  'Subthalamic Nucleus'
+  'Brodmann area 1'
+  'Brodmann area 2'
+  'Brodmann area 3'
+  'Brodmann area 4'
+  'Brodmann area 5'
+  'Brodmann area 6'
+  'Brodmann area 7'
+  'Brodmann area 8'
+  'Brodmann area 9'
+  'Brodmann area 10'
+  'Brodmann area 11'
+  'Brodmann area 13'
+  'Brodmann area 17'
+  'Brodmann area 18'
+  'Brodmann area 19'
+  'Brodmann area 20'
+  'Brodmann area 21'
+  'Brodmann area 22'
+  'Brodmann area 23'
+  'Brodmann area 24'
+  'Brodmann area 25'
+  'Brodmann area 27'
+  'Brodmann area 28'
+  'Brodmann area 29'
+  'Brodmann area 30'
+  'Brodmann area 31'
+  'Brodmann area 32'
+  'Brodmann area 33'
+  'Brodmann area 34'
+  'Brodmann area 35'
+  'Brodmann area 36'
+  'Brodmann area 37'
+  'Brodmann area 38'
+  'Brodmann area 39'
+  'Brodmann area 40'
+  'Brodmann area 41'
+  'Brodmann area 42'
+  'Brodmann area 43'
+  'Brodmann area 44'
+  'Brodmann area 45'
+  'Brodmann area 46'
+  'Brodmann area 47'
+  'Uvula of Vermis'
+  'Pyramis of Vermis'
+  'Tuber of Vermis'
+  'Declive of Vermis'
+  'Culmen of Vermis'
+  'Cerebellar Tonsil'
+  'Inferior Semi-Lunar Lobule'
+  'Fastigium'
+  'Nodule'
+  'Uvula'
+  'Pyramis'
+  'Culmen'
+  'Declive'
+  'Dentate'
+  'Tuber'
+  'Cerebellar Lingual'
+  };

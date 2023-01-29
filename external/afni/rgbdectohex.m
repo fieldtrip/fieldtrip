@@ -1,49 +1,55 @@
-function [Cs] = rgbdectohex (Mrgb,strg)
+function [Cs, sall] = rgbdectohex (Mrgb,strg, prompt)
 %
 %  Mode 1:
-%        [Cs] = rgbdectohex (Mrgb,[string])
+%        [Cs, sall] = rgbdectohex (Mrgb,[string])
 %  Mode 2:
-%        rgbdectohex 
+%        rgbdectohex
+%  Mode 3:
+%       Mrgb = rgbdectohex (sall)
 %
 % Mode 1:
 %This function takes as an input the rgb matrix Mrgb (size is Nx3)
 % where each row represents the rgb gun values of a color.
 % gun values should be integers between 0 and 255
 %
-%the optional 'string' is placed before the #hex representation 
+%the optional 'string' is placed before the #hex representation
 %in a way VERY suitable for afni's .Xdefaults file stuff ...
 %
 % remember the magic command : xrdb -merge <colors filename>
-% 
+%
 % the function cyclmat helps you fix your color maps, check it out...
 %
 %The hex values are all padded to two characters, looks nice.
 %
-% The function first displays the map, then  gives you the option of 
+% The function first displays the map, then  gives you the option of
 %   writing out the results:
-%     to an ascii file that can be (if you specified the right strg parameter) used 
+%     to an ascii file that can be (if you specified the right strg parameter) used
 %        directly in .Xdefaults
 %     to an ascii file that contains RGB values
 %     to an ascii file containing the definition of the colormap in a C-
 %        syntax that can be added to pbar.c and added with PBAR_define_bigmap( char *mapcmd );
-% 
-%the result is written to stdout in a format used 
+%
+%the result is written to stdout in a format used
 %by .Xdefault files, to make importing them to
 %.Xdefaults easy, just cut and paste.
 %
 %example: >> load hues_rygbr20 (this file is an ascii list of 3 integers per line specifying rgb colours)
 %         >> Mcyc = cyclmat (hues_rygbr20,-1,13); (changes the order of the loaded color file..)
 %         >> rgbdectohex (Mcyc,'AFNI*ovdef'); this displays the colour map, and asks if you want the results written out to a file
-%         
+%
 % If you sqaved the results to a file called junkmap
 % from command line do : xrdb -merge junkmap and the colormap is set for afni to read.
 %
 % If you use the return parameters [Cs, sall] then you'll get a command structure vector
 %  that tells AFNI (TellAfni(Cs)) to load the newly created colorscale and switch to it.
-%  The colorscale is named string if one is supplied.  
+%  The colorscale is named string if one is supplied.
 %
 % Mode 2:
 % Interactive mode for showing RGB colors. Enter RGB values to see color.
+%
+%
+% Mode 3:
+% Inverse of mode 1
 %
 % see also MakeColorMap, TellAfni, ROIcmap
 %
@@ -66,6 +72,22 @@ if (nargin == 0),
       ShowRGBcol(Mrgb);
       fprintf(1,'        Color: %s\n', RGBtoXhex(Mrgb, 0, ''));
    end
+end
+
+if (ischar(Mrgb)),
+   %mode 3
+   %skip to 1st #
+   i1 = find (Mrgb=='#')
+   if (length(i1)==0), Cs = []; return; end
+   Mrgb = Mrgb(i1(1):length(Mrgb));
+   [ss, Mrgb]  = strtok(Mrgb,'#');
+   Mhex = [];
+   while (~isempty(ss)),
+      Mhex = [Mhex; XhextoRGB(ss)];
+      [ss, Mrgb]  = strtok(Mrgb,'#');
+   end
+   Cs = Mhex;
+   return;
 end
 
 if (size (Mrgb,2) ~= 3)
@@ -164,8 +186,8 @@ if (nargout),
       s1 = pad_strn (lower(dec2hex(Mrgb(i,1))),'0',2,1);
 		s2 = pad_strn (lower(dec2hex(Mrgb(i,2))),'0',2,1);
 		s3 = pad_strn (lower(dec2hex(Mrgb(i,3))),'0',2,1);
-      
-      sall = sprintf('%s#%s%s%s ',sall, s1,s2,s3); 
+
+      sall = sprintf('%s#%s%s%s ',sall, s1,s2,s3);
    end
    if (son == 0), strg = 'rgbdectohex'; end
    Cs = NewCs('DEFINE_COLORSCALE', '', strg, sall);
@@ -198,4 +220,13 @@ function sret = RGBtoXhex(rgb, son, strg),
 		else
 			sret = sprintf ('#%s%s%s',s1,s2,s3);
 		end
+return;
+
+function rgb = XhextoRGB(shex),
+      shex = zdeblankall(shex);
+      nc = length(shex);
+      strim = shex(nc-5:nc)
+      rgb(3) = hex2dec(strim(5:6));
+      rgb(2) = hex2dec(strim(3:4));
+      rgb(1) = hex2dec(strim(1:2));
 return;

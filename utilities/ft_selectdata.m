@@ -33,25 +33,30 @@ function [varargout] = ft_selectdata(cfg, varargin)
 %   cfg.avgoverfreq = string, can be 'yes' or 'no' (default = 'no')
 %   cfg.nanmean     = string, can be 'yes' or 'no' (default = 'no')
 %
-% If multiple input arguments are provided, FT_SELECTDATA will adjust the individual inputs
-% such that either the intersection across inputs is retained (i.e. only the channel, time,
-% and frequency points that are shared across all input arguments), or that the union across
-% inputs is retained (replacing missing data with nans). In either case, the order (e.g. of
-% the channels) is made consistent across inputs.  The behavior can be specified with
+% When you average over a dimension, you can choose whether to keep that dimension in
+% the data representation or remove it alltogether.
+%   cfg.keeprptdim     = 'yes' or 'no' (default is automatic)
+%   cfg.keepchandim    = 'yes' or 'no' (default = 'yes')
+%   cfg.keepchancmbdim = 'yes' or 'no' (default = 'yes')
+%   cfg.keeptimedim    = 'yes' or 'no' (default = 'yes')
+%   cfg.keepfreqdim    = 'yes' or 'no' (default = 'yes')
+%
+% If multiple input arguments are provided, FT_SELECTDATA will adjust the individual
+% inputs such that either the INTERSECTION across inputs is retained (i.e. only the
+% channel, time, and frequency points that are shared across all input arguments), or
+% that the UNION across inputs is retained (replacing missing data with nans). In
+% either case, the order of the channels is made consistent across inputs. The
+% behavior can be specified with
 %   cfg.select      = string, can be 'intersect' or 'union' (default = 'intersect')
+% For raw data structures you cannot make the union.
 %
 % See also FT_DATATYPE, FT_CHANNELSELECTION, FT_CHANNELCOMBINATION
 
 % Undocumented options
-%   cfg.keeprptdim     = 'yes' or 'no'
-%   cfg.keepposdim     = 'yes' or 'no'
-%   cfg.keepchandim    = 'yes' or 'no'
-%   cfg.keepchancmbdim = 'yes' or 'no'
-%   cfg.keepfreqdim    = 'yes' or 'no'
-%   cfg.keeptimedim    = 'yes' or 'no'
 %   cfg.avgoverpos
+%   cfg.keepposdim     = 'yes' or 'no' (default = 'yes')
 
-% Copyright (C) 2012-2014, Robert Oostenveld & Jan-Mathijs Schoffelen
+% Copyright (C) 2012-2022, Robert Oostenveld & Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -79,7 +84,7 @@ ft_nargout  = nargout;
 ft_defaults
 ft_preamble init
 ft_preamble debug
-ft_preamble trackconfig
+
 ft_preamble loadvar varargin
 ft_preamble provenance varargin
 
@@ -110,6 +115,9 @@ cfg = ft_checkconfig(cfg, 'renamedval', {'parameter', 'trial.nai', 'nai'});
 
 cfg.tolerance = ft_getopt(cfg, 'tolerance', 1e-5);        % default tolerance for checking equality of time/freq axes
 cfg.select    = ft_getopt(cfg, 'select',   'intersect');  % default is to take intersection, alternative 'union'
+if isequal(dtype, 'raw') && isequal(cfg.select, 'union')
+  ft_error('using cfg.select=''union'' in combination with ''raw'' datatype is not supported');
+end
 
 if strcmp(dtype, 'volume') || strcmp(dtype, 'segmentation')
   % it must be a source representation, not a volume representation
@@ -447,7 +455,7 @@ end
 varargout = varargin;
 
 ft_postamble debug
-ft_postamble trackconfig
+
 ft_postamble previous varargin
 ft_postamble provenance varargout
 ft_postamble history varargout
@@ -757,26 +765,39 @@ else
   
   switch selmode
     case 'intersect'
+      haslabel = false(ndata,1);
       for k=1:ndata
-        if ~isfield(varargin{k}, 'label')
-          cfg.channelcmb = ft_channelcombination(cfg.channelcmb, unique(varargin{k}.labelcmb(:)));
-        else
+        haslabel = isfield(varargin{k}, 'label');
+      end
+      if all(haslabel)
+        for k=1:ndata
           cfg.channelcmb = ft_channelcombination(cfg.channelcmb, varargin{k}.label);
         end
-      end
-      
-      ncfgcmb = size(cfg.channelcmb,1);
-      cfgcmb  = cell(ncfgcmb, 1);
-      for i=1:ncfgcmb
-        cfgcmb{i} = sprintf('%s&%s', cfg.channelcmb{i,1}, cfg.channelcmb{i,2});
+        cfgcmb = cellfun(@sprintf,repmat({'%s_%s'},size(cfg.channelcmb,1),1),cfg.channelcmb(:,1),cfg.channelcmb(:,2),'UniformOutput',false);
+      elseif all(~haslabel)
+        % the data already has labelcmb, and thus needs a slightly different way to
+        % preset the cfg.channelcmb
+        chancmb = cellfun(@sprintf,repmat({'%s_%s'},size(varargin{1}.labelcmb,1),1),varargin{1}.labelcmb(:,1),varargin{1}.labelcmb(:,2),'UniformOutput',false);
+        for k=2:ndata
+          tmp = cellfun(@sprintf,repmat({'%s_%s'},size(varargin{k}.labelcmb,1),1),varargin{k}.labelcmb(:,1),varargin{k}.labelcmb(:,2),'UniformOutput',false);
+          chancmb = intersect(chancmb, tmp);
+        end
+        cfgcmb = unique(chancmb);
+        
+        if isequal(cfg.channelcmb, {'all' 'all'})
+          % nothing needed here
+        else
+          cfg.channelcmb = cellfun(@sprintf,repmat({'%s_%s'},size(cfg.channelcmb,1),1),cfg.channelcmb(:,1),cfg.channelcmb(:,2),'UniformOutput',false);
+        
+          cfgcmb = intersect(cfg.channelcmb, cfgcmb);
+        end
+        
+      else
+        ft_error('a combination of data with and without label field is not possible');
       end
       
       for k=1:ndata
-        ndatcmb = size(varargin{k}.labelcmb,1);
-        datcmb = cell(ndatcmb, 1);
-        for i=1:ndatcmb
-          datcmb{i} = sprintf('%s&%s', varargin{k}.labelcmb{i,1}, varargin{k}.labelcmb{i,2});
-        end
+        datcmb = cellfun(@sprintf,repmat({'%s_%s'},size(varargin{k}.labelcmb,1),1),varargin{k}.labelcmb(:,1),varargin{k}.labelcmb(:,2),'UniformOutput',false);
         
         % return the order according to the (joint) configuration, not according to the (individual) data
         % FIXME this should adhere to the general code guidelines, where
@@ -917,10 +938,10 @@ for k = 1:numel(alltimecell)
   indx(ix,k) = iy;
 end
 
-if iscell(varargin{1}.time) && ischar(cfg.latency)&& ~strcmp(cfg.latency, 'minperiod')
+if iscell(varargin{1}.time) && ~isequal(cfg.latency, 'minperiod')
   % if the input data arguments are of type 'raw', temporarily set the
   % selmode to union, otherwise the potentially different length trials
-  % will be truncated to the shorted epoch, prior to latency selection.
+  % will be truncated to the shortest epoch, prior to latency selection.
   selmode = 'union';
 elseif ischar(cfg.latency) && strcmp(cfg.latency, 'minperiod')
   % enforce intersect

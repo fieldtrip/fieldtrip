@@ -3,26 +3,26 @@
 %
 %
 %Purpose:
-%   
+%
 %   A script to demonstrate the use of the matlab AFNI driver tools (TellAfni).
 %   Make sure no current AFNI session is running with the -yesplugouts option.
 %
-%   The script is not fancy and some steps might go by too quickly but it should 
+%   The script is not fancy and some steps might go by too quickly but it should
 %   be a simple read to figure it all out.
 %
 %Input:
-%   
+%
 %   Needs the datasets distributed with AFNI's matlab library
-%   http://afni.nimh.nih.gov/pub/dist/data/afni_matlab_data.tgz
-%   
+%   https://afni.nimh.nih.gov/pub/dist/data/afni_matlab_data.tgz
+%
 %Output:
 %
-%  Follow instructions, watch AFNI 
-%   
-%   
-%      
+%  Follow instructions, watch AFNI
+%
+%
+%
 %More Info :
-%   
+%
 %    TellAfni
 %    TellAfni_Commands
 %    NewCs
@@ -70,7 +70,7 @@ cs(i) = NewCs('open_window', '', 'axialimage', 'keypress=" "'); i = i+1; % stop 
 cs(i) = NewCs('OPEN_PANEL', '', 'Define_Overlay'); i = i+1;
 cs(i) = NewCs('Set_Function', 'A', 'ARzs_CW_avvr.DEL'); i = i + 1;
 cs(i) = NewCs('See_Overlay', '', '+'); i = i + 1;
-cs(i) = NewCs('SET_DICOM_XYZ', '', '-6 86 -3'); i = i+1; 
+cs(i) = NewCs('SET_DICOM_XYZ', '', '-6 86 -3'); i = i+1;
 cs(i) = NewCs('SET_PBAR_SIGN', '' ,'+'); i = i + 1;
 cs(i) = NewCs('SET_PBAR_NUMBER', '' ,'20'); i = i + 1;
 cs(i) = NewCs('SET_SUBBRICKS', '', '-1 0 2'); i = i + 1;
@@ -93,10 +93,10 @@ if (err),
    fprintf(2,'Error: Failed telling AFNI.\n');
    return;
 end
- 
+
 fprintf(1,'Sleeping for a few seconds...\n'); pause(4);
 i = 1;
-cs(i) = NewCs('open_window', 'A', 'coronalimage', 'geom=500x500+550+750'); i = i+1; 
+cs(i) = NewCs('open_window', 'A', 'coronalimage', 'geom=500x500+550+750'); i = i+1;
 cs(i) = NewCs('open_window', '', 'axialimage', 'mont=1x1'); i = i+1;
 err = TellAfni(cs); clear cs
 if (err),
@@ -110,7 +110,7 @@ for (k=1:1:20),
    cs(i) = NewCs('PBAR_ROTATE', '', '+'); i = i+1;
    fnm = sprintf('Rot_%s.jpg',pad_strn(sprintf('%d',k), '0', 2, 1));
    unix(sprintf('rm %s', fnm));
-   cs(i) = NewCs('SAVE_JPEG', '', 'coronalimage', fnm); 
+   cs(i) = NewCs('SAVE_JPEG', '', 'coronalimage', fnm);
 end
 err = TellAfni(cs); clear cs
 if (err),
@@ -126,7 +126,7 @@ end
 figure(1); clf;
 for (i=1:1:200),
    imshow(ts(rem(i,20)+1).im); drawnow
-end   
+end
 
 
 input ('All done, hit "enter" to quit\n','s');

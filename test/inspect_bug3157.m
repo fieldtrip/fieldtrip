@@ -4,7 +4,6 @@ function inspect_bug3157
 % MEM 1gb
 % DEPENDENCY
 
-
 %%
 ctf151      = ft_read_sens(dccnpath('/home/common/matlab/fieldtrip/data/test/original/meg/ctf151/Subject01.ds'));
 neuromag122 = ft_read_sens(dccnpath('/home/common/matlab/fieldtrip/data/test/original/meg/neuromag122/jg_single_01raw.fif'));

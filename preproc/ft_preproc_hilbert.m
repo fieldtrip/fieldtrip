@@ -9,8 +9,7 @@ function [dat] = ft_preproc_hilbert(dat, option, handlenan, padnan)
 %   [dat] = ft_preproc_hilbert(dat, option)
 % where
 %   dat        data matrix (Nchans X Ntime)
-%   option     string that determines whether and how the Hilbert transform
-%              should be post-processed, can be
+%   option     string that determines whether and how the Hilbert transform should be post-processed, can be
 %                'abs' (default)
 %                'complex'
 %                'real'
@@ -24,12 +23,10 @@ function [dat] = ft_preproc_hilbert(dat, option, handlenan, padnan)
 %
 % See also PREPROC
 
-% Undocumented, and insufficiently tested, options: handlenan and padnan
-% intend to make the function nan-aware, FIXME: needs to be tested more.
-%
+% Undocumented and insufficiently tested options:
 %   handlenan  boolean, can be false (default) or true
-%   padnan     scalar, number of samples to pad the edges of the NaN
-%              samples, to remove the ringing, (default = 0)
+%   padnan     scalar, number of samples to pad the edges of the NaN samples, to remove the ringing, (default = 0)
+% FIXME these need to be tested more
 
 % Copyright (C) 2008, Robert Oostenveld
 %

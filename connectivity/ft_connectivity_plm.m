@@ -1,26 +1,24 @@
-function [p] = ft_connectivity_plm(input, varargin)
+function [p] = ft_connectivity_plm(inputdata, varargin)
 
-% FT_CONNECTIVITY_PLM computes the phase linearity measurement from a cell
-% array of time-domain data, where each cell is an epoch. This function implements
-% the metric described in Baselice et al. "Phase Linearity Measurement:
-% a novel index for brain functional connectivity", IEEE Transactions
-% on Medical Imaging, 2018. Please reference the paper in case of use.
+% FT_CONNECTIVITY_PLM computes the phase linearity measurement from a cell array of
+% time-domain data, where each cell is an epoch. This implements the metric described
+% in Baselice et al. "Phase Linearity Measurement: a novel index for brain functional
+% connectivity", IEEE Transactions on Medical Imaging, 2018.
 %
 % Use as
-%   [p] = ft_connectivity_plm(input, ...)
+%   [p] = ft_connectivity_plm(inputdata, ...)
 %
-% The input data input should be organized as a cell-array, one element for each epoch.
-% Each cell element should be a matrix of of nchan x nsamples values.
+% The input data input should be organized as a cell-array, one element for each
+% epoch/repetition. Each cell should be a matrix of of nchan x nsamples values.
 %
 % Additional optional input arguments come as key-value pairs:
-%   bandwidth	=	scalar, half-bandwidth parameter: the frequency range
-%			across which to integrate
-%   fsample     =       sampling frequency, needed to convert bandwidth to number of bins
+%   'bandwidth'	=	scalar, half-bandwidth parameter: the frequency range across which to integrate
+%   'fsample'   = sampling frequency, needed to convert bandwidth to number of bins
 %
-% The output p contains the phase linearity measurement in the [0, 1] interval.
-% The output p is organized as a 3D matrix of nepoch x nchan x  nchan dimensions.
+% The output p contains the phase linearity measurement in the [0, 1] interval. It is
+% organized as a 3D matrix of Nrpt x Nchan x Nchan dimensions.
 %
-% See also FT_CONNECTIVITYANALYSIS
+% See also CONNECTIVITY, FT_CONNECTIVITYANALYSIS
 
 % Copyright (C) 2018, Fabio Baselice, Pierpaolo Sorrentino, Jan-Mathijs Schoffelen
 %
@@ -49,7 +47,6 @@ function [p] = ft_connectivity_plm(input, varargin)
 %  - remove volume conduction component
 %  - integrate over bandwidth
 
-
 % NOTE BY JM: if the user inputs data with different length trials, the fft per trial is going
 % to have different frequency resolutions, which is not good. Better to throw an error in that
 % case.
@@ -63,18 +60,18 @@ if isempty(B)
   B=1;
 end
 
-nsmp = cellfun('size', input, 2);
+nsmp = cellfun('size', inputdata, 2);
 assert(all(nsmp==nsmp(1)), 'currently there is no support for input, where the trials are of different length');
 
-nrpt=numel(input);
-for k = 1:numel(input)
-  input{k} = hilbert(input{k}')';
+nrpt=numel(inputdata);
+for k = 1:numel(inputdata)
+  inputdata{k} = hilbert(inputdata{k}')';
 end
 % NOTE by JM: Is it expected that the data has been bandpassfiltered at
-% this point? How would this be checked? 
+% this point? How would this be checked?
 
-nchan=size(input{1},1);
-trial_length=size(input{1},2);
+nchan=size(inputdata{1},1);
+trial_length=size(inputdata{1},2);
 ph_min=0.1;        % Eps of Eq.(17) of the manuscript
 f=(fs/trial_length)*(0:(trial_length-1));
 f_integr=(abs(f)<B) | (abs(f-fs)<B);
@@ -83,7 +80,7 @@ p=zeros(nchan, nchan, nrpt);
 for ktime=1:nrpt
   for kchan1=1:(nchan-1)
     for kchan2=(kchan1+1):nchan
-      temp=fft(input{ktime}(kchan1,:).*conj(input{ktime}(kchan2,:)));    % NOTE BY FB: The inner cycle can be vectorized
+      temp=fft(inputdata{ktime}(kchan1,:).*conj(inputdata{ktime}(kchan2,:)));    % NOTE BY FB: The inner cycle can be vectorized
       temp(1)=temp(1).*(abs(angle(temp(1)))>ph_min);  % Volume conduction suppression
       temp=(abs(temp)).^2;
       p_temp=sum(temp(f_integr))./sum(temp);

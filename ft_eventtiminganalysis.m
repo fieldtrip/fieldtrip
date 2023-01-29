@@ -1,8 +1,8 @@
 function [dataout] = ft_eventtiminganalysis(cfg, data)
 
-% FT_EVENTTIMINGANALYSIS computes a model of single trial event-
-% related activity, by estimating per trial the latency (and
-% amplitude) of event-related signal components.
+% FT_EVENTTIMINGANALYSIS computes a model of single trial event- related activity,
+% by estimating per trial the latency (and amplitude) of event-related signal
+% components.
 %
 % Use as
 %   [dataout] = ft_eventtiminganalysis(cfg, data)
@@ -103,7 +103,6 @@ ft_preamble init
 ft_preamble debug
 ft_preamble loadvar    data
 ft_preamble provenance data
-ft_preamble trackconfig
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -114,19 +113,24 @@ end
 % ensure that the input data is valid for this function
 data = ft_checkdata(data, 'datatype', {'raw+comp', 'raw'}, 'feedback', 'yes', 'hassampleinfo', 'yes');
 
-% ensure that the required options are present
-cfg         = ft_checkconfig(cfg, 'required', {'method'});
+% check if the input cfg is valid for this function
+cfg = ft_checkconfig(cfg, 'forbidden',  {'channels', 'trial'}); % prevent accidental typos, see issue 1729
+cfg = ft_checkconfig(cfg, 'required',   {'method'});
+
+% set the defaults
 cfg.trials  = ft_getopt(cfg, 'trials',  'all', 1); % all trials as default
 cfg.channel = ft_getopt(cfg, 'channel', 'all');
 cfg.output  = ft_getopt(cfg, 'output',  'model');
+
 % ensure that the options are valid
 cfg = ft_checkopt(cfg, 'method', 'char', {'aseo' 'gbve'});
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % the actual computation is done in the middle part
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 % select trials of interest
-tmpcfg = keepfields(cfg, {'trials' 'channel' 'showcallinfo'});
+tmpcfg = keepfields(cfg, {'trials' 'channel' 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
 data   = ft_selectdata(tmpcfg, data);
 % restore the provenance information
 [cfg, data] = rollback_provenance(cfg, data);
@@ -141,7 +145,7 @@ switch cfg.method
     fsample = data.fsample; % Sampling Frequency in Hz
     nchan   = numel(data.label);
     nsample = numel(data.time{1}); %FIXME ASSUMING FIXED TIME AXIS ACROSS ALL TRIALS
-
+    
     % setting a bunch of options, to be passed on to the lower level function
     if ~isfield(cfg, 'aseo'), cfg.aseo = []; end
     cfg.aseo.thresholdAmpH = ft_getopt(cfg.aseo, 'thresholdAmpH', 0.5);
@@ -159,14 +163,14 @@ switch cfg.method
     initlatency      = ft_getopt(cfg.aseo, 'initlatency', {});
     initcomp         = ft_getopt(cfg.aseo, 'initcomp',    {});
     jitter           = ft_getopt(cfg.aseo, 'jitter',      0.050); % half temporal width of shift in s
-        
+    
     if isempty(initlatency) && isempty(initcomp)
       ft_error('for the ASEO method you should supply either an initial estimate of the waveform component, or a set of latencies');
     elseif ~isempty(initlatency)
       % this takes precedence, and should contain per channel the begin and
       % end points of the subwindows in time, based on which the initial
       % subcomponents are estimated
-    
+      
       % ensure it to be a cell-array if the input is a matrix
       if ~iscell(initlatency)
         initlatency = repmat({initlatency},[1 nchan]);
@@ -188,7 +192,7 @@ switch cfg.method
         chandat = cat(1,tmp{:});
         chandat = ft_preproc_baselinecorrect(chandat, nearest(data.time{1}, -inf), nearest(data.time{1}, 0));
         avgdat  = nanmean(chandat, 1);
-                
+        
         % set the initial ERP waveforms according to the preset parameters
         ncomp       = size(initlatency{k},1);
         initcomp{k} = zeros(nsample, ncomp);
@@ -197,7 +201,7 @@ switch cfg.method
           endsmp = nearest(data.time{1},initlatency{k}(m, 2));
           if begsmp<1,       begsmp = 1;       end
           if endsmp>nsample, endsmp = nsample; end
-                 
+          
           tmp = avgdat(begsmp:endsmp)';
           initcomp{k}(begsmp:endsmp, m) = tmp;
         end
@@ -222,7 +226,7 @@ switch cfg.method
     for k = 1:numel(data.trial)
       dataout.trial{k}(:) = nan;
     end
-        
+    
     % initialize the struct that will contain the output parameters
     params = struct([]);
     
@@ -231,7 +235,7 @@ switch cfg.method
       % preprocessing data
       tmp     = cellrowselect(data.trial,k);
       chandat = cat(1,tmp{:});
-            
+      
       % baseline correction
       chandat = ft_preproc_baselinecorrect(chandat, nearest(data.time{1}, -inf), nearest(data.time{1}, 0));
       
@@ -262,132 +266,134 @@ switch cfg.method
       end
     end
     
-case 'gbve'
-  ft_hastoolbox('lagextraction', 1);
-  ft_hastoolbox('eeglab',        1); % because the low-level code might use a specific moving average function from EEGLAB
-  ft_hastoolbox('cellfunction',  1);
-  
-  if ~isfield(cfg, 'gbve'), cfg.gbve = []; end
-  cfg.gbve.NORMALIZE_DATA    = ft_getopt(cfg.gbve, 'NORMALIZE_DATA',     true);
-  cfg.gbve.CENTER_DATA       = ft_getopt(cfg.gbve, 'CENTER_DATA',        false);
-  cfg.gbve.USE_ADAPTIVE_SIGMA= ft_getopt(cfg.gbve, 'USE_ADAPTIVE_SIGMA', false);
-  cfg.gbve.sigma             = ft_getopt(cfg.gbve, 'sigma',    0.01:0.01:0.2);
-  cfg.gbve.distance          = ft_getopt(cfg.gbve, 'distance', 'corr2');
-  cfg.gbve.alpha             = ft_getopt(cfg.gbve, 'alpha',    [0 0.001 0.01 0.1]);
-  cfg.gbve.exponent          = ft_getopt(cfg.gbve, 'exponent', 1);
-  cfg.gbve.use_maximum       = ft_getopt(cfg.gbve, 'use_maximum', 1); % consider the positive going peak
-  cfg.gbve.show_pca          = ft_getopt(cfg.gbve, 'show_pca',          false);
-  cfg.gbve.show_trial_number = ft_getopt(cfg.gbve, 'show_trial_number', false);
-  cfg.gbve.verbose           = ft_getopt(cfg.gbve, 'verbose',           true);
-  cfg.gbve.disp_log          = ft_getopt(cfg.gbve, 'disp_log',          false);
-  cfg.gbve.latency           = ft_getopt(cfg.gbve, 'latency',  [-inf inf]);
-  cfg.gbve.xwin              = ft_getopt(cfg.gbve, 'xwin',     1); % default is a bit of smoothing
-  cfg.gbve.nfold             = ft_getopt(cfg.gbve, 'nfold',    5);
-  
-  nchan = numel(data.label);
-  ntrl  = numel(data.trial);
-  
-  tmin  = nearest(data.time{1}, cfg.gbve.latency(1));
-  tmax  = nearest(data.time{1}, cfg.gbve.latency(2));
-
-  % initialize the struct that will contain the output parameters
-  dataout = removefields(data, 'cfg');
-  params  = struct([]);
-  for k = 1:nchan
-    % preprocessing data
-    options = cfg.gbve;
-  
-    fprintf('--- Processing channel %d\n',k);
+  case 'gbve'
+    ft_hastoolbox('lagextraction', 1);
+    ft_hastoolbox('eeglab',        1); % because the low-level code might use a specific moving average function from EEGLAB
+    ft_hastoolbox('cellfunction',  1);
     
-    tmp     = cellrowselect(data.trial,k);
-    chandat = cat(1,tmp{:});
-    points  = chandat(:,tmin:tmax);
+    if ~isfield(cfg, 'gbve'), cfg.gbve = []; end
+    cfg.gbve.NORMALIZE_DATA     = ft_getopt(cfg.gbve, 'NORMALIZE_DATA',     true);
+    cfg.gbve.CENTER_DATA        = ft_getopt(cfg.gbve, 'CENTER_DATA',        false);
+    cfg.gbve.USE_ADAPTIVE_SIGMA = ft_getopt(cfg.gbve, 'USE_ADAPTIVE_SIGMA', false);
+    cfg.gbve.sigma              = ft_getopt(cfg.gbve, 'sigma',              0.01:0.01:0.2);
+    cfg.gbve.distance           = ft_getopt(cfg.gbve, 'distance',           'corr2');
+    cfg.gbve.alpha              = ft_getopt(cfg.gbve, 'alpha',              [0 0.001 0.01 0.1]);
+    cfg.gbve.exponent           = ft_getopt(cfg.gbve, 'exponent',           1);
+    cfg.gbve.use_maximum        = ft_getopt(cfg.gbve, 'use_maximum',        1); % consider the positive going peak
+    cfg.gbve.show_pca           = ft_getopt(cfg.gbve, 'show_pca',           false);
+    cfg.gbve.show_trial_number  = ft_getopt(cfg.gbve, 'show_trial_number',  false);
+    cfg.gbve.verbose            = ft_getopt(cfg.gbve, 'verbose',            true);
+    cfg.gbve.disp_log           = ft_getopt(cfg.gbve, 'disp_log',           false);
+    cfg.gbve.latency            = ft_getopt(cfg.gbve, 'latency',            [-inf inf]);
+    cfg.gbve.xwin               = ft_getopt(cfg.gbve, 'xwin',               1); % default is a bit of smoothing
+    cfg.gbve.nfold              = ft_getopt(cfg.gbve, 'nfold',              5);
     
-    % perform a loop across alpha values, cross validation
-    alphas = options.alpha;
+    nchan = numel(data.label);
+    ntrl  = numel(data.trial);
     
-    if length(alphas) > 1 % Use Cross validation error if multiple alphas are specified
-      best_CVerr = -Inf;
-
-      K = cfg.gbve.nfold;
-      disp(['--- Running K Cross Validation (K = ',num2str(K),')']);
-
-      block_idx = fix(linspace(1, ntrl, K+1)); % K cross validation
-      for jj=1:length(alphas)
-        options.alpha = alphas(jj);
-
-        CVerr = 0;
-        for kk = 1:K
-          bidx = block_idx(kk):block_idx(kk+1);
-          idx = 1:ntrl;
-          idx(bidx) = [];
-
-          data_k       = chandat(idx,:);
-          points_k     = points(idx,:);
-          [order,lags] = extractlag(points_k,options);
-
-          data_reordered = data_k(order,:);
-          lags           = lags + tmin;
-          [data_aligned, ~] = perform_realign(data_reordered, data.time{1}, lags);
-          data_aligned(~isfinite(data_aligned)) = nan;
-          ep_evoked = nanmean(data_aligned);
-          ep_evoked = ep_evoked ./ norm(ep_evoked);
-
-          data_k = chandat(bidx,:);
-          data_norm = sqrt(sum(data_k.^2,2));
-          data_k = diag(1./data_norm)*data_k;
-          data_k(data_norm==0,:) = 0;
+    tmin  = nearest(data.time{1}, cfg.gbve.latency(1));
+    tmax  = nearest(data.time{1}, cfg.gbve.latency(2));
+    
+    % initialize the struct that will contain the output parameters
+    dataout = removefields(data, 'cfg');
+    params  = struct([]);
+    for k = 1:nchan
+      % preprocessing data
+      options = cfg.gbve;
+      
+      fprintf('--- Processing channel %d\n',k);
+      
+      tmp     = cellrowselect(data.trial,k);
+      chandat = cat(1,tmp{:});
+      points  = chandat(:,tmin:tmax);
+      
+      % perform a loop across alpha values, cross validation
+      alphas = options.alpha;
+      
+      if length(alphas) > 1 % Use Cross validation error if multiple alphas are specified
+        best_CVerr = -Inf;
+        
+        K = cfg.gbve.nfold;
+        disp(['--- Running K Cross Validation (K = ',num2str(K),')']);
+        
+        block_idx = fix(linspace(1, ntrl, K+1)); % K cross validation
+        for jj=1:length(alphas)
+          options.alpha = alphas(jj);
           
-          for pp=1:length(bidx)
-            c     = xcorr(ep_evoked,data_k(pp,:));
-            CVerr = CVerr + max(c(:));
+          CVerr = 0;
+          for kk = 1:K
+            bidx = block_idx(kk):block_idx(kk+1);
+            idx = 1:ntrl;
+            idx(bidx) = [];
+            
+            data_k       = chandat(idx,:);
+            points_k     = points(idx,:);
+            [order,lags] = extractlag(points_k,options);
+            
+            data_reordered = data_k(order,:);
+            lags           = lags + tmin;
+            [data_aligned, dum] = perform_realign(data_reordered, data.time{1}, lags);
+            data_aligned(~isfinite(data_aligned)) = nan;
+            ep_evoked = nanmean(data_aligned);
+            ep_evoked = ep_evoked ./ norm(ep_evoked);
+            
+            data_k = chandat(bidx,:);
+            data_norm = sqrt(sum(data_k.^2,2));
+            data_k = diag(1./data_norm)*data_k;
+            data_k(data_norm==0,:) = 0;
+            
+            for pp=1:length(bidx)
+              c     = xcorr(ep_evoked,data_k(pp,:));
+              CVerr = CVerr + max(c(:));
+            end
+          end
+          
+          CVerr = CVerr/ntrl;
+          
+          if CVerr > best_CVerr
+            best_CVerr = CVerr;
+            best_alpha = alphas(jj);
           end
         end
-
-        CVerr = CVerr/ntrl;
-
-        if CVerr > best_CVerr
-          best_CVerr = CVerr;
-          best_alpha = alphas(jj);
-        end
+        options.alpha = best_alpha;
       end
-      options.alpha = best_alpha;
-    end
-
-    if options.use_maximum
-      [order,lags] = extractlag( points, options );
-    else
-      [order,lags] = extractlag( -points, options );
-    end
-    disp(['---------- Using alpha = ',num2str(options.alpha)]);
-    data_reordered = chandat(order,:);
-    lags = lags + tmin;
-    [data_aligned] = perform_realign(data_reordered, data.time{1}, lags );
-    data_aligned(~isfinite(data_aligned)) = nan;
-    
-    [~,order_inv] = sort(order);
-    lags_no_order = lags(order_inv);
-    data_aligned  = data_aligned(order_inv,:);
       
-    params(k).latency = data.time{1}(lags_no_order)';
-    switch cfg.output
-      case 'model'
-        tmp = mat2cell(data_aligned, ones(1,size(data_aligned,1)), size(data_aligned,2))';
-        dataout.trial = cellrowassign(dataout.trial, tmp, k);
-      case 'residual'
-        % to be done
-        error('not yet implemented');
+      if options.use_maximum
+        [order, lags] = extractlag( points, options );
+      else
+        [order, lags] = extractlag( -points, options );
+      end
+      disp(['---------- Using alpha = ',num2str(options.alpha)]);
+      data_reordered = chandat(order,:);
+      lags = lags + tmin;
+      [data_aligned] = perform_realign(data_reordered, data.time{1}, lags );
+      data_aligned(~isfinite(data_aligned)) = nan;
+      
+      [dum, order_inv] = sort(order);
+      lags_no_order = lags(order_inv);
+      data_aligned  = data_aligned(order_inv,:);
+      
+      params(k).latency = data.time{1}(lags_no_order)';
+      switch cfg.output
+        case 'model'
+          tmp = mat2cell(data_aligned, ones(1,size(data_aligned,1)), size(data_aligned,2))';
+          dataout.trial = cellrowassign(dataout.trial, tmp, k);
+        case 'residual'
+          % to be done
+          error('not yet implemented');
+      end
     end
-  end
-  
-end
+    
+  otherwise
+    ft_error('unsupported method');
+    
+end % switch method
 
 dataout.params = params;
 dataout.cfg    = cfg;
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-ft_postamble trackconfig
 ft_postamble previous   data
 ft_postamble provenance dataout
 ft_postamble history    dataout

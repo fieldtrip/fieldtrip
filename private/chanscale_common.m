@@ -75,10 +75,10 @@ switch dimord
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   case {'chan_time' 'chan_freq' 'chan_comp' 'chan_freq_time' 'chan_time_freq'}
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    
+
     % get the data from the structure
     dat = data.(cfg.parameter);
-    
+
     % apply scaling to selected channels, using wildcard to support subselection of channels
     if ~isempty(cfg.eegscale)
       chansel = match_str(data.label, ft_channelselection('EEG', data.label));
@@ -135,18 +135,18 @@ switch dimord
       ft_info('applying cfg.mychanscale to %d channels', numel(chansel));
       dat(chansel,:,:) = dat(chansel,:,:) .* repmat(cfg.mychanscale(scalesel),1,size(dat,2),size(dat,3));
     end
-    
+
     % put the data back into the structure
     data.(cfg.parameter) = dat;
-    
+
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   case '{rpt}_chan_time'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    
+
     for i=1:numel(data.(cfg.parameter))
       % get the data from the structure
       dat = data.(cfg.parameter){i};
-      
+
       % apply scaling to selected channels, using wildcard to support subselection of channels
       if ~isempty(cfg.eegscale)
         chansel = match_str(data.label, ft_channelselection('EEG', data.label));
@@ -203,20 +203,20 @@ switch dimord
         ft_info('applying cfg.mychanscale to %d channels', numel(chansel));
         dat(chansel,:) = dat(chansel,:) .* repmat(cfg.mychanscale(scalesel),1,size(dat,2));
       end
-      
+
       % put the data back into the structure
       data.(cfg.parameter){i} = dat;
-      
+
       if i==1
         % only print information for the first trial
         ws = ft_info('off');
       end
-      
+
     end % for each trial
-    
+
     % revert to the normal information state
     ft_info(ws);
-    
+
   otherwise
     if ~isempty(cfg.eegscale) || ...
         ~isempty(cfg.eogscale) || ...

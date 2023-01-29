@@ -25,9 +25,9 @@ f_data = ft_freqanalysis(cfg, data);
 
 % JM hack
 cf_data = f_data;
-cf_data = ft_checkdata(cf_data,'cmbrepresentation','fullfast'); % efficiently compute crsspctrm
-cf_data = ft_checkdata(cf_data,'cmbrepresentation','sparse'); % remove redundancy in channelcomb
-cf_data = ft_checkdata(cf_data,'cmbrepresentation','sparsewithpow'); % restore power data
+cf_data = ft_checkdata(cf_data, 'cmbstyle', 'fullfast'); % efficiently compute crsspctrm
+cf_data = ft_checkdata(cf_data, 'cmbstyle', 'sparse'); % remove redundancy in channelcomb
+cf_data = ft_checkdata(cf_data, 'cmbstyle', 'sparsewithpow'); % restore power data
 % data is now ready to be fed into sourceanalysis
 
 % Source analysis
@@ -51,8 +51,8 @@ sf_data                         = ft_sourceanalysis(cfg, cf_data);
 cfg                             = [];
 cfg.method                      = 'pcc';
 
-cfg.sourcemodel                        = sourceModelGrid;
-cfg.sourcemodel.filter                 = sf_data.avg.filter;
+cfg.sourcemodel                 = sourceModelGrid;
+cfg.sourcemodel.filter          = sf_data.avg.filter;
 cfg.headmodel                   = sourceModelVol;
 cfg.frequency                   = foi;
 

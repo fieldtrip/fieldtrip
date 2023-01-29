@@ -1,37 +1,36 @@
 function [stat, cfg] = ft_statistics_mvpa(cfg, dat, design)
 
-% FT_STATISTICS_MVPA performs multivariate pattern classification or 
-% regression using the MVPA-Light toolbox. The function supports
-% cross-validation, searchlight analysis, generalization, nested
-% preprocessing, a variety of classification and regression metrics, as
-% well as statistical testing of these metrics.
-%
-% This function should not be called directly, instead
-% you should call the function that is associated with the type of
-% data on which you want to perform the test.
+% FT_STATISTICS_MVPA performs multivariate pattern classification or regression using
+% the MVPA-Light toolbox. The function supports cross-validation, searchlight
+% analysis, generalization, nested preprocessing, a variety of classification and
+% regression metrics, as well as statistical testing of these metrics. This function
+% should not be called directly, instead you should call the function that is
+% associated with the type of data on which you want to perform the test.
 %
 % Use as
 %   stat = ft_timelockstatistics(cfg, data1, data2, data3, ...)
 %   stat = ft_freqstatistics    (cfg, data1, data2, data3, ...)
 %   stat = ft_sourcestatistics  (cfg, data1, data2, data3, ...)
-% where the data is obtained from FT_TIMELOCKANALYSIS, FT_FREQANALYSIS
-% or FT_SOURCEANALYSIS respectively, or from FT_TIMELOCKGRANDAVERAGE,
-% FT_FREQGRANDAVERAGE or FT_SOURCEGRANDAVERAGE respectively.
+%
+% where the data is obtained from FT_TIMELOCKANALYSIS, FT_FREQANALYSIS or
+% FT_SOURCEANALYSIS respectively, or from FT_TIMELOCKGRANDAVERAGE,
+% FT_FREQGRANDAVERAGE or FT_SOURCEGRANDAVERAGE respectively
+% and with cfg.method = 'mvpa'
 %
 % The configuration options that can be specified are:
-%   cfg.features        = specifies the name or index of the dimension(s) 
+%   cfg.features        = specifies the name or index of the dimension(s)
 %                         that serve(s) as features for the classifier or
 %                         regression model. Dimensions that are not
 %                         samples or features act as search
 %                         dimensions. For instance, assume the data is a
-%                         3D array of size [samples x channels x time]. 
-%                         If mvpa.features = 2, the channels serve as 
+%                         3D array of size [samples x channels x time].
+%                         If mvpa.features = 2, the channels serve as
 %                         features. A classification is then performed for
 %                         each time point (we call time a searchlight
 %                         dimension). Conversely, if mvpa.features = 3, the
 %                         time points serve as features. A classification
 %                         is performed for each channel (channel is a
-%                         searchlight dimension). 
+%                         searchlight dimension).
 %                         If mvpa.features = [], then all non-sample
 %                         dimensions serve as searchlight dimensions.
 %                         If the dimensions have names (ie cfg.dimord
@@ -49,9 +48,9 @@ function [stat, cfg] = ft_statistics_mvpa(cfg, dat, design)
 %                         be different from the value of mvpa.features.
 %                         (default [])
 %
-% The configuration contains a substruct cfg.mvpa that contains detailed 
+% The configuration contains a substruct cfg.mvpa that contains detailed
 % options for the MVPA. Possible fields
-%   cfg.mvpa.classifier  = string specifying the classifier 
+%   cfg.mvpa.classifier  = string specifying the classifier
 %                         Available classifiers:
 %                         'ensemble'     Ensemble of classifiers. Any of the other
 %                                        classifiers can be used as a learner.
@@ -68,7 +67,7 @@ function [stat, cfg] = ft_statistics_mvpa(cfg, dat, design)
 %                         for logistic regression, SVM, and Support Vector
 %                         Regression. Note that they can act as either
 %                         classifiers or regression models. An installation
-%                         of LIBSVM or LIBLINEAR is required. 
+%                         of LIBSVM or LIBLINEAR is required.
 %   cfg.mvpa.model       = string specifying the regression model. If a
 %                         regression model has been specified,
 %                         cfg.mvpa.classifier should be empty (and vice
@@ -80,18 +79,18 @@ function [stat, cfg] = ft_statistics_mvpa(cfg, dat, design)
 %                         'ridge         Ridge regression
 %                         'kernel_ridge' Kernel Ridge regression
 %                         More details on the regression models: https://github.com/treder/MVPA-Light#regression-models-
-%   cfg.mvpa.metric      = string, classification or regression metric, or 
-%                         cell array with multiple metrics. 
-%                         Classification metrics: accuracy auc confusion 
+%   cfg.mvpa.metric      = string, classification or regression metric, or
+%                         cell array with multiple metrics.
+%                         Classification metrics: accuracy auc confusion
 %                             dval f1 kappa precision recall tval
 %                         Regression metrics: mae mse r_squared
-%                         
+%
 %   cfg.mvpa.hyperparameter = struct, structure with hyperparameters for the
 %                         classifier or regression model (see HYPERPARAMETERS below)
 %   cfg.mvpa.feedback       = 'yes' or 'no', whether or not to print feedback on the console (default 'yes')
 %
-% To obtain a realistic estimate of classification performance,
-% cross-validation is used. It is controlled by the following parameters:
+% To obtain a realistic estimate of classification performance, cross-validation
+% is used. It is controlled by the following parameters:
 %   cfg.mvpa.cv          = string, cross-validation type, either 'kfold', 'leaveout'
 %                         'holdout', or 'predefined'. If 'none', no cross-validation is
 %                         used and the model is tested on the training
@@ -112,7 +111,7 @@ function [stat, cfg] = ft_statistics_mvpa(cfg, dat, design)
 % HYPERPARAMETERS:
 % Each classifier comes with its own set of hyperparameters, such as
 % regularization parameters and the kernel. Hyperparameters can be set
-% using the cfg.mvpa.hyperparameter substruct. For instance, in LDA, 
+% using the cfg.mvpa.hyperparameter substruct. For instance, in LDA,
 % cfg.mvpa.hyperparameter = 'auto' sets the lambda regularization parameter.
 %
 % The specification of the hyperparameters is found in the training function
@@ -121,10 +120,10 @@ function [stat, cfg] = ft_statistics_mvpa(cfg, dat, design)
 %
 % SEARCHLIGHT ANALYSIS:
 % Data dimensions that are not samples or features serve as 'search
-% dimensions'. For instance, if the data is [samples x chan x time] 
+% dimensions'. For instance, if the data is [samples x chan x time]
 % and mvpa.features = 'time', then the channel dimension serves as search
 % dimension: a separate analysis is carried out for each channel. Instead
-% of considering each channel individually, a searchlight can be defined 
+% of considering each channel individually, a searchlight can be defined
 % such that each channel is used together with its neighbours. Neighbours
 % can be specified using the cfg.neighbours field:
 %
@@ -138,10 +137,11 @@ function [stat, cfg] = ft_statistics_mvpa(cfg, dat, design)
 %                      leads to smoother results along the time axis.
 %   cfg.freqwin      = integer, acts like cfg.timwin but across frequencies
 %
-% Returns:
-%   stat        = struct with results. the .metric field contains the
-%                   requested metrics
+% This returns:
+%   stat.metric = this contains the requested metric
 %
+% See also FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS, FT_SOURCESTATISTICS,
+% FT_STATISTICS_ANALYTIC, FT_STATISTICS_STATS, FT_STATISTICS_MONTECARLO, FT_STATISTICS_CROSSVALIDATE
 
 % Copyright (C) 2019-2021, Matthias Treder and Jan-Mathijs Schoffelen
 %
@@ -169,26 +169,26 @@ ft_hastoolbox('mvpa-light', 1);
 assert(isnumeric(dat),    'this function requires numeric data as input, you probably want to use FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS instead');
 assert(isnumeric(design), 'this function requires numeric data as input, you probably want to use FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS instead');
 
-%% cfg: set defaults 
-cfg.generalize      = ft_getopt(cfg, 'generalize',  []);
-cfg.timwin          = ft_getopt(cfg, 'timwin',  []);
-cfg.freqwin         = ft_getopt(cfg, 'freqwin', []);
-cfg.neighbours      = ft_getopt(cfg, 'neighbours',  []);
-cfg.connectivity    = ft_getopt(cfg, 'connectivity', []); % the default is dealt with below
+%% cfg: set defaults
+cfg.generalize        = ft_getopt(cfg, 'generalize',   []);
+cfg.timwin            = ft_getopt(cfg, 'timwin',       []);
+cfg.freqwin           = ft_getopt(cfg, 'freqwin',      []);
+cfg.neighbours        = ft_getopt(cfg, 'neighbours',   []);
+cfg.connectivity      = ft_getopt(cfg, 'connectivity', []); % the default is dealt with below
 
-cfg.mvpa            = ft_getopt(cfg, 'mvpa',       []);
-cfg.mvpa.model      = ft_getopt(cfg.mvpa, 'model', []);
+cfg.mvpa              = ft_getopt(cfg, 'mvpa',       []);
+cfg.mvpa.model        = ft_getopt(cfg.mvpa, 'model', []);
 if isempty(cfg.mvpa.model)
   cfg.mvpa.classifier = ft_getopt(cfg.mvpa, 'classifier', 'lda');
   if strcmp(cfg.mvpa.classifier, 'naive_bayes')
-    cfg.mvpa.append = ft_getopt(cfg.mvpa, 'append', 1);
+    cfg.mvpa.append   = ft_getopt(cfg.mvpa, 'append', 1);
   end
   cfg.mvpa.metric     = ft_getopt(cfg.mvpa, 'metric', 'accuracy');
 else
   cfg.mvpa.metric     = ft_getopt(cfg.mvpa, 'metric', 'mae');
 end
-cfg.mvpa.neighbours = ft_getopt(cfg.mvpa, 'neighbours',  []);
-cfg.mvpa.feedback   = ft_getopt(cfg.mvpa, 'feedback',   'yes');
+cfg.mvpa.neighbours   = ft_getopt(cfg.mvpa, 'neighbours',  []);
+cfg.mvpa.feedback     = ft_getopt(cfg.mvpa, 'feedback',   'yes');
 
 has_dimord = isfield(cfg, 'dimord');
 has_dim    = isfield(cfg, 'dim');
@@ -207,7 +207,7 @@ end
 %% defaults for cfg.features
 if ~isfield(cfg, 'features')
   % no features provided, we have to guess
-  if ~isempty(cfg.neighbours) || ~isempty(cfg.connectivity) 
+  if ~isempty(cfg.neighbours) || ~isempty(cfg.connectivity)
     if isempty(cfg.timwin)
       cfg.features = 3; % dimension 3 = time (usually)
     end
@@ -273,7 +273,7 @@ if ~isempty(cfg.features)
 end
 
 %% transform neighbours into boolean matrix if necessary
-if isempty(cfg.mvpa.neighbours) && has_dim && has_dimord    
+if isempty(cfg.mvpa.neighbours) && has_dim && has_dimord
   if ~isempty(cfg.timwin) && ~any(contains(dimtok_search, 'time'))
     ft_warning('ignoring cfg.timwin because time is not a search dimension')
   end
@@ -327,22 +327,23 @@ if isempty(cfg.mvpa.neighbours) && has_dim && has_dimord
     end
   end
 elseif ~isempty(cfg.neighbours) || ~isempty(cfg.connectivity) || ~isempty(cfg.timwin) || ~isempty(cfg.freqwin)
-    ft_warning('cfg.mvpa.neighbours has been set, ignoring cfg.neighbours/cfg.connectivity/cfg.timwin/cfg.freqwin')
+  ft_warning('cfg.mvpa.neighbours has been set, ignoring cfg.neighbours/cfg.connectivity/cfg.timwin/cfg.freqwin')
 end
 
 %% adapt channel labels
 if any(strcmp('chan', cfg.mvpa.dimension_names(cfg.features)))
   % combine all labels when chan is used as features
-  label = sprintf('combined(%s)', strjoin(cfg.channel, ',')); 
+  label = sprintf('combined(%s)', strjoin(cfg.channel, ','));
 elseif ~isempty(cfg.neighbours)
   label = cell(size(cfg.neighbours,1), 1);
   if (size(cfg.neighbours,1) == size(cfg.neighbours,2)) && all(diag(cfg.neighbours))
     % keep label unchanged
     label = cfg.channel;
   else
+    selchan = find(strcmp(dimtok_search, 'chan'));
     % merge neighbours into combined channels
     for ix = 1:numel(label)
-      chan_ix = cfg.neighbours(ix,:);
+      chan_ix = cfg.mvpa.neighbours{selchan}(ix,:)>0;
       if sum(chan_ix)>1
         label{ix} = sprintf('combined(%s)', strjoin(cfg.channel(chan_ix), ','));
       else
@@ -368,7 +369,12 @@ end
 
 % build dimord from result struct
 if has_dimord
-  dimord = strrep(result.perf_dimension_names, ' ', '');
+  if ~iscell(perf)
+    dimord = strrep(result.perf_dimension_names, ' ', '');
+  else 
+    % more than one output metric is requested, use the first one for the dimord
+    dimord = strrep(result.perf_dimension_names{1}, ' ', '');
+  end
   if iscell(dimord), dimord = strjoin(dimord, '_'); end
 end
 
@@ -378,10 +384,10 @@ if ~iscell(perf),            perf            = {perf};            end
 %% setup stat struct
 stat = [];
 for mm=1:numel(perf)
-
+  
   % Performance metric
   stat.(cfg.mvpa.metric{mm}) = perf{mm};
-
+  
   % Std of performance
   if iscell(result.perf_std)
     stat.([cfg.mvpa.metric{mm} '_std']) = result.perf_std{mm};
@@ -402,7 +408,7 @@ end
 
 if exist('label', 'var'),     stat.label  = label;  end
 if exist('dim', 'var'),       stat.dim    = dim;    end
-if exist('dimord', 'var'),    cfg.dimord = dimord; end % stat.dimord is overwritten by cfg.dimord in the caller hence it's useless to set stat.dimord here
+if exist('dimord', 'var'),    cfg.dimord  = dimord; end % stat.dimord is overwritten by cfg.dimord in the caller, hence it's useless to set stat.dimord here
 if exist('frequency', 'var'), stat.freq   = frequency; end
 if exist('time', 'var'),      stat.time   = time; end
 

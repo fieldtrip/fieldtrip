@@ -16,7 +16,7 @@ function failed_ft_prepare_headmodel
 % get the data which is needed
 
 % read in the gradiometer information
-hdr  = ft_read_header(dccnpath('/home/common/matlab/fieldtrip/data/Subject01.ds'));
+hdr  = ft_read_header(dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds'));
 grad = hdr.grad;
 
 % read in the mri
@@ -26,14 +26,14 @@ load standard_mri
 load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/segmentedmri.mat'));
 
 % specify the file for the headshape
-shapefile  = dccnpath('/home/common/matlab/fieldtrip/data/Subject01.shape');
+shapefile  = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.shape');
 
 % read in the headshape
 shape = ft_read_headshape(shapefile);
 shapevol.bnd = shape;
 
 % hdmfile
-hdmfile  = dccnpath('/home/common/matlab/fieldtrip/data/Subject01.hdm');
+hdmfile  = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.hdm');
 
 
 %   vol = ft_prepare_headmodel(cfg)       or
@@ -64,8 +64,8 @@ cfg.numvertices = 1000;
 cs4bnd = ft_prepare_mesh(cfg, cs4vol);
 
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1646/seg2'))  % brain skull scalp (3 binary masks)
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1646/seg5'))  % seg (brain, skull & scalp indexed)
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1646/seg2.mat'))  % brain skull scalp (3 binary masks)
+load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1646/seg5.mat'))  % seg (brain, skull & scalp indexed)
 
 elcfile  = dccnpath('/home/common/matlab/fieldtrip/data/test/original/electrodes/asa/standard_primed.elc');
 elec = ft_read_sens(elcfile);
@@ -114,7 +114,7 @@ for ii = 1:numel(method)
   cfg.method = method{ii};
   
   % wrong input: nothing
-  try 
+  try
     vol21 = ft_prepare_headmodel(cfg);
     success = true;
   catch
@@ -170,7 +170,7 @@ for ii = 1:numel(method)
       vol27 = ft_prepare_headmodel(cfg, segmentedmri);
     case 'openmeeg' % it should work also with single compartment
       vol25 = ft_prepare_headmodel(cfg, ssbnd);
-      try % but not with 4 
+      try % but not with 4
         vol26 = ft_prepare_headmodel(cfg, cs4bnd);
         success = true;
       catch
@@ -181,7 +181,7 @@ for ii = 1:numel(method)
   end
   
   vol28 = ft_prepare_headmodel(cfg, seg2);   % 3 layered segmentation
-  vol29 = ft_prepare_headmodel(cfg, seg5);   % 3 layered segmentation (indexed style)  
+  vol29 = ft_prepare_headmodel(cfg, seg5);   % 3 layered segmentation (indexed style)
   
   
 end
@@ -227,7 +227,7 @@ vol35 = ft_prepare_headmodel(cfg, csbnd);
 % 1 comp mesh
 vol36 = ft_prepare_headmodel(cfg, ssbnd);
 % FIXME: should we allow for this unusual but error-free way of calling
-% concentricspheres?  only supplying 1 bnd and 1 conducitivity value, 
+% concentricspheres?  only supplying 1 bnd and 1 conducitivity value,
 % thus output is a 1-shell vol.
 
 % 4 comp mesh
@@ -462,14 +462,14 @@ clear vol*;
 
 % you can create simbio headmodel only from hexahedral mesh
 cfg = [];
-cfg.method = 'hexahedral';    
+cfg.method = 'hexahedral';
 hexmesh = ft_prepare_mesh(cfg, seg2);
 
 cfg = [];
 cfg.method = 'simbio';
-cfg.conductivity = [0.33 0.01 0.43];  
+cfg.conductivity = [0.33 0.01 0.43];
 
-try % this should not work 
+try % this should not work
   vol90 = ft_prepare_headmodel(cfg, mri);
   success = true;
 catch
@@ -486,4 +486,3 @@ clear vol_hex;
 
 %% interpolate
 % test_headmodel_interpolate
-

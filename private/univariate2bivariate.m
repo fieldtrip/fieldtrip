@@ -7,7 +7,7 @@ function [data, powindx, hasrpt] = univariate2bivariate(data, inparam, outparam,
 % where
 %   data        = FieldTrip structure according to dtype (see below)
 %   inparam     = string
-%   outparam     = string
+%   outparam    = string
 %   dtype       = string, can be 'freq', 'source', 'raw'
 % and additional options come in key-value pairs and can include
 %   channelcmb  = 
@@ -60,9 +60,9 @@ switch dtype
     if strcmp(inparam, 'fourierspctrm') && strcmp(outparam, 'crsspctrm')
       % fourier coefficients -> cross-spectral density
       if dofull
-        data = ft_checkdata(data, 'cmbrepresentation', 'full');
+        data = ft_checkdata(data, 'cmbstyle', 'full');
       else
-        data = ft_checkdata(data, 'cmbrepresentation', 'sparse', 'channelcmb', cmb);
+        data = ft_checkdata(data, 'cmbstyle', 'sparse', 'channelcmb', cmb);
         getpowindx = 1;
       end
     elseif strcmp(inparam, 'fourierspctrm') && strcmp(outparam, 'lcrsspctrm')
@@ -70,18 +70,18 @@ switch dtype
       getpowindx = 1;
     elseif strcmp(inparam, 'powandcsd') && strcmp(outparam, 'crsspctrm')
       if ~isempty(cmb)
-        data = ft_checkdata(data, 'cmbrepresentation', 'sparse', 'channelcmb', cmb);
+        data = ft_checkdata(data, 'cmbstyle', 'sparse', 'channelcmb', cmb);
         % ensure getting powindx later on to prevent crash
         getpowindx = 1;
       else
-        % data = ft_checkdata(data, 'cmbrepresentation', 'full');
+        % data = ft_checkdata(data, 'cmbstyle', 'full');
         % this should not be possible
         ft_error('cannot convert to a full csd representation');
       end
       
     elseif strcmp(inparam, 'fourierspctrm') && strcmp(outparam, 'powcovspctrm')
       % fourier coefficients -> power covariance
-      data = ft_checkdata(data, 'cmbrepresentation', 'sparsewithpow', 'channelcmb', {});
+      data = ft_checkdata(data, 'cmbstyle', 'sparsewithpow', 'channelcmb', {});
       if sqrtflag, data.powspctrm = sqrt(data.powspctrm); end
       % get covariance by using ft_checkdata
       if demeanflag
@@ -95,9 +95,9 @@ switch dtype
       data.cumtapcnt(:) = 1;
       data.cumsumcnt(:) = 1;
       if ncmb < (nchan-1)*nchan*0.5
-        data = ft_checkdata(data, 'cmbrepresentation', 'sparse', 'channelcmb', cmb);
+        data = ft_checkdata(data, 'cmbstyle', 'sparse', 'channelcmb', cmb);
       else
-        data = ft_checkdata(data, 'cmbrepresentation', 'full');
+        data = ft_checkdata(data, 'cmbstyle', 'full');
       end
       data.powcovspctrm = data.crsspctrm;
       data = rmfield(data, 'crsspctrm');
@@ -106,7 +106,7 @@ switch dtype
       % power-spectral density -> power covariance
       if sqrtflag, data.powspctrm = sqrt(data.powspctrm); end
       % get covariance by using ft_checkdata
-      if demeanflag,
+      if demeanflag
         nrpt = size(data.powspctrm,1);
         mdat = nanmean(data.powspctrm,1);
         data.powspctrm = data.powspctrm - mdat(ones(1,nrpt),:,:,:,:,:);
@@ -117,9 +117,9 @@ switch dtype
       data.cumtapcnt(:) = 1;
       data.cumsumcnt(:) = 1;
       if ncmb < (nchan-1)*nchan*0.5
-        data = ft_checkdata(data, 'cmbrepresentation', 'sparse', 'channelcmb', cmb);
+        data = ft_checkdata(data, 'cmbstyle', 'sparse', 'channelcmb', cmb);
       else
-        data = ft_checkdata(data, 'cmbrepresentation', 'full');
+        data = ft_checkdata(data, 'cmbstyle', 'full');
       end
       data.powcovspctrm = data.crsspctrm;
       data = rmfield(data, 'crsspctrm');
@@ -143,7 +143,7 @@ switch dtype
     if strcmp(inparam, 'pow') && strcmp(outparam, 'powcov')
       [nvox,nrpt] = size(data.pow);
       if sqrtflag, data.pow = sqrt(data.pow); end
-      if demeanflag,
+      if demeanflag
         mdat = nanmean(data.pow,2);
         data.pow = data.pow - mdat(:,ones(1,nrpt)); % FIXME only works for 1 frequency
       end
@@ -306,13 +306,13 @@ switch dtype
           data.inside = data.inside(:)*ones(1,ncmb+1) + (ones(length(data.inside),1)*nvox)*(0:ncmb);
           data.inside = data.inside(:);
           data.outside = setdiff((1:nvox*(ncmb+1))', data.inside);
-          if isfield(data, 'momdimord'),
+          if isfield(data, 'momdimord')
             data.crsspctrmdimord = ['pos_',data.momdimord(14:end)]; % FIXME this assumes dimord to be 'rpttap_...'
           end
           data = rmfield(data, 'mom');
           data = rmfield(data, 'momdimord');
         else
-          [nrpt,nvox] = size(mom);
+          [nrpt, nvox] = size(mom);
           data.crsspctrm = (transpose(mom)*conj(mom))./nrpt;
           data = rmfield(data, 'mom');
           try, data = rmfield(data, 'momdimord'); end
@@ -337,7 +337,7 @@ switch dtype
 
     if ~strcmp(inparam, 'trial')
       ft_error('incorrect specification of inparam')
-    elseif ~strcmp(outparam, 'cov'),
+    elseif ~strcmp(outparam, 'cov')
       ft_error('incorrect specification of outparam')
     end
     
@@ -405,8 +405,8 @@ end % swith dtype
 
 if ~exist('hasrpt', 'var')
   % in the case of raw data it has already been assigned
-  hasrpt = (isfield(data,            'dimord')  && ~isempty(strfind(data.dimord,                'rpt'))) || ...
-           (isfield(data, [outparam, 'dimord']) && ~isempty(strfind(data.([outparam,'dimord']), 'rpt')));
+  hasrpt = (isfield(data,            'dimord')  && contains(data.dimord,                'rpt')) || ...
+           (isfield(data, [outparam, 'dimord']) && contains(data.([outparam,'dimord']), 'rpt'));
 end
        
        

@@ -6,14 +6,14 @@ function [err,PatchHandles] = ShowPlane (EqPlane,Opt)
 %   This function displays a plane with equation ax + by + cz +d = 0
 %   The plane is defined by one sqaure patch
 %   The planes span the current axis limits of the figure.
-%   
+%
 %Input Parameters:
 %   EqPlane is a Nx4 matrix containing the equation of the plane containing each
 %       triplet in  Triplets. The plane passing by triplet i is speicifed in
-%       EqPlane(i,:) the plane would be 
+%       EqPlane(i,:) the plane would be
 %       EqPlane(i,1)x + EqPlane(i,2)y + EqPlane(i,3)z + EqPlane(i,4) = 0
 %   Opt is the options structure
-%     .Fig is a handle to the figure you want the planes displayed in, 
+%     .Fig is a handle to the figure you want the planes displayed in,
 %         default is the current figure.
 %     .WriteIV if this string is not empty, the planes that are displayed
 %         on the graph are written to an inventor format file
@@ -26,16 +26,16 @@ function [err,PatchHandles] = ShowPlane (EqPlane,Opt)
 %Output Parameters:
 %   err : 0 No Problem
 %       : 1 Mucho Problems
-%   
+%
 %   PatchHandles : the handle to the patches displayed on the figure
-%      
+%
 %More Info :
 %   see Plane_Equation
-%   
-%   
+%
+%
 %
 %     Author : Ziad Saad
-%     Date : Thu Oct 22 20:19:36 CDT 1998 
+%     Date : Thu Oct 22 20:19:36 CDT 1998
 
 
 %Define the function name for easy referencing
@@ -78,7 +78,7 @@ ztmp = zeros(1,4);
 
 for (i=1:1:Nplanes),
 	%using the XY limits, find the corrspondign z values
-	if (EqPlane(i,3) ~= 0), 
+	if (EqPlane(i,3) ~= 0),
 		ztmp(1) = (-EqPlane(i,4) - EqPlane(i,1).*Xlim(1) - EqPlane(i,2).*Ylim(1)) ./ EqPlane(i,3);
 		ztmp(2) = (-EqPlane(i,4) - EqPlane(i,1).*Xlim(2) - EqPlane(i,2).*Ylim(1)) ./ EqPlane(i,3);
 		ztmp(3) = (-EqPlane(i,4) - EqPlane(i,1).*Xlim(2) - EqPlane(i,2).*Ylim(2)) ./ EqPlane(i,3);

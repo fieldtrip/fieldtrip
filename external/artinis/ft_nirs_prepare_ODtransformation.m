@@ -105,7 +105,6 @@ ft_preamble init              % this will reset ft_warning and show the function
 ft_preamble debug             % this allows for displaying or saving the function name and input arguments upon an error
 ft_preamble loadvar    data   % this reads the input data in case the user specified the cfg.inputfile option
 ft_preamble provenance data   % this records the time and memory usage at the beginning of the function
-ft_preamble trackconfig       % this converts the cfg structure in a config object, which tracks the cfg options that are being used
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -122,16 +121,7 @@ cfg.age     = ft_getopt(cfg, 'age', []);
 cfg.dpf     = ft_getopt(cfg, 'dpf', []);
 
 % get the optode definition
-% FIXME this should use FT_FETCH_SENS
-if ~isfield(data, 'opto')
-  if ~isfield(data, 'hdr') && ~isfield(data.hdr, 'opto')
-    error('no optode structure found in the data');
-  else
-    opto = data.hdr.opto;
-  end
-else
-  opto = data.opto;
-end
+opto = ft_fetch_sens(cfg, data);
 
 % select the appropriate channels
 if isfield(data, 'topolabel')
@@ -169,9 +159,17 @@ if ~isempty(cfg.age) && ~isempty(cfg.dpf)
 elseif ~isempty(cfg.age)
   error('the use of cfg.age is not implemented, yet');
 elseif ~isempty(cfg.dpf)
+  % this is where they should be
   dpfs = repmat(cfg.dpf, size(cfg.channel));
-else
+elseif isfield(opto, 'DPF')
+  % this is for backward compatibility
   dpfs = opto.DPF(chanidx);
+elseif isfield(data, 'opto') && isfield(data.opto, 'DPF')
+  % this is for backward compatibility
+  dpfs = data.opto.DPF(chanidx);
+elseif isfield(data, 'hdr') && isfield(data.hdr, 'opto') && isfield(data.hdr.opto, 'DPF')
+  % this is for backward compatibility
+  dpfs = data.hdr.opto.DPF(chanidx);
 end
 
 % which chromophores are desired
@@ -191,7 +189,7 @@ receiveridx    = tratra<0;
 optodeidx      = (transmitteridx | receiveridx)'; % transpose to get back to tra order
 
 % extract the wavelengths
-wavelengths  = opto.wavelength(tratra(transmitteridx));
+wavelengths = opto.wavelength(tratra(transmitteridx));
 wlidx = bsxfun(@minus, coefs(:, 1), wavelengths);
 
 % find the relevant channel combinations
@@ -205,12 +203,12 @@ for c=1:numel(chanidx)
   % compute the channel combinations
   tupletidx = sum(bsxfun(@minus, optodeidx, optodeidx(c, :))~=0, 2)==0;
   chanUsed = chanUsed|tupletidx;
-  chancmb(:, end+1) = tupletidx;  
+  chancmb(:, end+1) = tupletidx;
 end
 
 % do the transformation
 tra      = zeros(size(chancmb, 2)*numel(chromophoreIdx), size(cfg.channel, 1));
-labelnew = cell(1, size(chancmb, 2)*numel(chromophoreIdx));
+labelnew = cell(size(chancmb, 2)*numel(chromophoreIdx), 1);
 
 % transformation has to be done per channel combination
 chanidx = []; % we will use this variable here for indexing channels (Rx-Tx cmbs)
@@ -250,6 +248,6 @@ end
 
 %% create output
 montage = [];
-montage.labelorg = cfg.channel;
+montage.labelorg = cfg.channel(:)';
 montage.labelnew = labelnew;
 montage.tra      = tra;

@@ -9,7 +9,7 @@ function test_bug1142
 % the script is not yet finished, so at this moment it should not proceed to give an error
 return
 
-datadir = dccnpath('/home/common/matlab/fieldtrip/data');
+datadir = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf');
 
 artifact_type = {
   'clip'

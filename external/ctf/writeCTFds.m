@@ -220,7 +220,7 @@ for index=[0:7 10 13 14 17 28 29]
       break;
     end
   end
-  if isempty(strfind(ds.res4.chanNames(k,:),'-'));break;end
+  if isempty(k)||isempty(strfind(ds.res4.chanNames(k,:),'-'));break;end
 end
 clear index k chanName;
 

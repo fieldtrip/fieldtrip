@@ -18,38 +18,38 @@ freq.cfg    = [];
 
 channelcmb = ft_channelcombination({'all' 'all'}, freq.label, 1);
 
-f1 = ft_checkdata(freq, 'cmbrepresentation', 'full');
-f2 = ft_checkdata(freq, 'cmbrepresentation', 'sparsewithpow', 'channelcmb', channelcmb(1,:));
-f3 = ft_checkdata(freq, 'cmbrepresentation', 'sparse', 'channelcmb', channelcmb);
+f1 = ft_checkdata(freq, 'cmbstyle', 'full');
+f2 = ft_checkdata(freq, 'cmbstyle', 'sparsewithpow', 'channelcmb', channelcmb(1,:));
+f3 = ft_checkdata(freq, 'cmbstyle', 'sparse', 'channelcmb', channelcmb);
 
 f1f = f1;
-f2f = ft_checkdata(f2, 'cmbrepresentation', 'full');
-f3f = ft_checkdata(f3, 'cmbrepresentation', 'full');
+f2f = ft_checkdata(f2, 'cmbstyle', 'full');
+f3f = ft_checkdata(f3, 'cmbstyle', 'full');
 
-f1f2  = ft_checkdata(f1f, 'cmbrepresentation', 'sparse');
-f1f2f = ft_checkdata(f1f2, 'cmbrepresentation', 'full');
+f1f2  = ft_checkdata(f1f, 'cmbstyle', 'sparse');
+f1f2f = ft_checkdata(f1f2, 'cmbstyle', 'full');
 
 c3 = f3;
 c3.cohspctrm = f3.crsspctrm;
-c3f = ft_checkdata(c3, 'cmbrepresentation', 'full');
-c3s = ft_checkdata(c3f, 'cmbrepresentation', 'sparse');
+c3f = ft_checkdata(c3, 'cmbstyle', 'full');
+c3s = ft_checkdata(c3f, 'cmbstyle', 'sparse');
 
 c1 = f1f2;
 c1.cohspctrm = c1.crsspctrm;
-c1f = ft_checkdata(c1, 'cmbrepresentation', 'full');
-c1s = ft_checkdata(c1f, 'cmbrepresentation', 'sparse');
+c1f = ft_checkdata(c1, 'cmbstyle', 'full');
+c1s = ft_checkdata(c1f, 'cmbstyle', 'sparse');
 
 cfg = [];
 cfg.method = 'coh';
 cfg.channelcmb = channelcmb(1,:);
 coh = ft_connectivityanalysis(cfg, freq);
-coh2 = ft_checkdata(coh, 'cmbrepresentation', 'sparse');
+coh2 = ft_checkdata(coh, 'cmbstyle', 'sparse');
 
 cfg = [];
 cfg.method = 'granger';
 
 g = ft_connectivityanalysis(cfg, freq);
-g2 = ft_checkdata(g, 'cmbrepresentation', 'sparse');
+g2 = ft_checkdata(g, 'cmbstyle', 'sparse');
 
 %this part tests the code which aims at speeding up the fourier->full conversion if all(freq.cumtapcnt==freq.cumtapcnt(1))
 
@@ -64,4 +64,4 @@ freq.label  = {'a';'b';'c';'d';'e';'f';'g';'h';'i';'j';'k';'l';'m';'n';'o';'p';'
 freq.cumtapcnt = 3*ones(3000,1);
 freq.cfg    = [];
 
-freqx = ft_checkdata(freq, 'cmbrepresentation', 'full');
+freqx = ft_checkdata(freq, 'cmbstyle', 'full');

@@ -40,7 +40,6 @@ function [input] = ft_apply_montage(input, montage, varargin)
 %   'balancename'   = string, name of the montage (default = '')
 %   'feedback'      = string, see FT_PROGRESS (default = 'text')
 %   'warning'       = boolean, whether to show warnings (default = true)
-%   'showcallinfo'  = string, 'yes' or 'no' (default = 'no')
 %
 % If the first input is a montage, then the second input montage will be
 % applied to the first. In effect, the output montage will first do
@@ -48,7 +47,7 @@ function [input] = ft_apply_montage(input, montage, varargin)
 %
 % See also FT_READ_SENS, FT_DATATYPE_SENS
 
-% Copyright (C) 2008-2016, Robert Oostenveld
+% Copyright (C) 2008-2023, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -68,7 +67,7 @@ function [input] = ft_apply_montage(input, montage, varargin)
 %
 % $Id$
 
-if iscell(input) && iscell(input)
+if iscell(input)
   % this represents combined EEG, ECoG and/or MEG
   for i=1:numel(input)
     input{i} = ft_apply_montage(input{i}, montage, varargin{:});
@@ -86,13 +85,16 @@ inverse       = ft_getopt(varargin, 'inverse',     'no');
 feedback      = ft_getopt(varargin, 'feedback',    'text');
 showwarning   = ft_getopt(varargin, 'warning',     true);
 bname         = ft_getopt(varargin, 'balancename', '');
-showcallinfo  = ft_getopt(varargin, 'showcallinfo', 'no');
 
 if istrue(showwarning)
   warningfun = @warning;
 else
   warningfun = @nowarning;
 end
+
+% ensure that the input montage is correct, see https://github.com/fieldtrip/fieldtrip/issues/1718
+assert(length(unique(montage.labelold))==length(montage.labelold), 'the montage is invalid');
+assert(length(unique(montage.labelnew))==length(montage.labelnew), 'the montage is invalid');
 
 % these are optional, at the end we will clean up the output in case they did not exist
 if ~istrue(inverse)
@@ -200,15 +202,14 @@ if ~isfield(input, 'tra') && isfield(input, 'label')
 end
 
 if istrue(inverse)
-  % swap the role of the original and new channels
+  % swap the role of the old and new channels
   tmp.labelnew    = montage.labelold;
   tmp.labelold    = montage.labelnew;
   tmp.chantypenew = montage.chantypeold;
   tmp.chantypeold = montage.chantypenew;
   tmp.chanunitnew = montage.chanunitold;
   tmp.chanunitold = montage.chanunitnew;
-  % apply the inverse montage, this can be used to undo a previously
-  % applied montage
+  % apply the inverse montage, this can be used to undo a previously applied montage
   tmp.tra = full(montage.tra);
   if rank(tmp.tra) < length(tmp.tra)
     warningfun('the linear projection for the montage is not full-rank, the resulting data will have reduced dimensionality');
@@ -219,9 +220,9 @@ if istrue(inverse)
   montage = tmp;
 end
 
-% select and keep the columns that are non-empty, i.e. remove the empty columns
+% keep only the columns that are not empty
 selcol = ~all(montage.tra==0, 1);
-if keepunused
+if istrue(keepunused)
   for i=find(selcol==false)
     % don't remove the column if it corresponds to one of the output channels
     selcol(i) = any(strcmp(montage.labelnew, montage.labelold{i}));
@@ -233,7 +234,7 @@ montage.chantypeold = montage.chantypeold(selcol);
 montage.chanunitold = montage.chanunitold(selcol);
 clear selcol
 
-% select and remove the columns corresponding to channels that are not present in the original data
+% keep only the channels that are present in the input data
 remove = setdiff(montage.labelold, intersect(montage.labelold, inputlabel));
 selcol = match_str(montage.labelold, remove);
 % we cannot just remove the colums, all rows that depend on it should also be removed
@@ -253,8 +254,7 @@ montage.chanunitnew = montage.chanunitnew(~selrow);
 montage.tra         = montage.tra(~selrow, ~selcol);
 clear remove selcol selrow
 
-% add columns for channels that are present in the input data but not specified in
-% the montage, stick to the original order in the data
+% add columns for channels present in the input data but that are not specified in the montage, stick to the original order in the data
 [dum, ix]   = setdiff(inputlabel, montage.labelold);
 addlabel    = inputlabel(sort(ix));
 addchantype = inputchantype(sort(ix));
@@ -262,23 +262,24 @@ addchanunit = inputchanunit(sort(ix));
 m = size(montage.tra,1);
 n = size(montage.tra,2);
 k = length(addlabel);
-% check for NaNs in unused channels; these will be mixed in with the rest
-% of the channels and result in NaNs in the output even when multiplied
-% with zeros or identity
-if k > 0 && isfield(input, 'trial') % check for raw data now only
-  cfg = [];
-  cfg.channel = addlabel;
-  cfg.showcallinfo = showcallinfo;
-  data_unused = ft_selectdata(cfg, input);
-  % use an anonymous function to test for the presence of NaNs in the input data
-  hasnan = @(x) any(isnan(x(:)));
-  if any(cellfun(hasnan, data_unused.trial))
-    ft_error('FieldTrip:NaNsinInputData', ['Your input data contains NaNs in channels that are unused '...
-      'in the supplied montage. This would result in undesired NaNs in the '...
-      'output data. Please remove these channels from the input data (using '...
-      'ft_selectdata) before attempting to apply the montage.']);
-  end
-end
+
+% % check for NaNs in unused channels; these will be mixed in with the rest
+% % of the channels and result in NaNs in the output even when multiplied
+% % with zeros or identity
+% if k > 0 && isfield(input, 'trial') % check for raw data now only
+%   cfg = [];
+%   cfg.channel = addlabel;
+%   cfg.showcallinfo = showcallinfo;
+%   data_unused = ft_selectdata(cfg, input);
+%   % use an anonymous function to test for the presence of NaNs in the input data
+%   hasnan = @(x) any(isnan(x(:)));
+%   if any(cellfun(hasnan, data_unused.trial))
+%     ft_error('FieldTrip:NaNsinInputData', ['Your input data contains NaNs in channels that are unused '...
+%       'in the supplied montage. This would result in undesired NaNs in the '...
+%       'output data. Please remove these channels from the input data (using '...
+%       'ft_selectdata) before attempting to apply the montage.']);
+%   end
+% end
 
 if istrue(keepunused)
   % add the channels that are not rereferenced to the input and output of the montage
@@ -323,10 +324,8 @@ montage.chanunitold    = montage.chanunitold(selmontage);
 % ensure that the montage is double precision
 montage.tra = double(montage.tra);
 
-% making the tra matrix sparse will speed up subsequent multiplications, but should
-% not result in a sparse matrix
-% note that this only makes sense for matrices with a lot of zero elements, for dense
-% matrices keeping it full will be much quicker
+% making the tra matrix sparse will speed up subsequent multiplications, but should not result in sparse output data
+% this only makes sense for matrices with a lot of zero elements; for dense matrices it is faster to keep it full
 if size(montage.tra,1)>1 && nnz(montage.tra)/numel(montage.tra) < 0.3
   montage.tra = sparse(montage.tra);
 else
@@ -362,9 +361,9 @@ elseif ft_datatype(input, 'freq') && isfield(input, 'fourierspctrm')
   inputtype = 'freq';
 elseif ft_datatype(input, 'freq') && isfield(input, 'crsspctrm')
   inputtype = 'freq_crsspctrm';
-  
+
   % attempt to convert to a chan-chan representation
-  input     = ft_checkdata(input, 'cmbrepresentation', 'full');
+  input     = ft_checkdata(input, 'cmbstyle', 'full');
 else
   inputtype = 'unknown';
 end
@@ -387,7 +386,7 @@ switch inputtype
     sens = input;
     clear input
 
-    % apply the montage to the inputor array
+    % apply the montage to the input
     if isa(sens.tra, 'single')
       % sparse matrices and single precision do not match
       sens.tra = full(montage.tra) * sens.tra;
@@ -396,7 +395,7 @@ switch inputtype
     end
 
     % The montage operates on the coil weights in sens.tra, but the output channels can be different.
-    % If possible, we want to keep the original channel positions and orientations.
+    % If possible, we want to keep the old channel positions and orientations.
     [sel1, sel2] = match_str(montage.labelnew, inputlabel);
     keepchans = isequal(sel1(:)', 1:numel(montage.labelnew));
 
@@ -415,7 +414,7 @@ switch inputtype
           sens.chantypeold = inputchantype;
           sens.chanunitold = inputchanunit;
         end
-        % compute the channel positions as a weighted sum of the original ones
+        % compute the new channel positions as a weighted sum of the old ones
         sens.chanpos = posweight * sens.chanpos;
       end
     end
@@ -427,7 +426,7 @@ switch inputtype
         if ~isfield(sens, 'chanoriold')
           sens.chanoriold = sens.chanori;
         end
-        % compute the channel orientations as a weighted sum of the original ones
+        % compute the new channel orientations as a weighted sum of the old ones
         sens.chanori = posweight * sens.chanori;
       end
     end
@@ -452,15 +451,13 @@ switch inputtype
 
     elseif ~istrue(inverse) && ~isempty(bname)
       if isfield(sens, 'balance')
-        % check whether a balancing montage with name bname already exist,
-        % and if so, how many
+        % check whether a balancing montage with name bname already exist, and if so, how many
         mnt = fieldnames(sens.balance);
         sel = strmatch(bname, mnt);
         if numel(sel)==0
           % bname can stay the same
         elseif numel(sel)==1
-          % the original should be renamed to 'bname1' and the new one should
-          % be 'bname2'
+          % the original should be renamed to 'bname1' and the new one should be 'bname2'
           sens.balance.([bname, '1']) = sens.balance.(bname);
           sens.balance                = rmfield(sens.balance, bname);
           if isfield(sens.balance, 'current') && strcmp(sens.balance.current, bname)
@@ -493,22 +490,44 @@ switch inputtype
     clear sens
 
   case 'raw'
-    % apply the montage to the raw data that was preprocessed using FieldTrip
+    % apply the montage to the raw input data
     data = input;
     clear input
+
+    % there are two challenges to deal with
+    % 1) the input data can be single, and sparse(1) * single(0) fails
+    % 2) the input data can contain nans, and 0*nan returns a nan
+    % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=3035 and https://github.com/fieldtrip/fieldtrip/issues/2169
 
     Ntrials = numel(data.trial);
     ft_progress('init', feedback, 'processing trials');
     for i=1:Ntrials
       ft_progress(i/Ntrials, 'processing trial %d from %d\n', i, Ntrials);
-      if isa(data.trial{i}, 'single')
-        % sparse matrices and single
-        % precision do not match
-        data.trial{i} = full(montage.tra) * data.trial{i};
-      else
+
+      if     ~isa(data.trial{i}, 'single') && ~any(isnan(data.trial{i}(:)))
         data.trial{i} = montage.tra * data.trial{i};
+      elseif ~isa(data.trial{i}, 'single') &&  any(isnan(data.trial{i}(:)))
+        % do not multiply 0 in the montage with nan in the data
+        tmp = zeros(size(montage.tra,1), size(data.trial{i}, 2));
+        for j=1:size(montage.tra,1)
+          sel = montage.tra(j,:)~=0;
+          tmp(j,:) = montage.tra(j,sel) * data.trial{i}(sel,:);
+        end
+        data.trial{i} = tmp;
+      elseif  isa(data.trial{i}, 'single') && ~any(isnan(data.trial{i}(:)))
+        % sparse matrices and single precision do not match
+        data.trial{i} = full(montage.tra) * data.trial{i};
+      elseif  isa(data.trial{i}, 'single') &&  any(isnan(data.trial{i}(:)))
+        % sparse matrices and single precision do not match
+        % do not multiply 0 in the montage with nan in the data, see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=3035
+        tmp = zeros(size(montage.tra,1), size(data.trial{i}, 2));
+        for j=1:size(montage.tra,1)
+          sel = montage.tra(j,:)~=0;
+          tmp(j,:) = full(montage.tra(j,sel)) * data.trial{i}(sel,:);
+        end
+        data.trial{i} = tmp;
       end
-    end
+    end % for Ntrials
     ft_progress('close');
 
     data.label    = montage.labelnew;
@@ -610,7 +629,7 @@ switch inputtype
   case 'freq_crsspctrm'
     % input freq data has a chan-chan crsspctrm, montage needs te be
     % applied to both ends
-    
+
     freq = input;
     clear input
     if contains(getdimord(freq, 'crsspctrm'), 'rpt')
@@ -636,7 +655,7 @@ switch inputtype
       end
       freq.crsspctrm = output;
     end
-    
+
     freq.label    = montage.labelnew;
     freq.chantype = montage.chantypenew;
     freq.chanunit = montage.chanunitnew;

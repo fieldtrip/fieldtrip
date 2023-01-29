@@ -32,14 +32,14 @@ function data = ft_denoise_pca(cfg, varargin)
 % if 0 < cfg.truncate < 1, the singular value spectrum will be thresholded at the
 % fraction cfg.truncate of the largest singular value.
 %
-% See also FT_PREPROCESSING, FT_DENOISE_SYNTHETIC
+% See also FT_PREPROCESSING, FT_DENOISE_SYNTHETIC, FT_DENOISE_SSP
 
 % Undocumented cfg-option: cfg.pca the output structure of an earlier call
 % to the function. Can be used regress out the reference channels from
 % another data set.
 
 % Copyright (c) 2008-2009, Jan-Mathijs Schoffelen, CCNi Glasgow
-% Copyright (c) 2010-2011, Jan-Mathijs Schoffelen, DCCN Nijmegen
+% Copyright (c) 2010-2022, Jan-Mathijs Schoffelen, DCCN Nijmegen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -69,7 +69,6 @@ ft_defaults
 ft_preamble init
 ft_preamble debug
 ft_preamble provenance varargin
-ft_preamble trackconfig
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -81,6 +80,9 @@ for i=1:length(varargin)
   varargin{i} = ft_checkdata(varargin{i}, 'datatype', 'raw');
 end
 
+% check if the input cfg is valid for this function
+cfg = ft_checkconfig(cfg, 'forbidden',  {'channels', 'trial'}); % prevent accidental typos, see issue 1729
+
 % set the defaults
 cfg.refchannel = ft_getopt(cfg, 'refchannel', 'MEGREF');
 cfg.channel    = ft_getopt(cfg, 'channel',    'MEG');
@@ -91,13 +93,12 @@ cfg.pertrial   = ft_getopt(cfg, 'pertrial',   'no');
 cfg.feedback   = ft_getopt(cfg, 'feedback',   'none');
 cfg.updatesens = ft_getopt(cfg, 'updatesens', 'yes');
 
-
 if istrue(cfg.pertrial)
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % iterate over trials
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-  tmpcfg  = keepfields(cfg, {'trials', 'showcallinfo'});
+  tmpcfg  = keepfields(cfg, {'trials', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
   % select trials of interest
   for i=1:numel(varargin)
     varargin{i}        = ft_selectdata(tmpcfg, varargin{i});
@@ -126,7 +127,7 @@ else
   computeweights = ~isfield(cfg, 'pca');
 
   % select trials of interest
-  tmpcfg  = keepfields(cfg, {'trials', 'showcallinfo'});
+  tmpcfg  = keepfields(cfg, {'trials', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
   if length(varargin)==1
     % channel data and reference channel data are in 1 data structure
     megchan = ft_channelselection(cfg.channel,    varargin{1}.label);
@@ -159,9 +160,9 @@ else
     
   end
   
-  refchan = ft_channelselection(cfg.refchannel, refdata.label);
+  refchan = ft_channelselection(cfg.refchannel, refdata.label, ft_senstype(refdata));
   refindx = match_str(refdata.label, refchan);
-  megchan = ft_channelselection(cfg.channel, data.label);
+  megchan = ft_channelselection(cfg.channel, data.label, ft_senstype(data));
   megindx = match_str(data.label, megchan);
 
   nref = length(refindx);
@@ -180,9 +181,6 @@ else
   data.trial    = cellvecadd(data.trial,    -m);
   m             = cellmean(refdata.trial,    2);
   refdata.trial = cellvecadd(refdata.trial, -m);
-
-  % compute std of data before the regression
-  stdpre = cellstd(data.trial, 2);
 
   if computeweights
 
@@ -261,9 +259,6 @@ else
 
   end
 
-  % compute std of data after
-  stdpst = cellstd(data.trial, 2);
-
   % demean FIXME is this needed
   m          = cellmean(data.trial, 2);
   data.trial = cellvecadd(data.trial, -m);
@@ -322,7 +317,6 @@ end % if pertrial
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-ft_postamble trackconfig
 ft_postamble previous   varargin
 ft_postamble provenance data
 ft_postamble history    data

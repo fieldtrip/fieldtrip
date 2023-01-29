@@ -1,28 +1,29 @@
-function [cluster, total] = findcluster(onoff, spatdimneighbstructmat, varargin)
+function [cluster, numcluster] = findcluster(onoff, spatdimneighbstructmat, varargin)
 
-% FINDCLUSTER returns all connected clusters in a 3 dimensional matrix
-% with a connectivity of 6.
+% FINDCLUSTER returns all connected clusters for a three-dimensional six-connected
+% neighborhood
 %
 % Use as
 %   [cluster, num] = findcluster(onoff, spatdimneighbstructmat, minnbchan)
 % or ar
 %   [cluster, num] = findcluster(onoff, spatdimneighbstructmat, spatdimneighbselmat, minnbchan)
-% where 
-%   onoff                   is a 3D boolean matrix with size N1xN2xN3
-%   spatdimneighbstructmat  defines the neighbouring channels/combinations, see below
-%   minnbchan               the minimum number of neighbouring channels/combinations 
-%   spatdimneighbselmat     is a special neighbourhood matrix that is used for selecting
-%                           channels/combinations on the basis of the minnbchan criterium
+% where
+%   onoff                  =  is a 3D boolean matrix with size N1xN2xN3
+%   spatdimneighbstructmat =  defines the neighbouring channels/combinations, see below
+%   minnbchan              =  the minimum number of neighbouring channels/combinations
+%   spatdimneighbselmat    =  is a special neighbourhood matrix that is used for selecting
+%                             channels/combinations on the basis of the minnbchan criterium
 %
-% The neighbourhood structure for the first dimension is specified using 
-% spatdimneighbstructmat, which is a 2D (N1xN1) matrix. Each row and each column corresponds
-% to a channel (combination) along the first dimension and along that row/column, elements
-% with "1" define the neighbouring channel(s) (combinations). The first dimension of
-% onoff should correspond to the channel(s) (combinations).
+% The neighbourhood structure for the first dimension is specified using
+% spatdimneighbstructmat, which is a 2D (N1xN1) matrix. Each row and each column
+% corresponds to a channel (combination) along the first dimension and along that
+% row/column, elements with "1" define the neighbouring channel(s) (combinations).
+% The first dimension of onoff should correspond to the channel(s) (combinations).
 %
-% See also SPM_BWLABEL (spm toolbox) 
+% See also SPM_BWLABEL, BWLABEL, BWLABELN
 
-% Copyright (C) 2004, Robert Oostenveld
+% Copyright (C) 2004-2020, Robert Oostenveld
+% Copyright (C) 2021, Robert Oostenveld and Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -42,74 +43,100 @@ function [cluster, total] = findcluster(onoff, spatdimneighbstructmat, varargin)
 %
 % $Id$
 
-ndatadim = size(onoff);
-spatdimlength = ndatadim(1);
-ndatadim = ndatadim(2:end);
-celldims = num2cell(ndatadim);
+% the calling code should ensure that SPM is on the path, preferably the latest version
+ft_hastoolbox('spm', -1);
 
-if length(size(spatdimneighbstructmat))~=2 || ~all(size(spatdimneighbstructmat)==spatdimlength)
+siz           = size(onoff);
+spatdimlength = siz(1);
+siz           = siz(2:end);
+dims          = ndims(onoff);
+
+% this is for reshaping back
+celldims      = num2cell([siz 1]);
+
+% this is for efficient matrix indexing
+seldims = repmat({':'},[1 dims-1]);
+
+% put the spatial dimension last: this substantially speeds up allocation
+% and selection of data from the matrix, which outweighs the time spent to
+% do the matrix permutation;
+onoff = permute(onoff, [2:dims 1]);
+
+if ~ismatrix(spatdimneighbstructmat) || ~all(size(spatdimneighbstructmat)==spatdimlength)
   ft_error('invalid dimension of spatdimneighbstructmat');
 end
 
-minnbchan=0;
+% this input argument handling is somewhat clunky, but it does the trick
 if length(varargin)==1
-    minnbchan=varargin{1};
+  minnbchan = varargin{1};
+else
+  minnbchan = 0;
 end
 if length(varargin)==2
-    spatdimneighbselmat=varargin{1};
-    minnbchan=varargin{2};
+  spatdimneighbselmat = varargin{1};
+  minnbchan           = varargin{2};
 end
 
 if minnbchan>0
-    % For every (time,frequency)-element, it is calculated how many significant
-    % neighbours this channel has. If a significant channel has less than minnbchan
-    % significant neighbours, then this channel is removed from onoff.
-    
-    if length(varargin)==1
-        selectmat = single(spatdimneighbstructmat | spatdimneighbstructmat');
-    end
-    if length(varargin)==2
-        selectmat = single(spatdimneighbselmat | spatdimneighbselmat');
-    end
-    nremoved=1;
-    while nremoved>0
-        nsigneighb=reshape(selectmat*reshape(single(onoff),[spatdimlength prod(ndatadim)]),[spatdimlength ndatadim]);
-        remove=(onoff.*nsigneighb)<minnbchan;
-        nremoved=length(find(remove.*onoff));
-        onoff(remove)=0;
-    end
+  % For every (time,frequency)-element, it is calculated how many supra
+  % threshold neighbours this spatial element has. If a supra threshold
+  % spatial elementhas fewer than minnbchan supra threshold neighbours,
+  % it is removed from onoff.
+  
+  if length(varargin)==1
+    selectmat = single(spatdimneighbstructmat | spatdimneighbstructmat');
+  end
+  if length(varargin)==2
+    selectmat = single(spatdimneighbselmat | spatdimneighbselmat');
+  end
+  
+  nremoved = 1;
+  while nremoved>0
+    nsigneighb = reshape(reshape(single(onoff),[prod(siz) spatdimlength])*selectmat,[siz spatdimlength]);
+    remove     = (onoff.*nsigneighb) < minnbchan;
+    nremoved   = length(find(remove.*onoff));
+    onoff(remove) = 0;
+  end
 end
 
-% for each channel (combination), find the connected time-frequency clusters
+% for each channel or channel-combination, find the connected time, frequency, or time-frequency clusters
 labelmat = zeros(size(onoff));
-total = 0;
-if numel(ndatadim)>1
-  for spatdimlev=1:spatdimlength
-    if numel(ndatadim) == 2 || numel(ndatadim) == 3 % if 2D or 3D data (without channel)
-      % use spm_bwlabel for 2D/3D data to avoid usage of image processing toolbox
-      [labelmat(spatdimlev, :, :,:), num] = spm_bwlabel(double(reshape(onoff(spatdimlev, :, :), celldims{:})), 6); % the previous code contained a '4' for input
+numcluster = 0;
+
+if ~(numel(siz)==1 && all(siz==1) && islogical(onoff))
+  for j = 1:spatdimlength
+    if numel(siz) <= 3 % if 2D or 3D data (without spatial dimension)
+      % use SPM for 2D/3D data instead of the MATLAB image processing toolbox
+      [clus, num] = spm_bwlabel(double(onoff(seldims{:},j)), 6);
     else
-      ft_error('cluster-based stats for data >4D is NYI')
+      [clus, num] = bwlabeln(double(onoff(seldims{:},j)), conndef(dims-1, 'min'));
     end
-      
-    
-    labelmat(spatdimlev, :, :, :) = labelmat(spatdimlev, :, :, :) + (labelmat(spatdimlev, :, :, :)~=0)*total;
-    total = total + num;
+    clus(clus~=0) = clus(clus~=0) + numcluster;
+    labelmat(seldims{:},j) = clus;
+    numcluster = numcluster + num;
   end
 else
   labelmat(onoff>0) = 1:sum(onoff(:));
-  total = sum(onoff(:));
+  numcluster = sum(onoff(:));
 end
-% combine the time and frequency dimension for simplicity
-labelmat = reshape(labelmat, spatdimlength, prod(ndatadim));
 
-% combine clusters that are connected in neighbouring channel(s)
-% (combinations). Convert inputs to uint32 as that is required by the mex
-% file (and the values will be positive integers anyway).
-cluster = combineClusters(uint32(labelmat), logical(spatdimneighbstructmat), uint32(total));
+% put the spatial dimension back upfront
+labelmat = permute(labelmat, [dims 1:(dims-1)]);
+
+% combine the non-spatial dimensions for simplicity
+labelmat = reshape(labelmat, spatdimlength, []);
+
+% combine clusters that are connected in neighbouring channels or channel
+% combinations. Here we convert the input to uint32 as that is required by the mex
+% file, and the values will be positive integers anyway.
+if spatdimlength>1
+  cluster = combineClusters(uint32(labelmat), logical(spatdimneighbstructmat), uint32(numcluster));
+else
+  cluster = labelmat;
+end
 
 % reshape the output to the original format of the data
 cluster = reshape(cluster, spatdimlength, celldims{:});
 
-% update the total number
-total = numel(unique(cluster(:)))-1; % the value of 0 does not count
+% update the total number of clusters
+numcluster = max(cluster(:));

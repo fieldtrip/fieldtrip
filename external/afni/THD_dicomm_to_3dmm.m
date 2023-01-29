@@ -3,25 +3,25 @@ function [err,XYZmm,map] = THD_dicomm_to_3dmm (Info, XYZdic)
 %   [err,XYZmm,map] = THD_dicomm_to_3dmm (Info, [XYZdic])
 %
 %Purpose:
-%   
+%
 %   Change from image-oriented mm coordinates to AFNI dicom (RAI) coordinates
-%   
+%
 %Input Parameters:
 %   Info: Structure of header file, see BrikInfo
 %   XYZdic: Nx3 matrix of dicom coordinates
-%   
+%
 %Output Parameters:
 %   err : 0 No Problem
 %       : 1  Problems
 %   XYZmm: Nx3 matrix of 3dmm coordinates
 %   map: 1x3 vector such that XYZmm = XYZdic(:,map)
-%      
+%
 %Key Terms:
-%   
+%
 %More Info :
 %   Based on THD_dicomm_to_3dmm in thd_coords.c
-%   
-%   
+%
+%
 %
 %     Author : Ziad Saad
 %     Date : Wed Feb 18 12:01:08 EST 2004
@@ -61,7 +61,7 @@ end
 XYZmm = [];
 if (nargin > 1),
    XYZmm = XYZdic;
-   if (~isempty(XYZdic)) XYZmm = XYZdic(:,map); end    
+   if (~isempty(XYZdic)) XYZmm = XYZdic(:,map); end
 end
 
 err = 0;

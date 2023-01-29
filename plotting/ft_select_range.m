@@ -44,7 +44,7 @@ function ft_select_range(handle, eventdata, varargin)
 %
 % See also FT_SELECT_BOX, FT_SELECT_CHANNEL, FT_SELECT_POINT, FT_SELECT_POINT3D, FT_SELECT_VOXEL
 
-% Copyright (C) 2009-2020, Robert Oostenveld
+% Copyright (C) 2009-2021, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -63,6 +63,8 @@ function ft_select_range(handle, eventdata, varargin)
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
 % $Id$
+
+persistent previous_cmhandle
 
 % get the optional arguments
 event       = ft_getopt(varargin, 'event');
@@ -124,33 +126,36 @@ end
 
 % setup contextmenu
 if ~isempty(contextmenu)
-  if isempty(get(handle,'uicontextmenu'))
-    hcmenu    = uicontextmenu(handle);
-    hcmenuopt = nan(1,numel(contextmenu));
+  if isempty(get(handle, 'uicontextmenu'))
+    cm    = uicontextmenu(handle);
+    cmopt = repmat(uimenu, size(contextmenu)); % start with an empty array of objects
     for icmenu = 1:numel(contextmenu)
-      hcmenuopt(icmenu) = uimenu(hcmenu, 'label', contextmenu{icmenu}, 'callback', {@evalcontextcallback, callback{:}, []}); % empty matrix is placeholder, will be updated to userdata.range
+      % the empty array at the end is a placeholder, it will be updated to userdata.range
+      cmopt(icmenu) = uimenu(cm, 'label', contextmenu{icmenu}, 'callback', [{@evalcontextcallback} callback {[]}]);
     end
+  else
+    cm = get(handle, 'uicontextmenu');
+    cmopt = get(cm, 'children');
   end
-  if ~exist('hcmenuopt','var')
-    hcmenuopt = get(get(handle,'uicontextmenu'),'children'); % uimenu handles, used for switchen on/off and updating
+
+  % add the contextmenu to all clickable objects
+  cmhandle = findobj(handle, 'hittest', 'on');
+
+  % the above should be fast enough, otherwise we might want to return to the following
+  % % add the contextmenu to all clickable children of the axes
+  % hchandle = findobj(findobj(handle, 'type', 'Axes'), 'hittest', 'on');
+  % % add the contextmenu to specific objects
+  % hchandle = [findobj(handle, 'type', 'text'); findobj(handle, 'type', 'patch'); findobj(handle, 'type', 'line')];
+
+  if ~isequal(previous_cmhandle, cmhandle)
+    % only set the context menu when needed
+    set(cmhandle, 'uicontextmenu', cm);
+    previous_cmhandle = cmhandle;
   end
-  
-  % setting associations for all clickable objects
-  % this out to be pretty fast, if this is still to slow in some cases, the code below has to be reused
-  if ~exist('hcmenu','var')
-    hcmenu = get(handle,'uicontextmenu');
-  end
-  set(findobj(handle,'hittest','on'), 'uicontextmenu',hcmenu);
-  % to be used if above is too slow
-  % associations only done once. this might be an issue in some cases, cause when a redraw is performed in the original figure (e.g. databrowser), a specific assocations are lost (lines/patches/text)
-  %   set(get(handle,'children'),'uicontextmenu',hcmenu);
-  %   set(findobj(handle,'type','text'), 'uicontextmenu',hcmenu);
-  %   set(findobj(handle,'type','patch'),'uicontextmenu',hcmenu);
-  %   set(findobj(handle,'type','line'), 'uicontextmenu',hcmenu); % fixme: add other often used object types that ft_select_range is called upon
 end
 
 % get last-used-mouse-button
-lastmousebttn = get(gcf,'selectiontype');
+lastmousebttn = get(gcf, 'selectiontype');
 
 switch lower(event)
   
@@ -167,7 +172,7 @@ switch lower(event)
             userData.box   = [];
             set(handle, 'Pointer', 'crosshair');
             if ~isempty(contextmenu) && ~pointonly
-              set(hcmenuopt,'enable', 'off')
+              set(cmopt, 'enable', 'off')
             end
           end
           
@@ -230,7 +235,7 @@ switch lower(event)
           end
           % update contextmenu callbacks
           if ~isempty(contextmenu)
-            updateContextCallback(hcmenuopt, callback, userData.range)
+            updateContextCallback(cmopt, callback, userData.range)
           end
         end
         
@@ -273,18 +278,19 @@ switch lower(event)
       set(userData.box(end), 'LineStyle', '--');
       set(userData.box(end), 'LineWidth', 1.5);
       set(userData.box(end), 'Visible', 'on');
+      set(userData.box(end), 'tag', 'selectedrange');
       
     else
       % update the cursor
       if inSelection(p, userData.range)
         set(handle, 'Pointer', 'hand');
         if ~isempty(contextmenu)
-          set(hcmenuopt,'enable','on')
+          set(cmopt, 'enable', 'on')
         end
       else
         set(handle, 'Pointer', 'crosshair');
         if ~isempty(contextmenu)
-          set(hcmenuopt,'enable','off')
+          set(cmopt, 'enable', 'off')
         end
       end
     end
@@ -294,7 +300,6 @@ switch lower(event)
     ft_error('unexpected event "%s"', event);
     
 end % switch event
-
 
 % put the modified selections back into the figure
 if ishandle(handle)
@@ -350,7 +355,7 @@ if ~isempty(callback)
     callback  = {funhandle, val};
   end
   for icmenu = 1:numel(hcmenuopt)
-    set(hcmenuopt(icmenu),'callback',{@evalcontextcallback, callback{:}})
+    set(hcmenuopt(icmenu), 'callback',{@evalcontextcallback, callback{:}})
   end
 end
 
@@ -361,10 +366,10 @@ function evalcontextcallback(hcmenuopt, eventdata, varargin)
 
 % delete selection box if present
 % get parent (uimenu -> uicontextmenu -> parent)
-parent = get(get(hcmenuopt,'parent'),'parent'); % fixme: isn't the parent handle always input provided in the callback?
+parent = get(get(hcmenuopt, 'parent'), 'parent'); % fixme: isn't the parent handle always input provided in the callback?
 userData = getappdata(parent, 'select_range_m');
 if ishandle(userData.box)
-  if any(~isnan([get(userData.box,'ydata') get(userData.box,'xdata')]))
+  if any(~isnan([get(userData.box, 'ydata') get(userData.box, 'xdata')]))
     delete(userData.box(ishandle(userData.box)));
     userData.range = [];
     userData.box   = [];
@@ -374,7 +379,7 @@ if ishandle(userData.box)
 end
 
 % get contextmenu name
-cmenulab = get(hcmenuopt,'label');
+cmenulab = get(hcmenuopt, 'label');
 if numel(varargin)>1
   % the callback specifies a function and additional arguments
   funhandle = varargin{1};

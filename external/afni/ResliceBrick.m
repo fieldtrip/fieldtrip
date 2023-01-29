@@ -4,18 +4,18 @@ function [err, ErrMessage, Info, V] = ResliceBrick (BrickName, NewCode, Opt)
 %
 %Purpose:
 %  Reslices an AFNI brick kinda a la 3daxialize but in any orientation desired
-%  No interpolation or shananigans are done 
-%   
+%  No interpolation or shananigans are done
+%
 %Input Parameters:
 %   BrickName the name of the afni brick
-%   NewCode The orientation code to write the new brick as 'RPS' or 'RAI' 
+%   NewCode The orientation code to write the new brick as 'RPS' or 'RAI'
 %     or the name of a brick to reslice the data as. The new code is extracted from
 %     that brick's header.
 %   Opt is an optional options structure with the following fields
 %     .Prefix : (optional) prefix of the output brick. Default is ''
 %               in which case, the output prefix is the input prefix_<NewCode>
 %     .WriteBrick : 0/[1] optional flag for writing the brick to disk
-%               you may choose not to if you are passing it back to the 
+%               you may choose not to if you are passing it back to the
 %               calling function.
 %
 %Output Parameters:
@@ -24,17 +24,17 @@ function [err, ErrMessage, Info, V] = ResliceBrick (BrickName, NewCode, Opt)
 %   ErrMessage: a string containing warnings or error messages
 %   Info : The header of the resliced brick
 %   M : the resliced brick
-%      
+%
 %Key Terms:
-%   
+%
 %More Info :
-%   
+%
 %   example: The images making up data set AMzsspgrco+orig were acquired coronally.
 %         In certain instances (especially those involving 3dvolreg), you need to have
 %         the images making up the different volumes to be in aqcuired in the same plane
 %         and orientation. In this example, we reslice AMzsspgrco+orig to look like its images
-%         were acquired just like those making up AHzsspgrax+orig (axial, LAI) 
-%   
+%         were acquired just like those making up AHzsspgrax+orig (axial, LAI)
+%
 %     [err, ErrMessage] = ResliceBrick ('AMzsspgrco+orig.BRIK', 'AHzsspgrax+orig');
 %
 %     Author : Ziad Saad
@@ -54,7 +54,7 @@ function [err, ErrMessage, Info, V] = ResliceBrick (BrickName, NewCode, Opt)
 
 %make sure Code is OK
 	tmp = WordNumber(AllOrient , NewCode, '|');
-	if (isempty(tmp)), 
+	if (isempty(tmp)),
 		%maybe it's a Brick
 		CodeBrick = RemoveExtension(NewCode, '.HEAD|.BRIK');
 		CodeBrick = sprintf('%s.HEAD', CodeBrick);
@@ -65,7 +65,7 @@ function [err, ErrMessage, Info, V] = ResliceBrick (BrickName, NewCode, Opt)
 			%change it to string
 			[err, NewCode] = AFNI_OrientCode (NewCode);
 		else
-			ErrMessage = sprintf('Error %s subfunction: %s . %s not a valid orientation code nore a brick.' ,FuncName, ErrMessage, NewCode); return; 
+			ErrMessage = sprintf('Error %s subfunction: %s . %s not a valid orientation code nore a brick.' ,FuncName, ErrMessage, NewCode); return;
 		end
 	end
 	
@@ -74,7 +74,7 @@ function [err, ErrMessage, Info, V] = ResliceBrick (BrickName, NewCode, Opt)
 	[BrickName_Prefix, BrickName_View] = RemoveExtension(BrickName, '+orig|+acpc|+tlrc');
 
 %make sure Opt is OK
-	if (nargin == 2), 
+	if (nargin == 2),
 		Opt.Prefix = '';
 		Opt.verbose = 1;
 		Opt.WriteBrick = 1;

@@ -1,4 +1,4 @@
-function data = edf2fieldtrip(filename)
+function [data, event] = edf2fieldtrip(filename)
 
 % EDF2FIELDTRIP reads data from a EDF file with channels that have a different
 % sampling rates. It upsamples all data to the highest sampling rate and
@@ -7,13 +7,17 @@ function data = edf2fieldtrip(filename)
 %
 % Use as
 %   data = edf2fieldtrip(filename)
+% or
+%   [data, event] = edf2fieldtrip(filename)
 %
 % For reading EDF files in which all channels have the same sampling rate, you can
 % use the standard procedure with FT_DEFINETRIAL and FT_PREPROCESSING.
 %
-% See also FT_PREPROCESSING, FT_DEFINETRIAL, FT_REDEFINETRIAL
+% See also FT_PREPROCESSING, FT_DEFINETRIAL, FT_REDEFINETRIAL,
+% FT_READ_EVENT
 
-% Copyright (C) 2015, Robert Oostenveld
+% Copyright (C) 2015-2021, Robert Oostenveld
+% Copyright (C) 2022-, Robert Oostenveld and Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -91,4 +95,13 @@ data = ft_annotate(cfg, data);
 if isfield(data, 'hdr')
   % remove this, as otherwise it might be very confusing with the subselections
   data = rmfield(data, 'hdr');
+end
+
+try 
+  event = ft_read_event(filename);
+  sel   = ~cellfun('isempty',{event.value}');
+  event = event(sel(:));
+catch
+  ft_warning('could not extract events from the data');
+  event = [];
 end

@@ -99,15 +99,17 @@ end
 % find the dipole positions that are inside/outside the brain
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if ~isfield(sourcemodel, 'inside')
-  sourcemodel.inside = ft_inside_headmodel(sourcemodel.pos, headmodel);
+  if hasfilter
+    sourcemodel.inside = ~cellfun(@isempty, sourcemodel.filter);
+  elseif hasleadfield
+    sourcemodel.inside = ~cellfun(@isempty, sourcemodel.leadfield);
+  else
+    sourcemodel.inside = ft_inside_headmodel(sourcemodel.pos, headmodel);
+  end
 end
 
-if any(sourcemodel.inside>1)
-  % convert to logical representation
-  tmp = false(size(sourcemodel.pos,1),1);
-  tmp(sourcemodel.inside) = true;
-  sourcemodel.inside = tmp;
-end
+% convert to logical representation
+sourcemodel = fixinside(sourcemodel);
 
 % keep the original details on inside and outside positions
 originside = sourcemodel.inside;

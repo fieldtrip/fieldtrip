@@ -82,22 +82,25 @@ ft_preamble init
 ft_preamble debug
 ft_preamble loadvar data
 ft_preamble provenance data
-ft_preamble trackconfig
+
 
 % ensure that the input data is valid for this function, this will also do
 % backward-compatibility conversions of old data that for example was
 % read from an old *.mat file
 data = ft_checkdata(data, 'datatype', {'raw'}, 'feedback', 'yes', 'hassampleinfo', 'yes');
 
+% check if the input cfg is valid for this function
+cfg = ft_checkconfig(cfg, 'forbidden',  {'channels', 'trial'}); % prevent accidental typos, see issue 1729
+
+% set the defaults
+cfg.method   = ft_getopt(cfg, 'method',   'velocity2D');
+cfg.feedback = ft_getopt(cfg, 'feedback', 'yes');
+
 if isfield(data, 'fsample')
   fsample = getsubfield(data, 'fsample');
 else
   fsample = 1./(mean(diff(data.time{1})));
 end
-
-% set the defaults
-cfg.method   = ft_getopt(cfg, 'method',   'velocity2D');
-cfg.feedback = ft_getopt(cfg, 'feedback', 'yes');
 
 % set the defaults for the various microsaccade detection methods
 switch cfg.method
@@ -115,10 +118,10 @@ switch cfg.method
     % Unsupervised clustering method to detect microsaccades. J Vis 14.
   otherwise
     ft_error('unsupported option for cfg.method');
-end
+end % switch method
 
 % select channels and trials of interest, by default this will select all channels and trials
-tmpcfg = keepfields(cfg, {'trials', 'channel', 'tolerance', 'showcallinfo'});
+tmpcfg = keepfields(cfg, {'trials', 'channel', 'tolerance', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
 data = ft_selectdata(tmpcfg, data);
 [cfg, data] = rollback_provenance(cfg, data);
 
@@ -203,12 +206,17 @@ for i=1:ntrial
       end
       
     case 'clustering'
-      % not implemented yet
-  end
-end
+      ft_error('not implemented yet');
+      % Otero-Millan J, Castro JLA, Macknik SL, Martinez-Conde S (2014)
+      % Unsupervised clustering method to detect microsaccades. J Vis 14.
+
+    otherwise
+      ft_error('unsupported option for cfg.method');
+  end % switch method
+end % for each trial
 ft_progress('close');
 
-ft_postamble trackconfig
+% do the general cleanup and bookkeeping at the end of the function
 ft_postamble provenance
 ft_postamble debug
 ft_postamble previous data

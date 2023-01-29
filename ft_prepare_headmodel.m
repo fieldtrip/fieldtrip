@@ -27,13 +27,13 @@ function [headmodel, cfg] = ft_prepare_headmodel(cfg, data)
 % a segmented anatomical MRI that was obtained from FT_VOLUMESEGMENT.
 %
 % The cfg argument is a structure that can contain:
-%   cfg.method         string that specifies the forward solution, see below
-%   cfg.conductivity   a number or a vector containing the conductivities of the compartments
-%   cfg.tissue         a string or integer, to be used in combination with a 'seg' for the
-%                      second intput. If 'brain', 'skull', and 'scalp' are fields
-%                      present in 'seg', then cfg.tissue need not be specified, as
-%                      these are defaults, depending on cfg.method. Otherwise,
-%                      cfg.tissue should refer to which field(s) of seg should be used.
+%   cfg.method         = string that specifies the forward solution, see below
+%   cfg.conductivity   = a number or a vector containing the conductivities of the compartments
+%   cfg.tissue         = a string or integer, to be used in combination with a 'seg' for the
+%                          second intput. If 'brain', 'skull', and 'scalp' are fields
+%                          present in 'seg', then cfg.tissue need not be specified, as
+%                          these are defaults, depending on cfg.method. Otherwise,
+%                          cfg.tissue should refer to which field(s) of seg should be used.
 %
 % For EEG the following methods are available:
 %   singlesphere       analytical single sphere model
@@ -62,6 +62,8 @@ function [headmodel, cfg] = ft_prepare_headmodel(cfg, data)
 % BEMCP, DIPOLI, OPENMEEG
 %   cfg.tissue            see above; in combination with 'seg' input
 %   cfg.isolatedsource    (optional)
+%   cfg.tempdir           (optional)
+%   cfg.tempname          (optional)
 %
 % CONCENTRICSPHERES
 %   cfg.tissue            see above; in combination with 'seg' input
@@ -84,7 +86,6 @@ function [headmodel, cfg] = ft_prepare_headmodel(cfg, data)
 %   cfg.grid_filename     Alternatively,  a filename for the grid and a filename for the conductivities can be passed.
 %   cfg.tensors_filename  "
 %   cfg.duneuro_settings  (optional) Additional settings can be provided for duneuro (see http://www.duneuro.org).
-
 %
 % SINGLESHELL
 %   cfg.tissue            see above; in combination with 'seg' input; default options are 'brain' or 'scalp'
@@ -154,7 +155,7 @@ ft_nargout  = nargout;
 % do the general setup of the function
 ft_defaults
 ft_preamble init
-ft_preamble trackconfig
+
 ft_preamble provenance data
 
 % the ft_abort variable is set to true or false in ft_preamble_init
@@ -191,6 +192,8 @@ cfg.threshold       = ft_getopt(cfg, 'threshold');
 
 % other options
 cfg.isolatedsource  = ft_getopt(cfg, 'isolatedsource');   % used for dipoli and openmeeg
+cfg.tempdir         = ft_getopt(cfg, 'tempdir');          % used for dipoli
+cfg.tempname        = ft_getopt(cfg, 'tempname');         % used for dipoli
 cfg.point           = ft_getopt(cfg, 'point');            % used for halfspace
 cfg.submethod       = ft_getopt(cfg, 'submethod');        % used for halfspace
 cfg.feedback        = ft_getopt(cfg, 'feedback');
@@ -315,7 +318,7 @@ switch cfg.method
         headmodel = ft_headmodel_bemcp(geometry, 'conductivity', cfg.conductivity);
       end
     elseif strcmp(cfg.method, 'dipoli')
-      headmodel = ft_headmodel_dipoli(geometry, 'conductivity', cfg.conductivity, 'isolatedsource', cfg.isolatedsource);
+      headmodel = ft_headmodel_dipoli(geometry, 'conductivity', cfg.conductivity, 'isolatedsource', cfg.isolatedsource, 'tempdir', cfg.tempdir, 'tempname', cfg.tempname);
     else
       headmodel = ft_headmodel_openmeeg(geometry, 'conductivity', cfg.conductivity, 'isolatedsource', cfg.isolatedsource, 'tissue', cfg.tissue);
     end
@@ -503,7 +506,6 @@ if ~ft_headmodeltype(headmodel, 'infinite')
 end
 
 % do the general cleanup and bookkeeping at the end of the function
-ft_postamble trackconfig
 ft_postamble provenance
 ft_postamble previous data
 ft_postamble history headmodel
