@@ -1,16 +1,15 @@
 function [pnt, tri] = triangulate_seg(seg, npnt, origin)
 
-% TRIANGULATE_SEG constructs a triangulation of the outer surface of a
-% segmented volume. It starts at the center of the volume and projects the
-% vertices of an evenly triangulated sphere onto the outer surface. The
-% resulting surface is star-shaped from the origin of the sphere.
+% TRIANGULATE_SEG constructs a triangulation of the outer surface of a segmented
+% volume. It starts at the center of the volume and projects the vertices of an
+% evenly triangulated sphere onto the outer surface. The resulting surface is by
+% construction star-shaped from the origin of the sphere.
 %
 % Use as
 %   [pnt, tri] = triangulate_seg(seg, npnt, origin)
 %
 % Input arguments:
-%  seg    = 3D-matrix (boolean) containing segmented volume. If not boolean
-%           seg = seg(~=0);
+%  seg    = 3D-matrix (boolean) containing the segmented volume
 %  npnt   = requested number of vertices
 %  origin = 1x3 vector specifying the location of the origin of the sphere
 %           in voxel indices. This argument is optional. If undefined, the
@@ -20,12 +19,12 @@ function [pnt, tri] = triangulate_seg(seg, npnt, origin)
 %  pnt = Nx3 matrix of vertex locations
 %  tri = Mx3 matrix of triangles
 %
-% Seg will be checked for holes, and filled if necessary. Also, seg will be
-% checked to consist of a single boolean blob. If not, only the outer surface
-% of the largest will be triangulated. SPM is used for both the filling and
-% checking for multiple blobs.
+% The segmentation will be checked for holes, and filled if necessary. Also, the
+% segmentation will be checked to consist of a single boolean blob. If not, only the
+% outer surface of the largest will be triangulated. SPM is used for both the filling
+% and checking for multiple blobs.
 %
-% See also KSPHERE
+% See also MESH_SPHERE
 
 % Copyright (C) 2005-2012, Robert Oostenveld
 %
