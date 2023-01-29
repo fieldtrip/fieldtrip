@@ -1052,13 +1052,14 @@ switch cfg.method
     % create structure to be passed to gui
     opt               = [];
     opt.dim           = dim;
+    opt.zoom          = 0;
     opt.ijk           = [xi yi zi];
     opt.h1size        = h1size;
     opt.h2size        = h2size;
     opt.h3size        = h3size;
     opt.handlesaxes   = [h1 h2 h3];
     opt.handlesfigure = h;
-    opt.axis          = cfg.axis;
+    opt.showaxis      = cfg.axis;
     if hasatlas
       opt.atlas = atlas;
     end
@@ -1103,11 +1104,15 @@ switch cfg.method
     opt.crosshair     = istrue(cfg.crosshair);
     opt.interactive   = istrue(cfg.interactive);
     if ~isempty(cfg.intersectmesh)
+      if isstruct(cfg.intersectmesh)
+        tmp = cfg.intersectmesh;
+        cfg.intersectmesh = cell(size(tmp));
+        for i=1:numel(tmp)
+          cfg.intersectmesh{i} = tmp(i);
+        end
+      end
       % the data will be plotted in voxel space, so transform the meshes
       % accordingly, assuming the same coordinate system as the anatomical
-      if ~isa(cfg.intersectmesh, 'cell')
-        cfg.intersectmesh = {cfg.intersectmesh};
-      end
       for m = 1:numel(cfg.intersectmesh)
         opt.intersectmesh{m} = ft_transform_geometry(inv(functional.transform), cfg.intersectmesh{m});
       end
@@ -1792,9 +1797,41 @@ if opt.hasfun
   end
 end
 
-set(opt.handlesaxes(1), 'Visible', opt.axis);
-set(opt.handlesaxes(2), 'Visible', opt.axis);
-set(opt.handlesaxes(3), 'Visible', opt.axis);
+% zoom 
+limits = [0.5 opt.dim(1)+0.5 0.5 opt.dim(2)+0.5 0.5 opt.dim(3)+0.5];
+xloadj = ((xi-limits(1))-(xi-limits(1))*opt.zoom);
+xhiadj = ((limits(2)-xi)-(limits(2)-xi)*opt.zoom);
+yloadj = ((yi-limits(3))-(yi-limits(3))*opt.zoom);
+yhiadj = ((limits(4)-yi)-(limits(4)-yi)*opt.zoom);
+zloadj = ((zi-limits(5))-(zi-limits(5))*opt.zoom);
+zhiadj = ((limits(6)-zi)-(limits(6)-zi)*opt.zoom);
+axis(h1, [xi-xloadj xi+xhiadj yi-yloadj yi+yhiadj zi-zloadj zi+zhiadj]);
+axis(h2, [xi-xloadj xi+xhiadj yi-yloadj yi+yhiadj zi-zloadj zi+zhiadj]);
+axis(h3, [xi-xloadj xi+xhiadj yi-yloadj yi+yhiadj]);
+
+if opt.zoom>0
+  % the coordsys labels fall outside the subplots when zoomed in
+  delete(findall(h, 'Type', 'text', 'Tag', 'coordsys_label_100'));
+  delete(findall(h, 'Type', 'text', 'Tag', 'coordsys_label_010'));
+  delete(findall(h, 'Type', 'text', 'Tag', 'coordsys_label_001'));
+end
+
+if opt.crosshair
+  if opt.init
+    hch1 = ft_plot_crosshair([xi        yi-yloadj zi], 'parent', h1); % was [xi 1 zi], now corrected for zoom
+    hch2 = ft_plot_crosshair([xi+xhiadj yi        zi], 'parent', h2); % was [opt.dim(1) yi zi], now corrected for zoom
+    hch3 = ft_plot_crosshair([xi        yi        zi], 'parent', h3); % was [xi yi opt.dim(3)], now corrected for zoom
+    opt.handlescross  = [hch1(:)';hch2(:)';hch3(:)'];
+  else
+  ft_plot_crosshair([xi        yi-yloadj zi], 'handle', opt.handlescross(1, :));
+  ft_plot_crosshair([xi+xhiadj yi        zi], 'handle', opt.handlescross(2, :));
+  ft_plot_crosshair([xi        yi        zi], 'handle', opt.handlescross(3, :));
+  end
+end
+
+set(opt.handlesaxes(1), 'Visible', opt.showaxis);
+set(opt.handlesaxes(2), 'Visible', opt.showaxis);
+set(opt.handlesaxes(3), 'Visible', opt.showaxis);
 
 if opt.hasfreq && opt.hastime && opt.hasfun
   h4 = subplot(2,2,4);
@@ -1860,18 +1897,6 @@ end
 sel = findobj('type', 'axes', 'tag',tag);
 if ~isempty(sel)
   set(opt.handlesfigure, 'currentaxes', sel(1));
-end
-if opt.crosshair
-  if opt.init
-    hch1 = ft_plot_crosshair([xi 1 zi], 'parent', opt.handlesaxes(1));
-    hch3 = ft_plot_crosshair([xi yi opt.dim(3)], 'parent', opt.handlesaxes(3));
-    hch2 = ft_plot_crosshair([opt.dim(1) yi zi], 'parent', opt.handlesaxes(2));
-    opt.handlescross  = [hch1(:)';hch2(:)';hch3(:)'];
-  else
-    ft_plot_crosshair([xi 1 zi], 'handle', opt.handlescross(1, :));
-    ft_plot_crosshair([opt.dim(1) yi zi], 'handle', opt.handlescross(2, :));
-    ft_plot_crosshair([xi yi opt.dim(3)], 'handle', opt.handlescross(3, :));
-  end
 end
 
 if opt.init
@@ -1994,7 +2019,21 @@ switch key
     opt.clim(2) = opt.clim(2)+cscalefactor;
     setappdata(h, 'opt', opt);
     cb_redraw(h);
-    
+
+  case 'pageup'
+    opt.zoom = opt.zoom + 0.1;
+    opt.zoom = min(opt.zoom, 0.9); % between 0 and 0.9
+    fprintf('increasing zoom to %f\n', opt.zoom);
+    setappdata(h, 'opt', opt);
+    cb_redraw(h);
+  
+  case 'pagedown'
+    opt.zoom = opt.zoom - 0.1;
+    opt.zoom = max(opt.zoom, 0); % between 0 and 0.9
+    fprintf('decreasing zoom to %f\n', opt.zoom);
+    setappdata(h, 'opt', opt);
+    cb_redraw(h);
+
   otherwise
     % do nothing
     

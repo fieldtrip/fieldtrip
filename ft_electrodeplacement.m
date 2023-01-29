@@ -453,7 +453,7 @@ switch cfg.method
     opt               = [];
     opt.method        = 'volume'; % this is to distinguish between volume and headshape in the callbacks
     opt.label         = chanlabel;
-    opt.axes          = [mri{1}.axes(1) mri{1}.axes(2) mri{1}.axes(3) h4 h5 h6 h7 h8 h9 h10 hscatter hscan];
+    opt.handlesaxes   = [mri{1}.axes(1) mri{1}.axes(2) mri{1}.axes(3) h4 h5 h6 h7 h8 h9 h10 hscatter hscan];
     opt.mainfig       = h;
     opt.quit          = false;
     opt.update        = [1 1 1];
@@ -564,7 +564,7 @@ switch cfg.method
     opt.method        = 'headshape'; % this is to distinguish between volume and headshape in the callbacks
     opt.headshape     = headshape;
     opt.label         = chanlabel;
-    opt.axes          = [h1 h8];
+    opt.handlesaxes   = [h1 h8];
     opt.mainfig       = h;
     opt.quit          = false;
     opt.init          = true;
@@ -848,9 +848,9 @@ set(0, 'CurrentFigure', opt.mainfig);
 curr_ax = get(h, 'currentaxes');
 tag = get(curr_ax, 'tag');
 
-h1 = opt.axes(1);
-h2 = opt.axes(2);
-h3 = opt.axes(3);
+h1 = opt.handlesaxes(1);
+h2 = opt.handlesaxes(2);
+h3 = opt.handlesaxes(3);
 
 if opt.init
   delete(findobj(opt.mainfig, 'Type', 'Surface')); % get rid of old orthos (to facilitate switching scans)
@@ -867,8 +867,7 @@ if opt.init
   set(opt.anahandles, 'tag', 'ana');
 
   % for zooming purposes
-  opt.axis = zeros(1,6);
-  opt.axis = [opt.axes(1).XLim opt.axes(1).YLim opt.axes(1).ZLim];
+  opt.axis = [opt.handlesaxes(1).XLim opt.handlesaxes(1).YLim opt.handlesaxes(1).ZLim];
   opt.redrawmarkers = true;
   opt.reinit = false; % do not redraw orthoplots
 
@@ -904,18 +903,25 @@ axis(h1, [xi-xloadj xi+xhiadj yi-yloadj yi+yhiadj zi-zloadj zi+zhiadj]);
 axis(h2, [xi-xloadj xi+xhiadj yi-yloadj yi+yhiadj zi-zloadj zi+zhiadj]);
 axis(h3, [xi-xloadj xi+xhiadj yi-yloadj yi+yhiadj]);
 
+if opt.zoom>0
+  % the coordsys labels fall outside the subplots when zoomed in
+  delete(findall(h, 'Type', 'text', 'Tag', 'coordsys_label_100'));
+  delete(findall(h, 'Type', 'text', 'Tag', 'coordsys_label_010'));
+  delete(findall(h, 'Type', 'text', 'Tag', 'coordsys_label_001'));
+end
+
 if opt.init
   % draw the crosshairs for the first time
   delete(findobj(opt.mainfig, 'Type', 'Line')); % get rid of old crosshairs (to facilitate switching scans)
-  hch1 = ft_plot_crosshair([xi yi-yloadj zi], 'parent', h1, 'color', 'yellow'); % was [xi 1 zi], now corrected for zoom
-  hch2 = ft_plot_crosshair([xi+xhiadj yi zi], 'parent', h2, 'color', 'yellow'); % was [opt.dim(1) yi zi], now corrected for zoom
-  hch3 = ft_plot_crosshair([xi yi zi], 'parent', h3, 'color', 'yellow'); % was [xi yi opt.dim(3)], now corrected for zoom
+  hch1 = ft_plot_crosshair([xi        yi-yloadj zi], 'parent', h1, 'color', 'yellow'); % was [xi 1 zi], now corrected for zoom
+  hch2 = ft_plot_crosshair([xi+xhiadj yi        zi], 'parent', h2, 'color', 'yellow'); % was [opt.dim(1) yi zi], now corrected for zoom
+  hch3 = ft_plot_crosshair([xi        yi        zi], 'parent', h3, 'color', 'yellow'); % was [xi yi opt.dim(3)], now corrected for zoom
   opt.handlescross  = [hch1(:)';hch2(:)';hch3(:)'];
 else
   % update the existing crosshairs, don't change the handles
-  ft_plot_crosshair([xi yi-yloadj zi], 'handle', opt.handlescross(1, :));
-  ft_plot_crosshair([xi+xhiadj yi zi], 'handle', opt.handlescross(2, :));
-  ft_plot_crosshair([xi yi zi], 'handle', opt.handlescross(3, :));
+  ft_plot_crosshair([xi        yi-yloadj zi], 'handle', opt.handlescross(1, :));
+  ft_plot_crosshair([xi+xhiadj yi        zi], 'handle', opt.handlescross(2, :));
+  ft_plot_crosshair([xi        yi        zi], 'handle', opt.handlescross(3, :));
 end
 
 if opt.showcrosshair
@@ -939,7 +945,7 @@ if opt.showmarkers && opt.redrawmarkers
     tmp2 = markerpos_sel(:,2);
     tmp3 = markerpos_sel(:,3);
 
-    subplot(opt.axes(1));
+    subplot(opt.handlesaxes(1));
     if ~opt.global % filter markers distant to the current slice (N units and further)
       posj_idx = find( abs(tmp2 - repmat(yi,size(tmp2))) < opt.markerdist);
       posi = tmp1(posj_idx);
@@ -962,7 +968,7 @@ if opt.showmarkers && opt.redrawmarkers
       hold off
     end
 
-    subplot(opt.axes(2));
+    subplot(opt.handlesaxes(2));
     if ~opt.global % filter markers distant to the current slice (N units and further)
       posi_idx = find( abs(tmp1 - repmat(xi,size(tmp1))) < opt.markerdist);
       posi = tmp1(posi_idx);
@@ -985,7 +991,7 @@ if opt.showmarkers && opt.redrawmarkers
       hold off
     end
 
-    subplot(opt.axes(3));
+    subplot(opt.handlesaxes(3));
     if ~opt.global % filter markers distant to the current slice (N units and further)
       posk_idx = find( abs(tmp3 - repmat(zi,size(tmp3))) < opt.markerdist);
       posi = tmp1(posk_idx);
@@ -1044,7 +1050,7 @@ if ~isfield(opt, 'scatterfig') % initiate in case the figure does not yet exist
     'Visible', 'on');
   set(opt.scatterfig, 'CloseRequestFcn', @cb_scattercleanup);
   opt.scatterfig_h1 = axes('position', [0.02 0.02 0.96 0.96]);
-  set(opt.scatterfig_h1, 'DataAspectRatio', get(opt.axes(1), 'DataAspectRatio'));
+  set(opt.scatterfig_h1, 'DataAspectRatio', get(opt.handlesaxes(1), 'DataAspectRatio'));
 
   dim = opt.mri{opt.currmri}.dim;
   transform = opt.mri{opt.currmri}.transform;
@@ -1256,7 +1262,6 @@ if isempty(key)
   key = '';
 end
 
-
 % the following code is largely shared by FT_SOURCEPLOT, FT_VOLUMEREALIGN, FT_INTERACTIVEREALIGN, FT_MESHREALIGN, FT_ELECTRODEPLACEMENT
 if strcmp(opt.method, 'volume')
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1279,21 +1284,21 @@ if strcmp(opt.method, 'volume')
       camlight
 
     case '1'
-      subplot(opt.axes(1));
+      subplot(opt.handlesaxes(1));
 
     case '2'
-      subplot(opt.axes(2));
+      subplot(opt.handlesaxes(2));
 
     case '3'
-      subplot(opt.axes(3));
+      subplot(opt.handlesaxes(3));
 
     case 'g' % global/local elec view (h9) toggle
       if isequal(opt.global, 0)
         opt.global = 1;
-        set(opt.axes(9), 'Value', 1);
+        set(opt.handlesaxes(9), 'Value', 1);
       elseif isequal(opt.global, 1)
         opt.global = 0;
-        set(opt.axes(9), 'Value', 0);
+        set(opt.handlesaxes(9), 'Value', 0);
       end
       opt.redrawmarkers = true; % draw markers
       setappdata(h, 'opt', opt);
@@ -1302,10 +1307,10 @@ if strcmp(opt.method, 'volume')
     case 'l' % elec label view (h8) toggle
       if isequal(opt.showlabels, 0)
         opt.showlabels = 1;
-        set(opt.axes(8), 'Value', 1);
+        set(opt.handlesaxes(8), 'Value', 1);
       elseif isequal(opt.showlabels, 1)
         opt.showlabels = 0;
-        set(opt.axes(8), 'Value', 0);
+        set(opt.handlesaxes(8), 'Value', 0);
       end
       opt.redrawmarkers = true; % draw markers
       setappdata(h, 'opt', opt);
@@ -1314,10 +1319,10 @@ if strcmp(opt.method, 'volume')
     case 'm' % magnet (h7) toggle
       if isequal(opt.magnet, 0)
         opt.magnet = 1;
-        set(opt.axes(7), 'Value', 1);
+        set(opt.handlesaxes(7), 'Value', 1);
       elseif isequal(opt.magnet, 1)
         opt.magnet = 0;
-        set(opt.axes(7), 'Value', 0);
+        set(opt.handlesaxes(7), 'Value', 0);
       end
       setappdata(h, 'opt', opt);
 
@@ -1416,6 +1421,24 @@ if strcmp(opt.method, 'volume')
       elseif l1=='j' && l2=='k'
         updatepanel = [3 1 2];
       end
+
+    case 'pageup'
+      opt.zoom = opt.zoom + 0.1;
+      opt.zoom = min(opt.zoom, 0.9); % between 0 and 0.9
+      fprintf('increasing zoom to %f\n', opt.zoom);
+      set(opt.handlesaxes(10), 'Value', opt.zoom);
+      setappdata(h, 'opt', opt);
+      cb_redraw(h);
+      drawnow
+
+    case 'pagedown'
+      opt.zoom = opt.zoom - 0.1;
+      opt.zoom = max(opt.zoom, 0); % between 0 and 0.9
+      fprintf('decreasing zoom to %f\n', opt.zoom);
+      set(opt.handlesaxes(10), 'Value', opt.zoom);
+      setappdata(h, 'opt', opt);
+      cb_redraw(h);
+      drawnow
 
     otherwise
       % do nothing
@@ -1533,8 +1556,8 @@ elseif strcmp(opt.method, 'headshape')
   h2 = h2(iscorrect);
   opt.pos = select3d(h2)'; % enforce column direction
   if ~isempty(opt.pos)
-    delete(findobj(h,'Type','Line','Marker','+','Color',[0 0 0])) % remove previous crosshairs
-    hold on; plot3(opt.pos(:,1),opt.pos(:,2),opt.pos(:,3), 'marker', '+', 'linestyle', 'none', 'color', [0 0 0]); % plot the crosshair
+    delete(findobj(h,'Type', 'Line', 'Marker', '+', 'Color', [0 0 0])) % remove previous crosshairs
+    hold on; plot3(opt.pos(:,1), opt.pos(:,2), opt.pos(:,3), 'marker', '+', 'linestyle', 'none', 'color', [0 0 0]); % plot the crosshair
   end
   %opt.pos = ft_select_point3d(opt.headshape, 'nearest', true, 'multiple', false, 'marker', '+'); % FIXME: this gets stuck in a loop waiting for any abritrary buttonpress
 end
@@ -1844,7 +1867,7 @@ function cb_scattercleanup(hObject, eventdata)
 h = findobj('type', 'figure', 'name', mfilename);
 opt = getappdata(h, 'opt');
 opt.scatter = 0;
-set(opt.axes(11), 'Value', 0);
+set(opt.handlesaxes(11), 'Value', 0);
 opt = rmfield(opt, 'scatterfig');
 setappdata(h, 'opt', opt);
 delete(hObject);
@@ -1944,10 +1967,10 @@ if opt.currmri>numel(opt.mri)
 end
 opt.ana = opt.mri{opt.currmri}.dat;
 opt.clim = opt.mri{opt.currmri}.clim; % use next scan's clim
-set(opt.axes(4), 'Value', opt.clim(1)); % update minslider
-set(opt.axes(5), 'Value', opt.clim(2)); % update maxslider
+set(opt.handlesaxes(4), 'Value', opt.clim(1)); % update minslider
+set(opt.handlesaxes(5), 'Value', opt.clim(2)); % update maxslider
 opt.slim = opt.mri{opt.currmri}.slim; % use next scan's scatter clim
-opt.axes(1:3) = opt.mri{opt.currmri}.axes;
+opt.handlesaxes(1:3) = opt.mri{opt.currmri}.axes;
 opt.init = true;
 
 setappdata(h, 'opt', opt);
