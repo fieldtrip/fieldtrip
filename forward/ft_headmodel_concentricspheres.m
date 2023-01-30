@@ -56,7 +56,7 @@ if any(strcmp(varargin(1:2:end), 'unit')) || any(strcmp(varargin(1:2:end), 'unit
 end
 
 if isnumeric(mesh) && size(mesh,2)==3
-  % assume that it is a Nx3 array with vertices
+  % assume that it is a Nx3 array with vertices such as a head surface
   % convert it to a structure, this is needed to determine the units further down
   mesh = struct('pos', mesh);
 elseif isstruct(mesh) && isfield(mesh, 'bnd')
@@ -84,11 +84,11 @@ if isempty(conductivity)
   defaultconductivity = true;
   switch length(mesh)
     case 1
-      conductivity = 1;                        % brain
+      conductivity = 1;                             % uniform
     case 3
-      conductivity = [0.3300   0.0042 0.3300]; % brain, skull, scalp
+      conductivity = [0.3300        0.0042 0.3300]; % brain, skull, scalp
     case 4
-      conductivity = [0.3300 1 0.0042 0.3300]; % brain, csf, skull, scalp
+      conductivity = [0.3300 1.7900 0.0042 0.3300]; % brain, csf, skull, scalp
     otherwise
       ft_error('conductivity values should be specified for each tissue type');
   end
@@ -118,7 +118,7 @@ npos = size(pos, 1);
 
 % fit a single sphere to all combined headshape points, this is used for the center of the spheres
 [single_o, single_r] = fitsphere(pos);
-fprintf('initial sphere: number of unique surface points = %d\n', npos);
+fprintf('initial sphere: total number of unique surface points = %d\n', npos);
 fprintf('initial sphere: center = [%.1f %.1f %.1f]\n', single_o(1), single_o(2), single_o(3));
 fprintf('initial sphere: radius = %.1f\n', single_r);
 
@@ -139,12 +139,12 @@ if any(diff(indx)<1)
   ft_warning('reordering spheres from smallest to largest')
 end
 % order the spheres from the smallest to the largest ('insidefirst' order)
-headmodel.r    = headmodel.r(indx);
+headmodel.r = headmodel.r(indx);
 if ~defaultconductivity
-  % assume that the specified conductivities are in the same order as the meshes
+  % assume that the user-specified conductivities are in the same order as the meshes
   headmodel.cond = headmodel.cond(indx);
 else
-  % the conductivities are already ordered 'insidefirst'
+  % the default conductivities are already ordered 'insidefirst'
 end
 
 for i=1:numel(mesh)

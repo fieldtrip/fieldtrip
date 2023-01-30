@@ -1,4 +1,4 @@
-function headmodel = ft_headmodel_openmeeg(bnd, varargin)
+function headmodel = ft_headmodel_openmeeg(mesh, varargin)
 
 % FT_HEADMODEL_OPENMEEG creates a volume conduction model of the head using the
 % boundary element method (BEM). This function takes as input the triangulated
@@ -25,11 +25,12 @@ function headmodel = ft_headmodel_openmeeg(bnd, varargin)
 % Optional input arguments should be specified in key-value pairs and can
 % include
 %   conductivity     = vector, conductivity of each compartment
-%   tissue           = tissue labels for each compartment
+%   tissue           = cell-array with the tissue labels for each compartment
+%   checkmesh        = 'yes' or 'no'
 %
 % See also FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD
 
-% Copyright (C) 2010-2020, Robert Oostenveld
+% Copyright (C) 2010-2023, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -64,71 +65,122 @@ end
 % get the optional arguments
 conductivity    = ft_getopt(varargin, 'conductivity');
 tissue          = ft_getopt(varargin, 'tissue');
+checkmesh       = ft_getopt(varargin, 'checkmesh', 'yes');
+
+% convert to Boolean value
+checkmesh = istrue(checkmesh);
 
 % copy the boundaries from the mesh into the volume conduction model
-if isfield(bnd, 'bnd')
-  bnd = bnd.bnd;
+if isfield(mesh, 'bnd')
+  mesh = mesh.bnd;
+end
+
+if ischar(tissue)
+  % it should be a cell-array
+  tissue = {tissue};
 end
 
 % rename pnt into pos
-bnd = fixpos(bnd);
-
-% start with an empty volume conductor
-headmodel = [];
+mesh = fixpos(mesh);
 
 % determine the number of compartments
-numboundaries = length(bnd);
+numboundaries = length(mesh);
+
+% OpenMEEG v2.3 and up internally adjusts the convention for surface
+% normals, but OpenMEEG v2.2 expects surface normals to point inwards;
+% this checks and corrects if needed
+for i=1:numboundaries
+  switch surface_orientation(mesh(i))
+    case 'outward'
+      ft_warning('flipping mesh %d', i);
+      mesh(i).tri = fliplr(mesh(i).tri);
+    case 'inward'
+      % this is ok
+    case 'otherwise'
+      ft_error('incorrect mesh %d', i)
+  end
+end
 
 % determine the desired nesting of the compartments
-order = surface_nesting(bnd, 'outsidefirst');
+order = surface_nesting(mesh, 'outsidefirst');
 
-% rearrange boundaries and conductivities
-if numel(bnd)>1
+% reorder the boundaries
+if numel(mesh)>1
   fprintf('reordering the boundaries to: ');
   fprintf('%d ', order);
   fprintf('\n');
   % update the order of the compartments
-  bnd = bnd(order);
+  mesh = mesh(order);
 end
 
+% start with an empty volume conductor
+headmodel = [];
+
 if isempty(conductivity)
-  ft_warning('No conductivity is declared, using default values\n')
+  ft_warning('no conductivity specified, using default values')
   if numboundaries == 1
+    % uniform
     conductivity = 1;
   elseif numboundaries == 3
     % skin/skull/brain
     conductivity = [0.33 0.0042 0.33];
   elseif numboundaries == 4
-    conductivity = [0.33 0.0042 1 0.33];
+    % skin/skull/csf/brain
+    conductivity = [0.33 0.0042 1.7900 0.33];
   else
-    ft_error(['Conductivity values are required for ' num2str(numboundaries) ' shells'])
+    ft_error('conductivity values must be specified')
   end
   headmodel.cond = conductivity;
 else
   if numel(conductivity)~=numboundaries
-    ft_error('a conductivity value should be specified for each compartment');
+    ft_error('each compartment should have a conductivity value');
   end
-  % update the order of the compartments
+  % reorder the user-specified conductivities
   headmodel.cond = conductivity(order);
 end
 
 % assign default tissue labels if none provided
 if(isempty(tissue))
   switch(numboundaries)
+    case 1
+      tissue = {'scalp'};
     case 3
       tissue = {'scalp','skull','brain'};
     case 4
       tissue = {'scalp','skull','csf','brain'};
     otherwise
-      tissue = strcat({'domain'},num2str((1:numboundaries)'));
+      ft_error('tissue types must be specified')
   end
 else
   tissue = tissue(order);
 end
-headmodel.tissue = tissue;
 
+% do some sanity checks on the meshes
+if checkmesh
+  for i=1:numboundaries
+    ntri = size(mesh(i).tri,1);
+    npos = size(mesh(i).pos,1);
+    assert(2*(npos-2)==ntri, 'the number of triangles does not match the number of vertices')
+  end
+
+  % check for each of the vertices that it falls inside the previous surface
+  for i=2:numboundaries
+    for j=1:size(mesh(i).pos,1)
+      inside = bounding_mesh(mesh(i).pos(j,:), mesh(i-1).pos, mesh(i-1).tri);
+      assert(inside, 'vertex %d of surface %d is outside surface %d', j, i, i-1);
+    end
+  end
+
+  ft_info('the meshes are closed and properly nested')
+end % if checkmesh
+
+headmodel.tissue       = tissue;
+headmodel.bnd          = mesh;
 headmodel.skin_surface = 1;
-headmodel.source = numboundaries;
+headmodel.source       = numboundaries;
+
+% just to be sure
+clear mesh
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % this uses an implementation that was contributed by INRIA Odyssee Team
@@ -139,55 +191,32 @@ mkdir(workdir);
 
 try
   % Write the triangulations to file, named after tissue type.
-  % OpenMEEG v2.3 and up internally adjusts the convention for surface
-  % normals, but OpenMEEG v2.2 expects surface normals to point inwards;
-  % this checks and corrects if needed
   bndfile = fullfile(workdir,strcat(tissue,'.tri'));
-  for ii=1:length(bnd)
-    ok = checknormals(bnd(ii));
-    if ~ok
-      % Flip faces for openmeeg convention (inwards normals)
-      bndtmp = bnd(ii);
-      bndtmp.tri = fliplr(bnd(ii).tri);
-      
-      ok = checknormals(bndtmp);
-      if(ok)
-        fprintf('flipping normals for OpenMEEG''s convention\n')
-        bnd(ii).tri = bndtmp.tri;
-      else
-        % if still not ok after flip, throw a warning
-        ft_warning('neither orientation of surface normals passes check... leaving as is.')
-      end
-      clear bndtmp
-    end
-    
-    om_save_tri(bndfile{ii}, bnd(ii).pos, bnd(ii).tri);
+  for ii=1:length(headmodel.bnd)
+    om_save_tri(bndfile{ii}, headmodel.bnd(ii).pos, headmodel.bnd(ii).tri);
   end
-  
-  % retain surfaces in headmodel structure (after possible normal flip)
-  headmodel.bnd = bnd;
-  
+
   condfile  = fullfile(workdir, 'om.cond');
   geomfile  = fullfile(workdir, 'om.geom');
   hmfile    = fullfile(workdir, 'hm.bin');
   hminvfile = fullfile(workdir, 'hminv.bin');
-  
+
   % write conductivity and mesh files
   bndlabel = {};
-  for i=1:length(bnd)
+  for i=1:length(headmodel.bnd)
     [dum, bndlabel{i}] = fileparts(bndfile{i});
   end
-  
+
   om_write_geom(geomfile, bndfile, bndlabel);
   om_write_cond(condfile, headmodel.cond, bndlabel);
-  
+
   om_status = system([prefix 'om_assemble -HM ' geomfile ' ' condfile ' ' hmfile]);
   if(om_status ~= 0) % status = 0 if successful
     ft_error('Aborting OpenMEEG pipeline due to above error.');
   end
-  
+
   headmodel.mat = inv(om_load_sym(hmfile,'binary'));
-  
+
   rmdir(workdir,'s'); % remove workdir with intermediate files
 
 catch me
@@ -197,30 +226,3 @@ end
 
 % remember the type of volume conduction model
 headmodel.type = 'openmeeg';
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function ok = checknormals(bnd)
-points = bnd.pos;
-faces = bnd.tri;
-
-% translate to the center
-org = mean(points,1);
-points(:,1) = points(:,1) - org(1);
-points(:,2) = points(:,2) - org(2);
-points(:,3) = points(:,3) - org(3);
-
-% FIXME: this method is rigorous only for star shaped surfaces
-w = sum(solid_angle(points, faces));
-
-if w<0 && (abs(w)-4*pi)<1000*eps
-  ok = false;
-  ft_info('your surface normals are outwards oriented')
-elseif w>0 && (abs(w)-4*pi)<1000*eps
-  ok = true;
-  ft_info('your surface normals are inwards oriented')
-else
-  ok = false;
-  ft_error('your surface probably is irregular')
-end
