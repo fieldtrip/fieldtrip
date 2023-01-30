@@ -19,7 +19,7 @@ function headmodel = ft_headmodel_bemcp(mesh, varargin)
 %
 % See also FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD
 
-% Copyright (C) 2010, Robert Oostenveld
+% Copyright (C) 2010, Robert Oostenveld, Donders Centre for Cognitive Neuroimaging, Nijmegen, NL
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
