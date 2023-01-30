@@ -174,14 +174,14 @@ else
 end
 
 % find the location of the dipoli binary
-str = which('dipoli.maci');
+str = which('dipoli.exe');
 [p, f, x] = fileparts(str);
-dipoli = fullfile(p, f);  % without the .maci extension
+dipoli = fullfile(p, f);  % without the .exe extension
 % the following determines the executable to use, which is in all cases the 32-bit version
 switch lower(computer)
-  case {'maci' 'maci64'}
-    % apple computer
-    dipoli = [dipoli '.maci'];
+  case {'maci' 'maci64', 'maca64'}
+    % apple computer with 32- or 64-bit Intel processor, or Apple ARM processor (M1 or M2)
+    dipoli = [dipoli '.universal'];
   case {'glnx86' 'glnxa64'}
     % linux computer
     dipoli = [dipoli '.glnx86'];
@@ -196,7 +196,11 @@ fprintf('using the executable "%s"\n', dipoli);
 % determine the prefix for the temporary files
 if isempty(tname)
   if isempty(tdir)
-    prefix = tempname;
+    if ismac
+      prefix = tempname('/tmp'); % otherwise the filename with the complete path gets too long
+    else
+      prefix = tempname;
+    end
   else
     prefix = tempname(tdir);
   end
@@ -240,7 +244,7 @@ try
   dos(exefile);
   ama = loadama(amafile);
   headmodel = ama2headmodel(ama);
-  
+
 catch
   ft_error('an error ocurred while running the dipoli executable - please look at the screen output');
 end
