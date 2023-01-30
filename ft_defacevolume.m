@@ -72,17 +72,18 @@ end
 cfg = ft_checkconfig(cfg, 'renamedval', {'method', 'box', 'interactive'});
 
 % set the defaults
-cfg.method    = ft_getopt(cfg, 'method', 'interactive');
-cfg.rotate    = ft_getopt(cfg, 'rotate', [0 0 0]);
-cfg.scale     = ft_getopt(cfg, 'scale'); % the automatic default is determined further down
-cfg.translate = ft_getopt(cfg, 'translate', [0 0 0]);
-cfg.selection = ft_getopt(cfg, 'selection', 'outside');
-cfg.smooth    = ft_getopt(cfg, 'smooth', 'no');
-cfg.keepbrain = ft_getopt(cfg, 'keepbrain', 'no');
-cfg.feedback  = ft_getopt(cfg, 'feedback', 'no');
+cfg.method         = ft_getopt(cfg, 'method', 'interactive');
+cfg.rotate         = ft_getopt(cfg, 'rotate', [0 0 0]);
+cfg.scale          = ft_getopt(cfg, 'scale'); % the automatic default is determined further down
+cfg.translate      = ft_getopt(cfg, 'translate', [0 0 0]);
+cfg.transformorder = ft_getopt(cfg, 'transformorder', {'scale', 'rotate', 'translate'}); % T*R*S
+cfg.selection      = ft_getopt(cfg, 'selection', 'outside');
+cfg.smooth         = ft_getopt(cfg, 'smooth', 'no');
+cfg.keepbrain      = ft_getopt(cfg, 'keepbrain', 'no');
+cfg.feedback       = ft_getopt(cfg, 'feedback', 'no');
 
-ismri    = ft_datatype(mri, 'volume') && isfield(mri, 'anatomy');
-ismesh   = isfield(mri, 'pos'); % triangles are optional
+ismri  = ft_datatype(mri, 'volume') && isfield(mri, 'anatomy');
+ismesh = isfield(mri, 'pos'); % triangles are optional
 
 if ismri
   % check if the input data is valid for this function
@@ -166,8 +167,11 @@ switch cfg.method
     defaultscale = [75 75 75] * ft_scalingfactor('mm', mri.unit);
     surfaceonly = isfield(mri, 'tet') | isfield(mri, 'hex'); % only for tetrahedral or hexahedral meshes
 
-    tmpcfg = keepfields(cfg, {'scale', 'rotate', 'translate'});
+    tmpcfg = keepfields(cfg, {'scale', 'rotate', 'translate', 'transformorder'});
     tmpcfg.scale = ft_getopt(cfg, 'scale', defaultscale);
+    tmpcfg.showlight = 'no';
+    tmpcfg.showalpha = 'no'; % do not use a global alpha level
+    tmpcfg.showapply = 'no'; % do not show the apply button
     tmpcfg.template.axes = 'yes';
     if ismri
       tmpcfg.template.mri = mri;
@@ -175,7 +179,7 @@ switch cfg.method
       tmpcfg.template.mesh = mri;
     end
     tmpcfg.individual.mesh = box;
-    tmpcfg.individual.meshstyle = {'edgecolor', 'k', 'facecolor', 'y', 'facealpha', 0.5, 'surfaceonly', surfaceonly};
+    tmpcfg.individual.meshstyle = {'edgecolor', 'k', 'facecolor', 'y', 'facealpha', 0.3, 'surfaceonly', surfaceonly};
     tmpcfg = ft_interactiverealign(tmpcfg);
 
     % remember these for potential reuse outside of this function
@@ -188,7 +192,7 @@ switch cfg.method
     T = translate(cfg.translate);
     S = scale    (cfg.scale);
     % this is the transformation to get from the individual to the template
-    transform = T*R*S;
+    transform = combine_transform(R, S, T, cfg.transformorder);
 
     if ismri
       % rather than converting the box to the MRI, do it the other way around

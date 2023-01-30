@@ -38,6 +38,15 @@ function [cfg] = ft_interactiverealign(cfg)
 % See also FT_VOLUMEREALIGN, FT_ELECTRODEREALIGN, FT_DETERMINE_COORDSYS,
 % FT_READ_SENS, FT_READ_HEADMODEL, FT_READ_HEADSHAPE
 
+% Undocumented options, primarily to support FT_DEFACEVOLUME
+%   cfg.showalpha
+%   cfg.showlight
+%   cfg.showapply
+%   cfg.rotate
+%   cfg.scale
+%   cfg.translate
+%   cfg.transformorder
+
 % Copyright (C) 2008, Vladimir Litvak
 % Copyright (C) 2022-2023, Robert Oostenveld
 %
@@ -83,11 +92,15 @@ cfg.template   = ft_checkconfig(cfg.template, 'renamed', {'vol', 'headmodel'});
 cfg.template   = ft_checkconfig(cfg.template, 'renamed', {'volstyle', 'headmodelstyle'});
 
 % allow to pass an initial transformation, this is used by FT_DEFACEVOLUME
-cfg.rotate     = ft_getopt(cfg, 'rotate', [0 0 0]);
-cfg.scale      = ft_getopt(cfg, 'scale', [1 1 1]);
-cfg.translate  = ft_getopt(cfg, 'translate', [0 0 0]);
+cfg.rotate         = ft_getopt(cfg, 'rotate', [0 0 0]);
+cfg.scale          = ft_getopt(cfg, 'scale', [1 1 1]);
+cfg.translate      = ft_getopt(cfg, 'translate', [0 0 0]);
+cfg.transformorder = ft_getopt(cfg, 'transformorder', {'rotate', 'translate', 'scale'});
 
 % get the other options
+cfg.showalpha                 = ft_getopt(cfg, 'showalpha', 'yes');
+cfg.showlight                 = ft_getopt(cfg, 'showlight', 'yes');
+cfg.showapply                 = ft_getopt(cfg, 'showapply', 'yes');
 cfg.unit                      = ft_getopt(cfg, 'unit', 'mm');
 cfg.individual.elec           = ft_getopt(cfg.individual, 'elec', []);
 cfg.individual.elecstyle      = ft_getopt(cfg.individual, 'elecstyle', {}); % key-value pairs
@@ -158,14 +171,14 @@ if ~isempty(cfg.template.headshape) && isfield(cfg.template.headshape, 'color')
   end
 end
 
-% only use a global alpha level if it is not specified for any of the individual objects
-usealpha = true;
+% only show and use the global alpha level if it is not specified for any of the individual objects
+showalpha = istrue(cfg.showalpha);
 for fn1={'individual', 'template'}
   fn1 = fn1{1};
   for fn2={'elecstyle', 'gradstyle', 'headshapestyle', 'headmodelstyle', 'mristyle', 'meshstyle'}
     fn2 = fn2{1};
     style = cfg.(fn1).(fn2);
-    usealpha = usealpha & ~any(endsWith(style(1:2:end), 'alpha'));
+    showalpha = showalpha & ~any(endsWith(style(1:2:end), 'alpha'));
   end
 end
 
@@ -245,16 +258,17 @@ set(gca, 'position', [0.05 0.15 0.75 0.75]);
 setappdata(fig, 'individual',     individual);
 setappdata(fig, 'template',       template);
 setappdata(fig, 'transform',      eye(4));
+setappdata(fig, 'init',           true);
 setappdata(fig, 'cleanup',        false);
 setappdata(fig, 'rotate',         cfg.rotate);
 setappdata(fig, 'scale',          cfg.scale);
 setappdata(fig, 'translate',      cfg.translate);
 setappdata(fig, 'coordsys',       coordsys); % can be unknown
 setappdata(fig, 'unit',           cfg.unit);
-setappdata(fig, 'usealpha',       usealpha);
 setappdata(fig, 'toggle_labels',  true);
 setappdata(fig, 'toggle_axes',    true);
 setappdata(fig, 'toggle_grid',    true);
+setappdata(fig, 'cfg',            cfg);
 
 % add the GUI elements
 axmax = 150 * ft_scalingfactor('mm', cfg.unit);
@@ -287,6 +301,12 @@ cfg.rotate    = getappdata(fig, 'rotate');
 cfg.scale     = getappdata(fig, 'scale');
 cfg.translate = getappdata(fig, 'translate');
 
+if istrue(cfg.showapply)
+  % do not return the individual steps if the apply button was available and potentially pressed
+  % in that case they only represent the last iteration, not the whole transformation
+  cfg = removefields(cfg, {'rotate', 'scale', 'translate'});
+end
+
 delete(fig);
 
 % do the general cleanup and bookkeeping at the end of the function
@@ -306,12 +326,13 @@ fig = getparent(h);
 rotate    = getappdata(fig, 'rotate');
 scale     = getappdata(fig, 'scale');
 translate = getappdata(fig, 'translate');
+cfg       = getappdata(fig, 'cfg');
 
 % constants
-CONTROL_WIDTH  = 0.04;
-CONTROL_HEIGHT = 0.05;
+CONTROL_WIDTH   = 0.04;
+CONTROL_HEIGHT  = 0.05;
 CONTROL_HOFFSET = 0.75;
-CONTROL_VOFFSET = 0.5;
+CONTROL_VOFFSET = 0.50;
 
 % rotateui
 uicontrol('tag', 'rotateui', 'parent',  fig, 'units', 'normalized', 'style', 'text', 'string', 'rotate', 'callback', [])
@@ -325,28 +346,28 @@ ft_uilayout(fig, 'tag', 'rz',   'BackgroundColor', [0.8 0.8 0.8], 'width',  CONT
 
 % scaleui
 uicontrol('tag', 'scaleui', 'parent',  fig, 'units', 'normalized', 'style', 'text', 'string', 'scale', 'callback', [])
-uicontrol('tag', 'sx',  'parent',  fig, 'units', 'normalized', 'style', 'edit', 'string', scale(1), 'callback', @cb_redraw)
-uicontrol('tag', 'sy',  'parent',  fig, 'units', 'normalized', 'style', 'edit', 'string', scale(2), 'callback', @cb_redraw)
-uicontrol('tag', 'sz',  'parent',  fig, 'units', 'normalized', 'style', 'edit', 'string', scale(3), 'callback', @cb_redraw)
+uicontrol('tag', 'sx',      'parent',  fig, 'units', 'normalized', 'style', 'edit', 'string', scale(1), 'callback', @cb_redraw)
+uicontrol('tag', 'sy',      'parent',  fig, 'units', 'normalized', 'style', 'edit', 'string', scale(2), 'callback', @cb_redraw)
+uicontrol('tag', 'sz',      'parent',  fig, 'units', 'normalized', 'style', 'edit', 'string', scale(3), 'callback', @cb_redraw)
 ft_uilayout(fig, 'tag', 'scaleui', 'BackgroundColor', [0.8 0.8 0.8], 'width',  2*CONTROL_WIDTH, 'height',  CONTROL_HEIGHT, 'hpos',  CONTROL_HOFFSET,                 'vpos',  CONTROL_VOFFSET-0*CONTROL_HEIGHT);
-ft_uilayout(fig, 'tag', 'sx',  'BackgroundColor', [0.8 0.8 0.8], 'width',  CONTROL_WIDTH,   'height',  CONTROL_HEIGHT, 'hpos',  CONTROL_HOFFSET+3*CONTROL_WIDTH, 'vpos',  CONTROL_VOFFSET-0*CONTROL_HEIGHT);
-ft_uilayout(fig, 'tag', 'sy',  'BackgroundColor', [0.8 0.8 0.8], 'width',  CONTROL_WIDTH,   'height',  CONTROL_HEIGHT, 'hpos',  CONTROL_HOFFSET+4*CONTROL_WIDTH, 'vpos',  CONTROL_VOFFSET-0*CONTROL_HEIGHT);
-ft_uilayout(fig, 'tag', 'sz',  'BackgroundColor', [0.8 0.8 0.8], 'width',  CONTROL_WIDTH,   'height',  CONTROL_HEIGHT, 'hpos',  CONTROL_HOFFSET+5*CONTROL_WIDTH, 'vpos',  CONTROL_VOFFSET-0*CONTROL_HEIGHT);
+ft_uilayout(fig, 'tag', 'sx',      'BackgroundColor', [0.8 0.8 0.8], 'width',  CONTROL_WIDTH,   'height',  CONTROL_HEIGHT, 'hpos',  CONTROL_HOFFSET+3*CONTROL_WIDTH, 'vpos',  CONTROL_VOFFSET-0*CONTROL_HEIGHT);
+ft_uilayout(fig, 'tag', 'sy',      'BackgroundColor', [0.8 0.8 0.8], 'width',  CONTROL_WIDTH,   'height',  CONTROL_HEIGHT, 'hpos',  CONTROL_HOFFSET+4*CONTROL_WIDTH, 'vpos',  CONTROL_VOFFSET-0*CONTROL_HEIGHT);
+ft_uilayout(fig, 'tag', 'sz',      'BackgroundColor', [0.8 0.8 0.8], 'width',  CONTROL_WIDTH,   'height',  CONTROL_HEIGHT, 'hpos',  CONTROL_HOFFSET+5*CONTROL_WIDTH, 'vpos',  CONTROL_VOFFSET-0*CONTROL_HEIGHT);
 
 % translateui
 uicontrol('tag', 'translateui', 'parent',  fig, 'units', 'normalized', 'style', 'text', 'string', 'translate', 'callback', [])
-uicontrol('tag', 'tx',      'parent',  fig, 'units', 'normalized', 'style', 'edit', 'string', translate(1), 'callback', @cb_redraw)
-uicontrol('tag', 'ty',      'parent',  fig, 'units', 'normalized', 'style', 'edit', 'string', translate(2), 'callback', @cb_redraw)
-uicontrol('tag', 'tz',      'parent',  fig, 'units', 'normalized', 'style', 'edit', 'string', translate(3), 'callback', @cb_redraw)
+uicontrol('tag', 'tx',          'parent',  fig, 'units', 'normalized', 'style', 'edit', 'string', translate(1), 'callback', @cb_redraw)
+uicontrol('tag', 'ty',          'parent',  fig, 'units', 'normalized', 'style', 'edit', 'string', translate(2), 'callback', @cb_redraw)
+uicontrol('tag', 'tz',          'parent',  fig, 'units', 'normalized', 'style', 'edit', 'string', translate(3), 'callback', @cb_redraw)
 ft_uilayout(fig, 'tag', 'translateui', 'BackgroundColor', [0.8 0.8 0.8], 'width',  2*CONTROL_WIDTH, 'height',  CONTROL_HEIGHT, 'hpos',  CONTROL_HOFFSET,                 'vpos',  CONTROL_VOFFSET-1*CONTROL_HEIGHT);
-ft_uilayout(fig, 'tag', 'tx',      'BackgroundColor', [0.8 0.8 0.8], 'width',  CONTROL_WIDTH,   'height',  CONTROL_HEIGHT, 'hpos',  CONTROL_HOFFSET+3*CONTROL_WIDTH, 'vpos',  CONTROL_VOFFSET-1*CONTROL_HEIGHT);
-ft_uilayout(fig, 'tag', 'ty',      'BackgroundColor', [0.8 0.8 0.8], 'width',  CONTROL_WIDTH,   'height',  CONTROL_HEIGHT, 'hpos',  CONTROL_HOFFSET+4*CONTROL_WIDTH, 'vpos',  CONTROL_VOFFSET-1*CONTROL_HEIGHT);
-ft_uilayout(fig, 'tag', 'tz',      'BackgroundColor', [0.8 0.8 0.8], 'width',  CONTROL_WIDTH,   'height',  CONTROL_HEIGHT, 'hpos',  CONTROL_HOFFSET+5*CONTROL_WIDTH, 'vpos',  CONTROL_VOFFSET-1*CONTROL_HEIGHT);
+ft_uilayout(fig, 'tag', 'tx',          'BackgroundColor', [0.8 0.8 0.8], 'width',  CONTROL_WIDTH,   'height',  CONTROL_HEIGHT, 'hpos',  CONTROL_HOFFSET+3*CONTROL_WIDTH, 'vpos',  CONTROL_VOFFSET-1*CONTROL_HEIGHT);
+ft_uilayout(fig, 'tag', 'ty',          'BackgroundColor', [0.8 0.8 0.8], 'width',  CONTROL_WIDTH,   'height',  CONTROL_HEIGHT, 'hpos',  CONTROL_HOFFSET+4*CONTROL_WIDTH, 'vpos',  CONTROL_VOFFSET-1*CONTROL_HEIGHT);
+ft_uilayout(fig, 'tag', 'tz',          'BackgroundColor', [0.8 0.8 0.8], 'width',  CONTROL_WIDTH,   'height',  CONTROL_HEIGHT, 'hpos',  CONTROL_HOFFSET+5*CONTROL_WIDTH, 'vpos',  CONTROL_VOFFSET-1*CONTROL_HEIGHT);
 
 % control buttons
 uicontrol('tag', 'viewpointbtn',  'parent',  fig, 'units', 'normalized', 'style', 'popup',      'string', 'top|bottom|left|right|front|back', 'value',  1, 'callback', @cb_viewpoint);
-uicontrol('tag', 'redisplaybtn',  'parent',  fig, 'units', 'normalized', 'style', 'pushbutton', 'string', 'redisplay',    'value', [], 'callback', @cb_redraw);
-uicontrol('tag', 'applybtn',      'parent',  fig, 'units', 'normalized', 'style', 'pushbutton', 'string', 'apply',        'value', [], 'callback', @cb_apply);
+uicontrol('tag', 'redisplaybtn',  'parent',  fig, 'units', 'normalized', 'style', 'pushbutton', 'string', 'redisplay',    'value', [], 'callback', @cb_redisplay);
+uicontrol('tag', 'applybtn',      'parent',  fig, 'units', 'normalized', 'style', 'pushbutton', 'string', 'apply',        'value', [], 'callback', @cb_apply, 'visible', istrue(cfg.showapply));
 uicontrol('tag', 'toggle labels', 'parent',  fig, 'units', 'normalized', 'style', 'pushbutton', 'string', 'toggle label', 'value',  getappdata(fig, 'toggle_labels'), 'callback', @cb_redraw);
 uicontrol('tag', 'toggle axes',   'parent',  fig, 'units', 'normalized', 'style', 'pushbutton', 'string', 'toggle axes',  'value',  getappdata(fig, 'toggle_axes'),   'callback', @cb_redraw);
 uicontrol('tag', 'toggle grid',   'parent',  fig, 'units', 'normalized', 'style', 'pushbutton', 'string', 'toggle grid',  'value',  getappdata(fig, 'toggle_grid'),   'callback', @cb_redraw);
@@ -359,7 +380,7 @@ ft_uilayout(fig, 'tag', 'toggle axes',    'BackgroundColor', [0.8 0.8 0.8], 'wid
 ft_uilayout(fig, 'tag', 'toggle grid',    'BackgroundColor', [0.8 0.8 0.8], 'width',  6*CONTROL_WIDTH, 'height',  CONTROL_HEIGHT, 'vpos',  CONTROL_VOFFSET-8*CONTROL_HEIGHT, 'hpos',  CONTROL_HOFFSET);
 ft_uilayout(fig, 'tag', 'quitbtn',        'BackgroundColor', [0.8 0.8 0.8], 'width',  6*CONTROL_WIDTH, 'height',  CONTROL_HEIGHT, 'vpos',  CONTROL_VOFFSET-9*CONTROL_HEIGHT, 'hpos',  CONTROL_HOFFSET);
 
-if getappdata(fig, 'usealpha')
+if istrue(cfg.showalpha)
   % alpha ui
   uicontrol('tag', 'alphaui', 'parent',  fig, 'units', 'normalized', 'style', 'text', 'string', 'alpha', 'value', [], 'callback', []);
   uicontrol('tag', 'alpha',   'parent',  fig, 'units', 'normalized', 'style', 'edit', 'string', '0.6', 'value', [], 'callback', @cb_redraw);
@@ -378,6 +399,7 @@ template       = getappdata(fig, 'template');
 transform      = getappdata(fig, 'transform');
 coordsys       = getappdata(fig, 'coordsys');
 unit           = getappdata(fig, 'unit');
+cfg            = getappdata(fig, 'cfg');
 
 % get the transformation details
 rx = str2double(get(findobj(fig, 'tag', 'rx'), 'string'));
@@ -395,12 +417,24 @@ R = rotate   ([rx ry rz]);
 S = scale    ([sx sy sz]);
 T = translate([tx ty tz]);
 % combine the transformation from the GUI with the one that has been previously applied
-H = S * T * R;
+H = combine_transform(R, S, T, cfg.transformorder);
 transform = H * transform;
 
 axis vis3d
 cla
 hold on
+
+if getappdata(fig, 'init')
+  % start from a fresh view
+  [az, el] = view(3);
+  setappdata(fig, 'init', false);
+else
+  % remember the current view
+  [az, el] = view();
+  % FIXME it would be possible to move the plotting from all template objects here
+  % FIXME so that they do not have to be plotted again upon each update
+  % FIXME however, that requires that the "cla" above is implemented more specifically
+end
 
 % the "individual" struct is a local copy, so it is safe to change it here
 if ~isempty(individual.headmodel)
@@ -491,17 +525,19 @@ if isstruct(individual.mesh) && isfield(individual.mesh, 'pos') && ~isempty(indi
   ft_plot_mesh(individual.mesh, individual.meshstyle{:});
 end
 
-% apply uniform light from all angles
-delete(findall(fig, 'Type', 'light')) % shut out previous lights
-lighting gouraud
-l = lightangle(0,  90); set(l, 'Color', 0.45*[1 1 1])
-l = lightangle(0, -90); set(l, 'Color', 0.45*[1 1 1])
-l = lightangle(  0, 0); set(l, 'Color', 0.45*[1 1 1])
-l = lightangle( 90, 0); set(l, 'Color', 0.45*[1 1 1])
-l = lightangle(180, 0); set(l, 'Color', 0.45*[1 1 1])
-l = lightangle(270, 0); set(l, 'Color', 0.45*[1 1 1])
+if istrue(cfg.showlight)
+  % apply uniform light from all angles
+  lighting gouraud
+  l = lightangle(0,  90); set(l, 'Color', 0.45*[1 1 1])
+  l = lightangle(0, -90); set(l, 'Color', 0.45*[1 1 1])
+  l = lightangle(  0, 0); set(l, 'Color', 0.45*[1 1 1])
+  l = lightangle( 90, 0); set(l, 'Color', 0.45*[1 1 1])
+  l = lightangle(180, 0); set(l, 'Color', 0.45*[1 1 1])
+  l = lightangle(270, 0); set(l, 'Color', 0.45*[1 1 1])
+end
 
-if getappdata(fig, 'usealpha')
+if istrue(cfg.showalpha)
+  % only apply the global alpha level when it is not explicitly set for the individual objects
   alpha(str2double(get(findobj(fig, 'tag', 'alpha'), 'string')));
 end
 
@@ -539,6 +575,9 @@ else
   grid off
 end
 
+% restore the current view
+view(az, el);
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -546,6 +585,7 @@ function cb_apply(h, eventdata, handles)
 
 fig       = getparent(h);
 transform = getappdata(fig, 'transform');
+cfg       = getappdata(fig, 'cfg');
 
 % get the transformation details
 rx = str2double(get(findobj(fig, 'tag', 'rx'), 'string'));
@@ -563,7 +603,7 @@ R = rotate   ([rx ry rz]);
 S = scale    ([sx sy sz]);
 T = translate([tx ty tz]);
 % combine the transformation from the GUI with the one that has been previously applied
-H = S * T * R;
+H = combine_transform(R, S, T, cfg.transformorder);
 transform = H * transform;
 
 set(findobj(fig, 'tag', 'rx'), 'string',  0);
@@ -635,6 +675,16 @@ end % switch key
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function cb_redisplay(h, eventdata)
+
+fig       = getparent(h);
+setappdata(fig, 'init', true);
+cb_redraw(h);
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_viewpoint(h, eventdata)
 
 fig       = getparent(h);
@@ -689,4 +739,3 @@ if ischar(style)
       ft_error('unsupported style "%s"', style);
   end % switch
 end % if
-
