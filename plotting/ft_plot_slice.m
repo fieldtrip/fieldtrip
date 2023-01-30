@@ -83,13 +83,12 @@ if isstruct(dat) && isfield(dat, 'anatomy') && isfield(dat, 'transform')
   return
 end
 
-if isequal(dim, size(dat))
+% the data can have up to 5 dimensions, including time and/or frequency
+if isequal(dim, size(dat, 1, 2, 3))
   % reuse the persistent variables to speed up subsequent calls with the same input
 else
-  dim = size(dat);
-  if numel(dim)<3
-    dim(3) = 1; % add 1 to catch size(dat,3) is singleton
-  end
+  % construct the persistent variables
+  dim = size(dat, 1, 2, 3);
   [X, Y, Z] = ndgrid(1:dim(1), 1:dim(2), 1:dim(3));
 end
 
