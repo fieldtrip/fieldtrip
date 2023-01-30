@@ -1,6 +1,7 @@
 function [h, T2] = ft_plot_slice(dat, varargin)
 
-% FT_PLOT_SLICE plots a 2-D cut through a 3-D volume and interpolates if needed
+% FT_PLOT_SLICE plots a single slice that cuts through a 3-D volume and interpolates
+% the data if needed.
 %
 % Use as
 %   ft_plot_slice(dat, ...)
@@ -17,6 +18,7 @@ function [h, T2] = ft_plot_slice(dat, varargin)
 %   'orientation'  = 1x3 vector specifying the direction orthogonal through the plane
 %                    which will be plotted (default = [0 0 1])
 %   'unit'         = string, can be 'm', 'cm' or 'mm (default is automatic)
+%   'coordsys'     = string, assume the data to be in the specified coordinate system (default = 'unknown')
 %   'resolution'   = number (default = 1 mm)
 %   'datmask'      = 3D-matrix with the same size as the data matrix, serving as opacitymap
 %                    If the second input argument to the function contains a matrix, this
@@ -27,7 +29,6 @@ function [h, T2] = ft_plot_slice(dat, varargin)
 %                    grayscale image that provides the background
 %   'opacitylim'   = 1x2 vector specifying the limits for opacity masking
 %   'interpmethod' = string specifying the method for the interpolation, see INTERPN (default = 'nearest')
-%   'style'        = string, 'flat' or '3D'
 %   'colormap'     = string, see COLORMAP
 %   'clim'         = 1x2 vector specifying the min and max for the colorscale
 %
@@ -35,7 +36,7 @@ function [h, T2] = ft_plot_slice(dat, varargin)
 % with a triangulated surface mesh (e.g. a cortical sheet) using
 %   'intersectmesh'       = triangulated mesh, see FT_PREPARE_MESH
 %   'intersectcolor'      = string, color specification
-%   'intersectlinestyle'  = string, line specification 
+%   'intersectlinestyle'  = string, line specification
 %   'intersectlinewidth'  = number
 %
 % See also FT_PLOT_ORTHO, FT_PLOT_MONTAGE, FT_SOURCEPLOT
@@ -82,21 +83,20 @@ if isstruct(dat) && isfield(dat, 'anatomy') && isfield(dat, 'transform')
   return
 end
 
-if isequal(dim, size(dat(:,:,:,1,1)))
+% the data can have up to 5 dimensions, including time and/or frequency
+if isequal(dim, size(dat, 1, 2, 3))
   % reuse the persistent variables to speed up subsequent calls with the same input
 else
-  dim       = size(dat); 
-  if numel(dim)<3
-    dim(3) = 1; % add 1 to catch size(dat,3) is singleton
-  end
+  % construct the persistent variables
+  dim = size(dat, 1, 2, 3);
   [X, Y, Z] = ndgrid(1:dim(1), 1:dim(2), 1:dim(3));
 end
 
 if any(dim==1)
-  ft_error('it is not possible to plot a volume with a dimensionality of 1 in one of its dimensions');
+  ft_error('it is not possible to plot a volume that consists of a single slice');
 end
 
-% parse first input argument(s). it is either
+% parse first input argument(s), it is either
 % (dat, varargin)
 % (dat, msk, varargin)
 % (dat, [], varargin)
@@ -110,6 +110,7 @@ end
 transform           = ft_getopt(varargin, 'transform', eye(4));
 loc                 = ft_getopt(varargin, 'location');
 ori                 = ft_getopt(varargin, 'orientation', [0 0 1]);
+coordsys            = ft_getopt(varargin, 'coordsys');
 unit                = ft_getopt(varargin, 'unit');       % the default will be determined further down
 resolution          = ft_getopt(varargin, 'resolution'); % the default depends on the units and will be determined further down
 datmask             = ft_getopt(varargin, 'datmask');
@@ -157,16 +158,16 @@ end
 % shift the location to be along the orientation vector
 loc = ori*dot(loc,ori);
 
-% it should be a cell-array
+dointersect = ~isempty(mesh);
+
+% the mesh should be a cell-array
 if isstruct(mesh)
   tmp = mesh;
   mesh = cell(size(tmp));
   for i=1:numel(tmp)
     mesh{i} = tmp(i);
   end
-elseif iscell(mesh)
-  % do nothing
-else
+elseif isempty(mesh)
   mesh = {};
 end
 
@@ -175,20 +176,17 @@ for k = 1:numel(mesh)
   mesh{k} = fixpos(mesh{k});
 end
 
-dointersect = ~isempty(mesh);
-if dointersect
-  for k = 1:numel(mesh)
-    if ~isfield(mesh{k}, 'pos') || ~isfield(mesh{k}, 'tri')
-      % ft_error('the mesh should be a structure with pos and tri');
-      mesh{k}.pos = [];
-      mesh{k}.tri = [];
-    end
+% the mesh should be a structure with both pos and tri
+for k = 1:numel(mesh)
+  if ~isfield(mesh{k}, 'pos') || ~isfield(mesh{k}, 'tri')
+    mesh{k}.pos = [];
+    mesh{k}.tri = [];
   end
 end
 
-% check whether the mask is ok
 domask = ~isempty(datmask);
 if domask
+  % check whether the mask is ok
   if ~isequal(size(dat), size(datmask)) && ~isequal(cmap, 'rgb')
     % the exception is when the functional data is to be interpreted as rgb
     ft_error('the mask data should have the same dimensions as the functional data');
@@ -197,6 +195,7 @@ end
 
 dobackground = ~isempty(background);
 if dobackground
+  % check whether the background is ok
   if ~isequal(size(dat), size(background))
     error('the background data should have the same dimensions as the functional data');
   end
@@ -214,8 +213,8 @@ end
 % voxel_edge_vc = [Xe(:) Ye(:) Ze(:)];
 % voxel_edge_hc = ft_warp_apply(transform, voxel_edge_vc);
 
-% determine the corner points of the box encompassing the whole data block
-% extend the box with half a voxel  in all directions to get the outer edge
+% determine the corner points of the box that encompasses the whole data
+% extend the box with half a voxel in all directions to get the outer edge
 corner_vc = [
   0.5        0.5        0.5
   0.5+dim(1) 0.5        0.5
@@ -237,6 +236,7 @@ if isempty(unit)
     unit = 'mm';
   end
 end
+
 if isempty(resolution)
   % the default resolution is 1 mm
   resolution = ft_scalingfactor('mm', unit);
@@ -252,8 +252,6 @@ dointerp = dointerp || ~(resolution==round(resolution));
 % this is necessary for the correct allocation of the persistent variables
 st = dbstack;
 if ~dointerp && numel(st)>1 && strcmp(st(2).name, 'ft_plot_montage'), dointerp = true; end
-
-
 
 % define 'x' and 'y' axis in projection plane, the definition of x and y is more or less arbitrary
 [x, y] = projplane(ori);
@@ -322,10 +320,10 @@ if use_interpn
   V  = interpn(X, Y, Z, dat, Xi, Yi, Zi, interpmethod);
   if domask,       Vmask = interpn(X, Y, Z, datmask,    Xi, Yi, Zi, interpmethod); end
   if dobackground, Vback = interpn(X, Y, Z, background, Xi, Yi, Zi, interpmethod); end
-elseif get_slice 
-  %something more efficient than an interpolation can be done
+elseif get_slice
+  % something more efficient than an interpolation can be done:
   % just select the appropriate plane, and permute to get the orientation
-  % right in the plots, something to do with ndgrid vs meshgrid I think
+  % right in the plots, this has something to do with ndgrid vs meshgrid I think
   permutevec = [2 1];
   if ndims(dat)>3
     permutevec = [permutevec 3:ndims(dat)];
@@ -425,14 +423,14 @@ if isempty(cmap)
     clear dmin dmax
   end
   V(~isfinite(V)) = 0;
-  
+
   % deal with clim for RGB data here, where the purpose is to increase the
   % contrast range, rather than shift the average grey value
   if ~isempty(clim)
     V = (V-clim(1))./clim(2);
     V(V>1)=1;
   end
-  
+
   % convert into RGB values, e.g. for the plotting of anatomy
   V = cat(3, V, V, V);
 end
@@ -482,7 +480,6 @@ elseif domask
       if ~isempty(opacitylim)
         alim(opacitylim)
       end
-    
     case 'colormix'
       if isempty(cmap), error('using ''colormix'' as maskstyle requires an explicitly defined colormap'); end
       if ischar(cmap),  cmap = strrep(cmap, 'default', 'parula'); cmap = ft_colormap(cmap); end
@@ -498,10 +495,63 @@ elseif domask
         set(h, 'Ydata', Yh);
         set(h, 'Zdata', Zh);
       end
-  otherwise
-    error('unsupported maskstyle');
+    otherwise
+      error('unsupported maskstyle');
   end
 end
+
+if ~isempty(coordsys) && ~strcmp(coordsys, 'unknown')
+  % convert 'neuromag' to 'ras', etc.
+  coordsys = generic(coordsys);
+
+  % determine the center of each of the 6 faces of the box that encompasses the whole data
+  % shift all of them inward by about 5%
+  center_vc = [
+    dim(1)*0.05 dim(2)*0.50 dim(3)*0.50
+    dim(1)*0.95 dim(2)*0.50 dim(3)*0.50
+    dim(1)*0.50 dim(2)*0.05 dim(3)*0.50
+    dim(1)*0.50 dim(2)*0.95 dim(3)*0.50
+    dim(1)*0.50 dim(2)*0.50 dim(3)*0.05
+    dim(1)*0.50 dim(2)*0.50 dim(3)*0.95
+    ];
+  center_hc = ft_warp_apply(transform, center_vc);
+
+  % the order of the center points is arbitrary and does not match coordsys/xyz
+  % hence we have to determine them for each x/y/z direction
+  minx = min(center_hc(:,1));
+  maxx = max(center_hc(:,1));
+  miny = min(center_hc(:,2));
+  maxy = max(center_hc(:,2));
+  minz = min(center_hc(:,3));
+  maxz = max(center_hc(:,3));
+  % also compute the midpoints, i.e. the center of the cube itself
+  midx = mean(center_hc(:,1));
+  midy = mean(center_hc(:,2));
+  midz = mean(center_hc(:,3));
+
+  if isequal(ori, [1 0 0])
+    % the slice is perpendicular to the x-axis
+    delete(findall(gca, 'Tag', 'coordsys_label_100')) % remove the labels from the previous call
+    text(loc(1), miny, midz, upper(flipletter(coordsys(2))), 'Color', 'y', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'coordsys_label_100');
+    text(loc(1), maxy, midz, upper(           coordsys(2) ), 'Color', 'y', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'coordsys_label_100');
+    text(loc(1), midy, minz, upper(flipletter(coordsys(3))), 'Color', 'y', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'coordsys_label_100');
+    text(loc(1), midy, maxz, upper(           coordsys(3) ), 'Color', 'y', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'coordsys_label_100');
+  elseif isequal(ori, [0 1 0])
+    % the slice is perpendicular to the y-axis
+    delete(findall(gca, 'Tag', 'coordsys_label_010')) % remove the labels from the previous call
+    text(minx, loc(2), midz, upper(flipletter(coordsys(1))), 'Color', 'y', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'coordsys_label_010');
+    text(maxx, loc(2), midz, upper(           coordsys(1) ), 'Color', 'y', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'coordsys_label_010');
+    text(midx, loc(2), minz, upper(flipletter(coordsys(3))), 'Color', 'y', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'coordsys_label_010');
+    text(midx, loc(2), maxz, upper(           coordsys(3) ), 'Color', 'y', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'coordsys_label_010');
+  elseif isequal(ori, [0 0 1])
+    % the slice is perpendicular to the z-axis
+    delete(findall(gca, 'Tag', 'coordsys_label_001')) % remove the labels from the previous call
+    text(minx, midy, loc(3), upper(flipletter(coordsys(1))), 'Color', 'y', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'coordsys_label_001');
+    text(maxx, midy, loc(3), upper(           coordsys(1) ), 'Color', 'y', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'coordsys_label_001');
+    text(midx, miny, loc(3), upper(flipletter(coordsys(2))), 'Color', 'y', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'coordsys_label_001');
+    text(midx, maxy, loc(3), upper(           coordsys(2) ), 'Color', 'y', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'coordsys_label_001');
+  end
+end % if coordsys
 
 % plot the intersection with a mesh
 if dointersect
@@ -510,19 +560,30 @@ if dointersect
   v1 = loc + inplane(1,:);
   v2 = loc + inplane(2,:);
   v3 = loc + inplane(3,:);
-  
+
+  if isempty(p) || length(p)~=length(mesh)
+    % try to find the handles of all patches
+    p = findall(gca, 'type', 'patch');
+  end
+
+  if length(p)~=length(mesh)
+    % the patchhandles do not make sense, start from scratch
+    delete(findall(gca, 'type', 'patch'))
+    p = nan(size(mesh));
+  end
+
   for k = 1:numel(mesh)
     [xmesh, ymesh, zmesh] = intersect_plane(mesh{k}.pos, mesh{k}.tri, v1, v2, v3);
-    
+
     % draw each individual line segment of the intersection
     if ~isempty(xmesh)
-      if isempty(p)
-        p = patch(xmesh', ymesh', zmesh', nan(1, size(xmesh,1)));
-        if ~isempty(intersectcolor),     set(p, 'EdgeColor', intersectcolor(k));  end
-        if ~isempty(intersectlinewidth), set(p, 'LineWidth', intersectlinewidth); end
-        if ~isempty(intersectlinestyle), set(p, 'LineStyle', intersectlinestyle); end
+      if ~ishandle(p(k))
+        p(k) = patch(xmesh', ymesh', zmesh', nan(1, size(xmesh, 1)));
+        if ~isempty(intersectcolor),     set(p(k), 'EdgeColor', intersectcolor(k));  end
+        if ~isempty(intersectlinewidth), set(p(k), 'LineWidth', intersectlinewidth); end
+        if ~isempty(intersectlinestyle), set(p(k), 'LineStyle', intersectlinestyle); end
       else
-        set(p, 'XData', xmesh', 'YData', ymesh', 'ZData', zmesh', 'FaceVertexCdata', nan(size(xmesh,1),1));
+        set(p(k), 'XData', xmesh', 'YData', ymesh', 'ZData', zmesh', 'FaceVertexCdata', nan(size(xmesh,1),1));
       end
     end
   end
@@ -558,13 +619,13 @@ axis(ax([1 4 2 5 3 6])); % reorder into [xmin xmax ymin ymaz zmin zmax]
 
 st = dbstack;
 if numel(st)>1
-  % ft_plot_slice has been called from another function
+  % ft_plot_slice has been called from another function, probably ft_plot_ortho
   % assume the remainder of the axis settings to be handled there
 else
   set(gca,'xlim',[min(Xh(:))-0.5*resolution max(Xh(:))+0.5*resolution]);
   set(gca,'ylim',[min(Yh(:))-0.5*resolution max(Yh(:))+0.5*resolution]);
   set(gca,'zlim',[min(Zh(:))-0.5*resolution max(Zh(:))+0.5*resolution]);
-  
+
   set(gca,'dataaspectratio',[1 1 1]);
   % axis equal; % this for some reason does not work robustly when drawing intersections, replaced by the above
   axis vis3d
@@ -611,3 +672,54 @@ else
   bool = false;
 end
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function letter = flipletter(letter)
+switch letter
+  case 'a'
+    letter = 'p';
+  case 'p'
+    letter = 'a';
+  case 'l'
+    letter = 'r';
+  case 'r'
+    letter = 'l';
+  case 'i'
+    letter = 's';
+  case 's'
+    letter = 'i';
+  otherwise
+    ft_error('incorrect letter')
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function coordsys = generic(coordsys)
+mapping = {
+  'ctf',       'als'
+  'bti',       'als'
+  '4d',        'als'
+  'yokogawa',  'als'
+  'eeglab',    'als'
+  'neuromag',  'ras'
+  'itab',      'ras'
+  'acpc',      'ras'
+  'spm',       'ras'
+  'mni',       'ras'
+  'fsaverage', 'ras'
+  'tal',       'ras'
+  'scanras',   'ras'
+  'scanlps',   'lps'
+  'dicom',     'lps'
+  };
+
+sel = find(strcmp(mapping(:,1), coordsys));
+if length(sel)==1
+  coordsys = mapping{sel,2};
+end
+
+if ~all(ismember(coordsys, 'lrapis'))
+  ft_error('cannot convert "%s" to a generic coordinate system label', coordsys);
+end
