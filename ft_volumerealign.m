@@ -738,7 +738,7 @@ switch cfg.method
     ft_hastoolbox('fileexchange',1);
 
     % construct the coregistration matrix
-    nrm = normals(scalp.pos, scalp.tri, 'vertex');
+    nrm = surface_normals(scalp.pos, scalp.tri, 'vertex');
     [R, t, err, dummy, info] = icp(scalp.pos', shape.pos', numiter, 'Minimize', 'plane', 'Normals', nrm', 'Weight', weights, 'Extrapolation', true, 'WorstRejection', 0.05);
 
     if doicp

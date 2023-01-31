@@ -1,16 +1,16 @@
-function [inside] = bounding_mesh(pos, pnt, tri)
+function [inside] = surface_inside(pos, pnt, tri)
 
-% BOUNDING_MESH determines if a point is inside/outside a triangle mesh 
+% SURFACE_INSIDE determines if a point is inside/outside a triangle mesh
 % whereby the bounding triangle mesh should be closed.
 %
-% [inside] = bounding_mesh(pos, pnt, tri)
-%
+% Use as
+%   inside = surface_inside(pos, pnt, tri)
 % where
 %   pos     position of point of interest (can be 1x3 or Nx3)
 %   pnt     bounding mesh vertices
 %   tri     bounding mesh triangles
 %
-% See also SOLID_ANGLE
+% See also SURFACE_ORIENTATION, SURFACE_NORMALS, SURFACE_NESTING, SOLID_ANGLE
 
 % Copyright (C) 2003, Robert Oostenveld
 %
@@ -30,6 +30,7 @@ function [inside] = bounding_mesh(pos, pnt, tri)
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
+% $Id$
 
 % this can be used for printing detailled user feedback
 fb = false;
@@ -60,7 +61,7 @@ for i=1:npos
     % the point is outside the bounding cube
     inside(i) = 0;
     if fb, fprintf(' outside the bounding cube\n'); end
-  elseif sqrt(sum((pos(i,:)-sphere_center).^2, 2))<sphere_radius 
+  elseif sqrt(sum((pos(i,:)-sphere_center).^2, 2))<sphere_radius
     % the point is inside the interior sphere
     inside(i) = 1;
     if fb, fprintf(' inside the interior sphere\n'); end
@@ -83,4 +84,3 @@ for i=1:npos
     if fb, fprintf(' solid angle\n'); end
   end
 end
-
