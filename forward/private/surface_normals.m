@@ -1,10 +1,10 @@
-function [nrm] = normals(pnt, tri, opt)
+function [nrm] = surface_normals(pnt, tri, opt)
 
 % NORMALS compute the surface normals of a triangular mesh
 % for each triangle or for each vertex
 %
 % Use as
-%   [nrm] = normals(pnt, tri, opt)
+%   [nrm] = surface_normals(pnt, tri, opt)
 % where opt is either 'vertex' (default) or 'triangle'.
 %
 % See also PCNORMALS, PROJECTTRI

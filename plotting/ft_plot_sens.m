@@ -343,7 +343,7 @@ if isempty(ori)
     % determine orientations based on a surface triangulation of the sensors
     % this only works if all positions are defined
     tri = projecttri(pos, 'delaunay');
-    ori = normals(pos, tri);
+    ori = surface_normals(pos, tri);
     
   elseif size(pos,1)>4
     % determine orientations by fitting a sphere to the sensors

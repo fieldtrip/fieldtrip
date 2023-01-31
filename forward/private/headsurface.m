@@ -209,7 +209,7 @@ end
 
 % shift the surface inward with a certain amount
 if ~isempty(inwardshift) && inwardshift~=0
-  ori = normals(pos, tri, 'vertex');
+  ori = surface_normals(pos, tri, 'vertex');
   % FIXME in case of a icosahedron projected onto a localspheres model, determining the
   % orientation for the vertices on the lower rim fails, causing problems with the inward shift
   switch surface_orientation(pos, tri, ori)

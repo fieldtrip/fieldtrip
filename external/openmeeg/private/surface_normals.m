@@ -1,13 +1,10 @@
-function [nrm] = normals(pnt, tri, opt)
+function [nrm] = surface_normals(pnt, tri, opt);
 
 % NORMALS compute the surface normals of a triangular mesh
 % for each triangle or for each vertex
 %
-% Use as
-%   [nrm] = normals(pnt, tri, opt)
-% where opt is either 'vertex' (default) or 'triangle'.
-%
-% See also PCNORMALS, PROJECTTRI
+% [nrm] = surface_normals(pnt, tri, opt)
+% where opt is either 'vertex' or 'triangle'
 
 % Copyright (C) 2002-2007, Robert Oostenveld
 %
@@ -27,16 +24,15 @@ function [nrm] = normals(pnt, tri, opt)
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
-% $Id$
 
 if nargin<3
   opt='vertex';
-elseif (opt(1)=='v' || opt(1)=='V')
+elseif (opt(1)=='v' | opt(1)=='V')
   opt='vertex';
-elseif (opt(1)=='t' || opt(1)=='T')
+elseif (opt(1)=='t' | opt(1)=='T')
   opt='triangle';
 else
-  ft_error('invalid optional argument');
+  error('invalid optional argument');
 end
 
 npnt = size(pnt,1);
@@ -48,18 +44,12 @@ pnt(:,2) = pnt(:,2)-mean(pnt(:,2),1);
 pnt(:,3) = pnt(:,3)-mean(pnt(:,3),1);
 
 % compute triangle normals
-% nrm_tri = zeros(ntri, 3);
-% for i=1:ntri
-%   v2 = pnt(tri(i,2),:) - pnt(tri(i,1),:);
-%   v3 = pnt(tri(i,3),:) - pnt(tri(i,1),:);
-%   nrm_tri(i,:) = cross(v2, v3);
-% end
-
-% vectorized version of the previous part
-v2 = pnt(tri(:,2),:) - pnt(tri(:,1),:);
-v3 = pnt(tri(:,3),:) - pnt(tri(:,1),:);
-nrm_tri = cross(v2, v3);
-
+nrm_tri = zeros(ntri, 3);
+for i=1:ntri
+  v2 = pnt(tri(i,2),:) - pnt(tri(i,1),:);
+  v3 = pnt(tri(i,3),:) - pnt(tri(i,1),:);
+  nrm_tri(i,:) = cross(v2, v3);
+end
 
 if strcmp(opt, 'vertex')
   % compute vertex normals
@@ -77,7 +67,7 @@ else
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% fast cross product to replace the MATLAB standard version
+% fast cross product to replace the Matlab standard version
 function [c] = cross(a,b)
-c = [a(:,2).*b(:,3)-a(:,3).*b(:,2) a(:,3).*b(:,1)-a(:,1).*b(:,3) a(:,1).*b(:,2)-a(:,2).*b(:,1)];
+c = [a(2)*b(3)-a(3)*b(2) a(3)*b(1)-a(1)*b(3) a(1)*b(2)-a(2)*b(1)];
 

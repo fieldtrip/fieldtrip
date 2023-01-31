@@ -183,7 +183,7 @@ switch fileformat
     end
     
   case 'stl'
-    %nrm = normals(mesh.pos, mesh.tri, 'triangle');
+    %nrm = surface_normals(mesh.pos, mesh.tri, 'triangle');
     %write_stl(filename, mesh.pos, mesh.tri, nrm);
     stlwrite(filename, mesh.tri, mesh.pos);
     
