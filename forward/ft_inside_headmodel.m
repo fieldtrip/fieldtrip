@@ -229,11 +229,11 @@ function indx = my_dsearchn(pos1, pos2, flag)
 % end
 
 % the idea is that the distance between 2 points is:
-%
+% 
 % sqrt(sum((p1(x,y,z)-p2(x,y,z)).^2)
-%
+% 
 % since we are dealing with relative distances, we can get rid of the sqrt:
-% so we need to compute:
+% so we need to compute: 
 %
 % sum((p1(x,y,z)-p2(x,y,z)).^2)
 %
@@ -243,8 +243,8 @@ function indx = my_dsearchn(pos1, pos2, flag)
 %
 % or, equivalently:
 %
-% p1x^2 + p2x^2 - 2*p1x*p2x+ ...
-%
+% p1x^2 + p2x^2 - 2*p1x*p2x+ ... 
+% 
 % reordering:
 %
 % (p1x^2 + p1y^2 + p1z^2) + cross-terms + (p2x^2 + p2y^2 + p2z^2)
