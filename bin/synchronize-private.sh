@@ -2514,14 +2514,15 @@ ARRAY+=(private/neuralynx_getheader.m)
 sync ${ARRAY[*]}
 
 ################################################################################
-# normals.m
+# surface_normals.m
 
 ARRAY=()
-ARRAY+=(fileio/private/normals.m)
-ARRAY+=(forward/private/normals.m)
-ARRAY+=(plotting/private/normals.m)
-ARRAY+=(private/normals.m)
-ARRAY+=(test/private/normals.m)
+ARRAY+=(external/openmeeg/private/surface_normals.m)
+ARRAY+=(fileio/private/surface_normals.m)
+ARRAY+=(forward/private/surface_normals.m)
+ARRAY+=(plotting/private/surface_normals.m)
+ARRAY+=(private/surface_normals.m)
+ARRAY+=(test/private/surface_normals.m)
 sync ${ARRAY[*]}
 
 ################################################################################
