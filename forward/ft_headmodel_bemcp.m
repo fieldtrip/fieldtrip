@@ -61,7 +61,7 @@ numboundaries = length(mesh);
 % bemcp expects surface normals to point outwards;
 % this checks and corrects if needed
 for i=1:numboundaries
-  switch surface_orientation(mesh(i))
+  switch surface_orientation(mesh(i).pos, mesh(i).tri)
     case 'outward'
       % this is ok
     case 'inward'

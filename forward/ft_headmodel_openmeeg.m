@@ -90,7 +90,7 @@ numboundaries = length(mesh);
 % normals, but OpenMEEG v2.2 expects surface normals to point inwards;
 % this checks and corrects if needed
 for i=1:numboundaries
-  switch surface_orientation(mesh(i))
+  switch surface_orientation(mesh(i).pos, mesh(i).tri)
     case 'outward'
       ft_warning('flipping mesh %d', i);
       mesh(i).tri = fliplr(mesh(i).tri);

@@ -77,7 +77,7 @@ numboundaries = numel(mesh);
 % Dipoli expects surface normals to point inwards;
 % this checks and corrects if needed
 for i=1:numboundaries
-  switch surface_orientation(mesh(i))
+  switch surface_orientation(mesh(i).pos, mesh(i).tri)
     case 'outward'
       ft_warning('flipping mesh %d', i);
       mesh(i).tri = fliplr(mesh(i).tri);
@@ -249,25 +249,19 @@ catch
   ft_error('an error ocurred while running the dipoli executable - please look at the screen output');
 end
 
-% This is to maintain the headmodel.bnd convention (outward oriented), whereas
-% in terms of further calculation it should not really matter.
-% The calculation fo the head model is done with inward normals
-% (sometimes flipped from the original input). This assures that the
-% outward oriented mesh is saved outward oriented in the headmodel structure
-for i=1:numel(headmodel.bnd)
-  isinward = checknormals(headmodel.bnd(i));
-  if isinward
-    fprintf('flipping the normals outwards after head matrix calculation\n')
-    headmodel.bnd(i).tri = fliplr(headmodel.bnd(i).tri);
-  end
-end
-
 % delete the temporary files
 for i=1:numboundaries
   delete(bndfile{i})
 end
 delete(amafile);
 delete(exefile);
+
+% maintain the general FieldTrip convention of outward-oriented surfaces
+% (also for visualization). The calculation of the head model was done with
+% inward-oriented surfaces (sometimes flipped from the original input).
+for i=1:numboundaries
+  headmodel.bnd(i).tri = fliplr(headmodel.bnd(i).tri);
+end
 
 % remember that it is a dipoli model
 headmodel.type = 'dipoli';
