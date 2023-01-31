@@ -2893,7 +2893,7 @@ if (strcmp(readbids, 'yes') || strcmp(readbids, 'ifmakessense')) && isbids
       if exist('channels_tsv', 'var')
         hdr.opto.label = channels_tsv.name;
         if exist('coordsystem_json', 'var') && ~isempty(coordsystem_json)
-          hdr.opto.unit = coordsystem_json.NIRSCoordinateUnites;
+          hdr.opto.unit = coordsystem_json.NIRSCoordinateUnits;
         end
         M = height(channels_tsv);
         N = height(optodes_tsv);
