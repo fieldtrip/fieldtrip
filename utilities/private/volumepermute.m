@@ -13,15 +13,7 @@ T   = volume.transform;
 dim = volume.dim;
 
 % determine which fields can be permuted
-fnames = fieldnames(volume);
-sel    = false(1,numel(fnames));
-for k = 1:numel(fnames)
-  tmp = volume.(fnames{k});
-  if isnumeric(tmp) && numel(tmp)==prod(dim) && ndims(tmp)==3
-    sel(k) = true;
-  end
-end
-fnames = fnames(sel);
+fn = parameterselection('all', volume);
 
 if nargin<2
   permutevec = 'auto';
@@ -38,10 +30,20 @@ end
 
 if ~all(permutevec==[1 2 3])
   % do the permutation on the numeric data
-  for k = 1:numel(fnames)
-    volume = setsubfield(volume, fnames{k}, permute(getsubfield(volume, fnames{k}), permutevec));
+  for k = 1:numel(fn)
+    tmp = volume.(fn{k});
+    switch ndims(tmp)
+      case 3
+        volume.(fn{k}) = permute(tmp, permutevec);
+      case 4
+        volume.(fn{k}) = permute(tmp, [permutevec 4]);
+      case 5
+        volume.(fn{k}) = permute(tmp, [permutevec 4 5]);
+      otherwise
+        ft_error('cannot permute %s', fn{k});
+    end
   end
-  
+
   % do the permutation on the transformation matrix and dim
   volume.transform = volume.transform(:,[permutevec 4]);
   volume.dim       = volume.dim(permutevec);
