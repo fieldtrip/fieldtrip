@@ -44,16 +44,8 @@ end
 T   = volume.transform;
 dim = volume.dim;
 
-% determine which fields can be permuted
-fnames = fieldnames(volume);
-sel    = false(1,numel(fnames));
-for k = 1:numel(fnames)
-  tmp = volume.(fnames{k});
-  if isnumeric(tmp) && numel(tmp)==prod(dim) && ndims(tmp)==3
-    sel(k) = true;
-  end
-end
-fnames = fnames(sel);
+% determine which fields can be flipped
+fn = parameterselection('all', volume);
 
 % pre-allocate
 flipvecout = false(1,3);
@@ -65,12 +57,13 @@ for m = 1:3
   else
     flipvecout(m) = flipvecin(m);
   end
-  
+
   if flipvecout(m)
     % get the reflection matrix
     flipmat = eye(4); flipmat(m,m) = -1; flipmat(m,4) = dim(m)+1;
-    for k = 1:numel(fnames)
-      volume = setsubfield(volume, fnames{k}, flipdim(getsubfield(volume, fnames{k}), m));
+    for k = 1:numel(fn)
+      tmp = volume.(fn{k});
+      volume.(fn{k}) = flipdim(tmp, m);
     end
     T = T*flipmat;
   else

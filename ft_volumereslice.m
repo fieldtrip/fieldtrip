@@ -158,15 +158,6 @@ if cfg.downsample~=1
   [cfg, mri] = rollback_provenance(cfg, mri);
 end
 
-% determine the fields to reslice
-fn = fieldnames(mri);
-fn = setdiff(fn, {'pos', 'tri', 'inside', 'outside', 'time', 'freq', 'dim', 'transform', 'unit', 'coordsys', 'fid', 'cfg', 'hdr'}); % remove fields that do not represent the data
-dimord = cell(size(fn));
-for i=1:numel(fn)
-  dimord{i} = getdimord(mri, fn{i});
-end
-fn = fn(strcmp(dimord, 'dim1_dim2_dim3'));
-
 if strcmp(cfg.method, 'flip')
   % this uses some private functions that change the volumes and the transform
   resliced = volumepermute(mri); % this makes the transform approximately diagonal
@@ -201,6 +192,9 @@ else
   
   fprintf('reslicing from [%d %d %d] to [%d %d %d]\n', mri.dim(1), mri.dim(2), mri.dim(3), resliced.dim(1), resliced.dim(2), resliced.dim(3));
   
+  % determine the fields to reslice
+  fn = parameterselection('all', mri);
+
   % the actual work is being done by ft_sourceinterpolate
   % this interpolates the real volume on the resolution that is defined for the resliced volume
   tmpcfg                = [];
