@@ -301,7 +301,7 @@ end % if istrue(individual)
 
 if isempty(ori)
   if ~isempty(headshape)
-    % the following code uses some functions from the computer vision toolbox
+    % the following code uses PCNORMALS from the computer vision toolbox
     % ft_hastoolbox('vision', -1);
     
     % how many local points on the headshape are used for estimating the local norm

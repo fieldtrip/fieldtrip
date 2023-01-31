@@ -3,14 +3,14 @@ function [inside] = surface_inside(pos, pnt, tri)
 % SURFACE_INSIDE determines if a point is inside/outside a triangle mesh
 % whereby the bounding triangle mesh should be closed.
 %
-% [inside] = surface_insidepos, pnt, tri)
-%
+% Use as
+%   inside = surface_inside(pos, pnt, tri)
 % where
 %   pos     position of point of interest (can be 1x3 or Nx3)
 %   pnt     bounding mesh vertices
 %   tri     bounding mesh triangles
 %
-% See also SOLID_ANGLE, SURFACE_ORIENTATION, SURFACE_NORMALS
+% See also SURFACE_ORIENTATION, SURFACE_NORMALS, SURFACE_NESTING, SOLID_ANGLE
 
 % Copyright (C) 2003, Robert Oostenveld
 %
@@ -30,6 +30,7 @@ function [inside] = surface_inside(pos, pnt, tri)
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
+% $Id$
 
 % this can be used for printing detailled user feedback
 fb = false;
