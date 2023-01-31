@@ -17,7 +17,7 @@ for i=1:numboundaries
       curpos1 = bnd(i).pos(1,:); % any point on the boundary is ok
       curpos  = bnd(j).pos;
       curtri  = bnd(j).tri;
-      nesting(i,j) = bounding_mesh(curpos1, curpos, curtri);
+      nesting(i,j) = surface_insidecurpos1, curpos, curtri);
     end
   end
 end

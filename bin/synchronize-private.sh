@@ -102,15 +102,15 @@ ARRAY+=(external/dss/private/boolvec2artifact.m)
 sync ${ARRAY[*]}
 
 ################################################################################
-# bounding_mesh.m
+# surface_inside.m
 
 ARRAY=()
-ARRAY+=(external/dipoli/private/bounding_mesh.m)
-ARRAY+=(external/openmeeg/private/bounding_mesh.m)
-ARRAY+=(fileio/private/bounding_mesh.m)
-ARRAY+=(forward/private/bounding_mesh.m)
-ARRAY+=(inverse/private/bounding_mesh.m)
-ARRAY+=(private/bounding_mesh.m)
+ARRAY+=(external/dipoli/private/surface_inside.m)
+ARRAY+=(external/openmeeg/private/surface_inside.m)
+ARRAY+=(fileio/private/surface_inside.m)
+ARRAY+=(forward/private/surface_inside.m)
+ARRAY+=(inverse/private/surface_inside.m)
+ARRAY+=(private/surface_inside.m)
 sync ${ARRAY[*]}
 
 ################################################################################
