@@ -210,21 +210,18 @@ end
 % shift the surface inward with a certain amount
 if ~isempty(inwardshift) && inwardshift~=0
   ori = normals(pos, tri, 'vertex');
-  % FIXME in case of a icosahedron projected onto a localspheres model, the
-  % surfaceorientation for the lower rim points fails, causing problems
-  % with the inward shift
-  tmp = surfaceorientation(pos, tri, ori);
-  % the orientation of the normals should be pointing to the outside of the surface
-  if tmp==1
-    % the normals are outward oriented
+  % FIXME in case of a icosahedron projected onto a localspheres model, determining the
+  % orientation for the vertices on the lower rim fails, causing problems with the inward shift
+  switch surface_orientation(pos, tri, ori)
+  case 'outward'
     % nothing to do
-  elseif tmp==-1
-    % the normals are inward oriented
+  case 'inward'
+    % the orientation of the normals should be pointing to the outside of the surface
     tri = fliplr(tri);
     ori = -ori;
-  else
-    ft_warning('cannot determine the orientation of the vertex normals');
+  otherwise
     % nothing to do
+    ft_warning('cannot determine the orientation of the surface');
   end
   % the orientation is outward, hence shift with a negative amount
   pos = pos - inwardshift * ori;

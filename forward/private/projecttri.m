@@ -67,7 +67,7 @@ switch method
     pos(:,2) = pos(:,2)./nrm;
     pos(:,3) = pos(:,3)./nrm;
     tri = convhulln(pos);
-    if surfaceorientation(pos, tri)<0
+    if strcmp(surface_orientation(pos, tri), 'inward')
       % make the surface outward oriented
       tri = fliplr(tri);
     end
