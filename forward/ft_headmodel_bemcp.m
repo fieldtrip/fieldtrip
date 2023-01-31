@@ -12,9 +12,14 @@ function headmodel = ft_headmodel_bemcp(mesh, varargin)
 % Use as
 %   headmodel = ft_headmodel_bemcp(mesh, ...)
 %
+% Optional input arguments should be specified in key-value pairs and can
+% include
+%   conductivity     = vector, conductivity of each compartment
+%   checkmesh        = 'yes' or 'no'
+%
 % See also FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD
 
-% Copyright (C) 2012, Donders Centre for Cognitive Neuroimaging, Nijmegen, NL
+% Copyright (C) 2010, Robert Oostenveld, Donders Centre for Cognitive Neuroimaging, Nijmegen, NL
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -38,6 +43,10 @@ ft_hastoolbox('bemcp', 1);
 
 % get the optional input arguments
 conductivity    = ft_getopt(varargin, 'conductivity');
+checkmesh       = ft_getopt(varargin, 'checkmesh', 'yes');
+
+% convert to Boolean value
+checkmesh = istrue(checkmesh);
 
 if isfield(mesh, 'bnd')
   mesh = mesh.bnd;
@@ -46,57 +55,96 @@ end
 % replace pnt with pos
 mesh = fixpos(mesh);
 
+% determine the number of compartments
+numboundaries = length(mesh);
+
+% bemcp expects surface normals to point outwards;
+% this checks and corrects if needed
+for i=1:numboundaries
+  switch surface_orientation(mesh(i))
+    case 'outward'
+      % this is ok
+    case 'inward'
+      ft_warning('flipping mesh %d', i);
+      mesh(i).tri = fliplr(mesh(i).tri);
+    case 'otherwise'
+      ft_error('incorrect mesh %d', i)
+  end
+end
+
 % ensure that the vertices and triangles are double precision, otherwise the bemcp mex files will crash
-for i=1:length(mesh)
+for i=1:numboundaries
   mesh(i).pos = double(mesh(i).pos);
   mesh(i).tri = double(mesh(i).tri);
 end
 
 % start with an empty volume conductor
 headmodel = [];
-headmodel.bnd = mesh;
 
 % determine the number of compartments
-numboundaries = length(headmodel.bnd);
+numboundaries = length(mesh);
 
 if numboundaries~=3
   ft_error('this only works for three surfaces');
 end
 
 % determine the desired nesting of the compartments
-order = surface_nesting(headmodel.bnd, 'insidefirst');
+order = surface_nesting(mesh, 'insidefirst');
 
 % rearrange boundaries and conductivities
-if numel(headmodel.bnd)>1 && ~isequal(order(:)', 1:numel(headmodel.bnd))
+if numboundaries>1 && ~isequal(order(:)', 1:numboundaries)
   fprintf('reordering the boundaries to: ');
   fprintf('%d ', order);
   fprintf('\n');
   % update the order of the compartments
-  headmodel.bnd    = headmodel.bnd(order);
+  mesh = mesh(order);
 end
 
 if isempty(conductivity)
-  ft_warning('No conductivity is declared, assuming standard values')
+  ft_warning('no conductivity specified, using default values')
   % brain/skull/skin
-  conductivity = [1 1/80 1] * 0.33;
+  conductivity = [0.33 0.0042 0.33];
   headmodel.cond = conductivity;
 else
   if numel(conductivity)~=numboundaries
-    ft_error('a conductivity value should be specified for each compartment');
+    ft_error('each compartment should have a conductivity value');
   end
   headmodel.cond = conductivity(order);
 end
 
-headmodel.skin_surface   = numboundaries;
-headmodel.source = 1;  
+% do some sanity checks on the meshes
+if checkmesh
+  for i=1:numboundaries
+    ntri = size(mesh(i).tri,1);
+    npos = size(mesh(i).pos,1);
+    assert(2*(npos-2)==ntri, 'the number of triangles does not match the number of vertices')
+  end
 
-% do some sanity checks
+  % check for each of the vertices that it falls inside the next surface
+  for i=1:(numboundaries-1)
+    for j=1:size(mesh(i).pos,1)
+      inside = bounding_mesh(mesh(i).pos(j,:), mesh(i+1).pos, mesh(i+1).tri);
+      assert(inside, 'vertex %d of surface %d is outside surface %d', j, i, i+1);
+    end
+  end
+
+  ft_info('the meshes are closed and properly nested')
+end % if checkmesh
+
+headmodel.bnd          = mesh;
+headmodel.skin_surface = numboundaries;
+headmodel.source       = 1;
+
 if headmodel.skin_surface~=3
   ft_error('the third surface should be the skin');
 end
-% if headmodel.source~=1
-%   ft_error('the first surface should be the inside of the skull');
-% end
+
+if headmodel.source~=1
+  ft_error('the first surface should the source compartment');
+end
+
+% just to be sure
+clear mesh
 
 % Build Triangle 4th point
 headmodel = triangle4pt(headmodel);

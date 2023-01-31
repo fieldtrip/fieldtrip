@@ -1,6 +1,6 @@
 function [resliced] = ft_volumereslice(cfg, mri)
 
-% FT_VOLUMERESLICE flips, permutes, interpolates and reslices a volume along the
+% FT_VOLUMERESLICE flips, permutes, interpolates and/or reslices a volume along the
 % principal axes of the coordinate system according to a specified resolution.
 %
 % Use as
@@ -160,7 +160,7 @@ end
 
 % determine the fields to reslice
 fn = fieldnames(mri);
-fn = setdiff(fn, {'pos', 'tri', 'inside', 'outside', 'time', 'freq', 'dim', 'transform', 'unit', 'coordsys', 'cfg', 'hdr'}); % remove fields that do not represent the data
+fn = setdiff(fn, {'pos', 'tri', 'inside', 'outside', 'time', 'freq', 'dim', 'transform', 'unit', 'coordsys', 'fid', 'cfg', 'hdr'}); % remove fields that do not represent the data
 dimord = cell(size(fn));
 for i=1:numel(fn)
   dimord{i} = getdimord(mri, fn{i});
@@ -175,6 +175,9 @@ if strcmp(cfg.method, 'flip')
   flipvec(2) = resliced.transform(2,2)<0;
   flipvec(3) = resliced.transform(3,3)<0;
   resliced = volumeflip(resliced, flipvec); % this flips along each of the dimensions
+  if ~isequal(mri.transform, resliced.transform)
+    ft_info('flipped the volume to make it consistent with the axes of the coordinate system');
+  end
   
 else
   % compute the desired grid positions

@@ -29,10 +29,11 @@ function [elec] = ft_electrodeplacement(cfg, varargin)
 % EEG and ERP measurements. Clin Neurophysiol. 2001 Apr;112(4):713-9" for details.
 %
 % SHAFT - This is for placing electrodes along a linear sEEG shaft. The tip of the
-% shaft, another point along the shaft and the distance between the electrodes should
-% be specified. If the shaft is not straight but curved, you should specify multiple
-% (at least two) points along the saft, i.e. specify cfg.shaft.along=Nx3 for N
-% points. The number of electrodes that is placed is determined from cfg.channel.
+% shaft corresponding to the first electrode, another point along the shaft, and the
+% distance between the electrodes should be specified. If the shaft is not straight
+% but curved, you should specify multiple (at least two) points along the shaft,
+% i.e., specify cfg.shaft.along as an Nx3 array for N points along the shaft. The
+% number of electrodes to be distributed along the shaft is determined from cfg.channel.
 %
 % GRID - This is for placing electrodes on a regular MxN ECoG grid. Each of the four
 % cornerpoints of the grid must be specified, along with the dimensions of the grid.
@@ -41,9 +42,11 @@ function [elec] = ft_electrodeplacement(cfg, varargin)
 % surface.
 %
 % Use as
+%   [elec] = ft_electrodeplacement(cfg, mri)
 %   [elec] = ft_electrodeplacement(cfg, ct)
-%   [elec] = ft_electrodeplacement(cfg, ct, mri, ..)
-% where the input mri should be an anatomical CT or MRI volume, or
+%   [elec] = ft_electrodeplacement(cfg, mri, ct, ..)
+% where the second and subsequent input arguments should be one or multiple
+% anatomical MRIs and/or CTs, or
 %   [elec] = ft_electrodeplacement(cfg, headshape)
 % where the input headshape should be a surface triangulation.
 %
@@ -142,17 +145,18 @@ cfg = ft_checkconfig(cfg, 'renamedval', {'method', 'mri', 'volume'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'newfigure', 'figure'});
 
 % set the defaults
-cfg.method        = ft_getopt(cfg, 'method');                  % volume, headshape, 1020, shaft
+cfg.method        = ft_getopt(cfg, 'method',              []); % volume, headshape, 1020, shaft
 cfg.feedback      = ft_getopt(cfg, 'feedback',         'yes');
 cfg.parameter     = ft_getopt(cfg, 'parameter',    'anatomy');
 cfg.channel       = ft_getopt(cfg, 'channel',             []); % default will be determined further down {'1', '2', ...}
 cfg.elec          = ft_getopt(cfg, 'elec',                []); % use previously placed electrodes
+cfg.flip          = ft_getopt(cfg, 'flip',                []); % the default is set below
 cfg.renderer      = ft_getopt(cfg, 'renderer',      'opengl');
 % view options
 cfg.clim          = ft_getopt(cfg, 'clim',             [0 1]); % initial volume intensity limit voxels
 cfg.markerdist    = ft_getopt(cfg, 'markerdist',           5); % marker-slice distance view when ~global
 % magnet options
-cfg.magtype       = ft_getopt(cfg, 'magtype',         'peakweighted'); % detect weighted peaks or troughs
+cfg.magtype       = ft_getopt(cfg, 'magtype', 'peakweighted'); % detect weighted peaks or troughs
 cfg.magradius     = ft_getopt(cfg, 'magradius',            3); % specify the physical unit radius
 cfg.voxelratio    = ft_getopt(cfg, 'voxelratio',      'data'); % display size of the voxel, 'data' or 'square'
 cfg.axisratio     = ft_getopt(cfg, 'axisratio',       'data'); % size of the axes of the three orthoplots, 'square', 'voxel', or 'data'
@@ -169,6 +173,14 @@ if isempty(cfg.method) && ~isempty(varargin)
   end
 end
 
+if isempty(cfg.flip)
+  if strcmp(cfg.method, 'volume')
+    cfg.flip = 'yes';
+  else
+    cfg.flip = 'no';
+  end
+end
+
 % check if the input data is valid for this function
 switch cfg.method
   case 'volume'
@@ -177,12 +189,28 @@ switch cfg.method
     end
   case  {'headshape', '1020'}
     headshape = fixpos(varargin{1});
-    headshape = ft_checkdata(headshape, 'hascoordsys', 'yes');
+    headshape = ft_checkdata(headshape, 'hascoordsys', 'yes', 'hasunit', 'yes');
 end
 
-% set-up channels labels if possible
-chanlabel = {}; chanstring = {};
-markerlab = {}; markerpos = {};
+if strcmp(cfg.flip, 'yes')
+  for v = 1:numel(varargin)
+    % align the anatomical volume approximately to coordinate system, this puts it upright
+    origmethod = cfg.method;
+    tmpcfg = [];
+    tmpcfg.method = 'flip';
+    tmpcfg.trackcallinfo = 'no';
+    tmpcfg.showcallinfo = 'no';
+    mri{v} = ft_volumereslice(tmpcfg, mri{v});
+    [cfg, mri] = rollback_provenance(cfg, mri);
+    cfg.method = origmethod;
+  end
+end
+
+% setup electrode labels if possible
+chanlabel = {}; 
+chanstring = {};
+markerlab = {}; 
+markerpos = {};
 if ~isempty(cfg.elec) % re-use previously placed (cfg.elec) electrodes
   for e = 1:numel(cfg.elec.label)
     chanlabel{end+1,1} = cfg.elec.label{e};
@@ -350,7 +378,7 @@ switch cfg.method
     h7 = uicontrol('Style', 'popupmenu',...
       'Parent', h, ...
       'Value', 4, ... % corresponding to magradius = 3 (see String)
-      'String', {'0', '1', '2', '3', '4', '5'}, ...
+      'String', {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'}, ...
       'Units', 'normalized', ...
       'Position', [2*mri{1}.h1size(1)-0.103 0.18 mri{1}.h1size(1)/4.25 0.04],...
       'BackgroundColor', [1 1 1], ...
@@ -425,7 +453,7 @@ switch cfg.method
     opt               = [];
     opt.method        = 'volume'; % this is to distinguish between volume and headshape in the callbacks
     opt.label         = chanlabel;
-    opt.axes          = [mri{1}.axes(1) mri{1}.axes(2) mri{1}.axes(3) h4 h5 h6 h7 h8 h9 h10 hscatter hscan];
+    opt.handlesaxes   = [mri{1}.axes(1) mri{1}.axes(2) mri{1}.axes(3) h4 h5 h6 h7 h8 h9 h10 hscatter hscan];
     opt.mainfig       = h;
     opt.quit          = false;
     opt.update        = [1 1 1];
@@ -536,7 +564,7 @@ switch cfg.method
     opt.method        = 'headshape'; % this is to distinguish between volume and headshape in the callbacks
     opt.headshape     = headshape;
     opt.label         = chanlabel;
-    opt.axes          = [h1 h8];
+    opt.handlesaxes   = [h1 h8];
     opt.mainfig       = h;
     opt.quit          = false;
     opt.init          = true;
@@ -820,13 +848,13 @@ set(0, 'CurrentFigure', opt.mainfig);
 curr_ax = get(h, 'currentaxes');
 tag = get(curr_ax, 'tag');
 
-h1 = opt.axes(1);
-h2 = opt.axes(2);
-h3 = opt.axes(3);
+h1 = opt.handlesaxes(1);
+h2 = opt.handlesaxes(2);
+h3 = opt.handlesaxes(3);
 
 if opt.init
   delete(findobj(opt.mainfig, 'Type', 'Surface')); % get rid of old orthos (to facilitate switching scans)
-  ft_plot_ortho(opt.ana, 'transform', opt.mri{opt.currmri}.transform, 'location', opt.pos, 'style', 'subplot', 'parents', [h1 h2 h3], 'update', opt.update, 'doscale', false, 'clim', opt.clim, 'unit', opt.mri{opt.currmri}.unit);
+  ft_plot_ortho(opt.ana, 'transform', opt.mri{opt.currmri}.transform, 'coordsys', opt.mri{opt.currmri}.coordsys, 'location', opt.pos, 'style', 'subplot', 'parents', [h1 h2 h3], 'update', opt.update, 'doscale', false, 'clim', opt.clim, 'unit', opt.mri{opt.currmri}.unit);
 
   opt.anahandles = findobj(opt.mainfig, 'Type', 'Surface')';
   parenttag = get(opt.anahandles, 'parent');
@@ -839,13 +867,12 @@ if opt.init
   set(opt.anahandles, 'tag', 'ana');
 
   % for zooming purposes
-  opt.axis = zeros(1,6);
-  opt.axis = [opt.axes(1).XLim opt.axes(1).YLim opt.axes(1).ZLim];
+  opt.axis = [opt.handlesaxes(1).XLim opt.handlesaxes(1).YLim opt.handlesaxes(1).ZLim];
   opt.redrawmarkers = true;
-  opt.reinit = false;
+  opt.reinit = false; % do not redraw orthoplots
 
 elseif opt.reinit
-  ft_plot_ortho(opt.ana, 'transform', opt.mri{opt.currmri}.transform, 'location', opt.pos, 'style', 'subplot', 'surfhandle', opt.anahandles, 'update', opt.update, 'doscale', false, 'clim', opt.clim, 'unit', opt.mri{opt.currmri}.unit);
+  ft_plot_ortho(opt.ana, 'transform', opt.mri{opt.currmri}.transform, 'coordsys', opt.mri{opt.currmri}.coordsys, 'location', opt.pos, 'style', 'subplot', 'surfhandle', opt.anahandles, 'update', opt.update, 'doscale', false, 'clim', opt.clim, 'unit', opt.mri{opt.currmri}.unit);
 
   fprintf('==================================================================================\n');
   lab = 'crosshair';
@@ -859,7 +886,7 @@ elseif opt.reinit
     otherwise
       fprintf('%10s at [%f %f %f] %s\n', lab, opt.pos, opt.mri{opt.currmri}.unit);
   end
-  opt.reinit = false;
+  opt.reinit = false; % do not redraw orthoplots
 end
 
 % zoom
@@ -876,18 +903,25 @@ axis(h1, [xi-xloadj xi+xhiadj yi-yloadj yi+yhiadj zi-zloadj zi+zhiadj]);
 axis(h2, [xi-xloadj xi+xhiadj yi-yloadj yi+yhiadj zi-zloadj zi+zhiadj]);
 axis(h3, [xi-xloadj xi+xhiadj yi-yloadj yi+yhiadj]);
 
+if opt.zoom>0
+  % the coordsys labels fall outside the subplots when zoomed in
+  delete(findall(h, 'Type', 'text', 'Tag', 'coordsys_label_100'));
+  delete(findall(h, 'Type', 'text', 'Tag', 'coordsys_label_010'));
+  delete(findall(h, 'Type', 'text', 'Tag', 'coordsys_label_001'));
+end
+
 if opt.init
   % draw the crosshairs for the first time
   delete(findobj(opt.mainfig, 'Type', 'Line')); % get rid of old crosshairs (to facilitate switching scans)
-  hch1 = ft_plot_crosshair([xi yi-yloadj zi], 'parent', h1, 'color', 'yellow'); % was [xi 1 zi], now corrected for zoom
-  hch2 = ft_plot_crosshair([xi+xhiadj yi zi], 'parent', h2, 'color', 'yellow'); % was [opt.dim(1) yi zi], now corrected for zoom
-  hch3 = ft_plot_crosshair([xi yi zi], 'parent', h3, 'color', 'yellow'); % was [xi yi opt.dim(3)], now corrected for zoom
+  hch1 = ft_plot_crosshair([xi        yi-yloadj zi], 'parent', h1, 'color', 'yellow'); % was [xi 1 zi], now corrected for zoom
+  hch2 = ft_plot_crosshair([xi+xhiadj yi        zi], 'parent', h2, 'color', 'yellow'); % was [opt.dim(1) yi zi], now corrected for zoom
+  hch3 = ft_plot_crosshair([xi        yi        zi], 'parent', h3, 'color', 'yellow'); % was [xi yi opt.dim(3)], now corrected for zoom
   opt.handlescross  = [hch1(:)';hch2(:)';hch3(:)'];
 else
   % update the existing crosshairs, don't change the handles
-  ft_plot_crosshair([xi yi-yloadj zi], 'handle', opt.handlescross(1, :));
-  ft_plot_crosshair([xi+xhiadj yi zi], 'handle', opt.handlescross(2, :));
-  ft_plot_crosshair([xi yi zi], 'handle', opt.handlescross(3, :));
+  ft_plot_crosshair([xi        yi-yloadj zi], 'handle', opt.handlescross(1, :));
+  ft_plot_crosshair([xi+xhiadj yi        zi], 'handle', opt.handlescross(2, :));
+  ft_plot_crosshair([xi        yi        zi], 'handle', opt.handlescross(3, :));
 end
 
 if opt.showcrosshair
@@ -898,8 +932,8 @@ end
 
 % draw markers
 if opt.showmarkers && opt.redrawmarkers
-  delete(findobj(opt.mainfig, 'Type', 'Line', 'Marker', '+')); % remove previous markers
-  delete(findobj(opt.mainfig, 'Type', 'text')); % remove previous labels
+  delete(findobj(opt.mainfig, 'Tag', 'marker')); % remove previous markers
+  delete(findobj(opt.mainfig, 'Tag', 'label')); % remove previous labels
   idx = find(~cellfun(@isempty,opt.markerlab)); % non-empty markers
   if ~isempty(idx)
     for i=1:numel(idx)
@@ -911,7 +945,7 @@ if opt.showmarkers && opt.redrawmarkers
     tmp2 = markerpos_sel(:,2);
     tmp3 = markerpos_sel(:,3);
 
-    subplot(opt.axes(1));
+    subplot(opt.handlesaxes(1));
     if ~opt.global % filter markers distant to the current slice (N units and further)
       posj_idx = find( abs(tmp2 - repmat(yi,size(tmp2))) < opt.markerdist);
       posi = tmp1(posj_idx);
@@ -925,16 +959,16 @@ if opt.showmarkers && opt.redrawmarkers
     end
     if ~isempty(posi)
       hold on
-      plot3(posi, repmat(yi-yloadj,size(posj)), posk, 'marker', '+', 'linestyle', 'none', 'color', 'r'); % [xi yi-yloadj zi]
+      plot3(posi, repmat(yi-yloadj,size(posj)), posk, 'Marker', '+', 'LineStyle', 'none', 'Color', 'r', 'Tag', 'marker'); % [xi yi-yloadj zi]
       if opt.showlabels
         for i=1:numel(posj_idx)
-          text(posi(i), yi-yloadj, posk(i), markerlab_sel{posj_idx(i),1}, 'color', [1 .5 0], 'clipping', 'on');
+          text(posi(i), yi-yloadj, posk(i), markerlab_sel{posj_idx(i),1}, 'Color', [1 .5 0], 'Clipping', 'on', 'Tag', 'label');
         end
       end
       hold off
     end
 
-    subplot(opt.axes(2));
+    subplot(opt.handlesaxes(2));
     if ~opt.global % filter markers distant to the current slice (N units and further)
       posi_idx = find( abs(tmp1 - repmat(xi,size(tmp1))) < opt.markerdist);
       posi = tmp1(posi_idx);
@@ -957,7 +991,7 @@ if opt.showmarkers && opt.redrawmarkers
       hold off
     end
 
-    subplot(opt.axes(3));
+    subplot(opt.handlesaxes(3));
     if ~opt.global % filter markers distant to the current slice (N units and further)
       posk_idx = find( abs(tmp3 - repmat(zi,size(tmp3))) < opt.markerdist);
       posi = tmp1(posk_idx);
@@ -1016,9 +1050,27 @@ if ~isfield(opt, 'scatterfig') % initiate in case the figure does not yet exist
     'Visible', 'on');
   set(opt.scatterfig, 'CloseRequestFcn', @cb_scattercleanup);
   opt.scatterfig_h1 = axes('position', [0.02 0.02 0.96 0.96]);
-  set(opt.scatterfig_h1, 'DataAspectRatio', get(opt.axes(1), 'DataAspectRatio'));
-  axis square; axis tight; axis off; view([90 0]);
-  xlabel('x'); ylabel('y'); zlabel('z');
+  set(opt.scatterfig_h1, 'DataAspectRatio', get(opt.handlesaxes(1), 'DataAspectRatio'));
+
+  dim = opt.mri{opt.currmri}.dim;
+  transform = opt.mri{opt.currmri}.transform;
+  % determine the corner points of the box that encompasses the whole data
+  % extend the box with half a voxel in all directions to get the outer edge
+  corner_vc = [
+    0.5        0.5        0.5
+    0.5+dim(1) 0.5        0.5
+    0.5+dim(1) 0.5+dim(2) 0.5
+    0.5        0.5+dim(2) 0.5
+    0.5        0.5        0.5+dim(3)
+    0.5+dim(1) 0.5        0.5+dim(3)
+    0.5+dim(1) 0.5+dim(2) 0.5+dim(3)
+    0.5        0.5+dim(2) 0.5+dim(3)
+    ];
+  corner_hc = ft_warp_apply(transform, corner_vc);
+  % xlabel('x'); ylabel('y'); zlabel('z');
+  axis equal; axis vis3d; axis off
+  axis([min(corner_hc(:,1)) max(corner_hc(:,1)) min(corner_hc(:,2)) max(corner_hc(:,2)) min(corner_hc(:,3)) max(corner_hc(:,3))]);
+  view(3);
 
   % scatter range sliders
   opt.scatterfig_h23text = uicontrol('Style', 'text',...
@@ -1076,7 +1128,7 @@ else
 end
 
 if opt.redrawscatter
-  delete(findobj(opt.scatterfig, 'type', 'scatter')); % remove previous scatters
+  delete(findobj(opt.scatterfig, 'Type', 'scatter')); % remove previous scatters
   msize = round(2000/opt.mri{opt.currmri}.dim(3)); % headsize (20 cm) / z slices
   inc = abs(opt.slim(2)-opt.slim(1))/4; % color increments
   for r = 1:4 % 4 color layers to encode peaks
@@ -1085,7 +1137,8 @@ if opt.redrawscatter
     voxind = find(opt.ana>lim1 & opt.ana<lim2);
     [x,y,z] = ind2sub(opt.mri{opt.currmri}.dim, voxind);
     pos = ft_warp_apply(opt.mri{opt.currmri}.transform, [x,y,z]);
-    hold on; scatter3(opt.scatterfig_h1, pos(:,1),pos(:,2),pos(:,3),msize, 'Marker', 's', 'MarkerEdgeColor', 'none', 'MarkerFaceColor', [.8-(r*.2) .8-(r*.2) .8-(r*.2)]);
+    hold on 
+    scatter3(opt.scatterfig_h1, pos(:,1), pos(:,2), pos(:,3), msize, 'Marker', 's', 'MarkerEdgeColor', 'none', 'MarkerFaceColor', [.8-(r*.2) .8-(r*.2) .8-(r*.2)], 'Tag', 'marker');
   end
   opt.redrawscatter = 0;
 end
@@ -1099,7 +1152,7 @@ if opt.showmarkers && opt.redrawscattermarkers % plot the markers
       markerlab_sel{i,1} = opt.markerlab{idx(i),1};
       markerpos_sel(i,:) = opt.markerpos{idx(i),1};
     end
-    plot3(opt.scatterfig_h1, markerpos_sel(:,1),markerpos_sel(:,2),markerpos_sel(:,3), 'marker', '+', 'linestyle', 'none', 'color', 'r'); % plot the markers
+    plot3(opt.scatterfig_h1, markerpos_sel(:,1), markerpos_sel(:,2),markerpos_sel(:,3), 'marker', '+', 'linestyle', 'none', 'color', 'r'); % plot the markers
     if opt.showlabels
       for i=1:size(markerpos_sel,1)
         text(opt.scatterfig_h1, markerpos_sel(i,1), markerpos_sel(i,2), markerpos_sel(i,3), markerlab_sel{i,1}, 'color', [1 .5 0]);
@@ -1144,13 +1197,14 @@ else
   ft_plot_mesh(removefields(opt.headshape, 'color'), 'tag', 'headshape', 'facecolor', 'skin', 'material', 'dull', 'edgecolor', 'none', 'facealpha', 1);
 end
 
+% apply uniform light from all angles
 lighting gouraud
-l = lightangle(0,  90); set(l, 'Color', 0.5*[1 1 1])
-l = lightangle(0, -90); set(l, 'Color', 0.5*[1 1 1])
-l = lightangle(  0, 0); set(l, 'Color', 0.5*[1 1 1])
-l = lightangle( 90, 0); set(l, 'Color', 0.5*[1 1 1])
-l = lightangle(180, 0); set(l, 'Color', 0.5*[1 1 1])
-l = lightangle(270, 0); set(l, 'Color', 0.5*[1 1 1])
+l = lightangle(0,  90); set(l, 'Color', 0.45*[1 1 1])
+l = lightangle(0, -90); set(l, 'Color', 0.45*[1 1 1])
+l = lightangle(  0, 0); set(l, 'Color', 0.45*[1 1 1])
+l = lightangle( 90, 0); set(l, 'Color', 0.45*[1 1 1])
+l = lightangle(180, 0); set(l, 'Color', 0.45*[1 1 1])
+l = lightangle(270, 0); set(l, 'Color', 0.45*[1 1 1])
 % alpha 0.9
 
 if opt.showmarkers
@@ -1158,7 +1212,7 @@ if opt.showmarkers
   if ~isempty(idx)
     elec = keepfields(opt.headshape, {'unit', 'coordsys'});
     elec.elecpos = cat(1, opt.markerpos{idx});
-    elec.label   = opt.markerlab(idx);
+    elec.label   = cat(1, opt.markerlab{idx});
     elec.elecori = elec.elecpos;
     elec.elecori(:,1) = elec.elecori(:,1) - mean(opt.headshape.pos(:,1));
     elec.elecori(:,2) = elec.elecori(:,2) - mean(opt.headshape.pos(:,2));
@@ -1208,7 +1262,6 @@ if isempty(key)
   key = '';
 end
 
-
 % the following code is largely shared by FT_SOURCEPLOT, FT_VOLUMEREALIGN, FT_INTERACTIVEREALIGN, FT_MESHREALIGN, FT_ELECTRODEPLACEMENT
 if strcmp(opt.method, 'volume')
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1231,21 +1284,21 @@ if strcmp(opt.method, 'volume')
       camlight
 
     case '1'
-      subplot(opt.axes(1));
+      subplot(opt.handlesaxes(1));
 
     case '2'
-      subplot(opt.axes(2));
+      subplot(opt.handlesaxes(2));
 
     case '3'
-      subplot(opt.axes(3));
+      subplot(opt.handlesaxes(3));
 
     case 'g' % global/local elec view (h9) toggle
       if isequal(opt.global, 0)
         opt.global = 1;
-        set(opt.axes(9), 'Value', 1);
+        set(opt.handlesaxes(9), 'Value', 1);
       elseif isequal(opt.global, 1)
         opt.global = 0;
-        set(opt.axes(9), 'Value', 0);
+        set(opt.handlesaxes(9), 'Value', 0);
       end
       opt.redrawmarkers = true; % draw markers
       setappdata(h, 'opt', opt);
@@ -1254,10 +1307,10 @@ if strcmp(opt.method, 'volume')
     case 'l' % elec label view (h8) toggle
       if isequal(opt.showlabels, 0)
         opt.showlabels = 1;
-        set(opt.axes(8), 'Value', 1);
+        set(opt.handlesaxes(8), 'Value', 1);
       elseif isequal(opt.showlabels, 1)
         opt.showlabels = 0;
-        set(opt.axes(8), 'Value', 0);
+        set(opt.handlesaxes(8), 'Value', 0);
       end
       opt.redrawmarkers = true; % draw markers
       setappdata(h, 'opt', opt);
@@ -1266,10 +1319,10 @@ if strcmp(opt.method, 'volume')
     case 'm' % magnet (h7) toggle
       if isequal(opt.magnet, 0)
         opt.magnet = 1;
-        set(opt.axes(7), 'Value', 1);
+        set(opt.handlesaxes(7), 'Value', 1);
       elseif isequal(opt.magnet, 1)
         opt.magnet = 0;
-        set(opt.axes(7), 'Value', 0);
+        set(opt.handlesaxes(7), 'Value', 0);
       end
       setappdata(h, 'opt', opt);
 
@@ -1369,6 +1422,24 @@ if strcmp(opt.method, 'volume')
         updatepanel = [3 1 2];
       end
 
+    case 'pageup'
+      opt.zoom = opt.zoom + 0.1;
+      opt.zoom = min(opt.zoom, 0.9); % between 0 and 0.9
+      fprintf('increasing zoom to %f\n', opt.zoom);
+      set(opt.handlesaxes(10), 'Value', opt.zoom);
+      setappdata(h, 'opt', opt);
+      cb_redraw(h);
+      drawnow
+
+    case 'pagedown'
+      opt.zoom = opt.zoom - 0.1;
+      opt.zoom = max(opt.zoom, 0); % between 0 and 0.9
+      fprintf('decreasing zoom to %f\n', opt.zoom);
+      set(opt.handlesaxes(10), 'Value', opt.zoom);
+      setappdata(h, 'opt', opt);
+      cb_redraw(h);
+      drawnow
+
     otherwise
       % do nothing
   end % switch key
@@ -1397,7 +1468,6 @@ elseif strcmp(opt.method, 'headshape')
       % do nothing
   end % switch key
 end % if method
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
@@ -1466,6 +1536,7 @@ if strcmp(opt.method, 'volume')
   end
   opt.reinit = true; % redraw orthoplots
   opt.redrawmarkers = true; % draw markers
+
 elseif strcmp(opt.method, 'headshape')
   h2 = get(gca, 'children'); % get the object handles
   iscorrect = false(size(h2));
@@ -1485,8 +1556,8 @@ elseif strcmp(opt.method, 'headshape')
   h2 = h2(iscorrect);
   opt.pos = select3d(h2)'; % enforce column direction
   if ~isempty(opt.pos)
-    delete(findobj(h,'Type','Line','Marker','+','Color',[0 0 0])) % remove previous crosshairs
-    hold on; plot3(opt.pos(:,1),opt.pos(:,2),opt.pos(:,3), 'marker', '+', 'linestyle', 'none', 'color', [0 0 0]); % plot the crosshair
+    delete(findobj(h,'Type', 'Line', 'Marker', '+', 'Color', [0 0 0])) % remove previous crosshairs
+    hold on; plot3(opt.pos(:,1), opt.pos(:,2), opt.pos(:,3), 'marker', '+', 'linestyle', 'none', 'color', [0 0 0]); % plot the crosshair
   end
   %opt.pos = ft_select_point3d(opt.headshape, 'nearest', true, 'multiple', false, 'marker', '+'); % FIXME: this gets stuck in a loop waiting for any abritrary buttonpress
 end
@@ -1635,8 +1706,8 @@ setappdata(h, 'opt', opt);
 function opt = magnetize(opt)
 
 try
-  pos = opt.pos;
-  vox = round(ft_warp_apply(inv(opt.mri{opt.currmri}.transform), pos)); % head to vox coord (for indexing within anatomy)
+  oldpos = opt.pos;
+  vox = round(ft_warp_apply(inv(opt.mri{opt.currmri}.transform), oldpos)); % head to vox coord (for indexing within anatomy)
   xsel = vox(1)+(-opt.magradius:opt.magradius);
   ysel = vox(2)+(-opt.magradius:opt.magradius);
   zsel = vox(3)+(-opt.magradius:opt.magradius);
@@ -1691,9 +1762,13 @@ try
   end
   % adjust the indices for the selection
   voxadj = [ix, iy, iz] + vox - opt.magradius - 1;
-  opt.pos = ft_warp_apply(opt.mri{opt.currmri}.transform, voxadj);
-  fprintf('==================================================================================\n');
-  fprintf(' clicked at [%.1f %.1f %.1f], %s magnetized adjustment [%.1f %.1f %.1f] %s\n', pos, opt.magtype, opt.pos-pos, opt.mri{opt.currmri}.unit);
+  newpos = ft_warp_apply(opt.mri{opt.currmri}.transform, voxadj);
+  if ~any(isnan(newpos))
+    % this fails if the selection is at the edge of the volume
+    fprintf('==================================================================================\n');
+    fprintf(' clicked at [%.1f %.1f %.1f], %s magnetized adjustment [%.1f %.1f %.1f] %s\n', oldpos, opt.magtype, newpos-oldpos, opt.mri{opt.currmri}.unit);
+    opt.pos = newpos;
+  end
 catch
   % this fails if the selection is at the edge of the volume
 end
@@ -1789,10 +1864,10 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_scattercleanup(hObject, eventdata)
 
-h = findobj('type', 'figure', 'name',mfilename);
+h = findobj('type', 'figure', 'name', mfilename);
 opt = getappdata(h, 'opt');
 opt.scatter = 0;
-set(opt.axes(11), 'Value', 0);
+set(opt.handlesaxes(11), 'Value', 0);
 opt = rmfield(opt, 'scatterfig');
 setappdata(h, 'opt', opt);
 delete(hObject);
@@ -1802,7 +1877,7 @@ delete(hObject);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_scatterminslider(h2, eventdata)
 
-h = findobj('type', 'figure', 'name',mfilename);
+h = findobj('type', 'figure', 'name', mfilename);
 opt = getappdata(h, 'opt');
 opt.slim(1) = get(h2, 'value');
 fprintf('==================================================================================\n');
@@ -1816,7 +1891,7 @@ cb_scatterredraw(h);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_scattermaxslider(h3, eventdata)
 
-h = findobj('type', 'figure', 'name',mfilename);
+h = findobj('type', 'figure', 'name', mfilename);
 opt = getappdata(h, 'opt');
 opt.slim(2) = get(h3, 'value');
 fprintf('==================================================================================\n');
@@ -1834,7 +1909,7 @@ h = findobj('type', 'figure', 'name', mfilename);
 opt = getappdata(h, 'opt');
 opt.pos = get(eventdata, 'Position'); % current datamarker position
 opt.reinit = true; % redraw orthoplots
-dcm_txt = ['']; % ['index = [' num2str(opt.pos) ']'];
+dcm_txt = ''; % ['index = [' num2str(opt.pos) ']'];
 
 if strcmp(get(opt.scatterfig_dcm, 'Enable'), 'on') % update appl and figures
   setappdata(h, 'opt', opt);
@@ -1892,10 +1967,10 @@ if opt.currmri>numel(opt.mri)
 end
 opt.ana = opt.mri{opt.currmri}.dat;
 opt.clim = opt.mri{opt.currmri}.clim; % use next scan's clim
-set(opt.axes(4), 'Value', opt.clim(1)); % update minslider
-set(opt.axes(5), 'Value', opt.clim(2)); % update maxslider
+set(opt.handlesaxes(4), 'Value', opt.clim(1)); % update minslider
+set(opt.handlesaxes(5), 'Value', opt.clim(2)); % update maxslider
 opt.slim = opt.mri{opt.currmri}.slim; % use next scan's scatter clim
-opt.axes(1:3) = opt.mri{opt.currmri}.axes;
+opt.handlesaxes(1:3) = opt.mri{opt.currmri}.axes;
 opt.init = true;
 
 setappdata(h, 'opt', opt);

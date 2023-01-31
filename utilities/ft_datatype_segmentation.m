@@ -211,7 +211,7 @@ switch segversion
             threshold = 0.5;
             smooth    = 5;
             % ensure that the segmentation contains the brain mask, if not then construct it from gray+white+csf
-            if length(intersect(tissuelabel, {'gray' 'white' 'csf'}))~=3
+            if ~all(ismember({'gray' 'white' 'csf'}, tissuelabel))
               ft_error('cannot construct a brain mask on the fly; this requires gray, white and csf');
             end
             gray  = tissue==find(strcmp(tissuelabel, 'gray'));
@@ -224,7 +224,7 @@ switch segversion
             % store it in the output
             segmentation.brain = brain;
           end % try to construct the brain
-        end
+        end % if single indexed representation
 
       elseif all(probabilistic)
         if ~isfield(segmentation, 'brain')
@@ -234,18 +234,16 @@ switch segversion
           threshold = 0.5;
           smooth    = 5;
           % ensure that the segmentation contains the brain mask, if not then construct it from gray+white+csf tissue probability maps
-          gray  = segmentation.gray;
-          white = segmentation.white;
-          csf   = segmentation.csf;
-          brain = gray + white + csf;
-          clear gray white csf
+          fprintf('creating brainmask ... using the sum of gray, white and csf tpms\n');
+          brain = segmentation.gray + segmentation.white + segmentation.csf;
           brain = volumesmooth(brain,    smooth,    'brain');
           brain = volumethreshold(brain, threshold, 'brain');
           % store it in the output
           segmentation.brain = brain;
         end
+
       else
-        ft_error('cannot construct a brain mask on the fly; this requires a uniquely indexed or a uniquely probabilitic representation');
+        ft_error('cannot construct a brain mask on the fly; this requires a uniquely indexed or probabilitic representation');
       end
     end % if hasbrain
 
