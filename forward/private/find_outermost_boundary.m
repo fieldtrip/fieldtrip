@@ -42,7 +42,7 @@ for j=1:ncmp
   if i==j
     inside(i,j) = 0;
   else
-    inside(i,j) = surface_insidecurpos1, curpos, curtri);
+    inside(i,j) = surface_inside(curpos1, curpos, curtri);
   end
 end
 end
