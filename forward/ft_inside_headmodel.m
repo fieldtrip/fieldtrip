@@ -67,11 +67,11 @@ switch ft_headmodeltype(headmodel)
     if ~isempty(headshape) && ~isempty(grad)
       % use the specified headshape to construct the bounding triangulation
       [pos, tri] = headsurface(headmodel, grad, 'headshape', headshape, 'inwardshift', inwardshift, 'surface', 'skin');
-      inside = surface_insidedippos, pos, tri);
+      inside = surface_inside(dippos, pos, tri);
     elseif ~isempty(grad)
       % use the volume conductor model to construct an approximate headshape
       [pos, tri] = headsurface(headmodel, grad, 'inwardshift', inwardshift, 'surface', 'skin');
-      inside = surface_insidedippos, pos, tri);
+      inside = surface_inside(dippos, pos, tri);
     else
       % only check whether the dipole is in any of the spheres
       nspheres = size(headmodel.r,1);
@@ -117,7 +117,7 @@ switch ft_headmodeltype(headmodel)
   case {'bem', 'dipoli', 'bemcp', 'openmeeg', 'asa', 'singleshell', 'neuromag', 'nolte'}
     % this is a model with a realistic shape described by a triangulated boundary
     [pos, tri] = headsurface(headmodel, [], 'inwardshift', inwardshift, 'surface', 'brain');
-    inside = surface_insidedippos, pos, tri);
+    inside = surface_inside(dippos, pos, tri);
 
   case {'simbio', 'duneuro'}
     % this is a model with hexaheders or tetraheders
@@ -229,11 +229,11 @@ function indx = my_dsearchn(pos1, pos2, flag)
 % end
 
 % the idea is that the distance between 2 points is:
-% 
+%
 % sqrt(sum((p1(x,y,z)-p2(x,y,z)).^2)
-% 
+%
 % since we are dealing with relative distances, we can get rid of the sqrt:
-% so we need to compute: 
+% so we need to compute:
 %
 % sum((p1(x,y,z)-p2(x,y,z)).^2)
 %
@@ -243,8 +243,8 @@ function indx = my_dsearchn(pos1, pos2, flag)
 %
 % or, equivalently:
 %
-% p1x^2 + p2x^2 - 2*p1x*p2x+ ... 
-% 
+% p1x^2 + p2x^2 - 2*p1x*p2x+ ...
+%
 % reordering:
 %
 % (p1x^2 + p1y^2 + p1z^2) + cross-terms + (p2x^2 + p2y^2 + p2z^2)

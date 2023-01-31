@@ -40,7 +40,7 @@ assert(ft_headmodeltype(svolcs,'concentricspheres'))
 %   zgrid = xgrid;
 %   [X, Y, Z]  = ndgrid(xgrid, ygrid, zgrid);
 %   pos = [X(:) Y(:) Z(:)];
-%   [inside] = surface_insidepos, svol(i).bnd.pnt, svol(i).bnd.tri);
+%   [inside] = surface_inside(pos, svol(i).bnd.pnt, svol(i).bnd.tri);
 %   l = length(xgrid)
 %   c = 76; sel = (l-1)./2; % in voxel
 %   tmp = reshape(inside,[l l l]);

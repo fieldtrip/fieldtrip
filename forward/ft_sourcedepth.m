@@ -66,7 +66,7 @@ case {'bem' 'dipoli', 'bemcp', 'asa', 'singleshell', 'neuromag','openmeeg'}
     pos = headmodel.bnd(headmodel.source).pos;
     tri = headmodel.bnd(headmodel.source).tri;
   end
-  inside = surface_insidedippos, pos, tri);
+  inside = surface_inside(dippos, pos, tri);
   ntri   = size(tri,1);
   npos   = size(dippos,1);
   dist   = zeros(ntri, 1);

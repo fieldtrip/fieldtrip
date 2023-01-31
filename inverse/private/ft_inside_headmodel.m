@@ -67,11 +67,11 @@ switch ft_headmodeltype(headmodel)
     if ~isempty(headshape) && ~isempty(grad)
       % use the specified headshape to construct the bounding triangulation
       [pos, tri] = headsurface(headmodel, grad, 'headshape', headshape, 'inwardshift', inwardshift, 'surface', 'skin');
-      inside = surface_insidedippos, pos, tri);
+      inside = surface_inside(dippos, pos, tri);
     elseif ~isempty(grad)
       % use the volume conductor model to construct an approximate headshape
       [pos, tri] = headsurface(headmodel, grad, 'inwardshift', inwardshift, 'surface', 'skin');
-      inside = surface_insidedippos, pos, tri);
+      inside = surface_inside(dippos, pos, tri);
     else
       % only check whether the dipole is in any of the spheres
       nspheres = size(headmodel.r,1);
@@ -117,7 +117,7 @@ switch ft_headmodeltype(headmodel)
   case {'bem', 'dipoli', 'bemcp', 'openmeeg', 'asa', 'singleshell', 'neuromag', 'nolte'}
     % this is a model with a realistic shape described by a triangulated boundary
     [pos, tri] = headsurface(headmodel, [], 'inwardshift', inwardshift, 'surface', 'brain');
-    inside = surface_insidedippos, pos, tri);
+    inside = surface_inside(dippos, pos, tri);
 
   case {'simbio', 'duneuro'}
     % this is a model with hexaheders or tetraheders

@@ -169,7 +169,7 @@ if checkmesh
   % check for each of the vertices that it falls inside the previous surface
   for i=2:numboundaries
     for j=1:size(mesh(i).pos,1)
-      inside = surface_insidemesh(i).pos(j,:), mesh(i-1).pos, mesh(i-1).tri);
+      inside = surface_inside(mesh(i).pos(j,:), mesh(i-1).pos, mesh(i-1).tri);
       assert(inside, 'vertex %d of surface %d is outside surface %d', j, i, i-1);
     end
   end
