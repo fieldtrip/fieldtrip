@@ -140,10 +140,13 @@ else
 end
 
 % assign default tissue labels if none provided
-if(isempty(tissue))
+% the tissue is used for the filename
+if isempty(tissue)
   switch(numboundaries)
     case 1
       tissue = {'scalp'};
+    case 2
+      tissue = {'skull', 'brain'};
     case 3
       tissue = {'scalp','skull','brain'};
     case 4
