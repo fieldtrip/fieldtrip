@@ -74,7 +74,7 @@ ft_hastoolbox('spm8up', 3) || ft_hastoolbox('spm2', 1);
 
 % look for >1 blob
 [lab, num] = spm_bwlabel(double(seg), 26);
-if num>1,
+if num>1
   ft_warning('the segmented volume consists of more than one compartment, using only the biggest one for the segmentation');
 
   for k = 1:num
