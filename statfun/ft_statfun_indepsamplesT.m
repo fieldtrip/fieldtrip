@@ -79,12 +79,12 @@ hasnans1 = any(nreplc1<sum(sel1));
 hasnans2 = any(nreplc2<sum(sel2));
 
 if any(nrepl==0)
-        datapused=sum(nrepl==size(design,2));
-        ft_warning('Computing the test statistic for %d out of %d datapoints', datapused, numel(nrepl));
+  datapused=sum(nrepl==size(design,2));
+  ft_warning('Computing the test statistic for %d out of %d datapoints', datapused, numel(nrepl));
 end
 
 if any(nrepl(nrepl>0)<size(design,2))
-       ft_warning('Using between %d and %d out of %d replications for the computation of the statistic',min(nrepl(nrepl>0)), max(nrepl), size(design,2));
+  ft_warning('Using between %d and %d out of %d replications for the computation of the statistic',min(nrepl(nrepl>0)), max(nrepl), size(design,2));
 end
 
 df = nrepl - 2;
