@@ -84,11 +84,14 @@ if isstruct(dat) && isfield(dat, 'anatomy') && isfield(dat, 'transform')
 end
 
 % the data can have up to 5 dimensions, including time and/or frequency
-if isequal(dim, size(dat, 1, 2, 3))
+% the size function in MATLAB 2022b can take multiple input arguments, but not in 2018b
+datsize = [size(dat, 1) size(dat, 2) size(dat, 3) size(dat, 4) size(dat, 5)];
+
+if isequal(dim, datsize(1:3))
   % reuse the persistent variables to speed up subsequent calls with the same input
 else
   % construct the persistent variables
-  dim = size(dat, 1, 2, 3);
+  dim = datsize(1:3);
   [X, Y, Z] = ndgrid(1:dim(1), 1:dim(2), 1:dim(3));
 end
 

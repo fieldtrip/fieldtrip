@@ -102,18 +102,6 @@ ARRAY+=(external/dss/private/boolvec2artifact.m)
 sync ${ARRAY[*]}
 
 ################################################################################
-# surface_inside.m
-
-ARRAY=()
-ARRAY+=(external/dipoli/private/surface_inside.m)
-ARRAY+=(external/openmeeg/private/surface_inside.m)
-ARRAY+=(fileio/private/surface_inside.m)
-ARRAY+=(forward/private/surface_inside.m)
-ARRAY+=(inverse/private/surface_inside.m)
-ARRAY+=(private/surface_inside.m)
-sync ${ARRAY[*]}
-
-################################################################################
 # buffer.mexa64
 
 ARRAY=()
@@ -2514,18 +2502,6 @@ ARRAY+=(private/neuralynx_getheader.m)
 sync ${ARRAY[*]}
 
 ################################################################################
-# surface_normals.m
-
-ARRAY=()
-ARRAY+=(external/openmeeg/private/surface_normals.m)
-ARRAY+=(fileio/private/surface_normals.m)
-ARRAY+=(forward/private/surface_normals.m)
-ARRAY+=(plotting/private/surface_normals.m)
-ARRAY+=(private/surface_normals.m)
-ARRAY+=(test/private/surface_normals.m)
-sync ${ARRAY[*]}
-
-################################################################################
 # offset2time.m
 
 ARRAY=()
@@ -3613,6 +3589,18 @@ ARRAY+=(utilities/strel_bol.m)
 sync ${ARRAY[*]}
 
 ################################################################################
+# surface_normals.m
+
+ARRAY=()
+ARRAY+=(external/openmeeg/private/surface_normals.m)
+ARRAY+=(fileio/private/surface_normals.m)
+ARRAY+=(forward/private/surface_normals.m)
+ARRAY+=(plotting/private/surface_normals.m)
+ARRAY+=(private/surface_normals.m)
+ARRAY+=(test/private/surface_normals.m)
+sync ${ARRAY[*]}
+
+################################################################################
 # surface_orientation.m
 
 ARRAY=()
@@ -3620,6 +3608,26 @@ ARRAY+=(forward/private/surface_orientation.m)
 ARRAY+=(inverse/private/surface_orientation.m)
 ARRAY+=(plotting/private/surface_orientation.m)
 ARRAY+=(private/surface_orientation.m)
+sync ${ARRAY[*]}
+
+################################################################################
+# surface_inside.m
+
+ARRAY=()
+ARRAY+=(external/dipoli/private/surface_inside.m)
+ARRAY+=(external/openmeeg/private/surface_inside.m)
+ARRAY+=(fileio/private/surface_inside.m)
+ARRAY+=(forward/private/surface_inside.m)
+ARRAY+=(inverse/private/surface_inside.m)
+ARRAY+=(private/surface_inside.m)
+sync ${ARRAY[*]}
+
+################################################################################
+# surface_shift
+
+ARRAY=()
+ARRAY+=(forward/private/surface_shift.m)
+ARRAY+=(private/surface_shift.m)
 sync ${ARRAY[*]}
 
 ################################################################################

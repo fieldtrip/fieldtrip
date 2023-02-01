@@ -41,9 +41,9 @@ pos(:,3) = pos(:,3) - center(3);
 
 if nargin==3
   % look at the orientation of the normals seen from the center
-  % this method is rigorous only for star-shaped surfaces
+  % this method is rigorous only for star-shaped surfaces, but it does also work for open surfaces
   n = sign(sum(pos .* ori, 2));
-
+  
   if all(n==1)
     s = 'outward';
     return
@@ -56,11 +56,13 @@ end % if normals provided
 % look at the sum of the solid angles as seen from the center
 % it assumes that the center of the surface is inside
 % this is computationally more expensive and requires the surface to be closed
-w = sum(solid_angle(pos, tri));
+solang = sum(solid_angle(pos, tri));
 
-if w<0 && (abs(w)-4*pi)<1000*eps
+tolerance = 1000*eps;
+
+if solang<0 && (abs(solang)-4*pi)<tolerance
   s = 'outward';
-elseif w>0 && (abs(w)-4*pi)<1000*eps
+elseif solang>0 && (abs(solang)-4*pi)<tolerance
   s = 'inward';
 else
   s = 'unknown';
