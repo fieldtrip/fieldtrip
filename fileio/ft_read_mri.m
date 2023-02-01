@@ -751,6 +751,9 @@ switch dataformat
     % ensure that this is double precision and not uint8
     mri.transform = double(mri.transform);
 
+    % ensure that this is double precision and not uint8
+    mri.dim = double(mri.dim);
+
     % these are already part of the output structure and should not be reassigned
     clear coordsys transform unit
 
