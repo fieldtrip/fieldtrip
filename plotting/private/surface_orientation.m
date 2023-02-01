@@ -42,7 +42,7 @@ pos(:,3) = pos(:,3) - center(3);
 if nargin==3
   % look at the orientation of the normals seen from the center
   % this method is rigorous only for star-shaped surfaces
-  n = sign(sum(pnt .* ori, 2));
+  n = sign(sum(pos .* ori, 2));
 
   if all(n==1)
     s = 'outward';
