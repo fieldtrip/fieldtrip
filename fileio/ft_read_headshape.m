@@ -1341,7 +1341,20 @@ switch fileformat
     shape.hex = shape.hex(:,1:8);
     shape.hex = shape.hex + 1; % this should be one-offset
 
-    
+  case 'gmsh_binary'
+    [nodes, elements] = read_gmsh_binary(filename);
+
+    shape.pos = nodes;
+    fnames = fieldnames(elements);
+    for k=1:numel(fnames)
+      switch fnames{k}
+        case 'triangles'
+
+        case 'tetrahedra'
+          
+      end
+    end
+
   otherwise
     % try reading it from an electrode of volume conduction model file
     success = false;
