@@ -19,6 +19,7 @@ function [cfg] = ft_movieplotER(cfg, data)
 %   cfg.baselinetype = 'absolute' or 'relative' (default = 'absolute')
 %   cfg.colorbar     = 'yes', 'no' (default = 'no')
 %   cfg.colorbartext = string indicating the text next to colorbar
+%   cfg.renderer     = string, 'opengl', 'zbuffer', 'painters', see RENDERERINFO (default is automatic, try 'painters' when it crashes)
 %
 % The layout defines how the channels are arranged. You can specify the
 % layout in a variety of ways:
@@ -89,7 +90,7 @@ cfg.renderer    = ft_getopt(cfg, 'renderer'); % let MATLAB decide on the default
 
 % apply optional baseline correction
 if ~strcmp(cfg.baseline, 'no')
-  tmpcfg = keepfields(cfg, {'baseline', 'baselinetype', 'parameter', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+  tmpcfg = keepfields(cfg, {'baseline', 'baselinetype', 'parameter', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
   data = ft_timelockbaseline(tmpcfg, data);
   [cfg, data] = rollback_provenance(cfg, data);
 end

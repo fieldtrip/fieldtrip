@@ -41,15 +41,15 @@ grid = ft_prepare_leadfield(cfg);
 
 %% create an anatomical parcellation
 parcellation = [];
-parcellation.pos        = grid.pos;
-parcellation.unit       = grid.unit;
-parcellation.type       = zeros(size(grid.pos,1),1);
-parcellation.typelabel  = {};
+parcellation.pos          = grid.pos;
+parcellation.unit         = grid.unit;
+parcellation.tissue       = zeros(size(grid.pos,1),1);
+parcellation.tissuelabel  = {};
 height = [3 4 5 6 7 8 9];
 for i=1:length(height)
   sel = parcellation.pos(:,3)==height(i);
-  parcellation.type(sel) = i;
-  parcellation.typelabel{i} = sprintf('%d%s', height(i), parcellation.unit);
+  parcellation.tissue(sel) = i;
+  parcellation.tissuelabel{i} = sprintf('%d%s', height(i), parcellation.unit);
 end
 parcellation.cfg = 'manual'; % to check whether the provenance is correct
 

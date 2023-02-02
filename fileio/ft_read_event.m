@@ -160,13 +160,13 @@ dataformat       = ft_getopt(varargin, 'dataformat');
 eventformat      = ft_getopt(varargin, 'eventformat');
 threshold        = ft_getopt(varargin, 'threshold');                 % this is used for analog channels
 tolerance        = ft_getopt(varargin, 'tolerance', 1);
-checkmaxfilter   = ft_getopt(varargin, 'checkmaxfilter');            % will be passed to ft_read_header
+checkmaxfilter   = ft_getopt(varargin, 'checkmaxfilter');            % will be passed to FT_READ_HEADER
+readbids         = ft_getopt(varargin, 'readbids', 'ifmakessense');  % will be passed to FT_READ_HEADER
 chanindx         = ft_getopt(varargin, 'chanindx');                  % this allows to override the automatic trigger channel detection (useful for Yokogawa & Ricoh, and for EDF with variable sampling rate)
 trigindx         = ft_getopt(varargin, 'trigindx');                  % deprecated, use chanindx instead
 triglabel        = ft_getopt(varargin, 'triglabel');                 % deprecated, use chanindx instead
 password         = ft_getopt(varargin, 'password', struct([]));
-readbids         = ft_getopt(varargin, 'readbids', 'ifmakessense');
-combinebinary    = ft_getopt(varargin, 'combinebinary'); % this is a sub-option for yokogawa data
+combinebinary    = ft_getopt(varargin, 'combinebinary');             % this is an option for yokogawa data
 
 % for backward compatibility, added by Robert in Sept 2019
 if ~isempty(trigindx)
@@ -1624,7 +1624,7 @@ switch eventformat
     end
     
     if isempty(hdr)
-      hdr = ft_read_header(filename, 'headerformat', headerformat, 'checkmaxfilter', checkmaxfilter, 'password', password);
+      hdr = ft_read_header(filename, 'headerformat', headerformat, 'checkmaxfilter', checkmaxfilter, 'readbids', readbids, 'password', password);
     end
     
     % note below we've had to include some chunks of code that are only

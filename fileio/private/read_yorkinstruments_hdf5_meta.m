@@ -57,8 +57,10 @@ info.ChNames= h5read(datafile,[strcat('/acquisitions/',num2str(acq_run)) '/chann
 [info.NChannels, null]=size(info.ChNames);
 Data = h5read(datafile,[strcat('/acquisitions/',num2str(acq_run)) '/data/']);
 [null, info.NSamples]=size(Data);
-try [null, info.NTrials] = size(h5read(datafile,[strcat('/acquisitions/',num2str(acq_run)) '/epochs/trigger_codes']));
-catch info.NTrials=1;
+try
+  [null, info.NTrials] = size(h5read(datafile,[strcat('/acquisitions/',num2str(acq_run)) '/epochs/trigger_codes']));
+catch
+  info.NTrials=1;
 end
 
 info.ChUnit = strings(info.NChannels,1);
@@ -71,7 +73,8 @@ for i = 1:info.NChannels
   end
   
   info.ChType(i)=h5readatt(datafile, char(strcat('/config/channels/',info.ChNames(i) )) ,'chan_type');
-  try info.ChType(i)=h5readatt(datafile, char(strcat('/config/channels/',info.ChNames(i) )) ,'mode');
+  try
+    info.ChType(i)=h5readatt(datafile, char(strcat('/config/channels/',info.ChNames(i) )) ,'mode');
   catch
     continue
   end

@@ -69,13 +69,27 @@ cfg.trialdef.length       = ft_getopt(cfg.trialdef, 'length');
 cfg.trialdef.overlap      = ft_getopt(cfg.trialdef, 'overlap', 0); % between 0 and 1
 cfg.trialdef.ntrials      = ft_getopt(cfg.trialdef, 'ntrials');
 
-% these options get passed to FT_READ_EVENT
-cfg.trialdef.detectflank  = ft_getopt(cfg.trialdef, 'detectflank');
-cfg.trialdef.trigshift    = ft_getopt(cfg.trialdef, 'trigshift');
-cfg.trialdef.chanindx     = ft_getopt(cfg.trialdef, 'chanindx');
-cfg.trialdef.threshold    = ft_getopt(cfg.trialdef, 'threshold');
-cfg.trialdef.tolerance    = ft_getopt(cfg.trialdef, 'tolerance');
-cfg.trialdef.combinebinary = ft_getopt(cfg.trialdef, 'combinebinary');
+% construct the low-level options as key-value pairs, these are passed to FT_READ_HEADER and FT_READ_DATA
+headeropt = {};
+headeropt  = ft_setopt(headeropt, 'headerformat',   ft_getopt(cfg, 'headerformat'));        % is passed to low-level function, empty implies autodetection
+headeropt  = ft_setopt(headeropt, 'readbids',       ft_getopt(cfg, 'readbids'));            % is passed to low-level function
+headeropt  = ft_setopt(headeropt, 'coordsys',       ft_getopt(cfg, 'coordsys', 'head'));    % is passed to low-level function
+headeropt  = ft_setopt(headeropt, 'coilaccuracy',   ft_getopt(cfg, 'coilaccuracy'));        % is passed to low-level function
+headeropt  = ft_setopt(headeropt, 'checkmaxfilter', ft_getopt(cfg, 'checkmaxfilter'));      % this allows to read non-maxfiltered neuromag data recorded with internal active shielding
+headeropt  = ft_setopt(headeropt, 'chantype',       ft_getopt(cfg, 'chantype', {}));        % 2017.10.10 AB required for NeuroOmega files
+
+% construct the low-level options as key-value pairs, these are passed to FT_READ_EVENT
+eventopt = {};
+eventopt = ft_setopt(eventopt, 'headerformat',  ft_getopt(cfg, 'headerformat'));        % is passed to low-level function, empty implies autodetection
+eventopt = ft_setopt(eventopt, 'dataformat',    ft_getopt(cfg, 'dataformat'));          % is passed to low-level function, empty implies autodetection
+eventopt = ft_setopt(eventopt, 'eventformat',   ft_getopt(cfg, 'eventformat'));         % is passed to low-level function, empty implies autodetection
+eventopt = ft_setopt(eventopt, 'readbids',      ft_getopt(cfg, 'readbids'));
+eventopt = ft_setopt(eventopt, 'detectflank',   ft_getopt(cfg.trialdef, 'detectflank'));
+eventopt = ft_setopt(eventopt, 'trigshift',     ft_getopt(cfg.trialdef, 'trigshift'));
+eventopt = ft_setopt(eventopt, 'chanindx',      ft_getopt(cfg.trialdef, 'chanindx'));
+eventopt = ft_setopt(eventopt, 'threshold',     ft_getopt(cfg.trialdef, 'threshold'));
+eventopt = ft_setopt(eventopt, 'tolerance',     ft_getopt(cfg.trialdef, 'tolerance'));
+eventopt = ft_setopt(eventopt, 'combinebinary', ft_getopt(cfg.trialdef, 'combinebinary'));
 
 % specify the default file formats
 cfg.eventformat   = ft_getopt(cfg, 'eventformat');
@@ -90,7 +104,7 @@ if isfield(cfg, 'hdr')
 else
   % read the header, contains the sampling frequency
   ft_info('reading the header from ''%s''\n', cfg.headerfile);
-  hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat);
+  hdr = ft_read_header(cfg.headerfile, headeropt{:});
 end
 
 % get the events
@@ -99,7 +113,7 @@ if isfield(cfg, 'event')
   event = cfg.event;
 else
   ft_info('reading the events from ''%s''\n', cfg.headerfile);
-  event = ft_read_event(cfg.headerfile, 'headerformat', cfg.headerformat, 'eventformat', cfg.eventformat, 'dataformat', cfg.dataformat,  'detectflank', cfg.trialdef.detectflank, 'trigshift', cfg.trialdef.trigshift, 'chanindx', cfg.trialdef.chanindx, 'threshold', cfg.trialdef.threshold, 'tolerance', cfg.trialdef.tolerance, 'combinebinary', cfg.trialdef.combinebinary);
+  event = ft_read_event(cfg.headerfile, eventopt{:});
 end
 
 if ~isempty(cfg.trialdef.length) && ~isinf(cfg.trialdef.length)

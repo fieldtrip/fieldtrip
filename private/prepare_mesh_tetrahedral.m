@@ -26,7 +26,7 @@ function mesh = prepare_mesh_tetrahedral(cfg, mri)
 % $Id$
 
 % ensure that the input is consistent with what this function expects
-mri = ft_checkdata(mri, 'datatype', {'volume', 'segmentation'}, 'hasunit', 'yes');
+mri = ft_checkdata(mri, 'datatype', {'volume', 'segmentation'});
 
 % get the default options
 cfg.tissue = ft_getopt(cfg, 'tissue');
@@ -67,7 +67,7 @@ if iscell(cfg.tissue)
   end
   % combine all tissue types
   seg      = false(mri.dim);
-  seglabel = cell(numel(cfg.tissue),1); 
+  seglabel = cell(numel(cfg.tissue),1);
   for i=1:numel(cfg.tissue)
     seg = seg + double(mri.(cfg.tissue{i})).*i;
     seglabel{i} = cfg.tissue{i};
@@ -89,7 +89,7 @@ ft_hastoolbox('iso2mesh', 1);
 [node, elem, face] = vol2mesh(uint8(seg), 1:mri.dim(1), 1:mri.dim(2), 1:mri.dim(3), 1, 1, 0, 'cgalmesh');
 elem(:,1:4)        = meshreorient(node(:,1:3), elem(:,1:4));
 
-mesh = keepfields(mri, {'coordsys', 'unit'});
+mesh = [];
 mesh.pos = ft_warp_apply(mri.transform, node(:,1:3)+1); % offset of 1 is needed because indexing is 0-based?
 mesh.tet = elem(:,1:4);
 mesh.tissue = elem(:,5);

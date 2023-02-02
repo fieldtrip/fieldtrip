@@ -278,7 +278,7 @@ elseif ismeg
       % compute the surface normals for each vertex point
       if ~isfield(headmodel.bnd, 'nrm')
         fprintf('computing surface normals\n');
-        headmodel.bnd.nrm = normals(headmodel.bnd.pos, headmodel.bnd.tri);
+        headmodel.bnd.nrm = surface_normals(headmodel.bnd.pos, headmodel.bnd.tri);
       end
 
       % estimate center and radius

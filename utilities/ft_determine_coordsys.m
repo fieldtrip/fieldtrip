@@ -196,12 +196,17 @@ end
 ft_plot_axes(data, 'axisscale', axisscale, 'fontsize', fontsize);
 
 if istrue(dointeractive)
+  % ensure the figure is updated prior to asking the question
+  % this was needed for FT_ELECTRODEPLACEMENT in combination with MATLAB 2022a
+  drawnow
 
   if ~isfield(data, 'coordsys') || isempty(data.coordsys)
     % default is yes
+    fprintf('The coordinate system is not specified.\n')
     value = smartinput('Do you want to change the anatomical labels for the axes [Y, n]? ', 'y');
   else
     % default is no
+    fprintf('The coordinate system is specified as "%s".\n', data.coordsys)
     value = smartinput('Do you want to change the anatomical labels for the axes [y, N]? ', 'n');
   end
 

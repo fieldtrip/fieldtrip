@@ -19,7 +19,7 @@ cfg.parameter    = 'avg';
 dataparcellated  = ft_sourceparcellate(cfg, source, parcellation);
 
 % (2) unparcellate
-dataunparcellated = ft_checkdata(dataparcellated, 'datatype','source');
+dataunparcellated = ft_checkdata(dataparcellated, 'datatype', 'source');
 
 % (3) visualise
 cfg = [];

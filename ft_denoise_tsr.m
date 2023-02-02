@@ -216,7 +216,7 @@ ft_postamble savevar    dataout
 function dataout = ft_denoise_tsr_core(cfg, varargin)
 
 % create a separate structure for the reference data
-tmpcfg  = keepfields(cfg, {'trials', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+tmpcfg  = keepfields(cfg, {'trials', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
 tmpcfg.channel = cfg.refchannel;
 if numel(varargin)>1
   fprintf('selecting reference channel data from the second data input argument\n');
@@ -228,7 +228,7 @@ end
 [dum, refdata] = rollback_provenance(cfg, refdata);
 
 % keep the requested channels from the data
-tmpcfg  = keepfields(cfg, {'trials', 'channel', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+tmpcfg  = keepfields(cfg, {'trials', 'channel', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
 data    = ft_selectdata(tmpcfg, varargin{1});
 [cfg, data] = rollback_provenance(cfg, data);
 

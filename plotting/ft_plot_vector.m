@@ -301,7 +301,8 @@ switch highlightstyle
         hor = hdat(   begsample(i):endsample(i));
         ver = vdat(j, begsample(i):endsample(i));
         if isempty(color)
-          plot(hor,ver,'linewidth',4*linewidth,'linestyle','-'); % changed 3* to 4*, as 3* appeared to have no effect
+          l = plot(hor,ver,'linewidth',4*linewidth,'linestyle','-'); % changed 3* to 4*, as 3* appeared to have no effect
+          color = get(l, 'Color'); % this is needed for the subsequent segments
         elseif ischar(color) && numel(color)==1
           % plot all lines with the same color
           plot(hor,ver,'linewidth',4*linewidth,'linestyle','-','Color', color); % changed 3* to 4*, as 3* appeared to have no effect

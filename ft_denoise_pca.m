@@ -98,7 +98,7 @@ if istrue(cfg.pertrial)
   % iterate over trials
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-  tmpcfg  = keepfields(cfg, {'trials', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+  tmpcfg  = keepfields(cfg, {'trials', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
   % select trials of interest
   for i=1:numel(varargin)
     varargin{i}        = ft_selectdata(tmpcfg, varargin{i});
@@ -127,7 +127,7 @@ else
   computeweights = ~isfield(cfg, 'pca');
 
   % select trials of interest
-  tmpcfg  = keepfields(cfg, {'trials', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+  tmpcfg  = keepfields(cfg, {'trials', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
   if length(varargin)==1
     % channel data and reference channel data are in 1 data structure
     megchan = ft_channelselection(cfg.channel,    varargin{1}.label);

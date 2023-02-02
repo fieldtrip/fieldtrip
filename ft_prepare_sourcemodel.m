@@ -720,7 +720,7 @@ if ~isempty(cfg.moveinward)
   end
   % construct a triangulated boundary of the source compartment
   [pos1, tri1] = headsurface(headmodel, [], 'inwardshift', cfg.moveinward, 'surface', 'brain');
-  inside = bounding_mesh(sourcemodel.pos, pos1, tri1);
+  inside = surface_inside(sourcemodel.pos, pos1, tri1);
   if ~all(inside)
     pos2 = sourcemodel.pos(~inside,:);
     [dum, pos3] = project_elec(pos2, pos1, tri1);

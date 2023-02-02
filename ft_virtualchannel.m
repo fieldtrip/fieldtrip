@@ -140,7 +140,7 @@ end
 
 % select channels and trials of interest, by default this will select all channels and trials
 [i1, i2] = match_str(data.label, source.label);
-tmpcfg   = keepfields(cfg, {'trials', 'tolerance', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+tmpcfg   = keepfields(cfg, {'trials', 'tolerance', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
 tmpcfg.channel = data.label(i1);
 data   = ft_selectdata(tmpcfg, data);
 % restore the provenance information

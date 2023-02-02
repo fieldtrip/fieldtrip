@@ -22,6 +22,14 @@ cfg.tissue = {'brain', 'skull', 'scalp'};
 cfg.numvertices = [1500 1000 500]; % these numbers later match the precomputed bnd
 mesh_new = ft_prepare_mesh(cfg, segmentedmri_new);
 
+% the segmentation is flawed: both the brain and the skull touch the base of the volume
+% hence the meshes of brain, skull and scalp touich each other at the base
+% as of approx 1 Feb 2023, ft_headmodel_bemcp checks for correctness of the meshes
+% shift the meshes to ensure that they don't touch or intersect
+mesh_new(1).pos(:,3) = mesh_new(1).pos(:,3) - 0; % brain
+mesh_new(2).pos(:,3) = mesh_new(2).pos(:,3) - 1; % skull
+mesh_new(3).pos(:,3) = mesh_new(3).pos(:,3) - 2; % scalp
+
 % I'm choosing 'mm' as units since that is what both the MRI and the
 % standard_bem are in already. Whether that is optimal for 'bemcp' is not
 % clear to me.

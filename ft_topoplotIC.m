@@ -58,9 +58,9 @@ function [cfg] = ft_topoplotIC(cfg, comp)
 %                            'title' to place comment as title
 %                            'layout' to place comment as specified for COMNT in layout
 %                            [x y] coordinates
-%   cfg.title              = string or 'auto' or 'off', specify a figure
-%                            title, or use 'component N' (auto) as the
-%                            title
+%   cfg.title              = string or 'auto' or 'off', specify a figure title, or use 'component N' (default) as the title
+%   cfg.figure             = 'yes' or 'no', whether to open a new figure. You can also specify a figure handle from FIGURE, GCF or SUBPLOT. (default = 'yes')
+%   cfg.renderer           = string, 'opengl', 'zbuffer', 'painters', see RENDERERINFO (default is automatic, try 'painters' when it crashes)
 %
 % The layout defines how the channels are arranged. You can specify the
 % layout in a variety of ways:
@@ -137,7 +137,7 @@ end
 cfg.interactive = 'no';
 
 % prepare the layout, this should be done only once
-tmpcfg = keepfields(cfg, {'layout', 'channel', 'rows', 'columns', 'commentpos', 'skipcomnt', 'scalepos', 'skipscale', 'projection', 'viewpoint', 'rotate', 'width', 'height', 'elec', 'grad', 'opto', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+tmpcfg = keepfields(cfg, {'layout', 'channel', 'rows', 'columns', 'commentpos', 'skipcomnt', 'scalepos', 'skipscale', 'projection', 'viewpoint', 'rotate', 'width', 'height', 'elec', 'grad', 'opto', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
 cfg.layout = ft_prepare_layout(tmpcfg);
 
 % this is needed for the figure title

@@ -9,7 +9,7 @@ function [] = om_save_tri(filename,points,faces,nrmls)
 % Copyright (C) 2010-2017, OpenMEEG developers
 
 if nargin<4 || isempty(nrmls)
-    nrmls = om_normals(points,faces);
+    nrmls = surface_normals(points,faces);
 end
 
 fid = fopen(filename,'w');
