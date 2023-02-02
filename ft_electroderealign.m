@@ -600,7 +600,7 @@ elseif strcmp(cfg.method, 'moveinward')
   elec.elecpos   = elec.elecpos(datsel,:);
   
   norm.label = elec.label;
-  norm.elecpos = moveinward(elec.elecpos, cfg.moveinward);
+  norm.elecpos = surface_shift(elec.elecpos, [], -cfg.moveinward); % move inward with the specified amount, hence negative
   
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 elseif strcmp(cfg.method, 'mni')

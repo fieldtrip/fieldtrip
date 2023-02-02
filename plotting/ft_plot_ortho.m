@@ -1,6 +1,7 @@
 function [hx, hy, hz] = ft_plot_ortho(dat, varargin)
 
-% FT_PLOT_ORTHO plots 3 orthographic slices through a 3-D volume and interpolates if needed
+% FT_PLOT_ORTHO plots three orthographic slices through a 3-D volume and interpolates
+% the data if needed.
 %
 % Use as
 %   ft_plot_ortho(dat, ...)
@@ -68,7 +69,7 @@ if isstruct(dat) && isfield(dat, 'anatomy') && isfield(dat, 'transform')
   return
 end
 
-% parse first input argument(s). it is either
+% parse first input argument(s), it is either
 % (dat, varargin)
 % (dat, msk, varargin)
 % (dat, [], varargin)
@@ -196,7 +197,7 @@ switch style
     
     varargin{2*sel} = ori(3,:);
     hz = ft_plot_slice(dat, varargin{:});
-    axis equal; axis tight; axis off;axis vis3d
+    axis equal; axis tight; axis vis3d; axis off
     view(3);
     
     if ~holdflag

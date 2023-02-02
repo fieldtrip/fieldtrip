@@ -301,7 +301,7 @@ end % if istrue(individual)
 
 if isempty(ori)
   if ~isempty(headshape)
-    % the following code uses some functions from the computer vision toolbox
+    % the following code uses PCNORMALS from the computer vision toolbox
     % ft_hastoolbox('vision', -1);
     
     % how many local points on the headshape are used for estimating the local norm
@@ -343,7 +343,7 @@ if isempty(ori)
     % determine orientations based on a surface triangulation of the sensors
     % this only works if all positions are defined
     tri = projecttri(pos, 'delaunay');
-    ori = normals(pos, tri);
+    ori = surface_normals(pos, tri);
     
   elseif size(pos,1)>4
     % determine orientations by fitting a sphere to the sensors

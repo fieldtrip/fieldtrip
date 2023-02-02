@@ -277,8 +277,8 @@ elseif method==2
   
   tname1 = [tempname, '.img'];
   tname2 = [tempname, '.img'];
-  V1 = ft_write_mri(tname1, object.anatomy,  'transform', object.transform,  'spmversion', spm('ver'), 'dataformat', 'nifti_spm');
-  V2 = ft_write_mri(tname2, template.anatomy, 'transform', template.transform, 'spmversion', spm('ver'), 'dataformat', 'nifti_spm');
+  V1 = ft_write_mri(tname1, object.anatomy,  'transform', object.transform,  'unit', object.unit, 'spmversion', spm('ver'), 'dataformat', 'nifti_spm');
+  V2 = ft_write_mri(tname2, template.anatomy, 'transform', template.transform, 'unit', template.unit, 'spmversion', spm('ver'), 'dataformat', 'nifti_spm');
   
   flags.nits       = 0; % set number of non-linear iterations to zero
   flags.regtype    = 'rigid';

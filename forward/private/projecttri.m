@@ -5,10 +5,10 @@ function [tri] = projecttri(pos, method)
 % a convex hull triangulation.
 %
 % Use as
-%   [tri] = projecttri(pos, method)
+%   tri = projecttri(pos, method)
 % where method is either 'convhull' (default) or 'delaunay'.
 %
-% See also NORMALS, PCNORMALS
+% See also SURFACE_NORMALS, PCNORMALS
 
 % Copyright (C) 2006-2019, Robert Oostenveld
 %
@@ -67,7 +67,7 @@ switch method
     pos(:,2) = pos(:,2)./nrm;
     pos(:,3) = pos(:,3)./nrm;
     tri = convhulln(pos);
-    if surfaceorientation(pos, tri)<0
+    if strcmp(surface_orientation(pos, tri), 'inward')
       % make the surface outward oriented
       tri = fliplr(tri);
     end

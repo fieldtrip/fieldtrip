@@ -25,8 +25,29 @@ function headmodel = ft_headmodel_dipoli(mesh, varargin)
 %   conductivity     = vector, conductivity of each compartment
 %   tempdir          = string, allows you to specify the path for the tempory files (default is automatic)
 %   tempname         = string, allows you to specify the full tempory name including path (default is automatic)
+%   checkmesh        = 'yes' or 'no'
 %
 % See also FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD
+
+% Copyright (C) 2012, Donders Centre for Cognitive Neuroimaging, Nijmegen, NL
+%
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
+% for the documentation and details.
+%
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
+%
+% $Id$
 
 ft_hastoolbox('dipoli', 1);
 
@@ -35,6 +56,10 @@ isolatedsource  = ft_getopt(varargin, 'isolatedsource');
 conductivity    = ft_getopt(varargin, 'conductivity');
 tdir            = ft_getopt(varargin, 'tempdir');
 tname           = ft_getopt(varargin, 'tempname');
+checkmesh       = ft_getopt(varargin, 'checkmesh', 'yes');
+
+% convert to Boolean value
+checkmesh = istrue(checkmesh);
 
 if isfield(mesh, 'bnd')
   mesh = mesh.bnd;
@@ -45,33 +70,23 @@ mesh = fixpos(mesh);
 
 % start with an empty volume conductor
 headmodel = [];
-headmodel.bnd = mesh;
 
 % determine the number of compartments
-numboundaries = numel(headmodel.bnd);
+numboundaries = numel(mesh);
 
-% % The following checks can in principle be performed, but are too
-% % time-consuming. Instead the code here relies on the calling function to
-% % feed in the correct geometry.
-% %
-% % if ~all(surface_closed(headmodel.bnd))
-% %   ft_error('...');
-% % end
-% % if any(surface_intersection(headmodel.bnd))
-% %   ft_error('...');
-% % end
-% % if any(surface_selfintersection(headmodel.bnd))
-% %   ft_error('...');
-% % end
-%
-% % The following checks should always be done.
-% headmodel.bnd = surface_orientation(headmodel.bnd, 'outwards'); % might have to be inwards
-%
-% order = surface_nesting(headmodel.bnd, 'outsidefirst'); % might have to be insidefirst
-% headmodel.bnd = headmodel.bnd(order);
-%
-% FIXME also the cond should be in the right order
-%
+% Dipoli expects surface normals to point inwards;
+% this checks and corrects if needed
+for i=1:numboundaries
+  switch surface_orientation(mesh(i).pos, mesh(i).tri)
+    case 'outward'
+      ft_warning('flipping mesh %d', i);
+      mesh(i).tri = fliplr(mesh(i).tri);
+    case 'inward'
+      % this is ok
+    case 'otherwise'
+      ft_error('incorrect mesh %d', i)
+  end
+end
 
 if isempty(isolatedsource)
   if numboundaries>1
@@ -92,41 +107,65 @@ else
 end
 
 % determine the desired nesting of the compartments
-order = surface_nesting(headmodel.bnd, 'outsidefirst');
+order = surface_nesting(mesh, 'outsidefirst');
 
-% rearrange boundaries and conductivities
-if numel(headmodel.bnd)>1
+% reorder the boundaries
+if numel(mesh)>1
   fprintf('reordering the boundaries to: ');
   fprintf('%d ', order);
   fprintf('\n');
   % update the order of the compartments
-  headmodel.bnd = headmodel.bnd(order);
+  mesh = mesh(order);
 end
 
 if isempty(conductivity)
-  ft_warning('No conductivity is declared, Assuming standard values\n')
+  ft_warning('no conductivity specified, using default values')
   if numboundaries == 1
+    % uniform
     conductivity = 1;
   elseif numboundaries == 3
     % skin/skull/brain
-    conductivity = [1 1/80 1] * 0.33;
+    conductivity = [0.3300 0.0042        0.3300];
   elseif numboundaries == 4
-    % FIXME: check for better default values here
-    % skin / outer skull / inner skull / brain
-    conductivity = [1 1/80 1 1] * 0.33;
+    % skin/skull/csf/brain
+    conductivity = [0.3300 0.0042 1.7900 0.3300];
   else
-    ft_error('Conductivity values are required!')
+    ft_error('conductivity values must be specified')
   end
   headmodel.cond = conductivity;
 else
   if numel(conductivity)~=numboundaries
-    ft_error('a conductivity value should be specified for each compartment');
+    ft_error('each compartment should have a conductivity value');
   end
+  % reorder the user-specified conductivities
   headmodel.cond = conductivity(order);
 end
 
+% do some sanity checks on the meshes
+if checkmesh
+  for i=1:numboundaries
+    ntri = size(mesh(i).tri,1);
+    npos = size(mesh(i).pos,1);
+    assert(2*(npos-2)==ntri, 'the number of triangles does not match the number of vertices')
+  end
+
+  % check for each of the vertices that it falls inside the previous surface
+  for i=2:numboundaries
+    for j=1:size(mesh(i).pos,1)
+      inside = surface_inside(mesh(i).pos(j,:), mesh(i-1).pos, mesh(i-1).tri);
+      assert(inside==true, 'vertex %d of surface %d is outside surface %d', j, i, i-1);
+    end
+  end
+
+  ft_info('the meshes are closed and properly nested')
+end % if checkmesh
+
+headmodel.bnd          = mesh;
 headmodel.skin_surface = 1;
 headmodel.source       = numboundaries; % this is now the last one
+
+% just to be sure
+clear mesh
 
 if isolatedsource
   fprintf('using compartment %d for the isolated source approach\n', headmodel.source);
@@ -135,14 +174,14 @@ else
 end
 
 % find the location of the dipoli binary
-str = which('dipoli.maci');
+str = which('dipoli.exe');
 [p, f, x] = fileparts(str);
-dipoli = fullfile(p, f);  % without the .maci extension
+dipoli = fullfile(p, f);  % without the .exe extension
 % the following determines the executable to use, which is in all cases the 32-bit version
 switch lower(computer)
-  case {'maci' 'maci64'}
-    % apple computer
-    dipoli = [dipoli '.maci'];
+  case {'maci' 'maci64', 'maca64'}
+    % apple computer with 32- or 64-bit Intel processor, or Apple ARM processor (M1 or M2)
+    dipoli = [dipoli '.universal'];
   case {'glnx86' 'glnxa64'}
     % linux computer
     dipoli = [dipoli '.glnx86'];
@@ -157,21 +196,16 @@ fprintf('using the executable "%s"\n', dipoli);
 % determine the prefix for the temporary files
 if isempty(tname)
   if isempty(tdir)
-    prefix = tempname;
+    if ismac
+      prefix = tempname('/tmp'); % otherwise the filename with the complete path gets too long
+    else
+      prefix = tempname;
+    end
   else
     prefix = tempname(tdir);
   end
 else
   prefix = tname;
-end
-
-% checks if normals are inwards oriented, otherwise flips them
-for i=1:numel(headmodel.bnd)
-  isinward = checknormals(headmodel.bnd(i));
-  if ~isinward
-    fprintf('flipping the normals inward prior to head matrix calculation\n')
-    headmodel.bnd(i).tri = fliplr(headmodel.bnd(i).tri);
-  end
 end
 
 % write the triangulations to file
@@ -210,22 +244,9 @@ try
   dos(exefile);
   ama = loadama(amafile);
   headmodel = ama2headmodel(ama);
-  
+
 catch
   ft_error('an error ocurred while running the dipoli executable - please look at the screen output');
-end
-
-% This is to maintain the headmodel.bnd convention (outward oriented), whereas
-% in terms of further calculation it should not really matter.
-% The calculation fo the head model is done with inward normals
-% (sometimes flipped from the original input). This assures that the
-% outward oriented mesh is saved outward oriented in the headmodel structure
-for i=1:numel(headmodel.bnd)
-  isinward = checknormals(headmodel.bnd(i));
-  if isinward
-    fprintf('flipping the normals outwards after head matrix calculation\n')
-    headmodel.bnd(i).tri = fliplr(headmodel.bnd(i).tri);
-  end
 end
 
 % delete the temporary files
@@ -235,32 +256,12 @@ end
 delete(amafile);
 delete(exefile);
 
+% maintain the general FieldTrip convention of outward-oriented surfaces
+% (also for visualization). The calculation of the head model was done with
+% inward-oriented surfaces (sometimes flipped from the original input).
+for i=1:numboundaries
+  headmodel.bnd(i).tri = fliplr(headmodel.bnd(i).tri);
+end
+
 % remember that it is a dipoli model
 headmodel.type = 'dipoli';
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function ok = checknormals(bnd)
-% checks if the normals are inward oriented
-pos = bnd.pos;
-tri = bnd.tri;
-% translate to the center
-center = median(pos,1);
-pos(:,1) = pos(:,1) - center(1);
-pos(:,2) = pos(:,2) - center(2);
-pos(:,3) = pos(:,3) - center(3);
-
-w = sum(solid_angle(pos, tri));
-
-% FIXME: this method is rigorous only for star shaped surfaces with the origin inside
-if w<0 && (abs(w)-4*pi)<1000*eps
-  % normals are outwards oriented
-  ok = 0;
-elseif w>0 && (abs(w)-4*pi)<1000*eps
-  % normals are inwards oriented
-  ok = 1;
-else
-  ft_warning('your headmodel boundary is not star-shaped when seen from the center')
-  ok = 1;
-end

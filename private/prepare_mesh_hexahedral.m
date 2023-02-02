@@ -15,7 +15,7 @@ function mesh = prepare_mesh_hexahedral(cfg, mri)
 % $Id$
 
 % ensure that the input is consistent with what this function expects
-mri = ft_checkdata(mri, 'datatype', {'segmentation'}, 'segmentationstyle', 'indexed', 'hasunit', 'yes');
+mri = ft_checkdata(mri, 'datatype', {'segmentation'}, 'segmentationstyle', 'indexed');
 
 % The support for cfg.resolution was discontinued on Aug 2020, due to interpolation
 % issues. When you do a nearest-neighbour interpolation of a segmented volume with a
