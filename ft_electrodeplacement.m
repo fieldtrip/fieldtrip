@@ -1212,7 +1212,7 @@ if opt.showmarkers
   if ~isempty(idx)
     elec = keepfields(opt.headshape, {'unit', 'coordsys'});
     elec.elecpos = cat(1, opt.markerpos{idx});
-    elec.label   = cat(1, opt.markerlab{idx});
+    elec.label   = cat(1, opt.markerlab(idx));
     elec.elecori = elec.elecpos;
     elec.elecori(:,1) = elec.elecori(:,1) - mean(opt.headshape.pos(:,1));
     elec.elecori(:,2) = elec.elecori(:,2) - mean(opt.headshape.pos(:,2));
