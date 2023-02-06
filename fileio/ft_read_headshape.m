@@ -1343,18 +1343,38 @@ switch fileformat
 
   case 'gmsh_binary'
     [nodes, elements] = read_gmsh_binary(filename);
-
     shape.pos = nodes;
+
+    % this file format may contain a mixture of differently shaped elements
     fnames = fieldnames(elements);
     for k=1:numel(fnames)
       switch fnames{k}
         case 'triangles'
+          tri = elements.(fnames{k});
+          if size(tri,2)>4
+            % assume the second column to contain a meaningful segmentation
+            % indx, and assume that last 3 columns to contain the triangles
+            ttype = tri(:,2);
+            if numel(unique(ttype))>1
+              shape.tissuetri = tri(:,2);
+            end
+          end
+          shape.tri = tri(:, end-2:end);
 
         case 'tetrahedra'
-          
+          tet = elements.(fnames{k});
+          if size(tet,2)>4
+            % assume the second column to contain a meaningful segmentation
+            % indx, and assume that last 4 columns to contain the tetrahedra
+            ttype = tet(:,2);
+            if numel(unique(ttype))>1
+              shape.tissuetet = tet(:,2);
+            end
+          end
+          shape.tet = tet(:, end-3:end);
       end
     end
-
+    
   otherwise
     % try reading it from an electrode of volume conduction model file
     success = false;

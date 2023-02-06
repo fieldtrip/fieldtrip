@@ -65,11 +65,13 @@ ptr = ftell(fid);
 fprintf('Reading position information for %d nodes\n', N);
 indx = fread(fid, N, 'uint32', 24);
 fseek(fid, ptr+4, 'bof');
-nodes(:,1) = fread(fid, N, 'double', 20);
-fseek(fid, ptr+12, 'bof');
-nodes(:,2) = fread(fid, N, 'double', 20);
-fseek(fid, ptr+20, 'bof');
-nodes(:,3) = fread(fid, N, 'double', 20);
+nodes = fread(fid, 3*N, '3*double', 4);
+nodes = reshape(nodes, 3, [])';
+% nodes(:,1) = fread(fid, N, 'double', 20);
+% fseek(fid, ptr+12, 'bof');
+% nodes(:,2) = fread(fid, N, 'double', 20);
+% fseek(fid, ptr+20, 'bof');
+% nodes(:,3) = fread(fid, N, 'double', 20);
 fseek(fid, ptr+28*N, 'bof');
 txt = fgetl(fid);
 assert(isequal(txt, '$EndNodes'), 'Reading of the nodes unexpectedly failed');
@@ -107,7 +109,7 @@ while N>Ntotal
   end
   
   fprintf('Reading %d %s with %d tags\n', Nsub, type_str, ntag);
-  tmp = fread(fid, Nsub.*(nnode+ntag+1), 'uint32');
+  tmp = fread(fid, Nsub.*(nnode+ntag+1), '*uint32');
   tmp = reshape(tmp, nnode+ntag+1, [])';
 
   elements.(type_str) = tmp;
