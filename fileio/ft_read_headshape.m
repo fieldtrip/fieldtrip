@@ -1343,35 +1343,23 @@ switch fileformat
 
   case 'gmsh_binary'
     [nodes, elements] = read_gmsh_binary(filename);
-    shape.pos = nodes;
+    shape.pos = nodes.nodes(nodes.indx, :);
 
     % this file format may contain a mixture of differently shaped elements
     fnames = fieldnames(elements);
     for k=1:numel(fnames)
+      el = elements.(fnames{k});
       switch fnames{k}
+        case 'lines'
+          shape.line = el;
         case 'triangles'
-          tri = elements.(fnames{k});
-          if size(tri,2)>4
-            % assume the second column to contain a meaningful segmentation
-            % indx, and assume that last 3 columns to contain the triangles
-            ttype = tri(:,2);
-            if numel(unique(ttype))>1
-              shape.tissuetri = tri(:,2);
-            end
-          end
-          shape.tri = tri(:, end-2:end);
-
+          shape.tri = el;
         case 'tetrahedra'
-          tet = elements.(fnames{k});
-          if size(tet,2)>4
-            % assume the second column to contain a meaningful segmentation
-            % indx, and assume that last 4 columns to contain the tetrahedra
-            ttype = tet(:,2);
-            if numel(unique(ttype))>1
-              shape.tissuetet = tet(:,2);
-            end
-          end
-          shape.tet = tet(:, end-3:end);
+          shape.tet = el;
+        case 'hexahedra'
+          shape.hex = el;
+        otherwise
+          ft_warning('skipping element field %s', fnames{k});
       end
     end
     

@@ -11,13 +11,15 @@ txt = fgetl(fid);
 if startsWith(txt, '$MeshFormat')
   % the file starts, as expected with the file header
   txt    = fgetl(fid);
-  format = sscanf(txt, '%f');
+  format = sscanf(txt, '%f %d %d');
   version  = format(1);
   isbinary = format(2)==1;
   dtype    = format(3);
-
+  
   % read until the end of this chunk
   while 1
+    % in a binary file, there's an endianness check byte, which is
+    % currently not handled here.
     txt = fgetl(fid);
     if startsWith(txt, '$EndMeshFormat')
       break;
@@ -33,7 +35,11 @@ end
 if ~isbinary
   ft_error('Currently only binary files can be read');
 end
+if dtype~=8
+  ft_error('Currently only 8-byte precision data is supported');
+end
 
+% read the contents of the file
 while 1
   txt = fgetl(fid);
   if txt==-1
@@ -42,16 +48,19 @@ while 1
     break;
   end
   if startsWith(txt, '$Nodes')
-    [indx, nodes] = getnodes(fid);
-    nodes = nodes(indx,:);
+    nodes = getnodes(fid);
   elseif startsWith(txt, '$Elements')
-    [elements] = getelements(fid);
+    elements = getelements(fid);
   else
     keyboard
   end
 end
 
-function [indx, nodes] = getnodes(fid)
+%%%%%%%%%%%%%%
+% subfunctions
+
+% $Nodes
+function [nodes] = getnodes(fid)
 
 % the chunk starts with an ascii-line with the number of elements
 %
@@ -63,19 +72,15 @@ N   = sscanf(txt, '%f');
 ptr = ftell(fid);
 
 fprintf('Reading position information for %d nodes\n', N);
-indx = fread(fid, N, 'uint32', 24);
+nodes.indx = fread(fid, N, 'uint32', 24);
 fseek(fid, ptr+4, 'bof');
-nodes = fread(fid, 3*N, '3*double', 4);
-nodes = reshape(nodes, 3, [])';
-% nodes(:,1) = fread(fid, N, 'double', 20);
-% fseek(fid, ptr+12, 'bof');
-% nodes(:,2) = fread(fid, N, 'double', 20);
-% fseek(fid, ptr+20, 'bof');
-% nodes(:,3) = fread(fid, N, 'double', 20);
+nodes.nodes = fread(fid, 3*N, '3*double', 4);
+nodes.nodes = reshape(nodes.nodes, 3, [])';
 fseek(fid, ptr+28*N, 'bof');
 txt = fgetl(fid);
 assert(isequal(txt, '$EndNodes'), 'Reading of the nodes unexpectedly failed');
 
+% $Elements
 function [elements] = getelements(fid)
 
 % the chunk starts with an ascii-line mentioning the overall number of elements, then 3 integers
@@ -84,7 +89,6 @@ function [elements] = getelements(fid)
 
 txt = fgetl(fid);
 N   = sscanf(txt, '%f');
-ptr = ftell(fid);
 
 fprintf('Reading element information for %d elements\n', N);
 Ntotal = 0;
@@ -95,25 +99,70 @@ while N>Ntotal
   Nsub = hdr(2);
   ntag = hdr(3);
 
-  switch type
-    case 2
-      % triangle
-      nnode = 3;
-      type_str = 'triangles';
-    case 4
-      % tetrahedron
-      nnode = 4;
-      type_str = 'tetrahedra';
-    otherwise
-      keyboard
-  end
+  [nnode, type_str] = type2nnode(type);
   
   fprintf('Reading %d %s with %d tags\n', Nsub, type_str, ntag);
   tmp = fread(fid, Nsub.*(nnode+ntag+1), '*uint32');
   tmp = reshape(tmp, nnode+ntag+1, [])';
 
-  elements.(type_str) = tmp;
+  elements.(type_str)                     = tmp(:, (ntag+2):end);
+  elements.(sprintf('%s_indx', type_str)) = tmp(:, 1);
+  elements.(sprintf('%s_tag',  type_str)) = tmp(:, 1 + (1:ntag));
   Ntotal = Ntotal + Nsub;
 end
 txt = fgetl(fid);
 assert(isequal(txt, '$EndElements'), 'Reading of the elements unexpectedly failed');
+
+function [nnode, type_str] = type2nnode(type)
+
+switch type
+  case 1 
+    % 2-node line
+    nnode = 2; type_str = 'lines';
+  case 2
+    % 3-node triangle
+    nnode = 3; type_str = 'triangles';
+  case 3
+    % 4-node quadrangle
+    nnode = 4; type_str = 'quadrangles';
+  case 4
+    % 4-node tetrahedron
+    nnode = 4; type_str = 'tetrahedra';
+  case 5
+    % 8-node hexahedron
+    nnode = 8; type_str = 'hexahedra';
+  case 6
+    % 6-node prism
+    nnode = 6; type_str = 'prisms';
+  case 7
+    % 5-node pyramid
+    nnode = 5; type_str = 'pyramids';
+  case 8 
+    % 3-node seconde order line (2 nodes associated with the vertices and 1 with the edge)
+    nnode = 3; type_str = 'line';
+  case 9
+    % 6-node second order triangle (3 nodes associated with the vertices and 3 with the edges)
+    nnode = 6; type_str = 'triangles';
+  case 10
+    % 9-node second order quadrangle (4 nodes associated with the vertices, 4 with the edges and 1 with the face)
+    nnode = 9; type_str = 'quadrangles';
+  case 11
+    % 10-node second order tetrahedron (4 nodes associated with the vertices and 6 with the edges)
+    nnode = 10; type_str = 'tetrahedra';
+  case 12
+    % 27-node second order hexahedron (8 nodes associated with the vertices, 12 with the edges,  6 with the faces and 1 with the volume)
+    nnode = 27; type_str = 'hexahedra';
+  case 13
+    % 18-node second order prism (6 nodes associated with the vertices, 9 with the edges and 3 with the quadrangular faces)
+    nnode = 18; type_str = 'prisms';
+  case 14
+    % 14-node seconde order pyramid (5 nodes associated with the vertices, 8 with the edges and 1 with the quadrangular face)
+    nnode = 14; type_str = 'pyramids';
+  case 15
+    % 1-node point
+    nnode = 1; type_str = 'points';
+  otherwise
+    %% FIXME add types 16-31, and 92 93
+    keyboard
+end
+
