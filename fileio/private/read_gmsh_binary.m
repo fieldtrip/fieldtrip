@@ -1,4 +1,4 @@
-function [nodes, elements] = read_gmsh_binary(filename)
+function [nodes, elements, nodedata, elementdata] = read_gmsh_binary(filename)
 
 % READ_GMSH_BINARY reads a gmsh .msh binary file. Current support is only
 % for version 2. There are some ASCII-readers floating around on the net,
@@ -29,15 +29,22 @@ else
   ft_error('File %s cannot be read, header information is missing', filename);
 end
 
-if floor(version)~=2
-  ft_error('Currently only version 2 files can be read, the version appears to be: %f', version);
-end
-if ~isbinary
-  ft_error('Currently only binary files can be read');
+if floor(version)~=2 || ~isbinary
+  if ~isbinary
+    str = 'not';
+  else
+    str = '';
+  end
+  ft_error('Currently only binary version 2 files can be read, the version is: %1.1f, and the file is %s binary', version, str);
 end
 if dtype~=8
   ft_error('Currently only 8-byte precision data is supported');
 end
+
+nodes       = [];
+elements    = [];
+nodedata    = [];
+elementdata = [];
 
 % read the contents of the file
 while 1
@@ -47,12 +54,35 @@ while 1
     fclose(fid);
     break;
   end
+  % Nodes and Elements are expected to be minimally present, needed to
+  % describe the mesh topology
   if startsWith(txt, '$Nodes')
     nodes = getnodes(fid);
   elseif startsWith(txt, '$Elements')
     elements = getelements(fid);
+  elseif startsWith(txt, '$PhysicalNames')
+    keyboard
+  elseif startsWith(txt, '$Entities')
+    keyboard
+  elseif startsWith(txt, '$PartitionedEntities')
+    keyboard
+  elseif startsWith(txt, '$Periodic')
+    keyboard
+  elseif startsWith(txt, '$GhostElements')
+    keyboard
+  elseif startsWith(txt, '$Parametrizations')
+    keyboard
+  elseif startsWith(txt, '$NodeData')
+    keyboard
+  elseif startsWith(txt, '$ElementData')
+    elementdata = getelementdata(fid);
+  elseif startsWith(txt, '$ElementNodeData')
+    keyboard
+  elseif startsWith(txt, '$InterpolationScheme')
+    keyboard
   else
     keyboard
+
   end
 end
 
@@ -113,6 +143,46 @@ end
 txt = fgetl(fid);
 assert(isequal(txt, '$EndElements'), 'Reading of the elements unexpectedly failed');
 
+% $ElementData
+function [elementdata] = getelementdata(fid)
+
+% stringTags
+txt = fgetl(fid);
+N   = sscanf(txt, '%d');
+for k = 1:N
+  stringTag{k,1} = fgetl(fid);
+end
+
+% realTags
+txt = fgetl(fid);
+N   = sscanf(txt, '%d');
+for k = 1:N
+  txt = fgetl(fid);
+  realTag(k,1) = sscanf(txt, '%d');
+end
+
+% integerTags
+txt = fgetl(fid);
+N   = sscanf(txt, '%d'); % N is kind of expected to be 4
+for k = 1:N
+  txt = fgetl(fid);
+  integerTag(k,1) = sscanf(txt, '%d');
+end
+nfc = integerTag(2); % number of field components
+N   = integerTag(3); % number of elements
+
+fprintf('Reading elementdata for %d elements\n', N);
+ptr = ftell(fid);
+elementdata.indx = fread(fid, N, 'uint32', nfc*8);
+fseek(fid, ptr+4, 'bof');
+elementdata.value = fread(fid, nfc*N, sprintf('%d*double', nfc), 4);
+elementdata.value = reshape(elementdata.value, nfc, [])';
+fseek(fid, ptr+(4+nfc*8)*N, 'bof');
+
+txt = fgetl(fid);
+assert(isequal(txt, '$EndElementData'), 'Reading of the elementdata unexpectedly failed');
+
+% helper function to get the number of nodes per element + a human interpretable name
 function [nnode, type_str] = type2nnode(type)
 
 switch type
