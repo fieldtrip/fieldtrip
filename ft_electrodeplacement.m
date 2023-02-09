@@ -226,7 +226,7 @@ if ~isempty(cfg.channel) % use prespecified (cfg.channel) electrode labels
       chanlabel{end+1,1} = cfg.channel{c};
       chanstring{end+1} = ['<HTML><FONT color="silver">' cfg.channel{c} '</FONT></HTML>']; % hmtl'ize
 
-      markerlab{end+1,1} = {};
+      markerlab{end+1,1} = [];
       markerpos{end+1,1} = zeros(0,3);
     end
   end
@@ -1656,7 +1656,7 @@ if ~isempty(elecidx)
     fprintf('==================================================================================\n');
     fprintf(' assigning marker %s\n', opt.label{elecidx,1});
     eleclab = regexprep(eleclab, '"silver"', '"black"'); % replace font color
-    opt.markerlab{elecidx,1} = opt.label(elecidx,1); % assign marker label
+    opt.markerlab{elecidx,1} = opt.label{elecidx,1}; % assign marker label
     opt.markerpos{elecidx,1} = opt.pos; % assign marker position
     opt.redrawmarkers = true; % draw markers
   elseif contains(eleclab, 'black') % already chosen before, move cursor to marker or uncheck
@@ -1669,7 +1669,7 @@ if ~isempty(elecidx)
       fprintf('==================================================================================\n');
       fprintf(' removing marker %s\n', opt.label{elecidx,1});
       eleclab = regexprep(eleclab, '"black"', '"silver"'); % replace font color
-      opt.markerlab{elecidx,1} = {}; % assign marker label
+      opt.markerlab{elecidx,1} = []; % assign marker label
       opt.markerpos{elecidx,1} = []; % assign marker position
       opt.redrawmarkers = true; % remove markers
     end
