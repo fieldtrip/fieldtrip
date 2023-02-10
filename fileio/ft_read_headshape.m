@@ -59,6 +59,7 @@ function [shape] = ft_read_headshape(filename, varargin)
 %   'caret_spec'
 %   'brainvisa_mesh'
 %   'brainsuite_dfs'
+%   'neurojson_*'
 %
 % See also FT_READ_HEADMODEL, FT_READ_SENS, FT_READ_ATLAS, FT_WRITE_HEADSHAPE
 
@@ -1341,7 +1342,69 @@ switch fileformat
     shape.hex = shape.hex(:,1:8);
     shape.hex = shape.hex + 1; % this should be one-offset
 
-    
+  case {'neurojson_jmesh' 'neurojson_bmesh'}
+    if(fileformat == 'neurojson_bmesh')
+        mesh = loadbj(filename);
+    else
+        mesh = loadjson(filename);
+    end
+
+    % mesh metadata
+    if(isfield(mesh, encodevarname('_DataInfo_')))
+        shape.info = mesh.(encodevarname('_DataInfo_'));
+    end
+
+    % node data
+    if(isfield(mesh, 'MeshVertex3'))
+        shape.pos  = mesh.MeshVertex3;
+    elseif(isfield(mesh, 'MeshNode'))
+        shape.pos  = mesh.MeshNode;
+    end
+
+    % extract mesh node label if present
+    if(isfield(shape, 'pos') && isstruct(shape.pos))
+        if(isfield(shape.pos, 'Properties') && isfield(shape.pos.Properties, 'Tag'))
+            shape.poslabel = shape.pos.Properties.Tag;
+        end
+        if(isfield(shape.pos, 'Data'))
+            shape.pos = shape.pos.Data;
+        end
+    end
+
+    % surface mesh data
+    if(isfield(mesh, 'MeshTri3'))
+        shape.tri  = mesh.MeshTri3;
+    elseif(isfield(mesh, 'MeshSurf'))
+        shape.tri  = mesh.MeshSurf;
+    end
+
+    % extract face label if present
+    if(isfield(shape, 'tri') && isstruct(shape.tri))
+        if(isfield(shape.tri, 'Properties') && isfield(shape.tri.Properties, 'Tag'))
+            shape.trilabel = shape.tri.Properties.Tag;
+        end
+        if(isfield(shape.tri, 'Data'))
+            shape.tri = shape.tri.Data;
+        end
+    end
+
+    % tet mesh data
+    if(isfield(mesh, 'MeshTet4'))
+        shape.tet  = mesh.MeshTet4;
+    elseif(isfield(mesh, 'MeshElem'))
+        shape.tet  = mesh.MeshElem;
+    end
+
+    % extract tet label if present
+    if(isfield(shape, 'tet') && isstruct(shape.tet))
+        if(isfield(shape.tet, 'Properties') && isfield(shape.tet.Properties, 'Tag'))
+            shape.tetlabel = shape.tet.Properties.Tag;
+        end
+        if(isfield(shape.tet, 'Data'))
+            shape.tet = shape.tet.Data;
+        end
+    end
+
   otherwise
     % try reading it from an electrode of volume conduction model file
     success = false;

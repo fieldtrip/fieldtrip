@@ -21,6 +21,7 @@ function ft_write_headshape(filename, mesh, varargin)
 %   'data'         = data matrix, size(1) should be number of vertices
 %   'unit'         = string, desired geometrical units for the data, for example 'mm'
 %   'coordsys'     = string, desired coordinate system for the data
+%   'jsonopt'      = cell of ('name', 'value') pairs, options for writing JSON/JMesh files
 %
 % Supported output formats are
 %   'freesurfer'  Freesurfer surf-file format, using write_surf from FreeSurfer
@@ -33,6 +34,7 @@ function ft_write_headshape(filename, mesh, varargin)
 %   'tetgen'
 %   'vista'
 %   'vtk'         Visualization ToolKit file format, for use with Paraview
+%   'jmesh'       NeuroJSON JSON/binary JSON based JMesh format (.jmsh, .bmsh)
 %
 % See also FT_READ_HEADSHAPE
 
@@ -226,7 +228,46 @@ switch fileformat
   case 'freesurfer'
     ft_hastoolbox('freesurfer', 1);
     write_surf(filename, mesh.pos, mesh.tri);
-    
+
+  case {'neurojson_jmesh' 'neurojson_bmesh'}
+    ft_hastoolbox('jsonlab', 1);
+
+    % construct a JMesh data structure
+    meshdata=struct;
+    if(isfield(mesh, 'info'))
+        meshdata.(encodevarname('_DataInfo_')) = mesh.info;
+    end
+    if(isfield(mesh, 'pos'))
+        if(isfield(mesh, 'poslabel'))
+            meshdata.MeshVertex3 = struct('Data', mesh.pos, 'Properties', struct('Tag', mesh.poslabel));
+        else
+            meshdata.MeshVertex3 = mesh.pos;
+        end
+    end
+    if(isfield(mesh, 'tri'))
+        if(isfield(mesh, 'trilabel'))
+            meshdata.MeshTri3 = struct('Data', mesh.tri, 'Properties', struct('Tag', mesh.trilabel));
+        else
+            meshdata.MeshTri3 = mesh.tri;
+        end
+    end
+    if(isfield(mesh, 'tet'))
+        if(isfield(mesh, 'tetlabel'))
+            meshdata.MeshTet4 = struct('Data', mesh.tet, 'Properties', struct('Tag', mesh.tetlabel));
+        else
+            meshdata.MeshTet4 = mesh.tet;
+        end
+    end
+
+    % save data to JSON or binary JSON
+    extraopt = jsonopt('jsonopt', {}, varargin2struct(varargin{:}));
+    if(fileformat == 'neurojson_jmesh')
+        savejson('', meshdata, 'filename', filename, 'compression', 'zlib', extraopt{:});
+    else
+        savebj('', meshdata, 'filename', filename, 'compression', 'zlib', extraopt{:});
+    end
+    clear meshdata
+
   case []
     ft_error('no output format specified');
     
