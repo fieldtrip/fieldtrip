@@ -1344,24 +1344,24 @@ switch fileformat
 
   case {'neurojson_jmesh' 'neurojson_bmesh'}
     if(fileformat == 'neurojson_bmesh')
-        mesh = loadbj(filename);
+        shape.orig = loadbj(filename);
     else
-        mesh = loadjson(filename);
+        shape.orig = loadjson(filename);
     end
 
-    % mesh metadata
-    if(isfield(mesh, encodevarname('_DataInfo_')))
-        shape.info = mesh.(encodevarname('_DataInfo_'));
+    % shape.orig metadata
+    if(isfield(shape.orig, encodevarname('_DataInfo_')))
+        shape.info = shape.orig.(encodevarname('_DataInfo_'));
     end
 
     % node data
-    if(isfield(mesh, 'MeshVertex3'))
-        shape.pos  = mesh.MeshVertex3;
-    elseif(isfield(mesh, 'MeshNode'))
-        shape.pos  = mesh.MeshNode;
+    if(isfield(shape.orig, 'MeshVertex3'))
+        shape.pos  = shape.orig.MeshVertex3;
+    elseif(isfield(shape.orig, 'MeshNode'))
+        shape.pos  = shape.orig.MeshNode;
     end
 
-    % extract mesh node label if present
+    % extract node label if present
     if(isfield(shape, 'pos') && isstruct(shape.pos))
         if(isfield(shape.pos, 'Properties') && isfield(shape.pos.Properties, 'Tag'))
             shape.poslabel = shape.pos.Properties.Tag;
@@ -1371,11 +1371,11 @@ switch fileformat
         end
     end
 
-    % surface mesh data
-    if(isfield(mesh, 'MeshTri3'))
-        shape.tri  = mesh.MeshTri3;
-    elseif(isfield(mesh, 'MeshSurf'))
-        shape.tri  = mesh.MeshSurf;
+    % surface data
+    if(isfield(shape.orig, 'MeshTri3'))
+        shape.tri  = shape.orig.MeshTri3;
+    elseif(isfield(shape.orig, 'MeshSurf'))
+        shape.tri  = shape.orig.MeshSurf;
     end
 
     % extract face label if present
@@ -1388,20 +1388,35 @@ switch fileformat
         end
     end
 
-    % tet mesh data
-    if(isfield(mesh, 'MeshTet4'))
-        shape.tet  = mesh.MeshTet4;
-    elseif(isfield(mesh, 'MeshElem'))
-        shape.tet  = mesh.MeshElem;
+    % tet element data
+    if(isfield(shape.orig, 'MeshTet4'))
+        shape.tet  = shape.orig.MeshTet4;
+    elseif(isfield(shape.orig, 'MeshElem'))
+        shape.tet  = shape.orig.MeshElem;
     end
 
-    % extract tet label if present
+    % extract hex label if present
     if(isfield(shape, 'tet') && isstruct(shape.tet))
         if(isfield(shape.tet, 'Properties') && isfield(shape.tet.Properties, 'Tag'))
             shape.tetlabel = shape.tet.Properties.Tag;
         end
         if(isfield(shape.tet, 'Data'))
             shape.tet = shape.tet.Data;
+        end
+    end
+
+    % hex element data
+    if(isfield(shape.orig, 'MeshHex8'))
+        shape.hex  = shape.orig.MeshHex8;
+    end
+
+    % extract hex label if present
+    if(isfield(shape, 'hex') && isstruct(shape.hex))
+        if(isfield(shape.hex, 'Properties') && isfield(shape.hex.Properties, 'Tag'))
+            shape.hexlabel = shape.hex.Properties.Tag;
+        end
+        if(isfield(shape.tet, 'Data'))
+            shape.hex = shape.hex.Data;
         end
     end
 

@@ -233,40 +233,48 @@ switch fileformat
     ft_hastoolbox('jsonlab', 1);
 
     % construct a JMesh data structure
-    meshdata=struct;
+    if(~isfield(mesh, 'orig'))
+        mesh.orig = struct;
+    end
     if(isfield(mesh, 'info'))
-        meshdata.(encodevarname('_DataInfo_')) = mesh.info;
+        mesh.orig.(encodevarname('_DataInfo_')) = mesh.info;
     end
     if(isfield(mesh, 'pos'))
         if(isfield(mesh, 'poslabel'))
-            meshdata.MeshVertex3 = struct('Data', mesh.pos, 'Properties', struct('Tag', mesh.poslabel));
+            mesh.orig.MeshVertex3 = struct('Data', mesh.pos, 'Properties', struct('Tag', mesh.poslabel));
         else
-            meshdata.MeshVertex3 = mesh.pos;
+            mesh.orig.MeshVertex3 = mesh.pos;
         end
     end
     if(isfield(mesh, 'tri'))
         if(isfield(mesh, 'trilabel'))
-            meshdata.MeshTri3 = struct('Data', mesh.tri, 'Properties', struct('Tag', mesh.trilabel));
+            mesh.orig.MeshTri3 = struct('Data', mesh.tri, 'Properties', struct('Tag', mesh.trilabel));
         else
-            meshdata.MeshTri3 = mesh.tri;
+            mesh.orig.MeshTri3 = mesh.tri;
         end
     end
     if(isfield(mesh, 'tet'))
         if(isfield(mesh, 'tetlabel'))
-            meshdata.MeshTet4 = struct('Data', mesh.tet, 'Properties', struct('Tag', mesh.tetlabel));
+            mesh.orig.MeshTet4 = struct('Data', mesh.tet, 'Properties', struct('Tag', mesh.tetlabel));
         else
-            meshdata.MeshTet4 = mesh.tet;
+            mesh.orig.MeshTet4 = mesh.tet;
+        end
+    end
+    if(isfield(mesh, 'hex'))
+        if(isfield(mesh, 'hexlabel'))
+            mesh.orig.MeshHex8 = struct('Data', mesh.hex, 'Properties', struct('Tag', mesh.hexlabel));
+        else
+            mesh.orig.MeshHex8 = mesh.hex;
         end
     end
 
     % save data to JSON or binary JSON
     extraopt = jsonopt('jsonopt', {}, varargin2struct(varargin{:}));
     if(fileformat == 'neurojson_jmesh')
-        savejson('', meshdata, 'filename', filename, 'compression', 'zlib', extraopt{:});
+        savejson('', mesh.orig, 'filename', filename, 'compression', 'zlib', extraopt{:});
     else
-        savebj('', meshdata, 'filename', filename, 'compression', 'zlib', extraopt{:});
+        savebj('', mesh.orig, 'filename', filename, 'compression', 'zlib', extraopt{:});
     end
-    clear meshdata
 
   case []
     ft_error('no output format specified');
