@@ -26,7 +26,7 @@ function [shape] = ft_read_headshape(filename, varargin)
 %   'image'       = path to .jpg file
 %   'surface'     = specific surface to be read (only for caret spec files)
 %   'refine'      = number, used for refining Structure Sensor meshes (default = 1)
-%   'jsonopt'      = cell of ('name', 'value') pairs, options for reading JSON/JMesh files
+%   'jmeshopt'    = cell of ('name', 'value') pairs, options for reading JSON/JMesh files
 %
 % Supported input file formats include
 %   'matlab'       containing FieldTrip or BrainStorm headshapes or cortical meshes
@@ -1344,7 +1344,7 @@ switch fileformat
     shape.hex = shape.hex + 1; % this should be one-offset
 
   case {'neurojson_jmesh' 'neurojson_bmesh'}
-    extraopt = jsonopt('jsonopt', {}, varargin2struct(varargin{:}));
+    extraopt = jsonopt('jmeshopt', {}, varargin2struct(varargin{:}));
     if(fileformat == 'neurojson_bmesh')
         jmesh = loadbj(filename, extraopt{:});
     else

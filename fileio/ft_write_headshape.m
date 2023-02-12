@@ -21,7 +21,7 @@ function ft_write_headshape(filename, mesh, varargin)
 %   'data'         = data matrix, size(1) should be number of vertices
 %   'unit'         = string, desired geometrical units for the data, for example 'mm'
 %   'coordsys'     = string, desired coordinate system for the data
-%   'jsonopt'      = cell of ('name', 'value') pairs, options for writing JSON/JMesh files
+%   'jmeshopt'     = cell of ('name', 'value') pairs, options for writing JSON/JMesh files
 %
 % Supported output formats are
 %   'freesurfer'  Freesurfer surf-file format, using write_surf from FreeSurfer
@@ -274,7 +274,7 @@ switch fileformat
     end
 
     % save data to JSON or binary JSON
-    extraopt = jsonopt('jsonopt', {}, varargin2struct(varargin{:}));
+    extraopt = jsonopt('jmeshopt', {}, varargin2struct(varargin{:}));
     if(fileformat == 'neurojson_jmesh')
         savejson('', jmesh, 'filename', filename, 'compression', 'zlib', extraopt{:});
     else
