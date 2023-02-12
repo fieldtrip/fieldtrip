@@ -1344,21 +1344,21 @@ switch fileformat
 
   case {'neurojson_jmesh' 'neurojson_bmesh'}
     if(fileformat == 'neurojson_bmesh')
-        shape.orig = loadbj(filename);
+        jmesh = loadbj(filename);
     else
-        shape.orig = loadjson(filename);
+        jmesh = loadjson(filename);
     end
 
-    % shape.orig metadata
-    if(isfield(shape.orig, encodevarname('_DataInfo_')))
-        shape.info = shape.orig.(encodevarname('_DataInfo_'));
+    % jmesh metadata
+    if(isfield(jmesh, encodevarname('_DataInfo_')))
+        shape.info = jmesh.(encodevarname('_DataInfo_'));
     end
 
     % node data
-    if(isfield(shape.orig, 'MeshVertex3'))
-        shape.pos  = shape.orig.MeshVertex3;
-    elseif(isfield(shape.orig, 'MeshNode'))
-        shape.pos  = shape.orig.MeshNode;
+    if(isfield(jmesh, 'MeshVertex3'))
+        shape.pos  = jmesh.MeshVertex3;
+    elseif(isfield(jmesh, 'MeshNode'))
+        shape.pos  = jmesh.MeshNode;
     end
 
     % extract node label if present
@@ -1372,10 +1372,10 @@ switch fileformat
     end
 
     % surface data
-    if(isfield(shape.orig, 'MeshTri3'))
-        shape.tri  = shape.orig.MeshTri3;
-    elseif(isfield(shape.orig, 'MeshSurf'))
-        shape.tri  = shape.orig.MeshSurf;
+    if(isfield(jmesh, 'MeshTri3'))
+        shape.tri  = jmesh.MeshTri3;
+    elseif(isfield(jmesh, 'MeshSurf'))
+        shape.tri  = jmesh.MeshSurf;
     end
 
     % extract face label if present
@@ -1389,10 +1389,10 @@ switch fileformat
     end
 
     % tet element data
-    if(isfield(shape.orig, 'MeshTet4'))
-        shape.tet  = shape.orig.MeshTet4;
-    elseif(isfield(shape.orig, 'MeshElem'))
-        shape.tet  = shape.orig.MeshElem;
+    if(isfield(jmesh, 'MeshTet4'))
+        shape.tet  = jmesh.MeshTet4;
+    elseif(isfield(jmesh, 'MeshElem'))
+        shape.tet  = jmesh.MeshElem;
     end
 
     % extract hex label if present
@@ -1406,8 +1406,8 @@ switch fileformat
     end
 
     % hex element data
-    if(isfield(shape.orig, 'MeshHex8'))
-        shape.hex  = shape.orig.MeshHex8;
+    if(isfield(jmesh, 'MeshHex8'))
+        shape.hex  = jmesh.MeshHex8;
     end
 
     % extract hex label if present
