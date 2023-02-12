@@ -266,6 +266,12 @@ switch fileformat
             jmesh.MeshHex8 = mesh.hex;
         end
     end
+    if(isfield(mesh, 'line'))
+        jmesh.MeshEdge = mesh.line;
+    end
+    if(isfield(mesh, 'poly'))
+        jmesh.MeshPLC = mesh.poly;
+    end
 
     % save data to JSON or binary JSON
     extraopt = jsonopt('jsonopt', {}, varargin2struct(varargin{:}));

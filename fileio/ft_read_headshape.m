@@ -26,6 +26,7 @@ function [shape] = ft_read_headshape(filename, varargin)
 %   'image'       = path to .jpg file
 %   'surface'     = specific surface to be read (only for caret spec files)
 %   'refine'      = number, used for refining Structure Sensor meshes (default = 1)
+%   'jsonopt'      = cell of ('name', 'value') pairs, options for reading JSON/JMesh files
 %
 % Supported input file formats include
 %   'matlab'       containing FieldTrip or BrainStorm headshapes or cortical meshes
@@ -1343,10 +1344,11 @@ switch fileformat
     shape.hex = shape.hex + 1; % this should be one-offset
 
   case {'neurojson_jmesh' 'neurojson_bmesh'}
+    extraopt = jsonopt('jsonopt', {}, varargin2struct(varargin{:}));
     if(fileformat == 'neurojson_bmesh')
-        jmesh = loadbj(filename);
+        jmesh = loadbj(filename, extraopt{:});
     else
-        jmesh = loadjson(filename);
+        jmesh = loadjson(filename, extraopt{:});
     end
 
     % jmesh metadata
@@ -1418,6 +1420,26 @@ switch fileformat
         if(isfield(shape.tet, 'Data'))
             shape.hex = shape.hex.Data;
         end
+    end
+
+    % line segment data
+    if(isfield(jmesh, 'MeshEdge'))
+        shape.line  = jmesh.MeshEdge;
+    end
+    if(isfield(shape, 'line') && isstruct(shape.line) && isfield(shape.line, 'Data'))
+        shape.line = shape.line.Data;
+    end
+
+    % line segment data
+    if(isfield(jmesh, 'MeshPLC'))
+        shape.poly  = jmesh.MeshPLC;
+    end
+    if(isfield(shape, 'poly') && isstruct(shape.poly) && isfield(shape.poly, 'Data'))
+        shape.poly = shape.poly.Data;
+    end
+    if(isfield(shape, 'poly') && iscell(shape.poly))
+        mask = cellfun(@(x) iscell(x), shape.poly);
+        shape.poly(mask) = cellfun(@(x) cell2mat(x), shape.poly(mask), 'uniformoutput', false);
     end
 
   otherwise

@@ -9,6 +9,8 @@ filename = [tempname '.jmsh'];
 % combine them in a structure
 mesh1.pos = pos;
 mesh1.tri = int32(tri);
+mesh1.line = nchoosek(mesh1.tri(1,:),2);
+mesh1.poly = {[1,2,3], [4,7,8,5]};
 mesh1.info = struct('JMeshVersion', '0.5', 'Dimension', 3, ...
                     'AnnotationFormat', 'https://github.com/NeuroJSON/jmesh/blob/master/JMesh_specification.md', ...
                     'SerialFormat', 'http://json.org');
@@ -21,15 +23,19 @@ assert(isequal(mesh1.pos, mesh2.pos));
 assert(isequal(mesh1.poslabel, mesh2.poslabel));
 assert(isequal(mesh1.tri, mesh2.tri));
 assert(isequal(mesh1.trilabel, mesh2.trilabel));
+assert(isequal(mesh1.line, mesh2.line));
+assert(isequal(mesh1.poly, mesh2.poly));
 delete(filename);
 
 ft_write_headshape(filename, mesh1, 'format', 'neurojson_jmesh', 'jsonopt', {'compact',1, 'compression', ''});
-mesh2 = ft_read_headshape(filename);
+mesh2 = ft_read_headshape(filename, 'jsonopt', {'FormatVersion', 2});
 assert(isequal(mesh1.tri, mesh2.tri));
 ratio = mesh1.pos(:)\mesh2.pos(:);
 assert(ratio>0.99 && ratio<1.01);
 assert(isequal(mesh1.poslabel, mesh2.poslabel));
 assert(isequal(mesh1.trilabel, mesh2.trilabel));
+assert(isequal(mesh1.line, mesh2.line));
+assert(isequal(mesh1.poly, mesh2.poly));
 delete(filename);
 
 filename = [tempname '.bmsh'];
@@ -41,9 +47,6 @@ assert(isequal(mesh1.pos, mesh2.pos));
 assert(isequal(mesh1.poslabel, mesh2.poslabel));
 assert(isequal(mesh1.tri, mesh2.tri));
 assert(isequal(mesh1.trilabel, mesh2.trilabel));
+assert(isequal(mesh1.line, mesh2.line));
+assert(isequal(mesh1.poly, mesh2.poly));
 delete(filename);
-
-
-
-
-
