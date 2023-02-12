@@ -27,8 +27,8 @@ assert(isequal(mesh1.line, mesh2.line));
 assert(isequal(mesh1.poly, mesh2.poly));
 delete(filename);
 
-ft_write_headshape(filename, mesh1, 'format', 'neurojson_jmesh', 'jsonopt', {'compact',1, 'compression', ''});
-mesh2 = ft_read_headshape(filename, 'jsonopt', {'FormatVersion', 2});
+ft_write_headshape(filename, mesh1, 'format', 'neurojson_jmesh', 'jmeshopt', {'compact',1, 'compression', ''});
+mesh2 = ft_read_headshape(filename, 'jmeshopt', {'formatversion', 2});
 assert(isequal(mesh1.tri, mesh2.tri));
 ratio = mesh1.pos(:)\mesh2.pos(:);
 assert(ratio>0.99 && ratio<1.01);
