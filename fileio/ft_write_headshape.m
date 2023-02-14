@@ -21,6 +21,7 @@ function ft_write_headshape(filename, mesh, varargin)
 %   'data'         = data matrix, size(1) should be number of vertices
 %   'unit'         = string, desired geometrical units for the data, for example 'mm'
 %   'coordsys'     = string, desired coordinate system for the data
+%   'jmeshopt'     = cell of ('name', 'value') pairs, options for writing JSON/JMesh files
 %
 % Supported output formats are
 %   'freesurfer'  Freesurfer surf-file format, using write_surf from FreeSurfer
@@ -33,6 +34,7 @@ function ft_write_headshape(filename, mesh, varargin)
 %   'tetgen'
 %   'vista'
 %   'vtk'         Visualization ToolKit file format, for use with Paraview
+%   'jmesh'       NeuroJSON JSON/binary JSON based JMesh format (.jmsh, .bmsh)
 %
 % See also FT_READ_HEADSHAPE
 
@@ -226,7 +228,59 @@ switch fileformat
   case 'freesurfer'
     ft_hastoolbox('freesurfer', 1);
     write_surf(filename, mesh.pos, mesh.tri);
-    
+
+  case {'neurojson_jmesh' 'neurojson_bmesh'}
+    ft_hastoolbox('jsonlab', 1);
+
+    % construct a JMesh data structure
+    jmesh = struct;
+
+    if(isfield(mesh, 'info'))
+        jmesh.(encodevarname('_DataInfo_')) = mesh.info;
+    end
+    if(isfield(mesh, 'pos'))
+        if(isfield(mesh, 'poslabel'))
+            jmesh.MeshVertex3 = struct('Data', mesh.pos, 'Properties', struct('Tag', mesh.poslabel));
+        else
+            jmesh.MeshVertex3 = mesh.pos;
+        end
+    end
+    if(isfield(mesh, 'tri'))
+        if(isfield(mesh, 'trilabel'))
+            jmesh.MeshTri3 = struct('Data', mesh.tri, 'Properties', struct('Tag', mesh.trilabel));
+        else
+            jmesh.MeshTri3 = mesh.tri;
+        end
+    end
+    if(isfield(mesh, 'tet'))
+        if(isfield(mesh, 'tetlabel'))
+            jmesh.MeshTet4 = struct('Data', mesh.tet, 'Properties', struct('Tag', mesh.tetlabel));
+        else
+            jmesh.MeshTet4 = mesh.tet;
+        end
+    end
+    if(isfield(mesh, 'hex'))
+        if(isfield(mesh, 'hexlabel'))
+            jmesh.MeshHex8 = struct('Data', mesh.hex, 'Properties', struct('Tag', mesh.hexlabel));
+        else
+            jmesh.MeshHex8 = mesh.hex;
+        end
+    end
+    if(isfield(mesh, 'line'))
+        jmesh.MeshEdge = mesh.line;
+    end
+    if(isfield(mesh, 'poly'))
+        jmesh.MeshPLC = mesh.poly;
+    end
+
+    % save data to JSON or binary JSON
+    extraopt = jsonopt('jmeshopt', {}, varargin2struct(varargin{:}));
+    if(fileformat == 'neurojson_jmesh')
+        savejson('', jmesh, 'filename', filename, 'compression', 'zlib', extraopt{:});
+    else
+        savebj('', jmesh, 'filename', filename, 'compression', 'zlib', extraopt{:});
+    end
+
   case []
     ft_error('no output format specified');
     

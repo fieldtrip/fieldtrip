@@ -26,6 +26,7 @@ function [shape] = ft_read_headshape(filename, varargin)
 %   'image'       = path to .jpg file
 %   'surface'     = specific surface to be read (only for caret spec files)
 %   'refine'      = number, used for refining Structure Sensor meshes (default = 1)
+%   'jmeshopt'    = cell of ('name', 'value') pairs, options for reading JSON/JMesh files
 %
 % Supported input file formats include
 %   'matlab'       containing FieldTrip or BrainStorm headshapes or cortical meshes
@@ -59,6 +60,7 @@ function [shape] = ft_read_headshape(filename, varargin)
 %   'caret_spec'
 %   'brainvisa_mesh'
 %   'brainsuite_dfs'
+%   'neurojson_*'
 %
 % See also FT_READ_HEADMODEL, FT_READ_SENS, FT_READ_ATLAS, FT_WRITE_HEADSHAPE
 
@@ -1341,7 +1343,105 @@ switch fileformat
     shape.hex = shape.hex(:,1:8);
     shape.hex = shape.hex + 1; % this should be one-offset
 
-    
+  case {'neurojson_jmesh' 'neurojson_bmesh'}
+    extraopt = jsonopt('jmeshopt', {}, varargin2struct(varargin{:}));
+    if(fileformat == 'neurojson_bmesh')
+        jmesh = loadbj(filename, extraopt{:});
+    else
+        jmesh = loadjson(filename, extraopt{:});
+    end
+
+    % jmesh metadata
+    if(isfield(jmesh, encodevarname('_DataInfo_')))
+        shape.info = jmesh.(encodevarname('_DataInfo_'));
+    end
+
+    % node data
+    if(isfield(jmesh, 'MeshVertex3'))
+        shape.pos  = jmesh.MeshVertex3;
+    elseif(isfield(jmesh, 'MeshNode'))
+        shape.pos  = jmesh.MeshNode;
+    end
+
+    % extract node label if present
+    if(isfield(shape, 'pos') && isstruct(shape.pos))
+        if(isfield(shape.pos, 'Properties') && isfield(shape.pos.Properties, 'Tag'))
+            shape.poslabel = shape.pos.Properties.Tag;
+        end
+        if(isfield(shape.pos, 'Data'))
+            shape.pos = shape.pos.Data;
+        end
+    end
+
+    % surface data
+    if(isfield(jmesh, 'MeshTri3'))
+        shape.tri  = jmesh.MeshTri3;
+    elseif(isfield(jmesh, 'MeshSurf'))
+        shape.tri  = jmesh.MeshSurf;
+    end
+
+    % extract face label if present
+    if(isfield(shape, 'tri') && isstruct(shape.tri))
+        if(isfield(shape.tri, 'Properties') && isfield(shape.tri.Properties, 'Tag'))
+            shape.trilabel = shape.tri.Properties.Tag;
+        end
+        if(isfield(shape.tri, 'Data'))
+            shape.tri = shape.tri.Data;
+        end
+    end
+
+    % tet element data
+    if(isfield(jmesh, 'MeshTet4'))
+        shape.tet  = jmesh.MeshTet4;
+    elseif(isfield(jmesh, 'MeshElem'))
+        shape.tet  = jmesh.MeshElem;
+    end
+
+    % extract hex label if present
+    if(isfield(shape, 'tet') && isstruct(shape.tet))
+        if(isfield(shape.tet, 'Properties') && isfield(shape.tet.Properties, 'Tag'))
+            shape.tetlabel = shape.tet.Properties.Tag;
+        end
+        if(isfield(shape.tet, 'Data'))
+            shape.tet = shape.tet.Data;
+        end
+    end
+
+    % hex element data
+    if(isfield(jmesh, 'MeshHex8'))
+        shape.hex  = jmesh.MeshHex8;
+    end
+
+    % extract hex label if present
+    if(isfield(shape, 'hex') && isstruct(shape.hex))
+        if(isfield(shape.hex, 'Properties') && isfield(shape.hex.Properties, 'Tag'))
+            shape.hexlabel = shape.hex.Properties.Tag;
+        end
+        if(isfield(shape.tet, 'Data'))
+            shape.hex = shape.hex.Data;
+        end
+    end
+
+    % line segment data
+    if(isfield(jmesh, 'MeshEdge'))
+        shape.line  = jmesh.MeshEdge;
+    end
+    if(isfield(shape, 'line') && isstruct(shape.line) && isfield(shape.line, 'Data'))
+        shape.line = shape.line.Data;
+    end
+
+    % line segment data
+    if(isfield(jmesh, 'MeshPLC'))
+        shape.poly  = jmesh.MeshPLC;
+    end
+    if(isfield(shape, 'poly') && isstruct(shape.poly) && isfield(shape.poly, 'Data'))
+        shape.poly = shape.poly.Data;
+    end
+    if(isfield(shape, 'poly') && iscell(shape.poly))
+        mask = cellfun(@(x) iscell(x), shape.poly);
+        shape.poly(mask) = cellfun(@(x) cell2mat(x), shape.poly(mask), 'uniformoutput', false);
+    end
+
   otherwise
     % try reading it from an electrode of volume conduction model file
     success = false;
