@@ -830,6 +830,7 @@ switch opt.method
     disp('1. Options for electrode placement:');
     disp('   a. Use the mouse to click on the desired position for an electrode');
     disp('   b. Click on the corresponding electrode label');
+    disp('   c. Double-click on an electrode label to remove the marker');
     disp('2. Press "v" to update the light position');
     disp('3. Press "q" or close the window when you are done');
 
@@ -1557,7 +1558,7 @@ elseif strcmp(opt.method, 'headshape')
   opt.pos = select3d(h2)'; % enforce column direction
   if ~isempty(opt.pos)
     delete(findobj(h,'Type', 'Line', 'Marker', '+', 'Color', [0 0 0])) % remove previous crosshairs
-    hold on; plot3(opt.pos(:,1), opt.pos(:,2), opt.pos(:,3), 'marker', '+', 'linestyle', 'none', 'color', [0 0 0]); % plot the crosshair
+    hold on; plot3(opt.pos(:,1), opt.pos(:,2), opt.pos(:,3), 'marker', '+', 'linestyle', 'none', 'color', [0 0 0], 'MarkerSize', 12); % plot the crosshair
   end
   %opt.pos = ft_select_point3d(opt.headshape, 'nearest', true, 'multiple', false, 'marker', '+'); % FIXME: this gets stuck in a loop waiting for any abritrary buttonpress
 end
