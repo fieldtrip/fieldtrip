@@ -222,7 +222,11 @@ elseif isheader
   elseif isfield(input, 'opto')
     sens   = input.opto;
     isnirs = true;
+  elseif isfield(input, 'orig')
+    % this probably contains further details on the type of sensor array
+    sens = input;
   elseif isfield(input, 'label')
+    % this is the least informative
     sens.label = input.label;
     islabel    = true;
   end
@@ -296,7 +300,11 @@ elseif issubfield(input, 'orig.sys_name')
     % FIXME this might fail if there are many bad channels
     type = 'yokogawa440';
   end
-  
+
+elseif issubfield(input, 'orig.raw.info')
+  % this is a complete header that was read from a FIF file
+  type = 'neuromag';
+
 elseif issubfield(input, 'orig.FILE.Ext') && strcmp(input.orig.FILE.Ext, 'edf')
   % this is a complete header that was read from an EDF or EDF+ dataset
   type = 'eeg';
