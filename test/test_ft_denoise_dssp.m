@@ -14,6 +14,7 @@ cfg.sourcemodel = tmp.grid;
 cfg.dssp.n_space = 30;
 cfg.dssp.n_in    = 30;
 cfg.dssp.n_out   = 30;
+cfg.dssp.n_intersect = 2;
 dataout = ft_denoise_dssp(cfg, data);
 
 % the lowsnr data, has multiple trials, in which the 'blip' of activity has
