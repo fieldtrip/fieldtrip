@@ -12,6 +12,7 @@ function [dataout] = ft_denoise_dssp(cfg, datain)
 %   cfg.trials           = 'all' or a selection given as a 1xN vector (default = 'all')
 %   cfg.pertrial         = 'no', or 'yes', compute the temporal projection per trial (default = 'no')
 %   cfg.sourcemodel      = structure, source model with precomputed leadfields, see FT_PREPARE_LEADFIELD
+%   cfg.demean           = 'yes', or 'no', demean the data per epoch (default = 'yes')
 %   cfg.dssp             = structure with parameters that determine the behavior of the algorithm
 %   cfg.dssp.n_space     = 'all', or scalar. Number of dimensions for the
 %                          initial spatial projection.
@@ -26,7 +27,7 @@ function [dataout] = ft_denoise_dssp(cfg, datain)
 %
 % See also FT_DENOISE_PCA, FT_DENOISE_SYNTHETIC, FT_DENOISE_TSR
 
-% Copyright (C) 2018-2022, Jan-Mathijs Schoffelen
+% Copyright (C) 2018-2023, Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -72,20 +73,18 @@ ft_hastoolbox('cellfunction', 1);
 
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'forbidden',  {'channels', 'trial'}); % prevent accidental typos, see issue 1729
-cfg = ft_checkconfig(cfg, 'renamed',    {'hdmfile', 'headmodel'});
-cfg = ft_checkconfig(cfg, 'renamed',    {'vol',     'headmodel'});
-cfg = ft_checkconfig(cfg, 'renamed',    {'grid',    'sourcemodel'});
 
 % set the defaults
 cfg.trials            = ft_getopt(cfg, 'trials',  'all', 1);
 cfg.channel           = ft_getopt(cfg, 'channel', 'all');
 cfg.pertrial          = ft_getopt(cfg, 'pertrial', 'no');
 cfg.sourcemodel       = ft_getopt(cfg, 'sourcemodel');
+cfg.demean            = ft_getopt(cfg, 'demean', 'yes');
 cfg.dssp              = ft_getopt(cfg, 'dssp');         % sub-structure to hold the parameters
-cfg.dssp.n_space      = ft_getopt(cfg.dssp, 'n_space', 'all'); % number of spatial components to retain from the Gram matrix
-cfg.dssp.n_in         = ft_getopt(cfg.dssp, 'n_in',    'all'); % dimensionality of the Bin subspace to be used for the computation of the intersection
-cfg.dssp.n_out        = ft_getopt(cfg.dssp, 'n_out',   'all'); % dimensionality of the Bout subspace to be used for the computation of the intersection
-cfg.dssp.n_intersect  = ft_getopt(cfg.dssp, 'n_intersect', 0.9); % dimensionality of the intersection
+cfg.dssp.n_space      = ft_getopt(cfg.dssp, 'n_space', 'interactive'); % number of spatial components to retain from the Gram matrix
+cfg.dssp.n_in         = ft_getopt(cfg.dssp, 'n_in',    'interactive'); % dimensionality of the Bin subspace to be used for the computation of the intersection
+cfg.dssp.n_out        = ft_getopt(cfg.dssp, 'n_out',   'interactive'); % dimensionality of the Bout subspace to be used for the computation of the intersection
+cfg.dssp.n_intersect  = ft_getopt(cfg.dssp, 'n_intersect', 'interactive'); % dimensionality of the intersection
 cfg.output            = ft_getopt(cfg, 'output', 'original');
 
 pertrial = istrue(cfg.pertrial);
@@ -95,6 +94,15 @@ tmpcfg = keepfields(cfg, {'trials', 'channel', 'tolerance', 'showcallinfo', 'tra
 datain = ft_selectdata(tmpcfg, datain);
 % restore the provenance information
 [cfg, datain] = rollback_provenance(cfg, datain);
+
+if istrue(cfg.demean)
+  ft_info('demeaning the time series');
+  tmpcfg = [];
+  tmpcfg.demean = 'yes';
+  datain = ft_preprocessing(tmpcfg, datain);
+  % restore the provenance information
+  [cfg, datain] = rollback_provenance(cfg, datain);
+end
 
 % match the input data's channels with the labels in the leadfield
 sourcemodel = cfg.sourcemodel;
@@ -271,18 +279,8 @@ for k = 1:size(trllist,1)
   % multivariate decomp? This is I guess equivalent mathematically
   [U,S] = svd(C);
   S     = diag(S);
-  if (ischar(Nintersect) && strcmp(Nintersect, 'auto'))
-    ft_error('Automatic determination of intersection dimension is not supported');
-  elseif ischar(Nintersect) && strcmp(Nintersect, 'interactive')
-    figure, plot(S,'-o'); drawnow
-    Nintersect  = input('Enter dimension of the intersection: ');
-  elseif Nintersect<1
-    % treat a numeric value < 1 as a threshold
-    Nintersect = find(S>Nintersect,1,'last');
-    if isempty(Nintersect), Nintersect = 1; end
-  end
-  fprintf('Using %d dimensions for the intersection\n', Nintersect);
-
+  Nintersect = getN(Nintersect, S, 'intersection');
+  
   Ae(indx) = U(:, 1:Nintersect)'*Qin;
 
   % keep the subspace information
@@ -294,13 +292,18 @@ end
 
 function N = getN(N, S, name)
 
-ttext = sprintf('enter the spatial dimension for the %s field: ', name);
+ttext = sprintf('enter the dimension for the %s field: ', name);
 if isempty(N)
   N  = input(ttext);
-elseif ischar(N) && isequal(N, 'interactive')
+elseif ischar(N) && isequal(N, 'interactive') && ~any(strcmp(name, {'outside' 'intersection'}))
   figure, plot(log10(S),'-o'); drawnow
+  N = input(ttext);
+elseif ischar(N) && isequal(N, 'interactive') && any(strcmp(name, {'outside' 'intersection'}))
+  figure, plot(S, '-o'); drawnow
   N = input(ttext);
 elseif ischar(N) && isequal(N, 'all')
   N = find(S./S(1)>1e5*eps, 1, 'last');
+elseif isnumeric(N) && N<1
+  N = find(S<=N, 1, 'last');
 end
-fprintf('Using %d spatial dimensions for the %s field\n', N, name);
+fprintf('Using %d dimensions for the %s field\n', N, name);
