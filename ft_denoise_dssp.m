@@ -95,6 +95,7 @@ datain = ft_selectdata(tmpcfg, datain);
 % restore the provenance information
 [cfg, datain] = rollback_provenance(cfg, datain);
 
+
 if istrue(cfg.demean)
   ft_info('demeaning the time series');
   tmpcfg = [];
@@ -127,13 +128,19 @@ lf = cat(2, sourcemodel.leadfield{:});
 G  = lf*lf';
 
 %dat     = cat(2,datain.trial{:});
-[Bclean, Ae, subspace] = dssp(datain.trial, G, cfg.dssp.n_in, cfg.dssp.n_out, cfg.dssp.n_space, cfg.dssp.n_intersect, pertrial);
+[Bclean, subspace] = dssp(datain.trial, G, cfg.dssp.n_in, cfg.dssp.n_out, cfg.dssp.n_space, cfg.dssp.n_intersect, pertrial);
 % datAe   = datain.trial*cellfun(@transpose, Ae, 'UniformOutput', false); % the projection is a right multiplication
 % with a matrix (eye(size(Ae,1))-Ae*Ae'), since Ae*Ae' can become quite
 % sizeable, it's computed slightly differently here.
 
 % put some diagnostic information in the output cfg.
 cfg.dssp.subspace = subspace;
+
+% replace the input cfg values
+cfg.dssp.n_space = subspace.S(1).n;
+cfg.dssp.n_in    = subspace.Sin(1).n;
+cfg.dssp.n_out   = subspace.Sout(1).n;
+cfg.dssp.n_intersect = subspace.T(1).n;
 
 % compute the cleaned data and put in a cell-array
 switch cfg.output
@@ -159,7 +166,7 @@ ft_postamble savevar    dataout
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % subfunctions for the computation of the projection matrix
 % kindly provided by Kensuke, and adjusted a bit by Jan-Mathijs
-function [Bclean, Ae, subspace] = dssp(B, G, Nin, Nout, Nspace, Nintersect, pertrial)
+function [Bclean, subspace] = dssp(B, G, Nin, Nout, Nspace, Nintersect, pertrial)
 
 % Nc: number of sensors
 % Nt: number of time points
@@ -212,6 +219,7 @@ fprintf('Computing the subspace projector based on signal correlations\n');
 subspace.S.U = Uspace;
 subspace.S.S = Sspace;
 subspace.S.n = Nspace;
+subspace.trial = Ae;
 
 fprintf('Applying the subspace projector\n');
 %Bclean    = B - (B*Ae)*Ae'; % avoid computation of Ae*Ae'
