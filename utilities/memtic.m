@@ -66,6 +66,10 @@ if nargin<1
 end
 
 if isempty(mexfile_exists)
+  mexfile_exists = false;
+end
+
+if ~mexfile_exists
   mexfile_exists = isempty(strfind(which('memprofile'), mexext));
 end
 
