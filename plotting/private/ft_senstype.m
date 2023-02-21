@@ -225,6 +225,9 @@ elseif isheader
   elseif isfield(input, 'orig')
     % this probably contains further details on the type of sensor array
     sens = input;
+    if isfield(sens, 'label')
+      islabel = true;
+    end
   elseif isfield(input, 'label')
     % this is the least informative
     sens.label = input.label;
@@ -255,6 +258,7 @@ end
 
 haschantype = isfield(sens, 'chantype');
 
+type = 'unknown'; % start with the type to be unknown
 if isfield(sens, 'type')
   % preferably the structure specifies its own type
   type = sens.type;
@@ -309,9 +313,10 @@ elseif issubfield(input, 'orig.FILE.Ext') && strcmp(input.orig.FILE.Ext, 'edf')
   % this is a complete header that was read from an EDF or EDF+ dataset
   type = 'eeg';
   
-else
-  % start with unknown, then try to determine the proper type by looking at the labels
-  type = 'unknown';
+end
+
+if strcmp(type, 'unknown')
+  % if it's still unknown, try to determine the proper type by looking at the labels
   
   if isgrad
     % this looks like MEG
