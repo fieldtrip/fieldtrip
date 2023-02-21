@@ -80,13 +80,13 @@ if isempty(checkpath)
 end
 
 % ft_warning is located in fieldtrip/utilities, which may not be on the path yet
-if ~exist('ft_warning', 'file')
+if ~initialized && ~exist('ft_warning', 'file')
   ft_warning = @warning;
 end
 
 % locate the file with the persistent FieldTrip preferences
 fieldtripprefs = fullfile(prefdir, 'fieldtripprefs.mat');
-if exist(fieldtripprefs, 'file')
+if ~initialized && exist(fieldtripprefs, 'file')
   prefs       = load(fieldtripprefs); % the file contains multiple fields
   ft_default  = mergestruct(ft_default, prefs);
 end

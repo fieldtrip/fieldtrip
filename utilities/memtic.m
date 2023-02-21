@@ -59,14 +59,19 @@ function output = memtic(action, counter)
 % $Id$
 
 persistent state
+persistent mexfile_exists
 
 if nargin<1
   action = 'tic';
 end
 
+if isempty(mexfile_exists)
+  mexfile_exists = isempty(strfind(which('memprofile'), mexext));
+end
+
 % the memtic/memtoc functions make use of a low-level mex file that interacts directly with the operating system
 % do not fail if the mex file does not exist
-if isempty(strfind(which('memprofile'), mexext))
+if mexfile_exists
   switch action
     case 'tic'
       if nargout
