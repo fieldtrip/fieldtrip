@@ -355,6 +355,9 @@ switch fileformat
       % read whatever variable is in the file, this will error if the file contains multiple variables
       sens = loadvar(matfile);
     end
+    if ft_datatype(sens, 'layout')
+      ft_error('"%s" contains a 2D layout for plotting, not 3D electrode positions', filename);
+    end
     
   case 'zebris_sfp'
     % these are created by a Zebris tracker, at CRC in Liege at least.

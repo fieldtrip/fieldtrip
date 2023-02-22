@@ -1,38 +1,39 @@
 function ft_write_headshape(filename, mesh, varargin)
 
-% FT_WRITE_HEADSHAPE writes a head surface, cortical sheet or
-% geometrical descrition of the volume conduction model or source
-% model to a file for further processing in external software.
+% FT_WRITE_HEADSHAPE writes a head surface, cortical sheet or geometrical descrition
+% of the volume conduction model or source model to a file for further processing in
+% external software.
 %
 % Use as
 %   ft_write_headshape(filename, mesh, ...)
 % or
 %   ft_write_headshape(filename, pos, ...)
-% where the input mesh is a structure containing the vertices and triangles
-% (mesh.pos and mesh.tri), or where the input pos is a Nx3 matrix that describes
-% the surface vertices.
+% where the input mesh is a structure containing the vertices and triangles (mesh.pos
+% and mesh.tri), or where the input pos is a Nx3 matrix that describes the surface
+% vertices.
 %
-% Required input arguments should be specified as key-value pairs and
-% should include
+% Required input arguments should be specified as key-value pairs and should include
 %   'format'		   = string, see below
 %
-% Optional input arguments should be specified as key-value pairs and
-% can include
+% Optional input arguments should be specified as key-value pairs and can include
 %   'data'         = data matrix, size(1) should be number of vertices
 %   'unit'         = string, desired geometrical units for the data, for example 'mm'
 %   'coordsys'     = string, desired coordinate system for the data
+%   'jmeshopt'     = cell-array with {'name', 'value'} pairs, options for writing JSON/JMesh files
 %
 % Supported output formats are
-%   'freesurfer'  Freesurfer surf-file format, using write_surf from FreeSurfer
-%   'gifti'
-%   'mne_pos'		  MNE source grid in ascii format, described as 3D points
-%   'mne_tri'		  MNE surface desciption in ascii format
-%   'off'
-%   'ply'         Stanford Polygon file format, for use with Paraview or Meshlab
-%   'stl'         STereoLithography file format, for use with CAD and generic 3D mesh editing programs
-%   'tetgen'
-%   'vista'
-%   'vtk'         Visualization ToolKit file format, for use with Paraview
+%   'freesurfer'      Freesurfer surf-file format, using write_surf from FreeSurfer
+%   'gifti'           see https://www.nitrc.org/projects/gifti/
+%   'mne_pos'		      MNE source grid in ascii format, described as 3D points
+%   'mne_tri'		      MNE surface desciption in ascii format
+%   'neurojson_jmesh' NeuroJSON ascii JSON-based format
+%   'neurojson_bmesh' NeuroJSON binary JSON-based format
+%   'off'             see http://www.geomview.org/docs/html/OFF.html
+%   'ply'             Stanford Polygon file format, for use with Paraview or Meshlab
+%   'stl'             STereoLithography file format, for use with CAD and generic 3D mesh editing programs
+%   'tetgen'          see https://wias-berlin.de/software/tetgen/
+%   'vista'           see http://www.cs.ubc.ca/nest/lci/vista/vista.html
+%   'vtk'             Visualization ToolKit file format, for use with Paraview
 %
 % See also FT_READ_HEADSHAPE
 
@@ -48,7 +49,7 @@ function ft_write_headshape(filename, mesh, varargin)
 %   'AnatomicalStructurePrimary'   (e.g. 'CortexLeft'),
 %   'AnatomicalStructureSecondary' (e.g. 'MidLayer')
 
-% Copyright (C) 2011-2021, Lilla Magyari & Robert Oostenveld
+% Copyright (C) 2011-2023, Lilla Magyari & Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -87,6 +88,11 @@ if ~isempty(coordsys)
   mesh = ft_convert_coordsys(mesh, coordsys);
 end
 
+if isempty(fileformat)
+  % only do the autodetection if the format was not specified
+  fileformat = ft_filetype(filename);
+end
+
 switch fileformat
   case 'mne_pos'
     fid = fopen_or_error(filename, 'wt');
@@ -102,7 +108,7 @@ switch fileformat
       fprintf(fid, '%-1.0f\n', num);
     end
     fclose(fid);
-    
+
   case 'mne_tri'
     fid = fopen_or_error(filename, 'wt');
     % convert to milimeter
@@ -128,10 +134,10 @@ switch fileformat
       fprintf(fid, '%-1.0f\n', num);
     end
     fclose(fid);
-    
+
   case 'off'
     write_off(filename, mesh.pos, mesh.tri);
-    
+
   case 'vista'
     ft_hastoolbox('simbio', 1)
     % no conversion needed (works in voxel coordinates)
@@ -142,11 +148,11 @@ switch fileformat
     else
       ft_error('unknown mesh representation')
     end
-    
+
   case 'tetgen'
     % the third argument is the element type. At the moment only type 302=triangle is supported
     surf_to_tetgen(filename, mesh.pos, mesh.tri, 302*ones(size(mesh.tri, 1), 1), [], []);
-    
+
   case 'vtk'
     [p, f, x] = fileparts(filename);
     filename = fullfile(p, [f, '.vtk']); % ensure it has the right extension
@@ -157,17 +163,15 @@ switch fileformat
     elseif isfield(mesh, 'hex')
       write_vtk(filename, mesh.pos, mesh.hex);
     end
-    
+
   case {'ply', 'ply_ascii', 'ply_binary'}
     [p, f, x] = fileparts(filename);
     filename = fullfile(p, [f, '.ply']); % ensure it has the right extension
-    
+
     if isfield(mesh, 'pos')
       vertices = mesh.pos;
-    elseif isfield(mesh, 'pos')
-      vertices = mesh.pos;
     end
-    
+
     if isfield(mesh, 'tri')
       elements = mesh.tri;
     elseif isfield(mesh, 'tet')
@@ -175,23 +179,23 @@ switch fileformat
     elseif isfield(mesh, 'hex')
       elements = mesh.hex;
     end
-    
+
     if length(fileformat)>4
       write_ply(filename, vertices, elements, fileformat(5:end));
     else
       write_ply(filename, vertices, elements, 'ascii');
     end
-    
+
   case 'stl'
-    %nrm = surface_normals(mesh.pos, mesh.tri, 'triangle');
-    %write_stl(filename, mesh.pos, mesh.tri, nrm);
+    % nrm = surface_normals(mesh.pos, mesh.tri, 'triangle');
+    % write_stl(filename, mesh.pos, mesh.tri, nrm);
     stlwrite(filename, mesh.tri, mesh.pos);
-    
+
   case 'gifti'
     ft_hastoolbox('gifti', 1);
-    
+
     mesh = ft_convert_units(mesh, 'mm');  % defined in the GIFTI standard to be milimeter
-    
+
     % start with an empty structure
     tmp          = [];
     tmp.vertices = mesh.pos;
@@ -200,7 +204,7 @@ switch fileformat
       tmp.cdata = data;
     end
     tmp = gifti(tmp);     % construct a gifti object
-    
+
     % check the presence of metadata
     if ~isempty(metadata)
       if isstruct(metadata)
@@ -220,16 +224,60 @@ switch fileformat
         ft_error('metadata should be provided as a struct-array');
       end
     end
-        
+
     save(tmp, filename);  % write the object to file
 
   case 'freesurfer'
     ft_hastoolbox('freesurfer', 1);
     write_surf(filename, mesh.pos, mesh.tri);
-    
+
+  case {'neurojson_jmesh' 'neurojson_bmesh'}
+    % see https://github.com/NeuroJSON/jmesh/blob/master/JMesh_specification.md
+    ft_hastoolbox('jsonlab', 1);
+
+    % construct a JMesh data structure
+    jmesh = struct;
+
+    % FIXME: note to future self, here is how to add "data" to positions, triangles, etc.
+    %   jmesh.MeshVertex3 = struct('Data', mesh.pos, 'Properties', struct('Tag',   mesh.tag));
+    %   jmesh.MeshTri3    = struct('Data', mesh.tri, 'Properties', struct('Color', mesh.color));
+    %   jmesh.MeshTet4    = struct('Data', mesh.tet, 'Properties', struct('Value', mesh.value));
+    % The documentation includes the following properties: Color, Normal, Size, Tag, Value, Texture
+
+    if (isfield(mesh, 'info'))
+      % this is specific to the jmesh/bmesh formats
+      jmesh.(encodevarname('_DataInfo_')) = mesh.info;
+    end
+    if (isfield(mesh, 'pos'))
+      jmesh.MeshVertex3 = mesh.pos;
+    end
+    if (isfield(mesh, 'tri'))
+      jmesh.MeshTri3 = mesh.tri;
+    end
+    if (isfield(mesh, 'tet'))
+      jmesh.MeshTet4 = mesh.tet;
+    end
+    if (isfield(mesh, 'hex'))
+      jmesh.MeshHex8 = mesh.hex;
+    end
+    if (isfield(mesh, 'line'))
+      jmesh.MeshEdge = mesh.line;
+    end
+    if (isfield(mesh, 'poly'))
+      jmesh.MeshPLC = mesh.poly;
+    end
+
+    % save data to JSON or binary JSON
+    extraopt = jsonopt('jmeshopt', {}, varargin2struct(varargin{:}));
+    if strcmp(fileformat, 'neurojson_jmesh')
+      savejson('', jmesh, 'filename', filename, 'compression', 'zlib', extraopt{:});
+    else
+      savebj('', jmesh, 'filename', filename, 'compression', 'zlib', extraopt{:});
+    end
+
   case []
     ft_error('no output format specified');
-    
+
   otherwise
     ft_error('unsupported output format "%s"', fileformat);
 end

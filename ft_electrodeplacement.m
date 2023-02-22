@@ -226,7 +226,7 @@ if ~isempty(cfg.channel) % use prespecified (cfg.channel) electrode labels
       chanlabel{end+1,1} = cfg.channel{c};
       chanstring{end+1} = ['<HTML><FONT color="silver">' cfg.channel{c} '</FONT></HTML>']; % hmtl'ize
 
-      markerlab{end+1,1} = {};
+      markerlab{end+1,1} = [];
       markerpos{end+1,1} = zeros(0,3);
     end
   end
@@ -830,6 +830,7 @@ switch opt.method
     disp('1. Options for electrode placement:');
     disp('   a. Use the mouse to click on the desired position for an electrode');
     disp('   b. Click on the corresponding electrode label');
+    disp('   c. Double-click on an electrode label to remove the marker');
     disp('2. Press "v" to update the light position');
     disp('3. Press "q" or close the window when you are done');
 
@@ -1212,7 +1213,7 @@ if opt.showmarkers
   if ~isempty(idx)
     elec = keepfields(opt.headshape, {'unit', 'coordsys'});
     elec.elecpos = cat(1, opt.markerpos{idx});
-    elec.label   = cat(1, opt.markerlab{idx});
+    elec.label   = cat(1, opt.markerlab(idx));
     elec.elecori = elec.elecpos;
     elec.elecori(:,1) = elec.elecori(:,1) - mean(opt.headshape.pos(:,1));
     elec.elecori(:,2) = elec.elecori(:,2) - mean(opt.headshape.pos(:,2));
@@ -1557,7 +1558,7 @@ elseif strcmp(opt.method, 'headshape')
   opt.pos = select3d(h2)'; % enforce column direction
   if ~isempty(opt.pos)
     delete(findobj(h,'Type', 'Line', 'Marker', '+', 'Color', [0 0 0])) % remove previous crosshairs
-    hold on; plot3(opt.pos(:,1), opt.pos(:,2), opt.pos(:,3), 'marker', '+', 'linestyle', 'none', 'color', [0 0 0]); % plot the crosshair
+    hold on; plot3(opt.pos(:,1), opt.pos(:,2), opt.pos(:,3), 'marker', '+', 'linestyle', 'none', 'color', [0 0 0], 'MarkerSize', 12); % plot the crosshair
   end
   %opt.pos = ft_select_point3d(opt.headshape, 'nearest', true, 'multiple', false, 'marker', '+'); % FIXME: this gets stuck in a loop waiting for any abritrary buttonpress
 end
@@ -1656,7 +1657,7 @@ if ~isempty(elecidx)
     fprintf('==================================================================================\n');
     fprintf(' assigning marker %s\n', opt.label{elecidx,1});
     eleclab = regexprep(eleclab, '"silver"', '"black"'); % replace font color
-    opt.markerlab{elecidx,1} = opt.label(elecidx,1); % assign marker label
+    opt.markerlab{elecidx,1} = opt.label{elecidx,1}; % assign marker label
     opt.markerpos{elecidx,1} = opt.pos; % assign marker position
     opt.redrawmarkers = true; % draw markers
   elseif contains(eleclab, 'black') % already chosen before, move cursor to marker or uncheck
@@ -1669,7 +1670,7 @@ if ~isempty(elecidx)
       fprintf('==================================================================================\n');
       fprintf(' removing marker %s\n', opt.label{elecidx,1});
       eleclab = regexprep(eleclab, '"black"', '"silver"'); % replace font color
-      opt.markerlab{elecidx,1} = {}; % assign marker label
+      opt.markerlab{elecidx,1} = []; % assign marker label
       opt.markerpos{elecidx,1} = []; % assign marker position
       opt.redrawmarkers = true; % remove markers
     end

@@ -149,11 +149,14 @@ for i=1:numel(cfg.tissue)
   end
   
   % in principle it is possible to do volumesmooth and volumethreshold, but
-  % the user is expected to prepare his segmentation outside this function
+  % the user is expected to prepare their segmentation outside this function
   % seg = volumesmooth(seg, nan, nan);
   
   % ensure that the segmentation is binary and that there is a single contiguous region
   seg = volumethreshold(seg, 0.5, seglabel);
+  
+  % the mesh generation will fail if there is a hole in the middle
+  seg = volumefillholes(seg);
   
   % add a layer on all sides to ensure that the tissue can be meshed all the way up to the edges
   % this also ensures that the mesh at the bottom of the neck will be closed
@@ -168,9 +171,6 @@ for i=1:numel(cfg.tissue)
   transform(1,4) = transform(1,4) - shift(1);
   transform(2,4) = transform(2,4) - shift(2);
   transform(3,4) = transform(3,4) - shift(3);
-  
-  % the mesh generation will fail if there is a hole in the middle
-  seg = volumefillholes(seg);
   
   switch cfg.method
     case 'isosurface'

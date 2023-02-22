@@ -1713,6 +1713,7 @@ if opt.hasfun
   plotopt = ft_setopt(plotopt, 'update', opt.update);
   plotopt = ft_setopt(plotopt, 'clim', [opt.fcolmin opt.fcolmax]);
   plotopt = ft_setopt(plotopt, 'colormap', opt.funcolormap);
+  plotopt = ft_setopt(plotopt, 'intersectmesh', opt.intersectmesh);
 
   if opt.init
     if isequal(opt.funcolormap, 'rgb')
