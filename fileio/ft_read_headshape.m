@@ -1363,6 +1363,14 @@ switch fileformat
           shape.tet = el;
         case 'hexahedra'
           shape.hex = el;
+        case 'lines_tag'
+          shape.tag_line = el;
+        case 'triangles_tag'
+          shape.tag_tri = el;
+        case 'tetrahedra_tag'
+          shape.tag_tet = el;
+        case 'hexahedra_tag'
+          shape.tag_hex = el;
         otherwise
           ft_warning('skipping element field %s', fnames{k});
       end
