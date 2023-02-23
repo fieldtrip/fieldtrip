@@ -292,7 +292,7 @@ if(~isempty(filename))
     else
         fid = fopen(filename, writemode, fileendian);
     end
-    fwrite(fid,json);
+    fwrite(fid,uint8(json));
     fclose(fid);
 else
     output=json;
