@@ -1183,7 +1183,8 @@ opt = getappdata(h, 'opt');
 
 figure(h); % make current figure
 
-delete(findobj(h, 'Type', 'line')); % remove all lines and markers
+delete(findobj(h, 'Type', 'line')); % remove all lines 
+delete(findobj(h, 'Type', 'Patch')); % remove all markers
 delete(findobj(h, 'Type', 'text')); % remove all labels
 delete(findall(h, 'Type','light'))
 delete(findobj(h, 'tag', 'headshape')); % remove the headshape
