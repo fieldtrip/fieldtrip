@@ -10,7 +10,9 @@ function [dataout] = ft_denoise_dssp(cfg, datain)
 % where cfg is a configuration structure that contains
 %   cfg.channel          = Nx1 cell-array with selection of channels (default = 'all'), see FT_CHANNELSELECTION for details
 %   cfg.trials           = 'all' or a selection given as a 1xN vector (default = 'all')
+%   cfg.pertrial         = 'no', or 'yes', compute the temporal projection per trial (default = 'no')
 %   cfg.sourcemodel      = structure, source model with precomputed leadfields, see FT_PREPARE_LEADFIELD
+%   cfg.demean           = 'yes', or 'no', demean the data per epoch (default = 'yes')
 %   cfg.dssp             = structure with parameters that determine the behavior of the algorithm
 %   cfg.dssp.n_space     = 'all', or scalar. Number of dimensions for the
 %                          initial spatial projection.
@@ -25,7 +27,7 @@ function [dataout] = ft_denoise_dssp(cfg, datain)
 %
 % See also FT_DENOISE_PCA, FT_DENOISE_SYNTHETIC, FT_DENOISE_TSR
 
-% Copyright (C) 2018, Jan-Mathijs Schoffelen
+% Copyright (C) 2018-2023, Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -66,28 +68,42 @@ end
 % check the input data
 datain = ft_checkdata(datain, 'datatype', {'raw'}); % FIXME how about timelock and freq?
 
+% ensure the external cellfunction toolbox is on the path
+ft_hastoolbox('cellfunction', 1);
+
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'forbidden',  {'channels', 'trial'}); % prevent accidental typos, see issue 1729
-cfg = ft_checkconfig(cfg, 'renamed',    {'hdmfile', 'headmodel'});
-cfg = ft_checkconfig(cfg, 'renamed',    {'vol',     'headmodel'});
-cfg = ft_checkconfig(cfg, 'renamed',    {'grid',    'sourcemodel'});
 
 % set the defaults
 cfg.trials            = ft_getopt(cfg, 'trials',  'all', 1);
 cfg.channel           = ft_getopt(cfg, 'channel', 'all');
+cfg.pertrial          = ft_getopt(cfg, 'pertrial', 'no');
 cfg.sourcemodel       = ft_getopt(cfg, 'sourcemodel');
+cfg.demean            = ft_getopt(cfg, 'demean', 'yes');
 cfg.dssp              = ft_getopt(cfg, 'dssp');         % sub-structure to hold the parameters
-cfg.dssp.n_space      = ft_getopt(cfg.dssp, 'n_space', 'all'); % number of spatial components to retain from the Gram matrix
-cfg.dssp.n_in         = ft_getopt(cfg.dssp, 'n_in', 'all');    % dimensionality of the Bin subspace to be used for the computation of the intersection
-cfg.dssp.n_out        = ft_getopt(cfg.dssp, 'n_out', 'all');   % dimensionality of the Bout subspace to be used for the computation of the intersection
-cfg.dssp.n_intersect  = ft_getopt(cfg.dssp, 'n_intersect', 0.9); % dimensionality of the intersection
+cfg.dssp.n_space      = ft_getopt(cfg.dssp, 'n_space', 'interactive'); % number of spatial components to retain from the Gram matrix
+cfg.dssp.n_in         = ft_getopt(cfg.dssp, 'n_in',    'interactive'); % dimensionality of the Bin subspace to be used for the computation of the intersection
+cfg.dssp.n_out        = ft_getopt(cfg.dssp, 'n_out',   'interactive'); % dimensionality of the Bout subspace to be used for the computation of the intersection
+cfg.dssp.n_intersect  = ft_getopt(cfg.dssp, 'n_intersect', 'interactive'); % dimensionality of the intersection
 cfg.output            = ft_getopt(cfg, 'output', 'original');
+
+pertrial = istrue(cfg.pertrial);
 
 % select channels and trials of interest, by default this will select all channels and trials
 tmpcfg = keepfields(cfg, {'trials', 'channel', 'tolerance', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
 datain = ft_selectdata(tmpcfg, datain);
 % restore the provenance information
 [cfg, datain] = rollback_provenance(cfg, datain);
+
+
+if istrue(cfg.demean)
+  ft_info('demeaning the time series');
+  tmpcfg = [];
+  tmpcfg.demean = 'yes';
+  datain = ft_preprocessing(tmpcfg, datain);
+  % restore the provenance information
+  [cfg, datain] = rollback_provenance(cfg, datain);
+end
 
 % match the input data's channels with the labels in the leadfield
 sourcemodel = cfg.sourcemodel;
@@ -111,33 +127,27 @@ end
 lf = cat(2, sourcemodel.leadfield{:});
 G  = lf*lf';
 
-dat     = cat(2,datain.trial{:});
-[dum, Ae, N, Nspace, Sout, Sin, Sspace, S] = dssp(dat, G, cfg.dssp.n_in, cfg.dssp.n_out, cfg.dssp.n_space, cfg.dssp.n_intersect);
-datAe   = dat*Ae; % the projection is a right multiplication
+%dat     = cat(2,datain.trial{:});
+[Bclean, subspace] = dssp(datain.trial, G, cfg.dssp.n_in, cfg.dssp.n_out, cfg.dssp.n_space, cfg.dssp.n_intersect, pertrial);
+% datAe   = datain.trial*cellfun(@transpose, Ae, 'UniformOutput', false); % the projection is a right multiplication
 % with a matrix (eye(size(Ae,1))-Ae*Ae'), since Ae*Ae' can become quite
 % sizeable, it's computed slightly differently here.
 
 % put some diagnostic information in the output cfg.
-cfg.dssp.S_space        = Sspace;
-cfg.dssp.n_space        = Nspace;
-cfg.dssp.S_out          = Sout;
-cfg.dssp.S_in           = Sin;
-cfg.dssp.S_intersect    = S;
-cfg.dssp.n_intersect    = N;
+cfg.dssp.subspace = subspace;
+
+% replace the input cfg values
+cfg.dssp.n_space = subspace.S(1).n;
+cfg.dssp.n_in    = subspace.Sin(1).n;
+cfg.dssp.n_out   = subspace.Sout(1).n;
+cfg.dssp.n_intersect = subspace.T(1).n;
 
 % compute the cleaned data and put in a cell-array
-nsmp  = cellfun(@numel, datain.time);
-csmp  = cumsum([0 nsmp]);
-trial = cell(size(datain.trial));
 switch cfg.output
   case 'original'
-    for k = 1:numel(datain.trial)
-      trial{k} = datain.trial{k} - datAe*Ae((csmp(k)+1):csmp(k+1),:)';
-    end
+    trial = Bclean;
   case 'complement'
-    for k = 1:numel(datain.trial)
-      trial{k} = datAe*Ae((csmp(k)+1):csmp(k+1),:)';
-    end
+    trial = datain.trial-Bclean;
   otherwise
     ft_error(sprintf('cfg.output = ''%s'' is not implemented',cfg.output));
 end
@@ -156,7 +166,7 @@ ft_postamble savevar    dataout
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % subfunctions for the computation of the projection matrix
 % kindly provided by Kensuke, and adjusted a bit by Jan-Mathijs
-function [Bclean, Ae, Nee, Nspace, Sout, Sin, Sspace, S] = dssp(B, G, Nin, Nout, Nspace, Nee)
+function [Bclean, subspace] = dssp(B, G, Nin, Nout, Nspace, Nintersect, pertrial)
 
 % Nc: number of sensors
 % Nt: number of time points
@@ -167,7 +177,7 @@ function [Bclean, Ae, Nee, Nspace, Sout, Sin, Sspace, S] = dssp(B, G, Nin, Nout,
 % recom_Nspace: recommended value for the dimension of the pseudo-signal subspace
 % outputs
 % Bclean(Nc,Nt): cleaned sensor data
-% Nee: dimension of the intersection
+% Nintersect: dimension of the intersection
 % Nspace: dimension of the pseudo-signal subspace
 %  ------------------------------------------------------------
 %  programmed by K. Sekihara,  Signal Analysis Inc.
@@ -175,45 +185,47 @@ function [Bclean, Ae, Nee, Nspace, Sout, Sin, Sspace, S] = dssp(B, G, Nin, Nout,
 % -------------------------------------------------------------
 %
 % The code below is modified by Jan-Mathijs, no functional changes
-% merely cosmetics
+% merely cosmetics, added the possibility to run the temporal subspace per
+% trial
 
-% eigen decomposition of the Gram matrix, matrix describing the spatial
-% components
-[U,S]   = eig(G);
-Sspace  = abs(diag(S));
+% eigen decomposition of the Gram matrix, matrix describing the spatial components of the defined 'in' compartment
+fprintf('Computing the spatial subspace projection\n');
+fprintf('Eigenvalue decomposition of the Gram matrix\n');
+[Uspace,S] = eig(G);
+Sspace     = abs(diag(S));
 
 [Sspace, iorder] = sort(-Sspace);
 Sspace           = -Sspace;
-U(:,:)           = U(:,iorder);
-
-if isempty(Nspace)
-  ttext = 'enter the spatial dimension: ';
-  Nspace    = input(ttext);
-elseif ischar(Nspace) && isequal(Nspace, 'interactive')
-  figure, plot(log10(Sspace),'-o');
-  Nspace = input('enter spatial dimension of the ROI subspace: ');
-elseif ischar(Nspace) && isequal(Nspace, 'all')
-  Nspace = find(Sspace./Sspace(1)>1e5*eps, 1, 'last');
-end
-fprintf('Using %d spatial dimensions\n', Nspace);
+Uspace(:,:)      = Uspace(:,iorder);
+Nspace           = getN(Nspace, Sspace, 'spatial');
 
 % spatial subspace projector
-Us   = U(:,1:Nspace);
-USUS = Us*Us';
+Us   = Uspace(:,1:Nspace);
 
-% Bin and Bout creations
-Bin  =                  USUS  * B;
-Bout = (eye(size(USUS))-USUS) * B;
+%USUS = Us*Us';
+% % Bin and Bout creation
+%Bin  =                  USUS  * B;
+%Bout = (eye(size(USUS))-USUS) * B;
 
-% create the temporal subspace projector and apply it to the data
-%[AeAe, Nee] = CSP01(Bin, Bout, Nout, Nin, Nee);
-%Bclean      = B*(eye(size(AeAe))-AeAe);
+% computationally more efficient than the above
+fprintf('Applying the spatial subspace projector\n');
+Bin  = Us*(Us'*B);
+Bout = B - Bin; 
 
-[Ae, Nee, Sout, Sin, S] = CSP01(Bin, Bout, Nin, Nout, Nee);
-Bclean    = B - (B*Ae)*Ae'; % avoid computation of Ae*Ae'
+fprintf('Computing the subspace projector based on signal correlations\n');
+[Ae, subspace] = CSP01(Bin, Bout, Nin, Nout, Nintersect, pertrial);
 
+% add the first spatial subspace projection information as well
+subspace.S.U = Uspace;
+subspace.S.S = Sspace;
+subspace.S.n = Nspace;
+subspace.trial = Ae;
 
-function [Ae, Nee, Sout, Sin, S] = CSP01(Bin, Bout, Nin, Nout, Nee)
+fprintf('Applying the subspace projector\n');
+%Bclean    = B - (B*Ae)*Ae'; % avoid computation of Ae*Ae'
+Bclean = B - (B*cellfun(@transpose, Ae, 'UniformOutput', false))*Ae;
+
+function [Ae, subspace] = CSP01(Bin, Bout, Nin, Nout, Nintersect, pertrial)
 %
 % interference rejection by removing the common temporal subspace of the two subspaces
 % K. Sekihara,  March 28, 2012
@@ -224,67 +236,82 @@ function [Ae, Nee, Sout, Sin, S] = CSP01(Bin, Bout, Nin, Nout, Nee)
 % inputs
 %  Bout(1:Nc,1:Nt): interference data
 %  Bin(1:Nc,1:Nt): signal plus interference data
-%  ypost(1:Nc,1:Nt): denoised data
 %  Nout: dimension of the interference subspace
 %  Nin: dimension of the signal plus interference subspace
-%  Nee: dimension of the intersection of the two subspaces
+%  Nintersect: dimension of the intersection of the two subspaces
 % outputs
 % Ae = matrix from which the projector onto the intersection can
 %      be obtained:
-% AeAe: projector onto the intersection, which is equal to the
-%       interference subspace.
-% Nee: dimension of the intersection
+% subspace: struct containing information about the different subspace
+%      projections
 %  ------------------------------------------------------------
 %  programmed by K. Sekihara,  Signal Analysis Inc.
 %  All right reserved by Signal Analysis Inc.
 % -------------------------------------------------------------
 %
 
-[dum,Sout,Vout] = svd(Bout,'econ');
-[dum,Sin, Vin]  = svd(Bin, 'econ');
-Sout = diag(Sout);
-Sin  = diag(Sin);
+if ~pertrial
+  % compute the projection across trials
+  trllist = 1:numel(Bout);
+else
+  % compute the projection per trial
+  trllist = (1:numel(Bout))';
+end  
 
-if isempty(Nout)
-  ttext = 'enter the spatial dimension for the outside field: ';
-  Nout  = input(ttext);
-elseif ischar(Nout) && isequal(Nout, 'interactive')
-  figure, plot(Sout,'-o');
-  Nout = input('enter dimension of the outside field: ');
-elseif ischar(Nout) && isequal(Nout, 'all')
-  Nout = find(Sout./Sout(1)>1e5*eps, 1, 'last');
+Ae = cell(size(Bin));
+for k = 1:size(trllist,1)
+  indx = trllist(k,:); % this is either a scalar, or a vector
+  [Uout,Sout,Vout] = svd(cat(2, Bout{indx}),'econ');
+  [Uin, Sin, Vin]  = svd(cat(2, Bin{indx}), 'econ');
+  Sout = diag(Sout);
+  Sin  = diag(Sin);
+
+  Nout = getN(Nout, Sout, 'outside');
+  Nin  = getN(Nin,  Sin,  'inside');
+  
+  % compute unit-norm orthogonal time courses
+  Qout = diag(1./Sout(1:Nout))*Uout(:,1:Nout)'*Bout(indx); % keep it in cell representation
+  Qin  = diag(1./Sin(1:Nin)  )* Uin(:,1:Nin)' *Bin(indx);
+  C    = Qin * cellfun(@transpose, Qout, 'UniformOutput', false);
+  C    = sum(cat(3, C{:}), 3);
+
+  % store the subspace information that is used in the next step
+  subspace.Sin(k).U  = Uin;
+  subspace.Sin(k).S  = Sin;
+  subspace.Sin(k).n  = Nin;
+  subspace.Sout(k).U = Uout;
+  subspace.Sout(k).S = Sout;
+  subspace.Sout(k).n = Nout;
+
+  % covariance matrix of unit-norm 'components' -> how does this relate to
+  % multivariate decomp? This is I guess equivalent mathematically
+  [U,S] = svd(C);
+  S     = diag(S);
+  Nintersect = getN(Nintersect, S, 'intersection');
+  
+  Ae(indx) = U(:, 1:Nintersect)'*Qin;
+
+  % keep the subspace information
+  subspace.T(k).U = U;
+  subspace.T(k).S = S;
+  subspace.T(k).C = C; clear C;
+  subspace.T(k).n = Nintersect;
 end
-fprintf('Using %d spatial dimensions for the outside field\n', Nout);
 
-if isempty(Nin)
-  ttext = 'enter the spatial dimension for the inside field: ';
-  Nin  = input(ttext);
-elseif ischar(Nin) && isequal(Nin, 'interactive')
-  figure, plot(log10(Sin),'-o');
-  Nin = input('enter dimension of the inside field: ');
-elseif ischar(Nin) && isequal(Nin, 'all')
-  Nin = find(Sin./Sin(1)>1e5*eps, 1, 'last');
+function N = getN(N, S, name)
+
+ttext = sprintf('enter the dimension for the %s field: ', name);
+if isempty(N)
+  N  = input(ttext);
+elseif ischar(N) && isequal(N, 'interactive') && ~any(strcmp(name, {'outside' 'intersection'}))
+  figure, plot(log10(S),'-o'); drawnow
+  N = input(ttext);
+elseif ischar(N) && isequal(N, 'interactive') && any(strcmp(name, {'outside' 'intersection'}))
+  figure, plot(S, '-o'); drawnow
+  N = input(ttext);
+elseif ischar(N) && isequal(N, 'all')
+  N = find(S./S(1)>1e5*eps, 1, 'last');
+elseif isnumeric(N) && N<1
+  N = find(S<=N, 1, 'last');
 end
-fprintf('Using %d spatial dimensions for the inside field\n', Nin);
-
-Qout = Vout(:,1:Nout);
-Qin  = Vin(:, 1:Nin);
-
-C     = Qin'*Qout;
-[U,S] = svd(C);
-S     = diag(S);
-if (ischar(Nee) && strcmp(Nee, 'auto'))
-  ft_error('automatic determination of intersection dimension is not supported');
-elseif ischar(Nee) && strcmp(Nee, 'interactive')
-  figure, plot(S,'-o');
-  Nee  = input('enter dimension of the intersection: ');
-elseif Nee<1
-  % treat a numeric value < 1 as a threshold
-  Nee = find(S>Nee,1,'last');
-  if isempty(Nee), Nee = 1; end
-end
-fprintf('Using %d dimensions for the interaction\n', Nee);
-
-Ae   = Qin*U;
-Ae   = Ae(:,1:Nee);
-%AeAe = Ae*Ae';
+fprintf('Using %d dimensions for the %s field\n', N, name);

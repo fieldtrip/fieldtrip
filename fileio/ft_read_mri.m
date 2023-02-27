@@ -676,7 +676,7 @@ switch dataformat
       mri.transform(1:3,1:3) = diag(tmp.vox(1:3))*mri.transform(1:3,1:3);
     end
 
-  case {'openjdata_jnii' 'openjdata_bnii'}
+  case {'neurojson_jnii' 'neurojson_bnii'}
     % this depends on two external toolboxes
     ft_hastoolbox('jsonlab', 1);
     ft_hastoolbox('jnifti', 1);

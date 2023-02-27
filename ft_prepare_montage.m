@@ -158,16 +158,16 @@ switch cfg.refmethod
       for i=1:numel(label)
         group(i) = regexp(label{i}, '^[a-zA-Z]+', 'match');
       end
-      group = unique(group, 'stable');
+      ugroup = unique(group, 'stable');
       
       tmpcfg = keepfields(cfg, {'refmethod', 'implicitref', 'refchannel', 'channel'});
       tmpcfg.groupchans = 'no';
       tmpcfg.showcallinfo = 'no';
       
-      groupmontage = cell(size(group));
-      for g = 1:length(group) % for each group of channels
+      groupmontage = cell(size(ugroup));
+      for g = 1:length(ugroup) % for each group of channels
         % select the channels within the group
-        tmpcfg.channel = label(startsWith(label, group{g}));
+        tmpcfg.channel = label(strcmp(group, ugroup{g}));
         groupmontage{g} = ft_prepare_montage(tmpcfg);
       end
       
@@ -177,7 +177,7 @@ switch cfg.refmethod
       montage2.labelnew = label(:);
       montage2.tra = eye(length(label));
       
-      for g = length(group):-1:1
+      for g = length(ugroup):-1:1
         % apply the montage for each groep (i.e., combine them), keep all other channels as they are
         % unused channels end up at the end, hence doing it in reverse order keeps the channel order consistent
         montage2 = ft_apply_montage(montage2, groupmontage{g}, 'keepunused', true);
