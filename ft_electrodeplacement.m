@@ -1470,6 +1470,7 @@ elseif strcmp(opt.method, 'headshape')
       cb_quit(h);
 
     case 'v' % camlight angle reset
+      cb_headshaperedraw(h);
       delete(findall(h,'Type','light')) % shut out the lights
       % add a new light from the current camera position
       lighting gouraud
