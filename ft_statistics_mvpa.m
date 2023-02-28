@@ -31,12 +31,14 @@ function [stat, cfg] = ft_statistics_mvpa(cfg, dat, design)
 %                         time points serve as features. A classification
 %                         is performed for each channel (channel is a
 %                         searchlight dimension).
-%                         If mvpa.features = [], then all non-sample
+%                         If cfg.features = [], then all non-sample
 %                         dimensions serve as searchlight dimensions.
-%                         If the dimensions have names (ie cfg.dimord
+%                         If the dimensions have names (i.e. cfg.dimord
 %                         exists), then instead of numbers the feature can
 %                         be specified as a string (e.g. 'chan').
-%                         (default 2)
+%                         Default value is chosen based on the (optional)
+%                         specification of the other searchlight options (see
+%                         below). If nothing is defined, the default will be 'chan'/2.
 %   cfg.generalize      = specifies the name or index of the dimensions
 %                         that serves for generalization (if any). For
 %                         instance, if the data is [samples x channels x
@@ -143,7 +145,7 @@ function [stat, cfg] = ft_statistics_mvpa(cfg, dat, design)
 % See also FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS, FT_SOURCESTATISTICS,
 % FT_STATISTICS_ANALYTIC, FT_STATISTICS_STATS, FT_STATISTICS_MONTECARLO, FT_STATISTICS_CROSSVALIDATE
 
-% Copyright (C) 2019-2021, Matthias Treder and Jan-Mathijs Schoffelen
+% Copyright (C) 2019-2023, Matthias Treder and Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -190,32 +192,60 @@ end
 cfg.mvpa.neighbours   = ft_getopt(cfg.mvpa, 'neighbours',  []);
 cfg.mvpa.feedback     = ft_getopt(cfg.mvpa, 'feedback',   'yes');
 
-has_dimord = isfield(cfg, 'dimord');
-has_dim    = isfield(cfg, 'dim');
-if ~has_dimord || ~has_dim
-  ft_warning('fields dim or dimord are missing, MVPA may not work correctly')
+if isfield(cfg, 'dim')
+  dim = cfg.dim; % this is the dimension per sample
+else
+  ft_warning('dim field is missing from the cfg, making up a fake dim, MVPA may not work correctly');
+  dim = [size(dat,2) 1];
+end
+
+if isfield(cfg, 'dimord')
+  dimord = cfg.dimord;
+else
+  ft_warning('dimord field is missing from the cfg, making up a fake dimord name, MVPA may not work correctly');
+  dimord = sprintf('dim%d',1);
+  for k = 2:numel(dim)
+    dimord = cat(2, dimord, '_', sprintf('dim%d',k));
+  end
+end
+
+if numel(dim) ~= numel(tokenize(dimord, '_'))
+  ft_error('the dim and dimord are inconsistent');
 end
 
 % flip dimensions such that the number of trials comes first
 dat = dat.';
 
-if has_dim
-  % reshape because MVPA-Light expects the original multi-dimensional array
-  dat = reshape(dat, [size(dat,1) cfg.dim]);
-end
+% reshape because MVPA-Light expects the original multi-dimensional array
+dat = reshape(dat, [size(dat,1) cfg.dim]);
 
 %% defaults for cfg.features
 if ~isfield(cfg, 'features')
-  % no features provided, we have to guess
-  if ~isempty(cfg.neighbours) || ~isempty(cfg.connectivity)
-    if isempty(cfg.timwin)
-      cfg.features = 3; % dimension 3 = time (usually)
-    end
-  elseif ~isempty(cfg.timwin) || ~isempty(cfg.freqwin)
-    cfg.features = 2; % dimension 2 = chan (usually)
+  % no features option has been provided, define a sensible default based 
+  % on the specification of neighbours/connectivity, and timwin/freqwin. If
+  % nothing is defined, fall back to the default as mentioned in the
+  % docstring, which is 'chan'/the second dimension of the reshaped matrix
+  dimtok = tokenize(dimord, '_');
+  feat   = dimtok;
+
+  if ~isempty(cfg.timwin)
+    % this suggests 'smoothing' across time/freq, i.e. to not use 'time'
+    feat = setdiff(feat, {'time'});
   end
+  if ~isempty(cfg.freqwin)
+    feat = setdiff(feat, {'freq'});
+  end
+  if ~isempty(cfg.neighbours) || ~isempty(cfg.connectivity)
+    feat = setdiff(feat, {'chan'});
+  end
+
+  if numel(feat)==numel(dimtok) && any(strcmp(dimtok, 'chan'))
+    feat = 'chan';
+  elseif numel(feat)==numel(dimtok) && any(strcmp(dimtok, 'dim1'))
+    feat = 'dim1';
+  end
+  cfg.features = feat;
 end
-cfg.features = ft_getopt(cfg, 'features', []);
 
 %% backward compatibility
 cfg.mvpa = ft_checkconfig(cfg.mvpa, 'renamed', {'param', 'hyperparameter'});
@@ -235,18 +265,14 @@ if isfield(cfg,'balance') && ~isempty(cfg.balance)
   cfg = add_to_preprocess(cfg, cfg.balance);
 end
 
-%% get dimension names
-if has_dimord
-  dimtok = tokenize(cfg.dimord, '_');
-  cfg.mvpa.dimension_names = ft_getopt(cfg.mvpa, 'dimension_names', [{'samples'} dimtok]);
-end
+%% set dimension names
+cfg.mvpa.dimension_names = ft_getopt(cfg.mvpa, 'dimension_names', [{'samples'} dimtok]);
 
 %% convert features and generalize from char to integers
 if ischar(cfg.features) || iscell(cfg.features)
   if ~iscell(cfg.features),  feat = {cfg.features};
   else, feat = cfg.features;
   end
-  assert(has_dimord, 'if cfg.features is a string then cfg.dimord must exist')
   cfg.features = zeros(1, numel(feat));
   for ix = 1:numel(feat)
     find_ix = find(ismember(cfg.mvpa.dimension_names, feat{ix}));
@@ -273,11 +299,11 @@ if ~isempty(cfg.features)
 end
 
 %% transform neighbours into boolean matrix if necessary
-if isempty(cfg.mvpa.neighbours) && has_dim && has_dimord
+if isempty(cfg.mvpa.neighbours)
   if ~isempty(cfg.timwin) && ~any(contains(dimtok_search, 'time'))
     ft_warning('ignoring cfg.timwin because time is not a search dimension')
   end
-  if ~isempty(cfg.freqwin) && ~any(contains(dimtok_search, 'f'))
+  if ~isempty(cfg.freqwin) && ~any(contains(dimtok_search, 'freq'))
     ft_warning('ignoring cfg.freqwin because freq is not a search dimension')
   end
   if (~isempty(cfg.neighbours) || ~isempty(cfg.connectivity)) && ~any(contains(dimtok_search, 'chan'))
@@ -364,36 +390,27 @@ if isempty(cfg.mvpa.model)
   end
 else
   % -------- Regression --------
-  [perf, result] = mv_regress(cfg.mvpa, dat, design);
-end
-
-% build dimord from result struct
-if has_dimord
-  if ~iscell(perf)
-    dimord = strrep(result.perf_dimension_names, ' ', '');
-  else 
-    % more than one output metric is requested, use the first one for the dimord
-    dimord = strrep(result.perf_dimension_names{1}, ' ', '');
-  end
-  if iscell(dimord), dimord = strjoin(dimord, '_'); end
+  [perf, result] = mv_regress(cfg.mvpa, dat, design');
 end
 
 if ~iscell(cfg.mvpa.metric), cfg.mvpa.metric = {cfg.mvpa.metric}; end
-if ~iscell(perf),            perf            = {perf};            end
+if ~iscell(result.perf),     result.perf     = {result.perf};     end
+if ~iscell(result.perf_std), result.perf_std = {result.perf_std}; end
 
 %% setup stat struct
 stat = [];
-for mm=1:numel(perf)
+for mm=1:numel(cfg.mvpa.metric)
   
-  % Performance metric
-  stat.(cfg.mvpa.metric{mm}) = perf{mm};
-  
-  % Std of performance
-  if iscell(result.perf_std)
-    stat.([cfg.mvpa.metric{mm} '_std']) = result.perf_std{mm};
+  if strcmp(cfg.mvpa.metric{mm}, 'none')
+    % This is a special case, skip for now  
   else
-    stat.([cfg.mvpa.metric{mm} '_std']) = result.perf_std;
+    % Performance metric
+    stat.(cfg.mvpa.metric{mm})          = result.perf{mm};
+    stat.([cfg.mvpa.metric{mm} '_std']) = result.perf_std{mm};
+    outdimord = strjoin(strrep(result.perf_dimension_names{mm}, ' ', ''), '_');
+    stat.dimord = outdimord;
   end
+
 end
 
 % return the MVPA-Light result struct as well
@@ -407,19 +424,16 @@ if isfield(cfg, 'frequency')
 end
 
 if exist('label', 'var'),     stat.label  = label;  end
-if exist('dim', 'var'),       stat.dim    = dim;    end
-if exist('dimord', 'var'),    cfg.dimord  = dimord; end % stat.dimord is overwritten by cfg.dimord in the caller, hence it's useless to set stat.dimord here
+if exist('outdimord', 'var'), cfg.dimord  = dimord; end % stat.dimord is overwritten by cfg.dimord in the caller, hence it's useless to set stat.dimord here
 if exist('frequency', 'var'), stat.freq   = frequency; end
 if exist('time', 'var'),      stat.time   = time; end
 
 % helper functions
-  function cfg = add_to_preprocess(cfg, item)
-    if ~isfield(cfg.mvpa,'preprocess')
-      cfg.mvpa.preprocess = item;
-    elseif ~iscell(cfg.mvpa.preprocess)
-      cfg.mvpa.preprocess = {item cfg.mvpa.preprocess};
-    else
-      cfg.mvpa.preprocess = [{item} cfg.mvpa.preprocess];
-    end
-  end
+function cfg = add_to_preprocess(cfg, item)
+if ~isfield(cfg.mvpa,'preprocess')
+  cfg.mvpa.preprocess = item;
+elseif ~iscell(cfg.mvpa.preprocess)
+  cfg.mvpa.preprocess = {item cfg.mvpa.preprocess};
+else
+  cfg.mvpa.preprocess = [{item} cfg.mvpa.preprocess];
 end
