@@ -208,8 +208,9 @@ else
     dimord = cat(2, dimord, '_', sprintf('dim%d',k));
   end
 end
+dimtok = tokenize(dimord, '_');
 
-if numel(dim) ~= numel(tokenize(dimord, '_'))
+if numel(dim) ~= numel(dimtok)
   ft_error('the dim and dimord are inconsistent');
 end
 
@@ -225,7 +226,6 @@ if ~isfield(cfg, 'features')
   % on the specification of neighbours/connectivity, and timwin/freqwin. If
   % nothing is defined, fall back to the default as mentioned in the
   % docstring, which is 'chan'/the second dimension of the reshaped matrix
-  dimtok = tokenize(dimord, '_');
   feat   = dimtok;
 
   if ~isempty(cfg.timwin)
@@ -282,7 +282,6 @@ if ischar(cfg.features) || iscell(cfg.features)
 end
 
 if ischar(cfg.generalize)
-  assert(has_dimord, 'if cfg.generalize is a string then cfg.dimord must exist')
   cfg.generalize = find(ismember(cfg.mvpa.dimension_names, cfg.generalize));
   if isempty(cfg.generalize)
     ft_error(sprintf('cfg.generalize = ''%s'' is not contained in cfg.dimord', cfg.generalize))
@@ -407,8 +406,14 @@ for mm=1:numel(cfg.mvpa.metric)
     % Performance metric
     stat.(cfg.mvpa.metric{mm})          = result.perf{mm};
     stat.([cfg.mvpa.metric{mm} '_std']) = result.perf_std{mm};
-    outdimord = strjoin(strrep(result.perf_dimension_names{mm}, ' ', ''), '_');
-    stat.dimord = outdimord;
+    try
+      if numel(cfg.mvpa.metric)==1
+        outdimord = strjoin(strrep(result.perf_dimension_names{1}, ' ', ''), '_');
+      else
+        outdimord = strjoin(strrep(result.perf_dimension_names{mm}, ' ', ''), '_');
+      end
+      stat.dimord = outdimord;
+    end
   end
 
 end
