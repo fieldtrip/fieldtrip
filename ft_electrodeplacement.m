@@ -1823,7 +1823,7 @@ function cb_shinybutton(h10, eventdata)
 
 h = getparent(h10);
 opt = getappdata(h, 'opt');
-opt.shiny = get(h10, 'value')
+opt.shiny = get(h10, 'value');
 setappdata(h, 'opt', opt);
 if opt.shiny == true
   material shiny
