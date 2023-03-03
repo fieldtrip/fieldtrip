@@ -410,7 +410,7 @@ switch cfg.method
       'HandleVisibility', 'on', ...
       'Callback', @cb_globalbutton);
 
-    hscatter = uicontrol('Style', 'checkbox',...
+    h11 = uicontrol('Style', 'checkbox',...
       'Parent', h, ...
       'Value', 0, ...
       'String', 'Scatter',...
@@ -420,7 +420,7 @@ switch cfg.method
       'HandleVisibility', 'on', ...
       'Callback', @cb_scatterbutton);
 
-    hscan = uicontrol('Style', 'checkbox',...
+    h12 = uicontrol('Style', 'checkbox',...
       'Parent', h, ...
       'Value', 0, ...
       'String', 'CT/MRI',...
@@ -430,7 +430,7 @@ switch cfg.method
       'HandleVisibility', 'on', ...
       'Visible', 'off', ...
       'Callback', @cb_scanbutton);
-    if numel(mri)>1; set(hscan, 'Visible', 'on'); end % only when two scans are given as input
+    if numel(mri)>1; set(h12, 'Visible', 'on'); end % only when two scans are given as input
 
     % zoom slider
     h10text = uicontrol('Style', 'text',...
@@ -453,7 +453,7 @@ switch cfg.method
     opt               = [];
     opt.method        = 'volume'; % this is to distinguish between volume and headshape in the callbacks
     opt.label         = chanlabel;
-    opt.handlesaxes   = [mri{1}.axes(1) mri{1}.axes(2) mri{1}.axes(3) h4 h5 h6 h7 h8 h9 h10 hscatter hscan];
+    opt.handlesaxes   = [mri{1}.axes(1) mri{1}.axes(2) mri{1}.axes(3) h4 h5 h6 h7 h8 h9 h10 h11 h12];
     opt.mainfig       = h;
     opt.quit          = false;
     opt.update        = [1 1 1];
@@ -472,8 +472,8 @@ switch cfg.method
     opt.magtype       = cfg.magtype;
     opt.showmarkers   = true;
     opt.global        = get(h9, 'Value'); % show all markers in the current slices
-    opt.scatter       = get(hscatter, 'Value'); % additional scatterplot
-    opt.scan          = get(hscan, 'Value'); % switch scans
+    opt.scatter       = get(h11, 'Value'); % additional scatterplot
+    opt.scan          = get(h12, 'Value'); % switch scans
     opt.slim          = [.9 1]; % 90% - maximum
     opt.markerlab     = markerlab;
     opt.markerpos     = markerpos;
@@ -532,7 +532,7 @@ switch cfg.method
       'Value', 1, ...
       'String', 'Surface', ...
       'Units', 'normalized', ...
-      'Position', [.8 0.70 .2 .05], ...
+      'Position', [.8 0.75 .2 .05], ...
       'BackgroundColor', [1 1 1], ...
       'HandleVisibility', 'on', ...
       'Callback', @cb_surfacebutton);
@@ -542,7 +542,7 @@ switch cfg.method
       'Value', 0, ...
       'String', 'Labels', ...
       'Units', 'normalized', ...
-      'Position', [.8 0.65 .2 .05], ...
+      'Position', [.8 0.70 .2 .05], ...
       'BackgroundColor', [1 1 1], ...
       'HandleVisibility', 'on', ...
       'Callback', @cb_labelsbutton);
@@ -553,7 +553,7 @@ switch cfg.method
         'Value', 1, ...
         'String', 'Colors', ...
         'Units', 'normalized', ...
-        'Position', [.8 0.60 .2 .05], ...
+        'Position', [.8 0.65 .2 .05], ...
         'BackgroundColor', [1 1 1], ...
         'HandleVisibility', 'on', ...
         'Callback', @cb_colorsbutton);
@@ -562,19 +562,28 @@ switch cfg.method
     h10 = uicontrol('Style', 'checkbox',...
       'Parent', h, ...
       'Value', 1, ...
-      'String', 'Shiny',...
+      'String', 'Camlight', ...
+      'Units', 'normalized', ...
+      'Position', [.8 0.60 .2 .05],...
+      'BackgroundColor', [1 1 1], ...
+      'HandleVisibility', 'on', ...
+      'Callback', @cb_camlight);
+
+    h11 = uicontrol('Style', 'checkbox',...
+      'Parent', h, ...
+      'Value', 1, ...
+      'String', 'Shiny', ...
       'Units', 'normalized', ...
       'Position', [.8 0.55 .2 .05],...
       'BackgroundColor', [1 1 1], ...
       'HandleVisibility', 'on', ...
-      'Callback', @cb_shinybutton);
+      'Callback', @cb_shiny);
 
     % create structure to be passed to gui
     opt               = [];
     opt.method        = 'headshape'; % this is to distinguish between volume and headshape in the callbacks
     opt.headshape     = headshape;
     opt.label         = chanlabel;
-    opt.handlesaxes   = [h1 h8];
     opt.mainfig       = h;
     opt.quit          = false;
     opt.init          = true;
@@ -587,11 +596,12 @@ switch cfg.method
     opt.markerlab     = markerlab;
     opt.markerpos     = markerpos;
     opt.markerdist    = cfg.markerdist; % hidden option
-    opt.shiny         = true;
+    opt.camlight      = get(h10, 'value');
+    opt.shiny         = get(h11, 'value');
 
     setappdata(h, 'opt', opt);
     cb_help(h);
-    cb_headshaperedraw(h);
+    cb_redraw(h);
     view([90, 0]);
 
     while(opt.quit==0)
@@ -855,6 +865,25 @@ function cb_redraw(h, eventdata)
 h   = getparent(h);
 opt = getappdata(h, 'opt');
 
+if nargin<2
+  eventdata = [];
+end
+
+switch opt.method
+  case 'volume'
+    cb_redraw_volume(h, eventdata)
+  case 'headshape'
+    cb_redraw_headshape(h, eventdata)
+end % switch
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function cb_redraw_volume(h, eventdata)
+
+h   = getparent(h);
+opt = getappdata(h, 'opt');
+
 % determine current axes
 set(0, 'CurrentFigure', opt.mainfig);
 curr_ax = get(h, 'currentaxes');
@@ -1033,7 +1062,7 @@ end % if showmarkers
 
 % also update the scatter appendix
 if opt.scatter
-  cb_scatterredraw(h);
+  cb_redraw_scatter(h);
 end
 
 % make the last current axes current again
@@ -1049,7 +1078,7 @@ setappdata(h, 'opt', opt);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function cb_scatterredraw(h, eventdata)
+function cb_redraw_scatter(h, eventdata)
 
 h   = getparent(h);
 opt = getappdata(h, 'opt');
@@ -1188,36 +1217,40 @@ setappdata(h, 'opt', opt);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function cb_headshaperedraw(h, eventdata)
+function cb_redraw_headshape(h, eventdata)
 
 h   = getparent(h);
 opt = getappdata(h, 'opt');
 
 figure(h); % make current figure
 
-delete(findobj(h, 'Type', 'line')); % remove all lines 
-delete(findobj(h, 'Type', 'Patch')); % remove all markers
-delete(findobj(h, 'Type', 'text')); % remove all labels
-delete(findall(h, 'Type','light'))
-delete(findobj(h, 'tag', 'headshape')); % remove the headshape
+delete(findobj(h, 'Type', 'line'));   % remove all lines 
+delete(findobj(h, 'Type', 'Patch'));  % remove all markers
+delete(findobj(h, 'Type', 'text'));   % remove all labels
+delete(findall(h, 'Type', 'light'));  % remove all lights
+delete(findobj(h, 'tag',  'headshape')); % remove the headshape
 
 % plot the faces of the 2D or 3D triangulation
 if ~opt.showsurface
   ft_plot_mesh(removefields(opt.headshape, 'color'), 'tag', 'headshape', 'facecolor', 'none', 'edgecolor', 'none', 'vertexcolor', 'none');
 elseif isfield(opt.headshape, 'color') && opt.showcolors
-  ft_plot_mesh(opt.headshape, 'tag', 'headshape', 'material', 'dull');
+  ft_plot_mesh(opt.headshape, 'tag', 'headshape');
 else
-  ft_plot_mesh(removefields(opt.headshape, 'color'), 'tag', 'headshape', 'facecolor', 'skin', 'material', 'dull', 'edgecolor', 'none', 'facealpha', 1);
+  ft_plot_mesh(removefields(opt.headshape, 'color'), 'tag', 'headshape', 'facecolor', 'skin', 'edgecolor', 'none', 'facealpha', 1);
 end
 
-% apply uniform light from all angles
+% apply some light and reflection for the 3D effect
 lighting gouraud
+if opt.camlight
+  camlight
+else
+  uniformlight
+end
 if opt.shiny
   material shiny
 else
   material dull
 end
-camlight
 % alpha 0.9
 
 if opt.showmarkers
@@ -1288,13 +1321,6 @@ if strcmp(opt.method, 'volume')
     case 'q'
       setappdata(h, 'opt', opt);
       cb_quit(h);
-
-    case 'v' % camlight angle reset
-      delete(findall(h,'Type','light')) % shut out the lights
-      % add a new light from the current camera position
-      lighting gouraud
-      material shiny
-      camlight
 
     case '1'
       subplot(opt.handlesaxes(1));
@@ -1471,11 +1497,12 @@ elseif strcmp(opt.method, 'headshape')
       cb_quit(h);
 
     case 'v' % camlight angle reset
-      cb_headshaperedraw(h);
-      delete(findall(h,'Type','light')) % shut out the lights
-      % add a new light from the current camera position
-      lighting gouraud
-      camlight
+      delete(findall(h, 'Type', 'light')) % shut out the lights
+      if opt.camlight
+        camlight
+      else
+        uniformlight
+      end
 
     otherwise
       % do nothing
@@ -1696,7 +1723,7 @@ if ~isempty(elecidx)
   if strcmp(opt.method, 'volume')
     cb_redraw(h);
   elseif strcmp(opt.method, 'headshape')
-    cb_headshaperedraw(h);
+    cb_redraw_headshape(h);
   end
 end
 
@@ -1799,7 +1826,7 @@ setappdata(h, 'opt', opt);
 if strcmp(opt.method, 'volume')
   cb_redraw(h);
 elseif strcmp(opt.method, 'headshape')
-  cb_headshaperedraw(h);
+  cb_redraw_headshape(h);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1814,21 +1841,39 @@ setappdata(h, 'opt', opt);
 if strcmp(opt.method, 'volume')
   cb_redraw(h);
 elseif strcmp(opt.method, 'headshape')
-  cb_headshaperedraw(h);
+  cb_redraw_headshape(h);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function cb_shinybutton(h10, eventdata)
+function cb_camlight(h10, eventdata)
 
 h = getparent(h10);
 opt = getappdata(h, 'opt');
-opt.shiny = get(h10, 'value');
+opt.camlight = get(h10, 'value');
 setappdata(h, 'opt', opt);
-if opt.shiny == true
+% also apply it to the current figure
+delete(findall(h, 'Type', 'light'));
+if opt.camlight
+  camlight
+else
+  uniformlight
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function cb_shiny(h11, eventdata)
+
+h = getparent(h11);
+opt = getappdata(h, 'opt');
+opt.shiny = get(h11, 'value');
+setappdata(h, 'opt', opt);
+% also apply it to the current figure
+if opt.shiny
   material shiny
-else 
+else
   material dull
 end
 
@@ -1844,7 +1889,7 @@ setappdata(h, 'opt', opt);
 if strcmp(opt.method, 'volume')
   cb_redraw(h);
 elseif strcmp(opt.method, 'headshape')
-  cb_headshaperedraw(h);
+  cb_redraw_headshape(h);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1874,17 +1919,17 @@ cb_redraw(h);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function cb_scatterbutton(hscatter, eventdata)
+function cb_scatterbutton(h11, eventdata)
 
-h = getparent(hscatter);
+h = getparent(h11);
 opt = getappdata(h, 'opt');
-opt.scatter = get(hscatter, 'value'); % update value
+opt.scatter = get(h11, 'value'); % update value
 setappdata(h, 'opt', opt);
 if isfield(opt, 'scatterfig') && ~opt.scatter % if already open but shouldn't, close it
   cb_scattercleanup(opt.scatterfig);
 end
 if opt.scatter
-  cb_scatterredraw(h);
+  cb_redraw_scatter(h);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1912,7 +1957,7 @@ fprintf('=======================================================================
 fprintf(' scatter limits updated to [%.03f %.03f]\n', opt.slim);
 opt.redrawscatter = 1;
 setappdata(h, 'opt', opt);
-cb_scatterredraw(h);
+cb_redraw_scatter(h);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
@@ -1926,7 +1971,7 @@ fprintf('=======================================================================
 fprintf(' scatter limits updated to [%.03f %.03f]\n', opt.slim);
 opt.redrawscatter = 1;
 setappdata(h, 'opt', opt);
-cb_scatterredraw(h);
+cb_redraw_scatter(h);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
@@ -1944,7 +1989,7 @@ if strcmp(get(opt.scatterfig_dcm, 'Enable'), 'on') % update appl and figures
   if strcmp(opt.method, 'volume')
     cb_redraw(h);
   elseif strcmp(opt.method, 'headshape')
-    cb_headshaperedraw(h);
+    cb_redraw_headshape(h);
   end
 end
 
@@ -1980,11 +2025,11 @@ cb_redraw(h);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function cb_scanbutton(hscan, eventdata)
+function cb_scanbutton(h12, eventdata)
 
-h = getparent(hscan);
+h = getparent(h12);
 opt = getappdata(h, 'opt');
-opt.scan = get(hscan, 'value');
+opt.scan = get(h12, 'value');
 
 opt.mri{opt.currmri}.clim = opt.clim; % store current scan's clim
 opt.mri{opt.currmri}.slim = opt.slim; % store current scan's scatter clim
@@ -2003,3 +2048,15 @@ opt.init = true;
 
 setappdata(h, 'opt', opt);
 cb_redraw(h);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function uniformlight
+% place 6 lights uniformly around the object
+l = lightangle(0,  90); set(l, 'Color', 0.45*[1 1 1])
+l = lightangle(0, -90); set(l, 'Color', 0.45*[1 1 1])
+l = lightangle(  0, 0); set(l, 'Color', 0.45*[1 1 1])
+l = lightangle( 90, 0); set(l, 'Color', 0.45*[1 1 1])
+l = lightangle(180, 0); set(l, 'Color', 0.45*[1 1 1])
+l = lightangle(270, 0); set(l, 'Color', 0.45*[1 1 1])
