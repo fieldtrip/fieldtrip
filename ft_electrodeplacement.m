@@ -532,7 +532,7 @@ switch cfg.method
       'Value', 1, ...
       'String', 'Surface', ...
       'Units', 'normalized', ...
-      'Position', [.8 0.65 .2 .05], ...
+      'Position', [.8 0.70 .2 .05], ...
       'BackgroundColor', [1 1 1], ...
       'HandleVisibility', 'on', ...
       'Callback', @cb_surfacebutton);
@@ -542,7 +542,7 @@ switch cfg.method
       'Value', 0, ...
       'String', 'Labels', ...
       'Units', 'normalized', ...
-      'Position', [.8 0.6 .2 .05], ...
+      'Position', [.8 0.65 .2 .05], ...
       'BackgroundColor', [1 1 1], ...
       'HandleVisibility', 'on', ...
       'Callback', @cb_labelsbutton);
@@ -553,11 +553,21 @@ switch cfg.method
         'Value', 1, ...
         'String', 'Colors', ...
         'Units', 'normalized', ...
-        'Position', [.8 0.55 .2 .05], ...
+        'Position', [.8 0.60 .2 .05], ...
         'BackgroundColor', [1 1 1], ...
         'HandleVisibility', 'on', ...
         'Callback', @cb_colorsbutton);
     end
+    
+    h10 = uicontrol('Style', 'checkbox',...
+      'Parent', h, ...
+      'Value', 1, ...
+      'String', 'Shiny',...
+      'Units', 'normalized', ...
+      'Position', [.8 0.55 .2 .05],...
+      'BackgroundColor', [1 1 1], ...
+      'HandleVisibility', 'on', ...
+      'Callback', @cb_shinybutton);
 
     % create structure to be passed to gui
     opt               = [];
@@ -577,6 +587,7 @@ switch cfg.method
     opt.markerlab     = markerlab;
     opt.markerpos     = markerpos;
     opt.markerdist    = cfg.markerdist; % hidden option
+    opt.shiny         = true;
 
     setappdata(h, 'opt', opt);
     cb_help(h);
@@ -1184,7 +1195,8 @@ opt = getappdata(h, 'opt');
 
 figure(h); % make current figure
 
-delete(findobj(h, 'Type', 'line')); % remove all lines and markers
+delete(findobj(h, 'Type', 'line')); % remove all lines 
+delete(findobj(h, 'Type', 'Patch')); % remove all markers
 delete(findobj(h, 'Type', 'text')); % remove all labels
 delete(findall(h, 'Type','light'))
 delete(findobj(h, 'tag', 'headshape')); % remove the headshape
@@ -1200,12 +1212,12 @@ end
 
 % apply uniform light from all angles
 lighting gouraud
-l = lightangle(0,  90); set(l, 'Color', 0.45*[1 1 1])
-l = lightangle(0, -90); set(l, 'Color', 0.45*[1 1 1])
-l = lightangle(  0, 0); set(l, 'Color', 0.45*[1 1 1])
-l = lightangle( 90, 0); set(l, 'Color', 0.45*[1 1 1])
-l = lightangle(180, 0); set(l, 'Color', 0.45*[1 1 1])
-l = lightangle(270, 0); set(l, 'Color', 0.45*[1 1 1])
+if opt.shiny
+  material shiny
+else
+  material dull
+end
+camlight
 % alpha 0.9
 
 if opt.showmarkers
@@ -1459,10 +1471,10 @@ elseif strcmp(opt.method, 'headshape')
       cb_quit(h);
 
     case 'v' % camlight angle reset
+      cb_headshaperedraw(h);
       delete(findall(h,'Type','light')) % shut out the lights
       % add a new light from the current camera position
       lighting gouraud
-      material shiny
       camlight
 
     otherwise
@@ -1803,6 +1815,21 @@ if strcmp(opt.method, 'volume')
   cb_redraw(h);
 elseif strcmp(opt.method, 'headshape')
   cb_headshaperedraw(h);
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function cb_shinybutton(h10, eventdata)
+
+h = getparent(h10);
+opt = getappdata(h, 'opt');
+opt.shiny = get(h10, 'value');
+setappdata(h, 'opt', opt);
+if opt.shiny == true
+  material shiny
+else 
+  material dull
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
