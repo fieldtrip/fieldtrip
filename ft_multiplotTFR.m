@@ -257,7 +257,7 @@ end
 hastime = isfield(data, 'time');
 hasfreq = isfield(data, 'freq');
 
-assert((hastime && hasfreq), 'please use ft_multiplotER for time-only or frequency-only data');
+assert((hastime && hasfreq), 'please use ft_multiplotTFR for time-frequency data only');
 
 xparam = ft_getopt(cfg, 'xparam', 'time');
 yparam = ft_getopt(cfg, 'yparam', 'freq');
