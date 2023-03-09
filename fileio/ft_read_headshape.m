@@ -1346,6 +1346,36 @@ switch fileformat
     shape.hex = shape.hex(:,1:8);
     shape.hex = shape.hex + 1; % this should be one-offset
 
+  case 'gmsh_binary'
+    [nodes, elements] = read_gmsh_binary(filename);
+    shape.pos = nodes.nodes(nodes.indx, :);
+
+    % this file format may contain a mixture of differently shaped elements
+    fnames = fieldnames(elements);
+    for k=1:numel(fnames)
+      el = elements.(fnames{k});
+      switch fnames{k}
+        case 'lines'
+          shape.line = el;
+        case 'triangles'
+          shape.tri = el;
+        case 'tetrahedra'
+          shape.tet = el;
+        case 'hexahedra'
+          shape.hex = el;
+        case 'lines_tag'
+          shape.tag_line = el;
+        case 'triangles_tag'
+          shape.tag_tri = el;
+        case 'tetrahedra_tag'
+          shape.tag_tet = el;
+        case 'hexahedra_tag'
+          shape.tag_hex = el;
+        otherwise
+          ft_warning('skipping element field %s', fnames{k});
+      end
+    end
+    
   case {'neurojson_jmesh' 'neurojson_bmesh'}
     % see https://github.com/NeuroJSON/jmesh/blob/master/JMesh_specification.md
     ft_hastoolbox('jsonlab', 1);
