@@ -1599,6 +1599,10 @@ elseif filetype_check_extension(filename, '.tsv') && filetype_check_header(filen
   type = 'eegsynth_tsv';
   manufacturer = 'EEGsynth recordtrigger';
   content = 'events';
+elseif filetype_check_extension(filename, '.msh') && filetype_check_header(filename, '$MeshFormat') && filetype_check_header(filename, 49, 16)
+  type = 'gmsh_binary';
+  manufacturer = 'gmsh team';
+  content = 'geometrical meshes';
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
