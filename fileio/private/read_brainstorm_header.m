@@ -38,9 +38,9 @@ hdr.orig        = sFile.header;
 hdr.nChans      = sFile.header.num_channels;
 hdr.Fs          = sFile.header.sample_rate;
 if isfield(sFile.epochs, 'samples')     
-  hdr.nSamples    = round(sFile.epochs.samples(end) - sFile.epochs.samples(1) + 1);
+  hdr.nSamples    = sFile.epochs.samples(end) - sFile.epochs.samples(1) + 1;
 elseif isfield(sFile.epochs, 'times') % accommodates a change to in_fopen_nk in 2021
-  hdr.nSamples    = round((sFile.epochs.times(end) - sFile.epochs.times(1)) * hdr.Fs) + 1;
+  hdr.nSamples    = (sFile.epochs.times(end) - sFile.epochs.times(1)) * hdr.Fs + 1;
 end
 hdr.nSamplesPre = 0;
 hdr.nTrials     = length(sFile.epochs);
