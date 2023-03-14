@@ -1346,6 +1346,11 @@ switch fileformat
     shape.hex = shape.hex(:,1:8);
     shape.hex = shape.hex + 1; % this should be one-offset
 
+    %   case 'gmsh_binary'
+    %     % use the SimNIBS reader, this is an alternative to READ_GMSH_BINARY but it has some limitations
+    %     shape = mesh_load_gmsh4(filename);
+    %     shape = fixpos(shape);
+
   case 'gmsh_binary'
     [nodes, elements] = read_gmsh_binary(filename);
     shape.pos = nodes.nodes(nodes.indx, :);
