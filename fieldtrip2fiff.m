@@ -105,8 +105,9 @@ info.chs      = sens2fiff(data);
 info.nchan    = numel(data.label);
 
 if israw
-  [outfid, cals] = fiff_start_writing_raw(fifffile, info);
-  fiff_write_raw_buffer(outfid, data.trial{1}, cals);
+  FIFF = fiff_define_constants; % some constants are not defined in the MATLAB function
+  [outfid, cals] = fiff_start_writing_raw(fifffile, info);%, [], class(data.trial{1}));
+  fiff_write_double(outfid, FIFF.FIFF_DATA_BUFFER, diag(1./cals)*data.trial{1});
   fiff_finish_writing_raw(outfid);
   
   % write events, if they exists
