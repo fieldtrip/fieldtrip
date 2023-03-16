@@ -472,7 +472,7 @@ elseif iseeg
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       lf = eeg_leadfieldb(dippos, sens.elecpos, headmodel);
 
-    case 'openmeeg'
+    case {'openmeeg','openmeegHArtMuT_dipole'}
       ft_hastoolbox('openmeeg', 1);
 
       dsm         = ft_getopt(varargin, 'dsm');
@@ -483,7 +483,88 @@ elseif iseeg
         dsm            = ft_sysmat_openmeeg(dippos, headmodel, sens, nonadaptive);
       end
       lf               = ds2sens + h2sens*headmodel.mat*dsm;
+      
+    case {'openmeegHArtMuT_tripole'}
+            ft_hastoolbox('openmeeg', 1);
+            nonadaptive = ft_getopt(varargin, 'nonadaptive');
+            
 
+            if isfield(headmodel,'locs')
+                locs = headmodel.locs;
+            else
+                locs=[-1.6 0 3.2];
+            end
+            if isfield(headmodel,'amps')
+                amps = headmodel.amps;
+            else
+                amps=[-1 2 -1];
+            end
+            
+            [h2sens,ds2sens] = ft_sensinterp_openmeeg(dippos, headmodel, sens);
+            
+            brainsources=is_inside(dippos,headmodel.bnd(end));
+            %missing eye sourcees:
+            %eyesources = Bla
+            %brainsources = brainsources | eysources
+            
+            lf=nan(size(h2sens,1),size(dippos,1)*3);
+            brainsources2=reshape(repmat(brainsources,1,3)',[],1);           
+            if sum(brainsources)>0
+                dsm            = ft_sysmat_openmeeg(dippos(brainsources,:), headmodel, sens, nonadaptive);
+                lf(:,brainsources2)      = h2sens*headmodel.mat*dsm;
+            end
+            if sum(~brainsources)>0
+                trippos=dippos(~brainsources,:);
+                trippos=repmat(trippos,1,1,3);
+                trippos=permute(trippos,[1 3 2]);
+                tripposx=trippos;
+                tripposx(:,:,1)=bsxfun(@plus,locs,tripposx(:,:,1));
+                tripposy=trippos;
+                tripposy(:,:,2)=bsxfun(@plus,locs,tripposy(:,:,2));
+                tripposz=trippos;
+                tripposz(:,:,3)=bsxfun(@plus,locs,tripposz(:,:,3));
+                failsx=~is_inside(tripposx(:,3,:),headmodel.bnd(1))|~is_inside(tripposx(:,1,:),headmodel.bnd(1))|...
+                    is_inside(tripposx(:,3,:),headmodel.bnd(2))|is_inside(tripposx(:,1,:),headmodel.bnd(2));
+                failsy=~is_inside(tripposy(:,3,:),headmodel.bnd(1))|~is_inside(tripposy(:,1,:),headmodel.bnd(1))|...
+                    is_inside(tripposy(:,3,:),headmodel.bnd(2))|is_inside(tripposy(:,1,:),headmodel.bnd(2));
+                failsz=~is_inside(tripposz(:,3,:),headmodel.bnd(1))|~is_inside(tripposz(:,1,:),headmodel.bnd(1))|...
+                    is_inside(tripposz(:,3,:),headmodel.bnd(2))|is_inside(tripposz(:,1,:),headmodel.bnd(2));
+                tripmod=locs;
+                while   any(failsx)
+                    tripmod=tripmod/2;
+                    tripposx(failsx,:,1)=bsxfun(@plus,tripmod,trippos(failsx,:,1));
+                    failsx=~is_inside(tripposx(:,3,:),headmodel.bnd(1))|~is_inside(tripposx(:,1,:),headmodel.bnd(1))|...
+                        is_inside(tripposx(:,3,:),headmodel.bnd(2))|is_inside(tripposx(:,1,:),headmodel.bnd(2));
+                end
+                tripmod=locs;
+                while   any(failsy)
+                    tripmod=tripmod/2;
+                    tripposy(failsy,:,2)=bsxfun(@plus,tripmod,trippos(failsy,:,2));
+                    failsy=~is_inside(tripposy(:,3,:),headmodel.bnd(1))|~is_inside(tripposy(:,1,:),headmodel.bnd(1))|...
+                        is_inside(tripposy(:,3,:),headmodel.bnd(2))|is_inside(tripposy(:,1,:),headmodel.bnd(2));                   
+                end
+                tripmod=locs;
+                while   any(failsz)
+                    tripmod=tripmod/2;
+                    tripposz(failsz,:,3)=bsxfun(@plus,tripmod,trippos(failsz,:,3));
+                    failsz=~is_inside(tripposz(:,3,:),headmodel.bnd(1))|~is_inside(tripposz(:,1,:),headmodel.bnd(1))|...
+                        is_inside(tripposz(:,3,:),headmodel.bnd(2))|is_inside(tripposz(:,1,:),headmodel.bnd(2));
+                end
+                msm              = openmeeg_msm(reshape(tripposx(:,2,:),size(tripposx,1),size(tripposx,3)), headmodel, sens, nonadaptive);
+                msm1_1           = openmeeg_msm(reshape(tripposx(:,1,:),size(tripposx,1),size(tripposx,3)), headmodel, sens, nonadaptive);
+                msm1_2           = openmeeg_msm(reshape(tripposx(:,3,:),size(tripposx,1),size(tripposx,3)), headmodel, sens, nonadaptive);
+                msm2_1           = openmeeg_msm(reshape(tripposy(:,1,:),size(tripposx,1),size(tripposx,3)), headmodel, sens, nonadaptive);
+                msm2_2           = openmeeg_msm(reshape(tripposy(:,3,:),size(tripposx,1),size(tripposx,3)), headmodel, sens, nonadaptive);
+                msm3_1           = openmeeg_msm(reshape(tripposz(:,1,:),size(tripposx,1),size(tripposx,3)), headmodel, sens, nonadaptive);
+                msm3_2           = openmeeg_msm(reshape(tripposz(:,3,:),size(tripposx,1),size(tripposx,3)), headmodel, sens, nonadaptive);
+                tripoles=nan(size(msm,1),size(msm,2),3);
+                tripoles(:,:,1)=amps(1)*msm1_1+amps(2)*msm+amps(3)*msm1_2;
+                tripoles(:,:,2)=amps(1)*msm2_1+amps(2)*msm+amps(3)*msm2_2;
+                tripoles(:,:,3)=amps(1)*msm3_1+amps(2)*msm+amps(3)*msm3_2;
+                tripoles=reshape(permute(tripoles,[1 3 2]),size(tripoles,1),[]);
+                lf(:,~brainsources2)     = h2sens*headmodel.mat*tripoles;
+            end
+            
     case {'infinite_currentdipole' 'infinite'}
       lf = eeg_infinite_dipole(dippos, sens.elecpos, headmodel);
 

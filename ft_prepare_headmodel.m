@@ -286,7 +286,7 @@ switch cfg.method
     end
     headmodel = ft_headmodel_asa(cfg.headmodel);
 
-  case {'bemcp' 'dipoli' 'openmeeg'}
+  case {'bemcp' 'dipoli' 'openmeeg' 'openmeegHArtMuT_dipole' 'openmeegHArtMuT_tripole'}
     % the low-level functions all need a mesh
     if isfield(data, 'pos') && isfield(data, 'tri')
       if ~isfield(cfg, 'numvertices') || isempty(cfg.numvertices) || isequal(cfg.numvertices, arrayfun(@(x) size(x.pos, 1), data))

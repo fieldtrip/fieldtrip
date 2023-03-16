@@ -119,6 +119,11 @@ switch ft_headmodeltype(headmodel)
     [pos, tri] = headsurface(headmodel, [], 'inwardshift', inwardshift, 'surface', 'brain');
     inside = surface_inside(dippos, pos, tri);
 
+  case {'openmeegHArtMuT_dipole', 'openmeegHArtMuT_tripole'}
+    % this is a model with a realistic shape described by a triangulated boundary
+    [pos, tri] = headsurface(headmodel, [], 'inwardshift', inwardshift, 'surface', 'skin');
+    inside = surface_inside(dippos, pos, tri);
+
   case {'simbio', 'duneuro'}
     % this is a model with hexaheders or tetraheders
     if isfield(headmodel, 'tet')
