@@ -3,9 +3,10 @@ function [mesh_realigned] = ft_meshrealign(cfg, mesh)
 % FT_MESHREALIGN rotates, translates and optionally scales a surface description of
 % the head or of the cortex. The different methods are described in detail below.
 %
-% INTERACTIVE - This displays the mesh surface together with the axis of the
-% coordinate system, and you manually (using the graphical user interface) adjust the
-% rotation, translation and scaling parameters.
+% INTERACTIVE - This displays the mesh surface together with an anatomical MRI, with
+% a head model, with electrodes, with gradiometers, with optodes, or simply with the
+% axis of the coordinate system, and you manually (using the graphical user
+% interface) adjust the rotation, translation and scaling parameters.
 %
 % FIDUCIAL - The coordinate system is updated according to the definition of the
 % coordinates of anatomical landmarks or fiducials that are specified in the
@@ -32,6 +33,14 @@ function [mesh_realigned] = ft_meshrealign(cfg, mesh)
 % mesh. If the fiducials are not specified in the configuration, the mesh is
 % displayed and you have to click on the fidicuals.
 %
+% When cfg.method = 'fiducial' you can specify
+%   cfg.mri            = structure, see FT_READ_MRI
+%   cfg.headmodel      = structure, see FT_PREPARE_HEADMODEL
+%   cfg.elec           = structure, see FT_READ_SENS
+%   cfg.grad           = structure, see FT_READ_SENS
+%   cfg.opto           = structure, see FT_READ_SENS
+% If none of these is specified, the x-, y- and z-axes will be shown.
+%
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
 %   cfg.outputfile  =  ...
@@ -42,7 +51,7 @@ function [mesh_realigned] = ft_meshrealign(cfg, mesh)
 %
 % See also FT_READ_HEADSHAPE, FT_PREPARE_MESH, FT_ELECTRODEREALIGN, FT_VOLUMEREALIGN
 
-% Copyrights (C) 2017-2022, Robert Oostenveld
+% Copyrights (C) 2017-2023, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -96,6 +105,11 @@ cfg.fiducial     = ft_getopt(cfg, 'fiducial');
 cfg.fiducial.nas = ft_getopt(cfg.fiducial, 'nas');
 cfg.fiducial.lpa = ft_getopt(cfg.fiducial, 'lpa');
 cfg.fiducial.rpa = ft_getopt(cfg.fiducial, 'rpa');
+cfg.mri          = ft_getopt(cfg, 'mri');
+cfg.headmodel    = ft_getopt(cfg, 'headmodel');
+cfg.elec         = ft_getopt(cfg, 'elec');
+cfg.grad         = ft_getopt(cfg, 'grad');
+cfg.opto         = ft_getopt(cfg, 'opto');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % the actual computation is done in the middle part
@@ -111,12 +125,38 @@ switch cfg.method
 
     tmpcfg = [];
     tmpcfg.unit = mesh_realigned.unit;
-    tmpcfg.template.axes = 'yes';
-    tmpcfg.template.headshape.pos       = zeros(3,3);           % three vertices
-    tmpcfg.template.headshape.tri       = [1 2 3];              % one triangle
-    tmpcfg.template.headshape.unit      = mesh_realigned.unit;  % give it the same units
-    tmpcfg.template.headshape.coordsys  = cfg.coordsys;         % this is the target coordsys
-    tmpcfg.template.headshapestyle = {'vertexcolor', 'none', 'edgecolor', 'none', 'facecolor', 'none'};
+    tmpcfg.template = [];
+    if ~isempty(cfg.mri)
+      tmpcfg.template.mri = cfg.mri;
+      % show the MRI with the intersection of the mesh
+      tmpcfg.showalpha = 'no';
+      tmpcfg.showlight = 'no';
+      tmpcfg.template.mristyle = {'facealpha', 1};
+      tmpcfg.individual.headshapestyle = {'facealpha', 0}; % this is for the mesh that is to be moved/rotated/scaled
+    end
+    if ~isempty(cfg.headmodel)
+      tmpcfg.template.headmodel = cfg.headmodel;
+    end      
+    if ~isempty(cfg.elec)
+      tmpcfg.template.elec = cfg.elec;
+    end      
+    if ~isempty(cfg.grad)
+      tmpcfg.template.grad = cfg.grad;
+    end      
+    if ~isempty(cfg.opto)
+      tmpcfg.template.opto = cfg.opto;
+    end      
+    if isempty(tmpcfg.template)
+      % only show the axes
+      tmpcfg.template.axes = 'yes';
+      tmpcfg.template.headshape.pos       = zeros(3,3);           % three vertices
+      tmpcfg.template.headshape.tri       = [1 2 3];              % one triangle
+      tmpcfg.template.headshape.unit      = mesh_realigned.unit;  % give it the same units
+      tmpcfg.template.headshape.coordsys  = cfg.coordsys;         % this is the target coordsys
+      tmpcfg.template.headshapestyle = {'vertexcolor', 'none', 'edgecolor', 'none', 'facecolor', 'none'};
+    end
+
+    % this is the mesh that is to be moved/rotated/scaled
     tmpcfg.individual.headshape = mesh_realigned;
     tmpcfg = ft_interactiverealign(tmpcfg);
     % keep the homogenous transformation
