@@ -4,9 +4,9 @@ function [mesh_realigned] = ft_meshrealign(cfg, mesh)
 % the head or of the cortex. The different methods are described in detail below.
 %
 % INTERACTIVE - This displays the mesh surface together with an anatomical MRI, with
-% electrodes, with gradiometers, or simply with the axis of the coordinate system,
-% and you manually (using the graphical user interface) adjust the rotation,
-% translation and scaling parameters.
+% a head model, with electrodes, with gradiometers, with optodes, or simply with the
+% axis of the coordinate system, and you manually (using the graphical user
+% interface) adjust the rotation, translation and scaling parameters.
 %
 % FIDUCIAL - The coordinate system is updated according to the definition of the
 % coordinates of anatomical landmarks or fiducials that are specified in the
@@ -38,7 +38,6 @@ function [mesh_realigned] = ft_meshrealign(cfg, mesh)
 %   cfg.grad           = structure, see FT_READ_SENS
 %   cfg.opto           = structure, see FT_READ_SENS
 %   cfg.headmodel      = structure, see FT_PREPARE_HEADMODEL
-%   cfg.headshape      = structure, see FT_READ_HEADSHAPE
 %   cfg.mri            = structure, see FT_READ_MRI
 % If none of these is specified, the x-, y- and z-axes will be shown.
 %
@@ -106,12 +105,11 @@ cfg.fiducial     = ft_getopt(cfg, 'fiducial');
 cfg.fiducial.nas = ft_getopt(cfg.fiducial, 'nas');
 cfg.fiducial.lpa = ft_getopt(cfg.fiducial, 'lpa');
 cfg.fiducial.rpa = ft_getopt(cfg.fiducial, 'rpa');
-cfg.headshape    = ft_getopt(cfg, 'headshape');
+cfg.mri          = ft_getopt(cfg, 'mri');
 cfg.headmodel    = ft_getopt(cfg, 'headmodel');
 cfg.elec         = ft_getopt(cfg, 'elec');
 cfg.grad         = ft_getopt(cfg, 'grad');
 cfg.opto         = ft_getopt(cfg, 'opto');
-cfg.mri          = ft_getopt(cfg, 'mri');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % the actual computation is done in the middle part
@@ -128,9 +126,14 @@ switch cfg.method
     tmpcfg = [];
     tmpcfg.unit = mesh_realigned.unit;
     tmpcfg.template = [];
-    if ~isempty(cfg.headshape)
-      tmpcfg.template.headshape = cfg.headshape;
-    end      
+    if ~isempty(cfg.mri)
+      tmpcfg.template.mri = cfg.mri;
+      % show the MRI with the intersection of the mesh
+      tmpcfg.showalpha = 'no';
+      tmpcfg.showlight = 'no';
+      tmpcfg.template.mristyle = {'facealpha', 1};
+      tmpcfg.individual.headshapestyle = {'facealpha', 0}; % this is for the mesh that is to be moved/rotated/scaled
+    end
     if ~isempty(cfg.headmodel)
       tmpcfg.template.headmodel = cfg.headmodel;
     end      
@@ -143,14 +146,6 @@ switch cfg.method
     if ~isempty(cfg.opto)
       tmpcfg.template.opto = cfg.opto;
     end      
-    if ~isempty(cfg.mri)
-      tmpcfg.template.mri = cfg.mri;
-      % show the MRI with the intersection of the mesh
-      tmpcfg.showalpha = 'no';
-      tmpcfg.showlight = 'no';
-      tmpcfg.template.mristyle = {'facealpha', 1};
-      tmpcfg.individual.headshapestyle = {'facealpha', 0}; % this is for the mesh we are working on
-    end
     if isempty(tmpcfg.template)
       % only show the axes
       tmpcfg.template.axes = 'yes';
@@ -161,7 +156,7 @@ switch cfg.method
       tmpcfg.template.headshapestyle = {'vertexcolor', 'none', 'edgecolor', 'none', 'facecolor', 'none'};
     end
 
-    % this is the object that is to be moved/rotated/scaled
+    % this is the mesh that is to be moved/rotated/scaled
     tmpcfg.individual.headshape = mesh_realigned;
     tmpcfg = ft_interactiverealign(tmpcfg);
     % keep the homogenous transformation
