@@ -34,11 +34,11 @@ function [mesh_realigned] = ft_meshrealign(cfg, mesh)
 % displayed and you have to click on the fidicuals.
 %
 % When cfg.method = 'fiducial' you can specify
+%   cfg.mri            = structure, see FT_READ_MRI
+%   cfg.headmodel      = structure, see FT_PREPARE_HEADMODEL
 %   cfg.elec           = structure, see FT_READ_SENS
 %   cfg.grad           = structure, see FT_READ_SENS
 %   cfg.opto           = structure, see FT_READ_SENS
-%   cfg.headmodel      = structure, see FT_PREPARE_HEADMODEL
-%   cfg.mri            = structure, see FT_READ_MRI
 % If none of these is specified, the x-, y- and z-axes will be shown.
 %
 % To facilitate data-handling and distributed computing you can use

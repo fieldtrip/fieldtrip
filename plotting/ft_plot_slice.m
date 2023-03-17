@@ -31,7 +31,7 @@ function [surfhandle, T2] = ft_plot_slice(dat, varargin)
 %   'interpmethod' = string specifying the method for the interpolation, see INTERPN (default = 'nearest')
 %   'colormap'     = string, see COLORMAP
 %   'clim'         = 1x2 vector specifying the min and max for the colorscale
-%   'facealpha'    = 
+%   'facealpha'    = transparency when no mask is specified, between 0 and 1 (default = 1)
 %
 % You can plot the slices from the volume together with an intersection of the slices
 % with a triangulated surface mesh (e.g. a cortical sheet) using
