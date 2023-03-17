@@ -47,3 +47,14 @@ cfg = [];
 cfg.method = 'interactive';
 cfg.mri = mri;
 ft_meshrealign(cfg, headshape)
+
+%%
+% this should now also work
+
+cfg = [];
+cfg.method = 'interactive';
+cfg.headmodel = [];
+cfg.headmodel.r = 92;
+cfg.headmodel.o = [0 0 40];
+ft_meshrealign(cfg, headshape)
+
