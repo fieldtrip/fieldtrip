@@ -58,3 +58,10 @@ cfg.headmodel.r = 92;
 cfg.headmodel.o = [0 0 40];
 ft_meshrealign(cfg, headshape)
 
+
+%%
+% oh, and this also works
+
+cfg = [];
+cfg.intersectmesh = headshape;
+ft_sourceplot(cfg, mri)
