@@ -1,4 +1,4 @@
-function [h, T2] = ft_plot_slice(dat, varargin)
+function [surfhandle, T2] = ft_plot_slice(dat, varargin)
 
 % FT_PLOT_SLICE plots a single slice that cuts through a 3-D volume and interpolates
 % the data if needed.
@@ -31,6 +31,7 @@ function [h, T2] = ft_plot_slice(dat, varargin)
 %   'interpmethod' = string specifying the method for the interpolation, see INTERPN (default = 'nearest')
 %   'colormap'     = string, see COLORMAP
 %   'clim'         = 1x2 vector specifying the min and max for the colorscale
+%   'facealpha'    = 
 %
 % You can plot the slices from the volume together with an intersection of the slices
 % with a triangulated surface mesh (e.g. a cortical sheet) using
@@ -79,7 +80,7 @@ if isstruct(dat) && isfield(dat, 'anatomy') && isfield(dat, 'transform')
     varargin = ft_setopt(varargin, 'unit', dat.unit);
   end
   dat = dat.anatomy;
-  [h, T2] = ft_plot_slice(dat, varargin{:});
+  [surfhandle, T2] = ft_plot_slice(dat, varargin{:});
   return
 end
 
@@ -124,8 +125,9 @@ interpmethod        = ft_getopt(varargin, 'interpmethod', 'nearest');
 cmap                = ft_getopt(varargin, 'colormap');
 clim                = ft_getopt(varargin, 'clim');
 doscale             = ft_getopt(varargin, 'doscale', true); % only scale when necessary (time consuming), i.e. when plotting as grayscale image & when the values are not between 0 and 1
-h                   = ft_getopt(varargin, 'surfhandle', []);
-p                   = ft_getopt(varargin, 'patchhandle', []);
+surfhandle          = ft_getopt(varargin, 'surfhandle', []);
+patchhandle         = ft_getopt(varargin, 'patchhandle', []);
+tag                 = ft_getopt(varargin, 'tag', ''); % this is used to keep the thee intersecting slices or subplots apart
 
 mesh                = ft_getopt(varargin, 'intersectmesh');
 intersectcolor      = ft_getopt(varargin, 'intersectcolor', 'yrgbmyrgbm');
@@ -135,6 +137,7 @@ intersectlinestyle  = ft_getopt(varargin, 'intersectlinestyle');
 plotmarker          = ft_getopt(varargin, 'plotmarker');
 markersize          = ft_getopt(varargin, 'markersize', 'auto');
 markercolor         = ft_getopt(varargin, 'markercolor', 'w');
+facealpha           = ft_getopt(varargin, 'facealpha', 1); % only applies when no mask is specified
 
 % convert from yes/no/true/false/0/1 into a proper boolean
 doscale = istrue(doscale);
@@ -446,16 +449,18 @@ Zh = reshape(interp_edge_hc(:,3), siz+1);
 % do the actual plotting of the slice
 if ~domask
   % no masked slice to be plotted
-  if isempty(h)
+  if isempty(surfhandle)
     % create surface object
-    h = surface(Xh, Yh, Zh, V);
-    set(h, 'linestyle', 'none');
+    surfhandle = surface(Xh, Yh, Zh, V);
+    set(surfhandle, 'linestyle', 'none');
+    set(surfhandle, 'FaceAlpha', facealpha);
   else
     % update the colordata in the surface object
-    set(h, 'Cdata', V);
-    set(h, 'Xdata', Xh);
-    set(h, 'Ydata', Yh);
-    set(h, 'Zdata', Zh);
+    set(surfhandle, 'Cdata', V);
+    set(surfhandle, 'Xdata', Xh);
+    set(surfhandle, 'Ydata', Yh);
+    set(surfhandle, 'Zdata', Zh);
+    set(surfhandle, 'FaceAlpha', facealpha);
   end
 elseif domask
   % what should be done depends on the maskstyle
@@ -464,22 +469,22 @@ elseif domask
       if dobackground
         ft_warning('specifying maskstyle = ''opacity'' causes the supplied background image not to be used');
       end
-      if isempty(h)
+      if isempty(surfhandle)
         % create surface object
-        h = surface(Xh, Yh, Zh, V);
-        set(h, 'linestyle', 'none');
+        surfhandle = surface(Xh, Yh, Zh, V);
+        set(surfhandle, 'linestyle', 'none');
       else
         % update the colordata in the surface object
-        set(h, 'Cdata', V);
-        set(h, 'Xdata', Xh);
-        set(h, 'Ydata', Yh);
-        set(h, 'Zdata', Zh);
+        set(surfhandle, 'Cdata', V);
+        set(surfhandle, 'Xdata', Xh);
+        set(surfhandle, 'Ydata', Yh);
+        set(surfhandle, 'Zdata', Zh);
       end
       if islogical(Vmask), Vmask = double(Vmask); end
-      set(h, 'FaceColor', 'texture');
-      set(h, 'FaceAlpha', 'texturemap'); %flat
-      set(h, 'AlphaDataMapping', 'scaled');
-      set(h, 'AlphaData', Vmask);
+      set(surfhandle, 'FaceColor', 'texture');
+      set(surfhandle, 'FaceAlpha', 'texturemap'); %flat
+      set(surfhandle, 'AlphaDataMapping', 'scaled');
+      set(surfhandle, 'AlphaData', Vmask);
       if ~isempty(opacitylim)
         alim(opacitylim)
       end
@@ -487,16 +492,16 @@ elseif domask
       if isempty(cmap), error('using ''colormix'' as maskstyle requires an explicitly defined colormap'); end
       if ischar(cmap),  cmap = strrep(cmap, 'default', 'parula'); cmap = ft_colormap(cmap); end
       V = bg_rgba2rgb(Vback,V,cmap,clim,Vmask,'rampup',opacitylim);
-      if isempty(h)
+      if isempty(surfhandle)
         % create surface object
-        h = surface(Xh, Yh, Zh, V);
-        set(h, 'linestyle', 'none');
+        surfhandle = surface(Xh, Yh, Zh, V);
+        set(surfhandle, 'linestyle', 'none');
       else
         % update the colordata in the surface object
-        set(h, 'Cdata', V);
-        set(h, 'Xdata', Xh);
-        set(h, 'Ydata', Yh);
-        set(h, 'Zdata', Zh);
+        set(surfhandle, 'Cdata', V);
+        set(surfhandle, 'Xdata', Xh);
+        set(surfhandle, 'Ydata', Yh);
+        set(surfhandle, 'Zdata', Zh);
       end
     otherwise
       error('unsupported maskstyle');
@@ -534,25 +539,25 @@ if ~isempty(coordsys) && ~strcmp(coordsys, 'unknown')
 
   if isequal(ori, [1 0 0])
     % the slice is perpendicular to the x-axis
-    delete(findall(gca, 'Tag', 'coordsys_label_100')) % remove the labels from the previous call
-    text(loc(1), miny, midz, upper(flipletter(coordsys(2))), 'Color', 'y', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'coordsys_label_100');
-    text(loc(1), maxy, midz, upper(           coordsys(2) ), 'Color', 'y', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'coordsys_label_100');
-    text(loc(1), midy, minz, upper(flipletter(coordsys(3))), 'Color', 'y', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'coordsys_label_100');
-    text(loc(1), midy, maxz, upper(           coordsys(3) ), 'Color', 'y', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'coordsys_label_100');
+    delete(findall(gca, 'Tag', ['coordsyslabel_' tag])) % remove the labels from the previous call
+    text(loc(1), miny, midz, upper(flipletter(coordsys(2))), 'Color', 'y', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', ['coordsyslabel_' tag]);
+    text(loc(1), maxy, midz, upper(           coordsys(2) ), 'Color', 'y', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', ['coordsyslabel_' tag]);
+    text(loc(1), midy, minz, upper(flipletter(coordsys(3))), 'Color', 'y', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', ['coordsyslabel_' tag]);
+    text(loc(1), midy, maxz, upper(           coordsys(3) ), 'Color', 'y', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', ['coordsyslabel_' tag]);
   elseif isequal(ori, [0 1 0])
     % the slice is perpendicular to the y-axis
-    delete(findall(gca, 'Tag', 'coordsys_label_010')) % remove the labels from the previous call
-    text(minx, loc(2), midz, upper(flipletter(coordsys(1))), 'Color', 'y', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'coordsys_label_010');
-    text(maxx, loc(2), midz, upper(           coordsys(1) ), 'Color', 'y', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'coordsys_label_010');
-    text(midx, loc(2), minz, upper(flipletter(coordsys(3))), 'Color', 'y', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'coordsys_label_010');
-    text(midx, loc(2), maxz, upper(           coordsys(3) ), 'Color', 'y', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'coordsys_label_010');
+    delete(findall(gca, 'Tag', ['coordsyslabel_' tag])) % remove the labels from the previous call
+    text(minx, loc(2), midz, upper(flipletter(coordsys(1))), 'Color', 'y', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', ['coordsyslabel_' tag]);
+    text(maxx, loc(2), midz, upper(           coordsys(1) ), 'Color', 'y', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', ['coordsyslabel_' tag]);
+    text(midx, loc(2), minz, upper(flipletter(coordsys(3))), 'Color', 'y', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', ['coordsyslabel_' tag]);
+    text(midx, loc(2), maxz, upper(           coordsys(3) ), 'Color', 'y', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', ['coordsyslabel_' tag]);
   elseif isequal(ori, [0 0 1])
     % the slice is perpendicular to the z-axis
-    delete(findall(gca, 'Tag', 'coordsys_label_001')) % remove the labels from the previous call
-    text(minx, midy, loc(3), upper(flipletter(coordsys(1))), 'Color', 'y', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'coordsys_label_001');
-    text(maxx, midy, loc(3), upper(           coordsys(1) ), 'Color', 'y', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'coordsys_label_001');
-    text(midx, miny, loc(3), upper(flipletter(coordsys(2))), 'Color', 'y', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'coordsys_label_001');
-    text(midx, maxy, loc(3), upper(           coordsys(2) ), 'Color', 'y', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', 'coordsys_label_001');
+    delete(findall(gca, 'Tag', ['coordsyslabel_' tag])) % remove the labels from the previous call
+    text(minx, midy, loc(3), upper(flipletter(coordsys(1))), 'Color', 'y', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', ['coordsyslabel_' tag]);
+    text(maxx, midy, loc(3), upper(           coordsys(1) ), 'Color', 'y', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', ['coordsyslabel_' tag]);
+    text(midx, miny, loc(3), upper(flipletter(coordsys(2))), 'Color', 'y', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', ['coordsyslabel_' tag]);
+    text(midx, maxy, loc(3), upper(           coordsys(2) ), 'Color', 'y', 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Tag', ['coordsyslabel_' tag]);
   end
 end % if coordsys
 
@@ -564,15 +569,15 @@ if dointersect
   v2 = loc + inplane(2,:);
   v3 = loc + inplane(3,:);
 
-  if isempty(p) || length(p)~=length(mesh)
+  if isempty(patchhandle) || length(patchhandle)~=length(mesh)
     % try to find the handles of all patches
-    p = findall(gca, 'type', 'patch');
+    patchhandle = findall(gca, 'tag', ['intersectmesh_' tag]);
   end
 
-  if length(p)~=length(mesh)
-    % the patchhandles do not make sense, start from scratch
-    delete(findall(gca, 'type', 'patch'))
-    p = nan(size(mesh));
+  if length(patchhandle)~=length(mesh)
+    % the patch handles do not make sense, start from scratch
+    delete(findall(gca, 'tag', ['intersectmesh_' tag]))
+    patchhandle = nan(size(mesh));
   end
 
   for k = 1:numel(mesh)
@@ -580,13 +585,14 @@ if dointersect
 
     % draw each individual line segment of the intersection
     if ~isempty(xmesh)
-      if ~ishandle(p(k))
-        p(k) = patch(xmesh', ymesh', zmesh', nan(1, size(xmesh, 1)));
-        if ~isempty(intersectcolor),     set(p(k), 'EdgeColor', intersectcolor(k));  end
-        if ~isempty(intersectlinewidth), set(p(k), 'LineWidth', intersectlinewidth); end
-        if ~isempty(intersectlinestyle), set(p(k), 'LineStyle', intersectlinestyle); end
+      if ~ishandle(patchhandle(k))
+        patchhandle(k) = patch(xmesh', ymesh', zmesh', nan(1, size(xmesh, 1)));
+        set(patchhandle(k), 'tag', ['intersectmesh_' tag]);
+        if ~isempty(intersectcolor),     set(patchhandle(k), 'EdgeColor', intersectcolor(k));  end
+        if ~isempty(intersectlinewidth), set(patchhandle(k), 'LineWidth', intersectlinewidth); end
+        if ~isempty(intersectlinestyle), set(patchhandle(k), 'LineStyle', intersectlinestyle); end
       else
-        set(p(k), 'XData', xmesh', 'YData', ymesh', 'ZData', zmesh', 'FaceVertexCdata', nan(size(xmesh,1),1));
+        set(patchhandle(k), 'XData', xmesh', 'YData', ymesh', 'ZData', zmesh', 'FaceVertexCdata', nan(size(xmesh,1),1));
       end
     end
   end
