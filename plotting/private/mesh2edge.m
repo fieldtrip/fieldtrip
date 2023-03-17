@@ -90,12 +90,15 @@ output.pos = mesh.pos;
 if isfield(mesh, 'tri')
   % these have two vertices in each edge element
   output.line = edge;
+  fprintf('reducing tri to %d edges\n', size(edge,1));
 elseif isfield(mesh, 'tet')
   % these have three vertices in each edge element
   output.tri = edge;
+  fprintf('reducing tet to %d edges\n', size(edge,1));
 elseif isfield(mesh, 'hex')
   % these have four vertices in each edge element
   output.poly = edge;
+  fprintf('reducing hex to %d edges\n', size(edge,1));
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
