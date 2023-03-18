@@ -3019,6 +3019,22 @@ ARRAY+=(fileio/private/remove_vertices.m)
 sync ${ARRAY[*]}
 
 ################################################################################
+# remove_double_vertices.m
+
+ARRAY=()
+ARRAY+=(private/remove_double_vertices.m)
+ARRAY+=(fileio/private/remove_double_vertices.m)
+sync ${ARRAY[*]}
+
+################################################################################
+# remove_unused_vertices.m
+
+ARRAY=()
+ARRAY+=(private/remove_unused_vertices.m)
+ARRAY+=(fileio/private/remove_unused_vertices.m)
+sync ${ARRAY[*]}
+
+################################################################################
 # rename.mexa64
 
 ARRAY=()

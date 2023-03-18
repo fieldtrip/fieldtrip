@@ -123,7 +123,18 @@ switch ft_headmodeltype(headmodel)
     
     % only plot the outer surface of the volume
     surfaceonly = true;
-    
+
+  case 'simnibs'
+    if isfield(headmodel, 'bnd')
+      % continue with the triangular mesh
+      mesh = headmodel.bnd;
+    else
+      % continue with the tetrahedral or hexahedral mesh
+      mesh = headmodel;
+      % only plot the outer surface of the volume
+      surfaceonly = true;
+    end
+
   case 'interpolate'
     xgrid = 1:headmodel.dim(1);
     ygrid = 1:headmodel.dim(2);

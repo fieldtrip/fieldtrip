@@ -19,6 +19,7 @@ function [hx, hy, hz] = ft_plot_ortho(dat, varargin)
 %
 % The following options are supported and passed on to FT_PLOT_SLICE
 %   'clim'                = [min max], lower and upper color limits
+%   'facealpha'           = transparency when no mask is specified, between 0 and 1 (default = 1)
 %   'transform'           = 4x4 homogeneous transformation matrix specifying the mapping from voxel space to the coordinate system in which the data are plotted
 %   'location'            = 1x3 vector specifying the intersection point at which the three slices will be plotted. The coordinates should be expressed in the coordinate system of the data. 
 %   'datmask'             = 3D-matrix with the same size as the matrix dat, serving as opacitymap if the second input argument to the function contains a matrix, this will be used as the mask
@@ -141,7 +142,7 @@ switch style
       % swap the first 2 dimensions because of meshgrid vs ndgrid issues
       varargin{2*sel} = ori(2,:);
       set(gcf,'currentaxes',Hx);
-      hx = ft_plot_slice(dat, varargin{:});
+      hx = ft_plot_slice(dat, varargin{:}, 'tag', 'x');
       set(Hx, 'view', [0 0]); %, 'xlim', [0.5 size(dat,1)-0.5], 'zlim', [0.5 size(dat,3)-0.5]);
       if isempty(parents)
         % only change axis behavior if no parents are specified
@@ -158,7 +159,7 @@ switch style
       end
       varargin{2*sel} = ori(1,:);
       set(gcf,'currentaxes',Hy);
-      hy = ft_plot_slice(dat, varargin{:});
+      hy = ft_plot_slice(dat, varargin{:}, 'tag', 'y');
       set(Hy, 'view', [90 0]); %, 'ylim', [0.5 size(dat,2)-0.5], 'zlim', [0.5 size(dat,3)-0.5]);
       if isempty(parents)
         % only change axis behavior if no parents are specified
@@ -175,7 +176,7 @@ switch style
       end
       varargin{2*sel} = ori(3,:);
       set(gcf,'currentaxes',Hz);
-      hz = ft_plot_slice(dat, varargin{:});
+      hz = ft_plot_slice(dat, varargin{:}, 'tag', 'z');
       set(Hz, 'view', [0 90]); %, 'xlim', [0.5 size(dat,1)-0.5], 'ylim', [0.5 size(dat,2)-0.5]);
       if isempty(parents)
         % only change axis behavior if no parents are specified
@@ -190,13 +191,14 @@ switch style
     end
     
     varargin{2*sel} = ori(1,:);
-    hx = ft_plot_slice(dat, varargin{:});
+    hx = ft_plot_slice(dat, varargin{:}, 'tag', 'x');
     
     varargin{2*sel} = ori(2,:);
-    hy = ft_plot_slice(dat, varargin{:});
+    hy = ft_plot_slice(dat, varargin{:}, 'tag', 'y');
     
     varargin{2*sel} = ori(3,:);
-    hz = ft_plot_slice(dat, varargin{:});
+    hz = ft_plot_slice(dat, varargin{:}, 'tag', 'z');
+
     axis equal; axis tight; axis vis3d; axis off
     view(3);
     

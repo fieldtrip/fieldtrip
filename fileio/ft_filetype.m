@@ -1603,6 +1603,10 @@ elseif filetype_check_extension(filename, '.msh') && filetype_check_header(filen
   type = 'gmsh_binary';
   manufacturer = 'gmsh team';
   content = 'geometrical meshes';
+elseif filetype_check_extension(filename, '.msh') && filetype_check_header(filename, '$MeshFormat') && filetype_check_header(filename, 48, 16)
+  type = 'gmsh_ascii';
+  manufacturer = 'gmsh team';
+  content = 'geometrical meshes';
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -1,11 +1,15 @@
 function [posR, triR, removetri] = remove_vertices(pos, tri, removepos)
 
-% REMOVE_VERTICES removes specified indexed vertices from a triangular mesh
-% renumbering the vertex-indices for the triangles and removing all
-% resulting 'open' triangles.
+% REMOVE_VERTICES removes specified indexed vertices from a triangular, tetrahedral
+% or hexahedral mesh renumbering the vertex-indices for the elements and removing all
+% resulting 'open' elements.
 %
 % Use as
 %   [pos, tri] = remove_vertices(pos, tri, sel)
+%   [pos, tet] = remove_vertices(pos, tet, sel)
+%   [pos, hex] = remove_vertices(pos, hex, sel)
+%
+% See also REMOVE_DOUBLE_VERTICES, REMOVE_UNUSED_VERTICES
 
 % Copyright (C) 2004-2022, Robert Oostenveld
 %

@@ -1,16 +1,16 @@
-function [pos, tri] = remove_double_vertices(pos, tri)
+function [pos, tri] = remove_unused_vertices(pos, tri)
 
-% REMOVE_DOUBLE_VERTICES removes double vertices from a triangular, tetrahedral or
+% REMOVE_UNUSED_VERTICES removes unused vertices from a triangular, tetrahedral or
 % hexahedral mesh, renumbering the vertex-indices for the elements.
 %
 % Use as
-%   [pos, tri] = remove_double_vertices(pos, tri)
-%   [pos, tet] = remove_double_vertices(pos, tet)
-%   [pos, hex] = remove_double_vertices(pos, hex)
+%   [pos, tri] = remove_unused_vertices(pos, tri)
+%   [pos, tet] = remove_unused_vertices(pos, tet)
+%   [pos, hex] = remove_unused_vertices(pos, hex)
 %
-% See also REMOVE_VERTICES
+% See also REMOVE_VERTICES, REMOVE_DOUBLE_VERTICES
 
-% Copyright (C) 2004-2022, Robert Oostenveld and Jan-Mathijs Schoffelen
+% Copyright (C) 2023, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -31,15 +31,7 @@ function [pos, tri] = remove_double_vertices(pos, tri)
 % $Id$
 
 npos = size(pos, 1);
-[dum, keeppos, i2] = unique(pos, 'rows');
-clear dum
 
-numb    = zeros(1,npos);
-numb(keeppos) = 1:length(keeppos);
-
-% re-index the indices in tri
-tri = keeppos(i2(tri));
-tri = numb(tri);
-
-% remove the vertices and triangles
-pos = pos(keeppos, :);
+sel = unique(tri(:));
+sel = setdiff(1:npos, sel);
+[pos, tri] = remove_vertices(pos, tri, sel);
