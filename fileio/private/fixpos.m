@@ -63,6 +63,20 @@ elseif isfield(mesh, 'Vertices') && isfield(mesh, 'Faces')
   mesh = rmfield(mesh, {'Faces', 'Vertices'});
 end
 
+% convert from GMesh/SimNIBS to FieldTrip convention
+if isfield(mesh, 'nodes') && isfield(mesh, 'node_data')
+  mesh.pos = mesh.nodes;
+  mesh = rmfield(mesh, 'nodes');
+  if isfield(mesh, 'triangles')
+    mesh.tri = mesh.triangles;
+    mesh = rmfield(mesh, 'triangles');
+  end
+  if isfield(mesh, 'tetrahedra')
+    mesh.tet = mesh.tetrahedra;
+    mesh = rmfield(mesh, 'tetrahedra');
+  end
+end
+
 % replace pnt by pos
 if isfield(mesh, 'pnt')
   mesh.pos = mesh.pnt;

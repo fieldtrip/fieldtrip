@@ -117,14 +117,40 @@ contourlinewidth  = ft_getopt(varargin, 'contourlinewidth', 3);
 contourlinestyle  = ft_getopt(varargin, 'contourlinestyle', '-');
 
 haspos   = isfield(mesh, 'pos');   % vertices
+hascolor = isfield(mesh, 'color'); % color code for vertices
 hastri   = isfield(mesh, 'tri');   % triangles   as a Mx3 matrix with vertex indices
 hastet   = isfield(mesh, 'tet');   % tetraheders as a Mx4 matrix with vertex indices
 hashex   = isfield(mesh, 'hex');   % hexaheders  as a Mx8 matrix with vertex indices
-hasline  = isfield(mesh, 'line');  % line segments in 3-D
-haspoly  = isfield(mesh, 'poly');  % polygons describing a surface in 3-D
-hascolor = isfield(mesh, 'color'); % color code for vertices
+hasline  = isfield(mesh, 'line');  % lines       as a Mx2 matrix with vertex indices
+haspoly  = isfield(mesh, 'poly');  % polygons    as a MxP matrix with vertex indices
+
+if ~isempty(unit)
+  mesh = ft_convert_units(mesh, unit);
+end
+
+if hastri+hastet+hashex+hasline+haspoly>1
+  % the code further down cannot deal with simultaneous triangles, tetraheders and/or hexaheders
+  % therefore we plot them one by one
+  if hastri
+    ft_plot_mesh(removefields(mesh, {'tet', 'hex', 'line', 'poly'}), varargin{:});
+  end
+  if hastet
+    ft_plot_mesh(removefields(mesh, {'tri', 'hex', 'line', 'poly'}), varargin{:});
+  end
+  if hashex
+    ft_plot_mesh(removefields(mesh, {'tri', 'tet', 'line', 'poly'}), varargin{:});
+  end
+  if hasline
+    ft_plot_mesh(removefields(mesh, {'tri', 'tet', 'hex', 'poly'}), varargin{:});
+  end
+  if haspoly
+    ft_plot_mesh(removefields(mesh, {'tri', 'tet', 'hex', 'line'}), varargin{:});
+  end
+  return
+end
 
 if isempty(surfaceonly)
+  % set the default depending on the input mesh
   if hastet
     ft_warning('only visualizing the outer surface of the tetrahedral mesh, see the "surfaceonly" option')
     surfaceonly = true;
@@ -136,22 +162,20 @@ if isempty(surfaceonly)
   end
 end
 
-if ~isempty(unit)
-  mesh = ft_convert_units(mesh, unit);
-end
+% convert string into boolean values
+faceindex   = istrue(faceindex);   % yes=view the face number
+vertexindex = istrue(vertexindex); % yes=view the vertex number
+surfaceonly = istrue(surfaceonly); % yes/no
 
 if surfaceonly
   mesh = mesh2edge(mesh);
   % update the flags that indicate which surface/volume elements are present
-  hastri   = isfield(mesh, 'tri');  % triangles   as a Mx3 matrix with vertex indices
-  hastet   = isfield(mesh, 'tet');  % tetraheders as a Mx4 matrix with vertex indices
-  hashex   = isfield(mesh, 'hex');  % hexaheders  as a Mx8 matrix with vertex indices
-  haspoly  = isfield(mesh, 'poly'); % polygons
+  hastri   = isfield(mesh, 'tri');   % triangles   as a Mx3 matrix with vertex indices
+  hastet   = isfield(mesh, 'tet');   % tetraheders as a Mx4 matrix with vertex indices
+  hashex   = isfield(mesh, 'hex');   % hexaheders  as a Mx8 matrix with vertex indices
+  hasline  = isfield(mesh, 'line');  % lines       as a Mx2 matrix with vertex indices
+  haspoly  = isfield(mesh, 'poly');  % polygons    as a MxP matrix with vertex indices
 end
-
-% convert string into boolean values
-faceindex   = istrue(faceindex);   % yes=view the face number
-vertexindex = istrue(vertexindex); % yes=view the vertex number
 
 if isempty(vertexcolor)
   if haspos && hascolor && (hastri || hastet || hashex || hasline || haspoly)
@@ -221,12 +245,8 @@ else
 end
 
 if isempty(pos)
-  hs=[];
+  hs = [];
   return
-end
-
-if hastri+hastet+hashex+hasline+haspoly>1
-  ft_error('cannot deal with simultaneous triangles, tetraheders and/or hexaheders')
 end
 
 if hastri
@@ -281,7 +301,7 @@ if haspos
 end
 
 if ~isempty(material_)
-  material(material_); % dull, shiny or default
+  material(material_); % dull, default, shiny or metal
 end
 
 % the vertexcolor can be specified either as a RGB color for each vertex, or as a single value at each vertex
@@ -310,7 +330,7 @@ switch maskstyle
       % the color is indicated as a single character or as a single RGB triplet
       set(hs, 'FaceColor', facecolor);
     end
-    
+
     % facealpha is a scalar, or an vector matching the number of vertices
     if size(pos,1)==numel(facealpha)
       set(hs, 'FaceVertexAlphaData', facealpha);
@@ -319,29 +339,29 @@ switch maskstyle
       % the default is 1, so that does not have to be set
       set(hs, 'FaceAlpha', facealpha);
     end
-    
+
     if edgealpha~=1
       % the default is 1, so that does not have to be set
       set(hs, 'EdgeAlpha', edgealpha);
     end
-    
+
     if ~(all(facealpha==1) && edgealpha==1)
       if ~isempty(alphalim)
         alim(gca, alphalim);
       end
       alphamap(alphamapping);
     end
-    
+
   case 'colormix'
     % ensure facecolor to be 1x3
     assert(isequal(size(facecolor),[1 3]), 'facecolor should be 1x3');
-    
+
     % ensure facealpha to be nvertex x 1
     if numel(facealpha)==1
       facealpha = repmat(facealpha, size(pos,1), 1);
     end
     assert(isequal(numel(facealpha),size(pos,1)), 'facealpha should be %dx1', size(pos,1));
-    
+
     bgcolor = repmat(facecolor, [numel(vertexcolor) 1]);
     rgb     = bg_rgba2rgb(bgcolor, vertexcolor, cmap, clim, facealpha, alphamapping, alphalim);
     set(hs, 'FaceVertexCData', rgb, 'facecolor', 'interp');
@@ -351,7 +371,7 @@ end
 if ~isempty(contour)
   if ~iscell(contour), contour = {contour}; end
   if ~iscell(contourlinestyle), contourlinestyle = {contourlinestyle}; end
-  
+
   if ischar(contourcolor)
     if numel(contour)>numel(contourcolor)
       contourcolor = repmat(contourcolor(:), [numel(contour) 1]);
@@ -362,15 +382,15 @@ if ~isempty(contour)
   if size(contourcolor,2)==3 && numel(contour)>size(contourcolor,1), contourcolor = repmat(contourcolor, [numel(contour) 1] ); end
   if numel(contour)>numel(contourlinewidth), contourlinewidth = repmat(contourlinewidth, [1 numel(contour)]); end
   if numel(contour)>numel(contourlinestyle), contourlinestyle = repmat(contourlinestyle, [1 numel(contour)]); end
-  
+
   for m = 1:numel(contour)
     C    = full(triangle2connectivity(tri));
     clus = findcluster(contour{m},C,0);
-    
+
     for cl = 1:max(clus)
       idxcl = find(clus==cl);
       [xbnd, ybnd, zbnd] = extract_contour(pos,tri,idxcl,contour{m});
-      
+
       % draw each individual line segment of the intersection
       p = [];
       for i = 1:length(xbnd)
@@ -395,7 +415,7 @@ end
 
 if ~isequal(vertexcolor, 'none') && ~vertexpotential
   % plot the vertices as points
-  
+
   if isempty(vertexcolor)
     % use black for all points
     if isscalar(vertexsize)
@@ -418,7 +438,7 @@ if ~isequal(vertexcolor, 'none') && ~vertexpotential
         end
       end
     end
-    
+
   elseif ischar(vertexcolor) && numel(vertexcolor)==1
     % one color for all points
     if isscalar(vertexsize)
@@ -441,7 +461,7 @@ if ~isequal(vertexcolor, 'none') && ~vertexpotential
         end
       end
     end
-    
+
   elseif ischar(vertexcolor) && numel(vertexcolor)==size(pos,1)
     % one color for each point
     if size(pos,2)==2
@@ -463,7 +483,7 @@ if ~isequal(vertexcolor, 'none') && ~vertexpotential
         end
       end
     end
-    
+
   elseif ~ischar(vertexcolor) && size(vertexcolor,1)==1
     % one RGB color for all points
     if size(pos,2)==2
@@ -473,7 +493,7 @@ if ~isequal(vertexcolor, 'none') && ~vertexpotential
       hs = plot3(pos(:,1), pos(:,2), pos(:,3), vertexmarker);
       set(hs, 'MarkerSize', vertexsize, 'MarkerEdgeColor', vertexcolor);
     end
-    
+
   elseif ~ischar(vertexcolor) && size(vertexcolor,1)==size(pos,1) && size(vertexcolor,2)==3
     % one RGB color for each point
     if size(pos,2)==2
@@ -495,11 +515,11 @@ if ~isequal(vertexcolor, 'none') && ~vertexpotential
         end
       end
     end
-    
+
   else
     ft_error('Unknown color specification for the vertices');
   end
-  
+
 end % plotting the vertices as points
 
 if vertexindex
