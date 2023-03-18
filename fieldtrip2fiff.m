@@ -1,4 +1,4 @@
-function fieldtrip2fiff(filename, data)
+function fieldtrip2fiff(filename, data, varargin)
 
 % FIELDTRIP2FIFF saves a FieldTrip raw data structure as a fiff-file, allowing it
 % to be further analyzed by the Neuromag/Elekta/Megin software, or in MNE-python.
@@ -104,10 +104,30 @@ info.ch_names = data.label(:)';
 info.chs      = sens2fiff(data);
 info.nchan    = numel(data.label);
 
+precision = ft_getopt(varargin, 'precision', class(data.trial{1}));
+if ~isreal(data.trial{1})
+  iscomplex = true;
+else
+  iscomplex = false;
+end
+
 if israw
   FIFF = fiff_define_constants; % some constants are not defined in the MATLAB function
+  
+  if iscomplex && strcmp(precision, 'single')
+    dtype = FIFF.FIFFT_COMPLEX_FLOAT; 
+  elseif iscomplex && strcmp(precision, 'double')
+    dtype = FIFF.FIFFT_COMPLEX_DOUBLE;
+  elseif ~iscomplex && strcmp(precision, 'single')
+    dtype = FIFF.FIFFT_FLOAT;
+  elseif ~iscomplex && strcmp(precision, 'double')
+    dtype = FIFF.FIFFT_DOUBLE;
+  else
+    ft_error('writing data in requested precision is not supported');
+  end
+
   [outfid, cals] = fiff_start_writing_raw(fifffile, info);%, [], class(data.trial{1}));
-  fiff_write_double(outfid, FIFF.FIFF_DATA_BUFFER, diag(1./cals)*data.trial{1});
+  fiff_write_raw_buffer(outfid, data.trial{1}, cals, dtype);
   fiff_finish_writing_raw(outfid);
   
   % write events, if they exists
