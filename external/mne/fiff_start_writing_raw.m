@@ -1,10 +1,12 @@
-function [fid,cals] = fiff_start_writing_raw(name,info,sel)
+function [fid,cals] = fiff_start_writing_raw(name,info,sel,precision)
 %
 % function [fid,cals] = fiff_start_writing_raw(name,info,sel)
 %
 % name       filename
 % info       The measurement info block of the source file
 % sel        Which channels will be included in the output file (optional)
+% precision  Numeric precision with which the data will be written
+%            (optional). Default 'single', can also be 'double'
 %
 
 %
@@ -31,7 +33,7 @@ function [fid,cals] = fiff_start_writing_raw(name,info,sel)
 %
 
 me='MNE:fiff_start_writing_raw';
-if nargin ~= 2 && nargin ~= 3
+if nargin > 4
     error(me,'Incorrect number of arguments');
 end
 %
@@ -39,11 +41,26 @@ global FIFF;
 if isempty(FIFF)
     FIFF = fiff_define_constants();
 end
-%
-%   We will always write floats
-%
-data_type = 4;
-if nargin == 2
+
+if nargin < 4 || isempty(precision)
+    %
+    %   We will always write floats, unless otherwise specified 
+    %
+    data_type = FIFF.FIFFT_FLOAT;
+else
+    switch precision
+      case 'single'
+          data_type = FIFF.FIFFT_FLOAT;
+      case 'double'
+          data_type = FIFF.FIFFT_DOUBLE;
+      case 'single_complex'
+          data_type = FIFF.FIFFT_COMPLEX_FLOAT;
+      case 'double_complex'
+          data_type = FIFF.FIFFT_COMPLEX_DOUBLE;
+    end
+end
+
+if nargin < 3 || isempty(sel)
     sel = 1:info.nchan;
 end
 chs = info.chs(sel);
