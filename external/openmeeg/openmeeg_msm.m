@@ -1,10 +1,11 @@
-function [dsm] = openmeeg_msm(pos, headmodel, NAflag, source)
+function [msm] = openmeeg_msm(pos, headmodel, NAflag, source)
 
-% FT_SYSMAT_OPENMEEG creates a volume conduction model of the
-% head using the boundary element method (BEM). This function takes
-% as input the triangulated surfaces that describe the boundaries and
-% returns as output a volume conduction model which can be used to
-% compute leadfields.
+% openmeeg_msm creates the boundary condition part b of a volume conduction
+% model of the head using the boundary element method (BEM). This function 
+% takes as input the triangulated surfaces that describe the boundaries and
+% the source position of single monopoles. It returns as output a vector of
+% boundary conditions which can be used together with a volume conduction 
+% model to compute leadfields.
 %
 % This function implements
 %   Gramfort et al. OpenMEEG: opensource software for quasistatic
@@ -86,21 +87,14 @@ try
     else
         str = ' -MSM';
     end
-%     if nargin<4
-%         if isfield(headmodel,'inner_skull_surface')
-%             source=[bndlabel{inner_skull_surface}];
-%         else
-%             source=[bndlabel{end}];
-%         end
-%     end
-%     om_status = system([prefix 'om_assemble' str ' ' geomfile ' ' condfile ' ' dipfile ' ' dsmfile ' ' source]);
+
     om_status = system([prefix 'om_assemble' str ' ' geomfile ' ' condfile ' ' dipfile ' ' msmfile]);
     
     if(om_status ~= 0) % status = 0 if successful
         ft_error(['Aborting OpenMEEG pipeline due to above error.']);
     end
     
-    dsm = om_load_full(msmfile,'binary');
+    msm = om_load_full(msmfile,'binary');
 catch
     rethrow(lasterror)
 end
