@@ -175,55 +175,54 @@ if ~strcmp(contourstyle, 'none')
     cntlevel   = [cntlevel; ones(contour(cnt_indx).n,1) * isolines(cnt_indx)];
   end
   
-  if ~(isempty(intersect1) || isempty(intersect2))
-      X = [intersect1(:,1) intersect2(:,1)]';
-      Y = [intersect1(:,2) intersect2(:,2)]';
-      C = [cntlevel(:)     cntlevel(:)]';
-
-      if size(pos,2)>2
-        Z = [intersect1(:,3) intersect2(:,3)]';
-      else
-        Z = zeros(2, length(cntlevel));
-      end
-
-      switch contourstyle
-        case 'black'
-          % make black-white contours
-          hc = [];
-          for i=1:length(cntlevel)
-            if cntlevel(i)>0
-              linestyle = '-';
-              linewidth = 1;
-            elseif cntlevel(i)<0
-              linestyle = '--';
-              linewidth = 1;
-            else
-              linestyle = '-';
-              linewidth = 2;
-            end
-            h1 = patch('XData', X(:,i), 'Ydata', Y(:,i), ...
-              'ZData', Z(:,i), 'CData', C(:,i), ...
-              'facecolor','none','edgecolor','black', ...
-              'linestyle', linestyle, 'linewidth', linewidth, ...
-              'userdata',cntlevel(i));
-            hc = [hc; h1];
-          end
-
-        case 'color'
-          % make full-color contours
-          hc = [];
-          for i=1:length(cntlevel)
-            h1 = patch('XData', X(:,i), 'Ydata', Y(:,i), ...
-              'ZData', Z(:,i), 'CData', C(:,i), ...
-              'facecolor','none','edgecolor','flat',...
-              'userdata',cntlevel(i));
-            hc = [hc; h1];
-          end
-
-        otherwise
-          ft_error('unsupported contourstyle');
-      end % switch contourstyle
+  X = [intersect1(:,1) intersect2(:,1)]';
+  Y = [intersect1(:,2) intersect2(:,2)]';
+  C = [cntlevel(:)     cntlevel(:)]';
+  
+  if size(pos,2)>2
+    Z = [intersect1(:,3) intersect2(:,3)]';
+  else
+    Z = zeros(2, length(cntlevel));
   end
+  
+  switch contourstyle
+    case 'black'
+      % make black-white contours
+      hc = [];
+      for i=1:length(cntlevel)
+        if cntlevel(i)>0
+          linestyle = '-';
+          linewidth = 1;
+        elseif cntlevel(i)<0
+          linestyle = '--';
+          linewidth = 1;
+        else
+          linestyle = '-';
+          linewidth = 2;
+        end
+        h1 = patch('XData', X(:,i), 'Ydata', Y(:,i), ...
+          'ZData', Z(:,i), 'CData', C(:,i), ...
+          'facecolor','none','edgecolor','black', ...
+          'linestyle', linestyle, 'linewidth', linewidth, ...
+          'userdata',cntlevel(i));
+        hc = [hc; h1];
+      end
+      
+    case 'color'
+      % make full-color contours
+      hc = [];
+      for i=1:length(cntlevel)
+        h1 = patch('XData', X(:,i), 'Ydata', Y(:,i), ...
+          'ZData', Z(:,i), 'CData', C(:,i), ...
+          'facecolor','none','edgecolor','flat',...
+          'userdata',cntlevel(i));
+        hc = [hc; h1];
+      end
+      
+    otherwise
+      ft_error('unsupported contourstyle');
+  end % switch contourstyle
+  
 end % plot the contours
 
 axis off
