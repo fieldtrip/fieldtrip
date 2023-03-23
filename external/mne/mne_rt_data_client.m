@@ -31,7 +31,7 @@ classdef mne_rt_data_client < mne_rt_client
             if (nargin < 3)
                 numOfRetries = 20; % set to -1 for infinite
             end
-            obj = obj@mne_rt_client(host, port, numOfRetries); %Superclass call
+            obj = obj@mne_rt_client(host, port, numOfRetries);%Superclass call
             obj.getClientId();
         end % mne_rt_data_client
         
@@ -386,14 +386,14 @@ classdef mne_rt_data_client < mne_rt_client
             
             kind = FIFF.FIFF_MNE_RT_COMMAND;
             type = FIFF.FIFFT_VOID;
-            size = 4+length(data); % first 4 bytes are the command code
+            size = 4+length(data);% first 4 bytes are the command code
             next = 0;
             
             p_DataOutputStream.writeInt(kind);
             p_DataOutputStream.writeInt(type);
             p_DataOutputStream.writeInt(size);
             p_DataOutputStream.writeInt(next);
-            p_DataOutputStream.writeInt(p_Cmd); % first 4 bytes are the command code
+            p_DataOutputStream.writeInt(p_Cmd);% first 4 bytes are the command code
             if(~isempty(data))
                 p_DataOutputStream.writeBytes(data);
             end
@@ -507,17 +507,17 @@ classdef mne_rt_data_client < mne_rt_client
 %                             case FIFF.FIFFT_INT
 %                                 tag.data = zeros(el_size/4, 1);
 %                                 for i = 1:el_size/4
-%                                     tag.data(i) = p_DataInputStream.readInt; %idata = fread(fid,dims(1)*dims(2),'int32=>int32');
+%                                     tag.data(i) = p_DataInputStream.readInt;%idata = fread(fid,dims(1)*dims(2),'int32=>int32');
 %                                 end
 %                             case FIFF.FIFFT_JULIAN
 %                                 tag.data = zeros(el_size/4, 1);
 %                                 for i = 1:el_size/4
-%                                     tag.data(i) = p_DataInputStream.readInt; %idata = fread(fid,dims(1)*dims(2),'int32=>int32');
+%                                     tag.data(i) = p_DataInputStream.readInt;%idata = fread(fid,dims(1)*dims(2),'int32=>int32');
 %                                 end
                             case FIFF.FIFFT_FLOAT
                                 t_MNERTBufferReader = mne_rt_buffer_reader(p_DataInputStream);
                                 tmp = t_MNERTBufferReader.readBuffer(el_size);
-                                tag.data = typecast(tmp, 'single'); %fdata = fread(fid,dims(1)*dims(2),'single=>double');
+                                tag.data = typecast(tmp, 'single');%fdata = fread(fid,dims(1)*dims(2),'single=>double');
                                 tag.data = swapbytes(tag.data);
                             otherwise
                                 error(me,'Cannot handle a matrix of type %d yet',matrix_type)
@@ -546,47 +546,47 @@ classdef mne_rt_data_client < mne_rt_client
                         case FIFF.FIFFT_INT
 %                             tag.data = zeros(tag.size/4, 1);
 %                             for i = 1:tag.size/4
-%                                 tag.data(i) = p_DataInputStream.readInt; %fread(fid,tag.size/4,'int32=>int32');
+%                                 tag.data(i) = p_DataInputStream.readInt;%fread(fid,tag.size/4,'int32=>int32');
 %                             end
                             t_MNERTBufferReader = mne_rt_buffer_reader(p_DataInputStream);
                             tmp = t_MNERTBufferReader.readBuffer(tag.size);
-                            tag.data = typecast(tmp, 'int32'); %fread(fid,tag.size/4,'int32=>int32');
+                            tag.data = typecast(tmp, 'int32');%fread(fid,tag.size/4,'int32=>int32');
                             tag.data = swapbytes(tag.data);
                         case FIFF.FIFFT_FLOAT
                             t_MNERTBufferReader = mne_rt_buffer_reader(p_DataInputStream);
                             tmp = t_MNERTBufferReader.readBuffer(tag.size);
-                            tag.data = typecast(tmp, 'single'); %fread(fid,tag.size/4,'single=>double');
+                            tag.data = typecast(tmp, 'single');%fread(fid,tag.size/4,'single=>double');
                             tag.data = swapbytes(tag.data);
                         case FIFF.FIFFT_STRING
                             t_MNERTBufferReader = mne_rt_buffer_reader(p_DataInputStream);
-                            tag.data = t_MNERTBufferReader.readBuffer(tag.size); %fread(fid,tag.size,'uint8=>char')';
+                            tag.data = t_MNERTBufferReader.readBuffer(tag.size);%fread(fid,tag.size,'uint8=>char')';
                             tag.data = char(tag.data);                            
                         case FIFF.FIFFT_ID_STRUCT
-                            tag.data.version = p_DataInputStream.readInt; %fread(fid,1,'int32=>int32');
+                            tag.data.version = p_DataInputStream.readInt;%fread(fid,1,'int32=>int32');
                             tag.data.machid = zeros(2,1);
-                            tag.data.machid(1)  = p_DataInputStream.readInt; %fread(fid,2,'int32=>int32');
+                            tag.data.machid(1)  = p_DataInputStream.readInt;%fread(fid,2,'int32=>int32');
                             tag.data.machid(2)  = p_DataInputStream.readInt;
-                            tag.data.secs    = p_DataInputStream.readInt; %fread(fid,1,'int32=>int32');
-                            tag.data.usecs   = p_DataInputStream.readInt; %fread(fid,1,'int32=>int32');
+                            tag.data.secs    = p_DataInputStream.readInt;%fread(fid,1,'int32=>int32');
+                            tag.data.usecs   = p_DataInputStream.readInt;%fread(fid,1,'int32=>int32');
                         case FIFF.FIFFT_DIG_POINT_STRUCT
-                            tag.data.kind    = p_DataInputStream.readInt; %fread(fid,1,'int32=>int32');
-                            tag.data.ident   = p_DataInputStream.readInt; %fread(fid,1,'int32=>int32');
+                            tag.data.kind    = p_DataInputStream.readInt;%fread(fid,1,'int32=>int32');
+                            tag.data.ident   = p_DataInputStream.readInt;%fread(fid,1,'int32=>int32');
                             tag.data.r = zeros(3,1);
                             for i = 1:3
-                                tag.data.r(i)	= p_DataInputStream.readFloat; %fread(fid,3,'single=>single');
+                                tag.data.r(i)	= p_DataInputStream.readFloat;%fread(fid,3,'single=>single');
                             end
                             tag.data.coord_frame = 0;
                         case FIFF.FIFFT_COORD_TRANS_STRUCT
-                            tag.data.from = p_DataInputStream.readInt; %fread(fid,1,'int32=>int32');
-                            tag.data.to   = p_DataInputStream.readInt; %fread(fid,1,'int32=>int32');
+                            tag.data.from = p_DataInputStream.readInt;%fread(fid,1,'int32=>int32');
+                            tag.data.to   = p_DataInputStream.readInt;%fread(fid,1,'int32=>int32');
                             rot = zeros(9,1);
                             for i = 1:9
-                                rot(i) = p_DataInputStream.readFloat; %fread(fid,9,'single=>double');
+                                rot(i) = p_DataInputStream.readFloat;%fread(fid,9,'single=>double');
                             end
                             rot = reshape(rot,3,3)';
                             move = zeros(3,1);
                             for i = 1:3
-                                move(i) = p_DataInputStream.readFloat; %fread(fid,3,'single=>double');
+                                move(i) = p_DataInputStream.readFloat;%fread(fid,3,'single=>double');
                             end
                             tag.data.trans = [ rot move ; [ 0  0 0 1 ]];
                             %
@@ -597,18 +597,18 @@ classdef mne_rt_data_client < mne_rt_client
                                 p_DataInputStream.readFloat;
                             end
                         case FIFF.FIFFT_CH_INFO_STRUCT
-                            tag.data.scanno    = p_DataInputStream.readInt; %fread(fid,1,'int32=>int32');
-                            tag.data.logno     = p_DataInputStream.readInt; %fread(fid,1,'int32=>int32');
-                            tag.data.kind      = p_DataInputStream.readInt; %fread(fid,1,'int32=>int32');
-                            tag.data.range     = p_DataInputStream.readFloat; %fread(fid,1,'single=>double');
-                            tag.data.cal       = p_DataInputStream.readFloat; %fread(fid,1,'single=>double');
-                            tag.data.coil_type = p_DataInputStream.readInt; %fread(fid,1,'int32=>int32');
+                            tag.data.scanno    = p_DataInputStream.readInt;%fread(fid,1,'int32=>int32');
+                            tag.data.logno     = p_DataInputStream.readInt;%fread(fid,1,'int32=>int32');
+                            tag.data.kind      = p_DataInputStream.readInt;%fread(fid,1,'int32=>int32');
+                            tag.data.range     = p_DataInputStream.readFloat;%fread(fid,1,'single=>double');
+                            tag.data.cal       = p_DataInputStream.readFloat;%fread(fid,1,'single=>double');
+                            tag.data.coil_type = p_DataInputStream.readInt;%fread(fid,1,'int32=>int32');
                             %
                             %   Read the coil coordinate system definition
                             %
                             tag.data.loc = zeros(12,1);
                             for i = 1:12
-                                tag.data.loc(i) = p_DataInputStream.readFloat; %fread(fid,12,'single=>double');
+                                tag.data.loc(i) = p_DataInputStream.readFloat;%fread(fid,12,'single=>double');
                             end
                             tag.data.coil_trans  = [];
                             tag.data.eeg_loc     = [];
@@ -631,8 +631,8 @@ classdef mne_rt_data_client < mne_rt_client
                             %
                             %   Unit and exponent
                             %
-                            tag.data.unit     = p_DataInputStream.readInt; %fread(fid,1,'int32=>int32');
-                            tag.data.unit_mul = p_DataInputStream.readInt; %fread(fid,1,'int32=>int32');
+                            tag.data.unit     = p_DataInputStream.readInt;%fread(fid,1,'int32=>int32');
+                            tag.data.unit_mul = p_DataInputStream.readInt;%fread(fid,1,'int32=>int32');
                             %
                             %   Handle the channel name
                             %

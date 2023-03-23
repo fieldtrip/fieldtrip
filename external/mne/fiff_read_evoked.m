@@ -295,7 +295,7 @@ fclose(fid);
 return;
 
     function [tag] = find_tag(node,findkind)
-        
+
         for p = 1:node.nent
             kind = node.dir(p).kind;
             pos  = node.dir(p).pos;
@@ -309,5 +309,3 @@ return;
     end
 
 end
-
-

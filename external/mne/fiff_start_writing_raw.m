@@ -138,11 +138,12 @@ end
 %
 %    Projectors
 %
-fiff_write_proj(fid,info.projs);
+ch_rename = fiff_make_ch_rename(info.chs);
+fiff_write_proj(fid,info.projs,ch_rename);
 %
 %    CTF compensation info
 %
-fiff_write_ctf_comp(fid,info.comps);
+fiff_write_ctf_comp(fid,info.comps,ch_rename);
 %
 %    Bad channels
 %
@@ -165,15 +166,7 @@ end
 %
 %    Channel info
 %
-for k = 1:nchan
-    %
-    %   Scan numbers may have been messed up
-    %
-    chs(k).scanno = k;
-    chs(k).range  = 1.0;
-    cals(k) = chs(k).cal;
-    fiff_write_ch_info(fid,chs(k));
-end
+cals = fiff_write_ch_infos(fid,chs,true,ch_rename);
 %
 %
 fiff_end_block(fid,FIFF.FIFFB_MEAS_INFO);
