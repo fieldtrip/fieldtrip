@@ -1875,7 +1875,7 @@ elseif strcmp(opt.colorbar,  'yes') && ~isfield(opt, 'hc')
 end
 
 if ~((opt.hasfreq && numel(functional.freq)>1) || opt.hastime)
-  ht = subplot('position',[0.06+0.06+opt.h1size(1) 0.06 opt.h2size(1) opt.h3size(2)]);
+  ht = axes('position',[0.06+0.06+opt.h1size(1) 0.06 opt.h2size(1) opt.h3size(2)]);
   set(ht, 'visible', 'off');
   if opt.init
     opt.ht0 = text(ht, 0, 0.7, str0);
