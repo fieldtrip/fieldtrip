@@ -1,4 +1,4 @@
-function test_tutorial_natmeg_statistics
+function test_tutorial_natmeg2014_statistics
 
 % WALLTIME 00:20:00
 % MEM 4gb

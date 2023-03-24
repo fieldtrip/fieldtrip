@@ -1,11 +1,11 @@
-function test_tutorial_natmeg_preprocessing
+function test_tutorial_natmeg2014_preprocessing
 
 % WALLTIME 00:20:00
 % MEM 5gb
 % DEPENDENCY
 
 % this script executes the MATLAB content from
-% http://www.fieldtriptoolbox.org/tutorial/natmeg/timefrequency
+% http://www.fieldtriptoolbox.org/tutorial/natmeg2014/timefrequency
 %
 % it corresponds to the wiki version of 7 October 2014
 

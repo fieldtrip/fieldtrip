@@ -1,4 +1,4 @@
-function test_tutorial_natmeg_timefrequency
+function test_tutorial_natmeg2014_timefrequency
 
 % WALLTIME 00:30:00
 % MEM 4gb
