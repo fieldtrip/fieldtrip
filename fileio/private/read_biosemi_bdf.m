@@ -176,7 +176,7 @@ if nargin==1
   if EDF.NRec == -1                            % unknown record size, determine correct NRec
     fseek(EDF.FILE.FID, 0, 'eof');
     endpos = ftell(EDF.FILE.FID);
-    EDF.NRec = floor((endpos - EDF.FILE.POS) / (sum(EDF.SPR) * 2));
+    EDF.NRec = floor((endpos - EDF.FILE.POS) / (sum(EDF.SPR) * 3));
     fseek(EDF.FILE.FID, EDF.FILE.POS, 'bof');
     H1(237:244)=sprintf('%-8i',EDF.NRec);      % write number of records
   end
