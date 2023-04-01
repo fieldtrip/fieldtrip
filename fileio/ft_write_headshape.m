@@ -16,7 +16,7 @@ function ft_write_headshape(filename, mesh, varargin)
 %   'format'		   = string, see below
 %
 % Optional input arguments should be specified as key-value pairs and can include
-%   'data'         = data matrix, size(1) should be number of vertices
+%   'data'         = data vector or matrix, the size along the 1st dimension should correspond to the number of vertices
 %   'unit'         = string, desired geometrical units for the data, for example 'mm'
 %   'coordsys'     = string, desired coordinate system for the data
 %   'jmeshopt'     = cell-array with {'name', 'value'} pairs, options for writing JSON/JMesh files
@@ -37,7 +37,7 @@ function ft_write_headshape(filename, mesh, varargin)
 %   'vista'           see http://www.cs.ubc.ca/nest/lci/vista/vista.html
 %   'vtk'             Visualization ToolKit file format, for use with Paraview
 %
-% See also FT_READ_HEADSHAPE
+% See also FT_READ_HEADSHAPE, FT_WRITE_DATA, FT_WRITE_MRI, FT_WRITE_SENS
 
 % Undocumented optional option:
 %   'metadata'     = struct-array, containing the fields 'name' and
@@ -159,11 +159,11 @@ switch fileformat
     [p, f, x] = fileparts(filename);
     filename = fullfile(p, [f, '.vtk']); % ensure it has the right extension
     if isfield(mesh, 'tri')
-      write_vtk(filename, mesh.pos, mesh.tri);
+      write_vtk(filename, mesh.pos, mesh.tri, data);
     elseif isfield(mesh, 'tet')
-      write_vtk(filename, mesh.pos, mesh.tet);
+      write_vtk(filename, mesh.pos, mesh.tet, data);
     elseif isfield(mesh, 'hex')
-      write_vtk(filename, mesh.pos, mesh.hex);
+      write_vtk(filename, mesh.pos, mesh.hex, data);
     end
 
   case {'ply', 'ply_ascii', 'ply_binary'}
