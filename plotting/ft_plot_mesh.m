@@ -23,8 +23,8 @@ function [hs] = ft_plot_mesh(mesh, varargin)
 %   'vertexmarker' = character, e.g. '.', 'o' or 'x' (default = '.')
 %   'vertexsize'   = scalar or vector with the size for each vertex (default = 10)
 %   'unit'         = string, convert to the specified geometrical units (default = [])
-%   'axes'          = boolean, whether to plot the axes of the 3D coordinate system (default = false)
-%   'maskstyle',   = 'opacity' or 'colormix', if the latter is specified, opacity masked color values
+%   'axes'         = boolean, whether to plot the axes of the 3D coordinate system (default = false)
+%   'maskstyle'    = 'opacity' or 'colormix', if the latter is specified, opacity masked color values
 %                    are converted (in combination with a background color) to RGB. This bypasses
 %                    openGL functionality, which behaves unpredictably on some platforms (e.g. when
 %                    using software opengl)
