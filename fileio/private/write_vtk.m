@@ -76,7 +76,7 @@ if size(tri,2)==3
     fprintf(fid, 'DATASET POLYDATA\n');
     fprintf(fid, '\n');
     % write the vertices
-    fprintf(fid, 'POINTS %d float\n', npnt);
+    fprintf(fid, 'POINTS %d float\n', npos);
     fprintf(fid, '%f\t%f\t%f\n', pos');
     fprintf(fid, '\n');
     % write the triangles
