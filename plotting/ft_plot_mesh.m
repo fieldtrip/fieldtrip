@@ -15,8 +15,8 @@ function [hs] = ft_plot_mesh(mesh, varargin)
 %   'facecolor'    = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r', or an Nx3 or Nx1 array where N is the number of faces
 %   'vertexcolor'  = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r', or an Nx3 or Nx1 array where N is the number of vertices
 %   'edgecolor'    = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r'
-%   'faceindex'    = true or false
-%   'vertexindex'  = true or false
+%   'faceindex'    = true or false (default = false)
+%   'vertexindex'  = true or false (default = false)
 %   'facealpha'    = transparency, between 0 and 1 (default = 1)
 %   'edgealpha'    = transparency, between 0 and 1 (default = 1)
 %   'surfaceonly'  = true or false, plot only the outer surface of a hexahedral or tetrahedral mesh (default = false)
@@ -28,6 +28,10 @@ function [hs] = ft_plot_mesh(mesh, varargin)
 %                    are converted (in combination with a background color) to RGB. This bypasses
 %                    openGL functionality, which behaves unpredictably on some platforms (e.g. when
 %                    using software opengl)
+%   'fontsize'     = number, sets the size of the text (default = 10)
+%   'fontunits'    =
+%   'fontname'     =
+%   'fontweight'   =
 %
 % If you don't want the faces, edges or vertices to be plotted, you should specify the color as 'none'.
 %
@@ -111,6 +115,13 @@ alphamapping  = ft_getopt(varargin, 'alphamap', 'rampup');
 cmap          = ft_getopt(varargin, 'colormap');
 maskstyle     = ft_getopt(varargin, 'maskstyle', 'opacity');
 contour       = ft_getopt(varargin, 'contour',   []);
+
+% these have to do with the font
+fontcolor       = ft_getopt(varargin, 'fontcolor', 'k');  % default is black
+fontsize        = ft_getopt(varargin, 'fontsize',   get(0, 'defaulttextfontsize'));
+fontname        = ft_getopt(varargin, 'fontname',   get(0, 'defaulttextfontname'));
+fontweight      = ft_getopt(varargin, 'fontweight', get(0, 'defaulttextfontweight'));
+fontunits       = ft_getopt(varargin, 'fontunits',  get(0, 'defaulttextfontunits'));
 
 contourcolor      = ft_getopt(varargin, 'contourcolor',     'k');
 contourlinewidth  = ft_getopt(varargin, 'contourlinewidth', 3);
@@ -527,9 +538,9 @@ if vertexindex
   for node_indx=1:size(pos,1)
     str = sprintf('%d', node_indx);
     if size(pos, 2)==2
-      h = text(pos(node_indx, 1), pos(node_indx, 2), str, 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle');
+      h = text(pos(node_indx, 1), pos(node_indx, 2), str, 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'color', fontcolor, 'fontunits', fontunits, 'fontsize', fontsize, 'fontname', fontname, 'fontweight', fontweight);
     else
-      h = text(pos(node_indx, 1), pos(node_indx, 2), pos(node_indx, 3), str, 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle');
+      h = text(pos(node_indx, 1), pos(node_indx, 2), pos(node_indx, 3), str, 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'color', fontcolor, 'fontunits', fontunits, 'fontsize', fontsize, 'fontname', fontname, 'fontweight', fontweight);
     end
     hs = [hs; h];
   end
