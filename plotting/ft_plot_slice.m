@@ -164,8 +164,6 @@ end
 % shift the location to be along the orientation vector
 loc = ori*dot(loc,ori);
 
-dointersect = ~isempty(mesh);
-
 % the mesh should be a cell-array
 if isstruct(mesh)
   tmp = mesh;
@@ -182,10 +180,12 @@ for k = 1:numel(mesh)
   mesh{k} = fixpos(mesh{k});
 end
 
-% the mesh should be a structure with both pos and tri
+% the mesh should be a structure with pos and either tri/tet/hex
 for k = 1:numel(mesh)
-  if ~isfield(mesh{k}, 'pos') || ~isfield(mesh{k}, 'tri')
+  if ~isfield(mesh{k}, 'pos')
     mesh{k}.pos = [];
+  end
+  if ~isfield(mesh{k}, 'tri') && ~isfield(mesh{k}, 'tet') && ~isfield(mesh{k}, 'hex')
     mesh{k}.tri = [];
   end
 end
@@ -562,13 +562,7 @@ if ~isempty(coordsys) && ~strcmp(coordsys, 'unknown')
 end % if coordsys
 
 % plot the intersection with a mesh
-if dointersect
-  % determine three points on the plane
-  inplane = eye(3) - (eye(3) * ori') * ori;
-  v1 = loc + inplane(1,:);
-  v2 = loc + inplane(2,:);
-  v3 = loc + inplane(3,:);
-
+if ~isempty(mesh)
   if isempty(patchhandle) || length(patchhandle)~=length(mesh)
     % try to find the handles of all patches
     patchhandle = findall(gca, 'tag', ['intersectmesh_' tag]);
@@ -580,8 +574,20 @@ if dointersect
     patchhandle = nan(size(mesh));
   end
 
+  % determine three points on the plane
+  inplane = eye(3) - (eye(3) * ori') * ori;
+  v1 = loc + inplane(1,:);
+  v2 = loc + inplane(2,:);
+  v3 = loc + inplane(3,:);
+
   for k = 1:numel(mesh)
-    [xmesh, ymesh, zmesh] = intersect_plane(mesh{k}.pos, mesh{k}.tri, v1, v2, v3);
+    if isfield(mesh{k}, 'tri')
+      [xmesh, ymesh, zmesh] = intersect_plane(mesh{k}.pos, mesh{k}.tri, v1, v2, v3);
+    elseif isfield(mesh{k}, 'tet')
+      [xmesh, ymesh, zmesh] = intersect_plane(mesh{k}.pos, mesh{k}.tet, v1, v2, v3);
+    elseif isfield(mesh{k}, 'hex')
+      [xmesh, ymesh, zmesh] = intersect_plane(mesh{k}.pos, mesh{k}.hex, v1, v2, v3);
+    end
 
     % draw each individual line segment of the intersection
     if ~isempty(xmesh)
@@ -594,6 +600,13 @@ if dointersect
       else
         set(patchhandle(k), 'XData', xmesh', 'YData', ymesh', 'ZData', zmesh', 'FaceVertexCdata', nan(size(xmesh,1),1));
       end
+    else
+      % there was no intersection, construct a patch that is invisible
+      patchhandle(k) = patch(nan, nan, nan, nan);
+      set(patchhandle(k), 'tag', ['intersectmesh_' tag]);
+      if ~isempty(intersectcolor),     set(patchhandle(k), 'EdgeColor', intersectcolor(k));  end
+      if ~isempty(intersectlinewidth), set(patchhandle(k), 'LineWidth', intersectlinewidth); end
+      if ~isempty(intersectlinestyle), set(patchhandle(k), 'LineStyle', intersectlinestyle); end
     end
   end
 end
