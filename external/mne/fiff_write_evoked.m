@@ -126,7 +126,7 @@ end
 %  Channel information
 %
 ch_rename = fiff_make_ch_rename(data.info.chs);
-fiff_write_ch_infos(fid,data.info,false,ch_rename);
+fiff_write_ch_infos(fid,data.info.chs,false,ch_rename);
 %
 %    Polhemus data
 %
