@@ -1331,6 +1331,10 @@ elseif filetype_check_extension(filename, '.mat') && filetype_check_header(filen
   type = 'neuroomega_mat';
   manufacturer = 'Alpha Omega';
   content = 'electrophysiological data';
+elseif filetype_check_extension(filename, '.mat') && filetype_check_header(filename, 'MATLAB') && filetype_check_seg3d_mat(filename)
+  type = 'seg3d_mat';
+  manufacturer = 'Scientific Computing and Imaging Institute, Salt Lake City, Utah';
+  content = 'imaging data';
 elseif filetype_check_extension(filename, '.mat') && filetype_check_header(filename, 'MATLAB')
   type = 'matlab';
   manufacturer = 'MATLAB';
@@ -1693,6 +1697,14 @@ fnames = {
   };
 
 res = (numel(intersect(fieldnames(var{1}), fnames)) >= 5);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION that checks for a SCIRun/Seg3D mat file
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function res = filetype_check_seg3d_mat(filename)
+% check the content of the *.mat file
+var = whos('-file', filename);
+res = contains('scirunnrrd', {var.name});
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION that checks for a SPM eeg/meg mat file
