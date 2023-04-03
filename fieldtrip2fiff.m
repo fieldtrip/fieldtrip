@@ -20,6 +20,7 @@ function fieldtrip2fiff(filename, data, varargin)
 % See also FT_DATATYPE_RAW, FT_DATATYPE_TIMELOCK
 
 % Copyright (C) 2012-2013, Jan-Mathijs Schoffelen, Gio Piantoni
+% Copyright (C) 2023, Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -111,26 +112,25 @@ else
   iscomplex = false;
 end
 
-if israw
-  FIFF = fiff_define_constants; % some constants are not defined in the MATLAB function
-  
-  if iscomplex && strcmp(precision, 'single')
-    dtype = FIFF.FIFFT_COMPLEX_FLOAT; 
-  elseif iscomplex && strcmp(precision, 'double')
-    dtype = FIFF.FIFFT_COMPLEX_DOUBLE;
-  elseif ~iscomplex && strcmp(precision, 'single')
-    dtype = FIFF.FIFFT_FLOAT;
-  elseif ~iscomplex && strcmp(precision, 'double')
-    dtype = FIFF.FIFFT_DOUBLE;
-  else
-    ft_error('writing data in requested precision is not supported');
-  end
+FIFF = fiff_define_constants; % some constants are not defined in the MATLAB function
+if iscomplex && strcmp(precision, 'single')
+  dtype = FIFF.FIFFT_COMPLEX_FLOAT;
+elseif iscomplex && strcmp(precision, 'double')
+  dtype = FIFF.FIFFT_COMPLEX_DOUBLE;
+elseif ~iscomplex && strcmp(precision, 'single')
+  dtype = FIFF.FIFFT_FLOAT;
+elseif ~iscomplex && strcmp(precision, 'double')
+  dtype = FIFF.FIFFT_DOUBLE;
+else
+  ft_error('writing data in requested precision is not supported');
+end
 
-  [outfid, cals] = fiff_start_writing_raw(fifffile, info);%, [], class(data.trial{1}));
+if israw
+  [outfid, cals] = fiff_start_writing_raw(fifffile, info);
   fiff_write_raw_buffer(outfid, data.trial{1}, cals, dtype);
   fiff_finish_writing_raw(outfid);
   
-  % write events, if they exists
+  % write events, if they exist
   if isfield(data, 'cfg')
     event = ft_findcfg(data.cfg, 'event');
   else
@@ -143,9 +143,8 @@ if israw
   end
   
 elseif isepch
-  
-  ft_warning('writing epochs to MNE is not implemented yet');
-  
+
+  % convert the data into an evoked struct-array that the writing function can handle
   ntrl    = numel(data.trial);
   aspect_kind = num2cell(ones(ntrl,1)*100);
   is_smsh = num2cell(zeros(ntrl,1)); % FIXME: How could we tell? + Don't know what this is
@@ -158,6 +157,10 @@ elseif isepch
   end
   evoked = struct('aspect_kind', aspect_kind, 'is_smsh', is_smsh, 'nave', nave, ...
     'first', first, 'last', last, 'comment', comment, 'times', data.time(:), 'epochs', data.trial(:));
+  
+  fiffdata.info   = info;
+  fiffdata.evoked = evoked;
+  fiff_write_evoked(fifffile, fiffdata);
 
 elseif istlck
   evoked.aspect_kind = 100;
@@ -257,6 +260,8 @@ else
         chs(1,k).coord_frame  = FIFF.FIFFV_COORD_HEAD;
         chs(1,k).eeg_loc      = [];
         chs(1,k).loc          = [pos(:); R(:)];
+        chs(1,k).cal          = 1;
+
       case 0
         % EEG
         cnt_elec = cnt_elec + 1;
@@ -270,6 +275,7 @@ else
         chs(1,k).coord_frame  = FIFF.FIFFV_COORD_DEVICE;
         chs(1,k).eeg_loc      = [elec.chanpos(i_elec,:)' zeros(3,1)] / 100;
         chs(1,k).loc          = [chs(1,k).eeg_loc(:); 0; 1; 0; 0; 0; 1];
+        chs(1,k).cal          = 1;
 
       case -1
         % OTHER
@@ -284,6 +290,7 @@ else
         chs(1,k).coord_frame  = NaN;
         chs(1,k).eeg_loc      = [];
         chs(1,k).loc          = zeros(12,1);
+        chs(1,k).cal          = 1;
 
       otherwise
     end
