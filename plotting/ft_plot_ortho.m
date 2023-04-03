@@ -33,10 +33,10 @@ function [hx, hy, hz] = ft_plot_ortho(dat, varargin)
 %   'intersectlinestyle'  = string, line specification 
 %   'intersectlinewidth'  = number
 %
-% See also FT_PLOT_SLICE, FT_PLOT_MONTAGE, FT_SOURCEPLOT
+% See also FT_PLOT_SLICE, FT_PLOT_MONTAGE, FT_PLOT_MESH, FT_SOURCEPLOT
 
 % Copyrights (C) 2010, Jan-Mathijs Schoffelen
-% Copyrights (C) 2022, Robert Oostenveld
+% Copyrights (C) 2022-2023, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.

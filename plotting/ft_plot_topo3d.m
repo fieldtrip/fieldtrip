@@ -1,7 +1,7 @@
 function ft_plot_topo3d(pos, val, varargin)
 
-% FT_PLOT_TOPO3D makes a 3-D topographic representation of the electric
-% potential or field at the sensor locations
+% FT_PLOT_TOPO3D visualizes a 3D topographic representation of the electric potential
+% or magnetic field distribution at the sensor locations
 %
 % Use as
 %   ft_plot_topo3d(pos, val, ...)
@@ -17,9 +17,10 @@ function ft_plot_topo3d(pos, val, varargin)
 %   'coordsys'     = string, assume the data to be in the specified coordinate system (default = 'unknown')
 %   'axes'         = boolean, whether to plot the axes of the 3D coordinate system (default = false)
 %
-% See also FT_PLOT_TOPO, FT_PLOT_SENS, FT_TOPOPLOTER, FT_TOPOPLOTTFR
+% See also FT_PLOT_SENS, FT_PLOT_HEADMODEL, FT_PLOT_HEADSHAPE, FT_PLOT_TOPO,
+% FT_TOPOPLOTER, FT_TOPOPLOTTFR
 
-% Copyright (C) 2009-2022, Robert Oostenveld
+% Copyright (C) 2009-2023, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
