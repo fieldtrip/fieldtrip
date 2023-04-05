@@ -69,11 +69,12 @@ elec = [];
 % ADC16   is 18
 % V0      is 15
 
-if ~isempty(coilaccuracy)
+if isfield(hdr, 'res4') && ~isempty(coilaccuracy)
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  % use the coil definitions from the MNE coil_def.dat file
-  % these allow for varying accuracy which is specified by
-  % coilaccuracy = 0, 1 or 2
+  % the header was read using the CTF p-files, i.e. readCTFds
+  %
+  % use in additionthe coil definitions from the MNE coil_def.dat file
+  % these allow for varying accuracy which is specified by coilaccuracy = 0, 1 or 2
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   
   ft_hastoolbox('mne', 1);
@@ -82,70 +83,91 @@ if ~isempty(coilaccuracy)
   
   k = 1;
   for i=1:length(hdr.res4.senres)
-    switch hdr.res4.senres(i).sensorTypeIndex
+    
+    thissens = hdr.res4.senres(i);
+    if thissens.numCoils==2
+      % line between the coils in dewar space, which  is needed to determine the type if it's a reference gradiometer
+      delta    = thissens.pos0*[-1;1]; 
+    end
+
+    switch thissens.sensorTypeIndex
       case 5 % 5001
         thisdef = def([def.id]==5001 & [def.accuracy]==coilaccuracy);
       case 0 % 5002
         thisdef = def([def.id]==5002 & [def.accuracy]==coilaccuracy);
-      case 1 % 5003
-        thisdef = def([def.id]==5003 & [def.accuracy]==coilaccuracy);
+      case 1 % 5003 or 5004
+        % this is a reference gradiometer
+        
+        % determine whether the gradient is 'off' diagonal, comparing the
+        % (cosine) of the angle between the line connecting the coils and
+        % the orientation of the first coil        % 
+        if abs((delta./norm(delta))'*thissens.ori0(:,1))<1e-3
+          % it's an off diagonal channel
+          thisdef = def([def.id]==5004 & [def.accuracy]==coilaccuracy);
+        else
+          thisdef = def([def.id]==5003 & [def.accuracy]==coilaccuracy);
+        end
       otherwise
         % do not add this as sensor to the gradiometer definition
         thisdef = [];
     end % case
     
     if ~isempty(thisdef)
-      % the sensors (i.e. the combination of coils that comprises a channel) is
-      % defined at [0 0 0] and with the direction [0 0 1]
-      pos0 = [0 0 0];
-      ori0 = [0 0 1];
-      
       if dewar
-        % convert from cm to m
-        pos2 = hdr.res4.senres(i).pos0(:,1)' / 100;
-        if hdr.res4.senres(i).numCoils==2
-          % determine the direction from the position of the two coils
-          ori2 = (hdr.res4.senres(i).pos0(:,2) - hdr.res4.senres(i).pos0(:,1))';
-        else
-          % determine the direction from the orientation of the coil
-          ori2 = hdr.res4.senres(i).ori0(:,1);
-        end
-      else
-        % convert from cm to m
-        pos2 = hdr.res4.senres(i).pos(:,1)' / 100;
-        if hdr.res4.senres(i).numCoils==2
-          % determine the direction from the position of the two coils
-          ori2 = (hdr.res4.senres(i).pos(:,2) - hdr.res4.senres(i).pos(:,1))';
-        else
-          % determine the direction from the orientation of the coil
-          ori2 = hdr.res4.senres(i).ori(:,1);
-        end
+        pos = thissens.pos0;
+        ori = thissens.ori0;
+      else 
+        pos = thissens.pos;
+        ori = thissens.ori;
       end
-      ori2 = ori2/norm(ori2);
+      pos   = pos./100;   % convert from cm to m
       
+      if thissens.numCoils==2 && thisdef.id~=5004
+        % determine the direction from the relative position of the two coils
+        ez  = -ori(:,1).*sign(thissens.properGain);
+        ez  = ez./norm(ez);
+        
+        pos = pos(:,1)'; % take the first coil as local origin
+        [ex, ey] = plane_unitvectors(ez);
+        
+      elseif thissens.numCoils==2 && thisdef.id==5004
+        % 'off' diagonal gradiometer, needs to be treated differently.
+        
+        % the local origin is the average of the two coils, and the local
+        % x-axis connects the coils
+        ex  = pos*[-1;1]; % line between the coils
+        pos = mean(pos,2)';
+
+        ez  = -ori(:,1).*sign(thissens.properGain);
+        ex  = ex./norm(ex); 
+        ey  = cross(ez,ex);
+ 
+      else
+        % magnetometer coil
+        pos = pos';
+
+        % determine the direction from the orientation of the magnetometer coil
+        ez = -ori(:,1).*sign(thissens.properGain);
+        [ex, ey] = plane_unitvectors(ez);
+        
+      end
+
       for j=1:thisdef.num_points
         weight = thisdef.coildefs(j,1);
         pos1 = thisdef.coildefs(j,2:4);
         ori1 = thisdef.coildefs(j,5:7);
         
-        [az0,el0,r0] = cart2sph(ori0(1), ori0(2), ori0(3));
-        [az2,el2,r2] = cart2sph(ori2(1), ori2(2), ori2(3));
-        % determine the homogenous transformation that rotates [1 0 0] towards ori0
-        R0 = rotate([0 0 az0*180/pi]) * rotate([0 -el0*180/pi 0]);
-        % determine the homogenous transformation that rotates [1 0 0] towards ori2
-        R2 = rotate([0 0 az2*180/pi]) * rotate([0 -el2*180/pi 0]);
-        % determine the homogenous transformation that rotates ori0 to ori2
-        R = R2/R0;
-        T = translate(pos2 - pos0);
-        H = T*R;
+        R = [ex(:) ey(:) ez(:) zeros(3,1);0 0 0 1];
+        T = translate(pos);
         grad.tra(i,k)     = weight;
         grad.coilpos(k,:) = ft_warp_apply(T*R, pos1); % first the rotation, then the translation
         grad.coilori(k,:) = ft_warp_apply(  R, ori1); % only the rotation
         k = k+1;
       end % for num_points
       
-      grad.chanpos(i,:) = pos2;
-      grad.chanori(i,:) = ori2;
+      grad.chanpos(i,:) = pos;
+      grad.chanori(i,:) = ez;
+      
       % remove the site-specific numbers from each channel name, e.g. 'MZC01-1706' becomes 'MZC01'
       grad.label{i} = strtok(hdr.res4.chanNames(i,:), '-');
     end % if MEG or MEGREF
@@ -492,3 +514,30 @@ if ~isempty(elec)
   elec.chantype = ft_chantype(elec);
   elec.chanunit = ft_chanunit(elec);
 end
+
+function [ex, ey] = plane_unitvectors(ez)
+
+% subfunction to obtain a pair of vectors that span the plane orthogonal to
+% ez. The heuristic is inspired by the MNE-python code
+
+if abs(abs(ez(3))-1)<1e-5
+  ex = [1 0 0]';
+else
+  ex = zeros(3,1);
+  if ez(2)<ez(3)
+    if ez(1)<ez(2)
+      ex(1) = 1;
+    else
+      ex(2) = 1;
+    end
+  else
+    if ez(1)<ez(2)
+      ex(1) = 1;
+    else
+      ex(3) = 1;
+    end
+  end
+end
+ex = ex - (ex'*ez).*ez;
+ex = ex / norm(ex);
+ey = cross(ez, ex);
