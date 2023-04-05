@@ -198,7 +198,7 @@ else
   haselec = isfield(data, 'elec');
   nchan   = numel(data.label);
   
-  stype = zeros(nchan, 1).*-1;
+  stype = zeros(nchan, 1)-1;
   indx  = nan(nchan,1);
   
   if haselec
@@ -206,7 +206,7 @@ else
     stype(i_labeeg) = 0; %meg/eeg/other = 1/0/-1
     indx(i_labeeg)  = i_elec; %indexes into the grad/elec
    
-    data.elec = ft_convert_units(data.elec, 'cm'); % MNE uses cm for EEG (FIXME is this true)
+    %data.elec = ft_convert_units(data.elec, 'cm'); % MNE uses cm for EEG (FIXME is this true?)
   end
   
   if hasgrad
@@ -271,9 +271,9 @@ else
         chs(1,k).coil_type    = NaN;
         chs(1,k).coil_trans   = [];
         chs(1,k).unit         = 107; % volts FIFF.FIFF_UNIT_V
-        chs(1,k).unit_mul     = -6; % micro FIFF.FIFF_UNITM_MU
+        chs(1,k).unit_mul     = -6; % micro FIFF.FIFF_UNITM_MU FIXME is this correct?
         chs(1,k).coord_frame  = FIFF.FIFFV_COORD_DEVICE;
-        chs(1,k).eeg_loc      = [elec.chanpos(i_elec,:)' zeros(3,1)] / 100;
+        chs(1,k).eeg_loc      = [data.elec.chanpos(indx(k),:)' zeros(3,1)]; % no clue here FIXME
         chs(1,k).loc          = [chs(1,k).eeg_loc(:); 0; 1; 0; 0; 0; 1];
         chs(1,k).cal          = 1;
 
@@ -363,23 +363,38 @@ function coiltype = grad2coiltype(grad)
 stype = ft_senstype(grad);
 def   = mne_load_coil_def('coil_def.dat');
 def   = def([def.accuracy]==0);
+descr = {def.description}';
 
-coiltype = [];
+coiltype = nan(numel(grad.label, 1));
 switch stype
   case 'neuromag122'
   case 'neuromag306'
   case {'ctf151' 'ctf275'}
+    sel = strncmp(descr, 'CTF', 3);
+    def = def(sel);
+    descr = descr(sel);
+
+    ctype = grad.chantype;
+keyboard
+    % the MEG gradiometers
+    coiltype(strcmp(ctype, 'meggrad')) = def(contains(descr, 'axial gradiometer')).id;
+    
+    % the REF magnetometers
+    coiltype(strcmp(ctype, 'refmag')) = def(contains(descr, 'reference magnetometer')).id;
+
+    % the REF gradiometers
+
+
   case 'bti148'
   case 'bti248'
   otherwise
-    
+    stype = 'point magnetometer';
+    % treat as point magnetometer system
+    sel         = strcmp(descr, 'Point magnetometer');
+    coiltype(:) = def(sel).id; 
 end
+ft_info('creating coiltypes according to sensor type: %s', stype);
 
-% treat as point magnetometer system
-sel = strcmp({def.description}', 'Point magnetometer');
-if isempty(coiltype)
-  coiltype = ones(numel(grad.label),1).*def(sel).id;
-end
 
 function coilunit = grad2coilunit(grad, FIFF)
 
