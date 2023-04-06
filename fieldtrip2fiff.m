@@ -182,14 +182,15 @@ end
 % subfunction
 function [chs] = sens2fiff(data)
 
-% use orig information if available
 if isfield(data, 'hdr') && isfield(data.hdr, 'orig') && isfield(data.hdr.orig, 'chs')
-  
+  % use orig information if available
   ft_warning('Using the original channel information from the header, this may be wrong if channels have been pruned, reordered, rescaled');
   [i_label, i_chs] = match_str(data.label, {data.hdr.orig.chs.ch_name}');
+  if numel(i_label) < numel(data.label)
+    ft_error('there are more channels in the data than in the original header information, this is currently not supported');
+  end
   chs(i_label)     = data.hdr.orig.chs(i_chs);
 else
-
   % otherwise reconstruct a usable channel information array
   ft_warning('Reconstructing channel information, based on the available data, it might be inaccurate\n');
   FIFF = fiff_define_constants; % some constants are not defined in the MATLAB function
@@ -224,7 +225,6 @@ else
   range   = num2cell(ones(nchan,1));
   cal     = num2cell(ones(nchan,1));
 
-  
   cnt_grad = 0;
   cnt_elec = 0;
   cnt_else = 0;
@@ -244,17 +244,10 @@ else
         pos = data.grad.chanpos(indx(k),:);
         ori = data.grad.chanori(indx(k),:);
 
-        this_z = ori;          
-        this_z = this_z / norm(this_z);
-        this_x = cross([0 0 1], this_z);
-        if all(this_x==0)
-          this_x = [1 0 0];
-        else
-          this_x = this_x / norm(this_x);
-        end
-        this_y = cross(this_z, this_x);
-        R      = [this_x(:) this_y(:) this_z(:)];
+        this_z = ori';          
+        [this_x, this_y] = plane_unitvectors(this_z);
 
+        R = [this_x this_y this_z];
         chs(1,k).coil_trans   = [R pos(:); 0 0 0 1];
         chs(1,k).unit_mul     = 0;
         chs(1,k).coord_frame  = FIFF.FIFFV_COORD_HEAD;
@@ -365,28 +358,45 @@ def   = mne_load_coil_def('coil_def.dat');
 def   = def([def.accuracy]==0);
 descr = {def.description}';
 
-coiltype = nan(numel(grad.label, 1));
+coiltype = nan(numel(grad.label), 1);
+ctype    = grad.chantype;
 switch stype
   case 'neuromag122'
+    keyboard
   case 'neuromag306'
   case {'ctf151' 'ctf275'}
-    sel = strncmp(descr, 'CTF', 3);
-    def = def(sel);
-    descr = descr(sel);
-
-    ctype = grad.chantype;
-keyboard
-    % the MEG gradiometers
-    coiltype(strcmp(ctype, 'meggrad')) = def(contains(descr, 'axial gradiometer')).id;
     
-    % the REF magnetometers
-    coiltype(strcmp(ctype, 'refmag')) = def(contains(descr, 'reference magnetometer')).id;
+    % the MEG gradiometers, hardcoded id from fif definition
+    coiltype(strcmp(ctype, 'meggrad')) = 5001;
+    
+    % the REF magnetometers, hardcoded id from fif definition
+    coiltype(strcmp(ctype, 'refmag')) = 5002;
 
-    % the REF gradiometers
-
+    % the REF gradiometers, hardcoded id from fif definition
+    coiltype(~isfinite(coiltype)&strcmp(ctype, 'refgrad')&contains(grad.label,'11')) = 5003;
+    coiltype(~isfinite(coiltype)&strcmp(ctype, 'refgrad')&contains(grad.label,'22')) = 5003;
+    coiltype(~isfinite(coiltype)&strcmp(ctype, 'refgrad'))                           = 5004;
 
   case 'bti148'
+    % hardcoded id from fif definition
+    coiltype(strcmp(ctype, 'megmag')) = 4001;
+
   case 'bti248'
+    % hardcoded id from fif definition
+    coiltype(strcmp(ctype, 'megmag')) = 4001;
+    coiltype(strcmp(ctype, 'refmag')) = 4003;
+    coiltype(strcmp(ctype, 'refgrad')&contains(grad.label,'xx')) = 4004;
+    coiltype(strcmp(ctype, 'refgrad')&contains(grad.label,'yy')) = 4004;
+    coiltype(strcmp(ctype, 'refgrad')&~isfinite(coiltype)) = 4005;
+  
+  case 'bti248grad'
+    % hardcoded id from fif definition
+    coiltype(strcmp(ctype, 'meggrad')) = 4002;
+    coiltype(strcmp(ctype, 'refmag')) = 4003;
+    coiltype(strcmp(ctype, 'refgrad')&contains(grad.label,'xx')) = 4004;
+    coiltype(strcmp(ctype, 'refgrad')&contains(grad.label,'yy')) = 4004;
+    coiltype(strcmp(ctype, 'refgrad')&~isfinite(coiltype)) = 4005;
+  
   otherwise
     stype = 'point magnetometer';
     % treat as point magnetometer system
@@ -411,3 +421,29 @@ for k = 1:numel(grad.chanunit)
   end
 end
 
+function [ex, ey] = plane_unitvectors(ez)
+
+% subfunction to obtain a pair of vectors that span the plane orthogonal to
+% ez. The heuristic is inspired by the MNE-python code
+
+if abs(abs(ez(3))-1)<1e-5
+  ex = [1 0 0]';
+else
+  ex = zeros(3,1);
+  if ez(2)<ez(3)
+    if ez(1)<ez(2)
+      ex(1) = 1;
+    else
+      ex(2) = 1;
+    end
+  else
+    if ez(1)<ez(2)
+      ex(1) = 1;
+    else
+      ex(3) = 1;
+    end
+  end
+end
+ex = ex - (ex'*ez).*ez;
+ex = ex / norm(ex);
+ey = cross(ez, ex);

@@ -1,3 +1,5 @@
+function test_fieldtrip2fiff
+
 datadir = dccnpath('/home/common/matlab/fieldtrip/data/test/original/meg');
 
 fname = {
@@ -38,5 +40,10 @@ for k = 1:numel(savename)
   cfg.coilaccuracy = 0; % ensure fif readers to use mne2grad
   datafif = ft_preprocessing(cfg);
   load(strrep(savename{k},'fif','mat'));
+
+  % some of the metadata are in single precision in the fif file
+  data    = ft_struct2single(data);
+  datafif = ft_struct2single(datafif);
+
   [ix,msg] = isalmostequal(rmfield(data,{'cfg' 'hdr'}),rmfield(datafif,{'cfg' 'hdr'}));
 end
