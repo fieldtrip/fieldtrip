@@ -1,4 +1,4 @@
-function [grad, elec] = ctf2grad(hdr, dewar, coilaccuracy)
+function [grad, elec] = ctf2grad(hdr, dewar, coilaccuracy, coildeffile)
 
 % CTF2GRAD converts a CTF header to a gradiometer structure that can be understood by
 % the FieldTrip low-level forward and inverse routines. The fieldtrip/fileio
@@ -10,6 +10,7 @@ function [grad, elec] = ctf2grad(hdr, dewar, coilaccuracy)
 % where
 %   dewar        = boolean, whether to return it in dewar or head coordinates (default is head coordinates)
 %   coilaccuracy = empty or a number (default is empty)
+%   coildeffile  = empty or a filename of a valid coil_def.dat file
 %
 % See also BTI2GRAD, FIF2GRAD, MNE2GRAD, ITAB2GRAD, YOKOGAWA2GRAD,
 % FT_READ_SENS, FT_READ_HEADER
@@ -42,6 +43,12 @@ if nargin<3 || isempty(coilaccuracy)
   % if empty it will use the original code
   % otherwise it will use the specified accuracy coil definition from the MNE coil_def.dat
   coilaccuracy = [];
+end
+
+if nargin<4 || isempty(coildeffile)
+  % if coilaccuracy is not empty, it will use the default coil_def.dat
+  % file, which is in external/mne
+  coildeffile = [];
 end
 
 if isfield(hdr, 'orig')
@@ -78,18 +85,16 @@ if isfield(hdr, 'res4') && ~isempty(coilaccuracy)
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   
   ft_hastoolbox('mne', 1);
-  [ftver, ftpath] = ft_version;
-  def = mne_load_coil_def(fullfile(ftpath, 'external', 'mne', 'coil_def.dat'));
+  if isempty(coildeffile)
+    [ftver, ftpath] = ft_version;
+    coildeffile     = fullfile(ftpath, 'external', 'mne', 'coil_def.dat');
+  end
+  def = mne_load_coil_def(coildeffile);
   
   k = 1;
   for i=1:length(hdr.res4.senres)
     
     thissens = hdr.res4.senres(i);
-    if thissens.numCoils==2
-      % line between the coils in dewar space, which  is needed to determine the type if it's a reference gradiometer
-      delta    = thissens.pos0*[-1;1]; 
-    end
-
     switch thissens.sensorTypeIndex
       case 5 % 5001
         thisdef = def([def.id]==5001 & [def.accuracy]==coilaccuracy);
@@ -97,11 +102,12 @@ if isfield(hdr, 'res4') && ~isempty(coilaccuracy)
         thisdef = def([def.id]==5002 & [def.accuracy]==coilaccuracy);
       case 1 % 5003 or 5004
         % this is a reference gradiometer
-        
+        delta = thissens.pos0*[-1;1]; 
+
         % determine whether the gradient is 'off' diagonal, comparing the
         % (cosine) of the angle between the line connecting the coils and
         % the orientation of the first coil        % 
-        if abs((delta./norm(delta))'*thissens.ori0(:,1))<1e-3
+        if abs((delta./norm(delta))'*thissens.ori0(:,1))<1e-2
           % it's an off diagonal channel
           thisdef = def([def.id]==5004 & [def.accuracy]==coilaccuracy);
         else
@@ -124,8 +130,9 @@ if isfield(hdr, 'res4') && ~isempty(coilaccuracy)
       
       if thissens.numCoils==2 && thisdef.id~=5004
         % determine the direction from the relative position of the two coils
+        %ez = pos(:,2)-pos(:,1);
+        %ez = ez./norm(ez);
         ez  = -ori(:,1).*sign(thissens.properGain);
-        ez  = ez./norm(ez);
         
         pos = pos(:,1)'; % take the first coil as local origin
         [ex, ey] = plane_unitvectors(ez);
@@ -135,13 +142,14 @@ if isfield(hdr, 'res4') && ~isempty(coilaccuracy)
         
         % the local origin is the average of the two coils, and the local
         % x-axis connects the coils
-        ex  = pos*[-1;1]; % line between the coils
+        ex  = pos*[1;-1]; % line between the coils
         pos = mean(pos,2)';
 
         ez  = -ori(:,1).*sign(thissens.properGain);
         ex  = ex./norm(ex); 
         ey  = cross(ez,ex);
- 
+        
+        %thisdef.coildefs(:,2:4) = -thisdef.coildefs(:,2:4); % FIXME not sure about this
       else
         % magnetometer coil
         pos = pos';
