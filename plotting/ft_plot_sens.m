@@ -34,6 +34,7 @@ function hs = ft_plot_sens(sens, varargin)
 %   'orientation'     = true/false, plot a line for the orientation of each optode (default = false)
 %   'optoshape'       = 'point', 'circle', 'square', 'sphere', or 'disc' (default is automatic)
 %   'optosize'        = diameter of the optodes (default is automatic)
+%   'headshape'       = headshape, required for optoshape 'disc'
 %
 % The following options apply when electrodes/coils/optodes are NOT plotted individually
 %   'style'           = plotting style for the points representing the channels, see plot3 (default = [])
@@ -89,6 +90,7 @@ fontsize        = ft_getopt(varargin, 'fontsize',   get(0, 'defaulttextfontsize'
 fontname        = ft_getopt(varargin, 'fontname',   get(0, 'defaulttextfontname'));
 fontweight      = ft_getopt(varargin, 'fontweight', get(0, 'defaulttextfontweight'));
 fontunits       = ft_getopt(varargin, 'fontunits',  get(0, 'defaulttextfontunits'));
+headshape       = ft_getopt(varargin, 'headshape', []); % needed for elecshape/optoshape 'disc'
 
 % this is for MEG magnetometer and/or gradiometer arrays
 coil            = ft_getopt(varargin, 'coil', false);
@@ -98,7 +100,6 @@ coilsize        = ft_getopt(varargin, 'coilsize');  % default depends on the inp
 elec            = ft_getopt(varargin, 'elec', false);
 elecshape       = ft_getopt(varargin, 'elecshape'); % default depends on the input, see below
 elecsize        = ft_getopt(varargin, 'elecsize');  % default depends on the input, see below
-headshape       = ft_getopt(varargin, 'headshape', []); % needed for elecshape 'disc'
 % this is for NIRS optode arrays
 opto            = ft_getopt(varargin, 'opto', false);
 optoshape       = ft_getopt(varargin, 'optoshape'); % default depends on the input, see below
