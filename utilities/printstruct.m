@@ -22,9 +22,9 @@ function str = printstruct(name, val, varargin)
 %
 %   s = printstruct('c', randn(10)>0.5)
 %
-% See also DISP
+% See also DISP, NUM2STR, INT2STR, MAT2STR
 
-% Copyright (C) 2006-2018, Robert Oostenveld
+% Copyright (C) 2006-2023, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -75,7 +75,7 @@ if numel(val) == 0
   elseif isnumeric(val)
     str = [name ' = [];' 10];
   end
-  
+
 elseif isstruct(val)
   if numel(val)>1
     % print it as a struct-array
@@ -114,7 +114,7 @@ elseif isstruct(val)
       str = [name ' = struct();'];
     end
   end
-  
+
 elseif ~isstruct(val)
   % print it as a named variable
   switch class(val)
@@ -217,8 +217,16 @@ siz = size(val);
 if numel(val) == 0
   str = sprintf('%s = [];\n', name);
 elseif numel(val) == 1
-  % an integer will never get trailing decimals when using %g
-  str = sprintf('%s = %g;', name, val);
+  if isa(val, 'double')
+    % an integer will never get trailing decimals when using %g
+    str = sprintf('%s = %g;', name, val);
+  elseif isa(val, 'logical') && val
+    str = sprintf('%s = true;', name);
+  elseif isa(val, 'logical') && ~val
+    str = sprintf('%s = false;', name);
+  else
+    str = sprintf('%s = %s(%g);', name, class(val), val);
+  end
 elseif numel(siz) == 2 && siz(2) == 1 && transposed
   % print column vector as (non-conjugate) transposed row
   str = printmat(name, transpose(val), linebreaks, false);
@@ -250,21 +258,21 @@ function str = printval(val, linebreaks, transposed)
 switch class(val)
   case 'char'
     str = ['''' val ''''];
-    
+
   case 'string'
     % these use " in the declaration rather than '
     str = ['"' char(val) '";'];
-    
+
   case {'single' 'double' 'int8' 'int16' 'int32' 'int64' 'uint8' 'uint16' 'uint32' 'uint64' 'logical'}
     str = printmat('', val, linebreaks, transposed);
     str = str(4:end);
     if endsWith(str, ';')
       str = str(1:end-1);
     end
-    
+
   case 'function_handle'
     str = ['@' func2str(val)];
-    
+
   case 'struct'
     % print it as an anonymous structure
     str = 'struct(';
@@ -273,7 +281,7 @@ switch class(val)
       str = [str '''' fn{i} '''' ', ' printval(val.(fn{i}), linebreaks, transposed)];
     end
     str = [str ')'];
-    
+
   otherwise
     ft_warning('cannot print unknown object at this level');
     str = '''ERROR: cannot print unknown object at this level''';
