@@ -1611,6 +1611,10 @@ elseif filetype_check_extension(filename, '.msh') && filetype_check_header(filen
   type = 'gmsh_ascii';
   manufacturer = 'gmsh team';
   content = 'geometrical meshes';
+elseif filetype_check_extension(filename, '.vtk') && filetype_check_header(filename, '# vtk') && filetype_check_ascii(filename, inf)
+  type = 'vtk';
+  manufacturer = 'ParaView';
+  content = 'geometrical meshes';
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1783,7 +1787,7 @@ if exist(filename, 'file')
   bin = fread(fid, len, 'uint8=>uint8');
   fclose(fid);
   printable = bin>31 & bin<127;  % the printable characters, represent letters, digits, punctuation marks, and a few miscellaneous symbols
-  special   = bin==10 | bin==13 | bin==11; % line feed, form feed, tab
+  special   = bin==9 | bin==10 | bin==11 | bin==12 | bin==13; % horizontal tab, line feed, vertical tab, form feed, carriage return
   res = all(printable | special);
 else
   % always return true if the file does not (yet) exist, this is important
