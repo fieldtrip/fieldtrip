@@ -951,9 +951,9 @@ axis(h3, [xi-xloadj xi+xhiadj yi-yloadj yi+yhiadj]);
 
 if opt.zoom>0
   % the coordsys labels fall outside the subplots when zoomed in
-  delete(findall(h, 'Type', 'text', 'Tag', 'coordsys_label_100'));
-  delete(findall(h, 'Type', 'text', 'Tag', 'coordsys_label_010'));
-  delete(findall(h, 'Type', 'text', 'Tag', 'coordsys_label_001'));
+  delete(findall(h, 'Type', 'text', 'Tag', 'coordsyslabel_x'));
+  delete(findall(h, 'Type', 'text', 'Tag', 'coordsyslabel_y'));
+  delete(findall(h, 'Type', 'text', 'Tag', 'coordsyslabel_z'));
 end
 
 if opt.init
