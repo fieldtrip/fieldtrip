@@ -23,6 +23,10 @@ switch viewpoint
     viewpoint = 'superior';
   case 'bottom'
     viewpoint = 'inferior';
+  case 'default'
+    % switch to the default 3D MATLAB view, irrespective of the coordinate system
+    view(ax, [-37.5 30])
+    return
 end
 
 switch lower(coordsys)
