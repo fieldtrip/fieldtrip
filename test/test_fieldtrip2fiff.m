@@ -20,13 +20,16 @@ savename = cell(numel(fname),1);
 for k = 1:numel(fname)
   cfg = [];
   cfg.dataset = fullfile(datadir, fname{k});
-  cfg.coilaccuracy = 0; %-> ensure the fif-reader to have the units right for the grad array
+  if endsWith(cfg.dataset, 'fif')
+    cfg.coilaccuracy = 0; %-> ensure the fif-reader to have the units right for the grad array, this uses the coil_def stuff
+  end
   hdr = ft_read_header(cfg.dataset);
   if hdr.nTrials*hdr.nSamples>1000
     cfg.trl = [1 1000 0];
   end
   cfg.continuous = 'yes';
   data = ft_preprocessing(cfg);
+  data.grad = ft_convert_units(data.grad, 'm');
   
   savename{k,1} = fullfile(savedir, sprintf('file%03d.fif',k));
   fieldtrip2fiff(savename{k}, data);
@@ -45,5 +48,44 @@ for k = 1:numel(savename)
   data    = ft_struct2single(data);
   datafif = ft_struct2single(datafif);
 
-  [ix,msg] = isalmostequal(rmfield(data,{'cfg' 'hdr'}),rmfield(datafif,{'cfg' 'hdr'}));
+  [ix,msg] = isalmostequal(rmfield(data,{'cfg' 'hdr' 'grad'}),rmfield(datafif,{'cfg' 'hdr' 'grad'}), 'reltol', 1e-4);
+  M(k).msg = msg;
+
+  % compare the grads
+  grad    = data.grad;
+  gradfif = datafif.grad;
+  
+  % the order of the channels might have been changed, as well as the
+  % coils, as well as the polarity of the ori.
+  [i1,i2] = match_str(grad.label, gradfif.label);
+  fn = fieldnames(gradfif);
+  for kk = 1:numel(fn)
+    if size(gradfif.(fn{kk}), 1) == numel(i2)
+      gradfif.(fn{kk}) = gradfif.(fn{kk})(i2,:);
+    end
+  end
+  
+  c1 = grad.coilpos;
+  c2 = gradfif.coilpos;
+  n  = size(c1,1);
+  D  = squareform(pdist([c1;c2]));
+  D  = D(1:n,n+(1:n));
+  
+  i2 = zeros(size(D,1),1);
+  for kk = 1:numel(i2)
+    [m, i2(kk)] = min(D(kk,:));
+  end
+  
+  for kk = 1:numel(fn)
+    if size(gradfif.(fn{kk}), 1) == numel(i2)
+      gradfif.(fn{kk}) = gradfif.(fn{kk})(i2,:);
+    elseif size(gradfif.(fn{kk}), 2) == numel(i2)
+      gradfif.(fn{kk}) = gradfif.(fn{kk})(:, i2);
+    end
+  end
+  
+  sel = sum(gradfif.tra)<0;
+  gradfif.tra = abs(gradfif.tra);
+  gradfif.coilori(sel,:) = -gradfif.coilori(sel,:);
+
 end

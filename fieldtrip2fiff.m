@@ -236,18 +236,18 @@ else
         % MEG
         cnt_grad = cnt_grad + 1;
         
+        % safety check
+        selcoil = data.grad.tra(indx(k),:)~=0;
+        assert(sum(selcoil)<=2);
+        
+        pos = data.grad.chanpos(indx(k),:);
+        ori = data.grad.chanori(indx(k),:);
+        R   = ori2r(ori, data.grad.coilpos(selcoil, :), coiltype(indx(k)));
+
         chs(1,k).kind      = FIFF.FIFFV_MEG_CH;
         chs(1,k).logno     = cnt_grad;
         chs(1,k).coil_type = coiltype(indx(k));
         chs(1,k).unit      = coilunit(indx(k));
-        
-        pos = data.grad.chanpos(indx(k),:);
-        ori = data.grad.chanori(indx(k),:);
-
-        this_z = ori';          
-        [this_x, this_y] = plane_unitvectors(this_z);
-
-        R = [this_x this_y this_z];
         chs(1,k).coil_trans   = [R pos(:); 0 0 0 1];
         chs(1,k).unit_mul     = 0;
         chs(1,k).coord_frame  = FIFF.FIFFV_COORD_HEAD;
@@ -362,8 +362,12 @@ coiltype = nan(numel(grad.label), 1);
 ctype    = grad.chantype;
 switch stype
   case 'neuromag122'
-    keyboard
+    % this can in theory happen, but is not supported yet, FIXME please
+    % feel free to add support for this (and the below) when you need it.
+    ft_warning('deteced neuromag122 as sensory array, but no original channel info will be used')
   case 'neuromag306'
+    ft_warning('deteced neuromag306 as sensory array, but no original channel info will be used')
+ 
   case {'ctf151' 'ctf275'}
     
     % the MEG gradiometers, hardcoded id from fif definition
@@ -402,6 +406,14 @@ switch stype
     % treat as point magnetometer system
     sel         = strcmp(descr, 'Point magnetometer');
     coiltype(:) = def(sel).id; 
+end
+
+% this is needed as long as neuromag is not properly dealt with in the above
+if all(~isfinite(coiltype))
+  stype = 'point magnetometer';
+  % treat as point magnetometer system
+  sel         = strcmp(descr, 'Point magnetometer');
+  coiltype(:) = def(sel).id; 
 end
 ft_info('creating coiltypes according to sensor type: %s', stype);
 
@@ -447,3 +459,23 @@ end
 ex = ex - (ex'*ez).*ez;
 ex = ex / norm(ex);
 ey = cross(ez, ex);
+
+function R = ori2r(ori, pos, coiltype)
+
+% helper function to get the orthonormal matrix that describes the local
+% coordinate system of a sensor in fif convention. Note that not all
+% coiltypes are guaranteed to be correct
+
+switch coiltype
+  case 5004
+    % off diagonal CTF reference gradiometer
+    ex  = pos'*[1;-1]; % line between the coils
+    ex  = ex./norm(ex);
+    ez  = ori(:);
+    ey  = cross(ez,ex);
+  otherwise
+    ez       = ori(:);
+    [ex, ey] = plane_unitvectors(ez);
+end
+R        = [ex(:) ey(:) ez(:)];
+
