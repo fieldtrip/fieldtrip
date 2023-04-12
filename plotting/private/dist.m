@@ -4,7 +4,7 @@ function [d] = dist(x)
 %
 % Use as
 %   [d] = dist(x)
-% where x is for example Nx3 for points in 3D space.
+% where x is for example an 3xN matrix with positions in 3D space.
 %
 % This function serves as a replacement for the dist function in the Neural
 % Networks toolbox.

@@ -517,7 +517,7 @@ if ~isempty(label) && ~any(strcmp(label, {'off', 'no'}))
     x = pos(i,1) + offset * ori(i,1);
     y = pos(i,2) + offset * ori(i,2);
     z = pos(i,3) + offset * ori(i,3);
-    text(x, y, z, str, 'color', fontcolor, 'fontunits', fontunits, 'fontsize', fontsize, 'fontname', fontname, 'fontweight', fontweight, 'horizontalalignment', 'center', 'verticalalignment', 'middle');
+    text(x, y, z, str, 'color', fontcolor, 'fontunits', fontunits, 'fontsize', fontsize, 'fontname', fontname, 'fontweight', fontweight, 'horizontalalignment', 'center', 'verticalalignment', 'middle', 'interpreter', 'none');
   end % for each channel
 end % if label
 
