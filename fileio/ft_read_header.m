@@ -1930,6 +1930,7 @@ switch headerformat
     if isempty(fiff_find_evoked(filename)) % true if file contains no evoked responses
       try
         epochs = fiff_read_epochs(filename);
+        epochs.data = permute(epochs.data, [2 3 1]); % makes life much easier later on (chan_time_rpt)
         isepoched = 1;
       catch
         % the "catch me" syntax is broken on MATLAB74, this fixes it
@@ -1979,7 +1980,7 @@ switch headerformat
     elseif isepoched
       hdr.nSamples    = length(epochs.times);
       hdr.nSamplesPre = sum(epochs.times < 0);
-      hdr.nTrials     = size(epochs.data, 1);
+      hdr.nTrials     = size(epochs.data, 3); % because the data matrix has been permuted
       info.epochs     = epochs;  % this is used by read_data to get the actual data, i.e. to prevent re-reading
 
     elseif isaverage

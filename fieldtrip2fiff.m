@@ -46,7 +46,7 @@ ft_defaults
 % ensure that the filename has the correct extension
 [pathstr, name, ext] = fileparts(filename);
 if ~strcmp(ext, '.fif')
-  ft_error('if the filename is specified with extension, this should read .fif');
+  ft_error('If the filename is specified with a file extension, this should read .fif');
 end
 fifffile  = fullfile(pathstr ,[name '.fif']);
 eventfile = fullfile(pathstr ,[name '-eve.fif']);
@@ -56,18 +56,22 @@ ft_hastoolbox('mne', 1);
 
 % check if the input data is valid for this function
 data   = ft_checkdata(data, 'datatype', {'raw', 'timelock'}, 'hassampleinfo', 'yes', 'feedback', 'yes');
-istlck = ft_datatype(data, 'timelock');
-isepch = ft_datatype(data, 'raw');
-israw  = false;
-if isepch && numel(data.trial) == 1
-  isepch = false;
-  israw  = true;
+istlck = ft_datatype(data, 'timelock') && isfield(data, 'avg');
+israw  = ft_datatype(data, 'raw') && numel(data.trial)==1;
+isepch = ft_datatype(data, 'timelock') || (ft_datatype(data, 'raw') && numel(data.trial)>1);
+if isepch
+  data = ft_checkdata(data, 'datatype', 'timelock', 'feedback', 'yes');
 end
-if istlck
-  fsample = 1./mean(diff(data.time));
-else
+if israw
   fsample = 1./mean(diff(data.time{1}));
+  dtype   = class(data.trial{1});
+  iscomplex = ~isreal(data.trial{1});
+else
+  fsample = 1./mean(diff(data.time));
+  dtype   = class(data.trial);
+  iscomplex = ~isreal(data.trial);
 end
+precision = ft_getopt(varargin, 'precision', dtype);
 
 % Create a fiff-header, or take information from the original header if possible
 if isfield(data, 'hdr') && isfield(data.hdr, 'orig') && isfield(data.hdr.orig, 'meas_id')
@@ -105,13 +109,6 @@ info.ch_names = data.label(:)';
 info.chs      = sens2fiff(data);
 info.nchan    = numel(data.label);
 
-precision = ft_getopt(varargin, 'precision', class(data.trial{1}));
-if ~isreal(data.trial{1})
-  iscomplex = true;
-else
-  iscomplex = false;
-end
-
 FIFF = fiff_define_constants; % some constants are not defined in the MATLAB function
 if iscomplex && strcmp(precision, 'single')
   dtype = FIFF.FIFFT_COMPLEX_FLOAT;
@@ -139,28 +136,34 @@ if israw
   if ~isempty(event)
     eve = convertevent(event);
     mne_write_events(eventfile, eve);
-    fprintf('Writing events to %s\n', eventfile)
+    ft_info('Writing events to %s\n', eventfile)
   end
   
 elseif isepch
-
-  % convert the data into an evoked struct-array that the writing function can handle
-  ntrl    = numel(data.trial);
-  aspect_kind = num2cell(ones(ntrl,1)*100);
-  is_smsh = num2cell(zeros(ntrl,1)); % FIXME: How could we tell? + Don't know what this is
-  nave    = num2cell(ones(ntrl,1));  % FIXME: Use the real value
-  first   = num2cell(data.sampleinfo(:, 1));
-  last    = num2cell(data.sampleinfo(:, 2));
-  comment = cell(ntrl,1);
-  for j = 1:ntrl
-    comment{j,1} = sprintf('FieldTrip data, category/trial %d', j);
-  end
-  evoked = struct('aspect_kind', aspect_kind, 'is_smsh', is_smsh, 'nave', nave, ...
-    'first', first, 'last', last, 'comment', comment, 'times', data.time(:), 'epochs', data.trial(:));
   
-  fiffdata.info   = info;
-  fiffdata.evoked = evoked;
-  fiff_write_evoked(fifffile, fiffdata);
+  if isfield(data, 'trialinfo')
+    ft_warning('Using the first column of the trialinfo field as event values');
+    events = [data.sampleinfo(:,1) zeros(size(data.trial,1),1) data.trialinfo(:,1)];
+    
+    vals = unique(data.trialinfo(:,1));
+    vals = [(1:numel(vals))' vals]';
+    eventid = sprintf('event%d:%d,',vals(:));
+    eventid = eventid(1:end-1); % remove the last comma
+  end
+
+  epochs.epoch = data.trial; 
+  epochs.tmin  = data.time(1).*info.sfreq;
+  epochs.tmax  = data.time(end).*info.sfreq;
+  epochs.baseline = [nan nan];
+  epochs.selection = (1:size(data.trial,1))'-1; % seems 0-based
+  epochs.drop_log  = ' ';
+  epochs.events    = events;
+  epochs.event_id  = eventid;
+  epochs.comment   = ' ';
+
+  fiffdata.info  = info;
+  fiffdata.epoch = epochs;
+  fiff_write_epochs(fifffile, fiffdata);
 
 elseif istlck
   evoked.aspect_kind = 100;
@@ -265,7 +268,7 @@ else
         chs(1,k).coil_type    = NaN;
         chs(1,k).coil_trans   = [];
         chs(1,k).unit         = FIFF.FIFF_UNIT_V;
-        chs(1,k).unit_mul     = log10(ft_scalingfactor(data.grad.chanunit{indx(k)}, 'V')); 
+        chs(1,k).unit_mul     = log10(ft_scalingfactor(data.elec.chanunit{indx(k)}, 'V')); 
         chs(1,k).coord_frame  = FIFF.FIFFV_COORD_DEVICE;
         chs(1,k).eeg_loc      = [data.elec.chanpos(indx(k),:)' zeros(3,1)];
         chs(1,k).loc          = [chs(1,k).eeg_loc(:); 0; 1; 0; 0; 0; 1];

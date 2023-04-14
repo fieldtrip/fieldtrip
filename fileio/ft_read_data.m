@@ -1263,15 +1263,12 @@ switch dataformat
 
       if requesttrials
         if endtrial>begtrial
-          dat = hdr.orig.epochs.data(begtrial:endtrial, chanindx, :);
-          dat = reshape(permute(dat, [2 3 1]), size(dat,2), []);
+          dat = hdr.orig.epochs.data(chanindx, :, begtrial:endtrial);
+          dat = reshape(dat, size(dat,2));
         else
-          dat = shiftdim(hdr.orig.epochs.data(begtrial, chanindx, :));
+          dat = hdr.orig.epochs.data(chanindx, :, begtrial);
         end
       else
-        % this is more generic, but requires the permutation of the data
-        % matrix (which slows down if called multiple times)
-        dat = permute(hdr.orig.epochs.data, [2 3 1]);  % Chan X Sample X Trials
         dat = dat(chanindx, begsample:endsample);  % reading over boundaries
       end
 

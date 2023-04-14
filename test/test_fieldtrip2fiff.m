@@ -1,7 +1,17 @@
 function test_fieldtrip2fiff
 
+savedir = tempdir;
+
 % test a variety of MEG files
 datadir = dccnpath('/home/common/matlab/fieldtrip/data/test/original/meg');
+
+cfg = [];
+cfg.dataset = fullfile(datadir, 'ctf151', 'Subject01.ds');
+hdr = ft_read_header(cfg.dataset);
+
+cfg.trl = [(0:4).*hdr.nSamples+1;(1:5).*hdr.nSamples;-300.*ones(1,5)]';
+data = ft_preprocessing(cfg);
+fieldtrip2fiff(fullfile(savedir, 'data_epoched.fif'), data);
 
 fname = {
   'bti148/c,rfhp0.1Hz'
@@ -17,7 +27,6 @@ fname = {
   'neuromag306/sub-15_ses-meg_task-facerecognition_run-01_meg.fif'
   };
 
-savedir = tempdir;
 savename = cell(numel(fname),1);
 for k = 1:numel(fname)
   cfg = [];
@@ -120,4 +129,3 @@ for k = 1:numel(savename)
     assert(all(sqrt(sum((grad.coilpos-gradfif.coilpos).^2,2))<1e-3), 'coil position different');
   end
 end
-keyboard
