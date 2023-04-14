@@ -407,17 +407,14 @@ switch cfg.method
 
     fprintf('creating 3D grid with %g %s resolution\n', cfg.resolution, cfg.unit);
 
-    % round the bounding box limits to the nearest cm
-    switch cfg.unit
-      case 'm'
-        minpos = floor(minpos*100)/100;
-        maxpos = ceil(maxpos*100)/100;
-      case 'cm'
-        minpos = floor(minpos);
-        maxpos = ceil(maxpos);
-      case 'mm'
-        minpos = floor(minpos/10)*10;
-        maxpos = ceil(maxpos/10)*10;
+    if isempty(cfg.symmetry)
+      % round the limits such that [0 0 0] will be on the grid
+      minpos = floor(minpos/cfg.resolution)*cfg.resolution;
+      maxpos = ceil(maxpos/cfg.resolution)*cfg.resolution;
+    else
+      % round the limits such that the grid will be symmetric around [0 0 0]
+      minpos = floor((minpos+cfg.resolution/2)/cfg.resolution)*cfg.resolution - cfg.resolution/2;
+      maxpos = ceil((maxpos+cfg.resolution/2)/cfg.resolution)*cfg.resolution - cfg.resolution/2;
     end
 
     if ischar(cfg.xgrid) && strcmp(cfg.xgrid, 'auto')
