@@ -240,7 +240,7 @@ if ft_abort
 end
 
 % check if the input data is valid for this function
-data = ft_checkdata(data, 'datatype', {'raw', 'raw+comp', 'mvar'}, 'feedback', 'yes', 'hassampleinfo', 'yes');
+data = ft_checkdata(data, 'datatype', {'raw+comp', 'raw', 'mvar'}, 'feedback', 'yes', 'hassampleinfo', 'yes');
 
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'forbidden',  {'channels', 'trial'}); % prevent accidental typos, see issue 1729

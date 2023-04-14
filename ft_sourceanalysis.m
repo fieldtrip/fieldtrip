@@ -167,10 +167,10 @@ end
 hasbaseline = exist('baseline', 'var');
 
 % check if the input data is valid for this function
-data = ft_checkdata(data, 'datatype', {'timelock', 'freq', 'comp'}, 'feedback', 'yes');
+data = ft_checkdata(data, 'datatype', {'comp', 'timelock', 'freq'}, 'feedback', 'yes');
 
 if hasbaseline
-  baseline = ft_checkdata(baseline, 'datatype', {'timelock', 'freq', 'comp'}, 'feedback', 'yes');
+  baseline = ft_checkdata(baseline, 'datatype', {'comp', 'timelock', 'freq'}, 'feedback', 'yes');
 end
 
 % check if the input cfg is valid for this function
