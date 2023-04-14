@@ -1,9 +1,11 @@
 function test_fieldtrip2fiff
 
+% test a variety of MEG files
 datadir = dccnpath('/home/common/matlab/fieldtrip/data/test/original/meg');
 
 fname = {
   'bti148/c,rfhp0.1Hz'
+  'bti248hcp/c,rfDC'
   'bti248/e,rfDC'
   'bti248grad/e,rfhp1.0Hz,COH'
   'ctf275/A0132_Aud-Obj-Recognition_20051115_02.ds'
@@ -38,9 +40,25 @@ for k = 1:numel(fname)
 end
 
 for k = 1:numel(savename)
+  skipgrad = false;
+
   cfg = [];
   cfg.dataset = savename{k};
   cfg.coilaccuracy = 0; % ensure fif readers to use mne2grad
+
+  % the example data from the bti systems requires a custom coildef,
+  % because of the representation of the diagonal reference gradiometers
+  if contains(fname{k}, 'bti248/e')
+    cfg.coildeffile = fullfile(datadir, 'bti248/coil_def_magnes_Glasgow.dat');
+  elseif contains(fname{k}, 'bti248hcp')
+    cfg.coildeffile = fullfile(datadir, 'bti248hcp/coil_def_magnes_StLouis.dat');
+  elseif contains(fname{k}, 'bti248grad')
+    cfg.coildeffile = fullfile(datadir, 'bti248grad/coil_def_magnes_Colorado.dat');
+  elseif contains(fname{k}, 'A0132')
+    % this one has a faulty bottom coil on one of the meggrads, will fail
+    % for sure, not due to the functionality tested.
+    skipgrad = true;
+  end
   datafif = ft_preprocessing(cfg);
   load(strrep(savename{k},'fif','mat'));
 
@@ -51,41 +69,55 @@ for k = 1:numel(savename)
   [ix,msg] = isalmostequal(rmfield(data,{'cfg' 'hdr' 'grad'}),rmfield(datafif,{'cfg' 'hdr' 'grad'}), 'reltol', 1e-4);
   M(k).msg = msg;
 
-  % compare the grads
-  grad    = data.grad;
-  gradfif = datafif.grad;
-  
-  % the order of the channels might have been changed, as well as the
-  % coils, as well as the polarity of the ori.
-  [i1,i2] = match_str(grad.label, gradfif.label);
-  fn = fieldnames(gradfif);
-  for kk = 1:numel(fn)
-    if size(gradfif.(fn{kk}), 1) == numel(i2)
-      gradfif.(fn{kk}) = gradfif.(fn{kk})(i2,:);
-    end
-  end
-  
-  c1 = grad.coilpos;
-  c2 = gradfif.coilpos;
-  n  = size(c1,1);
-  D  = squareform(pdist([c1;c2]));
-  D  = D(1:n,n+(1:n));
-  
-  i2 = zeros(size(D,1),1);
-  for kk = 1:numel(i2)
-    [m, i2(kk)] = min(D(kk,:));
-  end
-  
-  for kk = 1:numel(fn)
-    if size(gradfif.(fn{kk}), 1) == numel(i2)
-      gradfif.(fn{kk}) = gradfif.(fn{kk})(i2,:);
-    elseif size(gradfif.(fn{kk}), 2) == numel(i2)
-      gradfif.(fn{kk}) = gradfif.(fn{kk})(:, i2);
-    end
-  end
-  
-  sel = sum(gradfif.tra)<0;
-  gradfif.tra = abs(gradfif.tra);
-  gradfif.coilori(sel,:) = -gradfif.coilori(sel,:);
+  if ~skipgrad
+    % compare the grads
+    grad    = data.grad;
+    gradfif = datafif.grad;
 
+    % the order of the channels might have been changed, as well as the
+    % coils, as well as the polarity of the ori.
+    [i1,i2] = match_str(grad.label, gradfif.label);
+    fn = fieldnames(gradfif);
+    for kk = 1:numel(fn)
+      if size(gradfif.(fn{kk}), 1) == numel(i2)
+        gradfif.(fn{kk}) = gradfif.(fn{kk})(i2,:);
+      end
+    end
+
+    % reorder the coils
+    i1 = zeros(1,0);
+    i2 = zeros(1,0);
+    for kk = 1:numel(grad.label)
+      i1 = cat(2,i1,find(grad.tra(kk,:)~=0));
+      i2 = cat(2,i2,find(gradfif.tra(kk,:)~=0));
+    end
+
+    for kk = 1:numel(fn)
+      if size(gradfif.(fn{kk}), 1) == numel(i2)
+        gradfif.(fn{kk}) = gradfif.(fn{kk})(i2,:);
+      elseif size(gradfif.(fn{kk}), 2) == numel(i2)
+        gradfif.(fn{kk}) = gradfif.(fn{kk})(:, i2);
+      end
+      if size(grad.(fn{kk}), 1) == numel(i1)
+        grad.(fn{kk}) = grad.(fn{kk})(i1,:);
+      elseif size(gradfif.(fn{kk}), 2) == numel(i1)
+        grad.(fn{kk}) = grad.(fn{kk})(:, i1);
+      end
+    end
+
+    sel = sum(gradfif.tra)<0;
+    gradfif.tra = abs(gradfif.tra);
+    gradfif.coilori(sel,:) = -gradfif.coilori(sel,:);
+    
+    if endsWith(fname{k}, 'fif')
+      % this does not happen too often: but for the native fif-files
+      sel = sum(grad.tra)<0;
+      grad.tra = abs(grad.tra);
+      grad.coilori(sel,:) = -grad.coilori(sel,:);
+    end
+
+    assert(all(sum(grad.coilori.*gradfif.coilori,2)>0.999), 'coil orientation different');
+    assert(all(sqrt(sum((grad.coilpos-gradfif.coilpos).^2,2))<1e-3), 'coil position different');
+  end
 end
+keyboard

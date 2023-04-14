@@ -187,12 +187,12 @@ if isfield(data, 'hdr') && isfield(data.hdr, 'orig') && isfield(data.hdr.orig, '
   ft_warning('Using the original channel information from the header, this may be wrong if channels have been pruned, reordered, rescaled');
   [i_label, i_chs] = match_str(data.label, {data.hdr.orig.chs.ch_name}');
   if numel(i_label) < numel(data.label)
-    ft_error('there are more channels in the data than in the original header information, this is currently not supported');
+    ft_error('There are more channels in the data than in the original header information, this is currently not supported');
   end
   chs(i_label)     = data.hdr.orig.chs(i_chs);
 else
   % otherwise reconstruct a usable channel information array
-  ft_warning('Reconstructing channel information, based on the available data, it might be inaccurate\n');
+  ft_warning('Reconstructing channel information based on the available data, it might be inaccurate\n');
   FIFF = fiff_define_constants; % some constants are not defined in the MATLAB function
   
   hasgrad = isfield(data, 'grad');
@@ -207,7 +207,7 @@ else
     stype(i_labeeg) = 0; %meg/eeg/other = 1/0/-1
     indx(i_labeeg)  = i_elec; %indexes into the grad/elec
    
-    %data.elec = ft_convert_units(data.elec, 'cm'); % MNE uses cm for EEG (FIXME is this true?)
+    data.elec = ft_convert_units(data.elec, 'm'); % this seems needed for a correct round trip
   end
   
   if hasgrad
@@ -216,7 +216,7 @@ else
     indx(i_labmeg)  = i_grad;
   
     data.grad = undobalancing(data.grad); % if this fails, then it's difficult to write out meaningful channel info to begin with
-    coiltype  = grad2coiltype(data.grad);
+    [coiltype, coilkind] = grad2coiltype(data.grad);
     coilunit  = grad2coilunit(data.grad, FIFF);
   end
 
@@ -240,14 +240,15 @@ else
         selcoil = data.grad.tra(indx(k),:)~=0;
         assert(sum(selcoil)<=2);
         
-        pos = data.grad.chanpos(indx(k),:);
-        ori = data.grad.chanori(indx(k),:);
+        pos  = data.grad.chanpos(indx(k),:);
+        ori  = data.grad.chanori(indx(k),:);
+        
         R   = ori2r(ori, data.grad.coilpos(selcoil, :), coiltype(indx(k)));
 
-        chs(1,k).kind      = FIFF.FIFFV_MEG_CH;
-        chs(1,k).logno     = cnt_grad;
-        chs(1,k).coil_type = coiltype(indx(k));
-        chs(1,k).unit      = coilunit(indx(k));
+        chs(1,k).logno        = cnt_grad;
+        chs(1,k).kind         = coilkind(indx(k));
+        chs(1,k).coil_type    = coiltype(indx(k));
+        chs(1,k).unit         = coilunit(indx(k));
         chs(1,k).coil_trans   = [R pos(:); 0 0 0 1];
         chs(1,k).unit_mul     = 0;
         chs(1,k).coord_frame  = FIFF.FIFFV_COORD_HEAD;
@@ -259,14 +260,14 @@ else
         % EEG
         cnt_elec = cnt_elec + 1;
        
-        chs(1,k).kind         = FIFF.FIFFV_EEG_CH;
         chs(1,k).logno        = cnt_elec;
+        chs(1,k).kind         = FIFF.FIFFV_EEG_CH;
         chs(1,k).coil_type    = NaN;
         chs(1,k).coil_trans   = [];
-        chs(1,k).unit         = 107; % volts FIFF.FIFF_UNIT_V
-        chs(1,k).unit_mul     = -6; % micro FIFF.FIFF_UNITM_MU FIXME is this correct?
+        chs(1,k).unit         = FIFF.FIFF_UNIT_V;
+        chs(1,k).unit_mul     = log10(ft_scalingfactor(data.grad.chanunit{indx(k)}, 'V')); 
         chs(1,k).coord_frame  = FIFF.FIFFV_COORD_DEVICE;
-        chs(1,k).eeg_loc      = [data.elec.chanpos(indx(k),:)' zeros(3,1)]; % no clue here FIXME
+        chs(1,k).eeg_loc      = [data.elec.chanpos(indx(k),:)' zeros(3,1)];
         chs(1,k).loc          = [chs(1,k).eeg_loc(:); 0; 1; 0; 0; 0; 1];
         chs(1,k).cal          = 1;
 
@@ -274,8 +275,8 @@ else
         % OTHER
         cnt_else = cnt_else + 1;
         
+        chs(1,k).logno        = cnt_else;whos
         chs(1,k).kind         = NaN;
-        chs(1,k).logno        = cnt_else;
         chs(1,k).coil_type    = NaN;
         chs(1,k).coil_trans   = [];
         chs(1,k).unit         = NaN;
@@ -351,7 +352,7 @@ else
   end
 end
 
-function coiltype = grad2coiltype(grad)
+function [coiltype, coilkind] = grad2coiltype(grad)
 
 stype = ft_senstype(grad);
 def   = mne_load_coil_def('coil_def.dat');
@@ -359,6 +360,7 @@ def   = def([def.accuracy]==0);
 descr = {def.description}';
 
 coiltype = nan(numel(grad.label), 1);
+coilkind = nan(numel(grad.label), 1);
 ctype    = grad.chantype;
 switch stype
   case 'neuromag122'
@@ -372,35 +374,53 @@ switch stype
     
     % the MEG gradiometers, hardcoded id from fif definition
     coiltype(strcmp(ctype, 'meggrad')) = 5001;
-    
+    coilkind(strcmp(ctype, 'meggrad')) = 1;
+
     % the REF magnetometers, hardcoded id from fif definition
     coiltype(strcmp(ctype, 'refmag')) = 5002;
+    coilkind(strcmp(ctype, 'refmag')) = 301;
 
     % the REF gradiometers, hardcoded id from fif definition
     coiltype(~isfinite(coiltype)&strcmp(ctype, 'refgrad')&contains(grad.label,'11')) = 5003;
     coiltype(~isfinite(coiltype)&strcmp(ctype, 'refgrad')&contains(grad.label,'22')) = 5003;
+    coiltype(~isfinite(coiltype)&strcmp(ctype, 'refgrad')&contains(grad.label,'33')) = 5003;
     coiltype(~isfinite(coiltype)&strcmp(ctype, 'refgrad'))                           = 5004;
+    coilkind(strcmp(ctype, 'refgrad')) = 301;
 
   case 'bti148'
     % hardcoded id from fif definition
     coiltype(strcmp(ctype, 'megmag')) = 4001;
+    coilkind(strcmp(ctype, 'megmag')) = 1;
+    coiltype(strcmp(ctype, 'refmag')) = 4003;
+    coilkind(strcmp(ctype, 'refmag')) = 301;  
+    coiltype(strcmp(ctype, 'refgrad')&contains(grad.label,'xx')) = 4004;
+    coiltype(strcmp(ctype, 'refgrad')&contains(grad.label,'yy')) = 4004;
+    coiltype(strcmp(ctype, 'refgrad')&contains(grad.label,'zz')) = 4004;
+    coiltype(strcmp(ctype, 'refgrad')&~isfinite(coiltype)) = 4005;
+    coilkind(strcmp(ctype, 'refgrad')) = 301;
 
   case 'bti248'
     % hardcoded id from fif definition
     coiltype(strcmp(ctype, 'megmag')) = 4001;
+    coilkind(strcmp(ctype, 'megmag')) = 1;
     coiltype(strcmp(ctype, 'refmag')) = 4003;
+    coilkind(strcmp(ctype, 'refmag')) = 301;  
     coiltype(strcmp(ctype, 'refgrad')&contains(grad.label,'xx')) = 4004;
     coiltype(strcmp(ctype, 'refgrad')&contains(grad.label,'yy')) = 4004;
     coiltype(strcmp(ctype, 'refgrad')&~isfinite(coiltype)) = 4005;
-  
+    coilkind(strcmp(ctype, 'refgrad')) = 301;
+
   case 'bti248grad'
     % hardcoded id from fif definition
     coiltype(strcmp(ctype, 'meggrad')) = 4002;
-    coiltype(strcmp(ctype, 'refmag')) = 4003;
+    coilkind(strcmp(ctype, 'meggrad')) = 1;
+    coiltype(strcmp(ctype, 'refmag'))  = 4003;
+    coilkind(strcmp(ctype, 'refmag'))  = 301;  
     coiltype(strcmp(ctype, 'refgrad')&contains(grad.label,'xx')) = 4004;
     coiltype(strcmp(ctype, 'refgrad')&contains(grad.label,'yy')) = 4004;
     coiltype(strcmp(ctype, 'refgrad')&~isfinite(coiltype)) = 4005;
-  
+    coilkind(strcmp(ctype, 'refgrad')) = 301;
+
   otherwise
     stype = 'point magnetometer';
     % treat as point magnetometer system
@@ -469,6 +489,12 @@ function R = ori2r(ori, pos, coiltype)
 switch coiltype
   case 5004
     % off diagonal CTF reference gradiometer
+    ex  = pos'*[1;-1]; % line between the coils
+    ex  = ex./norm(ex);
+    ez  = ori(:);
+    ey  = cross(ez,ex);
+  case 4005
+    % off diagonal Magnes reference gradiometer
     ex  = pos'*[1;-1]; % line between the coils
     ex  = ex./norm(ex);
     ez  = ori(:);

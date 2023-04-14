@@ -157,19 +157,30 @@ if ~isempty(coilaccuracy)
   grad.label = grad.label(:);
   grad.unit  = 'm'; % the coil_def.dat file is in meter
   
-  % all the chs.kinds and chs.coil_types are obtained from the MNE manual, p.210-211
+  % all the chs.kinds and chs.coil_types are obtained from the MNE manual, p.210-211, 
+  % and https://github.com/mne-tools/mne-matlab/blob/master/matlab/fiff_define_constants.m
   kind  = [orig.chs.kind];
   type  = [orig.chs.coil_type];
   logno = [orig.chs.logno]; 
-  grad.chantype(kind==1 & type==2)    = {'megplanar'}; %Neuromag-122 planar gradiometer
-  grad.chantype(kind==1 & type==3012) = {'megplanar'}; %Type T1 planar grad
-  grad.chantype(kind==1 & type==3013) = {'megplanar'}; %Type T2 planar grad
-  grad.chantype(kind==1 & type==3014) = {'megplanar'}; %Type T3 planar grad
-  grad.chantype(kind==1 & type==3022) = {'megmag'};    %Type T1 magenetometer
-  grad.chantype(kind==1 & type==3023) = {'megmag'};    %Type T2 magenetometer
-  grad.chantype(kind==1 & type==3024) = {'megmag'};    %Type T3 magenetometer
-  grad.chantype(kind==1 & type==7001) = {'megaxial'};
-  grad.chantype(kind==301) = {'ref'}; %MEG reference channel, located far from head
+
+  megplanars = [2 3011 3012 3013 3014 3015];
+  megmags    = [3021 3022 3023 3024 3025 4001];
+  meggrads   = [4002 5001 6001];
+  megaxials  = 7001;
+  refmags    = [4003 5002 6002];
+  refgrads   = [4004 4005 5003 5004];
+
+  grad.chantype(kind==1)   = {'meg'};
+  grad.chantype(kind==301) = {'ref'};
+
+  % overwrite with more specific values
+  grad.chantype(kind==1 & ismember(type, megplanars)) = {'megplanar'}; % planar gradiometer
+  grad.chantype(kind==1 & ismember(type, megmags))    = {'megmag'};    % magnetometer
+  grad.chantype(kind==1 & ismember(type, meggrads))   = {'meggrad'};   % axial gradiometer
+  grad.chantype(kind==1 & ismember(type, megaxials))  = {'megaxial'};  % axial gradiometer, historical exception, FIXME?
+  grad.chantype(kind==301 & ismember(type, refmags))  = {'refmag'};    % reference magnetometer
+  grad.chantype(kind==301 & ismember(type, refgrads)) = {'refgrad'};   % reference gradiometer
+  
   grad.chantype(kind==2)   = {'eeg'}; %EEG channels
   grad.chantype(kind==201) = {'mcg'}; %MCG channels
   grad.chantype(kind==202) = {'eog'}; %EOG

@@ -14,6 +14,8 @@ grad3 = ft_read_sens(dataset, 'senstype', 'meg', 'coordsys', 'dewar', 'coilaccur
 % the order of the MEGGRAD-REF channels is different, as is the orientation of one of
 % the coils per gradiometer. This should be reflected by the tra
 
+
+
 coillist1ref = 303:356;
 coillist2ref = 1:54;
 coillist1meg = 1:302; coillist1meg = reshape(coillist1meg,151,2)'; coillist1meg = coillist1meg(:);

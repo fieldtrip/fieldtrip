@@ -300,6 +300,9 @@ elseif isfield(hdr, 'res4') && isfield(hdr.res4, 'senres')
   
   grad.label = label([selMEG selREF]);
   grad.unit  = 'cm'; % the res4 file represents it in centimeter
+  if ~isempty(elec)  
+    elec.unit  = 'cm';
+  end
   
   if dewar
     grad.coordsys = 'dewar';
