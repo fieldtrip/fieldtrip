@@ -53,18 +53,23 @@ if size(pos,1)==3 && size(pos,2)~=3
   pos = pos';
 end
 
-% determine which field(s) to use to look up the labels,
-% and whether these are boolean or indexed
+% determine which field(s) to use to look up the labels and whether these are boolean or indexed
 fn = fieldnames(atlas);
 isboolean = false(numel(fn),1);
 isindexed = false(numel(fn),1);
+haslabel  = false(numel(fn),1);
 for i=1:length(fn)
   if islogical(atlas.(fn{i})) && isequal(size(atlas.(fn{i})), atlas.dim)
     isboolean(i) = true;
   elseif isnumeric(atlas.(fn{i})) && isequal(size(atlas.(fn{i})), atlas.dim)
     isindexed(i) = true;
   end
+  haslabel(i) = ismember([fn{i} 'label'], fn);
 end
+
+% we only care about the indexed ones if they also have a label
+isindexed = isindexed & haslabel;
+
 if any(isindexed)
   % let the indexed prevail
   fn = fn(isindexed);
@@ -191,4 +196,3 @@ end
 
 
 %label = unique(atlas.descr.name(sel));
-

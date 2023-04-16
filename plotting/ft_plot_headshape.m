@@ -13,6 +13,7 @@ function hs = ft_plot_headshape(headshape, varargin)
 %
 % Optional arguments should come in key-value pairs and can include
 %   'facecolor'    = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r', or an Nx3 or Nx1 array where N is the number of faces
+%   'facealpha'    = transparency, between 0 and 1 (default = 1)
 %   'vertexcolor'  = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r', or an Nx3 or Nx1 array where N is the number of vertices
 %   'vertexsize'   = scalar value specifying the size of the vertices (default = 10)
 %   'fidcolor'     = [r g b] values or string, for example 'red', 'r', or an Nx3 or Nx1 array where N is the number of fiducials
@@ -26,7 +27,8 @@ function hs = ft_plot_headshape(headshape, varargin)
 %   shape = ft_read_headshape(filename);
 %   ft_plot_headshape(shape)
 %
-% See also FT_PLOT_MESH, FT_PLOT_ORTHO
+% See also FT_PLOT_MESH, FT_PLOT_HEADMODEL, FT_PLOT_SENS, FT_PLOT_DIPOLE,
+% FT_PLOT_ORTHO, FT_PLOT_TOPO3D
 
 % Copyright (C) 2009, Cristiano Micheli
 % Copyright (C) 2009-2023, Robert Oostenveld
@@ -83,6 +85,7 @@ end
 % get the optional input arguments
 vertexcolor = ft_getopt(varargin, 'vertexcolor',  defaultvertexcolor);
 facecolor   = ft_getopt(varargin, 'facecolor',    defaultfacecolor);
+facealpha   = ft_getopt(varargin, 'facealpha',    1);
 edgecolor   = ft_getopt(varargin, 'edgecolor',    defaultedgecolor);
 vertexsize  = ft_getopt(varargin, 'vertexsize',   10);
 material_   = ft_getopt(varargin, 'material');            % do not confuse with /Applications/MATLAB_R2020b.app/toolbox/matlab/graph3d/material.m
@@ -114,7 +117,7 @@ if ~holdflag
 end
 
 mesh = keepfields(headshape, {'pos', 'tri', 'tet', 'hex', 'color', 'unit', 'coordsys'});
-h  = ft_plot_mesh(mesh, 'vertexcolor', vertexcolor, 'vertexsize', vertexsize, 'facecolor', facecolor, 'edgecolor', edgecolor, 'material', material_, 'axes', axes_, 'tag', tag);
+h  = ft_plot_mesh(mesh, 'vertexcolor', vertexcolor, 'vertexsize', vertexsize, 'facecolor', facecolor, 'facealpha', facealpha, 'edgecolor', edgecolor, 'material', material_, 'axes', axes_, 'tag', tag);
 hs = [hs; h];
 
 if isfield(headshape, 'fid')

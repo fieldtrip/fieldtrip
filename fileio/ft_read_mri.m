@@ -43,20 +43,22 @@ function [mri] = ft_read_mri(filename, varargin)
 %   'neuromag_fif_old'           uses meg-pd toolbox
 %   'nifti'                      uses FreeSurfer code
 %   'nifti_spm'                  uses SPM
+%   'seg3d_mat'                  MATLAB file from Seg3D with a scirunnrrd structure
 %   'yokogawa_mri'
 %
 % The following MRI file formats are supported
-%   CTF (*.svl, *.mri version 4 and 5)
-%   NIFTi (*.nii) and zipped NIFTi (*.nii.gz)
-%   Analyze (*.img, *.hdr)
-%   DICOM (*.dcm, *.ima)
 %   AFNI (*.head, *.brik)
-%   FreeSurfer (*.mgz, *.mgh)
-%   MINC (*.mnc)
-%   Neuromag/Elekta/Megin (*.fif)
 %   ANT - Advanced Neuro Technology (*.mri)
-%   Yokogawa (*.mrk, incomplete)
+%   Analyze (*.img, *.hdr)
+%   CTF (*.svl, *.mri version 4 and 5)
+%   DICOM (*.dcm, *.ima)
+%   FreeSurfer (*.mgz, *.mgh)
+%   MATLAB (*.mat)
+%   MINC (*.mnc)
 %   Mrtrix image format (*.mif)
+%   NIFTi (*.nii) and zipped NIFTi (*.nii.gz)
+%   Neuromag/Elekta/Megin (*.fif)
+%   Yokogawa (*.mrk, incomplete)
 %
 % If you have a series of DICOM files, please provide the name of any of the files in
 % the series (e.g. the first one). The files corresponding to the whole volume will
@@ -73,7 +75,7 @@ function [mri] = ft_read_mri(filename, varargin)
 %
 % See also FT_DATATYPE_VOLUME, FT_WRITE_MRI, FT_READ_DATA, FT_READ_HEADER, FT_READ_EVENT
 
-% Copyright (C) 2008-2022, Robert Oostenveld & Jan-Mathijs Schoffelen
+% Copyright (C) 2008-2023, Robert Oostenveld & Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -608,6 +610,19 @@ switch dataformat
     hdr.besa_fiducial_point = besa_fiducial_point;
 
     ft_error('FIXME yokogawa_mri implementation is incomplete');
+
+  case 'seg3d_mat'
+    scirunnrrd = loadvar(filename, 'scirunnrrd');
+    mri.anatomy = scirunnrrd.data;
+    mri.dim = [scirunnrrd.axis.size];
+    % construct the homogenous transformation matrix
+    mri.transform = eye(4);
+    mri.transform(1,1) = scirunnrrd.axis(1).spacing;
+    mri.transform(2,2) = scirunnrrd.axis(2).spacing;
+    mri.transform(3,3) = scirunnrrd.axis(3).spacing;
+    mri.transform(1,4) = scirunnrrd.axis(1).min - scirunnrrd.axis(1).spacing;
+    mri.transform(2,4) = scirunnrrd.axis(2).min - scirunnrrd.axis(2).spacing;
+    mri.transform(3,4) = scirunnrrd.axis(3).min - scirunnrrd.axis(3).spacing;
 
   case 'matlab'
     mri = loadvar(filename, 'mri');

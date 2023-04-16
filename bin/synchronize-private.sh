@@ -1144,6 +1144,7 @@ ARRAY+=(fileio/private/getdatfield.m)
 ARRAY+=(private/getdatfield.m)
 ARRAY+=(test/private/getdatfield.m)
 ARRAY+=(utilities/private/getdatfield.m)
+ARRAY+=(plotting/private/getdatfield.m)
 sync ${ARRAY[*]}
 
 ################################################################################
@@ -3016,6 +3017,26 @@ sync ${ARRAY[*]}
 ARRAY=()
 ARRAY+=(private/remove_vertices.m)
 ARRAY+=(fileio/private/remove_vertices.m)
+ARRAY+=(forward/private/remove_vertices.m)
+ARRAY+=(plotting/private/remove_vertices.m)
+sync ${ARRAY[*]}
+
+################################################################################
+# remove_double_vertices.m
+
+ARRAY=()
+ARRAY+=(private/remove_double_vertices.m)
+ARRAY+=(forward/private/remove_double_vertices.m)
+ARRAY+=(fileio/private/remove_double_vertices.m)
+sync ${ARRAY[*]}
+
+################################################################################
+# remove_unused_vertices.m
+
+ARRAY=()
+ARRAY+=(private/remove_unused_vertices.m)
+ARRAY+=(forward/private/remove_unused_vertices.m)
+ARRAY+=(fileio/private/remove_unused_vertices.m)
 sync ${ARRAY[*]}
 
 ################################################################################

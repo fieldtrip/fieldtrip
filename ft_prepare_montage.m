@@ -79,7 +79,7 @@ hasdata = exist('data', 'var') && ~isempty(data);
 if ~hasdata
   data = struct([]);
 else
-  data = ft_checkdata(data, 'datatype', {'raw', 'raw+comp', 'timelock', 'timelock+comp'});
+  data = ft_checkdata(data, 'datatype', {'raw+comp', 'timelock+comp', 'raw', 'timelock'});
 end
 
 % do a sanity check for incompatible options which are used in ft_preprocessing and elsewhere

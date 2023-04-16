@@ -322,6 +322,7 @@ if ~isdeployed
     ft_hastoolbox('template/anatomy',     1, 1);
     ft_hastoolbox('template/headmodel',   1, 1);
     ft_hastoolbox('template/electrode',   1, 1);
+    ft_hastoolbox('template/gradiometer', 1, 1);
     ft_hastoolbox('template/neighbours',  1, 1);
     ft_hastoolbox('template/sourcemodel', 1, 1);
   end

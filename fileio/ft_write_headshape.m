@@ -16,7 +16,7 @@ function ft_write_headshape(filename, mesh, varargin)
 %   'format'		   = string, see below
 %
 % Optional input arguments should be specified as key-value pairs and can include
-%   'data'         = data matrix, size(1) should be number of vertices
+%   'data'         = data vector or matrix, the size along the 1st dimension should correspond to the number of vertices
 %   'unit'         = string, desired geometrical units for the data, for example 'mm'
 %   'coordsys'     = string, desired coordinate system for the data
 %   'jmeshopt'     = cell-array with {'name', 'value'} pairs, options for writing JSON/JMesh files
@@ -24,10 +24,12 @@ function ft_write_headshape(filename, mesh, varargin)
 % Supported output formats are
 %   'freesurfer'      Freesurfer surf-file format, using write_surf from FreeSurfer
 %   'gifti'           see https://www.nitrc.org/projects/gifti/
-%   'mne_pos'		      MNE source grid in ascii format, described as 3D points
-%   'mne_tri'		      MNE surface desciption in ascii format
-%   'neurojson_jmesh' NeuroJSON ascii JSON-based format
+%   'gmsh_ascii'      see https://gmsh.info
+%   'gmsh_binary'     see https://gmsh.info
+%   'mne_pos'         MNE source grid in ascii format, described as 3D points
+%   'mne_tri'         MNE surface desciption in ascii format
 %   'neurojson_bmesh' NeuroJSON binary JSON-based format
+%   'neurojson_jmesh' NeuroJSON ascii JSON-based format
 %   'off'             see http://www.geomview.org/docs/html/OFF.html
 %   'ply'             Stanford Polygon file format, for use with Paraview or Meshlab
 %   'stl'             STereoLithography file format, for use with CAD and generic 3D mesh editing programs
@@ -35,7 +37,7 @@ function ft_write_headshape(filename, mesh, varargin)
 %   'vista'           see http://www.cs.ubc.ca/nest/lci/vista/vista.html
 %   'vtk'             Visualization ToolKit file format, for use with Paraview
 %
-% See also FT_READ_HEADSHAPE
+% See also FT_READ_HEADSHAPE, FT_WRITE_DATA, FT_WRITE_MRI, FT_WRITE_SENS
 
 % Undocumented optional option:
 %   'metadata'     = struct-array, containing the fields 'name' and
@@ -157,11 +159,11 @@ switch fileformat
     [p, f, x] = fileparts(filename);
     filename = fullfile(p, [f, '.vtk']); % ensure it has the right extension
     if isfield(mesh, 'tri')
-      write_vtk(filename, mesh.pos, mesh.tri);
+      write_vtk(filename, mesh.pos, mesh.tri, data);
     elseif isfield(mesh, 'tet')
-      write_vtk(filename, mesh.pos, mesh.tet);
+      write_vtk(filename, mesh.pos, mesh.tet, data);
     elseif isfield(mesh, 'hex')
-      write_vtk(filename, mesh.pos, mesh.hex);
+      write_vtk(filename, mesh.pos, mesh.hex, data);
     end
 
   case {'ply', 'ply_ascii', 'ply_binary'}
@@ -226,6 +228,39 @@ switch fileformat
     end
 
     save(tmp, filename);  % write the object to file
+
+  case {'gmsh_ascii' 'gmsh_binary'}
+    ft_hastoolbox('simnibs', 1);
+    % start with an empty SimNIBS mesh
+    fn = mesh_empty();
+    % copy the nodes
+    if isfield(mesh, 'pos')
+      fn.nodes = mesh.pos;
+    end
+    % copy the elements
+    if isfield(mesh, 'tri')
+      fn.triangles = mesh.tri;
+      if isfield(mesh, 'triangle_regions')
+        fn.triangle_regions = mesh.triangle_regions;
+      else
+        fn.triangle_regions = ones(size(mesh.tri,1),1); % assign them all to the same region
+      end
+    end
+    % copy the elements
+    if isfield(mesh, 'tet')
+      fn.tetrahedra = mesh.tet;
+      if isfield(mesh, 'tetrahedron_regions')
+        fn.tetrahedron_regions = mesh.tetrahedron_regions;
+      else
+        fn.tetrahedron_regions = ones(size(mesh.tet,1),1); % assign them all to the same region
+      end
+    end
+    % write the file
+    if strcmp(fileformat, 'gmsh_ascii')
+      mesh_save_gmsh4(fn, filename, 'ascii');
+    else
+      mesh_save_gmsh4(fn, filename);
+    end
 
   case 'freesurfer'
     ft_hastoolbox('freesurfer', 1);

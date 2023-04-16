@@ -1,21 +1,24 @@
 function [headmodel] = ft_read_headmodel(filename, varargin)
 
-% FT_READ_HEADMODEL reads a volume conduction model from various manufacturer
-% specific files. Currently supported are ASA, CTF, Neuromag, MBFYS
-% and Matlab.
+% FT_READ_HEADMODEL reads a head model (or volume conduction model of the head) from
+% various manufacturer specific files. Currently supported are ASA, CTF, Neuromag,
+% MBFYS, MATLAB and SimNIBS. The volume conduction model is represented as a
+% structure with fields that depend on the type of model.
 %
 % Use as
 %   headmodel = ft_read_headmodel(filename, ...)
 %
 % Additional options should be specified in key-value pairs and can be
-%   'fileformat'   string
+%   'fileformat' = string
 %
-% The volume conduction model is represented as a structure with fields
-% that depend on the type of model.
+% If the fileformat is 'simnibs', an additional options can be used to specify the
+% type of model that is to be returned.
+%   'meshtype'   = string, 'volume' or 'surface' (default is automatic)
 %
-% See also FT_DATATYPE_HEADMODEL, FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD
+% See also FT_DATATYPE_HEADMODEL, FT_PREPARE_HEADMODEL, FT_READ_HEADMODEL,
+% FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD
 
-% Copyright (C) 2008-2018 Robert Oostenveld
+% Copyright (C) 2008-2023, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -45,6 +48,7 @@ end
 
 % get the options
 fileformat = ft_getopt(varargin, 'fileformat', ft_filetype(filename));
+meshtype   = ft_getopt(varargin, 'meshtype'); % the default is handled further down
 
 switch fileformat
   case 'matlab'
@@ -69,6 +73,98 @@ switch fileformat
     headmodel.bnd.pos = bem.rr;
     headmodel.bnd.tri = bem.tris;
     headmodel.coordsys = fif2coordsys(bem.coord_frame);
+
+  case 'gmsh_binary'
+    ft_error('this could be a simnibs headmodel, please specify ''fileformat'' to be ''simnibs'' if this is the case');
+
+  case {'simnibs' 'simnibs_v3' 'simnibs_v4'}
+    ft_hastoolbox('simnibs', 1);
+    mesh = ft_read_headshape(filename); % this will automatically detect ascii or binary
+    S    = standard_cond;
+
+    if isempty(meshtype)
+      % set the default
+      if isfield(mesh, 'tet') || isfield(mesh, 'hex')
+        meshtype = 'volume';
+      else
+        meshtype = 'surface';
+      end
+    end
+
+    switch meshtype
+      case 'volume'
+        if isfield(mesh, 'tet')
+          % prune the mesh
+          [headmodel.pos, headmodel.tet] = remove_unused_vertices(mesh.pos, mesh.tet);
+
+          tag    = mesh.tetrahedron_regions(:,1);
+          utag   = unique(tag);
+          tissue = zeros(size(tag));
+          tissuelabel = cell(numel(utag),1);
+          cond   = zeros(1,numel(utag));
+          for k = 1:numel(utag)
+            tissue(tag==utag(k)) = k;
+            tissuelabel{k} = lower(S(utag(k)).name);
+            cond(k) = S(utag(k)).value;
+          end
+
+          headmodel.tissue = tissue;
+          headmodel.tissuelabel = tissuelabel;
+          headmodel.cond = cond;
+          headmodel.type = 'simnibs';
+          headmodel = ft_determine_units(headmodel);
+        end
+
+        if isfield(mesh, 'hex')
+          % prune the mesh
+          [headmodel.pos, headmodel.hex] = remove_unused_vertices(mesh.pos, mesh.hex);
+
+          tag    = mesh.hexahedron_regions(:,1);
+          utag   = unique(tag);
+          tissue = zeros(size(tag));
+          tissuelabel = cell(numel(utag),1);
+          cond   = zeros(1,numel(utag));
+          for k = 1:numel(utag)
+            tissue(tag==utag(k)) = k;
+            tissuelabel{k} = lower(S(utag(k)).name);
+            cond(k) = S(utag(k)).value;
+          end
+
+          headmodel.tissue = tissue;
+          headmodel.tissuelabel = tissuelabel;
+          headmodel.cond = cond;
+          headmodel.type = 'simnibs';
+          headmodel = ft_determine_units(headmodel);
+        end
+
+      case 'surface'
+        % prune the mesh
+        [pos, tri] = remove_unused_vertices(mesh.pos, mesh.tri);
+
+        tag  = mesh.triangle_regions(:,1);
+        utag = unique(tag);
+
+        cond = zeros(1,numel(utag));
+        tissuelabel = cell(numel(utag),1);
+        for k = 1:numel(utag)
+
+          tissuelabel{k} = lower(S(utag(k)-1000).name);
+          cond(k) = S(utag(k)-1000).value;
+          ft_info('Creating boundary for tissue type %s', tissuelabel{k});
+
+          seltri = tri(tag==utag(k), :);
+          usepos = unique(reshape(seltri,[],1));
+          removepos = setdiff((1:size(pos,1))', usepos);
+          [bnd(k,1).pos, bnd(k,1).tri] = remove_vertices(pos, tri, removepos);
+        end
+        headmodel.bnd  = bnd;
+        headmodel.tissuelabel = tissuelabel;
+        headmodel.cond = cond;
+        headmodel.type = 'simnibs';
+
+      otherwise
+        ft_error('unsupported meshtype');
+    end
 
   otherwise
     ft_error('unknown fileformat for volume conductor model');
