@@ -640,8 +640,9 @@ cfg.channels.wavelength_emission_actual = ft_getopt(cfg.channels, 'wavelength_em
 cfg.channels.short_channel              = ft_getopt(cfg.channels, 'short_channel'               , nan);
 % specific options for motion channels
 cfg.channels.sampling_frequency         = ft_getopt(cfg.channels, 'sampling_frequency'          , nan);
-cfg.channels.orientation_component      = ft_getopt(cfg.channels, 'component'                   , nan);
+cfg.channels.component                  = ft_getopt(cfg.channels, 'component'                   , nan);
 cfg.channels.tracked_point              = ft_getopt(cfg.channels, 'tracked_point'               , nan);
+cfg.channels.placement                  = ft_getopt(cfg.channels, 'placement'                   , nan);
 
 %% columns in the electrodes.tsv
 cfg.electrodes.name             = ft_getopt(cfg.electrodes, 'name'             , nan);  % REQUIRED. Name of the electrode
