@@ -1352,7 +1352,6 @@ end
 %% need_motion_json
 if need_motion_json
     motion_json.SamplingFrequency     = hdr.Fs;
-    motion_json.StartTime             = nan;
     motion_json.MotionChannelCount    = hdr.nChans;
     motion_json.RecordingDuration     = (hdr.nSamples*hdr.nTrials)/hdr.Fs;
     motion_json.SamplingFrequencyEffective = size(dat,2)/motion_json.RecordingDuration;
