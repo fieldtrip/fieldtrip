@@ -164,7 +164,7 @@ if ~isempty(coilaccuracy)
   logno = [orig.chs.logno]; 
 
   megplanars = [2 3011 3012 3013 3014 3015];
-  megmags    = [3021 3022 3023 3024 3025 4001];
+  megmags    = [3021 3022 3023 3024 3025 4001 8001 8002 8101 8201];
   meggrads   = [4002 5001 6001];
   megaxials  = 7001;
   refmags    = [4003 5002 6002];
