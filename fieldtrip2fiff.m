@@ -134,36 +134,40 @@ if israw
     event = [];
   end
   if ~isempty(event)
-    eve = convertevent(event);
-    mne_write_events(eventfile, eve);
+    [eventlist, mappings] = convertevent(event);
+    fiff_write_events(eventfile, eventlist, mappings);
     ft_info('Writing events to %s\n', eventfile)
   end
   
 elseif isepch
   
+  nsmp   = numel(data.time);
+  ntrl   = size(data.trial,1);    
   if isfield(data, 'trialinfo')
     ft_warning('Using the first column of the trialinfo field as event values');
-    events = [data.sampleinfo(:,1) zeros(size(data.trial,1),1) data.trialinfo(:,1)];
-    
-    vals = unique(data.trialinfo(:,1));
-    vals = [(1:numel(vals))' vals]';
-    eventid = sprintf('event%d:%d,',vals(:));
-    eventid = eventid(1:end-1); % remove the last comma
+    trg = data.trialinfo(:,1);
+  else
+    trg = ones(ntrl,1);
   end
+  events = [((0:nsmp:(nsmp*(ntrl-1)))+1)' zeros(ntrl,1) trg];
+  vals = unique(trg);
+  vals = [(1:numel(vals))' vals]';
+  eventid = sprintf('event%d: %d;',vals(:));
+  eventid = eventid(1:end-1); % remove the last comma
 
-  epochs.epoch = data.trial; 
+  epochs.epoch = data.trial;
   epochs.tmin  = data.time(1).*info.sfreq;
   epochs.tmax  = data.time(end).*info.sfreq;
-  epochs.baseline = [nan nan];
+  epochs.baseline  = [];
   epochs.selection = (1:size(data.trial,1))'-1; % seems 0-based
-  epochs.drop_log  = ' ';
+  epochs.drop_log  = ['[',repmat('[], ',[1 size(data.trial,1)-1]), '[]]'];
   epochs.events    = events;
   epochs.event_id  = eventid;
   epochs.comment   = ' ';
 
   fiffdata.info  = info;
   fiffdata.epoch = epochs;
-  fiff_write_epochs(fifffile, fiffdata);
+  fiff_write_epochs(fifffile, fiffdata, dtype);
 
 elseif istlck
   evoked.aspect_kind = 100;
@@ -296,64 +300,55 @@ else
 end
 
 
-function eve = convertevent(event)
-% tentative code, with lots of assumption
+function [eventlist, mappings] = convertevent(event)
 
-%CTF should use backpanel trigger
-backpanel = strcmp({event.type}, 'backpanel trigger');
-if any(backpanel)
-  fprintf('Writing the value of the backpanel trigger into the event file\n')
-  trigger = [event(backpanel).value];
-  
-  eve = zeros(numel(trigger), 3);
-  eve(:,1) = [event(backpanel).sample];
-  eve(:,3) = [event(backpanel).value];
-  return
-end
+ev_type  = {event.type};
+ev_utype = unique(ev_type);
+ft_info('Detected %d events, of %d different event types\n', numel(ev_type), numel(ev_utype));
 
-% use ev_type and ev_value
-ev_type = unique({event.type});
-% convert to cell of strings
-if any(cellfun(@isnumeric, {event.value}))
-  event_value = cellfun(@num2str, {event.value}, 'uni', false);
-else
-  event_value = {event.value};
-end
-ev_value = unique(event_value);
-
-eve = zeros(numel(event), 3);
-
-for i1 = 1:numel(ev_type)
-  for i2 = 1:numel(ev_value)
-    i_type = strcmp({event.type}, ev_type{i1});
-    i_value = strcmp(event_value, ev_value{i2});
-    % if events are numeric & there's only one event type keep original code:
-    if ~isempty(str2num(ev_value{i2})) && numel(ev_type) == 1
-        marker = str2num(ev_value{i2});
+% a specific event type, can have different numeric (or non-numeric
+% values), or can have an empty value
+cnt = 0;
+for k = 1:numel(ev_utype)
+  sel = strcmp(ev_type, ev_utype{k});
+  if isempty([event(sel).value])
+    ft_info('Event type %s: %d occurrences\n', ev_utype{k}, sum(sel));
+    cnt = cnt+1;
+    ev(cnt).id     = ev_utype{k};
+    ev(cnt).sample = [event(sel).sample];
+  else
+    val = {event(sel).value};
+    if all(cellfun(@isnumeric, val))
+      val = [event(sel).value];
+      smp = [event(sel).sample];
+      uval = unique(val);
+      for kk = 1:numel(uval)
+        cnt = cnt+1;
+        ev(cnt).id     = sprintf('%s_%d', ev_utype{k}, uval(kk));
+        ev(cnt).sample = smp(val==uval(kk));
+        ft_info('Event type %s with value %d: %d occurrences\n', ev_utype{k}, uval(kk), sum(val==uval(kk)));
+      end
     else
-      marker = i1 * 10 + i2;
+      uval = unique(val);
+      for kk = 1:numel(uval)
+        cnt = cnt+1;
+        ev(cnt).id     = sprintf('%s_%s', ev_utype{k}, uval{kk});
+        ev(cnt).sample = smp(strcmp(val, uval{kk}));
+        ft_info('Event type %s with value %s: %d occurrences\n', ev_utype{k}, uval{kk}, sum(val==uval(kk)));
+      end
     end
-    
-    if any(i_type & i_value)
-      eve(i_type & i_value, 1) = [event(i_type & i_value).sample];
-      eve(i_type & i_value, 3) = marker;
-    end
-    
   end
 end
 
-% report event coding
-newev = unique(eve(:,3));
-if all(cellfun(@isnumeric, {event.value})) && numel(ev_type) == 1
-    fprintf('EVENT codes remain the same.\n')
-else
-  fprintf('EVENTS have been coded as:\n')
-  for i = 1:numel(newev)
-    i_type = floor(newev(i)/10);
-    i_value = mod(newev(i), 10);
-    fprintf('type: %s, value %s -> % 3d\n', ev_type{i_type}, ev_value{i_value}, newev(i))
-  end
+mappings  = '';
+eventlist = zeros(0,3);
+for k = 1:numel(ev)
+  mappings  = sprintf('%s, %s:%d', mappings, ev(k).id, k);
+
+  smp = ev(k).sample(:);
+  eventlist = cat(1, eventlist, [smp zeros(numel(smp),1) ones(numel(smp),1).*k]); 
 end
+mappings = mappings(3:end);
 
 function [coiltype, coilkind] = grad2coiltype(grad)
 
