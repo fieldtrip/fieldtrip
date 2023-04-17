@@ -1,4 +1,4 @@
-function fiff_write_epochs(name,data)
+function fiff_write_epochs(name,data,datatype)
 %
 % function fiff_write_epochs(name,data)
 %
@@ -7,7 +7,7 @@ function fiff_write_epochs(name,data)
 %
 %
 
-% This function has been adjusted by Jan-Mathijs Schoffelen, from the 
+% This function has been adjusted by Jan-Mathijs Schoffelen, inspired by the 
 % fiff_write_evoked function:
 %
 %   Author : Matti Hamalainen, MGH Martinos Center
@@ -62,11 +62,20 @@ function fiff_write_epochs(name,data)
 %
 %
 me='MNE:mne_write_epochs';
-if nargin ~= 2
+if nargin < 2
     error(me,'File name and data required as an arguments');
 end
+
 %
 FIFF = fiff_define_constants();
+if nargin < 3 || isempty(datatype)
+    datatype = FIFF.FIFFT_FLOAT;
+end
+
+if datatype ~= FIFF.FIFFT_FLOAT
+    warning(me, 'reading and writing of data in numeric precision ~= float is only supported in FieldTrip and MNE-Python');
+end
+
 %
 %  Create the file and save the essentials
 %
@@ -192,11 +201,26 @@ for k = 1:numel(data.info.chs)
         data.epoch.epochs(:,k,:) = data.epoch.epochs(:,k,:).*decal;
     end
 end
-fiff_write_float_matrix(fid,FIFF.FIFF_EPOCH,data.epoch.epoch);
+switch datatype
+    case FIFF.FIFFT_FLOAT
+        fiff_write_float_matrix(fid,FIFF.FIFF_EPOCH,data.epoch.epoch);
+    case FIFF.FIFFT_DOUBLE
+        fiff_write_double_matrix(fid,FIFF.FIFF_EPOCH,data.epoch.epoch);
+    case FIFF.FIFFT_COMPLEX_FLOAT
+        fiff_write_complex_matrix(fid,FIFF.FIFF_EPOCH,data.epoch.epoch);
+    case FIFF.FIFFT_COMPLEX_DOUBLE
+        fiff_write_double_complex_matrix(fid,FIFF.FIFF_EPOCH,data.epoch.epoch);
+    otherwise
+        error(me,'unsupported datatype requested for writing of the epoch data matrix');
+end
 
-% some other metadata
-fiff_write_float(fid,FIFF.FIFF_MNE_BASELINE_MIN,data.epoch.tmin);
-fiff_write_float(fid,FIFF.FIFF_MNE_BASELINE_MAX,data.epoch.tmax);
+%
+% Add some other metadata that belongs to the MNE epochs object
+%
+if ~isempty(data.epoch.baseline)
+  fiff_write_float(fid,FIFF.FIFF_MNE_BASELINE_MIN,data.epoch.baseline(1));
+  fiff_write_float(fid,FIFF.FIFF_MNE_BASELINE_MAX,data.epoch.baseline(2));
+end
 fiff_write_int(fid,FIFF.FIFF_MNE_EPOCHS_SELECTION,data.epoch.selection);
 fiff_write_string(fid,FIFF.FIFF_COMMENT,data.epoch.comment);
 fiff_write_string(fid,FIFF.FIFF_MNE_EPOCHS_DROP_LOG,data.epoch.drop_log);

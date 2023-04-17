@@ -35,7 +35,7 @@ if nargin < 4
     datatype = FIFF.FIFFT_FLOAT;
 end
 
-if datatype ~= FIFF.FIFFT_FLOAT;
+if datatype ~= FIFF.FIFFT_FLOAT
     warning(me, 'reading and writing of data in numeric precision ~= float is only supported in FieldTrip and MNE-Python');
 end
 
