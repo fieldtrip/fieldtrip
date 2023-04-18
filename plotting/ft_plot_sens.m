@@ -34,6 +34,7 @@ function hs = ft_plot_sens(sens, varargin)
 %   'orientation'     = true/false, plot a line for the orientation of each optode (default = false)
 %   'optoshape'       = 'point', 'circle', 'square', 'sphere', or 'disc' (default is automatic)
 %   'optosize'        = diameter of the optodes (default is automatic)
+%   'headshape'       = headshape, required for optoshape 'disc'
 %
 % The following options apply when electrodes/coils/optodes are NOT plotted individually
 %   'style'           = plotting style for the points representing the channels, see plot3 (default = [])
@@ -51,9 +52,10 @@ function hs = ft_plot_sens(sens, varargin)
 %   figure; ft_plot_sens(sens, 'coilshape', 'circle', 'coil', true, 'chantype', 'meggrad')
 %   figure; ft_plot_sens(sens, 'coilshape', 'circle', 'coil', false, 'orientation', true)
 %
-% See also FT_READ_SENS, FT_PLOT_HEADSHAPE, FT_PLOT_HEADMODEL
+% See also FT_DATATYPE_SENS, FT_READ_SENS, FT_PLOT_HEADSHAPE, FT_PLOT_HEADMODEL,
+% FT_PLOT_TOPO3D
 
-% Copyright (C) 2009-2022, Robert Oostenveld, Arjen Stolk
+% Copyright (C) 2009-2023, Robert Oostenveld, Arjen Stolk
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -88,6 +90,7 @@ fontsize        = ft_getopt(varargin, 'fontsize',   get(0, 'defaulttextfontsize'
 fontname        = ft_getopt(varargin, 'fontname',   get(0, 'defaulttextfontname'));
 fontweight      = ft_getopt(varargin, 'fontweight', get(0, 'defaulttextfontweight'));
 fontunits       = ft_getopt(varargin, 'fontunits',  get(0, 'defaulttextfontunits'));
+headshape       = ft_getopt(varargin, 'headshape', []); % needed for elecshape/optoshape 'disc'
 
 % this is for MEG magnetometer and/or gradiometer arrays
 coil            = ft_getopt(varargin, 'coil', false);
@@ -97,7 +100,6 @@ coilsize        = ft_getopt(varargin, 'coilsize');  % default depends on the inp
 elec            = ft_getopt(varargin, 'elec', false);
 elecshape       = ft_getopt(varargin, 'elecshape'); % default depends on the input, see below
 elecsize        = ft_getopt(varargin, 'elecsize');  % default depends on the input, see below
-headshape       = ft_getopt(varargin, 'headshape', []); % needed for elecshape 'disc'
 % this is for NIRS optode arrays
 opto            = ft_getopt(varargin, 'opto', false);
 optoshape       = ft_getopt(varargin, 'optoshape'); % default depends on the input, see below
@@ -515,7 +517,7 @@ if ~isempty(label) && ~any(strcmp(label, {'off', 'no'}))
     x = pos(i,1) + offset * ori(i,1);
     y = pos(i,2) + offset * ori(i,2);
     z = pos(i,3) + offset * ori(i,3);
-    text(x, y, z, str, 'color', fontcolor, 'fontunits', fontunits, 'fontsize', fontsize, 'fontname', fontname, 'fontweight', fontweight, 'horizontalalignment', 'center', 'verticalalignment', 'middle');
+    text(x, y, z, str, 'color', fontcolor, 'fontunits', fontunits, 'fontsize', fontsize, 'fontname', fontname, 'fontweight', fontweight, 'horizontalalignment', 'center', 'verticalalignment', 'middle', 'interpreter', 'none');
   end % for each channel
 end % if label
 

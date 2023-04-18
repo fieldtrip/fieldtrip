@@ -30,6 +30,7 @@ function [V] = ft_write_mri(filename, dat, varargin)
 %   'nifti2'      uses FreeSurfer code
 %   'nifti_gz'    uses FreeSurfer code
 %   'nifti_spm'   uses SPM
+%   'seg3d_mat'   MATLAB file for Seg3D with a scirunnrrd structure
 %   'vista'       SIMBIO specific format
 %   'vmr'         Brainvoyager specific format
 %   'vmp'         Brainvoyager specific format
@@ -37,7 +38,7 @@ function [V] = ft_write_mri(filename, dat, varargin)
 %
 % See also FT_READ_MRI, FT_DATATYPE_VOLUME, FT_WRITE_DATA, FT_WRITE_HEADSHAPE, FT_WRITE_SENS
 
-% Copyright (C) 2011-2021, Jan-Mathijs Schoffelen
+% Copyright (C) 2011-2023, Jan-Mathijs Schoffelen & Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -156,12 +157,12 @@ end
 % write the data
 switch dataformat
 
-  case {'vmr' 'vmp'}
+  case {'vmr', 'vmp'}
     % write to brainvoyager format
     vmpversion = ft_getopt(varargin, 'vmpversion', 2);
     write_brainvoyager(filename, dat, dataformat, vmpversion);
 
-  case {'analyze_old'}
+  case 'analyze_old'
     % write to Analyze format, using old code and functions from Darren Webbers toolbox
     avw = avw_hdr_make;
 
@@ -210,11 +211,11 @@ switch dataformat
     % write the header and image data
     avw_img_write(avw, filename, [], 'ieee-le');
 
-  case {'analyze_img' 'analyze_hdr' 'analyze' 'nifti_img' 'nifti_spm'}
+  case {'analyze_img', 'analyze_hdr', 'analyze', 'nifti_img', 'nifti_spm'}
     %% analyze or nifti data, using SPM
     V = volumewrite_spm(filename, dat, transform, spmversion, scl_slope, scl_inter);
 
-  case {'freesurfer_mgz' 'mgz' 'mgh'}
+  case {'freesurfer_mgz', 'mgz', 'mgh'}
     % mgz data, using Freesurfer
     ft_hastoolbox('freesurfer', 1);
 
@@ -223,7 +224,7 @@ switch dataformat
     transform = vox2ras_1to0(transform);
     save_mgh(dat, filename, transform);
 
-  case {'nifti' 'nifti_gz' 'nifti2'}
+  case {'nifti', 'nifti_gz', 'nifti2'}
     %% nifti data, using Freesurfer
     ft_hastoolbox('freesurfer', 1);
 
@@ -264,12 +265,12 @@ switch dataformat
     mri.scl_inter = scl_inter;
     MRIwrite(mri, filename, datatype);
 
-  case {'vista'}
+  case 'vista'
     % this requires the SIMBIO/Vista toolbox
     ft_hastoolbox('simbio', 1);
     write_vista_vol(size(dat), dat, filename);
 
-  case {'vtk'}
+  case 'vtk'
     % this uses https://www.mathworks.com/matlabcentral/fileexchange/47814-vtkwrite-exports-various-2d-3d-data-to-paraview-in-vtk-file-format
     % which is also available from https://github.com/joe-of-all-trades/vtkwrite
     ft_hastoolbox('fileexchange', 1);
@@ -281,6 +282,23 @@ switch dataformat
     y = reshape(headpos(:,2), dim);
     z = reshape(headpos(:,3), dim);
     vtkwrite(filename, 'structured_grid', x, y, z, 'scalars', 'mri', dat);
+
+  case 'seg3d_mat'
+    % construct a MATLAB structure that Seg3D hopefully understands
+    warning('scaling, rotation and translation are not retained');
+    dim = size(dat);
+    scirunnrrd.data = dat;
+    for i=1:3
+      scirunnrrd.axis(i).size = dim(i);
+      scirunnrrd.axis(i).spacing = 1;
+      scirunnrrd.axis(i).min = 1;
+      scirunnrrd.axis(i).max = dim(i);
+      scirunnrrd.axis(i).center = 0;
+      scirunnrrd.axis(i).label = 'axis ';
+      scirunnrrd.axis(i).unit = 'no unit';
+    end
+    scirunnrrd.axis = scirunnrrd.axis(:); % it should be 3x1, not 1x3
+    save(filename, 'scirunnrrd', '-v6');
 
   otherwise
     ft_error('unsupported format "%s"', dataformat);

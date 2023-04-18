@@ -33,10 +33,10 @@ function [hx, hy, hz] = ft_plot_ortho(dat, varargin)
 %   'intersectlinestyle'  = string, line specification 
 %   'intersectlinewidth'  = number
 %
-% See also FT_PLOT_SLICE, FT_PLOT_MONTAGE, FT_SOURCEPLOT
+% See also FT_PLOT_SLICE, FT_PLOT_MONTAGE, FT_PLOT_MESH, FT_SOURCEPLOT
 
 % Copyrights (C) 2010, Jan-Mathijs Schoffelen
-% Copyrights (C) 2022, Robert Oostenveld
+% Copyrights (C) 2022-2023, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -56,18 +56,27 @@ function [hx, hy, hz] = ft_plot_ortho(dat, varargin)
 %
 % $Id$
 
-if isstruct(dat) && isfield(dat, 'anatomy') && isfield(dat, 'transform')
-  % the input is an MRI structure, call this function recursively
-  varargin = ft_setopt(varargin, 'transform', dat.transform);
-  if isfield(dat, 'coordsys')
-    varargin = ft_setopt(varargin, 'coordsys', dat.coordsys);
+if isstruct(dat)
+  if isfield(dat, 'transform') && isfield(dat, 'dim')
+    % the input is an MRI structure, call this function recursively
+    varargin = ft_setopt(varargin, 'transform', dat.transform);
+    if isfield(dat, 'coordsys')
+      varargin = ft_setopt(varargin, 'coordsys', dat.coordsys);
+    end
+    if isfield(dat, 'unit')
+      varargin = ft_setopt(varargin, 'unit', dat.unit);
+    end
+    fn = fieldnames(dat);
+    for i=1:numel(fn)
+      if isequal(size(dat.(fn{i})), dat.dim)
+        ft_info('plotting %s', fn{i});
+        [hx, hy, hz] = ft_plot_ortho(dat.(fn{i}), varargin{:});
+      end % if 
+    end % for 
+    return
+  else
+    ft_error('unsupported input structure');
   end
-  if isfield(dat, 'unit')
-    varargin = ft_setopt(varargin, 'unit', dat.unit);
-  end
-  dat = dat.anatomy;
-  [hx, hy, hz] = ft_plot_ortho(dat, varargin{:});
-  return
 end
 
 % parse first input argument(s), it is either

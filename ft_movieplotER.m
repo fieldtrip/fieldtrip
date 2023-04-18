@@ -7,19 +7,21 @@ function [cfg] = ft_movieplotER(cfg, data)
 %   ft_movieplotER(cfg, timelock)
 % where the input data is from FT_TIMELOCKANALYSIS and the configuration
 % can contain
-%   cfg.parameter    = string, parameter that is color coded (default = 'avg')
-%   cfg.xlim         = 'maxmin' or [xmin xmax] (default = 'maxmin')
-%   cfg.zlim         = plotting limits for color dimension, 'maxmin',
-%                      'maxabs', 'zeromax', 'minzero', or [zmin zmax] (default = 'maxmin')
-%   cfg.speed        = number, initial speed for interactive mode (default = 1)
-%   cfg.samperframe  = number, samples per frame for non-interactive mode (default = 1)
-%   cfg.framespersec = number, frames per second for non-interactive mode (default = 5)%   cfg.framesfile   = 'string' or empty, filename of saved frames.mat (default = [])
-%   cfg.layout       = specification of the layout, see below
-%   cfg.baseline     = 'yes','no' or [time1 time2] (default = 'no'), see FT_TIMELOCKBASELINE
-%   cfg.baselinetype = 'absolute' or 'relative' (default = 'absolute')
-%   cfg.colorbar     = 'yes', 'no' (default = 'no')
-%   cfg.colorbartext = string indicating the text next to colorbar
-%   cfg.renderer     = string, 'opengl', 'zbuffer', 'painters', see RENDERERINFO (default is automatic, try 'painters' when it crashes)
+%   cfg.parameter       = string, parameter that is color coded (default = 'avg')
+%   cfg.xlim            = 'maxmin' or [xmin xmax] (default = 'maxmin')
+%   cfg.zlim            = plotting limits for color dimension, 'maxmin',
+%                         'maxabs', 'zeromax', 'minzero', or [zmin zmax] (default = 'maxmin')
+%   cfg.speed           = number, initial speed for interactive mode (default = 1)
+%   cfg.samperframe     = number, samples per frame for non-interactive mode (default = 1)
+%   cfg.framespersec    = number, frames per second for non-interactive mode (default = 5)%   cfg.framesfile   = 'string' or empty, filename of saved frames.mat (default = [])
+%   cfg.layout          = specification of the layout, see below
+%   cfg.interpolatenan  = string 'yes', 'no' interpolate over channels containing NaNs (default = 'yes')
+%   cfg.colormap        = string, or Nx3 matrix, see FT_COLORMAP
+%   cfg.baseline        = 'yes','no' or [time1 time2] (default = 'no'), see FT_TIMELOCKBASELINE
+%   cfg.baselinetype    = 'absolute' or 'relative' (default = 'absolute')
+%   cfg.colorbar        = 'yes', 'no' (default = 'no')
+%   cfg.colorbartext    = string indicating the text next to colorbar
+%   cfg.renderer        = string, 'opengl', 'zbuffer', 'painters', see RENDERERINFO (default is automatic, try 'painters' when it crashes)
 %
 % The layout defines how the channels are arranged. You can specify the
 % layout in a variety of ways:
@@ -41,7 +43,7 @@ function [cfg] = ft_movieplotER(cfg, data)
 %
 % See also FT_MULTIPLOTER, FT_TOPOPLOTER, FT_SINGLEPLOTER, FT_MOVIEPLOTTFR, FT_SOURCEMOVIE
 
-% Copyright (C) 2009-2022, Ingrid Nieuwenhuis, Jan-Mathijs Schoffelen, Robert Oostenveld, Cristiano Micheli
+% Copyright (C) 2009-2023, Ingrid Nieuwenhuis, Jan-Mathijs Schoffelen, Robert Oostenveld, Cristiano Micheli
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -95,7 +97,7 @@ if ~strcmp(cfg.baseline, 'no')
   [cfg, data] = rollback_provenance(cfg, data);
 end
 
-% prevent the baseline correction from happening in ft_movieplotTFR
+% prevent any further baseline correction from happening in ft_movieplotTFR
 tmpcfg = removefields(cfg, {'baseline', 'baselinetype'});
 tmpcfg = ft_movieplotTFR(tmpcfg, data);
 

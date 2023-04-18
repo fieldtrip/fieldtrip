@@ -2,7 +2,7 @@ function [val] = filetype_check_header(filename, head, offset)
 
 % FILETYPE_CHECK_HEADER helper function to determine the file type
 % by reading the first number of bytes of a file and comparing them
-% to a known string (c.f. magic number).
+% to a known string or magic number.
 
 % Copyright (C) 2003-2022 Robert Oostenveld
 %

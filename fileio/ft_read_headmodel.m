@@ -15,7 +15,8 @@ function [headmodel] = ft_read_headmodel(filename, varargin)
 % type of model that is to be returned.
 %   'meshtype'   = string, 'volume' or 'surface' (default is automatic)
 %
-% See also FT_DATATYPE_HEADMODEL, FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD
+% See also FT_DATATYPE_HEADMODEL, FT_PREPARE_HEADMODEL, FT_READ_HEADMODEL,
+% FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD
 
 % Copyright (C) 2008-2023, Robert Oostenveld
 %

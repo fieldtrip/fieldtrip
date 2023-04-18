@@ -106,7 +106,7 @@ end
 
 % ensure that the input data is valid for this function
 for i=1:length(varargin)
-  varargin{i} = ft_checkdata(varargin{i}, 'datatype', {'raw', 'raw+comp'}, 'feedback', 'no', 'haschantype', haschantype, 'haschanunit', haschanunit, 'hassampleinfo', cfg.keepsampleinfo);
+  varargin{i} = ft_checkdata(varargin{i}, 'datatype', {'raw+comp', 'raw'}, 'feedback', 'no', 'haschantype', haschantype, 'haschanunit', haschanunit, 'hassampleinfo', cfg.keepsampleinfo);
 end
 
 % set the defaults

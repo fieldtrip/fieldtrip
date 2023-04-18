@@ -119,7 +119,7 @@ function [cfg] = ft_sourceplot(cfg, functional, anatomical)
 %                              'voxel', voxelcoordinates as indices
 %   cfg.crosshair     = 'yes' or 'no' (default = 'yes')
 %   cfg.axis          = 'on' or 'off' (default = 'on')
-%   cfg.queryrange    = number, in atlas voxels (default 3)
+%   cfg.queryrange    = number, in atlas voxels (default = 1)
 %   cfg.clim          = lower and upper anatomical MRI limits (default = [0 1])
 %
 % When cfg.method='slice', a NxM montage with a large number of slices will be rendered.
@@ -924,7 +924,7 @@ switch cfg.method
     cfg.locationcoordinates = ft_getopt(cfg, 'locationcoordinates', 'head');
     cfg.crosshair           = ft_getopt(cfg, 'crosshair',           'yes');
     cfg.axis                = ft_getopt(cfg, 'axis',                'on');
-    cfg.queryrange          = ft_getopt(cfg, 'queryrange',          3);
+    cfg.queryrange          = ft_getopt(cfg, 'queryrange',          1);
     
     if ~ischar(cfg.location)
       if strcmp(cfg.locationcoordinates, 'head')
@@ -1571,7 +1571,7 @@ yi = opt.ijk(2);
 zi = opt.ijk(3);
 qi = opt.qi;
 
-if any([xi yi zi] > functional.dim) || any([xi yi zi] <= 0)
+if any([xi yi zi] > functional.dim) || any([xi yi zi] <= 1)
   return;
 end
 
@@ -1795,6 +1795,12 @@ if opt.hasfun
 
     plotopt = ft_setopt(plotopt, 'surfhandle', opt.funhandles);
     ft_plot_ortho(tmpfun, plotopt{:});
+
+    if ~opt.hasmsk && opt.hasfun && opt.hasana
+      set(opt.funhandles(1), 'facealpha', 0.5);
+      set(opt.funhandles(2), 'facealpha', 0.5);
+      set(opt.funhandles(3), 'facealpha', 0.5);
+    end
   end
 end
 
@@ -1812,9 +1818,9 @@ axis(h3, [xi-xloadj xi+xhiadj yi-yloadj yi+yhiadj]);
 
 if opt.zoom>0
   % the coordsys labels fall outside the subplots when zoomed in
-  delete(findall(h, 'Type', 'text', 'Tag', 'coordsys_label_100'));
-  delete(findall(h, 'Type', 'text', 'Tag', 'coordsys_label_010'));
-  delete(findall(h, 'Type', 'text', 'Tag', 'coordsys_label_001'));
+  delete(findall(h, 'Type', 'text', 'Tag', 'coordsyslabel_x'));
+  delete(findall(h, 'Type', 'text', 'Tag', 'coordsyslabel_y'));
+  delete(findall(h, 'Type', 'text', 'Tag', 'coordsyslabel_z'));
 end
 
 if opt.crosshair
@@ -2112,8 +2118,8 @@ if ~isempty(tag) && ~opt.init
     opt.update = [1 1 1];
   end
 end
-opt.ijk = min(opt.ijk(:)', opt.dim);
-opt.ijk = max(opt.ijk(:)', [1 1 1]);
+opt.ijk = min(opt.ijk(:)', opt.dim+0.01);
+opt.ijk = max(opt.ijk(:)', [1 1 1]-0.01);
 
 setappdata(h, 'opt', opt);
 
