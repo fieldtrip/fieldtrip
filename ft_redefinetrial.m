@@ -21,7 +21,7 @@ function [data] = ft_redefinetrial(cfg, data)
 % For realiging the time axes of all trials to a new reference time
 % point (i.e. change the definition for t=0) you can use the following
 % configuration option
-%   cfg.offset    = single number or Nx1 vector, expressed in samples relative to current t=0
+%   cfg.offset    = single number or Nx1 vector, expressed in samples relative to current t=0. Note, shifts the the time towards the beginning of the epoch (i.e., backwards from the current zero time).
 %
 % For selecting a specific subsection of (i.e. cut out a time window
 % of interest) you can select a time window in seconds that is common
