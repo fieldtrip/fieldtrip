@@ -42,10 +42,12 @@ function [cfg, artifact] = ft_artifact_zvalue(cfg, data)
 %   cfg.memory = 'low' or 'high', whether to be memory or computationally efficient, respectively (default = 'high')
 %
 % The optional configuration settings (see below) are:
-%   cfg.artfctdef.zvalue.artfctpeak       = 'yes' or 'no'
-%   cfg.artfctdef.zvalue.artfctpeakrange  = [begin end]
-%   cfg.artfctdef.zvalue.interactive      = 'yes' or 'no'
-%   cfg.artfctdef.zvalue.zscore           = 'yes' (default) or 'no'   
+%   cfg.artfctdef.zvalue.artfctpeak      = 'yes' or 'no'
+%   cfg.artfctdef.zvalue.artfctpeakrange = [begin end]
+%   cfg.artfctdef.zvalue.zscore          = 'yes' (default) or 'no'
+%   cfg.artfctdef.zvalue.method          = 'all' (default), 'trial' or 'trialdemean'
+%   cfg.artfctdef.zvalue.ntrial          = integer (default is 10)
+%   cfg.artfctdef.zvalue.interactive     = 'yes' or 'no'
 %
 % If you specify cfg.artfctdef.zvalue.artfctpeak='yes', a peak detection on the suprathreshold
 % z-scores will be performed, and the artifact will be defined relative to
@@ -64,6 +66,17 @@ function [cfg, artifact] = ft_artifact_zvalue(cfg, data)
 % to thresholding. This goes a bit against the name of the function, but it may be useful
 % if the threshold is to be defined in meaningful physical units, e.g. degrees of visual
 % angle for eye position data.
+%
+% cfg.artfctdef.zvalue.method controls how the z-scores are calculated, and is relevant
+% only if cfg.trl is defined. 'all' (default) means z-scores are caclulated using all
+% the data (all trials combined). 'trial' means z-scores are calculated locally, where 
+% cfg.artfctdef.zvalue.ntrial controls the extent. 
+%
+% cfg.artfctdef.zvalue.ntrial sets how many trials are used to calculates z-scores, and
+% is only relevant if cfg.artfctdef.zvalue.method = 'trial'. Specifically, the averages
+% and squared values (used to calculated the standard deviation) are smoothed with a 
+% moving average of width=ntrial before transforming the values to z-scores. By default,
+% ntrial is set to 10.
 %
 % If you specify cfg.artfctdef.zvalue.interactive = 'yes', a graphical user interface
 % will show in which you can manually accept/reject the detected artifacts, and/or
@@ -91,30 +104,30 @@ function [cfg, artifact] = ft_artifact_zvalue(cfg, data)
 %     uparrow           : Shift the z-threshold down
 %
 % Configuration settings related to the preprocessing of the data are
-%   cfg.artfctdef.zvalue.lpfilter      = 'no' or 'yes'  lowpass filter
-%   cfg.artfctdef.zvalue.hpfilter      = 'no' or 'yes'  highpass filter
-%   cfg.artfctdef.zvalue.bpfilter      = 'no' or 'yes'  bandpass filter
-%   cfg.artfctdef.zvalue.bsfilter      = 'no' or 'yes'  bandstop filter for line noise removal
-%   cfg.artfctdef.zvalue.dftfilter     = 'no' or 'yes'  line noise removal using discrete fourier transform
-%   cfg.artfctdef.zvalue.medianfilter  = 'no' or 'yes'  jump preserving median filter
-%   cfg.artfctdef.zvalue.lpfreq        = lowpass  frequency in Hz
-%   cfg.artfctdef.zvalue.hpfreq        = highpass frequency in Hz
-%   cfg.artfctdef.zvalue.bpfreq        = bandpass frequency range, specified as [low high] in Hz
-%   cfg.artfctdef.zvalue.bsfreq        = bandstop frequency range, specified as [low high] in Hz
-%   cfg.artfctdef.zvalue.lpfiltord     = lowpass  filter order
-%   cfg.artfctdef.zvalue.hpfiltord     = highpass filter order
-%   cfg.artfctdef.zvalue.bpfiltord     = bandpass filter order
-%   cfg.artfctdef.zvalue.bsfiltord     = bandstop filter order
-%   cfg.artfctdef.zvalue.medianfiltord = length of median filter
-%   cfg.artfctdef.zvalue.lpfilttype    = digital filter type, 'but' (default) or 'firws' or 'fir' or 'firls'
-%   cfg.artfctdef.zvalue.hpfilttype    = digital filter type, 'but' (default) or 'firws' or 'fir' or 'firls'
-%   cfg.artfctdef.zvalue.bpfilttype    = digital filter type, 'but' (default) or 'firws' or 'fir' or 'firls'
-%   cfg.artfctdef.zvalue.bsfilttype    = digital filter type, 'but' (default) or 'firws' or 'fir' or 'firls'
-%   cfg.artfctdef.zvalue.detrend       = 'no' or 'yes'
-%   cfg.artfctdef.zvalue.demean        = 'no' or 'yes'
+%   cfg.artfctdef.zvalue.lpfilter       = 'no' or 'yes'  lowpass filter
+%   cfg.artfctdef.zvalue.hpfilter       = 'no' or 'yes'  highpass filter
+%   cfg.artfctdef.zvalue.bpfilter       = 'no' or 'yes'  bandpass filter
+%   cfg.artfctdef.zvalue.bsfilter       = 'no' or 'yes'  bandstop filter for line noise removal
+%   cfg.artfctdef.zvalue.dftfilter      = 'no' or 'yes'  line noise removal using discrete fourier transform
+%   cfg.artfctdef.zvalue.medianfilter   = 'no' or 'yes'  jump preserving median filter
+%   cfg.artfctdef.zvalue.lpfreq         = lowpass  frequency in Hz
+%   cfg.artfctdef.zvalue.hpfreq         = highpass frequency in Hz
+%   cfg.artfctdef.zvalue.bpfreq         = bandpass frequency range, specified as [low high] in Hz
+%   cfg.artfctdef.zvalue.bsfreq         = bandstop frequency range, specified as [low high] in Hz
+%   cfg.artfctdef.zvalue.lpfiltord      = lowpass  filter order
+%   cfg.artfctdef.zvalue.hpfiltord      = highpass filter order
+%   cfg.artfctdef.zvalue.bpfiltord      = bandpass filter order
+%   cfg.artfctdef.zvalue.bsfiltord      = bandstop filter order
+%   cfg.artfctdef.zvalue.medianfiltord  = length of median filter
+%   cfg.artfctdef.zvalue.lpfilttype     = digital filter type, 'but' (default) or 'firws' or 'fir' or 'firls'
+%   cfg.artfctdef.zvalue.hpfilttype     = digital filter type, 'but' (default) or 'firws' or 'fir' or 'firls'
+%   cfg.artfctdef.zvalue.bpfilttype     = digital filter type, 'but' (default) or 'firws' or 'fir' or 'firls'
+%   cfg.artfctdef.zvalue.bsfilttype     = digital filter type, 'but' (default) or 'firws' or 'fir' or 'firls'
+%   cfg.artfctdef.zvalue.detrend        = 'no' or 'yes'
+%   cfg.artfctdef.zvalue.demean         = 'no' or 'yes'
 %   cfg.artfctdef.zvalue.baselinewindow = [begin end] in seconds, the default is the complete trial
-%   cfg.artfctdef.zvalue.hilbert       = 'no' or 'yes'
-%   cfg.artfctdef.zvalue.rectify       = 'no' or 'yes'
+%   cfg.artfctdef.zvalue.hilbert        = 'no' or 'yes'
+%   cfg.artfctdef.zvalue.rectify        = 'no' or 'yes'
 %
 % The output argument "artifact" is a Nx2 matrix comparable to the "trl" matrix of
 % FT_DEFINETRIAL. The first column of which specifying the beginsamples of an
