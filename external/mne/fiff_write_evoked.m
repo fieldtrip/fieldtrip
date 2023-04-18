@@ -1,6 +1,6 @@
-function fiff_write_evoked(name,data)
+function fiff_write_evoked(name,data,datatype)
 %
-% function fiff_write_evoked(name,data)
+% function fiff_write_evoked(name,data,datatype)
 %
 % name     filename
 % data     the data structure returned from fiff_read_evoked
@@ -60,7 +60,7 @@ function fiff_write_evoked(name,data)
 %
 %
 me='MNE:fiff_write_evoked';
-if nargin ~= 2
+if nargin < 2
     error(me,'File name and data required as an arguments');
 end
 %
@@ -68,6 +68,15 @@ global FIFF;
 if isempty(FIFF)
     FIFF = fiff_define_constants();
 end
+
+if nargin < 3 || isempty(datatype)
+    datatype = FIFF.FIFFT_FLOAT;
+end
+
+if datatype ~= FIFF.FIFFT_FLOAT
+    warning(me, 'reading and writing of data in numeric precision ~= float is only supported in FieldTrip and MNE-Python');
+end
+
 %
 %  Create the file and save the essentials
 %
@@ -185,7 +194,19 @@ for set = 1:length(data.evoked)
     for k = 1:data.info.nchan
         decal(k,k) = 1.0/(data.info.chs(k).cal);
     end
-    fiff_write_float_matrix(fid,FIFF.FIFF_EPOCH,decal*data.evoked(set).epochs);
+    switch datatype
+        case FIFF.FIFFT_FLOAT
+            fiff_write_float_matrix(fid,FIFF.FIFF_EPOCH,decal*data.evoked(set).epochs);
+        case FIFF.FIFFT_DOUBLE
+            fiff_write_double_matrix(fid,FIFF.FIFF_EPOCH,decal*data.evoked(set).epochs);
+        case FIFF.FIFFT_COMPLEX_FLOAT
+            fiff_write_complex_matrix(fid,FIFF.FIFF_EPOCH,decal*data.evoked(set).epochs);
+        case FIFF.FIFFT_COMPLEX_DOUBLE
+            fiff_write_double_complex_matrix(fid,FIFF.FIFF_EPOCH,decal*data.evoked(set).epochs);
+        otherwise
+            error(me,'unsupported datatype requested for writing of the epoch data matrix');
+    end
+
     %
     fiff_end_block(fid,FIFF.FIFFB_ASPECT);
     %

@@ -9,14 +9,24 @@ function fieldtrip2fiff(filename, data, varargin)
 % as obtained from FT_PREPROCESSING, or a timelock structure obtained from
 % FT_TIMELOCKANALYSIS.
 %
+% Additional options can be specified as key-value pairs:
+%   precision = string ('single'/'double'), determines the precision with which
+%                 the numeric data is written to file, default is the class of the
+%                 numeric data
+% 
 % If the data comes from preprocessing and has only one trial, then it writes the
-% data into raw continuous format. If present in the data, the original header
-% is reused (also removing the non-used channels). Otherwise, the function 
-% attempts to create the header, which might or might not be correct (e.g. with
-% respect to the scaling and the sensor locations. If the data contains events in 
-% the cfg structure, it writes the events in the MNE format (three columns) into 
-% a file based on "filename", ending with "-eve.fif"
-%
+% data into raw continuous format. 
+% 
+% If present in the data, the original header is reused (also removing the non-used channels).
+% Otherwise, the function attempts to create the header, which might or might not be correct
+% (e.g. with respect to the scaling and the sensor locations. 
+% 
+% If the data contains events in the cfg structure, it writes the events in the MNE format
+% (three columns) into a file based on "filename", ending with "-eve.fif". If only a subset
+% of the events is to be written to the event file, one can use the additional key-value pair:
+%   eventtype = string (or cell array of string) with the eventtypes to be
+%                 written to file, default 'all'
+% 
 % See also FT_DATATYPE_RAW, FT_DATATYPE_TIMELOCK
 
 % Copyright (C) 2012-2013, Jan-Mathijs Schoffelen, Gio Piantoni
@@ -68,10 +78,19 @@ if israw
   iscomplex = ~isreal(data.trial{1});
 else
   fsample = 1./mean(diff(data.time));
-  dtype   = class(data.trial);
-  iscomplex = ~isreal(data.trial);
+  if isfield(data, 'trial')
+    dtype   = class(data.trial);
+    iscomplex = ~isreal(data.trial);
+  elseif isfield(data, 'avg')
+    dtype = class(data.avg);
+    iscomplex = ~isreal(data.avg);
+  end
 end
 precision = ft_getopt(varargin, 'precision', dtype);
+if ~ismember(precision, {'single' 'double'})
+  % FIXME consider casting non single/double data to the supported class
+  ft_error('only single or double precision data is supported');
+end
 
 % Create a fiff-header, or take information from the original header if possible
 if isfield(data, 'hdr') && isfield(data.hdr, 'orig') && isfield(data.hdr.orig, 'meas_id')
@@ -134,13 +153,27 @@ if israw
     event = [];
   end
   if ~isempty(event)
-    [eventlist, mappings] = convertevent(event);
+    eventtype = ft_getopt(varargin, 'eventtype', 'all');
+    [eventlist, mappings] = convertevent(event, eventtype);
     fiff_write_events(eventfile, eventlist, mappings);
     ft_info('Writing events to %s\n', eventfile)
   end
   
-elseif isepch
+elseif istlck
+  evoked.aspect_kind = 100;
+  evoked.is_smsh     = 0;
+  evoked.nave        = max(data.dof(:));
+  evoked.first       = round(data.time(1)*info.sfreq);
+  evoked.last        = round(data.time(end)*info.sfreq);
+  evoked.times       = data.time;
+  evoked.comment     = sprintf('exported from FieldTrip: averaged data');
+  evoked.epochs      = data.avg;
   
+  fiffdata.info   = info;
+  fiffdata.evoked = evoked;
+  fiff_write_evoked(fifffile, fiffdata,dtype);
+  
+elseif isepch
   nsmp   = numel(data.time);
   ntrl   = size(data.trial,1);    
   if isfield(data, 'trialinfo')
@@ -149,7 +182,7 @@ elseif isepch
   else
     trg = ones(ntrl,1);
   end
-  events = [((0:nsmp:(nsmp*(ntrl-1)))+1)' zeros(ntrl,1) trg];
+  events = [((0:nsmp:(nsmp*(ntrl-1))))' zeros(ntrl,1) trg];
   vals = unique(trg);
   vals = [(1:numel(vals))' vals]';
   eventid = sprintf('event%d: %d;',vals(:));
@@ -163,26 +196,13 @@ elseif isepch
   epochs.drop_log  = ['[',repmat('[], ',[1 size(data.trial,1)-1]), '[]]'];
   epochs.events    = events;
   epochs.event_id  = eventid;
-  epochs.comment   = ' ';
+  epochs.comment   = 'exported from FieldTrip: epoched data';
 
   fiffdata.info  = info;
   fiffdata.epoch = epochs;
   fiff_write_epochs(fifffile, fiffdata, dtype);
 
-elseif istlck
-  evoked.aspect_kind = 100;
-  evoked.is_smsh     = 0;
-  evoked.nave        = max(data.dof(:));
-  evoked.first       = round(data.time(1)*info.sfreq);
-  evoked.last        = round(data.time(end)*info.sfreq);
-  evoked.times       = data.time;
-  evoked.comment     = sprintf('FieldTrip data averaged');
-  evoked.epochs      = data.avg;
-  
-  fiffdata.info   = info;
-  fiffdata.evoked = evoked;
-  fiff_write_evoked(fifffile, fiffdata);
-  
+
 end
 
 %-------------------
@@ -300,11 +320,21 @@ else
 end
 
 
-function [eventlist, mappings] = convertevent(event)
+function [eventlist, mappings] = convertevent(event, eventtype)
 
 ev_type  = {event.type};
 ev_utype = unique(ev_type);
 ft_info('Detected %d events, of %d different event types\n', numel(ev_type), numel(ev_utype));
+
+if isequal(eventtype, 'all')
+  ft_info('Writing all event types\n');
+else
+  if ischar(eventtype)
+    eventtype = {eventtype};
+  end
+  ev_utype = intersect(ev_utype, eventtype);
+  ft_info('Writing a selection of event types\n');
+end
 
 % a specific event type, can have different numeric (or non-numeric
 % values), or can have an empty value
@@ -345,10 +375,12 @@ eventlist = zeros(0,3);
 for k = 1:numel(ev)
   mappings  = sprintf('%s, %s:%d', mappings, ev(k).id, k);
 
-  smp = ev(k).sample(:);
+  smp = ev(k).sample(:)-1; % in the fiff-file the samples are 0 based
   eventlist = cat(1, eventlist, [smp zeros(numel(smp),1) ones(numel(smp),1).*k]); 
 end
-mappings = mappings(3:end);
+[srt, ix] = sort(eventlist(:,1));
+eventlist = eventlist(ix,:);
+mappings  = mappings(3:end);
 
 function [coiltype, coilkind] = grad2coiltype(grad)
 
