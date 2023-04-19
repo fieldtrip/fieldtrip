@@ -1359,7 +1359,7 @@ if need_motion_json
     motion_json.ORNTChannelCount      = sum(strcmpi(hdr.chantype, 'ORNT'));
     motion_json.VELChannelCount       = sum(strcmpi(hdr.chantype, 'VEL'));
     motion_json.ANGVELChannelCount    = sum(strcmpi(hdr.chantype, 'ANGVEL'));
-    motion_json.ACCChannelCount       = sum(strcmpi(hdr.chantype, 'ACC'));
+    motion_json.ACCELChannelCount       = sum(strcmpi(hdr.chantype, 'ACCEL'));
     motion_json.ANGACCChannelCount    = sum(strcmpi(hdr.chantype, 'ANGACC'));
     motion_json.MAGNChannelCount      = sum(strcmpi(hdr.chantype, 'MAGN'));
     motion_json.JNTANGChannelCount    = sum(strcmpi(hdr.chantype, 'JNTANG'));
