@@ -2146,14 +2146,14 @@ if ~isempty(cfg.bidsroot)
 
     if isfile(filename)
         scans_tsv = ft_read_tsv(filename);
+        % the filename should have forward slashes, see #1957 and #1959
+        this.filename = strrep(this.filename, '\', '/');
+        scans_tsv.filename = strrep(scans_tsv.filename, '\', '/');
         % the scans.tsv is always merged, use the filename column as the corresponding key
         scans_tsv = mergetable(scans_tsv, this, 'filename');
     else
         scans_tsv = this;
     end
-
-    % the filename should have forward slashes, see #1957 and #1959
-    scans_tsv.filename = strrep(scans_tsv.filename, '\', '/');
 
     % write the updated file back to disk
     ft_write_tsv(filename, scans_tsv);
