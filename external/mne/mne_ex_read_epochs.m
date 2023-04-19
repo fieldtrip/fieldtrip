@@ -79,11 +79,7 @@ end
 %
 %   Setup for reading the raw data
 %
-try
-    raw = fiff_setup_read_raw(fname);
-catch
-    error(me,'%s',mne_omit_first_line(lasterr));
-end
+raw = fiff_setup_read_raw(fname);
 
 if pick_all
     %
@@ -249,8 +245,11 @@ for p = 1:count
         data(p).tmin  = (double(from)-double(raw.first_samp))/raw.info.sfreq;
         data(p).tmax  = (double(to)-double(raw.first_samp))/raw.info.sfreq;
     catch
-        fclose(raw.fid);
-        error(me,'%s',mne_omit_first_line(lasterr));
+        err = lasterr;
+        try  % invalid file number sometimes
+            fclose(raw.fid);
+        end
+        error(me,'%s',mne_omit_first_line(err));
     end
 end
 fprintf(1,'Read %d epochs, %d samples each.\n',count,length(data(1).epoch));

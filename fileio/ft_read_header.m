@@ -185,6 +185,7 @@ retry          = ft_getopt(varargin, 'retry', false);     % the default is not t
 chanindx       = ft_getopt(varargin, 'chanindx');         % this is used for EDF with different sampling rates
 coordsys       = ft_getopt(varargin, 'coordsys', 'head'); % this is used for ctf and neuromag_mne, it can be head or dewar
 coilaccuracy   = ft_getopt(varargin, 'coilaccuracy');     % empty, or a number between 0-2
+coildeffile    = ft_getopt(varargin, 'coildeffile');      % empty, or a filename
 chantype       = ft_getopt(varargin, 'chantype', {});
 password       = ft_getopt(varargin, 'password', struct([]));
 readbids       = ft_getopt(varargin, 'readbids', 'ifmakessense');
@@ -729,7 +730,7 @@ switch headerformat
     end
     % add a gradiometer structure for forward and inverse modelling
     try
-      [grad, elec] = ctf2grad(orig, strcmp(coordsys, 'dewar'), coilaccuracy);
+      [grad, elec] = ctf2grad(orig, strcmp(coordsys, 'dewar'), coilaccuracy, coildeffile);
       if ~isempty(grad)
         hdr.grad = grad;
       end
@@ -1337,7 +1338,7 @@ switch headerformat
 
       % add a gradiometer structure for forward and inverse modelling
       try
-        [grad, elec] = mne2grad(cachechunk, true, coilaccuracy); % the coordsys is 'dewar'
+        [grad, elec] = mne2grad(cachechunk, true, coilaccuracy, coildeffile); % the coordsys is 'dewar'
         if ~isempty(grad)
           hdr.grad = grad;
         end
@@ -1915,7 +1916,7 @@ switch headerformat
 
     % add a gradiometer structure for forward and inverse modelling
     try
-      [grad, elec] = mne2grad(info, strcmp(coordsys, 'dewar'), coilaccuracy);
+      [grad, elec] = mne2grad(info, strcmp(coordsys, 'dewar'), coilaccuracy, coildeffile);
       if ~isempty(grad)
         hdr.grad = grad;
       end
@@ -1933,6 +1934,7 @@ switch headerformat
     if isempty(fiff_find_evoked(filename)) % true if file contains no evoked responses
       try
         epochs = fiff_read_epochs(filename);
+        epochs.data = permute(epochs.data, [2 3 1]); % makes life much easier later on (chan_time_rpt)
         isepoched = 1;
       catch
         % the "catch me" syntax is broken on MATLAB74, this fixes it
@@ -1982,7 +1984,7 @@ switch headerformat
     elseif isepoched
       hdr.nSamples    = length(epochs.times);
       hdr.nSamplesPre = sum(epochs.times < 0);
-      hdr.nTrials     = size(epochs.data, 1);
+      hdr.nTrials     = size(epochs.data, 3); % because the data matrix has been permuted
       info.epochs     = epochs;  % this is used by read_data to get the actual data, i.e. to prevent re-reading
 
     elseif isaverage

@@ -31,8 +31,9 @@ if nargin ~= 3
    error(me,'Incorrect number of arguments');
 end
 
-if length(size(mat)) ~= 2
-   error(me,'Input should be a two-dimensional matrix');
+ndim = ndims(mat);
+if ndim < 2 || ndim > 3
+   error(me,'Input should be a two-dimensional or three-dimensional matrix');
 end
 
 FIFFT_FLOAT  = 4;
@@ -40,7 +41,7 @@ FIFFT_MATRIX = bitshift(1,30);
 FIFFT_MATRIX_FLOAT = bitor(FIFFT_FLOAT,FIFFT_MATRIX);
 FIFFV_NEXT_SEQ=0;
 
-datasize = 4*numel(mat) + 4*3;
+datasize = 4*numel(mat) + 4*(ndim+1);
 
 count = fwrite(fid,int32(kind),'int32');
 if count ~= 1
@@ -58,16 +59,27 @@ count = fwrite(fid,int32(FIFFV_NEXT_SEQ),'int32');
 if count ~= 1
     error(me,'write failed');
 end
-count = fwrite(fid,single(mat'),'single');
+count = fwrite(fid,single(permute(mat,ndim:-1:1)),'single');
 if count ~= numel(mat)
     error(me,'write failed');
 end
-dims(1) = size(mat,2);
-dims(2) = size(mat,1);
-dims(3) = 2;
-count = fwrite(fid,int32(dims),'int32');
-if count ~= 3
-    error(me,'write failed');
+if ndim==2
+    dims(1) = size(mat,2);
+    dims(2) = size(mat,1);
+    dims(3) = 2;
+    count = fwrite(fid,int32(dims),'int32');
+    if count ~= 3
+        error(me,'write failed');
+    end
+elseif ndim==3
+    dims(1) = size(mat,3);
+    dims(2) = size(mat,2);
+    dims(3) = size(mat,1);
+    dims(4) = 3;
+    count = fwrite(fid,int32(dims),'int32');
+    if count ~= 4
+        error(me,'write failed');
+    end
 end
 
 return;

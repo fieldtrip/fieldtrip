@@ -1,7 +1,7 @@
-function [ projdata ] = fiff_read_proj(fid,node)
+function [ projdata ] = fiff_read_proj(fid,node,ch_rename)
 
 %
-% [ projdata ] = fiff_read_proj(fid,node)
+% [ projdata ] = fiff_read_proj(fid,node,ch_rename)
 %
 % Read the SSP data under a given directory node
 %
@@ -44,7 +44,9 @@ end
 
 me='MNE:fiff_read_proj';
 
-if nargin ~= 2
+if nargin == 2
+    ch_rename = {};
+elseif nargin ~= 3
     error(me,'Incorrect number of arguments');
 end
 
@@ -107,6 +109,7 @@ for i = 1:length(items)
     else
         error(me,'Projection item channel list missing');
     end
+    names = fiff_rename_list(names, ch_rename);
     tag = find_tag(item,FIFF.FIFF_PROJ_ITEM_VECTORS);
     if ~isempty(tag)
         data = tag.data;
@@ -155,7 +158,7 @@ end
 return;
 
     function [tag] = find_tag(node,findkind)
-        
+
         for p = 1:node.nent
             if node.dir(p).kind == findkind
                 tag = fiff_read_tag(fid,node.dir(p).pos);

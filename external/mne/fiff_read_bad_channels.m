@@ -1,11 +1,12 @@
-function [bads] = fiff_read_bad_channels(fid,node)
+function [bads] = fiff_read_bad_channels(fid,node,ch_rename)
 %
-% [bads] = fiff_read_bad_channels(fid,node)
+% [bads] = fiff_read_bad_channels(fid,node[,ch_rename])
 %
 % Reas the bad channel list from a node if it exists
 %
-% fid      - The file id
-% node     - The node of interes
+% fid       - The file id
+% node      - The node of interes
+% ch_rename - Short-to-long channel name mapping
 %
 
 %
@@ -29,6 +30,12 @@ function [bads] = fiff_read_bad_channels(fid,node)
 
 me='MNE:fiff_read_bad_channels';
 
+if nargin == 2
+    ch_rename = {};
+elseif nargin ~= 3
+    error(me,'Incorrect number of arguments');
+end
+
 global FIFF;
 if isempty(FIFF)
     FIFF = fiff_define_constants();
@@ -43,11 +50,12 @@ if ~isempty(node)
         bads = fiff_split_name_list(tag.data);
     end
 end
+bads = fiff_rename_list(bads, ch_rename);
 
 return;
 
     function [tag] = find_tag(node,findkind)
-        
+
         for p = 1:node.nent
             kind = node.dir(p).kind;
             pos  = node.dir(p).pos;
