@@ -71,12 +71,16 @@ for k = 1:ep.nent
         case FIFF.FIFF_MNE_BASELINE_MAX
             tag = fiff_read_tag(fid,pos);
             bmax = tag.data;
-        case FIFF.FIFFB_MNE_EPOCHS_SELECTION
+        case FIFF.FIFF_MNE_EPOCHS_SELECTION
             tag = fiff_read_tag(fid,pos);
             selection = tag.data;
-        case FIFF.FIFFB_MNE_EPOCHS_DROP_LOG
+        case FIFF.FIFF_MNE_EPOCHS_DROP_LOG
             tag = fiff_read_tag(fid,pos);
             drop_log = tag.data;
+        %FIXME consider support for the below
+        %FIFF.FIFF_MNE_EPOCHS_REJECT_FLAT;  % rejection and flat params
+        %FIFF.FIFF_MNE_EPOCHS_RAW_SFREQ;    % original raw sfreq
+
     end
 end
 

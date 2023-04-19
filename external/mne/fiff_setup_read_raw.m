@@ -169,6 +169,12 @@ for k = first:nent
                 nsamp = ent.size/(4*nchan);
             case FIFF.FIFFT_INT
                 nsamp = ent.size/(4*nchan);
+            case FIFF.FIFFT_DOUBLE
+                nsamp = ent.size/(8*nchan);
+            case FIFF.FIFFT_COMPLEX_FLOAT
+                nsamp = ent.size/(8*nchan);
+            case FIFF.FIFFT_COMPLEX_DOUBLE
+                nsamp = ent.size/(16*nchan);
             otherwise
                 fclose(fid);
                 error(me,'Cannot handle data buffers of type %d',ent.type);

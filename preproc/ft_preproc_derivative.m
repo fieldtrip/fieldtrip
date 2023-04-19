@@ -1,13 +1,15 @@
-function [dat] = ft_preproc_derivative(dat, order)
+function [dat] = ft_preproc_derivative(dat, order, deltat)
 
 % FT_PREPROC_DERIVATIVE computes the temporal Nth order derivative of the
 % data
 %
 % Use as
-%   [dat] = ft_preproc_derivative(dat, order)
+%   [dat] = ft_preproc_derivative(dat, order, deltat)
 % where
 %   dat        data matrix (Nchans X Ntime)
 %   order      number representing the Nth derivative (default = 1)
+%   deltat     number representing the duration of 1 time step in the data
+%              (default = 1)
 %
 % If the data contains NaNs, these are ignored for the computation, but
 % retained in the output.
@@ -15,6 +17,7 @@ function [dat] = ft_preproc_derivative(dat, order)
 % See also PREPROC
 
 % Copyright (C) 2008, Robert Oostenveld
+% Copyright (C) 2023, Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -39,6 +42,10 @@ if nargin<2 || isempty(order)
   order = 1;
 end
 
+if nargin<3 || isempty(deltat)
+  deltat = 1;
+end
+
 % preprocessing fails on channels that contain NaN
 if any(isnan(dat(:)))
   ft_warning('FieldTrip:dataContainsNaN', 'data contains NaN values');
@@ -46,5 +53,5 @@ end
 
 % compute the derivative
 for i=1:order
-  dat = gradient(dat);
+  dat = gradient(dat)./deltat;
 end

@@ -1,4 +1,4 @@
-function [grad, elec] = mne2grad(hdr, dewar, coilaccuracy)
+function [grad, elec] = mne2grad(hdr, dewar, coilaccuracy, coildeffile)
 
 % MNE2GRAD converts a header from a fif file that was read using the MNE toolbox into
 % a gradiometer structure that can be understood by the FieldTrip low-level forward
@@ -9,6 +9,7 @@ function [grad, elec] = mne2grad(hdr, dewar, coilaccuracy)
 % where
 %   dewar        = boolean, whether to return it in dewar or head coordinates (default = false, i.e. head coordinates)
 %   coilaccuracy = empty or a number (default = [])
+%   coildeffile  = empty or a filename of a valid coil_def.dat file
 %
 % See also CTF2GRAD, BTI2GRAD
 
@@ -61,6 +62,12 @@ if nargin<3 || isempty(coilaccuracy)
   coilaccuracy = [];
 end
 
+if nargin<4 || isempty(coildeffile)
+  % if coilaccuracy is not empty, it will use the default coil_def.dat
+  % file, which is in external/mne
+  coildeffile = [];
+end
+
 % orig = fiff_read_meas_info(filename);
 % orig = fiff_setup_read_raw(filename);
 
@@ -107,18 +114,20 @@ if ~isempty(coilaccuracy)
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   
   ft_hastoolbox('mne', 1);
-  [ftver, ftpath] = ft_version;
-  def = mne_load_coil_def(fullfile(ftpath, 'external', 'mne', 'coil_def.dat'));
-  
-  k = 1;
+  if isempty(coildeffile)
+    [ftver, ftpath] = ft_version;
+    coildeffile     = fullfile(ftpath, 'external', 'mne', 'coil_def.dat');
+  end
+  def = mne_load_coil_def(coildeffile);
   
   grad.chanpos = nan(length(orig.chs),3);
   grad.chanori = nan(length(orig.chs),3);
-  grad.label = cell(length(orig.chs),1);
+  grad.label   = cell(length(orig.chs),1);
   grad.tra      = nan(length(orig.chs),0);
   grad.chantype = repmat({'unknown'}, size(grad.label));
   grad.chanunit = repmat({'unknown'}, size(grad.label));
   
+  k = 1; % counter for the coils
   for i=1:length(orig.chs)
     thisdef = def([def.id]==orig.chs(i).coil_type & [def.accuracy]==coilaccuracy);
     if isempty(thisdef)
@@ -148,75 +157,55 @@ if ~isempty(coilaccuracy)
   grad.label = grad.label(:);
   grad.unit  = 'm'; % the coil_def.dat file is in meter
   
-  % all the chs.kinds and chs.coil_types are obtained from the MNE manual, p.210-211
-  for sel=find([orig.chs.kind]==1 & [orig.chs.coil_type]==2)' % planar gradiometers
-    grad.chantype(sel) = {'megplanar'}; %Neuromag-122 planar gradiometer
-  end
-  for sel=find([orig.chs.kind]==1 & [orig.chs.coil_type]==3012)' %planar gradiometers
-    grad.chantype(sel) = {'megplanar'}; %Type T1 planar grad
-  end
-  for sel=find([orig.chs.kind]==1 & [orig.chs.coil_type]==3013)' %planar gradiometers
-    grad.chantype(sel) = {'megplanar'}; %Type T2 planar grad
-  end
-  for sel=find([orig.chs.kind]==1 & [orig.chs.coil_type]==3014)' %planar gradiometers
-    grad.chantype(sel) = {'megplanar'}; %Type T3 planar grad
-  end
-  for sel=find([orig.chs.kind]==1 & [orig.chs.coil_type]==3022)' %magnetometers
-    grad.chantype(sel) = {'megmag'};    %Type T1 magenetometer
-  end
-  for sel=find([orig.chs.kind]==1 & [orig.chs.coil_type]==3023)' %magnetometers
-    grad.chantype(sel) = {'megmag'};    %Type T2 magenetometer
-  end
-  for sel=find([orig.chs.kind]==1 & [orig.chs.coil_type]==3024)' %magnetometers
-    grad.chantype(sel) = {'megmag'};    %Type T3 magenetometer
-  end
-  for sel=find([orig.chs.kind]==1 & [orig.chs.coil_type]==7001)' %axial gradiometer
-    grad.chantype(sel) = {'megaxial'};
-  end
-  for sel=find([orig.chs.kind]==301)' %MEG reference channel, located far from head
-    grad.chantype(sel) = {'ref'};
-  end
-  for sel=find([orig.chs.kind]==2)'   %EEG channels
-    grad.chantype(sel) = {'eeg'};
-  end
-  for sel=find([orig.chs.kind]==201)' %MCG channels
-    grad.chantype(sel) = {'mcg'};
-  end
-  for sel=find([orig.chs.kind]==3)' %Stim channels
-    if any(ismember([orig.chs(sel).logno], [101 102])) % new systems: 101 (and 102, if enabled) are digital; low numbers are 'pseudo-analog' (if enabled)
-      grad.chantype(sel([orig.chs(sel).logno] == 101)) = {'digital trigger'};
-      grad.chantype(sel([orig.chs(sel).logno] == 102)) = {'digital trigger'};
-      grad.chantype(sel([orig.chs(sel).logno] <= 32))  = {'analog trigger'};
-      others = [orig.chs(sel).logno] > 32 & [orig.chs(sel).logno] ~= 101 & ...
-        [orig.chs(sel).logno] ~= 102;
+  % all the chs.kinds and chs.coil_types are obtained from the MNE manual, p.210-211, 
+  % and https://github.com/mne-tools/mne-matlab/blob/master/matlab/fiff_define_constants.m
+  kind  = [orig.chs.kind];
+  type  = [orig.chs.coil_type];
+  logno = [orig.chs.logno]; 
+
+  megplanars = [2 3011 3012 3013 3014 3015];
+  megmags    = [3021 3022 3023 3024 3025 4001 8001 8002 8101 8201];
+  meggrads   = [4002 5001 6001];
+  megaxials  = 7001;
+  refmags    = [4003 5002 6002];
+  refgrads   = [4004 4005 5003 5004];
+
+  grad.chantype(kind==1)   = {'meg'};
+  grad.chantype(kind==301) = {'ref'};
+
+  % overwrite with more specific values
+  grad.chantype(kind==1 & ismember(type, megplanars)) = {'megplanar'}; % planar gradiometer
+  grad.chantype(kind==1 & ismember(type, megmags))    = {'megmag'};    % magnetometer
+  grad.chantype(kind==1 & ismember(type, meggrads))   = {'meggrad'};   % axial gradiometer
+  grad.chantype(kind==1 & ismember(type, megaxials))  = {'megaxial'};  % axial gradiometer, historical exception, FIXME?
+  grad.chantype(kind==301 & ismember(type, refmags))  = {'refmag'};    % reference magnetometer
+  grad.chantype(kind==301 & ismember(type, refgrads)) = {'refgrad'};   % reference gradiometer
+  
+  grad.chantype(kind==2)   = {'eeg'}; %EEG channels
+  grad.chantype(kind==201) = {'mcg'}; %MCG channels
+  grad.chantype(kind==202) = {'eog'}; %EOG
+  grad.chantype(kind==302) = {'emg'}; %EMG
+  grad.chantype(kind==402) = {'ecg'}; %ECG
+  grad.chantype(kind==502) = {'misc'}; %MISC
+  grad.chantype(kind==602) = {'respiration'}; %Respiration  
+  
+  sel = kind==3; %Stim channels
+    if any(ismember(logno(sel), [101 102])) % newer systems: 101 (and 102, if enabled) are digital; low numbers are 'pseudo-analog' (if enabled)
+      grad.chantype(sel(logno(sel))==101) = {'digital trigger'};
+      grad.chantype(sel(logno(sel))==102) = {'digital trigger'};
+      grad.chantype(sel(logno(sel))<=32)  = {'analog trigger'};
+      others = logno(sel)>32 & logno(sel)~=101 & logno(sel)~=102;
       grad.chantype(sel(others)) = {'other trigger'};
-    elseif any(ismember([orig.chs(sel).logno], [14 15 16])) % older systems: STI 014/015/016 are digital; lower numbers 'pseudo-analog'(if enabled)
-      grad.chantype(sel([orig.chs(sel).logno] == 14)) = {'digital trigger'};
-      grad.chantype(sel([orig.chs(sel).logno] == 15)) = {'digital trigger'};
-      grad.chantype(sel([orig.chs(sel).logno] == 16)) = {'digital trigger'};
-      grad.chantype(sel([orig.chs(sel).logno] <= 13)) = {'analog trigger'};
-      others = [orig.chs(sel).logno] > 16;
-      grad.chantype(sel(others)) = {'other trigger'};
+    elseif any(ismember(logno(sel), [14 15 16])) % older systems: STI 014/015/016 are digital; lower numbers 'pseudo-analog'(if enabled)
+      grad.chantype(sel(logno(sel))==14) = {'digital trigger'};
+      grad.chantype(sel(logno(sel))==15) = {'digital trigger'};
+      grad.chantype(sel(logno(sel))==16) = {'digital trigger'};
+      grad.chantype(sel(logno(sel))<=13) = {'analog trigger'};
+      grad.chantype(sel(logno(sel)>16))  = {'other trigger'};
     else
       ft_warning('There does not seem to be a suitable trigger channel.');
       grad.chantype(sel) = {'other trigger'};
     end
-  end
-  for sel=find([orig.chs.kind]==202)' %EOG
-    grad.chantype(sel) = {'eog'};
-  end
-  for sel=find([orig.chs.kind]==302)' %EMG
-    grad.chantype(sel) = {'emg'};
-  end
-  for sel=find([orig.chs.kind]==402)' %ECG
-    grad.chantype(sel) = {'ecg'};
-  end
-  for sel=find([orig.chs.kind]==502)' %MISC
-    grad.chantype(sel) = {'misc'};
-  end
-  for sel=find([orig.chs.kind]==602)' %Resp
-    grad.chantype(sel) = {'respiration'};
-  end
   
   % FIFF.FIFF_UNIT_HZ  = 101;
   % FIFF.FIFF_UNIT_N   = 102;
