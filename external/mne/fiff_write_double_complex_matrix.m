@@ -70,6 +70,7 @@ end
 % end
 
 % the matrix is written last dimension first, and then each element's real part followed by its imaginary part
+siz = size(mat);
 mat = permute(mat,ndim:-1:1);
 mat = [real(mat(:)) imag(mat(:))]';
 count = fwrite(fid,double(mat(:)),'double');
@@ -77,17 +78,17 @@ if count ~= numel(mat)
     error(me,'write failed');
 end
 if ndim==2
-    dims(1) = size(mat,2);
-    dims(2) = size(mat,1);
+    dims(1) = siz(2);
+    dims(2) = siz(1);
     dims(3) = 2;
         count = fwrite(fid,int32(dims),'int32');
     if count ~= 3
         error(me,'write failed');
     end
 elseif ndim==3
-    dims(1) = size(mat,3);
-    dims(2) = size(mat,2);
-    dims(3) = size(mat,1);
+    dims(1) = siz(3);
+    dims(2) = siz(2);
+    dims(3) = siz(1);
     dims(4) = 3;
     count = fwrite(fid,int32(dims),'int32');
     if count ~= 4
