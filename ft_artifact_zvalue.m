@@ -10,11 +10,6 @@ function [cfg, artifact] = ft_artifact_zvalue(cfg, data)
 % Use as
 %   [cfg, artifact] = ft_artifact_zvalue(cfg)
 % with the configuration options
-%   cfg.trl        = structure that defines the data segments of interest, see FT_DEFINETRIAL
-%   cfg.continuous = 'yes' or 'no' whether the file contains continuous data.
-%                    If the data has not been recorded continuously, then the cfg.trl should
-%                    stricly observe the boundaries of the discontinuous segments, and the 
-%                    permitted values padding options (described below) are restricted to 0. 
 %   cfg.dataset    = string with the filename
 % or
 %   cfg.headerfile = string with the filename
@@ -30,7 +25,10 @@ function [cfg, artifact] = ft_artifact_zvalue(cfg, data)
 %
 % In both cases the configuration should also contain
 %   cfg.trl        = structure that defines the data segments of interest, see FT_DEFINETRIAL
-%   cfg.continuous = 'yes' or 'no' whether the file contains continuous data
+%   cfg.continuous = 'yes' or 'no' whether the file contains continuous data.
+%                    If the data has not been recorded continuously, then the cfg.trl should
+%                    stricly observe the boundaries of the discontinuous segments, and the 
+%                    permitted values padding options (described below) are restricted to 0. 
 % and
 %   cfg.artfctdef.zvalue.channel    = Nx1 cell-array with selection of channels, see FT_CHANNELSELECTION for details
 %   cfg.artfctdef.zvalue.cutoff     = number, z-value threshold
@@ -47,7 +45,7 @@ function [cfg, artifact] = ft_artifact_zvalue(cfg, data)
 %   cfg.artfctdef.zvalue.zscore          = 'yes' (default) or 'no'
 %   cfg.artfctdef.zvalue.method          = 'all' (default), 'trial' or 'trialdemean'
 %   cfg.artfctdef.zvalue.ntrial          = integer (default is 10)
-%   cfg.artfctdef.zvalue.interactive     = 'yes' or 'no'
+%   cfg.artfctdef.zvalue.interactive     = 'yes' or 'no' (default)
 %
 % If you specify cfg.artfctdef.zvalue.artfctpeak='yes', a peak detection on the suprathreshold
 % z-scores will be performed, and the artifact will be defined relative to
@@ -67,10 +65,9 @@ function [cfg, artifact] = ft_artifact_zvalue(cfg, data)
 % if the threshold is to be defined in meaningful physical units, e.g. degrees of visual
 % angle for eye position data.
 %
-% cfg.artfctdef.zvalue.method controls how the z-scores are calculated, and is relevant
-% only if cfg.trl is defined. 'all' (default) means z-scores are caclulated using all
-% the data (all trials combined). 'trial' means z-scores are calculated locally, where 
-% cfg.artfctdef.zvalue.ntrial controls the extent. 
+% cfg.artfctdef.zvalue.method controls how the z-scores are calculated. 'all' (default) 
+% means z-scores are caclulated using all the data (all trials combined). 'trial' means
+% z-scores are calculated locally, where cfg.artfctdef.zvalue.ntrial controls the extent. 
 %
 % cfg.artfctdef.zvalue.ntrial sets how many trials are used to calculates z-scores, and
 % is only relevant if cfg.artfctdef.zvalue.method = 'trial'. Specifically, the averages
@@ -219,6 +216,9 @@ ft_warning('-clear')
 % measurements) which don't have to do with the artifact per se, the detection is
 % compromised (although the data quality is questionable when there is a lot of
 % movement to begin with).
+if ~ismember(cfg.artfctdef.zvalue.method, {'all', 'trial', 'trialdemean'})
+    ft_error('unsupported cfg.artfctdef.zvalue.method choice ''%s''', cfg.artfctdef.zvalue.method);
+end
 pertrial    = strcmp(cfg.artfctdef.zvalue.method, 'trial');
 demeantrial = strcmp(cfg.artfctdef.zvalue.method, 'trialdemean');
 if pertrial
@@ -257,10 +257,14 @@ if ~isfield(cfg, 'trl') && hasdata
   for k = 1:numel(data.trial)
     trl(k,3) = time2offset(data.time{k}, data.fsample);
   end
-elseif isfield(cfg, 'trl') && ischar(cfg.trl)
-  trl = loadvar(cfg.trl, 'trl');
-elseif isfield(cfg, 'trl') && isnumeric(cfg.trl)
-  trl = cfg.trl;
+elseif isfield(cfg, 'trl')
+    if ischar(cfg.trl)
+        trl = loadvar(cfg.trl, 'trl');
+    elseif strcmp(cfg.representation, 'numeric')
+        trl = cfg.trl;
+    elseif strcmp(cfg.representation, 'table')
+        trl = cfg.trl{:, (1:3)}; % Just keep begsmaple, endsample and offset
+    end
 else
   ft_error('cannot determine which segments of data to scan for artifacts');
 end
