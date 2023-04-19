@@ -1448,7 +1448,7 @@ if need_channels_tsv
         type_json = motion_json;
     end
     fn = fieldnames(type_json);
-    fn = fn(endsWith(fn, 'ChannelCount') & ~contains(fn,'ShortChannel'));
+    fn = fn(endsWith(fn, 'ChannelCount') & ~contains(fn,'ShortChannel') & ~contains(fn, 'Motion'));
     jsoncount = 0;
     for i=1:numel(fn)
         if ~isempty(type_json.(fn{i}))
@@ -1458,6 +1458,10 @@ if need_channels_tsv
     if size(channels_tsv,1)~=jsoncount
         ft_warning('inconsistent specification of the channel count: %d in the json, %d in the tsv', jsoncount, size(channels_tsv,1));
     end
+    if need_motion_json & size(channels_tsv,1)~=type_json.MotionChannelCount
+        ft_warning('inconsistent specification of the channel count: %d total motion channels in the json, %d in the tsv', type_json.MotionChannelCount, size(channels_tsv,1));
+    end
+        
 end % if need_channels_tsv
 
 %% need_electrodes_tsv
