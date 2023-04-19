@@ -63,6 +63,7 @@ eventfile = fullfile(pathstr ,[name '-eve.fif']);
 
 % ensure the mne-toolbox to be on the path
 ft_hastoolbox('mne', 1);
+FIFF = fiff_define_constants; % some constants are not defined in the MATLAB function
 
 % check if the input data is valid for this function
 data   = ft_checkdata(data, 'datatype', {'raw', 'timelock'}, 'hassampleinfo', 'yes', 'feedback', 'yes');
@@ -110,11 +111,10 @@ else
   % these are not strictly necessary, but the inverse functions in MNE works better if this matrix is present
   info.dev_head_t.from  = 1;
   info.dev_head_t.to    = 4;
-  info.dev_head_t.trans = eye(4);
+  info.dev_head_t.trans = eye(4); % this is of course not correct, but the exact transformation depends on the system
   
-  info.ctf_head_t = [];
   info.dig        = [];
-  info.projs      = struct('kind', {}, 'data', {}, 'active', {}, 'desc', {});
+  info.projs      = struct('kind', {}, 'data', {}, 'active',  {}, 'desc', {});
   info.comps      = struct('kind', {}, 'data', {}, 'ctfkind', {}, 'save_calibrated', {}, 'rowcals', {}, 'colcals', {});
   info.bads       = [];
   
@@ -128,7 +128,6 @@ info.ch_names = data.label(:)';
 info.chs      = sens2fiff(data);
 info.nchan    = numel(data.label);
 
-FIFF = fiff_define_constants; % some constants are not defined in the MATLAB function
 if iscomplex && strcmp(precision, 'single')
   dtype = FIFF.FIFFT_COMPLEX_FLOAT;
 elseif iscomplex && strcmp(precision, 'double')
@@ -242,6 +241,7 @@ else
     stype(i_labmeg) = 1;
     indx(i_labmeg)  = i_grad;
   
+    data.grad = ft_convert_units(data.grad, 'm');
     data.grad = undobalancing(data.grad); % if this fails, then it's difficult to write out meaningful channel info to begin with
     [coiltype, coilkind] = grad2coiltype(data.grad);
     coilunit  = grad2coilunit(data.grad, FIFF);
@@ -302,7 +302,7 @@ else
         % OTHER
         cnt_else = cnt_else + 1;
         
-        chs(1,k).logno        = cnt_else;whos
+        chs(1,k).logno        = cnt_else;
         chs(1,k).kind         = NaN;
         chs(1,k).coil_type    = NaN;
         chs(1,k).coil_trans   = [];
