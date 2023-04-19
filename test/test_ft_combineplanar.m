@@ -4,26 +4,69 @@ function test_ft_combineplanar
 % MEM 2gb
 % DEPENDENCY ft_combineplanar ft_preprocessing ft_timelockanalysis ft_prepare_neighbours ft_megplanar
 
-% template loading should be modified once template MEG data are available
-% (cf.issue #1834)
-subjectfilename = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds');
+headmodel = [];
+headmodel.r = 0.09;
+headmodel.o = [0 0 0.04];
+headmodel.unit = 'm';
 
-cfg            = [];
-cfg.dataset    = subjectfilename;
-cfg.channel    = {'MEG', '-MLP31', '-MLO12'};        % read all MEG channels except MLP31 and MLO12
-data = ft_preprocessing(cfg);
+%%
 
-cfg = [];
-data = ft_timelockanalysis(cfg,data);
+% these are in the fieldtrip/template/gradiometer directory
+senstype = {
+  'ctf64.mat'
+  'ctf151.mat'
+  'ctf275.mat'
+  'bti148.mat'
+  'bti248.mat'
+  'itab153.mat'
+  'yokogawa160.mat'
+  };
 
-cfg              = [];
-cfg.feedback     = 'no';
-cfg.method       = 'template';
-cfg.neighbours   = ft_prepare_neighbours(cfg, data);
-cfg.planarmethod = 'sincos';
-data = ft_megplanar(cfg, data);
+for i=1:numel(senstype)
+  grad = ft_read_sens(senstype{i});
 
-cfg = [];
-cfg.updatesens = 'no';
-dataout = ft_combineplanar(cfg,data);
+  cfg = [];
+  cfg.headmodel = headmodel;
+  cfg.grad = grad;
+  data = ft_dipolesimulation(cfg);
 
+  cfg = [];
+  timelock = ft_timelockanalysis(cfg, data);
+
+  cfg              = [];
+  cfg.feedback     = 'no';
+  cfg.method       = 'template';
+  cfg.neighbours   = ft_prepare_neighbours(cfg, timelock);
+  cfg.planarmethod = 'sincos';
+  timelock_planar = ft_megplanar(cfg, timelock);
+
+  cfg = [];
+  cfg.updatesens = 'no';
+  timelock_combined = ft_combineplanar(cfg, timelock_planar);
+
+end
+
+%%
+
+% these are in the fieldtrip/template/gradiometer directory
+senstype = {
+  'neuromag122.mat'
+  'neuromag306.mat'
+  };
+
+for i=1:numel(senstype)
+  grad = ft_read_sens(senstype{i});
+
+  cfg = [];
+  cfg.headmodel = headmodel;
+  cfg.grad = grad;
+  data_planar = ft_dipolesimulation(cfg);
+
+  cfg = [];
+  timelock_planar = ft_timelockanalysis(cfg, data_planar);
+
+  cfg = [];
+  cfg.updatesens = 'no';
+  timelock_combined = ft_combineplanar(cfg, timelock_planar);
+
+end

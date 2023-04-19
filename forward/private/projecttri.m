@@ -8,7 +8,7 @@ function [tri] = projecttri(pos, method)
 %   tri = projecttri(pos, method)
 % where method is either 'convhull' (default) or 'delaunay'.
 %
-% See also SURFACE_NORMALS, PCNORMALS
+% See also SURFACE_NORMALS, PCNORMALS, ELPROJ
 
 % Copyright (C) 2006-2019, Robert Oostenveld
 %

@@ -673,7 +673,11 @@ switch headerformat
       hdr.label{i} = strtok(hdr.label{i}, '-');
     end
     % read the balance coefficients, these are used to compute the synthetic gradients
-    coeftype = cellstr(char(orig.res4.scrr(:).coefType));
+    try
+      coeftype = cellstr(char(orig.res4.scrr(:).coefType));
+    catch
+      coeftype = {};
+    end
     try
       [alphaMEG,MEGlist,Refindex] = getCTFBalanceCoefs(orig,'NONE', 'T');
       orig.BalanceCoefs.none.alphaMEG  = alphaMEG;

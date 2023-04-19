@@ -78,6 +78,9 @@ if strcmp(dtype, 'unknown')
   elseif ~strcmp(ft_senstype(data), 'unknown')
     dtype = 'sens';
   end
+elseif strcmp(dtype, 'volume+label')
+  % we don't care about the labels here
+  dtype = 'volume';
 elseif strcmp(dtype, 'mesh+label')
   % we don't care about the labels here
   dtype = 'mesh';

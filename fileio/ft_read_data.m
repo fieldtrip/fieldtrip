@@ -475,10 +475,10 @@ switch dataformat
       'duration', [(begsample-1)*hdr.orig.skipfactor+1, endsample*hdr.orig.skipfactor],...
       'skipfactor', hdr.orig.skipfactor);
     
-    d_min=[orig.ElectrodesInfo.MinDigiValue];
-    d_max=[orig.ElectrodesInfo.MaxDigiValue];
-    v_min=[orig.ElectrodesInfo.MinAnalogValue];
-    v_max=[orig.ElectrodesInfo.MaxAnalogValue];
+    d_min=double([orig.ElectrodesInfo.MinDigiValue]);
+    d_max=double([orig.ElectrodesInfo.MaxDigiValue]);
+    v_min=double([orig.ElectrodesInfo.MinAnalogValue]);
+    v_max=double([orig.ElectrodesInfo.MaxAnalogValue]);
     
     %calculating slope (a) and ordinate (b) of the calibration
     b=double(v_min .* d_max - v_max .* d_min) ./ double(d_max - d_min);

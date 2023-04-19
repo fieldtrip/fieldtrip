@@ -36,7 +36,7 @@ if isfield(mesh, 'tri')
   edge2 = mesh.tri(:, [2 3]);
   edge3 = mesh.tri(:, [3 1]);
   edge = cat(1, edge1, edge2, edge3);
-  
+
 elseif isfield(mesh, 'tet')
   % make a list of all triangles that form the tetraheder
   tri1 = mesh.tet(:, [1 2 3]);
@@ -44,7 +44,7 @@ elseif isfield(mesh, 'tet')
   tri3 = mesh.tet(:, [3 4 1]);
   tri4 = mesh.tet(:, [4 1 2]);
   edge = cat(1, tri1, tri2, tri3, tri4);
-  
+
 elseif isfield(mesh, 'hex')
   % make a list of all "squares" that form the cube/hexaheder
   % FIXME should be checked, this is impossible without a drawing
@@ -55,7 +55,7 @@ elseif isfield(mesh, 'hex')
   square5 = mesh.hex(:, [3 4 8 7]);
   square6 = mesh.hex(:, [4 1 5 8]);
   edge = cat(1, square1, square2, square3, square4, square5, square6);
-  
+
 end % isfield(mesh)
 
 % soort all polygons in the same direction
@@ -90,12 +90,15 @@ output.pos = mesh.pos;
 if isfield(mesh, 'tri')
   % these have two vertices in each edge element
   output.line = edge;
+  fprintf('reducing triangles to %d lines\n', size(edge,1));
 elseif isfield(mesh, 'tet')
   % these have three vertices in each edge element
   output.tri = edge;
+  fprintf('reducing tetraheders to %d triangles\n', size(edge,1));
 elseif isfield(mesh, 'hex')
   % these have four vertices in each edge element
   output.poly = edge;
+  fprintf('reducing hexaheders to %d polygons\n', size(edge,1));
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

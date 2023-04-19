@@ -1,10 +1,12 @@
 function ft_plot_headmodel(headmodel, varargin)
 
-% FT_PLOT_HEADMODEL visualizes the boundaries in the volume conduction model of the head as
-% specified in the headmodel structure
+% FT_PLOT_HEADMODEL visualizes the boundaries in the volume conduction model of the
+% head as specified in the headmodel structure. This works for any of the head models
+% supported by FieldTrip. For spherical models, it will construct and plot a
+% triangulated sphere.
 %
 % Use as
-%   hs = ft_plot_headmodel(headmodel, varargin)
+%   ft_plot_headmodel(headmodel, ...)
 %
 % Optional arguments should come in key-value pairs and can include
 %   'facecolor'    = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r', or an Nx3 or Nx1 array where N is the number of faces
@@ -26,10 +28,11 @@ function ft_plot_headmodel(headmodel, varargin)
 %   figure
 %   ft_plot_headmodel(headmodel)
 %
-% See also FT_PREPARE_HEADMODEL, FT_PLOT_MESH, FT_PLOT_SENS
+% See also FT_PREPARE_HEADMODEL, FT_DATATAYPE_HEADMODEL, FT_PLOT_MESH,
+% FT_PLOT_HEADSHAPE, FT_PLOT_SENS, FT_PLOT_DIPOLE, FT_PLOT_ORTHO, FT_PLOT_TOPO3D
 
 % Copyright (C) 2009, Cristiano Micheli
-% Copyright (C) 2009-2022, Robert Oostenveld
+% Copyright (C) 2009-2023, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -93,7 +96,7 @@ switch ft_headmodeltype(headmodel)
     if isempty(edgecolor)
       edgecolor = 'none';
     end
-    
+
   case 'localspheres'
     if ~isempty(grad)
       ft_notice('estimating point on head surface for each gradiometer');
@@ -112,42 +115,60 @@ switch ft_headmodeltype(headmodel)
     if isempty(edgecolor)
       edgecolor = 'none';
     end
-    
+
   case {'bem', 'dipoli', 'asa', 'bemcp', 'singleshell' 'openmeeg'}
     % these already contain one or multiple triangulated surfaces for the boundaries
     mesh = headmodel.bnd;
-    
+
   case 'simbio'
     % the ft_plot_mesh function below wants the SIMBIO tetrahedral or hexahedral mesh
     mesh = headmodel;
-    
+
     % only plot the outer surface of the volume
     surfaceonly = true;
-    
+
+    if isempty(edgecolor)
+      edgecolor = 'none';
+    end
+
+  case 'simnibs'
+    if isfield(headmodel, 'bnd')
+      % continue with the triangular mesh
+      mesh = headmodel.bnd;
+    else
+      % continue with the tetrahedral or hexahedral mesh
+      mesh = headmodel;
+      % only plot the outer surface of the volume
+      surfaceonly = true;
+      if isempty(edgecolor)
+        edgecolor = 'none';
+      end
+    end
+
   case 'interpolate'
     xgrid = 1:headmodel.dim(1);
     ygrid = 1:headmodel.dim(2);
     zgrid = 1:headmodel.dim(3);
     [x, y, z] = ndgrid(xgrid, ygrid, zgrid);
     gridpos = ft_warp_apply(headmodel.transform, [x(:) y(:) z(:)]);
-    
+
     % plot the dipole positions that are inside
     plot3(gridpos(headmodel.inside, 1), gridpos(headmodel.inside, 2), gridpos(headmodel.inside, 3), 'k.');
-    
+
     % there is no boundary to be displayed
     mesh = [];
-    
+
   case {'infinite' 'infinite_monopole' 'infinite_currentdipole' 'infinite_magneticdipole'}
     ft_warning('there is nothing to plot for an infinite volume conductor')
-    
+
     % there is no boundary to be displayed
     mesh = [];
-    
+
   otherwise
     ft_error('unsupported headmodel type')
 end
 
-% all models except for the spherical ones
+% use black edges unless otherwise specified
 if isempty(edgecolor)
   edgecolor = 'k';
 end

@@ -517,8 +517,11 @@ switch cfg.method
     set(h, 'windowkeypressfcn',   @cb_keyboard);
     set(h, 'CloseRequestFcn',     @cb_quit);
 
+    % add an axis and rotate to the starting viewpoint
+    h1 = axes(h, 'Visible', 'off'); view([90, 0]); axis off
+
     % electrode listbox
-    h1 = uicontrol('Style', 'listbox', ...
+    h2 = uicontrol('Style', 'listbox', ...
       'Parent', h, ...
       'Value', [], 'Min', 0, 'Max', numel(chanstring), ...
       'Units', 'normalized', ...
@@ -547,18 +550,20 @@ switch cfg.method
       'HandleVisibility', 'on', ...
       'Callback', @cb_labelsbutton);
 
-    if isfield(headshape, 'color')
-      h9 = uicontrol('Style', 'checkbox', ...
-        'Parent', h, ...
-        'Value', 1, ...
-        'String', 'Colors', ...
-        'Units', 'normalized', ...
-        'Position', [.8 0.65 .2 .05], ...
-        'BackgroundColor', [1 1 1], ...
-        'HandleVisibility', 'on', ...
-        'Callback', @cb_colorsbutton);
+    h9 = uicontrol('Style', 'checkbox', ...
+      'Parent', h, ...
+      'Value', 1, ...
+      'String', 'Colors', ...
+      'Units', 'normalized', ...
+      'Position', [.8 0.65 .2 .05], ...
+      'BackgroundColor', [1 1 1], ...
+      'HandleVisibility', 'on', ...
+      'Callback', @cb_colorsbutton);
+
+    if ~isfield(headshape, 'color')
+      set(h9, 'Visible', false);
     end
-    
+
     h10 = uicontrol('Style', 'checkbox',...
       'Parent', h, ...
       'Value', 1, ...
@@ -946,9 +951,9 @@ axis(h3, [xi-xloadj xi+xhiadj yi-yloadj yi+yhiadj]);
 
 if opt.zoom>0
   % the coordsys labels fall outside the subplots when zoomed in
-  delete(findall(h, 'Type', 'text', 'Tag', 'coordsys_label_100'));
-  delete(findall(h, 'Type', 'text', 'Tag', 'coordsys_label_010'));
-  delete(findall(h, 'Type', 'text', 'Tag', 'coordsys_label_001'));
+  delete(findall(h, 'Type', 'text', 'Tag', 'coordsyslabel_x'));
+  delete(findall(h, 'Type', 'text', 'Tag', 'coordsyslabel_y'));
+  delete(findall(h, 'Type', 'text', 'Tag', 'coordsyslabel_z'));
 end
 
 if opt.init
@@ -1720,11 +1725,7 @@ if ~isempty(elecidx)
   set(h6, 'String', eleclis);
   set(h6, 'ListboxTop', listtopidx); % ensure listbox does not move upon label selec
   setappdata(h, 'opt', opt);
-  if strcmp(opt.method, 'volume')
-    cb_redraw(h);
-  elseif strcmp(opt.method, 'headshape')
-    cb_redraw_headshape(h);
-  end
+  cb_redraw(h);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1823,11 +1824,7 @@ opt = getappdata(h, 'opt');
 opt.showlabels = get(h8, 'value');
 opt.redrawmarkers = true; % draw markers
 setappdata(h, 'opt', opt);
-if strcmp(opt.method, 'volume')
-  cb_redraw(h);
-elseif strcmp(opt.method, 'headshape')
-  cb_redraw_headshape(h);
-end
+cb_redraw(h);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
@@ -1838,11 +1835,7 @@ h = getparent(h9);
 opt = getappdata(h, 'opt');
 opt.showcolors = get(h9, 'value');
 setappdata(h, 'opt', opt);
-if strcmp(opt.method, 'volume')
-  cb_redraw(h);
-elseif strcmp(opt.method, 'headshape')
-  cb_redraw_headshape(h);
-end
+cb_redraw(h);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
@@ -1886,11 +1879,7 @@ h = getparent(h9);
 opt = getappdata(h, 'opt');
 opt.showsurface = get(h9, 'value');
 setappdata(h, 'opt', opt);
-if strcmp(opt.method, 'volume')
-  cb_redraw(h);
-elseif strcmp(opt.method, 'headshape')
-  cb_redraw_headshape(h);
-end
+cb_redraw(h);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
@@ -1986,11 +1975,7 @@ dcm_txt = ''; % ['index = [' num2str(opt.pos) ']'];
 
 if strcmp(get(opt.scatterfig_dcm, 'Enable'), 'on') % update appl and figures
   setappdata(h, 'opt', opt);
-  if strcmp(opt.method, 'volume')
-    cb_redraw(h);
-  elseif strcmp(opt.method, 'headshape')
-    cb_redraw_headshape(h);
-  end
+  cb_redraw(h);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

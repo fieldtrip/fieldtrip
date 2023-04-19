@@ -95,15 +95,14 @@ else
   axesrescale   = false;
 end
 
-% check whether the input data combines well with the requested
-% transformation
+% check whether the input data combines well with the requested transformation
 dtype = ft_datatype(input);
 switch dtype
   case 'grad'
     if globalrescale || axesrescale, ft_error('only a rigid body transformation without rescaling is allowed'); end
-  case 'mesh'
+  case {'mesh', 'mesh+label'}
+    % there can be multiple meshes as a struct-array
     if isstruct(input) && length(input)>1
-      % there are multiple meshes
       for i=1:length(input)
         output(i) = ft_transform_geometry(transform, input(i));
       end
@@ -117,10 +116,13 @@ switch dtype
     if ft_headmodeltype(input, 'bem') && isfield(input, 'mat') && (globalrescale || axesrescale)
       ft_error('only a rigid body transformation without rescaling is allowed');
     end
-    if ft_headmodeltype(input, 'localspheres') && isfield(input, 'mat') && (globalrescale || axesrescale)
+    if ft_headmodeltype(input, 'localspheres') && (globalrescale || axesrescale)
       ft_error('only a rigid body transformation without rescaling is allowed');
     end
-    if (isfield(input, 'tetra') || isfield(input, 'hex')) && (globalrescale || axesrescale)
+    if (isfield(input, 'tet') && isfield(input, 'stiff')) && (globalrescale || axesrescale)
+      ft_error('only a rigid body transformation without rescaling is allowed');
+    end
+    if (isfield(input, 'hex') && isfield(input, 'stiff')) && (globalrescale || axesrescale)
       ft_error('only a rigid body transformation without rescaling is allowed');
     end
 end
