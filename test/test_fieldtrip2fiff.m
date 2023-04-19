@@ -13,13 +13,17 @@ cfg.trl = [(0:1).*hdr.nSamples+1;(1:2).*hdr.nSamples;-300.*ones(1,2)]';
 cfg.channel = 'MEG';
 data = ft_preprocessing(cfg);
 t1 = data.trial{1};
+cfgsel.trials = 1;
 fieldtrip2fiff(fullfile(savedir, 'data_epoched_double.fif'), data);
 fieldtrip2fiff(fullfile(savedir, 'data_epoched_single.fif'), data, 'precision', 'single');
+fieldtrip2fiff(fullfile(savedir, 'data_raw_double.fif'), ft_selectdata(cfgsel, data));
+fieldtrip2fiff(fullfile(savedir, 'data_raw_single.fif'), ft_selectdata(cfgsel, data), 'precision', 'single');
 data.trial{1} = data.trial{1}+1i.*data.trial{2};
 t1c = data.trial{1};
 fieldtrip2fiff(fullfile(savedir, 'data_epoched_complex_double.fif'), data);
 fieldtrip2fiff(fullfile(savedir, 'data_epoched_complex_single.fif'), data, 'precision', 'single');
-
+fieldtrip2fiff(fullfile(savedir, 'data_raw_complex_double.fif'), ft_selectdata(cfgsel, data));
+fieldtrip2fiff(fullfile(savedir, 'data_raw_complex_single.fif'), ft_selectdata(cfgsel, data), 'precision', 'single');
 
 cfg = [];
 cfg.dataset = fullfile(savedir, 'data_epoched_double.fif');
@@ -34,6 +38,19 @@ assert(isequal(datafif.trial{1}, t1c));
 cfg.dataset = fullfile(savedir, 'data_epoched_complex_single.fif');
 datafif = ft_preprocessing(cfg);
 assert(isequal(datafif.trial{1}, single(t1c)));
+cfg.dataset = fullfile(savedir, 'data_raw_double.fif');
+datafif = ft_preprocessing(cfg);
+assert(isequal(datafif.trial{1}, t1));
+cfg.dataset = fullfile(savedir, 'data_raw_single.fif');
+datafif = ft_preprocessing(cfg);
+assert(isequal(datafif.trial{1}, single(t1)));
+cfg.dataset = fullfile(savedir, 'data_raw_complex_double.fif');
+datafif = ft_preprocessing(cfg);
+assert(isequal(datafif.trial{1}, t1c));
+cfg.dataset = fullfile(savedir, 'data_raw_complex_single.fif');
+datafif = ft_preprocessing(cfg);
+assert(isequal(datafif.trial{1}, single(t1c)));
+
 
 fname = {
   'bti148/c,rfhp0.1Hz'

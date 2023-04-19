@@ -12,7 +12,7 @@ function failed_tutorial_natmeg_dipolefitting
 clear all
 close all
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/natmeg'));
+cd(dccnpath('/home/common/matlab/fieldtrip/data/ftp/workshop/natmeg2014'));
 
 mrifile = './dicom/00000113.dcm';
 

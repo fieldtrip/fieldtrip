@@ -113,6 +113,7 @@ else
   info.dev_head_t.to    = 4;
   info.dev_head_t.trans = eye(4); % this is of course not correct, but the exact transformation depends on the system
   
+  info.ctf_head_t = [];
   info.dig        = [];
   info.projs      = struct('kind', {}, 'data', {}, 'active',  {}, 'desc', {});
   info.comps      = struct('kind', {}, 'data', {}, 'ctfkind', {}, 'save_calibrated', {}, 'rowcals', {}, 'colcals', {});
