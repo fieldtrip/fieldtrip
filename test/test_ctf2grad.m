@@ -60,10 +60,10 @@ figure;ft_plot_sens(grad1, 'chantype', 'refgrad', 'coil', true);
 figure;ft_plot_sens(grad2, 'chantype', 'refgrad', 'coil', true);
 
 % in head coordinates
-grad1b = ft_read_sens('Subject01.ds', 'senstype', 'meg');
+grad1b = ft_read_sens(dataset, 'senstype', 'meg');
 grad1b = ft_convert_units(grad1b,'m');
-grad2b = ft_read_sens('Subject01.ds', 'senstype', 'meg', 'coilaccuracy', 0);
-grad3b = ft_read_sens('Subject01.ds', 'senstype', 'meg', 'coilaccuracy', 0, 'coildeffile', coildeffile);
+grad2b = ft_read_sens(dataset, 'senstype', 'meg', 'coilaccuracy', 0);
+grad3b = ft_read_sens(dataset, 'senstype', 'meg', 'coilaccuracy', 0, 'coildeffile', coildeffile);
 
 figure;ft_plot_sens(grad1b, 'chantype', 'refgrad', 'coil', true);
 figure;ft_plot_sens(grad2b, 'chantype', 'refgrad', 'coil', true);
