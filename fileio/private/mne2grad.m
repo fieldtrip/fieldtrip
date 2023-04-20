@@ -189,18 +189,18 @@ if ~isempty(coilaccuracy)
   grad.chantype(kind==502) = {'misc'}; %MISC
   grad.chantype(kind==602) = {'respiration'}; %Respiration  
   
-  sel = kind==3; %Stim channels
+  sel = find(kind==3); %Stim channels
     if any(ismember(logno(sel), [101 102])) % newer systems: 101 (and 102, if enabled) are digital; low numbers are 'pseudo-analog' (if enabled)
-      grad.chantype(sel(logno(sel))==101) = {'digital trigger'};
-      grad.chantype(sel(logno(sel))==102) = {'digital trigger'};
-      grad.chantype(sel(logno(sel))<=32)  = {'analog trigger'};
+      grad.chantype(sel(logno(sel)==101)) = {'digital trigger'};
+      grad.chantype(sel(logno(sel)==102)) = {'digital trigger'};
+      grad.chantype(sel(logno(sel)<=32))  = {'analog trigger'};
       others = logno(sel)>32 & logno(sel)~=101 & logno(sel)~=102;
       grad.chantype(sel(others)) = {'other trigger'};
     elseif any(ismember(logno(sel), [14 15 16])) % older systems: STI 014/015/016 are digital; lower numbers 'pseudo-analog'(if enabled)
-      grad.chantype(sel(logno(sel))==14) = {'digital trigger'};
-      grad.chantype(sel(logno(sel))==15) = {'digital trigger'};
-      grad.chantype(sel(logno(sel))==16) = {'digital trigger'};
-      grad.chantype(sel(logno(sel))<=13) = {'analog trigger'};
+      grad.chantype(sel(logno(sel)==14)) = {'digital trigger'};
+      grad.chantype(sel(logno(sel)==15)) = {'digital trigger'};
+      grad.chantype(sel(logno(sel)==16)) = {'digital trigger'};
+      grad.chantype(sel(logno(sel)<=13)) = {'analog trigger'};
       grad.chantype(sel(logno(sel)>16))  = {'other trigger'};
     else
       ft_warning('There does not seem to be a suitable trigger channel.');
