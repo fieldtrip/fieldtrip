@@ -88,7 +88,7 @@ if isempty(raw)
     raw = fiff_dir_tree_find(meas,FIFF.FIFFB_CONTINUOUS_DATA);
 end
 if isempty(raw) && allow_maxshield
-    raw = fiff_dir_tree_find(meas,FIFF.FIFFB_SMSH_RAW_DATA);
+    raw = fiff_dir_tree_find(meas,FIFF.FIFFB_IAS_RAW_DATA);
     if ~isempty(raw)
         disp([10 '--------' 10 ...
         'WARNING: This file contains raw Internal Active Shielding data. It may be distorted.' 10 ...
