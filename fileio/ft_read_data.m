@@ -1264,7 +1264,7 @@ switch dataformat
       if requesttrials
         if endtrial>begtrial
           dat = hdr.orig.epochs.data(chanindx, :, begtrial:endtrial);
-          dat = reshape(dat, size(dat,2));
+          dat = reshape(dat, size(dat,1), []);
         else
           dat = hdr.orig.epochs.data(chanindx, :, begtrial);
         end
