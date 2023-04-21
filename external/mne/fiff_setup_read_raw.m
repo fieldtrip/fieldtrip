@@ -88,7 +88,7 @@ if isempty(raw)
     raw = fiff_dir_tree_find(meas,FIFF.FIFFB_CONTINUOUS_DATA);
 end
 if isempty(raw) && allow_maxshield
-    raw = fiff_dir_tree_find(meas,FIFF.FIFFB_SMSH_RAW_DATA);
+    raw = fiff_dir_tree_find(meas,FIFF.FIFFB_IAS_RAW_DATA);
     if ~isempty(raw)
         disp([10 '--------' 10 ...
         'WARNING: This file contains raw Internal Active Shielding data. It may be distorted.' 10 ...
@@ -169,6 +169,12 @@ for k = first:nent
                 nsamp = ent.size/(4*nchan);
             case FIFF.FIFFT_INT
                 nsamp = ent.size/(4*nchan);
+            case FIFF.FIFFT_DOUBLE
+                nsamp = ent.size/(8*nchan);
+            case FIFF.FIFFT_COMPLEX_FLOAT
+                nsamp = ent.size/(8*nchan);
+            case FIFF.FIFFT_COMPLEX_DOUBLE
+                nsamp = ent.size/(16*nchan);
             otherwise
                 fclose(fid);
                 error(me,'Cannot handle data buffers of type %d',ent.type);
