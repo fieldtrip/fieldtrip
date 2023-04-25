@@ -138,7 +138,7 @@ function [freq] = ft_freqanalysis(cfg, data)
 %
 % SUPERLET performs time-frequency analysis on any time series trial data using the
 % 'superlet method' based on a frequency-wise combination of Morlet wavelets of varying cycle
-% widths (see Moca et al. 2019, https://doi.org/10.1101/583732).
+% widths (see Moca et al. 2021, https://doi.org/10.1038/s41467-020-20539-9).
 %   cfg.foi     = vector 1 x numfoi, frequencies of interest
 %       OR
 %   cfg.foilim  = [begin end], frequency band of interest
