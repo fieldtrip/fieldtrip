@@ -1,5 +1,9 @@
 function test_ft_affinecoordinates
 
+% WALLTIME 01:00:00
+% MEM 4gb
+% DEPENDENCY ft_affinecoordinates
+
 generic = {
   'als'; 'ali'; 'ars'; 'ari';...
   'pls'; 'pli'; 'prs'; 'pri';...
