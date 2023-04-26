@@ -113,7 +113,7 @@ for k = 1:length(projs)
         p = 0;
         for c = 1:nchan
             match = strmatch(ch_names{c},one.data.col_names);
-            if ~isempty(match) && isempty(strmatch(ch_names{c},bads))
+            if ~isempty(match) && (isempty(bads) || isempty(strmatch(ch_names{c},bads)))
                 p = p + 1;
                 sel(p)    = c;
                 vecsel(p) = match(1);

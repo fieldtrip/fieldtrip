@@ -27,7 +27,7 @@ classdef mne_rt_cmd_client < mne_rt_client
             if (nargin < 3)
                 numOfRetries = 20; % set to -1 for infinite
             end
-            obj = obj@mne_rt_client(host, port, numOfRetries); %Superclass call
+            obj = obj@mne_rt_client(host, port, numOfRetries);%Superclass call
         end % mne_rt_cmd_client
         
         % =================================================================
