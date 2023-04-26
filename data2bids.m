@@ -1136,6 +1136,62 @@ coordsystem_settings = keepfields(cfg.coordsystem, fn);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% construct the content for the json and tsv files
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% need_channels_tsv
+if need_channels_tsv
+
+    if isstruct(cfg.channels)
+        % remove fields with non-informative defaults
+        fn = fieldnames(cfg.channels);
+        for i=1:numel(fn)
+            if isequaln(cfg.channels.(fn{i}), nan)
+                % a single nan means that it was set as default
+                cfg.channels = rmfield(cfg.channels, fn{i});
+            end
+        end
+        try
+            cfg.channels = convert_table(cfg.channels);
+        catch
+            ft_error('incorrect specification of cfg.channels');
+        end
+    end
+
+    % channel information can come from the header and from cfg.channels
+    channels_tsv = hdr2table(hdr);
+    channels_tsv = mergetable(channels_tsv, cfg.channels, 'name');
+
+    % columns should appear in a specific order
+    if need_nirs_json
+        required = {'name', 'type', 'source', 'detector', 'wavelength_nominal', 'units'};
+    else
+        required = {'name', 'type', 'units', 'low_cutoff', 'high_cutoff'};
+    end
+    optional = setdiff(channels_tsv.Properties.VariableNames, required, 'stable');
+    channels_tsv = sort_columns(channels_tsv, [required, optional]);
+
+    % the default for cfg.channels consists of one row where all values are nan, this needs to be removed
+    keep = false(size(channels_tsv.name));
+    for i=1:numel(channels_tsv.name)
+        keep(i) = ischar(channels_tsv.name{i});
+    end
+    channels_tsv = channels_tsv(keep,:);
+
+    % there are some chanel types used in FieldTrip that are named differently in BIDS
+    channels_tsv.type(strcmpi(channels_tsv.type, 'unknown'))     = {'OTHER'};
+    channels_tsv.type(strcmpi(channels_tsv.type, 'clock'))       = {'SYSCLOCK'};
+    channels_tsv.type(strcmpi(channels_tsv.type, 'meggrad'))     = {'MEGGRADAXIAL'};
+    channels_tsv.type(strcmpi(channels_tsv.type, 'megplanar'))   = {'MEGGRADPLANAR'};
+    channels_tsv.type(strcmpi(channels_tsv.type, 'refmag'))      = {'MEGREFMAG'};
+    channels_tsv.type(strcmpi(channels_tsv.type, 'refgrad'))     = {'MEGREFGRADAXIAL'};
+    channels_tsv.type(strcmpi(channels_tsv.type, 'refplanar'))   = {'MEGREFGRADPLANAR'};
+    channels_tsv.type(strcmpi(channels_tsv.type, 'respiration')) = {'RESP'};
+    channels_tsv.type(strcmpi(channels_tsv.type, 'headloc'))     = {'HLU'};
+    channels_tsv.type(strcmpi(channels_tsv.type, 'headloc_gof')) = {'FITERR'};
+    channels_tsv.type(strcmpi(channels_tsv.type, 'ori'))         = {'ORNT'};
+    % trigger, analog trigger, and digital trigger all have to be renamed to TRIG
+    channels_tsv.type(contains(channels_tsv.type, 'trigger', 'IgnoreCase', true)) = {'TRIG'};
+    channels_tsv.type(contains(channels_tsv.type, 'nirs'))       = {'unknown'}; % depends on the type of measurement and should be provided by the user
+    % channel types in BIDS must be in upper case
+    channels_tsv.type = upper(channels_tsv.type);
 
 %% need_mri_json
 if need_mri_json
@@ -1374,64 +1430,9 @@ if need_motion_json
 
 end % if need_motion_json
 
-%% need_channels_tsv
-if need_channels_tsv
 
-    if isstruct(cfg.channels)
-        % remove fields with non-informative defaults
-        fn = fieldnames(cfg.channels);
-        for i=1:numel(fn)
-            if isequaln(cfg.channels.(fn{i}), nan)
-                % a single nan means that it was set as default
-                cfg.channels = rmfield(cfg.channels, fn{i});
-            end
-        end
-        try
-            cfg.channels = convert_table(cfg.channels);
-        catch
-            ft_error('incorrect specification of cfg.channels');
-        end
-    end
 
-    % channel information can come from the header and from cfg.channels
-    channels_tsv = hdr2table(hdr);
-    channels_tsv = mergetable(channels_tsv, cfg.channels, 'name');
-
-    % columns should appear in a specific order
-    if need_nirs_json
-        required = {'name', 'type', 'source', 'detector', 'wavelength_nominal', 'units'};
-    else
-        required = {'name', 'type', 'units', 'low_cutoff', 'high_cutoff'};
-    end
-    optional = setdiff(channels_tsv.Properties.VariableNames, required, 'stable');
-    channels_tsv = sort_columns(channels_tsv, [required, optional]);
-
-    % the default for cfg.channels consists of one row where all values are nan, this needs to be removed
-    keep = false(size(channels_tsv.name));
-    for i=1:numel(channels_tsv.name)
-        keep(i) = ischar(channels_tsv.name{i});
-    end
-    channels_tsv = channels_tsv(keep,:);
-
-    % there are some chanel types used in FieldTrip that are named differently in BIDS
-    channels_tsv.type(strcmpi(channels_tsv.type, 'unknown'))     = {'OTHER'};
-    channels_tsv.type(strcmpi(channels_tsv.type, 'clock'))       = {'SYSCLOCK'};
-    channels_tsv.type(strcmpi(channels_tsv.type, 'meggrad'))     = {'MEGGRADAXIAL'};
-    channels_tsv.type(strcmpi(channels_tsv.type, 'megplanar'))   = {'MEGGRADPLANAR'};
-    channels_tsv.type(strcmpi(channels_tsv.type, 'refmag'))      = {'MEGREFMAG'};
-    channels_tsv.type(strcmpi(channels_tsv.type, 'refgrad'))     = {'MEGREFGRADAXIAL'};
-    channels_tsv.type(strcmpi(channels_tsv.type, 'refplanar'))   = {'MEGREFGRADPLANAR'};
-    channels_tsv.type(strcmpi(channels_tsv.type, 'respiration')) = {'RESP'};
-    channels_tsv.type(strcmpi(channels_tsv.type, 'headloc'))     = {'HLU'};
-    channels_tsv.type(strcmpi(channels_tsv.type, 'headloc_gof')) = {'FITERR'};
-    channels_tsv.type(strcmpi(channels_tsv.type, 'ori'))         = {'ORNT'};
-    % trigger, analog trigger, and digital trigger all have to be renamed to TRIG
-    channels_tsv.type(contains(channels_tsv.type, 'trigger', 'IgnoreCase', true)) = {'TRIG'};
-    channels_tsv.type(contains(channels_tsv.type, 'nirs'))       = {'unknown'}; % depends on the type of measurement and should be provided by the user
-    % channel types in BIDS must be in upper case
-    channels_tsv.type = upper(channels_tsv.type);
-
-    % do a sanity check on the number of channels for the electrophysiology data types
+%% do a sanity check on the number of channels for the electrophysiology data types
     if need_meg_json
         type_json = meg_json;
     elseif need_eeg_json
