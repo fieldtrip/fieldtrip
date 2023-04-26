@@ -52,7 +52,8 @@ datafile      = fullfile(p,[f '_meg.bin']);
 headerfile    = fullfile(p,[f '_meg.json']);
 positionsfile = fullfile(p,[f '_positions.tsv']);
 
-precision = 'double';
+precision = 'single';
+
 switch precision
   case 'single'
     samplesize = 4;
@@ -93,12 +94,16 @@ if needhdr
   
   hdr.label       = channels.name;
   hdr.nChans      = size(channels, 1);
-  hdr.nSamples    = d.bytes/(size(channels, 1) * samplesize);
+  hdr.nSamples    = (d.bytes/(size(channels, 1) * samplesize))-1;
   hdr.nSamplesPre = 0; % continuous data
   hdr.nTrials     = 1; % continuous data
   hdr.Fs          = header.SamplingFrequency;
   hdr.chantype    = channels.type;
-  hdr.chanunit    = repmat({'unknown'}, size(hdr.label));
+  try
+      hdr.chanunit    = channels.unit;
+  catch
+      hdr.chanunit    = repmat({'unknown'}, size(hdr.label));
+  end
   
   % keep the original header details
   hdr.orig.header     = header;
@@ -111,7 +116,8 @@ if needhdr
     hdr.grad.label = positions.name;
     hdr.grad.coilpos = [positions.Px positions.Py positions.Pz];
     hdr.grad.coilori = [positions.Ox positions.Oy positions.Oz];
-    hdr.grad.type = 'meg';
+    hdr.grad.type = 'megmag';
+    hdr.grad.tra  = diag(ones(1,length(positions.name)));
     if ~isempty(coordsys)
       hdr.grad.unit = coordsys.MEGCoordinateUnits;
       hdr.grad.coordsys = coordsys.MEGCoordinateSystem;
@@ -123,7 +129,6 @@ if needhdr
   
 elseif needdat
   %% read the data, note that it is big endian
-  
   fid = fopen(datafile, 'rb');
   fseek(fid, begsample*samplesize*hdr.nChans, 'bof');
   dat = fread(fid,[hdr.nChans, (endsample-begsample+1)], precision, 0, 'b');
