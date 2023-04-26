@@ -1325,7 +1325,7 @@ if need_nirs_json
     if hdr.nTrials>1
         nirs_json.EpochLength             = hdr.nSamples/hdr.Fs;
     end
-    nirs_json.NIRSChannelCount          = sum(strcmpi(channels_tsv.type, 'nirs')); 
+    nirs_json.NIRSChannelCount          = sum(contains(lower(channels_tsv.type), 'nirs')); 
     nirs_json.ACCELChannelCount         = sum(strcmpi(channels_tsv.type, 'accel'));
     nirs_json.GYROChannelCount          = sum(strcmpi(channels_tsv.type, 'gyro'));
     nirs_json.MAGNChannelCount          = sum(strcmpi(channels_tsv.type, 'magn'));
