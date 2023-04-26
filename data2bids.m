@@ -1206,16 +1206,16 @@ end % if need_mri_json
 %% need_meg_json
 if need_meg_json
     meg_json.SamplingFrequency          = hdr.Fs;
-    meg_json.MEGChannelCount            = sum(strcmpi(hdr.chantype, 'megmag') | strcmpi(hdr.chantype, 'meggrad') | strcmpi(hdr.chantype, 'megplanar') | strcmpi(hdr.chantype, 'megaxial'));
-    meg_json.MEGREFChannelCount         = sum(strcmpi(hdr.chantype, 'refmag') | strcmpi(hdr.chantype, 'refgrad') | strcmpi(hdr.chantype, 'refplanar') | strcmpi(hdr.chantype, 'ref'));
-    meg_json.EEGChannelCount            = sum(strcmpi(hdr.chantype, 'eeg'));
-    meg_json.ECOGChannelCount           = sum(strcmpi(hdr.chantype, 'ecog'));
-    meg_json.SEEGChannelCount           = sum(strcmpi(hdr.chantype, 'seeg') | strcmpi(hdr.chantype, 'dbs'));
-    meg_json.EOGChannelCount            = sum(strcmpi(hdr.chantype, 'eog'));
-    meg_json.ECGChannelCount            = sum(strcmpi(hdr.chantype, 'ecg'));
-    meg_json.EMGChannelCount            = sum(strcmpi(hdr.chantype, 'emg'));
-    meg_json.MiscChannelCount           = sum(strcmpi(hdr.chantype, 'misc') | strcmpi(hdr.chantype, 'unknown'));
-    meg_json.TriggerChannelCount        = sum(contains(lower(hdr.chantype), 'trigger'));
+    meg_json.MEGChannelCount            = sum(strcmpi(channels_tsv.type, 'megmag') | strcmpi(channels_tsv.type, 'meggrad') | strcmpi(channels_tsv.type, 'megplanar') | strcmpi(channels_tsv.type, 'megaxial'));
+    meg_json.MEGREFChannelCount         = sum(strcmpi(channels_tsv.type, 'refmag') | strcmpi(channels_tsv.type, 'refgrad') | strcmpi(channels_tsv.type, 'refplanar') | strcmpi(channels_tsv.type, 'ref'));
+    meg_json.EEGChannelCount            = sum(strcmpi(channels_tsv.type, 'eeg'));
+    meg_json.ECOGChannelCount           = sum(strcmpi(channels_tsv.type, 'ecog'));
+    meg_json.SEEGChannelCount           = sum(strcmpi(channels_tsv.type, 'seeg') | strcmpi(channels_tsv.type, 'dbs'));
+    meg_json.EOGChannelCount            = sum(strcmpi(channels_tsv.type, 'eog'));
+    meg_json.ECGChannelCount            = sum(strcmpi(channels_tsv.type, 'ecg'));
+    meg_json.EMGChannelCount            = sum(strcmpi(channels_tsv.type, 'emg'));
+    meg_json.MiscChannelCount           = sum(strcmpi(channels_tsv.type, 'misc') | strcmpi(channels_tsv.type, 'unknown'));
+    meg_json.TriggerChannelCount        = sum(contains(lower(channels_tsv.type), 'trigger') | strcmpi(channels_tsv.type, 'trig'));
     meg_json.RecordingDuration          = (hdr.nTrials*hdr.nSamples)/hdr.Fs;
 
     if hdr.nTrials>1
@@ -1246,12 +1246,12 @@ end % if need_meg_json
 %% need_eeg_json
 if need_eeg_json
     eeg_json.SamplingFrequency          = hdr.Fs;
-    eeg_json.EEGChannelCount            = sum(strcmpi(hdr.chantype, 'eeg'));
-    eeg_json.EOGChannelCount            = sum(strcmpi(hdr.chantype, 'eog'));
-    eeg_json.ECGChannelCount            = sum(strcmpi(hdr.chantype, 'ecg'));
-    eeg_json.EMGChannelCount            = sum(strcmpi(hdr.chantype, 'emg'));
-    eeg_json.TriggerChannelCount        = sum(strcmpi(hdr.chantype, 'trigger'));
-    eeg_json.MiscChannelCount           = sum(strcmpi(hdr.chantype, 'misc') | strcmpi(hdr.chantype, 'unknown'));
+    eeg_json.EEGChannelCount            = sum(strcmpi(channels_tsv.type, 'eeg'));
+    eeg_json.EOGChannelCount            = sum(strcmpi(channels_tsv.type, 'eog'));
+    eeg_json.ECGChannelCount            = sum(strcmpi(channels_tsv.type, 'ecg'));
+    eeg_json.EMGChannelCount            = sum(strcmpi(channels_tsv.type, 'emg'));
+    eeg_json.TriggerChannelCount        = sum(stcmpi(channels_tsv.type, 'trigger') | strcmpi(channels_tsv.type, 'trig'));
+    eeg_json.MiscChannelCount           = sum(strcmpi(channels_tsv.type, 'misc') | strcmpi(channels_tsv.type, 'unknown'));
     eeg_json.RecordingDuration          = (hdr.nTrials*hdr.nSamples)/hdr.Fs;
     if hdr.nTrials>1
         eeg_json.EpochLength              = hdr.nSamples/hdr.Fs;
@@ -1266,14 +1266,14 @@ end % if need_eeg_json
 %% need_ieeg_json
 if need_ieeg_json
     ieeg_json.SamplingFrequency          = hdr.Fs;
-    ieeg_json.ECOGChannelCount           = sum(strcmpi(hdr.chantype, 'ecog'));
-    ieeg_json.SEEGChannelCount           = sum(strcmpi(hdr.chantype, 'seeg') | strcmpi(hdr.chantype, 'dbs'));
-    ieeg_json.EEGChannelCount            = sum(strcmpi(hdr.chantype, 'eeg'));
-    ieeg_json.EOGChannelCount            = sum(strcmpi(hdr.chantype, 'eog'));
-    ieeg_json.ECGChannelCount            = sum(strcmpi(hdr.chantype, 'ecg'));
-    ieeg_json.EMGChannelCount            = sum(strcmpi(hdr.chantype, 'emg'));
-    ieeg_json.TriggerChannelCount        = sum(strcmpi(hdr.chantype, 'trigger'));
-    ieeg_json.MiscChannelCount           = sum(strcmpi(hdr.chantype, 'misc') | strcmpi(hdr.chantype, 'unknown'));
+    ieeg_json.ECOGChannelCount           = sum(strcmpi(channels_tsv.type, 'ecog'));
+    ieeg_json.SEEGChannelCount           = sum(strcmpi(channels_tsv.type, 'seeg') | strcmpi(channels_tsv.type, 'dbs'));
+    ieeg_json.EEGChannelCount            = sum(strcmpi(channels_tsv.type, 'eeg'));
+    ieeg_json.EOGChannelCount            = sum(strcmpi(channels_tsv.type, 'eog'));
+    ieeg_json.ECGChannelCount            = sum(strcmpi(channels_tsv.type, 'ecg'));
+    ieeg_json.EMGChannelCount            = sum(strcmpi(channels_tsv.type, 'emg'));
+    ieeg_json.TriggerChannelCount        = sum(stcmpi(channels_tsv.type, 'trigger') | strcmpi(channels_tsv.type, 'trig'));
+    ieeg_json.MiscChannelCount           = sum(strcmpi(channels_tsv.type, 'misc') | strcmpi(channels_tsv.type, 'unknown'));
     ieeg_json.RecordingDuration          = (hdr.nTrials*hdr.nSamples)/hdr.Fs;
     if hdr.nTrials>1
         ieeg_json.EpochLength              = hdr.nSamples/hdr.Fs;
@@ -1288,11 +1288,11 @@ end
 %% need_emg_json
 if need_emg_json
     emg_json.SamplingFrequency          = hdr.Fs;
-    emg_json.EOGChannelCount            = sum(strcmpi(hdr.chantype, 'eog'));
-    emg_json.ECGChannelCount            = sum(strcmpi(hdr.chantype, 'ecg'));
-    emg_json.EMGChannelCount            = sum(strcmpi(hdr.chantype, 'emg'));
-    emg_json.TriggerChannelCount        = sum(strcmpi(hdr.chantype, 'trigger'));
-    emg_json.MiscChannelCount           = sum(strcmpi(hdr.chantype, 'misc') | strcmpi(hdr.chantype, 'unknown'));
+    emg_json.EOGChannelCount            = sum(strcmpi(channels_tsv.type, 'eog'));
+    emg_json.ECGChannelCount            = sum(strcmpi(channels_tsv.type, 'ecg'));
+    emg_json.EMGChannelCount            = sum(strcmpi(channels_tsv.type, 'emg'));
+    emg_json.TriggerChannelCount        = sum(stcmpi(channels_tsv.type, 'trigger') | strcmpi(channels_tsv.type, 'trig'))
+    emg_json.MiscChannelCount           = sum(strcmpi(channels_tsv.type, 'misc') | strcmpi(channels_tsv.type, 'unknown'));
     emg_json.RecordingDuration          = (hdr.nTrials*hdr.nSamples)/hdr.Fs;
     if hdr.nTrials>1
         emg_json.EpochLength              = hdr.nSamples/hdr.Fs;
@@ -1325,11 +1325,11 @@ if need_nirs_json
     if hdr.nTrials>1
         nirs_json.EpochLength             = hdr.nSamples/hdr.Fs;
     end
-    nirs_json.NIRSChannelCount          = sum(strcmpi(hdr.chantype, 'nirs'));
-    nirs_json.ACCELChannelCount         = sum(strcmpi(hdr.chantype, 'accel'));
-    nirs_json.GYROChannelCount          = sum(strcmpi(hdr.chantype, 'gyro'));
-    nirs_json.MAGNChannelCount          = sum(strcmpi(hdr.chantype, 'magn'));
-    nirs_json.MISCChannelCount          = sum(strcmpi(hdr.chantype, 'misc') | strcmpi(hdr.chantype, 'unknown') | strcmpi(hdr.chantype, 'aux'));
+    nirs_json.NIRSChannelCount          = sum(strcmpi(channels_tsv.type, 'nirs')); 
+    nirs_json.ACCELChannelCount         = sum(strcmpi(channels_tsv.type, 'accel'));
+    nirs_json.GYROChannelCount          = sum(strcmpi(channels_tsv.type, 'gyro'));
+    nirs_json.MAGNChannelCount          = sum(strcmpi(channels_tsv.type, 'magn'));
+    nirs_json.MISCChannelCount          = sum(strcmpi(channels_tsv.type, 'misc') | strcmpi(channels_tsv.type, 'unknown') | strcmpi(channels_tsv.type, 'aux'));
     [opto_labels, opto_idx]             = unique(hdr.opto.optolabel); % select unique optodes
     nirs_json.NIRSSourceOptodeCount     = sum(strcmpi(hdr.opto.optotype(opto_idx), 'transmitter'));
     nirs_json.NIRSDetectorOptodeCount   = sum (strcmpi(hdr.opto.optotype(opto_idx), 'receiver'));
@@ -1411,16 +1411,16 @@ if need_motion_json
     motion_json.MotionChannelCount    = hdr.nChans;
     motion_json.RecordingDuration     = (hdr.nSamples*hdr.nTrials)/hdr.Fs;
     motion_json.SamplingFrequencyEffective = size(dat,2)/motion_json.RecordingDuration;
-    motion_json.POSChannelCount       = sum(strcmpi(hdr.chantype, 'POS'));
-    motion_json.ORNTChannelCount      = sum(strcmpi(hdr.chantype, 'ORNT'));
-    motion_json.VELChannelCount       = sum(strcmpi(hdr.chantype, 'VEL'));
-    motion_json.ANGVELChannelCount    = sum(strcmpi(hdr.chantype, 'ANGVEL'));
-    motion_json.ACCChannelCount       = sum(strcmpi(hdr.chantype, 'ACC'));
-    motion_json.ANGACCChannelCount    = sum(strcmpi(hdr.chantype, 'ANGACC'));
-    motion_json.MAGNChannelCount      = sum(strcmpi(hdr.chantype, 'MAGN'));
-    motion_json.JNTANGChannelCount    = sum(strcmpi(hdr.chantype, 'JNTANG'));
-    if isfield(cfg, 'channels') && isfield(cfg.channels, 'tracked_point')
-        motion_json.TrackedPointsCount  = numel(setdiff(unique(cfg.channels.tracked_point), 'n/a'));
+    motion_json.POSChannelCount       = sum(strcmpi(channels_tsv.type, 'POS'));
+    motion_json.ORNTChannelCount      = sum(strcmpi(channels_tsv.type, 'ORNT'));
+    motion_json.VELChannelCount       = sum(strcmpi(channels_tsv.type, 'VEL'));
+    motion_json.ANGVELChannelCount    = sum(strcmpi(channels_tsv.type, 'ANGVEL'));
+    motion_json.ACCChannelCount       = sum(strcmpi(channels_tsv.type, 'ACC'));
+    motion_json.ANGACCChannelCount    = sum(strcmpi(channels_tsv.type, 'ANGACC'));
+    motion_json.MAGNChannelCount      = sum(strcmpi(channels_tsv.type, 'MAGN'));
+    motion_json.JNTANGChannelCount    = sum(strcmpi(channels_tsv.type, 'JNTANG'));
+    if isfield(cfg, 'channels') && any(ismember(channels_tsv.Properties.VariableNames, 'tracked_point'))
+        motion_json.TrackedPointsCount  = numel(setdiff(unique(channels_tsv.tracked_point), 'n/a'));
     end
 
     % merge the information specified by the user with that from the data
