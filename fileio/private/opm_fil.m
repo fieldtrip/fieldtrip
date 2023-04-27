@@ -116,7 +116,7 @@ if needhdr
     hdr.grad.label = positions.name;
     hdr.grad.coilpos = [positions.Px positions.Py positions.Pz];
     hdr.grad.coilori = [positions.Ox positions.Oy positions.Oz];
-    hdr.grad.type = 'megmag';
+    hdr.grad.type = 'meg';
     hdr.grad.tra  = diag(ones(1,length(positions.name)));
     if ~isempty(coordsys)
       hdr.grad.unit = coordsys.MEGCoordinateUnits;
