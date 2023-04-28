@@ -492,7 +492,7 @@ elseif iseeg
             if isfield(headmodel,'locs')
                 locs = headmodel.locs;
             else
-                locs=[-1.6 0 3.2];
+                locs=[-1.6 0 3.2]; %adapt units?
             end
             if isfield(headmodel,'amps')
                 amps = headmodel.amps;
@@ -502,19 +502,44 @@ elseif iseeg
             
             [h2sens,ds2sens] = ft_sensinterp_openmeeg(dippos, headmodel, sens);
             
-            brainsources=is_inside(dippos,headmodel.bnd(end));
-            %missing eye sourcees:
-            %eyesources = Bla
-            %brainsources = brainsources | eysources
+            brainsources=surface_inside(dippos,headmodel.bnd(end).pos,headmodel.bnd(end).tri)==1;
             
+            if isfield(headmodel,'eyes')
+                lm=headmodel.eyes.lm;
+                rm=headmodel.eyes.rm;
+                rad=headmodel.eyes.rad;
+            else
+                lm=[-33.7, 58.5, -36.4];
+                rm=[35.2, 59.5, -37.3];
+                rad = 12;
+            end
+            eyesourcesl = sqrt(sum(bsxfun(@minus,dippos,lm).^2,2))<=rad;
+            eyesourcesr = sqrt(sum(bsxfun(@minus,dippos,rm).^2,2))<=rad;
+            musclesources = ~brainsources & ~(eyesourcesl|eyesourcesr);
             lf=nan(size(h2sens,1),size(dippos,1)*3);
-            brainsources2=reshape(repmat(brainsources,1,3)',[],1);           
+            brainsources2=reshape(repmat(brainsources,1,3)',[],1);
+            musclesources2=reshape(repmat(musclesources,1,3)',[],1);
+            eyesourcesl2=reshape(repmat(eyesourcesl,1,3)',[],1);
+            eyesourcesr2=reshape(repmat(eyesourcesr,1,3)',[],1);
             if sum(brainsources)>0
                 dsm            = ft_sysmat_openmeeg(dippos(brainsources,:), headmodel, sens, nonadaptive);
                 lf(:,brainsources2)      = h2sens*headmodel.mat*dsm;
             end
-            if sum(~brainsources)>0
-                trippos=dippos(~brainsources,:);
+            if sum(eyesourcesl|eyesourcesr)>0
+                %mirror each position to the other eye to get symmetric
+                %dipoles
+                eyemirr_l = dippos(eyesourcesl,:)-lm+rm;
+                dsml = ft_sysmat_openmeeg(dippos(eyesourcesl,:), headmodel, sens, nonadaptive);
+                dsmlm = ft_sysmat_openmeeg(eyemirr_l, headmodel, sens, nonadaptive);
+                eyemirr_r = dippos(eyesourcesr,:)-rm+lm;
+                dsmr = ft_sysmat_openmeeg(dippos(eyesourcesr,:), headmodel, sens, nonadaptive);
+                dsmrm = ft_sysmat_openmeeg(eyemirr_r, headmodel, sens, nonadaptive);
+                
+                lf(:,eyesourcesl2)      = h2sens*headmodel.mat*(dsml+dsmlm);
+                lf(:,eyesourcesr2)      = h2sens*headmodel.mat*(dsmr+dsmrm);
+            end
+            if sum(musclesources)>0
+                trippos=dippos(musclesources,:);
                 trippos=repmat(trippos,1,1,3);
                 trippos=permute(trippos,[1 3 2]);
                 tripposx=trippos;
@@ -562,7 +587,7 @@ elseif iseeg
                 tripoles(:,:,2)=amps(1)*msm2_1+amps(2)*msm+amps(3)*msm2_2;
                 tripoles(:,:,3)=amps(1)*msm3_1+amps(2)*msm+amps(3)*msm3_2;
                 tripoles=reshape(permute(tripoles,[1 3 2]),size(tripoles,1),[]);
-                lf(:,~brainsources2)     = h2sens*headmodel.mat*tripoles;
+                lf(:,musclesources2)     = h2sens*headmodel.mat*tripoles;
             end
             
     case {'infinite_currentdipole' 'infinite'}
