@@ -87,11 +87,11 @@ function [dat, label, time, cfg] = preproc(dat, label, time, cfg, begpadding, en
 %   cfg.detrend       = 'no' or 'yes', this is done on the complete trial
 %   cfg.polyremoval   = 'no' or 'yes', this is done on the complete trial
 %   cfg.polyorder     = polynome order (default = 2)
-%   cfg.derivative    = 'no' (default) or 'yes', computes the first order derivative of the data
+%   cfg.derivative    = 'no' (default) or 'yes', computes the first order derivative of the data, using the MATLAB gradient function
 %   cfg.hilbert       = 'no', 'abs', 'complex', 'real', 'imag', 'absreal', 'absimag' or 'angle' (default = 'no')
 %   cfg.rectify       = 'no' or 'yes'
 %   cfg.precision     = 'single' or 'double' (default = 'double')
-%   cfg.absdiff       = 'no' or 'yes', computes absolute derivative (i.e.first derivative then rectify)
+%   cfg.absdiff       = 'no' or 'yes', computes absolute of the first order difference (i.e. first diff then rectify), using the MATLAB diff function
 %
 % Preprocessing options that you should only use for EEG data are
 %   cfg.reref         = 'no' or 'yes' (default = 'no')

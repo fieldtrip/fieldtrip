@@ -1,11 +1,12 @@
-function fiff_write_ctf_comp(fid,comps)
+function fiff_write_ctf_comp(fid,comps,ch_rename)
 %
-% fiff_write_ctf_comp(fid,comps)
+% fiff_write_ctf_comp(fid,comps,ch_rename)
 %
 % Writes the CTF compensation data into a fif file
 %
 %     fid           An open fif file descriptor
 %     comps         The compensation data to write
+%     ch_rename     Short-to-long channel name mapping
 %
 
 %
@@ -36,7 +37,9 @@ function fiff_write_ctf_comp(fid,comps)
 
 me='MNE:fiff_write_ctf_comp';
 
-if nargin ~= 2
+if nargin == 2
+    ch_rename = {};
+elseif nargin ~= 3
     error(me,'Incorrect number of arguments');
 end
 
@@ -54,6 +57,7 @@ end
 fiff_start_block(fid,FIFF.FIFFB_MNE_CTF_COMP);
 for k = 1:length(comps)
     comp = comps(k);
+    comp = fiff_rename_comp(comp, ch_rename);
     fiff_start_block(fid,FIFF.FIFFB_MNE_CTF_COMP_DATA);
     %
     %    Write the compensation kind
