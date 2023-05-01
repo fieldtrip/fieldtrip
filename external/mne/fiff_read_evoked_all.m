@@ -80,7 +80,7 @@ for k = 1:length(evoked)
         is_smsh = [ is_smsh zeros(1,sets(k).naspect) ];
         naspect = naspect + sets(k).naspect;
     end
-    saspects  = fiff_dir_tree_find(evoked(k), FIFF.FIFFB_SMSH_ASPECT);
+    saspects  = fiff_dir_tree_find(evoked(k), FIFF.FIFFB_IAS_ASPECT);
     nsaspects = length(saspects);
     if nsaspects > 0
         sets(k).naspect = sets(k).naspect + nsaspects;

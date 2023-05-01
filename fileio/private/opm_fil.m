@@ -40,13 +40,20 @@ needdat = (nargin==5);
 [p, f, x] = fileparts(filename);
 assert(isfile(filename), sprintf('file "%s" not found', filename));
 
-channelsfile  = fullfile(p, 'channels.tsv');
-coordsysfile  = fullfile(p, 'coordsystem.json');
-datafile      = fullfile(p, 'meg.bin');
-headerfile    = fullfile(p, 'meg.json');
-positionsfile = fullfile(p, 'positions.tsv');
+% Remove the _meg part of the filename
+if strcmp(f(end-3:end),'_meg')
+    f = f(1:end-4);
+end
 
-precision = 'double';
+% Get the BIDS compliant files
+channelsfile  = fullfile(p,[f '_channels.tsv']);
+coordsysfile  = fullfile(p,[f '_coordsystem.json']);
+datafile      = fullfile(p,[f '_meg.bin']);
+headerfile    = fullfile(p,[f '_meg.json']);
+positionsfile = fullfile(p,[f '_positions.tsv']);
+
+precision = 'single';
+
 switch precision
   case 'single'
     samplesize = 4;
@@ -57,10 +64,13 @@ end
 
 if needhdr
   %% read the header
-  
-  fid = fopen(headerfile, 'rt');
-  header = jsondecode(fread(fid, [1 inf], 'char=>char'));
-  fclose(fid);
+  try
+      fid = fopen(headerfile, 'rt');
+      header = jsondecode(fread(fid, [1 inf], 'char=>char'));
+      fclose(fid);
+  catch
+      ft_warning('Cannot open header');
+  end
   
   channels  = readtable(channelsfile, 'Delimiter', 'tab', 'FileType', 'text');
   
@@ -84,12 +94,16 @@ if needhdr
   
   hdr.label       = channels.name;
   hdr.nChans      = size(channels, 1);
-  hdr.nSamples    = d.bytes/(size(channels, 1) * samplesize);
+  hdr.nSamples    = (d.bytes/(size(channels, 1) * samplesize))-1;
   hdr.nSamplesPre = 0; % continuous data
   hdr.nTrials     = 1; % continuous data
   hdr.Fs          = header.SamplingFrequency;
   hdr.chantype    = channels.type;
-  hdr.chanunit    = repmat({'unknown'}, size(hdr.label));
+  try
+      hdr.chanunit    = channels.unit;
+  catch
+      hdr.chanunit    = repmat({'unknown'}, size(hdr.label));
+  end
   
   % keep the original header details
   hdr.orig.header     = header;
@@ -103,6 +117,7 @@ if needhdr
     hdr.grad.coilpos = [positions.Px positions.Py positions.Pz];
     hdr.grad.coilori = [positions.Ox positions.Oy positions.Oz];
     hdr.grad.type = 'meg';
+    hdr.grad.tra  = diag(ones(1,length(positions.name)));
     if ~isempty(coordsys)
       hdr.grad.unit = coordsys.MEGCoordinateUnits;
       hdr.grad.coordsys = coordsys.MEGCoordinateSystem;
@@ -114,7 +129,6 @@ if needhdr
   
 elseif needdat
   %% read the data, note that it is big endian
-  
   fid = fopen(datafile, 'rb');
   fseek(fid, begsample*samplesize*hdr.nChans, 'bof');
   dat = fread(fid,[hdr.nChans, (endsample-begsample+1)], precision, 0, 'b');

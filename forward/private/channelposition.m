@@ -143,11 +143,46 @@ switch ft_senstype(sens)
     [nchan, ncoil] = size(sens.tra);
     refpnt = zeros(nchan,3);
     refori = zeros(nchan,3); % FIXME not sure whether this will work
+    
+    % if the reference is a hardware gradiometer reference with two coils, 
+    % either the oris of the individual coils have opposite polarity, and the 
+    % corresponding weights have the same sign, or the the individual coils have 
+    % parallel polarity, and the weights have opposite sign. In case the
+    % polarities are approximately opposite, cancellation of the ori may
+    % occur. 
     for i=1:nchan
-      weight = abs(sens.tra(i,:));
-      weight = weight ./ sum(weight);
-      refpnt(i,:) = weight * sens.coilpos;
-      refori(i,:) = weight * sens.coilori;
+      weight = sens.tra(i,:);
+      selc   = weight~=0;
+      weight = abs(weight) ./ sum(abs(weight));
+      if sum(selc)==2
+        % this could be a reference gradiometer for which a more robust
+        % heuristic might work better than the generic solution below
+        tmpori = sens.coilori(selc,:);
+        tmppnt = sens.coilpos(selc,:);
+        if dot(tmpori(1,:),tmpori(2,:))<-0.9
+          tmpori(2,:) = -tmpori(2,:);
+        end
+        refori(i,:) = weight(selc)*tmpori;
+
+        % check whether the line between the coils is aligned with the
+        % oriention of the coils, in which case it's a diagonal reference,
+        % otherwise it's an off diagonal reference. For the diagonal
+        % reference the chanpos should be one of the coils, for the off
+        % diagonal reference it should be the average.
+        delta = tmppnt(2,:) - tmppnt(1,:);
+        delta = delta./norm(delta);
+        if abs(dot(delta, tmpori(1,:)))>0.9
+          % diagonal, take one of the positions
+          refpnt(i,:) = tmppnt(1,:);
+        else
+          % take the (weighted) average
+          refpnt(i,:) = weight(selc) * tmppnt;
+        end
+        refori(i,:) = weight(selc)*tmpori;
+      else
+        refpnt(i,:) = weight * sens.coilpos;
+        refori(i,:) = weight * sens.coilori;
+      end
     end
     reflab = sens.label;
 
