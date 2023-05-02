@@ -490,12 +490,12 @@ elseif iseeg
             
 
             if isfield(headmodel,'locs')
-                locs = headmodel.locs;
+                locs = headmodel.triplocs;
             else
                 locs=[-1.6 0 3.2]; %adapt units?
             end
             if isfield(headmodel,'amps')
-                amps = headmodel.amps;
+                amps = headmodel.tripamps;
             else
                 amps=[-1 2 -1];
             end
