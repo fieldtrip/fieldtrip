@@ -83,13 +83,14 @@ function [cfg] = data2bids(cfg, varargin)
 %   cfg.dicomfile               = string, filename of a matching DICOM file for header details (default = [])
 %   cfg.deface                  = string, 'yes' or 'no' (default = 'no')
 %
-% You can specify cfg.events as a Nx3 matrix with the trial definition (see
-% FT_DEFINETRIAL) or as a MATLAB table. When specified as table, the first three
-% columns containing integer values corresponding to the begsample, endsample and
-% offset, the additional colums can be of another type and have any name. If you do
-% not specify the trial definition, the events will be read from the MEG/EEG/iEEG
-% dataset. Events from the trial definition or from the data will be written to
-% events.tsv.
+% You can specify cfg.events as a Nx3 matrix with the "trl" trial definition (see
+% FT_DEFINETRIAL) or as a MATLAB table. When specified as table, you can use the
+% "trl" format from FT_DEFINETRIAL with the first three columns corresponding to the
+% begsample, endsample and offset (in samples). You can also a table with the
+% "events.tsv" format with the first two columns corresponding to the onset and
+% duration (in seconds). In either case the table can have additional culumns with
+% numerical or string values. If you do not specify cfg.events, the events will be
+% read from the MEG/EEG/iEEG dataset.
 %   cfg.events                  = trial definition (see FT_DEFINETRIAL) or event structure (see FT_READ_EVENT)
 %
 % If NBS Presentation was used in combination with another functional data type, you
