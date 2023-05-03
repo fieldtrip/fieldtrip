@@ -250,7 +250,6 @@ end
 
 if isempty(senstype)
   senstype = ft_senstype(datachannel);
-  disp(datachannel);
 end
 
 switch senstype
