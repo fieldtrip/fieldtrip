@@ -1271,7 +1271,10 @@ elseif filetype_check_extension(filename, '.nedf')
   type = 'neuroelectrics_nedf';
   manufacturer = 'Neurolectrics';
   content = 'EEG binary data (Enobio & Starstim)';
-
+elseif filetype_check_extension(filename, '.bin') && exist([filename(1:(end-4)) '.json'], 'file')
+  type = 'QZFM_UCL';
+  manufacturer = 'QuSpin';
+  content = 'OPM-MEG data';
   % some other known file types
 elseif filetype_check_extension(filename, '.hdf5')
   type = 'gtec_hdf5';

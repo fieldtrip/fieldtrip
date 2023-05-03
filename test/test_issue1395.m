@@ -48,6 +48,14 @@ cfg.dataset = datafile;
 data = ft_preprocessing(cfg);
 
 %%
+% Test without specifying cfg.headerformat and cfg.dataformat and
+% cfg.eventformat
+cfg         = [];
+cfg.dataset = datafile;
+data_auto   = ft_preprocessing(cfg);
+clear data_auto
+
+%%
 
 cfg = [];
 cfg.headerformat = 'opm_fil';

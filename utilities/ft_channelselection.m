@@ -250,6 +250,7 @@ end
 
 if isempty(senstype)
   senstype = ft_senstype(datachannel);
+  disp(datachannel);
 end
 
 switch senstype
@@ -364,10 +365,10 @@ switch senstype
     % all itab MEG channels start with MAG
     labelmeg = datachannel(strncmp('MAG', datachannel, length('MAG')));
 
-  case{'qzfm_gen2'}
-    % This is for use with QZFM_Gen2 Optically Pumped Magnetometers manufactured by QuSpin Inc.
+  case{'QZFM_UCL'}
+    % This is for use with UCL-OPM Lab which uses QZFM Optically Pumped 
+    % % Magnetometers manufactured by QuSpin Inc. 
     % SPECS: https://quspin.com/qzfm-gen-2-update/
-
     labelmeg    = datachannel(strncmp('meg', datachantype, 3));
     labelmegref = datachannel(strncmp('refmag', datachantype, 3));
 

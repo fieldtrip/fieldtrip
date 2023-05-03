@@ -75,10 +75,20 @@ if needhdr
     case 'double'
       samplesize = 8;
   end
+  
+  % Try to get the type of sensor array (helmet) used
+  if isfield(header, 'HelmetManufacturer')
+      type = ['QZFM' '_' header.HelmetManufacturer];  
+  else
+      type = ['QZFM' '_' header.HelmetManufacturer];
+      ft_warning(['No HelmetManufacturer specified in the accompanying' ...
+          ' meg.json file. Assuming the sensor type is ''QZFM_UCL''']);
+  end
 
+  % Read the channels
   channels  = readtable(channelsfile, 'Delimiter', 'tab', 'FileType', 'text');
 
-  % this one is optional
+  % Get the coordsysfile - this one is optional
   if exist(coordsysfile, 'file')
     fid = fopen(coordsysfile, 'rt');
     coordsys = jsondecode(fread(fid, [1 inf], 'char=>char'));
@@ -87,7 +97,7 @@ if needhdr
     coordsys = [];
   end
 
-  % this one is optional
+  % Get the positions file - this one is optional
   if exist(positionsfile, 'file')
     positions = readtable(positionsfile, 'Delimiter', 'tab', 'FileType', 'text');
   else
@@ -95,16 +105,16 @@ if needhdr
   end
 
   d = dir(datafile);
-
+  
+  % Construct the hdr
   hdr.label       = channels.name;
   hdr.nChans      = size(channels, 1);
   hdr.nSamples    = (d.bytes/(size(channels, 1) * samplesize))-1;
   hdr.nSamplesPre = 0; % continuous data
   hdr.nTrials     = 1; % continuous data
   hdr.Fs          = header.SamplingFrequency;
-  hdr.chantype    = channels.type;
   try
-    hdr.chanunit    = channels.unit;
+    hdr.chanunit    = channels.units;
   catch
     hdr.chanunit    = repmat({'unknown'}, size(hdr.label));
   end
@@ -120,8 +130,15 @@ if needhdr
     hdr.grad.label = positions.name;
     hdr.grad.coilpos = [positions.Px positions.Py positions.Pz];
     hdr.grad.coilori = [positions.Ox positions.Oy positions.Oz];
-    hdr.grad.type = 'meg';
+    hdr.grad.type = type;
+    hdr.grad.chantype = repmat({'megmag'},size(positions.name));
+    hdr.grad.chanunit = repmat({'fT'},size(positions.name));
     hdr.grad.tra  = diag(ones(1,length(positions.name)));
+
+    if isfield(header, 'HelmetManufacturer')
+        hdr.grad.HelmetManufacturersModelName = header.HelmetManufacturersModelName;
+    end
+
     if ~isempty(coordsys)
       hdr.grad.unit = coordsys.MEGCoordinateUnits;
       hdr.grad.coordsys = coordsys.MEGCoordinateSystem;
