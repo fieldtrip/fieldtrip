@@ -12,7 +12,13 @@ function fieldtrip2fiff(filename, data, varargin)
 % Additional options can be specified as key-value pairs:
 %   precision = string ('single'/'double'), determines the precision with which
 %                 the numeric data is written to file, default is the class of the
-%                 numeric data
+%                 numeric data.
+%   coordsys  = string ('native'/'neuromag'), determines the coordinate system in which
+%                 the MEG sensors are written (default: 'neuromag'). This option does not 
+%                 have an effect on EEG electrodes or fNIRS optodes. If coordsys = 'neuromag'
+%                 the MEG sensors are expressed in (approximate) neuromag coordinates, which
+%                 may facilitate downstream handling of the fif-files in other software, e.g.
+%                 MNE-python. This is according to the official definitions of the fif-file format
 % 
 % If the data comes from preprocessing and has only one trial, then it writes the
 % data into raw continuous format. 
@@ -52,6 +58,9 @@ function fieldtrip2fiff(filename, data, varargin)
 
 % this ensures that the path is correct and that the ft_defaults global variable is available
 ft_defaults
+
+coordsys  = ft_getopt(varargin, 'coordsys', 'neuromag');
+headshape = ft_getopt(varargin, 'headshape', []);
 
 % ensure that the filename has the correct extension
 [pathstr, name, ext] = fileparts(filename);
@@ -108,7 +117,10 @@ else
   info.highpass        = NaN;
   info.lowpass         = NaN;
   
-  % these are not strictly necessary, but the inverse functions in MNE works better if this matrix is present
+  % these are not strictly necessary, for basic functionality, i.e. time series manipulation. Thinks work
+  % best if an attempt is made to represent MEG-sensors according to the MNE conventions, i.e. sensors in 
+  % (neuromag) device coordinates, and the appropriate additional transformations specified. Fieldtrip2fiff 
+  % makes an attempt to do this, if 'coordsys' = 'neuromag' (handled below)
   info.dev_head_t.from  = 1;
   info.dev_head_t.to    = 4;
   info.dev_head_t.trans = eye(4); % this is of course not correct, but the exact transformation depends on the system
@@ -123,6 +135,75 @@ else
   info.isepoched    = double(isepch);
   info.iscontinuous = double(israw);
   info.sfreq        = fsample;
+end
+
+if isfield(data, 'grad')
+  % express in m to be sure
+  data.grad = ft_convert_units(data.grad, 'm');
+
+  % data contains a gradiometer structure, for which the coordsys is relevant
+  if ~isfield(data.grad, 'coordsys')
+    data.grad = ft_determine_coordsys(data.grad);
+  end
+  if isequal(coordsys, 'neuromag') || ~isequal(data.grad.coordsys, 'neuromag')
+    origcoordsys = data.grad.coordsys;
+    ft_info('Converting the gradiometer description into approximate neuromag coordinates. This optimizes the odds that the data can be seamlessly used in MNE-python.');
+    T         = ft_affinecoordinates(data.grad.coordsys, 'neuromag');
+    data.grad = ft_convert_coordsys(data.grad, 'neuromag');
+    
+    info.ctf_head_t.from  = FIFF.FIFFV_MNE_COORD_CTF_HEAD;
+    info.ctf_head_t.to    = 4;
+    info.ctf_head_t.trans = T;
+  
+    % the neuromag dewar's origin is the center of the posterior bunch of
+    % sensors, that allegedly approximate a sphere, since I don't know how
+    % it is for the other devices.
+    p      = data.grad.chanpos(ft_chantype(data.grad.label, 'meg'), :);
+    [C, R] = fitsphere(p(p(:,2)<0 & p(:,3)>0,:));
+    T      = [eye(3) C(:); 0 0 0 1];  
+    data.grad = ft_transform_geometry(T, data.grad);
+    
+    info.dev_head_t.from  = 1;
+    info.dev_head_t.to    = 4;
+    info.dev_head_t.trans = inv(T);
+  end
+  
+  if ~isempty(headshape)
+    if ~isfield(headshape, 'coordsys')
+      headshape = ft_determine_coordsys(headshape);
+    end
+    if isequal(coordsys, 'neuromag') && ~isequal(headshape.coordsys, 'neuromag')
+      if ~isequal(headshape.coordsys, origcoordsys)
+        ft_error('the coordinate system of the headshape should be the same as the input grad');
+      end
+      % the headshape should be in m and in neuromag head coordinates
+      headshape = ft_convert_coordsys(ft_convert_units(headshape, 'mm'), 'neuromag');
+      headshape = ft_convert_units(headshape, 'm');      
+    end
+
+    dig = [];
+    if isfield(headshape, 'fid')
+      dig(1).ident = FIFF.FIFFV_POINT_LPA;
+      dig(1).kind  = FIFF.FIFFV_POINT_CARDINAL;
+      dig(1).r     = headshape.fid.pos(strcmp(headshape.fid.label, 'lpa'),:);
+      dig(2).ident = FIFF.FIFFV_POINT_NASION;
+      dig(2).kind  = FIFF.FIFFV_POINT_CARDINAL;
+      dig(2).r     = headshape.fid.pos(strcmp(headshape.fid.label, 'nas'),:);
+      dig(3).ident = FIFF.FIFFV_POINT_RPA;
+      dig(3).kind  = FIFF.FIFFV_POINT_CARDINAL;
+      dig(3).r     = headshape.fid.pos(strcmp(headshape.fid.label, 'rpa'),:);
+    end
+    if ~isempty(headshape.pos)
+      cnt = numel(dig);
+      for k = 1:size(headshape.pos,1)
+        cnt = cnt+1;
+        dig(cnt).ident = FIFF.FIFFV_POINT_EXTRA;
+        dig(cnt).kind  = FIFF.FIFFV_POINT_EXTRA;
+        dig(cnt).r     = headshape.pos;
+      end
+    end
+    info.dig = dig;
+  end
 end
 
 info.ch_names = data.label(:)';
@@ -142,7 +223,10 @@ else
 end
 
 if israw
+  % this writes all data into a single buffer, and preserves the time offset
   [outfid, cals] = fiff_start_writing_raw(fifffile, info);
+  fiff_write_int(outfid, FIFF.FIFF_FIRST_SAMPLE, round(data.time{1}(1)*fsample));
+  fiff_write_int(outfid, FIFF.FIFF_DATA_SKIP, 0);
   fiff_write_raw_buffer(outfid, data.trial{1}, cals, dtype);
   fiff_finish_writing_raw(outfid);
   
@@ -270,16 +354,14 @@ else
         
         pos  = data.grad.chanpos(indx(k),:);
         ori  = data.grad.chanori(indx(k),:);
-        
-        R   = ori2r(ori, data.grad.coilpos(selcoil, :), coiltype(indx(k)));
+        R    = ori2r(ori, data.grad.coilpos(selcoil, :), coiltype(indx(k)));
 
+        chs(1,k).scanno       = cnt_grad;
         chs(1,k).logno        = cnt_grad;
         chs(1,k).kind         = coilkind(indx(k));
         chs(1,k).coil_type    = coiltype(indx(k));
         chs(1,k).unit         = coilunit(indx(k));
-        chs(1,k).coil_trans   = [R pos(:); 0 0 0 1];
         chs(1,k).unit_mul     = 0;
-        chs(1,k).coord_frame  = FIFF.FIFFV_COORD_HEAD;
         chs(1,k).eeg_loc      = [];
         chs(1,k).loc          = [pos(:); R(:)];
         chs(1,k).cal          = 1;
@@ -288,13 +370,12 @@ else
         % EEG
         cnt_elec = cnt_elec + 1;
        
+        chs(1,k).scanno       = cnt_elec;
         chs(1,k).logno        = cnt_elec;
         chs(1,k).kind         = FIFF.FIFFV_EEG_CH;
         chs(1,k).coil_type    = NaN;
-        chs(1,k).coil_trans   = [];
         chs(1,k).unit         = FIFF.FIFF_UNIT_V;
         chs(1,k).unit_mul     = log10(ft_scalingfactor(data.elec.chanunit{indx(k)}, 'V')); 
-        chs(1,k).coord_frame  = FIFF.FIFFV_COORD_DEVICE;
         chs(1,k).eeg_loc      = [data.elec.chanpos(indx(k),:)' zeros(3,1)];
         chs(1,k).loc          = [chs(1,k).eeg_loc(:); 0; 1; 0; 0; 0; 1];
         chs(1,k).cal          = 1;
@@ -303,13 +384,12 @@ else
         % OTHER
         cnt_else = cnt_else + 1;
         
+        chs(1,k).scanno       = cnt_else;
         chs(1,k).logno        = cnt_else;
         chs(1,k).kind         = NaN;
         chs(1,k).coil_type    = NaN;
-        chs(1,k).coil_trans   = [];
         chs(1,k).unit         = NaN;
         chs(1,k).unit_mul     = 0;
-        chs(1,k).coord_frame  = NaN;
         chs(1,k).eeg_loc      = [];
         chs(1,k).loc          = zeros(12,1);
         chs(1,k).cal          = 1;

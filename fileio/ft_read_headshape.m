@@ -310,9 +310,11 @@ switch fileformat
     if ~isempty(rest)
       for i = 4:size(fid,1)
         shape.fid.label{i} = ['fiducial' num2str(i)];
-        % in a 5 coil configuration this corresponds with Cz and Inion
+        % in a 5 coil configuration this corresponds with Cz and Inion, or
+        % wherever the researcher has placed the coils
       end
     end
+    shape.coordsys = '4d';
 
   case 'itab_asc'
     shape = read_itab_asc(filename);
