@@ -1331,6 +1331,10 @@ elseif filetype_check_extension(filename, '.mat') && filetype_check_header(filen
   type = 'neuroomega_mat';
   manufacturer = 'Alpha Omega';
   content = 'electrophysiological data';
+elseif filetype_check_extension(filename, '.mat') && filetype_check_header(filename, 'MATLAB') && filetype_check_seg3d_mat(filename)
+  type = 'seg3d_mat';
+  manufacturer = 'Scientific Computing and Imaging Institute, Salt Lake City, Utah';
+  content = 'imaging data';
 elseif filetype_check_extension(filename, '.mat') && filetype_check_header(filename, 'MATLAB')
   type = 'matlab';
   manufacturer = 'MATLAB';
@@ -1607,6 +1611,10 @@ elseif filetype_check_extension(filename, '.msh') && filetype_check_header(filen
   type = 'gmsh_ascii';
   manufacturer = 'gmsh team';
   content = 'geometrical meshes';
+elseif filetype_check_extension(filename, '.vtk') && filetype_check_header(filename, '# vtk') && filetype_check_ascii(filename, inf)
+  type = 'vtk';
+  manufacturer = 'ParaView';
+  content = 'geometrical meshes';
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1695,6 +1703,14 @@ fnames = {
 res = (numel(intersect(fieldnames(var{1}), fnames)) >= 5);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION that checks for a SCIRun/Seg3D mat file
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function res = filetype_check_seg3d_mat(filename)
+% check the content of the *.mat file
+var = whos('-file', filename);
+res = contains('scirunnrrd', {var.name});
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION that checks for a SPM eeg/meg mat file
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function res = filetype_check_spmeeg_mat(filename)
@@ -1771,7 +1787,7 @@ if exist(filename, 'file')
   bin = fread(fid, len, 'uint8=>uint8');
   fclose(fid);
   printable = bin>31 & bin<127;  % the printable characters, represent letters, digits, punctuation marks, and a few miscellaneous symbols
-  special   = bin==10 | bin==13 | bin==11; % line feed, form feed, tab
+  special   = bin==9 | bin==10 | bin==11 | bin==12 | bin==13; % horizontal tab, line feed, vertical tab, form feed, carriage return
   res = all(printable | special);
 else
   % always return true if the file does not (yet) exist, this is important

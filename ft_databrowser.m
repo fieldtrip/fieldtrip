@@ -2044,6 +2044,8 @@ if strcmp(cfg.plotevents, 'yes')
         else
           eventlabel = '';
         end
+      case 'no'
+        eventlabel = '';
       otherwise
         ft_warning('unsupported specification of cfg.ploteventlabels');
         eventlabel = '';

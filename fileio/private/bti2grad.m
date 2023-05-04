@@ -42,7 +42,7 @@ function [grad, elec] = bti2grad(hdr, balanceflag)
 % $Id$
 
 % for backward compatibility issues FIXME check whether anyone actually uses this code
-if isfield(hdr, 'Meg_pos'),
+if isfield(hdr, 'Meg_pos')
   ft_warning('using outdated code. this does not necessarily lead to correct output');
   
   elec      = [];
@@ -57,7 +57,7 @@ if isfield(hdr, 'Meg_pos'),
   grad.label = grad.label(:);
   grad.tra   = eye(size(grad.coilpos,1));
   
-elseif isfield(hdr, 'config'),
+elseif isfield(hdr, 'config')
   % hdr has been derived from read_4d_hdr
   
   % it seems as if there is information about the channels at 2 places of the original header.
@@ -121,7 +121,7 @@ elseif isfield(hdr, 'config'),
     grad.tra(i, cnt+1:cnt+numcoils(n)) = 1;
     % check the orientation of the individual coils in the case of a gradiometer
     % and adjust such that the grad.tra and grad.coilori are consistent
-    if numcoils(n) > 1,
+    if numcoils(n) > 1
       c   = ori*ori';
       s   = c./sqrt(diag(c)*diag(c)');
       ori(2:end, :) = ori(2:end, :) .* repmat(-sign(s(2:end,1)), [1 3]);
@@ -149,7 +149,7 @@ elseif isfield(hdr, 'config'),
     % check ori by determining the cosine of the angle between the orientations, this should be -1
     % check the orientation of the individual coils in the case of a gradiometer
     % and adjust such that the grad.tra and grad.coilori are consistent
-    if numcoils(n) > 1,
+    if numcoils(n) > 1
       c   = ori*ori';
       s   = c./sqrt(diag(c)*diag(c)');
       ori(2:end, :) = ori(2:end, :) .* repmat(-sign(s(2:end,1)), [1 3]);
@@ -176,10 +176,10 @@ elseif isfield(hdr, 'config'),
   end
   ubsel   = strmatch('B_weights_used', ubtype);
   
-  if ~isempty(ubsel),
+  if ~isempty(ubsel)
     % balance gradiometers
     weights  = hdr.user_block_data{ubsel};
-    if hdr.user_block_data{ubsel}.version==1,
+    if hdr.user_block_data{ubsel}.version==1
       % the user_block does not contain labels to the channels and references
       % ft_warning('the weight table does not contain contain labels to the channels and references: assuming the channel order as they occur in the header and the refchannel order M.A M.aA G.A');
       label    = {hdr.config.channel_data(:).name}';
@@ -203,11 +203,11 @@ elseif isfield(hdr, 'config'),
     balance           = struct(weights.position, montage);
     
     % check the version and the input arguments
-    if nargin==1,
+    if nargin==1
       balanceflag = hdr.user_block_data{ubsel}.version~=1;
     end
     
-    if balanceflag,
+    if balanceflag
       fprintf('applying digital weights in the gradiometer balancing matrix\n');
       grad.balance         = balance;
       grad.balance.current = weights.position;
@@ -267,7 +267,7 @@ elseif isfield(hdr, 'config'),
   end
   grad.chantype = type;
   
-elseif isfield(hdr, 'grad'),
+elseif isfield(hdr, 'grad')
   % hdr has been derived in read_bti_m4d and grad is already there
   % this happens for 148 channel data
   grad = hdr.grad;

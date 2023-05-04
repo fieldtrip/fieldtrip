@@ -175,9 +175,10 @@ for i=1:numel(cfg.tissue)
   switch cfg.method
     case 'isosurface'
       [tri, pos] = isosurface(seg);
-      if ~isempty(cfg.numvertices)
+      if ~isempty(cfg.numvertices) && ~isinf(cfg.numvertices(i))
         npos = cfg.numvertices(i);
         ntri = 2*(npos-2);
+        fprintf('reducing the triangulation from %d to approximately %d vertices\n', size(pos,1), npos);
         [tri, pos] = reducepatch(tri, pos, ntri);
       end
       pos = pos(:,[2 1 3]); % Mathworks isosurface indexes differently

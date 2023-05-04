@@ -1385,7 +1385,7 @@ switch eventformat
         % auto-detect the trigger channels
         chanindx = find(ft_chantype(hdr, 'flag'));
       end
-      trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', chanindx, 'detectflank', detectflank, 'denoise', denoise, 'trigshift', trigshift, 'trigpadding', trigpadding, 'threshold', threshold, 'denoise', denoise);
+      trigger = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', chanindx, 'detectflank', detectflank, 'denoise', denoise, 'trigshift', trigshift, 'trigpadding', trigpadding, 'threshold', threshold);
       event   = appendstruct(event, trigger);
     end
     

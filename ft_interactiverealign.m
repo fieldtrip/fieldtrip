@@ -22,7 +22,7 @@ function [cfg] = ft_interactiverealign(cfg)
 %
 % The configuration structure should also contain the geometrical object of a
 % template that serves as target
-%   cfg.template.axes             = string, 'yes' or 'no (default = 'no')
+%   cfg.template.axes             = string, 'yes' or 'no' (default = 'no')
 %   cfg.template.elec             = structure, see FT_READ_SENS
 %   cfg.template.grad             = structure, see FT_READ_SENS
 %   cfg.template.opto             = structure, see FT_READ_SENS

@@ -65,7 +65,7 @@ if (isfield(cfg, 'outputfile') && ~isempty(cfg.outputfile)) || exist('Fief7bee_r
     [Fief7bee_p, Fief7bee_f, Fief7bee_x] = fileparts(cfg.outputfile);
     Fief7bee_outputfile = fullfile(Fief7bee_p, [Fief7bee_f, '.fig']);
     ft_info('writing output figure to file ''%s''\n', Fief7bee_outputfile);
-    savefig(gcf, cfg.outputfile, 'compact')
+    savefig(gcf, Fief7bee_outputfile, 'compact')
     Fief7bee_outputfile = fullfile(Fief7bee_p, [Fief7bee_f, '.png']);
     ft_info('writing screenshot to file ''%s''\n', Fief7bee_outputfile);
     set(gcf, 'PaperOrientation', 'portrait');

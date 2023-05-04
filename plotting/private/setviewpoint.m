@@ -23,6 +23,10 @@ switch viewpoint
     viewpoint = 'superior';
   case 'bottom'
     viewpoint = 'inferior';
+  case 'default'
+    % switch to the default 3D MATLAB view, irrespective of the coordinate system
+    view(ax, [-37.5 30])
+    return
 end
 
 switch lower(coordsys)
@@ -41,7 +45,7 @@ switch lower(coordsys)
       case 'posterior'
         view(ax, [0 -1 0]);
     end % switch viewpoint
-  case {'als' 'ctf' '4d' 'bti' 'eeglab'}
+  case {'als' 'ctf' '4d' 'bti' 'yokogawa' 'eeglab'}
     switch viewpoint
       case 'superior'
         view(ax, [-90 90]); % not exactly the same as [0 0 1], this causes the nose pointing up

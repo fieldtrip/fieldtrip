@@ -40,30 +40,44 @@ needdat = (nargin==5);
 [p, f, x] = fileparts(filename);
 assert(isfile(filename), sprintf('file "%s" not found', filename));
 
-channelsfile  = fullfile(p, 'channels.tsv');
-coordsysfile  = fullfile(p, 'coordsystem.json');
-datafile      = fullfile(p, 'meg.bin');
-headerfile    = fullfile(p, 'meg.json');
-positionsfile = fullfile(p, 'positions.tsv');
-
-precision = 'double';
-switch precision
-  case 'single'
-    samplesize = 4;
-  case 'double'
-    samplesize = 8;
+% Remove the _meg part of the filename
+if endsWith(f, '_meg')
+  f = f(1:end-4);
 end
 
+% Get the BIDS compliant files
+channelsfile  = fullfile(p,[f '_channels.tsv']);
+coordsysfile  = fullfile(p,[f '_coordsystem.json']);
+datafile      = fullfile(p,[f '_meg.bin']);
+headerfile    = fullfile(p,[f '_meg.json']);
+positionsfile = fullfile(p,[f '_positions.tsv']);
 
 if needhdr
   %% read the header
-  
-  fid = fopen(headerfile, 'rt');
-  header = jsondecode(fread(fid, [1 inf], 'char=>char'));
-  fclose(fid);
-  
+  try
+    fid = fopen(headerfile, 'rt');
+    header = jsondecode(fread(fid, [1 inf], 'char=>char'));
+    fclose(fid);
+  catch
+    ft_warning('Cannot open header');
+  end
+
+  % determine the precision from the json header
+  if isfield(header, 'Precision')
+    precision = header.Precision;
+  else
+    precision = 'single';
+  end
+
+  switch precision
+    case 'single'
+      samplesize = 4;
+    case 'double'
+      samplesize = 8;
+  end
+
   channels  = readtable(channelsfile, 'Delimiter', 'tab', 'FileType', 'text');
-  
+
   % this one is optional
   if exist(coordsysfile, 'file')
     fid = fopen(coordsysfile, 'rt');
@@ -72,67 +86,87 @@ if needhdr
   else
     coordsys = [];
   end
-  
+
   % this one is optional
   if exist(positionsfile, 'file')
     positions = readtable(positionsfile, 'Delimiter', 'tab', 'FileType', 'text');
   else
     positions = [];
   end
-  
+
   d = dir(datafile);
-  
+
   hdr.label       = channels.name;
   hdr.nChans      = size(channels, 1);
-  hdr.nSamples    = d.bytes/(size(channels, 1) * samplesize);
+  hdr.nSamples    = (d.bytes/(size(channels, 1) * samplesize))-1;
   hdr.nSamplesPre = 0; % continuous data
   hdr.nTrials     = 1; % continuous data
   hdr.Fs          = header.SamplingFrequency;
   hdr.chantype    = channels.type;
-  hdr.chanunit    = repmat({'unknown'}, size(hdr.label));
-  
+  try
+    hdr.chanunit    = channels.unit;
+  catch
+    hdr.chanunit    = repmat({'unknown'}, size(hdr.label));
+  end
+
   % keep the original header details
   hdr.orig.header     = header;
   hdr.orig.coordsys   = coordsys;
   hdr.orig.positions  = positions;
   hdr.orig.channels   = channels;
-  
+
   if ~isempty(positions)
     % FIXME construct a grad structure
     hdr.grad.label = positions.name;
     hdr.grad.coilpos = [positions.Px positions.Py positions.Pz];
     hdr.grad.coilori = [positions.Ox positions.Oy positions.Oz];
     hdr.grad.type = 'meg';
+    hdr.grad.tra  = diag(ones(1,length(positions.name)));
     if ~isempty(coordsys)
       hdr.grad.unit = coordsys.MEGCoordinateUnits;
       hdr.grad.coordsys = coordsys.MEGCoordinateSystem;
     end
   end
-  
+
   % return the header details
   varargout = {hdr};
-  
+
 elseif needdat
   %% read the data, note that it is big endian
-  
+
+  % determine the precision from the json header
+  % see https://github.com/fieldtrip/fieldtrip/issues/2240
+  if isfield(hdr.orig.header, 'Precision')
+    precision = hdr.orig.header.Precision;
+  else
+    precision = 'single';
+  end
+
+  switch precision
+    case 'single'
+      samplesize = 4;
+    case 'double'
+      samplesize = 8;
+  end
+
   fid = fopen(datafile, 'rb');
   fseek(fid, begsample*samplesize*hdr.nChans, 'bof');
   dat = fread(fid,[hdr.nChans, (endsample-begsample+1)], precision, 0, 'b');
   fclose(fid);
-  
+
   % take the selection of channels
   dat = dat(chanindx,:);
-  
+
   % return the data
   varargout = {dat};
-  
+
 elseif needevt
   %% read the events
-  
+
   % FIXME this does not yet allow the user to override the defaults for ft_read_event, such as detectflank
   event = read_trigger(filename, 'header', hdr, 'dataformat', 'opm_fil', 'chanindx', find(strcmpi(hdr.chantype, 'TRIG')));
-  
+
   % return the events
   varargout = {event};
-  
+
 end

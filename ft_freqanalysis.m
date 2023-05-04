@@ -138,7 +138,7 @@ function [freq] = ft_freqanalysis(cfg, data)
 %
 % SUPERLET performs time-frequency analysis on any time series trial data using the
 % 'superlet method' based on a frequency-wise combination of Morlet wavelets of varying cycle
-% widths (see Moca et al. 2019, https://doi.org/10.1101/583732).
+% widths (see Moca et al. 2021, https://doi.org/10.1038/s41467-020-20539-9).
 %   cfg.foi     = vector 1 x numfoi, frequencies of interest
 %       OR
 %   cfg.foilim  = [begin end], frequency band of interest
@@ -240,7 +240,7 @@ if ft_abort
 end
 
 % check if the input data is valid for this function
-data = ft_checkdata(data, 'datatype', {'raw', 'raw+comp', 'mvar'}, 'feedback', 'yes', 'hassampleinfo', 'yes');
+data = ft_checkdata(data, 'datatype', {'raw+comp', 'raw', 'mvar'}, 'feedback', 'yes', 'hassampleinfo', 'yes');
 
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'forbidden',  {'channels', 'trial'}); % prevent accidental typos, see issue 1729

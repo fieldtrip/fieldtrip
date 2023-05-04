@@ -27,7 +27,8 @@ function hs = ft_plot_headshape(headshape, varargin)
 %   shape = ft_read_headshape(filename);
 %   ft_plot_headshape(shape)
 %
-% See also FT_PLOT_MESH, FT_PLOT_ORTHO
+% See also FT_PLOT_MESH, FT_PLOT_HEADMODEL, FT_PLOT_SENS, FT_PLOT_DIPOLE,
+% FT_PLOT_ORTHO, FT_PLOT_TOPO3D
 
 % Copyright (C) 2009, Cristiano Micheli
 % Copyright (C) 2009-2023, Robert Oostenveld
