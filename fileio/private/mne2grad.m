@@ -86,6 +86,7 @@ elec = [];
 % begin by transforming all channel locations into the desired coordinate system, if possible
 if ~dewar
   if ~isempty(orig.dev_head_t)
+    ft_info('Transforming MEG channels according to the device to head transform from the data');
     orig.chs = fiff_transform_meg_chs(orig.chs,orig.dev_head_t);
     %orig.chs = fiff_transform_eeg_chs(orig.chs,orig.dev_head_t); % EEG channels are normally stored in head coordinates anyway, but what the heck
     if ~isempty(orig.ctf_head_t)

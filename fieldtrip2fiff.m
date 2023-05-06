@@ -155,17 +155,17 @@ if isfield(data, 'grad')
     info.ctf_head_t.to    = 4;
     info.ctf_head_t.trans = T;
   
-    % the neuromag dewar's origin is the center of the posterior bunch of
+    % the neuromag device's origin is the center of the posterior bunch of
     % sensors, that allegedly approximate a sphere, since I don't know how
     % it is for the other devices.
     p      = data.grad.chanpos(ft_chantype(data.grad.label, 'meg'), :);
     [C, R] = fitsphere(p(p(:,2)<0 & p(:,3)>0,:));
     T      = [eye(3) C(:); 0 0 0 1];  
-    data.grad = ft_transform_geometry(T, data.grad);
+    data.grad = ft_transform_geometry(inv(T), data.grad);
     
     info.dev_head_t.from  = 1;
     info.dev_head_t.to    = 4;
-    info.dev_head_t.trans = inv(T);
+    info.dev_head_t.trans = T;
   end
   
   if ~isempty(headshape)
