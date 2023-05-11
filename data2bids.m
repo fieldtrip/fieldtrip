@@ -1417,6 +1417,7 @@ if need_motion_json
     motion_json.ANGACCELChannelCount    = sum(strcmpi(channels_tsv.type, 'ANGACCEL'));
     motion_json.MAGNChannelCount      = sum(strcmpi(channels_tsv.type, 'MAGN'));
     motion_json.JNTANGChannelCount    = sum(strcmpi(channels_tsv.type, 'JNTANG'));
+    motion_json.MISCChannelCount    = sum(strcmpi(channels_tsv.type, 'MISC'));
     if isfield(cfg, 'channels') && any(ismember(channels_tsv.Properties.VariableNames, 'tracked_point'))
         motion_json.TrackedPointsCount  = numel(setdiff(unique(channels_tsv.tracked_point), 'n/a'));
     end
