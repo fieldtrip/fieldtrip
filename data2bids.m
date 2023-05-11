@@ -2602,7 +2602,7 @@ elseif isnumeric(val) && numel(val)>1 && any(isnan(val))
     val = cellfun(@output_compatible, val, 'UniformOutput', false);
 elseif isdatetime(val)
     % see https://bids-specification.readthedocs.io/en/stable/02-common-principles.html#units
-    val = datestr(val, 'yyyy-mm-ddTHH:MM:SS');
+    val = datestr(val, 'yyyy-mm-ddTHH:MM:SS.FFF');
 else
     % write [] as 'n/a'
     % write nan as 'n/a'
