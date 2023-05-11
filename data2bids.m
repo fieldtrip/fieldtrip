@@ -576,9 +576,6 @@ cfg.motion.ManufacturersModelName         = ft_getopt(cfg.motion, 'Manufacturers
 cfg.motion.SamplingFrequency              = ft_getopt(cfg.motion, 'SamplingFrequency'         );
 cfg.motion.SamplingFrequencyEffective     = ft_getopt(cfg.motion, 'SamplingFrequencyEffective');
 cfg.motion.RecordingDuration              = ft_getopt(cfg.motion, 'RecordingDuration'         );
-cfg.motion.SpatialAxes                    = ft_getopt(cfg.motion, 'SpatialAxes'               );
-cfg.motion.RotationRule                   = ft_getopt(cfg.motion, 'RotationRule'              );
-cfg.motion.RotationOrder                  = ft_getopt(cfg.motion, 'RotationOrder'             );
 
 %% information for the coordsystem.json file for MEG, EEG, iEEG, and motion
 cfg.coordsystem.MEGCoordinateSystem                             = ft_getopt(cfg.coordsystem, 'MEGCoordinateSystem'                            ); % REQUIRED. Defines the coordinate system for the MEG sensors. See Appendix VIII: preferred names of Coordinate systems. If "Other", provide definition of the coordinate system in [MEGCoordinateSystemDescription].
