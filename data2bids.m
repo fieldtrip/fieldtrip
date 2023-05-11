@@ -1292,7 +1292,7 @@ if need_emg_json
     emg_json.EOGChannelCount            = sum(strcmpi(channels_tsv.type, 'eog'));
     emg_json.ECGChannelCount            = sum(strcmpi(channels_tsv.type, 'ecg'));
     emg_json.EMGChannelCount            = sum(strcmpi(channels_tsv.type, 'emg'));
-    emg_json.TriggerChannelCount        = sum(stcmpi(channels_tsv.type, 'trigger') | strcmpi(channels_tsv.type, 'trig'))
+    emg_json.TriggerChannelCount        = sum(strcmpi(channels_tsv.type, 'trigger') | strcmpi(channels_tsv.type, 'trig'))
     emg_json.MiscChannelCount           = sum(strcmpi(channels_tsv.type, 'misc') | strcmpi(channels_tsv.type, 'unknown'));
     emg_json.RecordingDuration          = (hdr.nTrials*hdr.nSamples)/hdr.Fs;
     if hdr.nTrials>1
