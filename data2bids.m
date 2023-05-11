@@ -1411,7 +1411,7 @@ if need_motion_json
     motion_json.POSChannelCount       = sum(strcmpi(channels_tsv.type, 'POS'));
     motion_json.ORNTChannelCount      = sum(strcmpi(channels_tsv.type, 'ORNT'));
     motion_json.VELChannelCount       = sum(strcmpi(channels_tsv.type, 'VEL'));
-    motion_json.ANGVELChannelCount    = sum(strcmpi(channels_tsv.type, 'ANGVEL'));
+    motion_json.GYROChannelCount      = sum(strcmpi(channels_tsv.type, 'GYRO'));
     motion_json.ACCELChannelCount       = sum(strcmpi(channels_tsv.type, 'ACCEL'));
     motion_json.ANGACCELChannelCount    = sum(strcmpi(channels_tsv.type, 'ANGACCEL'));
     motion_json.MAGNChannelCount      = sum(strcmpi(channels_tsv.type, 'MAGN'));
