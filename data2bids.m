@@ -1045,7 +1045,7 @@ elseif need_eyetracker_json
     cfg.dataset_description.BIDSVersion = 'n/a';
 elseif need_motion_json
     ft_warning('motion data is not yet part of the official BIDS specification');
-    cfg.dataset_description.BIDSVersion = 'n/a';
+    cfg.dataset_description.BIDSVersion = '1.9';
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
