@@ -1398,7 +1398,20 @@ if need_channels_tsv
 
   end % if need_motion_json
 
-
+ % remove xxxChannelCount in case it has a count of zero
+  if need_meg_json
+    meg_json = remove_zerochannelcount(meg_json);
+  elseif need_eeg_json
+    eeg_json = remove_zerochannelcount(eeg_json);
+  elseif need_ieeg_json
+    ieeg_json = remove_zerochannelcount(ieeg_json);
+  elseif need_emg_json
+    emg_json = remove_zerochannelcount(emg_json);
+  elseif need_nirs_json
+    nirs_json = remove_zerochannelcount(nirs_json);
+  elseif need_motion_json
+    motion_json = remove_zerochannelcount(motion_json);
+  end
 
   %% do a sanity check for those data types that have channel counts
   if need_meg_json
@@ -2604,3 +2617,15 @@ for i=1:numel(fn)
   end
 end
 t = struct2table(s);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function type_json = remove_zerochannelcount(type_json)
+fn = fieldnames(type_json);
+for i=1:numel(fn)
+  if endsWith(fn{i}, 'Count') && type_json.(fn{i})==0
+    % remove xxxChannelCount in case it has a count of zero
+    type_json = rmfield(type_json, fn{i});
+  end
+end
