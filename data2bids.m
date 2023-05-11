@@ -640,6 +640,7 @@ cfg.channels.sampling_frequency         = ft_getopt(cfg.channels, 'sampling_freq
 cfg.channels.component                  = ft_getopt(cfg.channels, 'component'                   , nan);
 cfg.channels.tracked_point              = ft_getopt(cfg.channels, 'tracked_point'               , nan);
 cfg.channels.placement                  = ft_getopt(cfg.channels, 'placement'                   , nan);
+cfg.channels.reference_frame            = ft_getopt(cfg.channels, 'reference_frame'             , nan);
 
 %% columns in the electrodes.tsv
 cfg.electrodes.name             = ft_getopt(cfg.electrodes, 'name'             , nan);  % REQUIRED. Name of the electrode
