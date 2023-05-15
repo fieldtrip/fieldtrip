@@ -1232,7 +1232,7 @@ if need_channels_tsv
     eeg_json.EOGChannelCount            = sum(strcmpi(channels_tsv.type, 'eog'));
     eeg_json.ECGChannelCount            = sum(strcmpi(channels_tsv.type, 'ecg'));
     eeg_json.EMGChannelCount            = sum(strcmpi(channels_tsv.type, 'emg'));
-    eeg_json.TriggerChannelCount        = sum(stcmpi(channels_tsv.type, 'trigger') | strcmpi(channels_tsv.type, 'trig'));
+    eeg_json.TriggerChannelCount        = sum(strcmpi(channels_tsv.type, 'trigger') | strcmpi(channels_tsv.type, 'trig'));
     eeg_json.MiscChannelCount           = sum(strcmpi(channels_tsv.type, 'misc') | strcmpi(channels_tsv.type, 'unknown'));
     eeg_json.RecordingDuration          = (hdr.nTrials*hdr.nSamples)/hdr.Fs;
     if hdr.nTrials>1
