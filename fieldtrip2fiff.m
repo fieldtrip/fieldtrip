@@ -145,27 +145,33 @@ if isfield(data, 'grad')
   if ~isfield(data.grad, 'coordsys')
     data.grad = ft_determine_coordsys(data.grad);
   end
-  if isequal(coordsys, 'neuromag') || ~isequal(data.grad.coordsys, 'neuromag')
+  if isequal(coordsys, 'neuromag') && ~isequal(data.grad.coordsys, 'neuromag')
+    
     origcoordsys = data.grad.coordsys;
-    ft_info('Converting the gradiometer description into approximate neuromag coordinates. This optimizes the odds that the data can be seamlessly used in MNE-python.');
-    T         = ft_affinecoordinates(data.grad.coordsys, 'neuromag');
-    data.grad = ft_convert_coordsys(data.grad, 'neuromag');
-    
-    info.ctf_head_t.from  = FIFF.FIFFV_MNE_COORD_CTF_HEAD;
-    info.ctf_head_t.to    = 4;
-    info.ctf_head_t.trans = T;
-  
-    % the neuromag device's origin is the center of the posterior bunch of
-    % sensors, that allegedly approximate a sphere, since I don't know how
-    % it is for the other devices.
-    p      = data.grad.chanpos(ft_chantype(data.grad.label, 'meg'), :);
-    [C, R] = fitsphere(p(p(:,2)<0 & p(:,3)>0,:));
-    T      = [eye(3) C(:); 0 0 0 1];  
-    data.grad = ft_transform_geometry(inv(T), data.grad);
-    
-    info.dev_head_t.from  = 1;
-    info.dev_head_t.to    = 4;
-    info.dev_head_t.trans = T;
+    try
+      T         = ft_affinecoordinates(data.grad.coordsys, 'neuromag');
+      data.grad = ft_convert_coordsys(data.grad, 'neuromag');
+
+      ft_info('Converting the gradiometer description into approximate neuromag coordinates.\nThis optimizes the odds that the data can be seamlessly used in MNE-python.');
+
+      info.ctf_head_t.from  = FIFF.FIFFV_MNE_COORD_CTF_HEAD;
+      info.ctf_head_t.to    = 4;
+      info.ctf_head_t.trans = T;
+
+      % the neuromag device's origin is the center of the posterior bunch of
+      % sensors, that allegedly approximate a sphere, since I don't know how
+      % it is for the other devices.
+      p      = data.grad.chanpos(ft_chantype(data.grad.label, 'meg'), :);
+      [C, R] = fitsphere(p(p(:,2)<0 & p(:,3)>0,:));
+      T      = [eye(3) C(:); 0 0 0 1];
+      data.grad = ft_transform_geometry(inv(T), data.grad);
+
+      info.dev_head_t.from  = 1;
+      info.dev_head_t.to    = 4;
+      info.dev_head_t.trans = T;
+    catch
+      ft_warning('Conversion of the gradiometer description into approximate neuromag coordinates failed.\nUsing the stored channel coordinates in MNE-python might not work well.');
+    end
   end
   
   if ~isempty(headshape)

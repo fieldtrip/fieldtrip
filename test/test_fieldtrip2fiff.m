@@ -169,6 +169,21 @@ for k = 1:numel(fname)
   data = ft_preprocessing(cfg);
   data.grad = ft_convert_units(data.grad, 'm');
   
+  if ~isfield(data.grad, 'coordsys')
+    % this is needed to avoid interactivity later on
+    if k==1
+      data.grad.coordsys = '4d';
+    elseif k<=3
+      data.grad.coordsys = 'dewar'; % if hdr.orig.config.Xfm is I-like, no headcoil info, thus dewar coordinates
+    elseif k<=4
+      data.grad.coordsys = '4d'; 
+    elseif k<=7
+      data.grad.coordsys = 'ctf';
+    else
+      data.grad.coordsys = 'neuromag';
+    end
+  end
+
   savename{k,1} = fullfile(savedir, sprintf('file%03d.fif',k));
   fieldtrip2fiff(savename{k}, data);
   save(strrep(savename{k},'fif','mat'),'data');
@@ -209,6 +224,16 @@ for k = 1:numel(savename)
     % compare the grads
     grad    = data.grad;
     gradfif = datafif.grad;
+
+    if k<=4
+      % undo the Supine balancing (if present) -> this is not yet represented
+      % in the fif files
+      pwdir = pwd;
+      [ftver, ftdir] = ft_version;
+      cd(fullfile(ftdir, 'fileio', 'private'))
+      grad = undobalancing(grad);
+      cd(pwdir);
+    end
 
     % the order of the channels might have been changed, as well as the
     % coils, as well as the polarity of the ori.
@@ -251,7 +276,7 @@ for k = 1:numel(savename)
       grad.tra = abs(grad.tra);
       grad.coilori(sel,:) = -grad.coilori(sel,:);
     end
-
+    
     assert(all(sum(grad.coilori.*gradfif.coilori,2)>0.999), 'coil orientation different');
     assert(all(sqrt(sum((grad.coilpos-gradfif.coilpos).^2,2))<1e-3), 'coil position different');
   end
