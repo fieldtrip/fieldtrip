@@ -1118,6 +1118,7 @@ coordsystem_settings = keepfields(cfg.coordsystem, fn);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% construct the content for the json and tsv files
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 %% need_channels_tsv
 if need_channels_tsv
 
@@ -1175,230 +1176,232 @@ if need_channels_tsv
   % channel types in BIDS must be in upper case
   channels_tsv.type = upper(channels_tsv.type);
 
-  %% need_mri_json
-  if need_mri_json
-    % start with the information from the DICOM header
-    mri_json = keepfields(dcm, [fieldnames(mri_settings); fieldnames(generic_settings)]);
-    % merge the information specified by the user with that from the data
-    % in case fields appear in both, the first input overrules the second
-    mri_json = mergestruct(mri_settings,     mri_json, false);
-    mri_json = mergestruct(generic_settings, mri_json, false);
-  end % if need_mri_json
+end % if need_channels_tsv
 
-  %% need_meg_json
-  if need_meg_json
-    meg_json.SamplingFrequency          = hdr.Fs;
-    meg_json.MEGChannelCount            = sum(strcmpi(channels_tsv.type, 'megmag') | strcmpi(channels_tsv.type, 'meggrad') | strcmpi(channels_tsv.type, 'megplanar') | strcmpi(channels_tsv.type, 'megaxial'));
-    meg_json.MEGREFChannelCount         = sum(strcmpi(channels_tsv.type, 'refmag') | strcmpi(channels_tsv.type, 'refgrad') | strcmpi(channels_tsv.type, 'refplanar') | strcmpi(channels_tsv.type, 'ref'));
-    meg_json.EEGChannelCount            = sum(strcmpi(channels_tsv.type, 'eeg'));
-    meg_json.ECOGChannelCount           = sum(strcmpi(channels_tsv.type, 'ecog'));
-    meg_json.SEEGChannelCount           = sum(strcmpi(channels_tsv.type, 'seeg') | strcmpi(channels_tsv.type, 'dbs'));
-    meg_json.EOGChannelCount            = sum(strcmpi(channels_tsv.type, 'eog'));
-    meg_json.ECGChannelCount            = sum(strcmpi(channels_tsv.type, 'ecg'));
-    meg_json.EMGChannelCount            = sum(strcmpi(channels_tsv.type, 'emg'));
-    meg_json.MiscChannelCount           = sum(strcmpi(channels_tsv.type, 'misc') | strcmpi(channels_tsv.type, 'unknown'));
-    meg_json.TriggerChannelCount        = sum(contains(lower(channels_tsv.type), 'trigger') | strcmpi(channels_tsv.type, 'trig'));
-    meg_json.RecordingDuration          = (hdr.nTrials*hdr.nSamples)/hdr.Fs;
+%% need_mri_json
+if need_mri_json
+  % start with the information from the DICOM header
+  mri_json = keepfields(dcm, [fieldnames(mri_settings); fieldnames(generic_settings)]);
+  % merge the information specified by the user with that from the data
+  % in case fields appear in both, the first input overrules the second
+  mri_json = mergestruct(mri_settings,     mri_json, false);
+  mri_json = mergestruct(generic_settings, mri_json, false);
+end % if need_mri_json
 
-    if hdr.nTrials>1
-      meg_json.EpochLength              = hdr.nSamples/hdr.Fs;
-    end
-    if ft_senstype(hdr.grad, 'ctf151')
-      meg_json.ContinuousHeadLocalization = any(strcmpi(hdr.chantype, 'headloc')); % CTF specific
-      meg_json.Manufacturer             = 'CTF';
-      meg_json.ManufacturersModelName   = 'CTF-151';
-    elseif ft_senstype(hdr.grad, 'ctf275')
-      meg_json.ContinuousHeadLocalization = any(strcmpi(hdr.chantype, 'headloc')); % CTF specific
-      meg_json.Manufacturer             = 'CTF';
-      meg_json.ManufacturersModelName   = 'CTF-275';
-    elseif ft_senstype(hdr.grad, 'neuromag122')
-      meg_json.Manufacturer             = 'Neuromag/Elekta/Megin';
-      meg_json.ManufacturersModelName   = 'Neuromag-122';
-    elseif ft_senstype(hdr.grad, 'neuromag306')
-      meg_json.Manufacturer             = 'Neuromag/Elekta/Megin';
-      % the ManufacturersModelName could be either Vectorview or Triux
-    end
+%% need_meg_json
+if need_meg_json
+  meg_json.SamplingFrequency          = hdr.Fs;
+  meg_json.MEGChannelCount            = sum(strcmpi(channels_tsv.type, 'megmag') | strcmpi(channels_tsv.type, 'meggrad') | strcmpi(channels_tsv.type, 'megplanar') | strcmpi(channels_tsv.type, 'megaxial'));
+  meg_json.MEGREFChannelCount         = sum(strcmpi(channels_tsv.type, 'refmag') | strcmpi(channels_tsv.type, 'refgrad') | strcmpi(channels_tsv.type, 'refplanar') | strcmpi(channels_tsv.type, 'ref'));
+  meg_json.EEGChannelCount            = sum(strcmpi(channels_tsv.type, 'eeg'));
+  meg_json.ECOGChannelCount           = sum(strcmpi(channels_tsv.type, 'ecog'));
+  meg_json.SEEGChannelCount           = sum(strcmpi(channels_tsv.type, 'seeg') | strcmpi(channels_tsv.type, 'dbs'));
+  meg_json.EOGChannelCount            = sum(strcmpi(channels_tsv.type, 'eog'));
+  meg_json.ECGChannelCount            = sum(strcmpi(channels_tsv.type, 'ecg'));
+  meg_json.EMGChannelCount            = sum(strcmpi(channels_tsv.type, 'emg'));
+  meg_json.MiscChannelCount           = sum(strcmpi(channels_tsv.type, 'misc') | strcmpi(channels_tsv.type, 'unknown'));
+  meg_json.TriggerChannelCount        = sum(contains(lower(channels_tsv.type), 'trigger') | strcmpi(channels_tsv.type, 'trig'));
+  meg_json.RecordingDuration          = (hdr.nTrials*hdr.nSamples)/hdr.Fs;
 
-    % merge the information specified by the user with that from the data
-    % in case fields appear in both, the first input overrules the second
-    meg_json = mergestruct(meg_settings,     meg_json, false);
-    meg_json = mergestruct(generic_settings, meg_json, false);
-  end % if need_meg_json
-
-  %% need_eeg_json
-  if need_eeg_json
-    eeg_json.SamplingFrequency          = hdr.Fs;
-    eeg_json.EEGChannelCount            = sum(strcmpi(channels_tsv.type, 'eeg'));
-    eeg_json.EOGChannelCount            = sum(strcmpi(channels_tsv.type, 'eog'));
-    eeg_json.ECGChannelCount            = sum(strcmpi(channels_tsv.type, 'ecg'));
-    eeg_json.EMGChannelCount            = sum(strcmpi(channels_tsv.type, 'emg'));
-    eeg_json.TriggerChannelCount        = sum(strcmpi(channels_tsv.type, 'trigger') | strcmpi(channels_tsv.type, 'trig'));
-    eeg_json.MiscChannelCount           = sum(strcmpi(channels_tsv.type, 'misc') | strcmpi(channels_tsv.type, 'unknown'));
-    eeg_json.RecordingDuration          = (hdr.nTrials*hdr.nSamples)/hdr.Fs;
-    if hdr.nTrials>1
-      eeg_json.EpochLength              = hdr.nSamples/hdr.Fs;
-    end
-
-    % merge the information specified by the user with that from the data
-    % in case fields appear in both, the first input overrules the second
-    eeg_json = mergestruct(eeg_settings,     eeg_json, false);
-    eeg_json = mergestruct(generic_settings, eeg_json, false);
-  end % if need_eeg_json
-
-  %% need_ieeg_json
-  if need_ieeg_json
-    ieeg_json.SamplingFrequency          = hdr.Fs;
-    ieeg_json.ECOGChannelCount           = sum(strcmpi(channels_tsv.type, 'ecog'));
-    ieeg_json.SEEGChannelCount           = sum(strcmpi(channels_tsv.type, 'seeg') | strcmpi(channels_tsv.type, 'dbs'));
-    ieeg_json.EEGChannelCount            = sum(strcmpi(channels_tsv.type, 'eeg'));
-    ieeg_json.EOGChannelCount            = sum(strcmpi(channels_tsv.type, 'eog'));
-    ieeg_json.ECGChannelCount            = sum(strcmpi(channels_tsv.type, 'ecg'));
-    ieeg_json.EMGChannelCount            = sum(strcmpi(channels_tsv.type, 'emg'));
-    ieeg_json.TriggerChannelCount        = sum(stcmpi(channels_tsv.type, 'trigger') | strcmpi(channels_tsv.type, 'trig'));
-    ieeg_json.MiscChannelCount           = sum(strcmpi(channels_tsv.type, 'misc') | strcmpi(channels_tsv.type, 'unknown'));
-    ieeg_json.RecordingDuration          = (hdr.nTrials*hdr.nSamples)/hdr.Fs;
-    if hdr.nTrials>1
-      ieeg_json.EpochLength              = hdr.nSamples/hdr.Fs;
-    end
-
-    % merge the information specified by the user with that from the data
-    % in case fields appear in both, the first input overrules the second
-    ieeg_json = mergestruct(ieeg_settings,    ieeg_json, false);
-    ieeg_json = mergestruct(generic_settings, ieeg_json, false);
+  if hdr.nTrials>1
+    meg_json.EpochLength              = hdr.nSamples/hdr.Fs;
+  end
+  if ft_senstype(hdr.grad, 'ctf151')
+    meg_json.ContinuousHeadLocalization = any(strcmpi(hdr.chantype, 'headloc')); % CTF specific
+    meg_json.Manufacturer             = 'CTF';
+    meg_json.ManufacturersModelName   = 'CTF-151';
+  elseif ft_senstype(hdr.grad, 'ctf275')
+    meg_json.ContinuousHeadLocalization = any(strcmpi(hdr.chantype, 'headloc')); % CTF specific
+    meg_json.Manufacturer             = 'CTF';
+    meg_json.ManufacturersModelName   = 'CTF-275';
+  elseif ft_senstype(hdr.grad, 'neuromag122')
+    meg_json.Manufacturer             = 'Neuromag/Elekta/Megin';
+    meg_json.ManufacturersModelName   = 'Neuromag-122';
+  elseif ft_senstype(hdr.grad, 'neuromag306')
+    meg_json.Manufacturer             = 'Neuromag/Elekta/Megin';
+    % the ManufacturersModelName could be either Vectorview or Triux
   end
 
-  %% need_emg_json
-  if need_emg_json
-    emg_json.SamplingFrequency          = hdr.Fs;
-    emg_json.EOGChannelCount            = sum(strcmpi(channels_tsv.type, 'eog'));
-    emg_json.ECGChannelCount            = sum(strcmpi(channels_tsv.type, 'ecg'));
-    emg_json.EMGChannelCount            = sum(strcmpi(channels_tsv.type, 'emg'));
-    emg_json.TriggerChannelCount        = sum(strcmpi(channels_tsv.type, 'trigger') | strcmpi(channels_tsv.type, 'trig'));
-    emg_json.MiscChannelCount           = sum(strcmpi(channels_tsv.type, 'misc') | strcmpi(channels_tsv.type, 'unknown'));
-    emg_json.RecordingDuration          = (hdr.nTrials*hdr.nSamples)/hdr.Fs;
-    if hdr.nTrials>1
-      emg_json.EpochLength              = hdr.nSamples/hdr.Fs;
-    end
+  % merge the information specified by the user with that from the data
+  % in case fields appear in both, the first input overrules the second
+  meg_json = mergestruct(meg_settings,     meg_json, false);
+  meg_json = mergestruct(generic_settings, meg_json, false);
+end % if need_meg_json
 
-    % merge the information specified by the user with that from the data
-    % in case fields appear in both, the first input overrules the second
-    emg_json = mergestruct(emg_settings,     emg_json, false);
-    emg_json = mergestruct(generic_settings, emg_json, false);
+%% need_eeg_json
+if need_eeg_json
+  eeg_json.SamplingFrequency          = hdr.Fs;
+  eeg_json.EEGChannelCount            = sum(strcmpi(channels_tsv.type, 'eeg'));
+  eeg_json.EOGChannelCount            = sum(strcmpi(channels_tsv.type, 'eog'));
+  eeg_json.ECGChannelCount            = sum(strcmpi(channels_tsv.type, 'ecg'));
+  eeg_json.EMGChannelCount            = sum(strcmpi(channels_tsv.type, 'emg'));
+  eeg_json.TriggerChannelCount        = sum(strcmpi(channels_tsv.type, 'trigger') | strcmpi(channels_tsv.type, 'trig'));
+  eeg_json.MiscChannelCount           = sum(strcmpi(channels_tsv.type, 'misc') | strcmpi(channels_tsv.type, 'unknown'));
+  eeg_json.RecordingDuration          = (hdr.nTrials*hdr.nSamples)/hdr.Fs;
+  if hdr.nTrials>1
+    eeg_json.EpochLength              = hdr.nSamples/hdr.Fs;
   end
 
-  %% need_nirs_json
-  if need_nirs_json
-    nirs_json.SamplingFrequency         = hdr.Fs;
-    nirs_json.RecordingDuration         = (hdr.nTrials*hdr.nSamples)/hdr.Fs;
-    if hdr.nTrials>1
-      nirs_json.EpochLength             = hdr.nSamples/hdr.Fs;
-    end
-    nirs_json.NIRSChannelCount          = sum(contains(lower(channels_tsv.type), 'nirs'));
-    nirs_json.ACCELChannelCount         = sum(strcmpi(channels_tsv.type, 'accel'));
-    nirs_json.GYROChannelCount          = sum(strcmpi(channels_tsv.type, 'gyro'));
-    nirs_json.MAGNChannelCount          = sum(strcmpi(channels_tsv.type, 'magn'));
-    nirs_json.MISCChannelCount          = sum(strcmpi(channels_tsv.type, 'misc') | strcmpi(channels_tsv.type, 'unknown') | strcmpi(channels_tsv.type, 'aux'));
-    [opto_labels, opto_idx]             = unique(hdr.opto.optolabel); % select unique optodes
-    nirs_json.NIRSSourceOptodeCount     = sum(strcmpi(hdr.opto.optotype(opto_idx), 'transmitter'));
-    nirs_json.NIRSDetectorOptodeCount   = sum (strcmpi(hdr.opto.optotype(opto_idx), 'receiver'));
+  % merge the information specified by the user with that from the data
+  % in case fields appear in both, the first input overrules the second
+  eeg_json = mergestruct(eeg_settings,     eeg_json, false);
+  eeg_json = mergestruct(generic_settings, eeg_json, false);
+end % if need_eeg_json
 
-    % merge the information specified by the user with that from the data
-    % in case fields appear in both, the first input overrules the second
-    nirs_json = mergestruct(nirs_settings,    nirs_json, false);
-    nirs_json = mergestruct(generic_settings, nirs_json, false);
+%% need_ieeg_json
+if need_ieeg_json
+  ieeg_json.SamplingFrequency          = hdr.Fs;
+  ieeg_json.ECOGChannelCount           = sum(strcmpi(channels_tsv.type, 'ecog'));
+  ieeg_json.SEEGChannelCount           = sum(strcmpi(channels_tsv.type, 'seeg') | strcmpi(channels_tsv.type, 'dbs'));
+  ieeg_json.EEGChannelCount            = sum(strcmpi(channels_tsv.type, 'eeg'));
+  ieeg_json.EOGChannelCount            = sum(strcmpi(channels_tsv.type, 'eog'));
+  ieeg_json.ECGChannelCount            = sum(strcmpi(channels_tsv.type, 'ecg'));
+  ieeg_json.EMGChannelCount            = sum(strcmpi(channels_tsv.type, 'emg'));
+  ieeg_json.TriggerChannelCount        = sum(strcmpi(channels_tsv.type, 'trigger') | strcmpi(channels_tsv.type, 'trig'));
+  ieeg_json.MiscChannelCount           = sum(strcmpi(channels_tsv.type, 'misc') | strcmpi(channels_tsv.type, 'unknown'));
+  ieeg_json.RecordingDuration          = (hdr.nTrials*hdr.nSamples)/hdr.Fs;
+  if hdr.nTrials>1
+    ieeg_json.EpochLength              = hdr.nSamples/hdr.Fs;
   end
 
-  %% need_audio_json
-  if need_audio_json
-    audio_json.SampleRate         = audio.SampleRate;
-    audio_json.RecordingDuration  = audio.Duration; % please note that this is not consistent with VideoDuration/AudioDuration for a video file, but it is consistent with MEG/EEG/iEEG
-    audio_json.ChannelCount       = audio.NumChannels;
+  % merge the information specified by the user with that from the data
+  % in case fields appear in both, the first input overrules the second
+  ieeg_json = mergestruct(ieeg_settings,    ieeg_json, false);
+  ieeg_json = mergestruct(generic_settings, ieeg_json, false);
+end
 
-    % merge the information specified by the user with that from the data
-    % in case fields appear in both, the first input overrules the second
-    audio_json = mergestruct(audio_settings,   audio_json, false);
-    audio_json = mergestruct(generic_settings, audio_json, false);
+%% need_emg_json
+if need_emg_json
+  emg_json.SamplingFrequency          = hdr.Fs;
+  emg_json.EOGChannelCount            = sum(strcmpi(channels_tsv.type, 'eog'));
+  emg_json.ECGChannelCount            = sum(strcmpi(channels_tsv.type, 'ecg'));
+  emg_json.EMGChannelCount            = sum(strcmpi(channels_tsv.type, 'emg'));
+  emg_json.TriggerChannelCount        = sum(strcmpi(channels_tsv.type, 'trigger') | strcmpi(channels_tsv.type, 'trig'));
+  emg_json.MiscChannelCount           = sum(strcmpi(channels_tsv.type, 'misc') | strcmpi(channels_tsv.type, 'unknown'));
+  emg_json.RecordingDuration          = (hdr.nTrials*hdr.nSamples)/hdr.Fs;
+  if hdr.nTrials>1
+    emg_json.EpochLength              = hdr.nSamples/hdr.Fs;
   end
 
-  %% need_video_json
-  if need_video_json
-    video_json.FrameRate          = video.FrameRate;
-    video_json.Width              = video.Width;
-    video_json.Height             = video.Height;
-    video_json.VideoDuration      = video.Duration; % to distinguish it from the audio duration
-    video_json.AudioDuration      = audio.Duration; % to distinguish it from the video duration
-    video_json.AudioSampleRate    = audio.SampleRate;
-    video_json.AudioChannelCount  = audio.NumChannels;
+  % merge the information specified by the user with that from the data
+  % in case fields appear in both, the first input overrules the second
+  emg_json = mergestruct(emg_settings,     emg_json, false);
+  emg_json = mergestruct(generic_settings, emg_json, false);
+end
 
-    % merge the information specified by the user with that from the data
-    % in case fields appear in both, the first input overrules the second
-    video_json = mergestruct(video_settings,   video_json, false);
-    video_json = mergestruct(generic_settings, video_json, false);
+%% need_nirs_json
+if need_nirs_json
+  nirs_json.SamplingFrequency         = hdr.Fs;
+  nirs_json.RecordingDuration         = (hdr.nTrials*hdr.nSamples)/hdr.Fs;
+  if hdr.nTrials>1
+    nirs_json.EpochLength             = hdr.nSamples/hdr.Fs;
+  end
+  nirs_json.NIRSChannelCount          = sum(contains(lower(channels_tsv.type), 'nirs'));
+  nirs_json.ACCELChannelCount         = sum(strcmpi(channels_tsv.type, 'accel'));
+  nirs_json.GYROChannelCount          = sum(strcmpi(channels_tsv.type, 'gyro'));
+  nirs_json.MAGNChannelCount          = sum(strcmpi(channels_tsv.type, 'magn'));
+  nirs_json.MISCChannelCount          = sum(strcmpi(channels_tsv.type, 'misc') | strcmpi(channels_tsv.type, 'unknown') | strcmpi(channels_tsv.type, 'aux'));
+  [opto_labels, opto_idx]             = unique(hdr.opto.optolabel); % select unique optodes
+  nirs_json.NIRSSourceOptodeCount     = sum(strcmpi(hdr.opto.optotype(opto_idx), 'transmitter'));
+  nirs_json.NIRSDetectorOptodeCount   = sum (strcmpi(hdr.opto.optotype(opto_idx), 'receiver'));
+
+  % merge the information specified by the user with that from the data
+  % in case fields appear in both, the first input overrules the second
+  nirs_json = mergestruct(nirs_settings,    nirs_json, false);
+  nirs_json = mergestruct(generic_settings, nirs_json, false);
+end
+
+%% need_audio_json
+if need_audio_json
+  audio_json.SampleRate         = audio.SampleRate;
+  audio_json.RecordingDuration  = audio.Duration; % please note that this is not consistent with VideoDuration/AudioDuration for a video file, but it is consistent with MEG/EEG/iEEG
+  audio_json.ChannelCount       = audio.NumChannels;
+
+  % merge the information specified by the user with that from the data
+  % in case fields appear in both, the first input overrules the second
+  audio_json = mergestruct(audio_settings,   audio_json, false);
+  audio_json = mergestruct(generic_settings, audio_json, false);
+end
+
+%% need_video_json
+if need_video_json
+  video_json.FrameRate          = video.FrameRate;
+  video_json.Width              = video.Width;
+  video_json.Height             = video.Height;
+  video_json.VideoDuration      = video.Duration; % to distinguish it from the audio duration
+  video_json.AudioDuration      = audio.Duration; % to distinguish it from the video duration
+  video_json.AudioSampleRate    = audio.SampleRate;
+  video_json.AudioChannelCount  = audio.NumChannels;
+
+  % merge the information specified by the user with that from the data
+  % in case fields appear in both, the first input overrules the second
+  video_json = mergestruct(video_settings,   video_json, false);
+  video_json = mergestruct(generic_settings, video_json, false);
+end
+
+%% need_physio_json
+if need_physio_json
+  physio_json.SamplingFrequency = hdr.Fs;
+  physio_json.StartTime = nan;
+  physio_json.Columns = hdr.label;
+
+  % merge the information specified by the user with that from the data
+  % in case fields appear in both, the first input overrules the second
+  physio_json = mergestruct(physio_settings,  physio_json, false);
+  physio_json = mergestruct(generic_settings, physio_json, false);
+end
+
+%% need_stim_json
+if need_stim_json
+  stim_json.SamplingFrequency = hdr.Fs;
+  stim_json.StartTime = nan;
+  stim_json.Columns = hdr.label;
+
+  % merge the information specified by the user with that from the data
+  % in case fields appear in both, the first input overrules the second
+  stim_json = mergestruct(stim_settings,    stim_json, false);
+  stim_json = mergestruct(generic_settings, stim_json, false);
+end
+
+%% need_eyetracker_json
+if need_eyetracker_json
+  eyetracker_json.SamplingFrequency = hdr.Fs;
+  eyetracker_json.StartTime = nan;
+  eyetracker_json.Columns = hdr.label;
+
+  % merge the information specified by the user with that from the data
+  % in case fields appear in both, the first input overrules the second
+  eyetracker_json = mergestruct(eyetracker_settings,  eyetracker_json, false);
+  eyetracker_json = mergestruct(generic_settings,     eyetracker_json, false);
+end
+
+%% need_motion_json
+if need_motion_json
+  motion_json.SamplingFrequency     = hdr.Fs;
+  motion_json.StartTime             = nan;
+  motion_json.MotionChannelCount    = hdr.nChans;
+  motion_json.RecordingDuration     = (hdr.nSamples*hdr.nTrials)/hdr.Fs;
+  motion_json.SamplingFrequencyEffective = size(dat,2)/motion_json.RecordingDuration;
+  motion_json.POSChannelCount       = sum(strcmpi(channels_tsv.type, 'POS'));
+  motion_json.ORNTChannelCount      = sum(strcmpi(channels_tsv.type, 'ORNT'));
+  motion_json.VELChannelCount       = sum(strcmpi(channels_tsv.type, 'VEL'));
+  motion_json.ANGVELChannelCount    = sum(strcmpi(channels_tsv.type, 'ANGVEL'));
+  motion_json.ACCELChannelCount     = sum(strcmpi(channels_tsv.type, 'ACCEL'));
+  motion_json.ANGACCChannelCount    = sum(strcmpi(channels_tsv.type, 'ANGACC'));
+  motion_json.MAGNChannelCount      = sum(strcmpi(channels_tsv.type, 'MAGN'));
+  motion_json.JNTANGChannelCount    = sum(strcmpi(channels_tsv.type, 'JNTANG'));
+  if isfield(cfg, 'channels') && any(ismember(channels_tsv.Properties.VariableNames, 'tracked_point'))
+    motion_json.TrackedPointsCount  = numel(setdiff(unique(channels_tsv.tracked_point), 'n/a'));
   end
 
-  %% need_physio_json
-  if need_physio_json
-    physio_json.SamplingFrequency = hdr.Fs;
-    physio_json.StartTime = nan;
-    physio_json.Columns = hdr.label;
+  % merge the information specified by the user with that from the data
+  % in case fields appear in both, the first input overrules the second
+  motion_json = mergestruct(motion_settings,  motion_json, false);
+  motion_json = mergestruct(generic_settings, motion_json, false);
+end % if need_motion_json
 
-    % merge the information specified by the user with that from the data
-    % in case fields appear in both, the first input overrules the second
-    physio_json = mergestruct(physio_settings,  physio_json, false);
-    physio_json = mergestruct(generic_settings, physio_json, false);
-  end
-
-  %% need_stim_json
-  if need_stim_json
-    stim_json.SamplingFrequency = hdr.Fs;
-    stim_json.StartTime = nan;
-    stim_json.Columns = hdr.label;
-
-    % merge the information specified by the user with that from the data
-    % in case fields appear in both, the first input overrules the second
-    stim_json = mergestruct(stim_settings,    stim_json, false);
-    stim_json = mergestruct(generic_settings, stim_json, false);
-  end
-
-  %% need_eyetracker_json
-  if need_eyetracker_json
-    eyetracker_json.SamplingFrequency = hdr.Fs;
-    eyetracker_json.StartTime = nan;
-    eyetracker_json.Columns = hdr.label;
-
-    % merge the information specified by the user with that from the data
-    % in case fields appear in both, the first input overrules the second
-    eyetracker_json = mergestruct(eyetracker_settings,  eyetracker_json, false);
-    eyetracker_json = mergestruct(generic_settings,     eyetracker_json, false);
-  end
-
-  %% need_motion_json
-  if need_motion_json
-    motion_json.SamplingFrequency     = hdr.Fs;
-    motion_json.StartTime             = nan;
-    motion_json.MotionChannelCount    = hdr.nChans;
-    motion_json.RecordingDuration     = (hdr.nSamples*hdr.nTrials)/hdr.Fs;
-    motion_json.SamplingFrequencyEffective = size(dat,2)/motion_json.RecordingDuration;
-    motion_json.POSChannelCount       = sum(strcmpi(channels_tsv.type, 'POS'));
-    motion_json.ORNTChannelCount      = sum(strcmpi(channels_tsv.type, 'ORNT'));
-    motion_json.VELChannelCount       = sum(strcmpi(channels_tsv.type, 'VEL'));
-    motion_json.ANGVELChannelCount    = sum(strcmpi(channels_tsv.type, 'ANGVEL'));
-    motion_json.ACCELChannelCount     = sum(strcmpi(channels_tsv.type, 'ACCEL'));
-    motion_json.ANGACCChannelCount    = sum(strcmpi(channels_tsv.type, 'ANGACC'));
-    motion_json.MAGNChannelCount      = sum(strcmpi(channels_tsv.type, 'MAGN'));
-    motion_json.JNTANGChannelCount    = sum(strcmpi(channels_tsv.type, 'JNTANG'));
-    if isfield(cfg, 'channels') && any(ismember(channels_tsv.Properties.VariableNames, 'tracked_point'))
-      motion_json.TrackedPointsCount  = numel(setdiff(unique(channels_tsv.tracked_point), 'n/a'));
-    end
-
-    % merge the information specified by the user with that from the data
-    % in case fields appear in both, the first input overrules the second
-    motion_json = mergestruct(motion_settings,  motion_json, false);
-    motion_json = mergestruct(generic_settings, motion_json, false);
-
-  end % if need_motion_json
-
- % remove xxxChannelCount in case it has a count of zero
+if need_channels_tsv
+  %% remove xxxChannelCount in case it has a count of zero
   if need_meg_json
     meg_json = remove_zerochannelcount(meg_json);
   elseif need_eeg_json
@@ -1415,24 +1418,26 @@ if need_channels_tsv
 
   %% do a sanity check for those data types that have channel counts
   if need_meg_json
-    type_json = meg_json;
+    modality_json = meg_json;
   elseif need_eeg_json
-    type_json = eeg_json;
+    modality_json = eeg_json;
   elseif need_ieeg_json
-    type_json = ieeg_json;
+    modality_json = ieeg_json;
   elseif need_emg_json
-    type_json = emg_json;
+    modality_json = emg_json;
   elseif need_nirs_json
-    type_json = nirs_json;
+    modality_json = nirs_json;
   elseif need_motion_json
-    type_json = motion_json;
+    modality_json = motion_json;
+  else
+    modality_json = struct();
   end
-  fn = fieldnames(type_json);
+  fn = fieldnames(modality_json);
   fn = fn(endsWith(fn, 'ChannelCount') & ~contains(fn, 'ShortChannel'));
   jsoncount = 0;
   for i=1:numel(fn)
-    if ~isempty(type_json.(fn{i}))
-      jsoncount = jsoncount + type_json.(fn{i});
+    if ~isempty(modality_json.(fn{i}))
+      jsoncount = jsoncount + modality_json.(fn{i});
     end
   end
   if size(channels_tsv,1)~=jsoncount
@@ -1623,8 +1628,6 @@ if need_coordsystem_json
   % in case fields appear in both, the first input overrules the second
   coordsystem_json = mergestruct(coordsystem_settings, coordsystem_json, false); % FIXME the order of precedence is different here
 end % if need_coordsystem_json
-
-
 
 %% need_events_tsv
 if need_events_tsv
@@ -2621,11 +2624,11 @@ t = struct2table(s);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function type_json = remove_zerochannelcount(type_json)
-fn = fieldnames(type_json);
+function modality_json = remove_zerochannelcount(modality_json)
+fn = fieldnames(modality_json);
 for i=1:numel(fn)
-  if endsWith(fn{i}, 'Count') && type_json.(fn{i})==0
+  if endsWith(fn{i}, 'Count') && modality_json.(fn{i})==0
     % remove xxxChannelCount in case it has a count of zero
-    type_json = rmfield(type_json, fn{i});
+    modality_json = rmfield(modality_json, fn{i});
   end
 end
