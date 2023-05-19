@@ -1976,7 +1976,7 @@ switch headerformat
         end
       end
       hdr.nSamples    = raw.last_samp - raw.first_samp + 1; % number of samples per trial
-      hdr.nSamplesPre = 0;
+      hdr.nSamplesPre = -raw.first_samp;
       % otherwise conflicts will occur in read_data
       hdr.nTrials     = 1;
       info.raw        = raw; % keep all the details

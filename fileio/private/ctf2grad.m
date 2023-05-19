@@ -202,8 +202,8 @@ elseif isfield(hdr, 'res4') && isfield(hdr.res4, 'senres')
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   
   sensType  = [hdr.res4.senres.sensorTypeIndex];
-  selMEG    = find(sensType==5);
-  selREF    = find(sensType==0 | sensType==1);
+  selMEG    = find(sensType==4 | sensType==5 | sensType==6 | sensType==7);
+  selREF    = find(sensType==0 | sensType==1 | sensType==2 | sensType==3);
   selEEG    = find(sensType==9);
   selMEG    = selMEG(:)';
   selREF    = selREF(:)';
@@ -211,16 +211,6 @@ elseif isfield(hdr, 'res4') && isfield(hdr.res4, 'senres')
   numMEG    = length(selMEG);
   numREF    = length(selREF);
   numEEG    = length(selEEG);
-  
-  % determine the number of channels and coils
-  coilcount = 0;
-  coilcount = coilcount + sum([hdr.res4.senres(selREF).numCoils]);
-  coilcount = coilcount + sum([hdr.res4.senres(selMEG).numCoils]);
-  chancount = numMEG + numREF;
-  % preallocate the memory
-  grad.coilpos = zeros(coilcount, 3);         % this will hold the position of each coil
-  grad.coilori = zeros(coilcount, 3);         % this will hold the orientation of each coil
-  grad.tra     = zeros(chancount, coilcount); % this describes how each coil contributes to each channel
   
   if numEEG>0
     for i=1:numEEG
@@ -241,8 +231,22 @@ elseif isfield(hdr, 'res4') && isfield(hdr.res4, 'senres')
   else
     elec = [];
   end
-  
-  % combine the bottom and top coil of each MEG channel
+
+  % determine the number of channels and coils
+  chancount = numMEG + numREF;
+  coilcount = 0;
+  coilcount = coilcount + sum([hdr.res4.senres(selMEG).numCoils]);
+  coilcount = coilcount + sum([hdr.res4.senres(selREF).numCoils]);
+  % preallocate the memory
+  grad.coilpos = zeros(coilcount, 3);         % this will hold the position of each coil
+  grad.coilori = zeros(coilcount, 3);         % this will hold the orientation of each coil
+  grad.tra     = zeros(chancount, coilcount); % this describes how each coil contributes to each channel
+
+  % keep track of the channels and coils
+  chancount = 0;
+  coilcount = 0;
+
+  % combine the coils of each MEG channel located in the head shell
   for i=1:numMEG
     n = selMEG(i);
     % get coil positions and orientations of this channel (max. 8)
@@ -253,22 +257,18 @@ elseif isfield(hdr, 'res4') && isfield(hdr.res4, 'senres')
       pos = hdr.res4.senres(n).pos';
       ori = hdr.res4.senres(n).ori';
     end
-    if hdr.res4.senres(n).numCoils~=2
-      ft_error('unexpected number of coils in MEG channel');
-    end
+    % determine the number of coils for this channel
+    numcoils = hdr.res4.senres(n).numCoils;
     % add the coils of this channel to the gradiometer array
-    grad.coilpos(i       ,:) = pos(1,:);
-    grad.coilpos(i+numMEG,:) = pos(2,:);
-    grad.coilori(i       ,:) = ori(1,:) .* -sign(hdr.res4.senres(n).properGain);
-    grad.coilori(i+numMEG,:) = ori(2,:) .* -sign(hdr.res4.senres(n).properGain);
-    grad.tra(i,i       ) = 1;
-    grad.tra(i,i+numMEG) = 1;
+    chancount = chancount+1;
+    for j=1:numcoils
+      coilcount = coilcount+1;
+      grad.coilpos(coilcount, :)         = pos(j,:);
+      grad.coilori(coilcount, :)         = ori(j,:) .* -sign(hdr.res4.senres(n).properGain);
+      grad.tra(chancount, coilcount) = 1;
+    end
   end
-  
-  % the MEG channels always have 2 coils, the reference channels vary in the number of coils
-  chancount = 1*numMEG;
-  coilcount = 2*numMEG;
-  
+ 
   % combine the coils of each reference channel
   for i=1:numREF
     n = selREF(i);
