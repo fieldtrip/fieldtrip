@@ -621,7 +621,7 @@ elseif ~isUnstructuredFun && ~isUnstructuredAna
           allav(:,:,:,k,m) = av;
         end
       end
-      if isfield(interp, 'freq') || isfield(interp, 'time')
+      if (isfield(interp, 'freq') && numel(interp.freq)>1) || (isfield(interp, 'time') && numel(interp.time)>1)
         % the output should be a source representation, not a volume
         allav = reshape(allav, prod(anatomical.dim), dimf(4), dimf(5));
       end
