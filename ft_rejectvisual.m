@@ -87,7 +87,7 @@ function [data] = ft_rejectvisual(cfg, data)
 % files should contain only a single variable, corresponding with the
 % input/output structure.
 %
-% See also FT_REJECTARTIFACT, FT_REJECTCOMPONENT
+% See also FT_REJECTARTIFACT, FT_REJECTCOMPONENT, FT_BADSEGMENT, FT_BADCHANNEL
 
 % Copyright (C) 2005-2006, Markus Bauer, Robert Oostenveld
 % Copyright (C) 2006-2021, Robert Oostenveld
