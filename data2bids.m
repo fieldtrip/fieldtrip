@@ -317,6 +317,37 @@ cfg.electrodes    = ft_getopt(cfg, 'electrodes');
 cfg.optodes       = ft_getopt(cfg, 'optodes');
 cfg.events        = ft_getopt(cfg, 'events');     % this can contain the trial definition as Nx3 array, as table, or an event structure
 cfg.coordsystem   = ft_getopt(cfg, 'coordsystem');
+% start with an empty structure for the following
+cfg.participants  = ft_getopt(cfg, 'participants', struct());
+cfg.sessions      = ft_getopt(cfg, 'sessions', struct());
+cfg.scans         = ft_getopt(cfg, 'scans', struct());
+
+% some of the cfg fields can be specified (or make most sense) as a table
+% however, the parsing of cfg options requires fields to be structures
+
+if istable(cfg.channels)
+  cfg.channels = table2struct(cfg.channels, 'ToScalar', true);
+end
+
+if istable(cfg.electrodes)
+  cfg.electrodes = table2struct(cfg.electrodes, 'ToScalar', true);
+end
+
+if istable(cfg.optodes)
+  cfg.optodes = table2struct(cfg.optodes, 'ToScalar', true);
+end
+
+if istable(cfg.participants)
+  cfg.participants = table2struct(cfg.participants, 'ToScalar', true);
+end
+
+if istable(cfg.sessions)
+  cfg.sessions = table2struct(cfg.sessions, 'ToScalar', true);
+end
+
+if istable(cfg.scans)
+  cfg.scans = table2struct(cfg.scans, 'ToScalar', true);
+end
 
 %% Dataset description
 
@@ -661,16 +692,6 @@ cfg.optodes.template_z          = ft_getopt(cfg.optodes, 'template_z'          ,
 cfg.optodes.description         = ft_getopt(cfg.optodes, 'description'         , nan);  % OPTIONAL.	string	Free-form text description of the optode, or other information of interest.
 cfg.optodes.detector_type       = ft_getopt(cfg.optodes, 'detector_type'       , nan);  % OPTIONAL.	string	The type of detector. Only to be used if the field DetectorType in *_nirs.json is set to mixed.
 cfg.optodes.source_type         = ft_getopt(cfg.optodes, 'source_type'         , nan);  % OPTIONAL.	string	The type of source. Only to be used if the field SourceType in *_nirs.json is set to mixed.
-
-
-%% information for the participants.tsv
-cfg.participants = ft_getopt(cfg, 'participants', struct());
-
-%% information for the scans.tsv
-cfg.scans = ft_getopt(cfg, 'scans', struct());
-
-%% information for the sessions.tsv
-cfg.sessions = ft_getopt(cfg, 'sessions', struct());
 
 %% sanity checks and determine the default method/outputfile
 
