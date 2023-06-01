@@ -80,10 +80,10 @@ elseif needdat
 
 elseif needevt
   evt = struct();
-  for i=1:size(stims,1)
+  for i=1:size(ov.stims,1)
     evt(i).type     = 'trigger';
-    evt(i).sample   = round(stims(i,1)*hdr.Fs+1);
-    evt(i).value    = stims(i,2);
+    evt(i).sample   = round(ov.stims(i,1)*hdr.Fs+1);
+    evt(i).value    = ov.stims(i,2);
     evt(i).offset   = 0;
     evt(i).duration = 0;
   end
