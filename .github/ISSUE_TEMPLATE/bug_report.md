@@ -24,9 +24,9 @@ A clear and concise description of what you expected to happen.
 If applicable, add screenshots to help explain your problem.
 
 **Environment and versions (please complete the following information):**
- - Operating System: [e.g. Windows 10]
- - MATLAB version [e.g. R2019b, type `ver`]
- - FieldTrip version [e.g. 2020312, or "most recent master branch from github", type `ft_version`]
+ - Operating System: [e.g., Windows 10 or macOS 13.4]
+ - MATLAB version [e.g., R2019b, type `ver`]
+ - FieldTrip version [e.g., 20230117, or "most recent master branch from github", type `ft_version`]
 
 **Additional context**
 Add any other context about the problem here.
