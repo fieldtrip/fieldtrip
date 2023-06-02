@@ -5,7 +5,7 @@ function test_tutorial_beamformingextended
 % DEPENDENCY ft_read_mri ft_redefinetrial ft_freqanalysis ft_volumesegment ft_appenddata ft_selectdata ft_prepare_singleshell ft_sourceanalysis ft_prepare_leadfield ft_prepare_headmodel ft_prepare_sourcemodel ft_plot_headmodel ft_plot_sens ft_plot_mesh ft_sourceinterpolate ft_sourceplot
 
 datadir = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/sensor_analysis');
-mridir = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer_extended');
+mridir = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformingextended');
 templatedir  = dccnpath('/home/common/matlab/fieldtrip/template/sourcemodel');
 
 load(fullfile(datadir, 'subjectK.mat'));
