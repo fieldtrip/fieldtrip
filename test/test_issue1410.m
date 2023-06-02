@@ -116,8 +116,8 @@ freq_exp           = ft_selectdata(cfg, freq_cmb);
 %%
 % this is used both for visual gamma and beta coherence
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer_extended/hdm.mat'))
-load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer_extended/sourcemodel.mat'))
+load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformingextended/hdm.mat'))
+load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformingextended/sourcemodel.mat'))
 
 cfg             = [];
 cfg.sourcemodel = sourcemodel;
