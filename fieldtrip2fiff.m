@@ -543,6 +543,7 @@ switch stype
     % treat as point magnetometer system
     sel         = strcmp(descr, 'Point magnetometer');
     coiltype(:) = def(sel).id; 
+    coilkind(:) = 1;
 end
 
 % this is needed as long as neuromag is not properly dealt with in the above
