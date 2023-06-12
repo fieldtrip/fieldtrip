@@ -26,7 +26,7 @@ function [cfg] = ft_singleplotER(cfg, varargin)
 %   cfg.showlegend    = 'yes' or 'no', show the legend with the colors (default = 'no')
 %   cfg.refchannel    = name of reference channel for visualising connectivity, can be 'gui'
 %   cfg.baseline      = 'yes', 'no' or [time1 time2] (default = 'no'), see ft_timelockbaseline
-%   cfg.baselineype   = 'absolute', 'relative', 'relchange', 'normchange', 'db', 'vssum' or 'zscore' (default = 'absolute'), only relevant for TFR data.
+%   cfg.baselinetype  = 'absolute', 'relative', 'relchange', 'normchange', 'db', 'vssum' or 'zscore' (default = 'absolute'), only relevant for TFR data.
 %                       See ft_freqbaseline.
 %   cfg.trials        = 'all' or a selection given as a 1xn vector (default = 'all')
 %   cfg.fontsize      = font size of title (default = 8)
