@@ -19,7 +19,7 @@ function [pos, tri] = mesh_sphere(n, method)
 % See also MESH_TETRAHEDRON, MESH_OCTAHEDRON, MESH_ICOSAHEDRON
 
 % Copyright (C) 2002, Robert Oostenveld
-% Copyright (C) 2019, Robert Oostenveld and Jan-Mathijs Schoffelen
+% Copyright (C) 2023, Robert Oostenveld and Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -64,10 +64,25 @@ assert(ischar(method), 'method should be specified as a string');
 switch method
   case 'ksphere'
     [pos, tri] = ksphere(n);
-    
+
   case 'msphere'
     [pos, tri] = msphere(n);
-    
+
+  case 'fibonachi'
+    % see https://extremelearning.com.au/evenly-distributing-points-on-a-sphere/
+    % this can even be further improved, as documented on that page 
+    i = ((0:(n-1))+0.5)'; % this should be a column vector
+    phi = acos(1 - 2*i/n);
+    goldenRatio = (1 + 5^0.5)/2;
+    theta = 2 * pi * i / goldenRatio;
+
+    x = cos(theta) .* sin(phi);
+    y = sin(theta) .* sin(phi);
+    z = cos(phi);
+
+    pos = [x y z];
+    tri = convhulln(pos);
+
   case 'tetrahedron'
     [pos, tri] = mesh_tetrahedron;
     if r_tetra>0
@@ -78,7 +93,7 @@ switch method
       % scale all vertices to the unit sphere
       pos = pos ./ repmat(sqrt(sum(pos.^2,2)), 1,3);
     end
-    
+
   case 'icosahedron'
     [pos, tri] = mesh_icosahedron;
     if r_ico>0
@@ -89,7 +104,7 @@ switch method
       % scale all vertices to the unit sphere
       pos = pos ./ repmat(sqrt(sum(pos.^2,2)), 1,3);
     end
-    
+
   case 'octahedron'
     [pos, tri] = mesh_octahedron;
     if r_octa>0
@@ -100,7 +115,7 @@ switch method
       % scale all vertices to the unit sphere
       pos = pos ./ repmat(sqrt(sum(pos.^2,2)), 1,3);
     end
-    
+
 end % switch method
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -194,12 +209,12 @@ storeM    = [];
 storelen  = [];
 increaseM = 0;
 while (1)
-  
+
   % put a single vertex at the top% subfunction
-  
+
   phi = 0;
   th  = 0;
-  
+
   M = round((pi/4)*sqrt(N)) + increaseM;
   for k=1:M
     newphi = (k/M)*pi;
@@ -213,11 +228,11 @@ while (1)
       end
     end
   end
-  
+
   % put a single vertex at the bottom
-  phi(end+1) = [pi];
-  th(end+1)  = [0];
-  
+  phi(end+1) = pi;
+  th(end+1)  = 0;
+
   % store this vertex packing
   storeM(end+1).th  = th;
   storeM(end  ).phi = phi;

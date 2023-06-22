@@ -63,7 +63,7 @@ function [cfg] = ft_multiplotER(cfg, varargin)
 %                       plotting.
 %   cfg.viewmode      = 'layout', or 'butterfly' (default = 'layout'), using the spatial layout as in cfg.layout for the
 %                       visualisation, or a butterfly plot
-
+%
 % The following options for the scaling of the EEG, EOG, ECG, EMG, MEG and NIRS channels
 % is optional and can be used to bring the absolute numbers of the different
 % channel types in the same range (e.g. fT and uV). The channel types are determined

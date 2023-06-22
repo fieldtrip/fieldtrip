@@ -21,7 +21,7 @@ function [stat] = ft_timelockstatistics(cfg, varargin)
 %                    'montecarlo'    get Monte-Carlo estimates of the significance probabilities and/or critical values from the permutation distribution,
 %                    'analytic'      get significance probabilities and/or critical values from the analytic reference distribution (typically, the sampling distribution under the null hypothesis),
 %                    'stats'         use a parametric test from the MATLAB statistics toolbox,
-%                    'crossvalidate' use crossvalidation to compute predictive performance
+%                    'mvpa'          use functionality from the MVPA-light toolbox for classification or multivariate regression
 %
 % The other cfg options depend on the method that you select. You
 % should read the help of the respective subfunction FT_STATISTICS_XXX

@@ -48,7 +48,7 @@ function [cfg] = ft_topoplotER(cfg, varargin)
 %                            'SouthOutside'       outside bottom
 %                            'EastOutside'        outside right
 %                            'WestOutside'        outside left
-%   cfg.colorbartext       =  string indicating the text next to colorbar
+%   cfg.colorbartext       = string indicating the text next to colorbar
 %   cfg.interplimits       = limits for interpolation (default = 'head')
 %                            'electrodes'         to furthest electrode
 %                            'head'               to edge of head
@@ -58,7 +58,9 @@ function [cfg] = ft_topoplotER(cfg, varargin)
 %                            'contour'            contour lines only
 %                            'both'               both colormap and contour lines
 %                            'fill'               constant color between lines
-%                            'blank'               only the head shape
+%                            'blank'              only the head shape
+%                            'straight_imsat'     colormap only, vector-graphics friendly
+%                            'both_imsat'         both colormap and contour lines, vector-graphics friendly
 %   cfg.gridscale          = scaling grid size that determines resolution of figure (default = 67)
 %   cfg.shading            = 'flat' or 'interp' (default = 'flat')
 %   cfg.comment            = 'no', 'auto' or 'xlim' (default = 'auto')

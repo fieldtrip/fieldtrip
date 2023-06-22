@@ -97,13 +97,14 @@ allevents = events;
 events = events(sel,:);
 
 if ismember('sample', events.Properties.VariableNames)
-  begsample = round(events.sample - cfg.trialdef.prestim * hdr.Fs);
+  % use the sample number, it is assumed that sample 1 corresponds to the first data sample (and not sample 0)
+  begsample = round(events.sample - cfg.trialdef.prestim  * hdr.Fs);
   endsample = round(events.sample + cfg.trialdef.poststim * hdr.Fs);
   offset    = round(-cfg.trialdef.prestim*hdr.Fs) * ones(size(begsample));
 else
   % use the onset, which is in seconds
-  begsample = round((events.onset * hdr.Fs) + 1 - cfg.trialdef.prestim);
-  endsample = round((events.onset * hdr.Fs) + 1 + cfg.trialdef.poststim);
+  begsample = round(events.onset * hdr.Fs + 1 - cfg.trialdef.prestim  * hdr.Fs);
+  endsample = round(events.onset * hdr.Fs + 1 + cfg.trialdef.poststim * hdr.Fs);
   offset    = round(-cfg.trialdef.prestim*hdr.Fs) * ones(size(begsample));
 end
 

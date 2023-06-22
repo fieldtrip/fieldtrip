@@ -4,7 +4,7 @@ function test_pull1604
 % WALLTIME 00:40:00
 % DEPENDENCY ft_inside_headmodel
 
-datadir = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer_extended/');
+datadir = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformingextended/');
 load(fullfile(datadir, 'segmentedmri.mat'));
 load(fullfile(datadir, 'sourcemodel.mat'));
 

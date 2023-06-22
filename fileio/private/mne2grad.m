@@ -86,8 +86,16 @@ elec = [];
 % begin by transforming all channel locations into the desired coordinate system, if possible
 if ~dewar
   if ~isempty(orig.dev_head_t)
+    ft_info('Transforming MEG channels according to the device to head transform from the data');
     orig.chs = fiff_transform_meg_chs(orig.chs,orig.dev_head_t);
-    orig.chs = fiff_transform_eeg_chs(orig.chs,orig.dev_head_t); % EEG channels are normally stored in head coordinates anyway, but what the heck
+    %orig.chs = fiff_transform_eeg_chs(orig.chs,orig.dev_head_t); % EEG channels are normally stored in head coordinates anyway, but what the heck
+    if ~isempty(orig.ctf_head_t)
+      orig.head_ctf_t.trans = inv(orig.ctf_head_t.trans);
+      orig.head_ctf_t.from  = orig.ctf_head_t.to;
+      orig.head_ctf_t.to    = orig.ctf_head_t.from;
+      ft_info('Transforming MEG channels according to the head to ctf transform from the data');
+      orig.chs = fiff_transform_meg_chs(orig.chs,orig.head_ctf_t);
+    end
   else
     ft_warning('No device to head transform available in fif file');
     ft_warning('MEG channels will likely have coordinates in device frame, not head frame');
