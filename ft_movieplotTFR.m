@@ -221,8 +221,8 @@ clear xbeg xend ybeg yend
 chanx = layout.pos(sellay,1);
 chany = layout.pos(sellay,2);
 
-% check for nans
-nanInds = any(isnan(parameter), 2);
+% check for nans along the time and/or freq dimension
+nanInds = any(isnan(parameter), [2 3]);
 if strcmp(cfg.interpolatenan, 'yes') && any(nanInds)
   ft_warning('removing channels with NaNs from the data');
   chanx(nanInds) = [];

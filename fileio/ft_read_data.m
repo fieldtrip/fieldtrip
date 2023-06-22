@@ -1250,12 +1250,28 @@ switch dataformat
       dat = fiff_read_raw_segment(hdr.orig.raw,begsample+hdr.orig.raw.first_samp-1,endsample+hdr.orig.raw.first_samp-1,chanindx);
       dimord = 'chans_samples';
     elseif (hdr.orig.isepoched)
-      data = permute(hdr.orig.epochs.data, [2 3 1]);  % Chan X Sample X Trials
-      if requesttrials
-        dat = data(chanindx, :, begtrial:endtrial);
-      else
-        dat = data(chanindx, begsample:endsample);  % reading over boundaries
+      % permutation of the data matrix is time consuming, and offsets the time gained by not 
+      % re-reading the data. Permutation is only needed for efficient matrix indexing, but 
+      % makes sense only if data are read across boundaries
+      if ~requesttrials
+        if mod(begsample, hdr.nSamples)==1 && mod(endsample, hdr.nSamples==0)
+          requesttrials = true;
+          begtrial = floor(begsample/hdr.nSamples)+1;
+          endtrial = endsample/hdr.nSamples;
+        end
       end
+
+      if requesttrials
+        if endtrial>begtrial
+          dat = hdr.orig.epochs.data(chanindx, :, begtrial:endtrial);
+          dat = reshape(dat, size(dat,1), []);
+        else
+          dat = hdr.orig.epochs.data(chanindx, :, begtrial);
+        end
+      else
+        dat = dat(chanindx, begsample:endsample);  % reading over boundaries
+      end
+
     elseif (hdr.orig.isaverage)
       assert(isfield(hdr.orig, 'evoked'), '%s does not contain evoked data', filename);
       dat = cat(2, hdr.orig.evoked.epochs);            % concatenate all epochs, this works both when they are of constant or variable length

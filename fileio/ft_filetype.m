@@ -36,7 +36,7 @@ function [type] = ft_filetype(filename, desired, varargin)
 %  - Analyse
 %  - Analyze/SPM
 %  - BESA
-%  - Bioimage Suite (*.mgrid)
+%  - Bioimage Suite *.mgrid
 %  - BrainSuite
 %  - BrainVisa
 %  - BrainVision
@@ -52,7 +52,8 @@ function [type] = ft_filetype(filename, desired, varargin)
 %  - MINC
 %  - Neuralynx
 %  - Neuroscan
-%  - Nihon Koden (*.m00)
+%  - Nihon Koden *.m00
+%  - OpenVibe MATLAB files *.mat
 %  - Plexon
 %  - SR Research Eyelink
 %  - SensoMotoric Instruments (SMI) *.txt
@@ -73,7 +74,7 @@ function [type] = ft_filetype(filename, desired, varargin)
 %  - NIRx *.tpl, *.wl1 and *.wl2
 %  - York Instruments *.meghdf5
 
-% Copyright (C) 2003-2022, Robert Oostenveld
+% Copyright (C) 2003-2023, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -1335,6 +1336,10 @@ elseif filetype_check_extension(filename, '.mat') && filetype_check_header(filen
   type = 'seg3d_mat';
   manufacturer = 'Scientific Computing and Imaging Institute, Salt Lake City, Utah';
   content = 'imaging data';
+elseif filetype_check_extension(filename, '.mat') && filetype_check_header(filename, 'MATLAB') && filetype_check_openvibe_mat(filename)
+  type = 'openvibe_mat';
+  manufacturer = 'OpenVibe';
+  content = 'EEG data';
 elseif filetype_check_extension(filename, '.mat') && filetype_check_header(filename, 'MATLAB')
   type = 'matlab';
   manufacturer = 'MATLAB';
@@ -1674,12 +1679,11 @@ y = 1;
 % SUBFUNCTION that checks for CED spike6 mat file
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function res = filetype_check_ced_spike6mat(filename)
-res = 1;
 var = whos('-file', filename);
 
 % Check whether all the variables in the file are structs (representing channels)
 if ~all(strcmp('struct', unique({var(:).class})) == 1)
-  res = 0;
+  res = false;
   return;
 end
 
@@ -1701,6 +1705,15 @@ fnames = {
   };
 
 res = (numel(intersect(fieldnames(var{1}), fnames)) >= 5);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION that checks for a OpenVibe mat file
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function res = filetype_check_openvibe_mat(filename)
+% check the content of the *.mat file
+var = whos('-file', filename);
+expected = {'stims', 'sampleTime', 'samples', 'samplingFreq', 'channelNames'};
+res = all(ismember(expected, {var.name}));
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION that checks for a SCIRun/Seg3D mat file

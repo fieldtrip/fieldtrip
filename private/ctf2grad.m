@@ -1,4 +1,4 @@
-function [grad, elec] = ctf2grad(hdr, dewar, coilaccuracy)
+function [grad, elec] = ctf2grad(hdr, dewar, coilaccuracy, coildeffile)
 
 % CTF2GRAD converts a CTF header to a gradiometer structure that can be understood by
 % the FieldTrip low-level forward and inverse routines. The fieldtrip/fileio
@@ -10,6 +10,7 @@ function [grad, elec] = ctf2grad(hdr, dewar, coilaccuracy)
 % where
 %   dewar        = boolean, whether to return it in dewar or head coordinates (default is head coordinates)
 %   coilaccuracy = empty or a number (default is empty)
+%   coildeffile  = empty or a filename of a valid coil_def.dat file
 %
 % See also BTI2GRAD, FIF2GRAD, MNE2GRAD, ITAB2GRAD, YOKOGAWA2GRAD,
 % FT_READ_SENS, FT_READ_HEADER
@@ -44,6 +45,12 @@ if nargin<3 || isempty(coilaccuracy)
   coilaccuracy = [];
 end
 
+if nargin<4 || isempty(coildeffile)
+  % if coilaccuracy is not empty, it will use the default coil_def.dat
+  % file, which is in external/mne
+  coildeffile = [];
+end
+
 if isfield(hdr, 'orig')
   hdr = hdr.orig; % use the original CTF header, not the FieldTrip header
 end
@@ -69,83 +76,106 @@ elec = [];
 % ADC16   is 18
 % V0      is 15
 
-if ~isempty(coilaccuracy)
+if isfield(hdr, 'res4') && ~isempty(coilaccuracy)
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  % use the coil definitions from the MNE coil_def.dat file
-  % these allow for varying accuracy which is specified by
-  % coilaccuracy = 0, 1 or 2
+  % the header was read using the CTF p-files, i.e. readCTFds
+  %
+  % use in additionthe coil definitions from the MNE coil_def.dat file
+  % these allow for varying accuracy which is specified by coilaccuracy = 0, 1 or 2
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   
   ft_hastoolbox('mne', 1);
-  [ftver, ftpath] = ft_version;
-  def = mne_load_coil_def(fullfile(ftpath, 'external', 'mne', 'coil_def.dat'));
+  if isempty(coildeffile)
+    [ftver, ftpath] = ft_version;
+    coildeffile     = fullfile(ftpath, 'external', 'mne', 'coil_def.dat');
+  end
+  def = mne_load_coil_def(coildeffile);
   
   k = 1;
   for i=1:length(hdr.res4.senres)
-    switch hdr.res4.senres(i).sensorTypeIndex
+    
+    thissens = hdr.res4.senres(i);
+    switch thissens.sensorTypeIndex
       case 5 % 5001
         thisdef = def([def.id]==5001 & [def.accuracy]==coilaccuracy);
       case 0 % 5002
         thisdef = def([def.id]==5002 & [def.accuracy]==coilaccuracy);
-      case 1 % 5003
-        thisdef = def([def.id]==5003 & [def.accuracy]==coilaccuracy);
+      case 1 % 5003 or 5004
+        % this is a reference gradiometer
+        delta = thissens.pos0*[-1;1]; 
+
+        % determine whether the gradient is 'off' diagonal, comparing the
+        % (cosine) of the angle between the line connecting the coils and
+        % the orientation of the first coil        % 
+        if abs((delta./norm(delta))'*thissens.ori0(:,1))<1e-2
+          % it's an off diagonal channel
+          thisdef = def([def.id]==5004 & [def.accuracy]==coilaccuracy);
+        else
+          thisdef = def([def.id]==5003 & [def.accuracy]==coilaccuracy);
+        end
       otherwise
         % do not add this as sensor to the gradiometer definition
         thisdef = [];
     end % case
     
     if ~isempty(thisdef)
-      % the sensors (i.e. the combination of coils that comprises a channel) is
-      % defined at [0 0 0] and with the direction [0 0 1]
-      pos0 = [0 0 0];
-      ori0 = [0 0 1];
-      
       if dewar
-        % convert from cm to m
-        pos2 = hdr.res4.senres(i).pos0(:,1)' / 100;
-        if hdr.res4.senres(i).numCoils==2
-          % determine the direction from the position of the two coils
-          ori2 = (hdr.res4.senres(i).pos0(:,2) - hdr.res4.senres(i).pos0(:,1))';
-        else
-          % determine the direction from the orientation of the coil
-          ori2 = hdr.res4.senres(i).ori0(:,1);
-        end
-      else
-        % convert from cm to m
-        pos2 = hdr.res4.senres(i).pos(:,1)' / 100;
-        if hdr.res4.senres(i).numCoils==2
-          % determine the direction from the position of the two coils
-          ori2 = (hdr.res4.senres(i).pos(:,2) - hdr.res4.senres(i).pos(:,1))';
-        else
-          % determine the direction from the orientation of the coil
-          ori2 = hdr.res4.senres(i).ori(:,1);
-        end
+        pos = thissens.pos0;
+        ori = thissens.ori0;
+      else 
+        pos = thissens.pos;
+        ori = thissens.ori;
       end
-      ori2 = ori2/norm(ori2);
+      pos   = pos./100;   % convert from cm to m
       
+      if thissens.numCoils==2 && thisdef.id~=5004
+        % determine the direction from the relative position of the two coils
+        %ez = pos(:,2)-pos(:,1);
+        %ez = ez./norm(ez);
+        ez  = -ori(:,1).*sign(thissens.properGain);
+        
+        pos = pos(:,1)'; % take the first coil as local origin
+        [ex, ey] = plane_unitvectors(ez);
+        
+      elseif thissens.numCoils==2 && thisdef.id==5004
+        % 'off' diagonal gradiometer, needs to be treated differently.
+        
+        % the local origin is the average of the two coils, and the local
+        % x-axis connects the coils
+        ex  = pos*[1;-1]; % line between the coils
+        pos = mean(pos,2)';
+
+        ez  = -ori(:,1).*sign(thissens.properGain);
+        ex  = ex./norm(ex); 
+        ey  = cross(ez,ex);
+        
+        %thisdef.coildefs(:,2:4) = -thisdef.coildefs(:,2:4); % FIXME not sure about this
+      else
+        % magnetometer coil
+        pos = pos';
+
+        % determine the direction from the orientation of the magnetometer coil
+        ez = -ori(:,1).*sign(thissens.properGain);
+        [ex, ey] = plane_unitvectors(ez);
+        
+      end
+
       for j=1:thisdef.num_points
         weight = thisdef.coildefs(j,1);
         pos1 = thisdef.coildefs(j,2:4);
         ori1 = thisdef.coildefs(j,5:7);
         
-        [az0,el0,r0] = cart2sph(ori0(1), ori0(2), ori0(3));
-        [az2,el2,r2] = cart2sph(ori2(1), ori2(2), ori2(3));
-        % determine the homogenous transformation that rotates [1 0 0] towards ori0
-        R0 = rotate([0 0 az0*180/pi]) * rotate([0 -el0*180/pi 0]);
-        % determine the homogenous transformation that rotates [1 0 0] towards ori2
-        R2 = rotate([0 0 az2*180/pi]) * rotate([0 -el2*180/pi 0]);
-        % determine the homogenous transformation that rotates ori0 to ori2
-        R = R2/R0;
-        T = translate(pos2 - pos0);
-        H = T*R;
+        R = [ex(:) ey(:) ez(:) zeros(3,1);0 0 0 1];
+        T = translate(pos);
         grad.tra(i,k)     = weight;
         grad.coilpos(k,:) = ft_warp_apply(T*R, pos1); % first the rotation, then the translation
         grad.coilori(k,:) = ft_warp_apply(  R, ori1); % only the rotation
         k = k+1;
       end % for num_points
       
-      grad.chanpos(i,:) = pos2;
-      grad.chanori(i,:) = ori2;
+      grad.chanpos(i,:) = pos;
+      grad.chanori(i,:) = ez;
+      
       % remove the site-specific numbers from each channel name, e.g. 'MZC01-1706' becomes 'MZC01'
       grad.label{i} = strtok(hdr.res4.chanNames(i,:), '-');
     end % if MEG or MEGREF
@@ -172,8 +202,8 @@ elseif isfield(hdr, 'res4') && isfield(hdr.res4, 'senres')
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   
   sensType  = [hdr.res4.senres.sensorTypeIndex];
-  selMEG    = find(sensType==5);
-  selREF    = find(sensType==0 | sensType==1);
+  selMEG    = find(sensType==4 | sensType==5 | sensType==6 | sensType==7);
+  selREF    = find(sensType==0 | sensType==1 | sensType==2 | sensType==3);
   selEEG    = find(sensType==9);
   selMEG    = selMEG(:)';
   selREF    = selREF(:)';
@@ -181,16 +211,6 @@ elseif isfield(hdr, 'res4') && isfield(hdr.res4, 'senres')
   numMEG    = length(selMEG);
   numREF    = length(selREF);
   numEEG    = length(selEEG);
-  
-  % determine the number of channels and coils
-  coilcount = 0;
-  coilcount = coilcount + sum([hdr.res4.senres(selREF).numCoils]);
-  coilcount = coilcount + sum([hdr.res4.senres(selMEG).numCoils]);
-  chancount = numMEG + numREF;
-  % preallocate the memory
-  grad.coilpos = zeros(coilcount, 3);         % this will hold the position of each coil
-  grad.coilori = zeros(coilcount, 3);         % this will hold the orientation of each coil
-  grad.tra     = zeros(chancount, coilcount); % this describes how each coil contributes to each channel
   
   if numEEG>0
     for i=1:numEEG
@@ -211,8 +231,22 @@ elseif isfield(hdr, 'res4') && isfield(hdr.res4, 'senres')
   else
     elec = [];
   end
-  
-  % combine the bottom and top coil of each MEG channel
+
+  % determine the number of channels and coils
+  chancount = numMEG + numREF;
+  coilcount = 0;
+  coilcount = coilcount + sum([hdr.res4.senres(selMEG).numCoils]);
+  coilcount = coilcount + sum([hdr.res4.senres(selREF).numCoils]);
+  % preallocate the memory
+  grad.coilpos = zeros(coilcount, 3);         % this will hold the position of each coil
+  grad.coilori = zeros(coilcount, 3);         % this will hold the orientation of each coil
+  grad.tra     = zeros(chancount, coilcount); % this describes how each coil contributes to each channel
+
+  % keep track of the channels and coils
+  chancount = 0;
+  coilcount = 0;
+
+  % combine the coils of each MEG channel located in the head shell
   for i=1:numMEG
     n = selMEG(i);
     % get coil positions and orientations of this channel (max. 8)
@@ -223,22 +257,18 @@ elseif isfield(hdr, 'res4') && isfield(hdr.res4, 'senres')
       pos = hdr.res4.senres(n).pos';
       ori = hdr.res4.senres(n).ori';
     end
-    if hdr.res4.senres(n).numCoils~=2
-      ft_error('unexpected number of coils in MEG channel');
-    end
+    % determine the number of coils for this channel
+    numcoils = hdr.res4.senres(n).numCoils;
     % add the coils of this channel to the gradiometer array
-    grad.coilpos(i       ,:) = pos(1,:);
-    grad.coilpos(i+numMEG,:) = pos(2,:);
-    grad.coilori(i       ,:) = ori(1,:) .* -sign(hdr.res4.senres(n).properGain);
-    grad.coilori(i+numMEG,:) = ori(2,:) .* -sign(hdr.res4.senres(n).properGain);
-    grad.tra(i,i       ) = 1;
-    grad.tra(i,i+numMEG) = 1;
+    chancount = chancount+1;
+    for j=1:numcoils
+      coilcount = coilcount+1;
+      grad.coilpos(coilcount, :)         = pos(j,:);
+      grad.coilori(coilcount, :)         = ori(j,:) .* -sign(hdr.res4.senres(n).properGain);
+      grad.tra(chancount, coilcount) = 1;
+    end
   end
-  
-  % the MEG channels always have 2 coils, the reference channels vary in the number of coils
-  chancount = 1*numMEG;
-  coilcount = 2*numMEG;
-  
+ 
   % combine the coils of each reference channel
   for i=1:numREF
     n = selREF(i);
@@ -270,6 +300,9 @@ elseif isfield(hdr, 'res4') && isfield(hdr.res4, 'senres')
   
   grad.label = label([selMEG selREF]);
   grad.unit  = 'cm'; % the res4 file represents it in centimeter
+  if ~isempty(elec)  
+    elec.unit  = 'cm';
+  end
   
   if dewar
     grad.coordsys = 'dewar';
@@ -492,3 +525,30 @@ if ~isempty(elec)
   elec.chantype = ft_chantype(elec);
   elec.chanunit = ft_chanunit(elec);
 end
+
+function [ex, ey] = plane_unitvectors(ez)
+
+% subfunction to obtain a pair of vectors that span the plane orthogonal to
+% ez. The heuristic is inspired by the MNE-python code
+
+if abs(abs(ez(3))-1)<1e-5
+  ex = [1 0 0]';
+else
+  ex = zeros(3,1);
+  if ez(2)<ez(3)
+    if ez(1)<ez(2)
+      ex(1) = 1;
+    else
+      ex(2) = 1;
+    end
+  else
+    if ez(1)<ez(2)
+      ex(1) = 1;
+    else
+      ex(3) = 1;
+    end
+  end
+end
+ex = ex - (ex'*ez).*ez;
+ex = ex / norm(ex);
+ey = cross(ez, ex);

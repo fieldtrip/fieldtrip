@@ -12,7 +12,7 @@ function failed_tutorial_natmeg_beamforming
 clear all
 close all
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/natmeg'));
+cd(dccnpath('/home/common/matlab/fieldtrip/data/ftp/workshop/natmeg2014'));
 
 load timefrequency/data_clean_MEG_responselocked.mat;
 load dipolefitting/headmodel_meg.mat;

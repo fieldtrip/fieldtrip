@@ -44,17 +44,19 @@ function [cfg] = ft_topoplotTFR(cfg, varargin)
 %                            'SouthOutside'       outside bottom
 %                            'EastOutside'        outside right
 %                            'WestOutside'        outside left
-%   cfg.colorbartext       =  string indicating the text next to colorbar
+%   cfg.colorbartext       = string indicating the text next to colorbar
 %   cfg.interplimits       = limits for interpolation (default = 'head')
-%                            'electrodes' to furthest electrode
-%                            'head' to edge of head
+%                            'electrodes'         to furthest electrode
+%                            'head'               to edge of head
 %   cfg.interpolation      = 'linear','cubic','nearest','v4' (default = 'v4') see GRIDDATA
 %   cfg.style              = plot style (default = 'both')
-%                            'straight' colormap only
-%                            'contour' contour lines only
-%                            'both' (default) both colormap and contour lines
-%                            'fill' constant color between lines
-%                            'blank' only the head shape
+%                            'straight'           colormap only
+%                            'contour'            contour lines only
+%                            'both'               both colormap and contour lines
+%                            'fill'               constant color between lines
+%                            'blank'              only the head shape
+%                            'straight_imsat'     colormap only, vector-graphics friendly
+%                            'both_imsat'         both colormap and contour lines, vector-graphics friendly
 %   cfg.gridscale          = scaling grid size (default = 67)
 %                            determines resolution of figure
 %   cfg.shading            = 'flat' or 'interp' (default = 'flat')
