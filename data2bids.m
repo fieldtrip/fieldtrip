@@ -2614,19 +2614,18 @@ elseif isdatetime(val)
     % see https://bids-specification.readthedocs.io/en/stable/02-common-principles.html#units
     val = datestr(val, 'yyyy-mm-ddTHH:MM:SS.FFF');
 else
-    % write [] as 'n/a'
-    % write nan as 'n/a'
-    % write boolean as 'true' or 'false'
-    if isempty(val)
-        val = 'n/a';
-    elseif isnan(val)
-        val = 'n/a';
-    elseif islogical(val)
-        if val
-            val = 'true';
-        else
-            val = 'false';
-        end
+  % write [] as 'n/a'
+  % write nan as 'n/a'
+  % write boolean as 'true' or 'false'
+  if isempty(val)
+    val = 'n/a';
+  elseif isnan(val)
+    val = 'n/a';
+  elseif islogical(val)
+    if val
+      val = 'true';
+    else
+      val = 'false';
     end
   end
 end
