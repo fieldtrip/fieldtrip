@@ -1,4 +1,4 @@
-function [rej_comp] = aw_ft_icabrowser(cfg, comp)
+function [rej_comp] = ft_icabrowser(cfg, comp)
 
 % FT_ICABROWSER loads in comp structure from FieldTrip ft_componentanalysis
 % and presents a GUI interface showing the power spectrum, variance over
