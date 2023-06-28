@@ -68,7 +68,7 @@ if ~ismember(powscale, {'lin', 'log10'})
 end
 
 if ~ismember(freqscale, {'lin', 'log'})
-  powscale = 'lin';
+  freqscale = 'lin';
 end
 
 % setup
