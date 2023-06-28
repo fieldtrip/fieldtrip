@@ -1,4 +1,4 @@
-function [rej_comp] = ft_icabrowser(cfg, comp)
+function [rej_comp] = aw_ft_icabrowser(cfg, comp)
 
 % FT_ICABROWSER loads in comp structure from FieldTrip ft_componentanalysis
 % and presents a GUI interface showing the power spectrum, variance over
@@ -18,6 +18,7 @@ function [rej_comp] = ft_icabrowser(cfg, comp)
 %   cfg.rejcomp       = list of components which shall be initially marked for rejection, e.g. [1 4 7]
 %   cfg.blocksize     = blocksize of time course (default = 1 sec)
 %   cfg.powscale      = scaling of y axis in power plot, 'lin' or 'log10', (default = 'log10')
+%   cfg.freqscale     = scaling of x axis in power plot, 'lin' or 'log', (default = 'lin')
 %   cfg.zlim          = plotting limits for color dimension of topoplot, 'maxmin', 'maxabs', 'zeromax', 'minzero', or [zmin zmax] (default = 'maxmin')
 %   cfg.path          = where pdfs will be saves (default = pwd)
 %   cfg.prefix        = prefix of the pdf files (default = 'ICA')
@@ -44,6 +45,7 @@ layout        = ft_getopt(cfg, 'layout');
 rejcomp       = ft_getopt(cfg, 'rejcomp', []);
 blocksize     = ft_getopt(cfg, 'blocksize', 1);
 powscale      = ft_getopt(cfg, 'powscale', 'log10');
+freqscale     = ft_getopt(cfg, 'freqscale', 'lin');
 zlim          = ft_getopt(cfg, 'zlim', 'maxmin');
 path          = ft_getopt(cfg, 'path', pwd);
 prefix        = ft_getopt(cfg, 'prefix', 'ICA');
@@ -63,6 +65,10 @@ end
 % test config
 if ~ismember(powscale, {'lin', 'log10'})
   powscale = 'log10';
+end
+
+if ~ismember(freqscale, {'lin', 'log'})
+  powscale = 'lin';
 end
 
 % setup
@@ -133,14 +139,25 @@ while err == 0 % KEEP GOING UNTIL THERE IS AN ERROR
     last.Enable = 'off';
 
     % ------------------------------------------------
+    % SWITCH POWER AXIS LOG/LINEAR
+    % ------------------------------------------------
+    powlog = uicontrol('Units','normalized','Position',[0.45 0.01 0.075 0.05],'Style','pushbutton', 'Callback',@(h, evt)powplotlog);
+    powlog.Enable = 'off';
+    if strcmp(powscale, 'log10')
+      powlog.String = 'Linear Power Scale';
+    else
+      powlog.String = 'Log Power Scale';
+    end
+
+    % ------------------------------------------------
     % SWITCH FREQUENCY AXIS LOG/LINEAR
     % ------------------------------------------------
-    log = uicontrol('Units','normalized','Position',[0.45 0.01 0.075 0.05],'Style','pushbutton', 'Callback',@(h, evt)plotlog);
-    log.Enable = 'off';
-    if strcmp(powscale, 'log10')
-      log.String = 'Linear';
+    freqlog = uicontrol('Units','normalized','Position',[0.55 0.01 0.090 0.05],'Style','pushbutton', 'Callback',@(h, evt)freqplotlog);
+    freqlog.Enable = 'off';
+    if strcmp(freqscale, 'log')
+      freqlog.String = 'Linear Frequency Scale';
     else
-      log.String = 'Log10';
+      freqlog.String = 'Log Frequency Scale';
     end
 
     % ------------------------------------------------
@@ -198,7 +215,16 @@ while err == 0 % KEEP GOING UNTIL THERE IS AN ERROR
       plot(freq(strt:stp),smoothed(strt:stp));
       ylabel('PSD (T^2/Hz)');
     end
-    set(gca,'TickDir','out','XTick',0:25:200)
+
+    if strcmp(freqscale, 'log')
+        set(gca, 'XScale', 'log');
+        set(gca,'TickDir','out','XTick', [1 10 100]);
+    else
+        set(gca, 'XScale', 'linear');
+        set(gca,'TickDir','out','XTick',0:25:200);
+    end
+
+    % set(gca,'TickDir','out','XTick',0:25:200);
     xlabel('Frequency (Hz)'); grid on;
     axis tight;
 
@@ -215,6 +241,7 @@ while err == 0 % KEEP GOING UNTIL THERE IS AN ERROR
     % ------------------------------------------------
     subcomp{3}{row} = subplot(numOfPlots,3,row*3);
     cfgtopo.component = compNum;       % specify the component(s) that should be plotted
+    cfgtopo.figure = subcomp{3}{row};
     ft_topoplotIC(cfgtopo, comp);
 
     if mod(compNum,numOfPlots)==0 || compNum == 80
@@ -299,7 +326,8 @@ while err == 0 % KEEP GOING UNTIL THERE IS AN ERROR
       else
         save_it.Enable = 'On';
       end
-      log.Enable = 'on';
+      freqlog.Enable = 'on';
+      powlog.Enable = 'on';
       quit_it.Enable = 'on';
       uiwait
     end
@@ -428,13 +456,25 @@ end
       uiresume;
     end
 
-    function plotlog()
+    function powplotlog()
       manpos = get(f,'OuterPosition');
       row = 0;
       if strcmp(powscale, 'log10')
         powscale = 'lin';
       else
         powscale = 'log10';
+      end
+      clf;
+      uiresume;
+    end
+
+    function freqplotlog()
+      manpos = get(f,'OuterPosition');
+      row = 0;
+      if strcmp(freqscale, 'log')
+        freqscale = 'lin';
+      else
+        freqscale = 'log';
       end
       clf;
       uiresume;
