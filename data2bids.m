@@ -871,7 +871,7 @@ switch typ
     need_meg_json = true;
 
   case {'brainvision_vhdr', 'edf', 'eeglab_set', 'biosemi_bdf'}
-    % the file on disk contains ExG data in a BIDS compiant format
+    % the file on disk contains EEG or EMG data in a BIDS compliant format
     hdr = ft_read_header(cfg.headerfile, 'checkmaxfilter', false, 'readbids', false);
     if strcmp(cfg.method, 'convert')
       % the data should be converted and written to disk
@@ -1451,8 +1451,6 @@ if need_channels_tsv
         modality_json = ieeg_json;
     elseif need_emg_json
         modality_json = emg_json;
-    elseif need_exg_json
-        modality_json = exg_json;
     elseif need_nirs_json
         modality_json = nirs_json;
     elseif need_motion_json
