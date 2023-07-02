@@ -21,7 +21,7 @@ function [channel] = ft_channelselection(desired, datachannel, senstype)
 %   'M*1'        is replaced by all channels that match the wildcard, e.g. MEG0111, MEG0131, MEG0131, ...
 %   'meg'        is replaced by all MEG channels (works for CTF, 4D, Neuromag and Yokogawa)
 %   'megref'     is replaced by all MEG reference channels (works for CTF and 4D)
-%   'meggrad'    is replaced by all MEG gradiometer channels (works for Yokogawa and Neuromag306)
+%   'meggrad'    is replaced by all MEG gradiometer channels (works for CTF, Yokogawa and Neuromag306)
 %   'megplanar'  is replaced by all MEG planar gradiometer channels (works for Neuromag306)
 %   'megmag'     is replaced by all MEG magnetometer channels (works for Yokogawa and Neuromag306)
 %   'eeg'        is replaced by all recognized EEG channels (this is system dependent)
@@ -264,8 +264,7 @@ switch senstype
     labelmeg      = datachannel(megind);
     labelmegmag   = datachannel(megmag);
     labelmeggrad  = datachannel(megax | megpl);
-    %%
-    %    labeleeg  = datachannel(strncmp('EEG', datachannel, length('EEG')));
+    %labeleeg  = datachannel(strncmp('EEG', datachannel, length('EEG')));
     eeg_A = myregexp('^A[^G]*[0-9hzZ]$', datachannel);
     eeg_P = myregexp('^P[^G]*[0-9hzZ]$', datachannel);
     eeg_T = myregexp('^T[^R]*[0-9hzZ]$', datachannel);
@@ -294,12 +293,15 @@ switch senstype
     % all CTF MEG channels start with "M"
     % all CTF reference channels start with B, G, P, Q or R
     % all CTF EEG channels start with "EEG"
-    labelmeg    = datachannel(strncmp('M'  , datachannel, length('M'  )));
-    labelmegref = [datachannel(strncmp('B'  , datachannel, 1));
+    labelmeg     = datachannel(strncmp('M'  , datachannel, length('M'  )));
+    labelmeggrad = datachannel(strncmp('M'  , datachannel, length('M'  )));
+    labelmegref  = [
+      datachannel(strncmp('B'  , datachannel, 1));
       datachannel(strncmp('G'  , datachannel, 1));
       datachannel(strncmp('P'  , datachannel, 1));
       datachannel(strncmp('Q'  , datachannel, 1));
-      datachannel(strncmp('R'  , datachannel, length('G'  )))];
+      datachannel(strncmp('R'  , datachannel, 1));
+      ];
     labeleeg  = datachannel(strncmp('EEG', datachannel, length('EEG')));
 
     % Not sure whether this should be here or outside the switch or
