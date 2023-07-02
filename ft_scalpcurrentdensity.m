@@ -14,7 +14,7 @@ function [scd] = ft_scalpcurrentdensity(cfg, data)
 % where the input data is obtained from FT_PREPROCESSING or from
 % FT_TIMELOCKANALYSIS. The output data has the same format as the input
 % and can be used in combination with most other FieldTrip functions
-% such as FT_FREQNALYSIS or FT_TOPOPLOTER.
+% such as FT_FREQANALYSIS or FT_TOPOPLOTER.
 %
 % The configuration should contain
 %   cfg.method       = 'finite' for finite-difference method or
@@ -25,10 +25,10 @@ function [scd] = ft_scalpcurrentdensity(cfg, data)
 %   cfg.feedback     = string, 'no', 'text', 'textbar', 'gui' (default = 'text')
 %
 % The finite method require the following
-%   cfg.conductivity = conductivity of the skin (default = 0.33 S/m)
+%   cfg.conductivity = conductivity of the scalp (default = 0.33 S/m)
 %
 % The spline and finite method require the following
-%   cfg.conductivity = conductivity of the skin (default = 0.33 S/m)
+%   cfg.conductivity = conductivity of the scalp (default = 0.33 S/m)
 %   cfg.lambda       = regularization parameter (default = 1e-05)
 %   cfg.order        = order of the splines (default = 4)
 %   cfg.degree       = degree of legendre polynomials (default for
@@ -43,7 +43,7 @@ function [scd] = ft_scalpcurrentdensity(cfg, data)
 % For the spline method you can specify the following
 %   cfg.badchannel      = cell-array, see FT_CHANNELSELECTION for details (default = [])
 %
-% Note that the skin conductivity, electrode dimensions and the potential
+% Note that the scalp conductivity, electrode dimensions and the potential
 % all have to be expressed in the same SI units, otherwise the units of
 % the SCD values are not scaled correctly. The spatial distribution still
 % will be correct.
