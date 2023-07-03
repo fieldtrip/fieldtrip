@@ -27,7 +27,6 @@ function [stat, cfg] = ft_statistics_montecarlo(cfg, dat, design, varargin)
 %   cfg.wvar             = number or list with indices, within-cell variable(s)
 %   cfg.cvar             = number or list with indices, control variable(s)
 %   cfg.feedback         = string, 'gui', 'text', 'textbar' or 'no' (default = 'text')
-%   cfg.randomseed       = string, 'yes', 'no' or a number (default = 'yes')
 %
 % If you use a cluster-based statistic, you can specify the following options that
 % determine how the single-sample or single-voxel statistics will be thresholded and
