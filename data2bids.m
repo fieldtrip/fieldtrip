@@ -88,7 +88,7 @@ function [cfg] = data2bids(cfg, varargin)
 % "trl" format from FT_DEFINETRIAL with the first three columns corresponding to the
 % begsample, endsample and offset (in samples). You can also a table with the
 % "events.tsv" format with the first two columns corresponding to the onset and
-% duration (in seconds). In either case the table can have additional culumns with
+% duration (in seconds). In either case the table can have additional columns with
 % numerical or string values. If you do not specify cfg.events, the events will be
 % read from the MEG/EEG/iEEG dataset.
 %   cfg.events                  = trial definition (see FT_DEFINETRIAL) or event structure (see FT_READ_EVENT)
