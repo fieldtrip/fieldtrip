@@ -1,6 +1,10 @@
 function [data] = ft_resampledata(cfg, data)
 
-% FT_RESAMPLEDATA performs a resampling or downsampling of the data
+% FT_RESAMPLEDATA performs a resampling or downsampling of the data to a specified
+% new sampling frequency, or an inperpolation of the data measured with one sampling
+% frequency to another. The latter is useful when merging data measured on two
+% different acquisition devices, or when the samples in two recordings are slightly
+% shifted.
 %
 % Use as
 %   [data] = ft_resampledata(cfg, data)
@@ -8,6 +12,7 @@ function [data] = ft_resampledata(cfg, data)
 % The data should be organised in a structure as obtained from the FT_PREPROCESSING
 % function. The configuration should contain
 %   cfg.resamplefs      = frequency at which the data will be resampled
+%   cfg.method          = resampling method, see RESAMPLE, DOWNSAMPLE, DECIMATE (default = 'resample')
 %   cfg.detrend         = 'no' or 'yes', detrend the data prior to resampling (no default specified, see below)
 %   cfg.demean          = 'no' or 'yes', whether to apply baseline correction (default = 'no')
 %   cfg.baselinewindow  = [begin end] in seconds, the default is the complete trial (default = 'all')
@@ -15,18 +20,21 @@ function [data] = ft_resampledata(cfg, data)
 %   cfg.trials          = 'all' or a selection given as a 1xN vector (default = 'all')
 %   cfg.sampleindex     = 'no' or 'yes', add a channel with the original sample indices (default = 'no')
 %
-% Instead of specifying cfg.resamplefs, you can also specify a time axis on which you
-% want the data to be resampled. This is useful for merging data from two acquisition
-% devices, after resampledata you can call FT_APPENDDATA to concatenate the channels
-% from the different acquisition devices.
-%   cfg.time        = cell-array with one time axis per trial (i.e. from another dataset)
+% Rather than resapling to a specific sampling frequency, you can also specify a time
+% axis on which you want the data to be resampled. This is useful for merging data
+% from two acquisition devices, after resampledata you can call FT_APPENDDATA to
+% concatenate the channels from the different acquisition devices.
+%   cfg.time        = cell-array with one time axis per trial (i.e., from another dataset)
 %   cfg.method      = interpolation method, see INTERP1 (default = 'pchip')
-%   cfg.extrapval   = extrapolation behaviour, scalar value or 'extrap' (default = as in INTERP1)
+%   cfg.extrapval   = extrapolation behaviour, scalar value or 'extrap' (default is as in INTERP1)
 %
-% When you specify cfg.method='resample' an implicit anti-aliasing low pass filter is applied prior
-% to the resampling. You can also explicitly specify an anti-aliasing low pass filter. This is adviced
-% when downsampling using any other method than 'resample', but also when strong noise components are
-% present just above the new Nyquist frequency.
+% The default method is 'resample' when you specify cfg.resamplefs, and 'pchip' when
+% you specify cfg.time.
+%
+% The methods 'resample' and 'decimate' automatically apply an anti-aliasing low-pass
+% filter. You can also explicitly specify an anti-aliasing low pass filter. This is
+% particularly adviced when downsampling using the 'downsample' method, but also when
+% strong noise components are present just above the new Nyquist frequency.
 %   cfg.lpfilter    = 'yes' or 'no' (default = 'no')
 %   cfg.lpfreq      = scalar value for low pass frequency (there is no default, so needs to be always specified)
 %   cfg.lpfilttype  = string, filter type (default is set in ft_preproc_lowpassfilter)
@@ -34,11 +42,6 @@ function [data] = ft_resampledata(cfg, data)
 %
 % More documentation about anti-alias filtering can be found in this <a href="matlab:
 % web('https://www.fieldtriptoolbox.org/faq/resampling_lowpassfilter')">FAQ</a> on the FieldTrip website.
-%
-% Previously this function used to detrend the data by default to avoid edge artifacts fue to the
-% anti-aliassing filter. Detrending is fine for removing slow drifts in data prior to frequency analysis,
-% but not recommended if you want to look at ERPs or ERFs. Therefore the old default value 'yes' has been
-% removed; you now explicitly have to specify whether you want to detrend or not.
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
@@ -48,10 +51,10 @@ function [data] = ft_resampledata(cfg, data)
 % files should contain only a single variable, corresponding with the
 % input/output structure.
 %
-% See also FT_PREPROCESSING, FT_APPENDDATA, FT_PREPROC_LOWPASSFILTER, ESAMPLE, DOWNSAMPLE, INTERP1
+% See also FT_PREPROCESSING, FT_APPENDDATA, FT_PREPROC_LOWPASSFILTER, RESAMPLE, DOWNSAMPLE, DECIMATE, INTERP1
 
 % Copyright (C) 2003-2006, FC Donders Centre, Markus Siegel
-% Copyright (C) 2004-2022, FC Donders Centre, Robert Oostenveld
+% Copyright (C) 2004-2023, FC Donders Centre, Robert Oostenveld
 % Copyright (C) 2022, DCCN, Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
@@ -98,6 +101,7 @@ cfg = ft_checkconfig(cfg, 'renamed', {'resamplemethod', 'method'});
 cfg = ft_checkconfig(cfg, 'renamed', {'fsample', 'resamplefs'});
 
 % set the defaults
+cfg.method           = ft_getopt(cfg, 'method',          []);
 cfg.resamplefs       = ft_getopt(cfg, 'resamplefs',      []);
 cfg.time             = ft_getopt(cfg, 'time',            {});
 cfg.factor           = ft_getopt(cfg, 'factor',          {});
@@ -106,7 +110,6 @@ cfg.demean           = ft_getopt(cfg, 'demean',          'no');
 cfg.baselinewindow   = ft_getopt(cfg, 'baselinewindow',  'all');
 cfg.feedback         = ft_getopt(cfg, 'feedback',        'text');
 cfg.trials           = ft_getopt(cfg, 'trials',          'all', 1);
-cfg.method           = ft_getopt(cfg, 'method',          []);
 cfg.sampleindex      = ft_getopt(cfg, 'sampleindex',     'no');
 cfg.extrapval        = ft_getopt(cfg, 'extrapval',       []);
 cfg.lpfilter         = ft_getopt(cfg, 'lpfilter');
@@ -117,19 +120,23 @@ convert = ft_datatype(data);
 % check if the input data is valid for this function, this will convert it to raw if needed
 data = ft_checkdata(data, 'datatype', {'raw+comp', 'raw'}, 'feedback', 'yes');
 
-if isempty(cfg.method) && ~isempty(cfg.time)
-  % see INTERP1, shape-preserving piecewise cubic interpolation
-  cfg.method = 'pchip';
-elseif isempty(cfg.method)
-  % see RESAMPLE
-  cfg.method = 'resample';
+if isempty(cfg.method)
+  if ~isempty(cfg.time)
+    % see INTERP1, shape-preserving piecewise cubic interpolation
+    cfg.method = 'pchip';
+  elseif ~isempty(cfg.resamplefs)
+    % see RESAMPLE
+    cfg.method = 'resample';
+  else
+    ft_error('you must specify cfg.method');
+  end
 end
 
 usefsample = any(strcmp(cfg.method, {'resample', 'downsample', 'decimate', 'mean', 'median'}));
 usetime    = ~usefsample;
 
 % select trials of interest
-tmpcfg = keepfields(cfg, {'trials', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+tmpcfg = keepfields(cfg, {'trials', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
 data   = ft_selectdata(tmpcfg, data);
 % restore the provenance information
 [cfg, data] = rollback_provenance(cfg, data);
@@ -264,9 +271,9 @@ if usefsample
     elseif strcmp(cfg.method, 'mean')
       if isa(olddat, 'single')
         % temporary convert this trial to double precision
-        newdat = transpose(single(my_mean(double(transpose(olddat)),fsorig/fsres)));
+        newdat = transpose(single(my_mean(double(transpose(olddat)), fsorig/fsres)));
       else
-        newdat = transpose(my_mean(transpose(olddat),fsorig/fsres));
+        newdat = transpose(my_mean(transpose(olddat), fsorig/fsres));
       end
 
     elseif strcmp(cfg.method, 'median')

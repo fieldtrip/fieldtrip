@@ -13,8 +13,9 @@ function [cfg] = ft_topoplotCC(cfg, freq)
 %   cfg.alphaparam    = string, parameter to be used to control the opacity (see below)
 %   cfg.colorparam    = string, parameter to be used to control the line color
 %   cfg.visible       = string, 'on' or 'off' whether figure will be visible (default = 'on')
-%   cfg.position      = location and size of the figure, specified as a vector of the form [left bottom width height]
-%   cfg.renderer      = string, 'opengl', 'zbuffer', 'painters', see MATLAB Figure Properties. If this function crashes, you should try 'painters'.
+%   cfg.figure        = 'yes' or 'no', whether to open a new figure. You can also specify a figure handle from FIGURE, GCF or SUBPLOT. (default = 'yes')
+%   cfg.position      = location and size of the figure, specified as [left bottom width height] (default is automatic)
+%   cfg.renderer      = string, 'opengl', 'zbuffer', 'painters', see RENDERERINFO (default is automatic, try 'painters' when it crashes)
 %
 % The widthparam should be indicated in pixels, e.g. usefull numbers are 1 and
 % larger.
@@ -95,7 +96,7 @@ cfg.linestyle   = ft_getopt(cfg, 'linestyle',   []);
 cfg.colormap    = ft_getopt(cfg, 'colormap',    'default');
 cfg.renderer    = ft_getopt(cfg, 'renderer'); % let MATLAB decide on the default
 
-tmpcfg = keepfields(cfg, {'layout', 'channel', 'rows', 'columns', 'commentpos', 'skipcomnt', 'scalepos', 'skipscale', 'projection', 'viewpoint', 'rotate', 'width', 'height', 'elec', 'grad', 'opto', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+tmpcfg = keepfields(cfg, {'layout', 'channel', 'rows', 'columns', 'commentpos', 'skipcomnt', 'scalepos', 'skipscale', 'projection', 'viewpoint', 'rotate', 'width', 'height', 'elec', 'grad', 'opto', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
 lay = ft_prepare_layout(tmpcfg, freq);
 
 beglabel = freq.labelcmb(:,1);

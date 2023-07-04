@@ -115,7 +115,7 @@ if isempty(cfg.parameter)
 end
 
 % ensure that the data in all inputs has the same channels, time-axis, etc.
-tmpcfg = keepfields(cfg, {'frequency', 'avgoverfreq', 'latency', 'avgovertime', 'channel', 'avgoverchan', 'parameter', 'select', 'nanmean', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+tmpcfg = keepfields(cfg, {'frequency', 'avgoverfreq', 'latency', 'avgovertime', 'channel', 'avgoverchan', 'parameter', 'select', 'nanmean', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
 [varargin{:}] = ft_selectdata(tmpcfg, varargin{:});
 % restore the provenance information
 [cfg, varargin{:}] = rollback_provenance(cfg, varargin{:});
@@ -124,7 +124,7 @@ tmpcfg = keepfields(cfg, {'frequency', 'avgoverfreq', 'latency', 'avgovertime', 
 if strcmp(cfg.correctm, 'cluster') && length(varargin{1}.label)>1
   % this is limited to reading neighbours from disk and/or selecting channels
   % the user should call FT_PREPARE_NEIGHBOURS directly for the actual construction
-  tmpcfg = keepfields(cfg, {'neighbours', 'channel', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+  tmpcfg = keepfields(cfg, {'neighbours', 'channel', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
   cfg.neighbours = ft_prepare_neighbours(tmpcfg);
 end
 

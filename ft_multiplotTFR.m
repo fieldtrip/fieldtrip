@@ -12,8 +12,7 @@ function [cfg] = ft_multiplotTFR(cfg, data)
 % functions.
 %
 % The configuration can have the following parameters:
-%   cfg.parameter        = field to be represented as color (default depends on data.dimord)
-%                          'powspctrm' or 'cohspctrm'
+%   cfg.parameter        = field to be represented as color, for example 'powspctrm' or 'cohspctrm' (default depends on data.dimord)
 %   cfg.maskparameter    = field in the data to be used for masking of data, can be logical (e.g. significant data points) or numerical (e.g. t-values).
 %                        (not possible for mean over multiple channels, or when input contains multiple subjects
 %                        or trials)
@@ -33,8 +32,7 @@ function [cfg] = ft_multiplotTFR(cfg, data)
 %   cfg.baseline         = 'yes', 'no' or [time1 time2] (default = 'no'), see FT_FREQBASELINE
 %   cfg.baselinetype     = 'absolute', 'relative', 'relchange', 'normchange', 'db' or 'zscore' (default = 'absolute')
 %   cfg.trials           = 'all' or a selection given as a 1xN vector (default = 'all')
-%   cfg.box              = 'yes', 'no' (default = 'no' if maskparameter given default = 'yes')
-%                          Draw a box around each graph
+%   cfg.box              = 'yes', 'no', whether to draw a box around each graph (default = 'no', if maskparameter is given default = 'yes')
 %   cfg.hotkeys          = enables hotkeys (up/down arrows) for dynamic colorbar adjustment
 %   cfg.colorbar         = 'yes', 'no' (default = 'no')
 %   cfg.colorbartext     = string indicating the text next to colorbar
@@ -52,7 +50,9 @@ function [cfg] = ft_multiplotTFR(cfg, data)
 %                          In a interactive plot you can select areas and produce a new
 %                          interactive plot when a selected area is clicked. Multiple areas
 %                          can be selected by holding down the SHIFT key.
-%   cfg.renderer         = 'painters', 'zbuffer', ' opengl' or 'none' (default = [])
+%   cfg.figure           = 'yes' or 'no', whether to open a new figure. You can also specify a figure handle from FIGURE, GCF or SUBPLOT. (default = 'yes')
+%   cfg.position         = location and size of the figure, specified as [left bottom width height] (default is automatic)
+%   cfg.renderer         = string, 'opengl', 'zbuffer', 'painters', see RENDERERINFO (default is automatic, try 'painters' when it crashes)
 %   cfg.directionality   = '', 'inflow' or 'outflow' specifies for
 %                          connectivity measures whether the inflow into a
 %                          node, or the outflow from a node is plotted. The
@@ -257,7 +257,7 @@ end
 hastime = isfield(data, 'time');
 hasfreq = isfield(data, 'freq');
 
-assert((hastime && hasfreq), 'please use ft_multiplotER for time-only or frequency-only data');
+assert((hastime && hasfreq), 'please use ft_multiplotTFR for time-frequency data only');
 
 xparam = ft_getopt(cfg, 'xparam', 'time');
 yparam = ft_getopt(cfg, 'yparam', 'freq');
@@ -295,7 +295,7 @@ if ~strcmp(cfg.baseline, 'no')
 end
 
 % channels SHOULD be selected here, as no interactive action produces a new multiplot
-tmpcfg = keepfields(cfg, {'channel', 'trials', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+tmpcfg = keepfields(cfg, {'channel', 'trials', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
 if hasrpt
   tmpcfg.avgoverrpt = 'yes';
 else
@@ -362,7 +362,7 @@ end
 %% Section 3: select the data to be plotted and determine min/max range
 
 % Read or create the layout that will be used for plotting
-tmpcfg = keepfields(cfg, {'layout', 'channel', 'rows', 'columns', 'commentpos', 'skipcomnt', 'scalepos', 'skipscale', 'projection', 'viewpoint', 'rotate', 'width', 'height', 'elec', 'grad', 'opto', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+tmpcfg = keepfields(cfg, {'layout', 'channel', 'rows', 'columns', 'commentpos', 'skipcomnt', 'scalepos', 'skipscale', 'projection', 'viewpoint', 'rotate', 'width', 'height', 'elec', 'grad', 'opto', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
 cfg.layout = ft_prepare_layout(tmpcfg, data);
 
 % Take the subselection of channels that is contained in the layout, this is the same in all datasets

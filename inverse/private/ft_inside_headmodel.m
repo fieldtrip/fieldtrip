@@ -17,7 +17,7 @@ function [inside] = ft_inside_headmodel(dippos, headmodel, varargin)
 %   grad        = structure with gradiometer information, used for localspheres
 %   headshape   = structure with headshape, used for old CTF localspheres strategy
 
-% Copyright (C) 2003-2016, Robert Oostenveld
+% Copyright (C) 2003-2023, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -67,11 +67,11 @@ switch ft_headmodeltype(headmodel)
     if ~isempty(headshape) && ~isempty(grad)
       % use the specified headshape to construct the bounding triangulation
       [pos, tri] = headsurface(headmodel, grad, 'headshape', headshape, 'inwardshift', inwardshift, 'surface', 'skin');
-      inside = bounding_mesh(dippos, pos, tri);
+      inside = surface_inside(dippos, pos, tri);
     elseif ~isempty(grad)
       % use the volume conductor model to construct an approximate headshape
       [pos, tri] = headsurface(headmodel, grad, 'inwardshift', inwardshift, 'surface', 'skin');
-      inside = bounding_mesh(dippos, pos, tri);
+      inside = surface_inside(dippos, pos, tri);
     else
       % only check whether the dipole is in any of the spheres
       nspheres = size(headmodel.r,1);
@@ -117,7 +117,7 @@ switch ft_headmodeltype(headmodel)
   case {'bem', 'dipoli', 'bemcp', 'openmeeg', 'asa', 'singleshell', 'neuromag', 'nolte'}
     % this is a model with a realistic shape described by a triangulated boundary
     [pos, tri] = headsurface(headmodel, [], 'inwardshift', inwardshift, 'surface', 'brain');
-    inside = bounding_mesh(dippos, pos, tri);
+    inside = surface_inside(dippos, pos, tri);
 
   case {'simbio', 'duneuro'}
     % this is a model with hexaheders or tetraheders
@@ -132,36 +132,23 @@ switch ft_headmodeltype(headmodel)
     numpos = size(headmodel.pos,1);
     numdip = size(dippos,1);
 
-    % FIXME we have to rethink which tissue types should be flagged as inside
-    %tissue = intersect({'gray', 'white', 'csf', 'brain'}, headmodel.tissuelabel);
-    tissue = intersect({'gm', 'gray', 'brain'}, headmodel.tissuelabel);
+    % select only the cortical or brain tissues
+    cortex = find(ismember(headmodel.tissuelabel, {'gm', 'gray', 'brain'}));
 
-    % determine all hexaheders that are labeled as brain
-    insidehex = false(size(headmodel.tissue));
-    for i=1:numel(tissue)
-      fprintf('selecting dipole positions inside the ''%s'' tissue\n', tissue{i});
-      insidehex = insidehex | (headmodel.tissue == find(strcmp(headmodel.tissuelabel, tissue{i})));
-    end
+    % determine all hexaheders that are labeled as cortical or brain
+    insidehex = ismember(headmodel.tissue, cortex);
 
-    % prune the mesh, i.e. only retain hexaheders labeled as brain
+    % prune the mesh, only retain hexaheders labeled as cortical or brain
     fprintf('pruning headmodel volume elements from %d to %d (%d%%)\n', numhex, sum(insidehex), round(100*sum(insidehex)/numhex));
     headmodel.hex    = headmodel.hex(insidehex,:);
     headmodel.tissue = headmodel.tissue(insidehex);
     numhex = sum(insidehex);
-    clear insidehex
 
-    % determine all vertices that are part of a hexaheder
-    insidepos = false(numpos,1);
-    insidepos(headmodel.hex) = true;
+    % remove these, we don't need them any more
+    clear cortex insidehex
 
-    % prune the mesh, i.e. only retain vertices that are part of a  hexaheder
-    fprintf('pruning headmodel vertices from %d to %d (%d%%)\n', numpos, sum(insidepos), round(100*sum(insidepos)/numpos));
-    headmodel.pos = headmodel.pos(insidepos,:);
-    numpos = sum(insidepos);
-    renumber = zeros(size(insidepos));
-    renumber(insidepos) = 1:numpos;          % determine the mapping from original to pruned vertex indices
-    headmodel.hex = renumber(headmodel.hex); % renumber the vertex indices
-    clear insidepos renumber
+    % prune the mesh, i.e. only retain vertices that are part of a hexaheder
+    [headmodel.pos, headmodel.hex] = remove_unused_vertices(headmodel.pos, headmodel.hex);
 
     % construct a sparse matrix with the mapping between all hexaheders and vertices
     i = repmat(transpose(1:numhex), 1, size(headmodel.hex,2));
@@ -177,11 +164,8 @@ switch ft_headmodeltype(headmodel)
     insidedip  = find( insidedip);
     dippos = dippos(insidedip,:);
 
-    % find the nearest vertex for each of the dipoles, dsearchn is slow
-    % when there are many points, knnsearch is much faster, but is in the
-    % stats-toolbox. So, use a drop-in replacement that performs in between
-    % in terms of speed.
-    posindx = my_dsearchn(headmodel.pos, dippos);
+    % find the nearest vertex for each of the dipoles in the headmodel mesh
+    posindx = knnsearch(headmodel.pos, dippos);
 
     % The following code is only guaranteed to work with convex elements. Regular
     % hexahedra and tetrahedra are convex, and the adapted hexahedra we can use with
@@ -211,85 +195,3 @@ end
 % ensure that it is a boolean column vector
 inside(isnan(inside(:))) = 0;
 inside = logical(inside(:));
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% local subfunction that is much faster than dsearchn
-
-function indx = my_dsearchn(pos1, pos2, flag)
-
-% indx = zeros(size(pos2,1),1);
-% mind = inf(size(pos2,1),1);
-% for k = 1:size(pos1,1)
-%   dpos = bsxfun(@minus, pos2, pos1(k,:));
-%   thisd = sum(dpos.^2,2);
-%   issmaller = thisd<mind;
-%   mind(issmaller) = thisd(issmaller);
-%   indx(issmaller) = k;
-% end
-
-% the idea is that the distance between 2 points is:
-% 
-% sqrt(sum((p1(x,y,z)-p2(x,y,z)).^2)
-% 
-% since we are dealing with relative distances, we can get rid of the sqrt:
-% so we need to compute: 
-%
-% sum((p1(x,y,z)-p2(x,y,z)).^2)
-%
-% this is the same as:
-%
-% (p1x-p2x)^2 + (p1y-p2y)^2 + (p1z-p2z)^2
-%
-% or, equivalently:
-%
-% p1x^2 + p2x^2 - 2*p1x*p2x+ ... 
-% 
-% reordering:
-%
-% (p1x^2 + p1y^2 + p1z^2) + cross-terms + (p2x^2 + p2y^2 + p2z^2)
-%
-% the last term between brackets is the same for each position-of-interest:
-% so it does not change the relative distance, and the first term between
-% brackets only needs to be computed once (below denoted as the 'offset'
-% variable.
-
-if nargin<3
-  flag = true;
-end
-
-if flag && exist('knnsearch', 'file')
-  % use much faster knnsearch if available on the path
-  indx = knnsearch(pos1, pos2);
-  return;
-end
-
-offset = (pos1.^2)*[1;1;1];
-
-% not sure whether this speeds up things, but it does not hurt do the
-% operations in order of overall offset (i.e. absolute distance of the
-% headmodel points to the origin)
-[srt, ix] = sort(-offset);
-indx   = zeros(size(pos2,1),1);
-mind   = inf(1,size(pos2,1));
-
-% transpose once, to speed up matrix computations
-pos2 = pos2';
-
-chunksize = 250; % just a number, could be optimized
-chunks    = [(0:chunksize:(numel(offset)-1)) numel(offset)];
-
-% loop across blocks of headmodel points, and iteratively update the
-% index to the nearest sourcemodel point, based on the shortcut heuristic
-% explained above
-
-for k = 1:(numel(chunks)-1)
-  iy = ix((chunks(k)+1):chunks(k+1));
-  
-  %thisd = offset(k) - 2.*(pos2(:,1).*pos1(k,1)+pos2(:,2).*pos1(k,2)+pos2(:,3).*pos1(k,3));
-  thisd  = offset(iy)./2 - pos1(iy,:)*pos2;%pos2(:,1)*pos1(k,1)-pos2(:,2)*pos1(k,2)-pos2(:,3)*pos1(k,3);
-  [m, i] = min(thisd, [], 1);
-  issmaller = m<mind;
-  mind(issmaller) = m(issmaller);
-  indx(issmaller) = iy(i(issmaller));
-end

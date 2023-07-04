@@ -8,14 +8,29 @@ cd(dccnpath('/home/common/matlab/fieldtrip/data/test/original/meg/opm_fil'));
 
 %% the data is from https://github.com/tierneytim/OPM
 
-channelsfile  = 'testData/channels.tsv';
-coordsysfile  = 'testData/coordsystem.json';
-datafile      = 'testData/meg.bin';
-headerfile    = 'testData/meg.json';
-positionsfile = 'testData/positions.tsv';
+% see https://github.com/fieldtrip/fieldtrip/issues/2240
+% the changes in https://github.com/fieldtrip/fieldtrip/commit/db64a5b168b14447ee911f98266dd1237c5184b1
+% caused the reading function to break on the original test data
 
-mrifile       = 'testData/T1w.nii';
-cortexfile    = 'testData/testCustom.gii';
+if false
+  channelsfile  = 'testData_v1/channels.tsv';
+  coordsysfile  = 'testData_v1/coordsystem.json';
+  datafile      = 'testData_v1/meg.bin';
+  headerfile    = 'testData_v1/meg.json';
+  positionsfile = 'testData_v1/positions.tsv';
+  mrifile       = 'testData_v1/T1w.nii';
+  cortexfile    = 'testData/testCustom.gii';
+
+else
+  % the files were renamed and a Precision field was added to the JSON
+  channelsfile  = 'testData_v2/test_channels.tsv';
+  coordsysfile  = 'testData_v2/test_coordsystem.json';
+  datafile      = 'testData_v2/test_meg.bin';
+  headerfile    = 'testData_v2/test_meg.json';
+  positionsfile = 'testData_v2/test_positions.tsv';
+  mrifile       = 'testData_v2/test_T1w.nii';
+  cortexfile    = 'testData_v2/test_testCustom.gii';
+end
 
 %%
 

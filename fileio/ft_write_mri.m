@@ -30,13 +30,15 @@ function [V] = ft_write_mri(filename, dat, varargin)
 %   'nifti2'      uses FreeSurfer code
 %   'nifti_gz'    uses FreeSurfer code
 %   'nifti_spm'   uses SPM
+%   'seg3d_mat'   MATLAB file for Seg3D with a scirunnrrd structure
 %   'vista'       SIMBIO specific format
 %   'vmr'         Brainvoyager specific format
 %   'vmp'         Brainvoyager specific format
+%   'vtk'         Visualization ToolKit file format, for use with Paraview
 %
-% See also FT_READ_MRI, FT_WRITE_DATA, FT_WRITE_HEADSHAPE
+% See also FT_READ_MRI, FT_DATATYPE_VOLUME, FT_WRITE_DATA, FT_WRITE_HEADSHAPE, FT_WRITE_SENS
 
-% Copyright (C) 2011-2021, Jan-Mathijs Schoffelen
+% Copyright (C) 2011-2023, Jan-Mathijs Schoffelen & Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -70,7 +72,7 @@ if ~ft_hastoolbox('spm') && isempty(spmversion)
   spmversion = 'spm12';
 end
 
-%% ensure that the input data is consistent
+% ensure that the input data is consistent
 if isnumeric(dat) || islogical(dat)
   % convert the data to a structure according to FT_DATATYPE_VOLUME and FT_READ_MRI
   mri.anatomy = dat;
@@ -117,7 +119,7 @@ dat         = mri.anatomy;
 transform   = mri.transform;
 clear mri % to avoid confusion
 
-%% determine the details of the output format
+% determine the details of the output format
 if isempty(dataformat)
   % only do the autodetection if the format was not specified
   dataformat = ft_filetype(filename);
@@ -152,28 +154,28 @@ if ~ismember(dataformat, {'empty', 'fcdc_global', 'fcdc_buffer', 'fcdc_mysql'})
   isdir_or_mkdir(fileparts(filename));
 end
 
-%% write the data
+% write the data
 switch dataformat
-  
-  case {'vmr' 'vmp'}
-    %% write to brainvoyager format
+
+  case {'vmr', 'vmp'}
+    % write to brainvoyager format
     vmpversion = ft_getopt(varargin, 'vmpversion', 2);
     write_brainvoyager(filename, dat, dataformat, vmpversion);
-    
-  case {'analyze_old'}
-    %% write to Analyze format, using old code and functions from Darren Webbers toolbox
+
+  case 'analyze_old'
+    % write to Analyze format, using old code and functions from Darren Webbers toolbox
     avw = avw_hdr_make;
-    
+
     % specify the image data and dimensions
     avw.hdr.dime.dim(2:4) = size(dat);
     avw.img = dat;
-    
+
     % orientation 0 means transverse unflipped (axial, radiological)
     % X direction first,  progressing from patient right to left,
     % Y direction second, progressing from patient posterior to anterior,
     % Z direction third,  progressing from patient inferior to superior.
     avw.hdr.hist.orient = 0;
-    
+
     % specify voxel size
     avw.hdr.dime.pixdim(2:4) = [1 1 1];
     % FIXME, this currently does not work due to all flipping and permuting
@@ -181,7 +183,7 @@ switch dataformat
     % resy = y(2)-y(1);
     % resz = z(2)-z(1);
     % avw.hdr.dime.pixdim(2:4) = [resy resx resz];
-    
+
     % specify the data type
     switch class(dat)
       case 'logical'
@@ -205,27 +207,27 @@ switch dataformat
       otherwise
         ft_error('unsupported datatype "%s" to write to analyze_old format', class(dat));
     end
-    
+
     % write the header and image data
     avw_img_write(avw, filename, [], 'ieee-le');
-    
-  case {'analyze_img' 'analyze_hdr' 'analyze' 'nifti_img' 'nifti_spm'}
+
+  case {'analyze_img', 'analyze_hdr', 'analyze', 'nifti_img', 'nifti_spm'}
     %% analyze or nifti data, using SPM
     V = volumewrite_spm(filename, dat, transform, spmversion, scl_slope, scl_inter);
-    
-  case {'freesurfer_mgz' 'mgz' 'mgh'}
-    %% mgz data, using Freesurfer
+
+  case {'freesurfer_mgz', 'mgz', 'mgh'}
+    % mgz data, using Freesurfer
     ft_hastoolbox('freesurfer', 1);
-    
+
     % in MATLAB the transformation matrix assumes the voxel indices to be 1-based
     % freesurfer assumes the voxel indices to be 0-based
     transform = vox2ras_1to0(transform);
     save_mgh(dat, filename, transform);
-    
-  case {'nifti' 'nifti_gz' 'nifti2'}
+
+  case {'nifti', 'nifti_gz', 'nifti2'}
     %% nifti data, using Freesurfer
     ft_hastoolbox('freesurfer', 1);
-    
+
     datatype = class(dat);
     switch(datatype)
       case 'int8'
@@ -243,7 +245,7 @@ switch dataformat
       otherwise
         ft_error('unsupported datatype "s" to write to nifti format', datatype);
     end
-    
+
     ndims = numel(size(dat));
     if ndims==3
       dat = ipermute(dat, [2 1 3]);
@@ -254,7 +256,7 @@ switch dataformat
     elseif ndims==4
       dat = ipermute(dat, [2 1 3 4]);
     end
-    
+
     mri          = [];
     mri.vol      = dat;
     mri.vox2ras0 = vox2ras_1to0(transform);
@@ -262,12 +264,42 @@ switch dataformat
     mri.scl_slope = scl_slope;
     mri.scl_inter = scl_inter;
     MRIwrite(mri, filename, datatype);
-    
-  case {'vista'}
-    %% this requires the SIMBIO/Vista toolbox
+
+  case 'vista'
+    % this requires the SIMBIO/Vista toolbox
     ft_hastoolbox('simbio', 1);
     write_vista_vol(size(dat), dat, filename);
-    
+
+  case 'vtk'
+    % this uses https://www.mathworks.com/matlabcentral/fileexchange/47814-vtkwrite-exports-various-2d-3d-data-to-paraview-in-vtk-file-format
+    % which is also available from https://github.com/joe-of-all-trades/vtkwrite
+    ft_hastoolbox('fileexchange', 1);
+    dim = size(dat);
+    [X, Y, Z] = ndgrid(1:dim(1), 1:dim(2), 1:dim(3));
+    voxpos = [X(:) Y(:) Z(:)];
+    headpos = ft_warp_apply(transform, voxpos);
+    x = reshape(headpos(:,1), dim);
+    y = reshape(headpos(:,2), dim);
+    z = reshape(headpos(:,3), dim);
+    vtkwrite(filename, 'structured_grid', x, y, z, 'scalars', 'mri', dat);
+
+  case 'seg3d_mat'
+    % construct a MATLAB structure that Seg3D hopefully understands
+    warning('scaling, rotation and translation are not retained');
+    dim = size(dat);
+    scirunnrrd.data = dat;
+    for i=1:3
+      scirunnrrd.axis(i).size = dim(i);
+      scirunnrrd.axis(i).spacing = 1;
+      scirunnrrd.axis(i).min = 1;
+      scirunnrrd.axis(i).max = dim(i);
+      scirunnrrd.axis(i).center = 0;
+      scirunnrrd.axis(i).label = 'axis ';
+      scirunnrrd.axis(i).unit = 'no unit';
+    end
+    scirunnrrd.axis = scirunnrrd.axis(:); % it should be 3x1, not 1x3
+    save(filename, 'scirunnrrd', '-v6');
+
   otherwise
     ft_error('unsupported format "%s"', dataformat);
 end % switch dataformat

@@ -184,7 +184,7 @@ end
 
 if ~isUnstructuredAna && cfg.downsample~=1
   % downsample the anatomical volume
-  tmpcfg = keepfields(cfg, {'downsample', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+  tmpcfg = keepfields(cfg, {'downsample', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
   tmpcfg.parameter = 'anatomy';
   anatomical = ft_volumedownsample(tmpcfg, anatomical);
   % restore the provenance information and put back cfg.parameter
@@ -621,7 +621,7 @@ elseif ~isUnstructuredFun && ~isUnstructuredAna
           allav(:,:,:,k,m) = av;
         end
       end
-      if isfield(interp, 'freq') || isfield(interp, 'time')
+      if (isfield(interp, 'freq') && numel(interp.freq)>1) || (isfield(interp, 'time') && numel(interp.time)>1)
         % the output should be a source representation, not a volume
         allav = reshape(allav, prod(anatomical.dim), dimf(4), dimf(5));
       end

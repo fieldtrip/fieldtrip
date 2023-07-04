@@ -13,6 +13,7 @@ function [sens] = ft_read_sens(filename, varargin)
 %   'senstype'       = string, can be 'eeg', 'meg' or 'nirs', specifies which type of sensors to read from the file (default = 'eeg')
 %   'coordsys'       = string, 'head' or 'dewar' (default = 'head')
 %   'coilaccuracy'   = scalar, can be empty or a number (0, 1 or 2) to specify the accuracy (default = [])
+%   'coildeffile'    = string, can be empty, to specify a coil_def.dat file if coilaccuracy ~= []
 %   'readbids'       = string, 'yes', no', or 'ifmakessense', whether to read information from the BIDS sidecar files (default = 'ifmakessense')
 %
 % The electrode, gradiometer and optode structures are defined in more detail
@@ -56,6 +57,7 @@ fileformat     = ft_getopt(varargin, 'fileformat', ft_filetype(filename));
 senstype       = ft_getopt(varargin, 'senstype');         % can be eeg/meg/nirs, default is automatic and eeg when both meg+eeg are present
 coordsys       = ft_getopt(varargin, 'coordsys', 'head'); % this is used for ctf and neuromag_mne, it can be head or dewar
 coilaccuracy   = ft_getopt(varargin, 'coilaccuracy');     % empty, or a number between 0 to 2
+coildeffile    = ft_getopt(varargin, 'coildeffile');      % empty, or a filename
 readbids       = ft_getopt(varargin, 'readbids', 'ifmakessense');
 
 realtime = any(strcmp(fileformat, {'fcdc_buffer', 'ctf_shm', 'fcdc_mysql'}));
@@ -113,7 +115,7 @@ switch fileformat
   % hence we use the standard fieldtrip/fileio ft_read_header function
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   case {'ctf_ds', 'ctf_res4', 'ctf_old', 'neuromag_fif', 'neuromag_mne', '4d', '4d_pdf', '4d_m4d', '4d_xyz', 'yokogawa_ave', 'yokogawa_con', 'yokogawa_raw', 'ricoh_ave', 'ricoh_con', 'itab_raw' 'itab_mhd', 'netmeg'}
-    hdr = ft_read_header(filename, 'headerformat', fileformat, 'coordsys', coordsys, 'coilaccuracy', coilaccuracy, 'readbids', readbids);
+    hdr = ft_read_header(filename, 'headerformat', fileformat, 'coordsys', coordsys, 'coilaccuracy', coilaccuracy, 'coildeffile', coildeffile, 'readbids', readbids);
     % sometimes there can also be electrode position information in the header
     if isfield(hdr, 'elec') && isfield(hdr, 'grad')
       if isempty(senstype)
@@ -314,18 +316,18 @@ switch fileformat
   case 'neuromag_mne_grad'
     % the file can contain both, force reading the gradiometer info
     % note that this functionality overlaps with senstype=eeg/meg
-    hdr = ft_read_header(filename, 'headerformat', 'neuromag_mne', 'coordsys', coordsys, 'coilaccuracy', coilaccuracy);
+    hdr = ft_read_header(filename, 'headerformat', 'neuromag_mne', 'coordsys', coordsys, 'coilaccuracy', coilaccuracy, 'coildeffile', coildeffile);
     sens = hdr.grad;
     
   case 'neuromag_mne_elec'
     % the file can contain both, force reading the electrode info
     % note that this functionality overlaps with senstype=eeg/meg
-    hdr = ft_read_header(filename, 'headerformat', 'neuromag_mne', 'coordsys', coordsys, 'coilaccuracy', coilaccuracy);
+    hdr = ft_read_header(filename, 'headerformat', 'neuromag_mne', 'coordsys', coordsys, 'coilaccuracy', coilaccuracy, 'coildeffile', coildeffile);
     sens = hdr.elec;
     
   case {'spmeeg_mat', 'eeglab_set'}
     % this is for EEG formats where electrode positions can be stored with the data
-    hdr = ft_read_header(filename, 'coordsys', coordsys, 'coilaccuracy', coilaccuracy);
+    hdr = ft_read_header(filename, 'coordsys', coordsys, 'coilaccuracy', coilaccuracy, 'coildeffile', coildeffile);
     if isfield(hdr, 'grad')
       sens = hdr.grad;
     elseif isfield(hdr, 'elec')
@@ -354,6 +356,9 @@ switch fileformat
     else
       % read whatever variable is in the file, this will error if the file contains multiple variables
       sens = loadvar(matfile);
+    end
+    if ft_datatype(sens, 'layout')
+      ft_error('"%s" contains a 2D layout for plotting, not 3D electrode positions', filename);
     end
     
   case 'zebris_sfp'

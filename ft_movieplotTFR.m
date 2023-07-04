@@ -7,25 +7,30 @@ function [cfg] = ft_movieplotTFR(cfg, data)
 %   ft_movieplotTFR(cfg, data)
 % where the input data comes from FT_FREQANALYSIS or FT_FREQDESCRIPTIVES and the
 % configuration is a structure that can contain
-%   cfg.parameter    = string, parameter that is color coded (default = 'avg')
-%   cfg.xlim         = selection boundaries over first dimension in data (e.g., time)
-%                      'maxmin' or [xmin xmax] (default = 'maxmin')
-%   cfg.ylim         = selection boundaries over second dimension in data (e.g., freq)
-%                      'maxmin' or [xmin xmax] (default = 'maxmin')
-%   cfg.zlim         = plotting limits for color dimension, 'maxmin',
-%                      'maxabs', 'zeromax', 'minzero', or [zmin zmax] (default = 'maxmin')
-%   cfg.speed        = number, initial speed for interactive mode (default = 1)
-%   cfg.samperframe  = number, samples per frame for non-interactive mode (default = 1)
-%   cfg.framespersec = number, frames per second for non-interactive mode (default = 5)
-%   cfg.framesfile   = 'string' or empty, filename of saved frames.mat (default = [])
-%   cfg.moviefreq    = number, movie frames are all time points at the fixed frequency moviefreq (default = [])
-%   cfg.movietime    = number, movie frames are all frequencies at the fixed time movietime (default = [])
-%   cfg.layout       = specification of the layout, see below
-%   cfg.interactive  = 'no' or 'yes', make it interactive
-%   cfg.baseline     = 'yes','no' or [time1 time2] (default = 'no'), see FT_TIMELOCKBASELINE or FT_FREQBASELINE
-%   cfg.baselinetype = 'absolute', 'relative', 'relchange', 'normchange', 'db' or 'zscore' (default = 'absolute')
-%   cfg.colorbar     = 'yes', 'no' (default = 'no')
-%   cfg.colorbartext = string indicating the text next to colorbar
+%   cfg.parameter       = string, parameter that is color coded (default = 'avg')
+%   cfg.xlim            = selection boundaries over first dimension in data (e.g., time)
+%                         'maxmin' or [xmin xmax] (default = 'maxmin')
+%   cfg.ylim            = selection boundaries over second dimension in data (e.g., freq)
+%                         'maxmin' or [xmin xmax] (default = 'maxmin')
+%   cfg.zlim            = plotting limits for color dimension, 'maxmin',
+%                         'maxabs', 'zeromax', 'minzero', or [zmin zmax] (default = 'maxmin')
+%   cfg.speed           = number, initial speed for interactive mode (default = 1)
+%   cfg.samperframe     = number, samples per frame for non-interactive mode (default = 1)
+%   cfg.framespersec    = number, frames per second for non-interactive mode (default = 5)
+%   cfg.framesfile      = 'string' or empty, filename of saved frames.mat (default = [])
+%   cfg.moviefreq       = number, movie frames are all time points at the fixed frequency moviefreq (default = [])
+%   cfg.movietime       = number, movie frames are all frequencies at the fixed time movietime (default = [])
+%   cfg.layout          = specification of the layout, see below
+%   cfg.interpolatenan  = string 'yes', 'no' interpolate over channels containing NaNs (default = 'yes')
+%   cfg.colormap        = string, or Nx3 matrix, see FT_COLORMAP
+%   cfg.interactive     = 'no' or 'yes', make it interactive
+%   cfg.baseline        = 'yes','no' or [time1 time2] (default = 'no'), see FT_TIMELOCKBASELINE or FT_FREQBASELINE
+%   cfg.baselinetype    = 'absolute', 'relative', 'relchange', 'normchange', 'db' or 'zscore' (default = 'absolute')
+%   cfg.colorbar        = 'yes', 'no' (default = 'no')
+%   cfg.colorbartext    = string indicating the text next to colorbar
+%   cfg.figure          = 'yes' or 'no', whether to open a new figure. You can also specify a figure handle from FIGURE, GCF or SUBPLOT. (default = 'yes')
+%   cfg.position        = location and size of the figure, specified as [left bottom width height] (default is automatic)
+%   cfg.renderer        = string, 'opengl', 'zbuffer', 'painters', see RENDERERINFO (default is automatic, try 'painters' when it crashes)
 %
 % The layout defines how the channels are arranged. You can specify the
 % layout in a variety of ways:
@@ -47,7 +52,7 @@ function [cfg] = ft_movieplotTFR(cfg, data)
 %
 % See also FT_MULTIPLOTTFR, FT_TOPOPLOTTFR, FT_SINGLEPLOTTFR, FT_MOVIEPLOTER, FT_SOURCEMOVIE
 
-% Copyright (c) 2009-2022, Ingrid Nieuwenhuis, Jan-Mathijs Schoffelen, Robert Oostenveld, Cristiano Micheli
+% Copyright (c) 2009-2023, Ingrid Nieuwenhuis, Jan-Mathijs Schoffelen, Robert Oostenveld, Cristiano Micheli
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -95,25 +100,26 @@ cfg = ft_checkconfig(cfg, 'deprecated', {'xparam'});
 cfg = ft_checkconfig(cfg, 'renamed', {'newfigure', 'figure'});
 
 % set the defaults
-cfg.xlim          = ft_getopt(cfg, 'xlim',          'maxmin');
-cfg.ylim          = ft_getopt(cfg, 'ylim',          'maxmin');
-cfg.zlim          = ft_getopt(cfg, 'zlim',          'maxmin');
-cfg.parameter     = ft_getopt(cfg, 'parameter',     'powspctrm'); % use power as default
-cfg.inputfile     = ft_getopt(cfg, 'inputfile',     []);
-cfg.speed         = ft_getopt(cfg, 'speed',         1);
-cfg.samperframe   = ft_getopt(cfg, 'samperframe',   1);
-cfg.framespersec  = ft_getopt(cfg, 'framespersec',  5);
-cfg.framesfile    = ft_getopt(cfg, 'framesfile',    []);
-cfg.moviefreq     = ft_getopt(cfg, 'moviefreq',     []);
-cfg.movietime     = ft_getopt(cfg, 'movietime',     []);
-cfg.movierpt      = ft_getopt(cfg, 'movierpt',      1);
-cfg.baseline      = ft_getopt(cfg, 'baseline',      'no');
-cfg.colormap      = ft_getopt(cfg, 'colormap',      'default');
-cfg.colorbar      = ft_getopt(cfg, 'colorbar',      'no');
-cfg.colorbartext  = ft_getopt(cfg, 'colorbartext',  '');
-cfg.interactive   = ft_getopt(cfg, 'interactive',   'yes');
-cfg.visible       = ft_getopt(cfg, 'visible',       'on');
-cfg.renderer      = ft_getopt(cfg, 'renderer',      []); % let MATLAB decide on the default
+cfg.xlim            = ft_getopt(cfg, 'xlim',           'maxmin');
+cfg.ylim            = ft_getopt(cfg, 'ylim',           'maxmin');
+cfg.zlim            = ft_getopt(cfg, 'zlim',           'maxmin');
+cfg.parameter       = ft_getopt(cfg, 'parameter',      'powspctrm'); % use power as default
+cfg.inputfile       = ft_getopt(cfg, 'inputfile',      []);
+cfg.speed           = ft_getopt(cfg, 'speed',          1);
+cfg.samperframe     = ft_getopt(cfg, 'samperframe',    1);
+cfg.framespersec    = ft_getopt(cfg, 'framespersec',   5);
+cfg.framesfile      = ft_getopt(cfg, 'framesfile',     []);
+cfg.moviefreq       = ft_getopt(cfg, 'moviefreq',      []);
+cfg.movietime       = ft_getopt(cfg, 'movietime',      []);
+cfg.movierpt        = ft_getopt(cfg, 'movierpt',       1);
+cfg.baseline        = ft_getopt(cfg, 'baseline',       'no');
+cfg.colormap        = ft_getopt(cfg, 'colormap',       'default');
+cfg.colorbar        = ft_getopt(cfg, 'colorbar',       'no');
+cfg.colorbartext    = ft_getopt(cfg, 'colorbartext',   '');
+cfg.interactive     = ft_getopt(cfg, 'interactive',    'yes');
+cfg.visible         = ft_getopt(cfg, 'visible',        'on');
+cfg.renderer        = ft_getopt(cfg, 'renderer',       []); % let MATLAB decide on the default
+cfg.interpolatenan  = ft_getopt(cfg, 'interpolatenan', 'yes');
 
 dointeractive = istrue(cfg.interactive);
 
@@ -123,12 +129,12 @@ if isfield(data, 'freq')
 end
 
 % read or create the layout that will be used for plotting:
-tmpcfg = keepfields(cfg, {'layout', 'channel', 'rows', 'columns', 'commentpos', 'skipcomnt', 'scalepos', 'skipscale', 'projection', 'viewpoint', 'rotate', 'width', 'height', 'elec', 'grad', 'opto', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+tmpcfg = keepfields(cfg, {'layout', 'channel', 'rows', 'columns', 'commentpos', 'skipcomnt', 'scalepos', 'skipscale', 'projection', 'viewpoint', 'rotate', 'width', 'height', 'elec', 'grad', 'opto', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
 layout = ft_prepare_layout(tmpcfg, data);
 
 % apply optional baseline correction
 if ~strcmp(cfg.baseline, 'no')
-  tmpcfg = keepfields(cfg, {'baseline', 'baselinetype', 'parameter', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+  tmpcfg = keepfields(cfg, {'baseline', 'baselinetype', 'parameter', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
   data = ft_freqbaseline(tmpcfg, data);
   [cfg, data] = rollback_provenance(cfg, data);
 end
@@ -214,6 +220,15 @@ clear xbeg xend ybeg yend
 % get the x and y coordinates and labels of the channels in the data
 chanx = layout.pos(sellay,1);
 chany = layout.pos(sellay,2);
+
+% check for nans along the time and/or freq dimension
+nanInds = any(isnan(parameter), [2 3]);
+if strcmp(cfg.interpolatenan, 'yes') && any(nanInds)
+  ft_warning('removing channels with NaNs from the data');
+  chanx(nanInds) = [];
+  chany(nanInds) = [];
+  parameter(nanInds,:) = [];
+end
 
 % get the z-range
 if ischar(cfg.zlim) && strcmp(cfg.zlim, 'maxmin')

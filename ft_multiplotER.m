@@ -43,7 +43,9 @@ function [cfg] = ft_multiplotER(cfg, varargin)
 %                       In an interactive plot you can select areas and produce a new
 %                       interactive plot when a selected area is clicked. Multiple areas
 %                       can be selected by holding down the SHIFT key.
-%   cfg.renderer      = 'painters', 'zbuffer', ' opengl' or 'none' (default = [])
+%   cfg.figure        = 'yes' or 'no', whether to open a new figure. You can also specify a figure handle from FIGURE, GCF or SUBPLOT. (default = 'yes')
+%   cfg.position      = location and size of the figure, specified as [left bottom width height] (default is automatic)
+%   cfg.renderer      = string, 'opengl', 'zbuffer', 'painters', see RENDERERINFO (default is automatic, try 'painters' when it crashes)
 %   cfg.colorgroups   = 'sequential', 'allblack', 'labelcharN' (N = Nth character in label), 'chantype' or a vector
 %                       with the length of the number of channels defining the groups (default = 'condition')
 %   cfg.linestyle     = linestyle/marker type, see options of the PLOT function (default = '-')
@@ -61,7 +63,7 @@ function [cfg] = ft_multiplotER(cfg, varargin)
 %                       plotting.
 %   cfg.viewmode      = 'layout', or 'butterfly' (default = 'layout'), using the spatial layout as in cfg.layout for the
 %                       visualisation, or a butterfly plot
-
+%
 % The following options for the scaling of the EEG, EOG, ECG, EMG, MEG and NIRS channels
 % is optional and can be used to bring the absolute numbers of the different
 % channel types in the same range (e.g. fT and uV). The channel types are determined
@@ -349,7 +351,7 @@ if ~strcmp(cfg.baseline, 'no')
 end
 
 % channels SHOULD be selected here, as no interactive action produces a new multiplot
-tmpcfg = keepfields(cfg, {'channel', 'trials', 'select', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+tmpcfg = keepfields(cfg, {'channel', 'trials', 'select', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
 if hasrpt
   tmpcfg.avgoverrpt = 'yes';
 else
@@ -426,7 +428,7 @@ end
 %% Section 3: select the data to be plotted and determine min/max range
 
 % Read or create the layout that will be used for plotting
-tmpcfg = keepfields(cfg, {'layout', 'channel', 'rows', 'columns', 'commentpos', 'skipcomnt', 'scalepos', 'skipscale', 'projection', 'viewpoint', 'rotate', 'width', 'height', 'elec', 'grad', 'opto', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+tmpcfg = keepfields(cfg, {'layout', 'channel', 'rows', 'columns', 'commentpos', 'skipcomnt', 'scalepos', 'skipscale', 'projection', 'viewpoint', 'rotate', 'width', 'height', 'elec', 'grad', 'opto', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
 tmpcfg = ft_setopt(tmpcfg, 'color', cfg.linecolor);
 if isequal(cfg.viewmode, 'butterfly')
   if isfield(tmpcfg, 'layout')

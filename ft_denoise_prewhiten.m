@@ -103,7 +103,7 @@ switch dtype_datain
 end
 
 % select channels and trials of interest, by default this will select all channels and trials
-tmpcfg = keepfields(cfg, {'trials', 'channel', 'tolerance', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+tmpcfg = keepfields(cfg, {'trials', 'channel', 'tolerance', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
 datain = ft_selectdata(tmpcfg, datain);
 noise  = ft_selectdata(tmpcfg, noise);
 

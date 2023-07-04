@@ -611,7 +611,7 @@ elseif ismneavg
   
   if projectmom
     if isfield(source, 'tri')
-      nrm = normals(source.pos, source.tri, 'vertex');
+      nrm = surface_normals(source.pos, source.tri, 'vertex');
       source.avg.phi = zeros(size(source.pos,1),1);
     end
     ft_progress('init', cfg.feedback, 'projecting dipole moment');

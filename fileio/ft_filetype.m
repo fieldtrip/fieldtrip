@@ -36,7 +36,7 @@ function [type] = ft_filetype(filename, desired, varargin)
 %  - Analyse
 %  - Analyze/SPM
 %  - BESA
-%  - Bioimage Suite (*.mgrid)
+%  - Bioimage Suite *.mgrid
 %  - BrainSuite
 %  - BrainVisa
 %  - BrainVision
@@ -52,7 +52,8 @@ function [type] = ft_filetype(filename, desired, varargin)
 %  - MINC
 %  - Neuralynx
 %  - Neuroscan
-%  - Nihon Koden (*.m00)
+%  - Nihon Koden *.m00
+%  - OpenVibe MATLAB files *.mat
 %  - Plexon
 %  - SR Research Eyelink
 %  - SensoMotoric Instruments (SMI) *.txt
@@ -73,7 +74,7 @@ function [type] = ft_filetype(filename, desired, varargin)
 %  - NIRx *.tpl, *.wl1 and *.wl2
 %  - York Instruments *.meghdf5
 
-% Copyright (C) 2003-2022, Robert Oostenveld
+% Copyright (C) 2003-2023, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -1331,6 +1332,14 @@ elseif filetype_check_extension(filename, '.mat') && filetype_check_header(filen
   type = 'neuroomega_mat';
   manufacturer = 'Alpha Omega';
   content = 'electrophysiological data';
+elseif filetype_check_extension(filename, '.mat') && filetype_check_header(filename, 'MATLAB') && filetype_check_seg3d_mat(filename)
+  type = 'seg3d_mat';
+  manufacturer = 'Scientific Computing and Imaging Institute, Salt Lake City, Utah';
+  content = 'imaging data';
+elseif filetype_check_extension(filename, '.mat') && filetype_check_header(filename, 'MATLAB') && filetype_check_openvibe_mat(filename)
+  type = 'openvibe_mat';
+  manufacturer = 'OpenVibe';
+  content = 'EEG data';
 elseif filetype_check_extension(filename, '.mat') && filetype_check_header(filename, 'MATLAB')
   type = 'matlab';
   manufacturer = 'MATLAB';
@@ -1580,17 +1589,37 @@ elseif filetype_check_extension(filename, '.meghdf5')
   manufacturer = 'York Instruments';
   content = 'MEG header and data';
 elseif filetype_check_extension(filename, '.jnii')
-  type = 'openjdata_jnii';
-  manufacturer = 'OpenJData'; % See http://openjdata.org
+  type = 'neurojson_jnii';
+  manufacturer = 'NeuroJSON'; % See https://neurojson.org
   content = 'MRI';
 elseif filetype_check_extension(filename, '.bnii')
-  type = 'openjdata_bnii';
-  manufacturer = 'OpenJData'; % See http://openjdata.org
+  type = 'neurojson_bnii';
+  manufacturer = 'NeuroJSON'; % See https://neurojson.org
   content = 'MRI';
+elseif any(filetype_check_extension(filename, {'.jmsh' '.jmesh'}))
+  type = 'neurojson_jmesh';
+  manufacturer = 'NeuroJSON'; % See https://neurojson.org
+  content = 'Mesh';
+elseif any(filetype_check_extension(filename, {'.bmsh' '.bmesh'}))
+  type = 'neurojson_bmesh';
+  manufacturer = 'NeuroJSON'; % See https://neurojson.org
+  content = 'Mesh';
 elseif filetype_check_extension(filename, '.tsv') && filetype_check_header(filename, sprintf('event\tvalue\ttimestamp'))
   type = 'eegsynth_tsv';
   manufacturer = 'EEGsynth recordtrigger';
   content = 'events';
+elseif filetype_check_extension(filename, '.msh') && filetype_check_header(filename, '$MeshFormat') && filetype_check_header(filename, 49, 16)
+  type = 'gmsh_binary';
+  manufacturer = 'gmsh team';
+  content = 'geometrical meshes';
+elseif filetype_check_extension(filename, '.msh') && filetype_check_header(filename, '$MeshFormat') && filetype_check_header(filename, 48, 16)
+  type = 'gmsh_ascii';
+  manufacturer = 'gmsh team';
+  content = 'geometrical meshes';
+elseif filetype_check_extension(filename, '.vtk') && filetype_check_header(filename, '# vtk') && filetype_check_ascii(filename, inf)
+  type = 'vtk';
+  manufacturer = 'ParaView';
+  content = 'geometrical meshes';
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1650,12 +1679,11 @@ y = 1;
 % SUBFUNCTION that checks for CED spike6 mat file
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function res = filetype_check_ced_spike6mat(filename)
-res = 1;
 var = whos('-file', filename);
 
 % Check whether all the variables in the file are structs (representing channels)
 if ~all(strcmp('struct', unique({var(:).class})) == 1)
-  res = 0;
+  res = false;
   return;
 end
 
@@ -1677,6 +1705,23 @@ fnames = {
   };
 
 res = (numel(intersect(fieldnames(var{1}), fnames)) >= 5);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION that checks for a OpenVibe mat file
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function res = filetype_check_openvibe_mat(filename)
+% check the content of the *.mat file
+var = whos('-file', filename);
+expected = {'stims', 'sampleTime', 'samples', 'samplingFreq', 'channelNames'};
+res = all(ismember(expected, {var.name}));
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION that checks for a SCIRun/Seg3D mat file
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function res = filetype_check_seg3d_mat(filename)
+% check the content of the *.mat file
+var = whos('-file', filename);
+res = contains('scirunnrrd', {var.name});
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION that checks for a SPM eeg/meg mat file
@@ -1755,7 +1800,7 @@ if exist(filename, 'file')
   bin = fread(fid, len, 'uint8=>uint8');
   fclose(fid);
   printable = bin>31 & bin<127;  % the printable characters, represent letters, digits, punctuation marks, and a few miscellaneous symbols
-  special   = bin==10 | bin==13 | bin==11; % line feed, form feed, tab
+  special   = bin==9 | bin==10 | bin==11 | bin==12 | bin==13; % horizontal tab, line feed, vertical tab, form feed, carriage return
   res = all(printable | special);
 else
   % always return true if the file does not (yet) exist, this is important

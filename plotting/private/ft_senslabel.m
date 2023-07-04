@@ -16,6 +16,8 @@ function label = ft_senslabel(type, varargin)
 %  'bti248'
 %  'bti248_planar'
 %  'btiref'
+%  'ctf64'
+%  'ctf64_planar'
 %  'ctf151'
 %  'ctf151_planar'
 %  'ctf275'
@@ -76,7 +78,7 @@ function label = ft_senslabel(type, varargin)
 % $Id$
 
 % these are for speeding up subsequent calls with the same input arguments
-persistent eeg electrode ant128 btiref bti148 bti148_planar bti148_planar_combined bti248 bti248_planar bti248_planar_combined ctfref ctfheadloc ctf64 ctf151 ctf151_planar ctf151_planar_combined ctf275 ctf275_planar ctf275_planar_combined neuromag122 neuromag122_combined neuromag306 neuromag306_mag neuromag306_planar neuromag306_combined eeg1020 eeg1010 eeg1005 ext1020 biosemi64 biosemi128 biosemi256 egi32 egi64 egi128 egi256 itab28 itab153 itab153_planar itab153_planar_combined yokogawa9 yokogawa64 yokogawa64_planar yokogawa64_planar_combined yokogawa160 yokogawa160_planar yokogawa160_planar_combined yokogawa208 yokogawa208_planar yokogawa208_planar_combined yokogawa440 yokogawa440_planar yokogawa440_planar_combined
+persistent eeg electrode ant128 btiref bti148 bti148_planar bti148_planar_combined bti248 bti248_planar bti248_planar_combined ctfref ctfheadloc ctf64 ctf64_planar ctf64_planar_combined ctf151 ctf151_planar ctf151_planar_combined ctf275 ctf275_planar ctf275_planar_combined neuromag122 neuromag122_combined neuromag306 neuromag306_mag neuromag306_planar neuromag306_combined eeg1020 eeg1010 eeg1005 ext1020 biosemi64 biosemi128 biosemi256 egi32 egi64 egi128 egi256 itab28 itab153 itab153_planar itab153_planar_combined yokogawa9 yokogawa64 yokogawa64_planar yokogawa64_planar_combined yokogawa160 yokogawa160_planar yokogawa160_planar_combined yokogawa208 yokogawa208_planar yokogawa208_planar_combined yokogawa440 yokogawa440_planar yokogawa440_planar_combined
 % these are for backward compatibility
 persistent neuromag122alt neuromag122alt_combined
 persistent neuromag306alt neuromag306alt_mag neuromag306alt_planar neuromag306alt_combined
@@ -91,10 +93,10 @@ output  = ft_getopt(varargin, 'output', 'normal'); % 'normal' or 'planarcombined
 
 if ~exist(type, 'var')
   ft_error('the requested sensor type "%s" is not supported', type);
-  
+
 elseif isempty(eval(type))
   % assign the list of channels only once, keep it as persistent variable
-  
+
   switch type
     case 'ant128'
       label = {
@@ -227,7 +229,7 @@ elseif isempty(eval(type))
         'RE4'
         'Rm'
         };
-      
+
     case 'btiref'
       label = {
         'MRxA'
@@ -254,13 +256,13 @@ elseif isempty(eval(type))
         'GyyA'
         'GzyA'
         };
-      
+
     case 'bti148'
       label = cell(148,1);
       for i=1:148
         label{i,1} = sprintf('A%d', i);
       end
-      
+
     case 'bti148_planar'
       label = cell(148,3);
       for i=1:148
@@ -270,13 +272,13 @@ elseif isempty(eval(type))
       end
       bti148_planar_combined = label(:,3);
       label = label(:,1:2);
-      
+
     case 'bti248'
       label = cell(248,1);
       for i=1:248
         label{i,1} = sprintf('A%d', i);
       end
-      
+
     case 'bti248_planar'
       label = cell(248,3);
       for i=1:248
@@ -286,7 +288,7 @@ elseif isempty(eval(type))
       end
       bti248_planar_combined = label(:,3);
       label = label(:,1:2);
-      
+
     case 'ctfref'
       label = {
         'BG1'
@@ -319,7 +321,7 @@ elseif isempty(eval(type))
         'R22'
         'R23'
         };
-      
+
     case 'ctfheadloc'
       label = {
         'HLC0011'
@@ -347,7 +349,7 @@ elseif isempty(eval(type))
         'HLC0036'
         'HLC0037'
         };
-      
+
     case 'ctf64'
       label = {
         'SL11'
@@ -415,7 +417,77 @@ elseif isempty(eval(type))
         'SR51'
         'SR52'
         };
-      
+
+    case 'ctf64_planar'
+      label = {
+        'SL11_dH'  'SL11_dV'  'SL11'
+        'SL12_dH'  'SL12_dV'  'SL12'
+        'SL13_dH'  'SL13_dV'  'SL13'
+        'SL14_dH'  'SL14_dV'  'SL14'
+        'SL15_dH'  'SL15_dV'  'SL15'
+        'SL16_dH'  'SL16_dV'  'SL16'
+        'SL17_dH'  'SL17_dV'  'SL17'
+        'SL18_dH'  'SL18_dV'  'SL18'
+        'SL19_dH'  'SL19_dV'  'SL19'
+        'SL21_dH'  'SL21_dV'  'SL21'
+        'SL22_dH'  'SL22_dV'  'SL22'
+        'SL23_dH'  'SL23_dV'  'SL23'
+        'SL24_dH'  'SL24_dV'  'SL24'
+        'SL25_dH'  'SL25_dV'  'SL25'
+        'SL26_dH'  'SL26_dV'  'SL26'
+        'SL27_dH'  'SL27_dV'  'SL27'
+        'SL28_dH'  'SL28_dV'  'SL28'
+        'SL29_dH'  'SL29_dV'  'SL29'
+        'SL31_dH'  'SL31_dV'  'SL31'
+        'SL32_dH'  'SL32_dV'  'SL32'
+        'SL33_dH'  'SL33_dV'  'SL33'
+        'SL34_dH'  'SL34_dV'  'SL34'
+        'SL35_dH'  'SL35_dV'  'SL35'
+        'SL41_dH'  'SL41_dV'  'SL41'
+        'SL42_dH'  'SL42_dV'  'SL42'
+        'SL43_dH'  'SL43_dV'  'SL43'
+        'SL44_dH'  'SL44_dV'  'SL44'
+        'SL45_dH'  'SL45_dV'  'SL45'
+        'SL46_dH'  'SL46_dV'  'SL46'
+        'SL47_dH'  'SL47_dV'  'SL47'
+        'SL51_dH'  'SL51_dV'  'SL51'
+        'SL52_dH'  'SL52_dV'  'SL52'
+        'SR11_dH'  'SR11_dV'  'SR11'
+        'SR12_dH'  'SR12_dV'  'SR12'
+        'SR13_dH'  'SR13_dV'  'SR13'
+        'SR14_dH'  'SR14_dV'  'SR14'
+        'SR15_dH'  'SR15_dV'  'SR15'
+        'SR16_dH'  'SR16_dV'  'SR16'
+        'SR17_dH'  'SR17_dV'  'SR17'
+        'SR18_dH'  'SR18_dV'  'SR18'
+        'SR19_dH'  'SR19_dV'  'SR19'
+        'SR21_dH'  'SR21_dV'  'SR21'
+        'SR22_dH'  'SR22_dV'  'SR22'
+        'SR23_dH'  'SR23_dV'  'SR23'
+        'SR24_dH'  'SR24_dV'  'SR24'
+        'SR25_dH'  'SR25_dV'  'SR25'
+        'SR26_dH'  'SR26_dV'  'SR26'
+        'SR27_dH'  'SR27_dV'  'SR27'
+        'SR28_dH'  'SR28_dV'  'SR28'
+        'SR29_dH'  'SR29_dV'  'SR29'
+        'SR31_dH'  'SR31_dV'  'SR31'
+        'SR32_dH'  'SR32_dV'  'SR32'
+        'SR33_dH'  'SR33_dV'  'SR33'
+        'SR34_dH'  'SR34_dV'  'SR34'
+        'SR35_dH'  'SR35_dV'  'SR35'
+        'SR41_dH'  'SR41_dV'  'SR41'
+        'SR42_dH'  'SR42_dV'  'SR42'
+        'SR43_dH'  'SR43_dV'  'SR43'
+        'SR44_dH'  'SR44_dV'  'SR44'
+        'SR45_dH'  'SR45_dV'  'SR45'
+        'SR46_dH'  'SR46_dV'  'SR46'
+        'SR47_dH'  'SR47_dV'  'SR47'
+        'SR51_dH'  'SR51_dV'  'SR51'
+        'SR52_dH'  'SR52_dV'  'SR52'
+        };
+      ctf64_planar_combined = label(:,3);
+      label = label(:,1:2);
+
     case 'ctf151'
       label = {
         'MLC11'
@@ -570,7 +642,7 @@ elseif isempty(eval(type))
         'MZP01'
         'MZP02'
         };
-      
+
     case 'ctf151_planar'
       label = {
         'MLC11_dH'  'MLC11_dV'  'MLC11'
@@ -727,7 +799,7 @@ elseif isempty(eval(type))
         };
       ctf151_planar_combined = label(:,3);
       label = label(:,1:2);
-      
+
     case 'ctf275'
       label = {
         'MLC11'
@@ -1006,7 +1078,7 @@ elseif isempty(eval(type))
         'MZO03'
         'MZP01'
         };
-      
+
     case 'ctf275_planar'
       label = {
         'MLC11_dH'  'MLC11_dV'  'MLC11'
@@ -1287,7 +1359,7 @@ elseif isempty(eval(type))
         };
       ctf275_planar_combined = label(:,3);
       label = label(:,1:2);
-      
+
     case {'neuromag122' 'neuromag122_combined' 'neuromag122alt' 'neuromag122alt_combined'}
       % this is the combination of the two versions (with and without space)
       % with the MNE-MATLAB reading functions, the labels for 122-channel data are normally WITH a space
@@ -1422,7 +1494,7 @@ elseif isempty(eval(type))
       neuromag122alt          = label(62:122, 1:2);
       neuromag122alt_combined = label(62:122, 3);
       label = eval(type);
-      
+
     case {'neuromag306' 'neuromag306_planar' 'neuromag306_mag' 'neuromag306_combined' 'neuromag306alt' 'neuromag306alt_planar' 'neuromag306alt_mag' 'neuromag306alt_combined'}
       % this is the combination of the two versions (with and without space)
       % with the MNE-MATLAB reading functions, the labels for 306-channel data are normally WITHOUT a space
@@ -1633,7 +1705,7 @@ elseif isempty(eval(type))
         'MEG 2622'  'MEG 2623'  'MEG 2621'  'MEG 2622+2623'
         'MEG 2632'  'MEG 2633'  'MEG 2631'  'MEG 2632+2633'
         'MEG 2642'  'MEG 2643'  'MEG 2641'  'MEG 2642+2643'
-        
+
         };
       neuromag306          = label(1:102, [1 2 3]);       % all physical channels
       neuromag306_planar   = label(1:102, [1 2]);         % planar channels
@@ -1644,7 +1716,7 @@ elseif isempty(eval(type))
       neuromag306alt_mag      = label(103:204, 3);        % magnetometer channels
       neuromag306alt_combined = label(103:204, 4);        % combined channels
       label = eval(type);
-      
+
     case 'eeg1020'
       label = {
         'Fp1'
@@ -1668,10 +1740,10 @@ elseif isempty(eval(type))
         'O1'
         'Oz'
         'O2'};
-      
+
       % Add also reference and some alternative labels that might be used
       label = cat(1, label, {'A1' 'A2' 'M1' 'M2' 'T3' 'T4' 'T5' 'T6'}');
-      
+
     case 'eeg1010'
       label = {
         'Fp1'
@@ -1761,10 +1833,10 @@ elseif isempty(eval(type))
         'Iz'
         'I2'
         };
-      
+
       % Add also reference and some alternative labels that might be used
       label = cat(1, label, {'A1' 'A2' 'M1' 'M2' 'T3' 'T4' 'T5' 'T6'}');
-      
+
     case 'eeg1005'
       label = {
         'Fp1'
@@ -2103,10 +2175,10 @@ elseif isempty(eval(type))
         'OIz'
         'OI2'
         };
-      
+
       % Add also reference and some alternative labels that might be used
       label = cat(1, label, {'A1' 'A2' 'M1' 'M2' 'T3' 'T4' 'T5' 'T6'}');
-      
+
     case 'ext1020'
       % start with the eeg1005 list
       label = {
@@ -2446,13 +2518,13 @@ elseif isempty(eval(type))
         'OIz'
         'OI2'
         };
-      
+
       % Add also reference and some alternative labels that might be used
       label = cat(1, label, {'A1' 'A2' 'M1' 'M2' 'T3' 'T4' 'T5' 'T6'}');
-      
+
       % This is to account for all variants of case in 1020 systems
       label = unique(cat(1, label, upper(label), lower(label)));
-      
+
     case 'biosemi64'
       label = {
         'A1'
@@ -2520,7 +2592,7 @@ elseif isempty(eval(type))
         'B31'
         'B32'
         };
-      
+
     case 'biosemi128'
       label = {
         'A1'
@@ -2652,7 +2724,7 @@ elseif isempty(eval(type))
         'D31'
         'D32'
         };
-      
+
     case 'biosemi256'
       label = {
         'A1'
@@ -2912,7 +2984,7 @@ elseif isempty(eval(type))
         'H31'
         'H32'
         };
-      
+
     case 'egi32'
       % this should be  uppercase for consistency with ft_read_header
       label = cell(33, 1);
@@ -2921,7 +2993,7 @@ elseif isempty(eval(type))
       end
       % there might also be a reference channel, but its name is inconsistent
       % it might be Cz, REF, VREF or 'vertex reference'
-      
+
     case 'egi64'
       % this should be  uppercase for consistency with ft_read_header
       label = cell(65, 1);
@@ -2930,7 +3002,7 @@ elseif isempty(eval(type))
       end
       % there might also be a reference channel, but its name is inconsistent
       % it might be Cz, REF, VREF or 'vertex reference'
-      
+
     case 'egi128'
       % this should be  uppercase for consistency with ft_read_header
       label = cell(129, 1);
@@ -2939,7 +3011,7 @@ elseif isempty(eval(type))
       end
       % there might also be a reference channel, but its name is inconsistent
       % it might be Cz, REF, VREF or 'vertex reference'
-      
+
     case 'egi256'
       % this should be  uppercase for consistency with ft_read_header
       label = cell(257, 1);
@@ -2948,7 +3020,7 @@ elseif isempty(eval(type))
       end
       % there might also be a reference channel, but its name is inconsistent
       % it might be Cz, REF, VREF or 'vertex reference'
-      
+
     case 'itab28'
       label = {
         'MAG_1'
@@ -2972,14 +3044,14 @@ elseif isempty(eval(type))
         'MAG_27'
         'MAG_28'
         };
-      
+
     case 'itab153'
       label = cell(153,1);
       for i=1:153
         % channel names start counting at zero
         label{i} = sprintf('MAG_%03d',  i-1);
       end
-      
+
     case 'itab153_planar'
       label = cell(153,3);
       for i=1:153
@@ -2990,7 +3062,7 @@ elseif isempty(eval(type))
       end
       itab153_planar_combined = label(:,3);
       label = label(:,1:2);
-      
+
     case 'yokogawa9'
       % note that this uses MATLAB style 1-offset indexing and not C style 0-offset indexing
       % this should be consistent with: read_yokogawa_header, ft_channelselection, yokogawa2grad
@@ -2998,7 +3070,7 @@ elseif isempty(eval(type))
       for i=1:9
         label{i} = sprintf('M%03d',  i);
       end
-      
+
     case 'yokogawa64'
       % note that this uses MATLAB style 1-offset indexing and not C style 0-offset indexing
       % this should be consistent with: read_yokogawa_header, ft_channelselection, yokogawa2grad
@@ -3006,7 +3078,7 @@ elseif isempty(eval(type))
       for i=1:64
         label{i} = sprintf('AG%03d', i);
       end
-      
+
     case 'yokogawa64_planar'
       % note that this uses MATLAB style 1-offset indexing and not C style 0-offset indexing
       % this should be consistent with: read_yokogawa_header, ft_channelselection, yokogawa2grad
@@ -3018,7 +3090,7 @@ elseif isempty(eval(type))
       end
       yokogawa64_planar_combined = label(:,3);
       label = label(:,1:2);
-      
+
     case 'yokogawa160'
       % note that this uses MATLAB style 1-offset indexing and not C style 0-offset indexing
       % this should be consistent with: read_yokogawa_header, ft_channelselection, yokogawa2grad
@@ -3026,7 +3098,7 @@ elseif isempty(eval(type))
       for i=1:160
         label{i} = sprintf('AG%03d', i);
       end
-      
+
     case 'yokogawa160_planar'
       % note that this uses MATLAB style 1-offset indexing and not C style 0-offset indexing
       % this should be consistent with: read_yokogawa_header, ft_channelselection, yokogawa2grad
@@ -3038,7 +3110,7 @@ elseif isempty(eval(type))
       end
       yokogawa160_planar_combined = label(:,3);
       label = label(:,1:2);
-      
+
     case 'yokogawa208'
       % note that this uses MATLAB style 1-offset indexing and not C style 0-offset indexing
       % this should be consistent with: read_yokogawa_header, ft_channelselection, yokogawa2grad
@@ -3046,7 +3118,7 @@ elseif isempty(eval(type))
       for i=1:208
         label{i} = sprintf('AG%03d', i);
       end
-      
+
     case 'yokogawa208_planar'
       % note that this uses MATLAB style 1-offset indexing and not C style 0-offset indexing
       % this should be consistent with: read_yokogawa_header, ft_channelselection, yokogawa2grad
@@ -3475,7 +3547,7 @@ elseif isempty(eval(type))
         'RM411'
         'RM412'
         };
-      
+
     case 'yokogawa440_planar'
       % this should be consistent with read_yokogawa_header, with
       % ft_channelselection and with yokogawa2grad
@@ -3693,21 +3765,21 @@ elseif isempty(eval(type))
         };
       yokogawa440_planar_combined = label(:,3);
       label = label(:,1:2);
-      
+
     case {'eeg' 'electrode'}
       % there is no default set of electrode labels for all possible EEG systems
       % but nevertheless the requested input type should not result in an error
       label = {};
-      
+
     otherwise
       ft_error('the requested sensor type "%s" is not supported', type);
-      
+
   end % switch
-  
+
   % remember this set of labels to speed up subsequent function calls
   eval(sprintf('%s = label;', type));
   clear label
-  
+
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -3719,14 +3791,14 @@ switch output
     % return labels as 2*Nx1 cell-array for planar systems or 3*Nx1 for neuromag306
     % return labels as   Nx1 cell-array for non-planar systems
     label = eval(type);
-    
+
   case 'planarcombined'
     % return labels as Nx3 cell-array for the planar channels, 3rd column contains the combination
     planar    = eval(type);
     combined  = eval([type '_combined']);
     label     = [planar(:,1:2) combined]; % magnetometers are in the 3rd column for neuromag306
-    
+
   otherwise
     ft_error('unsupported output "%s"', output);
-    
+
 end

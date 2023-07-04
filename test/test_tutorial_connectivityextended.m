@@ -88,11 +88,11 @@ for row=1:3
 end
 
 %% do the virtual channel stuff
-load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer_extended/source_coh_lft.mat'));
-load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer_extended/source_diff.mat'));
-load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer_extended/data_cmb.mat'));
-load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer_extended/sourcemodel.mat'));
-load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer_extended/hdm.mat'));
+load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformingextended/source_coh_lft.mat'));
+load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformingextended/source_diff.mat'));
+load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformingextended/data_cmb.mat'));
+load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformingextended/sourcemodel.mat'));
+load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformingextended/hdm.mat'));
 
 [maxval, maxcohindx] = max(source_coh_lft.avg.coh);
 source_coh_lft.pos(maxcohindx, :)

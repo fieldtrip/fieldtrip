@@ -32,7 +32,7 @@ function mesh = prepare_mesh_segmentation(cfg, mri)
 % $Id$
 
 % ensure that the input is consistent with what this function expects
-mri = ft_checkdata(mri, 'datatype', {'volume', 'segmentation'}, 'hasunit', 'yes');
+mri = ft_checkdata(mri, 'datatype', {'volume', 'segmentation'});
 
 % get the default options
 cfg.spmversion    = ft_getopt(cfg, 'spmversion', 'spm12');
@@ -109,15 +109,14 @@ for i=1:numel(cfg.tissue)
   
   if iscell(cfg.tissue)
     % the code below assumes that it is a probabilistic representation, for example {'brain', 'skull', scalp'}
-    try
-      seg = mri.(fixname(cfg.tissue{i}));
-    catch
-      ft_error('Please specify cfg.tissue to correspond to tissue types in the segmented MRI')
+    if ~isfield(mri, fixname(cfg.tissue{i}))
+      ft_error('the %s segmentation is missing', fixname(cfg.tissue{i}));
     end
+    seg = mri.(fixname(cfg.tissue{i}));
     seglabel = cfg.tissue{i};
   elseif isnumeric(cfg.tissue) && isfield(mri, 'seg')
-    % for backward compatibility with hard-coded seg field
-    % this assumes that it is an indexed representation, for example [3 2 1]
+    % for backward compatibility with hard-coded seg field without labels
+    % this assumes that it is an indexed representation, for example [1 2 3]
     seg = (mri.seg==cfg.tissue(i));
     if isfield(mri, 'seglabel')
       try
@@ -144,17 +143,20 @@ for i=1:numel(cfg.tissue)
   end
   
   if strcmp(cfg.method, 'isosurface')
-    fprintf('triangulating the outer boundary of compartment %d (%s) with the isosurface method\n', i, seglabel);
+    fprintf('triangulating the boundary of compartment %d (%s) with the isosurface method\n', i, seglabel);
   else
-    fprintf('triangulating the outer boundary of compartment %d (%s) with %d vertices\n', i, seglabel, cfg.numvertices(i));
+    fprintf('triangulating the boundary of compartment %d (%s) with %d vertices\n', i, seglabel, cfg.numvertices(i));
   end
   
   % in principle it is possible to do volumesmooth and volumethreshold, but
-  % the user is expected to prepare his segmentation outside this function
+  % the user is expected to prepare their segmentation outside this function
   % seg = volumesmooth(seg, nan, nan);
   
   % ensure that the segmentation is binary and that there is a single contiguous region
   seg = volumethreshold(seg, 0.5, seglabel);
+  
+  % the mesh generation will fail if there is a hole in the middle
+  seg = volumefillholes(seg);
   
   % add a layer on all sides to ensure that the tissue can be meshed all the way up to the edges
   % this also ensures that the mesh at the bottom of the neck will be closed
@@ -170,15 +172,13 @@ for i=1:numel(cfg.tissue)
   transform(2,4) = transform(2,4) - shift(2);
   transform(3,4) = transform(3,4) - shift(3);
   
-  % the mesh generation will fail if there is a hole in the middle
-  seg = volumefillholes(seg);
-  
   switch cfg.method
     case 'isosurface'
       [tri, pos] = isosurface(seg);
-      if ~isempty(cfg.numvertices)
+      if ~isempty(cfg.numvertices) && ~isinf(cfg.numvertices(i))
         npos = cfg.numvertices(i);
         ntri = 2*(npos-2);
+        fprintf('reducing the triangulation from %d to approximately %d vertices\n', size(pos,1), npos);
         [tri, pos] = reducepatch(tri, pos, ntri);
       end
       pos = pos(:,[2 1 3]); % Mathworks isosurface indexes differently
@@ -216,7 +216,6 @@ for i=1:numel(cfg.tissue)
   
   mesh(i).pos  = ft_warp_apply(transform, pos);
   mesh(i).tri  = tri;
-  mesh(i).unit = mri.unit;
   
 end % for each tissue
 

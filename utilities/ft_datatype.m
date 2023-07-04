@@ -1,19 +1,19 @@
 function [type, dimord] = ft_datatype(data, desired)
 
-% FT_DATATYPE determines the type of data represented in a FieldTrip data
-% structure and returns a string with raw, freq, timelock source, comp,
-% spike, source, volume, dip, montage, event.
+% FT_DATATYPE determines the type of data represented in a FieldTrip data structure
+% and returns a string with raw, freq, timelock source, comp, spike, source, volume,
+% dip, montage, event.
 %
 % Use as
 %   [type, dimord] = ft_datatype(data)
-%   [status]       = ft_datatype(data, desired)
+%   [bool]         = ft_datatype(data, desired)
 %
 % See also FT_DATATYPE_COMP, FT_DATATYPE_FREQ, FT_DATATYPE_MVAR,
 % FT_DATATYPE_SEGMENTATION, FT_DATATYPE_PARCELLATION, FT_DATATYPE_SOURCE,
 % FT_DATATYPE_TIMELOCK, FT_DATATYPE_DIP, FT_DATATYPE_HEADMODEL,
 % FT_DATATYPE_RAW, FT_DATATYPE_SENS, FT_DATATYPE_SPIKE, FT_DATATYPE_VOLUME
 
-% Copyright (C) 2008-2019, Robert Oostenveld
+% Copyright (C) 2008-2022, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -38,23 +38,23 @@ if nargin<2
 end
 
 % determine the type of input data
-israw          =  isfield(data, 'label') && isfield(data, 'time') && isa(data.time, 'cell') && isfield(data, 'trial') && isa(data.trial, 'cell') && ~isfield(data,'trialtime');
+israw          =   isfield(data, 'label') && isfield(data, 'time') && isa(data.time, 'cell') && isfield(data, 'trial') && isa(data.trial, 'cell') && ~isfield(data,'trialtime');
 isfreq         = ((isfield(data, 'label') && ~isfield(data, 'pos')) || isfield(data, 'labelcmb')) && isfield(data, 'freq') && ~isfield(data,'trialtime') && ~isfield(data,'origtrial'); %&& (isfield(data, 'powspctrm') || isfield(data, 'crsspctrm') || isfield(data, 'cohspctrm') || isfield(data, 'fourierspctrm') || isfield(data, 'powcovspctrm'));
-istimelock     =  isfield(data, 'label') && isfield(data, 'time') && ~isfield(data, 'freq') && ~isfield(data,'timestamp') && ~isfield(data,'trialtime') && ~(isfield(data, 'trial') && iscell(data.trial)) && ~isfield(data, 'pos'); %&& ((isfield(data, 'avg') && isnumeric(data.avg)) || (isfield(data, 'trial') && isnumeric(data.trial) || (isfield(data, 'cov') && isnumeric(data.cov))));
-iscomp         =  isfield(data, 'label') && isfield(data, 'topo') || isfield(data, 'topolabel');
-isvolume       =  isfield(data, 'transform') && isfield(data, 'dim') && ~isfield(data, 'pos');
-issource       = (isfield(data, 'pos') || isfield(data, 'pnt')) && isstruct(data) && numel(data)==1; % pnt is deprecated, this does not apply to a mesh array
-ismesh         = (isfield(data, 'pos') || isfield(data, 'pnt')) && (isfield(data, 'tri') || isfield(data, 'tet') || isfield(data, 'hex')); % pnt is deprecated
-isdip          =  isfield(data, 'dip');
-ismvar         =  isfield(data, 'dimord') && ~isempty(strfind(data.dimord, 'lag'));
-isfreqmvar     =  isfield(data, 'freq') && isfield(data, 'transfer');
-ischan         =  check_chan(data);
-issegmentation =  check_segmentation(data);
-isparcellation =  check_parcellation(data);
-ismontage      =  isfield(data, 'labelold') && isfield(data, 'labelnew') && isfield(data, 'tra');
-isevent        =  isfield(data, 'type') && isfield(data, 'value') && isfield(data, 'sample') && isfield(data, 'offset') && isfield(data, 'duration');
-islayout       =  all(isfield(data, {'label', 'pos', 'width', 'height'})); % mask and outline are optional
-isheadmodel    =  false; % FIXME this is not yet implemented
+istimelock     =   isfield(data, 'label') && isfield(data, 'time') && ~isfield(data, 'freq') && ~isfield(data,'timestamp') && ~isfield(data,'trialtime') && ~(isfield(data, 'trial') && iscell(data.trial)) && ~isfield(data, 'pos'); %&& ((isfield(data, 'avg') && isnumeric(data.avg)) || (isfield(data, 'trial') && isnumeric(data.trial) || (isfield(data, 'cov') && isnumeric(data.cov))));
+iscomp         =   isfield(data, 'label') && isfield(data, 'topo') || isfield(data, 'topolabel');
+isvolume       =   isfield(data, 'transform') && isfield(data, 'dim') && ~isfield(data, 'pos');
+issource       =  (isfield(data, 'pos') || isfield(data, 'pnt')) && isstruct(data) && numel(data)==1; % pnt is deprecated, this does not apply to a mesh array
+ismesh         =  (isfield(data, 'pos') || isfield(data, 'pnt')) && (isfield(data, 'tri') || isfield(data, 'tet') || isfield(data, 'hex')); % pnt is deprecated
+isdip          =   isfield(data, 'dip');
+ismvar         =   isfield(data, 'dimord') && ~isempty(strfind(data.dimord, 'lag'));
+isfreqmvar     =   isfield(data, 'freq') && isfield(data, 'transfer');
+ischan         =   check_chan(data);
+issegmentation =   check_segmentation(data);
+isparcellation =   check_parcellation(data);
+ismontage      =   isfield(data, 'labelold') && isfield(data, 'labelnew') && isfield(data, 'tra');
+isevent        =   isfield(data, 'type') && isfield(data, 'value') && isfield(data, 'sample') && isfield(data, 'offset') && isfield(data, 'duration');
+isheadmodel    =   isfield(data, 'type') && ischar(data.type) && ismember(data.type, {'bemcp', 'concentricspheres', 'dipoli', 'duneuro', 'fns', 'halfspace', 'halfspace_monopole', 'infinite', 'infinite_currentdipole', 'infinite_magneticdipole', 'infinite_monopole', 'interpolate', 'localspheres', 'openmeeg', 'simbio', 'singleshell', 'singlesphere', 'slab_monopole'});
+islayout       =   all(isfield(data, {'label', 'pos', 'width', 'height'})); % mask and outline are optional
 
 if issource && isstruct(data) && numel(data)>1
   % this applies to struct arrays with meshes, i.e. with a pnt+tri
@@ -131,6 +131,8 @@ elseif ismontage
   type = 'montage';
 elseif isevent
   type = 'event';
+elseif isheadmodel
+  type = 'headmodel';
 else
   type = 'unknown';
 end
@@ -194,7 +196,6 @@ else
   end
 end
 
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -235,7 +236,6 @@ end
 if ~isempty(isboolean)
   res = all(isboolean);
 end
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION

@@ -12,7 +12,7 @@ if true
   nMEG = 151;
   senstype = 'ctf151';
 else
-  load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/natmeg/preprocessing/data_MEG.mat'));
+  load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/workshop/natmeg2014/preprocessing/data_MEG.mat'));
   data = data_MEG;
   nMEG = 306;
   senstype = 'neuromag306';

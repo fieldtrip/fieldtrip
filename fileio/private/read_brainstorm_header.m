@@ -37,7 +37,11 @@ function [hdr] = read_brainstorm_header(filename)
 hdr.orig        = sFile.header;
 hdr.nChans      = sFile.header.num_channels;
 hdr.Fs          = sFile.header.sample_rate;
-hdr.nSamples    = sFile.epochs.samples(end)-sFile.epochs.samples(1)+1;
+if isfield(sFile.epochs, 'samples')     
+  hdr.nSamples    = sFile.epochs.samples(end) - sFile.epochs.samples(1) + 1;
+elseif isfield(sFile.epochs, 'times') % accommodates a change to in_fopen_nk in 2021
+  hdr.nSamples    = (sFile.epochs.times(end) - sFile.epochs.times(1)) * hdr.Fs + 1;
+end
 hdr.nSamplesPre = 0;
 hdr.nTrials     = length(sFile.epochs);
 hdr.label       = cell(hdr.nChans, 1);

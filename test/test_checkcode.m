@@ -210,7 +210,8 @@ end
 fid = fopen(filename, 'r');
 str = fread(fid, [1, inf], 'char=>char');
 bool = true; % this is the return value when all is fine
-bool = bool & isempty(regexp(str, '\[~', 'once'));
+bool = bool & isempty(regexp(str, '\[~ ', 'once'));
+bool = bool & isempty(regexp(str, '\[~,', 'once'));
 bool = bool & isempty(regexp(str, '~\]', 'once'));
 bool = bool & isempty(regexp(str, ', *~ *,', 'once'));
 fclose(fid);

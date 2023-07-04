@@ -19,15 +19,16 @@ function [rest] = mne_omit_first_line(str)
 %
 %
 me='MNE:mne_omit_first_line';
+rest = str;
+if exist('OCTAVE_VERSION', 'builtin') ~= 0
+    return;
+end
 
 lf = findstr(10,str);
-if isempty(lf)
-    rest = str;
-else    
+if ~isempty(lf)
     rest = str(lf+1:size(str,2));
 end
 
 return;
 
 end
-

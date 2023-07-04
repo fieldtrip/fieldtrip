@@ -17,7 +17,7 @@ function ft_write_sens(filename, sens, varargin)
 %   polhemus_pos
 %   matlab
 %
-% See also FT_READ_SENS, FT_DATATYPE_SENS
+% See also FT_READ_SENS, FT_DATATYPE_SENS, FT_WRITE_DATA, FT_WRITE_MRI, FT_WRITE_SENS
 
 % Copyright (C) 2017-2019, Robert Oostenveld
 %

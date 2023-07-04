@@ -15,7 +15,7 @@ load(filename);
 filename = fullfile(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/vol'), 'Subject01vol_singleshell');
 load(filename);
 vol = ft_datatype_headmodel(vol);
-[vol.bnd.nrm] = normals(vol.bnd.pos,vol.bnd.tri);
+[vol.bnd.nrm] = surface_normals(vol.bnd.pos,vol.bnd.tri);
 
 cfg           = [];
 cfg.headmodel = vol;

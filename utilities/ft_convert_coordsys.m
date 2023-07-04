@@ -42,7 +42,7 @@ function [object] = ft_convert_coordsys(object, target, varargin)
 % Undocumented options
 %   feedback  = string, 'yes' or 'no' (default = 'no')
 
-% Copyright (C) 2005-2021, Robert Oostenveld & Jan-Mathijs Schoffelen
+% Copyright (C) 2005-2023, Robert Oostenveld & Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -76,21 +76,6 @@ method        = ft_getopt(varargin, 'method');    % default is handled below
 templatefile  = ft_getopt(varargin, 'template');  % default is handled in the SPM section
 feedback      = ft_getopt(varargin, 'feedback', 'no');
 
-if isempty(method)
-  if isfield(object, 'transform') && isfield(object, 'anatomy')
-    % the default for an anatomical MRI is to start with an approximate alignment,
-    % followed by a call to spm_normalise for a better quality alignment
-    method = 2;
-  else
-    % the default for all other objects is to do only an approximate alignment
-    method = 0;
-  end
-end
-
-if isdeployed && method>0 && isempty(templatefile)
-  ft_error('you need to specify a template filename for the coregistration');
-end
-
 if ~isfield(object, 'coordsys') || isempty(object.coordsys)
   % determine the coordinate system of the input object
   object = ft_determine_coordsys(object, 'interactive', 'yes');
@@ -103,15 +88,21 @@ if ~isfield(object, 'coordsys') || isempty(object.coordsys)
   ft_notice('the coordinate system is determined as ''%s''', object.coordsys);
 end
 
-if ~isfield(object, 'unit') || isempty(object.unit)
-  % determine the units of the input object
-  object = ft_determine_units(object);
-  ft_notice('the units are determined as ''%s''', object.unit);
+if isequal(object.coordsys, target)
+  % no further conversion is needed
+  return
 end
 
-% all of the internal logic inside this function requires that the units are in millimeter
-original = object;
-object = ft_convert_units(object, 'mm');
+if isempty(method)
+  if isfield(object, 'transform') && isfield(object, 'anatomy')
+    % the default for an anatomical MRI is to start with an approximate alignment,
+    % followed by a call to spm_normalise for a better quality alignment
+    method = 2;
+  else
+    % the default for all other objects is to do only an approximate alignment
+    method = 0;
+  end
+end
 
 if ~ismember(object.coordsys, {'spm', 'mni', 'fsaverage', 'tal'}) && ismember(target, {'spm', 'mni', 'fsaverage', 'tal'})
   % the input appears to be an individual subject MRI which has not been rescaled
@@ -120,6 +111,17 @@ if ~ismember(object.coordsys, {'spm', 'mni', 'fsaverage', 'tal'}) && ismember(ta
   ft_warning('Not applying any scaling, using ''acpc'' instead of ''%s''. See http://bit.ly/2sw7eC4', target);
   target = 'acpc';
 end
+
+if ~isfield(object, 'unit') || isempty(object.unit)
+  % determine the units of the input object
+  object = ft_determine_units(object);
+  ft_notice('the units are determined as ''%s''', object.unit);
+end
+
+% all of the internal logic inside this function requires that the units are in millimeter
+% it will be converted back at the end of this function
+original = object;
+object = ft_convert_units(object, 'mm');
 
 %--------------------------------------------------------------------------
 % Do an initial affine registration (rigid body) alignment to the target coordinate
@@ -171,23 +173,23 @@ object.coordsys = target;
 % approximately aligned with ACPC.
 
 if method>0
+  if isdeployed && isempty(templatefile)
+    ft_error('you need to specify a template filename for the coregistration');
+  end
+  
   if ~isfield(object, 'transform') || ~isfield(object, 'anatomy')
     ft_error('affine or non-linear transformation are only supported for anatomical MRIs');
   end
+  
   if ~isfield(object, 'unit') || ~strcmp(object.unit, 'mm')
     ft_error('affine or non-linear transformation require the anatomial MRI to be expressed in mm');
   end
-  if ~any(ismember(object.coordsys, {'acpc', 'spm', 'mni', 'fsaverage', 'tal'}))
-    % this constraint could be relaxed if we would know that the template is expressed in another coordinate system
-    %     ft_error('affine or non-linear transformation is only supported for data in an SPM-like coordinate systems');
-  end
-  
-  % this requires SPM to be on the path. However, this is not the proper place to
+
+  % the following requires SPM to be on the path. However, this is not the proper place to
   % choose between SPM versions. The user can either use cfg.spmversion in a high-level
   % function, or has to add the path to the desired SPM version by hand.
   ft_hastoolbox('spm', -1);
 end
-
 
 if method==1
   % use spm_affreg
@@ -277,8 +279,8 @@ elseif method==2
   
   tname1 = [tempname, '.img'];
   tname2 = [tempname, '.img'];
-  V1 = ft_write_mri(tname1, object.anatomy,  'transform', object.transform,  'spmversion', spm('ver'), 'dataformat', 'nifti_spm');
-  V2 = ft_write_mri(tname2, template.anatomy, 'transform', template.transform, 'spmversion', spm('ver'), 'dataformat', 'nifti_spm');
+  V1 = ft_write_mri(tname1, object.anatomy,  'transform', object.transform,  'unit', object.unit, 'spmversion', spm('ver'), 'dataformat', 'nifti_spm');
+  V2 = ft_write_mri(tname2, template.anatomy, 'transform', template.transform, 'unit', template.unit, 'spmversion', spm('ver'), 'dataformat', 'nifti_spm');
   
   flags.nits       = 0; % set number of non-linear iterations to zero
   flags.regtype    = 'rigid';
@@ -301,14 +303,10 @@ if istrue(feedback)
   % give some graphical feedback
   ft_determine_coordsys(object, 'interactive', 'no', 'fontsize', 15);
   % also add the original axes
-  if method==0
-    ft_plot_axes([], 'transform', transform, 'unit', 'mm', 'coordsys', original.coordsys, 'fontsize', 15);
-  elseif method>0
-    transform = object.transform * inv(original.transform);
-    ft_plot_axes([], 'transform', transform, 'unit', 'mm', 'coordsys', original.coordsys, 'fontsize', 15);
-  end
+  transform = object.transform * inv(original.transform);
+  ft_plot_axes([], 'transform', transform, 'unit', 'mm', 'coordsys', original.coordsys, 'fontsize', 15);
 end
 
-% all of the internal logic inside this function requires that the units are in millimeter
+% all of the internal logic inside this function required that the units were in millimeter
 % convert back to the original units
 object = ft_convert_units(object, original.unit);
