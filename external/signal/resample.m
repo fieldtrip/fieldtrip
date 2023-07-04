@@ -119,7 +119,7 @@ Ly = ceil(Lx*p/q);
 % pre and postpad filter response
 
 nz_pre = floor(q-mod(L,q));
-hpad = [zeros(nz_pre,1);h'];
+hpad = [zeros(nz_pre,1);h];
 
 offset = floor((L+nz_pre)/q);
 nz_post = 0;
