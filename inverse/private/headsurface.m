@@ -59,7 +59,7 @@ end
 % parse the optional input arguments
 surface       = ft_getopt(varargin, 'surface', 'skin');     % skin or brain
 downwardshift = ft_getopt(varargin, 'downwardshift', true); % boolean
-inwardshift   = ft_getopt(varargin, 'inwardshift');         % number
+inwardshift   = ft_getopt(varargin, 'inwardshift', 0);      % number
 headshape     = ft_getopt(varargin, 'headshape');           % CTF *.shape file
 npos          = ft_getopt(varargin, 'npos');                % number of vertices
 
@@ -195,6 +195,10 @@ elseif ft_headmodeltype(headmodel, 'bem') ||  ft_headmodeltype(headmodel, 'singl
     otherwise
       ft_error('other surfaces cannot be constructed this way');
   end
+
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+else
+    ft_error('headmodel or headshape required')
 end
 
 % retriangulate the skin/brain/cortex surface to the desired number of vertices
@@ -203,25 +207,8 @@ if ~isempty(npos) && size(pos,1)~=npos
   [pos, tri]   = retriangulate(pos, tri, pnt2, tri2, 2);
 end
 
-% shift the surface inward with a certain amount
-if ~isempty(inwardshift) && inwardshift~=0
-  ori = normals(pos, tri, 'vertex');
-  % FIXME in case of a icosahedron projected onto a localspheres model, the
-  % surfaceorientation for the lower rim points fails, causing problems
-  % with the inward shift
-  tmp = surfaceorientation(pos, tri, ori);
-  % the orientation of the normals should be pointing to the outside of the surface
-  if tmp==1
-    % the normals are outward oriented
-    % nothing to do
-  elseif tmp==-1
-    % the normals are inward oriented
-    tri = fliplr(tri);
-    ori = -ori;
-  else
-    ft_warning('cannot determine the orientation of the vertex normals');
-    % nothing to do
-  end
-  % the orientation is outward, hence shift with a negative amount
-  pos = pos - inwardshift * ori;
+% shift the surface inward with the specified amount
+if inwardshift~=0
+  % the surface orientation is determined to be outward, hence shift with a negative amount
+  pos = surface_shift(pos, tri, -inwardshift);
 end

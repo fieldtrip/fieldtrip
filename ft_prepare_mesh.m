@@ -140,7 +140,7 @@ end
 
 if hasdata && cfg.downsample~=1
   % optionally downsample the anatomical volume and/or tissue segmentations
-  tmpcfg = keepfields(cfg, {'downsample', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+  tmpcfg = keepfields(cfg, {'downsample', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
   data = ft_volumedownsample(tmpcfg, data);
   % restore the provenance information and put back cfg.smooth
   tmpsmooth = cfg.smooth;
@@ -222,7 +222,7 @@ end
 
 % smooth the mesh
 if ~isempty(cfg.smooth)
-  tmpcfg = keepfields(cfg, {'smooth', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+  tmpcfg = keepfields(cfg, {'smooth', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
   tmpcfg.numvertices = []; % the number of vertices should not be changed
   tmpcfg.headshape = mesh;
   mesh = prepare_mesh_headshape(tmpcfg);

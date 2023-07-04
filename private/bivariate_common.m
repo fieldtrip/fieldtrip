@@ -29,7 +29,7 @@ end
 
 % Interactively select the reference channel
 if strcmp(cfg.refchannel, 'gui')
-  tmpcfg = keepfields(cfg, {'channel', 'layout', 'commentpos', 'scalepos', 'elec', 'grad', 'opto', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+  tmpcfg = keepfields(cfg, {'channel', 'layout', 'commentpos', 'scalepos', 'elec', 'grad', 'opto', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
   lay = ft_prepare_layout(tmpcfg, varargin{1});
   % Open a single figure with the channel layout, the user can click on a reference channel
   h = clf;

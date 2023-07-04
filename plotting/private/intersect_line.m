@@ -46,7 +46,7 @@ tol = 1e-12;
 ntri = size(tri,1);
 
 % normals to the triangles
-n   = normals(pnt, tri, 'triangle');
+n   = surface_normals(pnt, tri, 'triangle');
 
 % vectors describing the edges
 t0  = pnt(tri(:,1),:);

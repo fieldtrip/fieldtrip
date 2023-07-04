@@ -32,7 +32,8 @@ function [data] = ft_timelocksimulation(cfg)
 % certain amount of noise is added.
 %
 % Other configuration options include
-%   cfg.numchan     = number (default = 5)
+%   cfg.numchan    = number (default = 5)
+%   cfg.randomseed = 'yes' or a number or vector with the seed value (default = 'yes')
 %
 % See also FT_TIMELOCKANALYSIS, FT_TIMELOCKSTATISTICS, FT_FREQSIMULATION,
 % FT_DIPOLESIMULATION, FT_CONNECTIVITYSIMULATION
@@ -79,6 +80,7 @@ ft_defaults
 ft_preamble init
 ft_preamble debug
 ft_preamble provenance
+ft_preamble randomseed
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -218,6 +220,7 @@ end % for each trial
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 ft_postamble debug
+ft_postamble randomseed
 ft_postamble provenance data
 ft_postamble history    data
 ft_postamble savevar    data

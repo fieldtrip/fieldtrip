@@ -22,6 +22,8 @@ function [proj] = elproj(pos, method)
 %
 % The default projection is a polar projection (BESA like).
 % An inverse projection is the opposite of the default polar projection.
+%
+% See also PROJECTTRI
 
 % Copyright (C) 2000-2008, Robert Oostenveld
 %

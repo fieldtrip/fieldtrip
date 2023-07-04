@@ -177,6 +177,7 @@ url = {
   'RICOH_MEG_READER'                      'contact Ricoh engineers'
   'SIGNAL'                                'see http://www.mathworks.com/products/signal'
   'SIMBIO'                                'see https://www.mrt.uni-jena.de/simbio/index.php/Main_Page'
+  'SIMNIBS'                               'see http://www.simnibs.org/'
   'SON2'                                  'see http://www.kcl.ac.uk/depsta/biomedical/cfnr/lidierth.html, or contact Malcolm Lidierth'
   'SPECEST'                               'see http://www.fieldtriptoolbox.org'
   'SPIKE'                                 'see http://www.fieldtriptoolbox.org'
@@ -341,6 +342,8 @@ switch toolbox
     dependency = 'elecsfwd';
   case 'SIMBIO'
     dependency = {'calc_stiff_matrix_val', 'sb_transfer'};
+  case 'SIMNIBS'
+    dependency = {'mesh_load_gmsh4', 'mesh_save_gmsh4', 'standard_cond', 'mesh_empty'};
   case 'VGRID'
     dependency = 'vgrid';
   case 'GIFTI'

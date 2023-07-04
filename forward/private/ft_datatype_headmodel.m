@@ -1,24 +1,24 @@
 function [headmodel] = ft_datatype_headmodel(headmodel, varargin)
 
 % FT_DATATYPE_HEADMODEL describes the FieldTrip MATLAB structure for a volume
-% conduction model of the head that can be used for forward computations of
-% the EEG potentials or the MEG fields. The volume conduction model represents
-% the geometrical and the conductive properties of the head. These determine
-% how the secondary (or impressed) currents flow and how these contribute to
-% the model potential or field.
+% conduction model of the head that can be used for forward computations of the EEG
+% potentials or the MEG fields. The volume conduction model represents the
+% geometrical and the conductive properties of the head. These determine how the
+% secondary (or impressed) currents flow and how these contribute to the model
+% potential or field.
 %
-% A large number of forward solutions for the EEG and MEG are supported
-% in FieldTrip, each with its own specification of the MATLAB structure that
-% describes the volume conduction model of th ehead. It would be difficult to
-% list all the possibilities here. One common feature is that the volume
-% conduction model should specify its type, and that preferably it should
-% specify the geometrical units in which it is expressed (e.g. mm, cm or m).
+% A large number of forward solutions for the EEG and MEG are supported in FieldTrip,
+% each with its own specification of the MATLAB structure that describes the volume
+% conduction model of th ehead. It would be difficult to list all the possibilities
+% here. One common feature is that the volume conduction model should specify its
+% type, and that preferably it should specify the geometrical units in which it is
+% expressed (for example in mm, cm or m).
 %
 % An example of an EEG volume conduction model with 4 concentric spheres is:
 %
 % headmodel =
 %        r: [86 88 94 100]
-%        c: [0.33 1.00 0.042 0.33]
+%        c: [0.33 1.79 0.042 0.33]
 %        o: [0 0 0]
 %     type: 'concentricspheres'
 %     unit: 'mm'

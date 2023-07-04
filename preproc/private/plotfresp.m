@@ -1,7 +1,7 @@
 % plotfresp() - Plot a filter's impulse, step, magnitude, and phase response
 %
 % Usage:
-%   >> plotfresp(b, a, nfft, fs, causal);
+%   >> plotfresp(b, a, nfft, fs, dir);
 %
 % Inputs:
 %   b     - vector numerator coefficients

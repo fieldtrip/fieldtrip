@@ -2,31 +2,30 @@ function test_printstruct
 
 % MEM 4gb
 % WALLTIME 00:20:00
-% DEPENDENCY
+% DEPENDENCY printstruct
 
-% the above requirements are quite big, but this script is inherently
-% unpredictable
+% the above requirements are quite big, but this script is inherently unpredictable
 
 numtests = 10;
 
 fprintf('generating %d random deep nested structures to test printstruct() serialization\n', numtests);
 for k = 1:numtests
   % generate some deep structure
-  mystruct = randomval('struct');
-  
-  % get string version, assign new name
-  % FIXME think about whether printstruct itself should contain
-  % initialization to empty []
-  newstruct = []; 
-  printversion = printstruct('newstruct', mystruct);
-  
+  oldstruct = randomval('struct');
+
+  % get the printed/string version with a new name
+  printversion = printstruct('newstruct', oldstruct);
+
+  % do not add it to the existing structure
+  clear newstruct
+
   % eval() it
   eval(printversion);
-  
+
   % check equality
   % use abstol here because we know all floating point numeric values are
   % generated from standard normal distribution
-  [ok,msg] = isalmostequal(mystruct, newstruct, 'abstol', 1e-6);
+  [ok,msg] = isalmostequal(oldstruct, newstruct, 'abstol', 1e-6);
   if ok
     fprintf('printstruct() behaves as expected for random structure %d\n', k);
   else
@@ -36,7 +35,7 @@ for k = 1:numtests
   end
 end
 
-end
+end % function test_printstruct
 
 %%%%%%%%%%%%%%%%%%%% SUBFUNCTION %%%%%%%%%%%%%%%%%%%%
 function myval = randomval(type, depth)
@@ -84,4 +83,4 @@ switch(type)
     myval = randi(200, randi(100), randi(100), type);
 end
 
-end
+end % function randomval

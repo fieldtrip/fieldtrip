@@ -91,7 +91,7 @@ fprintf(fid, 'DataFormat=%s\r\n',        hdr.DataFormat);
 fprintf(fid, 'DataOrientation=%s\r\n',   hdr.DataOrientation);
 fprintf(fid, 'NumberOfChannels=%d\r\n',  hdr.nChans);
 % Sampling interval in microseconds
-fprintf(fid, 'SamplingInterval=%d\r\n',  1e6/hdr.Fs);
+fprintf(fid, 'SamplingInterval=%.6f\r\n',  1e6/hdr.Fs);
 fprintf(fid, '\r\n');
 fprintf(fid, '[Binary Infos]\r\n');
 fprintf(fid, 'BinaryFormat=%s\r\n',      hdr.BinaryFormat);

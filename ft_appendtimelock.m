@@ -78,7 +78,7 @@ end % try
 
 % ensure that the input data is valid for this function
 for i=1:length(varargin)
-  varargin{i} = ft_checkdata(varargin{i}, 'datatype', {'timelock', 'timelock+comp'}, 'feedback', 'yes', 'hassampleinfo', cfg.keepsampleinfo);
+  varargin{i} = ft_checkdata(varargin{i}, 'datatype', {'timelock+comp', 'timelock'}, 'feedback', 'yes', 'hassampleinfo', cfg.keepsampleinfo);
 end
 
 if isempty(cfg.appenddim) || strcmp(cfg.appenddim, 'auto')

@@ -21,7 +21,8 @@ function [data] = ft_redefinetrial(cfg, data)
 % For realiging the time axes of all trials to a new reference time
 % point (i.e. change the definition for t=0) you can use the following
 % configuration option
-%   cfg.offset    = single number or Nx1 vector, expressed in samples relative to current t=0
+%   cfg.offset    = single number or Nx1 vector, by how many samples should the time axes be shifted.
+%                   i.e. if you want t=1 to be the new t=0, set cfg.offset = -1*Fs (Fs is the sampling frequency in Hz).
 %
 % For selecting a specific subsection of (i.e. cut out a time window
 % of interest) you can select a time window in seconds that is common
@@ -133,7 +134,7 @@ if ~strcmp(cfg.trials, 'all')
   end
   
   % select trials of interest
-  tmpcfg = keepfields(cfg, {'trials', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+  tmpcfg = keepfields(cfg, {'trials', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
   data   = ft_selectdata(tmpcfg, data);
   % restore the provenance information
   [cfg, data] = rollback_provenance(cfg, data);
@@ -316,7 +317,11 @@ elseif ~isempty(cfg.length)
   % create dummy trl-matrix and recursively call ft_redefinetrial
   nsmp    = round(cfg.length*data.fsample);
   nshift  = round((1-cfg.overlap)*nsmp);
-  
+
+  if nshift<=0
+    ft_error('the overlap is too large');
+  end
+ 
   newtrl = zeros(0,4);
   for k = 1:numel(data.trial)
     begsample = data.sampleinfo(k,1);
@@ -332,7 +337,7 @@ elseif ~isempty(cfg.length)
   end
   clear begsample endsample offset
   
-  tmpcfg = keepfields(cfg, {'feedback', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+  tmpcfg = keepfields(cfg, {'feedback', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
   tmpcfg.trl = newtrl;
   
   if isfield(data, 'trialinfo') && ~istable(data.trialinfo)
@@ -370,7 +375,7 @@ elseif istrue(cfg.continuous)
   % here we want to use the start of the recording as t=0
   newtrl(:,3) = newtrl(:,1) - 1;
   
-  tmpcfg = keepfields(cfg, {'feedback', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+  tmpcfg = keepfields(cfg, {'feedback', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
   tmpcfg.trl = newtrl;
   
   data   = removefields(data, {'trialinfo'}); % the trialinfo does not apply any more

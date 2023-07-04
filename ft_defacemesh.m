@@ -60,10 +60,18 @@ tmpcfg = cfg;
 tmpcfg.showcallinfo = 'no';
 tmpcfg.method = 'interactive';
 mesh = ft_defacevolume(tmpcfg, mesh);
+% remember the output rotate, scale and translate
+rotate    = mesh.cfg.rotate;
+scale     = mesh.cfg.scale;
+translate = mesh.cfg.translate;
 % restore provenance information and put back cfg.callinfo
 tmpcallinfo = cfg.showcallinfo;
 [cfg, mesh] = rollback_provenance(cfg, mesh);
+% store these in the output configuration
 cfg.showcallinfo = tmpcallinfo;
+cfg.rotate       = rotate;
+cfg.scale        = scale;
+cfg.translate    = translate;
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug

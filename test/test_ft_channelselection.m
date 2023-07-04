@@ -16,7 +16,7 @@ for i=1:size(datasets,2)
   end
   
   if ~ft_senstype(hdr, datasets(i).senstype)
-    error(['incorrect senstype detection: ' datasets(i).datatype]);
+    error(['incorrect senstype detection: ' datasets(i).senstype]);
   else
     type=ft_senstype(hdr);
   end

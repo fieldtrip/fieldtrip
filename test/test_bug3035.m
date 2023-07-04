@@ -38,40 +38,26 @@ end
 
 cfg = [];
 cfg.component = 1;
+data_reject1 = ft_rejectcomponent(cfg, comp, data);
 
-ok = false;
-try
-  data_reject1 = ft_rejectcomponent(cfg, comp, data);
-catch err
-  if strcmp(err.identifier, 'FieldTrip:NaNsinInputData')
-    ok = true;
-  end
-end
-
-if ~ok
-  error('ft_rejectcomponent did not throw the expected error');
-end
-
-% check
-if exist('data_reject1', 'var')
-  tmp = cat(1, data_reject1.trial{:});
-  if any(isnan(tmp(:)))
-    errfun('cleaned data contains nans');
-  end
+% the nans should not spread beyond the eye channels
+tmp = data_reject1.trial{1}(1:42,:);
+if any(isnan(tmp(:)))
+  errfun('cleaned data contains nans')
 end
 
 %% rejectcomponent with 3rd input argument after zeroing nans
 
 % NOTE: the original bug did not occur here
 
-dat2 = data;
-for k = 1:numel(dat2.trial)
-  dat2.trial{k}(isnan(dat2.trial{k})) = 0;
+data1b = data;
+for k = 1:numel(data1b.trial)
+  data1b.trial{k}(isnan(data1b.trial{k})) = 0;
 end
 
 cfg = [];
 cfg.component = 1;
-data_reject1b = ft_rejectcomponent(cfg, comp, dat2);
+data_reject1b = ft_rejectcomponent(cfg, comp, data1b);
 
 % check
 tmp = cat(1, data_reject1b.trial{:});

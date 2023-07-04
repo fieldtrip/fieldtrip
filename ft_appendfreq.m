@@ -67,7 +67,7 @@ end
 
 % check if the input data is valid for this function
 for i=1:length(varargin)
-  varargin{i} = ft_checkdata(varargin{i}, 'datatype', {'freq', 'freq+comp'}, 'feedback', 'yes');
+  varargin{i} = ft_checkdata(varargin{i}, 'datatype', {'freq+comp', 'freq'}, 'feedback', 'yes');
 end
 
 % set the defaults

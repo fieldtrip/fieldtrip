@@ -87,16 +87,16 @@ end
 
 % check if the input data is valid for this function
 for i=1:length(varargin)
-  if isfield(varargin{i},'trial') && isfield(varargin{i},'avg') % see bug2372 (dieloz)
+  if isfield(varargin{i}, 'trial') && isfield(varargin{i}, 'avg') % see bug2372 (dieloz)
     varargin{i} = rmfield(varargin{i}, 'trial');
     varargin{i}.dimord = 'chan_time';
     ft_warning('not using the trials, using the single-subject average to compute the grand average');
-  else
-    if isfield(varargin{i},'trial') && ~isfield(varargin{i},'avg')
-      ft_error('input structure %d does not contain an average, use FT_TIMELOCKANALYSIS first', i);
-    end
   end
   varargin{i} = ft_checkdata(varargin{i}, 'datatype', 'timelock', 'feedback', 'no');
+  % ensure that it contains an average
+  if ~isfield(varargin{i}, 'avg')
+    ft_error('input structure %d does not contain an average, use FT_TIMELOCKANALYSIS first', i);
+  end
 end
 
 % check if the input cfg is valid for this function
@@ -125,7 +125,7 @@ end
 
 % select trials and channels of interest
 orgcfg = cfg;
-tmpcfg = keepfields(cfg, {'parameter', 'channel', 'tolerance', 'latency', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+tmpcfg = keepfields(cfg, {'parameter', 'channel', 'tolerance', 'latency', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
 [varargin{:}] = ft_selectdata(tmpcfg, varargin{:});
 % restore the provenance information
 [cfg, varargin{:}] = rollback_provenance(cfg, varargin{:});

@@ -4,8 +4,8 @@ function [source] = ft_datatype_source(source, varargin)
 % represented at the source level. This is typically obtained with a beamformer of
 % minimum-norm source reconstruction using FT_SOURCEANALYSIS.
 %
-% An example of a source structure obtained after performing DICS (a frequency
-% domain beamformer scanning method) is shown here
+% An example of a source structure obtained after performing DICS (a frequency domain
+% beamformer scan) is shown here
 %
 %           pos: [6732x3 double]       positions at which the source activity could have been estimated
 %        inside: [6732x1 logical]      boolean vector that indicates at which positions the source activity was estimated
@@ -23,7 +23,8 @@ function [source] = ft_datatype_source(source, varargin)
 %   - pos
 %
 % Optional fields:
-%   - time, freq, pow, coh, eta, mom, ori, cumtapcnt, dim, transform, inside, cfg, dimord, other fields with a dimord
+%   - inside, pow, coh, eta, mom, ori, leadfield, filter, or any other field with dimensions that are consistent with pos or dim
+%   - dim, transform, unit, coordsys, time, freq, cumtapcnt, dimord 
 %
 % Deprecated fields:
 %   - method, outside

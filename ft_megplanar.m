@@ -12,7 +12,7 @@ function [data] = ft_megplanar(cfg, data)
 %
 % The configuration should contain
 %   cfg.planarmethod   = string, can be 'sincos', 'orig', 'fitplane', 'sourceproject' (default = 'sincos')
-%   cfg.channel        =  Nx1 cell-array with selection of channels (default = 'all'), see FT_CHANNELSELECTION for details
+%   cfg.channel        =  Nx1 cell-array with selection of channels (default = {'megmag', 'meggrad'}), see FT_CHANNELSELECTION for details
 %   cfg.trials         = 'all' or a selection given as a 1xN vector (default = 'all')
 %
 % The methods orig, sincos and fitplane are all based on a neighbourhood interpolation.
@@ -61,7 +61,7 @@ function [data] = ft_megplanar(cfg, data)
 % See also FT_COMBINEPLANAR, FT_PREPARE_NEIGHBOURS
 
 % Copyright (C) 2004-2019, Robert Oostenveld
-% Copyright (C) 2020-      Robert Oostenveld and Jan-Mathijs Schoffelen
+% Copyright (C) 2020-2023, Robert Oostenveld and Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -103,7 +103,7 @@ isfreq = ft_datatype(data, 'freq');
 istlck = ft_datatype(data, 'timelock');  % this will be temporary converted into raw
 
 % check if the input data is valid for this function, this converts the data if needed
-data = ft_checkdata(data, 'datatype', {'raw' 'freq'}, 'feedback', 'yes', 'hassampleinfo', 'yes', 'ismeg', 'yes', 'senstype', {'ctf151', 'ctf275', 'bti148', 'bti248', 'itab153', 'yokogawa160', 'yokogawa64'});
+data = ft_checkdata(data, 'datatype', {'raw' 'freq'}, 'feedback', 'yes', 'hassampleinfo', 'yes', 'ismeg', 'yes', 'senstype', {'ctf64', 'ctf151', 'ctf275', 'bti148', 'bti248', 'itab153', 'yokogawa64', 'yokogawa160', 'yokogawa208'});
 
 if isfreq
   if ~isfield(data, 'fourierspctrm'), ft_error('freq data should contain Fourier spectra'); end
@@ -129,7 +129,7 @@ cfg = ft_checkconfig(cfg, 'renamedval',  {'headshape', 'headmodel', []});
 if ~strcmp(cfg.planarmethod, 'sourceproject')
   % this is limited to reading neighbours from disk and/or selecting channels
   % the user should call FT_PREPARE_NEIGHBOURS directly for the actual construction
-  tmpcfg = keepfields(cfg, {'neighbours', 'channel', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+  tmpcfg = keepfields(cfg, {'neighbours', 'channel', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
   cfg.neighbours = ft_prepare_neighbours(tmpcfg);
 end
 
@@ -143,7 +143,7 @@ cfg = ft_checkconfig(cfg, 'createsubcfg', {'sourcemodel'});
 cfg = ft_checkconfig(cfg, 'createtopcfg', {'sourcemodel'});
 
 % select trials of interest
-tmpcfg = keepfields(cfg, {'trials', 'channel', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'}); % don't keep tolerance, it is used differently here
+tmpcfg = keepfields(cfg, {'trials', 'channel', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'}); % don't keep tolerance, it is used differently here
 data = ft_selectdata(tmpcfg, data);
 % restore the provenance information
 [cfg, data] = rollback_provenance(cfg, data);
@@ -154,17 +154,17 @@ if strcmp(cfg.planarmethod, 'sourceproject')
   % and compute forward again with the axial gradiometer array replaced by
   % a planar one.
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  
+
   % method specific configuration options
   cfg.headshape   = ft_getopt(cfg, 'headshape',   []);
   cfg.inwardshift = ft_getopt(cfg, 'inwardshift', 2.5); % this number assumes that all other inputs are in cm
   cfg.pruneratio  = ft_getopt(cfg, 'pruneratio',  1e-3);
   cfg.spheremesh  = ft_getopt(cfg, 'spheremesh',  642);
-  
+
   if isfreq
     ft_error('the method ''sourceproject'' is not supported for frequency data as input');
   end
-  
+
   % PREPARE_HEADMODEL will match the data labels, the gradiometer labels and the
   % volume model labels (in case of a localspheres model) and result in a gradiometer
   % definition that only contains the gradiometers that are present in the
@@ -173,7 +173,7 @@ if strcmp(cfg.planarmethod, 'sourceproject')
   tmpcfg = cfg;
   tmpcfg.channel = ft_channelselection('MEG', cfg.channel);
   [headmodel, axial.grad, tmpcfg] = prepare_headmodel(tmpcfg, data);
-  
+
   % construct the low-level options for the leadfield computation as key-value pairs, these are passed to FT_COMPUTE_LEADFIELD
   leadfieldopt = {};
   leadfieldopt = ft_setopt(leadfieldopt, 'reducerank',     ft_getopt(cfg, 'reducerank'));
@@ -183,43 +183,43 @@ if strcmp(cfg.planarmethod, 'sourceproject')
   leadfieldopt = ft_setopt(leadfieldopt, 'weight',         ft_getopt(cfg, 'weight'));
 
   % copy all options that are potentially used in FT_PREPARE_SOURCEMODEL
-  tmpcfg           = keepfields(cfg, {'sourcemodel', 'mri', 'headshape', 'symmetry', 'smooth', 'threshold', 'spheremesh', 'inwardshift', 'xgrid' 'ygrid', 'zgrid', 'resolution', 'tight', 'warpmni', 'template', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo'});
+  tmpcfg           = keepfields(cfg, {'sourcemodel', 'mri', 'headshape', 'symmetry', 'smooth', 'threshold', 'spheremesh', 'inwardshift', 'xgrid' 'ygrid', 'zgrid', 'resolution', 'tight', 'warpmni', 'template', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
   tmpcfg.headmodel = headmodel;
   tmpcfg.grad      = axial.grad;
   % determine the dipole layer that represents the surface of the brain
   sourcemodel = ft_prepare_sourcemodel(tmpcfg);
-  
+
   % compute the forward model for the axial gradiometers
   ft_info('computing forward model for %d dipoles\n', size(sourcemodel.pos,1));
   lfold = ft_compute_leadfield(sourcemodel.pos, axial.grad, headmodel, leadfieldopt{:});
-  
+
   % construct the planar gradient definition and compute its forward model
   % this will not work for a localspheres model, compute_leadfield will catch
   % the error
   planar.grad = constructplanargrad([], axial.grad);
   lfnew = ft_compute_leadfield(sourcemodel.pos, planar.grad, headmodel, leadfieldopt{:});
-  
+
   % compute the interpolation matrix
   transform = lfnew * ft_inv(lfold, 'method', 'tsvd', 'tolerance', cfg.tolerance);
-  
+
   planarmontage = [];
   planarmontage.tra      = transform;
   planarmontage.labelold = axial.grad.label;
   planarmontage.labelnew = planar.grad.label;
-  
+
   % apply the linear transformation to the data
   interp  = ft_apply_montage(data, planarmontage, 'keepunused', 'yes');
-  
+
   % also apply the linear transformation to the gradiometer definition
   interp.grad = ft_apply_montage(data.grad, planarmontage, 'balancename', 'planar', 'keepunused', 'yes');
-  
+
   % ensure there is a type string describing the gradiometer definition
   if ~isfield(interp.grad, 'type')
     interp.grad.type = [ft_senstype(data.grad) '_planar'];
   else
     interp.grad.type = [interp.grad.type '_planar'];
   end
-  
+
   %   % interpolate the data towards the planar gradiometers
   %   for i=1:Ntrials
   %     ft_info('interpolating trial %d to planar gradiometer\n', i);
@@ -240,7 +240,7 @@ if strcmp(cfg.planarmethod, 'sourceproject')
   %   end
   %
 else
-  
+
   sens = ft_determine_units(data.grad);
   chanposnans = any(isnan(sens.chanpos(:))) || any(isnan(sens.chanori(:)));
   if chanposnans
@@ -254,75 +254,67 @@ else
       ft_error('The channel positions (and/or orientations) contain NaNs; this prohibits correct behavior of the function. Please replace the input channel definition with one that contains valid channel positions');
     end
   end
+  % the channels must be in the neighbour definition, in the grad structure, and in the data
+  cfg.channel = ft_channelselection(cfg.channel, {cfg.neighbours.label});
   cfg.channel = ft_channelselection(cfg.channel, sens.label);
   cfg.channel = ft_channelselection(cfg.channel, data.label);
-  
+
   % ensure channel order according to cfg.channel (there might be one check
   % too much in here somewhere or in the subfunctions, but I don't care.
   % Better one too much than one too little - JMH @ 09/19/12
-  cfg = struct(cfg);
   [neighbsel] = match_str({cfg.neighbours.label}, cfg.channel);
   cfg.neighbours = cfg.neighbours(neighbsel);
   cfg.neighbsel = channelconnectivity(cfg);
-  
+
   assert(any(cfg.neighbsel(:)), 'no neighbours found')
   ft_info('average number of neighbours is %.2f\n', mean(sum(cfg.neighbsel)));
-  
+
   Ngrad = length(sens.label);
   distance = zeros(Ngrad,Ngrad);
-  
+
   for i=1:size(cfg.neighbsel,1)
     j=find(cfg.neighbsel(i, :));
     d = sqrt(sum((sens.chanpos(j,:) - repmat(sens.chanpos(i, :), numel(j), 1)).^2, 2));
     distance(i,j) = d;
     distance(j,i) = d;
   end
-  
+
   ft_info('minimum distance between neighbours is %6.2f %s\n', min(distance(distance~=0)), sens.unit);
   ft_info('maximum distance between gradiometers is %6.2f %s\n', max(distance(distance~=0)), sens.unit);
-  
-  % The following does not work when running in deployed mode because the
-  % private functions that compute the planar montage are not recognized as
-  % such and won't be compiled, unless explicitly specified.
-  
-  % % generically call megplanar_orig megplanar_sincos or megplanar_fitplane
-  %fun = ['megplanar_'  cfg.planarmethod];
-  %if ~exist(fun, 'file')
-  %  ft_error('unknown method for computation of planar gradient');
-  %end
-  %planarmontage = eval([fun '(cfg, data.grad)']);
-  
+
   switch cfg.planarmethod
     case 'sincos'
       planarmontage = megplanar_sincos(cfg, sens);
     case 'orig'
       % method specific info that is needed
       cfg.distance  = distance;
-      
       planarmontage = megplanar_orig(cfg, sens);
     case 'fitplane'
       planarmontage = megplanar_fitplane(cfg, sens);
     otherwise
+      % This does not work when running in deployed mode because the
+      % private functions that compute the planar montage are not recognized as
+      % such and won't be compiled, unless explicitly specified.
       fun = ['megplanar_' cfg.planarmethod];
       if ~exist(fun, 'file')
         ft_error('unknown method for computation of planar gradient');
       end
       planarmontage = eval([fun '(cfg, data.grad)']);
   end
-  
+
   % apply the linear transformation to the data
   interp = ft_apply_montage(data, planarmontage, 'keepunused', 'yes', 'feedback', cfg.feedback);
-  
+
   % also apply the linear transformation to the gradiometer definition
   interp.grad = ft_apply_montage(sens, planarmontage, 'balancename', 'planar', 'keepunused', 'yes');
-  
+
   % ensure there is a type string describing the gradiometer definition
   if ~isfield(interp.grad, 'type')
     % put the original gradiometer type in (will get _planar appended)
     interp.grad.type = ft_senstype(sens);
   end
   interp.grad.type = [interp.grad.type '_planar'];
-  
+
   % add the chanpos info back into the gradiometer description
   tmplabel = interp.grad.label;
   for k = 1:numel(tmplabel)
@@ -332,7 +324,7 @@ else
   end
   [ix,iy] = match_str(tmplabel, sens.label);
   interp.grad.chanpos(ix,:) = sens.chanpos(iy,:);
-  
+
   % if the original chanpos contained nans, make sure to put nans in the
   % updated one as well, and move the updated chanpos values to chanposold
   if chanposnans

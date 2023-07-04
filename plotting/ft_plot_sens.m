@@ -34,6 +34,7 @@ function hs = ft_plot_sens(sens, varargin)
 %   'orientation'     = true/false, plot a line for the orientation of each optode (default = false)
 %   'optoshape'       = 'point', 'circle', 'square', 'sphere', or 'disc' (default is automatic)
 %   'optosize'        = diameter of the optodes (default is automatic)
+%   'headshape'       = headshape, required for optoshape 'disc'
 %
 % The following options apply when electrodes/coils/optodes are NOT plotted individually
 %   'style'           = plotting style for the points representing the channels, see plot3 (default = [])
@@ -51,9 +52,10 @@ function hs = ft_plot_sens(sens, varargin)
 %   figure; ft_plot_sens(sens, 'coilshape', 'circle', 'coil', true, 'chantype', 'meggrad')
 %   figure; ft_plot_sens(sens, 'coilshape', 'circle', 'coil', false, 'orientation', true)
 %
-% See also FT_READ_SENS, FT_PLOT_HEADSHAPE, FT_PLOT_HEADMODEL
+% See also FT_DATATYPE_SENS, FT_READ_SENS, FT_PLOT_HEADSHAPE, FT_PLOT_HEADMODEL,
+% FT_PLOT_TOPO3D
 
-% Copyright (C) 2009-2022, Robert Oostenveld, Arjen Stolk
+% Copyright (C) 2009-2023, Robert Oostenveld, Arjen Stolk
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -88,6 +90,7 @@ fontsize        = ft_getopt(varargin, 'fontsize',   get(0, 'defaulttextfontsize'
 fontname        = ft_getopt(varargin, 'fontname',   get(0, 'defaulttextfontname'));
 fontweight      = ft_getopt(varargin, 'fontweight', get(0, 'defaulttextfontweight'));
 fontunits       = ft_getopt(varargin, 'fontunits',  get(0, 'defaulttextfontunits'));
+headshape       = ft_getopt(varargin, 'headshape', []); % needed for elecshape/optoshape 'disc'
 
 % this is for MEG magnetometer and/or gradiometer arrays
 coil            = ft_getopt(varargin, 'coil', false);
@@ -97,7 +100,6 @@ coilsize        = ft_getopt(varargin, 'coilsize');  % default depends on the inp
 elec            = ft_getopt(varargin, 'elec', false);
 elecshape       = ft_getopt(varargin, 'elecshape'); % default depends on the input, see below
 elecsize        = ft_getopt(varargin, 'elecsize');  % default depends on the input, see below
-headshape       = ft_getopt(varargin, 'headshape', []); % needed for elecshape 'disc'
 % this is for NIRS optode arrays
 opto            = ft_getopt(varargin, 'opto', false);
 optoshape       = ft_getopt(varargin, 'optoshape'); % default depends on the input, see below
@@ -301,7 +303,7 @@ end % if istrue(individual)
 
 if isempty(ori)
   if ~isempty(headshape)
-    % the following code uses some functions from the computer vision toolbox
+    % the following code uses PCNORMALS from the computer vision toolbox
     % ft_hastoolbox('vision', -1);
     
     % how many local points on the headshape are used for estimating the local norm
@@ -338,11 +340,12 @@ if isempty(ori)
       Fn = Fn * (1/sqrt(sum(Fn.^2,2))); % normalize
       ori(i,:) = Fn;
     end % for
-    
+
   elseif ~any(isnan(pos(:))) && size(pos,1)>2
     % determine orientations based on a surface triangulation of the sensors
+    % this only works if all positions are defined
     tri = projecttri(pos, 'delaunay');
-    ori = normals(pos, tri);
+    ori = surface_normals(pos, tri);
     
   elseif size(pos,1)>4
     % determine orientations by fitting a sphere to the sensors
@@ -464,7 +467,7 @@ end % switch
 
 if ~isempty(label) && ~any(strcmp(label, {'off', 'no'}))
   
-  % determine the amount of offset for the labels
+  % determine the offset for the labels
   if strcmp(sensshape, 'point')
     % determine the median of the distance to the nearest neighbour
     sensdist = triu(dist(sens.chanpos'),1);
@@ -473,6 +476,8 @@ if ~isempty(label) && ~any(strcmp(label, {'off', 'no'}))
     sensdist = median(sensdist);
     % the offset is based on distance between sensors
     offset = 0.5 * sensdist;
+    % it should not be larger than 20 mm
+    offset = min(offset, 20*ft_scalingfactor('mm', sens.unit));
   else
     % the offset is based on size of the sensors
     offset = 1.5 * senssize;
@@ -480,7 +485,7 @@ if ~isempty(label) && ~any(strcmp(label, {'off', 'no'}))
   
   if isinf(offset)
     % this happens in case there is only one sensor and the size has not been specified
-    offset = ft_scalingfactor('mm', sens.unit)*10; % displace the label by 10 mm
+    offset = 10*ft_scalingfactor('mm', sens.unit); % displace the label by 10 mm
   end
   
   for i=1:size(pos,1)
@@ -512,7 +517,7 @@ if ~isempty(label) && ~any(strcmp(label, {'off', 'no'}))
     x = pos(i,1) + offset * ori(i,1);
     y = pos(i,2) + offset * ori(i,2);
     z = pos(i,3) + offset * ori(i,3);
-    text(x, y, z, str, 'color', fontcolor, 'fontunits', fontunits, 'fontsize', fontsize, 'fontname', fontname, 'fontweight', fontweight, 'horizontalalignment', 'center', 'verticalalignment', 'middle');
+    text(x, y, z, str, 'color', fontcolor, 'fontunits', fontunits, 'fontsize', fontsize, 'fontname', fontname, 'fontweight', fontweight, 'horizontalalignment', 'center', 'verticalalignment', 'middle', 'interpreter', 'none');
   end % for each channel
 end % if label
 
