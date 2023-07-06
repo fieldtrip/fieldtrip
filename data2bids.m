@@ -1454,7 +1454,7 @@ if need_channels_tsv
     elseif need_nirs_json
         modality_json = nirs_json;
     elseif need_motion_json
-        tmodality_json = motion_json;
+        modality_json = motion_json;
     end
     fn = fieldnames(modality_json);
     fn = fn(endsWith(fn, 'ChannelCount') & ~contains(fn,'ShortChannel') & ~contains(fn, 'Motion'));

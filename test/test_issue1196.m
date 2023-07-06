@@ -108,3 +108,9 @@ data2bids(cfg);
 cfg.dataset = videofile2;
 cfg.run = 2;
 data2bids(cfg);
+
+%% clean up afterwards, so that it's more robust in a cross user application of the script
+% regarding permissions
+if isfolder(dccnpath('/home/common/matlab/fieldtrip/data/test/issue1196/bids'))
+  system(sprintf('rm -rf %s', dccnpath('/home/common/matlab/fieldtrip/data/test/issue1196/bids')));
+end
