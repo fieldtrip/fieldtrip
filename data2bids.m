@@ -88,7 +88,7 @@ function [cfg] = data2bids(cfg, varargin)
 % "trl" format from FT_DEFINETRIAL with the first three columns corresponding to the
 % begsample, endsample and offset (in samples). You can also a table with the
 % "events.tsv" format with the first two columns corresponding to the onset and
-% duration (in seconds). In either case the table can have additional culumns with
+% duration (in seconds). In either case the table can have additional columns with
 % numerical or string values. If you do not specify cfg.events, the events will be
 % read from the MEG/EEG/iEEG dataset.
 %   cfg.events                  = trial definition (see FT_DEFINETRIAL) or event structure (see FT_READ_EVENT)
@@ -607,9 +607,6 @@ cfg.motion.TrackingSystemName             = ft_getopt(cfg.motion, 'TrackingSyste
 cfg.motion.SamplingFrequency              = ft_getopt(cfg.motion, 'SamplingFrequency'         );
 cfg.motion.SamplingFrequencyEffective     = ft_getopt(cfg.motion, 'SamplingFrequencyEffective');
 cfg.motion.RecordingDuration              = ft_getopt(cfg.motion, 'RecordingDuration'         );
-cfg.motion.SpatialAxes                    = ft_getopt(cfg.motion, 'SpatialAxes'               );
-cfg.motion.RotationRule                   = ft_getopt(cfg.motion, 'RotationRule'              );
-cfg.motion.RotationOrder                  = ft_getopt(cfg.motion, 'RotationOrder'             );
 
 %% information for the coordsystem.json file for MEG, EEG, iEEG, and NIRS
 cfg.coordsystem.MEGCoordinateSystem                             = ft_getopt(cfg.coordsystem, 'MEGCoordinateSystem'                            ); % REQUIRED. Defines the coordinate system for the MEG sensors. See Appendix VIII: preferred names of Coordinate systems. If "Other", provide definition of the coordinate system in [MEGCoordinateSystemDescription].
@@ -668,8 +665,10 @@ cfg.channels.wavelength_emission_actual = ft_getopt(cfg.channels, 'wavelength_em
 cfg.channels.short_channel              = ft_getopt(cfg.channels, 'short_channel'               , nan);
 % specific options for motion channels
 cfg.channels.sampling_frequency         = ft_getopt(cfg.channels, 'sampling_frequency'          , nan);
-cfg.channels.orientation_component      = ft_getopt(cfg.channels, 'component'                   , nan);
+cfg.channels.component                  = ft_getopt(cfg.channels, 'component'                   , nan);
 cfg.channels.tracked_point              = ft_getopt(cfg.channels, 'tracked_point'               , nan);
+cfg.channels.placement                  = ft_getopt(cfg.channels, 'placement'                   , nan);
+cfg.channels.reference_frame            = ft_getopt(cfg.channels, 'reference_frame'             , nan);
 
 %% columns in the electrodes.tsv
 cfg.electrodes.name             = ft_getopt(cfg.electrodes, 'name'             , nan);  % REQUIRED. Name of the electrode
@@ -872,7 +871,7 @@ switch typ
     need_meg_json = true;
 
   case {'brainvision_vhdr', 'edf', 'eeglab_set', 'biosemi_bdf'}
-    % the file on disk contains ExG data in a BIDS compiant format
+    % the file on disk contains EEG or EMG data in a BIDS compliant format
     hdr = ft_read_header(cfg.headerfile, 'checkmaxfilter', false, 'readbids', false);
     if strcmp(cfg.method, 'convert')
       % the data should be converted and written to disk
@@ -1053,8 +1052,8 @@ elseif need_eyetracker_json
   ft_warning('eyetracker data is not yet part of the official BIDS specification');
   cfg.dataset_description.BIDSVersion = 'n/a';
 elseif need_motion_json
-  ft_warning('motion data is not yet part of the official BIDS specification');
-  cfg.dataset_description.BIDSVersion = 'n/a';
+    ft_warning('motion data is not yet part of the official BIDS specification');
+    cfg.dataset_description.BIDSVersion = '1.9';
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1398,22 +1397,27 @@ end
 
 %% need_motion_json
 if need_motion_json
-  motion_json.SamplingFrequency     = hdr.Fs;
-  motion_json.StartTime             = nan;
-  motion_json.MotionChannelCount    = hdr.nChans;
-  motion_json.RecordingDuration     = (hdr.nSamples*hdr.nTrials)/hdr.Fs;
-  motion_json.SamplingFrequencyEffective = size(dat,2)/motion_json.RecordingDuration;
-  motion_json.POSChannelCount       = sum(strcmpi(channels_tsv.type, 'POS'));
-  motion_json.ORNTChannelCount      = sum(strcmpi(channels_tsv.type, 'ORNT'));
-  motion_json.VELChannelCount       = sum(strcmpi(channels_tsv.type, 'VEL'));
-  motion_json.ANGVELChannelCount    = sum(strcmpi(channels_tsv.type, 'ANGVEL'));
-  motion_json.ACCELChannelCount     = sum(strcmpi(channels_tsv.type, 'ACCEL'));
-  motion_json.ANGACCChannelCount    = sum(strcmpi(channels_tsv.type, 'ANGACC'));
-  motion_json.MAGNChannelCount      = sum(strcmpi(channels_tsv.type, 'MAGN'));
-  motion_json.JNTANGChannelCount    = sum(strcmpi(channels_tsv.type, 'JNTANG'));
-  if isfield(cfg, 'channels') && any(ismember(channels_tsv.Properties.VariableNames, 'tracked_point'))
-    motion_json.TrackedPointsCount  = numel(setdiff(unique(channels_tsv.tracked_point), 'n/a'));
-  end
+    motion_json.SamplingFrequency     = hdr.Fs;
+    motion_json.MotionChannelCount    = hdr.nChans;
+    motion_json.RecordingDuration     = (hdr.nSamples*hdr.nTrials)/hdr.Fs;
+    motion_json.SamplingFrequencyEffective = size(dat,2)/motion_json.RecordingDuration;
+    motion_json.POSChannelCount       = sum(strcmpi(channels_tsv.type, 'POS'));
+    motion_json.ORNTChannelCount      = sum(strcmpi(channels_tsv.type, 'ORNT'));
+    motion_json.VELChannelCount       = sum(strcmpi(channels_tsv.type, 'VEL'));
+    motion_json.GYROChannelCount      = sum(strcmpi(channels_tsv.type, 'GYRO'));
+    motion_json.ACCELChannelCount       = sum(strcmpi(channels_tsv.type, 'ACCEL'));
+    motion_json.ANGACCELChannelCount    = sum(strcmpi(channels_tsv.type, 'ANGACCEL'));
+    motion_json.MAGNChannelCount      = sum(strcmpi(channels_tsv.type, 'MAGN'));
+    motion_json.JNTANGChannelCount    = sum(strcmpi(channels_tsv.type, 'JNTANG'));
+    motion_json.MISCChannelCount    = sum(strcmpi(channels_tsv.type, 'MISC'));
+    if isfield(cfg, 'channels') && any(ismember(channels_tsv.Properties.VariableNames, 'tracked_point'))
+        motion_json.TrackedPointsCount  = numel(setdiff(unique(channels_tsv.tracked_point), 'n/a'));
+    end
+
+    % merge the information specified by the user with that from the data
+    % in case fields appear in both, the first input overrules the second
+    motion_json = mergestruct(motion_settings,  motion_json, false);
+    motion_json = mergestruct(generic_settings, motion_json, false);
 
   % merge the information specified by the user with that from the data
   % in case fields appear in both, the first input overrules the second
@@ -1437,33 +1441,36 @@ if need_channels_tsv
     motion_json = remove_zerochannelcount(motion_json);
   end
 
-  %% do a sanity check for those data types that have channel counts
-  if need_meg_json
-    modality_json = meg_json;
-  elseif need_eeg_json
-    modality_json = eeg_json;
-  elseif need_ieeg_json
-    modality_json = ieeg_json;
-  elseif need_emg_json
-    modality_json = emg_json;
-  elseif need_nirs_json
-    modality_json = nirs_json;
-  elseif need_motion_json
-    modality_json = motion_json;
-  else
-    modality_json = struct();
-  end
-  fn = fieldnames(modality_json);
-  fn = fn(endsWith(fn, 'ChannelCount') & ~contains(fn, 'ShortChannel'));
-  jsoncount = 0;
-  for i=1:numel(fn)
-    if ~isempty(modality_json.(fn{i}))
-      jsoncount = jsoncount + modality_json.(fn{i});
+
+%% do a sanity check on the number of channels for the electrophysiology data types
+    if need_meg_json
+        modality_json = meg_json;
+    elseif need_eeg_json
+        modality_json = eeg_json;
+    elseif need_ieeg_json
+        modality_json = ieeg_json;
+    elseif need_emg_json
+        modality_json = emg_json;
+    elseif need_nirs_json
+        modality_json = nirs_json;
+    elseif need_motion_json
+        modality_json = motion_json;
     end
-  end
-  if size(channels_tsv,1)~=jsoncount
-    ft_warning('inconsistent specification of the channel count: %d in the json, %d in the tsv', jsoncount, size(channels_tsv,1));
-  end
+    fn = fieldnames(modality_json);
+    fn = fn(endsWith(fn, 'ChannelCount') & ~contains(fn,'ShortChannel') & ~contains(fn, 'Motion'));
+    jsoncount = 0;
+    for i=1:numel(fn)
+        if ~isempty(modality_json.(fn{i}))
+            jsoncount = jsoncount + modality_json.(fn{i});
+        end
+    end
+    if size(channels_tsv,1)~=jsoncount
+        ft_warning('inconsistent specification of the channel count: %d in the json, %d in the tsv', jsoncount, size(channels_tsv,1));
+    end
+    if need_motion_json & size(channels_tsv,1)~=modality_json.MotionChannelCount
+        ft_warning('inconsistent specification of the channel count: %d total motion channels in the json, %d in the tsv', modality_json.MotionChannelCount, size(channels_tsv,1));
+    end
+
 end % if need_channels_tsv
 
 %% need_electrodes_tsv
@@ -1879,7 +1886,7 @@ switch cfg.method
 
             ft_info('writing %s\n', cfg.outputfile);
 
-            if any(strcmp(cfg.datatype, {'motion', 'physio'}))
+            if any(strcmp(cfg.datatype, {'physio'}))
               % with headers, the JSON will be written further down
               writecell(hdr.label', cfg.outputfile, 'FileType', 'text', 'Delimiter', '\t');
               writematrix(dat', cfg.outputfile, 'FileType', 'text', 'Delimiter', '\t', 'WriteMode','append');
@@ -2120,76 +2127,76 @@ if ~isempty(cfg.bidsroot)
   % write the updated file back to disk
   ft_write_tsv(filename, participants);
 
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  % update the scans.tsv
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  if ~isempty(cfg.ses)
-    % construct the output filename, with session directory
-    filename = fullfile(cfg.bidsroot, ['sub-' cfg.sub], ['ses-' cfg.ses], ['sub-' cfg.sub '_' 'ses-' cfg.ses '_scans.tsv']);
-  else
-    % construct the output filename, without session directory
-    filename = fullfile(cfg.bidsroot, ['sub-' cfg.sub], ['sub-' cfg.sub '_scans.tsv']);
-  end
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % update the scans.tsv
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    if ~isempty(cfg.ses)
+        % construct the output filename, with session directory
+        filename = fullfile(cfg.bidsroot, ['sub-' cfg.sub], ['ses-' cfg.ses], ['sub-' cfg.sub '_' 'ses-' cfg.ses '_scans.tsv']);
+    else
+        % construct the output filename, without session directory
+        filename = fullfile(cfg.bidsroot, ['sub-' cfg.sub], ['sub-' cfg.sub '_scans.tsv']);
+    end
 
-  % get filename
-  this = table();
-  [p, f, x] = fileparts(cfg.outputfile);
-  this.filename = {fullfile(datatype2dirname(cfg.datatype), [f x])};
-
-  fn = fieldnames(cfg.scans);
-  for i=1:numel(fn)
-    % write [] as 'n/a'
-    % write nan as 'n/a'
-    % write boolean as 'True' or 'False'
-    this.(fn{i}) = output_compatible(cfg.scans.(fn{i}));
-  end
-
-  if isfile(filename)
-    scans_tsv = ft_read_tsv(filename);
-    % the scans.tsv is always merged, use the filename column as the corresponding key
-    scans_tsv = mergetable(scans_tsv, this, 'filename');
-  else
-    scans_tsv = this;
-  end
-
-  % the filename should have forward slashes, see #1957 and #1959
-  scans_tsv.filename = strrep(scans_tsv.filename, '\', '/');
-
-  % write the updated file back to disk
-  ft_write_tsv(filename, scans_tsv);
-
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  % update the sessions.tsv, only when sessions are specified
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  if ~isempty(cfg.ses)
-    % construct the output filename
-    filename = fullfile(cfg.bidsroot, ['sub-' cfg.sub], ['sub-' cfg.sub '_sessions.tsv']);
-
-    % construct session identifier
+    % get filename
     this = table();
-    session_id = ['ses-' cfg.ses];
-    this.session_id = session_id;
+    [p, f, x] = fileparts(cfg.outputfile);
+    this.filename = {fullfile(datatype2dirname(cfg.datatype), [f x])};
 
-    fn = fieldnames(cfg.sessions);
+    fn = fieldnames(cfg.scans);
     for i=1:numel(fn)
-      % write [] as 'n/a'
-      % write nan as 'n/a'
-      % write boolean as 'True' or 'False'
-      this.(fn{i}) = output_compatible(cfg.sessions.(fn{i}));
+        % write [] as 'n/a'
+        % write nan as 'n/a'
+        % write boolean as 'True' or 'False'
+        this.(fn{i}) = output_compatible(cfg.scans.(fn{i}));
     end
 
     if isfile(filename)
-      sessions_tsv = ft_read_tsv(filename);
-      % the sessions.tsv is always merged, use the session_id column as the corresponding key
-      sessions_tsv = mergetable(sessions_tsv, this, 'session_id');
+        scans_tsv = ft_read_tsv(filename);
+        % the filename should have forward slashes, see #1957 and #1959
+        this.filename = strrep(this.filename, '\', '/');
+        scans_tsv.filename = strrep(scans_tsv.filename, '\', '/');
+        % the scans.tsv is always merged, use the filename column as the corresponding key
+        scans_tsv = mergetable(scans_tsv, this, 'filename');
     else
-      sessions_tsv = this;
+        scans_tsv = this;
     end
 
     % write the updated file back to disk
-    ft_write_tsv(filename, sessions_tsv);
+    ft_write_tsv(filename, scans_tsv);
 
-  end % if not empty cfg.ses
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % update the sessions.tsv, only when sessions are specified
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    if ~isempty(cfg.ses)
+        % construct the output filename
+        filename = fullfile(cfg.bidsroot, ['sub-' cfg.sub], ['sub-' cfg.sub '_sessions.tsv']);
+
+        % construct session identifier
+        this = table();
+        session_id = ['ses-' cfg.ses];
+        this.session_id = session_id;
+
+        fn = fieldnames(cfg.sessions);
+        for i=1:numel(fn)
+            % write [] as 'n/a'
+            % write nan as 'n/a'
+            % write boolean as 'True' or 'False'
+            this.(fn{i}) = output_compatible(cfg.sessions.(fn{i}));
+        end
+
+        if isfile(filename)
+            sessions_tsv = ft_read_tsv(filename);
+            % the sessions.tsv is always merged, use the session_id column as the corresponding key
+            sessions_tsv = mergetable(sessions_tsv, this, 'session_id');
+        else
+            sessions_tsv = this;
+        end
+
+        % write the updated file back to disk
+        ft_write_tsv(filename, sessions_tsv);
+
+    end % if not empty cfg.ses
 
 end % if bidsroot
 
@@ -2602,21 +2609,21 @@ elseif isnumeric(val) && numel(val)>1 && any(isnan(val))
   val = num2cell(val);
   val = cellfun(@output_compatible, val, 'UniformOutput', false);
 elseif isdatetime(val)
-  % see https://bids-specification.readthedocs.io/en/stable/02-common-principles.html#units
-  val = datestr(val, 'yyyy-mm-ddTHH:MM:SS');
+    % see https://bids-specification.readthedocs.io/en/stable/02-common-principles.html#units
+    val = datestr(val, 'yyyy-mm-ddTHH:MM:SS.FFF');
 else
   % write [] as 'n/a'
   % write nan as 'n/a'
-  % write boolean as 'True' or 'False'
+  % write boolean as 'true' or 'false'
   if isempty(val)
     val = 'n/a';
   elseif isnan(val)
     val = 'n/a';
   elseif islogical(val)
     if val
-      val = 'True';
+      val = 'true';
     else
-      val = 'False';
+      val = 'false';
     end
   end
 end
