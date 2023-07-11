@@ -3,6 +3,7 @@ function test_bug3397
 % WALLTIME 00:10:00
 % MEM 1gb
 % DEPENDENCY ft_appenddata ft_preamble_init
+% NODATA
 
 data       = [];
 data.label = {'chan01';'chan02';'chan03'};

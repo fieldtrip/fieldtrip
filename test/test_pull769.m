@@ -3,6 +3,7 @@ function test_pull769
 % WALLTIME 00:10:00
 % MEM 2gb
 % DEPENDENCY ft_read_event
+% PRIVATEDATA
 
 % the data was generated following the example at https://mne.tools/0.15/auto_tutorials/plot_creating_data_structures.html#tut-creating-data-structures
 % and written to disk following https://mne.tools/0.15/auto_tutorials/plot_object_epochs.html

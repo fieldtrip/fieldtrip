@@ -3,6 +3,7 @@ function test_firwsfiltering
 % MEM 3gb
 % WALLTIME 00:20:00
 % DEPENDENCY ft_preprocessing filter_with_correction ft_preproc_bandpassfilter ft_preproc_highpassfilter ft_preproc_lowpassfilter firws
+% NODATA
 
 %% create some data
 

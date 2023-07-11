@@ -3,6 +3,7 @@ function test_bug1357
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_multiplotTFR ft_singleplotTFR ft_singleplotTFR ft_singleplotTFR
+% NODATA
 
 cfg = [];
 cfg.layout = 'CTF151.lay';

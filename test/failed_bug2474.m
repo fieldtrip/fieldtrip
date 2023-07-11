@@ -3,6 +3,7 @@ function failed_bug2474
 % MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_compute_leadfield ft_prepare_vol_sens
+% PRIVATEDATA
 
 
 load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2474/bug.mat'));

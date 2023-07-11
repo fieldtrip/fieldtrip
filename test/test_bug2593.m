@@ -3,6 +3,7 @@ function test_bug2593
 % WALLTIME 00:10:00
 % MEM 2gb
 % DEPENDENCY ft_componentanalysis
+% NODATA
 
 % this function tests the cfg.numcomponent and related options for
 % ft_componentanalysis and its 3rd-party subfunctions

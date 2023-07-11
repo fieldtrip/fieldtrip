@@ -3,6 +3,7 @@ function test_matlab_ci
 % WALLTIME 00:05:00
 % MEM 1gb
 % DEPENDENCY 
+% NODATA
 
 disp('--------------------------------------------------------------------');
 ver;

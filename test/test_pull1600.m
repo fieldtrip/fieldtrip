@@ -3,6 +3,7 @@ function test_rereference
 % WALLTIME 00:10:00
 % MEM 3gb
 % DEPENDENCY ft_preprocessing ft_prepare_montage ft_apply_montage preproc
+% NODATA
 
 %% avg
 

@@ -1,5 +1,6 @@
 function [connectivity] = channelconnectivity(cfg, data)
 
+% NODATA
 % CHANNELCONNECTIVIY creates a NxN matrix that describes whether channels
 % are connected as neighbours
 %

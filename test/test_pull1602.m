@@ -3,6 +3,7 @@ function test_pull1602
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_specest_irasa ft_freqanalysis
+% NODATA
 
 % simulate data
 time = (1:2000)/1000;

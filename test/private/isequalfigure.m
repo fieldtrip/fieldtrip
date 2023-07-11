@@ -1,5 +1,6 @@
 function status = isequalfigure(a, b)
 
+% NODATA
 % ISEQUALFIGURE compares two figures and returns a boolean
 %
 % Use as

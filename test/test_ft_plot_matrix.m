@@ -3,6 +3,7 @@ function test_ft_plot_matrix
 % MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_plot_matrix
+% NODATA
 
 dat  = rand(30,50);
 mask = rand(30,50);

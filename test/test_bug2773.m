@@ -3,6 +3,7 @@ function test_bug2773
 % WALLTIME 00:20:00
 % MEM 2gb
 % DEPENDENCY ft_dipolefitting ft_movieplotER ft_prepare_sourcemodel ft_prepare_layout
+% PRIVATEDATA
 
 orig = load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2773.mat'));
 vol  = orig.cfg.vol;

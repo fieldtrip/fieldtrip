@@ -3,6 +3,7 @@ function test_bug2265
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_convert_units ft_prepare_sourcemodel
+% NODATA
 
 clear all
 close all

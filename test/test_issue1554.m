@@ -3,6 +3,7 @@ function test_issue1554
 % MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_spike_maketrials
+% NODATA
 
 clear all 
 

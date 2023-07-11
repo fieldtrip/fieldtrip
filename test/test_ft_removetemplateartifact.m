@@ -3,6 +3,7 @@ function test_ft_removetemplateartifact
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_removetemplateartifact
+% NODATA
 
 fs = 500;
 nchan = 32;

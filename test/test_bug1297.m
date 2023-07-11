@@ -3,6 +3,7 @@ function test_bug1297
 % MEM 3gb
 % WALLTIME 00:30:00
 % DEPENDENCY ft_volumesegment
+% PRIVATEDATA
 
 mri_nom = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1297/orig-nomask.mgz'));
 

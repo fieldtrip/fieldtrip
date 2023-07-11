@@ -3,6 +3,7 @@ function test_bug3007
 % WALLTIME 00:10:00
 % MEM 2gb
 % DEPENDENCY
+% PRIVATEDATA
 
 cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug3007'))
 

@@ -3,6 +3,7 @@
 % WALLTIME 01:00:00
 % MEM 6gb
 % DEPENDENCY ft_volumesegment ft_prepare_mesh ft_prepare_headmodel ft_headmodel_simbio
+% PUBLICDATA
 
 % this test script is based on the tutorial under development at
 % http://www.fieldtriptoolbox.org/development/simbio

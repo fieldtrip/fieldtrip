@@ -3,6 +3,7 @@ function test_ft_headmodel_bemcp
 % MEM 12gb
 % WALLTIME 03:00:00
 % DEPENDENCY ft_headmodel_localspheres ft_prepare_localspheres
+% NODATA
 
 % to test actual numerical output of bemcp, rather than simply successful
 % running and correct inputs (which is what test_ft_prepare_headmodel tests).

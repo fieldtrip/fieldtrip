@@ -1,7 +1,9 @@
 function value = loadvar(filename, varname)
 
+% NODATA
 % LOADVAR is a helper function for cfg.inputfile
 %
+% NODATA
 % See also SAVEVAR
 
 % Copyright (C) 2010, Robert Oostenveld

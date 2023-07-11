@@ -2,6 +2,7 @@ function test_example_bids_eyetracker
 
 % MEM 4gb
 % WALLTIME 00:20:00
+% PUBLICDATA
 
 %
 %% Converting an example eye tracker dataset for sharing in BIDS

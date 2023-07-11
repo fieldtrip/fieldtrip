@@ -3,6 +3,7 @@ function tests = test_ft_preproc_hilbert
 % MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_preproc_hilbert
+% NODATA
 
 if nargout
   % assume that this is called by RUNTESTS

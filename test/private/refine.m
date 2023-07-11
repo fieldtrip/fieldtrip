@@ -1,5 +1,6 @@
 function [posr, trir, texr] = refine(pos, tri, method, varargin)
 
+% NODATA
 % REFINE a 3D surface that is described by a triangulation
 %
 % Use as
@@ -18,6 +19,7 @@ function [posr, trir, texr] = refine(pos, tri, method, varargin)
 % using Banks' algorithm, followed by a downsampling using the REDUCEPATCH
 % function.
 %
+% NODATA
 % If the textures of the vertices are specified, the textures for the new
 % vertices are computed
 %
@@ -187,6 +189,7 @@ switch lower(method)
     end
     % reduce number of triangles using MATLAB function
     [trir, posr] = reducepatch(tri, pos, numtri);
+% NODATA
     
   otherwise
     ft_error('unsupported method "%s"', method);

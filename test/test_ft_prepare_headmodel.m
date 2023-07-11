@@ -3,6 +3,7 @@ function test_ft_prepare_headmodel
 % WALLTIME 00:10:00
 % MEM 2gb
 % DEPENDENCY ft_prepare_headmodel
+% NODATA
 
 nchan = 64;
 

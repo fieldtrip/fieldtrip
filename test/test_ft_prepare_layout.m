@@ -3,6 +3,7 @@ function test_ft_prepare_layout
 % WALLTIME 00:10:00
 % MEM 4gb
 % DEPENDENCY ft_prepare_layout ft_plot_layout ft_plot_sens
+% PUBLICDATA
 
 %%
 % Most of the test cases require visual inspection of the results. Nevertheless, it is useful to run them in a test batch.

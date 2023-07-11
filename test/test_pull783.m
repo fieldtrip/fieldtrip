@@ -3,6 +3,7 @@ function test_pull783
 % WALLTIME 00:10:00
 % MEM 2gb
 % DEPENDENCY
+% PUBLICDATA
 
 filename = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/epilepsy/raw/case2/neuromag/case2_sss.fif');
 

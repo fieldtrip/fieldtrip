@@ -1,11 +1,13 @@
 function [W] = csp(C1, C2, m)
 % CSP calculates the common spatial pattern (CSP) projection.
+% NODATA
 %
 % Use as:
 %   [W] = csp(C1, C2, m)
 %
 % This function implements the intents of the CSP algorithm described in [1].
 % Specifically, CSP finds m spatial projections that maximize the variance (or
+% NODATA
 % band power) in one condition (described by the [p x p] channel-covariance
 % matrix C1), and simultaneously minimizes the variance in the other (C2):
 %
@@ -46,6 +48,7 @@ W = W(keep,:);
 
 function P = whiten(C, rtol)
   [U, l, U2] = svd(C);
+% NODATA
   l = diag(l);
   keep = l > max(l) * rtol;
   P = diag(l(keep).^(-.5)) * U(:,keep)';

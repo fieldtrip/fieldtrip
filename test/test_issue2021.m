@@ -3,6 +3,7 @@ function test_issue2021
 % WALLTIME 00:10:00
 % MEM 4gb
 % DEPENDENCY ft_preprocessing
+% NODATA
 
 data  = randn(10);
 fname = [tempname '.mat'];

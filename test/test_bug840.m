@@ -3,6 +3,7 @@ function test_bug840
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_preproc_resample
+% NODATA
 
 nchans = 13;
 nsamples = 10000;

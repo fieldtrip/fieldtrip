@@ -3,6 +3,7 @@ function test_ft_recodeevent
 % WALLTIME 00:10:00
 % MEM 2gb
 % DEPENDENCY ft_recodeevent
+% NODATA
 
 event = [];
 trl = [];

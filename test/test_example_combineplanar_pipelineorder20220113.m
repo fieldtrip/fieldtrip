@@ -2,6 +2,7 @@ function test_example_combineplanar_pipelineorder
 
 % MEM 4gb
 % WALLTIME 00:10:00
+% PRIVATEDATA
 
 %
 %% The correct pipeline order for combining planar MEG channels

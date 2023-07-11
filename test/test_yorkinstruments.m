@@ -3,6 +3,7 @@ function test_yorkinstruments
 % MEM 3gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_filetype ft_read_header ft_read_data ft_read_event
+% PRIVATEDATA
 
 %%
 % this is where the data is installed on the DCCN compute cluster

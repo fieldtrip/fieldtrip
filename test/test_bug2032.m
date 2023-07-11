@@ -3,6 +3,7 @@ function test_bug2032
 % WALLTIME 00:20:00
 % MEM 2gb
 % DEPENDENCY
+% NODATA
 
 % read each of the atlasses and ensure that it specifies the units and coordsys
 

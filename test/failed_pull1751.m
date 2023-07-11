@@ -3,6 +3,7 @@ function test_pull1751
 % WALLTIME 00:20:00
 % MEM 3gb
 % DEPENDENCY ft_nirs_signalqualityindex
+% PRIVATEDATA
 
 % load sample set of data
 fname = dccnpath('/home/common/matlab/fieldtrip/data/test/original/nirs/artinis/Sofia/sample_data.oxy4');

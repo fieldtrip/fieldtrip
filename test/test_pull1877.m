@@ -3,6 +3,7 @@ function test_pull1877
 % MEM 1gb
 % WALLTIME 00:20:00
 % DEPENDENCY ft_prepare_neighbours ft_sourceplot ft_checkdata
+% NODATA
 
 % make a parcellation:
 [pos, tri] = mesh_sphere(1026);

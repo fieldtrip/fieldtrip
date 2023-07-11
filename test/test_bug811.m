@@ -3,6 +3,7 @@ function test_bug811
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_checkdata spm2fieldtrip
+% PRIVATEDATA
 
 addpath(dccnpath('/home/common/matlab/spm8'));
 

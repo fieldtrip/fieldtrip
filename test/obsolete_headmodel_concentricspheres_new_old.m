@@ -3,6 +3,7 @@ function test_headmodel_concentricspheres_new_old
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY
+% NODATA
 
 % generate a unit sphere
 [pnt, tri] = mesh_sphere(162);

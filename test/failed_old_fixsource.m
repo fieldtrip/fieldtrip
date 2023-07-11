@@ -3,6 +3,7 @@ function failed_old_fixsource
 % MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY
+% NODATA
 
 % this script tests the fixsource function which is part of ft_checkdata
 

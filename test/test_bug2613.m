@@ -3,6 +3,7 @@ function test_bug2613
 % WALLTIME 00:10:00
 % MEM 3gb
 % DEPENDENCY ft_freqanalysis ft_checkdata
+% PRIVATEDATA
 
 load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2613.mat'));
 

@@ -1,5 +1,6 @@
 function test_example_stratify
 
+% NODATA
 % MEM 4gb
 % WALLTIME 00:10:00
 
@@ -10,6 +11,7 @@ function test_example_stratify
 %
 % Finally, this example page shows how you can very simply stratify with the FieldTrip **[ft_stratify](https://github.com/fieldtrip/fieldtrip/blob/release/ft_stratify.m)** function. Although the example here only looks at a single channel, quite often you'll want to stratify the power in two channels simultaneously (e.g., for coherence computation). The **[ft_stratify](https://github.com/fieldtrip/fieldtrip/blob/release/ft_stratify.m)** function allows you to do that, and also solves the within-bin bias problem (cfg.equalbinavg='yes').
 %
+% NODATA
 s1_orig = randn(1,10000);
 s2_orig = randn(1,10000) + 1;
 
@@ -98,6 +100,7 @@ figure; hist(s, 100)
 %
 % Note that this easily can be achieved with the FieldTrip **[ft_stratify](https://github.com/fieldtrip/fieldtrip/blob/release/ft_stratify.m)** function like this
 %
+% NODATA
 cfg = [];
 cfg.method      = 'histogram'
 cfg.equalbinavg = 'no';  % 'yes' is more optimal: it also removes the small within-bin bias due to the distributions being shifted

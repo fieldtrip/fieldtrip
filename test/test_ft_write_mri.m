@@ -3,6 +3,7 @@ function test_ft_write_mri
 % WALLTIME 00:10:00
 % MEM 2gb
 % DEPENDENCY ft_read_mri ft_write_mri
+% PUBLICDATA
 
 mri = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.mri'));
 mri = ft_convert_units(mri, 'mm');

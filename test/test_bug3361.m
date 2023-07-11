@@ -3,6 +3,7 @@ function test_bug3361
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY
+% PRIVATEDATA
 
 % I noticed an error in MATLAB 2017b which would try to evaluate "ga" as a
 % function, even though it was read from the file. The solution is to read

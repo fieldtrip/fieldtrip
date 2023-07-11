@@ -3,6 +3,7 @@ function test_issue1395
 % WALLTIME 00:10:00
 % MEM 3gb
 % DEPENDENCY opm_fil
+% PRIVATEDATA
 
 cd(dccnpath('/home/common/matlab/fieldtrip/data/test/original/meg/opm_fil'));
 

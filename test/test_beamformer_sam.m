@@ -3,6 +3,7 @@ function test_beamformer_sam(dataset)
 % MEM 3gb
 % WALLTIME 00:20:00
 % DEPENDENCY ft_prepare_sourcemodel headsurface ft_prepare_leadfield ft_freqanalysis ft_sourceanalysis ft_inverse_sam
+% PUBLICDATA
 
 % this function creates a set of source-structures to be used for testing
 

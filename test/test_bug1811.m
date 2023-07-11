@@ -3,6 +3,7 @@ function test_bug1811
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_analysispipeline
+% PRIVATEDATA
 
 % loading meg + eyelink channels data appended with function_handle variable
 load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1811.mat'));

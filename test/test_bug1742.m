@@ -3,6 +3,7 @@ function test_bug1742
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY qsubcellfun fexec
+% NODATA
 
 [ftver, ftpath] = ft_version;
 addpath(fullfile(ftpath,'qsub'));

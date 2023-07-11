@@ -3,6 +3,7 @@ function test_bug2381
 % MEM 4gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_sourcestatistics
+% PRIVATEDATA
 
 %filename = dccnpath(fullfile('/home/common/matlab/fieldtrip/data/test/bug2381','AVG.mat'));
 filename = dccnpath('/home/common/matlab/fieldtrip/data/test/bug2381');

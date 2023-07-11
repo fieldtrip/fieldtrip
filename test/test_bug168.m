@@ -3,6 +3,7 @@ function test_bug168
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_realtime_topography
+% PUBLICDATA
  
 [ftver, ftpath] = ft_version;
 cd(ftpath);

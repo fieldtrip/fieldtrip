@@ -2,6 +2,7 @@ function test_example_rereference
 
 % MEM 4gb
 % WALLTIME 00:10:00
+% PRIVATEDATA
 
 %
 %% Re-reference EEG and iEEG data

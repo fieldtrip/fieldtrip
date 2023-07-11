@@ -3,6 +3,7 @@ function test_pull1643
 % MEM 8gb
 % WALLTIME 00:40:00
 % DEPENDENCY ft_connectivity_plm ft_connectivityanalysis
+% NODATA
 
 % create some dummy data
 ntrl = 100;

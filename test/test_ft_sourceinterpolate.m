@@ -3,6 +3,7 @@ function test_ft_sourceinterpolate
 % MEM 5gb
 % WALLTIME 00:15:00
 % DEPENDENCY ft_sourceinterpolate ft_sourceplot
+% NODATA
 
 % See also test_bug2769 which goes over more interpolation options using fake data
 

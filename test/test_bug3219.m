@@ -3,6 +3,7 @@ function test_bug3219
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_rejectartifact ft_rejectvisual
+% PRIVATEDATA
 
 load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug3218.mat'), 'data'); % on purpose
 

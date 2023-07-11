@@ -3,6 +3,7 @@ function test_bug1029
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_read_headmodel ft_headmodel_bem_asa ft_prepare_headmodel
+% NODATA
 
 % tests the functionality of the forward models after changing the names of
 % the headmodels

@@ -3,6 +3,7 @@ function test_tutorial_natmeg2014_timefrequency
 % WALLTIME 00:30:00
 % MEM 4gb
 % DEPENDENCY
+% PUBLICDATA
 
 % this script executes the MATLAB content from
 % http://www.fieldtriptoolbox.org/tutorial/natmeg2014/timefrequency

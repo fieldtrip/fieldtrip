@@ -3,6 +3,7 @@ function test_bug2221
 % MEM 1gb
 % WALLTIME 00:15:00
 % DEPENDENCY ft_selectdata ft_selectdata_new ft_multiplotER
+% PRIVATEDATA
 
 
 % this test function intends to test the functionality of:

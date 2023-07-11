@@ -3,6 +3,7 @@ function test_issue2169
 % WALLTIME 00:10:00
 % MEM 2gb
 % DEPENDENCY ft_apply_montage
+% NODATA
 
 %%
 

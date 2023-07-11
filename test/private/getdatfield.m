@@ -1,5 +1,6 @@
 function [datfield, dimord] = getdatfield(data)
 
+% NODATA
 % GETDATFIELD
 %
 % Use as

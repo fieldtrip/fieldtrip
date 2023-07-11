@@ -1,5 +1,6 @@
 function trl = trialfun_stimon_samples(cfg)
 
+% NODATA
 hdr   = ft_read_header(cfg.dataset);
 event = ft_read_event(cfg.dataset);
 correctresponse  = 10041;

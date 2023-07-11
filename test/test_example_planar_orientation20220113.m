@@ -2,6 +2,7 @@ function test_example_planar_orientation
 
 % MEM 4gb
 % WALLTIME 00:10:00
+% PUBLICDATA
 
 %
 %% Find the orientation of planar gradiometers

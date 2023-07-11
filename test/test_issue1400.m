@@ -3,6 +3,7 @@ function test_issue1400
 % WALLTIME 00:10:00
 % MEM 2gb
 % DEPENDENCY ft_selectdata
+% NODATA
 
 ntrial = 2;
 

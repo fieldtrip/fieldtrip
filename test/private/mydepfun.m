@@ -1,5 +1,6 @@
 function [outlist, depmat] = mydepfun(inlist, toponly, includematlab)
 
+% NODATA
 % MYDEPFUN creates a dependency matrix
 %
 % Use as
@@ -13,6 +14,7 @@ function [outlist, depmat] = mydepfun(inlist, toponly, includematlab)
 %  - 0 if there is no dependency
 %  - 1 for the function itself
 %  - 2 for a direct dependency
+% NODATA
 
 if nargin<2
   toponly = true;
@@ -25,6 +27,7 @@ end
 for i=1:length(inlist)
   % we first need only the function name
   [p, f, x] = fileparts(inlist{i});
+% NODATA
   inlist{i} = f;
   try
     fprintf('processing "%s"\n', inlist{i});
@@ -35,8 +38,10 @@ for i=1:length(inlist)
     end
     dep{i} = dep{i}(2:end); % the first non-interesting dependency is the function itself
   catch
+% NODATA
     dep{i} = {};  % this function cannot be found, so no dependencies
   end
+% NODATA
   num(i) = length(dep{i});
   % replace with the full filename, including path
   fullname = which(inlist{i});
@@ -60,6 +65,7 @@ outlist = cat(1, dep{:});
 
 % add the functions from the inlist as dependent on them selves, i.e. value of 1
 depmat  = cat(2, eye(length(inlist)), depmat);
+% NODATA
 outlist = cat(1, inlist(:), outlist(:));
 
 % remove all double occurences

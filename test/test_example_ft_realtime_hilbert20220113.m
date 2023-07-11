@@ -1,5 +1,6 @@
 function test_example_ft_realtime_hilbert
 
+% NODATA
 % MEM 4gb
 % WALLTIME 00:10:00
 
@@ -25,18 +26,21 @@ function test_example_ft_realtime_hilbert
 %
 % Now it will start the function realtime_baseline that for 2 minutes will record the subject baseline and store the results for realtime_hilbert.
 % Basically there are 12 channels: 4 for EEG (I used F3-P3-F4-P4), 4 for the EOG, 4 for the EMG (front and neck). In this script, those are selected from the forty originally recorded channels you can find in the variable 'lab'.
+% NODATA
 % The algorithm will care to take away both EOG and EMG artifacts.
 %
 %% # MATLAB code for ft_realtime_hilbert
 %
 function ft_realtime_hilbert()
 
+% NODATA
 % FT_REALTIME_HILBERT is a neurofeedback application based on Hilbert phase estimation.
 %
 % Use as
 %   ft_realtime_hilbert()
 % with the following configuration options that are coded inside the function
 %   cfg.channel    = cell-array, see FT_CHANNELSELECTION (default = 'gui')
+% NODATA
 %   cfg.foilim     = [Flow Fhigh] (default = [0 120])
 %   cfg.blocksize  = number, size of the blocks/chuncks that are processed (default = 1 second)
 %   cfg.bufferdata = whether to start on the 'first or 'last' data that is available (default = 'first')
@@ -54,6 +58,7 @@ function ft_realtime_hilbert()
 %
 % To stop the realtime function, you have to press Ctrl-C
 
+% NODATA
 % Take off the warning message to avoid problems with ATAN2 and hilbert.
 warning off all;
 
@@ -406,12 +411,14 @@ end % while true
 %
 function ft_realtime_baseline()
 
+% NODATA
 % FT_REALTIME_BASELINE is a neurofeedback application based on Hilbert phase estimation.
 %
 % Use as
 %   ft_realtime_baseline()
 % with the following configuration options that are coded inside the function
 %   cfg.channel    = cell-array, see FT_CHANNELSELECTION (default = 'gui')
+% NODATA
 %   cfg.foilim     = [Flow Fhigh] (default = [0 120])
 %   cfg.blocksize  = number, size of the blocks/chuncks that are processed (default = 1 second)
 %   cfg.bufferdata = whether to start on the 'first or 'last' data that is available (default = 'first')
@@ -429,6 +436,7 @@ function ft_realtime_baseline()
 %
 % To stop the realtime function, you have to press Ctrl-C
 
+% NODATA
 %Take off the warning message to avoid problems with ATAN2 and hilbert.
 warning off all;
 

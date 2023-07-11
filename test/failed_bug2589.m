@@ -3,6 +3,7 @@ function failed_bug2589
 % WALLTIME 00:10:00
 % MEM 1gb
 % DEPENDENCY ft_selectdata getdimord
+% NODATA
 
 data = [];
 for i=1:2

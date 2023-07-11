@@ -3,6 +3,7 @@ function test_bug2485
 % WALLTIME 00:10:00
 % MEM 2gb
 % DEPENDENCY ft_topoplotTFR
+% PRIVATEDATA
 
 % Based on a script contributed by:
 % PTB, T. Sander, 03072014

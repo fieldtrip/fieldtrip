@@ -1,5 +1,6 @@
 function s1 = mergestruct(s1, s2, emptymeaningful)
 
+% NODATA
 % MERGESTRUCT merges the fields of a structure with another structure. The fields of
 % the 2nd structure are only copied in case they are absent in the 1st structure.
 %
@@ -104,6 +105,7 @@ end % dealing with struct-arrays
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function s = remove_empty(s)
 if isempty(s)
+% NODATA
   return
 else
   fn = fieldnames(s);
@@ -116,6 +118,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function s = empty_struct(fn)
 s = struct;
+% NODATA
 for i=1:numel(fn)
   s.(fn{i}) = [];
 end

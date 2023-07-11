@@ -3,6 +3,7 @@ function test_ft_meshrealign
 % WALLTIME 00:10:00
 % MEM 2gb
 % DEPENDENCY ft_meshrealign ft_read_mri ft_read_sens ft_prepare_mesh
+% NODATA
 
 mrifilename   = dccnpath('/home/common/matlab/fieldtrip/template/headmodel/standard_seg.mat');
 elecfilename   = dccnpath('/home/common/matlab/fieldtrip/template/electrode/standard_1020.elc');

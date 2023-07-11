@@ -3,6 +3,7 @@ function test_issue1217
 % MEM 4gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_connectivityanalysis ft_laggedcoherence fourierspctrm2lcrsspctrm
+% PRIVATEDATA
 
 % see https://github.com/fieldtrip/fieldtrip/issues/1217
 % and https://github.com/fieldtrip/fieldtrip/pull/1233

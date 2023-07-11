@@ -3,6 +3,7 @@ function test_pull1138
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_sourceplot ft_plot_cloud
+% NODATA
 
 load('/home/common/matlab/fieldtrip/data/ftp/tutorial/human_ecog/SubjectUCI29/SubjectUCI29_freq.mat');
 cortex = load('/home/common/matlab/fieldtrip/data/ftp/tutorial/human_ecog/SubjectUCI29/SubjectUCI29_hull_lh.mat');

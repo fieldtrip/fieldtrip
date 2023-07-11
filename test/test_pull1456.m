@@ -3,6 +3,7 @@ function test_pull1456
 % MEM 8gb
 % WALLTIME 00:20:00
 % DEPENDENCY ft_sourceanalysis ft_inverse_eloreta
+% PRIVATEDATA
 
 load(dccnpath('/home/common/matlab/fieldtrip/data/test/pull1456.mat'));
 

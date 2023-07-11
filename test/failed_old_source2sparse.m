@@ -3,6 +3,7 @@ function failed_old_source2sparse
 % MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY
+% NODATA
 
 % this script tests the functionality of ft_source2sparse with respect
 % to source data new style

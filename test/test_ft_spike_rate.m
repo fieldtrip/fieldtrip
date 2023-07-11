@@ -3,6 +3,7 @@ function test_ft_spike_rate()
 % MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_spike_rate
+% NODATA
 
 clear
 spikesPerTrial = 1;

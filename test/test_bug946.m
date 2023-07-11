@@ -3,6 +3,7 @@ function test_bug946
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_appenddata
+% NODATA
 
 % make some dummy data
 data1 = [];

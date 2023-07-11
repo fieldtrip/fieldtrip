@@ -3,6 +3,7 @@ function test_issue1198
 % WALLTIME 00:10:00
 % MEM 2gb
 % DEPENDENCY ft_sourceanalysis ft_sourcedescriptives ft_sourceplot
+% NODATA
 
 %%
 % http://www.fieldtriptoolbox.org/example/testing_bem_created_leadfields/

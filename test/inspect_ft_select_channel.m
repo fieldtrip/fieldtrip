@@ -3,6 +3,7 @@ function inspect_ft_select_channel
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_select_channel
+% NODATA
 
 ft_debug off
 

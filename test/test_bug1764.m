@@ -3,6 +3,7 @@ function test_bug1764
 % MEM 3gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_prepare_singleshell ft_prepare_mesh
+% PUBLICDATA
 
 % This test is inspired by test test_tutorial_beamformer20120321 which uses
 % a call to ft_prepare_singleshell without specifying any cfg options. The

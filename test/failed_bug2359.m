@@ -3,6 +3,7 @@ function failed_bug2359
 % MEM 2gb
 % WALLTIME 00:30:00
 % DEPENDENCY ft_prepare_mesh ft_prepare_sourcemodel
+% PRIVATEDATA
 
 cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2359'));
 

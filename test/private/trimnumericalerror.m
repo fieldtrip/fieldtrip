@@ -1,5 +1,6 @@
 function x = trimnumericalerror(x, tolerance, replace)
 
+% NODATA
 % TRIMNUMERICALERROR replaces values in the input array that are likely to result in
 % numerical errors. It looks at the ratio of all values to the largest value, values
 % smaller than the relative tolerance are replaced.

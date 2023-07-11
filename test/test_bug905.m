@@ -3,6 +3,7 @@ function test_bug905
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_freqanalysis ft_specest_mtmfft
+% PRIVATEDATA
 
 load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug905.mat'));
 

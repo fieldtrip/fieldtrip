@@ -1,5 +1,6 @@
 function test_example_difference_erf
 
+% NODATA
 % MEM 4gb
 % WALLTIME 00:10:00
 

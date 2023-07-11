@@ -3,6 +3,7 @@ function failed_tutorial_natmeg_beamforming
 % WALLTIME 00:20:00
 % MEM 8gb
 % DEPENDENCY
+% PUBLICDATA
 
 % this script executes the MATLAB content from
 % http://www.fieldtriptoolbox.org/tutorial/natmeg/beamforming

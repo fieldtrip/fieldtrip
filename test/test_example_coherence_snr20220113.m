@@ -1,5 +1,6 @@
 function test_example_coherence_snr
 
+% NODATA
 % MEM 4gb
 % WALLTIME 00:10:00
 
@@ -88,6 +89,7 @@ legend({sprintf('snr = %f', snr1), sprintf('snr = %f', snr2)});
 %
 % Plotting the coherence for the two datasets is easy, as there are only two channels and therefore one estimate of coherence (as function of frequency) per dataset. For more realistic numbers of channels you may want to look at **[ft_connectivityplot](https://github.com/fieldtrip/fieldtrip/blob/release/ft_connectivityplot.m)** and **[ft_multiplotCC](https://github.com/fieldtrip/fieldtrip/blob/release/ft_multiplotCC.m)**.
 %
+% NODATA
 %% # Exercise 1
 %
 % You should vary the SNR parameters for the two datasets and experiment with the amount of random phase difference between the Fz and Pz channel.

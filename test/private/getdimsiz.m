@@ -1,5 +1,6 @@
 function dimsiz = getdimsiz(data, field, numdim)
 
+% NODATA
 % GETDIMSIZ
 %
 % Use as
@@ -77,12 +78,14 @@ dimsiz(end+1:numdim) = 1;
 
 end % main function
 
+% NODATA
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION to determine the size of data representations like {pos}_ori_time
 % FIXME this will fail for {xxx_yyy}_zzz
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function siz = cellmatsize(x)
 if iscell(x)
+% NODATA
   if isempty(x)
     siz = 0;
     return % nothing else to do

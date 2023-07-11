@@ -1,5 +1,6 @@
 function test_bug2640
 % DEPENDENCY ft_plot_slice ft_plot_ortho
+% NODATA
 
 % WALLTIME 00:10:00
 % MEM 1gb

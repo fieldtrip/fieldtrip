@@ -3,6 +3,7 @@ function test_bug2511
 % WALLTIME 00:20:00
 % MEM 8gb
 % DEPENDENCY ft_sourceplot ft_read_headshape
+% PRIVATEDATA
 
 t1 = ft_read_mri(dccnpath('/home/common/matlab/spm8/canonical/single_subj_T1.nii'));
 load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2511.mat'));

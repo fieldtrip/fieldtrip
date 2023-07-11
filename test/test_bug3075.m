@@ -3,6 +3,7 @@ function test_bug3075
 % MEM 1gb
 % WALLTIME 00:20:00
 % DEPENDENCY ft_preprocessing test_bug3075
+% NODATA
 
 % the reported issue is that cfg.inputfile and cfg.outputfile do not work
 

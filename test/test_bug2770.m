@@ -3,6 +3,7 @@ function test_bug2770
 % WALLTIME 00:10:00
 % MEM 2gb
 % DEPENDENCY eeglab2fieldtrip
+% PRIVATEDATA
 
 % the *.set file is actually a MATLAB file with the EEG structure in it
 % but it require EEGLAB to read it together with the ftd (which has the binary data)

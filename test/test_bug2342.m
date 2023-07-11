@@ -3,6 +3,7 @@ function test_bug2342
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY
+% NODATA
 
 
 % first create some data

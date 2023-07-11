@@ -3,6 +3,7 @@ function failed_bug2850
 % WALLTIME 00:10:00
 % MEM 2gb
 % DEPENDENCY ft_sourceanalysis ft_inverse_eloreta
+% PRIVATEDATA
 
 load(dccnpath('/home/common/matlab/fieldtrip/data/test/avgFIC.mat'));
 

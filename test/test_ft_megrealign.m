@@ -3,6 +3,7 @@ function test_ft_megrealign
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_megrealign ft_prepare_neighbours ft_transform_geometry
+% NODATA
 
 datainfo = ref_datasets;
 sel      = match_str({datainfo.datatype},{'bti148' 'bti248' 'ctf151' 'ctf275' 'itab153' 'yokogawa160'}');

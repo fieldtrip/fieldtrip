@@ -3,6 +3,7 @@ function test_ft_progress
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_progress
+% NODATA
 
 % testing parameters
 num_iterations = 100;

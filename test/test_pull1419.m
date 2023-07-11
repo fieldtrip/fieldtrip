@@ -3,6 +3,7 @@ function test_pull1419
 % WALLTIME 00:10:00
 % MEM 2gb
 % DEPENDENCY
+% PRIVATEDATA
 
 
 filename = dccnpath('/home/common/matlab/fieldtrip/data/test/pull1419/ANM255201_20141125_trimmed.nwb');

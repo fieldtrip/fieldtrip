@@ -3,6 +3,7 @@ function test_issue1068
 % WALLTIME 00:10:00
 % MEM 2gb
 % DEPENDENCY ft_checkdata ft_datatype makessense getdimord getdimsiz
+% NODATA
 
 %%
 % this worked

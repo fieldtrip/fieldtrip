@@ -3,6 +3,7 @@ function test_bug2649
 % WALLTIME 00:10:00
 % MEM 2gb
 % DEPENDENCY ft_write_data write_brainvision_eeg
+% PRIVATEDATA
 
 fileorig = dccnpath('/home/common/matlab/fieldtrip/data/test/original/eeg/brainvision/Mischa.eeg');
 

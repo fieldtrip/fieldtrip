@@ -2,6 +2,7 @@ function test_example_bids_behavioral
 
 % MEM 4gb
 % WALLTIME 00:10:00
+% PUBLICDATA
 
 %
 %% Converting an example behavioral dataset for sharing in BIDS

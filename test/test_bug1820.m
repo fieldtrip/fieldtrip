@@ -3,6 +3,7 @@ function test_bug1820
 % MEM 12gb
 % WALLTIME 04:30:00
 % DEPENDENCY ft_prepare_mesh ft_headmodel_simbio ft_prepare_vol_sens ft_compute_leadfield
+% NODATA
 
 % See http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1820
 

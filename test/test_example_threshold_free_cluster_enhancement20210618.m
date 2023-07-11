@@ -3,6 +3,7 @@ function test_example_threshold_free_cluster_enhancement_20210618
 % WALLTIME 00:20:00
 % MEM 3gb
 % DEPENDENCY ft_statisatics_montecarlo
+% PUBLICDATA
 
 load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/example/threshold_free_cluster_enhancement/ERF_orig.mat'));
 

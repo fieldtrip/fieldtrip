@@ -3,6 +3,7 @@ function test_issue1843
 % WALLTIME 00:30:00
 % MEM 4gb
 % DEPENDENCY ft_sourceplot ft_plot_slice
+% NODATA
 
 
 % this test function checks whether ft_sourceplot (method: ortho) produces

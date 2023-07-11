@@ -1,5 +1,6 @@
 function [pos, tri] = mesh_octahedron
 
+% NODATA
 % MESH_OCTAHEDRON returns the vertices and triangles of an octahedron
 %
 % Use as

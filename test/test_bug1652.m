@@ -3,6 +3,7 @@ function test_bug1652
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_datatype_segmentation
+% PRIVATEDATA
 
 cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1652'));
 

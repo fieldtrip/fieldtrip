@@ -3,6 +3,7 @@ function test_issue922
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_freqanalysis
+% PRIVATEDATA
 
 %test case for ft_freqanalysis rounding bug
 

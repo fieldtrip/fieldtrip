@@ -3,6 +3,7 @@ function test_bug2220(datainfo)
 % MEM 2gb
 % WALLTIME 00:20:00
 % DEPENDENCY ft_preprocessing ft_preproc_padding preproc
+% NODATA
 
 
 %load('C:\Users\jorhor\Downloads\bugdatafile.mat')

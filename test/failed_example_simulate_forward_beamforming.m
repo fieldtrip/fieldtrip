@@ -3,6 +3,7 @@ function failed_example_simulate_forward_beamforming
 % MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_dipolesimulation ft_timelockanalysis ft_sourceanalysis
+% NODATA
 
 % This example script shows you how to create some simulated channel-level
 % MEG data with a single dipole at a specified location in the head.

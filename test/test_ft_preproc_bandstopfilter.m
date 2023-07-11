@@ -3,6 +3,7 @@ function tests = test_ft_preproc_bandstopfilter
 % MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_preproc_bandstopfilter
+% NODATA
 
 if nargout
   % assume that this is called by RUNTESTS

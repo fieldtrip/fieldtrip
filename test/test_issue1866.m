@@ -3,6 +3,7 @@ function test_issue1866
 % MEM 2gb
 % WALLTIME 00:20:00
 % DEPENDENCY ft_checkdata ft_connectivityplot
+% NODATA
 
 
 data.trial{1} = randn(2,1000);

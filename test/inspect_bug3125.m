@@ -3,6 +3,7 @@ function insspect_bug3125
 % WALLTIME 00:10:00
 % MEM 1gb
 % DEPENDENCY
+% PRIVATEDATA
 
 cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug3125'))
 

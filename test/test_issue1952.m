@@ -4,6 +4,7 @@ function test_issue1952
 % MEM 4gb
 
 % DEPENDENCY ft_denoise_ssp
+% PUBLICDATA
 
 %% PATHS
 

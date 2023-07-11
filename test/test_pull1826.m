@@ -3,6 +3,7 @@ function test_pull1826
 % WALLTIME 00:10:00
 % MEM 3gb
 % DEPENDENCY ft_read_headshape
+% PRIVATEDATA
 
 %%
 

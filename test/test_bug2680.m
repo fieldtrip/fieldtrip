@@ -1,5 +1,6 @@
 function test_bug2680
 % DEPENDENCY ft_redefinetrial ft_timelockanalysis
+% NODATA
 
 % WALLTIME 00:10:00
 % MEM 1gb

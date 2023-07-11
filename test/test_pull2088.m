@@ -3,6 +3,7 @@ function test_pull2088(filename)
 % WALLTIME 00:20:00
 % MEM 3gb
 % DEPENDENCY ft_definetrial ft_trialfun_general
+% PRIVATEDATA
 
 if nargin<1
   filename = dccnpath('/home/common/matlab/fieldtrip/data/test/original/eeglab/sub-001-eeg-sub-001_task-P300_run-2_eeg.set');

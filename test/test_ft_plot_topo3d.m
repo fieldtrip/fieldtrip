@@ -3,6 +3,7 @@ function test_ft_plot_topo3d
 % MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_plot_topo3d
+% NODATA
 
 pos = randn(10,3);
 val = randn(10,1);

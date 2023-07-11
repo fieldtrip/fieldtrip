@@ -3,6 +3,7 @@ function test_bug1390
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_timelockanalysis ft_datatype_raw
+% PRIVATEDATA
 
 load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1390.mat'));
 

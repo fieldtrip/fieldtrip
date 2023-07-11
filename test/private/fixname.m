@@ -1,5 +1,6 @@
 function str = fixname(str, version)
 
+% NODATA
 % FIXNAME changes all inappropriate characters in a sting into '_'
 % so that it can be used as a filename or as a field name in a structure.
 % If the string begins with a digit, an 'x' is prepended.
@@ -10,6 +11,7 @@ function str = fixname(str, version)
 % MATLAB 2014a introduces the matlab.lang.makeValidName and
 % matlab.lang.makeUniqueStrings functions for constructing unique
 % identifiers, but this particular implementation also works with
+% NODATA
 % older MATLAB versions.
 %
 % See also DEBLANK, STRIP, PAD

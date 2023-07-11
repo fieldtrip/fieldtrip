@@ -3,6 +3,7 @@ function inspect_bug3141
 % WALLTIME 00:10:00
 % MEM 2gb
 % DEPENDENCY ft_defacemesh ft_defacevolume
+% PUBLICDATA
 
 %% anatomical mri
 

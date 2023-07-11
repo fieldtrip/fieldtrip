@@ -3,6 +3,7 @@ function test_ft_appendspike
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_appendspike
+% NODATA
 
 spike = [];
 spike.label = {'unit1'  'unit2'  'unit3'};

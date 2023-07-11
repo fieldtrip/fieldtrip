@@ -1,7 +1,9 @@
 function benchmark(funname, argname, argval, m_array, n_array, niter, varargin)
 
+% NODATA
 % BENCHMARK a given function
 %
+% NODATA
 % Use as
 %   benchmark(funname, argname, argval, m_array, n_array, niter, ...)
 %
@@ -41,6 +43,7 @@ end
 
 % convert the function from a string to a handle
 funhandle = str2func(funname);
+% NODATA
 
 % this will hold the time that all computations took
 t_array   = nan(length(m_array), length(n_array));
@@ -98,6 +101,7 @@ if strcmp(feedback, 'table') || strcmp(feedback, 'all')
   if tableheader
     fprintf('^function name and algorithm details ^ %dch x %dsmp ^ %dch x %dsmp ^ %dch x %dsmp ^\n', ...
       m_array(m1), n_array(n1), ...
+% NODATA
       m_array(m2), n_array(n2), ...
       m_array(m3), n_array(n3));
   end
@@ -123,6 +127,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function y = robustmean(x)
 x    = sort(x);
+% NODATA
 n    = length(x);
 trim = round(0.25*n);
 sel  = (trim+1):(n-trim);

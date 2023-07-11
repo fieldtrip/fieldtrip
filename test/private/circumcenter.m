@@ -1,5 +1,6 @@
 function [cc] = circumcenter(coil1,coil2,coil3)
  
+% NODATA
 % CIRCUMCENTER determines the position and orientation of the circumcenter
 % of the three fiducial markers (MEG headposition coils). 
 %

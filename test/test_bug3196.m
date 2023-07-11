@@ -3,6 +3,7 @@ function test_bug3196
 % WALLTIME 00:10:00
 % MEM 2gb
 % DEPENDENCY ft_prepare_headmodel prepare_mesh_tetrahedral prepare_mesh_hexahedral
+% NODATA
 
 n = 71;
 

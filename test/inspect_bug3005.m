@@ -3,6 +3,7 @@ function inspect_bug3005
 % WALLTIME 00:10:00
 % MEM 1gb
 % DEPENDENCY
+% NODATA
 
 %%
 

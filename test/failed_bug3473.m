@@ -3,6 +3,7 @@ function test_bug3473
 % WALLTIME 00:30:00
 % MEM 2gb
 % DEPENDENCY ft_prepare_mesh
+% PRIVATEDATA
 
 addpath(genpath(dccnpath('/home/common/matlab/fieldtrip/data/test/bug3473/cpd')));
 filename = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/epilepsy/case1/ctf_data/case1.pos');

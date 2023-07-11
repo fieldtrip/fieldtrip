@@ -3,6 +3,7 @@ function test_bug298
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY keyval keyvalx
+% NODATA
 
 warning('this test has become obsolete because ot the ft_getopt implementation');
 return

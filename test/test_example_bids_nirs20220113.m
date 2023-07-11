@@ -2,6 +2,7 @@ function test_example_bids_nirs
 
 % MEM 8gb
 % WALLTIME 00:30:00
+% PUBLICDATA
 
 %
 %% Converting an example NIRS dataset for sharing in BIDS

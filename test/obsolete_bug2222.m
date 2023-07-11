@@ -3,6 +3,7 @@ function test_bug2222
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_freqcomparison ft_math
+% NODATA
 
 % the bug reported by Izabela triggered a short discussion, concluding that
 % ft_freqcomparison should be deprecated. This test script tests the (old)

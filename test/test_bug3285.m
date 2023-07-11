@@ -3,6 +3,7 @@ function test_bug3285
 % WALLTIME 00:10:00
 % MEM 2gb
 % DEPENDENCY
+% PRIVATEDATA
 
 % load('SubjectUCI29_data.mat', 'data');
 cd(dccnpath('/home/common/matlab/fieldtrip/data/test'));

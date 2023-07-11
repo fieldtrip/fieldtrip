@@ -3,6 +3,7 @@ function test_example_combineplanar_pipelineorder
 % WALLTIME 00:10:00
 % MEM 2gb
 % DEPENDENCY ft_dipolesimulation ft_combineplanar ft_singleplotER ft_topoplotER
+% PUBLICDATA
 
 grad275 = ft_read_sens(dccnpath('/home/common/matlab/fieldtrip/data/ftp/example/megrealign/ctf275.mat'));
 

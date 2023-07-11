@@ -1,6 +1,7 @@
 function inspect_bug1223
 
 % DEPENDENCY ft_read_mri ft_sourceplot
+% PRIVATEDATA
 
 mri = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1223/Num1_MinDef_M_Normal_age12_num10Atlas.hdr'));
 

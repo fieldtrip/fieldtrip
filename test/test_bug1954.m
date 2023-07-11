@@ -3,6 +3,7 @@ function test_bug1954
 % MEM 3gb
 % WALLTIME 01:30:00
 % DEPENDENCY
+% NODATA
 
 [ftver, ftpath] = ft_version;
 load(fullfile(ftpath, 'template', 'headmodel', 'standard_mri.mat'));

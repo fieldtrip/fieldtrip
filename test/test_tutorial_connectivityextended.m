@@ -3,6 +3,7 @@ function test_tutorial_connectivityextended
 % WALLTIME 00:45:00
 % MEM 3gb
 % DEPENDENCY ft_connectivityanalysis ft_connectivitysimulation ft_freqanalysis ft_connectivityplot ft_mvaranalysis
+% PUBLICDATA
 
 % This is the first section of the connectivity tutorial, which
 % starts with an MVAR model and then uses parametric and nonparametric

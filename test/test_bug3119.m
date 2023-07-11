@@ -3,6 +3,7 @@ function test_bug3119
 % WALLTIME 00:20:00
 % MEM 2gb
 % DEPENDENCY ft_dipolefitting ft_inverse_dipolefit
+% PRIVATEDATA
 
 %% load template mri
 ftdir = fileparts(which('ft_defaults'));

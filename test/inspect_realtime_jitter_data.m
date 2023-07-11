@@ -3,6 +3,7 @@ function inspect_realtime_jitter_data
 % WALLTIME 00:10:00
 % MEM 1gb
 % DEPENDENCY
+% NODATA
 
 filename = 'buffer://localhost:1972';
 

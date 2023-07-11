@@ -3,6 +3,7 @@ function failed_old_halfspace_bug243
 % MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY
+% NODATA
 
 % this tests for bug 243
 

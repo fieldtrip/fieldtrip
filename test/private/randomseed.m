@@ -1,5 +1,6 @@
 function state = randomseed(setseed)
 
+% NODATA
 % RANDOMSEED retrieves or sets the random seed, taking into account the different
 % MATLAB version specific methods
 %

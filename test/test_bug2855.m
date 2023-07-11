@@ -3,6 +3,7 @@ function test_bug2855
 % MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_statistics_montecarlo clusterstat
+% NODATA
 
 % this is a bug reported long ago (the example data that was created back
 % then has never made it here), so it's not clear whether still valid.

@@ -3,6 +3,7 @@ function test_bug2956
 % WALLTIME 00:10:00
 % MEM 2gb
 % DEPENDENCY ft_preprocessing preproc ft_preproc_dftfilter 
+% NODATA
 % Test Script for the new dftfilter option "Spectrum Interpolation" to reduce power line noise in data
 
 %% Simulate some data with power line noise: 50 Hz sinusoid (increasing amplitude) added to noise

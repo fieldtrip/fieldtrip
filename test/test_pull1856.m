@@ -3,6 +3,7 @@ function test_pull1856
 % WALLTIME 00:20:00
 % MEM 3gb
 % DEPENDENCY ft_write_data getorthoviewpos
+% PRIVATEDATA
 
 %%
 

@@ -2,6 +2,7 @@ function test_example_common_filters_in_beamforming
 
 % MEM 4gb
 % WALLTIME 00:10:00
+% PUBLICDATA
 
 %
 %% Common filters in beamforming

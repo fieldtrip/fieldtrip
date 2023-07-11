@@ -3,6 +3,7 @@ function test_bug2556
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_sourceparcellate ft_checkdata
+% NODATA
 
 [ftver, ftpath] = ft_version;
 filename = fullfile(ftpath, 'template', 'atlas', 'aal', 'ROI_MNI_V4.nii');

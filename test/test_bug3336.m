@@ -3,6 +3,7 @@ function test_bug3336
 % WALLTIME 00:10:00
 % MEM 2gb
 % DEPENDENCY
+% NODATA
 
 % there are two versions: one with error() and one with ft_error()
 % these should give the same result

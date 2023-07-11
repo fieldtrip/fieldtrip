@@ -3,6 +3,7 @@ function test_pull401
 % WALLTIME 00:10:00
 % MEM 1gb
 % DEPENDENCY
+% NODATA
 
 level = {
   'emergency'

@@ -3,6 +3,7 @@ function test_ft_componentanalysis_dss(datadir)
 % WALLTIME 00:20:00
 % MEM 12gb
 % DEPENDENCY ft_componentanalysis ft_artifact_zvalue denoise_avg2
+% PUBLICDATA
 
 if nargin==0
   datadir = dccnpath('/home/common/matlab/fieldtrip/data/ftp/workshop/cuttingeeg2021/data-minimal');

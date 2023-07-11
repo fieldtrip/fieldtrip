@@ -3,6 +3,7 @@ function test_ft_prepare_singleshell
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_headmodel_singleshell ft_prepare_headmodel ft_prepare_singleshell
+% PUBLICDATA
 
 % function to test ft_headmodel_singleshell. this function is called
 % by ft_prepare_headmodel

@@ -3,6 +3,7 @@ function failed_tutorial_natmeg_dipolefitting
 % WALLTIME 00:40:00
 % MEM 10gb
 % DEPENDENCY
+% PUBLICDATA
 
 % this script executes the MATLAB content from
 % http://www.fieldtriptoolbox.org/tutorial/natmeg/dipolefitting

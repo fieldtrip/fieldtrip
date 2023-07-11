@@ -3,6 +3,7 @@ function test_ft_volumelookup
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_volumelookup ft_read_atlas atlas_lookup
+% NODATA
 
 atlasfilename = dccnpath('/home/common/matlab/fieldtrip/template/atlas/afni/TTatlas+tlrc.BRIK');
 mrifilename   = dccnpath('/home/common/matlab/fieldtrip/external/spm8/templates/T1.nii');

@@ -3,6 +3,7 @@ function test_ft_sourcedescriptives
 % WALLTIME 00:10:00
 % MEM 2gb
 % DEPENDENCY ft_sourcedescriptives
+% NODATA
 
 gridsize = 38*48*41;
 nsamples = 20;

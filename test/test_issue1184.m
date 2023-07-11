@@ -3,6 +3,7 @@ function test_issue1184
 % MEM 8gb
 % WALLTIME 00:30:00
 % DEPENDENCY ft_resampledata
+% NODATA
 
 global ft_default
 ft_default.toolbox.signal = 'matlab'; % do not use the compat version, its resample/firls is too slow

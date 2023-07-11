@@ -3,6 +3,7 @@ function test_bug2782
 % WALLTIME 00:10:00
 % MEM 1gb
 % DEPENDENCY
+% NODATA
 
 
 %% this is the initial problem

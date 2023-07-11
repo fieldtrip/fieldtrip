@@ -1,5 +1,6 @@
 function test_example_conditional_granger
 
+% NODATA
 % MEM 4gb
 % WALLTIME 00:10:00
 

@@ -3,6 +3,7 @@ function test_issue1546
 % MEM 3gb
 % WALLTIME 00:05:00
 % DEPENDENCY ft_freqanalysis ft_specest_irasa
+% NODATA
 
 % simulate data
 F = 1; % weight of (F)ractal components of the simulated data

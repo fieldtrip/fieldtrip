@@ -1,5 +1,7 @@
 function test_fieldtrip2fiff(mnedatadir)
 
+% PRIVATEDATA
+
 %%
 savedir = tempdir;
 

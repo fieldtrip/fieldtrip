@@ -3,6 +3,7 @@ function test_bug1646
 % MEM 6gb
 % WALLTIME 00:15:00
 % DEPENDENCY ft_prepare_mesh ft_datatype_segmentation
+% PRIVATEDATA
 
 % the purpose of this test script is to ensure that the new implementation
 % of ft_prepare_mesh, which is a merger between the old ft_prepare_mesh and

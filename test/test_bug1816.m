@@ -3,6 +3,7 @@ function test_bug1816
 % MEM 6gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_read_mri ft_volumesegment
+% PRIVATEDATA
 
 % test the ft_volumesegment function used for segmentation with FSL BET and FAST
 % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1816

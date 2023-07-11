@@ -3,6 +3,7 @@ function test_issue1711
 % WALLTIME 00:10:00
 % MEM 2gb
 % DEPENDENCY ft_source2full ft_source2sparse
+% NODATA
 
 %%
 

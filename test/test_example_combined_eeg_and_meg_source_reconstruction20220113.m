@@ -1,5 +1,6 @@
 function test_example_combined_eeg_and_meg_source_reconstruction
 
+% NODATA
 % MEM 4gb
 % WALLTIME 00:10:00
 
@@ -10,6 +11,7 @@ function test_example_combined_eeg_and_meg_source_reconstruction
 %
 % This example script shows how to do combined EEG and MEG source reconstruction. It is sofar only supported by the low-level code in [forwinv](/development/forwinv) and not by the high-level FieldTrip functions such as **[ft_dipolesimulation](https://github.com/fieldtrip/fieldtrip/blob/release/ft_dipolesimulation.m)**, **[ft_dipolefitting](https://github.com/fieldtrip/fieldtrip/blob/release/ft_dipolefitting.m)** and **[ft_sourceanalysis](https://github.com/fieldtrip/fieldtrip/blob/release/ft_sourceanalysis.m)**.
 %
+% NODATA
 % Below is an example that demonstrates how forward computations can be done. Inverse source reconstructions using the low-level code should work similar, i.e. by combining the eeg and meg sensor definitions and volume conduction models into a cell-array.
 %
 % Note that the same approach can also be used for combined EEG and invasive EEG, or combined MEG and invasive EEG, or any other data fusion. Furthermore note that the combination of volume conduction models can contain more realistically and accurate forward models than those used below.

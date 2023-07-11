@@ -3,6 +3,7 @@ function test_bug1125
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_preprocessing ft_preproc_bandpassfilter ft_preproc_bandstopfilter ft_preproc_lowpassfilter ft_preproc_highpassfilter
+% PRIVATEDATA
 
 N = 1000;
 x1 = randn(1,N)+5*rand(1);

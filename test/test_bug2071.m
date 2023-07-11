@@ -3,6 +3,7 @@ function test_bug2071
 % WALLTIME 00:10:00
 % MEM 1gb
 % DEPENDENCY ft_postamble ft_postamble_history
+% NODATA
 
 data1 = [];
 data1.label = {'1', '2', '3', '4'};

@@ -3,6 +3,7 @@ function inspect_issue1759
 % WALLTIME 00:10:00
 % MEM 2gb
 % DEPENDENCY resampledesign
+% NODATA
 
 % resampledesign should give warning if the number of user-selected permutations is not optimal
 % this is actually a duplicate of https://github.com/fieldtrip/fieldtrip/issues/1313

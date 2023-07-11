@@ -1,5 +1,6 @@
 function test_example_nirs_fingertapping
 
+% NODATA
 % MEM 4gb
 % WALLTIME 00:10:00
 
@@ -167,6 +168,7 @@ nirs = load(filename);
 %
 % Since the data is not stored on disk in a [dataformat](/faq/dataformat/) that FieldTrip can directly read, we will circumvent the FieldTrip reading functions as outlined in [this frequenly asked question](/faq/how_can_i_import_my_own_dataformat/#circumvent-the-fieldtrip-reading-functions).
 %
+% NODATA
 % We start with constructing a MATLAB data structure according to **[ft_datatype_raw](https://github.com/fieldtrip/fieldtrip/blob/release/utilities/ft_datatype_raw.m)**, as if it were produced by **[ft_preprocessing](https://github.com/fieldtrip/fieldtrip/blob/release/ft_preprocessing.m)**.
 %
 data_raw = [];

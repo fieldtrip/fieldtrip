@@ -3,6 +3,7 @@ function test_tutorial_multivariateanalysis(datadir, dmltdir)
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_timelockstatistics ft_topoplotER ft_freqstatistics ft_topoplotTFR
+% PUBLICDATA
 
 % this is a test script that I made following the report of Matt on
 % http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1585 and realizing that the

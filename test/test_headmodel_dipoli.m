@@ -3,6 +3,7 @@ function test_headmodel_dipoli
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_headmodel_dipoli ft_prepare_vol_sens ft_compute_leadfield
+% NODATA
 
 % generate a unit sphere
 [pnt, tri] = mesh_sphere(162);

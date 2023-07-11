@@ -3,6 +3,7 @@ function test_datatype_source
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY
+% NODATA
 
 % this function defines a bunch of 'ideal' source structures
 

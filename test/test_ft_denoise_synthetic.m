@@ -3,6 +3,7 @@ function test_ft_denoise_synthetic
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_denoise_synthetic
+% PRIVATEDATA
 
 load(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/preproc_ctf151.mat'));
 

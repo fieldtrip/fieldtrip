@@ -3,6 +3,7 @@ function test_bug3042
 % WALLTIME 00:20:00
 % MEM 2gb
 % DEPENDENCY ft_read_headshape ft_read_atlas
+% PRIVATEDATA
 
 filename = dccnpath('/home/common/matlab/fieldtrip/data/test/bug3042/tess_cortex_pial_low.mat');
 

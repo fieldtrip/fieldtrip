@@ -1,5 +1,6 @@
 function [nrm] = surface_normals(pnt, tri, opt)
 
+% NODATA
 % SURFACE_NORMALS compute the surface normals of a triangular mesh
 % for each triangle or for each vertex
 %
@@ -80,4 +81,5 @@ end
 % fast cross product to replace the MATLAB standard version
 function [c] = cross(a,b)
 c = [a(:,2).*b(:,3)-a(:,3).*b(:,2) a(:,3).*b(:,1)-a(:,1).*b(:,3) a(:,1).*b(:,2)-a(:,2).*b(:,1)];
+% NODATA
 

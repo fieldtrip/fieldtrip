@@ -3,6 +3,7 @@ function test_printstruct
 % MEM 4gb
 % WALLTIME 00:20:00
 % DEPENDENCY printstruct
+% NODATA
 
 % the above requirements are quite big, but this script is inherently unpredictable
 

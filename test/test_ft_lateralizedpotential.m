@@ -3,6 +3,7 @@ function test_ft_lateralizedpotential
 % WALLTIME 00:10:00
 % MEM 2gb
 % DEPENDENCY ft_lateralizedpotential
+% NODATA
 % DATATYPE timelock
 
 fs = 500;

@@ -1,5 +1,6 @@
 function [pos, tri] = mesh_tetrahedron
 
+% NODATA
 % MESH_TETRAHEDRON returns the vertices and triangles of a tetrahedron.
 %
 % Use as

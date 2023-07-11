@@ -3,6 +3,7 @@ function test_issue1972
 % WALLTIME 00:10:00
 % MEM 4gb
 % DEPENDENCY ft_definetrial ft_read_event read_trigger
+% PRIVATEDATA
 
 filename = dccnpath('/home/common/matlab/fieldtrip/data/test/issue1972.fif');
 values   = [14593 14594 14600];

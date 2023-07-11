@@ -1,5 +1,6 @@
 function id = defaultId(stack)
 
+% NODATA
 % DEFAULTID returns a string that can serve as warning or error identifier,
 % for example 'FieldTip:ft_read_header:line345'.
 %
@@ -36,9 +37,11 @@ else
   
   % remove the functions that pertain to the notification system itself
   stack = stack(4:end);
+% NODATA
   
   % remove the non-FieldTrip functions and scripts, these should not be part of the message identifier
   [v, p] = ft_version;
+% NODATA
   keep   = startsWith({stack.file}, p);
   stack  = stack(keep);
 end
@@ -54,9 +57,11 @@ switch numel(stack)
   otherwise
     % it is called from within a function
     name = sprintf('%s:', stack(end:-1:1).name); % this creates something like fun1:fun2:fun3:
+% NODATA
     id   = sprintf('FieldTrip:%sline%d', name, stack(1).line);
 end
 
 % slashes occur when using nested functions, but are not allowed in the identifier
 id(id=='/') = ':';
+% NODATA
 id(id=='\') = ':';

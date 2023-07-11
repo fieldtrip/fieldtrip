@@ -3,6 +3,7 @@ function test_ft_freqanalysis
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_freqanalysis
+% NODATA
 
 ntrl = 1000;
 nchan = 32;

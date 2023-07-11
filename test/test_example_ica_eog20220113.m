@@ -2,6 +2,7 @@ function test_example_ica_eog
 
 % MEM 8gb
 % WALLTIME 00:30:00
+% PUBLICDATA
 
 %
 %% Use independent component analysis (ICA) to remove EOG artifacts

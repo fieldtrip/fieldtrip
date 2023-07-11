@@ -1,5 +1,6 @@
 function test_example_crossfreq
 
+% NODATA
 % MEM 4gb
 % WALLTIME 00:10:00
 
@@ -11,6 +12,7 @@ function test_example_crossfreq
 %
 % With the **[ft_freqsimulation](https://github.com/fieldtrip/fieldtrip/blob/release/ft_freqsimulation.m)** function you can generate simulated data in FieldTrip format which the different types of cross-frequency interactions. The different methods are:
 %
+% NODATA
 %* [phalow_amphigh (is phase to power in Jensen and Colgin)](/example/crossfreq/phalow_amphigh)
 %* [amplow_amphigh (is power to power in Jensen and Colgin](/example/crossfreq/amplow_amphigh)
 %* [phalow_freqhigh (is phase to frequency in Jensen and Colgin)](/example/crossfreq/phalow_freqhigh)

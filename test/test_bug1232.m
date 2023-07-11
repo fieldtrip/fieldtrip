@@ -3,6 +3,7 @@ function test_bug1232
 % MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_selectdata ft_datatype_source
+% NODATA
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%

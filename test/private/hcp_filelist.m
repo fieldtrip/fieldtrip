@@ -5,6 +5,7 @@
 
 function list = hcp_filelist(basedir)
 
+% NODATA
 dirlist = hcp_dirlist(basedir, true);
 dirlist{end+1} = basedir;
 list = {};

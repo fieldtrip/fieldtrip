@@ -3,6 +3,7 @@ function test_bug1318
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_preproc_bandpassfilter ft_preproc_bandstopfilter ft_preproc_lowpassfilter ft_preproc_highpassfilter
+% NODATA
 
 tolerance = 1e-4;
 

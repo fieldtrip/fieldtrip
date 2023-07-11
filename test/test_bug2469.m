@@ -3,6 +3,7 @@ function test_bug2469
 % MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_connectivityanalysis ft_connectivity_powcorr_ortho
+% PRIVATEDATA
 
 % this test function tests the functionality of Hipp's method on
 % sensor-level data.

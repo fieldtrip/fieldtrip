@@ -3,6 +3,7 @@ function test_tutorial_networkanalysis
 % MEM 3gb
 % WALLTIME 00:30:00
 % DEPENDENCY ft_networkanalysis
+% PUBLICDATA
 
 %% read the continuous data and segment into 2 seconds epochs
 cfg = [];

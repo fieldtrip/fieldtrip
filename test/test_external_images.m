@@ -3,6 +3,7 @@ function test_external_images
 % WALLTIME 00:10:00
 % MEM 2gb
 % DEPENDENCY hsv2rgb
+% NODATA
 
 filelist = {'hsv2rgb'};
 

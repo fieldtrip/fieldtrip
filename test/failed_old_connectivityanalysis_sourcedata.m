@@ -3,6 +3,7 @@ function failed_old_connectivityanalysis_sourcedata
 % MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY
+% NODATA
 
 % this script tests the functionality of connectivityanalysis with respect
 % to source data

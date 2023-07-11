@@ -3,6 +3,7 @@ function test_bug2785
 % WALLTIME 00:10:00
 % MEM 1gb
 % DEPENDENCY
+% NODATA
 
 %% create some test data
 data = [];

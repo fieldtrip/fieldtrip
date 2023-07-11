@@ -1,5 +1,6 @@
 function test_example_glm_trials
 
+% NODATA
 % MEM 4gb
 % WALLTIME 00:10:00
 
@@ -10,6 +11,7 @@ function test_example_glm_trials
 %
 % An alternative to modeling all channel-time points over trials independently from each other is to make explicit models for the precise temporal structure in the data around each event (i.e. within the trial). This is common for event-related fMRI and fNIRS, where the cognitive activity related to events is very short compared to the low temporal resolution of the data. As the precise millisecond timing of the cortical activity is not represented in the data, the stimuli can be modeled as stick-functions and convolved with the BOLD haemodynamic response function. In MEG and EEG it is also possible to make explicit models including peri-stimulus time and use GLMs to estimate the event-related activity (REFS).
 %
+% NODATA
 % The example page on [Using General Linear Modeling on time series data](/example/glm_timeseries) shows how to use GLMs to model the event-related time series. This specific page will show how to use GLMs to model the trial-based structure in the data.
 %
 %% # GLMs for two conditions

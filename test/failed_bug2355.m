@@ -3,6 +3,7 @@ function failed_bug2355
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_prepare_sourcemodel
+% NODATA
 
 %% make a spherical model fitted to scalp surface, in cm
 vol = [];

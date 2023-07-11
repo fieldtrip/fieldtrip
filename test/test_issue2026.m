@@ -3,6 +3,7 @@ function test_issue2026
 % WALLTIME 00:10:00
 % MEM 2gb
 % DEPENDENCY ft_read_event
+% PRIVATEDATA
 
 %%
 

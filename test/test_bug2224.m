@@ -3,6 +3,7 @@ function test_bug2224
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_selectdata ft_selectdata_new ft_postamble ft_postamble_previous ft_postamble_history
+% NODATA
 
 freq1 = [];
 freq1.dimord = 'chan_freq';

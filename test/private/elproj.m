@@ -1,5 +1,6 @@
 function [proj] = elproj(pos, method)
 
+% NODATA
 % ELPROJ makes a azimuthal projection of a 3D electrode cloud
 %  on a plane tangent to the sphere fitted through the electrodes
 %  the projection is along the z-axis

@@ -1,5 +1,6 @@
 function s2 = sortfields(s1)
 
+% NODATA
 % SORTFIELDS returns the same structure, but with the fields sorted on
 % alphabet.
 

@@ -4,6 +4,7 @@
 
 function [list, numdirs, numfiles] = hcp_dirlist(basedir, recursive)
 
+% NODATA
 if nargin<2
   recursive = true;
 end

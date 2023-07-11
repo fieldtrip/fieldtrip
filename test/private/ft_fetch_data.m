@@ -1,5 +1,6 @@
 function [dat] = ft_fetch_data(data, varargin)
 
+% NODATA
 % FT_FETCH_DATA mimics the behavior of FT_READ_DATA, but for a FieldTrip
 % raw data structure instead of a file on disk.
 %

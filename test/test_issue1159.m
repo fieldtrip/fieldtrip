@@ -3,6 +3,7 @@ function test_issue1159
 % WALLTIME 00:10:00
 % MEM 2gb
 % DEPENDENCY ft_senstype undobalancing
+% PRIVATEDATA
 
 %%
 % see https://github.com/fieldtrip/fieldtrip/issues/1159

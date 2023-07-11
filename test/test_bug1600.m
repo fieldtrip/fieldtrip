@@ -3,6 +3,7 @@ function test_bug1600
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_checkdata ft_datatype_source
+% NODATA
 
 % The problem: ft_checkdata(volume, 'datatype', 'source') does not seem to
 % convert the inside back to vectorial representation

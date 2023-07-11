@@ -3,6 +3,7 @@ function test_bug2928
 % WALLTIME 00:20:00
 % MEM 4gb
 % DEPENDENCY ft_volumesegment ft_volumerealign
+% PRIVATEDATA
 
 filename = dccnpath('/home/common/matlab/fieldtrip/data/test/bug2928/e889.dcm');
 

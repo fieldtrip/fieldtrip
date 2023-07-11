@@ -1,5 +1,6 @@
 function test_pull1757
 
+% NODATA
 %addpath('..');
 
 %% generate data (from test_bug2148)

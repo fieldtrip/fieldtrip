@@ -1,5 +1,6 @@
 function [pos, tri] = mesh_sphere(n, method)
 
+% NODATA
 % MESH_SPHERE creates spherical mesh, with approximately nvertices vertices
 %
 % Use as
@@ -14,6 +15,7 @@ function [pos, tri] = mesh_sphere(n, method)
 %
 % The input parameter 'method' defines which function to use when an refined
 % icosahedron, octahedron or tetrahedron is not possible, and can be 'msphere'
+% NODATA
 % (default), or 'ksphere'.
 %
 % See also MESH_TETRAHEDRON, MESH_OCTAHEDRON, MESH_ICOSAHEDRON
@@ -123,6 +125,7 @@ end % switch method
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [pos, tri] = ksphere(N)
 
+% NODATA
 % KSPHERE returns a triangulated sphere with K vertices that are
 % approximately evenly distributed over the sphere.
 %
@@ -153,6 +156,7 @@ tri = convhulln(pos);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [pos, tri] = msphere(N)
 
+% NODATA
 % MSPHERE returns a triangulated sphere with approximately M vertices
 % that are nicely distributed over the sphere. The vertices are aligned
 % along equally spaced horizontal contours according to an algorithm of
@@ -162,6 +166,7 @@ function [pos, tri] = msphere(N)
 %
 % The code of this function is in the public domain and originates
 % from the sci.math newsgroup. The full news message can be found
+% NODATA
 % below. This MATLAB implementation was made by Robert Oostenveld.
 %
 % From: rusin@washington.math.niu.edu (Dave Rusin)
@@ -212,6 +217,7 @@ while (1)
 
   % put a single vertex at the top% subfunction
 
+% NODATA
   phi = 0;
   th  = 0;
 

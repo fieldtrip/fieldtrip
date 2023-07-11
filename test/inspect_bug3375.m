@@ -3,6 +3,7 @@ function inspect_bug3375
 % WALLTIME 00:10:00
 % MEM 3gb
 % DEPENDENCY ft_realtime_headlocalizer
+% PRIVATEDATA
 
 %%
 

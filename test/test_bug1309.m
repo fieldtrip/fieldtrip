@@ -3,6 +3,7 @@ function test_bug1309
 % MEM 2gb
 % WALLTIME 00:15:00
 % DEPENDENCY
+% NODATA
 
 % This tests for the reliability of the ft_convert_units function when dealing
 % with different input types (vol,sens,etc.)

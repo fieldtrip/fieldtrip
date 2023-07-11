@@ -3,6 +3,7 @@ function test_tutorial_spike_Neurosim
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_spike_select ft_definetrial ft_spike_plot_raster
+% PRIVATEDATA
 
 % performs all the operations mentioned int the spike tutorial
 % (http://www.fieldtriptoolbox.org/tutorial/spike), but only plots figures
@@ -16,9 +17,13 @@ function test_tutorial_spike_Neurosim
 % 
 % This script calls many functions and might take a while to complete.
 % DEPENDENCY ft_read_spike ft_spike_select ft_read_event 
+% PRIVATEDATA
 % DEPENDENCY ft_definetrial ft_spike_maketrials ft_read_header ft_checkdata
+% PRIVATEDATA
 % DEPENDENCY ft_spike_isi ft_spike_plot_isireturn ft_spike_psth ft_spikedensity
+% PRIVATEDATA
 % DEPENDENCY ft_spike_plot_raster ft_spike_xcorr
+% PRIVATEDATA
 
 spike2 = ft_read_spike(dccnpath('/home/common/matlab/fieldtrip/data/test/original/neurosim/spikes')); % should be the folder containing 'signals' and 'spikes'; or the spikes file directly
 

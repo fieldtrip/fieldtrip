@@ -3,6 +3,7 @@ function test_ft_connectivity_powcorr_ortho
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_connectivity_powcorr_ortho
+% NODATA
 
 if nargout
   % assume that this is called by RUNTESTS

@@ -2,6 +2,7 @@ function test_example_glm_nirs
 
 % MEM 4gb
 % WALLTIME 00:10:00
+% PUBLICDATA
 
 %% Using GLM to analyze NIRS timeseries data
 %

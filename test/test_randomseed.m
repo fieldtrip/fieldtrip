@@ -3,6 +3,7 @@ function test_randomseed
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY
+% NODATA
 
 
 % this is related to bug 1205

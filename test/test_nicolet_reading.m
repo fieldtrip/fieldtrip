@@ -3,6 +3,7 @@ function test_nicolet_reading
 % MEM 2gb
 % WALLTIME 00:30:00
 % DEPENDENCY test_nicolet_reading_onefile read_nervus_header
+% PRIVATEDATA
 
 % function to test reading of Nicolet/Nervus EEG files
 % one is a file from 2006 (older Nicolet format)

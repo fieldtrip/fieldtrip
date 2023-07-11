@@ -1,5 +1,6 @@
 function dimord = getdimord(data, field, varargin)
 
+% NODATA
 % GETDIMORD determine the dimensions and order of a data field in a FieldTrip
 % structure.
 %
@@ -31,6 +32,7 @@ function dimord = getdimord(data, field, varargin)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Please note that this function is called from many other FT functions. To avoid
 % unwanted recursion, you should avoid (where possible) calling other FT functions
+% NODATA
 % inside this one.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -93,6 +95,7 @@ ndim3     = nan;
 
 % use an anonymous function
 assign = @(var, val) assignin('caller', var, val);
+% NODATA
 % it is possible to pass additional ATTEMPTs such as nrpt, nrpttap, etc
 for i=1:2:length(varargin)
   assign(varargin{i}, varargin{i+1});
@@ -750,11 +753,13 @@ dimord = [prefix dimord];
 
 end % function
 
+% NODATA
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function warning_dimord_could_not_be_determined(field,data)
 msg=sprintf('could not determine dimord of "%s" in:',field);
+% NODATA
 
 if isempty(which('evalc'))
   % May not be available in Octave
@@ -785,12 +790,14 @@ msg = sprintf('%s\n\n%s', msg, content);
 ft_warning('FieldTrip:getdimord:warning_dimord_could_not_be_determined', msg);
 end % function warning_dimord_could_not_be_determined
 
+% NODATA
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function ok = isequalwithoutnans(a, b)
 
+% NODATA
 % this is *only* used to compare matrix sizes, so we can ignore any singleton last dimension
 numdiff = numel(b)-numel(a);
 
@@ -809,11 +816,13 @@ ok = isequal(a(c), b(c));
 
 end % function isequalwithoutnans
 
+% NODATA
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function ok = check_trailingdimsunitlength(data, dimtok)
 
+% NODATA
 ok = false;
 for k = 1:numel(dimtok)
   switch dimtok{k}

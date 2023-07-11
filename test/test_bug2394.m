@@ -3,6 +3,7 @@ function test_bug2394
 % WALLTIME 00:10:00
 % MEM 1gb
 % DEPENDENCY ft_selectdata ft_selectdata_new ft_selectdata_old
+% NODATA
 
 %% create the data
 

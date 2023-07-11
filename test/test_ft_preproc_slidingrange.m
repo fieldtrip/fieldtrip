@@ -3,6 +3,7 @@ function tests = test_ft_preproc_slidingrange
 % MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_preproc_slidingrange
+% NODATA
 
 if nargout
   % assume that this is called by RUNTESTS

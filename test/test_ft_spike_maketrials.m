@@ -3,6 +3,7 @@ function test_ft_spike_maketrials()
 % MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_spike_maketrials
+% NODATA
 
 spike = [];
 tsAll = [];

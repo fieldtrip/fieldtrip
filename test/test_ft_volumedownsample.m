@@ -3,6 +3,7 @@ function test_ft_volumedownsample
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_volumedownsample SPM
+% NODATA
 
 mri = [];
 mri.anatomy = randn(181,217,181);

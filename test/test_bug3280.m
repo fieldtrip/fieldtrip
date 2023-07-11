@@ -3,6 +3,7 @@ function test_bug3280
 % WALLTIME 00:10:00
 % MEM 2gb
 % DEPENDENCY
+% PRIVATEDATA
 
 
 %%

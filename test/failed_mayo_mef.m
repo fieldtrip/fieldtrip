@@ -3,6 +3,7 @@ function test_mayo_mef
 % WALLTIME 00:10:00
 % MEM 3gb
 % DEPENDENCY read_mayo_mef21 read_mayo_mef30
+% NODATA
 
 %% version 2.1
 dataset = '/home/common/matlab/fieldtrip/data/test/pull1378/sample_mef/mef_2p1';

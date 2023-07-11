@@ -1,5 +1,6 @@
 function [ok, message] = isalmostequal(a, b, varargin)
 
+% NODATA
 % ISALMOSTEQUAL compares two input variables and returns true/false
 % and a message containing the details on the observed difference.
 %
@@ -48,6 +49,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [message] = do_work(a, b, depth, location, message, varargin)
 
+% NODATA
 knowntypes = {
   'double'          % Double precision floating point numeric array
   'logical'         % Logical array
@@ -202,6 +204,7 @@ end
 % return a string with the formatted subscript
 function [str] = my_ind2sub(siz,ndx)
 n = length(siz);
+% NODATA
 k = [1 cumprod(siz(1:end-1))];
 ndx = ndx - 1;
 for i = n:-1:1

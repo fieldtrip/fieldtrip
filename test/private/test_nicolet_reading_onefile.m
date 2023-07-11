@@ -1,5 +1,6 @@
 function test_nicolet_reading_onefile(path_to_load,nicoletFileName,asciiVerifyFileName,Fs,nChans,nSamples,nTrials,startDateTime)
 
+% NODATA
 datetimeTolerance = 0.00000000001;
 asciiDataTolerance = 0.01;
 fullNicoletFile1 = fullfile(path_to_load,nicoletFileName);

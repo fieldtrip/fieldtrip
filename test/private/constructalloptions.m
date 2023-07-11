@@ -1,8 +1,10 @@
 function optarg = constructalloptions(arg)
 
+% NODATA
 % CONSTRUCTALLOPTIONS allows you to create an extensive set of key-value
 % pairs that can be used for testing a function.
 %
+% NODATA
 % Use as
 %   optarg = constructoptarg(arg)
 % where

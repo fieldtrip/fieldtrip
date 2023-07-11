@@ -1,5 +1,6 @@
 function [pos, tri] = mesh_icosahedron
 
+% NODATA
 % MESH_ICOSAHEDRON returns the vertices and triangle of a 12-vertex icosahedral
 % mesh.
 %

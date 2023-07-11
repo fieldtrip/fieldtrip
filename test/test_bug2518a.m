@@ -3,6 +3,7 @@ function test_bug2518a
 % WALLTIME 00:30:00
 % MEM 3gb
 % DEPENDENCY ft_componentanalysis
+% PUBLICDATA
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % for these functions I don't really know whether and how they should work

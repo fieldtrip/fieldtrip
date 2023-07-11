@@ -3,6 +3,7 @@ function test_pull1688
 % WALLTIME 00:10:00
 % MEM 1gb
 % DEPENDENCY xdf2fieldtrip fileio/private/sccn_xdf
+% PRIVATEDATA
 
 % description of example data
 % contains 5 continuous steams and 156 channels in total

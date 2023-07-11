@@ -3,6 +3,7 @@ function test_ft_regressconfound
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_regressconfound
+% NODATA
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

@@ -3,6 +3,7 @@ function test_bug2986
 % MEM 3gb
 % WALLTIME 00:20:00
 % DEPENDENCY ft_volumerealign ft_volumereslice
+% PRIVATEDATA
 
 load standard_mri
 

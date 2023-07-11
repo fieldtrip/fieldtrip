@@ -3,6 +3,7 @@ function test_ft_denoise_tsr
 % MEM 8gb
 % WALLTIME 01:30:00
 % DEPENDENCY ft_denoise_tsr
+% NODATA
 
 % create some data
 for k = 1:50

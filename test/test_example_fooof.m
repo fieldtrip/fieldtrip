@@ -3,6 +3,7 @@ function test_example_fooof
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_freqanalysis
+% NODATA
 
 
 % simulate data

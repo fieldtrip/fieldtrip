@@ -3,6 +3,7 @@ function test_ft_freqinterpolate
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_freqinterpolate
+% NODATA
 % DATATYPE freq
 
 freq.label = {'1';'2'};

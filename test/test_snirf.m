@@ -3,6 +3,7 @@ function test_snirf
 % WALLTIME 00:10:00
 % MEM 2GB
 % DEPENDENCY homer2fieldtrip fieldtrip2homer ft_write_data
+% PRIVATEDATA
 
 p = tempdir;
 f1 = fullfile(p, 'data1.snirf');

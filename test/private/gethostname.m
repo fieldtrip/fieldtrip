@@ -1,5 +1,6 @@
 function host = gethostname()
 
+% NODATA
 % HOSTNAME returns the hostname of this computer
 %
 % Use as

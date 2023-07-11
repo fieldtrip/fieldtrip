@@ -3,6 +3,7 @@ function test_ft_timelockbaseline
 % WALLTIME 00:10:00
 % MEM 2gb
 % DEPENDENCY ft_timelockbaseline
+% NODATA
 % DATATYPE timelock
 
 fs = 500;

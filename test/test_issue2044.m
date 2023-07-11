@@ -1,6 +1,7 @@
 function test_issue2044
 
 % WALLTIME 00:10:00
+% PRIVATEDATA
 % MEM 2gb
 
 %%

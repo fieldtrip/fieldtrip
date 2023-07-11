@@ -3,6 +3,7 @@ function test_ft_dipolesimulation
 % WALLTIME 00:10:00
 % MEM 2gb
 % DEPENDENCY ft_dipolesimulation
+% NODATA
 
 nchan = 32;
 % construct a set of electrodes randomly distributed over the upper hemisphere

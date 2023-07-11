@@ -3,6 +3,7 @@ function test_ft_freqanalysis_superlet
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_freqanalysis
+% NODATA
 
 % Generates toy data containing oscillation packets at 20 Hz, 40 Hz and 60 Hz,
 % each with 2 "neighbour packets" at a neighbouring frequency (+10 Hz) and a 

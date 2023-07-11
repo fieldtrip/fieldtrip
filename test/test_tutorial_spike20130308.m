@@ -3,6 +3,7 @@ function failed_tutorial_spike20130308
 % MEM 8gb
 % WALLTIME 00:10:00
 % DEPENDENCY
+% PUBLICDATA
 
 % Reading in spike data
 % 

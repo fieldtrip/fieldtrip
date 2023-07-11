@@ -3,6 +3,7 @@ function failed_headmodel_simbio
 % WALLTIME 00:45:00
 % MEM 16gb
 % DEPENDENCY ft_prepare_headmodel ft_prepare_mesh ft_prepare_leadfield ft_prepare_sourcemodel 
+% NODATA
 
 % this function tests that simbio forward model works, comparing the results with a 3 concentric spheres model
 % intial version by Lilla Magyari 2013

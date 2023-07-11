@@ -3,6 +3,7 @@ function test_ft_plot_layout
 % MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_plot_layout
+% NODATA
 
 % the following layout is CTF151.lay after being passed through printstruct
 layout.pos = [

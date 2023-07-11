@@ -3,6 +3,7 @@ function test_artinis_oxy
 % WALLTIME 00:20:00
 % MEM 4gb
 % DEPENDENCY read_artinis_oxy3 read_artinis_oxy4
+% PRIVATEDATA
 
 rootdir = dccnpath('/home/common/matlab/fieldtrip/data/test/original/nirs/artinis');
 

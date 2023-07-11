@@ -3,6 +3,7 @@ function test_ft_spiketriggeredspectrum_stat()
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_spiketriggeredspectrum_stat ft_spiketriggeredspectrum_tfr
+% NODATA
 
 nSpikes = 10000;
 randPhases = [];

@@ -3,6 +3,7 @@ function test_ft_channelnormalise
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_channelnormalise
+% NODATA
 
 fs = 500;
 nchan = 32;

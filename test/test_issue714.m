@@ -3,6 +3,7 @@ function test_issue714
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_databrowser ft_multiplotER ft_singleplotER
+% NODATA
 
 % hand-craft a dataset with two trials/conditions and 6 channels
 % the six channels come in three a/b pairs, resembing NIRS oxi/deoxihemoglobin channels

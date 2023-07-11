@@ -3,6 +3,7 @@ function test_bug1913
 % MEM 8gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_read_header ft_read_data
+% PRIVATEDATA
 
 fn1 = dccnpath('/home/common/matlab/fieldtrip/data/test/original/eeg/eeprobe/martlbc1.cnt');
 fn2 = dccnpath('/home/common/matlab/fieldtrip/data/test/original/eeg/eeprobe/martlbc1s1.avr');

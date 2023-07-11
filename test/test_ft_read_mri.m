@@ -3,6 +3,7 @@ function test_ft_read_mri
 % WALLTIME 00:10:00
 % MEM 2gb
 % DEPENDENCY ft_read_mri
+% PRIVATEDATA
 
 %%
 

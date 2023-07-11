@@ -3,6 +3,7 @@ function test_tutorial_eventrelatedaveraging20130308
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY
+% PUBLICDATA
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

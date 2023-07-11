@@ -1,5 +1,6 @@
 function test_example_phase_reset
 
+% NODATA
 % MEM 4gb
 % WALLTIME 00:10:00
 

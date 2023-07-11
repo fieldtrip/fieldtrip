@@ -2,6 +2,7 @@ function test_example_emgtriggered_trialdefinition
 
 % MEM 8gb
 % WALLTIME 00:10:00
+% PUBLICDATA
 
 %
 %% Detect the muscle activity in an EMG channel and use that as trial definition

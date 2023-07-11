@@ -3,6 +3,7 @@ function test_bug1443
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_rejectcomponent ft_componentanalysis
+% PRIVATEDATA
 
 load(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/preproc_ctf151.mat'));
 

@@ -3,6 +3,7 @@ function failed_neuromag_units
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_read_header ft_read_data
+% PRIVATEDATA
 
 % http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=953
 % http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=963

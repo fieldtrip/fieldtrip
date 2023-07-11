@@ -3,6 +3,7 @@ function failed_bug2396
 % WALLTIME 00:10:00
 % MEM 2gb
 % DEPENDENCY ft_read_headshape
+% PRIVATEDATA
 
 cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2396'));
 

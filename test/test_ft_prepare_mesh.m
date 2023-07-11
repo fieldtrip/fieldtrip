@@ -3,6 +3,7 @@ function test_ft_prepare_mesh
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_prepare_mesh ft_datatype_segmentation ft_plot_mesh
+% NODATA
 
 % test ft_prepare_mesh also used for constructing SIMBIO FEM head models
 % see also http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1815

@@ -3,6 +3,7 @@ function test_issue1167
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY edf2fieldtrip
+% NODATA
 
 filename = {'ma0844az_1-1+.edf';
             'test_generator.edf';
