@@ -1,9 +1,3 @@
-function test_issue2274
-
-% WALLTIME 00:10:00
-% MEM 4gb
-% DEPENDENCY GETDIMORD FT_SOURCEPLOT
-
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/issue2274.mat'));
-
-ft_sourceplot(cfg, sourceProj)
+version https://git-lfs.github.com/spec/v1
+oid sha256:0b8dcec0df012cb8d2d41151026ad98a59aebd4274b4084f294a7aaff2a113fb
+size 198
