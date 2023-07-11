@@ -1,10 +1,8 @@
 This is the FieldTrip TEST directory. It contains a whole bunch of
 m-files that we use during development to test that new functionality
 works as expected, but also to test that changes to the code do not
-% NODATA
 break existing functionality.
 
-% NODATA
 The files in this directory can be split in multiple categories
 
 -  Files named `test_xxx.m` are automatically executed with the whole test batch
