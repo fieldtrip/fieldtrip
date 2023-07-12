@@ -1,8 +1,8 @@
 function test_example_compute_forward_simulated_data
 
-% DATA no
 % MEM 4gb
 % WALLTIME 00:10:00
+% DATA no
 
 %
 %% Compute forward simulated data using ft_dipolesimulation
@@ -39,7 +39,6 @@ data = ft_dipolesimulation(cfg);
 %%
 % use low-level functions to make a detailled figure
 
-% DATA no
 figure
 % ft_plot_headmodel(headmodel);
 % ft_plot_ortho(mri.anatomy, 'location', [0 0 0], 'transform', mri.tra);
