@@ -1,12 +1,11 @@
 function inspect_menu_viewpoint
 
 % DATA no
+
 % Some of the FT_PLOT_XXX functions that return a 3D object support a
 % right-mouse-click context menu with which you can select
-% DATA no
 % top/bottom/left/right/front/back. This functionality requires that the object being
 % plotted has a known coordinate system.
-% DATA no
 
 % note that the objects don't really go together, so it does not fit 100%
 
