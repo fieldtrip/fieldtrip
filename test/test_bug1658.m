@@ -3,6 +3,7 @@ function test_bug1658
 % WALLTIME 00:20:00
 % MEM 4gb
 % DEPENDENCY ft_sourcedescriptives ft_selectdata
+% DATA no
 
 % test whether ft_sourceescriptives supports trial selection
 

@@ -2,6 +2,7 @@ function test_example_dss_ecg
 
 % MEM 8gb
 % WALLTIME 00:30:00
+% DATA public
 
 %
 %% # Use denoising source separation (DSS) to remove ECG artifacts

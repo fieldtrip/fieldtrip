@@ -3,6 +3,7 @@ function test_ft_analysispipeline
 % MEM 2gb
 % WALLTIME 02:53:11
 % DEPENDENCY ft_analysispipeline
+% DATA private
 
 % the style of this test script is also used in test_ft_datatype and test_bug2185
 

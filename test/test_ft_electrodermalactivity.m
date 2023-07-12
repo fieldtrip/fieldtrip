@@ -4,6 +4,7 @@ function test_ft_electrodermalactivity
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_electrodermalactivity
+% DATA no
 
 fs = 500;
 nchan = 32;

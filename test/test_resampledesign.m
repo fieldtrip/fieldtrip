@@ -3,6 +3,7 @@ function test_resampledesign
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY resampledesign
+% DATA no
 
 % since the function to test is in a private directory, we explicitely have to cd into that directory
 [ftver, ftpath] = ft_version;

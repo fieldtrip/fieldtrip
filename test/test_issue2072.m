@@ -3,6 +3,7 @@ function test_issue2072
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_selectdata
+% DATA no
  
 % Simulate data
 data = [];

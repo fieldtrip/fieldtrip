@@ -3,6 +3,7 @@ function test_tutorial_beamformingextended
 % MEM 5gb
 % WALLTIME 00:30:00
 % DEPENDENCY ft_read_mri ft_redefinetrial ft_freqanalysis ft_volumesegment ft_appenddata ft_selectdata ft_prepare_singleshell ft_sourceanalysis ft_prepare_leadfield ft_prepare_headmodel ft_prepare_sourcemodel ft_plot_headmodel ft_plot_sens ft_plot_mesh ft_sourceinterpolate ft_sourceplot
+% DATA public
 
 datadir = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/sensor_analysis');
 mridir = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformingextended');

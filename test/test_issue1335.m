@@ -3,6 +3,7 @@ function test_issue1335
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_prepare_layout
+% DATA private
 
 % it is required to change to the data directory, otherwise it cannot
 % automatically find the optodetemplates.xml file

@@ -3,6 +3,7 @@ function test_bug3156
 % WALLTIME 00:10:00
 % MEM 2gb
 % DEPENDENCY ft_electrodeplacement
+% DATA private
 
 %%
 

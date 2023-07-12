@@ -3,6 +3,7 @@ function test_example_fem
 % WALLTIME 08:00:00
 % MEM 12gb
 % DEPENDENCY ft_prepare_headmodel ft_prepare_mesh ft_datatype_segmentation
+% DATA public
 
 [ftver, ftpath] = ft_version;
 

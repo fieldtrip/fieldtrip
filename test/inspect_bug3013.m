@@ -1,6 +1,7 @@
 function inspect_bug3013
 
 % DEPENDENCY ft_sourceplot ft_plot_ortho
+% DATA no
 
 %%
 

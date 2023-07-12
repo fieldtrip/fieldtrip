@@ -3,6 +3,7 @@ function test_issue2012
 % WALLTIME 00:10:00
 % MEM 4gb
 % DEPENDENCY ft_virtualchannel
+% DATA private
 
 filename = dccnpath('/home/common/matlab/fieldtrip/data/test/issue2012.mat');
 load(filename);

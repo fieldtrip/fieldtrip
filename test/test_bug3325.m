@@ -3,6 +3,7 @@ function inspect_bug3325
 % WALLTIME 01:00:00
 % MEM 2gb
 % DEPENDENCY
+% DATA no
 
 % this option makes it interactive
 interactive = false;

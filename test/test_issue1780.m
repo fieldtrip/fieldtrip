@@ -3,6 +3,7 @@ function test_issue1780
 % WALLTIME 00:10:00
 % MEM 2gb
 % DEPENDENCY read_neuralynx_ds read_neuralynx_nsc
+% DATA private
 
 dataset1 = dccnpath('/home/common/matlab/fieldtrip/data/test/original/lfp/neuralynx/issue1780');            % this includes 2 channels
 dataset2 = dccnpath('/home/common/matlab/fieldtrip/data/test/original/lfp/neuralynx/issue1780/CSC01.ncs');  % this is only 1 channel

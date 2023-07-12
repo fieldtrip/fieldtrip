@@ -1,5 +1,6 @@
 function test_example_entropy_analysis
 
+% DATA no
 % MEM 4gb
 % WALLTIME 00:10:00
 
@@ -10,15 +11,18 @@ function test_example_entropy_analysis
 %
 % Notably, mMSE is able to reveal brain-behavior links in EEG data that go undetected by conventional analysis methods such as spectral power, overall signal variation (SD), and event-related potentials (ERPs).  Please see our preprints **[Kloosterman et al.](https://doi.org/10.1101/834614.m)** and **[Kosciessa et al.](https://doi.org/10.1371/journal.pcbi.1007885)** for more information, and the tutorial folder on our Github page for a step-by-step explanation of the computation of mMSE within our fieldtrip MATLAB function.
 %
+% DATA no
 %% Download and install the mMSE toolbox
 %
 % To run entropy analysis on your data, download the mMSE toolbox for FieldTrip from our GitHub page as follows:
 %
 % or use the Download button on the GitHub page. The mMSE toolbox folder can be placed anywhere – it is not necessary to have it in your FieldTrip folder. However, the folder needs to be added to the path so MATLAB can find it. Furthermore, availability of the FieldTrip toolbox is required as the mMSE code relies on various FieldTrip helper functions. You can do this as follows:
 %
+% DATA no
 %
 % After this step, you can call **[ft_entropyanalysis](https://github.com/LNDG/mMSE/blob/release/ft_entropyanalysis.m.m)** as any other FieldTrip function.
 %
+% DATA no
 %% Run mMSE analysis on your data
 %
 %
@@ -26,6 +30,7 @@ function test_example_entropy_analysis
 %
 % A final point pertains to the boundaries that are set around each data point to count pattern matches (see figure above). By increasingly smoothing the time series, coarse-graining affects not only on the signal's entropy, but also its overall variation, as reflected in the decreasing standard deviation as a function of time scale (see **[Nikulin and Brismar, 2004](https://doi.org/10.1103/PhysRevLett.92.089803.m)**). In the original implementation of the MSE calculation, the similarity parameter |r| was set as a proportion of the original (scale 1) time series' standard deviation and applied to all the scales (**[Costa et al. 2002](https://doi.org/10.1103/PhysRevLett.89.068102.m)**). Because of the decreasing variation in the time series due to coarse graining, the similarity parameter therefore becomes increasingly tolerant at longer time scales, resulting in more similar patterns and decreased entropy. This decreasing entropy can be attributed both to changes in signal complexity, but also in overall variation. To overcome this limitation, we advise recomputing the similarity parameter for each timescale, thereby normalizing MSE with respect to changes in overall time series variation at each scale. This feature can be controlled using the `cfg.recompute_r` parameter, as explained below.
 %
+% DATA no
 % To run mMSE analysis on your preprocessed data, first define the configuration:
 %
 %
@@ -40,6 +45,7 @@ function test_example_entropy_analysis
 %* `cfg.filtmethod` indicates the type of filter used in the 'filt_skip' method. It can either be |lp| (default), |hp|, |bp|, or |no| for no filtering.
 %* `cfg.mem_available` indicates the memory available to perform computations (default 8e9 bytes). Entropy is computed in the function using 2-dimensional time-by-time matrices, which grow exponentially in size as the number of trials increases. If the matrices exceed this size, they are chunked and processed sequentially to avoid overloading memory.
 %* `cfg.allowgpu` 1 (default) or 0 to indicate whether to allow computations to be run on a graphical processing unit (GPU), if available on the system. This can substantially speed up the computations. The function detects automatically both the presence of a MATLAB-compatible GPU, and the optimal chunk size depending on how much memory is available on the GPU.
+% DATA no
 %
 % After defining the cfg structure, entropy analysis is then simply run as follows:
 %
@@ -55,14 +61,17 @@ function test_example_entropy_analysis
 %        r: [48x42x26 double]          the boundary similarity parameter computed for each bin
 %      cfg: [1x1 struct]               the configuration used by the function that generated this data structure
 % 
+% DATA no
 % The |mmse| struct is structurally comparable to a |freq| structure as obtained from **[ft_freqanalysis](https://github.com/fieldtrip/fieldtrip/blob/release/ft_freqanalysis.m)**, with the following exceptions: |timescales| replaces the |frequency| field, indicating the timescales axis; |sampen| replaces the |powspctrm| field, containing the resulting sample entropy values; |fsample| indicates the sampling rate of the data at each coarsegraining step; |r| contains the r values computed at each channel-by-timescales-by-time location.
 %
 % If, after computing mMSE, you would like to use the FieldTrip functions for plotting, e.g., **[ft_multiplotTFR](https://github.com/fieldtrip/fieldtrip/blob/release/ft_multiplotTFR.m)** and computing statistics, i.e. **[ft_freqstatistics](https://github.com/fieldtrip/fieldtrip/blob/release/ft_freqstatistics.m)**, the easiest way is to place the mMSE output into a freq structure (see **[ft_datatype_freq](https://github.com/fieldtrip/fieldtrip/blob/release/utilities/ft_datatype_freq.m)**) so you can just plug the mMSE values into these functions.
 %
+% DATA no
 %% Run standard MSE analysis on your data
 %
 % Finally, it is also possible to run standard MSE analysis with our function. Standard MSE is computed across the complete timeseries at once so it has no time dimension. Furthermore, data is coarsened by averaging adjacent samples (point averaging). Finally, the r parameter is computed only once, instead of recomputed for each timescale. Please see the original MSE paper for details (**[Costa et al. 2002](https://doi.org/10.1103/PhysRevLett.89.068102.m)**).
 %
+% DATA no
 % To run standard MSE analysis, define your cfg as follows:
 %
 %

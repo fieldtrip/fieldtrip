@@ -3,6 +3,7 @@ function test_bug1490
 % MEM 3gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_read_header ft_read_data loadcnt
+% DATA private
 
 datadir       = dccnpath('/home/common/matlab/fieldtrip/data/test/bug1490');
 referencefile = dccnpath('/home/common/matlab/fieldtrip/data/test/bug1490.mat');

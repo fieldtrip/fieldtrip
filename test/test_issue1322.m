@@ -3,6 +3,7 @@ function test_issue1322
 % WALLTIME 00:10:00
 % MEM 2gb
 % DEPENDENCY ft_timelocksimulation ft_freqsimulation
+% DATA no
 
 headmodel = [];
 headmodel.unit = 'm';

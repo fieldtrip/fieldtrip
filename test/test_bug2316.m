@@ -3,6 +3,7 @@ function test_bug2316
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_databrowser
+% DATA private
 
 % this function currently serves as a placeholder to reproduce bug2316,
 % i.e. it crashes MATLAB (2011a, but possibly other versions as well) on

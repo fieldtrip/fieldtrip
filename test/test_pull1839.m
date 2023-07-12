@@ -3,6 +3,7 @@ function test_pull1839
 % WALLTIME 00:10:00
 % MEM 3gb
 % DEPENDENCY ft_timelockbaseline
+% DATA no
 
 %%
 

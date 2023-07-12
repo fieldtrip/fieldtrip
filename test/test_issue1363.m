@@ -3,6 +3,7 @@ function test_issue1363
 % MEM 6gb
 % WALLTIME 01:00:00
 % DEPENDENCY ft_componentanalysis ft_rejectcomponent
+% DATA no
 
 % this test function tests the functionality of the new option cfg.split in
 % ft_componentanalysis and ft_rejectcomponent

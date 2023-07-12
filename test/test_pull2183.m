@@ -3,6 +3,7 @@ function test_pull2183
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_read_headshape ft_read_headmodel
+% DATA private
 
 %%
 

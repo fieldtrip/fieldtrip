@@ -3,6 +3,7 @@ function test_issue1431
 % WALLTIME 00:10:00
 % MEM 2gb
 % DEPENDENCY ft_heartrate ft_interpolatenan
+% DATA no
 
 %%
 

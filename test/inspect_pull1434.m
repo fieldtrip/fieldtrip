@@ -1,5 +1,6 @@
 function inspect_pull1434
 
+% DATA no
 %%
 
 fsample = 1000;

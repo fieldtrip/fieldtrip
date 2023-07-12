@@ -3,6 +3,7 @@ function test_bug1112
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_convert_units ft_estimate_units
+% DATA private
 
 cd(dccnpath('/home/common/matlab/fieldtrip/data/test'))
 load bug1112

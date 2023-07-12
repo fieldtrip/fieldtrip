@@ -1,5 +1,6 @@
 function test_example_neighbours
 
+% DATA no
 % MEM 4gb
 % WALLTIME 00:10:00
 
@@ -12,6 +13,7 @@ function test_example_neighbours
 %
 % Although FieldTrip includes some functions that help you to construct a neighbour definition, you are yourself responsible to ensure it matches your measurement setup. The definition of neighbours influences how clusters will be formed: channels with many neighbours are be more likely to be part of large clusters than channels with few neighbours. As such the neighbour definition influences the clustering process and the statistical sensitivity. The false-alarm rate is not affected, as explained in the [Nonparametric statistical testing of EEG- and MEG-data](https://doi.org/10.1016/j.jneumeth.2007.03.024) paper.
 %
+% DATA no
 %% # Neighbours based on 2D layouts
 %
 % It first starts off with the 2D layout of these channels. This 2D layout is basically a flat pancake projection of the 3D positions. As with any cartographic projection, this will cause geometrical distortions, especially along the edes of the sphere.
@@ -131,6 +133,7 @@ neighbours8 = ft_prepare_neighbours(cfg);
 %
 % You can use the **[printstruct](https://github.com/fieldtrip/fieldtrip/blob/release/utilities/printstruct.m)** function to display the structure on screen and copy-and-paste it into your script, where you can make additional refinements.
 %
+% DATA no
 printstruct('neighbours', neighbours8)
 
 neighbours(1).label = 'Fp1';

@@ -3,6 +3,7 @@ function inspect_pull1413
 % WALLTIME 00:10:00
 % MEM 2gb
 % DEPENDENCY ft_rejectvisual rejectvisual_summary
+% DATA private
 
 cd(dccnpath('/home/common/matlab/fieldtrip/data/test/pull1413'));
 

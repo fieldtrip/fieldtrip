@@ -3,6 +3,7 @@ function test_spm12
 % MEM 4gb
 % WALLTIME 00:10:00
 % DEPENDENCY
+% DATA private
 
 % currently (Jan, 2017) SPM12 support for:
 % - ft_volumerealign

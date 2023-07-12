@@ -3,6 +3,7 @@ function test_bug1871
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_struct2single 
+% DATA private
 
 cd(dccnpath('/home/common/matlab/fieldtrip/data/test'));
 load avgFIC.mat

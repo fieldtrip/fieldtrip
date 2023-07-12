@@ -3,6 +3,7 @@ function test_ft_channelrepair
 % MEM 3gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_channelrepair ft_datatype_sens fixsens ft_prepare_neighbours
+% DATA private
 
 datainfo = ref_datasets;
 

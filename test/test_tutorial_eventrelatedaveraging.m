@@ -3,6 +3,7 @@ function test_tutorial_eventrelatedaveraging(dataset)
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_preprocessing ft_timelockanalysis ft_multiplotER ft_singleplotER ft_topoplotER ft_megplanar ft_combineplanar
+% DATA public
 
 % see http://www.fieldtriptoolbox.org/tutorial/eventrelatedaveraging
 % this testscript corresponds to the version on the wiki at 23 December 2012

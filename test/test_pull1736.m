@@ -3,6 +3,7 @@ function test_pullXXX
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY openpose_keypoints
+% DATA private
 
 %%
 

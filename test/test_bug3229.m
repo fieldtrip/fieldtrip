@@ -3,6 +3,7 @@ function test_bug3229
 % WALLTIME 00:10:00
 % MEM 1gb
 % DEPENDENCY ft_apply_transform ft_componentanalysis ft_rejectcomponent
+% DATA no
 
 elec = [];
 elec.label   = {'1';'2';'3';'4'};

@@ -1,5 +1,6 @@
 function test_bug2639
 % DEPENDENCY ft_checkdata
+% DATA no
 
 % MEM 2gb
 % WALLTIME 00:10:00

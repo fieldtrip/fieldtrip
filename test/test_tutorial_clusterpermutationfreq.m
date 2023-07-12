@@ -3,6 +3,7 @@ function test_tutorial_clusterpermutationfreq(dataset, datadir)
 % MEM 3gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_freqanalysis ft_multiplotTFR ft_singleplotTFR ft_freqstatistics ft_topoplotTFR ft_clustTFRplot ft_megplanar ft_combineplanar
+% DATA public
 
 if nargin==0
   dataset = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds');

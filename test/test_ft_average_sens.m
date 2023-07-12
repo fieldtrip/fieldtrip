@@ -3,6 +3,7 @@ function test_ft_average_sens
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_average_sens ft_transform_geometry
+% DATA no
 
 % this script so far only tests whether it runs through for a set of eeg
 % or meg sensor arrays

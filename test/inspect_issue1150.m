@@ -3,6 +3,7 @@ function inspect_issue1150
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_rejectvisual
+% DATA no
 
 data = [];
 data.label = {'Cz'};

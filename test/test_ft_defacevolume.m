@@ -3,6 +3,7 @@ function test_ft_defacevolume
 % MEM 8gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_defacevolume
+% DATA no
 
 mri = [];
 mri.anatomy = randn(181,217,181);

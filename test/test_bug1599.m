@@ -3,6 +3,7 @@ function test_bug1599(datainfo, version)
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_sourceanalysis ft_inverse_lcmv
+% DATA no
 
 % fixedori is set correctly in ft_inverse_lcmv, the only problem is
 % that ft_sourceanalysis seems to not bother about this when using a

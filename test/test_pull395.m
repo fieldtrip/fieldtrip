@@ -3,6 +3,7 @@ function test_pull395
 % WALLTIME 00:10:00
 % MEM 2gb
 % DEPENDENCY
+% DATA private
 
 cd(dccnpath('/home/common/matlab/fieldtrip/data/test/original/eeg/bdf'));
 
