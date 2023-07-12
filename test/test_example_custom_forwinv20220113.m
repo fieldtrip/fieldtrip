@@ -1,15 +1,14 @@
 function test_example_custom_forwinv
 
-% DATA no
 % MEM 4gb
 % WALLTIME 00:20:00
+% DATA no
 
 %
 %% Use your own forward leadfield model in an inverse beamformer computation
 %
 % You can use externally precomputed leadfield matrices for each dipole location on which you want to compute the beamformer solution. That is usually done using the **[ft_prepare_leadfield](https://github.com/fieldtrip/fieldtrip/blob/release/ft_prepare_leadfield.m)** function, and the main purpose is to speed up the source reconstruction. The output of **[ft_prepare_leadfield](https://github.com/fieldtrip/fieldtrip/blob/release/ft_prepare_leadfield.m)** can be used as input in **[ft_sourceanalysis](https://github.com/fieldtrip/fieldtrip/blob/release/ft_sourceanalysis.m)**, and you should construct a MATLAB structure that resembles the output of **[ft_prepare_leadfield](https://github.com/fieldtrip/fieldtrip/blob/release/ft_prepare_leadfield.m)**. The best way of getting to know the format of the precomputed leadfields is by computing the leadfield for a spherical model and look at it.
 %
-% DATA no
 % That can be demonstrated using the following code
 %
 % construct some random EEG electrodes on a sphere
