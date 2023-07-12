@@ -1,9 +1,9 @@
 function [trl, event] = trialfun_affcog(cfg)
 
 % DATA no
+
 %% the first part is common to all trial functions
 % read the header (needed for the samping rate) and the events
-% DATA no
 hdr        = ft_read_header(cfg.headerfile);
 event      = ft_read_event(cfg.headerfile);
 
@@ -36,7 +36,6 @@ offset = -PreTrig*ones(size(endsample));
 
 %% the last part is again common to all trial functions
 % return the trl matrix (required) and the event structure (optional)
-% DATA no
 trl = [begsample endsample offset task];
 
 end % function
