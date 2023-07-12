@@ -1,13 +1,12 @@
 function test_example_compute_leadfield
 
-% DATA no
 % MEM 4gb
 % WALLTIME 00:10:00
+% DATA no
 
 %
 %% Example use of the ft_compute_leadfield function
 %
-% DATA no
 % Rather than using the high-level **[ft_dipolesimulation](https://github.com/fieldtrip/fieldtrip/blob/release/ft_dipolesimulation.m)**, this uses the low-level **[ft_compute_leadfield](https://github.com/fieldtrip/fieldtrip/blob/release/forward/ft_compute_leadfield.m)**. Note that this makes you responsible of more bookkeeping.
 %
 % create a set of electrodes, randomly placed on a sphere
