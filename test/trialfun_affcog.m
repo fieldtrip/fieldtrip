@@ -1,7 +1,5 @@
 function [trl, event] = trialfun_affcog(cfg)
 
-% DATA no
-
 %% the first part is common to all trial functions
 % read the header (needed for the samping rate) and the events
 hdr        = ft_read_header(cfg.headerfile);
