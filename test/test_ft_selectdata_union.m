@@ -3,6 +3,7 @@ function test_ft_selectdata_union
 % WALLTIME 00:10:00
 % MEM 1gb
 % DEPENDENCY ft_selectdata
+% DATA no
 
 data1        = [];
 data1.label  = {'1' '2'};

@@ -3,6 +3,7 @@ function test_bug3433
 % WALLTIME 00:10:00
 % MEM 2gb
 % DEPENDENCY ft_heartrate ft_respiration
+% DATA private
 
 cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug3433'));
 

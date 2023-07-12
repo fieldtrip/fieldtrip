@@ -3,6 +3,7 @@ function test_issue968
 % WALLTIME 00:10:00
 % MEM 2gb
 % DEPENDENCY
+% DATA public
 
 p = tempname;
 mkdir(p);

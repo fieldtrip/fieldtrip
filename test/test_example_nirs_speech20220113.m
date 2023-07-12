@@ -2,6 +2,7 @@ function test_example_nirs_speech
 
 % MEM 8gb
 % WALLTIME 00:30:00
+% DATA public
 
 %
 %% Analyzing NIRS data recorded during listening to and repeating speech

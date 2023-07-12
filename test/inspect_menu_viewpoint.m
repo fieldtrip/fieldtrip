@@ -1,5 +1,7 @@
 function inspect_menu_viewpoint
 
+% DATA no
+
 % Some of the FT_PLOT_XXX functions that return a 3D object support a
 % right-mouse-click context menu with which you can select
 % top/bottom/left/right/front/back. This functionality requires that the object being

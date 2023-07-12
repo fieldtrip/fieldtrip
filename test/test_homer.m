@@ -3,6 +3,7 @@ function test_homer
 % WALLTIME 00:10:00
 % MEM 2GB
 % DEPENDENCY homer2fieldtrip fieldtrip2homer ft_write_data opto2homer homer2opto
+% DATA private
 
 % there are different ways that Homer data can be processed with FieldTrip
 % - the way that is used in most FT tutorials is to read (original) Homer files using FT_PREPROCESSING

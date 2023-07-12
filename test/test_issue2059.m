@@ -3,6 +3,7 @@ function test_issue2059
 % WALLTIME 00:10:00
 % MEM 2gb
 % DEPENDENCY ft_dipolesimulation ft_compute_leadfield
+% DATA no
 
 %%
 % randomply distribute some electrodes overt the upper hemisphere

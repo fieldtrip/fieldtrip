@@ -3,6 +3,7 @@ function test_old_filtering
 % MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY
+% DATA no
 
 
 % This script is for testing ideas about how to correct

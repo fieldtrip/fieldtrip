@@ -3,6 +3,7 @@ function test_layout_egi
 % MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY
+% DATA no
 
 [ftver, ftpath] = ft_version;
 dir_elec = fullfile(ftpath, 'template', 'electrode');

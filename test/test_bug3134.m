@@ -3,6 +3,7 @@ function test_bug3134
 % WALLTIME 00:10:00
 % MEM 1gb
 % DEPENDENCY
+% DATA no
 
 
 list = {

@@ -3,6 +3,7 @@ function test_headmodel_openmeeg
 % MEM 2gb
 % WALLTIME 00:20:00
 % DEPENDENCY ft_prepare_vol_sens ft_compute_leadfield ft_headmodel_openmeeg
+% DATA no
 
 % load openmeeg paths
 system('module load openmeeg');

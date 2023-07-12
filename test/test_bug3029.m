@@ -3,6 +3,7 @@ function test_bug3029
 % MEM 5gb
 % WALLTIME 00:20:00
 % DEPENDENCY ft_sourceanalysis prepare_freq_matrices
+% DATA private
 
 % this test function tests the correctness of the data handling in
 % ft_sourceanalysis, with respect to:

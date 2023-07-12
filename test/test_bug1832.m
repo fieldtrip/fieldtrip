@@ -3,6 +3,7 @@ function test_bug1832
 % MEM 2gb
 % WALLTIME 00:20:00
 % DEPENDENCY ft_read_mri ft_volumesegment ft_prepare_headmodel ft_prepare_sourcemodel
+% DATA no
 
 % for the warp template example script:
 % 1) make test script that checks on the units in these objects (with assert)

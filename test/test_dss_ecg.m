@@ -3,6 +3,7 @@ function test_dss_ecg
 % MEM 8gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_artifact_zvalue ft_componentanalysis
+% DATA public
 
 % define 'trl' of example dataset and read in the meg data
 cfg         = [];

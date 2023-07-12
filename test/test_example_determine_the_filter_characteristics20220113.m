@@ -2,6 +2,7 @@ function test_example_determine_the_filter_characteristics
 
 % MEM 4gb
 % WALLTIME 00:10:00
+% DATA no
 
 %
 %% Determine the filter characteristics

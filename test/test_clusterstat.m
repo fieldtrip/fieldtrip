@@ -3,6 +3,7 @@ function test_clusterstat
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY findcluster clusterstat ft_statistics_montecarlo
+% DATA no
 
 %%%%%%%%5
 % some code -> this relates to issue 1732

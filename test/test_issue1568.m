@@ -3,6 +3,7 @@ function test_issue1568
 % WALLTIME 00:10:00
 % MEM 2gb
 % DEPENDENCY ft_databrowser
+% DATA no
 
 global ft_default
 ft_default.representation = 'table';

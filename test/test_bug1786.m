@@ -3,6 +3,7 @@ function test_bug1786
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_channelrepair ft_prepare_neighbours
+% DATA private
 
 % Original report:
 % Hello,

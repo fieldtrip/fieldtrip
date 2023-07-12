@@ -2,6 +2,7 @@ function test_example_bids_motion
 
 % MEM 4gb
 % WALLTIME 00:10:00
+% DATA public
 
 %% Converting an example motion tracking dataset for sharing in BIDS
 %

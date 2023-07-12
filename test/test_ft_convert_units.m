@@ -3,6 +3,7 @@ function test_ft_convert_units
 % MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_convert_units
+% DATA no
 
 if nargout
   % assume that this is called by RUNTESTS

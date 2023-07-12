@@ -3,6 +3,7 @@ function test_bug3126
 % WALLTIME 00:20:00
 % MEM 4gb
 % DEPENDENCY
+% DATA private
 
 filename = dccnpath('/home/common/matlab/fieldtrip/data/test/original/eeg/neurone/2016-02-11T152726');
 

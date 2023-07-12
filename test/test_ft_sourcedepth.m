@@ -3,6 +3,7 @@ function test_ft_sourcedepth
 % MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_sourcedepth
+% DATA no
 
 if nargout
   % assume that this is called by RUNTESTS

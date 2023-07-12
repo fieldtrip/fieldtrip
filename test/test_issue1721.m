@@ -3,6 +3,7 @@ function test_issue1721
 % WALLTIME 00:10:00
 % MEM 3gb
 % DEPENDENCY ft_multiplotER ft_singleplotER ft_topoplotER ft_multiplotTFR ft_singleplotTFR ft_topoplotTFR ft_topoplotIC topoplot_common
+% DATA no
 
 %%
 

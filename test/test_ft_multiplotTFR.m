@@ -3,6 +3,7 @@ function test_ft_multiplotTFR
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_freqanalysis ft_multiplotTFR ft_prepare_layout
+% DATA private
 
 % writeflag determines whether the output should be saved to disk
 % version determines the output directory

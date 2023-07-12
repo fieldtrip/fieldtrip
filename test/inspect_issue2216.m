@@ -2,6 +2,7 @@ function inspect_issue2216
 
 % WALLTIME 00:10:00
 % DEPENDENCY ft_meshrealign ft_interactiverealign ft_plot_ortho ft_plot_slice
+% DATA no
 
 load(dccnpath('issue2216.mat')); % contains mri and headshape
 

@@ -3,6 +3,7 @@ function test_pull434
 % WALLTIME 00:10:00
 % MEM 1gb
 % DEPENDENCY
+% DATA no
 
 % this script tests the appending of sensor structures 
 % and specifically the handling of overlapping channels and/or electrodes

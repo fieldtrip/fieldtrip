@@ -3,6 +3,7 @@ function test_pull1209
 % WALLTIME 00:10:00
 % MEM 2gb
 % DEPENDENCY xdf2fieldtrip
+% DATA private
 
 filename = dccnpath('/home/common/matlab/fieldtrip/data/test/pull1209.xdf');
 

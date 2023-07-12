@@ -3,6 +3,7 @@ function test_issue1987
 % WALLTIME 00:10:00
 % MEM 2gb
 % DEPENDENCY read_brainvision_eeg
+% DATA private
 
 %% Unit test for update to read_brainvision_eeg.m
 %

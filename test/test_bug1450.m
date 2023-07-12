@@ -3,6 +3,7 @@ function test_bug1450
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY mergestruct
+% DATA no
 
 % ft_checkconfig used to be responsible for mergestruct, but on 19-10-2015
 % that moved to ft_preable_init which is called prior to ft_checkconfig

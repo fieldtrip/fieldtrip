@@ -2,6 +2,7 @@ function test_example_combined_eeg_and_meg_source_reconstruction
 
 % MEM 4gb
 % WALLTIME 00:10:00
+% DATA no
 
 %
 %% Combined EEG and MEG source reconstruction

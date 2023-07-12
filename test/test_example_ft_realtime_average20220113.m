@@ -1,5 +1,6 @@
 function test_example_ft_realtime_average
 
+% DATA no
 % MEM 4gb
 % WALLTIME 00:10:00
 

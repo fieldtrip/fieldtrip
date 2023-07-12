@@ -3,6 +3,7 @@ function test_ft_senslabel
 % MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_senslabel
+% DATA no
 
 if nargout
   % assume that this is called by RUNTESTS

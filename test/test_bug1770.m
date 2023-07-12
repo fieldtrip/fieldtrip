@@ -3,6 +3,7 @@ function test_bug1770
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY read_neuralynx_dma read_neuralynx_ncs
+% DATA private
 
 filenameA = dccnpath('/home/common/matlab/fieldtrip/data/test/bug1770/2012-07-14_15-33-09');
 filenameB = dccnpath('/home/common/matlab/fieldtrip/data/test/bug1770/DigitalLynxRawDataFile.nrd');

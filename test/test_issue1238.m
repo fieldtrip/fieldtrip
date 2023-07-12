@@ -3,6 +3,7 @@ function test_issue1238
 % WALLTIME 00:10:00
 % MEM 3gb
 % DEPENDENCY ft_singleplotER ft_multiplotER ft_databrowser
+% DATA private
 
 % The data contains a part of a multichannel fNIRS dataset of one subject, timelocked
 % for a fingertapping task (from second 0 tot 20) with in between a resting tasks.

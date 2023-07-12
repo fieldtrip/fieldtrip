@@ -3,6 +3,7 @@ function test_issue1459
 % WALLTIME 00:10:00
 % MEM 2gb
 % DEPENDENCY ft_checkdata ft_datatype_segmentation ft_read_atlas
+% DATA no
 
 [ftver, ftpath] = ft_version;
 

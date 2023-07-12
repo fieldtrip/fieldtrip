@@ -3,6 +3,7 @@ function test_ft_rejectcomponent
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_rejectcomponent
+% DATA no
 
 fs = 500;
 nchan = 32;

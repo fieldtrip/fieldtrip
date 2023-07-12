@@ -3,6 +3,7 @@ function test_ft_plot_topo
 % MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_plot_topo
+% DATA no
 
 x = randn(30,1);
 y = randn(30,1);

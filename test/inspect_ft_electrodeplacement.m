@@ -3,6 +3,7 @@ function inspect_ft_electrodeplacement
 % WALLTIME 00:10:00
 % MEM 1gb
 % DEPENDENCY
+% DATA public
 
 %%
 % do some prepatations

@@ -3,6 +3,7 @@ function inspect_issue1216
 % WALLTIME 00:10:00
 % MEM 3gb
 % DEPENDENCY ft_hastoolbox ft_postamble_hastoolbox
+% DATA private
 
 % this should be executed on MATLAB version R2016a, since it deals with the compat/matlablt2016b directory
 

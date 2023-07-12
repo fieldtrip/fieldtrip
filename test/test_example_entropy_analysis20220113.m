@@ -2,6 +2,7 @@ function test_example_entropy_analysis
 
 % MEM 4gb
 % WALLTIME 00:10:00
+% DATA no
 
 %
 %% Perform modified Multiscale Entropy (mMSE) analysis on EEG/MEG/LFP data

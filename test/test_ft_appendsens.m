@@ -3,6 +3,7 @@ function test_ft_appendsens
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY
+% DATA no
 
 
 % regular

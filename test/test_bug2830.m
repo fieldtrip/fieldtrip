@@ -3,6 +3,7 @@ function test_bug2830
 % WALLTIME 00:20:00
 % MEM 3gb
 % DEPENDENCY ft_sourcestatistics ft_statistics_montecarlo clusterstat
+% DATA private
 
 % the test directory holds the data and the statfun
 cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2830'))

@@ -1,5 +1,6 @@
 function test_bug2800
 % DEPENDENCY project_elec
+% DATA private
 
 % WALLTIME 00:10:00
 % MEM 1gb

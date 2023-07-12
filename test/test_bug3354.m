@@ -3,6 +3,7 @@ function test_bug3354
 % WALLTIME 00:20:00
 % MEM 2gb
 % DEPENDENCY ft_selectdata
+% DATA no
 
 trial = cell(1,10);
 time  = cell(1,10);
