@@ -3,6 +3,7 @@ function test_ft_clusterplot
 % MEM 12gb
 % WALLTIME 00:20:00
 % DEPENDENCY ft_clusterplot ft_statistics_montecarlo ft_timelockstatistics clusterstat findcluster
+% DATA public
 
 cd(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/eventrelatedstatistics'));
 

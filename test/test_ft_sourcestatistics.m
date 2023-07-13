@@ -3,6 +3,7 @@ function test_ft_sourcestatistics
 % WALLTIME 00:10:00
 % MEM 2gb
 % DEPENDENCY ft_sourcestatistics
+% DATA no
 
 gridsize = 1320;
 nsamples = 20;

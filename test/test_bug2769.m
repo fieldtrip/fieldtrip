@@ -3,6 +3,7 @@ function failed_bug2769
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_sourceplot ft_sourceinterpolate
+% DATA no
 
 clear all
 close all

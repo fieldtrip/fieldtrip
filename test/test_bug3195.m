@@ -3,6 +3,7 @@ function test_bug3195
 % MEM 8gb
 % WALLTIME 00:20:00
 % DEPENDENCY ft_prepare_sourcemodel ft_inside_headmodel
+% DATA private
 
 %%
 % load the data

@@ -3,6 +3,7 @@ function test_pull1412
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_heartrate
+% DATA private
 
 cd(dccnpath('/home/common/matlab/fieldtrip/data/test/pull1412'));
 

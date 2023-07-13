@@ -3,6 +3,7 @@ function test_ft_sourceanalysis
 % WALLTIME 00:10:00
 % MEM 2gb
 % DEPENDENCY ft_sourceanalysis
+% DATA no
 % DATATYPE comp timelock freq
 
 fs = 500;

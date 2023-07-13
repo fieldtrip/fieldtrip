@@ -3,6 +3,7 @@ function test_bug1416
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_setopt
+% DATA no
 
 opt = {'opt1' 1 'opt2' 2};
 

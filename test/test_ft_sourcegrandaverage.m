@@ -3,6 +3,7 @@ function test_ft_sourcegrandaverage
 % WALLTIME 00:10:00
 % MEM 1gb
 % DEPENDENCY ft_sourcegrandaverage ft_selectdata ft_selectdata_new ft_datatype_source
+% DATA no
 
 %% format 1
 

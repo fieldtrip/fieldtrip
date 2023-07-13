@@ -1,5 +1,6 @@
 function test_bug2746
 % DEPENDENCY loadcnt
+% DATA private
 
 % MEM 2gb
 % WALLTIME 00:10:00

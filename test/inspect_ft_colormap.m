@@ -1,5 +1,6 @@
 function inspect_ft_colormap
 
+% DATA no
 % see https://github.com/fieldtrip/fieldtrip/pull/1430
 
 close all

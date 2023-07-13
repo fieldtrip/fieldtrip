@@ -3,6 +3,7 @@ function inspect_bug1830
 % WALLTIME 00:10:00
 % MEM 1gb
 % DEPENDENCY
+% DATA public
 
 %%
 

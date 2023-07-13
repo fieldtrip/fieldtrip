@@ -3,6 +3,7 @@ function failed_ft_prepare_sourcemodel
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_prepare_sourcemodel ft_read_sens ft_read_headmodel 
+% DATA private
 
 % function to test ft_prepare_sourcemodel given configuration options (cfg), 
 % a single sphere volume condution model (vol), and gradiometer information

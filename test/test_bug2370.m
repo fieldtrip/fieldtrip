@@ -3,6 +3,7 @@ function test_bug2370
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_filetype ft_read_headshape ft_write_headshape read_ply write_ply
+% DATA no
 
 filename = [tempname '.ply'];
 

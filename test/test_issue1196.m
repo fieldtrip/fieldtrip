@@ -3,6 +3,7 @@ function test_issue1196
 % MEM 2gb
 % WALLTIME 00:20:00
 % DEPENDENCY data2bids
+% DATA private
 
 cd(dccnpath('/home/common/matlab/fieldtrip/data/test/issue1196'));
 

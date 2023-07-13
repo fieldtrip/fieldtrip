@@ -3,6 +3,7 @@ function test_tutorial_beamformer20131122
 % MEM 10gb
 % WALLTIME 02:30:00
 % DEPENDENCY ft_sourceanalysis ft_prepare_leadfield
+% DATA public
 
 % this test script represents the MATLAB code from http://www.fieldtriptoolbox.org/tutorial/beamformer
 % as downloaded from the wiki on 22 November 2013

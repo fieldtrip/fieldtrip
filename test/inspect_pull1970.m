@@ -3,6 +3,7 @@ function inspect_pull1970
 % WALLTIME 00:10:00
 % MEM 2gb
 % DEPENDENCY ft_databrowser
+% DATA public
 
 cfg = [];
 cfg.dataset = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds');

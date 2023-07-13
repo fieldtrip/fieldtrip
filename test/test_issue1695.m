@@ -3,6 +3,7 @@ function test_issue1695
 % MEM 2gb
 % WALLTIME 01:00:00
 % DEPENDENCY ft_version ft_read_mri ft_volumereslice ft_volumenormalise ft_warp_apply spm_file spm_preproc_run
+% DATA no
 
 %% Init
 [ftver, ftpath] = ft_version;

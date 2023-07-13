@@ -3,6 +3,7 @@ function test_bug3368
 % WALLTIME 00:10:00
 % MEM 4gb
 % DEPENDENCY
+% DATA no
 
 % load a fieldtrip dataset
 

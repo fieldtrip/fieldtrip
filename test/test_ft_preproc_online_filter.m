@@ -3,6 +3,7 @@ function tests = test_ft_preproc_online_filter
 % MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_preproc_online_filter_init ft_preproc_online_filter_apply
+% DATA no
 
 if nargout
   % assume that this is called by RUNTESTS

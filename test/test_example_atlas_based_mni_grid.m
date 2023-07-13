@@ -3,6 +3,7 @@ function test_example_atlas_based_mni_grid
 % WALLTIME 00:20:00
 % MEM 3gb
 % DEPENDENCY
+% DATA public
 
 % http://www.fieldtriptoolbox.org/example/create_single-subject_grids_in_individual_head_space_that_are_all_aligned_in_brain_atlas_based_mni_space
 

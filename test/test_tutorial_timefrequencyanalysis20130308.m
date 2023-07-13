@@ -3,6 +3,7 @@ function test_tutorial_timefrequencyanalysis20130308
 % MEM 2gb
 % WALLTIME 00:20:00
 % DEPENDENCY ft_freqanalysis ft_preprocessing ft_multiplotTFR ft_singleplotTFR
+% DATA public
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % this reflects  http://www.fieldtriptoolbox.org/tutorial/timefrequencyanalysis

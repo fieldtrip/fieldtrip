@@ -3,6 +3,7 @@ function test_bug2085
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_senstype ft_senslabel
+% DATA no
 
 %% create a volume conductor
 vol = [];

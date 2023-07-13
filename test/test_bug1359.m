@@ -3,6 +3,7 @@ function test_bug1359
 % MEM 3gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_read_header ft_read_data loadcnt
+% DATA private
 
 % the data is shared with test script 1490
 filename = dccnpath('/home/common/matlab/fieldtrip/data/test/bug1490/sub1E3a.cnt');

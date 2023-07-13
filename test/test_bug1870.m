@@ -3,6 +3,7 @@ function test_bug1870
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_megplanar ft_datatype_sens ft_compute_leadfield
+% DATA private
 
 % this test is basically a small section of test_ft_megplanar
 % the input data is consistent, but along the way the grad structure gets screwed up

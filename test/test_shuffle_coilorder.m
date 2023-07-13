@@ -3,6 +3,7 @@ function test_shuffle_coilorder
 % MEMORY 3GB
 % WALLTIME 00:10:00
 % DEPENDENCY ft_prepare_headmodel ft_compute_leadfield
+% DATA no
 
 % With the commit https://github.com/fieldtrip/fieldtrip/commit/61930a70a8db47da4b5778bb20ff505d122c11c1
 % the order of the coils changed in coilpos, coilori and tra. It used to be first all

@@ -3,6 +3,7 @@ function test_issue1313
 % WALLTIME 00:10:00
 % MEM 2gb
 % DEPENDENCY resampledesign
+% DATA no
 
 %%
 

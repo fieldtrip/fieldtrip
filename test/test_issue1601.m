@@ -3,6 +3,7 @@ function test_issue1601
 % WALLTIME 00:10:00
 % MEM 2gb
 % DEPENDENCY bids_sidecar ft_read_header ft_read_sens
+% DATA private
 
 %%
 

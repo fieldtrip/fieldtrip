@@ -3,6 +3,7 @@ function test_bug1992
 % WALLTIME 00:10:00
 % MEM 3gb
 % DEPENDENCY ft_filetype ft_read_headshape ft_write_headshape loadjson savejson loadbj savebj jsonopt
+% DATA private
 
 cd(dccnpath('/home/common/matlab/fieldtrip/data/test/original/mesh/jmesh'));
 

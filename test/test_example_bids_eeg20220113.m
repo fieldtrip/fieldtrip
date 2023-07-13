@@ -2,6 +2,7 @@ function test_example_bids_eeg
 
 % MEM 4gb
 % WALLTIME 00:10:00
+% DATA public
 
 
 

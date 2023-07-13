@@ -3,6 +3,7 @@ function test_bug2783
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_redefinetrial ft_checkdata
+% DATA no
 
 %% create some data
 

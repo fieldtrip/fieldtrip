@@ -3,6 +3,7 @@ function test_bug2336
 % WALLTIME 00:30:00
 % MEM 4gb
 % DEPENDENCY
+% DATA private
 
 % script to test the integration of FEM output files created by BESA MRI.
 %
