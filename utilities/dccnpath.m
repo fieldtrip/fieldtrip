@@ -66,7 +66,11 @@ end
 % alternative2 allows for the user to specify the path in the global ft_default variable
 % see https://github.com/fieldtrip/fieldtrip/issues/1998
 if isfield(ft_default, 'dccnpath')
-  alternative2 = strrep(filename, '/home/common/matlab/fieldtrip', ft_default.dccnpath);
+    if ~ispc
+        alternative2 = strrep(filename, '/home/common/matlab/fieldtrip', ft_default.dccnpath);
+    else
+        alternative2 = strrep(filename, 'H:\common\matlab\fieldtrip', ft_default.dccnpath);
+    end
 else
   alternative2 = '';
 end
