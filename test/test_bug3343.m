@@ -3,6 +3,7 @@ function test_bug3343
 % WALLTIME 00:10:00
 % MEM 1gb
 % DEPENDENCY
+% DATA no
 
 %% this used to return ctf
 elec = [];

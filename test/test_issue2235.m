@@ -3,6 +3,7 @@ function test_issue2235
 % WALLTIME 00:10:00
 % MEM 3gb
 % DEPENDENCY data2bids
+% DATA no
 
 %% make an EEG dataset in memory
 

@@ -3,6 +3,7 @@ function test_issue1214
 % WALLTIME 00:10:00
 % MEM 1gb
 % DEPENDENCY ft_singleplotER ft_multiplotER ft_plot_vector
+% DATA no
 
 %% make some data
 

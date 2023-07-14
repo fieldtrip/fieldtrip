@@ -3,6 +3,7 @@ function test_pull694
 % WALLTIME 00:20:00
 % MEM 8gb
 % DEPENDENCY read_eyelink_asc
+% DATA private
 
 cd(dccnpath('/home/common/matlab/fieldtrip/data/test/original/eyetracker/eyelink'));
 

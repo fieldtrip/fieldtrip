@@ -3,6 +3,7 @@ function test_bug2170
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_filetype ft_read_event
+% DATA private
 
 % the 3rd dataset is different in the sense that it is a *.fif file accompanied
 % by an *.eve file. Those files are also used in the Tristan babysquid74 system.

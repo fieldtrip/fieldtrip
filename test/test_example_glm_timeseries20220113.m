@@ -2,6 +2,7 @@ function test_example_glm_timeseries
 
 % MEM 16gb
 % WALLTIME 00:30:00
+% DATA public
 
 %
 %% Using General Linear Modeling on time series data

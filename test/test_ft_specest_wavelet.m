@@ -3,6 +3,7 @@ function tests = test_ft_specest_wavelet
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_specest_wavelet
+% DATA no
 
 if nargout
   % assume that this is called by RUNTESTS

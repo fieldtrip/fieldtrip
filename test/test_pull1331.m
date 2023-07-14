@@ -3,6 +3,7 @@ function test_pull1331
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_prepare_layout ft_preprocessing ft_channelrepair
+% DATA public
 
 load(fullfile(fileparts(which('ft_defaults')),'template/neighbours/ctf151_neighb.mat'));
 lay = ft_prepare_layout(struct('layout',fullfile(fileparts(which('ft_defaults')),'template/layout/CTF151.lay')));

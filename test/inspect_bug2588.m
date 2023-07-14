@@ -1,6 +1,7 @@
 function inspect_bug2588
 
 % DEPENDENCY ft_databrowser
+% DATA no
 
 data = [];
 for i=1:10

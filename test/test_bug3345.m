@@ -3,6 +3,7 @@ function test_bug3345
 % MEM 5GB
 % WALLTIME 00:20:00
 % DEPENDENCY ft_multiplotER ft_singleplotER ft_topoplotER ft_multiplotTFR ft_singleplotTFR ft_topoplotTFR topolot_common bivariate_common chanscale_common
+% DATA public
 
 % See also http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=3296 
 % which is on cfg.trials in the plotting functions

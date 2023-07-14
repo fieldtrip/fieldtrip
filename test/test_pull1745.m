@@ -3,6 +3,7 @@ function test_pull1745
 % WALLTIME 00:10:00
 % MEMORY 8gb
 % DEPENDENCY ft_datatype_source ft_datatype_volume ft_datatype_parcellation ft_datatype_segmentation ft_sourceparcellate
+% DATA private
 
 filename3d = dccnpath('/home/common/matlab/fieldtrip/data/test/original/mri/nifti/sub-01_ses-mri_acq-mprage_T1w.nii');                    % 3D anatomical
 filename4d = dccnpath('/home/common/matlab/fieldtrip/data/test/original/mri/nifti/sub-01_ses-mri_task-facerecognition_run-01_bold.nii');  % 4D functional

@@ -2,6 +2,7 @@ function test_example_crossfreq
 
 % MEM 4gb
 % WALLTIME 00:10:00
+% DATA no
 
 %
 %% Cross-frequency analysis

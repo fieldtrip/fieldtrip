@@ -3,6 +3,7 @@ function test_issue789
 % WALLTIME 00:10:00
 % MEM 2gb
 % DEPENDENCY xdf2fieldtrip ft_read_header ft_read_data ft_read_event
+% DATA private
 
 filename = dccnpath('/home/common/matlab/fieldtrip/data/test/original/xdf/example_EEG_eyeTracking_rigidBody.xdf');
 

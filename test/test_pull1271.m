@@ -3,6 +3,7 @@ function test_pull1271
 % MEM 5gb
 % WALLTIME 00:20:00
 % DEPENDENCY ft_read_data ft_read_header ft_read_event
+% DATA private
 
 % the DCCNPATH function will take the file from the present working directory if possible
 % otherwise it will search on /home/common/matlab (a DCCN specific linux network drive)

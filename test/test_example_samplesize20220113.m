@@ -2,6 +2,7 @@ function test_example_samplesize
 
 % MEM 8gb
 % WALLTIME 01:30:00
+% DATA no
 
 %
 %% Using simulations to estimate the sample size for cluster-based permutation test

@@ -3,6 +3,7 @@ function test_ft_plot_headshape
 % MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_plot_headshape
+% DATA no
 
 shape.pnt = randn(500,3);
 shape.fid.pnt = randn(3,3);

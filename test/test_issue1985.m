@@ -4,6 +4,7 @@ function test_issue1985
 % MEM 2gb
 
 % DEPENDENCY filter_with_correction fir_filterdcpadded
+% DATA no
 
 nchan = 1;
 fsample = 1000;

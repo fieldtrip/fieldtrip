@@ -431,12 +431,12 @@ end
 hasfun = isfield(functional, cfg.funparameter);
 if hasfun
   fun = getsubfield(functional, cfg.funparameter);
-    
+
   dimord = getdimord(functional, cfg.funparameter);
   dimtok = tokenize(dimord, '_');
-  
+
   % replace the cell-array functional with a normal array
-  if strcmp(dimtok{1}, '{pos}')
+  if startsWith(dimord, '{pos}')
     tmpdim = getdimsiz(functional, cfg.funparameter);
     tmpfun = nan(tmpdim);
     insideindx = find(functional.inside);
@@ -445,8 +445,24 @@ if hasfun
     end
     fun = tmpfun;
     clear tmpfun
-    dimtok{1} = 'pos';  % update the description of the dimensions
-    dimord([1 5]) = []; % remove the { and }
+    dimord = ['pos' dimord(6:end)]; % update the description of the dimensions
+    dimtok = tokenize(dimord, '_');
+  elseif startsWith(dimord, '{dim1_dim2_dim3}')
+    tmpdim = getdimsiz(functional, cfg.funparameter);
+    tmpfun = nan(tmpdim);
+    for i1=1:functional.dim(1)
+      for i2=1:functional.dim(2)
+        for i3=1:functional.dim(3)
+          if functional.inside(i1, i2, i3)
+            tmpfun(i1,i2,i3,:) = fun{i1, i2, i3};
+          end
+        end
+      end
+    end
+    fun = tmpfun;
+    clear tmpfun
+    dimord = ['dim1_dim2_dim3' dimord(17:end)]; % update the description of the dimensions
+    dimtok = tokenize(dimord, '_');
   end
   
   % ensure that the functional data is real

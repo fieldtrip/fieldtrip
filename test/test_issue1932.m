@@ -3,6 +3,7 @@ function test_issue1932
 % WALLTIME 00:10:00
 % MEM 2gb
 % DEPENDENCY fieldtrip2homer event2boolvec
+% DATA private
 
 load(dccnpath('/home/common/matlab/fieldtrip/data/test/issue1932/data.mat'));
 tmp = load(dccnpath('/home/common/matlab/fieldtrip/data/test/issue1932/Events.mat'));

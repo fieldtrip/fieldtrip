@@ -2,6 +2,7 @@ function test_example_fittemplate
 
 % MEM 4gb
 % WALLTIME 00:20:00
+% DATA public
 
 %
 %% How to create a head model if you do not have an individual MRI

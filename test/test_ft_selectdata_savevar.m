@@ -3,6 +3,7 @@ function test_ft_selectdata_savevar
 % WALLTIME 00:10:00
 % MEM 2gb
 % DEPENDENCY
+% DATA no
 
 %%
 

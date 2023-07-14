@@ -3,6 +3,7 @@ function test_bug1508
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_freqanalysis
+% DATA no
 
 % Stan reported a strange error caused by the following:
 % if the cfg.channel in a call to ft_freqanalysis contains channels that

@@ -3,6 +3,7 @@ function test_ft_preproc_dftfilter
 % WALLTIME 00:10:00
 % MEM 2gb
 % DEPENDENCY ft_preproc_dftfilter
+% DATA no
 
 if nargout
   % assume that this is called by RUNTESTS

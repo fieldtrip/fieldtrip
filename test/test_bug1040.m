@@ -3,6 +3,7 @@ function test_bug1040
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY bug1040
+% DATA private
 
 % function to test ft_prepare_sourcemodel given configuration options (cfg),
 % a single sphere volume condution model (vol), and gradiometer information

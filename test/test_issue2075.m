@@ -3,6 +3,7 @@ function test_issue2075
 % WALLTIME 00:10:00
 % MEM 4gb
 % DEPENDENCY nanmean
+% DATA no
 
 % A user reported an issue related to nanmean, using MATLAB 2022a.
 % Operating system unknown. This script tries to reproduce it. On our end,

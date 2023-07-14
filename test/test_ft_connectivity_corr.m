@@ -3,6 +3,7 @@ function tests = test_ft_connectivity_corr
 % MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_connectivity_corr
+% DATA no
 
 if nargout
   % assume that this is called by RUNTESTS

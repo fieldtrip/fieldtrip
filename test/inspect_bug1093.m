@@ -1,6 +1,7 @@
 function inspect_bug1093
 
 % DEPENDENCY ft_artifact_zvalue
+% DATA private
 
 % the original bug was that ft_artifact_zvalue does not adjust the detected
 % artifacts when the threshold is adjusted

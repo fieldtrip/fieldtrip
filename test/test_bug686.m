@@ -3,6 +3,7 @@ function test_bug686
 % MEM 2gb
 % WALLTIME 00:30:00
 % DEPENDENCY ft_convert_units ft_prepare_headmodel ft_prepare_leadfield ft_prepare_sourcemodel ft_headmodel_openmeeg headsurface
+% DATA no
 
 [pnt, tri] = mesh_sphere(162);
 pnt = pnt .* 10;           % convert to cm

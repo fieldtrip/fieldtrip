@@ -1,5 +1,6 @@
 function test_bug2647
 % DEPENDENCY ft_freqstatistics
+% DATA private
 
 % WALLTIME 00:10:00
 % MEM 2gb

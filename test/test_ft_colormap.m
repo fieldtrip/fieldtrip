@@ -3,6 +3,7 @@ function test_ft_colormap
 % MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_colormap
+% DATA no
 
 cmap = {'parula', 'jet', 'hsv', 'hot', 'cool', 'spring', 'summer', 'autumn', 'winter', 'gray', 'bone', 'copper', 'pink', 'lines', 'colorcube', 'prism', 'flag', 'cividis', 'inferno', 'magma', 'plasma', 'tab10', 'tab20', 'tab20b', 'tab20c', 'twilight', 'viridis', 'thermal', 'haline', 'solar', 'ice', 'oxy', 'deep', 'dense' 'algae', 'matter', 'turbid', 'speed', 'amp', 'tempo', 'rain', 'delta', 'curl', 'diff', 'tarn', 'phase', 'topo'};
 

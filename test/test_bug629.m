@@ -3,6 +3,7 @@ function test_bug629
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_read_header ft_read_data ft_read_event read_mff_header read_mff_data
+% DATA private
 
 % note that read_mff_event does not exist, handling of the events is coded in ft_read_event
 

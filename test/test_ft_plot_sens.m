@@ -3,6 +3,7 @@ function test_ft_plot_sens
 % MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_plot_sens
+% DATA no
 
 % make a unit sphere for the head
 [headshape.pos, headshape.tri] = mesh_sphere(300);

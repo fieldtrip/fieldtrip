@@ -3,6 +3,7 @@ function test_bug3184
 % WALLTIME 00:10:00
 % MEM 1gb
 % DEPENDENCY getdimord ft_datatype_source ft_selectdata
+% DATA private
 
 % it seems it already goes wrong at an earlier stage, since the data lacks
 % a csdlabel field. This seems the consequence of an intermediate call to

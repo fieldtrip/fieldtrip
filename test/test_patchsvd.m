@@ -3,6 +3,7 @@ function test_patchsvd(datadirs)
 % WALLTIME 00:30:00
 % MEM 6gb
 % DEPENDENCY ft_prepare_leadfield
+% DATA public
 
 %if nargin==0
     datadirs{1} = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf');

@@ -3,6 +3,7 @@ function test_ctf2grad
 % WALLTIME 00:10:00
 % MEM 2gb
 % DEPENDENCY ft_read_header ft_read_sens ctf2grad
+% DATA private
 
 datadir = dccnpath('/home/common/matlab/fieldtrip/data/test/original/meg/ctf151');
 dataset = fullfile(datadir, 'Subject01.ds');

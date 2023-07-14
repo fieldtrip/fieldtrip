@@ -1,6 +1,7 @@
 function inspect_bug1937
 
 % DEPENDENCY ft_connectivitysimulation ft_freqanalysis_mvar qsubfeval qsubget
+% DATA no
 
 % alebac, 19 Mar 2014: added support "waitfor" for multiple jobs
 

@@ -3,6 +3,7 @@ function test_issue1387
 % WALLTIME 00:10:00
 % MEM 1gb
 % DEPENDENCY ft_read_event ft_read_header ft_preprocessing
+% DATA private
 
 %%
 % load data and parse the events using '5*nanmedian' threshold on 8 channels

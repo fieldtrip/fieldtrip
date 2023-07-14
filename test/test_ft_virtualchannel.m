@@ -3,6 +3,7 @@ function test_ft_virtualchannel
 % WALLTIME 00:45:00
 % MEM 6gb
 % DEPENDENCY ft_virtualchannel
+% DATA public
 
 %% do some virtual channel stuff
 load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformingextended/source_coh_lft.mat'));

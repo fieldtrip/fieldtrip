@@ -3,6 +3,7 @@ function test_bug1878
 % MEM 3gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_artifact_clip
+% DATA private
 
 cd(dccnpath('/home/common/matlab/fieldtrip/data/test'));
 load bug1878.mat

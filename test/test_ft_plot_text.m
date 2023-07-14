@@ -3,6 +3,7 @@ function test_ft_plot_text
 % MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_plot_text
+% DATA no
 
 %%
 

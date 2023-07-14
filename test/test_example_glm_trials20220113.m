@@ -2,6 +2,7 @@ function test_example_glm_trials
 
 % MEM 4gb
 % WALLTIME 00:10:00
+% DATA no
 
 %
 %% Using General Linear Modeling over trials

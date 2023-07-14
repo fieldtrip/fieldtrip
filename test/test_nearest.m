@@ -3,6 +3,7 @@ function test_nearest
 % MEM 3gb
 % WALLTIME 00:10:00
 % DEPENDENCY nearest
+% DATA no
 
 % Use as
 %   [indx] = nearest(array, val, insideflag, toleranceflag)

@@ -3,6 +3,7 @@ function test_bug2767
 % WALLTIME 00:10:00
 % MEM 1gb
 % DEPENDENCY
+% DATA private
 
 
 filename = dccnpath('/home/common/matlab/fieldtrip/data/test/bug2767/01_ljh_firststd_meg_182.fif');
