@@ -366,12 +366,12 @@ cfg.dataset_description.ReferencesAndLinks  = ft_getopt(cfg.dataset_description,
 cfg.dataset_description.DatasetDOI          = ft_getopt(cfg.dataset_description, 'DatasetDOI'            ); % OPTIONAL. The Document Object Identifier of the dataset (not the corresponding paper).
 
 % this is a structure, and in the json file an object
-cfg.dataset_description.GeneratedBy             = ft_getopt(cfg.dataset_description, 'GeneratedBy', struct);
-cfg.dataset_description.GeneratedBy.Name        = ft_getopt(cfg.dataset_description.GeneratedBy, 'Name', 'FieldTrip');
-cfg.dataset_description.GeneratedBy.Version     = ft_getopt(cfg.dataset_description.GeneratedBy, 'Version', ft_version);
-cfg.dataset_description.GeneratedBy.Description = ft_getopt(cfg.dataset_description.GeneratedBy, 'Description', 'data2bids converter');
-cfg.dataset_description.GeneratedBy.URI         = ft_getopt(cfg.dataset_description.GeneratedBy, 'URI', 'https://www.fieldtriptoolbox.org');
-
+default.Name        = 'FieldTrip';
+default.Version     = ft_version();
+default.Description = 'data2bids converter';
+default.URI         = 'https://www.fieldtriptoolbox.org';
+cfg.dataset_description.GeneratedBy         = ft_getopt(cfg.dataset_description, 'GeneratedBy', {default});
+clear default
 
 %% Generic fields for all data types
 cfg.TaskName                          = ft_getopt(cfg, 'TaskName'                    ); % REQUIRED. Name of the task (for resting state use the "rest" prefix). Different Tasks SHOULD NOT have the same name. The Task label is derived from this field by removing all non alphanumeric ([a-zA-Z0-9]) characters.
@@ -2085,6 +2085,9 @@ if ~isempty(cfg.bidsroot)
     existing = [];
   end
 
+  existing = fix_dataset_description(existing);
+  dataset_description_settings = fix_dataset_description(dataset_description_settings);
+  
   switch cfg.writejson
     case 'yes'
       if ~isempty(existing)
@@ -2659,5 +2662,24 @@ for i=1:numel(fn)
   if endsWith(fn{i}, 'Count') && modality_json.(fn{i})==0
     % remove xxxChannelCount in case it has a count of zero
     modality_json = rmfield(modality_json, fn{i});
+  end
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function dataset_description = fix_dataset_description(dataset_description)
+fn = {'GeneratedBy', 'SourceDatasets'};
+for i=1:numel(fn)
+  if isfield(dataset_description, fn{i}) && isstruct(dataset_description.(fn{i}))
+    % it should be an array of objects in the JSON file
+    dataset_description.(fn{i}) = {dataset_description.(fn{i})};
+  end
+end
+fn = {'Authors', 'Funding', 'EthicsApprovals', 'ReferencesAndLinks'};
+for i=1:numel(fn)
+  if isfield(dataset_description, fn{i}) && ischar(dataset_description.(fn{i}))
+    % it should be an array of strings in the JSON file
+    dataset_description.(fn{i}) = {dataset_description.(fn{i})};
   end
 end

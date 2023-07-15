@@ -594,7 +594,7 @@ ARRAY=()
 ARRAY+=(fileio/private/fixcoordsys.m)
 ARRAY+=(forward/private/fixcoordsys.m)
 ARRAY+=(plotting/private/fixcoordsys.m)
-ARRAY+=(utilities/fixcoordsys.m)
+ARRAY+=(utilities/private/fixcoordsys.m)
 sync ${ARRAY[*]}
 
 ################################################################################
