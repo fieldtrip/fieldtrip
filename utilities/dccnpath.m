@@ -40,18 +40,18 @@ function filename = dccnpath(filename)
 
 global ft_default
 
-% switch between linux and windows paths
+% alternative0 allows to test when in the DCCN cluster
 if ispc
-  filename = strrep(filename,'/home','H:');
-  filename = strrep(filename,'/','\');
+  alternative0 = strrep(filename,'/home','H:');
+  alternative0 = strrep(alternative0,'/','\');
 else
-  filename = strrep(filename,'H:','/home');
-  filename = strrep(filename,'\','/');
+  alternative0 = strrep(filename,'H:','/home');
+  alternative0 = strrep(alternative0,'\','/');
 end
 
-% alternative1 alllows to test with local files in the present working directory
+% alternative1 allows to test with local files in the present working directory
 % this is often convenient when initially setting up a new test script while the data is not yet uploaded
-[p, f, x] = fileparts(filename);
+[p, f, x] = fileparts(alternative0);
 alternative1 = [f x];
 
 if strcmp(alternative1, 'test')
@@ -67,18 +67,53 @@ end
 % see https://github.com/fieldtrip/fieldtrip/issues/1998
 if isfield(ft_default, 'dccnpath')
     if ~ispc
-        alternative2 = strrep(filename, '/home/common/matlab/fieldtrip', ft_default.dccnpath);
+        alternative2 = strrep(alternative0, '/home/common/matlab/fieldtrip', ft_default.dccnpath);
     else
-        alternative2 = strrep(filename, 'H:\common\matlab\fieldtrip', ft_default.dccnpath);
+        alternative2 = strrep(alternative0, 'H:\common\matlab\fieldtrip', ft_default.dccnpath);
     end
 else
   alternative2 = '';
 end
 
-if ~exist(filename, 'file') && exist(alternative1, 'file')
-  warning('using local copy %s instead of %s', alternative1, filename);
+if exist(alternative1, 'file')
+  warning('using present working directory %s', alternative1);
   filename = alternative1;
-elseif ~exist(filename, 'file') && exist(alternative2, 'file')
-  warning('using local copy %s instead of %s', alternative2, filename);
+elseif isfield(ft_default, 'dccnpath')
+  warning('using local copy %s ', alternative2);
+
+  % Check if filename exists. If not, download it (Todo: after permission)    
+  if ~exist(alternative2, 'file')
+ 
+     % Public data are downloaded from https://download.fieldtriptoolbox.org
+     if contains(alternative2, 'ftp')
+        % Find the right path to the HTTPS download server
+        pattern = 'ftp(.*)';                      
+        datadir = regexp(alternative2, pattern, 'tokens', 'once');          
+        weblocation = strcat("https://download.fieldtriptoolbox.org", datadir);
+        weblocation = strrep(weblocation, '\', '/');
+        
+        urlContent = webread(weblocation, weboptions('ContentType', 'text')); % Runs a bit slow for large files
+    
+       % Check if the URL corresponds to a folder or file
+       if contains(urlContent, '<html') % Folder (HTML content) 
+              recursiveDownload(weblocation, alternative2);
+       else % File
+
+              % Create the necessary directories if they do not exist
+              [folder, ~, ~] = fileparts(alternative2); 
+              if ~isfolder(folder)
+                  mkdir(folder);
+              end
+                             
+              websave(alternative2, weblocation);
+        end
+    else
+    % Todo: FTP connection of private data
+    end          
+  end
   filename = alternative2;
+else
+  warning('using default DCCN path %s', alternative0);
+  filename = alternative0;
+end
 end
