@@ -2085,22 +2085,9 @@ if ~isempty(cfg.bidsroot)
     existing = [];
   end
 
-  fn = {'GeneratedBy', 'SourceDatasets'};
-  for i=1:numel(fn)
-    if isfield(dataset_description_settings, fn{i}) && isstruct(dataset_description_settings.(fn{i}))
-      % it should be an array of objects in the JSON file
-      dataset_description_settings.(fn{i}) = {dataset_description_settings.(fn{i})};
-    end
-  end
-
-  fn = {'Authors', 'Funding', 'EthicsApprovals', 'ReferencesAndLinks'};
-  for i=1:numel(fn)
-    if isfield(dataset_description_settings, fn{i}) && ischar(dataset_description_settings.(fn{i}))
-      % it should be an array of strings in the JSON file
-      dataset_description_settings.(fn{i}) = {dataset_description_settings.(fn{i})};
-    end
-  end
-
+  existing = fix_dataset_description(existing);
+  dataset_description_settings = fix_dataset_description(dataset_description_settings);
+  
   switch cfg.writejson
     case 'yes'
       if ~isempty(existing)
@@ -2675,5 +2662,24 @@ for i=1:numel(fn)
   if endsWith(fn{i}, 'Count') && modality_json.(fn{i})==0
     % remove xxxChannelCount in case it has a count of zero
     modality_json = rmfield(modality_json, fn{i});
+  end
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function dataset_description = fix_dataset_description(dataset_description)
+fn = {'GeneratedBy', 'SourceDatasets'};
+for i=1:numel(fn)
+  if isfield(dataset_description, fn{i}) && isstruct(dataset_description.(fn{i}))
+    % it should be an array of objects in the JSON file
+    dataset_description.(fn{i}) = {dataset_description.(fn{i})};
+  end
+end
+fn = {'Authors', 'Funding', 'EthicsApprovals', 'ReferencesAndLinks'};
+for i=1:numel(fn)
+  if isfield(dataset_description, fn{i}) && ischar(dataset_description.(fn{i}))
+    % it should be an array of strings in the JSON file
+    dataset_description.(fn{i}) = {dataset_description.(fn{i})};
   end
 end
