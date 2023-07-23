@@ -1021,7 +1021,7 @@ switch dataformat
     
   case 'mayo_mef30'
     hdr.sampleunit = 'index';
-    dat = read_mayo_mef30(filename, password, sortchannel, hdr, begsample, endsample, chanindx);
+    dat = read_mayo_mef30(filename, password, [], hdr, begsample, endsample, chanindx);
     
   case 'mayo_mef21'
     hdr.sampleunit = 'index';

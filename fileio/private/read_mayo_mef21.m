@@ -1,11 +1,11 @@
 function mayo_out = read_mayo_mef21(varargin)
-% MAYO_MEF30 read header, event and data from the files formatted in MEF2.1
+% READ_MAYO_MEF21 read header, event and data from the files formatted in MEF2.1
 %
 % Syntax:
-%   hdr = mayo_mef21(filename)
-%   hdr = mayo_mef21(filename, password)
-%   evt = mayo_mef21(filename, password, hdr)
-%   dat = mayo_mef21(filename, password, hdr, begsample, endsample, chanindx)
+%   hdr = read_mayo_mef21(filename)
+%   hdr = read_mayo_mef21(filename, password)
+%   evt = read_mayo_mef21(filename, password, hdr)
+%   dat = read_mayo_mef21(filename, password, hdr, begsample, endsample, chanindx)
 %
 % Input(s):
 %   filename        - [char] name of the file or folder of the dataset
@@ -34,7 +34,7 @@ function mayo_out = read_mayo_mef21(varargin)
 % See also ft_filetype, ft_read_header, ft_read_event, ft_read_data.
 
 % Copyright 2020 Richard J. Cui. Created: Thu 04/02/2020  4:13:44.233 PM
-% $Revision: 0.1 $  $Date: Thu 04/02/2020  4:13:44.233 PM $
+% $Revision: 0.2 $  $Date: Fri 05/15/2020 12:32:49.067 AM $
 %
 % Multimodel Neuroimaging Lab (Dr. Dora Hermes)
 % Mayo Clinic St. Mary Campus
