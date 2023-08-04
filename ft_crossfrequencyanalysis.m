@@ -301,7 +301,7 @@ switch cfg.method
       
     else
       dimord = 'chan_freqlow_freqhigh_phase' ;
-      crsspctrm = reshape(mean(cfcdata,1),[nchan nlf nhf nbin 1]);
+      crsspctrm = reshape(mean(cfcdata,1,'omitnan'),[nchan nlf nhf nbin 1]);
       crsspctrm(isnan(crsspctrm)) = 0;
       
     end % if keeptrials
