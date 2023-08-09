@@ -1360,6 +1360,11 @@ end
 pos   = sens.chanpos;
 label = sens.label;
 
+if ~isempty(rotatez)
+  % apply the rotation around the z-axis
+  pos = ft_warp_apply(rotate([0 0 rotatez]), pos, 'homogenous');
+end
+
 if strcmpi(style, '3d')
   layout.pos   = pos;
   layout.label = label;
