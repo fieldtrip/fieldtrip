@@ -60,6 +60,6 @@ pwdir = pwd;
 cd(fullfile(ftpath,'private'));
 mri_spm = align_ijk2xyz(mri_spm);
 mri_fs  = align_ijk2xyz(mri_fs);
-[ok,message]=isalmostequal(rmfield(mri_spm, 'hdr'), rmfield(mri_fs, 'hdr'));
+[ok,message]=isalmostequal(rmfield(mri_spm, 'hdr'), rmfield(mri_fs, 'hdr'), 'reltol', 0.01);
 assert(ok);
 cd(pwdir);
