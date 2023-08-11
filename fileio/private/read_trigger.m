@@ -80,7 +80,7 @@ if isempty(chanindx) || isempty(intersect(chanindx, 1:hdr.nChans))
   return
 else
   % read the trigger channels as raw data, here we can safely assume that it is continuous
-  dat = ft_read_data(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', begsample, 'endsample', endsample, 'chanindx', chanindx, 'checkboundary', 0);
+  dat = ft_read_data(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', begsample, 'endsample', endsample, 'chanindx', chanindx, 'checkboundary', 0, 'checkmaxfilter', 0);
 end
 
 % detect situations where the channel value changes almost at every sample, which are likely to be noise
