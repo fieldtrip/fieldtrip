@@ -19,7 +19,7 @@ function [data] = ft_determine_coordsys(data, varargin)
 %   axisscale    = scaling factor for the reference axes and sphere (default = 1)
 %   clim         = lower and upper anatomical MRI limits (default = [0 1])
 %
-% This function wil pop up a figure that allows you to check whether the
+% This function will pop up a figure that allows you to check whether the
 % alignment of the object relative to the coordinate system axes is correct
 % and what the anatomical labels of the coordinate system axes are. You
 % should switch on the 3D rotation option in the figure panel to rotate and

@@ -34,7 +34,7 @@ function [varargout] = ft_selectdata(cfg, varargin)
 %   cfg.nanmean     = string, can be 'yes' or 'no' (default = 'no')
 %
 % When you average over a dimension, you can choose whether to keep that dimension in
-% the data representation or remove it alltogether.
+% the data representation or remove it altogether.
 %   cfg.keeprptdim     = 'yes' or 'no' (default is automatic)
 %   cfg.keepchandim    = 'yes' or 'no' (default = 'yes')
 %   cfg.keepchancmbdim = 'yes' or 'no' (default = 'yes')
