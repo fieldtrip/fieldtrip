@@ -57,7 +57,7 @@ if isfield(source, 'avg')
   end
 end
 
-% convering the trials has precedence over the average
+% converging that the trials has precedence over the average
 if isfield(source, 'trial')
   trial  = source.trial;
   source = rmfield(source,  'trial');
