@@ -1,4 +1,7 @@
 [codespell]
-skip = .git,*.pdf,*.svg
-#
-# ignore-words-list =
+skip = .git,*.pdf,*.svg,external,src
+ignore-regex = \b[a-zA-Z]{1,4}\b
+ignore-words-list = siz,homogenous
+# there is no files option yet: https://github.com/codespell-project/codespell/issues/2758
+# but for now - running codespell only for utilities
+# files = utilites
