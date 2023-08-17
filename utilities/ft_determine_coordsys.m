@@ -65,7 +65,7 @@ data  = ft_checkdata(data, 'hasunit', 'yes');
 dtype = ft_datatype(data);
 
 % the high-level data structures are detected with ft_datatype, but there are
-% also some low-level data structures that need to be supproted here
+% also some low-level data structures that need to be supported here
 if strcmp(dtype, 'unknown')
   if isfield(data, 'fid') || (isfield(data, 'tri') && isfield(data, 'pos'))
     dtype = 'headshape';

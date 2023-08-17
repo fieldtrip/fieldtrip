@@ -38,7 +38,7 @@ function [spike] = ft_datatype_spike(spike, varargin)
 % FT_SPIKE_MAKETRIALS function can be used to reorganise the SPIKE
 % structure such that the spike times are expressed relative to a trigger
 % instead of relative to the acquisition devices internal timestamp clock.
-% The time field then contains only those spikes that ocurred within one of
+% The time field then contains only those spikes that occurred within one of
 % the trials . The spike times are now expressed on seconds relative to the
 % trigger.
 %

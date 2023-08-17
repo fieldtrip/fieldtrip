@@ -61,7 +61,7 @@ function [result, M] = ft_warp_optim(input, target, method)
 %
 % $Id$
 
-% this can be used for printing detailled user feedback
+% this can be used for printing detailed user feedback
 fb = false;
 
 if nargin<3

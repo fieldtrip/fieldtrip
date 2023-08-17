@@ -44,7 +44,7 @@ end
 
 current_argin = {filename, format};
 if isequal(current_argin, previous_argin)
-  % don't do the whole cheking again, but return the previous output from cache
+  % don't do the whole checking again, but return the previous output from cache
   filename   = previous_argout{1};
   headerfile = previous_argout{2};
   datafile   = previous_argout{3};

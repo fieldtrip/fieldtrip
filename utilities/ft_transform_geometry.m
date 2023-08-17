@@ -129,7 +129,7 @@ end
 
 % tfields must be rotated, translated and scaled
 % rfields must only be rotated
-% mfields must be simply multipied
+% mfields must be simply multiplied
 % recfields must be recursed into
 tfields   = {'pos' 'pnt' 'o' 'coilpos' 'elecpos' 'optopos' 'chanpos' 'chanposold' 'nas' 'lpa' 'rpa' 'zpoint'}; % apply rotation plus translation
 rfields   = {'ori' 'nrm'     'coilori' 'elecori' 'optoori' 'chanori' 'chanoriold' 'mom'                     }; % only apply rotation
