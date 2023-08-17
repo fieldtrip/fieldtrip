@@ -1,8 +1,10 @@
 [codespell]
 skip = .git,*.pdf,*.svg,external,src
 ignore-words-list = ans,siz,homogenous,pth,nam,ext,dum,siz,toi,whos,als
+
 # case sensitive etc as regex
-ignore-regex = \b(ALS|correctT)\b|n\(ot a
+# ignore-regex = \b(ALS|correctT)\b|n\(ot a
+
 # there is no files option yet: https://github.com/codespell-project/codespell/issues/2758
 # but for now - running codespell only for utilities
 # files = utilites
