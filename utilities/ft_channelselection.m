@@ -244,7 +244,7 @@ for i=1:length(channel)
 end
 
 if ~isempty(findreg)
-  findreg  = unique(findreg); % remove multiple occurances due to multiple wildcards
+  findreg  = unique(findreg); % remove multiple occurrences due to multiple wildcards
   labelreg = datachannel(labelreg);
 end
 
@@ -448,7 +448,7 @@ findmua        = find(strcmpi(channel, 'mua'));
 findspike      = find(strcmpi(channel, 'spike'));
 findgui        = find(strcmpi(channel, 'gui'));
 
-% remove any occurences of groups in the channel list
+% remove any occurrences of groups in the channel list
 channel([
   findall
   findreg

@@ -81,7 +81,7 @@ pos = detrend(sens(1).chanpos, 'constant');
 x1 = pos*u(:, 2);
 x2 = pos*u(:, 1);
 
-% detemine the indices of three reference sensors that are close to the three principal axes
+% determine the indices of three reference sensors that are close to the three principal axes
 [dum, ind1] = min(x1);
 [dum, ind2] = max(x1);
 [dum, ind3] = max(abs(x2 - mean(x2([ind1 ind2]))));

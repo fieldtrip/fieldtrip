@@ -75,7 +75,7 @@ if (isfield(cfg, 'outputfile') && ~isempty(cfg.outputfile)) || exist('Fief7bee_r
   end
   
   if isequal(postamble_argin, {'varargout'}) && ~iscell(cfg.outputfile)
-    % this should be a cell-array, oterwise it cannot be matched with varargout
+    % this should be a cell-array, otherwise it cannot be matched with varargout
     cfg.outputfile = {cfg.outputfile};
   end
   
