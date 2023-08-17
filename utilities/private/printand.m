@@ -1,6 +1,6 @@
 function str = printand(strs, quote)
 
-% PRINTAND prints a single or mutiple strings as "x1, x2, x3 and x4". If there is
+% PRINTAND prints a single or multiple strings as "x1, x2, x3 and x4". If there is
 % only one string, that string is returned without additional formatting.
 %
 % See also PRINTOR

@@ -10,7 +10,7 @@ function [freq] = ft_datatype_freq(freq, varargin)
 % and 120 frequencies is
 %
 %       dimord: 'chan_freq'          defines how the numeric data should be interpreted
-%    powspctrm: [306x120 double]     the power spectum
+%    powspctrm: [306x120 double]     the power spectrum
 %        label: {306x1 cell}         the channel labels
 %         freq: [1x120 double]       the frequencies expressed in Hz
 %          cfg: [1x1 struct]         the configuration used by the function that generated this data structure
@@ -20,7 +20,7 @@ function [freq] = ft_datatype_freq(freq, varargin)
 % and 60 timepoints is
 %
 %       dimord: 'chan_freq_time'     defines how the numeric data should be interpreted
-%    powspctrm: [306x120x60 double]  the power spectum
+%    powspctrm: [306x120x60 double]  the power spectrum
 %        label: {306x1 cell}         the channel labels
 %         freq: [1x120 double]       the frequencies, expressed in Hz
 %         time: [1x60 double]        the time, expressed in seconds

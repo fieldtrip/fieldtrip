@@ -8,7 +8,7 @@ function ft_compile_mex(force)
 % path. Subsequently you can rtun this function to recompile it on your platform with
 % your compiler settings
 %
-% The standards procedure for compiling mex files is detailled on
+% The standards procedure for compiling mex files is detailed on
 % http://www.fieldtriptoolbox.org/development/guidelines/code#compiling_mex_files
 %
 % Please note that this script does NOT set up your MEX environment for you, so in

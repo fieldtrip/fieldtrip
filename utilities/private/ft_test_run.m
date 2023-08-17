@@ -118,7 +118,7 @@ for i=1:numel(filelist)
     end
     
     if ~istrue(hasdccnpath)
-      % search for the occurence of the DCCNPATH function in each of the test functions
+      % search for the occurrence of the DCCNPATH function in each of the test functions
       [s, e] = regexp(line{k}, 'dccnpath', 'once', 'start', 'end');
       if ~isempty(s)
         file(i) = true;
