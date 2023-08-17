@@ -21,9 +21,9 @@ function recursiveDownload(weblocation, localFolder)
             recursiveDownload(subWebLocation, subfolder);
         else % File
             % Create the necessary directories if they do not exist
-            [folder, ~, ~] = fileparts(localFolder); 
-            if ~isfolder(folder)
-                mkdir(folder);
+            
+            if ~isfolder(localFolder)
+                mkdir(localFolder);
             end
 
             % Download the file
