@@ -1,4 +1,9 @@
-[![Platform: MATLAB](https://img.shields.io/badge/MATLAB-orange.svg?style=plastic)](https://www.mathworks.com)[![Last commit](https://img.shields.io/github/last-commit/fieldtrip/fieldtrip?style=plastic)](https://github.com/fieldtrip/fieldtrip)[![License: GPL-3.0](https://img.shields.io/badge/License-GPLv3-blue.svg?style=plastic)](https://www.gnu.org/licenses/gpl-3.0)
+[![Platform: MATLAB](https://img.shields.io/badge/MATLAB-orange.svg?style=plastic)](https://www.mathworks.com)
+[![GitHub contributors](https://img.shields.io/github/contributors/fieldtrip/fieldtrip)](https://github.com/fieldtrip/fieldtrip/graphs/contributors)
+[![Last commit](https://img.shields.io/github/last-commit/fieldtrip/fieldtrip?style=plastic)](https://github.com/fieldtrip/fieldtrip)
+[![GitHub commit activity (branch)](https://img.shields.io/github/commit-activity/m/fieldtrip/fieldtrip)](https://github.com/fieldtrip/fieldtrip/commits/master)
+[![GitHub Repo stars](https://img.shields.io/github/stars/fieldtrip/fieldtrip)](https://scholar.google.com/scholar?cites=3328911510682538425&scisbd=1)
+[![License: GPL-3.0](https://img.shields.io/badge/License-GPLv3-blue.svg?style=plastic)](https://www.gnu.org/licenses/gpl-3.0)
 
 # FieldTrip 
 
