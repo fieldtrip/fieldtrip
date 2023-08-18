@@ -50,19 +50,11 @@ end
 
     
 %% Test2: Downloading a file from the HTTPS download server
+testdata=fullfile(tempdir,'testdata');
+mkdir(testdata);
 
 global ft_default
-ft_default.dccnpath=tempdir;
-
-if ~ispc
-    filename=strcat(ft_default.dccnpath,'data/ftp/test/ctf/Subject01.ds/BadChannels');
-else
-    filename=strcat(ft_default.dccnpath,'data\ftp\test\ctf\Subject01.ds\BadChannels');
-end
-
-if exist(filename, 'file')
-    delete(filename) % delete filename if it exists, so we can download it in the next step
-end
+ft_default.dccnpath=testdata;
 
 filename=dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds/BadChannels');
 if ~exist(filename, 'file')
@@ -71,24 +63,18 @@ end
 
 
 %% Test3: File exists in the local copy and it doesn't get downloaded
+ft_default.dccnpath=fullfile(testdata,'BadChannels');
 
 filename=dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds/BadChannels'); %'/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds/BadChannels' has already been downloaded by test2
 if ~exist(filename, 'file')
     error('File exists in the local copy, but dccnpath() can not find it');
 end
  
-
+delete(ft_default.dccnpath)
 
 %% Test4: Downloading a folder from the HTTPS download server 
-if ~ispc
-    foldername=strcat(ft_default.dccnpath,'data/ftp/test/ctf/Subject02.ds/');
-else
-    foldername=strcat(ft_default.dccnpath,'data\ftp\test\ctf\Subject02.ds\');
-end
 
-if exist(foldername, 'dir')
-    rmdir(foldername,'s') % delete foldername if it exists, so we can download it in the next step
-end
+ft_default.dccnpath=testdata;
 
 foldername=dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject02.ds/');
 if ~exist(foldername, 'dir') % Here I check only if the main dir exists and not if this dir has the contents that had to be downloaded 
@@ -98,19 +84,31 @@ end
 
 %% Test5: Folder exists in the local copy and it doesn't get downloaded 
 
-filename=dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject02.ds/'); %'/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject02.ds/' has already been downloaded by test4
-if ~exist(filename, 'dir')
+foldername=dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject02.ds/'); %'/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject02.ds/' has already been downloaded by test4
+if ~exist(foldername, 'dir')
     error('Folder exists in the local copy, but dccnpath() can not find it');
 end
 
-
+rmdir(testdata, 's');
 
 %% Test6: When ft_default.dccnpath is not specified then data should be saved automatically to tempdir
 
+% Download
 ft_default=rmfield(ft_default,'dccnpath');
 
-filename=dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds/BadChannels'); %'/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds/BadChannels' has already been downloaded by test2
+delete(fullfile(tempdir,'data/ftp/test/ctf/Subject01.ds/BadChannels'));
+
+filename=dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds/BadChannels'); 
 if ~exist(filename, 'file') || ~contains(filename,tempdir)
     error('Data are not automatically downloaded to tempdir when ft_default.dccnpath is not specified');
+end
+
+
+% Do not download
+ft_default=rmfield(ft_default,'dccnpath');
+
+filename=dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds/BadChannels'); 
+if ~exist(filename, 'file') || ~contains(filename,tempdir)
+    error('Data exist in the tempdir, but dccnpath() can not find it');
 end
 

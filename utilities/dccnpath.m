@@ -1,24 +1,36 @@
 function filename = dccnpath(filename)
 
-% DCCNPATH manages the filename and path for test files. It helps to locate and read
-% test file from Linux, Windows or macOS computers both inside and outside the DCCN.
-%
-% Use as
-%  filename = dccnpath(filename)
-%
-% The default location for FieldTrip and its test data is '/home/common/matlab/fieldtrip'.
-% This function will search-and-replace this string by the location that applies to
-% your computer. It will replace '/home' by 'H:' and will replace forward by backward slashes.
-%
-% In case you have a local copy, you can override the default location by
-%   global ft_default
-%   ft_default.dccnpath = '/your/copy';
-%
-% Note that most test scripts expect data located at /home/common/matlab/fieldtrip/data/ftp
-% or /home/common/matlab/fieldtrip/data/test, hence you should organize your local
-% copy of the data under /your/copy/data/ftp and /your/copy/data/test.
-%
-% Copyright (C) 2012-2022, Donders Centre for Cognitive Neuroimaging, Nijmegen, NL
+% DCCNPATH manages the filename and path for test files. It helps to locate and read test file from Linux, Windows or macOS computers both inside and outside the DCCN.
+% 
+% Use as 
+%   filename = dccnpath(filename)
+% 
+% Inputs:
+%   filename - The relative path to the test data file within the DCCN cluster.
+%              Examples:
+%              - For public test data: '/home/common/matlab/fieldtrip/data/ftp/testdata' 
+%              - For private test data: '/home/common/matlab/fieldtrip/data/test/testdata' 
+% 
+% Outputs:
+%   filename - string that corresponds to the local path that the test data
+%   are saved.
+% 
+% The default location for FieldTrip and its test data is '/home/common/matlab/fieldtrip'. This function will search-and-replace this string by the location that applies to your computer. It will replace '/home' by 'H:' and will replace forward by backward slashes. 
+% 
+% In case you have a local copy:
+% 
+% - You should override the default location by 
+%    global ft_default 
+%    ft_default.dccnpath = '/your/copy'; 
+% 
+%    If you do not define ft_default.dccnpath manually then dccnpath will
+%    automatically use: 
+%    ft_default.dccnpath = tempdir;
+% 
+% - If the test data are not downloaded inside '/your/copy', then dccnpath
+%   will automatically download them.
+% 
+% Copyright (C) 2012-2023, Donders Centre for Cognitive Neuroimaging, Nijmegen, NL
 
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -101,12 +113,8 @@ end
 
 % alternative2 allows for the user to specify the path in the global ft_default variable
 % see https://github.com/fieldtrip/fieldtrip/issues/1998
-if isfield(ft_default, 'dccnpath')
-    if ~ispc
-        alternative2 = strrep(alternative0, '/home/common/matlab/fieldtrip', ft_default.dccnpath);
-    else
-        alternative2 = strrep(alternative0, 'H:\common\matlab\fieldtrip', ft_default.dccnpath);
-    end
+if isfield(ft_default, 'dccnpath')    
+        alternative2 = ft_default.dccnpath;      
 else % save the test data automatically in the tempdir
     ft_default.dccnpath = tempdir;
     ft_default.dccnpath = ft_default.dccnpath(1:end-1); % we do not want the temppdir to end with a '/' or '\'   
@@ -117,23 +125,22 @@ else % save the test data automatically in the tempdir
     end
 end
 
+% if folder or file doesn't exist or is empty, then download test data
+dirContents = dir(alternative2);
+if ~exist(alternative2, 'file') || ~exist(alternative2, 'dir') || isempty(dirContents(~ismember({dirContents.name}, {'.', '..'}))) 
 
-% if dccnpath's input starts with
-% /home/common/matlab/fieldtrip/data/ftp, download test data if it is not already downloaded.
-if ~exist(alternative2, 'file') || ~exist(alternative2, 'dir')
-
-    if contains(alternative2, 'data/test') || contains(alternative2, 'data\test')
-        warning('Data are private and can not be used if there is no connection to the Donders intranet')
+    if contains(alternative0, 'data/test') || contains(alternative0, 'data\test')
+        error('The test data are private and can not be downloaded from the public download server')
     end
 
    
     % Public data are downloaded from https://download.fieldtriptoolbox.org. So, we need to find the right path to the HTTPS download server
     pattern = 'ftp(.*)';                      
-    datadir = regexp(alternative2, pattern, 'tokens', 'once');          
+    datadir = regexp(alternative0, pattern, 'tokens', 'once');          
     weblocation = strcat("https://download.fieldtriptoolbox.org", datadir);
     weblocation = strrep(weblocation, '\', '/');
     
-    urlContent = webread(weblocation, weboptions('ContentType', 'text')); % Runs a bit slow for large files
+    urlContent = webread(weblocation, weboptions('ContentType', 'text')); 
     
     % Check if the URL corresponds to a folder or file
     if contains(urlContent, '<html') % Folder (HTML content) 
@@ -145,22 +152,21 @@ if ~exist(alternative2, 'file') || ~exist(alternative2, 'dir')
           if ~isfolder(folder)
               mkdir(folder);
           end
+          
+          if isfolder(alternative2)
+              [~, file, fileextension] = fileparts(alternative0);
+              alternative2 = fullfile(alternative2, [file fileextension]);
+          end
                          
           websave(alternative2, weblocation);
     end
 end 
 
-if exist(alternative2, 'file') || exist(alternative2, 'dir') %this "if" just checks if everything went alright. Maybe is not needed
+if exist(alternative2, 'file') || exist(alternative2, 'dir') 
     warning('using local copy %s ', alternative2);
     filename = alternative2;
     return;
 end
-
-
-
-% if dccnpath=incorrect MATLAB gives automatic error:
-% Error using matlab.internal.webservices.HTTPConnector/copyContentToByteArray
-% The server returned the status 404 with message "Not Found" in response to the request to URL
-% https://download.fieldtriptoolbox.org/tutorial/epilepsy/raw/case1/neuromag/case1_cHPI_ra.fif.
-
+    
 end
+
