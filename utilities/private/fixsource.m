@@ -57,7 +57,7 @@ if isfield(source, 'avg')
   end
 end
 
-% convering the trials has precedence over the average
+% converging that the trials has precedence over the average
 if isfield(source, 'trial')
   trial  = source.trial;
   source = rmfield(source,  'trial');
@@ -84,7 +84,7 @@ else
 end
 
 
-% FIXME the code bellow should be repatterned
+% FIXME the code below should be repatterned
 % first get the dimord string
 % then determine the data dimensions
 % then determine the dimensions according to the dimord

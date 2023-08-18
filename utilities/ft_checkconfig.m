@@ -308,7 +308,7 @@ if ~isempty(createtopcfg)
         if silent
           % don't mention it
         elseif loose
-          ft_warning('The field cfg.%s.%s is deprecated, pleae use cfg.%s\n', subname, fieldname{i}, fieldname{i});
+          ft_warning('The field cfg.%s.%s is deprecated, please use cfg.%s\n', subname, fieldname{i}, fieldname{i});
         elseif pedantic
           ft_error('The field cfg.%s.%s is not longer supported, please use cfg.%s\n', subname, fieldname{i}, fieldname{i});
         end
@@ -321,7 +321,7 @@ if ~isempty(createtopcfg)
         if silent
           % don't mention it
         elseif loose
-          ft_warning('The field cfg.%s.%s is deprecated, pleae use cfg.%s\n', subname, fieldname{i}, fieldname{i});
+          ft_warning('The field cfg.%s.%s is deprecated, please use cfg.%s\n', subname, fieldname{i}, fieldname{i});
         elseif pedantic
           ft_error('The field cfg.%s.%s is not longer supported, please use cfg.%s\n', subname, fieldname{i}, fieldname{i});
         end
@@ -347,7 +347,7 @@ end
 % them in a separate substructure.
 %
 % This is to ensure backward compatibility of end-user scripts, FieldTrip functions
-% and documentation that do not use the nested detailled configuration but that use a
+% and documentation that do not use the nested detailed configuration but that use a
 % flat configuration.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if ~isempty(createsubcfg)
@@ -574,7 +574,7 @@ if ~isempty(createsubcfg)
         if silent
           % don't mention it
         elseif loose
-          ft_warning('The field cfg.%s is deprecated, pleae use cfg.%s.%s\n', fieldname{i}, subname, fieldname{i});
+          ft_warning('The field cfg.%s is deprecated, please use cfg.%s.%s\n', fieldname{i}, subname, fieldname{i});
         elseif pedantic
           ft_error('The field cfg.%s is not longer supported, please use cfg.%s.%s\n', fieldname{i}, subname, fieldname{i});
         end
@@ -587,7 +587,7 @@ if ~isempty(createsubcfg)
         if silent
           % don't mention it
         elseif loose
-          ft_warning('The field cfg.%s is deprecated, pleae use cfg.%s.%s\n', fieldname{i}, subname, fieldname{i});
+          ft_warning('The field cfg.%s is deprecated, please use cfg.%s.%s\n', fieldname{i}, subname, fieldname{i});
         elseif pedantic
           ft_error('The field cfg.%s is not longer supported, please use cfg.%s.%s\n', fieldname{i}, subname, fieldname{i});
         end

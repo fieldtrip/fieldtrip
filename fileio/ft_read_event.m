@@ -141,8 +141,13 @@ if iscell(filename)
       end
     end
   end
+  if numel(event)>1
+    event = appendstruct(event{:});
+  else
+    % APPENDSTRUCT fails if there is only one
+    event = event{1};
+  end
   % return the concatenated events
-  event = appendstruct(event{:});
   return
 end
 

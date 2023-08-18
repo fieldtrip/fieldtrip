@@ -120,12 +120,12 @@ end % insideflag
 % whereas it is desired to have consistently the match that is most towards the side of the array
 
 if val>maxarray
-  % return the last occurence of the largest number
+  % return the last occurrence of the largest number
   [dum, indx] = max(flipud(array));
   indx = numel(array) + 1 - indx;
 
 elseif val<minarray
-  % return the first occurence of the smallest number
+  % return the first occurrence of the smallest number
   [dum, indx] = min(array);
 
 else
@@ -137,7 +137,7 @@ else
   %     precision = (maxarray-minarray) / 10^6;
   %   end
   %
-  %   % return the first occurence of the nearest number
+  %   % return the first occurrence of the nearest number
   %   [dum, indx] = min(round((abs(array(:) - val)./precision)).*precision);
 
   % use find instead, see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1943

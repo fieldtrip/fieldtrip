@@ -12,7 +12,7 @@ function offset = time2offset(time, fsample)
 % the end of the trials, and the third column contains the offset of
 % the trigger with respect to the trial. An offset of 0 means that
 % the first sample of the trial corresponds to the trigger. A positive
-% offset indicates that the first sample is later than the triger, a
+% offset indicates that the first sample is later than the trigger, a
 % negative offset indicates a trial beginning before the trigger.
 
 % Copyright (C) 2005, Robert Oostenveld

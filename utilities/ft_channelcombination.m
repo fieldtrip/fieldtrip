@@ -100,7 +100,7 @@ if ~(numel(channelcmb)==2 && iscell(channelcmb{1}) && iscell(channelcmb{2})) &&.
 else
   % a combination is made for each row of the input selection after
   % translating the channel group (such as 'all') to the proper channel names
-  % and within each set, double occurences and autocombinations are removed
+  % and within each set, double occurrences and autocombinations are removed
   
   selmat = false(numel(datachannel));
   for sel=1:size(channelcmb,1)

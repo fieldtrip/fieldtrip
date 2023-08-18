@@ -11,8 +11,8 @@ function [comp] = ft_datatype_comp(comp, varargin)
 % An example of a decomposed raw data structure with 100 components that resulted from
 % a 151-channel MEG recording is shown here:
 %
-%           topo: [151x100 double]  the compoment topographies
-%       unmixing: [100x151 double]  the compoment unmixing matrix
+%           topo: [151x100 double]  the component topographies
+%       unmixing: [100x151 double]  the component unmixing matrix
 %      topolabel: {151x1 cell}      the channel labels (e.g. 'MRC13')
 %          label: {100x1 cell}      the component labels (e.g. 'runica001')
 %           time: {1x10 cell}       the time axis [1*Ntime double] per trial
