@@ -105,7 +105,9 @@ end
 
 
 % Do not download
-ft_default=rmfield(ft_default,'dccnpath');
+if isfield(ft_default,'dccnpath')
+    ft_default=rmfield(ft_default,'dccnpath');
+end 
 
 filename=dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds/BadChannels'); 
 if ~exist(filename, 'file') || ~contains(filename,tempdir)
