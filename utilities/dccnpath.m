@@ -79,14 +79,17 @@ if strcmp(alternative1, 'test')
   % this should not be used when the filename is only "test", since that is too generic
   alternative1 = '';
   warning('You are currently in the test directory, change directory so dccnpath can function properly')
-elseif endsWith(pwd, alternative1)
-  % exist(alternative1, 'file') also returns 7 in case the present working directory name matches alternative1
-  % this is not the match we want
+% elseif endsWith(pwd, alternative1)
+%   % exist(alternative1, 'file') also returns 7 in case the present working directory name matches alternative1
+%   % this is not the match we want
+%   alternative1 = '';
+elseif strcmp(alternative1, 'ctf')
+  % this should not be used when the filename is only "ctf", since that is too generic 
   alternative1 = '';
 end
 
 if exist(alternative1, 'file') || exist(alternative1, 'dir') 
-    if ~isempty(x) % if alternative1 is a file
+    if ~isempty(x) && ~isequal(x,'.ds') % if alternative1 is a file
       filenamepath = which(alternative1); % output the path that alternative1 is located at
       warning('using present working directory %s', filenamepath);
       filename = filenamepath;
@@ -98,8 +101,8 @@ if exist(alternative1, 'file') || exist(alternative1, 'dir')
         folderPath = '';
         for i = 1:numel(directories)
             currentFolder = directories{i};
-            if exist(fullfile(currentFolder, alternative1), 'dir') == 7
-                folderPath = fullfile(currentFolder, alternative1);
+            if contains(currentFolder, alternative1)
+                folderPath = currentFolder;
                 break;
             end
         end
@@ -165,6 +168,7 @@ end
 if exist(alternative2, 'file') || exist(alternative2, 'dir') 
     warning('using local copy %s ', alternative2);
     filename = alternative2;
+%     ft_default=rmfield(ft_default,'dccnpath');
     return;
 end
     

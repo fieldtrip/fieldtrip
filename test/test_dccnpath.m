@@ -2,8 +2,8 @@ function test_dccnpath
 
 % MEM 2gb
 % WALLTIME 00:10:00
-% DEPENDENCY
-% DATA public private
+% DEPENDENCY dccnpath
+% DATA public
 
 %% Alternative0: Finds the right path for users that have access to the DCCN intranet. It will replace '/home' by 'H:' and will replace forward by backward slashes.
 
