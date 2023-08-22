@@ -1,0 +1,13 @@
+# see https://manpages.ubuntu.com/manpages/impish/man1/codespell.1.html
+
+[codespell]
+skip = .git,*.pdf,*.svg,external,src
+ignore-words-list = ans,cfg,siz,pnt,pos,ori,ext,dum,siz,toi,homogenous,whos,nas,ini,lpa,rpa,als,ali,ars,ari,pls,pli,prs,pri,las,lai,ras,rai,lps,lpi,rps,rpi,asl,ail,asr,air,psl,pil,psr,pir,sal,ial,sar,iar,spl,ipl,spr,ipr,sla,ila,sra,ira,slp,ilp,srp,irp,lsa,lia,rsa,ria,lsp,lip,rsp,rip
+exclude-file = .codespellignorelines
+
+# case sensitive etc as regex
+# ignore-regex = \b(ALS|correctT)\b|n\(ot a
+
+# there is no files option yet: https://github.com/codespell-project/codespell/issues/2758
+# but for now - running codespell only for utilities
+# files = utilites

@@ -68,8 +68,6 @@ if exist(alternative0, 'file') || exist(alternative0, 'dir')
     return;
 end
 
-
-
 % alternative1 allows to test with local files in the present working directory
 % this is often convenient when initially setting up a new test script while the data is not yet uploaded
 [p, f, x] = fileparts(alternative0);

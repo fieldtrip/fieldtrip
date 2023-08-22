@@ -172,7 +172,7 @@ function [pos, tri] = msphere(N)
 % In article <39mrqm$8f1@usenet.ins.cwru.edu>,
 % John Barmann <an311@cleveland.Freenet.Edu> wrote:
 % >
-% >I have a geomety/math/CAD probelm that i can't seem to crack.  I need
+% >I have a geometry/math/CAD problem that i can't seem to crack.  I need
 % >to space 14,000 to 15,000 holes on a sphere.  The sphere has a diameter
 % >of 8.125 inches and is hollow.  The holes are to be .098 inches in
 %

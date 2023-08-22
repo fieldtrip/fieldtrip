@@ -51,7 +51,7 @@ function [H] = quaternion(q)
 % $Id$
 
 if numel(q)==6
-  % this is used a lot by the Neuromag/Elekta/Megin software, where the first element is left out and a rigid body transformation wothout scaling is used.
+  % this is used a lot by the Neuromag/Elekta/Megin software, where the first element is left out and a rigid body transformation without scaling is used.
   % see also https://github.com/mne-tools/mne-python/blob/maint/0.15/mne/transforms.py#L1137
   q0 = sqrt(1 - q(1)^2 - q(2)^2 - q(3)^2);
   q = [q0 q];

@@ -168,7 +168,7 @@ if trlnum>1
             ft_error('some of the requested samples occur twice in the data and have conflicting values');
           end
           % Otherwise rises a warning and exits the loop.
-          ft_warning('some of the requested samples occur twice in the data and have conflicting values, using only the last occurence of each sample');
+          ft_warning('some of the requested samples occur twice in the data and have conflicting values, using only the last occurrence of each sample');
           break
         end
       end

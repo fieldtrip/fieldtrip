@@ -51,10 +51,10 @@ end
 
 
 if (length(dim)>ndims(A)||any(dim>ndims(A)))
-  ft_error('dim, or one of its contents are larger than the number of dimentions in A');
+  ft_error('dim, or one of its contents are larger than the number of dimensions in A');
 end
 if (~isequal(unique(dim),sort(dim)))
-  ft_error('dim must be unique, every dimention can be addressed only once');
+  ft_error('dim must be unique, every dimension can be addressed only once');
 end
 
 N = ndims(A);
