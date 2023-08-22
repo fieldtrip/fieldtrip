@@ -20,7 +20,7 @@ filename=dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/edf/testAlphaIR20
     end
 catch
     hostname=gethostname();
-    if startsWith(hostname, 'DCCN')
+    if startsWith(hostname, 'DCCN') || startsWith(hostname, 'dccn')
         error('dccnpath() does not find the right DCCN path')
     end
 end
@@ -101,7 +101,7 @@ delete(fullfile(tempdir,'data/ftp/test/ctf/Subject01.ds/ClassFile.cls'));
 
 filename=dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds/ClassFile.cls'); 
 hostname=gethostname();
-if ~startsWith(hostname, 'DCCN') %this test applies to external contributors and not for users in the DCCN cluster
+if ~startsWith(hostname, 'DCCN') && ~startsWith(hostname, 'dccn') %this test applies to external contributors and not for users in the DCCN cluster
    if ~exist(filename, 'file') || ~contains(filename,tempdir)
          error('Data are not automatically downloaded to tempdir when ft_default.dccnpath is not specified');
    end
@@ -113,7 +113,7 @@ if isfield(ft_default,'dccnpath')
 end 
 
 filename=dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds/ClassFile.cls'); 
-if ~startsWith(hostname, 'DCCN') %this test applies to external contributors and not for users in the DCCN cluster
+if ~startsWith(hostname, 'DCCN') && ~startsWith(hostname, 'dccn') %this test applies to external contributors and not for users in the DCCN cluster
    if ~exist(filename, 'file') || ~contains(filename,tempdir)
          error('Data are not automatically downloaded to tempdir when ft_default.dccnpath is not specified');
    end
