@@ -5,25 +5,26 @@ function test_dccnpath
 % DEPENDENCY dccnpath
 % DATA public
 
-%% Alternative0: Finds the right path for users that have access to the DCCN intranet. It will replace '/home' by 'H:' and will replace forward by backward slashes.
+%% Alternative0: Finds the right path for users that have access to the DCCN computer cluster. It will replace '/home' by 'H:' and will replace forward by backward slashes.
 
-% % This can only run by people that have access to the DCCN intranet
-% filename=dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/edf/testAlphaIR20170321-0.edf'); 
-%     if ispc
-%         if ~strcmp(filename, 'H:\common\matlab\fieldtrip\data\ftp\test\edf\testAlphaIR20170321-0.edf')
-%             error('Alternative0 does not work');
-%         end
-%     else
-%         if ~strcmp(filename, '/home/common/matlab/fieldtrip/data/ftp/test/edf/testAlphaIR20170321-0.edf')
-%             error('Alternative0 does not work');
-%         end
-%     end
-
-% This can work for everyone
-filename=dccnpath(tempdir);
-if ~strcmp(filename, tempdir)
-     error('dccnpath() does not find the right DCCN path');
+try
+filename=dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/edf/testAlphaIR20170321-0.edf'); 
+    if ispc
+        if ~strcmp(filename, 'H:\common\matlab\fieldtrip\data\ftp\test\edf\testAlphaIR20170321-0.edf')
+            error('Alternative0 does not work');
+        end
+    else
+        if ~strcmp(filename, '/home/common/matlab/fieldtrip/data/ftp/test/edf/testAlphaIR20170321-0.edf')
+            error('Alternative0 does not work');
+        end
+    end
+catch
+    hostname=gethostname();
+    if startsWith(hostname, 'DCCN')
+        error('dccnpath() does not find the right DCCN path')
+    end
 end
+
 
 %% Alternative1: Allows to test with local files in the present working directory
 
@@ -35,7 +36,6 @@ end
 
 
 %% Alternative2: It downloads test data to the local computer, if test data is not already downloaded. It has 6 different tests that are listed below
-
 
 %% Test1: When ft_default.dccnpath is given by the user, dccnpath() should always select alternative2 (this is not done now)
 
@@ -56,28 +56,28 @@ mkdir(testdata);
 global ft_default
 ft_default.dccnpath=testdata;
 
-filename=dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds/BadChannels');
+filename=dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds/ClassFile.cls');
 if ~exist(filename, 'file')
     error('File is not downloaded from the HTTPS FieldTrip server');
 end
 
 
 %% Test3: File exists in the local copy and it doesn't get downloaded
-ft_default.dccnpath=fullfile(testdata,'BadChannels');
+ft_default.dccnpath=fullfile(testdata,'ClassFile.cls');
 
-filename=dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds/BadChannels'); %'/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds/BadChannels' has already been downloaded by test2
+filename=dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds/ClassFile.cls'); %'/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds/ClassFile.cls' has already been downloaded by test2
 if ~exist(filename, 'file')
     error('File exists in the local copy, but dccnpath() can not find it');
 end
  
-delete(ft_default.dccnpath)
+delete(ft_default.dccnpath);
 
 %% Test4: Downloading a folder from the HTTPS download server 
 
 ft_default.dccnpath=testdata;
 
 foldername=dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject02.ds/');
-if ~exist(foldername, 'dir') % Here I check only if the main dir exists and not if this dir has the contents that had to be downloaded 
+if ~exist(foldername, 'dir') % Here I check only if the main dir exists and not if this dir has the necessary contents. 
     error('Folder is not downloaded from the HTTPS FieldTrip server');
 end
 
@@ -89,6 +89,7 @@ if ~exist(foldername, 'dir')
     error('Folder exists in the local copy, but dccnpath() can not find it');
 end
 
+
 rmdir(testdata, 's');
 
 %% Test6: When ft_default.dccnpath is not specified then data should be saved automatically to tempdir
@@ -96,9 +97,9 @@ rmdir(testdata, 's');
 % Download
 ft_default=rmfield(ft_default,'dccnpath');
 
-delete(fullfile(tempdir,'data/ftp/test/ctf/Subject01.ds/BadChannels'));
+delete(fullfile(tempdir,'data/ftp/test/ctf/Subject01.ds/ClassFile.cls'));
 
-filename=dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds/BadChannels'); 
+filename=dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds/ClassFile.cls'); 
 if ~exist(filename, 'file') || ~contains(filename,tempdir)
     error('Data are not automatically downloaded to tempdir when ft_default.dccnpath is not specified');
 end
@@ -109,7 +110,7 @@ if isfield(ft_default,'dccnpath')
     ft_default=rmfield(ft_default,'dccnpath');
 end 
 
-filename=dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds/BadChannels'); 
+filename=dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds/ClassFile.cls'); 
 if ~exist(filename, 'file') || ~contains(filename,tempdir)
     error('Data exist in the tempdir, but dccnpath() can not find it');
 end
