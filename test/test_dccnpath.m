@@ -100,10 +100,12 @@ ft_default=rmfield(ft_default,'dccnpath');
 delete(fullfile(tempdir,'data/ftp/test/ctf/Subject01.ds/ClassFile.cls'));
 
 filename=dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds/ClassFile.cls'); 
-if ~exist(filename, 'file') || ~contains(filename,tempdir)
-    error('Data are not automatically downloaded to tempdir when ft_default.dccnpath is not specified');
+hostname=gethostname();
+if ~startsWith(hostname, 'DCCN') %this test applies to external contributors and not for users in the DCCN cluster
+   if ~exist(filename, 'file') || ~contains(filename,tempdir)
+         error('Data are not automatically downloaded to tempdir when ft_default.dccnpath is not specified');
+   end
 end
-
 
 % Do not download
 if isfield(ft_default,'dccnpath')
@@ -111,7 +113,9 @@ if isfield(ft_default,'dccnpath')
 end 
 
 filename=dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds/ClassFile.cls'); 
-if ~exist(filename, 'file') || ~contains(filename,tempdir)
-    error('Data exist in the tempdir, but dccnpath() can not find it');
+if ~startsWith(hostname, 'DCCN') %this test applies to external contributors and not for users in the DCCN cluster
+   if ~exist(filename, 'file') || ~contains(filename,tempdir)
+         error('Data are not automatically downloaded to tempdir when ft_default.dccnpath is not specified');
+   end
 end
 
