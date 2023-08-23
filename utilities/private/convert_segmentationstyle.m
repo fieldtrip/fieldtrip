@@ -10,23 +10,36 @@ switch style
   case 'indexed'
     
     % convert the probabilistic representation to an indexed representation
-    threshold   = 0.5;
-    tissue      = zeros(dim);
-    tissuelabel = cell(1,numel(fn));
     
+    alltissue = zeros(prod(segmentation.dim), length(fn));
     for i=1:length(fn)
-      tmp = segmentation.(fn{i})>threshold;
-      if any(tissue(tmp(:)))
-        ft_error('overlapping tissue probability maps cannot be converted to an indexed representation');
-        % FIXME in principle it is possible to represent two tissue types at one voxel
-      else
-        tissue(tmp) = i;
-        tissuelabel{i} = fn{i};
-      end
+      alltissue(:,i) = reshape(segmentation.(fn{i}), prod(segmentation.dim), 1);
     end
+    % for each voxel take the most likely tissue
+    [val, tissue] = max(alltissue, [], 2);
+    tissue(val==0) = 0;
+    
     segmentation             = rmfield(segmentation, fn);
-    segmentation.tissue      = tissue;
-    segmentation.tissuelabel = tissuelabel;
+    segmentation.tissue      = reshape(tissue, segmentation.dim);
+    segmentation.tissuelabel = fn;
+    
+%     threshold   = 0.5;
+%     tissue      = zeros(dim);
+%     tissuelabel = cell(1,numel(fn));
+%     
+%     for i=1:length(fn)
+%       tmp = segmentation.(fn{i})>threshold;
+%       if any(tissue(tmp(:)))
+%         ft_error('overlapping tissue probability maps cannot be converted to an indexed representation');
+%         % FIXME in principle it is possible to represent two tissue types at one voxel
+%       else
+%         tissue(tmp) = i;
+%         tissuelabel{i} = fn{i};
+%       end
+%     end
+%     segmentation             = rmfield(segmentation, fn);
+%     segmentation.tissue      = tissue;
+%     segmentation.tissuelabel = tissuelabel;
     
   case 'probabilistic'
     % convert the indexed representation to a probabilistic one
