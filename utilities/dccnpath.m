@@ -1,37 +1,35 @@
 function filename = dccnpath(filename)
 
-% DCCNPATH manages the filename and path for test files. It helps to locate and read test file from Linux, Windows or macOS computers both inside and outside the DCCN.
-% 
-% Use as 
+% DCCNPATH manages the filename and path for test files. It helps to locate and read
+% test file from Linux, Windows or macOS computers both inside and outside the DCCN.
+%
+% Use as
 %   filename = dccnpath(filename)
-% 
-% Inputs:
-%   filename - The relative path to the test data file within the DCCN cluster.
-%              Examples:
-%              - For public test data: '/home/common/matlab/fieldtrip/data/ftp/testdata' 
-%              - For private test data: '/home/common/matlab/fieldtrip/data/test/testdata' 
-% 
-% Outputs:
-%   filename - string that corresponds to the local path that the test data
-%   are saved.
-% 
-% The default location for FieldTrip and its test data is '/home/common/matlab/fieldtrip'. This function will search-and-replace this string by the location that applies to your computer. It will replace '/home' by 'H:' and will replace forward by backward slashes. 
-% 
-% In case you have a local copy:
-% 
-% - You should override the default location by 
-%    global ft_default 
-%    ft_default.dccnpath = '/your/copy'; 
-% 
-%    If you do not define ft_default.dccnpath manually then dccnpath will
-%    automatically use: 
-%    ft_default.dccnpath = tempdir;
-% 
-% - If the test data are not downloaded inside '/your/copy', then dccnpath
-%   will automatically download them.
-% 
-% Copyright (C) 2012-2023, Donders Centre for Cognitive Neuroimaging, Nijmegen, NL
+% where the input filename corresponds to the test data on the DCCN cluster and the
+% output filename corresponds to the local file including the full path where the
+% test data is available.
+%
+% The test data location on the DCCN cluster is '/home/common/matlab/fieldtrip/data'
+% and the specification of the input filename MUST start with this.
+%
+% This function will search-and-replace the location on the DCCN cluster by the
+% location that applies to your computer. If needed, it will replace '/home' by 'H:'
+% and will replace forward by backward slashes.
+%
+% In case you have a local copy of the data, or if you are inside the DCCN and have
+% mounted the '/home' drive on another letter than 'H:', you should override the
+% default location using
+%    global ft_default
+%    ft_default.dccnpath = '/your/copy';
+%
+% If you do not have a local copy and do not define ft_default.dccnpath manually,
+% then dccnpath will automatically use a temporary directory and try to download the
+% data.
+%
+% See also WHICH, WEBSAVE
 
+% Copyright (C) 2012-2023, Donders Centre for Cognitive Neuroimaging, Nijmegen, NL
+%
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
 %
@@ -52,8 +50,10 @@ function filename = dccnpath(filename)
 
 global ft_default
 
+% it must always start with this
+assert(startsWith(filename, '/home/common/matlab/fieldtrip/data'));
 
-% alternative0 allows to test when in the DCCN cluster
+% alternative0 applies when in the DCCN cluster
 if ispc
   alternative0 = strrep(filename,'/home','H:');
   alternative0 = strrep(alternative0,'/','\');
@@ -63,112 +63,123 @@ else
 end
 
 if exist(alternative0, 'file') || exist(alternative0, 'dir')
-    warning('using default DCCN path %s', alternative0);
-    filename = alternative0;
-    return;
+  ft_notice('using default DCCN path %s', alternative0);
+  filename = alternative0;
+  return
 end
 
-% alternative1 allows to test with local files in the present working directory
+% alternative1 applies with local files in the present working directory
 % this is often convenient when initially setting up a new test script while the data is not yet uploaded
 [p, f, x] = fileparts(alternative0);
 alternative1 = [f x];
 
 if strcmp(alternative1, 'test')
   % this should not be used when the filename is only "test", since that is too generic
+  warning('the name "test" is too generic')
   alternative1 = '';
-  warning('You are currently in the test directory, change directory so dccnpath can function properly')
-% elseif endsWith(pwd, alternative1)
-%   % exist(alternative1, 'file') also returns 7 in case the present working directory name matches alternative1
-%   % this is not the match we want
-%   alternative1 = '';
 elseif strcmp(alternative1, 'ctf')
-  % this should not be used when the filename is only "ctf", since that is too generic 
+  % this should not be used when the filename is only "ctf", since that is too generic
+  warning('the name "ctf" is too generic')
   alternative1 = '';
 end
 
-if exist(alternative1, 'file') || exist(alternative1, 'dir') 
-    if ~isempty(x) && ~isequal(x,'.ds') % if alternative1 is a file
-      filenamepath = which(alternative1); % output the path that alternative1 is located at
-      warning('using present working directory %s', filenamepath);
-      filename = filenamepath;
-      return;
-    else  % if alternative1 is a folder
-        searchPath = path; % Get the MATLAB search path
-        directories = strsplit(searchPath, pathsep); % Split the search path into individual directories
-        
-        folderPath = '';
-        for i = 1:numel(directories)
-            currentFolder = directories{i};
-            if contains(currentFolder, alternative1)
-                folderPath = currentFolder;
-                break;
-            end
-        end
-        warning('using present working directory %s', folderPath);
-        filename = folderPath;
-        return;
-    end 
-end
-
-
-
-% alternative2 allows for the user to specify the path in the global ft_default variable
-% see https://github.com/fieldtrip/fieldtrip/issues/1998
-if isfield(ft_default, 'dccnpath')    
-        alternative2 = ft_default.dccnpath;      
-else % save the test data automatically in the tempdir
-    ft_default.dccnpath = tempdir;
-    ft_default.dccnpath = ft_default.dccnpath(1:end-1); % we do not want the temppdir to end with a '/' or '\'   
-    if ~ispc
-        alternative2 = strrep(alternative0, '/home/common/matlab/fieldtrip', ft_default.dccnpath);
-    else
-        alternative2 = strrep(alternative0, 'H:\common\matlab\fieldtrip', ft_default.dccnpath);
-    end
-end
-
-% if folder or file doesn't exist or is empty, then download test data
-dirContents = dir(alternative2);
-if ~exist(alternative2, 'file') || ~exist(alternative2, 'dir') || isempty(dirContents(~ismember({dirContents.name}, {'.', '..'}))) 
-
-    if contains(alternative0, 'data/test') || contains(alternative0, 'data\test')
-        error('The test data are private and can not be downloaded from the public download server')
-    end
-
-   
-    % Public data are downloaded from https://download.fieldtriptoolbox.org. So, we need to find the right path to the HTTPS download server
-    pattern = 'ftp(.*)';                      
-    datadir = regexp(alternative0, pattern, 'tokens', 'once');          
-    weblocation = strcat("https://download.fieldtriptoolbox.org", datadir);
-    weblocation = strrep(weblocation, '\', '/');
-    
-    urlContent = webread(weblocation, weboptions('ContentType', 'text')); 
-    
-    % Check if the URL corresponds to a folder or file
-    if contains(urlContent, '<html') % Folder (HTML content) 
-          recursiveDownload(weblocation, alternative2);
-    else % File
-    
-          % Create the necessary directories if they do not exist
-          [folder, ~, ~] = fileparts(alternative2); 
-          if ~isfolder(folder)
-              mkdir(folder);
-          end
-          
-          if isfolder(alternative2)
-              [~, file, fileextension] = fileparts(alternative0);
-              alternative2 = fullfile(alternative2, [file fileextension]);
-          end
-                         
-          websave(alternative2, weblocation);
-    end
-end 
-
-if exist(alternative2, 'file') || exist(alternative2, 'dir') 
-    warning('using local copy %s ', alternative2);
-    filename = alternative2;
-%     ft_default=rmfield(ft_default,'dccnpath');
+if exist(alternative1, 'file') || exist(alternative1, 'dir')
+  if ~isempty(x) && ~isequal(x,'.ds')   % if alternative1 is a file
+    filenamepath = which(alternative1); % also output the path that alternative1 is located at
+    ft_notice('using present working directory %s', filenamepath);
+    filename = filenamepath;
     return;
-end
-    
+  else                 % if alternative1 is a folder
+    searchPath = path; % get the MATLAB search path
+    directories = strsplit(searchPath, pathsep); % split the search path into individual directories
+
+    folderPath = '';
+    for i = 1:numel(directories)
+      currentFolder = directories{i};
+      if contains(currentFolder, alternative1)
+        folderPath = currentFolder;
+        break
+      end
+    end
+    warning('using present working directory %s', folderPath);
+    filename = folderPath;
+    return
+  end
 end
 
+% alternative2 applies when specified ft_default.dccnpath
+% see https://github.com/fieldtrip/fieldtrip/issues/1998
+
+if ~isfield(ft_default, 'dccnpath') || isempty(ft_default.dccnpath)
+  ft_notice('using a temporary directory')
+  ft_default.dccnpath = tempdir;
+end
+
+% we do not want it to end with a '/' or '\'
+strip(ft_default.dccnpath, 'right', '/');
+strip(ft_default.dccnpath, 'right', '\');
+
+if ~ispc
+  alternative2 = strrep(alternative0, '/home/common/matlab/fieldtrip/data', ft_default.dccnpath);
+else
+  alternative2 = strrep(alternative0, 'H:\common\matlab\fieldtrip\data', ft_default.dccnpath);
+end
+
+if exist(alternative2, 'file')
+  ft_notice('using local copy %s ', alternative2);
+  filename = alternative2;
+  return
+
+elseif isfolder(alternative2) && ~isemptydir(alternative2)
+  ft_notice('using local copy %s ', alternative2);
+  filename = alternative2;
+  return
+
+else
+  % if the file doesn't exist or the folder is empty, then download test data
+  % see also UNTAR, UNZIP, GUNZIP, which can download on the fly
+
+  if contains(alternative2, 'data/test') || contains(alternative2, 'data\test')
+    error('the test data are private and can not be downloaded')
+  end
+
+  % public data are downloaded from https://download.fieldtriptoolbox.org
+  % so, we need to find the right path to the HTTPS download server
+  pattern = 'ftp(.*)';
+  datadir = regexp(alternative0, pattern, 'tokens', 'once');
+  weblocation = strcat("https://download.fieldtriptoolbox.org", datadir);
+  weblocation = strrep(weblocation, '\', '/');
+
+  urlContent = webread(weblocation, weboptions('ContentType', 'text'));
+
+  if contains(urlContent, '<html')
+    % the URL corresponds to a folder
+    ft_notice('downloading recursively from %s', weblocation);
+    recursive_download(weblocation, alternative2);
+    filename = alternative2;
+
+  else
+    % the URL corresponds to a file
+    % create the necessary directories if they do not exist
+    [p, f, x] = fileparts(alternative2);
+    if ~isfolder(p)
+      mkdir(p);
+    end
+
+    if isfolder(alternative2)
+      [p, f, x] = fileparts(alternative0);
+      alternative2 = fullfile(alternative2, [f x]);
+    end
+
+    ft_notice('downloading recursively from %s', weblocation);
+    websave(alternative2, weblocation);
+    filename = alternative2;
+  end
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function bool = isemptydir(dirName)
+dirContents = dir(dirName);
+bool = ~isempty(dirContents(~ismember({dirContents.name}, {'.', '..'})));
