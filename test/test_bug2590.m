@@ -5,7 +5,7 @@ function test_bug2590
 % DEPENDENCY ft_removetemplateartifact ft_definetrial ft_artifact_ecg ft_preprocessing ft_timelockanalysis
 % DATA public
 
-clear all
+% clear all
 close all
 
 cd(dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf'));
