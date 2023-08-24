@@ -41,6 +41,7 @@ jobs:
       - name: Create comment with suggested tests
         uses: thollander/actions-comment-pull-request@v2
         with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           message: |
             Hello world ! :wave:
           
