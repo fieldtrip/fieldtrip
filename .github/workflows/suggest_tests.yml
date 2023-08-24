@@ -1,7 +1,7 @@
 name: Suggest tests
           
 on:
-  pull_request:
+  pull_request_target:
 
 jobs:
   suggest-test:
@@ -39,8 +39,9 @@ jobs:
           cat ./comment
 
       - name: Create comment with suggested tests
-        uses: peter-evans/create-or-update-comment@v3.0.2
+        uses: thollander/actions-comment-pull-request@v2
         with:
-          issue-number: ${{ github.event.number }} 
-          body-path: ./comment
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          message: |
+            Hello world ! :wave:
           
