@@ -39,9 +39,7 @@ jobs:
           cat ./comment
 
       - name: Create comment with suggested tests
-        uses: thollander/actions-comment-pull-request@v2
+        uses: peter-evans/create-or-update-comment@v3.0.2
         with:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          message: |
-            Hello world ! :wave:
-          
+          issue-number: ${{ github.event.number }} 
+          body-path: ./comment
