@@ -53,7 +53,7 @@ global ft_default
 % it must always start with this
 assert(startsWith(filename, '/home/common/matlab/fieldtrip/data'));
 
-% alternative0 applies when in the DCCN cluster
+% alternative0 applies inside the DCCN network when using the standard data location
 if ispc
   alternative0 = strrep(filename,'/home','H:');
   alternative0 = strrep(alternative0,'/','\');
@@ -68,7 +68,7 @@ if exist(alternative0, 'file') || exist(alternative0, 'dir')
   return
 end
 
-% alternative1 applies with local files in the present working directory
+% alternative1 applies with a local file in the present working directory
 % this is often convenient when initially setting up a new test script while the data is not yet uploaded
 [p, f, x] = fileparts(alternative0);
 alternative1 = [f x];
@@ -107,7 +107,7 @@ if exist(alternative1, 'file') || exist(alternative1, 'dir')
   end
 end
 
-% alternative2 applies when specified ft_default.dccnpath
+% alternative2 applies when ft_default.dccnpath is specified
 % see https://github.com/fieldtrip/fieldtrip/issues/1998
 
 if ~isfield(ft_default, 'dccnpath') || isempty(ft_default.dccnpath)
@@ -119,6 +119,7 @@ end
 strip(ft_default.dccnpath, 'right', '/');
 strip(ft_default.dccnpath, 'right', '\');
 
+% alternative0 is the same as the input filename, but potentially updated for windows
 if ~ispc
   alternative2 = strrep(alternative0, '/home/common/matlab/fieldtrip/data', ft_default.dccnpath);
 else
