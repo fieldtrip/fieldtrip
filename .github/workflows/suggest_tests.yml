@@ -4,11 +4,15 @@ on:
   pull_request:
 
 jobs:
-  create_comment:
+  suggest-test:
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
     steps:
       - name: Check out repository
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 2
 
       - name: Setup Python
         uses: actions/setup-python@v4
@@ -30,8 +34,12 @@ jobs:
         run: |
           python .github/scripts/suggest_tests.py ${{ steps.changed-files.outputs.all_changed_files }} > ./comment
 
+      - name: Show suggested tests
+        run: |
+          cat ./comment
+
       - name: Create comment with suggested tests
-        uses: peter-evans/create-or-update-comment@v3
+        uses: peter-evans/create-or-update-comment@v3.0.2
         with:
           issue-number: ${{ github.event.number }} 
           body-path: ./comment
