@@ -2589,7 +2589,16 @@ switch headerformat
     end
     hdr.label = hdr.label(:);
     hdr.nChans = length(hdr.label);
-
+    
+  case {'QZFM_UCL'}
+      % Use the opm_fil function
+      hdr = opm_fil(filename);
+      % Fix the hdr.chantype using ft_chantype
+      hdr.chantype = ft_chantype(hdr);
+      % This is needed so ft_read_header doesn't over-ride with raw BIDS
+      % info
+      readbids = 'no';
+        
   case {'ricoh_ave', 'ricoh_con', 'ricoh_mrk'}
     % header can be read with Ricoh MEG Reader
     hdr = read_ricoh_header(filename);

@@ -236,7 +236,7 @@ elseif isheader && issubfield(input, 'orig.chs.coil_type')
   for sel=find([input.orig.chs.kind]==602)' % Resp
     chantype(sel) = {'respiration'};
   end
-  
+
 elseif ft_senstype(input, 'babysquid74')
   % the name can be something like "MEG 001" or "MEG001" or "MEG 0113" or "MEG0113"
   % i.e. with two or three digits and with or without a space
@@ -308,7 +308,17 @@ elseif ft_senstype(input, 'ctf') && islabel
   chantype(sel) = {'refmag'};             % reference magnetometers
   sel = myregexp('^[GPQR][0-9][0-9]$', label);
   chantype(sel) = {'refgrad'};            % reference gradiometers
-  
+
+elseif isheader && ft_senstype(input,'QZFM_UCL')
+    chantype = input.orig.channels.type;
+    
+    sel = myregexp('^MEGMAG$', chantype);
+    chantype(sel) = {'megmag'};            % magnetometers
+    sel = myregexp('^MEGREFMAG$', chantype);
+    chantype(sel) = {'refmag'};            % reference magnetemeters
+    sel = myregexp('TRIG', chantype);
+    chantype(sel) = {'trigger'};           % trigger channels
+    
 elseif ft_senstype(input, 'bti')
   if isfield(input, 'orig') && isfield(input.orig, 'config')
     configname = {input.orig.config.channel_data.name};

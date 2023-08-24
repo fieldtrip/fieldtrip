@@ -1568,7 +1568,10 @@ switch dataformat
         dat(spikesel(i),j) = dat(spikesel(i),j) + 1;
       end
     end
-    
+   
+  case {'QZFM_UCL'}
+    dat = opm_fil(filename, hdr, begsample, endsample, chanindx);
+
   case 'read_nex_data' % this is an alternative reader for nex files
     dat = read_nex_data(filename, hdr, begsample, endsample, chanindx);
     
