@@ -139,7 +139,7 @@ function [data] = ft_preprocessing(cfg, data)
 %   cfg.export.dataset    = string with the output file name
 %   cfg.export.dataformat = string describing the output file format, see FT_WRITE_DATA
 
-% Copyright (C) 2003-2022, Robert Oostenveld, SMI, FCDC
+% Copyright (C) 2003-2023, Robert Oostenveld, SMI, FCDC
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
