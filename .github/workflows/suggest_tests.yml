@@ -41,6 +41,7 @@ jobs:
       - name: Create comment with suggested tests
         uses: peter-evans/create-or-update-comment@v3.0.2
         with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           issue-number: ${{ github.event.number }} 
           body-path: ./comment
           
