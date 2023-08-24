@@ -32,33 +32,38 @@ catch
 end
 
 %% Alternative1: Test with local files in the present working directory
-
-tmpdir = tempname;
-mkdir(fullfile(tmpdir, 'ftp', 'test', 'edf'));
-cd(fullfile(tmpdir, 'ftp', 'test', 'edf'));
-websave('testAlphaIR20170321-0.edf', 'https://download.fieldtriptoolbox.org/test/edf/testAlphaIR20170321-0.edf');
-
-filename = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/edf/testAlphaIR20170321-0.edf');
-if ~startsWith(filename, tmpdir)
-  error('dccnpath() does not find the right working directory');
+hostname = gethostname();
+if ~startsWith(hostname, 'DCCN') && ~startsWith(hostname, 'dccn') % this test applies to external contributors and not for users in the DCCN cluster
+    tmpdir = tempname;
+    mkdir(fullfile(tmpdir, 'ftp', 'test', 'edf'));
+    cd(fullfile(tmpdir, 'ftp', 'test', 'edf'));
+    websave('testAlphaIR20170321-0.edf', 'https://download.fieldtriptoolbox.org/test/edf/testAlphaIR20170321-0.edf');
+    
+    filename = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/edf/testAlphaIR20170321-0.edf');
+    if ~startsWith(filename, tmpdir)
+      error('dccnpath() does not find the right working directory');
+    end
+    
+    % return to the original directory
+    cd(origdir);
 end
-
-% return to the original directory
-cd(origdir);
 
 %% Alternative2: It downloads test data to the local computer, if test data is not already downloaded. It has 6 different tests that are listed below
 
 %% Test1: When ft_default.dccnpath is given by the user, dccnpath() should always select alternative2 (this is not done now)
 
-% ... continue with the temporary copy from the previous test
-ft_default.dccnpath = tmpdir;
+hostname = gethostname();
+if ~startsWith(hostname, 'DCCN') && ~startsWith(hostname, 'dccn') % this test applies to external contributors and not for users in the DCCN cluster
+    % ... continue with the temporary copy from the previous test
+    ft_default.dccnpath = tmpdir;
+    
+    filename = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/edf/testAlphaIR20170321-0.edf');
+    if ~startsWith(filename, tmpdir)
+      error('dccnpath() does not find the right working directory');
+    end
 
-filename = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/edf/testAlphaIR20170321-0.edf');
-if ~startsWith(filename, tmpdir)
-  error('dccnpath() does not find the right working directory');
+    rmdir(ft_default.dccnpath, 's')
 end
-
-rmdir(ft_default.dccnpath, 's')
 
 %% Test2: Downloading a file from the HTTPS download server
 
@@ -79,7 +84,9 @@ if ~exist(filename, 'file')
   error('File exists in the local copy, but dccnpath() can not find it');
 end
 
-rmdir(ft_default.dccnpath, 's');
+if exist(ft_default.dccnpath,'dir')
+    rmdir(ft_default.dccnpath, 's');
+end
 
 %% Test4: Downloading a folder from the HTTPS download server
 
@@ -100,7 +107,9 @@ if ~exist(foldername, 'dir')
   error('Folder exists in the local copy, but dccnpath() can not find it');
 end
 
-rmdir(ft_default.dccnpath, 's');
+if exist(ft_default.dccnpath,'dir')
+    rmdir(ft_default.dccnpath, 's');
+end
 
 %% Test6: When ft_default.dccnpath is not specified, then data should be saved automatically to tempdir
 
