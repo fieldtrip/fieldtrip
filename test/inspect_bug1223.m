@@ -1,5 +1,7 @@
 function inspect_bug1223
 
+% MEM 3gb
+% WALLTIME 00:10:00
 % DEPENDENCY ft_read_mri ft_sourceplot
 % DATA private
 
