@@ -11,9 +11,8 @@ function [data] = ft_preprocessing(cfg, data)
 % The first input argument "cfg" is the configuration structure, which contains all
 % details for the dataset filename, trials and the preprocessing options.
 %
-% If you are calling FT_PREPROCESSING with only the configuration as first
-% input argument and the data still has to be read from file, you should
-% specify
+% If you are calling FT_PREPROCESSING with only the configuration as first input
+% argument and the data still has to be read from file, you should specify
 %   cfg.dataset      = string with the filename
 %   cfg.trl          = Nx3 matrix with the trial definition, see FT_DEFINETRIAL
 %   cfg.padding      = length (in seconds) to which the trials are padded for filtering (default = 0)
