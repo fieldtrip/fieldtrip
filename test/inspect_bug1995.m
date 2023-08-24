@@ -1,5 +1,7 @@
 function inspect_bug1995
 
+% WALLTIME 00:10:00
+% MEM 3gb
 % DEPENDENCY ft_voumerealign ft_sourceplot
 % DATA private
 

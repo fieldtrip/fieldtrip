@@ -1,5 +1,7 @@
 function inspect_bug3033
 
+% WALLTIME 00:10:00
+% MEM 3gb
 % DEPENDENCY ft_plot_topo ft_databrowser ft_topoplotER
 % DATA private
 
