@@ -61,7 +61,11 @@ end
 % do a basic check whether the senstype, units, and coordinate systems match
 senstype = cell(1,length(varargin));
 for i=1:length(varargin)
-  senstype{i} = ft_senstype(varargin{i});
+  if isfield(varargin{i}, 'chantype') && numel(unique(varargin{i}.chantype))==1
+    senstype{i} = varargin{i}.chantype{1};
+  else
+    senstype{i} = ft_senstype(varargin{i});
+  end
 end
 typematch = all(strcmp(senstype{1}, senstype));
 
