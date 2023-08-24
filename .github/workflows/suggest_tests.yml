@@ -6,6 +6,9 @@ on:
 jobs:
   suggest-test:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
       - name: Check out repository
         uses: actions/checkout@v3
@@ -37,6 +40,7 @@ jobs:
       - name: Create comment with suggested tests
         uses: peter-evans/create-or-update-comment@v3.0.2
         with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
           issue-number: ${{ github.event.number }} 
           body-path: ./comment
           
