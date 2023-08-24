@@ -1,0 +1,38 @@
+name: Suggest tests
+          
+on:
+  pull_request:
+
+jobs:
+  create_comment:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v38
+
+      - name: Show changed files
+        run: |
+          for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
+            echo "$file was changed"
+          done
+
+      - name: Find suggested tests
+        id: find-tests
+        run: |
+          python .github/scripts/suggest_tests.py ${{ steps.changed-files.outputs.all_changed_files }} > ./comment
+
+      - name: Create comment with suggested tests
+        uses: peter-evans/create-or-update-comment@v3
+        with:
+          issue-number: ${{ github.event.number }} 
+          body-path: ./comment
+          
