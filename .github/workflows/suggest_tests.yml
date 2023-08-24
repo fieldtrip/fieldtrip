@@ -2,7 +2,24 @@ name: Suggest tests
           
 on:
   pull_request_target:
-    types: [opened, synchronize, reopened]
+    types:
+      - assigned
+      - unassigned
+      - labeled
+      - unlabeled
+      - opened
+      - edited
+      - closed
+      - reopened
+      - synchronize
+      - converted_to_draft
+      - ready_for_review
+      - locked
+      - unlocked 
+      - review_requested 
+      - review_request_removed 
+      - auto_merge_enabled 
+      - auto_merge_disabled
 
 jobs:
   suggest-test:
