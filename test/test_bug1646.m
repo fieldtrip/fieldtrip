@@ -17,6 +17,9 @@ function test_bug1646
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+[ftver, ftpath] = ft_version;
+templatedir  = fullfile(ftpath, 'template');
+
 % it is not supposed to work with a 3-D array as input
 try
   cfg = [];
@@ -67,7 +70,7 @@ load(fullfile(datadir,'seg4'));
 load(fullfile(datadir,'seg5'));
 load(fullfile(datadir,'seg6'));
 
-atlas = ft_read_atlas(dccnpath('/home/common/matlab/fieldtrip/template/atlas/afni/TTatlas+tlrc.BRIK'));
+atlas = ft_read_atlas(fullfile(templatedir, 'atlas', 'afni', 'TTatlas+tlrc.BRIK'));
 mri = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/Subject01.mri'));
 
 assert(ft_datatype(seg1, 'segmentation'));

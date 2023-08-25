@@ -7,9 +7,12 @@ function test_ft_sourceparcellate
 
 % see also https://github.com/fieldtrip/fieldtrip/issues/1753
 
+[ftver, ftpath] = ft_version;
+templatedir  = fullfile(ftpath, 'template');
+
 %%
 
-atlasfilename   = dccnpath('/home/common/matlab/fieldtrip/template/atlas/aal/ROI_MNI_V4.nii');
+atlasfilename   = fullfile(templatedir, 'atlas', 'aal', 'ROI_MNI_V4.nii');
 
 npos = 38*48*41;
 ntime = 20;

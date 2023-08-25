@@ -5,8 +5,11 @@ function test_ft_meshrealign
 % DEPENDENCY ft_meshrealign ft_read_mri ft_read_sens ft_prepare_mesh
 % DATA no
 
-mrifilename   = dccnpath('/home/common/matlab/fieldtrip/template/headmodel/standard_seg.mat');
-elecfilename   = dccnpath('/home/common/matlab/fieldtrip/template/electrode/standard_1020.elc');
+[ftver, ftpath] = ft_version;
+templatedir  = fullfile(ftpath, 'template');
+
+mrifilename   = fullfile(templatedir, 'headmodel', 'standard_seg.mat');
+elecfilename  = fullfile(templatedir, 'electrode', 'standard_1020.elc');
 
 mri = ft_read_mri(mrifilename);
 cfg        = [];

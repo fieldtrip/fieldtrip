@@ -25,6 +25,9 @@ function test_ft_volumerealign
 
 % path to data
 
+[ftver, ftpath] = ft_version;
+templatedir  = fullfile(ftpath, 'template');
+
 subjectT1  = dccnpath('/home/common/matlab/fieldtrip/data/test/bug1826/T1.nii.gz');
 subjectT2  = dccnpath('/home/common/matlab/fieldtrip/data/test/bug1826/T2.nii.gz');
 
@@ -442,7 +445,7 @@ clear all;
 
 % template T1 (fuzzy)
 
-T1temp = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/external/spm8/templates/T1.nii'));
+T1temp = ft_read_mri(fullfile(ftpath, 'external', 'spm8', 'templates', 'T1.nii'));
 
 % other subject's T1
 
@@ -475,7 +478,7 @@ clear all;
 
 % template T1 (fuzzy)
 
-T1temp = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/external/spm8/templates/T1.nii'));
+T1temp = ft_read_mri(fullfile(ftpath, 'external', 'spm8', 'templates', 'T1.nii'));
 
 % other subject's T1
 

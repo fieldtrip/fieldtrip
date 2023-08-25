@@ -9,6 +9,9 @@ function test_bug1563(datainfo, version)
 % that ft_sourceanalysis seems to not bother about this when using a
 % predefined filter
 
+[ftver, ftpath] = ft_version;
+templatedir  = fullfile(ftpath, 'template');
+
 if nargin<1
   datainfo = ref_datasets;
 end
@@ -49,7 +52,7 @@ cfg.lcmv.fixedori   = 'no';
 source              = ft_sourceanalysis(cfg, timelock);
 
 % template is distributed with spm
-template = dccnpath('/home/common/matlab/fieldtrip/external/spm8/templates/T1.nii');
+template = fullfile(ftpath, 'external', 'spm8', 'templates', 'T1.nii');
 
 source.coordsys = 'mni'; % this can also be determined with ft_determine_coordsys
 
