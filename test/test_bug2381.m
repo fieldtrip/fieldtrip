@@ -6,7 +6,7 @@ function test_bug2381
 % DATA private
 
 %filename = dccnpath(fullfile('/home/common/matlab/fieldtrip/data/test/bug2381','AVG.mat'));
-filename = dccnpath('/home/common/matlab/fieldtrip/data/test/bug2381');
+filename = dccnpath('/home/common/matlab/fieldtrip/data/test/bug2381.mat');
 load(filename);
 
 nsubj = 15;

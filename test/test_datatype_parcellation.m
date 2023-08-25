@@ -9,8 +9,6 @@ function test_datatype_parcellation
 % includes an elaborate discussion to the 2012 version of the
 % segmentation and parcellation structures.
 
-clear all
-
 % construct the data structures that are given as examples in the function help
 [pnt, tri] = mesh_sphere(162);
 

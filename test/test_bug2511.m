@@ -5,7 +5,10 @@ function test_bug2511
 % DEPENDENCY ft_sourceplot ft_read_headshape
 % DATA private
 
-t1 = ft_read_mri(dccnpath('/home/common/matlab/spm8/canonical/single_subj_T1.nii'));
+[ftver, ftpath] = ft_version;
+templatedir = fullfile(ftpath, 'template');
+
+t1 = ft_read_mri(fullfile(templatedir, 'anatomy', 'single_subj_T1.nii'));
 load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2511.mat'));
 
 % loading the data takes quite some time, as it is 4.7GB on disk, which is
