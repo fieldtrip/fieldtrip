@@ -5,11 +5,15 @@ function test_issue1196
 % DEPENDENCY data2bids
 % DATA private
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/issue1196'));
+datadir = dccnpath('/home/common/matlab/fieldtrip/data/test/issue1196');
+bidsdir = fullfile(datadir, 'bids');
 
-if isfolder(dccnpath('/home/common/matlab/fieldtrip/data/test/issue1196/bids'))
-  system(sprintf('rm -rf %s', dccnpath('/home/common/matlab/fieldtrip/data/test/issue1196/bids')));
+if isfolder(bidsdir)
+  % remove the results from the previous run
+  rmdir(bidsdir, 's');
 end
+
+cd(datadir);
 
 %%
 

@@ -5,7 +5,7 @@ function test_bug811
 % DEPENDENCY ft_checkdata spm2fieldtrip
 % DATA private
 
-addpath(dccnpath('/home/common/matlab/spm8'));
+ft_hastoolbox('spm8', 1);
 
 filename = dccnpath('/home/common/matlab/fieldtrip/data/test/bug811/cespm8_LD031286_DOELLER_20100223_01.mat');
 
