@@ -3,7 +3,7 @@ function test_ft_channelselection
 % MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_senstype ref_datasets
-% DATA no
+% DATA private
 
 datasets = ref_datasets;
 
