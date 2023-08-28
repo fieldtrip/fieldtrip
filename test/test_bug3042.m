@@ -1,7 +1,7 @@
 function test_bug3042
 
 % WALLTIME 00:20:00
-% MEM 2gb
+% MEM 1gb
 % DEPENDENCY ft_read_headshape ft_read_atlas
 % DATA private
 

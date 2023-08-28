@@ -1,6 +1,6 @@
 function test_ft_regressconfound
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_regressconfound
 % DATA no

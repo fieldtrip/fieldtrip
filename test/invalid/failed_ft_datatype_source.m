@@ -1,7 +1,7 @@
 function failed_ft_datatype_source
 
 % WALLTIME 24:00:00
-% MEM 4gb
+% MEM 2gb
 % DEPENDENCY ft_sourcegrandaverage ft_selectdata ft_selectdata_new ft_datatype_source ft_math
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

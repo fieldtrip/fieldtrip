@@ -1,7 +1,7 @@
 function test_pull1751
 
 % WALLTIME 00:20:00
-% MEM 3gb
+% MEM 1gb
 % DEPENDENCY ft_nirs_signalqualityindex
 
 % load sample set of data

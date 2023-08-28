@@ -1,6 +1,6 @@
 function test_bug2231
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_read_header ft_preprocessing read_bti_m4d
 % DATA private

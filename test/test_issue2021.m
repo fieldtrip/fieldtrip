@@ -1,7 +1,7 @@
 function test_issue2021
 
 % WALLTIME 00:10:00
-% MEM 4gb
+% MEM 2gb
 % DEPENDENCY ft_preprocessing
 % DATA no
 

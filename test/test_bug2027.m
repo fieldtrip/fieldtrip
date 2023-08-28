@@ -1,6 +1,6 @@
 function test_bug2027
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:20:00
 % DEPENDENCY read_4d_hdr ft_read_header ft_channelselection
 % DATA private

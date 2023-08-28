@@ -1,7 +1,7 @@
 function test_bug3435
 
 % WALLTIME 00:20:00
-% MEM 3gb
+% MEM 1gb
 % DEPENDENCY ft_prepare_mesh prepare_mesh_tetrahedral
 % DATA no
 

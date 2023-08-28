@@ -1,7 +1,7 @@
 function test_bug2511
 
 % WALLTIME 00:20:00
-% MEM 8gb
+% MEM 6gb
 % DEPENDENCY ft_sourceplot ft_read_headshape
 % DATA private
 

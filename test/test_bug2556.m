@@ -1,6 +1,6 @@
 function test_bug2556
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_sourceparcellate ft_checkdata
 % DATA no

@@ -1,6 +1,6 @@
 function test_bug2232
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY gifti ft_read_headshape ft_read_atlas
 % DATA private

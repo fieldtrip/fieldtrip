@@ -1,7 +1,7 @@
 function failed_tutorial_natmeg_dipolefitting
 
 % WALLTIME 00:40:00
-% MEM 10gb
+% MEM 8gb
 % DEPENDENCY
 
 % this script executes the MATLAB content from

@@ -1,7 +1,7 @@
 function failed_tutorial_natmeg_beamforming
 
 % WALLTIME 00:20:00
-% MEM 8gb
+% MEM 6gb
 % DEPENDENCY
 
 % this script executes the MATLAB content from

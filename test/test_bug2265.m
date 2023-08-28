@@ -1,6 +1,6 @@
 function test_bug2265
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_convert_units ft_prepare_sourcemodel
 % DATA no

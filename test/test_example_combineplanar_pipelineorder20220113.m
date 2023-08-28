@@ -1,6 +1,6 @@
 function test_example_combineplanar_pipelineorder
 
-% MEM 4gb
+% MEM 2gb
 % WALLTIME 00:10:00
 % DATA private
 

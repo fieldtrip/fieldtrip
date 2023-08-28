@@ -1,6 +1,6 @@
 filename = dccnpath('/home/common/matlab/fieldtrip/data/test/original/meg/neuromag306/oddball_raw.fif');
 
-% MEM 3gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_trialfun_general
 % DATA private

@@ -1,6 +1,6 @@
 function test_bug1924
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY read_deymed_dat read_deymed_ini ft_filetype ft_read_header ft_read_data ft_read_event
 % DATA private

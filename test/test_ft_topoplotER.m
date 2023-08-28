@@ -1,6 +1,6 @@
 function test_ft_topoplotER
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_topoplotER ft_topoplotTFR ft_topoplotIC
 % DATA private

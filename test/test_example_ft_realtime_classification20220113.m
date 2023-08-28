@@ -1,6 +1,6 @@
 function test_example_realtime_classification
 
-% MEM 8gb
+% MEM 6gb
 % WALLTIME 08:00:00
 % DATA public
 

@@ -1,6 +1,6 @@
 function test_tutorial_beamformingextended20131122
 
-% MEM 8gb
+% MEM 6gb
 % WALLTIME 02:30:00
 % DEPENDENCY ft_sourceanalysis ft_prepare_leadfield
 % DATA public

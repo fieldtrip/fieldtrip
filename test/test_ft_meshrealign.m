@@ -1,7 +1,7 @@
 function test_ft_meshrealign
 
 % WALLTIME 00:10:00
-% MEM 2gb
+% MEM 1gb
 % DEPENDENCY ft_meshrealign ft_read_mri ft_read_sens ft_prepare_mesh
 % DATA no
 

@@ -1,7 +1,7 @@
 function inspect_bug1937
 
 % WALLTIME 00:10:00
-% MEM 3gb
+% MEM 1gb
 % DEPENDENCY ft_connectivitysimulation ft_freqanalysis_mvar qsubfeval qsubget
 % DATA no
 

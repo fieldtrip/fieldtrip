@@ -1,7 +1,7 @@
 function test_bug2569
 
 % WALLTIME 00:10:00
-% MEM 6gb
+% MEM 4gb
 % DEPENDENCY read_wdq_header read_wdq_data read_wdq_event
 % DATA private
 

@@ -1,6 +1,6 @@
 function test_ft_volumelookup
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_volumelookup ft_read_atlas atlas_lookup
 % DATA no

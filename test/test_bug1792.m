@@ -1,6 +1,6 @@
 function test_bug1792
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 
 % this script should not be included in the regression test (yet)

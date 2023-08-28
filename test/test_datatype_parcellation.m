@@ -1,6 +1,6 @@
 function test_datatype_parcellation
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_datatype_parcellation ft_datatype
 % DATA no

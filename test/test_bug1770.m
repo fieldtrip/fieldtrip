@@ -1,6 +1,6 @@
 function test_bug1770
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY read_neuralynx_dma read_neuralynx_ncs
 % DATA private

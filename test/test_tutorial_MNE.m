@@ -1,6 +1,6 @@
 function test_tutorial_MNE
 
-% MEM 4gb
+% MEM 2gb
 % WALLTIME 00:30:00
 % DEPENDENCY ft_volumereslice ft_volumerealign ft_volumesegment
 % DATA public

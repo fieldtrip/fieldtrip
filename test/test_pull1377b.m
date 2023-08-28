@@ -1,6 +1,6 @@
 function test_pull1377b
 
-% MEM 6gb
+% MEM 4gb
 % WALLTIME 01:00:00
 % DEPENDENCY ft_sourceanalysis ft_dipolefitting
 % DATA private

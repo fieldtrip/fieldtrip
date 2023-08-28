@@ -1,7 +1,7 @@
 function test_patchsvd(datadirs)
 
 % WALLTIME 00:30:00
-% MEM 6gb
+% MEM 4gb
 % DEPENDENCY ft_prepare_leadfield
 % DATA public
 

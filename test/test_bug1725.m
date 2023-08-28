@@ -1,6 +1,6 @@
 function test_bug1725
 
-% MEM 3gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_read_atlas ft_prepare_atlas
 % DATA private

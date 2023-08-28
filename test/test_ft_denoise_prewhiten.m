@@ -1,6 +1,6 @@
 function test_ft_denoise_prewhiten
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_denoise_prewhiten
 % DATA no

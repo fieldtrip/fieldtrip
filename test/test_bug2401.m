@@ -1,6 +1,6 @@
 function test_bug2401
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_prepare_headmodel ft_prepare_vol_sens ft_read_headmodel read_ctf_hdm
 % DATA public

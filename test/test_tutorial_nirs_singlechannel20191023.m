@@ -1,7 +1,7 @@
 function test_tutorial_nirs_singlechannel20191023
 
 % WALLTIME 00:10:00
-% MEM 3gb
+% MEM 1gb
 % DEPENDENCY ft_datatype_sens ft_nirs_transform_ODs ft_nirs_prepare_ODtransformation
 % DATA public
 

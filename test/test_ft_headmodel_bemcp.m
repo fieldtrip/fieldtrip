@@ -1,6 +1,6 @@
 function test_ft_headmodel_bemcp
 
-% MEM 12gb
+% MEM 10gb
 % WALLTIME 03:00:00
 % DEPENDENCY ft_headmodel_localspheres ft_prepare_localspheres
 % DATA no

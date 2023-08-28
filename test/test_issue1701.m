@@ -1,7 +1,7 @@
 function test_issue1701
 
 % WALLTIME 00:10:00
-% MEM 3gb
+% MEM 1gb
 % DEPENDENCY ft_debug ft_info ft_notice ft_warning ft_notification
 % DATA no
 

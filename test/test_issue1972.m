@@ -1,7 +1,7 @@
 function test_issue1972
 
 % WALLTIME 00:10:00
-% MEM 4gb
+% MEM 2gb
 % DEPENDENCY ft_definetrial ft_read_event read_trigger
 % DATA private
 

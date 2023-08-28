@@ -1,6 +1,6 @@
 function test_bug1041
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_freqdescriptives memtic memtoc
 % DATA no

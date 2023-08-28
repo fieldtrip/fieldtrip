@@ -1,6 +1,6 @@
 function test_example_getting_started_with_reading_raw_eeg_or_meg_data
 
-% MEM 4gb
+% MEM 2gb
 % WALLTIME 00:10:00
 % DATA public
 

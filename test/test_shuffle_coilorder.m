@@ -1,6 +1,6 @@
 function test_shuffle_coilorder
 
-% MEMORY 3GB
+% MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_prepare_headmodel ft_compute_leadfield
 % DATA no
@@ -79,4 +79,3 @@ plot(lf_sphere * dipmom, lf_singleshell * dipmom, 'go')
 dipmom = [0 0 1]';
 plot(lf_sphere * dipmom, lf_openmeeg * dipmom, 'b.') % should be close to zero
 plot(lf_sphere * dipmom, lf_singleshell * dipmom, 'bo')
-

@@ -1,6 +1,6 @@
 function inspect_ft_select_channel
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_select_channel
 % DATA no

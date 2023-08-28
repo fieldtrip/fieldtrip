@@ -1,6 +1,6 @@
 function test_bug686
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:30:00
 % DEPENDENCY ft_convert_units ft_prepare_headmodel ft_prepare_leadfield ft_prepare_sourcemodel ft_headmodel_openmeeg headsurface
 % DATA no

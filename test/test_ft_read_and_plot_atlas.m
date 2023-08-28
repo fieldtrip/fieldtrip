@@ -1,7 +1,7 @@
 function test_ft_read_and_plot_atlas
 
 % WALLTIME 00:15:00
-% MEM 8gb
+% MEM 6gb
 % DEPENDENCY ft_read_atlas ft_sourceplot
 % DATA private
 

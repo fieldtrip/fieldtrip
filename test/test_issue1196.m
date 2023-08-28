@@ -1,6 +1,6 @@
 function test_issue1196
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:20:00
 % DEPENDENCY data2bids
 % DATA private

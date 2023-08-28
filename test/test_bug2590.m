@@ -1,7 +1,7 @@
 function test_bug2590
 
 % WALLTIME 00:10:00
-% MEM 2gb
+% MEM 1gb
 % DEPENDENCY ft_removetemplateartifact ft_definetrial ft_artifact_ecg ft_preprocessing ft_timelockanalysis
 % DATA public
 
