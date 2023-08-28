@@ -2,7 +2,7 @@ function test_issue2048
 
 % WALLTIME 00:10:00
 % DATA private
-% MEM 2gb
+% MEM 1gb
 
 % test data downloaded from here: https://www.teuniz.net/edf_bdf_testfiles/
 

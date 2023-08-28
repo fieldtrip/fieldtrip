@@ -1,7 +1,7 @@
 function test_bug3473
 
 % WALLTIME 00:30:00
-% MEM 2gb
+% MEM 1gb
 % DEPENDENCY ft_prepare_mesh
 
 addpath(genpath(dccnpath('/home/common/matlab/fieldtrip/data/test/bug3473/cpd')));

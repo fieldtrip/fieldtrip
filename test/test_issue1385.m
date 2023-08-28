@@ -1,6 +1,6 @@
 function test_issue1385
 
-% MEM 4gb
+% MEM 2gb
 % WALLTIME 00:20:00
 % DEPENDENCY ft_sourceplot
 % DATA public

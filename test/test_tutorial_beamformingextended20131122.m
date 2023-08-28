@@ -1,12 +1,15 @@
 function test_tutorial_beamformingextended20131122
 
-% MEM 8gb
+% MEM 6gb
 % WALLTIME 02:30:00
 % DEPENDENCY ft_sourceanalysis ft_prepare_leadfield
 % DATA public
 
 % this test script represents the MATLAB code from http://www.fieldtriptoolbox.org/tutorial/beamformer
 % as downloaded from the wiki on 22 November 2013
+
+[ftver, ftpath] = ft_version;
+templatedir  = fullfile(ftpath, 'template');
 
 load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/sensor_analysis/subjectK.mat'));
 data_combined = ft_appenddata([], data_left, data_right);
@@ -31,7 +34,7 @@ cfg        = [];
 cfg.method = 'singleshell';
 hdm        = ft_prepare_headmodel(cfg, segmentedmri);
 
-template = load(dccnpath('/home/common/matlab/fieldtrip/template/sourcemodel/standard_sourcemodel3d8mm.mat'));
+template = load(fullfile(templatedir, 'sourcemodel', 'standard_sourcemodel3d8mm.mat'));
 
 % inverse-warp the subject specific grid to the template grid
 cfg                = [];
@@ -120,7 +123,7 @@ source_diff.avg.pow = (source_exp.avg.pow ./ source_bsl.avg.pow) - 1;
 source_diff.pos = template.sourcemodel.pos;
 source_diff.dim = template.sourcemodel.dim;
 
-template_mri = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/external/spm8/templates/T1.nii'));
+template_mri = ft_read_mri(fullfile(ftpath, 'external', 'spm8', 'templates', 'T1.nii'));
 
 cfg              = [];
 cfg.voxelcoord   = 'no';
@@ -166,7 +169,7 @@ source_coh_lft      = ft_sourceanalysis(cfg, freq_csd);
 source_coh_lft.pos = template.sourcemodel.pos;
 source_coh_lft.dim = template.sourcemodel.dim;
 
-template_mri = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/external/spm8/templates/T1.nii'));
+template_mri = ft_read_mri(fullfile(ftpath, 'external', 'spm8', 'templates', 'T1.nii'));
 
 cfg              = [];
 cfg.voxelcoord   = 'no';

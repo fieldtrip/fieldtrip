@@ -1,6 +1,6 @@
 function test_tutorial_beamformer(datadir)
 
-% MEM 8gb
+% MEM 6gb
 % WALLTIME 03:30:00
 % DEPENDENCY ft_redefinetrial ft_freqanalysis ft_volumesegment ft_prepare_singleshell ft_sourceanalysis ft_prepare_leadfield ft_sourceinterpolate ft_sourceplot ft_volumenormalise
 % DATA public

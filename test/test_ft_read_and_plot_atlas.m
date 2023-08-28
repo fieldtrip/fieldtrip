@@ -1,7 +1,7 @@
 function test_ft_read_and_plot_atlas
 
 % WALLTIME 00:15:00
-% MEM 8gb
+% MEM 6gb
 % DEPENDENCY ft_read_atlas ft_sourceplot
 % DATA private
 
@@ -98,10 +98,12 @@ cfg.method = 'surface';
 ft_sourceplot(cfg, atlas, pial.mesh)
 
 % read and plot simnibs
-atlas = ft_read_atlas(fullfile(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/atlas/volume'), 'final_tissues.nii.gz'));
+vdir = dccnpath('/home/common/matlab/fieldtrip/data/test/latest/atlas/volume');
+atlas = ft_read_atlas(fullfile(vdir, 'final_tissues.nii.gz'));
 
 % read and plot volumetric freesurfer
-atlas = ft_read_atlas(fullfile(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/atlas/volume'), 'aparc.a2009s+aseg.mgz'));
+vdir = dccnpath('/home/common/matlab/fieldtrip/data/test/latest/atlas/volume');
+atlas = ft_read_atlas(fullfile(vdir, 'aparc.a2009s+aseg.mgz'));
 
 % read and plot freesurfer_annot based atlas
 sdir = dccnpath('/home/common/matlab/fieldtrip/data/test/latest/atlas/surface');
@@ -110,7 +112,6 @@ atlas = ft_read_atlas({fullfile(sdir, 'lh.aparc.a2009s.annot') fullfile(sdir, 'l
 % read and plot caret_label type atlas
 sdir = dccnpath('/home/common/matlab/fieldtrip/data/test/latest/atlas/surface');
 atlas = ft_read_atlas({fullfile(sdir, 'sub-008.L.aparc.a2009s.8k_fs_LR.label.gii') fullfile(sdir, 'sub-008.L.midthickness.8k_fs_LR.surf.gii')});
-
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -163,15 +164,10 @@ end
 
 % the fieldtrip code should be able to read in all atlases without error
 ok = true;
-%try
-  for k = find(hastable)'
-    fname = fullfile(f(k).folder, f(k).name);
-    y{k} = ft_read_atlas(fname);
-  end
-%catch
-%  ok = false;
-%end
-%assert(ok==1);
+for k = find(hastable)'
+  fname = fullfile(f(k).folder, f(k).name);
+  y{k} = ft_read_atlas(fname);
+end
 
 
 

@@ -1,6 +1,6 @@
 function test_ft_prepare_mesh
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_prepare_mesh ft_datatype_segmentation ft_plot_mesh
 % DATA no

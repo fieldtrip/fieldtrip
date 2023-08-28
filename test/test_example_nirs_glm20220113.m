@@ -1,6 +1,6 @@
 function test_example_glm_nirs
 
-% MEM 4gb
+% MEM 2gb
 % WALLTIME 00:10:00
 % DATA public
 

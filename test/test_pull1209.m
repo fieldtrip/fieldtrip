@@ -1,7 +1,7 @@
 function test_pull1209
 
 % WALLTIME 00:10:00
-% MEM 2gb
+% MEM 1gb
 % DEPENDENCY xdf2fieldtrip
 % DATA private
 

@@ -1,6 +1,6 @@
 function test_issue1587
 
-% MEM 7gb
+% MEM 6gb
 % WALLTIME 00:20:00
 % DEPENDENCY ft_channelselection
 % DATA public

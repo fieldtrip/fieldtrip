@@ -1,6 +1,6 @@
 function test_old_ft_singleplotTFR
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY
 % DATA private
@@ -9,7 +9,7 @@ function test_old_ft_singleplotTFR
 % different input datatypes. no other functionality is tested.
 % the script has been written in order to test a clean up of the code
 
-filename = dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/eeg/preproc_neuroscan16');
+filename = dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/eeg/preproc_neuroscan16.mat');
 load(filename)
 
 %there's an unresolved issue with duplicate labels 'FREE'

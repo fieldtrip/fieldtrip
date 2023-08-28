@@ -1,7 +1,7 @@
 function test_pull1377
 
-% MEM 12gb
-% WALLTIME 1:30:00
+% MEM 10gb
+% WALLTIME 01:30:00
 % DEPENDENCY ft_prepare_sourcemodel headsurface ft_prepare_leadfield ft_freqanalysis ft_sourceanalysis
 % DATA private
 
@@ -30,6 +30,8 @@ function test_pull1377
 global ft_default
 ft_default.checkconfig = 'loose';
 
+[ftver, ftpath] = ft_version;
+templatedir  = fullfile(ftpath, 'template');
 
 datameg = []; % touch these variables to make them shared between the main function and the nexted function
 dataeeg = [];
@@ -158,7 +160,7 @@ perform_source_analysis
     dataeeg.label = lay.label(1:end-2);
     clear lay
     
-    dataeeg.elec = ft_read_sens(dccnpath('/home/common/matlab/fieldtrip/template/electrode/standard_1020.elc'), 'senstype', 'eeg');
+    dataeeg.elec = ft_read_sens(fullfile(templatedir, 'electrode', 'standard_1020.elc'), 'senstype', 'eeg');
     
   end % loding raw data
 

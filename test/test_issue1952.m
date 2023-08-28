@@ -1,7 +1,7 @@
 function test_issue1952
 
 % WALLTIME 00:20:00
-% MEM 4gb
+% MEM 2gb
 
 % DEPENDENCY ft_denoise_ssp
 % DATA public

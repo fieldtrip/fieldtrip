@@ -1,6 +1,6 @@
 function test_bug1357
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_multiplotTFR ft_singleplotTFR ft_singleplotTFR ft_singleplotTFR
 % DATA no

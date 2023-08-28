@@ -1,6 +1,6 @@
 function test_issue2124
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_rejectartifact
 % DATA no

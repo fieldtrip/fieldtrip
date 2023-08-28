@@ -1,6 +1,6 @@
 function test_bug97
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_preprocessing ft_selectdata
 % DATA private

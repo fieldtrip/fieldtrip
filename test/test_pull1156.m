@@ -1,7 +1,7 @@
 function test_pull1156
 
 % WALLTIME 00:20:00
-% MEM 3gb
+% MEM 1gb
 % DEPENDENCY write_edf read_edf
 % DATA no
 

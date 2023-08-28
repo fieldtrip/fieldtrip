@@ -1,7 +1,7 @@
 function test_tutorial_eeg_preprocessing
 
 % WALLTIME 00:45:00
-% MEM 2gb
+% MEM 1gb
 % DEPENDENCY ft_definetrial ft_preprocessing
 % DATA public
 

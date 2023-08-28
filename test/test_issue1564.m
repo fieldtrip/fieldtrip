@@ -1,6 +1,6 @@
 function test_issue1564
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_artifact_clip ft_artifact_threshold ft_artifact_jump ft_rejectartifact
 % DATA no

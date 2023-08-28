@@ -1,7 +1,7 @@
 function test_pull694
 
 % WALLTIME 00:20:00
-% MEM 8gb
+% MEM 6gb
 % DEPENDENCY read_eyelink_asc
 % DATA private
 

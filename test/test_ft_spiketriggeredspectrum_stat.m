@@ -1,6 +1,6 @@
 function test_ft_spiketriggeredspectrum_stat()
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_spiketriggeredspectrum_stat ft_spiketriggeredspectrum_tfr
 % DATA no

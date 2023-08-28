@@ -1,6 +1,6 @@
 function failed_tutorial_ecog_human_anatomy
 
-% MEM 5gb
+% MEM 4gb
 % WALLTIME 00:10:00
 % DEPENDENCY
 

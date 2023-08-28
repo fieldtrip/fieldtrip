@@ -1,6 +1,6 @@
 function test_bug1600
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_checkdata ft_datatype_source
 % DATA no

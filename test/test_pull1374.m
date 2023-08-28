@@ -1,7 +1,7 @@
 function test_pull1374
 
 % WALLTIME 00:15:00
-% MEM 6gb
+% MEM 4gb
 % DEPENDENCY xsens_mvnx motion_c3d
 % DATA private
 

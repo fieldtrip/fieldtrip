@@ -1,6 +1,6 @@
 function test_bug255
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_timelockanalysis ft_prepare_layout ft_timelockstatistics ft_topoplotER
 % DATA private
@@ -9,7 +9,7 @@ function test_bug255
 % functional data having dimord 'chan', i.e. after doing statistics with
 % 'avgoverfreq' or 'avgovertime' = 'yes';
 
-filename = dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/eeg/preproc_neuroscan16');
+filename = dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/eeg/preproc_neuroscan16.mat');
 load(filename)
 
 %there's an unresolved issue with duplicate labels 'FREE'

@@ -1,6 +1,6 @@
 function test_bug905
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_freqanalysis ft_specest_mtmfft
 % DATA private

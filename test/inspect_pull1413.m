@@ -1,7 +1,7 @@
 function inspect_pull1413
 
 % WALLTIME 00:10:00
-% MEM 2gb
+% MEM 1gb
 % DEPENDENCY ft_rejectvisual rejectvisual_summary
 % DATA private
 

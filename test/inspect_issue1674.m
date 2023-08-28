@@ -1,7 +1,7 @@
 function inspect_issue1674
 
 % WALLTIME 00:10:00
-% MEM 2gb
+% MEM 1gb
 % DEPENDENCY ft_prepare_layout ft_convert_coordsys
 % DATA no
 

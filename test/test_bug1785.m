@@ -1,6 +1,6 @@
 function test_bug1785
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_read_sens read_asa_elc read_asa
 % DATA private

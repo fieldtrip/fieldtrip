@@ -1,7 +1,7 @@
 function test_ft_prepare_leadfield
 
 % WALLTIME 00:20:00
-% MEM 2gb
+% MEM 1gb
 % DEPENDENCY ft_prepare_leadfield
 % DATA no
 

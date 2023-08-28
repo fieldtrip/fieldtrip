@@ -1,6 +1,6 @@
 function test_bug1266
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_read_header ft_read_data ft_read_event read_biosig_data read_biosig_header
 % DATA private

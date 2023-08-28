@@ -1,7 +1,7 @@
 function test_bug2485
 
 % WALLTIME 00:10:00
-% MEM 2gb
+% MEM 1gb
 % DEPENDENCY ft_topoplotTFR
 % DATA private
 

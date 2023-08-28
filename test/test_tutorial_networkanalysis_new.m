@@ -1,7 +1,7 @@
 function test_tutorial_networkanalysis(datadirs)
 
 % WALLTIME 00:30:00
-% MEM 10gb
+% MEM 8gb
 % DEPENDENCY ft_networkanalysis
 % DATA public
 

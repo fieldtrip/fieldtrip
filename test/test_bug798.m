@@ -1,6 +1,6 @@
 function test_bug798
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_freqstatistics ft_selectdata ft_datatype_freq ft_appendfreq
 % DATA private

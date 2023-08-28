@@ -1,6 +1,6 @@
 function test_bug2476
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_freqanalysis ft_freqanalysis_mvar
 % DATA private

@@ -1,6 +1,6 @@
 function test_bug3172
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_plot_sens
 % DATA private

@@ -1,6 +1,9 @@
 function inspect_ft_colormap
 
+% WALLTIME 00:10:00
+% MEM 1gb
 % DATA no
+
 % see https://github.com/fieldtrip/fieldtrip/pull/1430
 
 close all

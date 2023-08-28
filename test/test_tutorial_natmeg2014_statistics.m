@@ -1,7 +1,7 @@
 function test_tutorial_natmeg2014_statistics
 
 % WALLTIME 00:20:00
-% MEM 4gb
+% MEM 2gb
 % DEPENDENCY
 % DATA public
 
@@ -104,7 +104,7 @@ cfg.correctm  = 'no';
 TFR_stat1     = ft_freqstatistics(cfg, TFR_logpow);
 
 cfg.method    = 'analytic';
-cfg.correctm  = 'bonferoni';
+cfg.correctm  = 'bonferroni';
 TFR_stat2     = ft_freqstatistics(cfg, TFR_logpow);
 cfg.method    = 'analytic';
 cfg.correctm  = 'fdr';
@@ -182,7 +182,7 @@ cfg.correctm  = 'no';
 ERF_stat1     = ft_timelockstatistics(cfg, ERF_all);
 
 cfg.method    = 'analytic';
-cfg.correctm  = 'bonferoni';
+cfg.correctm  = 'bonferroni';
 ERF_stat2     = ft_timelockstatistics(cfg, ERF_all);
 
 cfg.method    = 'analytic';

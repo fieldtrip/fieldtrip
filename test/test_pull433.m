@@ -1,6 +1,6 @@
 function test_pull433
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:20:00
 % DEPENDENCY
 % DATA private

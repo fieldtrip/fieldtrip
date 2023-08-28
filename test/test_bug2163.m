@@ -1,6 +1,6 @@
 function test_bug2163
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_read_spike read_neuralynx_nse
 % DATA private

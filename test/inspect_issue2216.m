@@ -1,6 +1,7 @@
 function inspect_issue2216
 
 % WALLTIME 00:10:00
+% MEM 1gb
 % DEPENDENCY ft_meshrealign ft_interactiverealign ft_plot_ortho ft_plot_slice
 % DATA no
 

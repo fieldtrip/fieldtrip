@@ -1,6 +1,6 @@
 function test_example_determine_the_filter_characteristics
 
-% MEM 4gb
+% MEM 2gb
 % WALLTIME 00:10:00
 % DATA no
 

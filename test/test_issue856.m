@@ -1,6 +1,6 @@
 function test_issue856
 
-% MEM 3gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_determine_coordsys ft_convert_coordsys ft_determine_units ft_convert_units ft_transform_geometry
 % DATA public

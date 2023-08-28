@@ -1,6 +1,6 @@
 function test_bug1483
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_selectdata ft_selectdata_new ft_selectdata_old
 % DATA no

@@ -1,6 +1,6 @@
 function test_issue1410
 
-% MEM 6gb
+% MEM 4gb
 % WALLTIME 00:20:00
 % DEPENDENCY
 % DATA private
