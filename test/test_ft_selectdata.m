@@ -1,6 +1,6 @@
 function test_ft_selectdata
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_selectdata ft_selectdata_old ft_selectdata_new ft_appendfreq
 % DATA no

@@ -1,7 +1,7 @@
 function test_example_use_simulated_erps_to_explore_cluster_statistics
 
 % DATA no
-% MEM 4gb
+% MEM 2gb
 % WALLTIME 00:10:00
 
 %

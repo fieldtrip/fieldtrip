@@ -1,7 +1,7 @@
 function test_issue2075
 
 % WALLTIME 00:10:00
-% MEM 4gb
+% MEM 2gb
 % DEPENDENCY nanmean
 % DATA no
 

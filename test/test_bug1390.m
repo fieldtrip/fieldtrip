@@ -1,6 +1,6 @@
 function test_bug1390
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_timelockanalysis ft_datatype_raw
 % DATA private

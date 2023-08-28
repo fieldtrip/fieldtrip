@@ -1,7 +1,7 @@
 function inspect_bug2588
 
 % WALLTIME 00:10:00
-% MEM 3gb
+% MEM 1gb
 % DEPENDENCY ft_databrowser
 % DATA no
 

@@ -1,6 +1,6 @@
 function test_headmodel_dipoli_new_old
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_headmodel_dipoli mesh_sphere ft_prepare_vol_sens ft_compute_leadfield
 

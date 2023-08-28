@@ -1,6 +1,6 @@
 function failed_ft_datatype_sens
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_datatype_sens ft_read_sens ft_read_header ctf2grad bti2grad itab2grad fif2grad yokogawa2grad
 

@@ -1,7 +1,7 @@
 function failed_bug_harmony
 
 % WALLTIME 00:45:00
-% MEM 6gb
+% MEM 4gb
 % DEPENDENCY
 
 % this is to test the implementation of the frequency domain harmony reconstruction

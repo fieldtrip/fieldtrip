@@ -1,7 +1,7 @@
 function test_ctf2grad
 
 % WALLTIME 00:10:00
-% MEM 2gb
+% MEM 1gb
 % DEPENDENCY ft_read_header ft_read_sens ctf2grad
 % DATA private
 

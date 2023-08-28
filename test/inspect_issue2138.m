@@ -2,7 +2,7 @@ function inspect_issue2138
 
 % WALLTIME 00:10:00
 % DATA private
-% MEM 2gb
+% MEM 1gb
 
 %%
 

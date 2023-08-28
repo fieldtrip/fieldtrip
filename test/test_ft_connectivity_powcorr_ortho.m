@@ -1,6 +1,6 @@
 function test_ft_connectivity_powcorr_ortho
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_connectivity_powcorr_ortho
 % DATA no

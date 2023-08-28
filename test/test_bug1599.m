@@ -1,6 +1,6 @@
 function test_bug1599(datainfo, version)
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_sourceanalysis ft_inverse_lcmv
 % DATA no

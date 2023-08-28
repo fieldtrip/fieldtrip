@@ -1,6 +1,6 @@
 function test_dccnpath
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY dccnpath
 % DATA public
@@ -139,3 +139,4 @@ else
   end
 
 end % if inside or outside the DCCN
+

@@ -1,7 +1,7 @@
 function test_lbex(datadirs)
 
 % WALLTIME 01:00:00
-% MEM 12gb
+% MEM 10gb
 % DEPENDENCY ft_prepare_leadfield
 % DATA public
 

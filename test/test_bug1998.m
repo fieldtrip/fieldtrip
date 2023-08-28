@@ -1,7 +1,7 @@
 function test_bug1998
 
 % WALLTIME 00:10:00
-% MEM 2gb
+% MEM 1gb
 % DEPENDENCY ft_preprocessing ft_read_data read_neuralynx_ncs
 % DATA private
 

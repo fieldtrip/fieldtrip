@@ -1,6 +1,6 @@
 function test_tutorial_coherence
 
-% MEM 5gb
+% MEM 4gb
 % WALLTIME 00:20:00
 % DEPENDENCY ft_freqanalysis ft_connectivityanalysis ft_multiplotER ft_singleplotER ft_topoplotER ft_sourceanalysis ft_sourceinterpolate ft_prepare_sourcemodel headsurface
 % DATA public

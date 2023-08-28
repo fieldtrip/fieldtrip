@@ -1,6 +1,6 @@
 function test_bug2560
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:15:00
 % DEPENDENCY ft_sourceplot ft_plot_slice
 % DATA no

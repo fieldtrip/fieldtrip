@@ -1,6 +1,6 @@
 function pull810
 
-% MEM 3gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_fetch_data ft_databrowser ft_appenddata
 % DATA private

@@ -1,6 +1,6 @@
 function test_bug1306b
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_preprocessing ref_datasets ft_timelockanalysis
 % DATA no

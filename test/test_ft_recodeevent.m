@@ -1,7 +1,7 @@
 function test_ft_recodeevent
 
 % WALLTIME 00:10:00
-% MEM 2gb
+% MEM 1gb
 % DEPENDENCY ft_recodeevent
 % DATA no
 

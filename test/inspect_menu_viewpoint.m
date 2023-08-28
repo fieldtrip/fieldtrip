@@ -1,7 +1,7 @@
 function inspect_menu_viewpoint
 
 % WALLTIME 00:10:00
-% MEM 3gb
+% MEM 1gb
 % DATA no
 
 % Some of the FT_PLOT_XXX functions that return a 3D object support a

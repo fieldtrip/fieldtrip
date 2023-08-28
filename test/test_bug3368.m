@@ -1,13 +1,13 @@
 function test_bug3368
 
 % WALLTIME 00:10:00
-% MEM 4gb
+% MEM 2gb
 % DEPENDENCY
 % DATA no
 
 % load a fieldtrip dataset
 
-ieeg_name      = dccnpath(fullfile('/home/common/matlab/fieldtrip/data/ftp/tutorial/human_ecog','SubjectNY394','NY394_VisualLoc_R1.edf'));
+ieeg_name      = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/human_ecog/SubjectNY394/NY394_VisualLoc_R1.edf');
 cfg            = [];
 cfg.dataset    = ieeg_name;
 cfg.continuous = 'yes';

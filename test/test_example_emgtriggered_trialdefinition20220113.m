@@ -1,6 +1,6 @@
 function test_example_emgtriggered_trialdefinition
 
-% MEM 8gb
+% MEM 6gb
 % WALLTIME 00:10:00
 % DATA public
 

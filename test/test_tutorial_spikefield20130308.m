@@ -1,6 +1,6 @@
 function failed_tutorial_spikefield20130308
 
-% MEM 3gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY
 % DATA public

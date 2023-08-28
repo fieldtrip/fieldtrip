@@ -1,6 +1,6 @@
 function failed_tutorial_headmodel_meg(datadir)
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:45:00
 % DEPENDENCY ft_read_mri ft_volumesegment ft_prepare_headmodel ft_plot_headmodel ft_convert_units ft_read_sens ft_plot_sens
 

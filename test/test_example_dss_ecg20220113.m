@@ -1,6 +1,6 @@
 function test_example_dss_ecg
 
-% MEM 8gb
+% MEM 6gb
 % WALLTIME 00:30:00
 % DATA public
 

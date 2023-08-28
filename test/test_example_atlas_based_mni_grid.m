@@ -1,7 +1,7 @@
 function test_example_atlas_based_mni_grid
 
 % WALLTIME 00:20:00
-% MEM 3gb
+% MEM 1gb
 % DEPENDENCY
 % DATA public
 

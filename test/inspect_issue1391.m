@@ -1,7 +1,7 @@
 function inspect_issue1391
 
-% WALLTIME 00:05:00
-% MEM 2gb
+% WALLTIME 00:10:00
+% MEM 1gb
 % DEPENDENCY ft_rejectvisual rejectvisual_summary rejectvisual_trial rejectvisual_channel
 % DATA no
 

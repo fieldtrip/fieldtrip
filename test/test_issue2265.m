@@ -1,7 +1,7 @@
 function test_issue2265
 
 % WALLTIME 00:10:00
-% MEM 3gb
+% MEM 1gb
 % DEPENDENCY ft_freqanalysis ft_specest_mtmfft
 % DATA no
 

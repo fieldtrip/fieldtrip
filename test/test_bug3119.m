@@ -1,7 +1,7 @@
 function test_bug3119
 
 % WALLTIME 00:20:00
-% MEM 2gb
+% MEM 1gb
 % DEPENDENCY ft_dipolefitting ft_inverse_dipolefit
 % DATA private
 
