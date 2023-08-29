@@ -2,7 +2,7 @@ function test_ft_badsegment
 
 % WALLTIME 00:10:00
 % DATA public
-% MEM 2gb
+% MEM 1gb
 
 dataset = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds');
 

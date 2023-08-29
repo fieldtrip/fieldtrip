@@ -7,8 +7,8 @@ function [freq] = ft_freqanalysis(cfg, data)
 %   [freq] = ft_freqanalysis(cfg, data)
 %
 % The input data should be organised in a structure as obtained from
-% the FT_PREPROCESSING or the FT_MVARANALYSIS function. The configuration
-% depends on the type of computation that you want to perform.
+% FT_PREPROCESSING or FT_MVARANALYSIS. The configuration depends on the
+% type of computation that you want to perform.
 %
 % The configuration should contain:
 %   cfg.method      = different methods of calculating the spectra

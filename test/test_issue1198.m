@@ -1,7 +1,7 @@
 function test_issue1198
 
 % WALLTIME 00:10:00
-% MEM 2gb
+% MEM 1gb
 % DEPENDENCY ft_sourceanalysis ft_sourcedescriptives ft_sourceplot
 % DATA no
 

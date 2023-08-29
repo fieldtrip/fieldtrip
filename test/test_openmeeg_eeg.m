@@ -3,7 +3,7 @@ function test_openmeeg_eeg
 % WALLTIME 00:30:00
 % DEPENDENCY
 % DATA no
-% MEM 4gb
+% MEM 2gb
 
 % Test the computation of an EEG leadfield with OpenMEEG
 % Copyright (C) 2010-2017, OpenMEEG developers

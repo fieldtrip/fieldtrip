@@ -1,7 +1,7 @@
 function test_ft_write_mri
 
 % WALLTIME 00:10:00
-% MEM 2gb
+% MEM 1gb
 % DEPENDENCY ft_read_mri ft_write_mri
 % DATA public
 

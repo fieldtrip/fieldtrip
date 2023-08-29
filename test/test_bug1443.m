@@ -1,6 +1,6 @@
 function test_bug1443
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_rejectcomponent ft_componentanalysis
 % DATA private

@@ -1,6 +1,6 @@
 function test_bug1764
 
-% MEM 3gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_prepare_singleshell ft_prepare_mesh
 % DATA public

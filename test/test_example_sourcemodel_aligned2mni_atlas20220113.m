@@ -1,6 +1,6 @@
 function test_example_sourcemodel_aligned2mni_atlas
 
-% MEM 4gb
+% MEM 2gb
 % WALLTIME 00:10:00
 % DATA public
 

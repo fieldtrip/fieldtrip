@@ -1,6 +1,6 @@
 function test_bug1082
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_prepare_vol_sens ft_prepare_headmodel ft_compute_leadfield ft_plot_topo3d ft_headmodel_openmeeg
 

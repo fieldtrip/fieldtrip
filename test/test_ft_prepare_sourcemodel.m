@@ -1,6 +1,6 @@
 function failed_ft_prepare_sourcemodel
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_prepare_sourcemodel ft_read_sens ft_read_headmodel 
 % DATA private

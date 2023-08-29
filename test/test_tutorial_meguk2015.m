@@ -1,7 +1,7 @@
 function test_tutorial_meguk2015
 
 % WALLTIME 01:30:00
-% MEM 8gb
+% MEM 6gb
 % DEPENDENCY ft_preprocessing ft_appenddata ft_timelockanalysis ft_componentanalysis ft_rejectcomponent ft_freqanalysis ft_math ft_sourceanalysis ft_sourceinterpolate ft_volumerealign ft_determine_coordsys ft_sourceplot ft_timelockstatistics ft_multiplotER ft_multiplotTFR ft_singleplotER ft_singleplotTFR
 % DATA private
 

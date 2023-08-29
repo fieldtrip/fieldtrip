@@ -1,6 +1,6 @@
 function test_bug1887
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_checkdata ft_datatype_raw ft_datatype_comp ft_datatype_timelock ft_componentanalysis ft_connectivityanalysis
 % DATA private

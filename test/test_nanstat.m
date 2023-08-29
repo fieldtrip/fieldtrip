@@ -1,6 +1,6 @@
 function test_nanstat
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY nansum nanmean nanstd nanvar nanvar_base
 % DATA no

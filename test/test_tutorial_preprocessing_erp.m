@@ -1,6 +1,6 @@
 function test_tutorial_preprocessing_erp
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY
 % DATA public

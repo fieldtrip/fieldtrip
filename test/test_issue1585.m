@@ -1,7 +1,7 @@
 function test_issue1585
 
 % WALLTIME 00:10:00
-% MEM 2gb
+% MEM 1gb
 % DEPENDENCY ft_read_header ft_read_data ft_read_event
 % DATA private
 

@@ -1,6 +1,6 @@
 function test_old_ft_topoplotTFR
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:20:00
 
 % DEPENDENCY_FT_TOPOPLOTTFR

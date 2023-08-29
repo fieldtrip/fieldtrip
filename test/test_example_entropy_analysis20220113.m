@@ -1,6 +1,6 @@
 function test_example_entropy_analysis
 
-% MEM 4gb
+% MEM 2gb
 % WALLTIME 00:10:00
 % DATA no
 

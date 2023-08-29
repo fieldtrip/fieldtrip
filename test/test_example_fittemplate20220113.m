@@ -1,6 +1,6 @@
 function test_example_fittemplate
 
-% MEM 4gb
+% MEM 2gb
 % WALLTIME 00:20:00
 % DATA public
 

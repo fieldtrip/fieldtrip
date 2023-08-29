@@ -1,6 +1,6 @@
 function test_tutorial_beamformer20120321
 
-% MEM 10gb
+% MEM 8gb
 % WALLTIME 02:30:00
 % DEPENDENCY ft_redefinetrial ft_freqanalysis ft_volumesegment ft_prepare_singleshell ft_sourceanalysis ft_prepare_leadfield ft_sourceinterpolate ft_sourceplot ft_volumenormalise
 % DATA public

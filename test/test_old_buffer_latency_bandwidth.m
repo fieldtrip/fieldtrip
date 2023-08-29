@@ -1,6 +1,6 @@
 function test_old_buffer_latency_bandwidth
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_create_buffer
 % DATA no

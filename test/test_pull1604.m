@@ -1,6 +1,6 @@
 function test_pull1604
 
-% MEM 8gb
+% MEM 6gb
 % WALLTIME 00:40:00
 % DEPENDENCY ft_inside_headmodel
 % DATA public

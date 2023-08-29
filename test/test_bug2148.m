@@ -1,6 +1,6 @@
 function test_bug2148
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_connectivitysimulation ft_freqanalysis ft_connectivityanalysis ft_connectivityplot ft_freqdescriptives ft_checkdata
 % DATA no

@@ -1,6 +1,6 @@
 function test_bug70
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:20:00
 % DEPENDENCY ft_prepare_headmodel ft_prepare_leadfield ft_headmodel_openmeeg
 % DATA no

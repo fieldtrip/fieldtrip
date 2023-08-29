@@ -1,6 +1,6 @@
 function test_bug1227
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_sourcewrite
 % DATA no

@@ -1,6 +1,6 @@
 function failed_tutorial_spikefield
 
-% MEM 3gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_read_spike ft_spike_select ft_spike_maketrials ft_appendspike ft_spiketriggeredinterpolation ft_spiketriggeredaverage ft_spiketriggeredspectrum ft_spiketriggeredspectrum_stat
 % DATA public

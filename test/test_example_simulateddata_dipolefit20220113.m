@@ -1,7 +1,7 @@
 function test_example_simulateddata_dipolefit
 
 % DATA no
-% MEM 4gb
+% MEM 2gb
 % WALLTIME 00:10:00
 
 %

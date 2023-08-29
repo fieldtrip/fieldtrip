@@ -1,7 +1,7 @@
 function test_ft_analysispipeline
 
-% MEM 2gb
-% WALLTIME 02:53:11
+% MEM 1gb
+% WALLTIME 03:00:00
 % DEPENDENCY ft_analysispipeline
 % DATA private
 

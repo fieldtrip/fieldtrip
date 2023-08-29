@@ -1,7 +1,7 @@
 function inspect_issue1216
 
 % WALLTIME 00:10:00
-% MEM 3gb
+% MEM 1gb
 % DEPENDENCY ft_hastoolbox ft_postamble_hastoolbox
 % DATA private
 

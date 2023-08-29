@@ -1,6 +1,6 @@
 function test_example_irasa()
-% MEM 3gb
-% WALLTIME 00:05:00
+% MEM 1gb
+% WALLTIME 00:10:00
 % DEPENDENCY ft_freqanalysis ft_specest_irasa external/signal/resample.m
 % DATA no
 % tested on MATLAB_R2022a, macOS_Monterey_12.4, FT_2f387ff (@JM fixed resample scaling issue)
