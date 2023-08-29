@@ -11,27 +11,28 @@ function fieldtrip2fiff(filename, data, varargin)
 %
 % Additional options can be specified as key-value pairs:
 %   precision = string ('single'/'double'), determines the precision with which
-%                 the numeric data is written to file, default is the class of the
-%                 numeric data.
+%               the numeric data is written to file, default is the class of the
+%               numeric data.
 %   coordsys  = string ('native'/'neuromag'), determines the coordinate system in which
-%                 the MEG sensors are written (default: 'neuromag'). This option does not 
-%                 have an effect on EEG electrodes or fNIRS optodes. If coordsys = 'neuromag'
-%                 the MEG sensors are expressed in (approximate) neuromag coordinates, which
-%                 may facilitate downstream handling of the fif-files in other software, e.g.
-%                 MNE-python. This is according to the official definitions of the fif-file format
+%               the MEG sensors are written (default = 'neuromag'). In case of 
+%               'neuromag' the MEG sensors are expressed in (approximate) neuroma^
+%               coordinates, which may facilitate downstream handling of the fif-files
+%               in other software such as MNE-python. This is according to the
+%               official fif-file format definition. This option does not have an
+%               effect on EEG electrodes or fNIRS optodes.
+%   event     = structure as obtained from FT_READ_EVENT
+%   eventtype = string or cell array of string with the event types to be
+%               written to file (default is all)
 % 
-% If the data comes from preprocessing and has only one trial, then it writes the
+% If the data comes from FT_PREPROCESSING and has only one trial, then it writes the
 % data into raw continuous format. 
 % 
 % If present in the data, the original header is reused (also removing the non-used channels).
 % Otherwise, the function attempts to create the header, which might or might not be correct
 % (e.g. with respect to the scaling and the sensor locations. 
 % 
-% If the data contains events in the cfg structure, it writes the events in the MNE format
-% (three columns) into a file based on "filename", ending with "-eve.fif". If only a subset
-% of the events is to be written to the event file, one can use the additional key-value pair:
-%   eventtype = string (or cell array of string) with the eventtypes to be
-%                 written to file, default 'all'
+% The events are written in MNE format (three columns) into a file based on "filename", ending
+% with "-eve.fif".
 % 
 % See also FT_DATATYPE_RAW, FT_DATATYPE_TIMELOCK
 
@@ -61,6 +62,7 @@ ft_defaults
 
 coordsys  = ft_getopt(varargin, 'coordsys', 'neuromag');
 headshape = ft_getopt(varargin, 'headshape', []);
+event     = ft_getopt(varargin, 'event', []);
 
 % ensure that the filename has the correct extension
 [pathstr, name, ext] = fileparts(filename);
@@ -236,11 +238,9 @@ if israw
   fiff_write_raw_buffer(outfid, data.trial{1}, cals, dtype);
   fiff_finish_writing_raw(outfid);
   
-  % write events, if they exist
-  if isfield(data, 'cfg')
+  % write events, if specified or present in the structure provenance
+  if isempty(event) && isfield(data, 'cfg')
     event = ft_findcfg(data.cfg, 'event');
-  else
-    event = [];
   end
   if ~isempty(event)
     eventtype = ft_getopt(varargin, 'eventtype', 'all');
@@ -292,11 +292,11 @@ elseif isepch
   fiffdata.epoch = epochs;
   fiff_write_epochs(fifffile, fiffdata, dtype);
 
-
 end
 
-%-------------------
-% subfunction
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [chs] = sens2fiff(data)
 
 if isfield(data, 'hdr') && isfield(data.hdr, 'orig') && isfield(data.hdr.orig, 'chs')
@@ -402,11 +402,12 @@ else
 
       otherwise
     end
-
   end
 end
 
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [eventlist, mappings] = convertevent(event, eventtype)
 
 ev_type  = {event.type};
@@ -469,6 +470,9 @@ end
 eventlist = eventlist(ix,:);
 mappings  = mappings(3:end);
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [coiltype, coilkind] = grad2coiltype(grad)
 
 stype = ft_senstype(grad);
@@ -556,6 +560,9 @@ end
 ft_info('creating coiltypes according to sensor type: %s', stype);
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function coilunit = grad2coilunit(grad, FIFF)
 
 coilunit = zeros(numel(grad.label),1)-1;
@@ -571,8 +578,10 @@ for k = 1:numel(grad.chanunit)
   end
 end
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [ex, ey] = plane_unitvectors(ez)
-
 % subfunction to obtain a pair of vectors that span the plane orthogonal to
 % ez. The heuristic is inspired by the MNE-python code
 
@@ -598,8 +607,11 @@ ex = ex - (ex'*ez).*ez;
 ex = ex / norm(ex);
 ey = cross(ez, ex);
 
-function R = ori2r(ori, pos, coiltype)
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function R = ori2r(ori, pos, coiltype)
 % helper function to get the orthonormal matrix that describes the local
 % coordinate system of a sensor in fif convention. Note that not all
 % coiltypes are guaranteed to be correct
@@ -621,5 +633,5 @@ switch coiltype
     ez       = ori(:);
     [ex, ey] = plane_unitvectors(ez);
 end
-R        = [ex(:) ey(:) ez(:)];
+R = [ex(:) ey(:) ez(:)];
 
