@@ -40,23 +40,22 @@ jobs:
         run: |
           [ -s ./comment ]
 
-      - name: Dump GitHub context
-        env:
-          GITHUB_CONTEXT: ${{ toJson(github) }}
-        run: echo "$GITHUB_CONTEXT"
+# See https://docs.github.com/en/actions/learn-github-actions/contexts#steps-context
+# - if the comment file is empty, the outcome will be "failure"
+# - due to the continue-on-error, the conclusion will be "success"
 
       - name: Show that there are no tests
-        if: steps.any-tests.conclusion == 'failure'
+        if: steps.any-tests.outcome == 'failure'
         run: |
           echo "No tests were found"
 
       - name: Show suggested tests
-        if: steps.any-tests.conclusion == 'success'
+        if: steps.any-tests.outcome == 'success'
         run: |
           cat ./comment
 
       - name: Create comment with suggested tests
-        if: steps.any-tests.conclusion == 'success'
+        if: steps.any-tests.outcome == 'success'
         uses: peter-evans/create-or-update-comment@v3.0.2
         with:
           issue-number: ${{ github.event.number }} 
