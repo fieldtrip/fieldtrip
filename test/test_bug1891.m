@@ -1,7 +1,7 @@
 function test_bug1891
 
 % MEM 1gb
-% WALLTIME 10:00:00
+% WALLTIME 00:10:00
 % DEPENDENCY ft_connectivity_wpli.m
 % DATA no
 
