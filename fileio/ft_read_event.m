@@ -1723,6 +1723,57 @@ switch eventformat
         
       end
       
+      % check whether there's an event definition in the fif file
+      try
+        [events, mappings] = fiff_read_events(filename);
+
+        events(:,1) = events(:,1) + 1; % 0 versus 1 based indexing
+
+        % convert the event matrix into a struct-array
+        if ~isempty(mappings)
+          mappings = tokenize(mappings, ',')';
+          for k = 1:numel(mappings)
+            tok = tokenize(flip(deblank(flip(mappings{k},2)),2), ':');
+            type{k,1} = tok{1};
+            idx(k,1)  = str2num(tok{2});
+            tok = tokenize(tok{1}, '_');
+            if numel(tok)>1
+              type{k,1} = tok{1};
+              if isempty(str2num(tok{2}))
+                val{k,1} = tok{2};
+              else
+                val{k,1} = str2num(tok{2});
+              end
+            else
+              val{k,1} = idx(k);
+            end
+          end
+          smp    = mat2cell(events(:,1), ones(size(events,1),1), 1);
+          eventx = struct('type', type(events(:,3)), 'value', val(events(:,3)), 'sample', smp);
+        else
+          % FIXME this needs to be done still
+
+        end
+      end
+      event = appendstruct(event(:), eventx);
+      
+      % prune the double occurrences where type and sample match
+      tab  = struct2table(event);
+      sel  = true(size(tab,1));
+      for k = 1:size(sel,1)
+        sel(k,:) = sel(k,:) & (tab.sample==tab.sample(k))' & (strcmp(tab.type, tab.type{k}))'; 
+      end
+      indx = (1:size(sel,1))';
+      for k = 1:size(sel,1)
+        if indx(k)==k && sum(sel(k,:))>1
+          selix = find(sel(k,:));
+          indx(selix(2:end)) = 0;
+        end
+      end
+      tab   = tab(indx(indx>0),:);
+      event = event(indx(indx>0));
+keyboard
+
     elseif isaverage
       % the length of each average can be variable
       nsamples = zeros(1, length(hdr.orig.evoked));
@@ -1740,7 +1791,7 @@ switch eventformat
       
     elseif isepoched
       begsample = cumsum([1 repmat(hdr.nSamples, hdr.nTrials-1, 1)']);
-      events_id = split(split(hdr.orig.epochs.event_id, ';'), ':');
+      events_id = reshape(split(split(hdr.orig.epochs.event_id, ';'), ':'), [], 2); % should be nx2, avoids 2x1 in case of a single event_id
       if all(cellfun(@ischar, events_id(:, 1)))
         events_label = events_id(:, 1);
         events_code = str2num(char(events_id(:, 2)));

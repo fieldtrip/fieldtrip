@@ -119,7 +119,7 @@ else
   info.highpass        = NaN;
   info.lowpass         = NaN;
   
-  % these are not strictly necessary, for basic functionality, i.e. time series manipulation. Thinks work
+  % these are not strictly necessary, for basic functionality, i.e. time series manipulation. Things work
   % best if an attempt is made to represent MEG-sensors according to the MNE conventions, i.e. sensors in 
   % (neuromag) device coordinates, and the appropriate additional transformations specified. Fieldtrip2fiff 
   % makes an attempt to do this, if 'coordsys' = 'neuromag' (handled below)
@@ -236,18 +236,25 @@ if israw
   fiff_write_int(outfid, FIFF.FIFF_FIRST_SAMPLE, round(data.time{1}(1)*fsample));
   fiff_write_int(outfid, FIFF.FIFF_DATA_SKIP, 0);
   fiff_write_raw_buffer(outfid, data.trial{1}, cals, dtype);
-  fiff_finish_writing_raw(outfid);
   
   % write events, if specified or present in the structure provenance
-  if isempty(event) && isfield(data, 'cfg')
-    event = ft_findcfg(data.cfg, 'event');
-  end
   if ~isempty(event)
     eventtype = ft_getopt(varargin, 'eventtype', 'all');
-    [eventlist, mappings] = convertevent(event, eventtype);
-    fiff_write_events(eventfile, eventlist, mappings);
-    ft_info('Writing events to %s\n', eventfile)
+    if isequal(eventtype, 'all')
+      eventtype = {event.type};
+    else
+      type      = {event.type};
+      sel       = match_str(unique(type), eventtype);
+      eventtype = type(sel);
+    end
+
+    if ~isempty(eventtype)
+      ft_info('Writing event matrix to %s\n', fifffile);
+      [eventlist, mappings] = convertevent(event, eventtype);
+      fiff_write_events(outfid, eventlist, mappings)
+    end
   end
+  fiff_finish_writing_raw(outfid);
   
 elseif istlck
   evoked.aspect_kind = 100;
@@ -270,6 +277,7 @@ elseif isepch
     ft_warning('Using the first column of the trialinfo field as event values');
     trg = data.trialinfo(:,1);
   else
+    ft_warning('Marking each epoch boundary with a single event value (1)')
     trg = ones(ntrl,1);
   end
   events = [((0:nsmp:(nsmp*(ntrl-1))))' zeros(ntrl,1) trg];
@@ -338,11 +346,25 @@ else
     coilunit  = grad2coilunit(data.grad, FIFF);
   end
 
+  % FIXME: experimental attempt to assign digital trigger channels correctly
+  % these are so far only from 4d or ctf systems
+  [i_labstim, i_stim] = match_str(data.label, {'STIM' 'UPPT001' 'TRIGGER'}');
+  stype(i_labstim) = 2;
+  indx(i_labstim)  = i_stim;
+
+  % FIXME: experimental attempt to assign digital response channels correctly
+  % these are so far only from 4d or ctf systems
+  [i_labresp, i_resp] = match_str(data.label, {'UPPT002' 'RESPONSE'}');
+  stype(i_labresp) = 3;
+  indx(i_labresp)  = i_resp;
+
   scanno  = num2cell((1:nchan)');
   ch_name = data.label(:);
   range   = num2cell(ones(nchan,1));
   cal     = num2cell(ones(nchan,1));
 
+  cnt_resp = 0;
+  cnt_stim = 0;
   cnt_grad = 0;
   cnt_elec = 0;
   cnt_else = 0;
@@ -350,6 +372,34 @@ else
   for k = 1:nchan
   
     switch stype(k)
+      case 3
+        % digital response channel
+        cnt_resp = cnt_resp + 1;
+
+        chs(1,k).scanno       = cnt_resp;
+        chs(1,k).logno        = cnt_resp;
+        chs(1,k).kind         = FIFF.FIFFV_RESP_CH;
+        chs(1,k).coil_type    = 0;
+        chs(1,k).unit         = FIFF.FIFF_UNIT_V;
+        chs(1,k).unit_mul     = 0;
+        chs(1,k).eeg_loc      = [];
+        chs(1,k).loc          = repmat([0 0 0 1]',3,1);
+        chs(1,k).cal          = 1;
+
+      case 2
+        % digital trigger channel
+        cnt_stim = cnt_stim + 1;
+
+        chs(1,k).scanno       = cnt_stim;
+        chs(1,k).logno        = cnt_stim + 100;
+        chs(1,k).kind         = FIFF.FIFFV_STIM_CH;
+        chs(1,k).coil_type    = 0;
+        chs(1,k).unit         = FIFF.FIFF_UNIT_V;
+        chs(1,k).unit_mul     = 0;
+        chs(1,k).eeg_loc      = [];
+        chs(1,k).loc          = repmat([0 0 0 1]',3,1);
+        chs(1,k).cal          = 1;
+
       case 1
         % MEG
         cnt_grad = cnt_grad + 1;
@@ -363,7 +413,7 @@ else
         R    = ori2r(ori, data.grad.coilpos(selcoil, :), coiltype(indx(k)));
 
         chs(1,k).scanno       = cnt_grad;
-        chs(1,k).logno        = cnt_grad;
+        chs(1,k).logno        = cnt_grad + 1000;
         chs(1,k).kind         = coilkind(indx(k));
         chs(1,k).coil_type    = coiltype(indx(k));
         chs(1,k).unit         = coilunit(indx(k));
@@ -377,7 +427,7 @@ else
         cnt_elec = cnt_elec + 1;
        
         chs(1,k).scanno       = cnt_elec;
-        chs(1,k).logno        = cnt_elec;
+        chs(1,k).logno        = cnt_elec + 10000;
         chs(1,k).kind         = FIFF.FIFFV_EEG_CH;
         chs(1,k).coil_type    = NaN;
         chs(1,k).unit         = FIFF.FIFF_UNIT_V;
@@ -436,9 +486,9 @@ for k = 1:numel(ev_utype)
     ev(cnt).sample = [event(sel).sample];
   else
     val = {event(sel).value};
+    smp = [event(sel).sample];
     if all(cellfun(@isnumeric, val))
-      val = [event(sel).value];
-      smp = [event(sel).sample];
+      val  = [event(sel).value]; % make numeric vector, rather than cell
       uval = unique(val);
       for kk = 1:numel(uval)
         cnt = cnt+1;
@@ -452,7 +502,7 @@ for k = 1:numel(ev_utype)
         cnt = cnt+1;
         ev(cnt).id     = sprintf('%s_%s', ev_utype{k}, uval{kk});
         ev(cnt).sample = smp(strcmp(val, uval{kk}));
-        ft_info('Event type %s with value %s: %d occurrences\n', ev_utype{k}, uval{kk}, sum(val==uval(kk)));
+        ft_info('Event type %s with value %s: %d occurrences\n', ev_utype{k}, uval{kk}, sum(strcmp(val, uval{kk})));
       end
     end
   end
@@ -487,9 +537,9 @@ switch stype
   case 'neuromag122'
     % this can in theory happen, but is not supported yet, FIXME please
     % feel free to add support for this (and the below) when you need it.
-    ft_warning('deteced neuromag122 as sensory array, but no original channel info will be used')
+    ft_warning('deteced neuromag122 as sensor array, but no original channel info will be used')
   case 'neuromag306'
-    ft_warning('deteced neuromag306 as sensory array, but no original channel info will be used')
+    ft_warning('deteced neuromag306 as sensor array, but no original channel info will be used')
  
   case {'ctf151' 'ctf275'}
     

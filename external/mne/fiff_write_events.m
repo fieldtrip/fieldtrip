@@ -35,7 +35,12 @@ eventlist = reshape(eventlist',numel(eventlist),1);
 %
 %   Start writing...
 %
-fid  = fiff_start_file(filename);
+if ischar(filename)
+  fid = fiff_start_file(filename);
+else
+  % assume the supplied filename to be a file identifier to an open file
+  fid = filename;
+end
 
 fiff_start_block(fid,FIFF.FIFFB_MNE_EVENTS);
     
@@ -46,4 +51,6 @@ end
 
 fiff_end_block(fid,FIFF.FIFFB_MNE_EVENTS);
 
-fiff_end_file(fid);
+if ischar(filename)
+  fiff_end_file(fid);
+end
