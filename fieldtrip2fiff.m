@@ -365,13 +365,13 @@ end
 
 % FIXME: experimental attempt to assign digital trigger channels correctly
 % these are so far only from 4d or ctf systems
-i_labstim = strcmp(data.label, 'trigger');
+i_labstim = strcmp(ft_chantype(data.label), 'trigger');
 stype(i_labstim) = 2;
 %indx(i_labstim)  = i_stim;
 
 % FIXME: experimental attempt to assign digital response channels correctly
 % these are so far only from 4d or ctf systems
-i_labresp = strcmp(data.label, 'response');
+i_labresp = strcmp(ft_chantype(data.label), 'response');
 stype(i_labresp) = 3;
 %indx(i_labresp)  = i_resp;
 

@@ -1939,7 +1939,7 @@ switch headerformat
       catch
         % the "catch me" syntax is broken on MATLAB74, this fixes it
         me = lasterror;
-        if strcmp(me.identifier, 'MNE:fiff_read_epochs')
+        if strcmp(me.identifier, 'MNE:fiff_read_epochs') || strcmp(me.identifier, 'MNE:fiff_read_events')
           iscontinuous = 1;
         else
           rethrow(me)

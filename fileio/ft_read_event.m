@@ -1754,6 +1754,8 @@ switch eventformat
           % FIXME this needs to be done still
 
         end
+      catch
+        eventx = [];
       end
       event = appendstruct(event(:), eventx);
       
