@@ -2,6 +2,7 @@ function test_fieldtrip2fiff(mnedatadir)
 
 % WALLTIME 00:10:00
 % MEM 1gb
+% DEPENDENCY fieldtrip2fiff
 % DATA private
 
 %%
