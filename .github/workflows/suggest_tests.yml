@@ -36,6 +36,7 @@ jobs:
 
       - name: Are there any suggested tests?
         id: any-tests
+        continue-on-error: true
         run: |
           [ -s ./comment ]
 
