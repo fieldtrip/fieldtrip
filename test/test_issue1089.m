@@ -1,7 +1,7 @@
 function test_issue1089
 
 % MEM 1gb
-% WALLTIME 10:00:00
+% WALLTIME 00:10:00
 % DEPENDENCY ft_selectdata
 % DATA no
 
