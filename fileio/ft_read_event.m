@@ -1772,7 +1772,6 @@ switch eventformat
       end
       tab   = tab(indx(indx>0),:);
       event = event(indx(indx>0));
-keyboard
 
     elseif isaverage
       % the length of each average can be variable
