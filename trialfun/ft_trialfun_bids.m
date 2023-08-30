@@ -74,7 +74,7 @@ if isfield(cfg, 'event')
   ft_info('using the events from the configuration structure\n');
   events = cfg.event;
 else
-  % do not use FT_READ_EVENTS, as that will force the events in a structure
+  % do not use FT_READ_EVENT, as that will force the events in a structure
   eventsfile = bids_sidecar(cfg.dataset, 'events');
   events = ft_read_tsv(eventsfile);
 end
