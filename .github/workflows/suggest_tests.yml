@@ -40,6 +40,11 @@ jobs:
         run: |
           [ -s ./comment ]
 
+      - name: Dump GitHub context
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: echo "$GITHUB_CONTEXT"
+
       - name: Show that there are no tests
         if: steps.any-tests.conclusion == 'failure'
         run: |
