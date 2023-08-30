@@ -1,6 +1,6 @@
 function test_nicolet_reading
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:30:00
 % DEPENDENCY test_nicolet_reading_onefile read_nervus_header
 % DATA private

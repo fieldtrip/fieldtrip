@@ -1,7 +1,7 @@
 function test_ft_volumebiascorrect
 
-% MEM 8gb
-% WALLTIME 00:60:00
+% MEM 6gb
+% WALLTIME 01:00:00
 % DEPENDENCY ft_volumebiascorrect
 % DATA no
 

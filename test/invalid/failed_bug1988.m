@@ -1,6 +1,6 @@
 function failed_bug1988
 
-% MEM 3gb
+% MEM 1gb
 % WALLTIME 00:45:00
 % DEPENDENCY ft_volumesegment ft_prepare_headmodel
 

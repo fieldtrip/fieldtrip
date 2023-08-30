@@ -1,6 +1,6 @@
 function test_issue928
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_singleplotER ft_plot_vector
 % DATA no

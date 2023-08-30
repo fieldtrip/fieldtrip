@@ -1,6 +1,6 @@
 function test_ft_prepare_singleshell
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_headmodel_singleshell ft_prepare_headmodel ft_prepare_singleshell
 

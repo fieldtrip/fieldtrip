@@ -1,7 +1,7 @@
 function test_tutorial_connectivityextended
 
 % WALLTIME 00:45:00
-% MEM 3gb
+% MEM 1gb
 % DEPENDENCY ft_connectivityanalysis ft_connectivitysimulation ft_freqanalysis ft_connectivityplot ft_mvaranalysis
 % DATA public
 

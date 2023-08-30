@@ -1,7 +1,7 @@
 function inspect_pull1434
 
 % WALLTIME 00:10:00
-% MEM 3gb
+% MEM 1gb
 % DATA no
 
 %%

@@ -1,6 +1,6 @@
 function test_tutorial_networkanalysis
 
-% MEM 3gb
+% MEM 1gb
 % WALLTIME 00:30:00
 % DEPENDENCY ft_networkanalysis
 

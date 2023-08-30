@@ -1,7 +1,7 @@
 function test_example_combineplanar_pipelineorder
 
 % WALLTIME 00:10:00
-% MEM 2gb
+% MEM 1gb
 % DEPENDENCY ft_dipolesimulation ft_combineplanar ft_singleplotER ft_topoplotER
 % DATA public
 

@@ -1,6 +1,6 @@
 function test_headmodel_infinite
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_prepare_headmodel ft_headmodel_infinite
 % DATA no

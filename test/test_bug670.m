@@ -1,6 +1,6 @@
 function test_bug670
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_channelselection ft_channelcombination
 % DATA no

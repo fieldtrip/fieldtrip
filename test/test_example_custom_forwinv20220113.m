@@ -1,6 +1,6 @@
 function test_example_custom_forwinv
 
-% MEM 4gb
+% MEM 2gb
 % WALLTIME 00:20:00
 % DATA no
 

@@ -1,6 +1,6 @@
 function test_bug1315
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_checkdata ft_prepare_neighbours ft_megplanar ft_combineplanar
 % DATA private

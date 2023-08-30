@@ -1,16 +1,18 @@
 function test_bug2096
 
-% MEM 5gb
+% MEM 4gb
 % WALLTIME 00:20:00
 % DEPENDENCY ft_sourcewrite ft_read_cifti ft_write_cifti
 % DATA private
+
+[ftver, ftpath] = ft_version;
+templatedir  = fullfile(ftpath, 'template');
 
 cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2096'));
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % general purpose tests
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-clear all; close all
 
 %%
 source = [];
@@ -125,7 +127,7 @@ ft_sourcewrite(cfg, source);
 source1 = ft_read_cifti('test_bug2096.timeseries.dtseries.nii');
 
 %%
-parcellation = ft_read_atlas(dccnpath('/home/common/matlab/fieldtrip/template/atlas/aal/ROI_MNI_V4.nii'));
+parcellation = ft_read_atlas(fullfile(templatedir, 'atlas', 'aal', 'ROI_MNI_V4.nii'));
 source = ft_checkdata(parcellation, 'datatype', 'source');
 source = removefields(source, {'tissue', 'tissuelabel'});
 source.pow = randn(prod(parcellation.dim), 1);

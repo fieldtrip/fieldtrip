@@ -4,6 +4,7 @@ function [result] = ft_test(varargin)
 % results from the dashboard database.
 %
 % Use as
+%   ft_test inventorize     ...
 %   ft_test run             ...
 %   ft_test moxunit_run     ...
 %   ft_test report          ...
@@ -21,11 +22,12 @@ function [result] = ft_test(varargin)
 % not be considered.
 %
 % Additional optional arguments are specified as key-value pairs and can include
-%   dependency       = string
+%   dependency       = string or cell-array of strings
 %   upload           = string, upload test results to the dashboard, can be 'yes' or 'no' (default = 'yes')
 %   dccnpath         = string, allow files to be read from the DCCN path, can be 'yes' or 'no' (default is automatic)
 %   maxmem           = number (in bytes) or string such as 10GB
 %   maxwalltime      = number (in seconds) or string such as HH:MM:SS
+%   data             = string or cell-array of strings with 'no', 'public' and/or 'private'
 %   sort             = string, can be 'alphabetical', 'walltime', 'mem' or 'random' (default = 'alphabetical')
 %   returnerror      = string, whether give an error upon detecting a failed script, can be 'immediate', 'final', 'no' (default = 'no')
 %
@@ -80,7 +82,7 @@ function [result] = ft_test(varargin)
 %
 % See also FT_VERSION
 
-% Copyright (C) 2016-2019, Robert Oostenveld
+% Copyright (C) 2016-2023, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/donders/fieldtrip
 % for the documentation and details.
@@ -105,6 +107,11 @@ function [result] = ft_test(varargin)
 % but you can also execute it like this
 %   ft_test('run', 'test_bug46')
 % which is required if you want to get the result as output argument.
+
+if nargin==0
+  help(mfilename)
+  return
+end
 
 % ensure that all input arguments are strings, required for maxwalltime etc.
 for i=1:numel(varargin)

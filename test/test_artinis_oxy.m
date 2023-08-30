@@ -1,7 +1,7 @@
 function test_artinis_oxy
 
 % WALLTIME 00:20:00
-% MEM 4gb
+% MEM 2gb
 % DEPENDENCY read_artinis_oxy3 read_artinis_oxy4
 % DATA private
 

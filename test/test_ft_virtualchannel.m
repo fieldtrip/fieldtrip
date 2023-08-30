@@ -1,7 +1,7 @@
 function test_ft_virtualchannel
 
 % WALLTIME 00:45:00
-% MEM 6gb
+% MEM 4gb
 % DEPENDENCY ft_virtualchannel
 % DATA public
 

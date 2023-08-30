@@ -1,6 +1,6 @@
 function test_old_appenddata_2datasets
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY
 % DATA private

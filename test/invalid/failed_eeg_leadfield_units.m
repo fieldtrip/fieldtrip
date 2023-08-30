@@ -1,6 +1,6 @@
 function failed_eeg_leadfield_units
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_convert_units ft_datatype_sens ft_convert_vol_sens ft_compute_leadfield current_dipole
 

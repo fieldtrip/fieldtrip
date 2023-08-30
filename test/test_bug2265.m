@@ -1,16 +1,16 @@
 function test_bug2265
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_convert_units ft_prepare_sourcemodel
 % DATA no
 
-clear all
-close all
+[ftver, ftpath] = ft_version;
+templatedir  = fullfile(ftpath, 'template');
 
-load(dccnpath('/home/common/matlab/fieldtrip/template/headmodel/standard_bem.mat'));
-load(dccnpath('/home/common/matlab/fieldtrip/template/headmodel/standard_mri.mat'));
-elecs = ft_read_sens(dccnpath('/home/common/matlab/fieldtrip/template/electrode/standard_1020.elc'));
+load(fullfile(templatedir, 'headmodel', 'standard_bem.mat'));
+load(fullfile(templatedir, 'headmodel', 'standard_mri.mat'));
+elecs = ft_read_sens(fullfile(templatedir, 'electrode', 'standard_1020.elc'));
 
 %%
 CMMM = 'cm'; scale=1;

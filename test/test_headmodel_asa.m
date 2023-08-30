@@ -1,6 +1,6 @@
 function test_headmodel_asa
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_headmodel_asa ft_prepare_vol_sens ft_compute_leadfield
 % DATA no
@@ -11,8 +11,11 @@ function test_headmodel_asa
 % see ftp://ftp.fieldtriptoolbox.org/pub/fieldtrip/standard_BEM.zip
 % although that zip file does not contain the original file ASA formats
 
-hdmfile = dccnpath('/home/common/matlab/fieldtrip/template/headmodel/standard_bem.mat');
-elcfile = dccnpath('/home/common/matlab/fieldtrip/template/electrode/standard_1020.elc');
+[ftver, ftpath] = ft_version;
+templatedir  = fullfile(ftpath, 'template');
+
+hdmfile = fullfile(templatedir, 'headmodel', 'standard_bem.mat');
+elcfile = fullfile(templatedir, 'electrode', 'standard_1020.elc');
 
 vol = ft_headmodel_asa(hdmfile);
 figure

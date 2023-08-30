@@ -1,6 +1,6 @@
 function test_example_ica_eog
 
-% MEM 8gb
+% MEM 6gb
 % WALLTIME 00:30:00
 % DATA public
 

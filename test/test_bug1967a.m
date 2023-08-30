@@ -1,6 +1,6 @@
 function test_bug1967a
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:20:00
 % DEPENDENCY ft_prepare_vol_sens
 % DATA no

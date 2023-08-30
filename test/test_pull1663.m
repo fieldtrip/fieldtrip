@@ -1,7 +1,7 @@
 function test_pull1663
 
-% MEM 14gb
-% WALLTIME 00:60:00
+% MEM 12gb
+% WALLTIME 01:00:00
 % DEPENDENCY ft_prepare_sourcemodel headsurface ft_prepare_leadfield ft_freqanalysis ft_sourceanalysis
 % DATA private
 

@@ -1,6 +1,6 @@
 function failed_fieldtrip2fiff
 
-% MEM 11gb
+% MEM 8gb
 % WALLTIME 00:10:00
 % DEPENDENCY fieldtrip2fiff ft_read_header ft_read_data ft_read_event
 

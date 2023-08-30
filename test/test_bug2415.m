@@ -1,6 +1,6 @@
 function test_bug2415(updatereference)
 
-% MEM 3gb
+% MEM 1gb
 % WALLTIME 00:15:00
 % DEPENDENCY ft_read_event
 % DATA private

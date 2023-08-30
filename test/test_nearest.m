@@ -1,6 +1,6 @@
 function test_nearest
 
-% MEM 3gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY nearest
 % DATA no

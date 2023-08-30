@@ -1,6 +1,6 @@
 function test_bug1051
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_prepare_neighbours ft_megplanar ft_apply_montage
 % DATA private

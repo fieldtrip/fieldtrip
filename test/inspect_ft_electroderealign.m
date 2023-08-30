@@ -1,15 +1,18 @@
 function inspect_ft_electroderealign
 
-% MEM 3gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_electroderealign ft_read_mri ft_read_sens ft_prepare_mesh ft_warp_apply
 % DATA public
 
+[ftver, ftpath] = ft_version;
+templatedir  = fullfile(ftpath, 'template');
+
 %% load mri, segmentation and electrode definition
 mri = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.mri'));
 load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/headmodel_eeg/segmentedmri.mat'));
-elec = ft_read_sens(dccnpath('/home/common/matlab/fieldtrip/template/electrode/standard_1020.elc'));
-temp = ft_read_sens(dccnpath('/home/common/matlab/fieldtrip/template/electrode/standard_1005.elc'));
+elec = ft_read_sens(fullfile(templatedir, 'electrode', 'standard_1020.elc'));
+temp = ft_read_sens(fullfile(templatedir, 'electrode', 'standard_1005.elc'));
 
 % create a bem and a fem mesh
 

@@ -1,6 +1,6 @@
 function test_ft_timelockanalysis(datainfo, writeflag, version)
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY
 % DATA no

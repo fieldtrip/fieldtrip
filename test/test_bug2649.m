@@ -1,7 +1,7 @@
 function test_bug2649
 
 % WALLTIME 00:10:00
-% MEM 2gb
+% MEM 1gb
 % DEPENDENCY ft_write_data write_brainvision_eeg
 % DATA private
 

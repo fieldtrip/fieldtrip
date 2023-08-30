@@ -310,7 +310,7 @@ else
   for chan=1:nChan           %  Convert EEGs from uV to V, SQUIDs from fT to T
     SQUIDtype=any(ds.res4.senres(chan).sensorTypeIndex==[0:7]);
     EEGtype=any(ds.res4.senres(chan).sensorTypeIndex==[8 9]);
-    if EEGtype & (strcmp(unit,'ft') | strtcmp(unit,'phi0'))
+    if EEGtype & (strcmp(unit,'ft') | strcmp(unit,'phi0'))
       alphaG=1e-6;
     elseif SQUIDtype & strcmp(unit,'ft')
       alphaG=1e-15;

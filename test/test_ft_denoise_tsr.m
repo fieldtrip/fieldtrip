@@ -1,6 +1,6 @@
 function test_ft_denoise_tsr
 
-% MEM 8gb
+% MEM 6gb
 % WALLTIME 01:30:00
 % DEPENDENCY ft_denoise_tsr
 % DATA no

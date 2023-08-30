@@ -1,7 +1,7 @@
 function test_headmodel_interpolate
 
 % WALLTIME 00:45:00
-% MEM 6gb
+% MEM 4gb
 % DEPENDENCY mesh_sphere ft_headmodeltype ft_headmodel_interpolate ft_prepare_vol_sens ft_compute_leadfield leadfield_interpolate ft_apply_transform
 % DATA no
 

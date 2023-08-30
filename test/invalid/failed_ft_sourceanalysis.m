@@ -1,6 +1,6 @@
 function [varargout] = test_ft_sourceanalysis(datainfo, writeflag, version, diagnosticsflag)
 
-% MEM 4gb
+% MEM 2gb
 % WALLTIME 04:30:00
 % DEPENDENCY ft_sourceanalysis ref_datasets
 

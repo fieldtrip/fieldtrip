@@ -1,6 +1,6 @@
 function tests = test_ft_specest_wavelet
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_specest_wavelet
 % DATA no

@@ -1,6 +1,6 @@
 function test_bug2399
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:20:00
 % DEPENDENCY ft_sourceanalysis ft_prepare_vol_sens channelposition
 % DATA private

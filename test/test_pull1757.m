@@ -1,7 +1,7 @@
 function test_pull1757
 
 % WALLTIME 00:10:00
-% MEM 3gb
+% MEM 1gb
 % DATA no
 
 %% generate data (from test_bug2148)
