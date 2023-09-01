@@ -273,7 +273,7 @@ switch cfg.method
     else
       dimord = 'chan_freqlow_freqhigh' ;
       crsspctrm = zeros(nchan,nlf,nhf);
-      cfcdatamean = reshape(mean(cfcdata,1),[nchan nlf nhf nbin 1]);
+      cfcdatamean = reshape(nanmean(cfcdata,1),[nchan nlf nhf nbin 1]);
       
       for k =1:nchan
         pac = squeeze(cfcdatamean(k,:,:,:));
@@ -301,7 +301,7 @@ switch cfg.method
       
     else
       dimord = 'chan_freqlow_freqhigh_phase' ;
-      crsspctrm = reshape(mean(cfcdata,1,'omitnan'),[nchan nlf nhf nbin 1]);
+      crsspctrm = reshape(nanmean(cfcdata,1),[nchan nlf nhf nbin 1]);
       crsspctrm(isnan(crsspctrm)) = 0;
       
     end % if keeptrials
