@@ -1,23 +1,9 @@
-function update_dependency(depmat, inlist, outlist)
+function ft_test_update_dependency(depmat, inlist, outlist)
 
-% UPDATE_DEPENDENCY updates the dependencies of test scripts
+% FT_TEST_UPDATE_DEPENDENCY documentation is included inside ft_test
+% documentation.
 % 
-% Use as
-%    update_dependency(depmat, inlist, outlist)
-% 
-% where 
-%   inlist   = Nx1 cell-array, descibes the rows and lists the test scripts
-%   outlist  = 1xM cell-array, describes the columns and lists the
-%   dependencies
-%   depmat   = NxM matrix, see below
-% 
-% The depmat contains the following values:
-%  - 0 if there is no dependency
-%  - 2 for a direct dependency
-% 
-%  Note: You should always first run FIND_DEPENDENCY to find "outlist" and "depmat".
-% 
-% See also: FIND_DEPENDENCY, READLINES, WRITELINES
+% See also FT_TEST, READLINES, WRITELINES
 
 % Copyright (C) 2023, Konstantinos Tsilimparis
 %

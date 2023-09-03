@@ -26,7 +26,7 @@ function filename = dccnpath(filename)
 % then dccnpath will automatically use a temporary directory and try to download the
 % data.
 %
-% See also WHICH, WEBSAVE
+% See also  FT_TEST, WHICH, WEBSAVE
 
 % Copyright (C) 2012-2023, Donders Centre for Cognitive Neuroimaging, Nijmegen, NL
 %

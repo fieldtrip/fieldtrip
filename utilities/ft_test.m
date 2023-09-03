@@ -176,6 +176,13 @@ switch (varargin{1})
     result = ft_test_run(varargin{:});
   case 'inventorize'
     result = ft_test_run(varargin{:}); % this uses the same code as 'run'
+  case 'find_dependency'
+    [outlist, depmat] = ft_test_find_dependency(varargin{:});
+  case 'update_dependency'
+    [outlist, depmat] = ft_test_find_dependency(varargin{:});
+    ft_test_update_dependency(depmat, varargin(2:end), outlist);
+    case 'untested_functions'
+    ft_test_untested_functions(varargin{:});
   case 'report'
     result = ft_test_report(varargin{:});
   case 'compare'
@@ -186,15 +193,29 @@ switch (varargin{1})
     ft_error('unsupported command "%s"', varargin{1})
 end % switch
 
-if ~nargout
-  % show it on screen, do not return 'ans'
-  if isempty(result)
-    fprintf('Results are empty\n');
-  else
-    printstruct_as_table(result);
-  end
-  clear result
-else
-  % convert it to a proper MATLAB table
-  result = struct2table(result);
+switch (varargin{1})
+  case 'find_dependency'
+    fprintf('For the test scripts ');
+    fprintf('%s ', varargin{2:end});
+    fprintf('the dependency matrix is:\n');
+    disp(outlist);
+    disp(depmat);
+  case 'update_dependency'
+    return;
+  case 'untested_functions'
+    return;
+
+otherwise
+    if ~nargout
+      % show it on screen, do not return 'ans'
+      if isempty(result)
+        fprintf('Results are empty\n');
+      else                  
+         printstruct_as_table(result);                
+      end
+      clear result
+    else
+      % convert it to a proper MATLAB table
+      result = struct2table(result);
+    end
 end

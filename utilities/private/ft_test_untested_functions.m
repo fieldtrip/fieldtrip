@@ -1,8 +1,9 @@
-function untested_functions
+function ft_test_untested_functions(varargin)
 
-% UNTESTED_FUNCTIONS finds FieldTrip high-level functions not tested by any test scripts
+% FT_TEST_UNTESTED_FUNCTIONS documentation is included inside ft_test
+% documentation.
 % 
-% See also FIND_DEPENDENCY
+% See also FT_TEST
 
 % Copyright (C) 2023, Konstantinos Tsilimparis
 %
@@ -23,6 +24,10 @@ function untested_functions
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
 % $Id$
+
+narginchk(1, 1); % Check that there is exactly one input argument
+command = varargin{1};
+assert(isequal(command, 'untested_functions'));
 
 % Get FieldTrip version and path
 [ftver, ftpath] = ft_version;
@@ -51,7 +56,7 @@ for i = 1:length(testScripts)
 end
 
 % Find the dependencies of all the test scripts
-[dependencies, depmat] = find_dependency(testScripts);
+[dependencies, depmat] = ft_test_find_dependency('untested_functions', testScripts(1:20));
 
 list    = dir(ftpath);
 indices = endsWith({list.name}, {'.m'});
@@ -82,6 +87,7 @@ testedFunctions   = functionFiles(testedFunctionsIndices);
 untestedFunctions = setdiff(functionFiles, testedFunctions);
 
 % Display the untested functions
+disp('-------------------')
 disp('Untested functions:');
 disp(char(untestedFunctions));
 disp('Number of untested functions:');

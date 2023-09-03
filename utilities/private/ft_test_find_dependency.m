@@ -1,20 +1,9 @@
-function [outlist, depmat] = find_dependency(inlist, varargin)
+function [outlist, depmat] = ft_test_find_dependency(varargin)
 
-% FIND_DEPENDENCY creates a dependency matrix for direct dependencies of test scripts
+% FT_TEST_FIND_DEPENDENCY documentation is included inside ft_test
+% documentation.
 % 
-% Use as
-%    [outlist, depmat] = find_dependency(inlist)
-% where 
-%   inlist   = Nx1 cell-array, descibes the rows and lists the test scripts
-%   outlist  = 1xM cell-array, describes the columns and lists the
-%   dependencies
-%   depmat   = NxM matrix, see below
-% 
-% The depmat contains the following values:
-%  - 0 if there is no dependency
-%  - 2 for a direct dependency
-% 
-% See also UPDATE_DEPENDENCY, UNTESTED_FUNCTIONS
+% See also FT_TEST
 
 % Copyright (C) 2023, Konstantinos Tsilimparis
 %
@@ -35,6 +24,15 @@ function [outlist, depmat] = find_dependency(inlist, varargin)
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
 % $Id$
+
+narginchk(1, inf);
+command = varargin{1};
+assert(isequal(command, 'find_dependency') || isequal(command, 'update_dependency') || isequal(command, 'untested_functions'));
+if iscell(varargin{2})
+    inlist = varargin{2};
+else
+    inlist=varargin(2:end);
+end
 
 for i=1:length(inlist)  
   [p, f, x] = fileparts(inlist{i});
