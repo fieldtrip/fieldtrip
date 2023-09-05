@@ -56,7 +56,7 @@ end
 % Initialize a matrix to hold all dependencies
 depmat = zeros(length(inlist), sum(num));
 
-% Mark the dependencies with a value of 2
+% Mark direct dependencies with a value of 2, where 1 is reserved for self-dependencies (not yet implemented), and 3 for indirect dependencies (not yet implemented). 
 for i=1:length(inlist)
   offset = sum(num(1:(i-1)));
   depmat(i, (offset+1):(offset+num(i))) = 2;
@@ -65,7 +65,7 @@ end
 % Drop functions with no dependencies
 dep = dep(~num==0); 
 
-% Define outlist and remove all double occurences
+% Define outlist and remove all double occurrences
 outlist=[dep{:}];
 s = unique(outlist);
 for i=1:length(s)

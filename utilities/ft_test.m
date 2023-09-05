@@ -60,7 +60,7 @@ function [result] = ft_test(varargin)
 % to find on what functions test_bug46 depends on.
 % 
 % It outputs:
-%   inlist   = Nx1 cell-array, descibes the rows and lists the test scripts
+%   inlist   = Nx1 cell-array, describes the rows and lists the test scripts
 %   outlist  = 1xM cell-array, describes the columns and lists the
 %   dependencies
 %   depmat   = NxM dependency matrix, see below

@@ -35,20 +35,11 @@ assert(isequal(command, 'untested_functions'));
 % Define the folder containing test scripts
 testFolder = fullfile(ftpath, 'test');
 
-% List all files in the test folder
-list = dir(testFolder);
+% List all files in the test folder that start with test_* or inspect_*
+list1 = dir(fullfile(testFolder,'test_*'));
+list2 = dir(fullfile(testFolder,'inspect_*'));
+list  = [list1; list2];
 testScripts  = {list.name};
-
-% Exclude specific files and folders
-excludeFiles = {'.', '..', 'test_eeglab_ft_integration_20140529T090217.mat', ...
-'test_eeglab_ft_integration_20150528T150257.mat', ...
-'test_issue1334.mat', ...
-'test_spm_ft_integration.mat', ...
-'trialfun_affcog.m', ...
-'trialfun_stimon.m', ...
-'trialfun_stimon_samples.m', 'invalid', 'private', 'README'};
-validIndices = ~ismember({list.name}, excludeFiles);
-testScripts  = testScripts(validIndices);
 
 % Remove the ".m" extension from test script names
 for i = 1:length(testScripts)
@@ -56,7 +47,7 @@ for i = 1:length(testScripts)
 end
 
 % Find the dependencies of all the test scripts
-[dependencies, depmat] = ft_test_find_dependency('untested_functions', testScripts(1:20));
+[dependencies, depmat] = ft_test_find_dependency('untested_functions', testScripts(1:10));
 
 list    = dir(ftpath);
 indices = endsWith({list.name}, {'.m'});
@@ -87,8 +78,8 @@ testedFunctions   = functionFiles(testedFunctionsIndices);
 untestedFunctions = setdiff(functionFiles, testedFunctions);
 
 % Display the untested functions
-disp('-------------------')
+fprintf('\n ------------------- \n')
 disp('Untested functions:');
 disp(char(untestedFunctions));
-disp('Number of untested functions:');
-disp(length(untestedFunctions));
+fprintf('\n Number of untested functions: %d \n\n', length(untestedFunctions))
+
