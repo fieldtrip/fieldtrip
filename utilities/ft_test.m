@@ -60,12 +60,7 @@ function [result] = ft_test(varargin)
 % 
 % It outputs:
 %   inlist   = Nx1 cell-array, describes the rows and lists the test scripts
-<<<<<<< HEAD
-%   outlist  = 1xM cell-array, describes the columns and lists the
-%   dependencies
-=======
 %   outlist  = 1xM cell-array, describes the columns and lists the dependencies
->>>>>>> a75319f4323f61cac47ef4e40dec60aaa2eb5081
 %   depmat   = NxM dependency matrix, see below
 % 
 % The dependency matrix contains the following values:
