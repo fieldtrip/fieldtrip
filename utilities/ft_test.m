@@ -4,14 +4,14 @@ function [result] = ft_test(varargin)
 % results from the dashboard database.
 %
 % Use as
-%   ft_test inventorize     ...
-%   ft_test run             ...
-%   ft_test find_dependency ...
-%   ft_test update_dependency ...
+%   ft_test inventorize        ...
+%   ft_test run                ...
+%   ft_test find_dependency    ...
+%   ft_test update_dependency  ...
 %   ft_test untested_functions ...
-%   ft_test moxunit_run     ... % This is obsolete
-%   ft_test report          ... % This is obsolete
-%   ft_test compare         ... % This is obsolete
+%   ft_test moxunit_run        ... % this is obsolete
+%   ft_test report             ... % this is obsolete
+%   ft_test compare            ... % this is obsolete
 % 
 % ========= INVENTORIZE =========
 % 
@@ -21,7 +21,6 @@ function [result] = ft_test(varargin)
 %   ft_test inventorize data no
 % to list test functions that don't need any external data to run.
 %  
-% 
 % Additional optional arguments are specified as key-value pairs and can include
 %   dependency       = string or cell-array of strings
 %   upload           = string, upload test results to the dashboard, can be 'yes' or 'no' (default = 'yes')
@@ -61,26 +60,23 @@ function [result] = ft_test(varargin)
 % 
 % It outputs:
 %   inlist   = Nx1 cell-array, descibes the rows and lists the test scripts
-%   outlist  = 1xM cell-array, describes the columns and lists the
-%   dependencies
+%   outlist  = 1xM cell-array, describes the columns and lists the dependencies
 %   depmat   = NxM dependency matrix, see below
 % 
 % The dependency matrix contains the following values:
 %  - 0 if there is no dependency
 %  - 2 for a direct dependency
 % 
-% 
 % ========= UPDATE_DEPENDENCY =========
 % 
-% To update the DEPENDENCY header items of test scripts, you would do:
+% To update the DEPENDENCY header in a specific test script, you would do:
 %   ft_test update_dependency test_bug46
-% to update the DEPENDENCY header items of test_bug46.
 % 
 % ========= UNTESTED_FUNCTIONS =========
 % 
 % To find FieldTrip high-level functions not tested by any test scripts,
 % you would do
-%  ft_test untested_functions
+%   ft_test untested_functions
 %
 % ========= MOXUNIT_RUN =========
 %
@@ -181,7 +177,7 @@ switch (varargin{1})
   case 'update_dependency'
     [outlist, depmat] = ft_test_find_dependency(varargin{:});
     ft_test_update_dependency(depmat, varargin(2:end), outlist);
-    case 'untested_functions'
+  case 'untested_functions'
     ft_test_untested_functions(varargin{:});
   case 'report'
     result = ft_test_report(varargin{:});
@@ -200,10 +196,12 @@ switch (varargin{1})
     fprintf('the dependency matrix is:\n');
     disp(outlist);
     disp(depmat);
+
   case 'update_dependency'
-    return;
+    return
+  
   case 'untested_functions'
-    return;
+    return
 
 otherwise
     if ~nargout
