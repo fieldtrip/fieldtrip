@@ -47,7 +47,7 @@ for i = 1:length(testScripts)
 end
 
 % Find the dependencies of all the test scripts
-[dependencies, depmat] = ft_test_find_dependency('untested_functions', testScripts(1:10));
+[dependencies, depmat] = ft_test_find_dependency('untested_functions', testScripts);
 
 list    = dir(ftpath);
 indices = endsWith({list.name}, {'.m'});
