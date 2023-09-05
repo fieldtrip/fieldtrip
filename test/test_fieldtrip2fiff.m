@@ -2,6 +2,7 @@ function test_fieldtrip2fiff(mnedatadir)
 
 % WALLTIME 00:10:00
 % MEM 1gb
+% DEPENDENCY fieldtrip2fiff
 % DATA private
 
 %%
@@ -143,7 +144,40 @@ datafif     = ft_preprocessing(cfg);
 assert(isequal(datafif.trial{1}, single(a1c)));
 
 %%
-% This section tests a bunch of MEG dataset, of different systems
+% This section checks whether event handling works to a certain extent
+% Use the 'Subject01.ds' dataset for basic testing of the writing and reading
+cfg         = [];
+cfg.dataset = fullfile(datadir, 'ctf151', 'Subject01.ds');
+cfg.channel = 'MEG';
+cfg.continuous = 'yes';
+data        = ft_preprocessing(cfg); % read in as a single chunk
+event       = ft_read_event(cfg.dataset); % as detected by fieldtrip
+
+fieldtrip2fiff(fullfile(savedir, 'data_without_stimchan_events.fif'), data);
+fieldtrip2fiff(fullfile(savedir, 'data_without_stimchan.fif'), data, 'event', event);
+
+cfg.channel = 'all';
+data        = ft_preprocessing(cfg);
+fieldtrip2fiff(fullfile(savedir, 'data_without_events.fif'), data);
+fieldtrip2fiff(fullfile(savedir, 'data.fif'), data, 'event', event);
+
+ev1 = ft_read_event(fullfile(savedir, 'data_without_stimchan_events.fif'));
+ev2 = ft_read_event(fullfile(savedir, 'data_without_stimchan.fif'));
+ev3 = ft_read_event(fullfile(savedir, 'data_without_events.fif'));
+ev4 = ft_read_event(fullfile(savedir, 'data.fif'));
+assert(numel(ev1)==0);
+assert(numel(ev2)==numel(event) && isequal([event.sample], [ev2.sample]));
+assert(numel(ev4)==numel(event) && isequal([event.sample], [ev4.sample]));
+assert(numel(ev3)==sum(strcmp({event.type},'STIM')));
+
+% delete the files again, they are pretty big
+delete(fullfile(savedir, 'data_without_stimchan_events.fif'));
+delete(fullfile(savedir, 'data_without_stimchan.fif'));
+delete(fullfile(savedir, 'data_without_events.fif'));
+delete(fullfile(savedir, 'data.fif'));
+
+%%
+% This section tests a bunch of MEG datasets, of different systems
 fname = {
   'bti148/c,rfhp0.1Hz'
   'bti248hcp/c,rfDC'

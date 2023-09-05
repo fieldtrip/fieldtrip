@@ -297,7 +297,7 @@ elseif ft_senstype(input, 'ctf') && isgrad
   chantype(sel) = {'refmag'};             % reference magnetometers
   sel = myregexp('^[GPQR][0-9][0-9]$', input.label);
   chantype(sel) = {'refgrad'};            % reference gradiometers
-  
+    
 elseif ft_senstype(input, 'ctf') && islabel
   % the channels have to be identified based on their name alone
   sel = myregexp('^M[ZLR][A-Z][0-9][0-9]$', label);
@@ -308,7 +308,13 @@ elseif ft_senstype(input, 'ctf') && islabel
   chantype(sel) = {'refmag'};             % reference magnetometers
   sel = myregexp('^[GPQR][0-9][0-9]$', label);
   chantype(sel) = {'refgrad'};            % reference gradiometers
-  
+  sel = myregexp('STIM', label);
+  chantype(sel) = {'trigger'};
+  sel = myregexp('UPPT001', label);
+  chantype(sel) = {'trigger'};
+  sel = myregexp('UPPT002', label);
+  chantype(sel) = {'response'};
+
 elseif ft_senstype(input, 'bti')
   if isfield(input, 'orig') && isfield(input.orig, 'config')
     configname = {input.orig.config.channel_data.name};
@@ -334,7 +340,8 @@ elseif ft_senstype(input, 'bti')
     chantype(configtype==2) = {'eeg'};
     chantype(configtype==3) = {'ref'}; % not known if mag or grad
     chantype(configtype==4) = {'aux'};
-    chantype(configtype==5) = {'trigger'};
+    chantype(configtype==5 & ~strcmp(configname, 'RESPONSE')) = {'trigger'};
+    chantype(configtype==5 &  strcmp(configname, 'RESPONSE')) = {'response'};
     
     % refine the distinction between refmag and refgrad to make the types
     % in grad and header consistent
@@ -353,7 +360,11 @@ elseif ft_senstype(input, 'bti')
     chantype(sel) = {'refmag'};
     sel = myregexp('^G[xyz][xyz]A$', label);
     chantype(sel) = {'refgrad'};
-    
+    sel = myregexp('STIMULUS', label);
+    chantype(sel) = {'trigger'};
+    sel = myregexp('RESPONSE', label);
+    chantype(sel) = {'response'};
+
     if isgrad && isfield(input, 'tra')
       gradtype = repmat({'unknown'}, size(input.label));
       gradtype(strncmp('A', input.label, 1)) = {'meg'};

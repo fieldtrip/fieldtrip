@@ -148,7 +148,7 @@ function [freq] = ft_freqanalysis(cfg, data)
 %   cfg.gwidth  = determines the length of the used wavelets in standard
 %                   deviations of the implicit Gaussian kernel and should
 %                   be chosen >= 3; (default = 3)
-%   cfg.combine = 'additive', 'multiplicative' (default = 'additive')
+%   cfg.combine = 'additive', 'multiplicative' (default = 'multiplicative')
 %                   determines if cycle numbers of wavelets comprising a superlet
 %                   are chosen additively or multiplicatively
 %   cfg.order   = vector 1 x numfoi, superlet order, i.e. number of combined
@@ -354,13 +354,8 @@ switch cfg.method
     
     cfg.width   = ft_getopt(cfg, 'width',   3);
     cfg.gwidth  = ft_getopt(cfg, 'gwidth',  3);
-    cfg.combine = ft_getopt(cfg, 'combine', 'additive');
-    cfg.order   = ft_getopt(cfg, 'order',   ones(1, numel(cfg.foi)));
-    if numel(cfg.order) == 1
-      cfg.order = cfg.order.*length(cfg.foi);
-    elseif numel(cfg.order) ~= numel(cfg.foi)
-      ft_error('cfg.foi must have the same number of elements as cfg.foi, or must be a scalar');
-    end
+    cfg.combine = ft_getopt(cfg, 'combine', 'multiplicative');
+    cfg.order   = ft_getopt(cfg, 'order',   []);
     
   case 'tfr'
     cfg = ft_checkconfig(cfg, 'renamed', {'waveletwidth', 'width'});
@@ -630,6 +625,14 @@ for itrial = 1:ntrials
       % equivalent one-liners:
       %   multiplicative: cycles = arrayfun(@(order) arrayfun(@(wl_num) cfg.width*wl_num, 1:order), cfg.order,'uni',0)
       %   additive: cycles = arrayfun(@(order) arrayfun(@(wl_num) cfg.width+wl_num-1, 1:order), cfg.order,'uni',0)
+      if isempty(cfg.order)
+        ft_error('cfg.order should be defined');
+      elseif numel(cfg.order) == 1
+        cfg.order = cfg.order.*ones(1, numel(cfg.foi));
+      elseif numel(cfg.order) ~= numel(cfg.foi)
+        ft_error('cfg.foi must have the same number of elements as cfg.foi, or must be a scalar');
+      end
+      
       order_int = ceil(cfg.order);
       cycles = cell(length(cfg.foi), 1);
       for i_f = 1:length(cfg.foi)
@@ -647,26 +650,26 @@ for itrial = 1:ntrials
       end
       
       % compute superlets
-      spectrum = NaN(nchan, length(cfg.foi), length(cfg.toi));
+      
       % index of 'freqoi' value in 'options'
       idx_freqoi = find(ismember(options(1:2:end), 'freqoi'))*2;
       foi = options{idx_freqoi};
       for i_f = 1:length(cfg.foi)
         % collext individual wavelets' responses per frequency
-        spec_f = NaN(order_int(i_f), nchan, length(cfg.toi));
         opt = options;
         opt{idx_freqoi} = cfg.foi(i_f);
         % compute responses for individual wavelets
         for i_wl = 1:order_int(i_f)
-          [spec_f(i_wl, :, :), dum, toi] = ft_specest_wavelet(dat, time, 'timeoi', cfg.toi, 'width', cycles{i_f}(i_wl), 'gwidth', cfg.gwidth, opt{:}, 'feedback', fbopt);
+          [spec_f(:,:,:,i_wl), dum, toi] = ft_specest_wavelet(dat, time, 'timeoi', cfg.toi, 'width', cycles{i_f}(i_wl), 'gwidth', cfg.gwidth, opt{:}, 'feedback', fbopt);
         end
+        spec_f = permute(spec_f, [4 1 2 3]); 
         if floor(cfg.order(i_f)) ~= order_int(i_f)
-            spec_f(i_wl, :, :) = spec_f(i_wl, :, :) .^ rem(cfg.order(i_f), 1);
+            spec_f(i_wl, :, :, :) = spec_f(i_wl, :, :, :) .^ rem(cfg.order(i_f), 1);
         end
         % geometric mean across individual wavelets
         spectrum(:, i_f, :) = prod(spec_f, 1) .^ (1 / cfg.order(i_f));
+        clear spec_f
       end
-      clear spec_f
       
       % the following variable is created to keep track of the number of
       % trials per time bin and is needed for proper normalization if
