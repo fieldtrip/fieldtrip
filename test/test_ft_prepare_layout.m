@@ -1,7 +1,7 @@
 function test_ft_prepare_layout
 
 % WALLTIME 00:10:00
-% MEM 4gb
+% MEM 2gb
 % DEPENDENCY ft_prepare_layout ft_plot_layout ft_plot_sens
 % DATA public
 

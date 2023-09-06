@@ -1,6 +1,6 @@
 function test_bug2231
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_read_header ft_preprocessing read_bti_m4d
 % DATA private
@@ -8,8 +8,9 @@ function test_bug2231
 % Bug reported by Christian Wienbruch, about the functionality of reading 4D-data
 % the old-fashioned way being broken
 
-d = dir(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2231/*,s'));
-filename = fullfile(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2231/'), d(1).name);
+datadir = dccnpath('/home/common/matlab/fieldtrip/data/test/bug2231/');
+d = dir(fullfile(datadir, '*,s'));
+filename = fullfile(datadir, d(1).name);
 
 cfg = [];
 cfg.dataset = filename;

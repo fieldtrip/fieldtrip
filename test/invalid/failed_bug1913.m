@@ -1,6 +1,6 @@
 function test_bug1913
 
-% MEM 8gb
+% MEM 6gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_read_header ft_read_data
 

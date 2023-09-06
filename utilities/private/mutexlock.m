@@ -22,7 +22,7 @@ end
 
 stopwatch = tic;
 while exist(lockfile, 'file')
-  % wait untill another process removes the lockfile
+  % wait until another process removes the lockfile
   pause(1);
   if toc(stopwatch)>timeout
     ft_error('timeout exceeded waiting for the lockfile to be removed');

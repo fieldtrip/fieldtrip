@@ -1,6 +1,6 @@
 function test_bug1309
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:15:00
 % DEPENDENCY
 % DATA no

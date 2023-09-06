@@ -1,7 +1,7 @@
 function test_issue1991
 
 % WALLTIME 00:10:00
-% MEM 2gb
+% MEM 1gb
 % DEPENDENCY ft_read_mri ft_hastoolbox ft_filetype
 % DATA private
 

@@ -1,6 +1,6 @@
 function test_tutorial_connectivity20130308
 
-% MEM 7gb
+% MEM 6gb
 % WALLTIME 00:10:00
 % DEPENDENCY
 % DATA public

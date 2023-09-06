@@ -1,5 +1,7 @@
 function inspect_bug1093
 
+% WALLTIME 00:10:00
+% MEM 1gb
 % DEPENDENCY ft_artifact_zvalue
 % DATA private
 

@@ -1,7 +1,7 @@
 function test_pull1427
 
-% MEM 6gb
-% WALLTIME 1:00:00
+% MEM 4gb
+% WALLTIME 01:00:00
 % DEPENDENCY ft_prepare_mesh ft_prepare_headmodel
 % DATA no
 

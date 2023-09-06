@@ -1,7 +1,7 @@
 function test_bug1992
 
 % WALLTIME 00:10:00
-% MEM 3gb
+% MEM 1gb
 % DEPENDENCY ft_filetype ft_read_headshape ft_write_headshape loadjson savejson loadbj savebj jsonopt
 % DATA private
 

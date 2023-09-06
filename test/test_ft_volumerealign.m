@@ -1,6 +1,6 @@
 function test_ft_volumerealign
 
-% MEM 4gb
+% MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_read_mri ft_volumerealign ft_volumereslice
 % DATA private
@@ -24,6 +24,9 @@ function test_ft_volumerealign
 % SAME subject's images in T1 and T2 modalities
 
 % path to data
+
+[ftver, ftpath] = ft_version;
+templatedir  = fullfile(ftpath, 'template');
 
 subjectT1  = dccnpath('/home/common/matlab/fieldtrip/data/test/bug1826/T1.nii.gz');
 subjectT2  = dccnpath('/home/common/matlab/fieldtrip/data/test/bug1826/T2.nii.gz');
@@ -442,7 +445,7 @@ clear all;
 
 % template T1 (fuzzy)
 
-T1temp = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/external/spm8/templates/T1.nii'));
+T1temp = ft_read_mri(fullfile(ftpath, 'external', 'spm8', 'templates', 'T1.nii'));
 
 % other subject's T1
 
@@ -475,7 +478,7 @@ clear all;
 
 % template T1 (fuzzy)
 
-T1temp = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/external/spm8/templates/T1.nii'));
+T1temp = ft_read_mri(fullfile(ftpath, 'external', 'spm8', 'templates', 'T1.nii'));
 
 % other subject's T1
 

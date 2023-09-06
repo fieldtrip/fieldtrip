@@ -1,6 +1,6 @@
 function test_issue1866
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:20:00
 % DEPENDENCY ft_checkdata ft_connectivityplot
 % DATA no

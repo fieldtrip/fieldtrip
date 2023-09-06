@@ -1,6 +1,6 @@
 function test_pull574_reref
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 01:00:00
 % DEPENDENCY ft_preprocessing preproc ft_preproc_reference
 % DATA private

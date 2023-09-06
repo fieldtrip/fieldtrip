@@ -1,6 +1,6 @@
 function test_ft_componentanalysis_methods
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_componentanalysis ft_rejectcomponent ft_checkdata runica fastica sobi jader dss parafac
 % DATA no

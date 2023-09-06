@@ -1,7 +1,7 @@
 function test_bug2518a
 
 % WALLTIME 00:30:00
-% MEM 3gb
+% MEM 1gb
 % DEPENDENCY ft_componentanalysis
 % DATA public
 

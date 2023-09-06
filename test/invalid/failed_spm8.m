@@ -1,7 +1,7 @@
 function failed_spm8
 
 % WALLTIME 00:10:00
-% MEM 3gb
+% MEM 1gb
 % DEPENDENCY ft_volumenormalise ft_volumesegment ft_volumedownsample mni2tal tal2mni
 
 mrifile = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/SubjectBraille.mri');

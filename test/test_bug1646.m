@@ -1,6 +1,6 @@
 function test_bug1646
 
-% MEM 6gb
+% MEM 4gb
 % WALLTIME 00:15:00
 % DEPENDENCY ft_prepare_mesh ft_datatype_segmentation
 % DATA private
@@ -16,6 +16,9 @@ function test_bug1646
 % http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=964 is obsolete
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+[ftver, ftpath] = ft_version;
+templatedir  = fullfile(ftpath, 'template');
 
 % it is not supposed to work with a 3-D array as input
 try
@@ -67,7 +70,7 @@ load(fullfile(datadir,'seg4'));
 load(fullfile(datadir,'seg5'));
 load(fullfile(datadir,'seg6'));
 
-atlas = ft_read_atlas(dccnpath('/home/common/matlab/fieldtrip/template/atlas/afni/TTatlas+tlrc.BRIK'));
+atlas = ft_read_atlas(fullfile(templatedir, 'atlas', 'afni', 'TTatlas+tlrc.BRIK'));
 mri = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/Subject01.mri'));
 
 assert(ft_datatype(seg1, 'segmentation'));

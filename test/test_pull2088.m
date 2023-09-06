@@ -1,7 +1,7 @@
 function test_pull2088(filename)
 
 % WALLTIME 00:20:00
-% MEM 3gb
+% MEM 1gb
 % DEPENDENCY ft_definetrial ft_trialfun_general
 % DATA private
 

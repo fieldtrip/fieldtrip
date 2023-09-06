@@ -18,7 +18,7 @@ function ft_standalone(varargin)
 %   ft_standalone --option value scriptname.m
 % or on the Linux/macOS command line
 %   fieldtrip.sh <MATLABROOT> --option value scriptname.m
-% The options and their values are automaticallly made available as local
+% The options and their values are automatically made available as local
 % variables in the script execution environment.
 %
 % See also FT_COMPILE_STANDALONE

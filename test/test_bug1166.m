@@ -1,6 +1,6 @@
 function test_bug1166
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_prepare_headmodel ft_headmodel_bem_asa 
 % DATA no
@@ -8,8 +8,11 @@ function test_bug1166
 % This function tests that the inputs for the headmodel functions are
 % read-in correctly
 
+[ftver, ftpath] = ft_version;
+templatedir  = fullfile(ftpath, 'template');
+
 % ASA headmodel
-filename = dccnpath('/home/common/matlab/fieldtrip/template/headmodel/skin/standard_skin_1222.vol');
+filename = fullfile(templatedir, 'headmodel', 'skin', 'standard_skin_1222.vol');
 cfg = [];
 cfg.method = 'asa';
 cfg.hdmfile = filename;

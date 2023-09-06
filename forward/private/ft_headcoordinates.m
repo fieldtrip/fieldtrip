@@ -75,7 +75,7 @@ function [transform, coordsys] = ft_headcoordinates(fid1, fid2, fid3, fid4, coor
 %   the origin is the intersection of the line through LPA and RPA and a line orthogonal to L passing through the nasion
 %
 % The ASA coordinate system is defined as follows:
-%   the origin is at the orthogonal intersection of the line from rpa-lpa and the line trough nas
+%   the origin is at the orthogonal intersection of the line from rpa-lpa and the line through nas
 %   the X-axis goes towards nas
 %   the Y-axis goes through rpa and lpa
 %   the Z-axis goes approximately towards the vertex, orthogonal to X and Y

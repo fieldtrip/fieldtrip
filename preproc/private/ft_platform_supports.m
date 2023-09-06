@@ -16,7 +16,7 @@ function tf = ft_platform_supports(what, varargin)
 %   'onCleanup'                     onCleanup(...)
 %   'alim'                          alim(...)
 %   'int32_logical_operations'      bitand(a,b) with a, b of type int32
-%   'graphics_objects'              graphics sysem is object-oriented
+%   'graphics_objects'              graphics system is object-oriented
 %   'libmx_c_interface'             libmx is supported through mex in the C-language (recent MATLAB versions only support C++)
 %   'images'                        all image processing functions in FieldTrip's external/images directory
 %   'signal'                        all signal processing functions in FieldTrip's external/signal directory

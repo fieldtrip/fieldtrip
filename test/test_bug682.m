@@ -1,6 +1,6 @@
 function test_bug682
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY channelposition ft_datatype_sens yokogawa2grad ft_prepare_layout
 % DATA private

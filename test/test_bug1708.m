@@ -1,6 +1,6 @@
 function test_bug1708
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY test_bug1708 ft_denoise_synthetic
 % DATA private

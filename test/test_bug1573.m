@@ -1,11 +1,14 @@
 function test_bug1573
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_read_mri ft_volumnrealign ft_sourceinterpolate
 % DATA no
 
-template = dccnpath('/home/common/matlab/spm8/canonical/single_subj_T1.nii');
+[ftver, ftpath] = ft_version;
+templatedir = fullfile(ftpath, 'template');
+
+template = fullfile(templatedir, 'anatomy', 'single_subj_T1.nii');
 template_mri = ft_read_mri(template);
 
 cfg = [];
@@ -17,6 +20,7 @@ mri = ft_volumerealign(cfg,template_mri);
 
 %%
 return
+
 % these files johzum has but are not on svn.
 load('gava_sourcenorm/grandAVG_SourceDiff_OHNEdysphagie__beta.mat');
 % below requires too much memory

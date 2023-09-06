@@ -1,7 +1,7 @@
 function test_issue1985
 
 % WALLTIME 00:10:00
-% MEM 2gb
+% MEM 1gb
 
 % DEPENDENCY filter_with_correction fir_filterdcpadded
 % DATA no

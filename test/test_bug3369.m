@@ -1,7 +1,7 @@
 function test_bug3369
 
 % WALLTIME 00:20:00
-% MEM 2gb
+% MEM 1gb
 % DEPENDENCY read_neuromag_maxfilterlog
 % DATA private
 

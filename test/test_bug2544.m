@@ -2,7 +2,7 @@ function test_bug2544
 
 
 % WALLTIME 00:10:00
-% MEM 2gb
+% MEM 1gb
 % DEPENDENCY ft_sourcegrandaverage getdimord ft_selectdata
 % DATA private
 

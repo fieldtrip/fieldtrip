@@ -1,7 +1,7 @@
 function test_ft_preproc_dftfilter
 
 % WALLTIME 00:10:00
-% MEM 2gb
+% MEM 1gb
 % DEPENDENCY ft_preproc_dftfilter
 % DATA no
 

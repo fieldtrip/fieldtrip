@@ -1,6 +1,6 @@
 function test_pull1229
 
-% MEM 8gb
+% MEM 6gb
 % WALLTIME 00:20:00
 % DEPENDENCY ft_read_header ft_read_data ft_read_event
 % DATA private

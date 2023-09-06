@@ -1,6 +1,6 @@
 function test_old_fixcsd
 
-% MEM 4gb
+% MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY
 % DATA no

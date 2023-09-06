@@ -1,6 +1,6 @@
 function test_bug2031
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_topoplotER ft_topoplotTFR ft_singleplotER ft_singleplotTFR
 % DATA no

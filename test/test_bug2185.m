@@ -1,7 +1,7 @@
 function test_bug2185
 
 % WALLTIME 00:20:00
-% MEM 6gb
+% MEM 4gb
 % DEPENDENCY ft_sourcegrandaverage ft_selectdata ft_selectdata_new ft_datatype_source ft_math
 % DATA private
 

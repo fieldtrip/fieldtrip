@@ -1,6 +1,6 @@
 function test_ft_volumenormalise
 
-% MEM 8gb
+% MEM 6gb
 % WALLTIME 00:45:00
 % DEPENDENCY ft_volumenormalise ft_warp_apply
 % DATA public

@@ -1,6 +1,6 @@
 function str = printor(strs, quote)
 
-% PRINTOR prints a single or mutiple strings as "x1, x2, x3 or x4". If there is
+% PRINTOR prints a single or multiple strings as "x1, x2, x3 or x4". If there is
 % only one string, that string is returned without additional formatting.
 %
 % See also PRINTAND

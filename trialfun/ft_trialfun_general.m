@@ -31,7 +31,7 @@ function [trl, event] = ft_trialfun_general(cfg)
 %
 % See also FT_DEFINETRIAL, FT_TRIALFUN_GUI, FT_TRIALFUN_SHOW
 
-% Copyright (C) 2005-2021, Robert Oostenveld
+% Copyright (C) 2005-2023, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -80,21 +80,22 @@ headeropt  = ft_setopt(headeropt, 'chantype',       ft_getopt(cfg, 'chantype', {
 
 % construct the low-level options as key-value pairs, these are passed to FT_READ_EVENT
 eventopt = {};
-eventopt = ft_setopt(eventopt, 'headerformat',  ft_getopt(cfg, 'headerformat'));        % is passed to low-level function, empty implies autodetection
-eventopt = ft_setopt(eventopt, 'dataformat',    ft_getopt(cfg, 'dataformat'));          % is passed to low-level function, empty implies autodetection
-eventopt = ft_setopt(eventopt, 'eventformat',   ft_getopt(cfg, 'eventformat'));         % is passed to low-level function, empty implies autodetection
-eventopt = ft_setopt(eventopt, 'readbids',      ft_getopt(cfg, 'readbids'));
-eventopt = ft_setopt(eventopt, 'detectflank',   ft_getopt(cfg.trialdef, 'detectflank'));
-eventopt = ft_setopt(eventopt, 'trigshift',     ft_getopt(cfg.trialdef, 'trigshift'));
-eventopt = ft_setopt(eventopt, 'chanindx',      ft_getopt(cfg.trialdef, 'chanindx'));
-eventopt = ft_setopt(eventopt, 'threshold',     ft_getopt(cfg.trialdef, 'threshold'));
-eventopt = ft_setopt(eventopt, 'tolerance',     ft_getopt(cfg.trialdef, 'tolerance'));
-eventopt = ft_setopt(eventopt, 'combinebinary', ft_getopt(cfg.trialdef, 'combinebinary'));
+eventopt = ft_setopt(eventopt, 'headerformat',   ft_getopt(cfg, 'headerformat'));        % is passed to low-level function, empty implies autodetection
+eventopt = ft_setopt(eventopt, 'dataformat',     ft_getopt(cfg, 'dataformat'));          % is passed to low-level function, empty implies autodetection
+eventopt = ft_setopt(eventopt, 'eventformat',    ft_getopt(cfg, 'eventformat'));         % is passed to low-level function, empty implies autodetection
+eventopt = ft_setopt(eventopt, 'readbids',       ft_getopt(cfg, 'readbids'));
+eventopt = ft_setopt(eventopt, 'detectflank',    ft_getopt(cfg.trialdef, 'detectflank'));
+eventopt = ft_setopt(eventopt, 'trigshift',      ft_getopt(cfg.trialdef, 'trigshift'));
+eventopt = ft_setopt(eventopt, 'chanindx',       ft_getopt(cfg.trialdef, 'chanindx'));
+eventopt = ft_setopt(eventopt, 'threshold',      ft_getopt(cfg.trialdef, 'threshold'));
+eventopt = ft_setopt(eventopt, 'tolerance',      ft_getopt(cfg.trialdef, 'tolerance'));
+eventopt = ft_setopt(eventopt, 'combinebinary',  ft_getopt(cfg.trialdef, 'combinebinary'));
+eventopt = ft_setopt(eventopt, 'checkmaxfilter', ft_getopt(cfg, 'checkmaxfilter'));      % this allows to read non-maxfiltered neuromag data recorded with internal active shielding
 
 % specify the default file formats
-cfg.eventformat   = ft_getopt(cfg, 'eventformat');
-cfg.headerformat  = ft_getopt(cfg, 'headerformat');
-cfg.dataformat    = ft_getopt(cfg, 'dataformat');
+cfg.eventformat    = ft_getopt(cfg, 'eventformat');
+cfg.headerformat   = ft_getopt(cfg, 'headerformat');
+cfg.dataformat     = ft_getopt(cfg, 'dataformat');
 cfg.representation = ft_getopt(cfg, 'representation');
 
 % get the header, this is among others for the sampling frequency

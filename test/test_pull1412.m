@@ -1,6 +1,6 @@
 function test_pull1412
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_heartrate
 % DATA private

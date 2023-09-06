@@ -1,6 +1,6 @@
 function failed_tutorial_spike20130308
 
-% MEM 8gb
+% MEM 6gb
 % WALLTIME 00:10:00
 % DEPENDENCY
 % DATA public
