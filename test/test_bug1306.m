@@ -3,7 +3,7 @@ function test_bug1306b
 % MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_preprocessing ref_datasets ft_timelockanalysis
-% DATA no
+% DATA private
 
 % Use function signature below for testing --- note that xUnit does not seem to support it.
 %function datanew = test_ft_preprocessing(datainfo, writeflag, version)
