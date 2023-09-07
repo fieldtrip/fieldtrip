@@ -34,9 +34,10 @@ else
     inlist=varargin(2:end);
 end
 
+% Remove path and file extension from 'inlist'
 for i=1:length(inlist)  
   [p, f, x] = fileparts(inlist{i});
-  inlist{i} = f; % Remove path and file extension
+  inlist{i} = f; 
 
   try
     fprintf('processing "%s"\n', inlist{i});
@@ -76,3 +77,9 @@ for i=1:length(s)
       depmat(:,sel(2:end)) = [];
   end
 end 
+
+% Remove path and file extension from 'outlist'
+for i=1:length(outlist)  
+  [p, f, x] = fileparts(outlist{i});
+  outlist{i} = f; 
+end
