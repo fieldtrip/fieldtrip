@@ -191,11 +191,12 @@ end % switch
 
 switch (varargin{1})
   case 'find_dependency'
-    fprintf('For the test scripts ');
-    fprintf('%s ', varargin{2:end});
-    fprintf('the dependency matrix is:\n');
-    disp(outlist);
-    disp(depmat);
+    fprintf('\n');
+    fprintf('The test scripts: ');
+    fprintf('<strong>%s</strong> ', varargin{2:end});
+    fprintf('depend on: ');
+    fprintf('<strong>%s</strong> ', outlist{:});
+    fprintf('\n\n');
 
   case 'update_dependency'
     return
