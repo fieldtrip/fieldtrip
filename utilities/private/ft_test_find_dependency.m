@@ -76,3 +76,10 @@ for i=1:length(s)
       depmat(:,sel(2:end)) = [];
   end
 end 
+
+for i=1:length(outlist)  
+  [p, f, x] = fileparts(outlist{i});
+  outlist{i} = f; % Remove path and file extension
+end
+
+% outlist = string(outlist);
