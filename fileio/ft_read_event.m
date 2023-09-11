@@ -1758,22 +1758,24 @@ switch eventformat
         eventx = [];
       end
       event = appendstruct(event(:), eventx);
-      
-      % prune the double occurrences where type and sample match
-      tab  = struct2table(event);
-      sel  = true(size(tab,1));
-      for k = 1:size(sel,1)
-        sel(k,:) = sel(k,:) & (tab.sample==tab.sample(k))' & (strcmp(tab.type, tab.type{k}))'; 
-      end
-      indx = (1:size(sel,1))';
-      for k = 1:size(sel,1)
-        if indx(k)==k && sum(sel(k,:))>1
-          selix = find(sel(k,:));
-          indx(selix(2:end)) = 0;
+     
+      if ~isempty(event) 
+        % prune the double occurrences where type and sample match
+        tab  = struct2table(event);
+        sel  = true(size(tab,1));
+        for k = 1:size(sel,1)
+          sel(k,:) = sel(k,:) & (tab.sample==tab.sample(k))' & (strcmp(tab.type, tab.type{k}))'; 
         end
+        indx = (1:size(sel,1))';
+        for k = 1:size(sel,1)
+          if indx(k)==k && sum(sel(k,:))>1
+            selix = find(sel(k,:));
+            indx(selix(2:end)) = 0;
+          end
+        end
+        tab   = tab(indx(indx>0),:);
+        event = event(indx(indx>0));
       end
-      tab   = tab(indx(indx>0),:);
-      event = event(indx(indx>0));
 
     elseif isaverage
       % the length of each average can be variable

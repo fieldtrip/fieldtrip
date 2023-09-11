@@ -1,6 +1,8 @@
 function [summary] = ft_test_compare(varargin)
 
-% FT_TEST_COMPARE
+% FT_TEST_COMPARE documentation is included inside ft_test documentation.
+% 
+% See also FT_TEST
 
 % Copyright (C) 2017, Robert Oostenveld
 %

@@ -3,7 +3,7 @@ function test_ft_prepare_neighbours
 % MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_prepare_neighbours
-% DATA no
+% DATA private
 
 datainfo = ref_datasets;
 

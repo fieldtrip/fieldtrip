@@ -1,6 +1,8 @@
 function [result] = ft_test_run(varargin)
 
-% FT_TEST_RUN
+% FT_TEST_RUN documentation is included inside ft_test documentation.
+% 
+% See also FT_TEST
 
 % Copyright (C) 2017, Robert Oostenveld
 %

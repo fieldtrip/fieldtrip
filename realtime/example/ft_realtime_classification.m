@@ -221,5 +221,9 @@ while t(end)<cfg.timeout
       end
     end % if train
   end % looping over new trials
-end % while true
+
+  % update the timing, also if there are no new trials
+  t(end) = toc;
+  
+end % while not timeout
 

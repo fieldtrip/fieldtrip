@@ -26,7 +26,7 @@ function filename = dccnpath(filename)
 % then dccnpath will automatically use a temporary directory and try to download the
 % data.
 %
-% See also WHICH, WEBSAVE
+% See also  FT_TEST, WHICH, WEBSAVE
 
 % Copyright (C) 2012-2023, Donders Centre for Cognitive Neuroimaging, Nijmegen, NL
 %
@@ -140,8 +140,8 @@ else
   % if the file doesn't exist or the folder is empty, then download test data
   % see also UNTAR, UNZIP, GUNZIP, which can download on the fly
 
-  if contains(alternative2, 'data/test') || contains(alternative2, 'data\test')
-    error('the test data are private and can not be downloaded')
+  if contains(alternative0, 'data/test') || contains(alternative0, 'data\test')
+    error('the test data are private and can not be downloaded from https://download.fieldtriptoolbox.org')
   end
 
   % public data are downloaded from https://download.fieldtriptoolbox.org
