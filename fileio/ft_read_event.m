@@ -1751,20 +1751,19 @@ switch eventformat
           smp    = mat2cell(events(:,1), ones(size(events,1),1), 1);
           eventx = struct('type', type(events(:,3)), 'value', val(events(:,3)), 'sample', smp);
         else
-          % FIXME this needs to be done still
-
+          % FIXME this needs to be done still, i.e. if mappings are empty
         end
       catch
         eventx = [];
       end
       event = appendstruct(event(:), eventx);
-     
-      if ~isempty(event) 
+
+      if ~isempty(event)
         % prune the double occurrences where type and sample match
         tab  = struct2table(event);
         sel  = true(size(tab,1));
         for k = 1:size(sel,1)
-          sel(k,:) = sel(k,:) & (tab.sample==tab.sample(k))' & (strcmp(tab.type, tab.type{k}))'; 
+          sel(k,:) = sel(k,:) & (tab.sample==tab.sample(k))' & (strcmp(tab.type, tab.type{k}))';
         end
         indx = (1:size(sel,1))';
         for k = 1:size(sel,1)
@@ -1794,8 +1793,16 @@ switch eventformat
       
     elseif isepoched
       begsample = cumsum([1 repmat(hdr.nSamples, hdr.nTrials-1, 1)']);
-      events_id = reshape(split(split(hdr.orig.epochs.event_id, ';'), ':'), [], 2); % should be nx2, avoids 2x1 in case of a single event_id
-      if all(cellfun(@ischar, events_id(:, 1)))
+      events_id = reshape(split(split(hdr.orig.epochs.event_id, ','), ':'), [], 2); % should be nx2, avoids 2x1 in case of a single event_id
+      if all(cellfun(@ischar, events_id(:, 1))) && all(contains(events_id(:,1), '_'))
+        % this assumes a numeric mapping between the numbers in the
+        % events_id (second column) and the number after the '_' in the first column
+        for i=1:size(events_id,1)
+          tok = tokenize(events_id{i,1}, '_');
+          events_label(i,1) = str2num(events_id{i,2});
+          events_code(i,1)  = i;
+        end
+      elseif all(cellfun(@ischar, events_id(:, 1)))
         events_label = events_id(:, 1);
         events_code = str2num(char(events_id(:, 2)));
       elseif all(cellfun(@isnumeric, events_id(:, 1)))
