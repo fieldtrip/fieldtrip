@@ -321,7 +321,7 @@ elseif isepch
   end
   events(:,3) = tmp;
 
-  eventid = sprintf('event_%d: %d,',vals(:));
+  eventid = sprintf('event_%d: %d;',vals(:));
   eventid = eventid(1:end-1); % remove the last comma
 
   epochs.epoch = data.trial;
@@ -550,7 +550,7 @@ end
 mappings  = '';
 eventlist = zeros(0,3);
 for k = 1:numel(ev)
-  mappings  = sprintf('%s, %s:%d', mappings, ev(k).id, k);
+  mappings  = sprintf('%s; %s:%d', mappings, ev(k).id, k);
 
   smp = ev(k).sample(:)-1; % in the fiff-file the samples are 0 based
   eventlist = cat(1, eventlist, [smp zeros(numel(smp),1) ones(numel(smp),1).*k]); 

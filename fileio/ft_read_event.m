@@ -1731,7 +1731,14 @@ switch eventformat
 
         % convert the event matrix into a struct-array
         if ~isempty(mappings)
-          mappings = tokenize(mappings, ',')';
+          num_comma     = sum(hdr.orig.epochs.event_id==',');
+          num_semicolon = sum(hdr.orig.epochs.event_id==';');
+          if num_comma>num_semicolon
+            sep = ',';
+          else
+            sep = ';';
+          end
+          mappings = tokenize(mappings, sep)';
           for k = 1:numel(mappings)
             tok = tokenize(flip(deblank(flip(mappings{k},2)),2), ':');
             type{k,1} = tok{1};
@@ -1792,8 +1799,15 @@ switch eventformat
       end
       
     elseif isepoched
+      num_comma     = sum(hdr.orig.epochs.event_id==',');
+      num_semicolon = sum(hdr.orig.epochs.event_id==';');
+      if num_comma>num_semicolon
+        sep = ',';
+      else
+        sep = ';';
+      end      
       begsample = cumsum([1 repmat(hdr.nSamples, hdr.nTrials-1, 1)']);
-      events_id = reshape(split(split(hdr.orig.epochs.event_id, ','), ':'), [], 2); % should be nx2, avoids 2x1 in case of a single event_id
+      events_id = reshape(split(split(hdr.orig.epochs.event_id, sep), ':'), [], 2); % should be nx2, avoids 2x1 in case of a single event_id
       if all(cellfun(@ischar, events_id(:, 1))) && all(contains(events_id(:,1), '_'))
         % this assumes a numeric mapping between the numbers in the
         % events_id (second column) and the number after the '_' in the first column
