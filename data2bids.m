@@ -861,7 +861,7 @@ switch typ
 
   case {'ctf_ds', 'ctf_meg4', 'ctf_res4', 'ctf151', 'ctf275', 'neuromag_fif', 'neuromag122', 'neuromag306'}
     % it is MEG data from disk and in a supported format
-    hdr = ft_read_header(cfg.headerfile, 'checkmaxfilter', false, 'readbids', false);
+    hdr = ft_read_header(cfg.headerfile, 'checkmaxfilter', false, 'readbids', false, 'coilaccuracy', 1);
     if strcmp(cfg.method, 'convert')
       % the data should be converted and written to disk
       dat = ft_read_data(cfg.datafile, 'header', hdr, 'checkboundary', false, 'begsample', 1, 'endsample', hdr.nSamples*hdr.nTrials);
@@ -1572,13 +1572,17 @@ end % need_optodes_tsv
 if need_coordsystem_json
   if isfield(hdr, 'grad') && ft_senstype(hdr.grad, 'ctf')
 
-    % CTF empty-room recordings use the standard positions of the coils, as if they were measured
-    emptyroom = all(hdr.orig.hc.standard == hdr.orig.hc.dewar, [1 2]);
-    if emptyroom
+    if ~issubfield(hdr, 'orig.hc')
+      % the data was not read using the default CTF import function
+      ft_notice('cannot determine MEG coordinate system, you MUST specify cfg.coordsystem')
+      coordsystem_json = table();
+    elseif all(hdr.orig.hc.standard == hdr.orig.hc.dewar, [1 2])
+      % CTF empty-room recordings use the standard positions of the coils, as if they were measured
       ft_notice('this seems to be an empty room recording')
-    end
-
-    if ~emptyroom
+      coordsystem_json.MEGCoordinateSystem                 = 'Other';
+      coordsystem_json.MEGCoordinateUnits                  = 'cm';
+      coordsystem_json.MEGCoordinateSystemDescription      = 'CTF head coordinates with standard coil positions relative to dewar, orientation ALS';
+    else
       % coordinate system for MEG sensors
       coordsystem_json.MEGCoordinateSystem                 = 'CTF';
       coordsystem_json.MEGCoordinateUnits                  = 'cm';
@@ -1596,22 +1600,21 @@ if need_coordsystem_json
           coordsystem_json.HeadCoilCoordinates.(fixname(label{i})) = position(:,i)';
         end
       end
-    else
-      % coordinate system for MEG sensors
-      coordsystem_json.MEGCoordinateSystem                 = 'Other';
-      coordsystem_json.MEGCoordinateUnits                  = 'cm';
-      coordsystem_json.MEGCoordinateSystemDescription      = 'CTF head coordinates with standard coil positions relative to dewar, orientation ALS';
-    end % if ~emptyroom
+    end % if emptyroom
 
   elseif isfield(hdr, 'grad') && ft_senstype(hdr.grad, 'neuromag')
 
-    % Neuromag empty-room recordings do not have digitizer information
-    emptyroom = isempty(hdr.orig.dig);
-    if emptyroom
+    if ~issubfield(hdr, 'orig.dig')
+      % the data was not read using the default Neuromag import function
+      ft_notice('cannot determine MEG coordinate system, you MUST specify cfg.coordsystem')
+      coordsystem_json = table();
+    elseif isempty(hdr.orig.dig)
+      % Neuromag empty-room recordings do not have digitizer information
       ft_notice('this seems to be an empty room recording')
-    end
-
-    if ~emptyroom
+      coordsystem_json.MEGCoordinateSystem                 = 'Other';
+      coordsystem_json.MEGCoordinateUnits                  = 'm';
+      coordsystem_json.MEGCoordinateSystemDescription      = 'ElektaNeuromag dewar coordinates, orientation RAS';
+    else
       % coordinate system for MEG sensors
       coordsystem_json.MEGCoordinateSystem                 = 'ElektaNeuromag';
       coordsystem_json.MEGCoordinateUnits                  = 'm';
@@ -1641,12 +1644,7 @@ if need_coordsystem_json
       else
         coordsystem_json.AnatomicalLandmarkCoordinates = nan;
       end
-    else
-      % coordinate system for MEG sensors
-      coordsystem_json.MEGCoordinateSystem                 = 'Other';
-      coordsystem_json.MEGCoordinateUnits                  = 'm';
-      coordsystem_json.MEGCoordinateSystemDescription      = 'ElektaNeuromag dewar coordinates, orientation RAS';
-    end % if ~emptyroom
+    end % if emptyroom
 
   else
     ft_warning('automatic coordsystem handling not yet supported for this data, you MUST specify cfg.coordsystem');
