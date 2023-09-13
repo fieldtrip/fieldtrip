@@ -305,6 +305,9 @@ elseif isepch
   if isfield(data, 'trialinfo')
     ft_warning('Using the first column of the trialinfo field as event values');
     trg = data.trialinfo(:,1);
+    if istable(trg)
+      trg = table2array(trg);
+    end
   else
     ft_warning('Marking each epoch boundary with a single event value (1)')
     trg = ones(ntrl,1);
@@ -312,7 +315,16 @@ elseif isepch
   events = [((0:nsmp:(nsmp*(ntrl-1))))' zeros(ntrl,1) trg];
   vals = unique(trg);
   vals = [(1:numel(vals))' vals]';
-  eventid = sprintf('event%d: %d;',vals(:));
+
+  % remap the event values in the matrix to index into the unique values,
+  % to be able to the the reverse interpretation correctly
+  tmp = events(:,3);
+  for k = 1:numel(vals(2,:))
+    tmp(events(:,3)==vals(2,k)) = k;
+  end
+  events(:,3) = tmp;
+
+  eventid = sprintf('event_%d: %d;',vals(:));
   eventid = eventid(1:end-1); % remove the last comma
 
   epochs.epoch = data.trial;
@@ -541,7 +553,7 @@ end
 mappings  = '';
 eventlist = zeros(0,3);
 for k = 1:numel(ev)
-  mappings  = sprintf('%s, %s:%d', mappings, ev(k).id, k);
+  mappings  = sprintf('%s; %s:%d', mappings, ev(k).id, k);
 
   smp = ev(k).sample(:)-1; % in the fiff-file the samples are 0 based
   eventlist = cat(1, eventlist, [smp zeros(numel(smp),1) ones(numel(smp),1).*k]); 
