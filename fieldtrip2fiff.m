@@ -305,6 +305,9 @@ elseif isepch
   if isfield(data, 'trialinfo')
     ft_warning('Using the first column of the trialinfo field as event values');
     trg = data.trialinfo(:,1);
+    if istable(trg)
+      trg = table2array(trg);
+    end
   else
     ft_warning('Marking each epoch boundary with a single event value (1)')
     trg = ones(ntrl,1);
