@@ -1,4 +1,4 @@
-function test_ft_connectivity_powcorr_ortho
+function tests = test_ft_connectivity_powcorr_ortho
 
 % MEM 1gb
 % WALLTIME 00:10:00
@@ -18,7 +18,7 @@ else
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function testOptions(testCase)
+function testEverything(testCase)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 nchan   = 10;

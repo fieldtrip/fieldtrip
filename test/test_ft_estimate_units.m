@@ -1,4 +1,4 @@
-function test_ft_estimate_units
+function tests = test_ft_estimate_units
 
 % MEM 1gb
 % WALLTIME 00:10:00
@@ -18,7 +18,7 @@ else
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function testUnits(testCase)
+function testEverything(testCase)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 assert(strcmp(ft_estimate_units(80),  'mm'));

@@ -1,4 +1,4 @@
-function test_ft_determine_units
+function tests = test_ft_determine_units
 
 % MEM 1gb
 % WALLTIME 00:10:00
