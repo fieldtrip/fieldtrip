@@ -1749,8 +1749,8 @@ switch eventformat
 
         % convert the event matrix into a struct-array
         if ~isempty(mappings)
-          num_comma     = sum(hdr.orig.epochs.event_id==',');
-          num_semicolon = sum(hdr.orig.epochs.event_id==';');
+          num_comma     = sum(mappings==',');
+          num_semicolon = sum(mappings==';');
           if num_comma>num_semicolon
             sep = ',';
           else
