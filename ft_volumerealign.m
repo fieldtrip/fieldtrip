@@ -1,11 +1,14 @@
 function [realign, snap] = ft_volumerealign(cfg, mri, target)
 
 % FT_VOLUMEREALIGN spatially aligns an anatomical MRI with head coordinates based on
-% external fiducials or anatomical landmarks. This function does not change the
-% anatomical MRI volume itself, but only adjusts the homogeneous transformation
+% external fiducials or anatomical landmarks. This function typically does not change
+% the anatomical MRI volume itself, but only adjusts the homogeneous transformation
 % matrix that describes the mapping from voxels to the coordinate system. It also
 % appends a coordsys-field to the output data, or it updates it. This field specifies
-% how the x/y/z-axes of the coordinate system should be interpreted.
+% how the x/y/z-axes of the coordinate system should be interpreted. Occasionally,
+% the orientation and handedness of the output volume may be different from the orientation
+% and handedness of the input volume. This is determined by the cfg.flip
+% argument. See the code for more details.
 %
 % For spatial normalisation and deformation (i.e. warping) an MRI to a template brain
 % you should use the FT_VOLUMENORMALISE function.
@@ -56,6 +59,9 @@ function [realign, snap] = ft_volumerealign(cfg, mri, target)
 %   cfg.parameter      = 'anatomy' the parameter which is used for the visualization
 %   cfg.viewresult     = string, 'yes' or 'no', whether or not to visualize aligned volume(s)
 %                        after realignment (default = 'no')
+%   cfg.flip           = string, 'yes' or 'no', to realign the volume approximately to the 
+%                        input coordinate axes, this may reorient the output volume relative
+%                        to the input (default = 'yes', when cfg.method = 'interactive', and 'no'  otherwise)
 %
 % When cfg.method = 'interactive', a user interface allows for the specification of
 % the fiducials or landmarks using the mouse, cursor keys and keyboard. The fiducials
@@ -768,7 +774,7 @@ switch cfg.method
       smoothdist          = ft_sourceinterpolate(tmpcfg, functional, target);
       scalp.distance      = smoothdist.distance(:);
 
-      functional.pow      = info.distancein(:);
+      functional.distance = info.distancein(:);
       smoothdist          = ft_sourceinterpolate(tmpcfg, functional, target);
       scalp.distancein    = smoothdist.distance(:);
 
