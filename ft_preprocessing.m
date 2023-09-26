@@ -419,7 +419,8 @@ else
     cfg.trl = loadvar(cfg.trl, 'trl');
   end
 
-  % the code below expects an Nx3 matrix with begsample, endsample and offset
+  % the code further down expects an Nx3 matrix with begsample, endsample and offset
+  assert(size(cfg.trl,2)>=3, 'incorrect specification of cfg.trl');
   if istable(cfg.trl)
     trl = table2array(cfg.trl(:,1:3));
   else
