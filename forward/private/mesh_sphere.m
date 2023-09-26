@@ -3,18 +3,19 @@ function [pos, tri] = mesh_sphere(n, method)
 % MESH_SPHERE creates spherical mesh, with approximately nvertices vertices
 %
 % Use as
-%   [pos, tri] = mesh_sphere(numvertices, method)
+%   [pos, tri] = mesh_sphere(n, method)
 %
-% The input parameter 'n' specifies the (approximate) number of vertices.
-% Once log4((n-2)/10) is an integer, the mesh will be based on an icosahedron.
-% Once log4((n-2)/4) is an integer, the mesh will be based on a refined octahedron.
-% Once log4((n-2)/2) is an integer, the mesh will be based on a refined tetrahedron.
-% Otherwise, an msphere will be used. If n is empty, or undefined, a 12 vertex
-% icosahedron will be returned.
+% The input parameter 'n' specifies the (approximate) number of vertices. If n is
+% empty, or undefined, a 12 vertex icosahedron will be returned. If n is specified
+% but the method is not specified, the most optimal method will be selected based on
+% n.
+% - If log4((n-2)/10) is an integer, the mesh will be based on an icosahedron.
+% - If log4((n-2)/4) is an integer, the mesh will be based on a refined octahedron.
+% - If log4((n-2)/2) is an integer, the mesh will be based on a refined tetrahedron.
+% - Otherwise, an msphere will be used.
 %
-% The input parameter 'method' defines which function to use when an refined
-% icosahedron, octahedron or tetrahedron is not possible, and can be 'msphere'
-% (default), or 'ksphere'.
+% The input parameter 'method' defines which algorithm or approach to use. This can
+% be 'icosahedron', 'octahedron', 'tetrahedron', 'fibonachi', 'msphere', or 'ksphere'.
 %
 % See also MESH_TETRAHEDRON, MESH_OCTAHEDRON, MESH_ICOSAHEDRON
 
@@ -41,11 +42,12 @@ function [pos, tri] = mesh_sphere(n, method)
 if nargin<1 || isempty(n)
   n = 12;
 end
+
 assert(isscalar(n), 'number of vertices should be specified as a scalar');
 
-r_ico   = log((n-2)./10)./log(4);
-r_octa  = log((n-2)./4)./log(4);
-r_tetra = log((n-2)./2)./log(4);
+r_ico   = log((n-2)/10)/log(4);
+r_octa  = log((n-2)/4)/log(4);
+r_tetra = log((n-2)/2)/log(4);
 
 if nargin<2 || isempty(method)
   % default method is dependent on n
@@ -59,6 +61,7 @@ if nargin<2 || isempty(method)
     method = 'msphere';
   end
 end
+
 assert(ischar(method), 'method should be specified as a string');
 
 switch method
@@ -70,7 +73,7 @@ switch method
 
   case 'fibonachi'
     % see https://extremelearning.com.au/evenly-distributing-points-on-a-sphere/
-    % this can even be further improved, as documented on that page 
+    % this can even be further improved, as documented on that page
     i = ((0:(n-1))+0.5)'; % this should be a column vector
     phi = acos(1 - 2*i/n);
     goldenRatio = (1 + 5^0.5)/2;
