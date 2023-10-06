@@ -883,7 +883,7 @@ if (strcmp(readbids, 'yes') || strcmp(readbids, 'ifmakessense')) && isbids
   end % if mri_json
 end % if readbids
 
-if exist('fid', 'var')
+if exist('fid', 'var') && ~isempty(fid)
   % store the fiducial details
   mri.fid = fid;
 end
