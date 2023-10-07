@@ -1,7 +1,7 @@
 function test_issue1238
 
 % WALLTIME 00:10:00
-% MEM 3gb
+% MEM 1gb
 % DEPENDENCY ft_singleplotER ft_multiplotER ft_databrowser
 % DATA private
 

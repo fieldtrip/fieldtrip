@@ -49,7 +49,7 @@ elseif isa(opt, 'cell')
     valindex = keyindex+1;
     opt{valindex} = val;
   elseif length(sel)>1
-    % first remove all occurences
+    % first remove all occurrences
     keyindex = 2*sel-1;
     valindex = keyindex+1;
     opt([keyindex valindex]) = [];

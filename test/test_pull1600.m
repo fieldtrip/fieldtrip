@@ -1,7 +1,7 @@
 function test_rereference
 
 % WALLTIME 00:10:00
-% MEM 3gb
+% MEM 1gb
 % DEPENDENCY ft_preprocessing ft_prepare_montage ft_apply_montage preproc
 % DATA no
 

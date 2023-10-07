@@ -1,7 +1,7 @@
 function test_bug1658
 
 % WALLTIME 00:20:00
-% MEM 4gb
+% MEM 2gb
 % DEPENDENCY ft_sourcedescriptives ft_selectdata
 % DATA no
 

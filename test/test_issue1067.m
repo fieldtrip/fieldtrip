@@ -1,7 +1,7 @@
 function test_issue1067
 
 % WALLTIME 00:10:00
-% MEM 2gb
+% MEM 1gb
 % DEPENDENCY ft_prepare_layout ft_prepare_mesh ft_prepare_sourcemodel ft_prepare_headmodel ft_prepare_neighbours
 % DATA private
 

@@ -1,6 +1,6 @@
 function test_ft_qualitycheck
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:30:00
 % DEPENDENCY ft_qualitycheck
 % DATA private

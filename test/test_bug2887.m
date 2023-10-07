@@ -1,7 +1,7 @@
 function test_bug2887
 
 % WALLTIME 00:20:00
-% MEM 2gb
+% MEM 1gb
 % DEPENDENCY ft_read_header ft_read_data ft_read_event read_edf
 % DATA private
 

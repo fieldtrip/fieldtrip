@@ -10,8 +10,8 @@ function [cfg] = ft_singleplotER(cfg, varargin)
 %   ft_singleplotER(cfg, data1, data2, ..., datan)
 %
 % The data can be an erp/erf produced by FT_TIMELOCKANALYSIS, a power
-% spectrum produced by FT_FREQANALYSIS or connectivity spectrum produced by
-% FT_CONNECTIVITYANALYSIS.
+% spectrum or time-frequency respresentation produced by FT_FREQANALYSIS or 
+% a connectivity spectrum produced by FT_CONNECTIVITYANALYSIS.
 %
 % The configuration can have the following parameters:
 %   cfg.parameter     = field to be plotted on y-axis, for example 'avg', 'powspctrm' or 'cohspctrm' (default is automatic)
@@ -26,7 +26,8 @@ function [cfg] = ft_singleplotER(cfg, varargin)
 %   cfg.showlegend    = 'yes' or 'no', show the legend with the colors (default = 'no')
 %   cfg.refchannel    = name of reference channel for visualising connectivity, can be 'gui'
 %   cfg.baseline      = 'yes', 'no' or [time1 time2] (default = 'no'), see ft_timelockbaseline
-%   cfg.baselinetype  = 'absolute' or 'relative' (default = 'absolute')
+%   cfg.baselinetype  = 'absolute', 'relative', 'relchange', 'normchange', 'db', 'vssum' or 'zscore' (default = 'absolute'), only relevant for TFR data.
+%                       See ft_freqbaseline.
 %   cfg.trials        = 'all' or a selection given as a 1xn vector (default = 'all')
 %   cfg.fontsize      = font size of title (default = 8)
 %   cfg.hotkeys       = enables hotkeys (leftarrow/rightarrow/uparrow/downarrow/m) for dynamic zoom and translation (ctrl+) of the axes

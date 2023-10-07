@@ -1,6 +1,6 @@
 function failed_corrupt_matfiles
 
-% MEM 8gb
+% MEM 6gb
 % WALLTIME 10:00:00
 % DEPENDENCY
 

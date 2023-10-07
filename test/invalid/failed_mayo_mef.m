@@ -1,7 +1,7 @@
 function test_mayo_mef
 
 % WALLTIME 00:10:00
-% MEM 3gb
+% MEM 1gb
 % DEPENDENCY read_mayo_mef21 read_mayo_mef30
 
 %% version 2.1

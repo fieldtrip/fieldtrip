@@ -1,6 +1,6 @@
 function failed_bug2377b
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_senslabel ft_senstype ft_chantype ft_chanunit ft_datatype_sens ft_apply_transform
 

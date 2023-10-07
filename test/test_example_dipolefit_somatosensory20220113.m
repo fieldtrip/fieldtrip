@@ -1,6 +1,6 @@
 function test_example_dipolefit_somatosensory
 
-% MEM 8gb
+% MEM 6gb
 % WALLTIME 00:15:00
 % DATA public
 

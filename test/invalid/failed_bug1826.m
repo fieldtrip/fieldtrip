@@ -1,6 +1,6 @@
 function failed_bug1826
 
-% MEM 3gb
+% MEM 1gb
 % WALLTIME 00:20:00
 % DEPENDENCY ft_read_mri ft_write_mri ft_volumerealign
 

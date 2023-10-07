@@ -652,7 +652,7 @@ path = strrep(path,'\','/');
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function status = hasfunction(funname, toolbox)
 try
-  % call the function without any input arguments, which probably is inapropriate
+  % call the function without any input arguments, which probably is inappropriate
   feval(funname);
   % it might be that the function without any input already works fine
   status = true;

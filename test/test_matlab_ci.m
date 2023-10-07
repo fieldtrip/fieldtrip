@@ -1,6 +1,6 @@
 function test_matlab_ci
 
-% WALLTIME 00:05:00
+% WALLTIME 00:10:00
 % MEM 1gb
 % DEPENDENCY 
 % DATA no

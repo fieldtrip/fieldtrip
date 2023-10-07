@@ -98,9 +98,9 @@ end
 if isempty(pad) % if no padding is specified padding is equal to current data length
   pad = dattime;
 end
-postpad    = ceil((pad - dattime) * fsample);
-endnsample = round(pad * fsample);  % total number of samples of padded data
-endtime    = pad;                   % total time in seconds of padded data
+endnsample = round(pad * fsample);    % total number of samples of padded data
+postpad    = endnsample - ndatsample; % number of samples for zero padding
+endtime    = pad;                     % total time in seconds of padded data
 
 % Set freqboi and freqoi
 freqoiinput = freqoi;

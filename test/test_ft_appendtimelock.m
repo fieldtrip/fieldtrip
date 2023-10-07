@@ -1,6 +1,6 @@
 function test_ft_appendtimelock
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_appendtimelock append_common ft_datatype_timelock
 % DATA public

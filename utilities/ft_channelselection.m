@@ -244,7 +244,7 @@ for i=1:length(channel)
 end
 
 if ~isempty(findreg)
-  findreg  = unique(findreg); % remove multiple occurances due to multiple wildcards
+  findreg  = unique(findreg); % remove multiple occurrences due to multiple wildcards
   labelreg = datachannel(labelreg);
 end
 
@@ -289,7 +289,7 @@ switch senstype
       datachannel(strncmp('Q'  , datachannel, 1));
       datachannel(strncmp('R'  , datachannel, length('G'  )))];
 
-  case {'ctf', 'ctf275', 'ctf151', 'ctf275_planar', 'ctf151_planar'}
+  case {'ctf', 'ctf275', 'ctf151', 'ctf275_planar', 'ctf151_planar', 'ctf275_planar_combined', 'ctf151_planar_combined'}
     % all CTF MEG channels start with "M"
     % all CTF reference channels start with B, G, P, Q or R
     % all CTF EEG channels start with "EEG"
@@ -325,7 +325,7 @@ switch senstype
     labelmzo  = datachannel(strncmp('MZO', datachannel, length('MZO')));
     labelmzp  = datachannel(strncmp('MZP', datachannel, length('MZP')));
 
-  case {'bti', 'bti248', 'bti248grad', 'bti148', 'bti248_planar', 'bti148_planar'}
+  case {'bti', 'bti248', 'bti248grad', 'bti148', 'bti248_planar', 'bti148_planar', 'bti248_planar_combined', 'bti148_planar_combined'}
     % all 4D-BTi MEG channels start with "A"
     % all 4D-BTi reference channels start with M or G
 
@@ -448,7 +448,7 @@ findmua        = find(strcmpi(channel, 'mua'));
 findspike      = find(strcmpi(channel, 'spike'));
 findgui        = find(strcmpi(channel, 'gui'));
 
-% remove any occurences of groups in the channel list
+% remove any occurrences of groups in the channel list
 channel([
   findall
   findreg

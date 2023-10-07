@@ -11,9 +11,8 @@ function [data] = ft_preprocessing(cfg, data)
 % The first input argument "cfg" is the configuration structure, which contains all
 % details for the dataset filename, trials and the preprocessing options.
 %
-% If you are calling FT_PREPROCESSING with only the configuration as first
-% input argument and the data still has to be read from file, you should
-% specify
+% If you are calling FT_PREPROCESSING with only the configuration as first input
+% argument and the data still has to be read from file, you should specify
 %   cfg.dataset      = string with the filename
 %   cfg.trl          = Nx3 matrix with the trial definition, see FT_DEFINETRIAL
 %   cfg.padding      = length (in seconds) to which the trials are padded for filtering (default = 0)
@@ -140,7 +139,7 @@ function [data] = ft_preprocessing(cfg, data)
 %   cfg.export.dataset    = string with the output file name
 %   cfg.export.dataformat = string describing the output file format, see FT_WRITE_DATA
 
-% Copyright (C) 2003-2022, Robert Oostenveld, SMI, FCDC
+% Copyright (C) 2003-2023, Robert Oostenveld, SMI, FCDC
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -420,7 +419,8 @@ else
     cfg.trl = loadvar(cfg.trl, 'trl');
   end
 
-  % the code below expects an Nx3 matrix with begsample, endsample and offset
+  % the code further down expects an Nx3 matrix with begsample, endsample and offset
+  assert(size(cfg.trl,2)>=3, 'incorrect specification of cfg.trl');
   if istable(cfg.trl)
     trl = table2array(cfg.trl(:,1:3));
   else

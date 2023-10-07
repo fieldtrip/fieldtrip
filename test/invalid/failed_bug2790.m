@@ -1,6 +1,6 @@
 function failed_bug2790
 
-% MEM 6gb
+% MEM 4gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_selectdata ft_connectivityanalysis
 

@@ -1,7 +1,7 @@
 function test_ft_statfun_correlationT
 
 % WALLTIME 00:20:00
-% MEM 3gb
+% MEM 1gb
 % DEPENDENCY
 % DATA no
 

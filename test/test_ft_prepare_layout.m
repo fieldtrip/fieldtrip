@@ -1,7 +1,7 @@
 function test_ft_prepare_layout
 
 % WALLTIME 00:10:00
-% MEM 4gb
+% MEM 2gb
 % DEPENDENCY ft_prepare_layout ft_plot_layout ft_plot_sens
 % DATA public
 
@@ -11,7 +11,7 @@ function test_ft_prepare_layout
 interactive = false;
 
 % this corresponds to the ftp directory
-cd(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/layout'));
+cd(dccnpath('/home/common/matlab/fioeldtrip/data/ftp/tutorial/layout'));
 
 %%
 % make it from a figure
@@ -30,7 +30,7 @@ end
 % channel 35 is at Fpz
 % the nose is along +Y
 
-clear all
+clear
 close all
 
 elec = ft_read_sens('easycap-M10.txt');
@@ -68,10 +68,10 @@ figure; ft_plot_layout(layout)
 % simple projection of CT151 gradiometers
 % the nose is along +X
 
-clear all
+clear
 close all
 
-load ctf151.mat % the mat files contains the variable "sens"
+sens = ft_read_sens('ctf151.mat');
 
 figure
 ft_plot_sens(sens, 'label', 'label', 'chantype', 'meggrad')
@@ -101,10 +101,10 @@ figure; ft_plot_layout(layout); title(cfg.projection)
 % simple projection of CT151 gradiometers
 % the nose is along +X
 
-clear all
+clear
 close all
 
-load ctf151.mat % the mat files contains the variable "sens"
+sens = ft_read_sens('ctf151.mat');
 
 figure
 ft_plot_sens(sens, 'label', 'label', 'chantype', 'meggrad')
@@ -139,10 +139,10 @@ figure; ft_plot_layout(layout)
 % simple projection of CT151 gradiometers
 % the nose is along +X
 
-clear all
+clear
 close all
 
-load ctf151.mat % the mat files contains the variable "sens"
+sens = ft_read_sens('ctf151.mat');
 
 figure
 ft_plot_sens(sens, 'label', 'label', 'chantype', 'meggrad')
@@ -183,10 +183,10 @@ figure; ft_plot_layout(layout); title(cfg.viewpoint);
 % WORKS if elec/grad and headshape contain the same coordsys
 % WORKS for most common coordsys options
 
-clear all
+clear
 close all
 
-load ctf151.mat % the mat files contains the variable "sens"
+sens = ft_read_sens('ctf151.mat');
 headshape = ft_read_headshape('Subject01.shape');
 headshape.coordsys = 'ctf';
 
@@ -230,10 +230,10 @@ figure; ft_plot_layout(layout); title(cfg.viewpoint)
 % WORKS if elec/grad and mri contain the same coordsys AND mri either has brain field or can be segmented on the fly (other segmentations can be achieved via ft_prepare_mesh and cfg.headshape)
 % WORKS for most common coordsys options
 
-clear all
+clear
 close all
 
-load ctf151.mat % the mat files contains the variable "sens"
+sens = ft_read_sens('ctf151.mat');
 load segmentedmri
 
 figure
@@ -315,7 +315,7 @@ figure; ft_plot_layout(layout); title(cfg.viewpoint)
 %%
 % test the non-topographic layouts
 
-clear all
+clear
 close all
 
 elec = ft_read_sens('easycap-M10.txt');
@@ -332,7 +332,7 @@ end
 
 %% test the ordered/horizontal/vertical layouts for iEEG
 
-clear all
+clear
 close all
 
 nchan = 10;

@@ -1,7 +1,7 @@
 function test_bug3461
 
 % WALLTIME 00:20:00
-% MEM 3gb
+% MEM 1gb
 % DEPENDENCY ft_sourcestatistics ft_sourcegrandaverage
 % DATA private
 

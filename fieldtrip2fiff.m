@@ -7,31 +7,39 @@ function fieldtrip2fiff(filename, data, varargin)
 %   fieldtrip2fiff(filename, data)
 % where filename is the name of the output file, and data is a raw data structure
 % as obtained from FT_PREPROCESSING, or a timelock structure obtained from
-% FT_TIMELOCKANALYSIS.
+% FT_TIMELOCKANALYSIS. If the input data is a raw data structure with a single
+% trial, a continuous fif-file will be written. If the input data contains multiple
+% trials, either in a timelock or raw format, and epoched fif-file will be written. 
+% If trials have different time axes, nans will be added to pad the trials to equal
+% length and time axis. If the input data contains an average across trials, an evoked
+% fif-file will be written.
 %
 % Additional options can be specified as key-value pairs:
-%   precision = string ('single'/'double'), determines the precision with which
-%                 the numeric data is written to file, default is the class of the
-%                 numeric data.
+%   precision = string ('single'/'double'), determines the precision with which the
+%               numeric data is written to file, default is the class of the data.
 %   coordsys  = string ('native'/'neuromag'), determines the coordinate system in which
-%                 the MEG sensors are written (default: 'neuromag'). This option does not 
-%                 have an effect on EEG electrodes or fNIRS optodes. If coordsys = 'neuromag'
-%                 the MEG sensors are expressed in (approximate) neuromag coordinates, which
-%                 may facilitate downstream handling of the fif-files in other software, e.g.
-%                 MNE-python. This is according to the official definitions of the fif-file format
-% 
-% If the data comes from preprocessing and has only one trial, then it writes the
-% data into raw continuous format. 
+%               the MEG sensors are written (default = 'neuromag'). In case of 
+%               'neuromag' the MEG sensors are expressed in (approximate) neuromag
+%               coordinates, which may facilitate downstream handling of the fif-files
+%               in other software such as MNE-python. This is according to the
+%               official fif-file format definition. This option does not have an
+%               effect on EEG electrodes or fNIRS optodes.
+%   event     = structure as obtained from FT_READ_EVENT, note that the sampling in the
+%               event structure should be the same as the sampling of the data structure,
+%               i.e. the values in data.sampleinfo should be in line with event.sample, and
+%               the sampling rate should be the same. No check will be performed. Also, the 
+%               events will only be written to file if the input data is of type raw with
+%               a single trial.               
+%   eventtype = string or cell array of string with the event types to be
+%               written to the continuous fif-file (default is all)
+%   hdr       = structure as obtained from FT_READ_HEADER
 % 
 % If present in the data, the original header is reused (also removing the non-used channels).
 % Otherwise, the function attempts to create the header, which might or might not be correct
-% (e.g. with respect to the scaling and the sensor locations. 
+% (e.g. with respect to the scaling and the sensor locations). 
 % 
-% If the data contains events in the cfg structure, it writes the events in the MNE format
-% (three columns) into a file based on "filename", ending with "-eve.fif". If only a subset
-% of the events is to be written to the event file, one can use the additional key-value pair:
-%   eventtype = string (or cell array of string) with the eventtypes to be
-%                 written to file, default 'all'
+% The events are written in MNE format (three columns) into the continuous
+% fif-file, with a mapping string that allows for a richer interpretation of the events.
 % 
 % See also FT_DATATYPE_RAW, FT_DATATYPE_TIMELOCK
 
@@ -59,8 +67,10 @@ function fieldtrip2fiff(filename, data, varargin)
 % this ensures that the path is correct and that the ft_defaults global variable is available
 ft_defaults
 
-coordsys  = ft_getopt(varargin, 'coordsys', 'neuromag');
+coordsys  = ft_getopt(varargin, 'coordsys',  'neuromag');
 headshape = ft_getopt(varargin, 'headshape', []);
+event     = ft_getopt(varargin, 'event',     []);
+hdr       = ft_getopt(varargin, 'hdr',       []);
 
 % ensure that the filename has the correct extension
 [pathstr, name, ext] = fileparts(filename);
@@ -68,18 +78,35 @@ if ~strcmp(ext, '.fif')
   ft_error('If the filename is specified with a file extension, this should read .fif');
 end
 fifffile  = fullfile(pathstr ,[name '.fif']);
-eventfile = fullfile(pathstr ,[name '-eve.fif']);
 
 % ensure the mne-toolbox to be on the path
 ft_hastoolbox('mne', 1);
 FIFF = fiff_define_constants; % some constants are not defined in the MATLAB function
+
+% check the input data for the presence of a hdr before passing it to
+% ft_checkdata (because the hdr might be scrubbed there)
+if isempty(hdr) && ~isfield(data, 'hdr')
+  ft_info('The input data does not include header information');
+elseif isempty(hdr) && isfield(data, 'hdr')
+  ft_info('Using the header information from the input data');
+  hdr = data.hdr;
+elseif ~isempty(hdr) && ~isfield(data, 'hdr')
+  ft_info('Using the header information supplied as separate input');
+elseif ~isempty(hdr) && isfield(data, 'hdr')
+  ft_error('You should either supply a separate header, or a data argument with a hdr field, not both');
+end
 
 % check if the input data is valid for this function
 data   = ft_checkdata(data, 'datatype', {'raw', 'timelock'}, 'hassampleinfo', 'yes', 'feedback', 'yes');
 istlck = ft_datatype(data, 'timelock') && isfield(data, 'avg');
 israw  = ft_datatype(data, 'raw') && numel(data.trial)==1;
 isepch = ft_datatype(data, 'timelock') || (ft_datatype(data, 'raw') && numel(data.trial)>1);
+if ~israw && ~isempty(event)
+  ft_error('events are only used for the writing of continuous files');
+end
 if isepch
+  % this step ensures that all trials have a common time axis, and that variable length trials can 
+  % be handled (injecting the shorter trials with NaNs)
   data = ft_checkdata(data, 'datatype', 'timelock', 'feedback', 'yes');
 end
 if israw
@@ -103,9 +130,9 @@ if ~ismember(precision, {'single' 'double'})
 end
 
 % Create a fiff-header, or take information from the original header if possible
-if isfield(data, 'hdr') && isfield(data.hdr, 'orig') && isfield(data.hdr.orig, 'meas_id')
+if ~isempty(hdr) && isfield(hdr, 'orig') && isfield(hdr.orig, 'meas_id')
   ft_notice('The data contains header information that seems to be derived from a FIFF file,\nre-using header information, channel locations may be read \nfrom .grad and .elec in the data');
-  info = data.hdr.orig;
+  info = hdr.orig;
 else
   info.meas_id.version = NaN;
   info.meas_id.machid  = [NaN;NaN];
@@ -117,7 +144,7 @@ else
   info.highpass        = NaN;
   info.lowpass         = NaN;
   
-  % these are not strictly necessary, for basic functionality, i.e. time series manipulation. Thinks work
+  % these are not strictly necessary, for basic functionality, i.e. time series manipulation. Things work
   % best if an attempt is made to represent MEG-sensors according to the MNE conventions, i.e. sensors in 
   % (neuromag) device coordinates, and the appropriate additional transformations specified. Fieldtrip2fiff 
   % makes an attempt to do this, if 'coordsys' = 'neuromag' (handled below)
@@ -213,7 +240,7 @@ if isfield(data, 'grad')
 end
 
 info.ch_names = data.label(:)';
-info.chs      = sens2fiff(data);
+info.chs      = sens2fiff(data, hdr);
 info.nchan    = numel(data.label);
 
 if iscomplex && strcmp(precision, 'single')
@@ -234,20 +261,29 @@ if israw
   fiff_write_int(outfid, FIFF.FIFF_FIRST_SAMPLE, round(data.time{1}(1)*fsample));
   fiff_write_int(outfid, FIFF.FIFF_DATA_SKIP, 0);
   fiff_write_raw_buffer(outfid, data.trial{1}, cals, dtype);
-  fiff_finish_writing_raw(outfid);
   
-  % write events, if they exist
-  if isfield(data, 'cfg')
-    event = ft_findcfg(data.cfg, 'event');
-  else
-    event = [];
-  end
+  % write events, if specified or present in the structure provenance
   if ~isempty(event)
     eventtype = ft_getopt(varargin, 'eventtype', 'all');
-    [eventlist, mappings] = convertevent(event, eventtype);
-    fiff_write_events(eventfile, eventlist, mappings);
-    ft_info('Writing events to %s\n', eventfile)
+    if isequal(eventtype, 'all')
+      eventtype = {event.type};
+    else
+      type      = {event.type};
+      sel       = match_str(unique(type), eventtype);
+      eventtype = type(sel);
+    end
+
+    if ~isempty(eventtype)
+      ft_info('Writing event matrix to %s\n', fifffile);
+      [eventlist, mappings] = convertevent(event, eventtype);
+      
+      % adjust for the first sample in the data
+      eventlist(:,1) = eventlist(:,1) + 1 - data.sampleinfo(1);
+
+      fiff_write_events(outfid, eventlist, mappings)
+    end
   end
+  fiff_finish_writing_raw(outfid);
   
 elseif istlck
   evoked.aspect_kind = 100;
@@ -269,13 +305,26 @@ elseif isepch
   if isfield(data, 'trialinfo')
     ft_warning('Using the first column of the trialinfo field as event values');
     trg = data.trialinfo(:,1);
+    if istable(trg)
+      trg = table2array(trg);
+    end
   else
+    ft_warning('Marking each epoch boundary with a single event value (1)')
     trg = ones(ntrl,1);
   end
   events = [((0:nsmp:(nsmp*(ntrl-1))))' zeros(ntrl,1) trg];
   vals = unique(trg);
   vals = [(1:numel(vals))' vals]';
-  eventid = sprintf('event%d: %d;',vals(:));
+
+  % remap the event values in the matrix to index into the unique values,
+  % to be able to the the reverse interpretation correctly
+  tmp = events(:,3);
+  for k = 1:numel(vals(2,:))
+    tmp(events(:,3)==vals(2,k)) = k;
+  end
+  events(:,3) = tmp;
+
+  eventid = sprintf('event_%d: %d;',vals(:));
   eventid = eventid(1:end-1); % remove the last comma
 
   epochs.epoch = data.trial;
@@ -292,121 +341,165 @@ elseif isepch
   fiffdata.epoch = epochs;
   fiff_write_epochs(fifffile, fiffdata, dtype);
 
-
 end
 
-%-------------------
-% subfunction
-function [chs] = sens2fiff(data)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function [chs] = sens2fiff(data, hdr)
 
-if isfield(data, 'hdr') && isfield(data.hdr, 'orig') && isfield(data.hdr.orig, 'chs')
+if ~isempty(hdr) && isfield(hdr, 'orig') && isfield(hdr.orig, 'chs')
   % use orig information if available
   ft_warning('Using the original channel information from the header, this may be wrong if channels have been pruned, reordered, rescaled');
-  [i_label, i_chs] = match_str(data.label, {data.hdr.orig.chs.ch_name}');
+  [i_label, i_chs] = match_str(data.label, {hdr.orig.chs.ch_name}');
   if numel(i_label) < numel(data.label)
     ft_error('There are more channels in the data than in the original header information, this is currently not supported');
   end
   chs(i_label)     = data.hdr.orig.chs(i_chs);
-else
-  % otherwise reconstruct a usable channel information array
-  ft_warning('Reconstructing channel information based on the available data, it might be inaccurate\n');
-  FIFF = fiff_define_constants; % some constants are not defined in the MATLAB function
-  
-  hasgrad = isfield(data, 'grad');
-  haselec = isfield(data, 'elec');
-  nchan   = numel(data.label);
-  
-  stype = zeros(nchan, 1)-1;
-  indx  = nan(nchan,1);
-  
-  if haselec
-    [i_labeeg, i_elec] = match_str(data.label, data.elec.label);
-    stype(i_labeeg) = 0; %meg/eeg/other = 1/0/-1
-    indx(i_labeeg)  = i_elec; %indexes into the grad/elec
-   
-    data.elec = ft_convert_units(data.elec, 'm'); % this seems needed for a correct round trip
-  end
-  
-  if hasgrad
-    [i_labmeg, i_grad] = match_str(data.label, data.grad.label);
-    stype(i_labmeg) = 1;
-    indx(i_labmeg)  = i_grad;
-  
-    data.grad = ft_convert_units(data.grad, 'm');
-    data.grad = undobalancing(data.grad); % if this fails, then it's difficult to write out meaningful channel info to begin with
-    [coiltype, coilkind] = grad2coiltype(data.grad);
-    coilunit  = grad2coilunit(data.grad, FIFF);
-  end
+  return;
+end
 
-  scanno  = num2cell((1:nchan)');
-  ch_name = data.label(:);
-  range   = num2cell(ones(nchan,1));
-  cal     = num2cell(ones(nchan,1));
+% otherwise reconstruct a usable channel information array
+ft_warning('Reconstructing channel information based on the available data, it might be inaccurate\n');
+FIFF = fiff_define_constants; % some constants are not defined in the MATLAB function
 
-  cnt_grad = 0;
-  cnt_elec = 0;
-  cnt_else = 0;
-  chs = struct('scanno', scanno, 'ch_name', ch_name, 'range', range, 'cal', cal)';
-  for k = 1:nchan
-  
-    switch stype(k)
-      case 1
-        % MEG
-        cnt_grad = cnt_grad + 1;
-        
-        % safety check
-        selcoil = data.grad.tra(indx(k),:)~=0;
-        assert(sum(selcoil)<=2);
-        
-        pos  = data.grad.chanpos(indx(k),:);
-        ori  = data.grad.chanori(indx(k),:);
-        R    = ori2r(ori, data.grad.coilpos(selcoil, :), coiltype(indx(k)));
+hasgrad = isfield(data, 'grad');
+haselec = isfield(data, 'elec');
+nchan   = numel(data.label);
 
-        chs(1,k).scanno       = cnt_grad;
-        chs(1,k).logno        = cnt_grad;
-        chs(1,k).kind         = coilkind(indx(k));
-        chs(1,k).coil_type    = coiltype(indx(k));
-        chs(1,k).unit         = coilunit(indx(k));
-        chs(1,k).unit_mul     = 0;
-        chs(1,k).eeg_loc      = [];
-        chs(1,k).loc          = [pos(:); R(:)];
-        chs(1,k).cal          = 1;
+stype = zeros(nchan, 1)-1;
+indx  = nan(nchan,1);
 
-      case 0
-        % EEG
-        cnt_elec = cnt_elec + 1;
-       
-        chs(1,k).scanno       = cnt_elec;
-        chs(1,k).logno        = cnt_elec;
-        chs(1,k).kind         = FIFF.FIFFV_EEG_CH;
-        chs(1,k).coil_type    = NaN;
-        chs(1,k).unit         = FIFF.FIFF_UNIT_V;
-        chs(1,k).unit_mul     = log10(ft_scalingfactor(data.elec.chanunit{indx(k)}, 'V')); 
-        chs(1,k).eeg_loc      = [data.elec.chanpos(indx(k),:)' zeros(3,1)];
-        chs(1,k).loc          = [chs(1,k).eeg_loc(:); 0; 1; 0; 0; 0; 1];
-        chs(1,k).cal          = 1;
+if haselec
+  [i_labeeg, i_elec] = match_str(data.label, data.elec.label);
+  stype(i_labeeg) = 0; %meg/eeg/other = 1/0/-1
+  indx(i_labeeg)  = i_elec; %indexes into the grad/elec
 
-      case -1
-        % OTHER
-        cnt_else = cnt_else + 1;
-        
-        chs(1,k).scanno       = cnt_else;
-        chs(1,k).logno        = cnt_else;
-        chs(1,k).kind         = NaN;
-        chs(1,k).coil_type    = NaN;
-        chs(1,k).unit         = NaN;
-        chs(1,k).unit_mul     = 0;
-        chs(1,k).eeg_loc      = [];
-        chs(1,k).loc          = zeros(12,1);
-        chs(1,k).cal          = 1;
+  data.elec = ft_convert_units(data.elec, 'm'); % this seems needed for a correct round trip
+end
 
-      otherwise
-    end
+if hasgrad
+  [i_labmeg, i_grad] = match_str(data.label, data.grad.label);
+  stype(i_labmeg) = 1;
+  indx(i_labmeg)  = i_grad;
 
+  data.grad = ft_convert_units(data.grad, 'm');
+  data.grad = undobalancing(data.grad); % if this fails, then it's difficult to write out meaningful channel info to begin with
+  [coiltype, coilkind] = grad2coiltype(data.grad);
+  coilunit  = grad2coilunit(data.grad, FIFF);
+end
+
+% FIXME: experimental attempt to assign digital trigger channels correctly
+% these are so far only from 4d or ctf systems
+i_labstim = strcmp(ft_chantype(data.label), 'trigger');
+stype(i_labstim) = 2;
+%indx(i_labstim)  = i_stim;
+
+% FIXME: experimental attempt to assign digital response channels correctly
+% these are so far only from 4d or ctf systems
+i_labresp = strcmp(ft_chantype(data.label), 'response');
+stype(i_labresp) = 3;
+%indx(i_labresp)  = i_resp;
+
+scanno  = num2cell((1:nchan)');
+ch_name = data.label(:);
+range   = num2cell(ones(nchan,1));
+cal     = num2cell(ones(nchan,1));
+
+cnt_resp = 0;
+cnt_stim = 0;
+cnt_grad = 0;
+cnt_elec = 0;
+cnt_else = 0;
+chs = struct('scanno', scanno, 'ch_name', ch_name, 'range', range, 'cal', cal)';
+for k = 1:nchan
+
+  switch stype(k)
+    case 3
+      % digital response channel
+      cnt_resp = cnt_resp + 1;
+
+      chs(1,k).scanno       = cnt_resp;
+      chs(1,k).logno        = cnt_resp;
+      chs(1,k).kind         = FIFF.FIFFV_RESP_CH;
+      chs(1,k).coil_type    = 0;
+      chs(1,k).unit         = FIFF.FIFF_UNIT_V;
+      chs(1,k).unit_mul     = 0;
+      chs(1,k).eeg_loc      = [];
+      chs(1,k).loc          = repmat([0 0 0 1]',3,1);
+      chs(1,k).cal          = 1;
+
+    case 2
+      % digital trigger channel
+      cnt_stim = cnt_stim + 1;
+
+      chs(1,k).scanno       = cnt_stim;
+      chs(1,k).logno        = cnt_stim + 100;
+      chs(1,k).kind         = FIFF.FIFFV_STIM_CH;
+      chs(1,k).coil_type    = 0;
+      chs(1,k).unit         = FIFF.FIFF_UNIT_V;
+      chs(1,k).unit_mul     = 0;
+      chs(1,k).eeg_loc      = [];
+      chs(1,k).loc          = repmat([0 0 0 1]',3,1);
+      chs(1,k).cal          = 1;
+
+    case 1
+      % MEG
+      cnt_grad = cnt_grad + 1;
+
+      % safety check
+      selcoil = data.grad.tra(indx(k),:)~=0;
+      assert(sum(selcoil)<=2);
+
+      pos  = data.grad.chanpos(indx(k),:);
+      ori  = data.grad.chanori(indx(k),:);
+      R    = ori2r(ori, data.grad.coilpos(selcoil, :), coiltype(indx(k)));
+
+      chs(1,k).scanno       = cnt_grad;
+      chs(1,k).logno        = cnt_grad + 1000;
+      chs(1,k).kind         = coilkind(indx(k));
+      chs(1,k).coil_type    = coiltype(indx(k));
+      chs(1,k).unit         = coilunit(indx(k));
+      chs(1,k).unit_mul     = 0;
+      chs(1,k).eeg_loc      = [];
+      chs(1,k).loc          = [pos(:); R(:)];
+      chs(1,k).cal          = 1;
+
+    case 0
+      % EEG
+      cnt_elec = cnt_elec + 1;
+
+      chs(1,k).scanno       = cnt_elec;
+      chs(1,k).logno        = cnt_elec + 10000;
+      chs(1,k).kind         = FIFF.FIFFV_EEG_CH;
+      chs(1,k).coil_type    = NaN;
+      chs(1,k).unit         = FIFF.FIFF_UNIT_V;
+      chs(1,k).unit_mul     = log10(ft_scalingfactor(data.elec.chanunit{indx(k)}, 'V'));
+      chs(1,k).eeg_loc      = [data.elec.chanpos(indx(k),:)' zeros(3,1)];
+      chs(1,k).loc          = [chs(1,k).eeg_loc(:); 0; 1; 0; 0; 0; 1];
+      chs(1,k).cal          = 1;
+
+    case -1
+      % OTHER
+      cnt_else = cnt_else + 1;
+
+      chs(1,k).scanno       = cnt_else;
+      chs(1,k).logno        = cnt_else;
+      chs(1,k).kind         = FIFF.FIFFV_MISC_CH;
+      chs(1,k).coil_type    = NaN;
+      chs(1,k).unit         = NaN;
+      chs(1,k).unit_mul     = 0;
+      chs(1,k).eeg_loc      = [];
+      chs(1,k).loc          = zeros(12,1);
+      chs(1,k).cal          = 1;
+
+    otherwise
   end
 end
 
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [eventlist, mappings] = convertevent(event, eventtype)
 
 ev_type  = {event.type};
@@ -435,9 +528,9 @@ for k = 1:numel(ev_utype)
     ev(cnt).sample = [event(sel).sample];
   else
     val = {event(sel).value};
+    smp = [event(sel).sample];
     if all(cellfun(@isnumeric, val))
-      val = [event(sel).value];
-      smp = [event(sel).sample];
+      val  = [event(sel).value]; % make numeric vector, rather than cell
       uval = unique(val);
       for kk = 1:numel(uval)
         cnt = cnt+1;
@@ -451,7 +544,7 @@ for k = 1:numel(ev_utype)
         cnt = cnt+1;
         ev(cnt).id     = sprintf('%s_%s', ev_utype{k}, uval{kk});
         ev(cnt).sample = smp(strcmp(val, uval{kk}));
-        ft_info('Event type %s with value %s: %d occurrences\n', ev_utype{k}, uval{kk}, sum(val==uval(kk)));
+        ft_info('Event type %s with value %s: %d occurrences\n', ev_utype{k}, uval{kk}, sum(strcmp(val, uval{kk})));
       end
     end
   end
@@ -460,7 +553,7 @@ end
 mappings  = '';
 eventlist = zeros(0,3);
 for k = 1:numel(ev)
-  mappings  = sprintf('%s, %s:%d', mappings, ev(k).id, k);
+  mappings  = sprintf('%s; %s:%d', mappings, ev(k).id, k);
 
   smp = ev(k).sample(:)-1; % in the fiff-file the samples are 0 based
   eventlist = cat(1, eventlist, [smp zeros(numel(smp),1) ones(numel(smp),1).*k]); 
@@ -469,6 +562,9 @@ end
 eventlist = eventlist(ix,:);
 mappings  = mappings(3:end);
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [coiltype, coilkind] = grad2coiltype(grad)
 
 stype = ft_senstype(grad);
@@ -483,9 +579,9 @@ switch stype
   case 'neuromag122'
     % this can in theory happen, but is not supported yet, FIXME please
     % feel free to add support for this (and the below) when you need it.
-    ft_warning('deteced neuromag122 as sensory array, but no original channel info will be used')
+    ft_warning('deteced neuromag122 as sensor array, but no original channel info will be used')
   case 'neuromag306'
-    ft_warning('deteced neuromag306 as sensory array, but no original channel info will be used')
+    ft_warning('deteced neuromag306 as sensor array, but no original channel info will be used')
  
   case {'ctf151' 'ctf275'}
     
@@ -556,6 +652,9 @@ end
 ft_info('creating coiltypes according to sensor type: %s', stype);
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function coilunit = grad2coilunit(grad, FIFF)
 
 coilunit = zeros(numel(grad.label),1)-1;
@@ -571,8 +670,10 @@ for k = 1:numel(grad.chanunit)
   end
 end
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [ex, ey] = plane_unitvectors(ez)
-
 % subfunction to obtain a pair of vectors that span the plane orthogonal to
 % ez. The heuristic is inspired by the MNE-python code
 
@@ -598,8 +699,11 @@ ex = ex - (ex'*ez).*ez;
 ex = ex / norm(ex);
 ey = cross(ez, ex);
 
-function R = ori2r(ori, pos, coiltype)
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function R = ori2r(ori, pos, coiltype)
 % helper function to get the orthonormal matrix that describes the local
 % coordinate system of a sensor in fif convention. Note that not all
 % coiltypes are guaranteed to be correct
@@ -621,5 +725,5 @@ switch coiltype
     ez       = ori(:);
     [ex, ey] = plane_unitvectors(ez);
 end
-R        = [ex(:) ey(:) ez(:)];
+R = [ex(:) ey(:) ez(:)];
 

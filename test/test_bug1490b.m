@@ -1,6 +1,6 @@
 function test_bug1490b
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_read_header ft_read_data loadcnt
 % DATA private

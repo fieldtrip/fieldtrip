@@ -1,6 +1,6 @@
 function inspect_qsubcellfun3
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY qsubcellfun qsubfeval qsubget
 % DATA no

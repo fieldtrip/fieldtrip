@@ -1,6 +1,6 @@
 function test_bug1816
 
-% MEM 6gb
+% MEM 4gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_read_mri ft_volumesegment
 % DATA private

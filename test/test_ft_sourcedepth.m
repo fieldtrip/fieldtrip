@@ -1,4 +1,4 @@
-function test_ft_sourcedepth
+function tests = test_ft_sourcedepth
 
 % MEM 1gb
 % WALLTIME 00:10:00

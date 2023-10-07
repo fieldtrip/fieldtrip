@@ -14,7 +14,7 @@ function [warped]= individual2sn(P, input)
 %
 % Input parameters:
 %   P     = structure that contains the contents of an spm generated _sn.mat
-%           file, or the representaiton of the parameters as of SPM12
+%           file, or the representation of the parameters as of SPM12
 %   input = Nx3 array containing the input positions
 
 % Copyright (C) 2013-2017, Jan-Mathijs Schoffelen

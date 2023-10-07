@@ -1,7 +1,7 @@
 function test_ft_denoise_hfc(testfile)
 
 % WALLTIME 00:10:00
-% MEM 8gb
+% MEM 6gb
 % DEPENDENCY test_ft_denoise_hfc
 % DATA private
 

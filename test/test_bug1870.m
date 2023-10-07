@@ -1,6 +1,6 @@
 function test_bug1870
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_megplanar ft_datatype_sens ft_compute_leadfield
 % DATA private

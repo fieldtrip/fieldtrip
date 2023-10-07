@@ -1,6 +1,8 @@
 function [summary] = ft_test_compare(varargin)
 
-% FT_TEST_COMPARE
+% FT_TEST_COMPARE documentation is included inside ft_test documentation.
+% 
+% See also FT_TEST
 
 % Copyright (C) 2017, Robert Oostenveld
 %
@@ -58,7 +60,7 @@ for i=1:numel(varargin)
   result = webread([url query sprintf('&%s=%s', feature, varargin{i})], options);
   
   % the documents in the mongoDB database might not fully consistent, in which case they are returned as cell-array containing different structures
-  % merge all stuctures into a single struct-array
+  % merge all structures into a single struct-array
   result = mergecellstruct(result);
   
   assert(~isempty(result), 'no results were returned for %s %s', feature, varargin{i});

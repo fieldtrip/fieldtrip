@@ -1,6 +1,6 @@
 function test_old_connectivityanalysis
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY
 % DATA no

@@ -1,6 +1,6 @@
 function test_example_sphere_fitting
 
-% MEM 8gb
+% MEM 6gb
 % WALLTIME 00:20:00
 % DATA private
 

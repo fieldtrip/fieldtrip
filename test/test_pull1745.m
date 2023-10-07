@@ -1,7 +1,7 @@
 function test_pull1745
 
 % WALLTIME 00:10:00
-% MEMORY 8gb
+% MEM 8gb
 % DEPENDENCY ft_datatype_source ft_datatype_volume ft_datatype_parcellation ft_datatype_segmentation ft_sourceparcellate
 % DATA private
 
@@ -114,5 +114,3 @@ atlas = ft_read_atlas(fullfile(ftpath, 'template', 'atlas', 'aal', 'ROI_MNI_V4.n
 % - spatially transform the atlas to the 3D anatomical
 % - interpolate the atlas onto the 3D and 4D representation
 % - average the non-interpolated functional data over some parcels
-
-

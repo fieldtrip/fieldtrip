@@ -1,7 +1,7 @@
-function test_ft_preproc_dftfilter
+function tests = test_ft_preproc_dftfilter
 
 % WALLTIME 00:10:00
-% MEM 2gb
+% MEM 1gb
 % DEPENDENCY ft_preproc_dftfilter
 % DATA no
 
@@ -65,6 +65,9 @@ figure; plot(data.time{1}, datafilt1.trial{1}-datafilt2.trial{1});
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function testOther(testCase)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 % some other instances, testing ft_preproc_dftfilter directly
 tim = (0:1999)./1000;
 dat = randn(1, 2000) + (1+hanning(2000))'.*sin(2.*pi.*(tim).*50);
@@ -87,7 +90,6 @@ end
 
 figure;plot(tim, dat-filt); hold on;plot(tim, (1+hanning(2001))'.*sin(2.*pi.*(tim).*50));
 
-
 dat = randn(3, 2001) + [(1+hanning(2001))'.*sin(2.*pi.*(tim).*53) ; (1+hanning(2001))'.*sin(2.*pi.*(tim).*79 - 0.025) ; (1+hanning(2001))'.*sin(2.*pi.*(tim).*127 + 0.002)];
 filt = ft_preproc_dftfilter(dat, 1000, [53, 79, 127], 'dftreplace', 'neighbour', 'dftneighbourwidth', [1 1 1]);
 figure;
@@ -107,7 +109,11 @@ dat = randn(1, 5000) + ([krn(1:2500) ones(1,2500)]).*sin(2.*pi.*(tim).*50);
 filt = ft_preproc_dftfilter(dat, 1000, 50, 'dftreplace', 'neighbour', 'dftneighbourwidth', 2, 'dftbandwidth', 2);
 figure;hold on;plot(tim, ([krn(1:2500) ones(1,2500)]).*sin(2.*pi.*(tim).*50));plot(tim, dat-filt)
 
-%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function testSabine(testCase)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 % Code chunk from Sabine
 samples_off = 2; % samples to add, so a full 50 Hz cycle doesn't fit
 

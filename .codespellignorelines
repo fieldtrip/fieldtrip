@@ -1,0 +1,9 @@
+    origin = input('Is the origin of the coordinate system at the a(nterior commissure), i(nterauricular), s(scanner origin), n(ot a landmark)? ', 's');
+        tmp = sens.tra(:, strcmp(sens.optotype, 'transmitter')); correctT = all(tmp(:)>=0);
+        tmp = sens.tra(:, strcmp(sens.optotype, 'receiver'   )); correctR = all(tmp(:)<=0);
+        if ~correctT
+        if ~correctR
+  [pth,nam,ext] = fileparts(fname);
+  V  = nifti(fullfile(pth,['iy_',nam,ext]));
+  [pth,nam,ext] = fileparts(fname);
+  V  = nifti(fullfile(pth,['y_',nam,ext]));

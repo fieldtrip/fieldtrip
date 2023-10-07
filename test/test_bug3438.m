@@ -1,6 +1,6 @@
 function test_bug3438
 
-% MEM 7gb
+% MEM 6gb
 % WALLTIME 00:20:00
 % DEPENDENCY ft_read_headshape
 % DATA private

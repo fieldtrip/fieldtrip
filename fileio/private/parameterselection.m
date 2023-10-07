@@ -45,7 +45,7 @@ if ~isempty(sel)
   allparam = fieldnames(data);
   
   % Around 1 May 2021, seg has been renamed in tissue in the automatic
-  % conversion of probablistic to indexed segmentations/parcellations.
+  % conversion of probabilistic to indexed segmentations/parcellations.
   if ismember('seg', param) && ~ismember('seg', allparam) && ismember('tissue', allparam)
     ft_warning('the field ''seg'' has been renamed to ''trial'', please update your code')
     param{strcmp(param, 'seg')} = 'tissue';

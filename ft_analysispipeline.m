@@ -2,8 +2,8 @@ function [pipeline] = ft_analysispipeline(cfg, data)
 
 % FT_ANALYSIPIPELINE reconstructs the complete analysis pipeline that was used to create
 % the input FieldTrip data structure. The pipeline will be visualized as a flowchart.
-% In the future it will be possible to output the complete pipeline as a MATLAB script
-% or in a specialized pipeline format (e.g. PSOM, JIST, LONI, Taverna).
+% In the future it might be possible to output the complete pipeline as a MATLAB script
+% or in a specialized pipeline format like PSOM, JIST, LONI, or Taverna.
 %
 % Use as
 %   output = ft_analysispipeline(cfg, data)
@@ -13,16 +13,17 @@ function [pipeline] = ft_analysispipeline(cfg, data)
 % FieldTrip function, e.g. FT_PREPROCESSING, FT_TIMELOCKANALYSIS, FT_SOURCEANALYSIS,
 % FT_FREQSTATISTICS or whatever you like.
 %
-% Alternatively, for the second input argument you can also only give the configuration
-% of the processed data (i.e. "data.cfg") instead of the full data.
+% Alternatively, for the second data input argument you can also only give the
+% configuration of the processed data (for example data.cfg) instead of the full data
+% structure.
 %
 % The configuration options that apply to the behavior of this function are
 %   cfg.filename    = string, filename without the extension
-%   cfg.filetype    = string, can be 'matlab', 'html' or 'dot'
+%   cfg.filetype    = string, can be 'matlab', 'html', 'dot' or 'prov'
 %   cfg.feedback    = string, 'no', 'text', 'gui' or 'yes', whether text and/or
 %                     graphical feedback should be presented (default = 'yes')
 %   cfg.showinfo    = string or cell-array of strings, information to display
-%                     in the gui boxes, can be any combination of
+%                     in the GUI boxes, can be any combination of
 %                     'functionname', 'revision', 'matlabversion',
 %                     'computername', 'username', 'calltime', 'timeused',
 %                     'memused', 'workingdir', 'scriptpath' (default =
@@ -66,7 +67,7 @@ function [pipeline] = ft_analysispipeline(cfg, data)
 % See also FT_PREPROCESSING, FT_TIMELOCKANALYSIS, FT_FREQANALYSIS, FT_SOURCEANALYSIS,
 % FT_CONNECTIVITYANALYSIS, FT_NETWORKANALYSIS
 
-% Copyright (C) 2014-2022, Robert Oostenveld
+% Copyright (C) 2014-2023, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -125,6 +126,8 @@ if isempty(cfg.filetype) && ~isempty(cfg.filename)
       cfg.filetype = 'html';
     case '.dot'
       cfg.filetype = 'dot';
+    case '.prov.jsonld'
+      cfg.filetype = 'prov';
     otherwise
       ft_error('cannot determine filetype');
   end
@@ -247,6 +250,8 @@ else
       pipeline2dotfile(cfg, pipeline);
     case 'html'
       pipeline2htmlfile(cfg, pipeline);
+    case 'prov'
+      pipeline2provfile(cfg, pipeline);
     otherwise
       ft_error('unsupported filetype');
   end
@@ -263,6 +268,10 @@ if isempty(cfg.filename)
   menu_fieldtrip(gcf, cfg);
 end
 
+% do not return an output variable if not requested
+if ~ft_nargout
+  clear pipeline
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION for recursive walking along the cfg.previous.previous info
@@ -387,7 +396,7 @@ function pipeline2matlabfigure(cfg, pipeline)
 
 fprintf('plotting pipeline as MATLAB figure\n');
 
-layout = cell(numel(pipeline));
+layout = cell(numel(pipeline), numel(pipeline));
 for i=1:length(pipeline)
   % get the vertical and horizontal position in integer values
   % high numbers are towards the begin, low numbers are towards the end of the pipeline
@@ -753,13 +762,93 @@ fid = fopen(filename, 'w');
 fwrite(fid, htmlfile, 'uchar');
 fclose(fid);
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function pipeline2provfile(cfg, pipeline)
+% this tries to follow http://bids.neuroimaging.io/bep028
+
+[p, f, x] = fileparts(cfg.filename);
+filename = fullfile(p, [f '.prov.jsonld']);
+
+fprintf('exporting provenance to ''%s''\n', filename);
+
+prov = [];
+prov.context = 'https://raw.githubusercontent.com/bids-standard/BEP028_BIDSprov/master/context.json';
+prov.BIDSProvVersion = 'dev';
+prov.Records.Software{1}.Id = char(java.util.UUID.randomUUID.toString);
+prov.Records.Software{1}.RRID = 'RRID:SCR_004849';
+prov.Records.Software{1}.Label = 'FieldTrip';
+prov.Records.Software{1}.Type = 'Software';
+prov.Records.Software{1}.Version = ft_version;
+
+prov.Records.Activities = {};
+prov.Records.Entities = {};
+
+% these are used to make random 32-character hexadecimal numbers
+hexchar = '0123456789abcdef';
+
+for i=1:numel(pipeline)
+
+  % extend the provenance with one activity and one entity
+  prov.Records.Activities{end+1} = struct();
+  prov.Records.Entities{end+1} = struct();
+
+  if ~isempty(pipeline(i).this)
+    pipeline(i).this = ['data_' pipeline(i).this];
+  end
+
+  for j=1:numel(pipeline(i).parent)
+    pipeline(i).parent{j} = ['data_' pipeline(i).parent{j}];
+  end
+
+  % append this activity to the provenance
+  prov.Records.Activities{end}.Id = hexchar(randi(16, 1, 32));
+  prov.Records.Activities{end}.Label = pipeline(i).name;
+  prov.Records.Activities{end}.Used = pipeline(i).parent;
+  prov.Records.Activities{end}.AssociatedWith = prov.Records.Software{1}.Id;
+
+  cfg = rmfield(pipeline(i).cfg, 'previous');
+  
+
+  cmd = 'cfg = []; ';
+  cmd = [cmd strrep(printstruct('cfg', cfg), newline, ' ')];
+  cmd = [cmd ' ' pipeline(i).name '(cfg, '];
+  if ~isempty(pipeline(i).parent)
+    for j=1:numel(pipeline(i).parent)
+      cmd = [cmd pipeline(i).parent{j} ', '];
+    end
+  end
+  cmd = cmd(1:end-2); % remove the last ', '
+  cmd = [cmd ');'];
+  prov.Records.Activities{end}.Command = cmd;
+  
+  % append this entity to the provenance
+  prov.Records.Entities{end}.Id = pipeline(i).this;
+  prov.Records.Entities{end}.Label = 'data';
+  prov.Records.Entities{end}.GeneratedBy = prov.Records.Activities{end}.Id;
+
+end
+
+% write the file
+ft_write_json(filename, prov);
+
+% there is one JSON field that needs to be renamed
+fid = fopen(filename, 'rt');
+str = fread(fid, [1 inf], 'char=>char');
+fclose(fid);
+
+str = strrep(str, '"context"', '"@context"');
+
+fid = fopen(filename, 'w');
+fwrite(fid, str);
+fclose(fid);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cfghtml = escapestruct(tmpcfg)
-% convert the cfg structure to a suitable string (escape newlines and
-% quotes)
+% convert the cfg structure to a suitable string (escape newlines and quotes)
 
 % strip away big numeric fields
 if isstruct(tmpcfg)

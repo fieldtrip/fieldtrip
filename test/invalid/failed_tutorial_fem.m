@@ -1,7 +1,7 @@
 % function failed_tutorial_fem
 
 % WALLTIME 01:00:00
-% MEM 6gb
+% MEM 4gb
 % DEPENDENCY ft_volumesegment ft_prepare_mesh ft_prepare_headmodel ft_headmodel_simbio
 
 % this test script is based on the tutorial under development at

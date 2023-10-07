@@ -115,10 +115,21 @@ end
 
 % make a selection of the channels
 if ~isempty(chanindx)
+  nchan = length(layout.label);
   layout.pos    = layout.pos(chanindx,:);
   layout.width  = layout.width(chanindx);
   layout.height = layout.height(chanindx);
   layout.label  = layout.label(chanindx);
+  if numel(pointsymbol)==nchan
+    pointsymbol = pointsymbol(chanindx);
+  end
+  if numel(pointsize)==nchan
+    pointsize = pointsize(chanindx);
+  end
+  if size(pointcolor,1)==nchan
+    pointcolor = pointcolor(chanindx,:); % these are RGB triplets
+  end
+  clear nchan
 end
 
 % the units can be arbitrary (e.g. relative or pixels), so we need to compute the right scaling factor and offset
