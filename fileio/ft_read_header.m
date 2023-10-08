@@ -15,7 +15,7 @@ function [hdr] = ft_read_header(filename, varargin)
 %   'chantype'       = string or cell-array with strings, channel types to be read (only for NeuroOmega and BlackRock)
 %   'coordsys'       = string, 'head' or 'dewar' (default = 'head')
 %   'headerformat'   = name of a MATLAB function that takes the filename as input (default is automatic)
-%   'password'       = password structure for encrypted data set (only for mayo_mef30 and mayo_mef21)
+%   'password'       = password structure for encrypted data set (for dhn_med10, mayo_mef30, mayo_mef21)
 %   'readbids'       = string, 'yes', no', or 'ifmakessense', whether to read information from the BIDS sidecar files (default = 'ifmakessense')
 %
 % This returns a header structure with the following fields
@@ -1686,6 +1686,10 @@ switch headerformat
   case 'mayo_mef21'
     ft_hastoolbox('mayo_mef', 1); % make sure mayo_mef exists
     hdr = read_mayo_mef21(filename, password);
+
+  case 'dhn_med10'
+    ft_hastoolbox('mayo_mef', 1); % make sure mayo_mef exists
+    hdr = read_mayo_med10(filename, password);
 
   case 'mega_neurone'
     % ensure that this external toolbox is on the path
