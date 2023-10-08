@@ -16,8 +16,8 @@ function setup_mayo_mex(options)
     %
     % See also make_mex_mef, test_mayo_mef.
 
-    % Copyright 2020 Richard J. Cui. Created: Fri 05/15/2020 10:33:00.474 AM
-    % $ Revision: 0.2 $  $ Date: Mon 01/30/2023 10:12:07.571 PM $
+    % Copyright 2020-2023 Richard J. Cui. Created: Fri 05/15/2020 10:33:00.474 AM
+    % $ Revision: 0.3 $  $ Date: Sun 10/08/2023 12:42:06.711 PM $
     %
     % Mayo Foundation for Medical Education and Research
     % Mayo Clinic St. Mary Campus
@@ -86,7 +86,9 @@ function setup_mayo_mex(options)
 
     % check MEF mex binary
     % --------------------
-    fprintf('Setting up MEF mex binary...\n')
+    fprintf('***************************\n')
+    fprintf('* Checking MEF mex binary *\n')
+    fprintf('***************************\n')
 
     % directory of setup_mayo_mex.m assumed in mayo_mef
     mayo_mef = fileparts(mfilename('fullpath')); % store mef mex here
@@ -108,7 +110,10 @@ function setup_mayo_mex(options)
     % check MED mex binary
     % --------------------
     if ~isempty(med_mex_path)
-        fprintf('Setting up MED mex binary...\n')
+        fprintf('\n')
+        fprintf('***************************\n')
+        fprintf('* Checking MED mex binary *\n')
+        fprintf('***************************\n')
 
         % check mex files in read_MED
         valid_mex = check_mex_files(med_mex_path, MexType = 'MED');
