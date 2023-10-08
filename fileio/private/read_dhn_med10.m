@@ -10,7 +10,7 @@ function dhn_out = read_dhn_med10(filename, password, sortchannel, hdr, begsampl
     %
     % Input(s):
     %   filename        - [char] name of the file or folder of the dataset
-    %   password        - [char] (opt) password structure of MED 1.0 data (see
+    %   password        - [struct] (opt) password structure of MED 1.0 data (see
     %                     MEDSession_1p0)
     %   sortchannel     - [char] (opt) sort channel order either alphabetically
     %                     'alphabet' or numerically 'number' (default = 'alphabet')
@@ -33,7 +33,7 @@ function dhn_out = read_dhn_med10(filename, password, sortchannel, hdr, begsampl
     % See also FT_FILETYPE, FT_READ_HEADER, FT_READ_EVENT, FT_READ_DATA.
 
     % Copyright 2023 Richard J. Cui. Created: Sat 02/11/2023  5:47:28.254 PM
-    % $Revision: 0.2 $  $Date: Sun 10/08/2023 12:04:45.093 AM $
+    % $Revision: 0.3 $  $Date: Sun 10/08/2023 01:56:00.468 PM $
     %
     % Rocky Creek Dr. NE
     % Rochester, MN 55906, USA
@@ -45,8 +45,9 @@ function dhn_out = read_dhn_med10(filename, password, sortchannel, hdr, begsampl
     % ======================================================================
     arguments
         filename (1, :) char
-        password (1, :) char = 'L2_password' % example_data password =='L1_password' or 'L2_password'
-        sortchannel (1, 1) string = "alphabet"
+        password (1, 1) struct = struct('Level1Password', '', 'Level2Password', '', ...
+            'AccessLevel', 1); % example_data password =='L1_password' or 'L2_password'
+        sortchannel (1, 1) logical = false
         hdr (1, 1) struct = struct()
         begsample (1, 1) double = nan
         endsample (1, 1) double = nan
@@ -58,16 +59,6 @@ function dhn_out = read_dhn_med10(filename, password, sortchannel, hdr, begsampl
     % ======================================================================
     % check the consistency of SortChannel
     % ------------------------------------
-    if isempty(sortchannel)
-
-        if isempty(hdr)
-            sortchannel = 'alphabet';
-        else
-            sortchannel = hdr.SortChannel;
-        end % if
-
-    end % if
-
     if ~isempty(fieldnames(hdr)) && ~strcmpi(hdr.SortChannel, sortchannel)
         warning('off', 'backtrace')
         warning('dhn_med10:invalidSortChannel', ...
@@ -80,8 +71,8 @@ function dhn_out = read_dhn_med10(filename, password, sortchannel, hdr, begsampl
 
     % setup the instance of MEDFieldTrip_1p0
     % -------------------------------------
-    med_ft = MEDFieldTrip_1p0(filename, password, 'SortChannel', sortchannel); % dealing MED 1.0 data for FieldTrip
-    channames = mef_ft.SelectedChannel;
+    med_ft = MEDFieldTrip_1p0(filename, password, sortchannel); % dealing MED 1.0 data for FieldTrip
+    channames = med_ft.SelectedChannel;
 
     % get the desired information
     % ---------------------------
