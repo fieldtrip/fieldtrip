@@ -59,7 +59,7 @@ function dhn_out = read_dhn_med10(filename, password, sortchannel, hdr, begsampl
     % ======================================================================
     % check the consistency of SortChannel
     % ------------------------------------
-    if ~isempty(fieldnames(hdr)) && ~strcmpi(hdr.SortChannel, sortchannel)
+    if ~isempty(fieldnames(hdr)) && hdr.SortChannel ~= sortchannel
         warning('off', 'backtrace')
         warning('dhn_med10:invalidSortChannel', ...
             'SortChannel provided -%s- is not consistent with -%s- in header. use that in header', ...

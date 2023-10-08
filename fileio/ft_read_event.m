@@ -692,7 +692,7 @@ switch eventformat
     if isempty(hdr)
       hdr = ft_read_header(filename, 'password', password);
     end
-    event = read_dhn_med10(filename, password, [], hdr);
+    event = read_dhn_med10(filename, password, false, hdr);
 
   case 'edf'
     % read the header
