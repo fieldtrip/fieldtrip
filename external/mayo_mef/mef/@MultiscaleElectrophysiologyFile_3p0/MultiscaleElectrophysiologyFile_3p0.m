@@ -67,10 +67,10 @@ classdef MultiscaleElectrophysiologyFile_3p0 < MultiscaleElectrophysiologyFile
             
             % parse rules
             p = inputParser;
-            p.addOptional('file1st', '', @isstr);
-            p.addOptional('file2nd', '', @isstr);
-            p.addParameter('Level1Password', default_pw, @isstr);
-            p.addParameter('Level2Password', default_pw, @isstr);
+            p.addOptional('file1st', '', @ischar);
+            p.addOptional('file2nd', '', @ischar);
+            p.addParameter('Level1Password', default_pw, @ischar);
+            p.addParameter('Level2Password', default_pw, @ischar);
             p.addParameter('AccessLevel', default_al, @isnumeric);
             
             % parse and return the results

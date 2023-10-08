@@ -6,13 +6,13 @@ function seg_cont = analyzeContinuity(this, varargin)
 %   seg_cont = analyzeContinuity(__, bid)
 % 
 % Imput(s):
-%   this            - [obj] MultiscaleElectrophysiologyFile object
+%   this            - [obj] MultiscaleElectrophysiologyFile_3p0 object
 %   bid             - [table] (opt) block index data (see readBlockIndexData.m
 %                     for the detail) (default = this.BlockIndexData)
 % 
 % Output(s):
 %   seg_cont        - [table] N x 9, information of segments of continuity
-%                     of sampling in the data file.  The 7 variable names
+%                     of sampling in the data file.  The 9 variable names
 %                     are:
 %                     SegmentStart      : [num] index of start data segment
 %                     BlockStart        : [num] index of start data block 
@@ -36,7 +36,7 @@ function seg_cont = analyzeContinuity(this, varargin)
 % See also readBlockIndexData.
 
 % Copyright 2020 Richard J. Cui. Created: Wed 02/05/2020 10:19:17.599 AM
-% $Revision: 0.4 $  $Date: Thu 04/09/2020 10:11:27.490 PM $
+% $Revision: 0.5 $  $Date: Wed 04/19/2023 12:22:52.916 AM $
 %
 % 1026 Rocky Creek Dr NE
 % Rochester, MN 55906, USA

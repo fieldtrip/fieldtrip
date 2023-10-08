@@ -19,7 +19,7 @@ function [path_to_sess, sess_name, sess_ext] = get_sess_parts(this, varargin)
 % See also .
 
 % Copyright 2020 Richard J. Cui. Created: Thu 02/20/2020 11:24:47.068 AM
-% $Revision: 0.1 $  $Date: Thu 02/20/2020 11:24:47.068 AM $
+% $Revision: 0.2 $  $Date: Tue 02/21/2023 11:05:42.802 PM $
 %
 % 1026 Rocky Creek Dr NE
 % Rochester, MN 55906, USA
@@ -58,7 +58,7 @@ default_sp = '';
 % parse rules
 p = inputParser;
 p.addRequired('this', @isobject);
-p.addOptional('sess_path', default_sp, @isstr);
+p.addOptional('sess_path', default_sp, @ischar);
 
 % parse and return the results
 p.parse(varargin{:});

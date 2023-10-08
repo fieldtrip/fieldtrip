@@ -26,7 +26,7 @@ classdef MultiscaleElectrophysiologyFile < handle
     % MEF information
     % ---------------
     properties (SetAccess = protected)
-        MEFVersion = []     % MEF version to serve; can be set only in 
+        MEFVersion = []     % MEF version to serve, can be set only in 
                             % constructor
         MPS = 1e6           % microseconds per seconds
     end %  properties: protected
