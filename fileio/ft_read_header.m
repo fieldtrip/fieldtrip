@@ -853,6 +853,10 @@ switch headerformat
     hdr.label       = orig.label(:);
     hdr.orig        = orig; % remember the original details
 
+  case 'dhn_med10'
+    ft_hastoolbox('mayo_mef', 1); % make sure mayo_mef exists
+    hdr = read_dhn_med10(filename, password);
+
   case 'edf'
     % this reader is largely similar to the bdf reader
     if isempty(chanindx)
@@ -1686,10 +1690,6 @@ switch headerformat
   case 'mayo_mef21'
     ft_hastoolbox('mayo_mef', 1); % make sure mayo_mef exists
     hdr = read_mayo_mef21(filename, password);
-
-  case 'dhn_med10'
-    ft_hastoolbox('mayo_mef', 1); % make sure mayo_mef exists
-    hdr = read_mayo_med10(filename, password);
 
   case 'mega_neurone'
     % ensure that this external toolbox is on the path

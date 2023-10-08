@@ -23,7 +23,7 @@ function [dat] = ft_read_data(filename, varargin)
 %   'fallback'       can be empty or 'biosig' (default = [])
 %   'blocking'       wait for the selected number of events (default = 'no')
 %   'timeout'        amount of time in seconds to wait when blocking (default = 5)
-%   'password'       password structure for encrypted data set (only for mayo_mef30 and mayo_mef21)
+%   'password'       password structure for encrypted data set (only for dhn_med10, mayo_mef30 and mayo_mef21)
 %
 % This function returns a 2-D matrix of size Nchans*Nsamples for continuous
 % data when begevent and endevent are specified, or a 3-D matrix of size
@@ -569,6 +569,10 @@ switch dataformat
   case 'dataq_wdq'
     dat = read_wdq_data(filename, hdr.orig, begsample, endsample, chanindx);
     
+  case 'dhn_med10'
+    hdr.sampleunit = 'index';
+    dat = read_dhn_med10(filename, password, [], hdr, begsample, endsample, chanindx);
+
   case 'eeglab_set'
     dat = read_eeglabdata(filename, 'header', hdr, 'begtrial', begtrial, 'endtrial', endtrial, 'chanindx', chanindx);
     dimord = 'chans_samples_trials';
