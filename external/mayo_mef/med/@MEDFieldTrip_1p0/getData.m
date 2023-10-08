@@ -1,4 +1,4 @@
-function dat = getData(this, options)
+function dat = getData(this, channames, sampleunit, begsample, endsample, chanindx)
     % MEDFILEDTRIP_1P0.GETDATA read data from MED 1.0 dataset for FieldTrip
     %
     % Syntax:
@@ -26,7 +26,7 @@ function dat = getData(this, options)
     % See also .
 
     % Copyright 2023 Richard J. Cui. Created: Tue 10/03/2023 12:25:01.918 AM
-    % $Revision: 0.1 $  $Date: Thu 10/05/2023 11:22:50.574 PM $
+    % $Revision: 0.2 $  $Date: Sun 10/08/2023 03:04:54.209 PM $
     %
     % Rocky Creek Dr. NE
     % Rochester, MN 55906, USA
@@ -38,21 +38,12 @@ function dat = getData(this, options)
     % ======================================================================
     arguments
         this (1, 1) MEDFieldTrip_1p0
+        channames (1, :) string = this.ChannelName
+        sampleunit (1, :) char = 'index'
+        begsample (1, 1) double = 1
+        endsample (1, 1) double = this.Samples
+        chanindx (1, :) double = []
     end % positional
-
-    arguments
-        options.ChanNames (1, :) string = this.ChannelName
-        options.SampleUnit (1, :) char = 'index'
-        options.BegSample (1, 1) double = 1
-        options.EndSample (1, 1) double = this.Samples
-        options.ChanIndex (1, :) double = []
-    end % optional
-
-    channames = options.ChanNames;
-    sampleunit = options.SampleUnit;
-    begsample = options.BegSample;
-    endsample = options.EndSample;
-    chanindx = options.ChanIndex;
 
     if isempty(chanindx)
         chanindx = 1:numel(channames);

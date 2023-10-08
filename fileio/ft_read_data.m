@@ -571,7 +571,7 @@ switch dataformat
     
   case 'dhn_med10'
     hdr.sampleunit = 'index';
-    dat = read_dhn_med10(filename, password, [], hdr, begsample, endsample, chanindx);
+    dat = read_dhn_med10(filename, password, false, hdr, begsample, endsample, chanindx);
 
   case 'eeglab_set'
     dat = read_eeglabdata(filename, 'header', hdr, 'begtrial', begtrial, 'endtrial', endtrial, 'chanindx', chanindx);
