@@ -26,7 +26,7 @@ function seg_cont_corr = analyzeContinuity(this)
     % See also .
 
     % Copyright 2023 Richard J. Cui. Created: Fri 04/14/2023 12:11:12.027 AM
-    % $Revision: 0.4 $  $Date: Sun 07/02/2023  1:53:16.012 PM $
+    % $Revision: 0.5 $  $Date: Mon 10/09/2023 12:36:10.360 AM $
     %
     % Rocky Creek Dr. NE
     % Rochester, MN 55906, USA
@@ -44,7 +44,7 @@ function seg_cont_corr = analyzeContinuity(this)
     % main
     % ======================================================================
     meta_data = this.ChannelMetadata;
-    fs = this.ChanSamplingFreq;
+    fs = this.ChannelMetadata.metadata.sampling_frequency;
 
     % get the continuity table
     % ------------------------

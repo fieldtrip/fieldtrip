@@ -22,7 +22,7 @@ function abs_time = relative2absTimePoint(this, rel_time, unit)
     % See also .
 
     % Copyright 2023 Richard J. Cui. Created: Sun 09/17/2023 10:40:37.047 PM
-    % $Revision: 0.1 $  $Date: Sun 09/17/2023 10:40:37.096 PM $
+    % $Revision: 0.2 $  $Date: Mon 10/09/2023 12:22:37.852 AM $
     %
     % Rocky Creek Dr. NE
     % Rochester, MN 55906, USA
@@ -42,7 +42,7 @@ function abs_time = relative2absTimePoint(this, rel_time, unit)
     % main
     % ======================================================================
     offset = this.getSessionRecordOffset(unit);
-    abs_time = rel_time + offset;
+    abs_time = rel_time + double(offset);
 
 end % function relative2absTimePoint
 

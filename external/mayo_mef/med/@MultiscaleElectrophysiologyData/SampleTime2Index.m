@@ -23,7 +23,7 @@ function [sample_index, sample_yn] = SampleTime2Index(this, sample_time, options
 % See also SampleIndex2Time.
 
 % Copyright 2019-2023 Richard J. Cui. Created: Sun 05/05/2019 10:29:21.071 PM
-% $Revision: 1.4 $  $Date: Wed 07/19/2023 12:25:28.262 AM $
+% $Revision: 1.5 $  $Date: Mon 10/09/2023 12:22:37.852 AM $
 %
 % 1026 Rocky Creek Dr NE
 % Rochester, MN 55906, USA
@@ -39,7 +39,7 @@ arguments
 end % positional
 
 arguments
-    options.st_unit (1, 1) string {mustBeMember(options.st_unit, ["Index", "uUTC", "Second", "Minute", "Hour", "Day"])} = "Index"
+    options.st_unit (1, 1) string {mustBeMember(options.st_unit, ["index", "uutc", "second", "minute", "hour", "day"])} = "index"
 end %
 
 st_unit = options.st_unit;
@@ -72,7 +72,7 @@ end % if
 
 % within continuous segment
 % -------------------------
-fs = this.ChanSamplingFreq;
+fs = this.ChannelMetadata.metadata.sampling_frequency;
 
 % get relative start and end time in uUTC
 x = cont{:, {'start_time', 'end_time'}}; % in uUTC

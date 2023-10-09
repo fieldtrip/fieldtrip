@@ -16,7 +16,7 @@ function out_time = SessionUnitConvert(this, in_time, options)
     % See also .
 
     % Copyright 2023 Richard J. Cui. Created: Sun 09/17/2023 10:48:44.776 PM
-    % $Revision: 0.1 $  $Date: Sun 09/17/2023 10:48:44.797 PM $
+    % $Revision: 0.2 $  $Date: Mon 10/09/2023 12:57:35.798 AM $
     %
     % Rocky Creek Dr. NE
     % Rochester, MN 55906, USA
@@ -32,9 +32,9 @@ function out_time = SessionUnitConvert(this, in_time, options)
     end % positional
 
     arguments
-        options.InUnit (1, 1) char ...
+        options.InUnit (1, :) char ...
             {mustBeMember(options.InUnit, {'index', 'uutc', 'msec', 'second', 'minute', 'hour', 'day'})} = 'uutc'
-        options.OutUnit (1, 1) char ...
+        options.OutUnit (1, :) char ...
             {mustBeMember(options.OutUnit, {'index', 'uutc', 'msec', 'second', 'minute', 'hour', 'day'})} = 'second'
     end % optional
 

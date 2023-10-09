@@ -5,7 +5,7 @@ function test_mayo_mef()
     % DEPENDENCY read_mayo_mef21 read_mayo_mef30
 
     % Copyright 2020-2023 Richard J. Cui. Created: Sat 03/21/2020 10:35:23.147 PM
-    % $Revision: 0.4 $  $Date: Thu 01/26/2023 10:35:01.233 PM $
+    % $Revision: 0.5 $  $Date: Sun 10/08/2023 03:11:11.701 PM $
     %
     % Mayo Foundation for Medical Education and Research
     % Mayo Clinic St. Mary Campus
@@ -13,26 +13,33 @@ function test_mayo_mef()
     %
     % Email: richard.cui@utoronto.ca (permanent), Cui.Jie@mayo.edu (official)
 
-    % =========================================================================
+    % ======================================================================
     % Note of sample dataset
-    % =========================================================================
-    % Go to https://github.com/jiecui/mef_reader_fieldtrip
-    % and follow the instructions to download the sample dataset. Set the path
-    % to the sample dataset below.
+    % ======================================================================
+    % Follow the instructions
+    % (https://www.fieldtriptoolbox.org/faq/should_i_add_fieldtrip_with_all_subdirectories_to_my_matlab_path/)
+    % to add FieldTrip to your MATLAB path. Then, download the sample
+    % dataset from https://github.com/jiecui/mef_reader_fieldtrip and follow
+    % the instructions to download the sample dataset. Set the path to the
+    % sample dataset below.
 
-    %% set path to sample dataset
+    % set path to sample dataset
+    % --------------------------
     % please set the path to sample dataset
     mef21_data = '/path/to/sample_mef/mef_2p1';
     mef30_data = '/path/to/sample_mef/mef_3p0.mefd';
+    med10_data = '/path/to/sample_mef/med_1p0.medd';
 
-    %% install toolbox and build mex files
+    % install toolbox and build mex files
+    % -----------------------------------
     disp('-----------------------------------')
     disp('install toolbox and build mex files')
     disp('-----------------------------------')
     ft_hastoolbox('mayo_mef', 1);
     setup_mayo_mex()
 
-    %% MEF version 2.1
+    % MEF version 2.1
+    % ---------------
     disp(' ')
     disp('--------------------------')
     disp('testing MEF version 2.1...')
@@ -41,18 +48,37 @@ function test_mayo_mef()
     % the password of MEF 2.1 sample dataset
     mef21_pw = struct('Subject', 'erlichda', 'Session', 'sieve', 'Data', '');
 
-    % low-level
+    % low-level testing
     hdr = ft_read_header(mef21_data, 'password', mef21_pw);
-    dat = ft_read_data(mef21_data, 'password', mef21_pw);
-    event = ft_read_event(mef21_data, 'password', mef21_pw);
 
-    % high-level
+    if isempty(hdr)
+        warning('failed to read header of MEF 2.1 sample dataset')
+    end
+
+    dat = ft_read_data(mef21_data, 'password', mef21_pw);
+
+    if isempty(dat)
+        warning('failed to read data of MEF 2.1 sample dataset')
+    end
+
+    evt = ft_read_event(mef21_data, 'password', mef21_pw);
+
+    if isempty(evt)
+        warning('failed to read event of MEF 2.1 sample dataset')
+    end
+
+    % high-level testing
     cfg = [];
     cfg.dataset = mef21_data;
     cfg.password = mef21_pw;
     data = ft_preprocessing(cfg);
 
-    %% MEF version 3.0
+    if isempty(data)
+        warning('failed to read data of MEF 2.1 sample dataset in high-level testing')
+    end
+
+    % MEF version 3.0
+    % ---------------
     disp(' ')
     disp('--------------------------')
     disp('testing MEF version 3.0...')
@@ -60,18 +86,76 @@ function test_mayo_mef()
 
     % the password of MEF 3.0 sample dataset
     mef30_pw = struct('Level1Password', 'password1', 'Level2Password', ...
-    'password2', 'AccessLevel', 2);
+        'password2', 'AccessLevel', 2);
 
-    % low-level
+    % low-level testing
     hdr = ft_read_header(mef30_data, 'password', mef30_pw);
-    dat = ft_read_data(mef30_data, 'password', mef30_pw);
-    event = ft_read_event(mef30_data, 'password', mef30_pw);
 
-    % high-level
+    if isempty(hdr)
+        warning('failed to read header of MEF 3.0 sample dataset')
+    end
+
+    dat = ft_read_data(mef30_data, 'password', mef30_pw);
+
+    if isempty(dat)
+        warning('failed to read data of MEF 3.0 sample dataset')
+    end
+
+    evt = ft_read_event(mef30_data, 'password', mef30_pw);
+
+    if isempty(evt)
+        warning('failed to read event of MEF 3.0 sample dataset')
+    end
+
+    % high-level testing
     cfg = [];
     cfg.dataset = mef30_data;
     cfg.password = mef30_pw;
     data = ft_preprocessing(cfg);
+
+    if isempty(data)
+        warning('failed to read data of MEF 3.0 sample dataset in high-level testing')
+    end
+
+    % MED version 1.0
+    % ---------------
+    disp(' ')
+    disp('--------------------------')
+    disp('testing MED version 1.0...')
+    disp('--------------------------')
+
+    % the password of MED 1.0 sample dataset
+    med10_pw = struct('Level1Password', 'L1_password', 'Level2Password', ...
+        'L2_password', 'AccessLevel', 2);
+
+    % low-level testing
+    hdr = ft_read_header(med10_data, 'password', med10_pw);
+
+    if isempty(hdr)
+        warning('failed to read header of MED 1.0 sample dataset')
+    end
+
+    dat = ft_read_data(med10_data, 'password', med10_pw);
+
+    if isempty(dat)
+        warning('failed to read data of MED 1.0 sample dataset')
+    end
+
+    evt = ft_read_event(med10_data, 'password', med10_pw);
+
+    if isempty(evt)
+        warning('failed to read event of MED 1.0 sample dataset')
+    end
+
+    % high-level testing
+    cfg = [];
+    cfg.dataset = med10_data;
+    cfg.password = med10_pw;
+    data = ft_preprocessing(cfg);
+
+    if isempty(data)
+        warning('failed to read data of MED 1.0 sample dataset in high-level testing')
+    end
 
     disp('********************')
     disp('* You are all set! *')

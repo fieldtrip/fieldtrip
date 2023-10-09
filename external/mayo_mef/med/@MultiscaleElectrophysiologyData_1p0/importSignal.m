@@ -39,7 +39,7 @@ function [x, t] = importSignal(this, start_end, st_unit, filepath, filename, opt
     % See also .
 
     % Copyright 2023 Richard J. Cui. Created: Thu 04/20/2023 12:24:33.818 AM
-    % $Revision: 0.7 $  $Date: Fri 10/06/2023 12:19:28.864 AM $
+    % $Revision: 0.8 $  $Date: Mon 10/09/2023 12:36:10.360 AM $
     %
     % Rocky Creek Dr. NE
     % Rochester, MN 55906, USA
@@ -138,7 +138,7 @@ function [x, t] = importSignal(this, start_end, st_unit, filepath, filename, opt
     % -----
     if isnan(se_index(1)) == true || se_index(1) < start_ind
         se_index(1) = start_ind;
-        cprintf([1 .5, 0], 'Warning: MultiscaleElectrophysiologyData_1p0:ImportSignal:discardSample:Reqested data samples are not valid or before the recording are discarded\n')
+        fprintf('Warning: MultiscaleElectrophysiologyData_1p0:ImportSignal:discardSample:Reqested data samples are not valid or before the recording are discarded\n')
     end % if
 
     if isnan(se_index(2)) || se_index(2) > end_ind
