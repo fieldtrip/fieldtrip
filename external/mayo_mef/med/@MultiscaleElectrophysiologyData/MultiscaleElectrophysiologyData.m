@@ -2,7 +2,7 @@ classdef MultiscaleElectrophysiologyData < handle
     % Class MULTISCALEELECTROPHYSIOLOGYDATA process MED channel data
 
     % Copyright 2023 Richard J. Cui. Created: Mon 01/30/2023 10:01:06.104 PM
-    % $Revision: 0.4 $  $Date: Tue 08/01/2023 12:27:18.039 AM $
+    % $Revision: 0.5 $  $Date: Mon 10/09/2023 08:35:28.664 PM $
     %
     % Rocky Creek Dr. NE
     % Rochester, MN 55906, USA
@@ -45,8 +45,9 @@ classdef MultiscaleElectrophysiologyData < handle
     % -------------
     methods
         varargout = getSampleTimeInterval(this, varargin) % bound of sampling interval
-        varargout = SampleTime2Index(this, varargin) % time --> index
         varargout = SampleIndex2Time(this, varargin) % index --> time
+        varargout = SampleTime2Index(this, varargin) % time --> index
+        varargout = SampleUnitConvert(this, varargin) % convert units of time points
     end % methods
 
 end % classdef
