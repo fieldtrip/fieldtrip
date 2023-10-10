@@ -11,7 +11,7 @@ function test_ft_prepare_layout
 interactive = false;
 
 % this corresponds to the ftp directory
-cd(dccnpath('/home/common/matlab/fioeldtrip/data/ftp/tutorial/layout'));
+cd(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/layout'));
 
 %%
 % make it from a figure
