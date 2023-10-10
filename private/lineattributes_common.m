@@ -88,20 +88,17 @@ if isnumeric(cfg.linecolor) && size(cfg.linecolor,2)==3
 elseif ischar(cfg.linecolor) && all(ismember(cfg.linecolor, 'rgbcmykw'))
   % this is handled below
 elseif isequal(cfg.linecolor, 'spatial')
-  if isfield(cfg, 'layout')
-    % try to get the color specification from the layout
-    if ischar(cfg.layout)
-      tmpcfg = keepfields(cfg, {'layout'});
-      tmpcfg.color = 'spatial';
-      tmplayout = ft_prepare_layout(tmpcfg);
-      cfg.linecolor = tmplayout.color;
-    elseif isstruct(cfg.layout) && isfield(cfg.layout, 'color')
-      cfg.linecolor = cfg.layout.color;
-    else
-      ft_error('the input cfg should contain a layout specification for which the spatial colors can be determined');
-    end
+  % try to get the color specification from the layout
+  if isfield(cfg, 'layout') && ischar(cfg.layout)
+    tmpcfg = keepfields(cfg, {'layout'});
+    tmpcfg.color = 'spatial';
+    tmplayout = ft_prepare_layout(tmpcfg);
+    cfg.linecolor = tmplayout.color;
+  elseif isfield(cfg, 'layout') && isstruct(cfg.layout) && isfield(cfg.layout, 'color')
+    cfg.linecolor = cfg.layout.color;
   else
-    ft_error('this does not work yet'); % FIXME in principle the color can be derived from the 3D chanpos if present in the data
+    ft_warning('the input cfg should contain a layout specification for which the spatial colors can be determined');
+    cfg.linecolor = 'b';
   end
 elseif isempty(cfg.linecolor)
   cfg.linecolor = [
