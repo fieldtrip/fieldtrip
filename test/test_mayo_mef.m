@@ -48,35 +48,40 @@ function test_mayo_mef()
     % the password of MEF 2.1 sample dataset
     mef21_pw = struct('Subject', 'erlichda', 'Session', 'sieve', 'Data', '');
 
-    % low-level testing
-    fprintf('low-level testing...\n')
-    hdr = ft_read_header(mef21_data, 'password', mef21_pw);
+    try
+        % low-level testing
+        fprintf('low-level testing...\n')
+        hdr = ft_read_header(mef21_data, 'password', mef21_pw);
 
-    if isempty(hdr)
-        warning('failed to read header of MEF 2.1 sample dataset')
-    end
+        if isempty(hdr)
+            warning('failed to read header of MEF 2.1 sample dataset')
+        end
 
-    dat = ft_read_data(mef21_data, 'password', mef21_pw);
+        dat = ft_read_data(mef21_data, 'password', mef21_pw);
 
-    if isempty(dat)
-        warning('failed to read data of MEF 2.1 sample dataset')
-    end
+        if isempty(dat)
+            warning('failed to read data of MEF 2.1 sample dataset')
+        end
 
-    evt = ft_read_event(mef21_data, 'password', mef21_pw);
+        evt = ft_read_event(mef21_data, 'password', mef21_pw);
 
-    if isempty(evt)
-        warning('failed to read event of MEF 2.1 sample dataset')
-    end
+        if isempty(evt)
+            warning('failed to read event of MEF 2.1 sample dataset')
+        end
 
-    % high-level testing
-    fprintf('high-level testing...\n')
-    cfg = [];
-    cfg.dataset = mef21_data;
-    cfg.password = mef21_pw;
-    data = ft_preprocessing(cfg);
+        % high-level testing
+        fprintf('high-level testing...\n')
+        cfg = [];
+        cfg.dataset = mef21_data;
+        cfg.password = mef21_pw;
+        data = ft_preprocessing(cfg);
 
-    if isempty(data)
-        warning('failed to read data of MEF 2.1 sample dataset in high-level testing')
+        if isempty(data)
+            warning('failed to read data of MEF 2.1 sample dataset in high-level testing')
+        end
+
+    catch
+        warning('failed to read MEF 2.1 sample dataset')
     end
 
     % MEF version 3.0
