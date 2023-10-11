@@ -17,7 +17,7 @@ function setup_mayo_mex(options)
     % See also make_mex_mef, test_mayo_mef.
 
     % Copyright 2020-2023 Richard J. Cui. Created: Fri 05/15/2020 10:33:00.474 AM
-    % $ Revision: 0.3 $  $ Date: Sun 10/08/2023 12:42:06.711 PM $
+    % $ Revision: 0.4 $  $ Date: Wed 10/11/2023 13:04:25.277 PM $
     %
     % Mayo Foundation for Medical Education and Research
     % Mayo Clinic St. Mary Campus
@@ -55,9 +55,9 @@ function setup_mayo_mex(options)
                 user = getenv('USER');
                 dhn_root = fullfile(filesep, 'home', user, 'DHN');
             case 'PCWIN64' % Windows
-                driver = getenv('HOMEDRIVE');
-                user = getenv('HOMEPATH');
-                dhn_root = fullfile(driver, user, 'DHN');
+                driver = getenv('SystemDrive');
+                user = getenv('USERNAME');
+                dhn_root = fullfile(driver, 'Users', user, 'DHN');
             otherwise
                 ft_error('MAYO_MEF:setup_mayo_mex', ...
                     'Unknown computer type %s. MED is not supported.\n', ...
