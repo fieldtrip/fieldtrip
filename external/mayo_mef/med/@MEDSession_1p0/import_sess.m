@@ -8,7 +8,7 @@ function [X, t] = import_sess(this, begin_stop, bs_unit, sel_chan, options)
     % Input(s):
     %   this            - [obj] MEDSession_1p0 object
     %   begin_stop      - [num] 1 x 2 array of begin and stop points of
-    %                     importing the session, absolute time points
+    %                     importing the session, relative time points
     %   bs_unit         - [str] unit of begin_stop: 'uUTC','Index', 'Second',
     %                     'Minute', 'Hour', and 'Day'.
     %   sel_chan        - [str array] the names of the selected channels
@@ -32,7 +32,7 @@ function [X, t] = import_sess(this, begin_stop, bs_unit, sel_chan, options)
     % See also importSignal, importSession.
 
     % Copyright 2023 Richard J. Cui. Created: Thu 09/14/2023 11:56:16.600 PM
-    % $Revision: 0.2 $  $Date: Fri 10/06/2023 12:19:28.864 AM $
+    % $Revision: 0.3 $  $Date: Tue 10/10/2023 10:57:29.531 PM $
     %
     % Rocky Creek Dr. NE
     % Rochester, MN 55906, USA

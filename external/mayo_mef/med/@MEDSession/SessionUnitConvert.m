@@ -44,9 +44,7 @@ function out_time = SessionUnitConvert(this, in_time, options)
     % =========================================================================
     % main
     % =========================================================================
-    in_time_abs = this.relative2absTimePoint(in_time, in_unit);
-    out_time_abs = this.SampleUnitConvert(in_time_abs, in_unit, out_unit); % TODO
-    out_time = this.abs2relativeTimePoint(out_time_abs, out_unit);
+    out_time = this.SampleUnitConvert(in_time, in_unit, out_unit);
 
 end % function SessionUnitConvert
 

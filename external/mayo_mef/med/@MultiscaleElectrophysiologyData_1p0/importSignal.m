@@ -14,10 +14,10 @@ function [x, t] = importSignal(this, start_end, st_unit, filepath, filename, opt
     % Input(s):
     %   this            - [obj] MultiscaleElectrophysiologyData_1p0 object
     %   start_end       - [1 x 2 array] (opt) [start time/index, end time/index] of
-    %                     the signal to be extracted fromt the file (default:
+    %                     the signal to be extracted fromt the file, relative time (default:
     %                     the entire signal)
-    %   st_unit         - [str] (opt) unit of start_end: 'Index' (default), 'uUTC',
-    %                     'Second', 'Minute', 'Hour', and 'Day'
+    %   st_unit         - [str] (opt) unit of start_end: 'index' (default), 'uutc',
+    %                     'second', 'minute', 'hour', and 'day'
     %   filepath        - [str] (opt) directory of the session
     %   filename        = [str] (opt) filename of the channel
     %   level_1_pw      - [str] (para) password of level 1 (default = this.Level1Password)
@@ -39,7 +39,7 @@ function [x, t] = importSignal(this, start_end, st_unit, filepath, filename, opt
     % See also .
 
     % Copyright 2023 Richard J. Cui. Created: Thu 04/20/2023 12:24:33.818 AM
-    % $Revision: 0.8 $  $Date: Mon 10/09/2023 12:36:10.360 AM $
+    % $Revision: 0.9 $  $Date: Tue 10/10/2023 10:57:29.531 PM $
     %
     % Rocky Creek Dr. NE
     % Rochester, MN 55906, USA

@@ -17,7 +17,7 @@ function record_offset = getSessionRecordOffset(this, unit)
     % Seaa slso .
 
     % Copyright 2020 Richard J. Cui. Created: Wed 09/13/2023 11:45:31.702 PM
-    % $Revision: 0.2 $  $Date: Fri 10/06/2023 12:19:28.864 AM $
+    % $Revision: 0.3 $  $Date: Tue 10/10/2023 09:54:21.098 PM $
     %
     % 1026 Rocky Creek Dr NE
     % Rochester, MN 55906, USA
@@ -36,23 +36,25 @@ function record_offset = getSessionRecordOffset(this, unit)
     % =========================================================================
     % main
     % =========================================================================
-    offset_uutc = this.MetaData.recording_time_offset; % in uutc
+    start_time = double(this.MetaData.start_time); % in uutc
+    start_sample = double(this.MetaData.absolute_start_sample_number); % in sample
+    offset_uutc = double(this.MetaData.recording_time_offset); % in uutc
 
     switch unit
         case "index"
-            record_offset = 0;
+            record_offset = start_sample - 1;
         case "uutc"
-            record_offset = offset_uutc;
+            record_offset = offset_uutc + start_time;
         case "msec"
-            record_offset = offset_uutc / 1e3;
+            record_offset = (offset_uutc + start_time) / 1e3;
         case "second"
-            record_offset = offset_uutc / 1e6;
+            record_offset = (offset_uutc +start_time) / 1e6;
         case "minute"
-            record_offset = offset_uutc / 1e6/60;
+            record_offset = (offset_uutc +start_time) / 1e6/60;
         case "hour"
-            record_offset = offset_uutc / 1e6/60/60;
+            record_offset = (offset_uutc +start_time) / 1e6/60/60;
         case "day"
-            record_offset = offset_uutc / 1e6/60/60/24;
+            record_offset = (offset_uutc +start_time) / 1e6/60/60/24;
     end % switch
 
 end % funciton
