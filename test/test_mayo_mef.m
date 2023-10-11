@@ -5,7 +5,7 @@ function test_mayo_mef()
     % DEPENDENCY read_mayo_mef21 read_mayo_mef30
 
     % Copyright 2020-2023 Richard J. Cui. Created: Sat 03/21/2020 10:35:23.147 PM
-    % $Revision: 0.5 $  $Date: Sun 10/08/2023 03:11:11.701 PM $
+    % $Revision: 0.6 $  $Date: Wed 10/11/2023 12:44:00.481 AM $
     %
     % Mayo Foundation for Medical Education and Research
     % Mayo Clinic St. Mary Campus
@@ -49,6 +49,7 @@ function test_mayo_mef()
     mef21_pw = struct('Subject', 'erlichda', 'Session', 'sieve', 'Data', '');
 
     % low-level testing
+    fprintf('low-level testing...\n')
     hdr = ft_read_header(mef21_data, 'password', mef21_pw);
 
     if isempty(hdr)
@@ -68,6 +69,7 @@ function test_mayo_mef()
     end
 
     % high-level testing
+    fprintf('high-level testing...\n')
     cfg = [];
     cfg.dataset = mef21_data;
     cfg.password = mef21_pw;
@@ -89,6 +91,7 @@ function test_mayo_mef()
         'password2', 'AccessLevel', 2);
 
     % low-level testing
+    fprintf('low-level testing...\n')
     hdr = ft_read_header(mef30_data, 'password', mef30_pw);
 
     if isempty(hdr)
@@ -108,6 +111,7 @@ function test_mayo_mef()
     end
 
     % high-level testing
+    fprintf('high-level testing...\n')
     cfg = [];
     cfg.dataset = mef30_data;
     cfg.password = mef30_pw;
@@ -129,6 +133,7 @@ function test_mayo_mef()
         'L2_password', 'AccessLevel', 2);
 
     % low-level testing
+    fprintf('low-level testing...\n')
     hdr = ft_read_header(med10_data, 'password', med10_pw);
 
     if isempty(hdr)
@@ -148,6 +153,7 @@ function test_mayo_mef()
     end
 
     % high-level testing
+    fprintf('high-level testing...\n')
     cfg = [];
     cfg.dataset = med10_data;
     cfg.password = med10_pw;
