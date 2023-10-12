@@ -428,7 +428,7 @@ end
 % Read or create the layout that will be used for plotting
 tmpcfg = keepfields(cfg, {'layout', 'channel', 'rows', 'columns', 'commentpos', 'skipcomnt', 'scalepos', 'skipscale', 'projection', 'viewpoint', 'rotate', 'width', 'height', 'elec', 'grad', 'opto', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
 if isequal(cfg.viewmode, 'butterfly')
-  % use channel colors matching the spatial locations by default
+  % default is to use channel colors matching the spatial locations
   tmpcfg.color = ft_getopt(cfg, 'linecolor', 'spatial');
   % create two layouts, one for butterfly and another for topographic
   cfg.topolayout = ft_prepare_layout(tmpcfg, varargin{1}); % this will be passed to singleplot and topoplot
@@ -439,6 +439,8 @@ if isequal(cfg.viewmode, 'butterfly')
   cfg.layout.color = zeros(length(cfg.layout.label), 3); % RGB triplets
   cfg.layout.color(chanindx1,:) = cfg.topolayout.color(chanindx2,:);
 else
+  % default is not to use channel colors matching the spatial locations
+  tmpcfg.color = ft_getopt(cfg, 'linecolor');
   % create only the topographic layout, use it for both
   cfg.topolayout = ft_prepare_layout(tmpcfg, varargin{1}); % this will be passed to singleplot and topoplot
   cfg.layout = cfg.topolayout;

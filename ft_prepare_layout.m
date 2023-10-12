@@ -73,7 +73,7 @@ function [layout, cfg] = ft_prepare_layout(cfg, data)
 %   cfg.skipscale   = 'yes' or 'no', whether the scale should be included in the layout or not (default = 'no')
 %   cfg.skipcomnt   = 'yes' or 'no', whether the comment should be included in the layout or not (default = 'no')
 %   cfg.color       = empty, 'spatial', or Nx3 matrix, if non-empty, an Nx3 color matrix based on the position 
-% %                   of the sensors will be added (default = [])
+%                     of the sensors will be added (default = [])
 %
 % If you use cfg.headshape or cfg.mri to create a headshape outline, the input
 % geometry should be expressed in the same units and coordinate system as the input
@@ -1215,11 +1215,9 @@ if isequal(cfg.color, 'spatial') && ~isfield(layout, 'color')
   sel = match_str(layout.label, setdiff(layout.label, {'COMNT';'SCALE'}));
   xy  = sqrt(sum(layout.pos(sel,:).^2,2));
   z   = sqrt(max(xy).^2 - xy.^2);
-  
   xyz = [layout.pos(sel,:) z];
   xyz = xyz - min(xyz, [], 1);
   rgb = xyz./(max(xyz, [], 1)+10*eps);
-  
   layout.color = ones(numel(layout.label), 3);
   layout.color(sel, :) = rgb;
 elseif size(cfg.color,1) == numel(layout.label)
