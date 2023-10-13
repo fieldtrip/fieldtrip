@@ -90,7 +90,6 @@ if numel(mesh)>1
 end
 
 % get the optional input arguments
-vertexcolor  = ft_getopt(varargin, 'vertexcolor');
 if isfield(mesh, 'tri') && size(mesh.tri,1)>10000
   facecolor    = ft_getopt(varargin, 'facecolor',   'cortex_light');
   edgecolor    = ft_getopt(varargin, 'edgecolor',   'none');
@@ -98,24 +97,26 @@ else
   facecolor    = ft_getopt(varargin, 'facecolor',   'white');
   edgecolor    = ft_getopt(varargin, 'edgecolor',   'k');
 end
-faceindex     = ft_getopt(varargin, 'faceindex',   false);
-vertexindex   = ft_getopt(varargin, 'vertexindex', false);
-vertexsize    = ft_getopt(varargin, 'vertexsize',  10);
-vertexmarker  = ft_getopt(varargin, 'vertexmarker', '.');
-facealpha     = ft_getopt(varargin, 'facealpha',   1);
-edgealpha     = ft_getopt(varargin, 'edgealpha',   1);
-edgelinewidth = ft_getopt(varargin, 'edgelinewidth', .5);
-material_     = ft_getopt(varargin, 'material');        % note the underscore, there is also a material function
-tag           = ft_getopt(varargin, 'tag',         '');
-surfaceonly   = ft_getopt(varargin, 'surfaceonly');     % default is handled below
+vertexcolor   = ft_getopt(varargin, 'vertexcolor');
+vertexindex   = ft_getopt(varargin, 'vertexindex',   false);
+vertexsize    = ft_getopt(varargin, 'vertexsize',    10);
+vertexmarker  = ft_getopt(varargin, 'vertexmarker',  '.');
+faceindex     = ft_getopt(varargin, 'faceindex',     false);
+facealpha     = ft_getopt(varargin, 'facealpha',     1);
+edgealpha     = ft_getopt(varargin, 'edgealpha',     1);
+edgelinewidth = ft_getopt(varargin, 'edgelinewidth', 0.5);
+material_     = ft_getopt(varargin, 'material');         % note the underscore, there is also a material function
+tag           = ft_getopt(varargin, 'tag',           '');
+surfaceonly   = ft_getopt(varargin, 'surfaceonly');      % default is handled below
 unit          = ft_getopt(varargin, 'unit');
-axes_         = ft_getopt(varargin, 'axes', false);     % do not confuse with built-in function
-clim          = ft_getopt(varargin, 'clim');
+axes_         = ft_getopt(varargin, 'axes',      false); % do not confuse with built-in function
 alphalim      = ft_getopt(varargin, 'alphalim');
-alphamapping  = ft_getopt(varargin, 'alphamap', 'rampup');
-cmap          = ft_getopt(varargin, 'colormap');
+alphamapping  = ft_getopt(varargin, 'alphamap',  'rampup');
 maskstyle     = ft_getopt(varargin, 'maskstyle', 'opacity');
-contour       = ft_getopt(varargin, 'contour',   []);
+cmap          = ft_getopt(varargin, 'colormap');
+clim          = ft_getopt(varargin, 'clim');
+contour       = ft_getopt(varargin, 'contour');
+insideonly    = ft_getopt(varargin, 'insideonly', false);
 
 % these have to do with the font
 fontcolor       = ft_getopt(varargin, 'fontcolor', 'k');  % default is black
@@ -135,14 +136,20 @@ hastet   = isfield(mesh, 'tet');   % tetraheders as a Mx4 matrix with vertex ind
 hashex   = isfield(mesh, 'hex');   % hexaheders  as a Mx8 matrix with vertex indices
 hasline  = isfield(mesh, 'line');  % lines       as a Mx2 matrix with vertex indices
 haspoly  = isfield(mesh, 'poly');  % polygons    as a MxP matrix with vertex indices
+hasinside = isfield(mesh, 'inside'); 
 
 if ~isempty(unit)
   mesh = ft_convert_units(mesh, unit);
 end
 
-if hastri+hastet+hashex+hasline+haspoly>1
-  % the code further down cannot deal with simultaneous triangles, tetraheders and/or hexaheders
-  % therefore we plot them one by one
+if hastri+hastet+hashex+hasline+haspoly==1
+  if hasinside && istrue(insideonly)
+    % overrule inconsistent user setting
+    ft_warning('overruling insideonly setting, don''t know how to deal with this in the presence of mesh faces');
+    insideonly = false;
+  end
+elseif hastri+hastet+hashex+hasline+haspoly>1
+  % the code further down cannot deal with simultaneous triangles, tetraheders and/or hexaheders therefore we plot them one by one
   if hastri
     ft_plot_mesh(removefields(mesh, {'tet', 'hex', 'line', 'poly'}), varargin{:});
   end
@@ -159,6 +166,9 @@ if hastri+hastet+hashex+hasline+haspoly>1
     ft_plot_mesh(removefields(mesh, {'tri', 'tet', 'hex', 'line'}), varargin{:});
   end
   return
+elseif hastri+hastet+hashex+hasline+haspoly==0
+  % this is a situation where there are only vertices to plot, and it's safe to apply the inside vector if requested
+  insideonly = istrue(insideonly);
 end
 
 if isempty(surfaceonly)
@@ -249,6 +259,9 @@ end
 if isfield(mesh, 'pos')
   % this is assumed to reflect 3-D vertices
   pos = mesh.pos;
+  if insideonly
+    pos = pos(mesh.inside,:);
+  end
 elseif isfield(mesh, 'prj')
   % this happens sometimes if the 3-D vertices are projected to a 2-D plane
   pos = mesh.prj;
