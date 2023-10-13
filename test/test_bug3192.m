@@ -10,9 +10,9 @@ templatedir  = fullfile(ftpath, 'template');
 
 % one color for all vertex
 cfg = [];
-cfg.sourcemodel.xgrid  = -20:5:20;
-cfg.sourcemodel.ygrid  = -20:5:20;
-cfg.sourcemodel.zgrid  = -20:5:20;
+cfg.xgrid  = -20:5:20;
+cfg.ygrid  = -20:5:20;
+cfg.zgrid  = -20:5:20;
 grid  = ft_prepare_sourcemodel(cfg);
 figure, ft_plot_mesh(grid, 'vertexcolor', 'blue', 'facecolor', 'brain', 'edgecolor', 'skull')
 
