@@ -216,25 +216,13 @@ for i=1:size(sourcemodel.pos,1)
     
     switch fixedori
       case 'spinning'
-        % perform a non-linear search for the optimum orientation
+        % compute orientation in tangential plane so that the pseudo-Z
+        % score of the corresponding virtual sensor is maximized
         [tanu, tanv] = calctangent(vox_pos - meansphereorigin); % get tangential components
-        % get a decent starting guess
-        all_costfun_val = zeros(size(all_angles));
-        for j=1:length(all_angles)
-          costfun_val        = SAM_costfun(all_angles(j), vox_pos, tanu, tanv, lf, C, inv_cov, noisecov);
-          all_costfun_val(j) = costfun_val;
-        end
-        [junk, min_ind] = min(all_costfun_val);
-        
-        optim_options = optimset('Display', 'final', 'TolX', 1e-3, 'Display', 'off');
-        [opt_angle, fval, exitflag, output] = fminsearch(@SAM_costfun, all_angles(min_ind), optim_options, vox_pos, tanu, tanv, lf, C, inv_cov, noisecov);
-        MDip        = settang(opt_angle, tanu, tanv);
-        MagDip      = sqrt(dot(Msourcemodel,MDip));
-        opt_vox_or  = (MDip/MagDip)';
-        
-        % figure
-        % plot(all_angles, all_costfun_val, 'k-'); hold on; plot(opt_angle, fval, 'g*')
-        % drawnow
+        O = [tanu(:), tanv(:)];
+        Y1 = O' * lf' * inv_cov * C * inv_cov * lf * O;
+        Y2 = O' * lf' * inv_cov * noisecov * inv_cov * lf * O;
+        [U, S] = eig(Y1, Y2);
         
       case 'gareth'
         % Compute Y1 = lf' R(^-1) * lf
@@ -277,7 +265,11 @@ for i=1:size(sourcemodel.pos,1)
     % convert the U matrix into the optimal orientation vector
     switch fixedori
       case 'spinning'
-        % do nothing, optimum orientation is already computed above
+        % project 2d orientation in tangential plane to 3d equivalent
+        [dum, ori_inx] = sort(diag(S), 'descend');
+        or_2d = U(:,ori_inx(1));
+        or_2d = or_2d / norm(or_2d);
+        opt_vox_or = O * or_2d;
         
       otherwise
         % The optimum orientation is the eigenvector that corresponds to the
@@ -332,6 +324,13 @@ for i=1:size(sourcemodel.pos,1)
     Ng                  = gain' * Nproj * gain;
     Sg                  = gain' * Sproj * gain;
     estimate.pseudoZ(i) = Sg / Ng;
+  elseif strcmp(fixedori, 'spinning')
+    tangential_projection = O' * opt_vox_or;
+    if tangential_projection(2) < 0
+      tangential_projection = -tangential_projection;
+    end
+    angle = atan2(tangential_projection(2), tangential_projection(1));
+    estimate.pseudoZ(i) = 1 / power(SAM_costfun(angle, vox_pos, O(:, 1), O(:, 2), lf, C, inv_cov, noisecov), 2);
   end
   
 end % for each dipole position
