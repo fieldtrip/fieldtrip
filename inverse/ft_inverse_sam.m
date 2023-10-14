@@ -30,6 +30,7 @@ function [estimate] = ft_inverse_sam(sourcemodel, sens, headmodel, dat, C, varar
 %
 % See also FT_SOURCEANALYSIS, FT_PREPARE_HEADMODEL, FT_PREPARE_SOURCEMODEL
 
+% Copyright (C) 2023,      Malte Hoeltershinken
 % Copyright (C) 2009,      Robert Oostenveld
 % Copyright (C) 2005-2009, Arjan Hillebrand
 % Copyright (C) 2005-2009, Gareth Barnes
@@ -63,12 +64,24 @@ leadfieldopt = ft_setopt(leadfieldopt, 'normalize',      ft_getopt(varargin, 'no
 leadfieldopt = ft_setopt(leadfieldopt, 'normalizeparam', ft_getopt(varargin, 'normalizeparam'));
 leadfieldopt = ft_setopt(leadfieldopt, 'weight',         ft_getopt(varargin, 'weight'));
 
-if strcmp(fixedori, 'moiseev') && isempty(noisecov)
-  ft_error('fixedori method ''moiseev'' requires a noise covariance matrix to be specified');
-end
+switch fixedori
+  case 'robert'
+    ft_error('fixedori=''robert'' is not supported anymore. The exact same functionality is implemented in ft_inverse_lcmv, using fixedori = ''yes''');
+  case 'gareth'
+    % placeholder: give some user feedback, either error or not, to be discussed, depends on whether it will be merged
+  case 'moiseev'
+    % placeholder: give some user feedback, either error or not, to be discussed, depends on whether it will/can be merged
+    % (apart from the toi functionality)
+    if isempty(noisecov)
+      ft_error('fixedori method ''moiseev'' requires a noise covariance matrix to be specified');
+    end
+  case 'spinning'
+    ft_info('fixedori=''spinning'' has been adjusted to provide an exact estimate of the optimal orientation, see the code for details');
+    leadfieldopt = ft_setopt(leadfieldopt, 'backproject', 'no');
 
-if ~strcmp(fixedori, 'spinning')
-  leadfieldopt = ft_setopt(leadfieldopt, 'backproject', 'no');
+
+  otherwise
+    ft_error('unsupported value for fixedori option');
 end
 
 if strcmp(fixedori, 'spinning')
@@ -117,7 +130,7 @@ origpos    = sourcemodel.pos;
 sourcemodel.pos = sourcemodel.pos(originside,:);
 
 if hasmom
-  ft_warning('this probably will not work because of the spinning/nonspinning source orientation estimate being part of this code');
+  ft_warning('a prespecified mom in the sourcemodel will probably not work because of the spinning/nonspinning source orientation estimate being part of this code');
   sourcemodel.mom = sourcemodel.mom(:, sourcemodel.inside);
 end
 
@@ -174,14 +187,10 @@ else
 end
 
 % the inverse only has to be computed once for all dipoles
-inv_cov   = ft_inv(C, invopt{:});
+invC = ft_inv(C, invopt{:});
 if isempty(noisecov)
   noisecov = noise * eye(size(C));
 end
-
-
-% the angles are the same for all dipole locations
-all_angles = 0:pi/72:pi;
 
 % start the scanning
 ft_progress('init', feedback, 'scanning grid');
@@ -191,8 +200,8 @@ for i=1:size(sourcemodel.pos,1)
   vox_pos = sourcemodel.pos(i,:);
   
   if hasfilter
-    SAMweights = sourcemodel.filter{i};
-    if size(SAMweights,1)>1
+    filt = sourcemodel.filter{i};
+    if size(filt,1)>1
       ft_error('unsupported dimensionality of precomputed spatial filters');
     end
     
@@ -216,42 +225,33 @@ for i=1:size(sourcemodel.pos,1)
     
     switch fixedori
       case 'spinning'
-        % compute orientation in tangential plane so that the pseudo-Z
-        % score of the corresponding virtual sensor is maximized
+        % compute orientation in tangential plane so that the pseudo-Z score of the corresponding virtual sensor is maximized
         [tanu, tanv] = calctangent(vox_pos - meansphereorigin); % get tangential components
         O = [tanu(:), tanv(:)];
-        Y1 = O' * lf' * inv_cov * C * inv_cov * lf * O;
-        Y2 = O' * lf' * inv_cov * noisecov * inv_cov * lf * O;
+        Y1 = O' * lf' * invC * C        * invC * lf * O;
+        Y2 = O' * lf' * invC * noisecov * invC * lf * O;
         [U, S] = eig(Y1, Y2);
         
       case 'gareth'
         % Compute Y1 = lf' R(^-1) * lf
         % and     Y2 = lf' R(^-2) * lf
-        Y1 = lf' * inv_cov * lf;
-        Y2 = lf' * (inv_cov * inv_cov) * lf;
+        Y1 = lf' * invC * lf;
+        Y2 = lf' * (invC * invC) * lf;
         % find the eigenvalues and eigenvectors
         [U,S] = eig(Y1,Y2);
-        
-      case 'robert'
-        % Use Sekihara's method of finding the optimum orientation
-        %
-        % Sekihara et al. Asymptotic SNR of scalar and vector minimum-variance
-        % beamformers for neuromagnetic source reconstruction. IEEE Trans. Biomed.
-        % Eng, No 10, Vol. 51, 2004, pp 1726-1734
-        [U,S] = svd(pinv(lf' * inv_cov * lf)); % JM added pinv, in order to take the orientation that belong to the maximum S
         
       case'moiseev'
         if ~isempty(toi)
           % use trial averaged variance matrix within a time of interest
           Avg   = dat(:,toi(1):toi(2));
           Cavg  = Avg*Avg'/size(Avg,2);
-          Sproj = inv_cov * Cavg * inv_cov';
+          Sproj = invC * Cavg * invC';
         else
           % in case of induced data, just use the Signal cov only
-          Sproj = inv_cov;
+          Sproj = invC;
         end
         
-        Nproj = inv_cov * noisecov * inv_cov';
+        Nproj = invC * noisecov * invC';
         
         Y1 = lf' * Sproj * lf;
         Y2 = lf' * Nproj * lf;
@@ -307,17 +307,17 @@ for i=1:size(sourcemodel.pos,1)
     
     % compute the spatial filter for the optimal source orientation
     gain        = lf * opt_vox_or;
-    trgain_invC = gain' * inv_cov;
-    SAMweights  = trgain_invC / (trgain_invC * gain);
+    trgain_invC = gain' * invC;
+    filt  = trgain_invC / (trgain_invC * gain);
     
   end % if hasfilter or not
   
   % remember all output details for this dipole
-  estimate.pow(i)    = SAMweights * C  * SAMweights';
-  estimate.noise(i)  = SAMweights * noisecov * SAMweights';
-  estimate.filter{i} = SAMweights;
+  estimate.pow(i)    = filt * C  * filt';
+  estimate.noise(i)  = filt * noisecov * filt';
+  estimate.filter{i} = filt;
   if ~isempty(dat)
-    estimate.mom{i}  = SAMweights * dat;
+    estimate.mom{i}  = filt * dat;
   end
   if strcmp(fixedori,'moiseev') && exist('gain', 'var')
     % get pseudoZ
@@ -330,7 +330,7 @@ for i=1:size(sourcemodel.pos,1)
       tangential_projection = -tangential_projection;
     end
     angle = atan2(tangential_projection(2), tangential_projection(1));
-    estimate.pseudoZ(i) = 1 / power(SAM_costfun(angle, vox_pos, O(:, 1), O(:, 2), lf, C, inv_cov, noisecov), 2);
+    estimate.pseudoZ(i) = 1 / power(SAM_costfun(angle, vox_pos, O(:, 1), O(:, 2), lf, C, invC, noisecov), 2);
   end
   
 end % for each dipole position
