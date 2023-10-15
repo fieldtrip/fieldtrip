@@ -51,15 +51,17 @@ function test_example_samplesize
 % All of the above steps can be done using the following block of MATLAB code:
 
 % JM added:
-t = tempdir;
-unzip('https://files.osf.io/v1/resources/rmqhc/providers/osfstorage/60347b1e88ea1a0471ee8da7/?zip=');
-addpath(t);
+% t = tempdir;
+% unzip('https://files.osf.io/v1/resources/rmqhc/providers/osfstorage/60347b1e88ea1a0471ee8da7/?zip=');
+% addpath(t);
 % JM added: one of the downloaded functions requires the financial
 % toolbox's corr2cov function. This is such a no-brainer that it's created
 % here on the fly
-fid=fopen(fullfile(t,'corr2cov.m'),'w');
-fprintf(fid,'function out = corr2cov(sd,cor)\nout=diag(sd)*cor*diag(sd);\n');
-fclose(fid);
+% fid=fopen(fullfile(t,'corr2cov.m'),'w');
+% fprintf(fid,'function out = corr2cov(sd,cor)\nout=diag(sd)*cor*diag(sd);\n');
+% fclose(fid);
+
+cd(dccnpath('/home/common/matlab/fieldtrip/data/ftp/example/samplesize'))
 
 % settings
 p_heads_h1  = 1;     % chance to land on head under H1, aka, the effect size
@@ -172,7 +174,7 @@ title(['Required sample size is ' num2str(n_sample)])
 %
 %%
 close all;
-addpath('F:\SampleSize\functions')
+% addpath('F:\SampleSize\functions')
 load('exampleData_timefreq.mat');   % load a time-freq data obtained from the ft_freqanalysis function,
                                     % to retrieve the fieldtrip data structure
                                     
@@ -235,10 +237,10 @@ stat_cfg.alpha            = 0.05;
 stat_cfg.numrandomization = 100;%500;        % number of randomizations, should be >= 500, JM set to 100 for time considerations
 
 %%% Run the function
-MyPar = parpool; % start parallel pool; 
+% MyPar = parpool; % start parallel pool; 
 res = sampleSize_timefreq(cfg,stat_cfg);
-save(fullfile(t,'results_timefreq_pairedSamples.mat'),'res')
-delete(MyPar)
+% save(fullfile(t,'results_timefreq_pairedSamples.mat'),'res')
+% delete(MyPar)
 %
 % Running this function would be quite time-consuming, with a lot of simulations to run. It can therefore be time-saving to open |parpool| to use parallel computing. The results are stored in |res|. The following block of code plots the results.
 %

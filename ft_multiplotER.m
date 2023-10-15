@@ -52,17 +52,14 @@ function [cfg] = ft_multiplotER(cfg, varargin)
 %                       can be a single style for all datasets, or a cell-array containing one style for each dataset
 %   cfg.linewidth     = linewidth in points (default = 0.5)
 %   cfg.linecolor     = color(s) used for plotting the dataset(s). The default is defined in LINEATTRIBUTES_COMMON, see
-%                       the help of this function for more information
+%                       the help of this function for more information.
 %   cfg.directionality = '', 'inflow' or 'outflow' specifies for connectivity measures whether the
 %                       inflow into a node, or the outflow from a node is plotted. The (default) behavior
 %                       of this option depends on the dimord of the input data (see below).
 %   cfg.layout        = specify the channel layout for plotting using one of the supported ways (see below).
-%   cfg.select        = 'intersect' or 'union' (default = 'intersect')
-%                       with multiple input arguments determines the
-%                       pre-selection of the data that is considered for
-%                       plotting.
-%   cfg.viewmode      = 'layout', or 'butterfly' (default = 'layout'), using the spatial layout as in cfg.layout for the
-%                       visualisation, or a butterfly plot
+%   cfg.select        = 'intersect' or 'union' with multiple input arguments determines the
+%                       pre-selection of the data that is considered for plotting (default = 'intersect')
+%   cfg.viewmode      = 'topographic' or 'butterfly', whether to use the topographic channel layout or a butterfly plot (default = 'topographic')
 %
 % The following options for the scaling of the EEG, EOG, ECG, EMG, MEG and NIRS channels
 % is optional and can be used to bring the absolute numbers of the different
@@ -191,6 +188,7 @@ cfg = ft_checkconfig(cfg, 'renamedval', {'directionality', 'feedback', 'inflow'}
 cfg = ft_checkconfig(cfg, 'renamedval', {'directionality', 'feedforward', 'outflow'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'zlim', 'absmax', 'maxabs'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'newfigure', 'figure'});
+cfg = ft_checkconfig(cfg, 'renamedval', {'viewmode', 'layout', 'topographic'});
 % cfg = ft_checkconfig(cfg, 'deprecated', {'xparam'});
 
 % set the defaults
@@ -225,7 +223,7 @@ cfg.frequency      = ft_getopt(cfg, 'frequency',      'all'); % needed for frequ
 cfg.latency        = ft_getopt(cfg, 'latency',        'all'); % needed for latency selection with TFR data, FIXME, probably not used
 cfg.renderer       = ft_getopt(cfg, 'renderer');              % let MATLAB decide on the default
 cfg.select         = ft_getopt(cfg, 'select',         'intersect'); % for ft_selectdata
-cfg.viewmode       = ft_getopt(cfg, 'viewmode',       'layout');
+cfg.viewmode       = ft_getopt(cfg, 'viewmode',       'topographic');
 
 % some options constrain the default value for other options
 if isequal(cfg.linecolor, 'spatial')
@@ -429,14 +427,25 @@ end
 
 % Read or create the layout that will be used for plotting
 tmpcfg = keepfields(cfg, {'layout', 'channel', 'rows', 'columns', 'commentpos', 'skipcomnt', 'scalepos', 'skipscale', 'projection', 'viewpoint', 'rotate', 'width', 'height', 'elec', 'grad', 'opto', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
-tmpcfg = ft_setopt(tmpcfg, 'color', cfg.linecolor);
 if isequal(cfg.viewmode, 'butterfly')
-  if isfield(tmpcfg, 'layout')
-    tmpcfg.layouttopo = tmpcfg.layout;
-  end
-  tmpcfg.layout     = 'butterfly';
+  % default is to use channel colors matching the spatial locations
+  tmpcfg.color = ft_getopt(cfg, 'linecolor', 'spatial');
+  % create two layouts, one for butterfly and another for topographic
+  cfg.topolayout = ft_prepare_layout(tmpcfg, varargin{1}); % this will be passed to singleplot and topoplot
+  tmpcfg.layout = 'butterfly';
+  cfg.layout = ft_prepare_layout(tmpcfg, varargin{1});
+  % copy the topographic colors over to the butterfly layout
+  [chanindx1, chanindx2] = match_str(cfg.layout.label, cfg.topolayout.label);
+  cfg.layout.color = zeros(length(cfg.layout.label), 3); % RGB triplets
+  cfg.layout.color(chanindx1,:) = cfg.topolayout.color(chanindx2,:);
+else
+  % default is not to use channel colors matching the spatial locations
+  tmpcfg.color = ft_getopt(cfg, 'linecolor');
+  % create only the topographic layout, use it for both
+  cfg.topolayout = ft_prepare_layout(tmpcfg, varargin{1}); % this will be passed to singleplot and topoplot
+  cfg.layout = cfg.topolayout;
 end
-cfg.layout = ft_prepare_layout(tmpcfg, varargin{1});
+
 
 % Take the subselection of channels that is contained in the layout, this is the same in all datasets
 [selchan, sellay] = match_str(varargin{1}.label, cfg.layout.label);
@@ -557,17 +566,22 @@ for m=1:length(selchan)
   end
 end % for number of channels
 
-% plot the layout, labels and outline
-ft_plot_layout(cfg.layout, 'box', cfg.box, 'label', cfg.showlabels, 'outline', cfg.showoutline, 'point', 'no', 'mask', 'no', 'fontsize', cfg.fontsize, 'labelyoffset', 1.4*median(cfg.layout.height/2), 'labelalignh', 'center', 'chanindx', find(~ismember(cfg.layout.label, {'COMNT', 'SCALE'})), 'interpreter', cfg.interpreter);
-if isfield(cfg.layout, 'layout')
+if strcmp(cfg.viewmode, 'topographic')
+  % plot the layout, labels and outline for each channel
+  ft_plot_layout(cfg.layout, 'box', cfg.box, 'label', cfg.showlabels, 'outline', cfg.showoutline, 'point', 'no', 'mask', 'no', 'fontsize', cfg.fontsize, 'labelyoffset', 1.4*median(cfg.layout.height/2), 'labelalignh', 'center', 'chanindx', find(~ismember(cfg.layout.label, {'COMNT', 'SCALE'})), 'interpreter', cfg.interpreter);
+elseif strcmp(cfg.viewmode, 'butterfly')
+  % plot the layout in the upper left corner
   hlim = get(gca, 'xlim');
   vlim = get(gca, 'ylim');
   hpos = hlim(1)+diff(hlim)*0.1;
   vpos = vlim(1)+diff(vlim)*0.9;
   h    = 0.2*diff(vlim);
   w    = 0.2*diff(hlim);
-  [i1, i2] = match_str(cfg.channel, cfg.layout.layout.label);
-  ft_plot_layout(cfg.layout.layout, 'box', 'no', 'label', 'off', 'point', 'yes', 'pointcolor', linecolor(i1, :), 'pointsize', 5, 'pointsymbol', 'o', 'hpos', hpos, 'vpos', vpos, 'height', h, 'width', w);
+  % the linecolor is sorted according to cfg.channel, the pointcolor should be according to the layout
+  [chanindx1, chanindx2] = match_str(cfg.topolayout.label, cfg.channel);
+  pointcolor = zeros(length(cfg.topolayout.label), 3);
+  pointcolor(chanindx1,:) = linecolor(chanindx2, :);
+  ft_plot_layout(cfg.topolayout, 'box', 'no', 'label', 'off', 'point', 'yes', 'pointcolor', pointcolor, 'pointsize', 5, 'pointsymbol', 'o', 'hpos', hpos, 'vpos', vpos, 'height', h, 'width', w, 'chanindx', chanindx1);
 end
 
 % write comment
@@ -639,12 +653,6 @@ set(gcf, 'NumberTitle', 'off');
 
 % Make the figure interactive
 if strcmp(cfg.interactive, 'yes')
-  if all(cfg.layout.pos(:,1)==cfg.layout.pos(1,1) & cfg.layout.pos(:,2)==cfg.layout.pos(2,2)) && isfield(cfg.layout, 'layout')
-    % it's a butterfly layout, which does not work well in interactive
-    % mode, replace it with the one that (hopefully) has topographical
-    % information
-    cfg.layout = cfg.layout.layout;
-  end
   % add the cfg/data/channel information to the figure under identifier linked to this axis
   ident                 = ['axh' num2str(round(sum(clock.*1e6)))]; % unique identifier for this axis
   set(gca, 'tag', ident);
@@ -710,7 +718,7 @@ ft_plot_text(hlim(1), vlim(2), [num2str(vlim(2), 3) ' '], placement{:}, 'Horizon
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION which is called after selecting channels in case of cfg.interactive='yes'
+% SUBFUNCTION which is called after selecting channels with cfg.interactive='yes'
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function select_singleplotER(label, varargin)
 % fetch cfg/data based on axis indentifier given as tag
@@ -729,7 +737,7 @@ if ~isempty(label)
   % ensure that the new figure appears at the same position
   cfg.figure = 'yes';
   cfg.position = get(gcf, 'Position');
-  
+  cfg.layout = cfg.topolayout; % in case cfg.viewmode='butterfly
   selchan = match_str(datvarargin{1}.label, cfg.channel);
   cfg.linecolor = linecolor(selchan, :, :); % make a subselection for the correct inheritance of the line colors
   ft_singleplotER(cfg, datvarargin{:});
@@ -745,7 +753,16 @@ ident    = get(gca, 'tag');
 info     = guidata(gcf);
 cfg      = info.(ident).cfg;
 varargin = info.(ident).varargin;
+
 if ~isempty(range)
+  % the range is not what it appears, since the figure was constructed with FT_PLOT_VECTOR
+  % this critically depends on AXIS TIGHT being done earlier
+  xlim_plot = get(gca, 'xlim');
+  xlim_real = varargin{1}.time([1 end]);
+  % map the range that was selected in the plot onto the real range of the data
+  p = polyfit(xlim_plot, xlim_real, 1);
+  range([1 2]) = polyval(p, range([1 2]));
+
   cfg = removefields(cfg, 'inputfile');   % the reading has already been done and varargin contains the data
   cfg = removefields(cfg, 'showlabels');  % this is not allowed in topoplotER
   cfg.baseline = 'no';                    % make sure the next function does not apply a baseline correction again
@@ -763,5 +780,7 @@ if ~isempty(range)
   % ensure that the new figure appears at the same position
   cfg.figure = 'yes';
   cfg.position = get(gcf, 'Position');
+  cfg.layout = cfg.topolayout; % use the topographic layout, not the butterfly layout
+
   ft_topoplotER(cfg, varargin{:});
 end
