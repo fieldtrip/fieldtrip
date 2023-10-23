@@ -32,7 +32,7 @@ cfg      = [];
 cfg.grad = data.grad;
 cfg.headmodel = vol;
 cfg.channel = 'MEG';
-cfg.sourcemodel.resolution = 1.5;
+cfg.resolution = 1.5;
 cfg.reducerank = 3; % no rank reduction
 grid = ft_prepare_leadfield(cfg);
 
@@ -100,7 +100,7 @@ tlck_N          = ft_timelockanalysis(cfg, data_noise);
 % do SAM beamforming
 cfg            = [];
 cfg.method              = 'sam';
-cfg.grid                = grid;
+cfg.sourcemodel         = grid;
 cfg.headmodel           = vol;
 cfg.grad                = data_signal.grad;
 cfg.sam.lambda          = '5%';
@@ -127,7 +127,7 @@ ori_All = [ori_moiseev; ori_gar];
 
 cfg                     = [];
 cfg.method              = 'sam';
-cfg.grid                = grid;
+cfg.sourcemodel         = grid;
 cfg.headmodel           = vol;
 cfg.grad                = data_signal.grad;
 cfg.sam.lambda          = '5%';
@@ -135,20 +135,20 @@ cfg.sam.keepfilter      = 'yes';
 cfg.sam.keepori         = 'yes';
 cfg.rawtrial            = 'yes';
 cfg.sam.keepmom         = 'yes';  % saves the time series
-cfg.sam.keeptrials      = 'yes'; %'no' or 'yes
-cfg.sam.keepleadfield   = 'no';
+cfg.keeptrials          = 'yes'; %'no' or 'yes
+cfg.keepleadfield       = 'no';
 cfg.sam.keepfilter      = 'no';
 
 % default case, equivalent to the fixedori approach previously named 'moiseev'
 cfg.sam.noisecov        = tlck_N.cov;
-cfg.grid.filter         = source_moiseev_ft.avg.filter;
+cfg.sourcemodel.filter  = source_moiseev_ft.avg.filter;
 source_moiseev_mom      = ft_sourceanalysis(cfg, tlck_S);
  
 
 % if no noise covariance is specified, it is estimated using a multiple of the identity matrix.
 % this is equivalent to the fixedori approach previously named 'gareth'
 cfg.sam                 = rmfield(cfg.sam, 'noisecov');
-cfg.grid.filter         = source_gar_ft.avg.filter;
+cfg.sourcemodel.filter  = source_gar_ft.avg.filter;
 source_gar_mom          = ft_sourceanalysis(cfg, tlck_S);
 
 
