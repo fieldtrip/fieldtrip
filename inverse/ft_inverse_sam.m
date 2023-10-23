@@ -23,9 +23,10 @@ function [estimate] = ft_inverse_sam(sourcemodel, sens, headmodel, dat, C, varar
 % If no orientation is specified, the SAM beamformer will try to estimate the orientation from the data.
 % The beamformer will either try to estimate the whole orientation, or only its tangential component.
 % This is controlled by the 'reducerank' parameter. For reducerank=3, the whole orientation is estimated,
-% and for reducerank=2 only the tangential component is estimated.
+% and for reducerank=2 only the tangential component is estimated, based on an svd of the dipole's leadfield,
+% treating the 3d component as the 'radial' orientation.
 %
-% These options influence the forward computation of the leadfield
+% These options influence the forward computation of the leadfield, if it has not yet been precomputed
 %   'reducerank'      = 'no' or number  (default = 3 for EEG, 2 for MEG)
 %   'backproject'     = 'yes' or 'no', in the case of a rank reduction this parameter determines whether the result will be backprojected onto the original subspace (default = 'yes')
 %   'normalize'       = 'no', 'yes' or 'column' (default = 'no')
@@ -189,7 +190,7 @@ end
 % the inverse only has to be computed once for all dipoles
 invC = ft_inv(C, invopt{:});
 
-% If no orientation is specified, it is estimated from the data. This script implements two approaches
+% If no orientation is specified, it is estimated from the data. This function implements two approaches
 % for this estimation, both based on choosing an orientation that maximizes some form of "pseudo-Z". Concretely, these two approaches maximize
 % 1): pseudo-Z = projected_signal_power / projected_noise_power = (w' C w) / (w' N w),
 % 2): event-related pseudo-Z = projected_evoked_activity_power / projected_noise_power = (w' Cavg w) / (w' N w), 
