@@ -2659,6 +2659,14 @@ ARRAY+=(utilities/private/offset2time.m)
 sync ${ARRAY[*]}
 
 ################################################################################
+# open_figure.m
+
+ARRAY=()
+ARRAY+=(private/open_figure.m)
+ARRAY+=(realtime/online_meg/private/open_figure.m)
+sync ${ARRAY[*]}
+
+################################################################################
 # parameterselection.m
 
 ARRAY=()
