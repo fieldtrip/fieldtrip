@@ -8,7 +8,7 @@ function ft_realtime_sensysproxy(cfg)
 %   ft_realtime_sensysproxy(cfg)
 %
 % The configuration should contain
-%   cfg.filename    = string, name of the serial port (default = 'COM2')
+%   cfg.serialport  = string, name of the serial port (default = 'COM2')
 %   cfg.blocksize   = number, in seconds (default = 0.1)
 %   cfg.fsample     = sampling frequency (default = 1000)
 %
@@ -43,7 +43,7 @@ function ft_realtime_sensysproxy(cfg)
 cfg = ft_checkconfig(cfg);
 
 % set the defaults
-cfg.filename          = ft_getopt(cfg, 'filename', 'COM2');
+cfg.serialport        = ft_getopt(cfg, 'serialport', 'COM2');
 cfg.baudrate          = ft_getopt(cfg, 'baudrate', 921600);
 cfg.blocksize         = ft_getopt(cfg, 'blocksize', 0.1);
 cfg.fsample           = ft_getopt(cfg, 'fsample', 400);
@@ -57,15 +57,12 @@ cfg.flowcontrol = 'none';
 cfg.stopbits    = 1;
 cfg.parity      = 'none';
 
-% ensure that each block is an integer number of samples
-cfg.blocksize = round(cfg.blocksize*cfg.fsample)/cfg.fsample;
-
 % share the configuration details with the callback function
 setappdata(0, 'cfg', cfg)
 
-% the unicorn uses the SPP protocol, i.e. serial-over-bluetooth
+% the Sensys FGM3D TD Application allows serial data to be written out to a COM port
 % open the serial device
-sensys = serialport(cfg.filename, cfg.baudrate);
+sensys = serialport(cfg.serialport, cfg.baudrate);
 
 %%
 % this takes care of cleanup
@@ -96,14 +93,15 @@ function readSerialData(sensys, event)
 
 % this is called on every line/sample that is received
 % but the data is not written that fast, so we need a buffer
-persistent buffer nchan bufsize counter
+persistent buffer nchan blocksize counter
 
 cfg = getappdata(0, 'cfg');
 
 if isempty(buffer)
     nchan = 5;
-    bufsize = cfg.blocksize*cfg.fsample;
-    buffer = nan(nchan, bufsize);
+    % ensure that each block is an integer number of samples
+    blocksize = round(cfg.blocksize*cfg.fsample);
+    buffer = zeros(nchan, blocksize);
     counter = 0;
 end
 
@@ -114,13 +112,13 @@ end
 % Timestamp;Value Channel 1;Value Channel 2;Value Channel 3;Absolute Value<CR><LF>
 
 line = char(readline(sensys));
-line = strrep(line, ',', '.');
-counter = counter + 1;
+line = strrep(line, ',', '.'); % depending on the language settings there might be a . or a , as decimal separator
 dat = str2double(split(line, ';'));
 
-buffer(:,rem(counter,bufsize)+1) = dat';
+buffer(:,rem(counter,blocksize)+1) = dat';
+counter = counter + 1;
 
-if counter==bufsize
+if counter==blocksize
     % after the first block
     hdr = [];
     hdr.Fs = cfg.fsample;
@@ -129,22 +127,16 @@ if counter==bufsize
     hdr.nSamplesPre = 0;
     hdr.label = {'timestamp', 'x', 'y', 'z', 'abs'};
     % flush the file, write the header and subsequently write the data segment
-    try
-        ft_write_data(cfg.target.datafile, buffer, 'header', hdr, 'dataformat', cfg.target.dataformat, 'append', false);
-    catch
-        myCleanupFun(sensys);
-    end
+    ft_write_data(cfg.target.datafile, buffer, 'header', hdr, 'dataformat', cfg.target.dataformat, 'append', false);
     fprintf('wrote header and %d channels, %d samples\n', nchan, counter);
-elseif mod(counter,bufsize)==0
+    
+elseif mod(counter,blocksize)==0
     % after each subsequent block
     % write the data segment
-    try
-        ft_write_data(cfg.target.datafile, buffer, 'append', true);
-    catch
-        myCleanupFun(sensys);
-    end
+    ft_write_data(cfg.target.datafile, buffer, 'append', true);
     fprintf('wrote %d channels, %d samples\n', nchan, counter);
-end % if count==1
+
+end % process complete block
 
 end % function
 
