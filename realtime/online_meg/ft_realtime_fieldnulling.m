@@ -67,7 +67,6 @@ if isempty(cfg.position)
     cfg.position(4) = 240;
 end
 
-
 %%
 
 % open a new figure with the specified settings
@@ -146,6 +145,44 @@ end % function
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function control_output_calibration(h, eventdata)
+% output a sine wave with a different frequency on each of the coils
+fig = getparent(h);
+coils = getappdata(fig, 'coils');
+
+offset = [0 0 0 0 0 0];
+frequency = [5 6 7 8 9 10];
+amplitude = 1;
+duration = 5;
+fsample = 1000;
+nchan = 6;
+
+assert(numel(offset)==nchan);
+assert(numel(frequency)==nchan);
+assert(numel(amplitude)==1);
+assert(numel(duration)==1);
+
+coils.Rate = fsample;
+
+signal = zeros(nchan,fsample);
+time = (0:(fsample-1))/fsample;
+for i=1:nchan
+    signal(i,:) = amplitude * sin(frequency(i)*2*pi*time) + offset(i);
+end
+preload(coils, signal');
+
+disp('start calibration');
+t = timer('StartDelay', duration, 'ExecutionMode', 'singleshot');
+t.StartFcn = @(varargin) start(coils, 'repeatoutput');
+t.TimerFcn = @(varargin) stop(coils);
+t.StopFcn  = @(varargin) disp('stop calibration');
+start(t)
+
+end % function
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function measure_callback(fluxgate, varargin)
 
 persistent fig counter
@@ -194,7 +231,6 @@ end % function
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_creategui(h, eventdata, handles)
 fig = getparent(h);
-cfg = getappdata(fig, 'cfg');
 
 p1 = uipanel(fig, 'units', 'normalized', 'position', [0.0 0.3 0.5 0.7]);
 p2 = uipanel(fig, 'units', 'normalized', 'position', [0.5 0.3 0.5 0.7]);
@@ -259,9 +295,11 @@ ft_uilayout(p2, 'tag', 'f2.', 'hpos', 'auto', 'vpos', 0.5);
 ft_uilayout(p2, 'tag', 'f3.', 'hpos', 'auto', 'vpos', 0.3);
 ft_uilayout(p2, 'tag', 'f4.', 'hpos', 'auto', 'vpos', 0.1);
 
-uicontrol('parent', p3, 'style', 'pushbutton', 'string', 'quit', 'callback', @cb_quit);
+uicontrol('parent', p3, 'style', 'pushbutton', 'string', 'calibrate', 'callback', @control_output_calibration);
+uicontrol('parent', p3, 'style', 'pushbutton', 'string', 'auto null');
+uicontrol('parent', p3, 'style', 'pushbutton', 'string', 'quit',      'callback', @cb_quit);
 
-ft_uilayout(p3, 'style', 'pushbutton', 'units', 'normalized', 'width', 0.3, 'hpos', 0.35, 'vpos', 0.5);
+ft_uilayout(p3, 'style', 'pushbutton', 'units', 'normalized', 'width', 0.35, 'hpos', 'auto', 'vpos', 0.5);
 
 end % function
 
