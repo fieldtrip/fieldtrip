@@ -2677,6 +2677,14 @@ ARRAY+=(utilities/private/parameterselection.m)
 sync ${ARRAY[*]}
 
 ################################################################################
+# parsekeyboardevent.m
+
+ARRAY=()
+ARRAY+=(private/parsekeyboardevent.m)
+ARRAY+=(realtime/online_meg/private/parsekeyboardevent.m)
+sync ${ARRAY[*]}
+
+################################################################################
 # peakdetect3.m
 
 ARRAY=()
