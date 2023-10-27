@@ -54,7 +54,19 @@ switch cfg.figure
     % this will open a new figure if there is no figure yet
     h = gcf;
   
-  otherwise
+  case 'ui'
+    % make a new UI figure
+    figopt = {};
+    if ~istrue(cfg.visible)
+      figopt = ft_setopt(figopt, 'visible', 'off');
+    end
+    if ~isempty(cfg.position)
+      figopt = ft_setopt(figopt, 'position', cfg.position);
+    end
+
+    h = uifigure(figopt{:});
+
+    otherwise
     % assume that it specifies a figure handle
     h = cfg.figure;
 end
