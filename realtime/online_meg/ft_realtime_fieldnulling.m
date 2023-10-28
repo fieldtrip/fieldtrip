@@ -78,8 +78,6 @@ if isempty(cfg.position)
   cfg.position(4) = 240;
 end
 
-%%
-
 % open a new figure with the specified settings
 tmpcfg = keepfields(cfg, {'figure', 'position', 'visible', 'renderer', 'figurename', 'title'});
 % overrule some of the settings
@@ -114,6 +112,8 @@ else
   fluxgate = [];
 end
 
+setappdata(fig, 'fluxgate', fluxgate);
+
 %% set up the digital-to-analog converter
 
 if istrue(cfg.enableoutput)
@@ -129,12 +129,11 @@ else
   coils = [];
 end
 
+setappdata(fig, 'coils', coils);
+
 %% activate the graphical user interface
 
-setappdata(fig, 'fluxgate', fluxgate);
-setappdata(fig, 'coils', coils);
 setappdata(fig, 'running', true);
-
 cb_create_gui(fig);
 cb_redraw(fig);
 
@@ -182,7 +181,7 @@ residual = residual(:); % it should be a column
 offset = offset(:); % it should be a column
 
 if isempty(calib)
-  warning('cannot auto-null, calibration has not been performed')
+  warning('cannot auto-null, calibration has not yet been performed')
 
 else
   disp('auto-null')
@@ -503,7 +502,6 @@ function cb_redraw(h, eventdata)
 fig     = getparent(h);
 offset  = getappdata(fig, 'offset');
 field   = getappdata(fig, 'field');
-coils   = getappdata(fig, 'coils');
 
 % deal with the two coils being locked to each other or not
 if get(findall(fig, 'tag', 'c2x'), 'value')
@@ -517,22 +515,22 @@ if get(findall(fig, 'tag', 'c6x'), 'value')
 end
 setappdata(fig, 'offset', offset);
 
+% update the current driver offset
+set(findall(fig, 'tag', 'c1e'), 'string', offset(1));
+set(findall(fig, 'tag', 'c2e'), 'string', offset(2));
+set(findall(fig, 'tag', 'c3e'), 'string', offset(3));
+set(findall(fig, 'tag', 'c4e'), 'string', offset(4));
+set(findall(fig, 'tag', 'c5e'), 'string', offset(5));
+set(findall(fig, 'tag', 'c6e'), 'string', offset(6));
+
+% update the fluxgate field
+set(findall(fig, 'tag', 'f1e'), 'string', sprintf('%.03f uT', 1e6*field(1)));
+set(findall(fig, 'tag', 'f2e'), 'string', sprintf('%.03f uT', 1e6*field(2)));
+set(findall(fig, 'tag', 'f3e'), 'string', sprintf('%.03f uT', 1e6*field(3)));
+set(findall(fig, 'tag', 'f4e'), 'string', sprintf('%.03f uT', 1e6*field(4)));
+
 if getappdata(fig, 'running')
-  % FIXME control_offset(fig);
-
-  % update the current driver offset
-  set(findall(fig, 'tag', 'c1e'), 'string', offset(1));
-  set(findall(fig, 'tag', 'c2e'), 'string', offset(2));
-  set(findall(fig, 'tag', 'c3e'), 'string', offset(3));
-  set(findall(fig, 'tag', 'c4e'), 'string', offset(4));
-  set(findall(fig, 'tag', 'c5e'), 'string', offset(5));
-  set(findall(fig, 'tag', 'c6e'), 'string', offset(6));
-
-  % update the fluxgate field
-  set(findall(fig, 'tag', 'f1e'), 'string', sprintf('%.03f uT', 1e6*field(1)));
-  set(findall(fig, 'tag', 'f2e'), 'string', sprintf('%.03f uT', 1e6*field(2)));
-  set(findall(fig, 'tag', 'f3e'), 'string', sprintf('%.03f uT', 1e6*field(3)));
-  set(findall(fig, 'tag', 'f4e'), 'string', sprintf('%.03f uT', 1e6*field(4)));
+  control_offset(fig);
 end
 
 end % function
@@ -545,7 +543,7 @@ fig     = getparent(h);
 offset  = getappdata(fig, 'offset');
 
 switch get(fig, 'SelectionType')
-  case 'alt'       % ctrl-click
+  case 'alt'       % ctrl-click, this does not work on macOS
     step = 0.01;
   case 'extend'    % shift-click
     step = 0.1;
