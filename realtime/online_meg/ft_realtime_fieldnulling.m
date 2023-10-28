@@ -64,6 +64,7 @@ cfg.position      = ft_getopt(cfg, 'position'); % default is handled below
 cfg.enableinput   = ft_getopt(cfg, 'enableinput', 'yes');
 cfg.enableoutput  = ft_getopt(cfg, 'enableoutput', 'yes');
 cfg.offset        = ft_getopt(cfg, 'offset', [0 0 0 0 0 0]); % initial offset on the coils
+cfg.calib         = ft_getopt(cfg, 'calib'); % user-specified calibration values
 
 % these determine the calibration signal
 cfg.calibration           = ft_getopt(cfg, '', []);
@@ -75,6 +76,7 @@ cfg.calibration.fsample   = ft_getopt(cfg, 'fsample', 1000); % in Hz
 
 if isempty(cfg.position)
   cfg.position = get(groot, 'defaultFigurePosition');
+  cfg.position(3) = 800;
   cfg.position(4) = 240;
 end
 
@@ -90,9 +92,9 @@ drawnow
 setappdata(fig, 'cfg', cfg);
 setappdata(fig, 'field', [nan nan nan nan]);  % set the initial measured field: x, y, z, abs
 setappdata(fig, 'offset', cfg.offset);        % set the initial offset
-setappdata(fig, 'running', false);
-setappdata(fig, 'calib', []);
-setappdata(fig, 'calibration', 'off');
+setappdata(fig, 'calib', cfg.calib);
+setappdata(fig, 'running', 'off');            % can be 'off', 'manual', 'closedloop'
+setappdata(fig, 'calibration', 'off');        % can be 'init', 'on', 'off'
 
 % add the callbacks
 set(fig, 'CloseRequestFcn',     @cb_quit);
@@ -101,13 +103,13 @@ set(fig, 'WindowButtondownfcn', @cb_click);
 
 %% set up the serial connection to the fluxgate sensor
 
-measure_callback(fig); % call it once to pass the figure handle
+measure_sample(fig); % call it once to pass the figure handle
 
 if istrue(cfg.enableinput)
   fluxgate = serialport(cfg.serialport, cfg.baudrate);
   cleanup = onCleanup(@()measure_cleanup(fluxgate));
   configureTerminator(fluxgate, 'LF');
-  configureCallback(fluxgate, 'terminator', @measure_callback);
+  configureCallback(fluxgate, 'terminator', @measure_sample);
 else
   fluxgate = [];
 end
@@ -133,7 +135,7 @@ setappdata(fig, 'coils', coils);
 
 %% activate the graphical user interface
 
-setappdata(fig, 'running', true);
+setappdata(fig, 'running', 'manual');
 cb_create_gui(fig);
 cb_redraw(fig);
 
@@ -175,16 +177,22 @@ offset = getappdata(fig, 'offset');
 field = getappdata(fig, 'field');
 calib = getappdata(fig, 'calib');
 
-% only keep the x, y, and z component
-residual = field(1:3);
-residual = residual(:); % it should be a column
-offset = offset(:); % it should be a column
 
 if isempty(calib)
-  warning('cannot auto-null, calibration has not yet been performed')
+  warning('cannot auto null, calibration has not yet been performed')
 
 else
-  disp('auto-null')
+  disp('auto null')
+
+  % this is incompatible with pairwise linked coils
+  set(findobj(fig, 'tag', 'c1x'), 'value', 0);
+  set(findobj(fig, 'tag', 'c3x'), 'value', 0);
+  set(findobj(fig, 'tag', 'c5x'), 'value', 0);
+  cb_enable_gui(fig); % update the gui
+
+  residual = field(1:3);  % only keep the x, y, and z component
+  residual = residual(:); % it should be a column
+  offset   = offset(:);   % it should be a column
 
   % The idea is to compute a correction to the current offset that will bring the measured field to zero
   %   field = residual - calib * offset  % this is the environmental field
@@ -196,7 +204,7 @@ else
   % Hence
   %   residual = - calib * correction
 
-  correction = - calib \ residual;
+  correction = - pinv(calib) * residual;
   offset = offset + correction;
 
   % show and apply the updated offset values
@@ -295,7 +303,7 @@ end % function
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function measure_callback(fluxgate, varargin)
+function measure_sample(fluxgate, varargin)
 persistent fig counter buffer
 
 if ishandle(fluxgate)
@@ -344,6 +352,22 @@ switch getappdata(fig, 'calibration')
     % nothing to do
 end
 
+% closed-loop updating of the offset
+if strcmp(getappdata(fig, 'running'), 'closedloop')
+  calib = getappdata(fid, 'calib');
+  offset = getappdata(fid, 'offset');
+  if ~isempty(calib)
+    residual = dat(1:3);    % only keep the x, y, and z component
+    residual = residual(:); % it should be a column
+    offset   = offset(:);   % it should be a column
+
+    correction = - pinv(calib) * residual;
+    offset = offset + correction;
+    setappdata(fid, 'offset', offset);
+    control_offset(fig);
+  end
+end
+
 % add the fluxgate field strength to the figure
 setappdata(fig, 'field', dat(2:5));
 cb_redraw(fig);
@@ -367,21 +391,21 @@ end % function
 function cb_create_gui(h, eventdata, handles)
 fig = getparent(h);
 
-p1 = uipanel(fig, 'units', 'normalized', 'position', [0.0 0.3 0.5 0.7]);
-p2 = uipanel(fig, 'units', 'normalized', 'position', [0.5 0.3 0.5 0.7]);
-p3 = uipanel(fig, 'units', 'normalized', 'position', [0.0 0.0 1.0 0.3]);
+p1 = uipanel(fig, 'units', 'normalized', 'position', [0.0 0.2 0.5 0.8]);
+p2 = uipanel(fig, 'units', 'normalized', 'position', [0.5 0.2 0.5 0.8]);
+p3 = uipanel(fig, 'units', 'normalized', 'position', [0.0 0.0 1.0 0.2]);
 
-uicontrol('parent', p1, 'style', 'text', 'string', 'control', 'units', 'normalized', 'position', [0.0 0.9 0.5 0.1]);
-uicontrol('parent', p2, 'style', 'text', 'string', 'measure',   'units', 'normalized', 'position', [0.0 0.9 0.5 0.1]);
+uicontrol('parent', p1, 'style', 'text', 'string', 'control', 'units', 'normalized', 'position', [0.01 0.89 0.5 0.1], 'horizontalalignment', 'left');
+uicontrol('parent', p2, 'style', 'text', 'string', 'measure', 'units', 'normalized', 'position', [0.01 0.89 0.5 0.1], 'horizontalalignment', 'left');
 
 uicontrol('parent', p1, 'tag', 'c1l', 'style', 'text', 'string', 'x');
 uicontrol('parent', p1, 'tag', 'c1e', 'style', 'edit');
 uicontrol('parent', p1, 'tag', 'c1m', 'style', 'pushbutton', 'string', '-');
 uicontrol('parent', p1, 'tag', 'c1p', 'style', 'pushbutton', 'string', '+');
 uicontrol('parent', p1, 'tag', 'c2e', 'style', 'edit');
-uicontrol('parent', p1, 'tag', 'c2p', 'style', 'pushbutton', 'string', '+');
 uicontrol('parent', p1, 'tag', 'c2m', 'style', 'pushbutton', 'string', '-');
-uicontrol('parent', p1, 'tag', 'c2x', 'style', 'checkbox');
+uicontrol('parent', p1, 'tag', 'c2p', 'style', 'pushbutton', 'string', '+');
+uicontrol('parent', p1, 'tag', 'c1x', 'style', 'checkbox'); % link pairwise coils
 
 uicontrol('parent', p1, 'tag', 'c3l', 'style', 'text', 'string', 'y');
 uicontrol('parent', p1, 'tag', 'c3e', 'style', 'edit');
@@ -390,7 +414,7 @@ uicontrol('parent', p1, 'tag', 'c3p', 'style', 'pushbutton', 'string', '+');
 uicontrol('parent', p1, 'tag', 'c4e', 'style', 'edit');
 uicontrol('parent', p1, 'tag', 'c4m', 'style', 'pushbutton', 'string', '-');
 uicontrol('parent', p1, 'tag', 'c4p', 'style', 'pushbutton', 'string', '+');
-uicontrol('parent', p1, 'tag', 'c4x', 'style', 'checkbox');
+uicontrol('parent', p1, 'tag', 'c3x', 'style', 'checkbox'); % link pairwise coils
 
 uicontrol('parent', p1, 'tag', 'c5l', 'style', 'text', 'string', 'z');
 uicontrol('parent', p1, 'tag', 'c5e', 'style', 'edit');
@@ -399,14 +423,17 @@ uicontrol('parent', p1, 'tag', 'c5p', 'style', 'pushbutton', 'string', '+');
 uicontrol('parent', p1, 'tag', 'c6e', 'style', 'edit');
 uicontrol('parent', p1, 'tag', 'c6m', 'style', 'pushbutton', 'string', '-');
 uicontrol('parent', p1, 'tag', 'c6p', 'style', 'pushbutton', 'string', '+');
-uicontrol('parent', p1, 'tag', 'c6x', 'style', 'checkbox');
+uicontrol('parent', p1, 'tag', 'c5x', 'style', 'checkbox'); % link pairwise coils
+uicontrol('parent', p1, 'tag', 'cad', 'style', 'text', 'string', ''); % this is a dummy placeholder
+uicontrol('parent', p1, 'tag', 'cax', 'style', 'checkbox');
+uicontrol('parent', p1, 'tag', 'cal', 'style', 'text', 'string', 'cont. auto null', 'HorizontalAlignment', 'left');
 
-ft_uilayout(p1, 'style', 'edit', 'callback', @cb_click, 'backgroundcolor', [1 1 1]);
-ft_uilayout(p1, 'style', 'checkbox', 'callback', @cb_click);
+ft_uilayout(p1, 'style', 'edit',       'callback', @cb_click);
+ft_uilayout(p1, 'style', 'checkbox',   'callback', @cb_click);
 ft_uilayout(p1, 'style', 'pushbutton', 'callback', @cb_click);
 
 ft_uilayout(p1, 'tag', 'c..', 'units', 'normalized', 'height', 0.15)
-ft_uilayout(p1, 'tag', 'c..', 'style', 'edit', 'width', 0.20);
+ft_uilayout(p1, 'style', 'edit', 'width', 0.25, 'backgroundcolor', [1 1 1]);
 ft_uilayout(p1, 'tag', 'c.p', 'width', 0.05)
 ft_uilayout(p1, 'tag', 'c.m', 'width', 0.05)
 ft_uilayout(p1, 'tag', 'c.x', 'width', 0.05)
@@ -414,6 +441,8 @@ ft_uilayout(p1, 'tag', 'c.x', 'width', 0.05)
 ft_uilayout(p1, 'tag', 'c[12].', 'hpos', 'auto', 'vpos', 0.7);
 ft_uilayout(p1, 'tag', 'c[34].', 'hpos', 'auto', 'vpos', 0.5);
 ft_uilayout(p1, 'tag', 'c[56].', 'hpos', 'auto', 'vpos', 0.3);
+ft_uilayout(p1, 'tag', 'ca.',    'hpos', 'auto', 'vpos', 0.1);
+ft_uilayout(p1, 'tag', 'cal',    'width', 0.5);
 
 uicontrol('parent', p2, 'tag', 'f1l', 'style', 'text', 'string', 'x');
 uicontrol('parent', p2, 'tag', 'f1e', 'style', 'edit');
@@ -424,17 +453,18 @@ uicontrol('parent', p2, 'tag', 'f3e', 'style', 'edit');
 uicontrol('parent', p2, 'tag', 'f4l', 'style', 'text', 'string', 'abs');
 uicontrol('parent', p2, 'tag', 'f4e', 'style', 'edit');
 
-ft_uilayout(p2, 'tag', 'f..', 'units', 'normalized', 'height', 0.1)
+ft_uilayout(p2, 'tag', 'f..', 'units', 'normalized', 'height', 0.15)
+ft_uilayout(p2, 'style', 'edit', 'width', 0.5, 'backgroundcolor', [0.9 0.9 0.9]);
 ft_uilayout(p2, 'tag', 'f1.', 'hpos', 'auto', 'vpos', 0.7);
 ft_uilayout(p2, 'tag', 'f2.', 'hpos', 'auto', 'vpos', 0.5);
 ft_uilayout(p2, 'tag', 'f3.', 'hpos', 'auto', 'vpos', 0.3);
 ft_uilayout(p2, 'tag', 'f4.', 'hpos', 'auto', 'vpos', 0.1);
 
-uicontrol('parent', p3, 'style', 'pushbutton', 'string', 'calibrate', 'callback', @calibration_init);
-uicontrol('parent', p3, 'style', 'pushbutton', 'string', 'auto null', 'callback', @control_auto_null);
-uicontrol('parent', p3, 'style', 'pushbutton', 'string', 'quit',      'callback', @cb_quit);
+uicontrol('parent', p3, 'tag', 'bc', 'style', 'pushbutton', 'string', 'calibrate', 'callback', @calibration_init);
+uicontrol('parent', p3, 'tag', 'ba', 'style', 'pushbutton', 'string', 'auto null', 'callback', @control_auto_null);
+uicontrol('parent', p3, 'tag', 'bq', 'style', 'pushbutton', 'string', 'quit',      'callback', @cb_quit);
 
-ft_uilayout(p3, 'style', 'pushbutton', 'units', 'normalized', 'width', 0.35, 'height', 0.4, 'hpos', 'auto', 'vpos', 0.5);
+ft_uilayout(p3, 'style', 'pushbutton', 'units', 'normalized', 'width', 0.35, 'height', 0.6, 'hpos', 'auto', 'vpos', 0.2);
 
 cb_enable_gui(fig);
 end % function
@@ -445,41 +475,59 @@ end % function
 function cb_enable_gui(h, eventdata)
 disp('enable gui');
 fig = getparent(h);
+set(findall(fig, 'type', 'uicontrol', 'style', 'text'),       'Enable', 'on');
 set(findall(fig, 'type', 'uicontrol', 'style', 'edit'),       'Enable', 'on');
 set(findall(fig, 'type', 'uicontrol', 'style', 'pushbutton'), 'Enable', 'on');
 set(findall(fig, 'type', 'uicontrol', 'style', 'checkbox'),   'Enable', 'on');
 
-h = findall(fig, 'tag', 'c2x');
-if get(h, 'Value')
-  set(findall(fig, 'tag', 'c2e'), 'Enable', 'off');
-  set(findall(fig, 'tag', 'c2m'), 'Enable', 'off');
-  set(findall(fig, 'tag', 'c2p'), 'Enable', 'off');
-else
-  set(findall(fig, 'tag', 'c2e'), 'Enable', 'on');
-  set(findall(fig, 'tag', 'c2m'), 'Enable', 'on');
-  set(findall(fig, 'tag', 'c2p'), 'Enable', 'on');
+if isempty(getappdata(fig, 'calib'))
+  % auto nulling is not possible
+  set(findall(fig, 'tag', 'ba'), 'Enable', 'off');
+  set(findall(fig, 'tag', 'cax'), 'Enable', 'off');
+  set(findall(fig, 'tag', 'cal'), 'Enable', 'off');
 end
 
-h = findall(fig, 'tag', 'c4x');
+% during continuous auto nulling the coils should not be pairwise linked 
+h = findall(fig, 'tag', 'cax');
 if get(h, 'Value')
-  set(findall(fig, 'tag', 'c4e'), 'Enable', 'off');
-  set(findall(fig, 'tag', 'c4m'), 'Enable', 'off');
-  set(findall(fig, 'tag', 'c4p'), 'Enable', 'off');
-else
-  set(findall(fig, 'tag', 'c4e'), 'Enable', 'on');
-  set(findall(fig, 'tag', 'c4m'), 'Enable', 'on');
-  set(findall(fig, 'tag', 'c4p'), 'Enable', 'on');
+  set(findobj(fig, 'tag', 'c1x'), 'value', 0);
+  set(findobj(fig, 'tag', 'c3x'), 'value', 0);
+  set(findobj(fig, 'tag', 'c5x'), 'value', 0);
 end
 
-h = findall(fig, 'tag', 'c6x');
+% disable the pairwise second coil when linked
+h = findall(fig, 'tag', 'c1x');
 if get(h, 'Value')
-  set(findall(fig, 'tag', 'c6e'), 'Enable', 'off');
-  set(findall(fig, 'tag', 'c6m'), 'Enable', 'off');
-  set(findall(fig, 'tag', 'c6p'), 'Enable', 'off');
+  ft_uilayout(fig, 'tag', 'c2.', 'enable', 'off')
 else
-  set(findall(fig, 'tag', 'c6e'), 'Enable', 'on');
-  set(findall(fig, 'tag', 'c6m'), 'Enable', 'on');
-  set(findall(fig, 'tag', 'c6p'), 'Enable', 'on');
+  ft_uilayout(fig, 'tag', 'c2.', 'enable', 'on')
+end
+
+% disable the pairwise second coil when linked
+h = findall(fig, 'tag', 'c3x');
+if get(h, 'Value')
+  ft_uilayout(fig, 'tag', 'c4.', 'enable', 'off')
+else
+  ft_uilayout(fig, 'tag', 'c4.', 'enable', 'on')
+end
+
+% disable the pairwise second coil when linked
+h = findall(fig, 'tag', 'c5x');
+if get(h, 'Value')
+  ft_uilayout(fig, 'tag', 'c6.', 'enable', 'off')
+else
+  ft_uilayout(fig, 'tag', 'c6.', 'enable', 'on')
+end
+
+% disable manual control during continuous auto nulling
+h = findall(fig, 'tag', 'cax');
+if get(h, 'Value')
+  ft_uilayout(fig, 'tag', 'c1.', 'enable', 'off')
+  ft_uilayout(fig, 'tag', 'c2.', 'enable', 'off')
+  ft_uilayout(fig, 'tag', 'c3.', 'enable', 'off')
+  ft_uilayout(fig, 'tag', 'c4.', 'enable', 'off')
+  ft_uilayout(fig, 'tag', 'c5.', 'enable', 'off')
+  ft_uilayout(fig, 'tag', 'c6.', 'enable', 'off')
 end
 
 end % function
@@ -499,18 +547,19 @@ end % function
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_redraw(h, eventdata)
+disp('redraw');
 fig     = getparent(h);
 offset  = getappdata(fig, 'offset');
 field   = getappdata(fig, 'field');
 
-% deal with the two coils being locked to each other or not
-if get(findall(fig, 'tag', 'c2x'), 'value')
+% deal with the pairwise linkage between coils
+if get(findall(fig, 'tag', 'c1x'), 'value')
   offset(2) = offset(1);
 end
-if get(findall(fig, 'tag', 'c4x'), 'value')
+if get(findall(fig, 'tag', 'c3x'), 'value')
   offset(4) = offset(3);
 end
-if get(findall(fig, 'tag', 'c6x'), 'value')
+if get(findall(fig, 'tag', 'c5x'), 'value')
   offset(6) = offset(5);
 end
 setappdata(fig, 'offset', offset);
@@ -529,7 +578,7 @@ set(findall(fig, 'tag', 'f2e'), 'string', sprintf('%.03f uT', 1e6*field(2)));
 set(findall(fig, 'tag', 'f3e'), 'string', sprintf('%.03f uT', 1e6*field(3)));
 set(findall(fig, 'tag', 'f4e'), 'string', sprintf('%.03f uT', 1e6*field(4)));
 
-if getappdata(fig, 'running')
+if getappdata(fig, 'manual')
   control_offset(fig);
 end
 
@@ -587,12 +636,14 @@ switch get(h, 'tag')
     offset(6) = offset(6) + step;
   case 'c6m'
     offset(6) = offset(6) - step;
-  case 'c2x'
-    cb_enable_gui(fig); % disable/enable the linked coils
-  case 'c4x'
-    cb_enable_gui(fig); % disable/enable the linked coils
-  case 'c6x'
-    cb_enable_gui(fig); % disable/enable the linked coils
+  case 'c1x'
+    cb_enable_gui(fig); % disable/enable the pairwise linked coil
+  case 'c3x'
+    cb_enable_gui(fig); % disable/enable the pairwise linked coil
+  case 'c5x'
+    cb_enable_gui(fig); % disable/enable the pairwise linked coil
+  case 'cax'
+    cb_enable_gui(fig); % disable/enable the manual control of coils
 end
 
 % set near-zero values to zero
