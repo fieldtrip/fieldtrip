@@ -15,6 +15,13 @@ function ft_realtime_fieldnulling(cfg)
 %
 % See also FT_REALTIME_SENSYSPROXY
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Some ideas to implement:
+%  - dithering of output DAC values
+%  - clipping of output values between safe range
+%  - smooth padded transition to prevent overshoots
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 % Copyright (C) 2023, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
@@ -90,7 +97,7 @@ drawnow
 
 % store the configuration details in the application
 setappdata(fig, 'cfg', cfg);
-setappdata(fig, 'field', [nan nan nan nan]);  % set the initial measured field: x, y, z, abs
+setappdata(fig, 'field', [0 0 0 0]);          % set the initial measured field: x, y, z, abs
 setappdata(fig, 'offset', cfg.offset);        % set the initial offset
 setappdata(fig, 'calib', cfg.calib);
 setappdata(fig, 'running', 'off');            % can be 'off', 'manual', 'closedloop'
@@ -171,19 +178,16 @@ end % function
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function control_auto_null(h, eventdata)
-fig = getparent(h);
+function control_auto_null(fig)
+disp('auto null')
 offset = getappdata(fig, 'offset');
 field = getappdata(fig, 'field');
 calib = getappdata(fig, 'calib');
-
 
 if isempty(calib)
   warning('cannot auto null, calibration has not yet been performed')
 
 else
-  disp('auto null')
-
   % this is incompatible with pairwise linked coils
   set(findobj(fig, 'tag', 'c1x'), 'value', 0);
   set(findobj(fig, 'tag', 'c3x'), 'value', 0);
@@ -213,16 +217,6 @@ else
   control_offset(fig);
 
 end
-end % function
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function calibration_init(h, eventdata)
-fig = getparent(h);
-cb_disable_gui(fig);
-setappdata(fig', 'calibration', 'init');
-disp('initiated calibration')
 end % function
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -460,8 +454,9 @@ ft_uilayout(p2, 'tag', 'f2.', 'hpos', 'auto', 'vpos', 0.5);
 ft_uilayout(p2, 'tag', 'f3.', 'hpos', 'auto', 'vpos', 0.3);
 ft_uilayout(p2, 'tag', 'f4.', 'hpos', 'auto', 'vpos', 0.1);
 
-uicontrol('parent', p3, 'tag', 'bc', 'style', 'pushbutton', 'string', 'calibrate', 'callback', @calibration_init);
-uicontrol('parent', p3, 'tag', 'ba', 'style', 'pushbutton', 'string', 'auto null', 'callback', @control_auto_null);
+uicontrol('parent', p3, 'tag', 'bc', 'style', 'pushbutton', 'string', 'calibrate', 'callback', @cb_click);
+uicontrol('parent', p3, 'tag', 'ba', 'style', 'pushbutton', 'string', 'auto null', 'callback', @cb_click);
+uicontrol('parent', p3, 'tag', 'bo', 'style', 'pushbutton', 'string', 'coils off', 'callback', @cb_click);
 uicontrol('parent', p3, 'tag', 'bq', 'style', 'pushbutton', 'string', 'quit',      'callback', @cb_quit);
 
 ft_uilayout(p3, 'style', 'pushbutton', 'units', 'normalized', 'width', 0.35, 'height', 0.6, 'hpos', 'auto', 'vpos', 0.2);
@@ -489,7 +484,7 @@ end
 
 % during continuous auto nulling the coils should not be pairwise linked 
 h = findall(fig, 'tag', 'cax');
-if get(h, 'Value')
+if h.Value
   set(findobj(fig, 'tag', 'c1x'), 'value', 0);
   set(findobj(fig, 'tag', 'c3x'), 'value', 0);
   set(findobj(fig, 'tag', 'c5x'), 'value', 0);
@@ -497,7 +492,7 @@ end
 
 % disable the pairwise second coil when linked
 h = findall(fig, 'tag', 'c1x');
-if get(h, 'Value')
+if h.Value
   ft_uilayout(fig, 'tag', 'c2.', 'enable', 'off')
 else
   ft_uilayout(fig, 'tag', 'c2.', 'enable', 'on')
@@ -505,7 +500,7 @@ end
 
 % disable the pairwise second coil when linked
 h = findall(fig, 'tag', 'c3x');
-if get(h, 'Value')
+if h.Value
   ft_uilayout(fig, 'tag', 'c4.', 'enable', 'off')
 else
   ft_uilayout(fig, 'tag', 'c4.', 'enable', 'on')
@@ -513,7 +508,7 @@ end
 
 % disable the pairwise second coil when linked
 h = findall(fig, 'tag', 'c5x');
-if get(h, 'Value')
+if h.Value
   ft_uilayout(fig, 'tag', 'c6.', 'enable', 'off')
 else
   ft_uilayout(fig, 'tag', 'c6.', 'enable', 'on')
@@ -521,7 +516,7 @@ end
 
 % disable manual control during continuous auto nulling
 h = findall(fig, 'tag', 'cax');
-if get(h, 'Value')
+if h.Value
   ft_uilayout(fig, 'tag', 'c1.', 'enable', 'off')
   ft_uilayout(fig, 'tag', 'c2.', 'enable', 'off')
   ft_uilayout(fig, 'tag', 'c3.', 'enable', 'off')
@@ -591,7 +586,7 @@ function cb_click(h, eventdata)
 fig     = getparent(h);
 offset  = getappdata(fig, 'offset');
 
-switch get(fig, 'SelectionType')
+switch fig.SelectionType
   case 'alt'       % ctrl-click, this does not work on macOS
     step = 0.01;
   case 'extend'    % shift-click
@@ -599,19 +594,20 @@ switch get(fig, 'SelectionType')
   otherwise
     step = 1;
 end
-switch get(h, 'tag')
+
+switch h.Tag
   case 'c1e'
-    offset(1) = str2double(get(h, 'string'));
+    offset(1) = str2double(h.String);
   case 'c2e'
-    offset(2) = str2double(get(h, 'string'));
+    offset(2) = str2double(h.String);
   case 'c3e'
-    offset(3) = str2double(get(h, 'string'));
+    offset(3) = str2double(h.String);
   case 'c4e'
-    offset(4) = str2double(get(h, 'string'));
+    offset(4) = str2double(h.String);
   case 'c5e'
-    offset(5) = str2double(get(h, 'string'));
+    offset(5) = str2double(h.String);
   case 'c6e'
-    offset(6) = str2double(get(h, 'string'));
+    offset(6) = str2double(h.String);
   case 'c1p'
     offset(1) = offset(1) + step;
   case 'c1m'
@@ -643,8 +639,29 @@ switch get(h, 'tag')
   case 'c5x'
     cb_enable_gui(fig); % disable/enable the pairwise linked coil
   case 'cax'
+    if h.Value
+      setappdata(fig, 'running', 'closedloop')
+    else
+      setappdata(fig, 'running', 'manual')
+    end
     cb_enable_gui(fig); % disable/enable the manual control of coils
-end
+
+  case 'bc'
+    disp('initiating calibration')
+    setappdata(fig', 'calibration', 'init');
+    cb_disable_gui(fig);
+    % the calibration is further handled in the measure_sample callback
+  case 'ba'
+    control_auto_null(fig);
+    offset = getappdata(fig, 'offset');
+  case 'bo'
+    disp('coils off')
+    offset(:) = 0;
+    % disable continuous auto nulling
+    set(findobj(fig, 'tag', 'cax'), 'value', 0);
+    cb_enable_gui(fig);
+
+end % switch
 
 % set near-zero values to zero
 offset(abs(offset)<10*eps) = 0;
@@ -665,14 +682,14 @@ fig = getparent(h);
 
 if isempty(eventdata)
   % determine the key that corresponds to the uicontrol element that was activated
-  key = get(fig, 'userdata');
+  key = fig.userdata;
 else
   % determine the key that was pressed on the keyboard
   key = parsekeyboardevent(eventdata);
 end
 
 % get focus back to figure
-if ~strcmp(get(h, 'type'), 'figure')
+if ~strcmp(h.Type, 'figure')
   set(h, 'enable', 'off');
   drawnow;
   set(h, 'enable', 'on');
