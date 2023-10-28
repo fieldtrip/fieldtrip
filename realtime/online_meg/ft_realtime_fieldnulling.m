@@ -48,23 +48,34 @@ ft_preamble provenance
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
-    % do not continue function execution in case the outputfile is present and the user indicated to keep it
-    return
+  % do not continue function execution in case the outputfile is present and the user indicated to keep it
+  return
 end
 
 % set the defaults
-cfg.serialport  = ft_getopt(cfg, 'serialport', 'COM2');
-cfg.baudrate    = ft_getopt(cfg, 'baudrate', 921600);
-cfg.fsample     = ft_getopt(cfg, 'fsample', 40);
-cfg.databits    = ft_getopt(cfg, 'databits', 8);
-cfg.flowcontrol = ft_getopt(cfg, 'flowcontrol', 'none');
-cfg.stopbits    = ft_getopt(cfg, 'stopbits', 1);
-cfg.parity      = ft_getopt(cfg, 'parity', 'none');
-cfg.position    = ft_getopt(cfg, 'position'); % default is handled below
+cfg.serialport    = ft_getopt(cfg, 'serialport', 'COM2');
+cfg.baudrate      = ft_getopt(cfg, 'baudrate', 921600);
+cfg.fsample       = ft_getopt(cfg, 'fsample', 40);
+cfg.databits      = ft_getopt(cfg, 'databits', 8);
+cfg.flowcontrol   = ft_getopt(cfg, 'flowcontrol', 'none');
+cfg.stopbits      = ft_getopt(cfg, 'stopbits', 1);
+cfg.parity        = ft_getopt(cfg, 'parity', 'none');
+cfg.position      = ft_getopt(cfg, 'position'); % default is handled below
+cfg.enableinput   = ft_getopt(cfg, 'enableinput', 'yes');
+cfg.enableoutput  = ft_getopt(cfg, 'enableoutput', 'yes');
+cfg.offset        = ft_getopt(cfg, 'offset', [0 0 0 0 0 0]); % initial offset on the coils
+
+% these determine the calibration signal
+cfg.calibration           = ft_getopt(cfg, '', []);
+cfg.calibration.duration  = ft_getopt(cfg, 'duration', 5); % in seconds
+cfg.calibration.nchan     = ft_getopt(cfg, 'nchan', 6);
+cfg.calibration.amplitude = ft_getopt(cfg, 'amplitude', 1);
+cfg.calibration.frequency = ft_getopt(cfg, 'frequency', [5 6 7 8 9 10]); % in Hz
+cfg.calibration.fsample   = ft_getopt(cfg, 'fsample', 1000); % in Hz
 
 if isempty(cfg.position)
-    cfg.position = get(groot, 'defaultFigurePosition');
-    cfg.position(4) = 240;
+  cfg.position = get(groot, 'defaultFigurePosition');
+  cfg.position(4) = 240;
 end
 
 %%
@@ -77,11 +88,13 @@ tmpcfg.figurename = 'ft_realtime_fieldnulling';
 fig = open_figure(tmpcfg);
 drawnow
 
-% store the configuration details and in the application
+% store the configuration details in the application
 setappdata(fig, 'cfg', cfg);
-setappdata(fig, 'field', [0 0 0 0]); % x, y, z, abs
-setappdata(fig, 'offset', [0 0 0 0 0 0]);
+setappdata(fig, 'field', [nan nan nan nan]);  % set the initial measured field: x, y, z, abs
+setappdata(fig, 'offset', cfg.offset);        % set the initial offset
 setappdata(fig, 'running', false);
+setappdata(fig, 'calib', []);
+setappdata(fig, 'calibration', 'off');
 
 % add the callbacks
 set(fig, 'CloseRequestFcn',     @cb_quit);
@@ -92,21 +105,29 @@ set(fig, 'WindowButtondownfcn', @cb_click);
 
 measure_callback(fig); % call it once to pass the figure handle
 
-fluxgate = serialport(cfg.serialport, cfg.baudrate);
-cleanup = onCleanup(@()measure_cleanup(fluxgate));
-configureTerminator(fluxgate, 'LF');
-configureCallback(fluxgate, 'terminator', @measure_callback);
+if istrue(cfg.enableinput)
+  fluxgate = serialport(cfg.serialport, cfg.baudrate);
+  cleanup = onCleanup(@()measure_cleanup(fluxgate));
+  configureTerminator(fluxgate, 'LF');
+  configureCallback(fluxgate, 'terminator', @measure_callback);
+else
+  fluxgate = [];
+end
 
 %% set up the digital-to-analog converter
 
-coils = daq('ni');
-% add channels and set channel properties, if any.
-addoutput(coils, 'cDAQ1Mod1', 'ao0', 'Voltage');
-addoutput(coils, 'cDAQ1Mod1', 'ao1', 'Voltage');
-addoutput(coils, 'cDAQ1Mod1', 'ao2', 'Voltage');
-addoutput(coils, 'cDAQ1Mod1', 'ao3', 'Voltage');
-addoutput(coils, 'cDAQ1Mod1', 'ao4', 'Voltage');
-addoutput(coils, 'cDAQ1Mod1', 'ao5', 'Voltage');
+if istrue(cfg.enableoutput)
+  coils = daq('ni');
+  % add channels and set channel properties, if any.
+  addoutput(coils, 'cDAQ1Mod1', 'ao0', 'Voltage');
+  addoutput(coils, 'cDAQ1Mod1', 'ao1', 'Voltage');
+  addoutput(coils, 'cDAQ1Mod1', 'ao2', 'Voltage');
+  addoutput(coils, 'cDAQ1Mod1', 'ao3', 'Voltage');
+  addoutput(coils, 'cDAQ1Mod1', 'ao4', 'Voltage');
+  addoutput(coils, 'cDAQ1Mod1', 'ao5', 'Voltage');
+else
+  coils = [];
+end
 
 %% activate the graphical user interface
 
@@ -114,11 +135,11 @@ setappdata(fig, 'fluxgate', fluxgate);
 setappdata(fig, 'coils', coils);
 setappdata(fig, 'running', true);
 
-cb_creategui(fig);
+cb_create_gui(fig);
 cb_redraw(fig);
 
 while ishandle(fig)
-    pause(0.1);
+  pause(0.1);
 end
 
 % do the general cleanup and bookkeeping at the end of the function
@@ -126,8 +147,8 @@ ft_postamble debug
 ft_postamble provenance
 
 if ~ft_nargout
-    % don't return anything
-    clear cfg
+  % don't return anything
+  clear cfg
 end
 
 end % main function
@@ -135,69 +156,156 @@ end % main function
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function control_output_dc(coils, offset)
-% output the specified DC amplitude on each channel.
-nchan = 6;
-assert(numel(offset)==nchan);
-write(coils, offset);
+function control_offset(fig)
+coils = getappdata(fig, 'coils');
+offset = getappdata(fig, 'offset');
+
+if ~isempty(coils)
+  % output the specified DC offset on each of the coils
+  write(coils, offset);
+end
+
 end % function
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function control_output_calibration(h, eventdata)
-% output a sine wave with a different frequency on each of the coils
+function control_auto_null(h, eventdata)
 fig = getparent(h);
-coils = getappdata(fig, 'coils');
+offset = getappdata(fig, 'offset');
+field = getappdata(fig, 'field');
+calib = getappdata(fig, 'calib');
 
-offset = [0 0 0 0 0 0];
-frequency = [5 6 7 8 9 10];
-amplitude = 1;
-duration = 5;
-fsample = 1000;
-nchan = 6;
+% only keep the x, y, and z component
+residual = field(1:3);
+residual = residual(:); % it should be a column
+offset = offset(:); % it should be a column
+
+if isempty(calib)
+  warning('cannot auto-null, calibration has not been performed')
+
+else
+  disp('auto-null')
+
+  % The idea is to compute a correction to the current offset that will bring the measured field to zero
+  %   field = residual - calib * offset  % this is the environmental field
+  %   residual = field + calib * offset  % this is the residual field that we measure
+  %
+  % The sum of the enviromental field, the offset, and the correction should be zero
+  %   zero = field + calib * offset + calib * correction
+  %        = residual               + calib * correction
+  % Hence
+  %   residual = - calib * correction
+
+  correction = - calib \ residual;
+  offset = offset + correction;
+
+  % show and apply the updated offset values
+  setappdata(fig, 'offset', offset);
+  cb_redraw(fig);
+  control_offset(fig);
+
+end
+end % function
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function calibration_init(h, eventdata)
+fig = getparent(h);
+cb_disable_gui(fig);
+setappdata(fig', 'calibration', 'init');
+disp('initiated calibration')
+end % function
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function calibration_start_signal(fig)
+% output a sine wave with a different frequency on each of the coils
+cfg     = getappdata(fig, 'cfg');
+coils   = getappdata(fig, 'coils');
+offset  = getappdata(fig, 'offset');
+nchan   = cfg.calibration.nchan;
+fsample = cfg.calibration.fsample;
 
 assert(numel(offset)==nchan);
-assert(numel(frequency)==nchan);
-assert(numel(amplitude)==1);
-assert(numel(duration)==1);
+assert(numel(cfg.calibration.frequency)==nchan);
+assert(numel(cfg.calibration.amplitude)==1);
 
 coils.Rate = fsample;
 
+% create one second of data, it will loop until finished
 signal = zeros(nchan,fsample);
 time = (0:(fsample-1))/fsample;
 for i=1:nchan
-    signal(i,:) = amplitude * sin(frequency(i)*2*pi*time) + offset(i);
+  signal(i,:) = cfg.calibration.amplitude * sin(cfg.calibration.frequency(i)*2*pi*time) + offset(i);
 end
-preload(coils, signal');
 
-disp('start calibration');
-t = timer('StartDelay', duration, 'ExecutionMode', 'singleshot');
-t.StartFcn = @(varargin) start(coils, 'repeatoutput');
-t.TimerFcn = @(varargin) stop(coils);
-t.StopFcn  = @(varargin) disp('stop calibration');
-start(t)
+if ~isempty(coils)
+  preload(coils, signal');
+  start(coils);
+  disp('started calibration signal');
+end
 
+end % function
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function calibration_stop_signal(fig)
+coils = getappdata(fig, 'coils');
+if ~isempty(coils)
+  stop(coils);
+  disp('stopped calibration signal');
+end
+end % function
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function calibration_compute(fig, dat)
+cfg     = getappdata(fig, 'cfg');
+nchan   = cfg.calibration.nchan;
+fsample = cfg.calibration.fsample;
+nsample = size(dat,2);
+
+time = (0:(nsample-1))/fsample;
+input = zeros(nchan+1,nsample); % additional channel for the constant offset
+for i=1:nchan
+  input(i,:) = sin(cfg.calibration.frequency(i)*2*pi*time);
+end
+input(end,:) = 1;
+
+% compute the linear mix from the input signals on the coils towards the output measurement on the fluxgate
+% output = calib * input + noise
+calib = dat / input;
+
+disp(calib)
+
+noise = dat - calib*input;
+gof = 1 - norm(noise, 'fro')/norm(dat, 'fro');
+
+fprintf('calibration computed\n');
+fprintf('goodness of fit = %f %%\n', gof*100);
+
+setappdata(fig, 'calib', calib);
+cb_enable_gui(fig);
 end % function
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function measure_callback(fluxgate, varargin)
-
-persistent fig counter
+persistent fig counter buffer
 
 if ishandle(fluxgate)
-    % it is called once so that the callback knows about the main figure
-    fig = fluxgate;
-    return
+  % it is called like this once, so that it knows about the main figure
+  fig = fluxgate;
+  return
 end
 
-if isempty(counter)
-    counter = 0;
-end
-
-% The format is as follows:
+% The serial communication format is as follows:
 % 1353411242214;0.0010416524;-0.0010926605;0.0014391395;0.0020856819<CR><LF>
 %
 % The separate values have the following meanings:
@@ -207,7 +315,35 @@ line = char(readline(fluxgate));
 line = strrep(line, ',', '.'); % depending on the language settings there might be a . or a , as decimal separator
 dat = str2double(split(line, ';'));
 
-counter = counter + 1;
+% the calibration is implemented as a finite-state machine 
+% it switches from 'init' -> 'on' -> 'off'
+switch getappdata(fig, 'calibration')
+  case 'init'
+    setappdata(fig, 'calibration', 'on');
+    calibration_start_signal(fig);
+    cfg = getappdata(fig, 'cfg');
+    nsample = round(cfg.calibration.duration * cfg.fsample);
+    nchan = numel(dat);
+    buffer = nan(nchan, nsample);
+    counter = 0;
+  case 'on'
+    if counter<nsamples
+      % add the current sample to the buffer
+      counter = counter+1;
+      buffer(:,counter) = dat;
+    else
+      % compute the calibration values and cleanup
+      setappdata(fig, 'calibration', 'off');
+      calibration_stop_signal(fig);
+      % the first channel is the timestamp, the last one is the absolute value
+      dat = buffer([2 3 4],:);
+      calibration_compute(fig, dat);
+      buffer = [];
+      counter = 0;
+    end
+  case 'off'
+    % nothing to do
+end
 
 % add the fluxgate field strength to the figure
 setappdata(fig, 'field', dat(2:5));
@@ -229,7 +365,7 @@ end % function
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function cb_creategui(h, eventdata, handles)
+function cb_create_gui(h, eventdata, handles)
 fig = getparent(h);
 
 p1 = uipanel(fig, 'units', 'normalized', 'position', [0.0 0.3 0.5 0.7]);
@@ -270,7 +406,7 @@ ft_uilayout(p1, 'style', 'edit', 'callback', @cb_click, 'backgroundcolor', [1 1 
 ft_uilayout(p1, 'style', 'checkbox', 'callback', @cb_click);
 ft_uilayout(p1, 'style', 'pushbutton', 'callback', @cb_click);
 
-ft_uilayout(p1, 'tag', 'c..', 'units', 'normalized', 'height', 0.1)
+ft_uilayout(p1, 'tag', 'c..', 'units', 'normalized', 'height', 0.15)
 ft_uilayout(p1, 'tag', 'c..', 'style', 'edit', 'width', 0.20);
 ft_uilayout(p1, 'tag', 'c.p', 'width', 0.05)
 ft_uilayout(p1, 'tag', 'c.m', 'width', 0.05)
@@ -295,49 +431,108 @@ ft_uilayout(p2, 'tag', 'f2.', 'hpos', 'auto', 'vpos', 0.5);
 ft_uilayout(p2, 'tag', 'f3.', 'hpos', 'auto', 'vpos', 0.3);
 ft_uilayout(p2, 'tag', 'f4.', 'hpos', 'auto', 'vpos', 0.1);
 
-uicontrol('parent', p3, 'style', 'pushbutton', 'string', 'calibrate', 'callback', @control_output_calibration);
-uicontrol('parent', p3, 'style', 'pushbutton', 'string', 'auto null');
+uicontrol('parent', p3, 'style', 'pushbutton', 'string', 'calibrate', 'callback', @calibration_init);
+uicontrol('parent', p3, 'style', 'pushbutton', 'string', 'auto null', 'callback', @control_auto_null);
 uicontrol('parent', p3, 'style', 'pushbutton', 'string', 'quit',      'callback', @cb_quit);
 
-ft_uilayout(p3, 'style', 'pushbutton', 'units', 'normalized', 'width', 0.35, 'hpos', 'auto', 'vpos', 0.5);
+ft_uilayout(p3, 'style', 'pushbutton', 'units', 'normalized', 'width', 0.35, 'height', 0.4, 'hpos', 'auto', 'vpos', 0.5);
+
+cb_enable_gui(fig);
+end % function
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function cb_enable_gui(h, eventdata)
+disp('enable gui');
+fig = getparent(h);
+set(findall(fig, 'type', 'uicontrol', 'style', 'edit'),       'Enable', 'on');
+set(findall(fig, 'type', 'uicontrol', 'style', 'pushbutton'), 'Enable', 'on');
+set(findall(fig, 'type', 'uicontrol', 'style', 'checkbox'),   'Enable', 'on');
+
+h = findall(fig, 'tag', 'c2x');
+if get(h, 'Value')
+  set(findall(fig, 'tag', 'c2e'), 'Enable', 'off');
+  set(findall(fig, 'tag', 'c2m'), 'Enable', 'off');
+  set(findall(fig, 'tag', 'c2p'), 'Enable', 'off');
+else
+  set(findall(fig, 'tag', 'c2e'), 'Enable', 'on');
+  set(findall(fig, 'tag', 'c2m'), 'Enable', 'on');
+  set(findall(fig, 'tag', 'c2p'), 'Enable', 'on');
+end
+
+h = findall(fig, 'tag', 'c4x');
+if get(h, 'Value')
+  set(findall(fig, 'tag', 'c4e'), 'Enable', 'off');
+  set(findall(fig, 'tag', 'c4m'), 'Enable', 'off');
+  set(findall(fig, 'tag', 'c4p'), 'Enable', 'off');
+else
+  set(findall(fig, 'tag', 'c4e'), 'Enable', 'on');
+  set(findall(fig, 'tag', 'c4m'), 'Enable', 'on');
+  set(findall(fig, 'tag', 'c4p'), 'Enable', 'on');
+end
+
+h = findall(fig, 'tag', 'c6x');
+if get(h, 'Value')
+  set(findall(fig, 'tag', 'c6e'), 'Enable', 'off');
+  set(findall(fig, 'tag', 'c6m'), 'Enable', 'off');
+  set(findall(fig, 'tag', 'c6p'), 'Enable', 'off');
+else
+  set(findall(fig, 'tag', 'c6e'), 'Enable', 'on');
+  set(findall(fig, 'tag', 'c6m'), 'Enable', 'on');
+  set(findall(fig, 'tag', 'c6p'), 'Enable', 'on');
+end
 
 end % function
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function cb_redraw(h, eventdata)
+function cb_disable_gui(h, eventdata)
+disp('disable gui');
 fig = getparent(h);
-offset = getappdata(fig, 'offset');
-field = getappdata(fig, 'field');
-coils = getappdata(fig, 'coils');
+set(findall(fig, 'type', 'uicontrol', 'style', 'edit'),       'Enable', 'off');
+set(findall(fig, 'type', 'uicontrol', 'style', 'pushbutton'), 'Enable', 'off');
+set(findall(fig, 'type', 'uicontrol', 'style', 'checkbox'),   'Enable', 'off');
+end % function
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function cb_redraw(h, eventdata)
+fig     = getparent(h);
+offset  = getappdata(fig, 'offset');
+field   = getappdata(fig, 'field');
+coils   = getappdata(fig, 'coils');
+
+% deal with the two coils being locked to each other or not
 if get(findall(fig, 'tag', 'c2x'), 'value')
-    offset(2) = offset(1);
+  offset(2) = offset(1);
 end
 if get(findall(fig, 'tag', 'c4x'), 'value')
-    offset(4) = offset(3);
+  offset(4) = offset(3);
 end
 if get(findall(fig, 'tag', 'c6x'), 'value')
-    offset(6) = offset(5);
+  offset(6) = offset(5);
 end
+setappdata(fig, 'offset', offset);
 
 if getappdata(fig, 'running')
-    control_output_dc(coils, offset);
+  % FIXME control_offset(fig);
 
-    % update the current driver offset
-    set(findall(fig, 'tag', 'c1e'), 'string', offset(1));
-    set(findall(fig, 'tag', 'c2e'), 'string', offset(2));
-    set(findall(fig, 'tag', 'c3e'), 'string', offset(3));
-    set(findall(fig, 'tag', 'c4e'), 'string', offset(4));
-    set(findall(fig, 'tag', 'c5e'), 'string', offset(5));
-    set(findall(fig, 'tag', 'c6e'), 'string', offset(6));
+  % update the current driver offset
+  set(findall(fig, 'tag', 'c1e'), 'string', offset(1));
+  set(findall(fig, 'tag', 'c2e'), 'string', offset(2));
+  set(findall(fig, 'tag', 'c3e'), 'string', offset(3));
+  set(findall(fig, 'tag', 'c4e'), 'string', offset(4));
+  set(findall(fig, 'tag', 'c5e'), 'string', offset(5));
+  set(findall(fig, 'tag', 'c6e'), 'string', offset(6));
 
-    % update the fluxgate field
-    set(findall(fig, 'tag', 'f1e'), 'string', sprintf('%.03f uT', 1e6*field(1)));
-    set(findall(fig, 'tag', 'f2e'), 'string', sprintf('%.03f uT', 1e6*field(2)));
-    set(findall(fig, 'tag', 'f3e'), 'string', sprintf('%.03f uT', 1e6*field(3)));
-    set(findall(fig, 'tag', 'f4e'), 'string', sprintf('%.03f uT', 1e6*field(4)));
+  % update the fluxgate field
+  set(findall(fig, 'tag', 'f1e'), 'string', sprintf('%.03f uT', 1e6*field(1)));
+  set(findall(fig, 'tag', 'f2e'), 'string', sprintf('%.03f uT', 1e6*field(2)));
+  set(findall(fig, 'tag', 'f3e'), 'string', sprintf('%.03f uT', 1e6*field(3)));
+  set(findall(fig, 'tag', 'f4e'), 'string', sprintf('%.03f uT', 1e6*field(4)));
 end
 
 end % function
@@ -346,83 +541,60 @@ end % function
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_click(h, eventdata)
-fig = getparent(h);
-offset = getappdata(fig, 'offset');
+fig     = getparent(h);
+offset  = getappdata(fig, 'offset');
+
 switch get(fig, 'SelectionType')
-    case 'alt'       % ctrl-click
-        step = 0.01;
-    case 'extend'    % shift-click
-        step = 0.1;
-    otherwise
-        step = 1;
+  case 'alt'       % ctrl-click
+    step = 0.01;
+  case 'extend'    % shift-click
+    step = 0.1;
+  otherwise
+    step = 1;
 end
 switch get(h, 'tag')
-    case 'c1e'
-        offset(1) = str2double(get(h, 'string'));
-    case 'c2e'
-        offset(2) = str2double(get(h, 'string'));
-    case 'c3e'
-        offset(3) = str2double(get(h, 'string'));
-    case 'c4e'
-        offset(4) = str2double(get(h, 'string'));
-    case 'c5e'
-        offset(5) = str2double(get(h, 'string'));
-    case 'c6e'
-        offset(6) = str2double(get(h, 'string'));
-    case 'c1p'
-        offset(1) = offset(1) + step;
-    case 'c1m'
-        offset(1) = offset(1) - step;
-    case 'c2p'
-        offset(2) = offset(2) + step;
-    case 'c2m'
-        offset(2) = offset(2) - step;
-    case 'c3p'
-        offset(3) = offset(3) + step;
-    case 'c3m'
-        offset(3) = offset(3) - step;
-    case 'c4p'
-        offset(4) = offset(4) + step;
-    case 'c4m'
-        offset(4) = offset(4) - step;
-    case 'c5p'
-        offset(5) = offset(5) + step;
-    case 'c5m'
-        offset(5) = offset(5) - step;
-    case 'c6p'
-        offset(6) = offset(6) + step;
-    case 'c6m'
-        offset(6) = offset(6) - step;
-    case 'c2x'
-        if get(h, 'Value')
-            set(findall(fig, 'tag', 'c2e'), 'Enable', 'off');
-            set(findall(fig, 'tag', 'c2m'), 'Enable', 'off');
-            set(findall(fig, 'tag', 'c2p'), 'Enable', 'off');
-        else
-            set(findall(fig, 'tag', 'c2e'), 'Enable', 'on');
-            set(findall(fig, 'tag', 'c2m'), 'Enable', 'on');
-            set(findall(fig, 'tag', 'c2p'), 'Enable', 'on');
-        end
-    case 'c4x'
-        if get(h, 'Value')
-            set(findall(fig, 'tag', 'c4e'), 'Enable', 'off');
-            set(findall(fig, 'tag', 'c4m'), 'Enable', 'off');
-            set(findall(fig, 'tag', 'c4p'), 'Enable', 'off');
-        else
-            set(findall(fig, 'tag', 'c4e'), 'Enable', 'on');
-            set(findall(fig, 'tag', 'c4m'), 'Enable', 'on');
-            set(findall(fig, 'tag', 'c4p'), 'Enable', 'on');
-        end
-    case 'c6x'
-        if get(h, 'Value')
-            set(findall(fig, 'tag', 'c6e'), 'Enable', 'off');
-            set(findall(fig, 'tag', 'c6m'), 'Enable', 'off');
-            set(findall(fig, 'tag', 'c6p'), 'Enable', 'off');
-        else
-            set(findall(fig, 'tag', 'c6e'), 'Enable', 'on');
-            set(findall(fig, 'tag', 'c6m'), 'Enable', 'on');
-            set(findall(fig, 'tag', 'c6p'), 'Enable', 'on');
-        end
+  case 'c1e'
+    offset(1) = str2double(get(h, 'string'));
+  case 'c2e'
+    offset(2) = str2double(get(h, 'string'));
+  case 'c3e'
+    offset(3) = str2double(get(h, 'string'));
+  case 'c4e'
+    offset(4) = str2double(get(h, 'string'));
+  case 'c5e'
+    offset(5) = str2double(get(h, 'string'));
+  case 'c6e'
+    offset(6) = str2double(get(h, 'string'));
+  case 'c1p'
+    offset(1) = offset(1) + step;
+  case 'c1m'
+    offset(1) = offset(1) - step;
+  case 'c2p'
+    offset(2) = offset(2) + step;
+  case 'c2m'
+    offset(2) = offset(2) - step;
+  case 'c3p'
+    offset(3) = offset(3) + step;
+  case 'c3m'
+    offset(3) = offset(3) - step;
+  case 'c4p'
+    offset(4) = offset(4) + step;
+  case 'c4m'
+    offset(4) = offset(4) - step;
+  case 'c5p'
+    offset(5) = offset(5) + step;
+  case 'c5m'
+    offset(5) = offset(5) - step;
+  case 'c6p'
+    offset(6) = offset(6) + step;
+  case 'c6m'
+    offset(6) = offset(6) - step;
+  case 'c2x'
+    cb_enable_gui(fig); % disable/enable the linked coils
+  case 'c4x'
+    cb_enable_gui(fig); % disable/enable the linked coils
+  case 'c6x'
+    cb_enable_gui(fig); % disable/enable the linked coils
 end
 
 % set near-zero values to zero
@@ -443,34 +615,34 @@ function cb_keyboard(h, eventdata)
 fig = getparent(h);
 
 if isempty(eventdata)
-    % determine the key that corresponds to the uicontrol element that was activated
-    key = get(fig, 'userdata');
+  % determine the key that corresponds to the uicontrol element that was activated
+  key = get(fig, 'userdata');
 else
-    % determine the key that was pressed on the keyboard
-    key = parsekeyboardevent(eventdata);
+  % determine the key that was pressed on the keyboard
+  key = parsekeyboardevent(eventdata);
 end
 
 % get focus back to figure
 if ~strcmp(get(h, 'type'), 'figure')
-    set(h, 'enable', 'off');
-    drawnow;
-    set(h, 'enable', 'on');
+  set(h, 'enable', 'off');
+  drawnow;
+  set(h, 'enable', 'on');
 end
 
 if isempty(key)
-    % this happens if you press the apple key
-    key = '';
+  % this happens if you press the apple key
+  key = '';
 end
 
 switch key
-    case {'' 'shift+shift' 'alt-alt' 'control+control' 'command-0'}
-        % do nothing
+  case {'' 'shift+shift' 'alt-alt' 'control+control' 'command-0'}
+    % do nothing
 
-    case 'q'
-        cb_quit(h);
+  case 'q'
+    cb_quit(h);
 
-    otherwise
-        % do nothing
+  otherwise
+    % do nothing
 
 end % switch key
 end % function
@@ -490,7 +662,7 @@ end % function
 function h = getparent(h)
 p = h;
 while p~=0
-    h = p;
-    p = get(h, 'parent');
+  h = p;
+  p = get(h, 'parent');
 end
 end % function
