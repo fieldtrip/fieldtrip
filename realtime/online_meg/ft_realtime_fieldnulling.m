@@ -19,6 +19,7 @@ function ft_realtime_fieldnulling(cfg)
 % Some ideas to implement:
 %  - dithering of output DAC values
 %  - smooth padded transition to prevent overshoots
+%  - logging of input and output values
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Copyright (C) 2023, Robert Oostenveld
@@ -71,7 +72,7 @@ cfg.enableinput   = ft_getopt(cfg, 'enableinput', 'yes');
 cfg.enableoutput  = ft_getopt(cfg, 'enableoutput', 'yes');
 cfg.offset        = ft_getopt(cfg, 'offset', [0 0 0 0 0 0]); % initial offset on the coils
 cfg.calib         = ft_getopt(cfg, 'calib'); % user-specified calibration values
-cfg.clip          = ft_getopt(cfg, 'clip', [-10 10]); % clipping for the output
+cfg.clip          = ft_getopt(cfg, 'clip', [-1 1]); % clipping for the output
 
 % these determine the calibration signal
 cfg.calibration           = ft_getopt(cfg, '', []);
@@ -174,7 +175,7 @@ offset = offset(:)';
 
 % clip to the allowed range
 if any(offset<cfg.clip(1) | offset>cfg.clip(2))
-  warning('clipping output')
+  disp('clipping output')
   offset(offset>cfg.clip(2)) = cfg.clip(2);
   offset(offset<cfg.clip(1)) = cfg.clip(1);
   setappdata(fig, 'offset', offset);
@@ -226,7 +227,7 @@ else
 
   % clip to the allowed range
   if any(offset<cfg.clip(1) | offset>cfg.clip(2))
-    warning('clipping output')
+    disp('clipping output')
     offset(offset>cfg.clip(2)) = cfg.clip(2);
     offset(offset<cfg.clip(1)) = cfg.clip(1);
   end
@@ -380,7 +381,7 @@ if strcmp(getappdata(fig, 'running'), 'closedloop')
 
     correction = - pinv(calib) * residual;
     offset = offset + correction;
-    setappdata(fid, 'offset', offset);
+    setappdata(fig, 'offset', offset);
     control_offset(fig);
   end
 end
@@ -596,8 +597,11 @@ set(findall(fig, 'tag', 'f2e'), 'string', sprintf('%.03f uT', 1e6*field(2)));
 set(findall(fig, 'tag', 'f3e'), 'string', sprintf('%.03f uT', 1e6*field(3)));
 set(findall(fig, 'tag', 'f4e'), 'string', sprintf('%.03f uT', 1e6*field(4)));
 
-if getappdata(fig, 'manual')
-  control_offset(fig);
+switch getappdata(fig, 'running')
+  case 'manual'
+    control_offset(fig);
+  otherwise
+    % do nothing
 end
 
 end % function
@@ -610,13 +614,17 @@ fig     = getparent(h);
 cfg     = getappdata(fig, 'cfg');
 offset  = getappdata(fig, 'offset');
 
+% make 1V steps for the full range -10V to +10V output
+% or 0.1V steps if the output range is from -1V to +1V 
+step = (cfg.clip(2)-cfg.clip(1))/20; 
+
 switch fig.SelectionType
   case 'alt'       % ctrl-click, this does not work on macOS
-    step = 0.01;
+    step = step * 0.01;
   case 'extend'    % shift-click
-    step = 0.1;
+    step = step * 0.1;
   otherwise
-    step = 1;
+    step = step * 1;
 end
 
 switch h.Tag
@@ -692,7 +700,7 @@ offset(abs(offset)<10*eps) = 0;
 
 % clip to the allowed range
 if any(offset<cfg.clip(1) | offset>cfg.clip(2))
-  warning('clipping output')
+  disp('clipping output')
   offset(offset>cfg.clip(2)) = cfg.clip(2);
   offset(offset<cfg.clip(1)) = cfg.clip(1);
 end
