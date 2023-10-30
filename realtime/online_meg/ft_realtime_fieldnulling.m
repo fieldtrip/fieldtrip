@@ -18,7 +18,6 @@ function ft_realtime_fieldnulling(cfg)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Some ideas to implement:
 %  - dithering of output DAC values
-%  - clipping of output values between safe range
 %  - smooth padded transition to prevent overshoots
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -72,6 +71,7 @@ cfg.enableinput   = ft_getopt(cfg, 'enableinput', 'yes');
 cfg.enableoutput  = ft_getopt(cfg, 'enableoutput', 'yes');
 cfg.offset        = ft_getopt(cfg, 'offset', [0 0 0 0 0 0]); % initial offset on the coils
 cfg.calib         = ft_getopt(cfg, 'calib'); % user-specified calibration values
+cfg.clip          = ft_getopt(cfg, 'clip', [-10 10]); % clipping for the output
 
 % these determine the calibration signal
 cfg.calibration           = ft_getopt(cfg, '', []);
@@ -165,8 +165,20 @@ end % main function
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function control_offset(fig)
-coils = getappdata(fig, 'coils');
-offset = getappdata(fig, 'offset');
+cfg     = getappdata(fig, 'cfg');
+coils   = getappdata(fig, 'coils');
+offset  = getappdata(fig, 'offset');
+
+% ensure it is a row vector
+offset = offset(:)';
+
+% clip to the allowed range
+if any(offset<cfg.clip(1) | offset>cfg.clip(2))
+  warning('clipping output')
+  offset(offset>cfg.clip(2)) = cfg.clip(2);
+  offset(offset<cfg.clip(1)) = cfg.clip(1);
+  setappdata(fig, 'offset', offset);
+end
 
 if ~isempty(coils)
   % output the specified DC offset on each of the coils
@@ -180,9 +192,10 @@ end % function
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function control_auto_null(fig)
 disp('auto null')
-offset = getappdata(fig, 'offset');
-field = getappdata(fig, 'field');
-calib = getappdata(fig, 'calib');
+cfg     = getappdata(fig, 'cfg');
+offset  = getappdata(fig, 'offset');
+field   = getappdata(fig, 'field');
+calib   = getappdata(fig, 'calib');
 
 if isempty(calib)
   warning('cannot auto null, calibration has not yet been performed')
@@ -210,6 +223,13 @@ else
 
   correction = - pinv(calib) * residual;
   offset = offset + correction;
+
+  % clip to the allowed range
+  if any(offset<cfg.clip(1) | offset>cfg.clip(2))
+    warning('clipping output')
+    offset(offset>cfg.clip(2)) = cfg.clip(2);
+    offset(offset<cfg.clip(1)) = cfg.clip(1);
+  end
 
   % show and apply the updated offset values
   setappdata(fig, 'offset', offset);
@@ -246,7 +266,7 @@ end
 if ~isempty(coils)
   preload(coils, signal');
   start(coils);
-  disp('started calibration signal');
+  fprintf('started calibration signal for %.1f seconds\n', cfg.calibration.duration);
 end
 
 end % function
@@ -290,6 +310,9 @@ gof = 1 - norm(noise, 'fro')/norm(dat, 'fro');
 fprintf('calibration computed\n');
 fprintf('goodness of fit = %f %%\n', gof*100);
 
+% drop the DC offset component from the calibration matrix
+calib = calib(:,1:6);
+
 setappdata(fig, 'calib', calib);
 cb_enable_gui(fig);
 end % function
@@ -298,7 +321,7 @@ end % function
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function measure_sample(fluxgate, varargin)
-persistent fig counter buffer
+persistent fig counter nsample nchan buffer
 
 if ishandle(fluxgate)
   % it is called like this once, so that it knows about the main figure
@@ -316,7 +339,7 @@ line = char(readline(fluxgate));
 line = strrep(line, ',', '.'); % depending on the language settings there might be a . or a , as decimal separator
 dat = str2double(split(line, ';'));
 
-% the calibration is implemented as a finite-state machine 
+% the calibration is implemented as a finite-state machine
 % it switches from 'init' -> 'on' -> 'off'
 switch getappdata(fig, 'calibration')
   case 'init'
@@ -328,7 +351,7 @@ switch getappdata(fig, 'calibration')
     buffer = nan(nchan, nsample);
     counter = 0;
   case 'on'
-    if counter<nsamples
+    if counter<nsample
       % add the current sample to the buffer
       counter = counter+1;
       buffer(:,counter) = dat;
@@ -348,8 +371,8 @@ end
 
 % closed-loop updating of the offset
 if strcmp(getappdata(fig, 'running'), 'closedloop')
-  calib = getappdata(fid, 'calib');
-  offset = getappdata(fid, 'offset');
+  calib  = getappdata(fig, 'calib');
+  offset = getappdata(fig, 'offset');
   if ~isempty(calib)
     residual = dat(1:3);    % only keep the x, y, and z component
     residual = residual(:); % it should be a column
@@ -482,7 +505,7 @@ if isempty(getappdata(fig, 'calib'))
   set(findall(fig, 'tag', 'cal'), 'Enable', 'off');
 end
 
-% during continuous auto nulling the coils should not be pairwise linked 
+% during continuous auto nulling the coils should not be pairwise linked
 h = findall(fig, 'tag', 'cax');
 if h.Value
   set(findobj(fig, 'tag', 'c1x'), 'value', 0);
@@ -542,7 +565,7 @@ end % function
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_redraw(h, eventdata)
-disp('redraw');
+% disp('redraw');
 fig     = getparent(h);
 offset  = getappdata(fig, 'offset');
 field   = getappdata(fig, 'field');
@@ -584,6 +607,7 @@ end % function
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_click(h, eventdata)
 fig     = getparent(h);
+cfg     = getappdata(fig, 'cfg');
 offset  = getappdata(fig, 'offset');
 
 switch fig.SelectionType
@@ -667,9 +691,13 @@ end % switch
 offset(abs(offset)<10*eps) = 0;
 
 % clip to the allowed range
-offset(offset>+10) = +10;
-offset(offset<-10) = -10;
+if any(offset<cfg.clip(1) | offset>cfg.clip(2))
+  warning('clipping output')
+  offset(offset>cfg.clip(2)) = cfg.clip(2);
+  offset(offset<cfg.clip(1)) = cfg.clip(1);
+end
 
+% update the values in the GUI
 setappdata(fig, 'offset', offset);
 cb_redraw(fig);
 end % function
