@@ -174,7 +174,7 @@ title(['Required sample size is ' num2str(n_sample)])
 %
 %%
 close all;
-addpath('F:\SampleSize\functions')
+% addpath('F:\SampleSize\functions')
 load('exampleData_timefreq.mat');   % load a time-freq data obtained from the ft_freqanalysis function,
                                     % to retrieve the fieldtrip data structure
                                     
@@ -239,7 +239,7 @@ stat_cfg.numrandomization = 100;%500;        % number of randomizations, should 
 %%% Run the function
 % MyPar = parpool; % start parallel pool; 
 res = sampleSize_timefreq(cfg,stat_cfg);
-save(fullfile(t,'results_timefreq_pairedSamples.mat'),'res')
+% save(fullfile(t,'results_timefreq_pairedSamples.mat'),'res')
 % delete(MyPar)
 %
 % Running this function would be quite time-consuming, with a lot of simulations to run. It can therefore be time-saving to open |parpool| to use parallel computing. The results are stored in |res|. The following block of code plots the results.
