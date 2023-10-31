@@ -72,7 +72,7 @@ cfg.enableinput   = ft_getopt(cfg, 'enableinput', 'yes');
 cfg.enableoutput  = ft_getopt(cfg, 'enableoutput', 'yes');
 cfg.offset        = ft_getopt(cfg, 'offset', [0 0 0 0 0 0]); % initial offset on the coils
 cfg.calib         = ft_getopt(cfg, 'calib'); % user-specified calibration values
-cfg.clip          = ft_getopt(cfg, 'clip', [-1 1]); % clipping for the output
+cfg.clip          = ft_getopt(cfg, 'clip', [-10 10]); % clipping for the output
 
 % these determine the calibration signal
 cfg.calibration           = ft_getopt(cfg, '', []);
