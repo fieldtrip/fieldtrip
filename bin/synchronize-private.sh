@@ -2659,6 +2659,14 @@ ARRAY+=(utilities/private/offset2time.m)
 sync ${ARRAY[*]}
 
 ################################################################################
+# open_figure.m
+
+ARRAY=()
+ARRAY+=(private/open_figure.m)
+ARRAY+=(realtime/online_meg/private/open_figure.m)
+sync ${ARRAY[*]}
+
+################################################################################
 # parameterselection.m
 
 ARRAY=()
@@ -2666,6 +2674,14 @@ ARRAY+=(contrib/nutmegtrip/private/parameterselection.m)
 ARRAY+=(fileio/private/parameterselection.m)
 ARRAY+=(private/parameterselection.m)
 ARRAY+=(utilities/private/parameterselection.m)
+sync ${ARRAY[*]}
+
+################################################################################
+# parsekeyboardevent.m
+
+ARRAY=()
+ARRAY+=(private/parsekeyboardevent.m)
+ARRAY+=(realtime/online_meg/private/parsekeyboardevent.m)
 sync ${ARRAY[*]}
 
 ################################################################################
