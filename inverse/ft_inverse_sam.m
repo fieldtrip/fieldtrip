@@ -275,7 +275,7 @@ for i=1:size(sourcemodel.pos,1)
       gain = lf * max_ori;
 
       if istangentialestimation
-        estimate.tangential_ori{i} = V_lf(:, 1:2) * max_ori;
+        estimate.ori{i} = V_lf(:, 1:2) * max_ori;
       else
         estimate.ori{i} = max_ori;
       end
