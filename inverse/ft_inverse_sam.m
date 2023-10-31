@@ -321,10 +321,6 @@ if isfield(estimate, 'ori')
   estimate.ori( originside) = estimate.ori;
   estimate.ori(~originside) = {[]};
 end
-if isfield(estimate, 'tangential_ori')
-  estimate.tangential_ori( originside) = estimate.tangential_ori;
-  estimate.tangential_ori(~originside) = {[]};
-end
 if isfield(estimate, 'pow')
   estimate.pow( originside) = estimate.pow;
   estimate.pow(~originside) = nan;
