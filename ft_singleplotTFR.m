@@ -156,6 +156,7 @@ cfg.xlim           = ft_getopt(cfg, 'xlim',          'maxmin');
 cfg.ylim           = ft_getopt(cfg, 'ylim',          'maxmin');
 cfg.zlim           = ft_getopt(cfg, 'zlim',          'maxmin');
 cfg.fontsize       = ft_getopt(cfg, 'fontsize',       8);
+cfg.interpreter    = ft_getopt(cfg, 'interpreter',   'none');
 cfg.colorbar       = ft_getopt(cfg, 'colorbar',      'yes');
 cfg.colormap       = ft_getopt(cfg, 'colormap',       'default');
 cfg.colorbartext   = ft_getopt(cfg, 'colorbartext',  '');
@@ -456,7 +457,7 @@ else
     t = sprintf('mean(%0s)', join_str(', ', cfg.channel));
   end
 end
-title(t, 'fontsize', cfg.fontsize);
+title(t, 'fontsize', cfg.fontsize, 'interpreter', cfg.interpreter);
 
 % set the figure window title, add channel labels if number is small
 if isempty(get(gcf, 'Name'))
