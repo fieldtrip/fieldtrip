@@ -267,7 +267,7 @@ switch cfg.output
       covar      = diag(regr'*regr)';                                         % regressor covariance
       bvar       = repmat(mse',1,size(covar,2))./repmat(covar,size(mse,2),1); % beta variance
       tval       = (beta'./sqrt(bvar))';                                      % betas -> t-values
-      prob       = 2*(tcdf(-abs(tval),dfe));                                  % p-values
+      prob       = 2*(tcdf(-abs(tval),dfe));                                  % t-values -> p-values
       clear err dfe mse bvar
       dataout.stat = reshape(tval, [nconf dimsiz(datdim)]);
       dataout.prob = reshape(prob, [nconf dimsiz(datdim)]);
