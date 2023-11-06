@@ -181,7 +181,7 @@ if any(offset<cfg.clip(1) | offset>cfg.clip(2))
   setappdata(fig, 'offset', offset);
 end
 
-if ~isempty(coils)
+if ~isempty(coils) && ~coils.Running
   % output the specified DC offset on each of the coils
   write(coils, offset);
 end
@@ -264,7 +264,7 @@ for i=1:nchan
   signal(i,:) = cfg.calibration.amplitude * sin(cfg.calibration.frequency(i)*2*pi*time) + offset(i);
 end
 
-if ~isempty(coils)
+if ~isempty(coils) && ~coils.Running
   preload(coils, signal');
   start(coils);
   fprintf('started calibration signal for %.1f seconds\n', cfg.calibration.duration);
@@ -277,7 +277,7 @@ end % function
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function calibration_stop_signal(fig)
 coils = getappdata(fig, 'coils');
-if ~isempty(coils)
+if ~isempty(coils) && coils.Running
   stop(coils);
   disp('stopped calibration signal');
 end
