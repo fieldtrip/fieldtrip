@@ -532,24 +532,30 @@ elseif isequal(cfg.layout, 'ordered')
   % try to generate layout from other configuration options
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 elseif ischar(cfg.layout)
+  [p, f, x] = fileparts(cfg.layout);
   
-  if isempty(strfind(cfg.layout, '.'))
-    
-    % check whether a corresponding mat or lay exists
-    if exist([cfg.layout '.mat'], 'file')
-      ft_info('appending .mat to layout file\n');
+  if isempty(p) && isempty(x)
+    % this is not a complete filename
+    % check whether a corresponding lay or mat exists
+    if exist([cfg.layout '.lay'], 'file')
+      cfg.layout = [cfg.layout '.lay'];
+      layout = ft_prepare_layout(cfg);
+      return
+    elseif exist([lower(cfg.layout) '.lay'], 'file')
+      cfg.layout = [cfg.layout '.lay'];
+      layout = ft_prepare_layout(cfg);
+      return
+    elseif exist([cfg.layout '.mat'], 'file')
       cfg.layout = [cfg.layout '.mat'];
       layout = ft_prepare_layout(cfg);
       return
-    else
-      ft_info('appending .lay to layout file\n');
-      cfg.layout = [cfg.layout '.lay'];
+    elseif exist([lower(cfg.layout) '.mat'], 'file')
+      cfg.layout = [cfg.layout '.mat'];
       layout = ft_prepare_layout(cfg);
       return
     end
     
   elseif ft_filetype(cfg.layout, 'matlab')
-    
     ft_info('reading layout from file %s\n', cfg.layout);
     if ~exist(cfg.layout, 'file')
       ft_error('the specified layout file %s was not found', cfg.layout);
@@ -564,7 +570,6 @@ elseif ischar(cfg.layout)
     end
     
   elseif ft_filetype(cfg.layout, 'layout')
-    
     if exist(cfg.layout, 'file')
       ft_info('reading layout from file %s\n', cfg.layout);
       layout = readlay(cfg.layout);
@@ -577,14 +582,13 @@ elseif ischar(cfg.layout)
     end
     
   elseif ~ft_filetype(cfg.layout, 'layout')
-    
-    % assume that cfg.layout is an electrode file
+    % assume that it points to an electrode file
     ft_info('creating layout from sensor description file %s\n', cfg.layout);
     sens = ft_read_sens(cfg.layout);
     layout = sens2lay(sens, cfg.rotate, cfg.projection, cfg.style, cfg.overlap, cfg.viewpoint, cfg.boxchannel);
     
   end
-  
+
 elseif ~isempty(cfg.grad)
   if isstruct(cfg.grad)
     ft_info('creating layout from cfg.grad\n');
