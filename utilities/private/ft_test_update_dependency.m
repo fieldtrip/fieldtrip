@@ -52,7 +52,7 @@ for  i = 1:length(inlist)
     % Loop through each line to check if any line contains "% DEPENDENCY"
     containsDependency = false;
     for k = 1:numel(lines)
-        if contains(lines{k}, "% DEPENDENCY")
+        if contains(lines{k}, '% DEPENDENCY')
             containsDependency = true;
             break; 
         end
