@@ -1,7 +1,7 @@
 function ft_realtime_fieldnulling(cfg)
 
 % FT_REALTIME_FIELDNULLING is a real-time application to drive the nulling
-% coilss in the magnetically shielded room.
+% coils in the magnetically shielded room.
 %
 % Use as
 %   ft_realtime_fieldnulling(cfg)
@@ -13,7 +13,8 @@ function ft_realtime_fieldnulling(cfg)
 %   cfg.enableinput  = string, 'yes' or 'no' to enable the fluxgate input (default = 'yes')
 %   cfg.enableoutput = string, 'yes' or 'no' to enable the NI-DAQ output (default = 'yes')
 %   cfg.range        = [min max], values outside this range will be clipped (default [-10 10])
-%   cfg.offset       = initial offset on the coils (default = [0 0 0 0 0 0])
+%   cfg.voltage      = initial voltage on the coils (default = [0 0 0 0 0 0])
+%   cfg.polarity     = vector with +1 or -1 values to indicate polarity of coils (default = [1 1 1 1 1 1])
 %
 % Furthermore, these options determine the calibration signal
 %   cfg.calibration.duration  = number in seconds (default = 5)
@@ -28,9 +29,9 @@ function ft_realtime_fieldnulling(cfg)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Some ideas to implement:
-%  - dithering of output DAC values
-%  - smooth padded transition to prevent overshoots
-%  - logging of input and output values
+%  - dithering of output DAC values to achive
+%  - smooth padded transitions, to prevent overshoots
+%  - logging of input and output
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Copyright (C) 2023, Robert Oostenveld
@@ -66,7 +67,7 @@ ft_preamble provenance
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
-  % do not continue function execution in case the outputfile is present and the user indicated to keep it
+  % do not continue function execution if something is wrong
   return
 end
 
@@ -85,14 +86,14 @@ cfg.parity        = ft_getopt(cfg, 'parity', 'none');
 cfg.position      = ft_getopt(cfg, 'position'); % default is handled below
 cfg.enableinput   = ft_getopt(cfg, 'enableinput', 'yes');
 cfg.enableoutput  = ft_getopt(cfg, 'enableoutput', 'yes');
-cfg.offset        = ft_getopt(cfg, 'offset', [0 0 0 0 0 0]); % initial offset on the coils
+cfg.voltage       = ft_getopt(cfg, 'voltage', [0 0 0 0 0 0]); % initial voltage on each of the coils
+cfg.polarity      = ft_getopt(cfg, 'polarity', [1 1 1 1 1 1]); % +1 or -1 for each of the coils coils
 cfg.calib         = ft_getopt(cfg, 'calib'); % user-specified calibration values
 cfg.range         = ft_getopt(cfg, 'range', [-10 10]); % values outside this range will be clipped
 
 % these determine the calibration signal
 cfg.calibration           = ft_getopt(cfg, '', []);
 cfg.calibration.duration  = ft_getopt(cfg, 'duration', 5); % in seconds
-cfg.calibration.nchan     = ft_getopt(cfg, 'nchan', 6);
 cfg.calibration.amplitude = ft_getopt(cfg, 'amplitude', 1);
 cfg.calibration.frequency = ft_getopt(cfg, 'frequency', [5 6 7 8 9 10]); % in Hz
 cfg.calibration.fsample   = ft_getopt(cfg, 'fsample', 1000); % in Hz
@@ -105,7 +106,7 @@ end
 
 % clear the subfunctions with persistent values
 % FIXME this seems not to work as expected
-clear control_offset
+clear control_voltage
 clear measure_sample
 
 % open a new figure with the specified settings
@@ -118,8 +119,8 @@ drawnow
 
 % store the configuration details in the application
 setappdata(fig, 'cfg', cfg);
-setappdata(fig, 'field', [0 0 0 0]);          % set the initial measured field: x, y, z, abs
-setappdata(fig, 'offset', cfg.offset);        % set the initial offset
+setappdata(fig, 'field', [0 0 0 0]);          % set the initial value for the field: x, y, z, abs
+setappdata(fig, 'voltage', cfg.voltage);      % set the initial voltage
 setappdata(fig, 'calib', cfg.calib);
 setappdata(fig, 'running', 'off');            % can be 'off', 'manual', 'closedloop'
 setappdata(fig, 'calibration', 'off');        % can be 'init', 'on', 'off'
@@ -188,27 +189,28 @@ end % main function
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function control_offset(fig)
-persistent previous_offset
+function control_voltage(fig)
+persistent previous_voltage
 cfg     = getappdata(fig, 'cfg');
 coils   = getappdata(fig, 'coils');
-offset  = getappdata(fig, 'offset');
+voltage = getappdata(fig, 'voltage');
 
-% clip to the allowed range
-if any(offset<cfg.range(1) | offset>cfg.range(2))
-  ft_info('clipping output')
-  offset(offset>cfg.range(2)) = cfg.range(2);
-  offset(offset<cfg.range(1)) = cfg.range(1);
-  setappdata(fig, 'offset', offset);
+% clip the voltage to the specified range
+if any(voltage<cfg.range(1) | voltage>cfg.range(2))
+  ft_info('clipping voltage')
+  voltage(voltage>cfg.range(2)) = cfg.range(2);
+  voltage(voltage<cfg.range(1)) = cfg.range(1);
+  setappdata(fig, 'voltage', voltage);
 end
 
-if ~isempty(coils) && ~coils.Running && ~isequal(previous_offset, offset)
-  % it should be a row vector
-  offset = offset(:)';   
-  % output the specified DC offset on each of the coils, ensure it is a row vector
-  write(coils, offset);
-  % prevent writing the same value over and over again
-  previous_offset = offset;
+% it should be a row vector
+voltage = voltage(:)';
+
+if ~isempty(coils) && ~coils.Running && ~isequal(previous_voltage, voltage)
+  % output the specified DC voltage on the coils
+  write(coils, cfg.polarity .* voltage);
+  % prevent writing the same voltage over and over again
+  previous_voltage = voltage;
 end
 
 end % function
@@ -219,7 +221,7 @@ end % function
 function control_auto_null(fig)
 ft_info('auto null')
 cfg     = getappdata(fig, 'cfg');
-offset  = getappdata(fig, 'offset');
+voltage  = getappdata(fig, 'voltage');
 field   = getappdata(fig, 'field');
 calib   = getappdata(fig, 'calib');
 
@@ -231,33 +233,33 @@ if ~isempty(calib)
   cb_enable_gui(fig); % update the gui
 
   residual = field(1:3);  % only keep the x, y, and z component
-  residual = residual(:); % it should be a column
-  offset   = offset(:);   % it should be a column
+  residual = residual(:); % it should be a column vector
+  voltage  = voltage(:);  % it should be a column vector
 
-  % The idea is to compute a correction to the current offset that will bring the measured field to zero
-  %   field = residual - calib * offset  % this is the environmental field
-  %   residual = field + calib * offset  % this is the residual field that we measure
+  % The idea is to compute a correction to the currently applied voltage that will bring the measured field to zero
+  %   field = residual - calib * voltage  % this is the true environmental field
+  %   residual = field + calib * voltage  % this is the residual field that we measure
   %
-  % The sum of the enviromental field, the offset, and the correction should be zero
-  %   zero = field + calib * offset + calib * correction
-  %        = residual               + calib * correction
+  % The sum of the environmental field plus that due to the voltage and the correction should be zero
+  %   zero = field + calib * voltage + calib * correction
+  %        = residual                + calib * correction
   % Hence
   %   residual = - calib * correction
 
   correction = - pinv(calib) * residual;
-  offset = offset + correction;
+  voltage = voltage + correction;
 
-  % clip to the allowed range
-  if any(offset<cfg.range(1) | offset>cfg.range(2))
-    ft_info('clipping output')
-    offset(offset>cfg.range(2)) = cfg.range(2);
-    offset(offset<cfg.range(1)) = cfg.range(1);
+  % clip the voltage to the specified range
+  if any(voltage<cfg.range(1) | voltage>cfg.range(2))
+    ft_info('clipping voltage')
+    voltage(voltage>cfg.range(2)) = cfg.range(2);
+    voltage(voltage<cfg.range(1)) = cfg.range(1);
   end
 
-  % show and apply the updated offset values
-  setappdata(fig, 'offset', offset);
+  % show and apply the updated voltage values
+  setappdata(fig, 'voltage', voltage);
   cb_redraw(fig);
-  control_offset(fig);
+  control_voltage(fig);
 
 else
   warning('cannot auto null, calibration has not yet been performed')
@@ -272,26 +274,27 @@ function calibration_start_signal(fig)
 % output a sine wave with a different frequency on each of the coils
 cfg     = getappdata(fig, 'cfg');
 coils   = getappdata(fig, 'coils');
-offset  = getappdata(fig, 'offset');
-nchan   = cfg.calibration.nchan;
+voltage = getappdata(fig, 'voltage');
 fsample = cfg.calibration.fsample;
+nsample = fsample*1; % one second of data is enough, it will repeat automatically
+ncoil   = 6;
 
-assert(numel(offset)==nchan);
-assert(numel(cfg.calibration.frequency)==nchan);
+assert(numel(voltage)==ncoil);
+assert(numel(cfg.calibration.frequency)==ncoil);
 assert(numel(cfg.calibration.amplitude)==1);
 
 coils.Rate = fsample;
 
-% create one second of data, it will loop until finished
-signal = zeros(nchan,fsample);
-time = (0:(fsample-1))/fsample;
-for i=1:nchan
-  signal(i,:) = cfg.calibration.amplitude * sin(cfg.calibration.frequency(i)*2*pi*time) + offset(i);
+% create one second of signal, it will loop until finished
+voltage = zeros(ncoil, nsample);
+time = (0:(nsample-1))/fsample;
+for i=1:ncoil
+  voltage(i,:) = cfg.polarity(i) * (cfg.calibration.amplitude * sin(cfg.calibration.frequency(i)*2*pi*time) + voltage(i));
 end
 
 if ~isempty(coils) && ~coils.Running
-  preload(coils, signal');
-  start(coils);
+  preload(coils, voltage');
+  start(coils, 'repeatoutput');
   fprintf('started calibration signal for %.1f seconds\n', cfg.calibration.duration);
 end
 
@@ -311,31 +314,34 @@ end % function
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function calibration_compute(fig, dat)
+function calibration_compute(fig, field)
 cfg     = getappdata(fig, 'cfg');
-nchan   = cfg.calibration.nchan;
-fsample = cfg.calibration.fsample;
-nsample = size(dat,2);
+fsample = cfg.fsample;     % the sampling rate of the measured field
+nsample = size(field, 2);  % the number of samples of the measured field
+ncoil   = 6;
 
 time = (0:(nsample-1))/fsample;
-input = zeros(nchan,nsample); % additional channel for the constant offset
-for i=1:nchan
-  input(i,:) = sin(cfg.calibration.frequency(i)*2*pi*time);
+voltage = zeros(ncoil, nsample);
+for i=1:ncoil
+  % FIXME what if there is a significant phase difference?
+  voltage(i,:) = cfg.polarity(i) * cfg.calibration.amplitude * sin(cfg.calibration.frequency(i)*2*pi*time);
 end
 
-% remove the DC offset from the fluxgate
-dat = ft_preproc_baselinecorrect(dat);
+% remove the DC component from the measured field
+field = ft_preproc_baselinecorrect(field);
 
-% compute the linear mix from the input signals on the coils towards the output measurement on the fluxgate
-% output = calib * input + noise
-calib = dat / input;
+% compute the linear mix from the input voltages on the coils towards the measured output fields on the fluxgate
+% field = calib * voltage + noise
+calib = field / voltage;
 
-disp(calib);
-
-noise = dat - calib*input;
-gof = 1 - norm(noise, 'fro')/norm(dat, 'fro');
+noise = field - calib*voltage;
+gof = 1 - norm(noise, 'fro')/norm(field, 'fro');
 
 fprintf('calibration computed\n');
+
+disp('------------------ calibration in nT/V ----------------------')
+disp(calib*1e9);
+
 fprintf('goodness of fit = %.02f %%\n', gof*100);
 
 setappdata(fig, 'calib', calib);
@@ -394,19 +400,19 @@ switch getappdata(fig, 'calibration')
     % nothing to do
 end
 
-% closed-loop updating of the offset
+% closed-loop updating of the voltage
 if strcmp(getappdata(fig, 'running'), 'closedloop')
   calib  = getappdata(fig, 'calib');
-  offset = getappdata(fig, 'offset');
+  voltage = getappdata(fig, 'voltage');
   if ~isempty(calib)
     residual = dat(1:3);    % only keep the x, y, and z component
-    residual = residual(:); % it should be a column
-    offset   = offset(:);   % it should be a column
+    residual = residual(:); % it should be a column vector
+    voltage  = voltage(:);  % it should be a column vector
 
     correction = - pinv(calib) * residual;
-    offset = offset + correction;
-    setappdata(fig, 'offset', offset);
-    control_offset(fig);
+    voltage = voltage + correction;
+    setappdata(fig, 'voltage', voltage);
+    control_voltage(fig);
   end
 end
 
@@ -437,8 +443,8 @@ p1 = uipanel(fig, 'units', 'normalized', 'position', [0.0 0.2 0.5 0.8]);
 p2 = uipanel(fig, 'units', 'normalized', 'position', [0.5 0.2 0.5 0.8]);
 p3 = uipanel(fig, 'units', 'normalized', 'position', [0.0 0.0 1.0 0.2]);
 
-uicontrol('parent', p1, 'style', 'text', 'string', 'control', 'units', 'normalized', 'position', [0.01 0.89 0.5 0.1], 'horizontalalignment', 'left');
-uicontrol('parent', p2, 'style', 'text', 'string', 'measure', 'units', 'normalized', 'position', [0.01 0.89 0.5 0.1], 'horizontalalignment', 'left');
+uicontrol('parent', p1, 'style', 'text', 'string', 'voltage', 'units', 'normalized', 'position', [0.01 0.89 0.5 0.1], 'horizontalalignment', 'left');
+uicontrol('parent', p2, 'style', 'text', 'string', 'field',   'units', 'normalized', 'position', [0.01 0.89 0.5 0.1], 'horizontalalignment', 'left');
 
 uicontrol('parent', p1, 'tag', 'c1l', 'style', 'text', 'string', 'x');
 uicontrol('parent', p1, 'tag', 'c1e', 'style', 'edit');
@@ -592,38 +598,38 @@ end % function
 function cb_redraw(h, eventdata)
 % disp('redraw');
 fig     = getparent(h);
-offset  = getappdata(fig, 'offset');
+voltage = getappdata(fig, 'voltage');
 field   = getappdata(fig, 'field');
 
 % deal with the pairwise linkage between coils
 if get(findall(fig, 'tag', 'c1x'), 'value')
-  offset(2) = offset(1);
+  voltage(2) = voltage(1);
 end
 if get(findall(fig, 'tag', 'c3x'), 'value')
-  offset(4) = offset(3);
+  voltage(4) = voltage(3);
 end
 if get(findall(fig, 'tag', 'c5x'), 'value')
-  offset(6) = offset(5);
+  voltage(6) = voltage(5);
 end
-setappdata(fig, 'offset', offset);
+setappdata(fig, 'voltage', voltage);
 
-% update the current driver offset
-set(findall(fig, 'tag', 'c1e'), 'string', offset(1));
-set(findall(fig, 'tag', 'c2e'), 'string', offset(2));
-set(findall(fig, 'tag', 'c3e'), 'string', offset(3));
-set(findall(fig, 'tag', 'c4e'), 'string', offset(4));
-set(findall(fig, 'tag', 'c5e'), 'string', offset(5));
-set(findall(fig, 'tag', 'c6e'), 'string', offset(6));
+% update the output voltage
+set(findall(fig, 'tag', 'c1e'), 'string', voltage(1));
+set(findall(fig, 'tag', 'c2e'), 'string', voltage(2));
+set(findall(fig, 'tag', 'c3e'), 'string', voltage(3));
+set(findall(fig, 'tag', 'c4e'), 'string', voltage(4));
+set(findall(fig, 'tag', 'c5e'), 'string', voltage(5));
+set(findall(fig, 'tag', 'c6e'), 'string', voltage(6));
 
 % update the fluxgate field
-set(findall(fig, 'tag', 'f1e'), 'string', sprintf('%.03f uT', 1e6*field(1)));
-set(findall(fig, 'tag', 'f2e'), 'string', sprintf('%.03f uT', 1e6*field(2)));
-set(findall(fig, 'tag', 'f3e'), 'string', sprintf('%.03f uT', 1e6*field(3)));
-set(findall(fig, 'tag', 'f4e'), 'string', sprintf('%.03f uT', 1e6*field(4)));
+set(findall(fig, 'tag', 'f1e'), 'string', sprintf('%.03f nT', 1e9*field(1)));
+set(findall(fig, 'tag', 'f2e'), 'string', sprintf('%.03f nT', 1e9*field(2)));
+set(findall(fig, 'tag', 'f3e'), 'string', sprintf('%.03f nT', 1e9*field(3)));
+set(findall(fig, 'tag', 'f4e'), 'string', sprintf('%.03f nT', 1e9*field(4)));
 
 switch getappdata(fig, 'running')
   case 'manual'
-    control_offset(fig);
+    control_voltage(fig);
   otherwise
     % do nothing
 end
@@ -636,10 +642,10 @@ end % function
 function cb_click(h, eventdata)
 fig     = getparent(h);
 cfg     = getappdata(fig, 'cfg');
-offset  = getappdata(fig, 'offset');
+voltage = getappdata(fig, 'voltage');
 
-% make 1V steps for the full range -10V to +10V output
-% or 0.1V steps if the output range is from -1V to +1V
+% make steps of 1.0 for the full output range of -10V to +10V 
+% make steps of 0.1 for an output range of -1V to +1V 
 step = (cfg.range(2)-cfg.range(1))/20;
 
 switch fig.SelectionType
@@ -653,41 +659,41 @@ end
 
 switch h.Tag
   case 'c1e'
-    offset(1) = str2double(h.String);
+    voltage(1) = str2double(h.String);
   case 'c2e'
-    offset(2) = str2double(h.String);
+    voltage(2) = str2double(h.String);
   case 'c3e'
-    offset(3) = str2double(h.String);
+    voltage(3) = str2double(h.String);
   case 'c4e'
-    offset(4) = str2double(h.String);
+    voltage(4) = str2double(h.String);
   case 'c5e'
-    offset(5) = str2double(h.String);
+    voltage(5) = str2double(h.String);
   case 'c6e'
-    offset(6) = str2double(h.String);
+    voltage(6) = str2double(h.String);
   case 'c1p'
-    offset(1) = offset(1) + step;
+    voltage(1) = voltage(1) + step;
   case 'c1m'
-    offset(1) = offset(1) - step;
+    voltage(1) = voltage(1) - step;
   case 'c2p'
-    offset(2) = offset(2) + step;
+    voltage(2) = voltage(2) + step;
   case 'c2m'
-    offset(2) = offset(2) - step;
+    voltage(2) = voltage(2) - step;
   case 'c3p'
-    offset(3) = offset(3) + step;
+    voltage(3) = voltage(3) + step;
   case 'c3m'
-    offset(3) = offset(3) - step;
+    voltage(3) = voltage(3) - step;
   case 'c4p'
-    offset(4) = offset(4) + step;
+    voltage(4) = voltage(4) + step;
   case 'c4m'
-    offset(4) = offset(4) - step;
+    voltage(4) = voltage(4) - step;
   case 'c5p'
-    offset(5) = offset(5) + step;
+    voltage(5) = voltage(5) + step;
   case 'c5m'
-    offset(5) = offset(5) - step;
+    voltage(5) = voltage(5) - step;
   case 'c6p'
-    offset(6) = offset(6) + step;
+    voltage(6) = voltage(6) + step;
   case 'c6m'
-    offset(6) = offset(6) - step;
+    voltage(6) = voltage(6) - step;
   case 'c1x'
     cb_enable_gui(fig); % disable/enable the pairwise linked coil
   case 'c3x'
@@ -709,10 +715,10 @@ switch h.Tag
     % the calibration is further handled in the measure_sample callback
   case 'ba'
     control_auto_null(fig);
-    offset = getappdata(fig, 'offset');
+    voltage = getappdata(fig, 'voltage');
   case 'bo'
     ft_info('switching coils off');
-    offset(:) = 0;
+    voltage(:) = 0;
     % disable continuous auto nulling
     set(findobj(fig, 'tag', 'cax'), 'value', 0);
     cb_enable_gui(fig);
@@ -720,17 +726,17 @@ switch h.Tag
 end % switch
 
 % set near-zero values to zero
-offset(abs(offset)<10*eps) = 0;
+voltage(abs(voltage)<10*eps) = 0;
 
-% clip to the allowed range
-if any(offset<cfg.range(1) | offset>cfg.range(2))
-  ft_info('clipping output')
-  offset(offset>cfg.range(2)) = cfg.range(2);
-  offset(offset<cfg.range(1)) = cfg.range(1);
+% clip the voltage to the specified range
+if any(voltage<cfg.range(1) | voltage>cfg.range(2))
+  ft_info('clipping voltage')
+  voltage(voltage>cfg.range(2)) = cfg.range(2);
+  voltage(voltage<cfg.range(1)) = cfg.range(1);
 end
 
 % update the values in the GUI
-setappdata(fig, 'offset', offset);
+setappdata(fig, 'voltage', voltage);
 cb_redraw(fig);
 end % function
 
@@ -779,10 +785,10 @@ end % function
 function cb_quit(h, eventdata)
 fig = getparent(h);
 ft_info('switching coils off');
-offset = getappdata(fig, 'offset');
-offset(:) = 0;
-setappdata(fig, 'offset', offset);
-control_offset(fig);
+voltage = getappdata(fig, 'voltage');
+voltage(:) = 0;
+setappdata(fig, 'voltage', voltage);
+control_voltage(fig);
 setappdata(fig, 'running', false);
 delete(fig);
 end % function
