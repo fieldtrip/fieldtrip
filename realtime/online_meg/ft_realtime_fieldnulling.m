@@ -7,11 +7,22 @@ function ft_realtime_fieldnulling(cfg)
 %   ft_realtime_fieldnulling(cfg)
 %
 % The configuration should contain
-%   cfg.serialport  = string, name of the serial port (default = 'COM2')
-%   cfg.fsample     = sampling frequency (default = 1000)
+%   cfg.serialport   = string, name of the serial port (default = 'COM2')
+%   cfg.baudrate     = number (default = 921600)
+%   cfg.fsample      = number, sampling rate of the fluxgate AFTER averaging (no default provided)
+%   cfg.enableinput  = string, 'yes' or 'no' to enable the fluxgate input (default = 'yes')
+%   cfg.enableoutput = string, 'yes' or 'no' to enable the NI-DAQ output (default = 'yes')
+%   cfg.range        = [min max], values outside this range will be clipped (default [-10 10])
+%   cfg.offset       = initial offset on the coils (default = [0 0 0 0 0 0])
+%
+% Furthermore, these options determine the calibration signal
+%   cfg.calibration.duration  = number in seconds (default = 5)
+%   cfg.calibration.amplitude = number in Volt (default = 1)
+%   cfg.calibration.frequency = number in Hz for each of the coils (default = [5 6 7 8 9 10])
 %
 % When clicking the + and - buttons, you can use the shift and ctrl
-% modifier keys to make small and even smaller steps.
+% modifier keys to make small and even smaller steps. The step size depends
+% on the range.
 %
 % See also FT_REALTIME_SENSYSPROXY
 
@@ -59,10 +70,14 @@ if ft_abort
   return
 end
 
+% check if the input cfg is valid for this function
+cfg = ft_checkconfig(cfg, 'required', 'fsample');
+cfg = ft_checkconfig(cfg, 'renamed', {'clip', 'range'});
+
 % set the defaults
 cfg.serialport    = ft_getopt(cfg, 'serialport', 'COM2');
 cfg.baudrate      = ft_getopt(cfg, 'baudrate', 921600);
-cfg.fsample       = ft_getopt(cfg, 'fsample', 40);
+cfg.fsample       = ft_getopt(cfg, 'fsample'); % this must be specified
 cfg.databits      = ft_getopt(cfg, 'databits', 8);
 cfg.flowcontrol   = ft_getopt(cfg, 'flowcontrol', 'none');
 cfg.stopbits      = ft_getopt(cfg, 'stopbits', 1);
@@ -72,7 +87,7 @@ cfg.enableinput   = ft_getopt(cfg, 'enableinput', 'yes');
 cfg.enableoutput  = ft_getopt(cfg, 'enableoutput', 'yes');
 cfg.offset        = ft_getopt(cfg, 'offset', [0 0 0 0 0 0]); % initial offset on the coils
 cfg.calib         = ft_getopt(cfg, 'calib'); % user-specified calibration values
-cfg.clip          = ft_getopt(cfg, 'clip', [-10 10]); % clipping for the output
+cfg.range         = ft_getopt(cfg, 'range', [-10 10]); % values outside this range will be clipped
 
 % these determine the calibration signal
 cfg.calibration           = ft_getopt(cfg, '', []);
@@ -87,6 +102,11 @@ if isempty(cfg.position)
   cfg.position(3) = 800;
   cfg.position(4) = 240;
 end
+
+% clear the subfunctions with persistent values
+% FIXME this seems not to work as expected
+clear control_offset
+clear measure_sample
 
 % open a new figure with the specified settings
 tmpcfg = keepfields(cfg, {'figure', 'position', 'visible', 'renderer', 'figurename', 'title'});
@@ -114,6 +134,7 @@ set(fig, 'WindowButtondownfcn', @cb_click);
 measure_sample(fig); % call it once to pass the figure handle
 
 if istrue(cfg.enableinput)
+  ft_info('initializing serial port for fluxgate');
   fluxgate = serialport(cfg.serialport, cfg.baudrate);
   cleanup = onCleanup(@()measure_cleanup(fluxgate));
   configureTerminator(fluxgate, 'LF');
@@ -127,6 +148,7 @@ setappdata(fig, 'fluxgate', fluxgate);
 %% set up the digital-to-analog converter
 
 if istrue(cfg.enableoutput)
+  ft_info('initializing NI-DAQ');
   coils = daq('ni');
   % add channels and set channel properties, if any.
   addoutput(coils, 'cDAQ1Mod1', 'ao0', 'Voltage');
@@ -143,6 +165,7 @@ setappdata(fig, 'coils', coils);
 
 %% activate the graphical user interface
 
+ft_info('creating gui');
 setappdata(fig, 'running', 'manual');
 cb_create_gui(fig);
 cb_redraw(fig);
@@ -166,24 +189,26 @@ end % main function
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function control_offset(fig)
+persistent previous_offset
 cfg     = getappdata(fig, 'cfg');
 coils   = getappdata(fig, 'coils');
 offset  = getappdata(fig, 'offset');
 
-% ensure it is a row vector
-offset = offset(:)';
-
 % clip to the allowed range
-if any(offset<cfg.clip(1) | offset>cfg.clip(2))
-  disp('clipping output')
-  offset(offset>cfg.clip(2)) = cfg.clip(2);
-  offset(offset<cfg.clip(1)) = cfg.clip(1);
+if any(offset<cfg.range(1) | offset>cfg.range(2))
+  ft_info('clipping output')
+  offset(offset>cfg.range(2)) = cfg.range(2);
+  offset(offset<cfg.range(1)) = cfg.range(1);
   setappdata(fig, 'offset', offset);
 end
 
-if ~isempty(coils) && ~coils.Running
-  % output the specified DC offset on each of the coils
+if ~isempty(coils) && ~coils.Running && ~isequal(previous_offset, offset)
+  % it should be a row vector
+  offset = offset(:)';   
+  % output the specified DC offset on each of the coils, ensure it is a row vector
   write(coils, offset);
+  % prevent writing the same value over and over again
+  previous_offset = offset;
 end
 
 end % function
@@ -192,16 +217,13 @@ end % function
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function control_auto_null(fig)
-disp('auto null')
+ft_info('auto null')
 cfg     = getappdata(fig, 'cfg');
 offset  = getappdata(fig, 'offset');
 field   = getappdata(fig, 'field');
 calib   = getappdata(fig, 'calib');
 
-if isempty(calib)
-  warning('cannot auto null, calibration has not yet been performed')
-
-else
+if ~isempty(calib)
   % this is incompatible with pairwise linked coils
   set(findobj(fig, 'tag', 'c1x'), 'value', 0);
   set(findobj(fig, 'tag', 'c3x'), 'value', 0);
@@ -226,10 +248,10 @@ else
   offset = offset + correction;
 
   % clip to the allowed range
-  if any(offset<cfg.clip(1) | offset>cfg.clip(2))
-    disp('clipping output')
-    offset(offset>cfg.clip(2)) = cfg.clip(2);
-    offset(offset<cfg.clip(1)) = cfg.clip(1);
+  if any(offset<cfg.range(1) | offset>cfg.range(2))
+    ft_info('clipping output')
+    offset(offset>cfg.range(2)) = cfg.range(2);
+    offset(offset<cfg.range(1)) = cfg.range(1);
   end
 
   % show and apply the updated offset values
@@ -237,7 +259,10 @@ else
   cb_redraw(fig);
   control_offset(fig);
 
+else
+  warning('cannot auto null, calibration has not yet been performed')
 end
+
 end % function
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -279,7 +304,7 @@ function calibration_stop_signal(fig)
 coils = getappdata(fig, 'coils');
 if ~isempty(coils) && coils.Running
   stop(coils);
-  disp('stopped calibration signal');
+  ft_info('stopped calibration signal');
 end
 end % function
 
@@ -293,26 +318,25 @@ fsample = cfg.calibration.fsample;
 nsample = size(dat,2);
 
 time = (0:(nsample-1))/fsample;
-input = zeros(nchan+1,nsample); % additional channel for the constant offset
+input = zeros(nchan,nsample); % additional channel for the constant offset
 for i=1:nchan
   input(i,:) = sin(cfg.calibration.frequency(i)*2*pi*time);
 end
-input(end,:) = 1;
+
+% remove the DC offset from the fluxgate
+dat = ft_preproc_baselinecorrect(dat);
 
 % compute the linear mix from the input signals on the coils towards the output measurement on the fluxgate
 % output = calib * input + noise
 calib = dat / input;
 
-disp(calib)
+disp(calib);
 
 noise = dat - calib*input;
 gof = 1 - norm(noise, 'fro')/norm(dat, 'fro');
 
 fprintf('calibration computed\n');
-fprintf('goodness of fit = %f %%\n', gof*100);
-
-% drop the DC offset component from the calibration matrix
-calib = calib(:,1:6);
+fprintf('goodness of fit = %.02f %%\n', gof*100);
 
 setappdata(fig, 'calib', calib);
 cb_enable_gui(fig);
@@ -396,9 +420,9 @@ end % function
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function measure_cleanup(fluxgate)
-disp('cleanup');
+ft_info('cleanup');
 configureCallback(fluxgate, 'off');
-disp('stopped')
+ft_info('stopped');
 clear fluxgate
 clear readSerialData
 end % function
@@ -466,7 +490,7 @@ uicontrol('parent', p2, 'tag', 'f1l', 'style', 'text', 'string', 'x');
 uicontrol('parent', p2, 'tag', 'f1e', 'style', 'edit');
 uicontrol('parent', p2, 'tag', 'f2l', 'style', 'text', 'string', 'y');
 uicontrol('parent', p2, 'tag', 'f2e', 'style', 'edit');
-uicontrol('parent', p2, 'tag', 'f3l', 'style', 'text', 'string', 'x');
+uicontrol('parent', p2, 'tag', 'f3l', 'style', 'text', 'string', 'z');
 uicontrol('parent', p2, 'tag', 'f3e', 'style', 'edit');
 uicontrol('parent', p2, 'tag', 'f4l', 'style', 'text', 'string', 'abs');
 uicontrol('parent', p2, 'tag', 'f4e', 'style', 'edit');
@@ -492,7 +516,7 @@ end % function
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_enable_gui(h, eventdata)
-disp('enable gui');
+ft_info('enable gui');
 fig = getparent(h);
 set(findall(fig, 'type', 'uicontrol', 'style', 'text'),       'Enable', 'on');
 set(findall(fig, 'type', 'uicontrol', 'style', 'edit'),       'Enable', 'on');
@@ -555,7 +579,7 @@ end % function
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_disable_gui(h, eventdata)
-disp('disable gui');
+ft_info('disable gui');
 fig = getparent(h);
 set(findall(fig, 'type', 'uicontrol', 'style', 'edit'),       'Enable', 'off');
 set(findall(fig, 'type', 'uicontrol', 'style', 'pushbutton'), 'Enable', 'off');
@@ -615,8 +639,8 @@ cfg     = getappdata(fig, 'cfg');
 offset  = getappdata(fig, 'offset');
 
 % make 1V steps for the full range -10V to +10V output
-% or 0.1V steps if the output range is from -1V to +1V 
-step = (cfg.clip(2)-cfg.clip(1))/20; 
+% or 0.1V steps if the output range is from -1V to +1V
+step = (cfg.range(2)-cfg.range(1))/20;
 
 switch fig.SelectionType
   case 'alt'       % ctrl-click, this does not work on macOS
@@ -679,7 +703,7 @@ switch h.Tag
     cb_enable_gui(fig); % disable/enable the manual control of coils
 
   case 'bc'
-    disp('initiating calibration')
+    ft_info('initiating calibration')
     setappdata(fig', 'calibration', 'init');
     cb_disable_gui(fig);
     % the calibration is further handled in the measure_sample callback
@@ -687,7 +711,7 @@ switch h.Tag
     control_auto_null(fig);
     offset = getappdata(fig, 'offset');
   case 'bo'
-    disp('coils off')
+    ft_info('switching coils off');
     offset(:) = 0;
     % disable continuous auto nulling
     set(findobj(fig, 'tag', 'cax'), 'value', 0);
@@ -699,10 +723,10 @@ end % switch
 offset(abs(offset)<10*eps) = 0;
 
 % clip to the allowed range
-if any(offset<cfg.clip(1) | offset>cfg.clip(2))
-  disp('clipping output')
-  offset(offset>cfg.clip(2)) = cfg.clip(2);
-  offset(offset<cfg.clip(1)) = cfg.clip(1);
+if any(offset<cfg.range(1) | offset>cfg.range(2))
+  ft_info('clipping output')
+  offset(offset>cfg.range(2)) = cfg.range(2);
+  offset(offset<cfg.range(1)) = cfg.range(1);
 end
 
 % update the values in the GUI
@@ -754,6 +778,11 @@ end % function
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_quit(h, eventdata)
 fig = getparent(h);
+ft_info('switching coils off');
+offset = getappdata(fig, 'offset');
+offset(:) = 0;
+setappdata(fig, 'offset', offset);
+control_offset(fig);
 setappdata(fig, 'running', false);
 delete(fig);
 end % function
