@@ -177,7 +177,7 @@ else
   % so, we need to find the right path to the HTTPS download server
   pattern = 'ftp(.*)';
   datadir = regexp(alternative0, pattern, 'tokens', 'once');
-  weblocation = strcat("https://download.fieldtriptoolbox.org", datadir);
+  weblocation = strcat('https://download.fieldtriptoolbox.org', datadir);
   weblocation = strrep(weblocation, '\', '/');
 
   urlContent = webread(weblocation, weboptions('ContentType', 'text'));
