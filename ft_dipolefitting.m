@@ -449,6 +449,7 @@ if strcmp(cfg.gridsearch, 'yes')
       dip.pos = sourcemodel.pos(indx,:);                % note that for a symmetric dipole pair this results in a vector
       dip.pos = reshape(dip.pos,3,cfg.numdipoles)';     % convert to a Nx3 array
       dip.mom = zeros(cfg.numdipoles*3,1);              % set the dipole moment to zero
+      dip.lf  = sourcemodel.leadfield{indx};            % copy the corresponding leadfield  
       if cfg.numdipoles==1
         ft_info('found minimum after scanning on grid point [%g %g %g]\n', dip.pos(1), dip.pos(2), dip.pos(3));
       elseif cfg.numdipoles==2
@@ -462,6 +463,7 @@ if strcmp(cfg.gridsearch, 'yes')
         dip(t).pos = sourcemodel.pos(indx,:);                 % note that for a symmetric dipole pair this results in a vector
         dip(t).pos = reshape(dip(t).pos,3,cfg.numdipoles)';   % convert to a Nx3 array
         dip(t).mom = zeros(cfg.numdipoles*3,1);               % set the dipole moment to zero
+        dip.lf  = sourcemodel.leadfield{indx};            % copy the corresponding leadfield
         if cfg.numdipoles==1
           ft_info('found minimum after scanning for topography %d on grid point [%g %g %g]\n', t, dip(t).pos(1), dip(t).pos(2), dip(t).pos(3));
         elseif cfg.numdipoles==2
@@ -574,7 +576,7 @@ end
 switch cfg.model
   case 'regional'
     if success
-      if ~lf
+      if ~isfield(dip, 'lf')
           % if there is no leadfield, re-compute it in order to compute the model potential and dipole moment
           lf = ft_compute_leadfield(dip.pos, sens, headmodel, leadfieldopt{:});
       end
@@ -592,8 +594,8 @@ switch cfg.model
   case 'moving'
     for t=1:ntime
       if success(t)
-        if ~lf  
-            % re-compute the leadfield in order to compute the model potential and dipole moment
+        if ~isfield(dip, 'lf')  
+            % if there is no leadfield, re-compute it in order to compute the model potential and dipole moment
             lf = ft_compute_leadfield(dip(t).pos, sens, headmodel, leadfieldopt{:});
         end
         % compute all details of the final dipole model
