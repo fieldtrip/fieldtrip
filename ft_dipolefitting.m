@@ -574,8 +574,10 @@ end
 switch cfg.model
   case 'regional'
     if success
-      % re-compute the leadfield in order to compute the model potential and dipole moment
-      lf = ft_compute_leadfield(dip.pos, sens, headmodel, leadfieldopt{:});
+      if ~lf
+          % if there is no leadfield, re-compute it in order to compute the model potential and dipole moment
+          lf = ft_compute_leadfield(dip.pos, sens, headmodel, leadfieldopt{:});
+      end
       if isfield(dip, 'mom') && isfield(dip, 'ampl')
         % the orientation and amplitude have already been estimated, this applies to the case of a fixed dipole orientation
         dip.pot = (lf * dip.mom) * dip.ampl;
@@ -590,8 +592,10 @@ switch cfg.model
   case 'moving'
     for t=1:ntime
       if success(t)
-        % re-compute the leadfield in order to compute the model potential and dipole moment
-        lf = ft_compute_leadfield(dip(t).pos, sens, headmodel, leadfieldopt{:});
+        if ~lf  
+            % re-compute the leadfield in order to compute the model potential and dipole moment
+            lf = ft_compute_leadfield(dip(t).pos, sens, headmodel, leadfieldopt{:});
+        end
         % compute all details of the final dipole model
         dip(t).mom = pinv(lf)*Vdata(:,t);
         dip(t).pot = lf*dip(t).mom;
