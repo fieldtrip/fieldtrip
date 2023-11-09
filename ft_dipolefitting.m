@@ -579,6 +579,8 @@ switch cfg.model
       if ~isfield(dip, 'lf')
           % if there is no leadfield, re-compute it in order to compute the model potential and dipole moment
           lf = ft_compute_leadfield(dip.pos, sens, headmodel, leadfieldopt{:});
+      else
+          lf = dip.lf;
       end
       if isfield(dip, 'mom') && isfield(dip, 'ampl')
         % the orientation and amplitude have already been estimated, this applies to the case of a fixed dipole orientation
@@ -597,6 +599,8 @@ switch cfg.model
         if ~isfield(dip, 'lf')  
             % if there is no leadfield, re-compute it in order to compute the model potential and dipole moment
             lf = ft_compute_leadfield(dip(t).pos, sens, headmodel, leadfieldopt{:});
+        else
+          lf = dip.lf;
         end
         % compute all details of the final dipole model
         dip(t).mom = pinv(lf)*Vdata(:,t);
