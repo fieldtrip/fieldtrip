@@ -463,7 +463,7 @@ if strcmp(cfg.gridsearch, 'yes')
         dip(t).pos = sourcemodel.pos(indx,:);                 % note that for a symmetric dipole pair this results in a vector
         dip(t).pos = reshape(dip(t).pos,3,cfg.numdipoles)';   % convert to a Nx3 array
         dip(t).mom = zeros(cfg.numdipoles*3,1);               % set the dipole moment to zero
-        dip.lf  = sourcemodel.leadfield{indx};            % copy the corresponding leadfield
+        dip(t).lf  = sourcemodel.leadfield{indx};            % copy the corresponding leadfield
         if cfg.numdipoles==1
           ft_info('found minimum after scanning for topography %d on grid point [%g %g %g]\n', t, dip(t).pos(1), dip(t).pos(2), dip(t).pos(3));
         elseif cfg.numdipoles==2
@@ -600,7 +600,7 @@ switch cfg.model
             % if there is no leadfield, re-compute it in order to compute the model potential and dipole moment
             lf = ft_compute_leadfield(dip(t).pos, sens, headmodel, leadfieldopt{:});
         else
-          lf = dip.lf;
+          lf = dip(t).lf;
         end
         % compute all details of the final dipole model
         dip(t).mom = pinv(lf)*Vdata(:,t);
