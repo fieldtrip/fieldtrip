@@ -18,6 +18,7 @@ function ft_realtime_fieldnulling(cfg)
 %
 % Furthermore, these options determine the calibration signal
 %   cfg.calibration.duration  = number in seconds (default = 5)
+%   cfg.calibration.pad       = number in seconds (default = 0)
 %   cfg.calibration.amplitude = number in Volt (default = 1)
 %   cfg.calibration.frequency = number in Hz for each of the coils (default = [5 6 7 8 9 10])
 %
@@ -92,11 +93,12 @@ cfg.calib         = ft_getopt(cfg, 'calib'); % user-specified calibration values
 cfg.range         = ft_getopt(cfg, 'range', [-10 10]); % values outside this range will be clipped
 
 % these determine the calibration signal
-cfg.calibration           = ft_getopt(cfg, '', []);
-cfg.calibration.duration  = ft_getopt(cfg, 'duration', 5); % in seconds
-cfg.calibration.amplitude = ft_getopt(cfg, 'amplitude', 1);
-cfg.calibration.frequency = ft_getopt(cfg, 'frequency', [5 6 7 8 9 10]); % in Hz
-cfg.calibration.fsample   = ft_getopt(cfg, 'fsample', 1000); % in Hz
+cfg.calibration           = ft_getopt(cfg, 'calibration', []);
+cfg.calibration.duration  = ft_getopt(cfg.calibration, 'duration', 5); % in seconds
+cfg.calibration.pad       = ft_getopt(cfg.calibration, 'pad', 0); % in seconds
+cfg.calibration.amplitude = ft_getopt(cfg.calibration, 'amplitude', 1);
+cfg.calibration.frequency = ft_getopt(cfg.calibration, 'frequency', [5 6 7 8 9 10]); % in Hz
+cfg.calibration.fsample   = ft_getopt(cfg.calibration, 'fsample', 1000); % in Hz
 
 if isempty(cfg.position)
   cfg.position = get(groot, 'defaultFigurePosition');
@@ -169,7 +171,12 @@ setappdata(fig, 'coils', coils);
 ft_info('creating gui');
 setappdata(fig, 'running', 'manual');
 cb_create_gui(fig);
-cb_redraw(fig);
+
+t = timer;
+t.Period = 1;
+t.ExecutionMode = 'fixedRate';
+t.TimerFcn = {@cb_redraw, fig};
+t.start();
 
 while ishandle(fig)
   pause(0.1);
@@ -197,7 +204,6 @@ voltage = getappdata(fig, 'voltage');
 
 % clip the voltage to the specified range
 if any(voltage<cfg.range(1) | voltage>cfg.range(2))
-  ft_info('clipping voltage')
   voltage(voltage>cfg.range(2)) = cfg.range(2);
   voltage(voltage<cfg.range(1)) = cfg.range(1);
   setappdata(fig, 'voltage', voltage);
@@ -256,9 +262,8 @@ if ~isempty(calib)
     voltage(voltage<cfg.range(1)) = cfg.range(1);
   end
 
-  % show and apply the updated voltage values
+  % output the updated voltage
   setappdata(fig, 'voltage', voltage);
-  cb_redraw(fig);
   control_voltage(fig);
 
 else
@@ -295,7 +300,10 @@ end
 if ~isempty(coils) && ~coils.Running
   preload(coils, voltage');
   start(coils, 'repeatoutput');
-  fprintf('started calibration signal for %.1f seconds\n', cfg.calibration.duration);
+  while ~coils.Running
+    pause(0.1);
+  end
+  fprintf('started calibration signal for %.1f seconds\n', cfg.calibration.duration + 2*cfg.calibration.pad);
 end
 
 end % function
@@ -307,6 +315,10 @@ function calibration_stop_signal(fig)
 coils = getappdata(fig, 'coils');
 if ~isempty(coils) && coils.Running
   stop(coils);
+  flush(coils);
+  while coils.Running
+    pause(0.1);
+  end
   ft_info('stopped calibration signal');
 end
 end % function
@@ -327,12 +339,25 @@ for i=1:ncoil
   voltage(i,:) = cfg.polarity(i) * cfg.calibration.amplitude * sin(cfg.calibration.frequency(i)*2*pi*time);
 end
 
+% drop the padding at the start and end
+padsmp = (cfg.calibration.pad*fsample);
+sel     = (padsmp+1):(nsample-padsmp);
+time    = time(sel);
+voltage = voltage(:,sel);
+field   = field(:,sel);
+
 % remove the DC component from the measured field
 field = ft_preproc_baselinecorrect(field);
 
 % compute the linear mix from the input voltages on the coils towards the measured output fields on the fluxgate
 % field = calib * voltage + noise
 calib = field / voltage;
+
+figure; plot(time, field); title('field');
+figure; plot(time, voltage); title('voltage');
+figure; plot(time, calib*voltage); title('model');
+figure; plot(time, field - calib*voltage); title('residue');
+drawnow
 
 noise = field - calib*voltage;
 gof = 1 - norm(noise, 'fro')/norm(field, 'fro');
@@ -374,13 +399,14 @@ dat = str2double(split(line, ';'));
 % it switches from 'init' -> 'on' -> 'off'
 switch getappdata(fig, 'calibration')
   case 'init'
-    setappdata(fig, 'calibration', 'on');
     calibration_start_signal(fig);
     cfg = getappdata(fig, 'cfg');
-    nsample = round(cfg.calibration.duration * cfg.fsample);
+    % include padding at the start and end
+    nsample = round((cfg.calibration.duration + 2*cfg.calibration.pad) * cfg.fsample);
     nchan = numel(dat);
     buffer = nan(nchan, nsample);
     counter = 0;
+    setappdata(fig, 'calibration', 'on');
   case 'on'
     if counter<nsample
       % add the current sample to the buffer
@@ -418,7 +444,6 @@ end
 
 % add the fluxgate field strength to the figure
 setappdata(fig, 'field', dat(2:5));
-cb_redraw(fig);
 
 end % function
 
@@ -522,7 +547,7 @@ end % function
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_enable_gui(h, eventdata)
-ft_info('enable gui');
+% ft_info('enable gui');
 fig = getparent(h);
 set(findall(fig, 'type', 'uicontrol', 'style', 'text'),       'Enable', 'on');
 set(findall(fig, 'type', 'uicontrol', 'style', 'edit'),       'Enable', 'on');
@@ -536,12 +561,17 @@ if isempty(getappdata(fig, 'calib'))
   set(findall(fig, 'tag', 'cal'), 'Enable', 'off');
 end
 
-% during continuous auto nulling the coils should not be pairwise linked
+% during continuous auto nulling
 h = findall(fig, 'tag', 'cax');
 if h.Value
+  % the coils should not be pairwise linked
   set(findobj(fig, 'tag', 'c1x'), 'value', 0);
   set(findobj(fig, 'tag', 'c3x'), 'value', 0);
   set(findobj(fig, 'tag', 'c5x'), 'value', 0);
+  % these should be disabled
+  set(findall(fig, 'tag', 'ba'), 'Enable', 'off');
+  set(findall(fig, 'tag', 'bc'), 'Enable', 'off');
+  set(findall(fig, 'tag', 'bo'), 'Enable', 'off');
 end
 
 % disable the pairwise second coil when linked
@@ -585,7 +615,7 @@ end % function
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_disable_gui(h, eventdata)
-ft_info('disable gui');
+% ft_info('disable gui');
 fig = getparent(h);
 set(findall(fig, 'type', 'uicontrol', 'style', 'edit'),       'Enable', 'off');
 set(findall(fig, 'type', 'uicontrol', 'style', 'pushbutton'), 'Enable', 'off');
@@ -595,9 +625,18 @@ end % function
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function cb_redraw(h, eventdata)
+function cb_redraw(h, eventdata, timerarg)
 % disp('redraw');
-fig     = getparent(h);
+if nargin==3
+  if isvalid(timerarg)
+    fig = timerarg;
+  else
+    % this can happen when closing the application
+    return
+  end
+else
+  fig = getparent(h);
+end
 voltage = getappdata(fig, 'voltage');
 field   = getappdata(fig, 'field');
 
@@ -627,11 +666,9 @@ set(findall(fig, 'tag', 'f2e'), 'string', sprintf('%.03f nT', 1e9*field(2)));
 set(findall(fig, 'tag', 'f3e'), 'string', sprintf('%.03f nT', 1e9*field(3)));
 set(findall(fig, 'tag', 'f4e'), 'string', sprintf('%.03f nT', 1e9*field(4)));
 
-switch getappdata(fig, 'running')
-  case 'manual'
-    control_voltage(fig);
-  otherwise
-    % do nothing
+if strcmp(getappdata(fig, 'running'), 'manual')
+  % update the output voltage
+  control_voltage(fig);
 end
 
 end % function
@@ -644,8 +681,8 @@ fig     = getparent(h);
 cfg     = getappdata(fig, 'cfg');
 voltage = getappdata(fig, 'voltage');
 
-% make steps of 1.0 for the full output range of -10V to +10V 
-% make steps of 0.1 for an output range of -1V to +1V 
+% make steps of 1.0 for the full output range of -10V to +10V
+% make steps of 0.1 for an output range of -1V to +1V
 step = (cfg.range(2)-cfg.range(1))/20;
 
 switch fig.SelectionType
@@ -702,8 +739,10 @@ switch h.Tag
     cb_enable_gui(fig); % disable/enable the pairwise linked coil
   case 'cax'
     if h.Value
+      ft_info('closedloop');
       setappdata(fig, 'running', 'closedloop')
     else
+      ft_info('manual');
       setappdata(fig, 'running', 'manual')
     end
     cb_enable_gui(fig); % disable/enable the manual control of coils
@@ -789,7 +828,7 @@ voltage = getappdata(fig, 'voltage');
 voltage(:) = 0;
 setappdata(fig, 'voltage', voltage);
 control_voltage(fig);
-setappdata(fig, 'running', false);
+setappdata(fig, 'running', 'off');
 delete(fig);
 end % function
 
