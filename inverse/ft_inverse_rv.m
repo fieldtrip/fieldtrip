@@ -129,6 +129,9 @@ estimate.rv  = nan(size(sourcemodel.pos,1),1);
 estimate.pow = nan(size(sourcemodel.pos,1),1);
 estimate.mom = cell(size(sourcemodel.pos,1),1);
 
+% sum-of-squares of data matrix, can most of the time be computed once
+datsumsq = sum(sum(abs(dat).^2, 1), 2);
+
 ft_progress('init', feedback, 'scanning grid');
 for i=1:size(sourcemodel.pos,1)
   ft_progress(i/size(sourcemodel.pos,1), 'scanning grid %d/%d\n', i, size(sourcemodel.pos,1));
@@ -160,6 +163,7 @@ for i=1:size(sourcemodel.pos,1)
     else
       dat = sourcemodel.subspace{i} * dat_pre_subspace; % Subspace time-series or fourier coefficients
     end
+    datsumsq = sum(sum(abs(dat).^2, 1), 2);
   end
   
   % Projection matrix (Pseudoinverse)
@@ -168,7 +172,7 @@ for i=1:size(sourcemodel.pos,1)
   if strcmp(datatype, 'time') || strcmp(datatype, 'fourier')
     % Compute dipole moment and residual variance
     estimate.mom{i} = lfi * dat;
-    estimate.rv(i)  = sum(sum(abs(dat - lf*estimate.mom{i}).^2, 1), 2)./sum(sum(abs(dat).^2, 1), 2);
+    estimate.rv(i)  = sum(sum(abs(dat - lf*estimate.mom{i}).^2, 1), 2)./datsumsq;
     % Compute power at each location, this is convenient for plotting
     estimate.pow(i) = mean(sum(abs(estimate.mom{i}(:)).^2, 1));  % FIXME is this normalization correct?
   else
