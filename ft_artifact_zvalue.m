@@ -430,6 +430,9 @@ opt.trlop        = 1;
 opt.updatethreshold = true;
 opt.zmax         = zmax;
 opt.zsum         = zsum;
+if isfield(cfg.artfctdef.zvalue, 'montage')
+  opt.montage = cfg.artfctdef.zvalue.montage;
+end
 
 if ~thresholdsum
   opt.zval = zmax;
@@ -908,17 +911,39 @@ hdr       = opt.hdr;
 trl       = opt.trl;
 trlpadsmp = round(artcfg.trlpadding*hdr.Fs);
 channel   = opt.channel;
+hasmontage = false;
+if isfield(opt, 'montage')
+  montage = opt.montage;
+  hasmontage = true;
+else
+  hasmontage = false;
+end
 
 % determine the channel with the highest z-value to be displayed
 % this is default behavior but can be overruled in the gui
 if strcmp(channel, 'artifact')
-  [dum, indx] = max(zval);
-  chanindx      = zindx(indx);
+  if ~isempty(opt.data)
+    [dum, indx] = max(zval);
+    chanindx    = zindx(indx);
+  elseif isempty(opt.data)
+    if hasmontage
+      % the montage needs to be applied first to the data before the channel can be selected
+      chanindx    = match_str(hdr.label, montage.labelold);
+    elseif ~hasmontage
+      [dum, indx] = max(zval);
+      chanindx    = zindx(indx);
+    end
+  end
 else
   if ~isempty(opt.data)
     chanindx = match_str(channel, opt.data.label);
   else
-    chanindx = match_str(channel, hdr.label);
+    if hasmontage
+      % the montage needs to be applied first to the data before the channel can be selected
+      chanindx = match_str(hdr.label, montage.labelold);
+    elseif ~hasmontage
+      chanindx = match_str(hdr.label, channel);
+    end
   end
 end
 
@@ -929,9 +954,29 @@ else
 end
 
 % data = preproc(data, '', hdr.Fs, artcfg, [], artcfg.fltpadding, artcfg.fltpadding);
+if hasmontage
+  % convert the data temporarily to a raw structure
+  tmpdata.trial = {data};
+  tmpdata.time  = {1:size(data,2)};
+  tmpdata.label = hdr.label(chanindx);
+  % apply the montage to the data
+  tmpdata = ft_apply_montage(tmpdata, montage, 'feedback', 'none');
+  data    = tmpdata.trial{1}; % the number of channels can have changed
+  clear tmpdata
+  
+  if strcmp(channel, 'artifact')
+    [dum, indx] = max(zval);
+    chanindx    = find(chanindx==zindx(indx)); % this is relative to the original indices in the data, this is a bit ugly FIXME
+  else
+    chanindx    = match_sr(montage.labelnew, channel);
+  end
+  channame = montage.labelnew{chanindx};
+else
+  channame = hdr.label{chanindx};
+end
 
 % the string us used as title and printed in the command window
-str = sprintf('trial %3d of %d, channel %s', trlop, size(trl,1), hdr.label{chanindx});
+str = sprintf('trial %3d of %d, channel %s', trlop, size(trl,1), channame);
 fprintf('showing %s\n', str);
 
 %-----------------------------
@@ -1054,7 +1099,7 @@ else
   set(findall(h2children, 'displayname', 'vline2'), 'YData', abc2(3:4));
   set(findall(h2children, 'displayname', 'vline1'), 'visible', 'on');
   set(findall(h2children, 'displayname', 'vline2'), 'visible', 'on');
-  str = sprintf('trial %3d, channel %s', opt.trlop, hdr.label{chanindx});
+  str = sprintf('trial %3d, channel %s', opt.trlop, channame);
   title(str);
   xlim([xval(1) xval(end)]);
 end
