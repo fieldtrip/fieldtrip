@@ -20,7 +20,7 @@ function ft_realtime_fieldnulling(cfg)
 %   cfg.calibration.duration  = number in seconds (default = 5)
 %   cfg.calibration.pad       = number in seconds (default = 0)
 %   cfg.calibration.amplitude = number in Volt (default = 1)
-%   cfg.calibration.frequency = number in Hz for each of the coils (default = [5 6 7 8 9 10])
+%   cfg.calibration.frequency = number in Hz for each of the coils (default = [1 2 3 4 5 6])
 %
 % When clicking the + and - buttons, you can use the shift and ctrl
 % modifier keys to make small and even smaller steps. The step size depends
@@ -97,7 +97,7 @@ cfg.calibration           = ft_getopt(cfg, 'calibration', []);
 cfg.calibration.duration  = ft_getopt(cfg.calibration, 'duration', 5); % in seconds
 cfg.calibration.pad       = ft_getopt(cfg.calibration, 'pad', 0); % in seconds
 cfg.calibration.amplitude = ft_getopt(cfg.calibration, 'amplitude', 1);
-cfg.calibration.frequency = ft_getopt(cfg.calibration, 'frequency', [5 6 7 8 9 10]); % in Hz
+cfg.calibration.frequency = ft_getopt(cfg.calibration, 'frequency', [1 2 3 4 5 6]); % in Hz
 cfg.calibration.fsample   = ft_getopt(cfg.calibration, 'fsample', 1000); % in Hz
 
 if isempty(cfg.position)
@@ -124,7 +124,7 @@ setappdata(fig, 'cfg', cfg);
 setappdata(fig, 'field', [0 0 0 0]);          % set the initial value for the field: x, y, z, abs
 setappdata(fig, 'voltage', cfg.voltage);      % set the initial voltage
 setappdata(fig, 'calib', cfg.calib);
-setappdata(fig, 'running', 'off');            % can be 'off', 'manual', 'closedloop'
+setappdata(fig, 'closedloop', 'off');         % can be 'off', 'on'
 setappdata(fig, 'calibration', 'off');        % can be 'init', 'on', 'off'
 
 % add the callbacks
@@ -169,7 +169,7 @@ setappdata(fig, 'coils', coils);
 %% activate the graphical user interface
 
 ft_info('creating gui');
-setappdata(fig, 'running', 'manual');
+setappdata(fig, 'closedloop', 'off');
 cb_create_gui(fig);
 
 t = timer;
@@ -276,7 +276,7 @@ end % function
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function calibration_start_signal(fig)
-% output a sine wave with a different frequency on each of the coils
+% output a sine-wave with a different frequency on each of the coils
 cfg     = getappdata(fig, 'cfg');
 coils   = getappdata(fig, 'coils');
 voltage = getappdata(fig, 'voltage');
@@ -290,7 +290,7 @@ assert(numel(cfg.calibration.amplitude)==1);
 
 coils.Rate = fsample;
 
-% create one second of signal, it will loop until finished
+% create one second of a sine-wave signal, it will loop until finished
 voltage = zeros(ncoil, nsample);
 time = (0:(nsample-1))/fsample;
 for i=1:ncoil
@@ -301,7 +301,7 @@ if ~isempty(coils) && ~coils.Running
   preload(coils, voltage');
   start(coils, 'repeatoutput');
   while ~coils.Running
-    pause(0.1);
+    pause(0.05);
   end
   fprintf('started calibration signal for %.1f seconds\n', cfg.calibration.duration + 2*cfg.calibration.pad);
 end
@@ -315,10 +315,10 @@ function calibration_stop_signal(fig)
 coils = getappdata(fig, 'coils');
 if ~isempty(coils) && coils.Running
   stop(coils);
-  flush(coils);
   while coils.Running
-    pause(0.1);
+    pause(0.05);
   end
+  flush(coils);
   ft_info('stopped calibration signal');
 end
 end % function
@@ -333,10 +333,11 @@ nsample = size(field, 2);  % the number of samples of the measured field
 ncoil   = 6;
 
 time = (0:(nsample-1))/fsample;
-voltage = zeros(ncoil, nsample);
+voltage = zeros(ncoil*2, nsample);
 for i=1:ncoil
-  % FIXME what if there is a significant phase difference?
-  voltage(i,:) = cfg.polarity(i) * cfg.calibration.amplitude * sin(cfg.calibration.frequency(i)*2*pi*time);
+  % the output can be out of phase with the input, hence a cosine component is added
+  voltage(2*i-1,:) = cfg.polarity(i) * cfg.calibration.amplitude * sin(cfg.calibration.frequency(i)*2*pi*time);
+  voltage(2*i  ,:) = cfg.polarity(i) * cfg.calibration.amplitude * cos(cfg.calibration.frequency(i)*2*pi*time);
 end
 
 % drop the padding at the start and end
@@ -350,22 +351,44 @@ field   = field(:,sel);
 field = ft_preproc_baselinecorrect(field);
 
 % compute the linear mix from the input voltages on the coils towards the measured output fields on the fluxgate
-% field = calib * voltage + noise
+% field = calib * voltage + residue
 calib = field / voltage;
 
-figure; plot(time, field); title('field');
-figure; plot(time, voltage); title('voltage');
-figure; plot(time, calib*voltage); title('model');
-figure; plot(time, field - calib*voltage); title('residue');
+model = calib*voltage;
+residue = field - model;
+gof = 1 - norm(residue, 'fro')/norm(field, 'fro');
+
+figure; 
+subplot(3,1,1); plot(time, field);   title('field');
+subplot(3,1,2); plot(time, model);   title('model');
+subplot(3,1,3); plot(time, residue); title('residue');
 drawnow
 
-noise = field - calib*voltage;
-gof = 1 - norm(noise, 'fro')/norm(field, 'fro');
+% the measurement can be out of phase with the calibration signal
+% hence the model voltage contains both a sine and a cosine component
+c_sin = calib(1:2:end,:);
+c_cos = calib(2:2:end,:);
+
+% compute the phase difference between input and output
+phase = atan2(c_cos, c_sin) * 180/pi;
+
+% from the phase we can compute the delay in seconds
+delay = phase;
+for i=1:ncoil
+  delay = (1./cfg.calibration.frequency) .* phase(i,:) / 360;
+end
+
+% combine the in-phase sine and the out-of-phase cosine component, assume that the delay is small
+calib = sqrt(c_sin.^2 + c_cos.^2) * sign(v_sin);
 
 fprintf('calibration computed\n');
 
 disp('------------------ calibration in nT/V ----------------------')
 disp(calib*1e9);
+disp('------------------ phase in deg ----------------------')
+disp(phase);
+disp('------------------ delay in ms ----------------------')
+disp(delay * 1000);
 
 fprintf('goodness of fit = %.02f %%\n', gof*100);
 
@@ -424,23 +447,26 @@ switch getappdata(fig, 'calibration')
     end
   case 'off'
     % nothing to do
-end
+end % switch calibration
 
 % closed-loop updating of the voltage
-if strcmp(getappdata(fig, 'running'), 'closedloop')
-  calib  = getappdata(fig, 'calib');
-  voltage = getappdata(fig, 'voltage');
-  if ~isempty(calib)
-    residual = dat(1:3);    % only keep the x, y, and z component
-    residual = residual(:); % it should be a column vector
-    voltage  = voltage(:);  % it should be a column vector
+switch getappdata(fig, 'closedloop')
+  case 'on'
+    calib  = getappdata(fig, 'calib');
+    voltage = getappdata(fig, 'voltage');
+    if ~isempty(calib)
+      residual = dat(1:3);    % only keep the x, y, and z component
+      residual = residual(:); % it should be a column vector
+      voltage  = voltage(:);  % it should be a column vector
 
-    correction = - pinv(calib) * residual;
-    voltage = voltage + correction;
-    setappdata(fig, 'voltage', voltage);
-    control_voltage(fig);
-  end
-end
+      correction = - pinv(calib) * residual;
+      voltage = voltage + correction;
+      setappdata(fig, 'voltage', voltage);
+      control_voltage(fig);
+    end
+  case 'off'
+    % nothing to do
+end % switch running
 
 % add the fluxgate field strength to the figure
 setappdata(fig, 'field', dat(2:5));
@@ -666,7 +692,7 @@ set(findall(fig, 'tag', 'f2e'), 'string', sprintf('%.03f nT', 1e9*field(2)));
 set(findall(fig, 'tag', 'f3e'), 'string', sprintf('%.03f nT', 1e9*field(3)));
 set(findall(fig, 'tag', 'f4e'), 'string', sprintf('%.03f nT', 1e9*field(4)));
 
-if strcmp(getappdata(fig, 'running'), 'manual')
+if strcmp(getappdata(fig, 'closedloop'), 'off')
   % update the output voltage
   control_voltage(fig);
 end
@@ -739,11 +765,11 @@ switch h.Tag
     cb_enable_gui(fig); % disable/enable the pairwise linked coil
   case 'cax'
     if h.Value
-      ft_info('closedloop');
-      setappdata(fig, 'running', 'closedloop')
+      ft_info('closedloop on');
+      setappdata(fig, 'closedloop', 'on')
     else
-      ft_info('manual');
-      setappdata(fig, 'running', 'manual')
+      ft_info('closedloop off');
+      setappdata(fig, 'closedloop', 'off')
     end
     cb_enable_gui(fig); % disable/enable the manual control of coils
 
@@ -828,7 +854,7 @@ voltage = getappdata(fig, 'voltage');
 voltage(:) = 0;
 setappdata(fig, 'voltage', voltage);
 control_voltage(fig);
-setappdata(fig, 'running', 'off');
+setappdata(fig, 'closedloop', 'off');
 delete(fig);
 end % function
 
