@@ -449,7 +449,9 @@ if strcmp(cfg.gridsearch, 'yes')
       dip.pos = sourcemodel.pos(indx,:);                % note that for a symmetric dipole pair this results in a vector
       dip.pos = reshape(dip.pos,3,cfg.numdipoles)';     % convert to a Nx3 array
       dip.mom = zeros(cfg.numdipoles*3,1);              % set the dipole moment to zero
+      if isfield(sourcemodel, 'leadfield')
       dip.lf  = sourcemodel.leadfield{indx};            % copy the corresponding leadfield  
+      end
       if cfg.numdipoles==1
         ft_info('found minimum after scanning on grid point [%g %g %g]\n', dip.pos(1), dip.pos(2), dip.pos(3));
       elseif cfg.numdipoles==2
@@ -463,7 +465,9 @@ if strcmp(cfg.gridsearch, 'yes')
         dip(t).pos = sourcemodel.pos(indx,:);                 % note that for a symmetric dipole pair this results in a vector
         dip(t).pos = reshape(dip(t).pos,3,cfg.numdipoles)';   % convert to a Nx3 array
         dip(t).mom = zeros(cfg.numdipoles*3,1);               % set the dipole moment to zero
+        if isfield(sourcemodel, 'leadfield')
         dip(t).lf  = sourcemodel.leadfield{indx};            % copy the corresponding leadfield
+        end
         if cfg.numdipoles==1
           ft_info('found minimum after scanning for topography %d on grid point [%g %g %g]\n', t, dip(t).pos(1), dip(t).pos(2), dip(t).pos(3));
         elseif cfg.numdipoles==2
