@@ -179,14 +179,26 @@ Lbl    = layout.label;
 
 if point
   if ~isempty(pointsymbol) && ~isempty(pointcolor) && ~isempty(pointsize) % if they're all non-empty, don't use the default
-    if size(pointcolor, 1) == numel(X)
-      if numel(pointsymbol)==1, pointsymbol = repmat(pointsymbol, [numel(X) 1]); end
-      if numel(pointsize)==1, pointsize = repmat(pointsize, [numel(X) 1]); end  
-      for k = 1:numel(X)
-        plot(X(k), Y(k), 'marker', pointsymbol(k), 'markerfacecolor', pointcolor(k, :), 'markersize', pointsize(k), 'color', [0 0 0]);
-      end
-    else
+    ncol = size(pointcolor, 1);
+    nsym = numel(pointsymbol);
+    nsiz = numel(pointsize);
+    if (ncol == nsym) && (nsym == nsiz) && nsiz == 1 % One value for all
       plot(X, Y, 'marker', pointsymbol, 'color', pointcolor, 'markersize', pointsize, 'linestyle', 'none');
+    else % One of the parameters has more than one value, loop
+    % Expand the values to match the number of plotted markers
+      if ncol == 1
+        pointcolor = repmat(pointcolor, numel(X), 1);
+      end
+      if nsym == 1
+        pointsymbol = repmat(pointsymbol, numel(X), 1);
+      end
+      if nsiz == 1
+        pointsize = repmat(pointsize, [numel(X) 1]);
+      end  
+    % Loop
+    for k = 1:numel(X)
+      plot(X(k), Y(k), 'marker', pointsymbol(k), 'markerfacecolor', pointcolor(k, :), 'markersize', pointsize(k), 'color', [0 0 0]);
+    end
     end
   else
     plot(X, Y, 'marker', '.', 'color', 'b', 'linestyle', 'none');
