@@ -9,9 +9,9 @@ function [H] = scale(f)
 %   S   [sx, sy, sz] scaling along each of the axes
 %   H   corresponding homogenous transformation matrix
 %
-% See also TRANSLATE, ROTATE, QUATERNION, HOMOGENOUS2TRADITIONAL
+% See also TRANSLATE, ROTATE, RIGIDBODY, QUATERNION, HOMOGENOUS2TRADITIONAL
 
-% Copyright (C) 2000-2005, Robert Oostenveld
+% Copyright (C) 2000-2023, Robert Oostenveld
 %
 % This program is free software; you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by
