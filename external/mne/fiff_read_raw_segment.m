@@ -213,8 +213,6 @@ if isfield(raw, 'fastread') && raw.fastread
     % FIXME, no reason not to implement this
   end
   
-  % do the more fine grained selection
- 
   % calibrate
   if isempty(sel)
     sel = 1:size(data,1);

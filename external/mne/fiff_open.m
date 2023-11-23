@@ -57,7 +57,7 @@ fid = fopen(fname,'rb','ieee-be');
 
 if (fid < 0)
     error(me,'Cannot open file %s', fname);
-end;
+end
 %
 %   Check that this looks like a fif file
 %
