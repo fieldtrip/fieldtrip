@@ -26,10 +26,16 @@ FIFFV_NEXT_SEQ=0;
 
 me='MNE:fiff_read_tag';
 
-tag.kind = fread(fid,1,'int');
-tag.type = fread(fid,1,'int');
-tag.size = fread(fid,1,'int');
-tag.next = fread(fid,1,'int');
+data = fread(fid,4,'int');
+tag.kind = data(1);
+tag.type = data(2);
+tag.size = data(3);
+tag.next = data(4);
+
+%tag.kind = fread(fid,1,'int');
+%tag.type = fread(fid,1,'int');
+%tag.size = fread(fid,1,'int');
+%tag.next = fread(fid,1,'int');
 
 if tag.next == FIFFV_NEXT_SEQ
   fseek(fid,tag.size,'cof');

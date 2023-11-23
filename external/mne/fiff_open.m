@@ -37,6 +37,16 @@ function [fid, tree, dir] = fiff_open(fname)
 %
 
 global FIFF;
+persistent previous_tree previous_dir previous_fname
+
+if isequal(previous_fname, fname)
+  % the previous file name is the same as the current one, just open the file
+  fid  = fopen(fname,'rb','ieee-be');
+  tree = previous_tree;
+  dir  = previous_dir;
+  return;
+end
+
 if isempty(FIFF)
     FIFF = fiff_define_constants();
 end
@@ -104,4 +114,10 @@ end
 %   Back to the beginning
 %
 fseek(fid,0,'bof');
+
+% keep track of some things
+previous_tree  = tree;
+previous_dir   = dir;
+previous_fname = fname;
+
 return;
