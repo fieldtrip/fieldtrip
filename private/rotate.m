@@ -14,9 +14,9 @@ function [H] = rotate(f)
 % rotation is first done around the z-axis, then the y-axis and finally the
 % x-axis.
 %
-% See also TRANSLATE, SCALE, QUATERNION, HOMOGENOUS2TRADITIONAL
+% See also TRANSLATE, SCALE, RIGIDBODY, QUATERNION, HOMOGENOUS2TRADITIONAL
 
-% Copyright (C) 2000-2005, Robert Oostenveld
+% Copyright (C) 2000-2023, Robert Oostenveld
 %
 % This program is free software; you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by

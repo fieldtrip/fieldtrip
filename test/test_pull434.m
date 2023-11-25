@@ -2,14 +2,13 @@ function test_pull434
 
 % WALLTIME 00:10:00
 % MEM 1gb
-% DEPENDENCY
+% DEPENDENCY ft_appendsens
 % DATA no
 
-% this script tests the appending of sensor structures 
+% this script tests the appending of sensor structures
 % and specifically the handling of overlapping channels and/or electrodes
 % see https://github.com/fieldtrip/fieldtrip/pull/434
 % and the preceding https://github.com/fieldtrip/fieldtrip/pull/428
-
 
 %% construct some electrode structures
 
@@ -80,18 +79,18 @@ assert(isequal(size(append123.tra), [6 6]));
 %%
 
 elec1b.label = {'1b', '2b', '3b'};
-elec1b.elecpos = [1 1 1; 2 2 2; 3 3 3];      % same electrodes 
-elec1b.chanpos = [1 1 1; 2 2 2; 3 3 3] + 10; % different channels
+elec1b.elecpos = [1 1 1; 2 2 2; 3 3 3];      % same elecpos
+elec1b.chanpos = [1 1 1; 2 2 2; 3 3 3] + 10; % different chanpos
 elec1b.tra = eye(3);
 
 elec1c.label = {'1c', '2c', '3c'};
-elec1c.elecpos = [1 1 1; 2 2 2; 3 3 3] + 10; % different electrodes
-elec1c.chanpos = [1 1 1; 2 2 2; 3 3 3];      % same channels
+elec1c.elecpos = [1 1 1; 2 2 2; 3 3 3] + 10; % different elecpos
+elec1c.chanpos = [1 1 1; 2 2 2; 3 3 3];      % same chanpos
 elec1c.tra = eye(3);
 
 %%
 
-append11b = ft_appendsens(cfg, elec1, elec1b); % same elec, diff chan
+append11b = ft_appendsens(cfg, elec1, elec1b); % same elecpos
 
 assert(numel(append11b.label)==6);
 assert(size(append11b.chanpos,1)==6);
@@ -100,8 +99,27 @@ assert(isequal(size(append11b.tra), [6 3]));
 
 %%
 
-if false
-append11c = ft_appendsens(cfg, elec1, elec1c); % same chan, diff elec
-% this should crash because there are 6 labels and only 3 chanpos
-end
+append11c = ft_appendsens(cfg, elec1, elec1c); % different elecpos
+
+assert(numel(append11c.label)==6);
+assert(size(append11c.chanpos,1)==6);
+assert(size(append11c.elecpos,1)==6);
+assert(isequal(size(append11c.tra), [6 6]));
+
+%%
+
+elec1bip.label = {'1-2'; '2-3'};
+elec1bip.elecpos = [1 1 1; 2 2 2; 3 3 3];
+elec1bip.chanpos = [1.5 1.5 1.5; 2.5 2.5 2.5];
+elec1bip.tra = [
+  1 -1  0
+  0  1 -1
+  ];
+
+append11bip = ft_appendsens(cfg, elec1, elec1bip); % bipolar version of same electrodes
+
+assert(numel(append11bip.label)==5);
+assert(size(append11bip.chanpos,1)==5);
+assert(size(append11bip.elecpos,1)==3);
+assert(isequal(size(append11bip.tra), [5 3]));
 
