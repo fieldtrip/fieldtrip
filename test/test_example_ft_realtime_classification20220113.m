@@ -51,9 +51,13 @@ dummy = ft_definetrial(cfg);
 
 % JM added: we need prtools on the path for the following function call, so
 % download and install on the fly: at the moment (20220401) the below url works.
-t = tempdir;
-unzip('http://prtools.tudelft.nl/files/prtools4.2.5.zip', t);
-addpath(fullfile(t, 'prtools'));
+% t = tempdir;
+% unzip('http://prtools.tudelft.nl/files/prtools4.2.5.zip', t);
+% addpath(fullfile(t, 'prtools'));
+
+% RO: the prtools.tudelft.nl website does not work any more (20231125) hence I copied a version from my laptop to /home/common
+% the following will find /home/common/matlab/prtools and add it to the path
+ft_hastoolbox('prtools', 1);
 
 ft_realtime_classification(cfg);
 
