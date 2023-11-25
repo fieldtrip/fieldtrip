@@ -169,8 +169,8 @@ if ~isempty(tra) && ~any(cellfun(@isempty, tra))
   sens.tra = [];
   % this needs to be blockwise shifted
   for t = 1:numel(tra)
-    trarow = [1:size(tra{t},1)] + size(sens.tra,1);
-    tracol = [1:size(tra{t},2)] + size(sens.tra,2);
+    trarow = (1:size(tra{t},1)) + size(sens.tra,1);
+    tracol = (1:size(tra{t},2)) + size(sens.tra,2);
     sens.tra(trarow, tracol) = tra{t};
   end
 end
@@ -200,7 +200,7 @@ if ~isempty(chanposold) && all(isequal(chanposold{1}, chanposold{:})) % chanposo
   sens.chanposold = chanposold{1};
 end
 
-% remove duplicates
+% remove duplicate channels
 [lab, labidx] = unique(sens.label, 'stable');
 if ~isequal(lab, sens.label)
   ft_warning('removing channels with duplicate labels')
@@ -247,7 +247,60 @@ if ~isequal(lab, sens.label)
     sens.chanori = sens.chanori(labidx,:);
   end
 
-end % if duplicates
+end % if duplicate channels
+
+% remove duplicate electrode positions
+if isfield(sens, 'elecpos') && isfield(sens, 'tra')
+  [pos, posindx, colindx] = unique(sens.elecpos, 'rows', 'stable');
+  if ~isequal(posindx, 1:size(sens.elecpos,1))
+    ft_warning('removing duplicate electrode positions')
+    % the mapping of electrodes onto channels needs to be updated
+    for i=1:numel(posindx)
+      newcol = posindx(i);
+      oldcol = find(colindx==newcol);
+      sens.tra(:,newcol) = sum(sens.tra(:,oldcol),2);
+    end
+    % drop the duplicates
+    sens.elecpos = sens.elecpos(posindx,:);
+    sens.tra = sens.tra(:,posindx);
+  end
+end
+
+% remove duplicate optode positions
+if isfield(sens, 'optopos') && isfield(sens, 'tra')
+  [pos, posindx, colindx] = unique(sens.optopos, 'rows', 'stable');
+  if ~isequal(posindx, 1:size(sens.optopos,1))
+    ft_warning('removing duplicate optode positions')
+    % the mapping of optodes onto channels needs to be updated
+    for i=1:numel(posindx)
+      newcol = posindx(i);
+      oldcol = find(colindx==newcol);
+      sens.tra(:,newcol) = sum(sens.tra(:,oldcol),2);
+    end
+    % drop the duplicates
+    sens.optopos = sens.optopos(posindx,:);
+    sens.tra = sens.tra(:,posindx);
+  end
+end
+
+% remove duplicate magnetometer/gradiometer coil positions and orientations
+if isfield(sens, 'coilpos') && isfield(sens, 'coilori') && isfield(sens, 'tra')
+  % both the coil position and orientation needs to be considered
+  [pos, posindx, colindx] = unique([sens.coilpos sens.coilori], 'rows', 'stable');
+  if ~isequal(posindx, 1:size(sens.coilpos,1))
+    ft_warning('removing duplicate coils')
+    % the mapping of coils onto channels needs to be updated
+    for i=1:numel(posindx)
+      newcol = posindx(i);
+      oldcol = find(colindx==newcol);
+      sens.tra(:,newcol) = sum(sens.tra(:,oldcol),2);
+    end
+    % drop the duplicates
+    sens.coilpos = sens.coilpos(posindx,:);
+    sens.coilori = sens.coilori(posindx,:);
+    sens.tra = sens.tra(:,posindx);
+  end
+end
 
 % ensure up-to-date and consistent output sensor description
 sens = ft_datatype_sens(sens);
