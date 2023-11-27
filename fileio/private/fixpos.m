@@ -86,7 +86,7 @@ end
 if recurse<3
   % recurse into substructures, not too deep
   fn = fieldnames(mesh);
-  fn = setdiff(fn, {'cfg'}); % don't recurse into the cfg structure
+  fn = setdiff(fn, {'cfg', 'hdr'}); % don't recurse into the cfg or hdr structure
   for i=1:length(fn)
     if isstruct(mesh.(fn{i}))
       mesh.(fn{i}) = fixpos(mesh.(fn{i}), recurse+1);
