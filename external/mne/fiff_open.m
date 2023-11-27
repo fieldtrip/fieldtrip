@@ -36,8 +36,7 @@ function [fid, tree, dir] = fiff_open(fname)
 %   Added fiff reading routines
 %
 
-global FIFF;
-persistent previous_tree previous_dir previous_fname
+persistent FIFF previous_tree previous_dir previous_fname
 
 if isequal(previous_fname, fname)
   % the previous file name is the same as the current one, just open the file
