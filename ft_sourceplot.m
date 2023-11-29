@@ -1587,7 +1587,8 @@ yi = opt.ijk(2);
 zi = opt.ijk(3);
 qi = opt.qi;
 
-if any([xi yi zi] > functional.dim) || any([xi yi zi] <= 1)
+if any([xi yi zi] > functional.dim) || any([xi yi zi] < 1)
+  % do not redraw the functional data when the user clicked outside the volume
   return;
 end
 
