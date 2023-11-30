@@ -2,15 +2,16 @@ function [output] = volumefillholes(input, along)
 
 % VOLUMEFILLHOLES is a helper function for segmentations
 %
-% See also VOLUMETHRESHOLD, VOLUMESMOOTH
+% See also VOLUMETHRESHOLD, VOLUMESMOOTH, VOLUMEPAD, VOLUMESELECTLARGEST
 
 % ensure that SPM is available, needed for spm_bwlabel
 ft_hastoolbox('spm8up', 3) || ft_hastoolbox('spm2', 1);
 
 if nargin<2
-  inflate = false(size(input)+2);                   % grow the edges along each dimension
-  inflate(2:end-1, 2:end-1, 2:end-1) = (input~=0);  % insert the original volume
+
+  inflate = volumepad(input, 1);                    % pad the volume
   [lab, num] = spm_bwlabel(double(~inflate), 18);   % note that 18 is consistent with imfill, 26 is not
+
   if num>1
     inflate(lab~=lab(1)) = true;
     output  = inflate(2:end-1, 2:end-1, 2:end-1);   % trim the edges
