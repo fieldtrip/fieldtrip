@@ -1,12 +1,10 @@
-function [output] = volumepad(input, n)
+function [output] = volumeselectlargest(input)
 
-% VOLUMEPAR is a helper function for segmentations. It adds a layer on all sides to
-% ensure that the tissue can be meshed all the way up to the edges this also ensures
-% that the mesh at the bottom of the neck will be closed.
+% VOLUMESELECTLARGEST is a helper function for segmentations
 %
-% See also VOLUMEFILLHOLES, VOLUMESMOOTH, VOLUMETHRESHOLD
+% See also VOLUMEFILLHOLES, VOLUMETHRESHOLD, VOLUMESMOOTH, VOLUMEPAD
 
-% Copyrights (C) 2021, Robert Oostenveld
+% Copyrights (C) 2023, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -26,20 +24,24 @@ function [output] = volumepad(input, n)
 %
 % $Id$
 
-if nargin<2 || isempty(n)
-  n = 1;
-end
+ft_hastoolbox('spm8up', 3) || ft_hastoolbox('spm2', 1);
 
-dim = size(input);
+inflate = volumepad(input, 1);                    % pad the volume
+[lab, num] = spm_bwlabel(double(inflate), 18);    % note that 18 is consistent with imfill, 26 is not
 
-if islogical(input)
-  output = false(dim+2*n);
+if num>1
+  % determine the size of each cluster
+  s = zeros(1, num);
+  for i=1:num
+    s(i) = sum(lab(:)==i);
+  end
+
+  % select the largest
+  [maxsize, maxindex] = max(s);
+
+  inflate = (lab==maxindex);
+  output  = inflate(2:end-1, 2:end-1, 2:end-1);   % trim the edges
+  
 else
-  output = zeros(dim+2*n, 'like', input);
+  output = input;
 end
-
-selx = (1+n):(dim(1)+n);
-sely = (1+n):(dim(2)+n);
-selz = (1+n):(dim(3)+n);
-% insert the original data in the padded volume, the edges remain "false" or zero
-output(selx, sely, selz) = input;
