@@ -219,6 +219,14 @@ if ~isempty(asc.esacc)
   end
 end
 
+% try to also convert the messages into a table, don't know how uniform
+% this is in general, but the below assumes a 3-column matrix
+if ~isempty(asc.msg)
+  try
+    asc.msg = totable(asc.msg(:,2:end), {'stime', 'message'}, 1);
+  end
+end
+
 function lineout = convertline(linein, msgflag)
 
 % split the line by horizontal tabs, and the first output element
