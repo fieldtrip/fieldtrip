@@ -1166,14 +1166,23 @@ switch eventformat
     % contain more information than the 's' -events
     fnames = {'eblink', 'efix', 'esacc'};
     tnames = {'BLINK',  'FIX',  'SACC'};
+    if isfield(asc, 'msg') && istable(asc.msg) && size(asc.msg,2)==2
+      fnames(end+1) = {'msg'};
+      tnames(end+1) = {'MSG'};
+    end
     for k=1:length(fnames)
       if isfield(asc, fnames{k}) && ~isempty(asc.(fnames{k}))
         bfs = asc.(fnames{k});
 
         timestamp = bfs.stime;
         sample    = (timestamp-hdr.FirstTimeStamp)/hdr.TimeStampPerSample + 1;
-        value     = bfs.eye;
-        duration  = bfs.dur;
+        if ~strcmp(fnames{k}, 'msg')
+          value     = bfs.eye;
+          duration  = bfs.dur;
+        else
+          value     = bfs.message;
+          duration  = nan(size(bfs,1),1);
+        end
 
         % note that in this dataformat the first input trigger can be before
         % the start of the data acquisition
