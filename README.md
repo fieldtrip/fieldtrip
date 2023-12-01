@@ -22,6 +22,24 @@ easily allows methods researchers to incorporate new methods for EEG/MEG analysi
 
 For more information, documentation, and tutorials, please visit http://www.fieldtriptoolbox.org
 
+## Installation
+
+To install the FieldTrip toolbox on your computer, you can clone this repository or
+download the zip file, unzip it, and add it to your MATLAB path. Subsequently you call
+the `ft_defaults` function, which will add the required subdirectories to the path.
+
+We recommend that you add the `addpath(...)` and the `ft_defaults` command to your
+[startup.m](https://www.mathworks.com/help/matlab/ref/startup.html) file. See 
+also https://www.fieldtriptoolbox.org/faq/installation/
+
+Note that you should not use `addpath(genpath(...))` and we recommend not to use the
+"add with subdirectories" button in the graphical path setup tool, as there are a
+number of external toolboxes and backward compatibility directories that you should
+not add to your path. If those directories are needed, then `ft_defaults` and
+`ft_hastoolbox` will take care of them.
+
+## Copyright
+
 The FieldTrip software is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
