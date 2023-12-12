@@ -1978,7 +1978,7 @@ switch headerformat
       isepoched = 1;
       
       % read in the epochs info, this also gets all the data already
-      epochs = fiff_read_epochs(fid, tree);
+      epochs = fiff_read_epochs(filename);
       
       hdr.nSamples    = length(epochs.times);
       hdr.nSamplesPre = sum(epochs.times < 0);
