@@ -264,7 +264,7 @@ else
   % how many Magnetometers?
   nMag = 0;
   for i = 1:orig.nchan
-    nMag = nMag +(orig.chs(i).coil_type==3022 | orig.chs(i).coil_type==3023 | orig.chs(i).coil_type==3024);
+    nMag = nMag + (orig.chs(i).coil_type==3022 | orig.chs(i).coil_type==3023 | orig.chs(i).coil_type==3024 | orig.chs(i).coil_type==8101);
   end
   
   % how many Axial gradiometers?
@@ -309,7 +309,7 @@ else
   % ever be the case but acts as a safety net...
   
   for n = 1:orig.nchan
-    if (orig.chs(n).coil_type==3022 || orig.chs(n).coil_type==3023 || orig.chs(n).coil_type==3024) % magnetometer
+    if (orig.chs(n).coil_type==3022 || orig.chs(n).coil_type==3023 || orig.chs(n).coil_type==3024 || orig.chs(n).coil_type==8101) % magnetometer
       t = orig.chs(n).coil_trans;
       
       % TC 2011 09 24 I have changed the coil definition, the original was
