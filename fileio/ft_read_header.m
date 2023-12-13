@@ -1979,7 +1979,8 @@ switch headerformat
       
       % read in the epochs info, this also gets all the data already
       epochs = fiff_read_epochs(filename);
-      
+      epochs.data = permute(epochs.data, [2 3 1]); % chan x time x rpt
+
       hdr.nSamples    = length(epochs.times);
       hdr.nSamplesPre = sum(epochs.times < 0);
       hdr.nTrials     = size(epochs.data, 3); % because the data matrix has been permuted
