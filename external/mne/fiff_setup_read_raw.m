@@ -83,10 +83,6 @@ end
 %
 %   Special handling of data recorded with Internal Active Shielding
 %
-raw = fiff_dir_tree_find(meas,FIFF.FIFFB_RAW_DATA);
-if isempty(raw)
-    raw = fiff_dir_tree_find(meas,FIFF.FIFFB_CONTINUOUS_DATA);
-end
 if isempty(raw) && allow_maxshield
     raw = fiff_dir_tree_find(meas,FIFF.FIFFB_IAS_RAW_DATA);
     if ~isempty(raw)
@@ -146,71 +142,126 @@ if dir(first).kind == FIFF.FIFF_FIRST_SAMPLE
 end
 data.first_samp = first_samp;
 %
-%   Go through the remaining tags in the directory
+%   Check whether the data are organized uniformly as one sample per tag,
+%   which may create an administrative overhead in file handling, that can
+%   be avoided. The extraction of the data from the struct array may take
+%   some time for large arrays, but is worth the wait, because still faster
+%   than looping across all tags in the other case. Note that the
+%   first_skip is required to be 0 in addition to the other conditions
 %
-rawdir = struct('ent',{},'first',{},'last',{},'nsamp',{});
-nskip = 0;
-ndir  = 0;
-for k = first:nent
+dir_kind = cat(2, dir.kind);
+dir_type = cat(2, dir.type);
+dir_siz  = cat(2, dir.size);
+dir_pos  = cat(2, dir.pos);
+if all(dir_kind == FIFF.FIFF_DATA_BUFFER) && all(diff(dir_pos)==(dir_siz(1)+16)) && all(dir_siz==dir_siz(1)) && all(dir_type==dir_type(1)) && first_skip==0
+  switch dir_type(1)
+    case FIFF.FIFFT_DAU_PACK16
+      nsamp = dir_siz(1)/(2*nchan);
+    case FIFF.FIFFT_SHORT
+      nsamp = dir_siz(1)/(2*nchan);
+    case FIFF.FIFFT_FLOAT
+      nsamp = dir_siz(1)/(4*nchan);
+    case FIFF.FIFFT_INT
+      nsamp = dir_siz(1)/(4*nchan);
+    case FIFF.FIFFT_DOUBLE
+      nsamp = dir_siz(1)/(8*nchan);
+    case FIFF.FIFFT_COMPLEX_FLOAT
+      nsamp = dir_siz(1)/(8*nchan);
+    case FIFF.FIFFT_COMPLEX_DOUBLE
+      nsamp = dir_siz(1)/(16*nchan);
+    otherwise
+      fclose(fid);
+      error(me,'Cannot handle data buffers of type %d',dir_type(1));
+  end
+  nsamp = double(nsamp);
+  
+  firstsamp = cumsum([first_samp nsamp(ones(1,nent-first))]); 
+  lastsamp  = firstsamp + nsamp - 1;
+  
+  % organize this slightly differently than in the original way. This is
+  % much faster, and should not be too big of a problem, provided the
+  % downstream reading function also knows how to interpret both
+  % representations
+  rawdir.first = firstsamp;
+  rawdir.last  = lastsamp;
+  rawdir.pos   = dir_pos;
+  rawdir.type  = dir_type(1);
+  rawdir.kind  = dir_kind(1);
+  rawdir.size  = dir_siz(1);
+  rawdir.nsamp = nsamp;
+  
+  data.first_samp = firstsamp(1);
+  data.last_samp  = lastsamp(end);
+  data.fastread   = true; % add flag that can be used later for fast reading
+else
+  %
+  %   Go through the remaining tags in the directory
+  %
+  rawdir = struct('ent',{},'first',{},'last',{},'nsamp',{});
+  nskip = 0;
+  ndir  = 0;
+  for k = first:nent
     ent = dir(k);
     if ent.kind == FIFF.FIFF_DATA_SKIP
-        tag = fiff_read_tag(fid,ent.pos);
-        nskip = tag.data;
+      tag = fiff_read_tag(fid,ent.pos);
+      nskip = tag.data;
     elseif ent.kind == FIFF.FIFF_DATA_BUFFER
-        %
-        %   Figure out the number of samples in this buffer
-        %
-        switch ent.type
-            case FIFF.FIFFT_DAU_PACK16
-                nsamp = ent.size/(2*nchan);
-            case FIFF.FIFFT_SHORT
-                nsamp = ent.size/(2*nchan);
-            case FIFF.FIFFT_FLOAT
-                nsamp = ent.size/(4*nchan);
-            case FIFF.FIFFT_INT
-                nsamp = ent.size/(4*nchan);
-            case FIFF.FIFFT_DOUBLE
-                nsamp = ent.size/(8*nchan);
-            case FIFF.FIFFT_COMPLEX_FLOAT
-                nsamp = ent.size/(8*nchan);
-            case FIFF.FIFFT_COMPLEX_DOUBLE
-                nsamp = ent.size/(16*nchan);
-            otherwise
-                fclose(fid);
-                error(me,'Cannot handle data buffers of type %d',ent.type);
-        end
-        %
-        %  Do we have an initial skip pending?
-        %
-        if first_skip > 0
-            first_samp = first_samp + nsamp*first_skip;
-            data.first_samp = first_samp;
-            first_skip = 0;
-        end
-        %
-        %  Do we have a skip pending?
-        %
-        if nskip > 0
-            ndir        = ndir+1;
-            rawdir(ndir).ent   = [];
-            rawdir(ndir).first = first_samp;
-            rawdir(ndir).last  = first_samp + nskip*nsamp - 1;
-            rawdir(ndir).nsamp = nskip*nsamp;
-            first_samp = first_samp + nskip*nsamp;
-            nskip = 0;
-        end
-        %
-        %  Add a data buffer
-        %
-        ndir               = ndir+1;
-        rawdir(ndir).ent   = ent;
+      %
+      %   Figure out the number of samples in this buffer
+      %
+      switch ent.type
+        case FIFF.FIFFT_DAU_PACK16
+          nsamp = ent.size/(2*nchan);
+        case FIFF.FIFFT_SHORT
+          nsamp = ent.size/(2*nchan);
+        case FIFF.FIFFT_FLOAT
+          nsamp = ent.size/(4*nchan);
+        case FIFF.FIFFT_INT
+          nsamp = ent.size/(4*nchan);
+        case FIFF.FIFFT_DOUBLE
+          nsamp = ent.size/(8*nchan);
+        case FIFF.FIFFT_COMPLEX_FLOAT
+          nsamp = ent.size/(8*nchan);
+        case FIFF.FIFFT_COMPLEX_DOUBLE
+          nsamp = ent.size/(16*nchan);
+        otherwise
+          fclose(fid);
+          error(me,'Cannot handle data buffers of type %d',ent.type);
+      end
+      %
+      %  Do we have an initial skip pending?
+      %
+      if first_skip > 0
+        first_samp = first_samp + nsamp*first_skip;
+        data.first_samp = first_samp;
+        first_skip = 0;
+      end
+      %
+      %  Do we have a skip pending?
+      %
+      if nskip > 0
+        ndir        = ndir+1;
+        rawdir(ndir).ent   = [];
         rawdir(ndir).first = first_samp;
-        rawdir(ndir).last  = first_samp + nsamp - 1;
-        rawdir(ndir).nsamp = nsamp;
-        first_samp = first_samp + nsamp;
+        rawdir(ndir).last  = first_samp + nskip*nsamp - 1;
+        rawdir(ndir).nsamp = nskip*nsamp;
+        first_samp = first_samp + nskip*nsamp;
+        nskip = 0;
+      end
+      %
+      %  Add a data buffer
+      %
+      ndir               = ndir+1;
+      rawdir(ndir).ent   = ent;
+      rawdir(ndir).first = first_samp;
+      rawdir(ndir).last  = first_samp + nsamp - 1;
+      rawdir(ndir).nsamp = nsamp;
+      first_samp = first_samp + nsamp;
     end
+  end
+  data.last_samp  = first_samp - 1;
 end
-data.last_samp  = first_samp - 1;
+
 %
 %   Add the calibration factors
 %
@@ -232,20 +283,5 @@ fprintf(1,'Ready.\n');
 fclose(data.fid);
 data.fid = -1;
 return;
-
-    function [tag] = find_tag(node,findkind)
-
-        for p = 1:node.nent
-            kind = node.dir(p).kind;
-            pos  = node.dir(p).pos;
-            if kind == findkind
-                tag = fiff_read_tag(fid,pos);
-                return;
-            end
-        end
-        tag = [];
-        return
-
-    end
 
 end
