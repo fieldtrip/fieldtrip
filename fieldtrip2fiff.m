@@ -318,11 +318,11 @@ elseif isepch
 
   % remap the event values in the matrix to index into the unique values,
   % to be able to the the reverse interpretation correctly
-  tmp = events(:,3);
-  for k = 1:numel(vals(2,:))
-    tmp(events(:,3)==vals(2,k)) = k;
-  end
-  events(:,3) = tmp;
+  %tmp = events(:,3);
+  % for k = 1:numel(vals(2,:))
+  %   tmp(events(:,3)==vals(2,k)) = k;
+  % end
+  % events(:,3) = tmp;
 
   eventid = sprintf('event_%d: %d;',vals(:));
   eventid = eventid(1:end-1); % remove the last comma
