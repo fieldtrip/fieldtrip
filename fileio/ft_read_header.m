@@ -1908,8 +1908,8 @@ switch headerformat
     % ensure that the required low-level toolbox is available, if possible
     ft_hastoolbox('mne', 1);
 
-    [fid, tree] = fiff_open(filename);
-    info        = fiff_read_meas_info(fid, tree);
+    [fid, tree]  = fiff_open(filename);
+    [info, meas] = fiff_read_meas_info(fid, tree);
     fclose(fid);
     
     % convert to FieldTrip format header
@@ -1989,14 +1989,12 @@ switch headerformat
     else
       iscontinuous = 1;
       
-      allow_maxshield = true;
-      raw = fiff_setup_read_raw(filename, allow_maxshield);
-      
-      % no error message from fiff_setup_read_raw? Then maxshield
-      % was applied, but maxfilter wasn't, so return this error:
-      if istrue(checkmaxfilter)
+      raw     = fiff_setup_read_raw(filename, 1);
+      has_ias = ~isempty(fiff_dir_tree_find(meas,FIFF.FIFFB_IAS_RAW_DATA));
+
+      if has_ias && istrue(checkmaxfilter)
         ft_error('Maxshield data should be corrected using Maxfilter prior to importing in FieldTrip.');
-      else
+      elseif has_ias
         ft_warning('Maxshield data should be corrected using Maxfilter prior to importing in FieldTrip.');
       end
       hdr.nSamples    = raw.last_samp - raw.first_samp + 1; % number of samples per trial
