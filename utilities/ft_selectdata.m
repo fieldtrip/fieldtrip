@@ -102,6 +102,7 @@ assert(~ismember(dtype, {'elec', 'grad', 'opto', 'layout'}), 'invalid input data
 % ensure that the user does not give invalid selection options
 cfg = ft_checkconfig(cfg, 'forbidden', {'foi', 'toi'});
 
+cfg = ft_checkconfig(cfg, 'forbidden',  {'channels', 'trial'}); % prevent accidental typos, see issue 1729
 cfg = ft_checkconfig(cfg, 'renamed',    {'selmode',    'select'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'toilim',     'latency'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'foilim',     'frequency'});

@@ -121,6 +121,7 @@ function [hdr] = ft_read_header(filename, varargin)
 persistent cacheheader        % for caching the full header
 persistent cachechunk         % for caching the res4 chunk when doing realtime analysis on the CTF scanner
 persistent db_blob            % for fcdc_mysql
+global FIFF                   % for fiff-files
 
 if isempty(db_blob)
   db_blob = false;
@@ -1904,11 +1905,13 @@ switch headerformat
     hdr.orig = log;
 
   case {'neuromag_fif' 'neuromag_mne'}
-    % check that the required low-level toolbox is available
+    % ensure that the required low-level toolbox is available, if possible
     ft_hastoolbox('mne', 1);
 
-    info = fiff_read_meas_info(filename);
-
+    [fid, tree]  = fiff_open(filename);
+    [info, meas] = fiff_read_meas_info(fid, tree);
+    fclose(fid);
+    
     % convert to FieldTrip format header
     hdr.label       = info.ch_names(:);
     hdr.nChans      = info.nchan;
@@ -1930,64 +1933,9 @@ switch headerformat
     iscontinuous  = 0;
     isepoched     = 0;
     isaverage     = 0;
-
-    if isempty(fiff_find_evoked(filename)) % true if file contains no evoked responses
-      try
-        epochs = fiff_read_epochs(filename);
-        epochs.data = permute(epochs.data, [2 3 1]); % makes life much easier later on (chan_time_rpt)
-        isepoched = 1;
-      catch
-        % the "catch me" syntax is broken on MATLAB74, this fixes it
-        me = lasterror;
-        if strcmp(me.identifier, 'MNE:fiff_read_epochs') || strcmp(me.identifier, 'MNE:fiff_read_events')
-          iscontinuous = 1;
-        else
-          rethrow(me)
-        end
-      end
-
-    else
+    if ~isempty(fiff_dir_tree_find(tree, FIFF.FIFFB_EVOKED)) % true file contains evoked responses
       isaverage = 1;
-    end
-
-    if iscontinuous
-      try
-        % we only use 1 input argument here to allow backward
-        % compatibility up to MNE 2.6.x:
-        raw = fiff_setup_read_raw(filename);
-      catch
-        % the "catch me" syntax is broken on MATLAB74, this fixes it
-        me = lasterror;
-        % there is an error - we try to use MNE 2.7.x (if present) to
-        % determine if the cause is maxshielding:
-        try
-          allow_maxshield = true;
-          raw = fiff_setup_read_raw(filename,allow_maxshield);
-        catch
-          % unknown problem, or MNE version 2.6.x or less:
-          rethrow(me);
-        end
-        % no error message from fiff_setup_read_raw? Then maxshield
-        % was applied, but maxfilter wasn't, so return this error:
-        if istrue(checkmaxfilter)
-          ft_error('Maxshield data should be corrected using Maxfilter prior to importing in FieldTrip.');
-        else
-          ft_warning('Maxshield data should be corrected using Maxfilter prior to importing in FieldTrip.');
-        end
-      end
-      hdr.nSamples    = raw.last_samp - raw.first_samp + 1; % number of samples per trial
-      hdr.nSamplesPre = -raw.first_samp;
-      % otherwise conflicts will occur in read_data
-      hdr.nTrials     = 1;
-      info.raw        = raw; % keep all the details
-
-    elseif isepoched
-      hdr.nSamples    = length(epochs.times);
-      hdr.nSamplesPre = sum(epochs.times < 0);
-      hdr.nTrials     = size(epochs.data, 3); % because the data matrix has been permuted
-      info.epochs     = epochs;  % this is used by read_data to get the actual data, i.e. to prevent re-reading
-
-    elseif isaverage
+      
       try
         evoked_data    = fiff_read_evoked_all(filename);
         vartriallength = any(diff([evoked_data.evoked.first])) || any(diff([evoked_data.evoked.last]));
@@ -2015,6 +1963,7 @@ switch headerformat
           info.info       = evoked_data.info;               % keep all the details
           info.vartriallength = 0;
         end
+        
       catch
         % this happens if fiff_read_evoked_all cannot find evoked
         % responses, in which case it errors due to not assigning the
@@ -2024,8 +1973,37 @@ switch headerformat
         hdr.nSamplesPre = 0;
         hdr.nTrials     = 0;
       end
-    end
+    
+    elseif ~isempty(fiff_dir_tree_find(tree, FIFF.FIFFB_MNE_EPOCHS))
+      isepoched = 1;
+      
+      % read in the epochs info, this also gets all the data already
+      epochs = fiff_read_epochs(filename);
+      epochs.data = permute(epochs.data, [2 3 1]); % chan x time x rpt
 
+      hdr.nSamples    = length(epochs.times);
+      hdr.nSamplesPre = sum(epochs.times < 0);
+      hdr.nTrials     = size(epochs.data, 3); % because the data matrix has been permuted
+      info.epochs     = epochs;  % this is used by read_data to get the actual data, i.e. to prevent re-reading
+      
+    else
+      iscontinuous = 1;
+      
+      raw     = fiff_setup_read_raw(filename, 1);
+      has_ias = ~isempty(fiff_dir_tree_find(meas,FIFF.FIFFB_IAS_RAW_DATA));
+
+      if has_ias && istrue(checkmaxfilter)
+        ft_error('Maxshield data should be corrected using Maxfilter prior to importing in FieldTrip.');
+      elseif has_ias
+        ft_warning('Maxshield data should be corrected using Maxfilter prior to importing in FieldTrip.');
+      end
+      hdr.nSamples    = raw.last_samp - raw.first_samp + 1; % number of samples per trial
+      hdr.nSamplesPre = -raw.first_samp;
+      % otherwise conflicts will occur in read_data
+      hdr.nTrials     = 1;
+      info.raw        = raw; % keep all the details
+    end
+    
     % remember the original header details
     hdr.orig = info;
 

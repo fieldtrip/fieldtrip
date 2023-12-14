@@ -31,7 +31,7 @@ function [tree, last] = fiff_make_dir_tree(fid,dir,start,indent)
 
 %
 %  Define the relevant constants here
-%  no need to get the whole fiff_define_costants
+%  no need to get the whole fiff_define_constants
 %
 FIFF_BLOCK_START     = 104;
 FIFF_BLOCK_END       = 105;
@@ -66,7 +66,6 @@ if verbose ~= 0
     fprintf(1,'start { %d\n',block);
 end
 
-nchild = 0;
 this = start;
 
 tree.block    = block;
@@ -77,14 +76,15 @@ tree.nchild   = 0;
 tree.dir      = dir(this);
 tree.children = struct('block', {}, 'id', {}, 'parent_id', {}, 'nent', {}, 'nchild', {}, 'dir', {}, 'children', {});
 while this <= length(dir)
-    if dir(this).kind == FIFF_BLOCK_START
+    thiskind = dir(this).kind;
+    if thiskind == FIFF_BLOCK_START
         if this ~= start
             [ child , this ] = fiff_make_dir_tree(fid,dir,this,indent+1);
             tree.nchild = tree.nchild + 1;
             tree.children(tree.nchild) = child;
 
         end
-    elseif dir(this).kind == FIFF_BLOCK_END
+    elseif thiskind == FIFF_BLOCK_END
         tag = fiff_read_tag(fid,dir(start).pos);
         if tag.data == block
             break;
@@ -96,15 +96,15 @@ while this <= length(dir)
         %  Add the id information if available
         %
         if block == 0
-            if dir(this).kind == FIFF_FILE_ID
+            if thiskind == FIFF_FILE_ID
                 tag = fiff_read_tag(fid,dir(this).pos);
                 tree.id = tag.data;
             end
         else
-            if dir(this).kind == FIFF_BLOCK_ID
+            if thiskind == FIFF_BLOCK_ID
                 tag = fiff_read_tag(fid,dir(this).pos);
                 tree.id = tag.data;
-            elseif dir(this).kind == FIFF_PARENT_BLOCK_ID
+            elseif thiskind == FIFF_PARENT_BLOCK_ID
                 tag = fiff_read_tag(fid,dir(this).pos);
                 tree.parent_id = tag.data;
             end

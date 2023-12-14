@@ -1,22 +1,22 @@
-function fid = fopen_or_error(filename, mode, varargin)
+function fid = fopen_or_error(filename, permission, varargin)
 
 % FOPEN_OR_ERROR Opens a file, like fopen, but throws an exception if the open failed.
 %
 % This keeps you from having to write "if fid < 0; error(...)" everywhere
 % you do an fopen.
 %
-% See also ISDIR_OR_MKDIR
+% See also FOPEN, ISDIR_OR_MKDIR
 
-if nargin < 2 || isempty(mode)
-  mode = 'r';
+if nargin < 2 || isempty(permission)
+  permission = 'r';
 end
 
-[fid, msg] = fopen(filename, mode, varargin{:});
+[fid, msg] = fopen(filename, permission, varargin{:});
 
 if fid < 0
-  if any(mode == 'w')
+  if any(permission == 'w')
     mode_descr = 'writing';
-  elseif any(mode == 'a')
+  elseif any(permission == 'a')
     mode_descr = 'appending';
   else
     mode_descr = 'reading';
