@@ -203,6 +203,25 @@ switch version
       
     end % ifnirs
     
+    % ensure internal consistency
+    nchan = numel(sens.label);
+    if isfield(sens, 'chanpos')
+      assert(size(sens.chanpos, 1)==nchan, 'sensor structure is inconsistent');
+    end
+    if isfield(sens, 'chanori')
+      assert(size(sens.chanori, 1)==nchan, 'sensor structure is inconsistent');
+    end
+    if isfield(sens, 'tra')
+      assert(size(sens.tra, 1)==nchan);
+      if isfield(sens, 'elecpos')
+        assert(size(sens.tra,2)==size(sens.elecpos,1), 'sensor structure is inconsistent')
+      elseif isfield(sens, 'optopos')
+        assert(size(sens.tra,2)==size(sens.optopos,1), 'sensor structure is inconsistent')
+      elseif isfield(sens, 'coilpos')
+        assert(size(sens.tra,2)==size(sens.coilpos,1), 'sensor structure is inconsistent')
+      end
+    end
+
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   case '2019'
     % update it to the previous standard version
