@@ -8,7 +8,8 @@ function fiff_write_epochs(name,data,datatype)
 %
 
 % This function has been adjusted by Jan-Mathijs Schoffelen, inspired by the 
-% fiff_write_evoked function:
+% fiff_write_evoked function, in order to achieve some more symmetry with
+% respect to the reading and writing of epoched data files.
 %
 %   Author : Matti Hamalainen, MGH Martinos Center
 %   License : BSD 3-clause
