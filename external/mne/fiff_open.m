@@ -50,11 +50,11 @@ if isempty(FIFF)
     FIFF = fiff_define_constants();
 end
 
-me='MNE:fiff_open';
-verbose=false;
+me = 'MNE:fiff_open';
+verbose = false;
 fid = fopen(fname,'rb','ieee-be');
 
-if (fid < 0)
+if fid < 0
     error(me,'Cannot open file %s', fname);
 end
 %
@@ -119,4 +119,4 @@ previous_tree  = tree;
 previous_dir   = dir;
 previous_fname = fname;
 
-return;
+return

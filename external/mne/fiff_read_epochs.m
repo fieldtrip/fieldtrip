@@ -2,7 +2,7 @@ function [epochs] = fiff_read_epochs(fname)
 %
 % [epochs] = fiff_read_epochs(fname,setno)
 %
-% Read eochs from file
+% Read epochs from file
 %
 %
 %   Author : Martin Luessi, MGH Martinos Center
