@@ -1917,6 +1917,11 @@ switch headerformat
     hdr.nChans      = info.nchan;
     hdr.Fs          = info.sfreq;
 
+    if ft_senstype(hdr, 'fieldline') && isempty(coilaccuracy)
+      ft_warning('FieldLine data requires coilaccuracy>=1');
+      coilaccuracy = 1;
+    end
+
     % add a gradiometer structure for forward and inverse modelling
     try
       [grad, elec] = mne2grad(info, strcmp(coordsys, 'dewar'), coilaccuracy, coildeffile);
@@ -1928,6 +1933,20 @@ switch headerformat
       end
     catch
       disp(lasterr);
+    end
+
+    % remove the electronics chassis number from the fieldline channel names
+    if ft_senstype(hdr, 'fieldline_v3') && any(contains(hdr.label, '-s'))
+      for i=1:length(hdr.label)
+        tok = split(hdr.label{i}, '-');
+        hdr.label{i} = tok{1};
+      end
+    end
+    if isfield(hdr, 'grad') && ft_senstype(hdr.grad, 'fieldline_v3') && any(contains(hdr.grad.label, '-s'))
+      for i=1:length(hdr.grad.label)
+        tok = split(hdr.grad.label{i}, '-');
+        hdr.grad.label{i} = tok{1};
+      end
     end
 
     iscontinuous  = 0;
