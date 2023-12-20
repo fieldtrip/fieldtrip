@@ -112,6 +112,9 @@ cfg = ft_checkconfig(cfg, 'renamedval', {'funparameter', 'avg.pow', 'pow'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'funparameter', 'avg.coh', 'coh'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'funparameter', 'avg.mom', 'mom'});
 
+% set the defaults
+cfg.feedback = ft_getopt(cfg, 'feedback', 'text');
+
 if ~iscell(cfg.parameter)
   cfg.parameter = {cfg.parameter};
 end
@@ -427,9 +430,11 @@ for p = 1:length(cfg.parameter)
             y = feval(operation, arginval{:});
           end
         else
+          ft_progress('init', cfg.feedback, 'Processing trials...')
           y = cell(size(x1));
           % do the same thing, but now for each element of the cell-array
           for i=1:numel(y)
+            ft_progress(i/numel(y), 'Processing trial %d from %d', i, numel(y))
             for j=1:length(varargin)
               % rather than working with x1 and x2, we need to work on its elements
               % xx1 is one element of the x1 cell-array
@@ -445,7 +450,8 @@ for p = 1:length(cfg.parameter)
             else
               y{i} = feval(operation, arginval{:});
             end
-          end % for each element
+          end % for i over each element
+          ft_progress('close');
         end % iscell or not
 
     end % switch
@@ -453,7 +459,7 @@ for p = 1:length(cfg.parameter)
 
   % store the result of the operation in the output structure
   data = setsubfield(data, cfg.parameter{p}, y);
-end % p over length(cfg.parameter)
+end % for p over all parameters
 
 % certain fields should remain in the output, but only if they are identical in all inputs
 keepfield = {'grad', 'elec', 'opto', 'inside', 'trialinfo', 'sampleinfo', 'tri', 'brainordinate'};
