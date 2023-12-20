@@ -314,7 +314,7 @@ elseif issubfield(input, 'orig.raw.info') && mean(ismember(input.orig.raw.info.c
 
 elseif issubfield(input, 'orig.raw.info') && mean(ismember(input.orig.raw.info.ch_names, ft_senstype('neuromag122')))>0.5
   % this is a complete header that was read from a FIF file
-  type = 'neuromag306';
+  type = 'neuromag122';
 
 elseif issubfield(input, 'orig.FILE.Ext') && strcmp(input.orig.FILE.Ext, 'edf')
   % this is a complete header that was read from an EDF or EDF+ dataset
