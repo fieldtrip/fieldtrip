@@ -63,10 +63,6 @@ switch style
     
     % convert from a cumulative to an exclusive representation
     contains = false(length(fn));
-    if length(fn)>4
-      % test for each tissue whether it is overlapping with or contained in each other tissue
-      ft_warning('more than 4 tissue types, this may take a while');
-    end
     for i=1:length(fn)
       segi = segmentation.(fn{i})>0;
       for j=1:length(fn)

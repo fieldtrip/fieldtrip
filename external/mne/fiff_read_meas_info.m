@@ -188,7 +188,7 @@ if length(chs) ~= nchan
 end
 
 
-if isempty(dev_head_t) || isempty(ctf_head_t)
+if isempty(dev_head_t) && isempty(ctf_head_t)
     hpi_result = fiff_dir_tree_find(meas_info,FIFF.FIFFB_HPI_RESULT);
     if length(hpi_result) == 1
         for k = 1:hpi_result.nent

@@ -107,6 +107,7 @@ fieldtrip2fiff(fullfile(savedir, 'data_evoked_complex_single.fif'), ft_timelocka
 % Read in the data and compare against the benchmarks
 cfg         = [];
 cfg.dataset = fullfile(savedir, 'data_epoched_double.fif');
+cfg.checkmaxfilter = false;
 datafif     = ft_preprocessing(cfg);
 assert(isequal(datafif.trial{1}, t1));
 cfg.dataset = fullfile(savedir, 'data_epoched_single.fif');

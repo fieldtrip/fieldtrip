@@ -55,7 +55,7 @@ function ft_uilayout(h, varargin)
 %
 %   ft_uilayout(h, 'tag', '.*', 'BackGroundColor', [1 0 0]);
 %
-% See also UICONTROL
+% See also UICONTROL, ALIGN, UISTACK
 
 % Copyright (C) 2009-2015, Robert Oostenveld
 %

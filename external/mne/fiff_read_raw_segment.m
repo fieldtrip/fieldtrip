@@ -46,6 +46,11 @@ function [data,times] = fiff_read_raw_segment(raw,from,to,sel)
 %
 %
 
+global FIFF;
+if isempty(FIFF)
+    FIFF = fiff_define_constants();
+end
+
 me='MNE:fiff_read_raw_segment';
 
 if nargin == 3
@@ -128,108 +133,204 @@ else
    fid = raw.fid;
 end
 
-for k = 1:length(raw.rawdir)
+if isfield(raw, 'fastread') && raw.fastread
+  % the data are organized in a way that allows for fast reading, without
+  % the overhead of interpreting all the tags
+  
+  % note: the overhead is 16 bytes per tag, each tag contains an
+  % nchanxnsamp data vector, in the precision as specified by the type
+  iscomplex = false;
+  switch raw.rawdir.type(1)
+    %
+    %   Simple types, does not allow for matrix coding, don't know whether
+    %   that latter scenario will occur, ever.
+    %
+    
+    case FIFF.FIFFT_BYTE
+      nrows   = raw.rawdir.size/(raw.rawdir.nsamp*1);
+      nextra  = 16;
+      readstr = 'uint8=>uint8';
+    case FIFF.FIFFT_SHORT
+      nrows   = raw.rawdir.size/(raw.rawdir.nsamp*2);
+      nextra  = 8;
+      readstr = 'int16=>int16';
+    case FIFF.FIFFT_INT
+      nrows   = raw.rawdir.size/(raw.rawdir.nsamp*4);
+      nextra  = 4;
+      readstr =  'int32=>int32';
+    case FIFF.FIFFT_USHORT
+      nrows   = raw.rawdir.size/(raw.rawdir.nsamp*2);
+      nextra  = 8;
+      readstr = 'uint16=>uint16';
+    case FIFF.FIFFT_UINT
+      nrows   = raw.rawdir.size/(raw.rawdir.nsamp*4);
+      nextra  = 4; 
+      readstr = 'uint32=>uint32';
+    case FIFF.FIFFT_FLOAT
+      nrows   = raw.rawdir.size/(raw.rawdir.nsamp*4);
+      nextra  = 4;
+      readstr = 'single=>double';
+    case FIFF.FIFFT_DOUBLE
+      nrows   = raw.rawdir.size/(raw.rawdir.nsamp*8);
+      nextra  = 2;
+      readstr = 'double';
+    case FIFF.FIFFT_DAU_PACK16
+      nrows   = raw.rawdir.size/(raw.rawdir.nsamp*2);
+      nextra  = 8; 
+      readstr = 'int16=>int16';
+    case FIFF.FIFFT_COMPLEX_FLOAT
+      nrows   = raw.rawdir.size/(raw.rawdir.nsamp*4);
+      nextra  = 4;
+      readstr = 'single=>double';
+      iscomplex = true;
+    case FIFF.FIFFT_COMPLEX_DOUBLE
+      nrows   = raw.rawdir.size/(raw.rawdir.nsamp*8);
+      nextra  = 2;
+      readstr = 'double';
+      iscomplex = true;
+    otherwise
+      error(me,'Unsupported data type for fast reading');
+  end
+  
+  if nrows~=round(nrows)
+    error(me,'This datafile does not allow for fast reading');
+  end
+  
+  first = find(raw.rawdir.first==from);
+  last  = find(raw.rawdir.last==to);
+  
+  n = last - first + 1;
+  
+  fseek(fid, raw.rawdir.pos(first), 'bof');
+  tmp = fread(fid, [nrows*raw.rawdir.nsamp+nextra n], readstr);
+  data = tmp((nextra+1):end, :); % the first rows are the tags' metadata
+  if raw.rawdir.nsamp>1
+    data = reshape(data, [nrows raw.rawdir.nsamp*n]);
+  end
+  
+  if iscomplex
+    error(me, 'fast reading complex-valued data is not yet supported');
+    % FIXME, no reason not to implement this
+  end
+  
+  % calibrate
+  if isempty(sel)
+    sel = 1:size(data,1);
+  end
+  
+  if isempty(mult)
+    data = cal*double(data(sel,:));
+  else
+    data = mult*double(data);
+  end
+  
+  
+else
+  % default to the old way of doing things
+  
+  for k = 1:length(raw.rawdir)
     this = raw.rawdir(k);
     %
     %  Do we need this buffer
     %
-    if this.last > from
-        if isempty(this.ent)
-            %
-            %  Take the easy route: skip is translated to zeros
-            %
-            if do_debug
-                fprintf(1,'S');
-            end
-            doing_whole = false;
-            if isempty(sel)
-                one = zeros(nchan,this.nsamp);
-            else
-                one = zeros(length(sel),this.nsamp);
-            end
+    if this.last >= from
+      if isempty(this.ent)
+        %
+        %  Take the easy route: skip is translated to zeros
+        %
+        if do_debug
+          fprintf(1,'S');
+        end
+        doing_whole = false;
+        if isempty(sel)
+          one = zeros(nchan,this.nsamp);
         else
-            tag = fiff_read_tag(fid,this.ent.pos);
-            %
-            %   Depending on the state of the projection and selection
-            %   we proceed a little bit differently
-            %
-            if isempty(mult)
-                if isempty(sel)
-                    one = cal*double(reshape(tag.data,nchan,this.nsamp));
-                else
-                    one = double(reshape(tag.data,nchan,this.nsamp));
-                    one = cal*one(sel,:);
-                end
-            else
-                one = mult*double(reshape(tag.data,nchan,this.nsamp));
-            end
+          one = zeros(length(sel),this.nsamp);
         end
+      else
+        tag = fiff_read_tag(fid,this.ent.pos);
         %
-        %  The picking logic is a bit complicated
+        %   Depending on the state of the projection and selection
+        %   we proceed a little bit differently
         %
-        if to >= this.last && from <= this.first
-            %
-            %    We need the whole buffer
-            %
-            first_pick = 1;
-            last_pick  = this.nsamp;
-            if do_debug
-                fprintf(1,'W');
-            end
-        elseif from > this.first
-            first_pick = from - this.first + 1;
-            if to < this.last
-                %
-                %   Something from the middle
-                %
-                last_pick = this.nsamp + to - this.last;
-                if do_debug
-                    fprintf(1,'M');
-                end
-            else
-                %
-                %   From the middle to the end
-                %
-                last_pick = this.nsamp;
-                if do_debug
-                    fprintf(1,'E');
-                end
-            end
+        if isempty(mult)
+          if isempty(sel)
+            one = cal*double(reshape(tag.data,nchan,this.nsamp));
+          else
+            one = double(reshape(tag.data,nchan,this.nsamp));
+            one = cal*one(sel,:);
+          end
         else
-            %
-            %    From the beginning to the middle
-            %
-            first_pick = 1;
-            last_pick  = to - this.first + 1;
-            if do_debug
-                fprintf(1,'B');
-            end
+          one = mult*double(reshape(tag.data,nchan,this.nsamp));
         end
+      end
+      %
+      %  The picking logic is a bit complicated
+      %
+      if to >= this.last && from <= this.first
         %
-        %   Now we are ready to pick
+        %    We need the whole buffer
         %
-        picksamp = last_pick - first_pick + 1;
-        if picksamp >= 0
-            data(:,dest:dest+picksamp-1) = one(:,first_pick:last_pick);
-            dest = dest + picksamp;
+        first_pick = 1;
+        last_pick  = this.nsamp;
+        if do_debug
+          fprintf(1,'W');
         end
+      elseif from > this.first
+        first_pick = from - this.first + 1;
+        if to < this.last
+          %
+          %   Something from the middle
+          %
+          last_pick = this.nsamp + to - this.last;
+          if do_debug
+            fprintf(1,'M');
+          end
+        else
+          %
+          %   From the middle to the end
+          %
+          last_pick = this.nsamp;
+          if do_debug
+            fprintf(1,'E');
+          end
+        end
+      else
+        %
+        %    From the beginning to the middle
+        %
+        first_pick = 1;
+        last_pick  = to - this.first + 1;
+        if do_debug
+          fprintf(1,'B');
+        end
+      end
+      %
+      %   Now we are ready to pick
+      %
+      picksamp = last_pick - first_pick + 1;
+      if picksamp >= 0
+        data(:,dest:dest+picksamp-1) = one(:,first_pick:last_pick);
+        dest = dest + picksamp;
+      end
     end
     %
     %   Done?
     %
     if this.last >= to
-        fprintf(1,' [done]\n');
-        break;
+      fprintf(1,' [done]\n');
+      break;
     end
+  end
+
+  
 end
 
 fclose(fid);
 
 if nargout == 2
-    times = [ from:to ];
-    times = double(times)/raw.info.sfreq;
+  times = [ from:to ];
+  times = double(times)/raw.info.sfreq;
 end
 
 return;
-
-end

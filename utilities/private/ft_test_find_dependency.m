@@ -44,8 +44,8 @@ for i=1:length(inlist)
     dep{i} = matlab.codetools.requiredFilesAndProducts(inlist{i}, 'toponly'); % Determine direct dependencies
 
     indices           = ~contains(dep{i}, inlist{i});    % Remove self-dependencies
-    indices_dccnpath  = ~contains(dep{i}, "dccnpath");   % Remove the dependency on dccnpath, since dccnpath is widely used
-    indices_ft_getopt = ~contains(dep{i}, "ft_getopt");  % Remove the dependency on ft_getopt, since ft_getopt is widely used
+    indices_dccnpath  = ~contains(dep{i}, 'dccnpath');   % Remove the dependency on dccnpath, since dccnpath is widely used
+    indices_ft_getopt = ~contains(dep{i}, 'ft_getopt');  % Remove the dependency on ft_getopt, since ft_getopt is widely used
     dep{i} = dep{i}(indices & indices_dccnpath & indices_ft_getopt); 
   catch
     fprintf('cannot find "%s"\n', inlist{i});

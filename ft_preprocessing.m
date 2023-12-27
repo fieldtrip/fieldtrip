@@ -224,7 +224,7 @@ headeropt  = ft_setopt(headeropt, 'coilaccuracy',   ft_getopt(cfg, 'coilaccuracy
 headeropt  = ft_setopt(headeropt, 'coildeffile',    ft_getopt(cfg, 'coildeffile'));         % is passed to low-level function
 headeropt  = ft_setopt(headeropt, 'checkmaxfilter', ft_getopt(cfg, 'checkmaxfilter'));      % this allows to read non-maxfiltered neuromag data recorded with internal active shielding
 headeropt  = ft_setopt(headeropt, 'chantype',       ft_getopt(cfg, 'chantype', {}));        % 2017.10.10 AB required for NeuroOmega files
-headeropt  = ft_setopt(headeropt, 'password',       ft_getopt(cfg, 'password'));            % this allows to read data from MED 1.0, MEF 3.0 and MEF 2.1 files
+headeropt  = ft_setopt(headeropt, 'cache',          ft_getopt(cfg, 'cache'));
 
 if ~isfield(cfg, 'feedback')
   if strcmp(cfg.method, 'channel')
