@@ -15,7 +15,7 @@ function [hdr] = ft_read_header(filename, varargin)
 %   'chantype'       = string or cell-array with strings, channel types to be read (only for NeuroOmega and BlackRock)
 %   'coordsys'       = string, 'head' or 'dewar' (default = 'head')
 %   'headerformat'   = name of a MATLAB function that takes the filename as input (default is automatic)
-%   'password'       = password structure for encrypted data set (only for mayo_mef30 and mayo_mef21)
+%   'password'       = password structure for encrypted data set (for dhn_med10, mayo_mef30, mayo_mef21)
 %   'readbids'       = string, 'yes', no', or 'ifmakessense', whether to read information from the BIDS sidecar files (default = 'ifmakessense')
 %
 % This returns a header structure with the following fields
@@ -853,6 +853,10 @@ switch headerformat
     hdr.nTrials     = 1;
     hdr.label       = orig.label(:);
     hdr.orig        = orig; % remember the original details
+
+  case 'dhn_med10'
+    ft_hastoolbox('mayo_mef', 1); % make sure mayo_mef exists
+    hdr = read_dhn_med10(filename, password);
 
   case 'edf'
     % this reader is largely similar to the bdf reader
@@ -1911,7 +1915,7 @@ switch headerformat
     [fid, tree]  = fiff_open(filename);
     [info, meas] = fiff_read_meas_info(fid, tree);
     fclose(fid);
-    
+
     % convert to FieldTrip format header
     hdr.label       = info.ch_names(:);
     hdr.nChans      = info.nchan;
@@ -1982,7 +1986,7 @@ switch headerformat
           info.info       = evoked_data.info;               % keep all the details
           info.vartriallength = 0;
         end
-        
+
       catch
         % this happens if fiff_read_evoked_all cannot find evoked
         % responses, in which case it errors due to not assigning the
@@ -2022,7 +2026,7 @@ switch headerformat
       hdr.nTrials     = 1;
       info.raw        = raw; % keep all the details
     end
-    
+
     % remember the original header details
     hdr.orig = info;
 
