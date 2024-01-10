@@ -250,12 +250,6 @@ elseif ischar(edgecolor) && ismember(edgecolor, htmlcolors)
   edgecolor = htmlcolors(edgecolor);
 end
 
-% everything is added to the current figure
-holdflag = ishold;
-if ~holdflag
-  hold on
-end
-
 if isfield(mesh, 'pos')
   % this is assumed to reflect 3-D vertices
   pos = mesh.pos;
@@ -309,6 +303,12 @@ if hasline
   line = mesh.line;
 else
   line = [];
+end
+
+% everything is added to the current figure
+holdflag = ishold;
+if ~holdflag
+  hold on
 end
 
 if haspos
