@@ -91,15 +91,15 @@ elseif  isempty(object) &&  isempty(coordsys)
   coordsys = 'unknown';
 end
 
-axmax = 150 * ft_scalingfactor('mm', unit);
-rbol  =   5 * ft_scalingfactor('mm', unit);
+axmax  = 150 * ft_scalingfactor('mm', unit);
+radius =   5 * ft_scalingfactor('mm', unit);
 
 % this is useful if the anatomy is from a non-human primate or rodent
-axmax = axisscale*axmax;
-rbol  = axisscale*rbol;
+axmax  = axisscale*axmax;
+radius = axisscale*radius;
 
 ft_info('The axes are %g %s long in each direction\n', axmax, unit);
-ft_info('The diameter of the sphere at the origin is %g %s\n', 2*rbol, unit);
+ft_info('The diameter of the sphere at the origin is %g %s\n', 2*radius, unit);
 
 % get the xyz-axes
 xdat  = [-axmax 0 0; axmax 0 0];
@@ -127,9 +127,6 @@ if ~isempty(transform)
   zdatdot(:) = tmp(:,3);
 end
 
-prevhold = ishold;
-hold on
-
 if ~isempty(transform)
   xcolor = 0.4*[1 0 0] + 0.4*[1 1 1]; % somewhat red
   ycolor = 0.4*[0 1 0] + 0.4*[1 1 1]; % somewhat green
@@ -138,6 +135,12 @@ else
   xcolor = [1 0 0]; % red
   ycolor = [0 1 0]; % green
   zcolor = [0 0 1]; % blue
+end
+
+% everything is added to the current figure
+holdflag = ishold;
+if ~holdflag
+  hold on
 end
 
 % plot axes
@@ -153,15 +156,15 @@ for k = 1:n
 end
 
 % create the sphere at the origin
-[O.pos, O.tri] = mesh_sphere(42);
-O.pos = O.pos.*rbol;
+[sphere.pos, sphere.tri] = mesh_sphere(42);
+sphere.pos = sphere.pos.*radius;
 
 if ~isempty(transform)
   % apply the transformation to the sphere prior to plotting
-  O.pos = ft_warp_apply(transform, O.pos);
+  sphere.pos = ft_warp_apply(transform, sphere.pos);
 end
 
-ft_plot_mesh(O, 'edgecolor', 'none');
+ft_plot_mesh(sphere, 'edgecolor', 'none');
 
 % create the labels that are to be plotted along the axes
 [labelx, labely, labelz] = coordsys2label(coordsys, 3, 1);
@@ -174,7 +177,7 @@ text(xdat(2,1), ydat(2,1), zdat(2,1), labelx{2}, 'linewidth', 2, 'color', fontco
 text(xdat(2,2), ydat(2,2), zdat(2,2), labely{2}, 'linewidth', 2, 'color', fontcolor, 'fontunits', fontunits, 'fontsize', fontsize, 'fontname', fontname, 'fontweight', fontweight);
 text(xdat(2,3), ydat(2,3), zdat(2,3), labelz{2}, 'linewidth', 2, 'color', fontcolor, 'fontunits', fontunits, 'fontsize', fontsize, 'fontname', fontname, 'fontweight', fontweight);
 
-if ~prevhold
+if ~holdflag
   hold off
 end
 

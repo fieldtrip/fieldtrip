@@ -228,12 +228,12 @@ switch fileformat
     end
     [nchan,nrow] = size(tmp);
     if nrow==3
-      sens.pnt = tmp;
+      sens.pos = tmp;
     elseif nrow==9
-      pnt1 = tmp(:,1:3);  % bottom coil
-      pnt2 = tmp(:,4:6);  % top coil
+      pos1 = tmp(:,1:3);  % bottom coil
+      pos2 = tmp(:,4:6);  % top coil
       ori  = tmp(:,7:9);  % orientation of bottom coil
-      sens.pnt = [pnt1; pnt2];
+      sens.pos = [pos1; pos2];
       sens.ori = [ori; ori];
       sens.tra = [eye(nchan) -eye(nchan)];
     else
@@ -338,10 +338,10 @@ switch fileformat
     
   case 'polhemus_fil'
     % these are created at the FIL in London with a polhemus tracker
-    [sens.fid.pnt, sens.pnt, sens.fid.label] = read_polhemus_fil(filename, 0);
+    [sens.fid.pos, sens.pos, sens.fid.label] = read_polhemus_fil(filename, 0);
     % the file does not have channel labels in it
     ft_warning('no channel names in polhemus file, using numbers instead');
-    for i=1:size(sens.pnt, 1)
+    for i=1:size(sens.pos, 1)
       sens.label{i} = sprintf('%03d', i);
     end
     
@@ -363,7 +363,7 @@ switch fileformat
     
   case 'zebris_sfp'
     % these are created by a Zebris tracker, at CRC in Liege at least.
-    [sens.fid.pnt, sens.chanpos, sens.fid.label, sens.label] = read_zebris(filename, 0);
+    [sens.fid.pos, sens.chanpos, sens.fid.label, sens.label] = read_zebris(filename, 0);
     % convert to columns
     sens.label = sens.label(:);
     sens.fid.label = sens.fid.label(:);
@@ -396,7 +396,7 @@ switch fileformat
       sens.label      = l(~sel);
       sens.elecpos    = [x(~sel) y(~sel) z(~sel)];
       sens.fid.label  = l(sel);
-      sens.fid.pnt    = [x(sel) y(sel) z(sel)];
+      sens.fid.pos    = [x(sel) y(sel) z(sel)];
     end
     
   case {'localite_pos', 'localite_ins'}
