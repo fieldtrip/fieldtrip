@@ -444,6 +444,8 @@ if strcmp(type, 'unknown')
       type = 'fieldline_v3'; % like R407_bz
     elseif (mean(startsWith(sens.label, {'L', 'R'}) & contains(sens.label, {'bx-s', 'by-s', 'bz-s'})) > 0.5)
       type = 'fieldline_v3'; % like R407_bz-s32, including the electronics chassis number
+    elseif (mean(startsWith(sens.label, 'FL')))
+      type = 'fieldlinealpha1'; % this is used for the alpha1 helmet
 
     elseif (mean(ismember(ft_senslabel('biosemi256'),         sens.label)) > 0.8)
       type = 'biosemi256';
@@ -550,7 +552,7 @@ if ~isempty(desired)
     case 'itab'
       type = any(strcmp(type, {'itab' 'itab28' 'itab153' 'itab153_planar'}));
     case 'fieldline'
-      type = any(strcmp(type, {'fieldline_v2' 'fieldline_v3'}));
+      type = startsWith(type, 'fieldline');
     case 'meg_axial'
       % note that neuromag306 is mixed planar and axial
       % note that fieldline_v3 might include tangential magnetometers
