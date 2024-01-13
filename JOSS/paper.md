@@ -22,11 +22,11 @@ authors:
     orcid: 0000-0002-1974-1293
     affiliation: 1, 4
 affiliations:
- - name: Donders Institute for Brain, Cognition and Behaviour, Radboud University 	Nijmegen, The Netherlands
+ - name: Donders Institute for Brain, Cognition and Behaviour, Radboud University Nijmegen, The Netherlands
    index: 1
- - name: Oxford Centre for Human Brain Activity, Department of Psychiatry, University of 	Oxford, United Kingdom
+ - name: Oxford Centre for Human Brain Activity, Department of Psychiatry, University of Oxford, United Kingdom
    index: 2
- - name: Wellcome Centre for Integrative Neuroimaging, University of Oxford, Oxford, United 	Kingdom
+ - name: Wellcome Centre for Integrative Neuroimaging, University of Oxford, Oxford, United Kingdom
    index: 3
  - name: NatMEG, Karolinska Institutet, Stockholm, Sweden
    index: 4
@@ -145,11 +145,7 @@ Because here we used *reproducescript* for a simple pipeline containing only thr
 
 # Acknowledgements
 
-The authors would like to thank Lau Andersen for publishing his original data and analysis scripts in `@Andersen2018` and his help in executing the pipeline.
+The authors would like to thank Lau Andersen for publishing his original data and analysis scripts in `@Andersen2018` and his help in executing the pipeline. Author MVE's research is supported by the Wellcome Trust (215573/Z/19/Z), author ES is supported by The Netherlands Organisation for Scientific Research (NWO Veni: 016.Veni.198) and The Wellcome Centre for Integrative Neuroimaging is supported by core funding from the Wellcome Trust (203139/Z/16/Z).
 
-- Author MVE is supported by The Netherlands Organisation for Scientific Research (NWO Vidi: 864.14.011), and Wellcome Trust (215573/Z/19/Z). 
-- Author ES is supported by The Netherlands Organisation for Scientific Research (NWO Veni: 016.Veni.198).
-- Author JMS is supported by The Netherlands Organisation for Scientific Research (NWO Vidi: 864.14.011).
-- Author RO is supported by 
 
 # References
