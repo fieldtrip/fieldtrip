@@ -35,13 +35,6 @@ faces = zeros(length(face_lines), 3);
 textureIdx = zeros(length(face_lines), 3);
 
 for i = 1: length(face_lines)
-  %     f = sscanf(face_lines{i}, 'f %d//%d %d//%d %d//%d');
-  %     if (length(f) == 6) % face
-  %         faces(i, 1) = f(1);
-  %         faces(i, 2) = f(3);
-  %         faces(i, 3) = f(5);
-  %         continue
-  %     end
   %     f = sscanf(face_lines{i}, 'f %d %d %d');
   %     if (length(f) == 3) % face
   %         faces(i, :) = f';
@@ -65,6 +58,13 @@ for i = 1: length(face_lines)
     textureIdx(i,1) = f(2);
     textureIdx(i,2) = f(5);
     textureIdx(i,3) = f(8);
+    continue
+  end
+  f = sscanf(face_lines{i}, 'f %d//%d %d//%d %d//%d');
+  if (length(f) == 6) % face
+    faces(i, 1) = f(1);
+    faces(i, 2) = f(3);
+    faces(i, 3) = f(5);
     continue
   end
 end
