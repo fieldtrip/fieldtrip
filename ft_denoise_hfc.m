@@ -1,33 +1,33 @@
 function [data] = ft_denoise_hfc(cfg,data)
 
-% FT_DENOISE_HFC implements harmonic field correction, which models
-% interference as a harmonic magnetic field. It is particulaly useful
-% for MEG data with low channel numbers (e.g. OPM data). Homogenous field based
-% on Tierney et al. (2021) NIMG, 118484. Harmonic expansion based on Tierney
-% et al. (2022) NIMG, 119338.
+% FT_DENOISE_HFC implements harmonic field correction, which models external
+% interference on the recordings as a harmonic magnetic field. It is particulaly
+% useful for MEG data with low channel numbers, such as OPM data.
 %
-% Use as:
+% The homogenous field correction method implements Tierney et al. (2021) NIMG,
+% https://doi.org/10.1016/j.neuroimage.2021.118484.
+%
+% The harmonic expansion method implements Tierney et al. (2022) NIMG,
+% https://doi.org/10.1016/j.neuroimage.2022.119338.
+%
+% Use as
 %   data = ft_denoise_hfc(cfg,data)
 %
 % Where cfg is a configuration structure that contains:
 %   cfg.channel         = channels for HFC (default = 'all')
-% 	cfg.order           = spherical harmonic order:
-%                           order = 1 is a homogenous field; order = 2
-%                           includes gradients; order = 3 includes
-%                           quadratic terms etc. (default = 1)
-%   cfg.trials          = which trials do you want to denoise?
-%                           (default = 'all')
-%   cfg.updatesens      = do you want to update sensor info with projector?
-%                           (default = 'yes')
+% 	cfg.order           = number, spherical harmonic order (default = 1)
+%                         order = 1 is a homogenous field
+%                         order = 2 includes gradients
+%                         order = 3 includes quadratic terms, etc.
+%   cfg.trials          = which trials do you want to denoise? (default = 'all')
+%   cfg.updatesens      = do you want to update sensor info with projector? (default = 'yes')
 %   cfg.feedback        = do you want feedback (default = 'yes')
-%   cfg.residualcheck   = do you want to check channel residuals
-%                          (default = 'yes')
-%   cfg.residualthresh  = (in pT) what level of residual signal is fine for
-%                           quality assurance (default = 50)
+%   cfg.residualcheck   = do you want to check channel residuals (default = 'yes')
+%   cfg.residualthresh  = number in pT, what level of residual signal is fine for quality assurance (default = 50)
+%
 % See also FT_DENOISE_SYNTHETIC, FT_DENOISE_PCA, FT_DENOISE_DSSP, FT_DENOISE_TSP
 
-% Copyright (C) 2021-22, Tim Tierney, George O'Neill, Robert Seymour
-% Wellcome Centre for Human Neuroimaging, UCL
+% Copyright (C) 2021-22, Tim Tierney, George O'Neill, Robert Seymour, Wellcome Centre for Human Neuroimaging, UCL
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -65,20 +65,12 @@ if ft_abort
   return
 end
 
-% check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'forbidden',  {'trial'}); % prevent accidental typos, see issue 1729
-
 % check the input data
-data = ft_checkdata(data, 'datatype', {'raw'});
+data = ft_checkdata(data, 'datatype', {'raw'}, 'ismeg', 'yes');
 
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'forbidden',  {'trial'}); % prevent accidental typos, see issue 1729
 cfg = ft_checkconfig(cfg, 'forbidden',  {'channels'}); % prevent accidental typos, see issue 1729
-
-% Check if the data has a grad structure
-if ~isfield(data,'grad')
-  error(['Data needs a grad structure']);
-end
 
 % set the defaults
 cfg.order           = ft_getopt(cfg, 'order', 1);
@@ -89,26 +81,19 @@ cfg.feedback        = ft_getopt(cfg, 'feedback', 'yes');
 cfg.residualcheck   = ft_getopt(cfg, 'residualcheck', 'yes');
 cfg.residualthresh  = ft_getopt(cfg, 'residualthresh', 50);
 
-% select data based on cfg.channel and cfg.trials
-tmpcfg = keepfields(cfg, {'trials', 'showcallinfo'});
-
-% Select the correct channels using ft_channelselection
-tmpcfg.channel = cfg.channel;
+% select trials and channels of interest
+tmpcfg = keepfields(cfg, {'trials', 'channel', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
 data   = ft_selectdata(tmpcfg, data);
-
 % restore the provenance information
 [cfg, data] = rollback_provenance(cfg, data);
 
 % Check match between input data chans and grad chans
-[x, dummy] = ismember(data.grad.label,data.label);
+[sel, dum] = ismember(data.grad.label, data.label);
+num_mismatch = sum(sel == 0);
 
 % Warn the user if there are chans in grad not in data
-num_mismatch = sum(x(:) == 0);
-
-if num_mismatch > 0 && istrue(cfg.feedback)
-  ft_warning(['Found ' num2str(num_mismatch) ' channels in grad structure'...
-    ' not present in cfg.channel. These channels will NOT be used for '...
-    'Harmonic Field Correction']);
+if num_mismatch > 0
+  ft_notice('Found %d channels in grad structure not present in cfg.channel. These will NOT be used for Harmonic Field Correction', num_mismatch);
 end
 
 % Check for Dr. Tim Tierney's OPM toolbox on the path, and add if needed
@@ -118,41 +103,37 @@ ft_hastoolbox('opm', 1);
 % generate harmonic basis set
 opt = [];
 opt.li = cfg.order;
-opt.v = data.grad.coilpos(x,:);
-opt.o = data.grad.coilori(x,:);
+opt.v = data.grad.coilpos(sel,:);
+opt.o = data.grad.coilori(sel,:);
 N = spm_opm_vslm(opt);
 
 % Make montage for the next step
-montage     = [];
-montage.tra = eye(length(N)) - N*pinv(N);
-montage.labelold = data.grad.label(x);
-montage.labelnew = data.grad.label(x);
-montage.chantypeold = data.grad.chantype(x);
-montage.chantypenew = data.grad.chantype(x);
-montage.chanunitold = data.grad.chanunit(x);
-montage.chanunitnew = data.grad.chanunit(x);
+montage             = [];
+montage.tra         = eye(length(N)) - N*pinv(N);
+montage.labelold    = data.grad.label(sel);
+montage.labelnew    = data.grad.label(sel);
+montage.chantypeold = data.grad.chantype(sel);
+montage.chantypenew = data.grad.chantype(sel);
+montage.chanunitold = data.grad.chanunit(sel);
+montage.chanunitnew = data.grad.chanunit(sel);
 
+% this is prior to the montage
 labelold = data.label;
 
-% apply montage;
-% Tell the user
-data = ft_apply_montage(data,montage,'keepunused','yes');
-if istrue(cfg.feedback)
-  disp('Applied HFC to the data');
-end
+% apply the montage
+data = ft_apply_montage(data, montage, 'keepunused', 'yes');
 
-% Update the tra to account for the g. Essential to correct the lead
-% fields going forward.
+% Tell the user
+ft_info('Applied HFC to the data');
+
+% Update the tra, it is essential to correct the leadfields going forward
 if istrue(cfg.updatesens)
-  data.grad = ft_apply_montage(data.grad, montage, 'keepunused',...
-    'yes', 'balancename', 'hfc','warning',false);
-  if istrue(cfg.feedback)
-    disp('Converted the sensor description to HFC');
-  end
+  data.grad = ft_apply_montage(data.grad, montage, 'keepunused', 'yes', 'balancename', 'hfc','warning',false);
+  ft_info('Converted the sensor description to HFC');
 end
 
 % reorder the channels to stay close to the original ordering
-[dummy, selnew] = match_str(montage.labelold, data.label);
+[selold, selnew] = match_str(montage.labelold, data.label);
 if numel(selnew)==numel(labelold)
   for i=1:numel(data.trial)
     data.trial{i} = data.trial{i}(selnew,:);
@@ -163,8 +144,8 @@ else
 end
 
 % Perform running variance check to identify odd channels
-if strcmp(cfg.residualcheck,'yes')
-  residual_check(cfg.residualthresh,data,montage.labelold)
+if strcmp(cfg.residualcheck, 'yes')
+  residual_check(cfg.residualthresh, data, montage.labelold)
 end
 
 % do the general cleanup and bookkeeping at the end of the function
@@ -174,52 +155,39 @@ ft_postamble provenance data
 ft_postamble history    data
 ft_postamble savevar    data
 
-
-function residual_check(residualthresh,data,oldlabels)
-% Script to determine residual variance post HFC
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function residual_check(residualthresh, data, oldlabels)
 
 % find corrected channels in the output data
-[dummy, selnew2] = match_str(oldlabels, data.label);
+[selold2, selnew2] = match_str(oldlabels, data.label);
 
 trvar = [];
 for ii = 1:numel(data.trial)
   tmp = data.trial{ii}(selnew2,:);
-  Mk =  tmp(:,1);
-  Sk = zeros(size(Mk));
+  Mk  = tmp(:,1);
+  Sk  = zeros(size(Mk));
   count = 1;
   for jj = 1:size(tmp,2)
-    Xk = tmp(:,jj);
+    Xk     = tmp(:,jj);
     Mkprev = Mk;
-    Mk = Mkprev +(Xk-Mkprev)/count;
-    Sk=Sk+(Xk-Mkprev).*(Xk-Mk) ;
+    Mk     = Mkprev +(Xk-Mkprev)/count;
+    Sk     = Sk+(Xk-Mkprev).*(Xk-Mk);
     count=count+1;
   end
-  trvar(:,ii)=Sk/(count-1);
+  trvar(:,ii) = Sk/(count-1);
 end
 
 % Identify the most common chanunit
 chanunit = ft_chanunit(data);
-[s,dummy,j]=unique(chanunit);
+[s, i, j] = unique(chanunit);
 chanunit = s{mode(j)};
 
-switch chanunit % some of this are silly, but safety first!
-  case 'fT'
-    scale = 1e-3;
-  case 'pT'
-    scale = 1;
-  case 'nT'
-    scale = 1e3;
-  case 'uT'
-    scale = 1e6;
-  case 'mT'
-    scale = 1e9;
-  case {'T','T/m'}
-    scale = 1e12;
-  otherwise
-    ft_error('Cannot check residuals due to unknown sensor units!')
-end
+% Express results in pT
+scale = ft_scalingfactor(chanunit, 'pT');
 
-SD = mean(sqrt(trvar),2)*scale;
+SD = mean(sqrt(trvar),2) * scale;
 
 fprintf('Checking for unsual channels post-corrections\n')
 count = 0;
@@ -227,15 +195,10 @@ for ii = 1:length(SD)
   index = selnew2(ii);
   if SD(ii) > residualthresh
     count = count + 1;
-    if strcmp(chanunit,'fT')
-      fprintf(['Residual on channel ' num2str(index) ', '...
-        data.label{index} ': %3.2f pT\n'], SD(ii));
-    else
-      fprintf(['Residual on channel ' num2str(index) ', '...
-        data.label{index} ': %3.2f' chanunit '\n'], SD(ii));
-    end
+    fprintf('Residual on channel %d (%s) = %3.2f pT\n', index, data.label{index}, SD(ii));
   end
 end
+
 if ~count
   fprintf('No unusual channel residuals found!\n')
 end
