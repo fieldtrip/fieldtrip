@@ -28,6 +28,11 @@
 %
 % $Id$
 
+if isfield(cfg, 'keepprevious') && ~istrue(cfg.keepprevious)
+  % do not keep the previous configuration in the output
+  return
+end
+
 % remember the cfg history of the input data structures
 cfg.previous = {};
 cnt = 0;
