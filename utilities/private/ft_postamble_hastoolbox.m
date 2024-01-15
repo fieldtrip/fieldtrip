@@ -37,5 +37,7 @@ if ~isempty(ft_default) && isfield(ft_default, 'toolbox') && isfield(ft_default.
     ft_warning('on','backtrace');
     rmpath(genpath(toolbox));
     ft_default.toolbox.cleanup = ft_default.toolbox.cleanup(1:end-1);
+    % clear the persistent variables in the ft_hastoolbox function
+    clear ft_hastoolbox
   end
 end
