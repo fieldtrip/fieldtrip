@@ -46,6 +46,7 @@ function hs = ft_plot_sens(sens, varargin)
 %   'edgealpha'       = transparency, between 0 and 1 (default = 1)
 %
 % The sensor array can include an optional fid field with fiducials, which will also be plotted.
+%   'fiducial'        = rue/false, plot the fiducials (default = true)
 %   'fidcolor'        = [r g b] values or string, for example 'red', 'r', or an Nx3 or Nx1 array where N is the number of fiducials
 %   'fidmarker'       = ['.', '*', '+',  ...]
 %   'fidlabel'        = ['yes', 'no', 1, 0, 'true', 'false']
@@ -89,6 +90,8 @@ chantype        = ft_getopt(varargin, 'chantype');
 unit            = ft_getopt(varargin, 'unit');
 axes_           = ft_getopt(varargin, 'axes', false);     % do not confuse with built-in function
 orientation     = ft_getopt(varargin, 'orientation', false);
+% these have to do with the fiducials
+fiducial        = ft_getopt(varargin, 'fiducial', true);
 fidcolor        = ft_getopt(varargin, 'fidcolor', 'g');
 fidmarker       = ft_getopt(varargin, 'fidmarker', '*');
 fidlabel        = ft_getopt(varargin, 'fidlabel', true);
@@ -537,7 +540,7 @@ end % if label
 axis vis3d
 axis equal
 
-if isfield(sens, 'fid') && ~isempty(sens.fid)
+if isfield(sens, 'fid') && ~isempty(sens.fid) && istrue(fiducial)
   % plot the fiducials
   for i=1:size(sens.fid.pos,1)
     h  = plot3(sens.fid.pos(i,1), sens.fid.pos(i,2), sens.fid.pos(i,3), 'Marker', fidmarker, 'MarkerEdgeColor', fidcolor);

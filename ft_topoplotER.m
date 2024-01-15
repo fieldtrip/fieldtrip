@@ -182,6 +182,10 @@ if ft_abort
   return
 end
 
+% check if the input cfg is valid for this function
+cfg = ft_checkconfig(cfg, 'renamed', {'latency', 'xlim'});
+cfg = ft_checkconfig(cfg, 'renamed', {'frequency', 'xlim'});
+
 % this is needed for the figure title
 if isfield(cfg, 'dataname') && ~isempty(cfg.dataname)
   dataname = cfg.dataname;

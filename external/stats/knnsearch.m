@@ -50,11 +50,11 @@ pos2 = pos2';
 
 indx   = zeros(n2,1);
 mind   = inf(1,n2);
-offset = sum(pos1.^2,2);
+offset = sum(pos1.^2,2)/2; % divide by two so that the cross-terms don't need to be multiplied
 
 % compute up to 1e6 pairwise distances at any given time
 % this is needed to keep the memory within bounds
-chunksize = round(1e6/n2);
+chunksize = ceil(1e6/n2);
 chunks    = [(0:chunksize:(n1-1)) n1];
 
 % loop across blocks of headmodel points, and iteratively update the
@@ -64,11 +64,11 @@ chunks    = [(0:chunksize:(n1-1)) n1];
 for k = 1:(numel(chunks)-1)
   iy = (chunks(k)+1):chunks(k+1);
 
-  thisd  = offset(iy)./2 - pos1(iy,:)*pos2;
+  thisd  = offset(iy) - pos1(iy,:)*pos2; % note that this is half the distance
   [m, i] = min(thisd, [], 1);
   issmaller = m<mind;
   mind(issmaller) = m(issmaller);
   indx(issmaller) = iy(i(issmaller));
 end
 
-mind = mind';
+mind = mind * 2'; % multiply by two since the cross-terms were not multiplied
