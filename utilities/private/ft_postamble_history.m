@@ -27,6 +27,11 @@
 %
 % $Id$
 
+if isfield(cfg, 'keepcfg') && ~istrue(cfg.keepcfg)
+  % do not keep the configuration in the output
+  return
+end
+
 % large fields should be removed in the output configuration
 cfg = ft_checkconfig(cfg, 'checksize', 'yes');
 
