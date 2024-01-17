@@ -2695,11 +2695,13 @@ for i=1:numel(fn)
     % Assume naïvely that if not semi-colon delimination is used, then
     % commas are used to separate elements
     if contains(tmp, ';')
-      tmp = strsplit(tmp,'; ')
-    end
+      tmp = strtrim(strsplit(tmp,';'))
+      dataset_description.(fn{i}) = tmp
     elseif contains(tmp, ',')
-      tmp = strsplit(tmp,', ')
+      tmp = strtrim(strsplit(tmp,','))
+      dataset_description.(fn{i}) = tmp
+    else
+      dataset_description.(fn{i}) = {tmp};
     end
-    dataset_description.(fn{i}) = {tmp};
   end
 end
