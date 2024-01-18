@@ -568,6 +568,11 @@ for indx=1:Ndata
     if ~isempty(msk)
       msk(nanInds) = [];
     end
+  elseif strcmp(cfg.interpolatenan, 'no') && any(nanInds)
+    if isempty(msk)
+      msk = true(size(dat));
+    end
+    msk(nanInds) = false;
   end
   
   % Set ft_plot_topo specific options

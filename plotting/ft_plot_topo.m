@@ -77,13 +77,12 @@ box           = ft_getopt(varargin, 'box', false);
 box = istrue(box);
 
 % check for nans in the data, they can be still left incase people want to mask non channels.
-if any(isnan(dat))
-  ft_warning('the data passed to ft_plot_topo contains NaNs, these channels will be removed from the data to prevent interpolation errors, but will remain in the mask');
-  flagNaN = true;
-else
-  flagNaN = false;
-end
 NaNind = isnan(dat);
+if any(NaNind) && ~isempty(mask) && isequal(isnan(dat), ~datmask)
+  ft_warning('the interpolation will exclude channels containing NaNs');
+elseif any(NaNind)
+  ft_warning('the interpolation will replace channels containing NaNs');
+end
 
 % everything is added to the current figure
 holdflag = ishold;
@@ -204,7 +203,7 @@ if ~isempty(datmask)
 end
 
 % take out NaN channels if interpmethod does not work with NaNs
-if flagNaN && strcmp(interpmethod, 'v4')
+if any(NaNind) && strcmp(interpmethod, 'v4')
   dat(NaNind) = [];
   chanX(NaNind) = [];
   chanY(NaNind) = [];
@@ -216,14 +215,14 @@ chanX = double(chanX);
 chanY = double(chanY);
 
 %interpolate data
-xi         = linspace(hlim(1), hlim(2), gridscale);       % x-axis for interpolation (row vector)
-yi         = linspace(vlim(1), vlim(2), gridscale);       % y-axis for interpolation (row vector)
+xi = linspace(hlim(1), hlim(2), gridscale);       % x-axis for interpolation (row vector)
+yi = linspace(vlim(1), vlim(2), gridscale);       % y-axis for interpolation (row vector)
 
 if ~ft_platform_supports('griddata-vector-input')
   % in GNU Octave, griddata does not support vector
   % positions; make a grid to get the locations in vector form
-  [xi,yi]=meshgrid(xi,yi);
-  xi=xi';
+  [xi, yi] = meshgrid(xi, yi);
+  xi = xi';
 end
 
 if ~isempty(maskimage) && strcmp(interplim, 'mask_individual')
