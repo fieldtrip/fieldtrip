@@ -6,6 +6,8 @@ function [nearest, distance] = find_nearest(pnt1, pnt2, npart, gridflag)
 %
 % Use as
 %   [nearest, distance] = find_nearest(pnt1, pnt2, npart)
+%
+% See also KNNSEARCH, DIST, DSEARCHN
 
 % Copyright (C) 2007, Robert Oostenveld
 %

@@ -100,6 +100,8 @@ if ~isfield(ft_default, 'checkpath'),         ft_default.checkpath      = 'pedan
 if ~isfield(ft_default, 'checksize'),         ft_default.checksize      = 1e5;        end % number in bytes, can be inf
 if ~isfield(ft_default, 'showlogo'),          ft_default.showlogo       = 'yes';      end % yes or no, this is relevant for SPM and EEGLAB
 if ~isfield(ft_default, 'showcallinfo'),      ft_default.showcallinfo   = 'yes';      end % yes or no, this is used in ft_pre/postamble_provenance
+if ~isfield(ft_default, 'keepprevious'),      ft_default.keepprevious   = 'yes';      end % yes, no, this is used in ft_postamble_previous
+if ~isfield(ft_default, 'keepcfg'),           ft_default.keepcfg        = 'yes';      end % yes, no, this is used in ft_postamble_history
 if ~isfield(ft_default, 'debug'),             ft_default.debug          = 'no';       end % no, save, saveonerror, display, displayonerror, this is used in ft_pre/postamble_debug
 if ~isfield(ft_default, 'outputfilepresent'), ft_default.outputfilepresent = 'overwrite'; end % can be keep, overwrite, error
 
