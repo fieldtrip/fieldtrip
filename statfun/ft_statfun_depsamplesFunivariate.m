@@ -133,21 +133,21 @@ if strcmp(cfg.computestat,'yes')
   %  s.stat(smplindx) = MSfac/MSerr; % F-statistic
   %end
   dat  = reshape(dat(:,poslabelsperunit),[nsmpls nunits nconds]);
-  Ysub = mean(dat,3);
-  Yfac = mean(dat,2);
+  Ysub = nanmean(dat,3);
+  Yfac = nanmean(dat,2);
 
-  meanYsub = mean(Ysub,2);
-  SStot    = sum(sum((dat-meanYsub(:,ones(1,nunits),ones(1,nconds))).^2,3),2);
-  SSsub    = nconds * sum((Ysub-meanYsub(:,ones(1,nunits))).^2,2);
-  SSfac    = nunits * sum((Yfac-meanYsub(:,1,ones(1,nconds))).^2,3);
+  meanYsub = nanmean(Ysub,2);
+  SStot    = nansum(nansum((dat-meanYsub(:,ones(1,nunits),ones(1,nconds))).^2,3),2);
+  SSsub    = nconds * nansum((Ysub-meanYsub(:,ones(1,nunits))).^2,2);
+  SSfac    = nunits * nansum((Yfac-meanYsub(:,1,ones(1,nconds))).^2,3);
   SSerr    = SStot - SSsub - SSfac;
 
   % mean sum of squares for factor levels
   df  = nconds - 1;
-  dfe = numel(dat(1,:,:)) - nunits - df;
+  dfe = sum(isfinite(dat(:,:)),2) - nunits - df;
 
-  MSfac = SSfac/df;
-  MSerr = SSerr/dfe;
+  MSfac = SSfac./df;
+  MSerr = SSerr./dfe;
 
   s.stat = MSfac./MSerr; % F-statistic;
 end
