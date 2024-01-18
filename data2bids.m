@@ -127,16 +127,17 @@ function [cfg] = data2bids(cfg, varargin)
 %   cfg.SoftwareVersions            = string
 %
 % If you specify cfg.bidsroot, this function will also write the dataset_description.json
-% file. You can specify the following fields
-%   cfg.dataset_description.writesidecar        = string
+% file. Among others you can specify the following fields
+%   cfg.dataset_description.writesidecar        = 'yes' or 'no' (default = 'yes')
 %   cfg.dataset_description.Name                = string
 %   cfg.dataset_description.BIDSVersion         = string
 %   cfg.dataset_description.License             = string
-%   cfg.dataset_description.Authors             = string or cell-array of strings
+%   cfg.dataset_description.Authors             = cell-array of strings
+%   cfg.dataset_description.ReferencesAndLinks  = cell-array of strings
+%   cfg.dataset_description.EthicsApprovals     = cell-array of strings
+%   cfg.dataset_description.Funding             = cell-array of strings
 %   cfg.dataset_description.Acknowledgements    = string
 %   cfg.dataset_description.HowToAcknowledge    = string
-%   cfg.dataset_description.Funding             = string or cell-array of strings
-%   cfg.dataset_description.ReferencesAndLinks  = string or cell-array of strings
 %   cfg.dataset_description.DatasetDOI          = string
 %
 % General BIDS options that apply to all functional data types are
