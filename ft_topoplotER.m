@@ -52,7 +52,7 @@ function [cfg] = ft_topoplotER(cfg, varargin)
 %   cfg.interplimits       = limits for interpolation (default = 'head')
 %                            'electrodes'         to furthest electrode
 %                            'head'               to edge of head
-%   cfg.interpolation      = 'linear','cubic','nearest','v4' (default = 'v4') see GRIDDATA
+%   cfg.interpolation      = 'linear', 'cubic', 'nearest', 'v4' (default = 'v4') see GRIDDATA
 %   cfg.style              = plot style (default = 'both')
 %                            'straight'           colormap only
 %                            'contour'            contour lines only
