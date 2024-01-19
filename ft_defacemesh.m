@@ -11,6 +11,8 @@ function mesh = ft_defacemesh(cfg, mesh)
 %   mesh = ft_defacemesh(cfg, mesh)
 %
 % The configuration can contain the following options
+%   cfg.exclude    = string, specification of the shape that is used as a boundary for exclusion,
+%                    can be either 'box' or 'plane' (default = 'box')
 %   cfg.translate  = initial position of the center of the box (default = [0 0 0])
 %   cfg.scale      = initial size of the box along each dimension (default is automatic)
 %   cfg.rotate     = initial rotation of the box (default = [0 0 0])
