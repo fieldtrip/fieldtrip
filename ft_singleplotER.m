@@ -174,7 +174,7 @@ cfg.xlim            = ft_getopt(cfg, 'xlim',          'maxmin');
 cfg.ylim            = ft_getopt(cfg, 'ylim',          'maxmin');
 cfg.zlim            = ft_getopt(cfg, 'zlim',          'maxmin');
 cfg.comment         = ft_getopt(cfg, 'comment',        strcat([date '\n']));
-cfg.axes            = ft_getopt(cfg, ' axes',         'yes');
+cfg.axes            = ft_getopt(cfg, 'axes',          'yes');
 cfg.fontsize        = ft_getopt(cfg, 'fontsize',       8);
 cfg.interpreter     = ft_getopt(cfg, 'interpreter',   'none');  % none, tex or latex
 cfg.hotkeys         = ft_getopt(cfg, 'hotkeys',       'yes');
@@ -310,10 +310,8 @@ else
 end
 tmpvar = varargin{1};
 [varargin{:}] = ft_selectdata(tmpcfg, varargin{:});
-% restore the provenance information and put back cfg.channel
-tmpchannel  = cfg.channel;
-[cfg, varargin{:}] = rollback_provenance(cfg, varargin{:});
-cfg.channel = tmpchannel;
+% restore the provenance information, don't keep the ft_selectdata details
+[tmpcfg, varargin{:}] = rollback_provenance(cfg, varargin{:});
 
 if isfield(tmpvar, cfg.maskparameter) && ~isfield(varargin{1}, cfg.maskparameter)
   % the mask parameter is not present after ft_selectdata, because it is
@@ -619,12 +617,13 @@ cfg      = info.(ident).cfg;
 varargin = info.(ident).varargin;
 if ~isempty(range)
   cfg = removefields(cfg, 'inputfile');   % the reading has already been done and varargin contains the data
-  cfg = removefields(cfg, 'showlabels');  % this is not allowed in topoplotER
+  cfg = removefields(cfg, 'showlabels');  % this is not allowed in ft_topoplotER
+  cfg = removefields(cfg, {'latency', 'frequency'});  % this should be xlim in ft_topoplotER
   cfg.baseline = 'no';                    % make sure the next function does not apply a baseline correction again
   cfg.dataname = info.(ident).dataname;   % put data name in here, this cannot be resolved by other means
   cfg.channel = 'all';                    % make sure the topo displays all channels, not just the ones in this singleplot
-  cfg.comment = 'auto';
   cfg.trials = 'all';                     % trial selection has already been taken care of
+  cfg.comment = 'auto';
   cfg.xlim = range(1:2);
   % if user specified a ylim, copy it over to the zlim of topoplot
   if isfield(cfg, 'ylim')
