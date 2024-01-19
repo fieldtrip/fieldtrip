@@ -8,7 +8,7 @@ function mesh = ft_defacemesh(cfg, mesh)
 % FT_PLOT_MESH.
 %
 % Use as
-%   mesh = ft_defacevolume(cfg, mesh)
+%   mesh = ft_defacemesh(cfg, mesh)
 %
 % The configuration can contain the following options
 %   cfg.translate  = initial position of the center of the box (default = [0 0 0])

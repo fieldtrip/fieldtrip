@@ -81,6 +81,7 @@ cfg.selection      = ft_getopt(cfg, 'selection', 'outside');
 cfg.smooth         = ft_getopt(cfg, 'smooth', 'no');
 cfg.keepbrain      = ft_getopt(cfg, 'keepbrain', 'no');
 cfg.feedback       = ft_getopt(cfg, 'feedback', 'no');
+cfg.exclude        = ft_getopt(cfg, 'exclude', 'box');
 
 ismri  = ft_datatype(mri, 'volume') && isfield(mri, 'anatomy');
 ismesh = isfield(mri, 'pos'); % triangles are optional
@@ -129,7 +130,8 @@ switch cfg.method
 
   case 'interactive'
     % this is an alternative implementation of the interactive method usinf FT_INTERACTIVEREALIGN
-    % it aligns a box to the MRI or mesh, and then removes the points inside that box
+    % it aligns a box or a plane to the MRI or mesh, and then removes the points inside that box,
+    % or below the plane
 
     if ismri
       % enhance the contrast of the volumetric data, see also FT_VOLUMEREALIGN
@@ -141,27 +143,39 @@ switch cfg.method
       mri.anatomy = dat;
     end
 
-    % construct a box with a unit length expressed in the units of the input mri or mesh
-    % rather than using a triangulation, this specifies polygons for each of the 6 edges of the box
-    box.unit = mri.unit;
-    box.pos = [
-       1  1  1
-       1 -1  1
-      -1 -1  1
-      -1  1  1
-       1  1 -1
-       1 -1 -1
-      -1 -1 -1
-      -1  1 -1
-      ]/2;
-    box.poly = [
-      1 2 3 4
-      1 5 6 2
-      2 6 7 3
-      3 7 8 4
-      4 8 5 1
-      5 8 7 6
-      ];
+    if isequal(cfg.exclude, 'box')
+      % construct a box with a unit length expressed in the units of the input mri or mesh
+      % rather than using a triangulation, this specifies polygons for each of the 6 edges of the box
+      box.unit = mri.unit;
+      box.pos = [
+        1  1  1
+        1 -1  1
+        -1 -1  1
+        -1  1  1
+        1  1 -1
+        1 -1 -1
+        -1 -1 -1
+        -1  1 -1
+        ]/2;
+      box.poly = [
+        1 2 3 4
+        1 5 6 2
+        2 6 7 3
+        3 7 8 4
+        4 8 5 1
+        5 8 7 6
+        ];
+    elseif isequal(cfg.exclude, 'plane')
+      % call it box, make a plane
+      box.unit = mri.unit;
+      box.pos  = [ 1  1 0
+                  -1  1 0
+                  -1 -1 0
+                   1 -1 0];
+      box.poly = [1 2 3 4];
+    else
+      ft_error('you can only specify a box or a plane as exclusion criterion');
+    end
 
     % the default is to scale the box to 75 mm (or equivalent)
     defaultscale = [75 75 75] * ft_scalingfactor('mm', mri.unit);
@@ -185,12 +199,16 @@ switch cfg.method
     % remember these for potential reuse outside of this function
     cfg.rotate    = tmpcfg.rotate;
     cfg.scale     = tmpcfg.scale;
-    cfg.translate = tmpcfg.translate;
+    cfg.translate = tmpcfg.translate.*ft_scalingfactor('mm',mri.unit);
 
     % the template remains fixed, the individual is moved around
-    R = rotate   (cfg.rotate);
+    R = rotate(cfg.rotate);
     T = translate(cfg.translate);
-    S = scale    (cfg.scale);
+    if dobox
+      S = scale(cfg.scale);
+    else
+      S = eye(4); % no scaling needs to be performed
+    end
     % this is the transformation to get from the individual to the template
     transform = combine_transform(R, S, T, cfg.transformorder);
 
@@ -212,13 +230,18 @@ switch cfg.method
       % rather than converting the box to the mesh, do it the other way around
       meshpos = ft_warp_apply(inv(transform), mri.pos);         % vertex positions in box coordinates
 
-      remove = ...
-        meshpos(:,1) > -0.5 & ...
-        meshpos(:,1) < +0.5 & ...
-        meshpos(:,2) > -0.5 & ...
-        meshpos(:,2) < +0.5 & ...
-        meshpos(:,3) > -0.5 & ...
-        meshpos(:,3) < +0.5;
+      if dobox
+        remove = ...
+          meshpos(:,1) > -0.5 & ...
+          meshpos(:,1) < +0.5 & ...
+          meshpos(:,2) > -0.5 & ...
+          meshpos(:,2) < +0.5 & ...
+          meshpos(:,3) > -0.5 & ...
+          meshpos(:,3) < +0.5;
+      else
+        remove = meshpos(:,3) < 0;
+      end
+
     end
 
     if strcmp(cfg.selection, 'inside')
