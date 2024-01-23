@@ -107,6 +107,7 @@ cfg.fiducial.lpa = ft_getopt(cfg.fiducial, 'lpa');
 cfg.fiducial.rpa = ft_getopt(cfg.fiducial, 'rpa');
 cfg.mri          = ft_getopt(cfg, 'mri');
 cfg.headmodel    = ft_getopt(cfg, 'headmodel');
+cfg.headshape    = ft_getopt(cfg, 'headshape');
 cfg.elec         = ft_getopt(cfg, 'elec');
 cfg.grad         = ft_getopt(cfg, 'grad');
 cfg.opto         = ft_getopt(cfg, 'opto');
@@ -145,7 +146,11 @@ switch cfg.method
     end      
     if ~isempty(cfg.opto)
       tmpcfg.template.opto = cfg.opto;
-    end      
+    end
+    if ~isempty(cfg.headshape)
+      tmpcfg.template.headshape = cfg.headshape;
+      tmpcfg.template.headshapestyle = {'vertexcolor', 'none', 'edgecolor', 'none', 'facecolor', [0.8 0.8 1]};
+    end
     if isempty(tmpcfg.template)
       % only show the axes
       tmpcfg.template.axes = 'yes';
@@ -158,6 +163,11 @@ switch cfg.method
 
     % this is the mesh that is to be moved/rotated/scaled
     tmpcfg.individual.headshape = mesh_realigned;
+
+    % the mesh may have user-defined plotting style options
+    if ~isempty(cfg.meshstyle)
+      tmpcfg.individual.headshapestyle = cfg.meshstyle;
+    end
     tmpcfg = ft_interactiverealign(tmpcfg);
     % keep the homogenous transformation
     transform = tmpcfg.m;
@@ -270,6 +280,9 @@ end
 
 % update the positions
 mesh_realigned = ft_transform_geometry(transform, mesh_realigned);
+
+% store the transformation in the cfg, if it is to be used elsewhere
+cfg.transform = transform; 
 
 % assign the coordinate system
 if ~isempty(cfg.coordsys)

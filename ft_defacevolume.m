@@ -11,12 +11,13 @@ function mri = ft_defacevolume(cfg, mri)
 %   mri = ft_defacevolume(cfg, mri)
 %
 % The configuration can contain the following options
-%   cfg.method     = 'interactive', 'spm' (default = 'interactive')
+%   cfg.method     = 'box', 'plane', 'spm' (default = 'box')
 %
 % If you specify the box method, the following options apply
-%   cfg.translate  = initial position of the center of the box (default = [0 0 0])
+%   cfg.translate  = initial position of the center of the box, or a point
+%                    on the plane, (default = [0 0 0])
 %   cfg.scale      = initial size of the box along each dimension (default is automatic)
-%   cfg.rotate     = initial rotation of the box (default = [0 0 0])
+%   cfg.rotate     = initial rotation of the box, or the plane (default = [0 0 0])
 %   cfg.selection  = which voxels to keep, can be 'inside' or 'outside' (default = 'outside')
 %   cfg.smooth     = 'no' or the FWHM of the gaussian kernel in voxels (default = 'no')
 %   cfg.keepbrain  = 'no' or 'yes', segment and retain the brain (default = 'no')
@@ -69,10 +70,10 @@ if ft_abort
 end
 
 % for backward compatibility
-cfg = ft_checkconfig(cfg, 'renamedval', {'method', 'box', 'interactive'});
+cfg = ft_checkconfig(cfg, 'renamedval', {'method', 'interactive', 'box'});
 
 % set the defaults
-cfg.method         = ft_getopt(cfg, 'method', 'interactive');
+cfg.method         = ft_getopt(cfg, 'method', 'box');
 cfg.rotate         = ft_getopt(cfg, 'rotate', [0 0 0]);
 cfg.scale          = ft_getopt(cfg, 'scale'); % the automatic default is determined further down
 cfg.translate      = ft_getopt(cfg, 'translate', [0 0 0]);
@@ -81,7 +82,6 @@ cfg.selection      = ft_getopt(cfg, 'selection', 'outside');
 cfg.smooth         = ft_getopt(cfg, 'smooth', 'no');
 cfg.keepbrain      = ft_getopt(cfg, 'keepbrain', 'no');
 cfg.feedback       = ft_getopt(cfg, 'feedback', 'no');
-cfg.exclude        = ft_getopt(cfg, 'exclude', 'box');
 
 ismri  = ft_datatype(mri, 'volume') && isfield(mri, 'anatomy');
 ismesh = isfield(mri, 'pos'); % triangles are optional
@@ -128,7 +128,7 @@ switch cfg.method
     delete(filename1{1});
     delete(filename2{1});
 
-  case 'interactive'
+  case {'box' 'plane'}
     % this is an alternative implementation of the interactive method usinf FT_INTERACTIVEREALIGN
     % it aligns a box or a plane to the MRI or mesh, and then removes the points inside that box,
     % or below the plane
@@ -143,7 +143,7 @@ switch cfg.method
       mri.anatomy = dat;
     end
 
-    if isequal(cfg.exclude, 'box')
+    if isequal(cfg.method, 'box')
       % construct a box with a unit length expressed in the units of the input mri or mesh
       % rather than using a triangulation, this specifies polygons for each of the 6 edges of the box
       box.unit = mri.unit;
@@ -165,20 +165,30 @@ switch cfg.method
         4 8 5 1
         5 8 7 6
         ];
-    elseif isequal(cfg.exclude, 'plane')
+
+      % the default is to scale the box to 75 mm (or equivalent)
+      defaultscale = [75 75 75] * ft_scalingfactor('mm', mri.unit);
+    
+    elseif isequal(cfg.method, 'plane')
       % call it box, make a plane
       box.unit = mri.unit;
       box.pos  = [ 1  1 0
                   -1  1 0
                   -1 -1 0
-                   1 -1 0];
+                   1 -1 0
+                   0  0 0
+                   0  0 -1];
       box.poly = [1 2 3 4];
+      box.line = [5 6];
+
+      % the default is to draw the plane as a 100x100 mm plane (or
+      % equivalent, note that a deviation of this default does not have
+      % functional consequences
+      defaultscale = [100 100 100] * ft_scalingfactor('mm', mri.unit);
     else
       ft_error('you can only specify a box or a plane as exclusion criterion');
     end
 
-    % the default is to scale the box to 75 mm (or equivalent)
-    defaultscale = [75 75 75] * ft_scalingfactor('mm', mri.unit);
     surfaceonly = isfield(mri, 'tet') | isfield(mri, 'hex'); % only for tetrahedral or hexahedral meshes
 
     tmpcfg = keepfields(cfg, {'scale', 'rotate', 'translate', 'transformorder'});
@@ -204,9 +214,9 @@ switch cfg.method
     % the template remains fixed, the individual is moved around
     R = rotate(cfg.rotate);
     T = translate(cfg.translate);
-    if dobox
+    if isequal(cfg.method, 'box')
       S = scale(cfg.scale);
-    else
+    else isequal(cfg.method, 'plane')
       S = eye(4); % no scaling needs to be performed
     end
     % this is the transformation to get from the individual to the template
@@ -230,7 +240,7 @@ switch cfg.method
       % rather than converting the box to the mesh, do it the other way around
       meshpos = ft_warp_apply(inv(transform), mri.pos);         % vertex positions in box coordinates
 
-      if dobox
+      if isequal(cfg.method, 'box')
         remove = ...
           meshpos(:,1) > -0.5 & ...
           meshpos(:,1) < +0.5 & ...
@@ -238,7 +248,7 @@ switch cfg.method
           meshpos(:,2) < +0.5 & ...
           meshpos(:,3) > -0.5 & ...
           meshpos(:,3) < +0.5;
-      else
+      else isequal(cfg.method, 'plane')
         remove = meshpos(:,3) < 0;
       end
 
