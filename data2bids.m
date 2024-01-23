@@ -2689,6 +2689,21 @@ fn = {'Authors', 'Funding', 'EthicsApprovals', 'ReferencesAndLinks'};
 for i=1:numel(fn)
   if isfield(dataset_description, fn{i}) && ischar(dataset_description.(fn{i}))
     % it should be an array of strings in the JSON file
-    dataset_description.(fn{i}) = {dataset_description.(fn{i})};
+    tmp = dataset_description.(fn{i});
+    % Check if multiple elements are given in a single string
+    % and try to coerce them into individual array elements.
+    % Assume naïvely that if not semi-colon delimination is used, then
+    % commas are used to separate elements
+    if contains(tmp, ';')
+      tmp = strtrim(strsplit(tmp,';'))
+      dataset_description.(fn{i}) = tmp
+      ft_warning(sprintf('Multiple entries to %s field should be an array-of-strings, splitting on '';''', fn{i}));
+    elseif contains(tmp, ',')
+      tmp = strtrim(strsplit(tmp,','))
+      dataset_description.(fn{i}) = tmp
+      ft_warning(sprintf('Multiple entries to %s field should be an array-of-strings, splitting on '',''', fn{i}));
+    else
+      dataset_description.(fn{i}) = {tmp};
+    end
   end
 end
