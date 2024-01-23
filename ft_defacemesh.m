@@ -11,7 +11,6 @@ function mesh = ft_defacemesh(cfg, mesh)
 %   mesh = ft_defacemesh(cfg, mesh)
 %
 % The configuration can contain the following options
-<<<<<<< HEAD
 %   cfg.method     = string, specification of the shape that is used 
 %                    as a boundary for exclusion, can be either 'box' or 'plane' (default = 'box')
 %   cfg.translate  = initial position of the center of the box, or a point on the plane (default = [0 0 0])
@@ -21,7 +20,7 @@ function mesh = ft_defacemesh(cfg, mesh)
 %
 % See also FT_ANONYMIZEDATA, FT_DEFACEVCOLUME, FT_ANALYSISPIPELINE, FT_PLOT_MESH
 
-% Copyright (C) 2015-2024, Robert Oostenveld
+% Copyright (C) 2015-2024, Robert Oostenveld and Jan-Mathijs Schoffelen 
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
