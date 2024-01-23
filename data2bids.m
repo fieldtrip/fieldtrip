@@ -2696,11 +2696,11 @@ for i=1:numel(fn)
     if contains(tmp, ';')
       tmp = strtrim(strsplit(tmp,';'))
       dataset_description.(fn{i}) = tmp
-      ft_warning(sprintf('Multiple intries to %s field should be an array of strings, splitting on '';''', fn{i}));
+      ft_warning(sprintf('Multiple entries to %s field should be an array-of-strings, splitting on '';''', fn{i}));
     elseif contains(tmp, ',')
       tmp = strtrim(strsplit(tmp,','))
       dataset_description.(fn{i}) = tmp
-      ft_warning(sprintf('Multiple intries to %s field should be an array of strings, splitting on '',''', fn{i}));
+      ft_warning(sprintf('Multiple entries to %s field should be an array-of-strings, splitting on '',''', fn{i}));
     else
       dataset_description.(fn{i}) = {tmp};
     end
