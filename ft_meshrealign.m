@@ -111,6 +111,7 @@ cfg.headshape    = ft_getopt(cfg, 'headshape');
 cfg.elec         = ft_getopt(cfg, 'elec');
 cfg.grad         = ft_getopt(cfg, 'grad');
 cfg.opto         = ft_getopt(cfg, 'opto');
+cfg.meshstyle    = ft_getopt(cfg, 'meshstyle');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % the actual computation is done in the middle part
@@ -149,7 +150,7 @@ switch cfg.method
     end
     if ~isempty(cfg.headshape)
       tmpcfg.template.headshape = cfg.headshape;
-      tmpcfg.template.headshapestyle = {'vertexcolor', 'none', 'edgecolor', 'none', 'facecolor', [0.8 0.8 1]};
+      tmpcfg.template.headshapestyle = {'vertexcolor', 'none', 'edgecolor', 'none', 'facecolor', [0.8 0.8 1], 'facealpha', 0.6};
     end
     if isempty(tmpcfg.template)
       % only show the axes

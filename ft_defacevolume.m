@@ -177,7 +177,7 @@ switch cfg.method
                   -1 -1 0
                    1 -1 0
                    0  0 0
-                   0  0 -1];
+                   0  0 -0.5];
       box.poly = [1 2 3 4];
       box.line = [5 6];
 
