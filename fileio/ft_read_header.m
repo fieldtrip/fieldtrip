@@ -2012,9 +2012,9 @@ switch headerformat
       has_ias = ~isempty(fiff_dir_tree_find(meas,FIFF.FIFFB_IAS_RAW_DATA));
 
       if has_ias && istrue(checkmaxfilter)
-        ft_error('Maxshield data should be corrected using Maxfilter prior to importing in FieldTrip.');
+        ft_error('Maxshield data should be corrected using Maxfilter prior to importing into FieldTrip, otherwise the data may be distorted. If you still want to proceed, consider setting the ''checkmaxfilter'' option to be ''no''.');
       elseif has_ias
-        ft_warning('Maxshield data should be corrected using Maxfilter prior to importing in FieldTrip.');
+        ft_warning('Maxshield data should be corrected using Maxfilter prior to importing into FieldTrip, otherwise the data may be distorted. If you still want to proceed, consider setting the ''checkmaxfilter'' option to be ''no''.');
       end
       hdr.nSamples    = raw.last_samp - raw.first_samp + 1; % number of samples per trial
       hdr.nSamplesPre = -raw.first_samp;
