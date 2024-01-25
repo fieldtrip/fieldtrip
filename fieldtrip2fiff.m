@@ -355,7 +355,7 @@ if ~isempty(hdr) && isfield(hdr, 'orig') && isfield(hdr.orig, 'chs')
   if numel(i_label) < numel(data.label)
     ft_error('There are more channels in the data than in the original header information, this is currently not supported');
   end
-  chs(i_label)     = data.hdr.orig.chs(i_chs);
+  chs(i_label)     = hdr.orig.chs(i_chs);
   return;
 end
 
