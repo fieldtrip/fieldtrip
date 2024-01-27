@@ -1,0 +1,21 @@
+MEF 3.0 C Library
+------------------------------
+
+Specification for Multiscale Electrophysiology Format (MEF) version 3.0
+Copyright 2013, Mayo Foundation, Rochester MN. All rights reserved.
+Written by Matt Stead, Ben Brinkmann, and Dan Crepeau.
+
+Usage and modification of this source code is governed by the Apache 2.0 license.
+You may not use this file except in compliance with this License.
+A copy of the Apache 2.0 License may be obtained at http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under this License is distributed on an "as is" basis,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either expressed or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+Thanks to all who acknowledge the Mayo Systems Electrophysiology Laboratory, Rochester, MN
+in academic publications of their work facilitated by this software.
+
+For further information about mef_lib.c API see meflib.c or documentation.
