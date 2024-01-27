@@ -1237,6 +1237,11 @@ elseif filetype_check_extension(filename, '.minf') && filetype_check_ascii(filen
   % known Multiscale Electrophysiology Format (or Mayo EEG File, MEF)
   % MEF 2.1, see: https://github.com/benbrinkmann/mef_lib_2_1
   % MEF 3.0, see: https://msel.mayo.edu/codes.html
+  % MED 1.0, see: http://www.darkhorseneuro.com
+elseif isfolder(filename) && any(filetype_check_extension(filename, {'.medd', '.tied', '.rdat','recd','.ridx'}))
+  type = 'dhn_med10';
+  manufacturer = 'Dark Horse Neuro';
+  content = 'Multiscale Electrophysiology Data 1.0';
 elseif isfolder(filename) && any(filetype_check_extension(filename, {'.mefd', '.timd', '.segd'}))
   type = 'mayo_mef30';
   manufacturer = 'Mayo Clinic';
