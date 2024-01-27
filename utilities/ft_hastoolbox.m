@@ -143,7 +143,7 @@ url = {
   'MATLAB2BESA'                           'see http://www.besa.de/downloads/matlab/ and get the "MATLAB to BESA Export functions"'
   'MATNWB'                                'see https://neurodatawithoutborders.github.io/matnwb/'
   'MATPLOTLIB'                            'see https://nl.mathworks.com/matlabcentral/fileexchange/62729-matplotlib-perceptually-uniform-colormaps'
-  'MAYO_MEF'                              'see https://github.com/MultimodalNeuroimagingLab/mef_reader_fieldtrip and https://msel.mayo.edu/codes.html'
+  'MAYO_MEF'                              'see https://github.com/jiecui/mef_reader_fieldtrip and https://msel.mayo.edu/codes.html'
   'MEG-CALC'                              'this is a commercial toolbox from Neuromag, see http://www.neuromag.com'
   'MEG-PD'                                'see http://www.kolumbus.fi/kuutela/programs/meg-pd'
   'MENTAT'                                'see http://robertoostenveld.nl, or contact Robert Oostenveld'
