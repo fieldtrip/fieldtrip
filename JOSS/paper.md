@@ -61,7 +61,8 @@ The FieldTrip toolbox is not a program with a user interface where you can click
 	cfg1                         = [];
 	cfg1.dataset                 = 'Subject01.ds';
 	cfg1.trialdef.eventtype      = 'backpanel trigger';
-	cfg1.trialdef.eventvalue     = 3; % the value of the stimulus trigger for fully incongruent (FIC).
+	cfg1.trialdef.eventvalue     = 3; % the value of the stimulus trigger for fully 
+					  % incongruent (FIC).
 	cfg1.trialdef.prestim        = 1;
 	cfg1.trialdef.poststim       = 2;
 
@@ -87,7 +88,8 @@ The new functionality we propose, called *reproducescript*, is enabled by the us
 	% enable reproducescript by specifying a directory
 	ft_default.reproducescript = 'reproduce/';
 	
-	% the original analysis pipeline with calls (high level) FieldTrip functions should be written here
+	% the original analysis pipeline with calls (high level) FieldTrip 
+ 	% functions should be written here.
 	
 	% disable reproducescript
 	ft_default.reproducescript = [];
@@ -125,27 +127,32 @@ directory:
 	cfg.headerformat = 'ctf_res4';
 	cfg.trialfun = 'ft_trialfun_general';
 	cfg.representation = [];
-	cfg.trl = 'reproduce/20221128T140217_ft_preprocessing_largecfginput_trl.mat';
-	cfg.outputfile = { 'reproduce/20221128T140217_ft_preprocessing_output_data.mat' };
+	cfg.trl = 
+ 	'reproduce/20221128T140217_ft_preprocessing_largecfginput_trl.mat';
+	cfg.outputfile = 
+ 	{'reproduce/20221128T140217_ft_preprocessing_output_data.mat'};
 	ft_preprocessing(cfg);
 	
 	%%
 	
-	% a new input variable is entering the pipeline here: 20221128T140224_ft_timelockanalysis_input_data.mat
+	% a new input variable is entering the pipeline here: 
+ 	% 20221128T140224_ft_timelockanalysis_input_data.mat
 	
 	cfg = [];
 	cfg.showlogo = 'yes';
 	cfg.tracktimeinfo = 'yes';
 	cfg.trackmeminfo = 'yes';
-	cfg.inputfile = { 'reproduce/20221128T140224_ft_timelockanalysis_input_data.mat' };
-	cfg.outputfile = { 'reproduce/20221128T140232_ft_timelockanalysis_output_timelock.mat' };
+	cfg.inputfile = 
+ 	{'reproduce/20221128T140224_ft_timelockanalysis_input_data.mat'};
+	cfg.outputfile = 
+ 	{'reproduce/20221128T140232_ft_timelockanalysis_output_timelock.mat'};
 	ft_timelockanalysis(cfg);
 	
 Because here we used *reproducescript* for a simple pipeline containing only three function calls, the standardized script does not look much different. For more complex analysis pipelines the differences with the original scripts tend to be larger. We refer the reader to the extended examples mentioned above for further details.
 
 # Acknowledgements
 
-The authors would like to thank Lau Andersen for publishing his original data and analysis scripts in `@Andersen2018` and his help in executing the pipeline. Author MVE's research is supported by the Wellcome Trust (215573/Z/19/Z), author ES is supported by The Netherlands Organisation for Scientific Research (NWO Veni: 016.Veni.198) and The Wellcome Centre for Integrative Neuroimaging is supported by core funding from the Wellcome Trust (203139/Z/16/Z).
+The authors would like to thank Lau Andersen for publishing his original data and analysis scripts in `@Andersen2018` and his help in executing the pipeline. Author ES is supported by The Netherlands Organisation for Scientific Research (NWO Veni: 016.Veni.198).
 
 
 # References
