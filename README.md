@@ -1,4 +1,4 @@
-[![Platform: MATLAB](https://img.shields.io/badge/MATLAB-orange.svg?style=plastic)](https://www.mathworks.com)
+[![Open in MATLAB Online](https://www.mathworks.com/images/responsive/global/open-in-matlab-online.svg)](https://matlab.mathworks.com/open/github/v1?repo=fieldtrip/fieldtrip&file=README.md)
 [![GitHub contributors](https://img.shields.io/github/contributors/fieldtrip/fieldtrip)](https://github.com/fieldtrip/fieldtrip/graphs/contributors)
 [![Last commit](https://img.shields.io/github/last-commit/fieldtrip/fieldtrip?style=plastic)](https://github.com/fieldtrip/fieldtrip)
 [![GitHub commit activity (branch)](https://img.shields.io/github/commit-activity/m/fieldtrip/fieldtrip)](https://github.com/fieldtrip/fieldtrip/commits/master)
