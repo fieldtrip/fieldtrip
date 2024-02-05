@@ -145,8 +145,8 @@ if ~isfield(ft_default, 'dccnpath') || isempty(ft_default.dccnpath)
 end
 
 % we do not want it to end with a '/' or '\'
-strip(ft_default.dccnpath, 'right', '/');
-strip(ft_default.dccnpath, 'right', '\');
+ft_default.dccnpath = strip(ft_default.dccnpath, 'right', '/');
+ft_default.dccnpath = strip(ft_default.dccnpath, 'right', '\');
 
 % alternative0 is the same as the input filename, but potentially updated for windows
 if ~ispc
