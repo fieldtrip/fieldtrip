@@ -19,7 +19,7 @@ function [data] = ft_channelrepair(cfg, data)
 %   cfg.order          = order of the polynomial interpolation (default = 4 for methods 'spline' and 'slap')
 %   cfg.senstype       = string, which type of data to repair. Can be 'meg', 'eeg' or 'nirs' (default is automatic)
 %
-% The weighted and average method are less reliably in case multiple bad channels lie
+% The weighted and average method are less reliable in case multiple bad channels lie
 % next to each other. In that case the bad channels will be removed from the
 % neighbours and not considered for interpolation.
 %
