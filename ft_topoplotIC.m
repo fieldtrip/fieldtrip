@@ -38,7 +38,7 @@ function [cfg] = ft_topoplotIC(cfg, comp)
 %                            'WestOutside'        outside left
 %   cfg.colorbartext       = string indicating the text next to colorbar
 %   cfg.interplimits       = limits for interpolation (default = 'head')
-%                            'electrodes'         to furthest electrode
+%                            'sensors'            to furthest sensor
 %                            'head'               to edge of head
 %   cfg.interpolation      = 'linear','cubic','nearest','v4' (default = 'v4') see GRIDDATA
 %   cfg.style              = plot style (default = 'both')
@@ -130,7 +130,8 @@ cfg.renderer  = ft_getopt(cfg, 'renderer'); % let MATLAB decide on the default
 
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'required', 'component');
-cfg = ft_checkconfig(cfg, 'allowedval', {'parameter' 'topo'});
+cfg = ft_checkconfig(cfg, 'allowedval', {'parameter', 'topo'});
+cfg = ft_checkconfig(cfg, 'renamedval', {'interplimits', 'electrodes', 'sensors'});
 
 % interactive plotting doesn't work for chan_comp dimord.
 if isfield(cfg, 'interactive') && strcmp(cfg.interactive, 'yes')
