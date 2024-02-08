@@ -86,7 +86,7 @@ function [cfg] = ft_databrowser(cfg, data)
 % Additional plotting options for the component viewmode:
 %   cfg.gridscale               = scalar, number of points along both directions for interpolation (default = 45 here)
 %   cfg.shading                 = string, 'none', 'flat', 'interp' (default = 'flat')
-%   cfg.interplimits            = string, 'electrodes' or 'mask' (default here = 'mask')
+%   cfg.interplimits            = string, 'sensors' or 'mask' (default here = 'mask')
 %   cfg.interpolation           = string, 'nearest', 'linear', 'natural', 'cubic' or 'v4' (default = 'v4')
 %   cfg.contournum              = topoplot contour lines
 %
@@ -177,6 +177,7 @@ cfg = ft_checkconfig(cfg, 'renamed',    {'anonimize', 'anonymize'}); % fix typo 
 cfg = ft_checkconfig(cfg, 'renamed',    {'anonymise', 'anonymize'}); % use North American and Oxford British spelling
 cfg = ft_checkconfig(cfg, 'renamed',    {'newfigure', 'figure'});
 cfg = ft_checkconfig(cfg, 'deprecated', {'selectfeature'}); % please specify cfg.artfctdef.xxx and cfg.artfctdef.yyy for each feature
+cfg = ft_checkconfig(cfg, 'renamedval', {'interplimits', 'electrodes' 'sensors'});
 
 % ensure that the preproc specific options are located in the cfg.preproc substructure
 cfg = ft_checkconfig(cfg, 'createsubcfg',  {'preproc'});
@@ -225,7 +226,7 @@ cfg.contournum          = ft_getopt(cfg, 'contournum', 0);               % topop
 cfg.trl                 = ft_getopt(cfg, 'trl');
 cfg.gridscale           = ft_getopt(cfg, 'gridscale', 45);
 cfg.shading             = ft_getopt(cfg, 'shading', 'flat');
-cfg.interplimits        = ft_getopt(cfg, 'interplim', 'mask');
+cfg.interplimits        = ft_getopt(cfg, 'interplimits', 'mask');
 cfg.interpolation       = ft_getopt(cfg, 'interpmethod', 'v4');
 cfg.channelclamped      = ft_getopt(cfg, 'channelclamped');
 % set the defaults for plotting the events

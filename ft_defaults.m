@@ -19,6 +19,7 @@ function ft_defaults
 %   ft_default.trackcallinfo     = string, can be 'yes' or 'no' (default = 'yes')
 %   ft_default.trackusage        = false, or string with salt for one-way encryption of identifying information (by default this is enabled and an automatic salt is created)
 %   ft_default.trackdatainfo     = string, can be 'yes' or 'no' (default = 'no')
+%   ft_default.keepprevious      = string, can be 'yes' or 'no' (default = 'yes')
 %   ft_default.outputfilepresent = string, can be 'keep', 'overwrite', 'error' (default = 'overwrite')
 %   ft_default.debug             = string, can be 'display', 'displayonerror', 'displayonsuccess', 'save', 'saveonerror', saveonsuccess' or 'no' (default = 'no')
 %   ft_default.toolbox.signal    = string, can be 'compat' or 'matlab' (default is automatic, see below)

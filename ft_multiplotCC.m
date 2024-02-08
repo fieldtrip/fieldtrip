@@ -126,7 +126,7 @@ for k=1:length(chNum) - 2
     catch
       tmpcfg.refmarker = strmatch(Lbl(k), data.label);
     end
-    tmpcfg.interplimits = 'electrodes';
+    tmpcfg.interplimits = 'sensors';
     if isfield(cfg, 'xparam')
       tmpcfg.xparam = cfg.xparam;
       tmpcfg.xlim   = xparam;
