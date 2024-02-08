@@ -177,7 +177,7 @@ cfg = ft_checkconfig(cfg, 'renamed',    {'anonimize', 'anonymize'}); % fix typo 
 cfg = ft_checkconfig(cfg, 'renamed',    {'anonymise', 'anonymize'}); % use North American and Oxford British spelling
 cfg = ft_checkconfig(cfg, 'renamed',    {'newfigure', 'figure'});
 cfg = ft_checkconfig(cfg, 'deprecated', {'selectfeature'}); % please specify cfg.artfctdef.xxx and cfg.artfctdef.yyy for each feature
-CFG = ft_checkconfig(cfg, 'renamedval', {'interplimits', 'electrodes' 'sensors'});
+cfg = ft_checkconfig(cfg, 'renamedval', {'interplimits', 'electrodes' 'sensors'});
 
 % ensure that the preproc specific options are located in the cfg.preproc substructure
 cfg = ft_checkconfig(cfg, 'createsubcfg',  {'preproc'});
