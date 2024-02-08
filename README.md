@@ -67,8 +67,8 @@ The functions in the FieldTrip toolbox are copyrighted by their respective autho
 
 The authors are or were working at a range of academic institutions:
 
-  - Copyright (C) 2008-2023, Donders Institute for Brain, Cognition and Behaviour, Radboud University, The Netherlands (DCCN, DCC, DCN)
-  - Copyright (C) 2014-2023, Karolinska Institute, Stockholm, Sweden (NatMEG)
+  - Copyright (C) 2008-2024, Donders Institute for Brain, Cognition and Behaviour, Radboud University, The Netherlands (DCCN, DCC, DCN)
+  - Copyright (C) 2014-2024, Karolinska Institute, Stockholm, Sweden (NatMEG)
   - Copyright (C) 2012-2018, Max Planck Institute for Psycholinguistics, The Netherlands (MPI)
   - Copyright (C) 2008-2017, The Wellcome Trust Centre for Neuroimaging, University College London, UK (UCL)
   - Copyright (C) 2010-2013, Swammerdam Institute for Life Sciences, University of Amsterdam (SILS)
