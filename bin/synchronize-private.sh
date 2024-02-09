@@ -1135,6 +1135,20 @@ ARRAY+=(utilities/ft_setopt.m)
 sync ${ARRAY[*]}
 
 ################################################################################
+# ft_version.m
+
+ARRAY=()
+ARRAY+=(connectivity/private/ft_version.m)
+ARRAY+=(fileio/private/ft_version.m)
+ARRAY+=(forward/private/ft_version.m)
+ARRAY+=(inverse/private/ft_version.m)
+ARRAY+=(plotting/private/ft_version.m)
+ARRAY+=(preproc/private/ft_version.m)
+ARRAY+=(specest/private/ft_version.m)
+ARRAY+=(utilities/ft_version.m)
+sync ${ARRAY[*]}
+
+################################################################################
 # ft_warning.m, should be consistent with ft_notification and ft_error
 
 ARRAY=()
