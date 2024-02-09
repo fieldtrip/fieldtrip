@@ -834,20 +834,6 @@ ARRAY+=(plotting/private/ft_estimate_units.m)
 sync ${ARRAY[*]}
 
 ################################################################################
-# ft_error.m, should be consistent with ft_notification and ft_warning
-
-ARRAY=()
-ARRAY+=(connectivity/private/ft_error.m)
-ARRAY+=(fileio/private/ft_error.m)
-ARRAY+=(forward/private/ft_error.m)
-ARRAY+=(inverse/private/ft_error.m)
-ARRAY+=(plotting/private/ft_error.m)
-ARRAY+=(preproc/private/ft_error.m)
-ARRAY+=(specest/private/ft_error.m)
-ARRAY+=(utilities/ft_error.m)
-sync ${ARRAY[*]}
-
-################################################################################
 # ft_fetch_data.m
 
 ARRAY=()
@@ -1040,7 +1026,7 @@ ARRAY+=(inverse/private/ft_inv.m)
 sync ${ARRAY[*]}
 
 ################################################################################
-# ft_notification.m, should be consistent with ft_warning and ft_error
+# ft_notification.m, should be consistent with ft_warning etc
 
 ARRAY=()
 ARRAY+=(connectivity/private/ft_notification.m)
@@ -1051,6 +1037,61 @@ ARRAY+=(plotting/private/ft_notification.m)
 ARRAY+=(preproc/private/ft_notification.m)
 ARRAY+=(specest/private/ft_notification.m)
 ARRAY+=(utilities/private/ft_notification.m)
+sync ${ARRAY[*]}
+
+ARRAY=()
+ARRAY+=(connectivity/private/ft_warning.m)
+ARRAY+=(fileio/private/ft_warning.m)
+ARRAY+=(forward/private/ft_warning.m)
+ARRAY+=(inverse/private/ft_warning.m)
+ARRAY+=(plotting/private/ft_warning.m)
+ARRAY+=(preproc/private/ft_warning.m)
+ARRAY+=(specest/private/ft_warning.m)
+ARRAY+=(utilities/ft_warning.m)
+sync ${ARRAY[*]}
+
+ARRAY=()
+ARRAY+=(connectivity/private/ft_error.m)
+ARRAY+=(fileio/private/ft_error.m)
+ARRAY+=(forward/private/ft_error.m)
+ARRAY+=(inverse/private/ft_error.m)
+ARRAY+=(plotting/private/ft_error.m)
+ARRAY+=(preproc/private/ft_error.m)
+ARRAY+=(specest/private/ft_error.m)
+ARRAY+=(utilities/ft_error.m)
+sync ${ARRAY[*]}
+
+ARRAY=()
+ARRAY+=(connectivity/private/ft_notice.m)
+ARRAY+=(fileio/private/ft_notice.m)
+ARRAY+=(forward/private/ft_notice.m)
+ARRAY+=(inverse/private/ft_notice.m)
+ARRAY+=(plotting/private/ft_notice.m)
+ARRAY+=(preproc/private/ft_notice.m)
+ARRAY+=(specest/private/ft_notice.m)
+ARRAY+=(utilities/ft_notice.m)
+sync ${ARRAY[*]}
+
+ARRAY=()
+ARRAY+=(connectivity/private/ft_info.m)
+ARRAY+=(fileio/private/ft_info.m)
+ARRAY+=(forward/private/ft_info.m)
+ARRAY+=(inverse/private/ft_info.m)
+ARRAY+=(plotting/private/ft_info.m)
+ARRAY+=(preproc/private/ft_info.m)
+ARRAY+=(specest/private/ft_info.m)
+ARRAY+=(utilities/ft_info.m)
+sync ${ARRAY[*]}
+
+ARRAY=()
+ARRAY+=(connectivity/private/ft_debug.m)
+ARRAY+=(fileio/private/ft_debug.m)
+ARRAY+=(forward/private/ft_debug.m)
+ARRAY+=(inverse/private/ft_debug.m)
+ARRAY+=(plotting/private/ft_debug.m)
+ARRAY+=(preproc/private/ft_debug.m)
+ARRAY+=(specest/private/ft_debug.m)
+ARRAY+=(utilities/ft_debug.m)
 sync ${ARRAY[*]}
 
 ################################################################################
@@ -1146,20 +1187,6 @@ ARRAY+=(plotting/private/ft_version.m)
 ARRAY+=(preproc/private/ft_version.m)
 ARRAY+=(specest/private/ft_version.m)
 ARRAY+=(utilities/ft_version.m)
-sync ${ARRAY[*]}
-
-################################################################################
-# ft_warning.m, should be consistent with ft_notification and ft_error
-
-ARRAY=()
-ARRAY+=(connectivity/private/ft_warning.m)
-ARRAY+=(fileio/private/ft_warning.m)
-ARRAY+=(forward/private/ft_warning.m)
-ARRAY+=(inverse/private/ft_warning.m)
-ARRAY+=(plotting/private/ft_warning.m)
-ARRAY+=(preproc/private/ft_warning.m)
-ARRAY+=(specest/private/ft_warning.m)
-ARRAY+=(utilities/ft_warning.m)
 sync ${ARRAY[*]}
 
 ################################################################################
