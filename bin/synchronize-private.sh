@@ -834,6 +834,20 @@ ARRAY+=(plotting/private/ft_estimate_units.m)
 sync ${ARRAY[*]}
 
 ################################################################################
+# ft_error.m, should be consistent with ft_notification and ft_warning
+
+ARRAY=()
+ARRAY+=(connectivity/private/ft_error.m)
+ARRAY+=(fileio/private/ft_error.m)
+ARRAY+=(forward/private/ft_error.m)
+ARRAY+=(inverse/private/ft_error.m)
+ARRAY+=(plotting/private/ft_error.m)
+ARRAY+=(preproc/private/ft_error.m)
+ARRAY+=(specest/private/ft_error.m)
+ARRAY+=(utilities/ft_error.m)
+sync ${ARRAY[*]}
+
+################################################################################
 # ft_fetch_data.m
 
 ARRAY=()
@@ -1026,7 +1040,7 @@ ARRAY+=(inverse/private/ft_inv.m)
 sync ${ARRAY[*]}
 
 ################################################################################
-# ft_notification.m, should be consistent with ft_warning
+# ft_notification.m, should be consistent with ft_warning and ft_error
 
 ARRAY=()
 ARRAY+=(connectivity/private/ft_notification.m)
@@ -1121,7 +1135,7 @@ ARRAY+=(utilities/ft_setopt.m)
 sync ${ARRAY[*]}
 
 ################################################################################
-# ft_warning.m, should be consistent with ft_notification.m
+# ft_warning.m, should be consistent with ft_notification and ft_error
 
 ARRAY=()
 ARRAY+=(connectivity/private/ft_warning.m)
