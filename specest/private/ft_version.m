@@ -61,7 +61,13 @@ end
 
 if isempty(ftpath)
   ftpath = fileparts(mfilename('fullpath'));
-  ftpath = ftpath(1:end-10); % strip away '/utilities' where this function is located
+  % ft_version is either in utilities, or in <some-module>/private
+  if endsWith(ftpath, 'utilities')
+    ftpath = ftpath(1:end-10); % strip away '/utilities' where this function is located
+  elseif endsWith(ftpath, 'private')
+    slash = strfind(ftpath, filesep);
+    ftpath = ftpath(1:(slash(end-1)-1));
+  end
 end
 
 % set the defaults
