@@ -1127,7 +1127,7 @@ stim_settings = keepfields(cfg.stim, fn);
 % make the relevant selection, all json fields start with a capital letter
 fn = fieldnames(cfg.eyetrack);
 fn = fn(~cellfun(@isempty, regexp(fn, '^[A-Z].*')));
-eyetracker_settings = keepfields(cfg.eyetrack, fn);
+eyetrack_settings = keepfields(cfg.eyetrack, fn);
 
 % make the relevant selection, all json fields start with a capital letter
 fn = fieldnames(cfg.motion);
@@ -1390,14 +1390,14 @@ end
 
 %% need_eyetrack_json
 if need_eyetrack_json
-  eyetracker_json.SamplingFrequency = hdr.Fs;
-  eyetracker_json.StartTime = nan;
-  eyetracker_json.Columns = hdr.label;
+  eyetrack_json.SamplingFrequency = hdr.Fs;
+  eyetrack_json.StartTime = nan;
+  eyetrack_json.Columns = hdr.label;
 
   % merge the information specified by the user with that from the data
   % in case fields appear in both, the first input overrules the second
-  eyetracker_json = mergestruct(eyetracker_settings,  eyetracker_json, false);
-  eyetracker_json = mergestruct(generic_settings,     eyetracker_json, false);
+  eyetrack_json = mergestruct(eyetrack_settings,  eyetrack_json, false);
+  eyetrack_json = mergestruct(generic_settings,     eyetrack_json, false);
 end
 
 %% need_motion_json
