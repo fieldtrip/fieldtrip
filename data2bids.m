@@ -823,7 +823,7 @@ need_audio_json         = false;
 need_video_json         = false;
 need_physio_json        = false;
 need_stim_json          = false;
-need_eyetrack_json    = false;
+need_eyetrack_json      = false;
 need_motion_json        = false;
 need_coordsystem_json   = false;
 % determine the tsv files that are required
