@@ -2695,12 +2695,12 @@ for i=1:numel(fn)
     % Assume naïvely that if not semi-colon delimination is used, then
     % commas are used to separate elements
     if contains(tmp, ';')
-      tmp = strtrim(strsplit(tmp,';'))
-      dataset_description.(fn{i}) = tmp
+      tmp = strtrim(strsplit(tmp,';'));
+      dataset_description.(fn{i}) = tmp;
       ft_warning(sprintf('Multiple entries to %s field should be an array-of-strings, splitting on '';''', fn{i}));
     elseif contains(tmp, ',')
-      tmp = strtrim(strsplit(tmp,','))
-      dataset_description.(fn{i}) = tmp
+      tmp = strtrim(strsplit(tmp,','));
+      dataset_description.(fn{i}) = tmp;
       ft_warning(sprintf('Multiple entries to %s field should be an array-of-strings, splitting on '',''', fn{i}));
     else
       dataset_description.(fn{i}) = {tmp};
