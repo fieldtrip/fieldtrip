@@ -823,7 +823,7 @@ need_audio_json         = false;
 need_video_json         = false;
 need_physio_json        = false;
 need_stim_json          = false;
-need_eyetracker_json    = false;
+need_eyetrack_json    = false;
 need_motion_json        = false;
 need_coordsystem_json   = false;
 % determine the tsv files that are required
@@ -941,7 +941,7 @@ switch typ
     elseif isequal(cfg.suffix, 'stim')
       need_stim_json = true;
     elseif isequal(cfg.suffix, 'eyetrack')
-      need_eyetracker_json = true;
+      need_eyetrack_json = true;
     elseif isequal(cfg.suffix, 'motion')
       need_motion_json = true;
     else
@@ -978,7 +978,7 @@ switch typ
     elseif isequal(cfg.suffix, 'stim')
       need_stim_json = true;
     elseif isequal(cfg.suffix, 'eyetrack')
-      need_eyetracker_json = true;
+      need_eyetrack_json = true;
     elseif isequal(cfg.suffix, 'motion')
       need_motion_json = true;
     elseif isequal(cfg.suffix, 'events')
@@ -1039,7 +1039,7 @@ if need_nirs_json
   end
 end
 
-need_events_tsv       = need_events_tsv       || need_meg_json || need_eeg_json || need_ieeg_json || need_emg_json || need_nirs_json || need_eyetracker_json || need_motion_json || (contains(cfg.outputfile, 'task') || ~isempty(cfg.TaskName) || ~isempty(cfg.task)) || ~isempty(cfg.events);
+need_events_tsv       = need_events_tsv       || need_meg_json || need_eeg_json || need_ieeg_json || need_emg_json || need_nirs_json || need_eyetrack_json || need_motion_json || (contains(cfg.outputfile, 'task') || ~isempty(cfg.TaskName) || ~isempty(cfg.task)) || ~isempty(cfg.events);
 need_channels_tsv     = need_channels_tsv     || need_meg_json || need_eeg_json || need_ieeg_json || need_emg_json || need_nirs_json || need_motion_json ;
 need_coordsystem_json = need_coordsystem_json || need_meg_json || need_electrodes_tsv || need_nirs_json ;
 
@@ -1052,7 +1052,7 @@ elseif need_audio_json
 elseif need_video_json
   ft_warning('video data is not yet part of the official BIDS specification');
   cfg.dataset_description.BIDSVersion = 'n/a';
-elseif need_eyetracker_json
+elseif need_eyetrack_json
   ft_warning('eyetracker data is not yet part of the official BIDS specification');
   cfg.dataset_description.BIDSVersion = 'n/a';
 elseif need_motion_json
@@ -1388,8 +1388,8 @@ if need_stim_json
   stim_json = mergestruct(generic_settings, stim_json, false);
 end
 
-%% need_eyetracker_json
-if need_eyetracker_json
+%% need_eyetrack_json
+if need_eyetrack_json
   eyetracker_json.SamplingFrequency = hdr.Fs;
   eyetracker_json.StartTime = nan;
   eyetracker_json.Columns = hdr.label;
