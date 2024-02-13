@@ -2603,7 +2603,7 @@ switch typ
   case {'emg'} % this is being discussed at https://github.com/bids-standard/bids-specification/issues/1371
     dir = 'emg';
   case {'eyetrack'} % this is specified in BEP020: https://docs.google.com/document/d/1eggzTCzSHG3AEKhtnEDbcdk-2avXN6I94X8aUPEBVsw/edit#heading=h.64qz71yd6qpa
-    dir = 'eyetrack'
+    dir = 'eyetrack';
 
   otherwise
     ft_error('unrecognized data type ''%s''', typ);
