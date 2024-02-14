@@ -325,6 +325,7 @@ cfg.coordsystem   = ft_getopt(cfg, 'coordsystem');
 cfg.participants  = ft_getopt(cfg, 'participants', struct());
 cfg.sessions      = ft_getopt(cfg, 'sessions', struct());
 cfg.scans         = ft_getopt(cfg, 'scans', struct());
+cfg.datatypedir   = ft_getopt(cfg, 'datatypedir', struc()); % This specifies the main imaging modality whose dir will be the dest. audio, video, eyetrack, physio, stim
 
 % some of the cfg fields can be specified (or make most sense) as a table
 % however, the parsing of cfg options requires fields to be structures
@@ -726,7 +727,7 @@ if isempty(cfg.outputfile)
   elseif isempty(cfg.suffix)
     ft_error('cfg.suffix is required to construct BIDS output directory and file');
   else
-    dirname = datatype2dirname(cfg.suffix);
+    dirname = datatype2dirname(cfg);
     filename = ['sub-' cfg.sub];
     filename = add_entity(filename, 'ses',  cfg.ses);
     filename = add_entity(filename, 'task', cfg.task);
@@ -2158,7 +2159,7 @@ if ~isempty(cfg.bidsroot)
   % get filename
   this = table();
   [p, f, x] = fileparts(cfg.outputfile);
-  this.filename = {fullfile(datatype2dirname(cfg.suffix), [f x])};
+  this.filename = {fullfile(datatype2dirname(cfg), [f x])};
 
   fn = fieldnames(cfg.scans);
   for i=1:numel(fn)
@@ -2578,9 +2579,10 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function dir = datatype2dirname(typ)
+function dir = datatype2dirname(cfg)
 % see https://bids-specification.readthedocs.io/en/stable/99-appendices/04-entity-table.html
 % motion, emg, eyetracker, audio, and video are not part of the official specification
+typ = cfg.suffix;
 switch typ
   case {'T1w' 'T2w' 'T1rho' 'T1map' 'T2map' 'T2star' 'FLAIR' 'FLASH' 'PD' 'PDmap' 'PDT2' 'inplaneT1' 'inplaneT2' 'angio' 'defacemask'}
     dir = 'anat';
@@ -2590,8 +2592,11 @@ switch typ
     dir = 'dwi';
   case {'phasediff' 'phase1' 'phase2' 'magnitude1' 'magnitude2' 'magnitude' 'fieldmap' 'epi'}
     dir = 'fmap';
-  case {'events' 'stim' 'physio' 'audio' 'video'} % these could also all be stored in 'func' or one of the other directories with brain data
-    dir = 'beh';
+  case {'events' 'stim' 'physio' 'audio' 'video' 'eyetrack'} % these should be recorded in the main imaging modality directory according to BEP020 https://bids-specification--1128.org.readthedocs.build/en/1128/modality-specific-files/eye-tracking.html#eye-tracking-data
+    if isempty(cfg.datatypedir)
+      ft_error('main imaging modality must be specifed in cfg.datatypedir for data of type ''%s''', typ);
+    end
+    dir = cfg.datatypedir;
   case {'meg'} % this could also include 'events' or other non-brain data
     dir = 'meg';
   case {'eeg'} % this could also include 'events' or other non-brain data
@@ -2604,8 +2609,6 @@ switch typ
     dir = 'motion';
   case {'emg'} % this is being discussed at https://github.com/bids-standard/bids-specification/issues/1371
     dir = 'emg';
-  case {'eyetrack'} % this is specified in BEP020: https://docs.google.com/document/d/1eggzTCzSHG3AEKhtnEDbcdk-2avXN6I94X8aUPEBVsw/edit#heading=h.64qz71yd6qpa
-    dir = 'eyetrack';
 
   otherwise
     ft_error('unrecognized data type ''%s''', typ);
