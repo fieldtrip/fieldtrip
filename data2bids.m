@@ -315,6 +315,7 @@ cfg.video         = ft_getopt(cfg, 'video');
 cfg.eyetrack      = ft_getopt(cfg, 'eyetrack');
 cfg.physio        = ft_getopt(cfg, 'physio');
 cfg.stim          = ft_getopt(cfg, 'stim');
+cfg.datatypedir   = ft_getopt(cfg, 'datatypedir'); % This specifies the main imaging modality whose dir will be the dest. audio, video, eyetrack, physio, stim
 cfg.motion        = ft_getopt(cfg, 'motion');
 cfg.channels      = ft_getopt(cfg, 'channels');
 cfg.electrodes    = ft_getopt(cfg, 'electrodes');
@@ -325,7 +326,6 @@ cfg.coordsystem   = ft_getopt(cfg, 'coordsystem');
 cfg.participants  = ft_getopt(cfg, 'participants', struct());
 cfg.sessions      = ft_getopt(cfg, 'sessions', struct());
 cfg.scans         = ft_getopt(cfg, 'scans', struct());
-cfg.datatypedir   = ft_getopt(cfg, 'datatypedir', struct()); % This specifies the main imaging modality whose dir will be the dest. audio, video, eyetrack, physio, stim
 
 % some of the cfg fields can be specified (or make most sense) as a table
 % however, the parsing of cfg options requires fields to be structures
@@ -2593,7 +2593,7 @@ switch typ
   case {'phasediff' 'phase1' 'phase2' 'magnitude1' 'magnitude2' 'magnitude' 'fieldmap' 'epi'}
     dir = 'fmap';
   case {'events' 'stim' 'physio' 'audio' 'video' 'eyetrack'} % these should be recorded in the main imaging modality directory according to BEP020 https://bids-specification--1128.org.readthedocs.build/en/1128/modality-specific-files/eye-tracking.html#eye-tracking-data
-    if isempty(fieldnames(cfg.datatypedir))
+    if isempty(cfg.datatypedir)
       ft_error('main imaging modality must be specifed in cfg.datatypedir for data of type ''%s''', typ);
     end
     dir = cfg.datatypedir;
