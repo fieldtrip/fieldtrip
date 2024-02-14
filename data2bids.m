@@ -325,7 +325,7 @@ cfg.coordsystem   = ft_getopt(cfg, 'coordsystem');
 cfg.participants  = ft_getopt(cfg, 'participants', struct());
 cfg.sessions      = ft_getopt(cfg, 'sessions', struct());
 cfg.scans         = ft_getopt(cfg, 'scans', struct());
-cfg.datatypedir   = ft_getopt(cfg, 'datatypedir', struc()); % This specifies the main imaging modality whose dir will be the dest. audio, video, eyetrack, physio, stim
+cfg.datatypedir   = ft_getopt(cfg, 'datatypedir', struct()); % This specifies the main imaging modality whose dir will be the dest. audio, video, eyetrack, physio, stim
 
 % some of the cfg fields can be specified (or make most sense) as a table
 % however, the parsing of cfg options requires fields to be structures
