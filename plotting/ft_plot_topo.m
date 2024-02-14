@@ -12,7 +12,7 @@ function [Zi, h] = ft_plot_topo(chanX, chanY, dat, varargin)
 %   'mask'          = cell-array with line segments that forms the mask (see FT_PREPARE_LAYOUT)
 %   'outline'       = cell-array with line segments that for the outline (see  FT_PREPARE_LAYOUT)
 %   'isolines'      = vector with values for isocontour lines (default = [])
-%   'interplim'     = string, 'electrodes' or 'mask' (default = 'electrodes')
+%   'interplim'     = string, 'sensors' or 'mask' (default = 'sensors')
 %   'interpmethod'  = string, 'nearest', 'linear', 'natural', 'cubic' or 'v4' (default = 'v4')
 %   'style'         = can be 'surf', 'iso', 'isofill', 'surfiso', 'imsat', 'imsatiso', 'colormix'
 %   'clim'          = [min max], limits for color scaling
@@ -61,7 +61,7 @@ width         = ft_getopt(varargin, 'width',        []);
 height        = ft_getopt(varargin, 'height',       []);
 gridscale     = ft_getopt(varargin, 'gridscale',    67); % 67 in original
 shading       = ft_getopt(varargin, 'shading',      'flat');
-interplim     = ft_getopt(varargin, 'interplim',    'electrodes');
+interplim     = ft_getopt(varargin, 'interplim',    'sensors');
 interpmethod  = ft_getopt(varargin, 'interpmethod', 'v4');
 style         = ft_getopt(varargin, 'style',        'surfiso'); % can be 'surf', 'iso', 'isofill', 'surfiso', 'imsat', 'imsatiso', 'colormix'
 tag           = ft_getopt(varargin, 'tag',          '');
@@ -132,7 +132,7 @@ chanYorg = chanY;
 chanX = chanX(:) * xScaling + hpos;
 chanY = chanY(:) * yScaling + vpos;
 
-if strcmp(interplim, 'electrodes')
+if strcmp(interplim, 'sensors')
   hlim = [min(chanX) max(chanX)];
   vlim = [min(chanY) max(chanY)];
 elseif (strcmp(interplim, 'mask') || strcmp(interplim, 'mask_individual')) && ~isempty(mask)

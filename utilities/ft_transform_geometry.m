@@ -1,4 +1,4 @@
-function [output] = ft_transform_geometry(transform, input)
+function [output] = ft_transform_geometry(transform, input, method)
 
 % FT_TRANSFORM_GEOMETRY applies a homogeneous coordinate transformation to a
 % structure with geometric information, for example a volume conduction model for the
@@ -9,7 +9,12 @@ function [output] = ft_transform_geometry(transform, input)
 %   [output] = ft_transform_geometry(transform, input)
 % where the transform should be a 4x4 homogeneous transformation matrix and the input
 % data structure can be any of the FieldTrip data structures that describes
-% geometrical data.
+% geometrical data, or
+%   [output] = ft_transform_geometry(transform, input, method)
+% where the transform contains a set of parameters that can be converted into a 4x4 
+% homogeneous transformation matrix, using one of the supported methods:
+% 'rotate', 'scale', 'translate', 'rigidbody'. All methods require a 3-element vector
+% as parameters, apart from rigidbody, which requires 6 parameters. 
 %
 % The units of the transformation matrix must be the same as the units in which the
 % geometric object is expressed.
@@ -48,7 +53,7 @@ function [output] = ft_transform_geometry(transform, input)
 %
 % See also FT_WARP_APPLY, FT_HEADCOORDINATES, FT_SCALINGFACTOR
 
-% Copyright (C) 2011-2022, Jan-Mathijs Schoffelen and Robert Oostenveld
+% Copyright (C) 2011-2024, Jan-Mathijs Schoffelen and Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -67,6 +72,30 @@ function [output] = ft_transform_geometry(transform, input)
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
 % $Id: ft_transform_geometry.m$
+
+siz = size(transform);
+if isequal(siz, [4 4])
+  % this is OK
+else
+  % check whether the method has been specified, and to be consistent with
+  % the input transform parameters, and create the transformation matrix
+  if nargin<3
+    ft_error('the first input argument is not a transformation matrix, hence a ''method'' should be specified');
+  end
+  switch method
+    case {'scale' 'translate' 'rotate'}
+      if numel(transform)~=3
+        ft_error('the number of transformation parameters should be 3');
+      end
+    case 'rigidbody'
+      if ~isequal(siz, [1 6]) && ~isequal(siz, [6 1])
+        ft_error('the transformation parameters should contain six elements in a vector');
+      end
+    otherwise
+      ft_error('unsupported method');
+  end
+  transform = feval(method, transform);
+end
 
 % determine the rotation matrix
 rotation = eye(4);
