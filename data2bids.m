@@ -237,6 +237,7 @@ cfg = ft_checkconfig(cfg, 'renamed', {'channels.writesidecar', 'writejson'});
 cfg = ft_checkconfig(cfg, 'renamed', {'electrodes.writesidecar', 'writejson'});
 cfg = ft_checkconfig(cfg, 'renamed', {'coordsystem.writesidecar', 'writejson'});
 cfg = ft_checkconfig(cfg, 'renamed', {'event', 'events'}); % cfg.event is used elsewhere in FieldTrip, but here it should be cfg.events with an s
+cfg = ft_checkconfig(cfg, 'renamedval', {'suffix', 'eyetracker', 'eyetrack'});
 
 % prevent some common errors
 cfg = ft_checkconfig(cfg, 'forbidden', {'acq_time'});                 % this should be in cfg.scans or in cfg.sessions
