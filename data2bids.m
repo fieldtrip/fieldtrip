@@ -2593,7 +2593,7 @@ switch typ
   case {'phasediff' 'phase1' 'phase2' 'magnitude1' 'magnitude2' 'magnitude' 'fieldmap' 'epi'}
     dir = 'fmap';
   case {'events' 'stim' 'physio' 'audio' 'video' 'eyetrack'} % these should be recorded in the main imaging modality directory according to BEP020 https://bids-specification--1128.org.readthedocs.build/en/1128/modality-specific-files/eye-tracking.html#eye-tracking-data
-    if isempty(cfg.datatypedir)
+    if isempty(fieldnames(cfg.datatypedir))
       ft_error('main imaging modality must be specifed in cfg.datatypedir for data of type ''%s''', typ);
     end
     dir = cfg.datatypedir;
