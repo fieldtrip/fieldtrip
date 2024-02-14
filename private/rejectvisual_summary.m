@@ -138,7 +138,7 @@ info.axes(3) = axes('position', [0.100 0.250 0.375 0.300]);  % trials
 % set up radio buttons for choosing metric
 bgcolor = get(h, 'color');
 
-metriclist = {'var' 'std' 'min' 'max' 'maxabs' 'range' 'kurtosis' '1/var' 'zvalue' 'maxzvalue' 'neighbexpvar' 'neighbcorr' 'neighbstdratio' 'db'};
+metriclist = {'var' 'std' 'mad' 'min' 'max' 'maxabs' 'range' 'kurtosis' '1/var' 'zvalue' 'maxzvalue' 'neighbexpvar' 'neighbcorr' 'neighbstdratio' 'db'};
 
 uicontrol(h, 'Units', 'normalized', 'position', [0.575 0.50 0.24 0.04], 'Style', 'text', 'HorizontalAlignment', 'left', 'backgroundcolor', get(h, 'color'), 'string', 'Metric used:'); % text string for metric
 uicontrol(h, 'Units', 'normalized', 'position', [0.725 0.51 0.20 0.04], 'Style', 'popupmenu', 'backgroundcolor', bgcolor, 'string', metriclist,       'HandleVisibility', 'off', 'callback', @change_metric); % popup menu for metric
