@@ -143,7 +143,7 @@ url = {
   'MATLAB2BESA'                           'see http://www.besa.de/downloads/matlab/ and get the "MATLAB to BESA Export functions"'
   'MATNWB'                                'see https://neurodatawithoutborders.github.io/matnwb/'
   'MATPLOTLIB'                            'see https://nl.mathworks.com/matlabcentral/fileexchange/62729-matplotlib-perceptually-uniform-colormaps'
-  'MAYO_MEF'                              'see https://github.com/jiecui/mef_reader_fieldtrip and https://msel.mayo.edu/codes.html'
+  'MAYO_MEF'                              'see http://darkhorseneuro.com/, https://github.com/jiecui/mef_reader_fieldtrip and https://msel.mayo.edu/codes.html'
   'MEG-CALC'                              'this is a commercial toolbox from Neuromag, see http://www.neuromag.com'
   'MEG-PD'                                'see http://www.kolumbus.fi/kuutela/programs/meg-pd'
   'MENTAT'                                'see http://robertoostenveld.nl, or contact Robert Oostenveld'
@@ -432,8 +432,8 @@ switch toolbox
     dependency = {'copnorm' 'mi_gg'};
   case 'XSENS'
     dependency = {'load_mvnx'};
-  case 'MAYO_MEF' % MEF 2.1 and MEF 3.0
-    dependency = {'MEFFieldTrip_2p1', 'MEFFieldTrip_3p0'};
+  case 'MAYO_MEF' % MED 1.0, MEF 2.1 and MEF 3.0
+    dependency = {'MEDFieldTrip_1p0', 'MEFFieldTrip_2p1', 'MEFFieldTrip_3p0'};
   case 'MATNWB'
     dependency = {'nwbRead', 'generateCore'};
   case 'MATPLOTLIB'
