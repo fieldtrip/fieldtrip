@@ -82,8 +82,7 @@ switch metric
   case 'maxzvalue'
     level = nanmax((dat-repmat(mval, 1, nsample))./repmat(sd, 1, nsample), [], 2);
   case 'mad'
-    mval = median(dat, 2, 'omitmissing'); % the median per channel, over time
-    level = median(abs(dat-repmat(mval, 1, nsample)), 2, 'omitmissing'); % median absolute deviation
+    level = mad(dat, 1, 2);
 
   case 'neighbexpvar'
     % this results in a Nx1 vector
