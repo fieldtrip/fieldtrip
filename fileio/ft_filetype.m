@@ -1242,6 +1242,10 @@ elseif isfolder(filename) && any(filetype_check_extension(filename, {'.medd', '.
   type = 'dhn_med10';
   manufacturer = 'Dark Horse Neuro';
   content = 'Multiscale Electrophysiology Data 1.0';
+elseif isfolder(filename) && any(endsWith({ls.name}, '.medd'))
+  type = 'dhn_med10';
+  manufacturer = 'Dark Horse Neuro';
+  content = 'Multiscale Electrophysiology Format 1.0';
 elseif isfolder(filename) && any(filetype_check_extension(filename, {'.mefd', '.timd', '.segd'}))
   type = 'mayo_mef30';
   manufacturer = 'Mayo Clinic';
