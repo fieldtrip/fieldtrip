@@ -6,7 +6,7 @@ function [proj, dist] = plinprojn(l1,l2,r,flag)
 % 
 % where l1 and l2 are Nx3 matrices with the begin and endpoints of the linepieces, 
 % and r is the point that is projected onto the lines
-% This is a vectorized version of Robert's ptriproj function and is
+% This is a vectorized version of Robert's plinproj function and is
 % generally faster than a for-loop around the mex-file.
 %
 % the optional flag can be:

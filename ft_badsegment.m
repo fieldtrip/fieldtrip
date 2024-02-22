@@ -29,6 +29,8 @@ function [cfg, artifact] = ft_badsegment(cfg, data)
 %   cfg.metric        = string, describes the metric that should be computed in summary mode for each channel in each trial, can be
 %                       'var'       variance within each channel (default)
 %                       'std'       standard deviation within each channel
+%                       'mad'       median absolute deviation within each channel
+%                       '1/var'     inverse variance within each channel
 %                       'min'       minimum value in each channel
 %                       'max'       maximum value in each channel
 %                       'maxabs'    maximum absolute value in each channel
