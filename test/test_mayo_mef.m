@@ -32,7 +32,7 @@ if nargin<1
 end
 mef21_data = fullfile(datapath, 'mef_2p1');
 mef30_data = fullfile(datapath, 'mef_3p0.mefd');
-med10_data = fullfile(datapath, 'med_1p0.medd');
+med10_data = fullfile(datapath, 'med_1p0');
 
 ft_hastoolbox('mayo_mef', 1);
 
@@ -89,41 +89,37 @@ disp('--------------------------')
 mef30_pw = struct('Level1Password', 'password1', 'Level2Password', ...
   'password2', 'AccessLevel', 2);
 
-try
-  % low-level testing
-  fprintf('low-level testing...\n')
-  hdr = ft_read_header(mef30_data, 'password', mef30_pw);
+% low-level testing
+fprintf('low-level testing...\n')
+hdr = ft_read_header(mef30_data, 'password', mef30_pw);
 
-  if isempty(hdr)
-    warning('failed to read header of MEF 3.0 sample dataset')
-  end
-
-  dat = ft_read_data(mef30_data, 'password', mef30_pw);
-
-  if isempty(dat)
-    warning('failed to read data of MEF 3.0 sample dataset')
-  end
-
-  evt = ft_read_event(mef30_data, 'password', mef30_pw);
-
-  if isempty(evt)
-    warning('failed to read event of MEF 3.0 sample dataset')
-  end
-
-  % high-level testing
-  fprintf('high-level testing...\n')
-  cfg = [];
-  cfg.dataset = mef30_data;
-  cfg.password = mef30_pw;
-  data = ft_preprocessing(cfg);
-
-  if isempty(data)
-    warning('failed to read data of MEF 3.0 sample dataset in high-level testing')
-  end
-
-catch
-  warning('failed to read MEF 3.0 sample dataset')
+if isempty(hdr)
+  warning('failed to read header of MEF 3.0 sample dataset')
 end
+
+dat = ft_read_data(mef30_data, 'password', mef30_pw);
+
+if isempty(dat)
+  warning('failed to read data of MEF 3.0 sample dataset')
+end
+
+evt = ft_read_event(mef30_data, 'password', mef30_pw);
+
+if isempty(evt)
+  warning('failed to read event of MEF 3.0 sample dataset')
+end
+
+% high-level testing
+fprintf('high-level testing...\n')
+cfg = [];
+cfg.dataset = mef30_data;
+cfg.password = mef30_pw;
+data = ft_preprocessing(cfg);
+
+if isempty(data)
+  warning('failed to read data of MEF 3.0 sample dataset in high-level testing')
+end
+
 
 % MED version 1.0
 % ---------------
@@ -136,6 +132,7 @@ disp('--------------------------')
   med10_pw = struct('Level1Password', 'L1_password', 'Level2Password', ...
     'L2_password', 'AccessLevel', 2);
 
+try
   % low-level testing
   fprintf('low-level testing...\n')
   hdr = ft_read_header(med10_data, 'password', med10_pw);
@@ -166,12 +163,13 @@ disp('--------------------------')
   if isempty(data)
     warning('failed to read data of MED 1.0 sample dataset in high-level testing')
   end
+catch
+  ft_warning('failed to read data of MED 1.0 sample data');
+end
 
 
 disp('*************************')
 disp('* Testing is completed! *')
 disp('*************************')
-
-end % function
 
 % [EOF]
