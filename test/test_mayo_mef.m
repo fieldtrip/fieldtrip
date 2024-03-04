@@ -3,6 +3,11 @@ function test_mayo_mef(datapath)
 % WALLTIME 00:10:00
 % MEM 3gb
 % DEPENDENCY read_mayo_mef21 read_mayo_mef30
+% DATA private
+
+% NOTE: this function only makes sense when it is run with the
+% mef_reader_fieldtrip folder correctly added to the path, otherwise it
+% will just 'run through' without error (but also without testing anything)
 
 % Copyright 2020-2023 Richard J. Cui. Created: Sat 03/21/2020 10:35:23.147 PM
 % $Revision: 0.6 $  $Date: Wed 10/11/2023 12:44:00.481 AM $
@@ -50,19 +55,19 @@ try
   hdr = ft_read_header(mef21_data, 'password', mef21_pw);
 
   if isempty(hdr)
-    warning('failed to read header of MEF 2.1 sample dataset')
+    ft_warning('failed to read header of MEF 2.1 sample dataset')
   end
 
   dat = ft_read_data(mef21_data, 'password', mef21_pw);
 
   if isempty(dat)
-    warning('failed to read data of MEF 2.1 sample dataset')
+    ft_error('failed to read data of MEF 2.1 sample dataset')
   end
 
   evt = ft_read_event(mef21_data, 'password', mef21_pw);
 
   if isempty(evt)
-    warning('failed to read event of MEF 2.1 sample dataset')
+    ft_error('failed to read event of MEF 2.1 sample dataset')
   end
 
   % high-level testing
@@ -73,9 +78,12 @@ try
   data = ft_preprocessing(cfg);
 
   if isempty(data)
-    warning('failed to read data of MEF 2.1 sample dataset in high-level testing')
+    ft_error('failed to read data of MEF 2.1 sample dataset in high-level testing')
   end
 catch
+  % keep this as warning, because for the code to be functional, some
+  % toolboxes external to FieldTrip should be set up on the path, this is
+  % not available when the test function is executed in house
   ft_warning('failed to read data of MEF 2.1 sample data');
 end
 
@@ -96,19 +104,19 @@ try
   hdr = ft_read_header(mef30_data, 'password', mef30_pw);
 
   if isempty(hdr)
-    warning('failed to read header of MEF 3.0 sample dataset')
+    ft_error('failed to read header of MEF 3.0 sample dataset')
   end
 
   dat = ft_read_data(mef30_data, 'password', mef30_pw);
 
   if isempty(dat)
-    warning('failed to read data of MEF 3.0 sample dataset')
+    ft_error('failed to read data of MEF 3.0 sample dataset')
   end
 
   evt = ft_read_event(mef30_data, 'password', mef30_pw);
 
   if isempty(evt)
-    warning('failed to read event of MEF 3.0 sample dataset')
+    ft_warning('failed to read event of MEF 3.0 sample dataset')
   end
 
   % high-level testing
@@ -119,7 +127,7 @@ try
   data = ft_preprocessing(cfg);
 
   if isempty(data)
-    warning('failed to read data of MEF 3.0 sample dataset in high-level testing')
+    ft_error('failed to read data of MEF 3.0 sample dataset in high-level testing')
   end
 catch
   ft_warning('failed to read data of MEF 3.0 sample data');
@@ -149,19 +157,19 @@ try
   hdr = ft_read_header(med10_data, 'password', med10_pw);
 
   if isempty(hdr)
-    warning('failed to read header of MED 1.0 sample dataset')
+    ft_error('failed to read header of MED 1.0 sample dataset')
   end
 
   dat = ft_read_data(med10_data, 'password', med10_pw);
 
   if isempty(dat)
-    warning('failed to read data of MED 1.0 sample dataset')
+    ft_error('failed to read data of MED 1.0 sample dataset')
   end
 
   evt = ft_read_event(med10_data, 'password', med10_pw);
 
   if isempty(evt)
-    warning('failed to read event of MED 1.0 sample dataset')
+    ft_error('failed to read event of MED 1.0 sample dataset')
   end
 
   % high-level testing
@@ -172,7 +180,7 @@ try
   data = ft_preprocessing(cfg);
 
   if isempty(data)
-    warning('failed to read data of MED 1.0 sample dataset in high-level testing')
+    ft_error('failed to read data of MED 1.0 sample dataset in high-level testing')
   end
 catch
   ft_warning('failed to read data of MED 1.0 sample data');
