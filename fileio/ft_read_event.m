@@ -19,7 +19,7 @@ function [event] = ft_read_event(filename, varargin)
 %   'tolerance'      = tolerance in samples when merging Neuromag analogue trigger channels (default = 1, meaning that a shift of one sample in both directions is compensated for)
 %   'blocking'       = wait for the selected number of events (default = 'no')
 %   'timeout'        = amount of time in seconds to wait when blocking (default = 5)
-%   'password'       = password structure for encrypted data set (only for mayo_mef30 and mayo_mef21)
+%   'password'       = password structure for encrypted data set (only for dhn_med10, mayo_mef30 and mayo_mef21)
 %   'readbids'       = 'yes', no', or 'ifmakessense', whether to read information from the BIDS sidecar files (default = 'ifmakessense')
 %
 % This function returns an event structure with the following fields
@@ -687,6 +687,12 @@ switch eventformat
       event(i).value  = trigger(ix(i),iy(i));
       event(i).sample = iy(i);
     end
+
+  case 'dhn_med10'
+    if isempty(hdr)
+      hdr = ft_read_header(filename, 'password', password);
+    end
+    event = read_dhn_med10(filename, password, false, hdr);
 
   case 'edf'
     % read the header
