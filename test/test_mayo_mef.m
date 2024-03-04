@@ -14,18 +14,16 @@ function test_mayo_mef(datapath)
 % Email: richard.cui@utoronto.ca (permanent), Cui.Jie@mayo.edu (official)
 
 % ======================================================================
-% Note of sample dataset
+% Note of sample dataset, when outside the DCCN
 % ======================================================================
 % Follow the instructions
 % (https://www.fieldtriptoolbox.org/faq/should_i_add_fieldtrip_with_all_subdirectories_to_my_matlab_path/)
 % to add FieldTrip to your MATLAB path. Then, download the sample
 % dataset from https://github.com/jiecui/mef_reader_fieldtrip and follow
-% the instructions to download the sample dataset. Set the path to the
-% sample dataset below.
-
-% set path to sample dataset
-% --------------------------
-% please set the path to sample dataset
+% the instructions to download the sample dataset. The input argument to
+% this function should contain the path to where the data are located. Also
+% the mef_reader_fieldtrip toolbox should be available on the path, and
+% properly set up
 
 if nargin<1
   datapath = dccnpath('/home/common/matlab/fieldtrip/data/test/original/lfp/mef');
@@ -34,105 +32,118 @@ mef21_data = fullfile(datapath, 'mef_2p1');
 mef30_data = fullfile(datapath, 'mef_3p0.mefd');
 med10_data = fullfile(datapath, 'med_1p0');
 
-ft_hastoolbox('mayo_mef', 1);
+ft_hastoolbox('mayo_mef');
 
-% MEF version 2.1
-% ---------------
-disp(' ')
-disp('--------------------------')
-disp('testing MEF version 2.1...')
-disp('--------------------------')
+try
+  % MEF version 2.1
+  % ---------------
+  disp(' ')
+  disp('--------------------------')
+  disp('testing MEF version 2.1...')
+  disp('--------------------------')
 
-% the password of MEF 2.1 sample dataset
-mef21_pw = struct('Subject', 'erlichda', 'Session', 'sieve', 'Data', '');
+  % the password of MEF 2.1 sample dataset
+  mef21_pw = struct('Subject', 'erlichda', 'Session', 'sieve', 'Data', '');
 
-% low-level testing
-fprintf('low-level testing...\n')
-hdr = ft_read_header(mef21_data, 'password', mef21_pw);
+  % low-level testing
+  fprintf('low-level testing...\n')
+  hdr = ft_read_header(mef21_data, 'password', mef21_pw);
 
-if isempty(hdr)
-  warning('failed to read header of MEF 2.1 sample dataset')
+  if isempty(hdr)
+    warning('failed to read header of MEF 2.1 sample dataset')
+  end
+
+  dat = ft_read_data(mef21_data, 'password', mef21_pw);
+
+  if isempty(dat)
+    warning('failed to read data of MEF 2.1 sample dataset')
+  end
+
+  evt = ft_read_event(mef21_data, 'password', mef21_pw);
+
+  if isempty(evt)
+    warning('failed to read event of MEF 2.1 sample dataset')
+  end
+
+  % high-level testing
+  fprintf('high-level testing...\n')
+  cfg = [];
+  cfg.dataset = mef21_data;
+  cfg.password = mef21_pw;
+  data = ft_preprocessing(cfg);
+
+  if isempty(data)
+    warning('failed to read data of MEF 2.1 sample dataset in high-level testing')
+  end
+catch
+  ft_warning('failed to read data of MEF 2.1 sample data');
 end
 
-dat = ft_read_data(mef21_data, 'password', mef21_pw);
+try
+  % MEF version 3.0
+  % ---------------
+  disp(' ')
+  disp('--------------------------')
+  disp('testing MEF version 3.0...')
+  disp('--------------------------')
 
-if isempty(dat)
-  warning('failed to read data of MEF 2.1 sample dataset')
+  % the password of MEF 3.0 sample dataset
+  mef30_pw = struct('Level1Password', 'password1', 'Level2Password', ...
+    'password2', 'AccessLevel', 2);
+
+  % low-level testing
+  fprintf('low-level testing...\n')
+  hdr = ft_read_header(mef30_data, 'password', mef30_pw);
+
+  if isempty(hdr)
+    warning('failed to read header of MEF 3.0 sample dataset')
+  end
+
+  dat = ft_read_data(mef30_data, 'password', mef30_pw);
+
+  if isempty(dat)
+    warning('failed to read data of MEF 3.0 sample dataset')
+  end
+
+  evt = ft_read_event(mef30_data, 'password', mef30_pw);
+
+  if isempty(evt)
+    warning('failed to read event of MEF 3.0 sample dataset')
+  end
+
+  % high-level testing
+  fprintf('high-level testing...\n')
+  cfg = [];
+  cfg.dataset = mef30_data;
+  cfg.password = mef30_pw;
+  data = ft_preprocessing(cfg);
+
+  if isempty(data)
+    warning('failed to read data of MEF 3.0 sample dataset in high-level testing')
+  end
+catch
+  ft_warning('failed to read data of MEF 3.0 sample data');
 end
 
-evt = ft_read_event(mef21_data, 'password', mef21_pw);
+try
+  % JM comment, this is likely to fail, since the compiled binaries
+  % downloaded from darkhorseneuro.com (which are necessary for this
+  % functionality) may have been compiled against libraries that are not
+  % available on the test computer -> at least I did not manage to get the
+  % below code to run on the DCCN cluster or my local Macbook pro.
 
-if isempty(evt)
-  warning('failed to read event of MEF 2.1 sample dataset')
-end
-
-% high-level testing
-fprintf('high-level testing...\n')
-cfg = [];
-cfg.dataset = mef21_data;
-cfg.password = mef21_pw;
-data = ft_preprocessing(cfg);
-
-if isempty(data)
-  warning('failed to read data of MEF 2.1 sample dataset in high-level testing')
-end
-
-
-% MEF version 3.0
-% ---------------
-disp(' ')
-disp('--------------------------')
-disp('testing MEF version 3.0...')
-disp('--------------------------')
-
-% the password of MEF 3.0 sample dataset
-mef30_pw = struct('Level1Password', 'password1', 'Level2Password', ...
-  'password2', 'AccessLevel', 2);
-
-% low-level testing
-fprintf('low-level testing...\n')
-hdr = ft_read_header(mef30_data, 'password', mef30_pw);
-
-if isempty(hdr)
-  warning('failed to read header of MEF 3.0 sample dataset')
-end
-
-dat = ft_read_data(mef30_data, 'password', mef30_pw);
-
-if isempty(dat)
-  warning('failed to read data of MEF 3.0 sample dataset')
-end
-
-evt = ft_read_event(mef30_data, 'password', mef30_pw);
-
-if isempty(evt)
-  warning('failed to read event of MEF 3.0 sample dataset')
-end
-
-% high-level testing
-fprintf('high-level testing...\n')
-cfg = [];
-cfg.dataset = mef30_data;
-cfg.password = mef30_pw;
-data = ft_preprocessing(cfg);
-
-if isempty(data)
-  warning('failed to read data of MEF 3.0 sample dataset in high-level testing')
-end
-
-
-% MED version 1.0
-% ---------------
-disp(' ')
-disp('--------------------------')
-disp('testing MED version 1.0...')
-disp('--------------------------')
+  % MED version 1.0
+  % ---------------
+  disp(' ')
+  disp('--------------------------')
+  disp('testing MED version 1.0...')
+  disp('--------------------------')
 
   % the password of MED 1.0 sample dataset
   med10_pw = struct('Level1Password', 'L1_password', 'Level2Password', ...
     'L2_password', 'AccessLevel', 2);
 
-try
+
   % low-level testing
   fprintf('low-level testing...\n')
   hdr = ft_read_header(med10_data, 'password', med10_pw);
@@ -166,10 +177,3 @@ try
 catch
   ft_warning('failed to read data of MED 1.0 sample data');
 end
-
-
-disp('*************************')
-disp('* Testing is completed! *')
-disp('*************************')
-
-% [EOF]
