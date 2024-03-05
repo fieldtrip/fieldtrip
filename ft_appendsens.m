@@ -253,51 +253,56 @@ end % if duplicate channels
 if isfield(sens, 'elecpos') && ~isequal(sens.chanpos, sens.elecpos)
   ft_warning('removing duplicate electrodes')
   [pos, index, swap] = unique(sens.elecpos, 'rows', 'stable');
-  % reconstruct the tra matrix
-  nchan = length(sens.label);
-  nsens = length(index);
-  tra = zeros(nchan, nsens);
-  for i=1:nchan
-    for j=1:nsens
-      tra(i,j) = sum(sens.tra(i,swap==index(j)));
+  if isfield(sens, 'tra')
+    % reconstruct the tra matrix
+    nchan = length(sens.label);
+    nsens = length(index);
+    tra = zeros(nchan, nsens);
+    for i=1:nchan
+      for j=1:nsens
+        tra(i,j) = sum(sens.tra(i,swap==index(j)));
+      end
     end
+    sens.tra = tra;
   end
-  sens.tra = tra;
   sens.elecpos = pos;
-  
+
 elseif isfield(sens, 'optopos') && ~isequal(sens.chanpos, sens.optopos)
   ft_warning('removing duplicate optodes')
   [pos, index, swap] = unique(sens.optopos, 'rows', 'stable');
-  % reconstruct the tra matrix
-  nchan = length(sens.label);
-  nsens = length(index);
-  tra = zeros(nchan, nsens);
-  for i=1:nchan
-    for j=1:nsens
-      tra(i,j) = sum(sens.tra(i,swap==index(j)));
+  if isfield(sens, 'tra')
+    % reconstruct the tra matrix
+    nchan = length(sens.label);
+    nsens = length(index);
+    tra = zeros(nchan, nsens);
+    for i=1:nchan
+      for j=1:nsens
+        tra(i,j) = sum(sens.tra(i,swap==index(j)));
+      end
     end
+    sens.tra = tra;
   end
-  sens.tra = tra;
   sens.optopos = pos;
 
 elseif isfield(sens, 'coilpos') && ~isequal(sens.chanpos, sens.coilpos)
   ft_warning('removing duplicate magnetometer or gradiometer coils')
   [posori, index, swap] = unique([sens.coilpos sens.coilori], 'rows', 'stable');
-  % reconstruct the tra matrix
-  nchan = length(sens.label);
-  nsens = length(index);
-  tra = zeros(nchan, nsens);
-  for i=1:nchan
-    for j=1:nsens
-      tra(i,j) = sum(sens.tra(i,swap==index(j)));
+  if isfield(sens, 'tra')
+    % reconstruct the tra matrix
+    nchan = length(sens.label);
+    nsens = length(index);
+    tra = zeros(nchan, nsens);
+    for i=1:nchan
+      for j=1:nsens
+        tra(i,j) = sum(sens.tra(i,swap==index(j)));
+      end
     end
+    sens.tra = tra;
   end
-  sens.tra = tra;
   sens.coilpos = posori(:,1:3);
   sens.coilori = posori(:,4:6);
   
 end % if duplicate sensors
-
 
 % ensure up-to-date and consistent output sensor description
 sens = ft_datatype_sens(sens);
