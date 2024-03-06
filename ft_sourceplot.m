@@ -168,11 +168,11 @@ function [cfg] = ft_sourceplot(cfg, functional, anatomical)
 %                        or an Nx3 or Nx1 array where N is the number of vertices
 %   cfg.edgecolor      = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r'
 %
-% When cfg.method = 'cloud', the functional data will be rendered as as clouds (groups of points), spheres, or
-% single points at each sensor position. These spheres or point clouds can either
-% be viewed in 3D or as 2D slices. The 'anatomical' input may also consist of
-% a single or multiple triangulated surface mesh(es) in an Nx1 cell-array
-% to be plotted with the interpolated functional data (see FT_PLOT_CLOUD)
+% When cfg.method = 'cloud', the functional data will be rendered as as clouds (groups of points), 
+% spheres, or single points at each sensor position. These spheres or point clouds can either be 
+% viewed in 3D or as 2D slices. The 'anatomical' input may also consist of a single or multiple 
+% triangulated surface meshes in an Nx1 cell-array to be plotted with the interpolated functional 
+% data (see FT_PLOT_CLOUD).
 %
 % The following parameters apply to cfg.method='cloud'
 %   cfg.cloudtype       = 'point' plots a single point at each sensor position
