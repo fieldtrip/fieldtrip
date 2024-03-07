@@ -1922,8 +1922,8 @@ switch headerformat
     hdr.Fs          = info.sfreq;
 
     if ft_senstype(hdr, 'fieldline') && isempty(coilaccuracy)
-      ft_warning('FieldLine data requires coilaccuracy>=1');
-      coilaccuracy = 1;
+      ft_warning('FieldLine data requires a numeric value for coilaccuracy>=0');
+      coilaccuracy = 0;
     end
 
     % add a gradiometer structure for forward and inverse modelling
