@@ -17,11 +17,11 @@ function [Zi, h] = ft_plot_topo(chanX, chanY, dat, varargin)
 %   'style'         = can be 'surf', 'iso', 'isofill', 'surfiso', 'imsat', 'imsatiso', 'colormix'
 %   'clim'          = [min max], limits for color scaling
 %   'shading'       = string, 'none', 'flat', 'interp' (default = 'flat')
-%   'parent'        = handle which is set as the parent for all plots
-%   'tag'           = string, the name assigned to the object. All tags with the same name can be deleted in a figure, without deleting other parts of the figure.
-%   'box'           = draw a box around the local axes, can be 'yes' or 'no'
+%   'parent'        = handle which is set as the parent for all plots (default = [])
+%   'tag'           = string, the tag assigned to the plotted elements (default = '')
 %
 % It is possible to plot the object in a local pseudo-axis (c.f. subplot), which is specfied as follows
+%   'box'           = draw a box around the local axes, can be 'yes' or 'no'
 %   'hpos'          = horizontal position of the lower left corner of the local axes
 %   'vpos'          = vertical position of the lower left corner of the local axes
 %   'width'         = width of the local axes
