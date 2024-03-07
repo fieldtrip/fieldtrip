@@ -181,10 +181,10 @@ switch cfg.method
       box.poly = [1 2 3 4];
       box.line = [5 6];
 
-      % the default is to draw the plane as a 100x100 mm plane (or
+      % the default is to draw the plane as a 200x200 mm plane (or
       % equivalent, note that a deviation of this default does not have
       % functional consequences
-      defaultscale = [100 100 100] * ft_scalingfactor('mm', mri.unit);
+      defaultscale = [200 200 1000] * ft_scalingfactor('mm', mri.unit);
     else
       ft_error('you can only specify a box or a plane as exclusion criterion');
     end
@@ -193,14 +193,18 @@ switch cfg.method
 
     tmpcfg = keepfields(cfg, {'scale', 'rotate', 'translate', 'transformorder'});
     tmpcfg.scale = ft_getopt(cfg, 'scale', defaultscale);
-    tmpcfg.showlight = 'no';
-    tmpcfg.showalpha = 'no'; % do not use a global alpha level
     tmpcfg.showapply = 'no'; % do not show the apply button
     tmpcfg.template.axes = 'yes';
     if ismri
+      tmpcfg.showlight = 'no';
+      tmpcfg.showalpha = 'no';
       tmpcfg.template.mri = mri;
     elseif ismesh
-      tmpcfg.template.mesh = mri;
+      tmpcfg.showlight = 'yes';
+      tmpcfg.showalpha = 'yes';
+      tmpcfg.template.mesh = mri; % the input variable is called "mri" but it contains a mesh
+      tmpcfg.template.meshstyle.facefolor = 'skin_medium';
+      tmpcfg.template.meshstyle.edgecolor = 'none';
     end
     tmpcfg.individual.mesh = box;
     tmpcfg.individual.meshstyle = {'edgecolor', 'k', 'facecolor', 'y', 'facealpha', 0.3, 'surfaceonly', surfaceonly};

@@ -19,6 +19,7 @@ function hs = ft_plot_headshape(headshape, varargin)
 %   'transform'    = transformation matrix for the fiducials, converts MRI voxels into head shape coordinates
 %   'unit'         = string, convert to the specified geometrical units (default = [])
 %   'axes'         = boolean, whether to plot the axes of the 3D coordinate system (default = false)
+%   'tag'          = string, the tag assigned to the plotted elements (default = '') 
 %
 % The sensor array can include an optional fid field with fiducials, which will also be plotted.
 %   'fidcolor'     = [r g b] values or string, for example 'red', 'r', or an Nx3 or Nx1 array where N is the number of fiducials
@@ -161,4 +162,3 @@ end
 if nargout==0
   clear hs
 end
-

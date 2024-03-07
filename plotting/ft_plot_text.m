@@ -16,7 +16,7 @@ function [varargout] = ft_plot_text(X, Y, str, varargin)
 %   'verticalalignment'   =
 %   'interpreter'         = string, can be 'none', 'tex' or 'latex' (default = 'none')
 %   'rotation'            =
-%   'tag'                 = string, the name assigned to the object. All tags with the same name can be deleted in a figure, without deleting other parts of the figure.
+%   'tag'                 = string, the tag assigned to the plotted elements (default = '')
 %
 % It is possible to plot the object in a local pseudo-axis (c.f. subplot), which is specfied as follows
 %   'hpos'                = horizontal position of the center of the local axes
