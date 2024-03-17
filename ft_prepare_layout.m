@@ -560,14 +560,7 @@ elseif ischar(cfg.layout)
     if ~exist(cfg.layout, 'file')
       ft_error('the specified layout file %s was not found', cfg.layout);
     end
-    tmp = load(cfg.layout, 'lay*');
-    if isfield(tmp, 'layout')
-      layout = tmp.layout;
-    elseif isfield(tmp, 'lay')
-      layout = tmp.lay;
-    else
-      ft_error('mat file does not contain a layout');
-    end
+    layout = loadvar(cfg.layout,'layout');
     
   elseif ft_filetype(cfg.layout, 'layout')
     if exist(cfg.layout, 'file')
