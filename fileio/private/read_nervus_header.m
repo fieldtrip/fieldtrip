@@ -34,7 +34,7 @@ UNITSIZE = 16;
 ITEMNAMESIZE  = 64;
 
 % ---------------- Opening File------------------
-h = fopen_or_error(filename,'rb','ieee-le');
+h = fopen_or_error(filename,'rb','ieee-le','US-ASCII');
 
 nrvHdr = struct();
 nrvHdr.filename = filename;
