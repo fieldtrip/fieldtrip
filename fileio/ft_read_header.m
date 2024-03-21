@@ -2942,6 +2942,14 @@ hdr.label = fixlabels(hdr.label);
 if isfield(hdr, 'chantype'), hdr.chantype = fixchantype(hdr.chantype); end
 if isfield(hdr, 'chanunit'), hdr.chanunit = fixchanunit(hdr.chanunit); end
 
+% ensure that these are double precision and not integers, otherwise
+% subsequent computations that depend on these might be messed up
+hdr.Fs          = double(hdr.Fs);
+hdr.nSamples    = double(hdr.nSamples);
+hdr.nSamplesPre = double(hdr.nSamplesPre);
+hdr.nTrials     = double(hdr.nTrials);
+hdr.nChans      = double(hdr.nChans);
+
 if ~isempty(splitlabel) && istrue(splitlabel)
   % this is default for CTF and FieldLine v3
   for i=1:numel(hdr.label)
@@ -2965,14 +2973,6 @@ if ~isempty(splitlabel) && istrue(splitlabel)
   end
 end
 
-% ensure that these are double precision and not integers, otherwise
-% subsequent computations that depend on these might be messed up
-hdr.Fs          = double(hdr.Fs);
-hdr.nSamples    = double(hdr.nSamples);
-hdr.nSamplesPre = double(hdr.nSamplesPre);
-hdr.nTrials     = double(hdr.nTrials);
-hdr.nChans      = double(hdr.nChans);
-
 if inflated
   % compressed file has been unzipped on the fly, clean up
   if strcmp(headerformat, 'brainvision_vhdr')
@@ -2990,6 +2990,7 @@ if cache && exist(headerfile, 'file')
   cacheheader.details = dir(headerfile);
   % fprintf('added header to cache\n');
 end
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION to determine the file size in bytes
