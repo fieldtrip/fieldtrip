@@ -162,6 +162,12 @@ if isempty(filename)
   end
 end
 
+% some of the code does not work well on matlab strings, (i.e. "" vs ''),
+% specifically ["a" "b"] yields something different than ['a' 'b']. 
+if isstring(filename)
+  filename = char(filename);
+end
+
 % the parts of the filename are used further down
 if isfolder(filename)
   [p, f, x] = fileparts(filename);

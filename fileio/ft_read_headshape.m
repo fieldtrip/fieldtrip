@@ -208,6 +208,12 @@ if iscell(filename)
   return
 end % if iscell
 
+% some of the code does not work well on matlab strings, (i.e. "" vs ''),
+% specifically ["a" "b"] yields something different than ['a' 'b']. 
+if isstring(filename)
+  filename = char(filename);
+end
+
 % optionally get the data from the URL and make a temporary local copy
 filename = fetch_url(filename);
 
