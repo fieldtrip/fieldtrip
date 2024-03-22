@@ -175,6 +175,7 @@ if isfield(hdr, 'res4') && ~isempty(coilaccuracy)
 
       grad.chanpos(i,:) = pos;
       grad.chanori(i,:) = ez;
+      grad.label{i}     = hdr.res4.chanNames(i,:);
 
     end % if MEG or MEGREF
   end % for each channel
