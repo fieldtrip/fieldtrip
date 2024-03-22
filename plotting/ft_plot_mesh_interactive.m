@@ -22,11 +22,11 @@ classdef ft_plot_mesh_interactive<handle
     
     % graphics handles
     fig_surface; axes_surface; surfs_surface; camlight_surface;
-    figs_time; axes_time; vlines_time;
+    figs_time; axes_time; vlines_time; rect_time;
     virt_elec_surfs;
     
     % currently displayed time point
-    cur_time;
+    cur_time; t1; t2;
     
     % number of conditions/positions/time points
     ncond; npos; ntim;
@@ -88,7 +88,8 @@ classdef ft_plot_mesh_interactive<handle
       % an index into the "current" time point (in seconds)
       self.cur_time = 0;
       
-      
+      self.t1 = 0;
+      self.t2 = 0;
       
       self.timeplot_colourmap = brewermap(8, 'Set2');
     end
@@ -301,20 +302,33 @@ classdef ft_plot_mesh_interactive<handle
       hold(ax, 'on');
       self.vlines_time(thisfig_ind) = plot([self.cur_time self.cur_time], get(ax, 'ylim'),...
         'k:', 'Color', [0 0 0 0.5], 'LineWidth', 2, 'HandleVisibility', 'off');
-      
+      self.rect_time(thisfig_ind) = patch([self.t1 self.t1 self.t2 self.t2], [get(ax, 'ylim') flip(get(ax, 'ylim'),2)], 0.8.*[1 1 1],...
+        'FaceAlpha', 0.3, 'Edgecolor', 'none');
+
       % add event handler: clicking somewhere should move the indicator and
       % update the surface plots
       is_down = false;
+      is_up   = false;
       function button_down(~,~)
         is_down = true;
-        point = get(ax, 'CurrentPoint');
-        self.fire_timepoint_change(point(1));
+        is_up   = false;
+        point   = get(ax, 'CurrentPoint');
+        self.t1 = point(1);
+        set(self.rect_time(thisfig_ind), 'XData', self.t1.*[1 1 1 1]);
       end
-      function button_up(~,~), is_down = false; end
+      function button_up(~,~)
+        is_down = false; 
+        is_up   = true;
+        point   = get(ax, 'CurrentPoint');
+        self.t2 = point(1);
+        self.fire_timepoint_change([self.t1 self.t2]);
+        set(self.vlines_time(thisfig_ind), 'Visible', 'on');
+      end
       function mouse_dragged(~,~)
         if is_down
           point = get(ax, 'CurrentPoint');
-          self.fire_timepoint_change(point(1));
+          set(self.rect_time(thisfig_ind), 'XData', [self.t1 self.t1 point(1) point(1)]);
+          set(self.vlines_time(thisfig_ind), 'Visible', 'off');
         end
       end
       set(ax, 'ButtonDownFcn', @button_down);
@@ -346,15 +360,15 @@ classdef ft_plot_mesh_interactive<handle
       % FIRE_TIMEPOINT_CHANGE handles the event triggered when the active
       % time point (should) change(s). Surface plots colors are updated,
       % and the vertical time point reference line in any time axis plots.
-      self.cur_time = t;
+      self.cur_time = mean(t);
       for k = 1:self.ncond
         set(self.surfs_surface(k), 'FaceVertexCData',...
-          self.data{k}(:,self.tim_to_ind(t)));
+          mean(self.data{k}(:,self.tim_to_ind(t(1)):self.tim_to_ind(t(2))),2));
       end
       for k = 1:numel(self.figs_time)
-          set(self.vlines_time(k), 'XData', [t t]);
+          set(self.vlines_time(k), 'XData', [1 1].*mean(t));
       end
-      set(self.fig_surface, 'Name', sprintf('t = %.2f', t));
+      set(self.fig_surface, 'Name', sprintf('t = %.2f - %.2f', t(1), t(2)));
     end
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
