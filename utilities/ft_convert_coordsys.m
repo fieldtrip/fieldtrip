@@ -78,8 +78,12 @@ feedback      = ft_getopt(varargin, 'feedback', 'no');
 spmversion    = ft_getopt(varargin, 'spmversion');
 
 % use the version that is on the path, or default to spm12
-if ~ft_hastoolbox('spm') && isempty(spmversion)
-  spmversion = 'spm12';
+if isempty(spmversion)
+  if ~ft_hastoolbox('spm')
+    spmversion = 'spm12';
+  else
+    spmversion = strtok(spm('version'));
+  end
 end
 
 if ~isfield(object, 'coordsys') || isempty(object.coordsys)
