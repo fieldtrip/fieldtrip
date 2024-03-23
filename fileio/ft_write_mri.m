@@ -68,8 +68,12 @@ scl_slope     = ft_getopt(varargin, 'scl_slope', 1);
 scl_inter     = ft_getopt(varargin, 'scl_inter', 0);
 
 % use the version that is on the path, or default to spm12
-if ~ft_hastoolbox('spm') && isempty(spmversion)
-  spmversion = 'spm12';
+if isempty(spmversion)
+  if ~ft_hastoolbox('spm')
+    spmversion = 'spm12';
+  else
+    spmversion = strtok(spm('version'));
+  end
 end
 
 % ensure that the input data is consistent
