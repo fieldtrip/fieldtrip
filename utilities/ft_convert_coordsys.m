@@ -82,7 +82,7 @@ if isempty(spmversion)
   if ~ft_hastoolbox('spm')
     spmversion = 'spm12';
   else
-    spmversion = strtok(spm('version'));
+    spmversion = lower(spm('ver'));
   end
 end
 
