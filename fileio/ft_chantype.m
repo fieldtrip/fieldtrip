@@ -254,6 +254,13 @@ elseif isheader && isfield(input, 'orig') && isfield(input.orig, 'sensor') && is
   chantype = ctfchantype(origSensType);
   
 elseif ft_senstype(input, 'ctf') && isgrad
+
+  if all(contains(input.label, '-'))
+    % this applies when splitlabel=false
+    input.label = split(input.label(:), '-');
+    input.label = input.label(:,1);
+  end
+
   % in principle it is possible to look at the number of coils, but here the channels are identified based on their name
   sel = myregexp('^M[ZLR][A-Z][0-9][0-9]$', input.label);
   chantype(sel) = {'meggrad'};            % normal gradiometer channels
@@ -538,7 +545,6 @@ elseif ft_senstype(input, 'yokogawa') && islabel
   chantype(sel) = {'etc'};
   
 elseif ft_senstype(input, 'itab') && isheader
-  
   origtype = [input.orig.ch.type];
   chantype(origtype==0)   = {'unknown'};
   chantype(origtype==1)   = {'unknown'};%{'ele'};
