@@ -107,8 +107,12 @@ spmversion  = ft_getopt(varargin, 'spmversion');
 readbids    = ft_getopt(varargin, 'readbids', 'ifmakessense');
 
 % use the version that is on the path, or default to spm12
-if ~ft_hastoolbox('spm') && isempty(spmversion)
-  spmversion = 'spm12';
+if isempty(spmversion)
+  if ~ft_hastoolbox('spm')
+    spmversion = 'spm12';
+  else
+    spmversion = lower(spm('ver'));
+  end
 end
 
 % the following is added for backward compatibility of using 'format' rather than 'dataformat'
