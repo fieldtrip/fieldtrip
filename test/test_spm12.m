@@ -41,6 +41,7 @@ c2b = ft_convert_coordsys(mri3, 'tal', 2);
 
 try
   rmpath(spm('dir'));
+  clear ft_hastoolbox
 end
 
 %ft_volumerealign: coregistration (used in human ecog tutorial)
@@ -52,6 +53,7 @@ r12 = ft_volumerealign(cfg, mri1, mri2);
 
 try
   rmpath(spm('dir'));
+  clear ft_hastoolbox
 end
 
 %ft_volumedownsample
@@ -68,6 +70,7 @@ d12s           = ft_volumedownsample(cfg, mri1);
 
 try
   rmpath(spm('dir'));
+  clear ft_hastoolbox
 end
 
 %mni2tal and tal2mni
@@ -79,6 +82,7 @@ outpoints = mni2tal(inpoints);
 
 try
   rmpath(spm('dir'));
+  clear ft_hastoolbox
 end
 
 inpoints = tal2mni(outpoints);
@@ -87,6 +91,7 @@ inpoints = tal2mni(outpoints);
 
 try
   rmpath(spm('dir'));
+  clear ft_hastoolbox
 end
 
 %ft_volumenormalise
@@ -100,6 +105,7 @@ elecpos = ft_warp_apply(n8.params, [4 4 4; 1 1 1], 'individual2sn');
 
 try
   rmpath(spm('dir'));
+  clear ft_hastoolbox
 end
 
 %ft_volumesegment
