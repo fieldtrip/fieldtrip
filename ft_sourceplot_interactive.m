@@ -119,7 +119,7 @@ cfg.atlas     = ft_getopt(cfg, 'atlas',     []);
 
 % check whether we're dealing with time or frequency data
 dimord = getdimord(varargin{1}, cfg.parameter);
-if ~ismember(dimord, {'pos_time', 'pos_freq' '{pos}_ori_time'})
+if ~ismember(dimord, {'pos_time' 'pos_freq' '{pos}_ori_time' 'pos_freq_time'})
   ft_error('functional data must be pos_time or pos_freq');
 end
 
@@ -137,6 +137,9 @@ if strcmp(dimord, 'pos_time') || strcmp(dimord, '{pos}_ori_time')
   xdat = varargin{1}.time;
 elseif strcmp(dimord, 'pos_freq')
   xdat = varargin{1}.freq;
+elseif strcmp(dimord, 'pos_freq_time')
+  xdat = varargin{1}.time;
+  ydat = varargin{1}.freq;
 end
 
 % optionally load an atlas
@@ -164,6 +167,10 @@ end
 % set up the arguments
 keyval = ft_cfg2keyval(cfg);
 keyval = [keyval {'tri', varargin{1}.tri, 'pos', varargin{1}.pos, 'data', data, 'time', xdat, 'unit', varargin{1}.unit}];
+
+if exist('ydat', 'var')
+  keyval = [keyval {'freq', ydat}];
+end
 
 % and launch the viewer
 viewer = ft_plot_mesh_interactive(keyval{:});
