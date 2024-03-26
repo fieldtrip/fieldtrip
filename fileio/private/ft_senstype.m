@@ -489,6 +489,14 @@ if strcmp(type, 'unknown')
       type = 'nirs';
       
     end
+
+    if strcmp(type, 'unknown') && all(contains(sens.label, '-'))
+      % this applies to CTF and FieldLine data when splitlabel=false
+      sens.label = strtok(sens.label, '-'); % take the part before the dash
+      type = ft_senstype(sens.label(:,1));
+    end
+
+
   end % look at label, ori and/or pos
 end % if isfield(sens, 'type')
 
