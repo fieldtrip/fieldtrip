@@ -257,8 +257,7 @@ elseif ft_senstype(input, 'ctf') && isgrad
 
   if all(contains(input.label, '-'))
     % this applies when splitlabel=false
-    input.label = split(input.label(:), '-');
-    input.label = input.label(:,1);
+    input.label = strtok(input.label, '-'); % take the part before the dash
   end
 
   % in principle it is possible to look at the number of coils, but here the channels are identified based on their name
