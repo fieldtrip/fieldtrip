@@ -2952,24 +2952,26 @@ hdr.nChans      = double(hdr.nChans);
 
 if ~isempty(splitlabel) && istrue(splitlabel)
   % this is default for CTF and FieldLine v3
-  for i=1:numel(hdr.label)
-    hdr.label{i} = strtok(hdr.label{i}, '-');
-  end
+  hdr.label = strtok(hdr.label, '-');
   % also update the grad, elec and opto structure
   if isfield(hdr, 'grad')
-    for i=1:numel(hdr.grad.label)
-      hdr.grad.label{i} = strtok(hdr.grad.label{i}, '-');
+    hdr.grad.label = strtok(hdr.grad.label, '-');
+    if isfield(hdr.grad, 'balance')
+      % also update the G1BR, G2BR and G3BR balancing structures
+      fn = fieldnames(hdr.grad.balance);
+      for i=1:numel(fn)
+        if isstruct(hdr.grad.balance.(fn{i}))
+          hdr.grad.balance.(fn{i}).labelold = strtok(hdr.grad.balance.(fn{i}).labelold, '-');
+          hdr.grad.balance.(fn{i}).labelnew = strtok(hdr.grad.balance.(fn{i}).labelnew, '-');
+        end
+      end
     end
   end
   if isfield(hdr, 'elec')
-    for i=1:numel(hdr.elec.label)
-      hdr.elec.label{i} = strtok(hdr.elec.label{i}, '-');
-    end
+    hdr.elec.label = strtok(hdr.elec.label, '-');
   end
   if isfield(hdr, 'opto')
-    for i=1:numel(hdr.opto.label)
-      hdr.opto.label{i} = strtok(hdr.opto.label{i}, '-');
-    end
+    hdr.opto.label = strtok(hdr.opto.label, '-');
   end
 end
 
