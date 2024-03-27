@@ -736,6 +736,7 @@ mapping = {
   'scanras',   'ras'
   'scanlps',   'lps'
   'dicom',     'lps'
+  'paxinos',   'rsp'
   };
 
 sel = find(strcmp(mapping(:,1), coordsys));
