@@ -71,15 +71,16 @@ classdef ft_plot_mesh_interactive<handle
       if self.has_diff
         n = numel(self.data)-1;
       end
+      sat = 1;
       if ischar(self.clim) && strcmp(self.clim, 'maxmin')
-        self.clims = [min(cellfun(@(x) min(x(:)), self.data(1:n)))*0.75 max(cellfun(@(x) max(x(:)), self.data(1:n)))*0.75];
+        self.clims = [min(cellfun(@(x) min(x(:)), self.data(1:n)))*sat max(cellfun(@(x) max(x(:)), self.data(1:n)))*sat];
       elseif ischar(self.clim) && strcmp(self.clim, 'maxabs')
-        tmpclim = [min(cellfun(@(x) min(x(:)), self.data(1:n)))*0.75 max(cellfun(@(x) max(x(:)), self.data(1:n)))*0.75];
+        tmpclim = [min(cellfun(@(x) min(x(:)), self.data(1:n)))*sat max(cellfun(@(x) max(x(:)), self.data(1:n)))*sat];
         self.clims = [-1 1].*max(abs(tmpclim));
       elseif ischar(self.clim) && strcmp(self.clim, 'zeromax')
-        self.clims = [0 max(cellfun(@(x) max(x(:)), self.data(1:n)))*0.75];
+        self.clims = [0 max(cellfun(@(x) max(x(:)), self.data(1:n)))*sat];
       elseif ischar(self.clim) && strcmp(self.clim, 'minzero')
-        self.clims = [min(cellfun(@(x) min(x(:)), self.data(1:n)))*0.75 0];
+        self.clims = [min(cellfun(@(x) min(x(:)), self.data(1:n)))*sat 0];
       end
       
       % we need brewermap
@@ -130,6 +131,10 @@ classdef ft_plot_mesh_interactive<handle
       % INIT_SURFACE_PLOTS initializes a single figure that displays
       % surface plots for all the functional data at a single time point.
       self.fig_surface = figure('Color', 'w');
+      p = get(self.fig_surface, 'position');
+      p(1) = 10; % move the figure to the left
+      set(self.fig_surface, 'position', p);
+
       ft_colormap(self.fig_surface, self.colourmap);
       for k = 1:self.ncond
         % initialize axes and surface
@@ -148,7 +153,7 @@ classdef ft_plot_mesh_interactive<handle
         % set display properties
         lighting gouraud;
         shading interp;
-        material shiny;
+        material dull;
         axis vis3d equal off;
         set(self.axes_surface(k),'CameraViewAngleMode','Manual');
         set(self.axes_surface(k), 'CLim', self.clims);
@@ -156,8 +161,9 @@ classdef ft_plot_mesh_interactive<handle
         
         % treat an optional condition difference separately
         if self.has_diff && k == self.ncond
+          sat = 1;
           tmp = self.data{k};
-          lims = max(tmp(:)) * 0.75;
+          lims = max(tmp(:)) * sat;
           set(self.axes_surface(k), 'CLim', [-lims lims]);
           ft_colormap(self.axes_surface(k), brewermap(64, '*RdBu')); % FIXME: not sure why the colormap is hard-coded here
         end
@@ -210,17 +216,18 @@ classdef ft_plot_mesh_interactive<handle
           n = numel(self.data);
         end
 
+        sat = 1;
         if (ischar(self.clim) && strcmp(self.clim, 'maxmin')) || isnumeric(self.clim)
           % FIXME the second condition is old default behavior I think (but
           % probably not optimal in its alignment with possible user expectations)
-          clim_conds = [min(cellfun(@(x) min(nanmean(nanmean(x(ix{:}),3),2)), self.data(1:n)))*0.75 max(cellfun(@(x) max(nanmean(nanmean(x(ix{:}),3),2)), self.data(1:n)))*0.75];
+          clim_conds = [min(cellfun(@(x) min(nanmean(nanmean(x(ix{:}),3),2)), self.data(1:n)))*sat max(cellfun(@(x) max(nanmean(nanmean(x(ix{:}),3),2)), self.data(1:n)))*sat];
         elseif ischar(self.clim) && strcmp(self.clim, 'maxabs')
-          tmpclim = [min(cellfun(@(x) min(nanmean(nanmean(x(ix{:}),3),2)), self.data(1:n)))*0.75 max(cellfun(@(x) max(nanmean(nanmean(x(ix{:}),3),2)), self.data(1:n)))*0.75];
+          tmpclim = [min(cellfun(@(x) min(nanmean(nanmean(x(ix{:}),3),2)), self.data(1:n)))*sat max(cellfun(@(x) max(nanmean(nanmean(x(ix{:}),3),2)), self.data(1:n)))*sat];
           clim_conds = [-1 1].*max(abs(tmpclim));
         elseif ischar(self.clim) && strcmp(self.clim, 'zeromax')
-          clim_conds = [0 max(cellfun(@(x) max(nanmean(nanmean(x(ix{:}),3),2)), self.data(1:n)))*0.75];
+          clim_conds = [0 max(cellfun(@(x) max(nanmean(nanmean(x(ix{:}),3),2)), self.data(1:n)))*sat];
         elseif ischar(self.clim) && strcmp(self.clim, 'minzero')
-          clim_conds = [min(cellfun(@(x) min(nanmean(nanmean(x(ix{:}),3),2)), self.data(1:n)))*0.75 0];
+          clim_conds = [min(cellfun(@(x) min(nanmean(nanmean(x(ix{:}),3),2)), self.data(1:n)))*sat 0];
         end
         for k = 1:n
           set(self.axes_surface(k), 'CLim', clim_conds);
@@ -413,7 +420,9 @@ classdef ft_plot_mesh_interactive<handle
       % are provided, the average value over those positions is plotted.
       
       % set up figure and store handles
-      fig = figure('Color', 'w');
+      p = get(self.fig_surface, 'position');
+      p(1) = p(1)+p(3)+10;
+      fig = figure('Color', 'w', 'position', p);
       thisfig_ind = numel(self.figs_time) + 1;
       self.figs_time(thisfig_ind) = fig;
       ax = axes();
@@ -449,6 +458,9 @@ classdef ft_plot_mesh_interactive<handle
       
       box off;
       
+      self.rect_time(thisfig_ind) = patch([self.t1 self.t1 self.t2 self.t2], [self.f1 self.f2 self.f2 self.f1], 0.8.*[1 1 1],...
+        'FaceAlpha', 0.3, 'Edgecolor', 'k');
+
       % add event handler: clicking somewhere should move the indicator and
       % update the surface plots
       is_down = false;
@@ -459,7 +471,8 @@ classdef ft_plot_mesh_interactive<handle
         point   = get(ax, 'CurrentPoint');
         self.t1 = point(1);
         self.f1 = point(3);
-        %set(self.rect_time(thisfig_ind), 'XData', self.t1.*[1 1 1 1]);
+        set(self.rect_time(thisfig_ind), 'XData', self.t1.*[1 1 1 1]);
+        set(self.rect_time(thisfig_ind), 'YData', self.f1.*[1 1 1 1]);
       end
       function button_up(~,~)
         is_down = false; 
@@ -473,7 +486,9 @@ classdef ft_plot_mesh_interactive<handle
       function mouse_dragged(~,~)
         if is_down
           point = get(ax, 'CurrentPoint');
-          %set(self.rect_time(thisfig_ind), 'XData', [self.t1 self.t1 point(1) point(1)]);
+          set(self.rect_time(thisfig_ind), 'XData', [self.t1 self.t1 point(1) point(1)]);
+          set(self.rect_time(thisfig_ind), 'YData', [self.f1 point(3) point(3) self.f1]);
+          
           %set(self.vlines_time(thisfig_ind), 'Visible', 'off');
         end
       end
@@ -488,7 +503,7 @@ classdef ft_plot_mesh_interactive<handle
         try
           self.figs_time(thisfig_ind) = [];
           self.axes_time(thisfig_ind) = [];
-          self.vlines_time(thisfig_ind) = [];
+          %self.vlines_time(thisfig_ind) = [];
           delete(self.virt_elec_surfs(thisfig_ind,:));
           self.virt_elec_surfs(thisfig_ind,:) = [];
           delete(fig);
