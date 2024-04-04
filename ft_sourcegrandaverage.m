@@ -104,7 +104,7 @@ for i=1:length(varargin)
 end
 
 % check that these fields are identical for each input source
-checkfields = {'pos' 'dim' 'xgrid' 'ygrid' 'zgrid' 'transform' 'inside' 'outside'};
+checkfields = {'pos', 'tri', 'dim', 'transform', 'unit', 'coordsys', 'inside', 'xgrid', 'ygrid', 'zgrid'};
 for k = 1:numel(checkfields)
   tmpstr = checkfields{k};
   if isfield(varargin{1}, tmpstr)
@@ -216,7 +216,7 @@ else
 end
 
 % the fields that describe the actual data need to be copied over from the input to the output
-grandavg = copyfields(varargin{1}, grandavg, {'pos', 'time', 'freq', 'dim', 'transform', 'inside', 'outside', 'unit', 'coordsys'});
+grandavg = copyfields(varargin{1}, grandavg, {'pos', 'tri', 'dim', 'transform', 'unit', 'coordsys', 'inside', 'time', 'freq'});
 
 % these fields might not be needed
 if ~contains(dimord, 'time'), grandavg = removefields(grandavg, 'time'); end

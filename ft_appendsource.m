@@ -283,7 +283,7 @@ switch cfg.appenddim
       freq     = freq(ix);
     end
 
-    source = keepfields(varargin{1}, {'pos' 'dim' 'time' 'tri'});
+    source = keepfields(varargin{1}, {'pos', 'tri', 'dim', 'unit', 'coordsys', 'time'});
     source.freq = cat(2, freq{:});
 
   case 'time'
@@ -314,7 +314,7 @@ switch cfg.appenddim
       time     = time(ix);
     end
 
-    source = keepfields(varargin{1}, {'pos' 'dim' 'freq' 'tri'});
+    source = keepfields(varargin{1}, {'pos', 'tri', 'dim', 'unit', 'coordsys', 'time'});
     source.time = cat(2, time{:});
 
   otherwise

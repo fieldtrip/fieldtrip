@@ -1267,7 +1267,7 @@ switch dtype
     end
     
   case {'source' 'source+mesh'}
-    stat = keepfields(data, {'pos', 'dim', 'transform', 'inside', 'outside' 'tri'});
+    stat = keepfields(data, {'pos', 'tri', 'dim', 'transform', 'unit', 'coordsys', 'inside'});
     stat.(outparam) = datout;
     if ~isempty(varout)
       stat.([outparam, 'sem']) = (varout/nrpt).^0.5;

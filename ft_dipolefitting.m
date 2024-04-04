@@ -366,7 +366,7 @@ if strcmp(cfg.gridsearch, 'yes')
   if isfield(cfg.sourcemodel, 'leadfield')
     ft_notice('using precomputed leadfields for the gridsearch');
 
-    sourcemodel = keepfields(cfg.sourcemodel, {'pos', 'tri', 'dim', 'inside', 'leadfield', 'leadfielddimord', 'label'});
+    sourcemodel = keepfields(cfg.sourcemodel, {'pos', 'tri', 'dim', 'unit', 'coordsys', 'inside', 'leadfield', 'leadfielddimord', 'label'});
     
     % select the channels corresponding to the data and the user configuration
     tmpcfg = keepfields(cfg, 'channel');

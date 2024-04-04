@@ -484,7 +484,7 @@ switch cfg.method
     % source positions are already specified in the configuration, reuse as much of the
     % prespecified model as possible (but only known objects)
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    sourcemodel = keepfields(cfg.sourcemodel, {'pos', 'unit', 'xgrid', 'ygrid', 'zgrid', 'mom', 'tri', 'dim', 'transform', 'inside', 'lbex', 'subspace', 'leadfield', 'filter', 'label', 'leadfielddimord'});
+    sourcemodel = keepfields(cfg.sourcemodel, {'pos', 'tri', 'dim', 'transform', 'unit', 'coordsys', 'xgrid', 'ygrid', 'zgrid', 'mom', 'inside', 'lbex', 'subspace', 'leadfield', 'leadfielddimord', 'filter', 'filterdimord', 'label'});
 
   case 'basedonmri'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
