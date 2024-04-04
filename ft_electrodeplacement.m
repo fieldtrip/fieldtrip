@@ -1988,7 +1988,7 @@ opt = getappdata(h, 'opt');
 if get(hObject, 'value') && ~isfield(opt.mri{opt.currmri}, 'dat_strip') % skullstrip
   fprintf('==================================================================================\n');
   fprintf(' stripping the skull - this may take a few minutes\n')
-  tmp = keepfields(opt.mri{opt.currmri}, {'anatomy', 'dim', 'coordsys', 'unit', 'transform'});
+  tmp = keepfields(opt.mri{opt.currmri}, {'anatomy', 'dim', 'transform', 'unit', 'coordsys'});
   cfg = [];
   cfg.output = 'skullstrip';
   seg = ft_volumesegment(cfg, tmp);

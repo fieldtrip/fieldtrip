@@ -393,7 +393,7 @@ if ~isempty(cfg.refdip) || ~isempty(cfg.supdip)
   
 elseif isfield(cfg.sourcemodel, 'filter')
   ft_notice('using precomputed filters, not computing any leadfields');
-  sourcemodel = keepfields(cfg.sourcemodel, {'pos', 'tri', 'dim', 'inside', 'filter', 'filterdimord', 'label', 'cfg'});
+  sourcemodel = keepfields(cfg.sourcemodel, {'pos', 'tri', 'dim', 'unit', 'coordsys', 'inside', 'filter', 'filterdimord', 'label', 'cfg'});
   
   if ~isfield(sourcemodel, 'label')
     ft_warning('the labels are missing for the precomputed filters, assuming that they were computed with the same channel selection');
@@ -428,7 +428,7 @@ elseif isfield(cfg.sourcemodel, 'filter')
   
 elseif isfield(cfg.sourcemodel, 'leadfield')
   ft_notice('using precomputed leadfields');
-  sourcemodel = keepfields(cfg.sourcemodel, {'pos', 'tri', 'dim', 'inside', 'leadfield', 'leadfielddimord', 'label', 'cfg', 'subspace'});
+  sourcemodel = keepfields(cfg.sourcemodel, {'pos', 'tri', 'dim', 'unit', 'coordsys', 'inside', 'leadfield', 'leadfielddimord', 'label', 'cfg', 'subspace'});
   
   if ~isfield(sourcemodel, 'label')
     ft_warning('the labels are missing for the precomputed leadfields, assuming that they were computed with the same channel selection');
@@ -1219,14 +1219,14 @@ end % if freq or timelock or comp data
 % clean up and collect the results
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-source = copyfields(sourcemodel, source, {'pos', 'tri', 'dim', 'inside', 'leadfield', 'leadfielddimord', 'label', 'cfg'});
+source = copyfields(sourcemodel, source, {'pos', 'tri', 'dim', 'unit', 'coordsys', 'inside', 'leadfield', 'leadfielddimord', 'label', 'cfg'});
 
 if exist('dip', 'var')
   % the fields in the dip structure might be more recent than those in the sourcemodel structure
-  source = copyfields(dip, source, {'pos', 'tri', 'dim', 'inside', 'leadfield', 'leadfielddimord', 'label', 'cfg'});
+  source = copyfields(dip, source, {'pos', 'tri', 'dim', 'unit', 'coordsys', 'inside', 'leadfield', 'leadfielddimord', 'label', 'cfg'});
   
   % prevent duplication of these fields when copying the content of dip into source.avg or source.trial
-  dip    = removefields(dip,       {'pos', 'tri', 'dim', 'inside', 'leadfield', 'leadfielddimord', 'label', 'cfg'});
+  dip    = removefields(dip,       {'pos', 'tri', 'dim', 'unit', 'coordsys', 'inside', 'leadfield', 'leadfielddimord', 'label', 'cfg'});
   
   if istrue(cfg.(cfg.method).keepfilter) && isfield(dip(1), 'filter')
     for k=1:numel(dip)
