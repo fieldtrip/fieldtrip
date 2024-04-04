@@ -398,7 +398,7 @@ if istlck
 end
 
 if usepos
-  brainordinate = keepfields(source, {'pos' 'dim' 'tri' 'transform' 'inside' 'unit'});
+  brainordinate = keepfields(source, {'pos', 'tri', 'dim', 'transform', 'unit', 'coordsys', 'inside'});
   brainordinate.index = zeros(npos, 1);
   brainordinate.index(indx) = indx;
   brainordinate.indexlabel  = data_vc.label; % FIXME this only works with one component per vc

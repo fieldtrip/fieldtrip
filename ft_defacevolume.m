@@ -275,7 +275,7 @@ switch cfg.method
       end
 
       if istrue(cfg.feedback)
-        tmpmri = keepfields(mri, {'anatomy', 'transform', 'coordsys', 'units', 'dim'});
+        tmpmri = keepfields(mri, {'anatomy', 'dim', 'transform', 'unit', 'coordsys'});
         tmpmri.remove = remove;
         tmpcfg = [];
         tmpcfg.funparameter = 'remove';
