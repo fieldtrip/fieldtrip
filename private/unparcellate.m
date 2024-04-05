@@ -68,43 +68,56 @@ if isfield(data, 'label')
       
       fun = nan(dimsiz);
       
-      [parcelindx, chanindx] = match_str(parcellation.([parcelparam,'label']), data.label);
-      
-      
+      parcel.label  = parcellation.([parcelparam,'label']);
+      parcel.lation = parcellation.(parcelparam);
+
+      [parcelindx, chanindx] = match_str(parcel.label, data.label);
+        
       if numel(dimtok)>1 && strcmp(dimtok{1}, 'chan') && strcmp(dimtok{2}, 'chan')
         % chan_chan_xxx
         for i=1:numel(parcelindx)
           for j=1:numel(parcelindx)
-            p1 = parcellation.(parcelparam)==parcelindx(i);
-            p2 = parcellation.(parcelparam)==parcelindx(j);
+            p1 = parcel.lation==parcelindx(i);
+            p2 = parcel.lation==parcelindx(j);
             c1 = chanindx(i);
             c2 = chanindx(j);
             fun(p1,p2,:) = repmat(data_parcellated(c1,c2,:), [sum(p1) sum(p2) 1]);
           end
         end
       elseif strcmp(dimtok{1}, 'chan')
-        % reorder the parcellated data according to the order in the
-        % parcellation
-        data_parcellated = data_parcellated(chanindx, :); 
+        % FIXME the below should ideally also be done for the bivariate
+        % case above, but needs to be thought through
+        if ~isequal(parcelindx(:), (1:numel(parcelindx))')
+          % for some parcels there is no corresponding data
+          ft_warning('for some parcels there is no corresponding data, these will be filled with NaNs');
+        end
+        if ~isequal(sort(chanindx(:)), (1:numel(chanindx))')
+          ft_warning('for some of the data labels there is no corresponding parcel, these will be skipped');
+        end
+      
+        tmp = data_parcellated;
+        siz = size(tmp);
+        data_parcellated = nan([numel(parcel.label), siz(2:end)]);
         
-%         % chan_xxx
-%         for i=1:numel(parcelindx)
-%           p1 = parcellation.(parcelparam)==parcelindx(i);
-%           c1 = chanindx(i);
-%           fun(p1,:) = repmat(data_parcellated(c1,:), [sum(p1) 1]);
-%         end
-
-        fun(parcellation.(parcelparam)>0,:) = data_parcellated(parcellation.(parcelparam)(parcellation.(parcelparam)>0),:);
+        % reorder the parcellated data according to the order in the parcellation
+        data_parcellated(parcelindx, :) = tmp(chanindx, :); 
+        
+        fun(parcel.lation>0,:) = data_parcellated(parcel.lation(parcel.lation>0),:);
+        
       end
       varargout{1} = fun;
       
     case 'projection matrix'
-      [parcelindx, chanindx] = match_str(parcellation.([parcelparam,'label']), data.label);
+
+      parcel.label  = parcellation.([parcelparam,'label']);
+      parcel.lation = parcellation.(parcelparam);
+
+      [parcelindx, chanindx] = match_str(parcel.label, data.label);
       ix = zeros(0,1);
       iy = zeros(0,1);
       for i=1:numel(parcelindx)
-        ix = cat(1,ix,find(parcellation.(parcelparam)==parcelindx(i)));
-        iy = cat(1,iy,ones(sum(parcellation.(parcelparam)==parcelindx(i)),1).*chanindx(i));
+        ix = cat(1,ix,find(parcel.lation==parcelindx(i)));
+        iy = cat(1,iy,ones(sum(parcel.lation==parcelindx(i)),1).*chanindx(i));
       end
       fun = sparse(ix,iy,ones(numel(ix),1));
       
