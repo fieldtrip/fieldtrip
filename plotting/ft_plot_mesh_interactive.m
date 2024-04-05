@@ -447,7 +447,9 @@ classdef ft_plot_mesh_interactive<handle
           case 'minzero'
             cclim = [min(plotdata(:)) 0];
         end
-        set(ax, 'CLim', cclim);
+        if all(isfinite(cclim))
+          set(ax, 'CLim', cclim);
+        end
       end
       colorbar(ax);
 
