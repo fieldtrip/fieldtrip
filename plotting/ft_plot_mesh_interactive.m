@@ -7,6 +7,7 @@ classdef ft_plot_mesh_interactive<handle
   % like ft_plot_mesh etc., for performance reasons.
   %
   % Copyright (C) 2019 Eelke Spaak, Donders Institute, e.spaak@donders.ru.nl
+  % Copyright (C) 2024 Jan-Mathijs Schoffelen, Donders Institute
   
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   
@@ -81,6 +82,8 @@ classdef ft_plot_mesh_interactive<handle
         self.clims = [0 max(cellfun(@(x) max(x(:)), self.data(1:n)))*sat];
       elseif ischar(self.clim) && strcmp(self.clim, 'minzero')
         self.clims = [min(cellfun(@(x) min(x(:)), self.data(1:n)))*sat 0];
+      else
+        self.clims = self.clim;
       end
       
       % we need brewermap
@@ -447,10 +450,14 @@ classdef ft_plot_mesh_interactive<handle
           case 'minzero'
             cclim = [min(plotdata(:)) 0];
         end
-        if all(isfinite(cclim))
-          set(ax, 'CLim', cclim);
-        end
+      else
+        cclim = self.clim;
       end
+
+      if all(isfinite(cclim))
+        set(ax, 'CLim', cclim);
+      end
+      
       colorbar(ax);
 
       % set up some appearance properties
