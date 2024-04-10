@@ -178,6 +178,7 @@ cfg.unit              = ft_getopt(cfg, 'unit');
 cfg.method            = ft_getopt(cfg, 'method'); % the default is to do automatic detection further down
 cfg.movetocentroids   = ft_getopt(cfg, 'movetocentroids', 'no');
 cfg.feedback          = ft_getopt(cfg, 'feedback', 'text');
+cfg.checkinside       = ft_getopt(cfg, 'checkinside', 'no'); % default is 'no' since this is a relatively slow procedure. It is also not always required, for example with MEG singlesphere, singleshell, localspheres.
 
 % this option was deprecated on 12 Aug 2020
 if isfield(cfg, 'warpmni')
@@ -837,6 +838,10 @@ if strcmp(cfg.tight, 'yes')
 end % if tight
 
 fprintf('%d dipoles inside, %d dipoles outside brain\n', sum(sourcemodel.inside), sum(~sourcemodel.inside));
+
+if istrue(cfg.checkinside) && ~any(sourcemodel.inside)
+  ft_error('there are no dipoles inside the volume conductor')
+end
 
 % apply the symmetry constraint, i.e. add a symmetric dipole for each location that was defined sofar
 if ~isempty(cfg.symmetry)
