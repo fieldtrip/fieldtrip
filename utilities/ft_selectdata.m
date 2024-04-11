@@ -373,7 +373,12 @@ for i=1:numel(varargin)
     if strcmp(datfield{j}, 'sampleinfo') && ~isequal(cfg.latency, 'all')
       if iscell(seltime{i}) && numel(seltime{i})==size(varargin{i}.sampleinfo,1)
         for k = 1:numel(seltime{i})
-          varargin{i}.sampleinfo(k,:) = varargin{i}.sampleinfo(k,1) - 1 + seltime{i}{k}([1 end]);
+          if ~isempty(seltime{i}{k})
+            varargin{i}.sampleinfo(k,:) = varargin{i}.sampleinfo(k,1) - 1 + seltime{i}{k}([1 end]);
+          else
+            % it could be that the latency selection has resulted in an empty trial
+            varargin{i}.sampleinfo(k,:) = [nan nan];
+          end
         end
       elseif ~iscell(seltime{i}) && ~isempty(seltime{i}) && ~all(isnan(seltime{i}))
         nrpt       = size(varargin{i}.sampleinfo,1);
@@ -441,6 +446,24 @@ for i=1:length(orgdim1)
   dimord = dimord(1:end-1); % remove the trailing _
   for j=1:length(varargin)
     varargin{j}.(orgdim1{i}) = dimord;
+  end
+end
+
+% remove the empty trials from a raw/comp data structure
+if strcmp(dtype, 'raw') || strcmp(dtype, 'comp')
+  for i=1:length(varargin)
+    trialnotempty = true(length(varargin{i}.trial),1);
+    for j=1:length(varargin{i}.trial)
+      trialnotempty(j) = ~isempty(varargin{i}.trial{j});
+    end
+    varargin{i}.trial = varargin{i}.trial(trialnotempty);
+    varargin{i}.time  = varargin{i}.time(trialnotempty);
+    if isfield(varargin{i}, 'trialinfo')
+      varargin{i}.trialinfo = varargin{i}.trialinfo(trialnotempty,:);
+    end
+    if isfield(varargin{i}, 'sampleinfo')
+      varargin{i}.sampleinfo = varargin{i}.sampleinfo(trialnotempty,:);
+    end
   end
 end
 
@@ -1107,8 +1130,6 @@ if isfield(cfg, 'frequency')
       cfg.frequency = [min(freqaxis) 0];
     elseif strcmp(cfg.frequency, 'maxabs')
       cfg.frequency = [-max(abs(freqaxis)) max(abs(freqaxis))];
-    elseif strcmp(cfg.frequency, 'zeromax')
-      cfg.frequency = [0 max(freqaxis)];
     elseif strcmp(cfg.frequency, 'zeromax')
       cfg.frequency = [0 max(freqaxis)];
     else
