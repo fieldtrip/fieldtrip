@@ -217,7 +217,7 @@ set(get(ax(2),'Xlabel'),'String','isi(n) (sec)')
 set(get(ax(3),'Ylabel'),'String','isi(n+1) (sec)')
 
 % create the colorbar (who doesn't want one)
-caxis([min(dens(:)) max(dens(:))]); 
+clim([min(dens(:)) max(dens(:))]); 
 colormap(cfg.colormap);                  % create the colormap as the user wants  
 colorbarHdl = colorbar;                % create a colorbar  
 

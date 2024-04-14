@@ -243,7 +243,7 @@ switch info.cfg.viewmode
     tmp(~info.chansel, :) = nan;
     tmp(:, ~info.trlsel)  = nan;
     imagesc(tmp, 'AlphaData', ~isnan(tmp));
-    caxis([min(tmp(:)) max(tmp(:))]);
+    clim([min(tmp(:)) max(tmp(:))]);
   case 'hide'
     imagesc(level(info.chansel==1, info.trlsel==1));
     if ~all(info.trlsel)
