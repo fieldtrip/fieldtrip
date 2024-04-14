@@ -4,7 +4,7 @@ function clim(varargin)
 % which has been introduced in MATLAB 2022a. This replacement function
 % allows CLIM also to be called on older MATLAB versions.
 %
-% The directory containing this function shoudl only be added to the path
+% The directory containing this function should only be added to the path
 % of MATLAB versions prior to 2022a.
 
 % Copyright (C) 2024, Robert Oostenveld
