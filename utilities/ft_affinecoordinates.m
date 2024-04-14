@@ -265,7 +265,7 @@ if isempty(precomputed)
         end
       end
     end
-    figure; imagesc(implemented); caxis([0 3]);
+    figure; imagesc(implemented); clim([0 3]);
     xticklabels(coordsys); xticks(1:numel(coordsys));
     yticklabels(coordsys); yticks(1:numel(coordsys));
   end

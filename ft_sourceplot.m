@@ -1865,7 +1865,7 @@ if opt.hasfreq && opt.hastime && opt.hasfun
   uimagesc(double(functional.time), double(functional.freq), tmpdat); axis xy;
   xlabel('time'); ylabel('freq');
   set(h4, 'tag', 'TF1');
-  caxis([opt.fcolmin opt.fcolmax]);
+  clim([opt.fcolmin opt.fcolmax]);
 elseif opt.hasfreq && opt.hasfun
   h4 = subplot(2,2,4);
   plot(functional.freq, shiftdim(opt.fun(xi,yi,zi,:),3)); xlabel('freq');
@@ -1881,7 +1881,7 @@ elseif strcmp(opt.colorbar,  'yes') && ~isfield(opt, 'hc')
     % imagesc(vectorcolorbar,1,vectorcolorbar);ft_colormap(cfg.funcolormap);
     % use a normal MATLAB colorbar, attach it to the invisible 4th subplot
     try
-      caxis([opt.fcolmin opt.fcolmax]);
+      clim([opt.fcolmin opt.fcolmax]);
     end
     
     opt.hc = colorbar;
