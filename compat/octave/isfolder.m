@@ -3,8 +3,8 @@ function [varargout] = isfolder(varargin)
 %ISFOLDER Determine if the input path points to a folder
 %   TF = ISFOLDER(PATH) returns true if PATH points to a folder and false otherwise.
 %
-% This is a compatibility function that should only be added to the path on
-% MATLAB versions prior to R2017b.
+% This is a compatibility function that should only be added to the path
+% of MATLAB versions prior to R2017b.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % try to automatically remove incorrect compat folders from the path, see https://github.com/fieldtrip/fieldtrip/issues/899

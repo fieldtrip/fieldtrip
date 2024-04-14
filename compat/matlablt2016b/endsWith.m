@@ -4,8 +4,8 @@ function [varargout] = endsWith(varargin)
 %   TF = endsWith(S,PATTERN) returns true if any element of string array S
 %   starts with PATTERN. TF is the same size as S.
 %
-% This is a compatibility function that should only be added to the path on
-% MATLAB versions prior to R2016b.
+% This is a compatibility function that should only be added to the path
+% of MATLAB versions prior to R2016b.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % try to automatically remove incorrect compat folders from the path, see https://github.com/fieldtrip/fieldtrip/issues/899

@@ -4,8 +4,8 @@ function [varargout] = split(varargin)
 % array If STR is a string scalar or character vector, then NEWSTR is a P-by-1 string
 % array or cell array where P is the number of splits.
 %
-% This is a compatibility function that should only be added to the path on
-% MATLAB versions prior to R2016b.
+% This is a compatibility function that should only be added to the path
+% of MATLAB versions prior to R2016b.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % try to automatically remove incorrect compat folders from the path, see https://github.com/fieldtrip/fieldtrip/issues/899
