@@ -449,24 +449,6 @@ for i=1:length(orgdim1)
   end
 end
 
-% remove the empty trials from a raw/comp data structure
-if strcmp(dtype, 'raw') || strcmp(dtype, 'comp')
-  for i=1:length(varargin)
-    trialnotempty = true(length(varargin{i}.trial),1);
-    for j=1:length(varargin{i}.trial)
-      trialnotempty(j) = ~isempty(varargin{i}.trial{j});
-    end
-    varargin{i}.trial = varargin{i}.trial(trialnotempty);
-    varargin{i}.time  = varargin{i}.time(trialnotempty);
-    if isfield(varargin{i}, 'trialinfo')
-      varargin{i}.trialinfo = varargin{i}.trialinfo(trialnotempty,:);
-    end
-    if isfield(varargin{i}, 'sampleinfo')
-      varargin{i}.sampleinfo = varargin{i}.sampleinfo(trialnotempty,:);
-    end
-  end
-end
-
 % restore the source.avg field, this keeps the output reasonably consistent with the
 % old-style source representation of the input
 if strcmp(dtype, 'source') && ~isempty(restoreavg)

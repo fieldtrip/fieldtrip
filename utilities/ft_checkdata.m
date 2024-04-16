@@ -135,6 +135,7 @@ segmentationstyle    = ft_getopt(varargin, 'segmentationstyle'); % this will be 
 parcellationstyle    = ft_getopt(varargin, 'parcellationstyle'); % this will be passed on to the corresponding ft_datatype_xxx function
 trialinfostyle       = ft_getopt(varargin, 'trialinfostyle');
 fsample              = ft_getopt(varargin, 'fsample');
+allowemptytrials     = ft_getopt(varargin, 'allowemptytrials'); % this will be passed on to the corresponding ft_datatype_raw function
 
 % determine the type of input data
 israw           = ft_datatype(data, 'raw');
@@ -276,7 +277,7 @@ end
 if iscomp % this should go before israw/istimelock/isfreq
   data = ft_datatype_comp(data, 'hassampleinfo', hassampleinfo);
 elseif israw
-  data = ft_datatype_raw(data, 'hassampleinfo', hassampleinfo);
+  data = ft_datatype_raw(data, 'hassampleinfo', hassampleinfo, 'allowemptytrials', allowemptytrials);
 elseif istimelock
   data = ft_datatype_timelock(data, 'hassampleinfo', hassampleinfo);
 elseif isfreq
