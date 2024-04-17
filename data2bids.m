@@ -18,6 +18,10 @@ function [cfg] = data2bids(cfg, varargin)
 % data input argument allows you to write preprocessed electrophysiological data
 % and/or realigned and defaced anatomical MRI to disk.
 %
+% The implementation in this function aims to correspond to the latest BIDS version.
+% See https://bids-specification.readthedocs.io/ for the full specification
+% and http://bids.neuroimaging.io/ for further details.
+%
 % The configuration structure should contains
 %   cfg.method       = string, can be 'decorate', 'copy' or 'convert', see below (default is automatic)
 %   cfg.dataset      = string, filename of the input data
@@ -47,8 +51,8 @@ function [cfg] = data2bids(cfg, varargin)
 %
 % Although you can explicitly specify cfg.outputfile yourself, it is recommended to
 % use the following configuration options. This results in a BIDS compliant output
-% directory and file name. With these options data2bids will also write, or if
-% already present update the participants.tsv and scans.tsv files.
+% directory and file name. With these options data2bids will also write or, if
+% already present, update the participants.tsv and scans.tsv files.
 %   cfg.bidsroot                = string, top level directory for the BIDS output
 %   cfg.sub                     = string, subject name
 %   cfg.ses                     = string, optional session name
@@ -66,16 +70,45 @@ function [cfg] = data2bids(cfg, varargin)
 %   cfg.space                   = string
 %   cfg.desc                    = string
 %
-% When specifying the output directory in cfg.bidsroot, you can also specify
-% additional information to be added as extra columns in the participants.tsv and
-% scans.tsv files. For example:
+% If you specify cfg.bidsroot, this function will also write the dataset_description.json
+% file. Among others you can specify the following fields:
+%   cfg.dataset_description.writesidecar        = 'yes' or 'no' (default = 'yes')
+%   cfg.dataset_description.Name                = string
+%   cfg.dataset_description.BIDSVersion         = string
+%   cfg.dataset_description.License             = string
+%   cfg.dataset_description.Authors             = cell-array of strings
+%   cfg.dataset_description.ReferencesAndLinks  = cell-array of strings
+%   cfg.dataset_description.EthicsApprovals     = cell-array of strings
+%   cfg.dataset_description.Funding             = cell-array of strings
+%   cfg.dataset_description.Acknowledgements    = string
+%   cfg.dataset_description.HowToAcknowledge    = string
+%   cfg.dataset_description.DatasetDOI          = string
+%
+% If you specify cfg.bidsroot, you can also specify additional information to be
+% added as extra columns in the participants.tsv and scans.tsv files. For example:
 %   cfg.participants.age        = scalar
 %   cfg.participants.sex        = string, 'm' or 'f'
 %   cfg.scans.acq_time          = string, should be formatted according to RFC3339 as '2019-05-22T15:13:38'
 %   cfg.sessions.acq_time       = string, should be formatted according to RFC3339 as '2019-05-22T15:13:38'
 %   cfg.sessions.pathology      = string, recommended when different from healthy
-% In case any of these values is specified as empty (i.e. []) or as nan, it will be
-% written to the tsv file as 'n/a'.
+% If any of these values is specified as [] or as nan, it will be written to 
+% the tsv file as 'n/a'.
+%
+% General BIDS options that apply to all data types are
+%   cfg.InstitutionName             = string
+%   cfg.InstitutionAddress          = string
+%   cfg.InstitutionalDepartmentName = string
+%   cfg.Manufacturer                = string
+%   cfg.ManufacturersModelName      = string
+%   cfg.DeviceSerialNumber          = string
+%   cfg.SoftwareVersions            = string
+%
+% General BIDS options that apply to all functional data types are
+%   cfg.TaskName                    = string
+%   cfg.TaskDescription             = string
+%   cfg.Instructions                = string
+%   cfg.CogAtlasID                  = string
+%   cfg.CogPOID                     = string
 %
 % For anatomical and functional MRI data you can specify cfg.dicomfile to read the
 % detailed MRI scanner and sequence details from the header of that DICOM file. This
@@ -117,36 +150,7 @@ function [cfg] = data2bids(cfg, varargin)
 % it as cfg.opto or you can specify a filename with optode information.
 %   cfg.opto                    = structure with optode positions or filename,see FT_READ_SENS
 %
-% General BIDS options that apply to all data types are
-%   cfg.InstitutionName             = string
-%   cfg.InstitutionAddress          = string
-%   cfg.InstitutionalDepartmentName = string
-%   cfg.Manufacturer                = string
-%   cfg.ManufacturersModelName      = string
-%   cfg.DeviceSerialNumber          = string
-%   cfg.SoftwareVersions            = string
-%
-% If you specify cfg.bidsroot, this function will also write the dataset_description.json
-% file. You can specify the following fields
-%   cfg.dataset_description.writesidecar        = string
-%   cfg.dataset_description.Name                = string
-%   cfg.dataset_description.BIDSVersion         = string
-%   cfg.dataset_description.License             = string
-%   cfg.dataset_description.Authors             = string or cell-array of strings
-%   cfg.dataset_description.Acknowledgements    = string
-%   cfg.dataset_description.HowToAcknowledge    = string
-%   cfg.dataset_description.Funding             = string or cell-array of strings
-%   cfg.dataset_description.ReferencesAndLinks  = string or cell-array of strings
-%   cfg.dataset_description.DatasetDOI          = string
-%
-% General BIDS options that apply to all functional data types are
-%   cfg.TaskName                    = string
-%   cfg.TaskDescription             = string
-%   cfg.Instructions                = string
-%   cfg.CogAtlasID                  = string
-%   cfg.CogPOID                     = string
-%
-% There are more BIDS options for the mri/meg/eeg/ieegÂ data type specific sidecars.
+% There are more BIDS options for the mri/meg/eeg/ieeg data type specific sidecars.
 % Rather than listing them all here, please open this function in the MATLAB editor,
 % and scroll down a bit to see what those are. In general the information in the JSON
 % files is specified by a field that is specified in CamelCase
@@ -155,17 +159,13 @@ function [cfg] = data2bids(cfg, varargin)
 %   cfg.eeg.SomeOption              = string, please check the MATLAB code
 %   cfg.ieeg.SomeOption             = string, please check the MATLAB code
 %   cfg.nirs.SomeOption             = string, please check the MATLAB code
-%   cfg.coordsystem.someoption      = string, please check the MATLAB code
+%   cfg.coordsystem.SomeOption      = string, please check the MATLAB code
 % The information for TSV files is specified with a column header in lowercase or
 % snake_case and represents a list of items
-%   cfg.channels.someoption         = cell-array, please check the MATLAB code
-%   cfg.events.someoption           = cell-array, please check the MATLAB code
-%   cfg.electrodes.someoption       = cell-array, please check the MATLAB code
-%   cfg.optodes.someoption          = cell-array, please check the MATLAB code
-%
-% The implementation in this function aims to correspond to the latest BIDS version.
-% See https://bids-specification.readthedocs.io/ for the full specification
-% and http://bids.neuroimaging.io/ for further details.
+%   cfg.channels.some_option        = cell-array, please check the MATLAB code
+%   cfg.events.some_option          = cell-array, please check the MATLAB code
+%   cfg.electrodes.some_option      = cell-array, please check the MATLAB code
+%   cfg.optodes.some_option         = cell-array, please check the MATLAB code
 %
 % See also FT_DATAYPE_RAW, FT_DATAYPE_VOLUME, FT_DATATYPE_SENS, FT_DEFINETRIAL,
 % FT_PREPROCESSING, FT_READ_MRI, FT_READ_EVENT
@@ -185,7 +185,7 @@ function [cfg] = data2bids(cfg, varargin)
 % officially supported data types.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% Copyright (C) 2018-2023, Robert Oostenveld
+% Copyright (C) 2018-2024, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -351,7 +351,6 @@ if istable(cfg.scans)
 end
 
 %% Dataset description
-
 cfg.dataset_description                     = ft_getopt(cfg, 'dataset_description'                       );
 cfg.dataset_description.writesidecar        = ft_getopt(cfg.dataset_description, 'writesidecar', 'yes'   );
 cfg.dataset_description.Name                = ft_getopt(cfg.dataset_description, 'Name'                  ); % REQUIRED. Name of the dataset.
@@ -365,14 +364,12 @@ cfg.dataset_description.Funding             = ft_getopt(cfg.dataset_description,
 cfg.dataset_description.EthicsApprovals     = ft_getopt(cfg.dataset_description, 'EthicsApprovals'       ); % OPTIONAL. List of ethics committee approvals of the research protocols and/or protocol identifiers.
 cfg.dataset_description.ReferencesAndLinks  = ft_getopt(cfg.dataset_description, 'ReferencesAndLinks'    ); % OPTIONAL. List of references to publication that contain information on the dataset, or links.
 cfg.dataset_description.DatasetDOI          = ft_getopt(cfg.dataset_description, 'DatasetDOI'            ); % OPTIONAL. The Document Object Identifier of the dataset (not the corresponding paper).
-
-% this is a structure, and in the json file an object
-default.Name        = 'FieldTrip';
-default.Version     = ft_version();
-default.Description = 'data2bids converter';
-default.URI         = 'https://www.fieldtriptoolbox.org';
-cfg.dataset_description.GeneratedBy         = ft_getopt(cfg.dataset_description, 'GeneratedBy', {default});
-clear default
+% GeneratedBy is here a MATLAB structure, and in the file a JSON object
+cfg.dataset_description.GeneratedBy             = ft_getopt(cfg.dataset_description, 'GeneratedBy', struct);
+cfg.dataset_description.GeneratedBy.Name        = ft_getopt(cfg.dataset_description.GeneratedBy, 'Name', 'FieldTrip');
+cfg.dataset_description.GeneratedBy.Version     = ft_getopt(cfg.dataset_description.GeneratedBy, 'Version', ft_version);
+cfg.dataset_description.GeneratedBy.Description = ft_getopt(cfg.dataset_description.GeneratedBy, 'Description', 'data2bids converter');
+cfg.dataset_description.GeneratedBy.URI         = ft_getopt(cfg.dataset_description.GeneratedBy, 'URI', 'https://www.fieldtriptoolbox.org');
 
 %% Generic fields for all data types
 cfg.TaskName                          = ft_getopt(cfg, 'TaskName'                    ); % REQUIRED. Name of the task (for resting state use the 'rest' prefix). Different Tasks SHOULD NOT have the same name. The Task label is derived from this field by removing all non alphanumeric ([a-zA-Z0-9]) characters.
@@ -2688,6 +2685,21 @@ fn = {'Authors', 'Funding', 'EthicsApprovals', 'ReferencesAndLinks'};
 for i=1:numel(fn)
   if isfield(dataset_description, fn{i}) && ischar(dataset_description.(fn{i}))
     % it should be an array of strings in the JSON file
-    dataset_description.(fn{i}) = {dataset_description.(fn{i})};
+    tmp = dataset_description.(fn{i});
+    % Check if multiple elements are given in a single string
+    % and try to coerce them into individual array elements.
+    % Assume naïvely that if not semi-colon delimination is used, then
+    % commas are used to separate elements
+    if contains(tmp, ';')
+      tmp = strtrim(strsplit(tmp,';'))
+      dataset_description.(fn{i}) = tmp
+      ft_warning(sprintf('Multiple entries to %s field should be an array-of-strings, splitting on '';''', fn{i}));
+    elseif contains(tmp, ',')
+      tmp = strtrim(strsplit(tmp,','))
+      dataset_description.(fn{i}) = tmp
+      ft_warning(sprintf('Multiple entries to %s field should be an array-of-strings, splitting on '',''', fn{i}));
+    else
+      dataset_description.(fn{i}) = {tmp};
+    end
   end
 end

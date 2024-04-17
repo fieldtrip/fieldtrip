@@ -6,7 +6,7 @@ function level = artifact_level(dat, metric, mval, sd, connectivity)
 %   level = artifact_level(dat, metric, mval, sd, connectivity)
 % where
 %   dat           = nchan*ntime, data of a single trial
-%   metric        = string
+%   metric        = string, see below in the code
 %   mval          = mean value over all trials
 %   sd            = standard deviation over all trials
 %   connectivity  = nchan*nchan connectivity matrix
@@ -14,7 +14,7 @@ function level = artifact_level(dat, metric, mval, sd, connectivity)
 %   level         = nchan*1 vector with values
 
 % Copyright (C) 2005-2006, Markus Bauer, Robert Oostenveld
-% Copyright (C) 2006-2021, Robert Oostenveld
+% Copyright (C) 2006-2024, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -56,7 +56,7 @@ if contains(metric, 'zvalue')
   assert(~isempty(sd));
 end
 
-nchan = size(dat, 1);
+[nchan, nsample] = size(dat);
 
 switch metric
   case 'var'
@@ -78,10 +78,12 @@ switch metric
   case '1/var'
     level = 1./(nanstd(dat, [], 2).^2);
   case 'zvalue'
-    level = nanmean( (dat-repmat(mval, 1, size(dat, 2)) )./repmat(sd, 1, size(dat, 2)) , 2);
+    level = nanmean((dat-repmat(mval, 1, nsample))./repmat(sd, 1, nsample), 2);
   case 'maxzvalue'
-    level = nanmax( ( dat-repmat(mval, 1, size(dat, 2)) )./repmat(sd, 1, size(dat, 2)) , [], 2);
-    
+    level = nanmax((dat-repmat(mval, 1, nsample))./repmat(sd, 1, nsample), [], 2);
+  case 'mad'
+    level = mad(dat, 1, 2);
+
   case 'neighbexpvar'
     % this results in a Nx1 vector
     level = nan(nchan, 1);

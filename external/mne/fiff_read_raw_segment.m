@@ -253,15 +253,20 @@ else
         %   Depending on the state of the projection and selection
         %   we proceed a little bit differently
         %
+        if numel(tag.data)==nchan.*this.nsamp;
+          dat = double(reshape(tag.data, nchan, this.nsamp));
+        else
+          error(me, 'mismatch between actual and expected number of data elements in tag, possibly the datafile is corrupted');  
+        end
         if isempty(mult)
           if isempty(sel)
-            one = cal*double(reshape(tag.data,nchan,this.nsamp));
+            one = cal*dat;
           else
-            one = double(reshape(tag.data,nchan,this.nsamp));
+            one = dat;
             one = cal*one(sel,:);
           end
         else
-          one = mult*double(reshape(tag.data,nchan,this.nsamp));
+          one = mult*dat;
         end
       end
       %

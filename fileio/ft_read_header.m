@@ -15,8 +15,9 @@ function [hdr] = ft_read_header(filename, varargin)
 %   'chantype'       = string or cell-array with strings, channel types to be read (only for NeuroOmega and BlackRock)
 %   'coordsys'       = string, 'head' or 'dewar' (default = 'head')
 %   'headerformat'   = name of a MATLAB function that takes the filename as input (default is automatic)
-%   'password'       = password structure for encrypted data set (only for mayo_mef30 and mayo_mef21)
+%   'password'       = password structure for encrypted data set (for dhn_med10, mayo_mef30, mayo_mef21)
 %   'readbids'       = string, 'yes', no', or 'ifmakessense', whether to read information from the BIDS sidecar files (default = 'ifmakessense')
+%   'splitlabel'     = string, 'yes' or 'no', split the channel labels on the '-' and return the first part (default = 'yes' for CTF and FieldLine, 'no' for others)
 %
 % This returns a header structure with the following fields
 %   hdr.Fs          = sampling frequency
@@ -96,7 +97,7 @@ function [hdr] = ft_read_header(filename, varargin)
 % See also FT_READ_DATA, FT_READ_EVENT, FT_WRITE_DATA, FT_WRITE_EVENT,
 % FT_CHANTYPE, FT_CHANUNIT
 
-% Copyright (C) 2003-2021 Robert Oostenveld
+% Copyright (C) 2003-2024 Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -190,6 +191,7 @@ coildeffile    = ft_getopt(varargin, 'coildeffile');      % empty, or a filename
 chantype       = ft_getopt(varargin, 'chantype', {});
 password       = ft_getopt(varargin, 'password', struct([]));
 readbids       = ft_getopt(varargin, 'readbids', 'ifmakessense');
+splitlabel     = ft_getopt(varargin, 'splitlabel');       % default for CTF and FieldLine is dealt with below
 
 % this should be a cell array
 if ~iscell(chantype); chantype = {chantype}; end
@@ -283,7 +285,7 @@ if cache && exist(headerfile, 'file') && ~isempty(cacheheader)
         % for realtime analysis end-of-file-chasing the res4 does not correctly
         % estimate the number of samples, so we compute it on the fly
         sz = 0;
-        files = dir([filename '/*.*meg4']);
+        files = dir([filename filesep '*.*meg4']);
         for j=1:numel(files)
           sz = sz + files(j).bytes;
         end
@@ -657,7 +659,11 @@ switch headerformat
   case {'ctf_ds', 'ctf_meg4', 'ctf_res4'}
     % check the presence of the required low-level toolbox
     ft_hastoolbox('ctf', 1);
-    orig             = readCTFds(filename);
+
+    % default for CTF is to remove the site-specific numbers from each channel name, e.g. 'MZC01-1706' becomes 'MZC01'
+    splitlabel = ft_getopt(varargin, 'splitlabel', true);
+
+    orig = readCTFds(filename);
     if isempty(orig)
       % this is to deal with data from the 64 channel system and the error
       % readCTFds: .meg4 file header=MEG4CPT   Valid header options:  MEG41CP  MEG42CP
@@ -669,10 +675,7 @@ switch headerformat
     hdr.nSamplesPre  = orig.res4.preTrigPts;
     hdr.nTrials      = orig.res4.no_trials;
     hdr.label        = cellstr(orig.res4.chanNames);
-    for i=1:numel(hdr.label)
-      % remove the site-specific numbers from each channel name, e.g. 'MZC01-1706' becomes 'MZC01'
-      hdr.label{i} = strtok(hdr.label{i}, '-');
-    end
+
     % read the balance coefficients, these are used to compute the synthetic gradients
     try
       coeftype = cellstr(char(orig.res4.scrr(:).coefType));
@@ -853,6 +856,10 @@ switch headerformat
     hdr.nTrials     = 1;
     hdr.label       = orig.label(:);
     hdr.orig        = orig; % remember the original details
+
+  case 'dhn_med10'
+    ft_hastoolbox('mayo_mef', 1); % make sure mayo_mef exists
+    hdr = read_dhn_med10(filename, password);
 
   case 'edf'
     % this reader is largely similar to the bdf reader
@@ -1911,15 +1918,20 @@ switch headerformat
     [fid, tree]  = fiff_open(filename);
     [info, meas] = fiff_read_meas_info(fid, tree);
     fclose(fid);
-    
+
     % convert to FieldTrip format header
     hdr.label       = info.ch_names(:);
     hdr.nChans      = info.nchan;
     hdr.Fs          = info.sfreq;
 
     if ft_senstype(hdr, 'fieldline') && isempty(coilaccuracy)
-      ft_warning('FieldLine data requires coilaccuracy>=1');
-      coilaccuracy = 1;
+      ft_warning('FieldLine data requires a numeric value for coilaccuracy>=0');
+      coilaccuracy = 0;
+    end
+
+    if ft_senstype(hdr, 'fieldline_v3')
+      % default for FieldLine v3 is to remove the electronics chassis number from the channel names
+      splitlabel = ft_getopt(varargin, 'splitlabel', true);
     end
 
     % add a gradiometer structure for forward and inverse modelling
@@ -1933,20 +1945,6 @@ switch headerformat
       end
     catch
       disp(lasterr);
-    end
-
-    % remove the electronics chassis number from the fieldline channel names
-    if ft_senstype(hdr, 'fieldline_v3') && any(contains(hdr.label, '-s'))
-      for i=1:length(hdr.label)
-        tok = split(hdr.label{i}, '-');
-        hdr.label{i} = tok{1};
-      end
-    end
-    if isfield(hdr, 'grad') && ft_senstype(hdr.grad, 'fieldline_v3') && any(contains(hdr.grad.label, '-s'))
-      for i=1:length(hdr.grad.label)
-        tok = split(hdr.grad.label{i}, '-');
-        hdr.grad.label{i} = tok{1};
-      end
     end
 
     iscontinuous  = 0;
@@ -1982,7 +1980,7 @@ switch headerformat
           info.info       = evoked_data.info;               % keep all the details
           info.vartriallength = 0;
         end
-        
+
       catch
         % this happens if fiff_read_evoked_all cannot find evoked
         % responses, in which case it errors due to not assigning the
@@ -2012,9 +2010,9 @@ switch headerformat
       has_ias = ~isempty(fiff_dir_tree_find(meas,FIFF.FIFFB_IAS_RAW_DATA));
 
       if has_ias && istrue(checkmaxfilter)
-        ft_error('Maxshield data should be corrected using Maxfilter prior to importing in FieldTrip.');
+        ft_error('Maxshield data should be corrected using Maxfilter prior to importing into FieldTrip, otherwise the data may be distorted. If you still want to proceed, consider setting the ''checkmaxfilter'' option to be ''no''.');
       elseif has_ias
-        ft_warning('Maxshield data should be corrected using Maxfilter prior to importing in FieldTrip.');
+        ft_warning('Maxshield data should be corrected using Maxfilter prior to importing into FieldTrip, otherwise the data may be distorted. If you still want to proceed, consider setting the ''checkmaxfilter'' option to be ''no''.');
       end
       hdr.nSamples    = raw.last_samp - raw.first_samp + 1; % number of samples per trial
       hdr.nSamplesPre = -raw.first_samp;
@@ -2952,6 +2950,31 @@ hdr.nSamplesPre = double(hdr.nSamplesPre);
 hdr.nTrials     = double(hdr.nTrials);
 hdr.nChans      = double(hdr.nChans);
 
+if ~isempty(splitlabel) && istrue(splitlabel)
+  % this is default for CTF and FieldLine v3
+  hdr.label = strtok(hdr.label, '-');
+  % also update the grad, elec and opto structure
+  if isfield(hdr, 'grad')
+    hdr.grad.label = strtok(hdr.grad.label, '-');
+    if isfield(hdr.grad, 'balance')
+      % also update the G1BR, G2BR and G3BR balancing structures
+      fn = fieldnames(hdr.grad.balance);
+      for i=1:numel(fn)
+        if isstruct(hdr.grad.balance.(fn{i}))
+          hdr.grad.balance.(fn{i}).labelold = strtok(hdr.grad.balance.(fn{i}).labelold, '-');
+          hdr.grad.balance.(fn{i}).labelnew = strtok(hdr.grad.balance.(fn{i}).labelnew, '-');
+        end
+      end
+    end
+  end
+  if isfield(hdr, 'elec')
+    hdr.elec.label = strtok(hdr.elec.label, '-');
+  end
+  if isfield(hdr, 'opto')
+    hdr.opto.label = strtok(hdr.opto.label, '-');
+  end
+end
+
 if inflated
   % compressed file has been unzipped on the fly, clean up
   if strcmp(headerformat, 'brainvision_vhdr')
@@ -2969,6 +2992,7 @@ if cache && exist(headerfile, 'file')
   cacheheader.details = dir(headerfile);
   % fprintf('added header to cache\n');
 end
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION to determine the file size in bytes

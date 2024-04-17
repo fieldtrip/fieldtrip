@@ -182,7 +182,7 @@ else
     end
     dimordfields = dimordfields(ok);
 end
-data = keepfields(varargin{1}, [dimordfields {'label', 'labelcmb', 'freq', 'time', 'pos', 'dim', 'transform'}]);
+data = keepfields(varargin{1}, [dimordfields {'pos', 'tri', 'dim', 'transform', 'unit', 'coordsys', 'label', 'labelcmb', 'freq', 'time'}]);
 
 for p = 1:length(cfg.parameter)
   ft_info('selecting %s from the first input argument\n', cfg.parameter{p});

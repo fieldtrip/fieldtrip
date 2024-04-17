@@ -11,15 +11,16 @@ function ft_plot_axes(object, varargin)
 %
 % Additional optional input arguments should be specified as key-value pairs
 % and can include
-%   'unit'         = string, plot axes that are suitable for the specified geometrical units (default = [])
-%   'axisscale'    = scaling factor for the reference axes and sphere (default = 1)
-%   'coordsys'     = string, assume the data to be in the specified coordinate system (default = 'unknown')
-%   'transform'    = empty or 4x4 homogenous transformation matrix (default = [])
-%   'fontcolor'    = string, color specification (default = [1 .5 0], i.e. orange)
-%   'fontsize'     = number, sets the size of the text (default is automatic)
-%   'fontunits'    =
-%   'fontname'     =
-%   'fontweight'   =
+%   'unit'       = string, plot axes that are suitable for the specified geometrical units (default = [])
+%   'axisscale'  = scaling factor for the reference axes and sphere (default = 1)
+%   'coordsys'   = string, assume the data to be in the specified coordinate system (default = 'unknown')
+%   'transform'  = empty or 4x4 homogenous transformation matrix (default = [])
+%   'fontcolor'  = string, color specification (default = [1 .5 0], i.e. orange)
+%   'fontsize'   = number, sets the size of the text (default is automatic)
+%   'fontunits'  =
+%   'fontname'   =
+%   'fontweight' =
+%   'tag'        = string, the tag assigned to the plotted elements (default = '') 
 %
 % See also FT_PLOT_SENS, FT_PLOT_MESH, FT_PLOT_ORTHO, FT_PLOT_HEADSHAPE, FT_PLOT_DIPOLE, FT_PLOT_HEADMODEL
 
@@ -43,10 +44,12 @@ function ft_plot_axes(object, varargin)
 %
 % $Id$
 
-axisscale = ft_getopt(varargin, 'axisscale', 1);   % this is used to scale the axmax and rbol
+% get the optional input arguments
+axisscale = ft_getopt(varargin, 'axisscale', 1); % this is used to scale the axmax and rbol
 unit      = ft_getopt(varargin, 'unit');
 coordsys  = ft_getopt(varargin, 'coordsys');
 transform = ft_getopt(varargin, 'transform'); % the default is [], which means that no coordinate transformation is done
+tag       = ft_getopt(varargin, 'tag', '');
 % these have to do with the font
 fontcolor   = ft_getopt(varargin, 'fontcolor', [1 .5 0]); % default is orange
 fontsize    = ft_getopt(varargin, 'fontsize',   get(0, 'defaulttextfontsize'));
@@ -145,14 +148,14 @@ end
 
 % plot axes
 hl = line(xdat, ydat, zdat);
-set(hl(1), 'linewidth', 1, 'color', xcolor);
-set(hl(2), 'linewidth', 1, 'color', ycolor);
-set(hl(3), 'linewidth', 1, 'color', zcolor);
+set(hl(1), 'linewidth', 1, 'color', xcolor, 'tag', tag);
+set(hl(2), 'linewidth', 1, 'color', ycolor, 'tag', tag);
+set(hl(3), 'linewidth', 1, 'color', zcolor, 'tag', tag);
 hld = line(xdatdot, ydatdot, zdatdot);
 for k = 1:n
-  set(hld(k    ), 'linewidth', 3, 'color', xcolor);
-  set(hld(k+n*1), 'linewidth', 3, 'color', ycolor);
-  set(hld(k+n*2), 'linewidth', 3, 'color', zcolor);
+  set(hld(k    ), 'linewidth', 3, 'color', xcolor, 'tag', tag);
+  set(hld(k+n*1), 'linewidth', 3, 'color', ycolor, 'tag', tag);
+  set(hld(k+n*2), 'linewidth', 3, 'color', zcolor, 'tag', tag);
 end
 
 % create the sphere at the origin
@@ -164,18 +167,18 @@ if ~isempty(transform)
   sphere.pos = ft_warp_apply(transform, sphere.pos);
 end
 
-ft_plot_mesh(sphere, 'edgecolor', 'none');
+ft_plot_mesh(sphere, 'edgecolor', 'none', 'tag', tag);
 
 % create the labels that are to be plotted along the axes
 [labelx, labely, labelz] = coordsys2label(coordsys, 3, 1);
 
 % add the labels to the axis
-text(xdat(1,1), ydat(1,1), zdat(1,1), labelx{1}, 'linewidth', 2, 'color', fontcolor, 'fontunits', fontunits, 'fontsize', fontsize, 'fontname', fontname, 'fontweight', fontweight);
-text(xdat(1,2), ydat(1,2), zdat(1,2), labely{1}, 'linewidth', 2, 'color', fontcolor, 'fontunits', fontunits, 'fontsize', fontsize, 'fontname', fontname, 'fontweight', fontweight);
-text(xdat(1,3), ydat(1,3), zdat(1,3), labelz{1}, 'linewidth', 2, 'color', fontcolor, 'fontunits', fontunits, 'fontsize', fontsize, 'fontname', fontname, 'fontweight', fontweight);
-text(xdat(2,1), ydat(2,1), zdat(2,1), labelx{2}, 'linewidth', 2, 'color', fontcolor, 'fontunits', fontunits, 'fontsize', fontsize, 'fontname', fontname, 'fontweight', fontweight);
-text(xdat(2,2), ydat(2,2), zdat(2,2), labely{2}, 'linewidth', 2, 'color', fontcolor, 'fontunits', fontunits, 'fontsize', fontsize, 'fontname', fontname, 'fontweight', fontweight);
-text(xdat(2,3), ydat(2,3), zdat(2,3), labelz{2}, 'linewidth', 2, 'color', fontcolor, 'fontunits', fontunits, 'fontsize', fontsize, 'fontname', fontname, 'fontweight', fontweight);
+text(xdat(1,1), ydat(1,1), zdat(1,1), labelx{1}, 'linewidth', 2, 'color', fontcolor, 'fontunits', fontunits, 'fontsize', fontsize, 'fontname', fontname, 'fontweight', fontweight, 'tag', tag);
+text(xdat(1,2), ydat(1,2), zdat(1,2), labely{1}, 'linewidth', 2, 'color', fontcolor, 'fontunits', fontunits, 'fontsize', fontsize, 'fontname', fontname, 'fontweight', fontweight, 'tag', tag);
+text(xdat(1,3), ydat(1,3), zdat(1,3), labelz{1}, 'linewidth', 2, 'color', fontcolor, 'fontunits', fontunits, 'fontsize', fontsize, 'fontname', fontname, 'fontweight', fontweight, 'tag', tag);
+text(xdat(2,1), ydat(2,1), zdat(2,1), labelx{2}, 'linewidth', 2, 'color', fontcolor, 'fontunits', fontunits, 'fontsize', fontsize, 'fontname', fontname, 'fontweight', fontweight, 'tag', tag);
+text(xdat(2,2), ydat(2,2), zdat(2,2), labely{2}, 'linewidth', 2, 'color', fontcolor, 'fontunits', fontunits, 'fontsize', fontsize, 'fontname', fontname, 'fontweight', fontweight, 'tag', tag);
+text(xdat(2,3), ydat(2,3), zdat(2,3), labelz{2}, 'linewidth', 2, 'color', fontcolor, 'fontunits', fontunits, 'fontsize', fontsize, 'fontname', fontname, 'fontweight', fontweight, 'tag', tag);
 
 if ~holdflag
   hold off

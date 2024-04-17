@@ -568,6 +568,11 @@ for indx=1:Ndata
     if ~isempty(msk)
       msk(nanInds) = [];
     end
+  elseif strcmp(cfg.interpolatenan, 'no') && any(nanInds)
+    if isempty(msk)
+      msk = true(size(dat));
+    end
+    msk(nanInds) = false;
   end
   
   % Set ft_plot_topo specific options
@@ -711,7 +716,11 @@ for indx=1:Ndata
   
   % Set colour axis
   if ~strcmp(cfg.style, 'blank')
-    caxis([zmin zmax]);
+    if zmin==zmax
+      clim([zmin-eps zmax+eps]);
+    else
+      clim([zmin zmax]);
+    end
   end
   
   % Plot colorbar

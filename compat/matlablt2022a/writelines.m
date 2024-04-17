@@ -5,12 +5,12 @@ function writelines(lines, filename)
 % backwards compatibility, it is only capable of writing a cell-array with lines
 % to a text file.
 %
-% The directory containing this function shoudl only be added to the path on
-% MATLAB versions prior to 2022a.
+% The directory containing this function should only be added to the path
+% of MATLAB versions prior to 2022a.
 
 % Copyright (C) 2023, Konstantinos Tsilimparis
 
-assert(nargin==2, 'only two input arguments are supported'); 
+assert(nargin==2, 'only two input arguments are supported');
 assert(ischar(filename), 'the filename must be a string');
 assert(all(cellfun(@ischar, lines)), 'invalid lines in the cell-array');
 

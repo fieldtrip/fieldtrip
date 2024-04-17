@@ -19,8 +19,8 @@ function [varargout] = ft_plot_vector(varargin)
 %   'highlightstyle'  = can be 'box', 'thickness', 'saturation', 'difference' (default='box')
 %   'facecolor'       = color for the highlighted box/difference (default = [0.6 0.6 0.6])
 %   'facealpha'       = transparency for the highlighted box/difference, between 0 and 1 (default = 1)
-%   'tag'             = string, the name assigned to the object. All tags with the same name can be deleted in a figure, without deleting other parts of the figure.
-%   'box'             = draw a box around the local axes, can be 'yes' or 'no'
+%   'parent'          = handle which is set as the parent for all plots (default = [])
+%   'tag'             = string, the tag assigned to the plotted elements (default = '')
 %
 % The line color can be specified in a variety of ways
 %   - as a string with one character per line that you want to plot. Supported colors are the same as in PLOT, i.e. 'bgrcmykw'.
@@ -28,6 +28,7 @@ function [varargout] = ft_plot_vector(varargin)
 %   - as a Nx3 matrix, where N=length(x), to use graded RGB colors along the line
 %
 % It is possible to plot the object in a local pseudo-axis (c.f. subplot), which is specfied as follows
+%   'box'             = draw a box around the local axes, can be 'yes' or 'no'
 %   'hpos'            = horizontal position of the center of the local axes
 %   'vpos'            = vertical position of the center of the local axes
 %   'width'           = width of the local axes
@@ -395,9 +396,9 @@ switch highlightstyle
       % the color is specified as Nx3 matrix with RGB values for each line  -> this is as of 2022 the second likely use case
       for i=1:size(vdat,1)
         if numel(style)>1
-          style_i = style{i}; 
+          style_i = style{i};
         else
-          style_i = style; 
+          style_i = style;
         end
         if numel(linewidth)>1
           linewidth_i = linewidth(i);

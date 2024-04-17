@@ -244,7 +244,7 @@ while true
                 ft_plot_dipole(dip(i).pos, dip(i).mom);
                 ft_plot_topo3d(sens.chanpos, real(topo(:,i)));
                 m = max(abs(caxis));
-                caxis([-m m]);
+                clim([-m m]);
                 alpha 0.5
             end
         end

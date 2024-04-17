@@ -3,8 +3,8 @@ function [varargout] = pad(varargin)
 % PAD adds leading or trailing characters, such as spaces, to the left or
 % right of an existing string.
 %
-% This is a compatibility function that should only be added to the path on
-% MATLAB versions prior to R2016b.
+% This is a compatibility function that should only be added to the path
+% of MATLAB versions prior to R2016b.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % try to automatically remove incorrect compat folders from the path, see https://github.com/fieldtrip/fieldtrip/issues/899
