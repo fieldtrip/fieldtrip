@@ -75,14 +75,20 @@ function b = fir1(n, w, varargin)
   % sort arglist, normalize any string
   for i=1:length(varargin)
     arg = varargin{i};
-    if ischar(arg), arg=lower(arg);end
-    if isempty(arg) continue; end  
-    switch arg
-      case {'low','stop','dc-1'},             ftype  = 1;
-      case {'high','pass','bandpass','dc-0'}, ftype  = 0;
-      case {'scale'},                         scale  = 1;
-      case {'noscale'},                       scale  = 0;
-      otherwise                               window = arg;
+    if ischar(arg),  arg=lower(arg); end
+    if isempty(arg), continue;       end
+    if numel(arg)>1
+      % looks like a vectorial element, i.e. the window
+      window = arg;
+    else
+      switch arg
+        case {'low','stop','dc-1'},             ftype  = 1;
+        case {'high','pass','bandpass','dc-0'}, ftype  = 0;
+        case {'scale'},                         scale  = 1;
+        case {'noscale'},                       scale  = 0;
+        otherwise
+          error('there is something wrong with the input arguments');
+      end
     end
   end
 
