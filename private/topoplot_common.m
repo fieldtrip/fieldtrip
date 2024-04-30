@@ -716,7 +716,11 @@ for indx=1:Ndata
   
   % Set colour axis
   if ~strcmp(cfg.style, 'blank')
-    caxis([zmin zmax]);
+    if zmin==zmax
+      clim([zmin-eps zmax+eps]);
+    else
+      clim([zmin zmax]);
+    end
   end
   
   % Plot colorbar

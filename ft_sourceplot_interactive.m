@@ -22,9 +22,7 @@ function [cfg] = ft_sourceplot_interactive(cfg, varargin)
 %                         freq dimension.
 %   cfg.pow_label       = string, ylabel for line graphs of functional data. Default = 'Current
 %                         density (a.u.)'.
-%   cfg.clim            = 2-element numeric vector, color limits for surface plots. Default =
-%                         [0 max(data)*0.75], and [-max(data)*0.75, max(data)*0.75] for an
-%                         optional last functional input argument reflecting a difference score
+%   cfg.clim            = string, or 2-element numeric vector specifying the color limits
 %                         (see 'has_diff' option below).
 %   cfg.has_diff        = 1x1 logical, default = false. If true, this function will treat the
 %                         last data input argument slightly differently from the ones before
@@ -48,6 +46,7 @@ function [cfg] = ft_sourceplot_interactive(cfg, varargin)
 % See also FT_SOURCEPLOT, FT_SOURCEMOVIE
 
 % Copyright (C) 2019 Eelke Spaak, Donders Institute. e.spaak@donders.ru.nl
+% Copyright (C) 2024 Jan-Mathijs Schoffelen, Donders Institute
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -119,7 +118,7 @@ cfg.atlas     = ft_getopt(cfg, 'atlas',     []);
 
 % check whether we're dealing with time or frequency data
 dimord = getdimord(varargin{1}, cfg.parameter);
-if ~ismember(dimord, {'pos_time', 'pos_freq' '{pos}_ori_time'})
+if ~ismember(dimord, {'pos_time' 'pos_freq' '{pos}_ori_time' 'pos_freq_time'})
   ft_error('functional data must be pos_time or pos_freq');
 end
 
@@ -137,6 +136,9 @@ if strcmp(dimord, 'pos_time') || strcmp(dimord, '{pos}_ori_time')
   xdat = varargin{1}.time;
 elseif strcmp(dimord, 'pos_freq')
   xdat = varargin{1}.freq;
+elseif strcmp(dimord, 'pos_freq_time')
+  xdat = varargin{1}.time;
+  ydat = varargin{1}.freq;
 end
 
 % optionally load an atlas
@@ -164,6 +166,10 @@ end
 % set up the arguments
 keyval = ft_cfg2keyval(cfg);
 keyval = [keyval {'tri', varargin{1}.tri, 'pos', varargin{1}.pos, 'data', data, 'time', xdat, 'unit', varargin{1}.unit}];
+
+if exist('ydat', 'var')
+  keyval = [keyval {'freq', ydat}];
+end
 
 % and launch the viewer
 viewer = ft_plot_mesh_interactive(keyval{:});

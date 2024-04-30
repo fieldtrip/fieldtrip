@@ -132,7 +132,7 @@ end
 
 % determine the fields and corresponding dimords to work on
 fn = fieldnames(source);
-fn = setdiff(fn, {'pos', 'tri', 'inside', 'outside', 'time', 'freq', 'dim', 'transform', 'unit', 'coordsys', 'cfg', 'hdr'}); % remove fields that do not represent the data
+fn = setdiff(fn, {'pos', 'tri', 'dim', 'transform', 'unit', 'coordsys', 'inside', 'time', 'freq', 'cfg', 'hdr'}); % remove fields that do not represent the data
 fn = fn(cellfun(@isempty, regexp(fn, 'dimord'))); % remove dimord fields
 fn = fn(cellfun(@isempty, regexp(fn, 'label'))); % remove label fields
 dimord = cell(size(fn));
@@ -369,7 +369,7 @@ for i=1:numel(fn)
 end % for each of the fields that should be parcellated
 
 % a brainordinate is a brain location that is specified by either a surface vertex (node) or a volume voxel
-parcel.brainordinate = keepfields(parcellation, {'pos', 'tri', 'dim', 'transform'}); % keep the information about the geometry
+parcel.brainordinate = keepfields(parcellation, {'pos', 'tri', 'dim', 'transform', 'unit', 'coordsys'}); % keep the information about the geometry
 fn = fieldnames(parcellation);
 for i=1:numel(fn)
   if isfield(parcellation, [fn{i} 'label'])

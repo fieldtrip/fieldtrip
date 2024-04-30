@@ -6,8 +6,8 @@ function [varargout] = strip(varargin)
 % newstr = strip(str, side)         removes all whitespace on the specified side
 % newstr = strip(str, side, chars)  removes specified characters on the specified side
 %
-% This is a compatibility function that should only be added to the path on
-% MATLAB versions prior to R2016b.
+% This is a compatibility function that should only be added to the path
+% of MATLAB versions prior to R2016b.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % try to automatically remove incorrect compat folders from the path, see https://github.com/fieldtrip/fieldtrip/issues/899

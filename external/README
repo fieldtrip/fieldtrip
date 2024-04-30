@@ -2,3 +2,15 @@ This directory contains toolboxes that are not maintained by the FieldTrip
 maintainers. These toolboxes are or can be used in combination with
 FieldTrip and are provided here with permission of the original toolbox
 authors as courtesy to the end-users.
+
+Note that for some toolboxes we only include a "lite" version pruned
+down to the functions that FieldTrip needs. This is especially the
+case with large toolboxes, like SPM.
+
+Furthermore, the version of the toolboxes included here is in general
+not always the latest one but one that has been tested and that we
+know to work.
+
+If you need a more up-to-date or more complete version of the toolbox,
+please download it from its respective site where it is maintained.
+

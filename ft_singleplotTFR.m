@@ -552,9 +552,9 @@ if length(eventdata.Modifier) == 1 && strcmp(eventdata.Modifier{:}, 'control')
   % TRANSLATE by 10%
   switch eventdata.Key
     case 'pageup'
-      caxis([min(caxis)+incr_c max(caxis)+incr_c]);
+      clim([min(caxis)+incr_c max(caxis)+incr_c]);
     case 'pagedown'
-      caxis([min(caxis)-incr_c max(caxis)-incr_c]);
+      clim([min(caxis)-incr_c max(caxis)-incr_c]);
     case 'leftarrow'
       xlim([xlimits(1)+incr_x xlimits(2)+incr_x])
     case 'rightarrow'
@@ -568,9 +568,9 @@ else
   % ZOOM by 10%
   switch eventdata.Key
     case 'pageup'
-      caxis([min(caxis)-incr_c max(caxis)+incr_c]);
+      clim([min(caxis)-incr_c max(caxis)+incr_c]);
     case 'pagedown'
-      caxis([min(caxis)+incr_c max(caxis)-incr_c]);
+      clim([min(caxis)+incr_c max(caxis)-incr_c]);
     case 'leftarrow'
       xlim([xlimits(1)-incr_x xlimits(2)+incr_x])
     case 'rightarrow'
@@ -582,6 +582,6 @@ else
     case 'm'
       xlim([varargin{1} varargin{2}])
       ylim([varargin{3} varargin{4}])
-      caxis([varargin{5} varargin{6}]);
+      clim([varargin{5} varargin{6}]);
   end % switch
 end % if

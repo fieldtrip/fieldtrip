@@ -26,7 +26,7 @@ function filename = dccnpath(filename)
 % then dccnpath will automatically use a temporary directory and try to download the
 % data.
 %
-% See also  FT_TEST, WHICH, WEBSAVE
+% See also WHICH, WEBSAVE
 
 % Copyright (C) 2012-2023, Donders Centre for Cognitive Neuroimaging, Nijmegen, NL
 %
@@ -177,6 +177,9 @@ else
   % so, we need to find the right path to the HTTPS download server
   pattern = 'ftp(.*)';
   datadir = regexp(alternative0, pattern, 'tokens', 'once');
+  if iscell(datadir)
+    datadir = datadir{1};
+  end
   weblocation = strcat('https://download.fieldtriptoolbox.org', datadir);
   weblocation = strrep(weblocation, '\', '/');
 

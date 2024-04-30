@@ -2358,7 +2358,7 @@ if strcmp(cfg.viewmode, 'component')
       % drawnow
     end % for chanindx
 
-    caxis([0 1]);
+    clim([0 1]);
 
   end % if redraw_topo
 
