@@ -77,7 +77,7 @@ function b = fir1(n, w, varargin)
     arg = varargin{i};
     if ischar(arg),  arg=lower(arg); end
     if isempty(arg), continue;       end
-    if numel(arg)>1
+    if ~ischar(arg) && numel(arg)>1
       % looks like a vectorial element, i.e. the window
       window = arg;
     else
