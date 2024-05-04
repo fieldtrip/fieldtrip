@@ -71,7 +71,7 @@ function [cfg] = data2bids(cfg, varargin)
 %   cfg.desc                    = string
 %
 % If you specify cfg.bidsroot, this function will also write the dataset_description.json
-% file. Among others you can specify the following fields:
+% file. Among others, you can specify the following fields:
 %   cfg.dataset_description.writesidecar        = 'yes' or 'no' (default = 'yes')
 %   cfg.dataset_description.Name                = string
 %   cfg.dataset_description.BIDSVersion         = string
@@ -91,8 +91,15 @@ function [cfg] = data2bids(cfg, varargin)
 %   cfg.scans.acq_time          = string, should be formatted according to RFC3339 as '2019-05-22T15:13:38'
 %   cfg.sessions.acq_time       = string, should be formatted according to RFC3339 as '2019-05-22T15:13:38'
 %   cfg.sessions.pathology      = string, recommended when different from healthy
-% If any of these values is specified as [] or as nan, it will be written to 
+% If any of these values is specified as [] or as nan, it will be written to
 % the tsv file as 'n/a'.
+%
+% If you specify cfg.bidsroot, this function can also write some modality agnostic
+% files at the top-level of the dataset. You can specify their content here and/or
+% subsequently edit them with a text editor.
+%   cfg.README                  = string (default is a template with instructions)
+%   cfg.LICENSE                 = string (no default)
+%   cfg.CHANGES                 = string (no default)
 %
 % General BIDS options that apply to all data types are
 %   cfg.InstitutionName             = string
@@ -318,10 +325,16 @@ cfg.electrodes    = ft_getopt(cfg, 'electrodes');
 cfg.optodes       = ft_getopt(cfg, 'optodes');
 cfg.events        = ft_getopt(cfg, 'events');     % this can contain the trial definition as Nx3 array, as table, or an event structure
 cfg.coordsystem   = ft_getopt(cfg, 'coordsystem');
+
 % start with an empty structure for the following
 cfg.participants  = ft_getopt(cfg, 'participants', struct());
 cfg.sessions      = ft_getopt(cfg, 'sessions', struct());
 cfg.scans         = ft_getopt(cfg, 'scans', struct());
+
+% start with a template or empty file for the following
+cfg.README        = ft_getopt(cfg, 'README', template_README);
+cfg.LICENSE       = ft_getopt(cfg, 'LICENSE');
+cfg.CHANGES       = ft_getopt(cfg, 'CHANGES');
 
 % some of the cfg fields can be specified (or make most sense) as a table
 % however, the parsing of cfg options requires fields to be structures
@@ -2080,6 +2093,48 @@ end % for each modality
 
 if ~isempty(cfg.bidsroot)
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  % write the modality agnostic files
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  if ~isempty(cfg.README)
+    filename = fullfile(cfg.bidsroot, 'README');
+    fid = fopen(filename, 'w');
+    if ischar(cfg.README)
+      str = cfg.README;
+    elseif iscell(cfg.README)
+      str = sprintf('%s\n', cfg.README{:});
+    end
+    ft_info('writing %s', filename);
+    fwrite(fid, str);
+    fclose(fid);
+  end
+
+  if ~isempty(cfg.LICENSE)
+    filename = fullfile(cfg.bidsroot, 'LICENSE');
+    fid = fopen(filename, 'w');
+    if ischar(cfg.LICENSE)
+      str = cfg.LICENSE;
+    elseif iscell(cfg.LICENSE)
+      str = sprintf('%s\n', cfg.LICENSE{:});
+    end
+    ft_info('writing %s', filename);
+    fwrite(fid, str);
+    fclose(fid);
+  end
+
+  if ~isempty(cfg.CHANGES)
+    filename = fullfile(cfg.bidsroot, 'CHANGES');
+    fid = fopen(filename, 'w');
+    if ischar(cfg.CHANGES)
+      str = cfg.CHANGES;
+    elseif iscell(cfg.CHANGES)
+      str = sprintf('%s\n', cfg.CHANGES{:});
+    end
+    ft_info('writing %s', filename);
+    fwrite(fid, str);
+    fclose(fid);
+  end
+
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % update the dataset_description
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   filename = fullfile(cfg.bidsroot, 'dataset_description.json');
@@ -2703,3 +2758,165 @@ for i=1:numel(fn)
     end
   end
 end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+% this originates from https://github.com/bids-standard/bids-starter-kit/tree/main/templates
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function str = template_README
+str = {
+'# README'
+''
+'The README is usually the starting point for researchers using your data'
+'and serves as a guidepost for users of your data. A clear and informative'
+'README makes your data much more usable.'
+''
+'In general you can include information in the README that is not captured by some other'
+'files in the BIDS dataset (dataset_description.json, events.tsv, ...).'
+''
+'It can also be useful to also include information that might already be'
+'present in another file of the dataset but might be important for users to be aware of'
+'before preprocessing or analysing the data.'
+''
+'If the README gets too long you have the possibility to create a `/doc` folder'
+'and add it to the `.bidsignore` file to make sure it is ignored by the BIDS validator.'
+''
+'More info here: https://neurostars.org/t/where-in-a-bids-dataset-should-i-put-notes-about-individual-mri-acqusitions/17315/3'
+''
+'## Details related to access to the data'
+''
+'- [ ] Data user agreement'
+''
+'If the dataset requires a data user agreement, link to the relevant information.'
+''
+'- [ ] Contact person'
+''
+'Indicate the name and contact details (email and ORCID) of the person responsible for additional information.'
+''
+'- [ ] Practical information to access the data'
+''
+'If there is any special information related to access rights or'
+'how to download the data make sure to include it.'
+'For example, if the dataset was curated using datalad,'
+'make sure to include the relevant section from the datalad handbook:'
+'http://handbook.datalad.org/en/latest/basics/101-180-FAQ.html#how-can-i-help-others-get-started-with-a-shared-dataset'
+''
+'## Overview'
+''
+'- [ ] Project name (if relevant)'
+''
+'- [ ] Year(s) that the project ran'
+''
+'If no `scans.tsv` is included, this could at least cover when the data acquisition'
+'starter and ended. Local time of day is particularly relevant to subject state.'
+''
+'- [ ] Brief overview of the tasks in the experiment'
+''
+'A paragraph giving an overview of the experiment. This should include the'
+'goals or purpose and a discussion about how the experiment tries to achieve'
+'these goals.'
+''
+'- [ ] Description of the contents of the dataset'
+''
+'An easy thing to add is the output of the bids-validator that describes what type of'
+'data and the number of subject one can expect to find in the dataset.'
+''
+'- [ ] Independent variables'
+''
+'A brief discussion of condition variables (sometimes called contrasts'
+'or independent variables) that were varied across the experiment.'
+''
+'- [ ] Dependent variables'
+''
+'A brief discussion of the response variables (sometimes called the'
+'dependent variables) that were measured and or calculated to assess'
+'the effects of varying the condition variables. This might also include'
+'questionnaires administered to assess behavioral aspects of the experiment.'
+''
+'- [ ] Control variables'
+''
+'A brief discussion of the control variables --- that is what aspects'
+'were explicitly controlled in this experiment. The control variables might'
+'include subject pool, environmental conditions, set up, or other things'
+'that were explicitly controlled.'
+''
+'- [ ] Quality assessment of the data'
+''
+'Provide a short summary of the quality of the data ideally with descriptive statistics if relevant'
+'and with a link to more comprehensive description (like with MRIQC) if possible.'
+''
+'## Methods'
+''
+'### Subjects'
+''
+'A brief sentence about the subject pool in this experiment.'
+''
+'Remember that `Control` or `Patient` status should be defined in the `participants.tsv`'
+'using a group column.'
+''
+'- [ ] Information about the recruitment procedure'
+'- [ ] Subject inclusion criteria (if relevant)'
+'- [ ] Subject exclusion criteria (if relevant)'
+''
+'### Apparatus'
+''
+'A summary of the equipment and environment setup for the'
+'experiment. For example, was the experiment performed in a shielded room'
+'with the subject seated in a fixed position.'
+''
+'### Initial setup'
+''
+'A summary of what setup was performed when a subject arrived.'
+''
+'### Task organization'
+''
+'How the tasks were organized for a session.'
+'This is particularly important because BIDS datasets usually have task data'
+'separated into different files.)'
+''
+'- [ ] Was task order counter-balanced?'
+'- [ ] What other activities were interspersed between tasks?'
+''
+'- [ ] In what order were the tasks and other activities performed?'
+''
+'### Task details'
+''
+'As much detail as possible about the task and the events that were recorded.'
+''
+'### Additional data acquired'
+''
+'A brief indication of data other than the'
+'imaging data that was acquired as part of this experiment. In addition'
+'to data from other modalities and behavioral data, this might include'
+'questionnaires and surveys, swabs, and clinical information. Indicate'
+'the availability of this data.'
+''
+'This is especially relevant if the data are not included in a `phenotype` folder.'
+'https://bids-specification.readthedocs.io/en/stable/03-modality-agnostic-files.html#phenotypic-and-assessment-data'
+''
+'### Experimental location'
+''
+'This should include any additional information regarding the'
+'the geographical location and facility that cannot be included'
+'in the relevant json files.'
+''
+'### Missing data'
+''
+'Mention something if some participants are missing some aspects of the data.'
+'This can take the form of a processing log and/or abnormalities about the dataset.'
+''
+'Some examples:'
+''
+'- A brain lesion or defect only present in one participant'
+'- Some experimental conditions missing on a given run for a participant because'
+'  of some technical issue.'
+'- Any noticeable feature of the data for certain participants'
+'- Differences (even slight) in protocol for certain participants.'
+''
+'### Notes'
+''
+'Any additional information or pointers to information that'
+'might be helpful to users of the dataset. Include qualitative information'
+'related to how the data acquisition went.'
+''
+};
