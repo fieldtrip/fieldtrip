@@ -26,7 +26,7 @@ function [elec_realigned] = ft_electroderealign(cfg, elec_original)
 % methods use a non-linear search to minimize the distance between the input sensor
 % positions and the projection of the electrodes on the head surface.
 %
-% PROJECT - This projects all electrodes to the nearest point on the
+% PROJECT - This projects each of the electrodes to the nearest point on the
 % head surface mesh.
 %
 % MOVEINWARD - This moves all electrodes inward according to their normals.
@@ -302,6 +302,9 @@ end
 if useheadshape
   % get the surface describing the head shape
   [headshape.pos, headshape.tri] = headsurface([], [], 'headshape', cfg.headshape);
+  if isfield(cfg.headshape, 'unit')
+    headshape.unit = cfg.headshape.unit;
+  end
   
   % ensure that the units are consistent with the electrodes
   headshape = ft_convert_units(headshape, elec.unit);

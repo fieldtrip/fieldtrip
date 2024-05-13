@@ -1,4 +1,5 @@
-The external toolboxes are copyright their respective author and are
-not covered under the same GPL license as FieldTrip. Please look in the
-respective external toolbox directories for the README and COPYING files
-for further details.
+The external toolboxes are copyright their respective author and
+may not be covered under the same Open Source license as FieldTrip.
+
+Please look in the respective external toolbox directories for the
+README and COPYING files for further details.

@@ -43,6 +43,7 @@ function [cfg] = ft_interactiverealign(cfg)
 % Undocumented options, primarily to support FT_DEFACEVOLUME
 %   cfg.showalpha
 %   cfg.showlight
+%   cfg.showmaterial
 %   cfg.showapply
 %   cfg.rotate
 %   cfg.scale
@@ -102,6 +103,7 @@ cfg.transformorder = ft_getopt(cfg, 'transformorder', {'rotate', 'translate', 's
 % get the other options
 cfg.showalpha                 = ft_getopt(cfg, 'showalpha'); % default is set below
 cfg.showlight                 = ft_getopt(cfg, 'showlight', 'yes');
+cfg.showmaterial              = ft_getopt(cfg, 'showlight', 'yes');
 cfg.showapply                 = ft_getopt(cfg, 'showapply', 'yes');
 cfg.unit                      = ft_getopt(cfg, 'unit', 'mm');
 cfg.individual.elec           = ft_getopt(cfg.individual, 'elec', []);
@@ -265,8 +267,9 @@ ft_info('Close the figure when you are done.');
 fig = figure;
 set(fig, 'CloseRequestFcn',    @cb_quit);
 set(fig, 'windowkeypressfcn',  @cb_keyboard);
-set(gca, 'position', [0.05 0.15 0.75 0.75]);
 
+% move the axes so that they don't overlap with the GUI elements
+set(gca, 'position', [0.15 0.30 0.50 0.60]);
 % add the data and the settings to the figure
 setappdata(fig, 'individual',     individual);
 setappdata(fig, 'template',       template);
@@ -347,7 +350,7 @@ cfg       = getappdata(fig, 'cfg');
 CONTROL_WIDTH   = 0.04;
 CONTROL_HEIGHT  = 0.05;
 CONTROL_HOFFSET = 0.75;
-CONTROL_VOFFSET = 0.60;
+CONTROL_VOFFSET = 0.80;
 
 % rotateui
 uicontrol('tag', 'rotateui', 'parent',  fig, 'units', 'normalized', 'style', 'text', 'string', 'rotate',  'callback', [])
@@ -382,26 +385,29 @@ ft_uilayout(fig, 'tag', 'tz',          'width',  CONTROL_WIDTH,   'height',  CON
 % alpha ui
 uicontrol('tag', 'alphaui', 'parent',  fig, 'units', 'normalized', 'style', 'text', 'string', 'alpha', 'value', [], 'callback', [], 'Visible', istrue(cfg.showalpha));
 uicontrol('tag', 'alpha',   'parent',  fig, 'units', 'normalized', 'style', 'edit', 'string', '0.6',   'value', [], 'callback', @cb_redraw, 'Visible', istrue(cfg.showalpha));
-ft_uilayout(fig, 'tag', 'alphaui',  'BackgroundColor', [0.8 0.8 0.8], 'width',  3*CONTROL_WIDTH, 'height',  CONTROL_HEIGHT, 'vpos',  CONTROL_VOFFSET-2*CONTROL_HEIGHT, 'hpos',  CONTROL_HOFFSET);
-ft_uilayout(fig, 'tag', 'alpha',    'BackgroundColor', [0.8 0.8 0.8], 'width',  3*CONTROL_WIDTH, 'height',  CONTROL_HEIGHT, 'vpos',  CONTROL_VOFFSET-2*CONTROL_HEIGHT, 'hpos',  CONTROL_HOFFSET+3*CONTROL_WIDTH);
+ft_uilayout(fig, 'tag', 'alphaui', 'width',  3*CONTROL_WIDTH, 'height',  CONTROL_HEIGHT, 'hpos',  CONTROL_HOFFSET,                 'vpos',  CONTROL_VOFFSET-1*CONTROL_HEIGHT);
+ft_uilayout(fig, 'tag', 'alpha',   'width',  3*CONTROL_WIDTH, 'height',  CONTROL_HEIGHT, 'hpos',  CONTROL_HOFFSET+3*CONTROL_WIDTH, 'vpos',  CONTROL_VOFFSET-1*CONTROL_HEIGHT);
 
-% control buttons
-uicontrol('tag', 'viewpointbtn',  'parent',  fig, 'units', 'normalized', 'style', 'popup',      'string', 'top|bottom|left|right|front|back', 'value', 1, 'callback', @cb_viewpoint);
-uicontrol('tag', 'camlightbtn',   'parent',  fig, 'units', 'normalized', 'style', 'popup',      'string', 'none|camlight|uniform',            'value', 1, 'callback', @cb_camlight, 'Visible', istrue(cfg.showlight));
-uicontrol('tag', 'axesbtn',       'parent',  fig, 'units', 'normalized', 'style', 'checkbox',   'string', 'axes',         'value', getappdata(fig, 'axes'),     'callback', @cb_axes);
-uicontrol('tag', 'labelsbtn',     'parent',  fig, 'units', 'normalized', 'style', 'checkbox',   'string', 'label',        'value', getappdata(fig, 'labels'),   'callback', @cb_labels);
-uicontrol('tag', 'gridbtn',       'parent',  fig, 'units', 'normalized', 'style', 'checkbox',   'string', 'grid',         'value', getappdata(fig, 'grid'),     'callback', @cb_grid);
-uicontrol('tag', 'redisplaybtn',  'parent',  fig, 'units', 'normalized', 'style', 'pushbutton', 'string', 'redisplay',    'value', [],                          'callback', @cb_redisplay);
-uicontrol('tag', 'applybtn',      'parent',  fig, 'units', 'normalized', 'style', 'pushbutton', 'string', 'apply',        'value', [],                          'callback', @cb_apply,    'Visible', istrue(cfg.showapply));
-uicontrol('tag', 'quitbtn',       'parent',  fig, 'units', 'normalized', 'style', 'pushbutton', 'string', 'quit',         'value', 1,                           'callback', @cb_quit);
-ft_uilayout(fig, 'tag', 'viewpointbtn',                                     'width',  6*CONTROL_WIDTH, 'height',  CONTROL_HEIGHT, 'vpos',  CONTROL_VOFFSET-3*CONTROL_HEIGHT, 'hpos',  CONTROL_HOFFSET);
-ft_uilayout(fig, 'tag', 'camlightbtn',                                      'width',  6*CONTROL_WIDTH, 'height',  CONTROL_HEIGHT, 'vpos',  CONTROL_VOFFSET-4*CONTROL_HEIGHT, 'hpos',  CONTROL_HOFFSET);
-ft_uilayout(fig, 'tag', 'axesbtn',                                          'width',  6*CONTROL_WIDTH, 'height',  CONTROL_HEIGHT, 'vpos',  CONTROL_VOFFSET-5*CONTROL_HEIGHT, 'hpos',  CONTROL_HOFFSET);
-ft_uilayout(fig, 'tag', 'labelsbtn',                                        'width',  6*CONTROL_WIDTH, 'height',  CONTROL_HEIGHT, 'vpos',  CONTROL_VOFFSET-6*CONTROL_HEIGHT, 'hpos',  CONTROL_HOFFSET);
-ft_uilayout(fig, 'tag', 'gridbtn',                                          'width',  6*CONTROL_WIDTH, 'height',  CONTROL_HEIGHT, 'vpos',  CONTROL_VOFFSET-7*CONTROL_HEIGHT, 'hpos',  CONTROL_HOFFSET);
-ft_uilayout(fig, 'tag', 'redisplaybtn',   'BackgroundColor', [0.8 0.8 0.8], 'width',  6*CONTROL_WIDTH, 'height',  CONTROL_HEIGHT, 'vpos',  CONTROL_VOFFSET-8*CONTROL_HEIGHT, 'hpos',  CONTROL_HOFFSET);
-ft_uilayout(fig, 'tag', 'applybtn',       'BackgroundColor', [0.8 0.8 0.8], 'width',  6*CONTROL_WIDTH, 'height',  CONTROL_HEIGHT, 'vpos',  CONTROL_VOFFSET-9*CONTROL_HEIGHT, 'hpos',  CONTROL_HOFFSET);
-ft_uilayout(fig, 'tag', 'quitbtn',        'BackgroundColor', [0.8 0.8 0.8], 'width',  6*CONTROL_WIDTH, 'height',  CONTROL_HEIGHT, 'vpos',  CONTROL_VOFFSET-10*CONTROL_HEIGHT, 'hpos',  CONTROL_HOFFSET);
+% control GUI elements on the right side
+uicontrol('tag', 'viewpointbtn',  'parent',  fig, 'units', 'normalized', 'style', 'popup',      'string', 'default|top|bottom|left|right|front|back', 'value', 1,                   'callback', @cb_viewpoint);
+uicontrol('tag', 'camlightbtn',   'parent',  fig, 'units', 'normalized', 'style', 'popup',      'string', 'none|camlight|uniform',            'value', 1,                           'callback', @cb_camlight, 'Visible', istrue(cfg.showlight));
+uicontrol('tag', 'materialbtn',   'parent',  fig, 'units', 'normalized', 'style', 'popup',      'string', 'shiny|dull|metal',                 'value', 1,                           'callback', @cb_material, 'Visible', istrue(cfg.showmaterial));
+uicontrol('tag', 'axes1btn',      'parent',  fig, 'units', 'normalized', 'style', 'checkbox',   'string', '3d axes',                          'value', istrue(cfg.template.axes),   'callback', @cb_axes1);
+uicontrol('tag', 'axes2btn',      'parent',  fig, 'units', 'normalized', 'style', 'checkbox',   'string', 'figure axes',                      'value', getappdata(fig, 'axes'),     'callback', @cb_axes2);
+uicontrol('tag', 'labelsbtn',     'parent',  fig, 'units', 'normalized', 'style', 'checkbox',   'string', 'figure axes label',                'value', getappdata(fig, 'labels'),   'callback', @cb_labels);
+uicontrol('tag', 'gridbtn',       'parent',  fig, 'units', 'normalized', 'style', 'checkbox',   'string', 'figure axes grid',                 'value', getappdata(fig, 'grid'),     'callback', @cb_grid);
+uicontrol('tag', 'redisplaybtn',  'parent',  fig, 'units', 'normalized', 'style', 'pushbutton', 'string', 'redisplay',                        'value', [],                          'callback', @cb_redisplay);
+uicontrol('tag', 'applybtn',      'parent',  fig, 'units', 'normalized', 'style', 'pushbutton', 'string', 'apply',                            'value', [],                          'callback', @cb_apply,    'Visible', istrue(cfg.showapply));
+uicontrol('tag', 'quitbtn',       'parent',  fig, 'units', 'normalized', 'style', 'pushbutton', 'string', 'quit',                             'value', 1,                           'callback', @cb_quit);
+
+% remove the invisible GUI elements
+delete(findall(fig, 'type', 'uicontrol', 'visible', false))
+
+% organize the remaining ones
+ft_uilayout(fig, 'tag', '.*btn', 'units', 'normalized', 'width', 0.25, 'height', 0.05, 'hpos', 0.75, 'vpos', 'auto', 'backgroundcolor', [0.8 0.8 0.8]);
+ft_uilayout(fig, 'tag', '.*btn', 'vshift', -5*CONTROL_HEIGHT);
+ft_uilayout(fig, 'style', 'checkbox', 'backgroundcolor', get(fig, 'color'));
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
@@ -475,10 +481,6 @@ if ~isempty(individual.mesh)
 end
 
 % plot all the template and individual objects
-if istrue(template.axes)
-  ft_plot_axes([], 'unit', unit, 'coordsys', coordsys);
-end
-
 if ~isempty(template.mri)
   ft_plot_ortho(template.mri.anatomy, 'transform', template.mri.transform, 'unit', template.mri.unit, 'style', 'intersect', 'intersectmesh', individual.headshape, template.mristyle{:});
 end
@@ -548,10 +550,13 @@ if istrue(cfg.showalpha)
   alpha(str2double(get(findobj(fig, 'tag', 'alpha'), 'string')));
 end
 
-cb_camlight(h, []);
-cb_axes(h, []);
+% update the figure based on the GUI elements
+cb_axes1(h, []);
+cb_axes2(h, []);
 cb_labels(h, []);
 cb_grid(h, []);
+cb_camlight(h, []);
+cb_material(h, []);
 
 % restore the current view
 view(az, el);
@@ -580,9 +585,45 @@ uiresume;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function cb_axes(h, eventdata)
+function cb_material(h, eventdata)
 fig = getparent(h);
-if get(findall(fig, 'tag', 'axesbtn'), 'value')
+switch get(findall(fig, 'tag', 'materialbtn'), 'value')
+  case 1
+    material shiny
+  case 2
+    material dull
+  case 3
+    material metal
+end
+uiresume;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function cb_axes1(h, eventdata)
+fig = getparent(h);
+if get(findall(fig, 'tag', 'axes1btn'), 'value')
+  % FT_PLOT_AXES calls FT_PLOT_MESH, which does "axis off"
+  ax = findall(fig, 'type', 'axes');
+  prevaxis = ax.Visible;
+  ft_plot_axes([], 'unit', getappdata(fig, 'unit'), 'coordsys', getappdata(fig, 'coordsys'), 'tag', 'axes1');
+  if prevaxis
+    axis on
+  else
+    axis off
+  end
+else
+  delete(findall(fig, 'tag', 'axes1'))
+end
+uiresume;
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function cb_axes2(h, eventdata)
+fig = getparent(h);
+if get(findall(fig, 'tag', 'axes2btn'), 'value')
   axis on
 else
   axis off
@@ -727,22 +768,19 @@ end % switch key
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_redisplay(h, eventdata)
 fig = getparent(h);
-setappdata(fig, 'init', true);
+cb_viewpoint(findall(fig, 'tag', 'viewpointbtn'));
 cb_redraw(h);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_viewpoint(h, eventdata)
-
 fig       = getparent(h);
 coordsys  = getappdata(fig, 'coordsys');
-
 % get the index of the option that was selected
 val = get(h, 'value');
-viewpoint = {'top', 'bottom', 'left', 'right', 'front', 'back'};
+viewpoint = {'default', 'top', 'bottom', 'left', 'right', 'front', 'back'};
 setviewpoint(gca, coordsys, viewpoint{val});
-
 uiresume;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

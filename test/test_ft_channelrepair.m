@@ -226,3 +226,53 @@ for tr=1:numel(data_eeg_interp.trial)
   end
 end
 
+%% part 4 - deal with bad channels that are neighbours of each other
+
+data_bad = [];
+data_bad.label = {'1', '2', '3', '4'};
+data_bad.trial{1} = zeros(4,1000);
+data_bad.trial{1}(1,:) = 1;
+data_bad.trial{1}(2,:) = nan;  % bad channel
+data_bad.trial{1}(3,:) = nan;  % bad channel
+data_bad.trial{1}(4,:) = 4;
+data_bad.time{1} = (1:1000)/1000;
+
+cfg = [];
+cfg.trials = 1;
+cfg.badchannel = []; % the nans will be auto-detected as bad
+cfg.method = 'average';
+
+cfg.neighbours(1).label = '1';
+cfg.neighbours(1).neighblabel = {'1', '2', '3', '4'};
+cfg.neighbours(2).label = '2';
+cfg.neighbours(2).neighblabel = {'1', '2', '3', '4'};
+cfg.neighbours(3).label = '3';
+cfg.neighbours(3).neighblabel = {'1', '2', '3', '4'};
+cfg.neighbours(4).label = '4';
+cfg.neighbours(4).neighblabel = {'1', '2', '3', '4'};
+
+data_repaired = ft_channelrepair(cfg, data_bad);
+
+% this is how it was before, the result is not what you would expect because the bad channels are neighbours of each other
+%
+% data_repaired.trial{1}(:,1)
+% ans =
+%      1
+%      0
+%      0
+%      4
+
+% this is how it is after updating the code such that bad channels are removed from the neighbours
+%
+% data_repaired.trial{1}(:,1)
+% ans =
+%     1.0000
+%     2.5000
+%     2.5000
+%     4.0000
+
+assert(data_repaired.trial{1}(1)==1)
+assert(data_repaired.trial{1}(2)==2.5)
+assert(data_repaired.trial{1}(3)==2.5)
+assert(data_repaired.trial{1}(4)==4)
+

@@ -107,7 +107,7 @@ if hasatlas
   end
   ft_progress('close');
   
-  sourcemodel     = removefields(sourcemodel, {'pos' 'dim' 'tri' 'inside'});
+  sourcemodel     = removefields(sourcemodel, {'pos', 'tri', 'dim', 'inside'});
   sourcemodel.pos = pos; 
   sourcemodel.inside = true(size(pos,1),1);
   

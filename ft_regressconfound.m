@@ -246,7 +246,7 @@ if ~isempty(cfg.ftest)
 end
 
 % organize the output
-dataout = keepfields(datain, {'label', 'time', 'freq', 'pos', 'dim', 'transform', 'inside', 'outside', 'trialinfo', 'sampleinfo', 'dimord'});
+dataout = keepfields(datain, {'pos', 'tri', 'dim', 'transform', 'unit', 'coordsys', 'inside', 'label', 'time', 'freq', 'trialinfo', 'sampleinfo', 'dimord'});
 switch cfg.output
   case 'residual'
     dataout.(cfg.parameter) = reshape(Yc, [nrpt dimsiz(datdim)]); % either powspctrm, trial, or pow
@@ -278,7 +278,7 @@ switch cfg.output
       clear tval prob
     end
   case 'model'
-    dataout.model = keepfields(datain, {'label', 'time', 'freq', 'pos', 'dim', 'transform', 'inside', 'outside', 'trialinfo', 'sampleinfo', 'dimord'});
+    dataout.model = keepfields(datain, {'pos', 'tri', 'dim', 'transform', 'unit', 'coordsys', 'inside', 'label', 'time', 'freq', 'trialinfo', 'sampleinfo', 'dimord'});
     dataout.model.(cfg.parameter) = reshape(model, [nrpt, dimsiz(datdim)]);
     if haspermuted
       dataout.model.(cfg.parameter) = ipermute(dataout.model.(cfg.parameter), [rptdim datdim]);
