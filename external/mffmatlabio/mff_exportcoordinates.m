@@ -25,10 +25,7 @@
 
 function mff_exportcoordinates(EEG, mffFile)
 
-p = fileparts(which('mff_importsignal.m'));
-warning('off', 'MATLAB:Java:DuplicateClass');
-javaaddpath(fullfile(p, 'MFF-1.2.2-jar-with-dependencies.jar'));
-warning('on', 'MATLAB:Java:DuplicateClass');
+mff_path;
 
 % rotate back (need all the channels)
 EEG=pop_chanedit(EEG, 'forcelocs',[],'nosedir','-Y');

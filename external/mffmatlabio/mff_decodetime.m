@@ -2,12 +2,16 @@
 %
 % Usage:
 %   timeout = mff_decodetime(timein);
+%   timeout = mff_decodetime(timein, fullResFlag);
 %
 % Input:
 %  timein  - EGI time format (string)
+%  fullResFlag - [0|1] flag of 1 do not subtract 730000 (looses some
+%                resolution). Default is 0 and 730000 is subtracted.
 %
 % Output:
-%  timeout - Matlab numerical time (see datenum)
+%  timeout - Matlab numerical time (see datenum). Note that 730000 is
+%            subtracted to achive 
 
 % This file is part of mffmatlabio.
 %
@@ -24,10 +28,13 @@
 % You should have received a copy of the GNU General Public License
 % along with mffmatlabio.  If not, see <https://www.gnu.org/licenses/>.
 
-function timeValOut = mff_decodetime(timeVal)
+function timeValOut = mff_decodetime(timeVal, fullResFlag)
 
     % remove GMT part
     microSec     = 0.0000000000115251168608665466308593750000000;
+    if nargin < 2 || isequal(fullResFlag, 0)
+        timeVal(1)   = '0'; % fix the precision issue
+    end
     timeValOut   = datenum(timeVal(1:23), 'yyyy-mm-ddTHH:MM:SS.FFF') + str2double(timeVal(24:26))*microSec;
 
 %     indDash = find(timeVal == '-');

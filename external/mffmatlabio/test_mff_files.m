@@ -17,12 +17,12 @@
 
 clear
 if ispc
-    baseFolder = 'z:/data/philips';
+    baseFolder = 'z:/data/magstim';
     outputFolder = '';
     error('Change folders');
 elseif ismac
-    baseFolder = '/Users/arno/GoogleDrive/EGI';
-    outputFolder = '/data/philips/temp/';
+    baseFolder = '/Users/arno/Google Drive/My Drive/EGI';
+    outputFolder = '/System/Volumes/Data/data/matlab/eeglab/plugins/mffmatlabio/temp/';
 else
     baseFolder = '/home/xxx/matlab';
 end
@@ -74,7 +74,7 @@ inputFilenames(end+1).file = 'MFF_Files/OtherFilesRobert/bug629/pilot05_test 201
 inputFilenames(end+1).file = 'MFF_Files/OtherFilesRobert/original/eeg/egi/NS500Sine6Hz.mff';  'Differences in begintime due to File version 0 vs version 3 (nanoseconds vs microseconds) - OK';
 
 inputFilenames(end+1).file = 'MFF_Files/Bugs/SPBI023_20150414_1357.mff';
-inputFilenames(end+1).file = 'MFF_Files/Treys_files/MMVTD_Continuous_EEG.mff';
+inputFilenames(end+1).file = 'MFF_Files/Treys_files/MMVTD_Continuous_EEG.mff'; inputFilenames(end).info = 'Name difference is one TCP/IP event, not sure it can be fixed because name is not exported like other fields in mff_exportevents';
 inputFilenames(end+1).file = 'MFF_Files/Treys_files/MMI_HC1_20180314_093330_physio_only.mff'; inputFilenames(end).info = 'Issue with ''relativeBeginTime (event 364 differs) - field is not exported back and is not 0 in original file - field not used anyway';
 
 inputFilenames(end+1).file = 'MFF_Files/OtherFilesJoe/SLI_30.ave.mff';
@@ -113,6 +113,7 @@ inputFilenames(end+1).file = 'MFF_Files/Bugs/zhaodi.mff';
 inputFilenames(end+1).file = 'MFF_Files/Bugs/issue21/EEG_VisualMotor_Run01.mff';
 inputFilenames(end+1).file = 'MFF_Files/Bugs/issue22/CNTL001_P50Sup_T1_20150608_1530.mff'; inputFilenames(end).info = 'Differences checked and OK - reference renamed for some reason';
 inputFilenames(end+1).file = 'MFF_Files/Bugs/issue25/2197LA_creativity1.mff'; inputFilenames(end).info = 'Differences checked and OK - reference renamed for some reason';
+inputFilenames(end+1).file = 'MFF_Files/Bugs/issue28/auditory_run01.mff'; inputFilenames(end).info = 'Differences checked and OK - reference renamed for some reason';
 
 %%
 ALLEEG = [];
@@ -127,7 +128,7 @@ datasetsToLoad = 1:length(inputFilenames); % dataset 16 POTENTIAL PROBLEM
 % end
 % return
 
-for iFile = length(datasetsToLoad)
+for iFile = 1:length(datasetsToLoad)
     errorMsg = '';
     
     fprintf('Reading file %s\n', inputFilenames(iFile).file);
@@ -136,7 +137,32 @@ for iFile = length(datasetsToLoad)
         rmdir(outputFile, 's')
     end    
     
-    if strcmpi(testtarget, 'eeglab')
+    if strcmpi(testtarget, 'checkfiles')
+
+        res = exist(fullfile(baseFolder, inputFilenames(iFile).file));
+        if res == 0
+            fprintf('File not found %s\n', fullfile(baseFolder, inputFilenames(iFile).file));
+        else
+            % if 0
+            %     tmpFileNames = dir(fullfile(baseFolder, inputFilenames(iFile).file, 'Events*.xml'));
+            % 
+            %     for iFile = 1:length(tmpFileNames)
+            %         res = xml2struct(fullfile(tmpFileNames(iFile).folder, tmpFileNames(iFile).name));
+            %         if isfield(res.eventTrack, 'event')
+            %             if iscell(res.eventTrack.event{1}) && isfield(res.eventTrack.event{1}, 'relativebegintime')
+            %                 fprintf(2, 'Found relative time\n')
+            %             elseif isstruct(res.eventTrack.event{1}) && isfield(res.eventTrack.event, 'relativebegintime')
+            %                 fprintf(2, 'Found relative time\n')
+            %             end
+            %         end
+            %     end
+            % else
+            %     tmpFileNames = dir(fullfile(baseFolder, inputFilenames(iFile).file, 'Events*.xml'));
+            % 
+            % end
+        end
+
+    elseif strcmpi(testtarget, 'eeglab')
 
         % test EEGLAB import/export
         EEG = mff_import(fullfile(baseFolder, inputFilenames(iFile).file));
@@ -185,7 +211,7 @@ for iFile = length(datasetsToLoad)
         end
     end
     
-    if ~strcmpi(testtarget, 'matlab')
+    if ~strcmpi(testtarget, 'matlab') && ~strcmpi(testtarget, 'checkfiles')
         diary(fileDairy);
         disp('-------------------------')
         fprintf('File number %d\nComparing reimported file %s\n', iFile, inputFilenames(iFile).file);
@@ -204,7 +230,9 @@ for iFile = length(datasetsToLoad)
             eeglab redraw; 
         end
     else
-        disp('CANNOT COMPARE IMPORTED AND EXPORTED FILES USING THIS MODE');
+        if ~strcmpi(testtarget, 'checkfiles')
+            disp('CANNOT COMPARE IMPORTED AND EXPORTED FILES USING THIS MODE');
+        end
     end
 end
 diary off;

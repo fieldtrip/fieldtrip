@@ -25,11 +25,7 @@
 
 function mff_exportevents(EEG, mffFile)
 
-p = fileparts(which('mff_importsignal.m'));
-warning('off', 'MATLAB:Java:DuplicateClass');
-javaaddpath(fullfile(p, 'MFF-1.2.2-jar-with-dependencies.jar'));
-warning('on', 'MATLAB:Java:DuplicateClass');
-
+mff_path;
 if isfield(EEG.etc, 'recordingtime')
     begTime = EEG.etc.recordingtime;
 else
@@ -75,7 +71,7 @@ for iFile = 1:length(uniqueNames)
         indEvents = 1:length(events);
     end
     
-    if ~all(cellfun(@(x)isequal(x, 'boundary'), {events(indEvents).type}))
+    if ~isempty(events) && ~all(cellfun(@(x)isequal(x, 'boundary'), {events(indEvents).type}))
         eventtracktype = javaObject('com.egi.services.mff.api.MFFResourceType', javaMethod('valueOf', 'com.egi.services.mff.api.MFFResourceType$MFFResourceTypes', 'kMFF_RT_EventTrack'));
         if mfffactory.createResourceAtURI(eventtrackfilename, eventtracktype)
             disp('Success at creating the event file');

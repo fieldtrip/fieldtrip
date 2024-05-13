@@ -31,6 +31,12 @@ if nargin < 1
     help pop_mffexport;
     return;
 end
+if exist('pop_readegimff.m', 'file')
+    errordlg2( [ 'You have installed the MFFimport plugin.' 10 ...
+                'Please uninstall this plugin as it creates conflicts' 10 ...
+                'with the MFFmatlabIO plugin (and this function).' ]);
+   return;
+end
 
 matVer = ver('MATLAB');
 if datenum(matVer.Date) < 735595
