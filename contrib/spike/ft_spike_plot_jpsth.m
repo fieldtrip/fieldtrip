@@ -258,7 +258,7 @@ end
 
 % create the colorbar if requested
 if strcmp(cfg.colorbar,'yes')
-  caxis([min(dens(:))-0.05 max(dens(:))+0.05])
+  clim([min(dens(:))-0.05 max(dens(:))+0.05])
   colormap(cfg.colormap);                  % create the colormap as the user wants
   H.colorbarHdl = colorbar;                % create a colorbar
   

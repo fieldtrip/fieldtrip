@@ -21,7 +21,7 @@ rej1 = ft_rejectcomponent(cfg, comp, data);
 rej2 = ft_rejectcomponent(cfg, comp);
 
 norm(rej2.grad.tra-rej1.grad.tra)/norm(rej2.grad.tra);
-figure; imagesc(rej2.grad.tra - rej1.grad.tra); caxis([-1 1])
+figure; imagesc(rej2.grad.tra - rej1.grad.tra); clim([-1 1])
 
 load standard_sourcemodel3d10mm
 load standard_singleshell

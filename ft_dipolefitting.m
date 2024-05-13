@@ -17,22 +17,23 @@ function [source] = ft_dipolefitting(cfg, data)
 %   cfg.symmetry    = 'x', 'y' or 'z' symmetry for two dipoles, can be empty (default = [])
 %   cfg.channel     = Nx1 cell-array with selection of channels (default = 'all'),
 %                     see FT_CHANNELSELECTION for details
-%   cfg.gridsearch  = 'yes' or 'no', perform global search for initial
+%   cfg.gridsearch  = 'yes' or 'no', perform global grid search for initial
 %                     guess for the dipole parameters (default = 'yes')
 %   cfg.nonlinear   = 'yes' or 'no', perform nonlinear search for optimal
 %                     dipole parameters (default = 'yes')
 %
-% If you start with a grid search, the complete grid with dipole positions is
-% constructed using FT_PREPARE_SOURCEMODEL. It can be specified as as a regular 3-D
-% grid that is aligned with the axes of the head coordinate system using
+% If a grid search is performed, a source model needs to be specified. This should either be 
+% specified as cfg.sourcemodel (see below), or as a set of parameters to define a 3-D regular grid.
+% In the latter case, a complete grid is constructed using FT_PREPARE_SOURCEMODEL.  The specification 
+% of a regular 3-D grid, aligned with the axes of the head coordinate system, can be obtained with 
 %   cfg.xgrid               = vector (e.g. -20:1:20) or 'auto' (default = 'auto')
 %   cfg.ygrid               = vector (e.g. -20:1:20) or 'auto' (default = 'auto')
 %   cfg.zgrid               = vector (e.g.   0:1:20) or 'auto' (default = 'auto')
-%   cfg.resolution          = number (e.g. 1 cm) for automatic grid generation
+%   cfg.resolution          = number (e.g. 1 cm)
 % If the source model destribes a triangulated cortical sheet, it is described as
 %   cfg.sourcemodel.pos     = N*3 matrix with the vertex positions of the cortical sheet
 %   cfg.sourcemodel.tri     = M*3 matrix that describes the triangles connecting the vertices
-% Alternatively the position of a few dipoles at locations of interest can be
+% Alternatively the position of the dipoles at locations of interest can be
 % user-specified, for example obtained from an anatomical or functional MRI
 %   cfg.sourcemodel.pos     = N*3 matrix with position of each source
 %   cfg.sourcemodel.inside  = N*1 vector with boolean value whether grid point is inside brain (optional)
@@ -366,7 +367,7 @@ if strcmp(cfg.gridsearch, 'yes')
   if isfield(cfg.sourcemodel, 'leadfield')
     ft_notice('using precomputed leadfields for the gridsearch');
 
-    sourcemodel = keepfields(cfg.sourcemodel, {'pos', 'tri', 'dim', 'inside', 'leadfield', 'leadfielddimord', 'label'});
+    sourcemodel = keepfields(cfg.sourcemodel, {'pos', 'tri', 'dim', 'unit', 'coordsys', 'inside', 'leadfield', 'leadfielddimord', 'label'});
     
     % select the channels corresponding to the data and the user configuration
     tmpcfg = keepfields(cfg, 'channel');

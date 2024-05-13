@@ -18,7 +18,7 @@ function mesh = ft_defacemesh(cfg, mesh)
 %   cfg.rotate     = initial rotation of the box, or the plane (default = [0 0 0])
 %   cfg.selection  = which vertices to keep, can be 'inside' or 'outside' (default = 'outside')
 %
-% See also FT_ANONYMIZEDATA, FT_DEFACEVCOLUME, FT_ANALYSISPIPELINE, FT_PLOT_MESH
+% See also FT_ANONYMIZEDATA, FT_DEFACEVOLUME, FT_ANALYSISPIPELINE, FT_PLOT_MESH
 
 % Copyright (C) 2015-2024, Robert Oostenveld and Jan-Mathijs Schoffelen 
 %

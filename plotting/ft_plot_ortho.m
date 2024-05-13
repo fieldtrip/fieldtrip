@@ -21,16 +21,16 @@ function [hx, hy, hz] = ft_plot_ortho(dat, varargin)
 %   'clim'                = [min max], lower and upper color limits
 %   'facealpha'           = transparency when no mask is specified, between 0 and 1 (default = 1)
 %   'transform'           = 4x4 homogeneous transformation matrix specifying the mapping from voxel space to the coordinate system in which the data are plotted
-%   'location'            = 1x3 vector specifying the intersection point at which the three slices will be plotted. The coordinates should be expressed in the coordinate system of the data. 
+%   'location'            = 1x3 vector specifying the intersection point at which the three slices will be plotted. The coordinates should be expressed in the coordinate system of the data.
 %   'datmask'             = 3D-matrix with the same size as the matrix dat, serving as opacitymap if the second input argument to the function contains a matrix, this will be used as the mask
 %   'maskstyle'           = string, 'opacity' or 'colormix', defines the rendering
 %   'background'          = needed when maskstyle is 'colormix', 3D-matrix with the same size as the data matrix, serving as grayscale image that provides the background
 %   'interpmethod'        = string specifying the method for the interpolation, see INTERPN (default = 'nearest')
 %   'colormap'            = string, see COLORMAP
-%   'unit'                = string, can be 'm', 'cm' or 'mm (default is automatic)
+%   'unit'                = string, can be 'm', 'cm' or 'mm' (default is automatic)
 %   'intersectmesh'       = triangulated mesh, see FT_PREPARE_MESH
 %   'intersectcolor'      = string, color specification
-%   'intersectlinestyle'  = string, line specification 
+%   'intersectlinestyle'  = string, line specification
 %   'intersectlinewidth'  = number
 %
 % See also FT_PLOT_SLICE, FT_PLOT_MONTAGE, FT_PLOT_MESH, FT_SOURCEPLOT
@@ -71,8 +71,8 @@ if isstruct(dat)
       if isequal(size(dat.(fn{i})), dat.dim)
         ft_info('plotting %s', fn{i});
         [hx, hy, hz] = ft_plot_ortho(dat.(fn{i}), varargin{:});
-      end % if 
-    end % for 
+      end % if
+    end % for
     return
   else
     ft_error('unsupported input structure');

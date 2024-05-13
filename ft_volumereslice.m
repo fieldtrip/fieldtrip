@@ -201,7 +201,9 @@ else
   tmpcfg.parameter      = fn;
   tmpcfg.interpmethod   = cfg.method;
   resliced              = ft_sourceinterpolate(tmpcfg, mri, resliced);
-  resliced.cfg.previous = resliced.cfg.previous{1}; % the 2nd input is a dummy variable
+  if isfield(resliced, cfg) && isfield(resliced.cfg, 'previous')
+    resliced.cfg.previous = resliced.cfg.previous{1}; % the 2nd input is a dummy variable and should be discarded
+  end
   cfg.method = resliced.cfg.interpmethod;           % remember the method that was used
   % restore the provenance information
   [cfg, resliced] = rollback_provenance(cfg, resliced);

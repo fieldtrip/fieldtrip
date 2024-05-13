@@ -170,14 +170,14 @@ axis tight
 ylabel('frequency (Hz)')
 xlabel('time (s)')
 title('old implementation')
-colorbar; axis xy; caxis([0 1])
+colorbar; axis xy; clim([0 1])
 subplot(3,1,2)
 imagesc(connnew.time,connnew.freq,squeeze(connnew.cohspctrm(10,:,:)))
 axis tight
 ylabel('frequency (Hz)')
 xlabel('time (s)')
 title('new implementation')
-colorbar; axis xy; caxis([0 1]);
+colorbar; axis xy; clim([0 1]);
 subplot(3,1,3)
 hold on
 imagesc(connold.time,connold.freq,squeeze(connold.cohspctrm(10,:,:))-squeeze(connnew.cohspctrm(10,:,:)))
@@ -186,7 +186,7 @@ axis tight
 ylabel('frequency (Hz)')
 xlabel('time (s)')
 title('old minus new')
-colorbar; caxis([0 1]); axis xy
+colorbar; clim([0 1]); axis xy
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
@@ -493,14 +493,14 @@ axis tight
 ylabel('frequency (Hz)')
 xlabel('time (s)')
 title('old implementation')
-colorbar; axis xy; caxis([0 1])
+colorbar; axis xy; clim([0 1])
 subplot(3,1,2)
 imagesc(connnew.time,connnew.freq,squeeze(connnew.cohspctrm(10,:,:)))
 axis tight
 ylabel('frequency (Hz)')
 xlabel('time (s)')
 title('new implementation')
-colorbar; axis xy; caxis([0 1]);
+colorbar; axis xy; clim([0 1]);
 subplot(3,1,3)
 hold on
 imagesc(connold.time,connold.freq,squeeze(connold.cohspctrm(10,:,:))-squeeze(connnew.cohspctrm(10,:,:)))
@@ -509,7 +509,7 @@ axis tight
 ylabel('frequency (Hz)')
 xlabel('time (s)')
 title('old minus new')
-colorbar; caxis([0 1]); axis xy
+colorbar; clim([0 1]); axis xy
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 

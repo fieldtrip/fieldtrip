@@ -1364,7 +1364,10 @@ fn = fieldnames(source);
 sel = false(size(fn));
 for i=1:numel(fn)
   tmp = source.(fn{i});
-  sel(i) = iscell(tmp) && isequal(sort(tmp(:)), sort(data.label(:)));
+  % this allows for more parcels in the parcellation than labels in the
+  % data, which may be a somewhat common use case, e.g. with ??? or
+  % MEDIAL WALL parcels that don't have a corresponding functional data label
+  sel(i) = iscell(tmp) && numel(intersect(tmp(:),data.label(:)))==numel(data.label); 
 end
 parcelparam = fn(sel);
 if numel(parcelparam)~=1
