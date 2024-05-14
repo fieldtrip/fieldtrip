@@ -25,6 +25,7 @@ catch
   return;
 end
 
+eventout = struct([]);
 if isfield(eventin, 'TYP')
   for index = 1:length( eventin.TYP )
     eType = eventin.TYP(index);
