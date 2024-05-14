@@ -53,33 +53,67 @@ eventopt = ft_setopt(eventopt, 'threshold',     ft_getopt(cfg.trialdef, 'thresho
 eventopt = ft_setopt(eventopt, 'tolerance',     ft_getopt(cfg.trialdef, 'tolerance'));
 eventopt = ft_setopt(eventopt, 'combinebinary', ft_getopt(cfg.trialdef, 'combinebinary'));
 
+% define a message identifier and overrule the uses-specified default for ft_info
+me = 'FieldTrip:ft_trialfun_show:showevents';
+ft_info('on', me);
+
 % get the events
 if isfield(cfg, 'event')
-  ft_info('using the events from the configuration structure\n');
+  ft_info(me, 'using the events from the configuration structure\n');
   event = cfg.event;
 else
-  ft_info('reading the events from ''%s''\n', cfg.headerfile);
+  ft_info(me, 'reading the events from ''%s''\n', cfg.headerfile);
   event = ft_read_event(cfg.headerfile, eventopt{:});
 end
 
 if isempty(event)
-  ft_info('no events were found in the data\n');
-  
+  ft_info(me, 'no events were found in the data\n');
 else
-  ft_info('the following events were found in the data\n');
+  ft_info(me, 'the following events were found in the data:\n\n');
   eventtype = unique({event.type});
   for i=1:length(eventtype)
     sel = find(strcmp(eventtype{i}, {event.type}));
     try
-      eventvalue = unique({event(sel).value});            % cell-array with string value
-      eventvalue = sprintf('''%s'' ', eventvalue{:});     % translate into a single string
+      value         = {event(sel(:)).value};
+      eventvalue    = unique(value);                         % cell-array with string value
+      eventvaluestr = sprintf('''%s'' ', eventvalue{:});     % translate into a single string
     catch
-      eventvalue = unique(cell2mat({event(sel).value}));  % array with numeric values or empty
-      eventvalue = num2str(eventvalue);                   % translate into a single string
+      value         = cell2mat({event(sel(:)).value});
+      eventvalue    = unique(value);                         % array with numeric values or empty
+      eventvaluestr = num2str(eventvalue);                   % translate into a single string
     end
-    ft_info('event type: ''%s'' ', eventtype{i});
-    ft_info('with event values: %s', eventvalue);
-    ft_info('\n');
+    
+    % count the number of occurrences per unique value
+    n = zeros(numel(eventvalue), 1);
+    nstr = '';
+    for k = 1:numel(eventvalue)
+      if iscell(eventvalue)
+        n(k) = sum(strcmp(value, eventvalue{k}));
+      else
+        n(k) = sum(value==eventvalue(k));
+      end
+    end
+    if isempty(eventvalue)
+      n = numel(sel);
+    end
+    nstr = num2str(n(:)');  
+
+    if ~iscell(eventvalue) && ~isempty(eventvalue)
+      % try to make a nice formatting for the display, for cellarrays it's too difficult for now
+      tmp = num2str([eventvalue(:)';n(:)'], '%d ');
+      eventvaluestr = tmp(1,:);
+      nstr = tmp(2,:);
+    end
+    
+    ft_info(me, 'event type: ''%s'' ', eventtype{i});
+    if ~isempty(eventvalue)
+      ft_info(me, 'with event values : %s', eventvaluestr);
+      ft_info(me, 'these values occur: %s times', nstr);
+    else 
+      ft_info(me, 'with event_values : %s', '[]');
+      ft_info(me, 'these values occur: %s times', nstr);
+    end
+    ft_info(me, '\n');
   end
 end
 
