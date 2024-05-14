@@ -492,15 +492,35 @@ switch eventformat
       hdr = ft_read_header(filename);
     end
     % the following applies to Biosemi data that is stored in the gdf format
-    statusindx = find(strcmp(hdr.label, 'STATUS'));
-    if length(statusindx)==1
-      % represent the rising flanks in the STATUS channel as events
-      event = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', statusindx, 'detectflank', 'up', 'trigshift', trigshift, 'trigpadding', trigpadding, 'fixbiosemi', true);
-    else
-      ft_warning('BIOSIG does not have a consistent event representation, skipping events')
-      event = [];
+    if ~isempty(chanindx)
+      chanindx = find(strcmp(hdr.label, 'STATUS'));
     end
-
+    event = [];
+    if length(chanindx)==1
+      % represent the rising flanks in the STATUS (or user specified) channel as events
+      event = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', chanindx, 'detectflank', detectflank, 'trigshift', trigshift, 'trigpadding', trigpadding, 'fixbiosemi', true);
+    else
+      ft_warning('data does not have a STATUS channel');
+    end
+    
+    % make an attempt to get the events from the BIOSIG hdr
+    if isfield(hdr.orig, 'EVENT')
+      % this is code that has been inspired by eeglab's biosig2eeglabevent
+      event_hdr = biosig2fieldtripevent(hdr.orig.EVENT);
+    else 
+      event_hdr = [];
+    end
+    
+    if ~isempty(event) && ~isempty(event_hdr)
+      % merge the two structs
+      event = appendstruct(event(:), event_hdr(:));
+      smp   = [event.sample];
+      [srt, indx] = sort(smp);
+      event = event(indx);
+    elseif isempty(event) && ~isempty(event_hdr)
+      event = event_hdr(:);
+    end
+    
   case 'AnyWave'
     event = read_ah5_markers(hdr, filename);
 
