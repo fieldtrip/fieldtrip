@@ -7,22 +7,10 @@ function test_pull2413
 
 %%
 
-mshdir = dccnpath('/home/common/matlab/fieldtrip/data/test/pull2183/');
+datadir = dccnpath('/home/common/matlab/fieldtrip/data/test/original/eeg/gdf/');
 
-d = dir(fullfile(mshdir, '*.msh'));
+d = dir(fullfile(datadir, '*.gdf'));
 for k = 1:numel(d)
-  hs = ft_read_headshape(fullfile(d(k).folder, d(k).name));
+  event = ft_read_event(fullfile(d(k).folder, d(k).name));
 end
-
-%%
-
-filename = dccnpath('/home/common/matlab/fieldtrip/data/test/original/simnibs/v4/ernie.msh');
-hm = ft_read_headmodel(filename, 'fileformat', 'simnibs');
-hm = ft_read_headmodel(filename, 'fileformat', 'simnibs', 'meshtype', 'surface');
-
-%%
-
-filename = dccnpath('/home/common/matlab/fieldtrip/data/test/original/simnibs/v3/ernie_v3.msh');
-hm = ft_read_headmodel(filename, 'fileformat', 'simnibs');
-hm = ft_read_headmodel(filename, 'fileformat', 'simnibs', 'meshtype', 'surface');
 
