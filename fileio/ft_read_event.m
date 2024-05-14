@@ -492,10 +492,12 @@ switch eventformat
       hdr = ft_read_header(filename);
     end
     % the following applies to Biosemi data that is stored in the gdf format
-    chanindx = find(strcmp(hdr.label, 'STATUS'));
+    if ~isempty(chanindx)
+      chanindx = find(strcmp(hdr.label, 'STATUS'));
+    end
     event = [];
     if length(chanindx)==1
-      % represent the rising flanks in the STATUS channel as events
+      % represent the rising flanks in the STATUS (or user specified) channel as events
       event = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', chanindx, 'detectflank', detectflank, 'trigshift', trigshift, 'trigpadding', trigpadding, 'fixbiosemi', true);
     else
       ft_warning('data does not have a STATUS channel');
