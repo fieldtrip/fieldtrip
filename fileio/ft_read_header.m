@@ -82,7 +82,7 @@ function [hdr] = ft_read_header(filename, varargin)
 %   Neurodata Without Borders (*.nwb)
 %   Neurosim  (neurosim_spikes, neurosim_signals, neurosim_ds)
 %   NeuroOmega (*.mat transformed from *.mpx)
-%   Neuropixel data recorded with SpikeGLX (*.bin)
+%   Neuropixel data recorded with SpikeGLX (*.bin, *.meta)
 %   Plextor (*.nex, *.plx, *.ddt)
 %   Windaq (*.wdq)
 %
