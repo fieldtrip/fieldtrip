@@ -41,6 +41,11 @@ needdat = (nargin==5);
 
 % use the full filename including path to distinguish between similarly named files in different directories
 [p, f, x] = fileparts(filename);
+
+if strcmp(x, '.meta')
+  x = '.bin';
+end
+
 if isempty(p)
   % no path was specified
   fullname = which(filename);
