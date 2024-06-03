@@ -215,8 +215,10 @@ if ~isempty(threshold)
     for i = 1:size(dat,1)
       threshold_value = eval([threshold '(dat(i,:))']);
       % discretize the signal
-      dat(i,dat(i,:)< threshold_value) = 0;
-      dat(i,dat(i,:)>=threshold_value) = 1;
+      below = dat(i,:)< threshold_value;
+      above = dat(i,:)>=threshold_value;
+      dat(i,below) = 0;
+      dat(i,above) = 1;
     end
   else
     % discretize the signal
