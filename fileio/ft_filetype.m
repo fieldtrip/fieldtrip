@@ -610,6 +610,10 @@ elseif filetype_check_extension(filename, '.pos')
   type = 'polhemus_pos';
   manufacturer = 'BrainProducts/CTF/Polhemus?'; % actually I don't know whose software it is
   content = 'electrode positions';
+elseif filetype_check_extension(filename, '.txt') && filetype_header_contains(filename, 'FastSCAN', 300)
+  type = 'fastscan_txt';
+  manufacturer = 'Polhemus FastSCAN';
+  content = 'headshape points';
 
   % known Blackrock Microsystems file types
 elseif strncmp(x,'.ns',3) && (filetype_check_header(filename, 'NEURALCD') || filetype_check_header(filename, 'NEURALSG'))
@@ -1797,6 +1801,23 @@ if haslfp || hasmua || hasspike
   end
 
   res=any(ft_filetype(neuralynxdirs, 'neuralynx_ds'));
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION that checks whether the file contains only ascii characters
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function res = filetype_header_contains(filename, pat, len)
+if exist(filename, 'file')
+  fid = fopen(filename, 'rt');
+  try
+    str = fread(fid, [1 len], 'uint8=>char');
+  catch
+    str = fread(fid, [1 inf], 'uint8=>char');
+  end
+  fclose(fid);
+  res = contains(str, pat);
+else
+  res = false;
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
