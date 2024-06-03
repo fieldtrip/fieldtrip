@@ -4,10 +4,10 @@ function s = spm_mesh_detect(F)
 % F        - variable to query: filename, vol structure, patch structure
 % s        - true if F corresponds to a mesh, and false otherwise
 %__________________________________________________________________________
-% Copyright (C) 2012 Wellcome Trust Centre for Neuroimaging
 
 % Guillaume Flandin
-% $Id: spm_mesh_detect.m 5065 2012-11-16 20:00:21Z guillaume $
+% Copyright (C) 2012-2022 Wellcome Centre for Human Neuroimaging
+
 
 s = false;
 

@@ -17,10 +17,9 @@ function dict = spm_dicom_text_to_dict(textfile)
 % After this, the spm_dicom_text_to_dict function can be run to generate
 % the data dictionary.
 %__________________________________________________________________________
-% Copyright (C) 2002-2014 Wellcome Trust Centre for Neuroimaging
 
 % John Ashburner
-% $Id: spm_dicom_text_to_dict.m 6416 2015-04-21 15:34:10Z guillaume $
+% Copyright (C) 2002-2022 Wellcome Centre for Human Neuroimaging
 
 
 if ~nargin, textfile = fullfile(spm('Dir'),'spm_dicom_dict.txt'); end

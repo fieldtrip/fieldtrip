@@ -15,11 +15,16 @@ function krn = spm_smoothkern(fwhm,x,t)
 % a Gaussian convolved with a triangular (1st degree B-spline) basis 
 % function (by default). A Gaussian convolved with a hat function (0th 
 % degree B-spline) can also be returned.
+%
+% Note that the convolution kernel returned by this function differ from
+% the ones that other packages currently use for Gaussian smoothing -
+% particularly when the FWHM is small compared with the voxel dimensions.
+% The fact that SPM does it differently from other software does not mean
+% that it is wrong.
 %__________________________________________________________________________
-% Copyright (C) 2005-2011 Wellcome Trust Centre for Neuroimaging
 
 % John Ashburner
-% $Id: spm_smoothkern.m 4419 2011-08-03 18:42:35Z guillaume $
+% Copyright (C) 2005-2022 Wellcome Centre for Human Neuroimaging
 
 
 if nargin<3, t = 1; end
@@ -50,6 +55,10 @@ elseif t==1
 
 else
     error('Only defined for nearest neighbour and linear interpolation.');
-    % If anyone knows a nice formula for a sinc function convolved with a
-    % a Gaussian, then that could be quite useful.
+    % This should probably be based on https://arxiv.org/pdf/1608.05854.pdf:
+    %     Martin TB, Prunet S, Drissen L. Optimal fitting of Gaussian-apodized
+    %     or under-resolved emission lines in Fourier transform spectra
+    %     providing new insights on the velocity structure of NGC 6720. Monthly
+    %     Notices of the Royal Astronomical Society. 2016 Sep 14;463(4):4223-38.
+    % (thanks for the pointer Guillaume).
 end

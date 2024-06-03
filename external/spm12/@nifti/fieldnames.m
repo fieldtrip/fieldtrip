@@ -1,10 +1,8 @@
 function t = fieldnames(obj)
 % Fieldnames of a NIFTI-1 object
-% _______________________________________________________________________
-% Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
+%__________________________________________________________________________
 
-%
-% $Id: fieldnames.m 1143 2008-02-07 19:33:33Z spm $
+% Copyright (C) 2005-2022 Wellcome Centre for Human Neuroimaging
 
 
 if isfield(obj.hdr,'magic')
@@ -23,4 +21,4 @@ if isfield(obj.hdr,'magic')
     };
 else
     error('This should not happen.');
-end;
+end

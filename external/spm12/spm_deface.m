@@ -8,10 +8,9 @@ function names = spm_deface(job)
 % This is a little routine for attempting to strip the face from images,
 % so individuals are more difficult to identify from surface renderings.
 %__________________________________________________________________________
-% Copyright (C) 2013-2014 Wellcome Trust Centre for Neuroimaging
 
 % John Ashburner
-% $Id: spm_deface.m 6086 2014-07-03 16:08:44Z guillaume $ 
+% Copyright (C) 2013-2022 Wellcome Centre for Human Neuroimaging
 
 
 if ~nargin
@@ -38,13 +37,27 @@ d       = [size(Nii.dat) 1];
 nul1    = nul*M*Nii.mat;
 msk     = nul1(1)*i + nul1(2)*j + nul1(3)*k + nul1(4) < 0;
 
+% Ensure anything that may reveal identity is not included in the face-stripped
+% version. This includes hidden fields, extensions etc that may contain strings.
 fname   = spm_file(Nii.dat.fname,'prefix','anon_');
-Noo     = Nii;
-Noo.dat.fname = fname;
+%Noo    = Nii; % This was unsafe because Nii may contain hidden strings
+Noo             = nifti;
+Noo.dat         = file_array(fname, Nii.dat.dim, Nii.dat.dtype, 0, ...
+                             Nii.dat.scl_slope, Nii.dat.scl_inter);
+Noo.dat.fname   = fname;
+Noo.diminfo     = Nii.diminfo;
+Noo.mat         = Nii.mat;
+Noo.mat_intent  = Nii.mat_intent;
+Noo.mat0        = Nii.mat0;
+Noo.mat0_intent = Nii.mat0_intent;
+Noo.descrip     = 'SPM anonymised'; % Unsafe to copy string
+Noo.intent      = Nii.intent;
+Noo.cal         = Nii.cal;
+
 create(Noo);
-for k=1:size(Noo.dat,6),
-    for j=1:size(Noo.dat,5),
-        for i=1:size(Noo.dat,4), 
+for k=1:size(Noo.dat,6)
+    for j=1:size(Noo.dat,5)
+        for i=1:size(Noo.dat,4)
             F       = Nii.dat(:,:,:,i,j,k);
             F(msk)  = NaN;
             Noo.dat(:,:,:) = F;

@@ -10,7 +10,6 @@ function [L,num] = spm_bwlabel(BW,n)
 % L      - connected component image, i.e. image where each non-zero voxel
 %          in BW will have a value corresponding to its label.
 % num    - number of connected components in L.
-%
 %__________________________________________________________________________
 %
 % The implementation is loosely based on:
@@ -18,10 +17,9 @@ function [L,num] = spm_bwlabel(BW,n)
 % labeling algorithm with simultaneous object feature extraction
 % capability. CVGIP: Graphical Models and Image Processing 54(4):357-364.
 %__________________________________________________________________________
-% Copyright (C) 2002-2012 Wellcome Trust Centre for Neuroimaging
 
 % Jesper Andersson
-% $Id: spm_bwlabel.m 4929 2012-09-17 14:21:01Z guillaume $
+% Copyright (C) 2002-2022 Wellcome Centre for Human Neuroimaging
 
 %-This is merely the help file for the compiled routine
 error('spm_bwlabel.c not compiled - see Makefile');
