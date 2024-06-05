@@ -9,10 +9,10 @@ function spm_preproc_write(p,opts)
 %        WM      - similar to GM
 %        CSF     - similar to GM
 %__________________________________________________________________________
-% Copyright (C) 2005-2016 Wellcome Trust Centre for Neuroimaging
 
 % John Ashburner
-% $Id: spm_preproc_write.m 6894 2016-09-30 16:48:46Z spm $
+% Copyright (C) 2005-2022 Wellcome Centre for Human Neuroimaging
+
 
 if ischar(p), p = cellstr(p); end
 
