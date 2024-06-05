@@ -24,7 +24,7 @@ s = whos(varname);
 
 % if variable < ~500 MB, store it in old (uncompressed) format, which is faster
 if (s.bytes < 500000000)
-  save(filename, varname, '-v6');
+  save(filename, varname, '-v7', '-nocompression');
 else
   save(filename, varname, '-v7.3');
 end
