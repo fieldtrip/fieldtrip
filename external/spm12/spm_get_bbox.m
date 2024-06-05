@@ -10,10 +10,9 @@ function [BB,vx] = spm_get_bbox(V, thr, premul)
 %       i.e. BB = [minX minY minZ; maxX maxY maxZ].
 % vx  - a [1 x 3] vector of voxel dimensions {mm}.
 %__________________________________________________________________________
-% Copyright (C) 2011-2013 Wellcome Trust Centre for Neuroimaging
 
 % Ged Ridgway
-% $Id: spm_get_bbox.m 5398 2013-04-12 12:37:00Z ged $
+% Copyright (C) 2011-2022 Wellcome Centre for Human Neuroimaging
 
 % Undocumented expert options:
 % V           - can be a 4D @nifti object (but not 5D), image-based BBs

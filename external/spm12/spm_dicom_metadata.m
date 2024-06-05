@@ -11,10 +11,9 @@ function N = spm_dicom_metadata(N,hdr)
 %
 % See also: spm_dicom_convert
 %__________________________________________________________________________
-% Copyright (C) 2017-2018 Wellcome Trust Centre for Neuroimaging
 
-% Evelyne Balteau, Cyclotron Research Centre, University of Liege, Belgium
-% $Id: spm_dicom_metadata.m 7482 2018-11-12 12:18:08Z guillaume $
+% Evelyne Balteau
+% Copyright (C) 2017-2018 Cyclotron Research Centre, University of Liege, Belgium
 
 
 %-Provenance and general description of the image (hMRI toolbox)

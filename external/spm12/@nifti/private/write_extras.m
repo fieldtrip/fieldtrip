@@ -1,10 +1,8 @@
 function extras = write_extras(fname,extras)
 % Write extra bits of information
 %__________________________________________________________________________
-% Copyright (C) 2005-2013 Wellcome Trust Centre for Neuroimaging
 
-%
-% $Id: write_extras.m 5451 2013-04-26 14:03:05Z guillaume $
+% Copyright (C) 2005-2022 Wellcome Centre for Human Neuroimaging
 
 
 if ~isstruct(extras) || isempty(fieldnames(extras))

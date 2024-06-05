@@ -5,10 +5,9 @@ function M = spm_get_space(P,M)
 % P - image filename
 % M - voxel-to-world mapping
 %__________________________________________________________________________
-% Copyright (C) 1996-2015 Wellcome Trust Centre for Neuroimaging
 
 % John Ashburner
-% $Id: spm_get_space.m 6379 2015-03-16 13:27:26Z guillaume $
+% Copyright (C) 1996-2022 Wellcome Centre for Human Neuroimaging
 
 
 [pth,nam,ext,num] = spm_fileparts(P);

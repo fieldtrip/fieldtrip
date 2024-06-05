@@ -8,10 +8,9 @@ function hdr1 = spm_dicom_essentials(hdr0)
 % big for all the fields to be saved.  The idea here is to strip down
 % the headers to their essentials.
 %__________________________________________________________________________
-% Copyright (C) 2008-2018 Wellcome Trust Centre for Neuroimaging
 
 % John Ashburner
-% $Id: spm_dicom_essentials.m 7416 2018-09-11 13:55:13Z john $
+% Copyright (C) 2008-2018 Wellcome Centre for Human Neuroimaging
 
 
 if isempty(hdr0), hdr1 = hdr0; return; end

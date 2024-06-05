@@ -10,8 +10,7 @@ function varargout = spm_bsplinc(varargin)
 % This function deconvolves B-splines from volume V, returning
 % coefficients, c.  These coefficients are then passed to spm_bsplins
 % in order to sample the data using B-spline interpolation.
-%
-%_______________________________________________________________________
+%__________________________________________________________________________
 %
 % References:
 %   M. Unser, A. Aldroubi and M. Eden.
@@ -30,13 +29,11 @@ function varargout = spm_bsplinc(varargin)
 %   P. Thevenaz and T. Blu and M. Unser.
 %   "Interpolation Revisited"
 %   IEEE Transactions on Medical Imaging 19(7):739-758 (2000).
-%_______________________________________________________________________
-% Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
+%__________________________________________________________________________
 
 % John Ashburner
-% $Id: spm_bsplinc.m 4676 2012-03-02 20:17:02Z john $
+% Copyright (C) 2001-2022 Wellcome Centre for Human Neuroimaging
 
 
 %-This is merely the help file for the compiled routine
 error('spm_bsplinc.c not compiled - see Makefile');
-

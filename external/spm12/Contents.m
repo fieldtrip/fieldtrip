@@ -1,10 +1,10 @@
 % Statistical Parametric Mapping
-% Version 6470 (SPM12) 03-Jun-15
+% Version dev (SPM12) 01-Mar-2024
 %__________________________________________________________________________
 %  ___  ____  __  __
 % / __)(  _ \(  \/  )  
 % \__ \ )___/ )    (   Statistical Parametric Mapping
-% (___/(__)  (_/\/\_)  SPM - http://www.fil.ion.ucl.ac.uk/spm/
+% (___/(__)  (_/\/\_)  SPM - https://www.fil.ion.ucl.ac.uk/spm/
 %__________________________________________________________________________
 %
 % This Contents.m file holds the version ID for this release of SPM.
@@ -13,31 +13,25 @@
 % of spatially extended statistical processes used to test hypotheses about
 % functional imaging data.  These ideas have been instantiated in software 
 % that is called SPM.
+%
 % The  SPM software package has been designed for the analysis of brain 
 % imaging data  sequences.  The sequences can be a series of images from 
 % different cohorts, or time-series from the same subject.  The current 
 % release is designed for the analysis of fMRI, PET, SPECT, EEG and MEG.
 %
-% SPM is developed under the auspices of Functional Imaging Laboratory
-% (FIL) The Wellcome Trust Centre for Neuroimaging, in the Institute of
-% Neurology at University College London (UCL), UK.
+% SPM is developed under the auspices of the Functional Imaging Laboratory
+% (FIL) at the Wellcome Centre for Human Neuroimaging, in the Queen Square
+% Institute of Neurology at University College London (UCL), UK.
 %
 % SPM is free software: you can redistribute it and/or modify it under the 
 % terms of the GNU General Public License as published by the Free Software
 % Foundation, either version 2 of the License, or (at  your option) any
 % later version.
-% SPM is distributed in the hope that it will be useful, but WITHOUT ANY
-% WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-% FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more 
-% details.
-% You should have received a copy of the GNU General Public License along
-% with SPM, in LICENCE.txt. If not, see <http://www.gnu.org/licenses/>.
 %
-% See README.txt for details of this release.
+% See README.md for details of this release.
 %__________________________________________________________________________
-% Copyright (C) 1991,1994-2015 Wellcome Trust Centre for Neuroimaging
+% Copyright (C) 1991,1994-2023 Wellcome Centre for Human Neuroimaging
 
-% $Id: Contents.m 6469 2015-06-03 16:46:08Z guillaume $
 
 %==========================================================================
 % PROGRAMMERS NOTE:

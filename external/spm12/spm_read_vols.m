@@ -1,38 +1,38 @@
-function [Y,XYZ] = spm_read_vols(V,mask)
+function [Y,XYZmm] = spm_read_vols(V,mask)
 % Read in entire image volumes
-% FORMAT [Y,XYZ] = spm_read_vols(V,mask)
-% V    - vector of mapped image volumes to read in (from spm_vol)
-% mask - implicit zero mask?
+% FORMAT [Y,XYZmm] = spm_read_vols(V,mask)
+% V      - vector of mapped image volumes to read in (from spm_vol)
+% mask   - implicit zero mask?
 %
-% Y    - 4D matrix of image data, fourth dimension indexes images
-% XYZ  - 3xn matrix of XYZ locations returned (in mm)
+% Y      - 4D matrix of image data, fourth dimension indexes images
+% XYZmm  - 3xn matrix of XYZ locations returned {mm}
 %__________________________________________________________________________
 %
 % For image data types without a representation of NaN (see spm_type),
 % implicit zero masking can be used. If mask is set, then zeros are
 % treated as masked, and returned as NaN.
 %__________________________________________________________________________
-% Copyright (C) 1999-2013 Wellcome Trust Centre for Neuroimaging
 
 % Andrew Holmes
-% $Id: spm_read_vols.m 5731 2013-11-04 18:11:44Z guillaume $
+% Copyright (C) 1999-2022 Wellcome Centre for Human Neuroimaging
 
 
 %-Argument checks
 %--------------------------------------------------------------------------
-if nargin<2, mask = 0; end
-if nargin<1, error('insufficient arguments'), end
+if nargin<2, mask = false; end
 
 spm_check_orientations(V);
 
 %-Read in image data
 %--------------------------------------------------------------------------
-n = numel(V);                       %-#images
-Y = zeros([V(1).dim(1:3),n]);       %-image data matrix
+n = numel(V);                                           %-#images
+Y = zeros([V(1).dim(1:3),n]);                           %-image data matrix
 
-for i=1:n, for p=1:V(1).dim(3)
-    Y(:,:,p,i) = spm_slice_vol(V(i),spm_matrix([0 0 p]),V(i).dim(1:2),0);
-end, end
+for i=1:n
+    for p=1:V(1).dim(3)
+        Y(:,:,p,i) = spm_slice_vol(V(i),spm_matrix([0 0 p]),V(i).dim(1:2),0);
+    end
+end
 
 %-Apply implicit zero mask for image datatypes without a NaNrep
 %--------------------------------------------------------------------------
@@ -48,12 +48,10 @@ end
 %--------------------------------------------------------------------------
 if n==1, Y=Y(:,:,:,1); end
 
-%-Compute XYZ co-ordinates (if required)
+%-Compute XYZmm coordinates (if required)
 %--------------------------------------------------------------------------
-if nargout>1
-    [R,C,P]  = ndgrid(1:V(1).dim(1),1:V(1).dim(2),1:V(1).dim(3));
-    RCP      = [R(:)';C(:)';P(:)'];
-    clear R C P
-    RCP(4,:) = 1;
-    XYZ      = V(1).mat(1:3,:)*RCP;
+if nargout > 1
+    [R,C,P] = ndgrid(1:V(1).dim(1),1:V(1).dim(2),1:V(1).dim(3));
+    RCP     = [R(:)';C(:)';P(:)';ones(1,numel(R))];
+    XYZmm   = V(1).mat(1:3,:)*RCP;
 end

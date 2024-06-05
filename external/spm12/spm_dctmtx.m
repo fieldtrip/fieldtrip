@@ -1,10 +1,11 @@
-function C = spm_dctmtx(N,K,n,f)
+function [C,D] = spm_dctmtx(N,K,n,f)
 % Create basis functions for Discrete Cosine Transform
 % FORMAT C = spm_dctmtx(N)
 % FORMAT C = spm_dctmtx(N,K)
 % FORMAT C = spm_dctmtx(N,K,n)
 % FORMAT D = spm_dctmtx(N,K,'diff')
 % FORMAT D = spm_dctmtx(N,K,n,'diff')
+% FORMAT D = spm_dctmtx(N,K,'diff',dx)
 %
 % N        - dimension
 % K        - order
@@ -17,15 +18,73 @@ function C = spm_dctmtx(N,K,n,f)
 % dimensional discrete cosine transform.
 % With the 'diff' argument, spm_dctmtx produces the derivatives of the DCT.
 %
+% If N and K are vectors, C is a large prod(N) x prod(K) matrix
+% corresponding to the Kronecker tensor product of each N-dimensional
+% basis set. This is useful for dealing with vectorised N-arrays. An
+% additional argument, dx can be specified to scale the derivatives
+%
 % Reference:
 % Fundamentals of Digital Image Processing (p 150-154). Anil K. Jain, 1989.
 %__________________________________________________________________________
-% Copyright (C) 1996-2015 Wellcome Trust Centre for Neuroimaging
 
 % John Ashburner
-% $Id: spm_dctmtx.m 6416 2015-04-21 15:34:10Z guillaume $
+% Copyright (C) 1996-2022 Wellcome Centre for Human Neuroimaging
 
 
+% Kroneckor form for n-dimensional DCTs
+%--------------------------------------------------------------------------
+nN  = numel(N);
+if nN > 1
+    if nargin > 1
+        if numel(K) < nN
+            K = repmat(K,1,nN);
+        end
+    else
+        K = N;
+    end
+    
+    if nargin < 3
+        
+        % Kroneckor form
+        %------------------------------------------------------------------
+        C = 1;
+        for i = 1:nN
+            c = spm_dctmtx(N(i),K(i));
+            C = kron(c,C);
+        end
+        
+    else
+        
+        % intervals
+        %------------------------------------------------------------------
+        if nargin < 4
+            f = ones(nN,1);
+        end
+        
+        % derivatives (Kroneckor form)
+        %------------------------------------------------------------------
+        D     = cell(nN,1);
+        for d = 1:nN
+            C = 1;
+            for i = 1:nN
+                if i == d
+                    c = spm_dctmtx(N(i),K(i),'diff');
+                else
+                    c = spm_dctmtx(N(i),K(i));
+                end
+                C = kron(c,C);
+            end
+            D{d}  = C/f(d);
+        end
+        C  = spm_cat(D);
+        
+    end
+
+    return
+end
+
+% DCT matrix
+%--------------------------------------------------------------------------
 d = 0;
 
 if nargin == 1, K = N; end

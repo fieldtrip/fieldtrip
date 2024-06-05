@@ -9,10 +9,10 @@ function spm_plot_convergence(action,varargin)
 % FORMAT spm_plot_convergence('Clear')
 % Clear the 'Interactive' window.
 %__________________________________________________________________________
-% Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
 
 % John Ashburner
-% $Id: spm_plot_convergence.m 4147 2010-12-24 13:50:06Z guillaume $
+% Copyright (C) 2008-2022 Wellcome Centre for Human Neuroimaging
+
 
 if ~nargin, action = 'Init'; end
 
@@ -29,12 +29,10 @@ switch lower(action)
         if nargin > 2, arg2 = varargin{2}; else arg2 = 'Chi-squared'; end
         if nargin > 3, arg3 = varargin{3}; else arg3 = 'Iteration';   end
         pb = struct('pointer',get(Finter,'Pointer'),...
-                    'name',   get(Finter,'Name'),...
-                    'buffer', get(Finter,'DoubleBuffer'));
+                    'name',   get(Finter,'Name'));
         spm_plot_convergence('Clear');
         set(Finter,'Pointer','watch');
         set(Finter,'Name',pb.name);
-        set(Finter,'DoubleBuffer','on');
         pb.ax = axes('Position',[0.15 0.1 0.8 0.75],...
                      'Box',     'on',...
                      'Parent',  Finter);
@@ -68,7 +66,6 @@ switch lower(action)
         if isstruct(pb)
             set(Finter,'Pointer',     pb.pointer);
             set(Finter,'Name',        pb.name);
-            set(Finter,'DoubleBuffer',pb.buffer);
         end
         
     % Error

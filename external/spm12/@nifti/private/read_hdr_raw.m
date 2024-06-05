@@ -5,17 +5,15 @@ function [hdr,be] = read_hdr_raw(hname)
 % hdr   - a structure containing header info
 % be    - whether big-endian or not
 %__________________________________________________________________________
-% Copyright (C) 2005-2015 Wellcome Trust Centre for Neuroimaging
 
-%
-% $Id: read_hdr_raw.m 6336 2015-02-11 18:06:41Z guillaume $
+% Copyright (C) 2005-2022 Wellcome Centre for Human Neuroimaging
 
 
 hdr = [];
 be  = [];
 sts = true;
 
-% Open header file
+%-Open header file
 %--------------------------------------------------------------------------
 fp  = fopen(hname,'r','native');
 if fp==-1
@@ -104,6 +102,15 @@ for i=1:length(org)
     hdr.(org(i).label) = feval(org(i).dtype.conv,field);
 end
 
+%-Read header extensions
+%--------------------------------------------------------------------------
+try
+    ext = read_extensions(fp,hdr);
+    if ~isempty(ext)
+        hdr.ext = ext;
+    end
+end
+
 %-Close header file
 %--------------------------------------------------------------------------
 try, fclose(fp); catch, sts = false; end
@@ -113,4 +120,27 @@ try, fclose(fp); catch, sts = false; end
 if ~sts
     fprintf('There was a problem reading the header of\n');
     fprintf('"%s".\n', hname);
+end
+
+
+%==========================================================================
+function ext = read_extensions(fp,hdr)
+
+%-Read first header extension (if any)
+%--------------------------------------------------------------------------
+ext = []; n = 0;
+exts = fread(fp,4,'*uint8');
+if numel(exts) ~= 4, exts = uint8([0 0 0 0]); end
+if exts(1) ~= 0
+    n = n + 1;
+    ext(n).esize = fread(fp,1,'*int32');
+    ext(n).ecode = fread(fp,1,'*int32');
+    ext(n).edata = fread(fp,ext(n).esize-8,'*uint8');
+    if numel(ext(n).edata) ~= ext(n).esize-8
+        fprintf('Cannot read header extension.');
+        ext(n)   = [];
+        n        = n - 1;
+    else
+        while ext(n).edata(end) == 0, ext(n).edata(end) = []; end
+    end
 end

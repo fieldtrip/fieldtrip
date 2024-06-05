@@ -1,14 +1,12 @@
 function dt = datatypes
-% Datatype
-% _______________________________________________________________________
-% Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
+% Dictionary of datatypes
+%__________________________________________________________________________
 
-%
-% $Id: datatypes.m 4136 2010-12-09 22:22:28Z guillaume $
+% Copyright (C) 2005-2022 Wellcome Centre for Human Neuroimaging
 
 
 persistent dtype
-if isempty(dtype),
+if isempty(dtype)
     t = true;
     f = false;
     table = {...
@@ -40,7 +38,7 @@ if isempty(dtype),
         'unsigned' ,table(:,8),...
         'min',-Inf,'max',Inf',...
         'supported',table(:,9));
-    for i=1:length(dtype),
+    for i=1:length(dtype)
         if dtype(i).isint
             if dtype(i).unsigned
                 dtype(i).min =  0;
@@ -48,9 +46,9 @@ if isempty(dtype),
             else
                 dtype(i).min = -2^(8*dtype(i).size-1);
                 dtype(i).max =  2^(8*dtype(i).size-1)-1;
-            end;
-        end;
-    end;
-end;
+            end
+        end
+    end
+end
 
 dt = dtype;

@@ -10,7 +10,7 @@ function varargout = spm_jsonwrite(varargin)
 %
 % FORMAT [...] = spm_jsonwrite(...,opts)
 % opts     - structure or list of name/value pairs of optional parameters:
-%              indent: string to use for indentation [Default: '']
+%              prettyPrint: indent output [Default: false]
 %              replacementStyle: string to control how non-alphanumeric
 %                characters are replaced {'underscore','hex','delete','nop'}
 %                [Default: 'underscore']
@@ -21,16 +21,16 @@ function varargout = spm_jsonwrite(varargin)
 %   JSON Standard: https://www.json.org/
 %   jsonencode: https://www.mathworks.com/help/matlab/ref/jsonencode.html
 %__________________________________________________________________________
-% Copyright (C) 2015-2019 Wellcome Trust Centre for Neuroimaging
 
 % Guillaume Flandin
-% $Id: spm_jsonwrite.m 7526 2019-02-06 14:33:18Z guillaume $
+% Copyright (C) 2015-2022 Wellcome Centre for Human Neuroimaging
 
 
 %-Input parameters
 %--------------------------------------------------------------------------
 opts = struct(...
     'indent','',...
+    'prettyprint',false,...
     'replacementstyle','underscore',...
     'convertinfandnan',true);
 opt  = {struct([])};
@@ -62,6 +62,9 @@ fn = fieldnames(opt);
 for i=1:numel(fn)
     if ~isfield(opts,lower(fn{i})), warning('Unknown option "%s".',fn{i}); end
     opts.(lower(fn{i})) = opt.(fn{i});
+end
+if opts.prettyprint
+    opts.indent = '  ';
 end
 optregistry(opts);
 
@@ -132,6 +135,9 @@ elseif isa(json,'table')
         end
     end
     S = jsonwrite_struct(S,tab);
+elseif isa(json,'function_handle')
+    json = functions(json); % or json = func2str(json);
+    S = jsonwrite_struct(json,tab);
 else
     if numel(json) ~= 1
         json = arrayfun(@(x)x,json,'UniformOutput',false);
@@ -141,7 +147,7 @@ else
         if isempty(p), p = fieldnames(json); end % for pre-classdef
         s = struct;
         for i=1:numel(p)
-            s.(p{i}) = json.(p{i});
+            try, s.(p{i}) = json.(p{i}); end
         end
         S = jsonwrite_struct(s,tab);
         %error('Class "%s" is not supported.',class(json));

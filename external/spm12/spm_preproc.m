@@ -9,25 +9,22 @@ function results = spm_preproc(varargin)
 %  opts.warpreg  - warping regularisation
 %  opts.warpco   - cutoff distance for DCT basis functions
 %  opts.biasreg  - regularisation for bias correction
-%  opts.biasfwhm - FWHM of Gausian form for bias regularisation
+%  opts.biasfwhm - FWHM of Gaussian form for bias regularisation
 %  opts.regtype  - regularisation for affine part
 %  opts.fudge    - a fudge factor
 %  opts.msk      - unused
 %__________________________________________________________________________
-% Copyright (C) 2005-2011 Wellcome Trust Centre for Neuroimaging
 
 % John Ashburner
-% $Id: spm_preproc.m 4916 2012-09-11 19:15:53Z guillaume $
+% Copyright (C) 2005-2022 Wellcome Centre for Human Neuroimaging
 
-
-SVNid     = '$Rev: 4916 $';
 
 if ~isdeployed, addpath(fullfile(spm('Dir'),'toolbox','OldSeg')); end
 if ~isdeployed, addpath(fullfile(spm('Dir'),'toolbox','OldNorm')); end
 
 %-Say hello
 %--------------------------------------------------------------------------
-SPMid     = spm('FnBanner',mfilename,SVNid);
+SPMid     = spm('FnBanner',mfilename);
 
 %-Parameters & Arguments
 %--------------------------------------------------------------------------
@@ -131,14 +128,19 @@ for z=1:length(z0)
 end
 [thresh,mx]  = spm_minmax(f);
 mn           = zeros(K,1);
-% give same results each time
-st = rand('state'); % st = rng;
-rand('state',0); % rng(0,'v5uniform'); % rng('defaults');
+% Give same results each time. Random number seed done the old way for
+% compatibility with MATLAB versions older than R2011a
+warning('off','MATLAB:RandStream:ActivatingLegacyGenerators')
+st = rand('state');
+rand('state',0);
+% st = rng;           % Save old state
+% rng(0,'twister'); % Replicable random numbers
 for k1=1:Kb
     kk = sum(lkp==k1);
     mn(lkp==k1) = rand(kk,1)*mx;
 end
-rand('state',st); % rng(st);
+rand('state',st);
+%rng(st);
 vr           = ones(K,1)*mx^2;
 mg           = ones(K,1)/K;
 
@@ -539,32 +541,32 @@ results.ll     = ll;
 fprintf('%-40s: %30s\n','Completed',spm('time'))                        %-#
 
 
-%=======================================================================
+%==========================================================================
 
-%=======================================================================
+%==========================================================================
 function t = transf(B1,B2,B3,T)
-if ~isempty(T),
+if ~isempty(T)
     d2 = [size(T) 1];
     t1 = reshape(reshape(T, d2(1)*d2(2),d2(3))*B3', d2(1), d2(2));
     t  = B1*t1*B2';
 else
     t  = zeros(size(B1,1),size(B2,1));
-end;
+end
 return;
-%=======================================================================
+%==========================================================================
 
-%=======================================================================
+%==========================================================================
 function [x1,y1,z1] = defs(Twarp,z,B1,B2,B3,x0,y0,z0,M,msk)
 x1a = x0    + transf(B1,B2,B3(z,:),Twarp(:,:,:,1));
 y1a = y0    + transf(B1,B2,B3(z,:),Twarp(:,:,:,2));
 z1a = z0(z) + transf(B1,B2,B3(z,:),Twarp(:,:,:,3));
-if nargin>=10,
+if nargin>=10
     x1a = x1a(msk);
     y1a = y1a(msk);
     z1a = z1a(msk);
-end;
+end
 x1  = M(1,1)*x1a + M(1,2)*y1a + M(1,3)*z1a + M(1,4);
 y1  = M(2,1)*x1a + M(2,2)*y1a + M(2,3)*z1a + M(2,4);
 z1  = M(3,1)*x1a + M(3,2)*y1a + M(3,3)*z1a + M(3,4);
 return;
-%=======================================================================
+%==========================================================================

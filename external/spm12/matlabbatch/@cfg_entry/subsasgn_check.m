@@ -11,9 +11,9 @@ function [sts, val] = subsasgn_check(item,subs,val)
 % Copyright (C) 2007 Freiburg Brain Imaging
 
 % Volkmar Glauche
-% $Id: subsasgn_check.m 5946 2014-04-10 13:09:34Z volkmar $
+% $Id: subsasgn_check.m 7339 2018-06-15 12:44:42Z volkmar $
 
-rev = '$Rev: 5946 $'; %#ok
+rev = '$Rev: 7339 $'; %#ok
 
 sts = true;
 switch subs(1).subs
@@ -43,7 +43,7 @@ switch subs(1).subs
             val = {vtmp};
         end
     case {'strtype'}
-        strtypes = {'s','e','f','n','w','i','r','c','x','p'};
+        strtypes = {'s','s+','e','f','n','w','i','r','c','x','p'};
         sts = isempty(val) || (ischar(val) && ...
                                any(strcmp(val, strtypes)));
         if ~sts
@@ -59,7 +59,7 @@ sts = true;
 % check for reserved words
 if ischar(val) && size(val, 1) == 1 && any(strcmp(val, {'<UNDEFINED>','<DEFAULTS>'}))
     cfg_message('matlabbatch:checkval', ...
-            ['%s: Item must not be one of the reserved words ''<UNDEFINED>'' ' ...
+            ['%s: Value must not be one of the reserved words ''<UNDEFINED>'' ' ...
              'or ''<DEFAULTS>''.'], subsasgn_checkstr(item,substruct('.','val')));
     sts = false;
     return;
@@ -94,8 +94,14 @@ else
                 end
             end
         case {'s+'}
-            cfg_message('matlabbatch:checkval:strtype', ...
-                    '%s: FAILURE: Cant do s+ yet', subsasgn_checkstr(item,substruct('.','val')));
+            if ~iscellstr(val)
+                cfg_message('matlabbatch:checkval:strtype', ...
+                    '%s: Item must be a cell array of strings.', subsasgn_checkstr(item,substruct('.','val')));
+                sts = false;
+            else
+                [sts, val] = numcheck(item,val);
+                val = val(:);
+            end
         case {'f'}
             % test whether val is a function handle or a name of an
             % existing function
@@ -160,7 +166,7 @@ function [sts, val] = numcheck(item,val)
 sts = true;
 csz = size(val);
 if ~isempty(item.num)
-    if item.strtype == 's' && numel(item.num) == 2
+    if any(strcmp(item.strtype, {'s','s+'})) && numel(item.num) == 2
         % interpret num field as [min max] # elements
         sts = item.num(1) <= numel(val) && numel(val) <= item.num(2);
         if ~sts

@@ -1,6 +1,6 @@
 function varargout = optimNn(varargin)
 % Full multigrid matrix solver stuff (zero gradient at boundaries)
-%_______________________________________________________________________
+%__________________________________________________________________________
 %
 % FORMAT v = optimNn('fmg',A, b, param)
 % v     - the solution n1*n2*n3*n4
@@ -25,8 +25,8 @@ function varargout = optimNn(varargin)
 %           Note that more cycles and iterations may be needed
 %           for bending energy than for membrane energy.
 %
-% Solve equations using a Full Multigrid method.  See Press et al
-% for more information.
+% Solve equations using a Full Multigrid method.  See Press et al for more
+% information.
 % v = inv(A+H)*b
 % A, b and v are all single precision floating point.
 % H is a large sparse matrix encoded by param(1:7).
@@ -34,7 +34,7 @@ function varargout = optimNn(varargin)
 % then anything could happen (see references about Fisher scoring for
 % help on ensuring that second derivatives are positive definite).
 %
-%_______________________________________________________________________
+%__________________________________________________________________________
 %
 % FORMAT m = optimNn('vel2mom', v, param)
 % v     - velocity (flow) field n1*n2*n3*n4.
@@ -53,19 +53,14 @@ function varargout = optimNn(varargin)
 % v and m are single precision floating point. This function has uses
 % beyond only image registration.
 %
-%_______________________________________________________________________
+%__________________________________________________________________________
 %
 % Note that the boundary conditions are Neumann (zero gradients at the
-% boundaries) throughout. For circulant boundary conditions, use
-% use optimN.
-%
-%_______________________________________________________________________
-% Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
+% boundaries) throughout. For circulant boundary conditions, use optimN.
+%__________________________________________________________________________
 
 % John Ashburner
-% $Id: optimNn.m 4758 2012-05-29 15:34:08Z john $
+% Copyright (C) 2006-2022 Wellcome Centre for Human Neuroimaging
+
 
 [varargout{1:nargout}] = optim_compat(1,varargin{:});
-
-%error('Not compiled for %s in MATLAB %s  (see make.m)\n', computer, version);
-

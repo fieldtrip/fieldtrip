@@ -2,10 +2,8 @@ function hdr = empty_hdr(fmt)
 % Create an empty NIFTI header
 % FORMAT hdr = empty_hdr
 %__________________________________________________________________________
-% Copyright (C) 2005-2013 Wellcome Trust Centre for Neuroimaging
 
-%
-% $Id: empty_hdr.m 5451 2013-04-26 14:03:05Z guillaume $
+% Copyright (C) 2005-2022 Wellcome Centre for Human Neuroimaging
 
 
 if ~nargin, fmt = 'nifti1'; end
