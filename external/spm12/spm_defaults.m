@@ -5,7 +5,7 @@ function spm_defaults
 % If you want to customise some defaults for your installation, do not
 % modify this file directly, but create a file named spm_my_defaults.m
 % instead, accessible from MATLAB search path; e.g., it can be saved in
-% MATLAB Startup Folder: userhome/Documents/MATLAB.
+% MATLAB Startup Folder: <userhome>/Documents/MATLAB.
 %
 % Example: create the following file to change the image file extension:
 % ----------- file /home/karl/Documents/MATLAB/spm_my_defaults.m -----------
@@ -20,10 +20,9 @@ function spm_defaults
 %
 %                 ** This file should not be edited **
 %__________________________________________________________________________
-% Copyright (C) 1994-2014 Wellcome Trust Centre for Neuroimaging
 
 % SPM
-% $Id: spm_defaults.m 6255 2014-11-05 09:55:02Z christophe $
+% Copyright (C) 1994-2022 Wellcome Centre for Human Neuroimaging
 
 
 global defaults
@@ -38,7 +37,7 @@ defaults.ui.monitor = NaN;
 defaults.ui.colour  = [0.58 0.77 0.57];
 defaults.ui.fs      = 14;  % unused
 defaults.ui.print   = 'ps';
-defaults.renderer   = 'zbuffer';
+defaults.renderer   = 'opengl';
 
 % File format specific
 %==========================================================================
@@ -46,11 +45,14 @@ defaults.renderer   = 'zbuffer';
 % left/right handedness of the voxel indices is now done entirely by
 % spm_flip_analyze_images.m
 defaults.images.format  = 'nii'; % options: 'img', 'nii'
+defaults.images.tol_orient = 1e-4; % tolerance (see spm_check_orientation)
 defaults.mat.format     = '-v6'; % options: '-mat', '-v6', '-v7.0', '-v7.3'
 
 % Toolboxes defaults
 %==========================================================================
 defaults.tbx.dir = { fullfile(spm('Dir'),'toolbox') };
+
+defaults.tbx.mb.data = fullfile(defaults.tbx.dir{1},'MB','data');
 
 % DICOM Import defaults
 %==========================================================================
@@ -62,6 +64,7 @@ defaults.stats.fmri.t   = 16;
 defaults.stats.fmri.t0  = 8;
 defaults.stats.fmri.hpf = 128;
 defaults.stats.fmri.cvi = 'AR(1)';
+defaults.stats.fmri.hrf = [6 16 1 1 6 0 32];
 
 % Mask defaults
 %==========================================================================
@@ -69,7 +72,7 @@ defaults.mask.thresh    = 0.8;
 
 % Stats defaults
 %==========================================================================
-defaults.stats.maxmem      = 2^26;
+defaults.stats.maxmem      = 2^30;
 defaults.stats.maxres      = 64;
 defaults.stats.resmem      = false;
 defaults.stats.fmri.ufp    = 0.001;  % Upper tail F-probability
@@ -85,21 +88,22 @@ defaults.stats.results.mipmat         = {fullfile(spm('dir'),'MIP.mat')};
 
 % Filename prefix defaults
 %==========================================================================
-defaults.slicetiming.prefix     = 'a';
-defaults.realign.write.prefix   = 'r';
-defaults.coreg.write.prefix     = 'r';
-defaults.unwarp.write.prefix    = 'u';
-defaults.normalise.write.prefix = 'w';
-defaults.smooth.prefix          = 's';
-defaults.imcalc.prefix          = 'i';
+defaults.slicetiming.prefix           = 'a';
+defaults.realign.write.prefix         = 'r';
+defaults.coreg.write.prefix           = 'r';
+defaults.unwarp.write.prefix          = 'u';
+defaults.normalise.write.prefix       = 'w';
+defaults.deformations.modulate.prefix = 'm';
+defaults.smooth.prefix                = 's';
+defaults.imcalc.prefix                = 'i';
 
 % Realignment defaults
 %==========================================================================
-defaults.realign.estimate.quality = 0.9;
+defaults.realign.estimate.quality = 0.95;
 defaults.realign.estimate.interp  = 2;
 defaults.realign.estimate.wrap    = [0 0 0];
-defaults.realign.estimate.sep     = 4;
-defaults.realign.estimate.fwhm    = 5;
+defaults.realign.estimate.sep     = 1.5;
+defaults.realign.estimate.fwhm    = 1;
 defaults.realign.estimate.rtm     = 1;
 defaults.realign.write.mask       = 1;
 defaults.realign.write.interp     = 4;
@@ -108,20 +112,18 @@ defaults.realign.write.which      = [2 1];
 
 % Unwarp defaults
 %==========================================================================
-defaults.unwarp.estimate.rtm      = 0;
-defaults.unwarp.estimate.fwhm     = 4;
+defaults.unwarp.estimate.fwhm     = 2;
 defaults.unwarp.estimate.basfcn   = [12 12];
 defaults.unwarp.estimate.regorder = 1;
 defaults.unwarp.estimate.regwgt   = 1e5;
 defaults.unwarp.estimate.foe      = [4 5];
 defaults.unwarp.estimate.soe      = [];
 defaults.unwarp.estimate.rem      = 1;
-defaults.unwarp.estimate.jm       = 0;
 defaults.unwarp.estimate.noi      = 5;
 defaults.unwarp.estimate.expround = 'Average';
-%
-% Unwarp uses defaults.realign.write defaults for writing.
-%
+
+% Unwarp mostly uses defaults.realign.write defaults for writing.
+defaults.unwarp.write.jm          = 1;
 
 % Coregistration defaults
 %==========================================================================
@@ -180,6 +182,9 @@ defaults.old.preproc.output.cleanup = 0;
 %==========================================================================
 defaults.smooth.fwhm = [8 8 8];
 
+% DCM defaults
+%==========================================================================
+defaults.dcm.verbose = true;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %-Prevent users from making direct calls to spm_defaults
@@ -206,7 +211,7 @@ if exist(user_defaults,'file')
     if isdeployed && exist(fullfile(spm('Dir'),user_defaults),'file')
         user_defaults_file = cellstr(fullfile(spm('Dir'),user_defaults));
     else
-        user_defaults_file = which(user_defaults,'-ALL');
+        user_defaults_file = cellstr(which(user_defaults,'-ALL'));
     end
     for i=1:numel(user_defaults_file)
         try

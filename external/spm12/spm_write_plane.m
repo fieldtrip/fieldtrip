@@ -10,11 +10,10 @@ function V = spm_write_plane(V,dat,n)
 % V   - (possibly) modified data structure containing image information.
 %       It is possible that future versions of spm_write_plane may
 %       modify scalefactors (for example).
-%_______________________________________________________________________
-% Copyright (C) 1999-2014 Wellcome Trust Centre for Neuroimaging
+%__________________________________________________________________________
 
 % John Ashburner
-% $Id: spm_write_plane.m 6079 2014-06-30 18:25:37Z spm $
+% Copyright (C) 1999-2022 Wellcome Centre for Human Neuroimaging
 
 % For performance reasons, on network filesystems one should write
 % out as large contiguous blocks data as possible at once. Therefore,

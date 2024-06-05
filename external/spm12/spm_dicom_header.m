@@ -22,10 +22,9 @@ function Header = spm_dicom_header(DicomFilename, DicomDictionary, Options)
 % This code may not work for all cases of DICOM data, as DICOM is an
 % extremely complicated "standard".
 %__________________________________________________________________________
-% Copyright (C) 2002-2018 Wellcome Trust Centre for Neuroimaging
 
 % John Ashburner
-% $Id: spm_dicom_header.m 7374 2018-07-09 17:09:46Z guillaume $
+% Copyright (C) 2002-2022 Wellcome Centre for Human Neuroimaging
 
 
 if nargin < 3
@@ -36,14 +35,14 @@ Header = [];
 DicomFilename = deblank(DicomFilename);
 FID  = fopen(DicomFilename,'r','ieee-le');
 if FID == -1
-    warning('spm:dicom','%s: Cant open file.', DicomFilename);
+    warning('spm:dicom','%s: Cannot open file.', DicomFilename);
     return;
 end
 
 fseek(FID,128,'bof');
 dcm = char(fread(FID,4,'uint8')');
 if ~strcmp(dcm,'DICM')
-    % Try truncated DICOM file fomat
+    % Try truncated DICOM file format
     fseek(FID,0,'bof');
     Tag.Group   = fread(FID,1,'ushort');
     Tag.Element = fread(FID,1,'ushort');
@@ -54,7 +53,7 @@ if ~strcmp(dcm,'DICM')
     end
     if isempty(find(DicomDictionary.group==Tag.Group & DicomDictionary.element==Tag.Element,1)) && ~(Tag.Group==8 && Tag.Element==0)
         % Entry not found in DICOM dictionary and not from a GE Twin+excite
-        % that starts with with an 8/0 Tag that I can't find any
+        % that starts with with an 8/0 Tag that I cannot find any
         % documentation for.
         fclose(FID);
         warning('spm:dicom','%s: Not a DICOM file.', DicomFilename);
@@ -93,6 +92,7 @@ while BytesRead < NumBytes
     %fprintf('(%.4X,%.4X) "%s" %d %d %s\n', Tag.Group, Tag.Element, Tag.VR, Tag.Length, Tag.ExtraBytes, Tag.Name);
 
     if Tag.Group==65534 && Tag.Element==57357 % FFFE,E00D ItemDelimitationItem
+        BytesRead = BytesRead + Tag.ExtraBytes;
         break;
     end
     if Tag.Length>0
@@ -123,11 +123,11 @@ while BytesRead < NumBytes
                     case {'1.2.840.10008.1.2.1'}    % Explicit VR Little Endian
                         TransferSyntax = 'el';
                     case {'1.2.840.10008.1.2.1.99'} % Deflated Explicit VR Little Endian
-                        warning('spm:dicom','%s: Cant read Deflated Explicit VR Little Endian file.', fopen(FID));
+                        warning('spm:dicom','%s: Cannot read Deflated Explicit VR Little Endian file.', fopen(FID));
                        %TransferSyntax = 'dl';
                         return;
                     case {'1.2.840.10008.1.2.2'}    % Explicit VR Big Endian
-                        %warning('spm:dicom','%s: Cant read Explicit VR Big Endian file',fopen(FID));
+                        %warning('spm:dicom','%s: Cannot read Explicit VR Big Endian file',fopen(FID));
                         TransferSyntax = 'eb'; % Unused
                     case {'1.2.840.10008.1.2.4.50','1.2.840.10008.1.2.4.51','1.2.840.10008.1.2.4.70',...
                           '1.2.840.10008.1.2.4.80','1.2.840.10008.1.2.4.90','1.2.840.10008.1.2.4.91'} % JPEG Explicit VR
@@ -227,7 +227,6 @@ while BytesRead < NumBytes
     BytesRead = BytesRead + Tag.ExtraBytes + Tag.Length;
 end
 
-
 %==========================================================================
 % function [Header, BytesRead] = ReadSQ(FID, TransferSyntax, DicomDictionary, Options, NumBytes)
 %==========================================================================
@@ -239,6 +238,7 @@ while BytesRead<NumBytes
     Tag.Group   = fread(FID,1,'ushort');
     Tag.Element = fread(FID,1,'ushort');
     Tag.Length  = fread(FID,1,'uint');
+
     if isempty(Tag.Length), return; end % End of file
     BytesRead   = BytesRead + 8;
     if (Tag.Group == 65534) && (Tag.Element == 57344)   % FFFE/E000 Item
@@ -286,13 +286,12 @@ while BytesRead<NumBytes
     end
 end
 
-
 %==========================================================================
 % function Tag = ReadTag(FID,TransferSyntax,DicomDictionary, Options)
 %==========================================================================
 function Tag = ReadTag(FID, TransferSyntax, DicomDictionary, Options)
-[GroupElement, Bytesread] = fread(FID,2,'ushort');
-if Bytesread < 2, Tag = []; return; end
+[GroupElement, ItemsRead] = fread(FID,2,'ushort');
+if ItemsRead < 2, Tag = []; return; end
 Tag.Group   = GroupElement(1);
 Tag.Element = GroupElement(2);
 if Tag.Group == 2, TransferSyntax = 'el'; end
@@ -334,12 +333,14 @@ end
 Tag.ExtraBytes = 4; % Two shorts read so far
 
 if TransferSyntax(1) =='e'
+    VR             = Tag.VR;
     Tag.VR         = char(fread(FID,2,'uint8')');
     Tag.ExtraBytes = Tag.ExtraBytes + 2;
     switch Tag.VR
         case {'OB','OW','OF','OD','SQ','UN','UT'}
             if ~strcmp(Tag.VR,'UN') || Tag.Group~=65534
                 fread(FID,1,'ushort');
+                if strcmp(Tag.VR,'UN'), Tag.VR = VR; end
                 Tag.ExtraBytes = Tag.ExtraBytes + 2;
             else
                 warning('spm:dicom','%s: Possible problem with %s Tag (VR="%s").', fopen(FID), Tag.Name, Tag.VR);
@@ -385,11 +386,10 @@ if isempty(Tag.VR) || isempty(Tag.Length)
     return;
 end
 
-
 if rem(Tag.Length,2)
     if Tag.Length==4294967295 % FFFFFFFF
         if strcmp(Tag.VR,'UN')
-            warning('spm:dicom','%s: Unknown Value Representation of %s Tag, assuming ''SQ''.', fopen(FID), Tag.Name);
+           %warning('spm:dicom','%s: Unknown Value Representation of %s Tag, assuming ''SQ''.', fopen(FID), Tag.Name);
             Tag.VR = 'SQ';
         end
         return;
@@ -462,10 +462,10 @@ for i=1:n
         t(i).item(t(i).nitems) = struct('xx',[], 'val',[]);
     end
     for j=1:t(i).nitems
-        % This bit is just wierd
+        % This bit is just weird
         t(i).item(j).xx  = fread(FID,4,'int32')'; % [x x 77 x]
         BytesToRead      = t(i).item(j).xx(1)-t(1).nitems;
-        if BytesToRead<0 || BytesToRead+Bytesread+4*4>NumBytes
+        if BytesToRead<0 || BytesToRead+BytesRead+4*4>NumBytes
             t(i).item(j).val = '';
             t(i).item        = t(i).item(1:j);
             BytesRead        = BytesRead + 4*4;

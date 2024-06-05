@@ -12,10 +12,9 @@ function Headers = spm_dicom_headers(DicomFilenames, Essentials)
 % This code may not work for all cases of DICOM data, as DICOM is an
 % extremely complicated "standard".
 %__________________________________________________________________________
-% Copyright (C) 2002-2018 Wellcome Trust Centre for Neuroimaging
 
 % John Ashburner
-% $Id: spm_dicom_headers.m 7755 2019-12-16 13:19:28Z spm $
+% Copyright (C) 2002-2022 Wellcome Centre for Human Neuroimaging
 
 
 DicomFilenames = cellstr(DicomFilenames);

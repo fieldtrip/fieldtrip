@@ -7,9 +7,9 @@ function out = spm_run_normalise(job)
 % Output:
 % out    - computation results, usually a struct variable.
 %__________________________________________________________________________
-% Copyright (C) 2005-2011 Wellcome Trust Centre for Neuroimaging
 
-% $Id: spm_run_normalise.m 4873 2012-08-30 19:06:26Z john $
+% John Ashburner
+% Copyright (C) 2005-2022 Wellcome Centre for Human Neuroimaging
 
 
 if isfield(job,'eoptions')

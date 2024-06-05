@@ -1,10 +1,8 @@
 function h = nifti(varargin)
 % Create a NIFTI-1 object
 %__________________________________________________________________________
-% Copyright (C) 2005-2012 Wellcome Trust Centre for Neuroimaging
 
-%
-% $Id: nifti.m 4986 2012-10-05 17:35:09Z guillaume $
+% Copyright (C) 2005-2022 Wellcome Centre for Human Neuroimaging
 
 
 switch nargin
@@ -62,7 +60,7 @@ case 1
 
         if ~vol.hdr.scl_slope && ~vol.hdr.scl_inter
             vol.hdr.scl_slope = 1;
-        end;
+        end
         slope = double(vol.hdr.scl_slope);
         inter = double(vol.hdr.scl_inter);
 
@@ -71,7 +69,23 @@ case 1
         h     = class(h,'nifti');
 
     elseif isstruct(varargin{1})
-        h     = class(varargin{1},'nifti');
+        %-Commented code is slow
+        % if ~isempty(setdiff(fieldnames(varargin{1}),...
+        %         {'hdr','dat','extras'}))
+        %     error('Invalid input structure.');
+        % end
+        h = varargin{1};
+        if ~isfield(h,'hdr'), [h.hdr] = deal(struct([])); end
+        if ~isfield(h,'dat'), [h.dat] = deal([]); end
+        if ~isfield(h,'extras'), [h.extras] = deal(struct); end
+        for i=1:numel(h)
+            if isempty(h(i).hdr)
+                h(i).hdr = empty_hdr;
+            elseif ischar(h(i).hdr)
+                h(i).hdr = empty_hdr(h(i).hdr);
+            end
+        end
+        h = class(h,'nifti');
 
     elseif iscell(varargin{1})
         fnames = varargin{1};
@@ -82,9 +96,9 @@ case 1
         end
 
     else
-        error('Don''t know what to do yet.');
+        error('Invalid syntax.');
     end
     
 otherwise
-    error('Don''t know what to do yet.');
+    error('Invalid syntax.');
 end

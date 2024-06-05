@@ -8,14 +8,13 @@ function out = spm_deformations(job)
 %
 % See spm_cfg_deformations.m for more information.
 %__________________________________________________________________________
-% Copyright (C) 2005-2015 Wellcome Trust Centre for Neuroimaging
 
 % John Ashburner
-% $Id: spm_deformations.m 6577 2015-10-15 15:22:11Z volkmar $
+% Copyright (C) 2005-2022 Wellcome Centre for Human Neuroimaging
 
 
 [Def,mat] = get_comp(job.comp);
-out = struct('def',{{}},'warped',{{}},'surf',{{}},'jac',{{}});
+out = struct('def',{{}},'warped',{{}},'surf',{{}},'jac',{{}},'sparse',{{}});
 for i=1:numel(job.out)
     fn = fieldnames(job.out{i});
     fn = fn{1};
@@ -30,6 +29,8 @@ for i=1:numel(job.out)
         out.surf   = [out.surf;   surf_def(Def,mat,job.out{i}.(fn))];
     case 'savejac'
         out.jac    = [out.jac;    jac_def(Def,mat,job.out{i}.(fn))];
+    case 'def2sparse'
+        out.sparse = [out.sparse; def2sparse(Def,mat,job.out{i}.(fn))];
     otherwise
         error('Unknown option');
     end
@@ -86,6 +87,8 @@ switch fn
         [Def,mat] = get_id(job.(fn));
     case {'idbbvox'}
         [Def,mat] = get_idbbvox(job.(fn));
+    case {'supplied'}
+        [Def,mat] = get_supplied(job.(fn));
     otherwise
         error('Unrecognised job type');
 end
@@ -191,9 +194,21 @@ function [Def,mat] = get_def(job)
 Nii = nifti(job{1});
 Def = single(Nii.dat(:,:,:,1,:));
 d   = size(Def);
-if d(4)~=1 || d(5)~=3, error('Deformation field is wrong!'); end
+if numel(d)~=5 || d(4)~=1 || d(5)~=3
+    error('The deformation field has a wrong size.');
+end
 Def = reshape(Def,[d(1:3) d(5)]);
 mat = Nii.mat;
+
+
+%==========================================================================
+% function [Def,mat] = get_supplied(job)
+%==========================================================================
+function [Def,mat] = get_supplied(job)
+% Deformation field passed as an argument
+Def = single(job.Def);
+mat = job.mat;
+
 
 %==========================================================================
 % function [Def,mat] = get_dartel(job)
@@ -227,7 +242,7 @@ end
 
 % Integrate a Dartel flow field
 y0      = spm_dartel_integrate(Nii.dat,job.times,job.K);
-if all(job.times == [0 1]),
+if all(job.times == [0 1])
     mat = Nii.mat0;
     Def = affine(y0,single(Mat));
 else
@@ -278,9 +293,9 @@ function fname = save_def(Def,mat,job)
 % Save a deformation field as an image
 
 ofname = job.ofname;
-if isempty(ofname), fname = {}; return; end;
+if isempty(ofname), fname = {}; return; end
 
-[pth,nam] = fileparts(ofname);
+nam = spm_file(ofname,'basename');
 if isfield(job.savedir,'savepwd')
     wd = pwd;
 elseif isfield(job.savedir,'saveusr')
@@ -319,9 +334,9 @@ function fname = jac_def(Def,mat,job)
 % Save Jacobian determinants of deformation field 
 
 ofname = job.ofname;
-if isempty(ofname), fname = {}; return; end;
+if isempty(ofname), fname = {}; return; end
 
-[pth,nam] = fileparts(ofname);
+nam = spm_file(ofname,'basename');
 if isfield(job.savedir,'savepwd')
     wd = pwd;
 elseif isfield(job.savedir,'saveusr')
@@ -437,10 +452,18 @@ for m=1:numel(PI)
 
     if sum(job.fwhm.^2)==0
         newprefix  = spm_get_defaults('normalise.write.prefix');
-        NO.descrip = sprintf('Warped');
+        if job.interp>=0
+            NO.descrip = sprintf('Warped');
+        else
+            NO.descrip = sprintf('Warped categorical');
+        end
     else
         newprefix  = [spm_get_defaults('smooth.prefix') spm_get_defaults('normalise.write.prefix')];
-        NO.descrip = sprintf('Smoothed (%gx%gx%g subopt) warped',job.fwhm);
+        if job.interp>=0
+            NO.descrip = sprintf('Smoothed (%gx%gx%g subopt) warped',job.fwhm);
+        else
+            NO.descrip = sprintf('Smoothed (%gx%gx%g subopt) warped categorical',job.fwhm); % A bit pointless really
+        end
     end
     if isfield(job,'prefix') && ~isempty(job.prefix)
         NO.dat.fname = fullfile(wd,[job.prefix nam ext]);
@@ -489,15 +512,33 @@ for m=1:numel(PI)
         %------------------------------------------------------------------
         for k=k_range
             for l=l_range
-                C   = spm_diffeo('bsplinc',single(NI.dat(:,:,:,j,k,l)),intrp);
-                dat = spm_diffeo('bsplins',C,Y,intrp);
+                f0  = single(NI.dat(:,:,:,j,k,l));
+                if job.interp>=0
+                    c  = spm_diffeo('bsplinc',f0,intrp);
+                    f1 = spm_diffeo('bsplins',c,Y,intrp);
+                else
+                    % Warp labels
+                    U  = unique(f0(:));
+                    if numel(U)>255
+                        error('Too many label values.');
+                    end
+                    f1   = zeros(dim(1:3),class(f0));
+                    p1   = zeros(size(f1),'single');
+                    for u=U'
+                        g0       = single(f0==u);
+                        tmp      = spm_diffeo('bsplins',g0,Y,[abs(intrp(1:3)) intrp(4:end)]);
+                        msk1     = (tmp>p1);
+                        p1(msk1) = tmp(msk1);
+                        f1(msk1) = u;
+                    end
+                end
                 if job.mask
-                    dat(~msk) = NaN;
+                    f1(~msk) = NaN;
                 end
                 if sum(job.fwhm.^2)~=0
-                    spm_smooth(dat,dat,krn); % Side effects
+                    spm_smooth(f1,f1,krn); % Side effects
                 end
-                NO.dat(:,:,:,j,k,l) = dat;
+                NO.dat(:,:,:,j,k,l) = f1;
                 %fprintf('\t%d,%d,%d', j,k,l);
             end
         end
@@ -524,22 +565,34 @@ if isfield(job.fov,'file')
     N1   = nifti(job.fov.file);
     mat0 = N1.mat;
     dim  = N1.dat.dim(1:3);
-else
+elseif isfield(job.fov,'bbvox')
     bb   = job.fov.bbvox.bb;
     vox  = job.fov.bbvox.vox;
     [mat0, dim] = spm_get_matdim('', vox, bb);
+else
+    dim  = job.fov.matdim.dim;
+    mat0 = job.fov.matdim.mat;
 end
 
 M   = inv(mat0);
 y0  = affine(Def,M);
 
 if isfield(job,'weight') && ~isempty(job.weight) && ~isempty(job.weight{1})
-    wfile = job.weight{1};
-    Nw    = nifti(wfile);
-    Mw    = Nw.mat;
-    wt    = Nw.dat(:,:,:,1,1,1);
+    if job.preserve==2
+        warning('Ignoring weighting image for "preserve labels".');
+        wt    = [];
+    else
+        wfile = job.weight{1};
+        Nw    = nifti(wfile);
+        Mw    = Nw.mat;
+        wt    = Nw.dat(:,:,:,1,1,1);
+    end
 else
     wt    = [];
+end
+
+if sum(job.fwhm.^2)>0 && job.preserve==2
+    warning('Ignoring smoothing fwhm for "preserve labels".');
 end
 
 odm = zeros(1,3);
@@ -573,7 +626,7 @@ for m=1:numel(PI)
     end
 
     NO = NI;
-    if job.preserve
+    if job.preserve==1
         NO.dat.scl_slope = 1.0;
         NO.dat.scl_inter = 0.0;
         NO.dat.dtype     = 'float32-le';
@@ -584,7 +637,7 @@ for m=1:numel(PI)
             newprefix  = [spm_get_defaults('smooth.prefix') spm_get_defaults('deformations.modulate.prefix') spm_get_defaults('normalise.write.prefix')];
             NO.descrip = sprintf('Smoothed (%gx%gx%g) warped Jac scaled',job.fwhm);
         end
-    else
+    elseif job.preserve==0
         if sum(job.fwhm.^2)==0
             newprefix  = spm_get_defaults('normalise.write.prefix');
             NO.descrip = sprintf('Warped');
@@ -592,7 +645,11 @@ for m=1:numel(PI)
             newprefix  = [spm_get_defaults('smooth.prefix') spm_get_defaults('normalise.write.prefix')];
             NO.descrip = sprintf('Smoothed (%gx%gx%g opt) warped',job.fwhm);
         end
+    elseif job.preserve==2
+        newprefix  = spm_get_defaults('normalise.write.prefix');
+        NO.descrip = sprintf('Warped categorical');
     end
+
     if isfield(job,'prefix') && ~isempty(job.prefix)
         NO.dat.fname = fullfile(wd,[job.prefix nam ext]);
     else
@@ -655,18 +712,38 @@ for m=1:numel(PI)
         for k=k_range
             for l=l_range
                 f  = single(NI.dat(:,:,:,j,k,l));
-                if isempty(wt)
-                    if ~job.preserve
+                if isempty(wt) || job.preserve==2
+                    if job.preserve==0
                         % Unmodulated - note the slightly novel procedure
                         [f,c] = spm_diffeo('push',f,y,dim);
                         spm_smooth(f,f,krn); % Side effects
                         spm_smooth(c,c,krn); % Side effects
                         f = f./(c+0.001);
-                    else
+                    elseif job.preserve==1
                         % Modulated, by pushing
                         scal = abs(det(NI.mat(1:3,1:3))/det(NO.mat(1:3,1:3))); % Account for vox sizes
                         f    = spm_diffeo('push',f,y,dim)*scal;
                         spm_smooth(f,f,krn); % Side effects
+                    elseif job.preserve==2
+                        % Warp labels
+                        U  = unique(f(:));
+                        if numel(U)>255
+                            error('Too many label values.');
+                        end
+                        f1   = zeros(dim(1:3),class(f))+NaN;
+                        p1   = zeros(size(f1),'single');
+                       %filt = [0.125 0.75 0.125];
+                        for u=U'
+                            g0       = single(f==u);
+                            g0       = spm_diffeo('push',g0,y,dim);
+                           %g0       = convn(g0,reshape(filt,[3,1,1]),'same');
+                           %g0       = convn(g0,reshape(filt,[1,3,1]),'same');
+                           %g0       = convn(g0,reshape(filt,[1,1,3]),'same');
+                            msk1     = (g0>p1);
+                            p1(msk1) = g0(msk1);
+                            f1(msk1) = u;
+                        end
+                        f    = f1;
                     end
                 else
                     if isequal(size(wt),size(f)) && sum((Mw(:)-M0(:)).^2)<1e-6
@@ -679,14 +756,14 @@ for m=1:numel(PI)
                             wtw(:,:,z) = single(spm_slice_vol(wt,Mz,[size(f,1),size(f,2)],1));
                         end
                     end
-                    if ~job.preserve
+                    if job.preserve==0
                         % Unmodulated - note the slightly novel procedure
                         f = spm_diffeo('push',f.*wtw,y,dim);
                         c = spm_diffeo('push',wtw,y,dim);
                         spm_smooth(f,f,krn); % Side effects
                         spm_smooth(c,c,krn); % Side effects
                         f = f./(c+0.001);
-                    else
+                    elseif job.preserve==1
                         % Modulated, by pushing
                         scal = abs(det(NI.mat(1:3,1:3))/det(NO.mat(1:3,1:3))); % Account for vox sizes
                         f    = spm_diffeo('push',f.*wtw,y,dim)*scal;
@@ -752,3 +829,91 @@ for y3=1:d(3)
     Def(:,:,y3,2) = y1*M(2,1) + y2*M(2,2) + (y3*M(2,3) + M(2,4));
     Def(:,:,y3,3) = y1*M(3,1) + y2*M(3,2) + (y3*M(3,3) + M(3,4));
 end
+
+
+%==========================================================================
+% function [Phi,dim1,dim2] = spm_def2sparse(Def,mat,job)
+%==========================================================================
+function out = def2sparse(Def,mat,job)
+% Generate a sparse matrix encoding a deformation
+% [Phi,dim1,dim2] = spm_def2sparse(PY,PI)
+% PY - Filename of deformation field
+% PI - Filename of image defining field of view etc
+%__________________________________________________________________________
+
+if isfield(job.fov,'file')
+    N1   = nifti(job.fov.file);
+    mat2 = N1.mat;
+    dim2 = N1.dat.dim(1:3);
+elseif isfield(job.fov,'bbvox')
+    bb   = job.fov.bbvox.bb;
+    vox  = job.fov.bbvox.vox;
+    [mat2, dim2] = spm_get_matdim('', vox, bb);
+else
+    dim2 = job.fov.matdim.dim;
+    mat2 = job.fov.matdim.mat;
+end
+
+dim1 = size(Def);
+dim1 = dim1(1:3);
+
+X1   = Def(:,:,:,1);
+X2   = Def(:,:,:,2);
+X3   = Def(:,:,:,3);
+
+M    = inv(mat2);
+Y1   = double(M(1,1)*X1 + M(1,2)*X2 + M(1,3)*X3 + M(1,4));
+Y2   = double(M(2,1)*X1 + M(2,2)*X2 + M(2,3)*X3 + M(2,4));
+Y3   = double(M(3,1)*X1 + M(3,2)*X2 + M(3,3)*X3 + M(3,4));
+
+if false
+    % Nearest Neighbour
+    fY1 = (round(Y1));
+    fY2 = (round(Y2));
+    fY3 = (round(Y3));
+    I   = find(fY1>=1 & fY1<=dim2(1) & fY2>=1 & fY2<=dim2(2) & fY3>=1 & fY3<=dim2(3));
+    J   = fY1(I) + dim2(1)*(fY2(I)-1 + dim2(2)*(fY3(I)-1));
+    Phi = sparse(I,J,1,prod(dim1),prod(dim2));
+else
+    % Trilinear
+    fY1 = (floor(Y1));
+    fY2 = (floor(Y2));
+    fY3 = (floor(Y3));
+    w1  = Y1-fY1;
+    w2  = Y2-fY2;
+    w3  = Y3-fY3;
+    inrange = @(r1,r2,r3,d,o1,o2,o3)   find(r1>=(1-o1) & r1<=d(1)-o1 & r2>=1-o2 & r2<=d(2)-o2 & r3>=(1-o3) & r3<=d(3)-o3);
+    j_index = @(r1,r2,r3,d,o1,o2,o3,I) r1(I)+o1 + d(1)*(r2(I)+(o2-1) + d(2)*(r3(I)+(o3-1)));
+
+    C   = cell(8,1);
+    I   = inrange(fY1,fY2,fY3,dim2,0,0,0); J = j_index(fY1,fY2,fY3,dim2,0,0,0,I); S = (1-w1).*(1-w2).*(1-w3); C{1} = [I,J,S(I)];
+    I   = inrange(fY1,fY2,fY3,dim2,1,0,0); J = j_index(fY1,fY2,fY3,dim2,1,0,0,I); S =    w1 .*(1-w2).*(1-w3); C{2} = [I,J,S(I)];
+    I   = inrange(fY1,fY2,fY3,dim2,0,1,0); J = j_index(fY1,fY2,fY3,dim2,0,1,0,I); S = (1-w1).*   w2 .*(1-w3); C{3} = [I,J,S(I)];
+    I   = inrange(fY1,fY2,fY3,dim2,1,1,0); J = j_index(fY1,fY2,fY3,dim2,1,1,0,I); S =    w1 .*   w2 .*(1-w3); C{4} = [I,J,S(I)];
+    I   = inrange(fY1,fY2,fY3,dim2,0,0,1); J = j_index(fY1,fY2,fY3,dim2,0,0,1,I); S = (1-w1).*(1-w2).*   w3 ; C{5} = [I,J,S(I)];
+    I   = inrange(fY1,fY2,fY3,dim2,1,0,1); J = j_index(fY1,fY2,fY3,dim2,1,0,1,I); S =    w1 .*(1-w2).*   w3 ; C{6} = [I,J,S(I)];
+    I   = inrange(fY1,fY2,fY3,dim2,0,1,1); J = j_index(fY1,fY2,fY3,dim2,0,1,1,I); S = (1-w1).*   w2 .*   w3 ; C{7} = [I,J,S(I)];
+    I   = inrange(fY1,fY2,fY3,dim2,1,1,1); J = j_index(fY1,fY2,fY3,dim2,1,1,1,I); S =    w1 .*   w2 .*   w3 ; C{8} = [I,J,S(I)];
+    IJV = cell2mat(C);
+    Phi = sparse(IJV(:,1),IJV(:,2),IJV(:,3),prod(dim1),prod(dim2));
+    save crap.mat
+end
+
+
+ofname = job.ofname;
+if isempty(ofname), out = {}; return; end
+
+nam = spm_file(ofname,'basename');
+if isfield(job.savedir,'savepwd')
+    wd = pwd;
+elseif isfield(job.savedir,'saveusr')
+    wd = job.savedir.saveusr{1};
+else
+    wd = pwd;
+end
+fname = fullfile(wd,['y_' nam '_def2sparse.mat']);
+
+mat1 = mat;
+save(fname,'Phi','dim1','dim2','mat1','mat2');
+out  = {fname};
+

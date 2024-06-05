@@ -18,9 +18,9 @@ function [val, sts] = resolve_deps(item, cj)
 % Copyright (C) 2007 Freiburg Brain Imaging
 
 % Volkmar Glauche
-% $Id: resolve_deps.m 5678 2013-10-11 14:58:04Z volkmar $
+% $Id: resolve_deps.m 8183 2021-11-04 15:25:19Z guillaume $
 
-rev = '$Rev: 5678 $'; %#ok
+rev = '$Rev: 8183 $'; %#ok
 
 val1 = cell(size(item.val{1}));
 for k = 1:numel(item.val{1})
@@ -37,7 +37,7 @@ for k = 1:numel(item.val{1})
     try
         val1{k} = subsref(out, item.val{1}(k).src_output);
     catch 
-        % dependency can't be resolved, even though it should be there
+        % dependency cannot be resolved, even though it should be there
         l = lasterror; %#ok
         % display source output to diagnose problems
         val1{k} = out;

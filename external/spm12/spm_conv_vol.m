@@ -27,13 +27,10 @@ function varargout = spm_conv_vol(varargin)
 % to write out each plane of the image.
 %
 % See also spm_conv.m and spm_smooth.m spm_write_plane.m
-%
 %__________________________________________________________________________
-% Copyright (C) 1994-2014 Wellcome Trust Centre for Neuroimaging
 
 % John Ashburner, Tom Nichols
-% $Id: spm_conv_vol.m 6157 2014-09-05 18:17:54Z guillaume $
-
+% Copyright (C) 1994-2022 Wellcome Centre for Human Neuroimaging
 
 %-This is merely the help file for the compiled routine
 error('spm_conv_vol.c not compiled - see Makefile')

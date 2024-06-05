@@ -13,10 +13,10 @@ function orig_coord = spm_get_orig_coord(coord, matname,PU)
 %            - or the structure containing the transformation.
 % orig_coord - Original co-ordinate (mm).
 %__________________________________________________________________________
-% Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
 
 % John Ashburner
-% $Id: spm_get_orig_coord.m 4873 2012-08-30 19:06:26Z john $
+% Copyright (C) 2005-2022 Wellcome Centre for Human Neuroimaging
+
 
 if ischar(matname)
     t = load(matname);
@@ -26,7 +26,7 @@ else
     error('Wrong normalisation parameters!');
 end
     
-if size(coord,2)~=3, error('coord must be an N x 3 matrix'); end;
+if size(coord,2)~=3, error('coord must be an N x 3 matrix'); end
 coord = coord';
 
 Mat = inv(t.VG(1).mat);
@@ -35,31 +35,31 @@ Tr  = t.Tr;
 Affine = t.Affine;
 d   = t.VG(1).dim(1:3);
 
-if nargin>2,
+if nargin>2
     VU   = spm_vol(PU);
     Mult = VU.mat\t.VF.mat*Affine;
 %   disp('Output co-ordinates are in voxels');
 else
     Mult = t.VF.mat*Affine;
 %   disp('Output co-ordinates are in mm');
-end;
+end
 
-if (prod(size(Tr)) == 0),
+if (prod(size(Tr)) == 0)
         affine_only = 1;
         basX = 0; tx = 0;
         basY = 0; ty = 0;
         basZ = 0; tz = 0;
-else,
+else
         affine_only = 0;
         basX = spm_dctmtx(d(1),size(Tr,1),xyz(1,:)-1);
         basY = spm_dctmtx(d(2),size(Tr,2),xyz(2,:)-1);
         basZ = spm_dctmtx(d(3),size(Tr,3),xyz(3,:)-1);
-end;
+end
 
-if affine_only,
+if affine_only
     xyz2 = Mult(1:3,:)*[xyz ; ones(1,size(xyz,2))];
-else,
-    for i=1:size(xyz,2),
+else
+    for i=1:size(xyz,2)
         bx = basX(i,:);
         by = basY(i,:);
         bz = basZ(i,:);
@@ -73,8 +73,6 @@ else,
             reshape(Tr(:,:,:,3),size(Tr,1)*size(Tr,2),size(Tr,3))...
             *bz', size(Tr,1), size(Tr,2) );
         xyz2(:,i) = Mult(1:3,:)*[xyz(:,i) + [bx*tx*by' ; bx*ty*by' ; bx*tz*by']; 1];
-    end;
-end;
+    end
+end
 orig_coord = xyz2';
-
-return;

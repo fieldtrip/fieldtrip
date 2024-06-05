@@ -6,17 +6,16 @@ function out = spm_dartel_jacobian(job)
 %
 % Note that K needs to be reasonably large in order to obtain reasonable
 % Jacobian determinant fields.
-%_______________________________________________________________________
-% Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
+%__________________________________________________________________________
 
 % John Ashburner
-% $Id: spm_dartel_jacobian.m 5506 2013-05-14 17:13:43Z john $
+% Copyright (C) 2006-2022 Wellcome Centre for Human Neuroimaging
 
 PU = job.flowfields;
 K  = job.K;
 
 spm_progress_bar('Init',numel(PU),'Creating Jacobian det fields','Number complete');
-for i=1:numel(PU),
+for i=1:numel(PU)
     NU = nifti(PU{i});
     [pth,nam,ext,num] = spm_fileparts(NU.dat.fname);
     [y,dt] = spm_dartel_integrate(NU.dat,[1 0], K);
@@ -36,14 +35,13 @@ for i=1:numel(PU),
     create(NO);
     NO.dat(:,:,:)=dt;
     spm_progress_bar('Set',i);
-end;
+end
 spm_progress_bar('Clear');
 
 PU = job.flowfields;
 out.files = cell(numel(PU),1);
-for i=1:numel(PU),
+for i=1:numel(PU)
     [pth,nam,ext] = fileparts(PU{i});
     fname         = fullfile(pth,['jac_' nam(3:end) ext]);
     out.files{i}  = fname;
-end;
-
+end

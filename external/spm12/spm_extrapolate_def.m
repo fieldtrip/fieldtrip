@@ -8,14 +8,13 @@ function Y = spm_extrapolate_def(Y,M)
 % This function is typically used after generating an inverse deformation,
 % as these may contain missing locations.
 %__________________________________________________________________________
-% Copyright (C) 2014 Wellcome Trust Centre for Neuroimaging
 
 % John Ashburner
-% $Id: spm_extrapolate_def.m 6137 2014-08-19 12:43:11Z john $
+% Copyright (C) 2014-2022 Wellcome Centre for Human Neuroimaging
 
 msk = isfinite(Y(:,:,:,1)); % Identify existing points
-if ~all(msk(:)), % See if needed
-    if nargin>=2,
+if ~all(msk(:)) % See if needed
+    if nargin>=2
         vx     = sqrt(sum(M(1:3,1:3).^2)); % Voxel sizes
     else
         vx     = [1 1 1];
@@ -29,7 +28,7 @@ if ~all(msk(:)), % See if needed
 
     bnd        = spm_field('boundary'); % For tidying up afterwards
     spm_field('boundary',1);            % Free boundary conditions
-    for d=1:3,
+    for d=1:3
         x          = M1(d,1)*x1 + M1(d,2)*x2 + M1(d,3)*x3 + M1(d,4);
         u          = Y(:,:,:,d) - x; % Displacement field
         u(~msk)    = 0;
@@ -41,4 +40,3 @@ if ~all(msk(:)), % See if needed
     end
     spm_field('boundary',bnd);
 end
-

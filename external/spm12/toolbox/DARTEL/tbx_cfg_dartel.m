@@ -1,10 +1,10 @@
 function dartel = tbx_cfg_dartel
 % Configuration file for toolbox 'Dartel Tools'
-%_______________________________________________________________________
-% Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
+%__________________________________________________________________________
 
 % John Ashburner
-% $Id: tbx_cfg_dartel.m 6522 2015-08-14 18:55:42Z john $
+% Copyright (C) 2008-2022 Wellcome Centre for Human Neuroimaging
+
 
 if ~isdeployed, addpath(fullfile(spm('dir'),'toolbox','DARTEL')); end
 
@@ -14,7 +14,7 @@ if ~isdeployed, addpath(fullfile(spm('dir'),'toolbox','DARTEL')); end
 matnames         = cfg_files;
 matnames.tag     = 'matnames';
 matnames.name    = 'Parameter Files';
-matnames.help    = {'Select ''_sn.mat'' files containing the spatial transformation and segmentation parameters. Rigidly aligned versions of the image that was segmented will be generated. The image files used by the segmentation may have moved. If they have, then (so the import can find them) ensure that they are either in the output directory, or the current working directory.'};
+matnames.help    = {'Select `*_seg`_sn.mat`` files containing the spatial transformation and segmentation parameters. Rigidly aligned versions of the image that was segmented will be generated. The image files used by the segmentation may have moved. If they have, then (so the import can find them) ensure that they are either in the output directory, or the current working directory.'};
 matnames.filter = 'mat';
 matnames.ufilter = '.*seg_sn\.mat$';
 matnames.num     = [1 Inf];
@@ -56,7 +56,7 @@ image         = cfg_menu;
 image.tag     = 'image';
 image.name    = 'Image option';
 image.val     = {0};
-image.help    = {'A resliced version of the original image can be produced, which may have various procedures applied to it.  All options will rescale the images so that the mean of the white matter intensity is set to one. The ``skull stripped'''' versions are the images simply scaled by the sum of the grey and white matter probabilities.'};
+image.help    = {'A resliced version of the original image can be produced, which may have various procedures applied to it.  All options will rescale the images so that the mean of the white matter intensity is set to one. The "skull stripped" versions are the images simply scaled by the sum of the grey and white matter probabilities.'};
 image.labels  = {
                 'Original'
                 'Bias Corrected'
@@ -105,13 +105,13 @@ CSF.labels  = {
 }';
 CSF.values  = {1 0};
 % ---------------------------------------------------------------------
-% initial Initial Import
+% initial Initial Import: To be removed
 % ---------------------------------------------------------------------
 initial         = cfg_exbranch;
 initial.tag     = 'initial';
 initial.name    = 'Initial Import';
 initial.val     = {matnames odir bb vox image GM WM CSF };
-initial.help    = {'Images first need to be imported into a form that Dartel can work with. If the default segmentation is used (ie the Segment button), then this involves taking the results of the segmentation (*_seg_sn.mat)/* \cite{ashburner05} */, in order to have rigidly aligned tissue class images. Typically, there would be imported grey matter and white matter images, but CSF images can also be included. The subsequent Dartel alignment will then attempt to nonlinearly register these tissue class images together. If the new segmentation routine is used (from the toolbox), then this includes the option to generate ``imported'''' tissue class images. This means that a separate importing step is not needed for it.'};
+initial.help    = {'Images first need to be imported into a form that Dartel can work with. If the default segmentation is used (ie the Segment button), then this involves taking the results of the segmentation (``*_seg_sn.mat``)/* \cite{ashburner05} */, in order to have rigidly aligned tissue class images. Typically, there would be imported grey matter and white matter images, but CSF images can also be included. The subsequent Dartel alignment will then attempt to nonlinearly register these tissue class images together. If the new segmentation routine is used (from the toolbox), then this includes the option to generate "imported" tissue class images. This means that a seperate importing step is not needed for it.'};
 initial.prog = @spm_dartel_import;
 initial.vout = @vout_initial_import;
 % ---------------------------------------------------------------------
@@ -150,7 +150,7 @@ rform         = cfg_menu;
 rform.tag     = 'rform';
 rform.name    = 'Regularisation Form';
 rform.val     = {0};
-rform.help    = {'The registration is penalised by some ``energy'''' term.  Here, the form of this energy term is specified. Three different forms of regularisation can currently be used.'};
+rform.help    = {'The registration is penalised by some "energy" term.  Here, the form of this energy term is specified. Three different forms of regularisation can currently be used.'};
 rform.labels = {
                 'Linear Elastic Energy'
                 'Membrane Energy'
@@ -181,13 +181,13 @@ its.values  = {1 2 3 4 5 6 7 8 9 10};
 % ---------------------------------------------------------------------
 % rparam Reg params
 % ---------------------------------------------------------------------
+reghelp = {'For *linear elasticity*, the parameters are /*$\*/mu/*$*/, /*$\*/lambda/*$*/ and id. For *membrane energy*, the parameters are /*$\*/lambda/*$*/, unused and id, where id is a term for penalising absolute displacements, and should therefore be small.  For *bending energy*, the parameters are /*$\*/lambda/*$*/, id/*$_*/1/*$*/ and id/*$_*/2/*$*/, and the regularisation is by /*$(-\lambda \nabla + \mathsf{id}_1)^2 + \mathsf{id}_2$*/','%(-lambda*Laplacian + id1)^2 + id2.'};
+
 rparam         = cfg_entry;
 rparam.tag     = 'rparam';
 rparam.name    = 'Reg params';
 rparam.val     = {[0.1 0.01 0.001]};
-rparam.help    = {
-                  'For linear elasticity, the parameters are mu, lambda and id. For membrane energy, the parameters are lambda, unused and id.id is a term for penalising absolute displacements, and should therefore be small.  For bending energy, the parameters are lambda, id1 and id2, and the regularisation is by (-lambda*Laplacian + id1)^2 + id2.'
-                  'Use more regularisation for the early iterations so that the deformations are smooth, and then use less for the later ones so that the details can be better matched.'
+rparam.help    = {reghelp{:}, 'Use more regularisation for the early iterations so that the deformations are smooth, and then use less for the later ones so that the details can be better matched.'
 }';
 rparam.strtype = 'e';
 rparam.num     = [1 3];
@@ -319,7 +319,7 @@ its         = cfg_menu;
 its.tag     = 'its';
 its.name    = 'Iterations';
 its.val     = {3};
-its.help    = {'Number of relaxation iterations performed in each multi-grid cycle. More iterations are needed if using ``bending energy'''' regularisation, because the relaxation scheme only runs very slowly. See the chapter on solving partial differential equations in Numerical Recipes for more information about relaxation methods.'};
+its.help    = {'Number of relaxation iterations performed in each multi-grid cycle. More iterations are needed if using *bending energy* regularisation, because the relaxation scheme only runs very slowly. See the chapter on solving partial differential equations in Numerical Recipes for more information about relaxation methods.'};
 its.labels  = {
               '1'
               '2'
@@ -355,7 +355,7 @@ warp.tag     = 'warp';
 warp.name    = 'Run Dartel (create Templates)';
 warp.val     = {images settings };
 warp.check   = @check_dartel_template;
-warp.help    = {'Run the Dartel nonlinear image registration procedure. This involves iteratively matching all the selected images to a template generated from their own mean. A series of Template*.nii files are generated, which become increasingly crisp as the registration proceeds.'};
+warp.help    = {'Run the Dartel nonlinear image registration procedure. This involves iteratively matching all the selected images to a template generated from their own mean. A series of ``Template*.nii`` files are generated, which become increasingly crisp as the registration proceeds. Note that tissue maps should first be "imported", which is typically done at the **Segment** stage.'};
 warp.prog = @spm_dartel_template;
 warp.vout = @vout_dartel_template;
 % ---------------------------------------------------------------------
@@ -384,7 +384,7 @@ rform         = cfg_menu;
 rform.tag     = 'rform';
 rform.name    = 'Regularisation Form';
 rform.val     = {0};
-rform.help    = {'The registration is penalised by some ``energy'''' term.  Here, the form of this energy term is specified. Three different forms of regularisation can currently be used.'};
+rform.help    = {'The registration is penalised by some "energy" term.  Here, the form of this energy term is specified. Three different forms of regularisation can currently be used.'};
 rform.labels  = {
                 'Linear Elastic Energy'
                 'Membrane Energy'
@@ -419,10 +419,8 @@ rparam         = cfg_entry;
 rparam.tag     = 'rparam';
 rparam.name    = 'Reg params';
 rparam.val     = {[0.1 0.01 0.001]};
-rparam.help    = {
-                  'For linear elasticity, the parameters are mu, lambda and id. For membrane energy, the parameters are lambda, unused and id.id is a term for penalising absolute displacements, and should therefore be small.  For bending energy, the parameters are lambda, id1 and id2, and the regularisation is by (-lambda*Laplacian + id1)^2 + id2.'
-                  'Use more regularisation for the early iterations so that the deformations are smooth, and then use less for the later ones so that the details can be better matched.'
-}';
+rparam.help    = {reghelp{:}, 'Use more regularisation for the early iterations so that the deformations are smooth, and then use less for the later ones so that the details can be better matched.'
+};
 rparam.strtype = 'e';
 rparam.num     = [1 3];
 % ---------------------------------------------------------------------
@@ -538,7 +536,7 @@ its         = cfg_menu;
 its.tag     = 'its';
 its.name    = 'Iterations';
 its.val     = {3};
-its.help    = {'Number of relaxation iterations performed in each multi-grid cycle. More iterations are needed if using ``bending energy'''' regularisation, because the relaxation scheme only runs very slowly. See the chapter on solving partial differential equations in Numerical Recipes for more information about relaxation methods.'};
+its.help    = {'Number of relaxation iterations performed in each multi-grid cycle. More iterations are needed if using *bending energy* regularisation, because the relaxation scheme only runs very slowly. See the chapter on solving partial differential equations in Numerical Recipes for more information about relaxation methods.'};
 its.labels  = {
               '1'
               '2'
@@ -574,7 +572,7 @@ warp1.tag     = 'warp1';
 warp1.name    = 'Run Dartel (existing Templates)';
 warp1.val     = {images settings };
 warp1.check   = @check_dartel_template;
-warp1.help    = {'Run the Dartel nonlinear image registration procedure to match individual images to pre-existing template data. Start out with smooth templates, and select crisp templates for the later iterations.'};
+warp1.help    = {'Run the Dartel nonlinear image registration procedure to match individual images to pre-existing template data. Start out with smooth templates, and select crisp templates for the later iterations. Note that tissue maps should first be "imported", which is typically done at the **Segment** stage.'};
 warp1.prog = @spm_dartel_warp;
 warp1.vout = @vout_dartel_warp;
 % ---------------------------------------------------------------------
@@ -784,7 +782,7 @@ crt_iwarped         = cfg_exbranch;
 crt_iwarped.tag     = 'crt_iwarped';
 crt_iwarped.name    = 'Create Inverse Warped';
 crt_iwarped.val     = {flowfields images K interp };
-crt_iwarped.help    = {'Create inverse normalised versions of some image(s). The image that is inverse-normalised should be in alignment with the template (generated during the warping procedure). Note that the results have the same dimensions as the ``flow fields'''', but are mapped to the original images via the affine transformations in their headers.'};
+crt_iwarped.help    = {'Create inverse normalised versions of some image(s). The image that is inverse-normalised should be in alignment with the template (generated during the warping procedure). Note that the results have the same dimensions as the "flow fields", but are mapped to the original images via the affine transformations in their headers.'};
 crt_iwarped.prog = @spm_dartel_invnorm;
 crt_iwarped.vout = @vout_invnorm;
 % ---------------------------------------------------------------------
@@ -850,7 +848,7 @@ template.help   = {...
  'registered with a TPM file, such that the resulting spatially normalised '...
  'images are closer aligned to MNI space. Leave empty if you do not wish to '...
  'incorporate a transform to MNI space '...
- '(ie just click ``done'' on the file selector, without selecting any images).']};
+ '(ie just click **done** on the file selector, without selecting any images).']};
 % ---------------------------------------------------------------------
 %
 % ---------------------------------------------------------------------
@@ -860,7 +858,7 @@ fwhm.name    = 'Gaussian FWHM';
 fwhm.val     = {[8 8 8]};
 fwhm.strtype = 'e';
 fwhm.num     = [1 3];
-fwhm.help    = {'Specify the full-width at half maximum (FWHM) of the Gaussian blurring kernel in mm. Three values should be entered, denoting the FWHM in the x, y and z directions. Note that you can also specify [0 0 0], but any ``modulated'' data will show aliasing (see eg Wikipedia), which occurs because of the way the warped images are generated.'};
+fwhm.help    = {'Specify the full-width at half maximum (FWHM) of the Gaussian blurring kernel in mm. Three values should be entered, denoting the FWHM in the x, y and z directions. Note that you can also specify [0 0 0], but any "modulated" data will show aliasing (see eg Wikipedia), which occurs because of the way the warped images are generated.'};
 % ---------------------------------------------------------------------
 %
 % ---------------------------------------------------------------------
@@ -868,13 +866,12 @@ preserve         = cfg_menu;
 preserve.tag     = 'preserve';
 preserve.name    = 'Preserve';
 preserve.help    = {
-'Preserve Concentrations (no "modulation"): Smoothed spatially normalised images (sw*) represent weighted averages of the signal under the smoothing kernel, approximately preserving the intensities of the original images. This option is currently suggested for eg fMRI.'
-''
-'Preserve Amount ("modulation"): Smoothed and spatially normalised images preserve the total amount of signal from each region in the images (smw*). Areas that are expanded during warping are correspondingly reduced in intensity. This option is suggested for VBM.'
+'    * **Preserve concentrations** (no "modulation"): Smoothed spatially normalised images (sw*) represent weighted averages of the signal under the smoothing kernel, approximately preserving the intensities of the original images. This option is currently suggested for eg fMRI.'
+'    * **Preserve amount** ("modulation"): Smoothed and spatially normalised images preserve the total amount of signal from each region in the images (smw*). Areas that are expanded during warping are correspondingly reduced in intensity. This option is suggested for VBM.'
 }';
 preserve.labels = {
-                   'Preserve Concentrations'
-                   'Preserve Amount'
+                   'Preserve concentrations'
+                   'Preserve amount'
 }';
 preserve.values = {0 1};
 preserve.val    = {0};
@@ -918,18 +915,24 @@ nrm.help  = {[...
 'Normally, Dartel generates warped images that align with the average-shaped template. ',...
 'This routine includes an initial affine regisration of the template (the final one ',...
 'generated by Dartel), with the TPM data released with SPM.'],[...
-'``Smoothed'''' (blurred) spatially normalised images are generated in such a ',...
+'Smoothed (blurred) spatially normalised images are generated in such a ',...
 'way that the original signal is preserved. Normalised images are ',...
-'generated by a ``pushing'''' rather than a ``pulling'''' (the usual) procedure. ',...
+'generated by a "pushing" rather than a "pulling" (the usual) procedure. ',...
 'Note that a procedure related to trilinear interpolation is used, and no masking is done.  It ',...
 'is therefore recommended that the images are realigned and resliced ',...
 'before they are spatially normalised, in order to benefit from motion correction using higher order interpolation.  Alternatively, contrast images ',...
 'generated from unsmoothed native-space fMRI/PET data can be spatially ',...
 'normalised for a 2nd level analysis.'],[...
-'Two ``preserve'''' options are provided.  One of them should do the ',...
-'equavalent of generating smoothed ``modulated'''' spatially normalised ',...
+'Two "preserve" options are provided.  One of them should do the ',...
+'equavalent of generating smoothed "modulated" spatially normalised ',...
 'images.  The other does the equivalent of smoothing the modulated ',...
-'normalised fMRI/PET, and dividing by the smoothed Jacobian determinants.']};
+'normalised fMRI/PET, and dividing by the smoothed Jacobian determinants.'],[...
+'Note that the behaviour of Dartel is different from that of more conventional ',...
+'methods -- particularly for voxels close to the edge of the original field ',...
+'of view.  Users may see streaky artifacts, but these are a feature - not a bug. ',...
+'They arise because when Dartel blurs the images, it normalises according to how ',...
+'many voxels are averaged over.  More conventional methods simply assume zeros ',...
+'outside the field of view, causing the signal to drop off to zero.']};
 
 % ---------------------------------------------------------------------
 % template Dartel Template
@@ -1069,7 +1072,7 @@ weight.num     = [0 1];
 dotprod         = cfg_entry;
 dotprod.tag     = 'dotprod';
 dotprod.name    = 'Dot-product Filename';
-dotprod.help    = {'Enter a filename for results (it will be prefixed by ``dp_'''' and saved in the current directory).'};
+dotprod.help    = {'Enter a filename for results (it will be prefixed by ``dp_`` and saved in the current directory).'};
 dotprod.strtype = 's';
 dotprod.num     = [1 Inf];
 % ---------------------------------------------------------------------
@@ -1079,7 +1082,7 @@ reskern         = cfg_exbranch;
 reskern.tag     = 'reskern';
 reskern.name    = 'Kernel from Images';
 reskern.val     = {images weight dotprod };
-reskern.help    = {'Generate a kernel matrix from images. In principle, this same function could be used for generating kernels from any image data (e.g. ``modulated'''' grey matter). If there is prior knowledge about some region providing more predictive information (e.g. the hippocampi for AD), then it is possible to weight the generation of the kernel accordingly. The matrix of dot-products is saved in a variable ``Phi'''', which can be loaded from the dp_*.mat file. The ``kernel trick'''' can be used to convert these dot-products into distance measures for e.g. radial basis-function approaches.'};
+reskern.help    = {'Generate a kernel matrix from images. In principle, this same function could be used for generating kernels from any image data (e.g. "modulated" grey matter). If there is prior knowledge about some region providing more predictive information (e.g. the hippocampi for AD), then it is possible to weight the generation of the kernel accordingly. The matrix of dot-products is saved in a variable ``Phi``, which can be loaded from the ``dp_*.mat`` file. The kernel trick can be used to convert these dot-products into distance measures for e.g. radial basis-function approaches.'};
 reskern.prog = @spm_dartel_dotprods;
 % ---------------------------------------------------------------------
 % flowfields Flow fields
@@ -1098,7 +1101,7 @@ rform         = cfg_menu;
 rform.tag     = 'rform';
 rform.name    = 'Regularisation Form';
 rform.val     = {0};
-rform.help    = {'The registration is penalised by some ``energy'''' term.  Here, the form of this energy term is specified. Three different forms of regularisation can currently be used.'};
+rform.help    = {'The registration is penalised by some "energy" term.  Here, the form of this energy term is specified. Three different forms of regularisation can currently be used.'};
 rform.labels  = {
                 'Linear Elastic Energy'
                 'Membrane Energy'
@@ -1112,7 +1115,7 @@ rparam         = cfg_entry;
 rparam.tag     = 'rparam';
 rparam.name    = 'Reg params';
 rparam.val     = {[0.25 0.125 1e-06]};
-rparam.help    = {'For linear elasticity, the parameters are `mu'', `lambda'' and `id''. For membrane and bending energy, the parameters are `lambda'', unused and `id''. The term `id'' is for penalising absolute displacements, and should therefore be small.'};
+rparam.help    = reghelp;
 rparam.strtype = 'e';
 rparam.num     = [1 3];
 % ---------------------------------------------------------------------
@@ -1121,7 +1124,7 @@ rparam.num     = [1 3];
 dotprod         = cfg_entry;
 dotprod.tag     = 'dotprod';
 dotprod.name    = 'Dot-product Filename';
-dotprod.help    = {'Enter a filename for results (it will be prefixed by ``dp_'''' and saved in the current directory.'};
+dotprod.help    = {'Enter a filename for results (it will be prefixed by ``dp_`` and saved in the current directory.'};
 dotprod.strtype = 's';
 dotprod.num     = [1 Inf];
 % ---------------------------------------------------------------------
@@ -1131,19 +1134,17 @@ flokern         = cfg_exbranch;
 flokern.tag     = 'flokern';
 flokern.name    = 'Kernel from Flows';
 flokern.val     = {flowfields rform rparam dotprod };
-flokern.help    = {'Generate a kernel from flow fields. The dot-products are saved in a variable ``Phi'''' in the resulting dp_*.mat file.'};
+flokern.help    = {'Generate a kernel from flow fields. The dot-products are saved in a variable ``Phi`` in the resulting ``dp_*.mat`` file.'};
 flokern.prog = @spm_dartel_kernel;
 % ---------------------------------------------------------------------
-% kernfun Kernel Utilities
+% kernfun Kernel utilities
 % ---------------------------------------------------------------------
 kernfun         = cfg_choice;
 kernfun.tag     = 'kernfun';
-kernfun.name    = 'Kernel Utilities';
-kernfun.help    = {
-                   'Dartel can be used for generating matrices of dot-products for various kernel pattern-recognition procedures.'
-                   'The idea of applying pattern-recognition procedures is to obtain a multi-variate characterisation of the anatomical differences among groups of subjects. These characterisations can then be used to separate (eg) healthy individuals from particular patient populations. There is still a great deal of methodological work to be done, so the types of kernel that can be generated here are unlikely to be the definitive ways of proceeding.  They are only just a few ideas that may be worth trying out. The idea is simply to attempt a vaguely principled way to combine generative models with discriminative models (see the ``Pattern Recognition and Machine Learning'''' book by Chris Bishop for more ideas). Better ways (higher predictive accuracy) will eventually emerge.'
-                   'Various pattern recognition algorithms are available freely over the Internet. Possible approaches include Support-Vector Machines, Relevance-Vector machines and Gaussian Process Models. Gaussian Process Models probably give the most accurate probabilistic predictions, and allow kernels generated from different pieces of data to be most easily combined.'
-}';
+kernfun.name    = 'Kernel utilities';
+kernfun.help    = {'Dartel can be used for generating matrices of dot-products for various kernel pattern-recognition procedures.'};
+% 'The idea of applying pattern-recognition procedures is to obtain a multi-variate characterisation of the anatomical differences among groups of subjects. These characterisations can then be used to separate (eg) healthy individuals from particular patient populations. There is still a great deal of methodological work to be done, so the types of kernel that can be generated here are unlikely to be the definitive ways of proceeding.  They are only just a few ideas that may be worth trying out. The idea is simply to attempt a vaguely principled way to combine generative models with discriminative models (see the "Pattern Recognition and Machine Learning" book by Chris Bishop for more ideas). Better ways (higher predictive accuracy) will eventually emerge.'
+% 'Various pattern recognition algorithms are available freely over the Internet. Possible approaches include Support-Vector Machines, Relevance-Vector machines and Gaussian Process Models. Gaussian Process Models probably give the most accurate probabilistic predictions, and allow kernels generated from different pieces of data to be most easily combined.'
 kernfun.values  = {reskern flokern};
 % ---------------------------------------------------------------------
 % dartel Dartel Tools
@@ -1152,14 +1153,9 @@ dartel         = cfg_choice;
 dartel.tag     = 'dartel';
 dartel.name    = 'Dartel Tools';
 dartel.help    = {
-                  'This toolbox is based around the ``A Fast Diffeomorphic Registration Algorithm'''' paper/* \cite{ashburner07} */. The idea is to register images by computing a ``flow field'''', which can then be ``exponentiated'''' to generate both forward and backward deformations. Currently, the software only works with images that have isotropic voxels, identical dimensions and which are in approximate alignment with each other. One of the reasons for this is that the approach assumes circulant boundary conditions, which makes modelling global rotations impossible. Another reason why the images should be approximately aligned is because there are interactions among the transformations that are minimised by beginning with images that are already almost in register. This problem could be alleviated by a time varying flow field, but this is currently computationally impractical.'
-                  'Because of these limitations, images should first be imported. This involves taking the ``*_seg_sn.mat'''' files produced by the segmentation code of SPM5, and writing out rigidly transformed versions of the tissue class images, such that they are in as close alignment as possible with the tissue probability maps. Rigidly transformed original images can also be generated, with the option to have skull-stripped versions.'
-                  'The next step is the registration itself.  This can involve matching single images together, or it can involve the simultaneous registration of e.g. GM with GM, WM with WM and 1-(GM+WM) with 1-(GM+WM) (when needed, the 1-(GM+WM) class is generated implicitly, so there is no need to include this class yourself). This procedure begins by creating a mean of all the images, which is used as an initial template. Deformations from this template to each of the individual images are computed, and the template is then re-generated by applying the inverses of the deformations to the images and averaging. This procedure is repeated a number of times.'
-                  'Finally, warped versions of the images (or other images that are in alignment with them) can be generated. '
-                  ''
-                  'This toolbox is not yet seamlessly integrated into the SPM package. Eventually, the plan is to use many of the ideas here as the default strategy for spatial normalisation. The toolbox may change with future updates.  There will also be a number of other (as yet unspecified) extensions, which may include a variable velocity version (related to LDDMM). Note that the Fast Diffeomorphism paper only describes a sum of squares objective function. The multinomial objective function is an extension, based on a more appropriate model for aligning binary data to a template.'
+                  'This toolbox is based around the "A Fast Diffeomorphic Registration Algorithm" paper/* \cite{ashburner07}*/. The idea is to register images by computing a "flow field", which can then be exponentiated to generate both forward and backward deformations.'
 }';
-dartel.values  = {initial warp warp1 nrm crt_warped jacdet crt_iwarped popnorm kernfun };
+dartel.values  = {warp warp1 nrm crt_warped jacdet crt_iwarped popnorm kernfun };
 %dartel.num     = [0 Inf];
 
 %_______________________________________________________________________
@@ -1169,7 +1165,7 @@ dartel.values  = {initial warp warp1 nrm crt_warped jacdet crt_iwarped popnorm k
 function dep = vout_initial_import(job)
 cls = {'GM', 'WM', 'CSF'};
 kk = 1;
-for k=1:3,
+for k=1:3
     if isnumeric(job.(cls{k})) && job.(cls{k})
         dep(kk)            = cfg_dep;
         dep(kk).sname      = sprintf('Imported Tissue (%s)', cls{k});
@@ -1191,12 +1187,12 @@ function chk = check_dartel_template(job)
 n1 = numel(job.images);
 n2 = numel(job.images{1});
 chk = '';
-for i=1:n1,
-    if numel(job.images{i}) ~= n2,
+for i=1:n1
+    if numel(job.images{i}) ~= n2
         chk = 'Incompatible number of images';
         break;
-    end;
-end;
+    end
+end
 %_______________________________________________________________________
 
 %_______________________________________________________________________
@@ -1204,7 +1200,7 @@ function dep = vout_dartel_template(job)
 
 if isa(job.settings.template,'cfg_dep') || ~ ...
         isempty(deblank(job.settings.template))
-    for it=0:numel(job.settings.param),
+    for it=0:numel(job.settings.param)
         tdep(it+1)            = cfg_dep;
         tdep(it+1).sname      = sprintf('Template (Iteration %d)', it);
         tdep(it+1).src_output = substruct('.','template','()',{it+1});
@@ -1243,8 +1239,8 @@ chk = '';
 PU = job.flowfields;
 PI = job.images;
 n1 = numel(PU);
-for i=1:numel(PI),
-    if numel(PI{i}) ~= n1,
+for i=1:numel(PI)
+    if numel(PI{i}) ~= n1
         chk = 'Incompatible number of images';
         break;
     end
@@ -1258,8 +1254,8 @@ if isfield(job.data,'subjs')
     PU = job.data.subjs.flowfields;
     PI = job.data.subjs.images;
     n1 = numel(PU);
-    for i=1:numel(PI),
-        if numel(PI{i}) ~= n1,
+    for i=1:numel(PI)
+        if numel(PI{i}) ~= n1
             chk = 'Incompatible number of images';
             break;
         end
@@ -1269,14 +1265,14 @@ end
 
 %_______________________________________________________________________
 function dep = vout_norm(job)
-if job.jactransf,
+if job.jactransf
     sname = 'Warped Images - Jacobian Transformed';
 else
     sname = 'Warped Images';
 end
 PU    = job.flowfields;
 PI    = job.images;
-for m=1:numel(PI),
+for m=1:numel(PI)
     dep(m)            = cfg_dep;
     dep(m).sname      = sprintf('%s (Image %d)',sname,m);
     dep(m).src_output = substruct('.','files','()',{':',m});
@@ -1289,14 +1285,14 @@ function dep = vout_invnorm(job)
 PU    = job.flowfields;
 PI    = job.images;
 
-for m=1:numel(PI),
+for m=1:numel(PI)
     dep(m)            = cfg_dep;
     dep(m).sname      = sprintf('Inverse Warped Images (Image %d)',m);
     dep(m).src_output = substruct('.','files','()',{':',m});
     dep(m).tgt_spec   = cfg_findspec({{'filter','nifti'}});
 end
 n = numel(PI);
-for m=1:numel(PU),
+for m=1:numel(PU)
     dep(m+n)            = cfg_dep;
     dep(m+n).sname      = sprintf('Inverse Warped Images (Deformation %d)',m);
     dep(m+n).src_output = substruct('.','files','()',{m,':'});
@@ -1314,7 +1310,7 @@ dep.tgt_spec   = cfg_findspec({{'filter','nifti'}});
 
 %_______________________________________________________________________
 function dep = vout_norm_fun(job)
-if job.preserve,
+if job.preserve
     sname = 'MNI Smo. Warped - Amount';
 else
     sname = 'MNI Smo. Warped - Concentrations';
@@ -1332,7 +1328,7 @@ if isfield(job.data,'subj')
 end
 
 if isfield(job.data,'subjs')
-    for m=1:numel(job.data.subjs.images),
+    for m=1:numel(job.data.subjs.images)
         dep(m)            = cfg_dep;
         dep(m).sname      = sprintf('%s (Image %d)',sname,m);
         dep(m).src_output = substruct('()',{':',m});
@@ -1347,8 +1343,8 @@ chk = '';
 PU = job.flowfields;
 PI = job.images;
 n1 = numel(PU);
-for i=1:numel(PI),
-    if numel(PI{i}) ~= n1,
+for i=1:numel(PI)
+    if numel(PI{i}) ~= n1
         chk = 'Incompatible number of images';
         break;
     end
@@ -1362,7 +1358,3 @@ dep.sname      = 'Residual Files';
 dep.src_output = substruct('.','files','()',{':'});
 dep.tgt_spec   = cfg_findspec({{'filter','nifti'}});
 %_______________________________________________________________________
-
-
-
-

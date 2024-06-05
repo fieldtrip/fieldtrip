@@ -50,10 +50,9 @@ function f = spm_Gpdf(x,h,l)
 %       "Numerical Recipes in C"
 %        Cambridge
 %__________________________________________________________________________
-% Copyright (C) 1993-2011 Wellcome Trust Centre for Neuroimaging
 
 % Andrew Holmes
-% $Id: spm_Gpdf.m 4182 2011-02-01 12:29:09Z guillaume $
+% Copyright (C) 1993-2022 Wellcome Centre for Human Neuroimaging
 
 
 %-Format arguments, note & check sizes

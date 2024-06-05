@@ -7,13 +7,13 @@ function s = spm_existfile(filename)
 %
 % This compiled routine is equivalent to:
 % >> s = exist(filename,'file') == 2;
-% and was written for speed purposes. The differences in behavior is that
-% spm_existfile does not look in MATLAB's search path.
+% and was written for speed purposes. The differences in behaviour are that
+% spm_existfile does not look in MATLAB's search path and does not perform
+% tilde '~' expansion.
 %__________________________________________________________________________
-% Copyright (C) 2008-2012 Wellcome Trust Centre for Neuroimaging
 
 % Guillaume Flandin
-% $Id: spm_existfile.m 4901 2012-09-05 15:10:48Z guillaume $
+% Copyright (C) 2008-2022 Wellcome Centre for Human Neuroimaging
 
 
 %-This is merely the help file for the compiled routine

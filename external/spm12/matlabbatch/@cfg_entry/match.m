@@ -18,6 +18,7 @@ function sts = match(item, spec)
 % 'i' - matches strtype 'n', 'w', 'i'
 % 'r' - matches strtype 'n', 'w', 'i', 'r'
 % Any other strtype matches only on equality.
+% An item with strtype 's+' also matches file lists.
 %
 % This code is part of a batch job configuration system for MATLAB. See 
 %      help matlabbatch
@@ -26,9 +27,9 @@ function sts = match(item, spec)
 % Copyright (C) 2007 Freiburg Brain Imaging
 
 % Volkmar Glauche
-% $Id: match.m 2675 2009-01-30 14:58:07Z volkmar $
+% $Id: match.m 7335 2018-06-15 12:44:38Z volkmar $
 
-rev = '$Rev: 2675 $'; %#ok
+rev = '$Rev: 7335 $'; %#ok
 
 % match an empty spec
 sts = true;
@@ -56,7 +57,11 @@ for k = 1:numel(spec)
             case 'num',
                 sts = true;
             case 'class'
-                sts = strcmpi(spec{k}(l).value,class(item));
+                if strcmp(item.strtype, 's+')
+                    sts = any(strcmpi(spec{k}(l).value,{class(item),'cfg_files'}));
+                else
+                    sts = strcmpi(spec{k}(l).value,class(item));
+                end
             otherwise
                 spec1{1}(1) = spec{k}(l);
                 sts = match(item.cfg_item, spec1);

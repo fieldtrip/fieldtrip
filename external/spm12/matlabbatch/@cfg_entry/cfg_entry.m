@@ -30,6 +30,9 @@ function item = cfg_entry(varargin)
 %                workaround - in future versions num may be changed to a
 %                2-by-ndims array encoding min/max values for each
 %                dimension.
+%                If strtype is 's+' and num has 2 elements, these 2
+%                elements code the min/max number of lines in the cell
+%                array. The length of each line is not checked.
 %    * def
 %    * extras  - Extra information used for content checks of item.val{1}. The
 %                following strtypes can use this extra information:
@@ -56,6 +59,7 @@ function item = cfg_entry(varargin)
 % The type of values that are entered by typing.  e.g. 'e' for evaluated.
 % The valid value types are:
 %   's'   string
+%   's+'  multi-line string, returned as cellstr
 %   'e'   evaluated expression - this can be any expression, even a struct
 %          or cell
 %   'f'   function or function handle
@@ -95,9 +99,9 @@ function item = cfg_entry(varargin)
 % Copyright (C) 2007 Freiburg Brain Imaging
 
 % Volkmar Glauche
-% $Id: cfg_entry.m 5678 2013-10-11 14:58:04Z volkmar $
+% $Id: cfg_entry.m 7335 2018-06-15 12:44:38Z volkmar $
 
-rev = '$Rev: 5678 $'; %#ok
+rev = '$Rev: 7335 $'; %#ok
 
 myclass = mfilename;
 % Get local fields and defaults from private/mysubs_fields
