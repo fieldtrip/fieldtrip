@@ -73,6 +73,7 @@ createtopcfg    = ft_getopt(varargin, 'createtopcfg');
 checkfilenames  = ft_getopt(varargin, 'dataset2files', 'no');
 checkinside     = ft_getopt(varargin, 'inside2logical', 'no');
 checksize       = ft_getopt(varargin, 'checksize', 'no');
+checkstring     = ft_getopt(varargin, 'checkstring', 'yes');
 
 % these should be cell arrays and not strings
 if ischar(required),     required     = {required};      end
@@ -90,7 +91,7 @@ else
   silent   = false;
   loose    = true;
   pedantic = false;
-end
+checkstring     = ft_getopt(varargin, 'checkstring', 'yes');end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % rename old to new options, give warning
@@ -607,6 +608,17 @@ if ~isempty(createsubcfg)
   end
 end
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% checkstring, i.e. convertStringsToChar
+%
+% Converts "strings" to 'chars' if necessary.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+if istrue(checkstring)
+  cfg = checkstringfun(cfg);
+end
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % checkinside, i.e. inside2logical
 %
@@ -749,6 +761,27 @@ for i=1:numel(fieldsorig)
     end
   end % for numel(cfg)
 end % for each of the fieldsorig
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function [cfg] = checkstringfun(cfg)
+
+c = struct2cell(cfg);
+s = fieldnames(cfg);
+t = cellfun(@class, c, 'UniformOutput', false);
+
+% convert
+[c{:}] = convertStringsToChars(c{:});
+cfg = cell2struct(c,s,1);
+
+% recurse
+if any(strcmp(t, 'struct'))
+  fn = s(strcmp(t,'struct'));
+  for k = 1:numel(fn)
+    cfg.(fn{k}) = checkstringfun(cfg.(fn{k}));
+  end
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION converts a cell-array of structure arrays into a structure array
