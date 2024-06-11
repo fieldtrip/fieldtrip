@@ -23,7 +23,7 @@ end
 s = whos(varname);
 
 % if variable < ~500 MB, store it in old (uncompressed) format, which is faster
-if (s.bytes < 500000000)
+if (s.bytes < 500000000) && ~ft_platform_supports('matlabversion', -inf, '2019a')
   save(filename, varname, '-v7', '-nocompression');
 else
   save(filename, varname, '-v7.3');
