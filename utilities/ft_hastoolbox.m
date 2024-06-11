@@ -207,24 +207,22 @@ url = {
 % determine whether the toolbox is installed
 toolbox = upper(toolbox);
 
-% get a list of required functions to check for, and fallback option (for
-% SPM)
+% work internally with cell(-array)
 if ischar(toolbox)
   toolbox = {toolbox};
 end
 
-%elseif iscell(toolbox)
-  status     = false(numel(toolbox),1);
-  for i=1:numel(toolbox)
-    [dependency, fallback_toolbox] = get_dependency(toolbox{i}, silent);
-    
-    status(i,1) = is_present(dependency);
-    if ~status(i,1) && ~isempty(fallback_toolbox)
-      % in case of SPMxUP
-      toolbox{i} = fallback_toolbox;
-    end
+% get a list of required functions to check for, and fallback option (for SPM)
+status     = false(numel(toolbox),1);
+for i=1:numel(toolbox)
+  [dependency, fallback_toolbox] = get_dependency(toolbox{i}, silent);
+  
+  status(i,1) = is_present(dependency);
+  if ~status(i,1) && ~isempty(fallback_toolbox)
+    % in case of SPMxUP
+    toolbox{i} = fallback_toolbox;
   end
-%end
+end
 
 % try to determine the path of the requested toolbox and add it
 if any(~status) && autoadd>0
@@ -381,7 +379,7 @@ if any(isafolder)
             ~cellfun(@isempty, regexp(lower(toolbox), 'spm8$', 'once')) | ...
             ~cellfun(@isempty, regexp(lower(toolbox), 'spm12$', 'once'))) & isafolder;
   if any(isspm)
-    % SPM needs to be added witha all its subdirectories 
+    % SPM needs to be added with all its subdirectories 
     addpath(genpath(toolbox{isspm}));
     isafolder(isspm) = false;
   end
@@ -412,7 +410,7 @@ path = strrep(path,'\','/');
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function status = hasfunction(funname, toolbox)
 try
-  % call the function without any input arguments, which probably is inapropriate
+  % call the function without any input arguments, which probably is inappropriate
   feval(funname);
   % it might be that the function without any input already works fine
   status = true;
