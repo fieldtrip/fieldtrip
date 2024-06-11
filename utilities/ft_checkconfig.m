@@ -73,7 +73,6 @@ createtopcfg    = ft_getopt(varargin, 'createtopcfg');
 checkfilenames  = ft_getopt(varargin, 'dataset2files', 'no');
 checkinside     = ft_getopt(varargin, 'inside2logical', 'no');
 checksize       = ft_getopt(varargin, 'checksize', 'no');
-checkstring     = ft_getopt(varargin, 'checkstring', 'yes');
 
 % these should be cell arrays and not strings
 if ischar(required),     required     = {required};      end
@@ -91,7 +90,13 @@ else
   silent   = false;
   loose    = true;
   pedantic = false;
-checkstring     = ft_getopt(varargin, 'checkstring', 'yes');end
+end
+
+if isfield(cfg, 'checkstring')
+  checkstring = cfg.checkstring;
+else
+  checkstring = 'no';
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % rename old to new options, give warning
@@ -774,6 +779,14 @@ t = cellfun(@class, c, 'UniformOutput', false);
 % convert
 [c{:}] = convertStringsToChars(c{:});
 cfg = cell2struct(c,s,1);
+
+% deal with cell-arrays
+if any(strcmp(t, 'cell'))
+  fn = s(strcmp(t, 'cell'));
+  for k = 1:numel(fn)
+    [cfg.(fn{k}){:}] = convertStringsToChars(cfg.(fn{k}){:});
+  end
+end
 
 % recurse
 if any(strcmp(t, 'struct'))
