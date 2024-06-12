@@ -7,7 +7,7 @@ function [datafile, jsonfile] = bids_datafile(filename)
 %
 % See also BIDS_SIDECAR, BIDS_TSV, EVENTS_TSV
 
-% Copyright (C) 2020, Robert Oostenveld
+% Copyright (C) 2020-2024, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -52,11 +52,81 @@ modality = {'audio', 'bold', 'eeg', 'emg', 'exg', 'eyetracker', 'ieeg', 'meg', '
 % this is the reverse procedure than the one implemented in BIDS_SIDECAR
 for i=1:numel(modality)
   f = [sprintf('%s_', entities{:}), modality{i}];
+
   % we don't know the file extension, hence we have to search with a wildcard
   d = dir(fullfile(p, [f '.*']));
   if ~isempty(d)
     datafile = fullfile(p, d.name);
-    jsonfile = fullfile(p, [sprintf('%s_', entities{:}), modality{i} '.json']);
-    break
-  end
+
+    % the json file can have fewer entities and/or can be at a higher level due to the inheritance principle
+    % we search for the one that is the "closest by"
+    foundjson = false;
+
+    if ~foundjson
+      % find the corresponding json file in the same directory as the data
+      alloptions = binoall(numel(entities));
+      for j=1:size(alloptions,1)
+        jsonfile = fullfile(p, [sprintf('%s_', entities{alloptions(j,:)}), modality{i} '.json']);
+        if exist(jsonfile, 'file')
+          foundjson = true;
+          break
+        end
+      end
+    end % if ~foundjson
+    if ~foundjson
+      % find the corresponding json file one directory up
+      alloptions = binoall(numel(entities));
+      p = fileparts(p); % remove the last directory
+      for j=1:size(alloptions,1)
+        jsonfile = fullfile(p, [sprintf('%s_', entities{alloptions(j,:)}), modality{i} '.json']);
+        if exist(jsonfile, 'file')
+          foundjson = true;
+          break
+        end
+      end
+    end % if ~foundjson
+    if ~foundjson
+      % find the corresponding json file two directories up
+      alloptions = binoall(numel(entities));
+      p = fileparts(p); % remove the last directory
+      for j=1:size(alloptions,1)
+        jsonfile = fullfile(p, [sprintf('%s_', entities{alloptions(j,:)}), modality{i} '.json']);
+        if exist(jsonfile, 'file')
+          foundjson = true;
+          break
+        end
+      end
+    end % if ~foundjson
+    if ~foundjson
+      % find the corresponding json file three directories up
+      alloptions = binoall(numel(entities));
+      p = fileparts(p); % remove the last directory
+      for j=1:size(alloptions,1)
+        jsonfile = fullfile(p, [sprintf('%s_', entities{alloptions(j,:)}), modality{i} '.json']);
+        if exist(jsonfile, 'file')
+          foundjson = true;
+          break
+        end
+      end
+    end % if ~foundjson
+
+    if ~foundjson
+      error('cannot find JSON sidecar for %s', datafile);
+    end
+  end % ~isempty(d)
+end % for each modality
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function r =  binoall(n)
+% this returns an 2^n by n matrix with all possible binomial options
+% See also BINORND
+
+r = zeros(2^n, n, 'logical');
+for i=0:(2^n-1)
+  r(i+1,:) = bitget(uint32(i), 1:n);
 end
+r = fliplr(r);
+r = flipud(r);
+

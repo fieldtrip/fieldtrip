@@ -3,11 +3,14 @@ function V = spm_create_vol(V)
 % FORMAT V = spm_create_vol(V)
 % V        - image volume information (see spm_vol.m)
 %__________________________________________________________________________
-% Copyright (C) 2005-2014 Wellcome Trust Centre for Neuroimaging
 
 % John Ashburner
-% $Id: spm_create_vol.m 6157 2014-09-05 18:17:54Z guillaume $
+% Copyright (C) 2005-2022 Wellcome Centre for Human Neuroimaging
 
+
+if ~isstruct(V)
+    error('Input argument V is not a structure.');
+end
 
 for i=1:numel(V)
     v = create_vol(V(i));
@@ -24,15 +27,24 @@ end
 %==========================================================================
 function V = create_vol(V)
 
-if ~isstruct(V),        error('Not a structure.'); end
+%-Field 'fname'
+%--------------------------------------------------------------------------
+if ~isfield(V,'fname'), error('Missing field "fname".'); end
+V.fname  = deblank(V.fname);
 
-if ~isfield(V,'fname'), error('No "fname" field'); end
-
-if ~isfield(V,'dim'),   error('No "dim" field'); end
-if ~all(size(V.dim)==[1 3])
-    error(['"dim" field is the wrong size (' num2str(size(V.dim)) ').']);
+%-Field 'dim'
+%--------------------------------------------------------------------------
+if ~isfield(V,'dim'), error('Missing field "dim".'); end
+if ~isequal(size(V.dim),[1 3])
+    error('Field "dim" has a wrong size (%s).',num2str(size(V.dim)));
 end
 
+%-Field 'mat'
+%--------------------------------------------------------------------------
+if ~isfield(V,'mat'), error('Missing field "mat".'); end
+
+%-Field 'n'
+%--------------------------------------------------------------------------
 if ~isfield(V,'n')
     V.n = [1 1];
 else
@@ -43,7 +55,9 @@ if V.n(1)>1 && V.n(2)>1
     error('Can only do up to 4D data (%s).',V.fname);
 end
 
-if ~isfield(V,'dt')
+%-Field 'dt'
+%--------------------------------------------------------------------------
+if ~isfield(V,'dt') || isempty(V.dt)
     V.dt = [spm_type('float64') spm_platform('bigend')];
 end
 dt{1} = spm_type(V.dt(1));
@@ -52,27 +66,40 @@ if strcmp(dt{1},'unknown')
 end
 if V.dt(2), dt{2} = 'BE'; else dt{2} = 'LE'; end
 
-if ~isfield(V,'pinfo'), V.pinfo      = [Inf Inf 0]'; end
-if size(V.pinfo,1)==2,  V.pinfo(3,:) = 0;            end
+%-Field 'pinfo'
+%--------------------------------------------------------------------------
+if ~isfield(V,'pinfo') || isempty(V.pinfo)
+    V.pinfo      = [Inf Inf 0]';
+end
+if size(V.pinfo,1)==2, V.pinfo(3,:) = 0; end
 
-V.fname  = deblank(V.fname);
-ext      = spm_file(V.fname,'ext');
-
+ext = spm_file(V.fname,'ext');
 switch ext
 case {'img'}
     minoff = 0;
 case {'nii'}
     minoff = 352; % or 544 for NIfTI-2
 otherwise
-    error(['".' ext '" is not a recognised extension.']);
+    error('".%s" is not a recognised extension.',ext);
 end
 bits   = spm_type(V.dt(1),'bits');
 minoff = minoff + ceil(prod(V.dim(1:2))*bits/8)*V.dim(3)*(V.n(1)-1+V.n(2)-1);
 V.pinfo(3,1) = max(V.pinfo(3,:),minoff);
 
-if ~isfield(V,'descrip'), V.descrip = '';     end
-if ~isfield(V,'private'), V.private = struct; end
+%-Field 'descrip'
+%--------------------------------------------------------------------------
+if ~isfield(V,'descrip') || isempty(V.descrip)
+    V.descrip = '';
+end
 
+%-Field 'private'
+%--------------------------------------------------------------------------
+if ~isfield(V,'private') || isempty(V.private)
+    V.private = struct;
+end
+
+%-Create image volume
+%--------------------------------------------------------------------------
 dim    = [V.dim(1:3) V.n];
 dat    = file_array(V.fname,dim,[dt{1} '-' dt{2}],0,V.pinfo(1),V.pinfo(2));
 N      = nifti;
@@ -82,7 +109,7 @@ N.mat0 = V.mat;
 N.mat_intent  = 'Aligned';
 N.mat0_intent = 'Aligned';
 N.descrip = V.descrip;
-%try, N.timing = V.private.timing; end
+try, N.timing = V.private.timing; end
 
 try
     N0  = nifti(V.fname);
@@ -149,6 +176,7 @@ if ~isempty(N0)
             N.extras.mat(:,:,V.n(1)) = V.mat;
         end
     else
+        N.mat = N0.mat;
         if sum(sum((N0.mat-V.mat).^2))>1e-8
             N.extras.mat(:,:,V.n(1)) = V.mat;
         end

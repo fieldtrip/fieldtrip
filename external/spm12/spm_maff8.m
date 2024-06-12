@@ -17,46 +17,46 @@ function [M,ll,h] = spm_maff8(varargin)
 %           'subj'    - inter-subject registration
 %           'none'    - no regularisation
 %__________________________________________________________________________
-% Copyright (C) 2008-2014 Wellcome Trust Centre for Neuroimaging
 
 % John Ashburner
-% $Id: spm_maff8.m 6421 2015-04-23 16:54:25Z john $
+% Copyright (C) 2008-2022 Wellcome Centre for Human Neuroimaging
+
 
 [buf,MG,x,ff] = loadbuf(varargin{1:3});
 [M,ll,h]      = affreg(buf, MG, x, ff, varargin{4:end});
-
-return;
 
 
 %==========================================================================
 % function [buf,MG,x,ff] = loadbuf(V,samp,fwhm)
 %==========================================================================
 function [buf,MG,x,ff] = loadbuf(V,samp,fwhm)
-if ischar(V), V = spm_vol(V); end;
-d       = V(1).dim(1:3);
-vx      = sqrt(sum(V(1).mat(1:3,1:3).^2));  % Voxel sizes
+
+V       = spm_vol(V);
+MG      = V.mat;
+d       = V.dim(1:3);
+vx      = sqrt(sum(V.mat(1:3,1:3).^2));                       % Voxel sizes
 sk      = max([1 1 1],round(samp*[1 1 1]./vx));
 [x1,x2] = ndgrid(1:sk(1):d(1),1:sk(2):d(2));
 x3      = 1:sk(3):d(3);
+x       = {x1,x2,x3};
 
-% Fudge Factor - to (approximately) account for
-% non-independence of voxels
-s    = (fwhm+mean(vx))/sqrt(8*log(2));                 % Standard deviation
-ff   = prod(4*pi*(s./vx./sk).^2 + 1)^(1/2);
+% Fudge Factor
+% to (approximately) account for non-independence of voxels
+s       = (fwhm+mean(vx))/sqrt(8*log(2));              % Standard deviation
+ff      = prod(4*pi*(s./vx./sk).^2 + 1)^(1/2);
 
 % Old version of fudge factor
 %ff  = max(1,ff^3/prod(sk)/abs(det(V(1).mat(1:3,1:3))));
 
 % Load the image
-V         = spm_vol(V);
-o         = ones(size(x1));
-d         = [size(x1) length(x3)];
-g         = zeros(d);
+o       = ones(size(x1));
+d       = [size(x1) length(x3)];
+g       = zeros(d);
 spm_progress_bar('Init',d(3),'Loading volume','Planes loaded');
 for i=1:d(3)
     g(:,:,i) = spm_sample_vol(V,x1,x2,o*x3(i),0);
     spm_progress_bar('Set',i);
-end;
+end
 spm_progress_bar('Clear');
 spm_progress_bar('Init',d(3),'Initial Histogram','Planes complete');
 mn = min(g(:));
@@ -69,7 +69,7 @@ for i=1:d(3)
     p = round(p*sf(1)+sf(2));
     h = h + accumarray(p(:),1,[4000,1]);
     spm_progress_bar('Set',i);
-end;
+end
 spm_progress_bar('Clear');
 spm_progress_bar('Init',d(3),'Converting to uint8','Planes complete');
 h  = cumsum(h)/sum(h);
@@ -77,16 +77,18 @@ mn = (find(h>(0.0005),1)-sf(2))/sf(1);
 mx = (find(h>(0.9995),1)-sf(2))/sf(1);
 sf = [mn 1;mx 1]\[0;255];
 
-if spm_type(V.dt(1),'intt'),
+if spm_type(V.dt(1),'intt')
     scrand = V.pinfo(1);
+    warning('off','MATLAB:RandStream:ActivatingLegacyGenerators')
     rand('seed',1);
+    % rng(1,'twister'); % Replicable random numbers
 else
     scrand = 0;
 end
 
 cl = cell(1,d(3));
 buf = struct('nm',cl,'msk',cl,'g',cl);
-for i=1:d(3),
+for i=1:d(3)
     gz         = g(:,:,i);
     buf(i).msk = isfinite(gz) & gz~=0;
     buf(i).nm  = sum(buf(i).msk(:));
@@ -94,15 +96,12 @@ for i=1:d(3),
     gz         = gz(buf(i).msk)*sf(1)+sf(2);
     buf(i).g   = uint8(max(min(round(gz),255),0));
     spm_progress_bar('Set',i);
-end;
+end
 spm_progress_bar('Clear');
-MG = V.mat;
-x  = {x1,x2,x3};
-return;
 
 
 %==========================================================================
-% function [M,h0] = affreg(buf,MG,x,ff,tpm,M,regtyp)
+% function [M,h0] = affreg(buf,MG,x,ff,tpm,M,regtyp,maxit)
 %==========================================================================
 function [M,ll,h0] = affreg(buf,MG,x,ff,tpm,M,regtyp,maxit)
 % Mutual Information Registration
@@ -116,7 +115,7 @@ x3 = x{3};
 mu        = [zeros(6,1) ; mu];
 Alpha0    = [eye(6,6)*0.00001 zeros(6,6) ; zeros(6,6) isig]*ff;
 
-if ~isempty(M),
+if ~isempty(M)
     sol  = M2P(M);
 else
     sol  = mu;
@@ -128,10 +127,10 @@ krn  = spm_smoothkern(4,(-256:256)',0);
 spm_plot_convergence('Init','Registering','Log-likelihood','Iteration');
 h1       = ones(256,numel(tpm.dat));
 nsearch  = 12;
-for iter=1:200
+for iter=1:maxit
 
     stepsize = 1;
-    for search = 1:nsearch,
+    for search = 1:nsearch
         if iter>1 
             sol1    = sol - stepsize*dsol;
         else
@@ -170,28 +169,28 @@ for iter=1:200
         ll1 = 0;
         for subit=1:32
             h0  = zeros(256,numel(tpm.dat))+eps;
-            if ~rem(subit,4),
+            if ~rem(subit,4)
                 ll0 = ll1;
                 ll1 = 0;
             end
-            for i=1:length(x3),
+            for i=1:length(x3)
                 if ~buf(i).nm || ~buf(i).nm1, continue; end
                 gm    = double(buf(i).g(buf(i).msk1))+1;
                 q     = zeros(numel(gm),size(h0,2));
-                for k=1:size(h0,2),
+                for k=1:size(h0,2)
                     q(:,k) = h1(gm(:),k).*buf(i).b{k};
                 end
                 sq = sum(q,2) + eps;
-                if ~rem(subit,4),
+                if ~rem(subit,4)
                     ll1 = ll1 + sum(log(sq));
                 end
-                for k=1:size(h0,2),
+                for k=1:size(h0,2)
                     h0(:,k) = h0(:,k) + accumarray(gm,q(:,k)./sq,[256 1]);
                 end
             end
-            h1  = conv2((h0+eps)/sum(h0(:)),krn,'same');
+            h1  = conv2((h0+eps)/sum(h0(:)+eps),krn,'same');
             h1  = h1./(sum(h1,2)*sum(h1,1));
-            if ~rem(subit,4),
+            if ~rem(subit,4)
                 if (ll1-ll0)/sum(h0(:)) < 1e-5, break; end
             end
         end
@@ -209,7 +208,7 @@ for iter=1:200
         if abs(ll1-ll)<1e-4, return; end     % Seems to have converged
         if (ll1<ll)
             stepsize = stepsize*0.5;        % Worse solution. Try again
-            if search==nsearch, return; end; % Give up trying
+            if search==nsearch, return; end % Give up trying
         else
             break;                           % Better solution.  Carry on to next GN step.
         end
@@ -280,7 +279,6 @@ end
 
 spm_plot_convergence('Clear');
 M = P2M(sol);
-return;
 
 
 %==========================================================================
@@ -295,13 +293,14 @@ R  = V\J;
 
 lV = logm(V);
 lR = -logm(R);
-if sum(sum(imag(lR).^2))>1e-6, error('Rotations by pi are still a problem.'); end;
+if sum(sum(imag(lR).^2))>1e-6
+    error('Rotations by pi are still a problem.');
+end
 P       = zeros(12,1);
 P(1:3)  = M(1:3,4);
 P(4:6)  = lR([2 3 6]);
 P(7:12) = lV([1 2 3 5 6 9]);
 P       = real(P);
-return;
 
 
 %==========================================================================
@@ -328,7 +327,6 @@ T(ind) = P(7:12);
 V      = expm(T+T'-diag(diag(T)));
 
 M      = [V*R D ; 0 0 0 1];
-return;
 
 
 %==========================================================================
@@ -348,4 +346,3 @@ for i=1:12
     M1     = M1(1:3,:);
     R(:,i) = (M1(:)-M0(:))/dp;
 end
-return;

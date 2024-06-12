@@ -1,35 +1,37 @@
 function varargout = scl_slope(varargin)
-% Format
+% file_array's scl_slope property
 % For getting the value
 % dat = scl_slope(obj)
 %
 % For setting the value
 % obj = scl_slope(obj,dat)
-% _______________________________________________________________________
-% Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
+%__________________________________________________________________________
 
-%
-% $Id: scl_slope.m 1143 2008-02-07 19:33:33Z spm $
+% Copyright (C) 2005-2022 Wellcome Centre for Human Neuroimaging
 
 
-
-if nargin==2,
+if nargin==2
     varargout{1} = asgn(varargin{:});
-elseif nargin==1,
+elseif nargin==1
     varargout{1} = ref(varargin{:});
 else
     error('Wrong number of arguments.');
-end;
-return;
+end
 
+
+%==========================================================================
+% function dat = ref(obj)
+%==========================================================================
 function dat = ref(obj)
 dat = obj.scl_slope;
-return;
 
+
+%==========================================================================
+% function obj = asgn(obj,dat)
+%==========================================================================
 function obj = asgn(obj,dat)
-if isnumeric(dat), % && numel(dat)<=1,
+if isnumeric(dat) % && numel(dat)<=1,
     obj.scl_slope = double(dat);
 else
     error('"scl_slope" must be numeric.');
-end;
-return;
+end

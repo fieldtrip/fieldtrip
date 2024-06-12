@@ -16,11 +16,10 @@ function spm_dartel_kernel(job)
 % field would be decomposed by J = (J+J')/2 + (J-J')/2.
 % The elements of the symetric part (along with its trace)
 % would then be used to generate the kernel.
-%_______________________________________________________________________
-% Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
+%__________________________________________________________________________
 
 % John Ashburner
-% $Id: spm_dartel_kernel.m 4492 2011-09-16 12:11:09Z guillaume $
+% Copyright (C) 2006-2022 Wellcome Centre for Human Neuroimaging
 
 
 P      = strvcat(job.flowfields);
@@ -36,10 +35,10 @@ dm  = size(N(1).dat);
 n   = numel(N);
 Phi = zeros(n,n);
 spm_progress_bar('Init',n*n,'Generating kernel','Elements done');
-for i=1:n,
+for i=1:n
     x1 = single(squeeze(N(i).dat(:,:,:,end,:)));
     x1 = dartel3('vel2mom',x1,prm);
-    for j=i:n,
+    for j=i:n
         x2       =squeeze(N(j).dat(:,:,:,end,:,:));
         d        = x1(:)'*x2(:);
         Phi(i,j) = d;
@@ -55,4 +54,3 @@ for i=1:n,
     save(ofname,'Phi','input','typ', spm_get_defaults('mat.format'));
 end
 spm_progress_bar('Clear');
-

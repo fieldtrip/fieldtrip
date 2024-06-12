@@ -1,13 +1,12 @@
 function b0 = spm_load_priors(B)
-% Loads the tissue probability maps for segmentation
+% Load the tissue probability maps for segmentation
 % FORMAT b0 = spm_load_priors(B)
 % B  - structures of image volume information (or filenames)
 % b0 - a cell array of tissue probabilities
 %__________________________________________________________________________
-% Copyright (C) 2005-2011 Wellcome Trust Centre for Neuroimaging
 
 % John Ashburner
-% $Id: spm_load_priors.m 4873 2012-08-30 19:06:26Z john $
+% Copyright (C) 2005-2022 Wellcome Centre for Human Neuroimaging
 
 
 % deg = 3;

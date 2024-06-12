@@ -12,10 +12,10 @@ function [s,ds1,ds2,ds3] = spm_sample_priors8(tpm,x1,x2,x3)
 % T = spm_load_priors(V);
 % B = spm_sample_priors(T,X,Y,Z);
 %__________________________________________________________________________
-% Copyright (C) 2008-2014 Wellcome Trust Centre for Neuroimaging
 
 % John Ashburner
-% $Id: spm_sample_priors8.m 5962 2014-04-17 12:47:43Z spm $
+% Copyright (C) 2008-2022 Wellcome Centre for Human Neuroimaging
+
 
 deg  = tpm.deg;
 tiny = tpm.tiny;

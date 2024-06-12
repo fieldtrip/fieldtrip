@@ -17,10 +17,9 @@ function spm_progress_bar(action,varargin)
 % FORMAT spm_progress_bar('Clear')
 % Clear the 'Interactive' window.
 %__________________________________________________________________________
-% Copyright (C) 1996-2015 Wellcome Trust Centre for Neuroimaging
 
 % John Ashburner
-% $Id: spm_progress_bar.m 6383 2015-03-19 17:20:41Z guillaume $
+% Copyright (C) 1996-2022 Wellcome Centre for Human Neuroimaging
 
 
 persistent pbar;
@@ -40,12 +39,10 @@ switch lower(action)
         if nargin > 4, arg4 = varargin{4}; else arg4 = ' ';         end
         if any(arg4 == 't'), interp = 'tex'; else interp = 'none';  end
         pb = struct('pointer',get(Finter,'Pointer'),...
-                    'name',   get(Finter,'Name'),...
-                    'buffer', get(Finter,'DoubleBuffer'));
+                    'name',   get(Finter,'Name'));
         spm_progress_bar('Clear');
         set(Finter,'Pointer','watch');
         set(Finter,'Name',pb.name);
-        set(Finter,'DoubleBuffer','on'); % no effect since R2013a
         if ischar(arg2), arg2 = repmat({arg2},1,numel(arg1)); end
         if ischar(arg3), arg3 = repmat({arg3},1,numel(arg1)); end
         
@@ -131,9 +128,8 @@ switch lower(action)
         if isempty(Finter), pbar = []; return; end
         spm_figure('Clear',Finter);
         if isstruct(pbar)
-            set(Finter,'Pointer',     pbar.pointer);
-            set(Finter,'Name',        pbar.name);
-            set(Finter,'DoubleBuffer',pbar.buffer);
+            set(Finter,'Pointer', pbar.pointer);
+            set(Finter,'Name',    pbar.name);
         end
         pbar = [];
         drawnow;

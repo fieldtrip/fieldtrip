@@ -2,12 +2,11 @@ function out = spm_norm_population(job)
 % Obtain mapping from population average to ICBM space
 % FORMAT spm_norm_population(job)
 % job.template - name of population average template
-%
-%________________________________________________________
-% (c) Wellcome Trust Centre for NeuroImaging (2011)
+%__________________________________________________________________________
 
 % John Ashburner
-% $Id: spm_norm_population.m 5677 2013-10-10 18:59:11Z john $
+% Copyright (C) 2011-2022 Wellcome Centre for Human Neuroimaging
+
 
 % Hard coded stuff, that should maybe be customisable
 Ng  = nifti(fullfile(spm('Dir'),'toolbox','DARTEL','icbm152.nii'));
@@ -32,7 +31,7 @@ g  = zeros([df(1:3),nd],'single'); % Resliced ICBM
 
 % Images need to be same size, so reslice the MNI data
 M = inv(M0);
-for k=1:nd,
+for k=1:nd
     p          = Ng.dat(:,:,:,k);
     [i1,i2,i3] = ndgrid(1:df(1),1:df(2),1:df(3));
     j1 = M(1,1)*i1+M(1,2)*i2+M(1,3)*i3+M(1,4);
@@ -50,7 +49,7 @@ spm_plot_convergence('Init','Least-squares Nonlin. Registration',...
               'Objective Fun.', 'Iteration');
 
 prm1 = [prm(1) prm(2:4)/mean(sqrt(sum(Nf.mat(1:3,1:3).^2))) prm(5:end)];
-for it=1:12,
+for it=1:12
     [u,ll] = dartel3(u,f,g,prm1); % Gauss-Newton update for registration
     fprintf('%d \t%g\t%g\t%g\t%g\n',...
         it,ll(1),ll(2),ll(1)+ll(2),ll(3));
@@ -83,4 +82,3 @@ Nout.dat(:,:,:,1,2) = y2(:,:,:,2);
 Nout.dat(:,:,:,1,3) = y2(:,:,:,3);
 
 out.files{1} = defname;
-

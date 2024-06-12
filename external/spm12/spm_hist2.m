@@ -16,10 +16,10 @@ function H = spm_hist2(G,F,M,s)
 % Note that the function jitters the sampling of the data to reduce
 % interpolation artifacts.
 %__________________________________________________________________________
-% Copyright (C) 2001-2011 Wellcome Trust Centre for Neuroimaging
 
 % John Ashburner
-% $Id: spm_hist2.m 4156 2011-01-11 19:03:31Z guillaume $
+% Copyright (C) 2001-2022 Wellcome Centre for Human Neuroimaging
+
 
 %-This is merely the help file for the compiled routine
 error('spm_hist2.c not compiled - see Makefile')

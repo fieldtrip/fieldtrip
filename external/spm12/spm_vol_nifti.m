@@ -6,10 +6,9 @@ function V = spm_vol_nifti(P,n)
 %
 % V   - a structure containing the image volume information
 %__________________________________________________________________________
-% Copyright (C) 2005-2014 Wellcome Trust Centre for Neuroimaging
 
 % John Ashburner
-% $Id: spm_vol_nifti.m 6079 2014-06-30 18:25:37Z spm $
+% Copyright (C) 2005-2022 Wellcome Centre for Human Neuroimaging
 
 
 if nargin<2,  n = [1 1];      end

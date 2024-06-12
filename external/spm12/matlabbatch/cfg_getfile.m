@@ -13,7 +13,7 @@ function [t,sts] = cfg_getfile(varargin)
 %            'batch' - matlabbatch batch files (.m, .mat and XML)
 %            'dir'   - select a directory. By default, hidden ('.xyz') and
 %                      MATLAB class directories are not shown.
-%            'mat'   - Matlab .mat files or .txt files (assumed to contain
+%            'mat'   - MATLAB .mat files or .txt files (assumed to contain
 %                      ASCII representation of a 2D-numeric array)
 %            'xml'   - XML files
 %            Other strings act as a filter to regexp.  This means
@@ -88,7 +88,7 @@ function [t,sts] = cfg_getfile(varargin)
 % Copyright (C) 2007 Freiburg Brain Imaging
 
 % John Ashburner and Volkmar Glauche
-% $Id: cfg_getfile.m 6467 2015-06-03 14:47:41Z guillaume $
+% $Id: cfg_getfile.m 7067 2017-04-20 16:49:53Z guillaume $
 
 t = {};
 sts = false;
@@ -165,7 +165,7 @@ if nargin > 0 && ischar(varargin{1})
             end
             t   = cat(1,t{:});
             sts = cat(1,sts{:});
-        case 'prevdirs',
+        case 'prevdirs'
             if nargin > 1
                 prevdirs(varargin{2});
             end
@@ -261,7 +261,7 @@ wd = char(cpath(cellstr(wd)));
 [col1,col2,col3,lf,bf] = colours;
 
 % delete old selector, if any
-fg = findobj(0,'Tag',mfilename);
+fg = findobj(0,'-depth',1,'Tag',mfilename);
 if ~isempty(fg)
     delete(fg);
 end
@@ -507,7 +507,7 @@ uimenu('Label','Select All', 'Parent',c0,'Callback',@select_all);
 updatedir_fun = @(ob,ev)(update(char(cpath(subsref(get(ob,'String'),substruct('()',{get(ob,'Value')}))))));
 
 % Drives
-if strcmpi(computer,'PCWIN') || strcmpi(computer,'PCWIN64'),
+if ispc
     % get fh for lists
     tmp=uicontrol('style','text','string','X',lf{:},...
         'units','normalized','visible','off');
@@ -623,7 +623,7 @@ set(fg,'windowstyle', 'modal');
 
 waitfor(dne);
 drawnow;
-if ishandle(sel),
+if ishandle(sel)
     t  = get(sel,'String');
     if isempty(t)
         t = {''};
@@ -696,9 +696,9 @@ if isempty(c) || isequal(c,char(13))
     str = get(lb,'String');
     pd  = get(sib('edit'),'String');
     sel = str{vl};
-    if strcmp(sel,'..'),     % Parent directory
+    if strcmp(sel,'..')     % Parent directory
         [dr, odr] = fileparts(pd);
-    elseif strcmp(sel,'.'),  % Current directory
+    elseif strcmp(sel,'.')  % Current directory
         dr = pd;
         odr = '';
     else
@@ -726,7 +726,7 @@ if nargin<1
     dr = get(lb,'UserData');
 end
 [f,d] = listfiles(dr,getfilt);
-if isempty(d),
+if isempty(d)
     dr    = get(lb,'UserData');
     [f,d] = listfiles(dr,getfilt);
 else
@@ -739,10 +739,10 @@ set(sib('pardirs'),'String',pardirs(dr),'Value',1);
 set(sib('previous'),'String',ls,'Value',mch);
 set(sib('edit'),'String',dr);
 
-if ispc && numel(dr)>1 && dr(2)==':',
+if ispc && numel(dr)>1 && dr(2)==':'
     str = char(get(sib('drive'),'String'));
     mch = find(lower(str(:,1))==lower(dr(1)));
-    if isempty(mch),
+    if isempty(mch)
         str = listdrives(true);
         cstr = char(str);
         mch = find(lower(cstr(:,1))==lower(dr(1)));
@@ -786,7 +786,7 @@ function checkdone(selmsg)
 nsel = numel(get(sib('selected'),'String'));
 fb   = sib('files');
 lim  = get(fb,'Userdata');
-if nsel == 1, s = ''; else s = 's'; end
+if nsel == 1, s = ''; else, s = 's'; end
 if isequal(lim,[0 inf])
     msg('Selected %d file%s. (%s)',nsel,s,selmsg);
 elseif lim(2) == inf
@@ -815,7 +815,7 @@ function click_file_box(lb,varargin)
 c = get_current_char;
 if isempty(c) || isequal(c, char(13))
     vlo  = get(lb,'Value');
-    if isempty(vlo),
+    if isempty(vlo)
         msg('Nothing selected');
         return;
     end
@@ -841,7 +841,7 @@ nnew     = numel(new);
 nalready = numel(already);
 nsel     = min(lim(2)-nalready,nnew);
 set(sib('selected'),'String',[already(:);new(1:nsel)],'Value',[]);
-if nsel == 1, s = ''; else s = 's'; end
+if nsel == 1, s = ''; else, s = 's'; end
 checkdone(sprintf('Added %d/%d file%s.',nsel,nnew,s));
 return;
 %=======================================================================
@@ -916,7 +916,7 @@ if nargin<3, cdflag = true; end
 if nargin<2, filt = '';  end
 if nargin<1, dr   = '.'; end
 de      = dir(dr);
-if isempty(de),
+if isempty(de)
     d = {'..'};
     f = {};
     if domsg
@@ -1060,9 +1060,9 @@ for cp = 1:numel(pt)
 end
 % Assemble paths
 if ispc
-    t         = cellfun(@(pt1)fullfile(pt1{:}),pt,'UniformOutput',false);
+    t = cellfun(@(pt1)fullfile(pt1{:}),pt,'UniformOutput',false);
 else
-    t         = cellfun(@(pt1)fullfile(filesep,pt1{:}),pt,'UniformOutput',false);
+    t = cellfun(@(pt1)fullfile(filesep,pt1{:}),pt,'UniformOutput',false);
 end
 %=======================================================================
 
@@ -1098,9 +1098,9 @@ ind1 = cell(size(filt.tfilt));
 for k = 1:numel(filt.tfilt)
     [f1, ind1{k}] = do_filter(f,filt.tfilt(k).regex);
     if ~(isempty(f1) || isempty(filt.tfilt(k).fun))
-        [unused,prms]         = harvest(filt.tfilt(k).prms, filt.tfilt(k).prms, false, false);
-        [unused,ind2]         = filt.tfilt(k).fun('filter',f1,prms);
-        ind1{k}               = ind1{k}(ind2);
+        [unused,prms] = harvest(filt.tfilt(k).prms, filt.tfilt(k).prms, false, false);
+        [unused,ind2] = filt.tfilt(k).fun('filter',f1,prms);
+        ind1{k}       = ind1{k}(ind2);
     end
 end
 sel = unique(cat(1,ind1{:}));
@@ -1530,7 +1530,7 @@ end
 function obj = sib(tag)
 persistent fg;
 if isempty(fg) || ~ishandle(fg)
-    fg = findobj(0,'Tag',mfilename);
+    fg = findobj(0,'-depth',1,'Tag',mfilename);
 end
 obj = findobj(fg,'Tag',tag);
 return;

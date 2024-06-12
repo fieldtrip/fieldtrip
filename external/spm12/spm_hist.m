@@ -4,10 +4,9 @@ function h = spm_hist(ind,val)
 % ind - indices (unsigned byte)
 % val - weights
 %__________________________________________________________________________
-% Copyright (C) 1999-2014 Wellcome Trust Centre for Neuroimaging
 
 % John Ashburner
-% $Id: spm_hist.m 6157 2014-09-05 18:17:54Z guillaume $
+% Copyright (C) 1999-2022 Wellcome Centre for Human Neuroimaging
 
 
 %-This is merely the help file for the compiled routine

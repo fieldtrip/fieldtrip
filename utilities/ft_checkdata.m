@@ -566,17 +566,12 @@ if ~isempty(stype)
     stype = {stype};
   end
   
-  if isfield(data, 'grad') || isfield(data, 'elec') || isfield(data, 'opto')
-    if any(strcmp(ft_senstype(data), stype))
-      okflag = 1;
-    elseif any(cellfun(@ft_senstype, repmat({data}, size(stype)), stype))
-      % this is required to detect more general types, such as "meg" or "ctf" rather than "ctf275"
-      okflag = 1;
-    else
-      okflag = 0;
-    end
+  if any(strcmp(ft_senstype(data), stype))
+    okflag = 1;
+  elseif any(cellfun(@ft_senstype, repmat({data}, size(stype)), stype))
+    % this is required to detect more general types, such as "meg" or "ctf" rather than "ctf275"
+    okflag = 1;
   else
-    % the data does not contain a sensor array
     okflag = 0;
   end
   

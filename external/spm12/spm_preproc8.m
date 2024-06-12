@@ -58,7 +58,8 @@ function results = spm_preproc8(obj)
 %    results.vr     = obj.vr;
 %    results.ll     = Log-likelihood.
 %
-%_______________________________________________________________________
+%__________________________________________________________________________
+%
 % The general principles are described in the following paper, but some
 % technical details differ.  These include a different parameterisation
 % of the deformations, the ability to use multi-channel data and the
@@ -67,11 +68,12 @@ function results = spm_preproc8(obj)
 %
 % Ashburner J & Friston KJ. "Unified segmentation".
 % NeuroImage 26(3):839-851 (2005).
-%_______________________________________________________________________
-% Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
+%__________________________________________________________________________
 
 % John Ashburner
-% $Id: spm_preproc8.m 6798 2016-05-20 11:53:33Z john $
+% Copyright (C) 2012-2022 Wellcome Centre for Human Neuroimaging
+
+wp_reg    = 100; % Bias wp towards 1/Kb
 
 Affine    = obj.Affine;
 tpm       = obj.tpm;
@@ -98,12 +100,12 @@ kron = @(a,b) spm_krutil(a,b);
 
 % Some random numbers are used, so initialise random number generators to
 % give the same results each time.
-%rng('default');
-
 % These will eventually need changing
 % because using character strings to control RAND and RANDN is deprecated.
+warning('off','MATLAB:RandStream:ActivatingLegacyGenerators')
 randn('state',0);
 rand('state',0);
+% rng(0,'twister'); % Replicable random numbers
 
 % Fudge Factor - to (approximately) account for non-independence of voxels.
 % Note that variances add, and that Var[a*x + b*y] = a^2*Var[x] + b^2*Var[y]
@@ -124,7 +126,7 @@ ff   = prod(4*pi*(s./vx./sk).^2 + 1)^(1/2);
 spm_diffeo('boundary',1);
 
 % Initialise Deformation
-%-----------------------------------------------------------------------
+%--------------------------------------------------------------------------
 % This part is fiddly because of the regularisation of the warps.
 % The fact that displacement fields are only parameterised every few
 % voxels means that the functions in spm_diffeo need tweaking to
@@ -155,7 +157,7 @@ end
 
 
 % Initialise bias correction
-%-----------------------------------------------------------------------
+%--------------------------------------------------------------------------
 N    = numel(V);
 cl   = cell(N,1);
 args = {'C',cl,'B1',cl,'B2',cl,'B3',cl,'T',cl,'ll',cl};
@@ -202,9 +204,11 @@ if isfield(obj,'msk') && ~isempty(obj.msk)
 end
 
 % Load the data
-%-----------------------------------------------------------------------
+%--------------------------------------------------------------------------
 nm      = 0; % Number of voxels
 
+% For integer data types, add a tiny amount of random noise to prevent aliasing
+% effects due to "bias" correction.
 scrand = zeros(N,1);
 for n=1:N
     if spm_type(V(n).dt(1),'intt')
@@ -271,15 +275,10 @@ end
 
 % Construct a ``Wishart-style prior'' (vr0)
 vr0 = diag(mom2./mom0 - (mom1./mom0).^2)/Kb^2;
-%for n=1:N
-%    if spm_type(V(n).dt(1),'intt')
-%        vr0(n,n) = vr0(n,n) + 0.083*V(n).pinfo(1,1);
-%    end
-%end
 
 
 % Create initial bias field
-%-----------------------------------------------------------------------
+%--------------------------------------------------------------------------
 llrb = 0;
 for n=1:N
     B1 = chan(n).B1;
@@ -319,10 +318,10 @@ for iter=1:30
 
     if iter==1
         % Starting estimates for intensity distribution parameters
-        %-----------------------------------------------------------------------
+        %------------------------------------------------------------------
         if use_mog
             % Starting estimates for Gaussian parameters
-            %-----------------------------------------------------------------------
+            %--------------------------------------------------------------
             if isfield(obj,'mg') && isfield(obj,'mn') && isfield(obj,'vr')
                 mg = obj.mg;
                 mn = obj.mn;
@@ -339,7 +338,7 @@ for iter=1:30
                     for n=1:N
                         cr(:,n)  = double(buf(z).f{n}.*buf(z).bf{n});
                     end
-                    for k1=1:Kb, % Moments
+                    for k1=1:Kb % Moments
                         b           = double(buf(z).dat(:,k1));
                         mm0(k1)     = mm0(k1)     + sum(b);
                         mm1(:,k1)   = mm1(:,k1)   + (b'*cr)';
@@ -355,8 +354,7 @@ for iter=1:30
                 vr1 = zeros(N,N);
                 for k1=1:Kb
                     mn(:,k1)   = mm1(:,k1)/(mm0(k1)+tiny);
-                   %vr(:,:,k1) = (mm2(:,:,k1) - mm1(:,k1)*mm1(:,k1)'/mm0(k1))/(mm0(k1)+tiny);
-                    vr1 = vr1 + (mm2(:,:,k1) - mm1(:,k1)*mm1(:,k1)'/mm0(k1));
+                    vr1        = vr1 + (mm2(:,:,k1) - mm1(:,k1)*mm1(:,k1)'/mm0(k1));
                 end
                 vr1 = (vr1+N*vr0)/(sum(mm0)+N);
                 for k1=1:Kb
@@ -366,7 +364,7 @@ for iter=1:30
             end
         else
             % Starting estimates for histograms
-            %-----------------------------------------------------------------------
+            %--------------------------------------------------------------
             for n=1:N
                 maxval = -Inf;
                 minval =  Inf;
@@ -394,9 +392,9 @@ for iter=1:30
 
     for iter1=1:8
         if use_mog
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             % Estimate cluster parameters
-            %------------------------------------------------------------
+            %--------------------------------------------------------------
             for subit=1:20
                 oll  = ll;
                 mom0 = zeros(K,1)+tiny; % Initialise moments
@@ -416,7 +414,7 @@ for iter=1:30
                     for n=1:N
                         cr(:,n)  = double(buf(z).f{n}.*buf(z).bf{n});
                     end
-                    for k=1:K, % Update moments
+                    for k=1:K % Update moments
                         q(:,k)      = q(:,k);
                         mom0(k)     = mom0(k)     + sum(q(:,k));
                         mom1(:,k)   = mom1(:,k)   + (q(:,k)'*cr)';
@@ -434,7 +432,7 @@ for iter=1:30
                     vr(:,:,k) = (mom2(:,:,k) - mom1(:,k)*mom1(:,k)'/mom0(k) + N*vr0)/(mom0(k)+N); % US eq. 25
                 end
                 for k1=1:Kb
-                    wp(k1) = (sum(mom0(lkp==k1)) + 1)/(mgm(k1) + Kb); % bias the solution towards 1
+                    wp(k1) = (sum(mom0(lkp==k1)) + wp_reg*1)/(mgm(k1) + wp_reg*Kb); % bias the solution towards 1/Kb
                 end
                 wp = wp/sum(wp);
 
@@ -447,9 +445,9 @@ for iter=1:30
                 end
             end
         else
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             % Estimate histogram parameters
-            %------------------------------------------------------------
+            %--------------------------------------------------------------
 
             % Compute regularisation for histogram smoothing
             for n=1:N
@@ -492,7 +490,7 @@ for iter=1:30
                     end
                     clear cr
                 end
-                wp = (sum(chan(1).hist)+1)./(mgm+Kb);
+                wp = (sum(chan(1).hist)+wp_reg*1)./(mgm+wp_reg*Kb);
                 wp = wp/sum(wp);
 
                 my_fprintf('Hist:\t%g\t%g\t%g\n', ll,llr,llrb);
@@ -518,13 +516,13 @@ for iter=1:30
         ooll = ll;
 
 
-        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         % Estimate bias
         % Note that for multi-spectral data, the covariances among
         % channels are not computed as part of the second derivatives.
         % The aim is to save memory, and maybe make the computations
         % faster.
-        %------------------------------------------------------------
+        %------------------------------------------------------------------
 
         if use_mog
             pr = zeros(size(vr)); % Precisions
@@ -588,7 +586,7 @@ for iter=1:30
                         clear wt1 wt2 b3
                     end
 
-                    oll     = ll;
+                    oll     = ll;        % Previous log-likelihood - for checking improvements
                     C       = chan(n).C; % Inverse covariance of priors
                     oldT    = chan(n).T;
 
@@ -611,7 +609,7 @@ for iter=1:30
                         end
                         llrb = 0;
                         for n1=1:N, llrb = llrb + chan(n1).ll; end
-                        ll    = llr+llrb;
+                        ll   = llr+llrb;
                         for z=1:length(z0)
                             if ~buf(z).nm, continue; end
                             if use_mog
@@ -623,6 +621,8 @@ for iter=1:30
                             end
                             clear q
                         end
+
+                        % Decide whether to accept new estimates
                         if ll>=oll
                             spm_plot_convergence('Set',ll);
                             my_fprintf('Bias-%d:\t%g\t%g\t%g :o)\n', n, ll, llr,llrb);
@@ -678,9 +678,9 @@ for iter=1:30
 
 
 
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % Estimate deformations
-    %------------------------------------------------------------
+    %----------------------------------------------------------------------
     ll_const = 0;
     ll       = llr+llrb;
     if use_mog
@@ -794,28 +794,11 @@ for iter=1:30
 
         % Heavy-to-light regularisation
         if ~isfield(obj,'Twarp')
-            switch iter
-            case 1
-                prm = [param(1:3) 256*param(4:8)];
-            case 2
-                prm = [param(1:3) 128*param(4:8)];
-            case 3
-                prm = [param(1:3)  64*param(4:8)];
-            case 4
-                prm = [param(1:3)  32*param(4:8)];
-            case 5
-                prm = [param(1:3)  16*param(4:8)];
-            case 6
-                prm = [param(1:3)  8*param(4:8)];
-            case 7
-                prm = [param(1:3)  4*param(4:8)];
-            case 8
-                prm = [param(1:3)  2*param(4:8)];
-            otherwise
-                prm = [param(1:3)    param(4:8)];
-            end
+            scal   = 2^max(10-iter,0);
+            prm    = param;
+            prm(6) = param(6)*scal;
         else
-            prm = [param(1:3)   param(4:8)];
+            prm = [param(1:3) param(4:8)];
         end
 
         % Add in the first derivatives of the prior term
@@ -829,7 +812,7 @@ for iter=1:30
         for line_search=1:12
             Twarp1 = Twarp - armijo*Update; % Backtrack if necessary
 
-            % Recompute objective funciton
+            % Recompute objective function
             llr1   = -0.5*sum(sum(sum(sum(Twarp1.*bsxfun(@times,spm_diffeo('vel2mom',bsxfun(@times,Twarp1,1./sk4),prm),1./sk4)))));
             ll1    = llr1+llrb+ll_const;
             for z=1:length(z0)
@@ -873,7 +856,7 @@ for iter=1:30
         oll = ll;
     end
 
-    if iter>9 && ~((ll-ooll)>2*tol1*nm)
+    if iter>=10 && ~((ll-ooll)>2*tol1*nm)
         % Finished
         break
     end
@@ -901,9 +884,9 @@ else
 end
 results.ll      = ll;
 return;
-%=======================================================================
+%==========================================================================
 
-%=======================================================================
+%==========================================================================
 function t = transf(B1,B2,B3,T)
 if ~isempty(T)
     d2 = [size(T) 1];
@@ -913,9 +896,9 @@ else
     t  = zeros(size(B1,1),size(B2,1));
 end
 return;
-%=======================================================================
+%==========================================================================
 
-%=======================================================================
+%==========================================================================
 function [x1,y1,z1] = defs(Twarp,z,x0,y0,z0,M,msk)
 x1a = x0    + double(Twarp(:,:,z,1));
 y1a = y0    + double(Twarp(:,:,z,2));
@@ -929,9 +912,9 @@ x1  = M(1,1)*x1a + M(1,2)*y1a + M(1,3)*z1a + M(1,4);
 y1  = M(2,1)*x1a + M(2,2)*y1a + M(2,3)*z1a + M(2,4);
 z1  = M(3,1)*x1a + M(3,2)*y1a + M(3,3)*z1a + M(3,4);
 return;
-%=======================================================================
+%==========================================================================
 
-%=======================================================================
+%==========================================================================
 function L = log_likelihoods(f,bf,mg,mn,vr)
 K  = numel(mg);
 N  = numel(f);
@@ -946,9 +929,9 @@ for k=1:K
     d      = bsxfun(@minus,cr,mn(:,k)')/C;
     L(:,k) = log(mg(k)) - (N/2)*log(2*pi) - sum(log(diag(C))) - 0.5*sum(d.*d,2);
 end
-%=======================================================================
+%==========================================================================
 
-%=======================================================================
+%==========================================================================
 function L = log_likelihoods_nonpar(f,bf,chan)
 K  = size(chan(1).lik,1);
 Kb = size(chan(1).lik,2);
@@ -962,24 +945,24 @@ for n=1:N
         L(:,k1) = L(:,k1)+loglik(tmp,k1);
     end
 end
-%=======================================================================
+%==========================================================================
 
-%=======================================================================
+%==========================================================================
 function B = log_spatial_priors(B,wp)
 B   = bsxfun(@times,B,wp);
 B   = log(bsxfun(@times,B,1./sum(B,2)));
-%=======================================================================
+%==========================================================================
 
-%=======================================================================
+%==========================================================================
 function [Q,ll] = safe_softmax(Q)
 maxQ = max(Q,[],2);
 Q    = exp(bsxfun(@minus,Q,maxQ));
 sQ   = sum(Q,2);
 ll   = sum(log(sQ)+maxQ);
 Q    = bsxfun(@rdivide,Q,sQ);
-%=======================================================================
+%==========================================================================
 
-%=======================================================================
+%==========================================================================
 function [Q,ll] = latent(f,bf,mg,mn,vr,B,lkp,wp)
 B   = log_spatial_priors(B,wp);
 Q   = log_likelihoods(f,bf,mg,mn,vr);
@@ -990,17 +973,17 @@ for k1=1:Kb
     end
 end
 [Q,ll] = safe_softmax(Q);
-%=======================================================================
+%==========================================================================
 
-%=======================================================================
+%==========================================================================
 function [Q,ll] = latent_nonpar(f,bf,chan,B,wp)
 B      = log_spatial_priors(B,wp);
 Q      = log_likelihoods_nonpar(f,bf,chan);
 Q      = Q + B;
 [Q,ll] = safe_softmax(Q);
-%=======================================================================
+%==========================================================================
 
-%=======================================================================
+%==========================================================================
 function count = my_fprintf(varargin)
 verbose = false;
 if verbose
@@ -1008,8 +991,6 @@ if verbose
 else
     count = 0;
 end
-%=======================================================================
+%==========================================================================
 
-%=======================================================================
-
-
+%==========================================================================

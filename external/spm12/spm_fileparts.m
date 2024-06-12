@@ -8,17 +8,25 @@ function [pth,nam,ext,num] = spm_fileparts(fname)
 % ext    - extension
 % num    - comma separated list of values
 %__________________________________________________________________________
-% Copyright (C) 2005-2011 Wellcome Trust Centre for Neuroimaging
 
 % John Ashburner
-% $Id: spm_fileparts.m 4439 2011-08-25 17:47:07Z guillaume $
+% Copyright (C) 2005-2023 Wellcome Centre for Human Neuroimaging
 
 
-num = '';
 if ~ispc, fname = strrep(fname,'\',filesep); end
 [pth,nam,ext] = fileparts(fname);
-ind = find(ext==',');
+ind = strfind(ext,',');
 if ~isempty(ind)
-    num = ext(ind(1):end);
-    ext = ext(1:(ind(1)-1));
+    if isa(fname,'string') % R2016b onwards
+        num = extractAfter(ext,ind(1)-1);
+        ext = extractBefore(ext,ind(1));
+    else
+        num = ext(ind(1):end);
+        ext = ext(1:(ind(1)-1));
+    end
+else
+    num = '';
+    if isa(fname,'string') % R2016b onwards
+        num = string(num);
+    end
 end

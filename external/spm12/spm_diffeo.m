@@ -1,7 +1,7 @@
 function varargout = spm_diffeo(varargin)
-% Mex function called for image registration stuff
+% MEX function called for image registration stuff
 %
-%_______________________________________________________________________
+%__________________________________________________________________________
 %
 % FORMAT u = spm_diffeo('vel2mom', v, param)
 % v     - velocity (flow) field n1*n2*n3*3.
@@ -11,16 +11,15 @@ function varargout = spm_diffeo(varargin)
 %           - [4] Absolute displacements need to be penalised by a tiny
 %                 amount.  The first element encodes the amount of
 %                 penalty on these.  Ideally, absolute displacements
-%                 should not be penalised, but it is usually necessary
+%                 should not be penalised, but it is often necessary
 %                 for technical reasons.
 %           - [5] The `membrane energy' of the deformation is penalised,
 %                 usually by a relatively small amount. This penalises
 %                 the sum of squares of the derivatives of the velocity
 %                 field (ie the sum of squares of the elements of the
 %                 Jacobian tensors).
-%           - [6] The `bending energy' is penalised (3rd element). This
-%                 penalises the sum of squares of the 2nd derivatives of
-%                 the velocity.
+%           - [6] The `bending energy' is penalised. This penalises the
+%                 sum of squares of the 2nd derivatives of the parameters.
 %           - [7][8] Linear elasticity regularisation is also included.
 %                    The first parameter (mu) is similar to that for
 %                    linear elasticity, except it penalises the sum of
@@ -39,7 +38,7 @@ function varargout = spm_diffeo(varargin)
 % A is the large sparse matrix encoding some form of regularisation.
 % v and m are single precision floating point.
 %
-%_______________________________________________________________________
+%__________________________________________________________________________
 %
 % FORMAT v = spm_diffeo('mom2vel',g, param)
 % v     - the solution n1*n2*n3*3
@@ -55,7 +54,7 @@ function varargout = spm_diffeo(varargin)
 % v = inv(A)*g
 % g and v are both single precision floating point.
 %
-%_______________________________________________________________________
+%__________________________________________________________________________
 %
 % FORMAT v = spm_diffeo('fmg',H, g, param)
 % v     - the solution n1*n2*n3*3
@@ -72,7 +71,7 @@ function varargout = spm_diffeo(varargin)
 % v = inv(A+H)*g
 % H, g and v are all single precision floating point.
 %
-%_______________________________________________________________________
+%__________________________________________________________________________
 %
 % FORMAT v = spm_diffeo('cgs',H, g, param)
 % v     - the solution
@@ -90,7 +89,7 @@ function varargout = spm_diffeo(varargin)
 % v = inv(A+H)*g
 % H, g and v are all single precision floating point.
 %
-%_______________________________________________________________________
+%__________________________________________________________________________
 %
 % FORMAT F = spm_diffeo('kernel',d,prm)
 % d   - image dimensions
@@ -99,7 +98,14 @@ function varargout = spm_diffeo(varargin)
 % F   - The differential operator encoded as an image (or images).
 %       Convolving a velocity field by this will give the momentum.
 %
-%_______________________________________________________________________
+%       Note that a smaller (3D) kernel is obtained when the linear
+%       elasticity settings are all zero.  If any of the linear
+%       elasticity settings are non-zero, the resulting kernel is
+%       represented by a 5D array. For the 3D form, the voxel sizes
+%       need to be incorporated as an additional scaling of the kernel.
+%       See the code in spm_shoot_greens.m for an illustration.
+%
+%__________________________________________________________________________
 %
 % FORMAT y3 = spm_diffeo('comp',y1,y2)
 % y1, y2 - deformation fields n1*n2*n3*3.
@@ -118,15 +124,15 @@ function varargout = spm_diffeo(varargin)
 % Composition of two deformations, with their Jacobian fields.
 % All fields are single precision floating point.
 %
-%_______________________________________________________________________
+%__________________________________________________________________________
 %
 % FORMAT iy = spm_diffeo('invdef',y,d,M1,M2);
 %
 % iy - inverted deformation field of size d(1)*d(2)*d(3)*3.
 % y  - original deformation field.
-% M1 - An affine mapping from mm to voxels in the co-ordinate
+% M1 - An affine mapping from mm to voxels in the coordinate
 %      system of the inverse deformation field.
-% M2 - An affine mapping from voxels to mm in the co-ordinate
+% M2 - An affine mapping from voxels to mm in the coordinate
 %      system of the forward deformation field.
 %
 % Inversion of a deformation field.
@@ -140,7 +146,7 @@ function varargout = spm_diffeo(varargin)
 %    J. Ashburner, J. Andersson and K. J. Friston (2000).
 %    "Image Registration using a Symmetric Prior - in Three-Dimensions".
 %    Human Brain Mapping 9(4):212-225 (appendix).
-%_______________________________________________________________________
+%__________________________________________________________________________
 %
 % FORMAT [f,dfx,dfy,dfz] = spm_diffeo('bsplins', c, y,d)
 % c          - input image(s) of B-spline coefficients n1*n2*n3*n4
@@ -160,7 +166,7 @@ function varargout = spm_diffeo(varargin)
 % 
 % Note that nearest neighbour interpolation is used instead of 0th
 % degree B-splines, and the derivatives of trilinear interpolation are
-% returned insted of those of 1st degree B-splines.  The difference is
+% returned instead of those of 1st degree B-splines.  The difference is
 % extremely subtle.
 %
 % c, f and y are single precision floating point.
@@ -183,7 +189,7 @@ function varargout = spm_diffeo(varargin)
 %    "Interpolation Revisited"
 %    IEEE Transactions on Medical Imaging 19(7):739-758 (2000).
 %
-%_______________________________________________________________________
+%__________________________________________________________________________
 %
 % FORMAT c = spm_diffeo('bsplinc',f,d)
 %   f - an image
@@ -195,7 +201,7 @@ function varargout = spm_diffeo(varargin)
 % coefficients, c.  These coefficients are then passed to 'bsplins'
 % in order to sample the data using B-spline interpolation.
 %
-%_______________________________________________________________________
+%__________________________________________________________________________
 %
 % FORMAT f2 = spm_diffeo('samp', f1, y)
 % f1 - input image(s) n1*n2*n3*n4
@@ -205,8 +211,36 @@ function varargout = spm_diffeo(varargin)
 % Sample a function according to a deformation using trilinear interp.
 % f2 = f1(y)
 % f1, f2 and y are single precision floating point.
+% Uses boundary condiditions that wrap around (circulant - identical to
+% the 'pullc' option - but retained for backward compatibility).
 %
-%_______________________________________________________________________
+%__________________________________________________________________________
+%
+% FORMAT f2 = spm_diffeo('pull', f1, y)
+% f1 - input image(s) n1*n2*n3*n4
+% y  - points to sample n1*n2*n3*3
+% f2 - output image n1*n2*n3*n4
+%
+% Sample a function according to a deformation using trilinear interp.
+% f2 = f1(y)
+% f1, f2 and y are single precision floating point.
+% Values sampled outside the field of view of f1 are assigned a value
+% of NaN.
+%
+%__________________________________________________________________________
+%
+% FORMAT f2 = spm_diffeo('pullc', f1, y)
+% f1 - input image(s) n1*n2*n3*n4
+% y  - points to sample n1*n2*n3*3
+% f2 - output image n1*n2*n3*n4
+%
+% Sample a function according to a deformation using trilinear interp.
+% f2 = f1(y)
+% f1, f2 and y are single precision floating point.
+% Uses boundary condiditions that wrap around (circulant - identical to
+% the 'samp' option).
+%
+%__________________________________________________________________________
 %
 % FORMAT f2 = spm_diffeo('push', f1, y)
 % f1 - input image(s) n1*n2*n3*n4
@@ -214,10 +248,12 @@ function varargout = spm_diffeo(varargin)
 % f2 - output image n1*n2*n3*n4
 %
 % Push values of a function according to a deformation.  Note that the
-% deformation should be the inverse of the one used with 'samp' or 'bsplins'.
-% f1, f2 and y are single precision floating point.
+% deformation should be the inverse of the one used with 'samp' or
+% 'bsplins'. f1, f2 and y are single precision floating point.
+% Voxels in f1 that would be pushed outside the field of view of f2 
+% are ignored.
 %
-%_______________________________________________________________________
+%__________________________________________________________________________
 %
 % FORMAT f2 = spm_diffeo('pushc', f1, y)
 % f1 - input image(s) n1*n2*n3*n4
@@ -225,10 +261,10 @@ function varargout = spm_diffeo(varargin)
 % f2 - output image n1*n2*n3*n4
 %
 % Push values of a function according to a deformation, but using
-% circulant boundary conditions.  Data wraps around.
+% circulant boundary conditions.  Data wraps around (circulant).
 % f1, f2 and y are single precision floating point.
 %
-%_______________________________________________________________________
+%__________________________________________________________________________
 %
 % FORMAT ut = spm_diffeo('pushg', u0, y)
 % u0 - input momentum n1*n2*n3*3
@@ -247,7 +283,7 @@ function varargout = spm_diffeo(varargin)
 % EPdiff equations used for geodesic shooting.
 % u0, ut and y are single precision floating point.
 %
-%_______________________________________________________________________
+%__________________________________________________________________________
 %
 % FORMAT f2 = spm_diffeo('resize', f1, dim)
 % f1  - input fields n1*n2*n3*n4
@@ -257,7 +293,7 @@ function varargout = spm_diffeo(varargin)
 % Resize a field according to dimensions dim.  This is a component of
 % the multigrid approach, and is used for prolongation.
 %
-%_______________________________________________________________________
+%__________________________________________________________________________
 %
 % FORMAT v2 = spm_diffeo('restrict', v1)
 % v1  - input fields n1*n2*n3*n4
@@ -266,7 +302,7 @@ function varargout = spm_diffeo(varargin)
 % Restricts a field such that its dimensions are approximately half
 % their original.  This is a component of the multigrid approach.
 %
-%_______________________________________________________________________
+%__________________________________________________________________________
 %
 % FORMAT J = spm_diffeo('def2jac',y)
 % y - Deformation field
@@ -274,7 +310,7 @@ function varargout = spm_diffeo(varargin)
 %
 % Compute Jacobian tensors from a deformation.
 %
-%_______________________________________________________________________
+%__________________________________________________________________________
 %
 % FORMAT J = spm_diffeo('def2det',y)
 % y - Deformation field
@@ -282,7 +318,7 @@ function varargout = spm_diffeo(varargin)
 %
 % Compute Jacobian determinants from a deformation.
 %
-%_______________________________________________________________________
+%__________________________________________________________________________
 %
 % FORMAT j = spm_diffeo('det',J)
 % J - Jacobian tensor field
@@ -290,7 +326,17 @@ function varargout = spm_diffeo(varargin)
 %
 % Compute determinants of Jacobian tensors.
 %
-%_______________________________________________________________________
+%__________________________________________________________________________
+%
+% FORMAT g = spm_diffeo('grad',v)
+% v  - velocity field
+% g  - gradient of velocity field
+%
+% The grad option can be applied to any collection of 3D volumes. If
+% the input has dimensions d1 x d2 x d3 x d4 x d5..., then the output
+% has dimensions d1 x d2 x d3 x (d4xd5...) x 3.
+%
+%__________________________________________________________________________
 %
 % FORMAT dv = spm_diffeo('div',v)
 % v  - velocity field
@@ -299,7 +345,7 @@ function varargout = spm_diffeo(varargin)
 % Computes divergence from velocity field.  This is indicative of rates
 % of volumetric expansion/contraction.
 %
-%_______________________________________________________________________
+%__________________________________________________________________________
 %
 % FORMAT [y,J] = spm_diffeo('smalldef',v,s)
 % v - velocity field
@@ -312,40 +358,54 @@ function varargout = spm_diffeo(varargin)
 % change in future to use some form of Pade approximation of the
 % small deformation.
 %
-%_______________________________________________________________________
+%__________________________________________________________________________
 %
-% FORMAT v3 = spm_diffeo('brc', v1, v2)
-% v1, v2, v3 - flow fields n1*n2*n3*3
+% FORMAT t = spm_diffeo('trapprox',H, param)
+% v     - the solution n1*n2*n3*3
+% H     - parameterisation of 2nd derivatives 
+% param - 10 parameters (settings)
+%         - [1][2][3] Voxel sizes
+%         - [4][5][6][7][8] Regularisation settings (see vel2mom).
+% t     - approximation of [trace((L+H)\L) trace((L+H)\H)];
 %
-% Lie Bracket.  Useful for many things
-% e.g. Baker-Campbell-Haussdorf series expansion.
-% The Lie bracket is denoted by
-% v3 = [v1,v2]
-% and on scalar fields, is computed by
-% v3 = J1*v2 - J2*v1, where J1 and J2 are the Jacobian
-% tensor fields. For matrices, the Lie bracket is simply
-% [A,B] = A*B-B*A
+% Generate an approximation of Trace((L+H)\L) and Trace((L+H)\H) for
+% to give a ball-park figure for the "degrees of freedom" in Laplace
+% approximations.  L is the regulariser in sparse matrix form.  The
+% approximation is a poor one, which assumes all the off-diagonals of L
+% are 0.
+% H is single precision floating point.
 %
-%_______________________________________________________________________
+%__________________________________________________________________________
 %
 % FORMAT v = spm_diffeo('dartel',v,g,f,param)
 % v     - flow field n1*n2*n3*3 (single precision float)
 % g     - first image n1*n2*n3*n4 (single precision float)
 % f     - second image n1*n2*n3*n4 (single precision float)
 % param - 9 parameters (settings)
-%         - [1] Regularisation type, can take values of
-%           - 0 Linear elasticity
-%           - 1 Membrane energy
-%           - 2 Bending energy
-%         - [2][3][4] Regularisation parameters
-%           - For "membrane energy", the parameters are
-%             lambda, unused and id.
-%           - For "linear elasticity", the parameters are
-%             mu, lambda, and id
-%           - For "bending energy", the parameters are
-%             lambda, id1 and id2, such that regularisation is by
-%             (-lambda*\grad^2 + id1)^2 + id2
-%         - [5] Levenberg-Marquardt regularisation
+%       - [1][2][3][4][5] Regularisation parameters
+%       - [1] Absolute displacements need to be penalised by a tiny
+%             amount.  The first element encodes the amount of
+%             penalty on these.  Ideally, absolute displacements
+%             should not be penalised.
+%       - [2] The `membrane energy' of the deformation is penalised,
+%             usually by a relatively small amount. This penalises
+%             the sum of squares of the derivatives of the velocity
+%             field (ie the sum of squares of the elements of the
+%             Jacobian tensors).
+%       - [3] The `bending energy' is penalised. This penalises the
+%             sum of squares of the 2nd derivatives of the velocity.
+%       - [4][5] Linear elasticity regularisation is also included.
+%                The first parameter (mu) is similar to that for
+%                linear elasticity, except it penalises the sum of
+%                squares of the Jacobian tensors after they have been
+%                made symmetric (by averaging with the transpose).
+%                This term essentially penalises length changes,
+%                without penalising rotations.
+%                The final term also relates to linear elasticity,
+%                and is the weight that denotes how much to penalise
+%                changes to the divergence of the velocities (lambda).
+%                This divergence is a measure of the rate of volumetric
+%                expansion or contraction.
 %         - [6] Number of Full Multigrid cycles
 %         - [7] Number of relaxation iterations per cycle
 %         - [8] K, such that 2^K time points are used to
@@ -366,7 +426,7 @@ function varargout = spm_diffeo(varargin)
 % difference between each scalar field + the sum of squares difference
 % between one minus the sum of the scalar fields.
 %
-%_______________________________________________________________________
+%__________________________________________________________________________
 %
 % FORMAT [y,J] = spm_diffeo('Exp', v, param)
 % v - flow field
@@ -384,17 +444,16 @@ function varargout = spm_diffeo(varargin)
 % using a scaling and squaring approach.  See the work of Arsigny
 % et al, or Cleve Moler's "19 Dubious Ways" papers.
 %
-%_______________________________________________________________________
+%__________________________________________________________________________
 %
 % Note that the boundary conditions are circulant throughout.
 % Interpolation is trilinear, except for the resize function
 % which uses a 2nd degree B-spline (without first deconvolving).
 %
-%_______________________________________________________________________
-% Copyright (C) 2012 Wellcome Trust Centre for Neuroimaging
+%__________________________________________________________________________
 
 % John Ashburner
-% $Id: spm_diffeo.m 4890 2012-09-03 15:19:46Z guillaume $
+% Copyright (C) 2012-2022 Wellcome Centre for Human Neuroimaging
 
 
 %-This is merely the help file for the compiled routine

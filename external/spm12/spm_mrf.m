@@ -33,19 +33,18 @@ function varargout = spm_mrf(varargin)
 % FORMAT spm_mrf(q,p,G,w)
 % This is the dodgy way of using the function, as it changes the RHS
 % argument (q) and can lead to some strange side effects.  This approach
-% would not be ebdorsed by the MathWorks, but it does save a bit of memory.
+% would not be endorsed by the MathWorks, but it does save a bit of memory.
 %
 %
 % The MRF updates are done using a red-black checkerboard scheme.  Each
 % voxel is updated by q = (exp(G'*a).*p)/sum(exp(G'*a).*p), where
 % vector a is computed from the number of neighbours of each type
 % (divided by 6). The contribution of each neighbour is scaled by w.
-%
-%_______________________________________________________________________
-% Copyright (C) 2010 Wellcome Trust Centre for Neuroimaging
+%__________________________________________________________________________
 
 % John Ashburner
-% $Id: spm_mrf.m 6881 2016-09-19 09:48:54Z john $
+% Copyright (C) 2010-2022 Wellcome Centre for Human Neuroimaging
+
 
 %-This is merely the help file for the compiled routine
 error('spm_mrf.c not compiled - see Makefile')

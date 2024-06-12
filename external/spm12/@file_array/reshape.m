@@ -1,21 +1,18 @@
 function a = reshape(b,varargin)
 % Overloaded reshape function for file_array objects
-% _______________________________________________________________________
-% Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
+%__________________________________________________________________________
 
-%
-% $Id: reshape.m 1143 2008-02-07 19:33:33Z spm $
+% Copyright (C) 2005-2022 Wellcome Centre for Human Neuroimaging
 
 
-if length(struct(b))~=1, error('Can only reshape simple file_array objects.'); end;
+if length(struct(b))~=1, error('Can only reshape simple file_array objects.'); end
 
 args = [];
-for i=1:length(varargin),
+for i=1:length(varargin)
     args = [args varargin{i}(:)'];
-end;
-if prod(args)~=prod(b.dim),
+end
+if prod(args)~=prod(b.dim)
     error('To RESHAPE the number of elements must not change.');
-end;
+end
 a = b;
 a.dim = args;
-
