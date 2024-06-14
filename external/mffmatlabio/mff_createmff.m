@@ -24,10 +24,7 @@
 
 function events = mff_createmff(mffURI)
 
-p = fileparts(which('mff_importsignal.m'));
-warning('off', 'MATLAB:Java:DuplicateClass');
-javaaddpath(fullfile(p, 'MFF-1.2.2-jar-with-dependencies.jar'));
-warning('on', 'MATLAB:Java:DuplicateClass');
+mff_path;
 
 % Test script for matlab binding of Java based MFF file access library.
 % The MFFFactory class is used to access all resources contained in a

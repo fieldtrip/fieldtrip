@@ -3,10 +3,15 @@
 %                    from all files is imported.
 %
 % Usage:
-%   [events, timezone] = mff_importevents(mffFile);
+%   [events, timezone] = mff_importevents(mffFile, begTime, srate, correctevents);
 %
 % Inputs:
 %  mffFile - filename/foldername for the MFF file
+%  begTime - [float] time onset of the experiment
+%  srate   - [float] sampling rate
+%  correctevents - [0|1] correct (overwrite) event files who have special
+%                  characters and cannot be imported by the Java library
+%                  (default is 0 or false)
 %
 % Output:
 %  events   - EEGLAB event structure
@@ -27,14 +32,15 @@
 % You should have received a copy of the GNU General Public License
 % along with mffmatlabio.  If not, see <https://www.gnu.org/licenses/>.
 
-function [events, timeZone] = mff_importevents(mffFile, begTime, srate)
+function [events, timeZone] = mff_importevents(mffFile, begTime, srate, correctEvents)
 
 events = [];
 timeZone = [];
-p = fileparts(which('mff_importsignal.m'));
-warning('off', 'MATLAB:Java:DuplicateClass');
-javaaddpath(fullfile(p, 'MFF-1.2.2-jar-with-dependencies.jar'));
-warning('on', 'MATLAB:Java:DuplicateClass');
+mff_path;
+
+if nargin < 4
+    correctEvents = false;
+end
 
 % create a factory
 mfffactorydelegate = javaObject('com.egi.services.mff.api.LocalMFFFactoryDelegate');
@@ -55,11 +61,29 @@ if ~exist('vararg2str', 'file')
 end
 
 for iEvent = 1:length(eventFile)
-    eventtrackfilename = fullfile(mffFile, eventFile(iEvent).name);
+
+    if eventFile(iEvent).bytes == 0
+        fprintf(2, 'Empty event file detected %s\n', fullfile( eventFile(iEvent).folder, eventFile(iEvent).name));
+        continue
+    end
+    eventtrackfilename = fullfile( eventFile(iEvent).folder, eventFile(iEvent).name);
+
+    if correctEvents
+        disp('Overwriting event files and removing special characters');
+        fixcharabove128(eventtrackfilename);
+    end
+    
     eventtracktype = javaObject('com.egi.services.mff.api.MFFResourceType', javaMethod('valueOf', 'com.egi.services.mff.api.MFFResourceType$MFFResourceTypes', 'kMFF_RT_EventTrack'));
     eventtrackObj = mfffactory.openResourceAtURI(eventtrackfilename, eventtracktype);
+
+    % scan file and rewrite special characters
     
-    if eventtrackObj.loadResource()
+    try
+        res = eventtrackObj.loadResource();
+    catch
+        error('Error loading event file. Try calling the function pop_mffimport from the command line and set the option to correct events.');
+    end
+    if res
         
         name      = eventtrackObj.getName();
         trackType = eventtrackObj.getTrackType();
@@ -97,8 +121,14 @@ for iEvent = 1:length(eventFile)
                 
                 % compute latency in days with ms -> convert to samples
                 % eventCount = 1; 
-                events(eventCount).latency = (mff_decodetime(events(eventCount).begintime)-begTime)*multiplier;
-                
+                if events(eventCount).relativebegintime > 0 % for data epochs, this is required
+                    events(eventCount).latency = events(eventCount).relativebegintime / 1000000 * srate;
+                    % see bug 44, STAT events are supposed to be 42 ms
+                    % before the time locking events, this fixes the problem
+                else
+                    events(eventCount).latency = (mff_decodetime(events(eventCount).begintime)-begTime)*multiplier;
+                end
+
                 % dual time recoding
 %                 tmp = mff_encodetime(events(eventCount).latency/multiplier+begTime, '08:00')
 %                 fprintf('%s\n%s\n', events(eventCount).begintime, tmp);
@@ -192,4 +222,23 @@ end
 % 
 % events = struct('begintime', begintime, 'latency', begintime2, 'classid', classid, 'code', code, 'type', code, 'description', description, ...
 %                 'label', label, 'duration', duration, 'relativebegintime', relativebegintime, 'sourcedevice', sourcedevice, 'eventkeys', eventkeys);
+
+function fixcharabove128(fileName1)
+
+fileName2 = [ fileName1 'x' ];
+fid1 = fopen(fileName1, 'r');
+fid2 = fopen(fileName2, 'w');
+if fid1 == -1, error('Cannot open file %s', fileName1); end
+if fid2 == -1, error('Cannot open file %s', fileName2); end
+
+while ~feof(fid1)
+    str = fgetl(fid1);
+    str(str > 128) = ' ';
+    fprintf(fid2, '%s\n', str);
+end
+fclose(fid1);
+fclose(fid2);
+delete(fileName1);
+copyfile(fileName2, fileName1);
+delete(fileName2);
 

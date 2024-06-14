@@ -29,11 +29,7 @@ function [chanlocs, reference, rVal] = mff_importcoordinates(mffFile)
 
 chanlocs = [];
 rVal = true;
-
-p = fileparts(which('mff_importsignal.m'));
-warning('off', 'MATLAB:Java:DuplicateClass');
-javaaddpath(fullfile(p, 'MFF-1.2.2-jar-with-dependencies.jar'));
-warning('on', 'MATLAB:Java:DuplicateClass');
+mff_path;
 
 % Create an MFFFactory object.
 mfffactorydelegate = javaObject('com.egi.services.mff.api.LocalMFFFactoryDelegate');
