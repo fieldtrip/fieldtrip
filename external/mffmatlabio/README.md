@@ -42,6 +42,33 @@
 
 # Revision history
 ----------------
+Version 5.0
+- Fix event latency with segmented data files
+- Add aditional checks for epoch limits
+- Improve event time resolution
+
+Version 4.1
+- Avoid errors when discontinuities are present
+- Automatically detect channel location for source localization
+
+Version 4.0
+- Handle removed channels for exporting
+- Fixed compilation issues
+- Remove non-handle event characters
+- Handle conflict with MFFimport plugin
+
+Version 3.7
+- Rename menu
+- Error message when MFF files contain XML characters
+
+Version 3.6
+- Fix exporting datasets with no events
+
+Version 3.5
+- Fixes issues associated with standalone use
+- Fix importing multiple datasets;
+- Now import subject information into EEGLAB
+
 Version 3.4
 - Fixes issues associated with reading data under Fieldtrip
 
