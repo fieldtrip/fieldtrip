@@ -185,7 +185,6 @@ insideindx = find(sourcemodel.inside);
 % check whether units are equal (NOTE: this was previously not required,
 % this check can be removed if the underlying bug is resolved. See
 % http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2387
-sourcemodel.unit = 'mm';
 if ~isfield(headmodel, 'unit') || ~isfield(sourcemodel, 'unit') || ~isfield(sens, 'unit')
   ft_warning('cannot determine the units of all geometric objects required for leadfield computation (headmodel, sourcemodel, sensor configuration). THIS CAN LEAD TO WRONG RESULTS! (refer to http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2387)');
 else
