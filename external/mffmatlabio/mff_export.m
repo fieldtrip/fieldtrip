@@ -36,6 +36,70 @@ end
 [filePath, fileName] = fileparts( outputFile);
 outputFile = fullfile(filePath, [ fileName '.mff' ]);
 
+% check missing channels and reconstruct data 
+if isfield(EEG.etc, 'layout')
+    
+    if isfield(EEG.chaninfo, 'removedchans') && ~isempty(EEG.chaninfo.removedchans)
+
+            mff_path;
+            badchans1 = javaObject('com.egi.services.mff.api.ChannelStatus');
+            badchans1.setExclusion('badChannels');
+            badchans1.setBinIndex(0);    
+            jList1 = javaObject('java.util.ArrayList');
+            
+            if isfield(EEG.etc, 'info2')
+            badchans2 = javaObject('com.egi.services.mff.api.ChannelStatus');
+            badchans2.setExclusion('badChannels');
+            badchans2.setBinIndex(0);    
+            jList2 = javaObject('java.util.ArrayList');
+            
+            % add back the channels, zero them out and add special structure
+            for iRm = 1:length(EEG.chaninfo.removedchans)
+                posInsert = str2double(EEG.chaninfo.removedchans(iRm).labels(2:end));
+                if isnan(posInsert) % PNS chan
+                    posInsert = size(EEG.data,1)+1;
+                end
+                
+                % insert data
+                EEG.data(posInsert+1:end+1,:) = EEG.data(posInsert:end,:);
+                EEG.data(posInsert,:) = 0;
+
+                % insert channel
+                EEG.chanlocs(posInsert+1:end+1) = EEG.chanlocs(posInsert:end);
+                EEG.chanlocs(posInsert) = EEG.chaninfo.removedchans(iRm);
+                chanint = zeros(1,1,'int32'); 
+                
+                % deal with PNS channels
+                if strcmpi(EEG.chanlocs(posInsert).type, 'PNS')
+                    alltypes = { EEG.chanlocs(1:posInsert-1).type };
+                    alltypes = cellfun(@(x)num2str(x), alltypes, 'uniformoutput', false);
+                    inds = strmatch('pns', lower(alltypes), 'exact');
+                    chanint(1) = length(inds)+1; % index of PNS channel
+                    jList2.add(chanint);
+                else
+                    chanint(1) = posInsert;
+                    jList1.add(chanint);
+                end
+            end
+    
+            % save channel list to remove
+            EEG.nbchan = size(EEG.data,1);
+            if isfield(EEG.etc, 'info1') && ~isempty(jList1.isEmpty)
+                badchans1.setChannels(jList1);
+                EEG.etc.info1.ChannelStatus = badchans1; 
+            end
+            if ~isempty(jList2.isEmpty)
+                badchans2.setChannels(jList2);
+                if isfield(EEG.etc, 'info2')
+                    EEG.etc.info2.ChannelStatus = badchans2; 
+                else
+                    EEG.etc.info1.ChannelStatus = badchans2; % only PNS
+                end
+            end
+        end
+    end
+end
+           
 % delete folder if it exist
 if exist(outputFile)
     rmdir(outputFile, 's');
