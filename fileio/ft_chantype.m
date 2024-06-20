@@ -138,9 +138,6 @@ end
 if ~any(strcmp(chantype, 'unknown'))
   % all channels are known, don't bother doing any further heuristics
   
-elseif ft_senstype(input, 'unknown')
-  % don't bother doing subsequent checks to determine the chantype
-  
 elseif isheader && issubfield(input, 'orig.channames')
   % this is for Neuromag or Babysquid systems
   % channames-KI is the channel kind, 1=meg, 202=eog, 2=eeg, 3=trigger (I am not sure, but have inferred this from a single test file)
@@ -203,6 +200,10 @@ elseif isheader && issubfield(input, 'orig.chs.coil_type')
     end
   end
   
+elseif ft_senstype(input, 'unknown')
+  % don't bother doing subsequent checks to determine the chantype
+  % NOTE: this skips the evaluation of the subsequent 'elseif' statements   
+
 elseif ft_senstype(input, 'babysquid74')
   % the name can be something like "MEG 001" or "MEG001" or "MEG 0113" or "MEG0113"
   % i.e. with two or three digits and with or without a space
