@@ -585,7 +585,7 @@ switch eventformat
     end
 
     try
-      % read the trigger codes from the STIM channel, usefull for (pseudo) continuous data
+      % read the trigger codes from the STIM channel, useful for (pseudo) continuous data
       % this splits the trigger channel into the lowers and highest 16 bits,
       % corresponding with the front and back panel of the electronics cabinet at the Donders Centre
       [backpanel, frontpanel] = read_ctf_trigger(filename);
