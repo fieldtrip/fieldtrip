@@ -92,6 +92,12 @@ else
   pedantic = false;
 end
 
+if isfield(cfg, 'checkstring')
+  checkstring = cfg.checkstring;
+else
+  checkstring = 'no';
+end
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % rename old to new options, give warning
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -607,6 +613,17 @@ if ~isempty(createsubcfg)
   end
 end
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% checkstring, i.e. convertStringsToChar
+%
+% Converts "strings" to 'chars' if necessary.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+if istrue(checkstring)
+  cfg = checkstringfun(cfg);
+end
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % checkinside, i.e. inside2logical
 %
@@ -749,6 +766,35 @@ for i=1:numel(fieldsorig)
     end
   end % for numel(cfg)
 end % for each of the fieldsorig
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function [cfg] = checkstringfun(cfg)
+
+c = struct2cell(cfg);
+s = fieldnames(cfg);
+t = cellfun(@class, c, 'UniformOutput', false);
+
+% convert
+[c{:}] = convertStringsToChars(c{:});
+cfg = cell2struct(c,s,1);
+
+% deal with cell-arrays
+if any(strcmp(t, 'cell'))
+  fn = s(strcmp(t, 'cell'));
+  for k = 1:numel(fn)
+    [cfg.(fn{k}){:}] = convertStringsToChars(cfg.(fn{k}){:});
+  end
+end
+
+% recurse
+if any(strcmp(t, 'struct'))
+  fn = s(strcmp(t,'struct'));
+  for k = 1:numel(fn)
+    cfg.(fn{k}) = checkstringfun(cfg.(fn{k}));
+  end
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION converts a cell-array of structure arrays into a structure array

@@ -14,6 +14,7 @@ function ft_defaults
 %   ft_default.checkconfig       = string, can be 'pedantic', 'loose', 'silent' (default = 'loose')
 %   ft_default.checkpath         = string, can be 'pedantic', 'once', 'no' (default = 'pedantic')
 %   ft_default.checksize         = number in bytes, can be inf (default = 1e5)
+%   ft_default.checkstring       = string, can be 'yes' or 'no' (default = 'yes'), convert "strings" in cfg to 'chars'
 %   ft_default.showlogo          = string, can be 'yes' or 'no' (default = 'yes')
 %   ft_default.showcallinfo      = string, can be 'yes' or 'no' (default = 'yes')
 %   ft_default.trackcallinfo     = string, can be 'yes' or 'no' (default = 'yes')
@@ -99,6 +100,7 @@ end
 if ~isfield(ft_default, 'checkconfig'),       ft_default.checkconfig    = 'loose';    end % pedantic, loose, silent
 if ~isfield(ft_default, 'checkpath'),         ft_default.checkpath      = 'pedantic'; end % pedantic, once, no
 if ~isfield(ft_default, 'checksize'),         ft_default.checksize      = 1e5;        end % number in bytes, can be inf
+if ~isfield(ft_default, 'checkstring'),       ft_default.checkstring    = 'yes';      end % yes or no
 if ~isfield(ft_default, 'showlogo'),          ft_default.showlogo       = 'yes';      end % yes or no, this is relevant for SPM and EEGLAB
 if ~isfield(ft_default, 'showcallinfo'),      ft_default.showcallinfo   = 'yes';      end % yes or no, this is used in ft_pre/postamble_provenance
 if ~isfield(ft_default, 'keepprevious'),      ft_default.keepprevious   = 'yes';      end % yes, no, this is used in ft_postamble_previous

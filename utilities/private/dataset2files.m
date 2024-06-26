@@ -38,6 +38,11 @@ if iscell(filename)
   return
 end
 
+if isstring(filename)
+  % the below code does not deal well with matlab strings (i.e. "" vs. '')
+  filename = char(filename);
+end
+
 if isempty(format)
   format = ft_filetype(filename);
 end
