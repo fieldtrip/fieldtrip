@@ -772,6 +772,12 @@ end % for each of the fieldsorig
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [cfg] = checkstringfun(cfg)
 
+if ~iscolumn(cfg)
+  dotranspose = true;
+  cfg = cfg';
+else
+  dotranspose = false;
+end
 c = struct2cell(cfg);
 s = fieldnames(cfg);
 t = cellfun(@class, c, 'UniformOutput', false);
@@ -782,18 +788,23 @@ cfg = cell2struct(c,s,1);
 
 % deal with cell-arrays
 if any(strcmp(t, 'cell'))
-  fn = s(strcmp(t, 'cell'));
+  fn = s(strcmp(t(:,1), 'cell')); % assumes uniformity along the columns of t
   for k = 1:numel(fn)
-    [cfg.(fn{k}){:}] = convertStringsToChars(cfg.(fn{k}){:});
+    for m = 1:numel(cfg)
+      [cfg(m).(fn{k}){:}] = convertStringsToChars(cfg(m).(fn{k}){:});
+    end
   end
 end
 
-% recurse
 if any(strcmp(t, 'struct'))
-  fn = s(strcmp(t,'struct'));
+  fn = s(strcmp(t(:,1),'struct'));
   for k = 1:numel(fn)
     cfg.(fn{k}) = checkstringfun(cfg.(fn{k}));
   end
+end
+
+if dotranspose
+  cfg = cfg';
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
