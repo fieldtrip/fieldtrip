@@ -7,7 +7,7 @@ function ft_plot_layout(layout, varargin)
 % where the layout is a FieldTrip structure obtained from FT_PREPARE_LAYOUT.
 %
 % Additional options should be specified in key-value pairs and can be
-%   'chanindx'    = logical vector or vecotr of indices. Which channels to plot (default is all)
+%   'chanindx'    = logical vector or vector of indices. Which channels to plot (default is all)
 %   'point'       = 'yes' or 'no' (default 'yes'), plot markers for sensors, comment and scale
 %   'box'         = 'yes' or 'no' (default 'yes'), plot boxes around the sensors, comment and scale
 %   'label'       = 'yes' or 'no' (default 'yes'), plot the labels of the sensors, comment and scale
