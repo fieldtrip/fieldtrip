@@ -177,19 +177,18 @@ if numoptions==0 && isempty(cfg.minlength) && strcmp(cfg.trials, 'all')
   ft_error('you should specify at least one configuration option');
 end
 
-% check that the number of chosen trials matches the number of method
-% parameters provided
+% check that the number of chosen trials matches the number of method parameters provided
 if length(cfg.offset)>1 && length(cfg.offset)~=Ntrial
-    ft_error('inconsitent number of trials and offsets');
+  ft_error('inconsistent number of trials and offsets');
 end
 if length(cfg.begsample)>1 && length(cfg.begsample)~=Ntrial
-    ft_error('inconsitent number of trials and begsamples');
+  ft_error('inconsistent number of trials and begsamples');
 end
 if length(cfg.endsample)>1 && length(cfg.endsample)~=Ntrial
-    ft_error('inconsitent number of trials and begsamples');
+  ft_error('inconsistent number of trials and begsamples');
 end
 if size(cfg.toilim, 1)>1 && size(cfg.toilim, 1)~=Ntrial
-    ft_error('inconsitent number of trials and toilims');
+  ft_error('inconsistent number of trials and toilims');
 end
 
 % start processing
