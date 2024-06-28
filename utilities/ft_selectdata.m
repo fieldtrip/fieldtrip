@@ -373,7 +373,12 @@ for i=1:numel(varargin)
     if strcmp(datfield{j}, 'sampleinfo') && ~isequal(cfg.latency, 'all')
       if iscell(seltime{i}) && numel(seltime{i})==size(varargin{i}.sampleinfo,1)
         for k = 1:numel(seltime{i})
-          varargin{i}.sampleinfo(k,:) = varargin{i}.sampleinfo(k,1) - 1 + seltime{i}{k}([1 end]);
+          if ~isempty(seltime{i}{k})
+            varargin{i}.sampleinfo(k,:) = varargin{i}.sampleinfo(k,1) - 1 + seltime{i}{k}([1 end]);
+          else
+            % it could be that the latency selection has resulted in an empty trial
+            varargin{i}.sampleinfo(k,:) = [nan nan];
+          end
         end
       elseif ~iscell(seltime{i}) && ~isempty(seltime{i}) && ~all(isnan(seltime{i}))
         nrpt       = size(varargin{i}.sampleinfo,1);
@@ -1107,8 +1112,6 @@ if isfield(cfg, 'frequency')
       cfg.frequency = [min(freqaxis) 0];
     elseif strcmp(cfg.frequency, 'maxabs')
       cfg.frequency = [-max(abs(freqaxis)) max(abs(freqaxis))];
-    elseif strcmp(cfg.frequency, 'zeromax')
-      cfg.frequency = [0 max(freqaxis)];
     elseif strcmp(cfg.frequency, 'zeromax')
       cfg.frequency = [0 max(freqaxis)];
     else
