@@ -146,6 +146,7 @@ cfg.sel50p         = ft_getopt(cfg, 'sel50p',    'no');
 cfg.feedback       = ft_getopt(cfg, 'feedback',  'text');
 cfg.mollify        = ft_getopt(cfg, 'mollify',   'no');
 cfg.patchsvd       = ft_getopt(cfg, 'patchsvd',  'no');
+cfg.checkinside    = ft_getopt(cfg, 'checkinside'); % default is set in FT_PREPARE_SOURCEMODEL
 
 cfg = ft_checkconfig(cfg, 'renamed', {'tightgrid',   'tight'});  % this is moved to cfg.sourcemodel.tight by the subsequent createsubcfg
 cfg = ft_checkconfig(cfg, 'renamed', {'sourceunits', 'unit'});   % this is moved to cfg.sourcemodel.unit by the subsequent createsubcfg
@@ -169,7 +170,7 @@ end
 [headmodel, sens, cfg] = prepare_headmodel(cfg, data);
 
 % construct the sourcemodel for which the leadfield will be computed
-tmpcfg           = keepfields(cfg, {'sourcemodel', 'mri', 'headshape', 'symmetry', 'smooth', 'threshold', 'spheremesh', 'inwardshift', 'xgrid' 'ygrid', 'zgrid', 'resolution', 'tight', 'warpmni', 'template', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
+tmpcfg           = keepfields(cfg, {'checkinside', 'sourcemodel', 'mri', 'headshape', 'symmetry', 'smooth', 'threshold', 'spheremesh', 'inwardshift', 'xgrid' 'ygrid', 'zgrid', 'resolution', 'tight', 'warpmni', 'template', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
 tmpcfg.headmodel = headmodel;
 if ft_senstype(sens, 'eeg')
   tmpcfg.elec = sens;

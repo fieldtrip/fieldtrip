@@ -40,7 +40,7 @@ dataformat   = ft_getopt(varargin, 'dataformat'         );
 begsample    = ft_getopt(varargin, 'begsample'          );
 endsample    = ft_getopt(varargin, 'endsample'          );
 chanindx     = ft_getopt(varargin, 'chanindx'           ); % specify -1 in case you don't want to detect triggers
-detectflank  = ft_getopt(varargin, 'detectflank'        ); % can be up, updiff, down, downdiff, both, any, biton, bitoff
+detectflank  = ft_getopt(varargin, 'detectflank'        ); % can be up, updiff, down, downdiff, both, any, biton, bitoff, optionally appended with _split16bit
 denoise      = ft_getopt(varargin, 'denoise',      true );
 trigshift    = ft_getopt(varargin, 'trigshift',    0); % causes the value of the trigger to be obtained from a sample that is shifted N samples away from the actual flank
 trigpadding  = ft_getopt(varargin, 'trigpadding',  true );
@@ -215,8 +215,10 @@ if ~isempty(threshold)
     for i = 1:size(dat,1)
       threshold_value = eval([threshold '(dat(i,:))']);
       % discretize the signal
-      dat(i,dat(i,:)< threshold_value) = 0;
-      dat(i,dat(i,:)>=threshold_value) = 1;
+      below = dat(i,:)< threshold_value;
+      above = dat(i,:)>=threshold_value;
+      dat(i,below) = 0;
+      dat(i,above) = 1;
     end
   else
     % discretize the signal
@@ -253,9 +255,24 @@ if isempty(detectflank)
   end
 end
 
+label = hdr.label(chanindx);
+if contains(detectflank, 'split16bit')
+  % split the trigger channel into lower and higher (bitshifted) trigger channels. 
+  % this is the same functionality as read_ctf_trigger, consider merging
+  dat_high = fix(dat / 2^16);
+  dat_low  = double(bitand(uint32(dat), 2^16-1));
+  dat      = [dat_low; dat_high];
+  
+  label = cat(1, cellfun(@sprintf, repmat({'%s_low16bit'},numel(label),1), label, 'UniformOutput', false), ...
+    cellfun(@sprintf, repmat({'%s_high16bit'},numel(label),1), label, 'UniformOutput', false));
+
+  tok = tokenize(detectflank, '_');
+  detectflank = tok{1};
+end
+
 for i = 1:size(dat,1)
   % process each trigger channel independently
-  channel = hdr.label{chanindx(i)};
+  channel = label{i};
   trig    = dat(i,:);
   
   if trigpadding

@@ -9,17 +9,19 @@ function Vo = spm_imcalc(Vi,Vo,f,flags,varargin)
 %                 ( and can be omitted from Vo on input.  See spm_vol     )
 %                 or output image filename
 % f             - MATLAB expression to be evaluated
-% flags         - cell array of flags: {dmtx,mask,interp,dtype}
+% flags         - cell array of flags: {dmtx,mask,interp,dtype,descrip}
 %                 or structure with these fieldnames
-%      dmtx     - Read images into data matrix?
+%      dmtx     - read images into data matrix?
 %                 [defaults (missing or empty) to 0 - no]
 %      mask     - implicit zero mask?
-%                 [defaults (missing or empty) to 0]
+%                 [defaults (missing or empty) to 0 - no]
 %                  ( negative value implies NaNs should be zeroed )
 %      interp   - interpolation hold (see spm_slice_vol)
 %                 [defaults (missing or empty) to 0 - nearest neighbour]
 %      dtype    - data type for output image (see spm_type)
 %                 [defaults (missing or empty) to 4 - 16 bit signed shorts]
+%      descrip  - content of the 'descrip' field of the NIfTI header
+%                 [defaults (missing or empty) to 'spm - algebra']
 % extra_vars... - additional variables which can be used in expression
 %
 % Vo (output)   - spm_vol structure of output image volume after
@@ -72,18 +74,15 @@ function Vo = spm_imcalc(Vi,Vo,f,flags,varargin)
 % E.g. if c is a 1xn vector of weights, then for n images, using the (dmtx)
 % data-matrix version, the weighted sum can be computed using:
 %       Vi = spm_vol(spm_select(inf,'image'));
-%       Vo = 'output.img'
+%       Vo = 'output.nii'
 %       Q  = spm_imcalc(Vi,Vo,'c*X',{1},c)
 % Here we've pre-specified the expression and passed the vector c as an
 % additional variable (you'll be prompted to select the n images).
 %__________________________________________________________________________
-% Copyright (C) 1998-2011 Wellcome Trust Centre for Neuroimaging
 
 % John Ashburner & Andrew Holmes
-% $Id: spm_imcalc.m 6124 2014-07-29 11:51:11Z guillaume $
+% Copyright (C) 1998-2023 Wellcome Centre for Human Neuroimaging
 
-
-SVNid = '$Rev: 6124 $';
 
 %-Parameters & arguments
 %==========================================================================
@@ -91,8 +90,6 @@ if nargin < 3
     spm_jobman('interactive','','spm.util.imcalc');
     return;
 end
-
-spm('FnBanner',mfilename,SVNid);
 
 %-Input images
 %--------------------------------------------------------------------------
@@ -118,21 +115,24 @@ end
 %--------------------------------------------------------------------------
 if nargin < 4, flags = {}; end
 if iscell(flags)
-    if length(flags) < 4, dtype  = []; else dtype  = flags{4}; end
-    if length(flags) < 3, interp = []; else interp = flags{3}; end
-    if length(flags) < 2, mask   = []; else mask   = flags{2}; end
-    if length(flags) < 1, dmtx   = []; else dmtx   = flags{1}; end
+    if numel(flags) < 5, descrip = []; else descrip = flags{5}; end
+    if numel(flags) < 4, dtype   = []; else dtype   = flags{4}; end
+    if numel(flags) < 3, interp  = []; else interp  = flags{3}; end
+    if numel(flags) < 2, mask    = []; else mask    = flags{2}; end
+    if numel(flags) < 1, dmtx    = []; else dmtx    = flags{1}; end
 else
-    if isfield(flags,'dmtx'),   dmtx   = flags.dmtx;   else dmtx   = []; end
-    if isfield(flags,'mask'),   mask   = flags.mask;   else mask   = []; end
-    if isfield(flags,'interp'), interp = flags.interp; else interp = []; end
-    if isfield(flags,'dtype'),  dtype  = flags.dtype;  else dtype  = []; end
+    if isfield(flags,'dmtx'),   dmtx     = flags.dmtx;    else dmtx    = []; end
+    if isfield(flags,'mask'),   mask     = flags.mask;    else mask    = []; end
+    if isfield(flags,'interp'), interp   = flags.interp;  else interp  = []; end
+    if isfield(flags,'dtype'),  dtype    = flags.dtype;   else dtype   = []; end
+    if isfield(flags,'descrip'), descrip = flags.descrip; else descrip = ''; end
 end
-if ischar(dtype),   dtype  = spm_type(dtype); end
-if isempty(interp), interp = 0; end
-if isempty(mask),   mask   = 0; end
-if isempty(dmtx),   dmtx   = 0; end
-if isempty(dtype),  dtype  = spm_type('int16'); end
+if ischar(dtype),    dtype   = spm_type(dtype); end
+if isempty(interp),  interp  = 0; end
+if isempty(mask),    mask    = 0; end
+if isempty(dmtx),    dmtx    = 0; end
+if isempty(dtype),   dtype   = spm_type('int16'); end
+if isempty(descrip), descrip = 'spm - algebra'; end
 
 %-Output image
 %--------------------------------------------------------------------------
@@ -141,10 +141,10 @@ if ischar(Vo)
     Vo = struct('fname',   fullfile(p, [n, e]),...
                 'dim',     Vi(1).dim(1:3),...
                 'dt',      [dtype spm_platform('bigend')],...
-                'pinfo',   [Inf Inf Inf]',...
+                'pinfo',   [Inf Inf 0]',...
                 'mat',     Vi(1).mat,...
                 'n',       1,...
-                'descrip', 'spm - algebra');
+                'descrip', descrip);
 end
 
 %-Process any additional variables
@@ -178,10 +178,6 @@ end
 n = numel(Vi);
 Y = zeros(Vo.dim(1:3));
 
-%-Start progress plot
-%--------------------------------------------------------------------------
-spm_progress_bar('Init',Vo.dim(3),f,'planes completed');
-
 %-Loop over planes computing result Y
 %--------------------------------------------------------------------------
 for p = 1:Vo.dim(3)
@@ -200,20 +196,14 @@ for p = 1:Vo.dim(3)
         eval(['Yp = ' f ';']);
     catch
         l = lasterror;
-        error('%s\nCan''t evaluate "%s".',l.message,f);
+        error('%s\nCannot evaluate "%s".',l.message,f);
     end
     if prod(Vo.dim(1:2)) ~= numel(Yp)
         error(['"',f,'" produced incompatible image.']); end
     if (mask < 0), Yp(isnan(Yp)) = 0; end
     Y(:,:,p) = reshape(Yp,Vo.dim(1:2));
-
-    spm_progress_bar('Set',p);
 end
 
 %-Write output image
 %--------------------------------------------------------------------------
 Vo = spm_write_vol(Vo,Y);
-
-%-End
-%--------------------------------------------------------------------------
-spm_progress_bar('Clear')

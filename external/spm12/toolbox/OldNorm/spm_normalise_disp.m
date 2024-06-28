@@ -3,10 +3,9 @@ function spm_normalise_disp(matname,VF)
 % FORMAT spm_normalise_disp(matname)
 % matname - name of parameter file *_sn.mat
 %__________________________________________________________________________
-% Copyright (C) 2002-2011 Wellcome Trust Centre for Neuroimaging
 
 % John Ashburner
-% $Id: spm_normalise_disp.m 4873 2012-08-30 19:06:26Z john $
+% Copyright (C) 2002-2022 Wellcome Centre for Human Neuroimaging
 
 
 fg = spm_figure('FindWin','Graphics');

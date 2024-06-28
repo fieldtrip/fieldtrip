@@ -45,7 +45,13 @@ function hs = ft_plot_sens(sens, varargin)
 %   'facealpha'       = transparency, between 0 and 1 (default = 1)
 %   'edgealpha'       = transparency, between 0 and 1 (default = 1)
 %
-% Example
+% The sensor array can include an optional fid field with fiducials, which will also be plotted.
+%   'fiducial'        = rue/false, plot the fiducials (default = true)
+%   'fidcolor'        = [r g b] values or string, for example 'red', 'r', or an Nx3 or Nx1 array where N is the number of fiducials
+%   'fidmarker'       = ['.', '*', '+',  ...]
+%   'fidlabel'        = ['yes', 'no', 1, 0, 'true', 'false']
+%
+% Example:
 %   sens = ft_read_sens('Subject01.ds', 'senstype', 'meg');
 %   figure; ft_plot_sens(sens, 'coilshape', 'point', 'style', 'r*')
 %   figure; ft_plot_sens(sens, 'coilshape', 'circle')
@@ -84,6 +90,11 @@ chantype        = ft_getopt(varargin, 'chantype');
 unit            = ft_getopt(varargin, 'unit');
 axes_           = ft_getopt(varargin, 'axes', false);     % do not confuse with built-in function
 orientation     = ft_getopt(varargin, 'orientation', false);
+% these have to do with the fiducials
+fiducial        = ft_getopt(varargin, 'fiducial', true);
+fidcolor        = ft_getopt(varargin, 'fidcolor', 'g');
+fidmarker       = ft_getopt(varargin, 'fidmarker', '*');
+fidlabel        = ft_getopt(varargin, 'fidlabel', true);
 % these have to do with the font
 fontcolor       = ft_getopt(varargin, 'fontcolor', 'k');  % default is black
 fontsize        = ft_getopt(varargin, 'fontsize',   get(0, 'defaulttextfontsize'));
@@ -259,6 +270,9 @@ if ~isempty(chantype)
   
 end % selecting channels and coils
 
+% start with empty return values
+hs = [];
+
 % everything is added to the current figure
 holdflag = ishold;
 if ~holdflag
@@ -415,10 +429,12 @@ switch sensshape
       end
       if any(specified)
         % the marker shape is specified in the style option
-        hs = plot3(pos(:,1), pos(:,2), pos(:,3), style, 'MarkerSize', senssize);
+        h = plot3(pos(:,1), pos(:,2), pos(:,3), style, 'MarkerSize', senssize);
+        hs = [hs; h];
       else
         % the marker shape is not specified in the style option, use the marker option instead and assume that the style option represents the color
-        hs = plot3(pos(:,1), pos(:,2), pos(:,3), 'Marker', marker, 'MarkerSize', senssize, 'Color', style, 'Linestyle', 'none');
+        h = plot3(pos(:,1), pos(:,2), pos(:,3), 'Marker', marker, 'MarkerSize', senssize, 'Color', style, 'Linestyle', 'none');
+        hs = [hs; h];
       end
     else
       % the style is not specified, use facecolor for the marker
@@ -524,6 +540,23 @@ end % if label
 axis vis3d
 axis equal
 
+if isfield(sens, 'fid') && ~isempty(sens.fid) && istrue(fiducial)
+  % plot the fiducials
+  for i=1:size(sens.fid.pos,1)
+    h  = plot3(sens.fid.pos(i,1), sens.fid.pos(i,2), sens.fid.pos(i,3), 'Marker', fidmarker, 'MarkerEdgeColor', fidcolor);
+    hs = [hs; h];
+    if isfield(sens.fid, 'label') && istrue(fidlabel)
+      % the text command does not like int or single position values
+      x = double(sens.fid.pos(i, 1));
+      y = double(sens.fid.pos(i, 2));
+      z = double(sens.fid.pos(i, 3));
+      str = sprintf('%s', sens.fid.label{i});
+      h   = text(x, y, z, str, 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Interpreter', 'none');
+      hs  = [hs; h];
+    end
+  end
+end
+
 if istrue(axes_)
   % plot the 3D axes, this depends on the units and coordsys
   ft_plot_axes(sens);
@@ -541,6 +574,7 @@ end
 if ~nargout
   clear hs
 end
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION all optional inputs are passed to ft_plot_mesh

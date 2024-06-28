@@ -2,7 +2,7 @@ function varargout = events_tsv(filename, hdr)
 
 % EVENTS_TSV is called from FT_READ_EVENT to read the events from a BIDS _events.tsv
 % file. Although this function also reads the header for the sampling rate, it cannot
-% be used to read data. Please see BIDS_TSV for that.
+% be used to read data. Please see BIDS_TSV for reading data.
 %
 % Use as
 %   hdr = events_tsv(filename)
@@ -14,9 +14,10 @@ function varargout = events_tsv(filename, hdr)
 %
 % See https://bids-specification.readthedocs.io/en/stable/04-modality-specific-files/05-task-events.html
 %
-% See also FT_FILETYPE, FT_READ_HEADER, FT_READ_DATA, FT_READ_EVENT, QUALISYS_TSV, MOTION_C3D, BIDS_TSV
+% See also FT_FILETYPE, FT_READ_HEADER, FT_READ_DATA, FT_READ_EVENT
+% See also BIDS_TSV, BIOPAC_ACQ, BUCN_TXT, EEGSYNTH_TSV, EVENTS_TSV, LIBERTY_CSV, MAUS_TEXTGRID, MOTION_C3D, OPENBCI_TXT, OPENPOSE_KEYPOINTS, OPENSIGNALS_TXT, OPENVIBE_MAT, OPM_FIL, QUALISYS_TSV, SCCN_XDF, SENSYS_CSV, SNIRF, SPIKEGLX_BIN, UNICORN_CSV, XSENS_MVNX
 
-% Copyright (C) 2018-2020, Robert Oostenveld
+% Copyright (C) 2018-2024, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.

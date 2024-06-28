@@ -17,7 +17,7 @@ function [surfhandle, T2] = ft_plot_slice(dat, varargin)
 %                    data will be plotted. location defines the origin of the plane
 %   'orientation'  = 1x3 vector specifying the direction orthogonal through the plane
 %                    which will be plotted (default = [0 0 1])
-%   'unit'         = string, can be 'm', 'cm' or 'mm (default is automatic)
+%   'unit'         = string, can be 'm', 'cm' or 'mm' (default is automatic)
 %   'coordsys'     = string, assume the data to be in the specified coordinate system (default = 'unknown')
 %   'resolution'   = number (default = 1 mm)
 %   'datmask'      = 3D-matrix with the same size as the data matrix, serving as opacitymap
@@ -32,6 +32,7 @@ function [surfhandle, T2] = ft_plot_slice(dat, varargin)
 %   'colormap'     = string, see COLORMAP
 %   'clim'         = 1x2 vector specifying the min and max for the colorscale
 %   'facealpha'    = transparency when no mask is specified, between 0 and 1 (default = 1)
+%   'tag'          = string, the tag assigned to the plotted elements (default = '')
 %
 % You can plot the slices from the volume together with an intersection of the slices
 % with a triangulated surface mesh (e.g. a cortical sheet) using
@@ -735,6 +736,7 @@ mapping = {
   'scanras',   'ras'
   'scanlps',   'lps'
   'dicom',     'lps'
+  'paxinos',   'rsp'
   };
 
 sel = find(strcmp(mapping(:,1), coordsys));

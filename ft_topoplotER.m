@@ -50,9 +50,9 @@ function [cfg] = ft_topoplotER(cfg, varargin)
 %                            'WestOutside'        outside left
 %   cfg.colorbartext       = string indicating the text next to colorbar
 %   cfg.interplimits       = limits for interpolation (default = 'head')
-%                            'electrodes'         to furthest electrode
+%                            'sensors'            to furthest sensor
 %                            'head'               to edge of head
-%   cfg.interpolation      = 'linear','cubic','nearest','v4' (default = 'v4') see GRIDDATA
+%   cfg.interpolation      = 'linear', 'cubic', 'nearest', 'v4' (default = 'v4') see GRIDDATA
 %   cfg.style              = plot style (default = 'both')
 %                            'straight'           colormap only
 %                            'contour'            contour lines only
@@ -181,6 +181,11 @@ ft_preamble provenance varargin
 if ft_abort
   return
 end
+
+% check if the input cfg is valid for this function
+cfg = ft_checkconfig(cfg, 'renamed', {'latency', 'xlim'});
+cfg = ft_checkconfig(cfg, 'renamed', {'frequency', 'xlim'});
+cfg = ft_checkconfig(cfg, 'renamedval', {'interplimits', 'electrodes', 'sensors'});
 
 % this is needed for the figure title
 if isfield(cfg, 'dataname') && ~isempty(cfg.dataname)

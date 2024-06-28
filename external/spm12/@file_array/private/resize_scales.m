@@ -1,10 +1,9 @@
 function s1 = resize_scales(s0,dim,args)
 % Resize scalefactors 
 %__________________________________________________________________________
-% Copyright (C) 2005-2013 Wellcome Trust Centre for Neuroimaging
 
-%
-% $Id: resize_scales.m 5456 2013-04-29 15:49:22Z guillaume $
+% Copyright (C) 2005-2022 Wellcome Centre for Human Neuroimaging
+
 
 dim = [dim ones(1,max(numel(args)-numel(dim),0))];
 args1 = cell(1,numel(args));

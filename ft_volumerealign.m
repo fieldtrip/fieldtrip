@@ -106,6 +106,12 @@ function [realign, snap] = ft_volumerealign(cfg, mri, target)
 % Z-axis is towards the vertex, in between the hemispheres the X-axis is
 % orthogonal to the YZ-plane, positive to the right.
 %
+% When cfg.method = 'fiducial' and cfg.coordsys = 'paxinos' for a mouse brain,
+% the following is required to specify the voxel indices of the fiducials:
+%   cfg.fiducial.bregma      = [i j k], position of bregma
+%   cfg.fiducial.lambda      = [i j k], position of lambda
+%   cfg.fiducial.yzpoint     = [i j k], point on the midsagittal-plane
+%
 % With the 'interactive' and 'fiducial' methods it is possible to define an
 % additional point (with the key 'z'), which should be a point on the positive side
 % of the xy-plane, i.e. with a positive z-coordinate in world coordinates. This point
@@ -282,6 +288,8 @@ if isempty(cfg.coordsys)
     cfg.coordsys = 'ctf';
   elseif isstruct(cfg.fiducial) && all(ismember(fieldnames(cfg.fiducial), {'ac', 'pc', 'xzpoint', 'right'}))
     cfg.coordsys = 'acpc';
+  elseif isstruct(cfg.fiducial) && all(ismember(fieldnames(cfg.fiducial), {'bregma', 'lambda', 'yzpoint'}))
+    cfg.coordsys = 'paxinos';
   elseif strcmp(cfg.method, 'interactive')
     cfg.coordsys = 'ctf';
   end
@@ -1530,7 +1538,11 @@ else
 
       lab = 'crosshair';
       vox = [xi yi zi];
-      ind = sub2ind(mri.dim(1:3), round(vox(1)), round(vox(2)), round(vox(3)));
+      if all(isfinite(vox))
+        ind = sub2ind(mri.dim(1:3), round(vox(1)), round(vox(2)), round(vox(3)));
+      else
+        ind = nan; % functional behavior of sub2ind has changed, giving an error with nan-input
+      end
       pos = ft_warp_apply(mri.transform, vox);
       switch opt.unit
         case 'mm'
@@ -1547,7 +1559,11 @@ else
     for i=1:length(opt.fidlabel)
       lab = opt.fidlabel{i};
       vox = opt.fiducial.(lab);
-      ind = sub2ind(mri.dim(1:3), round(vox(1)), round(vox(2)), round(vox(3)));
+      if all(isfinite(vox))
+        ind = sub2ind(mri.dim(1:3), round(vox(1)), round(vox(2)), round(vox(3)));
+      else
+        ind = nan; % functional behavior of sub2ind has changed, giving an error with nan-input
+      end
       pos = ft_warp_apply(mri.transform, vox);
       switch opt.unit
         case 'mm'
@@ -1949,7 +1965,11 @@ fprintf('=======================================================================
 for i=1:length(opt.fidlabel)
   lab = opt.fidlabel{i};
   vox = opt.fiducial.(lab);
-  ind = sub2ind(opt.mri.dim(1:3), round(vox(1)), round(vox(2)), round(vox(3)));
+  if all(isfinite(vox))
+    ind = sub2ind(mri.dim(1:3), round(vox(1)), round(vox(2)), round(vox(3)));
+  else
+    ind = nan; % functional behavior of sub2ind has changed, giving an error with nan-input
+  end
   pos = ft_warp_apply(opt.mri.transform, vox);
   switch opt.unit
     case 'mm'

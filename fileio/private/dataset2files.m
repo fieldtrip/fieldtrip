@@ -38,6 +38,11 @@ if iscell(filename)
   return
 end
 
+if isstring(filename)
+  % the below code does not deal well with matlab strings (i.e. "" vs. '')
+  filename = char(filename);
+end
+
 if isempty(format)
   format = ft_filetype(filename);
 end
@@ -189,6 +194,10 @@ switch format
       headerfile = filename;
       datafile = filename;
     end
+  case {'spikeglx_bin'}
+    [p, f, x] = fileparts(filename);
+    headerfile = fullfile(p, [f '.meta']);
+    datafile   = fullfile(p, [f '.bin']);
   otherwise
     % convert filename into filenames, assume that the header and data are the same
     datafile   = filename;

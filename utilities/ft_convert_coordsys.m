@@ -75,6 +75,16 @@ end
 method        = ft_getopt(varargin, 'method');    % default is handled below
 templatefile  = ft_getopt(varargin, 'template');  % default is handled in the SPM section
 feedback      = ft_getopt(varargin, 'feedback', 'no');
+spmversion    = ft_getopt(varargin, 'spmversion');
+
+% use the version that is on the path, or default to spm12
+if isempty(spmversion)
+  if ~ft_hastoolbox('spm')
+    spmversion = 'spm12';
+  else
+    spmversion = lower(spm('ver'));
+  end
+end
 
 if ~isfield(object, 'coordsys') || isempty(object.coordsys)
   % determine the coordinate system of the input object
@@ -185,10 +195,8 @@ if method>0
     ft_error('affine or non-linear transformation require the anatomial MRI to be expressed in mm');
   end
 
-  % the following requires SPM to be on the path. However, this is not the proper place to
-  % choose between SPM versions. The user can either use cfg.spmversion in a high-level
-  % function, or has to add the path to the desired SPM version by hand.
-  ft_hastoolbox('spm', -1);
+  % the following requires SPM to be on the path
+  ft_hastoolbox(spmversion, 1);
 end
 
 if method==1

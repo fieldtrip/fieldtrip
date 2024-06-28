@@ -47,6 +47,9 @@ function timeValOut = mff_encodetime(timeVal, timeZone)
         end
     end
     timeValOut = [ tmp sprintf('%.3d', round(remain/microSec/10)*10) timeZone ];
+    if timeValOut(1) == '0'
+        timeValOut(1) = '2';
+    end
 
     
 % old code

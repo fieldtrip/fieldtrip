@@ -1,10 +1,8 @@
 function o = nifti2struc
 % Create a data structure describing NIFTI-2 headers
 %__________________________________________________________________________
-% Copyright (C) 2005-2012 Wellcome Trust Centre for Neuroimaging
 
-%
-% $Id: nifti2struc.m 6314 2015-01-23 17:00:51Z guillaume $
+% Copyright (C) 2005-2022 Wellcome Centre for Human Neuroimaging
 
 
 persistent org;

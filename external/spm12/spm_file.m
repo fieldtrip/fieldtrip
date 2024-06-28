@@ -10,7 +10,7 @@ function str = spm_file(str,varargin)
 % str        - character array, or cell array of strings
 % opt_key    - string of targeted item - one among:
 %              {'path', 'basename', 'ext', 'filename', 'number', 'prefix',
-%              'suffix','link'}
+%              'suffix','link','local'}
 % opt_val    - string of new value for feature
 %__________________________________________________________________________
 %
@@ -33,12 +33,12 @@ function str = spm_file(str,varargin)
 % spm_file('C:\data\myimage.nii', 'prefix','rp_', 'ext','.txt')
 % returns 'C:\data\rp_myimage.txt' on a Windows platform
 %
-% spm_file({'/home/karl/software/spm8/spm.m'},'path','/home/karl/spm12')
-% returns {'/home/karl/spm12/spm.m'}
+% spm_file({'/home/karl/software/spm.m'},'path','/home/karl/spm')
+% returns {'/home/karl/spm/spm.m'}
 %
-% spm_file('/home/karl/software/spm12/spm.m','filename')
+% spm_file('/home/karl/software/spm/spm.m','filename')
 % returns 'spm.m', and
-% spm_file('/home/karl/software/spm12/spm.m','basename')
+% spm_file('/home/karl/software/spm/spm.m','basename')
 % returns 'spm'
 %
 % spm_file('SPM.mat','fpath')
@@ -51,10 +51,9 @@ function str = spm_file(str,varargin)
 %
 % See also: spm_fileparts, spm_select, spm_file_ext, spm_existfile
 %__________________________________________________________________________
-% Copyright (C) 2011-2014 Wellcome Trust Centre for Neuroimaging
 
 % Guillaume Flandin
-% $Id: spm_file.m 6346 2015-02-24 11:01:50Z volkmar $
+% Copyright (C) 2011-2023 Wellcome Centre for Human Neuroimaging
 
 
 needchar = ischar(str);
@@ -164,10 +163,32 @@ while ~isempty(options)
                     m   = repmat(str(n),1,p);
                     str{n} = sprintf(cmd,m{:});
                 end
+            case 'local'
+                protocol = str{n}(1:find(str{n}==':',1)-1);
+                if ismember(protocol,{'file','http','https','ftp'})
+                    switch lower(options{2})
+                        case 'temp'
+                            [str{n}, sts] = urlwrite(str{n},tempname);
+                        case 'content'
+                            [str{n}, sts] = urlread(str{n});
+                        otherwise
+                            if exist(options{2},'dir') == 7
+                                options{2} = fullfile(options{2},[nam ext]);
+                            end
+                            [str{n}, sts] = urlwrite(str{n},options{2});
+                    end
+                    if ~sts
+                        error('An error occurred while accessing %s.',str{n});
+                    end
+                else
+                    if strcmpi(options{2},'content')
+                        str{n} = fileread(str{n});
+                    end
+                end
             otherwise
                 warning('Unknown item ''%s'': ignored.',lower(options{1}));
         end
-        if ~strcmpi(options{1},'link')
+        if ~any(strcmpi(options{1},{'link','local'}))
             str{n} = fullfile(pth,[nam ext num]);
         end
     end

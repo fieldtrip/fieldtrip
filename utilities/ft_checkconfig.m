@@ -92,6 +92,12 @@ else
   pedantic = false;
 end
 
+if isfield(cfg, 'checkstring')
+  checkstring = cfg.checkstring;
+else
+  checkstring = 'no';
+end
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % rename old to new options, give warning
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -607,6 +613,17 @@ if ~isempty(createsubcfg)
   end
 end
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% checkstring, i.e. convertStringsToChar
+%
+% Converts "strings" to 'chars' if necessary.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+if istrue(checkstring)
+  cfg = checkstringfun(cfg);
+end
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % checkinside, i.e. inside2logical
 %
@@ -749,6 +766,48 @@ for i=1:numel(fieldsorig)
     end
   end % for numel(cfg)
 end % for each of the fieldsorig
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function [cfg] = checkstringfun(cfg)
+
+if ~iscolumn(cfg)
+  dotranspose = true;
+  cfg = cfg';
+else
+  dotranspose = false;
+end
+c = struct2cell(cfg);
+s = fieldnames(cfg);
+t = cellfun(@class, c, 'UniformOutput', false);
+
+% convert
+[c{:}] = convertStringsToChars(c{:});
+cfg = cell2struct(c,s,1);
+
+% deal with cell-arrays
+if any(strcmp(t, 'cell'))
+  fn = s(strcmp(t(:,1), 'cell')); % assumes uniformity along the columns of t
+  for k = 1:numel(fn)
+    for m = 1:numel(cfg)
+      [cfg(m).(fn{k}){:}] = convertStringsToChars(cfg(m).(fn{k}){:});
+    end
+  end
+end
+
+if any(strcmp(t, 'struct'))
+  fn = s(strcmp(t(:,1),'struct'));
+  for k = 1:numel(fn)
+    for m = 1:numel(cfg)
+      cfg(m).(fn{k}) = checkstringfun(cfg(m).(fn{k}));
+    end
+  end
+end
+
+if dotranspose
+  cfg = cfg';
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION converts a cell-array of structure arrays into a structure array

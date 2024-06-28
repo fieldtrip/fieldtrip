@@ -13,23 +13,23 @@ function [data] = ft_checkdata(data, varargin)
 %   [data] = ft_checkdata(data, ...)
 %
 % Optional input arguments should be specified as key-value pairs and can include
-%   feedback           = yes, no
+%   feedback           = 'yes' or 'no'
 %   datatype           = raw, freq, timelock, comp, spike, source, mesh, dip, volume, segmentation, parcellation
 %   dimord             = any combination of time, freq, chan, refchan, rpt, subj, chancmb, rpttap, pos
 %   senstype           = ctf151, ctf275, ctf151_planar, ctf275_planar, neuromag122, neuromag306, bti148, bti248, bti248_planar, magnetometer, electrode
 %   fsample            = sampling frequency to use to go from SPIKE to RAW representation
-%   ismeg              = yes, no
-%   iseeg              = yes, no
-%   isnirs             = yes, no
-%   hasunit            = yes, no
-%   hascoordsys        = yes, no
-%   haschantype        = yes, no
-%   haschanunit        = yes, no
-%   hassampleinfo      = yes, no, ifmakessense (applies to raw and timelock data)
-%   hascumtapcnt       = yes, no (only applies to freq data)
-%   hasdim             = yes, no
-%   hasdof             = yes, no
-%   hasbrain           = yes, no (only applies to segmentation)
+%   ismeg              = 'yes' or 'no', requires the data to have a grad structure
+%   iseeg              = 'yes' or 'no', requires the data to have an elec structure
+%   isnirs             = 'yes' or 'no', requires the data to have an opto structure
+%   hasunit            = 'yes' or 'no'
+%   hascoordsys        = 'yes' or 'no'
+%   haschantype        = 'yes' or 'no'
+%   haschanunit        = 'yes' or 'no'
+%   hassampleinfo      = 'yes', 'no', or 'ifmakessense' (applies to raw and timelock data)
+%   hascumtapcnt       = 'yes' or 'no' (only applies to freq data)
+%   hasdim             = 'yes' or 'no'
+%   hasdof             = 'yes' or 'no'
+%   hasbrain           = 'yes' or 'no' (only applies to segmentation)
 %   insidestyle        = logical, index, can also be empty
 %   cmbstyle           = sparse, sparsewithpow, full, fullfast, fourier (applies to covariance and cross-spectral density)
 %   segmentationstyle  = indexed, probabilistic (only applies to segmentation)
@@ -91,7 +91,7 @@ function [data] = ft_checkdata(data, varargin)
 
 % FIXME the following is difficult, if not impossible, to support without knowing the parameter
 % FIXME it is presently (dec 2014) not being used anywhere in FT, so can be removed
-%   hastrials          = yes, no
+%   hastrials          = 'yes' or 'no'
 
 % check whether people are using deprecated options
 sel = find(strcmp(varargin(1:2:end), 'hastrialdef'));
@@ -566,17 +566,12 @@ if ~isempty(stype)
     stype = {stype};
   end
   
-  if isfield(data, 'grad') || isfield(data, 'elec') || isfield(data, 'opto')
-    if any(strcmp(ft_senstype(data), stype))
-      okflag = 1;
-    elseif any(cellfun(@ft_senstype, repmat({data}, size(stype)), stype))
-      % this is required to detect more general types, such as "meg" or "ctf" rather than "ctf275"
-      okflag = 1;
-    else
-      okflag = 0;
-    end
+  if any(strcmp(ft_senstype(data), stype))
+    okflag = 1;
+  elseif any(cellfun(@ft_senstype, repmat({data}, size(stype)), stype))
+    % this is required to detect more general types, such as "meg" or "ctf" rather than "ctf275"
+    okflag = 1;
   else
-    % the data does not contain a sensor array
     okflag = 0;
   end
   
@@ -1364,7 +1359,10 @@ fn = fieldnames(source);
 sel = false(size(fn));
 for i=1:numel(fn)
   tmp = source.(fn{i});
-  sel(i) = iscell(tmp) && isequal(sort(tmp(:)), sort(data.label(:)));
+  % this allows for more parcels in the parcellation than labels in the
+  % data, which may be a somewhat common use case, e.g. with ??? or
+  % MEDIAL WALL parcels that don't have a corresponding functional data label
+  sel(i) = iscell(tmp) && numel(intersect(tmp(:),data.label(:)))==numel(data.label); 
 end
 parcelparam = fn(sel);
 if numel(parcelparam)~=1

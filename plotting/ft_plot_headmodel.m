@@ -92,6 +92,12 @@ switch ft_headmodeltype(headmodel)
       mesh(i).pos(:,2) = pos(:,2)*headmodel.r(i) + headmodel.o(2);
       mesh(i).pos(:,3) = pos(:,3)*headmodel.r(i) + headmodel.o(3);
       mesh(i).tri = tri;
+      if isfield(headmodel, 'unit')
+        mesh(i).unit = headmodel.unit;
+      end
+      if isfield(headmodel, 'coordsys')
+        mesh(i).coordsys= headmodel.coordsys;
+      end
     end
     if isempty(edgecolor)
       edgecolor = 'none';

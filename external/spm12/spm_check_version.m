@@ -5,7 +5,7 @@ function varargout = spm_check_version(tbx,chk)
 % tbx    - toolbox name {'matlab','octave',...}
 %
 % FORMAT v = spm_check_version(tbx)
-% tbx    - toolbox name {'matlab','octave','signal',...}
+% tbx    - toolbox name {'matlab','octave','spm','signal',...}
 %
 % v      - version number {string}
 %
@@ -57,12 +57,11 @@ function varargout = spm_check_version(tbx,chk)
 % all MATLAB Toolbox versions after 6.5.0.
 %__________________________________________________________________________
 %
-% See also VERSION, VER, VERLESSTHAN.
+% See also VERSION, VER, VERLESSTHAN, ISMATLABRELEASEOLDERTHAN
 %__________________________________________________________________________
-% Copyright (C) 2006-2014 Wellcome Trust Centre for Neuroimaging
 
 % Darren Gitelman
-% $Id: spm_check_version.m 6156 2014-09-05 17:34:53Z guillaume $
+% Copyright (C) 2006-2022 Wellcome Centre for Human Neuroimaging
 
 
 %-Detect software used
@@ -89,7 +88,7 @@ elseif strcmpi(tbx,'octave')
 else
     tbxStruct = ver(tbx);
     if isempty(tbxStruct)
-        error('Cannot find given toolbox.');
+        error('Cannot find the "%s" toolbox.',tbx);
     elseif numel(tbxStruct) > 1
         error('Too many toolboxes found for given toolbox name.')
     end
@@ -105,6 +104,40 @@ if nargin == 1, varargout = {tbxVer}; return; end
 if strcmpi(tbx,'matlab') && strcmpi(spm_check_version,'octave')
     varargout = {1}; % hack
     return;
+end
+
+% SPM-specific versioning
+%--------------------------------------------------------------------------
+if strcmpi(tbx,'spm')
+    [v,r] = spm('Ver','',1);
+    % The release string can take the following forms:
+    % * dev           - development version of SPM
+    % * YY.0M[.MICRO] - public releases of SPM (using calver.org)
+    % * 7771          - public releases of SPM12 (based on SVN revision)
+    %                   one of [6225 6470 6685 6906 7219 7487 7771]
+    % * 12.x          - internal name of SPM12 releases (using semver.org)
+    %                   one of [12.0 12.1 12.2 12.3 12.4 12.5 12.6]
+    if strcmp(r,'dev')
+        % dev
+        status = 1;
+    elseif isempty(strfind(r,'.')) && str2double(r) > 1000
+        % 7771
+        if strcmp(v,'SPM')
+            status = 1;
+        else
+            status = NaN;
+        end
+    elseif strncmp(r,'12.',3)
+        % 12.x
+        status = 1;
+    else
+        % YY.0M[.MICRO]
+        status = NaN;
+    end
+    if ~isnan(status)
+        varargout = {status};
+        return;
+    end
 end
 
 % If a number is supplied then convert to text

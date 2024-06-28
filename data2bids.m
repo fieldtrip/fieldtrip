@@ -18,6 +18,10 @@ function [cfg] = data2bids(cfg, varargin)
 % data input argument allows you to write preprocessed electrophysiological data
 % and/or realigned and defaced anatomical MRI to disk.
 %
+% The implementation in this function aims to correspond to the latest BIDS version.
+% See https://bids-specification.readthedocs.io/ for the full specification
+% and http://bids.neuroimaging.io/ for further details.
+%
 % The configuration structure should contains
 %   cfg.method       = string, can be 'decorate', 'copy' or 'convert', see below (default is automatic)
 %   cfg.dataset      = string, filename of the input data
@@ -47,8 +51,8 @@ function [cfg] = data2bids(cfg, varargin)
 %
 % Although you can explicitly specify cfg.outputfile yourself, it is recommended to
 % use the following configuration options. This results in a BIDS compliant output
-% directory and file name. With these options data2bids will also write, or if
-% already present update the participants.tsv and scans.tsv files.
+% directory and file name. With these options data2bids will also write or, if
+% already present, update the participants.tsv and scans.tsv files.
 %   cfg.bidsroot                = string, top level directory for the BIDS output
 %   cfg.sub                     = string, subject name
 %   cfg.ses                     = string, optional session name
@@ -66,16 +70,52 @@ function [cfg] = data2bids(cfg, varargin)
 %   cfg.space                   = string
 %   cfg.desc                    = string
 %
-% When specifying the output directory in cfg.bidsroot, you can also specify
-% additional information to be added as extra columns in the participants.tsv and
-% scans.tsv files. For example:
+% If you specify cfg.bidsroot, this function will also write the dataset_description.json
+% file. Among others, you can specify the following fields:
+%   cfg.dataset_description.writesidecar        = 'yes' or 'no' (default = 'yes')
+%   cfg.dataset_description.Name                = string
+%   cfg.dataset_description.BIDSVersion         = string
+%   cfg.dataset_description.License             = string
+%   cfg.dataset_description.Authors             = cell-array of strings
+%   cfg.dataset_description.ReferencesAndLinks  = cell-array of strings
+%   cfg.dataset_description.EthicsApprovals     = cell-array of strings
+%   cfg.dataset_description.Funding             = cell-array of strings
+%   cfg.dataset_description.Acknowledgements    = string
+%   cfg.dataset_description.HowToAcknowledge    = string
+%   cfg.dataset_description.DatasetDOI          = string
+%
+% If you specify cfg.bidsroot, you can also specify additional information to be
+% added as extra columns in the participants.tsv and scans.tsv files. For example:
 %   cfg.participants.age        = scalar
 %   cfg.participants.sex        = string, 'm' or 'f'
 %   cfg.scans.acq_time          = string, should be formatted according to RFC3339 as '2019-05-22T15:13:38'
 %   cfg.sessions.acq_time       = string, should be formatted according to RFC3339 as '2019-05-22T15:13:38'
 %   cfg.sessions.pathology      = string, recommended when different from healthy
-% In case any of these values is specified as empty (i.e. []) or as nan, it will be
-% written to the tsv file as 'n/a'.
+% If any of these values is specified as [] or as nan, it will be written to
+% the tsv file as 'n/a'.
+%
+% If you specify cfg.bidsroot, this function can also write some modality agnostic
+% files at the top-level of the dataset. You can specify their content here and/or
+% subsequently edit them with a text editor.
+%   cfg.README                  = string (default is a template with instructions)
+%   cfg.LICENSE                 = string (no default)
+%   cfg.CHANGES                 = string (no default)
+%
+% General BIDS options that apply to all data types are
+%   cfg.InstitutionName             = string
+%   cfg.InstitutionAddress          = string
+%   cfg.InstitutionalDepartmentName = string
+%   cfg.Manufacturer                = string
+%   cfg.ManufacturersModelName      = string
+%   cfg.DeviceSerialNumber          = string
+%   cfg.SoftwareVersions            = string
+%
+% General BIDS options that apply to all functional data types are
+%   cfg.TaskName                    = string
+%   cfg.TaskDescription             = string
+%   cfg.Instructions                = string
+%   cfg.CogAtlasID                  = string
+%   cfg.CogPOID                     = string
 %
 % For anatomical and functional MRI data you can specify cfg.dicomfile to read the
 % detailed MRI scanner and sequence details from the header of that DICOM file. This
@@ -117,36 +157,7 @@ function [cfg] = data2bids(cfg, varargin)
 % it as cfg.opto or you can specify a filename with optode information.
 %   cfg.opto                    = structure with optode positions or filename,see FT_READ_SENS
 %
-% General BIDS options that apply to all data types are
-%   cfg.InstitutionName             = string
-%   cfg.InstitutionAddress          = string
-%   cfg.InstitutionalDepartmentName = string
-%   cfg.Manufacturer                = string
-%   cfg.ManufacturersModelName      = string
-%   cfg.DeviceSerialNumber          = string
-%   cfg.SoftwareVersions            = string
-%
-% If you specify cfg.bidsroot, this function will also write the dataset_description.json
-% file. You can specify the following fields
-%   cfg.dataset_description.writesidecar        = string
-%   cfg.dataset_description.Name                = string
-%   cfg.dataset_description.BIDSVersion         = string
-%   cfg.dataset_description.License             = string
-%   cfg.dataset_description.Authors             = string or cell-array of strings
-%   cfg.dataset_description.Acknowledgements    = string
-%   cfg.dataset_description.HowToAcknowledge    = string
-%   cfg.dataset_description.Funding             = string or cell-array of strings
-%   cfg.dataset_description.ReferencesAndLinks  = string or cell-array of strings
-%   cfg.dataset_description.DatasetDOI          = string
-%
-% General BIDS options that apply to all functional data types are
-%   cfg.TaskName                    = string
-%   cfg.TaskDescription             = string
-%   cfg.Instructions                = string
-%   cfg.CogAtlasID                  = string
-%   cfg.CogPOID                     = string
-%
-% There are more BIDS options for the mri/meg/eeg/ieegÂ data type specific sidecars.
+% There are more BIDS options for the mri/meg/eeg/ieeg data type specific sidecars.
 % Rather than listing them all here, please open this function in the MATLAB editor,
 % and scroll down a bit to see what those are. In general the information in the JSON
 % files is specified by a field that is specified in CamelCase
@@ -155,17 +166,13 @@ function [cfg] = data2bids(cfg, varargin)
 %   cfg.eeg.SomeOption              = string, please check the MATLAB code
 %   cfg.ieeg.SomeOption             = string, please check the MATLAB code
 %   cfg.nirs.SomeOption             = string, please check the MATLAB code
-%   cfg.coordsystem.someoption      = string, please check the MATLAB code
+%   cfg.coordsystem.SomeOption      = string, please check the MATLAB code
 % The information for TSV files is specified with a column header in lowercase or
 % snake_case and represents a list of items
-%   cfg.channels.someoption         = cell-array, please check the MATLAB code
-%   cfg.events.someoption           = cell-array, please check the MATLAB code
-%   cfg.electrodes.someoption       = cell-array, please check the MATLAB code
-%   cfg.optodes.someoption          = cell-array, please check the MATLAB code
-%
-% The implementation in this function aims to correspond to the latest BIDS version.
-% See https://bids-specification.readthedocs.io/ for the full specification
-% and http://bids.neuroimaging.io/ for further details.
+%   cfg.channels.some_option        = cell-array, please check the MATLAB code
+%   cfg.events.some_option          = cell-array, please check the MATLAB code
+%   cfg.electrodes.some_option      = cell-array, please check the MATLAB code
+%   cfg.optodes.some_option         = cell-array, please check the MATLAB code
 %
 % See also FT_DATAYPE_RAW, FT_DATAYPE_VOLUME, FT_DATATYPE_SENS, FT_DEFINETRIAL,
 % FT_PREPROCESSING, FT_READ_MRI, FT_READ_EVENT
@@ -185,7 +192,7 @@ function [cfg] = data2bids(cfg, varargin)
 % officially supported data types.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% Copyright (C) 2018-2023, Robert Oostenveld
+% Copyright (C) 2018-2024, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -318,10 +325,16 @@ cfg.electrodes    = ft_getopt(cfg, 'electrodes');
 cfg.optodes       = ft_getopt(cfg, 'optodes');
 cfg.events        = ft_getopt(cfg, 'events');     % this can contain the trial definition as Nx3 array, as table, or an event structure
 cfg.coordsystem   = ft_getopt(cfg, 'coordsystem');
+
 % start with an empty structure for the following
 cfg.participants  = ft_getopt(cfg, 'participants', struct());
 cfg.sessions      = ft_getopt(cfg, 'sessions', struct());
 cfg.scans         = ft_getopt(cfg, 'scans', struct());
+
+% start with a template or empty file for the following
+cfg.README        = ft_getopt(cfg, 'README', template_README);
+cfg.LICENSE       = ft_getopt(cfg, 'LICENSE');
+cfg.CHANGES       = ft_getopt(cfg, 'CHANGES');
 
 % some of the cfg fields can be specified (or make most sense) as a table
 % however, the parsing of cfg options requires fields to be structures
@@ -351,7 +364,6 @@ if istable(cfg.scans)
 end
 
 %% Dataset description
-
 cfg.dataset_description                     = ft_getopt(cfg, 'dataset_description'                       );
 cfg.dataset_description.writesidecar        = ft_getopt(cfg.dataset_description, 'writesidecar', 'yes'   );
 cfg.dataset_description.Name                = ft_getopt(cfg.dataset_description, 'Name'                  ); % REQUIRED. Name of the dataset.
@@ -365,14 +377,12 @@ cfg.dataset_description.Funding             = ft_getopt(cfg.dataset_description,
 cfg.dataset_description.EthicsApprovals     = ft_getopt(cfg.dataset_description, 'EthicsApprovals'       ); % OPTIONAL. List of ethics committee approvals of the research protocols and/or protocol identifiers.
 cfg.dataset_description.ReferencesAndLinks  = ft_getopt(cfg.dataset_description, 'ReferencesAndLinks'    ); % OPTIONAL. List of references to publication that contain information on the dataset, or links.
 cfg.dataset_description.DatasetDOI          = ft_getopt(cfg.dataset_description, 'DatasetDOI'            ); % OPTIONAL. The Document Object Identifier of the dataset (not the corresponding paper).
-
-% this is a structure, and in the json file an object
-default.Name        = 'FieldTrip';
-default.Version     = ft_version();
-default.Description = 'data2bids converter';
-default.URI         = 'https://www.fieldtriptoolbox.org';
-cfg.dataset_description.GeneratedBy         = ft_getopt(cfg.dataset_description, 'GeneratedBy', {default});
-clear default
+% GeneratedBy is here a MATLAB structure, and in the file a JSON object
+cfg.dataset_description.GeneratedBy             = ft_getopt(cfg.dataset_description, 'GeneratedBy', struct);
+cfg.dataset_description.GeneratedBy.Name        = ft_getopt(cfg.dataset_description.GeneratedBy, 'Name', 'FieldTrip');
+cfg.dataset_description.GeneratedBy.Version     = ft_getopt(cfg.dataset_description.GeneratedBy, 'Version', ft_version);
+cfg.dataset_description.GeneratedBy.Description = ft_getopt(cfg.dataset_description.GeneratedBy, 'Description', 'data2bids converter');
+cfg.dataset_description.GeneratedBy.URI         = ft_getopt(cfg.dataset_description.GeneratedBy, 'URI', 'https://www.fieldtriptoolbox.org');
 
 %% Generic fields for all data types
 cfg.TaskName                          = ft_getopt(cfg, 'TaskName'                    ); % REQUIRED. Name of the task (for resting state use the 'rest' prefix). Different Tasks SHOULD NOT have the same name. The Task label is derived from this field by removing all non alphanumeric ([a-zA-Z0-9]) characters.
@@ -2083,6 +2093,48 @@ end % for each modality
 
 if ~isempty(cfg.bidsroot)
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  % write the modality agnostic files
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  if ~isempty(cfg.README)
+    filename = fullfile(cfg.bidsroot, 'README');
+    fid = fopen(filename, 'w');
+    if ischar(cfg.README)
+      str = cfg.README;
+    elseif iscell(cfg.README)
+      str = sprintf('%s\n', cfg.README{:});
+    end
+    ft_info('writing %s', filename);
+    fwrite(fid, str);
+    fclose(fid);
+  end
+
+  if ~isempty(cfg.LICENSE)
+    filename = fullfile(cfg.bidsroot, 'LICENSE');
+    fid = fopen(filename, 'w');
+    if ischar(cfg.LICENSE)
+      str = cfg.LICENSE;
+    elseif iscell(cfg.LICENSE)
+      str = sprintf('%s\n', cfg.LICENSE{:});
+    end
+    ft_info('writing %s', filename);
+    fwrite(fid, str);
+    fclose(fid);
+  end
+
+  if ~isempty(cfg.CHANGES)
+    filename = fullfile(cfg.bidsroot, 'CHANGES');
+    fid = fopen(filename, 'w');
+    if ischar(cfg.CHANGES)
+      str = cfg.CHANGES;
+    elseif iscell(cfg.CHANGES)
+      str = sprintf('%s\n', cfg.CHANGES{:});
+    end
+    ft_info('writing %s', filename);
+    fwrite(fid, str);
+    fclose(fid);
+  end
+
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % update the dataset_description
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   filename = fullfile(cfg.bidsroot, 'dataset_description.json');
@@ -2688,6 +2740,183 @@ fn = {'Authors', 'Funding', 'EthicsApprovals', 'ReferencesAndLinks'};
 for i=1:numel(fn)
   if isfield(dataset_description, fn{i}) && ischar(dataset_description.(fn{i}))
     % it should be an array of strings in the JSON file
-    dataset_description.(fn{i}) = {dataset_description.(fn{i})};
+    tmp = dataset_description.(fn{i});
+    % Check if multiple elements are given in a single string
+    % and try to coerce them into individual array elements.
+    % Assume naïvely that if not semi-colon delimination is used, then
+    % commas are used to separate elements
+    if contains(tmp, ';')
+      tmp = strtrim(strsplit(tmp,';'))
+      dataset_description.(fn{i}) = tmp
+      ft_warning(sprintf('Multiple entries to %s field should be an array-of-strings, splitting on '';''', fn{i}));
+    elseif contains(tmp, ',')
+      tmp = strtrim(strsplit(tmp,','))
+      dataset_description.(fn{i}) = tmp
+      ft_warning(sprintf('Multiple entries to %s field should be an array-of-strings, splitting on '',''', fn{i}));
+    else
+      dataset_description.(fn{i}) = {tmp};
+    end
   end
 end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+% this originates from https://github.com/bids-standard/bids-starter-kit/tree/main/templates
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function str = template_README
+str = {
+'# README'
+''
+'The README is usually the starting point for researchers using your data'
+'and serves as a guidepost for users of your data. A clear and informative'
+'README makes your data much more usable.'
+''
+'In general you can include information in the README that is not captured by some other'
+'files in the BIDS dataset (dataset_description.json, events.tsv, ...).'
+''
+'It can also be useful to also include information that might already be'
+'present in another file of the dataset but might be important for users to be aware of'
+'before preprocessing or analysing the data.'
+''
+'If the README gets too long you have the possibility to create a `/doc` folder'
+'and add it to the `.bidsignore` file to make sure it is ignored by the BIDS validator.'
+''
+'More info here: https://neurostars.org/t/where-in-a-bids-dataset-should-i-put-notes-about-individual-mri-acqusitions/17315/3'
+''
+'## Details related to access to the data'
+''
+'- [ ] Data user agreement'
+''
+'If the dataset requires a data user agreement, link to the relevant information.'
+''
+'- [ ] Contact person'
+''
+'Indicate the name and contact details (email and ORCID) of the person responsible for additional information.'
+''
+'- [ ] Practical information to access the data'
+''
+'If there is any special information related to access rights or'
+'how to download the data make sure to include it.'
+'For example, if the dataset was curated using datalad,'
+'make sure to include the relevant section from the datalad handbook:'
+'http://handbook.datalad.org/en/latest/basics/101-180-FAQ.html#how-can-i-help-others-get-started-with-a-shared-dataset'
+''
+'## Overview'
+''
+'- [ ] Project name (if relevant)'
+''
+'- [ ] Year(s) that the project ran'
+''
+'If no `scans.tsv` is included, this could at least cover when the data acquisition'
+'starter and ended. Local time of day is particularly relevant to subject state.'
+''
+'- [ ] Brief overview of the tasks in the experiment'
+''
+'A paragraph giving an overview of the experiment. This should include the'
+'goals or purpose and a discussion about how the experiment tries to achieve'
+'these goals.'
+''
+'- [ ] Description of the contents of the dataset'
+''
+'An easy thing to add is the output of the bids-validator that describes what type of'
+'data and the number of subject one can expect to find in the dataset.'
+''
+'- [ ] Independent variables'
+''
+'A brief discussion of condition variables (sometimes called contrasts'
+'or independent variables) that were varied across the experiment.'
+''
+'- [ ] Dependent variables'
+''
+'A brief discussion of the response variables (sometimes called the'
+'dependent variables) that were measured and or calculated to assess'
+'the effects of varying the condition variables. This might also include'
+'questionnaires administered to assess behavioral aspects of the experiment.'
+''
+'- [ ] Control variables'
+''
+'A brief discussion of the control variables --- that is what aspects'
+'were explicitly controlled in this experiment. The control variables might'
+'include subject pool, environmental conditions, set up, or other things'
+'that were explicitly controlled.'
+''
+'- [ ] Quality assessment of the data'
+''
+'Provide a short summary of the quality of the data ideally with descriptive statistics if relevant'
+'and with a link to more comprehensive description (like with MRIQC) if possible.'
+''
+'## Methods'
+''
+'### Subjects'
+''
+'A brief sentence about the subject pool in this experiment.'
+''
+'Remember that `Control` or `Patient` status should be defined in the `participants.tsv`'
+'using a group column.'
+''
+'- [ ] Information about the recruitment procedure'
+'- [ ] Subject inclusion criteria (if relevant)'
+'- [ ] Subject exclusion criteria (if relevant)'
+''
+'### Apparatus'
+''
+'A summary of the equipment and environment setup for the'
+'experiment. For example, was the experiment performed in a shielded room'
+'with the subject seated in a fixed position.'
+''
+'### Initial setup'
+''
+'A summary of what setup was performed when a subject arrived.'
+''
+'### Task organization'
+''
+'How the tasks were organized for a session.'
+'This is particularly important because BIDS datasets usually have task data'
+'separated into different files.)'
+''
+'- [ ] Was task order counter-balanced?'
+'- [ ] What other activities were interspersed between tasks?'
+''
+'- [ ] In what order were the tasks and other activities performed?'
+''
+'### Task details'
+''
+'As much detail as possible about the task and the events that were recorded.'
+''
+'### Additional data acquired'
+''
+'A brief indication of data other than the'
+'imaging data that was acquired as part of this experiment. In addition'
+'to data from other modalities and behavioral data, this might include'
+'questionnaires and surveys, swabs, and clinical information. Indicate'
+'the availability of this data.'
+''
+'This is especially relevant if the data are not included in a `phenotype` folder.'
+'https://bids-specification.readthedocs.io/en/stable/03-modality-agnostic-files.html#phenotypic-and-assessment-data'
+''
+'### Experimental location'
+''
+'This should include any additional information regarding the'
+'the geographical location and facility that cannot be included'
+'in the relevant json files.'
+''
+'### Missing data'
+''
+'Mention something if some participants are missing some aspects of the data.'
+'This can take the form of a processing log and/or abnormalities about the dataset.'
+''
+'Some examples:'
+''
+'- A brain lesion or defect only present in one participant'
+'- Some experimental conditions missing on a given run for a participant because'
+'  of some technical issue.'
+'- Any noticeable feature of the data for certain participants'
+'- Differences (even slight) in protocol for certain participants.'
+''
+'### Notes'
+''
+'Any additional information or pointers to information that'
+'might be helpful to users of the dataset. Include qualitative information'
+'related to how the data acquisition went.'
+''
+};

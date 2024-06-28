@@ -29,9 +29,9 @@ function [str, tag, cind, ccnt] = gencode_item(item, tag, tagctx, stoptag, tropt
 % Copyright (C) 2007 Freiburg Brain Imaging
 
 % Volkmar Glauche
-% $Id: gencode_item.m 5688 2013-10-11 14:58:28Z volkmar $
+% $Id: gencode_item.m 7473 2018-11-06 10:26:44Z guillaume $
 
-rev = '$Rev: 5688 $'; %#ok
+rev = '$Rev: 7473 $'; %#ok
 
 %% Class of item
 % if there are function handles in .check or .def, add their names to
@@ -52,7 +52,7 @@ if (tropts.clvl > tropts.mlvl || (~isempty(tropts.stopspec) && match(item, tropt
         tag = genvarname(sprintf('%s%s', stoptag, item.tag), tagctx);
     else
         tag = genvarname(sprintf('%s%s', stoptag, tag), tagctx);
-    end;
+    end
     str = {};
     cind = [];
     ccnt = 0;
@@ -64,8 +64,8 @@ else
         % only modify tag if there seems to be something wrong
         % could be more specific (parse struct,cell,array subscripts)
         tag = genvarname(tag, tagctx);
-    end;
-end;
+    end
+end
 tagctx = [tagctx {tag}];
 % Item count
 ccnt = 1;
@@ -108,8 +108,8 @@ if numel(item.val) > 0 && isa(item.val{1}, 'cfg_item')
             ccnt = ccnt + cccnt;
             ctropts.cnt = ctropts.cnt + cccnt;
             tagctx = [tagctx ctag(k)];
-        end;
-    end;
+        end
+    end
     % Update position of class definition
     cind = cind+numel(cstr);
     % Prepend code of children
@@ -118,11 +118,16 @@ if numel(item.val) > 0 && isa(item.val{1}, 'cfg_item')
 elseif numel(item.val) > 0 && ~isa(item.val{1}, 'cfg_item')
     % Check .def field. Generate code for .val only, if no defaults
     % defined or value is different from defaults.
-    if isempty(item.def) || ~isequalwithequalnans(feval(item.def), item.val{1})
+    if exist('isequalwithequalnans','builtin')
+        iseqn = isequalwithequalnans(feval(item.def), item.val{1});
+    else
+        iseqn = isequaln(feval(item.def), item.val{1});
+    end
+    if isempty(item.def) || ~iseqn
         str1 = gencode(item.val, sprintf('%s.val', tag), tagctx);
         str = [str(:)' str1(:)'];
-    end;
-end;
+    end
+end
 %% Check
 % Generate check field
 if ~isempty(item.check)
@@ -145,7 +150,7 @@ if numel(item.help) > 0
     % Works only because gencode does not produce subscripts for cellstrings
     str1 = gencode(item.help, sprintf('%s.help   ', tag), tagctx);
     str = [str(:)' str1(:)'];
-end;
+end
 %% Def
 % Generate def field
 if ~isempty(item.def)
@@ -154,4 +159,4 @@ if ~isempty(item.def)
     % strings
     str1 = gencode(item.def, sprintf('%s.def    ', tag), tagctx);
     str = [str(:)' str1(:)'];
-end;
+end

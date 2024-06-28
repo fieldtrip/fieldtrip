@@ -1,4 +1,4 @@
-[![Platform: MATLAB](https://img.shields.io/badge/MATLAB-orange.svg?style=plastic)](https://www.mathworks.com)
+[![Open in MATLAB Online](https://www.mathworks.com/images/responsive/global/open-in-matlab-online.svg)](https://matlab.mathworks.com/open/github/v1?repo=fieldtrip/fieldtrip&file=README.md)
 [![GitHub contributors](https://img.shields.io/github/contributors/fieldtrip/fieldtrip)](https://github.com/fieldtrip/fieldtrip/graphs/contributors)
 [![Last commit](https://img.shields.io/github/last-commit/fieldtrip/fieldtrip?style=plastic)](https://github.com/fieldtrip/fieldtrip)
 [![GitHub commit activity (branch)](https://img.shields.io/github/commit-activity/m/fieldtrip/fieldtrip)](https://github.com/fieldtrip/fieldtrip/commits/master)
@@ -21,6 +21,24 @@ that you can use to construct your own analysis protocols in MATLAB. Furthermore
 easily allows methods researchers to incorporate new methods for EEG/MEG analysis.
 
 For more information, documentation, and tutorials, please visit http://www.fieldtriptoolbox.org
+
+## Installation
+
+To install the FieldTrip toolbox on your computer, you can clone this repository or
+download the zip file, unzip it, and add it to your MATLAB path. Subsequently you call
+the `ft_defaults` function, which will add the required subdirectories to the path.
+
+We recommend that you add the `addpath(...)` and the `ft_defaults` command to your
+[startup.m](https://www.mathworks.com/help/matlab/ref/startup.html) file. See 
+also https://www.fieldtriptoolbox.org/faq/installation/
+
+Note that you should not use `addpath(genpath(...))` and we recommend not to use the
+"add with subdirectories" button in the graphical path setup tool, as there are a
+number of external toolboxes and backward compatibility directories that you should
+not add to your path. If those directories are needed, then `ft_defaults` and
+`ft_hastoolbox` will take care of them.
+
+## Copyright
 
 The FieldTrip software is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -49,8 +67,8 @@ The functions in the FieldTrip toolbox are copyrighted by their respective autho
 
 The authors are or were working at a range of academic institutions:
 
-  - Copyright (C) 2008-2023, Donders Institute for Brain, Cognition and Behaviour, Radboud University, The Netherlands (DCCN, DCC, DCN)
-  - Copyright (C) 2014-2023, Karolinska Institute, Stockholm, Sweden (NatMEG)
+  - Copyright (C) 2008-2024, Donders Institute for Brain, Cognition and Behaviour, Radboud University, The Netherlands (DCCN, DCC, DCN)
+  - Copyright (C) 2014-2024, Karolinska Institute, Stockholm, Sweden (NatMEG)
   - Copyright (C) 2012-2018, Max Planck Institute for Psycholinguistics, The Netherlands (MPI)
   - Copyright (C) 2008-2017, The Wellcome Trust Centre for Neuroimaging, University College London, UK (UCL)
   - Copyright (C) 2010-2013, Swammerdam Institute for Life Sciences, University of Amsterdam (SILS)

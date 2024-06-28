@@ -16,10 +16,9 @@ function varargout = spm_get_defaults(defstr, varargin)
 % This value will not be saved for future sessions of SPM. To make
 % persistent changes, see help section in spm_defaults.m.
 %__________________________________________________________________________
-% Copyright (C) 2008-2014 Wellcome Trust Centre for Neuroimaging
 
 % Volkmar Glauche
-% $Id: spm_get_defaults.m 6157 2014-09-05 18:17:54Z guillaume $
+% Copyright (C) 2008-2022 Wellcome Centre for Human Neuroimaging
 
 
 global defaults;

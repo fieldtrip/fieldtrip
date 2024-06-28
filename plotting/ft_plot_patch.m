@@ -10,8 +10,8 @@ function [varargout] = ft_plot_patch(hdat, vdat, varargin)
 %
 % Optional arguments should come in key-value pairs and can include
 %   'axis'            = draw the local axis,  can be 'yes', 'no', 'xy', 'x' or 'y'
-%   'box'             = draw a box around the local axes, can be 'yes' or 'no'
-%   'tag'             = string, the name assigned to the object. All tags with the same name can be deleted in a figure, without deleting other parts of the figure.
+%   'parent'          = handle which is set as the parent for the plotted elements (default = [])
+%   'tag'             = string, the tag assigned to the plotted elements (default = '')
 %   'facecolor'       = see MATLAB standard patch properties
 %   'facealpha'       = see MATLAB standard patch properties (note, approx. transparency can be achieved using 'facecolor')
 %   'edgecolor'       = see MATLAB standard patch properties (default is 'none') (equivalent to 'linecolor' in PLOT)
@@ -24,6 +24,7 @@ function [varargout] = ft_plot_patch(hdat, vdat, varargin)
 %   - as 'none' if you do not want the face of the patch to be filled (useful when you want to plot an empty box).
 %
 % It is possible to plot the object in a local pseudo-axis (c.f. subplot), which is specfied as follows
+%   'box'             = draw a box around the local axes, can be 'yes' or 'no'
 %   'hpos'            = horizontal position of the center of the local axes
 %   'vpos'            = vertical position of the center of the local axes
 %   'width'           = width of the local axes

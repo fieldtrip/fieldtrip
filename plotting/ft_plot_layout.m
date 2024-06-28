@@ -87,7 +87,7 @@ fontname    = ft_getopt(varargin, 'fontname',   get(0, 'defaulttextfontname'));
 fontweight  = ft_getopt(varargin, 'fontweight', get(0, 'defaulttextfontweight'));
 fontunits   = ft_getopt(varargin, 'fontunits',  get(0, 'defaulttextfontunits'));
 % these have to do with the font
-interpreter  = ft_getopt(varargin, 'interpreter', 'tex'); % none, tex or latex
+interpreter  = ft_getopt(varargin, 'interpreter', 'none'); % none, tex or latex
 
 % some stuff related to some refined label plotting
 labelrotate   = ft_getopt(varargin, 'labelrotate',  0);

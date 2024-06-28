@@ -162,6 +162,12 @@ if isempty(filename)
   end
 end
 
+% some of the code does not work well on matlab strings, (i.e. "" vs ''),
+% specifically ["a" "b"] yields something different than ['a' 'b']. 
+if isstring(filename)
+  filename = char(filename);
+end
+
 % the parts of the filename are used further down
 if isfolder(filename)
   [p, f, x] = fileparts(filename);
@@ -610,6 +616,10 @@ elseif filetype_check_extension(filename, '.pos')
   type = 'polhemus_pos';
   manufacturer = 'BrainProducts/CTF/Polhemus?'; % actually I don't know whose software it is
   content = 'electrode positions';
+elseif filetype_check_extension(filename, '.txt') && filetype_header_contains(filename, 'FastSCAN', 300)
+  type = 'fastscan_txt';
+  manufacturer = 'Polhemus FastSCAN';
+  content = 'headshape points';
 
   % known Blackrock Microsystems file types
 elseif strncmp(x,'.ns',3) && (filetype_check_header(filename, 'NEURALCD') || filetype_check_header(filename, 'NEURALSG'))
@@ -1237,6 +1247,15 @@ elseif filetype_check_extension(filename, '.minf') && filetype_check_ascii(filen
   % known Multiscale Electrophysiology Format (or Mayo EEG File, MEF)
   % MEF 2.1, see: https://github.com/benbrinkmann/mef_lib_2_1
   % MEF 3.0, see: https://msel.mayo.edu/codes.html
+  % MED 1.0, see: http://www.darkhorseneuro.com
+elseif isfolder(filename) && any(filetype_check_extension(filename, {'.medd', '.tied', '.rdat','recd','.ridx'}))
+  type = 'dhn_med10';
+  manufacturer = 'Dark Horse Neuro';
+  content = 'Multiscale Electrophysiology Data 1.0';
+elseif isfolder(filename) && any(endsWith({ls.name}, '.medd'))
+  type = 'dhn_med10';
+  manufacturer = 'Dark Horse Neuro';
+  content = 'Multiscale Electrophysiology Format 1.0';
 elseif isfolder(filename) && any(filetype_check_extension(filename, {'.mefd', '.timd', '.segd'}))
   type = 'mayo_mef30';
   manufacturer = 'Mayo Clinic';
@@ -1620,6 +1639,14 @@ elseif filetype_check_extension(filename, '.vtk') && filetype_check_header(filen
   type = 'vtk';
   manufacturer = 'ParaView';
   content = 'geometrical meshes';
+elseif filetype_check_extension(filename, '.bin') && exist(fullfile(p, [f '.meta']), 'file') 
+  type = 'spikeglx_bin';
+  manufacturer = 'SpikeGLX';
+  content = 'neuropixel data';
+elseif filetype_check_extension(filename, '.meta') && exist(fullfile(p, [f '.bin']), 'file') 
+  type = 'spikeglx_bin';
+  manufacturer = 'SpikeGLX';
+  content = 'neuropixel data';
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1788,6 +1815,23 @@ if haslfp || hasmua || hasspike
   end
 
   res=any(ft_filetype(neuralynxdirs, 'neuralynx_ds'));
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION that checks whether the file contains only ascii characters
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function res = filetype_header_contains(filename, pat, len)
+if exist(filename, 'file')
+  fid = fopen(filename, 'rt');
+  try
+    str = fread(fid, [1 len], 'uint8=>char');
+  catch
+    str = fread(fid, [1 inf], 'uint8=>char');
+  end
+  fclose(fid);
+  res = contains(str, pat);
+else
+  res = false;
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

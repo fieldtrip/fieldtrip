@@ -32,6 +32,7 @@ function [hs] = ft_plot_mesh(mesh, varargin)
 %   'fontunits'    =
 %   'fontname'     =
 %   'fontweight'   =
+%   'tag'          = string, the tag assigned to the plotted elements (default = '')
 %
 % If you don't want the faces, edges or vertices to be plotted, you should specify the color as 'none'.
 %
@@ -136,7 +137,7 @@ hastet   = isfield(mesh, 'tet');   % tetraheders as a Mx4 matrix with vertex ind
 hashex   = isfield(mesh, 'hex');   % hexaheders  as a Mx8 matrix with vertex indices
 hasline  = isfield(mesh, 'line');  % lines       as a Mx2 matrix with vertex indices
 haspoly  = isfield(mesh, 'poly');  % polygons    as a MxP matrix with vertex indices
-hasinside = isfield(mesh, 'inside'); 
+hasinside = isfield(mesh, 'inside');
 
 if ~isempty(unit)
   mesh = ft_convert_units(mesh, unit);
@@ -250,12 +251,6 @@ elseif ischar(edgecolor) && ismember(edgecolor, htmlcolors)
   edgecolor = htmlcolors(edgecolor);
 end
 
-% everything is added to the current figure
-holdflag = ishold;
-if ~holdflag
-  hold on
-end
-
 if isfield(mesh, 'pos')
   % this is assumed to reflect 3-D vertices
   pos = mesh.pos;
@@ -309,6 +304,12 @@ if hasline
   line = mesh.line;
 else
   line = [];
+end
+
+% everything is added to the current figure
+holdflag = ishold;
+if ~holdflag
+  hold on
 end
 
 if haspos

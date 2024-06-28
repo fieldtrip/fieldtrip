@@ -1,6 +1,6 @@
 function varargout = spm_brainwarp(varargin)
 % Part of old nonlinear spatial normalisation - a compiled routine
-%_______________________________________________________________________
+%__________________________________________________________________________
 % [Alpha,Beta,Var] = spm_brainwarp(VG,VF,Affine,basX,basY,basZ,...
 %                                   dbasX,dbasY,dbasZ,T,fwhm,VW,VW2)
 % VG    - Template volume(s) (see spm_vol)
@@ -29,7 +29,7 @@ function varargout = spm_brainwarp(varargin)
 % Alpha - A*A - where A is the design matrix
 % Beta  - A*b - where f is the object image
 % Var   - the approximate chi^2 (corrected for number of resels).
-%_______________________________________________________________________
+%__________________________________________________________________________
 % 
 % The voxels of g1, g2.. are sampled according to the smoothness of the
 % image (fwhm). The corresponding voxels of f are determined according
@@ -37,7 +37,7 @@ function varargout = spm_brainwarp(varargin)
 % "spm_write_sn.m" for more details about how this is done.
 % 
 % 
-%-----------------------------------------------------------------------
+%--------------------------------------------------------------------------
 % 
 % The design matrix A is generated internally from:
 % 
@@ -65,11 +65,10 @@ function varargout = spm_brainwarp(varargin)
 % 
 % The vector b contains [diag(w)*(f - diag(g1)*s1 - diag(g1)*x*s2 - ...)].
 %
-%_______________________________________________________________________
-% Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
+%__________________________________________________________________________
 
 % John Ashburner
-% $Id: spm_brainwarp.m 4923 2012-09-13 15:01:01Z guillaume $
+% Copyright (C) 1996-2022 Wellcome Centre for Human Neuroimaging
 
 
 %-This is merely the help file for the compiled routine

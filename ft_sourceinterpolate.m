@@ -229,8 +229,8 @@ if isUnstructuredFun && isUnstructuredAna && isfield(anatomical, 'orig') && isfi
 
   % start with an empty structure, keep only some fields
   interp = keepfields(functional, {'time', 'freq'});
-  interp = copyfields(anatomical, interp, {'coordsys', 'unit'});
-  interp = copyfields(anatomical.orig, interp, {'pos', 'tri'});
+  interp = copyfields(anatomical, interp, {'unit', 'coordsys'});
+  interp = copyfields(anatomical.orig, interp, {'pos', 'tri', 'dim'});
 
   % identify the inside voxels after interpolation
   nzeros     = sum(interpmat~=0,2);
@@ -285,7 +285,7 @@ elseif isUnstructuredFun && isUnstructuredAna
 
   % start with an empty structure, keep only some fields
   interp = keepfields(functional, {'time', 'freq'});
-  interp = copyfields(anatomical, interp, {'pos', 'tri', 'dim', 'transform', 'coordsys', 'unit'});
+  interp = copyfields(anatomical, interp, {'pos', 'tri', 'dim', 'transform', 'unit', 'coordsys'});
 
   % identify the inside voxels after interpolation
   nzeros     = sum(interpmat~=0,2);
@@ -345,7 +345,7 @@ elseif isUnstructuredFun && ~isUnstructuredAna
   
   % start with an empty structure, keep only some fields
   interp = keepfields(functional, {'time', 'freq'});
-  interp = copyfields(anatomical, interp, {'pos', 'tri', 'dim', 'transform', 'coordsys', 'unit', 'anatomy'});
+  interp = copyfields(anatomical, interp, {'pos', 'tri', 'dim', 'transform', 'unit', 'coordsys', 'anatomy'});
 
   % identify the inside voxels after interpolation
   nzeros     = sum(interpmat~=0,2);
@@ -426,7 +426,7 @@ elseif ~isUnstructuredFun && isUnstructuredAna
 
   % start with an empty structure, keep some fields
   interp = keepfields(functional, {'time', 'freq'});
-  interp = copyfields(anatomical, interp, {'pos', 'tri', 'dim', 'transform', 'coordsys', 'unit'});
+  interp = copyfields(anatomical, interp, {'pos', 'tri', 'dim', 'transform', 'unit', 'coordsys'});
 
   % identify the inside voxels after interpolation
   interp.inside    = true(size(anatomical.pos,1),1);
@@ -502,7 +502,7 @@ elseif ~isUnstructuredFun && ~isUnstructuredAna
     
     [ix,i1,i2] = intersect([tx(:) ty(:) tz(:)],[tmpint.tx(:) tmpint.ty(:) tmpint.tz(:)],'rows');
     
-    interp = keepfields(anatomical, {'pos', 'dim', 'transform', 'coordsys', 'unit',  'anatomy'});
+    interp = keepfields(anatomical, {'pos', 'tri', 'dim', 'transform', 'unit', 'coordsys', 'anatomy'});
     interp.inside = false(interp.dim);
     interp.inside(i1) = true;
     
@@ -527,7 +527,7 @@ elseif ~isUnstructuredFun && ~isUnstructuredAna
   else
     % start with an empty structure, keep some fields
     interp = keepfields(functional, {'time', 'freq'});
-    interp = copyfields(anatomical, interp, {'pos', 'dim', 'transform', 'coordsys', 'unit', 'anatomy'});
+    interp = copyfields(anatomical, interp, {'pos', 'tri', 'dim', 'transform', 'unit', 'coordsys', 'anatomy'});
     
     % convert the anatomical voxel positions into voxel indices into the functional volume
     anatomical.transform = functional.transform \ anatomical.transform;

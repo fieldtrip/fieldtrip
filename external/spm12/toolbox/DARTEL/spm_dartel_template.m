@@ -1,13 +1,13 @@
 function out = spm_dartel_template(job)
 % Iteratively compute a template with mean shape and intensities
-% format spm_dartel_template(job)
+% FORMAT spm_dartel_template(job)
 %
 % The outputs are flow fields, and a series of Template images.
-%_______________________________________________________________________
-% Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
+%__________________________________________________________________________
 
 % John Ashburner
-% $Id: spm_dartel_template.m 4064 2010-09-03 12:57:10Z john $
+% Copyright (C) 2006-2022 Wellcome Centre for Human Neuroimaging
+
 
 code = 2;
 st = job.settings;
@@ -17,17 +17,24 @@ n2 = numel(job.images{1});
 NF = struct('NI',[],'vn',[1 1]);
 NF(n1,n2) = struct('NI',[],'vn',[1 1]);
 
-for i=1:n1,
-    if numel(job.images{i}) ~= n2,
+% Check if output path is specified
+if isfield(job,'output')
+    output = job.output;
+else
+    output = [];
+end
+
+for i=1:n1
+    if numel(job.images{i}) ~= n2
         error('Incompatible number of images');
-    end;
-    for j=1:n2,
+    end
+    for j=1:n2
         [pth,nam,ext,num] = spm_fileparts(job.images{i}{j});
         NF(i,j).NI        = nifti(fullfile(pth,[nam ext]));
         num               = [str2num(num) 1 1];
         NF(i,j).vn        = num(1:2);
-    end;
-end;
+    end
+end
 
 spm_progress_bar('Init',n2,'Initial mean','Images done');
 dm = [size(NF(1,1).NI.dat) 1];
@@ -35,9 +42,10 @@ dm = dm(1:3);
 NU = cat(2,NF(1,:).NI);
 t  = zeros([dm n1+1],'single');
 tname = deblank(job.settings.template);
-for i=1:n2,
+for i=1:n2
     [pth,nam,ext]   = fileparts(NU(i).dat.fname);
-    if ~isempty(tname),
+    pth = get_output_path(pth,output,'subject');
+    if ~isempty(tname)
         NU(i).dat.fname = fullfile(pth,['u_' nam '_' tname '.nii']);
     else
         NU(i).dat.fname = fullfile(pth,['u_' nam '.nii']);
@@ -59,14 +67,14 @@ for i=1:n2,
    %        clear dat
    %    end;
    %end;
-    if exist(NU(i).dat.fname,'file'),
+    if exist(NU(i).dat.fname,'file')
         fprintf('Continuing registration from pre-existing parameters (%s)\n', NU(i).dat.fname);
         u = NU(i).dat(:,:,:,1,:);
         u = single(squeeze(u));
         y = dartel3('Exp',u,[K 1 1]);
 
         tmp = cell(1);
-        for j=1:n1,
+        for j=1:n1
             vn = NF(j,i).vn;
             if j==n1, tmp=cell(1,2); end
             [tmp{:}] = dartel3('push',...
@@ -94,39 +102,40 @@ for i=1:n2,
     else
         create(NU(i));
         NU(i).dat(:,:,:,:,:) = 0;
-        for j=1:n1,
+        for j=1:n1
             vn         = NF(j,i).vn;
             dat        = NF(j,i).NI.dat(:,:,:,vn(1),vn(2));
             msk        = isfinite(dat);
             dat(~msk)  = 0;
             t(:,:,:,j) = t(:,:,:,j) + dat;
-        end;
+        end
         t(:,:,:,end) = t(:,:,:,end) + msk;
         clear tmp msk
-    end;
+    end
     spm_progress_bar('Set',i);
-end;
+end
 spm_progress_bar('Clear');
 
 M  = NF(1,1).NI.mat;
 vx = sqrt(sum(M(1:3,1:3).^2));
-if st.param(1).slam,
-    for j=1:n1,
+if st.param(1).slam
+    for j=1:n1
         t(:,:,:,end) = t(:,:,:,end) - t(:,:,:,j);
     end
     t = max(t,0);
     g = spm_dartel_smooth(t,st.param(1).slam*2,8,vx);
 else
     g = zeros([size(t,1),size(t,2),size(t,3),n1],'single');
-    for j=1:n1,
+    for j=1:n1
         g(:,:,:,j) = t(:,:,:,j)./(t(:,:,:,end)+eps);
     end
 end
 
-if ~isempty(tname),
+if ~isempty(tname)
     NG = NF(1,1).NI;
     NG.descrip       = sprintf('Avg of %d', n2);
     [tdir,nam,ext]   = fileparts(job.images{1}{1});
+    tdir = get_output_path(tdir,output,'darteltemplates');
     NG.dat.fname     = fullfile(tdir,[tname, '_0.nii']);
     NG.dat.dim       = [dm n1];
     NG.dat.dtype     = 'float32-le';
@@ -138,23 +147,23 @@ if ~isempty(tname),
 end
 
 it0 = 0;
-for it=1:numel(st.param),
+for it=1:numel(st.param)
     param = st.param(it);
     prm   = [st.rform, param.rparam, st.optim.lmreg, ...
              st.optim.cyc, st.optim.its, param.K, code];
     drawnow
 
-    for it1=1:param.its,
+    for it1=1:param.its
         it0 = it0 + 1;
         t   = zeros([dm n1+1],'single');
 
-        for i=1:n2,
+        for i=1:n2
             f = zeros([dm n1],'single');
-            for j=1:n1,
+            for j=1:n1
                 vn         = NF(j,i).vn;
                 f(:,:,:,j) = single(NF(j,i).NI.dat(:,:,:,vn(1),vn(2)));
                 drawnow
-            end;
+            end
             u = squeeze(single(NU(i).dat(:,:,:,:,:)));
             drawnow
             [u,ll] = dartel3(u,f,g(:,:,:,1:n1),prm);
@@ -164,7 +173,7 @@ for it=1:numel(st.param),
 
             y = dartel3('Exp',u,[K 1 1]);
             tmp = cell(1);
-            for j=1:n1,
+            for j=1:n1
                 vn = NF(j,i).vn;
                 if j==n1, tmp=cell(1,2); end
                 [tmp{:}] = dartel3('push',...
@@ -184,48 +193,83 @@ for it=1:numel(st.param),
             %end;
             %t(:,:,:,end) = t(:,:,:,end) + dt;
             %clear y dt
-        end;
-        if param.slam,
-            for j=1:n1,
+        end
+        if param.slam
+            for j=1:n1
                 t(:,:,:,end) = t(:,:,:,end) - t(:,:,:,j);
             end
             t(:,:,:,end) = max(t(:,:,:,end),0);
             g = spm_dartel_smooth(t,param.slam,8,vx);
         else
-            for j=1:n1,
+            for j=1:n1
                 g(:,:,:,j) = t(:,:,:,j)./(t(:,:,:,end)+eps);
             end
         end
         clear t
-        if ~isempty(tname),
+        if ~isempty(tname)
             NG.dat.fname    = fullfile(tdir,[tname '_' num2str(it) '.nii']);
             create(NG);
             NG.dat(:,:,:,:) = g(:,:,:,1:n1);
         end
         drawnow
-    end;
-end;
+    end
+end
 
 
 n1 = numel(job.images);
 n2 = numel(job.images{1});
 [tdir,nam,ext] = fileparts(job.images{1}{1});
+tdir = get_output_path(tdir,output,'darteltemplates');
 tname = deblank(job.settings.template);
 out.template = cell(numel(job.settings.param),1);
-if ~isempty(tname),
-    for it=0:numel(job.settings.param),
+if ~isempty(tname)
+    for it=0:numel(job.settings.param)
         fname    = fullfile(tdir,[tname '_' num2str(it) '.nii']);
         out.template{it+1} = fname;
     end
 end
 out.files = cell(n2,1);
-for j=1:n2,
+for j=1:n2
     [pth,nam,ext,num] = spm_fileparts(job.images{1}{j});
-    if ~isempty(tname),
+    pth = get_output_path(pth,output,'subject');
+    if ~isempty(tname)
         fname             = fullfile(pth,['u_' nam '_' tname '.nii']);
     else
         fname             = fullfile(pth,['u_' nam '.nii']);
     end
     out.files{j} = fname;
-end;
+end
 
+
+%==========================================================================
+
+%==========================================================================
+function pth = get_output_path(pth,output,dtype)
+
+% Generate desired output path.
+
+if ~isempty(output)
+    switch output.option
+        case 'same'
+            % no change to output path
+        case 'allin'
+            % put everythin the same predefined folder
+            pth = output.outDir;
+        case 'subjspec'
+            % keep per-subject organisation in predefined folder
+            % and create it if necessary
+            switch dtype
+                case 'subject' % get subject's directory name
+                    l_fsep = strfind(pth,filesep);
+                    lp_fsep = [0 l_fsep length(pth)+1];
+                    dn_out = pth(lp_fsep(end-1)+1:lp_fsep(end)-1);
+                case 'darteltemplates'
+                    dn_out = 'DartelTemplates';
+            end
+            pth = fullfile(output.outDir,dn_out);
+        otherwise
+            % inconsistent specification -> no change to output path
+            fprintf('\nWrong output path specification, use input data path.\n');
+    end
+    if ~exist(pth,'dir'), mkdir(pth); end
+end

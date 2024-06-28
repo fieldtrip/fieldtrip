@@ -31,9 +31,15 @@ if nargin<2 || isempty(n)
 end
 
 dim = size(input);
-output = false(dim+2*n);
+
+if islogical(input)
+  output = false(dim+2*n);
+else
+  output = zeros(dim+2*n, 'like', input);
+end
+
 selx = (1+n):(dim(1)+n);
 sely = (1+n):(dim(2)+n);
 selz = (1+n):(dim(3)+n);
-% insert the original data in the padded boolean volume, the edges remain "false"
+% insert the original data in the padded volume, the edges remain "false" or zero
 output(selx, sely, selz) = input;

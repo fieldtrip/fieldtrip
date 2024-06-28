@@ -1,10 +1,8 @@
 function obj = subsasgn(obj,subs,dat)
 % Overloaded subsasgn function for file_array objects
 %__________________________________________________________________________
-% Copyright (C) 2005-2013 Wellcome Trust Centre for Neuroimaging
 
-%
-% $Id: subsasgn.m 6157 2014-09-05 18:17:54Z guillaume $
+% Copyright (C) 2005-2022 Wellcome Centre for Human Neuroimaging
 
 
 if isempty(subs), return; end
@@ -145,7 +143,13 @@ end
 
 %-Convert data into output datatype
 %--------------------------------------------------------------------------
-if dt(ind).isint, dat = round(dat); end
+if dt(ind).isint
+    % Avoid "Warning: Out of range value converted to intmin() or intmax()." 
+    dat = max(dat,dt(ind).min);
+    dat = min(dat,dt(ind).max);
+
+    dat = round(dat);
+end
 
 %ws = warning('off'); % Avoid warning messages in R14 SP3
 dat = feval(dt(ind).conv,dat);

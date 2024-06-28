@@ -14,11 +14,13 @@ function ft_defaults
 %   ft_default.checkconfig       = string, can be 'pedantic', 'loose', 'silent' (default = 'loose')
 %   ft_default.checkpath         = string, can be 'pedantic', 'once', 'no' (default = 'pedantic')
 %   ft_default.checksize         = number in bytes, can be inf (default = 1e5)
+%   ft_default.checkstring       = string, can be 'yes' or 'no' (default = 'yes'), convert "strings" in cfg to 'chars'
 %   ft_default.showlogo          = string, can be 'yes' or 'no' (default = 'yes')
 %   ft_default.showcallinfo      = string, can be 'yes' or 'no' (default = 'yes')
 %   ft_default.trackcallinfo     = string, can be 'yes' or 'no' (default = 'yes')
 %   ft_default.trackusage        = false, or string with salt for one-way encryption of identifying information (by default this is enabled and an automatic salt is created)
 %   ft_default.trackdatainfo     = string, can be 'yes' or 'no' (default = 'no')
+%   ft_default.keepprevious      = string, can be 'yes' or 'no' (default = 'yes')
 %   ft_default.outputfilepresent = string, can be 'keep', 'overwrite', 'error' (default = 'overwrite')
 %   ft_default.debug             = string, can be 'display', 'displayonerror', 'displayonsuccess', 'save', 'saveonerror', saveonsuccess' or 'no' (default = 'no')
 %   ft_default.toolbox.signal    = string, can be 'compat' or 'matlab' (default is automatic, see below)
@@ -80,13 +82,13 @@ if isempty(checkpath)
 end
 
 % ft_warning is located in fieldtrip/utilities, which may not be on the path yet
-if ~exist('ft_warning', 'file')
+if ~initialized && ~exist('ft_warning', 'file')
   ft_warning = @warning;
 end
 
 % locate the file with the persistent FieldTrip preferences
 fieldtripprefs = fullfile(prefdir, 'fieldtripprefs.mat');
-if exist(fieldtripprefs, 'file')
+if ~initialized && exist(fieldtripprefs, 'file')
   prefs       = load(fieldtripprefs); % the file contains multiple fields
   ft_default  = mergestruct(ft_default, prefs);
 end
@@ -98,8 +100,11 @@ end
 if ~isfield(ft_default, 'checkconfig'),       ft_default.checkconfig    = 'loose';    end % pedantic, loose, silent
 if ~isfield(ft_default, 'checkpath'),         ft_default.checkpath      = 'pedantic'; end % pedantic, once, no
 if ~isfield(ft_default, 'checksize'),         ft_default.checksize      = 1e5;        end % number in bytes, can be inf
+if ~isfield(ft_default, 'checkstring'),       ft_default.checkstring    = 'yes';      end % yes or no
 if ~isfield(ft_default, 'showlogo'),          ft_default.showlogo       = 'yes';      end % yes or no, this is relevant for SPM and EEGLAB
 if ~isfield(ft_default, 'showcallinfo'),      ft_default.showcallinfo   = 'yes';      end % yes or no, this is used in ft_pre/postamble_provenance
+if ~isfield(ft_default, 'keepprevious'),      ft_default.keepprevious   = 'yes';      end % yes, no, this is used in ft_postamble_previous
+if ~isfield(ft_default, 'keepcfg'),           ft_default.keepcfg        = 'yes';      end % yes, no, this is used in ft_postamble_history
 if ~isfield(ft_default, 'debug'),             ft_default.debug          = 'no';       end % no, save, saveonerror, display, displayonerror, this is used in ft_pre/postamble_debug
 if ~isfield(ft_default, 'outputfilepresent'), ft_default.outputfilepresent = 'overwrite'; end % can be keep, overwrite, error
 
@@ -291,7 +296,7 @@ if ~isdeployed
     if ft_platform_supports('matlabversion', -inf, '2013a'), ft_hastoolbox('compat/matlablt2013b', 3, 1); end
     if ft_platform_supports('matlabversion', -inf, '2013b'), ft_hastoolbox('compat/matlablt2014a', 3, 1); end
     if ft_platform_supports('matlabversion', -inf, '2014a'), ft_hastoolbox('compat/matlablt2014b', 3, 1); end
-    if ft_platform_supports('matlabversion', -inf, '2014d'), ft_hastoolbox('compat/matlablt2015a', 3, 1); end
+    if ft_platform_supports('matlabversion', -inf, '2014b'), ft_hastoolbox('compat/matlablt2015a', 3, 1); end
     if ft_platform_supports('matlabversion', -inf, '2015a'), ft_hastoolbox('compat/matlablt2015b', 3, 1); end
     if ft_platform_supports('matlabversion', -inf, '2015b'), ft_hastoolbox('compat/matlablt2016a', 3, 1); end
     if ft_platform_supports('matlabversion', -inf, '2016a'), ft_hastoolbox('compat/matlablt2016b', 3, 1); end

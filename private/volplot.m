@@ -188,7 +188,7 @@ elseif strcmp(sel, 'montage')
     map(siz(2)*(ny-1)+1:siz(2)*ny,siz(1)*(nx-1)+1:siz(1)*nx) = dat(:,:,k)';
   end
   imagesc(map);axis xy;axis equal;axis off;
-  caxis([cmin cmax]);
+  clim([cmin cmax]);
   colormap jet
 
 elseif strcmp(sel, 'sumproject')
@@ -212,23 +212,23 @@ elseif strcmp(sel, 'sumproject')
   imagesc(x, z, squeeze(sum(dat, 2))'); set(gca, 'ydir', 'normal')
   axis equal; axis tight;
   xlabel('x'); ylabel('z');
-  caxis([cmin cmax]);
+  clim([cmin cmax]);
 
   subplot(h2);
   imagesc(y, z, squeeze(sum(dat, 1))'); set(gca, 'ydir', 'normal')
   axis equal; axis tight;
   xlabel('y'); ylabel('z');
-  caxis([cmin cmax]);
+  clim([cmin cmax]);
 
   subplot(h3);
   imagesc(x, y, squeeze(sum(dat, 3))'); set(gca, 'ydir', 'normal')
   axis equal; axis tight;
   xlabel('x'); ylabel('y');
-  caxis([cmin cmax]);
+  clim([cmin cmax]);
 
   subplot(h4);
   imagesc(cmin:cmax);
-  caxis([cmin cmax]);
+  clim([cmin cmax]);
   xlabel('colorscale')
 
 elseif strcmp(sel, 'maxproject')
@@ -243,19 +243,19 @@ elseif strcmp(sel, 'maxproject')
   imagesc(x, z, squeeze(max(dat, [], 2))'); set(gca, 'ydir', 'normal')
   axis equal; axis tight;
   xlabel('x'); ylabel('z');
-  caxis([cmin cmax]);
+  clim([cmin cmax]);
 
   subplot(h2);
   imagesc(y, z, squeeze(max(dat, [], 1))'); set(gca, 'ydir', 'normal')
   axis equal; axis tight;
   xlabel('y'); ylabel('z');
-  caxis([cmin cmax]);
+  clim([cmin cmax]);
 
   subplot(h3);
   imagesc(x, y, squeeze(max(dat, [], 3))'); set(gca, 'ydir', 'normal')
   axis equal; axis tight;
   xlabel('x'); ylabel('y');
-  caxis([cmin cmax]);
+  clim([cmin cmax]);
 
   subplot(h4);
   colorbar(h4, 'peer', h1);
@@ -281,26 +281,26 @@ else
   imagesc(x, z, squeeze(dat(:,yi,:))'); set(gca, 'ydir', 'normal')
   axis equal; axis tight;
   xlabel('x'); ylabel('z');
-  caxis([cmin cmax]);
+  clim([cmin cmax]);
   ft_plot_crosshair([x(xi) z(zi)], 'color', 'yellow');
 
   subplot(h2);
   imagesc(y, z, squeeze(dat(xi,:,:))'); set(gca, 'ydir', 'normal')
   axis equal; axis tight;
   xlabel('y'); ylabel('z');
-  caxis([cmin cmax]);
+  clim([cmin cmax]);
   ft_plot_crosshair([y(yi) z(zi)], 'color', 'yellow');
 
   subplot(h3);
   imagesc(x, y, squeeze(dat(:,:,zi))'); set(gca, 'ydir', 'normal')
   axis equal; axis tight;
   xlabel('x'); ylabel('y');
-  caxis([cmin cmax]);
+  clim([cmin cmax]);
   ft_plot_crosshair([x(xi) y(yi)], 'color', 'yellow');
 
   subplot(h4);
   imagesc(cmin:((cmax-cmin)./64):cmax);
-  caxis([cmin cmax]);
+  clim([cmin cmax]);
   xlabel('colorscale')
 end
 

@@ -31,23 +31,21 @@ function varargout = subsref(opt,subs)
 %               Setting frequency, phase or slice to 0 will remove it.
 % timing      - timing information.  When present, contains the fields
 %               toffset - acquisition time of first volume (seconds)
-%               tspace  - time between sucessive volumes (seconds)
+%               tspace  - time between successive volumes (seconds)
 % descrip     - a brief description of the image
 % cal         - a two-element vector containing cal_min and cal_max
 % aux_file    - name of an auxiliary file
-% _________________________________________________________________________
-% Copyright (C) 2005-2013 Wellcome Trust Centre for Neuroimaging
+%__________________________________________________________________________
 
-%
-% $Id: subsref.m 5759 2013-11-21 14:01:14Z guillaume $
+% Copyright (C) 2005-2022 Wellcome Centre for Human Neuroimaging
 
 
 varargout = rec(opt,subs);
 return;
 
 function c = rec(opt,subs)
-switch subs(1).type,
-case {'.'},
+switch subs(1).type
+case {'.'}
     c = {};
     opts = struct(opt);
     for ii=1:numel(opts)
@@ -57,48 +55,48 @@ case {'.'},
         %end;
 
         h = opt.hdr;
-        if isempty(h),
+        if isempty(h)
             %error('No header.');
             h = empty_hdr;
-        end;
+        end
 
         % NIFTI-1 FORMAT
         switch(subs(1).subs)
-        case 'extras',
+        case 'extras'
             t = opt.extras;
 
-        case 'raw', % A hidden field
-            if isa(opt.dat,'file_array'),
+        case 'raw' % A hidden field
+            if isa(opt.dat,'file_array')
                 tmp         = struct(opt.dat);
                 tmp.scl_slope = [];
                 tmp.scl_inter = [];
                 t           = file_array(tmp);
             else
                 t = opt.dat;
-            end;
+            end
 
-        case 'dat',
+        case 'dat'
             t = opt.dat;
 
-        case 'mat0',
+        case 'mat0'
             t = decode_qform0(h);
             s = double(bitand(h.xyzt_units,7));
             if s
                 d = findindict(s,'units');
                 if ~isempty(d)
                     t = diag([d.rescale*[1 1 1] 1])*t; 
-                end;
-            end;
+                end
+            end
 
-        case 'mat0_intent',
+        case 'mat0_intent'
             d = findindict(h.qform_code,'xform');
-            if isempty(d) || d.code==0,
+            if isempty(d) || d.code==0
                 t = '';
             else
                 t = d.label;
-            end;
+            end
 
-        case 'mat',
+        case 'mat'
             if h.sform_code > 0
                 t = double([h.srow_x ; h.srow_y ; h.srow_z ; 0 0 0 1]);
                 t = t * [eye(4,3) [-1 -1 -1 1]'];
@@ -113,22 +111,22 @@ case {'.'},
                 end
             end
 
-        case 'mat_intent',
-            if h.sform_code>0,
+        case 'mat_intent'
+            if h.sform_code>0
                 t = h.sform_code;
             else
                 t = h.qform_code;
-            end;
+            end
             d = findindict(t,'xform');
-            if isempty(d) || d.code==0,
+            if isempty(d) || d.code==0
                 t = '';
             else
                 t = d.label;
-            end;
+            end
 
-        case 'intent',
+        case 'intent'
             d = findindict(h.intent_code,'intent');
-            if isempty(d) || d.code == 0,
+            if isempty(d) || d.code == 0
                 %t = struct('code','UNKNOWN','param',[]);
                 t = [];
             else
@@ -137,7 +135,7 @@ case {'.'},
                 t.param = t.param(1:length(d.param));
             end
 
-         case 'diminfo',
+         case 'diminfo'
             t   = [];
             tmp = bitand(         h.dim_info    ,3); if tmp, t.frequency = double(tmp); end;
             tmp = bitand(bitshift(h.dim_info,-2),3); if tmp, t.phase     = double(tmp); end;
@@ -146,98 +144,98 @@ case {'.'},
             %               'phase',bitand(bitshift(h.dim_info,-2),3),...
             %               'slice',bitand(bitshift(h.dim_info,-4),3))
             if isfield(t,'slice')
-                 sc = double(h.slice_code);
-                 ss = double(h.slice_start)+1;
-                 se = double(h.slice_end)+1;
-                 ss = max(ss,1);
-                 se = min(se,double(h.dim(t.slice+1)));
+                sc = double(h.slice_code);
+                ss = double(h.slice_start)+1;
+                se = double(h.slice_end)+1;
+                ss = max(ss,1);
+                se = min(se,double(h.dim(t.slice+1)));
+                
+                sd = double(h.slice_duration);
+                s  = double(bitand(h.xyzt_units,24));
+                d  = findindict(s,'units');
+                if d.rescale, sd = sd*d.rescale; end
+                
+                ns       = (se-ss+1);
+                d = findindict(sc,'sliceorder');
+                if isempty(d)
+                    label = 'UNKNOWN';
+                else
+                    label = d.label;
+                end
+                t.slice_time = struct('code',label,'start',ss,'end',se,'duration',sd);
+                if 0 % Never
+                    t.times  = zeros(1,double(h.dim(t.slice+1)))+NaN;
+                    switch sc
+                        case 0 % Unknown
+                            t.times(ss:se)        = zeros(1,ns);
+                        case 1 % sequential increasing
+                            t.times(ss:se)        = (0:(ns-1))*sd;
+                        case 2 % sequential decreasing
+                            t.times(ss:se)        = ((ns-1):-1:0)*sd;
+                        case 3 % alternating increasing
+                            t.times(ss:2:se)      = (0:floor((ns+1)/2-1))*sd;
+                            t.times((ss+1):2:se)  = (floor((ns+1)/2):(ns-1))*sd;
+                        case 4 % alternating decreasing
+                            t.times(se:-2:ss)     = (0:floor((ns+1)/2-1))*sd;
+                            t.times(se:-2:(ss+1)) = (floor((ns+1)/2):(ns-1))*sd;
+                    end
+                end
+            end
 
-                 sd = double(h.slice_duration);
-                 s  = double(bitand(h.xyzt_units,24));
-                 d  = findindict(s,'units');
-                 if d.rescale, sd = sd*d.rescale; end;
-
-                 ns       = (se-ss+1);
-                 d = findindict(sc,'sliceorder');
-                 if isempty(d)
-                     label = 'UNKNOWN';
-                 else
-                     label = d.label;
-                 end;
-                 t.slice_time = struct('code',label,'start',ss,'end',se,'duration',sd);
-                 if 0, % Never
-                     t.times  = zeros(1,double(h.dim(t.slice+1)))+NaN;
-                     switch sc,
-                     case 0, % Unknown
-                         t.times(ss:se)        = zeros(1,ns);
-                     case 1, % sequential increasing
-                         t.times(ss:se)        = (0:(ns-1))*sd;
-                     case 2, % sequential decreasing
-                         t.times(ss:se)        = ((ns-1):-1:0)*sd;
-                     case 3, % alternating increasing
-                         t.times(ss:2:se)      = (0:floor((ns+1)/2-1))*sd;
-                         t.times((ss+1):2:se)  = (floor((ns+1)/2):(ns-1))*sd;
-                     case 4, % alternating decreasing
-                         t.times(se:-2:ss)     = (0:floor((ns+1)/2-1))*sd;
-                         t.times(se:-2:(ss+1)) = (floor((ns+1)/2):(ns-1))*sd;
-                     end;
-                 end;
-             end;
-
-        case 'timing',
+        case 'timing'
             to = double(h.toffset);
             dt = double(h.pixdim(5));
-            if to==0 && dt==0,
+            if to==0 && dt==0
                 t = [];
             else
                 s  = double(bitand(h.xyzt_units,24));
                 d  = findindict(s,'units');
-                if d.rescale,
+                if d.rescale
                     to = to*d.rescale;
                     dt = dt*d.rescale;
-                end;
+                end
                 t  = struct('toffset',to,'tspace',dt);
-            end;
+            end
 
-        case 'descrip',
+        case 'descrip'
             t   = deblank(h.descrip);
             msk = find(t==0);
-            if any(msk), t=t(1:(msk(1)-1)); end;
+            if any(msk), t=t(1:(msk(1)-1)); end
 
-        case 'cal',
+        case 'cal'
             t = [double(h.cal_min) double(h.cal_max)];
-            if all(t==0), t = []; end;
+            if all(t==0), t = []; end
 
-        case 'aux_file',
+        case 'aux_file'
             t = deblank(h.aux_file);
 
-        case 'hdr', % Hidden field
+        case 'hdr' % Hidden field
             t = h;
 
         otherwise
             error(['Reference to non-existent field ''' subs(1).subs '''.']);
-        end;
-        if numel(subs)>1,
+        end
+        if numel(subs)>1
             t = subsref(t,subs(2:end));
-        end;
+        end
         c{ii} = t;
-    end;
-case {'{}'},
+    end
+case {'{}'}
     error('Cell contents reference from a non-cell array object.');
-case {'()'},
+case {'()'}
     opt  = struct(opt);
     t    = subsref(opt,subs(1));
     if length(subs)>1
         c = {};
-        for i=1:numel(t),
+        for i=1:numel(t)
             ti = nifti(t(i));
             ti = rec(ti,subs(2:end));
             c  = {c{:}, ti{:}};
-        end;
+        end
     else
         c    = {nifti(t)};
-    end;
+    end
 
 otherwise
     error('This should not happen.');
-end;
+end

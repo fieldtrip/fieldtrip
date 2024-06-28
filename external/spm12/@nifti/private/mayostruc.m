@@ -1,17 +1,15 @@
 function o = mayostruc
 % Create a data structure describing Analyze headers
-% _______________________________________________________________________
-% Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
+%__________________________________________________________________________
 
-%
-% $Id: mayostruc.m 1143 2008-02-07 19:33:33Z spm $
+% Copyright (C) 2005-2022 Wellcome Centre for Human Neuroimaging
 
 
 persistent org;
-if ~isempty(org),
+if ~isempty(org)
     o = org;
     return;
-end;
+end
 t = struct('conv',{ @char, @int16, @int32, @single },...
            'prec',{'uint8','int16','int32','single'},...
            'size',{      1,      2,      4,       4});
@@ -74,7 +72,5 @@ for j=1:length(org)
     org(j).def    = feval(fun,def);
     org(j).offset = os;
     os  = os + org(j).len*org(j).dtype.size;
-end;
+end
 o = org;
-return;
-

@@ -4,10 +4,17 @@
 %
 % Usage:
 %   EEG = mff_import(mffFile);
+%   EEG = mff_import(mffFile, correctEvents);
 %
 % Input:
 %  mffFile - filename/foldername for the MFF file (MFF file/folder must
 %            already exist)
+%
+% Optional input:
+%  correctEvents - [0|1] correct (overwrite) event files who have special
+%                  characters and cannot be imported by the Java library
+%                  (default is 0 or false)
+%
 % Output:
 %  EEG      - EEGLAB structure
 %  data     - channels x sample data
@@ -61,7 +68,7 @@
 % You should have received a copy of the GNU General Public License
 % along with mffmatlabio.  If not, see <https://www.gnu.org/licenses/>.
 
-function [EEG, data, events, chanlocs, mff] = mff_import(mffFile)
+function [EEG, data, events, chanlocs, mff] = mff_import(mffFile, correctEvents)
 
 %matVer = ver('MATLAB');
 %if datenum(matVer.Date) < 735595 % Matlab 2014a
@@ -71,6 +78,9 @@ function [EEG, data, events, chanlocs, mff] = mff_import(mffFile)
 if nargin < 1 
     help mff_import;
     return;
+end
+if nargin < 2
+    correctEvents = false;
 end
 
 % add full path if possible
@@ -136,14 +146,21 @@ if ~isempty(info2) && length(fieldnames(info2)) > 1
 end
 
 % import info file
-info    = mff_importinfo(mffFile);
+[info, begtime]= mff_importinfo(mffFile);
 layout  = mff_importsensorlayout(mffFile);
 subject = mff_importsubject(mffFile);
-begtime            = info.recordtimematlab;
 EEG.etc.timezone   = info.timezone;
+EEG.etc.recordingtime = info.recordtimematlab;
 EEG.etc.mffversion = info.version;
 EEG.etc.layout     = layout;
 EEG.etc.subject    = subject;
+if ~isempty(subject)
+    subjectFields = { subject.fields.name };
+    ind = strmatch('localIdentifier', subjectFields,  'exact');
+    if ~isempty(ind)
+        EEG.subject = subject.fields(ind).data;
+    end
+end
 
 % import coordinate layout
 [EEG.chanlocs, EEG.ref] = mff_importcoordinates(mffFile);
@@ -185,14 +202,14 @@ if ~isempty(pnschans)
 end
 if exist('pop_chanedit', 'file')
     EEG=pop_chanedit(EEG, 'forcelocs',[],'nosedir','+Y');
+    EEG.chaninfo.filename = 'egimff';
 else
     EEG.chaninfo.nosedir = '+Y';
+    EEG.chaninfo.filename = 'egimff';
 end
 
-EEG.etc.recordingtime = begtime;
-
 % import events
-[EEG.event, newtimezone] = mff_importevents(mffFile, begtime, EEG.srate);
+[EEG.event, newtimezone] = mff_importevents(mffFile, begtime, EEG.srate, correctEvents);
 if ~isequal(EEG.etc.timezone, newtimezone) && ~isempty(newtimezone)
     error('Time zone issue');
 end
@@ -205,11 +222,13 @@ cont = mff_importepochs(mffFile, info.version);
 cat = mff_importcategories(mffFile, info.version);
 
 % calculate epoch length
-allEpochLen = [ [cont.endtime] - [cont.begintime] ];
-if length(unique(allEpochLen)) > 1
-    fprintf([ 'IMPORTANT Warning: cannot import trials of different length\n' ... 
-              '  importing as segmented data (trial/category info will be lost)\n' ] );
-    cat = [];
+if ~isempty(cont)
+    allEpochLen = [ [cont.endtime] - [cont.begintime] ];
+    if length(unique(allEpochLen)) > 1
+        fprintf([ 'IMPORTANT Warning: cannot import trials of different length\n' ... 
+                  '  importing as segmented data (trial/category info will be lost)\n' ] );
+        cat = [];
+    end
 end
 
 if ~isempty(cat)
@@ -253,8 +272,11 @@ if ~isempty(cat)
         % there is a natural jitter of a few millisecond for each time-locking
         % event within the uncertainty of the EEG sampling rate
         % epochDiffLat{iCat}(end+1) = cat(iCat).trials(iTrial(iCat)-1).eventbegin-cat(iCat).trials(iTrial(iCat)-1).begintime;
-        if catCont(iBound).eventbegin-catCont(iBound).begintime ~= EEG.xmin
-            % disp('Time locking event offset');
+        if -(catCont(iBound).eventbegin-catCont(iBound).begintime)/1000000 ~= EEG.xmin
+            diffms = (EEG.xmin+(catCont(iBound).eventbegin-catCont(iBound).begintime)/1000000)*1000;
+            if abs(diffms) > 1/EEG.srate*1000
+                fprintf(2, 'Time locking event discrepency of %1.2f ms which is larger than the tolerated %1.2f ms based on the sampling rate\n', diffms, 1/EEG.srate*1000 );
+            end
         end
         
         % check latency and block consistency
@@ -327,9 +349,13 @@ else
             EEG.event(end).duration = eventDuration/1000000*EEG.srate; % in samples
             
             sampleCalculated = ((cont(iBound).begintime-discontinuities)/1000000)*EEG.srate;
-            sampleBlock      = blockSamples(cont(iBound).firstblock); % this assumes block of size 1
-            if abs(sampleCalculated-sampleBlock) > 1e-10
-                fprintf('Warning: segment discontinuity (%d samples missing - pause in the recording or bug?)\n', sampleCalculated-sampleBlock);
+            try
+                sampleBlock      = blockSamples(cont(iBound).firstblock); % this assumes block of size 1
+                if abs(sampleCalculated-sampleBlock) > 1e-10
+                    fprintf('Warning: segment discontinuity (%d samples missing - pause in the recording or bug?)\n', sampleCalculated-sampleBlock);
+                end
+            catch
+                disp('Warning: issue when calculating segment discontinuity');
             end
             EEG.event(end).latency  = (cont(iBound).begintime)/1000000*EEG.srate; % absolute time allow resorting events later
 %            EEG.event(end).latency  = sampleCalculated;

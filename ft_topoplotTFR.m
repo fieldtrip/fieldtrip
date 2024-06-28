@@ -46,7 +46,7 @@ function [cfg] = ft_topoplotTFR(cfg, varargin)
 %                            'WestOutside'        outside left
 %   cfg.colorbartext       = string indicating the text next to colorbar
 %   cfg.interplimits       = limits for interpolation (default = 'head')
-%                            'electrodes'         to furthest electrode
+%                            'sensors'            to furthest sensor
 %                            'head'               to edge of head
 %   cfg.interpolation      = 'linear','cubic','nearest','v4' (default = 'v4') see GRIDDATA
 %   cfg.style              = plot style (default = 'both')
