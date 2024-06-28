@@ -135,7 +135,7 @@ cfg          = ft_rejectartifact(cfg);
 datay = data1;
 datay = rmfield(datay,   'sampleinfo');
 datay = rmfield(datay,   'trialinfo');
-datay2       = ft_rejectartifact(cfg, datay);
+datay2       = ft_rejectartifact(rmfield(cfg, 'trl'), datay);
 
 % test all other functions using raw data as input (to remove sampleinfo)
 
