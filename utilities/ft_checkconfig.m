@@ -799,7 +799,9 @@ end
 if any(strcmp(t, 'struct'))
   fn = s(strcmp(t(:,1),'struct'));
   for k = 1:numel(fn)
-    cfg.(fn{k}) = checkstringfun(cfg.(fn{k}));
+    for m = 1:numel(cfg)
+      cfg(m).(fn{k}) = checkstringfun(cfg(m).(fn{k}));
+    end
   end
 end
 
