@@ -35,4 +35,8 @@ function offset = time2offset(time, fsample)
 %
 % $Id$
 
-offset = round(time(1)*fsample);
+if ~isempty(time)
+  offset = round(time(1)*fsample);
+else
+  offset = nan;
+end

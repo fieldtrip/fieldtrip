@@ -323,3 +323,26 @@ catch
   ok = false;
 end
 assert(~ok, 'ft_selectdata with raw input and union selection should fail');
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% this part of the script tests a specific latency selection on raw data, causing
+% some of the trials being empty
+
+cfg = [];
+cfg.latency = [5 10];
+datasel3 = ft_selectdata(cfg, data);
+
+% new behavior
+%assert(numel(datasel3.trial)== 1);
+assert(numel(datasel3.trial)== 2);
+assert(numel(datasel3.trial{1})==0);
+
+% add a sampleinfo
+data.sampleinfo = [1 10;11 20];
+datasel4 = ft_selectdata(cfg, data);
+% new behavior
+%assert(size(datasel4.sampleinfo,1)==1);
+assert(size(datasel4.sampleinfo,1)==2);
+assert(all(~isfinite(datasel4.sampleinfo(1,:))));
+
+ 
