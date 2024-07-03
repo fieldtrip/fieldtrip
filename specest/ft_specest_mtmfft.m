@@ -66,6 +66,8 @@ if isempty(fbopt)
   fbopt.n = 1;
 end
 
+verbose = istrue(verbose); % if the calling function has 'yes'/'no'/etc
+
 % throw errors for required input
 if isempty(tapsmofrq) && (strcmp(taper, 'dpss') || strcmp(taper, 'sine'))
   ft_error('you need to specify tapsmofrq when using dpss or sine tapers')
@@ -257,9 +259,9 @@ if timedelay ~= 0
 end
 
 % compute fft
+[st, cws] = dbstack;
 if ~((strcmp(taper,'dpss') || strcmp(taper,'sine')) && numel(tapsmofrq)>1) % ariable number of slepian tapers not requested
   str = sprintf('nfft: %d samples, datalength: %d samples, %d tapers',endnsample,ndatsample,ntaper(1));
-  [st, cws] = dbstack;
   if length(st)>1 && strcmp(st(2).name, 'ft_freqanalysis')
     % specest_mtmfft has been called by ft_freqanalysis, meaning that ft_progress has been initialised
     ft_progress(fbopt.i./fbopt.n, ['processing trial %d/%d ',str,'\n'], fbopt.i, fbopt.n);
@@ -291,7 +293,6 @@ else % variable number of slepian tapers requested
       spectrum = complex(NaN([max(ntaper) nchan nfreqoi]));
       for ifreqoi = 1:nfreqoi
         str = sprintf('nfft: %d samples, datalength: %d samples, frequency %d (%.2f Hz), %d tapers',endnsample,ndatsample,ifreqoi,freqoi(ifreqoi),ntaper(ifreqoi));
-        [st, cws] = dbstack;
         if length(st)>1 && strcmp(st(2).name, 'ft_freqanalysis') && verbose
           % specest_mtmconvol has been called by ft_freqanalysis, meaning that ft_progress has been initialised
           ft_progress(fbopt.i./fbopt.n, ['processing trial %d, ',str,'\n'], fbopt.i);
@@ -324,7 +325,6 @@ else % variable number of slepian tapers requested
       spectrum = complex(zeros([nchan sum(ntaper)]));
       for ifreqoi = 1:nfreqoi
         str = sprintf('nfft: %d samples, datalength: %d samples, frequency %d (%.2f Hz), %d tapers',endnsample,ndatsample,ifreqoi,freqoi(ifreqoi),ntaper(ifreqoi));
-        [st, cws] = dbstack;
         if length(st)>1 && strcmp(st(2).name, 'ft_freqanalysis') && verbose
           % specest_mtmconvol has been called by ft_freqanalysis, meaning that ft_progress has been initialised
           ft_progress(fbopt.i./fbopt.n, ['processing trial %d, ',str,'\n'], fbopt.i);

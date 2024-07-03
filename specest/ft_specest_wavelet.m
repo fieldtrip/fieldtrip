@@ -62,6 +62,8 @@ if isempty(fbopt)
   fbopt.n = 1;
 end
 
+verbose = istrue(verbose); % if the calling function has 'yes'/'no'/etc
+
 % Set n's
 [nchan,ndatsample] = size(dat);
 
@@ -206,10 +208,10 @@ end
 % Compute fft
 spectrum = complex(nan(nchan,nfreqoi,ntimeboi),nan(nchan,nfreqoi,ntimeboi));
 datspectrum = fft(ft_preproc_padding(dat, padtype, 0, postpad), [], 2);
+[st, cws] = dbstack;
 for ifreqoi = 1:nfreqoi
   str = sprintf('frequency %d (%.2f Hz)', ifreqoi,freqoi(ifreqoi));
   
-  [st, cws] = dbstack;
   if length(st)>1 && strcmp(st(2).name, 'ft_freqanalysis') && verbose
     % specest_convol has been called by ft_freqanalysis, meaning that ft_progress has been initialised
     ft_progress(fbopt.i./fbopt.n, ['trial %d, ',str,'\n'], fbopt.i);

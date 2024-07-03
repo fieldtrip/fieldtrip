@@ -55,6 +55,8 @@ if isempty(fbopt)
   fbopt.n = 1;
 end
 
+verbose = istrue(verbose); % if the calling function has 'yes'/'no'/etc
+
 % this does not work on integer data
 dat = cast(dat, 'double');
 
