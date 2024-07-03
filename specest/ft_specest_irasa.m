@@ -62,6 +62,8 @@ polyorder = ft_getopt(varargin, 'polyorder', 1);
 verbose   = ft_getopt(varargin, 'verbose', true);
 fbopt     = ft_getopt(varargin, 'feedback');
 
+verbose = istrue(verbose); % if the calling function has 'yes'/'no'/etc
+
 % check output option
 if ~strcmp(output, {'fractal','original'})
   ft_error('The current version ft_specest_irasa outputs ''fractal'' or ''original'' power only. For more information about the update, see https://www.fieldtriptoolbox.org/example/irasa/');
