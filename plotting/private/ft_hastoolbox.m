@@ -208,8 +208,334 @@ url = {
 % determine whether the toolbox is installed
 toolbox = upper(toolbox);
 
+% work internally with cell(-array)
+if ischar(toolbox)
+  toolbox = {toolbox};
+end
+
+% get a list of required functions to check for, and fallback option (for SPM)
+status     = false(numel(toolbox),1);
+for i=1:numel(toolbox)
+  [dependency, fallback_toolbox] = get_dependency(toolbox{i}, silent);
+  
+  status(i,1) = is_present(dependency);
+  if ~status(i,1) && ~isempty(fallback_toolbox)
+    % in case of SPMxUP
+    toolbox{i} = fallback_toolbox;
+  end
+end
+
+% try to determine the path of the requested toolbox and add it
+if any(~status) && autoadd>0
+  
+  % for core FieldTrip modules
+  prefix = fileparts(which('ft_defaults'));
+  if any(~status)
+    status(~status) = myaddpath(fullfile(prefix, lower(toolbox(~status))), silent);
+  end
+  
+  % for external FieldTrip modules
+  prefix = fullfile(fileparts(which('ft_defaults')), 'external');
+  if any(~status)
+    newstatus   = myaddpath(fullfile(prefix, lower(toolbox(~status))), silent);
+    licensefile = strcat(lower(toolbox(~status)), '_license');
+    exist_licensefile = cellfun(@exist, licensefile, repmat({'file'}, size(licensefile))) == 2;
+    licensefile = licensefile(exist_licensefile);
+    
+    status(~status) = newstatus; % update the status
+    if any(newstatus) && ~isempty(licensefile)
+      % this will execute openmeeg_license, mne_license, artinis_license, and duneuro_license
+      % which display the license on screen for a few seconds
+      for i=1:numel(licensefile)
+        feval(licensefile{i});
+      end
+    end
+  end
+  
+  % for contributed FieldTrip extensions
+  prefix = fullfile(fileparts(which('ft_defaults')), 'contrib');
+  if any(~status)
+    newstatus   = myaddpath(fullfile(prefix, lower(toolbox(~status))), silent);
+    licensefile = strcat(lower(toolbox(~status)), '_license');
+    exist_licensefile = cellfun(@exist, licensefile, repmat({'file'}, size(licensefile))) == 2;
+    licensefile = licensefile(exist_licensefile);
+    
+    status(~status) = newstatus;
+    if any(newstatus) && ~isempty(licensefile)
+      % this will execute openmeeg_license, mne_license and artinis_license
+      % which display the license on screen for a few seconds
+      for i=1:numel(licensefile)
+        feval(licensefile{i});
+      end
+    end
+  end
+  
+  % for linux computers in the Donders Centre for Cognitive Neuroimaging
+  prefix = {'/home/common/matlab'};
+  if any(~status) && is_folder(prefix)
+    status(~status) = myaddpath(fullfile(prefix, lower(toolbox(~status))), silent);
+  end
+  
+  % for windows computers in the Donders Centre for Cognitive Neuroimaging
+  prefix = {'h:\common\matlab'};
+  if any(~status) && is_folder(prefix)
+    status(~status) = myaddpath(fullfile(prefix, lower(toolbox(~status))), silent);
+  end
+  
+  % use the MATLAB subdirectory in your homedirectory, this works on linux and mac
+  prefix = {fullfile(getenv('HOME'), 'matlab')};
+  if any(~status) && is_folder(prefix)
+    status(~status) = myaddpath(fullfile(prefix, lower(toolbox(~status))), silent);
+  end
+  
+  if ~status
+    % the toolbox is not on the path and cannot be added
+    sel = find(strcmp(url(:,1), toolbox));
+    if ~isempty(sel)
+      msg = sprintf('the %s toolbox is not installed, %s', toolbox, url{sel, 2});
+    else
+      msg = sprintf('the %s toolbox is not installed', toolbox);
+    end
+    if autoadd==1
+      error(msg);
+    elseif autoadd==2
+      warning(msg);
+    else
+      % fail silently
+    end
+  end
+  
+elseif ~status && autoadd<0
+  % the toolbox is not on the path and should not be added
+  sel = find(strcmp(url(:,1), toolbox));
+  if ~isempty(sel)
+    msg = sprintf('the %s toolbox is not installed, %s', toolbox, url{sel, 2});
+  else
+    msg = sprintf('the %s toolbox is not installed', toolbox);
+  end
+  error(msg);
+end
+
+% this function is called many times in FieldTrip and associated toolboxes
+% use efficient handling if the same toolbox has been investigated before
+% if status
+%  previous.(fixname(toolbox)) = status;
+% end
+
+% remember the previous path, allows us to determine on the next call
+% whether the path has been modified outise of this function
+% previouspath = path;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% helper function
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function status = myaddpath(toolbox, silent)
+global ft_default
+
+status    = false(numel(toolbox),1);
+notfolder = ~is_folder(toolbox);
+if any(notfolder)
+  notfolder = find(notfolder);
+  for i=1:numel(notfolder)
+    % search for a case-insensitive match, this is needed for MVPA-Light
+    [p, f] = fileparts(toolbox{i});
+    dirlist = dir(p);
+    sel = strcmpi({dirlist.name}, f);
+    if sum(sel)==1
+      toolbox{i} = fullfile(p, dirlist(sel).name);
+    end
+  end
+end
+
+if isdeployed
+  ft_warning('cannot change path settings for %s in a compiled application', toolbox);
+  status(:) = true;
+  return;
+end
+
+isafolder = is_folder(toolbox);
+if any(isafolder)
+  if ~silent
+    ft_warning('off','backtrace');
+    ft_warning('adding %s toolbox to your MATLAB path', toolbox{isafolder});
+    ft_warning('on','backtrace');
+  end
+  
+  % deal with some exceptions: spm, mvpa-light, ibtb
+  ismvpa = ~cellfun(@isempty, regexp(lower(toolbox), 'mvpa-light$', 'once')) & isafolder;
+  if any(ismvpa)
+    % this one comes with its own startup script
+    addpath(fullfile(toolbox{ismvpa}, 'startup'));
+    startup_MVPA_light;
+    isafolder(ismvpa) = false; % switch this one off 
+  end
+  isibtb = ~cellfun(@isempty, regexp(lower(toolbox), 'ibtb', 'once')) & isafolder;
+  if any(isibtb)
+    % this needs to be added with all its subdirectories
+    addpath(genpath(toolbox{isibtb}));
+    isafolder(isibtb) = false;
+  end
+  isspm = (~cellfun(@isempty, regexp(lower(toolbox), 'spm2$', 'once')) | ...
+            ~cellfun(@isempty, regexp(lower(toolbox), 'spm5$', 'once')) | ...
+            ~cellfun(@isempty, regexp(lower(toolbox), 'spm8$', 'once')) | ...
+            ~cellfun(@isempty, regexp(lower(toolbox), 'spm12$', 'once'))) & isafolder;
+  if any(isspm)
+    % SPM needs to be added with all its subdirectories 
+    addpath(genpath(toolbox{isspm}));
+    isafolder(isspm) = false;
+  end
+  
+  addpath(toolbox{isafolder});
+  % remember the toolbox that was just added to the path, it will be cleaned up by FT_POSTAMBLE_HASTOOLBOX
+  if ~isfield(ft_default, 'toolbox') || ~isfield(ft_default.toolbox, 'cleanup')
+    ft_default.toolbox.cleanup = {};
+  end
+  ft_default.toolbox.cleanup(end+(1:sum(isafolder))) = toolbox(isafolder);
+  status(isafolder) = true;
+end
+
+%if (~isempty(regexp(toolbox(~isafolder), 'spm2$', 'once')) || ~isempty(regexp(toolbox(~isafolder), 'spm5$', 'once')) || ~isempty(regexp(toolbox(~isafolder), 'spm8$', 'once')) || ~isempty(regexp(toolbox(~isafolder), 'spm12$', 'once'))) && exist(strcat(toolbox(~isafolder), 'b'), 'dir')
+%  % the final release version of SPM is not available, add the beta version instead
+%  status(~isafolder) = myaddpath(strcat(toolbox(~isafolder), 'b'), silent);
+%end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% helper function
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function path = unixpath(path)
+%path(path=='\') = '/'; % replace backward slashes with forward slashes
+path = strrep(path,'\','/');
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% helper function
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function status = hasfunction(funname, toolbox)
+try
+  % call the function without any input arguments, which probably is inappropriate
+  feval(funname);
+  % it might be that the function without any input already works fine
+  status = true;
+catch
+  % either the function returned an error, or the function is not available
+  % availability is influenced by the function being present and by having a
+  % license for the function, i.e. in a concurrent licensing setting it might
+  % be that all toolbox licenses are in use
+  m = lasterror;
+  if strcmp(m.identifier, 'MATLAB:license:checkouterror')
+    if nargin>1
+      ft_warning('the %s toolbox is available, but you don''t have a license for it', toolbox);
+    else
+      ft_warning('the function ''%s'' is available, but you don''t have a license for it', funname);
+    end
+    status = false;
+  elseif strcmp(m.identifier, 'MATLAB:UndefinedFunction')
+    status = false;
+  else
+    % the function seems to be available and it gave an unknown error,
+    % which is to be expected with inappropriate input arguments
+    status = true;
+  end
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% helper function
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function status = is_subdir_in_fieldtrip_path(toolbox_name)
+fttrunkpath = unixpath(fileparts(which('ft_defaults')));
+fttoolboxpath = fullfile(fttrunkpath, lower(toolbox_name));
+needle   = [pathsep fttoolboxpath pathsep];
+haystack = [pathsep path() pathsep];
+status   = contains(haystack, needle);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% helper function
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function status = has_mex(name)
+full_name=[name '.' mexext];
+status = (exist(full_name, 'file')==3);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% helper function
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function v = get_spm_version()
+if ~is_present('spm')
+  v=NaN;
+  return
+end
+
+version_str = spm('ver');
+token = regexp(version_str,'(\d*)','tokens');
+v = str2num([token{:}{:}]);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function status = check_spm_mex()
+status = true;
+try
+  % this will always result in an error
+  spm_conv_vol
+catch
+  me = lasterror;
+  % any error is ok, except when due to an invalid MEX file
+  status = ~isequal(me.identifier, 'MATLAB:mex:ErrInvalidMEXFile');
+end
+if ~status
+  % SPM8 mex file issues are common on macOS with recent MATLAB versions
+  ft_warning('the SPM mex files are incompatible with your platform, see http://bit.ly/2OGF6US');
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% helper function
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function status = has_license(toolbox_name)
+% NOTE: this explicitly checks out a license, which may be suboptimal in
+% terms of license use. Consider using the option 'test', but this needs to
+% be checked with respect to backward compatibility first
+status = license('checkout', toolbox_name)==1;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% helper function
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function status = is_present(dependency)
+if iscell(dependency)
+  % use recursion
+  status = all(cellfun(@is_present,dependency));
+elseif islogical(dependency)
+  % boolean
+  status = all(dependency);
+elseif ischar(dependency)
+  % name of a function
+  status = is_function_present_in_search_path(dependency);
+elseif isa(dependency, 'function_handle')
+  status = dependency();
+else
+  assert(false,'this should not happen');
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% helper function
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function status = is_function_present_in_search_path(function_name)
+w = which(function_name);
+
+% must be in path and not a variable
+status = ~isempty(w) && ~isequal(w, 'variable');
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% IS_FOLDER is needed for versions prior to 2017b
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function tf = is_folder(dirpath)
+tf = cellfun(@exist, dirpath, repmat({'dir'}, size(dirpath))) == 7;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% GET_DEPENDENCY is moved to a subfunction, to keep code readable, and to
+% support cell-array input into ft_hastoolbox
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function [dependency, fallback_toolbox] = get_dependency(toolbox, silent)
+
 % In case SPMxUP not available, allow to use fallback toolbox
-fallback_toolbox='';
+fallback_toolbox = '';
 
 switch toolbox
   case 'AFNI'
@@ -490,287 +816,3 @@ switch toolbox
     if ~silent, ft_warning('cannot determine whether the %s toolbox is present', toolbox); end
     dependency = false;
 end
-
-status = is_present(dependency);
-if ~status && ~isempty(fallback_toolbox)
-  % in case of SPMxUP
-  toolbox = fallback_toolbox;
-end
-
-% try to determine the path of the requested toolbox and add it
-if ~status && autoadd>0
-
-  % for core FieldTrip modules
-  prefix = fileparts(which('ft_defaults'));
-  if ~status
-    status = myaddpath(fullfile(prefix, lower(toolbox)), silent);
-  end
-
-  % for external FieldTrip modules
-  prefix = fullfile(fileparts(which('ft_defaults')), 'external');
-  if ~status
-    status = myaddpath(fullfile(prefix, lower(toolbox)), silent);
-    licensefile = [lower(toolbox) '_license'];
-    if status && exist(licensefile, 'file')
-      % this will execute openmeeg_license, mne_license and duneuro_license
-      % which display the license on screen for three seconds
-      feval(licensefile);
-    end
-  end
-
-  % for contributed FieldTrip extensions
-  prefix = fullfile(fileparts(which('ft_defaults')), 'contrib');
-  if ~status
-    status = myaddpath(fullfile(prefix, lower(toolbox)), silent);
-    licensefile = [lower(toolbox) '_license'];
-    if status && exist(licensefile, 'file')
-      % this will execute openmeeg_license, mne_license and artinis_license
-      % which display the license on screen for a few seconds
-      feval(licensefile);
-    end
-  end
-
-  % for linux computers in the Donders Centre for Cognitive Neuroimaging
-  prefix = '/home/common/matlab';
-  if ~status && is_folder(prefix)
-    status = myaddpath(fullfile(prefix, lower(toolbox)), silent);
-  end
-
-  % for windows computers in the Donders Centre for Cognitive Neuroimaging
-  prefix = 'h:\common\matlab';
-  if ~status && is_folder(prefix)
-    status = myaddpath(fullfile(prefix, lower(toolbox)), silent);
-  end
-
-  % use the MATLAB subdirectory in your homedirectory, this works on linux and mac
-  prefix = fullfile(getenv('HOME'), 'matlab');
-  if ~status && is_folder(prefix)
-    status = myaddpath(fullfile(prefix, lower(toolbox)), silent);
-  end
-
-  if ~status
-    % the toolbox is not on the path and cannot be added
-    sel = find(strcmp(url(:,1), toolbox));
-    if ~isempty(sel)
-      msg = sprintf('the %s toolbox is not installed, %s', toolbox, url{sel, 2});
-    else
-      msg = sprintf('the %s toolbox is not installed', toolbox);
-    end
-    if autoadd==1
-      error(msg);
-    elseif autoadd==2
-      warning(msg);
-    else
-      % fail silently
-    end
-  end
-
-elseif ~status && autoadd<0
-  % the toolbox is not on the path and should not be added
-  sel = find(strcmp(url(:,1), toolbox));
-  if ~isempty(sel)
-    msg = sprintf('the %s toolbox is not installed, %s', toolbox, url{sel, 2});
-  else
-    msg = sprintf('the %s toolbox is not installed', toolbox);
-  end
-  error(msg);
-end
-
-% this function is called many times in FieldTrip and associated toolboxes
-% use efficient handling if the same toolbox has been investigated before
-% if status
-%  previous.(fixname(toolbox)) = status;
-% end
-
-% remember the previous path, allows us to determine on the next call
-% whether the path has been modified outise of this function
-% previouspath = path;
-
-
-% remember the current input and output arguments, so that they can be
-% reused on a subsequent call in case the same input argument is given
-current_argout = {status};
-previous_argin  = current_argin;
-previous_argout = current_argout;
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% helper function
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function status = myaddpath(toolbox, silent)
-global ft_default
-
-if ~is_folder(toolbox)
-  % search for a case-insensitive match, this is needed for MVPA-Light
-  [p, f] = fileparts(toolbox);
-  dirlist = dir(p);
-  sel = strcmpi({dirlist.name}, f);
-  if sum(sel)==1
-    toolbox = fullfile(p, dirlist(sel).name);
-  end
-end
-
-if isdeployed
-  ft_warning('cannot change path settings for %s in a compiled application', toolbox);
-  status = true;
-elseif is_folder(toolbox)
-  if ~silent
-    ft_warning('off','backtrace');
-    ft_warning('adding %s toolbox to your MATLAB path', toolbox);
-    ft_warning('on','backtrace');
-  end
-  if any(~cellfun(@isempty, regexp(lower(toolbox), {'spm2$', 'spm5$', 'spm8$', 'spm12$'})))
-    % SPM needs to be added with all its subdirectories
-    addpath(genpath(toolbox));
-    % check whether the mex files are compatible
-    check_spm_mex;
-  elseif ~isempty(regexp(lower(toolbox), 'mvpa-light$', 'once'))
-    % this comes with its own startup script
-    addpath(fullfile(toolbox, 'startup'))
-    startup_MVPA_Light;
-  elseif ~isempty(regexp(lower(toolbox), 'ibtb', 'once'))
-    % this needs to be added with all its subdirectories
-    addpath(genpath(toolbox));
-  else
-    addpath(toolbox);
-  end
-  % remember the toolbox that was just added to the path, it will be cleaned up by FT_POSTAMBLE_HASTOOLBOX
-  if ~isfield(ft_default, 'toolbox') || ~isfield(ft_default.toolbox, 'cleanup')
-    ft_default.toolbox.cleanup = {};
-  end
-  ft_default.toolbox.cleanup{end+1} = toolbox;
-  status = true;
-elseif (~isempty(regexp(toolbox, 'spm2$', 'once')) || ~isempty(regexp(toolbox, 'spm5$', 'once')) || ~isempty(regexp(toolbox, 'spm8$', 'once')) || ~isempty(regexp(toolbox, 'spm12$', 'once'))) && exist([toolbox 'b'], 'dir')
-  % the final release version of SPM is not available, add the beta version instead
-  status = myaddpath([toolbox 'b'], silent);
-else
-  status = false;
-end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% helper function
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function path = unixpath(path)
-%path(path=='\') = '/'; % replace backward slashes with forward slashes
-path = strrep(path,'\','/');
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% helper function
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function status = hasfunction(funname, toolbox)
-try
-  % call the function without any input arguments, which probably is inappropriate
-  feval(funname);
-  % it might be that the function without any input already works fine
-  status = true;
-catch
-  % either the function returned an error, or the function is not available
-  % availability is influenced by the function being present and by having a
-  % license for the function, i.e. in a concurrent licensing setting it might
-  % be that all toolbox licenses are in use
-  m = lasterror;
-  if strcmp(m.identifier, 'MATLAB:license:checkouterror')
-    if nargin>1
-      ft_warning('the %s toolbox is available, but you don''t have a license for it', toolbox);
-    else
-      ft_warning('the function ''%s'' is available, but you don''t have a license for it', funname);
-    end
-    status = false;
-  elseif strcmp(m.identifier, 'MATLAB:UndefinedFunction')
-    status = false;
-  else
-    % the function seems to be available and it gave an unknown error,
-    % which is to be expected with inappropriate input arguments
-    status = true;
-  end
-end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% helper function
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function status = is_subdir_in_fieldtrip_path(toolbox_name)
-fttrunkpath = unixpath(fileparts(which('ft_defaults')));
-fttoolboxpath = fullfile(fttrunkpath, lower(toolbox_name));
-needle   = [pathsep fttoolboxpath pathsep];
-haystack = [pathsep path() pathsep];
-status   = contains(haystack, needle);
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% helper function
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function status = has_mex(name)
-full_name=[name '.' mexext];
-status = (exist(full_name, 'file')==3);
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% helper function
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function v = get_spm_version()
-if ~is_present('spm')
-  v=NaN;
-  return
-end
-
-version_str = spm('ver');
-token = regexp(version_str,'(\d*)','tokens');
-v = str2num([token{:}{:}]);
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function status = check_spm_mex()
-status = true;
-try
-  % this will always result in an error
-  spm_conv_vol
-catch
-  me = lasterror;
-  % any error is ok, except when due to an invalid MEX file
-  status = ~isequal(me.identifier, 'MATLAB:mex:ErrInvalidMEXFile');
-end
-if ~status
-  % SPM8 mex file issues are common on macOS with recent MATLAB versions
-  ft_warning('the SPM mex files are incompatible with your platform, see http://bit.ly/2OGF6US');
-end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% helper function
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function status = has_license(toolbox_name)
-% NOTE: this explicitly checks out a license, which may be suboptimal in
-% terms of license use. Consider using the option 'test', but this needs to
-% be checked with respect to backward compatibility first
-status = license('checkout', toolbox_name)==1;
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% helper function
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function status = is_present(dependency)
-if iscell(dependency)
-  % use recursion
-  status = all(cellfun(@is_present,dependency));
-elseif islogical(dependency)
-  % boolean
-  status = all(dependency);
-elseif ischar(dependency)
-  % name of a function
-  status = is_function_present_in_search_path(dependency);
-elseif isa(dependency, 'function_handle')
-  status = dependency();
-else
-  assert(false,'this should not happen');
-end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% helper function
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function status = is_function_present_in_search_path(function_name)
-w = which(function_name);
-
-% must be in path and not a variable
-status = ~isempty(w) && ~isequal(w, 'variable');
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% ISFOLDER is needed for versions prior to 2017b
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function tf = is_folder(dirpath)
-tf = exist(dirpath,'dir') == 7;
