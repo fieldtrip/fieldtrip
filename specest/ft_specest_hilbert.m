@@ -188,9 +188,9 @@ nfreqoi = size(filtfreq,1);
 
 % preallocate the result and perform the transform
 spectrum = complex(nan(nchan, nfreqoi, ntimeboi), nan(nchan, nfreqoi, ntimeboi));
+[st, cws] = dbstack;
 for ifreqoi = 1:nfreqoi
   str = sprintf('frequency %d (%.2f Hz)', ifreqoi,freqoi(ifreqoi));
-  [st, cws] = dbstack;
   if length(st)>1 && strcmp(st(2).name, 'ft_freqanalysis') && verbose
     % specest_convol has been called by ft_freqanalysis, meaning that ft_progress has been initialised
     ft_progress(fbopt.i./fbopt.n, ['trial %d, ',str,'\n'], fbopt.i);

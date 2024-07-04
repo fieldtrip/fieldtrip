@@ -71,6 +71,8 @@ if isempty(fbopt)
   fbopt.n = 1;
 end
 
+verbose = istrue(verbose); % if the calling function has 'yes'/'no'/etc
+
 % throw errors for required input
 if ismember(taper, {'dpss', 'sine', 'sine_old'}) && isempty(tapsmofrq)
   % these are multitapering methods
@@ -282,6 +284,7 @@ else
 end
 
 % Switch between memory efficient representation or intuitive default representation
+[st, cws] = dbstack;
 switch dimord
         
   case 'tap_chan_freq_time' % default
@@ -290,7 +293,6 @@ switch dimord
     spectrum = cell(max(ntaper), nfreqoi);
     for ifreqoi = 1:nfreqoi
       str = sprintf('frequency %d (%.2f Hz), %d tapers', ifreqoi,freqoi(ifreqoi),ntaper(ifreqoi));
-      [st, cws] = dbstack;
       if length(st)>1 && strcmp(st(2).name, 'ft_freqanalysis') && verbose
         % specest_mtmconvol has been called by ft_freqanalysis, meaning that ft_progress has been initialised
         ft_progress(fbopt.i./fbopt.n, ['trial %d, ',str,'\n'], fbopt.i);
@@ -333,7 +335,6 @@ switch dimord
     spectrum = complex(zeros([nchan ntimeboi sum(ntaper)]));
     for ifreqoi = 1:nfreqoi
       str = sprintf('frequency %d (%.2f Hz), %d tapers', ifreqoi,freqoi(ifreqoi),ntaper(ifreqoi));
-      [st, cws] = dbstack;
       if length(st)>1 && strcmp(st(2).name, 'ft_freqanalysis') && verbose
         % specest_mtmconvol has been called by ft_freqanalysis, meaning that ft_progress has been initialised
         ft_progress(fbopt.i./fbopt.n, ['trial %d, ',str,'\n'], fbopt.i);
