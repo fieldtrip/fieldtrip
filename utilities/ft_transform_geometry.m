@@ -161,7 +161,7 @@ end
 % mfields must be simply multiplied
 % recfields must be recursed into
 tfields   = {'pos' 'pnt' 'o' 'coilpos' 'elecpos' 'optopos' 'chanpos' 'chanposold' 'nas' 'lpa' 'rpa' 'zpoint'}; % apply rotation plus translation
-rfields   = {'ori' 'nrm'     'coilori' 'elecori' 'optoori' 'chanori' 'chanoriold' 'mom'                     }; % only apply rotation
+rfields   = {'ori' 'nrm'     'coilori' 'elecori' 'optoori' 'chanori' 'chanoriold' 'mom' 'leadfield' 'filter'}; % only apply rotation
 mfields   = {'transform'};                % plain matrix multiplication
 recfields = {'fid' 'bnd' 'orig' 'dip'};   % recurse into these fields
 % the field 'r' is not included here, because it applies to a volume
@@ -197,6 +197,17 @@ output = input;
 % SUBFUNCTION that applies the homogeneous transformation
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [new] = apply(transform, old)
+
+if iscell(old)
+  % recurse into the cell-array
+  new = cell(size(old));
+  for i=1:numel(old)
+    if ~isempty(old{i})
+      new{i} = apply(transform, old{i});
+    end
+  end
+  return;
+end
 
 [m, n] = size(old);
 if m~=3 && n==3
