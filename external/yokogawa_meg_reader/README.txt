@@ -1,7 +1,5 @@
-This directory contains code for importing MEG data from the YOKOGAWA system. This code was initially
-developped and contributed by YOKOGAWA, but its MEG activities have been transferred to RICOH.
-The code is now the responsibility of RICOH.
+This directory contains code for NIRS data reading and analysis that is contributed by Jorn Horschig at Artinis (https://www.artinis.com).
 
-Please see the "EULA for YOKOGAWA MEG Reader Toolbox.pdf" document for the software license agreement.
+The code here is the responsibility of Artinis. If you have questions about this, please contact https://www.artinis.com/support
 
-See also https://www.ricoh-usa.com/en/industries/healthcare/ricoh-meg-diagnostic-neurological-tool-to-measure-brain-activity
+See the LICENSE.txt file for details on the copyrights.  
