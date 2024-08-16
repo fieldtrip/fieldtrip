@@ -1,6 +1,7 @@
 function level = artifact_level(dat, metric, mval, sd, connectivity)
 
-% This function is shared between FT_REJECTVISUAL and FT_BADCHANNEL
+% This function is shared between FT_REJECTVISUAL, FT_BADCHANNEL, 
+% FT_BADSEGMENT, and FT_BADDATA
 %
 % Use as
 %   level = artifact_level(dat, metric, mval, sd, connectivity)
@@ -61,10 +62,14 @@ end
 switch metric
   case 'var'
     level = nanstd(dat, [], 2).^2;
-  case 'db'
-    level = 10*log10(nanstd(dat, [], 2).^2);
   case 'std'
     level = nanstd(dat, [], 2);
+  case 'db'
+    level = 10*log10(nanstd(dat, [], 2).^2);
+  case 'mad'
+    level = mad(dat, 1, 2);
+  case '1/var'
+    level = 1./(nanstd(dat, [], 2).^2);
   case 'min'
     level = nanmin(dat, [], 2);
   case 'max'
@@ -75,14 +80,10 @@ switch metric
     level = nanmax(dat, [], 2) - nanmin(dat, [], 2);
   case 'kurtosis'
     level = kurtosis(dat, [], 2);
-  case '1/var'
-    level = 1./(nanstd(dat, [], 2).^2);
   case 'zvalue'
     level = nanmean((dat-repmat(mval, 1, nsample))./repmat(sd, 1, nsample), 2);
   case 'maxzvalue'
     level = nanmax((dat-repmat(mval, 1, nsample))./repmat(sd, 1, nsample), [], 2);
-  case 'mad'
-    level = mad(dat, 1, 2);
 
   case 'neighbexpvar'
     % this results in a Nx1 vector

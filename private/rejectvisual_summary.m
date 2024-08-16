@@ -138,10 +138,11 @@ info.axes(3) = axes('position', [0.100 0.250 0.375 0.300]);  % trials
 % set up radio buttons for choosing metric
 bgcolor = get(h, 'color');
 
-metriclist = {'var' 'std' 'mad' 'min' 'max' 'maxabs' 'range' 'kurtosis' '1/var' 'zvalue' 'maxzvalue' 'neighbexpvar' 'neighbcorr' 'neighbstdratio' 'db'};
+metriclist = {'var' 'std' 'mad' 'db' '1/var' 'min' 'max' 'maxabs' 'range' 'kurtosis' 'zvalue' 'maxzvalue' 'neighbexpvar' 'neighbcorr' 'neighbstdratio'};
+currentmetric = find(strcmp(metriclist, info.metric));
 
 uicontrol(h, 'Units', 'normalized', 'position', [0.575 0.50 0.24 0.04], 'Style', 'text', 'HorizontalAlignment', 'left', 'backgroundcolor', get(h, 'color'), 'string', 'Metric used:'); % text string for metric
-uicontrol(h, 'Units', 'normalized', 'position', [0.725 0.51 0.20 0.04], 'Style', 'popupmenu', 'backgroundcolor', bgcolor, 'string', metriclist,       'HandleVisibility', 'off', 'callback', @change_metric); % popup menu for metric
+uicontrol(h, 'Units', 'normalized', 'position', [0.725 0.51 0.20 0.04], 'Style', 'popupmenu', 'backgroundcolor', bgcolor, 'string', metriclist, 'value', currentmetric, 'HandleVisibility', 'off', 'callback', @change_metric); % popup menu for metric
 uicontrol(h, 'Units', 'normalized', 'position', [0.575 0.46 0.24 0.04], 'Style', 'text', 'HorizontalAlignment', 'left', 'backgroundcolor', get(h, 'color'), 'string', 'Plot trial:');
 info.plottrltxt = uicontrol(h, 'Units', 'normalized', 'position', [0.725 0.47 0.20 0.04], 'Style', 'edit', 'HorizontalAlignment', 'left', 'backgroundcolor', [1 1 1], 'callback', @plot_trials); % editbox for trial plotting
 
@@ -287,11 +288,20 @@ switch info.cfg.viewmode
       set(info.axes(2), 'Ytick', []);
     end
 end % switch
-% don't try to rescale the axes if they are empty
-if any(info.chansel) && any(info.trlsel)
+if ~any(info.chansel) || ~any(info.trlsel)
+  % don't try to rescale the axes if they are empty
+else
+  if xmin>0 && xmax>0
+    xmin = 0.8*xmin; % closest to zero
+    xmax = 1.2*xmax; % furthest from zero
+  end
+  if xmin<0 && xmax<0
+    xmin = 1.2*xmin; % furthest from zero
+    xmax = 0.8*xmax; % closest to zero
+  end
   % ensure that the horizontal and vertical range increase, also when negative
   % see https://github.com/fieldtrip/fieldtrip/issues/1150
-  axis(fixrange([0.8*xmin 1.2*xmax ymin-0.5 ymax+0.5]));
+  axis(fixrange([xmin xmax ymin-0.5 ymax+0.5]));
 end
 axis ij;
 set(info.axes(2), 'ButtonDownFcn', @toggle_visual);  % needs to be here; call to axis resets this property
@@ -325,11 +335,20 @@ switch info.cfg.viewmode
       set(info.axes(3), 'Xtick', []);
     end
 end % switch
-% don't try to rescale the axes if they are empty
-if any(info.chansel) && any(info.trlsel)
+if ~any(info.chansel) || ~any(info.trlsel)
+  % don't try to rescale the axes if they are empty
+else
+  if ymin>0 && ymax>0
+    ymin = 0.8*ymin; % closest to zero
+    ymax = 1.2*ymax; % furthest from zero
+  end
+  if ymin<0 && ymax<0
+    ymin = 1.2*ymin; % furthest from zero
+    ymax = 0.8*ymax; % closest to zero
+  end
   % ensure that the horizontal and vertical range increase, also when negative
   % see https://github.com/fieldtrip/fieldtrip/issues/1150
-  axis(fixrange([xmin-0.5 xmax+0.5 0.8*ymin 1.2*ymax]));
+  axis(fixrange([xmin-0.5 xmax+0.5 ymin ymax]));
 end
 set(info.axes(3), 'ButtonDownFcn', @toggle_visual);  % needs to be here; call to axis resets this property
 xlabel('trial number');
@@ -575,11 +594,11 @@ drawnow
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [maxperchan, maxpertrl, maxperchan_all, maxpertrl_all] = set_maxper(level, chansel, trlsel, metric)
-if ismember(metric, {'var', 'std', 'max', 'maxabs', 'range', 'kurtosis', '1/var', 'zvalue', 'maxzvalue', 'neighbstdratio'})
-  % take the maximum
+if ismember(metric, {'var', 'std', 'db', 'mad', '1/var', 'max', 'maxabs', 'range', 'kurtosis', 'zvalue', 'maxzvalue', 'neighbstdratio'})
+  % large values should be detected, take the maximum
   extreme = @max;
 elseif ismember(metric, {'min', 'neighbexpvar', 'neighbcorr'})
-  % take the minimum
+  % small values should be detected, take the minimum
   extreme = @min;
 end
 % determine the extreme value
