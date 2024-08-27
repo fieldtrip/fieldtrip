@@ -196,10 +196,10 @@ if isfield(raw, 'fastread') && raw.fastread
     error(me,'This datafile does not allow for fast reading');
   end
   
-  first = find(raw.rawdir.first==from);
-  last  = find(raw.rawdir.last==to);
+  first = find(raw.rawdir.first<=from,1,'last');
+  last  = find(raw.rawdir.last>=to,1,'first');
   
-  n = last - first + 1;
+  n = last - first + 1; % number of buffers to read to capture the requested segment
   
   fseek(fid, raw.rawdir.pos(first), 'bof');
   tmp = fread(fid, [nrows*raw.rawdir.nsamp+nextra n], readstr);
@@ -208,6 +208,9 @@ if isfield(raw, 'fastread') && raw.fastread
     data = reshape(data, [nrows raw.rawdir.nsamp*n]);
   end
   
+  % only a subpart of the chunk of data may be requested
+  data = data(:, (from-raw.rawdir.first(first)+1):(to-raw.rawdir.first(first)+1));
+
   if iscomplex
     error(me, 'fast reading complex-valued data is not yet supported');
     % FIXME, no reason not to implement this
