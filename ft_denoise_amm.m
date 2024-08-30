@@ -223,7 +223,7 @@ end
 v = pos;
 n = ori;
 vrange   = abs((max(v)-min(v)));
-[~, ind] = max(vrange);
+[tmp, ind] = max(vrange);
 [o, r]   = spheroid_fit(v, ind);
 
 if (ind~=2)
