@@ -1,4 +1,4 @@
-function [data] = ft_badchannel(cfg, data)
+function [data] = ft_baddata(cfg, data)
 
 % FT_BADDATA identifies bad data in a MEG or EEG dataset by looping over all trials
 % and all channels. Each channel in each trial is considered separately, in the
