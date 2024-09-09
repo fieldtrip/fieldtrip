@@ -7,7 +7,7 @@ function [nrm] = surface_normals(pnt, tri, opt)
 %   nrm = surface_normals(pnt, tri, opt)
 % where opt is either 'vertex' (default) or 'triangle'.
 %
-% See also SURFACE_ORIENTATION, SURFACE_INSIDE, SURFACE_NESTING, PROJECTTRI, PCNORMALS
+% See also SURFACE_AREA, SURFACE_ORIENTATION, SURFACE_INSIDE, SURFACE_NESTING, PROJECTTRI, PCNORMALS
 
 % Copyright (C) 2002-2007, Robert Oostenveld
 %
