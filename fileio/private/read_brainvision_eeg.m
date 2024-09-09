@@ -101,6 +101,7 @@ elseif strcmpi(hdr.DataFormat, 'binary') && strcmpi(hdr.DataOrientation, 'vector
   fseek(fid, 0, 'bof');
 
   numsamples = (endsample-begsample+1);
+  dat = zeros(hdr.NumberOfChannels,numsamples);
   for chan=1:hdr.NumberOfChannels
     fseek(fid, (begsample-1)*4, 'cof');                 % skip the first N samples
     [tmp, siz] = fread(fid, numsamples, sampletype);    % read these samples
