@@ -8,7 +8,7 @@ function s = surface_orientation(pos, tri, ori)
 % or
 %   str = surface_orientation(pos, tri, ori)
 %
-% See also SURFACE_NESTING, SURFACE_NORMALS, SURFACE_NESTING
+% See also SURFACE_AREA, SURFACE_NESTING, SURFACE_NORMALS, SURFACE_NESTING
 
 % Copyright (C) 2007-2023, Robert Oostenveld
 %
