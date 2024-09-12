@@ -51,6 +51,9 @@ hdr.DataFormat      = 'BINARY';
 hdr.DataOrientation = 'MULTIPLEXED';
 hdr.BinaryFormat    = 'IEEE_FLOAT_32';
 hdr.resolution      = ones(size(hdr.label));  % no additional calibration needed, since float32
+if ~isfield(hdr, 'chanunit')
+  hdr.chanunit = repmat({'unknown'}, size(hdr.label));
+end
 
 % determine the filenames
 [p, f, x] = fileparts(filename);
@@ -97,11 +100,11 @@ fprintf(fid, '[Binary Infos]\r\n');
 fprintf(fid, 'BinaryFormat=%s\r\n',      hdr.BinaryFormat);
 fprintf(fid, '\r\n');
 fprintf(fid, '[Channel Infos]\r\n');
-% Each entry: Ch<Channel number>=<Name>,<Reference channel name>,<Resolution in microvolts>,<Future extensions>...
+% Each entry: Ch<Channel number>=<Name>,<Reference channel name>,<Resolution in "Unit">,<Unit>,<Future extensions>...
 % Fields are delimited by commas, some fields might be omitted (empty).
 % Commas in channel names should be coded as "\1", but are not supported here
 for i=1:hdr.nChans
-  fprintf(fid, 'Ch%d=%s,,%g\r\n', i, hdr.label{i}, hdr.resolution(i));
+  fprintf(fid, 'Ch%d=%s,,%g,%s\r\n', i, hdr.label{i}, hdr.resolution(i), strrep(hdr.chanunit{i}, 'uV', 'µV'));
 end
 fclose(fid);
 

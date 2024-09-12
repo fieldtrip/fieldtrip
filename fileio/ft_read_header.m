@@ -622,8 +622,9 @@ switch headerformat
     hdr.nTrials     = orig.nTrials;
     hdr.orig        = orig;
     % assign the channel type and units for the known channels
-    hdr.chantype = repmat({'eeg'}, size(hdr.label));
-    hdr.chanunit = repmat({'uV'},  size(hdr.label));
+    hdr.chanunit = orig.unit;
+    hdr.chantype = repmat({'unknown'}, size(hdr.label));
+    hdr.chantype(strcmp(hdr.chanunit, 'uV')) = {'eeg'}; % assume these to be EEG
 
   case 'bucn_nirs'
     orig = read_bucn_nirshdr(filename);
@@ -638,7 +639,7 @@ switch headerformat
     orig = orig.header;
     % In Spike2, channels can have different sampling rates, units, length
     % etc. etc. Here, channels need to have to same properties.
-    if length(unique([orig.samplerate]))>1,
+    if length(unique([orig.samplerate]))>1
       ft_error('channels with different sampling rates are not supported');
     else
       hdr.Fs   = orig(1).samplerate;
@@ -648,7 +649,7 @@ switch headerformat
     hdr.nSamples    = min([orig.nsamples]);
     hdr.nSamplesPre = 0;
     % only continuous data supported
-    if sum(strcmpi({orig.mode},'continuous')) < hdr.nChans,
+    if sum(strcmpi({orig.mode},'continuous')) < hdr.nChans
       ft_error('not all channels contain continuous data');
     else
       hdr.nTrials = 1;
