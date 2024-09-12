@@ -552,9 +552,9 @@ if ~status && autoadd>0
     % the toolbox is not on the path and cannot be added
     sel = find(strcmp(url(:,1), toolbox));
     if ~isempty(sel)
-      msg = sprintf('the %s toolbox is not installed, %s', toolbox, url{sel, 2});
+      msg = sprintf('the %s toolbox is not available, %s', toolbox, url{sel, 2});
     else
-      msg = sprintf('the %s toolbox is not installed', toolbox);
+      msg = sprintf('the %s toolbox is not available', toolbox);
     end
     if autoadd==1
       error(msg);
@@ -569,9 +569,9 @@ elseif ~status && autoadd<0
   % the toolbox is not on the path and should not be added
   sel = find(strcmp(url(:,1), toolbox));
   if ~isempty(sel)
-    msg = sprintf('the %s toolbox is not installed, %s', toolbox, url{sel, 2});
+    msg = sprintf('the %s toolbox is not available, %s', toolbox, url{sel, 2});
   else
-    msg = sprintf('the %s toolbox is not installed', toolbox);
+    msg = sprintf('the %s toolbox is not available', toolbox);
   end
   error(msg);
 end
