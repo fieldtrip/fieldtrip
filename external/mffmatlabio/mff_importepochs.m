@@ -27,11 +27,7 @@
 
 function continuous = mff_importepochs(mffFile, version)
 
-p = fileparts(which('mff_importsignal.m'));
-warning('off', 'MATLAB:Java:DuplicateClass');
-javaaddpath(fullfile(p, 'MFF-1.2.2-jar-with-dependencies.jar'));
-warning('on', 'MATLAB:Java:DuplicateClass');
-
+mff_path;
 if nargin < 2
     version = 3;
 end
@@ -52,7 +48,7 @@ if ~exist(catURI)
 end
 epochResource = mfffactorydelegate.openResourceAtURI(catURI, epochsRType);
 continuous    = [];
-if epochResource.loadResource()
+if ~isempty(epochResource) && epochResource.loadResource()
     epochs = epochResource.getEpochs();
     fprintf('Importing epoch.xml ressource: %d data segments\n', epochs.size);
     

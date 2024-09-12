@@ -7,9 +7,9 @@ function ft_write_tsv(filename, tsv)
 % Use as
 %   ft_write_tsv(filename, table)
 %
-% See also FT_READ_TSV, FT_READ_JSON, FT_WRITE_JSON, READTABLE, WRITETABLE
+% See also FT_READ_TSV, FT_READ_JSON, FT_WRITE_JSON, READTABLE, WRITETABLE, TBLWRITE
 
-% Copyright (C) 2018-2021, Robert Oostenveld
+% Copyright (C) 2018-2024, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.

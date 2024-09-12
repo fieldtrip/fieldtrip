@@ -40,11 +40,7 @@ end
 if exist('eegplugin_mffimport')
     error('MFFimport plugin conflict detected, remove plugin and call back this function/menu');
 end
-
-p = fileparts(which('mff_importsignal.m'));
-warning('off', 'MATLAB:Java:DuplicateClass');
-javaaddpath(fullfile(p, 'MFF-1.2.2-jar-with-dependencies.jar'));
-warning('on', 'MATLAB:Java:DuplicateClass');
+mff_path;
 
 % Create a factory.
 mfffactorydelegate = javaObject('com.egi.services.mff.api.LocalMFFFactoryDelegate');
@@ -85,7 +81,7 @@ for iFile = 1:length(binfilenames)
                         catch
                             errorCode = lasterror;
                             if strcmpi(errorCode.identifier, 'MATLAB:Java:GenericException')
-                                error( [ 'You must increate Java Memory to read this file' 10 ...
+                                error( [ 'You must increase Java Memory to read this file' 10 ...
                                     'On the Home tab, in the Environment section, click Preferences.' 10 ...
                                     'Select MATLAB > General > Java Heap Memory' 10 ...
                                     'You must restart Matlab after making this change.' 10 ...

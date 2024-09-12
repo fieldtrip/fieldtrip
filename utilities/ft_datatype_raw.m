@@ -75,6 +75,7 @@ function [data] = ft_datatype_raw(data, varargin)
 version       = ft_getopt(varargin, 'version', 'latest');
 hassampleinfo = ft_getopt(varargin, 'hassampleinfo', 'ifmakessense'); % can be yes/no/ifmakessense
 hastrialinfo  = ft_getopt(varargin, 'hastrialinfo',  'ifmakessense'); % can be yes/no/ifmakessense
+allowemptytrials = ft_getopt(varargin, 'allowemptytrials', 'yes');
 
 % do some sanity checks
 assert(isfield(data, 'trial') && isfield(data, 'time') && isfield(data, 'label'), 'inconsistent raw data structure, some field is missing');
@@ -96,9 +97,10 @@ if isequal(hastrialinfo, 'ifmakessense')
 else
   hastrialinfo = istrue(hastrialinfo);
 end
+allowemptytrials = istrue(allowemptytrials);
 
 if strcmp(version, 'latest')
-  version = '2011';
+  version = '2024';
 end
 
 if isempty(data)
@@ -106,6 +108,79 @@ if isempty(data)
 end
 
 switch version
+  case '2024'
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    if ~allowemptytrials
+      remove = false(numel(data.time),1);
+      for i=1:numel(data.time)
+        if isempty(data.time{i})
+          remove(i) = true;
+        end
+      end
+      data.time  = data.time(~remove);
+      data.trial = data.trial(~remove);
+      if isfield(data, 'sampleinfo')
+        data.sampleinfo = data.sampleinfo(~remove,:);
+      end
+      if isfield(data, 'trialinfo')
+        data.trialinfo = data.trialinfo(~remove,:);
+      end
+    end
+
+    % ensure that the sensor structures are up to date
+    if isfield(data, 'grad')
+      data.grad = ft_datatype_sens(data.grad);
+    end
+    if isfield(data, 'elec')
+      data.elec = ft_datatype_sens(data.elec);
+    end
+    if isfield(data, 'opto')
+      data.opto = ft_datatype_sens(data.opto);
+    end
+    
+    if ~isfield(data, 'fsample')
+      for i=1:length(data.time)
+        if length(data.time{i})>1
+          data.fsample = 1/mean(diff(data.time{i}));
+          break
+        else
+          data.fsample = nan;
+        end
+      end
+      if isnan(data.fsample)
+        ft_warning('cannot determine sampling frequency');
+      end
+    end
+    
+    if isfield(data, 'offset')
+      data = rmfield(data, 'offset');
+    end
+    
+    % the trialdef field should be renamed into sampleinfo
+    if isfield(data, 'trialdef')
+      data.sampleinfo = data.trialdef;
+      data = rmfield(data, 'trialdef');
+    end
+    
+    if (hassampleinfo && ~isfield(data, 'sampleinfo')) || (hastrialinfo && ~isfield(data, 'trialinfo'))
+      % try to reconstruct the sampleinfo and trialinfo
+      data = fixsampleinfo(data);
+    end
+    
+    if ~hassampleinfo && isfield(data, 'sampleinfo')
+      data = rmfield(data, 'sampleinfo');
+    end
+    
+    if ~hastrialinfo && isfield(data, 'trialinfo')
+      data = rmfield(data, 'trialinfo');
+    end
+    
+    if isfield(data, 'sampleinfo') && istable(data.sampleinfo)
+      % the sampleinfo contains two columns with the begsample and endsample and can always be represented as a numeric array
+      % the trialinfo can be either a numeric array or a table
+      data.sampleinfo = table2array(data.sampleinfo);
+    end
+    
   case '2011'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % ensure that the sensor structures are up to date

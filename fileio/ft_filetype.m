@@ -162,6 +162,12 @@ if isempty(filename)
   end
 end
 
+% some of the code does not work well on matlab strings, (i.e. "" vs ''),
+% specifically ["a" "b"] yields something different than ['a' 'b']. 
+if isstring(filename)
+  filename = char(filename);
+end
+
 % the parts of the filename are used further down
 if isfolder(filename)
   [p, f, x] = fileparts(filename);
@@ -1633,6 +1639,14 @@ elseif filetype_check_extension(filename, '.vtk') && filetype_check_header(filen
   type = 'vtk';
   manufacturer = 'ParaView';
   content = 'geometrical meshes';
+elseif filetype_check_extension(filename, '.bin') && exist(fullfile(p, [f '.meta']), 'file') 
+  type = 'spikeglx_bin';
+  manufacturer = 'SpikeGLX';
+  content = 'neuropixel data';
+elseif filetype_check_extension(filename, '.meta') && exist(fullfile(p, [f '.bin']), 'file') 
+  type = 'spikeglx_bin';
+  manufacturer = 'SpikeGLX';
+  content = 'neuropixel data';
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -27,16 +27,18 @@ function [cfg, artifact] = ft_badsegment(cfg, data)
 %
 % The configuration should contain
 %   cfg.metric        = string, describes the metric that should be computed in summary mode for each channel in each trial, can be
-%                       'var'       variance within each channel (default)
-%                       'std'       standard deviation within each channel
-%                       'mad'       median absolute deviation within each channel
-%                       '1/var'     inverse variance within each channel
-%                       'min'       minimum value in each channel
-%                       'max'       maximum value in each channel
-%                       'maxabs'    maximum absolute value in each channel
-%                       'range'     range from min to max in each channel
-%                       'kurtosis'  kurtosis, i.e. measure of peakedness of the amplitude distribution
-%                       'zvalue'    mean and std computed over all time and trials, per channel
+%                       'var'          variance within each channel (default)
+%                       'std'          standard deviation within each channel
+%                       'db'           decibel value within each channel
+%                       'mad'          median absolute deviation within each channel
+%                       '1/var'        inverse variance within each channel
+%                       'min'          minimum value in each channel
+%                       'max'          maximum value in each channel
+%                       'maxabs'       maximum absolute value in each channel
+%                       'range'        range from min to max in each channel
+%                       'kurtosis'     kurtosis, i.e. measure of peakedness of the amplitude distribution
+%                       'zvalue'       mean and std computed over all time and trials, per channel
+%                       'neighbexpvar' relative variance explained by neighboring channels in each trial
 %   cfg.threshold     = scalar, the optimal value depends on the methods and on the data characteristics
 %   cfg.neighbours    = neighbourhood structure, see FT_PREPARE_NEIGHBOURS for details
 %   cfg.nbdetect      = 'any', 'most', 'all', 'median', see below (default = 'median')
@@ -60,12 +62,12 @@ function [cfg, artifact] = ft_badsegment(cfg, data)
 % You can also specify 'median', in which case the threshold is applied to the median
 % value over neighbours.
 %
-% See also FT_BADCHANNEL, FT_REJECTVISUAL, FT_REJECTARTIFACT
+% See also FT_BADCHANNEL, FT_BADDATA, FT_REJECTVISUAL, FT_REJECTARTIFACT
 
 % Undocumented options
 %   cfg.thresholdside = above or below
 
-% Copyright (C) 2021, Robert Oostenveld
+% Copyright (C) 2021-2024, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -103,7 +105,7 @@ if ft_abort
 end
 
 % check if the input data is valid for this function
-data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes');
+data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes', 'hassampleinfo', 'yes');
 
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'forbidden',  {'channels', 'trial'}); % prevent accidental typos, see issue 1729
@@ -121,7 +123,7 @@ cfg.feedback      = ft_getopt(cfg, 'feedback', 'no');
 cfg.thresholdside = ft_getopt(cfg, 'thresholdside', []); % the default depends on cfg.metric, see below
 
 if isempty(cfg.thresholdside)
-  if ismember(cfg.metric, {'var', 'std', 'max', 'maxabs', 'range', 'kurtosis', '1/var', 'zvalue', 'maxzvalue', 'neighbstdratio'})
+  if ismember(cfg.metric, {'var', 'std', 'db', 'mad', '1/var', 'max', 'maxabs', 'range', 'kurtosis', 'zvalue', 'maxzvalue', 'neighbstdratio'})
     % large positive values indicate an artifact, so check for values ABOVE the threshold
     cfg.thresholdside = 'above';
   elseif ismember(cfg.metric, {'min', 'neighbexpvar', 'neighbcorr'})
@@ -235,7 +237,6 @@ cfg.artfctdef.badsegment.artifact = artifact;
 ft_postamble debug
 ft_postamble previous data
 ft_postamble provenance
-ft_postamble hastoolbox
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION

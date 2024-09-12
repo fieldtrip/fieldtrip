@@ -24,7 +24,7 @@ function chanunit = ft_chanunit(input, desired)
 %
 % See also FT_CHANTYPE
 
-% Copyright (C) 2011-2013, Robert Oostenveld
+% Copyright (C) 2011-2024, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.

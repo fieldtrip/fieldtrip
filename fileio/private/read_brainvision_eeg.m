@@ -97,14 +97,15 @@ elseif strcmpi(hdr.DataFormat, 'binary') && strcmpi(hdr.DataOrientation, 'vector
   fid = fopen_or_error(filename, 'rb', 'ieee-le');
 
   fseek(fid, 0, 'eof');
-  hdr.nSamples = ftell(fid)/(4*hdr.NumberOfChannels);
+  hdr.nSamples = ftell(fid)/(samplesize*hdr.NumberOfChannels);
   fseek(fid, 0, 'bof');
 
   numsamples = (endsample-begsample+1);
+  dat = zeros(hdr.NumberOfChannels,numsamples);
   for chan=1:hdr.NumberOfChannels
-    fseek(fid, (begsample-1)*4, 'cof');                 % skip the first N samples
-    [tmp, siz] = fread(fid, numsamples, sampletype);    % read these samples
-    fseek(fid, (hdr.nSamples-endsample)*4, 'cof');      % skip the last M samples
+    fseek(fid, (begsample-1)*samplesize, 'cof');                 % skip the first N samples
+    [tmp, siz] = fread(fid, numsamples, sampletype);             % read these samples
+    fseek(fid, (hdr.nSamples-endsample)*samplesize, 'cof');      % skip the last M samples
     dat(chan,:) = tmp(:)';
   end
 

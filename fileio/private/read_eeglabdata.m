@@ -70,7 +70,19 @@ if ischar(header.orig.data)
     if fid == -1
       fid = fopen(fullfile(header.orig.filepath, header.orig.data));
     end
-    
+
+    % assuming that there is a similarly named .fdt file in the same directory
+    if fid == -1
+      [pathstr, filestr] = fileparts(filename);
+      fid = fopen(fullfile(pathstr, [filestr, '.fdt']));
+    end
+
+    % assuming that there is a similarly named .dat file in the same directory
+    if fid == -1
+      [pathstr, filestr] = fileparts(filename);
+      fid = fopen(fullfile(pathstr, [filestr, '.dat']));
+    end
+
     if fid == -1, ft_error(['Cannot not find data file: ' header.orig.data]); end
     
     % only read the desired trials

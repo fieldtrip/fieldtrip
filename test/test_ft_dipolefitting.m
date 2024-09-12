@@ -73,6 +73,24 @@ cfg.model = 'regional';
 cfg.headmodel = headmodel;
 sourceout = ft_dipolefitting(cfg, timelock);
 
+% test for precomputed grid, without nonlinear optimization
+cfg = [];
+cfg.resolution = 1;
+cfg.headmodel  = headmodel;
+sourcemodel    = ft_prepare_sourcemodel(cfg);
+cfg.sourcemodel = sourcemodel;
+cfg.elec        = data.elec;
+leadfield       = ft_prepare_leadfield(cfg);
+
+cfg = [];
+cfg.model = 'regional';
+cfg.headmodel = headmodel;
+cfg.sourcemodel = leadfield;
+cfg.nonlinear = 'no';
+cfg.model = 'regional';
+cfg.latency = [0 1];
+sourceout = ft_dipolefitting(cfg, timelock);
+
 % test for freq type
 cfg = [];
 cfg.method = 'mtmfft';

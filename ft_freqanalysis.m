@@ -276,6 +276,13 @@ if numel(data.label)==0
   ft_error('no channels were selected');
 end
 
+% interpret the required verbosity (should be true, unless cfg.feedback = 'none')
+if isequal(cfg.feedback, 'none')
+	verbose = false;
+else
+	verbose = true;
+end
+
 % switch over method and do some of the method specfic checks and defaulting
 switch cfg.method
   
@@ -579,7 +586,7 @@ for itrial = 1:ntrials
     
     case 'mtmconvol'
       [spectrum_mtmconvol,ntaper,foi,toi] = ft_specest_mtmconvol(dat, time, 'timeoi', cfg.toi, 'timwin', cfg.t_ftimwin, 'taper', ...
-        cfg.taper, options{:}, 'dimord', 'chan_time_freqtap', 'feedback', fbopt);
+        cfg.taper, options{:}, 'dimord', 'chan_time_freqtap', 'feedback', fbopt, 'verbose', verbose);
       
       % the following variable is created to keep track of the number of
       % trials per time bin and is needed for proper normalization if
@@ -599,15 +606,15 @@ for itrial = 1:ntrials
       end
       
     case 'mtmfft'
-      [spectrum,ntaper,foi] = ft_specest_mtmfft(dat, time, 'taper', cfg.taper, options{:}, 'feedback', fbopt);
+      [spectrum,ntaper,foi] = ft_specest_mtmfft(dat, time, 'taper', cfg.taper, options{:}, 'feedback', fbopt, 'verbose', verbose);
       hastime = false;
       
     case 'irasa'
-      [spectrum,ntaper,foi] = ft_specest_irasa(dat, time, options{:}, 'feedback', fbopt);
+      [spectrum,ntaper,foi] = ft_specest_irasa(dat, time, options{:}, 'feedback', fbopt, 'verbose', verbose);
       hastime = false;
       
     case 'wavelet'
-      [spectrum,foi,toi] = ft_specest_wavelet(dat, time, 'timeoi', cfg.toi, 'width', cfg.width, 'gwidth', cfg.gwidth, options{:}, 'feedback', fbopt);
+      [spectrum,foi,toi] = ft_specest_wavelet(dat, time, 'timeoi', cfg.toi, 'width', cfg.width, 'gwidth', cfg.gwidth, options{:}, 'feedback', fbopt, 'verbose', verbose);
       
       % the following variable is created to keep track of the number of
       % trials per time bin and is needed for proper normalization if
@@ -660,7 +667,7 @@ for itrial = 1:ntrials
         opt{idx_freqoi} = cfg.foi(i_f);
         % compute responses for individual wavelets
         for i_wl = 1:order_int(i_f)
-          [spec_f(:,:,:,i_wl), dum, toi] = ft_specest_wavelet(dat, time, 'timeoi', cfg.toi, 'width', cycles{i_f}(i_wl), 'gwidth', cfg.gwidth, opt{:}, 'feedback', fbopt);
+          [spec_f(:,:,:,i_wl), dum, toi] = ft_specest_wavelet(dat, time, 'timeoi', cfg.toi, 'width', cycles{i_f}(i_wl), 'gwidth', cfg.gwidth, opt{:}, 'feedback', fbopt, 'verbose', verbose);
         end
         spec_f = permute(spec_f, [4 1 2 3]); 
         if floor(cfg.order(i_f)) ~= order_int(i_f)
@@ -683,7 +690,7 @@ for itrial = 1:ntrials
       spectrum = reshape(spectrum,[1 nchan numel(foi) numel(toi)]);
       
     case 'tfr'
-      [spectrum,foi,toi] = ft_specest_tfr(dat, time, 'timeoi', cfg.toi, 'width', cfg.width, 'gwidth', cfg.gwidth,options{:}, 'feedback', fbopt);
+      [spectrum,foi,toi] = ft_specest_tfr(dat, time, 'timeoi', cfg.toi, 'width', cfg.width, 'gwidth', cfg.gwidth,options{:}, 'feedback', fbopt, 'verbose', verbose);
       
       % the following variable is created to keep track of the number of
       % trials per time bin and is needed for proper normalization if
@@ -697,7 +704,7 @@ for itrial = 1:ntrials
       spectrum = reshape(spectrum,[1 nchan numel(foi) numel(toi)]);
       
     case 'hilbert'
-      [spectrum,foi,toi] = ft_specest_hilbert(dat, time, 'timeoi', cfg.toi, 'width', cfg.width, bpfiltoptions{:}, options{:}, 'feedback', fbopt, 'edgeartnan', cfg.edgeartnan);
+      [spectrum,foi,toi] = ft_specest_hilbert(dat, time, 'timeoi', cfg.toi, 'width', cfg.width, bpfiltoptions{:}, options{:}, 'feedback', fbopt, 'edgeartnan', cfg.edgeartnan, 'verbose', verbose);
       hastime = true;
       % create FAKE ntaper (this requires very minimal code change below for compatibility with the other specest functions)
       ntaper = ones(1,numel(foi));
@@ -705,7 +712,7 @@ for itrial = 1:ntrials
       spectrum = reshape(spectrum,[1 nchan numel(foi) numel(toi)]);
       
     case 'neuvar'
-      [spectrum,foi] = ft_specest_neuvar(dat, time, options{:}, 'feedback', fbopt);
+      [spectrum,foi] = ft_specest_neuvar(dat, time, options{:}, 'feedback', fbopt, 'verbose', verbose);
       hastime = false;
       % create FAKE ntaper (this requires very minimal code change below for compatibility with the other specest functions)
       ntaper = ones(1,numel(foi));
@@ -764,10 +771,8 @@ for itrial = 1:ntrials
     if strcmp(cfg.calcdof, 'yes')
       if hastime
         dof = zeros(nfoi,ntoi);
-        %dof = zeros(ntrials,nfoi,ntoi);
       else
         dof = zeros(nfoi,1);
-        %dof = zeros(ntrials,nfoi);
       end
     end
     
