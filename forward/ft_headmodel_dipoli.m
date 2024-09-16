@@ -185,7 +185,7 @@ switch lower(computer)
   case {'glnx86' 'glnxa64'}
     % linux computer
     dipoli = [dipoli '.glnx86'];
-  case {'win32', 'win64'}
+  case {'win32', 'win64', 'pcwin64'}
     % windows computer
     dipoli = [dipoli '.exe'];
   otherwise
@@ -215,29 +215,61 @@ for i=1:numboundaries
   write_tri(bndfile{i}, headmodel.bnd(i).pos, headmodel.bnd(i).tri);
 end
 
-% these will hold the shell script and the inverted system matrix
-exefile = [prefix '.sh'];
-amafile = [prefix '.ama'];
 
-fid = fopen(exefile, 'w');
-fprintf(fid, '#!/bin/sh\n');
-fprintf(fid, '\n');
-fprintf(fid, '%s -i %s << EOF\n', dipoli, amafile);
-for i=1:numboundaries
-  if isolatedsource && headmodel.source==i
-    % the isolated potential approach should be applied using this compartment
-    fprintf(fid, '!%s\n', bndfile{i});
-  else
-    fprintf(fid, '%s\n', bndfile{i});
+if ispc
+  % for now the solution for a PC is slightly different than the solution
+  % for the other operating systems: the dipoli.exe works fine with -g 
+  % arguments, which specify the boundaries. on the other hand, the other
+  % OSs do not seem to (anecdotally) swallow this. therefore, for the other
+  % operating systems, the 'interactive' mode is mimicked, by means of the <<EOF syntax
+
+  % these will hold the shell script and the inverted system matrix
+  exefile = [prefix '.bat'];
+  amafile = [prefix '.ama'];
+
+  fid = fopen(exefile, 'w');
+
+  fprintf(fid, '%s -i %s ', dipoli, amafile);
+  for i=1:numboundaries
+    fprintf(fid, '-g ');
+    if isolatedsource && headmodel.source==i
+      % the isolated potential approach should be applied using this compartment
+      % the dipoli.exe -h mentions a '%' sign, but Thom told me that a '!' also 
+      % should work, and anecdotally this works more robustly, depending on the 
+      % character with which the path starts
+      fprintf(fid, '!');
+      fprintf(fid, '%s ', bndfile{i});
+    else
+      fprintf(fid, '%s ', bndfile{i});
+    end
+    fprintf(fid, '%g ', headmodel.cond(i));
   end
-  fprintf(fid, '%g\n', headmodel.cond(i));
+  fclose(fid);
+else
+  % these will hold the shell script and the inverted system matrix
+  exefile = [prefix '.sh'];
+  amafile = [prefix '.ama'];
+
+  fid = fopen(exefile, 'w');
+  fprintf(fid, '#!/bin/sh\n');
+  fprintf(fid, '\n');
+  fprintf(fid, '%s -i %s << EOF\n', dipoli, amafile);
+  for i=1:numboundaries
+    if isolatedsource && headmodel.source==i
+      % the isolated potential approach should be applied using this compartment
+      fprintf(fid, '!%s\n', bndfile{i});
+    else
+      fprintf(fid, '%s\n', bndfile{i});
+    end
+    fprintf(fid, '%g\n', headmodel.cond(i));
+  end
+  fprintf(fid, '\n');
+  fprintf(fid, '\n');
+  fprintf(fid, 'EOF\n');
+  fclose(fid);
+  % ensure that the temporary shell script can be executed
+  dos(sprintf('chmod +x %s', exefile));
 end
-fprintf(fid, '\n');
-fprintf(fid, '\n');
-fprintf(fid, 'EOF\n');
-fclose(fid);
-% ensure that the temporary shell script can be executed
-dos(sprintf('chmod +x %s', exefile));
 
 try
   % execute dipoli and read the resulting file
