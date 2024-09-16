@@ -118,6 +118,10 @@ if isfield(cfg, 'sourcemodelout')
   % compartment, this is not part of the original DSSP algorithm, and
   % experimental code
   Gout = compute_grammatrix(cfg.sourcemodelout, datain.label);
+  
+  % project out the inspace projector
+  P = Us*Us';
+  Gout = P*Gout*P';
 
   ft_info('Computing the spatial subspace projector for the forward model describing the out field\n');
   Sout = dssp_spatial(datain.trial, Gout, cfg.dssp.n_space);
@@ -148,7 +152,6 @@ subspace.S     = S;
 
 ft_info('Applying the subspace projector\n');
 Bclean = datain.trial - (datain.trial*cellfun(@transpose, Ae, 'UniformOutput', false))*Ae;
-
 
 % put some diagnostic information in the output cfg.
 cfg.dssp.subspace = subspace;
@@ -294,18 +297,17 @@ function N = getN(N, S, name)
 ttext = sprintf('enter the dimension for the %s field: ', name);
 if isempty(N)
   N  = input(ttext);
-elseif ischar(N) && isequal(N, 'interactive') && ~any(strcmp(name, {'outside' 'intersection'}))
-  figure, plot(log10(S),'-o'); drawnow
-  N = input(ttext);
-elseif ischar(N) && isequal(N, 'interactive') && any(strcmp(name, {'outside' 'intersection'}))
-  figure, plot(S, '-o'); drawnow
+elseif ischar(N) && isequal(N, 'interactive')
+  h = figure; hpos = get(h, 'position'); set(h, 'position', hpos.*[1 1 2 1]);
+  subplot(121);plot(log10(S),'-o'); ylabel('log_1_0 singular values'); drawnow
+  subplot(122);plot(S,'-o'); ylabel('singular values'); drawnow
   N = input(ttext);
 elseif ischar(N) && isequal(N, 'all')
   N = find(S./S(1)>1e5*eps, 1, 'last');
 elseif isnumeric(N) && N<1
   N = find(S>=N, 1, 'last');
+  fprintf('Using %d dimensions for the %s field\n', N, name);
 end
-fprintf('Using %d dimensions for the %s field\n', N, name);
 
 function G = compute_grammatrix(sourcemodel, label)
 
@@ -330,4 +332,4 @@ end
 
 % compute the Gram-matrix of the supplied forward model
 lf = cat(2, sourcemodel.leadfield{:});
-G  = lf*lf';
+G  = (lf*lf')./size(lf,2);
