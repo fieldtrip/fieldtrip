@@ -1966,7 +1966,7 @@ for i=1:length(opt.fidlabel)
   lab = opt.fidlabel{i};
   vox = opt.fiducial.(lab);
   if all(isfinite(vox))
-    ind = sub2ind(mri.dim(1:3), round(vox(1)), round(vox(2)), round(vox(3)));
+    ind = sub2ind(opt.mri.dim(1:3), round(vox(1)), round(vox(2)), round(vox(3)));
   else
     ind = nan; % functional behavior of sub2ind has changed, giving an error with nan-input
   end
