@@ -170,6 +170,7 @@ cfg = ft_checkconfig(cfg, 'renamedval', {'method', 'bem_openmeeg', 'openmeeg'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'method', 'bem_dipoli', 'dipoli'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'method', 'bem_cp', 'bemcp'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'method', 'nolte', 'singleshell'});
+cfg = ft_checkconfig(cfg, 'renamed', {'duneuro_settings', 'duneuro'});
 cfg = ft_checkconfig(cfg, 'renamed', {'hdmfile', 'headmodel'});
 cfg = ft_checkconfig(cfg, 'renamed', {'vol',     'headmodel'});
 
@@ -203,7 +204,7 @@ cfg.baseline        = ft_getopt(cfg, 'baseline');
 cfg.singlesphere    = ft_getopt(cfg, 'singlesphere');
 cfg.grid_filename   = ft_getopt(cfg, 'grid_filename');    % used for duneuro
 cfg.tensors_filename= ft_getopt(cfg, 'tensors_filename'); % used for duneuro
-cfg.duneuro_settings= ft_getopt(cfg, 'duneuro_settings');
+cfg.duneuro         = ft_getopt(cfg, 'duneuro');
 cfg.tissueval       = ft_getopt(cfg, 'tissueval');        % used for simbio
 cfg.transform       = ft_getopt(cfg, 'transform');
 cfg.siunits         = ft_getopt(cfg, 'siunits', 'no');    % yes/no, convert the input and continue with SI units
@@ -486,7 +487,7 @@ switch cfg.method
       error('You must provide a mesh with tetrahedral or hexahedral elements, where each element has a scalar or tensor conductivity');
     end
     headmodel = ft_headmodel_duneuro(geometry, 'grid_filename', cfg.grid_filename, 'tensors_filename', cfg.tensors_filename,...
-      'conductivity', cfg.conductivity, 'duneuro_settings', cfg.duneuro_settings);
+      'conductivity', cfg.conductivity, 'duneuro_settings', cfg.duneuro);
   case {'fns'}
     if input_seg
       data = ft_datatype_segmentation(data, 'segmentationstyle', 'indexed');
