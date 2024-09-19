@@ -103,13 +103,13 @@ else
     % with respect to the origin of the coordinate system
     switch mri.coordsys
       case {'ctf', '4d', 'bti', 'eeglab'}
-        xshift = 30./cfg.resolution;
+        xshift = 30.*cfg.resolution;
         yshift = 0;
-        zshift = 40./cfg.resolution;
+        zshift = 40.*cfg.resolution;
       case {'neuromag', 'itab'}
         xshift = 0;
-        yshift = 30./cfg.resolution;
-        zshift = 40./cfg.resolution;
+        yshift = 30.*cfg.resolution;
+        zshift = 40.*cfg.resolution;
       case {'acpc', 'spm', 'mni', 'tal'}
         ft_warning('FIXME, the bounding box needs a better default');
         xshift = 0;
