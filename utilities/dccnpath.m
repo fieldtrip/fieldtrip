@@ -21,6 +21,9 @@ function filename = dccnpath(filename)
 % default location using
 %    global ft_default
 %    ft_default.dccnpath = '/your/copy';
+% Your local copy should include a directory named 'ftp'. Inside this
+% directory, the folder hierarchy should match the one on the FieldTrip download server 
+% (e.g. '/your/copy/ftp/test/ctf').
 %
 % If you do not have a local copy and do not define ft_default.dccnpath manually,
 % then dccnpath will automatically use a temporary directory and try to download the
