@@ -103,13 +103,13 @@ else
     % with respect to the origin of the coordinate system
     switch mri.coordsys
       case {'ctf', '4d', 'bti', 'eeglab'}
-        xshift = 30.*cfg.resolution;
+        xshift = 30.*ft_scalingfactor('mm', mri.unit);
         yshift = 0;
-        zshift = 40.*cfg.resolution;
+        zshift = 40.*ft_scalingfactor('mm', mri.unit);
       case {'neuromag', 'itab'}
         xshift = 0;
-        yshift = 30.*cfg.resolution;
-        zshift = 40.*cfg.resolution;
+        yshift = 30.*ft_scalingfactor('mm', mri.unit);
+        zshift = 40.*ft_scalingfactor('mm', mri.unit);
       case {'acpc', 'spm', 'mni', 'tal'}
         ft_warning('FIXME, the bounding box needs a better default');
         xshift = 0;
@@ -127,11 +127,11 @@ else
   end
   
   if ~isempty(cfg.dim)
-    xrange = [-cfg.dim(1)/2+0.5 cfg.dim(1)/2-0.5] * cfg.resolution + xshift;
-    yrange = [-cfg.dim(2)/2+0.5 cfg.dim(2)/2-0.5] * cfg.resolution + yshift;
-    zrange = [-cfg.dim(3)/2+0.5 cfg.dim(3)/2-0.5] * cfg.resolution + zshift;
+    xrange = [-cfg.dim(1)/2+0.5 cfg.dim(1)/2-0.5] * ft_scalingfactor('mm', mri.unit) + xshift;
+    yrange = [-cfg.dim(2)/2+0.5 cfg.dim(2)/2-0.5] * ft_scalingfactor('mm', mri.unit) + yshift;
+    zrange = [-cfg.dim(3)/2+0.5 cfg.dim(3)/2-0.5] * ft_scalingfactor('mm', mri.unit) + zshift;
   else % if no cfg.dim is specified, use defaults
-    range = [-127.5 127.5] * cfg.resolution; % 255 mm^3 bounding box, assuming human brain
+    range = [-127.5 127.5] * ft_scalingfactor('mm', mri.unit); % 255 mm^3 bounding box, assuming human brain
     xrange = range + xshift;
     yrange = range + yshift;
     zrange = range + zshift;
