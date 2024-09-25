@@ -27,9 +27,16 @@ function varargout = ft_version(command)
 %   ft_version branch
 %   ft_version clean
 %
+% On macOS you might have installed git along with Xcode instead of with homebrew,
+% which then requires that you agree to the Apple license. In that case it can
+% happen that this function stops, as in the background (invisible to you) it is
+% asking whether you agree. You can check this by typing "/usr/bin/git", which will
+% show the normal help messge, or which will mention the license agreement. To
+% resolve this please open a terminal and type "sudo xcodebuild -license"
+%
 % See also FT_PLATFORM_SUPPORTS, VERSION, VER, VERLESSTHAN
 
-% Copyright (C) 2012-2019, Eelke Spaak, Robert Oostenveld
+% Copyright (C) 2012-2024, Eelke Spaak, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/donders/fieldtrip
 % for the documentation and details.
