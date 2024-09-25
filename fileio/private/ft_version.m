@@ -31,7 +31,7 @@ function varargout = ft_version(command)
 % which then requires that you agree to the Apple license. In that case it can
 % happen that this function stops, as in the background (invisible to you) it is
 % asking whether you agree. You can check this by typing "/usr/bin/git", which will
-% show the normal help messge, or which will mention the license agreement. To
+% show the normal help message, or which will mention the license agreement. To
 % resolve this please open a terminal and type "sudo xcodebuild -license"
 %
 % See also FT_PLATFORM_SUPPORTS, VERSION, VER, VERLESSTHAN
