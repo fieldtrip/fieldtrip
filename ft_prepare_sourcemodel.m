@@ -111,7 +111,7 @@ function [sourcemodel, cfg] = ft_prepare_sourcemodel(cfg)
 % See also FT_PREPARE_LEADFIELD, FT_PREPARE_HEADMODEL, FT_SOURCEANALYSIS,
 % FT_DIPOLEFITTING, FT_MEGREALIGN
 
-% Copyright (C) 2004-2023, Robert Oostenveld
+% Copyright (C) 2004-2024, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.

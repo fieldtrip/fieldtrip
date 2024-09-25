@@ -42,7 +42,7 @@ function [timelock] = ft_timelockanalysis(cfg, data)
 
 % Copyright (C) 2018, Jan-Mathijs Schoffelen
 % Copyright (C) 2003-2006, Markus Bauer
-% Copyright (C) 2003-2023, Robert Oostenveld
+% Copyright (C) 2003-2024, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.

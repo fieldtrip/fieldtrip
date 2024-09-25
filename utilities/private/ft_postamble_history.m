@@ -7,7 +7,7 @@
 %
 % See also FT_PREAMBLE, FT_POSTAMBLE, FT_POSTAMBLE_PROVENANCE
 
-% Copyright (C) 2011-2023, Robert Oostenveld, DCCN
+% Copyright (C) 2011-2024, Robert Oostenveld, DCCN
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.

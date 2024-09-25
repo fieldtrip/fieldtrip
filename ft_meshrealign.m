@@ -51,7 +51,7 @@ function [mesh_realigned] = ft_meshrealign(cfg, mesh)
 %
 % See also FT_READ_HEADSHAPE, FT_PREPARE_MESH, FT_ELECTRODEREALIGN, FT_VOLUMEREALIGN
 
-% Copyrights (C) 2017-2023, Robert Oostenveld
+% Copyrights (C) 2017-2024, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.

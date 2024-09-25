@@ -27,7 +27,7 @@ function [dataout] = ft_denoise_dssp(cfg, datain)
 %
 % See also FT_DENOISE_PCA, FT_DENOISE_SYNTHETIC, FT_DENOISE_TSR
 
-% Copyright (C) 2018-2023, Jan-Mathijs Schoffelen
+% Copyright (C) 2018-2024, Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.

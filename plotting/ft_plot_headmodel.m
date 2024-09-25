@@ -32,7 +32,7 @@ function ft_plot_headmodel(headmodel, varargin)
 % FT_PLOT_HEADSHAPE, FT_PLOT_SENS, FT_PLOT_DIPOLE, FT_PLOT_ORTHO, FT_PLOT_TOPO3D
 
 % Copyright (C) 2009, Cristiano Micheli
-% Copyright (C) 2009-2023, Robert Oostenveld
+% Copyright (C) 2009-2024, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.

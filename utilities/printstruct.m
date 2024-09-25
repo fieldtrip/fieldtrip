@@ -24,7 +24,7 @@ function str = printstruct(name, val, varargin)
 %
 % See also DISP, NUM2STR, INT2STR, MAT2STR
 
-% Copyright (C) 2006-2023, Robert Oostenveld
+% Copyright (C) 2006-2024, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.

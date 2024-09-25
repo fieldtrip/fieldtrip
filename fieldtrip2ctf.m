@@ -16,7 +16,7 @@ function fieldtrip2ctf(filename, data, varargin)
 %
 % See also FT_DATATYPE, FT_APPLY_MONTAGE, FT_VOLUMEWRITE, FT_SOURCEWRITE, FT_WRITE_DATA
 
-% Copyright (C) 2015-2023, Robert Oostenveld
+% Copyright (C) 2015-2024, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.

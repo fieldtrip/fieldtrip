@@ -195,7 +195,7 @@ function [realign, snap] = ft_volumerealign(cfg, mri, target)
 % specified, weights are put on points with z-coordinate<0 (assuming those to be eye
 % rims and nose ridges, i.e. important points.
 
-% Copyright (C) 2006-2023, Robert Oostenveld, Jan-Mathijs Schoffelen
+% Copyright (C) 2006-2024, Robert Oostenveld, Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.

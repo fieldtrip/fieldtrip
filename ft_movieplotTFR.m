@@ -52,7 +52,7 @@ function [cfg] = ft_movieplotTFR(cfg, data)
 %
 % See also FT_MULTIPLOTTFR, FT_TOPOPLOTTFR, FT_SINGLEPLOTTFR, FT_MOVIEPLOTER, FT_SOURCEMOVIE
 
-% Copyright (c) 2009-2023, Ingrid Nieuwenhuis, Jan-Mathijs Schoffelen, Robert Oostenveld, Cristiano Micheli
+% Copyright (c) 2009-2024, Ingrid Nieuwenhuis, Jan-Mathijs Schoffelen, Robert Oostenveld, Cristiano Micheli
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.

@@ -67,7 +67,7 @@ function [pipeline] = ft_analysispipeline(cfg, data)
 % See also FT_PREPROCESSING, FT_TIMELOCKANALYSIS, FT_FREQANALYSIS, FT_SOURCEANALYSIS,
 % FT_CONNECTIVITYANALYSIS, FT_NETWORKANALYSIS
 
-% Copyright (C) 2014-2023, Robert Oostenveld
+% Copyright (C) 2014-2024, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.

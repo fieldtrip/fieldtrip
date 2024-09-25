@@ -10,7 +10,7 @@ function s = surface_orientation(pos, tri, ori)
 %
 % See also SURFACE_AREA, SURFACE_NESTING, SURFACE_NORMALS, SURFACE_NESTING
 
-% Copyright (C) 2007-2023, Robert Oostenveld
+% Copyright (C) 2007-2024, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.

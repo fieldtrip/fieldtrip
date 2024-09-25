@@ -51,7 +51,7 @@ function ft_write_headshape(filename, mesh, varargin)
 %   'AnatomicalStructurePrimary'   (e.g. 'CortexLeft'),
 %   'AnatomicalStructureSecondary' (e.g. 'MidLayer')
 
-% Copyright (C) 2011-2023, Lilla Magyari & Robert Oostenveld
+% Copyright (C) 2011-2024, Lilla Magyari & Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.

@@ -51,7 +51,7 @@ function [cfg] = ft_interactiverealign(cfg)
 %   cfg.transformorder
 
 % Copyright (C) 2008, Vladimir Litvak
-% Copyright (C) 2022-2023, Robert Oostenveld
+% Copyright (C) 2022-2024, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.

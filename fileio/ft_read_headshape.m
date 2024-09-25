@@ -69,7 +69,7 @@ function [shape] = ft_read_headshape(filename, varargin)
 %
 % See also FT_READ_HEADMODEL, FT_READ_SENS, FT_READ_ATLAS, FT_WRITE_HEADSHAPE
 
-% Copyright (C) 2008-2023, Robert Oostenveld
+% Copyright (C) 2008-2024, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.

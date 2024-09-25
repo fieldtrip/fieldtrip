@@ -21,7 +21,7 @@ function ft_plot_topo3d(pos, val, varargin)
 % See also FT_PLOT_TOPO, FT_PLOT_SENS, FT_PLOT_MESH, FT_PLOT_HEADSHAPE,
 % FT_TOPOPLOTER, FT_TOPOPLOTTFR
 
-% Copyright (C) 2009-2023, Robert Oostenveld
+% Copyright (C) 2009-2024, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.

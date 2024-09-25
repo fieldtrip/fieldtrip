@@ -61,7 +61,7 @@ function hs = ft_plot_sens(sens, varargin)
 % See also FT_DATATYPE_SENS, FT_READ_SENS, FT_PLOT_HEADSHAPE, FT_PLOT_HEADMODEL,
 % FT_PLOT_TOPO3D
 
-% Copyright (C) 2009-2023, Robert Oostenveld, Arjen Stolk
+% Copyright (C) 2009-2024, Robert Oostenveld, Arjen Stolk
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.

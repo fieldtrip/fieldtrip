@@ -11,7 +11,7 @@ function [H] = translate(f)
 %
 % See also ROTATE, SCALE, RIGIDBODY, QUATERNION, HOMOGENOUS2TRADITIONAL
 
-% Copyright (C) 2000-2023, Robert Oostenveld
+% Copyright (C) 2000-2024, Robert Oostenveld
 %
 % This program is free software; you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by

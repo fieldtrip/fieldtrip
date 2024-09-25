@@ -54,7 +54,7 @@ function [data] = ft_resampledata(cfg, data)
 % See also FT_PREPROCESSING, FT_APPENDDATA, FT_PREPROC_LOWPASSFILTER, RESAMPLE, DOWNSAMPLE, DECIMATE, INTERP1
 
 % Copyright (C) 2003-2006, FC Donders Centre, Markus Siegel
-% Copyright (C) 2004-2023, FC Donders Centre, Robert Oostenveld
+% Copyright (C) 2004-2024, FC Donders Centre, Robert Oostenveld
 % Copyright (C) 2022, DCCN, Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org

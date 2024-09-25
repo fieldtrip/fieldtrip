@@ -77,7 +77,7 @@ function [mri] = ft_read_mri(filename, varargin)
 %
 % See also FT_DATATYPE_VOLUME, FT_WRITE_MRI, FT_READ_DATA, FT_READ_HEADER, FT_READ_EVENT
 
-% Copyright (C) 2008-2023, Robert Oostenveld & Jan-Mathijs Schoffelen
+% Copyright (C) 2008-2024, Robert Oostenveld & Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.

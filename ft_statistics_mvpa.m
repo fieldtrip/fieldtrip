@@ -145,7 +145,7 @@ function [stat, cfg] = ft_statistics_mvpa(cfg, dat, design)
 % See also FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS, FT_SOURCESTATISTICS,
 % FT_STATISTICS_ANALYTIC, FT_STATISTICS_STATS, FT_STATISTICS_MONTECARLO, FT_STATISTICS_CROSSVALIDATE
 
-% Copyright (C) 2019-2023, Matthias Treder and Jan-Mathijs Schoffelen
+% Copyright (C) 2019-2024, Matthias Treder and Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.

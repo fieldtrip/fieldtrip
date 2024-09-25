@@ -25,7 +25,7 @@ function h = ft_plot_dipole(pos, ori, varargin)
 % See also FT_PLOT_MESH, FT_PLOT_HEADMODEL, FT_PLOT_HEADSHAPE, FT_PLOT_ORTHO,
 % QUIVER3, PLOT3
 
-% Copyright (C) 2009-2023, Robert Oostenveld
+% Copyright (C) 2009-2024, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.

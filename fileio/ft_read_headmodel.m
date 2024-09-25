@@ -18,7 +18,7 @@ function [headmodel] = ft_read_headmodel(filename, varargin)
 % See also FT_DATATYPE_HEADMODEL, FT_PREPARE_HEADMODEL, FT_READ_HEADMODEL,
 % FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD
 
-% Copyright (C) 2008-2023, Robert Oostenveld
+% Copyright (C) 2008-2024, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.

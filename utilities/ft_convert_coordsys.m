@@ -42,7 +42,7 @@ function [object] = ft_convert_coordsys(object, target, varargin)
 % Undocumented options
 %   feedback  = string, 'yes' or 'no' (default = 'no')
 
-% Copyright (C) 2005-2023, Robert Oostenveld & Jan-Mathijs Schoffelen
+% Copyright (C) 2005-2024, Robert Oostenveld & Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.

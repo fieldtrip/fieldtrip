@@ -31,7 +31,7 @@ function [trl, allevents] = ft_trialfun_bids(cfg)
 %
 % See also FT_DEFINETRIAL, FT_TRIALFUN_GENERAL
 
-% Copyright (C) 2021-2023, Robert Oostenveld
+% Copyright (C) 2021-2024, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.

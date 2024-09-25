@@ -38,7 +38,7 @@ function [V] = ft_write_mri(filename, dat, varargin)
 %
 % See also FT_READ_MRI, FT_DATATYPE_VOLUME, FT_WRITE_DATA, FT_WRITE_HEADSHAPE, FT_WRITE_SENS
 
-% Copyright (C) 2011-2023, Jan-Mathijs Schoffelen & Robert Oostenveld
+% Copyright (C) 2011-2024, Jan-Mathijs Schoffelen & Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.

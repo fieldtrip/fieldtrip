@@ -11,7 +11,7 @@ function [X, Y, Z, pos1, tri1, pos2, tri2] = intersect_plane(pos, tri, v1, v2, v
 % values are the X, Y and Z coordinates of the begin- and endpoints for all line
 % segments.
 
-% Copyright (C) 2002-2023, Robert Oostenveld
+% Copyright (C) 2002-2024, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.

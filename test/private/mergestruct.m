@@ -8,7 +8,7 @@ function s1 = mergestruct(s1, s2, emptymeaningful)
 %
 % See also PRINTSTRUCT, APPENDSTRUCT, COPYFIELDS, KEEPFIELDS, REMOVEFIELDS, MERGETABLE
 
-% Copyright (C) 2009-2023, Robert Oostenveld
+% Copyright (C) 2009-2024, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.

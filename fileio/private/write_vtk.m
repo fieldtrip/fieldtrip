@@ -15,7 +15,7 @@ function write_vtk(fn, pos, tri, val)
 %
 % See also READ_VTK, WRITE_PLY
 
-% Copyright (C) 2002-2023, Robert Oostenveld
+% Copyright (C) 2002-2024, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.

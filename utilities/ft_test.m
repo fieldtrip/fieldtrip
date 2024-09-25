@@ -129,7 +129,7 @@ function [result] = ft_test(varargin)
 %
 % See also DCCNPATH, FT_VERSION
 
-% Copyright (C) 2016-2023, Robert Oostenveld
+% Copyright (C) 2016-2024, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.ru.nl/donders/fieldtrip
 % for the documentation and details.

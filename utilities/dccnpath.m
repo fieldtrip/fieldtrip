@@ -31,7 +31,7 @@ function filename = dccnpath(filename)
 % to a temporary directory.
 %
 % See also WHICH, WEBSAVE
-% Copyright (C) 2012-2023, Donders Centre for Cognitive Neuroimaging, Nijmegen, NL
+% Copyright (C) 2012-2024, Donders Centre for Cognitive Neuroimaging, Nijmegen, NL
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.

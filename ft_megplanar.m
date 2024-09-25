@@ -61,7 +61,7 @@ function [data] = ft_megplanar(cfg, data)
 % See also FT_COMBINEPLANAR, FT_PREPARE_NEIGHBOURS
 
 % Copyright (C) 2004-2019, Robert Oostenveld
-% Copyright (C) 2020-2023, Robert Oostenveld and Jan-Mathijs Schoffelen
+% Copyright (C) 2020-2024, Robert Oostenveld and Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.

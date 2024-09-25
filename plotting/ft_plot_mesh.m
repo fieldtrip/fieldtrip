@@ -53,7 +53,7 @@ function [hs] = ft_plot_mesh(mesh, varargin)
 % FT_PLOT_DIPOLE, TRIMESH, PATCH
 
 % Copyright (C) 2009, Cristiano Micheli
-% Copyright (C) 2009-2023, Robert Oostenveld
+% Copyright (C) 2009-2024, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.

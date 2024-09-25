@@ -17,7 +17,7 @@ function [inside] = ft_inside_headmodel(dippos, headmodel, varargin)
 %   grad        = structure with gradiometer information, used for localspheres
 %   headshape   = structure with headshape, used for old CTF localspheres strategy
 
-% Copyright (C) 2003-2023, Robert Oostenveld
+% Copyright (C) 2003-2024, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.

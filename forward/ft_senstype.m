@@ -99,7 +99,7 @@ function [type] = ft_senstype(input, desired)
 %
 % See also FT_SENSLABEL, FT_CHANTYPE, FT_READ_SENS, FT_COMPUTE_LEADFIELD, FT_DATATYPE_SENS
 
-% Copyright (C) 2007-2023, Robert Oostenveld
+% Copyright (C) 2007-2024, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
