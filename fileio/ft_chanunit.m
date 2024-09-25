@@ -130,7 +130,7 @@ elseif isheader && ft_senstype(input, 'eeg') && isfield(input, 'chantype')
   % until now in all stand-alone EEG systems examined the data was in uV
   chanunit(strcmp('eeg', input.chantype)) = {'uV'};
 
-elseif isheader && (ft_senstype(input, 'neuromag') || ft_senstype(input, 'babysquid74')) && issubfield(input, 'orig.chs')
+elseif isheader && issubfield(input, 'orig.chs')
   for i = 1:numchan % make a cell-array of units for each channel
     switch input.orig.chs(i).unit
       case 201 % defined as constants by MNE, see p. 217 of MNE manual
