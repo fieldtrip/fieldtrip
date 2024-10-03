@@ -110,6 +110,8 @@ if hasmom
 end
 
 if hasleadfield
+  % check that the options normalize/reducerank/etc are not specified
+  assert(all(cellfun(@isempty, leadfieldopt(2:2:end))), 'the options for computing the leadfield must all be empty/default');
   ft_info('using precomputed leadfields\n');
   sourcemodel.leadfield = sourcemodel.leadfield(originside);
 else
