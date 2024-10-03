@@ -1253,9 +1253,7 @@ switch dataformat
     ft_hastoolbox('mne', 1);
     if (hdr.orig.iscontinuous)
       dat = fiff_read_raw_segment(hdr.orig.raw,begsample+hdr.orig.raw.first_samp-1,endsample+hdr.orig.raw.first_samp-1,chanindx);
-      if ispc
-        dat = full(dat); % prevent MATLAB crash on Windows due to 'dat' being a sparse matrix, see issue 2451
-      end
+      dat = full(dat); % prevent MATLAB crash on Windows due to 'dat' being a sparse matrix, see issue 2451
       dimord = 'chans_samples';
     elseif (hdr.orig.isepoched)
       % permutation of the data matrix is time consuming, and offsets the time gained by not 
