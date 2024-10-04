@@ -83,10 +83,10 @@ if isdata
   elseif isfield(input, 'grad')
     input = input.grad;
     isgrad = true;
-  elseif isfield(input, 'grad')
+  elseif isfield(input, 'elec')
     input = input.elec;
     iselec = true;
-  elseif isfield(input, 'grad')
+  elseif isfield(input, 'opto')
     input = input.opto;
     isopto = true;
   else
