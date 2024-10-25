@@ -3,7 +3,7 @@ function test_bug1404
 % MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_read_header ft_read_data ft_read_spike
-% DATA no
+% DATA private
 
 % this is only available on the DCCN mentat cluster
 dataset = '/home/common/matlab/fieldtrip/data/test/original/neurosim/signals';
