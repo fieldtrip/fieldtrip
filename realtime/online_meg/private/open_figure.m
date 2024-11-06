@@ -12,6 +12,7 @@ cfg.position    = ft_getopt(cfg, 'position'); % use the default position
 cfg.renderer    = ft_getopt(cfg, 'renderer'); % let MATLAB decide on the default
 cfg.figurename  = ft_getopt(cfg, 'figurename');
 cfg.title       = ft_getopt(cfg, 'title');
+cfg.interpreter = ft_getopt(cfg, 'interpreter', 'none');
 
 switch cfg.figure
   case {'new', 'yes'}
@@ -75,7 +76,7 @@ assert(ishandle(h), 'failed to open figure');
 
 if ~isempty(cfg.figurename)
   % this appears as the name of the window
-  set(h, 'name', cfg.figurename);
+  set(h, 'name', cfg.figurename, 'Interpreter', cfg.interpreter);
 end
 
 if ~isempty(cfg.renderer)
@@ -85,5 +86,5 @@ end
 
 if ~isempty(cfg.title)
   % this appears above the axes
-  title(cfg.title);
+  title(cfg.title, 'Interpreter', cfg.interpreter);
 end
