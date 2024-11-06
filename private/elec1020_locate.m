@@ -1,4 +1,4 @@
-function [elc, lab] = elec1020_locate(pnt, dhk, nas, ini, lpa, rpa, feedback)
+function [elc, lab] = elec1020_locate(pos, tri, nas, ini, lpa, rpa, feedback)
 
 % ELEC1020_LOCATE determines 10-20 (20%, 10% and 5%) electrode positions
 % on a scalp surface that is described by its surface triangulation
@@ -25,7 +25,6 @@ if nargin<7
   feedback = false;
 end
 
-
 % determine the approximate location of the vertex
 ori = (lpa+rpa+nas+ini)/4;      % center of head
 ver =  cross(rpa-lpa, nas-ini); % orientation
@@ -34,7 +33,7 @@ ver = ori + 0.7*ver;            % location from center of head
 
 if feedback
   figure
-  ft_plot_mesh(struct('pos', pnt, 'tri', dhk), 'edgecolor', 'none', 'facecolor', 'skin')
+  ft_plot_mesh(struct('pos', pos, 'tri', tri), 'edgecolor', 'none', 'facecolor', 'skin')
   lighting gouraud
   material dull
   lightangle(0, 90);
@@ -49,19 +48,18 @@ if feedback
   view([1 1 0.5])
 end
 
-
 % point near LPA that is at 50% of left lower contour
-[cnt1, cnt2] = elec1020_follow(pnt, dhk, nas, lpa, ini, feedback);
+[cnt1, cnt2] = elec1020_follow(pos, tri, nas, lpa, ini, feedback);
 mle = elec1020_fraction(cnt1, cnt2, 0.5);
 
 % point near RPA that is at 50% of right lower contour
-[cnt1, cnt2] = elec1020_follow(pnt, dhk, nas, rpa, ini, feedback);
+[cnt1, cnt2] = elec1020_follow(pos, tri, nas, rpa, ini, feedback);
 mre = elec1020_fraction(cnt1, cnt2, 0.5);
 
 % determine two points that approximate the vertex
-[cnt1, cnt2] = elec1020_follow(pnt, dhk, nas, ver, ini, feedback);
+[cnt1, cnt2] = elec1020_follow(pos, tri, nas, ver, ini, feedback);
 ver1 = elec1020_fraction(cnt1, cnt2, 0.5);
-[cnt1, cnt2] = elec1020_follow(pnt, dhk, mle, ver, mre, feedback);
+[cnt1, cnt2] = elec1020_follow(pos, tri, mle, ver, mre, feedback);
 ver2 = elec1020_fraction(cnt1, cnt2, 0.5);
 
 % refined estimate is the average of these two
@@ -73,7 +71,7 @@ ver = (ver1+ver2)/2;
 
 % ant-post contour through vertex
 fprintf('constructing vertical ant-post contour\n');
-[cnt1, cnt2] = elec1020_follow(pnt, dhk, nas, ver, ini, feedback);
+[cnt1, cnt2] = elec1020_follow(pos, tri, nas, ver, ini, feedback);
 Nz   = elec1020_fraction(cnt1, cnt2,  0/20);
 NFpz = elec1020_fraction(cnt1, cnt2,  1/20);
 Fpz  = elec1020_fraction(cnt1, cnt2,  2/20);
@@ -98,7 +96,7 @@ Iz   = elec1020_fraction(cnt1, cnt2, 20/20);
 
 % left-right through vertex
 fprintf('constructing C contour\n');
-[cnt1, cnt2] = elec1020_follow(pnt, dhk, mle, ver, mre, feedback);
+[cnt1, cnt2] = elec1020_follow(pos, tri, mle, ver, mre, feedback);
 T9   = elec1020_fraction(cnt1, cnt2,  0/20);
 T9h  = elec1020_fraction(cnt1, cnt2,  1/20);
 T7   = elec1020_fraction(cnt1, cnt2,  2/20);
@@ -123,7 +121,7 @@ T10  = elec1020_fraction(cnt1, cnt2, 20/20);
 
 % horizontal ant-post through T7
 fprintf('constructing horizontal left contour\n');
-[cnt1, cnt2] = elec1020_follow(pnt, dhk, Fpz, T7, Oz, feedback);
+[cnt1, cnt2] = elec1020_follow(pos, tri, Fpz, T7, Oz, feedback);
 Fp1h = elec1020_fraction(cnt1, cnt2,  1/20);
 Fp1  = elec1020_fraction(cnt1, cnt2,  2/20);
 AFp7 = elec1020_fraction(cnt1, cnt2,  3/20);
@@ -146,7 +144,7 @@ O1h  = elec1020_fraction(cnt1, cnt2, 19/20);
 
 % horizontal ant-post through T8
 fprintf('constructing horizontal right contour\n');
-[cnt1, cnt2] = elec1020_follow(pnt, dhk, Fpz, T8, Oz, feedback);
+[cnt1, cnt2] = elec1020_follow(pos, tri, Fpz, T8, Oz, feedback);
 Fp2h = elec1020_fraction(cnt1, cnt2,  1/20);
 Fp2  = elec1020_fraction(cnt1, cnt2,  2/20);
 AFp8 = elec1020_fraction(cnt1, cnt2,  3/20);
@@ -168,7 +166,7 @@ O2   = elec1020_fraction(cnt1, cnt2, 18/20);
 O2h  = elec1020_fraction(cnt1, cnt2, 19/20);
 
 fprintf('constructing AFp contour\n');
-[cnt1, cnt2] = elec1020_follow(pnt, dhk, AFp7, AFpz, AFp8, feedback);
+[cnt1, cnt2] = elec1020_follow(pos, tri, AFp7, AFpz, AFp8, feedback);
 AFp7h  = elec1020_fraction(cnt1, cnt2,  1/16);
 AFp5   = elec1020_fraction(cnt1, cnt2,  2/16);
 AFp5h  = elec1020_fraction(cnt1, cnt2,  3/16);
@@ -185,7 +183,7 @@ AFp6   = elec1020_fraction(cnt1, cnt2, 14/16);
 AFp8h  = elec1020_fraction(cnt1, cnt2, 15/16);
 
 fprintf('constructing AF contour\n');
-[cnt1, cnt2] = elec1020_follow(pnt, dhk, AF7, AFz, AF8, feedback);
+[cnt1, cnt2] = elec1020_follow(pos, tri, AF7, AFz, AF8, feedback);
 AF7h  = elec1020_fraction(cnt1, cnt2,  1/16);
 AF5   = elec1020_fraction(cnt1, cnt2,  2/16);
 AF5h  = elec1020_fraction(cnt1, cnt2,  3/16);
@@ -202,7 +200,7 @@ AF6   = elec1020_fraction(cnt1, cnt2, 14/16);
 AF8h  = elec1020_fraction(cnt1, cnt2, 15/16);
 
 fprintf('constructing AFF contour\n');
-[cnt1, cnt2] = elec1020_follow(pnt, dhk, AFF7, AFFz, AFF8, feedback);
+[cnt1, cnt2] = elec1020_follow(pos, tri, AFF7, AFFz, AFF8, feedback);
 AFF7h  = elec1020_fraction(cnt1, cnt2,  1/16);
 AFF5   = elec1020_fraction(cnt1, cnt2,  2/16);
 AFF5h  = elec1020_fraction(cnt1, cnt2,  3/16);
@@ -219,7 +217,7 @@ AFF6   = elec1020_fraction(cnt1, cnt2, 14/16);
 AFF8h  = elec1020_fraction(cnt1, cnt2, 15/16);
 
 fprintf('constructing F contour\n');
-[cnt1, cnt2] = elec1020_follow(pnt, dhk, F7, Fz, F8, feedback);
+[cnt1, cnt2] = elec1020_follow(pos, tri, F7, Fz, F8, feedback);
 F7h  = elec1020_fraction(cnt1, cnt2,  1/16);
 F5   = elec1020_fraction(cnt1, cnt2,  2/16);
 F5h  = elec1020_fraction(cnt1, cnt2,  3/16);
@@ -236,7 +234,7 @@ F6   = elec1020_fraction(cnt1, cnt2, 14/16);
 F8h  = elec1020_fraction(cnt1, cnt2, 15/16);
 
 fprintf('constructing FFC contour\n');
-[cnt1, cnt2] = elec1020_follow(pnt, dhk, FFT7, FFCz, FFT8, feedback);
+[cnt1, cnt2] = elec1020_follow(pos, tri, FFT7, FFCz, FFT8, feedback);
 FFT7h  = elec1020_fraction(cnt1, cnt2,  1/16);
 FFC5   = elec1020_fraction(cnt1, cnt2,  2/16);
 FFC5h  = elec1020_fraction(cnt1, cnt2,  3/16);
@@ -253,7 +251,7 @@ FFC6   = elec1020_fraction(cnt1, cnt2, 14/16);
 FFT8h  = elec1020_fraction(cnt1, cnt2, 15/16);
 
 fprintf('constructing FC contour\n');
-[cnt1, cnt2] = elec1020_follow(pnt, dhk, FT7, FCz, FT8, feedback);
+[cnt1, cnt2] = elec1020_follow(pos, tri, FT7, FCz, FT8, feedback);
 FT7h  = elec1020_fraction(cnt1, cnt2,  1/16);
 FC5   = elec1020_fraction(cnt1, cnt2,  2/16);
 FC5h  = elec1020_fraction(cnt1, cnt2,  3/16);
@@ -270,7 +268,7 @@ FC6   = elec1020_fraction(cnt1, cnt2, 14/16);
 FT8h  = elec1020_fraction(cnt1, cnt2, 15/16);
 
 fprintf('constructing FCC contour\n');
-[cnt1, cnt2] = elec1020_follow(pnt, dhk, FTT7, FCCz, FTT8, feedback);
+[cnt1, cnt2] = elec1020_follow(pos, tri, FTT7, FCCz, FTT8, feedback);
 FTT7h  = elec1020_fraction(cnt1, cnt2,  1/16);
 FCC5   = elec1020_fraction(cnt1, cnt2,  2/16);
 FCC5h  = elec1020_fraction(cnt1, cnt2,  3/16);
@@ -287,7 +285,7 @@ FCC6   = elec1020_fraction(cnt1, cnt2, 14/16);
 FTT8h  = elec1020_fraction(cnt1, cnt2, 15/16);
 
 fprintf('constructing CCP contour\n');
-[cnt1, cnt2] = elec1020_follow(pnt, dhk, TTP7, CCPz, TTP8, feedback);
+[cnt1, cnt2] = elec1020_follow(pos, tri, TTP7, CCPz, TTP8, feedback);
 TTP7h  = elec1020_fraction(cnt1, cnt2,  1/16);
 CCP5   = elec1020_fraction(cnt1, cnt2,  2/16);
 CCP5h  = elec1020_fraction(cnt1, cnt2,  3/16);
@@ -304,7 +302,7 @@ CCP6   = elec1020_fraction(cnt1, cnt2, 14/16);
 TTP8h  = elec1020_fraction(cnt1, cnt2, 15/16);
 
 fprintf('constructing CP contour\n');
-[cnt1, cnt2] = elec1020_follow(pnt, dhk, TP7, CPz, TP8, feedback);
+[cnt1, cnt2] = elec1020_follow(pos, tri, TP7, CPz, TP8, feedback);
 TP7h  = elec1020_fraction(cnt1, cnt2,  1/16);
 CP5   = elec1020_fraction(cnt1, cnt2,  2/16);
 CP5h  = elec1020_fraction(cnt1, cnt2,  3/16);
@@ -321,7 +319,7 @@ CP6   = elec1020_fraction(cnt1, cnt2, 14/16);
 TP8h  = elec1020_fraction(cnt1, cnt2, 15/16);
 
 fprintf('constructing CPP contour\n');
-[cnt1, cnt2] = elec1020_follow(pnt, dhk, TPP7, CPPz, TPP8, feedback);
+[cnt1, cnt2] = elec1020_follow(pos, tri, TPP7, CPPz, TPP8, feedback);
 TPP7h  = elec1020_fraction(cnt1, cnt2,  1/16);
 CPP5   = elec1020_fraction(cnt1, cnt2,  2/16);
 CPP5h  = elec1020_fraction(cnt1, cnt2,  3/16);
@@ -338,7 +336,7 @@ CPP6   = elec1020_fraction(cnt1, cnt2, 14/16);
 TPP8h  = elec1020_fraction(cnt1, cnt2, 15/16);
 
 fprintf('constructing P contour\n');
-[cnt1, cnt2] = elec1020_follow(pnt, dhk, P7, Pz, P8, feedback);
+[cnt1, cnt2] = elec1020_follow(pos, tri, P7, Pz, P8, feedback);
 P7h  = elec1020_fraction(cnt1, cnt2,  1/16);
 P5   = elec1020_fraction(cnt1, cnt2,  2/16);
 P5h  = elec1020_fraction(cnt1, cnt2,  3/16);
@@ -355,7 +353,7 @@ P6   = elec1020_fraction(cnt1, cnt2, 14/16);
 P8h  = elec1020_fraction(cnt1, cnt2, 15/16);
 
 fprintf('constructing PPO contour\n');
-[cnt1, cnt2] = elec1020_follow(pnt, dhk, PPO7, PPOz, PPO8, feedback);
+[cnt1, cnt2] = elec1020_follow(pos, tri, PPO7, PPOz, PPO8, feedback);
 PPO7h  = elec1020_fraction(cnt1, cnt2,  1/16);
 PPO5   = elec1020_fraction(cnt1, cnt2,  2/16);
 PPO5h  = elec1020_fraction(cnt1, cnt2,  3/16);
@@ -372,7 +370,7 @@ PPO6   = elec1020_fraction(cnt1, cnt2, 14/16);
 PPO8h  = elec1020_fraction(cnt1, cnt2, 15/16);
 
 fprintf('constructing PO contour\n');
-[cnt1, cnt2] = elec1020_follow(pnt, dhk, PO7, POz, PO8, feedback);
+[cnt1, cnt2] = elec1020_follow(pos, tri, PO7, POz, PO8, feedback);
 PO7h  = elec1020_fraction(cnt1, cnt2,  1/16);
 PO5   = elec1020_fraction(cnt1, cnt2,  2/16);
 PO5h  = elec1020_fraction(cnt1, cnt2,  3/16);
@@ -389,7 +387,7 @@ PO6   = elec1020_fraction(cnt1, cnt2, 14/16);
 PO8h  = elec1020_fraction(cnt1, cnt2, 15/16);
 
 fprintf('constructing POO contour\n');
-[cnt1, cnt2] = elec1020_follow(pnt, dhk, POO7, POOz, POO8, feedback);
+[cnt1, cnt2] = elec1020_follow(pos, tri, POO7, POOz, POO8, feedback);
 POO7h  = elec1020_fraction(cnt1, cnt2,  1/16);
 POO5   = elec1020_fraction(cnt1, cnt2,  2/16);
 POO5h  = elec1020_fraction(cnt1, cnt2,  3/16);
@@ -411,7 +409,7 @@ POO8h  = elec1020_fraction(cnt1, cnt2, 15/16);
 
 % low horizontal ant-post through T9
 fprintf('constructing low horizontal left contour\n');
-[cnt1, cnt2] = elec1020_follow(pnt, dhk, Nz, T9, Iz, feedback);
+[cnt1, cnt2] = elec1020_follow(pos, tri, Nz, T9, Iz, feedback);
 AFp9 = elec1020_fraction(cnt1, cnt2,  3/20);
 AF9  = elec1020_fraction(cnt1, cnt2,  4/20);
 AFF9 = elec1020_fraction(cnt1, cnt2,  5/20);
@@ -430,7 +428,7 @@ POO9 = elec1020_fraction(cnt1, cnt2, 17/20);
 I1   = elec1020_fraction(cnt1, cnt2, 18/20);
 I1h  = elec1020_fraction(cnt1, cnt2, 19/20);
 
-[cnt1, cnt2] = elec1020_follow(pnt, dhk, NFpz, T9h, OIz, feedback);
+[cnt1, cnt2] = elec1020_follow(pos, tri, NFpz, T9h, OIz, feedback);
 AFp9h = elec1020_fraction(cnt1, cnt2,  3/20);
 AF9h  = elec1020_fraction(cnt1, cnt2,  4/20);
 AFF9h = elec1020_fraction(cnt1, cnt2,  5/20);
@@ -451,7 +449,7 @@ OI1h  = elec1020_fraction(cnt1, cnt2, 19/20);
 
 % low horizontal ant-post through T10
 fprintf('constructing low horizontal right contour\n');
-[cnt1, cnt2] = elec1020_follow(pnt, dhk, Nz, T10, Iz, feedback);
+[cnt1, cnt2] = elec1020_follow(pos, tri, Nz, T10, Iz, feedback);
 AFp10 = elec1020_fraction(cnt1, cnt2,  3/20);
 AF10  = elec1020_fraction(cnt1, cnt2,  4/20);
 AFF10 = elec1020_fraction(cnt1, cnt2,  5/20);
@@ -470,7 +468,7 @@ POO10 = elec1020_fraction(cnt1, cnt2, 17/20);
 I2    = elec1020_fraction(cnt1, cnt2, 18/20);
 I2h   = elec1020_fraction(cnt1, cnt2, 19/20);
 
-[cnt1, cnt2] = elec1020_follow(pnt, dhk, NFpz, T10h, OIz, feedback);
+[cnt1, cnt2] = elec1020_follow(pos, tri, NFpz, T10h, OIz, feedback);
 AFp10h = elec1020_fraction(cnt1, cnt2,  3/20);
 AF10h  = elec1020_fraction(cnt1, cnt2,  4/20);
 AFF10h = elec1020_fraction(cnt1, cnt2,  5/20);

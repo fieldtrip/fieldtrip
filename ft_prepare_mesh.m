@@ -220,6 +220,13 @@ if ~isfield(mesh, 'coordsys') && hasdata && isfield(data, 'coordsys')
   end
 end
 
+% copy the fiducials from the input to the output
+if ~isfield(mesh, 'fid') && hasdata && isfield(data, 'fid')
+  for i=1:numel(mesh)
+    mesh(i).fid = data.fid;
+  end
+end
+
 % smooth the mesh
 if ~isempty(cfg.smooth)
   tmpcfg = keepfields(cfg, {'smooth', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
