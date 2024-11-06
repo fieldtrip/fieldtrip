@@ -150,8 +150,8 @@ if contains(cfg.metric, 'zvalue')
   runsum = zeros(nchan, 1);
   runss  = zeros(nchan, 1);
   runnum = 0;
-  for chan=1:ntrl
-    dat = preproc(data.trial{chan}, data.label, data.time{chan}, cfg.preproc);
+  for trl=1:ntrl
+    dat = preproc(data.trial{trl}, data.label, data.time{trl}, cfg.preproc);
     runsum = runsum + nansum(dat, 2);
     runss  = runss  + nansum(dat.^2, 2);
     runnum = runnum + sum(isfinite(dat), 2);
@@ -173,7 +173,8 @@ end
 
 for trl=1:ntrl
   % compute the artifact value for each channel in this trial
-  level = artifact_level(data.trial{trl}, cfg.metric, mval, sd, connectivity);
+  dat = preproc(data.trial{trl}, data.label, data.time{trl}, cfg.preproc);
+  level = artifact_level(dat, cfg.metric, mval, sd, connectivity);
   
   if isvector(level)
     % find channels with a value that exceeds the threshold
