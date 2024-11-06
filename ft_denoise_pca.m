@@ -2,9 +2,9 @@ function data = ft_denoise_pca(cfg, varargin)
 
 % FT_DENOISE_PCA performs a principal component analysis (PCA) on specified reference
 % channels and subtracts the projection of the data of interest onto this orthogonal
-% basis from the data of interest. This is the algorithm which is applied by 4D to
+% basis from the data of interest. This is the algorithm which is applied by BTi/4D to
 % compute noise cancellation weights on a dataset of interest. This function has been
-% designed for 4D MEG data, but can also be applied to data from other MEG systems.
+% designed for BTi/4D MEG data, but can also be applied to data from other MEG systems.
 %
 % Use as
 %   [dataout] = ft_denoise_pca(cfg, data)
