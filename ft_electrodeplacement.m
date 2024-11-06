@@ -79,7 +79,7 @@ function [elec] = ft_electrodeplacement(cfg, varargin)
 %   cfg.fiducial.ini   = 1x3 vector with coordinates
 %   cfg.fiducial.lpa   = 1x3 vector with coordinates
 %   cfg.fiducial.rpa   = 1x3 vector with coordinates
-%   cfg.feedback       = string, can be 'yes' or 'no' for detailled feedback (default = 'yes')
+%   cfg.feedback       = string, can be 'yes' or 'no' for detailed feedback (default = 'yes')
 %
 % The following options apply to the 'shaft' method
 %   cfg.shaft.tip      = 1x3 position of the electrode at the tip of the shaft
