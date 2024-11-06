@@ -35,6 +35,8 @@ function [cfg] = ft_databrowser(cfg, data)
 %   cfg.plotlabels              = 'yes', 'no' or 'some', whether to plot channel labels in vertical viewmode. The option 'some' plots one label for every ten channels, which is useful if there are many channels (default = 'some')
 %   cfg.plotevents              = 'no' or 'yes', whether to plot event markers (default = 'yes')
 %   cfg.ploteventlabels         = 'type=value', 'colorvalue' (default = 'type=value')
+%   cfg.eventcolor              = string with line colors or Nx3 color map, colors used for plotting the different types of events (default is automatic)
+%   cfg.artifactcolor           = string with line colors or Nx3 color map, colors used for plotting the different types of artifacts (default is automatic)
 %   cfg.artfctdef.xxx.artifact  = Nx2 matrix with artifact segments see FT_ARTIFACT_xxx functions
 %   cfg.selectfeature           = string, name of feature to be selected/added (default = 'visual')
 %   cfg.selectmode              = 'markartifact', 'markpeakevent', 'marktroughevent' (default = 'markartifact')
@@ -232,11 +234,13 @@ cfg.channelclamped      = ft_getopt(cfg, 'channelclamped');
 % set the defaults for plotting the events
 cfg.plotevents          = ft_getopt(cfg, 'plotevents', 'yes');
 cfg.ploteventlabels     = ft_getopt(cfg, 'ploteventlabels', 'type=value');
-cfg.eventalpha          = ft_getopt(cfg, 'artifactalpha', 0.2);          % for the opacity of events
+cfg.eventalpha          = ft_getopt(cfg, 'eventalpha', 0.2);             % for the opacity of events
+cfg.eventcolor          = ft_getopt(cfg, 'eventcolor', 'krbgmcy');
 % set the defaults for plotting the artifacts
 cfg.plotartifacts       = ft_getopt(cfg, 'plotartifacts', 'yes');
 cfg.plotartifactlabels  = ft_getopt(cfg, 'plotartifactlabels', '');
 cfg.artifactalpha       = ft_getopt(cfg, 'artifactalpha', 0.2);          % for the opacity of artifacts
+cfg.artifactcolor       = ft_getopt(cfg, 'artifactcolor', [0.9686 0.7608 0.7686; 0.7529 0.7098 0.9647; 0.7373 0.9725 0.6824; 0.8118 0.8118 0.8118; 0.9725 0.6745 0.4784; 0.9765 0.9176 0.5686; 0.6863 1 1; 1 0.6863 1; 0 1 0.6000]);
 % add some defaults for preprocessing, none of these is active but they will show up with the cfg.preproc button in the user interface
 cfg.preproc.demean      = ft_getopt(cfg.preproc, 'demean', 'no');
 cfg.preproc.lpfilter    = ft_getopt(cfg.preproc, 'lpfilter', 'no');
@@ -547,12 +551,12 @@ artdata.cfg.trl        = [1 endsample 0];
 
 % determine the unique artifact types and corresponding colors, this only needs to be done once
 artifacttypes = artlabel;
-artifactcolors = colorcheck([0.9686 0.7608 0.7686; 0.7529 0.7098 0.9647; 0.7373 0.9725 0.6824; 0.8118 0.8118 0.8118; 0.9725 0.6745 0.4784; 0.9765 0.9176 0.5686; 0.6863 1 1; 1 0.6863 1; 0 1 0.6000], numel(artdata.label));
+artifactcolors = colorcheck(cfg.artifactcolor, numel(artdata.label));
 
 % determine the unique event types and corresponding colors, this only needs to be done once
 if ~isempty(event) && isstruct(event)
   eventtypes  = unique({event.type});
-  eventcolors = colorcheck('krbgmcy', numel(eventtypes));
+  eventcolors = colorcheck(cfg.eventcolor, numel(eventtypes));
   % durations and offsets can be either empty or should be numeric values, see FT_READ_EVENT
   % the code further down expects them to be numeric values, so change them to zero
   for i=1:numel(event)
@@ -905,16 +909,17 @@ end % function cb_datacursortext
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function color = colorcheck(color, n)
 % define the mapping between color characters and RGB values
-name = 'rgbcmywk';
+% these are the standard colors used for lines
+name = 'bgrcmykw';
 rgb = [
-  1 0 0
-  0 1 0
   0 0 1
+  0 1 0
+  1 0 0
   0 1 1
   1 0 1
   1 1 0
-  1 1 1
   0 0 0
+  1 1 1
   ];
 % ensure that all colors are represented as RGB
 if ischar(color)
