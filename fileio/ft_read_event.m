@@ -1359,7 +1359,7 @@ switch eventformat
       udp=pnet('udpsocket',port);
       % Wait/Read udp packet to read buffer
       len=pnet(udp,'readpacket');
-      if len>0,
+      if len>0
         % if packet larger then 1 byte then read maximum of 1000 doubles in network byte order
         msg=pnet(udp,'read',1000,'uint8');
         if ~isempty(msg)
@@ -1388,8 +1388,20 @@ switch eventformat
     end
 
   case 'gtec_hdf5'
-    % the header mentions trigger channels, but I don't know how they are stored
-    ft_warning('event reading for hdf5 has not yet been implemented due to a lack of a good example file');
+    % 
+    if isempty(hdr)
+      hdr = ft_read_header(filename);
+    end
+    for i=1:length(hdr.orig.AsynchronData.Time)
+      % the type ID appears to be zero-offset
+      this = hdr.orig.AsynchronData.AsynchronSignalTypes(hdr.orig.AsynchronData.TypeID(i)+1);
+      % there are multiple informative fields in the description
+      event(end+1).type       = this.AsynchronSignalDescription.Name;
+      event(end  ).sample     = hdr.orig.AsynchronData.Time(i);
+      event(end  ).value      = hdr.orig.AsynchronData.Value(i);
+      event(end  ).duration   = 0;
+      event(end  ).offset     = 0;
+    end
 
   case 'gtec_mat'
     if isempty(hdr)
