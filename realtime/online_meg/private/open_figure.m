@@ -76,7 +76,7 @@ assert(ishandle(h), 'failed to open figure');
 
 if ~isempty(cfg.figurename)
   % this appears as the name of the window
-  set(h, 'name', cfg.figurename, 'Interpreter', cfg.interpreter);
+  set(h, 'name', cfg.figurename);
 end
 
 if ~isempty(cfg.renderer)
