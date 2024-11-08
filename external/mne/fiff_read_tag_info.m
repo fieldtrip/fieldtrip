@@ -17,13 +17,23 @@ function [tag] = fiff_read_tag_info(fid)
 %
 %
 
+me='MNE:fiff_read_tag_info';
+
 FIFFV_NEXT_SEQ=0;
 
 data     = fread(fid,4,'int');
-tag.kind = data(1);
-tag.type = data(2);
-tag.size = data(3);
-tag.next = data(4);
+if ~isempty(data)
+  tag.kind = data(1);
+  tag.type = data(2);
+  tag.size = data(3);
+  tag.next = data(4);
+else
+  warning(me,'Invalid tag found');
+  tag.kind = [];
+  tag.type = [];
+  tag.size = [];
+  tag.next = [];
+end
 
 if tag.next == FIFFV_NEXT_SEQ
   fseek(fid,tag.size,'cof');
