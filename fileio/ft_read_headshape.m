@@ -440,74 +440,82 @@ switch fileformat
   case 'mne_source'
     % read the source space from an MNE file
     ft_hastoolbox('mne', 1);
+    
+    try
+      % a fif-file can also contain a source space that is volumetric, in which case the below function call will fail (due to the add_geom
+      % being specified as true, but the file does not contain triangulation information. strictly speaking, the fif-file then
+      % does not represent a headshape, but as a service to the casual user, let's support the reading of this type of file
+      src = mne_read_source_spaces(filename, 1);
+    catch
+      src = mne_read_source_spaces(filename);
+    end
 
-    src = mne_read_source_spaces(filename, 1);
+    if numel(src)==2
+      if ~isempty(annotationfile)
+        ft_hastoolbox('freesurfer', 1);
+        if numel(annotationfile)~=2
+          ft_error('two annotationfiles expected, one for each hemisphere');
+        end
+        for k = 1:numel(annotationfile)
+          [v{k}, label{k}, c(k)] = read_annotation(annotationfile{k}, 1);
+        end
 
-    if ~isempty(annotationfile)
-      ft_hastoolbox('freesurfer', 1);
-      if numel(annotationfile)~=2
-        ft_error('two annotationfiles expected, one for each hemisphere');
+        % match the annotations with the src structures
+        if src(1).np == numel(label{1}) && src(2).np == numel(label{2})
+          src(1).labelindx = label{1};
+          src(2).labelindx = label{2};
+        elseif src(1).np == numel(label{2}) && src(1).np == numel(label{1})
+          src(1).labelindx = label{2};
+          src(2).labelindx = label{1};
+        else
+          ft_warning('incompatible annotation with triangulations, not using annotation information');
+        end
+        if ~isequal(c(1),c(2))
+          ft_error('the annotation tables differ, expecting equal tables for the hemispheres');
+        end
+        c = c(1);
       end
-      for k = 1:numel(annotationfile)
-        [v{k}, label{k}, c(k)] = read_annotation(annotationfile{k}, 1);
-      end
 
-      % match the annotations with the src structures
-      if src(1).np == numel(label{1}) && src(2).np == numel(label{2})
-        src(1).labelindx = label{1};
-        src(2).labelindx = label{2};
-      elseif src(1).np == numel(label{2}) && src(1).np == numel(label{1})
-        src(1).labelindx = label{2};
-        src(2).labelindx = label{1};
-      else
-        ft_warning('incompatible annotation with triangulations, not using annotation information');
-      end
-      if ~isequal(c(1),c(2))
-        ft_error('the annotation tables differ, expecting equal tables for the hemispheres');
-      end
-      c = c(1);
-    end
+      shape = [];
+      % only keep the points that are in use
+      inuse1 = src(1).inuse==1;
+      inuse2 = src(2).inuse==1;
+      shape.pos=[src(1).rr(inuse1,:); src(2).rr(inuse2,:)];
 
-    shape = [];
-    % only keep the points that are in use
-    inuse1 = src(1).inuse==1;
-    inuse2 = src(2).inuse==1;
-    shape.pos=[src(1).rr(inuse1,:); src(2).rr(inuse2,:)];
+      % only keep the triangles that are in use; these have to be renumbered
+      newtri1 = src(1).use_tris;
+      newtri2 = src(2).use_tris;
+      for i=1:numel(src(1).vertno)
+        newtri1(newtri1==src(1).vertno(i)) = i;
+      end
+      for i=1:numel(src(2).vertno)
+        newtri2(newtri2==src(2).vertno(i)) = i;
+      end
+      shape.tri  = [newtri1; newtri2 + numel(src(1).vertno)];
+      if isfield(src(1), 'use_tri_area')
+        shape.area = [src(1).use_tri_area(:); src(2).use_tri_area(:)];
+      end
+      if isfield(src(1), 'use_tri_nn')
+        shape.nn = [src(1).use_tri_nn; src(2).use_tri_nn];
+      end
+      shape.orig.pos = [src(1).rr; src(2).rr];
+      shape.orig.tri = [src(1).tris; src(2).tris + src(1).np];
+      shape.orig.inuse = [src(1).inuse src(2).inuse]';
+      shape.orig.nn    = [src(1).nn; src(2).nn];
+      if isfield(src(1), 'labelindx')
+        shape.orig.labelindx = [src(1).labelindx;src(2).labelindx];
+        shape.labelindx      = [src(1).labelindx(inuse1); src(2).labelindx(inuse2)];
+        shape.label          = c.struct_names;
+        shape.annotation     = c.orig_tab; % to be able to recover which one
+        shape.ctable         = c.table;
+      end
+    else
+      ft_warning('the fif-file did not seem to contain triangulation information, probably you try to read a volumetric source space');
 
-    % only keep the triangles that are in use; these have to be renumbered
-    newtri1 = src(1).use_tris;
-    newtri2 = src(2).use_tris;
-    for i=1:numel(src(1).vertno)
-      newtri1(newtri1==src(1).vertno(i)) = i;
-    end
-    for i=1:numel(src(2).vertno)
-      newtri2(newtri2==src(2).vertno(i)) = i;
-    end
-    shape.tri  = [newtri1; newtri2 + numel(src(1).vertno)];
-    if isfield(src(1), 'use_tri_area')
-      shape.area = [src(1).use_tri_area(:); src(2).use_tri_area(:)];
-    end
-    if isfield(src(1), 'use_tri_nn')
-      shape.nn = [src(1).use_tri_nn; src(2).use_tri_nn];
-    end
-    shape.orig.pos = [src(1).rr; src(2).rr];
-    shape.orig.tri = [src(1).tris; src(2).tris + src(1).np];
-    shape.orig.inuse = [src(1).inuse src(2).inuse]';
-    shape.orig.nn    = [src(1).nn; src(2).nn];
-    if isfield(src(1), 'labelindx')
-      shape.orig.labelindx = [src(1).labelindx;src(2).labelindx];
-      shape.labelindx      = [src(1).labelindx(inuse1); src(2).labelindx(inuse2)];
-      %      ulabelindx = unique(c.table(:,5));
-      %       for k = 1:c.numEntries
-      %         % the values are really high (apart from the 0), so I guess it's safe to start
-      %         % numbering from 1
-      %         shape.orig.labelindx(shape.orig.labelindx==ulabelindx(k)) = k;
-      %         shape.labelindx(shape.labelindx==ulabelindx(k)) = k;
-      %       end
-      % FIXME the above screws up the interpretation of the labels, because the color table is not sorted
-      shape.label = c.struct_names;
-      shape.annotation = c.orig_tab; % to be able to recover which one
-      shape.ctable = c.table;
+      shape        = [];
+      shape.pos    = src.rr;
+      shape.inside = src.inuse(:)>0;
+      shape.dim    = pos2dim3d(src.rr);
     end
 
   case {'neuromag_fif' 'neuromag_mne'}
