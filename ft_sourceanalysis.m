@@ -294,6 +294,18 @@ if ~isempty(cfg.supchan)
   assert(numel(cfg.supchan)>0, 'cfg.supchan is not present in the data');
 end
 
+% also do some checks which are conditional on the presence of spatial filters or precomputed leadfields
+if isfield(cfg.sourcemodel, 'leadfield') && isempty(cfg.refdip) && isempty(cfg.supdip)
+  cfg = ft_checkconfig(cfg, 'unused', {'reducerank' 'backproject' 'normalize' 'normalizeparam' 'weight'});
+end
+if isfield(cfg.sourcemodel, 'filter') && isempty(cfg.refdip) && isempty(cfg.supdip)
+  % these are options for forward computation
+  cfg = ft_checkconfig(cfg, 'unused', {'reducerank' 'backproject' 'normalize' 'normalizeparam' 'weight'});
+
+  % these are options for inverse computation
+  cfg.(cfg.method) = ft_checkconfig(cfg.(cfg.method), 'unused', {'lambda' 'kappa' 'tol' 'invmethod' 'fixedori' 'weightnorm' 'subspace'});
+end
+
 % spectrally decomposed data can have label and/or labelcmb
 if ~isfield(data, 'label') && isfield(data, 'labelcmb')
   % the code further down assumes that data.label is present
