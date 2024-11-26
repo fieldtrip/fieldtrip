@@ -294,6 +294,18 @@ if ~isempty(cfg.supchan)
   assert(numel(cfg.supchan)>0, 'cfg.supchan is not present in the data');
 end
 
+% also do some checks which are conditional on the presence of spatial filters or precomputed leadfields
+if isfield(cfg.sourcemodel, 'leadfield') && isempty(cfg.refdip) && isempty(cfg.supdip)
+  cfg = ft_checkconfig(cfg, 'unused', {'reducerank' 'backproject' 'normalize' 'normalizeparam' 'weight'});
+end
+if isfield(cfg.sourcemodel, 'filter') && isempty(cfg.refdip) && isempty(cfg.supdip)
+  % these are options for forward computation
+  cfg = ft_checkconfig(cfg, 'unused', {'reducerank' 'backproject' 'normalize' 'normalizeparam' 'weight'});
+
+  % these are options for inverse computation
+  cfg.(cfg.method) = ft_checkconfig(cfg.(cfg.method), 'unused', {'lambda' 'kappa' 'tol' 'invmethod' 'fixedori' 'weightnorm' 'subspace'});
+end
+
 % spectrally decomposed data can have label and/or labelcmb
 if ~isfield(data, 'label') && isfield(data, 'labelcmb')
   % the code further down assumes that data.label is present
@@ -477,6 +489,10 @@ elseif istrue(cfg.keepleadfield) || istrue(cfg.permutation) || istrue(cfg.random
   end
   sourcemodel = ft_prepare_leadfield(tmpcfg);
   
+  % these need to be removed from the cfg, otherwise the low-level inverse
+  % function may throw an error, see https://github.com/fieldtrip/fieldtrip/pull/2468
+  cfg = ft_checkconfig(cfg, 'unused', {'reducerank' 'backproject' 'normalize' 'normalizeparam' 'weight'});
+
   % no further forward computations are needed, but keep them in the cfg
   needheadmodel = false;
   headmodel = [];
@@ -1122,10 +1138,13 @@ elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne', 'harmony', 'r
     for i=1:Nrepetitions
       fprintf('estimating current density distribution for repetition %d\n', i);
       squeeze_avg = reshape(avg(i,:,:),[size_avg(2) size_avg(3)]);
-      if hascovariance
+      if hascovariance && ~isfield(sourcemodel, 'filter')
         squeeze_Cy  = reshape(Cy(i,:,:), [size_Cy(2)  size_Cy(3)]);
         dip(i) = ft_inverse_mne(sourcemodel, sens, headmodel, squeeze_avg, methodopt{:}, leadfieldopt{:}, 'noisecov', squeeze_Cy);
       else
+        if isfield(sourcemodel, 'filter') && hascovariance
+          ft_warning('spatial filter has been provided, not using the noise covariance matrix for the computations');
+        end
         dip(i) = ft_inverse_mne(sourcemodel, sens, headmodel, squeeze_avg, methodopt{:}, leadfieldopt{:});
       end
     end
