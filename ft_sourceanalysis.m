@@ -489,6 +489,10 @@ elseif istrue(cfg.keepleadfield) || istrue(cfg.permutation) || istrue(cfg.random
   end
   sourcemodel = ft_prepare_leadfield(tmpcfg);
   
+  % these need to be removed from the cfg, otherwise the low-level inverse
+  % function may throw an error, see https://github.com/fieldtrip/fieldtrip/pull/2468
+  cfg = ft_checkconfig(cfg, 'unused', {'reducerank' 'backproject' 'normalize' 'normalizeparam' 'weight'});
+
   % no further forward computations are needed, but keep them in the cfg
   needheadmodel = false;
   headmodel = [];
@@ -1134,10 +1138,13 @@ elseif istimelock && any(strcmp(cfg.method, {'lcmv', 'sam', 'mne', 'harmony', 'r
     for i=1:Nrepetitions
       fprintf('estimating current density distribution for repetition %d\n', i);
       squeeze_avg = reshape(avg(i,:,:),[size_avg(2) size_avg(3)]);
-      if hascovariance
+      if hascovariance && ~isfield(sourcemodel, 'filter')
         squeeze_Cy  = reshape(Cy(i,:,:), [size_Cy(2)  size_Cy(3)]);
         dip(i) = ft_inverse_mne(sourcemodel, sens, headmodel, squeeze_avg, methodopt{:}, leadfieldopt{:}, 'noisecov', squeeze_Cy);
       else
+        if isfield(sourcemodel, 'filter') && hascovariance
+          ft_warning('spatial filter has been provided, not using the noise covariance matrix for the computations');
+        end
         dip(i) = ft_inverse_mne(sourcemodel, sens, headmodel, squeeze_avg, methodopt{:}, leadfieldopt{:});
       end
     end

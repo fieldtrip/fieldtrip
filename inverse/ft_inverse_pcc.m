@@ -151,7 +151,7 @@ if hasfilter
   % check that the options normalize/reducerank/etc are not specified
   assert(all(cellfun(@isempty, leadfieldopt(2:2:end))), 'the options for computing the leadfield must all be empty/default');
   % check that the options for the inversion are not specified
-  assert(all(cellfun(@isempty, invopt(2:2:end))), 'the options for computing the inverse solution must all be empty/default');
+  assert(all(cellfun(@isempty, invopt(4:2:end))) && invopt{2}==0, 'the options for computing the inverse solution must all be empty/default');
   ft_info('using precomputed filters\n');
   sourcemodel.filter = sourcemodel.filter(originside);
 elseif hasleadfield
