@@ -1080,6 +1080,7 @@ dataset_description_settings = keepfields(cfg.dataset_description, fn);
 fn = fieldnames(cfg);
 fn = fn(~cellfun(@isempty, regexp(fn, '^[A-Z].*')));
 generic_settings = keepfields(cfg, fn);
+generic_settings = removefields(generic_settings, {'README', 'LICENSE', 'CHANGES'});
 
 % make the relevant selection, all json fields start with a capital letter
 fn = fieldnames(cfg.mri);
