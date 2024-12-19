@@ -21,6 +21,8 @@ function [cfg] = ft_topoplotTFR(cfg, varargin)
 %   cfg.baseline           = 'yes','no' or [time1 time2] (default = 'no'), see FT_TIMELOCKBASELINE or FT_FREQBASELINE
 %   cfg.baselinetype       = 'absolute' or 'relative' (default = 'absolute')
 %   cfg.trials             = 'all' or a selection given as a 1xN vector (default = 'all')
+%   cfg.magscale           = number, scaling to apply to the MEG magnetometer channels prior to display
+%   cfg.gradscale          = number, scaling to apply to the MEG gradiometer channels prior to display
 %   cfg.colormap           = string, or Nx3 matrix, see FT_COLORMAP
 %   cfg.marker             = 'on', 'labels', 'numbers', 'off'
 %   cfg.markersymbol       = channel marker symbol (default = 'o')

@@ -363,9 +363,12 @@ for indx=1:Ndata
     bivariate_common(cfg, varargin{:});
     return
   end
-  
+ 
   % Apply channel-type specific scaling
-  tmpcfg = keepfields(cfg, {'parameter', 'chanscale', 'ecgscale', 'eegscale', 'emgscale', 'eogscale', 'gradscale', 'magscale', 'megscale', 'mychan', 'mychanscale'});
+  fn = fieldnames(cfg);
+  fn = setdiff(fn, {'skipscale', 'showscale', 'gridscale'}); % these are for the layout and plotting, not for CHANSCALE_COMMON
+  fn = fn(endsWith(fn, 'scale') | startsWith(fn, 'mychan') | strcmp(fn, 'channel') | strcmp(fn, 'parameter'));
+  tmpcfg = keepfields(cfg, fn);
   data = chanscale_common(tmpcfg, data);
   
   
