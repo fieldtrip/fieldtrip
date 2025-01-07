@@ -1,5 +1,5 @@
-This directory contains various functions from MathWorks File Exchange.
+This directory contains various functions from MathWorks File Exchange at
+https://www.mathworks.com/matlabcentral/fileexchange
 
-See https://www.mathworks.com/matlabcentral/fileexchange
-
-These files are copyrighted by their respective authors,  see the respective LICENSE files for details.
+These files are copyrighted by their respective authors, see the individual source
+code files and their respective LICENSE files for details.
