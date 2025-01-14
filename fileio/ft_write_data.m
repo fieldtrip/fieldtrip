@@ -30,6 +30,7 @@ function ft_write_data(filename, dat, varargin)
 %   matlab
 %   homer_nirs
 %   snirf
+%   csv
 %
 % For EEG data, the input data is assumed to be scaled in microvolt.
 % For NIRS data, the input data is assumed to represent optical densities.
@@ -954,6 +955,25 @@ switch dataformat
     % save .snirf file
     snirf.Save(filename)
     
+  case 'csv'
+    % write the data matrix as a comma-separated text file, where each row is a time slice
+    % if a label is present in the header, the first header line contains the labels of the columns    
+    if ~isempty(hdr) && isfield(hdr, 'label')
+      label = hdr.label;
+    else
+      label = {};
+    end
+
+    if isempty(label)
+      dat = array2table(dat');
+      writelabel = false;
+    else
+      dat = array2table(dat', 'VariableNames', label);
+      writelabel = true;
+    end
+    writetable(dat, filename, 'WriteVariableNames', writelabel);
+
+
   otherwise
     ft_error('unsupported data format');
 end % switch dataformat
