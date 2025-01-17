@@ -58,7 +58,7 @@ function [cfg] = data2bids(cfg, varargin)
 %   cfg.ses                     = string, optional session name
 %   cfg.run                     = number, optional
 %   cfg.task                    = string, task name is required for functional data
-%   cfg.suffix                  = string, can be any of 'FLAIR', 'FLASH', 'PD', 'PDT2', 'PDmap', 'T1map', 'T1rho', 'T1w', 'T2map', 'T2star', 'T2w', 'angio', 'audio', 'bold', 'bval', 'bvec', 'channels', 'coordsystem', 'defacemask', 'dwi', 'eeg', 'emg', 'epi', 'events', 'eyetracker', 'fieldmap', 'headshape', 'ieeg', 'inplaneT1', 'inplaneT2', 'magnitude', 'magnitude1', 'magnitude2', 'meg', 'motion', 'nirs', 'phase1', 'phase2', 'phasediff', 'photo', 'physio', 'sbref', 'stim', 'video'
+%   cfg.suffix                  = string, can be any of 'FLAIR', 'FLASH', 'PD', 'PDT2', 'PDmap', 'T1map', 'T1rho', 'T1w', 'T2map', 'T2star', 'T2w', 'angio', 'audio', 'bold', 'bval', 'bvec', 'channels', 'coordsystem', 'defacemask', 'dwi', 'eeg', 'emg', 'epi', 'events', 'eyetrack', 'fieldmap', 'headshape', 'ieeg', 'inplaneT1', 'inplaneT2', 'magnitude', 'magnitude1', 'magnitude2', 'meg', 'motion', 'nirs', 'phase1', 'phase2', 'phasediff', 'photo', 'physio', 'sbref', 'stim', 'video'
 %   cfg.acq                     = string
 %   cfg.ce                      = string
 %   cfg.rec                     = string
@@ -243,6 +243,8 @@ cfg = ft_checkconfig(cfg, 'renamed', {'channels.writesidecar', 'writejson'});
 cfg = ft_checkconfig(cfg, 'renamed', {'electrodes.writesidecar', 'writejson'});
 cfg = ft_checkconfig(cfg, 'renamed', {'coordsystem.writesidecar', 'writejson'});
 cfg = ft_checkconfig(cfg, 'renamed', {'event', 'events'}); % cfg.event is used elsewhere in FieldTrip, but here it should be cfg.events with an s
+cfg = ft_checkconfig(cfg, 'renamedval', {'suffix', 'eyetracker', 'eyetrack'});
+cfg = ft_checkconfig(cfg, 'renamed', {'eyetracker', 'eyetrack'});
 
 % prevent some common errors
 cfg = ft_checkconfig(cfg, 'forbidden', {'acq_time'});                 % this should be in cfg.scans or in cfg.sessions
@@ -292,7 +294,7 @@ for i=1:numel(fn)
 end
 
 if isempty(cfg.suffix)
-  modality = {'meg', 'eeg', 'ieeg', 'emg', 'motion', 'audio', 'video', 'eyetracker', 'physio', 'stim', 'motion', 'nirs'};
+  modality = {'meg', 'eeg', 'ieeg', 'emg', 'motion', 'audio', 'video', 'eyetrack', 'physio', 'stim', 'motion', 'nirs'};
   for i=1:numel(modality)
     if isfield(cfg, modality{i}) && ~isempty(cfg.(modality{i}))
       % the user specified modality-specific options, assume that the datatype matches
@@ -316,9 +318,10 @@ cfg.emg           = ft_getopt(cfg, 'emg');
 cfg.nirs          = ft_getopt(cfg, 'nirs');
 cfg.audio         = ft_getopt(cfg, 'audio');
 cfg.video         = ft_getopt(cfg, 'video');
-cfg.eyetracker    = ft_getopt(cfg, 'eyetracker');
+cfg.eyetrack      = ft_getopt(cfg, 'eyetrack');
 cfg.physio        = ft_getopt(cfg, 'physio');
 cfg.stim          = ft_getopt(cfg, 'stim');
+cfg.datatypedir   = ft_getopt(cfg, 'datatypedir'); % This specifies the main imaging modality whose dir will be the dest. audio, video, eyetrack, physio, stim
 cfg.motion        = ft_getopt(cfg, 'motion');
 cfg.channels      = ft_getopt(cfg, 'channels');
 cfg.electrodes    = ft_getopt(cfg, 'electrodes');
@@ -602,11 +605,13 @@ cfg.stim.Columns                          = ft_getopt(cfg.stim, 'Columns'       
 cfg.stim.StartTime                        = ft_getopt(cfg.stim, 'StartTime'            );
 cfg.stim.SamplingFrequency                = ft_getopt(cfg.stim, 'SamplingFrequency'    );
 
-%% eyetracker is not part of the official BIDS specification
-% this follows https://bids-specification.readthedocs.io/en/stable/04-modality-specific-files/06-physiological-and-other-continuous-recordings.html
-cfg.eyetracker.Columns                    = ft_getopt(cfg.eyetracker, 'Columns'               );
-cfg.eyetracker.StartTime                  = ft_getopt(cfg.eyetracker, 'StartTime'             );
-cfg.eyetracker.SamplingFrequency          = ft_getopt(cfg.eyetracker, 'SamplingFrequency'     );
+%% eyetracker is not part of the official BIDS specification, but is included in proposal BEP020:
+% https://docs.google.com/document/d/1eggzTCzSHG3AEKhtnEDbcdk-2avXN6I94X8aUPEBVsw/edit#heading=h.9tphvz6ot0j1
+% The current implementation follows:
+% https://bids-specification.readthedocs.io/en/stable/04-modality-specific-files/06-physiological-and-other-continuous-recordings.html
+cfg.eyetrack.Columns                      = ft_getopt(cfg.eyetrack, 'Columns'               );
+cfg.eyetrack.StartTime                    = ft_getopt(cfg.eyetrack, 'StartTime'             );
+cfg.eyetrack.SamplingFrequency            = ft_getopt(cfg.eyetrack, 'SamplingFrequency'     );
 
 %% motion is not part of the official BIDS specification
 % this follows extension proposal 029 https://bids.neuroimaging.io/bep029
@@ -731,7 +736,7 @@ if isempty(cfg.outputfile)
   elseif isempty(cfg.suffix)
     ft_error('cfg.suffix is required to construct BIDS output directory and file');
   else
-    dirname = datatype2dirname(cfg.suffix);
+    dirname = datatype2dirname(cfg);
     filename = ['sub-' cfg.sub];
     filename = add_entity(filename, 'ses',  cfg.ses);
     filename = add_entity(filename, 'task', cfg.task);
@@ -830,7 +835,7 @@ need_audio_json         = false;
 need_video_json         = false;
 need_physio_json        = false;
 need_stim_json          = false;
-need_eyetracker_json    = false;
+need_eyetrack_json      = false;
 need_motion_json        = false;
 need_coordsystem_json   = false;
 % determine the tsv files that are required
@@ -947,8 +952,8 @@ switch typ
       need_physio_json = true;
     elseif isequal(cfg.suffix, 'stim')
       need_stim_json = true;
-    elseif isequal(cfg.suffix, 'eyetracker')
-      need_eyetracker_json = true;
+    elseif isequal(cfg.suffix, 'eyetrack')
+      need_eyetrack_json = true;
     elseif isequal(cfg.suffix, 'motion')
       need_motion_json = true;
     else
@@ -984,8 +989,8 @@ switch typ
       need_physio_json = true;
     elseif isequal(cfg.suffix, 'stim')
       need_stim_json = true;
-    elseif isequal(cfg.suffix, 'eyetracker')
-      need_eyetracker_json = true;
+    elseif isequal(cfg.suffix, 'eyetrack')
+      need_eyetrack_json = true;
     elseif isequal(cfg.suffix, 'motion')
       need_motion_json = true;
     elseif isequal(cfg.suffix, 'events')
@@ -1046,7 +1051,7 @@ if need_nirs_json
   end
 end
 
-need_events_tsv       = need_events_tsv       || need_meg_json || need_eeg_json || need_ieeg_json || need_emg_json || need_nirs_json || need_eyetracker_json || need_motion_json || (contains(cfg.outputfile, 'task') || ~isempty(cfg.TaskName) || ~isempty(cfg.task)) || ~isempty(cfg.events);
+need_events_tsv       = (need_events_tsv      || need_meg_json || need_eeg_json || need_ieeg_json || need_emg_json || need_nirs_json || need_motion_json || (contains(cfg.outputfile, 'task') || ~isempty(cfg.TaskName) || ~isempty(cfg.task)) || ~isempty(cfg.events)) && ~need_eyetrack_json;
 need_channels_tsv     = need_channels_tsv     || need_meg_json || need_eeg_json || need_ieeg_json || need_emg_json || need_nirs_json || need_motion_json ;
 need_coordsystem_json = need_coordsystem_json || need_meg_json || need_electrodes_tsv || need_nirs_json ;
 
@@ -1059,7 +1064,7 @@ elseif need_audio_json
 elseif need_video_json
   ft_warning('video data is not yet part of the official BIDS specification');
   cfg.dataset_description.BIDSVersion = 'n/a';
-elseif need_eyetracker_json
+elseif need_eyetrack_json
   ft_warning('eyetracker data is not yet part of the official BIDS specification');
   cfg.dataset_description.BIDSVersion = 'n/a';
 elseif need_motion_json
@@ -1133,9 +1138,9 @@ fn = fn(~cellfun(@isempty, regexp(fn, '^[A-Z].*')));
 stim_settings = keepfields(cfg.stim, fn);
 
 % make the relevant selection, all json fields start with a capital letter
-fn = fieldnames(cfg.eyetracker);
+fn = fieldnames(cfg.eyetrack);
 fn = fn(~cellfun(@isempty, regexp(fn, '^[A-Z].*')));
-eyetracker_settings = keepfields(cfg.eyetracker, fn);
+eyetrack_settings = keepfields(cfg.eyetrack, fn);
 
 % make the relevant selection, all json fields start with a capital letter
 fn = fieldnames(cfg.motion);
@@ -1396,16 +1401,16 @@ if need_stim_json
   stim_json = mergestruct(generic_settings, stim_json, false);
 end
 
-%% need_eyetracker_json
-if need_eyetracker_json
-  eyetracker_json.SamplingFrequency = hdr.Fs;
-  eyetracker_json.StartTime = nan;
-  eyetracker_json.Columns = hdr.label;
+%% need_eyetrack_json
+if need_eyetrack_json
+  eyetrack_json.SamplingFrequency = hdr.Fs;
+  eyetrack_json.StartTime = nan;
+  eyetrack_json.Columns = hdr.label;
 
   % merge the information specified by the user with that from the data
   % in case fields appear in both, the first input overrules the second
-  eyetracker_json = mergestruct(eyetracker_settings,  eyetracker_json, false);
-  eyetracker_json = mergestruct(generic_settings,     eyetracker_json, false);
+  eyetrack_json = mergestruct(eyetrack_settings,  eyetrack_json, false);
+  eyetrack_json = mergestruct(generic_settings,     eyetrack_json, false);
 end
 
 %% need_motion_json
@@ -1899,7 +1904,7 @@ switch cfg.method
             ft_info('writing ''%s''\n', cfg.outputfile);
             ft_write_data(cfg.outputfile, dat, 'dataformat', 'snirf', 'header', hdr, 'event', trigger);
 
-          case {'physio', 'stim', 'eyetracker', 'motion'}
+          case {'physio', 'stim', 'eyetrack', 'motion'}
             % write the data according to the Stim and Physio format as specified at
             % https://bids-specification.readthedocs.io/en/stable/04-modality-specific-files/06-physiological-and-other-continuous-recordings.html
             [p, f, x] = fileparts(cfg.outputfile);
@@ -1964,7 +1969,7 @@ end % switch method
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % each of these has a corresponding json file
-modality = {'mri', 'meg', 'eeg', 'ieeg', 'nirs', 'physio', 'stim', 'emg', 'audio', 'video', 'eyetracker', 'motion', 'coordsystem'};
+modality = {'mri', 'meg', 'eeg', 'ieeg', 'nirs', 'physio', 'stim', 'emg', 'audio', 'video', 'eyetrack', 'motion', 'coordsystem'};
 for i=1:numel(modality)
   if eval(sprintf('need_%s_json', modality{i}))
     modality_json = eval(sprintf('%s_json', modality{i}));
@@ -2206,7 +2211,7 @@ if ~isempty(cfg.bidsroot)
   % get filename
   this = table();
   [p, f, x] = fileparts(cfg.outputfile);
-  this.filename = {fullfile(datatype2dirname(cfg.suffix), [f x])};
+  this.filename = {fullfile(datatype2dirname(cfg), [f x])};
 
   fn = fieldnames(cfg.scans);
   for i=1:numel(fn)
@@ -2309,7 +2314,7 @@ function f = add_datatype(f, typ)
 f = [f '_' typ];
 
 function f = remove_datatype(f)
-typ = {'FLAIR', 'FLASH', 'PD', 'PDT2', 'PDmap', 'T1map', 'T1rho', 'T1w', 'T2map', 'T2star', 'T2w', 'angio', 'audio', 'bold', 'bval', 'bvec', 'channels', 'coordsystem', 'defacemask', 'dwi', 'eeg', 'emg', 'epi', 'events', 'eyetracker', 'fieldmap', 'headshape', 'ieeg', 'inplaneT1', 'inplaneT2', 'magnitude', 'magnitude1', 'magnitude2', 'meg', 'motion', 'nirs', 'phase1', 'phase2', 'phasediff', 'photo', 'physio', 'sbref', 'stim', 'video'};
+typ = {'FLAIR', 'FLASH', 'PD', 'PDT2', 'PDmap', 'T1map', 'T1rho', 'T1w', 'T2map', 'T2star', 'T2w', 'angio', 'audio', 'bold', 'bval', 'bvec', 'channels', 'coordsystem', 'defacemask', 'dwi', 'eeg', 'emg', 'epi', 'events', 'eyetrack', 'fieldmap', 'headshape', 'ieeg', 'inplaneT1', 'inplaneT2', 'magnitude', 'magnitude1', 'magnitude2', 'meg', 'motion', 'nirs', 'phase1', 'phase2', 'phasediff', 'photo', 'physio', 'sbref', 'stim', 'video'};
 for i=1:numel(typ)
   if endsWith(f, ['_' typ{i}])
     f = f(1:end-length(typ{i})-1); % also the '_'
@@ -2626,9 +2631,10 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function dir = datatype2dirname(typ)
+function dir = datatype2dirname(cfg)
 % see https://bids-specification.readthedocs.io/en/stable/99-appendices/04-entity-table.html
 % motion, emg, eyetracker, audio, and video are not part of the official specification
+typ = cfg.suffix;
 switch typ
   case {'T1w' 'T2w' 'T1rho' 'T1map' 'T2map' 'T2star' 'FLAIR' 'FLASH' 'PD' 'PDmap' 'PDT2' 'inplaneT1' 'inplaneT2' 'angio' 'defacemask'}
     dir = 'anat';
@@ -2638,8 +2644,11 @@ switch typ
     dir = 'dwi';
   case {'phasediff' 'phase1' 'phase2' 'magnitude1' 'magnitude2' 'magnitude' 'fieldmap' 'epi'}
     dir = 'fmap';
-  case {'events' 'stim' 'physio' 'eyetracker' 'audio' 'video'} % these could also all be stored in 'func' or one of the other directories with brain data
-    dir = 'beh';
+  case {'events' 'stim' 'physio' 'audio' 'video' 'eyetrack'} % these should be recorded in the main imaging modality directory according to BEP020 https://bids-specification--1128.org.readthedocs.build/en/1128/modality-specific-files/eye-tracking.html#eye-tracking-data
+    if isempty(cfg.datatypedir)
+      ft_error('main imaging modality must be specifed in cfg.datatypedir for data of type ''%s''', typ);
+    end
+    dir = cfg.datatypedir;
   case {'meg'} % this could also include 'events' or other non-brain data
     dir = 'meg';
   case {'eeg'} % this could also include 'events' or other non-brain data
@@ -2747,12 +2756,12 @@ for i=1:numel(fn)
     % Assume naïvely that if not semi-colon delimination is used, then
     % commas are used to separate elements
     if contains(tmp, ';')
-      tmp = strtrim(strsplit(tmp,';'))
-      dataset_description.(fn{i}) = tmp
+      tmp = strtrim(strsplit(tmp,';'));
+      dataset_description.(fn{i}) = tmp;
       ft_warning(sprintf('Multiple entries to %s field should be an array-of-strings, splitting on '';''', fn{i}));
     elseif contains(tmp, ',')
-      tmp = strtrim(strsplit(tmp,','))
-      dataset_description.(fn{i}) = tmp
+      tmp = strtrim(strsplit(tmp,','));
+      dataset_description.(fn{i}) = tmp;
       ft_warning(sprintf('Multiple entries to %s field should be an array-of-strings, splitting on '',''', fn{i}));
     else
       dataset_description.(fn{i}) = {tmp};
