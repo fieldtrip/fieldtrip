@@ -1587,7 +1587,7 @@ yi = opt.ijk(2);
 zi = opt.ijk(3);
 qi = opt.qi;
 
-if any([xi yi zi] > functional.dim) || any([xi yi zi] < 1)
+if any([xi yi zi] > functional.dim(1:3)) || any([xi yi zi] < 1)
   % do not redraw the functional data when the user clicked outside the volume
   return;
 end
@@ -2135,7 +2135,7 @@ if ~isempty(tag) && ~opt.init
     opt.update = [1 1 1];
   end
 end
-opt.ijk = min(opt.ijk(:)', opt.dim+0.01);
+opt.ijk = min(opt.ijk(:)', opt.dim(1:3)+0.01);
 opt.ijk = max(opt.ijk(:)', [1 1 1]-0.01);
 
 setappdata(h, 'opt', opt);
