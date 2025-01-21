@@ -52,7 +52,10 @@ function [data] = ft_redefinetrial(cfg, data)
 % segments, starting from the beginning of each trial. This may lead to loss
 % of data at the end of the trials
 %   cfg.length    = number (in seconds) that specifies the length of the required snippets
-%   cfg.overlap   = number between 0 and 1 (exclusive) specifying the fraction of overlap between snippets (0 = no overlap)
+%   cfg.overlap   = number between 0 and 1 (exclusive) specifying the fraction of overlap 
+%                   between snippets (0 = no overlap)
+%   cfg.updatetrialinfo = 'no' (default), or 'yes', which adds a column
+%                   with original trial indices trialinfo 
 %
 % Alternatively you can merge or stitch pseudo-continuous segmented data back into a
 % continuous representation. This requires that the data has a valid sampleinfo field
@@ -72,7 +75,7 @@ function [data] = ft_redefinetrial(cfg, data)
 %
 % See also FT_DEFINETRIAL, FT_RECODEEVENT, FT_PREPROCESSING
 
-% Copyright (C) 2006-2021, Robert Oostenveld
+% Copyright (C) 2006-2025, Robert Oostenveld and Jan Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -135,6 +138,7 @@ cfg.trl          = ft_getopt(cfg, 'trl',        []);
 cfg.length       = ft_getopt(cfg, 'length',     []);
 cfg.overlap      = ft_getopt(cfg, 'overlap',    0);
 cfg.continuous   = ft_getopt(cfg, 'continuous', 'no');
+cfg.updatetrialinfo = ft_getopt(cfg, 'updatetrialinfo', 'no');
 
 % select trials of interest
 if ~strcmp(cfg.trials, 'all')
@@ -384,6 +388,14 @@ elseif ~isempty(cfg.length)
     tmpcfg.trl = newtrl(:,1:3);
   end
   
+  if istrue(cfg.updatetrialinfo)
+    if ~istable(tmpcfg.trl)
+      tmpcfg.trl(:, end+1) = newtrl(:,4);
+    else
+      tmpcfg.trl = cat(2, tmpcfg.trl, array2table(newtrl(:,4), 'VariableNames', {'trialid_orig'}));
+    end
+  end
+
   data   = removefields(data, {'trialinfo'}); % these are in the additional columns of tmpcfg.trl
   data   = ft_redefinetrial(tmpcfg, data);
   % restore the provenance information
