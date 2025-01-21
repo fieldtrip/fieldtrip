@@ -5,7 +5,7 @@ function inspect_ft_trialfun_general
 % DEPENDENCY ft_trialfun_general ft_trialfun_gui ft_trialfun_show
 % DATA public
 
-dataset = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds');
+dataset = dccnpath('/project/3031000.02/external/download/test/ctf/Subject01.ds');
 
 %%
 

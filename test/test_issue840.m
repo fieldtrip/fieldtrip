@@ -38,9 +38,9 @@ if false
   
 else
   % load it from the mat files
-  load(dccnpath('/home/common/matlab/fieldtrip/data/test/issue840/data1.mat'));
-  load(dccnpath('/home/common/matlab/fieldtrip/data/test/issue840/data2.mat'));
-  load(dccnpath('/home/common/matlab/fieldtrip/data/test/issue840/data3.mat'));
+  load(dccnpath('/project/3031000.02/test/issue840/data1.mat'));
+  load(dccnpath('/project/3031000.02/test/issue840/data2.mat'));
+  load(dccnpath('/project/3031000.02/test/issue840/data3.mat'));
   
 end
 

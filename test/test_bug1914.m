@@ -6,7 +6,7 @@ function test_bug1914
 % DATA private
 
 %%
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1914'));
+cd(dccnpath('/project/3031000.02/test/bug1914'));
 
 dataset = {
   'conversion_testing_MEGEEG_raw.fif'

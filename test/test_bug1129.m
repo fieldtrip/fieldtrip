@@ -79,7 +79,7 @@ for N=[199 432 1000] % test 'firls' option
 end
 
 %% high-level ft_preprocessing
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1129.mat'));
+load(dccnpath('/project/3031000.02/test/bug1129.mat'));
 
 cfg = [];
 cfg.bpfreq = [8 12];

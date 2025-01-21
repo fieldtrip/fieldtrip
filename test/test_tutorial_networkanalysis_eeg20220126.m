@@ -10,7 +10,7 @@ function test_tutorial_networkanalysis_eeg20220126
 % ## Reading the data
 
 % load EEG data
-datadir = '/home/common/matlab/fieldtrip/data/ftp/tutorial/networkanalysis_eeg';
+datadir = '/project/3031000.02/external/download/tutorial/networkanalysis_eeg';
 load(fullfile(datadir, 'data_eeg_reref_ica.mat'));
 load(fullfile(datadir, 'elec.mat'));
 

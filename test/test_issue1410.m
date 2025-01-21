@@ -5,7 +5,7 @@ function test_issue1410
 % DEPENDENCY
 % DATA private
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/preproc_ctf151.mat'), 'data');
+load(dccnpath('/project/3031000.02/test/latest/raw/meg/preproc_ctf151.mat'), 'data');
 grad = data.grad;
 clear data
 
@@ -72,7 +72,7 @@ clear source1 source2
 % this is mostly from http://www.fieldtriptoolbox.org/tutorial/beamformingextended/
 
 clear all
-load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/sensor_analysis/subjectK.mat'));
+load(dccnpath('/project/3031000.02/external/download/tutorial/sensor_analysis/subjectK.mat'));
 
 data_combined = ft_appenddata([], data_left, data_right);
 
@@ -117,8 +117,8 @@ freq_exp           = ft_selectdata(cfg, freq_cmb);
 %%
 % this is used both for visual gamma and beta coherence
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformingextended/hdm.mat'))
-load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformingextended/sourcemodel.mat'))
+load(dccnpath('/project/3031000.02/external/download/tutorial/beamformingextended/hdm.mat'))
+load(dccnpath('/project/3031000.02/external/download/tutorial/beamformingextended/sourcemodel.mat'))
 
 cfg             = [];
 cfg.sourcemodel = sourcemodel;

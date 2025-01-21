@@ -6,11 +6,11 @@ function test_ft_virtualchannel
 % DATA public
 
 %% do some virtual channel stuff
-load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformingextended/source_coh_lft.mat'));
-load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformingextended/source_diff.mat'));
-load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformingextended/data_cmb.mat'));
-load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformingextended/sourcemodel.mat'));
-load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformingextended/hdm.mat'));
+load(dccnpath('/project/3031000.02/external/download/tutorial/beamformingextended/source_coh_lft.mat'));
+load(dccnpath('/project/3031000.02/external/download/tutorial/beamformingextended/source_diff.mat'));
+load(dccnpath('/project/3031000.02/external/download/tutorial/beamformingextended/data_cmb.mat'));
+load(dccnpath('/project/3031000.02/external/download/tutorial/beamformingextended/sourcemodel.mat'));
+load(dccnpath('/project/3031000.02/external/download/tutorial/beamformingextended/hdm.mat'));
 
 [maxval, maxcohindx] = max(source_coh_lft.avg.coh);
 [maxval, maxpowindx] = max(source_diff.avg.pow);

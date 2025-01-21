@@ -8,7 +8,7 @@ function test_tutorial_tmseeg
 triggers = {'S  1', 'S  3'}; % These values correspond to the markers placed in this dataset
 
 cfg = [];
-cfg.dataset                 = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/tms/sp/jimher_toolkit_demo_dataset_.eeg');
+cfg.dataset                 = dccnpath('/project/3031000.02/external/download/tutorial/tms/sp/jimher_toolkit_demo_dataset_.eeg');
 cfg.continuous              = 'yes';
 cfg.trialdef.prestim        = .5;   % Data to read in prior to event onset
 cfg.trialdef.poststim       = 1.5;  % Data to read in after event onset
@@ -114,7 +114,7 @@ legend(['raw data', labels]);
 trigger = {'S  1','S  3'};
 cfg                         = [];
 cfg.method                  = 'marker';
-cfg.dataset                 = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/tms/sp/jimher_toolkit_demo_dataset_.eeg');
+cfg.dataset                 = dccnpath('/project/3031000.02/external/download/tutorial/tms/sp/jimher_toolkit_demo_dataset_.eeg');
 cfg.prestim                 = .001;
 cfg.poststim                = .006;
 cfg.trialdef.eventtype      = 'Stimulus';
@@ -128,7 +128,7 @@ cfg_recharge = ft_artifact_tms(cfg); % Detect TMS artifacts
 
 % Combine into one structure
 cfg_artifact = [];
-cfg_artifact.dataset = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/tms/sp/jimher_toolkit_demo_dataset_.eeg');
+cfg_artifact.dataset = dccnpath('/project/3031000.02/external/download/tutorial/tms/sp/jimher_toolkit_demo_dataset_.eeg');
 cfg_artifact.artfctdef.ringing.artifact = cfg_ringing.artfctdef.tms.artifact; % Add ringing/step response artifact
 cfg_artifact.artfctdef.recharge.artifact   = cfg_recharge.artfctdef.tms.artifact; % Add recharge artifact
 
@@ -163,7 +163,7 @@ if false
   % raw
   cfg = [];
   cfg.artfctdef = cfg_artifact.artfctdef;
-  cfg.dataset = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/tms/sp/jimher_toolkit_demo_dataset_.eeg');
+  cfg.dataset = dccnpath('/project/3031000.02/external/download/tutorial/tms/sp/jimher_toolkit_demo_dataset_.eeg');
   ft_databrowser(cfg);
 end
 
@@ -179,7 +179,7 @@ close all;
 %
 % comp_tms = ft_conentanalysis(cfg, data_tms_segmented);
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/tms/sp/comp_tms.mat'));
+load(dccnpath('/project/3031000.02/external/download/tutorial/tms/sp/comp_tms.mat'));
 
 %save('comp_tms','comp_tms','-v7.3');
 

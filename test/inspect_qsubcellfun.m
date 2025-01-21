@@ -13,7 +13,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % this test script is based on http://www.fieldtriptoolbox.org/tutorial/distributedcomputing
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf'));
+cd(dccnpath('/project/3031000.02/external/download/test/ctf'));
 timreq = 20*60;
 memreq = 2*1024^3;
 

@@ -5,7 +5,7 @@ function test_example_threshold_free_cluster_enhancement_20210618
 % DEPENDENCY ft_statisatics_montecarlo
 % DATA public
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/example/threshold_free_cluster_enhancement/ERF_orig.mat'));
+load(dccnpath('/project/3031000.02/external/download/example/threshold_free_cluster_enhancement/ERF_orig.mat'));
 
 %%
 

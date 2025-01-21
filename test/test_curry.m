@@ -9,7 +9,7 @@ function test_curry
 % this is where the data is installed on the DCCN compute cluster
 % and where the nightly regression testing is done
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/original/curry'));
+cd(dccnpath('/project/3031000.02/test/original/curry'));
 
 %%
 

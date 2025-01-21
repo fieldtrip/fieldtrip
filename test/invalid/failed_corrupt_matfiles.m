@@ -4,7 +4,7 @@ function failed_corrupt_matfiles
 % WALLTIME 10:00:00
 % DEPENDENCY
 
-files = findfiles(dccnpath('/home/common/matlab/fieldtrip/data/test'));
+files = findfiles(dccnpath('/project/3031000.02/test'));
 status = true(size(files));
 
 for i=1:length(files)

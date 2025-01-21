@@ -23,7 +23,7 @@ function test_example_ica_eog
 %
 % preprocessing of example dataset
 cfg = [];
-cfg.dataset            = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/ArtifactMEG.ds');
+cfg.dataset            = dccnpath('/project/3031000.02/external/download/test/ctf/ArtifactMEG.ds');
 cfg.trialdef.eventtype = 'trial';
 cfg = ft_definetrial(cfg);
 

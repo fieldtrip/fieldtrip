@@ -8,7 +8,7 @@ function failed_neuromag_units
 % http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=963
 
 % this is a test dataset from Rik Henson that contains both MEG and EEG
-dataset = dccnpath('/home/common/matlab/fieldtrip/data/test/original/meg/neuromag306/run_01_raw.fif');
+dataset = dccnpath('/project/3031000.02/test/original/meg/neuromag306/run_01_raw.fif');
 
 hdr = ft_read_header(dataset);
 

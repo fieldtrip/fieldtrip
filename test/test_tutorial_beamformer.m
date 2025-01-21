@@ -7,7 +7,7 @@ function test_tutorial_beamformer(datadir)
 
 if nargin==0
   % this is where the data should be located
-  datadir = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer');
+  datadir = dccnpath('/project/3031000.02/external/download/tutorial/beamformer');
 end
 
 %load(fullfile(datadir, 'dataFIC.mat'));
@@ -43,13 +43,13 @@ freqPost = ft_freqanalysis(cfg, dataPost);
 %% Compute (or load) the forward model)
 
 %try
-  %if ~exist(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/segmentedmri.mat'), 'file')
+  %if ~exist(dccnpath('/project/3031000.02/external/download/tutorial/beamformer/segmentedmri.mat'), 'file')
   cfg = [];
   cfg.write        = 'no';
   [segmentedmri] = ft_volumesegment(cfg, mri);
 %catch
-%  mri = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.mri'));
-%  load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/segmentedmri.mat'));
+%  mri = ft_read_mri(dccnpath('/project/3031000.02/external/download/test/ctf/Subject01.mri'));
+%  load(dccnpath('/project/3031000.02/external/download/tutorial/beamformer/segmentedmri.mat'));
 %end
 
 %% Prepare head model

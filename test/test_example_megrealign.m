@@ -5,8 +5,8 @@ function test_example_megrealign
 % DEPENDENCY ft_read_sens ft_dipolesimulation ft_timelockanalysis 
 % DATA public
 
-grad151 = ft_read_sens(dccnpath('/home/common/matlab/fieldtrip/data/ftp/example/megrealign/ctf151.mat'));
-grad275 = ft_read_sens(dccnpath('/home/common/matlab/fieldtrip/data/ftp/example/megrealign/ctf275.mat'));
+grad151 = ft_read_sens(dccnpath('/project/3031000.02/external/download/example/megrealign/ctf151.mat'));
+grad275 = ft_read_sens(dccnpath('/project/3031000.02/external/download/example/megrealign/ctf275.mat'));
  
 vol = [];
 vol.r = 12;

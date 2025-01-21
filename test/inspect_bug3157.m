@@ -6,9 +6,9 @@ function inspect_bug3157
 % DATA private
 
 %%
-ctf151      = ft_read_sens(dccnpath('/home/common/matlab/fieldtrip/data/test/original/meg/ctf151/Subject01.ds'));
-neuromag122 = ft_read_sens(dccnpath('/home/common/matlab/fieldtrip/data/test/original/meg/neuromag122/jg_single_01raw.fif'));
-neuromag306 = ft_read_sens(dccnpath('/home/common/matlab/fieldtrip/data/test/original/meg/neuromag306/raw.fif'), 'senstype', 'meg');
+ctf151      = ft_read_sens(dccnpath('/project/3031000.02/test/original/meg/ctf151/Subject01.ds'));
+neuromag122 = ft_read_sens(dccnpath('/project/3031000.02/test/original/meg/neuromag122/jg_single_01raw.fif'));
+neuromag306 = ft_read_sens(dccnpath('/project/3031000.02/test/original/meg/neuromag306/raw.fif'), 'senstype', 'meg');
 
 %%
 

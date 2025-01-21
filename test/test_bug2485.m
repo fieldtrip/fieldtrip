@@ -15,7 +15,7 @@ function test_bug2485
 
 cfg             = [];
 %cfg.dataset     = [filepath filename];
-cfg.dataset     = dccnpath('/home/common/matlab/fieldtrip/data/test/bug2485.con');
+cfg.dataset     = dccnpath('/project/3031000.02/test/bug2485.con');
 cfg.channel     = 'AG*';
 cfg.trl= 1:100:900;
 cfg.trl = [cfg.trl(:) cfg.trl(:)+99 zeros(length(cfg.trl), 1)];    

@@ -7,7 +7,7 @@ function test_pull832
 
 %%
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/pull832'));
+cd(dccnpath('/project/3031000.02/test/pull832'));
 
 %%
 

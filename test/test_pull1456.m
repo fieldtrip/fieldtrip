@@ -5,7 +5,7 @@ function test_pull1456
 % DEPENDENCY ft_sourceanalysis ft_inverse_eloreta
 % DATA private
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/pull1456.mat'));
+load(dccnpath('/project/3031000.02/test/pull1456.mat'));
 
 % Compute spectrum
 cfg = [];

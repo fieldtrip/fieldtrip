@@ -17,14 +17,14 @@ success = true;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % load single sphere volume conduction model
-vol = ft_read_headmodel(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/vol/Subject01vol_singlesphere.mat'));
+vol = ft_read_headmodel(dccnpath('/project/3031000.02/test/latest/vol/Subject01vol_singlesphere.mat'));
 
 % load gradiometer information of an exemplary subject
-grad_standard = ft_read_sens(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/sens/ctf275.mat'));
+grad_standard = ft_read_sens(dccnpath('/project/3031000.02/test/latest/sens/ctf275.mat'));
 
 
 % load the same gradiometer information treated with ft_headmovement (10 clusters)
-grad_extended = ft_read_sens(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/sens/ctf275_10clusters.mat'));
+grad_extended = ft_read_sens(dccnpath('/project/3031000.02/test/latest/sens/ctf275_10clusters.mat'));
 
 %%%%%%%%%%%%%%%%%%%%%
 % do the computations (standard)

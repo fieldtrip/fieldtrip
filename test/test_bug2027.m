@@ -10,11 +10,11 @@ function test_bug2027
 
 % reproduce
 datasets = {
-  dccnpath('/home/common/matlab/fieldtrip/data/test/bug2027/colorado/e,rfhp1.0Hz,COH')
-  dccnpath('/home/common/matlab/fieldtrip/data/test/bug2027/glasgow/e,rfDC')
-  dccnpath('/home/common/matlab/fieldtrip/data/test/bug2027/marseille/e,rfhp1.0Hz,COH')
-  dccnpath('/home/common/matlab/fieldtrip/data/test/bug2027/stlouis/e,rfhp1.0Hz,COH')
-  dccnpath('/home/common/matlab/fieldtrip/data/test/bug2027/konstanz/c,rfhp0.1Hz')
+  dccnpath('/project/3031000.02/test/bug2027/colorado/e,rfhp1.0Hz,COH')
+  dccnpath('/project/3031000.02/test/bug2027/glasgow/e,rfDC')
+  dccnpath('/project/3031000.02/test/bug2027/marseille/e,rfhp1.0Hz,COH')
+  dccnpath('/project/3031000.02/test/bug2027/stlouis/e,rfhp1.0Hz,COH')
+  dccnpath('/project/3031000.02/test/bug2027/konstanz/c,rfhp0.1Hz')
 };
   
 nummeg = [248 248 248 248 148];          

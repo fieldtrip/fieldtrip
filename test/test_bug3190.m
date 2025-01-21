@@ -11,7 +11,7 @@ templatedir  = fullfile(ftpath, 'template');
 %% Lets load atlas, sourcemodel, and a connectivity structure
 atlas = ft_read_atlas(fullfile(templatedir, 'atlas', 'aal', 'ROI_MNI_V4.nii'));
 load(fullfile(templatedir, 'sourcemodel', 'standard_sourcemodel3d10mm.mat')); % 'sourcemodel'
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug3190.mat'));
+load(dccnpath('/project/3031000.02/test/bug3190.mat'));
 
 source_pco  = ft_convert_units(source_pco, 'cm');
 atlas       = ft_convert_units(atlas, 'cm');

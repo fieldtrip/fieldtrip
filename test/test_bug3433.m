@@ -5,7 +5,7 @@ function test_bug3433
 % DEPENDENCY ft_heartrate ft_respiration
 % DATA private
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug3433'));
+cd(dccnpath('/project/3031000.02/test/bug3433'));
 
 %%
 cfg =[];

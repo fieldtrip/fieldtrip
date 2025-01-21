@@ -5,8 +5,8 @@ function test_issue1368
 % DEPENDENCY ft_plot_sens mesh_cylinder
 % DATA private
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/issue1368/hull.mat'))
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/issue1368/elec.mat'))
+load(dccnpath('/project/3031000.02/test/issue1368/hull.mat'))
+load(dccnpath('/project/3031000.02/test/issue1368/elec.mat'))
 
 %%
 

@@ -31,7 +31,7 @@ headmodel.unit = 'cm';
 headmodel.type = 'singlesphere';
 
 % 3D folded cortical sheet
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/corticalsheet.mat'));
+load(dccnpath('/project/3031000.02/test/corticalsheet.mat'));
 sourcemodel_sheet = [];
 sourcemodel_sheet.pos = corticalsheet.pnt(1:100,:);          % FIXME reduce the size of the mesh
 sourcemodel_sheet.inside = 1:size(sourcemodel_sheet.pos,1);  % FIXME this should not be needed

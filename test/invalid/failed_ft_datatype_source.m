@@ -8,7 +8,7 @@ function failed_ft_datatype_source
 %% test the historical dirlists
 % the style of this is also used in test_ft_analysisprotocol and test_ft_datatype
 
-p = dccnpath('/home/common/matlab/fieldtrip/data/test/');
+p = dccnpath('/project/3031000.02/test/');
 d = dir(fullfile(p, '20*'));
 dirlist = {d.name};
 
@@ -19,11 +19,11 @@ failure = {};
 % these file contain data structures that have manually been identified as buggy,
 % e.g. with inconsistent dimensions of the fields in source.trial.noisecsd
 problematic = {
-  dccnpath('/home/common/matlab/fieldtrip/data/test/20111231/source/meg/source_grid_mtmfft_fourier_trl_DICS_keepall_rawtrial_ctf275.mat')
-  dccnpath('/home/common/matlab/fieldtrip/data/test/20120630/source/meg/source_grid_mtmfft_fourier_trl_DICS_keepall_rawtrial_ctf275.mat')
-  dccnpath('/home/common/matlab/fieldtrip/data/test/20121231/source/meg/source_grid_mtmfft_fourier_trl_DICS_keepall_rawtrial_ctf275.mat')
-  dccnpath('/home/common/matlab/fieldtrip/data/test/20130630/source/meg/source_grid_mtmfft_fourier_trl_DICS_keepall_rawtrial_bti148.mat')
-  dccnpath('/home/common/matlab/fieldtrip/data/test/20130630/source/meg/source_grid_mtmfft_fourier_trl_DICS_keepall_rawtrial_ctf275.mat')
+  dccnpath('/project/3031000.02/test/20111231/source/meg/source_grid_mtmfft_fourier_trl_DICS_keepall_rawtrial_ctf275.mat')
+  dccnpath('/project/3031000.02/test/20120630/source/meg/source_grid_mtmfft_fourier_trl_DICS_keepall_rawtrial_ctf275.mat')
+  dccnpath('/project/3031000.02/test/20121231/source/meg/source_grid_mtmfft_fourier_trl_DICS_keepall_rawtrial_ctf275.mat')
+  dccnpath('/project/3031000.02/test/20130630/source/meg/source_grid_mtmfft_fourier_trl_DICS_keepall_rawtrial_bti148.mat')
+  dccnpath('/project/3031000.02/test/20130630/source/meg/source_grid_mtmfft_fourier_trl_DICS_keepall_rawtrial_ctf275.mat')
   };
 
 for i=1:length(dirlist)

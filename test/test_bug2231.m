@@ -8,7 +8,7 @@ function test_bug2231
 % Bug reported by Christian Wienbruch, about the functionality of reading 4D-data
 % the old-fashioned way being broken
 
-datadir = dccnpath('/home/common/matlab/fieldtrip/data/test/bug2231/');
+datadir = dccnpath('/project/3031000.02/test/bug2231/');
 d = dir(fullfile(datadir, '*,s'));
 filename = fullfile(datadir, d(1).name);
 

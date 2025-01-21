@@ -7,7 +7,7 @@ function test_bug3280
 
 
 %%
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug3280'));
+cd(dccnpath('/project/3031000.02/test/bug3280'));
 
 dataset = 'A1826_comparisonSEF_20161212_02.ds';
 

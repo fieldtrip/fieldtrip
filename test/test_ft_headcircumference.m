@@ -4,7 +4,7 @@ function test_ft_headcircumference
 % DEPENDENCY ft_headcircumference ft_volumesegment ft_prepare_mesh
 % DATA no
 
-filename = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.mri');
+filename = dccnpath('/project/3031000.02/external/download/test/ctf/Subject01.mri');
 mri = ft_read_mri(filename);
 
 %%

@@ -5,5 +5,5 @@ function test_issue2193
 % DEPENDENCY ft_apply_montage ft_prepare_montage 
 % DATA private
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/issue2193.mat'));
+load(dccnpath('/project/3031000.02/test/issue2193.mat'));
 data = ft_preprocessing(cfg, data_segmented);

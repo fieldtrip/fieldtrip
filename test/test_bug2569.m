@@ -6,7 +6,7 @@ function test_bug2569
 % DATA private
 
 cfg = [];
-cfg.dataset = dccnpath('/home/common/matlab/fieldtrip/data/test/bug2569/WoD dec2013 rat nr 11.WDQ');
+cfg.dataset = dccnpath('/project/3031000.02/test/bug2569/WoD dec2013 rat nr 11.WDQ');
 ft_databrowser(cfg)
 
 hdr = ft_read_header(cfg.dataset);

@@ -7,7 +7,7 @@ function test_bug3188
 
 %%
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug3188.mat'))
+load(dccnpath('/project/3031000.02/test/bug3188.mat'))
 
 %%
 % first issue: inside definition is still old style

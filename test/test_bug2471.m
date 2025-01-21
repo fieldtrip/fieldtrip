@@ -5,7 +5,7 @@ function test_bug2471
 % DEPENDENCY ft_timelockgrandaverage
 % DATA private
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2471.mat'));
+load(dccnpath('/project/3031000.02/test/bug2471.mat'));
 
 cfg = [];
 cfg.channel = 'all';

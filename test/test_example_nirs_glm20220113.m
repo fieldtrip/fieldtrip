@@ -11,7 +11,7 @@ function test_example_glm_nirs
 % We start with reading the NIRS data from disk.
 %
 cfg = [];
-cfg.dataset = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/nirs_singlechannel/motor_cortex.oxy3');
+cfg.dataset = dccnpath('/project/3031000.02/external/download/tutorial/nirs_singlechannel/motor_cortex.oxy3');
 data_nirs = ft_preprocessing(cfg);
 
 %% # Construct a number of additional channels with the task/stimulus details

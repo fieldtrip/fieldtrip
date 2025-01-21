@@ -5,7 +5,7 @@ function test_ft_write_mri
 % DEPENDENCY ft_read_mri ft_write_mri
 % DATA public
 
-mri = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.mri'));
+mri = ft_read_mri(dccnpath('/project/3031000.02/external/download/test/ctf/Subject01.mri'));
 mri = ft_convert_units(mri, 'mm');
 
 %%

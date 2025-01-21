@@ -5,7 +5,7 @@ function test_bug2060
 % DEPENDENCY ft_read_event read_neuralynx_nev
 % DATA private
 
-filename = dccnpath('/home/common/matlab/fieldtrip/data/test/bug2060/Events.Nev');
+filename = dccnpath('/project/3031000.02/test/bug2060/Events.Nev');
 
 event = ft_read_event(filename);
 

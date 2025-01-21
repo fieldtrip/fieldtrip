@@ -6,7 +6,7 @@ function test_bug2830
 % DATA private
 
 % the test directory holds the data and the statfun
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2830'))
+cd(dccnpath('/project/3031000.02/test/bug2830'))
 
 load data_bug2830.mat
 

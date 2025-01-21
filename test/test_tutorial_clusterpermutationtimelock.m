@@ -6,10 +6,10 @@ function test_tutorial_clusterpermutationtimelock(dataset, datadir)
 % DATA public
 
 if nargin<1 || isempty(dataset)
-  dataset = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds');
+  dataset = dccnpath('/project/3031000.02/external/download/test/ctf/Subject01.ds');
 end
 if nargin<2
-  datadir = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/cluster_permutation_timelock');
+  datadir = dccnpath('/project/3031000.02/external/download/tutorial/cluster_permutation_timelock');
 end
 
 

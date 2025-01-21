@@ -7,8 +7,8 @@ function test_bug3124
 
 %%
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/headmodel.mat'))
-load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/data_all.mat'))
+load(dccnpath('/project/3031000.02/external/download/tutorial/beamformer/headmodel.mat'))
+load(dccnpath('/project/3031000.02/external/download/tutorial/beamformer/data_all.mat'))
 
 %%
 

@@ -14,10 +14,10 @@ function test_ft_denoise_hfc(testfile)
 %   case 1
 %     % If user inputs a filename, use path specific for DCCN
 %     % Find this data: https://doi.org/10.17605/OSF.IO/CJNXH
-%     load(dccnpath('/home/common/matlab/fieldtrip/data/test/pull2123/data_UCL_OPM.mat'));
+%     load(dccnpath('/project/3031000.02/test/pull2123/data_UCL_OPM.mat'));
 % end
 if nargin == 0
-  testfile = dccnpath('/home/common/matlab/fieldtrip/data/test/pull2123/data_UCL_OPM.mat');
+  testfile = dccnpath('/project/3031000.02/test/pull2123/data_UCL_OPM.mat');
 else
   % testfile is required in the input, as a full path to a mat-file
 end

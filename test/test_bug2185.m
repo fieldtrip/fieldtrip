@@ -7,7 +7,7 @@ function test_bug2185
 
 %% load the end-user provided test data
 
-filename = dccnpath('/home/common/matlab/fieldtrip/data/test/bug2185.mat');
+filename = dccnpath('/project/3031000.02/test/bug2185.mat');
 load(filename);
 
 % The content of the file is a cell-array that looks like this

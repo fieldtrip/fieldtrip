@@ -7,5 +7,5 @@ function test_issue922
 
 %test case for ft_freqanalysis rounding bug
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/issue922.mat'));
+load(dccnpath('/project/3031000.02/test/issue922.mat'));
 [freq] = ft_freqanalysis(cfg, test);

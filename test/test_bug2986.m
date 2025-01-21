@@ -14,7 +14,7 @@ mri = ft_convert_units(mri, 'cm');
 mri =  ft_volumereslice([], mri);
 
 % load headshape
-load(fullfile(dccnpath('/home/common/matlab/fieldtrip/data/test'),'bug2986.mat'));
+load(fullfile(dccnpath('/project/3031000.02/test'),'bug2986.mat'));
 
 % for quick check feed in fiducial positions
 fiducial = [];

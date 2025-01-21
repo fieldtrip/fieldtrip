@@ -74,7 +74,7 @@ subplot(2,2,4), plot(data2.time{2}, data2.trial{2}, 'r'); xlim([data1.time{2}(1)
 %%
 
 % this contains a problematic data structure from Mats
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug27.mat'), 'data');
+load(dccnpath('/project/3031000.02/test/bug27.mat'), 'data');
 
 clear sample0 time0
 for i=1:numel(data.time)

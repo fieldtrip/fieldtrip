@@ -8,7 +8,7 @@ function test_bug1998
 % this bug is detailled on http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1998
 % and the workaround is explained on http://www.fieldtriptoolbox.org/getting_started/neuralynx?&#discontinuous_recordings
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1998'));
+cd(dccnpath('/project/3031000.02/test/bug1998'));
 
 % start with normal preprocessing of a single channel
 cfg         = [];

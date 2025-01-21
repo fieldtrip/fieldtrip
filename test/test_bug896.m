@@ -5,7 +5,7 @@ function test_bug896
 % DEPENDENCY ft_multiplotTFR ft_prepare_layout ft_datatype ft_datatype_freq
 % DATA private
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug896.mat'));
+load(dccnpath('/project/3031000.02/test/bug896.mat'));
 
 ft_checkdata(stat_coh, 'datatype', 'freq');
 ft_checkdata(stat_coh_full, 'datatype', 'freq');

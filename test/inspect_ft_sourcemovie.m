@@ -13,10 +13,10 @@ addpath(fullfile(p, 'qsub'));
 
 %%
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/timefrequencyanalysis/dataFIC.mat'))
-load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/segmentedmri.mat'))
+load(dccnpath('/project/3031000.02/external/download/tutorial/timefrequencyanalysis/dataFIC.mat'))
+load(dccnpath('/project/3031000.02/external/download/tutorial/beamformer/segmentedmri.mat'))
 
-mri = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.mri'));
+mri = ft_read_mri(dccnpath('/project/3031000.02/external/download/test/ctf/Subject01.mri'));
 
 cfg              = [];
 cfg.output       = 'powandcsd';

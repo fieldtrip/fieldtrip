@@ -7,7 +7,7 @@ function test_issue1335
 
 % it is required to change to the data directory, otherwise it cannot
 % automatically find the optodetemplates.xml file
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/issue1335/'));
+cd(dccnpath('/project/3031000.02/test/issue1335/'));
 
 oxy3file = 'LR-01-2015-06-01-0002.oxy3';
 

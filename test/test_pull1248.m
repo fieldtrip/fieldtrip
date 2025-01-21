@@ -5,7 +5,7 @@ function test_pull1248
 % DEPENDENCY ft_read_header ft_read_data ft_read_event dataset2files
 % DATA private
 
-filename = dccnpath('/home/common/matlab/fieldtrip/data/test/pull1248/1106miedo.vhdr');
+filename = dccnpath('/project/3031000.02/test/pull1248/1106miedo.vhdr');
 
 %%
 

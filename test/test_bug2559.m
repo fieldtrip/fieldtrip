@@ -6,7 +6,7 @@ function test_bug2559
 % DEPENDENCY ft_databrowser ft_checkdata ft_datatype
 % DATA private
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2559.mat'));
+load(dccnpath('/project/3031000.02/test/bug2559.mat'));
 
 cfg = [];
 cfg.layout = 'easycapM10';

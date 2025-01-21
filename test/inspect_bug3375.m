@@ -7,7 +7,7 @@ function inspect_bug3375
 
 %%
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug3375'));
+cd(dccnpath('/project/3031000.02/test/bug3375'));
 
 mri = ft_read_mri('ctf/T1/o20150923_103128t1mpragesagiso1mmwselnfps004a1001.img');
 

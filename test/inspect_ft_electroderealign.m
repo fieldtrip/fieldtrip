@@ -9,8 +9,8 @@ function inspect_ft_electroderealign
 templatedir  = fullfile(ftpath, 'template');
 
 %% load mri, segmentation and electrode definition
-mri = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.mri'));
-load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/headmodel_eeg/segmentedmri.mat'));
+mri = ft_read_mri(dccnpath('/project/3031000.02/external/download/test/ctf/Subject01.mri'));
+load(dccnpath('/project/3031000.02/external/download/tutorial/headmodel_eeg/segmentedmri.mat'));
 elec = ft_read_sens(fullfile(templatedir, 'electrode', 'standard_1020.elc'));
 temp = ft_read_sens(fullfile(templatedir, 'electrode', 'standard_1005.elc'));
 

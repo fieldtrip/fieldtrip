@@ -7,7 +7,7 @@ function test_pull2099
 
 
 %%
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/pull2099.mat'));
+load(dccnpath('/project/3031000.02/test/pull2099.mat'));
 
 % try a bunch of visualizations
 cfg = [];

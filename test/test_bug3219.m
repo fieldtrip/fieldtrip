@@ -5,7 +5,7 @@ function test_bug3219
 % DEPENDENCY ft_rejectartifact ft_rejectvisual
 % DATA private
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug3218.mat'), 'data'); % on purpose
+load(dccnpath('/project/3031000.02/test/bug3218.mat'), 'data'); % on purpose
 
 % Note that I marked artifacts in trials 1, 3, 5, 7
 % 1: from the start of the trial to mid-way

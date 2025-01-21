@@ -8,7 +8,7 @@ function test_tutorial_beamformer20131122
 % this test script represents the MATLAB code from http://www.fieldtriptoolbox.org/tutorial/beamformer
 % as downloaded from the wiki on 22 November 2013
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf'));
+cd(dccnpath('/project/3031000.02/external/download/test/ctf'));
 
 % find the interesting segments of data
 cfg = [];                                           % empty configuration

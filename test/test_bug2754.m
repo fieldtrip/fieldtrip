@@ -5,7 +5,7 @@ function test_bug2754
 % DEPENDENCY ft_selectdata
 % DATA private
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2754.mat'));
+load(dccnpath('/project/3031000.02/test/bug2754.mat'));
 
 tbeg = 0.0050;
 tend = 0.0200;

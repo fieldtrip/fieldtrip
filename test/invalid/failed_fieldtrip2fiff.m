@@ -5,10 +5,10 @@ function failed_fieldtrip2fiff
 % DEPENDENCY fieldtrip2fiff ft_read_header ft_read_data ft_read_event
 
 % use file location on Donders server
-dataset_ctf      = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/SubjectBraille.ds');
+dataset_ctf      = dccnpath('/project/3031000.02/external/download/test/ctf/SubjectBraille.ds');
 sensfile         = dccnpath('/home/common/matlab/fieldtrip/template/electrode/GSN-HydroCel-257.sfp');
-dataset_neuromag = dccnpath('/home/common/matlab/fieldtrip/data/test/bug2036/sample_audvis_raw.fif');
-dataset_eeg      = dccnpath('/home/common/matlab/fieldtrip/data/test/bug2036/svui_0003_eeg_go-sd_010.raw');
+dataset_neuromag = dccnpath('/project/3031000.02/test/bug2036/sample_audvis_raw.fif');
+dataset_eeg      = dccnpath('/project/3031000.02/test/bug2036/svui_0003_eeg_go-sd_010.raw');
 datadir          = tempname;
 mkdir(datadir);
   

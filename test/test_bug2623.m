@@ -11,7 +11,7 @@ function test_bug2623
 % 2. unparcelled data is visualised using ft_sourceplot
 
 % load data ('source'), and parcellation 
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2623.mat'));
+load(dccnpath('/project/3031000.02/test/bug2623.mat'));
 
 % (1) parcellate
 cfg = [];

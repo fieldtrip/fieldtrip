@@ -5,8 +5,8 @@ function test_bug1770
 % DEPENDENCY read_neuralynx_dma read_neuralynx_ncs
 % DATA private
 
-filenameA = dccnpath('/home/common/matlab/fieldtrip/data/test/bug1770/2012-07-14_15-33-09');
-filenameB = dccnpath('/home/common/matlab/fieldtrip/data/test/bug1770/DigitalLynxRawDataFile.nrd');
+filenameA = dccnpath('/project/3031000.02/test/bug1770/2012-07-14_15-33-09');
+filenameB = dccnpath('/project/3031000.02/test/bug1770/DigitalLynxRawDataFile.nrd');
 
 hdrA = ft_read_header(filenameA);
 hdrB = ft_read_header(filenameB);

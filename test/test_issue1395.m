@@ -5,7 +5,7 @@ function test_issue1395
 % DEPENDENCY opm_fil
 % DATA private
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/original/meg/opm_fil'));
+cd(dccnpath('/project/3031000.02/test/original/meg/opm_fil'));
 
 %% the data is from https://github.com/tierneytim/OPM
 

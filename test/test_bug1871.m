@@ -5,7 +5,7 @@ function test_bug1871
 % DEPENDENCY ft_struct2single 
 % DATA private
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test'));
+cd(dccnpath('/project/3031000.02/test'));
 load avgFIC.mat
 
 avgFIC.avg = ft_struct2single(avgFIC.avg);

@@ -5,7 +5,7 @@ function inspect_pull1413
 % DEPENDENCY ft_rejectvisual rejectvisual_summary
 % DATA private
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/pull1413'));
+cd(dccnpath('/project/3031000.02/test/pull1413'));
 
 %%
 

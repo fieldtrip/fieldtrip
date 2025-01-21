@@ -5,7 +5,7 @@ function test_bug1212
 % DEPENDENCY ft_layoutplot
 % DATA private
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1212.mat'));
+load(dccnpath('/project/3031000.02/test/bug1212.mat'));
 
 cfg = [];
 cfg.grad = hdr.grad;

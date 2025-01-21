@@ -5,7 +5,7 @@ function test_bug2315
 % DEPENDENCY ft_databrowser ft_prepare_layout
 % DATA private
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/dataFIC.mat'));
+load(dccnpath('/project/3031000.02/test/dataFIC.mat'));
 
 %%
 

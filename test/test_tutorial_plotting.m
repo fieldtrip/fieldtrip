@@ -50,7 +50,7 @@ function test_tutorial_plotting
 %
 % Let us start by loading some data.
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/plotting'))
+cd(dccnpath('/project/3031000.02/external/download/tutorial/plotting'))
 
 load avgFC.mat
 load GA_FC.mat

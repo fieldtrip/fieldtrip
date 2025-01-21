@@ -5,7 +5,7 @@ function test_issue1196
 % DEPENDENCY data2bids
 % DATA private
 
-datadir = dccnpath('/home/common/matlab/fieldtrip/data/test/issue1196');
+datadir = dccnpath('/project/3031000.02/test/issue1196');
 bidsdir = fullfile(datadir, 'bids');
 
 if isfolder(bidsdir)
@@ -116,6 +116,6 @@ data2bids(cfg);
 
 %% clean up afterwards, so that it's more robust in a cross user application of the script
 % regarding permissions
-if isfolder(dccnpath('/home/common/matlab/fieldtrip/data/test/issue1196/bids'))
-  system(sprintf('rm -rf %s', dccnpath('/home/common/matlab/fieldtrip/data/test/issue1196/bids')));
+if isfolder(dccnpath('/project/3031000.02/test/issue1196/bids'))
+  system(sprintf('rm -rf %s', dccnpath('/project/3031000.02/test/issue1196/bids')));
 end

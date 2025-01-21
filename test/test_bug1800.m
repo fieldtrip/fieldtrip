@@ -16,7 +16,7 @@ function test_bug1800
 % http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1800
 
 % Load the timelocked data
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1800.mat'));
+load(dccnpath('/project/3031000.02/test/bug1800.mat'));
 
 cfg = [];
 cfg.avgovertime = 'yes';

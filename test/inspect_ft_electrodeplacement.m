@@ -8,7 +8,7 @@ function inspect_ft_electrodeplacement
 %%
 % do some prepatations
 
-filename = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.mri');
+filename = dccnpath('/project/3031000.02/external/download/test/ctf/Subject01.mri');
 mri = ft_read_mri(filename);
 
 cfg             = [];
@@ -210,7 +210,7 @@ cameratoolbar
 %%
 % demonstrate 3D Structure Sensor headshape
 
-headshape = ft_read_headshape(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/electrode/Model.obj'));
+headshape = ft_read_headshape(dccnpath('/project/3031000.02/external/download/tutorial/electrode/Model.obj'));
 
 cfg = [];
 cfg.method = 'fiducial';

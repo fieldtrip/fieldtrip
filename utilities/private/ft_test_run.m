@@ -62,7 +62,7 @@ end
 
 if isempty(hasdccnpath)
   % true when central storage is available, false otherwise
-  hasdccnpath = exist(dccnpath('/home/common/matlab/fieldtrip/data/'), 'dir');
+  hasdccnpath = exist(dccnpath('/project/3031000.02'), 'dir');
 end
 
 if ischar(maxwalltime)

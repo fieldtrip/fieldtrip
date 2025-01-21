@@ -10,7 +10,7 @@ function test_example_getting_started_with_reading_raw_eeg_or_meg_data
 % In FieldTrip you first have to define the segments of data in which you are interested, i.e. the "trials". That is done using the DEFINETRIAL function. You can use the DEFINETRIAL function also to show a summary of all events on your data fil
 %
 
-datadir = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf');
+datadir = dccnpath('/project/3031000.02/external/download/test/ctf');
 
 cfg = [];
 cfg.dataset = fullfile(datadir, 'ArtifactMEG.ds');

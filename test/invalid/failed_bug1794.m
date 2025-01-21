@@ -4,9 +4,9 @@ function failed_bug1794
 % WALLTIME 00:10:00
 % DEPENDENCY ft_prepare_sourcemodel ft_determine_units ft_convert_units ft_prepare_leadfield
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/vol.mat'))
-load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/dataFIC.mat'))
-load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/segmentedmri.mat'))
+load(dccnpath('/project/3031000.02/external/download/tutorial/beamformer/vol.mat'))
+load(dccnpath('/project/3031000.02/external/download/tutorial/beamformer/dataFIC.mat'))
+load(dccnpath('/project/3031000.02/external/download/tutorial/beamformer/segmentedmri.mat'))
 
 cfg = [];
 cfg.resolution = 1;

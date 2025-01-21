@@ -8,7 +8,7 @@ function failed_tutorial_spikefield20130308
 % Preprocessing
 % The data for this tutorial can be downloaded on ftp://ftp.fieldtriptoolbox.org/pub/fieldtrip/tutorial/spikefield/p029_sort_final_01.nex. Make sure you add the main Fieldtrip directory to your path and run ft_defaults. We first read in the spike data by ft_read_spike and select the following channels for analysis from the spike structure using ft_spike_select by
 
-filenex = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/spikefield/p029_sort_final_01.nex');
+filenex = dccnpath('/project/3031000.02/external/download/tutorial/spikefield/p029_sort_final_01.nex');
 spike  = ft_read_spike(filenex);
 
 cfg              = [];

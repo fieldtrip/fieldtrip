@@ -6,7 +6,7 @@ function test_bug2544
 % DEPENDENCY ft_sourcegrandaverage getdimord ft_selectdata
 % DATA private
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2544.mat'));
+load(dccnpath('/project/3031000.02/test/bug2544.mat'));
 
 cfg = [];
 grandavg = ft_sourcegrandaverage(cfg, tmp{:});

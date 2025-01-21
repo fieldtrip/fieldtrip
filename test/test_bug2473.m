@@ -5,7 +5,7 @@ function test_bug2473
 % DEPENDENCY ft_databrowser
 % DATA private
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/avgFIC.mat'));
+load(dccnpath('/project/3031000.02/test/avgFIC.mat'));
 
 cfg = [];
 cfg.preproc.bpfilter = 'yes';

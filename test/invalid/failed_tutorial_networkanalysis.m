@@ -6,7 +6,7 @@ function test_tutorial_networkanalysis
 
 %% read the continuous data and segment into 2 seconds epochs
 cfg = [];
-cfg.dataset              = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/SubjectRest.ds');
+cfg.dataset              = dccnpath('/project/3031000.02/external/download/test/ctf/SubjectRest.ds');
 cfg.trialdef.triallength = 2;
 cfg.trialdef.ntrials     = Inf;
 
@@ -15,7 +15,7 @@ cfg.continuous  = 'yes';
 cfg.channel     = {'MEG'};
 data = ft_preprocessing(cfg);
 
-datadir = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/networkanalysis');
+datadir = dccnpath('/project/3031000.02/external/download/tutorial/networkanalysis');
 cd(datadir);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

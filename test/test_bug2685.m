@@ -6,7 +6,7 @@ function test_bug2685
 % DATA private
 
 %% load data
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2685/bug2685.mat'));
+load(dccnpath('/project/3031000.02/test/bug2685/bug2685.mat'));
 
 %% scalp current density
 cfg                 = [];

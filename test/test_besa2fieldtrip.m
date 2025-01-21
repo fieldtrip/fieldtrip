@@ -12,7 +12,7 @@ function failed_old_besa2fieldtrip
 % as well as on MATLAB files containing a particular structure (for the
 % direct besa->matlab interface).
 
-basedir = dccnpath('/home/common/matlab/fieldtrip/data/test/original/besa/file/');
+basedir = dccnpath('/project/3031000.02/test/original/besa/file/');
 
 filename = {
   'besa_avr/Rolandic-Segment.avr'
@@ -65,7 +65,7 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-basedir = dccnpath('/home/common/matlab/fieldtrip/data/test/original/besa/struct/');
+basedir = dccnpath('/project/3031000.02/test/original/besa/struct/');
 
 filename = {
   'besa_channels/EpochedData.mat'

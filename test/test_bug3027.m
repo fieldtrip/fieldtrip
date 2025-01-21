@@ -7,7 +7,7 @@ function test_bug3027
 
 %%
 
-filename = dccnpath('/home/common/matlab/fieldtrip/data/test/bug3027/janny/data_janny4juni.txt');
+filename = dccnpath('/project/3031000.02/test/bug3027/janny/data_janny4juni.txt');
 assert(ft_filetype(filename, 'ascii_txt'));
 try
   hdr = ft_read_header(filename, 'headerformat', 'bucn_nirs');
@@ -18,12 +18,12 @@ end
 
 %%
 
-filename = dccnpath('/home/common/matlab/fieldtrip/data/test/bug3027/janny/being_imitated.sd');
+filename = dccnpath('/project/3031000.02/test/bug3027/janny/being_imitated.sd');
 assert(ft_filetype(filename, 'homer_sd'));
 
 %%
 
-filename = dccnpath('/home/common/matlab/fieldtrip/data/test/bug3027/homer_SampleData/Example1_Simple_Probe/Simple_Probe.nirs');
+filename = dccnpath('/project/3031000.02/test/bug3027/homer_SampleData/Example1_Simple_Probe/Simple_Probe.nirs');
 assert(ft_filetype(filename, 'homer_nirs'));
 
 hdr = ft_read_header(filename);
@@ -45,7 +45,7 @@ assert(isequal(dat5, dat(:,33:66)));
 
 %%
 
-filename = dccnpath('/home/common/matlab/fieldtrip/data/test/bug3027/homer_SampleData/Example1_Simple_Probe/Simple_Probe.nirs');
+filename = dccnpath('/project/3031000.02/test/bug3027/homer_SampleData/Example1_Simple_Probe/Simple_Probe.nirs');
 
 cfg = [];
 cfg.dataset = filename;
@@ -56,7 +56,7 @@ ft_databrowser(cfg);
 
 %%
 
-filename = dccnpath('/home/common/matlab/fieldtrip/data/test/bug3027/janny/pp2_13082013.nirs');
+filename = dccnpath('/project/3031000.02/test/bug3027/janny/pp2_13082013.nirs');
 
 hdr = ft_read_header(filename);
 dat = ft_read_data(filename);

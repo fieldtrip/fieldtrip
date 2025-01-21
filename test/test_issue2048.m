@@ -6,7 +6,7 @@ function test_issue2048
 
 % test data downloaded from here: https://www.teuniz.net/edf_bdf_testfiles/
 
-filename = dccnpath('/home/common/matlab/fieldtrip/data/test/issue2048/test_generator.edf');
+filename = dccnpath('/project/3031000.02/test/issue2048/test_generator.edf');
 
 %%
 % this works

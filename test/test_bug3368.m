@@ -7,7 +7,7 @@ function test_bug3368
 
 % load a fieldtrip dataset
 
-ieeg_name      = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/human_ecog/SubjectNY394/NY394_VisualLoc_R1.edf');
+ieeg_name      = dccnpath('/project/3031000.02/external/download/tutorial/human_ecog/SubjectNY394/NY394_VisualLoc_R1.edf');
 cfg            = [];
 cfg.dataset    = ieeg_name;
 cfg.continuous = 'yes';

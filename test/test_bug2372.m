@@ -5,9 +5,9 @@ function test_bug2372
 % DEPENDENCY ft_timelockgrandaverage ft_timelockanalysis
 % DATA public
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/eventrelatedaveraging/dataFC_LP.mat'));
-load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/eventrelatedaveraging/dataFIC_LP.mat'));
-load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/eventrelatedaveraging/dataIC_LP.mat'));
+load(dccnpath('/project/3031000.02/external/download/tutorial/eventrelatedaveraging/dataFC_LP.mat'));
+load(dccnpath('/project/3031000.02/external/download/tutorial/eventrelatedaveraging/dataFIC_LP.mat'));
+load(dccnpath('/project/3031000.02/external/download/tutorial/eventrelatedaveraging/dataIC_LP.mat'));
 
 %% creating timelock structures with avg and trial fields
 cfg = [];

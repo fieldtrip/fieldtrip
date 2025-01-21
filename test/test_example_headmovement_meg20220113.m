@@ -34,7 +34,7 @@ function test_example_headmovement_meg
 % Prepare configuration to define trials:
 %
 cfg                         = [];
-cfg.dataset                 = dccnpath('/home/common/matlab/fieldtrip/data/ftp/example/regressconfound/TacStimRegressConfound.ds');
+cfg.dataset                 = dccnpath('/project/3031000.02/external/download/example/regressconfound/TacStimRegressConfound.ds');
 cfg.trialdef.eventtype      = 'UPPT001';
 cfg.trialdef.eventvalue     = 4;
 cfg.trialdef.prestim        = 0.2;
@@ -94,7 +94,7 @@ maxposchange = max(abs(cc_rel(:,1:3)*1000)) % in mm
 %
     % define trials
     cfg = [];
-    cfg.dataset = dccnpath('/home/common/matlab/fieldtrip/data/ftp/example/regressconfound/TacStimRegressConfound.ds');
+    cfg.dataset = dccnpath('/project/3031000.02/external/download/example/regressconfound/TacStimRegressConfound.ds');
     cfg.trialdef.eventtype = 'UPPT001';
     cfg.trialdef.eventvalue = 4;
     cfg.trialdef.prestim = 0.2;
@@ -118,7 +118,7 @@ maxposchange = max(abs(cc_rel(:,1:3)*1000)) % in mm
 %
     % define trials
     cfg = [];
-    cfg.dataset = dccnpath('/home/common/matlab/fieldtrip/data/ftp/example/regressconfound/TacStimRegressConfound.ds');
+    cfg.dataset = dccnpath('/project/3031000.02/external/download/example/regressconfound/TacStimRegressConfound.ds');
     cfg.trialdef.eventtype = 'UPPT001';
     cfg.trialdef.eventvalue = 4;
     cfg.trialdef.prestim = 0.2;

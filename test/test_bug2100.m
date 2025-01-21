@@ -5,6 +5,6 @@ function test_bug2100
 % DEPENDENCY ft_read_mri read_ctf_mri4
 % DATA private
 
-filename = dccnpath('/home/common/matlab/fieldtrip/data/test/bug2100/Sub02.mri');
+filename = dccnpath('/project/3031000.02/test/bug2100/Sub02.mri');
 mri = ft_read_mri(filename);
 

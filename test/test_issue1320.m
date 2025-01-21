@@ -5,7 +5,7 @@ function test_issue1320
 % DEPENDENCY read_edf ft_read_header ft_read_data
 % DATA private
 
-filename = dccnpath('/home/common/matlab/fieldtrip/data/test/issue1320/000810000.230120.122109.Signals.Raw.edf');
+filename = dccnpath('/project/3031000.02/test/issue1320/000810000.230120.122109.Signals.Raw.edf');
 
 %%
 % this will give a warning, and 27 consistent channels are selected

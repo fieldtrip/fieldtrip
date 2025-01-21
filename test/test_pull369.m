@@ -12,7 +12,7 @@ endsample = (1:100)*1200;
 offset    = (1:100)*0;
 
 cfg = [];
-cfg.dataset = dccnpath('/home/common/matlab/fieldtrip/data/ftp/example/regressconfound/TacStimRegressConfound.ds');
+cfg.dataset = dccnpath('/project/3031000.02/external/download/example/regressconfound/TacStimRegressConfound.ds');
 cfg.trl = [begsample(:) endsample(:) offset(:)];
 
 cfg.numclusters = 1;

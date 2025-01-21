@@ -6,7 +6,7 @@ function test_bug2354
 % DATA private
 
 % example ERF data
-filename = dccnpath('/home/common/matlab/fieldtrip/data/test/bug2354.mat');
+filename = dccnpath('/project/3031000.02/test/bug2354.mat');
 load(filename);
 
 % plot a time window 

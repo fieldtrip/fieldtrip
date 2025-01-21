@@ -8,7 +8,7 @@ function test_bug3195
 %%
 % load the data
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug3195'));
+cd(dccnpath('/project/3031000.02/test/bug3195'));
 
 load('template_FEM.mat')
 load('sourcemodel.mat')

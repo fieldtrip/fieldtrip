@@ -15,7 +15,7 @@ function test_issue1238
 % the midline.
 
 % this contains layout and timelock_fingertapping
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/issue1238.mat'));
+load(dccnpath('/project/3031000.02/test/issue1238.mat'));
 
 %% ft_singleplotER
 cfg = [];

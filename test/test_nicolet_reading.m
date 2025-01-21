@@ -9,7 +9,7 @@ function test_nicolet_reading
 % one is a file from 2006 (older Nicolet format)
 % one is a file from 2018 (newer Nicolet format)
 
-path_to_load = dccnpath('/home/common/matlab/fieldtrip/data/test/original/eeg/nicolet');
+path_to_load = dccnpath('/project/3031000.02/test/original/eeg/nicolet');
 %path_to_load = 'C:\Midlertidig_Lagring\FieldTripNicoletTestData';
 
 %%

@@ -4,7 +4,7 @@ function failed_bug2396
 % MEM 1gb
 % DEPENDENCY ft_read_headshape
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2396'));
+cd(dccnpath('/project/3031000.02/test/bug2396'));
 
 %% define the files
 

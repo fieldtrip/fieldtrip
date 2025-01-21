@@ -9,7 +9,7 @@ function test_bug1254
 % executing this test
 return
 
-dataset = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds');
+dataset = dccnpath('/project/3031000.02/external/download/test/ctf/Subject01.ds');
 
 cfg = [];
 cfg.dataset = dataset;

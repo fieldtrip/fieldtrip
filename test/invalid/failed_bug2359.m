@@ -4,7 +4,7 @@ function failed_bug2359
 % WALLTIME 00:30:00
 % DEPENDENCY ft_prepare_mesh ft_prepare_sourcemodel
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2359'));
+cd(dccnpath('/project/3031000.02/test/bug2359'));
 
 cortex = ft_read_headshape('cortex_20484.surf.gii');
 iskull = ft_read_headshape('iskull_2562.surf.gii');

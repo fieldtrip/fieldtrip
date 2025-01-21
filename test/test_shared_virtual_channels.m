@@ -5,10 +5,10 @@ function test_shared_virtual_channels
 % DEPENDENCY ft_timelockanalysis ft_sourceanalysis ft_channelselection ft_databrowser
 % DATA public
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformingextended/hdm.mat'));
-load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformingextended/source_diff.mat'));
-load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformingextended/source_coh_lft.mat'));
-load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformingextended/data_cmb.mat'));
+load(dccnpath('/project/3031000.02/external/download/tutorial/beamformingextended/hdm.mat'));
+load(dccnpath('/project/3031000.02/external/download/tutorial/beamformingextended/source_diff.mat'));
+load(dccnpath('/project/3031000.02/external/download/tutorial/beamformingextended/source_coh_lft.mat'));
+load(dccnpath('/project/3031000.02/external/download/tutorial/beamformingextended/data_cmb.mat'));
 
 [maxval, maxcohindx] = max(source_coh_lft.avg.coh);
 source_coh_lft.pos(maxcohindx, :)

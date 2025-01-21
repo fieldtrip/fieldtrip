@@ -5,8 +5,8 @@ function test_bug2381
 % DEPENDENCY ft_sourcestatistics
 % DATA private
 
-%filename = dccnpath(fullfile('/home/common/matlab/fieldtrip/data/test/bug2381','AVG.mat'));
-filename = dccnpath('/home/common/matlab/fieldtrip/data/test/bug2381.mat');
+%filename = dccnpath(fullfile('/project/3031000.02/test/bug2381','AVG.mat'));
+filename = dccnpath('/project/3031000.02/test/bug2381.mat');
 load(filename);
 
 nsubj = 15;

@@ -17,7 +17,7 @@ function test_issue1632
 % method 'openmeeg', based on segmentedmri.mat from ftp://ftp.fieldtriptoolbox.org/pub/fieldtrip/tutorial/beamformer_lcmv/
 % Author: B Knipscheer 13-01-2021
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/issue1632.mat'));
+load(dccnpath('/project/3031000.02/test/issue1632.mat'));
 
 cfg                  = [];
 cfg.grad             = data.grad;

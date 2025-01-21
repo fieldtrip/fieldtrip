@@ -12,7 +12,7 @@ function test_tutorial_multivariateanalysis(datadir, dmltdir)
 % This test script corresponds to the documentation on the wiki from 3 July 2012
 
 if nargin==0
-  datadir = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/classification');
+  datadir = dccnpath('/project/3031000.02/external/download/tutorial/classification');
   dmltdir = dccnpath('/home/common/matlab/fieldtrip/external/dmlt');
 end
 

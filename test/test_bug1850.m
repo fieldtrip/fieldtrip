@@ -7,7 +7,7 @@ function test_bug1850
 %
 % http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1850
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/preproc_ctf275.mat'));
+load(dccnpath('/project/3031000.02/test/latest/raw/meg/preproc_ctf275.mat'));
 
 cfg = [];
 cfg.channel = {'all', '-MRT23', '-MLP57'};

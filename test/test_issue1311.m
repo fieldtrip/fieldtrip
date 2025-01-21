@@ -8,7 +8,7 @@ function test_issue1311
 %%
 
 cfg = [];
-cfg.dataset = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds');
+cfg.dataset = dccnpath('/project/3031000.02/external/download/test/ctf/Subject01.ds');
 cfg.trialdef.eventtype = 'backpanel trigger';
 cfg.trialdef.prestim        = 1;
 cfg.trialdef.poststim       = 2;
@@ -31,7 +31,7 @@ data0 = ft_preprocessing(cfg);
 % make a new one, with the trl from file
 
 cfg = [];
-cfg.dataset = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds');
+cfg.dataset = dccnpath('/project/3031000.02/external/download/test/ctf/Subject01.ds');
 cfg.channel = 'STIM';
 
 cfg.trl = trlfile;
@@ -48,7 +48,7 @@ assert(isequal(data0.trialinfo, data1.trialinfo));
 % process it as continuous
 
 cfg = [];
-cfg.dataset = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds');
+cfg.dataset = dccnpath('/project/3031000.02/external/download/test/ctf/Subject01.ds');
 cfg.continuous = 'yes';
 cfg.channel = 'STIM';
 data2 = ft_preprocessing(cfg);
@@ -95,7 +95,7 @@ assert(isequal(data0.trialinfo, data4.trialinfo));
 % process the artifacts with the data from disk
 
 cfg = [];
-cfg.dataset = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds');
+cfg.dataset = dccnpath('/project/3031000.02/external/download/test/ctf/Subject01.ds');
 cfg.continuous = 'yes';
 cfg.trl = trlfile;
 
@@ -142,7 +142,7 @@ cfg9.artfctdef.zvalue.channel = 'MZC01';
 % process the artifacts with the data from memory
 
 cfg = [];
-cfg.dataset = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds');
+cfg.dataset = dccnpath('/project/3031000.02/external/download/test/ctf/Subject01.ds');
 cfg.continuous = 'yes';
 cfg.channel = 'MEG';
 data = ft_preprocessing(cfg);
@@ -194,7 +194,7 @@ cfg9.artfctdef.zvalue.channel = 'MZC01';
 %%
 
 cfg = [];
-cfg.dataset = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds');
+cfg.dataset = dccnpath('/project/3031000.02/external/download/test/ctf/Subject01.ds');
 cfg.continuous = 'yes';
 cfg.trl = trlfile;
 

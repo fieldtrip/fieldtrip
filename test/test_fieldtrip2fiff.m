@@ -59,7 +59,7 @@ if nargin
   cd(pw_dir);
 end
 
-datadir = dccnpath('/home/common/matlab/fieldtrip/data/test/original/meg');
+datadir = dccnpath('/project/3031000.02/test/original/meg');
 
 % Use the 'Subject01.ds' dataset for basic testing of the writing and reading
 cfg         = [];

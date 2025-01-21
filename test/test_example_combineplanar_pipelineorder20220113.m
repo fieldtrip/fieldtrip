@@ -17,7 +17,7 @@ function test_example_combineplanar_pipelineorder
 %
 % The following code creates a single dipole that projects brain activity on posterior sensors. We simulate an alpha component (10Hz) whose power decreases after a hypothetical visual stimulus delivery. The signal itself is not very important (you can design your own).
 %
-grad275 = ft_read_sens(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/sens/ctf275.mat'));
+grad275 = ft_read_sens(dccnpath('/project/3031000.02/test/latest/sens/ctf275.mat'));
 
 vol = [];
 vol.r = 12;

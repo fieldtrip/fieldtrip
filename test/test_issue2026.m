@@ -7,7 +7,7 @@ function test_issue2026
 
 %%
 
-filename = dccnpath('/home/common/matlab/fieldtrip/data/test/issue2026/yev0004_New-Coherent.vmrk')
+filename = dccnpath('/project/3031000.02/test/issue2026/yev0004_New-Coherent.vmrk')
 
 %%
 

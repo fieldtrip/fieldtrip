@@ -10,7 +10,7 @@ templatedir  = fullfile(ftpath, 'template');
 
 %% anatomical mri
 
-mri = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.mri'));
+mri = ft_read_mri(dccnpath('/project/3031000.02/external/download/test/ctf/Subject01.mri'));
 
 cfg = [];
 defaced = ft_defacevolume(cfg, mri);
@@ -21,7 +21,7 @@ ft_sourceplot(cfg, defaced);
 
 %% head shape
 
-headshape = ft_read_headshape(dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.shape'));
+headshape = ft_read_headshape(dccnpath('/project/3031000.02/external/download/test/ctf/Subject01.shape'));
 
 cfg = [];
 defaced = ft_defacemesh(cfg, headshape);

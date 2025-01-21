@@ -6,8 +6,8 @@ function test_bug1901
 % DATA private
 
 % this is some data that should be relatively compatible with the original data
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1901.mat'), 'vol'); 
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1901.mat'), 'grad');
+load(dccnpath('/project/3031000.02/test/bug1901.mat'), 'vol'); 
+load(dccnpath('/project/3031000.02/test/bug1901.mat'), 'grad');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

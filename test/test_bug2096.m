@@ -8,7 +8,7 @@ function test_bug2096
 [ftver, ftpath] = ft_version;
 templatedir  = fullfile(ftpath, 'template');
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2096'));
+cd(dccnpath('/project/3031000.02/test/bug2096'));
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % general purpose tests
@@ -363,7 +363,7 @@ ft_plot_mesh(source1.brainordinate, 'vertexcolor', source1.brainordinate.parcell
 clear all; close all
 
 %% version 1
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2096/cifti1'));
+cd(dccnpath('/project/3031000.02/test/bug2096/cifti1'));
 
 % cii1 = ft_read_cifti('DenseConnectome.dconn.nii');            % this one is disabled because it is 10GB large
 % cii2 = ft_read_cifti('DenseTimeSeries.dtseries.nii');         % this one is disabled because the file contains an internal error (number of greynodes is not consistent with size of data)
@@ -372,7 +372,7 @@ cii4 = ft_read_cifti('BOLD_REST2_LR.dtseries.nii');
 cii5 = ft_read_cifti('BOLD_REST2_LR_Atlas.dtseries.nii');
 
 %% version 2
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2096/cifti2'));
+cd(dccnpath('/project/3031000.02/test/bug2096/cifti2'));
 
 cii1 = ft_read_cifti('ones.dscalar.nii');
 cii2 = ft_read_cifti('Conte69.MyelinAndCorrThickness.32k_fs_LR.dscalar.nii');
@@ -381,7 +381,7 @@ cii4 = ft_read_cifti('Conte69.MyelinAndCorrThickness.32k_fs_LR.ptseries.nii');
 cii5 = ft_read_cifti('Conte69.parcellations_VGD11b.32k_fs_LR.dlabel.nii');
 
 %% release data
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2096/hcp_release/fsaverage_LR32k'));
+cd(dccnpath('/project/3031000.02/test/bug2096/hcp_release/fsaverage_LR32k'));
 
 filename = {
   '177746.ArealDistortion.32k_fs_LR.dscalar.nii'
@@ -425,7 +425,7 @@ for i=1:length(filename)
 end
 
 %% MEG specific development data from DVE
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2096/hcp_devel/TestParcelsForMEG'));
+cd(dccnpath('/project/3031000.02/test/bug2096/hcp_devel/TestParcelsForMEG'));
 
 filename = {
   '3T_Q1-Q6related468_MSMsulc_d100_ts2_Znet2.pconn.nii'

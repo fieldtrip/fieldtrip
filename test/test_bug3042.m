@@ -5,7 +5,7 @@ function test_bug3042
 % DEPENDENCY ft_read_headshape ft_read_atlas
 % DATA private
 
-filename = dccnpath('/home/common/matlab/fieldtrip/data/test/bug3042/tess_cortex_pial_low.mat');
+filename = dccnpath('/project/3031000.02/test/bug3042/tess_cortex_pial_low.mat');
 
 %%
 

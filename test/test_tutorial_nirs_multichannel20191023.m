@@ -10,7 +10,7 @@ function test_tutorial_nirs_multichannel20191023
 % obtained from http://www.fieldtriptoolbox.org/tutorial/nirs_multichannel/ at 23 October 2019
 % most of the comments have been removed to make this MATLAB script easier to read
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/nirs_multichannel'));
+cd(dccnpath('/project/3031000.02/external/download/tutorial/nirs_multichannel'));
 
 %% ## Read data and downsample
 

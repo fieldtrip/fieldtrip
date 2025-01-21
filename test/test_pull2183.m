@@ -7,7 +7,7 @@ function test_pull2183
 
 %%
 
-mshdir = dccnpath('/home/common/matlab/fieldtrip/data/test/pull2183/');
+mshdir = dccnpath('/project/3031000.02/test/pull2183/');
 
 d = dir(fullfile(mshdir, '*.msh'));
 for k = 1:numel(d)
@@ -16,13 +16,13 @@ end
 
 %%
 
-filename = dccnpath('/home/common/matlab/fieldtrip/data/test/original/simnibs/v4/ernie.msh');
+filename = dccnpath('/project/3031000.02/test/original/simnibs/v4/ernie.msh');
 hm = ft_read_headmodel(filename, 'fileformat', 'simnibs');
 hm = ft_read_headmodel(filename, 'fileformat', 'simnibs', 'meshtype', 'surface');
 
 %%
 
-filename = dccnpath('/home/common/matlab/fieldtrip/data/test/original/simnibs/v3/ernie_v3.msh');
+filename = dccnpath('/project/3031000.02/test/original/simnibs/v3/ernie_v3.msh');
 hm = ft_read_headmodel(filename, 'fileformat', 'simnibs');
 hm = ft_read_headmodel(filename, 'fileformat', 'simnibs', 'meshtype', 'surface');
 

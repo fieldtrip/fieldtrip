@@ -43,7 +43,7 @@ source5 = ft_dipolefitting(cfg, data);
 clear all
 
 % this contains the EEG structure from eeglab_data.set/fdt used during the 2019 Aspet workshop
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/original/eeglab/eeglab_data.mat'))
+load(dccnpath('/project/3031000.02/test/original/eeglab/eeglab_data.mat'))
 
 data      = eeglab2fieldtrip(EEG, 'preprocessing');
 timelock  = eeglab2fieldtrip(EEG, 'timelockanalysis');
@@ -55,7 +55,7 @@ ft_checkdata(timelock, 'datatype', 'timelock');
 clear all
 
 % this contains the EEG structure from eeglab_data_epochs_ica.set/fdt used during the 2019 Aspet workshop
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/original/eeglab/eeglab_data_epochs_ica.mat'))
+load(dccnpath('/project/3031000.02/test/original/eeglab/eeglab_data_epochs_ica.mat'))
 
 data      = eeglab2fieldtrip(EEG, 'preprocessing');
 timelock  = eeglab2fieldtrip(EEG, 'timelockanalysis');

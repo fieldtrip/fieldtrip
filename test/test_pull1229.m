@@ -6,7 +6,7 @@ function test_pull1229
 % DATA private
 
 % this is dataset "d-18-s-3" from https://osf.io/52gy7/
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/pull1229'));
+cd(dccnpath('/project/3031000.02/test/pull1229'));
 
 d = dir('*.edf');
 filename = {d.name};

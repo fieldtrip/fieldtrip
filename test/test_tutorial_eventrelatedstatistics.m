@@ -5,7 +5,7 @@ function test_tutorial_eventrelatedstatistics
 % DEPENDENCY ft_timelockanalysis ft_multiplotER ft_singleplotER ft_timelockstatistics ft_topoplotER ft_clusterplot
 % DATA public
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/eventrelatedstatistics/ERF_orig.mat'));
+load(dccnpath('/project/3031000.02/external/download/tutorial/eventrelatedstatistics/ERF_orig.mat'));
 
 %% calculating the grand-average
 

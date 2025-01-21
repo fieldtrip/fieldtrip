@@ -6,7 +6,7 @@ function test_tutorial_sensor_analysis(datadir)
 % DATA public
 
 if nargin==0
-  datadir = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/sensor_analysis');
+  datadir = dccnpath('/project/3031000.02/external/download/tutorial/sensor_analysis');
 end
 
 load(fullfile(datadir, 'subjectK.mat'));

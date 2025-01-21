@@ -5,14 +5,14 @@ function test_bug1725
 % DEPENDENCY ft_read_atlas ft_prepare_atlas
 % DATA private
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1725/afni'));
+cd(dccnpath('/project/3031000.02/test/bug1725/afni'));
 
 % try to read a collection of atlasses
 % the first one is from AFNI
 filename = 'TTatlas+tlrc.BRIK';
 atlas = ft_read_atlas(filename);
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1725/wfu_pickatlas'));
+cd(dccnpath('/project/3031000.02/test/bug1725/wfu_pickatlas'));
 
 % these ones are from http://fmri.wfubmc.edu/
 filename = {

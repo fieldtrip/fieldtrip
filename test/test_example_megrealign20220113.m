@@ -10,8 +10,8 @@ function test_example_megrealign
 % the two example files with the 151 and 275 channel CTF specifications are available from
 % ftp://ftp.fieldtriptoolbox.org/pub/fieldtrip/example/megrealign/
 
-grad151 = ft_read_sens(dccnpath('/home/common/matlab/fieldtrip/data/ftp/example/megrealign/ctf151.mat'));
-grad275 = ft_read_sens(dccnpath('/home/common/matlab/fieldtrip/data/ftp/example/megrealign/ctf275.mat'));
+grad151 = ft_read_sens(dccnpath('/project/3031000.02/external/download/example/megrealign/ctf151.mat'));
+grad275 = ft_read_sens(dccnpath('/project/3031000.02/external/download/example/megrealign/ctf275.mat'));
 
 vol = [];
 vol.r = 12;

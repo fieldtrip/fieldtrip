@@ -10,7 +10,7 @@ function test_bug62
 % if cfg.nonlinear = 'yes';
  
 % reproduce bug
-mrifile = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.mri');
+mrifile = dccnpath('/project/3031000.02/external/download/test/ctf/Subject01.mri');
 mri     = ft_read_mri(mrifile);
 
 cfg           = [];

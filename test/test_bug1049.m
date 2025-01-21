@@ -8,11 +8,11 @@ function failed_bug1049
 % this function creates a set of source-structures to be used for testing
 
 % get volume conductor model
-volname = dccnpath('/home/common/matlab/fieldtrip/data/test/original/meg/ctf151/Subject01.ds/default.hdm');
+volname = dccnpath('/project/3031000.02/test/original/meg/ctf151/Subject01.ds/default.hdm');
 vol     = ft_read_headmodel(volname);
 
 % get data + sensor info
-dataname = dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/preproc_ctf151.mat');
+dataname = dccnpath('/project/3031000.02/test/latest/raw/meg/preproc_ctf151.mat');
 load(dataname);
 
 % create 3D grid
@@ -56,7 +56,7 @@ cfg.foilim = [0 20];
 cfg.channel = 'MEG';
 freq = ft_freqanalysis(cfg, data);
 
-outputdir = fullfile(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/source/meg'));
+outputdir = fullfile(dccnpath('/project/3031000.02/test/latest/source/meg'));
 
 % do LCMV beamforming
 cfg            = [];

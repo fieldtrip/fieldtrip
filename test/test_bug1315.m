@@ -5,7 +5,7 @@ function test_bug1315
 % DEPENDENCY ft_checkdata ft_prepare_neighbours ft_megplanar ft_combineplanar
 % DATA private
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1315.mat'))
+load(dccnpath('/project/3031000.02/test/bug1315.mat'))
 
 % neighbours
 cfg = [];

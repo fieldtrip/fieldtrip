@@ -7,7 +7,7 @@ function test_issue1585
 
 %%
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/issue1585'))
+cd(dccnpath('/project/3031000.02/test/issue1585'))
 
 % cfg = [];
 % cfg.dataset      = 'eeglab_data.mat';

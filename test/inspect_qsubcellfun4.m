@@ -14,7 +14,7 @@ function inspect_qsubcellfun4
 restoredefaultpath
 addpath(fullfile(ftpath, 'qsub'));
 
-addpath(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1891/somepath'));
+addpath(dccnpath('/project/3031000.02/test/bug1891/somepath'));
 
 a1a = mainfunction({3, 4, 5}, 'qsubcellfun');
 a1b = mainfunction({3, 4, 5}, 'qsubcellfun_nostack');

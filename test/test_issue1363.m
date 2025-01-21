@@ -8,7 +8,7 @@ function test_issue1363
 % this test function tests the functionality of the new option cfg.split in
 % ft_componentanalysis and ft_rejectcomponent
 
-datadir  = '/home/common/matlab/fieldtrip/data/test/original/meg/neuromag306/';
+datadir  = '/project/3031000.02/test/original/meg/neuromag306/';
 filename = 'sub-15_ses-meg_task-facerecognition_run-01_meg.fif';
 dataset  = dccnpath(fullfile(datadir, filename));
 

@@ -7,7 +7,7 @@ function failed_tutorial_spikefield
 
 memtic;
 
-filenex = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/spikefield/p029_sort_final_01.nex');
+filenex = dccnpath('/project/3031000.02/external/download/tutorial/spikefield/p029_sort_final_01.nex');
 spike   = ft_read_spike(filenex); 
  
 cfg              = [];

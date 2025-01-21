@@ -8,7 +8,7 @@ function test_ft_statistics_montecarlo
 % test the functionality of ft_statistics_montecarlo, in particular with respect to the clustering behavior.
 
 % start with some data
-filename = dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/preproc_ctf275.mat');
+filename = dccnpath('/project/3031000.02/test/latest/raw/meg/preproc_ctf275.mat');
 load(filename);
 
 cfg.channel = ft_channelselection('MEG',data.label);

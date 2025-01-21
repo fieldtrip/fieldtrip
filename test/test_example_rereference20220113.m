@@ -19,7 +19,7 @@ function test_example_rereference
 
 % grab a file from the DCCN filesystem: this is different from what is
 % mentioned on the example page.
-filename = dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/eeg/preproc_neuroscan32.mat')
+filename = dccnpath('/project/3031000.02/test/latest/raw/eeg/preproc_neuroscan32.mat')
 
 cfg = [];
 cfg.dataset = filename; %'somefile.eeg';

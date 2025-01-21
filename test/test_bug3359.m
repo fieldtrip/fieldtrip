@@ -26,7 +26,7 @@ cfg.noisecov      = [0.3 0 0;
 
 data_sim          = ft_connectivitysimulation(cfg);
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/preproc_ctf151.mat'));
+load(dccnpath('/project/3031000.02/test/latest/raw/meg/preproc_ctf151.mat'));
 
 cfg         = [];
 cfg.channel = 'MEG';

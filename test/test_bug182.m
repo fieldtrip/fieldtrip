@@ -10,7 +10,7 @@ function test_bug182
 % ft_rejectcomponent should have the possibility to contain a
 % grad-structure which is balanced according to the mixing matrix
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/'));
+cd(dccnpath('/project/3031000.02/test/latest/raw/meg/'));
 load('preproc_ctf151.mat');
 
 % the demean is essential to have an equal output for datanew1 and datanew2

@@ -6,7 +6,7 @@ function test_pull1419
 % DATA private
 
 
-filename = dccnpath('/home/common/matlab/fieldtrip/data/test/pull1419/ANM255201_20141125_trimmed.nwb');
+filename = dccnpath('/project/3031000.02/test/pull1419/ANM255201_20141125_trimmed.nwb');
 
 % low-level reading functions
 hdr = ft_read_header(filename);

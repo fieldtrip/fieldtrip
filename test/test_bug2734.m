@@ -6,7 +6,7 @@ function test_bug2734
 % DATA private
 
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2734'));
+cd(dccnpath('/project/3031000.02/test/bug2734'));
 
 cii = ft_read_cifti('tstat1.dtseries.nii');
 

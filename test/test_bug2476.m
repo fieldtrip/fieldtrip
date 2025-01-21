@@ -6,6 +6,6 @@ function test_bug2476
 % DATA private
 
 cfg           = [];
-cfg.inputfile = dccnpath('/home/common/matlab/fieldtrip/data/test/bug2476.mat');
+cfg.inputfile = dccnpath('/project/3031000.02/test/bug2476.mat');
 cfg.method    = 'mvar';
 freq          = ft_freqanalysis(cfg);

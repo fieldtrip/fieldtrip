@@ -7,7 +7,7 @@ function test_dss_ecg
 
 % define 'trl' of example dataset and read in the meg data
 cfg         = [];
-cfg.dataset = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/ArtifactRemoval.ds');
+cfg.dataset = dccnpath('/project/3031000.02/external/download/test/ctf/ArtifactRemoval.ds');
 cfg.trialdef.eventtype = 'trial';
 cfg     = ft_definetrial(cfg);
 cfg.trl = cfg.trl(1:end-1,:); % remove the last one, because it clips.

@@ -20,15 +20,15 @@ function test_spm12
 % - ft_volumesegment
 
 
-mrifile1 = dccnpath('/home/common/matlab/fieldtrip/data/test/latest/mri/freesurfer/T1.mgz');
+mrifile1 = dccnpath('/project/3031000.02/test/latest/mri/freesurfer/T1.mgz');
 mri1     = ft_read_mri(mrifile1);
 mri1.coordsys = 'tal'; % I don't think this is technically correct, it should be fsaverage aka mni305
 
-mrifile2 = dccnpath('/home/common/matlab/fieldtrip/data/test/latest/mri/nifti/single_subj_T1.nii');
+mrifile2 = dccnpath('/project/3031000.02/test/latest/mri/nifti/single_subj_T1.nii');
 mri2     = ft_read_mri(mrifile2);
 mri2.coordsys = 'mni';
 
-mrifile3 = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.mri');
+mrifile3 = dccnpath('/project/3031000.02/external/download/test/ctf/Subject01.mri');
 mri3     = ft_read_mri(mrifile3);
 mri3.coordsys = 'ctf';
 

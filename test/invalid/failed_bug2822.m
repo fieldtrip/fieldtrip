@@ -12,7 +12,7 @@ function failed_bug2822
 
 % find the interesting segments of data
 cfg = [];
-cfg.dataset                 = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds');       % name of CTF dataset
+cfg.dataset                 = dccnpath('/project/3031000.02/external/download/test/ctf/Subject01.ds');       % name of CTF dataset
 cfg.trialdef.eventtype      = 'backpanel trigger';
 cfg.trialdef.prestim        = 1;
 cfg.trialdef.poststim       = 2;

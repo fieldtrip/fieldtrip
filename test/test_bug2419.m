@@ -15,7 +15,7 @@ function test_bug2419
 % mesh only contains a downsampling of the vertices, without a
 % re-triangulation. this may explain the absence of the area information.
 
-filename = dccnpath('/home/common/matlab/fieldtrip/data/test/bug2419.fif');
+filename = dccnpath('/project/3031000.02/test/bug2419.fif');
 try
   bnd = ft_read_headshape(filename, 'format', 'mne_source');
 catch,

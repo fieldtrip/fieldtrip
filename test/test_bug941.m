@@ -5,7 +5,7 @@ function test_bug941
 % DEPENDENCY ft_channelrepair ft_databrowser
 % DATA private
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug941.mat'));
+load(dccnpath('/project/3031000.02/test/bug941.mat'));
 
 % code that produces the error
 data_eeg_clean.elec = elec_new;

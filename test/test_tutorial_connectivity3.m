@@ -11,7 +11,7 @@ function test_tutorial_connectivity3(datadir)
 
 if nargin==0
   % this is where the data should be located
-  datadir = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/connectivity');
+  datadir = dccnpath('/project/3031000.02/external/download/tutorial/connectivity');
 end
 
 load(fullfile(datadir, 'source.mat'));

@@ -5,7 +5,7 @@ function test_bug2235
 % DEPENDENCY ft_denoise_synthetic
 % DATA private
 
-filename = dccnpath('/home/common/matlab/fieldtrip/data/test/bug2235.mat');
+filename = dccnpath('/project/3031000.02/test/bug2235.mat');
 load(filename);
 
 cfg          = [];

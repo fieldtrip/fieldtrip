@@ -5,7 +5,7 @@ function test_pull395
 % DEPENDENCY
 % DATA private
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/original/eeg/bdf'));
+cd(dccnpath('/project/3031000.02/test/original/eeg/bdf'));
 
 %%
 

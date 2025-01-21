@@ -41,7 +41,7 @@ cfg.dataset_description.DatasetDOI          = 'n/a';
 cfg.TaskDescription = 'The subject was walking, stopping, turning, etcetera, while wearing a mobile EEG system on his head and a mobile NIRS system in his pocket';
 
 cfg.method    = 'copy'; % video should simply be copied, not converted
-cfg.dataset   = dccnpath('/home/common/matlab/fieldtrip/data/ftp/example/bids_video/original/Video_20190411_210224.mp4');
+cfg.dataset   = dccnpath('/project/3031000.02/external/download/example/bids_video/original/Video_20190411_210224.mp4');
 cfg.bidsroot  = fullfile(tempdir, 'bids');
 cfg.datatype  = 'video';
 cfg.sub       = '01';

@@ -10,7 +10,7 @@ function test_bug1833
 return
 
 % this test script borrows some data from another bug
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1820'));
+cd(dccnpath('/project/3031000.02/test/bug1820'));
 
 mesh = ft_read_headshape('tet_4layer_127_127_127.1.node');
 mesh.tet = mesh.tet(1:10000,:); % prune the number of elements

@@ -7,7 +7,7 @@ function test_pull2464
 
 %%
 
-datadir = dccnpath('/home/common/matlab/fieldtrip/data/test/');
+datadir = dccnpath('/project/3031000.02/test/');
 fname   = fullfile(datadir, 'pull2464.fif');
 hs      = ft_read_headshape(fname, 'format', 'mne_source');
 

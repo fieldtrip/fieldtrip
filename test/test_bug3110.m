@@ -8,7 +8,7 @@ function test_bug3110
 % this functions tests the behavior of ft_redefinetrial with comp input
 
 cfg = [];
-cfg.inputfile = dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/preproc_ctf275.mat');
+cfg.inputfile = dccnpath('/project/3031000.02/test/latest/raw/meg/preproc_ctf275.mat');
 cfg.method    = 'pca';
 comp = ft_componentanalysis(cfg);
 

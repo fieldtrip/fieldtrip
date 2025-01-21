@@ -6,7 +6,7 @@ function test_bug1351
 % DATA private
 
 % load the test data of just two subjects
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1351.mat'));
+load(dccnpath('/project/3031000.02/test/bug1351.mat'));
 
 % plot topographically - note: plot will look strange
 cfg = [];

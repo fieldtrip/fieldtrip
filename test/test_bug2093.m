@@ -9,8 +9,8 @@ function test_bug2093
 % ft_read_data, and ft_read_event using old (master branch) and new
 % (nexhandling branch) versions of the FieldTrip code
 
-testnexfile = dccnpath('/home/common/matlab/fieldtrip/data/test/original/lfp/plexon/p213parall.nex');
-testmatfile = dccnpath('/home/common/matlab/fieldtrip/data/test/bug2093.mat');
+testnexfile = dccnpath('/project/3031000.02/test/original/lfp/plexon/p213parall.nex');
+testmatfile = dccnpath('/project/3031000.02/test/bug2093.mat');
 
 %% first get output of old code
 % if ~exist(testmatfile, 'file')

@@ -12,7 +12,7 @@ function test_issue1067
 
 %%
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/issue1067'));
+cd(dccnpath('/project/3031000.02/test/issue1067'));
 
 
 %% layout

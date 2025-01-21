@@ -6,7 +6,7 @@ function test_bug2443
 % DATA private
 
 % get some data
-filename = dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/preproc_neuromag306.mat');
+filename = dccnpath('/project/3031000.02/test/latest/raw/meg/preproc_neuromag306.mat');
 load(filename);
 
 data_pre  = data;

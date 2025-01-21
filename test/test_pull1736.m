@@ -7,7 +7,7 @@ function test_pullXXX
 
 %%
 
-filename = dccnpath('/home/common/matlab/fieldtrip/data/test/original/motion/openpose/S_Npred_02_crop_000000010521_keypoints.json');
+filename = dccnpath('/project/3031000.02/test/original/motion/openpose/S_Npred_02_crop_000000010521_keypoints.json');
 
 assert(ft_filetype(filename, 'openpose_keypoints'));
 

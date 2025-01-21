@@ -56,7 +56,7 @@ end
 
 %% test the provided problematic data
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test'));
+cd(dccnpath('/project/3031000.02/test'));
 load bug2418.mat
 
 assert(isequal(ft_senstype(testdata_short), 'neuromag306'));

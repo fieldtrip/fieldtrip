@@ -5,7 +5,7 @@ function test_issue1905
 % DEPENDENCY data2bids
 % DATA private
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/issue1905'));
+cd(dccnpath('/project/3031000.02/test/issue1905'));
 
 % this contains the filename, and cfg.electrodes
 load cfg

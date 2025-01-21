@@ -5,7 +5,7 @@ function inspect_bug2993
 % DEPENDENCY
 % DATA private
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2993'));
+cd(dccnpath('/project/3031000.02/test/bug2993'));
 elec_original = ft_read_sens('EEGMarkersLocalite.xml');
 
 % elec_original = ft_determine_coordsys(elec_original);

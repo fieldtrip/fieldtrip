@@ -5,7 +5,7 @@ function test_bug2464
 % DEPENDENCY ft_selectdata
 % DATA private
 
-filename = dccnpath('/home/common/matlab/fieldtrip/data/test/bug2464.mat');
+filename = dccnpath('/project/3031000.02/test/bug2464.mat');
 load(filename);
 
 cfg = [];

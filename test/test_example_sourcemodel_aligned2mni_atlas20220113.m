@@ -57,7 +57,7 @@ ft_plot_mesh(template_grid.pos(template_grid.inside,:));
 %
 % Load the subject-specific MRI from [here](ftp://ftp.fieldtriptoolbox.org/pub/fieldtrip/tutorial/salzburg/mri.mat) and inverse-warp the subject specific grid to the template grid.
 %
-mri = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/salzburg/mri.mat'));
+mri = ft_read_mri(dccnpath('/project/3031000.02/external/download/tutorial/salzburg/mri.mat'));
 
 cfg                = [];
 cfg.warpmni   = 'yes';
@@ -70,7 +70,7 @@ sourcemodel        = ft_prepare_sourcemodel(cfg);
 %
 close all
 
-hdm = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/salzburg/hdm.mat'));
+hdm = ft_read_mri(dccnpath('/project/3031000.02/external/download/tutorial/salzburg/hdm.mat'));
 
 hdm         = ft_convert_units(hdm, 'm');
 sourcemodel = ft_convert_units(sourcemodel, 'm');

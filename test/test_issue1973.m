@@ -5,7 +5,7 @@ function test_issue1973
 % DEPENDENCY ft_statfun_actvsblT
 % DATA private
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/issue1973.mat'));
+load(dccnpath('/project/3031000.02/test/issue1973.mat'));
 
 %%
 

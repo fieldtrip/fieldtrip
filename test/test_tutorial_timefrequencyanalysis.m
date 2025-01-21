@@ -6,7 +6,7 @@ function test_tutorial_timefrequencyanalysis(datadir)
 % DATA public
 
 if nargin==0
-  datadir = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/timefrequencyanalysis');
+  datadir = dccnpath('/project/3031000.02/external/download/tutorial/timefrequencyanalysis');
 end
 
 load(fullfile(datadir, 'dataFIC.mat'));

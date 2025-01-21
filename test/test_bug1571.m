@@ -13,7 +13,7 @@ function test_bug1571
 % strong line noise. Including padding makes no difference either, therefore
 % the brackets.
 
-dataset = dccnpath('/home/common/matlab/fieldtrip/data/test/bug1571/20101230_1010.cnt');
+dataset = dccnpath('/project/3031000.02/test/bug1571/20101230_1010.cnt');
 
 cfg                     = [];
 cfg.channel      = {'EEG'};

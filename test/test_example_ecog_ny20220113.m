@@ -26,7 +26,7 @@ function test_example_ecog_ny
 
 
 T = tempdir;
-zipfile = fullfile(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial'), 'SubjectNY394.zip');
+zipfile = fullfile(dccnpath('/project/3031000.02/external/download/tutorial'), 'SubjectNY394.zip');
 unzip(zipfile, T);
 cd(fullfile(T, 'SubjectNY394'));
 

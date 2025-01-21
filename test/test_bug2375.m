@@ -5,7 +5,7 @@ function test_bug2375
 % DEPENDENCY ft_prepare_headmodel ft_headmodel_localspheres
 % DATA private
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2375/localspheres_bug.mat'));
+load(dccnpath('/project/3031000.02/test/bug2375/localspheres_bug.mat'));
 
 vol = ft_prepare_headmodel(cfg, headshape);
 

@@ -4,7 +4,7 @@ function test_issue1746
 % DATA private
 % MEM 2gb
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/issue1746'));
+cd(dccnpath('/project/3031000.02/test/issue1746'));
 
 %%
 

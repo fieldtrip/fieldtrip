@@ -7,7 +7,7 @@ function test_pull1856
 
 %%
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/original/nirs'));
+cd(dccnpath('/project/3031000.02/test/original/nirs'));
 
 %%
 

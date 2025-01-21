@@ -9,7 +9,7 @@ function test_bug1051
 % sensor descriptions that contain coilori/pos chanori/pos.
 % The chanori/chanpos get lost along the way
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/meg'));
+cd(dccnpath('/project/3031000.02/test/latest/raw/meg'));
 load preproc_ctf151
 
 cfg.method = 'triangulation';

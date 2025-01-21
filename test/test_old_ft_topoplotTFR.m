@@ -9,7 +9,7 @@ function test_old_ft_topoplotTFR
 % with the ctf275 layout showing power decreases at the parietal lobes
 
 % load time-frequency data
-datadir = dccnpath('/home/common/matlab/fieldtrip/data/test/');
+datadir = dccnpath('/project/3031000.02/test/');
 fprintf('loading data\n');
 %load observe_comm_moves_freqmtmconvol.mat
 load(fullfile(datadir,'observe_comm_moves_freqmtmconvol.mat'));

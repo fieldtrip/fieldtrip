@@ -8,7 +8,7 @@ function test_example_effectsize
 
 %%
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/example/effectsize/ERF_orig.mat'))
+load(dccnpath('/project/3031000.02/external/download/example/effectsize/ERF_orig.mat'))
 
 
 %%

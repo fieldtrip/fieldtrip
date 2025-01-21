@@ -12,7 +12,7 @@ function test_beamformer_whitening
 % honest), but it should be possible to have this implemented in
 % ft_appendsens. Currently that does not work
 
-datadir = dccnpath('/home/common/matlab/fieldtrip/data/test/original/rikhenson');
+datadir = dccnpath('/project/3031000.02/test/original/rikhenson');
 subj    = 15;
 
 %% read the data from all separate runs
@@ -90,10 +90,10 @@ data_white.grad = sens;
 
 %% create the geometric objects needed for the forward and inverse models
 % load the original MRI
-mri_orig = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/test/original/rikhenson/Sub15/T1/mprage.nii'));
+mri_orig = ft_read_mri(dccnpath('/project/3031000.02/test/original/rikhenson/Sub15/T1/mprage.nii'));
 
 % load the positions of the anatomical fiducials (as provided by Rik)
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/original/rikhenson/Sub15/T1/mri_fids.mat'));
+load(dccnpath('/project/3031000.02/test/original/rikhenson/Sub15/T1/mri_fids.mat'));
 
 % the location of fiducials is expressed in original MRI coordinates
 % ft_volumerealign needs them in voxel coordinates

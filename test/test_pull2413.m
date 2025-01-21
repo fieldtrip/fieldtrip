@@ -7,7 +7,7 @@ function test_pull2413
 
 %%
 
-datadir = dccnpath('/home/common/matlab/fieldtrip/data/test/original/eeg/gdf/');
+datadir = dccnpath('/project/3031000.02/test/original/eeg/gdf/');
 
 d = dir(fullfile(datadir, '*.gdf'));
 for k = 1:numel(d)

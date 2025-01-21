@@ -23,7 +23,7 @@ function test_issue1987
 % with error <10^-13
 
 % go to where the test data is located
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/issue1987'))
+cd(dccnpath('/project/3031000.02/test/issue1987'))
 
 hdr = ft_read_header('seg_noxfo1.vhdr');
 

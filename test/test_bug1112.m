@@ -5,7 +5,7 @@ function test_bug1112
 % DEPENDENCY ft_convert_units ft_estimate_units
 % DATA private
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test'))
+cd(dccnpath('/project/3031000.02/test'))
 load bug1112
 
 sens = ft_determine_units(sens);

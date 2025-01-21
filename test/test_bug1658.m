@@ -8,7 +8,7 @@ function test_bug1658
 % test whether ft_sourceescriptives supports trial selection
 
 % load some source data
-load(dccnpath(fullfile('/home/common/matlab/fieldtrip/data/test/latest/source/meg','source_grid_mtmfft_fourier_trl_DICS_keepall_rawtrial_ctf151.mat')));
+load(dccnpath(fullfile('/project/3031000.02/test/latest/source/meg','source_grid_mtmfft_fourier_trl_DICS_keepall_rawtrial_ctf151.mat')));
 
 % remove the spatial filters
 source.trial = rmfield(source.trial, {'filter' 'filterdimord', 'label'});

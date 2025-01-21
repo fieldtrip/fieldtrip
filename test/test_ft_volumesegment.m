@@ -8,7 +8,7 @@ function test_ft_volumesegment
 % initial version by Lilla Magyari 2012
 
 % read in an mri
-mri = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/mri/nifti/single_subj_T1.nii'));
+mri = ft_read_mri(dccnpath('/project/3031000.02/test/latest/mri/nifti/single_subj_T1.nii'));
 
 % the following could also be done using ft_determine_coordsys
 mri.coordsys = 'spm';

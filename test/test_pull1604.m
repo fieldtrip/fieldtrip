@@ -5,7 +5,7 @@ function test_pull1604
 % DEPENDENCY ft_inside_headmodel
 % DATA public
 
-datadir = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformingextended/');
+datadir = dccnpath('/project/3031000.02/external/download/tutorial/beamformingextended/');
 load(fullfile(datadir, 'segmentedmri.mat'));
 load(fullfile(datadir, 'sourcemodel.mat'));
 

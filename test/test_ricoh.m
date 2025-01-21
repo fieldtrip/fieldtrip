@@ -12,7 +12,7 @@ function test_ricoh
 % MEG data, EEG data, digitized points, acquisition conditions, etc.
 
 % filename = 'rightearAEF_export.con';
-filename = dccnpath('/home/common/matlab/fieldtrip/data/test/original/meg/ricoh160/rightearAEF_export.con');
+filename = dccnpath('/project/3031000.02/test/original/meg/ricoh160/rightearAEF_export.con');
 
 if ~ft_filetype(filename, 'ricoh_con')
   error('definition error of ricoh_con');

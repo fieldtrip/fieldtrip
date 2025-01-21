@@ -5,7 +5,7 @@ function test_example_incorporate_head_movements
 % DEPENDENCY ft_definetrial ft_preprocessing ft_timelockanalysis ft_regressconfound
 % DATA public
 
-dataset = dccnpath('/home/common/matlab/fieldtrip/data/ftp/example/regressconfound/TacStimRegressConfound.ds');
+dataset = dccnpath('/project/3031000.02/external/download/example/regressconfound/TacStimRegressConfound.ds');
 
 cfg                         = [];
 cfg.dataset                 = dataset;

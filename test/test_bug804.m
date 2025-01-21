@@ -5,7 +5,7 @@ function test_bug804
 % DEPENDENCY channeposition ft_datatype_sens yokogawa2grad ft_read_header
 % DATA private
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug804'));
+cd(dccnpath('/project/3031000.02/test/bug804'));
 
 cfg = [];
 cfg.dataset = 'amano.ave';

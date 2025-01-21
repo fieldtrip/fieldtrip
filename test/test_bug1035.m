@@ -5,7 +5,7 @@ function test_bug1035
 % DEPENDENCY ft_mulitplotER ft_prepare_layout
 % DATA private
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test'))
+cd(dccnpath('/project/3031000.02/test'))
 load bug1035.mat
 
 ft_multiplotER(cfg, avg151)

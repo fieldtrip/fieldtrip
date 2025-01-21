@@ -5,7 +5,7 @@ function insspect_bug3125
 % DEPENDENCY
 % DATA private
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug3125'))
+cd(dccnpath('/project/3031000.02/test/bug3125'))
 
 load('bnd4_1922_corrected_fiducials.mat')
 load('bnd4_1922_corrected.mat')

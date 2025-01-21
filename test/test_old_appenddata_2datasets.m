@@ -9,7 +9,7 @@ function test_old_appenddata_2datasets
 % this script tests ft_appenddata when the input is obtained from 2
 % different datafiles
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/original/meg/ctf275/A0132_Aud-Obj-Recognition_20051115_02.ds'));
+cd(dccnpath('/project/3031000.02/test/original/meg/ctf275/A0132_Aud-Obj-Recognition_20051115_02.ds'));
 headerfile = 'A0132_Aud-Obj-Recognition_20051115_02.res4';
 datafile   = 'A0132_Aud-Obj-Recognition_20051115_02.meg4';
 %hdr        = ft_read_header(headerfile);

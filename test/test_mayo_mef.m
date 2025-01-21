@@ -31,7 +31,7 @@ function test_mayo_mef(datapath)
 % properly set up
 
 if nargin<1
-  datapath = dccnpath('/home/common/matlab/fieldtrip/data/test/original/lfp/mef');
+  datapath = dccnpath('/project/3031000.02/test/original/lfp/mef');
 end
 mef21_data = fullfile(datapath, 'mef_2p1');
 mef30_data = fullfile(datapath, 'mef_3p0.mefd');

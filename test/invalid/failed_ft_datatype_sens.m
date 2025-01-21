@@ -6,7 +6,7 @@ function failed_ft_datatype_sens
 
 
 %% define the test data
-path = dccnpath('/home/common/matlab/fieldtrip/data/test/original');
+path = dccnpath('/project/3031000.02/test/original');
 
 filename = {
   fullfile('meg', 'ctf151', 'Subject01.ds')

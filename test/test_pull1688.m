@@ -10,7 +10,7 @@ function test_pull1688
 % 128 EEG channels :    1 stream x 128 channels
 % 28 motion channels:   4 streams x 7 channels 
 
-filename = dccnpath('/home/common/matlab/fieldtrip/data/test/original/xdf/example_EEG_motion_TUB.xdf');
+filename = dccnpath('/project/3031000.02/test/original/xdf/example_EEG_motion_TUB.xdf');
 
 
 %% 

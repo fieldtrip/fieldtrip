@@ -7,7 +7,7 @@ function test_pull342
 
 %% Setup
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/pull342'));
+cd(dccnpath('/project/3031000.02/test/pull342'));
 
 mri = ft_read_mri('IR29_Bext.nii.gz');
 % elec = read_bioimage_mgrid('IR29_grid.mgrid');

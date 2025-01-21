@@ -5,7 +5,7 @@ function test_bug2741
 % DEPENDENCY ft_read_cifti ft_write_cifti
 % DATA private
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2741'));
+cd(dccnpath('/project/3031000.02/test/bug2741'));
 
 cii1 = ft_read_cifti('zstat1.dtseries.nii', 'cortexleft', '100307.L.midthickness.32k_fs_LR.surf.gii', 'cortexright', '100307.R.midthickness.32k_fs_LR.surf.gii');
 

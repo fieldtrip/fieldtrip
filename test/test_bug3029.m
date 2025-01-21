@@ -10,10 +10,10 @@ function test_bug3029
 % -refchan handling when using DICS (with refchan)
 % -csd-matrix handling when using various versions of keeptrials in cfg
 
-filename = fullfile(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/freq/meg'), 'freq_mtmfft_fourier_trl_ctf275');
+filename = fullfile(dccnpath('/project/3031000.02/test/latest/freq/meg'), 'freq_mtmfft_fourier_trl_ctf275');
 load(filename);
 
-filename = fullfile(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/vol'), 'Subject01vol_singleshell');
+filename = fullfile(dccnpath('/project/3031000.02/test/latest/vol'), 'Subject01vol_singleshell');
 load(filename);
 vol = ft_datatype_headmodel(vol);
 [vol.bnd.nrm] = surface_normals(vol.bnd.pos,vol.bnd.tri);
@@ -128,7 +128,7 @@ if false
 end
 
 % ALSO: check whether it also works with powandcsd data
-filename = fullfile(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/freq/meg'), 'freq_mtmfft_powandcsd_trl_ctf275');
+filename = fullfile(dccnpath('/project/3031000.02/test/latest/freq/meg'), 'freq_mtmfft_powandcsd_trl_ctf275');
 load(filename);
 
 if true

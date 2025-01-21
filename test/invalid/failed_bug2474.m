@@ -5,7 +5,7 @@ function failed_bug2474
 % DEPENDENCY ft_compute_leadfield ft_prepare_vol_sens
 
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2474/bug.mat'));
+load(dccnpath('/project/3031000.02/test/bug2474/bug.mat'));
 
 try
   % this initially gives an error

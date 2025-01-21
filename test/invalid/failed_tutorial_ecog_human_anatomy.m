@@ -4,7 +4,7 @@ function failed_tutorial_ecog_human_anatomy
 % WALLTIME 00:10:00
 % DEPENDENCY
 
-datadir = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/human_ecog');
+datadir = dccnpath('/project/3031000.02/external/download/tutorial/human_ecog');
 subj = 'SubjectUCI29';
 subj_dir = fullfile(datadir, subj);
 cd(subj_dir)

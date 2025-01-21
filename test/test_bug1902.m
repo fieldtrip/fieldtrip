@@ -5,7 +5,7 @@ function test_bug1902
 % DEPENDENCY ft_volumesegment ft_prepare_sourcemodel volumesmooth
 % DATA private
 
-mri = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/mri/nifti/single_subj_T1.nii'));
+mri = ft_read_mri(dccnpath('/project/3031000.02/test/latest/mri/nifti/single_subj_T1.nii'));
 mri.coordsys = 'spm';
 
 cfg = [];

@@ -6,10 +6,10 @@ function failed_tutorial_headmodel_eeg
 
 clear all;
 %% load mri
-mri=ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.mri'));
+mri=ft_read_mri(dccnpath('/project/3031000.02/external/download/test/ctf/Subject01.mri'));
 
 %% segmentation
-load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/segmentedmri.mat'));
+load(dccnpath('/project/3031000.02/external/download/tutorial/beamformer/segmentedmri.mat'));
 
 % cfg          = [];
 % cfg.output   = {'brain','skull','scalp'};
@@ -19,7 +19,7 @@ load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/segmen
 
 % check if segmentation is the same as the segmentation on the ftp site
 
-segmentedmri2 = load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/headmodel_eeg/segmentedmri.mat'));
+segmentedmri2 = load(dccnpath('/project/3031000.02/external/download/tutorial/headmodel_eeg/segmentedmri.mat'));
 segmentedmri2 = rmfield(segmentedmri2.segmentedmri,'cfg');
 %segmentedmri1 = rmfield(segmentedmri,'cfg');
 %assert(isequal(segmentedmri2,segmentedmri1),'Segmentation does not match the segmentation on ftp/tutorial/headmodel_eeg');
@@ -53,14 +53,14 @@ vol_openmeeg = ft_prepare_headmodel(cfg,bnd);
 
 % check if segmentation is the same as the segmentation on the ftp site
 % dipoli
-vol2 = load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/headmodel_eeg/vol.mat'));
+vol2 = load(dccnpath('/project/3031000.02/external/download/tutorial/headmodel_eeg/vol.mat'));
 vol2 = rmfield(vol2.vol,'cfg');
 vol1 = rmfield(vol,'cfg');
 assert(isequal(vol2, vol1),'Segmentation of dipoli vol does not match the segmentation on ftp/tutorial/headmodel_eeg');
 clear vol1 vol2;
 
 % openmeeg
-vol2 = load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/headmodel_eeg/vol_openmeeg.mat'));
+vol2 = load(dccnpath('/project/3031000.02/external/download/tutorial/headmodel_eeg/vol_openmeeg.mat'));
 vol2 = rmfield(vol2.vol_openmeeg,'cfg');
 vol1 = rmfield(vol_openmeeg,'cfg');
 assert(isequal(vol2, vol1),'Segmentation of openmeeg vol does not match the segmentation on ftp/tutorial/headmodel_eeg');

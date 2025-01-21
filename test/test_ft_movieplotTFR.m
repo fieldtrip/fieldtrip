@@ -7,7 +7,7 @@ function test_ft_movieplotTFR
 
 % the timelock and frequency analysis is based on the tutorials
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/timefrequencyanalysis/dataFIC.mat'));
+load(dccnpath('/project/3031000.02/external/download/tutorial/timefrequencyanalysis/dataFIC.mat'));
 
 cfg              = [];
 timelockFIC      = ft_timelockanalysis(cfg, dataFIC);

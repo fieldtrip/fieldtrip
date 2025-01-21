@@ -9,7 +9,7 @@ function test_yorkinstruments
 % this is where the data is installed on the DCCN compute cluster
 % and where the nightly regression testing is done
 
-filename = dccnpath('/home/common/matlab/fieldtrip/data/test/original/meg/yorkinstruments/yi.meghdf5');
+filename = dccnpath('/project/3031000.02/test/original/meg/yorkinstruments/yi.meghdf5');
 hdr = ft_read_header(filename);
 
 if length(ft_channelselection('MEG', hdr.label))~=246

@@ -8,7 +8,7 @@ function test_bug2086
 warning('this test should not run automatically');
 return
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2086.mat'));
+load(dccnpath('/project/3031000.02/test/bug2086.mat'));
 
 cfg = [];
 cfg.continuous = 'no';

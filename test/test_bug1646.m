@@ -53,7 +53,7 @@ bnd = ft_prepare_mesh(cfg, headmodel);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 cfg = [];
-cfg.headshape = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.shape');
+cfg.headshape = dccnpath('/project/3031000.02/external/download/test/ctf/Subject01.shape');
 bnd = ft_prepare_mesh(cfg);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -61,7 +61,7 @@ bnd = ft_prepare_mesh(cfg);
 % http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1652
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-datadir = fullfile(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1646'));
+datadir = fullfile(dccnpath('/project/3031000.02/test/bug1646'));
 
 load(fullfile(datadir,'seg1'));
 load(fullfile(datadir,'seg2'));
@@ -71,7 +71,7 @@ load(fullfile(datadir,'seg5'));
 load(fullfile(datadir,'seg6'));
 
 atlas = ft_read_atlas(fullfile(templatedir, 'atlas', 'afni', 'TTatlas+tlrc.BRIK'));
-mri = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/Subject01.mri'));
+mri = ft_read_mri(dccnpath('/project/3031000.02/external/download/tutorial/beamformer/Subject01.mri'));
 
 assert(ft_datatype(seg1, 'segmentation'));
 assert(ft_datatype(seg2, 'segmentation'));
@@ -240,7 +240,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 clear all
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1651.mat'));
+load(dccnpath('/project/3031000.02/test/bug1651.mat'));
 
 cfg = [];
 cfg.tissue = {'brain', 'skull', 'scalp'};
@@ -257,7 +257,7 @@ bnd = ft_prepare_mesh(cfg, seg2);
 % http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=937
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug937.mat'));
+load(dccnpath('/project/3031000.02/test/bug937.mat'));
 
 mri = [];
 mri.anatomy = bkgrnd;

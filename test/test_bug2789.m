@@ -5,7 +5,7 @@ function test_bug2789
 % DEPENDENCY
 % DATA private
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2789.mat'));
+load(dccnpath('/project/3031000.02/test/bug2789.mat'));
 
 % do not repeat the debugging here
 cfg.debug = 'no';

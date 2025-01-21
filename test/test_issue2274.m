@@ -5,6 +5,6 @@ function test_issue2274
 % DEPENDENCY GETDIMORD FT_SOURCEPLOT
 % DATA private
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/issue2274.mat'));
+load(dccnpath('/project/3031000.02/test/issue2274.mat'));
 
 ft_sourceplot(cfg, sourceProj)

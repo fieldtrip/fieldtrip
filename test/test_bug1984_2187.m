@@ -5,7 +5,7 @@ function test_bug1984_2187
 % DEPENDENCY ft_appendfreq ft_freqgrandaverage ft_freqstatistics ft_prepare_neighbours
 % DATA private
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1984_2187.mat'));
+load(dccnpath('/project/3031000.02/test/bug1984_2187.mat'));
 
 %% first: test rpt concatenation
 cfg = [];

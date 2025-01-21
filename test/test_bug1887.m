@@ -6,7 +6,7 @@ function test_bug1887
 % DATA private
 
 % this contains raw data, 32 channels, 10 trials with nans
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1887.mat'));
+load(dccnpath('/project/3031000.02/test/bug1887.mat'));
 
 for i=1:10
   data.trial{i} = randn(size(data.trial{i}));

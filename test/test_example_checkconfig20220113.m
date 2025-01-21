@@ -51,7 +51,7 @@ ft_default.checksize   = 1e5;
 %
 
 % JM added this to make the function functional:
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/freq/meg/freq_mtmfft_trl_ctf151.mat'));
+load(dccnpath('/project/3031000.02/test/latest/freq/meg/freq_mtmfft_trl_ctf151.mat'));
 
 cfg = [];
 cfg.jacknife = 'no';
@@ -76,7 +76,7 @@ test = ft_freqdescriptives(cfg, freq)
 % If you are using the tutorial dataset, first get the trial definitio
 %
 cfg = [];
-cfg.dataset              = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds');
+cfg.dataset              = dccnpath('/project/3031000.02/external/download/test/ctf/Subject01.ds');
 cfg.trialdef.eventtype   = 'backpanel trigger';
 cfg.trialdef.prestim     = 1;
 cfg.trialdef.poststim    = 2;

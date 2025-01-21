@@ -27,7 +27,7 @@ function test_example_effectsize
 global ft_default;
 ft_default.checksize = inf;
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/example/effectsize/ERF_orig.mat'));    % averages for each individual subject, for each condition
+load(dccnpath('/project/3031000.02/external/download/example/effectsize/ERF_orig.mat'));    % averages for each individual subject, for each condition
 
 
 % Using **[ft_timelockgrandaverage](https://github.com/fieldtrip/fieldtrip/blob/release/ft_timelockgrandaverage.m)** with the `cfg.keepindividual` option allows us to represent the data in a more convenient format for the subsequent computations:

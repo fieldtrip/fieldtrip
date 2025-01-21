@@ -5,7 +5,7 @@ function test_bug2059
 % DEPENDENCY ft_topoplotER ft_channelselection
 % DATA private
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2059.mat'));
+load(dccnpath('/project/3031000.02/test/bug2059.mat'));
 
 close all
 

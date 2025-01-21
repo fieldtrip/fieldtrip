@@ -6,7 +6,7 @@ function failed_bug3177
 
 %%
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/headmodel_fem/vol.mat'))
+load(dccnpath('/project/3031000.02/external/download/tutorial/headmodel_fem/vol.mat'))
 
 
 %% project electrodes

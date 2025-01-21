@@ -5,7 +5,7 @@ function test_issue1671
 % DEPENDENCY ft_megplanar ft_apply_montage
 % DATA public
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/connectivity/data.mat'));
+load(dccnpath('/project/3031000.02/external/download/tutorial/connectivity/data.mat'));
 
 cfg = [];
 cfg.method = 'template';

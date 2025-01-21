@@ -5,7 +5,7 @@ function test_bug2909
 % DEPENDENCY ft_read_cifti
 % DATA private
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2909'));
+cd(dccnpath('/project/3031000.02/test/bug2909'));
 
 %%
 % this is the data mentioned by JM on http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2865

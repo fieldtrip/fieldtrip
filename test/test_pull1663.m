@@ -84,7 +84,7 @@ view(120, 30)
 
 % for MEG data + sensor info
 %
-% load(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/preproc_ctf151.mat'), 'data');
+% load(dccnpath('/project/3031000.02/test/latest/raw/meg/preproc_ctf151.mat'), 'data');
 % datameg = data;
 % clear data
 

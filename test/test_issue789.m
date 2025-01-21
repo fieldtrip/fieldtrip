@@ -5,7 +5,7 @@ function test_issue789
 % DEPENDENCY xdf2fieldtrip ft_read_header ft_read_data ft_read_event
 % DATA private
 
-filename = dccnpath('/home/common/matlab/fieldtrip/data/test/original/xdf/example_EEG_eyeTracking_rigidBody.xdf');
+filename = dccnpath('/project/3031000.02/test/original/xdf/example_EEG_eyeTracking_rigidBody.xdf');
 
 %%
 % test the combination of multiple streams, which resamples them to a common time axis

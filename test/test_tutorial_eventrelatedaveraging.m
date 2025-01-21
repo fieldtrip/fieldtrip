@@ -10,7 +10,7 @@ function test_tutorial_eventrelatedaveraging(dataset)
 
 if nargin<1
   % use the tutorial dataset from home/common
-  dataset = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds');
+  dataset = dccnpath('/project/3031000.02/external/download/test/ctf/Subject01.ds');
 else
   % use the dataset specified in the input, but check that it is called
   % Subject01.ds

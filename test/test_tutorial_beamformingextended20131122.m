@@ -11,12 +11,12 @@ function test_tutorial_beamformingextended20131122
 [ftver, ftpath] = ft_version;
 templatedir  = fullfile(ftpath, 'template');
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/sensor_analysis/subjectK.mat'));
+load(dccnpath('/project/3031000.02/external/download/tutorial/sensor_analysis/subjectK.mat'));
 data_combined = ft_appenddata([], data_left, data_right);
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformingextended/segmentedmri.mat'));
+load(dccnpath('/project/3031000.02/external/download/tutorial/beamformingextended/segmentedmri.mat'));
 
-mri = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformingextended/subjectK.mri'));
+mri = ft_read_mri(dccnpath('/project/3031000.02/external/download/tutorial/beamformingextended/subjectK.mri'));
 
 cfg          = [];
 cfg.coordsys = 'ctf'; % the MRI is expressed in the CTF coordinate system, see below

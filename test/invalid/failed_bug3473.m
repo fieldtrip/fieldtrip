@@ -4,8 +4,8 @@ function test_bug3473
 % MEM 1gb
 % DEPENDENCY ft_prepare_mesh
 
-addpath(genpath(dccnpath('/home/common/matlab/fieldtrip/data/test/bug3473/cpd')));
-filename = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/epilepsy/case1/ctf_data/case1.pos');
+addpath(genpath(dccnpath('/project/3031000.02/test/bug3473/cpd')));
+filename = dccnpath('/project/3031000.02/external/download/tutorial/epilepsy/case1/ctf_data/case1.pos');
 
 polhemus = ft_read_headshape(filename);
 polhemus = ft_convert_units(polhemus,'mm');
@@ -19,8 +19,8 @@ m = [0.0000    0.9000         0   40.5000;
     0         0         0         1.0000];
 template = ft_transform_geometry(m, template);
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug3473/defaced_polhemus.mat'))
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug3473/defaced_template.mat'))
+load(dccnpath('/project/3031000.02/test/bug3473/defaced_polhemus.mat'))
+load(dccnpath('/project/3031000.02/test/bug3473/defaced_template.mat'))
 
 ft_plot_mesh(defaced_template);
 ft_plot_mesh(defaced_polhemus);
@@ -55,7 +55,7 @@ transformation = T1*S*T2;
 template_t_sphere = ft_transform_geometry(transformation, template);
 
 % Method 2
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug3473/fiducials.mat'))
+load(dccnpath('/project/3031000.02/test/bug3473/fiducials.mat'))
 
 cfg             = [];
 cfg.method      = 'singlesphere';

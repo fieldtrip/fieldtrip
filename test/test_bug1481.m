@@ -5,7 +5,7 @@ function test_bug1481
 % DEPENDENCY ft_componentanalysis ft_rejectcomponent ft_apply_montage
 % DATA private
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/eeg/preproc_brainvision.mat'));
+load(dccnpath('/project/3031000.02/test/latest/raw/eeg/preproc_brainvision.mat'));
 
 elec = ft_read_sens('standard_1020.elc');
 data.elec = elec;

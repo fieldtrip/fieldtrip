@@ -5,7 +5,7 @@ function test_bug3438
 % DEPENDENCY ft_read_headshape
 % DATA private
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug3438'))
+cd(dccnpath('/project/3031000.02/test/bug3438'))
 
 % the following failed prior to fixing this bug
 shape = ft_read_headshape('OBJ.obj');

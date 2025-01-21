@@ -4,7 +4,7 @@ function failed_bug2850
 % MEM 1gb
 % DEPENDENCY ft_sourceanalysis ft_inverse_eloreta
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/avgFIC.mat'));
+load(dccnpath('/project/3031000.02/test/avgFIC.mat'));
 
 vol = [];
 vol.r = 10;

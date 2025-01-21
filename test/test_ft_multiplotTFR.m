@@ -9,7 +9,7 @@ function test_ft_multiplotTFR
 % version determines the output directory
 
 % dataset taken from ref_datasets, using the tutorial one for testing
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/preproc_ctf275.mat'));
+load(dccnpath('/project/3031000.02/test/latest/raw/meg/preproc_ctf275.mat'));
 
 % get freqs
 cfg            = [];

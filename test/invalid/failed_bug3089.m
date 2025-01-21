@@ -4,8 +4,8 @@ function test_bug3089
 % WALLTIME 00:20:00
 % DEPENDENCY ft_dipolefitting ft_compute_leadfield ft_apply_transform
 
-dataset = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/natmeg2014/oddball1_mc_downsampled.fif');
-datadir = dccnpath('/home/common/matlab/fieldtrip/data/test/bug3089');
+dataset = dccnpath('/project/3031000.02/external/download/tutorial/natmeg2014/oddball1_mc_downsampled.fif');
+datadir = dccnpath('/project/3031000.02/test/bug3089');
 addpath(datadir); % for the trialfuns
 
 %%

@@ -87,7 +87,7 @@ function test_example_nirs_speech
 
 % filename = filenames{1};
 
-filename = dccnpath('/home/common/matlab/fieldtrip/data/ftp/example/nirs_speech/S1001_run01.nirs');
+filename = dccnpath('/project/3031000.02/external/download/example/nirs_speech/S1001_run01.nirs');
 
 %% # Exploring the files that hold the NIRS data
 %

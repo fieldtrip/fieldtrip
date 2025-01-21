@@ -5,7 +5,7 @@ function test_bug3007
 % DEPENDENCY
 % DATA private
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug3007'))
+cd(dccnpath('/project/3031000.02/test/bug3007'))
 
 load cfg
 load eye_movs

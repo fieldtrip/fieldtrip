@@ -8,8 +8,8 @@ function test_bug3361
 % I noticed an error in MATLAB 2017b which would try to evaluate "ga" as a
 % function, even though it was read from the file. The solution is to read
 % it explicitly.
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug3361.mat'), 'cfg');
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug3361.mat'), 'ga');
+load(dccnpath('/project/3031000.02/test/bug3361.mat'), 'cfg');
+load(dccnpath('/project/3031000.02/test/bug3361.mat'), 'ga');
 
 %%
 
@@ -79,8 +79,8 @@ ft_topoplotTFR(cfg, ga)
 clear all
 close all
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug3361b.mat'), 'cfg');
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug3361b.mat'), 'stat');
+load(dccnpath('/project/3031000.02/test/bug3361b.mat'), 'cfg');
+load(dccnpath('/project/3031000.02/test/bug3361b.mat'), 'stat');
 
 % fake the first 5 positive clusters such that they show up
 stat.posclusters(1).prob = 0.01 - 0.0001;

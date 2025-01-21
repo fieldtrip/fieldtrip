@@ -12,19 +12,19 @@ function failed_bug576
 
 
 dataset122 = {
-  dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/preproc_neuromag122.mat')
-  dccnpath('/home/common/matlab/fieldtrip/data/test/latest/comp/meg/comp_neuromag122.mat')
-  dccnpath('/home/common/matlab/fieldtrip/data/test/latest/freq/meg/freq_mtmfft_neuromag122.mat')
-  dccnpath('/home/common/matlab/fieldtrip/data/test/latest/freq/meg/freq_mtmconvol_neuromag122.mat')
-  dccnpath('/home/common/matlab/fieldtrip/data/test/latest/timelock/meg/timelock_neuromag122.mat')
+  dccnpath('/project/3031000.02/test/latest/raw/meg/preproc_neuromag122.mat')
+  dccnpath('/project/3031000.02/test/latest/comp/meg/comp_neuromag122.mat')
+  dccnpath('/project/3031000.02/test/latest/freq/meg/freq_mtmfft_neuromag122.mat')
+  dccnpath('/project/3031000.02/test/latest/freq/meg/freq_mtmconvol_neuromag122.mat')
+  dccnpath('/project/3031000.02/test/latest/timelock/meg/timelock_neuromag122.mat')
   };
 
 dataset306 = {
-  dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/preproc_neuromag306.mat')
-  dccnpath('/home/common/matlab/fieldtrip/data/test/latest/comp/meg/comp_neuromag306.mat')
-  dccnpath('/home/common/matlab/fieldtrip/data/test/latest/freq/meg/freq_mtmfft_neuromag306.mat')
-  dccnpath('/home/common/matlab/fieldtrip/data/test/latest/freq/meg/freq_mtmconvol_neuromag306.mat')
-  dccnpath('/home/common/matlab/fieldtrip/data/test/latest/timelock/meg/timelock_neuromag306.mat')
+  dccnpath('/project/3031000.02/test/latest/raw/meg/preproc_neuromag306.mat')
+  dccnpath('/project/3031000.02/test/latest/comp/meg/comp_neuromag306.mat')
+  dccnpath('/project/3031000.02/test/latest/freq/meg/freq_mtmfft_neuromag306.mat')
+  dccnpath('/project/3031000.02/test/latest/freq/meg/freq_mtmconvol_neuromag306.mat')
+  dccnpath('/project/3031000.02/test/latest/timelock/meg/timelock_neuromag306.mat')
   };
 
 for i=1:length(dataset122)

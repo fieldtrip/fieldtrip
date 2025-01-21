@@ -24,7 +24,7 @@ function test_example_threshold_free_cluster_enhancement
 %
 % The data used in this example is available from our [FTP server](ftp://ftp.fieldtriptoolbox.org/pub/fieldtrip/example/threshold_free_cluster_enhancement/).
 %
-load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/example/threshold_free_cluster_enhancement/ERF_orig.mat'));
+load(dccnpath('/project/3031000.02/external/download/example/threshold_free_cluster_enhancement/ERF_orig.mat'));
 
 Nsubj       = 10;
 design      = zeros(2, Nsubj*2);

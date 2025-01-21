@@ -6,7 +6,7 @@ function failed_fairsurface
 
 ft_defaults
 
-hdmfile  = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.shape');
+hdmfile  = dccnpath('/project/3031000.02/external/download/test/ctf/Subject01.shape');
 shape = ft_read_headshape(hdmfile);
 
 tmpcfg             = [];

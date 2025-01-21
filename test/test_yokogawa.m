@@ -10,7 +10,7 @@ function test_yokogawa
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-filename = dccnpath('/home/common/matlab/fieldtrip/data/test/original/meg/yokogawa160/Continuous1.con');
+filename = dccnpath('/project/3031000.02/test/original/meg/yokogawa160/Continuous1.con');
 hdr = ft_read_header(filename);
 
 if length(ft_channelselection('MEG', hdr.label))~=160
@@ -35,7 +35,7 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-filename = dccnpath('/home/common/matlab/fieldtrip/data/test/original/meg/yokogawa440/S1_MEG_Epoch.raw');
+filename = dccnpath('/project/3031000.02/test/original/meg/yokogawa440/S1_MEG_Epoch.raw');
 hdr = ft_read_header(filename);
 
 if length(ft_channelselection('MEG', hdr.label))<400
@@ -61,7 +61,7 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-filename = dccnpath('/home/common/matlab/fieldtrip/data/test/original/meg/yokogawa64/2011_01_28_0354_ME053_AEF.con');
+filename = dccnpath('/project/3031000.02/test/original/meg/yokogawa64/2011_01_28_0354_ME053_AEF.con');
 hdr = ft_read_header(filename);
 
 if length(ft_channelselection('MEG', hdr.label))~=64

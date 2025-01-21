@@ -10,7 +10,7 @@ function test_pull929
 % the ERP has a fronto-central negativity at 100ms
 % the SCD resolves into two bilateral blobs
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2685/bug2685.mat'));
+load(dccnpath('/project/3031000.02/test/bug2685/bug2685.mat'));
 
 % this is needed to avoid the data being recognized as MEG
 ERP_standard = rmfield(ERP_standard, 'grad');

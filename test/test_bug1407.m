@@ -7,7 +7,7 @@ function test_bug1407
 
 ft_hastoolbox('egi_mff_v2', 1);
 
-datadir = dccnpath('/home/common/matlab/fieldtrip/data/test/bug1407');
+datadir = dccnpath('/project/3031000.02/test/bug1407');
 
 dataset = {
     fullfile(datadir, 'Long64ChannelWithEvents.mff')

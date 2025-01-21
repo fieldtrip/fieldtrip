@@ -27,7 +27,7 @@ function test_bug1786
 
 % narginchk(3, 3);
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1786.mat'));
+load(dccnpath('/project/3031000.02/test/bug1786.mat'));
 
 labels = electrodes_names_to_keep;
 badchans = interpolate_at_z;

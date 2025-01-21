@@ -5,8 +5,8 @@ function test_issue1780
 % DEPENDENCY read_neuralynx_ds read_neuralynx_nsc
 % DATA private
 
-dataset1 = dccnpath('/home/common/matlab/fieldtrip/data/test/original/lfp/neuralynx/issue1780');            % this includes 2 channels
-dataset2 = dccnpath('/home/common/matlab/fieldtrip/data/test/original/lfp/neuralynx/issue1780/CSC01.ncs');  % this is only 1 channel
+dataset1 = dccnpath('/project/3031000.02/test/original/lfp/neuralynx/issue1780');            % this includes 2 channels
+dataset2 = dccnpath('/project/3031000.02/test/original/lfp/neuralynx/issue1780/CSC01.ncs');  % this is only 1 channel
 
 %%
 

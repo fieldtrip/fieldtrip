@@ -9,7 +9,7 @@ function test_bug895
 % contains 'chan' in the dimord, rather than 'chancmb'
 
 % load some data
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/preproc_ctf275.mat'));
+load(dccnpath('/project/3031000.02/test/latest/raw/meg/preproc_ctf275.mat'));
 
 % do spectral transformation
 cfg = [];

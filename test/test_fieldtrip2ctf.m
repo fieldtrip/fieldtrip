@@ -7,7 +7,7 @@ function test_fieldtrip2ctf
 
 % Use the 'Subject01.ds' dataset for basic testing of the writing and reading
 
-inputfile = dccnpath('/home/common/matlab/fieldtrip/data/test/original/meg/ctf151/Subject01.ds');
+inputfile = dccnpath('/project/3031000.02/test/original/meg/ctf151/Subject01.ds');
 
 %%
 

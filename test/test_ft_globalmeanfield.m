@@ -4,7 +4,7 @@ function test_ft_globalmeanfield
 % WALLTIME 00:10:00
 % DEPENDENCY ft_singleplotER
 % DATA private
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2630/avg_tms_clean.mat'));
+load(dccnpath('/project/3031000.02/test/bug2630/avg_tms_clean.mat'));
 
 cfg = [];
 cfg.channel = 'all';

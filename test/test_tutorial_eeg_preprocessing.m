@@ -6,7 +6,7 @@ function test_tutorial_eeg_preprocessing
 % DATA public
 
 %% defining trials
-dataset = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/preprocessing_erp/s04.vhdr');
+dataset = dccnpath('/project/3031000.02/external/download/tutorial/preprocessing_erp/s04.vhdr');
 
 cfg = [];
 cfg.trialfun     = 'trialfun_affcog';

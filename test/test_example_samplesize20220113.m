@@ -61,7 +61,7 @@ function test_example_samplesize
 % fprintf(fid,'function out = corr2cov(sd,cor)\nout=diag(sd)*cor*diag(sd);\n');
 % fclose(fid);
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data/ftp/example/samplesize'))
+cd(dccnpath('/project/3031000.02/external/download/example/samplesize'))
 
 % settings
 p_heads_h1  = 1;     % chance to land on head under H1, aka, the effect size

@@ -7,7 +7,7 @@ function test_bug3207
 
 %% read data and annotations from a 2-channel test file
 
-filename = dccnpath('/home/common/matlab/fieldtrip/data/test/bug3207/test3_2048Hz.EDF');
+filename = dccnpath('/project/3031000.02/test/bug3207/test3_2048Hz.EDF');
 
 hdr1 = ft_read_header(filename, 'chanindx', 1);
 dat1 = ft_read_data(filename, 'header', hdr1);
@@ -32,7 +32,7 @@ plot([evt2.timestamp], ones(1,numel(evt2)), 'm+');
 
 %% read the annotation events from the much larger file
 
-filename = dccnpath('/home/common/matlab/fieldtrip/data/test/bug3207/ecog_mumc_anon.edf');
+filename = dccnpath('/project/3031000.02/test/bug3207/ecog_mumc_anon.edf');
 
 % use defaults
 hdr = ft_read_header(filename);
@@ -45,7 +45,7 @@ evt = ft_read_event(filename, 'detectflank', []);
 %% do a quick inspection of the EDF data
 
 cfg = [];
-cfg.dataset = dccnpath('/home/common/matlab/fieldtrip/data/test/bug3207/ecog_mumc_anon.edf');
+cfg.dataset = dccnpath('/project/3031000.02/test/bug3207/ecog_mumc_anon.edf');
 data = ft_preprocessing(cfg);
 
 % read the events, don't detect flanks in a trigger channel but read annotations
@@ -60,7 +60,7 @@ ft_databrowser(cfg, data);
 %% do a full analysis on the EDF data
 
 % this contains the data and the trialfun
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug3207/'));
+cd(dccnpath('/project/3031000.02/test/bug3207/'));
 
 cfg = [];
 cfg.dataset = 'ecog_mumc_anon.edf';

@@ -91,7 +91,7 @@ cfg.sourcemodel.zgrid = -8:8;
 grid2 = ft_prepare_leadfield(cfg);
 
 %% load simulated data
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug3119.mat'));
+load(dccnpath('/project/3031000.02/test/bug3119.mat'));
 
 figure
 plot(datat1.time, datat1.avg)

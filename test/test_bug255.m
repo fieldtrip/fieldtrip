@@ -9,7 +9,7 @@ function test_bug255
 % functional data having dimord 'chan', i.e. after doing statistics with
 % 'avgoverfreq' or 'avgovertime' = 'yes';
 
-filename = dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/eeg/preproc_neuroscan16.mat');
+filename = dccnpath('/project/3031000.02/test/latest/raw/eeg/preproc_neuroscan16.mat');
 load(filename)
 
 %there's an unresolved issue with duplicate labels 'FREE'

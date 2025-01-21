@@ -6,10 +6,10 @@ function test_bug2834
 % DATA private
 
 % get some data
-filename = dccnpath('/home/common/matlab/fieldtrip/data/test/latest/freq/meg/freq_mtmconvol_powandcsd_ctf151.mat');
+filename = dccnpath('/project/3031000.02/test/latest/freq/meg/freq_mtmconvol_powandcsd_ctf151.mat');
 load(filename);
 
-filename = dccnpath('/home/common/matlab/fieldtrip/data/test/latest/vol/Subject01vol_singleshell.mat');
+filename = dccnpath('/project/3031000.02/test/latest/vol/Subject01vol_singleshell.mat');
 load(filename);
 
 % the issue seems to be due to the fact that ft_selectdata with cfg.channel

@@ -5,7 +5,7 @@ function test_bug1894
 % DEPENDENCY ft_singleplotTFR ft_daattype_freq ft_datatype_sens ft_chantype
 % DATA private
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1894.mat'));
+load(dccnpath('/project/3031000.02/test/bug1894.mat'));
 
 cfg = [];
 ft_multiplotTFR (cfg, freq);

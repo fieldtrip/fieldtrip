@@ -5,7 +5,7 @@ function test_bug1735
 % DEPENDENCY ft_appenddata
 % DATA private
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test'))
+cd(dccnpath('/project/3031000.02/test'))
 load bug1735.mat
 
 part1 = data_trgtOnstimOnBTrgtLDetected_sourceL;

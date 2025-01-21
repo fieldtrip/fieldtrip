@@ -9,7 +9,7 @@ function test_bug2511
 templatedir = fullfile(ftpath, 'template');
 
 t1 = ft_read_mri(fullfile(templatedir, 'anatomy', 'single_subj_T1.nii'));
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2511.mat'));
+load(dccnpath('/project/3031000.02/test/bug2511.mat'));
 
 % loading the data takes quite some time, as it is 4.7GB on disk, which is
 % a bit silly, because only 1 variable is used, and the whole

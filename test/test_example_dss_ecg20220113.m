@@ -25,7 +25,7 @@ function test_example_dss_ecg
 % To load this dataset into MATLAB and preprocess with FieldTrip, use:
 %
 cfg         = [];
-cfg.dataset = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/ArtifactRemoval.ds');
+cfg.dataset = dccnpath('/project/3031000.02/external/download/test/ctf/ArtifactRemoval.ds');
 cfg.trialdef.eventtype = 'trial';
 cfg     = ft_definetrial(cfg);
 cfg.trl = cfg.trl(1:end-1,:); % remove the last one, because it clips.

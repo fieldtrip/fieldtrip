@@ -24,9 +24,9 @@ function test_bug1607
 ERPdata_nD_left = [];
 reference_labels = [];
 
-%load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1607/06_control_ICA_clean.mat'));
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1607/ERPdata.mat'));
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1607/reference.mat'));
+%load(dccnpath('/project/3031000.02/test/bug1607/06_control_ICA_clean.mat'));
+load(dccnpath('/project/3031000.02/test/bug1607/ERPdata.mat'));
+load(dccnpath('/project/3031000.02/test/bug1607/reference.mat'));
 
 % reference_labels = ICA_clean.label;
 

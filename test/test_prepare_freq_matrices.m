@@ -5,7 +5,7 @@ function test_prepare_freq_matrices
 % DEPENDENCY prepare_freq_matrices ft_sourceanalysis
 % DATA private
 
-datadir = dccnpath('/home/common/matlab/fieldtrip/data/test/latest/freq/meg');
+datadir = dccnpath('/project/3031000.02/test/latest/freq/meg');
 
 [ftver, ftpath] = ft_version;
 cd(fullfile(ftpath, 'private'));

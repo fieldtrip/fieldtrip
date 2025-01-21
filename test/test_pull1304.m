@@ -7,7 +7,7 @@ function test_pull1304
 
 %%
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/pull1304.mat'));
+load(dccnpath('/project/3031000.02/test/pull1304.mat'));
 
 %%
 

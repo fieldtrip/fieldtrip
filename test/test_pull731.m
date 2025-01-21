@@ -5,7 +5,7 @@ function test_pull731
 % DEPENDENCY ft_read_header ft_read_data ft_read_event
 % DATA private
 
-datadir = dccnpath('/home/common/matlab/fieldtrip/data/test/pull731');
+datadir = dccnpath('/project/3031000.02/test/pull731');
 
 dataset = {
   fullfile(datadir, './OtherFilesRobert/bug1427/Long64ChannelWithEvents.mff')

@@ -5,7 +5,7 @@
 % DEPENDENCY ft_eventtiminganalysis
 % DATA private
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/test_ft_eventtiminganalysis.mat'));
+load(dccnpath('/project/3031000.02/test/test_ft_eventtiminganalysis.mat'));
 ft_hastoolbox('lagextraction', 1);
 
 cfg = [];

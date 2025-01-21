@@ -5,7 +5,7 @@ function test_pull694
 % DEPENDENCY read_eyelink_asc
 % DATA private
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/original/eyetracker/eyelink'));
+cd(dccnpath('/project/3031000.02/test/original/eyetracker/eyelink'));
 
 filename = {
   'BP2D1_2.asc'

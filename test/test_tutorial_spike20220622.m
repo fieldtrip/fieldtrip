@@ -5,7 +5,7 @@ function test_tutorial_spike20220622
 % DEPENDENCY ft_read_spike ft_spike_select ft_spike_waveform ft_spike_maketrials ft_spike_plot_jpsth
 % DATA public
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/spike/'));
+cd(dccnpath('/project/3031000.02/external/download/tutorial/spike/'));
 
 %%
 

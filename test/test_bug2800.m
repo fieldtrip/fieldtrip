@@ -5,7 +5,7 @@ function test_bug2800
 % WALLTIME 00:10:00
 % MEM 1gb
 
-filename = dccnpath('/home/common/matlab/fieldtrip/data/test/bug2800.mat');
+filename = dccnpath('/project/3031000.02/test/bug2800.mat');
 load(filename);
 
 % we need to cd into the private directory

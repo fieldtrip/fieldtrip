@@ -6,7 +6,7 @@ function test_bug1447
 % DATA private
 
 % this contains the example data from Lilla, i.e. two ERPs and a layout
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test'))
+cd(dccnpath('/project/3031000.02/test'))
 load bug1447.mat
 
 close all

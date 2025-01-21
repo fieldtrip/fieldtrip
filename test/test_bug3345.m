@@ -8,7 +8,7 @@ function test_bug3345
 % See also http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=3296 
 % which is on cfg.trials in the plotting functions
 
-dataset = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds');
+dataset = dccnpath('/project/3031000.02/external/download/test/ctf/Subject01.ds');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% prepare the data

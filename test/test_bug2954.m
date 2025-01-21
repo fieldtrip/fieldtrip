@@ -6,7 +6,7 @@ function test_bug2954
 % DATA private
 
 %%
-filename = dccnpath('/home/common/matlab/fieldtrip/data/test/original/eeg/edf/0601_s.edf');
+filename = dccnpath('/project/3031000.02/test/original/eeg/edf/0601_s.edf');
 
 % all channels
 hdr = ft_read_header(filename);
@@ -56,7 +56,7 @@ assert(all(dat4==dat(4,:)));
 
 %%
 clear hdr* dat*
-filename = dccnpath('/home/common/matlab/fieldtrip/data/test/original/eeg/edf/shhs1-200001.edf');
+filename = dccnpath('/project/3031000.02/test/original/eeg/edf/shhs1-200001.edf');
 
 %% read the largest subset of channels with a consistent sampling rate, this should return 5 channels at 1Hz
 hdr = ft_read_header(filename);

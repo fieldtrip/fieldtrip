@@ -5,7 +5,7 @@ function test_issue1425
 % DEPENDENCY ft_preprocessing ft_read_data
 % DATA private
 
-filename = dccnpath('/home/common/matlab/fieldtrip/data/test/issue1425/X_X_e515c5ac-6301-4acd-8a69-fb208d5fd097_0014.edf');
+filename = dccnpath('/project/3031000.02/test/issue1425/X_X_e515c5ac-6301-4acd-8a69-fb208d5fd097_0014.edf');
 
 hdr   = ft_read_header(filename);
 event = ft_read_event(filename);

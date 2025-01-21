@@ -5,7 +5,7 @@ function test_bug3297
 % DEPENDENCY
 % DATA private
 
-filename = dccnpath('/home/common/matlab/fieldtrip/data/test/bug3297/testMEG001_1200hz_20170517_05.ds');
+filename = dccnpath('/project/3031000.02/test/bug3297/testMEG001_1200hz_20170517_05.ds');
 
 event = ft_read_event(filename);
 

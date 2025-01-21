@@ -13,7 +13,7 @@ function test_example_emgtriggered_trialdefinition
 % You would use this function as follows
 %
 
-dataset = fullfile(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial'), 'SubjectCMC.zip');
+dataset = fullfile(dccnpath('/project/3031000.02/external/download/tutorial'), 'SubjectCMC.zip');
 t = tempdir;
 unzip(dataset, t);
 

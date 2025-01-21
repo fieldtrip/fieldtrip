@@ -35,7 +35,7 @@ function test_example_bids_behavioral
 % - the extension shows whether it is the original NBS Presentation log file itself (.log) or the custom text file written by the Presentation script (.txt)
 
 %sourcepath = './original/sourcedata';
-sourcepath = dccnpath('/home/common/matlab/fieldtrip/data/ftp/example/bids_presentation/original');
+sourcepath = dccnpath('/project/3031000.02/external/download/example/bids_presentation/original');
 %targetpath = './bids';
 targetpath = fullfile(tempdir, 'bids');
 

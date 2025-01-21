@@ -5,7 +5,7 @@ function test_bug1878
 % DEPENDENCY ft_artifact_clip
 % DATA private
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test'));
+cd(dccnpath('/project/3031000.02/test'));
 load bug1878.mat
 
 % this is how I was able to reproduce it

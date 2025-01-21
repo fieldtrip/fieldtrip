@@ -5,12 +5,12 @@ function inspect_bug3033
 % DEPENDENCY ft_plot_topo ft_databrowser ft_topoplotER
 % DATA private
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug3033'));
+cd(dccnpath('/project/3031000.02/test/bug3033'));
 
 if true
   % this section only needs to run once
   cfg = [];
-  cfg.dataset = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds');
+  cfg.dataset = dccnpath('/project/3031000.02/external/download/test/ctf/Subject01.ds');
   cfg.continuous = 'yes';
   cfg.trl(:,1) = (1:300:10000)';
   cfg.trl(:,2) = (1:300:10000)' + 299;
@@ -21,7 +21,7 @@ if true
   save ctf ctf
 
   cfg = [];
-  cfg.dataset = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/natmeg/oddball1_mc_downsampled.fif');
+  cfg.dataset = dccnpath('/project/3031000.02/external/download/tutorial/natmeg/oddball1_mc_downsampled.fif');
   cfg.continuous = 'yes';
   cfg.trl(:,1) = (1:1000:30000)';
   cfg.trl(:,2) = (1:1000:30000)' + 999;

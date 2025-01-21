@@ -31,9 +31,9 @@ function test_tutorial_mvpa_light
 %
 % The data can be loaded into MATLAB using
 %
-load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/eventrelatedaveraging/dataFIC_LP.mat'));
-load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/eventrelatedaveraging/dataFC_LP.mat'));
-load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/eventrelatedaveraging/dataIC_LP.mat'));
+load(dccnpath('/project/3031000.02/external/download/tutorial/eventrelatedaveraging/dataFIC_LP.mat'));
+load(dccnpath('/project/3031000.02/external/download/tutorial/eventrelatedaveraging/dataFC_LP.mat'));
+load(dccnpath('/project/3031000.02/external/download/tutorial/eventrelatedaveraging/dataIC_LP.mat'));
 
 % To get started, we investigate whether we can discriminate between the three classes
 % FIC, FC, and IC, using the average activity in the 0.5-0.7 s post-stimulus interval.

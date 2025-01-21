@@ -7,7 +7,7 @@ function test_bug629
 
 % note that read_mff_event does not exist, handling of the events is coded in ft_read_event
 
-datadir = dccnpath('/home/common/matlab/fieldtrip/data/test/bug629');
+datadir = dccnpath('/project/3031000.02/test/bug629');
 
 cd(datadir);
 dataset = 'pilot05_test 20110120 1433.mff';

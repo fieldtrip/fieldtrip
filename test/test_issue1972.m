@@ -5,7 +5,7 @@ function test_issue1972
 % DEPENDENCY ft_definetrial ft_read_event read_trigger
 % DATA private
 
-filename = dccnpath('/home/common/matlab/fieldtrip/data/test/issue1972.fif');
+filename = dccnpath('/project/3031000.02/test/issue1972.fif');
 values   = [14593 14594 14600];
 
 % The reported problem by Mikkel, is that the above dataset does not

@@ -5,8 +5,8 @@ function test_bug1490
 % DEPENDENCY ft_read_header ft_read_data loadcnt
 % DATA private
 
-datadir       = dccnpath('/home/common/matlab/fieldtrip/data/test/bug1490');
-referencefile = dccnpath('/home/common/matlab/fieldtrip/data/test/bug1490.mat');
+datadir       = dccnpath('/project/3031000.02/test/bug1490');
+referencefile = dccnpath('/project/3031000.02/test/bug1490.mat');
 
 filelist = {
   '0500.cnt'

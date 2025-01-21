@@ -5,7 +5,7 @@ function test_tutorial_MNE
 % DEPENDENCY ft_volumereslice ft_volumerealign ft_volumesegment
 % DATA public
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf'));
+cd(dccnpath('/project/3031000.02/external/download/test/ctf'));
 mri = ft_read_mri('Subject01.mri');
 
 cfg        = [];

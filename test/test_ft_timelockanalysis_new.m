@@ -59,7 +59,7 @@ return
 
 
 function test_cfg_options
-load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/eventrelatedaveraging/dataFC_LP.mat'));
+load(dccnpath('/project/3031000.02/external/download/tutorial/eventrelatedaveraging/dataFC_LP.mat'));
 data = dataFC_LP;
 clear dataFC_LP
 
@@ -335,7 +335,7 @@ if 0
     tlock=ft_timelockanalysis_new(cfg,data);
     cfg=[];
     cfg.method='lcmv';
-    cfg.hdmfile=dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.hdm');
+    cfg.hdmfile=dccnpath('/project/3031000.02/external/download/test/ctf/Subject01.hdm');
     cfg.grad=data.grad;
     source=ft_sourceanalysis(cfg,tlock);
 
@@ -351,7 +351,7 @@ if 0
     save tlck tlckFC tlckFIC;
     cfg=[];
     cfg.method='lcmv';
-    cfg.hdmfile=dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.hdm');
+    cfg.hdmfile=dccnpath('/project/3031000.02/external/download/test/ctf/Subject01.hdm');
     cfg.grad=data.grad;
     sourceFC=ft_sourceanalysis(cfg,tlckFC);
 end
@@ -366,7 +366,7 @@ if 0
     cfg.preproc.bpfilter='yes';
     cfg.preproc.bpfreq=[16 20];
     tlock=ft_timelockanalysis_new(cfg,data);
-    load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/segmentedmri.mat'))
+    load(dccnpath('/project/3031000.02/external/download/tutorial/beamformer/segmentedmri.mat'))
     cfg=[];
     vol=ft_prepare_singleshell(cfg,segmentedmri);
     cfg=[];
@@ -383,7 +383,7 @@ if 0
     cfg.headmodel=vol;
     source=ft_sourceanalysis(cfg,tlock);
 
-    mri=ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.mri'));
+    mri=ft_read_mri(dccnpath('/project/3031000.02/external/download/test/ctf/Subject01.mri'));
     sourcediff=source;
     % sourcediff.avg.pow=(source.avg.pow-source.avg.noise)./source.avg.noise;
     sourcediff.avg.pow=(source.avg.pow)./source.avg.noise;

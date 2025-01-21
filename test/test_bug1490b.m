@@ -12,7 +12,7 @@ return
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-filename = dccnpath('/home/common/matlab/fieldtrip/data/test/bug1490/cba1ff01.cnt');
+filename = dccnpath('/project/3031000.02/test/bug1490/cba1ff01.cnt');
 dataformat = 'ns_cnt16';
 
 hdr = ft_read_header(filename);

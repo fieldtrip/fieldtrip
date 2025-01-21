@@ -5,7 +5,7 @@ function test_bug1910
 % DEPENDENCY ft_datatype_sens
 % DATA private
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1910.mat'));
+load(dccnpath('/project/3031000.02/test/bug1910.mat'));
 
 % update the old gradiometer structure
 gradnew = ft_datatype_sens(grad);

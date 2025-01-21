@@ -8,9 +8,9 @@ function test_bug2170
 % the 3rd dataset is different in the sense that it is a *.fif file accompanied
 % by an *.eve file. Those files are also used in the Tristan babysquid74 system.
 
-filename1 = dccnpath('/home/common/matlab/fieldtrip/data/test/original/meg/neuromag306/raw.fif');
-filename2 = dccnpath('/home/common/matlab/fieldtrip/data/test/original/meg/neuromag306/run_01_raw.fif');
-filename3 = dccnpath('/home/common/matlab/fieldtrip/data/test/bug2170/an05a4_ss.fif');
+filename1 = dccnpath('/project/3031000.02/test/original/meg/neuromag306/raw.fif');
+filename2 = dccnpath('/project/3031000.02/test/original/meg/neuromag306/run_01_raw.fif');
+filename3 = dccnpath('/project/3031000.02/test/bug2170/an05a4_ss.fif');
 
 assert(ft_filetype(filename1, 'neuromag_fif'));
 assert(ft_filetype(filename2, 'neuromag_fif'));

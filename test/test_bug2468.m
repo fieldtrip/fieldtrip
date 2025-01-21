@@ -8,7 +8,7 @@ function test_bug2468
 % this test function tests the functionality to do projectmom on the output
 % of a pcc-beamformer with a different number of components per dipole.
 
-filename = dccnpath('/home/common/matlab/fieldtrip/data/test/bug2468.mat');
+filename = dccnpath('/project/3031000.02/test/bug2468.mat');
 load(filename);
 
 % this is a dirty fix which is intended to be fixed upstream in the

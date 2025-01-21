@@ -28,8 +28,8 @@ function test_ft_volumerealign
 [ftver, ftpath] = ft_version;
 templatedir  = fullfile(ftpath, 'template');
 
-subjectT1  = dccnpath('/home/common/matlab/fieldtrip/data/test/bug1826/T1.nii.gz');
-subjectT2  = dccnpath('/home/common/matlab/fieldtrip/data/test/bug1826/T2.nii.gz');
+subjectT1  = dccnpath('/project/3031000.02/test/bug1826/T1.nii.gz');
+subjectT2  = dccnpath('/project/3031000.02/test/bug1826/T2.nii.gz');
 
 % load in the data
 
@@ -328,8 +328,8 @@ clear all;
 
 % path to data
 
-subjectT1  = dccnpath('/home/common/matlab/fieldtrip/data/test/bug1826/T1.nii.gz');
-subjectDTI = dccnpath('/home/common/matlab/fieldtrip/data/test/bug1826/DTI.nii');
+subjectT1  = dccnpath('/project/3031000.02/test/bug1826/T1.nii.gz');
+subjectDTI = dccnpath('/project/3031000.02/test/bug1826/DTI.nii');
 
 % load in the data
 
@@ -449,7 +449,7 @@ T1temp = ft_read_mri(fullfile(ftpath, 'external', 'spm8', 'templates', 'T1.nii')
 
 % other subject's T1
 
-T1other = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/mri/nifti/single_subj_T1.nii'));
+T1other = ft_read_mri(dccnpath('/project/3031000.02/test/latest/mri/nifti/single_subj_T1.nii'));
 
 cfg=[];
 % cfg.nonlinear = 'no';  option in volumenormalise
@@ -482,7 +482,7 @@ T1temp = ft_read_mri(fullfile(ftpath, 'external', 'spm8', 'templates', 'T1.nii')
 
 % other subject's T1
 
-T1other = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/mri/nifti/single_subj_T1.nii'));
+T1other = ft_read_mri(dccnpath('/project/3031000.02/test/latest/mri/nifti/single_subj_T1.nii'));
 
 
 cfg=[];

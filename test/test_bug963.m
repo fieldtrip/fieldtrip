@@ -5,8 +5,8 @@ function test_bug963
 % DEPENDENCY ft_read_header ft_read_sens ft_datatype_sens bti2grad itab2grad netmeg2grad ctf2grad mne2grad yokogawa2grad fif2grad mne2grad.old yokogawa2grad_new ft_compute_leadfield ft_prepare_vol_sens
 % DATA private
 
-datadir = dccnpath('/home/common/matlab/fieldtrip/data/test/bug963');
-rawdataprefix = dccnpath('/home/common/matlab/fieldtrip/data/test');
+datadir = dccnpath('/project/3031000.02/test/bug963');
+rawdataprefix = dccnpath('/project/3031000.02/test');
 
 dataset = {
   'original/meg/bti148/c,rfhp0.1Hz'
@@ -106,7 +106,7 @@ end % for all datasets
 % this checks that all three CTF implementations still work
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-filename = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds');
+filename = dccnpath('/project/3031000.02/external/download/test/ctf/Subject01.ds');
 hdr1 = ft_read_header(filename, 'headerformat', 'ctf_ds');
 hdr2 = ft_read_header(filename, 'headerformat', 'read_ctf_res4');
 %hdr3 = ft_read_header(filename, 'headerformat', 'ctf_read_res4');

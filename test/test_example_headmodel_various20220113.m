@@ -29,7 +29,7 @@ function test_example_make_leadfield_using_different_headmodels
 % produced with CTF software
 %--------------------------------------------------------------------------------------
 
-fpath = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf');
+fpath = dccnpath('/project/3031000.02/external/download/test/ctf');
 
 % read header, which contains the gradiometer description
 hdr  = ft_read_header(fullfile(fpath,'Subject01.ds'));

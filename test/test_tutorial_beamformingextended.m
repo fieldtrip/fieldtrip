@@ -8,8 +8,8 @@ function test_tutorial_beamformingextended
 [ftver, ftpath] = ft_version;
 templatedir  = fullfile(ftpath, 'template');
 
-datadir = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/sensor_analysis');
-mridir = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformingextended');
+datadir = dccnpath('/project/3031000.02/external/download/tutorial/sensor_analysis');
+mridir = dccnpath('/project/3031000.02/external/download/tutorial/beamformingextended');
 
 load(fullfile(datadir, 'subjectK.mat'));
 

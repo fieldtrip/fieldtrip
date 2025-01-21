@@ -16,7 +16,7 @@ function test_bug3417
 
 %% SL - one sample t
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug3417.mat'))
+load(dccnpath('/project/3031000.02/test/bug3417.mat'))
 
 freqs=14; % or 21
 times=81;
@@ -111,7 +111,7 @@ xlabel('Time')
 
 %% JA - one sample t
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug3417.mat'))
+load(dccnpath('/project/3031000.02/test/bug3417.mat'))
 
 freqs=14; % or 21
 times=81;
@@ -203,7 +203,7 @@ xlabel('Time')
 
 %% SJ vs. AJ
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug3417.mat'))
+load(dccnpath('/project/3031000.02/test/bug3417.mat'))
 
 freqs=14; % or 21
 times=81;

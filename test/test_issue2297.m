@@ -1,4 +1,4 @@
-filename = dccnpath('/home/common/matlab/fieldtrip/data/test/original/meg/neuromag306/oddball_raw.fif');
+filename = dccnpath('/project/3031000.02/test/original/meg/neuromag306/oddball_raw.fif');
 
 % MEM 1gb
 % WALLTIME 00:10:00

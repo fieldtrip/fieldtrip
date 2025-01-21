@@ -13,9 +13,9 @@ if nargin<1
 end
 
 
-filename1 = dccnpath('/home/common/matlab/fieldtrip/data/test/bug2415/TriggerTest.bdf');
-filename2 = dccnpath('/home/common/matlab/fieldtrip/data/test/original/eeg/bdf/Newtest17-256.bdf');
-filenameR = dccnpath('/home/common/matlab/fieldtrip/data/test/bug2415.mat');
+filename1 = dccnpath('/project/3031000.02/test/bug2415/TriggerTest.bdf');
+filename2 = dccnpath('/project/3031000.02/test/original/eeg/bdf/Newtest17-256.bdf');
+filenameR = dccnpath('/project/3031000.02/test/bug2415.mat');
 
 evt1 = ft_read_event(filename1);
 evt2 = ft_read_event(filename2);

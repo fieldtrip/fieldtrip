@@ -9,29 +9,31 @@ function filename = dccnpath(filename)
 % output filename corresponds to the local file including the full path where the
 % test data is available.
 %
-% The test data location on the DCCN cluster is '/home/common/matlab/fieldtrip/data'
-% and the specification of the input filename MUST start with this.
+% The location of the test data on the DCCN cluster is '/project/3031000.02/test' and 
+% the location of the externally downloadable data is '/project/3031000.02/external/download'
+% and the specification of the input filename MUST start with the string '/project/3031000.02'.
 %
 % This function will search-and-replace the location on the DCCN cluster by the
-% location that applies to your computer. If needed, it will replace '/home' by 'H:'
-% and will replace forward by backward slashes.
+% location that applies to your computer. If needed, it will replace '/home' by 'H:', 
+% '/project' by 'P:' and will replace forward by backward slashes.
 %
 % In case you have a local copy of the data, or if you are inside the DCCN and have
-% mounted the '/home' drive on another letter than 'H:', you should override the
-% default location using
+% mounted the network drives in a non-standard fashion, you should specify the
+% data location using
 %    global ft_default
 %    ft_default.dccnpath = '/your/copy';
 %
-% If you DO HAVE a local copy, it should contain a directory with the name 'ftp'. The 
-% content of the ftp directory should match that on the FieldTrip download server, 
-% for example '/your/copy/ftp/test/ctf'.
+% If you DO HAVE a local copy of the public data, it should contain a directory 
+% with the name 'external/download'. The content of the test directory should match
+% that on the FieldTrip download server, for example '/your/copy/external/download/ctf'.
 %
 % If you DO NOT have a local copy and do not define ft_default.dccnpath manually,
-% then this function will automatically try to download the publicly available data 
-% to a temporary directory.
+% then this function will automatically try to download the public data to a 
+% temporary directory.
 %
 % See also WHICH, WEBSAVE
-% Copyright (C) 2012-2024, Donders Centre for Cognitive Neuroimaging, Nijmegen, NL
+
+% Copyright (C) 2012-2025, Donders Centre for Cognitive Neuroimaging, Nijmegen, NL
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -54,14 +56,16 @@ function filename = dccnpath(filename)
 global ft_default
 
 % it must always start with this
-assert(startsWith(filename, '/home/common/matlab/fieldtrip/data'));
+assert(startsWith(filename, '/project/3031000.02'));
 
 % alternative0 applies inside the DCCN network when using the standard data location
 if ispc
   alternative0 = strrep(filename, '/home', 'H:');
+  alternative0 = strrep(alternative0, '/project', 'P:');
   alternative0 = strrep(alternative0, '/', '\');
 else
   alternative0 = strrep(filename, 'H:', '/home');
+  alternative0 = strrep(alternative0, 'P:', '/project');
   alternative0 = strrep(alternative0, '\', '/');
 end
 
@@ -153,9 +157,9 @@ ft_default.dccnpath = strip(ft_default.dccnpath, 'right', '\');
 
 % alternative0 is the same as the input filename, but potentially updated for windows
 if ~ispc
-  alternative2 = strrep(alternative0, '/home/common/matlab/fieldtrip/data', ft_default.dccnpath);
+  alternative2 = strrep(alternative0, '/project/3031000.02', ft_default.dccnpath);
 else
-  alternative2 = strrep(alternative0, 'H:\common\matlab\fieldtrip\data', ft_default.dccnpath);
+  alternative2 = strrep(alternative0, 'P:\3031000.02', ft_default.dccnpath);
 end
 
 if exist(alternative2, 'file')

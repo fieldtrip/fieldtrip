@@ -7,7 +7,7 @@ function test_bug798
 
 % note that this bug is related to bug 921
 
-datadir = (dccnpath('/home/common/matlab/fieldtrip/data/test/bug798'));
+datadir = (dccnpath('/project/3031000.02/test/bug798'));
 load(fullfile(datadir,'t2_subj1.mat'));
 load(fullfile(datadir,'t2_subj1_null'));
 load(fullfile(datadir,'t2_subj2'));

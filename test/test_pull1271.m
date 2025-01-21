@@ -11,8 +11,8 @@ function test_pull1271
 %
 % cd '/Users/alan/Dropbox/Lab-BML/Code/[2020.04]Fieldtrip_Neuroomega_nsx_PR';
 
-fname_nsx         = dccnpath('/home/common/matlab/fieldtrip/data/test/original/eeg/blackrock/test_data_blackrock.ns2');
-fname_neuroomega  = dccnpath('/home/common/matlab/fieldtrip/data/test/original/eeg/neuroomega/LT1D0.000F0000.mat');
+fname_nsx         = dccnpath('/project/3031000.02/test/original/eeg/blackrock/test_data_blackrock.ns2');
+fname_neuroomega  = dccnpath('/project/3031000.02/test/original/eeg/neuroomega/LT1D0.000F0000.mat');
 
 %% loading blackrock header and data
 hdr_nsx=ft_read_header(fname_nsx);

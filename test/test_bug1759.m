@@ -9,7 +9,7 @@ function test_bug1759
 % Sparse matrix multplication results in slightly different results than nonsparse
 % http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1759
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test'))
+cd(dccnpath('/project/3031000.02/test'))
 load bug1759.mat
 
 tmp{1} = tra*dat;

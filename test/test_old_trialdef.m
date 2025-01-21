@@ -27,7 +27,7 @@ function test_old_trialdef
 % -sampleinfo and trialinfo should be concatenated in ft_appenddata
 % -sampleinfo and trialinfo should be adjusted by ft_rejectartifact
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/original/meg/ctf275/A0132_Aud-Obj-Recognition_20051115_02.ds'));
+cd(dccnpath('/project/3031000.02/test/original/meg/ctf275/A0132_Aud-Obj-Recognition_20051115_02.ds'));
 headerfile = 'A0132_Aud-Obj-Recognition_20051115_02.res4';
 datafile   = 'A0132_Aud-Obj-Recognition_20051115_02.meg4';
 %hdr        = ft_read_header(headerfile);
@@ -117,7 +117,7 @@ cfg.continuous      = 'yes';
 ft_databrowser(cfg, data1b);
 
 % test ft_rejectartifact
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/original/meg/ctf275/A0132_Aud-Obj-Recognition_20051115_02.ds'));
+cd(dccnpath('/project/3031000.02/test/original/meg/ctf275/A0132_Aud-Obj-Recognition_20051115_02.ds'));
 headerfile = 'A0132_Aud-Obj-Recognition_20051115_02.res4';
 datafile   = 'A0132_Aud-Obj-Recognition_20051115_02.meg4';
 hdr        = ft_read_header(headerfile);

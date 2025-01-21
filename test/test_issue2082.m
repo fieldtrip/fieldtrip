@@ -8,10 +8,10 @@ function test_issue2082
 global ft_default
 
 cfg = [];
-cfg.dataset = string(dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds'));
+cfg.dataset = string(dccnpath('/project/3031000.02/external/download/test/ctf/Subject01.ds'));
 cfg = ft_checkconfig(cfg, 'dataset2files', 'yes');
 
-filename = string(dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.shape'));
+filename = string(dccnpath('/project/3031000.02/external/download/test/ctf/Subject01.shape'));
 hs = ft_read_headshape(filename);
 
 % create a dummy cfg

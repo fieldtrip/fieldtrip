@@ -11,7 +11,7 @@ function inspect_bug1474
 % since ft_rejectvisual requires user interaction with the GUI, we should
 % not run this automatically
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test'))
+cd(dccnpath('/project/3031000.02/test'))
 load bug1474.mat
 
 cfg = [];

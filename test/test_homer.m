@@ -10,7 +10,7 @@ function test_homer
 % - an alternative way is to read (original) Homer files using homer2fieldtrip
 % - it is also possible to write FieldTrip data to a Homer file on disk
 
-filename = dccnpath('/home/common/matlab/fieldtrip/data/test/original/nirs/homer/S1001_run01.nirs');
+filename = dccnpath('/project/3031000.02/test/original/nirs/homer/S1001_run01.nirs');
 
 data1 = homer2fieldtrip(filename);
 data2 = homer2fieldtrip(fieldtrip2homer(data1));

@@ -52,7 +52,7 @@ assert(ft_headmodeltype(svolcs,'concentricspheres'))
 % bkgrnd = MR{1}+MR{2}+MR{3};
 
 % fprintf('Loading a volume with a number N = %d of compartments ... ', numel(svol))
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug937.mat'));
+load(dccnpath('/project/3031000.02/test/bug937.mat'));
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % start the different methods

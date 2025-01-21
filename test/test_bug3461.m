@@ -8,7 +8,7 @@ function test_bug3461
 %%
 
 % this contains allSourceDiff050
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug3461.mat'));
+load(dccnpath('/project/3031000.02/test/bug3461.mat'));
 
 %% Grand average
 

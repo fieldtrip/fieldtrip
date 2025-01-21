@@ -15,7 +15,7 @@ function test_example_realtime_classification
 % The simplest is to try and classify the tutorial MEG dataset which is available from the FTP server. More information is on the dataset is available [here](/tutorial/meg_language). That dataset contains the stimulus classes FC, IC and FIC, corresponding to trigger values 9, 5 and 3.
 %
 cfg = [];
-cfg.dataset  = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds');
+cfg.dataset  = dccnpath('/project/3031000.02/external/download/test/ctf/Subject01.ds');
 cfg.trialfun = 'ft_trialfun_twoclass_classification';
 cfg.trialdef.numtrain    = 20;
 cfg.trialdef.eventtype   = 'backpanel trigger';

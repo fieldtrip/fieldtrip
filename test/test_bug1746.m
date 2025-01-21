@@ -5,9 +5,9 @@ function test_bug1746
 % DEPENDENCY ft_sourceanalysis test_bug1746 ft_prepare_leadfield
 % DATA private
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/vol/Subject01vol_singleshell.mat'));
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/freq/meg/freq_mtmfft_powandcsd_ctf275.mat'));
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/source/meg/source_grid_mtmfft_fourier_trl_DICS_fixedori_ctf275.mat'));
+load(dccnpath('/project/3031000.02/test/latest/vol/Subject01vol_singleshell.mat'));
+load(dccnpath('/project/3031000.02/test/latest/freq/meg/freq_mtmfft_powandcsd_ctf275.mat'));
+load(dccnpath('/project/3031000.02/test/latest/source/meg/source_grid_mtmfft_fourier_trl_DICS_fixedori_ctf275.mat'));
 
 sourcemodel = ft_source2grid(source);
 sourcemodel.inside(44:end) = false;

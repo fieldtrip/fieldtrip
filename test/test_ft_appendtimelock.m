@@ -47,7 +47,7 @@ assert(all( size(tlockapp.trial) == [10 2 5]))
 
 %% Test using other combinations of tlock from real data
 clear tlock*
-load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/eventrelatedaveraging/dataFC_LP.mat'));
+load(dccnpath('/project/3031000.02/external/download/tutorial/eventrelatedaveraging/dataFC_LP.mat'));
 
 cfg = [];
 tlock1 = ft_timelockanalysis(cfg, dataFC_LP);

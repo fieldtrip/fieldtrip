@@ -8,7 +8,7 @@ function test_bug1262
 % Quick and dirty sanity check for reading of fcdc_buffer_offline data.
 
 % Example data generated with sine example, saved with record.exe:
-dirname = dccnpath('/home/common/matlab/fieldtrip/data/test/bug1262/0001');  
+dirname = dccnpath('/project/3031000.02/test/bug1262/0001');  
 
 hdr = ft_read_header(dirname);
 assert(hdr.nChans == 16);

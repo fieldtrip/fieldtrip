@@ -6,7 +6,7 @@ function test_ft_componentanalysis_dss(datadir)
 % DATA public
 
 if nargin==0
-  datadir = dccnpath('/home/common/matlab/fieldtrip/data/ftp/workshop/cuttingeeg2021/data-minimal');
+  datadir = dccnpath('/project/3031000.02/external/download/workshop/cuttingeeg2021/data-minimal');
 else
   % assume the input argument to correspond to where the data can be found
   % locally

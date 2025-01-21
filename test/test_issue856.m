@@ -7,9 +7,9 @@ function test_issue856
 
 %%
 
-mri0 = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.mri'));
-grad0 = ft_read_sens(dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds'), 'senstype', 'meg');
-headmodel0 = ft_read_headmodel(dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.hdm'));
+mri0 = ft_read_mri(dccnpath('/project/3031000.02/external/download/test/ctf/Subject01.mri'));
+grad0 = ft_read_sens(dccnpath('/project/3031000.02/external/download/test/ctf/Subject01.ds'), 'senstype', 'meg');
+headmodel0 = ft_read_headmodel(dccnpath('/project/3031000.02/external/download/test/ctf/Subject01.hdm'));
 
 ft_hastoolbox('spm12', 1);
 

@@ -5,7 +5,7 @@ function test_bug1924
 % DEPENDENCY read_deymed_dat read_deymed_ini ft_filetype ft_read_header ft_read_data ft_read_event
 % DATA private
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1924'));
+cd(dccnpath('/project/3031000.02/test/bug1924'));
 
 datfile = 'R2.09.Dat';
 edffile = 'R2.09-export.edf';

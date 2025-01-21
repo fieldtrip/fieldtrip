@@ -5,7 +5,7 @@ function test_pull1751
 % DEPENDENCY ft_nirs_signalqualityindex
 
 % load sample set of data
-fname = dccnpath('/home/common/matlab/fieldtrip/data/test/original/nirs/artinis/Sofia/sample_data.oxy4');
+fname = dccnpath('/project/3031000.02/test/original/nirs/artinis/Sofia/sample_data.oxy4');
 
 cfg = [];
 cfg.dataset = fname; 
@@ -13,7 +13,7 @@ cfg.channel = 'nirs';
 data_test = ft_preprocessing(cfg);
 
 % load expected data output
-load('/home/common/matlab/fieldtrip/data/test/sqi/output_sqi.mat');
+load('/project/3031000.02/test/sqi/output_sqi.mat');
  
 % compute sqi
 cfg = [];

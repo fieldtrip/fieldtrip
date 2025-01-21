@@ -60,7 +60,7 @@ newdata = ft_channelrepair(cfg, removefields(data, {'elec', 'grad'}));
 %% part 2 - missing channels and EEG data
 % make use of bug941 data
 % load data
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug941.mat'));
+load(dccnpath('/project/3031000.02/test/bug941.mat'));
 
 % treat as a bad channel
 data_eeg_clean.elec = elec_new;
@@ -179,7 +179,7 @@ end
 
 %% use the new 'average' method
 % load data
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug941.mat'));
+load(dccnpath('/project/3031000.02/test/bug941.mat'));
 
 % treat as a bad channel
 data_eeg_clean.elec = elec_new;

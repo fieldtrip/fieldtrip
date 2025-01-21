@@ -5,7 +5,7 @@ function test_pull1209
 % DEPENDENCY xdf2fieldtrip
 % DATA private
 
-filename = dccnpath('/home/common/matlab/fieldtrip/data/test/pull1209.xdf');
+filename = dccnpath('/project/3031000.02/test/pull1209.xdf');
 
 % read the data and events
 [data, event] = xdf2fieldtrip(filename);

@@ -13,7 +13,7 @@ function test_bug1665
 [ftver, ftpath] = ft_version;
 
 ft_hastoolbox('spm8',1,0);
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1665/segmentedS2.mat'));
+load(dccnpath('/project/3031000.02/test/bug1665/segmentedS2.mat'));
 struct_reslice = ft_checkdata(struct_reslice, 'datatype', 'volume');
 
 cd(fullfile(ftpath, 'utilities', 'private'));

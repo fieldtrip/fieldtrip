@@ -45,10 +45,10 @@ function test_example_common_filters_in_beamforming
 % append the two conditions and remember the design %
 
 % JM added for this function: load some data
-load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/dataPre.mat')); dataA = dataPre; clear dataPre;
-load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/dataPost.mat')); dataB = dataPost; clear dataPost;
-load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/headmodel.mat'));
-load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/sourcemodel.mat'));
+load(dccnpath('/project/3031000.02/external/download/tutorial/beamformer/dataPre.mat')); dataA = dataPre; clear dataPre;
+load(dccnpath('/project/3031000.02/external/download/tutorial/beamformer/dataPost.mat')); dataB = dataPost; clear dataPost;
+load(dccnpath('/project/3031000.02/external/download/tutorial/beamformer/headmodel.mat'));
+load(dccnpath('/project/3031000.02/external/download/tutorial/beamformer/sourcemodel.mat'));
 
 
 data = ft_appenddata([], dataA, dataB);

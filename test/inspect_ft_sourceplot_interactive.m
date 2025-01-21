@@ -7,7 +7,7 @@ function inspect_ft_sourceplot_interactive
 
 %% load first dataset: results from MNE tutorial
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/minimumnormestimate/source.mat'));
+load(dccnpath('/project/3031000.02/external/download/tutorial/minimumnormestimate/source.mat'));
 
 %%
 
