@@ -112,7 +112,7 @@ sens.type       = ft_senstype(sens);
 headmodel.type  = ft_headmodeltype(headmodel);
 
 if isfield(headmodel, 'unit') && isfield(sens, 'unit') && ~strcmp(headmodel.unit, sens.unit)
-  ft_error('inconsistency in the units of the volume conductor and the sensor array');
+  ft_error('inconsistency in the units of the volume conductor ("%s") and the sensor array ("%s")', headmodel.unit, sens.unit);
 end
 
 if ismeg && iseeg
@@ -125,7 +125,7 @@ elseif ~ismeg && ~iseeg
 elseif ismeg
 
   % always ensure that there is a linear transfer matrix for combining the coils into gradiometers
-  if ~isfield(sens, 'tra');
+  if ~isfield(sens, 'tra')
     Nchans = length(sens.label);
     Ncoils = size(sens.coilpos,1);
     if Nchans~=Ncoils

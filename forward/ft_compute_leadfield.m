@@ -148,7 +148,7 @@ if isscalar(weight)
 end
 
 if isfield(headmodel, 'unit') && isfield(sens, 'unit') && ~strcmp(headmodel.unit, sens.unit)
-  ft_error('inconsistency in the units of the volume conductor and the sensor array');
+  ft_error('inconsistency in the units of the volume conductor ("%s") and the sensor array ("%s")', headmodel.unit, sens.unit);
 end
 
 if ismeg && iseeg
