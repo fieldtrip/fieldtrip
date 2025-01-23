@@ -644,6 +644,10 @@ cfg_mp.layout   = info.cfg.layout;
 cfg_mp.channel  = info.data.label(info.chansel);
 cfg_mp.dataname = info.cfg.dataname;
 cfg_mp.ylim     = info.cfg.ylim;
+cfg_mp.interactive = 'yes';
+cfg_mp.viewmode = 'butterfly';
+cfg_mp.linecolor = 'spatial'; 
+
 currfig = gcf;
 for n = 1:length(trls)
   % ft_multiplotER should be able to make the selection, but fails due to http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2978
@@ -651,9 +655,9 @@ for n = 1:length(trls)
   cfg_sd = [];
   cfg_sd.trials = trls(n);
   tmpdata = ft_selectdata(cfg_sd, info.data);
+  tmpdata.trial{1} = ft_preproc_baselinecorrect(tmpdata.trial{1});
 
   figure()
-  cfg_mp.interactive = 'yes';
   ft_multiplotER(cfg_mp, tmpdata);
   title(sprintf('Trial %i', trls(n)));
 end
