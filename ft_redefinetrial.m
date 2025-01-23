@@ -55,7 +55,10 @@ function [data] = ft_redefinetrial(cfg, data)
 %   cfg.overlap   = number between 0 and 1 (exclusive) specifying the fraction of overlap 
 %                   between snippets (0 = no overlap)
 %   cfg.updatetrialinfo = 'no' (default), or 'yes', which adds a column
-%                   with original trial indices trialinfo 
+%                   with original trial indices trialinfo
+%   cfg.keeppartial = 'no' (default), or 'yes', which keeps the partial sub
+%                   epochs at the end of the input trials
+%                   
 %
 % Alternatively you can merge or stitch pseudo-continuous segmented data back into a
 % continuous representation. This requires that the data has a valid sampleinfo field
@@ -139,6 +142,7 @@ cfg.length       = ft_getopt(cfg, 'length',     []);
 cfg.overlap      = ft_getopt(cfg, 'overlap',    0);
 cfg.continuous   = ft_getopt(cfg, 'continuous', 'no');
 cfg.updatetrialinfo = ft_getopt(cfg, 'updatetrialinfo', 'no');
+cfg.keeppartial  = ft_getopt(cfg, 'keeppartial', 'no');
 
 % select trials of interest
 if ~strcmp(cfg.trials, 'all')
@@ -361,11 +365,18 @@ elseif ~isempty(cfg.length)
     begsample = data.sampleinfo(k,1);
     endsample = data.sampleinfo(k,2);
     offset    = time2offset(data.time{k}, data.fsample);
-    thistrl   = (begsample:nshift:(endsample+1-nsmp))';
+    if istrue(cfg.keeppartial)
+      nsub = 0;
+    else
+      nsub = nsmp;
+    end
+    thistrl   = (begsample:nshift:(endsample+1-nsub))';
     if ~isempty(thistrl) % the trial might be too short
       thistrl(:,2) = thistrl(:,1) + nsmp - 1;
       thistrl(:,3) = thistrl(:,1) + offset - thistrl(1,1);
       thistrl(:,4) = k; % keep the trial number in the 4th column, this is needed further down
+      thistrl(thistrl(:,2)>data.sampleinfo(k,2), 2) = data.sampleinfo(k,2);
+      thistrl(thistrl(:,1)>thistrl(:,2), :) = [];
       newtrl = cat(1, newtrl, thistrl);
     end
   end
