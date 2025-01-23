@@ -76,7 +76,7 @@ box           = ft_getopt(varargin, 'box', false);
 % convert the yes/no strings into boolean values
 box = istrue(box);
 
-% check for nans in the data, they can be still left incase people want to mask non channels.
+% check for nans in the data, they can be still left in case people want to mask nan channels.
 NaNind = isnan(dat);
 if any(NaNind) && ~isempty(mask) && isequal(isnan(dat), ~datmask)
   ft_warning('the interpolation will exclude channels containing NaNs');
