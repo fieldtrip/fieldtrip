@@ -228,7 +228,7 @@ end
 
 if ~hasfilter
     % compute the Gram matrix and its inversion across all voxels
-    L = cell2mat(sourcemodel.leadfield');
+    L = cat(2,sourcemodel.leadfield{:});
     G = L*L'; % Gram matrix
     invG = inv(G + lambda * eye(size(G))); % regularized G^-1
 end
