@@ -758,7 +758,11 @@ if ~isempty(range)
   % the range is not what it appears, since the figure was constructed with FT_PLOT_VECTOR
   % this critically depends on AXIS TIGHT being done earlier
   xlim_plot = get(gca, 'xlim');
-  xlim_real = varargin{1}.time([1 end]);
+  if isfield(varargin{1}, 'time')
+    xlim_real = varargin{1}.time([1 end]);
+  elseif isfield(varargin{1}, 'freq')
+    xlim_real = varargin{1}.freq([1 end]);
+  end
   % map the range that was selected in the plot onto the real range of the data
   p = polyfit(xlim_plot, xlim_real, 1);
   range([1 2]) = polyval(p, range([1 2]));
