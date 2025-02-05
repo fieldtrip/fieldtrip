@@ -120,9 +120,9 @@ if ~iscell(cfg.parameter)
 end
 
 if ft_datatype(varargin{1}, 'raw+comp')
-    if length(varargin)>1
-        ft_error('ft_math does not support more than one input argument if the input data is of type "raw" or "comp"')
-    end
+  if length(varargin)>1
+    ft_error('ft_math does not support more than one input argument if the input data is of type "raw" or "comp"')
+  end
 end
 
 % this function only works for the upcoming (not yet standard) source representation without sub-structures
@@ -182,7 +182,7 @@ else
     end
     dimordfields = dimordfields(ok);
 end
-data = keepfields(varargin{1}, [dimordfields {'pos', 'tri', 'dim', 'transform', 'unit', 'coordsys', 'label', 'labelcmb', 'freq', 'time'}]);
+data = keepfields(varargin{1}, [dimordfields {'pos', 'tri', 'dim', 'transform', 'unit', 'coordsys', 'label', 'labelcmb', 'freq', 'time', 'trialinfo', 'sampleinfo', 'fsample'}]);
 
 for p = 1:length(cfg.parameter)
   ft_info('selecting %s from the first input argument\n', cfg.parameter{p});
@@ -462,7 +462,7 @@ for p = 1:length(cfg.parameter)
 end % for p over all parameters
 
 % certain fields should remain in the output, but only if they are identical in all inputs
-keepfield = {'grad', 'elec', 'opto', 'inside', 'trialinfo', 'sampleinfo', 'tri', 'brainordinate'};
+keepfield = {'grad', 'elec', 'opto', 'inside', 'trialinfo', 'sampleinfo', 'tri', 'brainordinate', 'fsample'};
 for j=1:numel(keepfield)
   if isfield(varargin{1}, keepfield{j})
     tmp  = varargin{1}.(keepfield{j});
