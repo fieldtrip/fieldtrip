@@ -1177,6 +1177,8 @@ if need_channels_tsv
   % columns should appear in a specific order
   if need_nirs_json
     required = {'name', 'type', 'source', 'detector', 'wavelength_nominal', 'units'};
+  elseif need_motion_json
+    required = {'name', 'component', 'type', 'tracked_point', 'units'};
   else
     required = {'name', 'type', 'units', 'low_cutoff', 'high_cutoff'};
   end
