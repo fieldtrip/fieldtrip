@@ -292,7 +292,7 @@ for i=1:numel(fn)
 end
 
 if isempty(cfg.suffix)
-  modality = {'meg', 'eeg', 'ieeg', 'emg', 'motion', 'audio', 'video', 'eyetracker', 'physio', 'stim', 'motion', 'nirs'};
+  modality = {'meg', 'eeg', 'ieeg', 'emg', 'audio', 'video', 'eyetracker', 'physio', 'stim', 'motion', 'nirs'};
   for i=1:numel(modality)
     if isfield(cfg, modality{i}) && ~isempty(cfg.(modality{i}))
       % the user specified modality-specific options, assume that the datatype matches
