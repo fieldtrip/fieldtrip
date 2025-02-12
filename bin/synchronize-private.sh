@@ -185,6 +185,14 @@ ARRAY+=(utilities/private/channelposition.m)
 sync ${ARRAY[*]}
 
 ################################################################################
+# char2rgb.m
+
+ARRAY=()
+ARRAY+=(plotting/private/char2rgb.m)
+ARRAY+=(private/char2rgb.m)
+sync ${ARRAY[*]}
+
+################################################################################
 # combineClusters.m
 
 ARRAY=()
