@@ -222,34 +222,23 @@ if isequal(edgecolor, 'false') || isequal(edgecolor, 'no') || isequal(edgecolor,
 end
 
 % color management
-if ischar(vertexcolor) && exist([vertexcolor '.m'], 'file')
-  vertexcolor = feval(vertexcolor);
-elseif ischar(vertexcolor) && ismember(vertexcolor, htmlcolors)
-  vertexcolor = htmlcolors(vertexcolor);
+if ischar(vertexcolor) && ~isequal(vertexcolor, 'curv') 
+  vertexcolor = char2rgb(vertexcolor);
 elseif ischar(vertexcolor) && isequal(vertexcolor, 'curv') % default of ft_sourceplot method surface
   if isfield(mesh, 'curv')
-    cortex_light = feval('cortex_light');
-    cortex_dark  = feval('cortex_dark');
+    cortex_light = char2rgb('cortex_light');
+    cortex_dark  = char2rgb('cortex_dark');
     % the curvature determines the color of gyri and sulci
     vertexcolor = mesh.curv(:) * cortex_dark + (1-mesh.curv(:)) * cortex_light;
   else
-    cortex_light = feval('cortex_light');
-    vertexcolor = repmat(cortex_light, size(mesh.pos,1), 1);
+    cortex_light = char2rgb('cortex_light');
+    vertexcolor  = repmat(cortex_light, size(mesh.pos,1), 1);
     ft_warning('no curv field present in the mesh structure, using cortex_light as vertexcolor')
   end
 end
 
-if ischar(facecolor) && exist([facecolor '.m'], 'file')
-  facecolor = feval(facecolor);
-elseif ischar(facecolor) && ismember(facecolor, htmlcolors)
-  facecolor = htmlcolors(facecolor);
-end
-
-if ischar(edgecolor) && exist([edgecolor '.m'], 'file')
-  edgecolor = feval(edgecolor);
-elseif ischar(edgecolor) && ismember(edgecolor, htmlcolors)
-  edgecolor = htmlcolors(edgecolor);
-end
+if ischar(facecolor), facecolor = char2rgb(facecolor); end
+if ischar(edgecolor), edgecolor = char2rgb(edgecolor); end
 
 if isfield(mesh, 'pos')
   % this is assumed to reflect 3-D vertices

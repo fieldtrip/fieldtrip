@@ -63,12 +63,8 @@ tag         = ft_getopt(varargin, 'tag',       '');
 parent      = ft_getopt(varargin, 'parent', []);
 
 % color management
-if ischar(facecolor) && exist([facecolor '.m'], 'file')
-	facecolor = feval(facecolor);
-end
-if ischar(edgecolor) && exist([edgecolor '.m'], 'file')
-	edgecolor = feval(edgecolor);
-end
+if ischar(facecolor), facecolor = char2rgb(facecolor); end
+if ischar(edgecolor), edgecolor = char2rgb(edgecolor); end
 
 % convert the two cornerpoints into something that the patch function understands
 % the box position is represented just like the argument to the AXIS function
