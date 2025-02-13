@@ -422,9 +422,8 @@ if istrue(orientation)
     linecolor = colororder; % this was the original default behavior
   end
   if ischar(linecolor)
-    linecolor = colorspec2rgb(linecolor);
+    linecolor = colorspec2rgb(linecolor, size(pos,1));
   end
-  linecolor = repmat(linecolor, ceil(size(pos,1)./size(linecolor,1)), 1);
 
   for i=1:size(pos,1)
     x = [pos(i,1) pos(i,1)+ori(i,1)*scale];
