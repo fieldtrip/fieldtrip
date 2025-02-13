@@ -60,7 +60,7 @@ end
 % color management
 if ~isempty(color)
   if ischar(color)
-    color = char2rgb(color);
+    color = colorspec2rgb(color);
   end
   varargin = ft_setopt(varargin, 'color', color);
 end

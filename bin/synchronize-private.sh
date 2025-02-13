@@ -185,11 +185,11 @@ ARRAY+=(utilities/private/channelposition.m)
 sync ${ARRAY[*]}
 
 ################################################################################
-# char2rgb.m
+# colorspec2rgb.m
 
 ARRAY=()
-ARRAY+=(plotting/private/char2rgb.m)
-ARRAY+=(private/char2rgb.m)
+ARRAY+=(plotting/private/colorspec2rgb.m)
+ARRAY+=(private/colorspec2rgb.m)
 sync ${ARRAY[*]}
 
 ################################################################################
@@ -3903,6 +3903,14 @@ sync ${ARRAY[*]}
 ARRAY=()
 ARRAY+=(contrib/spike/private/specest_nanfft.m)
 ARRAY+=(private/specest_nanfft.m)
+sync ${ARRAY[*]}
+
+################################################################################
+# standardcolors.m
+
+ARRAY=()
+ARRAY+=(private/standardcolors.m)
+ARRAY+=(plotting/private/standardcolors.m)
 sync ${ARRAY[*]}
 
 ################################################################################

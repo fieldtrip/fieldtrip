@@ -105,7 +105,7 @@ if ~isempty(unit)
 end
 
 % color management, the other colors are handled in ft_plot_mesh
-if ischar(fidcolor), fidcolor = char2rgb(fidcolor); end
+if ischar(fidcolor), fidcolor = colorspec2rgb(fidcolor); end
 
 % start with empty return values
 hs = [];

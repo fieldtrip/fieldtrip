@@ -58,7 +58,7 @@ fontweight  = ft_getopt(varargin, 'fontweight', get(0, 'defaulttextfontweight'))
 fontunits   = ft_getopt(varargin, 'fontunits',  get(0, 'defaulttextfontunits'));
 
 % color management
-if ischar(fontcolor), fontcolor = char2rgb(fontcolor); end
+if ischar(fontcolor), fontcolor = colorspec2rgb(fontcolor); end
 
 if ~isempty(object) && ~isempty(unit)
   % convert the object to the specified units

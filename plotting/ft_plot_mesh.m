@@ -223,22 +223,22 @@ end
 
 % color management
 if ischar(vertexcolor) && ~isequal(vertexcolor, 'curv') 
-  vertexcolor = char2rgb(vertexcolor);
+  vertexcolor = colorspec2rgb(vertexcolor);
 elseif ischar(vertexcolor) && isequal(vertexcolor, 'curv') % default of ft_sourceplot method surface
   if isfield(mesh, 'curv')
-    cortex_light = char2rgb('cortex_light');
-    cortex_dark  = char2rgb('cortex_dark');
+    cortex_light = colorspec2rgb('cortex_light');
+    cortex_dark  = colorspec2rgb('cortex_dark');
     % the curvature determines the color of gyri and sulci
     vertexcolor = mesh.curv(:) * cortex_dark + (1-mesh.curv(:)) * cortex_light;
   else
-    cortex_light = char2rgb('cortex_light');
+    cortex_light = colorspec2rgb('cortex_light');
     vertexcolor  = repmat(cortex_light, size(mesh.pos,1), 1);
     ft_warning('no curv field present in the mesh structure, using cortex_light as vertexcolor')
   end
 end
 
-if ischar(facecolor), facecolor = char2rgb(facecolor); end
-if ischar(edgecolor), edgecolor = char2rgb(edgecolor); end
+if ischar(facecolor), facecolor = colorspec2rgb(facecolor); end
+if ischar(edgecolor), edgecolor = colorspec2rgb(edgecolor); end
 
 if isfield(mesh, 'pos')
   % this is assumed to reflect 3-D vertices

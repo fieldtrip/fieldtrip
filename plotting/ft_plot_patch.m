@@ -82,8 +82,8 @@ linewidth       = ft_getopt(varargin, 'linewidth', .5);
 box = istrue(box);
 
 % color management
-if ischar(facecolor), facecolor = char2rgb(facecolor); end
-if ischar(edgecolor), edgecolor = char2rgb(edgecolor); end
+if ischar(facecolor), facecolor = colorspec2rgb(facecolor); end
+if ischar(edgecolor), edgecolor = colorspec2rgb(edgecolor); end
 
 % this should be a string, because valid options include yes, no, xy, x, y
 if isequal(axis, true)

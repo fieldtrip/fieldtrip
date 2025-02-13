@@ -238,8 +238,8 @@ if isempty(facecolor) % set default color depending on shape
     facecolor = 'b';
   end
 end
-if ischar(facecolor), facecolor = char2rgb(facecolor); end
-if ischar(edgecolor), edgecolor = char2rgb(edgecolor); end
+if ischar(facecolor), facecolor = colorspec2rgb(facecolor); end
+if ischar(edgecolor), edgecolor = colorspec2rgb(edgecolor); end
 
 % select a subset of channels and coils to be plotted
 if ~isempty(chantype)
@@ -422,7 +422,7 @@ if istrue(orientation)
     linecolor = colororder; % this was the original default behavior
   end
   if ischar(linecolor)
-    linecolor = char2rgb(linecolor);
+    linecolor = colorspec2rgb(linecolor);
   end
   linecolor = repmat(linecolor, ceil(size(pos,1)./size(linecolor,1)), 1);
 
