@@ -5,6 +5,10 @@ function test_pull433
 % DEPENDENCY
 % DATA private
 
+if ~ft_hastoolbox('optim', 1)
+  warning('the OPTIM toolbox is not available, skipping this test');
+end
+
 cd(dccnpath('/project/3031000.02/test/pull433'));
 load('SubjectUCI29_elec_tal_f.mat', 'elec_tal_f');
 load('SubjectUCI29_hull_lh.mat', 'mesh');
