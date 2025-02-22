@@ -2692,16 +2692,16 @@ sync ${ARRAY[*]}
 # neuralynx_crc.m
 
 ARRAY=()
+ARRAY+=(contrib/spike/private/neuralynx_crc.m)
 ARRAY+=(fileio/private/neuralynx_crc.m)
-ARRAY+=(private/neuralynx_crc.m)
 sync ${ARRAY[*]}
 
 ################################################################################
 # neuralynx_getheader.m
 
 ARRAY=()
+ARRAY+=(contrib/spike/private/neuralynx_getheader.m)
 ARRAY+=(fileio/private/neuralynx_getheader.m)
-ARRAY+=(private/neuralynx_getheader.m)
 sync ${ARRAY[*]}
 
 ################################################################################
@@ -3238,7 +3238,6 @@ sync ${ARRAY[*]}
 ARRAY=()
 ARRAY+=(contrib/spike/private/read_neuralynx_dma.m)
 ARRAY+=(fileio/private/read_neuralynx_dma.m)
-ARRAY+=(private/read_neuralynx_dma.m)
 sync ${ARRAY[*]}
 
 ################################################################################
