@@ -482,7 +482,7 @@ else
 end
 
 if ischar(linecolor)
-  set(gca, 'ColorOrder', char2rgb(linecolor))
+  set(gca, 'ColorOrder', colorspec2rgb(linecolor))
 elseif isnumeric(linecolor)
   set(gca, 'ColorOrder', shiftdim(linecolor(1,:,:),1)');
 end

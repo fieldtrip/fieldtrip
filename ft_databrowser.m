@@ -551,12 +551,12 @@ artdata.cfg.trl        = [1 endsample 0];
 
 % determine the unique artifact types and corresponding colors, this only needs to be done once
 artifacttypes = artlabel;
-artifactcolors = colorcheck(cfg.artifactcolor, numel(artdata.label));
+artifactcolors = colorspec2rgb(cfg.artifactcolor, numel(artdata.label));
 
 % determine the unique event types and corresponding colors, this only needs to be done once
 if ~isempty(event) && isstruct(event)
   eventtypes  = unique({event.type});
-  eventcolors = colorcheck(cfg.eventcolor, numel(eventtypes));
+  eventcolors = colorspec2rgb(cfg.eventcolor, numel(eventtypes));
   % durations and offsets can be either empty or should be numeric values, see FT_READ_EVENT
   % the code further down expects them to be numeric values, so change them to zero
   for i=1:numel(event)
@@ -902,37 +902,6 @@ else
   cursortext = '<no cursor available>';
 end
 end % function cb_datacursortext
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION see also lineattributes_common
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function color = colorcheck(color, n)
-% define the mapping between color characters and RGB values
-% these are the standard colors used for lines
-name = 'bgrcmykw';
-rgb = [
-  0 0 1
-  0 1 0
-  1 0 0
-  0 1 1
-  1 0 1
-  1 1 0
-  0 0 0
-  1 1 1
-  ];
-% ensure that all colors are represented as RGB
-if ischar(color)
-  original = color;
-  color = nan(length(original), 3);
-  for i=1:length(original)
-    color(i,:) = rgb(name==original(i),:);
-  end
-end
-% ensure that there are enough colors
-color = repmat(color, ceil(n/size(color,1)), 1);
-color = color(1:n,:);
-end % function colorcheck
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
