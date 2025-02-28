@@ -31,8 +31,12 @@ end
 
 if ischar(c) && (isequal(c, 'none') || startsWith(c, '#'))
   rgb = c;
-elseif isnumeric(c) && size(c,2)~=3
-  ft_error('a numeric input should have 3 columns');
+elseif isnumeric(c)
+  % this is OK unless the number of columns~=3
+  if size(c,2)~=3
+    ft_error('a numeric input should have 3 columns');
+  end
+  rgb = c;
 elseif all(ismember(c, 'ymcrgbwk'))
   % translate the single character color specifications
   rgb = zeros(numel(c), 3);

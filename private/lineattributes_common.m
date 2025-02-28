@@ -85,8 +85,6 @@ end
 % linecolor
 if isnumeric(cfg.linecolor) && size(cfg.linecolor,2)==3
   % overrule the default colors, because it seems to be Nx3 numeric
-elseif ischar(cfg.linecolor) && all(ismember(cfg.linecolor, 'rgbcmykw'))
-  % this is handled below
 elseif isequal(cfg.linecolor, 'spatial')
   % try to get the color specification from the layout
   if isfield(cfg, 'layout') && ischar(cfg.layout)
@@ -121,7 +119,7 @@ end
 
 if ischar(cfg.linecolor)
   % convert to rgb
-  cfg.linecolor = char2rgb(cfg.linecolor);
+  cfg.linecolor = colorspec2rgb(cfg.linecolor);
 end
 
 % ensure it is a Nx3xM matrix, the right size will be dealt with below
