@@ -420,6 +420,9 @@ if istrue(orientation)
 
   if isempty(linecolor)
     linecolor = colororder; % this was the original default behavior
+    if size(pos,1)>size(linecolor,1)
+      linecolor = repmat(linecolor, ceil(size(pos,1)/size(linecolor,1)), 1);
+    end
   end
   if ischar(linecolor)
     linecolor = colorspec2rgb(linecolor, size(pos,1));
