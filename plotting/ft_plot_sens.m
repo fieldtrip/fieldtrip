@@ -45,6 +45,12 @@ function hs = ft_plot_sens(sens, varargin)
 %   'facealpha'       = transparency, between 0 and 1 (default = 1)
 %   'edgealpha'       = transparency, between 0 and 1 (default = 1)
 %
+% The following options apply when the orientation is plotted as a line segment per channel
+%   'linecolor'       = [r g b] values or string, or Nx3 matrix for color of orientation line, 
+%                       default is the default matlab colororder
+%   'linewidth'       = scalar, width of the orientation line (default = 1)
+%   'linelength'      = scalar, length of the orientation line in mm (default = 20)
+%
 % The sensor array can include an optional fid field with fiducials, which will also be plotted.
 %   'fiducial'        = rue/false, plot the fiducials (default = true)
 %   'fidcolor'        = [r g b] values or string, for example 'red', 'r', or an Nx3 or Nx1 array where N is the number of fiducials
@@ -62,6 +68,7 @@ function hs = ft_plot_sens(sens, varargin)
 % FT_PLOT_TOPO3D
 
 % Copyright (C) 2009-2024, Robert Oostenveld, Arjen Stolk
+% Copyright (C) 2025, Robert Oostenveld, Arjen Stolk, Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -155,6 +162,11 @@ facecolor       = ft_getopt(varargin, 'facecolor');  % default depends on the in
 facealpha       = ft_getopt(varargin, 'facealpha',   1);
 edgealpha       = ft_getopt(varargin, 'edgealpha',   1);
 
+% this is needed when plotting orientation
+linecolor       = ft_getopt(varargin, 'linecolor');
+linewidth       = ft_getopt(varargin, 'linewidth', 1);
+linelength      = ft_getopt(varargin, 'linelength', 20);
+
 if ischar(chantype)
   % this should be a cell-array
   chantype = {chantype};
@@ -226,12 +238,8 @@ if isempty(facecolor) % set default color depending on shape
     facecolor = 'b';
   end
 end
-if ischar(facecolor) && exist([facecolor '.m'], 'file')
-  facecolor = feval(facecolor);
-end
-if ischar(edgecolor) && exist([edgecolor '.m'], 'file')
-  edgecolor = feval(edgecolor);
-end
+if ischar(facecolor), facecolor = colorspec2rgb(facecolor); end
+if ischar(edgecolor), edgecolor = colorspec2rgb(edgecolor); end
 
 % select a subset of channels and coils to be plotted
 if ~isempty(chantype)
@@ -408,12 +416,23 @@ elseif any(isnan(ori(:)))
 end
 
 if istrue(orientation)
-  scale = ft_scalingfactor('mm', sens.unit)*20; % draw a line segment of 20 mm
+  scale = ft_scalingfactor('mm', sens.unit)*linelength; % treat linelength in mm
+
+  if isempty(linecolor)
+    linecolor = colororder; % this was the original default behavior
+    if size(pos,1)>size(linecolor,1)
+      linecolor = repmat(linecolor, ceil(size(pos,1)/size(linecolor,1)), 1);
+    end
+  end
+  if ischar(linecolor)
+    linecolor = colorspec2rgb(linecolor, size(pos,1));
+  end
+
   for i=1:size(pos,1)
     x = [pos(i,1) pos(i,1)+ori(i,1)*scale];
     y = [pos(i,2) pos(i,2)+ori(i,2)*scale];
     z = [pos(i,3) pos(i,3)+ori(i,3)*scale];
-    line(x, y, z)
+    line(x, y, z, 'color', linecolor(i,:), 'linewidth', linewidth);
   end
 end
 

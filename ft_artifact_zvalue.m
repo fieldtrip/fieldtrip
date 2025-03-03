@@ -45,7 +45,8 @@ function [cfg, artifact] = ft_artifact_zvalue(cfg, data)
 %   cfg.artfctdef.zvalue.artfctpeak       = 'yes' or 'no'
 %   cfg.artfctdef.zvalue.artfctpeakrange  = [begin end]
 %   cfg.artfctdef.zvalue.interactive      = 'yes' or 'no'
-%   cfg.artfctdef.zvalue.zscore           = 'yes' (default) or 'no'   
+%   cfg.artfctdef.zvalue.zscore           = 'yes' (default) or 'no'
+%   cfg.artfctdef.zvalue.keepintermediate = 'no' (default) or 'yes'
 %
 % If you specify cfg.artfctdef.zvalue.artfctpeak='yes', a peak detection on the suprathreshold
 % z-scores will be performed, and the artifact will be defined relative to
@@ -64,6 +65,11 @@ function [cfg, artifact] = ft_artifact_zvalue(cfg, data)
 % to thresholding. This goes a bit against the name of the function, but it may be useful
 % if the threshold is to be defined in meaningful physical units, e.g. degrees of visual
 % angle for eye position data.
+%
+% If you specify cfg.artfctdef.zvalue.keepintermediate = 'yes', the intermediate data
+% that has been used for the artifacts' definition will be passed to the output. This
+% allows for the (potentially lengthy) computations to be uncoupled from the interactive
+% part.
 %
 % If you specify cfg.artfctdef.zvalue.interactive = 'yes', a graphical user interface
 % will show in which you can manually accept/reject the detected artifacts, and/or
@@ -128,7 +134,7 @@ function [cfg, artifact] = ft_artifact_zvalue(cfg, data)
 % See also FT_REJECTARTIFACT, FT_ARTIFACT_CLIP, FT_ARTIFACT_ECG, FT_ARTIFACT_EOG,
 % FT_ARTIFACT_JUMP, FT_ARTIFACT_MUSCLE, FT_ARTIFACT_THRESHOLD, FT_ARTIFACT_ZVALUE
 
-% Copyright (C) 2003-2011, Jan-Mathijs Schoffelen & Robert Oostenveld
+% Copyright (C) 2003-2025, Jan-Mathijs Schoffelen & Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -189,10 +195,19 @@ cfg.artfctdef.zvalue.artpadding  = ft_getopt(cfg.artfctdef.zvalue, 'artpadding',
 cfg.artfctdef.zvalue.interactive = ft_getopt(cfg.artfctdef.zvalue, 'interactive',  'no');
 cfg.artfctdef.zvalue.cumulative  = ft_getopt(cfg.artfctdef.zvalue, 'cumulative',   'yes');
 cfg.artfctdef.zvalue.artfctpeak  = ft_getopt(cfg.artfctdef.zvalue, 'artfctpeak',   'no');
-cfg.artfctdef.zvalue.artfctpeakrange  = ft_getopt(cfg.artfctdef.zvalue, 'artfctpeakrange',[0 0]);
-cfg.artfctdef.zvalue.zscore      = ft_getopt(cfg.artfctdef.zvalue, 'zscore',       'yes');
+cfg.artfctdef.zvalue.artfctpeakrange  = ft_getopt(cfg.artfctdef.zvalue, 'artfctpeakrange',  [0 0]);
+cfg.artfctdef.zvalue.zscore           = ft_getopt(cfg.artfctdef.zvalue, 'zscore',           'yes');
+cfg.artfctdef.zvalue.keepintermediate = ft_getopt(cfg.artfctdef.zvalue, 'keepintermediate', 'no');
 
-if isfield(cfg.artfctdef.zvalue, 'artifact')
+skipzscore = false;
+if isfield(cfg.artfctdef.zvalue, 'datagui')
+  ft_notice('cfg already contains some processed data, using this data for artifact detection, overruling other options from cfg\n');
+  opt = cfg.artfctdef.zvalue.datagui;
+  opt.artcfg.interactive = cfg.artfctdef.zvalue.interactive; % overrule this option
+  opt.artcfg.keepintermediate = cfg.artfctdef.zvalue.keepintermediate; % overrule this option to avoid recursive inflation
+  cfg.artfctdef.zvalue   = opt.artcfg;
+  skipzscore = true;
+elseif isfield(cfg.artfctdef.zvalue, 'artifact')
   ft_notice('zvalue artifact detection has already been done, retaining artifacts\n');
   artifact = cfg.artfctdef.zvalue.artifact;
   return
@@ -201,250 +216,251 @@ end
 % clear old warnings from this stack
 ft_warning('-clear')
 
-% flag whether to compute z-value per trial or not, rationale being that if there are
-% fluctuations in the variance across trials (e.g. due to position differences in MEG
-% measurements) which don't have to do with the artifact per se, the detection is
-% compromised (although the data quality is questionable when there is a lot of
-% movement to begin with).
-pertrial    = strcmp(cfg.artfctdef.zvalue.method, 'trial');
-demeantrial = strcmp(cfg.artfctdef.zvalue.method, 'trialdemean');
-if pertrial
-  if isfield(cfg.artfctdef.zvalue, 'ntrial') && cfg.artfctdef.zvalue.ntrial>0
-    pertrial = cfg.artfctdef.zvalue.ntrial;
-  else
-    ft_error('you should specify cfg.artfctdef.zvalue.ntrial, and it should be > 0');
-  end
-end
-
-% the data can be passed as input arguments or can be read from disk
-hasdata = exist('data', 'var');
-
-if ~hasdata
-  cfg = ft_checkconfig(cfg, 'dataset2files', 'yes');
-  cfg = ft_checkconfig(cfg, 'required', {'headerfile', 'datafile'});
-  hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat);
-else
-  data = ft_checkdata(data, 'datatype', 'raw', 'hassampleinfo', 'yes');
-  cfg  = ft_checkconfig(cfg, 'forbidden', {'dataset', 'headerfile', 'datafile'});
-  hdr  = ft_fetch_header(data);
-end
-
-% set default cfg.continuous
-if isempty(cfg.continuous)
-  if hdr.nTrials==1
-    cfg.continuous = 'yes';
-  else
-    cfg.continuous = 'no';
-  end
-end
-
-% get the specification of the data segments that should be scanned for artifacts
-if ~isfield(cfg, 'trl') && hasdata
-  trl = data.sampleinfo;
-  for k = 1:numel(data.trial)
-    trl(k,3) = time2offset(data.time{k}, data.fsample);
-  end
-elseif isfield(cfg, 'trl') && ischar(cfg.trl)
-  trl = loadvar(cfg.trl, 'trl');
-elseif isfield(cfg, 'trl') && isnumeric(cfg.trl)
-  trl = cfg.trl;
-else
-  ft_error('cannot determine which segments of data to scan for artifacts');
-end
-
-% check whether the value for trlpadding makes sense
-if hasdata && cfg.artfctdef.zvalue.trlpadding > 0
-  % negative trlpadding is allowed with in-memory data, since that would remove some data from each trial
-  ft_error('you cannot use positive trlpadding with in-memory data');
-end
-
-trlpadding = round(cfg.artfctdef.zvalue.trlpadding*hdr.Fs);
-fltpadding = round(cfg.artfctdef.zvalue.fltpadding*hdr.Fs);
-artpadding = round(cfg.artfctdef.zvalue.artpadding*hdr.Fs);
-
-trl(:,1)      = trl(:,1) - trlpadding;       % pad the trial with some samples, in order to detect
-trl(:,2)      = trl(:,2) + trlpadding;       % artifacts at the edges of the relevant trials.
-if size(trl,2)>= 3
-  trl(:,3)    = trl(:,3) - trlpadding;       % the offset can of course be adjusted as well
-elseif hasdata
-  % reconstruct offset
-  for tr=1:size(trl,1)
-    % account for 0 might not be in data.time
-    t0        = interp1(data.time{tr}, 1:numel(data.time{tr}), 0, 'linear', 'extrap');
-    trl(tr,3) = -t0+1 - trlpadding;
-  end
-else
-  % assuming that the trial starts at t=0s
-  trl(:,3) = trl(:,1);
-end
-
-numtrl        = size(trl,1);
-cfg.artfctdef.zvalue.channel = ft_channelselection(cfg.artfctdef.zvalue.channel, hdr.label);
-chanindx      = match_str(hdr.label, cfg.artfctdef.zvalue.channel);
-nchan         = length(chanindx);
-thresholdsum  = strcmp(cfg.artfctdef.zvalue.cumulative, 'yes');
-
-if nchan<1
-  ft_error('no channels selected');
-end
-
-% read the data and apply preprocessing options
-if ~pertrial
-  sumval = zeros(nchan, 1);
-  sumsqr = zeros(nchan, 1);
-  numsmp = zeros(nchan, 1);
-else
-  sumval = zeros(nchan, numtrl);
-  sumsqr = zeros(nchan, numtrl);
-  numsmp = zeros(nchan, numtrl);
-end
-
-if strcmp(cfg.memory, 'high') % store data in memory, saving computation time below
-  dat = cell(1, numtrl);
-end
-
-ft_progress('init', cfg.feedback, ['searching for artifacts in ' num2str(nchan) ' channels']);
-for trlop=1:numtrl
-
-  ft_progress(trlop/numtrl, 'processing trial %d from %d\n', trlop, numtrl);
-  if hasdata
-    thisdat = ft_fetch_data(data,        'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', chanindx, 'checkboundary', strcmp(cfg.continuous, 'no'), 'skipcheckdata', 1);
-  else
-    thisdat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', chanindx, 'checkboundary', strcmp(cfg.continuous, 'no'), 'dataformat', cfg.dataformat);
-  end
-  thisdat = preproc(thisdat, cfg.artfctdef.zvalue.channel, offset2time(0, hdr.Fs, size(thisdat,2)), cfg.artfctdef.zvalue, fltpadding, fltpadding);
- 
-  if ~pertrial
-    % accumulate the sum and the sum-of-squares
-    sumval = sumval + nansum(thisdat,2);
-    sumsqr = sumsqr + nansum(thisdat.^2,2);
-    numsmp = numsmp + sum(isfinite(thisdat),2);
-  else
-    % store per trial the sum and the sum-of-squares
-    sumval(:,trlop) = nansum(thisdat,2);
-    sumsqr(:,trlop) = nansum(thisdat.^2,2);
-    numsmp(:,trlop) = sum(isfinite(thisdat),2);
-  end
-  
-  if strcmp(cfg.memory, 'high') % store data in memory, saving computation time below
-    dat{trlop} = thisdat;
-  end
-
-end % for trlop
-ft_progress('close');
-
-if pertrial>1
-  sumval = ft_preproc_smooth(sumval, pertrial)*pertrial;
-  sumsqr = ft_preproc_smooth(sumsqr, pertrial)*pertrial;
-  numsmp = ft_preproc_smooth(numsmp, pertrial)*pertrial;
-end
-
-% compute the average and the standard deviation
-if strcmp(cfg.artfctdef.zvalue.zscore, 'yes')
-  datavg = sumval./numsmp;
-  datstd = sqrt(sumsqr./numsmp - (sumval./numsmp).^2);
-else
-  ft_warning('not performing z-scoring, note that the defined threshold has physical units');
-  datavg = zeros(size(sumval));
-  datstd = ones(size(sumval));
-end
-
-if strcmp(cfg.memory, 'low')
-  ft_info('\n');
-end
-
-zmax  = cell(1, numtrl);
-zsum  = cell(1, numtrl);
-zindx = cell(1, numtrl);
-
-% create a vector that indexes the trials, or is all 1, in order to a per trial
-% z-scoring, or use a static std and mean
-if pertrial
-  indvec = 1:numtrl;
-else
-  indvec = ones(1,numtrl);
-end
-
-ft_progress('init', cfg.feedback, ['processing data in ' num2str(nchan) ' channels']);
-for trlop = 1:numtrl
-  
-  if strcmp(cfg.memory, 'low') % store nothing in memory (note that we need to fetch/read and preproc AGAIN... *yawn*)
-    ft_progress(trlop/numtrl, 'processing trial %d from %d\n', trlop, numtrl);
-    options_getdata = {'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', chanindx, 'checkboundary', strcmp(cfg.continuous, 'no')};
-    if hasdata
-      thisdat = ft_fetch_data(data, options_getdata{:});
+if ~skipzscore
+  thresholdsum = strcmp(cfg.artfctdef.zvalue.cumulative, 'yes');
+  pertrial     = strcmp(cfg.artfctdef.zvalue.method, 'trial');
+  demeantrial  = strcmp(cfg.artfctdef.zvalue.method, 'trialdemean');
+  % flag whether to compute z-value per trial or not, rationale being that if there are
+  % fluctuations in the variance across trials (e.g. due to position differences in MEG
+  % measurements) which don't have to do with the artifact per se, the detection is
+  % compromised (although the data quality is questionable when there is a lot of
+  % movement to begin with).
+  if pertrial
+    if isfield(cfg.artfctdef.zvalue, 'ntrial') && cfg.artfctdef.zvalue.ntrial>0
+      pertrial = cfg.artfctdef.zvalue.ntrial;
     else
-      options_getdata = cat(2, options_getdata, {'dataformat', cfg.dataformat});
-      thisdat = ft_read_data(cfg.datafile, options_getdata{:});
+      ft_error('you should specify cfg.artfctdef.zvalue.ntrial, and it should be > 0');
+    end
+  end
+
+  % the data can be passed as input arguments or can be read from disk
+  hasdata = exist('data', 'var');
+
+  if ~hasdata
+    cfg = ft_checkconfig(cfg, 'dataset2files', 'yes');
+    cfg = ft_checkconfig(cfg, 'required', {'headerfile', 'datafile'});
+    hdr = ft_read_header(cfg.headerfile, 'headerformat', cfg.headerformat);
+  else
+    data = ft_checkdata(data, 'datatype', 'raw', 'hassampleinfo', 'yes');
+    cfg  = ft_checkconfig(cfg, 'forbidden', {'dataset', 'headerfile', 'datafile'});
+    hdr  = ft_fetch_header(data);
+  end
+
+  % set default cfg.continuous
+  if isempty(cfg.continuous)
+    if hdr.nTrials==1
+      cfg.continuous = 'yes';
+    else
+      cfg.continuous = 'no';
+    end
+  end
+
+  % get the specification of the data segments that should be scanned for artifacts
+  if ~isfield(cfg, 'trl') && hasdata
+    trl = data.sampleinfo;
+    for k = 1:numel(data.trial)
+      trl(k,3) = time2offset(data.time{k}, data.fsample);
+    end
+  elseif isfield(cfg, 'trl') && ischar(cfg.trl)
+    trl = loadvar(cfg.trl, 'trl');
+  elseif isfield(cfg, 'trl') && isnumeric(cfg.trl)
+    trl = cfg.trl;
+  else
+    ft_error('cannot determine which segments of data to scan for artifacts');
+  end
+
+  % check whether the value for trlpadding makes sense
+  if hasdata && cfg.artfctdef.zvalue.trlpadding > 0
+    % negative trlpadding is allowed with in-memory data, since that would remove some data from each trial
+    ft_error('you cannot use positive trlpadding with in-memory data');
+  end
+
+  trlpadding = round(cfg.artfctdef.zvalue.trlpadding*hdr.Fs);
+  fltpadding = round(cfg.artfctdef.zvalue.fltpadding*hdr.Fs);
+  artpadding = round(cfg.artfctdef.zvalue.artpadding*hdr.Fs);
+
+  trl(:,1)      = trl(:,1) - trlpadding;       % pad the trial with some samples, in order to detect
+  trl(:,2)      = trl(:,2) + trlpadding;       % artifacts at the edges of the relevant trials.
+  if size(trl,2)>= 3
+    trl(:,3)    = trl(:,3) - trlpadding;       % the offset can of course be adjusted as well
+  elseif hasdata
+    % reconstruct offset
+    for tr=1:size(trl,1)
+      % account for 0 might not be in data.time
+      t0        = interp1(data.time{tr}, 1:numel(data.time{tr}), 0, 'linear', 'extrap');
+      trl(tr,3) = -t0+1 - trlpadding;
+    end
+  else
+    % assuming that the trial starts at t=0s
+    trl(:,3) = trl(:,1);
+  end
+
+  numtrl        = size(trl,1);
+  cfg.artfctdef.zvalue.channel = ft_channelselection(cfg.artfctdef.zvalue.channel, hdr.label);
+  chanindx      = match_str(hdr.label, cfg.artfctdef.zvalue.channel);
+  nchan         = length(chanindx);
+  
+  if nchan<1
+    ft_error('no channels selected');
+  end
+
+  % read the data and apply preprocessing options
+  if ~pertrial
+    sumval = zeros(nchan, 1);
+    sumsqr = zeros(nchan, 1);
+    numsmp = zeros(nchan, 1);
+  else
+    sumval = zeros(nchan, numtrl);
+    sumsqr = zeros(nchan, numtrl);
+    numsmp = zeros(nchan, numtrl);
+  end
+
+  if strcmp(cfg.memory, 'high') % store data in memory, saving computation time below
+    dat = cell(1, numtrl);
+  end
+
+  ft_progress('init', cfg.feedback, ['searching for artifacts in ' num2str(nchan) ' channels']);
+  for trlop=1:numtrl
+
+    ft_progress(trlop/numtrl, 'processing trial %d from %d\n', trlop, numtrl);
+    if hasdata
+      thisdat = ft_fetch_data(data,        'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', chanindx, 'checkboundary', strcmp(cfg.continuous, 'no'), 'skipcheckdata', 1);
+    else
+      thisdat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', chanindx, 'checkboundary', strcmp(cfg.continuous, 'no'), 'dataformat', cfg.dataformat);
     end
     thisdat = preproc(thisdat, cfg.artfctdef.zvalue.channel, offset2time(0, hdr.Fs, size(thisdat,2)), cfg.artfctdef.zvalue, fltpadding, fltpadding);
+
+    if ~pertrial
+      % accumulate the sum and the sum-of-squares
+      sumval = sumval + nansum(thisdat,2);
+      sumsqr = sumsqr + nansum(thisdat.^2,2);
+      numsmp = numsmp + sum(isfinite(thisdat),2);
+    else
+      % store per trial the sum and the sum-of-squares
+      sumval(:,trlop) = nansum(thisdat,2);
+      sumsqr(:,trlop) = nansum(thisdat.^2,2);
+      numsmp(:,trlop) = sum(isfinite(thisdat),2);
+    end
+
+    if strcmp(cfg.memory, 'high') % store data in memory, saving computation time below
+      dat{trlop} = thisdat;
+    end
+
+  end % for trlop
+  ft_progress('close');
+
+  if pertrial>1
+    sumval = ft_preproc_smooth(sumval, pertrial)*pertrial;
+    sumsqr = ft_preproc_smooth(sumsqr, pertrial)*pertrial;
+    numsmp = ft_preproc_smooth(numsmp, pertrial)*pertrial;
+  end
+
+  % compute the average and the standard deviation
+  if strcmp(cfg.artfctdef.zvalue.zscore, 'yes')
+    datavg = sumval./numsmp;
+    datstd = sqrt(sumsqr./numsmp - (sumval./numsmp).^2);
   else
-    thisdat = dat{trlop};
+    ft_warning('not performing z-scoring, note that the defined threshold has physical units');
+    datavg = zeros(size(sumval));
+    datstd = ones(size(sumval));
   end
 
-  nsmp    = size(thisdat,2);
+  if strcmp(cfg.memory, 'low')
+    ft_info('\n');
+  end
 
-  zmax{trlop}  = -inf + zeros(1, nsmp);
-  zsum{trlop}  =        zeros(1, nsmp);
-  zindx{trlop} =        zeros(1, nsmp);
-        
-  ix           = indvec(trlop) * ones(1,nsmp);           % indexing vector dependent on the pertrial setting 
-  zdata        = (thisdat - datavg(:,ix))./datstd(:,ix); % convert the filtered data to z-values
-  zsum{trlop}  = nansum(zdata,1);      % sum the z-values across channels
-  [zmax{trlop},ind] = max(zdata,[],1); % find the maximum z-value and remember it
-  zindx{trlop}      = chanindx(ind);   % also remember the channel number that has the largest z-value
+  zmax  = cell(1, numtrl);
+  zsum  = cell(1, numtrl);
+  zindx = cell(1, numtrl);
 
-end % for trlop
-ft_progress('close');
+  % create a vector that indexes the trials, or is all 1, in order to a per trial
+  % z-scoring, or use a static std and mean
+  if pertrial
+    indvec = 1:numtrl;
+  else
+    indvec = ones(1,numtrl);
+  end
 
-if demeantrial
+  ft_progress('init', cfg.feedback, ['processing data in ' num2str(nchan) ' channels']);
   for trlop = 1:numtrl
-    zmax{trlop} = zmax{trlop}-nanmean(zmax{trlop},2);
-    zsum{trlop} = zsum{trlop}-nanmean(zsum{trlop},2);
+
+    if strcmp(cfg.memory, 'low') % store nothing in memory (note that we need to fetch/read and preproc AGAIN... *yawn*)
+      ft_progress(trlop/numtrl, 'processing trial %d from %d\n', trlop, numtrl);
+      options_getdata = {'header', hdr, 'begsample', trl(trlop,1)-fltpadding, 'endsample', trl(trlop,2)+fltpadding, 'chanindx', chanindx, 'checkboundary', strcmp(cfg.continuous, 'no')};
+      if hasdata
+        thisdat = ft_fetch_data(data, options_getdata{:});
+      else
+        options_getdata = cat(2, options_getdata, {'dataformat', cfg.dataformat});
+        thisdat = ft_read_data(cfg.datafile, options_getdata{:});
+      end
+      thisdat = preproc(thisdat, cfg.artfctdef.zvalue.channel, offset2time(0, hdr.Fs, size(thisdat,2)), cfg.artfctdef.zvalue, fltpadding, fltpadding);
+    else
+      thisdat = dat{trlop};
+    end
+
+    nsmp    = size(thisdat,2);
+
+    zmax{trlop}  = -inf + zeros(1, nsmp);
+    zsum{trlop}  =        zeros(1, nsmp);
+    zindx{trlop} =        zeros(1, nsmp);
+
+    ix           = indvec(trlop) * ones(1,nsmp);           % indexing vector dependent on the pertrial setting
+    zdata        = (thisdat - datavg(:,ix))./datstd(:,ix); % convert the filtered data to z-values
+    zsum{trlop}  = nansum(zdata,1);      % sum the z-values across channels
+    [zmax{trlop},ind] = max(zdata,[],1); % find the maximum z-value and remember it
+    zindx{trlop}      = chanindx(ind);   % also remember the channel number that has the largest z-value
+
+  end % for trlop
+  ft_progress('close');
+
+  if demeantrial
+    for trlop = 1:numtrl
+      zmax{trlop} = zmax{trlop}-nanmean(zmax{trlop},2);
+      zsum{trlop} = zsum{trlop}-nanmean(zsum{trlop},2);
+    end
+  end
+
+  for trlop = 1:numtrl
+    zsum{trlop} = zsum{trlop} ./ sqrt(nchan);
+  end
+
+  opt.artcfg       = cfg.artfctdef.zvalue;
+  opt.artval       = {};
+  opt.artpadding   = artpadding;
+  opt.cfg          = cfg;
+  opt.channel      = 'artifact';
+  opt.hdr          = hdr;
+  opt.numtrl       = size(trl,1);
+  opt.quit         = 0;
+  opt.threshold    = cfg.artfctdef.zvalue.cutoff;
+  opt.thresholdsum = thresholdsum;
+  opt.trialok      = true(1,opt.numtrl);  % OK by means of objective criterion
+  opt.keep         = zeros(1,opt.numtrl); % OK overruled by user +1 to keep, -1 to reject, start all zeros for callback to work
+  opt.trl          = trl;
+  opt.trlop        = 1;
+  opt.updatethreshold = true;
+  opt.zmax         = zmax;
+  opt.zsum         = zsum;
+  if isfield(cfg.artfctdef.zvalue, 'montage')
+    opt.montage = cfg.artfctdef.zvalue.montage;
+  end
+
+  if ~thresholdsum
+    opt.zval = zmax;
+  else
+    opt.zval = zsum;
+  end
+  opt.zindx = zindx;
+  if ~hasdata
+    opt.data = {};
+  else
+    opt.data = data;
   end
 end
 
-for trlop = 1:numtrl
-  zsum{trlop} = zsum{trlop} ./ sqrt(nchan);
-end
-
-% always create figure
-% keypress to enable keyboard uicontrol
+% always create figure, keypress to enable keyboard uicontrol
 h = figure('KeyPressFcn', @keyboard_cb);
 set(h, 'visible', 'off');
-
-opt.artcfg       = cfg.artfctdef.zvalue;
-opt.artval       = {};
-opt.artpadding   = artpadding;
-opt.cfg          = cfg;
-opt.channel      = 'artifact';
-opt.hdr          = hdr;
-opt.numtrl       = size(trl,1);
-opt.quit         = 0;
-opt.threshold    = cfg.artfctdef.zvalue.cutoff;
-opt.thresholdsum = thresholdsum;
-opt.trialok      = true(1,opt.numtrl);  % OK by means of objective criterion
-opt.keep         = zeros(1,opt.numtrl); % OK overruled by user +1 to keep, -1 to reject, start all zeros for callback to work
-opt.trl          = trl;
-opt.trlop        = 1;
-opt.updatethreshold = true;
-opt.zmax         = zmax;
-opt.zsum         = zsum;
-if isfield(cfg.artfctdef.zvalue, 'montage')
-  opt.montage = cfg.artfctdef.zvalue.montage;
-end
-
-if ~thresholdsum
-  opt.zval = zmax;
-else
-  opt.zval = zsum;
-end
-opt.zindx = zindx;
-if ~hasdata
-  opt.data = {};
-else
-  opt.data = data;
-end
 
 if strcmp(cfg.artfctdef.zvalue.interactive, 'yes')
   set(h, 'visible', 'on');
@@ -585,10 +601,12 @@ elseif strcmp(cfg.representation, 'table') && isnumeric(artifact)
 end
 
 % remember the details that were used here and store the detected artifacts
-cfg.artfctdef.zvalue.trl      = trl;              % remember where we have been looking for artifacts
+cfg.artfctdef.zvalue.trl      = opt.trl;          % remember where we have been looking for artifacts
 cfg.artfctdef.zvalue.cutoff   = opt.threshold;    % remember the threshold that was used
 cfg.artfctdef.zvalue.artifact = artifact;
-
+if istrue(cfg.artfctdef.zvalue.keepintermediate)
+  cfg.artfctdef.zvalue.datagui = opt;
+end
 ft_notice('detected %d artifacts\n', size(artifact,1));
 
 delete(h);
