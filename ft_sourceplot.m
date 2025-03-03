@@ -1943,6 +1943,8 @@ if opt.interactive
   fprintf('==================================================================================\n');
   fprintf('Press "h" to show this help.\n');
   fprintf('Press "1", "2", or "3" to switch to the corresponding subplot.\n');
+  fprintf('Press "PageUp" and "PageDown" to zoom in or out.\n');
+  fprintf('Press "+" and "-" to increase or decrease the brightness.\n');
   fprintf('Use the arrow keys to navigate in the current axis.\n');
   fprintf('Click left mouse button to reposition the cursor.\n');
   fprintf('Click and hold right mouse button to update the position while moving the mouse.\n');
