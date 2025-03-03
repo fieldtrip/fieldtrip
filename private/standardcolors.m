@@ -1,12 +1,13 @@
 function y = standardcolors(x)
 
-% STANDARDCOLORS looks up the RGB value for a named color (string), or the name for a given RGB value
+% STANDARDCOLORS looks up the RGB value for a named color that is specified as
+% a string, or looks up the name given the RGB value.
 %
 % Use as
 %   rgb = standardcolors(name)
 % or
 %   name = standardcolors(rgb)
-% or 
+% or
 %   list = standardcolors
 %
 % This returns a predefined color as [red green blue] values, according to
@@ -19,7 +20,7 @@ function y = standardcolors(x)
 %   yellow            = [255 255   0]/255;
 %   white             = [255 255 255]/255;
 %   black             = [  0   0   0]/255;
-%
+%   brain             = [202 100 100]/255;
 %   skull             = [140  85  85]/255
 %   cortex            = [255 213 119]/255;
 %   cortex_light      = [199 194 169]/255;
@@ -38,8 +39,10 @@ function y = standardcolors(x)
 % If no specific skin tone is specified, this function returns a light skin color.
 % This corresponds with that of one of the developers who approximated his own skin
 % color more than 15 years ago upon the first implementation of this function.
-% See also FT_COLORMAP, COLORMAP, COLORMAPEDITOR, BREWERMAP, MATPLOTLIB, CMOCEAN
+%
+% See also HTMLCOLORS, COLORSPEC2RGB, FT_COLORMAP, COLORMAP, COLORMAPEDITOR, BREWERMAP, MATPLOTLIB, CMOCEAM
 
+% Copyright (C) 2009-2025, Robert Oostenveld
 % Copyright (C) 2025, Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
@@ -69,6 +72,7 @@ mapping = {
   'yellow',            [255 255   0]
   'white',             [255 255 255]
   'black',             [  0   0   0]
+  'brain'              [202 100 100]
   'skull',             [140  85  85]
   'cortex',            [255 213 119]
   'cortex_light',      [199 194 169]
@@ -79,22 +83,23 @@ mapping = {
   'skin_medium',       [188 142 106]
   'skin_medium_dark',  [155 102	 65]
   'skin_dark',         [ 91  71  61]
-};
+  };
 
 if nargin==0
   % return the list with names
   y = mapping(:,1);
+
 elseif ischar(x)
   if isequal(x, 'skin')
     msgId = 'FieldTrip:plotting:private:standardcolors';
     ft_notice('once', msgId);
     ft_notice(msgId, 'standardcolors(''skin'') returns a light skin, you can also explicitly specify ''skin_light'','' skin_medium_light'', ''skin_medium'', ''skin_medium_dark'', or ''skin_dark''');
   end
-
   % look up the corresponding RGB values
   sel = strcmp(mapping(:,1), x);
   y = mapping{sel, 2};
   y = y/255;
+
 elseif isnumeric(x)
   x = x*255;
   % look up the corresponding name
