@@ -1,5 +1,5 @@
 /*
- * Simple application that sets up a buffer and writes all incoming messages (with timestamps) to disk for detailled debugging.
+ * Simple application that sets up a buffer and writes all incoming messages (with timestamps) to disk for detailed debugging.
  * The data stream can be played back with the same timing using the 'playback' application.
  *
  * Copyright (C) 2010, Stefan Klanke

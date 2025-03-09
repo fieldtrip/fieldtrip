@@ -78,7 +78,7 @@ figure; ft_plot_ortho(T2rot.anatomy); title('T2rot before aligning')
 clear rotatm;
 clear transmat;
 
-%% alignement %
+%% alignment %
 
 %% interpolation method: trilinear
 
@@ -122,7 +122,7 @@ cfg.funparameter = 'anatomyT2';
 cfg.maskparameter = 'anatomyT2';
 
 ft_sourceplot(cfg,T1);
-title('T2 (rotated) before alignement.');
+title('T2 (rotated) before alignment.');
 
 for m = 1:numel(costfuns)
   T1.anatomyT2 = T2_aligned{m}.anatomy;
@@ -132,11 +132,11 @@ for m = 1:numel(costfuns)
   cfg.maskparameter = 'anatomyT2';
   figure;
   ft_sourceplot(cfg,T1);
-  title(sprintf('T2 (non-rotated) after trilinear alignement with costfunction %s.', costfuns{m}));
+  title(sprintf('T2 (non-rotated) after trilinear alignment with costfunction %s.', costfuns{m}));
   T1.anatomyT2 = T2rot_aligned{m}.anatomy;
   figure;
   ft_sourceplot(cfg,T1);
-  title(sprintf('T2 (rotated) after trilinear alignement with costfunction %s.', costfuns{m}));
+  title(sprintf('T2 (rotated) after trilinear alignment with costfunction %s.', costfuns{m}));
   
 end
 
@@ -176,7 +176,7 @@ cfg.funparameter = 'anatomyT2';
 cfg.maskparameter = 'anatomyT2';
 
 ft_sourceplot(cfg,T1);
-title('T2 (rotated) before alignement.');
+title('T2 (rotated) before alignment.');
 
 for m = 1:numel(costfuns)
   T1.anatomyT2 = T2_aligned{m}.anatomy;
@@ -186,11 +186,11 @@ for m = 1:numel(costfuns)
   cfg.maskparameter = 'anatomyT2';
   figure;
   ft_sourceplot(cfg,T1);
-  title(sprintf('T2 (non-rotated) after sinc alignement with costfunction %s.', costfuns{m}));
+  title(sprintf('T2 (non-rotated) after sinc alignment with costfunction %s.', costfuns{m}));
   T1.anatomyT2 = T2rot_aligned{m}.anatomy;
   figure;
   ft_sourceplot(cfg,T1);
-  title(sprintf('T2 (rotated) after sinc alignement with costfunction %s.', costfuns{m}));
+  title(sprintf('T2 (rotated) after sinc alignment with costfunction %s.', costfuns{m}));
   
 end
 
@@ -234,7 +234,7 @@ cfg.funparameter = 'anatomyT2';
 cfg.maskparameter = 'anatomyT2';
 
 ft_sourceplot(cfg,T1);
-title('T2 (rotated) before alignement.');
+title('T2 (rotated) before alignment.');
 
 for m = 1:numel(costfuns)
   T1.anatomyT2 = T2_aligned{m}.anatomy;
@@ -244,11 +244,11 @@ for m = 1:numel(costfuns)
   cfg.maskparameter = 'anatomyT2';
   figure;
   ft_sourceplot(cfg,T1);
-  title(sprintf('T2 (non-rotated) after nearestneighbour alignement with costfunction %s.', costfuns{m}));
+  title(sprintf('T2 (non-rotated) after nearestneighbour alignment with costfunction %s.', costfuns{m}));
   T1.anatomyT2 = T2rot_aligned{m}.anatomy;
   figure;
   ft_sourceplot(cfg,T1);
-  title(sprintf('T2 (rotated) after nearestneighbour alignement with costfunction %s.', costfuns{m}));
+  title(sprintf('T2 (rotated) after nearestneighbour alignment with costfunction %s.', costfuns{m}));
   
 end
 
@@ -305,7 +305,7 @@ cfg.funparameter = 'anatomyT2';
 cfg.maskparameter = 'anatomyT2';
 figure;
 ft_sourceplot(cfg,T1);
-title(sprintf('T2 (rotated) after alignement'));
+title(sprintf('T2 (rotated) after alignment'));
 
 %FIXME: T2 does not seem to be aligned to T1 after reslice
 

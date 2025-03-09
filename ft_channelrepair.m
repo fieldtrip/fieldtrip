@@ -185,7 +185,7 @@ if needsens
   ismeg  = ft_senstype(sens, 'meg');
   isnirs = ft_senstype(sens, 'opto');
   
-  % determine the detailled type, e.g. ctf151 or neuromag122
+  % determine the detailed type, e.g. ctf151 or neuromag122
   sensortype = ft_senstype(sens);
   
 else
@@ -193,7 +193,7 @@ else
   iseeg  = ft_senstype(data, 'eeg');
   ismeg  = ft_senstype(data, 'meg');
   isnirs = ft_senstype(data, 'opto');
-  % determine the detailled type, e.g. ctf151 or neuromag122
+  % determine the detailed type, e.g. ctf151 or neuromag122
   sensortype = ft_senstype(data);
 end % if needsens
 
