@@ -84,7 +84,7 @@ case 1,   % dmat(:, num_col0+1:num_col0+num_col(1)) is the matrix for 1st order 
          for (ll = 1:1:n) % Should have a more decent way to do this in a matrix fashion instead of a lenthy loop?
             tmpstr = char (group{Contr.ord1.cnt(i).idx1}(ll));
 				if strcmp(tmpstr, FL(Contr.ord1.cnt(i).idx1).level(tmpv).expr)
-	            count = count + 1;   % total number of occurences at tmpv-th level
+	            count = count + 1;   % total number of occurrences at tmpv-th level
 	         end
          end
 			Contr.ord1.cnt(i).vec = Contr.ord1.cnt(i).vec + Contr.ord1.cnt(i).coef(j) * dmat(:, Contr.ord1.cnt(i).code(j).pos)'/count;			
@@ -276,7 +276,7 @@ case 2,  % dmat(:, num_col0+num_col(1)+1:num_col0+num_col(1)+num_col(2)) is the 
 			tmpstr1 = char (group{Contr.ord2.cnt(i).idx1}(ll));
 			tmpstr2 = char (group{Contr.ord2.cnt(i).idx2}(ll));			
 			if strcmp(tmpstr1, FL(Contr.ord2.cnt(i).idx1).level(tmpv1).expr) & strcmp(tmpstr2, FL(Contr.ord2.cnt(i).idx2).level(tmpv2).expr)
-			   count = count + 1;   % total number of occurences at tmpv-th level
+			   count = count + 1;   % total number of occurrences at tmpv-th level
 			end	
 		end
 		Contr.ord2.cnt(i).vec = Contr.ord2.cnt(i).vec + Contr.ord2.cnt(i).coef(j) * dmat(:, Contr.ord2.cnt(i).code(j).pos)'/count;			
@@ -485,7 +485,7 @@ case 3,
 				tmpstr3 = char (group{Contr.ord3.cnt(i).idx3}(ll));
 				if strcmp(tmpstr1, FL(Contr.ord3.cnt(i).idx1).level(tmpv1).expr) & strcmp(tmpstr2, FL(Contr.ord3.cnt(i).idx2).level(tmpv2).expr) ...
 				   & strcmp(tmpstr3, FL(Contr.ord3.cnt(i).idx3).level(tmpv3).expr)
-			      count = count + 1;   % total number of occurences at tmpv-th level
+			      count = count + 1;   % total number of occurrences at tmpv-th level
 			   end	
 			end
 		   Contr.ord3.cnt(i).vec = Contr.ord3.cnt(i).vec + Contr.ord3.cnt(i).coef(j) * dmat(:, Contr.ord3.cnt(i).code(j).pos)'/count;			
@@ -646,7 +646,7 @@ case 4,
 				tmpstr4 = char (group{Contr.ord4.cnt(i).idx4}(ll));
 				if strcmp(tmpstr1, FL(Contr.ord4.cnt(i).idx1).level(tmpv1).expr) & strcmp(tmpstr2, FL(Contr.ord4.cnt(i).idx2).level(tmpv2).expr) ...
 				   & strcmp(tmpstr3, FL(Contr.ord4.cnt(i).idx3).level(tmpv3).expr) & strcmp(tmpstr4, FL(Contr.ord4.cnt(i).idx4).level(tmpv4).expr)
-			      count = count + 1;   % total number of occurences at tmpv-th level
+			      count = count + 1;   % total number of occurrences at tmpv-th level
 			   end	
 			end % for (ll = 1:1:n)
 		   Contr.ord4.cnt(i).vec = Contr.ord4.cnt(i).vec + Contr.ord4.cnt(i).coef(j) * dmat(:, Contr.ord4.cnt(i).code(j).pos)'/count;			

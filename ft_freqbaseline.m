@@ -160,7 +160,7 @@ end
 ft_postamble debug
 ft_postamble previous   freq
 
-% rename the output variable to accomodate the savevar postamble
+% rename the output variable to accommodate the savevar postamble
 freq = freqOut;
 
 ft_postamble provenance freq

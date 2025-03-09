@@ -304,7 +304,7 @@ if isfield(freq, 'powspctrm') && isfield(freq, 'crsspctrm')
     if length(refindx)<1
       error('The reference channel was not found in powspctrm');
     elseif length(refindx)>1
-      error('Multiple occurences of the reference channel found in powspctrm');
+      error('Multiple occurrences of the reference channel found in powspctrm');
     end
     if Ntrials==1
       Pr = freq.powspctrm(refindx, fbin);

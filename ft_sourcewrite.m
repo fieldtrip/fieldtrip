@@ -147,7 +147,7 @@ switch (cfg.filetype)
 
   case 'cifti'
     % brainstructure should represent the global anatomical structure, such as CortexLeft, Thalamus, etc.
-    % parcellation should represent the detailled parcellation, such as BA1, BA2, BA3, etc.
+    % parcellation should represent the detailed parcellation, such as BA1, BA2, BA3, etc.
     ft_write_cifti(cfg.filename, source, 'parameter', cfg.parameter, 'brainstructure', cfg.brainstructure, 'parcellation', cfg.parcellation, 'precision', cfg.precision);
 
   otherwise

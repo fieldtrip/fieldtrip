@@ -249,7 +249,7 @@ else
   checkCritToi = 0;
 end
 
-% prevent double occurences of artifact types, ensure that the order remains the same
+% prevent double occurrences of artifact types, ensure that the order remains the same
 [fn, i] = unique(cfg.artfctdef.type);
 cfg.artfctdef.type = cfg.artfctdef.type(sort(i));
 % ensure that it is a row vector

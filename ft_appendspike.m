@@ -127,7 +127,7 @@ else
 
     % determine the corresponding sample numbers for each timestamp
     ts = spike.timestamp{i};
-    % timestamps can be uint64, hence explicitely convert to double at the
+    % timestamps can be uint64, hence explicitly convert to double at the
     % right moment
     if strcmp(class(ts),class(FirstTimeStamp))
       sample = round(double(ts-FirstTimeStamp)/TimeStampPerSample + 1);
