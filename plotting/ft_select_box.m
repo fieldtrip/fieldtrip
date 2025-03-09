@@ -1,7 +1,7 @@
 function [x, y] = ft_select_box()
 
 % FT_SELECT_BOX helper function for selecting a single rectangular region in the
-% current figure using the mouse. This function is not used as a callabck, but blocks
+% current figure using the mouse. This function is not used as a callback, but blocks
 % the execution of the code until a selection is made.
 %
 % Use as

@@ -28,7 +28,7 @@ function [varargout] = ft_plot_vector(varargin)
 %   - as an Nx3 matrix, where N is the number of points along the line, to use graded RGB colors along the line
 %   - as an Nx3 matrix, where N is the number of lines, to use a different color for each line
 %
-% It is possible to plot the object in a local pseudo-axis (c.f. subplot), which is specfied as follows
+% It is possible to plot the object in a local pseudo-axis (c.f. subplot), which is specified as follows
 %   'box'             = draw a box around the local axes, can be 'yes' or 'no'
 %   'hpos'            = horizontal position of the center of the local axes
 %   'vpos'            = vertical position of the center of the local axes
@@ -367,7 +367,7 @@ switch highlightstyle
     end
 
   otherwise
-    % no hightlighting needs to be done
+    % no highlighting needs to be done
 end % switch highlightstyle
 
 

@@ -1,6 +1,6 @@
 function [d] = dist(x)
 
-% DIST computes the euclidian distance between the columns of the input matrix
+% DIST computes the euclidean distance between the columns of the input matrix
 %
 % Use as
 %   [d] = dist(x)

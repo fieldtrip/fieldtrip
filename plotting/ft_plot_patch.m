@@ -23,7 +23,7 @@ function [varargout] = ft_plot_patch(hdat, vdat, varargin)
 %   - as an 'RGB triplet', a 1x3 vector with values between 0 and 1
 %   - as 'none' if you do not want the face of the patch to be filled (useful when you want to plot an empty box).
 %
-% It is possible to plot the object in a local pseudo-axis (c.f. subplot), which is specfied as follows
+% It is possible to plot the object in a local pseudo-axis (c.f. subplot), which is specified as follows
 %   'box'             = draw a box around the local axes, can be 'yes' or 'no'
 %   'hpos'            = horizontal position of the center of the local axes
 %   'vpos'            = vertical position of the center of the local axes
