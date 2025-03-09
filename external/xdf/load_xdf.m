@@ -446,7 +446,7 @@ if opts.HandleClockSynchronization
             for r=1:length(ranges)
                 idx = ranges{r};
                 if idx(1) ~= idx(2)
-                    % to accomodate the Winsorizing threshold (in seconds) we rescale the data (robust_fit sets it to 1 unit)
+                    % to accommodate the Winsorizing threshold (in seconds) we rescale the data (robust_fit sets it to 1 unit)
                     mappings{r} = robust_fit([ones(idx(2)-idx(1)+1,1) clock_times(idx(1):idx(2))']/opts.WinsorThreshold, clock_values(idx(1):idx(2))'/opts.WinsorThreshold);
                 else
                     mappings{r} = [clock_values(idx(1)) 0]; % just one measurement
@@ -911,7 +911,7 @@ end
 
 
 function C = grow_cell(C,idx)
-% grow a cell array to accomodate a particular index
+% grow a cell array to accommodate a particular index
 % (assuming that this index is not contained in the cell array yet)
 tmp = sprintf('%i,',idx);
 eval(['C{' tmp(1:end-1) '} = [];']);

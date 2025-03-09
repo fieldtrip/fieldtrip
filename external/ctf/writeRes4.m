@@ -157,7 +157,7 @@ function strng=writeCTFstring(instrng,strlen,fid)
 %  instrng : Character string.  size(instrng)=[nLine nPerLine].  strng is reformulated as a
 %            long string of size [1 nChar].  Multiple lines are allowed so the user can
 %            easily append text.  If necessary, characters are removed from
-%            instrng(1:nLine-1,:) so all of strng(nLine,:) can be accomodated.
+%            instrng(1:nLine-1,:) so all of strng(nLine,:) can be accommodated.
 %    strlen: Number of characters to write.  strlen<0 means remove leading characters.
 %        If abs(strlen)>length(strng) pad with nulls (char(0))
 %        If 0<strlen<length(strng), truncate strng and terminate with a null.

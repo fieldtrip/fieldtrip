@@ -15,7 +15,7 @@ function t = chanhandle(varargin)
 % Note:
 % Object structure:
 % Chanhandle can be a handle to only one channel, or several channels.
-% To accomodate an object array, the object is structured as follows:
+% To accommodate an object array, the object is structured as follows:
 % Chanhandle_obj has only one field - "handle". Subfields of "handle" are
 % the above named properties. ie
 % ChanHandle_Obj ->

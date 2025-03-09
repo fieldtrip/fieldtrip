@@ -501,7 +501,7 @@ end
 ft_postamble debug
 ft_postamble previous data
 
-% rename the output variable to accomodate the savevar postamble
+% rename the output variable to accommodate the savevar postamble
 data = interp;
 
 ft_postamble provenance data

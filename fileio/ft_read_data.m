@@ -228,7 +228,7 @@ if isempty(chanindx)
   chanindx = 1:hdr.nChans;
 end
 
-% test whether the requested channels can be accomodated
+% test whether the requested channels can be accommodated
 if min(chanindx)<1 || max(chanindx)>hdr.nChans
   ft_error('FILEIO:InvalidChanIndx', 'selected channels are not present in the data');
 end

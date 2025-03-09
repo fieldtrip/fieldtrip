@@ -87,7 +87,7 @@ function [R,edges] = binr(R, nt, nb, opt, par)
 %   |             |                                                       |
 %   |             | Note: if any of the values falls outside the selected |
 %   |             | range the first and last bin are stretched in order   |
-%   |             | to accomodate outliers falling below or above the     |
+%   |             | to accommodate outliers falling below or above the     |
 %   |             | range limits, respectively.                           |
 %   =======================================================================
 %
