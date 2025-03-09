@@ -287,6 +287,10 @@ if needhdr
     hdr.nSamples     = EDF.NRec * EDF.SPR(chansel(1));
     hdr.nSamplesPre  = 0;
     hdr.nTrials      = 1;
+    hdr.chanunit     = cellstr(EDF.PhysDim(chansel,:));
+    hdr.chantype     = repmat({'unknown'}, size(hdr.chanunit));  % start with unknown
+    hdr.chantype(strcmp(hdr.chanunit, 'uV')) = {'eeg'};          % it might also be EOG, ECG, EMG, etc
+    hdr.chantype(strcmp(hdr.chanunit, 'Boolean')) = {'trigger'};
     hdr.orig         = EDF;
     % this will be used on subsequent reading of data
     hdr.orig.chansel    = chansel;
