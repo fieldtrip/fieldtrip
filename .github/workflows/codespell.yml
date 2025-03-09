@@ -19,4 +19,4 @@ jobs:
       - name: Codespell
         uses: codespell-project/actions-codespell@v2
         with:
-          path: utilities
+          path: plotting utilities
