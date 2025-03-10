@@ -8,7 +8,7 @@ function setviewpoint(ax, coordsys, viewpoint)
 % For example
 %   setviewpoint(gca, 'mni', 'left')
 %
-% See alo GETORTHOVIEWPOS, COORDSYS2LABEL
+% See also GETORTHOVIEWPOS, COORDSYS2LABEL
 
 if isempty(coordsys)
   coordsys = 'unknown';
