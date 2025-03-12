@@ -1,4 +1,4 @@
-function [elist,nextfront]=advancefront(edges,loop,elen)
+function [elist, nextfront] = advancefront(edges, loop, elen)
 %
 % [elist,nextfront]=advancefront(edges,loop,elen)
 %
@@ -21,32 +21,34 @@ function [elist,nextfront]=advancefront(edges,loop,elen)
 % -- this function is part of iso2mesh toolbox (http://iso2mesh.sf.net)
 %
 
-elist=[];
-nextfront=[];
+elist = [];
+nextfront = [];
 
-if(nargin<3) elen=3; end
-
-[hasedge, loc]=ismember(loop,edges,'rows');
-
-if(~all(hasedge))
-   error('loop edge is not defined in the mesh');
+if (nargin < 3)
+    elen = 3;
 end
 
-nodenum=size(edges,1)/elen;
+[hasedge, loc] = ismember(loop, edges, 'rows');
 
-elist=unique(mod(loc-1,nodenum))+1;
-nextfront=edges(elist,:);
-for i=1:elen-1
-    nextfront=[nextfront;edges(elist+nodenum*i,:)];
+if (~all(hasedge))
+    error('loop edge is not defined in the mesh');
 end
-nextfront=setdiff(nextfront,loop,'rows');
+
+nodenum = size(edges, 1) / elen;
+
+elist = unique(mod(loc - 1, nodenum)) + 1;
+nextfront = edges(elist, :);
+for i = 1:elen - 1
+    nextfront = [nextfront; edges(elist + nodenum * i, :)];
+end
+nextfront = setdiff(nextfront, loop, 'rows');
 
 % remove reversed edge pairs
-[flag,loc]=ismember(nextfront,nextfront(:,[2 1]),'rows');
-id=find(flag);
-if(~isempty(id))
-    delmark=flag;
-    delmark(loc(find(loc>0)))=1;
-    nextfront(find(delmark),:)=[];
+[flag, loc] = ismember(nextfront, nextfront(:, [2 1]), 'rows');
+id = find(flag);
+if (~isempty(id))
+    delmark = flag;
+    delmark(loc(find(loc > 0))) = 1;
+    nextfront(find(delmark), :) = [];
 end
-nextfront=nextfront(:,[2 1]); % reverse this loop, as it is reversed to the input loop
+nextfront = nextfront(:, [2 1]); % reverse this loop, as it is reversed to the input loop

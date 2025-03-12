@@ -1,10 +1,206 @@
 ============================================================================
 
-     Iso2mesh - a compact, powerful yet simple-to-use 3D mesh generator
+     Iso2Mesh - a compact, powerful yet simple-to-use 3D mesh generator
 
 ----------------------------------------------------------------------------
 
-Iso2mesh ChangeLog (key features marked by *):
+Iso2Mesh ChangeLog (key features marked by *):
+
+2024/10/20  (1.9.8, codename: Pot Stickers)
+
+ 2024-10-19 [a3d12dc] [ci] add macos-14, break into smaller steps
+ 2024-10-18 [2682c76] [tools] using maci64 binary for tetgen 1.4.3
+ 2024-10-18 [66be46d] [ci] workaround due to octave 9.x windows fscanf bug reported at https://savannah.gnu.org/bugs/?66161
+ 2024-10-17 [902b0a9] [ci] remove demo_vol2mesh_ex3; build tools
+ 2024-10-17 [0917a2b] [meshfix] not sure when, but the origin was changed, revert
+ 2024-10-17 [820e1b8] [ci] fix submodule checkout error
+ 2024-10-17 [5316f69] [ci] fix fragile test
+ 2024-10-17*[c442361] [ci] test demo scripts to github action
+ 2024-10-17*[7438820] [doc] update jsonlab repo
+ 2024-10-17 [f40bfe4] [doc] update documentation for v1.9.8
+ 2024-10-17 [8fd183e] [io] update embedded IO toolboxes: jsonlab, jnifty, jsnirfy, easyh5
+ 2024-10-17 [0d31813] [format] complete reformat of code using miss_hit
+ 2024-08-19 [0dd6ce2] [deploy] add the missing cgalsimp2 for arm64 mac, fix #80
+ 2024-08-18*[90e4c94] Merge pull request #79 from sloriot/CGAL-6.0
+ 2024-08-13 [1dd27fa] compatibility with CGAL 5.0
+ 2024-07-25 [3dc1ce3] [format] add recommended output variable test, #77
+ 2024-07-25 [1d98ade] Merge pull request #77 from harmening/removeisolatednode
+ 2024-07-22 [d767904] backward compatibility
+ 2024-07-22 [4eef5ff] compatibility with CGAL 6.0
+ 2024-06-14 [aa78f3a] [feat] add native arm64 apple silicon binaries
+ 2024-04-01 [252f382] [jsonlab] update bundled jsonlab to v2.9.8 release
+ 2024-03-05 [4e0746d] [feat] update readobjmesh with more robust parsing
+ 2024-03-05 [25d5e20] [feat] add readobjmesh function
+ 2024-02-22 [381d5fd] include faces
+ 2024-01-15 [8a0f460] Merge branch 'master' of github.com:fangq/iso2mesh
+ 2024-01-15 [3df2ceb] [bug] fix loading nii.gz with extension
+ 2023-10-28 [29bedc6] resync meshfix and PoissonRecon submodules, fix #73
+ 2023-10-28 [cd94624] update jsonlab to the latest version
+ 2023-06-11 [607c5e4] sync jsonlab and jnifty to the latest versions
+ 2023-04-08 [ab2878a] sync with brain2mesh, polylinelen output oriented curve
+ 2023-04-08 [ee3f867] fix self intersection testing in surfboolean
+ 2023-02-25 [556f4c3] merge loadjd and savejd conflicts
+ 2023-02-25 [0ccb658] sync jnifty and jsonlab to the latest github version
+ 2022-11-10 [e3ff264] Merge pull request #69 from ithron/fix68_saveinr_single
+ 2022-11-09 [8b4725a] Fix #68 - saveinr() not working for single volumes.
+ 2022-10-07 [d87d60c] update jsonlab to git version
+ 2022-05-03 [70baeb6] Merge branch 'master' of github.com:fangq/iso2mesh
+ 2022-05-03 [1907f32] fix file name typo, close fangq/brain2mesh#13
+ 2022-04-12 [7d94249] fix loadjmesh function name
+ 2022-04-03 [e3664e6] update jsonlab to the latest to include loadjd and savejd
+ 2022-03-31 [f2af7cd] automatically reorient all surfaces and elements after each key function call
+ 2022-03-31 [9b55562] Merge branch 'master' of github.com:fangq/iso2mesh
+ 2022-03-30 [a3ac212] update bundled jsonlab
+ 2022-03-29 [3324c0b] update jmesh parser URLs in _DataInfo_
+ 2022-03-13 [80d2138] update savejson after fixing fangq/jsonlab#78
+ 2022-03-12 [978de05] sync jsonlab and jnifti with git version, add metadata to savejmesh
+ 2022-02-10 [f498ca2] upgrade jsonlab to 2.9.8-git20220210
+ 2021-09-22 [a7673f5] Merge pull request #60 from lrineau/modify_README
+ 2021-09-21 [29a1828] Update README.md for CGAL
+ 2021-09-20 [5c69f61] Merge pull request #59 from lrineau/improve_cgalmesh__images_with_1D_features
+ 2021-09-20 [081d41f] Respect 1D features in volume
+ 2021-09-12 [238c987] remove loop in savemphtxt, patch by @brainwatcher,close #50
+ 2021-09-12 [180618d] make region id positive in savemsh, close #58
+ 2021-09-08 [2162547] fix octave warning when loading tiff file
+ 2021-08-18 [7776f86] fix meshfix invalid commit hash, close #55
+ 2021-07-30 [8c35d0d] can handle both 2D and 3D image in bwislands
+ 2021-07-12 [28a09c8] remove readnifti, use loadnifti
+ 2021-04-21 [e8fb05c] print tetgen message when it fails
+ 2021-02-21 [3de31f9] add windows PoissonRecon binary
+ 2021-02-21 [71b1ab7] add PoissonRecon binary for Mac OS, add author and license info in README
+ 2021-02-21 [d611d7a] add PoissonRecon, prepare for the point cloud processing feature
+ 2021-02-21*[e6638c0] add PoissonRecon v8 as submodule
+ 2021-02-21 [f8f3fc2] make meshremap compatible with old matlab and octave
+ 2021-01-25 [0ead04f] export negative volume elem indices in meshreorient
+ 2021-01-15 [c7eec85] set initial value for meshinterp
+ 2020-12-31 [58de92c] qmeshcut returns node id
+
+2020/09/05  (1.9.6, codename: Lion's Head)
+
+ 2020-09-05 [12e7e8e] update octave toolbox info
+ 2020-09-05 [f110ef3] bump version number to 1.9.6
+ 2020-09-05 [dbe4d82] sync with jsonlab fangq/jsonlab@d0fb684
+ 2020-09-05 [e22964e] fix Fedora bug#1865133 due to CGAL header file changes
+ 2020-07-28 [3869f6a] update cork and surfboolean to add remesh support
+ 2020-07-07 [e8c45a2] add the missing polylineinterp function from brain2mesh
+
+2020/07/01  (1.9.5, codename: Lion's Head - beta)
+
+ 2020-07-01 [c89164a] fallback all executables to system PATH
+ 2020-06-30 [786b2c0] add cgalsurf manual
+ 2020-06-30 [e682958] add man page
+ 2020-06-17 [f36c220] fix octave DESCRIPTION file
+ 2020-06-17 [db9bd71] Update README.md
+ 2020-06-17 [4a85c4c] update reference, update build requires packages
+ 2020-06-17 [a791382] add git filters for version printing
+ 2020-06-16 [be35b28] revert the regression
+ 2020-06-16 [94ffa22] cgal windows binary permission set
+ 2020-06-17 [a231e14] enable windows 64bit binaries
+ 2020-06-16 [3bfbf62] add new 64bit cgal windows bianries
+ 2020-06-16 [dce0f62] remove unwanted dll
+ 2020-06-16 [477625f] add 64bit windows binaries
+ 2020-06-16 [51b6d06] update cork for 64bit windows
+ 2020-06-15 [cb5c449] update gendocs script, create octave package files
+ 2020-06-15 [9d488f9] test mesh2vol on both matlab 2010 and 2020
+ 2020-06-15 [b9dc1e0] make metch demo 2 work with octave
+ 2020-06-15 [c1dea88] make metchgui_one compatible with octave
+ 2020-06-15 [45a2ec2] make metchgui work again with matlab 2020a
+ 2020-06-15 [d2896be] merge metch toolbox with iso2mesh
+ 2020-06-15 [b9fbbf7] update jsonlab to v2.0
+ 2020-05-28 [4c76cd7] fix permission on windows
+ 2020-05-27 [168a578] add polyline functions from brain2mesh toolbox
+ 2020-03-23 [555ffce] remove degenerated surfaces to avoid matlab edge flipping in convhulln
+ 2020-03-18 [afebb6b] fix type conversion errors, thanks to John Richards
+ 2020-03-18 [9c503e5] use the correct row dimension for edges
+ 2020-03-05 [3d10fc0] add ndimfilter
+ 2020-03-01 [246d178] avoid degenerated edges in extractloops, needed by brain1020
+ 2020-02-21 [3630f03] remove gtsset, cork is stable
+ 2020-02-21 [ddc9a16] make mcpath to support 64bit windows exe, add cork_x86-64.exe, fix #43
+ 2020-02-19 [8454bf6] allow deletemeshfile to use wildcards
+ 2020-02-19 [db6eb75] fix mergesurf help info typos
+
+2020/02/13  (1.9.2 for integration with Brainstrom)
+
+ 2020-02-11 [f69eae2] Merge pull request #42 from ftadel/master
+ 2020-02-03 [000138f] Calling mwpath with no inputs
+ 2019-11-12 [c394673] sync jsonlab after fixing ubjson bug
+ 2019-11-08 [2de6ac5] README.md for better readability in Github
+ 2019-10-25 [59869c6] sync jsonlab to v1.9.8
+ 2019-10-18 [1245a7c] allow meshfix to be built on both Ubuntu and Fedora, fix #39
+
+2019/10/01  (1.9.1 for packaging iso2mesh)
+
+ 2019-10-01 [24736f5] update submodule to compile on fedora
+ 2019-10-01 [60b1b4c] fall back to system search path in mcpath
+ 2019-10-01 [6b687fc] make cgalmesh compilable with newer cgal where AABB_intersections.h was removed
+ 2019-09-16 [7b7385c] update jsonlab to support lz4, update jnifti toolbox to v0.5
+ 2019-08-20 [903791b] fix table transpose issue in jdatadecode
+ 2019-08-13 [5c15873] use iso2mesh original function isoctavemesh in place of isoctave
+ 2019-08-13 [4c276f8] Merge branch 'master' of https://github.com/fangq/iso2mesh
+ 2019-08-13 [33262fb] update function list
+ 2019-08-10 [4b969f3] add the missing isoctave for savejmesh
+ 2019-08-03 [999104b] plot window receive keyboard events
+ 2019-07-19 [80bffdf] update jsonlab to use the zmat v0.8 folder structure
+ 2019-07-08 [2d59124] reorient element before exporting to mphtxt
+ 2019-06-27 [7977137] refine meshes with square faces can cause inconsistency
+ 2019-06-25 [981ea63] update jsonlab to the latest
+ 2019-06-21 [9dbe3e7] add JNIfTI toolbox
+ 2019-06-20 [231654d] update savejmesh help info
+ 2019-06-20 [fe21139] update jsonlab
+ 2019-06-20 [5dbae5c] update savejmesh to support the current draft of jmesh format: https://github.com/fangq/jmesh
+ 2019-06-20 [af02073] update jsonlab to 2.0 beta
+ 2019-06-03 [4c93361] massive update of jsonlab to 1.9.8 - msgpack support and speed improvement
+ 2019-05-07 [14d64c7] update jsonlab to v1.9 to support data compression
+ 2019-01-21 [dae0242] support tetgen command option in surf2mesh and s2m, override ISO2MESH_TETGENOPT
+
+
+2018/07/19  (1.9.0, codename: Century Egg - final)
+
+  2018-07-19*[67ae478] update jsonlab to v1.8
+  2018-07-19 [0af072c] compiling jmeshlib and tetgen1.5 from source
+  2018-07-19 [c75ce08] use meshfix 1.2 from an old copy
+  2018-07-18 [f49286b] use system binaries first, then use locally built suffix-less binaries, then prebuilt ones
+  2018-07-18 [8d015f4] add makefile to compile all external tools and copy exe to bin
+  2018-07-18*[17bf732] add source codes for embedded tool for deployment
+  2018-06-27 [2baaf0d] fix bugs in meshinterp and meshremap when elemid contains nan
+  2018-06-26 [3413cf6] add meshremap and meshinterp to map values between a pair of meshes
+  2018-05-30 [f111940] add examples for readnirfast and savenirfast
+  2018-05-30*[6ec9dbc] support importing and exporting NIRFAST mesh files
+  2018-05-25 [312d1ff] nodevolume can be calculated using elemvolume
+  2018-05-02 [39bc663] fix missing command in the meshconn output
+  2018-04-11 [65a0f2a] Update tetgen1.5 executable for Windows to TetGen v1.5.1-beta1
+  2017-11-08*[98d9fb4] add extrudesurf function to expand an open surface into a solid
+  2017-10-02 [9f5e9f1] support cone trunk in meshacylinder
+  2017-09-13 [914d9e9] Fix bug in surf2mesh
+  2017-08-30*[a6070a9] add top and bottom faces for extrudecurve
+  2017-08-06 [6cd2747] merge phong's surfboolean, make s2m/surf2mesh support tetgen1.5
+  2017-07-19 [f6d8d7f] remove isoloated nodes for cell represented surfaces
+  2017-06-29 [4ff9ed9] support removing duplicated nodes in cell face input
+  2017-06-20 [dab6afe] close open surfaces by the bounding box
+  2017-06-20 [059f98a] support initial angle in orthdisk
+  2017-06-12 [5d22c41] apply a patch from Riccardo to correct surface orientation
+  2017-05-29 [48f30d5] update meshfix binary for windows, add 64bit meshfix from https://github.com/MarcoAttene/MeshFix-V2.1/
+  2017-05-11 [d11dbc4] add new function to create extruded surfaces from orthogonal 2D spline curves
+  2017-03-05 [41da47d] create 10-node tet from 4-node tet
+
+2017/01/16  (1.8.0, codename: Deviled Egg - final)
+        1.**robust surface boolean operator based on Cork
+        2. update tetgen 1.5 to 1.5.1
+        3. new function: insurface for point-in-surface test
+        4.*new function: fillsurf for tesselating a closed surface
+        5. new function: surfvolume for calculating the volume of an enclosed surface
+        6.*new function: innersurf/outersurf: interior and exterior parts of a surface
+        7. meshcylinders supports a series of segments, also returns PLC
+        8. surfedge/volface return tet element id for the face triangles
+        9. plotmesh supports element-based colormap
+       10. s2v outputs mesh-to-voxel transformation matrix
+       11.*JSONlab updates to 1.5 Nominus alpha
+       12. display binary utility download URL when missing
+       13. faceneighbor returns row- or column-major facelist
+       14. fix half-voxel offset bug in cgalmesher
+       15. surf2vol and s2v now rasterize labeled surfaces and tetrahedral mesh
+       16. disable binary compression for Mac OS to avoid crashes
+       17. fix uniqedges edgemap output bug
 
 2015/09/19  (1.7.9, codename: Deviled Egg - beta)
         1. make v2m(method=cgalmesh) output repeatable

@@ -1,10 +1,10 @@
-function tempname=mwpath(fname)
+function tempname = mwpath(fname)
 %
 % tempname=meshtemppath(fname)
 %
 % get full temp-file name by prepend working-directory and current session name
 %
-% author: Qianqian Fang (fangq <at> nmr.mgh.harvard.edu)
+% author: Qianqian Fang (q.fang at neu.edu)
 %
 % input:
 %    fname: input, a file name string
@@ -22,38 +22,48 @@ function tempname=mwpath(fname)
 % -- this function is part of iso2mesh toolbox (http://iso2mesh.sf.net)
 %
 
-p=getvarfrom({'caller','base'},'ISO2MESH_TEMP');
-session=getvarfrom({'caller','base'},'ISO2MESH_SESSION');
-
-username=getenv('USER'); % for Linux/Unix/Mac OS
-
-if(isempty(username))
-   username=getenv('UserName'); % for windows
+if (nargin < 1) || isempty(fname)
+    fname = '';
 end
 
-if(~isempty(username))
-   username=['iso2mesh-' username];
+p = getvarfrom({'caller', 'base'}, 'ISO2MESH_TEMP');
+session = getvarfrom({'caller', 'base'}, 'ISO2MESH_SESSION');
+
+if (isempty(session))
+    session = '';
 end
 
-tempname=[];
-if(isempty(p))
-      if(isoctavemesh & tempdir=='\')
-		tempname=['.'  filesep session fname];
-	else
-		tdir=tempdir;
-		if(tdir(end)~=filesep)
-			tdir=[tdir filesep];
-		end
-		if(~isempty(username))
-                    tdir=[tdir username filesep];
-                    if(exist(tdir)==0) mkdir(tdir); end
+username = getenv('USER'); % for Linux/Unix/Mac OS
+
+if (isempty(username))
+    username = getenv('UserName'); % for windows
+end
+
+if (~isempty(username))
+    username = ['iso2mesh-' username];
+end
+
+tempname = [];
+if (isempty(p))
+    if (isoctavemesh && tempdir == '\')
+        tempname = ['.'  filesep session fname];
+    else
+        tdir = tempdir;
+        if (tdir(end) ~= filesep)
+            tdir = [tdir filesep];
         end
-        if(nargin==0)
-            tempname=tdir;
+        if (~isempty(username))
+            tdir = [tdir username filesep];
+            if (exist(tdir) == 0)
+                mkdir(tdir);
+            end
+        end
+        if (nargin == 0)
+            tempname = tdir;
         else
-            tempname=[tdir session fname];
+            tempname = [tdir session fname];
         end
-	end
+    end
 else
-	tempname=[p filesep session fname];
+    tempname = [p filesep session fname];
 end

@@ -1,4 +1,4 @@
-function vol=surfvolume(node,face,option)
+function vol = surfvolume(node, face, option)
 %
 % vol=surfvolume(node,face,option)
 %
@@ -16,14 +16,14 @@ function vol=surfvolume(node,face,option)
 % -- this function is part of iso2mesh toolbox (http://iso2mesh.sf.net)
 %
 
-face=face(:,1:3);
+face = face(:, 1:3);
 
-ed=surfedge(face);
-if(~isempty(ed))
-   error('open surface is detected, you have to close it first, consider meshcheckrepair() with meshfix option');
+ed = surfedge(face);
+if (~isempty(ed))
+    error('open surface is detected, you have to close it first, consider meshcheckrepair() with meshfix option');
 end
 
-[no,el]=fillsurf(node,face);
+[no, el] = fillsurf(node, face);
 
-vol=elemvolume(no,el);
-vol=sum(vol);
+vol = elemvolume(no, el);
+vol = sum(vol);

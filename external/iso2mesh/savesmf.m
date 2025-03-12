@@ -1,4 +1,4 @@
-function savesmf(v,f,fname)
+function savesmf(v, f, fname)
 %
 % savesmf(v,f,fname)
 %
@@ -15,7 +15,7 @@ function savesmf(v,f,fname)
 % -- this function is part of iso2mesh toolbox (http://iso2mesh.sf.net)
 %
 
-fid=fopen(fname,'wt');
-fprintf(fid,'v %.16f %.16f %.16f\n',v');
-fprintf(fid,'f %d %d %d\n',f');
+fid = fopen(fname, 'wt');
+fprintf(fid, 'v %.16f %.16f %.16f\n', v');
+fprintf(fid, 'f %d %d %d\n', f');
 fclose(fid);

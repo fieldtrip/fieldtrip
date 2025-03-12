@@ -1,0 +1,234 @@
+<deployment-project plugin="plugin.ezdeploy" plugin-version="1.0">
+  <configuration build-checksum="3172910529" file="${PROJECT_ROOT}/i2m.prj" location="${PROJECT_ROOT}" name="i2m" preferred-package-location="${PROJECT_ROOT}/i2m/for_redistribution" preferred-package-type="package.type.install" target="target.ezdeploy.standalone" target-name="Application Compiler">
+    <param.appname>i2m</param.appname>
+    <param.icon />
+    <param.icons />
+    <param.version>0.8</param.version>
+    <param.authnamewatermark>Qianqian Fang</param.authnamewatermark>
+    <param.email>q.fang at neu.edu</param.email>
+    <param.company>Northeastern University</param.company>
+    <param.summary>I2M is an integrated GUI for the 3D meshing toolbox Iso2Mesh developed by Qianqian Fang</param.summary>
+    <param.description>Iso2Mesh is a free matlab/octave-based mesh generation and processing toolbox. It can create 3D tetrahedral finite element (FE) mesh from surfaces, 3D binary and gray-scale volumetric images such as segmented MRI/CT scans.</param.description>
+    <param.screenshot />
+    <param.guid />
+    <param.installpath.string>/local/i2m/</param.installpath.string>
+    <param.installpath.combo>option.installpath.user</param.installpath.combo>
+    <param.logo>${PROJECT_ROOT}/i2m.png</param.logo>
+    <param.install.notes>In the following directions, replace MCR_ROOT by the directory where the MATLAB Runtime is installed on the target machine.
+
+(1) Set the environment variable XAPPLRESDIR to this value:
+
+    MCR_ROOT/v901/X11/app-defaults
+
+
+(2) If the environment variable LD_LIBRARY_PATH is undefined, set it to the concatenation of the following strings:
+
+    MCR_ROOT/v901/runtime/glnxa64:
+    MCR_ROOT/v901/bin/glnxa64:
+    MCR_ROOT/v901/sys/os/glnxa64:
+    MCR_ROOT/v901/sys/opengl/lib/glnxa64
+
+    If it is defined, set it to the concatenation of these strings:
+
+    ${LD_LIBRARY_PATH}: 
+    MCR_ROOT/v901/runtime/glnxa64:
+    MCR_ROOT/v901/bin/glnxa64:
+    MCR_ROOT/v901/sys/os/glnxa64:
+    MCR_ROOT/v901/sys/opengl/lib/glnxa64</param.install.notes>
+    <param.target.install.notes />
+    <param.intermediate>${PROJECT_ROOT}/i2m/for_testing</param.intermediate>
+    <param.files.only>${PROJECT_ROOT}/i2m/for_redistribution_files_only</param.files.only>
+    <param.output>${PROJECT_ROOT}/i2m/for_redistribution</param.output>
+    <param.logdir>${PROJECT_ROOT}/i2m</param.logdir>
+    <param.enable.clean.build>false</param.enable.clean.build>
+    <param.user.defined.mcr.options />
+    <param.embed.ctf>true</param.embed.ctf>
+    <param.target.type>subtarget.standalone</param.target.type>
+    <param.support.packages />
+    <param.web.mcr>true</param.web.mcr>
+    <param.package.mcr>false</param.package.mcr>
+    <param.no.mcr>false</param.no.mcr>
+    <param.web.mcr.name>MyAppInstaller_web</param.web.mcr.name>
+    <param.package.mcr.name>MyAppInstaller_mcr</param.package.mcr.name>
+    <param.no.mcr.name>MyAppInstaller_app</param.no.mcr.name>
+    <param.windows.command.prompt>false</param.windows.command.prompt>
+    <param.create.log>false</param.create.log>
+    <param.log.file />
+    <unset>
+      <param.icon />
+      <param.icons />
+      <param.authnamewatermark />
+      <param.email />
+      <param.company />
+      <param.screenshot />
+      <param.guid />
+      <param.installpath.combo />
+      <param.target.install.notes />
+      <param.intermediate />
+      <param.files.only />
+      <param.output />
+      <param.logdir />
+      <param.enable.clean.build />
+      <param.user.defined.mcr.options />
+      <param.embed.ctf />
+      <param.target.type />
+      <param.support.packages />
+      <param.web.mcr />
+      <param.package.mcr />
+      <param.no.mcr />
+      <param.web.mcr.name />
+      <param.package.mcr.name />
+      <param.no.mcr.name />
+      <param.windows.command.prompt />
+      <param.create.log />
+      <param.log.file />
+    </unset>
+    <fileset.main>
+      <file>${PROJECT_ROOT}/img2mesh.m</file>
+    </fileset.main>
+    <fileset.resources>
+      <file>${PROJECT_ROOT}/img2mesh.m</file>
+    </fileset.resources>
+    <fileset.package>
+      <file>${PROJECT_ROOT}/bin</file>
+    </fileset.package>
+    <fileset.depfun>
+      <file>${PROJECT_ROOT}/bbxflatsegment.m</file>
+      <file>${PROJECT_ROOT}/binsurface.m</file>
+      <file>${PROJECT_ROOT}/cgals2m.m</file>
+      <file>${PROJECT_ROOT}/cgalv2m.m</file>
+      <file>${PROJECT_ROOT}/deletemeshfile.m</file>
+      <file>${PROJECT_ROOT}/elemvolume.m</file>
+      <file>${PROJECT_ROOT}/extractloops.m</file>
+      <file>${PROJECT_ROOT}/fallbackexeext.m</file>
+      <file>${PROJECT_ROOT}/finddisconnsurf.m</file>
+      <file>${PROJECT_ROOT}/getexeext.m</file>
+      <file>${PROJECT_ROOT}/getoptkey.m</file>
+      <file>${PROJECT_ROOT}/getplanefrom3pt.m</file>
+      <file>${PROJECT_ROOT}/getvarfrom.m</file>
+      <file>${PROJECT_ROOT}/img2mesh.fig</file>
+      <file>${PROJECT_ROOT}/internalpoint.m</file>
+      <file>${PROJECT_ROOT}/iso2meshver.m</file>
+      <file>${PROJECT_ROOT}/isoctavemesh.m</file>
+      <file>${PROJECT_ROOT}/jsonopt.m</file>
+      <file>${PROJECT_ROOT}/latticegrid.m</file>
+      <file>${PROJECT_ROOT}/loadjson.m</file>
+      <file>${PROJECT_ROOT}/loadubjson.m</file>
+      <file>${PROJECT_ROOT}/maxsurf.m</file>
+      <file>${PROJECT_ROOT}/mcpath.m</file>
+      <file>${PROJECT_ROOT}/mergestruct.m</file>
+      <file>${PROJECT_ROOT}/meshabox.m</file>
+      <file>${PROJECT_ROOT}/meshacylinder.m</file>
+      <file>${PROJECT_ROOT}/meshanellip.m</file>
+      <file>${PROJECT_ROOT}/meshasphere.m</file>
+      <file>${PROJECT_ROOT}/meshcentroid.m</file>
+      <file>${PROJECT_ROOT}/meshcheckrepair.m</file>
+      <file>${PROJECT_ROOT}/meshconn.m</file>
+      <file>${PROJECT_ROOT}/meshedge.m</file>
+      <file>${PROJECT_ROOT}/meshgrid5.m</file>
+      <file>${PROJECT_ROOT}/meshresample.m</file>
+      <file>${PROJECT_ROOT}/meshunitsphere.m</file>
+      <file>${PROJECT_ROOT}/mwpath.m</file>
+      <file>${PROJECT_ROOT}/plotedges.m</file>
+      <file>${PROJECT_ROOT}/plotmesh.m</file>
+      <file>${PROJECT_ROOT}/plotsurf.m</file>
+      <file>${PROJECT_ROOT}/plottetra.m</file>
+      <file>${PROJECT_ROOT}/qmeshcut.m</file>
+      <file>${PROJECT_ROOT}/raytrace.m</file>
+      <file>${PROJECT_ROOT}/readasc.m</file>
+      <file>${PROJECT_ROOT}/readgts.m</file>
+      <file>${PROJECT_ROOT}/readinr.m</file>
+      <file>${PROJECT_ROOT}/readmedit.m</file>
+      <file>${PROJECT_ROOT}/readmptiff.m</file>
+      <file>${PROJECT_ROOT}/readnifti.m</file>
+      <file>${PROJECT_ROOT}/readoff.m</file>
+      <file>${PROJECT_ROOT}/readsmf.m</file>
+      <file>${PROJECT_ROOT}/readtetgen.m</file>
+      <file>${PROJECT_ROOT}/removedupelem.m</file>
+      <file>${PROJECT_ROOT}/removedupnodes.m</file>
+      <file>${PROJECT_ROOT}/removeisolatednode.m</file>
+      <file>${PROJECT_ROOT}/removeisolatedsurf.m</file>
+      <file>${PROJECT_ROOT}/rotatevec3d.m</file>
+      <file>${PROJECT_ROOT}/rotmat2vec.m</file>
+      <file>${PROJECT_ROOT}/s2m.m</file>
+      <file>${PROJECT_ROOT}/s2v.m</file>
+      <file>${PROJECT_ROOT}/savegts.m</file>
+      <file>${PROJECT_ROOT}/saveinr.m</file>
+      <file>${PROJECT_ROOT}/savejmesh.m</file>
+      <file>${PROJECT_ROOT}/savejson.m</file>
+      <file>${PROJECT_ROOT}/saveoff.m</file>
+      <file>${PROJECT_ROOT}/savesurfpoly.m</file>
+      <file>${PROJECT_ROOT}/smoothsurf.m</file>
+      <file>${PROJECT_ROOT}/sms.m</file>
+      <file>${PROJECT_ROOT}/sortmesh.m</file>
+      <file>${PROJECT_ROOT}/struct2jdata.m</file>
+      <file>${PROJECT_ROOT}/surf2mesh.m</file>
+      <file>${PROJECT_ROOT}/surf2vol.m</file>
+      <file>${PROJECT_ROOT}/surf2volz.m</file>
+      <file>${PROJECT_ROOT}/surfboolean.m</file>
+      <file>${PROJECT_ROOT}/surfedge.m</file>
+      <file>${PROJECT_ROOT}/surfinterior.m</file>
+      <file>${PROJECT_ROOT}/surfplane.m</file>
+      <file>${PROJECT_ROOT}/surfseeds.m</file>
+      <file>${PROJECT_ROOT}/uniqedges.m</file>
+      <file>${PROJECT_ROOT}/v2m.m</file>
+      <file>${PROJECT_ROOT}/v2s.m</file>
+      <file>${PROJECT_ROOT}/varargin2struct.m</file>
+      <file>${PROJECT_ROOT}/vol2mesh.m</file>
+      <file>${PROJECT_ROOT}/vol2restrictedtri.m</file>
+      <file>${PROJECT_ROOT}/vol2surf.m</file>
+      <file>${PROJECT_ROOT}/volface.m</file>
+    </fileset.depfun>
+    <build-deliverables>
+      <file location="${PROJECT_ROOT}/i2m/for_testing" name="readme.txt" optional="true">${PROJECT_ROOT}/i2m/for_testing/readme.txt</file>
+      <file location="${PROJECT_ROOT}/i2m/for_testing" name="i2m" optional="false">${PROJECT_ROOT}/i2m/for_testing/i2m</file>
+      <file location="${PROJECT_ROOT}/i2m/for_testing" name="splash.png" optional="false">${PROJECT_ROOT}/i2m/for_testing/splash.png</file>
+      <file location="${PROJECT_ROOT}/i2m/for_testing" name="run_i2m.sh" optional="false">${PROJECT_ROOT}/i2m/for_testing/run_i2m.sh</file>
+    </build-deliverables>
+    <workflow />
+    <matlab>
+      <root>/drives/hoyi1/users/shared/MATLAB/R2016a</root>
+      <toolboxes>
+        <toolbox name="fixedpoint" />
+        <toolbox name="matlabcoder" />
+        <toolbox name="matlabhdlcoder" />
+        <toolbox name="embeddedcoder" />
+      </toolboxes>
+      <toolbox>
+        <fixedpoint>
+          <enabled>true</enabled>
+        </fixedpoint>
+      </toolbox>
+      <toolbox>
+        <matlabcoder>
+          <enabled>true</enabled>
+        </matlabcoder>
+      </toolbox>
+      <toolbox>
+        <matlabhdlcoder>
+          <enabled>true</enabled>
+        </matlabhdlcoder>
+      </toolbox>
+      <toolbox>
+        <embeddedcoder>
+          <enabled>true</enabled>
+        </embeddedcoder>
+      </toolbox>
+    </matlab>
+    <platform>
+      <unix>true</unix>
+      <mac>false</mac>
+      <windows>false</windows>
+      <win2k>false</win2k>
+      <winxp>false</winxp>
+      <vista>false</vista>
+      <linux>true</linux>
+      <solaris>false</solaris>
+      <osver>4.4.0-131-generic</osver>
+      <os32>false</os32>
+      <os64>true</os64>
+      <arch>glnxa64</arch>
+      <matlab>true</matlab>
+    </platform>
+  </configuration>
+</deployment-project>

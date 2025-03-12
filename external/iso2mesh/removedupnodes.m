@@ -1,10 +1,10 @@
-function [newnode,newelem]=removedupnodes(node,elem,tol)
+function [newnode, newelem] = removedupnodes(node, elem, tol)
 %
 % [newnode,newelem]=removedupnodes(node,elem)
 %
 % removing the duplicated nodes from a mesh
 %
-% author: Qianqian Fang <fangq at nmr.mgh.harvard.edu>
+% author: Qianqian Fang <q.fang at neu.edu>
 %
 % input:
 %   elem: integer array with dimensions of NE x 4, each row contains
@@ -19,12 +19,12 @@ function [newnode,newelem]=removedupnodes(node,elem,tol)
 % -- this function is part of iso2mesh toolbox (http://iso2mesh.sf.net)
 %
 
-if(nargin>=3 && tol~=0)
-    node=round(node/tol)*tol;
+if (nargin >= 3 && tol ~= 0)
+    node = round(node / tol) * tol;
 end
-[newnode,I,J]=unique(node,'rows');
-if(iscell(elem))
-    newelem=cellfun(@(x) J(x)', elem,'UniformOutput',false);
+[newnode, I, J] = unique(node, 'rows');
+if (iscell(elem))
+    newelem = cellfun(@(x) J(x)', elem, 'UniformOutput', false);
 else
-    newelem=J(elem);
+    newelem = J(elem);
 end

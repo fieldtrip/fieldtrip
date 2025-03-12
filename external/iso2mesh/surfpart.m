@@ -1,4 +1,4 @@
-function elist=surfpart(f,loopedge)
+function elist = surfpart(f, loopedge)
 %
 % elist=surfpart(f,loopedge)
 %
@@ -17,27 +17,27 @@ function elist=surfpart(f,loopedge)
 % -- this function is part of iso2mesh toolbox (http://iso2mesh.sf.net)
 %
 
-elist=[];
-if(isempty(f) || isempty(loopedge))
-    return;
+elist = [];
+if (isempty(f) || isempty(loopedge))
+    return
 end
 
-if(size(f,2)==3)
-    edges=[f(:,[1,2]);
-           f(:,[2,3]);
-           f(:,[3,1])];             % create all the edges
-elseif(size(f,2)==4)
-    edges=[f(:,[1,2]);
-           f(:,[2,3]);
-           f(:,[3,4]);
-           f(:,[4,1])];             % create all the edges
+if (size(f, 2) == 3)
+    edges = [f(:, [1, 2])
+             f(:, [2, 3])
+             f(:, [3, 1])];             % create all the edges
+elseif (size(f, 2) == 4)
+    edges = [f(:, [1, 2])
+             f(:, [2, 3])
+             f(:, [3, 4])
+             f(:, [4, 1])];             % create all the edges
 else
     error('surfpart only supports triangular and quadrilateral elements');
 end
 
-[elist,front]=advancefront(edges,loopedge);
-while(~isempty(front))
-	[elist0,front0]=advancefront(edges,front);
-	elist=unique([elist;elist0]);
-	front=front0;
+[elist, front] = advancefront(edges, loopedge);
+while (~isempty(front))
+    [elist0, front0] = advancefront(edges, front);
+    elist = unique([elist; elist0]);
+    front = front0;
 end

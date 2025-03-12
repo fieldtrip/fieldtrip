@@ -1,4 +1,4 @@
-function plane=surfplane(node,face)
+function plane = surfplane(node, face)
 %
 % plane=surfplane(node,face)
 %
@@ -17,9 +17,9 @@ function plane=surfplane(node,face)
 % -- this function is part of iso2mesh toolbox (http://iso2mesh.sf.net)
 %
 
-AB=node(face(:,2),1:3)-node(face(:,1),1:3);
-AC=node(face(:,3),1:3)-node(face(:,1),1:3);
+AB = node(face(:, 2), 1:3) - node(face(:, 1), 1:3);
+AC = node(face(:, 3), 1:3) - node(face(:, 1), 1:3);
 
-N=cross(AB',AC')';
-d=-dot(N',node(face(:,1),1:3)')';
-plane=[N,d];
+N = cross(AB', AC')';
+d = -dot(N', node(face(:, 1), 1:3)')';
+plane = [N, d];

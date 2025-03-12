@@ -1,4 +1,4 @@
-function [inface, outface]=innersurf(node,face,outface)
+function [inface, outface] = innersurf(node, face, outface)
 %
 % outface=innersurf(node,face,outface)
 %
@@ -18,10 +18,10 @@ function [inface, outface]=innersurf(node,face,outface)
 % -- this function is part of iso2mesh toolbox (http://iso2mesh.sf.net)
 %
 
-if(nargin<3)
-  outface=outersurf(node,face);
+if (nargin < 3)
+    outface = outersurf(node, face);
 end
 
-[I,J]=ismember(sort(face,2),sort(outface,2),'rows');
+tf = ismember(sort(face, 2), sort(outface, 2), 'rows');
 
-inface=face(I==0,:);
+inface = face(tf == 0, :);

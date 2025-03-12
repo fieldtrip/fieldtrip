@@ -1,6 +1,6 @@
-function openface=volface(t)
+function varargout = volface(t)
 %
-% openface=volface(t)
+% [openface,elemid]=volface(t)
 %
 % find the surface patches of a volume
 %
@@ -12,8 +12,11 @@ function openface=volface(t)
 %
 % output:
 %      openface: list of faces of the specified volume
+%      elemid (optional): the corresponding index of the
+%                tetrahedron of an open-edge or triangle,
+%                elemid has the same length as openedge.
 %
 % -- this function is part of iso2mesh toolbox (http://iso2mesh.sf.net)
 %
 
-openface=surfedge(t);
+[varargout{1:nargout}] = surfedge(t);
