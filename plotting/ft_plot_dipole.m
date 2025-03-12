@@ -11,7 +11,7 @@ function h = ft_plot_dipole(pos, ori, varargin)
 %   'diameter'  = number indicating sphere diameter (default = 'auto')
 %   'length'    = number indicating length of the stick (default = 'auto')
 %   'thickness' = number indicating thickness of the stick (default = 'auto')
-%   'color'     = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r' (default = 'r')
+%   'color'     = [r g b] values or string, for example 'skin', 'skull', 'brain', 'black', 'red', 'r' (default = 'r')
 %   'alpha'     = alpha value of the plotted dipole
 %   'scale'     = scale the dipole with the amplitude, can be 'none',  'both', 'diameter', 'length' (default = 'none')
 %   'unit'      = 'm', 'cm' or 'mm', used for automatic scaling (default = 'cm')

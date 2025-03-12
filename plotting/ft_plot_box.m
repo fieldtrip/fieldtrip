@@ -9,8 +9,8 @@ function [varargout] = ft_plot_box(position, varargin)
 %
 % Optional arguments should come in key-value pairs and can include
 %   'facealpha'     = transparency value between 0 and 1
-%   'facecolor'     = color specification as [r g b] values or a string, for example 'brain', 'cortex', 'skin', 'red', 'r'
-%   'edgecolor'     = color specification as [r g b] values or a string, for example 'brain', 'cortex', 'skin', 'red', 'r'
+%   'facecolor'     = color specification as [r g b] values or a string, for example 'skin', 'skull', 'brain', 'red', 'r'
+%   'edgecolor'     = color specification as [r g b] values or a string, for example 'skin', 'skull', 'brain', 'red', 'r'
 %   'parent'        = handle which is set as the parent for the plotted elements (default = [])
 %   'tag'           = string, the tag assigned to the plotted elements (default = '')
 %

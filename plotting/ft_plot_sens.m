@@ -40,8 +40,8 @@ function hs = ft_plot_sens(sens, varargin)
 %   'style'           = plotting style for the points representing the channels, see plot3 (default = [])
 %   'marker'          = marker type representing the channels, see plot3 (default = '.')
 % The following options apply when electrodes/coils/optodes are plotted individually
-%   'facecolor'       = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r', or an Nx3 or Nx1 array where N is the number of faces (default is automatic)
-%   'edgecolor'       = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r', color of channels or coils (default is automatic)
+%   'facecolor'       = [r g b] values or string, for example 'black', 'red', 'r', or an Nx3 or Nx1 array where N is the number of faces (default is automatic)
+%   'edgecolor'       = [r g b] values or string, for example 'black', 'red', 'r', color of channels or coils (default is automatic)
 %   'facealpha'       = transparency, between 0 and 1 (default = 1)
 %   'edgealpha'       = transparency, between 0 and 1 (default = 1)
 %

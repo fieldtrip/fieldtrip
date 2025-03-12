@@ -12,9 +12,10 @@ function hs = ft_plot_headshape(headshape, varargin)
 % where the headshape is a structure obtained from FT_READ_HEADSHAPE.
 %
 % Optional arguments should come in key-value pairs and can include
-%   'facecolor'    = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r', or an Nx3 or Nx1 array where N is the number of faces
+%   'facecolor'    = [r g b] values or string, for example 'skin', 'skull', 'brain', 'black', 'red', 'r', or an Nx3 or Nx1 array where N is the number of faces
+%   'vertexcolor'  = [r g b] values or string, for example 'skin', 'skull', 'brain', 'black', 'red', 'r', or an Nx3 or Nx1 array where N is the number of vertices
+%   'edgecolor'    = [r g b] values or string, for example 'skin', 'skull', 'brain', 'black', 'red', 'r'
 %   'facealpha'    = transparency, between 0 and 1 (default = 1)
-%   'vertexcolor'  = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r', or an Nx3 or Nx1 array where N is the number of vertices
 %   'vertexsize'   = scalar value specifying the size of the vertices (default = 10)
 %   'transform'    = transformation matrix for the fiducials, converts MRI voxels into head shape coordinates
 %   'unit'         = string, convert to the specified geometrical units (default = [])
