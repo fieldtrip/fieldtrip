@@ -79,77 +79,68 @@ switch fileformat
 
   case {'simnibs' 'simnibs_v3' 'simnibs_v4'}
     ft_hastoolbox('simnibs', 1);
-    mesh = ft_read_headshape(filename); % this will automatically detect ascii or binary
     S    = standard_cond;
+    mesh = ft_read_headshape(filename, 'meshtype', meshtype); % this will automatically detect ascii or binary
 
     if isempty(meshtype)
-      % set the default
-      if isfield(mesh, 'tet') || isfield(mesh, 'hex')
-        meshtype = 'volume';
-      else
-        meshtype = 'surface';
-      end
+      ft_error('please specify meshtype as tri, tet or hex')
     end
 
     switch meshtype
-      case 'volume'
-        if isfield(mesh, 'tet')
-          % prune the mesh
-          [headmodel.pos, headmodel.tet] = remove_unused_vertices(mesh.pos, mesh.tet);
+      case 'tet'
+        % prune the mesh
+        [headmodel.pos, headmodel.tet] = remove_unused_vertices(mesh.pos, mesh.tet);
 
-          tag    = mesh.tetrahedron_regions(:,1);
-          utag   = unique(tag);
-          tissue = zeros(size(tag));
-          tissuelabel = cell(numel(utag),1);
-          cond   = zeros(1,numel(utag));
-          for k = 1:numel(utag)
-            tissue(tag==utag(k)) = k;
-            tissuelabel{k} = lower(S(utag(k)).name);
-            cond(k) = S(utag(k)).value;
-          end
-
-          headmodel.tissue = tissue;
-          headmodel.tissuelabel = tissuelabel;
-          headmodel.cond = cond;
-          headmodel.type = 'simnibs';
-          headmodel = ft_determine_units(headmodel);
+        tag    = mesh.tissue(:);
+        utag   = unique(tag);
+        tissue = zeros(size(tag));
+        tissuelabel = cell(numel(utag),1);
+        cond   = zeros(1,numel(utag));
+        for k = 1:numel(utag)
+          tissue(tag==utag(k)) = k;
+          tissuelabel{k} = lower(S(utag(k)).name);
+          cond(k) = S(utag(k)).value;
         end
 
-        if isfield(mesh, 'hex')
-          % prune the mesh
-          [headmodel.pos, headmodel.hex] = remove_unused_vertices(mesh.pos, mesh.hex);
+        headmodel.tissue = tissue;
+        headmodel.tissuelabel = tissuelabel;
+        headmodel.cond = cond;
+        headmodel.type = 'simnibs';
+        headmodel = ft_determine_units(headmodel);
 
-          tag    = mesh.hexahedron_regions(:,1);
-          utag   = unique(tag);
-          tissue = zeros(size(tag));
-          tissuelabel = cell(numel(utag),1);
-          cond   = zeros(1,numel(utag));
-          for k = 1:numel(utag)
-            tissue(tag==utag(k)) = k;
-            tissuelabel{k} = lower(S(utag(k)).name);
-            cond(k) = S(utag(k)).value;
-          end
+      case 'hex'
+        % prune the mesh
+        [headmodel.pos, headmodel.hex] = remove_unused_vertices(mesh.pos, mesh.hex);
 
-          headmodel.tissue = tissue;
-          headmodel.tissuelabel = tissuelabel;
-          headmodel.cond = cond;
-          headmodel.type = 'simnibs';
-          headmodel = ft_determine_units(headmodel);
+        tag    = mesh.tissue(:);
+        utag   = unique(tag);
+        tissue = zeros(size(tag));
+        tissuelabel = cell(numel(utag),1);
+        cond   = zeros(1,numel(utag));
+        for k = 1:numel(utag)
+          tissue(tag==utag(k)) = k;
+          tissuelabel{k} = lower(S(utag(k)).name);
+          cond(k) = S(utag(k)).value;
         end
 
-      case 'surface'
+        headmodel.tissue = tissue;
+        headmodel.tissuelabel = tissuelabel;
+        headmodel.cond = cond;
+        headmodel.type = 'simnibs';
+        headmodel = ft_determine_units(headmodel);
+
+      case 'tri'
         % prune the mesh
         [pos, tri] = remove_unused_vertices(mesh.pos, mesh.tri);
 
-        tag  = mesh.triangle_regions(:,1);
+        tag  = mesh.tissue(:);
         utag = unique(tag);
-
         cond = zeros(1,numel(utag));
         tissuelabel = cell(numel(utag),1);
         for k = 1:numel(utag)
 
-          tissuelabel{k} = lower(S(utag(k)-1000).name);
-          cond(k) = S(utag(k)-1000).value;
+          tissuelabel{k} = lower(S(utag(k)).name);
+          cond(k) = S(utag(k)).value;
           ft_info('Creating boundary for tissue type %s', tissuelabel{k});
 
           seltri = tri(tag==utag(k), :);

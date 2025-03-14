@@ -17,12 +17,12 @@ end
 %%
 
 filename = dccnpath('/project/3031000.02/test/original/simnibs/v4/ernie.msh');
-hm = ft_read_headmodel(filename, 'fileformat', 'simnibs');
-hm = ft_read_headmodel(filename, 'fileformat', 'simnibs', 'meshtype', 'surface');
+hm = ft_read_headmodel(filename, 'fileformat', 'simnibs', 'meshtype', 'tet');
+hm = ft_read_headmodel(filename, 'fileformat', 'simnibs', 'meshtype', 'tri');
 
 %%
 
 filename = dccnpath('/project/3031000.02/test/original/simnibs/v3/ernie_v3.msh');
-hm = ft_read_headmodel(filename, 'fileformat', 'simnibs');
-hm = ft_read_headmodel(filename, 'fileformat', 'simnibs', 'meshtype', 'surface');
+hm = ft_read_headmodel(filename, 'fileformat', 'simnibs', 'meshtype', 'tet');
+hm = ft_read_headmodel(filename, 'fileformat', 'simnibs', 'meshtype', 'tri');
 

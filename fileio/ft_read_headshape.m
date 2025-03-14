@@ -100,7 +100,7 @@ unit           = ft_getopt(varargin, 'unit');
 image          = ft_getopt(varargin, 'image');               % path to .jpg file
 surface        = ft_getopt(varargin, 'surface');
 refine_        = ft_getopt(varargin, 'refine', 1);           % do not confuse with the private/refine function
-meshtype       = ft_getopt(varargin, 'meshtype', 'tri');     % tri, tet or hex
+meshtype       = ft_getopt(varargin, 'meshtype');            % tri, tet or hex
 
 % Check the input, if filename is a cell-array, call FT_READ_HEADSHAPE recursively and combine the outputs.
 % This is used to read the left and right hemisphere of a Freesurfer cortical segmentation.
@@ -1382,6 +1382,16 @@ switch fileformat
     for i=1:numel(fn)
       if isempty(shape.(fn{i}))
         shape = rmfield(shape, fn{i});
+      end
+    end
+
+    if isempty(meshtype)
+      if isfield(shape, 'tri') && ~isfield(shape, 'tet')
+        meshtype = 'tri';
+      elseif ~isfield(shape, 'tri') && isfield(shape, 'tet')
+        meshtype = 'tet';
+      else
+        ft_error('please specify meshtype as tri, tet or hex')
       end
     end
 
