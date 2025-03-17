@@ -18,10 +18,10 @@ mri = ft_read_mri(fullfile(datadir, 'Subject01.mri'));
 %% Preprocess time windows of interest
 
 cfg = [];
-cfg.toilim = [-0.5 0];
+cfg.toilim = [-0.5 0-1./data_all.fsample];
 dataPre = ft_redefinetrial(cfg, data_all);
 
-cfg.toilim = [0.8 1.3];
+cfg.toilim = [0.8 1.3-1./data_all.fsample];
 dataPost = ft_redefinetrial(cfg, data_all);
 
 %% Cross-spectral density
