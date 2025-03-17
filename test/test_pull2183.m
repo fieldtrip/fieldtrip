@@ -11,7 +11,8 @@ mshdir = dccnpath('/project/3031000.02/test/pull2183/');
 
 d = dir(fullfile(mshdir, '*.msh'));
 for k = 1:numel(d)
-  hs = ft_read_headshape(fullfile(d(k).folder, d(k).name));
+  hs = ft_read_headshape(fullfile(d(k).folder, d(k).name), 'meshtype', 'tet');
+  hs = ft_read_headshape(fullfile(d(k).folder, d(k).name), 'meshtype', 'tri');
 end
 
 %%
