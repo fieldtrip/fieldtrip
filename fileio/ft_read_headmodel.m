@@ -53,19 +53,19 @@ meshtype   = ft_getopt(varargin, 'meshtype'); % the default is handled further d
 switch fileformat
   case 'matlab'
     headmodel = loadvar(filename, 'headmodel');
-
+    
   case 'ctf_hdm'
     headmodel = read_ctf_hdm(filename);
     headmodel.coordsys = 'ctf';
-
+    
   case 'asa_vol'
     headmodel = read_asa_vol(filename);
     headmodel.type = 'asa';
-
+    
   case 'mbfys_ama'
     ama = loadama(filename);
     headmodel = ama2headmodel(ama);
-
+    
   case 'neuromag_fif'
     ft_hastoolbox('mne', 1);
     global FIFF
@@ -73,96 +73,89 @@ switch fileformat
     headmodel.bnd.pos = bem.rr;
     headmodel.bnd.tri = bem.tris;
     headmodel.coordsys = fif2coordsys(bem.coord_frame);
-
+    
   case 'gmsh_binary'
     ft_error('this could be a simnibs headmodel, please specify ''fileformat'' to be ''simnibs'' if this is the case');
-
+    
   case {'simnibs' 'simnibs_v3' 'simnibs_v4'}
     ft_hastoolbox('simnibs', 1);
-    S    = standard_cond;
+    standard = standard_cond;
     mesh = ft_read_headshape(filename, 'meshtype', meshtype); % this will automatically detect ascii or binary
-
-    if isempty(meshtype)
-      ft_error('please specify meshtype as tri, tet or hex')
+    
+    hastri = isfield(mesh, 'tri');
+    hastet = isfield(mesh, 'tet');
+    hashex = isfield(mesh, 'hex');
+    
+    if (hastri+hastet+hashex)>1
+      ft_error('multiple mesh types are not supported in a single head model');
     end
-
-    switch meshtype
-      case 'tet'
-        % prune the mesh
-        [headmodel.pos, headmodel.tet] = remove_unused_vertices(mesh.pos, mesh.tet);
-
-        tag    = mesh.tissue(:);
-        utag   = unique(tag);
-        tissue = zeros(size(tag));
-        tissuelabel = cell(numel(utag),1);
-        cond   = zeros(1,numel(utag));
-        for k = 1:numel(utag)
-          tissue(tag==utag(k)) = k;
-          tissuelabel{k} = lower(S(utag(k)).name);
-          cond(k) = S(utag(k)).value;
+    
+    if hastri
+      % convert the long list of triangles into multiple surfaces
+      % this also prunes unused vertices
+      [bnd, bndtissue] = tri2bnd(mesh.pos, mesh.tri, mesh.tissue);
+      headmodel.bnd = bnd;
+      headmodel.tissuelabel = mesh.tissuelabel(bndtissue);
+      
+      headmodel.cond = nan(size(headmodel.tissuelabel));
+      for i=1:numel(headmodel.tissuelabel)
+        for j=1:numel(standard)
+          if strcmpi(standard(j).type, 'COND') && ~isempty(standard(j).name) && strcmpi(standard(j).name, headmodel.tissuelabel{i})
+            headmodel.cond(i) = standard(j).value;
+            break
+          end
         end
-
-        headmodel.tissue = tissue;
-        headmodel.tissuelabel = tissuelabel;
-        headmodel.cond = cond;
-        headmodel.type = 'simnibs';
-        headmodel = ft_determine_units(headmodel);
-
-      case 'hex'
-        % prune the mesh
-        [headmodel.pos, headmodel.hex] = remove_unused_vertices(mesh.pos, mesh.hex);
-
-        tag    = mesh.tissue(:);
-        utag   = unique(tag);
-        tissue = zeros(size(tag));
-        tissuelabel = cell(numel(utag),1);
-        cond   = zeros(1,numel(utag));
-        for k = 1:numel(utag)
-          tissue(tag==utag(k)) = k;
-          tissuelabel{k} = lower(S(utag(k)).name);
-          cond(k) = S(utag(k)).value;
-        end
-
-        headmodel.tissue = tissue;
-        headmodel.tissuelabel = tissuelabel;
-        headmodel.cond = cond;
-        headmodel.type = 'simnibs';
-        headmodel = ft_determine_units(headmodel);
-
-      case 'tri'
-        % prune the mesh
-        [pos, tri] = remove_unused_vertices(mesh.pos, mesh.tri);
-
-        tag  = mesh.tissue(:);
-        utag = unique(tag);
-        cond = zeros(1,numel(utag));
-        tissuelabel = cell(numel(utag),1);
-        for k = 1:numel(utag)
-
-          tissuelabel{k} = lower(S(utag(k)).name);
-          cond(k) = S(utag(k)).value;
-          ft_info('Creating boundary for tissue type %s', tissuelabel{k});
-
-          seltri = tri(tag==utag(k), :);
-          usepos = unique(reshape(seltri,[],1));
-          removepos = setdiff((1:size(pos,1))', usepos);
-          [bnd(k,1).pos, bnd(k,1).tri] = remove_vertices(pos, tri, removepos);
-        end
-        headmodel.bnd  = bnd;
-        headmodel.tissuelabel = tissuelabel;
-        headmodel.cond = cond;
-        headmodel.type = 'simnibs';
-
-      otherwise
-        ft_error('unsupported meshtype');
-    end
-
+      end
+      
+    elseif hastet
+      % prune unused vertices
+      [headmodel.pos, headmodel.tet] = remove_unused_vertices(mesh.pos, mesh.tet);
+      
+      % renumber the tissues to remove unused tissue types
+      tag    = mesh.tissue(:);
+      utag   = unique(tag);
+      tissue = zeros(size(tag));
+      tissuelabel = cell(numel(utag),1);
+      cond   = zeros(1,numel(utag));
+      for k = 1:numel(utag)
+        tissue(tag==utag(k)) = k;
+        tissuelabel{k} = lower(standard(utag(k)).name);
+        cond(k) = standard(utag(k)).value;
+      end
+      
+      headmodel.tissue = tissue;
+      headmodel.tissuelabel = tissuelabel;
+      headmodel.cond = cond;
+      
+    elseif hashex
+      % prune unused vertices
+      [headmodel.pos, headmodel.hex] = remove_unused_vertices(mesh.pos, mesh.hex);
+      
+      % renumber the tissues to remove unused tissue types
+      tag    = mesh.tissue(:);
+      utag   = unique(tag);
+      tissue = zeros(size(tag));
+      tissuelabel = cell(numel(utag),1);
+      cond   = zeros(1,numel(utag));
+      for k = 1:numel(utag)
+        tissue(tag==utag(k)) = k;
+        tissuelabel{k} = lower(standard(utag(k)).name);
+        cond(k) = standard(utag(k)).value;
+      end
+      
+      headmodel.tissue = tissue;
+      headmodel.tissuelabel = tissuelabel;
+      headmodel.cond = cond;
+      
+    end % if tri, tet or hex
+    
   otherwise
     ft_error('unknown fileformat for volume conductor model');
-end
+end % switch fileformat
 
 % this will ensure that the structure is up to date, e.g. that the type is correct and that it has units
 headmodel = ft_datatype_headmodel(headmodel);
+headmodel = ft_determine_units(headmodel);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION

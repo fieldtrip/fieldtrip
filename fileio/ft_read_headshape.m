@@ -1385,13 +1385,17 @@ switch fileformat
       end
     end
 
+    hastri = isfield(shape, 'tri');
+    hastet = isfield(shape, 'tet');
+    
     if isempty(meshtype)
-      if isfield(shape, 'tri') && ~isfield(shape, 'tet')
-        meshtype = 'tri';
-      elseif ~isfield(shape, 'tri') && isfield(shape, 'tet')
+      if hastri && hastet
+        ft_warning('mesh has both tri and tet, returning tet');
         meshtype = 'tet';
-      else
-        ft_error('please specify meshtype as tri, tet or hex')
+      elseif hastet
+        meshtype = 'tet';
+      elseif hastri
+        meshtype = 'tri';
       end
     end
 

@@ -1,16 +1,17 @@
-function [pos, tri, tissue] = remove_double_vertices(pos, tri, tissue)
+function [bnd, bndtissue] = tri2bnd(pos, tri, tritissue)
 
-% REMOVE_DOUBLE_VERTICES removes double vertices from a triangular, tetrahedral or
-% hexahedral mesh, renumbering the vertex-indices for the elements.
+% TRI2BND takes a triangulated surface mesh that is represented as one
+% long list of triangles with per triangle a tissue or region type, and
+% converts it in a struct array with one surface mesh per tissue.
 %
 % Use as
-%   [pos, tri] = remove_double_vertices(pos, tri)
-%   [pos, tet] = remove_double_vertices(pos, tet)
-%   [pos, hex] = remove_double_vertices(pos, hex)
+%   [bnd, bndtissue] = tri2bnd(pos, tri, tritissue)
 %
-% See also REMOVE_VERTICES, REMOVE_UNUSED_VERTICES
+% The output "bnd" is a structure array with the fields bnd.pos and bnd.tri.
+%
+% See also MESH2EDGE, POLY2TRI, BND2TRI
 
-% Copyright (C) 2004-2025, Robert Oostenveld and Jan-Mathijs Schoffelen
+% Copyright (C) 2025, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -36,20 +37,15 @@ ntri = size(tri,1);
 % do some sanity checks
 assert(all(tri(:))>0)
 assert(all(tri(:))<=npos);
-if nargin>2
-  assert(numel(tissue)==ntri);
+assert(numel(tritissue)==ntri);
+
+% determine the different tissue types
+% note that this vector is not guaranteed to be contiguous, some tissues might be absent in the data 
+bndtissue = sort(unique(tritissue));
+
+% make a single boundary surface for each tissue type
+bnd = struct();
+for i=1:numel(bndtissue)
+  sel = (tritissue==bndtissue(i));
+  [bnd(i).pos, bnd(i).tri] = remove_unused_vertices(pos, tri(sel,:));
 end
-
-% find unique vertices, keep them in the same order
-[newpos, ia, ic] = unique(pos, 'rows', 'stable');
-
-% determine the mapping from the old to new indices
-mapping = zeros(1,npos);
-mapping(ia) = 1:length(ia);
-
-% re-index the vertex indices that are represented in tri
-tri = ia(ic(tri));
-tri = mapping(tri);
-
-% return only the unique vertices
-pos = newpos;

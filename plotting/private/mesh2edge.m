@@ -8,7 +8,7 @@ function [output] = mesh2edge(mesh)
 % Use as
 %   [edge] = mesh2edge(mesh)
 %
-% See also POLY2TRI
+% See also POLY2TRI, TRI2BND
 
 % Copyright (C) 2013-2020, Robert Oostenveld
 %
