@@ -57,7 +57,7 @@
 % can depend on other functions. The release of this toolbox includes functions from
 % other toolboxes that are covered under their respective licenses. See
 % fieldtrip/external for details. Unauthorised copying and distribution of functions
-% that are not explicitely covered by the GPL is not allowed!
+% that are not explicitly covered by the GPL is not allowed!
 %
 % Below is a non-exhaustive overview of some of the important FieldTrip functions, sorted by category.
 % You can get more details on a function by typing 'help functionname' in MATLAB.

@@ -321,7 +321,7 @@ end
 %figure; ft_plot_ortho(T2_aligned.anatomy); title('T2 after aligning')
 % figure; ft_plot_ortho(DTI_aligned.anatomy(:,:,:,1));title('DTI after aligning')
 
-assert(isequal(T1.transform,T2_aligned.transform),'Transformation matrix changed due to alignement.');
-assert(~isequal(T2.transform,T2_aligned.anatomy),'Anatomy has not changed despite of alignement.');
+assert(isequal(T1.transform,T2_aligned.transform),'Transformation matrix changed due to alignment.');
+assert(~isequal(T2.transform,T2_aligned.anatomy),'Anatomy has not changed despite of alignment.');
 
 T2_4p1_sinc = T2_aligned;

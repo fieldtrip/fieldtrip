@@ -5,7 +5,7 @@ function split = split_string(in, sep, varargin)
 % returns a cell P with the different parts of string S. Both S and D
 % should have only one row.
 %
-% If P contains N occurences of delimeter D, then P contains N strings so
+% If P contains N occurrences of delimeter D, then P contains N strings so
 % that strcat(P{1}, D, P{2}, D, ...,D, P{n}) == S.
 %
 % Extended syntax (Jan 2010):

@@ -189,7 +189,7 @@ mhd.nasion_vertex_inion = fread(fid, [1 1], 'float');
 
 %  Data analysis INFOs
 mhd.security  = fread(fid, [1 1], 'int32');          %  security flag
-mhd.ave_alignement  = fread(fid, [1 1], 'int32');    %  average data alignement 0 - FALSE
+mhd.ave_alignment  = fread(fid, [1 1], 'int32');    %  average data alignment 0 - FALSE
 %                          1 - TRUE
 
 mhd.itri  = fread(fid, [1 1], 'int32');              %  trigger channel number
