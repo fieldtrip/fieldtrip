@@ -84,7 +84,7 @@ optbeg = optbeg | strcmp('whichfunction', strargin);
 optbeg = optbeg | strcmp('waitfor',       strargin);
 optbeg = find(optbeg);
 if ~isempty(optbeg)
-  optbeg = optbeg(1)
+  optbeg = optbeg(1);
   optarg = varargin(optbeg:end);
 else
   optarg = [];
