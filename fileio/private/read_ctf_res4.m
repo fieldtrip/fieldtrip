@@ -18,6 +18,7 @@ function [hdr] = read_ctf_res4(fname)
 %
 % modifications Copyright (C) 2002, Ole Jensen
 % modifications Copyright (C) 2003, Robert Oostenveld
+% modifications Copyright (C) 2025, Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -111,8 +112,8 @@ for i=1:no_channels,
   temp=fread(fid,32,'uint8')';
   temp(find(temp<32 )) = ' ';       % remove non-printable characters
   temp(find(temp>126)) = ' ';       % remove non-printable characters
-  endstr = strfind(temp, '-'); temp(endstr:end) = ' ';  % cut off at '-'
-  endstr = strfind(temp, ' '); temp(endstr:end) = ' ';  % cut off at ' '
+  endstr = strfind(temp, '-'); if ~isempty(endstr), temp(endstr(1):end) = ' '; end % cut off at '-'
+  endstr = strfind(temp, ' '); if ~isempty(endstr), temp(endstr(1):end) = ' '; end % cut off at ' '
   chan_name(i,:) = char(temp);      % as char array
   chan_label{i}  = deblank(char(temp)); % as cell-array
 end %for
