@@ -87,7 +87,7 @@ function [type] = ft_senstype(input, desired)
 % If you specify the desired type, this function will return a boolean flag
 % indicating true/false depending on the input data.
 %
-% Besides specifiying a sensor definition (i.e. a grad or elec structure, see
+% Besides specifying a sensor definition (i.e. a grad or elec structure, see
 % FT_DATATYPE_SENS), it is also possible to give a data structure containing a grad
 % or elec field, or giving a list of channel names (as cell-arrray). So assuming that
 % you have a FieldTrip data structure, any of the following calls would also be fine.
@@ -471,7 +471,7 @@ if strcmp(type, 'unknown')
       type = 'eeg1005';
       
       % the following check looks at the fraction of channels in the user's data rather than the fraction in the predefined set
-      % there is a minumum number of channels, otherwise it is not worth recognizing
+      % there is a minimum number of channels, otherwise it is not worth recognizing
     elseif (sum(ismember(sens.label, ft_senslabel('eeg1005'))) > 10)
       type = 'ext1020'; % this will also cover small subsets of eeg1020, eeg1010 and eeg1005
     elseif (sum(ismember(ft_senslabel('btiref'), sens.label)) > 10)
@@ -571,7 +571,7 @@ if ~isempty(desired)
     otherwise
       type = any(strcmp(type, desired));
   end % switch desired
-end % detemine the correspondence to the desired type
+end % determine the correspondence to the desired type
 
 % remember the current input and output arguments, so that they can be
 % reused on a subsequent call in case the same input argument is given

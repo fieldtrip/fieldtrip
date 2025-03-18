@@ -6,7 +6,7 @@ function [C,R] = fitsphere(pnt)
 % Use as
 %       [center,radius] = fitsphere(pnt)
 % where
-%   pnt     = Nx3 matrix with the Carthesian coordinates of the surface points
+%   pnt     = Nx3 matrix with the Cartesian coordinates of the surface points
 % and
 %   center  = the center of the fitted sphere
 %   radius  = the radius of the fitted sphere
