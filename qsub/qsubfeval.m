@@ -83,7 +83,12 @@ optbeg = optbeg | strcmp('nargout',       strargin);
 optbeg = optbeg | strcmp('whichfunction', strargin);
 optbeg = optbeg | strcmp('waitfor',       strargin);
 optbeg = find(optbeg);
-optarg = varargin(optbeg:end);
+if ~isempty(optbeg)
+  optbeg = optbeg(1);
+  optarg = varargin(optbeg:end);
+else
+  optarg = [];
+end
 
 % check the required input arguments
 ft_checkopt(optarg, 'memreq', 'numericscalar');
