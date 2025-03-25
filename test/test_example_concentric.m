@@ -1,4 +1,4 @@
-function test_example_condentric
+function test_example_concentric
 
 % WALLTIME 01:00:00
 % MEM 10gb
