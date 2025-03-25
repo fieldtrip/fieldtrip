@@ -356,6 +356,9 @@ if isempty(cfg.unit)
   elseif strcmp(cfg.method, 'basedonmni') && ~isempty(cfg.mri.unit)
     % take the existing MRI units
     cfg.unit = cfg.mri.unit;
+  elseif strcmp(cfg.method, 'basedonmri') && ~isempty(cfg.mri.unit)
+    % take the existing MRI units
+    cfg.unit = cfg.mri.unit;
   elseif ~isempty(sens)
     % take the units from the gradiometer or electrode array
     cfg.unit = sens.unit;
@@ -519,8 +522,7 @@ switch cfg.method
 
     issegmentation = false;
     if isfield(mri, 'gray')
-      % this is not a boolean segmentation, but based on tissue probability
-      % maps, being the original implementation here.
+      % this is based on tissue probability maps, being the original implementation here.
       dat = double(mri.gray);
 
       % apply a smoothing of a certain amount of voxels
@@ -529,9 +531,8 @@ switch cfg.method
       end
 
     elseif isfield(mri, 'anatomy')
-      % this could be a tpm stored on disk, i.e. the result of
-      % ft_volumesegment. Reading it in always leads to the field 'anatomy'.
-      % Note this could be any anatomical mask
+      % this could be an anatomical MRI but also a segmentation or tpm stored as a
+      % NIFTI file, reading it from disk always leads to the field 'anatomy'.
       dat = double(mri.anatomy);
 
       % apply a smoothing of a certain amount of voxels
