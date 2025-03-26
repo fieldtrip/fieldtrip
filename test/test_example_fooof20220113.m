@@ -4,6 +4,11 @@ function test_example_fooof
 % MEM 2gb
 % WALLTIME 00:10:00
 
+if ~ft_hastoolbox('optim', 1)
+  warning('the OPTIM toolbox is not available, skipping this test');
+  return
+end
+
 %
 %% Fitting oscillations and one-over-F (FOOOF)
 %

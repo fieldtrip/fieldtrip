@@ -10,6 +10,7 @@ function test_warp_dykstra2012
 
 if ~ft_hastoolbox('optim', 1)
   warning('the OPTIM toolbox is not available, skipping this test');
+  return
 end
 
 % 'headshape' (random mesh)

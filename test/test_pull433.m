@@ -7,6 +7,7 @@ function test_pull433
 
 if ~ft_hastoolbox('optim', 1)
   warning('the OPTIM toolbox is not available, skipping this test');
+  return
 end
 
 cd(dccnpath('/project/3031000.02/test/pull433'));
