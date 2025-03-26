@@ -69,10 +69,10 @@ function [sourcemodel, cfg] = ft_prepare_sourcemodel(cfg)
 %
 % BASEDONCENTROIDS - places sources on the centroids of a volumetric mesh
 %   cfg.headmodel       = tetrahedral or hexahedral mesh
-%   cfg.headmodel.type  = 'simbio';
+%   cfg.headmodel.type  = 'simbio'
 %
 % Other configuration options include
-%   cfg.unit            = string, can be 'mm', 'cm', 'm' (default is automatic)
+%   cfg.unit            = string, can be 'mm', 'cm', 'm' (default is automatic, based on the input data)
 %   cfg.tight           = 'yes' or 'no' (default is automatic)
 %   cfg.inwardshift     = number, amount to shift the innermost surface of the headmodel inward when determining
 %                         whether sources are inside or outside the source compartment (default = 0)
@@ -315,7 +315,7 @@ end
 sourcemodel = [];
 
 % get the volume conduction model
-if ischar(cfg.headmodel)
+if ~isempty(cfg.headmodel) && ischar(cfg.headmodel)
   headmodel = ft_read_headmodel(cfg.headmodel);
 else
   % ensure that the volume conduction model is up-to-date
@@ -323,10 +323,17 @@ else
 end
 
 % get the headshape, this can also be a cortical sheet, or a set of left and right cortical sheets
-if ischar(cfg.headshape)
+if ~isempty(cfg.headshape) && ischar(cfg.headshape)
   headshape = ft_read_headshape(cfg.headshape);
 else
   headshape = cfg.headshape;
+end
+
+% get the anatomical MRI or segmentation
+if ~isempty(cfg.mri) && ischar(cfg.mri)
+  mri = ft_read_mri(cfg.mri);
+else
+  mri = cfg.mri;
 end
 
 % get the gradiometer or electrode definition
@@ -369,6 +376,7 @@ if isempty(cfg.unit)
     ft_warning('assuming "cm" as default units for source model');
     cfg.unit = 'cm';
   end
+  ft_warning('assuming that the sourcemodel units are in %s', cfg.unit);
 end
 
 % convert the volume conduction model to the desired units for the source model
@@ -384,6 +392,11 @@ end
 % convert the sensor array to the desired units for the source model
 if ~isempty(sens)
   sens = ft_convert_units(sens, cfg.unit);
+end
+
+if ~isempty(mri)
+  % convert the mri to the desired units for the source model
+  mri = ft_convert_units(mri, cfg.unit);
 end
 
 switch cfg.method
@@ -496,17 +509,6 @@ switch cfg.method
     % configuration, only voxels in gray matter will be used
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    if ischar(cfg.mri)
-      mri = ft_read_mri(cfg.mri);
-    else
-      mri = cfg.mri;
-    end
-
-    % ensure the mri to have units
-    if ~isfield(mri, 'unit')
-      mri = ft_determine_units(mri);
-    end
-
     if ~isfield(cfg, 'resolution')
       switch cfg.unit
         case 'mm'
@@ -568,25 +570,32 @@ switch cfg.method
     fprintf('thresholding MRI data at a relative value of %f\n', cfg.threshold);
     head = dat./max(dat(:)) > cfg.threshold;
 
-    % convert the source/functional data into the same units as the anatomical MRI
-    scale = ft_scalingfactor(cfg.unit, mri.unit);
-
     ind                 = find(head(:));
     fprintf('%d from %d voxels in the segmentation are marked as ''inside'' (%.0f%%)\n', length(ind), numel(head), 100*length(ind)/numel(head));
     [X,Y,Z]             = ndgrid(1:mri.dim(1), 1:mri.dim(2), 1:mri.dim(3));             % create the grid in MRI-coordinates
     posmri              = [X(ind) Y(ind) Z(ind)];                                       % take only the inside voxels
     poshead             = ft_warp_apply(mri.transform, posmri);                         % transform to head coordinates
-    resolution          = cfg.resolution*scale;                                         % source and mri can be expressed in different units (e.g. cm and mm)
-    xgrid               = floor(min(poshead(:,1))):resolution:ceil(max(poshead(:,1)));  % create the grid in head-coordinates
-    ygrid               = floor(min(poshead(:,2))):resolution:ceil(max(poshead(:,2)));  % with 'consistent' x,y,z definitions
-    zgrid               = floor(min(poshead(:,3))):resolution:ceil(max(poshead(:,3)));
+    resolution          = cfg.resolution;                                               % source and mri are expressed in the same units
+    
+    % determine the size of a bounding box, round it off to the nearest mm
+    scale = ft_scalingfactor(cfg.unit, 'mm');
+    xmin = floor(min(scale*poshead(:,1)))/scale;
+    xmax = ceil (max(scale*poshead(:,1)))/scale;
+    ymin = floor(min(scale*poshead(:,2)))/scale;
+    ymax = ceil (max(scale*poshead(:,2)))/scale;
+    zmin = floor(min(scale*poshead(:,3)))/scale;
+    zmax = ceil (max(scale*poshead(:,3)))/scale;
+
+    xgrid               = xmin:resolution:xmax;  % create the grid in head-coordinates
+    ygrid               = ymin:resolution:ymax;  % with consistent x,y,z definitions
+    zgrid               = zmin:resolution:zmax;
     [X,Y,Z]             = ndgrid(xgrid,ygrid,zgrid);
     pos2head            = [X(:) Y(:) Z(:)];
     pos2mri             = ft_warp_apply(inv(mri.transform), pos2head);                  % transform to MRI voxel coordinates
     pos2mri             = round(pos2mri);
     inside              = getinside(pos2mri, head);                                     % use helper subfunction
 
-    sourcemodel.pos     = pos2head/scale;                                               % convert to source units
+    sourcemodel.pos     = pos2head;
     sourcemodel.dim     = [length(xgrid) length(ygrid) length(zgrid)];
     sourcemodel.inside  = inside(:);
     sourcemodel.unit    = cfg.unit;
@@ -664,13 +673,6 @@ switch cfg.method
     % if not create it: FIXME (this needs to be done still)
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    % get the mri
-    if ischar(cfg.mri)
-      mri = ft_read_mri(cfg.mri);
-    else
-      mri = cfg.mri;
-    end
-
     % get the template grid
     if ischar(fname)
       mnigrid = loadvar(fname, 'sourcemodel');
@@ -678,7 +680,7 @@ switch cfg.method
       mnigrid = cfg.template;
     end
 
-    % ensure these to have units in mm, the conversion of the source model is done further down
+    % ensure these to have units in mm, the conversion of the source model into the desired units is done further down
     mri     = ft_convert_units(mri,     'mm');
     mnigrid = ft_convert_units(mnigrid, 'mm');
 
@@ -686,7 +688,7 @@ switch cfg.method
     mnigrid = fixinside(mnigrid);
 
     % spatial normalisation of the MRI to the template
-    tmpcfg           = keepfields(cfg, {'spmversion', 'spmmethod', 'nonlinear'});
+    tmpcfg = keepfields(cfg, {'spmversion', 'spmmethod', 'nonlinear'});
     if isfield(cfg, 'templatemri')
       % this option is called differently for the two functions
       tmpcfg.template = cfg.templatemri;
