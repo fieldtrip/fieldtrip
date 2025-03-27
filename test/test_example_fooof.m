@@ -5,7 +5,7 @@ function test_example_fooof
 % DEPENDENCY ft_freqanalysis
 % DATA no
 
-if ~ft_hastoolbox('optim', 1)
+if ~ft_hastoolbox('optim')
   warning('the OPTIM toolbox is not available, skipping this test');
   return
 end

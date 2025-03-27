@@ -5,7 +5,7 @@ function test_ft_freqstatistics
 % DEPENDENCY ft_freqstatistics findcluster clusterstat ft_statistics_montecarlo
 % DATA no
 
-if ~ft_hastoolbox('stats', 1)
+if ~ft_hastoolbox('stats')
   warning('the STATS toolbox is not available, skipping this test');
   return
 end

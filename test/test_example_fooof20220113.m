@@ -1,10 +1,10 @@
-function test_example_fooof
+function test_example_fooof20220113
 
 % DATA no
 % MEM 2gb
 % WALLTIME 00:10:00
 
-if ~ft_hastoolbox('optim', 1)
+if ~ft_hastoolbox('optim')
   warning('the OPTIM toolbox is not available, skipping this test');
   return
 end

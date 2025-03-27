@@ -5,9 +5,6 @@ function test_example_concentricspheres
 % DEPENDENCY ft_prepare_headmodel ft_prepare_mesh ft_datatype_segmentation
 % DATA public
 
-[ftver, ftpath] = ft_version;
-addpath(fullfile(ftpath, 'external', 'stats')); % this contains a PDIST2 replacement
-
 %% read mri
 mri = ft_read_mri(dccnpath('/project/3031000.02/external/download/test/ctf/Subject01.mri'));
 
