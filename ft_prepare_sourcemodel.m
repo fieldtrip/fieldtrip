@@ -167,18 +167,19 @@ cfg = ft_checkconfig(cfg, 'createsubcfg', {'sourcemodel'});
 cfg = ft_checkconfig(cfg, 'createtopcfg', {'sourcemodel'});
 
 % set the defaults
-cfg.moveinward        = ft_getopt(cfg, 'moveinward'); % the default is automatic and depends on a triangulation being present
-cfg.spherify          = ft_getopt(cfg, 'spherify', 'no');
+cfg.method            = ft_getopt(cfg, 'method'); % the default is to do automatic detection further down
 cfg.headshape         = ft_getopt(cfg, 'headshape');
-cfg.symmetry          = ft_getopt(cfg, 'symmetry');
-cfg.spmversion        = ft_getopt(cfg, 'spmversion', 'spm12');
+cfg.mri               = ft_getopt(cfg, 'mri');
 cfg.headmodel         = ft_getopt(cfg, 'headmodel');
 cfg.sourcemodel       = ft_getopt(cfg, 'sourcemodel');
 cfg.unit              = ft_getopt(cfg, 'unit');
-cfg.method            = ft_getopt(cfg, 'method'); % the default is to do automatic detection further down
+cfg.symmetry          = ft_getopt(cfg, 'symmetry');
+cfg.spmversion        = ft_getopt(cfg, 'spmversion', 'spm12');
+cfg.spherify          = ft_getopt(cfg, 'spherify', 'no');
 cfg.movetocentroids   = ft_getopt(cfg, 'movetocentroids', 'no');
-cfg.feedback          = ft_getopt(cfg, 'feedback', 'text');
+cfg.moveinward        = ft_getopt(cfg, 'moveinward'); % the default is automatic and depends on a triangulation being present
 cfg.checkinside       = ft_getopt(cfg, 'checkinside', 'no'); % default is 'no' since this is a relatively slow procedure. It is also not always required, for example with MEG singlesphere, singleshell, localspheres.
+cfg.feedback          = ft_getopt(cfg, 'feedback', 'text');
 
 % this option was deprecated on 12 Aug 2020
 if isfield(cfg, 'warpmni')
@@ -223,7 +224,7 @@ if isempty(cfg.method)
     cfg.method = 'basedonpos'; % using user-supplied positions, which can be regular or irregular
   elseif ~isempty(cfg.headshape)
     cfg.method = 'basedonshape'; % surface mesh based on inward shifted head surface from external file
-  elseif isfield(cfg, 'mri')
+  elseif ~isempty(cfg.mri)
     cfg.method = 'basedonmri'; % regular 3D grid, based on segmented MRI, restricted to gray matter
   elseif isfield(cfg, 'headshape') && (iscell(cfg.headshape) || any(ft_filetype(cfg.headshape, {'neuromag_fif', 'freesurfer_triangle_binary', 'caret_surf', 'gifti'})))
     cfg.method = 'basedoncortex'; % cortical sheet from external software such as Caret or FreeSurfer, can also be two separate hemispheres
