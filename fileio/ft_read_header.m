@@ -2875,7 +2875,8 @@ if (strcmp(readbids, 'yes') || strcmp(readbids, 'ifmakessense')) && isbids
       assert(length(channels_tsv.type)  == hdr.nChans, 'number of channels is not consistent with the BIDS channels.tsv');
       assert(length(channels_tsv.units) == hdr.nChans, 'number of channels is not consistent with the BIDS channels.tsv');
       hdr.label    = channels_tsv.name;
-      hdr.chantype = repmat({'unknown'}, [length(hdr.label), 1]);
+      hdr.chantype    = channels_tsv.type;
+      % hdr.chantype = repmat({'unknown'}, [length(hdr.label), 1]);
       hdr.chantype(contains(channels_tsv.type, 'NIRS')) = {'nirs'};
       hdr.chanunit = channels_tsv.units;
     end
