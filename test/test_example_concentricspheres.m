@@ -88,7 +88,22 @@ cfg.tissue       = {'brain', 'skull', 'scalp'};
 cfg.conductivity = [0.33 0.0125 0.33]; % this is Siemens per meter
 headmodel        = ft_prepare_headmodel(cfg, segmentedmri);
 
-%% plot the headmodel with electrodes
+%% make a regular 3D grid as the sourcemodel
+
+cfg           = [];
+cfg.method    = 'basedongrid';
+cfg.xgrid     = -10:1:10;
+cfg.ygrid     = -10:1:10; % from -10 to 10 in steps of 1
+cfg.zgrid     =  -2:1:10;
+cfg.unit      = 'cm';
+cfg.tight     = 'yes';
+cfg.headmodel = headmodel; % this determines which dipoles are inside/outside
+sourcemodel = ft_prepare_sourcemodel(cfg);
+
+% convert the sourcemodel from centimeter to meter
+sourcemodel = ft_convert_units(sourcemodel, 'm');
+
+% plot the headmodel together with the source positions
 
 % note that there are three spheres in the figure below 
 % and that the electrodes are ideally to be on the surface of the outermost (scalp) sphere
@@ -96,6 +111,7 @@ headmodel        = ft_prepare_headmodel(cfg, segmentedmri);
 figure
 ft_plot_headmodel(headmodel, 'facecolor', 'skin')
 ft_plot_sens(elec_aligned, 'elecsize', 0.010, 'elecshape', 'disc', 'facecolor', 'k', 'label', 'label')
+ft_plot_mesh(sourcemodel.pos)
 ft_plot_axes([], 'unit', 'm', 'coordsys', 'ctf')
 ft_headlight
 alpha 0.5
