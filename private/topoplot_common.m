@@ -199,8 +199,19 @@ if ~isequal(cfg.colormap, 'default')
 end
 
 Ndata = numel(varargin);
-for indx=1:Ndata
+makesubplots = false;
+if Ndata==1 && isequal(cfg.figure, 'subplot')
+  % overrule this setting
+  cfg.figure = 'yes';
+elseif Ndata>1 && isequal(cfg.figure, 'subplot')
+  makesubplots = true;
+end
   
+for indx=1:Ndata
+  if makesubplots  
+    cfg.figure = subplot(floor(sqrt(Ndata)), ceil(sqrt(Ndata)), indx);
+  end
+
   % open a new figure, or add it to the existing one
   open_figure(keepfields(cfg, {'figure', 'position', 'visible', 'renderer', 'figurename', 'title'}));
   
@@ -768,6 +779,13 @@ for indx=1:Ndata
     % add the cfg/data/channel information to the figure under identifier linked to this axis
     ident                    = ['axh' num2str(round(sum(clock.*1e6)))]; % unique identifier for this axis
     set(gca, 'tag',ident);
+     
+    % ensure that the function that is called knows about the subplot setting
+    if makesubplots
+      cfg.subplottopo = 1;
+    else
+      cfg.subplottopo = 0;
+    end
     info                     = guidata(gcf);
     info.(ident).x           = cfg.layout.pos(:, 1);
     info.(ident).y           = cfg.layout.pos(:, 2);
@@ -781,6 +799,7 @@ for indx=1:Ndata
     if ~isfield(info.(ident),'datvarargin')
       info.(ident).datvarargin = varargin(1:Ndata); % add all datasets to figure
     end
+    
     info.(ident).datvarargin{indx} = data; % update current dataset (e.g. baselined, channel selection, etc)
     guidata(gcf, info);
     if any(strcmp(dimord, {'chan_time', 'chan_freq', 'subj_chan_time', 'rpt_chan_time', 'chan_chan_freq', 'chancmb_freq', 'rpt_chancmb_freq', 'subj_chancmb_freq'}))
@@ -821,7 +840,7 @@ if ~isempty(label)
     cfg = rmfield(cfg, 'zlim');
   end
   fprintf('selected cfg.channel = {%s}\n', join_str(', ', cfg.channel));
-  % ensure that the new figure appears at the same position
+  % ensure that the new figure appears at the same position, and also that 
   cfg.figure = 'yes';
   cfg.position = get(gcf, 'Position');
   
@@ -848,8 +867,13 @@ if ~isempty(label)
   cfg.ylim = 'maxmin';
   fprintf('selected cfg.channel = {%s}\n', join_str(', ', cfg.channel));
   % ensure that the new figure appears at the same position
-  cfg.figure = 'yes';
   cfg.position = get(gcf, 'Position');
+  if isfield(cfg, 'subplottopo') && istrue(cfg.subplottopo)
+    figure('position', cfg.position);
+    cfg.figure = 'subplot';
+  else
+    cfg.figure = 'yes';
+  end
   ft_singleplotTFR(cfg, datvarargin{:});
 end
 
