@@ -400,11 +400,13 @@ for i=1:Ndata
   end
 
   %% Section 4: do the actual plotting
-
-  if makesubplots  
-    cfg.figure = subplot(floor(sqrt(Ndata)), ceil(sqrt(Ndata)), i);
+  if makesubplots
+    % make multiple plots in a single figure
+    nyplot = ceil(sqrt(Ndata));
+    nxplot = ceil(Ndata./nyplot);
+    cfg.figure = subplot(nxplot, nyplot, indx);
   end
-
+  
   % open a new figure, or add it to the existing one
   % note that in general adding a TFR to an existing one does not make sense, since they will overlap
   open_figure(keepfields(cfg, {'figure', 'position', 'visible', 'renderer', 'figurename', 'title'}));

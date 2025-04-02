@@ -61,7 +61,7 @@ function [cfg] = ft_topoplotIC(cfg, comp)
 %                            'layout' to place comment as specified for COMNT in layout
 %                            [x y] coordinates
 %   cfg.title              = string or 'auto' or 'off', specify a figure title, or use 'component N' (default) as the title
-%   cfg.figure             = 'yes' or 'no', whether to open a new figure. You can also specify a figure handle from FIGURE, GCF or SUBPLOT. (default = 'yes')
+%   cfg.figure             = 'yes', 'no' or 'subplot', whether to open a new figure. You can also specify a figure handle from FIGURE, GCF or SUBPLOT. (default = 'subplot')
 %   cfg.renderer           = string, 'opengl', 'zbuffer', 'painters', see RENDERERINFO (default is automatic, try 'painters' when it crashes)
 %
 % The layout defines how the channels are arranged. You can specify the
@@ -124,12 +124,12 @@ end
 comp = ft_checkdata(comp, 'datatype', 'comp');
 
 % set the config defaults
-cfg.title     = ft_getopt(cfg, 'title', 'auto');
 cfg.parameter = ft_getopt(cfg, 'parameter', 'topo'); % needed in topoplot_common
 cfg.renderer  = ft_getopt(cfg, 'renderer'); % let MATLAB decide on the default
+cfg.figure    = ft_getopt(cfg, 'figure', 'subplot');
 
 % check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'required', 'component');
+%cfg = ft_checkconfig(cfg, 'required', 'component');
 cfg = ft_checkconfig(cfg, 'allowedval', {'parameter', 'topo'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'interplimits', 'electrodes', 'sensors'});
 
@@ -149,7 +149,7 @@ if isfield(cfg, 'dataname') && ~isempty(cfg.dataname)
 elseif isfield(cfg, 'inputfile') && ~isempty(cfg.inputfile)
   dataname = cfg.inputfile;
 elseif nargin>1
-  dataname = arrayfun(@inputname, 2:nargin, 'UniformOutput', false);
+  dataname = inputname(2); % there's only a single data argument at most
 else
   dataname = {};
 end
@@ -162,40 +162,7 @@ cfg.dataname = dataname;
 tmpshowcallinfo = cfg.showcallinfo;
 cfg.showcallinfo = 'no';
 
-% create temporary variable to prevent overwriting the selected components
-selcomp = cfg.component;
-
-nplots = numel(selcomp);
-if nplots>1
-  % make multiple plots in a single figure
-  nyplot = ceil(sqrt(nplots));
-  nxplot = ceil(nplots./nyplot);
-  for i = 1:length(selcomp)
-    cfg.figure = subplot(nxplot, nyplot, i);
-    cfg.component = selcomp(i);
-
-    % call the common function that is shared with ft_topoplotER and ft_topoplotTFR
-    [cfg] = topoplot_common(cfg, comp);
-
-    if strcmp(cfg.title, 'auto')
-      title(['component ' num2str(selcomp(i))]);
-    elseif ~strcmp(cfg.title, 'off')
-      title(cfg.title);
-    end
-  end % for all components
-
-else
-  cfg.component = selcomp;
-
-  % call the common function that is shared with ft_topoplotER and ft_topoplotTFR
-  [cfg] = topoplot_common(cfg, comp);
-
-  if strcmp(cfg.title, 'auto')
-    title(['component ' num2str(selcomp)]);
-  elseif ~strcmp(cfg.title, 'off')
-    title(cfg.title);
-  end
-end
+cfg = topoplot_common(cfg, comp);
 
 % remove this field again, it is only used for figure labels
 cfg = removefields(cfg, 'funcname');

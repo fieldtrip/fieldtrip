@@ -199,6 +199,46 @@ if ~isequal(cfg.colormap, 'default')
 end
 
 Ndata = numel(varargin);
+dtype = cell(1,Ndata);
+for i=1:Ndata
+  varargin{i} = ft_checkdata(varargin{i}, 'datatype', {'comp', 'timelock', 'freq'});
+  dtype{i}    = ft_datatype(varargin{i});
+end
+
+if Ndata>1 && all(strcmp(dtype, dtype{1}))
+  % this is OK, one common dtype for multiple inputs
+  dtype = dtype{1};
+elseif Ndata>1
+  ft_error('multiple data inputs into a topoplot function should be of the same datatype');
+elseif Ndata==1 && strcmp(dtype{1}, 'comp')
+  % this is also OK, but will implicitly treat each to-be-plotted component topography as a single image
+  dtype =dtype{1};
+end
+
+if strcmp(dtype, 'comp')
+  if Ndata>1 && numel(cfg.component)~=1
+    ft_error('with multiple component structures in the input a single component topography should be specified in the input cfg');
+  elseif Ndata>1
+    % make the subselection of the to be plotted data
+    for i=1:Ndata
+      varargin{i} = select_component(varargin{i}, cfg.component);
+    end
+  elseif Ndata==1
+    % create a cell-array of data structures of the to be plotted data
+    if isempty(cfg.component)
+      comp          = varargin{1};
+      cfg.component = 1:size(comp.topo,2);
+    end
+    cfg.component(cfg.component>size(comp.topo,2)) = [];
+   
+    varargin = cell(1,numel(cfg.component));
+    for i=1:numel(cfg.component)
+      varargin{i} = select_component(comp, cfg.component(i));
+    end
+  end
+  Ndata = numel(varargin);
+end
+
 makesubplots = false;
 if Ndata==1 && isequal(cfg.figure, 'subplot')
   % overrule this setting
@@ -208,18 +248,13 @@ elseif Ndata>1 && isequal(cfg.figure, 'subplot')
 end
   
 for indx=1:Ndata
-  if makesubplots  
-    cfg.figure = subplot(floor(sqrt(Ndata)), ceil(sqrt(Ndata)), indx);
+  if makesubplots
+    % make multiple plots in a single figure
+    nyplot = ceil(sqrt(Ndata));
+    nxplot = ceil(Ndata./nyplot);
+    cfg.figure = subplot(nxplot, nyplot, indx);
   end
 
-  % open a new figure, or add it to the existing one
-  open_figure(keepfields(cfg, {'figure', 'position', 'visible', 'renderer', 'figurename', 'title'}));
-  
-  % apply the same colormap to all figures
-  if ~isempty(cfg.colormap)
-    set(gcf,  'colormap', cfg.colormap);
-  end
-  
   if iscell(cfg.dataname)
     dataname = cfg.dataname{indx};
   else
@@ -227,11 +262,9 @@ for indx=1:Ndata
   end
   
   data = varargin{indx};
-  data = ft_checkdata(data, 'datatype', {'comp', 'timelock', 'freq'});
   
   %% Section 2: data handling, this also includes converting bivariate (chan_chan and chancmb) into univariate data
   
-  dtype  = ft_datatype(data);
   hastime = isfield(data, 'time');
   
   % Set x/y/parameter defaults according to datatype and dimord
@@ -257,22 +290,13 @@ for indx=1:Ndata
         cfg.parameter = ft_getopt(cfg, 'parameter', 'powspctrm');
       end
     case 'comp'
-      % Add a pseudo-axis with the component numbers
-      data.comp = 1:size(data.topo,2);
-      if ~isempty(cfg.component)
-        % make a selection of components
-        data.comp  = data.comp(cfg.component);
-        data.topo  = data.topo(:,cfg.component);
-        try, data.label     = data.label(cfg.component); end
-        try, data.unmixing  = data.unmixing(cfg.component,:); end
-      end
-      % Rename the field with topographic label information
-      data.label      = data.topolabel;
-      data.topodimord = 'chan_comp';
-      data = removefields(data, {'topolabel', 'unmixing', 'unmixingdimord'}); % not needed any more
       xparam = 'comp';
       yparam = '';
       cfg.parameter = ft_getopt(cfg, 'parameter', 'topo');
+      if ischar(cfg.dataname)
+        cfg.title = sprintf('%s component %d', cfg.dataname, data.comp);
+      end
+
     otherwise
       % if the input data is not one of the standard data types, or if the functional
       % data is just one value per channel: in this case xparam, yparam are not defined
@@ -343,8 +367,7 @@ for indx=1:Ndata
     tmpvar = ft_selectdata(tmpcfg, tmpvar);
     data.(cfg.maskparameter) = tmpvar.(cfg.maskparameter);
   end
-  
-  clear tmpvar tmpcfg dimord dimtok hastime hasfreq hasrpt
+  clear tmpvar tmpcfg dimord dimtok hastime hasrpt
   
   % ensure that the preproc specific options are located in the cfg.preproc
   % substructure, but also ensure that the field 'refchannel' remains at the
@@ -381,7 +404,6 @@ for indx=1:Ndata
   fn = fn(endsWith(fn, 'scale') | startsWith(fn, 'mychan') | strcmp(fn, 'channel') | strcmp(fn, 'parameter'));
   tmpcfg = keepfields(cfg, fn);
   data = chanscale_common(tmpcfg, data);
-  
   
   %% Section 3: select the data to be plotted and determine min/max range
   
@@ -533,26 +555,42 @@ for indx=1:Ndata
   
   % Construct comment
   switch cfg.comment
-    case 'auto'
-      comment = date;
+    case {'auto' 'auto_nodate'}
+      if isequal(cfg.comment, 'auto')
+        comment = date;
+      else
+        comment = '';
+      end
       if ~isempty(xparam)
-        comment = sprintf('%0s\n%0s=[%.3g %.3g]', comment, xparam, xmin, xmax);
+        if xmin==xmax
+          comment = sprintf('%0s\n%0s=%.3g', comment, xparam, xmax);
+        else
+          comment = sprintf('%0s\n%0s=[%.3g %.3g]', comment, xparam, xmin, xmax);
+        end
       end
       if ~isempty(yparam)
-        comment = sprintf('%0s\n%0s=[%.3g %.3g]', comment, yparam, ymin, ymax);
+        if ymin==ymax
+          comment = sprintf('%0s\n%0s=%.3g', comment, yparam, ymin);
+        else
+          comment = sprintf('%0s\n%0s=[%.3g %.3g]', comment, yparam, ymin, ymax);
+        end
       end
       if ~isempty(cfg.parameter)
         comment = sprintf('%0s\n%0s=[%.3g %.3g]', comment, cfg.parameter, zmin, zmax);
       end
     case 'xlim'
       comment = '';
-      if ~isempty(xparam)
-        comment = sprintf('%0s=[%.3g %.3g]', xparam, xmin, xmax);
+      if xmin==xmax
+        comment = sprintf('%0s\n%0s=%.3g', comment, xparam, xmax);
+      else
+        comment = sprintf('%0s\n%0s=[%.3g %.3g]', comment, xparam, xmin, xmax);
       end
     case 'ylim'
       comment = '';
-      if ~isempty(yparam)
-        comment = sprintf('%0s=[%.3g %.3g]', yparam, ymin, ymax);
+      if ymin==ymax
+        comment = sprintf('%0s\n%0s=%.3g', comment, yparam, ymin);
+      else
+        comment = sprintf('%0s\n%0s=[%.3g %.3g]', comment, yparam, ymin, ymax);
       end
     case 'zlim'
       comment = sprintf('%0s=[%.3g %.3g]', cfg.parameter, zmin, zmax);
@@ -566,6 +604,14 @@ for indx=1:Ndata
     else
       comment = sprintf('%s\nreference=%s %s', comment, cfg.refchannel);
     end
+  end
+  
+  % open a new figure, or add it to the existing one
+  open_figure(keepfields(cfg, {'figure', 'position', 'visible', 'renderer', 'figurename', 'title'}));
+  
+  % apply the same colormap to all figures
+  if ~isempty(cfg.colormap)
+    set(gcf,  'colormap', cfg.colormap);
   end
   
   % Draw topoplot
@@ -884,7 +930,7 @@ function key_sub(handle, eventdata, varargin)
 ident       = get(gca, 'tag');
 info        = guidata(gcf);
 
-climits = caxis;
+climits = clim;
 incr_c  = abs(climits(2) - climits(1)) /10;
 
 newz = climits;
@@ -909,7 +955,7 @@ else
 end % if
 
 % update the color axis
-caxis(newz);
+clim(newz);
 
 if ~isempty(ident) && isfield(info.(ident), 'commenth') && ~isempty(info.(ident).commenth)
   commentstr = get(info.(ident).commenth, 'string');
@@ -919,3 +965,15 @@ if ~isempty(ident) && isfield(info.(ident), 'commenth') && ~isempty(info.(ident)
     set(info.(ident).commenth, 'string', commentstr);
   end
 end
+
+function data = select_component(data, indx)
+
+% Add a pseudo-axis with the component numbers
+data.comp = 1:size(data.topo,2);
+
+% make a selection of components
+data.comp  = data.comp(indx);
+data.topo  = data.topo(:,indx);
+data.label = data.topolabel;
+data.topodimord = 'chan_comp';
+data = removefields(data, {'topolabel', 'unmixing', 'unmixingdimord'}); % not needed any more
