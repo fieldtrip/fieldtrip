@@ -210,8 +210,7 @@ if Ndata>1 && all(strcmp(dtype, dtype{1}))
   dtype = dtype{1};
 elseif Ndata>1
   ft_error('multiple data inputs into a topoplot function should be of the same datatype');
-elseif Ndata==1 && strcmp(dtype{1}, 'comp')
-  % this is also OK, but will implicitly treat each to-be-plotted component topography as a single image
+elseif Ndata==1
   dtype =dtype{1};
 end
 
@@ -224,9 +223,10 @@ if strcmp(dtype, 'comp')
       varargin{i} = select_component(varargin{i}, cfg.component);
     end
   elseif Ndata==1
+    comp          = varargin{1};
+
     % create a cell-array of data structures of the to be plotted data
     if isempty(cfg.component)
-      comp          = varargin{1};
       cfg.component = 1:size(comp.topo,2);
     end
     cfg.component(cfg.component>size(comp.topo,2)) = [];
