@@ -84,24 +84,20 @@ function [cfg] = ft_topoplotTFR(cfg, varargin)
 %                            the supported ways (see below).
 %   cfg.interpolatenan     = string 'yes', 'no' (default = 'yes')
 %                            interpolate over channels containing NaNs
+%   cfg.figure             = 'yes', 'no', or 'subplot',  whether to open a new figure. You can also specify a figure
+%                            handle from FIGURE, GCF or SUBPLOT. (default = 'yes'). With multiple data inputs, 'subplot'
+%                            will make subplots in a single figure.
 %
-% For the plotting of directional connectivity data the cfg.directionality
-% option determines what is plotted. The default value and the supported
-% functionality depend on the dimord of the input data. If the input data
-% is of dimord 'chan_chan_XXX', the value of directionality determines
-% whether, given the reference channel(s), the columns (inflow), or rows
-% (outflow) are selected for plotting. In this situation the default is
-% 'inflow'. Note that for undirected measures, inflow and outflow should
-% give the same output. If the input data is of dimord 'chancmb_XXX', the
-% value of directionality determines whether the rows in data.labelcmb are
-% selected. With 'inflow' the rows are selected if the refchannel(s) occur in
-% the right column, with 'outflow' the rows are selected if the
-% refchannel(s) occur in the left column of the labelcmb-field. Default in
-% this case is '', which means that all rows are selected in which the
-% refchannel(s) occur. This is to robustly support linearly indexed
-% undirected connectivity metrics. In the situation where undirected
-% connectivity measures are linearly indexed, specifying 'inflow' or
-% 'outflow' can result in unexpected behavior.
+% For the plotting of directional connectivity data the cfg.directionality option determines what is plotted. The default
+% value and the supported functionality depend on the dimord of the input data. If the input data is of dimord 'chan_chan_XXX',
+% the value of directionality determines whether, given the reference channel(s), the columns (inflow), or rows (outflow) are
+% selected for plotting. In this situation the default is 'inflow'. Note that for undirected measures, inflow and outflow should
+% give the same output. If the input data is of dimord 'chancmb_XXX', the value of directionality determines whether the rows in
+% data.labelcmb are selected. With 'inflow' the rows are selected if the refchannel(s) occur in the right column, with 'outflow'
+% the rows are selected if the refchannel(s) occur in the left column of the labelcmb-field. Default in this case is '', which
+% means that all rows are selected in which the refchannel(s) occur. This is to robustly support linearly indexed undirected
+% connectivity metrics. In the situation where undirected connectivity measures are linearly indexed, specifying 'inflow' or 
+% outflow' can result in unexpected behavior.
 %
 % The layout defines how the channels are arranged. You can specify the
 % layout in a variety of ways:
@@ -144,7 +140,7 @@ function [cfg] = ft_topoplotTFR(cfg, varargin)
 % Other options:
 % cfg.labeloffset (offset of labels to their marker, default = 0.005)
 
-% Copyright (C) 2005-2017, F.C. Donders Centre
+% Copyright (C) 2005-2025, F.C. Donders Centre
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
