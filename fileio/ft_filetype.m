@@ -1637,7 +1637,7 @@ elseif filetype_check_extension(filename, '.msh') && filetype_check_header(filen
   content = 'geometrical meshes';
 elseif filetype_check_extension(filename, '.vtk') && filetype_check_header(filename, '# vtk') && filetype_check_ascii(filename, inf)
   type = 'vtk';
-  manufacturer = 'ParaView';
+  manufacturer = 'Visualization Toolkit';
   content = 'geometrical meshes';
 elseif filetype_check_extension(filename, '.bin') && exist(fullfile(p, [f '.meta']), 'file') 
   type = 'spikeglx_bin';
