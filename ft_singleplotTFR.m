@@ -404,7 +404,7 @@ for i=1:Ndata
     % make multiple plots in a single figure
     nyplot = ceil(sqrt(Ndata));
     nxplot = ceil(Ndata./nyplot);
-    cfg.figure = subplot(nxplot, nyplot, indx);
+    cfg.figure = subplot(nxplot, nyplot, i);
   end
   
   % open a new figure, or add it to the existing one
