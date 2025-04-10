@@ -577,6 +577,10 @@ if strcmp(cfg.interactive, 'yes')
   % add the cfg/data/channel information to the figure under identifier linked to this axis
   ident                  = ['axh' num2str(round(sum(clock.*1e6)))]; % unique identifier for this axis
   set(gca, 'tag', ident);
+
+  if isfield(cfg, 'subplottopo') && istrue(cfg.subplottopo)
+    cfg.figure = 'subplot';
+  end
   info                   = guidata(gcf);
   info.(ident).cfg       = cfg;
   info.(ident).varargin  = varargin;
@@ -632,8 +636,13 @@ if ~isempty(range)
   end
   fprintf('selected cfg.xlim = [%f %f]\n', cfg.xlim(1), cfg.xlim(2));
   % ensure that the new figure appears at the same position
-  cfg.figure = 'yes';
   cfg.position = get(gcf, 'Position');
+  if isfield(cfg, 'subplottopo') && istrue(cfg.subplottopo)
+    figure('position', cfg.position);
+    cfg.figure = 'subplot';
+  else
+    cfg.figure = 'yes';
+  end
   ft_topoplotER(cfg, varargin{:});
 end
 
