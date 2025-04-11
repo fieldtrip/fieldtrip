@@ -170,6 +170,7 @@ cfg.directionality = ft_getopt(cfg, 'directionality', []);
 cfg.figurename     = ft_getopt(cfg, 'figurename',     []);
 cfg.parameter      = ft_getopt(cfg, 'parameter',     'powspctrm');
 cfg.renderer       = ft_getopt(cfg, 'renderer',       []); % let MATLAB decide on the default
+cfg.figure         = ft_getopt(cfg, 'figure',         'yes');
 
 % this is needed for the figure title
 if isfield(cfg, 'dataname') && ~isempty(cfg.dataname)
