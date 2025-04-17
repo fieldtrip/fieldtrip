@@ -863,6 +863,27 @@ for indx=1:Ndata
   
 end % for numel(varargin)
 
+if Ndata>1
+  % lock the clim
+  clims = zeros(Ndata,2);
+  axh  = fieldnames(info);
+  for i=1:Ndata
+    clims(i,:) = get(info.(axh{i}).cfg.figure, 'CLim');
+  end
+  c = [min(clims(:,1)) max(clims(:,2))];
+  for i=1:Ndata
+    set(info.(axh{i}).cfg.figure, 'CLim', c);
+    if isfield(info.(axh{i}), 'commenth') && ~isempty(info.(axh{i}).commenth)
+      commentstr = get(info.(axh{i}).commenth, 'string');
+      sel        = contains(commentstr, info.(axh{i}).cfg.parameter);
+      if any(sel)
+        commentstr{sel} = sprintf('%0s=[%.3g %.3g]', info.(axh{i}).cfg.parameter, c(1), c(2));
+        set(info.(axh{i}).commenth, 'string', commentstr);
+      end
+    end
+  end
+end
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION which is called after selecting channels in case of cfg.interactive='yes'
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
