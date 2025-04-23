@@ -859,6 +859,8 @@ for indx=1:Ndata
     else
       cfg.subplottopo = 0;
     end
+    info.(ident).cfg         = cfg; % update cfg and add updated info to figure
+    guidata(gcf, info);
 
     if any(strcmp(dimord, {'chan_time', 'chan_freq', 'subj_chan_time', 'rpt_chan_time', 'chan_chan_freq', 'chancmb_freq', 'rpt_chancmb_freq', 'subj_chancmb_freq'}))
       set(gcf, 'WindowButtonUpFcn',     {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotER}, 'event', 'WindowButtonUpFcn'});
