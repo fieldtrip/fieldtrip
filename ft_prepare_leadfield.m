@@ -65,6 +65,12 @@ function [sourcemodel, cfg] = ft_prepare_leadfield(cfg, data)
 %                               for which the leadfield is computed in a
 %                               single call to the low-level code. Trades off
 %                               memory efficiency for speed.
+% 
+% For HBF based headmodels:
+%   cfg.hbf.batchsize = scalar or 'all' (default 1), number of dipoles
+%                               for which the leadfield is computed in a
+%                               single call to the low-level code. Trades off
+%                               memory efficiency for speed.
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
@@ -315,6 +321,31 @@ elseif ft_headmodeltype(headmodel, 'interpolate')
 
   lf = ft_compute_leadfield(sourcemodel.pos(insideindx,:), sens, headmodel, leadfieldopt{:});
   sourcemodel.leadfield(insideindx) = mat2cell(lf, 3, 3.*ones(1,numel(insideindx)));
+
+elseif ft_headmodeltype(headmodel, 'hbf')
+
+  cfg.hbf      = ft_getopt(cfg, 'hbf', []);
+  batchsize    = ft_getopt(cfg.hbf, 'batchsize', 1);
+  if ischar(batchsize) && strcmp(batchsize, 'all')
+    batchsize = length(insideindx);
+  end
+
+  dippos     = sourcemodel.pos(insideindx,:);
+  ndip       = length(insideindx);
+  numchunks  = ceil(ndip/batchsize);
+
+  sourcemodel.leadfield = cell(size(sourcemodel.pos,1),1);
+  ft_progress('init', cfg.feedback, 'computing leadfield');
+  for k = 1:numchunks
+    ft_progress(k/numchunks, 'computing leadfield %d/%d\n', k, numchunks);
+    diprange = (((k-1)*batchsize + 1):(min(k*batchsize,ndip)));
+    tmp      = ft_compute_leadfield(dippos(diprange,:), sens, headmodel, leadfieldopt{:});
+    % distribute the columns of the leadfield matrix over the individual dipole positions
+    % avoid using the options reducerank and backproject, see https://github.com/fieldtrip/fieldtrip/issues/1410#issuecomment-646994620
+    [m, n] = size(tmp);
+    sourcemodel.leadfield(insideindx(diprange)) = mat2cell(tmp, m, repmat(n/numel(diprange), 1, numel(diprange)));
+  end
+  ft_progress('close');
   
 else
   ft_progress('init', cfg.feedback, 'computing leadfield');
