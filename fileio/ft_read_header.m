@@ -466,7 +466,17 @@ switch headerformat
     ft_hastoolbox('BIOSIG', 1);
     hdr = read_biosig_header(filename);
 
-  case {'biosemi_bdf', 'bham_bdf'}
+  case {'biosemi_v3'}
+    [dat, hdr.orig] = read_bdf(filename, 'Channels', {}, 'Verbose', false);
+    hdr.Fs          = hdr.orig.sample_rate;
+    hdr.nChans      = hdr.orig.num_channels;
+    hdr.label       = {hdr.orig.channels.labels};
+    % it is continuous
+    hdr.nSamples    = hdr.orig.num_data_records * hdr.orig.record_duration * hdr.orig.sample_rate;
+    hdr.nSamplesPre = 0;
+    hdr.nTrials     = 1;
+
+  case {'biosemi_v2', 'biosemi_bdf'}
     hdr = read_biosemi_bdf(filename);
     if any(diff(hdr.orig.SampleRate))
       ft_error('channels with different sampling rate not supported');
@@ -481,19 +491,7 @@ switch headerformat
       hdr.chanunit(chan) = {'uV'};
     end
 
-    if ft_filetype(filename, 'bham_bdf')
-      % TODO channel renaming should be made a general option
-      % this is for the Biosemi system used at the University of Birmingham
-      labelold = { 'A1' 'A2' 'A3' 'A4' 'A5' 'A6' 'A7' 'A8' 'A9' 'A10' 'A11' 'A12' 'A13' 'A14' 'A15' 'A16' 'A17' 'A18' 'A19' 'A20' 'A21' 'A22' 'A23' 'A24' 'A25' 'A26' 'A27' 'A28' 'A29' 'A30' 'A31' 'A32' 'B1' 'B2' 'B3' 'B4' 'B5' 'B6' 'B7' 'B8' 'B9' 'B10' 'B11' 'B12' 'B13' 'B14' 'B15' 'B16' 'B17' 'B18' 'B19' 'B20' 'B21' 'B22' 'B23' 'B24' 'B25' 'B26' 'B27' 'B28' 'B29' 'B30' 'B31' 'B32' 'C1' 'C2' 'C3' 'C4' 'C5' 'C6' 'C7' 'C8' 'C9' 'C10' 'C11' 'C12' 'C13' 'C14' 'C15' 'C16' 'C17' 'C18' 'C19' 'C20' 'C21' 'C22' 'C23' 'C24' 'C25' 'C26' 'C27' 'C28' 'C29' 'C30' 'C31' 'C32' 'D1' 'D2' 'D3' 'D4' 'D5' 'D6' 'D7' 'D8' 'D9' 'D10' 'D11' 'D12' 'D13' 'D14' 'D15' 'D16' 'D17' 'D18' 'D19' 'D20' 'D21' 'D22' 'D23' 'D24' 'D25' 'D26' 'D27' 'D28' 'D29' 'D30' 'D31' 'D32' 'EXG1' 'EXG2' 'EXG3' 'EXG4' 'EXG5' 'EXG6' 'EXG7' 'EXG8' 'Status'};
-      labelnew = { 'P9' 'PPO9h' 'PO7' 'PPO5h' 'PPO3h' 'PO5h' 'POO9h' 'PO9' 'I1' 'OI1h' 'O1' 'POO1' 'PO3h' 'PPO1h' 'PPO2h' 'POz' 'Oz' 'Iz' 'I2' 'OI2h' 'O2' 'POO2' 'PO4h' 'PPO4h' 'PO6h' 'POO10h' 'PO10' 'PO8' 'PPO6h' 'PPO10h' 'P10' 'P8' 'TPP9h' 'TP7' 'TTP7h' 'CP5' 'TPP7h' 'P7' 'P5' 'CPP5h' 'CCP5h' 'CP3' 'P3' 'CPP3h' 'CCP3h' 'CP1' 'P1' 'Pz' 'CPP1h' 'CPz' 'CPP2h' 'P2' 'CPP4h' 'CP2' 'CCP4h' 'CP4' 'P4' 'P6' 'CPP6h' 'CCP6h' 'CP6' 'TPP8h' 'TP8' 'TPP10h' 'T7' 'FTT7h' 'FT7' 'FC5' 'FCC5h' 'C5' 'C3' 'FCC3h' 'FC3' 'FC1' 'C1' 'CCP1h' 'Cz' 'FCC1h' 'FCz' 'FFC1h' 'Fz' 'FFC2h' 'FC2' 'FCC2h' 'CCP2h' 'C2' 'C4' 'FCC4h' 'FC4' 'FC6' 'FCC6h' 'C6' 'TTP8h' 'T8' 'FTT8h' 'FT8' 'FT9' 'FFT9h' 'F7' 'FFT7h' 'FFC5h' 'F5' 'AFF7h' 'AF7' 'AF5h' 'AFF5h' 'F3' 'FFC3h' 'F1' 'AF3h' 'Fp1' 'Fpz' 'Fp2' 'AFz' 'AF4h' 'F2' 'FFC4h' 'F4' 'AFF6h' 'AF6h' 'AF8' 'AFF8h' 'F6' 'FFC6h' 'FFT8h' 'F8' 'FFT10h' 'FT10'};
-      % rename the channel labels
-      for i=1:length(labelnew)
-        chan = strcmp(labelold(i), hdr.label);
-        hdr.label(chan) = labelnew(chan);
-      end
-    end
-
-  case {'biosemi_old'}
+  case {'biosemi_v1', 'biosemi_old'}
     % this uses the openbdf and readbdf functions that were copied from EEGLAB
     orig = openbdf(filename);
     if any(orig.Head.SampleRate~=orig.Head.SampleRate(1))
@@ -1956,7 +1954,7 @@ switch headerformat
     isaverage     = 0;
     if ~isempty(fiff_dir_tree_find(tree, FIFF.FIFFB_EVOKED)) % true file contains evoked responses
       isaverage = 1;
-      
+
       try
         evoked_data    = fiff_read_evoked_all(filename);
         vartriallength = any(diff([evoked_data.evoked.first])) || any(diff([evoked_data.evoked.last]));
@@ -1994,10 +1992,10 @@ switch headerformat
         hdr.nSamplesPre = 0;
         hdr.nTrials     = 0;
       end
-    
+
     elseif ~isempty(fiff_dir_tree_find(tree, FIFF.FIFFB_MNE_EPOCHS))
       isepoched = 1;
-      
+
       % read in the epochs info, this also gets all the data already
       epochs = fiff_read_epochs(filename);
       epochs.data = permute(epochs.data, [2 3 1]); % chan x time x rpt
@@ -2006,10 +2004,10 @@ switch headerformat
       hdr.nSamplesPre = sum(epochs.times < 0);
       hdr.nTrials     = size(epochs.data, 3); % because the data matrix has been permuted
       info.epochs     = epochs;  % this is used by read_data to get the actual data, i.e. to prevent re-reading
-      
+
     else
       iscontinuous = 1;
-      
+
       raw     = fiff_setup_read_raw(filename, 1);
       has_ias = ~isempty(fiff_dir_tree_find(meas,FIFF.FIFFB_IAS_RAW_DATA));
 
@@ -2024,7 +2022,7 @@ switch headerformat
       hdr.nTrials     = 1;
       info.raw        = raw; % keep all the details
     end
-    
+
     % remember the original header details
     hdr.orig = info;
 

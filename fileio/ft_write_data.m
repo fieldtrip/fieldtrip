@@ -19,6 +19,7 @@ function ft_write_data(filename, dat, varargin)
 %   edf
 %   gdf
 %   anywave_ades
+%   biosemi_bdf
 %   brainvision_eeg
 %   neuralynx_ncs
 %   neuralynx_sdma
@@ -37,7 +38,7 @@ function ft_write_data(filename, dat, varargin)
 %
 % See also FT_READ_HEADER, FT_READ_DATA, FT_READ_EVENT, FT_WRITE_EVENT
 
-% Copyright (C) 2007-2021, Robert Oostenveld
+% Copyright (C) 2007-2025, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -742,7 +743,23 @@ switch dataformat
     filename = fullfile(path, [file, '.edf']);
     
     write_edf(filename, hdr, dat);
+
+  case 'biosemi_bdf'
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % Biosemi BDF 24 bit format
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    if append
+      ft_error('appending data is not yet supported for this data format');
+    end
+    if ~isempty(evt)
+      ft_error('writing events is not supported');
+    end
     
+    [path, file, ext] = fileparts(filename);
+    filename = fullfile(path, [file, '.bdf']);
+    
+    write_bdf(filename, dat, hdr.Fs, hdr.label);
+
   case 'anywave_ades'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % see http://meg.univ-amu.fr/wiki/AnyWave:ADES
