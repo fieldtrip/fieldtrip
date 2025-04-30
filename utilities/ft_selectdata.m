@@ -55,6 +55,8 @@ function [varargout] = ft_selectdata(cfg, varargin)
 % Undocumented options
 %   cfg.avgoverpos
 %   cfg.keepposdim     = 'yes' or 'no' (default = 'yes')
+%   cfg.avgmethod      = name of a function that has the same API as matlab's mean which can be used as alternative 'averaging'
+%                        method, e.g. median, or sum. only works if cfg.nanmean = 'no'
 
 % Copyright (C) 2012-2022, Robert Oostenveld & Jan-Mathijs Schoffelen
 %
@@ -258,10 +260,11 @@ if avgoverrpt,     assert(hasrpt||hasrpttap, 'there are no repetitions, so avera
 
 % set averaging function
 cfg.nanmean = ft_getopt(cfg, 'nanmean', 'no');
+cfg.avgmethod = ft_getopt(cfg, 'avgmethod', 'mean');
 if strcmp(cfg.nanmean, 'yes')
   average = @nanmean;
 else
-  average = @mean;
+  average = str2func(cfg.avgmethod);
 end
 
 % by default we keep most of the dimensions in the data structure when averaging over them

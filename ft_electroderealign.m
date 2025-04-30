@@ -170,8 +170,8 @@ ft_nargout  = nargout;
 ft_defaults
 ft_preamble init
 ft_preamble debug
-ft_preamble loadvar    elec_original
-ft_preamble provenance elec_original
+ft_preamble loadvar    elec_input
+ft_preamble provenance elec_input
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -237,7 +237,7 @@ if strcmp(cfg.method, 'fiducial') && isfield(cfg, 'warp') && ~isequal(cfg.warp, 
 end
 
 % the data can be passed as input arguments or can be read from disk
-hasdata = exist('elec_original', 'var');
+hasdata = exist('elec_input', 'var');
 
 % get the electrode definition that should be warped
 if ~hasdata
@@ -750,7 +750,7 @@ elec_realigned = ft_datatype_sens(elec_realigned);
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-ft_postamble previous   elec_original
+ft_postamble previous   elec_input
 ft_postamble provenance elec_realigned
 ft_postamble history    elec_realigned
 
