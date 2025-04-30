@@ -73,6 +73,7 @@ function [hdr] = ft_read_header(filename, varargin)
 %   NeuroScan (*.eeg, *.cnt, *.avg)
 %   Nexstim (*.nxe)
 %   OpenBCI (*.txt)
+%   PhysioNet (*.hea, *.dat)
 %   TMSi (*.Poly5)
 %
 % The following spike and LFP dataformats are supported
