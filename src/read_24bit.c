@@ -114,7 +114,7 @@ mexFunction (int nlhs, mxArray * plhs[], int nrhs, const mxArray * prhs[])
     dat_p[count] = ((int32_t) ((b3 << 24) | (b2 << 16) | (b1 << 8)))/256;
   }
 
-  /* explicitely free the buffer memory and don't wait for the garbage collector */
+  /* explicitly free the buffer memory and don't wait for the garbage collector */
   mxFree(buf);
   
   /* assign the output parameters */

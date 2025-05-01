@@ -239,7 +239,7 @@ end
 
 % check whether SPM is needed to generate tissue probability maps
 if numel(cfg.output) == 1 && strcmp('scalp', cfg.output)
-  needtpm = 0; % not needed for (cummulative type) scalpmask
+  needtpm = 0; % not needed for (cumulative type) scalpmask
 else
   needtpm = any(ismember(cfg.output, {'tpm' 'gray' 'white' 'csf' 'brain' 'skull' 'skullstrip'}));
 end
@@ -622,7 +622,7 @@ elseif  ~isempty(intersect(outp, {'white' 'gray' 'csf' 'brain' 'skull' 'scalp' '
       % threshold again to remove little parts outside of head
       scalpmask = volumethreshold(scalpmask);
       
-      % output: scalp (cummulative) (if this is the only requested output)
+      % output: scalp (cumulative) (if this is the only requested output)
       if numel(outp)==1
         segmented.scalp = scalpmask;
         remove(strcmp(remove, 'scalp')) = []; % keep this

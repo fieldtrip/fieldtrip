@@ -15,7 +15,7 @@ function [cfg] = ft_databrowser(cfg, data)
 %
 % If you want to browse data that is on disk, you have to specify
 %   cfg.dataset                 = string with the filename
-% Instead of specifying the dataset, you can also explicitely specify the name of the
+% Instead of specifying the dataset, you can also explicitly specify the name of the
 % file containing the header information and the name of the file containing the
 % data, using
 %   cfg.datafile                = string with the filename
@@ -1949,7 +1949,7 @@ if strcmp(cfg.plotartifacts, 'yes')
     end
 
     for k=1:numel(artbeg)
-      i = i + 1; % it is not a simple loop, there are multiple types of artifacts, times multiple occurences
+      i = i + 1; % it is not a simple loop, there are multiple types of artifacts, times multiple occurrences
       artifacttime(i) = tim(artbeg(k)) + opt.hlim(1);
       xpos = [tim(artbeg(k)) tim(artend(k))];
 

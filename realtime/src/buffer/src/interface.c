@@ -76,7 +76,7 @@ int open_connection(const char *hostname, int port) {
 		/* We only need to do this once ... and actually have a corresponding WSACleanup call somewhere */
 		if(WSAStartup(MAKEWORD(1, 1), &wsa)) {
 			fprintf(stderr, "open_connection: cannot start sockets\n");
-			/* FIXME should this exception be handled more explicitely?  */
+			/* FIXME should this exception be handled more explicitly?  */
 		}
 	}
 #endif
