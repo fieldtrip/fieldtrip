@@ -157,7 +157,7 @@ header.sample_rate = header.channels(1).samples_per_record / header.record_durat
 if isequal(p.Results.Channels, 'all')
   channels_to_read = 1:header.num_channels;
 else
-  [~, channels_to_read] = ismember(p.Results.Channels, {header.channels.labels});
+  [dum, channels_to_read] = ismember(p.Results.Channels, {header.channels.labels});
   channels_to_read = channels_to_read(channels_to_read > 0);
   if ~isempty(p.Results.Channels) && isempty(channels_to_read)
     error('None of the specified channels were found in the file');
