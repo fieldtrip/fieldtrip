@@ -127,7 +127,7 @@ if ~isempty(desired)
   % return a boolean flag
   switch desired
     case 'bem'
-      type = any(strcmp(type, {'bem', 'dipoli', 'asa', 'bemcp', 'openmeeg'}));
+      type = any(strcmp(type, {'bem', 'dipoli', 'asa', 'bemcp', 'openmeeg', 'hbf'}));
     otherwise
       type = any(strcmp(type, desired));
   end % switch desired
