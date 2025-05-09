@@ -1,6 +1,6 @@
 function write_ply(fn, pnt, tri, format)
 
-% WRITE_PLY writes triangles, tetraheders or hexaheders to a Stanford *.ply format file
+% WRITE_PLY writes triangles, tetrahedrons or hexahedrons to a Stanford *.ply format file
 %
 % Use as
 %   write_ply(filename, vertex, element)
@@ -33,15 +33,15 @@ function write_ply(fn, pnt, tri, format)
 
 % the element are described as
 %   Mx3 list of vertices for triangles
-%   Mx4 list of vertices for tetraheders
-%   Mx8 list of vertices for hexaheders
+%   Mx4 list of vertices for tetrahedrons
+%   Mx8 list of vertices for hexahedrons
 
 if nargin<4
   format = 'ascii';
 end
 
 if size(tri,2)==4
-  % describe the sides of the tetraheders as polygon surface elements
+  % describe the sides of the tetrahedrons as polygon surface elements
   % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1836
   tri = [
     tri(:,[3 2 1])
@@ -50,7 +50,7 @@ if size(tri,2)==4
     tri(:,[4 3 1])
     ];
 elseif size(tri,2)==8
-  % describe the sides of the hexaheders as polygon surface elements
+  % describe the sides of the hexahedrons as polygon surface elements
   % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1836
   tri = [
     tri(:,[4 3 2 1])

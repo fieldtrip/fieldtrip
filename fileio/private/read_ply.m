@@ -1,6 +1,6 @@
 function [vert, face] = read_ply(fn)
 
-% READ_PLY reads triangles, tetraheders or hexaheders from a Stanford *.ply file
+% READ_PLY reads triangles, tetrahedrons or hexahedrons from a Stanford *.ply file
 %
 % Use as
 %   [vert, face, prop, face_prop] = read_ply(filename)

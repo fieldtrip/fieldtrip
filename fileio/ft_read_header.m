@@ -2376,7 +2376,7 @@ switch headerformat
     es_key = tmp.searchFor('ElectricalSeries').keys; % find lfp data, which should be an ElectricalSeries object
     es_key = es_key(~contains(es_key, 'acquisition'));
     if isempty(es_key)
-      error('Dataset does not contain an LFP or EEG signal (i.e., no object of the class ''ElectricalSeries''.')
+      error('Dataset does not contain an LFP or EEG signal (i.e., no object of the class ''ElectricalSeries'').')
     elseif numel(es_key) > 1 % && isempty(additional_user_input) % TODO: Try to sort this out with the user's help
       % Temporary fix: SpikeEventSeries is a daughter of ElectrialSeries but should not be found here (searchFor update on its way)
       es_key = es_key(contains(es_key,'lfp','IgnoreCase',true));
