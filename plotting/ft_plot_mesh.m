@@ -3,7 +3,7 @@ function [hs] = ft_plot_mesh(mesh, varargin)
 % FT_PLOT_MESH visualizes a surface or volumetric mesh, for example with the cortical
 % folding of the brain, or the scalp surface of the head. Surface meshes are
 % described by triangles and consist of a structure with the fields "pos" and "tri".
-% Volumetric meshes are described with tetraheders or hexaheders and have the fields
+% Volumetric meshes are described with tetrahedrons or hexahedrons and have the fields
 % "pos" and "tet" or "hex".
 %
 % Use as
@@ -133,8 +133,8 @@ contourlinestyle  = ft_getopt(varargin, 'contourlinestyle', '-');
 haspos   = isfield(mesh, 'pos');   % vertices
 hascolor = isfield(mesh, 'color'); % color code for vertices
 hastri   = isfield(mesh, 'tri');   % triangles   as a Mx3 matrix with vertex indices
-hastet   = isfield(mesh, 'tet');   % tetraheders as a Mx4 matrix with vertex indices
-hashex   = isfield(mesh, 'hex');   % hexaheders  as a Mx8 matrix with vertex indices
+hastet   = isfield(mesh, 'tet');   % tetrahedrons as a Mx4 matrix with vertex indices
+hashex   = isfield(mesh, 'hex');   % hexahedrons  as a Mx8 matrix with vertex indices
 hasline  = isfield(mesh, 'line');  % lines       as a Mx2 matrix with vertex indices
 haspoly  = isfield(mesh, 'poly');  % polygons    as a MxP matrix with vertex indices
 hasinside = isfield(mesh, 'inside');
@@ -150,7 +150,7 @@ if hastri+hastet+hashex+hasline+haspoly==1
     insideonly = false;
   end
 elseif hastri+hastet+hashex+hasline+haspoly>1
-  % the code further down cannot deal with simultaneous triangles, tetraheders and/or hexaheders therefore we plot them one by one
+  % the code further down cannot deal with simultaneous triangles, tetrahedrons and/or hexahedrons therefore we plot them one by one
   if hastri
     ft_plot_mesh(removefields(mesh, {'tet', 'hex', 'line', 'poly'}), varargin{:});
   end
@@ -194,8 +194,8 @@ if surfaceonly
   mesh = mesh2edge(mesh);
   % update the flags that indicate which surface/volume elements are present
   hastri   = isfield(mesh, 'tri');   % triangles   as a Mx3 matrix with vertex indices
-  hastet   = isfield(mesh, 'tet');   % tetraheders as a Mx4 matrix with vertex indices
-  hashex   = isfield(mesh, 'hex');   % hexaheders  as a Mx8 matrix with vertex indices
+  hastet   = isfield(mesh, 'tet');   % tetrahedrons as a Mx4 matrix with vertex indices
+  hashex   = isfield(mesh, 'hex');   % hexahedrons  as a Mx8 matrix with vertex indices
   hasline  = isfield(mesh, 'line');  % lines       as a Mx2 matrix with vertex indices
   haspoly  = isfield(mesh, 'poly');  % polygons    as a MxP matrix with vertex indices
 end
@@ -274,7 +274,7 @@ elseif hastet
   % there are shared triangles between neighbouring tetraeders, remove these
   tri = unique(tri, 'rows');
 elseif hashex
-  % represent the hexaheders as a collection of 6 patches
+  % represent the hexahedrons as a collection of 6 patches
   tri = [
     mesh.hex(:,[1 2 3 4]);
     mesh.hex(:,[5 6 7 8]);
@@ -283,7 +283,7 @@ elseif hashex
     mesh.hex(:,[3 4 8 7]);
     mesh.hex(:,[4 1 5 8]);
     ];
-  % there are shared faces between neighbouring hexaheders, remove these
+  % there are shared faces between neighbouring hexahedrons, remove these
   tri = unique(tri, 'rows');
 else
   tri = [];

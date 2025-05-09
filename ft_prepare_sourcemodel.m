@@ -928,17 +928,17 @@ function centr = compute_centroids(headmodel)
 % some of the fields can be copied over, fields that are specified but not present will be silently ignored
 centr = keepfields(headmodel, {'tissue', 'tissuelabel', 'unit', 'coordsys'});
 
-% the FEM model should have tetraheders or hexaheders
+% the FEM model should have tetrahedrons or hexahedrons
 if isfield(headmodel, 'tet')
   numtet = size(headmodel.tet, 1);
-  fprintf('computing centroids for %d tetraheders\n', numtet);
-  % compute the mean of the 4 corner points of the tetraheders
+  fprintf('computing centroids for %d tetrahedrons\n', numtet);
+  % compute the mean of the 4 corner points of the tetrahedrons
   centr.pos = squeeze(mean(reshape(headmodel.pos(headmodel.tet,:), numtet, 4, 3), 2));
 elseif isfield(headmodel, 'hex')
   numhex = size(headmodel.hex, 1);
-  fprintf('computing centroids for %d hexaheders\n', numhex);
-  % compute the mean of the 8 corner points of the hexaheders
+  fprintf('computing centroids for %d hexahedrons\n', numhex);
+  % compute the mean of the 8 corner points of the hexahedrons
   centr.pos = squeeze(mean(reshape(headmodel.pos(headmodel.hex,:), numhex, 8, 3), 2));
 else
-  ft_error('the headmodel does not contain tetraheders or hexaheders');
+  ft_error('the headmodel does not contain tetrahedrons or hexahedrons');
 end

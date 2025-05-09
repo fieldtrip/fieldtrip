@@ -120,9 +120,9 @@ switch ft_headmodeltype(headmodel)
     inside = surface_inside(dippos, pos, tri);
 
   case {'simbio', 'duneuro'}
-    % this is a model with hexaheders or tetraheders
+    % this is a model with hexahedrons or tetrahedrons
     if isfield(headmodel, 'tet')
-      % the subsequent code works both for tetraheders or hexaheders, but assumes the volume elements to be called "hex"
+      % the subsequent code works both for tetrahedrons or hexahedrons, but assumes the volume elements to be called "hex"
       headmodel.hex = headmodel.tet;
       headmodel = rmfield(headmodel, 'tet');
     end
@@ -135,10 +135,10 @@ switch ft_headmodeltype(headmodel)
     % select only the cortical or brain tissues
     cortex = find(ismember(headmodel.tissuelabel, {'gm', 'gray', 'brain'}));
 
-    % determine all hexaheders that are labeled as cortical or brain
+    % determine all hexahedrons that are labeled as cortical or brain
     insidehex = ismember(headmodel.tissue, cortex);
 
-    % prune the mesh, only retain hexaheders labeled as cortical or brain
+    % prune the mesh, only retain hexahedrons labeled as cortical or brain
     fprintf('pruning headmodel volume elements from %d to %d (%d%%)\n', numhex, sum(insidehex), round(100*sum(insidehex)/numhex));
     headmodel.hex    = headmodel.hex(insidehex,:);
     headmodel.tissue = headmodel.tissue(insidehex);
@@ -147,10 +147,10 @@ switch ft_headmodeltype(headmodel)
     % remove these, we don't need them any more
     clear cortex insidehex
 
-    % prune the mesh, i.e. only retain vertices that are part of a hexaheder
+    % prune the mesh, i.e. only retain vertices that are part of a hexahedron
     [headmodel.pos, headmodel.hex] = remove_unused_vertices(headmodel.pos, headmodel.hex);
 
-    % construct a sparse matrix with the mapping between all hexaheders and vertices
+    % construct a sparse matrix with the mapping between all hexahedrons and vertices
     i = repmat(transpose(1:numhex), 1, size(headmodel.hex,2));
     j = headmodel.hex;
     s = ones(size(i));
@@ -172,7 +172,7 @@ switch ft_headmodeltype(headmodel)
     % SIMBIO/Duneuro have to be convex as well.
 
     inside = false(1, numdip);
-    % for each dipole determine whether it is inside one of the neighbouring hexaheders
+    % for each dipole determine whether it is inside one of the neighbouring hexahedrons
     % this will be the case for all vertices that are inside the middle, but not at the edges
     for i=1:numel(insidedip)
       hexindx = find(hex2pos(:,posindx(i)));
@@ -185,7 +185,7 @@ switch ft_headmodeltype(headmodel)
           inside(insidedip(i)) = true;
           break % out of the for-loop
         end % if
-      end % for each hexaheder
+      end % for each hexahedron
     end % for each of the dipole positions
 
   otherwise
