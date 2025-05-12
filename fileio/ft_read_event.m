@@ -2080,10 +2080,11 @@ switch eventformat
     event = [];
 
   case 'neuroomega_mat'
-
-    hdr = ft_read_header(filename, 'headerformat', headerformat);
+    if isempty(hdr)
+      hdr = ft_read_header(filename, 'headerformat', headerformat);
+    end
     hdr_orig = hdr.orig.orig;
-    fields_orig=hdr.orig.fields; %getting digital event channels
+    fields_orig = hdr.orig.fields; % getting digital event channels
 
     % extracting time begin
     if ismember('CANALOG_IN_1_TimeBegin',fields_orig)
@@ -2142,6 +2143,46 @@ switch eventformat
       event(i).timestamp = tmp.event.timestamp(i);
       event(i).sample    = tmp.event.sample(i);
     end
+
+  case 'nwb'
+    % check that the required toolbox is available
+    ft_hastoolbox('MatNWB', 1);
+    if isempty(hdr)
+      hdr = ft_read_header(filename, 'headerformat', headerformat);
+    end
+    data = nwbRead(filename); % this is lazy, so should not be too costly
+
+    % import events
+    if ~isempty(data.intervals_trials.start_time)
+      event_lat  = hdr.Fs * (data.intervals_trials.start_time.data.load) + 1;
+      event_stop = hdr.Fs * (data.intervals_trials.stop_time.data.load) + 1;
+      event_dur  = event_stop - event_lat;
+
+      for i=1:numel(event_lat)
+        event(i).sample   = round(event_lat(i));
+        event(i).offset   = 0;
+        event(i).duration = event_dur(i);
+
+        if contains('type', data.intervals_trials.vectordata.keys)
+          event(i).type = get(data.intervals_trials.vectordata, 'type').data(i);
+          if isempty(event(i).type)
+            event(i).type = 'unknown';
+          end
+        else
+          event(i).type = 'unknown';
+        end
+
+        if contains('value', data.intervals_trials.vectordata.keys)
+          event(i).value = get(data.intervals_trials.vectordata, 'value').data(i);
+          if isempty(event(i).value)
+            event(i).value = nan;
+          end
+        else
+          event(i).value = nan;
+        end
+
+      end % for
+    end % if
 
   case 'neuralynx_cds'
     % this is a combined Neuralynx dataset with separate subdirectories for the LFP, MUA and spike channels
