@@ -305,5 +305,5 @@ switch dataformat
     save(filename, 'scirunnrrd', '-v6');
 
   otherwise
-    ft_error('unsupported format "%s"', dataformat);
+    ft_error('unsupported dataformat "%s"', dataformat);
 end % switch dataformat
