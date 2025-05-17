@@ -31,14 +31,6 @@ function [pipeline] = ft_analysispipeline(cfg, data)
 %                     be 'all', show all pipeline. Please note that if you want
 %                     to show a lot of information, this will require a lot
 %                     of screen real estate.
-%   cfg.remove      = cell-array with strings, determines which objects will
-%                     be removed from the configuration prior to writing it to
-%                     file. For readibility of the script, you may want to
-%                     remove the large objectssuch as event structure, trial
-%                     definition, source positions
-%   cfg.keepremoved = 'yes' or 'no', determines whether removed fields are
-%                     completely removed, or only replaced by a short textual
-%                     description (default = 'no')
 %
 % This function uses the nested cfg and cfg.previous that are present in
 % the data structure. It will use the configuration and the nested previous
@@ -131,34 +123,6 @@ if isempty(cfg.filetype) && ~isempty(cfg.filename)
     otherwise
       ft_error('cannot determine filetype');
   end
-end
-
-if ~isfield(cfg, 'remove')
-  % this is the default list of configuration elements to be removed. These
-  % elements would be very large to print and make the script difficult to
-  % read. To get a correctly behaving script, you may have to change this.
-  cfg.remove = {
-    'sgncmb'
-    'channelcmb'
-    'event'
-    'trl'
-    'trlold'
-    'artfctdef.eog.trl'
-    'artfctdef.jump.trl'
-    'artfctdef.muscle.trl'
-    'pos'
-    'inside'
-    'outside'
-    'sourcemodel.pos'
-    'sourcemodel.inside'
-    'sourcemodel.outside'
-    'vol.bnd.pos'
-    'vol.bnd.tri'
-    'headmodel.bnd.pos'
-    'headmodel.bnd.tri'
-    };
-elseif ~iscell(cfg.remove)
-  cfg.remove = {cfg.remove};
 end
 
 if strcmp(cfg.showinfo, 'all')
@@ -376,12 +340,6 @@ for i=1:numel(pipeline)
     if isfield(cfg, 'previous')
       cfg = rmfield(cfg, 'previous');
     end
-    % use a helper function to remove uninteresting fields
-    cfg = removefields(cfg, ignorefields('pipeline'), 'recursive', true);
-    % use a helper function to remove too large fields
-    cfg.checksize = 3000;
-    cfg = ft_checkconfig(cfg, 'checksize', 'yes');
-    cfg = rmfield(cfg, 'checksize');
     script = printstruct('cfg', cfg);
     uidisplaytext(script, pipeline(i).name);
     break;

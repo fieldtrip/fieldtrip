@@ -33,7 +33,7 @@ function ft_plot_layout(layout, varargin)
 %   'pointsize'   = scalar or vector for marker size
 % The default marker is a blue dot sorrunded by a yellow circle.
 %
-% It is possible to plot the object in a local pseudo-axis (c.f. subplot), which is specfied as follows
+% It is possible to plot the object in a local pseudo-axis (c.f. subplot), which is specified as follows
 %   'hpos'        = horizontal position of the lower left corner of the local axes
 %   'vpos'        = vertical position of the lower left corner of the local axes
 %   'width'       = width of the local axes
@@ -103,9 +103,7 @@ mask    = istrue(mask);
 outline = istrue(outline);
 verbose = istrue(verbose);
 
-if ischar(pointcolor) && exist([pointcolor '.m'], 'file')
-  pointcolor = eval(pointcolor);
-end
+if ischar(pointcolor), pointcolor = colorspec2rgb(pointcolor); end
 
 if ~(point || box || label || mask || outline)
   % there is nothing to be plotted

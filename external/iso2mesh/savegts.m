@@ -1,4 +1,4 @@
-function nedge=savegts(v,f,fname,edges)
+function nedge = savegts(v, f, fname, edges)
 %
 % nedge=savegts(v,f,fname,edges)
 %
@@ -19,17 +19,17 @@ function nedge=savegts(v,f,fname,edges)
 % -- this function is part of iso2mesh toolbox (http://iso2mesh.sf.net)
 %
 
-fid=fopen(fname,'wt');
-if(fid==-1)
+fid = fopen(fname, 'wt');
+if (fid == -1)
     error('You do not have permission to save mesh files.');
 end
-v=v(:,1:3);
-f=f(:,1:3);
-[edges,idx,edgemap]=uniqedges(f);
-nedge=size(edges,1);
+v = v(:, 1:3);
+f = f(:, 1:3);
+[edges, idx, edgemap] = uniqedges(f);
+nedge = size(edges, 1);
 
-fprintf(fid,'%d %d %d\n',size(v,1),nedge,size(f,1));
-fprintf(fid,'%.16f %.16f %.16f\n',v');
-fprintf(fid,'%d %d\n',edges');
-fprintf(fid,'%d %d %d\n',edgemap');
+fprintf(fid, '%d %d %d\n', size(v, 1), nedge, size(f, 1));
+fprintf(fid, '%.16f %.16f %.16f\n', v');
+fprintf(fid, '%d %d\n', edges');
+fprintf(fid, '%d %d %d\n', edgemap');
 fclose(fid);

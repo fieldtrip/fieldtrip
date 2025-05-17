@@ -183,7 +183,7 @@ switch cfg.method
       cfg.numvertices = repmat(cfg.numvertices, length(data.r));
     end
     
-    mesh = [];
+    mesh = struct();
     for i=1:length(data.r)
       ft_info('triangulating sphere %d in the volume conductor\n', i);
       [pos, tri] = mesh_sphere(cfg.numvertices(i));

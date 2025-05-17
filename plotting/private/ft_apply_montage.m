@@ -237,7 +237,7 @@ clear selcol
 % keep only the channels that are present in the input data
 remove = setdiff(montage.labelold, intersect(montage.labelold, inputlabel));
 selcol = match_str(montage.labelold, remove);
-% we cannot just remove the colums, all rows that depend on it should also be removed
+% we cannot just remove the columns, all rows that depend on it should also be removed
 selrow = false(length(montage.labelnew),1);
 for i=1:length(selcol)
   selrow = selrow & (montage.tra(:,selcol(i))~=0);
@@ -627,7 +627,7 @@ switch inputtype
     input = freq;
     clear freq
   case 'freq_crsspctrm'
-    % input freq data has a chan-chan crsspctrm, montage needs te be
+    % input freq data has a chan-chan crsspctrm, montage needs to be
     % applied to both ends
 
     freq = input;

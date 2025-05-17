@@ -135,10 +135,10 @@ endtrial        = ft_getopt(varargin, 'endtrial');
 chanindx        = ft_getopt(varargin, 'chanindx');
 checkboundary   = ft_getopt(varargin, 'checkboundary');
 checkmaxfilter  = ft_getopt(varargin, 'checkmaxfilter', 'yes'); % this is only passed as varargin to FT_READ_HEADER
-headerformat    = ft_getopt(varargin, 'headerformat');
+dataformat      = ft_getopt(varargin, 'dataformat');
+headerformat    = ft_getopt(varargin, 'headerformat', dataformat);  % by default the same
 fallback        = ft_getopt(varargin, 'fallback');
 cache           = ft_getopt(varargin, 'cache', false);
-dataformat      = ft_getopt(varargin, 'dataformat');
 chanunit        = ft_getopt(varargin, 'chanunit');
 timestamp       = ft_getopt(varargin, 'timestamp', false); % return Neuralynx NSC timestamps instead of actual data
 password        = ft_getopt(varargin, 'password', struct([]));
@@ -424,12 +424,16 @@ switch dataformat
     % neuromag headposition file created with maxfilter, the position varies over time
     orig = read_neuromag_headpos(filename);
     dat  = orig.data(chanindx, begsample:endsample);
-    
-  case {'biosemi_bdf', 'bham_bdf'}
+
+  case {'biosemi_v3'}
+    % this does not use a mex file for reading the 24 bit data
+    [dat, hdr.orig] = read_bdf(filename, 'Channels', hdr.label(chanindx), 'TimeRange', [begsample-1, endsample-1]/hdr.Fs, 'Verbose', false);
+
+  case {'biosemi_v2', 'biosemi_bdf'}
     % this uses a mex file for reading the 24 bit data
     dat = read_biosemi_bdf(filename, hdr, begsample, endsample, chanindx);
-    
-  case 'biosemi_old'
+
+  case {'biosemi_v1', 'biosemi_old'}
     % this uses the openbdf and readbdf functions that I copied from the EEGLAB toolbox
     epochlength = hdr.orig.Head.SampleRate(1);
     % it has already been checked in ft_read_header that all channels have the same sampling rate

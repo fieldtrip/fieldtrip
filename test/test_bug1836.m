@@ -79,7 +79,7 @@ ft_plot_mesh(mesh2,'facealpha',0.5); % rubiks cube, rotate it to see it well
 ft_write_headshape('mesh1cube',mesh1,'format','ply')
 ft_write_headshape('mesh27cube',mesh2,'format','ply')
 
-%% do the same with a tetraheder
+%% do the same with a tetrahedron
 mesh = [];
 mesh.pnt = [
   0 0 0

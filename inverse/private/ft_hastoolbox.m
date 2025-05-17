@@ -101,6 +101,7 @@ url = {
   'CCA'                                   'see http://www.imt.liu.se/~magnus/cca or contact Magnus Borga'
   'CELLFUNCTION'                          'see https://github.com/schoffelen/cellfunction'
   'CMOCEAN'                               'see https://nl.mathworks.com/matlabcentral/fileexchange/57773-matplotlib-perceptually-uniform-colormaps'
+  'CODER'                                 'see https://nl.mathworks.com/products/matlab-coder'
   'COLORCET'                              'see https://www.peterkovesi.com/matlabfns/index.html#colour'
   'COMM'                                  'see http://www.mathworks.com/products/communications'
   'COMPILER'                              'see http://www.mathworks.com/products/compiler'
@@ -308,6 +309,8 @@ switch toolbox
     dependency = {has_license('video_and_image_blockset'), 'pointCloud', 'pcnormals'};      % also check the availability of a toolbox license
   case {'DCT', 'DISTCOMP'}
     dependency = {has_license('distrib_computing_toolbox'), 'parpool', 'batch'};            % also check the availability of a toolbox license
+  case {'CODER'}
+    dependency = {has_license('MATLAB_Coder'), 'coder', 'coderdemo_bouncing_balls'};       % also check the availability of a toolbox license
   case 'COMPILER'
     dependency = {has_license('compiler'), 'mcc', 'mcr'};                                   % also check the availability of a toolbox license
   case 'FASTICA'

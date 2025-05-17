@@ -12,7 +12,7 @@ function h = ft_plot_line(X, Y, varargin)
 %   'linewidth'       =
 %   'tag'             = string, the tag assigned to the plotted elements (default = '')
 %
-% It is possible to plot the object in a local pseudo-axis (c.f. subplot), which is specfied as follows
+% It is possible to plot the object in a local pseudo-axis (c.f. subplot), which is specified as follows
 %   'hpos'            = horizontal position of the center of the local axes
 %   'vpos'            = vertical position of the center of the local axes
 %   'width'           = width of the local axes
@@ -55,11 +55,7 @@ linewidth   = ft_getopt(varargin, 'linewidth',  0.5);
 tag         = ft_getopt(varargin, 'tag',        '');
 
 % color management
-if ischar(color) && exist([color '.m'], 'file')
-  color = eval(color);
-elseif ischar(color) && ismember(color, htmlcolors)
-  color = htmlcolors(color);
-end
+if ischar(color), color = colorspec2rgb(color); end
 
 if isempty(hlim) && isempty(vlim) && isempty(hpos) && isempty(vpos) && isempty(height) && isempty(width)
   % no scaling is needed, the input X and Y are already fine

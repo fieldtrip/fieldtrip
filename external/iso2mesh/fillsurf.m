@@ -1,4 +1,4 @@
-function [no,el]=fillsurf(node,face)
+function [no, el] = fillsurf(node, face)
 %
 % [no,el]=fillsurf(node,face)
 %
@@ -16,5 +16,4 @@ function [no,el]=fillsurf(node,face)
 % -- this function is part of iso2mesh toolbox (http://iso2mesh.sf.net)
 %
 
-ISO2MESH_TETGENOPT='-YY';
-[no,el]=surf2mesh(node,face,[],[],1,1);
+[no, el] = surf2mesh(node, face, [], [], 1, 1, [], [], 0, 'tetgen', '-YY');

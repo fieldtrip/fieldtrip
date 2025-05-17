@@ -1,4 +1,4 @@
-function [pos, tri] = remove_double_vertices(pos, tri)
+function [pos, tri, tissue] = remove_double_vertices(pos, tri, tissue)
 
 % REMOVE_DOUBLE_VERTICES removes double vertices from a triangular, tetrahedral or
 % hexahedral mesh, renumbering the vertex-indices for the elements.
@@ -8,9 +8,9 @@ function [pos, tri] = remove_double_vertices(pos, tri)
 %   [pos, tet] = remove_double_vertices(pos, tet)
 %   [pos, hex] = remove_double_vertices(pos, hex)
 %
-% See also REMOVE_VERTICES
+% See also REMOVE_VERTICES, REMOVE_UNUSED_VERTICES
 
-% Copyright (C) 2004-2022, Robert Oostenveld and Jan-Mathijs Schoffelen
+% Copyright (C) 2004-2025, Robert Oostenveld and Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -30,16 +30,26 @@ function [pos, tri] = remove_double_vertices(pos, tri)
 %
 % $Id$
 
-npos = size(pos, 1);
-[dum, keeppos, i2] = unique(pos, 'rows');
-clear dum
+npos = size(pos,1);
+ntri = size(tri,1);
 
-numb    = zeros(1,npos);
-numb(keeppos) = 1:length(keeppos);
+% do some sanity checks
+assert(all(tri(:))>0)
+assert(all(tri(:))<=npos);
+if nargin>2
+  assert(numel(tissue)==ntri);
+end
 
-% re-index the indices in tri
-tri = keeppos(i2(tri));
-tri = numb(tri);
+% find unique vertices, keep them in the same order
+[newpos, ia, ic] = unique(pos, 'rows', 'stable');
 
-% remove the vertices and triangles
-pos = pos(keeppos, :);
+% determine the mapping from the old to new indices
+mapping = zeros(1,npos);
+mapping(ia) = 1:length(ia);
+
+% re-index the vertex indices that are represented in tri
+tri = ia(ic(tri));
+tri = mapping(tri);
+
+% return only the unique vertices
+pos = newpos;

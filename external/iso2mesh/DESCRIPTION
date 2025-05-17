@@ -1,0 +1,21 @@
+Name: iso2mesh
+Version: 1.9.8
+Date: 2024-17-10
+Title: A 3D surface and volumetric mesh generator for MATLAB/Octave
+Author: Qianqian Fang <fangqq@gmail.com>
+Maintainer: Qianqian Fang <fangqq@gmail.com>
+Description: Iso2Mesh is a MATLAB/Octave-based mesh generation toolbox,
+ designed for easy creation of high quality surface and
+ tetrahedral meshes from 3D volumetric images. It contains
+ a rich set of mesh processing scripts/programs, working
+ either independently or interacting with external free
+ meshing utilities. Iso2Mesh toolbox can directly convert
+ a 3D image stack, including binary, segmented or gray-scale
+ images such as MRI or CT scans, into quality volumetric
+ meshes. This makes it particularly suitable for multi-modality
+ medical imaging data analysis and multi-physics modeling.
+ Iso2Mesh is cross-platform and is compatible with both MATLAB
+ and GNU Octave.
+URL: http://iso2mesh.sf.net
+Depends: jnifti, jsonlab, zmat
+Categories: Mesh

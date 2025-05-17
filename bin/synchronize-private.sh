@@ -185,6 +185,14 @@ ARRAY+=(utilities/private/channelposition.m)
 sync ${ARRAY[*]}
 
 ################################################################################
+# colorspec2rgb.m
+
+ARRAY=()
+ARRAY+=(plotting/private/colorspec2rgb.m)
+ARRAY+=(private/colorspec2rgb.m)
+sync ${ARRAY[*]}
+
+################################################################################
 # combineClusters.m
 
 ARRAY=()
@@ -2692,16 +2700,16 @@ sync ${ARRAY[*]}
 # neuralynx_crc.m
 
 ARRAY=()
+ARRAY+=(contrib/spike/private/neuralynx_crc.m)
 ARRAY+=(fileio/private/neuralynx_crc.m)
-ARRAY+=(private/neuralynx_crc.m)
 sync ${ARRAY[*]}
 
 ################################################################################
 # neuralynx_getheader.m
 
 ARRAY=()
+ARRAY+=(contrib/spike/private/neuralynx_getheader.m)
 ARRAY+=(fileio/private/neuralynx_getheader.m)
-ARRAY+=(private/neuralynx_getheader.m)
 sync ${ARRAY[*]}
 
 ################################################################################
@@ -3238,7 +3246,6 @@ sync ${ARRAY[*]}
 ARRAY=()
 ARRAY+=(contrib/spike/private/read_neuralynx_dma.m)
 ARRAY+=(fileio/private/read_neuralynx_dma.m)
-ARRAY+=(private/read_neuralynx_dma.m)
 sync ${ARRAY[*]}
 
 ################################################################################
@@ -3895,6 +3902,14 @@ sync ${ARRAY[*]}
 ARRAY=()
 ARRAY+=(contrib/spike/private/specest_nanfft.m)
 ARRAY+=(private/specest_nanfft.m)
+sync ${ARRAY[*]}
+
+################################################################################
+# standardcolors.m
+
+ARRAY=()
+ARRAY+=(private/standardcolors.m)
+ARRAY+=(plotting/private/standardcolors.m)
 sync ${ARRAY[*]}
 
 ################################################################################

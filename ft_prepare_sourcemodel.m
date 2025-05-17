@@ -69,10 +69,10 @@ function [sourcemodel, cfg] = ft_prepare_sourcemodel(cfg)
 %
 % BASEDONCENTROIDS - places sources on the centroids of a volumetric mesh
 %   cfg.headmodel       = tetrahedral or hexahedral mesh
-%   cfg.headmodel.type  = 'simbio';
+%   cfg.headmodel.type  = 'simbio'
 %
 % Other configuration options include
-%   cfg.unit            = string, can be 'mm', 'cm', 'm' (default is automatic)
+%   cfg.unit            = string, can be 'mm', 'cm', 'm' (default is automatic, based on the input data)
 %   cfg.tight           = 'yes' or 'no' (default is automatic)
 %   cfg.inwardshift     = number, amount to shift the innermost surface of the headmodel inward when determining
 %                         whether sources are inside or outside the source compartment (default = 0)
@@ -167,18 +167,19 @@ cfg = ft_checkconfig(cfg, 'createsubcfg', {'sourcemodel'});
 cfg = ft_checkconfig(cfg, 'createtopcfg', {'sourcemodel'});
 
 % set the defaults
-cfg.moveinward        = ft_getopt(cfg, 'moveinward'); % the default is automatic and depends on a triangulation being present
-cfg.spherify          = ft_getopt(cfg, 'spherify', 'no');
+cfg.method            = ft_getopt(cfg, 'method'); % the default is to do automatic detection further down
 cfg.headshape         = ft_getopt(cfg, 'headshape');
-cfg.symmetry          = ft_getopt(cfg, 'symmetry');
-cfg.spmversion        = ft_getopt(cfg, 'spmversion', 'spm12');
+cfg.mri               = ft_getopt(cfg, 'mri');
 cfg.headmodel         = ft_getopt(cfg, 'headmodel');
 cfg.sourcemodel       = ft_getopt(cfg, 'sourcemodel');
 cfg.unit              = ft_getopt(cfg, 'unit');
-cfg.method            = ft_getopt(cfg, 'method'); % the default is to do automatic detection further down
+cfg.symmetry          = ft_getopt(cfg, 'symmetry');
+cfg.spmversion        = ft_getopt(cfg, 'spmversion', 'spm12');
+cfg.spherify          = ft_getopt(cfg, 'spherify', 'no');
 cfg.movetocentroids   = ft_getopt(cfg, 'movetocentroids', 'no');
-cfg.feedback          = ft_getopt(cfg, 'feedback', 'text');
+cfg.moveinward        = ft_getopt(cfg, 'moveinward'); % the default is automatic and depends on a triangulation being present
 cfg.checkinside       = ft_getopt(cfg, 'checkinside', 'no'); % default is 'no' since this is a relatively slow procedure. It is also not always required, for example with MEG singlesphere, singleshell, localspheres.
+cfg.feedback          = ft_getopt(cfg, 'feedback', 'text');
 
 % this option was deprecated on 12 Aug 2020
 if isfield(cfg, 'warpmni')
@@ -223,7 +224,7 @@ if isempty(cfg.method)
     cfg.method = 'basedonpos'; % using user-supplied positions, which can be regular or irregular
   elseif ~isempty(cfg.headshape)
     cfg.method = 'basedonshape'; % surface mesh based on inward shifted head surface from external file
-  elseif isfield(cfg, 'mri')
+  elseif ~isempty(cfg.mri)
     cfg.method = 'basedonmri'; % regular 3D grid, based on segmented MRI, restricted to gray matter
   elseif isfield(cfg, 'headshape') && (iscell(cfg.headshape) || any(ft_filetype(cfg.headshape, {'neuromag_fif', 'freesurfer_triangle_binary', 'caret_surf', 'gifti'})))
     cfg.method = 'basedoncortex'; % cortical sheet from external software such as Caret or FreeSurfer, can also be two separate hemispheres
@@ -315,7 +316,7 @@ end
 sourcemodel = [];
 
 % get the volume conduction model
-if ischar(cfg.headmodel)
+if ~isempty(cfg.headmodel) && ischar(cfg.headmodel)
   headmodel = ft_read_headmodel(cfg.headmodel);
 else
   % ensure that the volume conduction model is up-to-date
@@ -323,10 +324,17 @@ else
 end
 
 % get the headshape, this can also be a cortical sheet, or a set of left and right cortical sheets
-if ischar(cfg.headshape)
+if ~isempty(cfg.headshape) && ischar(cfg.headshape)
   headshape = ft_read_headshape(cfg.headshape);
 else
   headshape = cfg.headshape;
+end
+
+% get the anatomical MRI or segmentation
+if ~isempty(cfg.mri) && ischar(cfg.mri)
+  mri = ft_read_mri(cfg.mri);
+else
+  mri = cfg.mri;
 end
 
 % get the gradiometer or electrode definition
@@ -356,6 +364,9 @@ if isempty(cfg.unit)
   elseif strcmp(cfg.method, 'basedonmni') && ~isempty(cfg.mri.unit)
     % take the existing MRI units
     cfg.unit = cfg.mri.unit;
+  elseif strcmp(cfg.method, 'basedonmri') && ~isempty(cfg.mri.unit)
+    % take the existing MRI units
+    cfg.unit = cfg.mri.unit;
   elseif ~isempty(sens)
     % take the units from the gradiometer or electrode array
     cfg.unit = sens.unit;
@@ -366,6 +377,7 @@ if isempty(cfg.unit)
     ft_warning('assuming "cm" as default units for source model');
     cfg.unit = 'cm';
   end
+  ft_warning('assuming that the sourcemodel units are in %s', cfg.unit);
 end
 
 % convert the volume conduction model to the desired units for the source model
@@ -381,6 +393,11 @@ end
 % convert the sensor array to the desired units for the source model
 if ~isempty(sens)
   sens = ft_convert_units(sens, cfg.unit);
+end
+
+if ~isempty(mri)
+  % convert the mri to the desired units for the source model
+  mri = ft_convert_units(mri, cfg.unit);
 end
 
 switch cfg.method
@@ -493,17 +510,6 @@ switch cfg.method
     % configuration, only voxels in gray matter will be used
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    if ischar(cfg.mri)
-      mri = ft_read_mri(cfg.mri);
-    else
-      mri = cfg.mri;
-    end
-
-    % ensure the mri to have units
-    if ~isfield(mri, 'unit')
-      mri = ft_determine_units(mri);
-    end
-
     if ~isfield(cfg, 'resolution')
       switch cfg.unit
         case 'mm'
@@ -519,8 +525,7 @@ switch cfg.method
 
     issegmentation = false;
     if isfield(mri, 'gray')
-      % this is not a boolean segmentation, but based on tissue probability
-      % maps, being the original implementation here.
+      % this is based on tissue probability maps, being the original implementation here.
       dat = double(mri.gray);
 
       % apply a smoothing of a certain amount of voxels
@@ -529,9 +534,8 @@ switch cfg.method
       end
 
     elseif isfield(mri, 'anatomy')
-      % this could be a tpm stored on disk, i.e. the result of
-      % ft_volumesegment. Reading it in always leads to the field 'anatomy'.
-      % Note this could be any anatomical mask
+      % this could be an anatomical MRI but also a segmentation or tpm stored as a
+      % NIFTI file, reading it from disk always leads to the field 'anatomy'.
       dat = double(mri.anatomy);
 
       % apply a smoothing of a certain amount of voxels
@@ -567,25 +571,32 @@ switch cfg.method
     fprintf('thresholding MRI data at a relative value of %f\n', cfg.threshold);
     head = dat./max(dat(:)) > cfg.threshold;
 
-    % convert the source/functional data into the same units as the anatomical MRI
-    scale = ft_scalingfactor(cfg.unit, mri.unit);
-
     ind                 = find(head(:));
     fprintf('%d from %d voxels in the segmentation are marked as ''inside'' (%.0f%%)\n', length(ind), numel(head), 100*length(ind)/numel(head));
     [X,Y,Z]             = ndgrid(1:mri.dim(1), 1:mri.dim(2), 1:mri.dim(3));             % create the grid in MRI-coordinates
     posmri              = [X(ind) Y(ind) Z(ind)];                                       % take only the inside voxels
     poshead             = ft_warp_apply(mri.transform, posmri);                         % transform to head coordinates
-    resolution          = cfg.resolution*scale;                                         % source and mri can be expressed in different units (e.g. cm and mm)
-    xgrid               = floor(min(poshead(:,1))):resolution:ceil(max(poshead(:,1)));  % create the grid in head-coordinates
-    ygrid               = floor(min(poshead(:,2))):resolution:ceil(max(poshead(:,2)));  % with 'consistent' x,y,z definitions
-    zgrid               = floor(min(poshead(:,3))):resolution:ceil(max(poshead(:,3)));
+    resolution          = cfg.resolution;                                               % source and mri are expressed in the same units
+    
+    % determine the size of a bounding box, round it off to the nearest mm
+    scale = ft_scalingfactor(cfg.unit, 'mm');
+    xmin = floor(min(scale*poshead(:,1)))/scale;
+    xmax = ceil (max(scale*poshead(:,1)))/scale;
+    ymin = floor(min(scale*poshead(:,2)))/scale;
+    ymax = ceil (max(scale*poshead(:,2)))/scale;
+    zmin = floor(min(scale*poshead(:,3)))/scale;
+    zmax = ceil (max(scale*poshead(:,3)))/scale;
+
+    xgrid               = xmin:resolution:xmax;  % create the grid in head-coordinates
+    ygrid               = ymin:resolution:ymax;  % with consistent x,y,z definitions
+    zgrid               = zmin:resolution:zmax;
     [X,Y,Z]             = ndgrid(xgrid,ygrid,zgrid);
     pos2head            = [X(:) Y(:) Z(:)];
     pos2mri             = ft_warp_apply(inv(mri.transform), pos2head);                  % transform to MRI voxel coordinates
     pos2mri             = round(pos2mri);
     inside              = getinside(pos2mri, head);                                     % use helper subfunction
 
-    sourcemodel.pos     = pos2head/scale;                                               % convert to source units
+    sourcemodel.pos     = pos2head;
     sourcemodel.dim     = [length(xgrid) length(ygrid) length(zgrid)];
     sourcemodel.inside  = inside(:);
     sourcemodel.unit    = cfg.unit;
@@ -663,13 +674,6 @@ switch cfg.method
     % if not create it: FIXME (this needs to be done still)
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    % get the mri
-    if ischar(cfg.mri)
-      mri = ft_read_mri(cfg.mri);
-    else
-      mri = cfg.mri;
-    end
-
     % get the template grid
     if ischar(fname)
       mnigrid = loadvar(fname, 'sourcemodel');
@@ -677,7 +681,7 @@ switch cfg.method
       mnigrid = cfg.template;
     end
 
-    % ensure these to have units in mm, the conversion of the source model is done further down
+    % ensure these to have units in mm, the conversion of the source model into the desired units is done further down
     mri     = ft_convert_units(mri,     'mm');
     mnigrid = ft_convert_units(mnigrid, 'mm');
 
@@ -685,7 +689,7 @@ switch cfg.method
     mnigrid = fixinside(mnigrid);
 
     % spatial normalisation of the MRI to the template
-    tmpcfg           = keepfields(cfg, {'spmversion', 'spmmethod', 'nonlinear'});
+    tmpcfg = keepfields(cfg, {'spmversion', 'spmmethod', 'nonlinear'});
     if isfield(cfg, 'templatemri')
       % this option is called differently for the two functions
       tmpcfg.template = cfg.templatemri;
@@ -924,17 +928,17 @@ function centr = compute_centroids(headmodel)
 % some of the fields can be copied over, fields that are specified but not present will be silently ignored
 centr = keepfields(headmodel, {'tissue', 'tissuelabel', 'unit', 'coordsys'});
 
-% the FEM model should have tetraheders or hexaheders
+% the FEM model should have tetrahedrons or hexahedrons
 if isfield(headmodel, 'tet')
   numtet = size(headmodel.tet, 1);
-  fprintf('computing centroids for %d tetraheders\n', numtet);
-  % compute the mean of the 4 corner points of the tetraheders
+  fprintf('computing centroids for %d tetrahedrons\n', numtet);
+  % compute the mean of the 4 corner points of the tetrahedrons
   centr.pos = squeeze(mean(reshape(headmodel.pos(headmodel.tet,:), numtet, 4, 3), 2));
 elseif isfield(headmodel, 'hex')
   numhex = size(headmodel.hex, 1);
-  fprintf('computing centroids for %d hexaheders\n', numhex);
-  % compute the mean of the 8 corner points of the hexaheders
+  fprintf('computing centroids for %d hexahedrons\n', numhex);
+  % compute the mean of the 8 corner points of the hexahedrons
   centr.pos = squeeze(mean(reshape(headmodel.pos(headmodel.hex,:), numhex, 8, 3), 2));
 else
-  ft_error('the headmodel does not contain tetraheders or hexaheders');
+  ft_error('the headmodel does not contain tetrahedrons or hexahedrons');
 end

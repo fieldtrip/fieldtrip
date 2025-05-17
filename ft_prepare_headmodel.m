@@ -43,7 +43,7 @@ function [headmodel, cfg] = ft_prepare_headmodel(cfg, data)
 %   dipoli             boundary element method, based on the implementation from Thom Oostendorp
 %   asa                boundary element method, based on the (commercial) ASA software
 %   simbio             finite element method, based on the SimBio software
-%   duneuro            finite element method, based on duneuro software
+%   duneuro            finite element method, based on the DUNEuro software
 %   fns                finite difference method, based on the FNS software
 %   infinite           electric dipole in an infinite homogenous medium
 %   halfspace          infinite homogenous medium on one side, vacuum on the other

@@ -28,6 +28,7 @@ function [shape] = ft_read_headshape(filename, varargin)
 %   'surface'     = specific surface to be read (only for Caret spec files)
 %   'refine'      = number, used for refining Structure Sensor meshes (default = 1)
 %   'jmeshopt'    = cell-array with {'name', 'value'} pairs, options for reading JSON/JMesh files
+%   'meshtype'    = string, which type of mesh to read in case the file contains multiple types, can be 'tri', 'tet' or 'hex'
 %
 % Supported input file formats include
 %   'gifti'           see https://www.nitrc.org/projects/gifti/
@@ -69,7 +70,7 @@ function [shape] = ft_read_headshape(filename, varargin)
 %
 % See also FT_READ_HEADMODEL, FT_READ_SENS, FT_READ_ATLAS, FT_WRITE_HEADSHAPE
 
-% Copyright (C) 2008-2024, Robert Oostenveld
+% Copyright (C) 2008-2025, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -99,6 +100,7 @@ unit           = ft_getopt(varargin, 'unit');
 image          = ft_getopt(varargin, 'image');               % path to .jpg file
 surface        = ft_getopt(varargin, 'surface');
 refine_        = ft_getopt(varargin, 'refine', 1);           % do not confuse with the private/refine function
+meshtype       = ft_getopt(varargin, 'meshtype');            % tri, tet or hex
 
 % Check the input, if filename is a cell-array, call FT_READ_HEADSHAPE recursively and combine the outputs.
 % This is used to read the left and right hemisphere of a Freesurfer cortical segmentation.
@@ -209,7 +211,7 @@ if iscell(filename)
 end % if iscell
 
 % some of the code does not work well on matlab strings, (i.e. "" vs ''),
-% specifically ["a" "b"] yields something different than ['a' 'b']. 
+% specifically ["a" "b"] yields something different than ['a' 'b'].
 if isstring(filename)
   filename = char(filename);
 end
@@ -440,7 +442,7 @@ switch fileformat
   case 'mne_source'
     % read the source space from an MNE file
     ft_hastoolbox('mne', 1);
-    
+
     try
       % a fif-file can also contain a source space that is volumetric, in which case the below function call will fail (due to the add_geom
       % being specified as true, but the file does not contain triangulation information. strictly speaking, the fif-file then
@@ -1383,6 +1385,46 @@ switch fileformat
       end
     end
 
+    hastri = isfield(shape, 'tri');
+    hastet = isfield(shape, 'tet');
+    
+    if isempty(meshtype)
+      if hastri && hastet
+        ft_warning('mesh has both tri and tet, returning tet');
+        meshtype = 'tet';
+      elseif hastet
+        meshtype = 'tet';
+      elseif hastri
+        meshtype = 'tri';
+      end
+    end
+
+    if isfield(shape, 'triangle_regions')
+      if strcmp(meshtype, 'tri')
+        % use this as the tissue type when keeping triangles
+        shape.tissue = shape.triangle_regions;
+      end
+      shape = rmfield(shape, 'triangle_regions');
+    end
+
+    if isfield(shape, 'tetrahedron_regions')
+      if strcmp(meshtype, 'tet')
+        % use this as the tissue type when keeping tetrahedrons
+        shape.tissue = shape.tetrahedron_regions;
+      end
+      shape = rmfield(shape, 'tetrahedron_regions');
+    end
+
+    if isfield(shape, 'tissue')
+      if all(shape.tissue(:)>999)
+        % this is the case for surface meshes with triangles
+        shape.tissue = shape.tissue-1000;
+      end
+      [labels, values, rgba] = simnibs_labels;
+      shape.tissuelabel = labels;
+      shape.rgba = rgba; % this is consistent with FT_READ_ATLAS
+    end
+
   case 'gmsh_binary_v1'
     % use Jan-Mathijs' reader, this only works for binary files but does read all gmsh properties/tags
     [nodes, elements] = read_gmsh_binary(filename);
@@ -1600,3 +1642,82 @@ shape = fixpos(shape);
 
 % ensure that the numerical arrays are represented in double precision and not as integers
 shape = ft_struct2double(shape);
+
+% determine which types of meshes to keep if there are multiple
+hastri = isfield(shape, 'tri');
+hastet = isfield(shape, 'tet');
+hashex = isfield(shape, 'hex');
+
+if (hastri+hastet+hashex)>1
+  % there are multiple types of meshes
+  % this also allows for specifications like 'tri+tet'
+  if  hastri && ~strcmp(meshtype, 'tri')
+    if isempty(meshtype)
+      ft_warning('removing surface mesh (tri), use the ''meshtype'' option to keep it')
+    end
+    shape = removefields(shape, 'tri');
+  elseif hastet && ~strcmp(meshtype, 'tet')
+    if isempty(meshtype)
+      ft_warning('removing tetrahedral mesh (tet), use the ''meshtype'' option to keep it')
+    end
+    shape = removefields(shape, 'tet');
+  elseif hashex && ~strcmp(meshtype, 'hex')
+    if isempty(meshtype)
+      ft_warning('removing hexahedral mesh (hex), use the ''meshtype'' option to keep it')
+    end
+    shape = removefields(shape, 'hex');
+  end
+
+end % if multiple types of meshes
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function [labels, values, rgba] = simnibs_labels
+% the following is from the final_tissues_LUT.txt and the .msh.opt files
+% the values should be offset with 1000 in case of triangles
+
+values = [
+  1
+  2
+  3
+  4
+  5
+  6
+  7
+  8
+  9
+  100
+  500
+  ];
+
+labels = {
+  'WM'
+  'GM'
+  'CSF'
+  'Bone'
+  'Scalp'
+  'Eye_balls'
+  'Compact_bone'
+  'Spongy_bone'
+  'Blood'
+  'Muscle'
+  'Electrode'
+  'Saline_or_gel'
+  };
+
+rgba = [
+  230 230 230 255
+  129 129 129 255
+  104 163 255 255
+  255 239 179 255
+  255 166 133 255
+  255 240 0 255
+  255 239 179 255
+  255 138 57 255
+  0 65 142 255
+  0 118 14 255
+  37 79 255 255
+  103 255 226 255
+  ];
+

@@ -6,6 +6,8 @@ function data = read_vtk_xml(filename)
 % this function is a trial-and-error based implementation to read xml-style
 % vtk files. There is some documentation online, which seems somewhat
 % incomplete, or at least not fully understood by me.
+%
+% See also READ_VTK, WRITE_VTK
 
 tree   = xmltree(filename);
 nnodes = length(tree);

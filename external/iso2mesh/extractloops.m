@@ -1,4 +1,4 @@
-function loops=extractloops(edges)
+function loops = extractloops(edges)
 %
 % loops=extractloops(edges)
 %
@@ -7,8 +7,8 @@ function loops=extractloops(edges)
 % author: Qianqian Fang, <q.fang at neu.edu>
 % date: 2007/11/21
 %
-% input:   
-%    edges:  two column matrix recording the starting/ending 
+% input:
+%    edges:  two column matrix recording the starting/ending
 %             points of all edge segments
 %
 % output:
@@ -22,54 +22,58 @@ function loops=extractloops(edges)
 % -- this function is part of iso2mesh toolbox (http://iso2mesh.sf.net)
 %
 
-loops=[];
-loops=[loops,edges(1,:)];
-loophead=edges(1,1);
-loopend=edges(1,end);
-edges(1,:)=[];
+loops = [];
+edges(edges(:, 1) == edges(:, 2), :) = []; % remove degenerated edges
+loops = [loops, edges(1, :)];
+loophead = edges(1, 1);
+loopend = edges(1, end);
+edges(1, :) = [];
 
-while(~isempty(edges))
-    idx=[find(edges(:,1)==loopend)',find(edges(:,2)==loopend)'];
-    if(length(idx)>1) % when a node with multiple connection found
-        idx=idx(1);   % take the first connection and continue
+while (~isempty(edges))
+    idx = [find(edges(:, 1) == loopend)', find(edges(:, 2) == loopend)'];
+    if (length(idx) > 1) % when a node with multiple connection found
+        idx = idx(1);   % take the first connection and continue
     end
-    if(isempty(idx)) % when an open-line segment gets to one end
+    if (isempty(idx)) % when an open-line segment gets to one end
         % when both open ends are found
-        if(isempty([find(edges(:,1)==loophead)',find(edges(:,2)==loophead)']))
-            loops=[loops,nan];
-            loops=[loops,edges(1,:)];
-            loophead=edges(1,1);
-            loopend=edges(1,end);
-            edges(1,:)=[];
+        if (isempty([find(edges(:, 1) == loophead)', find(edges(:, 2) == loophead)']))
+            loops = [loops, nan];
+            loops = [loops, edges(1, :)];
+            loophead = edges(1, 1);
+            loopend = edges(1, end);
+            edges(1, :) = [];
         else % only the first open end is found, flip and trace the other
-            [loophead, loopend]=deal(loopend, loophead);
-            lp=fliplr(loops);
-            seg=find(isnan(lp),1);
-            if(isempty(seg))
-                loops=lp;
+            [loophead, loopend] = deal(loopend, loophead);
+            lp = fliplr(loops);
+            seg = find(isnan(lp), 1);
+            if (isempty(seg))
+                loops = lp;
             else
-                loops=[loops(1:end-seg(1)+1) lp(1:seg(1)-1)];
+                loops = [loops(1:end - seg(1) + 1) lp(1:seg(1) - 1)];
             end
         end
-        continue;    
+        continue
     end
-    if(length(idx)==1) % tracing along a single line thread
-        idx=idx(1);
-        newend=setdiff(edges(idx,:),loopend);
-        if(newend==loophead)  % when a loop is found
-            loops=[loops loophead nan];
-            edges(idx,:)=[];
-            if(size(edges,1)==0) break; end
-            loops=[loops,edges(1,:)];
-            loophead=edges(1,1);
-            loopend=edges(1,end);
-            edges(1,:)=[];
-            continue;
+    if (length(idx) == 1) % tracing along a single line thread
+        idx = idx(1);
+        ed = edges(idx, :);
+        ed(ed == loopend) = [];
+        newend = ed(1);
+        if (newend == loophead)  % when a loop is found
+            loops = [loops loophead nan];
+            edges(idx, :) = [];
+            if (size(edges, 1) == 0)
+                break
+            end
+            loops = [loops, edges(1, :)];
+            loophead = edges(1, 1);
+            loopend = edges(1, end);
+            edges(1, :) = [];
+            continue
         else
-            loops=[loops,newend];
+            loops = [loops, newend];
         end
-        loopend=newend;
-        edges(idx,:)=[];
+        loopend = newend;
+        edges(idx, :) = [];
     end
 end
-    

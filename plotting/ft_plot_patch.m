@@ -23,7 +23,7 @@ function [varargout] = ft_plot_patch(hdat, vdat, varargin)
 %   - as an 'RGB triplet', a 1x3 vector with values between 0 and 1
 %   - as 'none' if you do not want the face of the patch to be filled (useful when you want to plot an empty box).
 %
-% It is possible to plot the object in a local pseudo-axis (c.f. subplot), which is specfied as follows
+% It is possible to plot the object in a local pseudo-axis (c.f. subplot), which is specified as follows
 %   'box'             = draw a box around the local axes, can be 'yes' or 'no'
 %   'hpos'            = horizontal position of the center of the local axes
 %   'vpos'            = vertical position of the center of the local axes
@@ -82,12 +82,8 @@ linewidth       = ft_getopt(varargin, 'linewidth', .5);
 box = istrue(box);
 
 % color management
-if ischar(facecolor) && exist([facecolor '.m'], 'file')
-  facecolor = feval(facecolor);
-end
-if ischar(edgecolor) && exist([edgecolor '.m'], 'file')
-  edgecolor = feval(edgecolor);
-end
+if ischar(facecolor), facecolor = colorspec2rgb(facecolor); end
+if ischar(edgecolor), edgecolor = colorspec2rgb(edgecolor); end
 
 % this should be a string, because valid options include yes, no, xy, x, y
 if isequal(axis, true)

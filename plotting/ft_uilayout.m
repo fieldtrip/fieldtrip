@@ -1,6 +1,6 @@
 function ft_uilayout(h, varargin)
 
-% FT_UILAYOUT is a helper function to make a consistent graphical user interafce with
+% FT_UILAYOUT is a helper function to make a consistent graphical user interface with
 % multiple control elements. This function will find all elements with a specific tag
 % and style, and update or position them consistently.
 %

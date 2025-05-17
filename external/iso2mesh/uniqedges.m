@@ -1,4 +1,4 @@
-function [edges,idx,edgemap]=uniqedges(elem)
+function [edges, idx, edgemap] = uniqedges(elem)
 %
 % [edges,idx,edgemap]=uniqedges(elem)
 %
@@ -18,14 +18,16 @@ function [edges,idx,edgemap]=uniqedges(elem)
 % -- this function is part of iso2mesh toolbox (http://iso2mesh.sf.net)
 %
 
-if(size(elem)==2)
-   edges=elem;
-elseif(size(elem)>=3)
-   edges=meshedge(elem);
+if (size(elem) == 2)
+    edges = elem;
+elseif (size(elem) >= 3)
+    edges = meshedge(elem);
 else
-   error('invalid input');
+    error('invalid input');
 end
 
-[uedges,idx,jdx]=unique(sort(edges,2),'rows');
-edges=edges(idx,:);
-edgemap=reshape(jdx,size(elem));
+[uedges, idx, jdx] = unique(sort(edges, 2), 'rows');
+edges = edges(idx, :);
+if (nargout > 2)
+    edgemap = reshape(jdx, [size(elem, 1) nchoosek(size(elem, 2), 2)]);
+end

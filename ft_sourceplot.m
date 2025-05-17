@@ -162,11 +162,11 @@ function [cfg] = ft_sourceplot(cfg, functional, anatomical)
 %
 % The following parameters apply to cfg.method='surface' irrespective of whether an interpolation is required
 %   cfg.camlight       = 'yes' or 'no' (default = 'yes')
-%   cfg.facecolor      = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r',
+%   cfg.facecolor      = [r g b] values or string, for example 'skin', 'skull', 'brain', 'black', 'red', 'r',
 %                        or an Nx3 or Nx1 array where N is the number of faces
-%   cfg.vertexcolor    = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r',
+%   cfg.vertexcolor    = [r g b] values or string, for example 'skin', 'skull', 'brain', 'black', 'red', 'r',
 %                        or an Nx3 or Nx1 array where N is the number of vertices
-%   cfg.edgecolor      = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r'
+%   cfg.edgecolor      = [r g b] values or string, for example 'skin', 'skull', 'brain', 'black', 'red', 'r'
 %
 % When cfg.method = 'cloud', the functional data will be rendered as as clouds (groups of points), 
 % spheres, or single points at each sensor position. These spheres or point clouds can either be 
@@ -1943,6 +1943,8 @@ if opt.interactive
   fprintf('==================================================================================\n');
   fprintf('Press "h" to show this help.\n');
   fprintf('Press "1", "2", or "3" to switch to the corresponding subplot.\n');
+  fprintf('Press "PageUp" and "PageDown" to zoom in or out.\n');
+  fprintf('Press "+" and "-" to increase or decrease the brightness.\n');
   fprintf('Use the arrow keys to navigate in the current axis.\n');
   fprintf('Click left mouse button to reposition the cursor.\n');
   fprintf('Click and hold right mouse button to update the position while moving the mouse.\n');

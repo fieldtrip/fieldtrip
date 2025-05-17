@@ -132,7 +132,7 @@ elseif ~isempty(headmodel) && isfield(headmodel, 'r') && length(headmodel.r)<5
   if isempty(npos)
     npos = 642;
   end
-  % construct an evenly tesselated unit sphere
+  % construct an evenly tessellated unit sphere
   [pos, tri] = mesh_sphere(npos);
 
   % scale and translate the vertices

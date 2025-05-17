@@ -1,4 +1,4 @@
-function [node,elem]=vol2restrictedtri(vol,thres,cent,brad,ang,radbound,distbound,maxnode)
+function [node, elem] = vol2restrictedtri(vol, thres, cent, brad, ang, radbound, distbound, maxnode)
 %
 % [node,elem]=vol2restrictedtri(vol,thres,cent,brad,ang,radbound,distbound,maxnode)
 %
@@ -25,33 +25,35 @@ function [node,elem]=vol2restrictedtri(vol,thres,cent,brad,ang,radbound,distboun
 % -- this function is part of iso2mesh toolbox (http://iso2mesh.sf.net)
 %
 
-if(radbound<1)
+if (radbound < 1)
     warning(['You are meshing the surface with sub-pixel size. If this ' ...
              'is not your your intent, please check if you set ' ...
              '"opt.radbound" correctly for the default meshing method.']);
 end
 
-exesuff=getexeext;
-exesuff=fallbackexeext(exesuff,'cgalsurf');
+exesuff = getexeext;
+exesuff = fallbackexeext(exesuff, 'cgalsurf');
 
-saveinr(vol,mwpath('pre_extract.inr'));
+saveinr(vol, mwpath('pre_extract.inr'));
 deletemeshfile(mwpath('post_extract.off'));
 
-randseed=hex2dec('623F9A9E'); % "U+623F U+9A9E"
+randseed = hex2dec('623F9A9E'); % "U+623F U+9A9E"
 
-if(~isempty(getvarfrom({'caller','base'},'ISO2MESH_RANDSEED')))
-	randseed=getvarfrom({'caller','base'},'ISO2MESH_RANDSEED');
+if (~isempty(getvarfrom({'caller', 'base'}, 'ISO2MESH_RANDSEED')))
+    randseed = getvarfrom({'caller', 'base'}, 'ISO2MESH_RANDSEED');
 end
 
-initnum=50;
-if(~isempty(getvarfrom({'caller','base'},'ISO2MESH_INITSIZE')))
-        initnum=getvarfrom({'caller','base'},'ISO2MESH_INITSIZE');
+initnum = 50;
+if (~isempty(getvarfrom({'caller', 'base'}, 'ISO2MESH_INITSIZE')))
+    initnum = getvarfrom({'caller', 'base'}, 'ISO2MESH_INITSIZE');
 end
 
 system([' "' mcpath('cgalsurf') exesuff '" "' mwpath('pre_extract.inr') ...
-    '" ' sprintf('%.16f %.16f %.16f %.16f %.16f %.16f %.16f %.16f %d ',thres,cent,brad,ang,radbound,distbound,maxnode) ...
-    ' "' mwpath('post_extract.off') '" ' sprintf('%.0f %d',randseed,initnum)]);
-[node,elem]=readoff(mwpath('post_extract.off'));
+        '" ' sprintf('%.16f %.16f %.16f %.16f %.16f %.16f %.16f %.16f %d ', thres, cent, brad, ang, radbound, distbound, maxnode) ...
+        ' "' mwpath('post_extract.off') '" ' sprintf('%.0f %d', randseed, initnum)]);
+[node, elem] = readoff(mwpath('post_extract.off'));
+
+[node, elem] = meshcheckrepair(node, elem);
 
 % assuming the origin [0 0 0] is located at the lower-bottom corner of the image
-node=node+0.5;
+node = node + 0.5;

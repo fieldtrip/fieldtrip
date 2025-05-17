@@ -1,4 +1,4 @@
-function [no,el,fc,nodemap]=sortmesh(origin,node,elem,ecol,face,fcol)
+function [no, el, fc, nodemap] = sortmesh(origin, node, elem, ecol, face, fcol)
 %
 % [no,el,fc]=sortmesh(origin,node,elem,face)
 %
@@ -11,7 +11,7 @@ function [no,el,fc,nodemap]=sortmesh(origin,node,elem,ecol,face,fcol)
 %
 % input:
 %    origin: sorting all nodes and elements with the distance and
-%            angles wrt this location, if origin=[], it will be 
+%            angles wrt this location, if origin=[], it will be
 %            node(1,:)
 %    node: list of nodes
 %    elem: list of elements (each row are indices of nodes of each element)
@@ -28,28 +28,28 @@ function [no,el,fc,nodemap]=sortmesh(origin,node,elem,ecol,face,fcol)
 % -- this function is part of iso2mesh toolbox (http://iso2mesh.sf.net)
 %
 
-if(isempty(origin))
-   origin=node(1,:);
+if (isempty(origin))
+    origin = node(1, :);
 end
-sdist=node-repmat(origin,size(node,1),1);
-[theta,phi,R]=cart2sph(sdist(:,1),sdist(:,2),sdist(:,3));
-sdist=[R,phi,theta];
-[nval,nodemap]=sortrows(sdist);
-no=node(nodemap,:);
+sdist = node - repmat(origin, size(node, 1), 1);
+[theta, phi, R] = cart2sph(sdist(:, 1), sdist(:, 2), sdist(:, 3));
+sdist = [R, phi, theta];
+[nval, nodemap] = sortrows(sdist);
+no = node(nodemap, :);
 
-[nval,nidx]=sortrows(nodemap);
-el=elem;
-if(nargin<4)
-   ecol=1:size(elem,2);
+[nval, nidx] = sortrows(nodemap);
+el = elem;
+if (nargin < 4)
+    ecol = 1:size(elem, 2);
 end
-el(:,ecol)=sort(nidx(elem(:,ecol)),2);
-el=sortrows(el,ecol);
+el(:, ecol) = sort(nidx(elem(:, ecol)), 2);
+el = sortrows(el, ecol);
 
-if(nargin>=5 && nargout==3)
-  if(nargin<6)
-     fcol=1:size(face,2);
-  end
-  fc=face;
-  fc(:,fcol)=sort(nidx(face(:,fcol)),2);
-  fc=sortrows(fc,fcol);
+if (nargin >= 5 && nargout == 3)
+    if (nargin < 6)
+        fcol = 1:size(face, 2);
+    end
+    fc = face;
+    fc(:, fcol) = sort(nidx(face(:, fcol)), 2);
+    fc = sortrows(fc, fcol);
 end
