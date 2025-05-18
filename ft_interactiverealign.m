@@ -14,8 +14,8 @@ function [cfg] = ft_interactiverealign(cfg)
 %   cfg.individual.opto           = structure, see FT_READ_SENS
 %   cfg.individual.headmodel      = structure, see FT_PREPARE_HEADMODEL
 %   cfg.individual.headshape      = structure, see FT_READ_HEADSHAPE
-%   cfg.individual.mri            = structure, see FT_READ_MRI
 %   cfg.individual.mesh           = structure, see FT_PREPARE_MESH
+%   cfg.individual.mri            = structure, see FT_READ_MRI
 % You can specify the style with which the objects are displayed using
 %   cfg.individual.headmodelstyle = 'vertex', 'edge', 'surface' or 'both' (default = 'edge')
 %   cfg.individual.headshapestyle = 'vertex', 'edge', 'surface' or 'both' (default = 'vertex')
@@ -28,8 +28,8 @@ function [cfg] = ft_interactiverealign(cfg)
 %   cfg.template.opto             = structure, see FT_READ_SENS
 %   cfg.template.headmodel        = structure, see FT_PREPARE_HEADMODEL
 %   cfg.template.headshape        = structure, see FT_READ_HEADSHAPE
-%   cfg.template.mri              = structure, see FT_READ_MRI
 %   cfg.template.mesh             = structure, see FT_PREPARE_MESH
+%   cfg.template.mri              = structure, see FT_READ_MRI
 % You can specify the style with which the objects are displayed using
 %   cfg.template.headmodelstyle   = 'vertex', 'edge', 'surface' or 'both' (default = 'edge')
 %   cfg.template.headshapestyle   = 'vertex', 'edge', 'surface' or 'both' (default = 'vertex')
@@ -45,13 +45,14 @@ function [cfg] = ft_interactiverealign(cfg)
 %   cfg.showlight
 %   cfg.showmaterial
 %   cfg.showapply
+%   cfg.showcutplane
 %   cfg.rotate
 %   cfg.scale
 %   cfg.translate
 %   cfg.transformorder
 
 % Copyright (C) 2008, Vladimir Litvak
-% Copyright (C) 2022-2024, Robert Oostenveld
+% Copyright (C) 2022-2025, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -105,25 +106,27 @@ cfg.showalpha                 = ft_getopt(cfg, 'showalpha'); % default is set be
 cfg.showlight                 = ft_getopt(cfg, 'showlight', 'yes');
 cfg.showmaterial              = ft_getopt(cfg, 'showlight', 'yes');
 cfg.showapply                 = ft_getopt(cfg, 'showapply', 'yes');
+cfg.showcutplane              = ft_getopt(cfg, 'showcutplane', 'no');
 cfg.unit                      = ft_getopt(cfg, 'unit', 'mm');
+
 cfg.individual.elec           = ft_getopt(cfg.individual, 'elec', []);
 cfg.individual.elecstyle      = ft_getopt(cfg.individual, 'elecstyle', {}); % key-value pairs
 cfg.individual.grad           = ft_getopt(cfg.individual, 'grad', []);
 cfg.individual.gradstyle      = ft_getopt(cfg.individual, 'gradstyle', {}); % key-value pairs
 cfg.individual.opto           = ft_getopt(cfg.individual, 'opto', []);
 cfg.individual.optostyle      = ft_getopt(cfg.individual, 'optostyle', {}); % key-value pairs
-cfg.individual.headshape      = ft_getopt(cfg.individual, 'headshape', []);
-if ~isempty(cfg.individual.headshape) && isfield(cfg.individual.headshape, 'tri')
-  cfg.individual.headshapestyle = ft_getopt(cfg.individual, 'headshapestyle', 'surface');
-else
-  cfg.individual.headshapestyle = ft_getopt(cfg.individual, 'headshapestyle', 'vertex');
-end
 cfg.individual.headmodel      = ft_getopt(cfg.individual, 'headmodel', []);
 cfg.individual.headmodelstyle = ft_getopt(cfg.individual, 'headmodelstyle', 'edge');
-cfg.individual.mri            = ft_getopt(cfg.individual, 'mri', []);
-cfg.individual.mristyle       = ft_getopt(cfg.individual, 'mristyle', {});
+cfg.individual.headshape      = ft_getopt(cfg.individual, 'headshape', []);
+if ~isempty(cfg.individual.headshape) && isfield(cfg.individual.headshape, 'tri')
+  cfg.individual.headshapestyle   = ft_getopt(cfg.individual, 'headshapestyle', 'surface');
+else
+  cfg.individual.headshapestyle   = ft_getopt(cfg.individual, 'headshapestyle', 'vertex');
+end
 cfg.individual.mesh           = ft_getopt(cfg.individual, 'mesh', []);
 cfg.individual.meshstyle      = ft_getopt(cfg.individual, 'meshstyle', {});
+cfg.individual.mri            = ft_getopt(cfg.individual, 'mri', []);
+cfg.individual.mristyle       = ft_getopt(cfg.individual, 'mristyle', {});
 
 cfg.template.axes             = ft_getopt(cfg.template, 'axes', 'no');
 cfg.template.elec             = ft_getopt(cfg.template, 'elec', []);
@@ -132,29 +135,31 @@ cfg.template.grad             = ft_getopt(cfg.template, 'grad', []);
 cfg.template.gradstyle        = ft_getopt(cfg.template, 'gradstyle', {}); % key-value pairs
 cfg.template.opto             = ft_getopt(cfg.template, 'opto', []);
 cfg.template.optostyle        = ft_getopt(cfg.template, 'optostyle', {}); % key-value pairs
+cfg.template.headmodel        = ft_getopt(cfg.template, 'headmodel', []);
+cfg.template.headmodelstyle   = ft_getopt(cfg.template, 'headmodelstyle', 'edge');
 cfg.template.headshape        = ft_getopt(cfg.template, 'headshape', []);
 if ~isempty(cfg.template.headshape) && isfield(cfg.template.headshape, 'tri')
   cfg.template.headshapestyle   = ft_getopt(cfg.template, 'headshapestyle', 'surface');
 else
   cfg.template.headshapestyle   = ft_getopt(cfg.template, 'headshapestyle', 'vertex');
 end
-cfg.template.headmodel        = ft_getopt(cfg.template, 'headmodel', []);
-cfg.template.headmodelstyle   = ft_getopt(cfg.template, 'headmodelstyle', 'edge');
-cfg.template.mri              = ft_getopt(cfg.template, 'mri', []);
-cfg.template.mristyle         = ft_getopt(cfg.template, 'mristyle', {});
 cfg.template.mesh             = ft_getopt(cfg.template, 'mesh', []);
 cfg.template.meshstyle        = ft_getopt(cfg.template, 'meshstyle', {});
+cfg.template.mri              = ft_getopt(cfg.template, 'mri', []);
+cfg.template.mristyle         = ft_getopt(cfg.template, 'mristyle', {});
 
 % convert the string that describes the style to a cell-array
-cfg.template.headshapestyle   = updatestyle(cfg.template.headshapestyle);
-cfg.individual.headshapestyle = updatestyle(cfg.individual.headshapestyle);
-cfg.template.headmodelstyle   = updatestyle(cfg.template.headmodelstyle);
 cfg.individual.headmodelstyle = updatestyle(cfg.individual.headmodelstyle);
+cfg.individual.headshapestyle = updatestyle(cfg.individual.headshapestyle);
+cfg.individual.meshstyle      = updatestyle(cfg.individual.meshstyle);
+cfg.template.headmodelstyle   = updatestyle(cfg.template.headmodelstyle);
+cfg.template.headshapestyle   = updatestyle(cfg.template.headshapestyle);
+cfg.template.meshstyle        = updatestyle(cfg.template.meshstyle);
 
 % ensure that these are keyval cell-arrays, not cfg structures
 for fn1={'individual', 'template'}
   fn1 = fn1{1};
-  for fn2={'elecstyle', 'gradstyle', 'headshapestyle', 'headmodelstyle', 'mristyle', 'meshstyle'}
+  for fn2={'elecstyle', 'gradstyle', 'headshapestyle', 'headmodelstyle', 'meshstyle', 'mristyle'}
     fn2 = fn2{1};
     style = cfg.(fn1).(fn2);
     if isstruct(style)
@@ -184,7 +189,7 @@ if isempty(cfg.showalpha)
   cfg.showalpha = true;
   for fn1={'individual', 'template'}
     fn1 = fn1{1};
-    for fn2={'elecstyle', 'gradstyle', 'headshapestyle', 'headmodelstyle', 'mristyle', 'meshstyle'}
+    for fn2={'elecstyle', 'gradstyle', 'headmodelstyle', 'headshapestyle', 'meshstyle', 'mristyle'}
       fn2 = fn2{1};
       style = cfg.(fn1).(fn2);
       cfg.showalpha = cfg.showalpha & ~any(endsWith(style(1:2:end), 'alpha'));
@@ -207,15 +212,15 @@ for fn1={'individual', 'template'}
 end
 
 % ensure that they are consistent with the latest FieldTrip version
-if ~isempty(template.headshape)
-  template.headshape = fixpos(template.headshape);
-end
 if ~isempty(individual.headshape)
   individual.headshape = fixpos(individual.headshape);
 end
+if ~isempty(template.headshape)
+  template.headshape = fixpos(template.headshape);
+end
 
 % convert the coordinates of all geometrical objects into mm
-fn = {'elec', 'grad', 'headshape', 'headmodel', 'mri', 'mesh'};
+fn = {'elec', 'grad', 'headmodel', 'headshape', 'mesh', 'mri'};
 hasindividual = false(size(fn));
 originalunit = cell(size(fn));
 for i=1:length(fn)
@@ -392,6 +397,7 @@ ft_uilayout(fig, 'tag', 'alpha',   'width',  3*CONTROL_WIDTH, 'height',  CONTROL
 uicontrol('tag', 'viewpointbtn',  'parent',  fig, 'units', 'normalized', 'style', 'popup',      'string', 'default|top|bottom|left|right|front|back', 'value', 1,                   'callback', @cb_viewpoint);
 uicontrol('tag', 'camlightbtn',   'parent',  fig, 'units', 'normalized', 'style', 'popup',      'string', 'none|camlight|uniform',            'value', 1,                           'callback', @cb_camlight, 'Visible', istrue(cfg.showlight));
 uicontrol('tag', 'materialbtn',   'parent',  fig, 'units', 'normalized', 'style', 'popup',      'string', 'shiny|dull|metal',                 'value', 1,                           'callback', @cb_material, 'Visible', istrue(cfg.showmaterial));
+uicontrol('tag', 'cutplanebtn',   'parent',  fig, 'units', 'normalized', 'style', 'popup',      'string', 'none|+x|-x|+y|-y|+z|-z',           'value', 1,                           'callback', @cb_cutplane, 'Visible', istrue(cfg.showcutplane));
 uicontrol('tag', 'axes1btn',      'parent',  fig, 'units', 'normalized', 'style', 'checkbox',   'string', '3d axes',                          'value', istrue(cfg.template.axes),   'callback', @cb_axes1);
 uicontrol('tag', 'axes2btn',      'parent',  fig, 'units', 'normalized', 'style', 'checkbox',   'string', 'figure axes',                      'value', getappdata(fig, 'axes'),     'callback', @cb_axes2);
 uicontrol('tag', 'labelsbtn',     'parent',  fig, 'units', 'normalized', 'style', 'checkbox',   'string', 'figure axes label',                'value', getappdata(fig, 'labels'),   'callback', @cb_labels);
@@ -461,23 +467,23 @@ else
 end
 
 % the "individual" struct is a local copy, so it is safe to change it here
-if ~isempty(individual.headmodel)
-  individual.headmodel = ft_transform_geometry(transform, individual.headmodel);
-end
 if ~isempty(individual.elec)
   individual.elec = ft_transform_geometry(transform, individual.elec);
 end
 if ~isempty(individual.grad)
   individual.grad = ft_transform_geometry(transform, individual.grad);
 end
+if ~isempty(individual.headmodel)
+  individual.headmodel = ft_transform_geometry(transform, individual.headmodel);
+end
 if ~isempty(individual.headshape)
   individual.headshape = ft_transform_geometry(transform, individual.headshape);
 end
-if ~isempty(individual.mri)
-  individual.mri = ft_transform_geometry(transform, individual.mri);
-end
 if ~isempty(individual.mesh)
   individual.mesh = ft_transform_geometry(transform, individual.mesh);
+end
+if ~isempty(individual.mri)
+  individual.mri = ft_transform_geometry(transform, individual.mri);
 end
 
 % plot all the template and individual objects
@@ -535,12 +541,12 @@ if isstruct(individual.headshape) && isfield(individual.headshape, 'pos') && ~is
   ft_plot_headshape(individual.headshape, individual.headshapestyle{:})
 end
 
-if isstruct(template.mesh) && isfield(template.mesh, 'pos') && ~isempty(template.mesh.pos)
+if isstruct(template.mesh) && isfield(template.mesh, 'pos') && ~isempty(template.mesh(1).pos)
   % there can be multiple meshes as a struct-array
   ft_plot_mesh(template.mesh, template.meshstyle{:});
 end
 
-if isstruct(individual.mesh) && isfield(individual.mesh, 'pos') && ~isempty(individual.mesh.pos)
+if isstruct(individual.mesh) && isfield(individual.mesh, 'pos') && ~isempty(individual.mesh(1).pos)
   % there can be multiple meshes as a struct-array
   ft_plot_mesh(individual.mesh, individual.meshstyle{:});
 end
@@ -557,6 +563,7 @@ cb_labels(h, []);
 cb_grid(h, []);
 cb_camlight(h, []);
 cb_material(h, []);
+cb_cutplane(h, []);
 
 % restore the current view
 view(az, el);
@@ -600,6 +607,41 @@ uiresume;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function cb_cutplane(h, eventdata)
+fig = getparent(h);
+template = getappdata(fig, 'template');
+individual = getappdata(fig, 'individual');
+switch get(findall(fig, 'tag', 'cutplanebtn'), 'value')
+  case 1
+    cutorientation = [];
+  case 2
+    cutorientation = [+1 0 0];
+  case 3
+    cutorientation = [-1 0 0];
+  case 4
+    cutorientation = [0 +1 0];
+  case 5
+    cutorientation = [0 -1 0];
+  case 6
+    cutorientation = [0 0 +1];
+  case 7
+    cutorientation = [0 0 -1];
+end
+% update the options for all objects that support a cut plane, they may or may not have cutlocation specified
+template.headmodelstyle   = ft_setopt(template.headmodelstyle, 'cutorientation',  cutorientation); 
+individual.headmodelstyle = ft_setopt(individual.headmodelstyle, 'cutorientation',  cutorientation); 
+template.headshapestyle   = ft_setopt(template.headshapestyle, 'cutorientation',  cutorientation); 
+individual.headshapestyle = ft_setopt(individual.headshapestyle, 'cutorientation',  cutorientation); 
+template.meshstyle        = ft_setopt(template.meshstyle, 'cutorientation',  cutorientation); 
+individual.meshstyle      = ft_setopt(individual.meshstyle, 'cutorientation',  cutorientation); 
+% put the options back in the figure
+setappdata(fig, 'template', template);
+setappdata(fig, 'individual', individual);
+uiresume;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_axes1(h, eventdata)
 fig = getparent(h);
 if get(findall(fig, 'tag', 'axes1btn'), 'value')
@@ -616,7 +658,6 @@ else
   delete(findall(fig, 'tag', 'axes1'))
 end
 uiresume;
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
