@@ -126,7 +126,7 @@ switch ft_headmodeltype(headmodel)
       edgecolor = 'none';
     end
 
-  case {'bem', 'dipoli', 'asa', 'bemcp', 'singleshell' 'openmeeg'}
+  case {'bem', 'dipoli', 'asa', 'bemcp', 'singleshell' 'openmeeg' 'hbf'}
     % these already contain one or multiple triangulated surfaces for the boundaries
     mesh = headmodel.bnd;
 
