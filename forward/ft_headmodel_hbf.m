@@ -1,4 +1,4 @@
-function headmodel = ft_headmodel_bemhbf(mesh, varargin)
+function headmodel = ft_headmodel_hbf(mesh, varargin)
 
 % FT_HEADMODEL_HBF creates a volume conduction model of the head
 % using the boundary element method (BEM) for M/EEG. This function
