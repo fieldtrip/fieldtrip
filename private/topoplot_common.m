@@ -239,6 +239,17 @@ if strcmp(dtype, 'comp')
   Ndata = numel(varargin);
 end
 
+% Handle the bivariate case
+dimord = getdimord(varargin{1}, cfg.parameter);
+if startsWith(dimord, 'chan_chan_') || startsWith(dimord, 'chancmb_')
+  % convert the bivariate data to univariate and call the parent plotting function again
+  s = dbstack;
+  cfg.originalfunction = s(2).name;
+  cfg.trials = 'all'; % trial selection has been taken care off
+  bivariate_common(cfg, varargin{:});
+  return
+end
+ 
 makesubplots = false;
 if Ndata==1 && isequal(cfg.figure, 'subplot')
   % overrule this setting
@@ -396,17 +407,6 @@ for indx=1:Ndata
     data = ft_preprocessing(cfg.preproc, data);
   end
   
-  % Handle the bivariate case
-  dimord = getdimord(varargin{1}, cfg.parameter);
-  if startsWith(dimord, 'chan_chan_') || startsWith(dimord, 'chancmb_')
-    % convert the bivariate data to univariate and call the parent plotting function again
-    s = dbstack;
-    cfg.originalfunction = s(2).name;
-    cfg.trials = 'all'; % trial selection has been taken care off
-    bivariate_common(cfg, varargin{:});
-    return
-  end
- 
   % Apply channel-type specific scaling
   fn = fieldnames(cfg);
   fn = setdiff(fn, {'skipscale', 'showscale', 'gridscale'}); % these are for the layout and plotting, not for CHANSCALE_COMMON
