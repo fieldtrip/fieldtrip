@@ -282,15 +282,31 @@ switch dtype
     end
 end
 
-% Handle the bivariate case
-dimord = getdimord(varargin{1}, cfg.parameter);
-if startsWith(dimord, 'chan_chan_') || startsWith(dimord, 'chancmb_')
+hasrpt = false(Ndata,1);
+isbivariate = false(Ndata,1);
+for i=1:Ndata
+  % with the data being of the same type, the dimords are not guaranteed to be the same across inputs
+  dimord{i} = getdimord(varargin{i}, cfg.parameter);
+  isbivariate(i) = contains(dimord{i}, 'chan_chan') || contains(dimord{i}, 'chancmb_');
+  hasrpt(i) = contains(dimord{i}, 'rpt_') || contains(dimord{i}, 'subj_');
+end
+
+if any(~hasrpt)
+  assert(isequal(cfg.trials, 'all') || isequal(cfg.trials, 1), 'incorrect specification of cfg.trials for data without repetitions');
+elseif any(hasrpt)
+  assert(~isempty(cfg.trials), 'empty specification of cfg.trials for data with repetitions');
+end
+
+% handle the bivariate case
+if all(isbivariate)
   % convert the bivariate data to univariate and call the parent plotting function again
   s = dbstack;
   cfg.originalfunction = s(2).name;
   cfg.trials = 'all'; % trial selection has been taken care off
   bivariate_common(cfg, varargin{:});
   return
+elseif any(isbivariate)
+  ft_error('a mixture of bivariate and univariate input is not allowed');
 end
  
 makesubplots = false;
@@ -325,25 +341,17 @@ for indx=1:Ndata
   end
   
   data = varargin{indx};
-  
+  dimord = getdimord(data, cfg.parameter);
+  dimtok = tokenize(dimord, '_');
+  hasrpt = any(ismember(dimtok, {'rpt', 'subj'}));
+
   if isequal(dtype, 'comp')
     % not sure why this needs to be here
     if ischar(dataname)
       cfg.title = sprintf('%s component %d', dataname, data.comp);
     end
   end
-  
-  % check whether rpt/subj is present and remove if necessary
-  dimord = getdimord(data, cfg.parameter);
-  dimtok = tokenize(dimord, '_');
-  hasrpt = any(ismember(dimtok, {'rpt' 'subj'}));
-  
-  if ~hasrpt
-    assert(isequal(cfg.trials, 'all') || isequal(cfg.trials, 1), 'incorrect specification of cfg.trials for data without repetitions');
-  else
-    assert(~isempty(cfg.trials), 'empty specification of cfg.trials for data with repetitions');
-  end
-  
+    
   % parse cfg.channel
   if isfield(cfg, 'channel') && isfield(data, 'label')
     cfg.channel = ft_channelselection(cfg.channel, data.label);
@@ -390,7 +398,7 @@ for indx=1:Ndata
     tmpvar = ft_selectdata(tmpcfg, tmpvar);
     data.(cfg.maskparameter) = tmpvar.(cfg.maskparameter);
   end
-  clear tmpvar tmpcfg dimord dimtok hastime hasrpt
+  clear tmpvar tmpcfg hastime hasrpt
   
   % ensure that the preproc specific options are located in the cfg.preproc
   % substructure, but also ensure that the field 'refchannel' remains at the
@@ -418,9 +426,6 @@ for indx=1:Ndata
   data = chanscale_common(tmpcfg, data);
   
   %% Section 3: select the data to be plotted and determine min/max range
-  
-  dimord = getdimord(varargin{1}, cfg.parameter);
-  dimtok = tokenize(dimord, '_');
   
   % Create time-series of small topoplots
   if ~ischar(cfg.xlim) && length(cfg.xlim)>2 %&& any(ismember(dimtok, 'time'))
