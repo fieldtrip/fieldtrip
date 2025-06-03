@@ -156,11 +156,11 @@ switch cmd
 
     curPwd     = getcustompwd();
     outputfile = fullfile(curPwd, sprintf('%s_output.mat', jobid)); % if the job is aborted to a resource violation, there will not be an output file
-    logout     = fullfile(curPwd, sprintf('%s.o*', jobid)); % note the wildcard in the file name
-    logerr     = fullfile(curPwd, sprintf('%s.e*', jobid)); % note the wildcard in the file name
+    logout     = dir(fullfile(curPwd, sprintf('%s.o*', jobid))); % note the wildcard in the file name
+    logerr     = dir(fullfile(curPwd, sprintf('%s.e*', jobid))); % note the wildcard in the file name
 
     % poll the job status to confirm that the job truely completed
-    if isfile(logout) && isfile(logerr) && ~isempty(pbsid)
+    if isempty(logout) && isempty(logerr) && ~isempty(pbsid)
       % only perform the more expensive check once the log files exist
       switch backend
         case 'torque'
@@ -194,7 +194,7 @@ switch cmd
           % there is no way polling the batch execution system
           retval = 1;
       end
-    elseif isfile(logout) && isfile(logerr) && isempty(pbsid)
+    elseif isempty(logout) && isempty(logerr) && isempty(pbsid)
       % we cannot locate the job in the PBS/torque backend (weird, but it happens), hence we have to rely on the e and o files
       % note that the mat file still might be missing, e.g. when the job was killed due to a resource violation
       retval = 1;
