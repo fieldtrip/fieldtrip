@@ -158,13 +158,15 @@ switch cmd
     outputfile = fullfile(curPwd, sprintf('%s_output.mat', jobid)); % if the job is aborted to a resource violation, there will not be an output file
     logout     = fullfile(curPwd, sprintf('%s.o*', jobid)); % note the wildcard in the file name
     logerr     = fullfile(curPwd, sprintf('%s.e*', jobid)); % note the wildcard in the file name
+    err        = 0; % Keep track of system call errors
+    jobstatus  = '';
 
     % poll the job status to confirm that the job truely completed
     if isfile(logout) && isfile(logerr) && ~isempty(pbsid)
       % only perform the more expensive check once the log files exist
       switch backend
         case 'torque'
-          [dum, jobstatus] = system(['qstat "' pbsid '" -f1 | grep job_state | grep -o "= [A-Z]" | grep -o "[A-Z]"']);
+          [err, jobstatus] = system(['qstat "' pbsid '" -f1 | grep job_state | grep -o "= [A-Z]" | grep -o "[A-Z]"']);
           if isempty(jobstatus)
             warning('cannot determine the status for pbsid %s', pbsid);
             retval = 1;
@@ -173,10 +175,10 @@ switch cmd
             retval = retval | contains(jobstatus, 'Unknown Job Id');
           end
         case 'lsf'
-          [dum, jobstatus] = system(['bjobs "' pbsid '" | awk ''NR==2'' | awk ''{print $3}'' ']);
+          [err, jobstatus] = system(['bjobs "' pbsid '" | awk ''NR==2'' | awk ''{print $3}'' ']);
           retval = strcmp(strtrim(jobstatus), 'DONE');
         case 'sge'
-          [dum, jobstatus] = system(['qstat -s z | grep "' pbsid '" | awk ''{print $5}''']);
+          [err, jobstatus] = system(['qstat -s z | grep "' pbsid '" | awk ''{print $5}''']);
           retval = strcmp(strtrim(jobstatus), 'z') | strcmp(strtrim(jobstatus), 'qw');
         case 'slurm'
           if ~isfile(outputfile)
@@ -186,7 +188,7 @@ switch cmd
             retval = 0;
           else
             % if the file is there, we can use squeue to verify that the job really left the queue
-            [dum, jobstatus] = system(['squeue -j "' pbsid '" -h -o %T']);
+            [err, jobstatus] = system(['squeue -j "' pbsid '" -h -o %T']);
             retval = isempty(jobstatus) | contains(jobstatus, 'Invalid job id');
           end
         case {'local','system'}
@@ -199,6 +201,10 @@ switch cmd
       % note that the mat file still might be missing, e.g. when the job was killed due to a resource violation
       retval = 1;
     else
+      retval = 0;
+    end
+    if err
+      warning('cannot determine the jobstatus: (error %i) %s', err, jobstatus);
       retval = 0;
     end
 
