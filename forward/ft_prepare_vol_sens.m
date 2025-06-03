@@ -352,6 +352,24 @@ elseif ismeg
     case 'simbio'
       ft_error('MEG not yet supported with simbio');
 
+    case 'hbf'
+      headmodel.coils = [];
+      headmodel.coils.p = sens.coilpos;
+      headmodel.coils.n = sens.coilori; 
+
+      ci = headmodel.cond(1,:);
+      co = headmodel.cond(2,:);
+
+      % convert bnd to bmeshes
+      headmodel.bmeshes = bmesh2bnd(headmodel.bnd);
+
+      % create transfer matrix 
+      DB = hbf_BEMOperatorsB_Linear(headmodel.bmeshes,headmodel.coils);
+      headmodel.sol = hbf_TM_Bvol_Linear(DB,headmodel.mat,ci,co);
+        
+      % remove original BEM mat to save memory
+      headmodel = rmfield(headmodel,'mat');
+
     otherwise
       ft_error('unsupported volume conductor model for MEG');
   end
@@ -610,6 +628,15 @@ elseif iseeg
         % map each of the leadfield files into memory
         headmodel.chan{i} = nifti(headmodel.filename{i});
       end
+
+    case 'hbf'
+
+      headmodel.bmeshes = bmesh2bnd(headmodel.bnd);
+      headmodel.elecs = hbf_ProjectElectrodesToScalp(sens.elecpos,headmodel.bmeshes);
+      headmodel.sol = hbf_InterpolateTfullToElectrodes(headmodel.mat,headmodel.bmeshes,headmodel.elecs);
+
+      % remove original BEM mat to save memory
+      headmodel = rmfield(headmodel,'mat');
 
     otherwise
       ft_error('unsupported volume conductor model for EEG');

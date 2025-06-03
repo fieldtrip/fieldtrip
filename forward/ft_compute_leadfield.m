@@ -367,6 +367,16 @@ elseif ismeg
       % referencing is done once more.
       sens.tra = speye(length(headmodel.filename));
 
+    case 'hbf'
+      % lf =  hbf_LFM_B_LC(headmodel.bmeshes,headmodel.coils,headmodel.sol,dippos);
+      % The above generates a lot in the command line output, so running
+      % with evalc to silence it
+      evalc('lf =  hbf_LFM_B_LC(headmodel.bmeshes,headmodel.coils,headmodel.sol,dippos);');
+      if isfield(sens, 'tra')
+        % construct the channels from a linear combination of all magnetometer coils
+        lf = sens.tra * lf;
+      end 
+
     otherwise
       ft_error('unsupported volume conductor model for MEG');
   end % switch type for MEG
@@ -540,7 +550,12 @@ elseif iseeg
       % channel values rather than the electrode values. Prevent that the
       % referencing is done once more.
       sens.tra = speye(length(headmodel.filename));
-
+    
+    case 'hbf'
+       % lf = hbf_LFM_Phi_LC(headmodel.bmeshes,headmodel.sol,dippos);
+       % The above generates a lot in the command line output, so running
+       % with evalc to silence it
+       evalc('lf = hbf_LFM_Phi_LC(headmodel.bmeshes,headmodel.sol,dippos);');
     otherwise
       ft_error('unsupported volume conductor model for EEG');
 

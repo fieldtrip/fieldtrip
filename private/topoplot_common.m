@@ -239,6 +239,76 @@ if strcmp(dtype, 'comp')
   Ndata = numel(varargin);
 end
 
+%% Section 2: data handling, this also includes converting bivariate (chan_chan and chancmb) into univariate data
+hastime = isfield(varargin{1}, 'time');
+
+% Set x/y/parameter defaults according to datatype and dimord
+switch dtype
+  case 'timelock'
+    xparam = ft_getopt(cfg, 'xparam', 'time');
+    yparam = ft_getopt(cfg, 'yparam', '');
+    if isfield(varargin{1}, 'trial')
+      cfg.parameter = ft_getopt(cfg, 'parameter', 'trial');
+    elseif isfield(varargin{1}, 'individual')
+      cfg.parameter = ft_getopt(cfg, 'parameter', 'individual');
+    elseif isfield(varargin{1}, 'avg')
+      cfg.parameter = ft_getopt(cfg, 'parameter', 'avg');
+    end
+  case 'freq'
+    if hastime
+      xparam = ft_getopt(cfg, 'xparam', 'time');
+      yparam = ft_getopt(cfg, 'yparam', 'freq');
+      cfg.parameter = ft_getopt(cfg, 'parameter', 'powspctrm');
+    else
+      xparam = 'freq';
+      yparam = '';
+      cfg.parameter = ft_getopt(cfg, 'parameter', 'powspctrm');
+    end
+  case 'comp'
+    xparam = 'comp';
+    yparam = '';
+    cfg.parameter = ft_getopt(cfg, 'parameter', 'topo');
+    
+  otherwise
+    % if the input data is not one of the standard data types, or if the functional
+    % data is just one value per channel: in this case xparam, yparam are not defined
+    % and the user should define the parameter
+    if ~isfield(varargin{1}, 'label'), ft_error('the input data should at least contain a label-field');         end
+    if ~isfield(cfg,  'parameter'), ft_error('the configuration should at least contain a ''parameter'' field'); end
+    if ~isfield(cfg,  'xparam')
+      cfg.xlim = [1 1];
+      xparam   = '';
+      yparam   = '';
+    end
+end
+
+hasrpt = false(Ndata,1);
+isbivariate = false(Ndata,1);
+for i=1:Ndata
+  % with the data being of the same type, the dimords are not guaranteed to be the same across inputs
+  dimord{i} = getdimord(varargin{i}, cfg.parameter);
+  isbivariate(i) = contains(dimord{i}, 'chan_chan') || contains(dimord{i}, 'chancmb_');
+  hasrpt(i) = contains(dimord{i}, 'rpt_') || contains(dimord{i}, 'subj_');
+end
+
+if any(~hasrpt)
+  assert(isequal(cfg.trials, 'all') || isequal(cfg.trials, 1), 'incorrect specification of cfg.trials for data without repetitions');
+elseif any(hasrpt)
+  assert(~isempty(cfg.trials), 'empty specification of cfg.trials for data with repetitions');
+end
+
+% handle the bivariate case
+if all(isbivariate)
+  % convert the bivariate data to univariate and call the parent plotting function again
+  s = dbstack;
+  cfg.originalfunction = s(2).name;
+  cfg.trials = 'all'; % trial selection has been taken care off
+  bivariate_common(cfg, varargin{:});
+  return
+elseif any(isbivariate)
+  ft_error('a mixture of bivariate and univariate input is not allowed');
+end
+ 
 makesubplots = false;
 if Ndata==1 && isequal(cfg.figure, 'subplot')
   % overrule this setting
@@ -271,65 +341,17 @@ for indx=1:Ndata
   end
   
   data = varargin{indx};
-  
-  %% Section 2: data handling, this also includes converting bivariate (chan_chan and chancmb) into univariate data
-  
-  hastime = isfield(data, 'time');
-  
-  % Set x/y/parameter defaults according to datatype and dimord
-  switch dtype
-    case 'timelock'
-      xparam = ft_getopt(cfg, 'xparam', 'time');
-      yparam = ft_getopt(cfg, 'yparam', '');
-      if isfield(data, 'trial')
-        cfg.parameter = ft_getopt(cfg, 'parameter', 'trial');
-      elseif isfield(data, 'individual')
-        cfg.parameter = ft_getopt(cfg, 'parameter', 'individual');
-      elseif isfield(data, 'avg')
-        cfg.parameter = ft_getopt(cfg, 'parameter', 'avg');
-      end
-    case 'freq'
-      if hastime
-        xparam = ft_getopt(cfg, 'xparam', 'time');
-        yparam = ft_getopt(cfg, 'yparam', 'freq');
-        cfg.parameter = ft_getopt(cfg, 'parameter', 'powspctrm');
-      else
-        xparam = 'freq';
-        yparam = '';
-        cfg.parameter = ft_getopt(cfg, 'parameter', 'powspctrm');
-      end
-    case 'comp'
-      xparam = 'comp';
-      yparam = '';
-      cfg.parameter = ft_getopt(cfg, 'parameter', 'topo');
-      if ischar(cfg.dataname)
-        cfg.title = sprintf('%s component %d', cfg.dataname, data.comp);
-      end
-
-    otherwise
-      % if the input data is not one of the standard data types, or if the functional
-      % data is just one value per channel: in this case xparam, yparam are not defined
-      % and the user should define the parameter
-      if ~isfield(data, 'label'),     ft_error('the input data should at least contain a label-field');            end
-      if ~isfield(cfg,  'parameter'), ft_error('the configuration should at least contain a ''parameter'' field'); end
-      if ~isfield(cfg,  'xparam')
-        cfg.xlim = [1 1];
-        xparam   = '';
-        yparam   = '';
-      end
-  end
-  
-  % check whether rpt/subj is present and remove if necessary
   dimord = getdimord(data, cfg.parameter);
   dimtok = tokenize(dimord, '_');
-  hasrpt = any(ismember(dimtok, {'rpt' 'subj'}));
-  
-  if ~hasrpt
-    assert(isequal(cfg.trials, 'all') || isequal(cfg.trials, 1), 'incorrect specification of cfg.trials for data without repetitions');
-  else
-    assert(~isempty(cfg.trials), 'empty specification of cfg.trials for data with repetitions');
+  hasrpt = any(ismember(dimtok, {'rpt', 'subj'}));
+
+  if isequal(dtype, 'comp')
+    % not sure why this needs to be here
+    if ischar(dataname)
+      cfg.title = sprintf('%s component %d', dataname, data.comp);
+    end
   end
-  
+    
   % parse cfg.channel
   if isfield(cfg, 'channel') && isfield(data, 'label')
     cfg.channel = ft_channelselection(cfg.channel, data.label);
@@ -376,7 +398,7 @@ for indx=1:Ndata
     tmpvar = ft_selectdata(tmpcfg, tmpvar);
     data.(cfg.maskparameter) = tmpvar.(cfg.maskparameter);
   end
-  clear tmpvar tmpcfg dimord dimtok hastime hasrpt
+  clear tmpvar tmpcfg hastime hasrpt
   
   % ensure that the preproc specific options are located in the cfg.preproc
   % substructure, but also ensure that the field 'refchannel' remains at the
@@ -396,17 +418,6 @@ for indx=1:Ndata
     data = ft_preprocessing(cfg.preproc, data);
   end
   
-  % Handle the bivariate case
-  dimord = getdimord(varargin{1}, cfg.parameter);
-  if startsWith(dimord, 'chan_chan_') || startsWith(dimord, 'chancmb_')
-    % convert the bivariate data to univariate and call the parent plotting function again
-    s = dbstack;
-    cfg.originalfunction = s(2).name;
-    cfg.trials = 'all'; % trial selection has been taken care off
-    bivariate_common(cfg, varargin{:});
-    return
-  end
- 
   % Apply channel-type specific scaling
   fn = fieldnames(cfg);
   fn = setdiff(fn, {'skipscale', 'showscale', 'gridscale'}); % these are for the layout and plotting, not for CHANSCALE_COMMON
@@ -415,9 +426,6 @@ for indx=1:Ndata
   data = chanscale_common(tmpcfg, data);
   
   %% Section 3: select the data to be plotted and determine min/max range
-  
-  dimord = getdimord(varargin{1}, cfg.parameter);
-  dimtok = tokenize(dimord, '_');
   
   % Create time-series of small topoplots
   if ~ischar(cfg.xlim) && length(cfg.xlim)>2 %&& any(ismember(dimtok, 'time'))
