@@ -160,7 +160,7 @@ switch cmd
     logerr     = dir(fullfile(curPwd, sprintf('%s.e*', jobid))); % note the wildcard in the file name
 
     % poll the job status to confirm that the job truely completed
-    if isempty(logout) && isempty(logerr) && ~isempty(pbsid)
+    if ~isempty(logout) && ~isempty(logerr) && ~isempty(pbsid)
       % only perform the more expensive check once the log files exist
       switch backend
         case 'torque'
