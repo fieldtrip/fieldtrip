@@ -609,34 +609,36 @@ uiresume;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_cutplane(h, eventdata)
 fig = getparent(h);
-template = getappdata(fig, 'template');
-individual = getappdata(fig, 'individual');
-switch get(findall(fig, 'tag', 'cutplanebtn'), 'value')
-  case 1
-    cutorientation = [];
-  case 2
-    cutorientation = [+1 0 0];
-  case 3
-    cutorientation = [-1 0 0];
-  case 4
-    cutorientation = [0 +1 0];
-  case 5
-    cutorientation = [0 -1 0];
-  case 6
-    cutorientation = [0 0 +1];
-  case 7
-    cutorientation = [0 0 -1];
+if ~isempty(get(findall(fig, 'tag', 'cutplanebtn'), 'value'))
+  template = getappdata(fig, 'template');
+  individual = getappdata(fig, 'individual');
+  switch get(findall(fig, 'tag', 'cutplanebtn'), 'value')
+    case 1
+      cutorientation = [];
+    case 2
+      cutorientation = [+1 0 0];
+    case 3
+      cutorientation = [-1 0 0];
+    case 4
+      cutorientation = [0 +1 0];
+    case 5
+      cutorientation = [0 -1 0];
+    case 6
+      cutorientation = [0 0 +1];
+    case 7
+      cutorientation = [0 0 -1];
+  end
+  % update the options for all objects that support a cut plane, they may or may not have cutlocation specified
+  template.headmodelstyle   = ft_setopt(template.headmodelstyle, 'cutorientation',  cutorientation);
+  individual.headmodelstyle = ft_setopt(individual.headmodelstyle, 'cutorientation',  cutorientation);
+  template.headshapestyle   = ft_setopt(template.headshapestyle, 'cutorientation',  cutorientation);
+  individual.headshapestyle = ft_setopt(individual.headshapestyle, 'cutorientation',  cutorientation);
+  template.meshstyle        = ft_setopt(template.meshstyle, 'cutorientation',  cutorientation);
+  individual.meshstyle      = ft_setopt(individual.meshstyle, 'cutorientation',  cutorientation);
+  % put the options back in the figure
+  setappdata(fig, 'template', template);
+  setappdata(fig, 'individual', individual);
 end
-% update the options for all objects that support a cut plane, they may or may not have cutlocation specified
-template.headmodelstyle   = ft_setopt(template.headmodelstyle, 'cutorientation',  cutorientation); 
-individual.headmodelstyle = ft_setopt(individual.headmodelstyle, 'cutorientation',  cutorientation); 
-template.headshapestyle   = ft_setopt(template.headshapestyle, 'cutorientation',  cutorientation); 
-individual.headshapestyle = ft_setopt(individual.headshapestyle, 'cutorientation',  cutorientation); 
-template.meshstyle        = ft_setopt(template.meshstyle, 'cutorientation',  cutorientation); 
-individual.meshstyle      = ft_setopt(individual.meshstyle, 'cutorientation',  cutorientation); 
-% put the options back in the figure
-setappdata(fig, 'template', template);
-setappdata(fig, 'individual', individual);
 uiresume;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
