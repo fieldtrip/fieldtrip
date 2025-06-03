@@ -194,7 +194,7 @@ switch cmd
           % there is no way polling the batch execution system
           retval = 1;
       end
-    elseif isempty(logout) && isempty(logerr) && isempty(pbsid)
+    elseif ~isempty(logout) && ~isempty(logerr) && isempty(pbsid)
       % we cannot locate the job in the PBS/torque backend (weird, but it happens), hence we have to rely on the e and o files
       % note that the mat file still might be missing, e.g. when the job was killed due to a resource violation
       retval = 1;
