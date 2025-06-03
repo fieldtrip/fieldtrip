@@ -225,7 +225,7 @@ if isempty(senssize)
       end
   end
   % convert from mm to the units of the sensor array
-  senssize = senssize/ft_scalingfactor(sens.unit, 'mm');
+  senssize = senssize / ft_scalingfactor(sens.unit, 'mm');
 end
 
 % color management
