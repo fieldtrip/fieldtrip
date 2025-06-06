@@ -15,7 +15,7 @@ function dat = read_biosemi_bdf(filename, hdr, begsample, endsample, chanindx)
 %   hdr.nSamplesPre  number of pre-trigger samples in each trial
 %   hdr.nTrials      number of trials
 %   hdr.label        cell-array with labels of each channel
-%   hdr.orig         detailled EDF header information
+%   hdr.orig         detailed EDF header information
 %
 % Or use as
 %   [dat] = read_biosemi_bdf(filename, hdr, begsample, endsample, chanindx);

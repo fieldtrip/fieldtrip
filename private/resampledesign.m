@@ -185,7 +185,7 @@ if isempty(cfg.uvar) && strcmp(cfg.resampling, 'permutation')
   
 elseif isempty(cfg.uvar) && strcmp(cfg.resampling, 'bootstrap')
   % randomly draw with replacement, keeping the number of elements the same in each class
-  % only the test under the null-hypothesis (h0) is explicitely implemented here
+  % only the test under the null-hypothesis (h0) is explicitly implemented here
   % but the h1 test can be achieved using a control variable
   resample = zeros(cfg.numrandomization, Nrepl);
   for i=1:cfg.numrandomization
@@ -251,7 +251,7 @@ elseif ~isempty(cfg.uvar) && strcmp(cfg.resampling, 'permutation')
   
 elseif length(cfg.uvar)==1 && strcmp(cfg.resampling, 'bootstrap') && isempty(cfg.cvar)
   % randomly draw with replacement, keeping the number of elements the same in each class
-  % only the test under the null-hypothesis (h0) is explicitely implemented here
+  % only the test under the null-hypothesis (h0) is explicitly implemented here
   % but the h1 test can be achieved using a control variable
   
   % FIXME allow for length(cfg.uvar)>1, does it make sense in the first place

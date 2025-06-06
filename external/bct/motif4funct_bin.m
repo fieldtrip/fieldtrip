@@ -68,7 +68,7 @@ for u=1:n-3                                     %loop u 1:n-2
                 ind=(M4*a)==N4;                 %find all contained isomorphs
                 id=ID4(ind);
 
-                [idu,j]=unique(id);             %unique motif occurences
+                [idu,j]=unique(id);             %unique motif occurrences
                 j=[0;j];                        %#ok<AGROW>
                 mu=length(idu);                 %number of unique motifs
                 f2=zeros(mu,1);

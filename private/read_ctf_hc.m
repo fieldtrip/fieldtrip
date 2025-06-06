@@ -52,7 +52,7 @@ function [hc] = read_ctf_hc(filename)
 %
 % $Id$
 
-% this can be used for printing detailled user feedback
+% this can be used for printing detailed user feedback
 fb = false;
 
 hc.standard.nas = [0 0 0];

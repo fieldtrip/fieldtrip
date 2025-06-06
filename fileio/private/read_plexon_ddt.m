@@ -130,7 +130,7 @@ elseif Version==102
   end
 elseif Version==103
   % I am not sure whether the calibration like this is correct, since the
-  % Plexon documentation does not explicitely specify how to do it for the
+  % Plexon documentation does not explicitly specify how to do it for the
   % 104 file format. I presume that it is identical to the 103 format.
   for i=1:dat.NChannels
     dat.data(i,:) = dat.data(i,:) * 5000 ./ (0.5 * (2^dat.BitsPerSample) * dat.ChannelGain(i));

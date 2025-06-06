@@ -164,8 +164,8 @@ elseif isfield(scalp2,'anatomy') || isfield(scalp2,'tpm') || isfield(scalp2,'bra
   error('inconsistent segmentation structure');
 end
 
-% when scalp is the only output: the representation is "cummulative"
-% for comparison, also the seg.scalp is converted to cummulative
+% when scalp is the only output: the representation is "cumulative"
+% for comparison, also the seg.scalp is converted to cumulative
 seg.scalp(seg.brain == 1) = 1;
 seg.scalp(seg.skull == 1) = 1;
 seg2.scalp(seg2.brain == 1) = 1;

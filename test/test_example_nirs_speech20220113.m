@@ -407,4 +407,4 @@ ft_multiplotER(cfg, timelock11, timelock12, timelock13, timelock14, timelock15)
 %
 %% # Closing remarks
 %
-% Looking at some more datasets, I noticed that the dataset `S1001_run01.nirs` contains overall clean data. The data for subject 2 (`S1002_run01.nirs`) is not shared. The data of subject 3 `S1003_run01.nirs` has some movement(?) artifacts, but also a channel that seems to show a response on every "aux1" stimulus. It would be interesting to follow up these analyses with a more detailled look into the time-locked and the spontaneous artifacts that can be observed in the data.
+% Looking at some more datasets, I noticed that the dataset `S1001_run01.nirs` contains overall clean data. The data for subject 2 (`S1002_run01.nirs`) is not shared. The data of subject 3 `S1003_run01.nirs` has some movement(?) artifacts, but also a channel that seems to show a response on every "aux1" stimulus. It would be interesting to follow up these analyses with a more detailed look into the time-locked and the spontaneous artifacts that can be observed in the data.

@@ -30,7 +30,7 @@ function ft_write_cifti(filename, source, varargin)
 %   'debug'            = boolean, write a debug.xml file (default = false)
 %
 % The brainstructure refers to the global anatomical structure, such as CortexLeft, Thalamus, etc.
-% The parcellation refers to the the detailled parcellation, such as BA1, BA2, BA3, etc.
+% The parcellation refers to the the detailed parcellation, such as BA1, BA2, BA3, etc.
 %
 % See also FT_READ_CIFTI, FT_READ_MRI, FT_WRITE_MRI
 

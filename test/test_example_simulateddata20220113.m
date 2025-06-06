@@ -37,7 +37,7 @@ cfg.headmodel = headmodel;
 data = ft_dipolesimulation(cfg);
 
 %%
-% use low-level functions to make a detailled figure
+% use low-level functions to make a detailed figure
 
 figure
 % ft_plot_headmodel(headmodel);

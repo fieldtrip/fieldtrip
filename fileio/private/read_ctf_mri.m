@@ -103,7 +103,7 @@ hdr.transformMatrix = fread(fid,[4 4],'float')'; % transformation matrix head->M
 % the header (position 1028), but it seems some versions of Matlab (or
 % perhaps only on some systems) doesn't read 2 bytes somewhere and end up
 % in position 1026...  In any case, it caused an error with some files so
-% we must explicitely seek to position 1028.
+% we must explicitly seek to position 1028.
 fseek(fid, 1028, 'bof');
 
 % turn all warnings back on
