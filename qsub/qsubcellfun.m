@@ -103,7 +103,7 @@ clear qsublist
 stopwatch = tic;
 
 % locate the begin of the optional key-value arguments
-optbeg = find(cellfun(@ischar, varargin));
+optbeg = find(cellfun(@ischar, varargin), 1, 'first');
 optarg = varargin(optbeg:end);
 
 % get the optional input arguments
