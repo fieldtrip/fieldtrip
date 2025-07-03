@@ -103,7 +103,7 @@ if isa(a, 'numeric') || isa(a, 'char') || isa(a, 'logical')
     return;
   end
   if ~all(isnan(a(:)) == isnan(b(:)))
-    message{end+1} = sprintf('different occurence of NaNs in %s', location);
+    message{end+1} = sprintf('different occurrence of NaNs in %s', location);
     return;
   end
   % replace the NaNs, since we cannot compare them numerically

@@ -35,14 +35,14 @@ if isfield(hdr,'nifti_1')
 	try
 		SNif = mri_info_from_nifti(hdr.nifti_1);
 	catch
-		warning('Errors occured while inspecting NIFTI-1 header.');
+                warning('Errors occurred while inspecting NIFTI-1 header.');
 	end
 end
 if isfield(hdr,'siemensap')
 	try
 		SSap = mri_info_from_sap(hdr.siemensap);
 	catch
-		warning('Errors occured while inspecting SiemensAP header.');
+                warning('Errors occurred while inspecting SiemensAP header.');
 	end
 end
 	

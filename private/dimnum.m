@@ -1,5 +1,5 @@
 function [num,dims]=dimnum(dimord, dim)
-% This function returns the number of the given dimention 'dim' in the dimord string.
+% This function returns the number of the given dimension 'dim' in the dimord string.
 %
 % Syntax: [num,dims]=dimnum(dimord, dim)
 %
@@ -8,7 +8,7 @@ function [num,dims]=dimnum(dimord, dim)
 % e.g. when dimord='rpt_chancmb_freq_time' and dim='chancmb', dimnum returns num=2
 %       and dims again contains {'rpt','chancmb','freq','tim'}.
 % 
-% For the known dimentiontypes dim can also be 'time' or 'frequency'.
+% For the known dimension types dim can also be 'time' or 'frequency'.
 % The known types are:
 % tim: 'time'
 % freq: 'frq', 'frequency'
