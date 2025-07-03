@@ -43,7 +43,7 @@ ntri = size(tri,1);
 % the matrix edge is the connectivity matric for all vertices
 edge = spalloc(npnt, npnt, 3*ntri);
 for i=1:ntri
-  % compute the lenght of all triangle edges
+  % compute the length of all triangle edges
   edge(tri(i,1), tri(i,2)) = norm(pnt(tri(i,1),:) - pnt(tri(i,2),:));
   edge(tri(i,2), tri(i,3)) = norm(pnt(tri(i,2),:) - pnt(tri(i,3),:));
   edge(tri(i,3), tri(i,1)) = norm(pnt(tri(i,3),:) - pnt(tri(i,1),:));
