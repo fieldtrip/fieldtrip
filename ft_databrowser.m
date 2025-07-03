@@ -1949,7 +1949,7 @@ if strcmp(cfg.plotartifacts, 'yes')
     end
 
     for k=1:numel(artbeg)
-      i = i + 1; % it is not a simple loop, there are multiple types of artifacts, times multiple occurences
+      i = i + 1; % it is not a simple loop, there are multiple types of artifacts, times multiple occurrences
       artifacttime(i) = tim(artbeg(k)) + opt.hlim(1);
       xpos = [tim(artbeg(k)) tim(artend(k))];
 
