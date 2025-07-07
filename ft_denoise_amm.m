@@ -228,7 +228,7 @@ vrange   = abs((max(v)-min(v)));
 
 if (ind~=2)
   % FIXME this assumes RAS(-like) coordinates, so for ALS the coordinates need to be temporarily adjusted, but I don't see back below why this would be relevant
-  inderror('Y is not longest axis.... fix please')
+  ft_error('Y is not longest axis.... fix please')
 end
 
 inside = (v(:,1)-o(1)).^2/r(1)^2 + (v(:,2)-o(2)).^2/r(2)^2 + (v(:,3)-o(3)).^2/r(3)^2;
@@ -431,7 +431,8 @@ for i = 1:numel(data.trial)
     if size(Ytemp,2) > nsmp
       smpinds = (1:nsmp:(size(Ytemp,2)-1));
       smpinds(2,:) = nsmp.*(1:size(smpinds,2));
-      smpinds = smpinds'; 
+      smpinds = smpinds';
+      smpinds(smpinds>size(Ytemp,2)) = size(Ytemp,2);
     else
       smpinds = [1 size(Ytemp,2)];
     end 
