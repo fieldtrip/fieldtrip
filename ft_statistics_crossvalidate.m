@@ -1,9 +1,13 @@
 function [stat, cfg] = ft_statistics_crossvalidate(cfg, dat, design)
 
 % FT_STATISTICS_CROSSVALIDATE performs cross-validation using a prespecified
-% multivariate analysis. This function should not be called directly, instead you
-% should call the function that is associated with the type of data on which you want
-% to perform the test.
+% multivariate analysis. It is not recommended to call this function directly,
+% but instead you should call the function that is associated with the type of data on 
+% which you want to perform the test. This is because important data bookkeeping 
+% operations on the data are performed in the higher-level functions, which are
+% assumed to have been handled correctly for the input arguments into this function. 
+% Also, notably, a prespecified randomseed in the cfg is handled in the higher
+% level function, not here.
 %
 % Use as
 %   stat = ft_timelockstatistics(cfg, data1, data2, data3, ...)
@@ -54,6 +58,15 @@ function [stat, cfg] = ft_statistics_crossvalidate(cfg, dat, design)
 % do a sanity check on the input data
 assert(isnumeric(dat),    'this function requires numeric data as input, you probably want to use FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS instead');
 assert(isnumeric(design), 'this function requires numeric data as input, you probably want to use FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS instead');
+
+% check whether the function has been called from ft_timelockstatistics, ft_freqstatistics, or ft_sourcestatistics
+st = dbstack;
+m  = mfilename;
+if isscalar(st)
+  ft_warning('It seems that %s has been called directly from the command line. This is not recommended, unless you know what you are doing', m);
+elseif numel(st)>1 && ~ismember(st(2).name, {'ft_freqstatistics' 'ft_timelockstatistics' 'ft_sourcestatistics'})
+  ft_warning('It seems that %s has not been called from one of the FT_XXXSTATISTICS functions. This is not recommended, unless you know what you are doing', m);
+end
 
 cfg.mva       = ft_getopt(cfg, 'mva');
 cfg.statistic = ft_getopt(cfg, 'statistic', {'accuracy', 'binomial'});

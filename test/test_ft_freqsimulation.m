@@ -8,3 +8,4 @@ function test_ft_freqsimulation
 cfg = [];
 cfg.method = 'superimposed';
 dataout = ft_freqsimulation(cfg);
+
