@@ -36,7 +36,7 @@ for rpt = 1:1
     % another way to simulate pink noise which give users more control over the features of the noise
     freq = linspace(lf, hf, sl); % sampling frequesies
     fn = zeros(size(t));
-    for i=1:length(freq) % cummulative sum over freq
+    for i=1:length(freq) % cumulative sum over freq
         fn = fn + (A * 1/freq(i)^C) * cos(2*pi*freq(i)*t + rand*2*pi); % 1/f amplitude = a*(1/f^c)
     end
 

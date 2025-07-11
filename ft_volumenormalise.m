@@ -25,7 +25,7 @@ function [normalised] = ft_volumenormalise(cfg, mri)
 %   cfg.templatemask     = string, filename of a mask for the template
 %                          anatomical MRI spcified in cfg.template, e.g. a
 %                          brain mask (optional).
-%   cfg.tpm              = string, file name of the SPM tissue probablility map to use in
+%   cfg.tpm              = string, file name of the SPM tissue probability map to use in
 %                          case spmversion is 'spm12' and spmmethod is 'new' or 'mars'
 %   cfg.write            = 'yes' or 'no' (default = 'no'), writes the segmented volumes to SPM2
 %                          compatible analyze-file, with the suffix

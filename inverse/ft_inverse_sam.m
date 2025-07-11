@@ -217,7 +217,7 @@ invC = ft_inv(C, invopt{:});
 % 1): pseudo-Z = projected_signal_power / projected_noise_power = (w' C w) / (w' N w),
 % 2): event-related pseudo-Z = projected_evoked_activity_power / projected_noise_power = (w' Cavg w) / (w' N w), 
 % where w is the spatial filter, C is the covariance matrix, N is the noise covarianc matrix, and Cavg is the
-% second moment matrix of the averaged data over some time interval. For a detailled discussion
+% second moment matrix of the averaged data over some time interval. For a detailed discussion
 % regarding these approaches, we refer to 
 % Moiseev et al., Application of multi-source minimum variance beamformers for reconstruction of correlated neural activity,
 % NeuroImage, Volume 58, Issue 2, 15 September 2011, Pages 481-496.

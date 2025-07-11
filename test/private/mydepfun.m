@@ -62,7 +62,7 @@ outlist = cat(1, dep{:});
 depmat  = cat(2, eye(length(inlist)), depmat);
 outlist = cat(1, inlist(:), outlist(:));
 
-% remove all double occurences
+% remove all double occurrences
 s = unique(outlist);
 for i=1:length(s)
   sel = find(strcmp(outlist, s{i}));
