@@ -1659,7 +1659,7 @@ function x=getArrayField(S,yfield)
 %    1. size(S(n).yfield) is the same for all n.  Any size allowed.
 %    2. S(n).yfield is a 2-D array for all structure elements S(n).
 %      Then yfield of different array elements S(n) can have different sizes.
-%      The array returned will be large enough to accommodate all of the data.
+%      The array returned will be large enough to accomodate all of the data.
 
 sizeS=size(S);
 nS=prod(sizeS);

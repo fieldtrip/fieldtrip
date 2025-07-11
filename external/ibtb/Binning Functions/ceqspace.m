@@ -53,5 +53,5 @@ spacing = (rightEdge-leftEdge) / nb;
 
 edges = zeros(nb+1, 1);
 edges(:) = leftEdge:spacing:rightEdge;
-% Stretching last edge to accommodate maxX:
+% Stretching last edge to accomodate maxX:
 edges(nb+1) = edges(nb+1) + 1;

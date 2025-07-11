@@ -99,7 +99,7 @@ class gridGenerator  {
 
   // output parameters
   int           verbose;                  // output level
-  bool          implicit_links;           // do not link vertices explicitly
+  bool          implicit_links;           // do not link vertices explicitely
   formType      out_arg;                  // output format
   
   bool          use_simbio_mat_ids;       // use the SimBio material ID convention

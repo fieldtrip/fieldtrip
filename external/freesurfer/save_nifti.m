@@ -73,7 +73,7 @@ hdr.dim(3) = size(hdr.vol,2);
 hdr.dim(4) = size(hdr.vol,3);
 hdr.dim(5) = size(hdr.vol,4);
 
-% This is to accommodate structures with more than 32k cols
+% This is to accomodate structures with more than 32k cols
 % FreeSurfer specific. See also mriio.c.
 if(hdr.dim(2) > 2^15)
   hdr.glmin = hdr.dim(2);

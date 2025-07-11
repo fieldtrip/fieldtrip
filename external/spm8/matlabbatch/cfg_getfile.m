@@ -1155,14 +1155,14 @@ if isempty(regexp(t,mch,'once')),
     t = [d fs t];
 end;
 
-% Replace occurrences of '/./' by '/' (problems with e.g. /././././././')
+% Replace occurences of '/./' by '/' (problems with e.g. /././././././')
 re = [fs1 '\.' fs1];
 while ~isempty(regexp(t,re, 'once' )),
     t  = regexprep(t,re,fs);
 end;
 t  = regexprep(t,[fs1 '\.' '$'], fs);
 
-% Replace occurrences of '/abc/../' by '/'
+% Replace occurences of '/abc/../' by '/'
 re = [fs1 '[^' fs1 ']+' fs1 '\.\.' fs1];
 while ~isempty(regexp(t,re, 'once' )),
     t  = regexprep(t,re,fs,'once');

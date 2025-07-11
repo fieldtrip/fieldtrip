@@ -315,7 +315,7 @@ end
             EEG.urevent(end+1) = event;
         end
 
-        event.code = 'Realignment';
+        event.code = 'Realignement';
         event.duration = 1;
         % event.channel = channel_id; % or 0 for all channels
         event.channel = 0; % or 0 for all channels

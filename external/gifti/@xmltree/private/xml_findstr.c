@@ -7,7 +7,7 @@
 
 /*
     Differences with built-in findstr:
-        - allows to search only the n first occurrences of a pattern
+        - allows to search only the n first occurences of a pattern
         - allows to search only in a substring (given an index of the beginning)
    
     MATLAB hack:

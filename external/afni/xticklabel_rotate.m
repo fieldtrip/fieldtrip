@@ -186,7 +186,7 @@ else
     set(hText,'Rotation',rot,'HorizontalAlignment','left',varargin{:})  
 end
 
-% Adjust the size of the axis to accommodate for longest label (like if they are text ones)
+% Adjust the size of the axis to accomodate for longest label (like if they are text ones)
 % This approach keeps the top of the graph at the same place and tries to keep xlabel at the same place
 % This approach keeps the right side of the graph at the same place 
 

@@ -111,7 +111,7 @@ hdr.magic           = fscanf(fp,'%c',4);
 
 fclose(fp);
 
-% This is to accommodate structures with more than 32k cols
+% This is to accomodate structures with more than 32k cols
 % FreeSurfer specific. See also mriio.c.
 if(hdr.dim(2) < 0) 
   hdr.dim(2) = hdr.glmin; 

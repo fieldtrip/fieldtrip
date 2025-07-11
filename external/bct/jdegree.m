@@ -29,7 +29,7 @@ id = sum(CIJ,1);    % indegree = column sum of CIJ
 od = sum(CIJ,2)';   % outdegree = row sum of CIJ
 
 % Create the joint degree distribution matrix
-% Note:  the matrix is shifted by one, to accommodate zero id and od in the first row/column.
+% Note:  the matrix is shifted by one, to accomodate zero id and od in the first row/column.
 % Upper triangular part of the matrix has vertices with an excess of 
 %    outgoing edges (od>id)
 % Lower triangular part of the matrix has vertices with an excess of
