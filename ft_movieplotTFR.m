@@ -120,6 +120,25 @@ cfg.interactive     = ft_getopt(cfg, 'interactive',    'yes');
 cfg.visible         = ft_getopt(cfg, 'visible',        'on');
 cfg.renderer        = ft_getopt(cfg, 'renderer',       []); % let MATLAB decide on the default
 cfg.interpolatenan  = ft_getopt(cfg, 'interpolatenan', 'yes');
+cfg.figurename      = ft_getopt(cfg, 'figurename');
+
+% this is needed for the figure title
+if isfield(cfg, 'dataname') && ~isempty(cfg.dataname)
+  dataname = cfg.dataname;
+elseif isfield(cfg, 'inputfile') && ~isempty(cfg.inputfile)
+  dataname = cfg.inputfile;
+elseif nargin>1
+  dataname = arrayfun(@inputname, 2:nargin, 'UniformOutput', false);
+else
+  dataname = {};
+end
+
+% set the figure window title, if not defined by user
+if isempty(cfg.figurename) && ~isempty(dataname)
+  cfg.figurename = sprintf('%s: %s', mfilename, join_str(', ', dataname));
+else
+  cfg.figurename = sprintf('%s:', mfilename);
+end
 
 dointeractive = istrue(cfg.interactive);
 
@@ -262,7 +281,7 @@ if ~isequal(cfg.colormap, 'default')
 end
 
 % open a new figure with the specified settings
-h = open_figure(keepfields(cfg, {'figure', 'position', 'visible', 'renderer'}));
+h = open_figure(keepfields(cfg, {'figure', 'position', 'visible', 'renderer', 'figurename'}));
 set(h, 'toolbar', 'figure');
 
 if ~isempty(cfg.colormap)
@@ -435,25 +454,6 @@ else
   movie(F, cfg.movierpt, cfg.framespersec);
 
 end % if dointeractive
-
-% this is needed for the figure title
-if isfield(cfg, 'dataname') && ~isempty(cfg.dataname)
-  dataname = cfg.dataname;
-elseif isfield(cfg, 'inputfile') && ~isempty(cfg.inputfile)
-  dataname = cfg.inputfile;
-elseif nargin>1
-  dataname = arrayfun(@inputname, 2:nargin, 'UniformOutput', false);
-else
-  dataname = {};
-end
-
-% set the figure window title
-if ~isempty(dataname)
-  set(gcf, 'Name', sprintf('%d: %s: %s', double(gcf), mfilename, join_str(', ', dataname)));
-else
-  set(gcf, 'Name', sprintf('%d: %s', double(gcf), mfilename));
-end
-set(gcf, 'NumberTitle', 'off');
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
