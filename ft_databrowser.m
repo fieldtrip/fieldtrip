@@ -231,6 +231,7 @@ cfg.shading             = ft_getopt(cfg, 'shading', 'flat');
 cfg.interplimits        = ft_getopt(cfg, 'interplimits', 'mask');
 cfg.interpolation       = ft_getopt(cfg, 'interpmethod', 'v4');
 cfg.channelclamped      = ft_getopt(cfg, 'channelclamped');
+cfg.figurename          = ft_getopt(cfg, 'figurename');
 % set the defaults for plotting the events
 cfg.plotevents          = ft_getopt(cfg, 'plotevents', 'yes');
 cfg.ploteventlabels     = ft_getopt(cfg, 'ploteventlabels', 'type=value');
@@ -331,6 +332,12 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if hasdata
+  if isfield(cfg, 'inputfile') && ~isempty(cfg.inputfile)
+    dataname = cfg.inputfile;
+  else
+    dataname = inputname(2);
+  end
+
   % save whether data came from a timelock structure
   istimelock = strcmp(ft_datatype(data), 'timelock');
 
@@ -389,6 +396,14 @@ else
   cfg = ft_checkconfig(cfg, 'renamedval', {'continuous', 'continuous', 'yes'});
   % read the header from file
   hdr = ft_read_header(cfg.headerfile, headeropt{:});
+
+  if isfield(cfg, 'dataset')
+    dataname = cfg.dataset;
+  elseif isfield(cfg, 'datafile')
+    dataname = cfg.datafile;
+  else
+    dataname = [];
+  end
 
   if isempty(cfg.continuous)
     if hdr.nTrials==1
@@ -683,7 +698,10 @@ if strcmp(cfg.viewmode, 'component')
 end
 
 % open a new figure with the specified settings
-h = open_figure(keepfields(cfg, {'figure', 'position', 'visible', 'renderer'}));
+if isempty(cfg.figurename)
+  cfg.figurename = sprintf('%s: %s', mfilename, join_str(', ',dataname));
+end
+h = open_figure(keepfields(cfg, {'figure', 'position', 'visible', 'renderer', 'figurename'}));
 
 % check if the colormap is in proper format and set it
 if ~isempty(cfg.colormap)
@@ -707,24 +725,6 @@ set(h, 'Interruptible', 'off', 'BusyAction', 'queue'); % enforce busyaction to q
 % enable custom data cursor text
 dcm = datacursormode(h);
 set(dcm, 'updatefcn', @cb_datacursortext);
-
-% set the figure window title
-funcname = mfilename();
-if ~hasdata
-  if isfield(cfg, 'dataset')
-    dataname = cfg.dataset;
-  elseif isfield(cfg, 'datafile')
-    dataname = cfg.datafile;
-  else
-    dataname = [];
-  end
-elseif isfield(cfg, 'inputfile') && ~isempty(cfg.inputfile)
-  dataname = cfg.inputfile;
-else
-  dataname = inputname(2);
-end
-set(gcf, 'Name', sprintf('%d: %s: %s', double(gcf), funcname, join_str(', ',dataname)));
-set(gcf, 'NumberTitle', 'off');
 
 % set zoom option to on
 % zoom(h, 'on')
