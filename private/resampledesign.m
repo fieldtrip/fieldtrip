@@ -288,13 +288,26 @@ elseif length(cfg.uvar)==1 && strcmp(cfg.resampling, 'bootstrap') && isempty(cfg
     end
     
     tmp = unique(tmp, 'rows');
-    fprintf('found %d unique rows in bootstrap matrix of %d bootstraps', size(tmp,1), cfg.numrandomization*10);
+    fprintf('found %d unique rows in bootstrap matrix of %d bootstraps\n', size(tmp,1), cfg.numrandomization*10);
     
     if size(tmp,1)<cfg.numrandomization
       fprintf('using only %d unique bootstraps\n', size(tmp,1));
       cfg.numrandomization = size(tmp,1);
       index = 1:size(tmp,1);
     else
+      % do a quick check on the number of unique units per row
+      nunique = zeros(size(tmp,1),1);
+      for i=1:size(tmp,1)
+        nunique(i,1) = numel(unique(tmp(i,:)));
+      end
+      ununique = unique(nunique);
+      for i=1:numel(ununique)
+        nnunique(i,1) = sum(nunique==ununique(i));
+      end
+      fprintf('range of unique units across bootstraps is %d - %d\n', min(nunique), max(nunique));
+      fprintf('discarding bootstraps with <= 10 different units, selecting from %d bootstraps\n', sum(nunique>=10));
+      tmp = tmp(nunique>=10,:);
+
       index = randperm(size(tmp,1));
       index = index(1:cfg.numrandomization);
     end
