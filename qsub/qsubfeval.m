@@ -281,7 +281,7 @@ switch backend
       cmdline = sprintf('%s %s %s', compiledfun, matlabroot, jobid);
     else
       % create the shell commands to execute matlab
-      cmdline = sprintf('%s -r "%s"', matlabcmd, matlabscript);
+      cmdline = sprintf('%s -batch "%s"', matlabcmd, matlabscript);
     end
 
   case 'sge'
@@ -309,7 +309,7 @@ switch backend
       cmdline = sprintf('%s %s %s', compiledfun, matlabroot, jobid);
     else
       % create the shell commands to execute matlab
-      cmdline = sprintf('%s -r \\"%s\\"', matlabcmd, matlabscript);
+      cmdline = sprintf('%s -batch \\"%s\\"', matlabcmd, matlabscript);
     end
 
     % pass the command to qsub with all requirements
@@ -357,7 +357,7 @@ switch backend
       cmdline = sprintf('%s %s %s', compiledfun, matlabroot, jobid);
     else
       % create the shell commands to execute matlab
-      cmdline = sprintf('%s -r \\"%s\\"', matlabcmd, matlabscript);
+      cmdline = sprintf('%s -batch \\"%s\\"', matlabcmd, matlabscript);
     end
 
     if any(curPwd==' ')
@@ -397,7 +397,7 @@ switch backend
       % create the command line for the compiled application
       cmdline = sprintf('%s %s %s', compiledfun, matlabroot, jobid);
     else
-      cmdline = sprintf('%s -r \\"%s\\"', matlabcmd, matlabscript);
+      cmdline = sprintf('%s -batch \\"%s\\"', matlabcmd, matlabscript);
     end
     cmdline = sprintf('sbatch --parsable --job-name=%s %s --output=%s --error=%s --wrap "%s"', ...
                        jobid, submitoptions, logout, logerr, cmdline);
@@ -413,7 +413,7 @@ switch backend
     fprintf(fid, '# Condor submit script\n');
     fprintf(fid, '\n');
     fprintf(fid, 'Executable     = %s\n', matlabcmd);
-    fprintf(fid, 'Arguments      = -r "%s"\n', matlabscript);
+    fprintf(fid, 'Arguments      = -batch "%s"\n', matlabscript);
     % the timreq and memrequ should be inserted here
     fprintf(fid, 'Requirements   = Memory >= 32 && OpSys == "LINUX" && Arch =="INTEL"\n');
     fprintf(fid, 'Rank           = Memory >= 64\n');
@@ -459,7 +459,7 @@ switch backend
       cmdline = sprintf('%s %s %s', compiledfun, matlabroot, jobid);
     else
       % create the shell commands to execute matlab
-      cmdline = sprintf('%s -r \\"%s\\"', matlabcmd, matlabscript);
+      cmdline = sprintf('%s -batch \\"%s\\"', matlabcmd, matlabscript);
     end
 
     % pass the command to qsub with all requirements
