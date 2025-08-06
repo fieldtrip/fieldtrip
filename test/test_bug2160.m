@@ -104,7 +104,7 @@ try
   caughterror = false;
   cfg = [];
   cfg.layout = 'CTF275.lay';
-  ft_multiplotER(cfg, f1, f14);
+  ft_multiplotER(cfg, f1, f4);
 catch
   caughterror = true;
 end
