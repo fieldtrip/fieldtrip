@@ -11,6 +11,10 @@ function [tag] = fiff_read_tag(fid,pos)
 %   License : BSD 3-clause
 %
 %
+%   Revision 1.17  2025/06/30 10:10:30 
+%   Added to read string type digitization, especially in the new FIFF
+%   data by MEGIN
+%
 %   Revision 1.16  2008/11/17 15:07:00  msh
 %   Added reading of short, unsigned short, and unsigned int data
 %
@@ -277,6 +281,12 @@ if tag.size > 0
                 tag.data.kind    = fread(fid,1,'int32=>int32');
                 tag.data.ident   = fread(fid,1,'int32=>int32');
                 tag.data.r       = fread(fid,3,'single=>single');
+                tag.data.coord_frame = 0;
+            case FIFF.FIFFT_DIG_STRING_STRUCT
+                tag.data.kind    = fread(fid,1,'int32=>int32');
+                tag.data.ident   = fread(fid,1,'int32=>int32');
+                npts             = fread(fid,1,'int32=>int32');
+                tag.data.r       = fread(fid,npts*3,'single=>single');
                 tag.data.coord_frame = 0;
             case FIFF.FIFFT_COORD_TRANS_STRUCT
                 tag.data.from = fread(fid,1,'int32=>int32');
