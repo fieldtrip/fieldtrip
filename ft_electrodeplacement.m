@@ -509,7 +509,7 @@ switch cfg.method
     % this is an interactive method, start building the figure
 
     h = open_figure(keepfields(cfg, {'figure', 'position', 'visible', 'renderer', 'figurename', 'title'}));
-    set(h, , mfilename);
+    set(h, 'Name', mfilename);
     set(h, 'Units', 'normalized');
     set(h, 'Color', [1 1 1]);
     set(h, 'windowbuttondownfcn', @cb_buttonpress);
