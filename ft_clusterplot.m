@@ -77,11 +77,11 @@ ws = ft_warning('off', 'FieldTrip:getdimord:warning_dimord_could_not_be_determin
 stat = ft_checkdata(stat, 'datatype', {'timelock', 'freq'}, 'feedback', 'yes');
 
 % check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'renamed',     {'hlmarkerseries',       'highlightsymbolseries'});
-cfg = ft_checkconfig(cfg, 'renamed',     {'hlmarkersizeseries',   'highlightsizeseries'});
-cfg = ft_checkconfig(cfg, 'renamed',     {'hlcolorpos',           'highlightcolorpos'});
-cfg = ft_checkconfig(cfg, 'renamed',     {'hlcolorneg',           'highlightcolorneg'});
-cfg = ft_checkconfig(cfg, 'renamed',     {'zparam', 'parameter'});
+cfg = ft_checkconfig(cfg, 'renamed',     {'hlmarkerseries',     'highlightsymbolseries'});
+cfg = ft_checkconfig(cfg, 'renamed',     {'hlmarkersizeseries', 'highlightsizeseries'});
+cfg = ft_checkconfig(cfg, 'renamed',     {'hlcolorpos',         'highlightcolorpos'});
+cfg = ft_checkconfig(cfg, 'renamed',     {'hlcolorneg',         'highlightcolorneg'});
+cfg = ft_checkconfig(cfg, 'renamed',     {'zparam',             'parameter'});
 cfg = ft_checkconfig(cfg, 'deprecated',  {'hllinewidthseries'});
 cfg = ft_checkconfig(cfg, 'deprecated',  {'xparam', 'yparam'});
 cfg = ft_checkconfig(cfg, 'renamed',     {'newfigure', 'figure'});
@@ -366,7 +366,8 @@ else
   % make plots
   for iPl = 1:Nfig
     % open a new figure with the specified settings, note that here it must always open a new figure
-    open_figure(keepfields(cfg, {'position', 'visible', 'renderer'}));
+    cfg.figurename = sprintf('%s: stat %d', mfilename, iPl);
+    open_figure(keepfields(cfg, {'position', 'visible', 'renderer', 'figurename'}));
     if is2D
       if iPl < Nfig
         for iT = 1:numSubplots
@@ -423,25 +424,6 @@ ft_progress('close');
 
 % return to previous warning settings
 ft_warning(ws);
-
-% this is needed for the figure title
-if isfield(cfg, 'dataname') && ~isempty(cfg.dataname)
-  dataname = cfg.dataname;
-elseif isfield(cfg, 'inputfile') && ~isempty(cfg.inputfile)
-  dataname = cfg.inputfile;
-elseif nargin>1
-  dataname = arrayfun(@inputname, 2:nargin, 'UniformOutput', false);
-else
-  dataname = {};
-end
-
-% set the figure window title
-if ~isempty(dataname)
-  set(gcf, 'Name', sprintf('%d: %s: %s', double(gcf), mfilename, join_str(', ', dataname)));
-else
-  set(gcf, 'Name', sprintf('%d: %s', double(gcf), mfilename));
-end
-set(gcf, 'NumberTitle', 'off');
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug

@@ -101,25 +101,6 @@ end
 tmpcfg = removefields(cfg, {'baseline', 'baselinetype'});
 tmpcfg = ft_movieplotTFR(tmpcfg, data);
 
-% this is needed for the figure title
-if isfield(cfg, 'dataname') && ~isempty(cfg.dataname)
-  dataname = cfg.dataname;
-elseif isfield(cfg, 'inputfile') && ~isempty(cfg.inputfile)
-  dataname = cfg.inputfile;
-elseif nargin>1
-  dataname = arrayfun(@inputname, 2:nargin, 'UniformOutput', false);
-else
-  dataname = {};
-end
-
-% set the figure window title
-if ~isempty(dataname)
-  set(gcf, 'Name', sprintf('%d: %s: %s', double(gcf), mfilename, join_str(', ', dataname)));
-else
-  set(gcf, 'Name', sprintf('%d: %s', double(gcf), mfilename));
-end
-set(gcf, 'NumberTitle', 'off');
-
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble previous data
