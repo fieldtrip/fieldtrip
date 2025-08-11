@@ -117,6 +117,13 @@ if ~isempty(optbeg)
   varargin = varargin(1:(optbeg-1));
 end
 
+% as of matlab R2019a the -batch is a flag to be preferred over -r if running in non-interactive mode
+if ft_platform_supports('matlabversion', -inf, '2018b')
+  batchflag = '-r';
+else
+  batchflag = '-batch';
+end
+
 if isempty(backend)
   % use the system default backend
   backend = defaultbackend;
@@ -281,7 +288,7 @@ switch backend
       cmdline = sprintf('%s %s %s', compiledfun, matlabroot, jobid);
     else
       % create the shell commands to execute matlab
-      cmdline = sprintf('%s -batch "%s"', matlabcmd, matlabscript);
+      cmdline = sprintf('%s %s "%s"', matlabcmd, batchflag, matlabscript);
     end
 
   case 'sge'
@@ -309,7 +316,7 @@ switch backend
       cmdline = sprintf('%s %s %s', compiledfun, matlabroot, jobid);
     else
       % create the shell commands to execute matlab
-      cmdline = sprintf('%s -batch \\"%s\\"', matlabcmd, matlabscript);
+      cmdline = sprintf('%s %s \\"%s\\"', matlabcmd, batchflag, matlabscript);
     end
 
     % pass the command to qsub with all requirements
@@ -357,7 +364,7 @@ switch backend
       cmdline = sprintf('%s %s %s', compiledfun, matlabroot, jobid);
     else
       % create the shell commands to execute matlab
-      cmdline = sprintf('%s -batch \\"%s\\"', matlabcmd, matlabscript);
+      cmdline = sprintf('%s %s \\"%s\\"', matlabcmd, batchflag, matlabscript);
     end
 
     if any(curPwd==' ')
@@ -397,7 +404,7 @@ switch backend
       % create the command line for the compiled application
       cmdline = sprintf('%s %s %s', compiledfun, matlabroot, jobid);
     else
-      cmdline = sprintf('%s -batch \\"%s\\"', matlabcmd, matlabscript);
+      cmdline = sprintf('%s %s \\"%s\\"', matlabcmd, batchflag, matlabscript);
     end
     cmdline = sprintf('sbatch --parsable --job-name=%s %s --output=%s --error=%s --wrap "%s"', ...
                        jobid, submitoptions, logout, logerr, cmdline);
