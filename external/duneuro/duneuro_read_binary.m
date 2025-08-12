@@ -1,11 +1,11 @@
-function data = duneuro_read_binary(inFile)
+function data = duneuro_read_binary(filename)
 % read the binary output from duneuro
 % created by juan GPC
 % modified and adapted to bst-duneuro toolbox by Takfarinas MEDANI
-[inFid,~]     = fopen(inFile);
-[nRows,nCols] = read_header(inFid);
-data          = read_matrix(inFid,nRows,nCols);
-fclose(inFid);
+[fid,~]       = fopen(filename);
+[nRows,nCols] = read_header(fid);
+data          = read_matrix(fid,nRows,nCols);
+fclose(fid);
 
 end
 

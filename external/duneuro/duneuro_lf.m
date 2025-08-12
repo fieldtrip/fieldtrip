@@ -6,19 +6,19 @@ function cfg = duneuro_lf(cfg, sens)
 % Takfarinas MEDANI, December 2019
 
 if strcmp(cfg.modality,'eeg')
-    cfg = bst_postprocess_eeg_lf(cfg); % FIXME THIS NEEDS TO BE FIXED?
+    cfg = postprocess_eeg_lf(cfg); % FIXME THIS NEEDS TO BE FIXED?
 end
 
 if strcmp(cfg.modality,'meg')
-    cfg = bst_postprocess_meg_lf(cfg, sens);
+    cfg = postprocess_meg_lf(cfg, sens);
 end
 
 if strcmp(cfg.modality,'meeg')
-    cfg = bst_postprocess_meg_lf(cfg, sens);
-    cfg = bst_postprocess_eeg_lf(cfg);    
+    cfg = postprocess_meg_lf(cfg, sens);
+    cfg = postprocess_eeg_lf(cfg);    
 end
 
-function cfg = bst_postprocess_eeg_lf(cfg)
+function cfg = postprocess_eeg_lf(cfg)
 
 %% substract the mean or not from the electrode
 %     cfg.fem_eeg_lf
@@ -35,20 +35,19 @@ if cfg.lfAvrgRef == 1
     end
 end
 
-function cfg = bst_postprocess_meg_lf(cfg, sens)
+function cfg = postprocess_meg_lf(cfg, sens)
 
 %% Compute the total magnetic field 
 dipoles_pos_ori = [kron(cfg.sourceSpace,ones(3,1)), kron(ones(length(cfg.sourceSpace),1), eye(3))];
 
 % a- Compute the MEG Primary Magnetic field  % apply formula of Sarvas
-%primary B-field
 Bp = compute_B_primary(sens.coilpos, dipoles_pos_ori, sens.coilori);
 
 % b- The total magnetic field B = Bp + Bs;
 %  full B-field
 Bs =  cfg.meg.Bs;
 
-mu = 4*pi*1e-4; % check the value of the units maybe it needs to be mu = 4*pi*1e-7
+mu = 4*pi*1e-7; % check the value of the units maybe it needs to be mu = 4*pi*1e-7, I now changed it from 4*pi*1e-4
 Bfull = (mu/(4*pi)) * (Bp - Bs);
 
 cfg.meg.lf = Bfull;   

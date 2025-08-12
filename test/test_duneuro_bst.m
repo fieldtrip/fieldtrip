@@ -1,4 +1,4 @@
-function [Gain, cfg] = test_duneuro_bst
+function [lf_bst, cfg] = test_duneuro_bst
 
 ft_hastoolbox('duneuro', 1);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -60,13 +60,65 @@ sens.chanpos = coils;
 sens.chanori = projections;
 sens.label = meg_labels;
 sens.type = 'meg';
-sens.unit = 'mm';
+sens.unit = 'm';
 sens.tra = eye(5);
-sens = ft_convert_units(sens,'mm');
+sens = ft_convert_units(sens,'m');
 
 %% define dipoles
 dip_pos = [5.5 6.5 6.5; 5.5 5.5 3.5; 3.5 5.5 5.5]./100;
 dip_mom = [0 1 0; 0 0 -1; -1 0 0 ];
+
+%%%% This part uses the mex file in fieldtrip
+
+%% prepare headmodel
+
+cfg              = [];
+cfg.method       = 'duneuro';
+cfg.conductivity = [0.33, 0.43, 0.53];  % vector, conductivity values for tissues: check the order here
+vol_duneuro_hex  = ft_prepare_headmodel(cfg, mesh_vol_hex);
+vol_duneuro_tet  = ft_prepare_headmodel(cfg, mesh_vol_tet);
+
+
+%% prepare sourcemodel
+
+% hex
+cfg = [];
+cfg.sourcemodel.pos = dip_pos';
+cfg.sourcemodel.inside = ones(size(dip_pos,2),1);
+cfg.grad = sens;
+cfg.headmodel = vol_duneuro_hex;
+sm_duneuro_hex = ft_prepare_sourcemodel(cfg);
+
+% tet
+cfg = [];
+cfg.sourcemodel.pos = dip_pos';
+cfg.sourcemodel.inside = ones(size(dip_pos,2),1);
+cfg.grad = sens;
+cfg.headmodel = vol_duneuro_tet;
+sm_duneuro_tet = ft_prepare_sourcemodel(cfg);
+
+
+%% prepare leadfield
+
+% hex
+cfg                 = [];
+cfg.sourcemodel     = sm_duneuro_hex;
+%cfg.sourcemodel.mom = dip_mom;
+cfg.headmodel       = vol_duneuro_hex;
+cfg.grad            = sens;
+cfg.reducerank      = 3;
+out_hex = ft_prepare_leadfield(cfg);
+lf_hex = cell2mat(out_hex.leadfield);
+
+% tet
+cfg                 = [];
+cfg.sourcemodel     = sm_duneuro_tet;
+%cfg.sourcemodel.mom = dip_mom;
+cfg.headmodel       = vol_duneuro_tet;
+cfg.grad            = sens;
+cfg.reducerank      = 3;
+out_tet = ft_prepare_leadfield(cfg);
+lf_tet = cell2mat(out_tet.leadfield);
 
 
 %%%%% Here starts the part that is adjusted from bst_duneuro
@@ -89,20 +141,13 @@ switch usemesh
 
   case 'hex'
     mesh = mesh_vol_hex;
-% reorder the hex -> FIXME this should be done in the headmodel function
 
+    % reorder the hex -> FIXME this should be done in the headmodel function
     mesh.hex(:,[3 4 7 8]) = mesh.hex(:,[4 3 8 7]);
     cfg.dnMeshElementType = 'hexahedron';
-
-
 end
 
 %% ===== DUNEURO =====
-
-cfg.deleteOutputFolder = 0; % brainstorm will manage the rest
-
-cfg.advancedMode = 0;
-
 cond = [0.33, 0.43, 0.53];
 
 % % TODO : The conductivities values in the case of the
@@ -247,5 +292,8 @@ cfg = duneuro_lf(cfg, sens);
 
 %% 6- Read the lead field
 % fill the bad channel with nan (not possible within the duneuro)
-Gain = cfg.meg.lf;
+lf_bst = cfg.meg.lf;
 
+
+
+keyboard

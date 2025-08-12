@@ -1,5 +1,5 @@
 function cfg = duneuro_read_leadfield(cfg)
-% bst_read_binary_leadfield_matrix(filename)
+% duneuro_read_leadfield(cfg)
 % read the binary output from the duneuro application.
 % could be used to read either the eeg/meg transfer matrix or the eeg/meg
 % leadfield mtrix.
