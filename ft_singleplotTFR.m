@@ -183,6 +183,13 @@ else
   dataname = {};
 end
 
+% set the figure window title, if not defined by user
+if isempty(cfg.figurename) && ~isempty(dataname)
+  cfg.figurename = sprintf('%s: %s', mfilename, join_str(', ', dataname));
+else
+  cfg.figurename = sprintf('%s:', mfilename);
+end
+
 makesubplots = false;
 if Ndata==1 && isequal(cfg.figure, 'subplot')
   % overrule this setting
@@ -307,6 +314,14 @@ end
 
 % Take the desided subselection of channels, this is the same in all datasets
 [selchan] = match_str(varargin{1}.label, cfg.channel);
+
+% Add the list of selected channels to figurename
+if length(selchan) < 5
+  chans = join_str(', ', cfg.channel);
+else
+  chans = '<multiple channels>';
+end
+cfg.figurename = sprintf('%s (%s)', cfg.figurename, chans);
 
 % Get physical min/max range of x, i.e. time
 if strcmp(cfg.xlim, 'maxmin')
@@ -487,25 +502,6 @@ for i=1:Ndata
     end
   end
   title(t, 'fontsize', cfg.fontsize, 'interpreter', cfg.interpreter);
-
-  % set the figure window title, add channel labels if number is small
-  if isempty(get(gcf, 'Name'))
-    if length(selchan) < 5
-      chans = join_str(', ', cfg.channel);
-    else
-      chans = '<multiple channels>';
-    end
-    if ~isempty(cfg.figurename)
-      set(gcf, 'name', cfg.figurename);
-      set(gcf, 'NumberTitle', 'off');
-    elseif ~isempty(dataname)
-      set(gcf, 'Name', sprintf('%d: %s: %s (%s)', double(gcf), mfilename, join_str(', ', dataname), chans));
-      set(gcf, 'NumberTitle', 'off');
-    else
-      set(gcf, 'Name', sprintf('%d: %s (%s)', double(gcf), mfilename, chans));
-      set(gcf, 'NumberTitle', 'off');
-    end
-  end
 
   axis tight
 

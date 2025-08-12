@@ -266,6 +266,13 @@ else
   dataname = {};
 end
 
+% set the figure window title, if not defined by user
+if isempty(cfg.figurename) && ~isempty(dataname)
+  cfg.figurename = sprintf('%s: %s', mfilename, join_str(', ', dataname));
+else
+  cfg.figurename = sprintf('%s:', mfilename);
+end
+
 %% Section 2: data handling, this also includes converting bivariate (chan_chan and chancmb) into univariate data
 
 for i=1:Ndata
@@ -642,14 +649,6 @@ end
 if ~isempty(cfg.orient)
   orient(gcf, cfg.orient);
 end
-
-% set the figure window title
-if ~isempty(dataname)
-  set(gcf, 'Name', sprintf('%d: %s: %s', double(gcf), mfilename, join_str(', ', dataname)));
-else
-  set(gcf, 'Name', sprintf('%d: %s', double(gcf), mfilename));
-end
-set(gcf, 'NumberTitle', 'off');
 
 % Make the figure interactive
 if strcmp(cfg.interactive, 'yes')
