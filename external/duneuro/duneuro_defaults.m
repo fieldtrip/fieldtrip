@@ -7,61 +7,84 @@ if nargin<1
 end
 
 %% General settings
-cfg.outputpath                     = ft_getopt(cfg, 'outputpath', tempdir);
-cfg.duneuro_configuration_filename = ft_getopt(cfg, 'duneuro_configuration_filename', 'duneuro_minifile.mini');
-cfg.dnFemMethodType                = ft_getopt(cfg, 'dnFemMethodType',                'fitted'); % 'fitted' or 'unfitted'
-cfg.dnFemSolverType                = ft_getopt(cfg, 'dnFemSolverType',                'cg');     % what else?
-cfg.dnMeshElementType              = ft_getopt(cfg, 'dnMeshElementType',              []);       % this should be determined from the mesh
+cfg.type                           = ft_getopt(cfg, 'type',                           'fitted'); % 'fitted' or 'unfitted'
+cfg.solver_type                    = ft_getopt(cfg, 'solver_type',                    'cg');     % what else?
+cfg.element_type                   = ft_getopt(cfg, 'element_type',                   []);       % this should be determined from the mesh
+cfg.application                    = ft_getopt(cfg, 'application',                    []);
+
 cfg.dnGeometryAdapted              = ft_getopt(cfg, 'dnGeometryAdapted',              false);  % true or  false why and  how
 cfg.dnTolerance                    = ft_getopt(cfg, 'dnTolerance',                    1e-8);
-cfg.EnableCacheMemory              = ft_getopt(cfg, 'EnableCacheMemory',              false); % no idea
 
 %% 1 Sensors
 % subpart electrode : [electrodes]
-cfg.dnElectrodType                 = ft_getopt(cfg, 'dnElectrodType',                 'normal'); % FIXME: typo
+cfg.eeg = ft_getopt(cfg, 'eeg');
+cfg.eeg.type          = ft_getopt(cfg.eeg, 'type',  'closest_subentity_center');
 
 %% subpart [meg]
-cfg.dnMegIntorderadd               = ft_getopt(cfg, 'dnMegIntorderadd',               0); % FIXME: why is this numeric, is it intended boolean? why also false/true as strings?
-cfg.dnMegType                      = ft_getopt(cfg, 'dnMegType',                      'physical');
+cfg.meg = ft_getopt(cfg, 'meg');
+cfg.meg.intorderadd   = ft_getopt(cfg.meg, 'intorderadd', 2); % FIXME (was 0 in bst, in FT seems to have 2 as default): why is this numeric, is it intended boolean? why also false/true as strings?
+cfg.meg.type          = ft_getopt(cfg.meg, 'type',          'physical');
+cfg.meg.enablecache   = ft_getopt(cfg.meg, 'enablecache',   false); % no idea
 
 %% 4 - Subpart  [solver] ==> refers to the linear system solver ?
-cfg.dnSolverSolverType = ft_getopt(cfg, 'dnSolverSolverType',                         'cg'); %  conjugate solver  what are the others 
-if ~isfield(cfg,'dnSolverPreconditionerType'); cfg.dnSolverPreconditionerType ='amg'; end %  what are the others 
-if ~isfield(cfg,'dnSolverCgSmootherType'); cfg.dnSolverCgSmootherType ='ssor'; end %  what are the others 
-if ~isfield(cfg,'dnSolverIntorderadd'); cfg.dnSolverIntorderadd =0; end %  what are the others 
+cfg.solver = ft_getopt(cfg, 'solver');
+cfg.solver.preconditioner_type = ft_getopt(cfg.solver, 'preconditioner_type', 'amg');  % what are the others 
+cfg.solver.cg_smoother_type    = ft_getopt(cfg.solver, 'cg_smoother_type',    'ssor'); % what are the others 
+cfg.solver.intorderadd         = ft_getopt(cfg.solver, 'intorderadd', 2);
 
 % case of the dg discontinious galerkin
-if ~isfield(cfg,'DgSmootherType'); cfg.dnGgSmootherType = 'ssor'; end %  what are the others 
-if ~isfield(cfg,'DgScheme'); cfg.dnScheme = 'sipg'; end %  what are the others 
-if ~isfield(cfg,'DgPenalty'); cfg.dnPenalty = 20; end %  what are the others 
-if ~isfield(cfg,'DgEdgeNormType'); cfg.dnEdgeNormType = 'houston'; end %  what are the others 
-if ~isfield(cfg,'DgWeights'); cfg.dnWeights = true; end %  what are the others 
-if ~isfield(cfg,'DgReduction'); cfg.dnWeights = true; end %  what are the others 
+cfg.solver.dg_smoother_type = ft_getopt(cfg.solver, 'dg_smoother_type', 'ssor');
+cfg.solver.dg_scheme        = ft_getopt(cfg.solver, 'dg_scheme', 'sipg');
+cfg.solver.dg_penalty       = ft_getopt(cfg.solver, 'dg_penalty', 20);
+cfg.solver.dg_edge_norm_type = ft_getopt(cfg.solver, 'dg_edge_norm_type', 'houston');
+cfg.solver.dg_weights        = ft_getopt(cfg.solver, 'dg_weights',   true);
+cfg.solver.dg_reduction      = ft_getopt(cfg.solver, 'dg_reduction', true);
 
 %% 5 - Subpart  [solution]
-if ~isfield(cfg,'dnSolutionPostProcess'); cfg.dnSolutionPostProcess = true; end %  what are the others 
-if ~isfield(cfg,'dnSolutionSubstractMean'); cfg.dnSolutionSubstractMean =false; end %  what are the others 
+cfg.post_process  = ft_getopt(cfg, 'post_process',  true);
+cfg.subtract_mean = ft_getopt(cfg, 'subtract_mean', true); 
+
 % subpart  [solution.solver]
-if ~isfield(cfg,'dnSolutionSolverReduction'); cfg.dnSolutionSolverReduction = 1e-10; end %  what are the others 
+cfg.reduction    = ft_getopt(cfg, 'reduction', 1e-15);
 
 %% 6 - subpart  [solution.source_model]
-if ~isfield(cfg,'femSourceModel'); cfg.femSourceModel = 'venant'; end % partial_integration, venant, subtraction | expand smtype
-if ~isfield(cfg,'femSourceModelIntorderadd'); cfg.femSourceModelIntorderadd = 0; end % 
-if ~isfield(cfg,'femSourceModelIntorderadd_lb'); cfg.femSourceModelIntorderadd_lb = 2; end % 
-if ~isfield(cfg,'femSourceModelNumberOfMoments'); cfg.femSourceModelNumberOfMoments = 3; end % 
-if ~isfield(cfg,'femSourceModelReferenceLength'); cfg.femSourceModelReferenceLength = 20; end % 
-if ~isfield(cfg,'femSourceModelWeightingExponent'); cfg.femSourceModelWeightingExponent = 1; end % 
-if ~isfield(cfg,'femSourceModelRelaxationFactor'); cfg.femSourceModelRelaxationFactor = 6; end % will be converted to 10^-(#)% 
-if ~isfield(cfg,'femSourceModelMixedMoments'); cfg.femSourceModelMixedMoments = true; end % 
-if ~isfield(cfg,'femSourceModelRestrict'); cfg.femSourceModelRestrict = true; end % 
-if ~isfield(cfg,'femSourceModelInitialization'); cfg.femSourceModelInitialization = 'closest_vertex'; end % 
+cfg.source_model                  = ft_getopt(cfg, 'source_model');
+cfg.source_model.type             = ft_getopt(cfg.source_model, 'type', 'venant'); % partial_integration, venant, subtraction | expand smtype
+cfg.source_model.initialization   = ft_getopt(cfg.source_model, 'initialization', 'closest_vertex');
+cfg.source_model.intorderadd      = ft_getopt(cfg.source_model, 'intorderadd', 2);
+cfg.source_model.intorderadd_lb   = ft_getopt(cfg.source_model, 'intorderadd_lb', 3);
+cfg.source_model.numberOfMoments  = ft_getopt(cfg.source_model, 'numberOfMoments', 3); 
+cfg.source_model.referenceLength  = ft_getopt(cfg.source_model, 'referenceLength', 20); 
+cfg.source_model.relaxationFactor = ft_getopt(cfg.source_model, 'relaxationFactor', 1e-6); 
+cfg.source_model.restrict         = ft_getopt(cfg.source_model, 'restrict', true); 
+cfg.source_model.weightingExponent = ft_getopt(cfg.source_model, 'weightingExponent', 1); 
+cfg.source_model.mixedMoments     = ft_getopt(cfg.source_model, 'mixedMoments', true); 
 
-%% 7 - subpart  [brainstorm]
-%if ~isfield(cfg,'brainstormModality'); cfg.brainstormModality = cfg.modality; end % should be done from the bst as tmp folder 
-if ~isfield(cfg,'BstOutputFolder'); cfg.BstOutputFolder = cfg.outputpath; end % should be done from the bst as tmp folder 
-if ~isfield(cfg,'BstSaveTransfer'); cfg.BstSaveTransfer = false; end % 
-if ~isfield(cfg,'BstEegTransferFile'); cfg.BstEegTransferFile = 'eeg_transfer.dat'; end % i
-if ~isfield(cfg,'BstMegTransferFile'); cfg.BstMegTransferFile = 'meg_transfer.dat'; end % 
-if ~isfield(cfg,'BstEegLfFile'); cfg.BstEegLfFile = 'eeg_lf.dat'; end %
-if ~isfield(cfg,'BstMegLfFile'); cfg.BstMegLfFile = 'meg_lf.dat'; end % 
+% figure out whether the user provided an application explicitly
+if isempty(cfg.application) && ~isfield(cfg, 'bstflag')
+  % default to duneuro_meeg, which relies on a platform-specific compiled mex-file duneuro_matlab.mex**
+  cfg.bstflag = false;
+elseif exist(cfg.application, 'file') && contains(cfg.application, 'bst_duneuro')
+  % assume it to be a valid compiled application downloaded from brainstorm
+  cfg.bstflag = true;
+end
 
+if cfg.bstflag
+  cfg.outputpath = ft_getopt(cfg, 'outputpath',  tempname);
+  if ~endsWith(cfg.outputpath, filesep)
+    cfg.outputpath = sprintf('%s%s', cfg.outputpath,filesep); % somehow this is needed 
+  end
+  if ~exist(cfg.outputpath, 'dir')
+    mkdir(cfg.outputpath);
+  end
+  cfg.minifile_filename              = ft_getopt(cfg, 'minifile_filename',  fullfile(cfg.outputpath, 'duneuro_minifile.mini'));
+
+  cfg.modality = ft_getopt(cfg, 'modality', []); % this cannot be guessed and needs to be figured out elsewhere
+
+  %% 7 - subpart  [brainstorm], specify the filenames and some other things
+  cfg.transfer_save = ft_getopt(cfg, 'transfer_save', false);
+  cfg.transfer_eeg  = ft_getopt(cfg, 'transfer_eeg',  'eeg_transfer.dat');
+  cfg.transfer_meg  = ft_getopt(cfg, 'transfer_meg',  'meg_transfer.dat');
+  cfg.lf_eeg        = ft_getopt(cfg, 'lf_eeg', 'eeg_lf.dat');
+  cfg.lf_meg        = ft_getopt(cfg, 'lf_meg', 'meg_lf.dat');
+end

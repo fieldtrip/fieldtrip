@@ -302,20 +302,31 @@ elseif ismeg
       % don't do anything, h2em or h2mm generated later in ft_prepare_leadfield
 
     case 'duneuro'
-           
-      %compute transfer matrix
-      if(~isfield(headmodel,'meg_transfer'))
+      
+      if isfield(headmodel, 'driver')
+        %compute transfer matrix
+        if(~isfield(headmodel,'meg_transfer'))
 
-        % set coils and projections
-        coils = sens.coilpos;
-        projections = sens.coilori;
-        headmodel.driver.set_coils_and_projections(coils', projections');
+          % set coils and projections
+          coils = sens.coilpos;
+          projections = sens.coilori;
+          headmodel.driver.set_coils_and_projections(coils', projections');
 
-        % compute transfer matrix
-        cfg = [];
-        cfg.solver.reduction   = headmodel.reduction;
-        cfg.solver.intorderadd = headmodel.intorderadd;
-        headmodel.meg_transfer = headmodel.driver.compute_meg_transfer_matrix(cfg);
+          % compute transfer matrix
+          cfg = [];
+          cfg.solver.reduction   = num2str(headmodel.duneuro.reduction,   '%d');
+          cfg.solver.intorderadd = num2str(headmodel.duneuro.solver.intorderadd, '%d'); % FIXME brainstorm allows for more optiones here
+          headmodel.meg_transfer = headmodel.driver.compute_meg_transfer_matrix(cfg);
+        end
+      else
+        % the brainstorm application is probably required, this uses a different approach
+        
+        % write the coils and projections files
+        filenames = {fullfile(headmodel.duneuro.outputpath, 'coilpos.txt') fullfile(headmodel.duneuro.outputpath, 'coilori.txt')};
+        headmodel.duneuro.filename_coilpos = filenames{1};
+        headmodel.duneuro.filename_coilori = filenames{2};
+        duneuro_write_sensors(sens, filenames);
+
       end
     
     case 'interpolate'

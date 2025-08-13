@@ -1,7 +1,7 @@
 function filename_cond = duneuro_write_conductivity(filename_cond, varargin)
 
 % cfg = bst_prepare_conductivity_model(cfg);
-% write the conductivity file either for isotrpic modelor anisotrpic
+% write the conductivity file either for isotrpic model or anisotrpic
 
 % Author : Takfarinas MEDANI, October 2019,
 
@@ -68,6 +68,8 @@ if isempty(ext) || ~strcmp(ext,'.con')
     ext = '.con';
 end
 cond_filename = fullfile(filepath,[name,ext]);
+ft_info('writing isotropic conductivity values to file %s', cond_filename);
+
 fid = fopen(cond_filename , 'w');
 fprintf(fid, '%d\t', conductivity);
 fclose(fid);

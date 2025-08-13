@@ -85,7 +85,7 @@ function [headmodel, cfg] = ft_prepare_headmodel(cfg, data)
 %   cfg.conductivity      An array with the conductivities must be provided. (see above)
 %   cfg.grid_filename     Alternatively,  a filename for the grid and a filename for the conductivities can be passed.
 %   cfg.tensors_filename  "
-%   cfg.duneuro_settings  (optional) Additional settings can be provided for duneuro (see http://www.duneuro.org).
+%   cfg.duneuro           (optional) Additional settings can be provided for duneuro (see http://www.duneuro.org, and duneuro_defaults.m).
 %
 % SINGLESHELL
 %   cfg.tissue            see above; in combination with 'seg' input; default options are 'brain' or 'scalp'

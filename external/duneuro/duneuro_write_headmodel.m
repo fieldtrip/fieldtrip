@@ -50,10 +50,8 @@ end
 
 if isfield(mesh, 'tet')
   eltype = 'tetrahedron';
-  elem   = [mesh.tet mesh.tissue];
 elseif isfield(mesh, 'hex')
   eltype = 'hexahedron';
-  elem   = [mesh.hex mesh.tissue];
 else
   ft_error('unknown element type');
 end
@@ -89,4 +87,5 @@ switch eltype
     end
 end
 filename_headmodel = sprintf('%s.%s', filename, ext);
+ft_info('writing headmodel geometry to file %s', filename_headmodel);
 ft_write_headshape(filename_headmodel, mesh, 'format', format, 'data', data);
