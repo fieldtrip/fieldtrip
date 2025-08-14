@@ -1,8 +1,8 @@
-function [lf_bst, cfg] = test_duneuro_bst(nvoxbox)
+function test_duneuro(nvoxbox, doplot)
 
 % MEM 12gb
 % WALLTIME 01:00:00
-% DEPENDENCY ft_prepare_sourcemodel headsurface ft_prepare_leadfield ft_freqanalysis ft_sourceanalysis
+% DEPENDENCY ft_prepare_sourcemodel ft_prepare_leadfield
 % DATA private
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -21,15 +21,19 @@ function [lf_bst, cfg] = test_duneuro_bst(nvoxbox)
 
 ft_hastoolbox('duneuro', 1);
 
-if nargin<1
+if nargin<1 || isempty(nvoxbox)
   nvoxbox = 11;
 else
   % having nvoxbox slightly bigger allows for potentially more
   % realistically sized computations
 end
 
-if nvoxbox<10
-  ft_error('the length of the volume conductor cube should be at least 10');
+if nargin<2
+  doplot = false;
+end
+
+if nvoxbox<11
+  ft_error('the length of the volume conductor cube should be at least 11');
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -38,35 +42,46 @@ end
 
 %% create mesh
 
-brainlim = ceil(0.4.*nvoxbox):floor(0.7.*nvoxbox);
-skulllim = ceil(0.3.*nvoxbox):floor(0.8.*nvoxbox);
-scalplim = ceil(0.2.*nvoxbox):floor(0.9.*nvoxbox);
 
 % from test_pull1427.m
 % dull segmentation
 segprob = [];
-segprob.brain = false(nvoxbox,nvoxbox,nvoxbox); segprob.brain(brainlim,brainlim,brainlim) = true;
-segprob.skull = false(nvoxbox,nvoxbox,nvoxbox); segprob.skull(skulllim,skulllim,skulllim) = true;
-segprob.scalp = false(nvoxbox,nvoxbox,nvoxbox); segprob.scalp(scalplim,scalplim,scalplim) = true;
+segprob.brain = false(nvoxbox,nvoxbox,nvoxbox); 
+segprob.skull = false(nvoxbox,nvoxbox,nvoxbox); 
+segprob.scalp = false(nvoxbox,nvoxbox,nvoxbox); 
 segprob.dim = size(segprob.brain);
 segprob.unit = 'cm';
 segprob.coordsys = 'ctf';
-segprob.transform = eye(4);
-segprob.transform(1,4) = -0.5;
-segprob.transform(2,4) = -0.5;
-segprob.transform(3,4) = -0.5;
+segprob.transform = diag([ (10./(nvoxbox-1)).*ones(1,3) 1] );
+segprob.transform(1,4) = -5.5;%-nvoxbox./2-0.5;
+segprob.transform(2,4) = -5.5;%-nvoxbox./2-0.5;
+segprob.transform(3,4) = -5.5;%-nvoxbox./2-0.5;
 
-center  = [nvoxbox nvoxbox nvoxbox]./2;
+center  = [0 0 0];
+
+[x,y,z] = ndgrid(1:nvoxbox, 1:nvoxbox, 1:nvoxbox);
+pos = ft_warp_apply(segprob.transform, [x(:) y(:) z(:)]);
+R   = sqrt(sum(pos.^2,2));
+clear x y z
+
+r = (max(pos(:))-min(pos(:)))./2;
+
+segprob.brain(R<=0.5.*r) = true;
+segprob.skull(R<=0.7.*r) = true;
+segprob.scalp(R<=0.9.*r) = true;
 
 % visualize the segmentation
 % it is more difficult to visualize a probabilistic segmentation than an indexed one
 segindx = ft_datatype_segmentation(segprob, 'segmentationstyle', 'indexed');
+segindx = ft_convert_units(segindx, 'm');
 
-cfg = [];
-cfg.funparameter = 'tissue';
-cfg.method   = 'ortho';
-cfg.location = center; % this is the center of the volume, in this plot it will be rounded off to the nearest voxel
-ft_sourceplot(cfg, segindx);
+if doplot
+  cfg = [];
+  cfg.funparameter = 'tissue';
+  cfg.method   = 'ortho';
+  cfg.location = center; % this is the center of the volume, in this plot it will be rounded off to the nearest voxel
+  ft_sourceplot(cfg, segindx);
+end
 
 % hexa mesh
 cfg = [];
@@ -81,12 +96,13 @@ cfg.tissue = 'brain';
 mesh_surf = ft_prepare_mesh(cfg, segprob);
 mesh_surf = ft_convert_units(mesh_surf, 'm');
 
-figure
-ft_plot_ortho(segindx.tissue, 'transform', segindx.transform, 'location', center, 'style', 'intersect');
-hold on
-ft_plot_mesh(mesh_vol_hex, 'surfaceonly', false, 'facecolor', 'none', 'edgecolor', 'm');
-view(120, 30)
-
+if doplot
+  figure
+  ft_plot_ortho(segindx.tissue, 'transform', segindx.transform, 'location', center, 'style', 'intersect');
+  hold on
+  ft_plot_mesh(mesh_vol_hex, 'surfaceonly', false, 'facecolor', 'none', 'edgecolor', 'm');
+  view(120, 30)
+end
 
 % tetra mesh
 cfg = [];
@@ -94,30 +110,19 @@ cfg.method = 'tetrahedral';
 mesh_vol_tet = ft_prepare_mesh(cfg, segprob);
 mesh_vol_tet = ft_convert_units(mesh_vol_tet, 'm');
 
-figure
-ft_plot_ortho(segindx.tissue, 'transform', segindx.transform, 'location', center, 'style', 'intersect');
-hold on
-ft_plot_mesh(mesh_vol_tet, 'surfaceonly', false, 'facecolor', 'none', 'edgecolor', 'm');
-view(120, 30)
+if doplot
+  figure
+  ft_plot_ortho(segindx.tissue, 'transform', segindx.transform, 'location', center, 'style', 'intersect');
+  hold on
+  ft_plot_mesh(mesh_vol_tet, 'surfaceonly', false, 'facecolor', 'none', 'edgecolor', 'm');
+  view(120, 30)
+end
 
 %% define sensors
 
-% i manually passed 5 coils and fixed projections
-% or maybe take some from a ctf file? something like this (from test_pull1377.m)
-
-% for MEG data + sensor info
-%
-% load(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/preproc_ctf151.mat'), 'data');
-% datameg = data;
-% clear data
-
-coils = [center(1) center(2) nvoxbox+2; center(1) nvoxbox+2 center(3); -2 center(2) center(3); nvoxbox+2 center(2) center(3); center(1) -2 center(3)]; % 2 cm out of the box
+% MEG sensor array
+coils = [0 0 r+2; 0 r+2 0; -(r+2) 0 0; r+2 0 0; 0 -(r+2) 0]; % 2 cm out of the box
 projections = [0 0 1 ; 0 1 0; -1 0 0; 1 0 0; 0 -1 0 ];
-
-figure
-ft_plot_ortho(segindx.tissue, 'transform', segindx.transform, 'location', center, 'style', 'intersect');
-hold on
-quiver3(coils(:,1),coils(:,2),coils(:,3),projections(:,1),projections(:,2),projections(:,3),'bo')
 
 meg_labels = cellstr(strings(1,size(coils,1)));
 for i=1:size(coils,1)
@@ -138,127 +143,233 @@ sens = ft_datatype_sens(sens);
 sens.chanunit = repmat({'T'}, [5 1]); % avoid bookkeeping slowdown
 sens.chantype = repmat({'megmag'}, [5 1]);
 
-%% define dipoles
-dip_pos = [5.5 6.5 6.5; 5.5 5.5 3.5; 3.5 5.5 5.5]./100; % in m
-dip_mom = [0 1 0; 0 0 -1; -1 0 0 ];
+if doplot
+  figure
+  ft_plot_ortho(segindx.tissue, 'transform', segindx.transform, 'location', center, 'style', 'intersect');
+  hold on
+  ft_plot_sens(sens);
+end
 
-figure
-ft_plot_ortho(segindx.tissue, 'transform', segindx.transform, 'location', center, 'style', 'intersect');
-hold on
-quiver3(dip_pos(:,1),dip_pos(:,2),dip_pos(:,3),dip_mom(:,1),dip_mom(:,2),dip_mom(:,3),'bo')
-view(-200, 15)
+% EEG sensor array
+elec = [];
+elec.elecpos = [0 0 r; 0 r 0; -r 0 0; r 0 0; 0 -r 0].*0.9;
+elec.type    = 'eeg';
+elec.unit    = 'cm';
+elec.label   = {'eeg1';'eeg2';'eeg3';'eeg4';'eeg5'};
+elec.chanunit = {'V' 'V' 'V' 'V' 'V'}';
+elec.chantype = {'eeg' 'eeg' 'eeg' 'eeg' 'eeg'}';
+elec = ft_convert_units(elec, 'm');
+elec = ft_datatype_sens(elec);
+
+
+%% define dipoles
+
+% -> just picking randomly yields very poor solutions (without tweaking)
+% when using hexagonal mesh
+%dip_pos = [rand(1,3); rand(1,3).*[1 1 -1]; rand(1,3).*[-1 1 1]];
+%dip_pos = 0.01.*0.15.*0.9.*r.*dip_pos./sqrt(sum(dip_pos.^2,2));
+%dip_mom = [0 1 0; 0 0 -1; -1 0 0 ];
+dip_pos = pos(segprob.brain(:),:);
+dip_pos(sqrt(sum(dip_pos.^2,2))<=1, :) = [];
+dip_pos = dip_pos./100;
+dip_mom = 2.*rand(size(dip_pos)) - 1;
+
+if doplot
+  figure
+  ft_plot_ortho(segindx.tissue, 'transform', segindx.transform, 'location', center, 'style', 'intersect');
+  hold on
+  quiver3(dip_pos(:,1),dip_pos(:,2),dip_pos(:,3),dip_mom(:,1),dip_mom(:,2),dip_mom(:,3),'bo')
+  view(-200, 15)
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% 2. compute the leadfield
+% 2. compute the leadfield with singlesphere model
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% prepare headmodel
+cfg               = [];
+cfg.method        = 'singlesphere';
+cfg.tissue        = 'brain';
+vol_ssph          = ft_prepare_headmodel(cfg, segprob);
+vol_ssph          = ft_convert_units(vol_ssph, 'm');
 
+cfg.method        = 'concentricspheres';
+cfg.conductivity  = [0.33, 0.43, 0.53];  % vector, conductivity values for tissues: check the order here
+cfg.tissue        = {'brain' 'skull' 'scalp'};
+vol_csph          = ft_prepare_headmodel(cfg, segprob);
+vol_csph          = ft_convert_units(vol_csph, 'm');
+
+%% prepare sourcemodel
+cfg                    = [];
+cfg.sourcemodel.pos    = dip_pos;
+cfg.sourcemodel.inside = ones(size(dip_pos,1),1);
+cfg.grad               = sens;
+cfg.headmodel          = vol_ssph;
+sm_ssph                = ft_prepare_sourcemodel(cfg);
+
+%% prepare leadfield MEG
+cfg                 = [];
+cfg.sourcemodel     = sm_ssph;
+cfg.sourcemodel.mom = dip_mom';
+cfg.headmodel       = vol_ssph;
+cfg.grad            = sens;
+cfg.reducerank      = 3;
+out_ssph            = ft_prepare_leadfield(cfg);
+lf_meg_ssph         = cell2mat(out_ssph.leadfield);
+
+%% prepare leadfield EEG
+cfg                 = [];
+cfg.sourcemodel     = sm_ssph;
+cfg.sourcemodel.mom = dip_mom';
+cfg.headmodel       = vol_csph;
+cfg.elec            = elec;
+cfg.reducerank      = 3;
+out_ssph            = ft_prepare_leadfield(cfg);
+lf_eeg_csph         = cell2mat(out_ssph.leadfield);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 3. compute the leadfield with the duneuro mex-file
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% prepare headmodel
 cfg              = [];
 cfg.method       = 'duneuro';
 cfg.conductivity = [0.33, 0.43, 0.53];  % vector, conductivity values for tissues: check the order here
 vol_duneuro_hex  = ft_prepare_headmodel(cfg, mesh_vol_hex);
 vol_duneuro_tet  = ft_prepare_headmodel(cfg, mesh_vol_tet);
 
-
 %% prepare sourcemodel
+cfg                    = [];
+cfg.sourcemodel.pos    = dip_pos;
+cfg.sourcemodel.inside = ones(size(dip_pos,1),1);
+cfg.grad               = sens;
 
 % hex
-cfg = [];
-cfg.sourcemodel.pos = dip_pos';
-cfg.sourcemodel.inside = ones(size(dip_pos,2),1);
-cfg.grad = sens;
-cfg.headmodel = vol_duneuro_hex;
-sm_duneuro_hex = ft_prepare_sourcemodel(cfg);
+cfg.headmodel          = vol_duneuro_hex;
+sm_duneuro_hex         = ft_prepare_sourcemodel(cfg);
 
 % tet
-cfg = [];
-cfg.sourcemodel.pos = dip_pos';
-cfg.sourcemodel.inside = ones(size(dip_pos,2),1);
-cfg.grad = sens;
-cfg.headmodel = vol_duneuro_tet;
-sm_duneuro_tet = ft_prepare_sourcemodel(cfg);
+cfg.headmodel          = vol_duneuro_tet;
+sm_duneuro_tet         = ft_prepare_sourcemodel(cfg);
 
-
-%% prepare leadfield
+%% prepare leadfield MEG
+cfg                 = [];
+cfg.grad            = sens;
+cfg.reducerank      = 3;
 
 % hex
-cfg                 = [];
 cfg.sourcemodel     = sm_duneuro_hex;
-cfg.sourcemodel.mom = dip_mom;
+cfg.sourcemodel.mom = dip_mom';
 cfg.headmodel       = vol_duneuro_hex;
-cfg.grad            = sens;
-cfg.reducerank      = 3;
-out_hex = ft_prepare_leadfield(cfg);
-lf_hex = cell2mat(out_hex.leadfield);
+out_hex             = ft_prepare_leadfield(cfg);
+lf_meg_hex          = cell2mat(out_hex.leadfield);
 
 % tet
-cfg                 = [];
 cfg.sourcemodel     = sm_duneuro_tet;
-cfg.sourcemodel.mom = dip_mom;
+cfg.sourcemodel.mom = dip_mom';
 cfg.headmodel       = vol_duneuro_tet;
+out_tet             = ft_prepare_leadfield(cfg);
+lf_meg_tet          = cell2mat(out_tet.leadfield);
+
+%% prepare leadfield EEG
+cfg                 = [];
+cfg.elec            = elec;
+cfg.reducerank      = 3;
+
+% hex
+cfg.sourcemodel     = sm_duneuro_hex;
+cfg.sourcemodel.mom = dip_mom';
+cfg.headmodel       = vol_duneuro_hex;
+out_hex             = ft_prepare_leadfield(cfg);
+lf_eeg_hex          = cell2mat(out_hex.leadfield);
+
+% tet
+cfg.sourcemodel     = sm_duneuro_tet;
+cfg.sourcemodel.mom = dip_mom';
+cfg.headmodel       = vol_duneuro_tet;
+out_tet             = ft_prepare_leadfield(cfg);
+lf_eeg_tet          = cell2mat(out_tet.leadfield);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 4. compute the leadfield with the brainstorm app
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+[p,f,e] = fileparts(which('duneuro_matlab'));
+setenv('LD_LIBRARY_PATH',[fullfile(p, 'lib') ':' getenv('LD_LIBRARY_PATH')]);
+
+cfg                     = [];
+cfg.duneuro.application = '/home/mrphys/jansch/matlab/fieldtrip/external/duneuro/bst_duneuro_meeg_linux64.app';
+cfg.method              = 'duneuro';
+cfg.conductivity        = [0.33, 0.43, 0.53];  % vector, conductivity values for tissues: check the order here
+vol_duneuro2_hex        = ft_prepare_headmodel(cfg, mesh_vol_hex);
+vol_duneuro2_tet        = ft_prepare_headmodel(cfg, mesh_vol_tet);
+
+cfg                 = [];
 cfg.grad            = sens;
 cfg.reducerank      = 3;
-out_tet = ft_prepare_leadfield(cfg);
-lf_tet = cell2mat(out_tet.leadfield);
+
+% hexmeg
+cfg.sourcemodel     = sm_duneuro_hex;
+cfg.sourcemodel.mom = dip_mom';
+cfg.headmodel       = vol_duneuro2_hex;
+out_hex2            = ft_prepare_leadfield(cfg);
+lf_meg_hex2         = cell2mat(out_hex2.leadfield);
+
+% tetmeg
+cfg.sourcemodel     = sm_duneuro_tet;
+cfg.sourcemodel.mom = dip_mom';
+cfg.headmodel       = vol_duneuro2_tet;
+out_tet2            = ft_prepare_leadfield(cfg);
+lf_meg_tet2         = cell2mat(out_tet2.leadfield);
+
+cfg = rmfield(cfg, 'grad');
+cfg.elec = elec;
+
+% hexeeg
+cfg.sourcemodel     = sm_duneuro_hex;
+cfg.sourcemodel.mom = dip_mom';
+cfg.headmodel       = vol_duneuro2_hex;
+out_hex2            = ft_prepare_leadfield(cfg);
+lf_eeg_hex2         = cell2mat(out_hex2.leadfield);
+
+% teteeg
+cfg.sourcemodel     = sm_duneuro_tet;
+cfg.sourcemodel.mom = dip_mom';
+cfg.headmodel       = vol_duneuro2_tet;
+out_tet2            = ft_prepare_leadfield(cfg);
+lf_eeg_tet2         = cell2mat(out_tet2.leadfield);
 
 %% compare leadfields
+err1 = 100*(abs(lf_meg_hex-lf_meg_ssph)./sqrt(sum(lf_meg_ssph.^2,1)));
+err2 = 100*(abs(lf_meg_tet-lf_meg_ssph)./sqrt(sum(lf_meg_ssph.^2,1)));
+err3 = 100*(abs(lf_meg_hex2-lf_meg_ssph)./sqrt(sum(lf_meg_ssph.^2,1)));
+err4 = 100*(abs(lf_meg_tet2-lf_meg_ssph)./sqrt(sum(lf_meg_ssph.^2,1)));
 
+% assert(max(err1(:))<10);
+% assert(max(err2(:))<10);
+% assert(max(err3(:))<10);
+% assert(max(err4(:))<10);
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% 3. compute the leadfield with singlesphere model
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+figure; hold on;
+plot(lf_meg_hex,'r');
+plot(lf_meg_tet,'b');
+plot(lf_meg_ssph,'g');
+plot(lf_meg_hex2,'k');
+plot(lf_meg_tet2,'m');
 
-%% prepare headmodel
+err1 = 100*(abs(lf_eeg_hex-lf_eeg_csph)./sqrt(sum(lf_eeg_csph.^2,1)));
+err2 = 100*(abs(lf_eeg_tet-lf_eeg_csph)./sqrt(sum(lf_eeg_csph.^2,1)));
+err3 = 100*(abs(lf_eeg_hex2-lf_eeg_csph)./sqrt(sum(lf_eeg_csph.^2,1)));
+err4 = 100*(abs(lf_eeg_tet2-lf_eeg_csph)./sqrt(sum(lf_eeg_csph.^2,1)));
 
-cfg              = [];
-cfg.method       = 'singlesphere';
-cfg.tissue       = 'brain';
-vol_ssph          = ft_prepare_headmodel(cfg, segprob);
-
-%% prepare sourcemodel
-
-% hex
-cfg = [];
-cfg.sourcemodel.pos = dip_pos';
-cfg.sourcemodel.inside = ones(size(dip_pos,2),1);
-cfg.grad = sens;
-cfg.headmodel = vol_ssph;
-sm_ssph = ft_prepare_sourcemodel(cfg);
-
-%% prepare leadfield
-
-% hex
-cfg                 = [];
-cfg.sourcemodel     = sm_ssph;
-cfg.sourcemodel.mom = dip_mom;
-cfg.headmodel       = vol_ssph;
-cfg.grad            = sens;
-cfg.reducerank      = 3;
-out_ssph = ft_prepare_leadfield(cfg);
-lf_ssph = cell2mat(out_ssph.leadfield);
-
-figure, plot(lf_hex,'r'), hold on, plot(lf_tet,'b'), plot(lf_ssph, 'g');
-
-% set a limit for an error
-rel_err_perc = 100*(abs(lf_hex-lf_tet)./norm(lf_hex));
-assert(max(max(rel_err_perc))<10)
-
-rel_err_perc2 = 100*(abs(lf_ssph-lf_tet)./norm(lf_ssph));
-%assert(max(max(rel_err_perc2))<10)
+% assert(max(err1(:))<10);
+% assert(max(err2(:))<10);
+% assert(max(err3(:))<10);
+% assert(max(err4(:))<10);
 
 
 
-%%%%% Here starts the part that is adjusted from bst_duneuro
 
-cfg = duneuro_defaults;
-
-cfg.modality = 'meg';%sens.type; % FIXME should also accommodate eeg and meeg;
-
-if ~isfield(cfg,'lfAvrgRef'); cfg.lfAvrgRef = 0; end                       %  compute average reference 1, otherwise the electrode 1 is the reference and set to 0
-
-%% ===== PREPARE THE INTERFACE TO DUNEURO =====
-%% 0 - Initialisation for duneuro computation (configuration used by the duneuro interface)
 
 %% ===== DUNEURO =====
 % % TODO : The conductivities values in the case of the
@@ -302,7 +413,7 @@ if ~isfield(cfg,'lfAvrgRef'); cfg.lfAvrgRef = 0; end                       %  co
 
 
 % cfg.layerToKeep       = [1 1 1]; % or may be this one should be sufficient
-cfg.shrinkSourceSpace = 0;
+%cfg.shrinkSourceSpace = 0;
 
 %% 3- Electrode Position / Coils positon / Orientation
 % === EEG ===
@@ -345,24 +456,5 @@ cfg.shrinkSourceSpace = 0;
 %% 4- Conductivity/tensor
 % TODO : Adapt this for anisotrpy // maybe could be done from outside and
 % put the tensor on OPTIONS.Conductivity or create new field OPTIONS.ConductivityTensor
-
-cfg = [];
-cfg.duneuro.application = '/home/mrphys/jansch/matlab/fieldtrip/external/duneuro/bst_duneuro_meeg_linux64.app';
-cfg.method       = 'duneuro';
-cfg.conductivity = [0.33, 0.43, 0.53];  % vector, conductivity values for tissues: check the order here
-vol_duneuro2_hex  = ft_prepare_headmodel(cfg, mesh_vol_hex);
-
-cfg                 = [];
-cfg.sourcemodel     = sm_duneuro_hex;
-cfg.sourcemodel.mom = dip_mom;
-cfg.headmodel       = vol_duneuro2_hex;
-cfg.grad            = sens;
-cfg.reducerank      = 3;
-out_hex2 = ft_prepare_leadfield(cfg);
-lf_hex2  = cell2mat(out_hex.leadfield);
-
-% set a limit for an error
-rel_err_perc = 100*(abs(lf_hex-lf_hex2)./norm(lf_hex));
-assert(max(max(rel_err_perc))<10)
 
 

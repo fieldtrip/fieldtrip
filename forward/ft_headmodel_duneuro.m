@@ -53,10 +53,6 @@ duneuro_settings = ft_getopt(varargin, 'duneuro_settings');
 
 duneuro_settings = duneuro_defaults(duneuro_settings); 
 
-duneuro_settings.electrodes       = ft_getopt(duneuro_settings, 'electrodes',       'closest_subentity_center');
-duneuro_settings.subentities      = ft_getopt(duneuro_settings, 'subentities',      '1 2 3');
-
-
 % start with an empty volume conductor
 headmodel = [];
 

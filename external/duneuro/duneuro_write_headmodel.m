@@ -73,7 +73,8 @@ switch eltype
   case 'tetrahedron'
     if cfg.isotrop && ~cfg.useTensor
       ext = 'msh';
-      format = 'gmsh_binary';
+      format = 'gmsh_ascii'; % this is not efficient in terms of file size etc, but the older DUNE readers cannot deal with binary files 
+      %format = 'gmsh_binary';
       mesh.tetrahedron_regions = mesh.tissue - 1; % subtract 1 on purpose, 0-indexing
     elseif cfg.isotrop && cfg.useTensor
       % Duneuro uses the Cauchy files

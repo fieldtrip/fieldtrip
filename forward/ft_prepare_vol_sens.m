@@ -578,17 +578,28 @@ elseif iseeg
     case 'duneuro'
       ft_hastoolbox('duneuro', 1);
 
-      if(~isfield(headmodel,'eeg_transfer'))
-        % set electrodes
-        cfg = [];
-        cfg.type = headmodel.electrodes;
-        cfg.codims = headmodel.subentities;
-        headmodel.driver.set_electrodes(sens.elecpos', cfg);
-        
-        % compute transfer matrix
-        cfg = [];
-        cfg.solver.reduction = headmodel.reduction;
-        headmodel.eeg_transfer = headmodel.driver.compute_eeg_transfer_matrix(cfg);
+      if isfield(headmodel, 'driver')
+        % compute the transfer matrix
+        if(~isfield(headmodel,'eeg_transfer'))
+          % set electrodes
+          cfg        = [];
+          cfg.type   = headmodel.duneuro.eeg.type;
+          cfg.codims = sprintf('%d ', headmodel.duneuro.eeg.subentities);
+          headmodel.driver.set_electrodes(sens.elecpos', cfg);
+
+          % compute transfer matrix
+          cfg = [];
+          cfg.solver.reduction   = num2str(headmodel.duneuro.reduction, '%d');
+          headmodel.eeg_transfer = headmodel.driver.compute_eeg_transfer_matrix(cfg);
+        end
+      else
+        % the brainstorm application is probably required, this uses a different approach
+
+        % write the coils and projections files
+        filename = fullfile(headmodel.duneuro.outputpath, 'elecpos.txt');
+        headmodel.duneuro.filename_elecpos = filename;
+        duneuro_write_sensors(sens, filename);
+
       end
 
     case 'interpolate'
