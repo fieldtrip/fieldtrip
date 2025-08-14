@@ -12,12 +12,12 @@ if nargin<1
 end
 
 %% General settings
-cfg.type                           = ft_getopt(cfg, 'type',             'fitted'); % 'fitted' or 'unfitted'
-cfg.solver_type                    = ft_getopt(cfg, 'solver_type',      'cg');     % what else?
-cfg.element_type                   = ft_getopt(cfg, 'element_type',     []);       % this should be determined from the mesh
-cfg.application                    = ft_getopt(cfg, 'application',      []);
-cfg.dnGeometryAdapted              = ft_getopt(cfg, 'geometry_adapted', false);    % false by default, if true it allegedly require dune-subgrid
-cfg.dnTolerance                    = ft_getopt(cfg, 'tolerance',        1e-8);
+cfg.type             = ft_getopt(cfg, 'type',             'fitted'); % 'fitted' or 'unfitted'
+cfg.solver_type      = ft_getopt(cfg, 'solver_type',      'cg');     % what else?
+cfg.element_type     = ft_getopt(cfg, 'element_type',     []);       % this should be determined from the mesh
+cfg.application      = ft_getopt(cfg, 'application',      []);
+cfg.geometry_adapted = ft_getopt(cfg, 'geometry_adapted', false);    % false by default, if true it allegedly require dune-subgrid
+cfg.tolerance        = ft_getopt(cfg, 'tolerance',        1e-8);
 
 %% 1 Sensors
 % subpart electrode : [electrodes]
