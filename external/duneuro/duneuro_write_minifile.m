@@ -1,7 +1,8 @@
 function duneuro_write_minifile(cfg, filename)
 
-%% ===== WRITE MINI FILE =====
-% Open the mini file
+% DUNEURO_WRITE_MINIFILE creates a text-file with the configuration, 
+% to be used in combination with Brainstorm's compiled executable
+
 fid = fopen(filename, 'wt+');
 
 % General settings
@@ -11,18 +12,10 @@ if strcmp(cfg.solver_type, 'cg')
 end
 fprintf(fid, 'element_type = %s\n', cfg.element_type);
 fprintf(fid, 'solver_type = %s\n',  cfg.solver_type);
-fprintf(fid, 'geometry_adapted = %s\n', bool2str(cfg.dnGeometryAdapted));
-fprintf(fid, 'tolerance = %d\n', cfg.dnTolerance);
+fprintf(fid, 'geometry_adapted = %s\n', bool2str(cfg.geometry_adapted));
+fprintf(fid, 'tolerance = %d\n', cfg.tolerance);
 
 % [electrodes]
-
-%%FIXME
-isEcog = false; isSeeg = false;
-if isEcog || isSeeg
-  % Instead of selecting the electrode on the outer surface,
-  % uses the nearest FEM node as the electrode location
-  cfg.ElecType = 'closest_subentity_center';
-end
 if strcmp(cfg.modality, 'eeg') || strcmp(cfg.modality, 'meeg')
   fprintf(fid, '[electrodes]\n');
   fprintf(fid, 'filename = %s\n', cfg.filename_elecpos);

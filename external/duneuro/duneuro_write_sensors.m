@@ -1,5 +1,8 @@
 function duneuro_write_sensors(sens, filename)
 
+% DUNEURO_WRITE_SENSORS creates a text-file for electrodes, or a pair of text files
+% for MEG coils/orientations, to be used in combination with Brainstorm's compiled executable
+
 if isfield(sens, 'elecpos')
   % treat as EEG for now, we should also consider sEEG and iEEG, which may need a different treatment
   write_duneuro_nx3(sens.elecpos, filename);
