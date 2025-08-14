@@ -300,10 +300,12 @@ lf_eeg_tet          = cell2mat(out_tet.leadfield);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 [p,f,e] = fileparts(which('duneuro_matlab'));
+
+% this is needed at the DCCN HPC
 setenv('LD_LIBRARY_PATH',[fullfile(p, 'lib') ':' getenv('LD_LIBRARY_PATH')]);
 
 cfg                     = [];
-cfg.duneuro.application = '/home/mrphys/jansch/matlab/fieldtrip/external/duneuro/bst_duneuro_meeg_linux64.app';
+cfg.duneuro.application = duneuro_installbrainstormapp;
 cfg.method              = 'duneuro';
 cfg.conductivity        = [0.33, 0.43, 0.53];  % vector, conductivity values for tissues: check the order here
 vol_duneuro2_hex        = ft_prepare_headmodel(cfg, mesh_vol_hex);

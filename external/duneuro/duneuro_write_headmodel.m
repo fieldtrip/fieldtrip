@@ -1,4 +1,14 @@
 function filename_headmodel = duneuro_write_headmodel(filename, mesh, cfg)
+
+% DUNEURO_WRITE_HEADMODEL is adjusted from brainstorm's bst_prepare_head_model
+% and writes a tetra/hexa geometry to a duneuro compatible file, in a file format
+% which depends on the additional analysis context.
+%
+% Use as:
+%   filename_headmodel = duneuro_write_headmodel(filename_withoutextension, mesh, cfg)
+%
+% FIXME THIS NEEDS CLEANUP WHILE WE GO ALONG
+%
 % cfg = bst_prepare_head_model(cfg)
 % write the head model file to the current path
 % The format can be either ".msh" or ".geo" according
