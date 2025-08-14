@@ -171,6 +171,11 @@ elec = ft_datatype_sens(elec);
 %dip_mom = [0 1 0; 0 0 -1; -1 0 0 ];
 dip_pos = pos(segprob.brain(:),:);
 dip_pos(sqrt(sum(dip_pos.^2,2))<=1, :) = [];
+
+if size(dip_pos,1) > 100
+  dip_pos = dip_pos(randperm(size(dip_pos,1), 100), :);
+end
+
 dip_pos = dip_pos./100;
 dip_mom = 2.*rand(size(dip_pos)) - 1;
 
@@ -345,6 +350,10 @@ err2 = 100*(abs(lf_meg_tet-lf_meg_ssph)./sqrt(sum(lf_meg_ssph.^2,1)));
 err3 = 100*(abs(lf_meg_hex2-lf_meg_ssph)./sqrt(sum(lf_meg_ssph.^2,1)));
 err4 = 100*(abs(lf_meg_tet2-lf_meg_ssph)./sqrt(sum(lf_meg_ssph.^2,1)));
 
+err = log10([err1(:) err2(:) err3(:) err4(:)]);
+hdat = histc(err, -2:0.2:2);
+figure;plot(-2:0.2:2, hdat); title('log10 % of meg mismatch with spherical model');
+
 % assert(max(err1(:))<10);
 % assert(max(err2(:))<10);
 % assert(max(err3(:))<10);
@@ -361,6 +370,10 @@ err1 = 100*(abs(lf_eeg_hex-lf_eeg_csph)./sqrt(sum(lf_eeg_csph.^2,1)));
 err2 = 100*(abs(lf_eeg_tet-lf_eeg_csph)./sqrt(sum(lf_eeg_csph.^2,1)));
 err3 = 100*(abs(lf_eeg_hex2-lf_eeg_csph)./sqrt(sum(lf_eeg_csph.^2,1)));
 err4 = 100*(abs(lf_eeg_tet2-lf_eeg_csph)./sqrt(sum(lf_eeg_csph.^2,1)));
+
+err = log10([err1(:) err2(:) err3(:) err4(:)]);
+hdat = histc(err, -2:0.2:2);
+figure;plot(-2:0.2:2, hdat); title('log10 % of eeg mismatch with spherical model');
 
 % assert(max(err1(:))<10);
 % assert(max(err2(:))<10);
