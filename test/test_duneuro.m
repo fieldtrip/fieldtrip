@@ -299,6 +299,7 @@ lf_eeg_tet          = cell2mat(out_tet.leadfield);
 % 4. compute the leadfield with the brainstorm app
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+if 0
 [p,f,e] = fileparts(which('duneuro_matlab'));
 
 % this is needed at the DCCN HPC
@@ -347,12 +348,12 @@ out_tet2            = ft_prepare_leadfield(cfg);
 lf_eeg_tet2         = cell2mat(out_tet2.leadfield);
 
 %% compare leadfields
-err1 = 100*(abs(lf_meg_hex-lf_meg_ssph)./sqrt(sum(lf_meg_ssph.^2,1)));
-err2 = 100*(abs(lf_meg_tet-lf_meg_ssph)./sqrt(sum(lf_meg_ssph.^2,1)));
-err3 = 100*(abs(lf_meg_hex2-lf_meg_ssph)./sqrt(sum(lf_meg_ssph.^2,1)));
-err4 = 100*(abs(lf_meg_tet2-lf_meg_ssph)./sqrt(sum(lf_meg_ssph.^2,1)));
+err1meg = 100*(abs(lf_meg_hex-lf_meg_ssph)./sqrt(sum(lf_meg_ssph.^2,1)));
+err2meg = 100*(abs(lf_meg_tet-lf_meg_ssph)./sqrt(sum(lf_meg_ssph.^2,1)));
+err3meg = 100*(abs(lf_meg_hex2-lf_meg_ssph)./sqrt(sum(lf_meg_ssph.^2,1)));
+err4meg = 100*(abs(lf_meg_tet2-lf_meg_ssph)./sqrt(sum(lf_meg_ssph.^2,1)));
 
-err = log10([err1(:) err2(:) err3(:) err4(:)]);
+err = log10([err1meg(:) err2meg(:) err3meg(:) err4meg(:)]);
 hdat = histc(err, -2:0.2:2);
 figure;plot(-2:0.2:2, hdat); title('log10 % of meg mismatch with spherical model');
 
@@ -368,12 +369,12 @@ plot(lf_meg_ssph,'g');
 plot(lf_meg_hex2,'k');
 plot(lf_meg_tet2,'m');
 
-err1 = 100*(abs(lf_eeg_hex-lf_eeg_csph)./sqrt(sum(lf_eeg_csph.^2,1)));
-err2 = 100*(abs(lf_eeg_tet-lf_eeg_csph)./sqrt(sum(lf_eeg_csph.^2,1)));
-err3 = 100*(abs(lf_eeg_hex2-lf_eeg_csph)./sqrt(sum(lf_eeg_csph.^2,1)));
-err4 = 100*(abs(lf_eeg_tet2-lf_eeg_csph)./sqrt(sum(lf_eeg_csph.^2,1)));
+err1eeg = 100*(abs(lf_eeg_hex-lf_eeg_csph)./sqrt(sum(lf_eeg_csph.^2,1)));
+err2eeg = 100*(abs(lf_eeg_tet-lf_eeg_csph)./sqrt(sum(lf_eeg_csph.^2,1)));
+err3eeg = 100*(abs(lf_eeg_hex2-lf_eeg_csph)./sqrt(sum(lf_eeg_csph.^2,1)));
+err4eeg = 100*(abs(lf_eeg_tet2-lf_eeg_csph)./sqrt(sum(lf_eeg_csph.^2,1)));
 
-err = log10([err1(:) err2(:) err3(:) err4(:)]);
+err = log10([err1eeg(:) err2eeg(:) err3eeg(:) err4eeg(:)]);
 hdat = histc(err, -2:0.2:2);
 figure;plot(-2:0.2:2, hdat); title('log10 % of eeg mismatch with spherical model');
 
@@ -381,7 +382,7 @@ figure;plot(-2:0.2:2, hdat); title('log10 % of eeg mismatch with spherical model
 % assert(max(err2(:))<10);
 % assert(max(err3(:))<10);
 % assert(max(err4(:))<10);
-
+end
 
 
 
