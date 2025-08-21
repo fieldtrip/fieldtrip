@@ -15,6 +15,7 @@ function [lf] = leadfield_duneuro(pos, headmodel, sens, method)
 % The output lf is the leadfield matrix of dimensions m (rows) x n*3 (columns)
 
 cfg = [];
+cfg.post_process_meg               = bool2str(headmodel.duneuro.post_process_meg);
 cfg.post_process                   = bool2str(headmodel.duneuro.post_process);
 cfg.subtract_mean                  = bool2str(headmodel.duneuro.subtract_mean);
 cfg.source_model.type              = headmodel.duneuro.source_model.type;
@@ -55,8 +56,12 @@ else
   duneuro_write_minifile(headmodel.duneuro, headmodel.duneuro.minifile_filename);
 
   % system call
-  system([headmodel.duneuro.application ' ' headmodel.duneuro.minifile_filename]);
-
+  [st, msg] = system([headmodel.duneuro.application ' ' headmodel.duneuro.minifile_filename]);
+  if st<0
+    disp(msg);
+    ft_error('an error occurred during the execution of the compiled brainstorm application');
+  end
+  
   % load the leadfield
   headmodel.duneuro = duneuro_read_leadfield(headmodel.duneuro);
 

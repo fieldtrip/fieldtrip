@@ -54,7 +54,6 @@ cfg = [];
 cfg.shift = 0.3;
 cfg.method = 'hexahedral';
 mesh_vol_hex = ft_prepare_mesh(cfg, segprob);
-mesh_vol_hex = ft_convert_units(mesh_vol_hex, 'm');
 
 % surface mesh
 cfg = [];
@@ -67,19 +66,20 @@ ft_plot_ortho(segindx.tissue, 'transform', segindx.transform, 'location', [5 5 5
 hold on
 ft_plot_mesh(mesh_vol_hex, 'surfaceonly', false, 'facecolor', 'none', 'edgecolor', 'm');
 view(120, 30)
+mesh_vol_hex = ft_convert_units(mesh_vol_hex, 'm');
 
 
 % tetra mesh
 cfg = [];
 cfg.method = 'tetrahedral';
 mesh_vol_tet = ft_prepare_mesh(cfg, segprob);
-mesh_vol_tet = ft_convert_units(mesh_vol_tet, 'm');
 
 figure
 ft_plot_ortho(segindx.tissue, 'transform', segindx.transform, 'location', [5 5 5], 'style', 'intersect');
 hold on
 ft_plot_mesh(mesh_vol_tet, 'surfaceonly', false, 'facecolor', 'none', 'edgecolor', 'm');
 view(120, 30)
+mesh_vol_tet = ft_convert_units(mesh_vol_tet, 'm');
 
 %% define sensors
 

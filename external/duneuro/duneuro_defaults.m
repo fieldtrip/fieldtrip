@@ -46,7 +46,8 @@ cfg.solver.dg_weights        = ft_getopt(cfg.solver, 'dg_weights',        true);
 cfg.solver.dg_reduction      = ft_getopt(cfg.solver, 'dg_reduction',      true);
 
 %% 5 - Subpart  [solution]
-cfg.post_process  = ft_getopt(cfg, 'post_process',  true);
+cfg.post_process_meg  = ft_getopt(cfg, 'post_process_meg', false);
+cfg.post_process      = ft_getopt(cfg, 'post_process',     false);
 cfg.subtract_mean = ft_getopt(cfg, 'subtract_mean', true); 
 
 % subpart  [solution.solver]
