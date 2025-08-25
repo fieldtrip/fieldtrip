@@ -21,6 +21,10 @@ function [cfg] = ft_clusterplot(cfg, stat)
 %   cfg.toi                     = vector, or 'all' (default) indicates which time
 %                                 points (or frequency bins) are to be plotted. If specified as 'all' only the
 %                                 data points with identified clusters are plotted
+%   cfg.figure                  = 'yes' or 'no', whether to open a new figure. You can also specify a figure handle from FIGURE, GCF or SUBPLOT. (default = 'yes')
+%   cfg.figurename              = string, title of the figure window
+%   cfg.position                = location and size of the figure, specified as [left bottom width height] (default is automatic)
+%   cfg.renderer                = string, 'opengl', 'zbuffer', 'painters', see RENDERERINFO (default is automatic, try 'painters' when it crashes)
 %
 % You can also specify most configuration options that apply to FT_TOPOPLOTER or FT_TOPOPLOTTFR,
 % except for cfg.xlim, any of the highlight options, cfg.comment and cfg.commentpos.

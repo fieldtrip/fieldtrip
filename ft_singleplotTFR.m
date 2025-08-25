@@ -49,6 +49,9 @@ function [cfg] = ft_singleplotTFR(cfg, varargin)
 %   cfg.figure         = 'yes', 'no', or 'subplot',  whether to open a new figure. You can also specify a figure
 %                        handle from FIGURE, GCF or SUBPLOT. (default = 'yes'). With multiple data inputs, 'subplot'
 %                        will make subplots in a single figure.
+%   cfg.figurename     = string, title of the figure window
+%   cfg.position       = location and size of the figure, specified as [left bottom width height] (default is automatic)
+%   cfg.renderer       = string, 'opengl', 'zbuffer', 'painters', see RENDERERINFO (default is automatic, try 'painters' when it crashes)
 %
 % The following options for the scaling of the EEG, EOG, ECG, EMG, MEG and NIRS channels
 % is optional and can be used to bring the absolute numbers of the different

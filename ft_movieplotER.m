@@ -21,6 +21,9 @@ function [cfg] = ft_movieplotER(cfg, data)
 %   cfg.baselinetype    = 'absolute' or 'relative' (default = 'absolute')
 %   cfg.colorbar        = 'yes', 'no' (default = 'no')
 %   cfg.colorbartext    = string indicating the text next to colorbar
+%   cfg.figure          = 'yes' or 'no', whether to open a new figure. You can also specify a figure handle from FIGURE, GCF or SUBPLOT. (default = 'yes')
+%   cfg.figurename      = string, title of the figure window
+%   cfg.position        = location and size of the figure, specified as [left bottom width height] (default is automatic)
 %   cfg.renderer        = string, 'opengl', 'zbuffer', 'painters', see RENDERERINFO (default is automatic, try 'painters' when it crashes)
 %
 % The layout defines how the channels are arranged. You can specify the
