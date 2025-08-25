@@ -49,6 +49,7 @@ function [cfg] = ft_databrowser(cfg, data)
 %   cfg.selcfg                  = configuration options for function in cfg.selfun
 %   cfg.seldat                  = 'selected' or 'all', specifies whether only the currently selected or all channels will be passed to the selfun (default = 'selected')
 %   cfg.figure                  = 'yes' or 'no', whether to open a new figure. You can also specify a figure handle from FIGURE, GCF or SUBPLOT. (default = 'yes')
+%   cfg.figurename              = string, title of the figure window
 %   cfg.visible                 = string, 'on' or 'off' whether figure will be visible (default = 'on')
 %   cfg.position                = location and size of the figure, specified as [left bottom width height] (default is automatic)
 %   cfg.renderer                = string, 'opengl', 'zbuffer', 'painters', see RENDERERINFO (default is automatic, try 'painters' when it crashes)
