@@ -524,8 +524,8 @@ if exist('statrand', 'var')
   stat.ref = mean(statrand,2);
 end
 
-% return optional other details that were returned by the statfun
-stat = copyfields(statfull, stat, fieldnames(statfull));
+% return optional other details that were returned by the statfun, but prevent that things like prob are overwritten by accident
+stat = copyfields(statfull, stat, setdiff(fieldnames(statfull), fieldnames(stat));
 
 ft_warning(ws); % revert to original state
 
