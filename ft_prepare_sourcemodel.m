@@ -298,12 +298,12 @@ switch cfg.method
     cfg.tight       = ft_getopt(cfg, 'tight',      'no');
 
   case 'basedonmni'
-    cfg.tight       = ft_getopt(cfg.sourcemodel, 'tight',       'no');
-    cfg.nonlinear   = ft_getopt(cfg.sourcemodel, 'nonlinear',   'no');
+    cfg.tight       = ft_getopt(cfg, 'tight',       'no');
+    cfg.nonlinear   = ft_getopt(cfg, 'nonlinear',   'no');
 
   case 'basedoncentroids'
     fprintf('creating sourcemodel based on volumetric mesh centroids\n');
-    cfg.tight       = ft_getopt(cfg.sourcemodel, 'tight',       'no');
+    cfg.tight       = ft_getopt(cfg, 'tight',       'no');
     cfg.inwardshift = ft_getopt(cfg, 'inwardshift', 0); % in this case for inside detection
 end
 
