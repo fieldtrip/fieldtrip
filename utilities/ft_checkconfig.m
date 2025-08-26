@@ -284,6 +284,7 @@ if ~isempty(createtopcfg)
           'tight'
           'warpmni'
           'template'
+          'nonlinear'
           };
 
       case {'dics' 'eloreta' 'harmony' 'lcmv' 'mne' 'music' 'mvl' 'pcc' 'rv' 'sam' 'sloreta'}
