@@ -194,7 +194,8 @@ function [freq] = ft_freqanalysis(cfg, data)
 % the power spectra resulting from the stretching/compression. The default behavior is 
 % according to the implementation in the referenced paper, where each input segment's
 % power spectrum is computed according to a Welch-type overlapping windowed estimation.
-%   cfg.taper    = 'hanning' (default), or 'dpss' (in which case the first Slepian is used)
+%   cfg.taper    = 'dpss', 'hanning' or many others, see WINDOW (default = 'hanning'), in case of 'dpss'
+%                    only the first Slepian is used
 %   cfg.hset     = vector of stretching/compression ratios (default = (1.1:0.05:1.9))
 %   cfg.nwindow  = scalar, number of overlapping windows per segment (default = 10)
 %   cfg.windowlength = scalar, 'auto', or 'all', length of window in seconds (default = 'auto')
