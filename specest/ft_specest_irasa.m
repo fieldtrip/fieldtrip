@@ -66,6 +66,7 @@ nwindow   = ft_getopt(varargin, 'nwindow', 10);
 windowlength = ft_getopt(varargin, 'windowlength', 'auto');
 taper     = ft_getopt(varargin, 'taper', 'hanning');
 mfunc     = ft_getopt(varargin, 'mfunc', 'median');
+tapopt    = ft_getopt(varargin, 'taperopt');
 
 % the original implementation uses a windowed (pwelch like) estimation technique,
 % where - per epoch - the data are chunked into 10 sub-windows, with a length of
@@ -192,6 +193,15 @@ else
       case 'dpss'
         tmp = dpss(windownsample, 1);
         tap = tmp(:,1)';
+      case {'sine' 'sine_old' 'alpha'}
+        ft_error('taper = %s is not implemented in ft_specest_irasa', taper);
+      otherwise
+        % create the taper and ensure that it is normalized
+        if isempty(tapopt) % some windowing functions don't support nargin>1, and window.m doesn't check it
+          tap = window(taper, ndatsample)';
+        else
+          tap = window(taper, ndatsample, tapopt)';
+        end
     end
     tap = tap./norm(tap, 'fro');
   end
@@ -268,9 +278,11 @@ for itap = 1:ntaper(1)
       case 'trimmean'
         spectrum{itap} = trimmean(pow, 0.1, 3);
     end
+
     
-    %%%%%%%% FFT %%%%%%%%%%
   elseif strcmp(output,'original')
+    %%%%%%%% FFT %%%%%%%%%%
+
     pow  = zeros(nchan,nfreqboi);
     for k = 0 : nwindow-1 % loop #subset
       % pair-wised resampling
