@@ -525,7 +525,7 @@ if exist('statrand', 'var')
 end
 
 % return optional other details that were returned by the statfun, but prevent that things like prob are overwritten by accident
-stat = copyfields(statfull, stat, setdiff(fieldnames(statfull), fieldnames(stat));
+stat = copyfields(statfull, stat, setdiff(fieldnames(statfull), fieldnames(stat)));
 
 ft_warning(ws); % revert to original state
 
