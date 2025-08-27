@@ -136,6 +136,24 @@ function [freq] = ft_freqanalysis(cfg, data)
 % The standard deviation in the temporal domain (st) at frequency f0 is
 % defined as: st = 1/(2*pi*sf)
 %
+% HILBERT performs time-frequency analysis on any time series data using a frequency specific
+% bandpass filter, followed by the Hilbert transform.
+%   cfg.foi       = vector 1 x numfoi, frequencies of interest
+%   cfg.toi       = vector 1 x numtoi, the time points for which the estimates will be returned (in seconds)
+%   cfg.width     = scalar, or vector (default: 1), specifying the half bandwidth of the filter;
+%   cfg.edgartnan = 'no' (default) or 'yes', replace filter edges with nans, works only for finite impulse response (FIR) filters, and
+%                     requires a user specification of the filter order
+%
+% For the bandpass filtering the following options can be specified, the default values are as in FT_PREPROC_BANDPASSFILTER, for more
+% information see the help of FT_PREPROCESSING
+%   cfg.bpfilttype
+%   cfg.bpfiltord        = (optional) scalar, or vector 1 x numfoi;
+%   cfg.bpfiltdir
+%   cfg.bpinstabilityfix
+%   cfg.bpfiltdf
+%   cfg.bpfiltwintype
+%   cfg.bpfiltdev
+%
 % SUPERLET performs time-frequency analysis on any time series trial data using the
 % 'superlet method' based on a frequency-wise combination of Morlet wavelets of varying cycle
 % widths (see Moca et al. 2021, https://doi.org/10.1038/s41467-020-20539-9).
@@ -159,24 +177,6 @@ function [freq] = ft_freqanalysis(cfg, data)
 % The standard deviation in the temporal domain (st) at frequency f0 is
 % defined as: st = 1/(2*pi*sf)
 %
-% HILBERT performs time-frequency analysis on any time series data using a frequency specific
-% bandpass filter, followed by the Hilbert transform.
-%   cfg.foi       = vector 1 x numfoi, frequencies of interest
-%   cfg.toi       = vector 1 x numtoi, the time points for which the estimates will be returned (in seconds)
-%   cfg.width     = scalar, or vector (default: 1), specifying the half bandwidth of the filter;
-%   cfg.edgartnan = 'no' (default) or 'yes', replace filter edges with nans, works only for finite impulse response (FIR) filters, and
-%                     requires a user specification of the filter order
-%
-% For the bandpass filtering the following options can be specified, the default values are as in FT_PREPROC_BANDPASSFILTER, for more
-% information see the help of FT_PREPROCESSING
-%   cfg.bpfilttype
-%   cfg.bpfiltord        = (optional) scalar, or vector 1 x numfoi;
-%   cfg.bpfiltdir
-%   cfg.bpinstabilityfix
-%   cfg.bpfiltdf
-%   cfg.bpfiltwintype
-%   cfg.bpfiltdev
-%
 % TFR performs time-frequency analysis on any time series trial data using the
 % 'wavelet method' based on Morlet wavelets. Using convolution in the time domain
 % instead of multiplication in the frequency domain.
@@ -188,6 +188,19 @@ function [freq] = ft_freqanalysis(cfg, data)
 %                  deviations of the implicit Gaussian kernel and should
 %                  be choosen >= 3; (default = 3)
 %
+% IRASA (Irregular-Resampling Auto-Spectral Analysis) estimates the
+% 'fractal' component of the power spectrum (https://doi.org/10.1007/s10548-015-0448-0),
+% by stretching/compressing the sampling rate, and combining the geometric means of 
+% the power spectra resulting from the stretching/compression. The default behavior is 
+% according to the implementation in the referenced paper, where each input segment's
+% power spectrum is computed according to a Welch-type overlapping windowed estimation.
+%   cfg.taper    = 'hanning' (default), or 'dpss' (in which case the first Slepian is used)
+%   cfg.hset     = vector of stretching/compression ratios (default = (1.1:0.05:1.9))
+%   cfg.nwindow  = scalar, number of overlapping windows per segment (default = 10)
+%   cfg.windowlength = scalar, 'auto', or 'all', length of window in seconds (default = 'auto')
+%   cfg.mfunc    = string, 'median', or 'trimmean', method to aggregate across geometric means of spectra (default = 'median')
+%   cfg.output   = string, 'fractal', or 'original' (default = 'fractal'), computes either fractal component, or the original
+%                    spectrum (for cmparison), based on the same parameters (minus the stretching/compression)
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
