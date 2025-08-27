@@ -5,6 +5,8 @@ function test_example_irasa()
 % DATA no
 % tested on MATLAB_R2022a, macOS_Monterey_12.4, FT_2f387ff (@JM fixed resample scaling issue)
 
+rng(42)
+
 % set simulation parameters
 A = 1; % scale of 1/f amplitude
 C = 1; % 1/f slope
@@ -19,31 +21,16 @@ n = 60000; % time pnts
 t = ((1:n)-1)/fs; % time axis
 
 % simulate data
-for rpt = 1:1
-
-    %     try
-    %       % generate pink noise
-    %         dspobj = dsp.ColoredNoise('Color', 'pink', 'SamplesPerFrame', length(t));
-    %         fn = dspobj()';
-    %     catch
-    %         % use another method to make pink noise when dsp.ColoredNoise returns licence error
-    %         fn = cumsum(randn(1,length(t)));
-    %         fn = fn./max(abs(fn)); %%% @JM This scale doesn't seem right?
-    %     end
-
-    % another way to simulate pink noise which give users more control over the features of the noise
-    freq = linspace(lf, hf, 0.1.*hf*(n./fs) + 1); % sampling frequencies for simulated noise
-    fn = zeros(size(t));
-    for i=2:length(freq) % cumulative sum over freq, but don't include the DC
-        fn = fn + sqrt(A * (1/freq(i)^C)) * cos(2*pi*freq(i)*t + rand*2*pi); % 1/f power = a*(1/f^c)
-    end
-
-    % add a 10Hz and 60 Hz oscillation
-    data.trial{1,rpt} = fn + O * cos(2*pi*10.7*t) + O * cos(2*pi*60.3*t);
-    data.time{1,rpt}  = t;
-    data.label{1}     = 'chan';
-    data.trialinfo(rpt,1) = rpt;
+freq = linspace(lf, hf, sl+1); % sampled frequencies for simulated noise
+fn = zeros(size(t));
+for i=2:length(freq) % cumulative sum over freq, but don't include the DC
+  fn = fn + sqrt(A * (1/freq(i)^C)) * cos(2*pi*freq(i)*t + rand*2*pi); % 1/f power = a*(1/f^c)
 end
+
+% add a 10Hz and 60 Hz oscillation
+data.trial{1} = fn + O * cos(2*pi*10.7*t) + O * cos(2*pi*60.3*t);
+data.time{1}  = t;
+data.label{1} = 'chan';
 
 % chunk 2-second segments (gives 1Hz frequency resolution) for long/continous trials
 cfg           = [];
@@ -54,12 +41,8 @@ data          = ft_redefinetrial(cfg, data);
 % compute the fractal and original spectra
 tic
 cfg               = [];
-cfg.foilim        = [0 200];
-cfg.pad           = 10;%'nextpow2';
 cfg.method        = 'irasa';
 cfg.output        = 'fractal';
-cfg.nwindow       = 10;
-cfg.windowlength  = 1;
 fractal = ft_freqanalysis(cfg, data);
 cfg.output        = 'original';
 original = ft_freqanalysis(cfg, data);
@@ -80,7 +63,8 @@ plot(log10(fractal.freq), log10(oscillatory.powspctrm));
 xlabel('log10-freq'); ylabel('log10-power');
 legend({'original','fractal','oscillatory'},'location','southwest');
 
-p = polyfit(log10((fractal.freq(2:end))),log10((fractal.powspctrm(2:end))),1);
+fend = nearest(fractal.freq, 250); % avoid getting too close to Nyquist
+p = polyfit(log10((fractal.freq(2:fend))),log10((fractal.powspctrm(2:fend))),1);
 fprintf('fitted slope = %d\n', p(1));
 fprintf('fitted intercept = %d\n', p(2));
 
