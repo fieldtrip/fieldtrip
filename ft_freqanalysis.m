@@ -333,10 +333,10 @@ switch cfg.method
     end
     
   case 'irasa'
-    cfg.taper  = ft_getopt(cfg, 'taper',  'hanning');
+    cfg.taper  = ft_getopt(cfg, 'taper',  'hanning'); % Undocumented: dpss is also allowed, in which case the first Slepian with a half time bandwidth product of 1 is used
     cfg.output = ft_getopt(cfg, 'output', 'fractal');
     cfg.pad    = ft_getopt(cfg, 'pad',    'nextpow2');
-    if ~isequal(cfg.taper, 'hanning')
+    if ~isequal(cfg.taper, 'hanning') && ~isequal(cfg.taper, 'dpss')
       ft_error('the irasa method supports hanning tapers only');
     end
     if ~isequal(cfg.pad, 'nextpow2')
@@ -348,7 +348,10 @@ switch cfg.method
         ft_error('frequencies in cfg.foi are above Nyquist')
       end
     end
-    
+    cfg.nwindow      = ft_getopt(cfg, 'nwindow', 10); % as per the original implementation, but is there a reason to do a pwelch type of analysis with multiple epochs, I suspect that the original implementation was based on continuous data to begin with?
+    cfg.windowlength = ft_getopt(cfg, 'windowlength', 'auto'); % 'auto' uses the heuristic in the paper, can also be 'all', or a scalar, see ft_specest_irasa
+    cfg.hset         = ft_getopt(cfg, 'hset', []); % use the default in the lower level function
+    cfg.mfunc        = ft_getopt(cfg, 'mfunc', 'median');
   case 'wavelet'
     cfg.width  = ft_getopt(cfg, 'width',  7);
     cfg.gwidth = ft_getopt(cfg, 'gwidth', 3);
@@ -610,7 +613,7 @@ for itrial = 1:ntrials
       hastime = false;
       
     case 'irasa'
-      [spectrum,ntaper,foi] = ft_specest_irasa(dat, time, options{:}, 'feedback', fbopt, 'verbose', verbose);
+      [spectrum,ntaper,foi] = ft_specest_irasa(dat, time, 'taper', cfg.taper, 'hset', cfg.hset, 'nwindow', cfg.nwindow, 'windowlength', cfg.windowlength, 'mfunc', cfg.mfunc, options{:}, 'feedback', fbopt, 'verbose', verbose);
       hastime = false;
       
     case 'wavelet'
