@@ -60,12 +60,8 @@ cfg.method        = 'irasa';
 cfg.output        = 'fractal';
 cfg.nwindow       = 10;
 cfg.windowlength  = 1;
-cfg.mfunc         = 'trimmean';
-cfg.taper = 'dpss';
-cfg.keeptrials = 'yes';
 fractal = ft_freqanalysis(cfg, data);
 cfg.output        = 'original';
-cfg.keeptrials = 'yes';
 original = ft_freqanalysis(cfg, data);
 toc % ~28s
 
