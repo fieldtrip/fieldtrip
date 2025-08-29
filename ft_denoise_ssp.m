@@ -1,23 +1,33 @@
-function [data] = ft_denoise_ssp(cfg, data)
+function [data] = ft_denoise_ssp(cfg, varargin)
 
 % FT_DENOISE_SSP projects out topographies based on ambient noise on
 % Neuromag/Elekta/MEGIN systems. These topographies are estimated during maintenance
-% visits from the engineers of MEGIN
+% visits from the engineers of MEGIN.
+% Alternatively, computes projectors from reference data (e.g., empty room) if it 
+% is given as an additional input. For best results, make sure to preprocess
+% the reference data the same as the data to denoise. 
 %
 % Use as
-%   [data] = ft_denoise_ssp(cfg, data)
+%   [data] = ft_denoise_ssp(cfg, data) OR
+%   [data] = ft_denoise_ssp(cfg, data, refdata) 
 % where data should come from FT_PREPROCESSING and the configuration
 % should contain
 %   cfg.ssp        = 'all' or a cell array of SSP names to apply (default = 'all')
 %   cfg.trials     = 'all' or a selection given as a 1xN vector (default = 'all')
 %   cfg.updatesens = 'no' or 'yes' (default = 'yes')
+%   cfg.channel      = Nx1 cell-array with selection of channels from the refdata 
+%                      (default = 'all'), see FT_CHANNELSELECTION for details
 %
-% To facilitate data-handling and distributed computing you can use
-%   cfg.inputfile   =  ...
+% If refdata is specified the configuration should also contain
+%   cfg.numcomponent = number of principal components to project out of the data 
+%                      (default = 3)
+%
+% To facilitate data-handling and distributed cmputing you can use
+%   cfg.inputfile   =  ...  
 %   cfg.outputfile  =  ...
 % If you specify one of these (or both) the input data will be read from a *.mat
 % file on disk and/or the output data will be written to a *.mat file. These mat
-% files should contain only a single variable, corresponding with the
+% files should contain only a sinegle variable, corresponding with the
 % input/output structure.
 %
 % See also FT_PREPROCESSING, FT_DENOISE_SYNTHETIC, FT_DENOISE_PCA
@@ -69,6 +79,18 @@ cfg = ft_checkconfig(cfg, 'required',   {'ssp'});
 cfg.ssp        = ft_getopt(cfg, 'ssp', 'all');
 cfg.trials     = ft_getopt(cfg, 'trials', 'all', 1);
 cfg.updatesens = ft_getopt(cfg, 'updatesens', 'yes');
+cfg.numcomponent = ft_getopt(cfg, 'numcomponent', 3);
+cfg.channel    = ft_getopt(cfg, 'channel', 'all');
+
+if numel(varargin) == 1
+    data = varargin{1};
+    refdata = [];
+elseif numel(varargin) == 2
+    data = varargin{1};
+    refdata = varargin{2};
+else
+    error('Incorrect number of input arguments.')
+end
 
 % store the original type of the input data
 dtype = ft_datatype(data);
@@ -78,15 +100,44 @@ dtype = ft_datatype(data);
 data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes', 'hassampleinfo', 'yes');
 
 % check whether it is neuromag data
-if ~ft_senstype(data, 'neuromag')
-  ft_error('SSP vectors can only be applied to neuromag data');
+if isempty(refdata) && ~ft_senstype(data, 'neuromag')
+  ft_error('SSP without reference data can only be applied to neuromag data');
 end
 
 % select trials of interest
-tmpcfg = keepfields(cfg, {'trials', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
+tmpcfg = keepfields(cfg, {'channel', 'trials', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
 data   = ft_selectdata(tmpcfg, data);
+
+if ~isempty(refdata)
+    datachs = ft_channelselection('MEG',data.label); % pick MEG channels from data
+    refdata = ft_checkdata(refdata, 'datatype', 'raw', 'feedback', 'yes', 'hassampleinfo', 'yes');
+    if ~isempty(setdiff(datachs,refdata.label))
+        ft_error('Refdata is missing channels present in data.')
+    elseif ~isempty(setdiff(refdata.label,datachs))
+        ft_warning('Data is missing channels present in refdata. Dropping extra channels from refdata.')
+    end
+    cfg.channel = datachs;  
+    tmpcfg = keepfields(cfg, {'channel', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
+    refdata = ft_selectdata(tmpcfg, refdata);
+end
+
 % restore the provenance information
 [cfg, data] = rollback_provenance(cfg, data);
+
+if ~isempty(refdata)
+    ft_info('Computing the projector(s)\n');
+    % compute numcomponent principal components in the reference data
+    [coeff,~,~,~,~] = pca(cell2mat(refdata.trial)','NumComponents',cfg.numcomponent);
+    % compute projector and define montage
+    data.grad.balance.ssp.tra = eye(size(coeff,1))-coeff*transpose(coeff);
+    data.grad.balance.ssp.labelold = refdata.label;
+    data.grad.balance.ssp.labelnew = refdata.label;
+    if ~isempty(cfg.ssp) && ~isequal(cfg.ssp,{'ssp'})
+        ft_error('cfg.ssp was configured incorrectly.');
+    else
+        cfg.ssp = {'ssp'};
+    end
+end
 
 % remember the original channel ordering
 labelold = data.label;
@@ -134,7 +185,8 @@ if ~strcmp(desired, 'none')
       data = ft_apply_montage(data, desired_montage, 'keepunused', 'yes', 'balancename', desired);
       if istrue(cfg.updatesens)
         fprintf('converting the sensor description from "none" to "%s"\n', desired);
-        data.grad = ft_apply_montage(data.grad, desired_montage, 'keepunused', 'yes', 'balancename', desired);
+        data.grad.balance = rmfield(data.grad.balance,desired); % remove to avoid creating the same balance twice
+        data.grad = ft_apply_montage(data.grad, desired_montage, 'keepunused', 'no', 'balancename', desired);
       end
     end % if desired
   end
