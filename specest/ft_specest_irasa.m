@@ -61,6 +61,16 @@ padtype   = ft_getopt(varargin, 'padtype', 'zero');
 polyorder = ft_getopt(varargin, 'polyorder', 1);
 verbose   = ft_getopt(varargin, 'verbose', true);
 fbopt     = ft_getopt(varargin, 'feedback');
+hset      = ft_getopt(varargin, 'hset', []); % array of stretch/compression fractions
+nwindow   = ft_getopt(varargin, 'nwindow', 10);
+windowlength = ft_getopt(varargin, 'windowlength', 'auto');
+taper     = ft_getopt(varargin, 'taper', 'hanning');
+mfunc     = ft_getopt(varargin, 'mfunc', 'median');
+tapopt    = ft_getopt(varargin, 'taperopt');
+
+% the original implementation uses a windowed (pwelch like) estimation technique,
+% where - per epoch - the data are chunked into 10 sub-windows, with a length of
+% 'nextpow2' times of (0.9*nsmp) samples. 
 
 verbose = istrue(verbose); % if the calling function has 'yes'/'no'/etc
 
@@ -69,36 +79,46 @@ if ~strcmp(output, {'fractal','original'})
   ft_error('The current version ft_specest_irasa outputs ''fractal'' or ''original'' power only. For more information about the update, see https://www.fieldtriptoolbox.org/example/irasa/');
 end
 
-% this does not work on integer data
-dat = cast(dat, 'double');
-if ~isa(dat, 'double') && ~isa(dat, 'single')
+% this does not work on data that is not single or double precision
+if ~isa(dat, 'double')
+  ft_info('Casting data to double precision')
   dat = cast(dat, 'double');
 end
 
-% dat param
-[nchan,ndatsample] = size(dat);
-fsample = 1./mean(diff(time));
+% size of the data, and sampling frequency
+[nchan, nsmp] = size(dat);
+fsample       = 1./mean(diff(time));
 
-% subset param
-subset_nsample = 2^floor(log2(ndatsample*0.9)); % the number of sub-segments in samples is the power of 2 that does not exceed 90% of input data
-subset_num     = 10;                            % the number of sub-segments
-subset_dist    = floor((ndatsample  - subset_nsample)/(subset_num - 1)); % distance between sub-segements in sample, to evenly distribute the sub-subsegments within the total length of input data
+% parameters needed for the pwelch-type of sliding window
+if isequal(windowlength, 'auto')
+  windownsample = 2^floor(log2(nsmp*0.9));
+elseif isequal(windowlength, 'all')
+  windownsample = nsmp;
+else
+  windownsample = round(fsample*windowlength);
+end
+subset_dist = floor((nsmp - windownsample)/(nwindow-1));
+if nwindow==1
+  subset_dist = 0;
+end
 
-% resampling ratio
-hset  = 1.1:0.05:1.9;
+% resampling ratio can be passed as option, default is defined above
+if isempty(hset)
+  hset = (1.1:0.05:1.9);
+end
 nhset = length(hset);
 
 % remove polynomial fit from the data -> default is demeaning
 if polyorder >= 0
-  dat = ft_preproc_polyremoval(dat, polyorder, 1, ndatsample);
+  dat = ft_preproc_polyremoval(dat, polyorder, 1, nsmp);
 end
 
-% zero padding
+% check whether zero padding is needed
 if isempty(pad)
   % if no padding is specified this is set equal to the current data length
-  pad = subset_nsample/fsample;
+  pad = windownsample/fsample;
 end
-if round(pad * fsample) < subset_nsample
+if round(pad * fsample) < windownsample
   ft_error('the padding that you specified is shorter than the data');
 end
 endnsample = round(pad * fsample);  % total number of samples of padded data
@@ -134,7 +154,7 @@ if isnumeric(freqoiinput)
   end
 end
 
-% determine whether tapers need to be recomputed
+% determine whether tapers need to be computed
 current_argin = {output, time, endnsample, freqoi}; % reasoning: if time and endnsample are equal, it's the same length trial, if the rest is equal then the requested output is equal
 if isequal(current_argin, previous_argin)
   % don't recompute tapers
@@ -145,13 +165,44 @@ else
     tap = cell(nhset*2,1);
     for ih = 1:nhset
       [n, d] = rat(hset(ih)); % n > d
-      tmp = hanning(size(resample(zeros(subset_nsample,nchan), n, d),1))';
+
+      nsmp_up = size(resample(zeros(windownsample,1), n, d),1);
+      switch taper
+        case 'hanning'
+          tmp = hanning(nsmp_up)';
+        case 'dpss'
+          tmp = dpss(nsmp_up, 1); % take the first Slepian 
+          tmp = tmp(:,1)';
+      end
       tap{ih,1} = tmp./norm(tmp, 'fro');% for upsampled subsets
-      tmp = hanning(size(resample(zeros(subset_nsample,nchan), d, n),1))';
+
+      nsmp_down = size(resample(zeros(windownsample,1), d, n),1);
+      switch taper  
+        case 'hanning'
+          tmp = hanning(nsmp_down)';
+        case 'dpss'
+          tmp = dpss(nsmp_down, 1);
+          tmp = tmp(:,1)';
+      end
       tap{ih+nhset,1} = tmp./norm(tmp, 'fro');% for downsampled subsets
     end
   elseif strcmp(output, 'original')
-    tap = hanning(subset_nsample)';
+    switch taper
+      case 'hanning'
+        tap = hanning(windownsample)';
+      case 'dpss'
+        tmp = dpss(windownsample, 1);
+        tap = tmp(:,1)';
+      case {'sine' 'sine_old' 'alpha'}
+        ft_error('taper = %s is not implemented in ft_specest_irasa', taper);
+      otherwise
+        % create the taper and ensure that it is normalized
+        if isempty(tapopt) % some windowing functions don't support nargin>1, and window.m doesn't check it
+          tap = window(taper, ndatsample)';
+        else
+          tap = window(taper, ndatsample, tapopt)';
+        end
+    end
     tap = tap./norm(tap, 'fro');
   end
 end
@@ -168,7 +219,7 @@ if isempty(fbopt)
   fbopt.i = 1;
   fbopt.n = 1;
 end
-str = sprintf('nfft: %d samples, datalength: %d samples, %d tapers',endnsample,ndatsample,ntaper(1));
+str = sprintf('nfft: %d samples, datalength: %d samples, %d tapers',endnsample,nsmp,ntaper(1));
 st  = dbstack;
 if length(st)>1 && strcmp(st(2).name, 'ft_freqanalysis')
   % specest_mtmfft has been called by ft_freqanalysis, meaning that ft_progress has been initialised
@@ -187,10 +238,10 @@ for itap = 1:ntaper(1)
       upow = zeros(nchan,nfreqboi);
       dpow = zeros(nchan,nfreqboi);
       [n, d] = rat(hset(ih)); % n > d
-      for k = 0 : subset_num-1 % loop #subset
+      for k = 0 : nwindow-1 % loop #subset
         % pair-wised resampling
         subset_start = subset_dist*k + 1;
-        subset_end = subset_start+subset_nsample-1;
+        subset_end = subset_start+windownsample-1;
         subdat = dat(:,subset_start:subset_end);
         udat = resample(subdat', n, d)'; % upsample
         ddat = resample(subdat', d, n)'; % downsample
@@ -213,23 +264,30 @@ for itap = 1:ntaper(1)
       end % loop #subset
       
       % average across subsets for noise filtering
-      upow = upow / subset_num;
-      dpow = dpow / subset_num;
+      upow = upow / nwindow;
+      dpow = dpow / nwindow;
       
       % geometric mean for relocating oscillatory component
       pow(:,:,ih) = sqrt(upow.*dpow);
     end % loop resampling ratios hset
     
-    % median across resampling factors
-    spectrum{itap} = median(pow,3);
+    switch mfunc
+      case 'median'
+        % median across resampling factors
+        spectrum{itap} = median(pow,3);
+      case 'trimmean'
+        spectrum{itap} = trimmean(pow, 0.1, 3);
+    end
+
     
-    %%%%%%%% FFT %%%%%%%%%%
   elseif strcmp(output,'original')
+    %%%%%%%% FFT %%%%%%%%%%
+
     pow  = zeros(nchan,nfreqboi);
-    for k = 0 : subset_num-1 % loop #subset
+    for k = 0 : nwindow-1 % loop #subset
       % pair-wised resampling
       subset_start = subset_dist*k + 1;
-      subset_end = subset_start+subset_nsample-1;
+      subset_end = subset_start+windownsample-1;
       subdat = dat(:,subset_start:subset_end);
       % compute auto-power
       postpad = ceil(round(pad * fsample) - size(subdat,2));
@@ -241,7 +299,7 @@ for itap = 1:ntaper(1)
     end % loop #subset
     
     % average across subsets for noise filtering
-    spectrum{itap} = pow / subset_num;
+    spectrum{itap} = pow / nwindow;
     
   end % if output
 end % for taper

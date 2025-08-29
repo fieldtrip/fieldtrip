@@ -136,6 +136,24 @@ function [freq] = ft_freqanalysis(cfg, data)
 % The standard deviation in the temporal domain (st) at frequency f0 is
 % defined as: st = 1/(2*pi*sf)
 %
+% HILBERT performs time-frequency analysis on any time series data using a frequency specific
+% bandpass filter, followed by the Hilbert transform.
+%   cfg.foi       = vector 1 x numfoi, frequencies of interest
+%   cfg.toi       = vector 1 x numtoi, the time points for which the estimates will be returned (in seconds)
+%   cfg.width     = scalar, or vector (default: 1), specifying the half bandwidth of the filter;
+%   cfg.edgartnan = 'no' (default) or 'yes', replace filter edges with nans, works only for finite impulse response (FIR) filters, and
+%                     requires a user specification of the filter order
+%
+% For the bandpass filtering the following options can be specified, the default values are as in FT_PREPROC_BANDPASSFILTER, for more
+% information see the help of FT_PREPROCESSING
+%   cfg.bpfilttype
+%   cfg.bpfiltord        = (optional) scalar, or vector 1 x numfoi;
+%   cfg.bpfiltdir
+%   cfg.bpinstabilityfix
+%   cfg.bpfiltdf
+%   cfg.bpfiltwintype
+%   cfg.bpfiltdev
+%
 % SUPERLET performs time-frequency analysis on any time series trial data using the
 % 'superlet method' based on a frequency-wise combination of Morlet wavelets of varying cycle
 % widths (see Moca et al. 2021, https://doi.org/10.1038/s41467-020-20539-9).
@@ -159,24 +177,6 @@ function [freq] = ft_freqanalysis(cfg, data)
 % The standard deviation in the temporal domain (st) at frequency f0 is
 % defined as: st = 1/(2*pi*sf)
 %
-% HILBERT performs time-frequency analysis on any time series data using a frequency specific
-% bandpass filter, followed by the Hilbert transform.
-%   cfg.foi       = vector 1 x numfoi, frequencies of interest
-%   cfg.toi       = vector 1 x numtoi, the time points for which the estimates will be returned (in seconds)
-%   cfg.width     = scalar, or vector (default: 1), specifying the half bandwidth of the filter;
-%   cfg.edgartnan = 'no' (default) or 'yes', replace filter edges with nans, works only for finite impulse response (FIR) filters, and
-%                     requires a user specification of the filter order
-%
-% For the bandpass filtering the following options can be specified, the default values are as in FT_PREPROC_BANDPASSFILTER, for more
-% information see the help of FT_PREPROCESSING
-%   cfg.bpfilttype
-%   cfg.bpfiltord        = (optional) scalar, or vector 1 x numfoi;
-%   cfg.bpfiltdir
-%   cfg.bpinstabilityfix
-%   cfg.bpfiltdf
-%   cfg.bpfiltwintype
-%   cfg.bpfiltdev
-%
 % TFR performs time-frequency analysis on any time series trial data using the
 % 'wavelet method' based on Morlet wavelets. Using convolution in the time domain
 % instead of multiplication in the frequency domain.
@@ -188,6 +188,23 @@ function [freq] = ft_freqanalysis(cfg, data)
 %                  deviations of the implicit Gaussian kernel and should
 %                  be choosen >= 3; (default = 3)
 %
+% IRASA (Irregular-Resampling Auto-Spectral Analysis) estimates the
+% 'fractal' component of the power spectrum (https://doi.org/10.1007/s10548-015-0448-0),
+% by stretching/compressing the sampling rate, and combining the geometric means of 
+% the power spectra resulting from the stretching/compression. The default behavior is 
+% according to the implementation in the referenced paper, where each input segment's
+% power spectrum is computed according to a Welch-type overlapping windowed estimation.
+%   cfg.taper    = 'dpss', 'hanning' or many others, see WINDOW (default = 'hanning'), in case of 'dpss'
+%                    only the first Slepian is used
+%   cfg.hset     = vector of stretching/compression ratios (default = (1.1:0.05:1.9))
+%   cfg.nwindow  = scalar, number of overlapping windows per segment (default = 10)
+%   cfg.windowlength = scalar, 'auto', or 'all', length of window in seconds (default = 'auto')
+%   cfg.mfunc    = string, 'median', or 'trimmean', method to aggregate across geometric means of spectra (default = 'median')
+%   cfg.output   = string, 'fractal', or 'original' (default = 'fractal'), computes either fractal component, or the original
+%                    spectrum (for comparison), based on the same parameters (minus the stretching/compression)
+%
+% MVAR estimates the spectrum based on Autoregressive models, requires output from FT_MVARANALYSIS.
+%   See FT_FREQANALYSIS_MVAR.          
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
@@ -287,7 +304,8 @@ end
 switch cfg.method
   
   case 'mtmconvol'
-    cfg.taper = ft_getopt(cfg, 'taper', 'dpss');
+    cfg.taper    = ft_getopt(cfg, 'taper', 'dpss');
+    cfg.taperopt = ft_getopt(cfg, 'taperopt');
     if isequal(cfg.taper, 'dpss') && ~isfield(cfg, 'tapsmofrq')
       ft_error('you must specify a smoothing parameter with taper = dpss');
     end
@@ -318,7 +336,8 @@ switch cfg.method
     end
     
   case 'mtmfft'
-    cfg.taper = ft_getopt(cfg, 'taper', 'dpss');
+    cfg.taper    = ft_getopt(cfg, 'taper', 'dpss');
+    cfg.taperopt = ft_getopt(cfg, 'taperopt');
     if isequal(cfg.taper, 'dpss') && not(isfield(cfg, 'tapsmofrq'))
       ft_error('you must specify a smoothing parameter with taper = dpss');
     end
@@ -333,11 +352,12 @@ switch cfg.method
     end
     
   case 'irasa'
-    cfg.taper  = ft_getopt(cfg, 'taper',  'hanning');
-    cfg.output = ft_getopt(cfg, 'output', 'fractal');
-    cfg.pad    = ft_getopt(cfg, 'pad',    'nextpow2');
+    cfg.taper    = ft_getopt(cfg, 'taper',  'hanning'); % Undocumented: dpss is also allowed, in which case the first Slepian with a half time bandwidth product of 1 is used
+    cfg.taperopt = ft_getopt(cfg, 'taperopt');
+    cfg.output   = ft_getopt(cfg, 'output', 'fractal');
+    cfg.pad      = ft_getopt(cfg, 'pad',    'nextpow2');
     if ~isequal(cfg.taper, 'hanning')
-      ft_error('the irasa method supports hanning tapers only');
+      ft_warning('the original irasa method uses hanning tapers');
     end
     if ~isequal(cfg.pad, 'nextpow2')
       ft_warning('consider using cfg.pad=''nextpow2'' for the irasa method');
@@ -348,13 +368,16 @@ switch cfg.method
         ft_error('frequencies in cfg.foi are above Nyquist')
       end
     end
-    
+    cfg.nwindow      = ft_getopt(cfg, 'nwindow', 10); % as per the original implementation, but is there a reason to do a pwelch type of analysis with multiple epochs, I suspect that the original implementation was based on continuous data to begin with?
+    cfg.windowlength = ft_getopt(cfg, 'windowlength', 'auto'); % 'auto' uses the heuristic in the paper, can also be 'all', or a scalar, see ft_specest_irasa
+    cfg.hset         = ft_getopt(cfg, 'hset', []); % use the default in the lower level function
+    cfg.mfunc        = ft_getopt(cfg, 'mfunc', 'median');
   case 'wavelet'
     cfg.width  = ft_getopt(cfg, 'width',  7);
     cfg.gwidth = ft_getopt(cfg, 'gwidth', 3);
     
   case 'superlet'
-    % reorganize the cfg, a nested cfg is not consistent with the othe methods
+    % reorganize the cfg, a nested cfg is not consistent with the other methods
     cfg = ft_checkconfig(cfg, 'createtopcfg', 'superlet');
     cfg = removefields(cfg, 'superlet');
     cfg = ft_checkconfig(cfg, 'renamed', {'basewidth', 'width'});
@@ -549,7 +572,7 @@ end
 
 % tapsmofrq compatibility between functions (make it into a vector if it's not)
 if isfield(cfg, 'tapsmofrq')
-  if strcmp(cfg.method, 'mtmconvol') && length(cfg.tapsmofrq) == 1 && length(cfg.foi) ~= 1
+  if strcmp(cfg.method, 'mtmconvol') && isscalar(cfg.tapsmofrq) && length(cfg.foi) ~= 1
     cfg.tapsmofrq = ones(length(cfg.foi),1) * cfg.tapsmofrq;
   elseif strcmp(cfg.method, 'mtmfft') && length(cfg.tapsmofrq) ~= 1
     ft_warning('cfg.tapsmofrq should be a single number when cfg.method = mtmfft, now using only the first element')
@@ -586,7 +609,7 @@ for itrial = 1:ntrials
     
     case 'mtmconvol'
       [spectrum_mtmconvol,ntaper,foi,toi] = ft_specest_mtmconvol(dat, time, 'timeoi', cfg.toi, 'timwin', cfg.t_ftimwin, 'taper', ...
-        cfg.taper, options{:}, 'dimord', 'chan_time_freqtap', 'feedback', fbopt, 'verbose', verbose);
+        cfg.taper, 'taperopt', cfg.taperopt, options{:}, 'dimord', 'chan_time_freqtap', 'feedback', fbopt, 'verbose', verbose);
       
       % the following variable is created to keep track of the number of
       % trials per time bin and is needed for proper normalization if
@@ -599,18 +622,18 @@ for itrial = 1:ntrials
         ft_error('currently you can only keep trials AND tapers, when using the number of tapers per frequency is equal across frequency')
       end
       % create tapfreqind for later indexing
-      freqtapind = [];
+      freqtapind = cell(1,numel(foi));
       tempntaper = [0; cumsum(ntaper(:))];
       for iindfoi = 1:numel(foi)
         freqtapind{iindfoi} = tempntaper(iindfoi)+1:tempntaper(iindfoi+1);
       end
       
     case 'mtmfft'
-      [spectrum,ntaper,foi] = ft_specest_mtmfft(dat, time, 'taper', cfg.taper, options{:}, 'feedback', fbopt, 'verbose', verbose);
+      [spectrum,ntaper,foi] = ft_specest_mtmfft(dat, time, 'taper', cfg.taper, 'taperopt', cfg.taperopt, options{:}, 'feedback', fbopt, 'verbose', verbose);
       hastime = false;
       
     case 'irasa'
-      [spectrum,ntaper,foi] = ft_specest_irasa(dat, time, options{:}, 'feedback', fbopt, 'verbose', verbose);
+      [spectrum,ntaper,foi] = ft_specest_irasa(dat, time, 'taper', cfg.taper, 'taperopt', cfg.taperopt, 'hset', cfg.hset, 'nwindow', cfg.nwindow, 'windowlength', cfg.windowlength, 'mfunc', cfg.mfunc, options{:}, 'feedback', fbopt, 'verbose', verbose);
       hastime = false;
       
     case 'wavelet'
@@ -634,7 +657,7 @@ for itrial = 1:ntrials
       %   additive: cycles = arrayfun(@(order) arrayfun(@(wl_num) cfg.width+wl_num-1, 1:order), cfg.order,'uni',0)
       if isempty(cfg.order)
         ft_error('cfg.order should be defined');
-      elseif numel(cfg.order) == 1
+      elseif isscalar(cfg.order)
         cfg.order = cfg.order.*ones(1, numel(cfg.foi));
       elseif numel(cfg.order) ~= numel(cfg.foi)
         ft_error('cfg.foi must have the same number of elements as cfg.foi, or must be a scalar');
