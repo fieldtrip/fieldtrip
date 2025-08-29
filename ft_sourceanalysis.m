@@ -1227,7 +1227,7 @@ elseif iscomp && any(strcmp(cfg.method, {'rv'}))
       dip(i) = ft_inverse_eloreta(sourcemodel, sens, headmodel, data.topo(:,i), [], methodopt{:}, leadfieldopt{:});
     end
   else
-    ft_error('method ''%s'' is unsupported for source reconstruction in the time domain', cfg.method);
+    ft_error('method ''%s'' is unsupported for source reconstruction of component topographies', cfg.method);
   end
   
 else
