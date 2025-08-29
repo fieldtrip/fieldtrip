@@ -25,13 +25,13 @@ function [sourcemodel, cfg] = ft_prepare_sourcemodel(cfg)
 %
 % BASEDONGRID - uses an explicitly specified grid, according to the following
 % configuration options:
-%   cfg.xgrid         = vector (e.g. -20:1:20) or 'auto' (default = 'auto')
-%   cfg.ygrid         = vector (e.g. -20:1:20) or 'auto' (default = 'auto')
-%   cfg.zgrid         = vector (e.g.   0:1:20) or 'auto' (default = 'auto')
+%   cfg.xgrid         = vector (e.g. -120:10:120) or 'auto' (default = 'auto')
+%   cfg.ygrid         = vector (e.g. -120:10:120) or 'auto' (default = 'auto')
+%   cfg.zgrid         = vector (e.g.  -50:10:120) or 'auto' (default = 'auto')
 %
 % BASEDONRESOLUTION - uses an grid with the desired resolution, according
 % to the following configuration options:
-%   cfg.resolution    = number (e.g. 1 cm) for automatic grid generation
+%   cfg.resolution    = number (e.g. 10 mm) for automatic grid generation
 %
 % BASEDONPOS - places sources on positions that you explicitly specify, according to
 % the following configuration options:
@@ -50,7 +50,7 @@ function [sourcemodel, cfg] = ft_prepare_sourcemodel(cfg)
 % configuration options:
 %   cfg.mri             = structure with the anatomical MRI, or the filename of the MRI, see FT_READ_MRI
 %   cfg.nonlinear       = 'no' (or 'yes'), use non-linear normalization
-%   cfg.resolution      = number (e.g. 6) of the resolution of the template MNI grid, defined in mm
+%   cfg.resolution      = scalar with the resolution of the template MNI grid, defined in mm (for example 6)
 %   cfg.template        = structure with the template sourcemodel, or the filename of a template sourcemodel (defined in MNI space)
 %   cfg.templatemri     = string, filename of the MNI template (default = 'T1.mnc' for SPM2 or 'T1.nii' for SPM8 and SPM12)
 %   cfg.spmversion      = string, 'spm2', 'spm8', 'spm12' (default = 'spm12')
@@ -111,7 +111,7 @@ function [sourcemodel, cfg] = ft_prepare_sourcemodel(cfg)
 % See also FT_PREPARE_LEADFIELD, FT_PREPARE_HEADMODEL, FT_SOURCEANALYSIS,
 % FT_DIPOLEFITTING, FT_MEGREALIGN
 
-% Copyright (C) 2004-2024, Robert Oostenveld
+% Copyright (C) 2004-2025, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
