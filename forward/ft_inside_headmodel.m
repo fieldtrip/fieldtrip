@@ -132,20 +132,24 @@ switch ft_headmodeltype(headmodel)
     numpos = size(headmodel.pos,1);
     numdip = size(dippos,1);
 
-    % select only the cortical or brain tissues
-    cortex = find(ismember(headmodel.tissuelabel, {'gm', 'gray', 'brain'}));
+    % select only the gray matter or brain tissues
+    brain = find(ismember(headmodel.tissuelabel, {'gm', 'gray', 'grey', 'brain'}));
 
-    % determine all hexahedrons that are labeled as cortical or brain
-    insidehex = ismember(headmodel.tissue, cortex);
+    for i=1:numel(brain)
+      fprintf('flagging dipoles with tissue type "%s" as inside\n', headmodel.tissuelabel{brain(i)});
+    end
 
-    % prune the mesh, only retain hexahedrons labeled as cortical or brain
+    % determine all hexahedrons that are labeled as gray matter or brain tissues
+    insidehex = ismember(headmodel.tissue, brain);
+
+    % prune the mesh, only retain hexahedrons labeled as gray matter or brain tissues
     fprintf('pruning headmodel volume elements from %d to %d (%d%%)\n', numhex, sum(insidehex), round(100*sum(insidehex)/numhex));
     headmodel.hex    = headmodel.hex(insidehex,:);
     headmodel.tissue = headmodel.tissue(insidehex);
     numhex = sum(insidehex);
 
     % remove these, we don't need them any more
-    clear cortex insidehex
+    clear brain insidehex
 
     % prune the mesh, i.e. only retain vertices that are part of a hexahedron
     [headmodel.pos, headmodel.hex] = remove_unused_vertices(headmodel.pos, headmodel.hex);
@@ -161,7 +165,7 @@ switch ft_headmodeltype(headmodel)
     maxpos = max(headmodel.pos,[],1);
     insidedip = all(bsxfun(@ge, dippos, minpos),2) & all(bsxfun(@le, dippos, maxpos),2);
     fprintf('pruning dipole positions from %d to %d (%d%%)\n', numdip, sum(insidedip), round(100*sum(insidedip)/numdip));
-    insidedip  = find( insidedip);
+    insidedip  = find(insidedip);
     dippos = dippos(insidedip,:);
 
     % find the nearest vertex for each of the dipoles in the headmodel mesh

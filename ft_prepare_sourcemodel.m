@@ -466,14 +466,14 @@ switch cfg.method
       ft_error('creating an automatic 3D grid requires either the sensor positions, a headmodel, or a headshape to estimate the extent');
     end
 
-    if isempty(cfg.symmetry)
+    if isempty(cfg.symmetry) || ~istrue(cfg.symmetry)
       % round the limits such that [0 0 0] will be on the grid
       minpos = floor(minpos/cfg.resolution)*cfg.resolution;
-      maxpos = ceil(maxpos/cfg.resolution)*cfg.resolution;
+      maxpos = ceil( maxpos/cfg.resolution)*cfg.resolution;
     else
       % round the limits such that the grid will be symmetric around [0 0 0]
       minpos = floor((minpos+cfg.resolution/2)/cfg.resolution)*cfg.resolution - cfg.resolution/2;
-      maxpos = ceil((maxpos+cfg.resolution/2)/cfg.resolution)*cfg.resolution - cfg.resolution/2;
+      maxpos = ceil( (maxpos+cfg.resolution/2)/cfg.resolution)*cfg.resolution - cfg.resolution/2;
     end
 
     if ischar(cfg.xgrid) && strcmp(cfg.xgrid, 'auto')
@@ -768,11 +768,48 @@ if ~isempty(cfg.moveinward)
   end
 end % if moveinward
 
+if isfield(sourcemodel, 'inside') && isfield(cfg, 'inwardshift') && isfield(cfg, 'template')
+  % warn about inwardshift not having an effect as inside is already specified as well
+  % warning should only be issued for templates, inwardshift can also be present for surface meshes
+  ft_warning('Inside dipole locations already determined by a template, cfg.inwardshift has no effect.')
+end
+
+% determine the dipole locations that are inside the source compartment of the
+% volume conduction model, i.e. inside the brain
+if ~isfield(sourcemodel, 'inside')
+  if isfield(sourcemodel, 'tissue') && isfield(sourcemodel, 'tissuelabel')
+    % this applies when basedoncentroids or movetocentroids
+    % select only the gray matter or brain tissues
+    brain = find(ismember(headmodel.tissuelabel, {'gm', 'gray', 'grey', 'brain'}));
+    sourcemodel.inside = ismember(sourcemodel.tissue, brain);
+  else
+    % this returns a boolean vector
+    sourcemodel.inside = ft_inside_headmodel(sourcemodel.pos, headmodel, 'grad', sens, 'headshape', cfg.headshape, 'inwardshift', cfg.inwardshift);
+  end
+end % if inside
+
 if strcmp(cfg.movetocentroids, 'yes')
+  % moving outside grid points to the FEM centroids does not make sense
+  % continue with only the inside positions
+  sourcemodel.pos = sourcemodel.pos(sourcemodel.inside, :);
+  if isfield(sourcemodel, 'tissue')
+    sourcemodel.tissue = sourcemodel.tissue(sourcemodel.inside);
+  end
+  % all remaining positions are inside
+  sourcemodel.inside = sourcemodel.inside(sourcemodel.inside);
+  if isfield(sourcemodel, 'dim')
+    sourcemodel = rmfield(sourcemodel, 'dim');
+  end
+
   % compute centroids of the tetrahedral or hexahedral mesh
   centroids = compute_centroids(headmodel);
 
   % move the dipole positions in the sourcemodel to the closest centroid
+  if ~startsWith(which('knnsearch'), matlabroot)
+    ft_warning('the knnsearch function in the MATLAB stats toolbox is much faster than the one in fieldtrip/external/stats, see https://www.fieldtriptoolbox.org/faq/matlab/toolboxes_legacyvsexternal/')
+    ft_notice('this may take some time ...');
+  end
+
   indx = knnsearch(centroids.pos, sourcemodel.pos);
   sourcemodel.pos = centroids.pos(indx,:);
 
@@ -795,26 +832,6 @@ if strcmp(cfg.movetocentroids, 'yes')
   % the shifted positions are not on a regular 3D grid any more, hence dim does not apply
   sourcemodel = removefields(sourcemodel, {'dim'});
 end % if movetocentroids
-
-if isfield(sourcemodel, 'inside') && isfield(cfg, 'inwardshift') && isfield(cfg, 'template')
-  % warn about inwardshift not having an effect as inside is already specified as well
-  % warning should only be issued for templates, inwardshift can also be present for surface meshes
-  ft_warning('Inside dipole locations already determined by a template, cfg.inwardshift has no effect.')
-end
-
-% determine the dipole locations that are inside the source compartment of the
-% volume conduction model, i.e. inside the brain
-if ~isfield(sourcemodel, 'inside')
-  if isfield(sourcemodel, 'tissue') && isfield(sourcemodel, 'tissuelabel')
-    % this applies when basedoncentroids or movetocentroids
-    % find the dipoles in the cortical or brain tissues
-    cortex = find(ismember(headmodel.tissuelabel, {'gm', 'gray', 'brain'}));
-    sourcemodel.inside = ismember(sourcemodel.tissue, cortex);
-  else
-    % this returns a boolean vector
-    sourcemodel.inside = ft_inside_headmodel(sourcemodel.pos, headmodel, 'grad', sens, 'headshape', cfg.headshape, 'inwardshift', cfg.inwardshift);
-  end
-end % if inside
 
 if strcmp(cfg.tight, 'yes')
   if ~isfield(sourcemodel, 'dim')
