@@ -2,7 +2,6 @@ function test_issue1952
 
 % WALLTIME 00:20:00
 % MEM 2gb
-
 % DEPENDENCY ft_denoise_ssp
 % DATA public
 
@@ -27,8 +26,8 @@ cfg.trl(:,3) = 0;
 
 % cfg.trialdef.eventtype      = 'STI101';
 % cfg.trialdef.eventvalue     = 5;
-% cfg.trialdef.prestim        = 0.200;        
-% cfg.trialdef.poststim       = 0.600;        
+% cfg.trialdef.prestim        = 0.200;
+% cfg.trialdef.poststim       = 0.600;
 % cfg.continuous              = 'yes';
 % cfg = ft_definetrial(cfg);
 
