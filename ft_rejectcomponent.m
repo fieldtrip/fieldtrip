@@ -137,8 +137,8 @@ if hasdata && length(seldat)~=length(label)
 end
 
 if hasdata
-  mixing   = comp.topo(selcomp,:);
-  unmixing = comp.unmixing(:,selcomp);
+  mixing   = comp.topo(selcomp, :);
+  unmixing = comp.unmixing(:, selcomp);
   
   % I am not sure about this, but it gives comparable results to the ~hasdata case
   % when comp contains non-orthogonal (=ica) topographies, and contains a complete decomposition
@@ -150,7 +150,6 @@ if hasdata
   montage.labelnew = comp.topolabel(selcomp);
   
   keepunused = 'yes'; % keep the original data which are not present in the mixing provided
-  bname = 'reject';
   
 else
   mixing = comp.topo(selcomp, :);
@@ -163,7 +162,6 @@ else
   montage.labelnew = comp.topolabel(selcomp);
   
   keepunused = 'no'; % don't need to keep the original rejected components
-  bname = 'invcomp';
   
   % create the initial data structure, remove all component details
   data = keepfields(comp, {'trial', 'time', 'label', 'fsample', 'grad', 'elec', 'opto', 'trialinfo', 'sampleinfo'});
@@ -189,17 +187,32 @@ if ~isempty(sensfield)
 
     for m = 1:numel(sensfield)
       ft_info('also applying the backprojection matrix to the %s structure\n', sensfield{m});
-      
-      % the balance field is needed to keep the sequence of linear projections
-      if ~isfield(data.(sensfield{m}), 'balance')
-        data.(sensfield{m}).balance.current = 'none';
+
+      % the name of the balancing should be unique in the sequence
+      if hasdata
+        bname = 'reject';
+      else
+        bname = 'invcomp';
       end
-      
+
+      bindx = 1;
+      while isfield(data.(sensfield{m}).balance, bname)
+        % use a suffix to make the name unique
+        if hasdata
+          bname = sprintf('reject%d', bindx);
+        else
+          bname = sprintf('invcomp%d', bindx);
+        end
+        bindx = bindx+1;
+      end
+
       % keepunused = 'yes' is required to get back e.g. reference or otherwise
-      % unused sensors in the sensor description. the unused components need to
+      % unused sensors in the sensor description. The unused components need to
       % be removed in a second step
-      sens = ft_apply_montage(data.(sensfield{m}), montage, 'keepunused', 'yes', 'balancename', bname, 'feedback', cfg.feedback);
-      
+      sens = ft_apply_montage(data.(sensfield{m}), montage, 'keepunused', 'yes', 'feedback', cfg.feedback);
+      sens.balance.(bname) = montage;
+      sens.balance.current(end+1) = {bname};
+
       % remove the unused channels from the grad/elec/opto
       [junk, remove]    = match_str(comp.label, sens.label);
       sens.tra(remove,:) = [];
@@ -208,35 +221,22 @@ if ~isempty(sensfield)
       if isfield(sens, 'chanori')
         sens.chanori(remove,:) = [];
       end
-      
-      % there could have been sequential subspace projections, so the
-      % invcomp-field may have been renamed into invcompX. If this it the case,
-      % take the one with the highest suffix
-      invcompfield = bname;
-      if  ~isfield(sens.balance, invcompfield)
-        for k = 10:-1:1
-          if isfield(sens.balance, [bname num2str(k)])
-            invcompfield = [invcompfield num2str(k)];
-            break;
-          end
 
-        end
-      end
-      
       % remove the unused components from the balancing
-      [junk, remove]    = match_str(comp.label, sens.balance.(invcompfield).labelnew);
-      sens.balance.(invcompfield).tra(remove, :)   = [];
-      sens.balance.(invcompfield).labelnew(remove) = [];
-      data.(sensfield{m})  = sens;
-    end
-    
+      [junk, remove]    = match_str(comp.label, sens.balance.(bname).labelnew);
+      sens.balance.(bname).tra(remove, :)   = [];
+      sens.balance.(bname).labelnew(remove) = [];
+
+      data.(sensfield{m}) = sens;
+    end % for grad, elec and opto
+
   else
     for m = 1:numel(sensfield)
       ft_info('not applying the backprojection matrix to the %s structure\n', sensfield{m});
       % simply copy it over
       comp.(sensfield{m}) = data.(sensfield{m});
-    end
-  end
+    end % for grad, elec and opto
+  end % if updatesens
 end % if sensfield
 
 if istlck

@@ -638,10 +638,14 @@ switch cfg.method
     % sort eigenvectors in descending order of eigenvalues
     d = cat(2,(1:1:Nchans)',diag(D));
     d = sortrows(d, -2);
-    
-    % return the desired number of principal components
-    unmixing = E(:,d(1:cfg.numcomponent,1))';
-    mixing = [];
+    E = E(:,d(:,1));
+
+    unmixing = E';
+    mixing   = inv(E');
+
+    % return the first number of principal components
+    unmixing = unmixing(1:cfg.numcomponent, :);
+    mixing   = mixing(:, 1:cfg.numcomponent);
     
     clear C D E d
     
@@ -939,22 +943,37 @@ if ~isempty(sensfield)
     
     for m = 1:numel(sensfield)
       ft_info('also applying the unmixing matrix to the %s structure\n', sensfield{m});
-      comp.(sensfield{m}) = ft_apply_montage(data.(sensfield{m}), montage, 'balancename', 'comp', 'keepunused', 'yes');
+
+      % the name of the balancing should be unique in the sequence
+      bname = 'comp';
+      bindx = 1;
+      while isfield(data.(sensfield{m}).balance, bname)
+        % use a suffix to make the name unique
+        bname = sprintf('comp%d', bindx);
+        bindx = bindx+1;
+      end
+
+      sens = ft_apply_montage(data.(sensfield{m}), montage, 'keepunused', 'yes');
+      sens.balance.(bname) = montage;
+      sens.balance.current(end+1) = {bname};
       
       % The output sensor array cannot simply be interpreted as the input
       % sensor array, hence the type should be removed to allow autodetection
       % See also http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1806
-      if isfield(comp.(sensfield{m}), 'type')
-        comp.(sensfield{m}) = rmfield(comp.(sensfield{m}), 'type');
+      if isfield(sens, 'type')
+        sens = rmfield(sens, 'type');
       end
-    end
+
+      comp.(sensfield{m}) = sens;
+    end % for grad, elec and opto
+
   else
     for m = 1:numel(sensfield)
       ft_info('not applying the unmixing matrix to the %s structure\n', sensfield{m});
       % simply copy it over
       comp.(sensfield{m}) = data.(sensfield{m});
-    end
-  end
+    end % for grad, elec and opto
+  end % if updatesens
 end % if sensfield
 
 % copy the sampleinfo into the output
