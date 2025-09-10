@@ -351,15 +351,15 @@ elseif isfield(hdr, 'res4') && isfield(hdr.res4, 'senres')
   end
 
   if     all([hdr.res4.senres(selMEG).grad_order_no]==0)
-    grad.balance.current = 'none';
+    grad.balance.current = {};
   elseif all([hdr.res4.senres(selMEG).grad_order_no]==1)
-    grad.balance.current = 'G1BR';
+    grad.balance.current = {'G1BR'};
   elseif all([hdr.res4.senres(selMEG).grad_order_no]==2)
-    grad.balance.current = 'G2BR';
+    grad.balance.current = {'G2BR'};
   elseif all([hdr.res4.senres(selMEG).grad_order_no]==3)
-    grad.balance.current = 'G3BR';
+    grad.balance.current = {'G3BR'};
   elseif all([hdr.res4.senres(selMEG).grad_order_no]==13)
-    grad.balance.current = 'G3AR';
+    grad.balance.current = {'G3AR'};
   else
     ft_warning('cannot determine balancing of CTF gradiometers');
     grad = rmfield(grad, 'balance');

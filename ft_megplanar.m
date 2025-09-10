@@ -208,10 +208,12 @@ if strcmp(cfg.planarmethod, 'sourceproject')
   planarmontage.labelnew = planar.grad.label;
 
   % apply the linear transformation to the data
-  interp  = ft_apply_montage(data, planarmontage, 'keepunused', 'yes');
+  interp = ft_apply_montage(data, planarmontage, 'keepunused', 'yes');
 
   % also apply the linear transformation to the gradiometer definition
-  interp.grad = ft_apply_montage(data.grad, planarmontage, 'balancename', 'planar', 'keepunused', 'yes');
+  interp.grad = ft_apply_montage(data.grad, planarmontage, 'keepunused', 'yes');
+  interp.grad.balance.planar = planarmontage;
+  interp.grad.balance.current{end+1} = 'planar'; % keep track of the projection that was applied
 
   % ensure there is a type string describing the gradiometer definition
   if ~isfield(interp.grad, 'type')
@@ -306,7 +308,9 @@ else
   interp = ft_apply_montage(data, planarmontage, 'keepunused', 'yes', 'feedback', cfg.feedback);
 
   % also apply the linear transformation to the gradiometer definition
-  interp.grad = ft_apply_montage(sens, planarmontage, 'balancename', 'planar', 'keepunused', 'yes');
+  interp.grad = ft_apply_montage(sens, planarmontage, 'keepunused', 'yes');
+  interp.grad.balance.planar = planarmontage;
+  interp.grad.balance.current{end+1} = 'planar'; % keep track of the projection that was applied
 
   % ensure there is a type string describing the gradiometer definition
   if ~isfield(interp.grad, 'type')

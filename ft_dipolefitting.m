@@ -286,7 +286,9 @@ if ~isempty(noisecov)
   montage.labelold = cfg.channel;
   montage.labelnew = cfg.channel;
   montage.tra = sphere;
-  sens = ft_apply_montage(sens, montage, 'balancename', 'sphering');
+  sens = ft_apply_montage(sens, montage);
+  sens.balance.sphering = montage;
+  sens.balance.current{end+1} = 'sphering'; % keep track of the projection that was applied
 end
 
 if iscomp

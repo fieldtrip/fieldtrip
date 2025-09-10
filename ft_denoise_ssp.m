@@ -8,10 +8,11 @@ function [data] = ft_denoise_ssp(cfg, varargin)
 % the reference data the same as the data to denoise.
 %
 % Use as
-%   [data] = ft_denoise_ssp(cfg, data) OR
+%   [data] = ft_denoise_ssp(cfg, data)
+% or
 %   [data] = ft_denoise_ssp(cfg, data, refdata)
-% where data should come from FT_PREPROCESSING and the configuration
-% should contain
+% where the input data should come from FT_PREPROCESSING or
+% FT_TIMELOCKANALYSIS and the configuration should contain
 %   cfg.channel    = the channels to be denoised (default = 'all')
 %   cfg.refchannel = the channels used as reference signal (default = 'MEG')
 %   cfg.trials     = 'all' or a selection given as a 1xN vector (default = 'all')
@@ -30,7 +31,9 @@ function [data] = ft_denoise_ssp(cfg, varargin)
 % files should contain only a single variable, corresponding with the
 % input/output structure.
 %
-% See also FT_PREPROCESSING, FT_DENOISE_SYNTHETIC, FT_DENOISE_PCA
+% See also FT_PREPROCESSING, FT_DENOISE_AMM, FT_DENOISE_DSSP,
+% FT_DENOISE_HFC, FT_DENOISE_PCA, FT_DENOISE_PREWHITEN, FT_DENOISE_SSS,
+% FT_DENOISE_SYNTHETIC, FT_DENOISE_TSR
 
 % Copyright (C) 2004-2022, Gianpaolo Demarchi, Lau Møller Andersen, Robert Oostenveld, Jan-Mathijs Schoffelen
 %
@@ -63,7 +66,6 @@ ft_preamble init
 ft_preamble debug
 ft_preamble loadvar data
 ft_preamble provenance data
-
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -145,6 +147,7 @@ if ~isempty(refdata)
   end
 end
 
+% first undo/invert the previously applied balancing
 while ~isempty(data.grad.balance.current)
   this_name    = data.grad.balance.current{end};
   this_montage = ft_inverse_montage(data.grad.balance.(this_name));
@@ -152,6 +155,13 @@ while ~isempty(data.grad.balance.current)
   data      = ft_apply_montage(data,      this_montage, 'keepunused', 'yes');
   data.grad = ft_apply_montage(data.grad, this_montage, 'keepunused', 'no');
   data.grad.balance.current = data.grad.balance.current(1:end-1); % remove this from the list
+
+  if strcmp(this_name, 'planar')
+    if isfield(data.grad, 'type') && ~isempty(strfind(data.grad.type, '_planar'))
+      % remove the _planar postfix from the MEG sensor type
+      data.grad.type = sens.type(1:(end-7));
+    end
+  end
 end
 
 if isequal(cfg.ssp, 'all')
@@ -160,6 +170,7 @@ elseif isequal(cfg.ssp, 'none')
   cfg.ssp = {};
 end
 
+% then apply the desired balancing
 desired = cfg.ssp;
 for i=1:numel(desired)
   this_name    = desired{i};

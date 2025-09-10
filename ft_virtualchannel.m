@@ -388,7 +388,8 @@ sensfields = {'grad' 'elec' 'opto'};
 for k = 1:numel(sensfields)
   if isfield(data_vc, sensfields{k})
     ft_info(sprintf('applying the montage to the %s structure\n', sensfields{k}));
-    data_vc.(sensfields{k}) = ft_apply_montage(data.(sensfields{k}), montage, 'feedback', 'none', 'keepunused', 'yes', 'balancename', bname);
+    data_vc.(sensfields{k}) = ft_apply_montage(data.(sensfields{k}), montage, 'feedback', 'none', 'keepunused', 'yes');
+    data_vc.(sensfields{k}).balance.current{end+1} = bname;
   end
 end
 

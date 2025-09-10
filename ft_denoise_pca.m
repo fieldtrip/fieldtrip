@@ -32,7 +32,9 @@ function data = ft_denoise_pca(cfg, varargin)
 % if 0 < cfg.truncate < 1, the singular value spectrum will be thresholded at the
 % fraction cfg.truncate of the largest singular value.
 %
-% See also FT_PREPROCESSING, FT_DENOISE_SYNTHETIC, FT_DENOISE_SSP
+% See also FT_PREPROCESSING, FT_DENOISE_AMM, FT_DENOISE_DSSP,
+% FT_DENOISE_HFC, FT_DENOISE_PREWHITEN, FT_DENOISE_SSP, FT_DENOISE_SSS,
+% FT_DENOISE_SYNTHETIC, FT_DENOISE_TSR
 
 % Undocumented cfg-option: cfg.pca the output structure of an earlier call
 % to the function. Can be used regress out the reference channels from
@@ -74,6 +76,9 @@ ft_preamble provenance varargin
 if ft_abort
   return
 end
+
+% store the original type of the input data
+dtype = ft_datatype(varargin{1});
 
 % check if the input data is valid for this function
 for i=1:length(varargin)
@@ -298,7 +303,9 @@ else
       montage.labelold  = labelold;
       montage.labelnew  = labelold;
 
-      data.(sensfield) = ft_apply_montage(data.(sensfield), montage, 'keepunused', 'yes', 'balancename', 'pca');
+      data.(sensfield) = ft_apply_montage(data.(sensfield), montage, 'keepunused', 'yes');
+      data.(sensfield).balance.pca = montage;
+      data.(sensfield).balance.current{end+1} = 'pca'; % keep track of the projection that was applied
 
       % order the fields
       fnames = fieldnames(data.(sensfield).balance);
@@ -315,6 +322,14 @@ else
   end % if sensfield
 
 end % if pertrial
+
+% convert back to input type if necessary
+switch dtype
+  case 'timelock'
+    data = ft_checkdata(data, 'datatype', 'timelock');
+  otherwise
+    % keep the output as it is
+end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug

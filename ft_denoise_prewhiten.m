@@ -22,7 +22,9 @@ function [dataout] = ft_denoise_prewhiten(cfg, datain, noise)
 % data structure will be present in the output, including trigger and other auxiliary
 % channels.
 %
-% See also FT_DENOISE_SYNTHETIC, FT_DENOISE_PCA, FT_DENOISE_DSSP, FT_DENOISE_TSP
+% See also FT_PREPROCESSING, FT_DENOISE_AMM, FT_DENOISE_DSSP,
+% FT_DENOISE_HFC, FT_DENOISE_PCA, FT_DENOISE_SSP, FT_DENOISE_SSS,
+% FT_DENOISE_SYNTHETIC, FT_DENOISE_TSR
 
 % Copyright (C) 2018-2019, Robert Oostenveld and Jan-Mathijs Schoffelen
 %
@@ -82,10 +84,10 @@ cfg.tol       = ft_getopt(cfg, 'tol',     []);
 cfg.realflag  = ft_getopt(cfg, 'realflag', true); % for complex-valued crsspctrm
 cfg.invmethod = ft_getopt(cfg, 'invmethod', 'tikhonov');
 
-dtype_datain = ft_datatype(datain);
+dtype = ft_datatype(datain);
 
 % check for allowed input combinations
-switch dtype_datain
+switch dtype
   case 'raw'
     assert(ft_datatype(noise, 'timelock'), 'noise data should be of datatype ''timelock''');
   case 'timelock'
@@ -186,17 +188,23 @@ dataout = ft_apply_montage(removefields(datain, {'grad', 'elec', 'opto'}), prewh
 
 if hasgrad
   % the gradiometer structure needs to be updated to ensure that the forward model remains consistent with the data
-  dataout.grad = ft_apply_montage(datain.grad, prewhiten, 'balancename', 'prewhiten');
+  dataout.grad = ft_apply_montage(datain.grad, prewhiten);
+  dataout.grad.balance.prewhiten = prewhiten;
+  dataout.grad.balance.current{end+1} = 'prewhiten'; % keep track of the projection that was applied
 end
 
 if haselec
   % the electrode structure needs to be updated to ensure that the forward model remains consistent
-  dataout.elec = ft_apply_montage(datain.elec, prewhiten, 'balancename', 'prewhiten');
+  dataout.elec = ft_apply_montage(datain.elec, prewhiten);
+  dataout.elec.balance.prewhiten = prewhiten;
+  dataout.elec.balance.current{end+1} = 'prewhiten'; % keep track of the projection that was applied
 end
 
 if hasopto
-  % the electrode structure needs to be updated to ensure that the forward model remains consistent
-  dataout.opto = ft_apply_montage(datain.opto, prewhiten, 'balancename', 'prewhiten');
+  % the optode structure needs to be updated to ensure that the forward model remains consistent
+  dataout.opto = ft_apply_montage(datain.opto, prewhiten);
+  dataout.opto.balance.prewhiten = prewhiten;
+  dataout.opto.balance.current{end+1} = 'prewhiten'; % keep track of the projection that was applied
 end
 
 % do the general cleanup and bookkeeping at the end of the function

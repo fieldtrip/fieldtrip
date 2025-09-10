@@ -1,12 +1,13 @@
 function [dataout] = ft_denoise_sss(cfg, datain)
 
-% FT_DENOISE_SSS implements an spherical harmonics based
-% projection algorithm to suppress interference outside an sphere
-% spanned by an MEG array. It is based on: REFERENCE.
+% FT_DENOISE_SSS implements an spherical harmonics based projection
+% algorithm to suppress interference outside an sphere spanned by an MEG
+% array.
 %
 % Use as
 %   dataout = ft_denoise_sss(cfg, datain)
-% where cfg is a configuration structure that contains
+% where the input data should come from FT_PREPROCESSING or
+% FT_TIMELOCKANALYSIS and the configuration should contain
 %   cfg.channel          = Nx1 cell-array with selection of channels (default = 'all'), see FT_CHANNELSELECTION for details
 %   cfg.trials           = 'all' or a selection given as a 1xN vector (default = 'all')
 %   cfg.pertrial         = 'no', or 'yes', compute the temporal projection per trial (default = 'yes')
@@ -16,9 +17,11 @@ function [dataout] = ft_denoise_sss(cfg, datain)
 %   cfg.sss.order_in     = scalar. Order of the spherical harmonics basis that spans the in space (default = 8) 
 %   cfg.sss.order_out    = scalar. Order of the spherical harmonics basis that spans the out space (default = 3) 
 %
-% The implementation is based on Tim Tierney's code written for spm
+% The implementation is based on Tim Tierney's code written for SPM.
 %
-% See also FT_DENOISE_PCA, FT_DENOISE_SYNTHETIC, FT_DENOISE_TSR, FT_DENOISE_DSSP, FT_DENOISE_HFC
+% See also FT_PREPROCESSING, FT_DENOISE_AMM, FT_DENOISE_DSSP,
+% FT_DENOISE_HFC, FT_DENOISE_PCA, FT_DENOISE_PREWHITEN, FT_DENOISE_SSP,
+% FT_DENOISE_SYNTHETIC, FT_DENOISE_TSR
 
 % Copyright (C) 2024, Jan-Mathijs Schoffelen
 %
@@ -118,7 +121,9 @@ if istrue(cfg.updatesens)
   montage.tra = S.Pin;
   montage.labelold = S.labelold;
   montage.labelnew = S.labelnew;
-  datain.grad = ft_apply_montage(datain.grad, montage, 'keepunused', 'yes', 'balancename', 'amm');
+  datain.grad = ft_apply_montage(datain.grad, montage, 'keepunused', 'yes');
+  datain.grad.balance.sss = montage;
+  datain.grad.balance.current{end+1} = 'sss'; % keep track of the projection that was applied
 end
 
 % keep some additional information in the subspace struct
@@ -185,8 +190,8 @@ grad = ft_datatype_sens(grad);
 ismag = strcmp(grad.chantype, 'mag')|strcmp(grad.chantype, 'megmag');
 extended_remove = []; % placeholder
 
-% for now only support unbalanced grad structures, it's the user's responsibility to unbalance
-assert(isfield(grad, 'balance') && strcmp(grad.balance.current, 'none'));
+% for now only support unbalanced grad structures, it is the user's responsibility to unbalance
+assert(issubfield(grad, 'balance.current') && isempty(grad.balance.current));
 
 % select the list of channels that is required for the output
 label   = ft_channelselection(options.channel, grad.label);

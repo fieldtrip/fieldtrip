@@ -684,15 +684,21 @@ if strcmp(cfg.updatesens, 'yes')
     end
     if isfield(dataout, 'grad')
       ft_info('applying the montage to the grad structure\n');
-      dataout.grad = ft_apply_montage(dataout.grad, montage, 'feedback', 'none', 'keepunused', 'no', 'balancename', bname);
+      dataout.grad = ft_apply_montage(dataout.grad, montage, 'feedback', 'none', 'keepunused', 'no');
+      dataout.grad.balance.(bname) = montage;
+      dataout.grad.balance.current{end+1} = bname;
     end
     if isfield(dataout, 'elec')
       ft_info('applying the montage to the elec structure\n');
-      dataout.elec = ft_apply_montage(dataout.elec, montage, 'feedback', 'none', 'keepunused', 'no', 'balancename', bname);
+      dataout.elec = ft_apply_montage(dataout.elec, montage, 'feedback', 'none', 'keepunused', 'no');
+      dataout.elec.balance.(bname) = montage;
+      dataout.elec.balance.current{end+1} = bname;
     end
     if isfield(dataout, 'opto')
       ft_info('applying the montage to the opto structure\n');
-      dataout.opto = ft_apply_montage(dataout.opto, montage, 'feedback', 'none', 'keepunused', 'no', 'balancename', bname);
+      dataout.opto = ft_apply_montage(dataout.opto, montage, 'feedback', 'none', 'keepunused', 'no');
+      dataout.opto.balance.(bname) = montage;
+      dataout.opto.balance.current{end+1} = bname;
     end
   end
 end % if updatesens

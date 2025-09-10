@@ -11,9 +11,9 @@ function [data] = ft_denoise_hfc(cfg,data)
 % https://doi.org/10.1016/j.neuroimage.2022.119338.
 %
 % Use as
-%   data = ft_denoise_hfc(cfg,data)
+%   data = ft_denoise_hfc(cfg, data)
 %
-% Where cfg is a configuration structure that contains:
+% The configuration should contain
 %   cfg.channel         = channels for HFC (default = 'all')
 % 	cfg.order           = number, spherical harmonic order (default = 1)
 %                         order = 1 is a homogenous field
@@ -25,9 +25,11 @@ function [data] = ft_denoise_hfc(cfg,data)
 %   cfg.residualcheck   = do you want to check channel residuals (default = 'yes')
 %   cfg.residualthresh  = number in pT, what level of residual signal is fine for quality assurance (default = 50)
 %
-% See also FT_DENOISE_SYNTHETIC, FT_DENOISE_PCA, FT_DENOISE_DSSP, FT_DENOISE_TSP
+% See also FT_PREPROCESSING, FT_DENOISE_AMM, FT_DENOISE_DSSP,
+% FT_DENOISE_PCA, FT_DENOISE_PREWHITEN, FT_DENOISE_SSP, FT_DENOISE_SSS,
+% FT_DENOISE_SYNTHETIC, FT_DENOISE_TSR
 
-% Copyright (C) 2021-22, Tim Tierney, George O'Neill, Robert Seymour, Wellcome Centre for Human Neuroimaging, UCL
+% Copyright (C) 2021-2022, Tim Tierney, George O'Neill, Robert Seymour, Wellcome Centre for Human Neuroimaging, UCL
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -64,6 +66,9 @@ if ft_abort
   % do not continue function execution in case the outputfile is present and the user indicated to keep it
   return
 end
+
+% store the original type of the input data
+dtype = ft_datatype(data);
 
 % check the input data
 data = ft_checkdata(data, 'datatype', {'raw'}, 'ismeg', 'yes');
@@ -128,7 +133,9 @@ ft_info('Applied HFC to the data');
 
 % Update the tra, it is essential to correct the leadfields going forward
 if istrue(cfg.updatesens)
-  data.grad = ft_apply_montage(data.grad, montage, 'keepunused', 'yes', 'balancename', 'hfc','warning',false);
+  data.grad = ft_apply_montage(data.grad, montage, 'keepunused', 'yes', 'warning', false);
+  data.grad.balance.hfc = montage;
+  data.grad.balance.current{end+1} = 'hfc'; % keep track of the projection that was applied
   ft_info('Converted the sensor description to HFC');
 end
 
@@ -146,6 +153,14 @@ end
 % Perform running variance check to identify odd channels
 if strcmp(cfg.residualcheck, 'yes')
   residual_check(cfg.residualthresh, data, montage.labelold)
+end
+
+% convert back to input type if necessary
+switch dtype
+  case 'timelock'
+    data = ft_checkdata(data, 'datatype', 'timelock');
+  otherwise
+    % keep the output as it is
 end
 
 % do the general cleanup and bookkeeping at the end of the function
