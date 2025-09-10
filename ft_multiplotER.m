@@ -209,6 +209,9 @@ cfg.fontsize       = ft_getopt(cfg, 'fontsize',       8);
 cfg.fontweight     = ft_getopt(cfg, 'fontweight');
 cfg.interpreter    = ft_getopt(cfg, 'interpreter',    'none');  % none, tex or latex
 cfg.interactive    = ft_getopt(cfg, 'interactive',    'yes');
+cfg.interactivecolor = ft_getopt(cfg, 'interactivecolor', [0 0 0]); % linecolor of selection rectangle
+cfg.interactivestyle = ft_getopt(cfg, 'interactivestyle', '--');    % linestyle of selection rectangle
+cfg.interactivewidth = ft_getopt(cfg, 'interactivewidth', 1.5);     % linewidth of selection rectangle
 cfg.orient         = ft_getopt(cfg, 'orient',         'landscape');
 cfg.maskparameter  = ft_getopt(cfg, 'maskparameter');
 cfg.linecolor      = ft_getopt(cfg, 'linecolor',      []); % the default is handled somewhere else
@@ -667,13 +670,15 @@ if strcmp(cfg.interactive, 'yes')
   guidata(gcf, info);
   
   if isequal(cfg.viewmode, 'butterfly')
-    set(gcf, 'windowbuttonupfcn',     {@ft_select_range, 'multiple', false, 'yrange', false, 'callback', {@select_topoplotER}, 'event', 'windowbuttonupfcn'});
-    set(gcf, 'windowbuttondownfcn',   {@ft_select_range, 'multiple', false, 'yrange', false, 'callback', {@select_topoplotER}, 'event', 'windowbuttondownfcn'});
-    set(gcf, 'windowbuttonmotionfcn', {@ft_select_range, 'multiple', false, 'yrange', false, 'callback', {@select_topoplotER}, 'event', 'windowbuttonmotionfcn'});
+    cb_options = {'multiple', false, 'yrange', false, 'callback', {@select_topoplotER}, 'linecolor', cfg.interactivecolor, 'linestyle', cfg.interactivestyle, 'linewidth', cfg.interactivewidth};
+    set(gcf, 'WindowButtonUpFcn',     [{@ft_select_range, 'event', 'WindowButtonUpFcn'}      cb_options]);
+    set(gcf, 'WindowButtonDownFcn',   [{@ft_select_range, 'event', 'WindowButtonDownFcn'},   cb_options]);
+    set(gcf, 'WindowButtonMotionFcn', [{@ft_select_range, 'event', 'WindowButtonMotionFcn'}, cb_options]);
   else
-    set(gcf, 'WindowButtonUpFcn',     {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotER}, 'event', 'WindowButtonUpFcn'});
-    set(gcf, 'WindowButtonDownFcn',   {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotER}, 'event', 'WindowButtonDownFcn'});
-    set(gcf, 'WindowButtonMotionFcn', {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotER}, 'event', 'WindowButtonMotionFcn'});
+    cb_options = {'multiple', true, 'callback', {@select_singleplotER}, 'linecolor', cfg.interactivecolor, 'linestyle', cfg.interactivestyle, 'linewidth', cfg.interactivewidth};
+    set(gcf, 'WindowButtonUpFcn',     [{@ft_select_channel, 'event', 'WindowButtonUpFcn'}      cb_options]);
+    set(gcf, 'WindowButtonDownFcn',   [{@ft_select_channel, 'event', 'WindowButtonDownFcn'},   cb_options]);
+    set(gcf, 'WindowButtonMotionFcn', [{@ft_select_channel, 'event', 'WindowButtonMotionFcn'}, cb_options]);
   end
 end
 % do the general cleanup and bookkeeping at the end of the function

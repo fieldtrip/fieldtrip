@@ -105,6 +105,9 @@ cfg.fontweight        = ft_getopt(cfg, 'fontweight',       'normal');
 cfg.baseline          = ft_getopt(cfg, 'baseline',         'no'); % to avoid warning in timelock/freqbaseline
 cfg.trials            = ft_getopt(cfg, 'trials',           'all', 1);
 cfg.interactive       = ft_getopt(cfg, 'interactive',      'yes');
+cfg.interactivecolor  = ft_getopt(cfg, 'interactivecolor', [0 0 0]); % linecolor of selection rectangle
+cfg.interactivestyle  = ft_getopt(cfg, 'interactivestyle', '--');    % linestyle of selection rectangle
+cfg.interactivewidth  = ft_getopt(cfg, 'interactivewidth', 1.5);     % linewidth of selection rectangle
 cfg.hotkeys           = ft_getopt(cfg, 'hotkeys',          'yes');
 cfg.renderer          = ft_getopt(cfg, 'renderer',          []); % let MATLAB decide on the default
 cfg.marker            = ft_getopt(cfg, 'marker',           'on');
@@ -871,13 +874,15 @@ for indx=1:Ndata
     guidata(gcf, info);
 
     if any(strcmp(dimord, {'chan_time', 'chan_freq', 'subj_chan_time', 'rpt_chan_time', 'chan_chan_freq', 'chancmb_freq', 'rpt_chancmb_freq', 'subj_chancmb_freq'}))
-      set(gcf, 'WindowButtonUpFcn',     {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotER}, 'event', 'WindowButtonUpFcn'});
-      set(gcf, 'WindowButtonDownFcn',   {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotER}, 'event', 'WindowButtonDownFcn'});
-      set(gcf, 'WindowButtonMotionFcn', {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotER}, 'event', 'WindowButtonMotionFcn'});
+      cb_options = {'multiple', true, 'callback', {@select_singleplotER}, 'linecolor', cfg.interactivecolor, 'linestyle', cfg.interactivestyle, 'linewidth', cfg.interactivewidth};
+      set(gcf, 'WindowButtonUpFcn',     [{@ft_select_channel, 'event', 'WindowButtonUpFcn'}      cb_options]);
+      set(gcf, 'WindowButtonDownFcn',   [{@ft_select_channel, 'event', 'WindowButtonDownFcn'},   cb_options]);
+      set(gcf, 'WindowButtonMotionFcn', [{@ft_select_channel, 'event', 'WindowButtonMotionFcn'}, cb_options]);
     elseif any(strcmp(dimord, {'chan_freq_time', 'subj_chan_freq_time', 'rpt_chan_freq_time', 'rpttap_chan_freq_time', 'chan_chan_freq_time', 'chancmb_freq_time', 'rpt_chancmb_freq_time', 'subj_chancmb_freq_time'}))
-      set(gcf, 'WindowButtonUpFcn',     {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotTFR}, 'event', 'WindowButtonUpFcn'});
-      set(gcf, 'WindowButtonDownFcn',   {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotTFR}, 'event', 'WindowButtonDownFcn'});
-      set(gcf, 'WindowButtonMotionFcn', {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotTFR}, 'event', 'WindowButtonMotionFcn'});
+      cb_options = {'multiple', true, 'callback', {@select_singleplotTFR}, 'linecolor', cfg.interactivecolor, 'linestyle', cfg.interactivestyle, 'linewidth', cfg.interactivewidth};
+      set(gcf, 'WindowButtonUpFcn',     [{@ft_select_channel, 'event', 'WindowButtonUpFcn'}      cb_options]);
+      set(gcf, 'WindowButtonDownFcn',   [{@ft_select_channel, 'event', 'WindowButtonDownFcn'},   cb_options]);
+      set(gcf, 'WindowButtonMotionFcn', [{@ft_select_channel, 'event', 'WindowButtonMotionFcn'}, cb_options]);
     else
       ft_warning('unsupported dimord "%s" for interactive plotting', dimord);
     end

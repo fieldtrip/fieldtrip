@@ -162,6 +162,9 @@ cfg.colorbar       = ft_getopt(cfg, 'colorbar',      'yes');
 cfg.colormap       = ft_getopt(cfg, 'colormap',       'default');
 cfg.colorbartext   = ft_getopt(cfg, 'colorbartext',  '');
 cfg.interactive    = ft_getopt(cfg, 'interactive',   'yes');
+cfg.interactivecolor = ft_getopt(cfg, 'interactivecolor', [0 0 0]); % linecolor of selection rectangle
+cfg.interactivestyle = ft_getopt(cfg, 'interactivestyle', '--');    % linestyle of selection rectangle
+cfg.interactivewidth = ft_getopt(cfg, 'interactivewidth', 1.5);     % linewidth of selection rectangle
 cfg.hotkeys        = ft_getopt(cfg, 'hotkeys',       'yes');
 cfg.maskalpha      = ft_getopt(cfg, 'maskalpha',      1);
 cfg.maskparameter  = ft_getopt(cfg, 'maskparameter',  []);
@@ -453,22 +456,19 @@ for i=1:Ndata
   end
 
   % Draw the data and mask NaN's if requested
+  plotopts = {'clim', [zmin zmax], 'tag', 'cip'};
   if isequal(cfg.masknans, 'yes') && isempty(cfg.maskparameter)
-    nans_mask = ~isnan(zval);
-    mask = double(nans_mask);
-    ft_plot_matrix(xval, yval, zval, 'clim', [zmin zmax], 'tag', 'cip', 'highlightstyle', cfg.maskstyle, 'highlight', mask)
+    mask     = double(~isnan(zval));
+    plotopts = cat(2, plotopts, {'highlightstyle', cfg.maskstyle, 'highlight', mask});
   elseif isequal(cfg.masknans, 'yes') && ~isempty(cfg.maskparameter)
-    nans_mask = ~isnan(zval);
-    mask = mask .* nans_mask;
-    mask = double(mask);
-    ft_plot_matrix(xval, yval, zval, 'clim', [zmin zmax], 'tag', 'cip', 'highlightstyle', cfg.maskstyle, 'highlight', mask)
+    mask     = double(mask .* (~isnan(zval)));
+    plotopts = cat(2, plotopts, {'highlightstyle', cfg.maskstyle, 'highlight', mask});
   elseif isequal(cfg.masknans, 'no') && ~isempty(cfg.maskparameter)
-    mask = double(mask);
-    ft_plot_matrix(xval, yval, zval, 'clim', [zmin zmax], 'tag', 'cip', 'highlightstyle', cfg.maskstyle, 'highlight', mask)
-  else
-    ft_plot_matrix(xval, yval, zval, 'clim', [zmin zmax], 'tag', 'cip')
+    mask     = double(mask);
+    plotopts = cat(2, plotopts, {'highlightstyle', cfg.maskstyle, 'highlight', mask});
   end
-
+  ft_plot_matrix(xval, yval, zval, plotopts{:});
+  
   % check if the colormap is in the proper format and set it
   if ~isequal(cfg.colormap, 'default')
     if ischar(cfg.colormap)
@@ -498,7 +498,7 @@ for i=1:Ndata
   if ~isempty(cfg.title)
     t = cfg.title;
   else
-    if length(cfg.channel) == 1
+    if isscalar(cfg.channel)
       t = [char(cfg.channel) ' / ' num2str(selchan) ];
     else
       t = sprintf('mean(%0s)', join_str(', ', cfg.channel));
@@ -523,9 +523,10 @@ for i=1:Ndata
     info.(ident).cfg      = cfg;
     info.(ident).varargin = varargin;
     guidata(gcf, info);
-    set(gcf, 'WindowButtonUpFcn',     {@ft_select_range, 'multiple', false, 'callback', {@select_topoplotTFR}, 'event', 'WindowButtonUpFcn'});
-    set(gcf, 'WindowButtonDownFcn',   {@ft_select_range, 'multiple', false, 'callback', {@select_topoplotTFR}, 'event', 'WindowButtonDownFcn'});
-    set(gcf, 'WindowButtonMotionFcn', {@ft_select_range, 'multiple', false, 'callback', {@select_topoplotTFR}, 'event', 'WindowButtonMotionFcn'});
+    cb_options = {'multiple', false, 'callback', {@select_topoplotTFR}, 'linecolor', cfg.interactivecolor, 'linestyle', cfg.interactivestyle, 'linewidth', cfg.interactivewidth};
+    set(gcf, 'WindowButtonUpFcn',     [{@ft_select_range, 'event', 'WindowButtonUpFcn'}      cb_options]);
+    set(gcf, 'WindowButtonDownFcn',   [{@ft_select_range, 'event', 'WindowButtonDownFcn'},   cb_options]);
+    set(gcf, 'WindowButtonMotionFcn', [{@ft_select_range, 'event', 'WindowButtonMotionFcn'}, cb_options]);
   end
 end
 
