@@ -20,8 +20,8 @@ function data = ft_denoise_pca(cfg, varargin)
 % consistent with the output of FT_PREPROCESSING.
 %
 % The configuration should contain
-%   cfg.refchannel = the channels used as reference signal (default = 'MEGREF')
 %   cfg.channel    = the channels to be denoised (default = 'MEG')
+%   cfg.refchannel = the channels used as reference signal (default = 'MEGREF')
 %   cfg.truncate   = optional truncation of the singular value spectrum (default = 'no')
 %   cfg.zscore     = standardise reference data prior to PCA (default = 'no')
 %   cfg.pertrial   = 'no' (default) or 'yes'. Regress out the references on a per trial basis
@@ -84,8 +84,8 @@ end
 cfg = ft_checkconfig(cfg, 'forbidden',  {'channels', 'trial'}); % prevent accidental typos, see issue 1729
 
 % set the defaults
-cfg.refchannel = ft_getopt(cfg, 'refchannel', 'MEGREF');
 cfg.channel    = ft_getopt(cfg, 'channel',    'MEG');
+cfg.refchannel = ft_getopt(cfg, 'refchannel', 'MEGREF');
 cfg.truncate   = ft_getopt(cfg, 'truncate',   'no');
 cfg.zscore     = ft_getopt(cfg, 'zscore',     'no');
 cfg.trials     = ft_getopt(cfg, 'trials',     'all', 1);
@@ -129,7 +129,7 @@ else
   % select trials of interest
   tmpcfg  = keepfields(cfg, {'trials', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
   if length(varargin)==1
-    % channel data and reference channel data are in 1 data structure
+  % channel data and reference channel data are in 1 data structure
     megchan = ft_channelselection(cfg.channel,    varargin{1}.label);
     refchan = ft_channelselection(cfg.refchannel, varargin{1}.label);
       
@@ -140,13 +140,12 @@ else
     data           = ft_selectdata(tmpcfg, varargin{1});
     [cfg, data]    = rollback_provenance(cfg, data);
   
-  else
+  elseif length(varargin)==2
     % channel data and reference channel data are in 2 data structures
     megchan = ft_channelselection(cfg.channel,    varargin{1}.label);
     refchan = ft_channelselection(cfg.refchannel, varargin{2}.label);
     
-    % throw a warning if some of the specified reference channels are also
-    % in the first data argument
+    % throw a warning if some of the specified reference channels are also in the first data argument
     if ~isempty(ft_channelselection(cfg.refchannel, varargin{1}.label))
       ft_warning('some of the specified reference channels are also present in the first data argument, this information will not be used for the cleaning of the data');
     end
@@ -158,6 +157,8 @@ else
     data           = ft_selectdata(tmpcfg, varargin{1});
     [cfg, data]    = rollback_provenance(cfg, data);
     
+  else
+    error('Incorrect number of input arguments.')
   end
   
   refchan = ft_channelselection(cfg.refchannel, refdata.label, ft_senstype(refdata));
