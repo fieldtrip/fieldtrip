@@ -12,15 +12,6 @@ function test_issue1952
 % dataset = fullfile(path, 'run_01_raw.fif');
 
 dataset = dccnpath('/project/3031000.02/external/download/tutorial/epilepsy/raw/case1/neuromag/case1_cHPI_raw.fif');
-if ~exist(dataset, 'file')
-  % probably not on filesystem at Donders
-  datadir = tempdir;
-  s = ftp('ftp.fieldtriptoolbox.org');
-  cd(s,'pub/fieldtrip/tutorial/epilepsy/raw/case1/neuromag');
-  mget(s, 'case1_cHPI_raw.fif', datadir);
-  close(s);
-  dataset = fullfile(datadir, 'case1_cHPI_raw.fif');
-end
 
 %% SEGMENT
 
