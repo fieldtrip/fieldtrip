@@ -36,8 +36,6 @@ function [input] = ft_apply_montage(input, montage, varargin)
 %
 % Additional options should be specified in key-value pairs and can be
 %   'keepunused'    = string, 'yes' or 'no' (default = 'no')
-%   'inverse'       = string, 'yes' or 'no' (default = 'no')
-%   'balancename'   = string, name of the montage (default = '')
 %   'feedback'      = string, see FT_PROGRESS (default = 'text')
 %   'warning'       = boolean, whether to show warnings (default = true)
 %
@@ -46,6 +44,10 @@ function [input] = ft_apply_montage(input, montage, varargin)
 % montage1, then montage2.
 %
 % See also FT_READ_SENS, FT_DATATYPE_SENS
+
+% Please note that the options 'inverse' and 'balancename' have been
+% removed with https://github.com/fieldtrip/fieldtrip/pull/2529 in favour
+% of a more explicit construction of the inverse and of the bookkeeping.
 
 % Copyright (C) 2008-2024, Robert Oostenveld
 %
@@ -81,10 +83,8 @@ input   = fixoldorg(input); % the input might be a montage or a sensor array
 
 % get optional input arguments
 keepunused    = ft_getopt(varargin, 'keepunused',  'no');
-inverse       = ft_getopt(varargin, 'inverse',     'no');
 feedback      = ft_getopt(varargin, 'feedback',    'text');
 showwarning   = ft_getopt(varargin, 'warning',     true);
-bname         = ft_getopt(varargin, 'balancename', '');
 
 if istrue(showwarning)
   warningfun = @warning;
@@ -97,18 +97,13 @@ assert(length(unique(montage.labelold))==length(montage.labelold), 'the montage 
 assert(length(unique(montage.labelnew))==length(montage.labelnew), 'the montage is invalid');
 
 % these are optional, at the end we will clean up the output in case they did not exist
-if ~istrue(inverse)
-  haschantype = (isfield(input, 'chantype') || isfield(input, 'chantypenew')) && all(isfield(montage, {'chantypeold', 'chantypenew'}));
-  haschanunit = (isfield(input, 'chanunit') || isfield(input, 'chanunitnew')) && all(isfield(montage, {'chanunitold', 'chanunitnew'}));
-else
-  haschantype = (isfield(input, 'chantype') || isfield(input, 'chantypeold')) && all(isfield(montage, {'chantypeold', 'chantypenew'}));
-  haschanunit = (isfield(input, 'chanunit') || isfield(input, 'chanunitold')) && all(isfield(montage, {'chanunitold', 'chanunitnew'}));
-end
+haschantype = (isfield(input, 'chantype') || isfield(input, 'chantypenew')) && all(isfield(montage, {'chantypeold', 'chantypenew'}));
+haschanunit = (isfield(input, 'chanunit') || isfield(input, 'chanunitnew')) && all(isfield(montage, {'chanunitold', 'chanunitnew'}));
 
 % make sure they always exist to facilitate the remainder of the code
 if ~isfield(montage, 'chantypeold')
   montage.chantypeold = repmat({'unknown'}, size(montage.labelold));
-  if isfield(input, 'chantype') && ~istrue(inverse)
+  if isfield(input, 'chantype')
     ft_warning('copying input chantype to montage');
     [sel1, sel2] = match_str(montage.labelold, input.label);
     montage.chantypeold(sel1) = input.chantype(sel2);
@@ -117,16 +112,11 @@ end
 
 if ~isfield(montage, 'chantypenew')
   montage.chantypenew = repmat({'unknown'}, size(montage.labelnew));
-  if isfield(input, 'chantype') && istrue(inverse)
-    ft_warning('copying input chantype to montage');
-    [sel1, sel2] = match_str(montage.labelnew, input.label);
-    montage.chantypenew(sel1) = input.chantype(sel2);
-  end
 end
 
 if ~isfield(montage, 'chanunitold')
   montage.chanunitold = repmat({'unknown'}, size(montage.labelold));
-  if isfield(input, 'chanunit') && ~istrue(inverse)
+  if isfield(input, 'chanunit')
     ft_warning('copying input chanunit to montage');
     [sel1, sel2] = match_str(montage.labelold, input.label);
     montage.chanunitold(sel1) = input.chanunit(sel2);
@@ -135,11 +125,6 @@ end
 
 if ~isfield(montage, 'chanunitnew')
   montage.chanunitnew = repmat({'unknown'}, size(montage.labelnew));
-  if isfield(input, 'chanunit') && istrue(inverse)
-    ft_warning('copying input chanunit to montage');
-    [sel1, sel2] = match_str(montage.labelnew, input.label);
-    montage.chanunitnew(sel1) = input.chanunit(sel2);
-  end
 end
 
 if ~isfield(input, 'label') && isfield(input, 'labelnew')
@@ -199,25 +184,6 @@ if ~isfield(input, 'tra') && isfield(input, 'label')
     nchan = length(input.label);
     input.tra = eye(nchan);
   end
-end
-
-if istrue(inverse)
-  % swap the role of the old and new channels
-  tmp.labelnew    = montage.labelold;
-  tmp.labelold    = montage.labelnew;
-  tmp.chantypenew = montage.chantypeold;
-  tmp.chantypeold = montage.chantypenew;
-  tmp.chanunitnew = montage.chanunitold;
-  tmp.chanunitold = montage.chanunitnew;
-  % apply the inverse montage, this can be used to undo a previously applied montage
-  tmp.tra = full(montage.tra);
-  if rank(tmp.tra) < length(tmp.tra)
-    warningfun('the linear projection for the montage is not full-rank, the resulting data will have reduced dimensionality');
-    tmp.tra = pinv(tmp.tra);
-  else
-    tmp.tra = inv(tmp.tra);
-  end
-  montage = tmp;
 end
 
 % keep only the columns that are not empty
@@ -434,57 +400,7 @@ switch inputtype
     sens.label    = montage.labelnew;
     sens.chantype = montage.chantypenew;
     sens.chanunit = montage.chanunitnew;
-
-    % keep track of the order of the balancing and which one is the current one
-    if istrue(inverse)
-      if isfield(sens, 'balance')% && isfield(sens.balance, 'previous')
-        if isfield(sens.balance, 'previous') && numel(sens.balance.previous)>=1
-          sens.balance.current  = sens.balance.previous{1};
-          sens.balance.previous = sens.balance.previous(2:end);
-        elseif isfield(sens.balance, 'previous')
-          sens.balance.current  = 'none';
-          sens.balance          = rmfield(sens.balance, 'previous');
-        else
-          sens.balance.current  = 'none';
-        end
-      end
-
-    elseif ~istrue(inverse) && ~isempty(bname)
-      if isfield(sens, 'balance')
-        % check whether a balancing montage with name bname already exist, and if so, how many
-        mnt = fieldnames(sens.balance);
-        sel = strmatch(bname, mnt);
-        if numel(sel)==0
-          % bname can stay the same
-        elseif numel(sel)==1
-          % the original should be renamed to 'bname1' and the new one should be 'bname2'
-          sens.balance.([bname, '1']) = sens.balance.(bname);
-          sens.balance                = rmfield(sens.balance, bname);
-          if isfield(sens.balance, 'current') && strcmp(sens.balance.current, bname)
-            sens.balance.current = [bname, '1'];
-          end
-          if isfield(sens.balance, 'previous')
-            sel2 = strmatch(bname, sens.balance.previous);
-            if ~isempty(sel2)
-              sens.balance.previous{sel2} = [bname, '1'];
-            end
-          end
-          bname = [bname, '2'];
-        else
-          bname = [bname, num2str(length(sel)+1)];
-        end
-      end
-
-      if isfield(sens, 'balance') && isfield(sens.balance, 'current')
-        if ~isfield(sens.balance, 'previous')
-          sens.balance.previous = {};
-        end
-        sens.balance.previous = [{sens.balance.current} sens.balance.previous];
-        sens.balance.current  = bname;
-        sens.balance.(bname)  = montage;
-      end
-    end
-
+  
     % rename the output variable
     input = sens;
     clear sens
