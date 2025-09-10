@@ -944,6 +944,10 @@ if ~isempty(sensfield)
     for m = 1:numel(sensfield)
       ft_info('also applying the unmixing matrix to the %s structure\n', sensfield{m});
 
+      if ~issubfield(data.(sensfield{m}), 'balance.current')
+        data.(sensfield{m}).balance.current = {};
+      end
+
       % the name of the balancing should be unique in the sequence
       bname = 'comp';
       bindx = 1;
