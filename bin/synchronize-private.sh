@@ -599,9 +599,11 @@ sync ${ARRAY[*]}
 # fixbalance.m
 
 ARRAY=()
+ARRAY+=(private/fixbalance.m)
 ARRAY+=(fileio/private/fixbalance.m)
 ARRAY+=(forward/private/fixbalance.m)
 ARRAY+=(plotting/private/fixbalance.m)
+ARRAY+=(test/private/fixbalance.m)
 ARRAY+=(utilities/private/fixbalance.m)
 sync ${ARRAY[*]}
 
