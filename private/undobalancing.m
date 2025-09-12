@@ -6,7 +6,6 @@ function sens = undobalancing(sens)
 
 % ensure that the representation of the balancing is up to date
 sens = fixbalance(sens);
-fprintf('.')
 
 while ~isempty(sens.balance.current)
   % undo the synthetic gradient balancing
