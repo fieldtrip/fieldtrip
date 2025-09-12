@@ -30,7 +30,7 @@ function [pnt, ori, lab] = channelposition(sens)
 % $Id$
 
 % remove the balancing from the sensor definition, e.g. planar gradients, 3rd-order gradients, PCA-cleaned data or ICA projections
-if isfield(sens, 'balance') && ~strcmp(sens.balance.current, 'none')
+if isfield(sens, 'balance') && isfield(sens.balance, 'current') && ~isempty(sens.balance.current)
   sens = undobalancing(sens);
 end
 

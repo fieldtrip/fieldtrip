@@ -33,6 +33,8 @@ tmpcfg = [];
 tmpcfg.reref = 'yes';
 tmpcfg.implicitref = [];
 tmpcfg.refchannel = 'all';
+tmpcfg.trackcallinfo = 'no';
+tmpcfg.trackdatainfo = 'no';
 
 cfg = [];
 cfg.montage = ft_prepare_montage(tmpcfg, data);
@@ -49,6 +51,10 @@ cfg.updatesens = 'yes';
 data_reref2 = ft_preprocessing(cfg, data);
 
 %%
+
+% these contain provenance information that differs
+data_reref1.elec = rmsubfield(data_reref1.elec, 'balance.preproc.cfg');
+data_reref2.elec = rmsubfield(data_reref2.elec, 'balance.preproc.cfg');
 
 assert(isalmostequal(data_reref1.trial{1}, data_reref2.trial{1}, 'reltol', 1e-6));
 assert(isalmostequal(data_reref1.elec, data_reref2.elec, 'reltol', 1e-6));
@@ -75,6 +81,10 @@ cfg.updatesens = 'yes';
 data_reref2 = ft_preprocessing(cfg, data);
 
 %%
+
+% these contain provenance information that differs
+data_reref1.elec = rmsubfield(data_reref1.elec, 'balance.preproc.cfg');
+data_reref2.elec = rmsubfield(data_reref2.elec, 'balance.preproc.cfg');
 
 assert(isalmostequal(data_reref1.trial{1}, data_reref2.trial{1}, 'reltol', 1e-6));
 assert(isalmostequal(data_reref1.elec, data_reref2.elec, 'reltol', 1e-6));

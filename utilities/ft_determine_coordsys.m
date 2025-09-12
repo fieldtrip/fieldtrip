@@ -172,7 +172,7 @@ switch dtype
     ft_plot_headmodel(data);
     ft_headlight
 
-  case {'grad' 'elec' 'opto' 'sens'}
+  case {'elec', 'grad', 'opto', 'sens'}
     ft_plot_sens(data, 'label', 'label');
     ft_headlight
 

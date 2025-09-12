@@ -82,10 +82,20 @@ fnames = {'chanori' 'chanpos' 'chantype' 'chanunit' 'label' 'tra'};
 for k = 1:numel(fnames)
   sens.(fnames{k}) = cat(1,sens1.(fnames{k}), sens2.(fnames{k}));
 end
-fnames = {'labelnew' 'chantypenew' 'chanunitnew' 'tra'};
-for k = 1:numel(fnames)
-  sens.balance.prewhiten.(fnames{k}) = cat(1,sens1.balance.prewhiten.(fnames{k}), sens2.balance.prewhiten.(fnames{k}));
-end
+
+% combine the two non-overlapping montages into one
+label = sort(unique(cat(1, sens1.label, sens2.label)));
+montage.labelold = label;
+montage.labelnew = label;
+montage.tra = eye(length(label));
+selrow = match_str(label, sens1.balance.prewhiten.labelnew);
+selcol = match_str(label, sens1.balance.prewhiten.labelold);
+montage.tra(selrow, selcol) = sens1.balance.prewhiten.tra;
+selrow = match_str(label, sens2.balance.prewhiten.labelnew);
+selcol = match_str(label, sens2.balance.prewhiten.labelold);
+montage.tra(selrow, selcol) = sens2.balance.prewhiten.tra;
+sens.balance.prewhiten = montage;
+
 data_white.grad = sens;
 
 %% create the geometric objects needed for the forward and inverse models

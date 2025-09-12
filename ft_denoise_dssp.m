@@ -7,7 +7,8 @@ function [dataout] = ft_denoise_dssp(cfg, datain)
 %
 % Use as
 %   dataout = ft_denoise_dssp(cfg, datain)
-% where cfg is a configuration structure that contains
+% where the input data should come from FT_PREPROCESSING or
+% FT_TIMELOCKANALYSIS and the configuration should contain
 %   cfg.channel          = Nx1 cell-array with selection of channels (default = 'all'), see FT_CHANNELSELECTION for details
 %   cfg.trials           = 'all' or a selection given as a 1xN vector (default = 'all')
 %   cfg.pertrial         = 'no', or 'yes', compute the temporal projection per trial (default = 'no')
@@ -25,7 +26,9 @@ function [dataout] = ft_denoise_dssp(cfg, datain)
 %                          included eigenvalues (if value<1), determining
 %                          the dimensionality of the intersection.
 %
-% See also FT_DENOISE_PCA, FT_DENOISE_SYNTHETIC, FT_DENOISE_TSR
+% See also FT_PREPROCESSING, FT_DENOISE_AMM, FT_DENOISE_HFC,
+% FT_DENOISE_PCA, FT_DENOISE_PREWHITEN, FT_DENOISE_SSP, FT_DENOISE_SSS,
+% FT_DENOISE_SYNTHETIC, FT_DENOISE_TSR
 
 % Copyright (C) 2018-2024, Jan-Mathijs Schoffelen
 %
@@ -64,6 +67,9 @@ if ft_abort
   % do not continue function execution in case the outputfile is present and the user indicated to keep it
   return
 end
+
+% store the original type of the input data
+dtype = ft_datatype(datain);
 
 % check the input data
 datain = ft_checkdata(datain, 'datatype', {'raw'}); % FIXME how about timelock and freq?
@@ -175,6 +181,14 @@ end
 % create the output argument
 dataout       = keepfields(datain, {'label', 'time', 'fsample', 'trialinfo', 'sampleinfo', 'grad', 'elec', 'opto'}); % grad can be kept and does not need to be balanced, since the cleaned data is a mixture over time, not space.
 dataout.trial = trial;
+
+% convert back to input type if necessary
+switch dtype
+  case 'timelock'
+    dataout = ft_checkdata(dataout, 'datatype', 'timelock');
+  otherwise
+    % keep the output as it is
+end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug

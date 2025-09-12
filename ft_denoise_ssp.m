@@ -1,18 +1,29 @@
-function [data] = ft_denoise_ssp(cfg, data)
+function [data] = ft_denoise_ssp(cfg, varargin)
 
 % FT_DENOISE_SSP projects out topographies based on ambient noise on
 % Neuromag/Elekta/MEGIN systems. These topographies are estimated during maintenance
-% visits from the engineers of MEGIN
+% visits from the engineers of MEGIN.
+% Alternatively, computes projectors from reference data (e.g., empty room) if it
+% is given as an additional input. For best results, make sure to preprocess
+% the reference data the same as the data to denoise.
 %
 % Use as
 %   [data] = ft_denoise_ssp(cfg, data)
-% where data should come from FT_PREPROCESSING and the configuration
-% should contain
-%   cfg.ssp        = 'all' or a cell array of SSP names to apply (default = 'all')
+% or
+%   [data] = ft_denoise_ssp(cfg, data, refdata)
+% where the input data should come from FT_PREPROCESSING or
+% FT_TIMELOCKANALYSIS and the configuration should contain
+%   cfg.channel    = the channels to be denoised (default = 'all')
+%   cfg.refchannel = the channels used as reference signal (default = 'MEG')
 %   cfg.trials     = 'all' or a selection given as a 1xN vector (default = 'all')
+%   cfg.ssp        = 'all' or a cell array of SSP names to apply (default = 'all')
 %   cfg.updatesens = 'no' or 'yes' (default = 'yes')
 %
-% To facilitate data-handling and distributed computing you can use
+% If refdata is specified, the configuration should also contain
+%   cfg.numcomponent = number of principal components to project out of the data
+%                      (default = 3)
+%
+% To facilitate data-handling and distributed cmputing you can use
 %   cfg.inputfile   =  ...
 %   cfg.outputfile  =  ...
 % If you specify one of these (or both) the input data will be read from a *.mat
@@ -20,10 +31,11 @@ function [data] = ft_denoise_ssp(cfg, data)
 % files should contain only a single variable, corresponding with the
 % input/output structure.
 %
-% See also FT_PREPROCESSING, FT_DENOISE_SYNTHETIC, FT_DENOISE_PCA
+% See also FT_PREPROCESSING, FT_DENOISE_AMM, FT_DENOISE_DSSP,
+% FT_DENOISE_HFC, FT_DENOISE_PCA, FT_DENOISE_PREWHITEN, FT_DENOISE_SSS,
+% FT_DENOISE_SYNTHETIC, FT_DENOISE_TSR
 
-% Copyright (C) 2004-2022, Gianpaolo Demarchi, Lau
-% Møller Andersen, Robert Oostenveld, Jan-Mathijs Schoffelen
+% Copyright (C) 2004-2022, Gianpaolo Demarchi, Lau Møller Andersen, Robert Oostenveld, Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -55,89 +67,118 @@ ft_preamble debug
 ft_preamble loadvar data
 ft_preamble provenance data
 
-
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
   return
 end
 
+% check if the input data is valid for this function
+for i=1:length(varargin)
+  varargin{i} = ft_checkdata(varargin{i}, 'datatype', 'raw');
+end
+
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'forbidden',  {'trial'}); % prevent accidental typos, see issue 1729
-cfg = ft_checkconfig(cfg, 'required',   {'ssp'});
 
 % set the defaults
-cfg.ssp        = ft_getopt(cfg, 'ssp', 'all');
-cfg.trials     = ft_getopt(cfg, 'trials', 'all', 1);
-cfg.updatesens = ft_getopt(cfg, 'updatesens', 'yes');
+cfg.ssp          = ft_getopt(cfg, 'ssp', 'all');
+cfg.trials       = ft_getopt(cfg, 'trials', 'all', 1);
+cfg.updatesens   = ft_getopt(cfg, 'updatesens', 'yes');
+cfg.numcomponent = ft_getopt(cfg, 'numcomponent', 3);
+cfg.channel      = ft_getopt(cfg, 'channel', 'all');
+cfg.refchannel   = ft_getopt(cfg, 'channel', 'MEG');
+
+if numel(varargin)==1
+  data    = varargin{1};
+  refdata = [];
+elseif numel(varargin) == 2
+  data    = varargin{1};
+  refdata = varargin{2};
+else
+  error('Incorrect number of input arguments.')
+end
 
 % store the original type of the input data
 dtype = ft_datatype(data);
 
 % check if the input data is valid for this function
-% this will convert timelocked input data to a raw data representation if needed
 data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes', 'hassampleinfo', 'yes');
 
 % check whether it is neuromag data
-if ~ft_senstype(data, 'neuromag')
-  ft_error('SSP vectors can only be applied to neuromag data');
+if isempty(refdata) && ~ft_senstype(data, 'neuromag')
+  ft_warning('this function is designed for neuromag data');
 end
 
-% select trials of interest
-tmpcfg = keepfields(cfg, {'trials', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
+% select channels and trials of interest
+tmpcfg = keepfields(cfg, {'channel', 'trials', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
 data   = ft_selectdata(tmpcfg, data);
 % restore the provenance information
 [cfg, data] = rollback_provenance(cfg, data);
 
-% remember the original channel ordering
+if ~isempty(refdata)
+  refdata = ft_checkdata(refdata, 'datatype', 'raw', 'feedback', 'yes', 'hassampleinfo', 'yes');
+  tmpcfg = keepfields(cfg, {'trials', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
+  tmpcfg.channel = cfg.refchannel;
+  refdata   = ft_selectdata(tmpcfg, refdata);
+end
+
+% keep track of the original order of the channels
 labelold = data.label;
 
-% apply the balancing to the MEG data and to the gradiometer definition
-current = data.grad.balance.current;
-desired = cfg.ssp;
+% keep track of the original grad structure
+gradorig = data.grad;
 
-if ~strcmp(current, 'none')
-  % first undo/invert the previously applied balancing
-  try
-    current_montage = data.grad.balance.(current);
-  catch
-    ft_error('unknown balancing for input data');
-  end
-  fprintf('converting the data from "%s" to "none"\n', current);
-  data = ft_apply_montage(data, current_montage, 'keepunused', 'yes', 'inverse', 'yes');
-  if istrue(cfg.updatesens)
-    fprintf('converting the sensor description from "%s" to "none"\n', current);
-    data.grad = ft_apply_montage(data.grad, current_montage, 'keepunused', 'yes', 'inverse', 'yes');
-    data.grad.balance.current = 'none';
-  end
-end % if current
-
-if ~strcmp(desired, 'none')
-  % then apply the desired balancing
-  if strcmp(desired, 'all')
-    desireds = fieldnames(data.grad.balance);
-  else
-      desireds = cfg.ssp;
-    if ~iscell(desireds)
-        ft_error('cfg.ssp must be a cell array of projector names')
+if ~isempty(refdata)
+  ft_info('computing the "ssp" projector\n');
+  % compute numcomponent principal components in the reference data
+  [coeff,dum,dum,dum,dum] = pca(cell2mat(refdata.trial)','NumComponents',cfg.numcomponent);
+  % compute projector and define montage
+  data.grad.balance.ssp.tra = eye(size(coeff,1))-coeff*transpose(coeff);
+  data.grad.balance.ssp.labelold = refdata.label;
+  data.grad.balance.ssp.labelnew = refdata.label;
+  if ~isempty(cfg.ssp)
+    if isequal(cfg.ssp, 'all')
+      cfg.ssp = {'ssp'};
+    elseif isequal(cfg.ssp, 'ssp')
+      cfg.ssp = {'ssp'};
+    else
+      ft_error('incorrect specification of cfg.ssp');
     end
+  end
+end
 
+% first undo/invert the previously applied balancing
+while ~isempty(data.grad.balance.current)
+  this_name    = data.grad.balance.current{end};
+  this_montage = ft_inverse_montage(data.grad.balance.(this_name));
+  fprintf('reverting the "%s" projection\n', this_name);
+  data      = ft_apply_montage(data,      this_montage, 'keepunused', 'yes');
+  data.grad = ft_apply_montage(data.grad, this_montage, 'keepunused', 'no');
+  data.grad.balance.current = data.grad.balance.current(1:end-1); % remove this from the list
+
+  if strcmp(this_name, 'planar')
+    if isfield(data.grad, 'type') && ~isempty(strfind(data.grad.type, '_planar'))
+      % remove the _planar postfix from the MEG sensor type
+      data.grad.type = sens.type(1:(end-7));
+    end
   end
-  for desired_index = 1:length(desireds)
-    desired = desireds{desired_index};
-    if ~strcmp(desired, 'current')
-      try
-        desired_montage = data.grad.balance.(desired);
-      catch
-        ft_error('unknown balancing for input data');
-      end
-      fprintf('converting the data from "none" to "%s"\n', desired);
-      data = ft_apply_montage(data, desired_montage, 'keepunused', 'yes', 'balancename', desired);
-      if istrue(cfg.updatesens)
-        fprintf('converting the sensor description from "none" to "%s"\n', desired);
-        data.grad = ft_apply_montage(data.grad, desired_montage, 'keepunused', 'yes', 'balancename', desired);
-      end
-    end % if desired
-  end
+end
+
+if isequal(cfg.ssp, 'all')
+  cfg.ssp = setdiff(fieldnames(data.grad.balance), {'current'});
+elseif isequal(cfg.ssp, 'none')
+  cfg.ssp = {};
+end
+
+% then apply the desired balancing
+desired = cfg.ssp;
+for i=1:numel(desired)
+  this_name    = desired{i};
+  this_montage = data.grad.balance.(this_name);
+  fprintf('applying the "%s" projection\n', this_name);
+  data      = ft_apply_montage(data,      this_montage, 'keepunused', 'yes');
+  data.grad = ft_apply_montage(data.grad, this_montage, 'keepunused', 'no');
+  data.grad.balance.current{end+1} = this_name;
 end
 
 % reorder the channels to stay close to the original ordering
@@ -151,6 +192,11 @@ else
   ft_warning('channel ordering might have changed');
 end
 
+if ~istrue(cfg.updatesens)
+  % revert to the original gradiometer definition
+  data.grad = gradorig;
+end
+
 % convert back to input type if necessary
 switch dtype
   case 'timelock'
@@ -161,7 +207,6 @@ end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
-
 ft_postamble previous   data
 ft_postamble provenance data
 ft_postamble history    data

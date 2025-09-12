@@ -658,13 +658,14 @@ else
 end % if hasdata
 
 if strcmp(cfg.updatesens, 'yes')
-  % updating the sensor descriptions can be done on basis of the montage or the rereference settings
+  % this can be done on basis of the montage or the rereference settings
   if ~isempty(cfg.montage) && ~isequal(cfg.montage, 'no')
     montage = cfg.montage;
   elseif strcmp(cfg.reref, 'yes')
     if strcmp(cfg.refmethod, 'bipolar') || strcmp(cfg.refmethod, 'avg') || strcmp(cfg.refmethod, 'laplace')
       tmpcfg = keepfields(cfg, {'refmethod', 'implicitref', 'refchannel', 'channel', 'groupchans'});
-      tmpcfg.showcallinfo = 'no';
+      tmpcfg.trackcallinfo = 'no';
+      tmpcfg.trackdatainfo = 'no';
       montage = ft_prepare_montage(tmpcfg, data);
     else
       % do not update the sensor description
@@ -677,23 +678,24 @@ if strcmp(cfg.updatesens, 'yes')
 
   if ~isempty(montage)
     % apply the linear projection also to the sensor description
+    % it has already been applied to the data itself in private/preproc
     if issubfield(montage, 'type')
       bname = montage.type;
     else
       bname = 'preproc';
     end
-    if isfield(dataout, 'grad')
-      ft_info('applying the montage to the grad structure\n');
-      dataout.grad = ft_apply_montage(dataout.grad, montage, 'feedback', 'none', 'keepunused', 'no', 'balancename', bname);
-    end
-    if isfield(dataout, 'elec')
-      ft_info('applying the montage to the elec structure\n');
-      dataout.elec = ft_apply_montage(dataout.elec, montage, 'feedback', 'none', 'keepunused', 'no', 'balancename', bname);
-    end
-    if isfield(dataout, 'opto')
-      ft_info('applying the montage to the opto structure\n');
-      dataout.opto = ft_apply_montage(dataout.opto, montage, 'feedback', 'none', 'keepunused', 'no', 'balancename', bname);
-    end
+
+    sensfield = {'elec', 'grad', 'opto'};
+    for m = 1:numel(sensfield)
+      if isfield(dataout, sensfield{m})
+        sens = fixbalance(dataout.(sensfield{m})); % ensure that the balancing representation is up to date
+        ft_info('applying the montage to the %s structure\n', sensfield{m});
+        sens = ft_apply_montage(sens, montage, 'feedback', 'none', 'keepunused', 'no');
+        sens.balance.(bname) = montage;
+        sens.balance.current{end+1} = bname;
+        dataout.(sensfield{m}) = sens;
+      end
+    end % for elec, grad and opto
   end
 end % if updatesens
 

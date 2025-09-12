@@ -384,11 +384,16 @@ montage.labelold = label_in{1};
 data_vc = ft_apply_montage(data, montage, 'feedback', 'none');
 
 % apply the montage to the sensor description
-sensfields = {'grad' 'elec' 'opto'};
-for k = 1:numel(sensfields)
-  if isfield(data_vc, sensfields{k})
-    ft_info(sprintf('applying the montage to the %s structure\n', sensfields{k}));
-    data_vc.(sensfields{k}) = ft_apply_montage(data.(sensfields{k}), montage, 'feedback', 'none', 'keepunused', 'yes', 'balancename', bname);
+sensfield = {'elec', 'grad', 'opto'};
+for k = 1:numel(sensfield)
+  if isfield(data_vc, sensfield{k})
+    sens = fixbalance(data_vc.(sensfield{k})); % ensure that the balancing representation is up to date
+    ft_info(sprintf('applying the montage to the %s structure\n', sensfield{k}));
+    sens = ft_apply_montage(data.(sensfield{k}), montage, 'feedback', 'none', 'keepunused', 'yes');
+    sens = fixbalance(sens); % ensure that the balancing representation is up to date
+    sens.balance.(bname) = montage;
+    sens.balance.current{end+1} = bname;
+    data_vc.(sensfield{k}) = sens;
   end
 end
 

@@ -36,7 +36,7 @@ function [montage, cfg] = ft_prepare_montage(cfg, data)
 %
 % See also FT_PREPROCESSING, FT_APPLY_MONTAGE
 
-% Copyright (C) 2017-2022, Robert Oostenveld
+% Copyright (C) 2017-2025, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.

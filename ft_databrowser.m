@@ -1833,7 +1833,7 @@ opt.curdata.trial{1}   = dat;
 opt.curdata.hdr        = opt.hdr;
 opt.curdata.fsample    = opt.fsample;
 opt.curdata.sampleinfo = [begsample endsample];
-opt.curdata = copyfields(opt.orgdata, opt.curdata, {'grad', 'elec', 'opto'});
+opt.curdata = copyfields(opt.orgdata, opt.curdata, {'elec', 'grad', 'opto'});
 % remove the local copy of the data fields
 clear lab tim dat
 

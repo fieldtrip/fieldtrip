@@ -16,13 +16,16 @@ function [dataout] = ft_denoise_prewhiten(cfg, datain, noise)
 %   cfg.split       = cell-array of channel types between which covariance is split, it can also be 'all' or 'no'
 %   cfg.lambda      = scalar, or string, regularization parameter for the inverse
 %   cfg.kappa       = scalar, truncation parameter for the inverse
+%   cfg.updatesens  = 'no' or 'yes' (default = 'yes')
 %
 % The channel selection relates to the channels that are pre-whitened using the same
 % selection of channels in the noise covariance. All channels present in the input
 % data structure will be present in the output, including trigger and other auxiliary
 % channels.
 %
-% See also FT_DENOISE_SYNTHETIC, FT_DENOISE_PCA, FT_DENOISE_DSSP, FT_DENOISE_TSP
+% See also FT_PREPROCESSING, FT_DENOISE_AMM, FT_DENOISE_DSSP,
+% FT_DENOISE_HFC, FT_DENOISE_PCA, FT_DENOISE_SSP, FT_DENOISE_SSS,
+% FT_DENOISE_SYNTHETIC, FT_DENOISE_TSR
 
 % Copyright (C) 2018-2019, Robert Oostenveld and Jan-Mathijs Schoffelen
 %
@@ -74,18 +77,19 @@ noise  = ft_checkdata(noise,  'datatype', {      'timelock' 'freq'}, 'haschantyp
 cfg = ft_checkconfig(cfg, 'forbidden',  {'channels'}); % prevent accidental typos, see issue 1729
 
 % set the defaults
-cfg.channel   = ft_getopt(cfg, 'channel', 'all');
-cfg.split     = ft_getopt(cfg, 'split',   'all');
-cfg.lambda    = ft_getopt(cfg, 'lambda',  0);
-cfg.kappa     = ft_getopt(cfg, 'kappa',   []);
-cfg.tol       = ft_getopt(cfg, 'tol',     []);
-cfg.realflag  = ft_getopt(cfg, 'realflag', true); % for complex-valued crsspctrm
-cfg.invmethod = ft_getopt(cfg, 'invmethod', 'tikhonov');
+cfg.channel    = ft_getopt(cfg, 'channel', 'all');
+cfg.split      = ft_getopt(cfg, 'split',   'all');
+cfg.lambda     = ft_getopt(cfg, 'lambda',  0);
+cfg.kappa      = ft_getopt(cfg, 'kappa',   []);
+cfg.tol        = ft_getopt(cfg, 'tol',     []);
+cfg.realflag   = ft_getopt(cfg, 'realflag', true); % for complex-valued crsspctrm
+cfg.invmethod  = ft_getopt(cfg, 'invmethod', 'tikhonov');
+cfg.updatesens = ft_getopt(cfg, 'updatesens', 'yes');
 
-dtype_datain = ft_datatype(datain);
+dtype = ft_datatype(datain);
 
 % check for allowed input combinations
-switch dtype_datain
+switch dtype
   case 'raw'
     assert(ft_datatype(noise, 'timelock'), 'noise data should be of datatype ''timelock''');
   case 'timelock'
@@ -93,7 +97,7 @@ switch dtype_datain
   case 'freq'
     if ft_datatype(noise, 'freq')
       % this is only allowed if both structures have the same singleton frequency
-      assert(numel(noise.freq)==1 && numel(datain.freq)==1 && isequal(noise.freq,datain.freq), ...
+      assert(isscalar(noise.freq) && isscalar(datain.freq) && isequal(noise.freq,datain.freq), ...
         'with both datain and noise of datatype ''freq'', only singleton and equal frequency bins are allowed');
     elseif ft_datatype(noise, 'timelock')
       % this is OK
@@ -182,22 +186,26 @@ prewhiten.chanunitold = noise.chanunit;
 prewhiten.chanunitnew = repmat({'snr'}, size(noise.chantype));
 
 % apply the projection to the data
-dataout = ft_apply_montage(removefields(datain, {'grad', 'elec', 'opto'}), prewhiten, 'keepunused', 'yes');
+dataout = ft_apply_montage(removefields(datain, {'elec', 'grad', 'opto'}), prewhiten, 'keepunused', 'yes');
 
-if hasgrad
-  % the gradiometer structure needs to be updated to ensure that the forward model remains consistent with the data
-  dataout.grad = ft_apply_montage(datain.grad, prewhiten, 'balancename', 'prewhiten');
-end
+sensfield = {'elec', 'grad', 'opto'};
+% these need to be updated to ensure that the forward model remains consistent with the data
+for m = 1:numel(sensfield)
+  if isfield(datain, sensfield{m})
+    sens = fixbalance(datain.(sensfield{m})); % ensure that the balancing representation is up to date
+    if strcmp(cfg.updatesens, 'yes')
+      ft_info('also applying the prewhitening to the %s structure\n', sensfield{m});
+      sens = ft_apply_montage(sens, prewhiten);
+      sens.balance.prewhiten = prewhiten;
+      sens.balance.current{end+1} = 'prewhiten'; % keep track of the projection that was applied
+    else
+      ft_info('not applying the prewhitening to the %s structure\n', sensfield{m});
+    end
 
-if haselec
-  % the electrode structure needs to be updated to ensure that the forward model remains consistent
-  dataout.elec = ft_apply_montage(datain.elec, prewhiten, 'balancename', 'prewhiten');
-end
-
-if hasopto
-  % the electrode structure needs to be updated to ensure that the forward model remains consistent
-  dataout.opto = ft_apply_montage(datain.opto, prewhiten, 'balancename', 'prewhiten');
-end
+    % add the potentially updated sensor definition back
+    dataout.(sensfield{m}) = sens;
+  end % if updatesens
+end % for elec, grad and opto
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug

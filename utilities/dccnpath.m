@@ -182,13 +182,13 @@ else
 
   % public data are downloaded from https://download.fieldtriptoolbox.org
   % so, we need to find the right path to the HTTPS download server
-  pattern = 'ftp(.*)';
-  datadir = regexp(alternative0, pattern, 'tokens', 'once');
-  if iscell(datadir)
-    datadir = datadir{1};
+  prefix = '/project/3031000.02/external/download';
+  datadir = alternative0((length(prefix)+1):end);
+  if ~startsWith(datadir, '/')
+    weblocation = ['https://download.fieldtriptoolbox.org/' datadir];
+  else
+    weblocation = ['https://download.fieldtriptoolbox.org' datadir];
   end
-  weblocation = strcat('https://download.fieldtriptoolbox.org', datadir);
-  weblocation = strrep(weblocation, '\', '/');
 
   urlContent = webread(weblocation, weboptions('ContentType', 'text'));
 

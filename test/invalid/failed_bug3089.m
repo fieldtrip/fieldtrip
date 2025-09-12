@@ -84,13 +84,12 @@ else
   for i=1:length(montage.labelnew)
     montage.tra(i,:) = montage.tra(i,:) - ones(1,length(montage.labelold))/length(montage.labelold);
   end
-  data_all      = ft_apply_montage(data_clean, montage, 'keepunused', true, 'balancename', 'avgref');
+  data_all = ft_apply_montage(data_clean, montage, 'keepunused', true);
 
   % apply the montage to the electrode definition
   elec = data_clean.elec;
   elec.tra = eye(length(elec.label));
-  elec.balance.current = 'none';
-  elec = ft_apply_montage(elec, montage, 'keepunused', true, 'balancename', 'avgref');
+  elec = ft_apply_montage(elec, montage, 'keepunused', true);
 
   % keep it with the data
   data_all.elec = elec;

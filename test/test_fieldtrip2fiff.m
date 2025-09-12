@@ -256,7 +256,7 @@ for k = 1:numel(savename)
   data    = ft_struct2single(data);
   datafif = ft_struct2single(datafif);
 
-  [ix,msg] = isalmostequal(rmfield(data,{'cfg' 'hdr' 'grad'}),rmfield(datafif,{'cfg' 'hdr' 'grad'}), 'reltol', 1e-4);
+  [ix,msg] = isalmostequal(rmfield(data,{'cfg' 'hdr' 'grad'}), rmfield(datafif,{'cfg' 'hdr' 'grad'}), 'reltol', 1e-4);
   M(k).msg = msg;
 
   if ~skipgrad

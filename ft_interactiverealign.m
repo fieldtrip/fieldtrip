@@ -220,7 +220,7 @@ if ~isempty(template.headshape)
 end
 
 % convert the coordinates of all geometrical objects into mm
-fn = {'elec', 'grad', 'headmodel', 'headshape', 'mesh', 'mri'};
+fn = {'elec', 'grad', 'opto', 'headmodel', 'headshape', 'mesh', 'mri'};
 hasindividual = false(size(fn));
 originalunit = cell(size(fn));
 for i=1:length(fn)
