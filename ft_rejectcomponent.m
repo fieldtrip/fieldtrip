@@ -204,9 +204,17 @@ for m = 1:numel(sensfield)
 
       % remove the unused channels from the grad/elec/opto
       [junk, remove]    = match_str(comp.label, sens.label);
-      sens.tra(remove,:) = [];
       sens.label(remove) = [];
-      sens.chanpos(remove,:) = [];
+      sens.tra(remove,:) = [];
+      if isfield(sens, 'chantype')
+        sens.chantype(remove) = [];
+      end
+      if isfield(sens, 'chanunit')
+        sens.chanunit(remove) = [];
+      end
+      if isfield(sens, 'chanpos')
+        sens.chanpos(remove,:) = [];
+      end
       if isfield(sens, 'chanori')
         sens.chanori(remove,:) = [];
       end
@@ -215,6 +223,12 @@ for m = 1:numel(sensfield)
       [junk, remove]    = match_str(comp.label, sens.balance.(bname).labelnew);
       sens.balance.(bname).tra(remove, :)   = [];
       sens.balance.(bname).labelnew(remove) = [];
+      if isfield(sens.balance.(bname), 'chantypenew')
+        sens.balance.(bname).chantypenew(remove) = [];
+      end
+      if isfield(sens.balance.(bname), 'chanunitnew')
+        sens.balance.(bname).chanunitnew(remove) = [];
+      end
 
     else
       ft_info('not applying the backprojection matrix to the %s structure\n', sensfield{m});

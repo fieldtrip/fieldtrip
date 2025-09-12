@@ -922,10 +922,12 @@ end
 comp.topolabel = data.label(:);
 
 % construct a montage and apply it to the sensor description
-montage          = [];
-montage.labelold = data.label;
-montage.labelnew = comp.label;
-montage.tra      = unmixing;
+montage             = [];
+montage.labelold    = data.label;
+montage.labelnew    = comp.label;
+montage.tra         = unmixing;
+montage.chantypeold = ft_chantype(data);
+montage.chanunitold = ft_chanunit(data);
 
 sensfield = {'elec', 'grad', 'opto'};
 for m = 1:numel(sensfield)
