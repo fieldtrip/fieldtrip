@@ -184,8 +184,11 @@ else
   % so, we need to find the right path to the HTTPS download server
   prefix = '/project/3031000.02/external/download';
   datadir = alternative0((length(prefix)+1):end);
-  weblocation = strcat('https://download.fieldtriptoolbox.org', datadir);
-  weblocation = strrep(weblocation, '\', '/');
+  if ~startsWith(datadir, '/')
+    weblocation = ['https://download.fieldtriptoolbox.org/' datadir];
+  else
+    weblocation = ['https://download.fieldtriptoolbox.org' datadir];
+  end
 
   urlContent = webread(weblocation, weboptions('ContentType', 'text'));
 
