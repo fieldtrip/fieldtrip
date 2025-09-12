@@ -139,30 +139,30 @@ end
 if hasdata
   mixing   = comp.topo(selcomp, :);
   unmixing = comp.unmixing(:, selcomp);
-  
+
   % I am not sure about this, but it gives comparable results to the ~hasdata case
   % when comp contains non-orthogonal (=ica) topographies, and contains a complete decomposition
-  
+
   montage     = [];
   montage.tra = eye(length(selcomp)) - mixing(:, reject)*unmixing(reject, :);
   % we are going from data to components, and back again
   montage.labelold = comp.topolabel(selcomp);
   montage.labelnew = comp.topolabel(selcomp);
-  
+
   keepunused = 'yes'; % keep the original data which are not present in the mixing provided
-  
+
 else
   mixing = comp.topo(selcomp, :);
   mixing(:, reject) = 0;
-  
+
   montage     = [];
   montage.tra = mixing;
   % we are going from components to data
   montage.labelold = comp.label;
   montage.labelnew = comp.topolabel(selcomp);
-  
+
   keepunused = 'no'; % don't need to keep the original rejected components
-  
+
   % create the initial data structure, remove all component details
   data = keepfields(comp, {'trial', 'time', 'label', 'fsample', 'grad', 'elec', 'opto', 'trialinfo', 'sampleinfo'});
 end % if hasdata
@@ -173,7 +173,7 @@ data = ft_apply_montage(data, montage, 'keepunused', keepunused, 'feedback', cfg
 sensfield = {'elec', 'grad', 'opto'};
 for m = 1:numel(sensfield)
   if isfield(data, sensfield{m})
-    sens = fixbalance(data.(sensfield{m})); % ensure that the balancing representation is up to date 
+    sens = fixbalance(data.(sensfield{m})); % ensure that the balancing representation is up to date
     if strcmp(cfg.updatesens, 'yes')
       ft_info('also applying the backprojection matrix to the %s structure\n', sensfield{m});
 
