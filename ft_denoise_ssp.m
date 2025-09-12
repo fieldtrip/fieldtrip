@@ -131,7 +131,7 @@ gradorig = data.grad;
 if ~isempty(refdata)
   ft_info('computing the "ssp" projector\n');
   % compute numcomponent principal components in the reference data
-  [coeff,~,~,~,~] = pca(cell2mat(refdata.trial)','NumComponents',cfg.numcomponent);
+  [coeff,dum,dum,dum,dum] = pca(cell2mat(refdata.trial)','NumComponents',cfg.numcomponent);
   % compute projector and define montage
   data.grad.balance.ssp.tra = eye(size(coeff,1))-coeff*transpose(coeff);
   data.grad.balance.ssp.labelold = refdata.label;

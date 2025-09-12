@@ -134,38 +134,38 @@ else
   % select trials of interest
   tmpcfg  = keepfields(cfg, {'trials', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
   if length(varargin)==1
-  % channel data and reference channel data are in 1 data structure
+    % channel data and reference channel data are in 1 data structure
     megchan = ft_channelselection(cfg.channel,    varargin{1}.label);
     refchan = ft_channelselection(cfg.refchannel, varargin{1}.label);
-      
+
     tmpcfg.channel = refchan;
     refdata        = ft_selectdata(tmpcfg, varargin{1});
     [dum,refdata]  = rollback_provenance(cfg, refdata);
     tmpcfg.channel = megchan;
     data           = ft_selectdata(tmpcfg, varargin{1});
     [cfg, data]    = rollback_provenance(cfg, data);
-  
+
   elseif length(varargin)==2
     % channel data and reference channel data are in 2 data structures
     megchan = ft_channelselection(cfg.channel,    varargin{1}.label);
     refchan = ft_channelselection(cfg.refchannel, varargin{2}.label);
-    
+
     % throw a warning if some of the specified reference channels are also in the first data argument
     if ~isempty(ft_channelselection(cfg.refchannel, varargin{1}.label))
       ft_warning('some of the specified reference channels are also present in the first data argument, this information will not be used for the cleaning of the data');
     end
-    
+
     tmpcfg.channel = refchan;
     refdata        = ft_selectdata(tmpcfg, varargin{2});
     [dum, refdata] = rollback_provenance(cfg, refdata);
     tmpcfg.channel = megchan;
     data           = ft_selectdata(tmpcfg, varargin{1});
     [cfg, data]    = rollback_provenance(cfg, data);
-    
+
   else
     error('Incorrect number of input arguments.')
   end
-  
+
   refchan = ft_channelselection(cfg.refchannel, refdata.label, ft_senstype(refdata));
   refindx = match_str(refdata.label, refchan);
   megchan = ft_channelselection(cfg.channel, data.label, ft_senstype(data));
@@ -269,57 +269,52 @@ else
   m          = cellmean(data.trial, 2);
   data.trial = cellvecadd(data.trial, -m);
 
-  if isfield(data, 'grad')
-    sensfield = 'grad';
-  elseif isfield(data, 'elec')
-    sensfield = 'elec';
-  elseif isfield(data, 'opto')
-    sensfield = 'opto';
-  else
-    sensfield = [];
-  end
+  sensfield = {'elec', 'grad', 'opto'};
+  for m = 1:numel(sensfield)
+    if isfield(data, sensfield{m})
+      if strcmp(cfg.updatesens, 'yes')
+        ft_info('also applying the weights to the %s structure\n', sensfield{m});
 
-  % apply the linear projection also to the sensor description
-  if ~isempty(sensfield)
-    if  strcmp(cfg.updatesens, 'yes')
-      fprintf('also applying the weights to the %s structure\n', sensfield);
+        montage     = [];
+        labelnew    = pca.label;
 
-      montage     = [];
-      labelnew    = pca.label;
+        % add columns of refchannels not yet present in labelnew
+        % [id, i1]  = setdiff(pca.reflabel, labelnew);
+        % labelold  = [labelnew; pca.reflabel(sort(i1))];
+        labelold  = data.grad.label;
+        nlabelold = length(labelold);
 
-      % add columns of refchannels not yet present in labelnew
-      % [id, i1]  = setdiff(pca.reflabel, labelnew);
-      % labelold  = [labelnew; pca.reflabel(sort(i1))];
-      labelold  = data.grad.label;
-      nlabelold = length(labelold);
+        % start with identity
+        montage.tra = eye(nlabelold);
 
-      % start with identity
-      montage.tra = eye(nlabelold);
+        % subtract weights
+        [i1, i2]  = match_str(labelold, pca.reflabel);
+        [i3, i4]  = match_str(labelold, pca.label);
+        montage.tra(i3,i1) = montage.tra(i3,i1) - pca.w(i4,i2);
+        montage.labelold  = labelold;
+        montage.labelnew  = labelold;
 
-      % subtract weights
-      [i1, i2]  = match_str(labelold, pca.reflabel);
-      [i3, i4]  = match_str(labelold, pca.label);
-      montage.tra(i3,i1) = montage.tra(i3,i1) - pca.w(i4,i2);
-      montage.labelold  = labelold;
-      montage.labelnew  = labelold;
+        sens = ft_apply_montage(data.(sensfield{m}), montage, 'keepunused', 'yes');
+        sens = fixbalance(sens); % ensure that the balancing representation is up to date
+        sens.balance.pca = montage;
+        sens.balance.current{end+1} = 'pca'; % keep track of the projection that was applied
 
-      data.(sensfield) = ft_apply_montage(data.(sensfield), montage, 'keepunused', 'yes');
-      data.(sensfield).balance.pca = montage;
-      data.(sensfield).balance.current{end+1} = 'pca'; % keep track of the projection that was applied
+        % order the fields
+        fnames = fieldnames(sens.balance);
+        tmp    = false(1,numel(fnames));
+        for k = 1:numel(fnames)
+          tmp(k) = isstruct(sens.balance.(fnames{k}));
+        end
+        [tmp, ix] = sort(tmp, 'descend');
+        sens.balance = orderfields(sens.balance, fnames(ix));
 
-      % order the fields
-      fnames = fieldnames(data.(sensfield).balance);
-      tmp    = false(1,numel(fnames));
-      for k = 1:numel(fnames)
-        tmp(k) = isstruct(data.(sensfield).balance.(fnames{k}));
-      end
-      [tmp, ix] = sort(tmp, 'descend');
-      data.grad.balance = orderfields(data.(sensfield).balance, fnames(ix));
+        data.(sensfield{m}) = sens;
 
-    else
-      fprintf('not applying the weights to the %s structure\n', sensfield);
+      else
+        fprintf('not applying the weights to the %s structure\n', sensfield{m});
+      end % if updatesens
     end
-  end % if sensfield
+  end % for elec, grad and opto
 
 end % if pertrial
 

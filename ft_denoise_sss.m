@@ -122,6 +122,7 @@ if istrue(cfg.updatesens)
   montage.labelold = S.labelold;
   montage.labelnew = S.labelnew;
   datain.grad = ft_apply_montage(datain.grad, montage, 'keepunused', 'yes');
+  datain.grad = fixbalance(datain.grad); % ensure that the balancing representation is up to date
   datain.grad.balance.sss = montage;
   datain.grad.balance.current{end+1} = 'sss'; % keep track of the projection that was applied
 end

@@ -134,6 +134,7 @@ ft_info('Applied HFC to the data');
 % Update the tra, it is essential to correct the leadfields going forward
 if istrue(cfg.updatesens)
   data.grad = ft_apply_montage(data.grad, montage, 'keepunused', 'yes', 'warning', false);
+  data.grad = fixbalance(data.grad); % ensure that the balancing representation is up to date
   data.grad.balance.hfc = montage;
   data.grad.balance.current{end+1} = 'hfc'; % keep track of the projection that was applied
   ft_info('Converted the sensor description to HFC');

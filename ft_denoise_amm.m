@@ -126,6 +126,7 @@ if istrue(cfg.updatesens)
   montage.labelold = S.labelold;
   montage.labelnew = S.labelnew;
   datain.grad = ft_apply_montage(datain.grad, montage, 'keepunused', 'yes');
+  datain.grad = fixbalance(datain.grad); % ensure that the balancing representation is up to date
   datain.grad.balance.amm = montage;
   datain.grad.balance.current{end+1} = 'amm'; % keep track of the projection that was applied
 end
@@ -311,6 +312,7 @@ if nargout>1
   varargout{2} = ft_apply_montage(data, montage, 'keepunused', 'no');
   if istrue(options.updatesens)
     varargout{2}.grad = ft_apply_montage(data.grad, montage, 'keepunused', 'yes');
+    varargout{2}.grad = fixbalance(varargout{2}.grad); % ensure that the balancing representation is up to date
     varargout{2}.grad.balance.amm = montage;
     varargout{2}.grad.balance.current{end+1} = 'amm'; % keep track of the projection that was applied
   end
@@ -318,6 +320,7 @@ if nargout>1
   varargout{3} = ft_apply_montage(data, montage, 'keepunused', 'no');
   if istrue(options.updatesens)
     varargout{3}.grad = ft_apply_montage(data.grad, montage, 'keepunused', 'yes');
+    varargout{3}.grad = fixbalance(varargout{3}.grad); % ensure that the balancing representation is up to date
     varargout{3}.grad.balance.amm = montage;
     varargout{3}.grad.balance.current{end+1} = 'amm'; % keep track of the projection that was applied
   end
