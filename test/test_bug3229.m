@@ -51,7 +51,7 @@ for i=1:5
   data.trial{i} = randn(4,1000);
   data.time{i}  = (1:1000)/1000;
 end
-data.elec = elec;
+data.elec = fixbalance(elec);
 data = ft_checkdata(data);
 
 %%
