@@ -49,7 +49,7 @@ function [input] = ft_apply_montage(input, montage, varargin)
 % removed with https://github.com/fieldtrip/fieldtrip/pull/2529 in favour
 % of a more explicit construction of the inverse and of the bookkeeping.
 
-% Copyright (C) 2008-2024, Robert Oostenveld
+% Copyright (C) 2008-2025, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -86,6 +86,14 @@ keepunused    = ft_getopt(varargin, 'keepunused',  'no');
 feedback      = ft_getopt(varargin, 'feedback',    'text');
 showwarning   = ft_getopt(varargin, 'warning',     true);
 
+% warn users about backward incompatible changes
+if any(strcmp(varargin(1:2:end), 'inverse'))
+  error('the option "inverse" is not supported any more, see FT_INVERSE_MONTAGE');
+end
+if any(strcmp(varargin(1:2:end), 'montagename'))
+  error('the option "montagename" is not supported any more');
+end
+
 if istrue(showwarning)
   warningfun = @warning;
 else
@@ -97,14 +105,13 @@ assert(length(unique(montage.labelold))==length(montage.labelold), 'the montage 
 assert(length(unique(montage.labelnew))==length(montage.labelnew), 'the montage is invalid');
 
 % these are optional, at the end we will clean up the output in case they did not exist
-haschantype = (isfield(input, 'chantype') || isfield(input, 'chantypenew')) && all(isfield(montage, {'chantypeold', 'chantypenew'}));
-haschanunit = (isfield(input, 'chanunit') || isfield(input, 'chanunitnew')) && all(isfield(montage, {'chanunitold', 'chanunitnew'}));
+haschantype = isfield(input, 'chantype');
+haschanunit = isfield(input, 'chanunit');
 
 % make sure they always exist to facilitate the remainder of the code
 if ~isfield(montage, 'chantypeold')
   montage.chantypeold = repmat({'unknown'}, size(montage.labelold));
   if isfield(input, 'chantype')
-    ft_warning('copying input chantype to montage');
     [sel1, sel2] = match_str(montage.labelold, input.label);
     montage.chantypeold(sel1) = input.chantype(sel2);
   end
@@ -112,12 +119,15 @@ end
 
 if ~isfield(montage, 'chantypenew')
   montage.chantypenew = repmat({'unknown'}, size(montage.labelnew));
+  if isfield(input, 'chantype')
+    [sel1, sel2] = match_str(montage.labelnew, input.label);
+    montage.chantypenew(sel1) = input.chantype(sel2);
+  end
 end
 
 if ~isfield(montage, 'chanunitold')
   montage.chanunitold = repmat({'unknown'}, size(montage.labelold));
   if isfield(input, 'chanunit')
-    ft_warning('copying input chanunit to montage');
     [sel1, sel2] = match_str(montage.labelold, input.label);
     montage.chanunitold(sel1) = input.chanunit(sel2);
   end
@@ -125,6 +135,10 @@ end
 
 if ~isfield(montage, 'chanunitnew')
   montage.chanunitnew = repmat({'unknown'}, size(montage.labelnew));
+  if isfield(input, 'chanunit')
+    [sel1, sel2] = match_str(montage.labelnew, input.label);
+    montage.chanunitnew(sel1) = input.chanunit(sel2);
+  end
 end
 
 if ~isfield(input, 'label') && isfield(input, 'labelnew')
