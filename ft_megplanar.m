@@ -212,6 +212,7 @@ if strcmp(cfg.planarmethod, 'sourceproject')
 
   % also apply the linear transformation to the gradiometer definition
   interp.grad = ft_apply_montage(data.grad, planarmontage, 'keepunused', 'yes');
+  interp.grad = fixbalance(interp.grad); % ensure that the balancing representation is up to date
   interp.grad.balance.planar = planarmontage;
   interp.grad.balance.current{end+1} = 'planar'; % keep track of the projection that was applied
 
@@ -309,6 +310,7 @@ else
 
   % also apply the linear transformation to the gradiometer definition
   interp.grad = ft_apply_montage(sens, planarmontage, 'keepunused', 'yes');
+  interp.grad = fixbalance(interp.grad); % ensure that the balancing representation is up to date
   interp.grad.balance.planar = planarmontage;
   interp.grad.balance.current{end+1} = 'planar'; % keep track of the projection that was applied
 

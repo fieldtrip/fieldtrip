@@ -75,6 +75,8 @@ cfg = [];
 cfg.method = 'pca';
 cfg.updatesens = 'yes';
 comp = ft_componentanalysis(cfg, data);
+
+assert(strcmp(comp.elec.balance.current{end}, 'comp'));
 assert(~isequal(comp.elec, data.elec));
 
 cfg = [];
@@ -82,7 +84,7 @@ cfg.component = []; % keep all
 cfg.updatesens = 'yes';
 backproject = ft_rejectcomponent(cfg, comp);
 
-assert(strcmp(backproject.elec.balance.current, 'invcomp'));
+assert(strcmp(backproject.elec.balance.current{end}, 'invcomp'));
 assert(isalmostequal(backproject.elec.tra, eye(4), 'abstol', 1e-9));
 
 cfg = [];
@@ -90,6 +92,6 @@ cfg.component = []; % keep all
 cfg.updatesens = 'yes';
 cleaned = ft_rejectcomponent(cfg, comp, data);
 
-assert(strcmp(cleaned.elec.balance.current, 'reject'));
+assert(strcmp(cleaned.elec.balance.current{end}, 'reject'));
 assert(isalmostequal(cleaned.elec.tra, eye(4), 'abstol', 1e-9));
 

@@ -185,7 +185,7 @@ switch version
       % In 2025 we switched to grad.balance.current as a single cell-array.
       % Prior to 2025 we had grad.balance.current as a string and
       % grad.balance.previous as a cell-array.
-      sens.balance = fixbalance(sens.balance);
+      sens = fixbalance(sens);
     end
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -574,17 +574,17 @@ descr = {def.description}';
 
 coiltype = nan(numel(grad.label), 1);
 coilkind = nan(numel(grad.label), 1);
-ctype    = grad.chantype;
+ctype    = ft_chantype(grad);
 switch stype
   case 'neuromag122'
     % this can in theory happen, but is not supported yet, FIXME please
     % feel free to add support for this (and the below) when you need it.
     ft_warning('deteced neuromag122 as sensor array, but no original channel info will be used')
+
   case 'neuromag306'
     ft_warning('deteced neuromag306 as sensor array, but no original channel info will be used')
  
   case {'ctf151' 'ctf275'}
-    
     % the MEG gradiometers, hardcoded id from fif definition
     coiltype(strcmp(ctype, 'meggrad')) = 5001;
     coilkind(strcmp(ctype, 'meggrad')) = 1;
@@ -658,8 +658,9 @@ ft_info('creating coiltypes according to sensor type: %s', stype);
 function coilunit = grad2coilunit(grad, FIFF)
 
 coilunit = zeros(numel(grad.label),1)-1;
-for k = 1:numel(grad.chanunit)
-  switch grad.chanunit{k}
+cunit = ft_chanunit(grad);
+for k = 1:numel(cunit)
+  switch cunit{k}
     case 'T'
       coilunit(k) = FIFF.FIFF_UNIT_T;
     case 'T/m'

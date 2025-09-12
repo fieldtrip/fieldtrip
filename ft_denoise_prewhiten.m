@@ -192,18 +192,18 @@ sensfield = {'elec', 'grad', 'opto'};
 % these need to be updated to ensure that the forward model remains consistent with the data
 for m = 1:numel(sensfield)
   if isfield(datain, sensfield{m})
+    sens = fixbalance(datain.(sensfield{m})); % ensure that the balancing representation is up to date
     if strcmp(cfg.updatesens, 'yes')
       ft_info('also applying the prewhitening to the %s structure\n', sensfield{m});
-      sens = ft_apply_montage(datain.grad, prewhiten);
-      sens = fixbalance(sens); % ensure that the balancing representation is up to date
+      sens = ft_apply_montage(sens, prewhiten);
       sens.balance.prewhiten = prewhiten;
       sens.balance.current{end+1} = 'prewhiten'; % keep track of the projection that was applied
-      dataout.(sensfield{m}) = sens;
     else
-      % simply copy it over
       ft_info('not applying the prewhitening to the %s structure\n', sensfield{m});
-      dataout.(sensfield{m}) = datain.(sensfield{m});
     end
+
+    % add the potentially updated sensor definition back
+    dataout.(sensfield{m}) = sens;
   end % if updatesens
 end % for elec, grad and opto
 

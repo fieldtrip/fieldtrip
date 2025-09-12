@@ -170,22 +170,11 @@ end % if hasdata
 % apply the linear projection to the data
 data = ft_apply_montage(data, montage, 'keepunused', keepunused, 'feedback', cfg.feedback, 'showcallinfo', cfg.showcallinfo);
 
-sensfield = cell(0,1);
-if isfield(data, 'grad')
-  sensfield{end+1} = 'grad';
-end
-if isfield(data, 'elec')
-  sensfield{end+1} = 'elec';
-end
-if isfield(data, 'opto')
-  sensfield{end+1} = 'opto';
-end
-
-% apply the linear projection also to the sensor description
-if ~isempty(sensfield)
-  if  strcmp(cfg.updatesens, 'yes')
-
-    for m = 1:numel(sensfield)
+sensfield = {'elec', 'grad', 'opto'};
+for m = 1:numel(sensfield)
+  if isfield(data, sensfield{m})
+    sens = fixbalance(data.(sensfield{m})); % ensure that the balancing representation is up to date 
+    if strcmp(cfg.updatesens, 'yes')
       ft_info('also applying the backprojection matrix to the %s structure\n', sensfield{m});
 
       % the name of the balancing should be unique in the sequence
@@ -196,7 +185,7 @@ if ~isempty(sensfield)
       end
 
       bindx = 1;
-      while isfield(data.(sensfield{m}).balance, bname)
+      while isfield(sens.balance, bname)
         % use a suffix to make the name unique
         if hasdata
           bname = sprintf('reject%d', bindx);
@@ -209,7 +198,7 @@ if ~isempty(sensfield)
       % keepunused = 'yes' is required to get back e.g. reference or otherwise
       % unused sensors in the sensor description. The unused components need to
       % be removed in a second step
-      sens = ft_apply_montage(data.(sensfield{m}), montage, 'keepunused', 'yes', 'feedback', cfg.feedback);
+      sens = ft_apply_montage(sens, montage, 'keepunused', 'yes', 'feedback', cfg.feedback);
       sens.balance.(bname) = montage;
       sens.balance.current(end+1) = {bname};
 
@@ -227,17 +216,14 @@ if ~isempty(sensfield)
       sens.balance.(bname).tra(remove, :)   = [];
       sens.balance.(bname).labelnew(remove) = [];
 
-      data.(sensfield{m}) = sens;
-    end % for grad, elec and opto
-
-  else
-    for m = 1:numel(sensfield)
+    else
       ft_info('not applying the backprojection matrix to the %s structure\n', sensfield{m});
-      % simply copy it over
-      comp.(sensfield{m}) = data.(sensfield{m});
-    end % for grad, elec and opto
-  end % if updatesens
-end % if sensfield
+    end % if updatesens
+
+    % add the potentially updated sensor definition back
+    data.(sensfield{m}) = sens;
+  end
+end % for grad, elec and opto
 
 if istlck
   % convert the raw structure back into a timelock structure

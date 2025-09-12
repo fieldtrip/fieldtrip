@@ -439,7 +439,7 @@ end
 % construct SSP projectors, these can be applied later to the data and grad
 % structure using FT_DENOISE_SSP
 grad.balance = [];
-grad.balance.current = 'none';
+grad.balance.current = {};
 
 for i = 1:length(hdr.projs)
   hdr.projs(i).active = 'true';

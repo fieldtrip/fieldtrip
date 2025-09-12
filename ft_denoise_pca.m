@@ -272,6 +272,7 @@ else
   sensfield = {'elec', 'grad', 'opto'};
   for m = 1:numel(sensfield)
     if isfield(data, sensfield{m})
+      sens = fixbalance(data.(sensfield{m})); % ensure that the balancing representation is up to date
       if strcmp(cfg.updatesens, 'yes')
         ft_info('also applying the weights to the %s structure\n', sensfield{m});
 
@@ -294,7 +295,7 @@ else
         montage.labelold  = labelold;
         montage.labelnew  = labelold;
 
-        sens = ft_apply_montage(data.(sensfield{m}), montage, 'keepunused', 'yes');
+        sens = ft_apply_montage(sens, montage, 'keepunused', 'yes');
         sens = fixbalance(sens); % ensure that the balancing representation is up to date
         sens.balance.pca = montage;
         sens.balance.current{end+1} = 'pca'; % keep track of the projection that was applied
@@ -308,11 +309,12 @@ else
         [tmp, ix] = sort(tmp, 'descend');
         sens.balance = orderfields(sens.balance, fnames(ix));
 
-        data.(sensfield{m}) = sens;
-
       else
         fprintf('not applying the weights to the %s structure\n', sensfield{m});
       end % if updatesens
+  
+      % add the potentially updated sensor definition back
+      data.(sensfield{m}) = sens;
     end
   end % for elec, grad and opto
 

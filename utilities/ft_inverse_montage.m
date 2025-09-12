@@ -28,6 +28,9 @@ function output = ft_inverse_montage(input)
 %
 % $Id$
 
+% ensure up-to-date field names
+input = fixoldorg(input);
+
 % swap the role of the old and new channels
 output.labelnew    = input.labelold;
 output.labelold    = input.labelnew;
