@@ -689,11 +689,13 @@ if strcmp(cfg.updatesens, 'yes')
     for m = 1:numel(sensfield)
       if isfield(dataout, sensfield{m})
         sens = fixbalance(dataout.(sensfield{m})); % ensure that the balancing representation is up to date
-        ft_info('applying the montage to the %s structure\n', sensfield{m});
-        sens = ft_apply_montage(sens, montage, 'feedback', 'none', 'keepunused', 'no');
-        sens.balance.(bname) = montage;
-        sens.balance.current{end+1} = bname;
-        dataout.(sensfield{m}) = sens;
+        if ~isempty(intersect(sens.label, montage.labelold))
+          ft_info('applying the montage to the %s structure\n', sensfield{m});
+          sens = ft_apply_montage(sens, montage, 'feedback', 'none', 'keepunused', 'no');
+          sens.balance.(bname) = montage;
+          sens.balance.current{end+1} = bname;
+          dataout.(sensfield{m}) = sens;
+        end
       end
     end % for elec, grad and opto
   end

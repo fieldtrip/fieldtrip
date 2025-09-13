@@ -16,7 +16,7 @@ function [dataout] = ft_denoise_prewhiten(cfg, datain, noise)
 %   cfg.split       = cell-array of channel types between which covariance is split, it can also be 'all' or 'no'
 %   cfg.lambda      = scalar, or string, regularization parameter for the inverse
 %   cfg.kappa       = scalar, truncation parameter for the inverse
-%   cfg.updatesens  = 'no' or 'yes' (default = 'yes')
+%   cfg.updatesens  = 'yes' or 'no', whether to update the sensor array with the spatial projector (default = 'yes')
 %
 % The channel selection relates to the channels that are pre-whitened using the same
 % selection of channels in the noise covariance. All channels present in the input
@@ -176,27 +176,27 @@ else
   tra      = U(:,sel)*diag(sqrt(diagS(sel)))*U(:,sel)';
 end
 
-prewhiten             = [];
-prewhiten.tra         = tra;
-prewhiten.labelold    = noise.label;
-prewhiten.labelnew    = noise.label;
-prewhiten.chantypeold = noise.chantype;
-prewhiten.chantypenew = noise.chantype;
-prewhiten.chanunitold = noise.chanunit;
-prewhiten.chanunitnew = repmat({'snr'}, size(noise.chantype));
+montage             = [];
+montage.tra         = tra;
+montage.labelold    = noise.label;
+montage.labelnew    = noise.label;
+montage.chantypeold = noise.chantype;
+montage.chantypenew = noise.chantype;
+montage.chanunitold = noise.chanunit;
+montage.chanunitnew = repmat({'snr'}, size(noise.chantype));
 
 % apply the projection to the data
-dataout = ft_apply_montage(removefields(datain, {'elec', 'grad', 'opto'}), prewhiten, 'keepunused', 'yes');
+dataout = ft_apply_montage(removefields(datain, {'elec', 'grad', 'opto'}), montage, 'keepunused', 'yes');
 
 sensfield = {'elec', 'grad', 'opto'};
 % these need to be updated to ensure that the forward model remains consistent with the data
 for m = 1:numel(sensfield)
   if isfield(datain, sensfield{m})
     sens = fixbalance(datain.(sensfield{m})); % ensure that the balancing representation is up to date
-    if strcmp(cfg.updatesens, 'yes')
+    if strcmp(cfg.updatesens, 'yes') && ~isempty(intersect(sens.label, montage.labelold))
       ft_info('also applying the prewhitening to the %s structure\n', sensfield{m});
-      sens = ft_apply_montage(sens, prewhiten);
-      sens.balance.prewhiten = prewhiten;
+      sens = ft_apply_montage(sens, montage);
+      sens.balance.prewhiten = montage;
       sens.balance.current{end+1} = 'prewhiten'; % keep track of the projection that was applied
     else
       ft_info('not applying the prewhitening to the %s structure\n', sensfield{m});

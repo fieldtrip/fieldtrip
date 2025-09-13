@@ -23,10 +23,10 @@ function data = ft_denoise_pca(cfg, varargin)
 %   cfg.channel    = the channels to be denoised (default = 'MEG')
 %   cfg.refchannel = the channels used as reference signal (default = 'MEGREF')
 %   cfg.truncate   = optional truncation of the singular value spectrum (default = 'no')
-%   cfg.zscore     = standardise reference data prior to PCA (default = 'no')
-%   cfg.pertrial   = 'no' (default) or 'yes'. Regress out the references on a per trial basis
+%   cfg.zscore     = standardize reference data prior to PCA (default = 'no')
 %   cfg.trials     = list of trials that are used (default = 'all')
-%   cfg.updatesens = 'no' or 'yes' (default = 'yes')
+%   cfg.pertrial   = 'yes' or 'no', whether to regress out the references on a per-trial basis (default = 'no')
+%   cfg.updatesens = 'yes' or 'no', whether to update the sensor array with the spatial projector (default = 'yes')
 %
 % if cfg.truncate is integer n > 1, n will be the number of singular values kept.
 % if 0 < cfg.truncate < 1, the singular value spectrum will be thresholded at the
@@ -276,41 +276,23 @@ else
       if strcmp(cfg.updatesens, 'yes')
         ft_info('also applying the weights to the %s structure\n', sensfield{m});
 
-        montage     = [];
-        labelnew    = pca.label;
-
-        % add columns of refchannels not yet present in labelnew
-        % [id, i1]  = setdiff(pca.reflabel, labelnew);
-        % labelold  = [labelnew; pca.reflabel(sort(i1))];
-        labelold  = data.grad.label;
-        nlabelold = length(labelold);
-
+        montage = [];
+        montage.labelold = sens.label;
+        montage.labelnew = sens.label;
         % start with identity
-        montage.tra = eye(nlabelold);
-
+        montage.tra = eye(length(sens.label));
         % subtract weights
-        [i1, i2]  = match_str(labelold, pca.reflabel);
-        [i3, i4]  = match_str(labelold, pca.label);
+        [i1, i2]  = match_str(sens.label, pca.reflabel);
+        [i3, i4]  = match_str(sens.label, pca.label);
         montage.tra(i3,i1) = montage.tra(i3,i1) - pca.w(i4,i2);
-        montage.labelold  = labelold;
-        montage.labelnew  = labelold;
 
         sens = ft_apply_montage(sens, montage, 'keepunused', 'yes');
         sens = fixbalance(sens); % ensure that the balancing representation is up to date
         sens.balance.pca = montage;
         sens.balance.current{end+1} = 'pca'; % keep track of the projection that was applied
 
-        % order the fields
-        fnames = fieldnames(sens.balance);
-        tmp    = false(1,numel(fnames));
-        for k = 1:numel(fnames)
-          tmp(k) = isstruct(sens.balance.(fnames{k}));
-        end
-        [tmp, ix] = sort(tmp, 'descend');
-        sens.balance = orderfields(sens.balance, fnames(ix));
-
       else
-        fprintf('not applying the weights to the %s structure\n', sensfield{m});
+        ft_info('not applying the weights to the %s structure\n', sensfield{m});
       end % if updatesens
   
       % add the potentially updated sensor definition back

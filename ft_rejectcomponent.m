@@ -23,7 +23,7 @@ function [data] = ft_rejectcomponent(cfg, comp, data)
 % The configuration structure can contain
 %   cfg.component  = list of components to remove, e.g. [1 4 7] or see FT_CHANNELSELECTION
 %   cfg.demean     = 'no' or 'yes', whether to demean the input data (default = 'yes')
-%   cfg.updatesens = 'no' or 'yes' (default = 'yes')
+%   cfg.updatesens = 'yes' or 'no', whether to update the sensor array with the spatial projector (default = 'yes')
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
@@ -174,7 +174,7 @@ sensfield = {'elec', 'grad', 'opto'};
 for m = 1:numel(sensfield)
   if isfield(data, sensfield{m})
     sens = fixbalance(data.(sensfield{m})); % ensure that the balancing representation is up to date
-    if strcmp(cfg.updatesens, 'yes')
+    if strcmp(cfg.updatesens, 'yes') && ~isempty(intersect(sens.label, montage.labelold))
       ft_info('also applying the backprojection matrix to the %s structure\n', sensfield{m});
 
       % the name of the balancing should be unique in the sequence
