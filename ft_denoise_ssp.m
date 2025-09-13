@@ -17,7 +17,7 @@ function [data] = ft_denoise_ssp(cfg, varargin)
 %   cfg.refchannel = the channels used as reference signal (default = 'MEG')
 %   cfg.trials     = 'all' or a selection given as a 1xN vector (default = 'all')
 %   cfg.ssp        = 'all' or a cell array of SSP names to apply (default = 'all')
-%   cfg.updatesens = 'no' or 'yes' (default = 'yes')
+%   cfg.updatesens = 'yes' or 'no', whether to update the sensor array with the spatial projector (default = 'yes')
 %
 % If refdata is specified, the configuration should also contain
 %   cfg.numcomponent = number of principal components to project out of the data

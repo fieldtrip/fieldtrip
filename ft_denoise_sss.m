@@ -10,12 +10,12 @@ function [dataout] = ft_denoise_sss(cfg, datain)
 % FT_TIMELOCKANALYSIS and the configuration should contain
 %   cfg.channel          = Nx1 cell-array with selection of channels (default = 'all'), see FT_CHANNELSELECTION for details
 %   cfg.trials           = 'all' or a selection given as a 1xN vector (default = 'all')
-%   cfg.pertrial         = 'no', or 'yes', compute the temporal projection per trial (default = 'yes')
-%   cfg.demean           = 'yes', or 'no', demean the data per epoch (default = 'yes')
-%   cfg.updatesens       = 'yes', or 'no', update the sensor array with the spatial projector
+%   cfg.pertrial         = 'no' or 'yes', compute the temporal projection per trial (default = 'yes')
+%   cfg.demean           = 'yes' or 'no', demean the data per epoch (default = 'yes')
+%   cfg.updatesens       = 'yes' or 'no', whether to update the sensor array with the spatial projector (default = 'yes')
 %   cfg.sss              = structure with parameters that determine the behavior of the algorithm
-%   cfg.sss.order_in     = scalar. Order of the spherical harmonics basis that spans the in space (default = 8) 
-%   cfg.sss.order_out    = scalar. Order of the spherical harmonics basis that spans the out space (default = 3) 
+%   cfg.sss.order_in     = scalar, order of the spherical harmonics basis that spans the in space (default = 8) 
+%   cfg.sss.order_out    = scalar, order of the spherical harmonics basis that spans the out space (default = 3) 
 %
 % The implementation is based on Tim Tierney's code written for SPM.
 %

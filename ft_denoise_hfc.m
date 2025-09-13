@@ -20,7 +20,7 @@ function [data] = ft_denoise_hfc(cfg,data)
 %                         order = 2 includes gradients
 %                         order = 3 includes quadratic terms, etc.
 %   cfg.trials          = which trials do you want to denoise? (default = 'all')
-%   cfg.updatesens      = do you want to update sensor info with projector? (default = 'yes')
+%   cfg.updatesens      = 'yes' or 'no', whether to update the sensor array with the spatial projector (default = 'yes')
 %   cfg.feedback        = do you want feedback (default = 'yes')
 %   cfg.residualcheck   = do you want to check channel residuals (default = 'yes')
 %   cfg.residualthresh  = number in pT, what level of residual signal is fine for quality assurance (default = 50)

@@ -45,9 +45,8 @@ function dataout = ft_denoise_tsr(cfg, varargin)
 %   cfg.threshold          = integer array, ([1 by 2] or [1 by numel(cfg.channel) + numel(cfg.reflags)]),
 %                            regularization or shrinkage ('lambda') parameter to be loaded on the diagonal of the
 %                            penalty term (if cfg.method == 'mlrridge' or 'mlrqridge')
-%   cfg.updatesens         = string, 'yes' or 'no' (default = 'yes')
-%   cfg.perchannel         = string, 'yes' or 'no', or logical, whether or not to perform estimation of beta weights
-%                            separately per channel
+%   cfg.updatesens         = 'yes' or 'no', whether to update the sensor array with the spatial projector (default = 'yes')
+%   cfg.perchannel         = 'yes' or 'no', whether or not to perform estimation of beta weights separately per channel
 %   cfg.output             = string, 'model' or 'residual' (defaul = 'model'),
 %                            specifies what is outputed in .trial field in <dataout>
 %   cfg.performance        = string, 'pearson' or 'r-squared' (default =

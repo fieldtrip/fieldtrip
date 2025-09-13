@@ -21,8 +21,8 @@ function [comp] = ft_componentanalysis(cfg, data)
 %                      is split, it can also be 'all' or 'no' (default = 'no')
 %   cfg.trials       = 'all' or a selection given as a 1xN vector (default = 'all')
 %   cfg.numcomponent = 'all' or number (default = 'all')
-%   cfg.demean       = 'no' or 'yes', whether to demean the input data (default = 'yes')
-%   cfg.updatesens   = 'no' or 'yes' (default = 'yes')
+%   cfg.demean       = 'yes' or 'no', whether to demean the input data (default = 'yes')
+%   cfg.updatesens   = 'yes' or 'no', whether to update the sensor array with the spatial projector (default = 'yes')
 %   cfg.feedback     = 'no', 'text', 'textbar', 'gui' (default = 'text')
 %
 % The runica method supports the following method-specific options. The

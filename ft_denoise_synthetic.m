@@ -10,7 +10,7 @@ function [data] = ft_denoise_synthetic(cfg, data)
 %   cfg.gradient   = 'none', 'G1BR', 'G2BR' or 'G3BR' specifies the gradiometer
 %                    type to which the data should be changed
 %   cfg.trials     = 'all' or a selection given as a 1xN vector (default = 'all')
-%   cfg.updatesens = 'no' or 'yes' (default = 'yes')
+%   cfg.updatesens = 'yes' or 'no', whether to update the sensor array with the spatial projector (default = 'yes')
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...

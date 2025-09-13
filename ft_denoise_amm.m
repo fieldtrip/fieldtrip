@@ -10,12 +10,12 @@ function [dataout] = ft_denoise_amm(cfg, datain)
 % FT_TIMELOCKANALYSIS and the configuration should contain
 %   cfg.channel          = Nx1 cell-array with selection of channels (default = 'MEG'), see FT_CHANNELSELECTION for details
 %   cfg.trials           = 'all' or a selection given as a 1xN vector (default = 'all')
-%   cfg.pertrial         = 'no', or 'yes', compute the temporal projection per trial (default = 'no')
-%   cfg.demean           = 'yes', or 'no', demean the data per epoch (default = 'yes')
-%   cfg.updatesens       = 'yes', or 'no', update the sensor array with the spatial projector
+%   cfg.pertrial         = 'no' or 'yes', compute the temporal projection per trial (default = 'no')
+%   cfg.demean           = 'yes' or 'no', demean the data per epoch (default = 'yes')
+%   cfg.updatesens       = 'yes' or 'no', whether to update the sensor array with the spatial projector (default = 'yes')
 %   cfg.amm              = structure with parameters that determine the behavior of the algorithm
-%   cfg.amm.order_in     = scalar. Order of the spheroidal harmonics basis that spans the in space (default = 9) 
-%   cfg.amm.order_out    = scalar. Order of the spheroidal harmonics basis that spans the out space (default = 2) 
+%   cfg.amm.order_in     = scalar, order of the spheroidal harmonics basis that spans the in space (default = 9)
+%   cfg.amm.order_out    = scalar, order of the spheroidal harmonics basis that spans the out space (default = 2)
 %   cfg.amm.reducerank
 %   cfg.amm.thr 
 %
