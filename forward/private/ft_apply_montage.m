@@ -313,19 +313,19 @@ else
 end
 
 % update the channel scaling if the input has different units than the montage expects
-if isfield(input, 'chanunit') && ~isequal(input.chanunit, montage.chanunitold)
+if isfield(input, 'chanunit') && ~isequal(input.chanunit(:), montage.chanunitold(:))
   scale = ft_scalingfactor(input.chanunit, montage.chanunitold);
   montage.tra = montage.tra * diag(scale);
   montage.chanunitold = input.chanunit;
-elseif isfield(input, 'chanunitnew') && ~isequal(input.chanunitnew, montage.chanunitold)
+elseif isfield(input, 'chanunitnew') && ~isequal(input.chanunitnew(:), montage.chanunitold(:))
   scale = ft_scalingfactor(input.chanunitnew, montage.chanunitold);
   montage.tra = montage.tra * diag(scale);
   montage.chanunitold = input.chanunitnew;
 end
 
-if isfield(input, 'chantype') && ~isequal(input.chantype, montage.chantypeold)
+if isfield(input, 'chantype') && ~isequal(input.chantype(:), montage.chantypeold(:))
   ft_error('inconsistent chantype in data and montage');
-elseif isfield(input, 'chantypenew') && ~isequal(input.chantypenew, montage.chantypeold)
+elseif isfield(input, 'chantypenew') && ~isequal(input.chantypenew(:), montage.chantypeold(:))
   ft_error('inconsistent chantype in data and montage');
 end
 
