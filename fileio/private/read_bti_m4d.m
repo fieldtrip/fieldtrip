@@ -57,9 +57,10 @@ numlist = {};
 
 line = '';
 
-msi.grad.label   = {};
-msi.grad.coilpos = zeros(0,3);
-msi.grad.coilori = zeros(0,3);
+msi.grad.label    = {};
+msi.grad.chantype = {};
+msi.grad.coilpos  = zeros(0,3);
+msi.grad.coilori  = zeros(0,3);
 
 while ischar(line)
   line = cleanline(fgetl(fid));
@@ -122,7 +123,8 @@ while ischar(line)
 
     % the following is FieldTrip specific
     if size(num,2)==6
-      msi.grad.label = [msi.grad.label; lab(:)];
+      msi.grad.label     = [msi.grad.label; lab];
+      msi.grad.chantype  = [msi.grad.chantype; repmat({'megmag'}, size(lab))]; 
       % the numbers represent position and orientation of each magnetometer coil
       msi.grad.coilpos   = [msi.grad.coilpos; num(:,1:3)];
       msi.grad.coilori   = [msi.grad.coilori; num(:,4:6)];
@@ -162,6 +164,7 @@ end % while ischar(line)
 % each coil weighs with a value of 1 into each channel
 msi.grad.tra  = eye(size(msi.grad.coilpos,1));
 msi.grad.unit = 'm';
+
 
 fclose(fid);
 

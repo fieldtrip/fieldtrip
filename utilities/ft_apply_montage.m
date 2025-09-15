@@ -105,8 +105,8 @@ assert(length(unique(montage.labelold))==length(montage.labelold), 'the montage 
 assert(length(unique(montage.labelnew))==length(montage.labelnew), 'the montage is invalid');
 
 % these are optional, at the end we will clean up the output in case they did not exist
-haschantype = isfield(input, 'chantype');
-haschanunit = isfield(input, 'chanunit');
+haschantype = isfield(input, 'chantype') || isfield(input, 'chantypeold') || isfield(input, 'chantypenew');
+haschanunit = isfield(input, 'chanunit') || isfield(input, 'chanunitold') || isfield(input, 'chanunitnew');
 
 % make sure they always exist to facilitate the remainder of the code
 if ~isfield(montage, 'chantypeold')
@@ -313,19 +313,19 @@ else
 end
 
 % update the channel scaling if the input has different units than the montage expects
-if isfield(input, 'chanunit') && ~isequal(input.chanunit, montage.chanunitold)
+if isfield(input, 'chanunit') && ~isequal(input.chanunit(:), montage.chanunitold(:))
   scale = ft_scalingfactor(input.chanunit, montage.chanunitold);
   montage.tra = montage.tra * diag(scale);
   montage.chanunitold = input.chanunit;
-elseif isfield(input, 'chanunitnew') && ~isequal(input.chanunitnew, montage.chanunitold)
+elseif isfield(input, 'chanunitnew') && ~isequal(input.chanunitnew(:), montage.chanunitold(:))
   scale = ft_scalingfactor(input.chanunitnew, montage.chanunitold);
   montage.tra = montage.tra * diag(scale);
   montage.chanunitold = input.chanunitnew;
 end
 
-if isfield(input, 'chantype') && ~isequal(input.chantype, montage.chantypeold)
+if isfield(input, 'chantype') && ~isequal(input.chantype(:), montage.chantypeold(:))
   ft_error('inconsistent chantype in data and montage');
-elseif isfield(input, 'chantypenew') && ~isequal(input.chantypenew, montage.chantypeold)
+elseif isfield(input, 'chantypenew') && ~isequal(input.chantypenew(:), montage.chantypeold(:))
   ft_error('inconsistent chantype in data and montage');
 end
 

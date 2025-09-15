@@ -105,8 +105,8 @@ assert(length(unique(montage.labelold))==length(montage.labelold), 'the montage 
 assert(length(unique(montage.labelnew))==length(montage.labelnew), 'the montage is invalid');
 
 % these are optional, at the end we will clean up the output in case they did not exist
-haschantype = isfield(input, 'chantype');
-haschanunit = isfield(input, 'chanunit');
+haschantype = isfield(input, 'chantype') || isfield(input, 'chantypeold') || isfield(input, 'chantypenew');
+haschanunit = isfield(input, 'chanunit') || isfield(input, 'chanunitold') || isfield(input, 'chanunitnew');
 
 % make sure they always exist to facilitate the remainder of the code
 if ~isfield(montage, 'chantypeold')

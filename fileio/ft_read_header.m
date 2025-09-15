@@ -2823,16 +2823,6 @@ end
 % as of November 2011, the header is supposed to include the channel type (see FT_CHANTYPE,
 % e.g. meggrad, megref, eeg) and the units of each channel (see FT_CHANUNIT, e.g. uV, fT)
 
-if ~isfield(hdr, 'chantype') && checkUniqueLabels
-  % use a helper function which has some built in intelligence
-  hdr.chantype = ft_chantype(hdr);
-end
-
-if ~isfield(hdr, 'chanunit') && checkUniqueLabels
-  % use a helper function which has some built in intelligence
-  hdr.chanunit = ft_chanunit(hdr);
-end
-
 % ensure that the output grad is according to the latest definition
 if isfield(hdr, 'grad')
   hdr.grad = ft_datatype_sens(hdr.grad);
@@ -2851,6 +2841,16 @@ if isfield(hdr, 'opto')
     % the NIRS optode structure is incomplete when reading/converting it from Homer files
     ft_warning('optode structure is not compliant with FT_DATATYPE_SENS');
   end
+end
+
+if ~isfield(hdr, 'chantype') && checkUniqueLabels
+  % use a helper function which has some built in intelligence
+  hdr.chantype = ft_chantype(hdr);
+end
+
+if ~isfield(hdr, 'chanunit') && checkUniqueLabels
+  % use a helper function which has some built in intelligence
+  hdr.chanunit = ft_chanunit(hdr);
 end
 
 if (strcmp(readbids, 'yes') || strcmp(readbids, 'ifmakessense')) && isbids
