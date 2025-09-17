@@ -555,7 +555,7 @@ switch headerformat
     orig = openNSx(filename, 'noread');
     channelstype=regexp({orig.ElectrodesInfo.Label},'[A-Za-z]+','match','once');
     if isfield(orig.ElectrodesInfo, 'ElectrodeID') % has been renamed into ChannelId
-      orig.ElectrodesInfo.ChannelId = orig.ElectrodesInfo.ElectrodeID;
+      orig.ElectrodesInfo.ChannelID = orig.ElectrodesInfo.ElectrodeID;
     end
     chaninfo=table({orig.ElectrodesInfo.ChannelID}',...
       transpose(deblank({orig.ElectrodesInfo.Label})),[channelstype]',...
