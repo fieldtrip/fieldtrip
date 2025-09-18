@@ -1,11 +1,12 @@
 function [spec, se, wt] = adaptspec_dpss(yk, lambda, adaptflag)
+
 % ADAPTSPEC_DPSS Adaptive multitaper spectrum estimate
 %
-%   [spec, se, wt] = adaptspec(yk, sk, lambda, adaptflag)
+%   [spec, se, wt] = adaptspec_dpss(yk, sk, lambda, adaptflag)
 %
 % Inputs
-%   yk     : [nchan x nfft x kspec] complex, tapered data Fourier transforms
-%   lambda   : [kspec x 1] real, eigenvalues of DPSS tapers
+%   yk     : [nchan x nfft x ntap] complex, tapered data Fourier transforms
+%   lambda   : [ntap x 1] real, eigenvalues of DPSS tapers
 %   adaptflag : integer, mode (default=0)
 %            0 - unweighted average (all tapers equal)
 %            1 - weighted by eigenvalues
@@ -14,13 +15,13 @@ function [spec, se, wt] = adaptspec_dpss(yk, lambda, adaptflag)
 % Outputs
 %   spec : [nchan x nfft] spectrum estimate
 %   se   : [1 x nfft] effective degrees of freedom
-%   wt   : [nchan x nfft x kspec] weights applied to tapers
+%   wt   : [nchan x nfft x ntap] weights applied to tapers
 %
 % Notes
-% - Follows Prieto’s 2006–2022 versions (your Python code).
+% - Follows German Prieto’s code (https://github.com/gaprieto/multitaper).
 % - The adaptive scheme iterates until convergence or max mloop.
-%
-% Author: MATLAB translation of your provided Python code
+% - ChatGPT provided a rough translation from Python to MATLAB, code
+% optimized for MATLAB + multichannel data by JMS
 
 if nargin < 3
   adaptflag = 0;
@@ -28,14 +29,14 @@ end
 
 yk = permute(yk, [2 1 3]);
 
-[nfft, nchan, kspec] = size(yk);
+[nfft, nchan, ntap] = size(yk);
 sk                   = abs(yk).^2;
 if adaptflag==0
   % average across tapers
-  wt     = ones(nfft, nchan, kspec);
+  wt     = ones(nfft, nchan, ntap);
   sbar   = mean(sk, 3);
   spec   = sbar;
-  se     = 2 * kspec * ones(nfft,1);
+  se     = 2 * ntap * ones(nfft,1);
 elseif adaptflag==1
   % weigh the tapered estimates by the tapers' concentration eigenvalues
   wt     = repmat(shiftdim(lambda(:).', -1), nfft, nchan, 1);
@@ -49,11 +50,11 @@ elseif adaptflag==2
   df = 1 / (nfft - 1);
 
   % Variance of Sk's and avg variance
-  varsk  = sum(sk, 1) * df;     % [1 x kspec]
+  varsk  = sum(sk, 1) * df;     % [1 x ntap]
   dvar   = mean(varsk, 3);
   
   lambda = shiftdim(lambda(:).', -1); % ensure row vector
-  bk     = repmat(dvar, [1 1 kspec]) .* (1 - repmat(lambda, [1 nchan 1])); % Thomson Eq 5.1b
+  bk     = repmat(dvar, [1 1 ntap]) .* (1 - repmat(lambda, [1 nchan 1])); % Thomson Eq 5.1b
   
   % Initialize
   sbar = (sk(:,:,1) + sk(:,:,2)) / 2; % initial guess
@@ -66,8 +67,8 @@ elseif adaptflag==2
   for i = 1:mloop
     slast = sbar;
     
-    for m = 1:kspec
-      wt1(:,:,m) = sbar*sqrt(lambda(m)); % [nfft x 1] x [1 x kspec]
+    for m = 1:ntap
+      wt1(:,:,m) = sbar*sqrt(lambda(m)); % [nfft x 1] x [1 x ntap]
       wt2(:,:,m) = sbar*lambda(m) + bk(onevec,:,m);
     end
     wt = min(wt1 ./ wt2, 1.0);
