@@ -162,7 +162,7 @@ url = {
   'NEURONE'                               'see http://www.megaemg.com/support/unrestricted-downloads'
   'NEUROSHARE'                            'see http://www.neuroshare.org'
   'NLXNETCOM'                             'see http://www.neuralynx.com'
-  'NPMK'                                  'see https://github.com/BlackrockMicrosystems/NPMK'
+  'NPMK'                                  'see https://github.com/BlackrockNeurotech/NPMK'
   'NWAY'                                  'see http://www.models.kvl.dk/source/nwaytoolbox'
   'OPENMEEG'                              'see http://openmeeg.github.io and http://www.fieldtriptoolbox.org/faq/how_do_i_install_the_openmeeg_binaries'
   'OPM'                                   'see https://github.com/tierneytim/OPM'
