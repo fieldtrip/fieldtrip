@@ -74,6 +74,9 @@ xrange      = ft_getopt(varargin, 'xrange',   true);
 yrange      = ft_getopt(varargin, 'yrange',   true);
 clear       = ft_getopt(varargin, 'clear',    false);
 contextmenu = ft_getopt(varargin, 'contextmenu'); % this will be displayed following a right mouse click
+linecolor   = ft_getopt(varargin, 'linecolor', [0 0 0]);
+linestyle   = ft_getopt(varargin, 'linestyle', '--');
+linewidth   = ft_getopt(varargin, 'linewidth', 1.5);
 
 % convert 'yes/no' string to boolean value
 multiple  = istrue(multiple);
@@ -273,10 +276,10 @@ switch lower(event)
       yData = [y1 y1 y2 y2 y1];
       set(userData.box(end), 'xData', xData);
       set(userData.box(end), 'yData', yData);
-      set(userData.box(end), 'Color', [0 0 0]);
+      set(userData.box(end), 'Color', linecolor);
       %set(userData.box(end), 'EraseMode', 'xor');
-      set(userData.box(end), 'LineStyle', '--');
-      set(userData.box(end), 'LineWidth', 1.5);
+      set(userData.box(end), 'LineStyle', linestyle);
+      set(userData.box(end), 'LineWidth', linewidth);
       set(userData.box(end), 'Visible', 'on');
       set(userData.box(end), 'tag', 'selectedrange');
       
