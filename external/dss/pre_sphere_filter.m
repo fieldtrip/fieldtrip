@@ -35,6 +35,9 @@ if iscell(X)
     if isfield(params,'dftfreq') && ~isempty(params.dftfreq)
       X{k} = ft_preproc_dftfilter(X{k}, params.fsample, params.dftfreq);
     end
+    if isfield(params,'dftfreqinv') && ~isempty(params.dftfreqinv)
+      X{k} = X{k} - ft_preproc_dftfilter(X{k}, params.fsample, params.dftfreqinv);
+    end
   end
 else
   ft_error('sphering with highpass filtering requires cell array in input'); % FIXME this is not strictly needed
