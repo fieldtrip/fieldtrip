@@ -35,6 +35,10 @@ function [infoPackets, version] = openCCF(filename)
 %
 % 2.1.0.0:
 %   - Fixed a bug in loading nTrode groups with a base of 0.
+%
+% 2.2.0.0 April 29, 2020
+%   - Fixed an error where N-Trodes with less than 4 members read an extra
+%     1 as the extra non-existent members.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 infoPackets.openCCFVersion = '2.1.0.0';
@@ -72,7 +76,7 @@ if( fid == -1 ),
 end;
 
 %% Read header incl. version
-head = fread(fid, 16, '*char*1' )';
+head = fread(fid, 16, 'uint8=>char*1' )';
 
 if strcmp(head(1:5), 'cbCCF')
     version = deblank(strtrim(head(6:end))); % Strip possible leading space and trailing nulls
@@ -97,14 +101,15 @@ end
 if strcmpi(version, '3.9')
     infoPackets = parseCCF(fullfilename);
     for nTrodeIDX = 1:length(infoPackets.Children(7).Children)
-        for trodeIDX = 1:length(infoPackets.Children(7).Children(nTrodeIDX).Children(9).Children)
+        for trodeIDX = 1:str2double(infoPackets.Children(7).Children(nTrodeIDX).Children(7).Children.Data)
             tempTrodes(trodeIDX) =  ...
             str2double(infoPackets.Children(7).Children(nTrodeIDX).Children(9).Children(trodeIDX).Children.Data) + 1;
         end
-        if ~all(tempTrodes == 1)
+        if ~isempty(tempTrodes)
             infoPackets.NTrodeInfo.NTrodeID(nTrodeIDX) = nTrodeIDX;
             infoPackets.NTrodeInfo.NTrodeMembers{nTrodeIDX} = tempTrodes;
         end 
+        tempTrodes = [];
     end
     return;
 end
