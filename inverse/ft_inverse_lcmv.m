@@ -15,6 +15,10 @@ function [estimate] = ft_inverse_lcmv(sourcemodel, sens, headmodel, dat, C, vara
 % and
 %   estimate    contains the estimated source parameters
 %
+% If the input data "dat" is in V, "cov" is in V^2, and the leadfield is in V/Am,
+% then the estimated output "mom" is in Am, the output "pow" is (Am)^2, and the
+% output "filter" is in Am/V, provided "weightnorm" has been specified to be 'no'.
+%
 % Additional input arguments should be specified as key-value pairs and can include
 %   'powmethod'        = can be 'trace' or 'lambda1'
 %   'feedback'         = can be 'none', 'gui', 'dial', 'textbar', 'text', 'textcr', 'textnl' (default = 'text')
@@ -163,9 +167,15 @@ if hasmom
 end
 
 if hasfilter
+  % check that the options normalize/reducerank/etc are not specified
+  assert(all(cellfun(@isempty, leadfieldopt(2:2:end))), 'the options for computing the leadfield must all be empty/default');
+  % check that lambda is not specified
+  assert(isempty(lambda), 'the options for computing the filter must all be empty/default');
   ft_info('using precomputed filters\n');
   sourcemodel.filter = sourcemodel.filter(originside);
 elseif hasleadfield
+  % check that the options normalize/reducerank/etc are not specified
+  assert(all(cellfun(@isempty, leadfieldopt(2:2:end))), 'the options for computing the leadfield must all be empty/default');
   ft_info('using precomputed leadfields\n');
   sourcemodel.leadfield = sourcemodel.leadfield(originside);
 else

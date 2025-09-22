@@ -14,7 +14,7 @@ function [estimate] = ft_inverse_eloreta(sourcemodel, sens, headmodel, dat, C, v
 %   estimate    contains the estimated source parameters
 %
 % If the input data "dat" is in V, "cov" is in V^2, and the leadfield is in V/Am,
-% then the the estimated output "mom" is in Am, the output "pow" is (Am)^2, and the
+% then the estimated output "mom" is in Am, the output "pow" is (Am)^2, and the
 % output "filter" is in Am/V.
 %
 % Additional input arguments should be specified as key-value pairs and can include

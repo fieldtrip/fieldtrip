@@ -13,6 +13,10 @@ function [estimate] = ft_inverse_mne(sourcemodel, sens, headmodel, dat, varargin
 % and
 %   estimate    contains the estimated source parameters
 %
+% If the input data "dat" is in V, "cov" is in V^2, and the leadfield is in V/Am,
+% then the estimated output "mom" is in Am, the output "pow" is (Am)^2, and the
+% output "filter" is in Am/V.
+%
 % Additional input arguments should be specified as key-value pairs and can include
 %   'noisecov'         = Nchan x Nchan matrix with noise covariance
 %   'noiselambda'      = scalar value, regularisation parameter for the noise covariance matrix (default = 0)
@@ -133,9 +137,19 @@ end
 
 % compute leadfield
 if hasfilter
+  % check that the options normalize/reducerank/etc are not specified
+  assert(all(cellfun(@isempty, leadfieldopt(2:2:end))), 'the options for computing the leadfield must all be empty/default');
+  % check that lambda is not specified
+  assert(isempty(lambda), 'the options for computing the filter must all be empty/default');
+  assert(isempty(snr), 'the options for computing the filter must all be empty/default');
+  assert(isempty(noiselambda), 'the options for computing the filter must all be empty/default');
+  assert(~istrue(prewhiten), 'the options for computing the filter must all be empty/default');
+  assert(~istrue(scalesourcecov), 'the options for computing the filter must all be empty/default');
   ft_info('using precomputed filters\n');
   sourcemodel.filter = sourcemodel.filter(originside);
 elseif hasleadfield
+  % check that the options normalize/reducerank/etc are not specified
+  assert(all(cellfun(@isempty, leadfieldopt(2:2:end))), 'the options for computing the leadfield must all be empty/default');
   % using the computed leadfields
   ft_info('using precomputed leadfields\n');
   sourcemodel.leadfield = sourcemodel.leadfield(originside);
