@@ -2,25 +2,43 @@ function saveNSx(NSx,varargin)
 
 %% 
 % Save an .NSx file from an NSx structure (gained by using openNSx)
-% Works with file spec 2.3
+% Works with file spec 2.3 and 3.0
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Use: saveNSx(NSx,optionalinputarguments)
 %   NSx:        The NSx data structure.
 %   All arguments below are optional:
 %   Filename:   A complete filepath for the output file.
 %               Default: CurrentFilename-Modified.NSx
+%   Filespec:   Save the file using the filespec specified e.g. 2.3 or 3.0
+%               Default: same as the filespec loaded
 
-%saveNSx version = '1.0.0.0';
+%saveNSx version = '1.0.0.1';
 
+% Version History
+%
+% 1.0.0.1:
+%   - Added ability to save to a specific filespec
+%
 
 %% 
 % Verify FilePath and establish overwrite paramaters
-if not(isempty(varargin))
-    FilePath = varargin{1};
-else
-    FilePath = [fullfile(NSx.MetaTags.FilePath,NSx.MetaTags.Filename) NSx.MetaTags.FileExt];
-    [File,Path] = uiputfile;
-    FilePath = [fullfile(Path,NSx.MetaTags.Filename(1:end)),'-modified',  NSx.MetaTags.FileExt];
+FilePath = [fullfile(NSx.MetaTags.FilePath,NSx.MetaTags.Filename) '-modified' NSx.MetaTags.FileExt];
+if length(varargin) >= 1
+    if not(isempty(varargin{1}))
+        FilePath = varargin{1};
+    end
+end
+
+% save to a specific filespec
+if length(varargin) >= 2
+    if (varargin{2} == 2.3)
+        NSx.MetaTags.FileTypeID(1:8) = 'NEURALCD';
+        NSx.MetaTags.FileSpec(1:3) = '2.3';
+    end
+    if (varargin{2} == 3.0)
+        NSx.MetaTags.FileTypeID(1:8) = 'BRSMPGRP';
+        NSx.MetaTags.FileSpec(1:3) = '3.0';
+    end
 end
 
 
@@ -36,7 +54,7 @@ end
 %%
 % Write the basic header into the file
 %FullFile
-Debug = 1;
+Debug = 0;
 
 if exist(FilePath)
         if exist(FilePath)
@@ -77,11 +95,17 @@ elseif Paused == 0
     [NumberOfChannels,LengthOfData] = size(NSx.Data);
 end
 
-
+%Identify filespec
+fspec = NSx.MetaTags.FileTypeID(1:8);
+if strcmp(fspec,'BRSMPGRP')
+    tspres = 'uint64';
+else
+    tspres = 'uint32';
+end
 
 %File Type ID
     Before = 0;
-    fwrite(FileID,NSx.MetaTags.FileTypeID(1:8));
+    fwrite(FileID,fspec);
     After = ftell(FileID);
     if After-Before ~= 8 && Debug == 1
         disp('error FildID')
@@ -347,11 +371,10 @@ if Paused == 0
     %Header
     fwrite(FileID, NSx.RawData.DataHeader(1));
     %Timestamp
-    fwrite(FileID, NSx.MetaTags.Timestamp,'uint32');
+    fwrite(FileID, NSx.MetaTags.Timestamp,tspres);
     %Number of data points
     fwrite(FileID, LengthOfData, 'uint32');
 
-    TotalDataPoints = LengthOfData * NumberOfChannels;
     %for i = 1:TotalDataPoints
     %Data points
     %fwrite(FileID, NSx.Data(i),'int16');
@@ -360,13 +383,12 @@ if Paused == 0
 elseif Paused == 1
     for SegmentNumber = 1:NumberOfSegments
         %Header
-        fwrite(FileID, NSx.RawData.DataHeader(1+9*(SegmentNumber-1)));
+        fwrite(FileID, 1, 'uint8');
         %Timestamp
-        fwrite(FileID, NSx.MetaTags.Timestamp(SegmentNumber),'uint32');
+        fwrite(FileID, NSx.MetaTags.Timestamp(SegmentNumber),tspres);
         %Number of data points
         fwrite(FileID, LengthOfData{SegmentNumber}, 'uint32');
 
-        TotalDataPoints = LengthOfData{SegmentNumber} * NumberOfChannels;
         %for i = 1:TotalDataPoints
         %Data points
         %fwrite(FileID, NSx.Data(i),'int16');
