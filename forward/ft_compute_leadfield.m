@@ -125,13 +125,13 @@ end
 iseeg = ft_senstype(sens, 'eeg');
 ismeg = ft_senstype(sens, 'meg');
 
-% determine the default for this option
+% set the default for reducing the rank of the leadfields
 if isempty(reducerank)
   if iseeg
     reducerank = 'no';    % for EEG
   elseif ismeg && ft_headmodeltype(headmodel, 'infinite')
     reducerank = 'no';    % for MEG with a magnetic dipole, e.g. a HPI coil
-  else
+  elseif ismeg
     reducerank = 'yes';   % for MEG with a current dipole in a volume conductor
   end
 end

@@ -84,12 +84,18 @@ else
   sens = ft_fetch_sens(cfg);
 end
 
+% determine whether it is EEG or MEG
+iseeg = ft_senstype(sens, 'eeg');
+ismeg = ft_senstype(sens, 'meg');
+
 if isempty(cfg.reducerank)
   % set the default for reducing the rank of the leadfields
-  if ft_senstype(sens, 'eeg')
-    cfg.reducerank = ft_getopt(cfg, 'reducerank', 3);
-  else
-    cfg.reducerank = ft_getopt(cfg, 'reducerank', 2);
+  if iseeg
+    cfg.reducerank = 'no';    % for EEG
+  elseif ismeg && ft_headmodeltype(headmodel, 'infinite')
+    cfg.reducerank = 'no';    % for MEG with a magnetic dipole, e.g. a HPI coil
+  elseif ismeg
+    cfg.reducerank = 'yes';   % for MEG with a current dipole in a volume conductor
   end
 end
 
@@ -134,10 +140,10 @@ if ~ischar(cfg.headmodel)
   cfg.headmodel = headmodel;
 end
 
-if isfield(cfg, 'grad') && ~ischar(cfg.grad) && ft_senstype(sens, 'meg')
+if isfield(cfg, 'grad') && ~ischar(cfg.grad) && ismeg
   % update the gradiometer definition in the configuration
   cfg.grad = sens;
-elseif isfield(cfg, 'elec') && ~ischar(cfg.elec) && ft_senstype(sens, 'eeg')
+elseif isfield(cfg, 'elec') && ~ischar(cfg.elec) && iseeg
   % update the electrode definition in the configuration
   cfg.elec = sens;
 else
