@@ -8,20 +8,21 @@ function hs = ft_plot_sens(sens, varargin)
 % by FT_PREPARE_VOL_SENS.
 %
 % Optional input arguments should come in key-value pairs and can include
-%   'label'           = show the label, can be 'off', 'label', 'number' (default = 'off')
-%   'chantype'        = string or cell-array with strings, for example 'meg' (default = 'all')
+%   'chantype'        = string or cell-array with strings, for example 'megmag' (default = 'all')
+%   'chanindx'        = logical vector or vector of indices with the channels to plot (default is all)
+%   'label'           = whether to show the channel label, can be 'off', 'label', 'number' (default = 'off')
+%   'axes'            = true/false, whether to plot the axes of the 3D coordinate system (default = false)
 %   'unit'            = string, convert the sensor array to the specified geometrical units (default = [])
-%   'axes'            = boolean, whether to plot the axes of the 3D coordinate system (default = false)
 %   'fontcolor'       = string, color specification (default = 'k')
 %   'fontsize'        = number, sets the size of the text (default = 10)
-%   'fontunits'       =
-%   'fontname'        =
-%   'fontweight'      =
+%   'fontunits'       = 'inches', 'centimeters', 'normalized', 'points' or 'pixels'
+%   'fontweight'      = 'normal' or 'bold'
+%   'fontname'        = string
 %
 % The following options apply to MEG magnetometers and/or gradiometers
 %   'coil'            = true/false, plot each individual coil (default = false)
 %   'orientation'     = true/false, plot a line for the orientation of each coil (default = false)
-%   'coilshape'       = 'point', 'circle', 'square', 'sphere', or 'disc' (default is automatic)
+%   'coilshape'       = 'point', 'circle', 'square', 'sphere' or 'disc' (default is automatic)
 %   'coilsize'        = diameter or edge length of the coils (default is automatic)
 % The following options apply to EEG electrodes
 %   'elec'            = true/false, plot each individual electrode (default = false)
@@ -94,6 +95,7 @@ sens = ft_datatype_sens(sens);
 % get the optional input arguments
 label           = ft_getopt(varargin, 'label', 'off');
 chantype        = ft_getopt(varargin, 'chantype');
+chanindx        = ft_getopt(varargin, 'chanindx');
 unit            = ft_getopt(varargin, 'unit');
 axes_           = ft_getopt(varargin, 'axes', false);     % do not confuse with built-in function
 orientation     = ft_getopt(varargin, 'orientation', false);
@@ -129,16 +131,16 @@ isnirs = ft_senstype(sens, 'nirs');
 
 % make sure that the options are consistent with the data
 if iseeg
-  individual = elec;
+  individual = istrue(elec);
   sensshape  = elecshape;
   senssize   = elecsize;
 elseif ismeg
-  individual = coil;
+  individual = istrue(coil);
   sensshape  = coilshape;
   senssize   = coilsize;
 elseif isnirs
   % this has not been tested
-  individual = opto;
+  individual = istrue(opto);
   sensshape  = optoshape;
   senssize   = optosize;
 else
@@ -167,6 +169,11 @@ linecolor       = ft_getopt(varargin, 'linecolor');
 linewidth       = ft_getopt(varargin, 'linewidth', 1);
 linelength      = ft_getopt(varargin, 'linelength', 20);
 
+if islogical(chanindx)
+  % this should be a list of indices
+  chanindx = find(chanindx);
+end
+
 if ischar(chantype)
   % this should be a cell-array
   chantype = {chantype};
@@ -192,7 +199,7 @@ end
 
 if isempty(sensshape)
   if ft_senstype(sens, 'neuromag')
-    if strcmp(chantype, 'megmag')
+    if any(strcmp(chantype, 'megmag'))
       sensshape = 'point'; % these cannot be plotted as squares
     else
       sensshape = 'square';
@@ -241,12 +248,20 @@ end
 if ischar(facecolor), facecolor = colorspec2rgb(facecolor); end
 if ischar(edgecolor), edgecolor = colorspec2rgb(edgecolor); end
 
-% select a subset of channels and coils to be plotted
-if ~isempty(chantype)
+% select a subset of channels to be plotted
+if ~isempty(chantype) || ~isempty(chanindx)
   % remove the balancing from the sensor definition, e.g. 3rd order gradients, PCA-cleaned data or ICA projections
   sens = undobalancing(sens);
-  
-  chansel = match_str(sens.chantype, chantype);
+
+  if ~isempty(chantype)
+    chansel = match_str(sens.chantype, chantype);
+  elseif ~isempty(chanindx)
+    chansel = chanindx;
+  else
+    chansel1 = match_str(sens.chantype, chantype);
+    chansel2 = find(chanindx); % ensure it is a list of indices
+    chansel = intersect(chansel1, chansel2);
+  end
   
   % remove the channels that are not selected
   sens.label    = sens.label(chansel);
@@ -254,8 +269,19 @@ if ~isempty(chantype)
   sens.chantype = sens.chantype(chansel);
   sens.chanunit = sens.chanunit(chansel);
   if isfield(sens, 'chanori')
-    % this is only present for MEG sensor descriptions
     sens.chanori  = sens.chanori(chansel,:);
+  end
+  if isfield(sens, 'chanposold')
+    sens.chanposold  = sens.chanposold(chansel,:);
+  end
+  if isfield(sens, 'labelold')
+    sens.labelold  = sens.labelold(chansel);
+  end
+  if isfield(sens, 'chantypeold')
+    sens.chanposold  = sens.chantypeold(chansel);
+  end
+  if isfield(sens, 'chanunitold')
+    sens.chanunitold  = sens.chanunitold(chansel);
   end
   
   % remove the magnetometer and gradiometer coils that are not in one of the selected channels
@@ -296,6 +322,8 @@ if istrue(individual)
   elseif isfield(sens, 'optopos')
     pos = sens.optopos;
   end
+  % get the orientation of all individual coils, electrodes or optodes
+  % this is used for displacing the label in 3D
   if isfield(sens, 'coilori')
     ori = sens.coilori;
   elseif isfield(sens, 'elecori')
@@ -324,7 +352,55 @@ else
 end % if istrue(individual)
 
 if isempty(ori)
-  if ~isempty(headshape)
+  if isfield(sens, 'coilori') && (~isfield(sens, 'tra') || isequal(sens.tra, eye(length(sens.label))))
+    % one-to-one mapping between coils and channels
+    ori = sens.coilori;
+
+  elseif isfield(sens, 'elecori') && (~isfield(sens, 'tra') || isequal(sens.tra, eye(length(sens.label))))
+    % one-to-one mapping between electrodes and channels
+    ori = sens.elecori;
+  
+  elseif isfield(sens, 'optoori') && (~isfield(sens, 'tra') || isequal(sens.tra, eye(length(sens.label))))
+    % one-to-one mapping between optodes and channels
+    ori = sens.optoori;
+
+  elseif isfield(sens, 'coilori') % and there is a non-trivial "tra"
+    ori = nan(size(pos));
+    % calculate the channel direction as a weighted sum
+    for i=1:length(sens.label)
+      orix = abs(sens.tra(i,:)) * sens.coilori(:,1);
+      oriy = abs(sens.tra(i,:)) * sens.coilori(:,2);
+      oriz = abs(sens.tra(i,:)) * sens.coilori(:,3);
+
+      ori(i,:) = [orix oriy oriz];
+      ori(i,:) = ori(i,:)/norm(ori(i,:));
+    end
+
+  elseif isfield(sens, 'elecori') % and there is a non-trivial "tra"
+    ori = nan(size(pos));
+    % calculate the channel direction as a weighted sum
+    for i=1:length(sens.label)
+      orix = abs(sens.tra(i,:)) * sens.elecori(:,1);
+      oriy = abs(sens.tra(i,:)) * sens.elecori(:,2);
+      oriz = abs(sens.tra(i,:)) * sens.elecori(:,3);
+
+      ori(i,:) = [orix oriy oriz];
+      ori(i,:) = ori(i,:)/norm(ori(i,:));
+    end
+
+  elseif isfield(sens, 'optoori') % and there is a non-trivial "tra"
+    ori = nan(size(pos));
+    % calculate the channel direction as a weighted sum
+    for i=1:length(sens.label)
+      orix = abs(sens.tra(i,:)) * sens.optoori(:,1);
+      oriy = abs(sens.tra(i,:)) * sens.optoori(:,2);
+      oriz = abs(sens.tra(i,:)) * sens.optoori(:,3);
+
+      ori(i,:) = [orix oriy oriz];
+      ori(i,:) = ori(i,:)/norm(ori(i,:));
+    end
+
+  elseif ~isempty(headshape)
     % the following code uses PCNORMALS from the computer vision toolbox
     % ft_hastoolbox('vision', -1);
     
@@ -381,6 +457,7 @@ if isempty(ori)
       ori(i,:) = pos(i,:) - center;
       ori(i,:) = ori(i,:)/norm(ori(i,:));
     end
+
   else
     ori = nan(size(pos));
   end
