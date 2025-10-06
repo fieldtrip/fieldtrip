@@ -437,7 +437,6 @@ elseif needdat || needevt
   end
 
 end
-fclose(EDF.FILE.FID);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION for reading the 16 bit values
@@ -464,8 +463,11 @@ if ~is_below_2GB || ~read_16bit_success
   [buf,num] = fread(fp,numwords,'bit16=>double');
   
   if (num<numwords)
-    fclose(fp);
     ft_error(['failed reading ' filename]);
     return
   end
+end
+
+end
+
 end
