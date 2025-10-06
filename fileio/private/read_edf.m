@@ -344,7 +344,7 @@ elseif needdat || needevt
   % user channel selection as well as any correction that might have been made due to
   % heterogenous sampling rates.
   
-  if     ~isempty(chanindx) && ~isfield(EDF, 'chansel')
+  if ~isempty(chanindx) && ~isfield(EDF, 'chansel')
     % a subset of channels should been selected from the full list of channels in the file
     chanindx = chanindx; % keep as it is
     useChanindx = true;
@@ -386,16 +386,24 @@ elseif needdat || needevt
   endepoch    = floor((endsample-1)/epochlength) + 1;
   nepochs     = endepoch - begepoch + 1;
   
+
+  % Open file
+  fid=fopen_or_error(filename,'r','ieee-le');
+  
+  EDF.FILE.FID=fid;
+  EDF.FILE.OPEN = 1;
+  EDF.FileName = filename;
+
   % allocate memory to hold the data
   dat = zeros(length(chanindx),nepochs*epochlength);
-  
+ 
   % read and concatenate all required data epochs
   for i=begepoch:endepoch
     if useChanindx
       % only a subset of channels with consistent sampling frequency is read
       offset = EDF.HeadLen + (i-1)*blocksize*2; % in bytes
       % read the complete data block
-      buf = readLowLevel(filename, offset, blocksize); % see below in subfunction
+      buf = readLowLevel(EDF, offset, blocksize); % see below in subfunction
       for j=1:length(chanindx)
         % cut out the part that corresponds with a single channel
         dat(j,((i-begepoch)*epochlength+1):((i-begepoch+1)*epochlength)) = buf((1:epochlength) + chanoffset(chanindx(j)));
@@ -418,6 +426,9 @@ elseif needdat || needevt
       dat(:,((i-begepoch)*epochlength+1):((i-begepoch+1)*epochlength)) = buf(:,chanindx)';
     end
   end
+
+  % close the file
+  fclose(EDF.FILE.FID);
   
   % select the desired samples
   begsample = begsample - (begepoch-1)*epochlength;  % correct for the number of bytes that were skipped
@@ -435,33 +446,39 @@ elseif needdat || needevt
     % in case of one channel the sparse multiplication would result in a sparse array
     dat = calib * dat;
   end
+
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION for reading the 16 bit values
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function buf = readLowLevel(filename, offset, numwords)
-is_below_2GB = offset < 2*1024^3;
+function buf = readLowLevel(EDF, offset, numwords)
+is_below_2GB = offset < 2*1024^2;
 read_16bit_success = true;
 if is_below_2GB
   % use the external mex file, only works for <2GB
   try
-    buf = read_16bit(filename, offset, numwords);
+    buf = read_16bit(EDF.FileName, offset, numwords);
   catch e
     read_16bit_success = false;
   end
 end
 if ~is_below_2GB || ~read_16bit_success
   % use plain matlab, thanks to Philip van der Broek
-  fp = fopen(filename,'r','ieee-le');
+  fp = EDF.FILE.FID;
+
   status = fseek(fp, offset, 'bof');
   if status
     ft_error(['failed seeking ' filename]);
   end
   [buf,num] = fread(fp,numwords,'bit16=>double');
-  fclose(fp);
+  
   if (num<numwords)
     ft_error(['failed reading ' filename]);
     return
   end
+end
+
+end
+
 end
