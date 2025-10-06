@@ -246,7 +246,7 @@ if needhdr
   %EDF.AS.IDX3=idx3;
   
   % close the file
-  %fclose(EDF.FILE.FID);
+  fclose(EDF.FILE.FID);
   
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % convert the header to Fieldtrip-style
@@ -344,7 +344,7 @@ elseif needdat || needevt
   % user channel selection as well as any correction that might have been made due to
   % heterogenous sampling rates.
   
-  if     ~isempty(chanindx) && ~isfield(EDF, 'chansel')
+  if ~isempty(chanindx) && ~isfield(EDF, 'chansel')
     % a subset of channels should been selected from the full list of channels in the file
     chanindx = chanindx; % keep as it is
     useChanindx = true;
@@ -386,9 +386,17 @@ elseif needdat || needevt
   endepoch    = floor((endsample-1)/epochlength) + 1;
   nepochs     = endepoch - begepoch + 1;
   
+
+  % Open file
+  fid=fopen_or_error(filename,'r','ieee-le');
+  
+  EDF.FILE.FID=fid;
+  EDF.FILE.OPEN = 1;
+  EDF.FileName = filename;
+
   % allocate memory to hold the data
   dat = zeros(length(chanindx),nepochs*epochlength);
-  
+ 
   % read and concatenate all required data epochs
   for i=begepoch:endepoch
     if useChanindx
@@ -418,6 +426,9 @@ elseif needdat || needevt
       dat(:,((i-begepoch)*epochlength+1):((i-begepoch+1)*epochlength)) = buf(:,chanindx)';
     end
   end
+
+  % close the file
+  fclose(EDF.FILE.FID);
   
   % select the desired samples
   begsample = begsample - (begepoch-1)*epochlength;  % correct for the number of bytes that were skipped
@@ -442,7 +453,7 @@ end
 % SUBFUNCTION for reading the 16 bit values
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function buf = readLowLevel(EDF, offset, numwords)
-is_below_2GB = offset < 2*1024^3;
+is_below_2GB = offset < 2*1024^2;
 read_16bit_success = true;
 if is_below_2GB
   % use the external mex file, only works for <2GB
