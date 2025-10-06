@@ -246,7 +246,7 @@ if needhdr
   %EDF.AS.IDX3=idx3;
   
   % close the file
-  fclose(EDF.FILE.FID);
+  %fclose(EDF.FILE.FID);
   
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % convert the header to Fieldtrip-style
@@ -395,7 +395,7 @@ elseif needdat || needevt
       % only a subset of channels with consistent sampling frequency is read
       offset = EDF.HeadLen + (i-1)*blocksize*2; % in bytes
       % read the complete data block
-      buf = readLowLevel(filename, offset, blocksize); % see below in subfunction
+      buf = readLowLevel(EDF, offset, blocksize); % see below in subfunction
       for j=1:length(chanindx)
         % cut out the part that corresponds with a single channel
         dat(j,((i-begepoch)*epochlength+1):((i-begepoch+1)*epochlength)) = buf((1:epochlength) + chanoffset(chanindx(j)));
@@ -435,32 +435,36 @@ elseif needdat || needevt
     % in case of one channel the sparse multiplication would result in a sparse array
     dat = calib * dat;
   end
+
 end
+fclose(EDF.FILE.FID);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION for reading the 16 bit values
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function buf = readLowLevel(filename, offset, numwords)
+function buf = readLowLevel(EDF, offset, numwords)
 is_below_2GB = offset < 2*1024^3;
 read_16bit_success = true;
 if is_below_2GB
   % use the external mex file, only works for <2GB
   try
-    buf = read_16bit(filename, offset, numwords);
+    buf = read_16bit(EDF.FileName, offset, numwords);
   catch e
     read_16bit_success = false;
   end
 end
 if ~is_below_2GB || ~read_16bit_success
   % use plain matlab, thanks to Philip van der Broek
-  fp = fopen(filename,'r','ieee-le');
+  fp = EDF.FILE.FID;
+
   status = fseek(fp, offset, 'bof');
   if status
     ft_error(['failed seeking ' filename]);
   end
   [buf,num] = fread(fp,numwords,'bit16=>double');
-  fclose(fp);
+  
   if (num<numwords)
+    fclose(fp);
     ft_error(['failed reading ' filename]);
     return
   end
