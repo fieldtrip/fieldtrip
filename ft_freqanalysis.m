@@ -629,7 +629,7 @@ for itrial = 1:ntrials
       end
       
     case 'mtmfft'
-      [spectrum,ntaper,foi,dof] = ft_specest_mtmfft(dat, time, 'taper', cfg.taper, 'taperopt', cfg.taperopt, 'weightopt', cfg.mtmadapt, options{:}, 'feedback', fbopt, 'verbose', verbose);
+      [spectrum,ntaper,foi,df] = ft_specest_mtmfft(dat, time, 'taper', cfg.taper, 'taperopt', cfg.taperopt, 'weightopt', cfg.mtmadapt, options{:}, 'feedback', fbopt, 'verbose', verbose);
       hastime = false;
       
     case 'irasa'
@@ -790,12 +790,17 @@ for itrial = 1:ntrials
       dimord = sprintf('%s_time', dimord); % add _time
     end
     
-    % prepare calcdof
+    % prepare calcdof: this is an option that does not seem to be widely
+    % used throughout the codebase, but it may make sense to keep track of
+    % the effective degrees-of-freedom with variable time axes and/or
+    % different numbers of tapers, or different adaptive weigths (mtmfft)
     if strcmp(cfg.calcdof, 'yes')
       if hastime
-        dof = zeros(nfoi,ntoi);
+        dof = zeros(ntrials,nfoi,ntoi); % with mtmconvol there might be different numbers of tapers per frequency
+      elseif isequal(cfg.method, 'mtmfft') && isequal(cfg.mtmadapt, 'adapt')
+        dof = zeros(ntrials,nchan,nfoi);
       else
-        dof = zeros(nfoi,1);
+        dof = zeros(ntrials,nfoi);
       end
     end
     
@@ -817,7 +822,7 @@ for itrial = 1:ntrials
     if strcmp(cfg.method, 'mtmconvol')
       foiind  = ones(1,nfoi);
       loopfoi = 1:nfoi;
-    elseif hastime || all(ntaper==ntaper(1))
+    elseif hastime || ~all(ntaper==ntaper(1))
       foiind  = 1:nfoi;
       loopfoi = 1:nfoi;
     else
@@ -911,9 +916,16 @@ for itrial = 1:ntrials
         if hastime
           acttimboiind = ~all(isnan(spectrum(1,:,foiind(ifoi),:)), 2); % check over all channels, some channels might contain a NaN
           acttimboiind = reshape(acttimboiind, [1 ntoi]);
-          dof(ifoi,acttimboiind) = ntaper(ifoi) + dof(ifoi,acttimboiind);
+          dof(itrial,ifoi,acttimboiind) = 2.*ntaper(ifoi) + dof(itrial,ifoi,acttimboiind);
+        elseif isequal(cfg.method, 'mtmfft')
+          % if mtmfft, df is already provided
+          if isequal(cfg.mtmadapt, 'adapt')
+            dof(itrial,:,ifoi) = df(:,ifoi);
+          else
+            dof(itrial,ifoi) = df(ifoi);
+          end
         else % hastime = false
-          dof(ifoi) = ntaper(ifoi) + dof(ifoi);
+          dof(itrial,ifoi) = 2.*ntaper(ifoi) + dof(itrial,ifoi);
         end
       end
     end %ifoi
@@ -1101,7 +1113,11 @@ if csdflg
   freq.crsspctrm = crsspctrm;
 end
 if strcmp(cfg.calcdof, 'yes')
-  freq.dof = 2 .* dof;
+  if keeprpt==1
+    freq.dof = shiftdim(sum(dof,1));
+  else
+    freq.dof = dof;
+  end
 end
 if strcmp(cfg.method, 'mtmfft') && (keeprpt == 2 || keeprpt == 4)
   freq.cumsumcnt = trllength';

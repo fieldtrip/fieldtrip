@@ -5,11 +5,11 @@ function test_ft_freqanalysis
 % DEPENDENCY ft_freqanalysis
 % DATA no
 
-ntrl = 1000;
+ntrl = 100;
 nchan = 32;
 fs = 500;
 start_time = -1; % seconds
-end_time = 2.5; % seconds
+end_time = 2.5 - 1./500; % seconds
 nsamples = (end_time - start_time) * fs + 1;
 
 data = [];

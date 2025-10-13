@@ -94,6 +94,7 @@ if isequal(windowlength, 'auto')
   windownsample = 2^floor(log2(nsmp*0.9));
 elseif isequal(windowlength, 'all')
   windownsample = nsmp;
+  nwindow = 1;
 else
   windownsample = round(fsample*windowlength);
 end
@@ -209,9 +210,9 @@ end
 
 % set ntaper
 if strcmp(output, 'fractal')
-  ntaper = repmat(size(tap,2),nfreqoi,1); % pretend there's only one taper
+  ntaper = repmat(size(tap,2),1,nfreqoi); % pretend there's only one taper
 elseif strcmp(output, 'original')
-  ntaper = repmat(size(tap,1),nfreqoi,1);
+  ntaper = repmat(size(tap,1),1,nfreqoi);
 end
 
 % feedback of computing progress

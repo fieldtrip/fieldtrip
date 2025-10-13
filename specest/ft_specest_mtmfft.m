@@ -4,7 +4,7 @@ function [spectrum, ntaper, freqoi, se] = ft_specest_mtmfft(dat, time, varargin)
 % multiple tapers from the DPSS sequence or using a variety of single tapers.
 %
 % Use as
-%   [spectrum, ntaper, freqoi, w] = ft_specest_mtmfft(dat, time, ...)
+%   [spectrum, ntaper, freqoi, se] = ft_specest_mtmfft(dat, time, ...)
 % where the input arguments are
 %   dat        = matrix of chan*sample
 %   time       = vector, containing time in seconds for each sample
@@ -258,7 +258,7 @@ end % isequal currargin
 
 % set ntaper
 if ~((strcmp(taper,'dpss') || strcmp(taper,'sine')) && numel(tapsmofrq)>1) % variable number of slepian tapers not requested
-  ntaper = repmat(size(tap,1),nfreqoi,1);
+  ntaper = repmat(size(tap,1),1,nfreqoi);
 else % variable number of slepian tapers requested
   ntaper = cellfun(@size,tap,repmat({1},[1 nfreqoi]));
 end
@@ -302,6 +302,9 @@ if ~((strcmp(taper,'dpss') || strcmp(taper,'sine')) && numel(tapsmofrq)>1) % var
     [spec, se, wt] = adaptspec_dpss(dum, w, adaptflag);
     wt  = wt(:,freqboi,:);
     se  = se(:,freqboi);
+    if all(se==se(1))
+      se = se(1,:);
+    end
   else
     wt = 1;
     se = 2;

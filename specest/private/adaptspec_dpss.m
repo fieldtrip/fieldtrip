@@ -86,7 +86,6 @@ elseif adaptflag==2
     end
 
     if oerr <= rerr
-      disp(i)
       spec = sbar;
       break;
     end
