@@ -271,7 +271,11 @@ switch type
     B = firls(order,f,z); % requires MATLAB signal processing toolbox
     
   case 'brickwall'
-    ix = linspace(0, Fs, size(dat, 2)+1) / (Fs / size(dat, 2));
+    ax = linspace(0, Fs, size(dat, 2))';
+    
+    a     = ones(1, size(dat,2));
+    fbin1 = dsearchn(ax, [min(Fbp);    max(Fbp)]);
+    fbin2 = dsearchn(ax, [Fs-max(Fbp); Fs-min(Fbp)])+1; % same band at the other end of the spectrum; +1: index correction for the negative elements
     ax = ix ./ (size(dat,2)./Fs); % frequency axis, including the other end of the spectrum
     
     a    = ones(1, size(dat,2));
