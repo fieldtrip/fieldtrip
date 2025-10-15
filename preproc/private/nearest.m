@@ -23,7 +23,7 @@ function [indx] = nearest(array, val, insideflag, toleranceflag)
 % tolerance that is allowed is half the distance between the subsequent
 % values in the array.
 %
-% See also FIND
+% See also FIND, DSEARCHN
 
 % Copyright (C) 2002-2012, Robert Oostenveld
 %
