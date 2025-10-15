@@ -200,7 +200,7 @@ else
       end
       
     case 'sine'
-      if isscalar
+      if isscalar(tapsmofrq)
         % create a sequence of sine tapers, 
         tap = sine_taper(ndatsample, ndatsample*(tapsmofrq./fsample))';
         % remove the last taper 
