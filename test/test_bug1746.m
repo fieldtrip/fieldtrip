@@ -6,7 +6,7 @@ function test_bug1746
 % DATA private
 
 load(dccnpath('/project/3031000.02/test/latest/vol/Subject01vol_singleshell.mat'));
-load(dccnpath('/project/3031000.02/test/latest/freq/meg/freq_mtmfft_powandcsd_ctf275.mat'));
+load(dccnpath('/project/3031000.02/test/latest/freq/meg/freq_mtmfft_fourier_trl_ctf275.mat'));
 load(dccnpath('/project/3031000.02/test/latest/source/meg/source_grid_mtmfft_fourier_trl_DICS_fixedori_ctf275.mat'));
 
 sourcemodel = ft_source2grid(source);
