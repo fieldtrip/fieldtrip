@@ -266,14 +266,16 @@ switch type
     A = 1;
     B = firls(N,f,z); % requires MATLAB signal processing toolbox
   case 'brickwall'
-    ax = (0:(size(dat,2)-1))./(Fs/size(dat,2)); % frequency axis
-    
+    n  = size(dat, 2);
+    ax = (0:(n-1)).*(Fs./n);
+
+    % deal with the part of the ax > Fs/2
+    ax(ax>Fs/2) = Fs - ax(ax>Fs/2);
+
+    % create a mask for the fft, requiring the full frequency range, excluding frequency bins >= flow 
     a     = ones(1, size(dat,2));
-    fbin1 = nearest(ax, Flp);
-    fbin2 = nearest(ax, Fs-Flp);
-    
-    a((fbin1+1):(fbin2-1)) = 0;
-    
+    a(ax>=Flp) = 0;
+   
     f    = fft(dat,[],2);             % FFT
     f    = f.*a(ones(size(dat,1),1),:); % brickwall
     filt = real(ifft(f,[],2));        % iFFT
