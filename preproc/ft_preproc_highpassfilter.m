@@ -49,10 +49,10 @@ function [filt, B, A] = ft_preproc_highpassfilter(dat, Fs, Fhp, N, type, dir, in
 % given that the FFT is performed on untapered data, substantial signal leakage
 % may occur. Another issue pertains to 0/1 nature of the brick wall mask in the
 % frequency domain. Particularly with short data segments, the frequency resolution
-% will be low, and one should realise that the the fact that frequency bins are
-% widely spaced on short time intervals, which has consequences for the low frequencies.
-% In general, one should be aware of the frequency bins' width, and how
-% this interacts with the filter parameters.
+% will be low, and one should realise that frequency bins are widely spaced on short 
+% time intervals, which has consequences for the low frequencies. In general, one 
+% should be aware of the frequency bins' width, and how this interacts with the filter
+% parameters. Only use this filter if you know what you are doing.
 %
 % If the data contains NaNs, these will affect the output. With an IIR
 % filter, and/or with FFT-filtering, local NaNs will spread to the whole
