@@ -43,10 +43,16 @@ function [filt, B, A] = ft_preproc_bandstopfilter(dat, Fs, Fbp, order, type, dir
 % filter, i.e. a two-pass filter with the same filter order will attenuate the signal
 % twice as strong.
 %
-% Further note that the filter type 'brickwall' filters in the frequency domain,
-% but may have severe issues. For instance, it has the implication that the time
-% domain signal is periodic. Another issue pertains to that frequencies are
-% not well defined over short time intervals; particularly for low frequencies.
+% Further note that the filter type 'brickwall' operates in the frequency domain,
+% which may have severe issues. For instance, it is assumed that the time
+% domain signal is periodic over the finite period of observation. In other words, 
+% given that the FFT is performed on untapered data, substantial signal leakage
+% may occur. Another issue pertains to 0/1 nature of the brick wall mask in the
+% frequency domain. Particularly with short data segments, the frequency resolution
+% will be low, and one should realise that the the fact that frequency bins are
+% widely spaced on short time intervals, which has consequences for the low frequencies.
+% In general, one should be aware of the frequency bins' width, and how
+% this interacts with the filter parameters.
 %
 % If the data contains NaNs, these will affect the output. With an IIR
 % filter, and/or with FFT-filtering, local NaNs will spread to the whole
@@ -279,8 +285,7 @@ switch type
     % deal with the part of the ax > Fs/2
     ax(ax>Fs/2) = Fs - ax(ax>Fs/2);
 
-    % create a mask for the fft, requiring the full frequency range
-    % NOTE: the mask excludes frequency bins >= flow, and <= fhigh 
+    % create a mask for the fft, requiring the full frequency range, excluding frequency bins >= flow, and <= fhigh 
     a     = ones(1, size(dat,2));
     a(ax>=Fbp(1) & ax<=Fbp(2)) = 0;
     
