@@ -43,10 +43,16 @@ function [filt, B, A] = ft_preproc_bandstopfilter(dat, Fs, Fbp, order, type, dir
 % filter, i.e. a two-pass filter with the same filter order will attenuate the signal
 % twice as strong.
 %
-% Further note that the filter type 'brickwall' filters in the frequency domain,
-% but may have severe issues. For instance, it has the implication that the time
-% domain signal is periodic. Another issue pertains to that frequencies are
-% not well defined over short time intervals; particularly for low frequencies.
+% Further note that the filter type 'brickwall' operates in the frequency domain,
+% which may have severe issues. For instance, it is assumed that the time
+% domain signal is periodic over the finite period of observation. In other words, 
+% given that the FFT is performed on untapered data, substantial signal leakage
+% may occur. Another issue pertains to 0/1 nature of the brick wall mask in the
+% frequency domain. Particularly with short data segments, the frequency resolution
+% will be low, and one should realise that frequency bins are widely spaced on short 
+% time intervals, which has consequences for the low frequencies. In general, one 
+% should be aware of the frequency bins' width, and how this interacts with the filter
+% parameters. Only use this filter if you know what you are doing.
 %
 % If the data contains NaNs, these will affect the output. With an IIR
 % filter, and/or with FFT-filtering, local NaNs will spread to the whole
@@ -273,14 +279,15 @@ switch type
     A = 1;
     B = firls(order,f,z); % requires MATLAB signal processing toolbox
   case 'brickwall'
-    ax = (0:(size(dat,2)-1))./(Fs/size(dat,2)); % frequency axis
-    
-    a    = ones(1, size(dat,2));
-    fbin1 = nearest(ax, [min(Fbp)    max(Fbp)]);
-    fbin2 = nearest(ax, [Fs-max(Fbp) Fs-min(Fbp)]); % same band at the other end of the spectrum 
-    
-    a(fbin1(1):fbin1(2)) = 0;
-    a(fbin2(1):fbin2(2)) = 0;
+    n  = size(dat, 2);
+    ax = (0:(n-1)).*(Fs./n);
+
+    % deal with the part of the ax > Fs/2
+    ax(ax>Fs/2) = Fs - ax(ax>Fs/2);
+
+    % create a mask for the fft, requiring the full frequency range, excluding frequency bins >= flow, and <= fhigh 
+    a     = ones(1, size(dat,2));
+    a(ax>=Fbp(1) & ax<=Fbp(2)) = 0;
     
     f    = fft(dat,[],2);             % FFT
     f    = f.*a(ones(size(dat,1),1),:); % brickwall
