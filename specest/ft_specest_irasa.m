@@ -249,6 +249,9 @@ for itap = 1:ntaper(1)
         % compute auto-power of resampled data
         % upsampled
         postpad = ceil(round(pad * fsample) - size(udat,2));
+        if postpad<0
+          ft_error('the requested amount of zero-padding is < 0, this is not possible');
+        end
         tmp = fft(ft_preproc_padding(bsxfun(@times,udat,tap{ih,1}), padtype, 0, postpad), endnsample, 2);
         tmp = tmp(:,freqboi);
         tmp = tmp .* sqrt(2 ./ endnsample);

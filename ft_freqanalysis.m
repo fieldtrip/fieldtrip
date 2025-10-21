@@ -546,7 +546,8 @@ elseif strcmp(cfg.pad, 'nextpow2')
   cfg.pad = padding/data.fsample;
 else
   padding = cfg.pad*data.fsample;
-  if padding<max(trllength)
+  if padding<max(trllength) && ~isequal(cfg.method, 'irasa')
+    % only throw an error when the method is not irasa, because irasa has other constraints
     ft_error('the specified padding is too short');
   end
 end
