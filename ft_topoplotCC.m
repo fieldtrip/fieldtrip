@@ -8,7 +8,7 @@ function [cfg] = ft_topoplotCC(cfg, freq)
 % The configuration should contain:
 %   cfg.feedback      = string (default = 'textbar')
 %   cfg.layout        = specification of the layout, see FT_PREPARE_LAYOUT
-%   cfg.foi           = the frequency of interest which is to be plotted (default is the first frequency bin)
+%   cfg.foi           = scalar, the frequency of interest which is to be plotted (default is the first frequency bin)
 %   cfg.widthparam    = string, parameter to be used to control the line width (see below)
 %   cfg.alphaparam    = string, parameter to be used to control the opacity (see below)
 %   cfg.colorparam    = string, parameter to be used to control the line color
