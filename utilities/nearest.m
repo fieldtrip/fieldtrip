@@ -5,8 +5,7 @@ function [indx] = nearest(array, val, insideflag, toleranceflag)
 % Use as
 %   [indx] = nearest(array, val, insideflag, toleranceflag)
 %
-% The second input val can be a scalar, or a [minval maxval] vector for
-% limits selection.
+% The second input val should be a scalar.
 %
 % If not specified or if left empty, the insideflag and the toleranceflag
 % will default to false.
@@ -25,7 +24,7 @@ function [indx] = nearest(array, val, insideflag, toleranceflag)
 %
 % See also FIND, DSEARCHN
 
-% Copyright (C) 2002-2012, Robert Oostenveld
+% Copyright (C) 2002-2025, Robert Oostenveld and Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -45,31 +44,12 @@ function [indx] = nearest(array, val, insideflag, toleranceflag)
 %
 % $Id$
 
+% input checks
 mbreal(array);
-mbreal(val);
-
 mbvector(array);
-assert(all(~isnan(val)), 'incorrect value (NaN)');
-
-if numel(val)==2
-  % interpret this as a range specification like [minval maxval]
-  % see also http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1431
-  intervaltol = eps;
-  sel = find(array>=val(1) & array<=val(2));
-  if isempty(sel)
-    ft_error('The limits you selected are outside the range available in the data');
-  end
-  indx = sel([1 end]);
-  if indx(1)>1 && abs(array(indx(1)-1)-val(1))<=intervaltol
-    indx(1) = indx(1)-1;
-  end
-  if indx(2)<length(array) && abs(array(indx(2)+1)-val(2))<=intervaltol
-    indx(2) = indx(2)+1;
-  end
-  return
-end
-
-mbscalar(val);
+mbreal(val);
+if ~isscalar(val), ft_error('The selected value should be a scalar, non-scalar value is not supported anymore due to ambiguity in functional behavior'); end
+if  isnan(val),    ft_error('The selected value should not be NaN');  end
 
 if nargin<3 || isempty(insideflag)
   insideflag = false;
@@ -90,7 +70,7 @@ maxarray = max(array);
 if insideflag
   if ~toleranceflag
     if val<minarray || val>maxarray
-      if numel(array)==1
+      if isscalar(array)
         ft_warning('the selected value %g should be within the range of the array from %g to %g', val, minarray, maxarray);
       else
         ft_error('the selected value %g should be within the range of the array from %g to %g', val, minarray, maxarray);
@@ -166,14 +146,6 @@ end
 function mbreal(a)
 if ~isreal(a)
   ft_error('Argument to mbreal must be real');
-end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function mbscalar(a)
-if ~all(size(a)==1)
-  ft_error('Argument to mbscalar must be scalar');
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

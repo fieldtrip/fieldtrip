@@ -994,7 +994,7 @@ if isempty(cfg.latency)
     timeindx{k} = [];
   end
   
-elseif numel(cfg.latency)==1
+elseif isscalar(cfg.latency)
   % this single value should be within the time axis of each input data structure
   if numel(alltimevec)>1
     tbin = nearest(alltimevec, cfg.latency, true, true); % determine the numerical tolerance
@@ -1130,7 +1130,7 @@ if isfield(cfg, 'frequency')
       freqindx{k} = [];
     end
     
-  elseif numel(cfg.frequency)==1
+  elseif isscalar(cfg.frequency)
     % this single value should be within the frequency axis of each input data structure
     if numel(freqaxis)>1
       fbin = nearest(freqaxis, cfg.frequency, true, true); % determine the numerical tolerance
