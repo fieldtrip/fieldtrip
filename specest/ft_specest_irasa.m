@@ -117,7 +117,7 @@ end
 % check whether zero padding is needed
 if isempty(pad)
   % if no padding is specified this is set equal to the current data length
-  pad = windownsample/fsample;
+  pad = 2*windownsample/fsample;
 end
 if round(pad * fsample) < windownsample
   ft_error('the padding that you specified is shorter than the data');
