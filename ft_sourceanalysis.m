@@ -566,6 +566,10 @@ if isfreq && any(strcmp(cfg.method, {'dics', 'pcc', 'eloreta', 'mne','harmony', 
       % if the input data has a complete Fourier spectrum, it can be projected through the filters
       if isfield(data, 'fourierspctrm')
         [dum, datchanindx] = match_str(tmpcfg.channel, data.label);
+
+        % FIXME: the below code, as opposed to the next section only works
+        % with scalar inputs to nearest (i.e. a scalar cfg.frequency or/and
+        % cfg.latency
         fbin = nearest(data.freq, cfg.frequency);
         if strcmp(data.dimord, 'chan_freq')
           avg = data.fourierspctrm(datchanindx, fbin);
@@ -590,20 +594,30 @@ if isfreq && any(strcmp(cfg.method, {'dics', 'pcc', 'eloreta', 'mne','harmony', 
       % if the input data has a complete fourier spectrum, it can be projected through the filters
       if isfield(data, 'fourierspctrm')
         [dum, datchanindx] = match_str(tmpcfg.channel, data.label);
-        fbin = nearest(data.freq, cfg.frequency);
-        if numel(fbin)==1, fbin = fbin.*[1 1]; end
+        
+        % select the frequency (and time)  bins
+        if isscalar(cfg.frequency)
+          fbin = nearest(data.freq, cfg.frequency);
+        else
+          fbin = (nearest(data.freq, cfg.frequency(1)):nearest(data.freq, cfg.frequency(2)));
+        end
+        if contains(data.dimord, 'time')
+          if isscalar(cfg.latency)
+            tbin = nearest(data.time, cfg.latency);
+          else
+            tbin = (nearest(data.time, cfg.latency(1)):nearest(data.time, cfg.latency(2)));
+          end
+        end
+
+        % select the data
         if strcmp(data.dimord, 'chan_freq')
           avg = data.fourierspctrm(datchanindx, fbin);
         elseif strcmp(data.dimord, 'rpt_chan_freq') || strcmp(data.dimord, 'rpttap_chan_freq')
-          avg = permute(data.fourierspctrm(:, datchanindx, fbin(1):fbin(2)), [2 1 3]);
+          avg = permute(data.fourierspctrm(:, datchanindx, fbin), [2 1 3]);
         elseif strcmp(data.dimord, 'chan_freq_time')
-          tbin = nearest(data.time, cfg.latency);
-          if numel(tbin)==1, tbin = tbin.*[1 1]; end
-          avg = data.fourierspctrm(datchanindx, fbin(1):fbin(2), tbin(1):tbin(2));
+          avg = data.fourierspctrm(datchanindx, fbin, tbin);
         elseif strcmp(data.dimord, 'rpt_chan_freq_time') || strcmp(data.dimord, 'rpttap_chan_freq_time')
-          tbin = nearest(data.time, cfg.latency);
-          if numel(tbin)==1, tbin = tbin.*[1 1]; end
-          avg  = permute(data.fourierspctrm(:, datchanindx, fbin(1):fbin(2), tbin(1):tbin(2)), [2 1 3 4]);
+          avg  = permute(data.fourierspctrm(:, datchanindx, fbin, tbin), [2 1 3 4]);
         end
       else % The input data is a CSD matrix, this is enough for computing source power, coherence and residual power.
         ft_warning('no fourierspctra in the input data, so the frequency domain dipole moments cannot be computed');

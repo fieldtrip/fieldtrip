@@ -48,14 +48,14 @@ end
 try
   nearest(.1:.1:1.0,[3 8]);
 catch me
-  if ~strcmp(me.message,'The selected value should be a scalar')
+  if ~strcmp(me.message,'The selected value should be a scalar, non-scalar value is not supported anymore due to ambiguity in functional behavior')
     error('wrong error message in nearest')
   end
 end
 
 % create a large array and test
 
-x = 0:492:(492*(25*10^7));
+x = 0:492:(492*(25*10^6));
 y = 8424306*492;
 indx = nearest(x,y);
 indx2 = find(x<=y, 1, 'last');
@@ -81,8 +81,8 @@ for i=1:10
 end
 t2 = toc;
 
-fprintf('Time needed for nearest function: %.2g s per 100 calls\n', t1/100);
-fprintf('Time needed for find function: %.2g s per 100 calls\n', t2/100);
+fprintf('Time needed for nearest function: %.2g s per 10 calls\n', t1/10);
+fprintf('Time needed for find function: %.2g s per 10 calls\n', t2/10);
 
 if indx~=indx2
   error('nearest does not output the correct value');
