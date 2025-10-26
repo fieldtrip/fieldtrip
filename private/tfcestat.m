@@ -1,4 +1,4 @@
-function [stat, cfg] = tfcestat(cfg, statrnd, statobs)
+function [stattfce, cfg] = tfcestat(cfg, statobs)
 
 % TFCESTAT computes threshold-free cluster statistic multidimensional channel-freq-time or
 % volumetric source data
@@ -36,10 +36,10 @@ cfg.tfce_h0      = ft_getopt(cfg, 'tfce_h0',      0);
 cfg.tfce_H       = ft_getopt(cfg, 'tfce_H',       2);
 cfg.tfce_E       = ft_getopt(cfg, 'tfce_E',       0.5);
 cfg.tfce_nsteps  = ft_getopt(cfg, 'nsteps',       100);
-
+cfg.height       = ft_getopt(cfg, 'height',       []);
 % these defaults are already set in the caller function, 
 % but may be necessary if a user calls this function directly
-cfg.connectivity     = ft_getopt(cfg, 'connectivity',     false);
+cfg.connectivity = ft_getopt(cfg, 'connectivity', false);
 
 % ensure that the preferred SPM version is on the path
 ft_hastoolbox(cfg.spmversion, 1);
@@ -62,26 +62,26 @@ connmat = full(ft_getopt(cfg, 'connectivity', false));
 needpos = cfg.tail==0 || cfg.tail== 1;
 needneg = cfg.tail==0 || cfg.tail==-1;
 
-Nrand      = size(statrnd,2);
-prb_pos    = zeros(size(statobs));
-prb_neg    = zeros(size(statobs));
-
 % remove the offset, which by default is 0
-statrnd = statrnd - cfg.tfce_h0;
 statobs = statobs - cfg.tfce_h0; 
 
 % compute the stepsize
-if needneg && needpos
-  height = max(max(abs(statobs(:))), max(abs(statrnd(:))));
-elseif needneg
-  height = max(max(-statobs(:)), max(-statrnd(:)));
-elseif needpos
-  height = max(max(statobs(:)), max(statrnd(:)));
+if isempty(cfg.height)
+  % explicitly compute the height here, to be added to the output cfg, so
+  % that in a subsequent call to this function the same settings can be
+  % used (i.e. for the randomizations)
+  if needneg && needpos
+    cfg.height = max(abs(statobs(:)));
+  elseif needneg
+    cfg.height = max(-statobs(:));
+  elseif needpos
+    cfg.height = max(statobs(:));
+  end
 end
-stepsize = height./cfg.tfce_nsteps;
+stepsize = cfg.height./cfg.tfce_nsteps;
 
 % first do the clustering on the observed data
-spacereshapeable = (numel(connmat)==1 && ~isfinite(connmat));
+spacereshapeable = (isscalar(connmat) && ~isfinite(connmat));
 
 if needpos
   if spacereshapeable
@@ -99,7 +99,7 @@ if needpos
   for j = 1:cfg.tfce_nsteps
     thr = (j-1)*stepsize;
     tmp(tmp<=thr) = 0;
-    [clus, nclus] = findcluster(tmp, connmat, 0);
+    [clus, nclus] = findcluster(tmp, connmat);
     extent = zeros(size(clus));
     extent = getextent(clus, nclus, extent); 
     statobspos = statobspos + stepsize .* (extent.^cfg.tfce_E) .* (thr.^cfg.tfce_H);
@@ -126,7 +126,7 @@ if needneg
   for j = 1:cfg.tfce_nsteps
     thr = (j-1)*stepsize;
     tmp(tmp<=thr) = 0;
-    [clus, nclus] = findcluster(tmp, connmat, 0);
+    [clus, nclus] = findcluster(tmp, connmat);
     extent = zeros(size(clus));
     extent = getextent(clus, nclus, extent);
     statobsneg = statobsneg + stepsize .* (extent.^cfg.tfce_E) .* (thr.^cfg.tfce_H);
@@ -139,105 +139,8 @@ if needneg
   end
   
 end % if needneg
+stattfce = statobsneg + statobspos;
 
-% add the offset back to the observed data
-statobs = statobs + cfg.tfce_h0;
-
-posdistribution = zeros(1,Nrand); % this holds the statistic of the largest positive tfce value in each randomization
-negdistribution = zeros(1,Nrand); % this holds the statistic of the largest negative tfce value in each randomization
-
-% do the clustering on the randomized data
-ft_progress('init', cfg.feedback, 'computing tfce for the test statistic computed from the randomized design');
-for i = 1:Nrand
-  ft_progress(i/Nrand, 'computing tfce for randomization %d from %d\n', i, Nrand);
-  if needpos
-    if spacereshapeable
-      tmp = zeros([1 cfg.dim]);
-      tmp(cfg.inside) = statrnd(:,i);
-    else
-      tmp = reshape(statrnd(:,i), [cfg.dim 1]);
-    end
-    
-    statrndpos = zeros(size(tmp));
-    for j = 1:cfg.tfce_nsteps
-      thr = (j-1)*stepsize;
-      tmp(tmp<=thr) = 0;
-      [clus, nclus] = findcluster(tmp, connmat, 0);
-      extent = zeros(size(clus));
-      extent = getextent(clus, nclus, extent);
-      statrndpos = statrndpos + stepsize .* (extent.^cfg.tfce_E) .* (thr.^cfg.tfce_H);
-    end
-    
-    if spacereshapeable
-      statrndpos = statrndpos(cfg.inside);
-    else
-      statrndpos = statrndpos(:);
-    end  
-    posdistribution(i) = max(statrndpos(:));
-    
-    prb_pos = prb_pos + (statobspos<posdistribution(i));
-  end % needpos
-  
-  if needneg
-    if spacereshapeable
-      tmp = zeros([1 cfg.dim]);
-      tmp(cfg.inside) = statrnd(:,i);
-    else
-      tmp = reshape(statrnd(:,i), [cfg.dim 1]);
-    end
-    tmp = -tmp;
-    
-    statrndneg = zeros(size(tmp));
-    for j = 1:cfg.tfce_nsteps
-      thr = (j-1)*stepsize;
-      tmp(tmp<=thr) = 0;
-      [clus, nclus] = findcluster(tmp, connmat, 0);
-      extent = zeros(size(clus));
-      extent = getextent(clus, nclus, extent);
-      statrndneg = statrndneg + stepsize .* (extent.^cfg.tfce_E) .* (thr.^cfg.tfce_H);
-    end
-    
-    if spacereshapeable
-      statrndneg = -statrndneg(cfg.inside);
-    else
-      statrndneg = -statrndneg(:);
-    end
-    negdistribution(i) = min(statrndneg(:));
-  
-    prb_neg = prb_neg + (statobsneg>negdistribution(i));
-  end % needneg
-end % for 1:Nrand
-ft_progress('close');
-
-if isequal(cfg.numrandomization, 'all')
-  N = Nrand;
-else
-  % the minimum possible p-value should not be 0, but 1/N, and the max
-  % should be 1
-  prb_neg = prb_neg+1;
-  prb_pos = prb_pos+1;
-  N = Nrand+1;
-end
-
-% compute the probablities and collect the remaining details in the output structure
-stat = struct();
-if cfg.tail==0
-  % consider both tails
-  stat.prob = min(prb_neg, prb_pos)./N; % this is the probability for the most unlikely tail
-  stat.stat_tfce = statobspos + statobsneg;
-  stat.posdistribution = posdistribution;
-  stat.negdistribution = negdistribution;
-elseif cfg.tail==1
-  % only consider the positive tail
-  stat.prob = prb_pos./N;
-  stat.stat_tfce = statobspos;
-  stat.posdistribution = posdistribution;
-elseif cfg.tail==-1
-  % only consider the negative tail
-  stat.prob = prb_neg./N;
-  stat.stat_tfce = statobsneg;
-  stat.negdistribution = negdistribution;
-end
 
 % faster integration a la Bruno Giordano, borrowed from LIMO_eeg
 function extent_map = getextent(clustered_map, num, extent_map)
