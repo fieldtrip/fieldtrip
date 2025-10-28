@@ -348,7 +348,7 @@ else
     numdip   = numel(pos)/3;
     numframe = size(dat,2)/numdip;
     
-    % do a sainty check on the number of frames, see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=3119
+    % do a sanity check on the number of frames, see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=3119
     assert(numframe>0 && numframe==round(numframe), 'the number of frames should be a positive integer');
     
     mom = zeros(3*numdip, numdip*numframe);
