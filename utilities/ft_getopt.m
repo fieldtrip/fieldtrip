@@ -22,7 +22,7 @@ function val = ft_getopt(opt, key, default, emptymeaningful)
 % If emptymeaningful==true, then the empty array will be returned.
 % If emptymeaningful==false, then the specified default will be returned.
 %
-% See also FT_SETOPT, FT_CHECKOPT, INPUTPARSER
+% See also FT_SETOPT, FT_CHECKOPT, FT_DELETEOPT, INPUTPARSER
 
 % Copyright (C) 2011-2012, Robert Oostenveld
 %

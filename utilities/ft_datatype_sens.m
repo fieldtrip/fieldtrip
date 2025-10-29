@@ -286,6 +286,7 @@ switch version
   case '2016'
     % update it to the previous standard version
     new_argin = ft_setopt(varargin, 'version', '2011v2');
+    new_argin = ft_deleteopt(new_argin, {'amplitude', 'distance', 'scaling'});
     sens      = ft_datatype_sens(sens, new_argin{:});
     
     % rename from org to old (reverse = false)

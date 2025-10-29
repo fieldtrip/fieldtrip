@@ -41,7 +41,7 @@ function opt = ft_checkopt(opt, key, allowedtype, allowedval)
 % allowed types and any of the allowed values is sufficient to let this
 % function pass.
 %
-% See also FT_GETOPT, FT_SETOPT
+% See also FT_GETOPT, FT_SETOPT, FT_DELETEOPT
 
 % Copyright (C) 2011-2022, Robert Oostenveld
 %
