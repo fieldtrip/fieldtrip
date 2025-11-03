@@ -1197,6 +1197,14 @@ ARRAY+=(utilities/ft_setopt.m)
 sync ${ARRAY[*]}
 
 ################################################################################
+# ft_struct2char.m
+
+ARRAY=()
+ARRAY+=(fileio/private/ft_struct2char.m)
+ARRAY+=(utilities/ft_struct2char.m)
+sync ${ARRAY[*]}
+
+################################################################################
 # ft_version.m
 
 ARRAY=()
