@@ -44,10 +44,8 @@ nsens  = numel(sens);
 
 % ensure the correct representation
 for i=1:nsens
-  newsens(i) = ft_datatype_sens(sens(i));
+  sens(i) = ft_datatype_sens(sens(i));
 end
-sens = newsens;
-clear newsens;
 
 fiducials = fixpos(fiducials);
 
