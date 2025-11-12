@@ -85,7 +85,9 @@ cfg.accuracy_orange = ft_getopt(cfg, 'accuracy_orange',  .3); % orange when with
 cfg.template        = ft_getopt(cfg, 'template',         []); % template dataset containing the references
 cfg.blocksize       = ft_getopt(cfg, 'blocksize',         1); % in seconds
 cfg.bufferdata      = ft_getopt(cfg, 'bufferdata',   'last'); % first (replay) or last (real-time)
+cfg.firstblock      = ft_getopt(cfg, 'firstblock'); % first block of data to be used if bufferdata='first'
 cfg.coilfreq        = ft_getopt(cfg, 'coilfreq',   [293, 307, 314, 321, 328]); % in Hz for Neuromag
+cfg.usecoils        = ft_getopt(cfg, 'usecoils',   1:numel(cfg.coilfreq));
 cfg.dewar           = ft_getopt(cfg, 'dewar',            []); % mesh of the dewar
 cfg.headshape       = ft_getopt(cfg, 'headshape',        []); % mesh of the head with the structure sensor
 cfg.polhemus        = ft_getopt(cfg, 'polhemus',         []); % mesh of the head recorded with the polhemus
@@ -96,7 +98,7 @@ clear ft_read_header
 
 % start by reading the header from the realtime buffer
 cfg = ft_checkconfig(cfg, 'dataset2files', 'yes'); % translate dataset into datafile+headerfile
-hdr = ft_read_header(cfg.headerfile, 'cache', true, 'coordsys', 'dewar');
+hdr = ft_read_header(cfg.headerfile, 'cache', true, 'coordsys', 'dewar', 'coilaccuracy', 1);
 
 % for backward compatibility, can be removed end 2018
 cfg = ft_checkconfig(cfg, 'renamed', {'head', 'headshape'});
@@ -104,6 +106,9 @@ cfg = ft_checkconfig(cfg, 'renamed', {'head', 'headshape'});
 % determine the size of blocks to process
 blocksize   = round(cfg.blocksize * hdr.Fs);
 prevSample  = 0;
+if isequal(cfg.bufferdata, 'first') && ~isempty(cfg.firstblock)
+  prevSample = blocksize * cfg.firstblock;
+end
 count       = 0;
 
 % determine MEG system type
@@ -175,6 +180,7 @@ if isctf
   if ~isempty(cfg.template)
     [p, f, x] = fileparts(cfg.template);
     if strcmp(x, '.ds')
+      % FIXME this is based on a har-coded assumption that ft_read_headshape returns the fiducials in the order NAS/LPA/RPA
       shape = ft_read_headshape(cfg.template, 'coordsys', 'dewar', 'format', 'ctf_ds');
       template(1,:) = [shape.fid.pos(1,1), shape.fid.pos(1,2), shape.fid.pos(1,3)]; % chan X pos
       template(2,:) = [shape.fid.pos(2,1), shape.fid.pos(2,2), shape.fid.pos(2,3)];
@@ -200,6 +206,7 @@ elseif isneuromag
   if ~isempty(cfg.template)
     [p, f, x] = fileparts(cfg.template);
     if strcmp(x, '.fif')
+      % FIXME this is based on a har-coded assumption that ft_read_headshape returns the fiducials in the order NAS/LPA/RPA
       shape = ft_read_headshape(cfg.template, 'coordsys', 'dewar', 'format', 'neuromag_fif');
       template(1,:) = [shape.fid.pos(1,1), shape.fid.pos(1,2), shape.fid.pos(1,3)]; % chan X pos
       template(2,:) = [shape.fid.pos(2,1), shape.fid.pos(2,2), shape.fid.pos(2,3)];
@@ -228,12 +235,19 @@ if isctf
   
 elseif isneuromag
   shape = ft_read_headshape(cfg.headerfile, 'coordsys', 'dewar', 'format', 'neuromag_fif', 'unit', 'cm');
-  for i = 1:min(size(shape.pos,1),length(cfg.coilfreq)) % for as many digitized or specified coils
-    if ~isempty(strfind(shape.label{i}, 'hpi'))
-      dip(i).pos = shape.pos(i,:); % chan X pos, initial guess for each of the dipole/coil positions
-      dip(i).mom = [0 0 0]';
-    end
+  
+  sel = startsWith(shape.label, 'hpi_');
+  dip.pos   = shape.pos(sel,:);
+  dip.label = shape.label(sel);
+
+  % use the selected coils only
+  dip.pos   = dip.pos(cfg.usecoils,:);
+  dip.label = dip.label(cfg.usecoils);
+  if isfield(shape, 'fid')
+    dip.pos   = cat(1, dip.pos, shape.fid.pos);
+    dip.label = cat(1, dip.label, lower(shape.fid.label));
   end
+
   if ~exist('dip', 'var')
     ft_error('head localization requires digitized positions for Neuromag systems')
   end
@@ -244,11 +258,7 @@ elseif isneuromag
   [vol, sens] = ft_prepare_vol_sens([], hdr.grad, 'channel', cfg.channel);
   sens = ft_datatype_sens(sens, 'scaling', 'amplitude/distance', 'distance', 'cm'); % ensure SI units
   coilsignal = [];
-  
-  % update distances, given that sensor units are m an not cm
-  cfg.accuracy_green = cfg.accuracy_green/100;
-  cfg.accuracy_orange = cfg.accuracy_orange/100;
-  
+ 
 else
   ft_error('the data does not resemble ctf, nor neuromag')
 end % if ctf or neuromag
@@ -374,8 +384,7 @@ while ishandle(hMainFig) && info.continue % while the flag is one, the loop cont
     end
     
     if info.isneuromag && size(coilsignal,2)~=info.blocksize
-      % construct the reference signal for each of the coils
-      % this needs to be updated if the blocksize changes
+      % construct the reference signal for each of the coils this needs to be updated if the blocksize changes
       ncoil = length(info.cfg.coilfreq);
       if ncoil==0
         ft_error('no coil frequencies were specified');
@@ -641,68 +650,44 @@ if isctf
   [dum, y3] = match_str('HLC0032', data.label);
   [dum, z3] = match_str('HLC0033', data.label);
   
-  % convert from meter to cm and assign to the resp. coil
+  % convert from meter to cm and assign to the resp. coil, ordered NAS/LPA/RPA
   hpi{1} = data.trial{1}([x1 y1 z1],end) * 100;
   hpi{2} = data.trial{1}([x2 y2 z2],end) * 100;
   hpi{3} = data.trial{1}([x3 y3 z3],end) * 100;
   
 elseif isneuromag
-  if all(startsWith(data.label, 'QUAT'))
-    q1 = data.trial{1}(strcmp(data.label, 'QUAT001'),:);
-    q2 = data.trial{1}(strcmp(data.label, 'QUAT002'),:);
-    q3 = data.trial{1}(strcmp(data.label, 'QUAT003'),:);
-    q4 = -data.trial{1}(strcmp(data.label, 'QUAT004'),:);
-    q5 = -data.trial{1}(strcmp(data.label, 'QUAT005'),:);
-    q6 = -data.trial{1}(strcmp(data.label, 'QUAT006'),:);
-    q = [q1(1) q2(1) q3(1) q4(1) q5(1) q6(1)];
-    
-    % compute the anatomical landmark location in cm
-    hpi{1} = ft_warp_apply(q(end,:), data.hdr.orig.dig(1).r' , 'quaternion')'*100;
-    hpi{2} = ft_warp_apply(q(end,:), data.hdr.orig.dig(2).r' , 'quaternion')'*100;
-    hpi{3} = ft_warp_apply(q(end,:), data.hdr.orig.dig(3).r' , 'quaternion')'*100;
-    
-  elseif all(startsWith(data.label, 'CHPI'))
-    q1 = data.trial{1}(strcmp(data.label, 'CHPI001'),:);
-    q2 = data.trial{1}(strcmp(data.label, 'CHPI002'),:);
-    q3 = data.trial{1}(strcmp(data.label, 'CHPI003'),:);
-    q4 = -data.trial{1}(strcmp(data.label, 'CHPI004'),:);
-    q5 = -data.trial{1}(strcmp(data.label, 'CHPI005'),:);
-    q6 = -data.trial{1}(strcmp(data.label, 'CHPI006'),:);
-    q = [q1(1) q2(1) q3(1) q4(1) q5(1) q6(1)];
-    
-    % compute the anatomical landmark location in cm
-    hpi{1} = ft_warp_apply(q(end,:), data.hdr.orig.dig(1).r' , 'quaternion')'*100;
-    hpi{2} = ft_warp_apply(q(end,:), data.hdr.orig.dig(2).r' , 'quaternion')'*100;
-    hpi{3} = ft_warp_apply(q(end,:), data.hdr.orig.dig(3).r' , 'quaternion')'*100;
-    
+  if all(startsWith(data.label, 'QUAT')) || all(startsWith(data.label, 'CHPI'))
+    % the quaternion data is present in the data as a channel, and is either named QUAT001/006, or CHPI001/006
+    for k = 1:6
+      q(1,k) = data.trial{1}(strcmp(data.label, sprintf('%s%03d', data.label{1}(1:4), k)));
+    end
+
+    % compute the anatomical landmark location in cm -> assumes m in data,
+    % and assumes fixed order of the digitized landmarks
+    hpi{2} = ft_warp_apply(q(end,:), data.hdr.orig.dig(1).r' , 'quaternion')'*100; % LPA
+    hpi{1} = ft_warp_apply(q(end,:), data.hdr.orig.dig(2).r' , 'quaternion')'*100; % NAS
+    hpi{3} = ft_warp_apply(q(end,:), data.hdr.orig.dig(3).r' , 'quaternion')'*100; % RPA
+       
   else
-    % estimate the complex-valued MEG topography for each coil
-    % this implements a discrete Fourier transform (DFT)
-    topo = [];
-    %[x, ut] = svdfft( data.trial{1} );
-    %data.trial{1} = x;
-    topo = ft_preproc_detrend(data.trial{1}) * ctranspose(coilsignal);
-    
-    % ignore the out-of-phase spectral component in the topography
-    topo = real(topo); % THIS SEEMS TO BE CRUCIAL
+    % estimate the complex-valued MEG topography for each coil, this implements a discrete Fourier transform (DFT)
+    topo = (ft_preproc_detrend(data.trial{1}) * ctranspose(coilsignal)); 
     
     % fit a magnetic dipole to each of the topographies
     constr.sequential = true; % for BTI systems this would be 'false' as all coils have the same frequency
     constr.rigidbody = true;
     
-    % fit the coils together
-    dipall = [];
-    ncoil = numel(dip);
-    for i=1:ncoil
-      dipall.pos(i,:) = dip(i).pos;
-    end
-    dipall = ft_inverse_dipolefit(dipall, sens, vol, topo, 'constr', constr, 'display', 'off');
-    for i=1:ncoil
-      sel = (1:3) + 3*(i-1);
-      dip(i).pos = dipall.pos(i,:);
-      dip(i).mom = real(dipall.mom(sel,i)); % ignore the complex phase information
-      hpi{i} = dip(i).pos;
-    end
+    % estimate the location of the hpi coils using an initial estimate
+    dipin.pos = dip.pos(startsWith(dip.label, 'hpi'),:);
+    dipout = ft_inverse_dipolefit(dipin, sens, vol, topo, 'constr', constr, 'display', 'off');
+    
+    % this transformation can be applied to the anatomical landmarks as represented in dipin, to be plugged into hp
+    transform_in2out = ([dipin.pos ones(size(dipin.pos,1),1)]\[dipout.pos ones(size(dipin.pos,1),1)])';
+    dip.pos = ft_warp_apply(transform_in2out, dip.pos);
+
+    hpi{2} = dip.pos(strcmp(dip.label, 'lpa'), :);
+    hpi{1} = dip.pos(strcmp(dip.label, 'nasion'), :);
+    hpi{3} = dip.pos(strcmp(dip.label, 'rpa'), :);
+
   end
 else
   ft_error('the data does not resemble ctf, nor neuromag')
@@ -759,147 +744,88 @@ cc(3) = zcirca + hpi{1}(3);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function draw_sub(handle)
 
-% get the info
+% get the infoM
 info = guidata(handle);
 
-% compute transformation
+% NOTE this is only correct if the position information in info.hpi reflects the locations of the NAS/LPA/RPA more or less
+% (i.e. if the placement of the first 3 hpi coils corresponds to the anatomical landmarks that define the coordinate system
+nas = info.hpi{1};
+lpa = info.hpi{2};
+rpa = info.hpi{3};
 if info.isctf
-  M          = ft_headcoordinates([info.hpi{1}(1),info.hpi{1}(2),info.hpi{1}(3)], [info.hpi{2}(1),info.hpi{2}(2),info.hpi{2}(3)], [info.hpi{3}(1),info.hpi{3}(2),info.hpi{3}(3)], 'ctf');
+  % compute transformation matrix
+  M   = ft_headcoordinates(nas, lpa, rpa, 'ctf'); 
 elseif info.isneuromag
-  M          = ft_headcoordinates([info.hpi{2}(1),info.hpi{2}(2),info.hpi{2}(3)], [info.hpi{1}(1),info.hpi{1}(2),info.hpi{1}(3)], [info.hpi{3}(1),info.hpi{3}(2),info.hpi{3}(3)], 'neuromag');
+  M   = ft_headcoordinates(nas, lpa, rpa, 'neuromag');
 end
+% M intends to transform from dewar to headspace
 M(1:3,1:3) = inv(M(1:3,1:3));
 M(1:3,4)   = (-M(1:3,4)'/M(1:3,1:3))';
 
 % plot the HPI mismatch
 if get(info.hCoilCheckBox, 'Value')
-  if info.isctf
     % draw nasion position
     if ~isempty(info.template)
-      if abs(info.template(1,1))-info.cfg.accuracy_green < abs(info.hpi{1}(1)) && abs(info.hpi{1}(1)) < abs(info.template(1,1))+info.cfg.accuracy_green ...
-          && abs(info.template(1,2))-info.cfg.accuracy_green < abs(info.hpi{1}(2)) && abs(info.hpi{1}(2)) < abs(info.template(1,2))+info.cfg.accuracy_green ...
-          && abs(info.template(1,3))-info.cfg.accuracy_green < abs(info.hpi{1}(3)) && abs(info.hpi{1}(3)) < abs(info.template(1,3))+info.cfg.accuracy_green
-        plot3(info.hpi{1}(1),info.hpi{1}(2),info.hpi{1}(3), 'g^', 'MarkerFaceColor', [.5 1 .5], 'MarkerSize',25)
+      if abs(info.template(1,1))-info.cfg.accuracy_green < abs(nas(1)) && abs(nas(1)) < abs(info.template(1,1))+info.cfg.accuracy_green ...
+          && abs(info.template(1,2))-info.cfg.accuracy_green < abs(nas(2)) && abs(nas(2)) < abs(info.template(1,2))+info.cfg.accuracy_green ...
+          && abs(info.template(1,3))-info.cfg.accuracy_green < abs(nas(3)) && abs(nas(3)) < abs(info.template(1,3))+info.cfg.accuracy_green
+        plot3(nas(1),nas(2),nas(3), 'g^', 'MarkerFaceColor', [.5 1 .5], 'MarkerSize',25)
         head1 = true;
-      elseif abs(info.template(1,1))-info.cfg.accuracy_orange < abs(info.hpi{1}(1)) && abs(info.hpi{1}(1)) < abs(info.template(1,1))+info.cfg.accuracy_orange ...
-          && abs(info.template(1,2))-info.cfg.accuracy_orange < abs(info.hpi{1}(2)) && abs(info.hpi{1}(2)) < abs(info.template(1,2))+info.cfg.accuracy_orange ...
-          && abs(info.template(1,3))-info.cfg.accuracy_orange < abs(info.hpi{1}(3)) && abs(info.hpi{1}(3)) < abs(info.template(1,3))+info.cfg.accuracy_orange
-        plot3(info.hpi{1}(1),info.hpi{1}(2),info.hpi{1}(3), 'y^', 'MarkerFaceColor', [1 .5 0], 'MarkerEdgeColor', [1 .5 0], 'MarkerSize', 25)
+      elseif abs(info.template(1,1))-info.cfg.accuracy_orange < abs(nas(1)) && abs(nas(1)) < abs(info.template(1,1))+info.cfg.accuracy_orange ...
+          && abs(info.template(1,2))-info.cfg.accuracy_orange < abs(nas(2)) && abs(nas(2)) < abs(info.template(1,2))+info.cfg.accuracy_orange ...
+          && abs(info.template(1,3))-info.cfg.accuracy_orange < abs(nas(3)) && abs(nas(3)) < abs(info.template(1,3))+info.cfg.accuracy_orange
+        plot3(nas(1),nas(2),nas(3), 'y^', 'MarkerFaceColor', [1 .5 0], 'MarkerEdgeColor', [1 .5 0], 'MarkerSize', 25)
         head1 = false;
       else % when not in correct position
-        plot3(info.hpi{1}(1),info.hpi{1}(2), info.hpi{1}(3), 'r^', 'MarkerFaceColor', [1 0 0], 'MarkerSize', 25)
+        plot3(nas(1),nas(2), nas(3), 'r^', 'MarkerFaceColor', [1 0 0], 'MarkerSize', 25)
         head1 = false;
       end
     else
-      plot3(info.hpi{1}(1),info.hpi{1}(2), info.hpi{1}(3), 'r^', 'MarkerFaceColor', [1 0 0], 'MarkerSize', 25)
+      plot3(nas(1), nas(2), nas(3), 'r^', 'MarkerFaceColor', [1 0 0], 'MarkerSize', 25);
       head1 = false;
     end
     
     % draw left ear position
     if ~isempty(info.template)
-      if abs(info.template(2,1))-info.cfg.accuracy_green < abs(info.hpi{2}(1)) && abs(info.hpi{2}(1)) < abs(info.template(2,1))+info.cfg.accuracy_green ...
-          && abs(info.template(2,2))-info.cfg.accuracy_green < abs(info.hpi{2}(2)) && abs(info.hpi{2}(2)) < abs(info.template(2,2))+info.cfg.accuracy_green ...
-          && abs(info.template(2,3))-info.cfg.accuracy_green < abs(info.hpi{2}(3)) && abs(info.hpi{2}(3)) < abs(info.template(2,3))+info.cfg.accuracy_green
-        plot3(info.hpi{2}(1),info.hpi{2}(2),info.hpi{2}(3), 'go', 'MarkerFaceColor', [.5 1 .5], 'MarkerSize',25)
+      if abs(info.template(2,1))-info.cfg.accuracy_green < abs(lpa(1)) && abs(lpa(1)) < abs(info.template(2,1))+info.cfg.accuracy_green ...
+          && abs(info.template(2,2))-info.cfg.accuracy_green < abs(lpa(2)) && abs(lpa(2)) < abs(info.template(2,2))+info.cfg.accuracy_green ...
+          && abs(info.template(2,3))-info.cfg.accuracy_green < abs(lpa(3)) && abs(lpa(3)) < abs(info.template(2,3))+info.cfg.accuracy_green
+        plot3(lpa(1),lpa(2),lpa(3), 'go', 'MarkerFaceColor', [.5 1 .5], 'MarkerSize',25)
         head2 = true;
-      elseif abs(info.template(2,1))-info.cfg.accuracy_orange < abs(info.hpi{2}(1)) && abs(info.hpi{2}(1)) < abs(info.template(2,1))+info.cfg.accuracy_orange ...
-          && abs(info.template(2,2))-info.cfg.accuracy_orange < abs(info.hpi{2}(2)) && abs(info.hpi{2}(2)) < abs(info.template(2,2))+info.cfg.accuracy_orange ...
-          && abs(info.template(2,3))-info.cfg.accuracy_orange < abs(info.hpi{2}(3)) && abs(info.hpi{2}(3)) < abs(info.template(2,3))+info.cfg.accuracy_orange
-        plot3(info.hpi{2}(1),info.hpi{2}(2),info.hpi{2}(3), 'yo', 'MarkerFaceColor', [1 .5 0], 'MarkerEdgeColor', [1 .5 0], 'MarkerSize',25)
+      elseif abs(info.template(2,1))-info.cfg.accuracy_orange < abs(lpa(1)) && abs(lpa(1)) < abs(info.template(2,1))+info.cfg.accuracy_orange ...
+          && abs(info.template(2,2))-info.cfg.accuracy_orange < abs(lpa(2)) && abs(lpa(2)) < abs(info.template(2,2))+info.cfg.accuracy_orange ...
+          && abs(info.template(2,3))-info.cfg.accuracy_orange < abs(lpa(3)) && abs(lpa(3)) < abs(info.template(2,3))+info.cfg.accuracy_orange
+        plot3(lpa(1),lpa(2),lpa(3), 'yo', 'MarkerFaceColor', [1 .5 0], 'MarkerEdgeColor', [1 .5 0], 'MarkerSize',25)
         head2 = false;
       else % when not in correct position
-        plot3(info.hpi{2}(1),info.hpi{2}(2), info.hpi{2}(3), 'ro', 'MarkerFaceColor', [1 0 0], 'MarkerSize', 25)
+        plot3(lpa(1),lpa(2), lpa(3), 'ro', 'MarkerFaceColor', [1 0 0], 'MarkerSize', 25)
         head2 = false;
       end
     else
-      plot3(info.hpi{2}(1),info.hpi{2}(2), info.hpi{2}(3), 'ro', 'MarkerFaceColor', [1 0 0], 'MarkerSize', 25)
+      plot3(lpa(1),lpa(2), lpa(3), 'ro', 'MarkerFaceColor', [1 0 0], 'MarkerSize', 25)
       head2 = false;
     end
     
     % draw right ear position
     if ~isempty(info.template)
-      if abs(info.template(3,1))-info.cfg.accuracy_green < abs(info.hpi{3}(1)) && abs(info.hpi{3}(1)) < abs(info.template(3,1))+info.cfg.accuracy_green  ...
-          && abs(info.template(3,2))-info.cfg.accuracy_green  < abs(info.hpi{3}(2)) && abs(info.hpi{3}(2)) < abs(info.template(3,2))+info.cfg.accuracy_green  ...
-          && abs(info.template(3,3))-info.cfg.accuracy_green  < abs(info.hpi{3}(3)) && abs(info.hpi{3}(3)) < abs(info.template(3,3))+info.cfg.accuracy_green
-        plot3(info.hpi{3}(1),info.hpi{3}(2),info.hpi{3}(3), 'go', 'MarkerFaceColor', [.5 1 .5], 'MarkerSize',25)
+      if abs(info.template(3,1))-info.cfg.accuracy_green < abs(rpa(1)) && abs(rpa(1)) < abs(info.template(3,1))+info.cfg.accuracy_green  ...
+          && abs(info.template(3,2))-info.cfg.accuracy_green  < abs(rpa(2)) && abs(rpa(2)) < abs(info.template(3,2))+info.cfg.accuracy_green  ...
+          && abs(info.template(3,3))-info.cfg.accuracy_green  < abs(rpa(3)) && abs(rpa(3)) < abs(info.template(3,3))+info.cfg.accuracy_green
+        plot3(rpa(1),rpa(2),rpa(3), 'go', 'MarkerFaceColor', [.5 1 .5], 'MarkerSize',25)
         head3 = true;
-      elseif abs(info.template(3,1))-info.cfg.accuracy_orange < abs(info.hpi{3}(1)) && abs(info.hpi{3}(1)) < abs(info.template(3,1))+info.cfg.accuracy_orange ...
-          && abs(info.template(3,2))-info.cfg.accuracy_orange < abs(info.hpi{3}(2)) && abs(info.hpi{3}(2)) < abs(info.template(3,2))+info.cfg.accuracy_orange ...
-          && abs(info.template(3,3))-info.cfg.accuracy_orange < abs(info.hpi{3}(3)) && abs(info.hpi{3}(3)) < abs(info.template(3,3))+info.cfg.accuracy_orange
-        plot3(info.hpi{3}(1),info.hpi{3}(2),info.hpi{3}(3), 'yo', 'MarkerFaceColor', [1 .5 0], 'MarkerEdgeColor', [1 .5 0], 'MarkerSize',25)
+      elseif abs(info.template(3,1))-info.cfg.accuracy_orange < abs(rpa(1)) && abs(rpa(1)) < abs(info.template(3,1))+info.cfg.accuracy_orange ...
+          && abs(info.template(3,2))-info.cfg.accuracy_orange < abs(rpa(2)) && abs(rpa(2)) < abs(info.template(3,2))+info.cfg.accuracy_orange ...
+          && abs(info.template(3,3))-info.cfg.accuracy_orange < abs(rpa(3)) && abs(rpa(3)) < abs(info.template(3,3))+info.cfg.accuracy_orange
+        plot3(rpa(1),rpa(2),rpa(3), 'yo', 'MarkerFaceColor', [1 .5 0], 'MarkerEdgeColor', [1 .5 0], 'MarkerSize',25)
         head3 = false;
       else % when not in correct position
-        plot3(info.hpi{3}(1),info.hpi{3}(2), info.hpi{3}(3), 'ro', 'MarkerFaceColor', [1 0 0], 'MarkerSize', 25)
+        plot3(rpa(1),rpa(2), rpa(3), 'ro', 'MarkerFaceColor', [1 0 0], 'MarkerSize', 25)
         head3 = false;
       end
     else
-      plot3(info.hpi{3}(1),info.hpi{3}(2), info.hpi{3}(3), 'ro', 'MarkerFaceColor', [1 0 0], 'MarkerSize', 25)
+      plot3(rpa(1),rpa(2), rpa(3), 'ro', 'MarkerFaceColor', [1 0 0], 'MarkerSize', 25)
       head3 = false;
     end
-  elseif info.isneuromag
-    % draw nasion position
-    if ~isempty(info.template)
-      if abs(info.template(1,1))-info.cfg.accuracy_green < abs(info.hpi{1}(1)) && abs(info.hpi{1}(1)) < abs(info.template(1,1))+info.cfg.accuracy_green ...
-          && abs(info.template(1,2))-info.cfg.accuracy_green < abs(info.hpi{1}(2)) && abs(info.hpi{1}(2)) < abs(info.template(1,2))+info.cfg.accuracy_green ...
-          && abs(info.template(1,3))-info.cfg.accuracy_green < abs(info.hpi{1}(3)) && abs(info.hpi{1}(3)) < abs(info.template(1,3))+info.cfg.accuracy_green
-        plot3(info.hpi{1}(1),info.hpi{1}(2),info.hpi{1}(3), 'go', 'MarkerFaceColor', [.5 1 .5], 'MarkerSize',25)
-        head1 = true;
-      elseif abs(info.template(1,1))-info.cfg.accuracy_orange < abs(info.hpi{1}(1)) && abs(info.hpi{1}(1)) < abs(info.template(1,1))+info.cfg.accuracy_orange ...
-          && abs(info.template(1,2))-info.cfg.accuracy_orange < abs(info.hpi{1}(2)) && abs(info.hpi{1}(2)) < abs(info.template(1,2))+info.cfg.accuracy_orange ...
-          && abs(info.template(1,3))-info.cfg.accuracy_orange < abs(info.hpi{1}(3)) && abs(info.hpi{1}(3)) < abs(info.template(1,3))+info.cfg.accuracy_orange
-        plot3(info.hpi{1}(1),info.hpi{1}(2),info.hpi{1}(3), 'yo', 'MarkerFaceColor', [1 .5 0], 'MarkerEdgeColor', [1 .5 0], 'MarkerSize',25)
-        head1 = false;
-      else % when not in correct position
-        plot3(info.hpi{1}(1),info.hpi{1}(2), info.hpi{1}(3), 'ro', 'MarkerFaceColor', [1 0 0], 'MarkerSize', 25)
-        head1 = false;
-      end
-    else
-      plot3(info.hpi{1}(1),info.hpi{1}(2), info.hpi{1}(3), 'ro', 'MarkerFaceColor', [1 0 0], 'MarkerSize', 25)
-      head1 = false;
-    end
-    
-    % draw left ear position
-    if ~isempty(info.template)
-      if abs(info.template(2,1))-info.cfg.accuracy_green < abs(info.hpi{2}(1)) && abs(info.hpi{2}(1)) < abs(info.template(2,1))+info.cfg.accuracy_green ...
-          && abs(info.template(2,2))-info.cfg.accuracy_green < abs(info.hpi{2}(2)) && abs(info.hpi{2}(2)) < abs(info.template(2,2))+info.cfg.accuracy_green ...
-          && abs(info.template(2,3))-info.cfg.accuracy_green < abs(info.hpi{2}(3)) && abs(info.hpi{2}(3)) < abs(info.template(2,3))+info.cfg.accuracy_green
-        plot3(info.hpi{2}(1),info.hpi{2}(2),info.hpi{2}(3), 'g^', 'MarkerFaceColor', [.5 1 .5], 'MarkerSize', 25)
-        head2 = true;
-      elseif abs(info.template(2,1))-info.cfg.accuracy_orange < abs(info.hpi{2}(1)) && abs(info.hpi{2}(1)) < abs(info.template(2,1))+info.cfg.accuracy_orange ...
-          && abs(info.template(2,2))-info.cfg.accuracy_orange < abs(info.hpi{2}(2)) && abs(info.hpi{2}(2)) < abs(info.template(2,2))+info.cfg.accuracy_orange ...
-          && abs(info.template(2,3))-info.cfg.accuracy_orange < abs(info.hpi{2}(3)) && abs(info.hpi{2}(3)) < abs(info.template(2,3))+info.cfg.accuracy_orange
-        plot3(info.hpi{2}(1),info.hpi{2}(2),info.hpi{2}(3), 'y^', 'MarkerFaceColor', [1 .5 0], 'MarkerEdgeColor', [1 .5 0], 'MarkerSize', 25)
-        head2 = false;
-      else % when not in correct position
-        plot3(info.hpi{2}(1),info.hpi{2}(2), info.hpi{2}(3), 'r^', 'MarkerFaceColor', [1 0 0], 'MarkerSize', 25)
-        head2 = false;
-      end
-    else
-      plot3(info.hpi{2}(1),info.hpi{2}(2), info.hpi{2}(3), 'r^', 'MarkerFaceColor', [1 0 0], 'MarkerSize', 25)
-      head2 = false;
-    end
-    
-    % draw right ear position
-    if ~isempty(info.template)
-      if abs(info.template(3,1))-info.cfg.accuracy_green < abs(info.hpi{3}(1)) && abs(info.hpi{3}(1)) < abs(info.template(3,1))+info.cfg.accuracy_green  ...
-          && abs(info.template(3,2))-info.cfg.accuracy_green  < abs(info.hpi{3}(2)) && abs(info.hpi{3}(2)) < abs(info.template(3,2))+info.cfg.accuracy_green  ...
-          && abs(info.template(3,3))-info.cfg.accuracy_green  < abs(info.hpi{3}(3)) && abs(info.hpi{3}(3)) < abs(info.template(3,3))+info.cfg.accuracy_green
-        plot3(info.hpi{3}(1),info.hpi{3}(2),info.hpi{3}(3), 'go', 'MarkerFaceColor', [.5 1 .5], 'MarkerSize', 25)
-        head3 = true;
-      elseif abs(info.template(3,1))-info.cfg.accuracy_orange < abs(info.hpi{3}(1)) && abs(info.hpi{3}(1)) < abs(info.template(3,1))+info.cfg.accuracy_orange ...
-          && abs(info.template(3,2))-info.cfg.accuracy_orange < abs(info.hpi{3}(2)) && abs(info.hpi{3}(2)) < abs(info.template(3,2))+info.cfg.accuracy_orange ...
-          && abs(info.template(3,3))-info.cfg.accuracy_orange < abs(info.hpi{3}(3)) && abs(info.hpi{3}(3)) < abs(info.template(3,3))+info.cfg.accuracy_orange
-        plot3(info.hpi{3}(1),info.hpi{3}(2),info.hpi{3}(3), 'yo', 'MarkerFaceColor', [1 .5 0], 'MarkerEdgeColor', [1 .5 0], 'MarkerSize', 25)
-        head3 = false;
-      else % when not in correct position
-        plot3(info.hpi{3}(1),info.hpi{3}(2), info.hpi{3}(3), 'ro', 'MarkerFaceColor', [1 0 0], 'MarkerSize', 25)
-        head3 = false;
-      end
-    else
-      plot3(info.hpi{3}(1),info.hpi{3}(2), info.hpi{3}(3), 'ro', 'MarkerFaceColor', [1 0 0], 'MarkerSize', 25)
-      head3 = false;
-    end
-  end
 end
 
 % plot the template fiducial positions
@@ -921,8 +847,8 @@ end
 % plot sphere model
 if get(info.hSphereCheckBox, 'Value')
   cc = circumcenter(info.hpi);
-  x_radius = sqrt((info.hpi{2}(1) - cc(1))^2 + (info.hpi{2}(2) - cc(2))^2);
-  y_radius = sqrt((info.hpi{3}(1) - cc(1))^2 + (info.hpi{3}(2) - cc(2))^2);
+  x_radius = sqrt((lpa(1) - cc(1))^2 + (lpa(2) - cc(2))^2);
+  y_radius = sqrt((rpa(1) - cc(1))^2 + (rpa(2) - cc(2))^2);
   [xe, ye, ze] = ellipsoid(cc(1),cc(2),cc(3),x_radius,y_radius,11);
   hh = surfl(xe, ye, ze);
   shading interp
