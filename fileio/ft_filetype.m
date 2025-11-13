@@ -1647,6 +1647,10 @@ elseif filetype_check_extension(filename, '.meta') && exist(fullfile(p, [f '.bin
   type = 'spikeglx_bin';
   manufacturer = 'SpikeGLX';
   content = 'neuropixel data';
+elseif filetype_check_extension(filename, '.lvm') && filetype_check_header(filename, 'LabVIEW')
+  type = 'quspin_lvm'; % technically it is a https://www.ni.com/docs/en-US/bundle/labview/page/labview-measurement-files.html
+  manufacturer = 'QuSpin';
+  content = 'OPM MEG data';
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
