@@ -50,6 +50,7 @@ end
 % determine how many header lines there are
 fid = fopen(fullname, 'rt');
 line = fgetl(fid);
+separator = line(end); % the first line ends with the separator
 headerlines = 0;
 while ~startsWith(line, 'X_Value')
   headerlines = headerlines + 1;
@@ -67,12 +68,12 @@ if needhdr
     if startsWith(line, '***End_of_Header***')
       continue
     end
-    tok = split(line, ',');
+    tok = split(line, separator);
     if length(tok)==2 && ~isempty(tok{1}) && ~isempty(tok{2})
       orig.(tok{1}) = tok{2};
     elseif length(tok)>2
       sel = find(~cellfun(@isempty, tok(2:end)));
-      if length(sel)==1
+      if isscalar(sel)
         % make it a single value
         orig.(tok{1}) = tok{sel+1};
       else
@@ -84,12 +85,12 @@ if needhdr
 
   % the first subsequent line of the file starts with X_Value and contains the channel labels
   line = fgetl(fid);
-  hdr.label = split(line, ',');
+  hdr.label = split(line, separator);
   hdr.label = hdr.label(2:end-1); % drop the X_Value and Comment
 
   % estimate the sampling rate, we would expect this to be 375Hz or 750Hz
-  sample1 = split(fgetl(fid), ',');
-  sample2 = split(fgetl(fid), ',');
+  sample1 = split(fgetl(fid), separator);
+  sample2 = split(fgetl(fid), separator);
   t1 = str2double(sample1{1});
   t2 = str2double(sample2{1});
   hdr.Fs = 1/(t2-t1);
@@ -129,6 +130,8 @@ if needhdr
 
 elseif needdat
   %% parse the data
+
+  % jump to where the data starts
   fid = fopen(fullname, 'rt');
   for i=1:headerlines
     fgetl(fid);
@@ -157,6 +160,8 @@ elseif needdat
 
 elseif needevt
   %% parse the events and trigger codes
+
+  % use a generic function to find the flanks in the digital trigger channels
   chanindx = find(strcmp(hdr.chantype, 'digital trigger'));
   event = read_trigger(fullname, 'header', hdr, 'chanindx', chanindx);
 
