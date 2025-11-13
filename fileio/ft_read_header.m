@@ -1932,14 +1932,25 @@ switch headerformat
     hdr.nChans      = info.nchan;
     hdr.Fs          = info.sfreq;
 
-    if ft_senstype(hdr, 'fieldline') && isempty(coilaccuracy)
-      ft_warning('FieldLine data requires a numeric value for coilaccuracy>=0');
+    if isempty(coilaccuracy) && (ft_senstype(hdr, 'fieldline') || ft_senstype(hdr, 'quspin_neuro1'))
+      ft_warning('OPM data requires a numeric value (0, 1, 2) for coilaccuracy');
       coilaccuracy = 0;
     end
 
     if ft_senstype(hdr, 'fieldline_v3')
       % default for FieldLine v3 is to remove the electronics chassis number from the channel names
       splitlabel = ft_getopt(varargin, 'splitlabel', true);
+    end
+
+    % allow FT_CHANTYPE to have a look in the original header details
+    hdr.orig = info;
+    hdr.chantype = ft_chantype(hdr);
+
+    if ft_senstype(hdr, 'quspin_neuro1')
+      sel = ismember(hdr.label, {'D0', 'D1', 'D2', 'D3', 'D4', 'D5', 'D6', 'D7', 'D8', 'D9', 'D10'});
+      hdr.chantype(sel) = {'digital trigger'}; % somehow these are marked as kind=501=misc in the fif file
+      sel = ismember(hdr.label, {'AI 0', 'AI 1', 'AI 2', 'AI 3', 'AI 4', 'AI 5', 'AI 6', 'AI 7', 'AI 8', 'AI 9', 'AI 10', 'AI 11', 'AI 12', 'AI 13', 'AI 14', 'AI 15'});
+      hdr.chantype(sel) = {'analog trigger'}; % somehow these are marked as kind=3=other trigger in the fif file
     end
 
     % add a gradiometer structure for forward and inverse modelling

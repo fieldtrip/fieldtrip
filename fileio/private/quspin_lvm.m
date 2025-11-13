@@ -117,7 +117,9 @@ if needhdr
   hdr.chantype(sel) = {'megmag'};
   sel = startsWith(hdr.label, 'Z');
   hdr.chantype(sel) = {'megmag'};
-  sel = startsWith(hdr.label, 'T');
+  sel = startsWith(hdr.label, 'T'); % this is according to the documentation, should correspond to columns 194-204
+  hdr.chantype(sel) = {'digital trigger'};
+  sel = 193:203; % note that we dropped the first column, which is the timestamp
   hdr.chantype(sel) = {'digital trigger'};
   sel = startsWith(hdr.label, 'A');
   hdr.chantype(sel) = {'analog trigger'};
@@ -163,7 +165,7 @@ elseif needevt
 
   % use a generic function to find the flanks in the digital trigger channels
   chanindx = find(strcmp(hdr.chantype, 'digital trigger'));
-  event = read_trigger(fullname, 'header', hdr, 'chanindx', chanindx);
+  event = read_trigger(fullname, 'header', hdr, 'chanindx', chanindx, 'denoise', false);
 
   % return the events
   varargout = {event};

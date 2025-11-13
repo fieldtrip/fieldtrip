@@ -179,6 +179,11 @@ if ~isempty(trigindx)
   chanindx = trigindx;
 end
 
+% this should be a list of indices 
+if islogical(chanindx)
+  chanindx = find(chanindx);
+end
+
 % for backward compatibility with https://github.com/fieldtrip/fieldtrip/issues/1585
 if islogical(readbids)
   % it should be either yes/no/ifmakessense
@@ -496,7 +501,7 @@ switch eventformat
       chanindx = find(strcmp(hdr.label, 'STATUS'));
     end
     event = [];
-    if length(chanindx)==1
+    if isscalar(chanindx)
       % represent the rising flanks in the STATUS (or user specified) channel as events
       event = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', chanindx, 'detectflank', detectflank, 'trigshift', trigshift, 'trigpadding', trigpadding, 'fixbiosemi', true);
     else
@@ -1714,6 +1719,7 @@ switch eventformat
     end
 
     if iscontinuous
+      % determine the trigger channels
       binaryindx = find(strcmp(ft_chantype(hdr), 'digital trigger'));
       otherindx  = find(strcmp(ft_chantype(hdr), 'other trigger'));
       analogindx = find(strcmp(ft_chantype(hdr), 'analog trigger'));
