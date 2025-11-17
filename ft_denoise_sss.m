@@ -143,7 +143,7 @@ ft_info('Computing the subspace projector based on signal correlations\n');
 % apply the spatial projector to the sensors
 if istrue(cfg.updatesens) && isscalar(S)
   montage     = [];
-  montage.tra = S.Qin*SiQin;
+  montage.tra = S.Qin*S.iQin;
   montage.labelold = S.labelold;
   montage.labelnew = S.labelnew;
   datain.grad = ft_apply_montage(datain.grad, montage, 'keepunused', 'yes', 'balancename', 'sss');
