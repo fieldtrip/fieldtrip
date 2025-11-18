@@ -329,7 +329,7 @@ if strcmp(type, 'unknown')
     % this looks like MEG
     
     % revert the component balancing that was previously applied
-    if isfield(sens, 'balance') && strcmp(sens.balance.current, 'comp')
+    if isfield(sens, 'balance') && isfield(sens.balance, 'current') && any(strcmp(sens.balance.current, 'comp'))
       sens = undobalancing(sens);
     end
     

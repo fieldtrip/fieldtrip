@@ -102,6 +102,7 @@ cfg.parcel       = ft_getopt(cfg, 'parcel',   'all');
 cfg.method       = ft_getopt(cfg, 'method',   'svd');
 cfg.feedback     = ft_getopt(cfg, 'feedback', 'text');
 cfg.numcomponent = ft_getopt(cfg, 'numcomponent', 1);
+cfg.updatesens   = ft_getopt(cfg, 'updatesens', 'yes');
 
 % the data can be passed as input argument or can be read from disk
 hasparcellation = exist('parcellation', 'var');
@@ -384,13 +385,20 @@ montage.labelold = label_in{1};
 data_vc = ft_apply_montage(data, montage, 'feedback', 'none');
 
 % apply the montage to the sensor description
-sensfields = {'grad' 'elec' 'opto'};
-for k = 1:numel(sensfields)
-  if isfield(data_vc, sensfields{k})
-    ft_info(sprintf('applying the montage to the %s structure\n', sensfields{k}));
-    data_vc.(sensfields{k}) = ft_apply_montage(data.(sensfields{k}), montage, 'feedback', 'none', 'keepunused', 'yes', 'balancename', bname);
+sensfield = {'elec', 'grad', 'opto'};
+for k = 1:numel(sensfield)
+  if isfield(data_vc, sensfield{k})
+    sens = fixbalance(data_vc.(sensfield{k})); % ensure that the balancing representation is up to date
+    if strcmp(cfg.updatesens, 'yes') && ~isempty(intersect(sens.label, montage.labelold))
+      ft_info(sprintf('applying the montage to the %s structure\n', sensfield{k}));
+      sens = ft_apply_montage(sens, montage, 'feedback', 'none', 'keepunused', 'yes');
+      sens = fixbalance(sens); % ensure that the balancing representation is up to date
+      sens.balance.(bname) = montage;
+      sens.balance.current{end+1} = bname;
+      data_vc.(sensfield{k}) = sens;
+    end % if updatesens
   end
-end
+end % for grad, elec and opto
 
 if istlck
   % convert the raw structure back into a timelock structure

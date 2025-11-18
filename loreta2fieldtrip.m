@@ -53,8 +53,8 @@ if ft_filetype(filename, 'loreta_slor') || is_txt && strcmp(filename(end-7:end-4
   voxnumber    = 6239;
   lorind       = getfield(load('loreta_ind.mat'), 'ind_sloreta');
   source.dim   = size(lorind);
-  %Note1, ingnie: this was the orriginal, but this can't be correct, since the x
-  %dimention, for instance, is 37, while -70:5:70 is only 29. I just left
+  %Note1, ingnie: this was the original, but this can't be correct, since the x
+  %dimension, for instance, is 37, while -70:5:70 is only 29. I just left
   %it here for reference.
   %   source.xgrid =  -70:5:70;
   %   source.ygrid = -100:5:65;

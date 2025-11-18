@@ -1306,7 +1306,7 @@ if isfield(sens, 'chanposold')
 else
   chanposold = [];
 end
-if isfield(sens, 'balance') && ~strcmp(sens.balance.current, 'none')
+if isfield(sens, 'balance') && ~isempty(sens.balance.current)
   sens = undobalancing(sens);
   if size(chanposold, 1) == numel(sens.label)
     sens.chanpos = chanposold;

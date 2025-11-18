@@ -12,12 +12,14 @@ function [dataout] = ft_denoise_sss(cfg, datain)
 %   cfg.demean           = 'yes', or 'no', demean the data per epoch (default = 'yes')
 %   cfg.updatesens       = 'yes', or 'no', update the sensor array with the spatial projector
 %   cfg.sss              = structure with parameters that determine the behavior of the algorithm
-%   cfg.sss.order_in     = scalar. Order of the spherical harmonics basis that spans the in space (default = 8) 
-%   cfg.sss.order_out    = scalar. Order of the spherical harmonics basis that spans the out space (default = 3) 
+%   cfg.sss.order_in     = scalar, order of the spherical harmonics basis that spans the in space (default = 8) 
+%   cfg.sss.order_out    = scalar, order of the spherical harmonics basis that spans the out space (default = 3) 
 %
-% The implementation is based on Tim Tierney's code written for spm
+% The implementation is based on Tim Tierney's code written for SPM.
 %
-% See also FT_DENOISE_PCA, FT_DENOISE_SYNTHETIC, FT_DENOISE_TSR, FT_DENOISE_DSSP, FT_DENOISE_HFC
+% See also FT_PREPROCESSING, FT_DENOISE_AMM, FT_DENOISE_DSSP,
+% FT_DENOISE_HFC, FT_DENOISE_PCA, FT_DENOISE_PREWHITEN, FT_DENOISE_SSP,
+% FT_DENOISE_SYNTHETIC, FT_DENOISE_TSR
 
 % Copyright (C) 2024, Jan-Mathijs Schoffelen
 %
@@ -138,7 +140,7 @@ end
 
 % compute the temporal subspace projector and the clean the data
 ft_info('Computing the subspace projector based on signal correlations\n');
-[datain] = sss_temporal(datain, options);
+datain = sss_temporal(datain, options);
 
 % apply the spatial projector to the sensors
 if istrue(cfg.updatesens) && isscalar(S)
@@ -146,7 +148,10 @@ if istrue(cfg.updatesens) && isscalar(S)
   montage.tra = S.Qin*S.iQin;
   montage.labelold = S.labelold;
   montage.labelnew = S.labelnew;
-  datain.grad = ft_apply_montage(datain.grad, montage, 'keepunused', 'yes', 'balancename', 'sss');
+  datain.grad = ft_apply_montage(datain.grad, montage, 'keepunused', 'yes');
+  datain.grad = fixbalance(datain.grad); % ensure that the balancing representation is up to date
+  datain.grad.balance.sss = montage;
+  datain.grad.balance.current{end+1} = 'sss'; % keep track of the projection that was applied
 end
 
 % keep some additional information in the subspace struct
@@ -236,8 +241,8 @@ end
 ismag = strcmp(grad.chantype, 'mag')|strcmp(grad.chantype, 'megmag');
 extended_remove = []; % placeholder
 
-% for now only support unbalanced grad structures, it's the user's responsibility to unbalance
-assert(isfield(grad, 'balance') && strcmp(grad.balance.current, 'none'));
+% for now only support unbalanced grad structures, it is the user's responsibility to unbalance
+assert(issubfield(grad, 'balance.current') && isempty(grad.balance.current));
 
 % select the list of channels that is required for the output
 label   = ft_channelselection(options.channel, grad.label);
@@ -299,9 +304,16 @@ Q       = [Qin Qout];
 % end
 if options.regularize==1
   ft_warning('using regularization on the basis functions is experimental code, and not thoroughly tested, use at your own risk');
+<<<<<<< HEAD
   % this is based on a heuristic that I got from the MNE-python implementation, and is based 
   % on an snr estimate per harmonic basis function. Some pruning is done to exclude the basis
   % functions with the lowest snr. It requires the basis functions to be scaled differently
+=======
+  % this is based on a heuristic that I got from the MNE-python
+  % implementation, and is based on a snr estimate per harmonic basis
+  % function. Some pruning is done to exclude the basis functions with the
+  % lowest snr. It requires the basis functions to be scaled differently
+>>>>>>> master
   % with respect to one another. So far I (JM) have only been able to get
   % this scaling by trial and error approximately right.
   [d, o] = get_degrees_orders(options.order_in);

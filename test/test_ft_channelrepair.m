@@ -27,19 +27,19 @@ newdata = ft_channelrepair(cfg, data);
 % now, also check whether an absent sensor array description works, as per
 % issue 1774 it doesn't
 try
-  newdata = ft_channelrepair(cfg, removefields(data, {'elec', 'grad'}));
+  newdata = ft_channelrepair(cfg, removefields(data, {'elec', 'grad', 'opto'}));
 catch
   fprintf('running a ''weighted'' interpolation without sensor info does not work\n');
 end
 cfg.method = 'average';
-newdata = ft_channelrepair(cfg, removefields(data, {'elec', 'grad'}));
+newdata = ft_channelrepair(cfg, removefields(data, {'elec', 'grad', 'opto'}));
 
 % rumour has it, that this should work: it indeed did at some point, but
 % shouldn't work. This has been changed by an explicit call to
 % ft_checkconfig
 % cfg.method = 'weighted';
 % cfg.layout = '4D248_helmet.mat';
-% newdata   = ft_channelrepair(cfg, removefields(data, {'elec', 'grad'}));
+% newdata   = ft_channelrepair(cfg, removefields(data, {'elec', 'grad', 'opto'}));
 
 % % do the EEG processing: this does not work, because there's no example EEG data
 % with sensor positions 

@@ -351,25 +351,29 @@ elseif isfield(hdr, 'res4') && isfield(hdr.res4, 'senres')
   end
 
   if     all([hdr.res4.senres(selMEG).grad_order_no]==0)
-    grad.balance.current = 'none';
+    bname = 'none';
   elseif all([hdr.res4.senres(selMEG).grad_order_no]==1)
-    grad.balance.current = 'G1BR';
+    bname = 'G1BR';
   elseif all([hdr.res4.senres(selMEG).grad_order_no]==2)
-    grad.balance.current = 'G2BR';
+    bname = 'G2BR';
   elseif all([hdr.res4.senres(selMEG).grad_order_no]==3)
-    grad.balance.current = 'G3BR';
+    bname = 'G3BR';
   elseif all([hdr.res4.senres(selMEG).grad_order_no]==13)
-    grad.balance.current = 'G3AR';
+    bname = 'G3AR';
   else
     ft_warning('cannot determine balancing of CTF gradiometers');
     grad = rmfield(grad, 'balance');
   end
 
   % sofar the gradiometer definition was the ideal, non-balenced one
-  if isfield(grad, 'balance') && ~strcmp(grad.balance.current, 'none')
-    % apply the current balancing parameters to the gradiometer definition
-    %grad = ft_apply_montage(grad, getfield(grad.balance, grad.balance.current));
-    grad = ft_apply_montage(grad, getfield(grad.balance, grad.balance.current), 'keepunused', 'yes');
+  if isfield(grad, 'balance')
+    if ~strcmp(bname, 'none')
+      % apply the current balancing parameters to the gradiometer definition
+      grad = ft_apply_montage(grad, grad.balance.(bname), 'keepunused', 'yes');
+      grad.balance.current = {bname};
+    else
+      grad.balance.current = {};
+    end
   end
 
 

@@ -36,6 +36,7 @@ function [cfg] = ft_singleplotER(cfg, varargin)
 %                       interactive plot when a selected area is clicked. multiple areas
 %                       can be selected by holding down the shift key.
 %   cfg.figure        = 'yes' or 'no', whether to open a new figure. You can also specify a figure handle from FIGURE, GCF or SUBPLOT. (default = 'yes')
+%   cfg.figurename    = string, title of the figure window
 %   cfg.position      = location and size of the figure, specified as [left bottom width height] (default is automatic)
 %   cfg.renderer      = string, 'opengl', 'zbuffer', 'painters', see RENDERERINFO (default is automatic, try 'painters' when it crashes)
 %   cfg.linestyle     = linestyle/marker type, see options of the PLOT function (default = '-')
@@ -179,6 +180,9 @@ cfg.fontsize        = ft_getopt(cfg, 'fontsize',       8);
 cfg.interpreter     = ft_getopt(cfg, 'interpreter',   'none');  % none, tex or latex
 cfg.hotkeys         = ft_getopt(cfg, 'hotkeys',       'yes');
 cfg.interactive     = ft_getopt(cfg, 'interactive',   'yes');
+cfg.interactivecolor = ft_getopt(cfg, 'interactivecolor', [0 0 0]); % linecolor of selection rectangle
+cfg.interactivestyle = ft_getopt(cfg, 'interactivestyle', '--');    % linestyle of selection rectangle
+cfg.interactivewidth = ft_getopt(cfg, 'interactivewidth', 1.5);     % linewidth of selection rectangle
 cfg.maskparameter   = ft_getopt(cfg, 'maskparameter',  []);
 cfg.colorgroups     = ft_getopt(cfg, 'colorgroups',   'condition'); % this is the only supported option
 cfg.linecolor       = ft_getopt(cfg, 'linecolor',     []);
@@ -208,6 +212,13 @@ elseif nargin>1
   dataname = arrayfun(@inputname, 2:nargin, 'UniformOutput', false);
 else
   dataname = {};
+end
+
+% set the figure window title, if not defined by user
+if isempty(cfg.figurename) && ~isempty(dataname)
+  cfg.figurename = sprintf('%s: %s', mfilename, join_str(', ', dataname));
+else
+  cfg.figurename = sprintf('%s:', mfilename);
 end
 
 %% Section 2: data handling, this also includes converting bivariate (chan_chan and chancmb) into univariate data
@@ -292,7 +303,6 @@ if ~strcmp(cfg.baseline, 'no')
     end
   end
 end
-
 
 % channels should NOT be selected and averaged here, since a topoplot might follow in interactive mode
 tmpcfg = keepfields(cfg, {'trials', 'select', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
@@ -390,6 +400,14 @@ end
 
 % Take the desided subselection of channels, this is the same in all datasets
 [selchan] = match_str(varargin{1}.label, cfg.channel);
+
+% Add the list of selected channels to figurename
+if length(selchan) < 5
+  chans = join_str(', ', varargin{1}.label(selchan));
+else
+  chans = '<multiple channels>';
+end
+cfg.figurename = sprintf('%s (%s)', cfg.figurename, chans);
 
 % Get physical min/max range of x, i.e. time or frequency
 if strcmp(cfg.xlim, 'maxmin')
@@ -533,32 +551,13 @@ end
 if ~isempty(cfg.title)
   t = cfg.title;
 else
-  if length(cfg.channel) == 1
+  if isscalar(cfg.channel)
     t = [char(cfg.channel) ' / ' num2str(selchan) ];
   else
     t = sprintf('mean(%0s)', join_str(', ', cfg.channel));
   end
 end
 title(t, 'fontsize', cfg.fontsize, 'interpreter', cfg.interpreter);
-
-% set the figure window title, add channel labels if number is small
-if isempty(get(gcf, 'Name'))
-  if length(selchan) < 5
-    chans = join_str(', ', cfg.channel);
-  else
-    chans = '<multiple channels>';
-  end
-  if ~isempty(cfg.figurename)
-    set(gcf, 'name', cfg.figurename);
-    set(gcf, 'NumberTitle', 'off');
-  elseif ~isempty(dataname)
-    set(gcf, 'Name', sprintf('%d: %s: %s (%s)', double(gcf), mfilename, join_str(', ', dataname), chans));
-    set(gcf, 'NumberTitle', 'off');
-  else
-    set(gcf, 'Name', sprintf('%d: %s (%s)', double(gcf), mfilename, chans));
-    set(gcf, 'NumberTitle', 'off');
-  end
-end
 
 if istrue(cfg.showlocations)
   hpos = xmin+(xmax-xmin)*0.1;
@@ -577,6 +576,10 @@ if strcmp(cfg.interactive, 'yes')
   % add the cfg/data/channel information to the figure under identifier linked to this axis
   ident                  = ['axh' num2str(round(sum(clock.*1e6)))]; % unique identifier for this axis
   set(gca, 'tag', ident);
+
+  if isfield(cfg, 'subplottopo') && istrue(cfg.subplottopo)
+    cfg.figure = 'subplot';
+  end
   info                   = guidata(gcf);
   info.(ident).cfg       = cfg;
   info.(ident).varargin  = varargin;
@@ -585,9 +588,10 @@ if strcmp(cfg.interactive, 'yes')
     info.(ident).linecolor   = linecolor;
   end
   guidata(gcf, info);
-  set(gcf, 'windowbuttonupfcn',     {@ft_select_range, 'multiple', false, 'yrange', false, 'callback', {@select_topoplotER}, 'event', 'windowbuttonupfcn'});
-  set(gcf, 'windowbuttondownfcn',   {@ft_select_range, 'multiple', false, 'yrange', false, 'callback', {@select_topoplotER}, 'event', 'windowbuttondownfcn'});
-  set(gcf, 'windowbuttonmotionfcn', {@ft_select_range, 'multiple', false, 'yrange', false, 'callback', {@select_topoplotER}, 'event', 'windowbuttonmotionfcn'});
+  cb_options = {'multiple', false, 'yrange', false, 'callback', {@select_topoplotER}, 'linecolor', cfg.interactivecolor, 'linestyle', cfg.interactivestyle, 'linewidth', cfg.interactivewidth};
+  set(gcf, 'WindowButtonUpFcn',     [{@ft_select_range, 'event', 'WindowButtonUpFcn'}      cb_options]);
+  set(gcf, 'WindowButtonDownFcn',   [{@ft_select_range, 'event', 'WindowButtonDownFcn'},   cb_options]);
+  set(gcf, 'WindowButtonMotionFcn', [{@ft_select_range, 'event', 'WindowButtonMotionFcn'}, cb_options]);
 end
 
 % do the general cleanup and bookkeeping at the end of the function
@@ -632,8 +636,13 @@ if ~isempty(range)
   end
   fprintf('selected cfg.xlim = [%f %f]\n', cfg.xlim(1), cfg.xlim(2));
   % ensure that the new figure appears at the same position
-  cfg.figure = 'yes';
   cfg.position = get(gcf, 'Position');
+  if isfield(cfg, 'subplottopo') && istrue(cfg.subplottopo)
+    figure('position', cfg.position);
+    cfg.figure = 'subplot';
+  else
+    cfg.figure = 'yes';
+  end
   ft_topoplotER(cfg, varargin{:});
 end
 

@@ -247,8 +247,8 @@ if strcmp(cfg.analyze,'yes')
       timelock.jumps(c,t) = length(find(diff(data.trial{1,1}(allchanindx(c),:)) > jumpthreshold));
     end
     
-    % remove the grad and elec to make the subsequent code faster. See https://github.com/fieldtrip/fieldtrip/issues/1551
-    data = removefields(data, {'grad', 'elec'});
+    % remove the sensor definitions to make the subsequent code faster. See https://github.com/fieldtrip/fieldtrip/issues/1551
+    data = removefields(data, {'elec', 'grad', 'opto'});
     
     % FFT and noise estimation
     redef                 = ft_redefinetrial(cfgredef, data); clear data;

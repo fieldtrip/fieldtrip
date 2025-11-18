@@ -15,6 +15,10 @@ function [info,meas] = fiff_read_meas_info(source,tree)
 %   License : BSD 3-clause
 %
 %
+%   Revision 1.15  2025/06/30 10:10:30 
+%   Improved to handle string type digitization, especially in the new FIFF
+%   data by MEGIN
+%   
 %   Revision 1.14  2009/03/31 01:12:30  msh
 %   Improved ID handling
 %
@@ -224,6 +228,22 @@ if length(isotrak) == 1
             p = p + 1;
             tag = fiff_read_tag(fid,pos);
             dig(p) = tag.data;
+        elseif kind == FIFF.FIFF_DIG_STRING % added to address updated FIFF format (2024-25)
+            tag = fiff_read_tag(fid,pos);
+            if length(tag.data.r)>3
+                assert(mod(length(tag.data.r), 3) == 0,...
+                    'length of vector tag.data.r must be 3*(no. of points in a string)')
+                rr = reshape(tag.data.r, 3, []);
+                for pp = 1:(length(tag.data.r)/3)
+                    p = p + 1;
+                    tag_data_pp   = tag.data;
+                    tag_data_pp.r = rr(:,pp);
+                    dig(p) = tag_data_pp;
+                end
+            else
+                p = p + 1;
+                dig(p) = tag.data;
+            end
         else
             if kind == FIFF.FIFF_MNE_COORD_FRAME
                 tag = fiff_read_tag(fid,pos);

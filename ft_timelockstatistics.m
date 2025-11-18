@@ -19,7 +19,8 @@ function [stat] = ft_timelockstatistics(cfg, varargin)
 % Furthermore, the configuration should contain
 %   cfg.method       = different methods for calculating the significance probability and/or critical value
 %                    'montecarlo'    get Monte-Carlo estimates of the significance probabilities and/or critical values from the permutation distribution,
-%                    'analytic'      get significance probabilities and/or critical values from the analytic reference distribution (typically, the sampling distribution under the null hypothesis),
+%                    'analytic'      get significance probabilities and/or critical values from the analytic reference distribution 
+%                                     (typically, the sampling distribution under the null hypothesis),
 %                    'stats'         use a parametric test from the MATLAB statistics toolbox,
 %                    'mvpa'          use functionality from the MVPA-light toolbox for classification or multivariate regression
 %

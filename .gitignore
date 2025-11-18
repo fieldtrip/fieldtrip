@@ -8,7 +8,8 @@
 *.ply
 *.swp
 .DS_Store
-external/iso2mesh/sample
+.vscode
+
 odmTest
 utilities/buildtimestamp.m
 
@@ -35,3 +36,4 @@ realtime/bin/*/test_pthread
 realtime/bin/*/test_waitdat
 
 external/npmk/NPMKverChecker.dat
+external/iso2mesh/sample

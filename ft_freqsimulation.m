@@ -31,7 +31,7 @@ function [data] = ft_freqsimulation(cfg)
 %
 % For each of the methods default parameters are configured to generate
 % example data, including noise. To get full control over the generated
-% data you should explicitely set all parameters involved in the method
+% data you should explicitly set all parameters involved in the method
 % of your choise. The interpretation of the following signal components
 % depends on the specified method:
 %

@@ -30,7 +30,7 @@ function [pnt, ori, lab] = channelposition(sens)
 % $Id$
 
 % remove the balancing from the sensor definition, e.g. planar gradients, 3rd-order gradients, PCA-cleaned data or ICA projections
-if isfield(sens, 'balance') && ~strcmp(sens.balance.current, 'none')
+if isfield(sens, 'balance') && isfield(sens.balance, 'current') && ~isempty(sens.balance.current)
   sens = undobalancing(sens);
 end
 
@@ -165,7 +165,7 @@ switch ft_senstype(sens)
         refori(i,:) = weight(selc)*tmpori;
 
         % check whether the line between the coils is aligned with the
-        % oriention of the coils, in which case it's a diagonal reference,
+        % orientation of the coils, in which case it's a diagonal reference,
         % otherwise it's an off diagonal reference. For the diagonal
         % reference the chanpos should be one of the coils, for the off
         % diagonal reference it should be the average.

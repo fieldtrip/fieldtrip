@@ -75,8 +75,13 @@ end
 assert(ishandle(h), 'failed to open figure');
 
 if ~isempty(cfg.figurename)
-  % this appears as the name of the window
-  set(h, 'name', cfg.figurename);
+  % this appears as the name of the window, but fails if the handle points
+  % to an axis object (e.g. if cfg.figure is a handle to a subplot)
+  % this can be solved more elegantly, but I don't know whether isa(h)
+  % returns something that is consistent across matlab versions
+  try
+    set(h, 'name', cfg.figurename);
+  end
 end
 
 if ~isempty(cfg.renderer)

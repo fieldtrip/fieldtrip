@@ -45,7 +45,7 @@ function [pnt3, tri3] = retriangulate(pnt1, tri1, pnt2, tri2, flag)
 %
 % $Id$
 
-% this can be used for printing detailled user feedback
+% this can be used for printing detailed user feedback
 fb = false;
 
 if nargin<5

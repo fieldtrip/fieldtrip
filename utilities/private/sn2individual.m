@@ -28,6 +28,8 @@ function [warped]= sn2individual(P, input)
 %
 % $Id$
 
+assert(isnumeric(input) && size(input,2)==3, 'incorrect specification of the input, should be Nx3 matrix with positions');
+
 if isfield(P, 'Tr')
   % this is an old-style representation of the parameters, so it uses the
   % code adjusted from nut_mni2mri

@@ -4,10 +4,11 @@
 [![GitHub commit activity (branch)](https://img.shields.io/github/commit-activity/m/fieldtrip/fieldtrip)](https://github.com/fieldtrip/fieldtrip/commits/master)
 [![GitHub Repo stars](https://img.shields.io/github/stars/fieldtrip/fieldtrip)](https://scholar.google.com/scholar?cites=3328911510682538425&scisbd=1)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPLv3-blue.svg?style=plastic)](https://www.gnu.org/licenses/gpl-3.0)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.10495174.svg)](https://doi.org/10.5281/zenodo.10495174)
 
 # FieldTrip 
 
-FieldTrip is the MATLAB software toolbox for MEG and EEG analysis that is being
+FieldTrip is the MATLAB software toolbox for MEG, EEG and iEEG analysis that is being
 developed at the Donders Institute for Brain, Cognition and Behaviour in Nijmegen,
 the Netherlands together with collaborating institutes.
 
@@ -20,7 +21,7 @@ systems, and new formats can be added easily. FieldTrip contains high-level func
 that you can use to construct your own analysis protocols in MATLAB. Furthermore, it
 easily allows methods researchers to incorporate new methods for EEG/MEG analysis.
 
-For more information, documentation, and tutorials, please visit http://www.fieldtriptoolbox.org
+For more information, documentation, and tutorials, please visit https://www.fieldtriptoolbox.org
 
 ## Installation
 
@@ -67,8 +68,8 @@ The functions in the FieldTrip toolbox are copyrighted by their respective autho
 
 The authors are or were working at a range of academic institutions:
 
-  - Copyright (C) 2008-2024, Donders Institute for Brain, Cognition and Behaviour, Radboud University, The Netherlands (DCCN, DCC, DCN)
-  - Copyright (C) 2014-2024, Karolinska Institute, Stockholm, Sweden (NatMEG)
+  - Copyright (C) 2008-2025, Donders Institute for Brain, Cognition and Behaviour, Radboud University, The Netherlands (DCCN, DCC, DCN)
+  - Copyright (C) 2014-2025, Karolinska Institute, Stockholm, Sweden (NatMEG)
   - Copyright (C) 2012-2018, Max Planck Institute for Psycholinguistics, The Netherlands (MPI)
   - Copyright (C) 2008-2017, The Wellcome Trust Centre for Neuroimaging, University College London, UK (UCL)
   - Copyright (C) 2010-2013, Swammerdam Institute for Life Sciences, University of Amsterdam (SILS)

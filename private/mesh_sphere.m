@@ -253,7 +253,7 @@ end
 th  = storeM(i).th;
 phi = storeM(i).phi;
 
-% convert from spherical to cartehsian coordinates
+% convert from spherical to cartesian coordinates
 [x, y, z] = sph2cart(th, pi/2-phi, 1);
 pos = [x' y' z'];
 tri = convhulln(pos);

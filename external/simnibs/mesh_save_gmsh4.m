@@ -71,9 +71,14 @@ end
 [~,~,extHlp] = fileparts(fn);
 if ~strcmpi(extHlp,'.msh')
     fn=[fn '.msh'];
-end;
+end
 
-fid=fopen(fn, 'W');
+if ~is_binary
+    % suggested fix for more robust file-reading on PCs
+    fid = fopen(fn, 'Wt');
+else
+    fid=fopen(fn, 'W');
+end
 
 %% write initial header
 fprintf(fid, '$MeshFormat\n');

@@ -596,6 +596,18 @@ ARRAY+=(private/fitsphere.m)
 sync ${ARRAY[*]}
 
 ################################################################################
+# fixbalance.m
+
+ARRAY=()
+ARRAY+=(private/fixbalance.m)
+ARRAY+=(fileio/private/fixbalance.m)
+ARRAY+=(forward/private/fixbalance.m)
+ARRAY+=(plotting/private/fixbalance.m)
+ARRAY+=(test/private/fixbalance.m)
+ARRAY+=(utilities/private/fixbalance.m)
+sync ${ARRAY[*]}
+
+################################################################################
 # fixcoordsys.m
 
 ARRAY=()
@@ -695,8 +707,9 @@ sync ${ARRAY[*]}
 
 ARRAY=()
 ARRAY+=(fileio/private/ft_apply_montage.m)
-ARRAY+=(forward/ft_apply_montage.m)
+ARRAY+=(forward/private/ft_apply_montage.m)
 ARRAY+=(plotting/private/ft_apply_montage.m)
+ARRAY+=(utilities/ft_apply_montage.m)
 sync ${ARRAY[*]}
 
 ################################################################################
@@ -1181,6 +1194,14 @@ sync ${ARRAY[*]}
 ARRAY=()
 ARRAY+=(inverse/private/ft_setopt.m)
 ARRAY+=(utilities/ft_setopt.m)
+sync ${ARRAY[*]}
+
+################################################################################
+# ft_struct2char.m
+
+ARRAY=()
+ARRAY+=(fileio/private/ft_struct2char.m)
+ARRAY+=(utilities/ft_struct2char.m)
 sync ${ARRAY[*]}
 
 ################################################################################

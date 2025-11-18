@@ -462,7 +462,7 @@ for p = 1:length(cfg.parameter)
 end % for p over all parameters
 
 % certain fields should remain in the output, but only if they are identical in all inputs
-keepfield = {'grad', 'elec', 'opto', 'inside', 'trialinfo', 'sampleinfo', 'tri', 'brainordinate', 'fsample'};
+keepfield = {'elec', 'grad', 'opto', 'inside', 'trialinfo', 'sampleinfo', 'tri', 'brainordinate', 'fsample'};
 for j=1:numel(keepfield)
   if isfield(varargin{1}, keepfield{j})
     tmp  = varargin{1}.(keepfield{j});

@@ -8,5 +8,5 @@ MATLAB release N, then you should only add the directories N+1,
 N+2, ... to your path. In general this will be done automatically
 by the ft_defaults function.
 
-See also http://www.fieldtriptoolbox.org/faq/should_i_add_fieldtrip_with_all_subdirectories_to_my_matlab_path
+See also https://www.fieldtriptoolbox.org/faq/matlab/installation/
 

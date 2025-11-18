@@ -41,6 +41,7 @@ function [headmodel, cfg] = ft_prepare_headmodel(cfg, data)
 %   openmeeg           boundary element method, based on the OpenMEEG software
 %   bemcp              boundary element method, based on the implementation from Christophe Phillips
 %   dipoli             boundary element method, based on the implementation from Thom Oostendorp
+%   hbf                boundary element method, based on the implementation from Matti Stenroos
 %   asa                boundary element method, based on the (commercial) ASA software
 %   simbio             finite element method, based on the SimBio software
 %   duneuro            finite element method, based on the DUNEuro software
@@ -52,6 +53,7 @@ function [headmodel, cfg] = ft_prepare_headmodel(cfg, data)
 %
 % For MEG the following methods are available:
 %   openmeeg           boundary element method, based on the OpenMEEG software
+%   hbf                boundary element method, based on the implementation from Matti Stenroos
 %   singlesphere       analytical single sphere model
 %   localspheres       local spheres model for MEG, one sphere per channel
 %   singleshell        realisically shaped single shell approximation, based on the implementation from Guido Nolte
@@ -85,7 +87,7 @@ function [headmodel, cfg] = ft_prepare_headmodel(cfg, data)
 %   cfg.conductivity      An array with the conductivities must be provided. (see above)
 %   cfg.grid_filename     Alternatively,  a filename for the grid and a filename for the conductivities can be passed.
 %   cfg.tensors_filename  "
-%   cfg.duneuro_settings  (optional) Additional settings can be provided for duneuro (see http://www.duneuro.org).
+%   cfg.duneuro           (optional) Additional settings can be provided for duneuro (see http://www.duneuro.org, and duneuro_defaults.m).
 %
 % SINGLESHELL
 %   cfg.tissue            see above; in combination with 'seg' input; default options are 'brain' or 'scalp'
@@ -114,6 +116,12 @@ function [headmodel, cfg] = ft_prepare_headmodel(cfg, data)
 %   cfg.point
 %   cfg.submethod         (optional)
 %
+% HBF
+%   cfg.conductivity      (required) [2 x n_boundaries] array with conductivity values for inside and outside of a boundary
+%   cfg.isolatedsource    (optional) set to 1 to apply isolated source approach on innermost boundary
+%   cfg.checkmesh         (optional) ['yes | 'no'] check the integrity and ordering of boundaries
+%
+%
 % More details for each of the specific methods can be found in the corresponding
 % low-level function which is called FT_HEADMODEL_XXX where XXX is the method
 % of choise.
@@ -123,7 +131,8 @@ function [headmodel, cfg] = ft_prepare_headmodel(cfg, data)
 % FT_HEADMODEL_SIMBIO, FT_HEADMODEL_FNS, FT_HEADMODEL_HALFSPACE,
 % FT_HEADMODEL_INFINITE, FT_HEADMODEL_OPENMEEG, FT_HEADMODEL_SINGLESPHERE,
 % FT_HEADMODEL_CONCENTRICSPHERES, FT_HEADMODEL_LOCALSPHERES,
-% FT_HEADMODEL_SINGLESHELL, FT_HEADMODEL_INTERPOLATE, FT_HEADMODEL_DUNEURO
+% FT_HEADMODEL_SINGLESHELL, FT_HEADMODEL_INTERPOLATE, FT_HEADMODEL_DUNEURO,
+% FT_HEADMODEL_HBF
 
 % Copyright (C) 2011, Cristiano Micheli
 % Copyright (C) 2011-2012, Jan-Mathijs Schoffelen, Robert Oostenveld
@@ -170,6 +179,7 @@ cfg = ft_checkconfig(cfg, 'renamedval', {'method', 'bem_openmeeg', 'openmeeg'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'method', 'bem_dipoli', 'dipoli'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'method', 'bem_cp', 'bemcp'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'method', 'nolte', 'singleshell'});
+cfg = ft_checkconfig(cfg, 'renamed', {'duneuro_settings', 'duneuro'});
 cfg = ft_checkconfig(cfg, 'renamed', {'hdmfile', 'headmodel'});
 cfg = ft_checkconfig(cfg, 'renamed', {'vol',     'headmodel'});
 
@@ -203,13 +213,14 @@ cfg.baseline        = ft_getopt(cfg, 'baseline');
 cfg.singlesphere    = ft_getopt(cfg, 'singlesphere');
 cfg.grid_filename   = ft_getopt(cfg, 'grid_filename');    % used for duneuro
 cfg.tensors_filename= ft_getopt(cfg, 'tensors_filename'); % used for duneuro
-cfg.duneuro_settings= ft_getopt(cfg, 'duneuro_settings');
+cfg.duneuro         = ft_getopt(cfg, 'duneuro');
 cfg.tissueval       = ft_getopt(cfg, 'tissueval');        % used for simbio
 cfg.transform       = ft_getopt(cfg, 'transform');
 cfg.siunits         = ft_getopt(cfg, 'siunits', 'no');    % yes/no, convert the input and continue with SI units
 cfg.unit            = ft_getopt(cfg, 'unit');
 cfg.smooth          = ft_getopt(cfg, 'smooth');           % used for interpolate
 cfg.headmodel       = ft_getopt(cfg, 'headmodel');        % can contain CTF localspheres model
+cfg.checkmesh       = ft_getopt(cfg, 'checkmesh');        % used for hbf
 
 % the data can be passed as input arguments or can be read from disk
 hasdata = exist('data', 'var');
@@ -286,7 +297,7 @@ switch cfg.method
     end
     headmodel = ft_headmodel_asa(cfg.headmodel);
 
-  case {'bemcp' 'dipoli' 'openmeeg'}
+    case {'bemcp' 'dipoli' 'hbf' 'openmeeg'}
     % the low-level functions all need a mesh
     if isfield(data, 'pos') && isfield(data, 'tri')
       if ~isfield(cfg, 'numvertices') || isempty(cfg.numvertices) || isequal(cfg.numvertices, arrayfun(@(x) size(x.pos, 1), data))
@@ -319,6 +330,10 @@ switch cfg.method
       end
     elseif strcmp(cfg.method, 'dipoli')
       headmodel = ft_headmodel_dipoli(geometry, 'conductivity', cfg.conductivity, 'isolatedsource', cfg.isolatedsource, 'tempdir', cfg.tempdir, 'tempname', cfg.tempname);
+    elseif strcmp(cfg.method, 'hbf')
+      % coonvert meshes to m
+      geometry =  ft_convert_units(geometry,'m');
+      headmodel = ft_headmodel_hbf(geometry, 'conductivity', cfg.conductivity, 'isolatedsource', cfg.isolatedsource, 'checkmesh', cfg.checkmesh);
     else
       headmodel = ft_headmodel_openmeeg(geometry, 'conductivity', cfg.conductivity, 'isolatedsource', cfg.isolatedsource, 'tissue', cfg.tissue);
     end
@@ -486,7 +501,7 @@ switch cfg.method
       error('You must provide a mesh with tetrahedral or hexahedral elements, where each element has a scalar or tensor conductivity');
     end
     headmodel = ft_headmodel_duneuro(geometry, 'grid_filename', cfg.grid_filename, 'tensors_filename', cfg.tensors_filename,...
-      'conductivity', cfg.conductivity, 'duneuro_settings', cfg.duneuro_settings);
+      'conductivity', cfg.conductivity, 'duneuro_settings', cfg.duneuro);
   case {'fns'}
     if input_seg
       data = ft_datatype_segmentation(data, 'segmentationstyle', 'indexed');

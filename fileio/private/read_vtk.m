@@ -1,14 +1,17 @@
 function [pos, tri, attr] = read_vtk(fn)
 
-% READ_VTK reads a triangulation from a VTK (Visualisation ToolKit) format file
-% Supported are triangles and other polygons.
+% READ_VTK reads a triangulation from a VTK (Visualisation ToolKit) format file.
+% Supported are triangles, triangle strips, and other polygons.
 %
 % Use as
 %   [pnt, tri] = read_vtk(filename)
 %
-% See also WRITE_VTK
+% See https://docs.vtk.org/en/latest/design_documents/VTKFileFormats.html
+% and https://www.princeton.edu/~efeibush/viscourse/vtk.pdf
+%
+% See also WRITE_VTK, READ_VTK_XML
 
-% Copyright (C) 2002-2023, Robert Oostenveld
+% Copyright (C) 2002-2025, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -48,7 +51,7 @@ end
 
 % ensure that this is a DATASET POLYDATA filetype, which is currently the only supported format
 line = '';
-while ~contains(line, 'DATASET') 
+while ~contains(line, 'DATASET')
   line = fgetl(fid);
 end
 
@@ -63,10 +66,10 @@ while (~npos)
   end
 end
 
-pos = fscanf(fid, '%f', 3*npos);
-pos = reshape(pos, [3 npos])';
+pos = fscanf(fid, '%f', [3 npos])';
 
 tri = [];
+attr = [];
 
 % next we can have VERTICES, POLYGONS, TRIANGLE_STRIPS, and LINES, assuming
 % that the next line at the current location in the files contains a known
@@ -77,12 +80,15 @@ while ~isequal(line, -1)
   while isempty(line)
     line = fgetl(fid);
   end
+  if isequal(line, -1)
+    break
+  end
 
   if startsWith(line, 'POLYGONS')
     tmp = sscanf(line, 'POLYGONS %d %d');
     ntri  = tmp(1);          % number of triangles
     nvert = tmp(2)/ntri - 1; % number of vertices per polygon
-    
+
     tri = zeros(ntri, nvert+1);
     for i=1:ntri
       tri(i,:) = fscanf(fid, '%d', nvert+1)';
@@ -94,34 +100,48 @@ while ~isequal(line, -1)
     tmp = sscanf(line, 'VERTICES %d %d');
     nvert   = tmp(1);
     sumvert = tmp(2);
-    data    = fscanf(fid, '%d', sumvert);
+    data    = fscanf(fid, '%d', sumvert+nvert); % each line starts with the number of elements to follow
     vert    = cell(nvert,1);
     offset  = 1;
     for k = 1:nvert
       vert{k} = data(offset+1+(0:(data(offset)-1))) + 1; % start counting at 1
       offset  = offset+1+numel(vert{k});
     end
-    
-  elseif startsWith(line, 'TRIANGLE_STRIPS')
-    % to do
-  elseif startsWith(line, 'LINES')
-    % to do
-  elseif startsWith(line, 'POINT_DATA')
-    break;
-  end
-end
 
-% deal with attributes
-if ischar(line) && startsWith(line, 'POINT_DATA')
-  line = fgetl(fid);
-  if startsWith(line, 'VECTORS')
-    % assume Npointsx3 floats
-    for i=1:npos
-      attr(i,:) = fscanf(fid, '%f', 3)';
+    % FIXME what to do with the vertices?
+
+  elseif startsWith(line, 'TRIANGLE_STRIPS')
+    tmp = sscanf(line, 'TRIANGLE_STRIPS %d %d');
+    nstrip   = tmp(1);
+    sumstrip = tmp(2);
+    data     = fscanf(fid, '%d', sumstrip+nstrip); % each line starts with the number of elements to follow
+    strip    = cell(nstrip,1);
+    offset   = 1;
+    for k=1:nstrip
+      strip{k} = data(offset+1+(0:(data(offset)-1))) + 1; % start counting at 1
+      offset   = offset+1+numel(strip{k});
+    end
+
+    % convert the triangle strips to triangles
+    tri = zeros(0,3);
+    for k=1:nstrip
+      tri = cat(1, tri, [strip{k}(1:end-2) strip{k}(2:end-1) strip{k}(3:end)]);
+    end
+
+  elseif startsWith(line, 'LINES')
+    ft_warning('LINES are currently not implemented')
+
+  elseif startsWith(line, 'POINT_DATA')
+    % deal with attributes
+    line = fgetl(fid);
+    if startsWith(line, 'VECTORS')
+      % assume Npoints*3 floats
+      attr = fscanf(fid, '%f', [3 npos])';
+    elseif startsWith(line, 'SCALARS')
+      % assume Npoints*1 floats
+      attr = fscanf(fid, '%f', [1 npos])';
     end
   end
-else
-  attr = [];
 end
 
 fclose(fid);

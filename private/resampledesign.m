@@ -185,11 +185,11 @@ if isempty(cfg.uvar) && strcmp(cfg.resampling, 'permutation')
   
 elseif isempty(cfg.uvar) && strcmp(cfg.resampling, 'bootstrap')
   % randomly draw with replacement, keeping the number of elements the same in each class
-  % only the test under the null-hypothesis (h0) is explicitely implemented here
+  % only the test under the null-hypothesis (h0) is explicitly implemented here
   % but the h1 test can be achieved using a control variable
   resample = zeros(cfg.numrandomization, Nrepl);
   for i=1:cfg.numrandomization
-    resample(i,:) = randsample(1:Nrepl, Nrepl, true);
+    resample(i,:) = randi(Nrepl, 1, Nrepl);
   end
   
 elseif ~isempty(cfg.uvar) && strcmp(cfg.resampling, 'permutation')
@@ -251,7 +251,7 @@ elseif ~isempty(cfg.uvar) && strcmp(cfg.resampling, 'permutation')
   
 elseif length(cfg.uvar)==1 && strcmp(cfg.resampling, 'bootstrap') && isempty(cfg.cvar)
   % randomly draw with replacement, keeping the number of elements the same in each class
-  % only the test under the null-hypothesis (h0) is explicitely implemented here
+  % only the test under the null-hypothesis (h0) is explicitly implemented here
   % but the h1 test can be achieved using a control variable
   
   % FIXME allow for length(cfg.uvar)>1, does it make sense in the first place
@@ -276,7 +276,7 @@ elseif length(cfg.uvar)==1 && strcmp(cfg.resampling, 'bootstrap') && isempty(cfg
   
   if ~checkunique
     for i=1:cfg.numrandomization
-      tmp           = randsample(1:Nrepl/Nrep(1), Nrepl/Nrep(1), true);
+      tmp           = randi(Nrepl/Nrep(1), 1, Nrepl/Nrep(1));
       for k=1:size(indx,1)
         resample(i,indx(k,:)) = indx(k,tmp);
       end
@@ -284,17 +284,30 @@ elseif length(cfg.uvar)==1 && strcmp(cfg.resampling, 'bootstrap') && isempty(cfg
   else
     tmp = zeros(cfg.numrandomization*10, Nrepl/Nrep(1));
     for i=1:cfg.numrandomization*10
-      tmp(i,:) = sort(randsample(1:Nrepl/Nrep(1), Nrepl/Nrep(1), true));
+      tmp(i,:) = sort(randi(Nrepl/Nrep(1), 1, Nrepl/Nrep(1)));
     end
     
     tmp = unique(tmp, 'rows');
-    fprintf('found %d unique rows in bootstrap matrix of %d bootstraps', size(tmp,1), cfg.numrandomization*10);
+    fprintf('found %d unique rows in bootstrap matrix of %d bootstraps\n', size(tmp,1), cfg.numrandomization*10);
     
     if size(tmp,1)<cfg.numrandomization
       fprintf('using only %d unique bootstraps\n', size(tmp,1));
       cfg.numrandomization = size(tmp,1);
       index = 1:size(tmp,1);
     else
+      % do a quick check on the number of unique units per row
+      nunique = zeros(size(tmp,1),1);
+      for i=1:size(tmp,1)
+        nunique(i,1) = numel(unique(tmp(i,:)));
+      end
+      ununique = unique(nunique);
+      for i=1:numel(ununique)
+        nnunique(i,1) = sum(nunique==ununique(i));
+      end
+      fprintf('range of unique units across bootstraps is %d - %d\n', min(nunique), max(nunique));
+      fprintf('discarding bootstraps with <= 10 different units, selecting from %d bootstraps\n', sum(nunique>=10));
+      tmp = tmp(nunique>=10,:);
+
       index = randperm(size(tmp,1));
       index = index(1:cfg.numrandomization);
     end

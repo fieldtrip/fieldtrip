@@ -116,8 +116,7 @@ end
 
 % initialize output structure
 freqOut = keepfields(freq, {'label' 'freq' 'dimord' 'time'});
-freqOut = copyfields(freq, freqOut,...
-  {'grad', 'elec', 'trialinfo', 'topo', 'topolabel', 'unmixing'});
+freqOut = copyfields(freq, freqOut, {'elec', 'grad', 'opto', 'trialinfo', 'topo', 'topolabel', 'unmixing'});
 
 % loop over all fields that should be normalized
 for k = 1:numel(cfg.parameter)
@@ -160,7 +159,7 @@ end
 ft_postamble debug
 ft_postamble previous   freq
 
-% rename the output variable to accomodate the savevar postamble
+% rename the output variable to accommodate the savevar postamble
 freq = freqOut;
 
 ft_postamble provenance freq

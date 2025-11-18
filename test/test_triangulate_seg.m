@@ -5,7 +5,7 @@ function test_triangulate_seg
 % DEPENDENCY triangulate_seg
 % DATA no
 
-% since the function to test is in a private directory, we explicitely have to cd into that directory
+% since the function to test is in a private directory, we explicitly have to cd into that directory
 [ftver, ftpath] = ft_version;
 cd(fullfile(ftpath, 'private'));
 

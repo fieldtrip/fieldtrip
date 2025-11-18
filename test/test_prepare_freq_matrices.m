@@ -50,7 +50,11 @@ assert(isequal(a2,b2) ||  norm(a2-b2)<eps^2);
 assert(isequal(a3,b3) ||  norm(a3-b3)<eps^2);
 
 % powandcsd data, multiple trials
-load(fullfile(datadir,'freq_mtmfft_powandcsd_trl_ctf275.mat'));
+
+% NOTE: the file below does not contain allxall csd anymore, this needs to be created first 
+% load(fullfile(datadir,'freq_mtmfft_powandcsd_trl_ctf275.mat'));
+cmb  = ft_channelcombination({'all' 'all'}, freq.label);
+freq = ft_checkdata(freq, 'cmbstyle', 'sparsewithpow', 'channelcmb', cmb); 
 
 cfg           = [];
 cfg.frequency = 5;
@@ -81,7 +85,9 @@ assert(isequal(a2,b2));
 assert(isequal(a3,b3));
 
 % powandcsd data, multiple trials and time
-load(fullfile(datadir,'freq_mtmconvol_powandcsd_trl_ctf275.mat'));
+% load(fullfile(datadir,'freq_mtmconvol_powandcsd_trl_ctf275.mat'));
+load(fullfile(datadir,'freq_mtmconvol_fourier_trl_ctf275.mat'));
+freq = ft_checkdata(freq, 'cmbstyle', 'sparsewithpow', 'channelcmb', cmb); 
 
 cfg           = [];
 cfg.frequency = 6;
@@ -304,7 +310,7 @@ if isfield(freq, 'powspctrm') && isfield(freq, 'crsspctrm')
     if length(refindx)<1
       error('The reference channel was not found in powspctrm');
     elseif length(refindx)>1
-      error('Multiple occurences of the reference channel found in powspctrm');
+      error('Multiple occurrences of the reference channel found in powspctrm');
     end
     if Ntrials==1
       Pr = freq.powspctrm(refindx, fbin);

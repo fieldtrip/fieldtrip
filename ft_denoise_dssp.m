@@ -7,12 +7,13 @@ function [dataout] = ft_denoise_dssp(cfg, datain)
 %
 % Use as
 %   dataout = ft_denoise_dssp(cfg, datain)
-% where cfg is a configuration structure that contains
+% where the input data should come from FT_PREPROCESSING or
+% FT_TIMELOCKANALYSIS and the configuration should contain
 %   cfg.channel          = Nx1 cell-array with selection of channels (default = 'all'), see FT_CHANNELSELECTION for details
 %   cfg.trials           = 'all' or a selection given as a 1xN vector (default = 'all')
-%   cfg.pertrial         = 'no', or 'yes', compute the temporal projection per trial (default = 'no')
+%   cfg.pertrial         = 'no' or 'yes', compute the temporal projection per trial (default = 'no')
 %   cfg.sourcemodel      = structure, source model with precomputed leadfields, see FT_PREPARE_LEADFIELD
-%   cfg.demean           = 'yes', or 'no', demean the data per epoch (default = 'yes')
+%   cfg.demean           = 'yes' or 'no', demean the data per epoch (default = 'yes')
 %   cfg.dssp             = structure with parameters that determine the behavior of the algorithm
 %   cfg.dssp.n_space     = 'all', or scalar. Number of dimensions for the
 %                          initial spatial projection.
@@ -25,7 +26,9 @@ function [dataout] = ft_denoise_dssp(cfg, datain)
 %                          included eigenvalues (if value<1), determining
 %                          the dimensionality of the intersection.
 %
-% See also FT_DENOISE_PCA, FT_DENOISE_SYNTHETIC, FT_DENOISE_TSR
+% See also FT_PREPROCESSING, FT_DENOISE_AMM, FT_DENOISE_HFC,
+% FT_DENOISE_PCA, FT_DENOISE_PREWHITEN, FT_DENOISE_SSP, FT_DENOISE_SSS,
+% FT_DENOISE_SYNTHETIC, FT_DENOISE_TSR
 
 % Copyright (C) 2018-2024, Jan-Mathijs Schoffelen
 %
@@ -64,6 +67,9 @@ if ft_abort
   % do not continue function execution in case the outputfile is present and the user indicated to keep it
   return
 end
+
+% store the original type of the input data
+dtype = ft_datatype(datain);
 
 % check the input data
 datain = ft_checkdata(datain, 'datatype', {'raw'}); % FIXME how about timelock and freq?
@@ -118,6 +124,10 @@ if isfield(cfg, 'sourcemodelout')
   % compartment, this is not part of the original DSSP algorithm, and
   % experimental code
   Gout = compute_grammatrix(cfg.sourcemodelout, datain.label);
+  
+  % project out the inspace projector
+  P = Us*Us';
+  Gout = P*Gout*P';
 
   ft_info('Computing the spatial subspace projector for the forward model describing the out field\n');
   Sout = dssp_spatial(datain.trial, Gout, cfg.dssp.n_space);
@@ -149,7 +159,6 @@ subspace.S     = S;
 ft_info('Applying the subspace projector\n');
 Bclean = datain.trial - (datain.trial*cellfun(@transpose, Ae, 'UniformOutput', false))*Ae;
 
-
 % put some diagnostic information in the output cfg.
 cfg.dssp.subspace = subspace;
 
@@ -172,6 +181,14 @@ end
 % create the output argument
 dataout       = keepfields(datain, {'label', 'time', 'fsample', 'trialinfo', 'sampleinfo', 'grad', 'elec', 'opto'}); % grad can be kept and does not need to be balanced, since the cleaned data is a mixture over time, not space.
 dataout.trial = trial;
+
+% convert back to input type if necessary
+switch dtype
+  case 'timelock'
+    dataout = ft_checkdata(dataout, 'datatype', 'timelock');
+  otherwise
+    % keep the output as it is
+end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
@@ -294,18 +311,17 @@ function N = getN(N, S, name)
 ttext = sprintf('enter the dimension for the %s field: ', name);
 if isempty(N)
   N  = input(ttext);
-elseif ischar(N) && isequal(N, 'interactive') && ~any(strcmp(name, {'outside' 'intersection'}))
-  figure, plot(log10(S),'-o'); drawnow
-  N = input(ttext);
-elseif ischar(N) && isequal(N, 'interactive') && any(strcmp(name, {'outside' 'intersection'}))
-  figure, plot(S, '-o'); drawnow
+elseif ischar(N) && isequal(N, 'interactive')
+  h = figure; hpos = get(h, 'position'); set(h, 'position', hpos.*[1 1 2 1]);
+  subplot(121);plot(log10(S),'-o'); ylabel('log_1_0 singular values'); drawnow
+  subplot(122);plot(S,'-o'); ylabel('singular values'); drawnow
   N = input(ttext);
 elseif ischar(N) && isequal(N, 'all')
   N = find(S./S(1)>1e5*eps, 1, 'last');
 elseif isnumeric(N) && N<1
   N = find(S>=N, 1, 'last');
+  fprintf('Using %d dimensions for the %s field\n', N, name);
 end
-fprintf('Using %d dimensions for the %s field\n', N, name);
 
 function G = compute_grammatrix(sourcemodel, label)
 
@@ -330,4 +346,4 @@ end
 
 % compute the Gram-matrix of the supplied forward model
 lf = cat(2, sourcemodel.leadfield{:});
-G  = lf*lf';
+G  = (lf*lf')./size(lf,2);

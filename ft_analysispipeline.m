@@ -164,7 +164,7 @@ end
 pipeline = tmp;
 
 if istrue(cfg.prune)
-  % prune the double occurences
+  % prune the double occurrences
   [dummy, indx] = unique({pipeline.this});
   pipeline = pipeline(sort(indx));
 end

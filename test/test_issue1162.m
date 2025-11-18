@@ -9,7 +9,7 @@ function test_issue1162
 
 cfg = [];
 cfg.dataset = dccnpath('/project/3031000.02/test/original/meg/neuromag306/raw.fif');
-cfg.trl = [1 7500 0]; % 30 seconds @250Hz
+cfg.trl = [125001 132500 0]; % 30 seconds @250Hz, the start of the file is all zeros
 cfg.continuous = 'yes';
 cfg.channel = {'MEG'};
 data = ft_preprocessing(cfg);

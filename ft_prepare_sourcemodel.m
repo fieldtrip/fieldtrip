@@ -25,13 +25,13 @@ function [sourcemodel, cfg] = ft_prepare_sourcemodel(cfg)
 %
 % BASEDONGRID - uses an explicitly specified grid, according to the following
 % configuration options:
-%   cfg.xgrid         = vector (e.g. -20:1:20) or 'auto' (default = 'auto')
-%   cfg.ygrid         = vector (e.g. -20:1:20) or 'auto' (default = 'auto')
-%   cfg.zgrid         = vector (e.g.   0:1:20) or 'auto' (default = 'auto')
+%   cfg.xgrid         = vector (e.g. -120:10:120) or 'auto' (default = 'auto')
+%   cfg.ygrid         = vector (e.g. -120:10:120) or 'auto' (default = 'auto')
+%   cfg.zgrid         = vector (e.g.  -50:10:120) or 'auto' (default = 'auto')
 %
 % BASEDONRESOLUTION - uses an grid with the desired resolution, according
 % to the following configuration options:
-%   cfg.resolution    = number (e.g. 1 cm) for automatic grid generation
+%   cfg.resolution    = number (e.g. 10 mm) for automatic grid generation
 %
 % BASEDONPOS - places sources on positions that you explicitly specify, according to
 % the following configuration options:
@@ -50,7 +50,7 @@ function [sourcemodel, cfg] = ft_prepare_sourcemodel(cfg)
 % configuration options:
 %   cfg.mri             = structure with the anatomical MRI, or the filename of the MRI, see FT_READ_MRI
 %   cfg.nonlinear       = 'no' (or 'yes'), use non-linear normalization
-%   cfg.resolution      = number (e.g. 6) of the resolution of the template MNI grid, defined in mm
+%   cfg.resolution      = scalar with the resolution of the template MNI grid, defined in mm (for example 6)
 %   cfg.template        = structure with the template sourcemodel, or the filename of a template sourcemodel (defined in MNI space)
 %   cfg.templatemri     = string, filename of the MNI template (default = 'T1.mnc' for SPM2 or 'T1.nii' for SPM8 and SPM12)
 %   cfg.spmversion      = string, 'spm2', 'spm8', 'spm12' (default = 'spm12')
@@ -111,7 +111,7 @@ function [sourcemodel, cfg] = ft_prepare_sourcemodel(cfg)
 % See also FT_PREPARE_LEADFIELD, FT_PREPARE_HEADMODEL, FT_SOURCEANALYSIS,
 % FT_DIPOLEFITTING, FT_MEGREALIGN
 
-% Copyright (C) 2004-2024, Robert Oostenveld
+% Copyright (C) 2004-2025, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -298,12 +298,12 @@ switch cfg.method
     cfg.tight       = ft_getopt(cfg, 'tight',      'no');
 
   case 'basedonmni'
-    cfg.tight       = ft_getopt(cfg.sourcemodel, 'tight',       'no');
-    cfg.nonlinear   = ft_getopt(cfg.sourcemodel, 'nonlinear',   'no');
+    cfg.tight       = ft_getopt(cfg, 'tight',       'no');
+    cfg.nonlinear   = ft_getopt(cfg, 'nonlinear',   'no');
 
   case 'basedoncentroids'
     fprintf('creating sourcemodel based on volumetric mesh centroids\n');
-    cfg.tight       = ft_getopt(cfg.sourcemodel, 'tight',       'no');
+    cfg.tight       = ft_getopt(cfg, 'tight',       'no');
     cfg.inwardshift = ft_getopt(cfg, 'inwardshift', 0); % in this case for inside detection
 end
 
@@ -466,14 +466,14 @@ switch cfg.method
       ft_error('creating an automatic 3D grid requires either the sensor positions, a headmodel, or a headshape to estimate the extent');
     end
 
-    if isempty(cfg.symmetry)
+    if isempty(cfg.symmetry) || ~istrue(cfg.symmetry)
       % round the limits such that [0 0 0] will be on the grid
       minpos = floor(minpos/cfg.resolution)*cfg.resolution;
-      maxpos = ceil(maxpos/cfg.resolution)*cfg.resolution;
+      maxpos = ceil( maxpos/cfg.resolution)*cfg.resolution;
     else
       % round the limits such that the grid will be symmetric around [0 0 0]
       minpos = floor((minpos+cfg.resolution/2)/cfg.resolution)*cfg.resolution - cfg.resolution/2;
-      maxpos = ceil((maxpos+cfg.resolution/2)/cfg.resolution)*cfg.resolution - cfg.resolution/2;
+      maxpos = ceil( (maxpos+cfg.resolution/2)/cfg.resolution)*cfg.resolution - cfg.resolution/2;
     end
 
     if ischar(cfg.xgrid) && strcmp(cfg.xgrid, 'auto')
@@ -768,11 +768,48 @@ if ~isempty(cfg.moveinward)
   end
 end % if moveinward
 
+if isfield(sourcemodel, 'inside') && isfield(cfg, 'inwardshift') && isfield(cfg, 'template')
+  % warn about inwardshift not having an effect as inside is already specified as well
+  % warning should only be issued for templates, inwardshift can also be present for surface meshes
+  ft_warning('Inside dipole locations already determined by a template, cfg.inwardshift has no effect.')
+end
+
+% determine the dipole locations that are inside the source compartment of the
+% volume conduction model, i.e. inside the brain
+if ~isfield(sourcemodel, 'inside')
+  if isfield(sourcemodel, 'tissue') && isfield(sourcemodel, 'tissuelabel')
+    % this applies when basedoncentroids or movetocentroids
+    % select only the gray matter or brain tissues
+    brain = find(ismember(headmodel.tissuelabel, {'gm', 'gray', 'grey', 'brain'}));
+    sourcemodel.inside = ismember(sourcemodel.tissue, brain);
+  else
+    % this returns a boolean vector
+    sourcemodel.inside = ft_inside_headmodel(sourcemodel.pos, headmodel, 'grad', sens, 'headshape', cfg.headshape, 'inwardshift', cfg.inwardshift);
+  end
+end % if inside
+
 if strcmp(cfg.movetocentroids, 'yes')
+  % moving outside grid points to the FEM centroids does not make sense
+  % continue with only the inside positions
+  sourcemodel.pos = sourcemodel.pos(sourcemodel.inside, :);
+  if isfield(sourcemodel, 'tissue')
+    sourcemodel.tissue = sourcemodel.tissue(sourcemodel.inside);
+  end
+  % all remaining positions are inside
+  sourcemodel.inside = sourcemodel.inside(sourcemodel.inside);
+  if isfield(sourcemodel, 'dim')
+    sourcemodel = rmfield(sourcemodel, 'dim');
+  end
+
   % compute centroids of the tetrahedral or hexahedral mesh
   centroids = compute_centroids(headmodel);
 
   % move the dipole positions in the sourcemodel to the closest centroid
+  if ~startsWith(which('knnsearch'), matlabroot)
+    ft_warning('the knnsearch function in the MATLAB stats toolbox is much faster than the one in fieldtrip/external/stats, see https://www.fieldtriptoolbox.org/faq/matlab/toolboxes_legacyvsexternal/')
+    ft_notice('this may take some time ...');
+  end
+
   indx = knnsearch(centroids.pos, sourcemodel.pos);
   sourcemodel.pos = centroids.pos(indx,:);
 
@@ -795,26 +832,6 @@ if strcmp(cfg.movetocentroids, 'yes')
   % the shifted positions are not on a regular 3D grid any more, hence dim does not apply
   sourcemodel = removefields(sourcemodel, {'dim'});
 end % if movetocentroids
-
-if isfield(sourcemodel, 'inside') && isfield(cfg, 'inwardshift') && isfield(cfg, 'template')
-  % warn about inwardshift not having an effect as inside is already specified as well
-  % warning should only be issued for templates, inwardshift can also be present for surface meshes
-  ft_warning('Inside dipole locations already determined by a template, cfg.inwardshift has no effect.')
-end
-
-% determine the dipole locations that are inside the source compartment of the
-% volume conduction model, i.e. inside the brain
-if ~isfield(sourcemodel, 'inside')
-  if isfield(sourcemodel, 'tissue') && isfield(sourcemodel, 'tissuelabel')
-    % this applies when basedoncentroids or movetocentroids
-    % find the dipoles in the cortical or brain tissues
-    cortex = find(ismember(headmodel.tissuelabel, {'gm', 'gray', 'brain'}));
-    sourcemodel.inside = ismember(sourcemodel.tissue, cortex);
-  else
-    % this returns a boolean vector
-    sourcemodel.inside = ft_inside_headmodel(sourcemodel.pos, headmodel, 'grad', sens, 'headshape', cfg.headshape, 'inwardshift', cfg.inwardshift);
-  end
-end % if inside
 
 if strcmp(cfg.tight, 'yes')
   if ~isfield(sourcemodel, 'dim')
@@ -928,17 +945,17 @@ function centr = compute_centroids(headmodel)
 % some of the fields can be copied over, fields that are specified but not present will be silently ignored
 centr = keepfields(headmodel, {'tissue', 'tissuelabel', 'unit', 'coordsys'});
 
-% the FEM model should have tetraheders or hexaheders
+% the FEM model should have tetrahedrons or hexahedrons
 if isfield(headmodel, 'tet')
   numtet = size(headmodel.tet, 1);
-  fprintf('computing centroids for %d tetraheders\n', numtet);
-  % compute the mean of the 4 corner points of the tetraheders
+  fprintf('computing centroids for %d tetrahedrons\n', numtet);
+  % compute the mean of the 4 corner points of the tetrahedrons
   centr.pos = squeeze(mean(reshape(headmodel.pos(headmodel.tet,:), numtet, 4, 3), 2));
 elseif isfield(headmodel, 'hex')
   numhex = size(headmodel.hex, 1);
-  fprintf('computing centroids for %d hexaheders\n', numhex);
-  % compute the mean of the 8 corner points of the hexaheders
+  fprintf('computing centroids for %d hexahedrons\n', numhex);
+  % compute the mean of the 8 corner points of the hexahedrons
   centr.pos = squeeze(mean(reshape(headmodel.pos(headmodel.hex,:), numhex, 8, 3), 2));
 else
-  ft_error('the headmodel does not contain tetraheders or hexaheders');
+  ft_error('the headmodel does not contain tetrahedrons or hexahedrons');
 end

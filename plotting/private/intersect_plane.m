@@ -40,14 +40,14 @@ side = ptriside(v1, v2, v3, pos);
 original = tri;
 
 if size(tri,2)==4
-  % the input mesh consists of tetraheders
+  % the input mesh consists of tetrahedrons
 
-  % only continue with the tetraheders that have vertices on both sides of the plane
+  % only continue with the tetrahedrons that have vertices on both sides of the plane
   indx = abs(sum(side(tri),2))~=4;
   tri = tri(indx,:);
 
   if ~isempty(tri)
-    % construct and concatenate the four triangular edges of each tetraheder
+    % construct and concatenate the four triangular edges of each tetrahedron
     part1 = tri(:,[1 2 3]);
     part2 = tri(:,[1 2 4]);
     part3 = tri(:,[2 3 4]);
@@ -55,9 +55,9 @@ if size(tri,2)==4
     tri = cat(1, part1, part2, part3, part4);
   end
 elseif size(tri,2)==8
-  % the input mesh consists of hexaheders
+  % the input mesh consists of hexahedrons
 
-  % only continue with the hexaheders that have vertices on both sides of the plane
+  % only continue with the hexahedrons that have vertices on both sides of the plane
   indx = abs(sum(side(tri),2))~=8;
   tri = tri(indx,:);
 
@@ -65,7 +65,7 @@ elseif size(tri,2)==8
     cube.hex = [1 2 3 4 5 6 7 8];
     cube.pos = pos(tri(1,:),:);
     cube.tri = convhull(cube.pos(:,1), cube.pos(:,2), cube.pos(:,3));
-    % each hexaheder/cube can be described by 12 triangles, 2 for each side
+    % each hexahedron/cube can be described by 12 triangles, 2 for each side
     part1  = tri(:,cube.tri(1,:));
     part2  = tri(:,cube.tri(2,:));
     part3  = tri(:,cube.tri(3,:));

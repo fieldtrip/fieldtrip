@@ -180,4 +180,55 @@ tlockapp = ft_appendtimelock(cfg, tlock1, tlock2);
 assert(isfield(tlockapp, 'sampleinfo')); % here it should exist
 assert(~isfield(tlockapp, 'fsample'));
 
+%% test with cfg.memory high/low
+tlock1 = [];
+tlock1.label = {'1';'2'};
+tlock1.time = 1:5;
+tlock1.dimord = 'rpt_chan_time';
+tlock1.trial = randn(10, 2, 5);
+
+tlock2 = [];
+tlock2.label = {'1';'2'};
+tlock2.time = 1:5;
+tlock2.dimord = 'rpt_chan_time';
+tlock2.trial = randn(8, 2, 5);
+
+tlock3 = [];
+tlock3.label = {'1';'2'};
+tlock3.time = 1:5;
+tlock3.dimord = 'rpt_chan_time';
+tlock3.trial = randn(7, 2, 5);
+
+cfg = [];
+cfg.memory = 'high';
+thigh = ft_appendtimelock(cfg, tlock1, tlock2, tlock3);
+cfg.memory = 'low';
+tlow = ft_appendtimelock(cfg, tlock1, tlock2, tlock3);
+assert(isequal(thigh.trial, tlow.trial));
+
+tlock1 = [];
+tlock1.label = {'1';'2'};
+tlock1.time = 1:5;
+tlock1.dimord = 'rpt_chan_time';
+tlock1.trial = randn(8, 2, 5);
+
+tlock2 = [];
+tlock2.label = {'3';'4'};
+tlock2.time = 1:5;
+tlock2.dimord = 'rpt_chan_time';
+tlock2.trial = randn(8, 2, 5);
+
+tlock3 = [];
+tlock3.label = {'5';'6'};
+tlock3.time = 1:5;
+tlock3.dimord = 'rpt_chan_time';
+tlock3.trial = randn(8, 2, 5);
+
+cfg = [];
+cfg.memory = 'high';
+thigh = ft_appendtimelock(cfg, tlock1, tlock2, tlock3);
+cfg.memory = 'low';
+tlow = ft_appendtimelock(cfg, tlock1, tlock2, tlock3);
+assert(isequal(thigh.trial, tlow.trial));
+
 

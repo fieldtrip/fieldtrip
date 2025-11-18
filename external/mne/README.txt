@@ -8,3 +8,6 @@ https://github.com/mne-tools/mne-matlab/commit/75059ed0798a6f25123906fe3acc8e3a1
 
 20241108:
 https://github.com/mne-tools/mne-matlab/commit/5a8a5e180026e981468aaf39f5c5dffcc299d726
+
+20250806:
+https://github.com/mne-tools/mne-matlab/commit/0f463c5776a28e6b30743decbdd6a72827721883

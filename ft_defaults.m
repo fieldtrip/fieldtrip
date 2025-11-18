@@ -283,10 +283,6 @@ if ~isdeployed
 
   try
     % these directories deal with compatibility with older MATLAB versions
-    if ft_platform_supports('matlabversion', -inf, '2008a'), ft_hastoolbox('compat/matlablt2008b', 3, 1); end
-    if ft_platform_supports('matlabversion', -inf, '2008b'), ft_hastoolbox('compat/matlablt2009a', 3, 1); end
-    if ft_platform_supports('matlabversion', -inf, '2009a'), ft_hastoolbox('compat/matlablt2009b', 3, 1); end
-    if ft_platform_supports('matlabversion', -inf, '2009b'), ft_hastoolbox('compat/matlablt2010a', 3, 1); end
     if ft_platform_supports('matlabversion', -inf, '2010a'), ft_hastoolbox('compat/matlablt2010b', 3, 1); end
     if ft_platform_supports('matlabversion', -inf, '2010b'), ft_hastoolbox('compat/matlablt2011a', 3, 1); end
     if ft_platform_supports('matlabversion', -inf, '2011a'), ft_hastoolbox('compat/matlablt2011b', 3, 1); end
@@ -317,6 +313,8 @@ if ~isdeployed
     if ft_platform_supports('matlabversion', -inf, '2023b'), ft_hastoolbox('compat/matlablt2024a', 3, 1); end
     if ft_platform_supports('matlabversion', -inf, '2024a'), ft_hastoolbox('compat/matlablt2024b', 3, 1); end
     if ft_platform_supports('matlabversion', -inf, '2024b'), ft_hastoolbox('compat/matlablt2025a', 3, 1); end
+    if ft_platform_supports('matlabversion', -inf, '2025a'), ft_hastoolbox('compat/matlablt2025b', 3, 1); end
+    if ft_platform_supports('matlabversion', -inf, '2025b'), ft_hastoolbox('compat/matlablt2026a', 3, 1); end
     % this deals with compatibility with all OCTAVE versions
     if ft_platform_supports('octaveversion', -inf, +inf),    ft_hastoolbox('compat/octave', 3, 1); end
   end
@@ -437,7 +435,7 @@ if length(list)>1
       ft_warning('one version of %s is found here: %s', toolbox, list{i});
     end
   end
-  ft_warning('You probably used addpath(genpath(''path_to_fieldtrip'')), this can lead to unexpected behavior. See http://www.fieldtriptoolbox.org/faq/should_i_add_fieldtrip_with_all_subdirectories_to_my_matlab_path');
+  ft_warning('You probably used addpath(genpath(''path_to_fieldtrip'')), this can lead to unexpected behavior. See https://www.fieldtriptoolbox.org/faq/matlab/installation/');
 end
 end % function checkMultipleToolbox
 
@@ -448,6 +446,6 @@ function checkIncorrectPath
 p = fileparts(mfilename('fullpath'));
 incorrect = fullfile(p, 'compat', 'incorrect');
 if ~isempty(strfind(path, incorrect))
-  ft_warning('Your path is set up incorrectly. You probably used addpath(genpath(''path_to_fieldtrip'')), this can lead to unexpected behavior. See http://www.fieldtriptoolbox.org/faq/should_i_add_fieldtrip_with_all_subdirectories_to_my_matlab_path');
+  ft_warning('Your path is set up incorrectly. You probably used addpath(genpath(''path_to_fieldtrip'')), this can lead to unexpected behavior. See https://www.fieldtriptoolbox.org/faq/matlab/installation/');
 end
 end % function checkIncorrectPath

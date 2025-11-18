@@ -23,13 +23,16 @@ data_private = []
 suggestions = []
 
 for testfile in tests:
-    pattern1 = '^% DATA.*\\bpublic|no\\b'  # this includes NO DATA
-    pattern2 = '^% DATA.*\\bprivate\\b'
+    pattern1 = '^% DATA.*\\bno\\b'
+    pattern2 = '^% DATA.*\\bpublic\\b'
+    pattern3 = '^% DATA.*\\bprivate\\b'
 
     for line in open(os.path.join(testdir, testfile)):
         if re.search(pattern1, line):
             data_public.append(testfile)
         if re.search(pattern2, line):
+            data_public.append(testfile)
+        if re.search(pattern3, line):
             data_private.append(testfile)
 
 for changedfile in args.file:
@@ -65,7 +68,10 @@ if len(suggestions_public):
     print()
 
 if len(suggestions_private):
-    print('When inside the DCCN, please also consider testing: ', end='')
+    if len(suggestions_public):
+        print('When inside the DCCN, please also consider testing: ', end='')
+    else:
+        print('When inside the DCCN, please consider testing: ', end='')
     for i, file in enumerate(suggestions_private):
         f, x = os.path.splitext(os.path.basename(file))
         if i==len(suggestions_private)-1:
@@ -76,4 +82,4 @@ if len(suggestions_private):
 
 if len(suggestions_public) and len(suggestions_private):
     print('Suggested tests outside the DCCN use public data or do not use data.')
-    print('Suggested tests inside the DCCN use private data.') 
+    print('Suggested tests inside the DCCN use private data.')

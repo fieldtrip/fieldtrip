@@ -51,6 +51,7 @@ function [cfg] = ft_multiplotTFR(cfg, data)
 %                          interactive plot when a selected area is clicked. Multiple areas
 %                          can be selected by holding down the SHIFT key.
 %   cfg.figure           = 'yes' or 'no', whether to open a new figure. You can also specify a figure handle from FIGURE, GCF or SUBPLOT. (default = 'yes')
+%   cfg.figurename       = string, title of the figure window
 %   cfg.position         = location and size of the figure, specified as [left bottom width height] (default is automatic)
 %   cfg.renderer         = string, 'opengl', 'zbuffer', 'painters', see RENDERERINFO (default is automatic, try 'painters' when it crashes)
 %   cfg.directionality   = '', 'inflow' or 'outflow' specifies for
@@ -209,6 +210,9 @@ cfg.channel        = ft_getopt(cfg, 'channel',      'all');
 cfg.fontsize       = ft_getopt(cfg, 'fontsize',      8);
 cfg.fontweight     = ft_getopt(cfg, 'fontweight');
 cfg.interactive    = ft_getopt(cfg, 'interactive',  'yes');
+cfg.interactivecolor = ft_getopt(cfg, 'interactivecolor', [0 0 0]); % linecolor of selection rectangle
+cfg.interactivestyle = ft_getopt(cfg, 'interactivestyle', '--');    % linestyle of selection rectangle
+cfg.interactivewidth = ft_getopt(cfg, 'interactivewidth', 1.5);     % linewidth of selection rectangle
 cfg.hotkeys        = ft_getopt(cfg, 'hotkeys',      'yes');
 cfg.orient         = ft_getopt(cfg, 'orient',       'landscape');
 cfg.maskalpha      = ft_getopt(cfg, 'maskalpha',     1);
@@ -250,6 +254,13 @@ elseif nargin>1
   dataname = arrayfun(@inputname, 2:nargin, 'UniformOutput', false);
 else
   dataname = {};
+end
+
+% set the figure window title, if not defined by user
+if isempty(cfg.figurename) && ~isempty(dataname)
+  cfg.figurename = sprintf('%s: %s', mfilename, join_str(', ', dataname));
+else
+  cfg.figurename = sprintf('%s:', mfilename);
 end
 
 %% Section 2: data handling, this also includes converting bivariate (chan_chan and chancmb) into univariate data
@@ -510,25 +521,21 @@ for k=1:length(selchan)
   if ~isempty(cfg.maskparameter)
     mdata = shiftdim(maskmatrix(k, :, :));
   end
-  
+ 
   % Draw plot (and mask Nan's with maskfield if requested)
+  plotopts = {'clim', [zmin zmax], 'tag', 'cip', 'hpos', chanX(k), 'vpos', chanY(k), 'width', chanWidth(k), 'height', chanHeight(k)};
   if isequal(cfg.masknans, 'yes') && isempty(cfg.maskparameter)
-    nans_mask = ~isnan(cdata);
-    mask = double(nans_mask);
-    ft_plot_matrix(cdata, 'clim', [zmin zmax], 'tag', 'cip', 'highlightstyle', cfg.maskstyle, 'highlight', mask, 'hpos', chanX(k), 'vpos', chanY(k), 'width', chanWidth(k), 'height', chanHeight(k))
+    mask     = double(~isnan(cdata));
+    plotopts = cat(2, plotopts, {'highlightstyle', cfg.maskstyle, 'highlight', mask});
   elseif isequal(cfg.masknans, 'yes') && ~isempty(cfg.maskparameter)
-    nans_mask = ~isnan(cdata);
-    mask = nans_mask .* mdata;
-    mask = double(mask);
-    ft_plot_matrix(cdata, 'clim', [zmin zmax], 'tag', 'cip', 'highlightstyle', cfg.maskstyle, 'highlight', mask, 'hpos', chanX(k), 'vpos', chanY(k), 'width', chanWidth(k), 'height', chanHeight(k))
+    mask     = double((~isnan(cdata)) .* mdata);
+    plotopts = cat(2, plotopts, {'highlightstyle', cfg.maskstyle, 'highlight', mask});
   elseif isequal(cfg.masknans, 'no') && ~isempty(cfg.maskparameter)
-    mask = mdata;
-    mask = double(mask);
-    ft_plot_matrix(cdata, 'clim', [zmin zmax], 'tag', 'cip', 'highlightstyle', cfg.maskstyle, 'highlight', mask, 'hpos', chanX(k), 'vpos', chanY(k), 'width', chanWidth(k), 'height', chanHeight(k))
-  else
-    ft_plot_matrix(cdata, 'clim', [zmin zmax], 'tag', 'cip', 'hpos', chanX(k), 'vpos', chanY(k), 'width', chanWidth(k), 'height', chanHeight(k))
+    mask     = double(mdata);
+    plotopts = cat(2, plotopts, {'highlightstyle', cfg.maskstyle, 'highlight', mask});
   end
-  
+  ft_plot_matrix(cdata, plotopts{:})
+
   % Currently the handle isn't being used below, this is here for possible use in the future
   h = findobj('tag', 'cip');
 end % plot channels
@@ -575,22 +582,18 @@ if istrue(cfg.showscale)
     cdata = shiftdim(mean(datamatrix, 1));
     
     % Draw plot (and mask Nan's with maskfield if requested)
+    plotopts = {'clim', [zmin zmax], 'tag', 'cip', 'hpos', cfg.layout.pos(k, 1), 'vpos', cfg.layout.pos(k, 2), 'width', cfg.layout.width(k), 'height', cfg.layout.height(k)};
     if isequal(cfg.masknans, 'yes') && isempty(cfg.maskparameter)
-      mask = ~isnan(cdata);
-      mask = double(mask);
-      ft_plot_matrix(cdata, 'clim', [zmin zmax], 'tag', 'cip', 'highlightstyle', cfg.maskstyle, 'highlight', mask, 'hpos', cfg.layout.pos(k, 1), 'vpos', cfg.layout.pos(k, 2), 'width', cfg.layout.width(k), 'height', cfg.layout.height(k))
+      mask     = double(~isnan(cdata));
+      plotopts = cat(2, plotopts, {'highlightstyle', cfg.maskstyle, 'highlight', mask});
     elseif isequal(cfg.masknans, 'yes') && ~isempty(cfg.maskparameter)
-      mask = ~isnan(cdata);
-      mask = mask .* mdata;
-      mask = double(mask);
-      ft_plot_matrix(cdata, 'clim', [zmin zmax], 'tag', 'cip', 'highlightstyle', cfg.maskstyle, 'highlight', mask, 'hpos', cfg.layout.pos(k, 1), 'vpos', cfg.layout.pos(k, 2), 'width', cfg.layout.width(k), 'height', cfg.layout.height(k))
+      mask     = double((~isnan(cdata)) .* mdata);
+      plotopts = cat(2, plotopts, {'highlightstyle', cfg.maskstyle, 'highlight', mask});
     elseif isequal(cfg.masknans, 'no') && ~isempty(cfg.maskparameter)
-      mask = mdata;
-      mask = double(mask);
-      ft_plot_matrix(cdata, 'clim', [zmin zmax], 'tag', 'cip', 'highlightstyle', cfg.maskstyle, 'highlight', mask, 'hpos', cfg.layout.pos(k, 1), 'vpos', cfg.layout.pos(k, 2), 'width', cfg.layout.width(k), 'height', cfg.layout.height(k))
-    else
-      ft_plot_matrix(cdata, 'clim', [zmin zmax], 'tag', 'cip', 'hpos', cfg.layout.pos(k, 1), 'vpos', cfg.layout.pos(k, 2), 'width', cfg.layout.width(k), 'height', cfg.layout.height(k))
+      mask     = double(mdata);
+      plotopts = cat(2, plotopts, {'highlightstyle', cfg.maskstyle, 'highlight', mask});
     end
+    ft_plot_matrix(cdata, plotopts{:})
   end
 end % show scale
 
@@ -621,14 +624,6 @@ if ~isempty(cfg.orient)
   orient(gcf, cfg.orient);
 end
 
-% set the figure window title
-if ~isempty(dataname)
-  set(gcf, 'Name', sprintf('%d: %s: %s', double(gcf), mfilename, join_str(', ', dataname)));
-else
-  set(gcf, 'Name', sprintf('%d: %s', double(gcf), mfilename));
-end
-set(gcf, 'NumberTitle', 'off');
-
 % Make the figure interactive:
 if strcmp(cfg.interactive, 'yes')
   % add the cfg/data/channel information to the figure under identifier linked to this axis
@@ -643,9 +638,10 @@ if strcmp(cfg.interactive, 'yes')
   info.(ident).data     = data;
   info.(ident).commenth = comment_handle;
   guidata(gcf, info);
-  set(gcf, 'WindowButtonUpFcn', {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotTFR}, 'event', 'WindowButtonUpFcn'});
-  set(gcf, 'WindowButtonDownFcn', {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotTFR}, 'event', 'WindowButtonDownFcn'});
-  set(gcf, 'WindowButtonMotionFcn', {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotTFR}, 'event', 'WindowButtonMotionFcn'});
+  cb_options = {'multiple', true, 'callback', {@select_singleplotTFR}, 'linecolor', cfg.interactivecolor, 'linestyle', cfg.interactivestyle, 'linewidth', cfg.interactivewidth};
+  set(gcf, 'WindowButtonUpFcn',     [{@ft_select_channel, 'event', 'WindowButtonUpFcn'}      cb_options]);
+  set(gcf, 'WindowButtonDownFcn',   [{@ft_select_channel, 'event', 'WindowButtonDownFcn'},   cb_options]);
+  set(gcf, 'WindowButtonMotionFcn', [{@ft_select_channel, 'event', 'WindowButtonMotionFcn'}, cb_options]);
 end
 
 % do the general cleanup and bookkeeping at the end of the function

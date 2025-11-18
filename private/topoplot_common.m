@@ -105,6 +105,9 @@ cfg.fontweight        = ft_getopt(cfg, 'fontweight',       'normal');
 cfg.baseline          = ft_getopt(cfg, 'baseline',         'no'); % to avoid warning in timelock/freqbaseline
 cfg.trials            = ft_getopt(cfg, 'trials',           'all', 1);
 cfg.interactive       = ft_getopt(cfg, 'interactive',      'yes');
+cfg.interactivecolor  = ft_getopt(cfg, 'interactivecolor', [0 0 0]); % linecolor of selection rectangle
+cfg.interactivestyle  = ft_getopt(cfg, 'interactivestyle', '--');    % linestyle of selection rectangle
+cfg.interactivewidth  = ft_getopt(cfg, 'interactivewidth', 1.5);     % linewidth of selection rectangle
 cfg.hotkeys           = ft_getopt(cfg, 'hotkeys',          'yes');
 cfg.renderer          = ft_getopt(cfg, 'renderer',          []); % let MATLAB decide on the default
 cfg.marker            = ft_getopt(cfg, 'marker',           'on');
@@ -199,16 +202,141 @@ if ~isequal(cfg.colormap, 'default')
 end
 
 Ndata = numel(varargin);
-for indx=1:Ndata
-  
-  % open a new figure, or add it to the existing one
-  open_figure(keepfields(cfg, {'figure', 'position', 'visible', 'renderer', 'figurename', 'title'}));
-  
-  % apply the same colormap to all figures
-  if ~isempty(cfg.colormap)
-    set(gcf,  'colormap', cfg.colormap);
+dtype = cell(1,Ndata);
+for i=1:Ndata
+  varargin{i} = ft_checkdata(varargin{i}, 'datatype', {'comp', 'timelock', 'freq'});
+  dtype{i}    = ft_datatype(varargin{i});
+end
+
+if Ndata>1 && all(strcmp(dtype, dtype{1}))
+  % this is OK, one common dtype for multiple inputs
+  dtype = dtype{1};
+elseif Ndata>1
+  ft_error('multiple data inputs into a topoplot function should be of the same datatype');
+elseif Ndata==1
+  dtype =dtype{1};
+end
+
+if strcmp(dtype, 'comp')
+  if Ndata>1 && numel(cfg.component)~=1
+    ft_error('with multiple component structures in the input a single component topography should be specified in the input cfg');
+  elseif Ndata>1
+    % make the subselection of the to be plotted data
+    for i=1:Ndata
+      varargin{i} = select_component(varargin{i}, cfg.component);
+    end
+  elseif Ndata==1
+    comp          = varargin{1};
+
+    % create a cell-array of data structures of the to be plotted data
+    if isempty(cfg.component)
+      cfg.component = 1:size(comp.topo,2);
+    end
+    cfg.component(cfg.component>size(comp.topo,2)) = [];
+   
+    varargin = cell(1,numel(cfg.component));
+    for i=1:numel(cfg.component)
+      varargin{i} = select_component(comp, cfg.component(i));
+    end
   end
+  Ndata = numel(varargin);
+end
+
+%% Section 2: data handling, this also includes converting bivariate (chan_chan and chancmb) into univariate data
+hastime = isfield(varargin{1}, 'time');
+
+% Set x/y/parameter defaults according to datatype and dimord
+switch dtype
+  case 'timelock'
+    xparam = ft_getopt(cfg, 'xparam', 'time');
+    yparam = ft_getopt(cfg, 'yparam', '');
+    if isfield(varargin{1}, 'trial')
+      cfg.parameter = ft_getopt(cfg, 'parameter', 'trial');
+    elseif isfield(varargin{1}, 'individual')
+      cfg.parameter = ft_getopt(cfg, 'parameter', 'individual');
+    elseif isfield(varargin{1}, 'avg')
+      cfg.parameter = ft_getopt(cfg, 'parameter', 'avg');
+    end
+  case 'freq'
+    if hastime
+      xparam = ft_getopt(cfg, 'xparam', 'time');
+      yparam = ft_getopt(cfg, 'yparam', 'freq');
+      cfg.parameter = ft_getopt(cfg, 'parameter', 'powspctrm');
+    else
+      xparam = 'freq';
+      yparam = '';
+      cfg.parameter = ft_getopt(cfg, 'parameter', 'powspctrm');
+    end
+  case 'comp'
+    xparam = 'comp';
+    yparam = '';
+    cfg.parameter = ft_getopt(cfg, 'parameter', 'topo');
+    
+  otherwise
+    % if the input data is not one of the standard data types, or if the functional
+    % data is just one value per channel: in this case xparam, yparam are not defined
+    % and the user should define the parameter
+    if ~isfield(varargin{1}, 'label'), ft_error('the input data should at least contain a label-field');         end
+    if ~isfield(cfg,  'parameter'), ft_error('the configuration should at least contain a ''parameter'' field'); end
+    if ~isfield(cfg,  'xparam')
+      cfg.xlim = [1 1];
+      xparam   = '';
+      yparam   = '';
+    end
+end
+
+hasrpt = false(Ndata,1);
+isbivariate = false(Ndata,1);
+for i=1:Ndata
+  % with the data being of the same type, the dimords are not guaranteed to be the same across inputs
+  dimord{i} = getdimord(varargin{i}, cfg.parameter);
+  isbivariate(i) = contains(dimord{i}, 'chan_chan') || contains(dimord{i}, 'chancmb_');
+  hasrpt(i) = contains(dimord{i}, 'rpt_') || contains(dimord{i}, 'subj_');
+end
+
+if any(~hasrpt)
+  assert(isequal(cfg.trials, 'all') || isequal(cfg.trials, 1), 'incorrect specification of cfg.trials for data without repetitions');
+elseif any(hasrpt)
+  assert(~isempty(cfg.trials), 'empty specification of cfg.trials for data with repetitions');
+end
+
+% handle the bivariate case
+if all(isbivariate)
+  % convert the bivariate data to univariate and call the parent plotting function again
+  s = dbstack;
+  cfg.originalfunction = s(2).name;
+  cfg.trials = 'all'; % trial selection has been taken care off
+  bivariate_common(cfg, varargin{:});
+  return
+elseif any(isbivariate)
+  ft_error('a mixture of bivariate and univariate input is not allowed');
+end
+ 
+makesubplots = false;
+if Ndata==1 && isequal(cfg.figure, 'subplot')
+  % overrule this setting
+  cfg.figure = 'yes';
+elseif Ndata>1 && isequal(cfg.figure, 'subplot')
+  makesubplots = true;
+end
   
+for indx=1:Ndata
+  if makesubplots
+    if indx==1
+      % the subplots can be drawn into a currently open figure, which might
+      % have been produced by a previous call to topoplot_common, to avoid
+      % downstream issues, clear the figure, and remove any previously
+      % created stale axis handles
+      clf;
+      guidata(gcf, []);
+    end
+
+    % make multiple plots in a single figure
+    nyplot = ceil(sqrt(Ndata));
+    nxplot = ceil(Ndata./nyplot);
+    cfg.figure = subplot(nxplot, nyplot, indx);
+  end
+
   if iscell(cfg.dataname)
     dataname = cfg.dataname{indx};
   else
@@ -216,76 +344,17 @@ for indx=1:Ndata
   end
   
   data = varargin{indx};
-  data = ft_checkdata(data, 'datatype', {'comp', 'timelock', 'freq'});
-  
-  %% Section 2: data handling, this also includes converting bivariate (chan_chan and chancmb) into univariate data
-  
-  dtype  = ft_datatype(data);
-  hastime = isfield(data, 'time');
-  
-  % Set x/y/parameter defaults according to datatype and dimord
-  switch dtype
-    case 'timelock'
-      xparam = ft_getopt(cfg, 'xparam', 'time');
-      yparam = ft_getopt(cfg, 'yparam', '');
-      if isfield(data, 'trial')
-        cfg.parameter = ft_getopt(cfg, 'parameter', 'trial');
-      elseif isfield(data, 'individual')
-        cfg.parameter = ft_getopt(cfg, 'parameter', 'individual');
-      elseif isfield(data, 'avg')
-        cfg.parameter = ft_getopt(cfg, 'parameter', 'avg');
-      end
-    case 'freq'
-      if hastime
-        xparam = ft_getopt(cfg, 'xparam', 'time');
-        yparam = ft_getopt(cfg, 'yparam', 'freq');
-        cfg.parameter = ft_getopt(cfg, 'parameter', 'powspctrm');
-      else
-        xparam = 'freq';
-        yparam = '';
-        cfg.parameter = ft_getopt(cfg, 'parameter', 'powspctrm');
-      end
-    case 'comp'
-      % Add a pseudo-axis with the component numbers
-      data.comp = 1:size(data.topo,2);
-      if ~isempty(cfg.component)
-        % make a selection of components
-        data.comp  = data.comp(cfg.component);
-        data.topo  = data.topo(:,cfg.component);
-        try, data.label     = data.label(cfg.component); end
-        try, data.unmixing  = data.unmixing(cfg.component,:); end
-      end
-      % Rename the field with topographic label information
-      data.label      = data.topolabel;
-      data.topodimord = 'chan_comp';
-      data = removefields(data, {'topolabel', 'unmixing', 'unmixingdimord'}); % not needed any more
-      xparam = 'comp';
-      yparam = '';
-      cfg.parameter = ft_getopt(cfg, 'parameter', 'topo');
-    otherwise
-      % if the input data is not one of the standard data types, or if the functional
-      % data is just one value per channel: in this case xparam, yparam are not defined
-      % and the user should define the parameter
-      if ~isfield(data, 'label'),     ft_error('the input data should at least contain a label-field');            end
-      if ~isfield(cfg,  'parameter'), ft_error('the configuration should at least contain a ''parameter'' field'); end
-      if ~isfield(cfg,  'xparam')
-        cfg.xlim = [1 1];
-        xparam   = '';
-        yparam   = '';
-      end
-  end
-  
-  % check whether rpt/subj is present and remove if necessary
   dimord = getdimord(data, cfg.parameter);
   dimtok = tokenize(dimord, '_');
-  hasrpt = any(ismember(dimtok, {'rpt' 'subj'}));
-  
-  if ~hasrpt
-    assert(isequal(cfg.trials, 'all') || isequal(cfg.trials, 1), 'incorrect specification of cfg.trials for data without repetitions');
-  else
-    assert(~isempty(cfg.trials), 'empty specification of cfg.trials for data with repetitions');
+  hasrpt = any(ismember(dimtok, {'rpt', 'subj'}));
+
+  if isequal(dtype, 'comp')
+    % not sure why this needs to be here
+    if ischar(dataname)
+      cfg.title = sprintf('%s component %d', dataname, data.comp);
+    end
   end
-  
+    
   % parse cfg.channel
   if isfield(cfg, 'channel') && isfield(data, 'label')
     cfg.channel = ft_channelselection(cfg.channel, data.label);
@@ -332,8 +401,7 @@ for indx=1:Ndata
     tmpvar = ft_selectdata(tmpcfg, tmpvar);
     data.(cfg.maskparameter) = tmpvar.(cfg.maskparameter);
   end
-  
-  clear tmpvar tmpcfg dimord dimtok hastime hasfreq hasrpt
+  clear tmpvar tmpcfg hastime hasrpt
   
   % ensure that the preproc specific options are located in the cfg.preproc
   % substructure, but also ensure that the field 'refchannel' remains at the
@@ -353,17 +421,6 @@ for indx=1:Ndata
     data = ft_preprocessing(cfg.preproc, data);
   end
   
-  % Handle the bivariate case
-  dimord = getdimord(varargin{1}, cfg.parameter);
-  if startsWith(dimord, 'chan_chan_') || startsWith(dimord, 'chancmb_')
-    % convert the bivariate data to univariate and call the parent plotting function again
-    s = dbstack;
-    cfg.originalfunction = s(2).name;
-    cfg.trials = 'all'; % trial selection has been taken care off
-    bivariate_common(cfg, varargin{:});
-    return
-  end
- 
   % Apply channel-type specific scaling
   fn = fieldnames(cfg);
   fn = setdiff(fn, {'skipscale', 'showscale', 'gridscale'}); % these are for the layout and plotting, not for CHANSCALE_COMMON
@@ -371,11 +428,7 @@ for indx=1:Ndata
   tmpcfg = keepfields(cfg, fn);
   data = chanscale_common(tmpcfg, data);
   
-  
   %% Section 3: select the data to be plotted and determine min/max range
-  
-  dimord = getdimord(varargin{1}, cfg.parameter);
-  dimtok = tokenize(dimord, '_');
   
   % Create time-series of small topoplots
   if ~ischar(cfg.xlim) && length(cfg.xlim)>2 %&& any(ismember(dimtok, 'time'))
@@ -522,26 +575,42 @@ for indx=1:Ndata
   
   % Construct comment
   switch cfg.comment
-    case 'auto'
-      comment = date;
+    case {'auto' 'auto_nodate'}
+      if isequal(cfg.comment, 'auto')
+        comment = date;
+      else
+        comment = '';
+      end
       if ~isempty(xparam)
-        comment = sprintf('%0s\n%0s=[%.3g %.3g]', comment, xparam, xmin, xmax);
+        if xmin==xmax
+          comment = sprintf('%0s\n%0s=%.3g', comment, xparam, xmax);
+        else
+          comment = sprintf('%0s\n%0s=[%.3g %.3g]', comment, xparam, xmin, xmax);
+        end
       end
       if ~isempty(yparam)
-        comment = sprintf('%0s\n%0s=[%.3g %.3g]', comment, yparam, ymin, ymax);
+        if ymin==ymax
+          comment = sprintf('%0s\n%0s=%.3g', comment, yparam, ymin);
+        else
+          comment = sprintf('%0s\n%0s=[%.3g %.3g]', comment, yparam, ymin, ymax);
+        end
       end
       if ~isempty(cfg.parameter)
         comment = sprintf('%0s\n%0s=[%.3g %.3g]', comment, cfg.parameter, zmin, zmax);
       end
     case 'xlim'
       comment = '';
-      if ~isempty(xparam)
-        comment = sprintf('%0s=[%.3g %.3g]', xparam, xmin, xmax);
+      if xmin==xmax
+        comment = sprintf('%0s\n%0s=%.3g', comment, xparam, xmax);
+      else
+        comment = sprintf('%0s\n%0s=[%.3g %.3g]', comment, xparam, xmin, xmax);
       end
     case 'ylim'
       comment = '';
-      if ~isempty(yparam)
-        comment = sprintf('%0s=[%.3g %.3g]', yparam, ymin, ymax);
+      if ymin==ymax
+        comment = sprintf('%0s\n%0s=%.3g', comment, yparam, ymin);
+      else
+        comment = sprintf('%0s\n%0s=[%.3g %.3g]', comment, yparam, ymin, ymax);
       end
     case 'zlim'
       comment = sprintf('%0s=[%.3g %.3g]', cfg.parameter, zmin, zmax);
@@ -555,6 +624,14 @@ for indx=1:Ndata
     else
       comment = sprintf('%s\nreference=%s %s', comment, cfg.refchannel);
     end
+  end
+  
+  % open a new figure, or add it to the existing one
+  open_figure(keepfields(cfg, {'figure', 'position', 'visible', 'renderer', 'figurename', 'title'}));
+  
+  % apply the same colormap to all figures
+  if ~isempty(cfg.colormap)
+    set(gcf,  'colormap', cfg.colormap);
   end
   
   % Draw topoplot
@@ -763,40 +840,76 @@ for indx=1:Ndata
     set(gcf, 'KeyPressFcn', {@key_sub, zmin, zmax})
   end
   
+  % add the cfg/data/channel information to the figure under identifier linked to this axis,
+  % this is now also needed in non-interactive mode for the post-hoc clim management
+  ident                    = ['axh' num2str(round(sum(clock.*1e6)))]; % unique identifier for this axis
+  set(gca, 'tag',ident);
+     
+  info                     = guidata(gcf);
+  info.(ident).x           = cfg.layout.pos(:, 1);
+  info.(ident).y           = cfg.layout.pos(:, 2);
+  info.(ident).label       = cfg.layout.label;
+  info.(ident).dataname    = dataname;
+  info.(ident).cfg         = cfg;
+  info.(ident).commenth    = comment_handle;
+  if exist('linecolor', 'var')
+    info.(ident).linecolor   = linecolor;
+  end
+  if ~isfield(info.(ident),'datvarargin')
+    info.(ident).datvarargin = varargin(1:Ndata); % add all datasets to figure
+  end
+
+  info.(ident).datvarargin{indx} = data; % update current dataset (e.g. baselined, channel selection, etc)
+  guidata(gcf, info);
+
   % Make the figure interactive
   if strcmp(cfg.interactive, 'yes')
-    % add the cfg/data/channel information to the figure under identifier linked to this axis
-    ident                    = ['axh' num2str(round(sum(clock.*1e6)))]; % unique identifier for this axis
-    set(gca, 'tag',ident);
-    info                     = guidata(gcf);
-    info.(ident).x           = cfg.layout.pos(:, 1);
-    info.(ident).y           = cfg.layout.pos(:, 2);
-    info.(ident).label       = cfg.layout.label;
-    info.(ident).dataname    = dataname;
-    info.(ident).cfg         = cfg;
-    info.(ident).commenth    = comment_handle;
-    if exist('linecolor', 'var')
-      info.(ident).linecolor   = linecolor;
+    % ensure that the function that is called knows about the subplot setting
+    if makesubplots
+      cfg.subplottopo = 1;
+    else
+      cfg.subplottopo = 0;
     end
-    if ~isfield(info.(ident),'datvarargin')
-      info.(ident).datvarargin = varargin(1:Ndata); % add all datasets to figure
-    end
-    info.(ident).datvarargin{indx} = data; % update current dataset (e.g. baselined, channel selection, etc)
+    info.(ident).cfg         = cfg; % update cfg and add updated info to figure
     guidata(gcf, info);
+
     if any(strcmp(dimord, {'chan_time', 'chan_freq', 'subj_chan_time', 'rpt_chan_time', 'chan_chan_freq', 'chancmb_freq', 'rpt_chancmb_freq', 'subj_chancmb_freq'}))
-      set(gcf, 'WindowButtonUpFcn',     {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotER}, 'event', 'WindowButtonUpFcn'});
-      set(gcf, 'WindowButtonDownFcn',   {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotER}, 'event', 'WindowButtonDownFcn'});
-      set(gcf, 'WindowButtonMotionFcn', {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotER}, 'event', 'WindowButtonMotionFcn'});
+      cb_options = {'multiple', true, 'callback', {@select_singleplotER}, 'linecolor', cfg.interactivecolor, 'linestyle', cfg.interactivestyle, 'linewidth', cfg.interactivewidth};
+      set(gcf, 'WindowButtonUpFcn',     [{@ft_select_channel, 'event', 'WindowButtonUpFcn'}      cb_options]);
+      set(gcf, 'WindowButtonDownFcn',   [{@ft_select_channel, 'event', 'WindowButtonDownFcn'},   cb_options]);
+      set(gcf, 'WindowButtonMotionFcn', [{@ft_select_channel, 'event', 'WindowButtonMotionFcn'}, cb_options]);
     elseif any(strcmp(dimord, {'chan_freq_time', 'subj_chan_freq_time', 'rpt_chan_freq_time', 'rpttap_chan_freq_time', 'chan_chan_freq_time', 'chancmb_freq_time', 'rpt_chancmb_freq_time', 'subj_chancmb_freq_time'}))
-      set(gcf, 'WindowButtonUpFcn',     {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotTFR}, 'event', 'WindowButtonUpFcn'});
-      set(gcf, 'WindowButtonDownFcn',   {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotTFR}, 'event', 'WindowButtonDownFcn'});
-      set(gcf, 'WindowButtonMotionFcn', {@ft_select_channel, 'multiple', true, 'callback', {@select_singleplotTFR}, 'event', 'WindowButtonMotionFcn'});
+      cb_options = {'multiple', true, 'callback', {@select_singleplotTFR}, 'linecolor', cfg.interactivecolor, 'linestyle', cfg.interactivestyle, 'linewidth', cfg.interactivewidth};
+      set(gcf, 'WindowButtonUpFcn',     [{@ft_select_channel, 'event', 'WindowButtonUpFcn'}      cb_options]);
+      set(gcf, 'WindowButtonDownFcn',   [{@ft_select_channel, 'event', 'WindowButtonDownFcn'},   cb_options]);
+      set(gcf, 'WindowButtonMotionFcn', [{@ft_select_channel, 'event', 'WindowButtonMotionFcn'}, cb_options]);
     else
       ft_warning('unsupported dimord "%s" for interactive plotting', dimord);
     end
   end
   
 end % for numel(varargin)
+
+if Ndata>1 && ~isequal(cfg.figure, 'yes')
+  % lock the clim
+  clims = zeros(Ndata,2);
+  axh  = fieldnames(info);
+  for i=1:Ndata
+    clims(i,:) = get(info.(axh{i}).cfg.figure, 'CLim');
+  end
+  c = [min(clims(:,1)) max(clims(:,2))];
+  for i=1:Ndata
+    set(info.(axh{i}).cfg.figure, 'CLim', c);
+    if isfield(info.(axh{i}), 'commenth') && ~isempty(info.(axh{i}).commenth)
+      commentstr = get(info.(axh{i}).commenth, 'string');
+      sel        = contains(commentstr, info.(axh{i}).cfg.parameter);
+      if any(sel)
+        commentstr{sel} = sprintf('%0s=[%.3g %.3g]', info.(axh{i}).cfg.parameter, c(1), c(2));
+        set(info.(axh{i}).commenth, 'string', commentstr);
+      end
+    end
+  end
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION which is called after selecting channels in case of cfg.interactive='yes'
@@ -821,7 +934,7 @@ if ~isempty(label)
     cfg = rmfield(cfg, 'zlim');
   end
   fprintf('selected cfg.channel = {%s}\n', join_str(', ', cfg.channel));
-  % ensure that the new figure appears at the same position
+  % ensure that the new figure appears at the same position, and also that 
   cfg.figure = 'yes';
   cfg.position = get(gcf, 'Position');
   
@@ -848,8 +961,13 @@ if ~isempty(label)
   cfg.ylim = 'maxmin';
   fprintf('selected cfg.channel = {%s}\n', join_str(', ', cfg.channel));
   % ensure that the new figure appears at the same position
-  cfg.figure = 'yes';
   cfg.position = get(gcf, 'Position');
+  if isfield(cfg, 'subplottopo') && istrue(cfg.subplottopo)
+    figure('position', cfg.position);
+    cfg.figure = 'subplot';
+  else
+    cfg.figure = 'yes';
+  end
   ft_singleplotTFR(cfg, datvarargin{:});
 end
 
@@ -860,7 +978,7 @@ function key_sub(handle, eventdata, varargin)
 ident       = get(gca, 'tag');
 info        = guidata(gcf);
 
-climits = caxis;
+climits = clim;
 incr_c  = abs(climits(2) - climits(1)) /10;
 
 newz = climits;
@@ -885,7 +1003,7 @@ else
 end % if
 
 % update the color axis
-caxis(newz);
+clim(newz);
 
 if ~isempty(ident) && isfield(info.(ident), 'commenth') && ~isempty(info.(ident).commenth)
   commentstr = get(info.(ident).commenth, 'string');
@@ -895,3 +1013,15 @@ if ~isempty(ident) && isfield(info.(ident), 'commenth') && ~isempty(info.(ident)
     set(info.(ident).commenth, 'string', commentstr);
   end
 end
+
+function data = select_component(data, indx)
+
+% Add a pseudo-axis with the component numbers
+data.comp = 1:size(data.topo,2);
+
+% make a selection of components
+data.comp  = data.comp(indx);
+data.topo  = data.topo(:,indx);
+data.label = data.topolabel;
+data.topodimord = 'chan_comp';
+data = removefields(data, {'topolabel', 'unmixing', 'unmixingdimord'}); % not needed any more

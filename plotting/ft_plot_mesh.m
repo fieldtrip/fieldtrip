@@ -3,7 +3,7 @@ function [hs] = ft_plot_mesh(mesh, varargin)
 % FT_PLOT_MESH visualizes a surface or volumetric mesh, for example with the cortical
 % folding of the brain, or the scalp surface of the head. Surface meshes are
 % described by triangles and consist of a structure with the fields "pos" and "tri".
-% Volumetric meshes are described with tetraheders or hexaheders and have the fields
+% Volumetric meshes are described with tetrahedrons or hexahedrons and have the fields
 % "pos" and "tet" or "hex".
 %
 % Use as
@@ -12,27 +12,29 @@ function [hs] = ft_plot_mesh(mesh, varargin)
 %   ft_plot_mesh(pos, ...)
 %
 % Optional arguments should come in key-value pairs and can include
-%   'facecolor'    = [r g b] values or string, for example 'skin', 'skull', 'brain', 'black', 'red', 'r', or an Nx3 or Nx1 array where N is the number of faces
-%   'vertexcolor'  = [r g b] values or string, for example 'skin', 'skull', 'brain', 'black', 'red', 'r', or an Nx3 or Nx1 array where N is the number of vertices
-%   'edgecolor'    = [r g b] values or string, for example 'skin', 'skull', 'brain', 'black', 'red', 'r'
-%   'faceindex'    = true or false (default = false)
-%   'vertexindex'  = true or false (default = false)
-%   'facealpha'    = transparency, between 0 and 1 (default = 1)
-%   'edgealpha'    = transparency, between 0 and 1 (default = 1)
-%   'surfaceonly'  = true or false, plot only the outer surface of a hexahedral or tetrahedral mesh (default = false)
-%   'vertexmarker' = character, e.g. '.', 'o' or 'x' (default = '.')
-%   'vertexsize'   = scalar or vector with the size for each vertex (default = 10)
-%   'unit'         = string, convert to the specified geometrical units (default = [])
-%   'axes'         = boolean, whether to plot the axes of the 3D coordinate system (default = false)
-%   'maskstyle'    = 'opacity' or 'colormix', if the latter is specified, opacity masked color values
-%                    are converted (in combination with a background color) to RGB. This bypasses
-%                    openGL functionality, which behaves unpredictably on some platforms (e.g. when
-%                    using software opengl)
-%   'fontsize'     = number, sets the size of the text (default = 10)
-%   'fontunits'    =
-%   'fontname'     =
-%   'fontweight'   =
-%   'tag'          = string, the tag assigned to the plotted elements (default = '')
+%   'facecolor'       = [r g b] values or string, for example 'skin', 'skull', 'brain', 'black', 'red', 'r', or an Nx3 or Nx1 array where N is the number of faces
+%   'facealpha'       = transparency, between 0 and 1 (default = 1)
+%   'faceindex'       = true or false (default = false)
+%   'vertexcolor'     = [r g b] values or string, for example 'skin', 'skull', 'brain', 'black', 'red', 'r', or an Nx3 or Nx1 array where N is the number of vertices
+%   'vertexsize'      = scalar or vector with the size for each vertex (default = 10)
+%   'vertexmarker'    = character, e.g. '.', 'o' or 'x' (default = '.')
+%   'vertexindex'     = true or false (default = false)
+%   'edgecolor'       = [r g b] values or string, for example 'skin', 'skull', 'brain', 'black', 'red', 'r'
+%   'edgealpha'       = transparency, between 0 and 1 (default = 1)
+%   'surfaceonly'     = true or false, plot only the outer surface of a hexahedral or tetrahedral mesh (default = false)
+%   'cutlocation'     = 1x3 vector specifying a point on the plane that cuts the mesh
+%   'cutorientation'  = 1x3 vector specifying the direction orthogonal through the plane that cuts the mesh
+%   'unit'            = string, convert to the specified geometrical units (default = [])
+%   'axes'            = boolean, whether to plot the axes of the 3D coordinate system (default = false)
+%   'maskstyle'       = 'opacity' or 'colormix', if the latter is specified, opacity masked color values
+%                       are converted (in combination with a background color) to RGB. This bypasses
+%                       openGL functionality, which behaves unpredictably on some platforms (e.g. when
+%                       using software opengl)
+%   'fontsize'        = number, sets the size of the text (default = 10)
+%   'fontunits'       =
+%   'fontname'        =
+%   'fontweight'      =
+%   'tag'             = string, the tag assigned to the plotted elements (default = '')
 %
 % If you don't want the faces, edges or vertices to be plotted, you should specify the color as 'none'.
 %
@@ -40,7 +42,7 @@ function [hs] = ft_plot_mesh(mesh, varargin)
 %   [pos, tri] = mesh_sphere(162);
 %   mesh.pos = pos;
 %   mesh.tri = tri;
-%   ft_plot_mesh(mesh, 'facecolor', 'skin', 'edgecolor', 'none')
+%   ft_plot_mesh(mesh, 'facecolor', 'skin', 'edgecolor', 'none');
 %   camlight
 %
 % You can plot an additional contour around specified areas using
@@ -53,7 +55,7 @@ function [hs] = ft_plot_mesh(mesh, varargin)
 % FT_PLOT_DIPOLE, TRIMESH, PATCH
 
 % Copyright (C) 2009, Cristiano Micheli
-% Copyright (C) 2009-2024, Robert Oostenveld
+% Copyright (C) 2009-2025, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -92,32 +94,34 @@ end
 
 % get the optional input arguments
 if isfield(mesh, 'tri') && size(mesh.tri,1)>10000
-  facecolor    = ft_getopt(varargin, 'facecolor',   'cortex_light');
-  edgecolor    = ft_getopt(varargin, 'edgecolor',   'none');
+  facecolor     = ft_getopt(varargin, 'facecolor',   'cortex_light');
+  edgecolor     = ft_getopt(varargin, 'edgecolor',   'none');
 else
-  facecolor    = ft_getopt(varargin, 'facecolor',   'white');
-  edgecolor    = ft_getopt(varargin, 'edgecolor',   'k');
+  facecolor     = ft_getopt(varargin, 'facecolor',   'white');
+  edgecolor     = ft_getopt(varargin, 'edgecolor',   'k');
 end
-vertexcolor   = ft_getopt(varargin, 'vertexcolor');
-vertexindex   = ft_getopt(varargin, 'vertexindex',   false);
-vertexsize    = ft_getopt(varargin, 'vertexsize',    10);
-vertexmarker  = ft_getopt(varargin, 'vertexmarker',  '.');
-faceindex     = ft_getopt(varargin, 'faceindex',     false);
-facealpha     = ft_getopt(varargin, 'facealpha',     1);
-edgealpha     = ft_getopt(varargin, 'edgealpha',     1);
-edgelinewidth = ft_getopt(varargin, 'edgelinewidth', 0.5);
-material_     = ft_getopt(varargin, 'material');         % note the underscore, there is also a material function
-tag           = ft_getopt(varargin, 'tag',           '');
-surfaceonly   = ft_getopt(varargin, 'surfaceonly');      % default is handled below
-unit          = ft_getopt(varargin, 'unit');
-axes_         = ft_getopt(varargin, 'axes',      false); % do not confuse with built-in function
-alphalim      = ft_getopt(varargin, 'alphalim');
-alphamapping  = ft_getopt(varargin, 'alphamap',  'rampup');
-maskstyle     = ft_getopt(varargin, 'maskstyle', 'opacity');
-cmap          = ft_getopt(varargin, 'colormap');
-clim          = ft_getopt(varargin, 'clim');
-contour       = ft_getopt(varargin, 'contour');
-insideonly    = ft_getopt(varargin, 'insideonly', false);
+vertexcolor     = ft_getopt(varargin, 'vertexcolor');
+vertexindex     = ft_getopt(varargin, 'vertexindex',   false);
+vertexsize      = ft_getopt(varargin, 'vertexsize',    10);
+vertexmarker    = ft_getopt(varargin, 'vertexmarker',  '.');
+faceindex       = ft_getopt(varargin, 'faceindex',     false);
+facealpha       = ft_getopt(varargin, 'facealpha',     1);
+edgealpha       = ft_getopt(varargin, 'edgealpha',     1);
+edgelinewidth   = ft_getopt(varargin, 'edgelinewidth', 0.5);
+material_       = ft_getopt(varargin, 'material');         % note the underscore, there is also a material function
+tag             = ft_getopt(varargin, 'tag',           '');
+surfaceonly     = ft_getopt(varargin, 'surfaceonly');      % default is handled below
+unit            = ft_getopt(varargin, 'unit');
+axes_           = ft_getopt(varargin, 'axes',      false); % do not confuse with built-in function
+alphalim        = ft_getopt(varargin, 'alphalim');
+alphamapping    = ft_getopt(varargin, 'alphamap',  'rampup');
+maskstyle       = ft_getopt(varargin, 'maskstyle', 'opacity');
+cmap            = ft_getopt(varargin, 'colormap');
+clim            = ft_getopt(varargin, 'clim');
+contour         = ft_getopt(varargin, 'contour');
+insideonly      = ft_getopt(varargin, 'insideonly', false);
+cutlocation     = ft_getopt(varargin, 'cutlocation', []);
+cutorientation  = ft_getopt(varargin, 'cutorientation', []);
 
 % these have to do with the font
 fontcolor       = ft_getopt(varargin, 'fontcolor', 'k');  % default is black
@@ -133,8 +137,8 @@ contourlinestyle  = ft_getopt(varargin, 'contourlinestyle', '-');
 haspos   = isfield(mesh, 'pos');   % vertices
 hascolor = isfield(mesh, 'color'); % color code for vertices
 hastri   = isfield(mesh, 'tri');   % triangles   as a Mx3 matrix with vertex indices
-hastet   = isfield(mesh, 'tet');   % tetraheders as a Mx4 matrix with vertex indices
-hashex   = isfield(mesh, 'hex');   % hexaheders  as a Mx8 matrix with vertex indices
+hastet   = isfield(mesh, 'tet');   % tetrahedrons as a Mx4 matrix with vertex indices
+hashex   = isfield(mesh, 'hex');   % hexahedrons  as a Mx8 matrix with vertex indices
 hasline  = isfield(mesh, 'line');  % lines       as a Mx2 matrix with vertex indices
 haspoly  = isfield(mesh, 'poly');  % polygons    as a MxP matrix with vertex indices
 hasinside = isfield(mesh, 'inside');
@@ -150,7 +154,7 @@ if hastri+hastet+hashex+hasline+haspoly==1
     insideonly = false;
   end
 elseif hastri+hastet+hashex+hasline+haspoly>1
-  % the code further down cannot deal with simultaneous triangles, tetraheders and/or hexaheders therefore we plot them one by one
+  % the code further down cannot deal with simultaneous triangles, tetrahedrons and/or hexahedrons therefore we plot them one by one
   if hastri
     ft_plot_mesh(removefields(mesh, {'tet', 'hex', 'line', 'poly'}), varargin{:});
   end
@@ -194,8 +198,8 @@ if surfaceonly
   mesh = mesh2edge(mesh);
   % update the flags that indicate which surface/volume elements are present
   hastri   = isfield(mesh, 'tri');   % triangles   as a Mx3 matrix with vertex indices
-  hastet   = isfield(mesh, 'tet');   % tetraheders as a Mx4 matrix with vertex indices
-  hashex   = isfield(mesh, 'hex');   % hexaheders  as a Mx8 matrix with vertex indices
+  hastet   = isfield(mesh, 'tet');   % tetrahedrons as a Mx4 matrix with vertex indices
+  hashex   = isfield(mesh, 'hex');   % hexahedrons  as a Mx8 matrix with vertex indices
   hasline  = isfield(mesh, 'line');  % lines       as a Mx2 matrix with vertex indices
   haspoly  = isfield(mesh, 'poly');  % polygons    as a MxP matrix with vertex indices
 end
@@ -253,6 +257,18 @@ else
   ft_error('no vertices found');
 end
 
+if ~isempty(cutlocation) && ~isempty(cutorientation)
+  % shift the vertices so that the cut location is at the origin
+  shiftedpos = pos;
+  shiftedpos(:,1) = shiftedpos(:,1) - cutlocation(1);
+  shiftedpos(:,2) = shiftedpos(:,2) - cutlocation(2);
+  shiftedpos(:,3) = shiftedpos(:,3) - cutlocation(3);
+  % find the vertices that are on the positive side of the plane, given the orientation
+  cut = (shiftedpos * cutorientation(:))>0;
+  % disable the vertices that are cut, note that this results in a ragged edge
+  pos(cut,:) = nan;
+end
+
 if isempty(pos)
   hs = [];
   return
@@ -274,7 +290,7 @@ elseif hastet
   % there are shared triangles between neighbouring tetraeders, remove these
   tri = unique(tri, 'rows');
 elseif hashex
-  % represent the hexaheders as a collection of 6 patches
+  % represent the hexahedrons as a collection of 6 patches
   tri = [
     mesh.hex(:,[1 2 3 4]);
     mesh.hex(:,[5 6 7 8]);
@@ -283,7 +299,7 @@ elseif hashex
     mesh.hex(:,[3 4 8 7]);
     mesh.hex(:,[4 1 5 8]);
     ];
-  % there are shared faces between neighbouring hexaheders, remove these
+  % there are shared faces between neighbouring hexahedrons, remove these
   tri = unique(tri, 'rows');
 else
   tri = [];

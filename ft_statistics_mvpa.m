@@ -3,9 +3,14 @@ function [stat, cfg] = ft_statistics_mvpa(cfg, dat, design)
 % FT_STATISTICS_MVPA performs multivariate pattern classification or regression using
 % the MVPA-Light toolbox. The function supports cross-validation, searchlight
 % analysis, generalization, nested preprocessing, a variety of classification and
-% regression metrics, as well as statistical testing of these metrics. This function
-% should not be called directly, instead you should call the function that is
-% associated with the type of data on which you want to perform the test.
+% regression metrics, as well as statistical testing of these metrics. 
+% It is not recommended to call this function directly,
+% but instead you should call the function that is associated with the type of data on 
+% which you want to perform the test. This is because important data bookkeeping 
+% operations on the data are performed in the higher-level functions, which are
+% assumed to have been handled correctly for the input arguments into this function. 
+% Also, notably, a prespecified randomseed in the cfg is handled in the higher
+% level function, not here.
 %
 % Use as
 %   stat = ft_timelockstatistics(cfg, data1, data2, data3, ...)
@@ -145,7 +150,7 @@ function [stat, cfg] = ft_statistics_mvpa(cfg, dat, design)
 % See also FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS, FT_SOURCESTATISTICS,
 % FT_STATISTICS_ANALYTIC, FT_STATISTICS_STATS, FT_STATISTICS_MONTECARLO, FT_STATISTICS_CROSSVALIDATE
 
-% Copyright (C) 2019-2024, Matthias Treder and Jan-Mathijs Schoffelen
+% Copyright (C) 2019-2025, Matthias Treder and Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -170,6 +175,15 @@ ft_hastoolbox('mvpa-light', 1);
 % do a sanity check on the input data
 assert(isnumeric(dat),    'this function requires numeric data as input, you probably want to use FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS instead');
 assert(isnumeric(design), 'this function requires numeric data as input, you probably want to use FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS instead');
+
+% check whether the function has been called from ft_timelockstatistics, ft_freqstatistics, or ft_sourcestatistics
+st = dbstack;
+m  = mfilename;
+if isscalar(st)
+  ft_warning('It seems that %s has been called directly from the command line. This is not recommended, unless you know what you are doing', m);
+elseif numel(st)>1 && ~ismember(st(2).name, {'ft_freqstatistics' 'ft_timelockstatistics' 'ft_sourcestatistics'})
+  ft_warning('It seems that %s has not been called from one of the FT_XXXSTATISTICS functions. This is not recommended, unless you know what you are doing', m);
+end
 
 %% cfg: set defaults
 cfg.generalize        = ft_getopt(cfg, 'generalize',   []);

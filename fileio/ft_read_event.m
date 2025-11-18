@@ -160,9 +160,9 @@ detectflank      = ft_getopt(varargin, 'detectflank', 'up', true);   % note that
 denoise          = ft_getopt(varargin, 'denoise', []);
 trigshift        = ft_getopt(varargin, 'trigshift');                 % default is assigned in subfunction
 trigpadding      = ft_getopt(varargin, 'trigpadding');               % default is assigned in subfunction
-headerformat     = ft_getopt(varargin, 'headerformat');
-dataformat       = ft_getopt(varargin, 'dataformat');
 eventformat      = ft_getopt(varargin, 'eventformat');
+headerformat     = ft_getopt(varargin, 'headerformat', eventformat); % by default the same
+dataformat       = ft_getopt(varargin, 'dataformat', eventformat);   % by default the same
 threshold        = ft_getopt(varargin, 'threshold');                 % this is used for analog channels
 tolerance        = ft_getopt(varargin, 'tolerance', 1);
 checkmaxfilter   = ft_getopt(varargin, 'checkmaxfilter');            % will be passed to FT_READ_HEADER
@@ -177,6 +177,11 @@ combinebinary    = ft_getopt(varargin, 'combinebinary');             % this is a
 if ~isempty(trigindx)
   ft_warning('please use ''chanindx'' instead of ''trigindx''')
   chanindx = trigindx;
+end
+
+% this should be a list of indices 
+if islogical(chanindx)
+  chanindx = find(chanindx);
 end
 
 % for backward compatibility with https://github.com/fieldtrip/fieldtrip/issues/1585
@@ -277,7 +282,7 @@ switch eventformat
 
   case {'4d' '4d_pdf', '4d_m4d', '4d_xyz'}
     if isempty(hdr)
-      hdr = ft_read_header(filename, 'headerformat', eventformat);
+      hdr = ft_read_header(filename, 'headerformat', headerformat);
     end
 
     if isempty(chanindx)
@@ -304,7 +309,7 @@ switch eventformat
     ft_hastoolbox('BCI2000', 1);
 
     if isempty(hdr)
-      hdr = ft_read_header(filename);
+      hdr = ft_read_header(filename, 'headerformat', headerformat);
     end
 
     if isfield(hdr.orig, 'signal') && isfield(hdr.orig, 'states')
@@ -362,7 +367,7 @@ switch eventformat
   case 'besa_besa'
     % read the header
     if isempty(hdr)
-      hdr = ft_read_header(filename);
+      hdr = ft_read_header(filename, 'headerformat', headerformat);
     end
 
     if ~isempty(detectflank) % parse the trigger channel (indicated by chanindx) for events
@@ -374,7 +379,7 @@ switch eventformat
 
   case {'besa_avr', 'besa_swf'}
     if isempty(hdr)
-      hdr = ft_read_header(filename);
+      hdr = ft_read_header(filename, 'headerformat', headerformat);
     end
     event(end+1).type     = 'average';
     event(end  ).sample   = 1;
@@ -382,10 +387,10 @@ switch eventformat
     event(end  ).offset   = -hdr.nSamplesPre;
     event(end  ).value    = [];
 
-  case {'biosemi_bdf', 'bham_bdf'}
+  case {'biosemi_bdf', 'biosemi_v3', 'biosemi_v2', 'biosemi_v1'}
     % read the header, required to determine the stimulus channels and trial specification
     if isempty(hdr)
-      hdr = ft_read_header(filename);
+      hdr = ft_read_header(filename, 'headerformat', headerformat);
     end
 
     % specify the range to search for triggers, default is the complete file
@@ -417,7 +422,7 @@ switch eventformat
     end
 
     % find the STATUS channel and read the values from it
-    schan = find(strcmpi(hdr.label,'STATUS'));
+    schan = find(strcmpi(hdr.label, 'STATUS'));
     sdata = ft_read_data(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', begsample, 'endsample', endsample, 'chanindx', schan);
 
     if ft_platform_supports('int32_logical_operations')
@@ -489,14 +494,14 @@ switch eventformat
     % single file or the first out of a sequence with postfix _1, _2, ...
     % because it uses private/read_trigger which again uses ft_read_data
     if isempty(hdr)
-      hdr = ft_read_header(filename);
+      hdr = ft_read_header(filename, 'headerformat', headerformat);
     end
     % the following applies to Biosemi data that is stored in the gdf format
     if ~isempty(chanindx)
       chanindx = find(strcmp(hdr.label, 'STATUS'));
     end
     event = [];
-    if length(chanindx)==1
+    if isscalar(chanindx)
       % represent the rising flanks in the STATUS (or user specified) channel as events
       event = read_trigger(filename, 'header', hdr, 'dataformat', dataformat, 'begsample', flt_minsample, 'endsample', flt_maxsample, 'chanindx', chanindx, 'detectflank', detectflank, 'trigshift', trigshift, 'trigpadding', trigpadding, 'fixbiosemi', true);
     else
@@ -547,7 +552,7 @@ switch eventformat
 
   case 'ced_spike6mat'
     if isempty(hdr)
-      hdr = ft_read_header(filename);
+      hdr = ft_read_header(filename, 'headerformat', headerformat);
     end
     if isempty(chanindx)
       for i = 1:numel(hdr.orig)
@@ -685,7 +690,7 @@ switch eventformat
 
   case {'curry_dat', 'curry_cdt'}
     if isempty(hdr)
-      hdr = ft_read_header(filename);
+      hdr = ft_read_header(filename, 'headerformat', headerformat);
     end
     event = [];
     for i=1:size(hdr.orig.events, 2)
@@ -785,13 +790,13 @@ switch eventformat
 
   case 'eeglab_set'
     if isempty(hdr)
-      hdr = ft_read_header(filename);
+      hdr = ft_read_header(filename, 'headerformat', headerformat);
     end
     event = read_eeglabevent(filename, 'header', hdr);
 
   case 'eeglab_erp'
     if isempty(hdr)
-      hdr = ft_read_header(filename);
+      hdr = ft_read_header(filename, 'headerformat', headerformat);
     end
     event = read_erplabevent(filename, 'header', hdr);
 
@@ -800,7 +805,7 @@ switch eventformat
     ft_hastoolbox('eeprobe', 1);
     % the headerfile and datafile are the same
     if isempty(hdr)
-      hdr = ft_read_header(filename);
+      hdr = ft_read_header(filename, 'headerformat', headerformat);
     end
     event(end+1).type     = 'average';
     event(end  ).sample   = 1;
@@ -850,7 +855,7 @@ switch eventformat
 
   case 'egi_egis'
     if isempty(hdr)
-      hdr = ft_read_header(filename);
+      hdr = ft_read_header(filename, 'headerformat', headerformat);
     end
     fhdr   = hdr.orig.fhdr;
     chdr   = hdr.orig.chdr;
@@ -872,7 +877,7 @@ switch eventformat
 
   case 'egi_egia'
     if isempty(hdr)
-      hdr = ft_read_header(filename);
+      hdr = ft_read_header(filename, 'headerformat', headerformat);
     end
     fhdr   = hdr.orig.fhdr;
     chdr   = hdr.orig.chdr;
@@ -956,7 +961,7 @@ switch eventformat
 
     if isempty(hdr)
       % use the corresponding code to read the header
-      hdr = ft_read_header(filename, 'headerformat', eventformat);
+      hdr = ft_read_header(filename, 'headerformat', headerformat);
     end
 
     if ~usejava('jvm')
@@ -1145,7 +1150,7 @@ switch eventformat
 
   case 'smi_txt'
     if isempty(hdr)
-      hdr = ft_read_header(filename);
+      hdr = ft_read_header(filename, 'headerformat', headerformat);
     end
     if isempty(chanindx)
       % auto-detect the trigger channels
@@ -1158,7 +1163,7 @@ switch eventformat
 
   case 'eyelink_asc'
     if isempty(hdr)
-      hdr = ft_read_header(filename);
+      hdr = ft_read_header(filename, 'headerformat', headerformat);
     end
     if isfield(hdr.orig, 'input')
       % this is inefficient, since it keeps the complete data in memory
@@ -1390,7 +1395,7 @@ switch eventformat
   case 'gtec_hdf5'
     % 
     if isempty(hdr)
-      hdr = ft_read_header(filename);
+      hdr = ft_read_header(filename, 'headerformat', headerformat);
     end
     for i=1:length(hdr.orig.AsynchronData.Time)
       % the type ID appears to be zero-offset
@@ -1405,7 +1410,7 @@ switch eventformat
 
   case 'gtec_mat'
     if isempty(hdr)
-      hdr = ft_read_header(filename);
+      hdr = ft_read_header(filename, 'headerformat', headerformat);
     end
     if isempty(chanindx)
       % these are probably trigger channels
@@ -1419,7 +1424,7 @@ switch eventformat
     % Homer files are MATLAB files in disguise
     % see https://www.nitrc.org/plugins/mwiki/index.php/homer2:Homer_Input_Files#NIRS_data_file_format
     if isempty(hdr)
-      hdr = ft_read_header(filename);
+      hdr = ft_read_header(filename, 'headerformat', headerformat);
     end
     if isempty(chanindx)
       % look in nirs.s for events, this corresponds to the stimulus channels
@@ -1440,7 +1445,7 @@ switch eventformat
 
   case {'itab_raw' 'itab_mhd'}
     if isempty(hdr)
-      hdr = ft_read_header(filename);
+      hdr = ft_read_header(filename, 'headerformat', headerformat);
     end
     for i=1:hdr.orig.nsmpl
       event(end+1).type = 'trigger';
@@ -1468,7 +1473,7 @@ switch eventformat
     elseif any(strcmp({w.name}, 'data')) || length(w)==1
       % assume that the matlab file contains a raw data structure according to FT_DATATYPE_RAW that includes trigger channels
       if isempty(hdr)
-        hdr = ft_read_header(filename);
+        hdr = ft_read_header(filename, 'headerformat', headerformat);
       end
       if isempty(chanindx)
         % try to determine the trigger channels from the header
@@ -1482,7 +1487,7 @@ switch eventformat
 
   case {'manscan_mbi', 'manscan_mb2'}
     if isempty(hdr)
-      hdr = ft_read_header(filename);
+      hdr = ft_read_header(filename, 'headerformat', headerformat);
     end
     if isfield(hdr.orig, 'epochs') && ~isempty(hdr.orig.epochs)
       trlind = [];
@@ -1517,7 +1522,7 @@ switch eventformat
 
   case 'mega_neurone'
     if isempty(hdr)
-      hdr = ft_read_header(filename);
+      hdr = ft_read_header(filename, 'headerformat', headerformat);
     end
     % this is fast but memory inefficient, since the header contains all data and events
     if isfield(hdr.orig, 'event')
@@ -1547,7 +1552,7 @@ switch eventformat
 
   case 'micromed_trc'
     if isempty(hdr)
-      hdr = ft_read_header(filename);
+      hdr = ft_read_header(filename, 'headerformat', headerformat);
     end
     if isfield(hdr, 'orig') && isfield(hdr.orig, 'Trigger_Area') && isfield(hdr.orig, 'Tigger_Area_Length')
       if ~isempty(chanindx)
@@ -1565,7 +1570,7 @@ switch eventformat
 
   case {'mpi_ds', 'mpi_dap'}
     if isempty(hdr)
-      hdr = ft_read_header(filename);
+      hdr = ft_read_header(filename, 'headerformat', headerformat);
     end
     % determine the DAP files that compromise this dataset
     if isfolder(filename)
@@ -1600,7 +1605,7 @@ switch eventformat
 
   case 'nervus_eeg'
     if isempty(hdr)
-      hdr = ft_read_header(filename);
+      hdr = ft_read_header(filename, 'headerformat', headerformat);
     end
     % construct a event structure from data in the header
     maxSampleRate = max([hdr.orig.Segments.samplingRate]);
@@ -1714,6 +1719,7 @@ switch eventformat
     end
 
     if iscontinuous
+      % determine the trigger channels
       binaryindx = find(strcmp(ft_chantype(hdr), 'digital trigger'));
       otherindx  = find(strcmp(ft_chantype(hdr), 'other trigger'));
       analogindx = find(strcmp(ft_chantype(hdr), 'analog trigger'));
@@ -1910,7 +1916,7 @@ switch eventformat
 
   case {'neuralynx_ttl' 'neuralynx_bin' 'neuralynx_dma' 'neuralynx_sdma'}
     if isempty(hdr)
-      hdr = ft_read_header(filename);
+      hdr = ft_read_header(filename, 'headerformat', headerformat);
     end
 
     % specify the range to search for triggers, default is the complete file
@@ -2019,7 +2025,7 @@ switch eventformat
   case 'neuralynx_ds'
     % read the header of the dataset
     if isempty(hdr)
-      hdr = ft_read_header(filename);
+      hdr = ft_read_header(filename, 'headerformat', headerformat);
     end
     % the event file is contained in the dataset directory
     if     exist(fullfile(filename, 'Events.Nev'))
@@ -2080,10 +2086,11 @@ switch eventformat
     event = [];
 
   case 'neuroomega_mat'
-
-    hdr = ft_read_header(filename, 'headerformat', eventformat);
+    if isempty(hdr)
+      hdr = ft_read_header(filename, 'headerformat', headerformat);
+    end
     hdr_orig = hdr.orig.orig;
-    fields_orig=hdr.orig.fields; %getting digital event channels
+    fields_orig = hdr.orig.fields; % getting digital event channels
 
     % extracting time begin
     if ismember('CANALOG_IN_1_TimeBegin',fields_orig)
@@ -2143,6 +2150,46 @@ switch eventformat
       event(i).sample    = tmp.event.sample(i);
     end
 
+  case 'nwb'
+    % check that the required toolbox is available
+    ft_hastoolbox('MatNWB', 1);
+    if isempty(hdr)
+      hdr = ft_read_header(filename, 'headerformat', headerformat);
+    end
+    data = nwbRead(filename); % this is lazy, so should not be too costly
+
+    % import events
+    if ~isempty(data.intervals_trials.start_time)
+      event_lat  = hdr.Fs * (data.intervals_trials.start_time.data.load) + 1;
+      event_stop = hdr.Fs * (data.intervals_trials.stop_time.data.load) + 1;
+      event_dur  = event_stop - event_lat;
+
+      for i=1:numel(event_lat)
+        event(i).sample   = round(event_lat(i));
+        event(i).offset   = 0;
+        event(i).duration = event_dur(i);
+
+        if contains('type', data.intervals_trials.vectordata.keys)
+          event(i).type = get(data.intervals_trials.vectordata, 'type').data(i);
+          if isempty(event(i).type)
+            event(i).type = 'unknown';
+          end
+        else
+          event(i).type = 'unknown';
+        end
+
+        if contains('value', data.intervals_trials.vectordata.keys)
+          event(i).value = get(data.intervals_trials.vectordata, 'value').data(i);
+          if isempty(event(i).value)
+            event(i).value = nan;
+          end
+        else
+          event(i).value = nan;
+        end
+
+      end % for
+    end % if
+
   case 'neuralynx_cds'
     % this is a combined Neuralynx dataset with separate subdirectories for the LFP, MUA and spike channels
     dirlist   = dir(filename);
@@ -2158,7 +2205,7 @@ switch eventformat
       eventfile = fullfile(filename, dirlist(find(filetype_check_extension({dirlist.name}, 'ttl'))).name);
       % read the header from the combined dataset
       if isempty(hdr)
-        hdr = ft_read_header(filename);
+        hdr = ft_read_header(filename, 'headerformat', headerformat);
       end
       % read the events from the *.ttl file
       event = ft_read_event(eventfile);
@@ -2209,7 +2256,7 @@ switch eventformat
     end
     % if present, read the digital triggers which are present as channel in the data
     if isempty(hdr)
-      hdr = ft_read_header(filename);
+      hdr = ft_read_header(filename, 'headerformat', headerformat);
     end
     if isempty(chanindx)
       % auto-detect the trigger channels
@@ -2226,7 +2273,7 @@ switch eventformat
 
   case 'nihonkohden_m00'
     if isempty(hdr)
-      hdr = ft_read_header(filename);
+      hdr = ft_read_header(filename, 'headerformat', headerformat);
     end
 
     if isempty(chanindx)
@@ -2260,7 +2307,7 @@ switch eventformat
 
   case 'nimh_cortex'
     if isempty(hdr)
-      hdr = ft_read_header(filename);
+      hdr = ft_read_header(filename, 'headerformat', headerformat);
     end
     cortex = hdr.orig.trial;
     for i=1:length(cortex)
@@ -2281,7 +2328,7 @@ switch eventformat
 
   case 'ns_avg'
     if isempty(hdr)
-      hdr = ft_read_header(filename);
+      hdr = ft_read_header(filename, 'headerformat', headerformat);
     end
     event(end+1).type     = 'average';
     event(end  ).sample   = 1;
@@ -2292,7 +2339,7 @@ switch eventformat
   case {'ns_cnt', 'ns_cnt16', 'ns_cnt32'}
     % read the header, the original header includes the event table
     if isempty(hdr)
-      hdr = ft_read_header(filename, 'headerformat', eventformat);
+      hdr = ft_read_header(filename, 'headerformat', headerformat);
     end
     % translate the event table into known FieldTrip event types
     for i=1:numel(hdr.orig.event)
@@ -2321,7 +2368,7 @@ switch eventformat
 
   case 'ns_eeg'
     if isempty(hdr)
-      hdr = ft_read_header(filename);
+      hdr = ft_read_header(filename, 'headerformat', headerformat);
     end
     for i=1:hdr.nTrials
       % the *.eeg file has a fixed trigger value for each trial
@@ -2388,7 +2435,7 @@ switch eventformat
     threshold = ft_getopt(varargin, 'threshold'); % needed to read in poly5 files acquired at TUE, don't know whether this is a generic feature
 
     if isempty(hdr)
-      hdr = ft_read_header(filename);
+      hdr = ft_read_header(filename, 'headerformat', headerformat);
     end
     if isempty(chanindx)
       % auto-detect the trigger channels
@@ -2423,7 +2470,7 @@ switch eventformat
 
   case {'yorkinstruments_hdf5'}
     if isempty(hdr)
-      hdr = ft_read_header(filename, 'headerformat', eventformat);
+      hdr = ft_read_header(filename, 'headerformat', headerformat);
     end
     % read the trigger channel and do flank detection
     trgindx = match_str(hdr.label, 'P_PORT_A');
@@ -2490,7 +2537,7 @@ switch eventformat
 
   case 'spmeeg_mat'
     if isempty(hdr)
-      hdr = ft_read_header(filename);
+      hdr = ft_read_header(filename, 'headerformat', headerformat);
     end
     event = read_spmeeg_event(filename, 'header', hdr);
 

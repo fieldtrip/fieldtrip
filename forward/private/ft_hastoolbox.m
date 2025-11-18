@@ -129,6 +129,7 @@ url = {
   'GIFTI'                                 'see http://www.artefact.tk/software/matlab/gifti'
   'GTEC'                                  'see http://www.gtec.at'
   'HOMER3'                                'see https://github.com/BUNPC/Homer3 and https://github.com/fNIRS/snirf_homer3'
+  'HBF'                                   'see https://github.com/MattiStenroos/hbf_lc_p'
   'HEDTOOLS'                              'see https://hed-examples.readthedocs.io/en/latest/HedMatlabTools.html'
   'IBTB'                                  'see Magri et al. BMC Neurosci 2009, 10:81'
   'ICASSO'                                'see http://www.cis.hut.fi/projects/ica/icasso'
@@ -161,7 +162,7 @@ url = {
   'NEURONE'                               'see http://www.megaemg.com/support/unrestricted-downloads'
   'NEUROSHARE'                            'see http://www.neuroshare.org'
   'NLXNETCOM'                             'see http://www.neuralynx.com'
-  'NPMK'                                  'see https://github.com/BlackrockMicrosystems/NPMK'
+  'NPMK'                                  'see https://github.com/BlackrockNeurotech/NPMK'
   'NWAY'                                  'see http://www.models.kvl.dk/source/nwaytoolbox'
   'OPENMEEG'                              'see http://openmeeg.github.io and http://www.fieldtriptoolbox.org/faq/how_do_i_install_the_openmeeg_binaries'
   'OPM'                                   'see https://github.com/tierneytim/OPM'
@@ -460,7 +461,9 @@ switch toolbox
   case 'READ_MED'
     dependency = {'read_MED', 'plot_MED'};
   case 'SKIPEGLX'
-    dependency = {'SGLX_readMeta'};    
+    dependency = {'SGLX_readMeta'};
+  case 'hbf'
+    dependency = {'hbf_TM_Phi_LC','hbf_LFM_B_LC','hbf_BEMOperatorsB_Linear'};
 
     % the following are FieldTrip modules or toolboxes
   case 'FILEIO'

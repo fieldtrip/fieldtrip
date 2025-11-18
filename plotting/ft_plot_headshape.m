@@ -12,30 +12,33 @@ function hs = ft_plot_headshape(headshape, varargin)
 % where the headshape is a structure obtained from FT_READ_HEADSHAPE.
 %
 % Optional arguments should come in key-value pairs and can include
-%   'facecolor'    = [r g b] values or string, for example 'skin', 'skull', 'brain', 'black', 'red', 'r', or an Nx3 or Nx1 array where N is the number of faces
-%   'vertexcolor'  = [r g b] values or string, for example 'skin', 'skull', 'brain', 'black', 'red', 'r', or an Nx3 or Nx1 array where N is the number of vertices
-%   'edgecolor'    = [r g b] values or string, for example 'skin', 'skull', 'brain', 'black', 'red', 'r'
-%   'facealpha'    = transparency, between 0 and 1 (default = 1)
-%   'vertexsize'   = scalar value specifying the size of the vertices (default = 10)
-%   'transform'    = transformation matrix for the fiducials, converts MRI voxels into head shape coordinates
-%   'unit'         = string, convert to the specified geometrical units (default = [])
-%   'axes'         = boolean, whether to plot the axes of the 3D coordinate system (default = false)
-%   'tag'          = string, the tag assigned to the plotted elements (default = '') 
+%   'facecolor'       = [r g b] values or string, for example 'skin', 'skull', 'brain', 'black', 'red', 'r', or an Nx3 or Nx1 array where N is the number of faces
+%   'facealpha'       = transparency, between 0 and 1 (default = 1)
+%   'vertexcolor'     = [r g b] values or string, for example 'skin', 'skull', 'brain', 'black', 'red', 'r', or an Nx3 or Nx1 array where N is the number of vertices
+%   'vertexsize'      = scalar value specifying the size of the vertices (default = 10)
+%   'edgecolor'       = [r g b] values or string, for example 'skin', 'skull', 'brain', 'black', 'red', 'r'
+%   'cutlocation'     = 1x3 vector specifying a point on the plane that cuts the mesh
+%   'cutorientation'  = 1x3 vector specifying the direction orthogonal through the plane that cuts the mesh
+%   'unit'            = string, convert to the specified geometrical units (default = [])
+%   'axes'            = boolean, whether to plot the axes of the 3D coordinate system (default = false)
+%   'tag'             = string, the tag assigned to the plotted elements (default = '') 
 %
 % The sensor array can include an optional fid field with fiducials, which will also be plotted.
-%   'fidcolor'     = [r g b] values or string, for example 'red', 'r', or an Nx3 or Nx1 array where N is the number of fiducials
-%   'fidmarker'    = ['.', '*', '+',  ...]
-%   'fidlabel'     = ['yes', 'no', 1, 0, 'true', 'false']
+%   'fidcolor'        = [r g b] values or string, for example 'red', 'r', or an Nx3 or Nx1 array where N is the number of fiducials
+%   'fidmarker'       = ['.', '*', '+',  ...]
+%   'fidlabel'        = ['yes', 'no', 1, 0, 'true', 'false']
+%   'transform'       = transformation matrix, converts fiducials from MRI voxels into head coordinates
 %
-% Example:
+% Example
 %   headshape = ft_read_headshape(filename);
-%   ft_plot_headshape(headshape)
+%   figure
+%   ft_plot_headshape(headshape);
 %
 % See also FT_PLOT_MESH, FT_PLOT_HEADMODEL, FT_PLOT_SENS, FT_PLOT_DIPOLE,
 % FT_PLOT_ORTHO, FT_PLOT_TOPO3D
 
 % Copyright (C) 2009, Cristiano Micheli
-% Copyright (C) 2009-2024, Robert Oostenveld
+% Copyright (C) 2009-2025, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -87,19 +90,21 @@ else
 end
 
 % get the optional input arguments
-vertexcolor = ft_getopt(varargin, 'vertexcolor',  defaultvertexcolor);
-facecolor   = ft_getopt(varargin, 'facecolor',    defaultfacecolor);
-facealpha   = ft_getopt(varargin, 'facealpha',    1);
-edgecolor   = ft_getopt(varargin, 'edgecolor',    defaultedgecolor);
-vertexsize  = ft_getopt(varargin, 'vertexsize',   10);
-material_   = ft_getopt(varargin, 'material');            % do not confuse with /Applications/MATLAB_R2020b.app/toolbox/matlab/graph3d/material.m
-tag         = ft_getopt(varargin, 'tag',         '');
-fidcolor    = ft_getopt(varargin, 'fidcolor',     'g');
-fidmarker   = ft_getopt(varargin, 'fidmarker',    '*');
-fidlabel    = ft_getopt(varargin, 'fidlabel',     true);
-transform   = ft_getopt(varargin, 'transform');
-unit        = ft_getopt(varargin, 'unit');
-axes_       = ft_getopt(varargin, 'axes', false);         % do not confuse with built-in (/Applications/MATLAB_R2020b.app/toolbox/matlab/graphics/axis/axes)
+facecolor       = ft_getopt(varargin, 'facecolor',    defaultfacecolor);
+facealpha       = ft_getopt(varargin, 'facealpha',    1);
+vertexcolor     = ft_getopt(varargin, 'vertexcolor',  defaultvertexcolor);
+vertexsize      = ft_getopt(varargin, 'vertexsize',   10);
+edgecolor       = ft_getopt(varargin, 'edgecolor',    defaultedgecolor);
+cutlocation     = ft_getopt(varargin, 'cutlocation',  []);
+cutorientation  = ft_getopt(varargin, 'cutorientation', []);
+material_       = ft_getopt(varargin, 'material');            % do not confuse with /Applications/MATLAB_R2020b.app/toolbox/matlab/graph3d/material.m
+tag             = ft_getopt(varargin, 'tag',         '');
+fidcolor        = ft_getopt(varargin, 'fidcolor',     'g');
+fidmarker       = ft_getopt(varargin, 'fidmarker',    '*');
+fidlabel        = ft_getopt(varargin, 'fidlabel',     true);
+transform       = ft_getopt(varargin, 'transform');
+unit            = ft_getopt(varargin, 'unit');
+axes_           = ft_getopt(varargin, 'axes', false);         % do not confuse with built-in (/Applications/MATLAB_R2020b.app/toolbox/matlab/graphics/axis/axes)
 
 if ~isempty(unit)
   headshape = ft_convert_units(headshape, unit);
@@ -118,7 +123,7 @@ if ~holdflag
 end
 
 mesh = keepfields(headshape, {'pos', 'tri', 'tet', 'hex', 'color', 'unit', 'coordsys'});
-h  = ft_plot_mesh(mesh, 'vertexcolor', vertexcolor, 'vertexsize', vertexsize, 'facecolor', facecolor, 'facealpha', facealpha, 'edgecolor', edgecolor, 'material', material_, 'tag', tag);
+h  = ft_plot_mesh(mesh, 'vertexcolor', vertexcolor, 'vertexsize', vertexsize, 'facecolor', facecolor, 'facealpha', facealpha, 'edgecolor', edgecolor, 'cutlocation', cutlocation, 'cutorientation', cutorientation, 'material', material_, 'tag', tag);
 hs = [hs; h];
 
 if isfield(headshape, 'fid') && ~isempty(headshape.fid)

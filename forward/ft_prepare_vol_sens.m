@@ -302,20 +302,31 @@ elseif ismeg
       % don't do anything, h2em or h2mm generated later in ft_prepare_leadfield
 
     case 'duneuro'
-           
-      %compute transfer matrix
-      if(~isfield(headmodel,'meg_transfer'))
+      
+      if isfield(headmodel, 'driver')
+        %compute transfer matrix
+        if(~isfield(headmodel,'meg_transfer'))
 
-        % set coils and projections
-        coils = sens.coilpos;
-        projections = sens.coilori;
-        headmodel.driver.set_coils_and_projections(coils', projections');
+          % set coils and projections
+          coils = sens.coilpos;
+          projections = sens.coilori;
+          headmodel.driver.set_coils_and_projections(coils', projections');
 
-        % compute transfer matrix
-        cfg = [];
-        cfg.solver.reduction   = headmodel.reduction;
-        cfg.solver.intorderadd = headmodel.intorderadd;
-        headmodel.meg_transfer = headmodel.driver.compute_meg_transfer_matrix(cfg);
+          % compute transfer matrix
+          cfg = [];
+          cfg.solver.reduction   = num2str(headmodel.duneuro.reduction,   '%d');
+          cfg.solver.intorderadd = num2str(headmodel.duneuro.solver.intorderadd, '%d'); % FIXME brainstorm allows for more optiones here
+          headmodel.meg_transfer = headmodel.driver.compute_meg_transfer_matrix(cfg);
+        end
+      else
+        % the brainstorm application is probably required, this uses a different approach
+        
+        % write the coils and projections files
+        filenames = {fullfile(headmodel.duneuro.outputpath, 'coilpos.txt') fullfile(headmodel.duneuro.outputpath, 'coilori.txt')};
+        headmodel.duneuro.filename_coilpos = filenames{1};
+        headmodel.duneuro.filename_coilori = filenames{2};
+        duneuro_write_sensors(sens, filenames);
+
       end
     
     case 'interpolate'
@@ -351,6 +362,24 @@ elseif ismeg
 
     case 'simbio'
       ft_error('MEG not yet supported with simbio');
+
+    case 'hbf'
+      headmodel.coils = [];
+      headmodel.coils.p = sens.coilpos;
+      headmodel.coils.n = sens.coilori; 
+
+      ci = headmodel.cond(1,:);
+      co = headmodel.cond(2,:);
+
+      % convert bnd to bmeshes
+      headmodel.bmeshes = bmesh2bnd(headmodel.bnd);
+
+      % create transfer matrix 
+      DB = hbf_BEMOperatorsB_Linear(headmodel.bmeshes,headmodel.coils);
+      headmodel.sol = hbf_TM_Bvol_Linear(DB,headmodel.mat,ci,co);
+        
+      % remove original BEM mat to save memory
+      headmodel = rmfield(headmodel,'mat');
 
     otherwise
       ft_error('unsupported volume conductor model for MEG');
@@ -567,17 +596,28 @@ elseif iseeg
     case 'duneuro'
       ft_hastoolbox('duneuro', 1);
 
-      if(~isfield(headmodel,'eeg_transfer'))
-        % set electrodes
-        cfg = [];
-        cfg.type = headmodel.electrodes;
-        cfg.codims = headmodel.subentities;
-        headmodel.driver.set_electrodes(sens.elecpos', cfg);
-        
-        % compute transfer matrix
-        cfg = [];
-        cfg.solver.reduction = headmodel.reduction;
-        headmodel.eeg_transfer = headmodel.driver.compute_eeg_transfer_matrix(cfg);
+      if isfield(headmodel, 'driver')
+        % compute the transfer matrix
+        if(~isfield(headmodel,'eeg_transfer'))
+          % set electrodes
+          cfg        = [];
+          cfg.type   = headmodel.duneuro.eeg.type;
+          cfg.codims = sprintf('%d ', headmodel.duneuro.eeg.subentities);
+          headmodel.driver.set_electrodes(sens.elecpos', cfg);
+
+          % compute transfer matrix
+          cfg = [];
+          cfg.solver.reduction   = num2str(headmodel.duneuro.reduction, '%d');
+          headmodel.eeg_transfer = headmodel.driver.compute_eeg_transfer_matrix(cfg);
+        end
+      else
+        % the brainstorm application is probably required, this uses a different approach
+
+        % write the coils and projections files
+        filename = fullfile(headmodel.duneuro.outputpath, 'elecpos.txt');
+        headmodel.duneuro.filename_elecpos = filename;
+        duneuro_write_sensors(sens, filename);
+
       end
 
     case 'interpolate'
@@ -610,6 +650,15 @@ elseif iseeg
         % map each of the leadfield files into memory
         headmodel.chan{i} = nifti(headmodel.filename{i});
       end
+
+    case 'hbf'
+
+      headmodel.bmeshes = bmesh2bnd(headmodel.bnd);
+      headmodel.elecs = hbf_ProjectElectrodesToScalp(sens.elecpos,headmodel.bmeshes);
+      headmodel.sol = hbf_InterpolateTfullToElectrodes(headmodel.mat,headmodel.bmeshes,headmodel.elecs);
+
+      % remove original BEM mat to save memory
+      headmodel = rmfield(headmodel,'mat');
 
     otherwise
       ft_error('unsupported volume conductor model for EEG');

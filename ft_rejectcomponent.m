@@ -23,7 +23,7 @@ function [data] = ft_rejectcomponent(cfg, comp, data)
 % The configuration structure can contain
 %   cfg.component  = list of components to remove, e.g. [1 4 7] or see FT_CHANNELSELECTION
 %   cfg.demean     = 'no' or 'yes', whether to demean the input data (default = 'yes')
-%   cfg.updatesens = 'no' or 'yes' (default = 'yes')
+%   cfg.updatesens = 'yes' or 'no', whether to update the sensor array with the spatial projector (default = 'yes')
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
@@ -137,34 +137,32 @@ if hasdata && length(seldat)~=length(label)
 end
 
 if hasdata
-  mixing   = comp.topo(selcomp,:);
-  unmixing = comp.unmixing(:,selcomp);
-  
+  mixing   = comp.topo(selcomp, :);
+  unmixing = comp.unmixing(:, selcomp);
+
   % I am not sure about this, but it gives comparable results to the ~hasdata case
   % when comp contains non-orthogonal (=ica) topographies, and contains a complete decomposition
-  
+
   montage     = [];
   montage.tra = eye(length(selcomp)) - mixing(:, reject)*unmixing(reject, :);
   % we are going from data to components, and back again
   montage.labelold = comp.topolabel(selcomp);
   montage.labelnew = comp.topolabel(selcomp);
-  
+
   keepunused = 'yes'; % keep the original data which are not present in the mixing provided
-  bname = 'reject';
-  
+
 else
   mixing = comp.topo(selcomp, :);
   mixing(:, reject) = 0;
-  
+
   montage     = [];
   montage.tra = mixing;
   % we are going from components to data
   montage.labelold = comp.label;
   montage.labelnew = comp.topolabel(selcomp);
-  
+
   keepunused = 'no'; % don't need to keep the original rejected components
-  bname = 'invcomp';
-  
+
   % create the initial data structure, remove all component details
   data = keepfields(comp, {'trial', 'time', 'label', 'fsample', 'grad', 'elec', 'opto', 'trialinfo', 'sampleinfo'});
 end % if hasdata
@@ -172,72 +170,74 @@ end % if hasdata
 % apply the linear projection to the data
 data = ft_apply_montage(data, montage, 'keepunused', keepunused, 'feedback', cfg.feedback, 'showcallinfo', cfg.showcallinfo);
 
-sensfield = cell(0,1);
-if isfield(data, 'grad')
-  sensfield{end+1} = 'grad';
-end
-if isfield(data, 'elec')
-  sensfield{end+1} = 'elec';
-end
-if isfield(data, 'opto')
-  sensfield{end+1} = 'opto';
-end
-
-% apply the linear projection also to the sensor description
-if ~isempty(sensfield)
-  if  strcmp(cfg.updatesens, 'yes')
-
-    for m = 1:numel(sensfield)
+sensfield = {'elec', 'grad', 'opto'};
+for m = 1:numel(sensfield)
+  if isfield(data, sensfield{m})
+    sens = fixbalance(data.(sensfield{m})); % ensure that the balancing representation is up to date
+    if strcmp(cfg.updatesens, 'yes') && ~isempty(intersect(sens.label, montage.labelold))
       ft_info('also applying the backprojection matrix to the %s structure\n', sensfield{m});
-      
-      % the balance field is needed to keep the sequence of linear projections
-      if ~isfield(data.(sensfield{m}), 'balance')
-        data.(sensfield{m}).balance.current = 'none';
+
+      % the name of the balancing should be unique in the sequence
+      if hasdata
+        bname = 'reject';
+      else
+        bname = 'invcomp';
       end
-      
+
+      bindx = 1;
+      while isfield(sens.balance, bname)
+        % use a suffix to make the name unique
+        if hasdata
+          bname = sprintf('reject%d', bindx);
+        else
+          bname = sprintf('invcomp%d', bindx);
+        end
+        bindx = bindx+1;
+      end
+
       % keepunused = 'yes' is required to get back e.g. reference or otherwise
-      % unused sensors in the sensor description. the unused components need to
+      % unused sensors in the sensor description. The unused components need to
       % be removed in a second step
-      sens = ft_apply_montage(data.(sensfield{m}), montage, 'keepunused', 'yes', 'balancename', bname, 'feedback', cfg.feedback);
-      
+      sens = ft_apply_montage(sens, montage, 'keepunused', 'yes', 'feedback', cfg.feedback);
+      sens.balance.(bname) = montage;
+      sens.balance.current(end+1) = {bname};
+
       % remove the unused channels from the grad/elec/opto
       [junk, remove]    = match_str(comp.label, sens.label);
-      sens.tra(remove,:) = [];
       sens.label(remove) = [];
-      sens.chanpos(remove,:) = [];
+      sens.tra(remove,:) = [];
+      if isfield(sens, 'chantype')
+        sens.chantype(remove) = [];
+      end
+      if isfield(sens, 'chanunit')
+        sens.chanunit(remove) = [];
+      end
+      if isfield(sens, 'chanpos')
+        sens.chanpos(remove,:) = [];
+      end
       if isfield(sens, 'chanori')
         sens.chanori(remove,:) = [];
       end
-      
-      % there could have been sequential subspace projections, so the
-      % invcomp-field may have been renamed into invcompX. If this it the case,
-      % take the one with the highest suffix
-      invcompfield = bname;
-      if  ~isfield(sens.balance, invcompfield)
-        for k = 10:-1:1
-          if isfield(sens.balance, [bname num2str(k)])
-            invcompfield = [invcompfield num2str(k)];
-            break;
-          end
 
-        end
-      end
-      
       % remove the unused components from the balancing
-      [junk, remove]    = match_str(comp.label, sens.balance.(invcompfield).labelnew);
-      sens.balance.(invcompfield).tra(remove, :)   = [];
-      sens.balance.(invcompfield).labelnew(remove) = [];
-      data.(sensfield{m})  = sens;
-    end
-    
-  else
-    for m = 1:numel(sensfield)
+      [junk, remove]    = match_str(comp.label, sens.balance.(bname).labelnew);
+      sens.balance.(bname).tra(remove, :)   = [];
+      sens.balance.(bname).labelnew(remove) = [];
+      if isfield(sens.balance.(bname), 'chantypenew')
+        sens.balance.(bname).chantypenew(remove) = [];
+      end
+      if isfield(sens.balance.(bname), 'chanunitnew')
+        sens.balance.(bname).chanunitnew(remove) = [];
+      end
+
+    else
       ft_info('not applying the backprojection matrix to the %s structure\n', sensfield{m});
-      % simply copy it over
-      comp.(sensfield{m}) = data.(sensfield{m});
-    end
+    end % if updatesens
+
+    % add the potentially updated sensor definition back
+    data.(sensfield{m}) = sens;
   end
-end % if sensfield
+end % for grad, elec and opto
 
 if istlck
   % convert the raw structure back into a timelock structure

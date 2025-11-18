@@ -16,10 +16,22 @@ function [timelock] = ft_appendtimelock(cfg, varargin)
 %                         are allowed to still be considered compatible (default = 1e-5)
 %   cfg.keepsampleinfo  = 'yes', 'no', 'ifmakessense' (default = 'ifmakessense')
 %
+% To facilitate data-handling and distributed computing you can use
+%   cfg.inputfile   =  ...
+%   cfg.outputfile  =  ...
+% If you specify one of these (or both) the input data will be read from a
+% *.mat file on disk and/or the output data will be written to a *.mat file.
+% These mat files should contain only a single variable, corresponding with
+% the input/output structure.
+%
+% If you encounter difficulties with memory usage, you can use
+%   cfg.memory = 'low' or 'high', whether to be memory or computationally efficient, respectively (default = 'high')
+%
 % See also FT_TIMELOCKANALYSIS, FT_DATATYPE_TIMELOCK, FT_APPENDDATA, FT_APPENDFREQ,
 % FT_APPENDSOURCE, FT_APPENDSENS
 
 % Copyright (C) 2011-2018, Robert Oostenveld
+% Copyright (C) 2019-, Jan-Mathijs Schoffelen and Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -63,6 +75,7 @@ cfg.appenddim       = ft_getopt(cfg, 'appenddim', []);
 cfg.tolerance       = ft_getopt(cfg, 'tolerance',  1e-5); % this is passed to append_common, which passes it to ft_selectdata
 cfg.appendsens      = ft_getopt(cfg, 'appendsens', 'no');
 cfg.keepsampleinfo  = ft_getopt(cfg, 'keepsampleinfo', 'no');
+cfg.memory          = ft_getopt(cfg, 'memory', 'high');
 
 try
   % although not 100% robust, this could make some users becoming aware of the issue of overlapping trials
@@ -114,7 +127,14 @@ if any(strcmp(cfg.parameter, 'avg')) && any(strcmp(cfg.parameter, 'trial'))
 end
 
 % use a low-level function that is shared with the other ft_appendxxx functions
-timelock = append_common(cfg, varargin{:});
+if strcmp(cfg.memory, 'high') || numel(varargin)<=2
+  timelock = append_common(cfg, varargin{:});
+elseif strcmp(cfg.memory, 'low')
+  timelock = varargin{1};
+  for i=2:numel(varargin)
+    timelock = append_common(cfg, timelock, varargin{i});
+  end
+end
 
 if isfield(timelock, 'avg') && ~isfield(timelock, 'trial')
   ft_warning('renaming the appended averages to "trial"');

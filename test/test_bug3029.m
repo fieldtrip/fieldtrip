@@ -128,8 +128,7 @@ if false
 end
 
 % ALSO: check whether it also works with powandcsd data
-filename = fullfile(dccnpath('/project/3031000.02/test/latest/freq/meg'), 'freq_mtmfft_powandcsd_trl_ctf275');
-load(filename);
+freq=ft_checkdata(freq,'cmbstyle','full');
 
 if true
   cfg           = [];

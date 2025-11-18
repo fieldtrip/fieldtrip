@@ -46,12 +46,14 @@ function [sens] = ft_datatype_sens(sens, varargin)
 %    sens.chanunit = Mx1 cell-array with the units of the channel signal, e.g. 'V', 'fT' or 'T/cm', see FT_CHANUNIT
 %
 % Optional fields:
-%    type, unit, fid, chantype, chanunit, coordsys
+%    type, unit, fid, chantype, chanunit, coordsys, balance
 %
 % Historical fields:
 %    pnt, pos, ori, pnt1, pnt2, fiberpos, fibertype, fiberlabel, transceiver, transmits, laserstrength
 %
 % Revision history:
+% (2025/latest) Explicitly deal with the balance field and sequence of montages.
+%
 % (2020/latest) Updated the specification of the NIRS sensor definition.
 %   Dropped the laserstrength and renamed transmits into tra for consistency.
 %
@@ -142,7 +144,7 @@ if ~isempty(distance) && ~any(strcmp(distance, {'m' 'dm' 'cm' 'mm'}))
 end
 
 if strcmp(version, 'latest')
-  version = '2020';
+  version = '2025';
 end
 
 if isempty(sens)
@@ -173,11 +175,36 @@ else
 end
 
 switch version
-  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  case '2025'
+    % update it to the previous standard version
+    new_argin = ft_setopt(varargin, 'version', '2020');
+    sens      = ft_datatype_sens(sens, new_argin{:});
+
+    if isfield(sens, 'balance')
+      % In 2025 we switched to grad.balance.current as a single cell-array.
+      % Prior to 2025 we had grad.balance.current as a string and
+      % grad.balance.previous as a cell-array.
+      sens = fixbalance(sens);
+    end
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   case '2020'
+    if isfield(sens, 'balance') && isfield(sens.balance, 'current') && iscell(sens.balance.current)
+
+      % revert to the previous representation
+      if ~isempty(sens.balance.current)
+        sens.balance.previous = sens.balance.current(1:end-1);  % remains a cell-array
+        sens.balance.current  = sens.balance.current{end};      % becomes a string
+      else
+        sens.balance.current = 'none';
+      end
+    end
+
     % update it to the previous standard version
     new_argin = ft_setopt(varargin, 'version', '2019');
     sens      = ft_datatype_sens(sens, new_argin{:});
+
     if isfield(sens, 'coordsys')
       sens = fixcoordsys(sens);
     end
@@ -239,7 +266,7 @@ switch version
       % especially the chanunit field needs some careful thought when converting between optical densities and chromophore concentrations.
       sens = removefields(sens, {'chantype', 'chanunit'});
     end
-    
+
     % ensure all positions are represented as 3D, not 2D
     fn = {'chanpos', 'optopos', 'elecpos', 'coilpos'};
     for i=1:numel(fn)
@@ -259,6 +286,7 @@ switch version
   case '2016'
     % update it to the previous standard version
     new_argin = ft_setopt(varargin, 'version', '2011v2');
+    new_argin = ft_deleteopt(new_argin, {'amplitude', 'distance', 'scaling'});
     sens      = ft_datatype_sens(sens, new_argin{:});
     
     % rename from org to old (reverse = false)
@@ -366,9 +394,9 @@ switch version
               sens.chanunit{i} = amplitude;
             elseif strcmp(sens.chanunit{i}, amplitude)
               % no conversion needed
-            elseif isfield(sens, 'balance') && strcmp(sens.balance.current, 'comp')
+            elseif isfield(sens, 'balance') && isequal(sens.balance.current, 'comp') 
               % no conversion needed
-            elseif isfield(sens, 'balance') && strcmp(sens.balance.current, 'planar')
+            elseif isfield(sens, 'balance') && isequal(sens.balance.current, 'planar')
               % no conversion needed
             else
               % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=3144

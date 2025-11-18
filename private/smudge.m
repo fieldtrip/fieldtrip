@@ -4,7 +4,7 @@ function [datout, S] = smudge(datin, tri, niter, threshold)
 % given a triangulation tri. The algorithm is according to what is in
 % MNE-Suite, documented in chapter 8.3
 
-if nargin<3 || isempty(niter),
+if nargin<3 || isempty(niter)
   niter = 1;
 end
 
@@ -14,7 +14,7 @@ end
 
 for k = 1:niter
   [tmp, Stmp] = do_smudge(datin, tri, threshold);
-  if k==1,
+  if k==1
     S      = Stmp;
   else
     S      = Stmp*S;

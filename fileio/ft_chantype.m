@@ -133,7 +133,23 @@ if isfield(input, 'chantype')
 else
   % start with unknown chantype for all channels
   chantype = repmat({'unknown'}, numchan, 1);
+  % the sensor desciption might provide information about the channel type
+  if isfield(input, 'grad') && isfield(input.grad, 'chantype')
+    [sel1, sel2] = match_str(input.label, input.grad.label);
+    chantype(sel1) = input.grad.chantype(sel2);
+  end
+  if isfield(input, 'elec') && isfield(input.elec, 'chantype')
+    [sel1, sel2] = match_str(input.label, input.elec.label);
+    chantype(sel1) = input.elec.chantype(sel2);
+  end
+  if isfield(input, 'opto') && isfield(input.opto, 'chantype')
+    [sel1, sel2] = match_str(input.label, input.opto.label);
+    chantype(sel1) = input.opto.chantype(sel2);
+  end
 end
+
+% some channel types were perhaps already determined
+chantypeinitial = chantype; 
 
 if ~any(strcmp(chantype, 'unknown'))
   % all channels are known, don't bother doing any further heuristics
@@ -323,7 +339,6 @@ elseif ft_senstype(input, 'bti')
     sel = myregexp('^G[xyz][xyz]A$', label);
     chantype(sel) = {'refgrad'};
   else
-    % determine the chantype on the basis of the channel labels
     % all 4D-BTi MEG channels start with "A" followed by a number
     % all 4D-BTi reference channels start with M or G
     % all 4D-BTi EEG channels start with E, except for the 248-MEG/32-EEG system in Warsaw where they end with -1
@@ -544,7 +559,7 @@ elseif ft_senstype(input, 'yokogawa') && islabel
   sel = myregexp('^ETC[0-9][0-9][0-9]$', label);
   chantype(sel) = {'etc'};
   
-elseif ft_senstype(input, 'itab') && isheader
+elseif ft_senstype(input, 'itab') && isheader && isfield(input, 'orig')
   origtype = [input.orig.ch.type];
   chantype(origtype==0)   = {'unknown'};
   chantype(origtype==1)   = {'unknown'};%{'ele'};
@@ -644,6 +659,9 @@ elseif ft_senstype(input, 'nex5') && isheader
   end
   
 end % ft_senstype
+
+% keep the channel types that were initially determined
+chantype(~strcmp(chantypeinitial, 'unknown')) = chantypeinitial(~strcmp(chantypeinitial, 'unknown'));
 
 if isdata
   % the input was replaced by one of hdr, grad, elec, opto

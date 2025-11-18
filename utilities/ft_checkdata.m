@@ -1527,7 +1527,7 @@ if ntrial==1
   tlck.avg    = data.trial{1};
   tlck.label  = data.label;
   tlck.dimord = 'chan_time';
-  tlck        = copyfields(data, tlck, {'grad', 'elec', 'opto', 'cfg', 'trialinfo', 'topo', 'topodimord', 'topolabel', 'unmixing', 'unmixingdimord'});
+  tlck        = copyfields(data, tlck, {'elec', 'grad', 'opto', 'cfg', 'trialinfo', 'topo', 'topodimord', 'topolabel', 'unmixing', 'unmixingdimord'});
   
 else
   % the code below tries to construct a general time-axis where samples of all trials can fall on
@@ -1557,7 +1557,7 @@ else
   tlck.time    = time;
   tlck.dimord  = 'rpt_chan_time';
   tlck.label   = data.label;
-  tlck         = copyfields(data, tlck, {'grad', 'elec', 'opto', 'cfg', 'trialinfo', 'sampleinfo', 'topo', 'topodimord', 'topolabel', 'unmixing', 'unmixingdimord'});
+  tlck         = copyfields(data, tlck, {'elec', 'grad', 'opto', 'cfg', 'trialinfo', 'sampleinfo', 'topo', 'topodimord', 'topolabel', 'unmixing', 'unmixingdimord'});
 end
 
 

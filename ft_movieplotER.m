@@ -21,6 +21,9 @@ function [cfg] = ft_movieplotER(cfg, data)
 %   cfg.baselinetype    = 'absolute' or 'relative' (default = 'absolute')
 %   cfg.colorbar        = 'yes', 'no' (default = 'no')
 %   cfg.colorbartext    = string indicating the text next to colorbar
+%   cfg.figure          = 'yes' or 'no', whether to open a new figure. You can also specify a figure handle from FIGURE, GCF or SUBPLOT. (default = 'yes')
+%   cfg.figurename      = string, title of the figure window
+%   cfg.position        = location and size of the figure, specified as [left bottom width height] (default is automatic)
 %   cfg.renderer        = string, 'opengl', 'zbuffer', 'painters', see RENDERERINFO (default is automatic, try 'painters' when it crashes)
 %
 % The layout defines how the channels are arranged. You can specify the
@@ -100,25 +103,6 @@ end
 % prevent any further baseline correction from happening in ft_movieplotTFR
 tmpcfg = removefields(cfg, {'baseline', 'baselinetype'});
 tmpcfg = ft_movieplotTFR(tmpcfg, data);
-
-% this is needed for the figure title
-if isfield(cfg, 'dataname') && ~isempty(cfg.dataname)
-  dataname = cfg.dataname;
-elseif isfield(cfg, 'inputfile') && ~isempty(cfg.inputfile)
-  dataname = cfg.inputfile;
-elseif nargin>1
-  dataname = arrayfun(@inputname, 2:nargin, 'UniformOutput', false);
-else
-  dataname = {};
-end
-
-% set the figure window title
-if ~isempty(dataname)
-  set(gcf, 'Name', sprintf('%d: %s: %s', double(gcf), mfilename, join_str(', ', dataname)));
-else
-  set(gcf, 'Name', sprintf('%d: %s', double(gcf), mfilename));
-end
-set(gcf, 'NumberTitle', 'off');
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug

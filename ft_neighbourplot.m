@@ -15,6 +15,7 @@ function [cfg] = ft_neighbourplot(cfg, data)
 %   cfg.enableedit    = string, 'yes' or 'no', allows you to interactively add or remove edges between vertices (default = 'no')
 %   cfg.visible       = string, 'on' or 'off' whether figure will be visible (default = 'on')
 %   cfg.figure        = 'yes' or 'no', whether to open a new figure. You can also specify a figure handle from FIGURE, GCF or SUBPLOT. (default = 'yes')
+%   cfg.figurename    = string, title of the figure window
 %   cfg.position      = location and size of the figure, specified as [left bottom width height] (default is automatic)
 %   cfg.renderer      = string, 'opengl', 'zbuffer', 'painters', see MATLAB Figure Properties. If this function crashes, you should try 'painters'.
 %
@@ -91,6 +92,7 @@ cfg.verbose    = ft_getopt(cfg, 'verbose', 'no');
 cfg.enableedit = ft_getopt(cfg, 'enableedit', 'no');
 cfg.visible    = ft_getopt(cfg, 'visible', 'on');
 cfg.renderer   = ft_getopt(cfg, 'renderer', []); % let MATLAB decide on the default
+cfg.figurename = ft_getopt(cfg, 'figurename', '');
 
 if isfield(cfg, 'neighbours')
   cfg.neighbours = cfg.neighbours;
@@ -131,8 +133,26 @@ else
   proj = sens.chanpos;
 end
 
+% this is needed for the figure title
+if isfield(cfg, 'dataname') && ~isempty(cfg.dataname)
+  dataname = cfg.dataname;
+elseif isfield(cfg, 'inputfile') && ~isempty(cfg.inputfile)
+  dataname = cfg.inputfile;
+elseif nargin>1
+  dataname = arrayfun(@inputname, 2:nargin, 'UniformOutput', false);
+else
+  dataname = {};
+end
+
+% set the figure window title, if not defined by user
+if isempty(cfg.figurename) && ~isempty(dataname)
+  cfg.figurename = sprintf('%s: %s', mfilename, join_str(', ', dataname));
+else
+  cfg.figurename = sprintf('%s:', mfilename);
+end
+
 % open a new figure with the specified settings
-hf = open_figure(keepfields(cfg, {'figure', 'position', 'visible', 'renderer'}));
+hf = open_figure(keepfields(cfg, {'figure', 'position', 'visible', 'renderer' 'figurename'}));
 
 axis equal
 axis vis3d
@@ -228,25 +248,6 @@ desired = ft_channelselection({'all', '-SCALE', '-COMNT'}, {cfg.neighbours.label
 
 neighb_idx = ismember({cfg.neighbours.label}, desired);
 cfg.neighbours = cfg.neighbours(neighb_idx);
-
-% this is needed for the figure title
-if isfield(cfg, 'dataname') && ~isempty(cfg.dataname)
-  dataname = cfg.dataname;
-elseif isfield(cfg, 'inputfile') && ~isempty(cfg.inputfile)
-  dataname = cfg.inputfile;
-elseif nargin>1
-  dataname = arrayfun(@inputname, 2:nargin, 'UniformOutput', false);
-else
-  dataname = {};
-end
-
-% set the figure window title
-if ~isempty(dataname)
-  set(gcf, 'Name', sprintf('%d: %s: %s', double(gcf), mfilename, join_str(', ', dataname)));
-else
-  set(gcf, 'Name', sprintf('%d: %s', double(gcf), mfilename));
-end
-set(gcf, 'NumberTitle', 'off');
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
