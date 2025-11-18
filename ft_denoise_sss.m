@@ -304,16 +304,9 @@ Q       = [Qin Qout];
 % end
 if options.regularize==1
   ft_warning('using regularization on the basis functions is experimental code, and not thoroughly tested, use at your own risk');
-<<<<<<< HEAD
   % this is based on a heuristic that I got from the MNE-python implementation, and is based 
   % on an snr estimate per harmonic basis function. Some pruning is done to exclude the basis
   % functions with the lowest snr. It requires the basis functions to be scaled differently
-=======
-  % this is based on a heuristic that I got from the MNE-python
-  % implementation, and is based on a snr estimate per harmonic basis
-  % function. Some pruning is done to exclude the basis functions with the
-  % lowest snr. It requires the basis functions to be scaled differently
->>>>>>> master
   % with respect to one another. So far I (JM) have only been able to get
   % this scaling by trial and error approximately right.
   [d, o] = get_degrees_orders(options.order_in);
