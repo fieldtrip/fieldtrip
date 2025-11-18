@@ -22,6 +22,11 @@
 # In addition, one should add the templates for the low-resolution spherical meshes
 # from fieldtrip/template/sourcemodel, i.e. all L/R.*.gii files.
 # In addition, this script requires HCP-workbench to be installed.
+#
+# NOTE: if this script fails, it could be due to a 'too high' freesurfer version.
+# Specifically, if the metric files sulc/curv etc fail to convert, it seems that 
+# "mris_convert -c" leads to unexpected (at least by this script) filenames. If this
+# happens, try it with a lower version of freesurfer, e.g. 6.0 
 
 # Copyright (C), 2019, Jan-Mathijs Schoffelen
 
