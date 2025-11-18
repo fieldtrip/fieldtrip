@@ -40,6 +40,7 @@ function [type] = ft_senstype(input, desired)
 %   'magview'             this is a BabySQUID system from Tristan Technologies
 %   'fieldline_v2'
 %   'fieldline_v3'
+%   'quspin_neuro1'       this can be from a LVM or a FIF file
 %   'egi32'
 %   'egi64'
 %   'egi128'
@@ -487,7 +488,9 @@ if strcmp(type, 'unknown')
       type = 'nirs';
     elseif (mean(~cellfun(@isempty, regexp(sens.label, 'D(\w+)-S(\w+)'))) > 0.5)
       type = 'nirs';
-      
+
+    elseif any(strcmp(sens.label, 'MUX_Counter1')) && any(strcmp(sens.label, 'MUX_Counter2'))
+      type = 'quspin_neuro1';
     end
 
     if strcmp(type, 'unknown') && all(contains(sens.label, '-'))
@@ -540,32 +543,35 @@ if ~isempty(desired)
     case {'ieeg'}
       type = any(strcmp(type, {'ieeg' 'seeg' 'ecog'}));
     case 'ant'
-      type = any(strcmp(type, {'ant' 'ant128'}));
+      type = startsWith(type, 'ant');
     case 'biosemi'
-      type = any(strcmp(type, {'biosemi' 'biosemi64' 'biosemi128' 'biosemi256'}));
+      type = startsWith(type, 'biosemi');
     case 'egi'
-      type = any(strcmp(type, {'egi' 'egi32' 'egi64' 'egi128' 'egi256'}));
-    case 'meg'
-      type = any(strcmp(type, {'meg' 'ctf' 'ctf64' 'ctf151' 'ctf275' 'ctf151_planar' 'ctf275_planar' 'neuromag' 'neuromag122' 'neuromag306' 'neuromag306_combined' 'bti' 'bti148' 'bti148_planar' 'bti248' 'bti248_planar' 'bti248grad' 'bti248grad_planar' 'yokogawa' 'yokogawa9' 'yokogawa160' 'yokogawa160_planar' 'yokogawa64' 'yokogawa64_planar' 'yokogawa440' 'itab' 'itab28' 'itab153' 'itab153_planar' 'babysquid' 'babysquid74' 'artenis123' 'magview' 'yorkinstruments248', 'fieldline_v2', 'fieldline_v3'}));
+      type = startsWith(type, 'egi');
     case 'ctf'
-      type = any(strcmp(type, {'ctf' 'ctf64' 'ctf151' 'ctf275' 'ctf151_planar' 'ctf275_planar'}));
+      type = startsWith(type, 'ctf');
     case 'bti'
-      type = any(strcmp(type, {'bti' 'bti148' 'bti148_planar' 'bti248' 'bti248_planar' 'bti248grad' 'bti248grad_planar'}));
+      type = startsWith(type, 'bti');
     case 'neuromag'
-      type = any(strcmp(type, {'neuromag' 'neuromag122' 'neuromag306'}));
+      type = startsWith(type, 'neuromag');
     case 'babysquid'
       type = any(strcmp(type, {'babysquid' 'babysquid74' 'artenis123' 'magview'}));
     case 'yokogawa'
-      type = any(strcmp(type, {'yokogawa' 'yokogawa9' 'yokogawa64' 'yokogawa64_planar' 'yokogawa160' 'yokogawa160_planar' 'yokogawa208' 'yokogawa208_planar' 'yokogawa440'}));
+      type = startsWith(type, 'yokogawa');
     case 'itab'
-      type = any(strcmp(type, {'itab' 'itab28' 'itab153' 'itab153_planar'}));
+      type = startsWith(type, 'itab');
     case 'fieldline'
       type = startsWith(type, 'fieldline');
+    case 'quspin'
+      type = startsWith(type, 'quspin');
+    case 'meg'
+      type = any(strcmp(type, {'meg' 'ctf' 'ctf64' 'ctf151' 'ctf275' 'ctf151_planar' 'ctf275_planar' 'neuromag' 'neuromag122' 'neuromag306' 'neuromag306_combined' 'bti' 'bti148' 'bti148_planar' 'bti248' 'bti248_planar' 'bti248grad' 'bti248grad_planar' 'yokogawa' 'yokogawa9' 'yokogawa160' 'yokogawa160_planar' 'yokogawa64' 'yokogawa64_planar' 'yokogawa440' 'itab' 'itab28' 'itab153' 'itab153_planar' 'babysquid' 'babysquid74' 'artenis123' 'magview' 'yorkinstruments248', 'fieldline_v2', 'fieldline_v3', 'quspin_neuro1'}));
     case 'meg_axial'
+      % both axial magnetometers and axial gradiometers are included
       % note that neuromag306 is mixed planar and axial
-      % note that fieldline_v3 might include tangential magnetometers
-      type = any(strcmp(type, {'neuromag306' 'ctf64' 'ctf151' 'ctf275' 'bti148' 'bti248' 'bti248grad' 'yokogawa9' 'yokogawa64' 'yokogawa160' 'yokogawa440', 'fieldline_v2', 'fieldline_v3'}));
+      type = any(strcmp(type, {'neuromag306' 'ctf64' 'ctf151' 'ctf275' 'bti148' 'bti248' 'bti248grad' 'yokogawa9' 'yokogawa64' 'yokogawa160' 'yokogawa440', 'fieldline_v2', 'fieldline_v3''quspin_neuro1'}));
     case 'meg_planar'
+      % only planar gradiometers are included
       % note that neuromag306 is mixed planar and axial
       type = any(strcmp(type, {'neuromag122' 'neuromag306' 'ctf151_planar' 'ctf275_planar' 'bti148_planar' 'bti248_planar' 'bti248grad_planar' 'yokogawa208_planar' 'yokogawa160_planar' 'yokogawa64_planar'}));
     otherwise
