@@ -230,9 +230,15 @@ options.bad       = ft_getopt(options, 'bad', []);
 options.regularize = ft_getopt(options, 'regularize', 'no');
 options.origin    = ft_getopt(options, 'origin', []);
 options.channel   = ft_getopt(options, 'channel', 'all');
+options.magscale  = ft_getopt(options, 'magscale', 100);
 
 grad = ft_datatype_sens(grad);
 grad = ft_convert_units(grad, 'm');
+
+% check the channel types in the grad
+if numel(unique(grad.chantype))>1 && any(contains(unique(grad.chantype), 'mag'))
+  ft_warning('mixed sensors with magnetometers detected, assuming the scaling to be represented in grad.tra');
+end
 
 if isempty(options.origin)
   ft_error('the origin of the spherical harmonics expansion needs to be provided');
