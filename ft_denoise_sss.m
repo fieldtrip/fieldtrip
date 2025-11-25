@@ -6,14 +6,21 @@ function [dataout] = ft_denoise_sss(cfg, datain)
 %
 % Use as
 %   dataout = ft_denoise_sss(cfg, datain)
-% where cfg is a configuration structure that contains
+%
+% where cfg is a configuration structure that should contain
+%   cfg.sss.origin       = 1x3 vector, specifying the origin of the spherical harmonic expansion, in coordinates and units consistent with the sensor array
+%
+% other options are 
 %   cfg.channel          = Nx1 cell-array with selection of channels (default = 'MEG'), see FT_CHANNELSELECTION for details
 %   cfg.trials           = 'all' or a selection given as a 1xN vector (default = 'all')
 %   cfg.demean           = 'yes', or 'no', demean the data per epoch (default = 'yes')
 %   cfg.updatesens       = 'yes', or 'no', update the sensor array with the spatial projector
+%   cfg.updateheadposition = 'no', or 'yes', do movement compensation by realigning the data to a fixed head position, for CTF data only (default = 'no')
 %   cfg.sss              = structure with parameters that determine the behavior of the algorithm
 %   cfg.sss.order_in     = scalar, order of the spherical harmonics basis that spans the in space (default = 8) 
 %   cfg.sss.order_out    = scalar, order of the spherical harmonics basis that spans the out space (default = 3) 
+%   cfg.sss.thr          = scalar, correlation threshold for the removal of temporal components from the intersection subspace (default = 0.98)
+%   cfg.sss.chunkszie    = scalar (or 'none'), length of segments for temporal component estimation (default = 10)
 %
 % The implementation is based on Tim Tierney's code written for SPM.
 %
@@ -21,7 +28,7 @@ function [dataout] = ft_denoise_sss(cfg, datain)
 % FT_DENOISE_HFC, FT_DENOISE_PCA, FT_DENOISE_PREWHITEN, FT_DENOISE_SSP,
 % FT_DENOISE_SYNTHETIC, FT_DENOISE_TSR
 
-% Copyright (C) 2024, Jan-Mathijs Schoffelen
+% Copyright (C) 2024-2025, Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -77,14 +84,15 @@ cfg.updateheadposition = ft_getopt(cfg, 'updateheadposition', 'no');
 cfg.sss                = ft_getopt(cfg, 'sss');         % sub-structure to hold the parameters
 cfg.sss.order_in       = ft_getopt(cfg.sss, 'order_in',  8); 
 cfg.sss.order_out      = ft_getopt(cfg.sss, 'order_out', 3);
-cfg.sss.thr            = ft_getopt(cfg.sss, 'thr',       0.95); % threshold value for removal of correlated components  
+cfg.sss.thr            = ft_getopt(cfg.sss, 'thr',       0.98); % threshold value for removal of correlated components  
 cfg.sss.chunksize      = ft_getopt(cfg.sss, 'chunksize', 10);
 
 if ~isequal(cfg.sss.chunksize, 'none')
-  tmpcfg             = [];
+  tmpcfg             = keepfields(cfg, {'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
   tmpcfg.length      = cfg.sss.chunksize;
   tmpcfg.keeppartial = 'yes';
-  datain = ft_redefinetrial(tmpcfg, datain);
+  datain             = ft_redefinetrial(tmpcfg, datain);
+  [cfg, datain]      = rollback_provenance(cfg, datain);
 end
 
 if istrue(cfg.updateheadposition)
@@ -105,12 +113,17 @@ if istrue(cfg.updateheadposition)
   % FIXME consider to allow a gradout and gradin to be provided in the
   % input cfg (so that the function behaves a bit like ft_megrealign)
 
-  datain.grad = gradout;
+  % NOTE: the supplied origin in the cfg should be defined in head coordinates, in meters
+  datain.grad = ft_convert_units(gradout, 'm');
+  for k = 1:numel(gradin)
+    gradin(k) = ft_convert_units(gradin(k), 'm');
+  end
 
   % remove the HLC channels from the data
-  tmpcfg = [];
+  tmpcfg         = keepfields(cfg, {'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
   tmpcfg.channel = 'MEG';
-  datain = ft_selectdata(tmpcfg, datain);
+  datain         = ft_selectdata(tmpcfg, datain);
+  [cfg, datain]  = rollback_provenance(cfg, datain);
 end
 
 % select channels and trials of interest, by default this will select all channels and trials
@@ -159,6 +172,13 @@ subspace.S     = S;
 
 % put some diagnostic information in the output cfg.
 cfg.sss.subspace = subspace;
+
+if ~isequal(cfg.sss.chunksize, 'none')
+  tmpcfg             = keepfields(cfg, {'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
+  tmpcfg.continuous  = 'yes';
+  datain             = ft_redefinetrial(tmpcfg, datain);
+  [cfg, datain]      = rollback_provenance(cfg, datain);
+end
 
 % create the output argument
 dataout = keepfields(datain, {'label', 'time', 'trial', 'fsample', 'trialinfo', 'sampleinfo', 'grad'}); 
@@ -230,10 +250,8 @@ options.bad       = ft_getopt(options, 'bad', []);
 options.regularize = ft_getopt(options, 'regularize', 'no');
 options.origin    = ft_getopt(options, 'origin', []);
 options.channel   = ft_getopt(options, 'channel', 'all');
-options.magscale  = ft_getopt(options, 'magscale', 100);
 
 grad = ft_datatype_sens(grad);
-grad = ft_convert_units(grad, 'm');
 
 % check the channel types in the grad
 if numel(unique(grad.chantype))>1 && any(contains(unique(grad.chantype), 'mag'))
