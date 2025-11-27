@@ -2,12 +2,12 @@ function [dataout] = ft_denoise_sss(cfg, datain)
 
 % FT_DENOISE_sss implements an spherical harmonics based
 % projection algorithm to suppress interference outside an sphere
-% spanned by an MEG array. It is based on: REFERENCE.
+% spanned by an MEG array. It is based on: https://doi.org/10.1063/1.1935742.
 %
 % Use as
 %   dataout = ft_denoise_sss(cfg, datain)
-%
-% where cfg is a configuration structure that should contain
+% where the input data should come from FT_PREPROCESSING or FT_TIMELOCKANALYSIS and the
+% configuration structure should contain
 %   cfg.sss.origin       = 1x3 vector, specifying the origin of the spherical harmonic expansion, in coordinates and units consistent with the sensor array
 %
 % other options are 
@@ -20,9 +20,11 @@ function [dataout] = ft_denoise_sss(cfg, datain)
 %   cfg.sss.order_in     = scalar, order of the spherical harmonics basis that spans the in space (default = 8) 
 %   cfg.sss.order_out    = scalar, order of the spherical harmonics basis that spans the out space (default = 3) 
 %   cfg.sss.thr          = scalar, correlation threshold for the removal of temporal components from the intersection subspace (default = 0.98)
-%   cfg.sss.chunkszie    = scalar (or 'none'), length of segments for temporal component estimation (default = 10)
+%   cfg.sss.chunkszie    = scalar (or 'none', or 'trial'), length of segments for temporal component estimation (default = 10). If 'none', no temporal 
+%                          projection will be performed. If 'trial', temporal projection (+optional headposition update) will be computed per trial 
+%                          (without accounting for chunksize) 
 %
-% The implementation is based on Tim Tierney's code written for SPM.
+% The implementation is based on Tim Tierney's code written for SPM, and with inspiration from the MNE-Python version.
 %
 % See also FT_PREPROCESSING, FT_DENOISE_AMM, FT_DENOISE_DSSP,
 % FT_DENOISE_HFC, FT_DENOISE_PCA, FT_DENOISE_PREWHITEN, FT_DENOISE_SSP,
@@ -87,7 +89,7 @@ cfg.sss.order_out      = ft_getopt(cfg.sss, 'order_out', 3);
 cfg.sss.thr            = ft_getopt(cfg.sss, 'thr',       0.98); % threshold value for removal of correlated components  
 cfg.sss.chunksize      = ft_getopt(cfg.sss, 'chunksize', 10);
 
-if ~isequal(cfg.sss.chunksize, 'none')
+if ~isequal(cfg.sss.chunksize, 'none') && ~isequal(cfg.sss.chunksize, 'trial')
   tmpcfg             = keepfields(cfg, {'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
   tmpcfg.length      = cfg.sss.chunksize;
   tmpcfg.keeppartial = 'yes';
