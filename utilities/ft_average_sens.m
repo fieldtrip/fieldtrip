@@ -43,8 +43,9 @@ toplot = ~isempty(fb);
 nsens  = numel(sens);
 
 % ensure the correct representation
+tmp = sens; clear sens; 
 for i=1:nsens
-  sens(i) = ft_datatype_sens(sens(i));
+  sens(i) = ft_datatype_sens(tmp(i));
 end
 
 fiducials = fixpos(fiducials);

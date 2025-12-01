@@ -104,6 +104,8 @@ end
 
 if ft_nargin>1
   hasdata = true;
+else
+  hasdata = false;
 end
 
 % set the defaults
@@ -345,18 +347,20 @@ if istrue(cfg.computecircumcenter)
   end
 end
 
-if istrue(cfg.feedback)
+if istrue(cfg.feedback) && isscalar(grad)
   % plot some stuff
   figure; hold on;
   title(sprintf('%s coordinates (%s)', grad.coordsys, grad.unit));
   ft_plot_axes(grad);
   ft_plot_sens(grad);
   
-  fiducials = [nas;lpa;rpa];
-  plot3(fiducials(:,1), fiducials(:,2), fiducials(:,3), 'b.');
-  plot3(hc.dewar.nas(1), hc.dewar.nas(2), hc.dewar.nas(3), 'ro');
-  plot3(hc.dewar.lpa(1), hc.dewar.lpa(2), hc.dewar.lpa(3), 'ro');
-  plot3(hc.dewar.rpa(1), hc.dewar.rpa(2), hc.dewar.rpa(3), 'ro');
+  if strcmp(grad.coordsys, 'dewar')
+    fiducials = [nas;lpa;rpa];
+    plot3(fiducials(:,1), fiducials(:,2), fiducials(:,3), 'b.');
+    plot3(hc.dewar.nas(1), hc.dewar.nas(2), hc.dewar.nas(3), 'ro');
+    plot3(hc.dewar.lpa(1), hc.dewar.lpa(2), hc.dewar.lpa(3), 'ro');
+    plot3(hc.dewar.rpa(1), hc.dewar.rpa(2), hc.dewar.rpa(3), 'ro');
+  end
   axis vis3d; axis off
 end
 
