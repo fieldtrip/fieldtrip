@@ -245,7 +245,7 @@ elseif ~isempty(cfg.offset)
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   offset = cfg.offset(:);
   offset = round(offset); % this is in samples and hence it must be expressed as integers
-  if length(cfg.offset)==1
+  if isscalar(cfg.offset)
     offset = repmat(offset, Ntrial, 1);
   end
   for i=1:Ntrial
@@ -258,10 +258,10 @@ elseif ~isempty(cfg.begsample) || ~isempty(cfg.endsample)
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   begsample = cfg.begsample(:);
   endsample = cfg.endsample(:);
-  if length(begsample)==1
+  if isscalar(begsample)
     begsample = repmat(begsample, Ntrial, 1);
   end
-  if length(endsample)==1
+  if isscalar(endsample)
     endsample = repmat(endsample, Ntrial, 1);
   end
   for i=1:Ntrial
@@ -425,8 +425,13 @@ elseif istrue(cfg.continuous)
   % to the trigger. A positive offset indicates that the first sample is later than
   % the trigger.
   
-  % here we want to use the start of the recording as t=0
-  newtrl(:,3) = newtrl(:,1) - 1;
+  % identify the input trials that indicate the start of the new output trials
+  % and update the offset of the output trials
+  [ix, i_in, i_out] = intersect(data.sampleinfo, newtrl(:,1));
+  assert(isequal(i_out, (1:size(newtrl,1))'));
+  for i=1:numel(i_out)
+    newtrl(i_out(i), 3) = round(data.fsample.*data.time{i_in(i)}(1));
+  end
   
   tmpcfg = keepfields(cfg, {'feedback', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
   tmpcfg.trl = newtrl;

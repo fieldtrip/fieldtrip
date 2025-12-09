@@ -1,29 +1,36 @@
 function [dataout] = ft_denoise_sss(cfg, datain)
 
-% FT_DENOISE_SSS implements an spherical harmonics based projection
-% algorithm to suppress interference outside an sphere spanned by an MEG
-% array.
+% FT_DENOISE_sss implements an spherical harmonics based
+% projection algorithm to suppress interference outside an sphere
+% spanned by an MEG array. It is based on: https://doi.org/10.1063/1.1935742.
 %
 % Use as
 %   dataout = ft_denoise_sss(cfg, datain)
-% where the input data should come from FT_PREPROCESSING or
-% FT_TIMELOCKANALYSIS and the configuration should contain
-%   cfg.channel          = Nx1 cell-array with selection of channels (default = 'all'), see FT_CHANNELSELECTION for details
+% where the input data should come from FT_PREPROCESSING or FT_TIMELOCKANALYSIS and the
+% configuration structure should contain
+%   cfg.sss.origin       = 1x3 vector, specifying the origin of the spherical harmonic expansion, in coordinates and units consistent with the sensor array
+%
+% other options are 
+%   cfg.channel          = Nx1 cell-array with selection of channels (default = 'MEG'), see FT_CHANNELSELECTION for details
 %   cfg.trials           = 'all' or a selection given as a 1xN vector (default = 'all')
-%   cfg.pertrial         = 'no' or 'yes', compute the temporal projection per trial (default = 'yes')
-%   cfg.demean           = 'yes' or 'no', demean the data per epoch (default = 'yes')
-%   cfg.updatesens       = 'yes' or 'no', whether to update the sensor array with the spatial projector (default = 'yes')
+%   cfg.demean           = 'yes', or 'no', demean the data per epoch (default = 'yes')
+%   cfg.updatesens       = 'yes', or 'no', update the sensor array with the spatial projector
+%   cfg.updateheadposition = 'no', or 'yes', do movement compensation by realigning the data to a fixed head position, for CTF data only (default = 'no')
 %   cfg.sss              = structure with parameters that determine the behavior of the algorithm
 %   cfg.sss.order_in     = scalar, order of the spherical harmonics basis that spans the in space (default = 8) 
 %   cfg.sss.order_out    = scalar, order of the spherical harmonics basis that spans the out space (default = 3) 
+%   cfg.sss.thr          = scalar, correlation threshold for the removal of temporal components from the intersection subspace (default = 0.98)
+%   cfg.sss.chunkszie    = scalar (or 'none', or 'trial'), length of segments for temporal component estimation (default = 10). If 'none', no temporal 
+%                          projection will be performed. If 'trial', temporal projection (+optional headposition update) will be computed per trial 
+%                          (without accounting for chunksize) 
 %
-% The implementation is based on Tim Tierney's code written for SPM.
+% The implementation is based on Tim Tierney's code written for SPM, and with inspiration from the MNE-Python version.
 %
 % See also FT_PREPROCESSING, FT_DENOISE_AMM, FT_DENOISE_DSSP,
 % FT_DENOISE_HFC, FT_DENOISE_PCA, FT_DENOISE_PREWHITEN, FT_DENOISE_SSP,
 % FT_DENOISE_SYNTHETIC, FT_DENOISE_TSR
 
-% Copyright (C) 2024, Jan-Mathijs Schoffelen
+% Copyright (C) 2024-2025, Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -71,23 +78,54 @@ ft_hastoolbox('cellfunction', 1);
 cfg = ft_checkconfig(cfg, 'forbidden',  {'channels', 'trial'}); % prevent accidental typos, see issue 1729
 
 % set the defaults
-cfg.trials            = ft_getopt(cfg, 'trials',   'all', 1);
-cfg.channel           = ft_getopt(cfg, 'channel',  'all');
-cfg.pertrial          = ft_getopt(cfg, 'pertrial', 'yes');
-cfg.demean            = ft_getopt(cfg, 'demean',   'yes');
-cfg.updatesens        = ft_getopt(cfg, 'updatesens', 'yes');
-cfg.sss               = ft_getopt(cfg, 'sss');         % sub-structure to hold the parameters
-cfg.sss.order_in      = ft_getopt(cfg.sss, 'order_in',  8); 
-cfg.sss.order_out     = ft_getopt(cfg.sss, 'order_out', 3);
-cfg.sss.thr           = ft_getopt(cfg.sss, 'thr', 0.95); % threshold value for removal of correlated components  
+cfg.trials             = ft_getopt(cfg, 'trials',     'all', 1);
+cfg.channel            = ft_getopt(cfg, 'channel',    'all');
+cfg.demean             = ft_getopt(cfg, 'demean',     'yes');
+cfg.updatesens         = ft_getopt(cfg, 'updatesens', 'yes');
+cfg.updateheadposition = ft_getopt(cfg, 'updateheadposition', 'no');
+cfg.sss                = ft_getopt(cfg, 'sss');         % sub-structure to hold the parameters
+cfg.sss.order_in       = ft_getopt(cfg.sss, 'order_in',  8); 
+cfg.sss.order_out      = ft_getopt(cfg.sss, 'order_out', 3);
+cfg.sss.thr            = ft_getopt(cfg.sss, 'thr',       0.98); % threshold value for removal of correlated components  
+cfg.sss.chunksize      = ft_getopt(cfg.sss, 'chunksize', 10);
 
-pertrial = istrue(cfg.pertrial);
-if ~pertrial
-  ft_error('a custom chunksize for the time dependent filtering has not yet been implemented, the temporal filtering is applied per trial');
+if ~isequal(cfg.sss.chunksize, 'none') && ~isequal(cfg.sss.chunksize, 'trial')
+  tmpcfg             = keepfields(cfg, {'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
+  tmpcfg.length      = cfg.sss.chunksize;
+  tmpcfg.keeppartial = 'yes';
+  datain             = ft_redefinetrial(tmpcfg, datain);
+  [cfg, datain]      = rollback_provenance(cfg, datain);
+end
+
+if istrue(cfg.updateheadposition)
+  % currently only possible for input CTF MEG data, which has HLC channels,
+  % and for which the grad structure is in dewar coordinates
+  assert(startsWith(ft_senstype(datain.grad), 'ctf'));
+  assert(strcmp(datain.grad.coordsys, 'dewar'));
+  assert(sum(strncmp(datain.label, 'HLC', 3))==9);
   
-  cfg.sss.chunksize = ft_getopt(cfg.sss, 'chunksize', 10); 
-else
-  cfg.sss.chunksize = ft_getopt(cfg.sss, 'chunksize', inf);
+  tmpcfg          = [];
+  tmpcfg.feedback = 'no';
+  tmpcfg.computecircumcenter = 'no';
+  tmpcfg.method   = 'pertrial';
+  [dum, gradin]   = ft_headmovement(tmpcfg, datain);
+  clear dum;
+ 
+  gradout = ft_average_sens(gradin);
+  % FIXME consider to allow a gradout and gradin to be provided in the
+  % input cfg (so that the function behaves a bit like ft_megrealign)
+
+  % NOTE: the supplied origin in the cfg should be defined in head coordinates, in meters
+  datain.grad = ft_convert_units(gradout, 'm');
+  for k = 1:numel(gradin)
+    gradin(k) = ft_convert_units(gradin(k), 'm');
+  end
+
+  % remove the HLC channels from the data
+  tmpcfg         = keepfields(cfg, {'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
+  tmpcfg.channel = 'MEG';
+  datain         = ft_selectdata(tmpcfg, datain);
+  [cfg, datain]  = rollback_provenance(cfg, datain);
 end
 
 % select channels and trials of interest, by default this will select all channels and trials
@@ -95,7 +133,6 @@ tmpcfg = keepfields(cfg, {'trials', 'channel', 'tolerance', 'showcallinfo', 'tra
 datain = ft_selectdata(tmpcfg, datain);
 % restore the provenance information
 [cfg, datain] = rollback_provenance(cfg, datain);
-
 
 if istrue(cfg.demean)
   ft_info('demeaning the time series');
@@ -106,19 +143,24 @@ if istrue(cfg.demean)
 end
 
 ft_info('Computing the spatial subspace projector\n');
-options = keepfields(cfg.sss, {'order_in' 'order_out' 'regularize' 'channel' 'bad' 'thr' 'st_only'});
-S       = sss_spatial(datain, options);
+options = cfg.sss;
+if ~istrue(cfg.updateheadposition)
+  S           = sss_spatial(datain.grad, options);
+  options.sss = S;
+else
+  [Sout, S]      = sss_spatial(datain.grad, gradin, options);
+  options.sss    = S;
+  options.sssout = Sout;
+end
 
 % compute the temporal subspace projector and the clean the data
 ft_info('Computing the subspace projector based on signal correlations\n');
-options = keepfields(cfg.sss, {'chunksize', 'thr' 'st_only'});
-options.SSS = S;
 datain = sss_temporal(datain, options);
 
 % apply the spatial projector to the sensors
-if istrue(cfg.updatesens)
+if istrue(cfg.updatesens) && isscalar(S)
   montage     = [];
-  montage.tra = S.Pin;
+  montage.tra = S.Qin*S.iQin;
   montage.labelold = S.labelold;
   montage.labelnew = S.labelnew;
   datain.grad = ft_apply_montage(datain.grad, montage, 'keepunused', 'yes');
@@ -133,6 +175,13 @@ subspace.S     = S;
 % put some diagnostic information in the output cfg.
 cfg.sss.subspace = subspace;
 
+if ~isequal(cfg.sss.chunksize, 'none')
+  tmpcfg             = keepfields(cfg, {'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
+  tmpcfg.continuous  = 'yes';
+  datain             = ft_redefinetrial(tmpcfg, datain);
+  [cfg, datain]      = rollback_provenance(cfg, datain);
+end
+
 % create the output argument
 dataout = keepfields(datain, {'label', 'time', 'trial', 'fsample', 'trialinfo', 'sampleinfo', 'grad'}); 
 
@@ -145,10 +194,10 @@ ft_postamble savevar    dataout
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % subfunctions for the computation of the projection matrices
-% adjusted from the SPM imlpementation by Jan-Mathijs Schoffelen
-function [varargout] = sss_spatial(data, options)
+% adjusted from the SPM implementation by Jan-Mathijs Schoffelen
+function [varargout] = sss_spatial(grad, varargin)
 
-% SSS_SPATIAL computes a collection of spatial projectors based on spherical
+% sss_SPATIAL computes a collection of spatial projectors based on spherical
 % harmonics. The spherical harmonics computation is done by code that has been
 % adjusted from Tim Tierney's implementation (adjusted for esthetics). The 
 % scaling of the spatial harmonics is different than in MNE-Python. The original
@@ -158,13 +207,12 @@ function [varargout] = sss_spatial(data, options)
 % not been able to figure out.
 %
 % Use as
+%  [sss] = sss_spatial(gradout, options)
+% or as
+%  [sssout, sssin] = sss_spatial(gradout, gradin, options)
 %
-%  [sss] = sss_spatial(data, options), or
-%  [sss, datain, dataout] = sss_spatial(data, options)
-%
-% The input argument data is a FieldTrip-style raw data structure containing a 
-% correct grad-structure, and the input arguments options specifies the behavior
-% of the algorithm.
+% The input argument gradout is a FieldTrip-style grad structure and the input argument(s) options specifies the behavior
+% of the algorithm. The optional input gradin (as a struct(-array)) remaps the coil positions from gradin to gradout
 %
 %  options.order_in = scalar (default: 8) order of the in-compartment spherical harmonics
 %  options.order_out = scalar (default: 3) order of the out-compartment spherical harmonics
@@ -172,8 +220,28 @@ function [varargout] = sss_spatial(data, options)
 %  options.bad
 %  options.regularize
 
-if nargin<2
-  options = [];
+if numel(varargin)>=1
+  % it could be that the second argument is a grad struct-array
+  if isfield(varargin{1}, 'coilpos')
+    if numel(varargin)>1
+      options = varargin{2};
+    else
+      options = [];
+    end
+
+    % we can recurse into the function and combine the output later
+    sssout = sss_spatial(grad, options);
+    options.origin = sssout.origin;
+
+    for i = 1:numel(varargin{1})
+      sssin(i) = sss_spatial(varargin{1}(i), options);
+    end
+    varargout{2} = sssin;
+    varargout{1} = sssout;
+    return;
+  else
+    options = varargin{1};
+  end
 end
 
 % ft_hastoolbox('opm', 1);
@@ -182,11 +250,19 @@ options.order_in  = ft_getopt(options, 'order_in',  8);
 options.order_out = ft_getopt(options, 'order_out', 3); 
 options.bad       = ft_getopt(options, 'bad', []);
 options.regularize = ft_getopt(options, 'regularize', 'no');
-options.origin    = ft_getopt(options, 'origin', [0 0 0]);
+options.origin    = ft_getopt(options, 'origin', []);
 options.channel   = ft_getopt(options, 'channel', 'all');
 
-grad = ft_convert_units(data.grad, 'm');
 grad = ft_datatype_sens(grad);
+
+% check the channel types in the grad
+if numel(unique(grad.chantype))>1 && any(contains(unique(grad.chantype), 'mag'))
+  ft_warning('mixed sensors with magnetometers detected, assuming the scaling to be represented in grad.tra');
+end
+
+if isempty(options.origin)
+  ft_error('the origin of the spherical harmonics expansion needs to be provided');
+end
 
 ismag = strcmp(grad.chantype, 'mag')|strcmp(grad.chantype, 'megmag');
 extended_remove = []; % placeholder
@@ -254,10 +330,9 @@ Q       = [Qin Qout];
 % end
 if options.regularize==1
   ft_warning('using regularization on the basis functions is experimental code, and not thoroughly tested, use at your own risk');
-  % this is based on a heuristic that I got from the MNE-python
-  % implementation, and is based on a snr estimate per harmonic basis
-  % function. Some pruning is done to exclude the basis functions with the
-  % lowest snr. It requires the basis functions to be scaled differently
+  % this is based on a heuristic that I got from the MNE-python implementation, and is based 
+  % on an snr estimate per harmonic basis function. Some pruning is done to exclude the basis
+  % functions with the lowest snr. It requires the basis functions to be scaled differently
   % with respect to one another. So far I (JM) have only been able to get
   % this scaling by trial and error approximately right.
   [d, o] = get_degrees_orders(options.order_in);
@@ -296,55 +371,49 @@ end
 S       = diag(1./diag(S(1:kappa,1:kappa)));
 iQ      = V(:,1:kappa)*S*U(:,1:kappa)';
 
-SSS.P  = Q * iQ;
-SSS.Q  = Q;
-SSS.iQ = iQ;
-SSS.n  = size(Q,2);
-SSS.nin = nin;
-SSS.nout = SSS.n - SSS.nin;
-
-% this is when the inverses are computed separately
-%SSS.iQin  = iQin;
-%SSS.iQout = iQout;
+sss.Q  = Q;
+sss.iQ = iQ;
+sss.n  = size(Q,2);
+sss.nin = nin;
+sss.nout = sss.n - sss.nin;
 
 % this is how it seems to be done in practice, which makes the in and out projectors to interact which each other (upon the inversion step)
-SSS.Qin   = Q(:, 1:SSS.nin);
-SSS.iQin  = iQ(1:SSS.nin, :);
-SSS.Pin   = SSS.Qin * SSS.iQin;
-SSS.Qout  = Q(:, (SSS.nin+1):end);
-SSS.iQout = iQ((SSS.nin+1):end, :);
-SSS.Pout  = SSS.Qout * SSS.iQout;
+sss.Qin   = Q(:, 1:sss.nin);
+sss.iQin  = iQ(1:sss.nin, :);
+sss.Qout  = Q(:, (sss.nin+1):end);
+sss.iQout = iQ((sss.nin+1):end, :);
 
-SSS.labelold = label(goodchan);
-SSS.labelnew = label;
+sss.labelold = label(goodchan);
+sss.labelnew = label;
 
-SSS.labelin = cell(size(SSS.Qin,2),1);
-for k = 1:numel(SSS.labelin)
-  SSS.labelin{k} = sprintf('spharm%03din',k);
+sss.labelin = cell(size(sss.Qin,2),1);
+for k = 1:numel(sss.labelin)
+  sss.labelin{k} = sprintf('sphharm%03din',k);
 end
-SSS.labelout = cell(size(SSS.Qout,2),1);
-for k = 1:numel(SSS.labelout)
-  SSS.labelout{k} = sprintf('spharm%03dout',k);
+sss.labelout = cell(size(sss.Qout,2),1);
+for k = 1:numel(sss.labelout)
+  sss.labelout{k} = sprintf('sphharm%03dout',k);
 end
+sss.origin = options.origin;
 
-varargout{1} = SSS;
+varargout{1} = sss;
 
-if nargout>1
-  % Make montage for the next step
-  montage     = [];
-  montage.tra = SSS.Pin;
-  montage.labelold = SSS.labelold;
-  montage.labelnew = SSS.labelnew;
-
-  % FIXME think of the mixing of different channel types
-%   montage.chantypeold = data.grad.chantype(i2);
-%   montage.chantypenew = data.grad.chantype(i2);
-%   montage.chanunitold = data.grad.chanunit(i2);
-%   montage.chanunitnew = data.grad.chanunit(i2);
-  varargout{2} = ft_apply_montage(data, montage, 'keepunused', 'no');
-  montage.tra = SSS.Pout;
-  varargout{3} = ft_apply_montage(data, montage, 'keepunused', 'no');
-end
+% if nargout>1
+%   % Make montage for the next step
+%   montage     = [];
+%   montage.tra = sss.Pin;
+%   montage.labelold = sss.labelold;
+%   montage.labelnew = sss.labelnew;
+% 
+%   % FIXME think of the mixing of different channel types
+% %   montage.chantypeold = data.grad.chantype(i2);
+% %   montage.chantypenew = data.grad.chantype(i2);
+% %   montage.chanunitold = data.grad.chanunit(i2);
+% %   montage.chanunitnew = data.grad.chanunit(i2);
+%   varargout{2} = ft_apply_montage(data, montage, 'keepunused', 'no');
+%   montage.tra = sss.Pout;
+%   varargout{3} = ft_apply_montage(data, montage, 'keepunused', 'no');
+% end
 
 function [Qnew, sss_indices, ninnew] = basis_condition_adjustment(Q, nin, thr)
 
@@ -366,23 +435,23 @@ sss_indices = [sss_indices_in (nin+1):n];
 ninnew = length(sss_indices_in);
 
 
-function [dataclean,vv,ss] = sss_temporal(data, options)
+function [dataclean,vv,ss,n] = sss_temporal(data, options)
 
-% SSS_TEMPORAL implements the temporal projection step of the
-% tSSS algorithm, and follows a call to the companion function
-% SSS_SPATIAL. 
+% sss_TEMPORAL implements the temporal projection step of the
+% tsss algorithm, and follows a call to the companion function
+% sss_SPATIAL. 
 % 
 % Use as:
 %   [dataclean] = sss_temporal(data, options)
 %
 % Where data is a Fieldtrip-style data structure, and options
-% is a structure that at least contains a field called SSS,
+% is a structure that at least contains a field called sss,
 % which contains the spatial projectors, as computed by sss_spatial.
 % 
 % Other options are
-%  options.thr = scalar (default 0.98), correlation threshold for 
-%                rejection of a 'temporal' component
-%  options.bad = cell-array (default []) of channel labels marked as bad
+%  options.thr     = scalar (default 0.98), correlation threshold for 
+%                    rejection of a 'temporal' component
+%  options.bad     = cell-array (default []) of channel labels marked as bad
 %  options.st_only = only apply the spatial projection for cleaning
 %
 % The temporal projectors are computed per trial, i.e. the length of the
@@ -392,8 +461,6 @@ function [dataclean,vv,ss] = sss_temporal(data, options)
 options.thr = ft_getopt(options, 'thr', 0.98);
 options.bad = ft_getopt(options, 'bad', []);
 options.st_only = ft_getopt(options, 'st_only', false);
-options.chunksize = ft_getopt(options, 'chunksize', 10); % in seconds
-
 
 % check whether there are any bad channels defined for the temporal
 % projection. In principle this shouldn't be needed, because the spatial
@@ -405,66 +472,73 @@ if ~isempty(options.bad)
   options.bad = ft_channelselection(options.bad, data.grad.label);
 end
 
-SSS  = options.SSS;
+sss  = options.sss;
+if numel(sss)>1
+  assert(numel(data.trial)==numel(sss));
+end
 
 % it could be that there are fewer channels in the actual data than in the sensors description
-[i1, i2] = match_str(data.label, SSS.labelnew);
-%assert(numel(SSS.labelnew)==numel(data.label));
-%assert(isequal(sort(i1), (1:numel(SSS.labelnew))'));
-%assert(numel(data.trial)==1); % this may change in the future
+[i1, i2] = match_str(data.label, sss(1).labelnew);
 
-% project the data into spherical harmonic space, use ft_apply_montage to
-% ensure correct matching of the order of the channels
-montage     = [];
-montage.tra = SSS.iQ;
-montage.labelold = SSS.labelold;
-montage.labelnew = [SSS.labelin;SSS.labelout];
-dataQ       = ft_apply_montage(data, montage, 'keepunused', 'no');
-
-montage.tra = SSS.Qin;
-montage.labelold = SSS.labelin;
-montage.labelnew = SSS.labelnew;
-datain  = ft_apply_montage(dataQ, montage, 'keepunused', 'no');
-
-montage.tra = SSS.Qout;
-montage.labelold = SSS.labelout;
-montage.labelnew = SSS.labelnew;
-dataout = ft_apply_montage(dataQ, montage, 'keepunused', 'no');
-
-cfg         = [];
-cfg.channel = dataQ.label(contains(dataQ.label, 'in'));
-dataQ       = ft_selectdata(cfg, dataQ);
-
-datas = data;
-datas.label = datas.label(i1);
-for k = 1:numel(data.trial)
-  datas.trial{k} = data.trial{k}(i1,:) - datain.trial{k}(i2,:) - dataout.trial{k}(i2,:);
-end
 dataclean = data;
-clear dataout data
+for i = 1:numel(data.trial)
+  cfg        = [];
+  cfg.trials = i;
+  thisdata   = ft_selectdata(cfg, data);
 
-% note the above is memory inefficient
+  if numel(sss)>1
+    thissss = sss(i);
+  else
+    thissss = sss(1);
+  end
 
-% the below is inteded to mimick MNE-python, which currently estimates the
-% temporal projector on the spatially in and out projected data with
-% omission of the bad channels
-if ~isempty(options.bad)
-  cfg = [];
-  cfg.channel = setdiff(datas.label, options.bad);
-  datas  = ft_selectdata(cfg, datas);
-  datain = ft_selectdata(cfg, datain);
-end
-
-% 
-
-for k = 1:numel(datain.trial)
-  % norm normalise
-  Bin  = datain.trial{k}./norm(datain.trial{k}, 'fro');
-  Bres = datas.trial{k}./norm(datas.trial{k}, 'fro');
+  if isfield(options, 'sssout')
+    sssout = options.sssout;
+  else
+    sssout = thissss;
+  end
   
-  %Uin  = orth(Bin');
-  %Ures = orth(Bres');
+  % project the data into spherical harmonic space, use ft_apply_montage to ensure correct matching of the order of the channels
+  montage          = [];
+  montage.tra      = thissss.iQ;
+  montage.labelold = thissss.labelold;
+  montage.labelnew = [thissss.labelin;thissss.labelout];
+  dataQ            = ft_apply_montage(thisdata, montage, 'keepunused', 'no', 'feedback' ,'none');
 
+  % forward project, in only
+  montage.tra      = thissss.Qin;
+  montage.labelold = thissss.labelin;
+  montage.labelnew = thissss.labelnew;
+  datain           = ft_apply_montage(dataQ, montage, 'keepunused', 'no', 'feedback', 'none');
+
+  % forward project, out only
+  montage.tra      = thissss.Qout;
+  montage.labelold = thissss.labelout;
+  montage.labelnew = thissss.labelnew;
+  dataout          = ft_apply_montage(dataQ, montage, 'keepunused', 'no', 'feedback', 'none');
+
+  cfg              = [];
+  cfg.channel      = dataQ.label(contains(dataQ.label, 'in'));
+  dataQ            = ft_selectdata(cfg, dataQ);
+
+  datas            = thisdata;
+  datas.label      = datas.label(i1);
+  datas.trial{1}   = thisdata.trial{1}(i1,:) - datain.trial{1}(i2,:) - dataout.trial{1}(i2,:);
+  
+  % the below is inteded to mimick MNE-python, which currently estimates the
+  % temporal projector on the spatially in and out projected data with
+  % omission of the bad channels
+  if ~isempty(options.bad)
+    cfg = [];
+    cfg.channel = setdiff(datas.label, options.bad);
+    datas  = ft_selectdata(cfg, datas);
+    datain = ft_selectdata(cfg, datain);
+  end
+
+  % norm normalise
+  Bin  = datain.trial{1}./norm(datain.trial{1}, 'fro');
+  Bres = datas.trial{1}./norm(datas.trial{1},   'fro');
+  
   % MNE-Python obtains the orthonormal basis with an svd
   [Uin, Sin, Vin] = svd(Bin','econ');
   tol = max(size(Bin)) * Sin(1) * eps;
@@ -478,46 +552,37 @@ for k = 1:numel(datain.trial)
 
   [qin,  rin]  = qr(Uin,0);
   [qres, rres] = qr(Ures,0);
-  [U, S, V] = svd(qin'*qres); clear U
+  [U, S, V] = svd(qin'*qres);
 
   V     = qres*V;
   diagS = diag(S);
   nint  = find(diagS>options.thr,1,'last');
   V     = V(:,1:nint); % temporal basis functions
-
-  % remove the correlated signals from the data
-  %dataclean = datain;
-  %dataclean.trial{1} = datain.trial{1} - (datain.trial{1}*U)*U';
-
+ 
   % in the SPM implementation the temporal projection is applied to the data
   % in spherical harmonic space, the 'in' channels have been selected above
-  cfg = [];
-  cfg.trials = k;
+  
   if options.st_only
-    tmp = dataclean.trial{k};
+    tmp = thisdata.trial{1};
     tmp = tmp - (tmp*V)*V';
-    dataclean.trial{k} = tmp;
+    dataclean.trial{i} = tmp;
   else
-    if k==1
-      datacleanQ          = ft_selectdata(cfg, dataQ);
-    else
-      datacleanQ.trial    = dataQ.trial(k);
-      datacleanQ.time     = dataQ.time(k);
-    end
+    datacleanQ = dataQ;
     datacleanQ.trial{1} = datacleanQ.trial{1} - (datacleanQ.trial{1}*V)*V';
     
     montage          = [];
-    montage.tra      = SSS.Qin;
-    montage.labelold = SSS.labelin;
-    montage.labelnew = SSS.labelnew;
-    tmp = ft_apply_montage(datacleanQ, montage, 'keepunused', 'no');
-    dataclean.trial{k} = tmp.trial{1};
-    if k==1
+    montage.tra      = sssout.Qin;
+    montage.labelold = sssout.labelin;
+    montage.labelnew = sssout.labelnew;
+    tmp = ft_apply_montage(datacleanQ, montage, 'keepunused', 'no', 'feedback', 'none');
+    dataclean.trial{i} = tmp.trial{1};
+    if i==1
       dataclean.label = tmp.label;
     end
   end
   
-  vv{k}               = V;
-  ss{k}               = diagS(1:nint);
+  vv{i}               = V;
+  ss{i}               = diagS;
+  n(1,i)              = nint;
   
 end

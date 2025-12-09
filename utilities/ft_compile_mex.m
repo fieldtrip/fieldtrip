@@ -100,17 +100,28 @@ L = add_mex_source(L,'src','sandwich3x3');
 L = add_mex_source(L,'src','combineClusters');
 
 % this one is located elsewhere
-L = add_mex_source(L,'external/fileexchange','CalcMD5',[],[],'CFLAGS=''-std=c99 -fPIC''');
+if exist('OCTAVE_VERSION','builtin')
+  % Octave requires specific formatting of extra flags (mkoctfile-style)
+  mex_flag_str = '-std=c99 -fPIC';
+else
+  % MATLAB uses mex-style single string
+  mex_flag_str = 'CFLAGS=''-std=c99 -fPIC''';
+end
+L = add_mex_source(L, 'external/fileexchange', 'CalcMD5', [], [], mex_flag_str);
 
 % this one depends on the MATLAB version
 if ft_platform_supports('libmx_c_interface')
   % use the C interface
   L = add_mex_source(L,'src','mxSerialize_c');
   L = add_mex_source(L,'src','mxDeserialize_c');
-else
+elseif ft_platform_supports('matlabversion',-inf,'2014a')
   % use the C++ interface
   L = add_mex_source(L,'src','mxSerialize_cpp');
   L = add_mex_source(L,'src','mxDeserialize_cpp');
+else
+  % the undocumented built-in mxSerialize.c does not exist anymore in versions
+  % >2014a, so the source file cannot be compiled. See issue #2491 on github (which
+  % provides a link to another solution, also relying on undocumented matlab)
 end
 
 oldDir = pwd;

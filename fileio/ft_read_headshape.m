@@ -525,38 +525,27 @@ switch fileformat
     orig = read_neuromag_hc(filename);
     switch coordsys
       case 'head'
-        fidN=1;
-        posN=1;
-        for i=1:size(orig.head.pos,1)
-          if strcmp(orig.head.label{i}, 'LPA') || strcmp(orig.head.label{i}, 'Nasion') || strcmp(orig.head.label{i}, 'RPA')
-            shape.fid.pos(fidN,1:3) = orig.head.pos(i,:);
-            shape.fid.label{fidN} = orig.head.label{i};
-            fidN = fidN + 1;
-          else
-            shape.pos(posN,1:3) = orig.head.pos(i,:);
-            shape.label{posN} = orig.head.label{i};
-            posN = posN + 1;
-          end
-        end
-        shape.coordsys = orig.head.coordsys;
+        orig = orig.head;
       case 'dewar'
-        fidN=1;
-        posN=1;
-        for i=1:size(orig.dewar.pos,1)
-          if strcmp(orig.dewar.label{i}, 'LPA') || strcmp(orig.dewar.label{i}, 'Nasion') || strcmp(orig.dewar.label{i}, 'RPA')
-            shape.fid.pos(fidN,1:3) = orig.dewar.pos(i,:);
-            shape.fid.label{fidN} = orig.dewar.label{i};
-            fidN = fidN + 1;
-          else
-            shape.pos(posN,1:3) = orig.dewar.pos(i,:);
-            shape.label{posN} = orig.dewar.label{i};
-            posN = posN + 1;
-          end
-        end
-        shape.coordsys = orig.dewar.coordsys;
+        orig = orig.dewar;
       otherwise
         ft_error('incorrect coordinates specified');
     end
+
+    fidN=1;
+    posN=1;
+    for i=1:size(orig.pos,1)
+      if strcmp(orig.label{i}, 'LPA') || strcmp(orig.label{i}, 'Nasion') || strcmp(orig.label{i}, 'RPA')
+        shape.fid.pos(fidN,1:3) = orig.pos(i,:);
+        shape.fid.label{fidN} = orig.label{i};
+        fidN = fidN + 1;
+      else
+        shape.pos(posN,1:3) = orig.pos(i,:);
+        shape.label{posN} = orig.label{i};
+        posN = posN + 1;
+      end
+    end
+    shape.coordsys = orig.coordsys;
 
   case {'ricoh_mrk', 'ricoh_ave', 'ricoh_con'}
     hdr = read_ricoh_header(filename);

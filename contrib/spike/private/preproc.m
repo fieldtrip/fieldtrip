@@ -113,7 +113,20 @@ function [dat, label, time, cfg] = preproc(dat, label, time, cfg, begpadding, en
 %
 % See also FT_READ_DATA, FT_READ_HEADER
 
-% Copyright (C) 2004-2012, Robert Oostenveld
+% Undocumented options
+%   cfg.custom        = structure that specificies the use of a custom for preprocessing
+% 
+% This should contain the field:
+%   cfg.custom.funhandle     = a MATLAB function handle to the custom function. The API to this function should
+%                              have a 2D data matrix as its first input argument
+% Optional additional fields are:
+%   cfg.custom.transposedata = 'no' (default), or 'yes', specifying whether the data should be transposed prior 
+%                              to and after execution of the function (should be 'yes' if the function assumes
+%                              that channels are defined in the columns)
+%   cfg.custom.optarg        = cell-array containing the positional additional input arguments to the function
+
+% Copyright (C) 2004-2025, Robert Oostenveld
+% Copyright (C) 2025, Jan Mathijs Schoffelen and Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -166,70 +179,55 @@ if iscell(cfg)
 end
 
 % set the defaults for the rereferencing options
-cfg.reref                = ft_getopt(cfg, 'reref',       'no');
-cfg.refchannel           = ft_getopt(cfg, 'refchannel',  {});
-cfg.refmethod            = ft_getopt(cfg, 'refmethod',   'avg');
-cfg.implicitref          = ft_getopt(cfg, 'implicitref', []);
-cfg.leadfield            = ft_getopt(cfg, 'leadfield',   []);
-cfg.groupchans           = ft_getopt(cfg, 'groupchans', 'no');
+cfg.reref                = ft_getopt(cfg, 'reref',          'no');
+cfg.refchannel           = ft_getopt(cfg, 'refchannel',     {});
+cfg.refmethod            = ft_getopt(cfg, 'refmethod',      'avg');
+cfg.implicitref          = ft_getopt(cfg, 'implicitref',    []);
+cfg.leadfield            = ft_getopt(cfg, 'leadfield',      []);
+cfg.groupchans           = ft_getopt(cfg, 'groupchans',     'no');
 % set the defaults for the signal processing options
-cfg.polyremoval          = ft_getopt(cfg, 'polyremoval', 'no');
-cfg.polyorder            = ft_getopt(cfg, 'polyorder',   2);
-cfg.detrend              = ft_getopt(cfg, 'detrend',     'no');
-cfg.demean               = ft_getopt(cfg, 'demean',      'no');
+cfg.polyremoval          = ft_getopt(cfg, 'polyremoval',    'no');
+cfg.polyorder            = ft_getopt(cfg, 'polyorder',      2);
+cfg.detrend              = ft_getopt(cfg, 'detrend',        'no');
+cfg.demean               = ft_getopt(cfg, 'demean',         'no');
 cfg.baselinewindow       = ft_getopt(cfg, 'baselinewindow', 'all');
-cfg.dftfilter            = ft_getopt(cfg, 'dftfilter', 'no');
-cfg.dftfreq              = ft_getopt(cfg, 'dftfreq', [50 100 150]);
-cfg.lpfilter             = ft_getopt(cfg, 'lpfilter',  'no');
-cfg.hpfilter             = ft_getopt(cfg, 'hpfilter',  'no');
-cfg.bpfilter             = ft_getopt(cfg, 'bpfilter',  'no');
-cfg.bsfilter             = ft_getopt(cfg, 'bsfilter',  'no');
-cfg.lpfiltord            = ft_getopt(cfg, 'lpfiltord', []);
-cfg.hpfiltord            = ft_getopt(cfg, 'hpfiltord', []);
-cfg.bpfiltord            = ft_getopt(cfg, 'bpfiltord', []);
-cfg.bsfiltord            = ft_getopt(cfg, 'bsfiltord', []);
-cfg.lpfilttype           = ft_getopt(cfg, 'lpfilttype', 'but');
-cfg.hpfilttype           = ft_getopt(cfg, 'hpfilttype', 'but');
-cfg.bpfilttype           = ft_getopt(cfg, 'bpfilttype', 'but');
-cfg.bsfilttype           = ft_getopt(cfg, 'bsfilttype', 'but');
-if strcmp(cfg.lpfilttype, 'firws'), cfg.lpfiltdir = ft_getopt(cfg, 'lpfiltdir', 'onepass-zerophase'); else, cfg.lpfiltdir = ft_getopt(cfg, 'lpfiltdir', 'twopass'); end
-if strcmp(cfg.hpfilttype, 'firws'), cfg.hpfiltdir = ft_getopt(cfg, 'hpfiltdir', 'onepass-zerophase'); else, cfg.hpfiltdir = ft_getopt(cfg, 'hpfiltdir', 'twopass'); end
-if strcmp(cfg.bpfilttype, 'firws'), cfg.bpfiltdir = ft_getopt(cfg, 'bpfiltdir', 'onepass-zerophase'); else, cfg.bpfiltdir = ft_getopt(cfg, 'bpfiltdir', 'twopass'); end
-if strcmp(cfg.bsfilttype, 'firws'), cfg.bsfiltdir = ft_getopt(cfg, 'bsfiltdir', 'onepass-zerophase'); else, cfg.bsfiltdir = ft_getopt(cfg, 'bsfiltdir', 'twopass'); end
-cfg.lpinstabilityfix     = ft_getopt(cfg, 'lpinstabilityfix', 'no');
-cfg.hpinstabilityfix     = ft_getopt(cfg, 'hpinstabilityfix', 'no');
-cfg.bpinstabilityfix     = ft_getopt(cfg, 'bpinstabilityfix', 'no');
-cfg.bsinstabilityfix     = ft_getopt(cfg, 'bsinstabilityfix', 'no');
-cfg.lpfiltdf             = ft_getopt(cfg, 'lpfiltdf',  []);
-cfg.hpfiltdf             = ft_getopt(cfg, 'hpfiltdf', []);
-cfg.bpfiltdf             = ft_getopt(cfg, 'bpfiltdf', []);
-cfg.bsfiltdf             = ft_getopt(cfg, 'bsfiltdf', []);
-cfg.lpfiltwintype        = ft_getopt(cfg, 'lpfiltwintype', 'hamming');
-cfg.hpfiltwintype        = ft_getopt(cfg, 'hpfiltwintype', 'hamming');
-cfg.bpfiltwintype        = ft_getopt(cfg, 'bpfiltwintype', 'hamming');
-cfg.bsfiltwintype        = ft_getopt(cfg, 'bsfiltwintype', 'hamming');
-cfg.lpfiltdev            = ft_getopt(cfg, 'lpfiltdev', []);
-cfg.hpfiltdev            = ft_getopt(cfg, 'hpfiltdev', []);
-cfg.bpfiltdev            = ft_getopt(cfg, 'bpfiltdev', []);
-cfg.bsfiltdev            = ft_getopt(cfg, 'bsfiltdev', []);
-cfg.plotfiltresp         = ft_getopt(cfg, 'plotfiltresp', 'no');
-cfg.usefftfilt           = ft_getopt(cfg, 'usefftfilt', 'no');
-cfg.medianfilter         = ft_getopt(cfg, 'medianfilter', 'no');
-cfg.medianfiltord        = ft_getopt(cfg, 'medianfiltord', 9);
-cfg.hilbert              = ft_getopt(cfg, 'hilbert', 'no');
-cfg.derivative           = ft_getopt(cfg, 'derivative', 'no');
-cfg.rectify              = ft_getopt(cfg, 'rectify', 'no');
-cfg.boxcar               = ft_getopt(cfg, 'boxcar', 'no');
-cfg.absdiff              = ft_getopt(cfg, 'absdiff', 'no');
-cfg.precision            = ft_getopt(cfg, 'precision', []);
-cfg.conv                 = ft_getopt(cfg, 'conv', 'no');
-cfg.montage              = ft_getopt(cfg, 'montage', 'no');
-cfg.dftinvert            = ft_getopt(cfg, 'dftinvert', 'no');
-cfg.standardize          = ft_getopt(cfg, 'standardize', 'no');
-cfg.denoise              = ft_getopt(cfg, 'denoise', '');
-cfg.subspace             = ft_getopt(cfg, 'subspace', []);
-cfg.custom               = ft_getopt(cfg, 'custom', '');
-cfg.resample             = ft_getopt(cfg, 'resample', '');
+cfg.dftfilter            = ft_getopt(cfg, 'dftfilter',      'no');
+cfg.dftfreq              = ft_getopt(cfg, 'dftfreq',        [50 100 150]);
+cfg.dftinvert            = ft_getopt(cfg, 'dftinvert',      'no');
+cfg.plotfiltresp         = ft_getopt(cfg, 'plotfiltresp',   'no');
+cfg.usefftfilt           = ft_getopt(cfg, 'usefftfilt',     'no');
+cfg.medianfilter         = ft_getopt(cfg, 'medianfilter',   'no');
+cfg.medianfiltord        = ft_getopt(cfg, 'medianfiltord',  9);
+cfg.hilbert              = ft_getopt(cfg, 'hilbert',        'no');
+cfg.derivative           = ft_getopt(cfg, 'derivative',     'no');
+cfg.rectify              = ft_getopt(cfg, 'rectify',        'no');
+cfg.boxcar               = ft_getopt(cfg, 'boxcar',         'no');
+cfg.absdiff              = ft_getopt(cfg, 'absdiff',        'no');
+cfg.precision            = ft_getopt(cfg, 'precision',      []);
+cfg.conv                 = ft_getopt(cfg, 'conv',           'no');
+cfg.montage              = ft_getopt(cfg, 'montage',        'no');
+cfg.standardize          = ft_getopt(cfg, 'standardize',    'no');
+cfg.denoise              = ft_getopt(cfg, 'denoise',        '');
+cfg.subspace             = ft_getopt(cfg, 'subspace',       []);
+cfg.custom               = ft_getopt(cfg, 'custom',         '');
+cfg.resample             = ft_getopt(cfg, 'resample',       '');
+
+% defaults for the various filter types
+ftypes = {'lp' 'hp' 'bp' 'bs'};
+for i=1:numel(ftypes)
+  cfg.(sprintf('%sfilter',         ftypes{i})) = ft_getopt(cfg, sprintf('%sfilter',         ftypes{i}), 'no');  % apply filter no
+  cfg.(sprintf('%sfiltord',        ftypes{i})) = ft_getopt(cfg, sprintf('%sfiltord',        ftypes{i}), []);    % default filter order []
+  cfg.(sprintf('%sfilttype',       ftypes{i})) = ft_getopt(cfg, sprintf('%sfilttype',       ftypes{i}), 'but'); % default filter type but
+  cfg.(sprintf('%sinstabilityfix', ftypes{i})) = ft_getopt(cfg, sprintf('%sinstabilityfix', ftypes{i}), 'no');  % default instabilityfix no
+  cfg.(sprintf('%sfiltdf',         ftypes{i})) = ft_getopt(cfg, sprintf('%sfiltdf',         ftypes{i}),  []);   % default filtdf (firws) []
+  cfg.(sprintf('%sfiltwintype',    ftypes{i})) = ft_getopt(cfg, sprintf('%sfiltwintype',    ftypes{i}), 'hamming'); % default window (firws) hamming
+  cfg.(sprintf('%sfiltdev',        ftypes{i})) = ft_getopt(cfg, sprintf('%sfiltdev',        ftypes{i}), []);    % default dev (firws) []
+  if strcmp(cfg.(sprintf('%sfilttype', ftypes{i})), 'firws')
+    cfg.(sprintf('%sfiltdir', ftypes{i})) = ft_getopt(cfg, sprintf('%sfiltdir', ftypes{i}), 'onepass-zerophase');
+  else
+    cfg.(sprintf('%sfiltdir', ftypes{i})) = ft_getopt(cfg, sprintf('%sfiltdir', ftypes{i}), 'twopass');
+  end
+end
 
 % test whether the MATLAB signal processing toolbox is available
 if strcmp(cfg.medianfilter, 'yes') && ~ft_hastoolbox('signal')
@@ -467,6 +465,7 @@ if strcmp(cfg.dftfilter, 'yes')
   end
 end
 if ~strcmp(cfg.hilbert, 'no')
+  % if cfg.hilbert is not 'no', it can be yes/abs/complex/real etc
   dat = ft_preproc_hilbert(dat, cfg.hilbert);
 end
 if strcmp(cfg.rectify, 'yes')
@@ -503,13 +502,21 @@ if ~isempty(cfg.subspace)
   dat = ft_preproc_subspace(dat, cfg.subspace);
 end
 if ~isempty(cfg.custom)
-  if ~isfield(cfg.custom, 'nargout')
-    cfg.custom.nargout = 1;
+  cfg.custom.nargout       = ft_getopt(cfg.custom, 'nargout', 1);
+  cfg.custom.transposedata = ft_getopt(cfg.custom, 'transposedata', 'no');
+  cfg.custom.optarg        = ft_getopt(cfg.custom, 'optarg', {});
+  if istrue(cfg.custom.transposedata)
+    % the custom function has channels defined in the columns, rather than in the rows
+    dat = dat.';
   end
   if cfg.custom.nargout==1
-    dat = feval(cfg.custom.funhandle, dat, cfg.custom.varargin);
+    dat = feval(cfg.custom.funhandle, dat, cfg.custom.optarg{:});
   elseif cfg.custom.nargout==2
-    [dat, time] = feval(cfg.custom.funhandle, dat, cfg.custom.varargin);
+    [dat, time] = feval(cfg.custom.funhandle, dat, cfg.custom.optarg{:});
+  end
+  if istrue(cfg.custom.transposedata)
+    % the custom function has channels defined in the columns, rather than in the rows
+    dat = dat.';
   end
 end
 if strcmp(cfg.resample, 'yes')
