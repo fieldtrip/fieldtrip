@@ -96,7 +96,14 @@ L = add_mex_source(L,'src','sandwich2x2');
 L = add_mex_source(L,'src','combineClusters');
 
 % this one is located elsewhere
-L = add_mex_source(L,'external/fileexchange','CalcMD5',[],[],'CFLAGS=''-std=c99 -fPIC''');
+if exist('OCTAVE_VERSION','builtin')
+  % Octave requires specific formatting of extra flags (mkoctfile-style)
+  mex_flag_str = '-std=c99 -fPIC';
+else
+  % MATLAB uses mex-style single string
+  mex_flag_str = 'CFLAGS=''-std=c99 -fPIC''';
+end
+L = add_mex_source(L, 'external/fileexchange', 'CalcMD5', [], [], mex_flag_str);
 
 % this one depends on the MATLAB version
 if ft_platform_supports('libmx_c_interface')
