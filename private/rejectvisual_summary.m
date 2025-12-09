@@ -338,6 +338,12 @@ end % switch
 if ~any(info.chansel) || ~any(info.trlsel)
   % don't try to rescale the axes if they are empty
 else
+  if isinf(ymin) || isnan(ymin)
+    ymin = 0;
+  end
+  if isinf(ymax) || isnan(ymax)
+    ymax = 0;
+  end
   if ymin>0 && ymax>0
     ymin = 0.8*ymin; % closest to zero
     ymax = 1.2*ymax; % furthest from zero
@@ -345,6 +351,10 @@ else
   if ymin<0 && ymax<0
     ymin = 1.2*ymin; % furthest from zero
     ymax = 0.8*ymax; % closest to zero
+  end
+  if ymin==ymax
+    ymin = ymin-0.5;
+    ymax = ymax+0.5;
   end
   % ensure that the horizontal and vertical range increase, also when negative
   % see https://github.com/fieldtrip/fieldtrip/issues/1150
