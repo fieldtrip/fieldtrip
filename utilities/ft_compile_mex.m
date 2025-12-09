@@ -1,11 +1,11 @@
 function ft_compile_mex(force)
 
-% FT_COMPILE_MEX can be used for compiling most of the FieldTrip MEX files Note that
+% FT_COMPILE_MEX can be used for compiling most of the FieldTrip MEX files. Note that
 % this function does not put the MEX files in the correct location in the private
 % folders, this is managed by a Bash script. In case you are not working with Git and
 % you want to recompile the mex files for your platform, you can find all mex files
 % for your platform and move them to a backup directory that is not on your MATLAB
-% path. Subsequently you can rtun this function to recompile it on your platform with
+% path. Subsequently you can run this function to recompile it on your platform with
 % your compiler settings
 %
 % The standards procedure for compiling mex files is detailed on
@@ -90,9 +90,13 @@ L = add_mex_source(L,'src','nanvar');
 L = add_mex_source(L,'src','nansum');
 L = add_mex_source(L,'src','nanstd');
 L = add_mex_source(L,'src','det2x2');
+L = add_mex_source(L,'src','det3x3');
 L = add_mex_source(L,'src','inv2x2');
+L = add_mex_source(L,'src','inv3x3');
 L = add_mex_source(L,'src','mtimes2x2');
+L = add_mex_source(L,'src','mtimes3x3'); 
 L = add_mex_source(L,'src','sandwich2x2');
+L = add_mex_source(L,'src','sandwich3x3');
 L = add_mex_source(L,'src','combineClusters');
 
 % this one is located elsewhere
