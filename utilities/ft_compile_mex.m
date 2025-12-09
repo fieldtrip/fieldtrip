@@ -110,10 +110,14 @@ if ft_platform_supports('libmx_c_interface')
   % use the C interface
   L = add_mex_source(L,'src','mxSerialize_c');
   L = add_mex_source(L,'src','mxDeserialize_c');
-else
+elseif ft_platform_supports('matlabversion',-inf,'2014a')
   % use the C++ interface
   L = add_mex_source(L,'src','mxSerialize_cpp');
   L = add_mex_source(L,'src','mxDeserialize_cpp');
+else
+  % the undocumented built-in mxSerialize.c does not exist anymore in versions
+  % >2014a, so the source file cannot be compiled. See issue #2491 on github (which
+  % provides a link to another solution, also relying on undocumented matlab)
 end
 
 oldDir = pwd;
