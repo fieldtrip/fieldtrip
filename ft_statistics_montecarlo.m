@@ -303,10 +303,18 @@ if isstruct(statobs)
   % remember all details for later reference, continue to work with the statistic
   statfull = statobs;
   statobs  = statobs.stat;
+else
+  % remember the statistic for later reference, continue to work with the statistic
+  statfull.stat = statobs;
 end
 
-% remember the statistic for later reference, continue to work with the statistic
-statfull.stat = statobs;
+if strcmp(cfg.correctm, 'tfce')
+  % compute tfce, but keep the original test-statistic, note that the cfg
+  % may be updated in this function call, with adding a 'height' parameter
+  % needed for consistent downstream behavior of tfce
+  statobs_orig   = statobs;
+  [statobs, cfg] = tfcestat(cfg, statobs);
+end
 
 time_eval = cputime - time_pre;
 ft_info('estimated time per randomization is %.2f seconds\n', time_eval);
@@ -344,7 +352,7 @@ for i = 1:Nrand
     tmpdesign = design;                     % the design matrix is not shuffled
     tmpdat    = dat(:,resample(i,:));        % the columns of the data are resampled by means of bootstrapping
   end
-  if any(strcmp(cfg.correctm, {'cluster' 'tfce'}))
+  if strcmp(cfg.correctm, 'cluster')
     % keep each randomization in memory for cluster postprocessing
     dum = statfun(cfg, tmpdat, tmpdesign);
     if isstruct(dum)
@@ -358,10 +366,14 @@ for i = 1:Nrand
     if isstruct(statrand)
       statrand = statrand.stat;
     end
-   
+    if strcmp(cfg.correctm, 'tfce')
+      % do tfce with the same settings as for the observed data
+      [statrand] = tfcestat(cfg, statrand);
+    end
+
     % the following line is for debugging
     % stat.statkeep(:,i) = statrand;
-    if strcmp(cfg.correctm, 'max')
+    if strcmp(cfg.correctm, 'max') || strcmp(cfg.correctm, 'tfce')
       % compare each data element with the maximum statistic
       prb_pos = prb_pos + (statobs<max(statrand(:)));
       prb_neg = prb_neg + (statobs>min(statrand(:)));
@@ -379,8 +391,6 @@ ft_progress('close');
 if strcmp(cfg.correctm, 'cluster')
   % do the cluster postprocessing
   [stat, cfg] = clusterstat(cfg, statrand, statobs);
-elseif strcmp(cfg.correctm, 'tfce')
-  [stat, cfg] = tfcestat(cfg, statrand, statobs);
 else
   if ~isequal(cfg.numrandomization, 'all')
     % in case of random permutations (i.e., montecarlo sample, and NOT full
@@ -515,12 +525,15 @@ else
   end
 end
 
-% return the observed statistic
-if ~isfield(stat, 'stat')
+% return the observed test-statistic
+if strcmp(cfg.correctm, 'tfce')
+  stat.stat     = statobs_orig;
+  stat.stattfce = statobs;
+elseif ~isfield(stat, 'stat')
   stat.stat = statobs;
 end
 
-if exist('statrand', 'var')
+if exist('statrand', 'var') && size(statrand,2)>1
   stat.ref = mean(statrand,2);
 end
 
