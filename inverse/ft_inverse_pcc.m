@@ -17,6 +17,10 @@ function [estimate] = ft_inverse_pcc(sourcemodel, sens, headmodel, dat, C, varar
 % and
 %   estimate    contains the estimated source parameters
 %
+% If the input data "dat" is in V, "cov" is in V^2, and the leadfield is in V/Am,
+% then the output "pow/csd" is (Am)^2, and the output "filter" is in Am/V, provided
+% "weightnorm" has been specified to be 'no'.
+%
 % Additional input arguments should be specified as key-value pairs and can include
 %   'refchan'
 %   'refdip'
@@ -39,9 +43,15 @@ function [estimate] = ft_inverse_pcc(sourcemodel, sens, headmodel, dat, C, varar
 %   'normalizeparam'  = parameter for depth normalization (default = 0.5)
 %   'weight'          = number or Nx1 vector, weight for each dipole position to compensate for the size of the corresponding patch (default = 1)
 %
+% These options influence the mathematical inversion of the cross-spectral density matrix
+%  'lambda'           = regularisation parameter
+%  'kappa'            = parameter for covariance matrix inversion
+%  'tol'              = parameter for covariance matrix inversion
+%  'invmethod'        = method for covariance matrix inversion
+%
 % See also FT_SOURCEANALYSIS, FT_PREPARE_HEADMODEL, FT_PREPARE_SOURCEMODEL
 
-% Copyright (C) 2005-2020, Robert Oostenveld & Jan-Mathijs Schoffelen
+% Copyright (C) 2005-2025, Robert Oostenveld & Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.

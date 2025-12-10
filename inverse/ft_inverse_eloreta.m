@@ -13,10 +13,14 @@ function [estimate] = ft_inverse_eloreta(sourcemodel, sens, headmodel, dat, C, v
 % and
 %   estimate    contains the estimated source parameters
 %
+% If the input data "dat" is in V, "cov" is in V^2, and the leadfield is in V/Am,
+% then the estimated output "mom" is in Am, the output "pow" is (Am)^2, and the
+% output "filter" is in Am/V.
+%
 % Additional input arguments should be specified as key-value pairs and can include
-%   'keepfilter'       = remember the spatial filter,    can be 'yes' or 'no'
-%   'keepleadfield'    = remember the forward computation,  can be 'yes' or 'no'
-%   'keepmom'          = remember the dipole moment,        can be 'yes' or 'no'
+%   'keepfilter'       = remember the spatial filter, can be 'yes' or 'no'
+%   'keepleadfield'    = remember the forward computation, can be 'yes' or 'no'
+%   'keepmom'          = remember the dipole moment, can be 'yes' or 'no'
 %   'lambda'           = scalar, regularisation parameter (default = 0.05)
 %
 % These options influence the forward computation of the leadfield
@@ -115,9 +119,15 @@ if hasmom
 end
 
 if hasfilter
+  % check that the options normalize/reducerank/etc are not specified
+  assert(all(cellfun(@isempty, leadfieldopt(2:2:end))), 'the options for computing the leadfield must all be empty/default');
+  % check that lambda is not specified
+  assert(isempty(lambda), 'the options for computing the filter must all be empty/default');
   ft_info('using precomputed filters\n');
   sourcemodel.filter = sourcemodel.filter(originside);
 elseif hasleadfield
+  % check that the options normalize/reducerank/etc are not specified
+  assert(all(cellfun(@isempty, leadfieldopt(2:2:end))), 'the options for computing the leadfield must all be empty/default');
   ft_info('using precomputed leadfields\n');
   sourcemodel.leadfield = sourcemodel.leadfield(originside);
 else

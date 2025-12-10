@@ -13,6 +13,10 @@ function [estimate] = ft_inverse_mne(sourcemodel, sens, headmodel, dat, varargin
 % and
 %   estimate    contains the estimated source parameters
 %
+% If the input data "dat" is in V, "cov" is in V^2, and the leadfield is in V/Am,
+% then the estimated output "mom" is in Am, the output "pow" is (Am)^2, and the
+% output "filter" is in Am/V.
+%
 % Additional input arguments should be specified as key-value pairs and can include
 %   'noisecov'         = Nchan x Nchan matrix with noise covariance
 %   'noiselambda'      = scalar value, regularisation parameter for the noise covariance matrix (default = 0)

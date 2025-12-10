@@ -14,6 +14,10 @@ function [estimate] = ft_inverse_sam(sourcemodel, sens, headmodel, dat, C, varar
 % and
 %   estimate    contains the estimated source parameters
 %
+% If the input data "dat" is in V, "cov" is in V^2, and the leadfield is in V/Am,
+% then the estimated output "mom" is in Am, the output "pow" is (Am)^2, and the
+% output "filter" is in Am/V.
+%
 % Additional input arguments should be specified as key-value pairs and can include
 %   'feedback'
 %   'fixedori'          deprecated, control behaviour via 'reducerank' instead
@@ -32,6 +36,12 @@ function [estimate] = ft_inverse_sam(sourcemodel, sens, headmodel, dat, C, varar
 %   'normalize'       = 'no', 'yes' or 'column' (default = 'no')
 %   'normalizeparam'  = parameter for depth normalization (default = 0.5)
 %   'weight'          = number or Nx1 vector, weight for each dipole position to compensate for the size of the corresponding patch (default = 1)
+%
+% These options influence the mathematical inversion of the covariance matrix
+%  'lambda'           = regularisation parameter
+%  'kappa'            = parameter for covariance matrix inversion
+%  'tol'              = parameter for covariance matrix inversion
+%  'invmethod'        = method for covariance matrix inversion
 %
 % See also FT_SOURCEANALYSIS, FT_PREPARE_HEADMODEL, FT_PREPARE_SOURCEMODEL
 
