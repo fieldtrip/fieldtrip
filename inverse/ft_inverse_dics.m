@@ -44,6 +44,7 @@ function [estimate] = ft_inverse_dics(sourcemodel, sens, headmodel, dat, C, vara
 %  'lambda'           = regularisation parameter
 %  'kappa'            = parameter for covariance matrix inversion
 %  'tol'              = parameter for covariance matrix inversion
+%  'invmethod'        = method for covariance matrix inversion
 %
 % If the dipole definition only specifies the dipole location, a rotating
 % dipole (regional source) is assumed on each location. If a dipole moment
@@ -52,7 +53,7 @@ function [estimate] = ft_inverse_dics(sourcemodel, sens, headmodel, dat, C, vara
 %
 % See also FT_SOURCEANALYSIS, FT_PREPARE_HEADMODEL, FT_PREPARE_SOURCEMODEL
 
-% Copyright (C) 2003-2020, Robert Oostenveld and Jan-Mathijs Schoffelen
+% Copyright (C) 2003-2025, Robert Oostenveld and Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -255,7 +256,7 @@ if hassubspace
 elseif ~isempty(subspace)
   ft_notice('using data-specific subspace projection\n');
   % TODO implement an "eigenspace beamformer" as described in Sekihara et al. 2002 in HBM
-  if numel(subspace)==1
+  if isscalar(subspace)
     % interpret this as a truncation of the eigenvalue-spectrum
     % if <1 it is a fraction of the largest eigenvalue
     % if >=1 it is the number of largest eigenvalues
@@ -311,7 +312,7 @@ if strcmp(submethod, 'dics_refdip')
   % handle the reference dipole, this needs to be done only once, since in this implementation
   % no fancy pairwise dipole source model is assumed
   if isstruct(refdip) && isfield(refdip, 'filter') % check if precomputed filter is present
-    assert(iscell(refdip.filter) && numel(refdip.filter)==1);
+    assert(iscell(refdip.filter) && isscalar(refdip.filter));
     filt1 = refdip.filter{1};
   else
     if ~isstruct(refdip)
@@ -321,7 +322,7 @@ if strcmp(submethod, 'dics_refdip')
     end
     % now refdip is always a struct
     if isfield(refdip, 'leadfield') % check if precomputed leadfield is present
-      assert(iscell(refdip.leadfield) && numel(refdip.leadfield)==1);
+      assert(iscell(refdip.leadfield) && isscalar(refdip.leadfield));
       lf1 = refdip.leadfield{1};
     elseif isfield(refdip, 'pos')
       assert(isnumeric(refdip.pos) && numel(refdip.pos)==3);

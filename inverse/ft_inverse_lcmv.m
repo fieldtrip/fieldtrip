@@ -43,6 +43,7 @@ function [estimate] = ft_inverse_lcmv(sourcemodel, sens, headmodel, dat, C, vara
 %  'lambda'           = regularisation parameter
 %  'kappa'            = parameter for covariance matrix inversion
 %  'tol'              = parameter for covariance matrix inversion
+%  'invmethod'        = method for covariance matrix inversion
 %
 % If the dipole definition only specifies the dipole location, a rotating
 % dipole (regional source) is assumed on each location. If a dipole moment
@@ -51,7 +52,7 @@ function [estimate] = ft_inverse_lcmv(sourcemodel, sens, headmodel, dat, C, vara
 %
 % See also FT_SOURCEANALYSIS, FT_PREPARE_HEADMODEL, FT_PREPARE_SOURCEMODEL
 
-% Copyright (C) 2003-2020, Robert Oostenveld and Jan-Mathijs Schoffelen
+% Copyright (C) 2003-2025, Robert Oostenveld and Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -218,7 +219,7 @@ if hassubspace
 elseif ~isempty(subspace)
   ft_notice('using data-specific subspace projection\n');
   % TODO implement an "eigenspace beamformer" as described in Sekihara et al. 2002 in HBM
-  if numel(subspace)==1
+  if isscalar(subspace)
     % interpret this as a truncation of the eigenvalue-spectrum
     % if <1 it is a fraction of the largest eigenvalue
     % if >=1 it is the number of largest eigenvalues
