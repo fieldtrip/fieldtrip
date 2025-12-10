@@ -1996,11 +1996,13 @@ end % for each modality
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if strcmp(cfg.suffix, 'physio') && need_events_tsv
-  % the events associated with a physio file should go in the physioevents file. 
-  need_physioevents_tsv  = true;
+  % the events associated with a physio file should go in the physioevents rather than events 
   need_events_tsv        = false;
+  need_physioevents_tsv  = true;
   physioevents_tsv       = events_tsv;
-  clear events_tsv events_json
+  clear events_tsv
+else
+  need_physioevents_tsv  = false;
 end
 
 % each of these has a corresponding tsv file
