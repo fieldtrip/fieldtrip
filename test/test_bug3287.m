@@ -3,6 +3,7 @@ function test_bug3287
 % WALLTIME 00:10:00
 % MEM 1gb
 % DEPENDENCY
+% DATA no
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % PART 1 - test the appending of data

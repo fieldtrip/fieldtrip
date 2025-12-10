@@ -1,7 +1,8 @@
 function test_example_bids_nirs
 
-% MEM 8gb
+% MEM 6gb
 % WALLTIME 00:30:00
+% DATA public
 
 %
 %% Converting an example NIRS dataset for sharing in BIDS
@@ -32,13 +33,13 @@ function test_example_bids_nirs
 
 % FIXME the artinis code cannot read data with a full path included it
 % seems, it gives a low level error in the reading functions
-cd(dccnpath('/home/common/matlab/fieldtrip/data/ftp/example/bids_nirs/artinis/original'));
+cd(dccnpath('/project/3031000.02/external/download/example/bids_nirs/artinis/original'));
 
 %%
 
 % this data is from https://www.fieldtriptoolbox.org/tutorial/nirs_multichannel/
 bidsroot = fullfile(tempdir, 'bids');
-datadir  = dccnpath('/home/common/matlab/fieldtrip/data/ftp/example/bids_nirs/artinis/original');
+datadir  = dccnpath('/project/3031000.02/external/download/example/bids_nirs/artinis/original');
 filelist = {
   'LR-01-2015-06-01-0002.oxy3'
   'LR-02-2015-06-08-0001.oxy3'
@@ -110,7 +111,7 @@ event2 = ft_read_event(fullfile(bidsroot, 'sub-LR01/nirs/sub-LR01_task-auditoryo
 % we are just using a subset here to demonstrate the principle
 
 bidsroot  = fullfile(tempdir, 'bids');
-datadir   = dccnpath('/home/common/matlab/fieldtrip/data/ftp/example/bids_nirs/homer/original');
+datadir   = dccnpath('/project/3031000.02/external/download/example/bids_nirs/homer/original');
 filenames = {
   'S1001_run01.nirs'
   'S1003_run01.nirs'
@@ -158,7 +159,7 @@ end
 %
 
 bidsroot  = fullfile(tempdir, 'bids');
-datadir   = dccnpath('/home/common/matlab/fieldtrip/data/ftp/example/bids_nirs/snirf/original');
+datadir   = dccnpath('/project/3031000.02/external/download/example/bids_nirs/snirf/original');
 filelist = {
   'LR01_rawdata.snirf'
   'LR02_rawdata.snirf'

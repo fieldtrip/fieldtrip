@@ -1,10 +1,11 @@
 function test_ft_denoise_synthetic
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_denoise_synthetic
+% DATA private
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/preproc_ctf151.mat'));
+load(dccnpath('/project/3031000.02/test/latest/raw/meg/preproc_ctf151.mat'));
 
 cfg = [];
 cfg.gradient = 'G1BR';

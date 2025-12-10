@@ -1,10 +1,11 @@
 function test_bug2613
 
 % WALLTIME 00:10:00
-% MEM 3gb
+% MEM 1gb
 % DEPENDENCY ft_freqanalysis ft_checkdata
+% DATA private
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2613.mat'));
+load(dccnpath('/project/3031000.02/test/bug2613.mat'));
 
 % cfg.trials is incorrect in the original as the selection runs all the way up to trial 240 (there are in fact 182 trials)
 % this fixes it and also speeds up the test

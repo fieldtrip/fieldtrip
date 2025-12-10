@@ -1,4 +1,4 @@
-function nirfastmesh=readnirfast(filestub)
+function nirfastmesh = readnirfast(filestub)
 %
 % nirfastmesh=readnirfast(v,f,filestub)
 %
@@ -36,70 +36,70 @@ function nirfastmesh=readnirfast(filestub)
 % -- this function is part of iso2mesh toolbox (http://iso2mesh.sf.net)
 %
 
-fname=[filestub,'.node'];
-if(~exist(fullfile(pwd,fname),'file'))
+fname = [filestub, '.node'];
+if (~exist(fullfile(pwd, fname), 'file'))
     error([fname ' could not be found']);
 end
-nirfastmesh.nodes=load(fname);
+nirfastmesh.nodes = load(fname);
 
-nirfastmesh.bndvtx=nirfastmesh.nodes(:,1);
-nirfastmesh.nodes(:,1)=[];
+nirfastmesh.bndvtx = nirfastmesh.nodes(:, 1);
+nirfastmesh.nodes(:, 1) = [];
 
-fname=[filestub,'.elem'];
-if(~exist(fullfile(pwd,fname),'file'))
+fname = [filestub, '.elem'];
+if (~exist(fullfile(pwd, fname), 'file'))
     error([fname ' could not be found']);
 end
-nirfastmesh.elements=load(fname);
-nirfastmesh.dimension=size(nirfastmesh.elements,2)-1;
+nirfastmesh.elements = load(fname);
+nirfastmesh.dimension = size(nirfastmesh.elements, 2) - 1;
 
-fname=[filestub,'.region'];
-if(exist(fullfile(pwd,fname),'file'))
-    nirfastmesh.region=load(fname);
+fname = [filestub, '.region'];
+if (exist(fullfile(pwd, fname), 'file'))
+    nirfastmesh.region = load(fname);
 end
 
-fname=[filestub,'.excoef'];
-fid=fopen(fname,'rt');
-if(fid>=0)
-    linenum=0;
-    textheader={};
-    while(~feof(fid))
-        oneline=fgetl(fid);
-        linenum=linenum+1;
-        [data, count]=sscanf(oneline,'%f');
-        if(count>1)
-            params=fscanf(fid,repmat('%f ',1,count),inf);
-            params=reshape(params,length(params)/count, count);
-            params(2:end+1,:)=params;
-            params(1,:)=data(:)';
-            nirfastmesh.excoef=params;
-            nirfastmesh.excoefheader=textheader;
-            break;
+fname = [filestub, '.excoef'];
+fid = fopen(fname, 'rb');
+if (fid >= 0)
+    linenum = 0;
+    textheader = {};
+    while (~feof(fid))
+        oneline = fgetl(fid);
+        linenum = linenum + 1;
+        [data, count] = sscanf(oneline, '%f');
+        if (count > 1)
+            params = fscanf(fid, repmat('%f ', 1, count), inf);
+            params = reshape(params, length(params) / count, count);
+            params(2:end + 1, :) = params;
+            params(1, :) = data(:)';
+            nirfastmesh.excoef = params;
+            nirfastmesh.excoefheader = textheader;
+            break
         else
-            textheader{end+1}=oneline;
+            textheader{end + 1} = oneline;
         end
     end
     fclose(fid);
 end
 
-fname=[filestub,'.param'];
-fid=fopen(fname,'rt');
-if(fid>=0)
-    linenum=0;
-    params=[];
-    while(~feof(fid))
-        oneline=fgetl(fid);
-        if(linenum==0)
-            nirfastmesh.type=oneline;
+fname = [filestub, '.param'];
+fid = fopen(fname, 'rb');
+if (fid >= 0)
+    linenum = 0;
+    params = [];
+    while (~feof(fid))
+        oneline = fgetl(fid);
+        if (linenum == 0)
+            nirfastmesh.type = oneline;
         end
-        linenum=linenum+1;
-        [data, count]=sscanf(oneline,'%f');
-        if(count>1)
-            params=fscanf(fid,repmat('%f ',1,count),inf);
-            params=reshape(params,length(params)/count, count);
-            params(2:end+1,:)=params;
-            params(1,:)=data(:)';
-            nirfastmesh.prop=params;
-            break;
+        linenum = linenum + 1;
+        [data, count] = sscanf(oneline, '%f');
+        if (count > 1)
+            params = fscanf(fid, repmat('%f ', 1, count), inf);
+            params = reshape(params, length(params) / count, count);
+            params(2:end + 1, :) = params;
+            params(1, :) = data(:)';
+            nirfastmesh.prop = params;
+            break
         end
     end
     fclose(fid);

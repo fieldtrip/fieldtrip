@@ -1,8 +1,9 @@
 function test_convert_event
 
 % WALLTIME 00:10:00
-% MEM 2gb
+% MEM 1gb
 % DEPENDENCY artifact2boolvec artifact2event artifact2trl boolvec2artifact boolvec2event boolvec2trl event2artifact event2boolvec event2trl trl2artifact trl2boolvec trl2event
+% DATA no
 
 % The functionality of converting between representations used to be covered by
 % fieldtrip/private/convert_event but has been split over multiple functions to

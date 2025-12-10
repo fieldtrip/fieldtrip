@@ -1,8 +1,9 @@
 function test_tutorial_connectivityextended
 
 % WALLTIME 00:45:00
-% MEM 3gb
+% MEM 1gb
 % DEPENDENCY ft_connectivityanalysis ft_connectivitysimulation ft_freqanalysis ft_connectivityplot ft_mvaranalysis
+% DATA public
 
 % This is the first section of the connectivity tutorial, which
 % starts with an MVAR model and then uses parametric and nonparametric
@@ -88,11 +89,11 @@ for row=1:3
 end
 
 %% do the virtual channel stuff
-load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer_extended/source_coh_lft.mat'));
-load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer_extended/source_diff.mat'));
-load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer_extended/data_cmb.mat'));
-load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer_extended/sourcemodel.mat'));
-load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer_extended/hdm.mat'));
+load(dccnpath('/project/3031000.02/external/download/tutorial/beamformingextended/source_coh_lft.mat'));
+load(dccnpath('/project/3031000.02/external/download/tutorial/beamformingextended/source_diff.mat'));
+load(dccnpath('/project/3031000.02/external/download/tutorial/beamformingextended/data_cmb.mat'));
+load(dccnpath('/project/3031000.02/external/download/tutorial/beamformingextended/sourcemodel.mat'));
+load(dccnpath('/project/3031000.02/external/download/tutorial/beamformingextended/hdm.mat'));
 
 [maxval, maxcohindx] = max(source_coh_lft.avg.coh);
 source_coh_lft.pos(maxcohindx, :)

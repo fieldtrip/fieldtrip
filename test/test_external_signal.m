@@ -1,8 +1,9 @@
 function test_external_signal
 
 % WALLTIME 00:10:00
-% MEM 2gb
+% MEM 1gb
 % DEPENDENCY hanning
+% DATA no
 
 filelist = {'barthannwin'
             'blackmanharris'

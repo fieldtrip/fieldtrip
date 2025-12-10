@@ -1,6 +1,8 @@
 function test_pull1757
 
-%addpath('..');
+% WALLTIME 00:10:00
+% MEM 1gb
+% DATA no
 
 %% generate data (from test_bug2148)
 cfg             = [];

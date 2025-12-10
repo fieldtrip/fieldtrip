@@ -1,4 +1,4 @@
-function [node,face,centroids]=latticegrid(varargin)
+function [node, face, centroids] = latticegrid(varargin)
 %
 % [node,face,centroids]=latticegrid(xrange,yrange,zrange,...)
 %
@@ -6,7 +6,7 @@ function [node,face,centroids]=latticegrid(varargin)
 %
 % author: Qianqian Fang, <q.fang at neu.edu>
 %
-% input: 
+% input:
 %   xrange, yrange, zrange ...: 1D vectors specifying the range of each
 %         dimension of the lattice
 %
@@ -22,7 +22,7 @@ function [node,face,centroids]=latticegrid(varargin)
 %    % generate a 3D lattice
 %    [node,face,c0]=latticegrid([1 2 4],1:3,1:4);
 %    plotmesh(node,face)
-%    
+%
 %    % mesh the 3D lattice based on the face info
 %    [no,el]=surf2mesh(node,face,[],[],1,0.01,c0);
 %    figure; plotmesh(no,el)
@@ -34,41 +34,41 @@ function [node,face,centroids]=latticegrid(varargin)
 %    figure; plotmesh(no,el)
 %
 % -- this function is part of iso2mesh toolbox (http://iso2mesh.sf.net)
-% 
+%
 
-n=length(varargin);
-p=cell(n,1);
-[p{:}]=ndgrid(varargin{:});
-node=zeros(length(p{1}(:)),n);
-for i=1:n
-   node(:,i)=p{i}(:);
+n = length(varargin);
+p = cell(n, 1);
+[p{:}] = ndgrid(varargin{:});
+node = zeros(length(p{1}(:)), n);
+for i = 1:n
+    node(:, i) = p{i}(:);
 end
-if(nargout==1)
-    return;
+if (nargout == 1)
+    return
 end
 
-dim=size(p{1});
+dim = size(p{1});
 
-dd=[dim(1) dim(1)*dim(2)];
-onecube=[0 dd(1) dd(1)+1 1; ...
-         0 1 dd(2)+1 dd(2); ...
-         0 dd(2) dd(2)+dd(1) dd(1)];
-onecube=[onecube;onecube+repmat([dd(2);dd(1);1],1,4)];
+dd = [dim(1) dim(1) * dim(2)];
+onecube = [0 dd(1) dd(1) + 1 1; ...
+           0 1 dd(2) + 1 dd(2); ...
+           0 dd(2) dd(2) + dd(1) dd(1)];
+onecube = [onecube; onecube + repmat([dd(2); dd(1); 1], 1, 4)];
 
-len=prod(dim(1:3)-1);
-face=repmat(onecube,len,1);
-[xx,yy,zz]=ndgrid(1:dim(1)-1,1:dim(2)-1,1:dim(3)-1);
-idx=sub2ind(dim,xx(:),yy(:),zz(:))';
-orig=repmat(idx,size(onecube,1),1);
+len = prod(dim(1:3) - 1);
+face = repmat(onecube, len, 1);
+[xx, yy, zz] = ndgrid(1:dim(1) - 1, 1:dim(2) - 1, 1:dim(3) - 1);
+idx = sub2ind(dim, xx(:), yy(:), zz(:))';
+orig = repmat(idx, size(onecube, 1), 1);
 
-for i=1:size(onecube,2)
-    face(:,i)=face(:,i)+orig(:);
+for i = 1:size(onecube, 2)
+    face(:, i) = face(:, i) + orig(:);
 end
-face=unique(face,'rows');
-face=mat2cell(face,ones(size(face,1),1));
+face = unique(face, 'rows');
+face = mat2cell(face, ones(size(face, 1), 1));
 
-if(nargout>=3)
-    diffvec=cellfun(@diff,varargin,'UniformOutput',false);
-    [xx,yy,zz]=ndgrid(diffvec{:});
-    centroids=node(idx,:)+[xx(:) yy(:) zz(:)]*0.5;
+if (nargout >= 3)
+    diffvec = cellfun(@diff, varargin, 'UniformOutput', false);
+    [xx, yy, zz] = ndgrid(diffvec{:});
+    centroids = node(idx, :) + [xx(:) yy(:) zz(:)] * 0.5;
 end

@@ -1,10 +1,11 @@
 function test_bug3369
 
 % WALLTIME 00:20:00
-% MEM 2gb
+% MEM 1gb
 % DEPENDENCY read_neuromag_maxfilterlog
+% DATA private
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug3369'));
+cd(dccnpath('/project/3031000.02/test/bug3369'));
 
 file0 = 'tactile_stim_raw.fif_tsss_mc.log';
 file1 = 'tactile_stim_raw-1.fif_tsss_mc.log';

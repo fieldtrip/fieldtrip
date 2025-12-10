@@ -1,8 +1,9 @@
 function test_ricoh
 
-% MEM 6gb
+% MEM 4gb
 % WALLTIME 01:00:00
 % DEPENDENCY hasricoh isricohmegfile read_ricoh_data read_ricoh_event read_ricoh_header ricoh2grad
+% DATA private
 
 %% Test function for Ricoh *.con (Third-party exported) data
 %
@@ -11,7 +12,7 @@ function test_ricoh
 % MEG data, EEG data, digitized points, acquisition conditions, etc.
 
 % filename = 'rightearAEF_export.con';
-filename = dccnpath('/home/common/matlab/fieldtrip/data/test/original/meg/ricoh160/rightearAEF_export.con');
+filename = dccnpath('/project/3031000.02/test/original/meg/ricoh160/rightearAEF_export.con');
 
 if ~ft_filetype(filename, 'ricoh_con')
   error('definition error of ricoh_con');

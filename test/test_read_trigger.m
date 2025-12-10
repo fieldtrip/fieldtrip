@@ -1,8 +1,9 @@
 function test_read_trigger
 
 % WALLTIME 00:10:00
-% MEM 2gb
+% MEM 1gb
 % DEPENDENCY ft_read_event read_trigger
+% DATA no
 
 hdr = [];
 hdr.Fs = 1000;

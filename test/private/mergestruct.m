@@ -8,7 +8,7 @@ function s1 = mergestruct(s1, s2, emptymeaningful)
 %
 % See also PRINTSTRUCT, APPENDSTRUCT, COPYFIELDS, KEEPFIELDS, REMOVEFIELDS, MERGETABLE
 
-% Copyright (C) 2009-2022, Robert Oostenveld
+% Copyright (C) 2009-2024, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -47,19 +47,21 @@ if ~emptymeaningful
   s2 = remove_empty(s2);
 end
 
-% merge the original with the fields from default
-defaultfields = fieldnames(s2);
-inputfields = fieldnames(s1);
-allfields = union(defaultfields, inputfields);
+% merge the s2 structure into s1
+s1fields = fieldnames(s1);
+s2fields = fieldnames(s2);
+allfields = union(s1fields, s2fields);
 
 if numel(s2)>1 && numel(s2)==numel(s1)
-  % create an empty structure that has all the fields
+  % create a new structure that has all the fields
   tmp = empty_struct(allfields);
   for i=1:numel(s1)
     for j=1:numel(allfields)
       if isfield(s1(i), allfields{j})
+        % keep the field of s1
         tmp(i).(allfields{j}) = s1(i).(allfields{j});
       else
+        % get the field from s2
         tmp(i).(allfields{j}) = s2(i).(allfields{j});
       end
     end
@@ -68,11 +70,11 @@ if numel(s2)>1 && numel(s2)==numel(s1)
   
 elseif numel(s2)~=numel(s1)
   for j=1:numel(allfields)
-    % ensure that the original has all fields
+    % ensure that s1 has all fields
     if ~isfield(s1, allfields{j})
       s1(1).(allfields{j}) = [];
     end
-    % ensure that the default has all fields
+    % ensure that s2 has all fields
     if ~isfield(s2, allfields{j})
       s2(1).(allfields{j}) = [];
     end
@@ -81,8 +83,8 @@ elseif numel(s2)~=numel(s1)
   s1 = cat(1, s1(:), s2(:));
   
 else
-  for i=1:length(defaultfields)
-    fn = defaultfields{i};
+  for i=1:length(s2fields)
+    fn = s2fields{i};
     if  ~isfield(s1, fn) && ~isstruct(s2.(fn))
       % simply copy the value over
       s1.(fn) = s2.(fn);

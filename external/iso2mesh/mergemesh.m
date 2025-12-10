@@ -1,12 +1,12 @@
-function [newnode,newelem]=mergemesh(node,elem,varargin)
+function [newnode, newelem] = mergemesh(node, elem, varargin)
 %
 % [newnode,newelem]=mergemesh(node,elem,varargin)
 %
 % concatenate two or more tetrahedral meshes or triangular surfaces
-% 
-% author: Qianqian Fang <fangq at nmr.mgh.harvard.edu>
 %
-% input: 
+% author: Qianqian Fang <q.fang at neu.edu>
+%
+% input:
 %      node: node coordinates, dimension (nn,3)
 %      elem: tetrahedral element or triangle surface (nn,3) to (nn,5)
 %
@@ -32,45 +32,45 @@ function [newnode,newelem]=mergemesh(node,elem,varargin)
 % -- this function is part of iso2mesh toolbox (http://iso2mesh.sf.net)
 %
 
-len=length(varargin);
-newnode=node;
-newelem=elem;
-if(len>0 & mod(len,2)~=0)
-   error('you must give node and element in pairs');
+len = length(varargin);
+newnode = node;
+newelem = elem;
+if (len > 0 && mod(len, 2) ~= 0)
+    error('you must give node and element in pairs');
 end
 
-X=mesheuler(newelem);
+X = mesheuler(newelem);
 
-if(size(newelem,2)==4)
-   if(X>=0)
-      newelem(:,end+1)=1;
-   end
+if (size(newelem, 2) == 4)
+    if (X >= 0)
+        newelem(:, end + 1) = 1;
+    end
 end
-if(size(newelem,2)==3)
-   newelem(:,end+1)=1;
+if (size(newelem, 2) == 3)
+    newelem(:, end + 1) = 1;
 end
-for i=1:2:len
-   no=varargin{i};
-   el=varargin{i+1};
-   baseno=size(newnode,1);
-   if(size(no,2)~=size(newnode,2))
+for i = 1:2:len
+    no = varargin{i};
+    el = varargin{i + 1};
+    baseno = size(newnode, 1);
+    if (size(no, 2) ~= size(newnode, 2))
         error('input node arrays have inconsistent columns');
-   end
-   if(size(el,2)==5 | size(el,2)==4)
-        el(:,1:4)=el(:,1:4)+baseno;
-	if(size(el,2)==4 & X>=0)
-	   el(:,5)=1+(i+1)/2;
-	end
-   	newnode=[newnode;no];
-	newelem=[newelem;el];
-   elseif(size(el,2)==3 & size(newelem,2)==4)
-        el(:,1:3)=el(:,1:3)+baseno;
-	if(size(el,2)==3)
-	   el(:,4)=1+(i+1)/2;
-	end
-   	newnode=[newnode;no];
-	newelem=[newelem;el];
-   else
+    end
+    if (size(el, 2) == 5 || size(el, 2) == 4)
+        el(:, 1:4) = el(:, 1:4) + baseno;
+        if (size(el, 2) == 4 && X >= 0)
+            el(:, 5) = 1 + (i + 1) / 2;
+        end
+        newnode = [newnode; no];
+        newelem = [newelem; el];
+    elseif (size(el, 2) == 3 && size(newelem, 2) == 4)
+        el(:, 1:3) = el(:, 1:3) + baseno;
+        if (size(el, 2) == 3)
+            el(:, 4) = 1 + (i + 1) / 2;
+        end
+        newnode = [newnode; no];
+        newelem = [newelem; el];
+    else
         error('input element arrays have inconsistent columns');
-   end
+    end
 end

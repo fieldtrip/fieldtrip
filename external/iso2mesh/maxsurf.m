@@ -1,8 +1,8 @@
-function [f maxsize]=maxsurf(facecell,node)
+function [f maxsize] = maxsurf(facecell, node)
 %
 % [f maxsize]=maxsurf(facecell,node)
 %
-% return the surface with the maximum element number or  
+% return the surface with the maximum element number or
 % total area from a cell arry of surfaces
 %
 % author: Qianqian Fang, <q.fang at neu.edu>
@@ -13,7 +13,7 @@ function [f maxsize]=maxsurf(facecell,node)
 %          surface with the largest surface area.
 %
 % output:
-%    f: the surface data (node indices) for the surface with the 
+%    f: the surface data (node indices) for the surface with the
 %       most elements (or largest area when node is given)
 %    maxsize: if node is not given, maxisize is row number of f;
 %             otherwise, maxsize is the total area of f
@@ -21,26 +21,26 @@ function [f maxsize]=maxsurf(facecell,node)
 % -- this function is part of iso2mesh toolbox (http://iso2mesh.sf.net)
 %
 
-maxsize=-1;
-maxid=-1;
+maxsize = -1;
+maxid = -1;
 
-if(nargin==2)
-    areas=zeros(1,length(facecell));
-    for i=1:length(facecell)
-       areas(i)=sum(elemvolume(node(:,1:3),facecell{i}));
+if (nargin == 2)
+    areas = zeros(1, length(facecell));
+    for i = 1:length(facecell)
+        areas(i) = sum(elemvolume(node(:, 1:3), facecell{i}));
     end
-    [maxsize,maxid]=max(areas);
-    f=facecell{maxid};
-    return;
+    [maxsize, maxid] = max(areas);
+    f = facecell{maxid};
+    return
 else
-    for i=1:length(facecell)
-	if(length(facecell{i})>maxsize)
-		maxsize=length(facecell{i});
-		maxid=i;
-	end
+    for i = 1:length(facecell)
+        if (length(facecell{i}) > maxsize)
+            maxsize = length(facecell{i});
+            maxid = i;
+        end
     end
-    f=[];
-    if(maxid>0)
-	f=facecell{maxid};
+    f = [];
+    if (maxid > 0)
+        f = facecell{maxid};
     end
 end

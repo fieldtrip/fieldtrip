@@ -1,8 +1,9 @@
 function test_bug1800
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_defaults ft_selectdata ft_topoplotER
+% DATA private
 
 % this was reported by Giorgos Michalareas
 %
@@ -15,7 +16,7 @@ function test_bug1800
 % http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1800
 
 % Load the timelocked data
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1800.mat'));
+load(dccnpath('/project/3031000.02/test/bug1800.mat'));
 
 cfg = [];
 cfg.avgovertime = 'yes';

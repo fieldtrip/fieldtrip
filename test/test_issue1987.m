@@ -1,8 +1,9 @@
 function test_issue1987
 
 % WALLTIME 00:10:00
-% MEM 2gb
+% MEM 1gb
 % DEPENDENCY read_brainvision_eeg
+% DATA private
 
 %% Unit test for update to read_brainvision_eeg.m
 %
@@ -22,7 +23,7 @@ function test_issue1987
 % with error <10^-13
 
 % go to where the test data is located
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/issue1987'))
+cd(dccnpath('/project/3031000.02/test/issue1987'))
 
 hdr = ft_read_header('seg_noxfo1.vhdr');
 

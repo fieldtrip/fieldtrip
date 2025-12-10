@@ -1,11 +1,12 @@
 function test_bug2235
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_denoise_synthetic
+% DATA private
 
-fname = dccnpath('/home/common/matlab/fieldtrip/data/test/bug2235');
-load(fname);
+filename = dccnpath('/project/3031000.02/test/bug2235.mat');
+load(filename);
 
 cfg          = [];
 cfg.gradient = 'G3BR';
@@ -22,6 +23,7 @@ assert(all(da==a),'order of the labels is different in input and output data');
 [da,a] = match_str(da_data.grad.label,a_data.grad.label);
 tra_a  = a_data.grad.tra(274:end,:);
 tra_da = da_data.grad.tra(274:end,:);
+
 assert(isequal(tra_a(a(274:end)-273,:),tra_da(da(274:end)-273,:)));
 assert(isequal(da_data.grad.chanpos(da,:),a_data.grad.chanpos(a,:)));
 assert(isequal(da_data.grad.chanori(da,:),a_data.grad.chanori(a,:)));

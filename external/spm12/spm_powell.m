@@ -15,10 +15,9 @@ function [p,f] = spm_powell(p,xi,tolsc,func,varargin)
 % Method is based on Powell's optimisation method described in
 % Numerical Recipes (Press, Flannery, Teukolsky & Vetterling).
 %__________________________________________________________________________
-% Copyright (C) 2001-2011 Wellcome Trust Centre for Neuroimaging
 
 % John Ashburner
-% $Id: spm_powell.m 4423 2011-08-04 16:28:51Z guillaume $
+% Copyright (C) 2001-2022 Wellcome Centre for Human Neuroimaging
 
 
 p = p(:);
@@ -32,12 +31,12 @@ for iter=1:512
     for i=1:length(p)
         ft = f;
         [p,junk,f] = min1d(p,xi(:,i),func,f,tolsc,varargin{:});
-        if abs(ft-f) > del,
+        if abs(ft-f) > del
             del  = abs(ft-f);
             ibig = i;
         end
     end
-    if numel(p)==1 || sqrt(sum(((p(:)-pp(:))./tolsc(:)).^2))<1, return; end
+    if numel(p)==1 || sqrt(sum(((p(:)-pp(:))./tolsc(:)).^2))<1 || abs((f-fp)/(f+fp))<1e-6, return; end
     ft = feval(func,2.0*p-pp,varargin{:});
     if ft < f
         [p,xi(:,ibig),f] = min1d(p,p-pp,func,f,tolsc,varargin{:});
@@ -66,8 +65,8 @@ pi       = pi*pmin;
 p        = p + pi;
 
 %if length(p)<12,
-%    for i=1:length(p), fprintf('%-8.4g ', p(i)); end;                  %-#
-%    fprintf('| %.5g\n', f);                                            %-#
+%   for i=1:length(p), fprintf('%-8.4g ', p(i)); end;                  %-#
+%   fprintf('| %.5g\n', f);                                            %-#
 %else
 %    fprintf('%.5g\n', f);                                              %-#
 %end
@@ -121,7 +120,7 @@ while t(2).f > t(3).f
         d    = -pol(2)/(2*pol(3)+eps);
 
         % A very conservative constraint on the displacement
-        if d > (1+gold)*(t(3).p-t(2).p),
+        if d > (1+gold)*(t(3).p-t(2).p)
             d = (1+gold)*(t(3).p-t(2).p);
         end
         u.p  = t(2).p+d;
@@ -199,7 +198,7 @@ for iter=1:128
     eps2 = 2*eps*abs(t(1).p)+eps;
     if abs(d) > abs(ppd)/2 || u.p < brk(1)+eps2 || u.p > brk(2)-eps2 || pol(3)<=0
         % if criteria are not met, then golden search into the larger part
-        if t(1).p >= 0.5*(brk(1)+brk(2)),
+        if t(1).p >= 0.5*(brk(1)+brk(2))
             d = gold1*(brk(1)-t(1).p);
         else
             d = gold1*(brk(2)-t(1).p);
@@ -252,11 +251,9 @@ if strcmpi(action,'init')
     
     min1dplot = struct('pointer',get(fg,'Pointer'),...
                        'name',   get(fg,'Name'),...
-                       'ax',     [],...
-                       'buffer', get(fg,'DoubleBuffer'));
+                       'ax',     []);
     min1d_plot('Clear');
     set(fg,'Pointer','Watch');
-    set(fg,'DoubleBuffer','on');
     min1dplot.ax = axes('Position', [0.15 0.1 0.8 0.75],...
                         'Box',      'on',...
                         'Parent',   fg);
@@ -292,7 +289,6 @@ elseif strcmpi(action,'clear')
         if ishandle(min1dplot.ax), delete(min1dplot.ax); end
         set(fg,'Pointer',min1dplot.pointer);
         set(fg,'Name',min1dplot.name);
-        set(fg,'DoubleBuffer',min1dplot.buffer);
     end
     spm_figure('Clear',fg);
     drawnow;

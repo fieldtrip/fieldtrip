@@ -1,7 +1,8 @@
 function test_example_ft_realtime_hilbert
 
-% MEM 4gb
+% MEM 2gb
 % WALLTIME 00:10:00
+% DATA no
 
 %
 %% Realtime neurofeedback application based on Hilbert phase estimation

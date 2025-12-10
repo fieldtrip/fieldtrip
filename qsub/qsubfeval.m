@@ -82,7 +82,7 @@ optbeg = optbeg | strcmp('display',       strargin);
 optbeg = optbeg | strcmp('nargout',       strargin);
 optbeg = optbeg | strcmp('whichfunction', strargin);
 optbeg = optbeg | strcmp('waitfor',       strargin);
-optbeg = find(optbeg);
+optbeg = find(optbeg, 1, 'first');
 optarg = varargin(optbeg:end);
 
 % check the required input arguments
@@ -117,6 +117,13 @@ if ~isempty(optbeg)
   varargin = varargin(1:(optbeg-1));
 end
 
+% as of matlab R2019a the -batch is a flag to be preferred over -r if running in non-interactive mode
+if ft_platform_supports('matlabversion', -inf, '2018b')
+  batchflag = '-r';
+else
+  batchflag = '-batch';
+end
+
 if isempty(backend)
   % use the system default backend
   backend = defaultbackend;
@@ -144,7 +151,7 @@ if compiled
 end
 
 hostname = gethostname();
-if isempty(queue) && ~compiled && (~isempty(regexp(hostname, '^dccn-c', 'once')) || ~isempty(regexp(hostname, '^mentat', 'once')))
+if isempty(queue) && ~compiled && (~isempty(regexp(hostname, '^dccn-c', 'once')) || ~isempty(regexp(hostname, '^mentat', 'once'))) && isequal(backend, 'torque')
   % At the DCCN we want the non-compiled distributed MATLAB jobs to be queued in the "matlab" queue. This
   % routes them to specific multi-core machines and limits the number of licenses that can be claimed at once.
   queue = 'matlab';
@@ -281,7 +288,7 @@ switch backend
       cmdline = sprintf('%s %s %s', compiledfun, matlabroot, jobid);
     else
       % create the shell commands to execute matlab
-      cmdline = sprintf('%s -r "%s"', matlabcmd, matlabscript);
+      cmdline = sprintf('%s %s "%s"', matlabcmd, batchflag, matlabscript);
     end
 
   case 'sge'
@@ -309,7 +316,7 @@ switch backend
       cmdline = sprintf('%s %s %s', compiledfun, matlabroot, jobid);
     else
       % create the shell commands to execute matlab
-      cmdline = sprintf('%s -r \\"%s\\"', matlabcmd, matlabscript);
+      cmdline = sprintf('%s %s \\"%s\\"', matlabcmd, batchflag, matlabscript);
     end
 
     % pass the command to qsub with all requirements
@@ -357,7 +364,7 @@ switch backend
       cmdline = sprintf('%s %s %s', compiledfun, matlabroot, jobid);
     else
       % create the shell commands to execute matlab
-      cmdline = sprintf('%s -r \\"%s\\"', matlabcmd, matlabscript);
+      cmdline = sprintf('%s %s \\"%s\\"', matlabcmd, batchflag, matlabscript);
     end
 
     if any(curPwd==' ')
@@ -397,7 +404,7 @@ switch backend
       % create the command line for the compiled application
       cmdline = sprintf('%s %s %s', compiledfun, matlabroot, jobid);
     else
-      cmdline = sprintf('%s -r \\"%s\\"', matlabcmd, matlabscript);
+      cmdline = sprintf('%s %s \\"%s\\"', matlabcmd, batchflag, matlabscript);
     end
     cmdline = sprintf('sbatch --parsable --job-name=%s %s --output=%s --error=%s --wrap "%s"', ...
                        jobid, submitoptions, logout, logerr, cmdline);
@@ -413,7 +420,7 @@ switch backend
     fprintf(fid, '# Condor submit script\n');
     fprintf(fid, '\n');
     fprintf(fid, 'Executable     = %s\n', matlabcmd);
-    fprintf(fid, 'Arguments      = -r "%s"\n', matlabscript);
+    fprintf(fid, 'Arguments      = %s "%s"\n', batchflag, matlabscript);
     % the timreq and memrequ should be inserted here
     fprintf(fid, 'Requirements   = Memory >= 32 && OpSys == "LINUX" && Arch =="INTEL"\n');
     fprintf(fid, 'Rank           = Memory >= 64\n');
@@ -459,7 +466,7 @@ switch backend
       cmdline = sprintf('%s %s %s', compiledfun, matlabroot, jobid);
     else
       % create the shell commands to execute matlab
-      cmdline = sprintf('%s -r \\"%s\\"', matlabcmd, matlabscript);
+      cmdline = sprintf('%s %s \\"%s\\"', matlabcmd, batchflag, matlabscript);
     end
 
     % pass the command to qsub with all requirements

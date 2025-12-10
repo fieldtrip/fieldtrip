@@ -1,8 +1,9 @@
 function inspect_pull1946
 
 % WALLTIME 00:10:00
-% MEM 2gb
+% MEM 1gb
 % DEPENDENCY ft_databrowser
+% DATA no
 
 %%
 % create some uniform data

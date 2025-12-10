@@ -4,17 +4,21 @@ function [trl, allevents] = ft_trialfun_bids(cfg)
 % the basis of the BIDS "events.tsv" file. This function should in general not be
 % called directly, it will be called by FT_DEFINETRIAL.
 %
-% Use this function by calling 
+% Use this function by calling
 %   [cfg] = ft_definetrial(cfg)
 % where the configuration structure should contain
 %   cfg.dataset   = string with the filename
 %   cfg.trialdef  = structure with the details of trial definition, see below
 %   cfg.trialfun  = 'ft_trialfun_bids'
 %
-% The trialdef structure should contain the following specifications
-%   cfg.trialdef.prestim    = latency in seconds (required)
-%   cfg.trialdef.poststim   = latency in seconds (required)
-% and you can specify your selection of events as
+% The trialdef structure should either contain the following
+%   cfg.trialdef.prestim    = latency in seconds
+%   cfg.trialdef.poststim   = latency in seconds
+% or the duration and offset relative to the event of interest
+%   cfg.trialdef.duration    = latency in seconds
+%   cfg.trialdef.offset      = latency in seconds
+%
+% You can specify your selection of events as
 %   cfg.trialdef.columnname = columnvalue
 % where the column name and value have to match those present in the events.tsv file.
 %
@@ -27,7 +31,7 @@ function [trl, allevents] = ft_trialfun_bids(cfg)
 %
 % See also FT_DEFINETRIAL, FT_TRIALFUN_GENERAL
 
-% Copyright (C) 2021, Robert Oostenveld
+% Copyright (C) 2021-2024, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -70,14 +74,10 @@ if isfield(cfg, 'event')
   ft_info('using the events from the configuration structure\n');
   events = cfg.event;
 else
-  % do not use FT_READ_EVENTS, as that will force the events in a structure
+  % do not use FT_READ_EVENT, as that will force the events in a structure
   eventsfile = bids_sidecar(cfg.dataset, 'events');
   events = ft_read_tsv(eventsfile);
 end
-
-% these cannot be used as column headings, as they are used as normal cfg options
-assert(~ismember('prestim', events.Properties.VariableNames));
-assert(~ismember('poststim', events.Properties.VariableNames));
 
 % make a selection of the rows
 sel = true(size(events,1),1);
@@ -93,22 +93,64 @@ end
 
 % remember and return all events
 allevents = events;
-% continue with the selection of events
+
+% continue defining trials with the selection of events
 events = events(sel,:);
 
-if ismember('sample', events.Properties.VariableNames)
-  begsample = round(events.sample - cfg.trialdef.prestim * hdr.Fs);
-  endsample = round(events.sample + cfg.trialdef.poststim * hdr.Fs);
-  offset    = round(-cfg.trialdef.prestim*hdr.Fs) * ones(size(begsample));
+% FIXME it would also be possible to construct trials if the events contained prestim and poststim
+% FIXME it would also be possible to construct trials if the events contained duration and offset
+% FIXME in those cases the user-specified cfg.trialdef options could overrule the ones from the events
+
+if isfield(cfg.trialdef, 'prestim') && isfield(cfg.trialdef, 'poststim')
+  % these are mutually exclusive
+  assert(~isfield(cfg.trialdef, 'duration'));
+  assert(~isfield(cfg.trialdef, 'offset'));
+
+  if ismember('sample', events.Properties.VariableNames)
+    % use the sample number, it is assumed that sample 1 corresponds to the first data sample (and not sample 0)
+    begsample = round(events.sample - cfg.trialdef.prestim  * hdr.Fs);
+    endsample = round(events.sample + cfg.trialdef.poststim * hdr.Fs);
+    offset    = round(-cfg.trialdef.prestim*hdr.Fs) * ones(size(begsample));
+  else
+    % use the onset, which is in seconds
+    begsample = round(events.onset * hdr.Fs + 1 - cfg.trialdef.prestim  * hdr.Fs);
+    endsample = round(events.onset * hdr.Fs + 1 + cfg.trialdef.poststim * hdr.Fs);
+    offset    = round(-cfg.trialdef.prestim*hdr.Fs) * ones(size(begsample));
+  end
+
+elseif isfield(cfg.trialdef, 'duration') && isfield(cfg.trialdef, 'offset')
+  % these are mutually exclusive
+  assert(~isfield(cfg.trialdef, 'prestim'));
+  assert(~isfield(cfg.trialdef, 'poststim'));
+
+  if ismember('sample', events.Properties.VariableNames)
+    % use the event sample number, it is assumed that sample 1 corresponds to the first data sample (and not sample 0)
+    begsample = round(events.sample);
+    endsample = round(events.sample + cfg.trialdef.duration * hdr.Fs);
+    offset    = round(cfg.trialdef.offset * hdr.Fs) * ones(size(begsample));
+  else
+    % use the event onset, which is in seconds
+    begsample = round(events.onset * hdr.Fs + 1);
+    endsample = round(events.onset * hdr.Fs + cfg.trialdef.duration * hdr.Fs);
+    offset    = round(cfg.trialdef.offset * hdr.Fs) * ones(size(begsample));
+  end
+
 else
-  % use the onset, which is in seconds
-  begsample = round((events.onset * hdr.Fs) + 1 - cfg.trialdef.prestim);
-  endsample = round((events.onset * hdr.Fs) + 1 + cfg.trialdef.poststim);
-  offset    = round(-cfg.trialdef.prestim*hdr.Fs) * ones(size(begsample));
+  ft_error('inconsistent specification of the cfg.trialdef options')
 end
 
+% construct the minimal required trial definition
 trl = table(begsample, endsample, offset);
-trl = cat(2, trl, events); % keep the selected event details
+
+% remove conflicting columns, as these cannot be used as column headings in the output
+fn = intersect({'begsample', 'endsample', 'offset'}, events.Properties.VariableNames);
+for i=1:numel(fn)
+  ft_warning('ignoring the %s column from the events', fn{i});
+  events.(fn{i}) = [];
+end
+
+% append the columns with details on the selected events
+trl = cat(2, trl, events);
 
 % remove trials that fall outside the data
 outside = trl.begsample<1 | trl.endsample>(hdr.nSamples*hdr.nTrials);

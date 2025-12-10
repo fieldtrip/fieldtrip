@@ -1,8 +1,9 @@
 function test_issue2124
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_rejectartifact
+% DATA no
 
 % reported issue is that ft_rejectartifact (with data in the input) fails
 % on overlapping data segments, which used to work in the past

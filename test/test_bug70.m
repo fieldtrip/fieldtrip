@@ -1,8 +1,9 @@
 function test_bug70
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:20:00
 % DEPENDENCY ft_prepare_headmodel ft_prepare_leadfield ft_headmodel_openmeeg
+% DATA no
 
 % this is the output of mesh_sphere(162), including it like this
 % makes the test script independent of that function

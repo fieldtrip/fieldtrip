@@ -70,7 +70,7 @@ function ft_plot_cloud(pos, val, varargin)
 
 % run some checks
 if size(pos,2)~=3
-  ft_error('positions shoudl be specified as an Nx3 array')
+  ft_error('positions should be specified as an Nx3 array')
 end
 
 if isempty(val)
@@ -305,11 +305,7 @@ end
 
 % functional data scaling factors
 if ischar(cmap)
-  if strcmp(cmap, 'default')
-    cmapsc = get(0, 'DefaultFigureColormap');
-  else
-    cmapsc = feval(cmap, 201); % an odd number
-  end
+  cmapsc = ft_colormap(cmap, 201); % an odd number
 else
   cmapsc = cmap;
 end
@@ -470,7 +466,7 @@ if strcmp(sli, '2d')
             azimuth = 2*pi*rand(npoints,1);             % azimuthal angle for each point
             radii = rmax(c)*(rand(npoints,1).^ptgradient);  % radius value for each point
             radii = sort(radii);                        % sort radii in ascending order so they are plotted from inside out
-            % convert to Carthesian; note that second input controls third output
+            % convert to Cartesian; note that second input controls third output
             if oriX; [y,z,x] = sph2cart(azimuth, zeros(npoints,1)+0.01*rand(npoints,1), radii); end
             if oriY; [x,z,y] = sph2cart(azimuth, zeros(npoints,1)+0.01*rand(npoints,1), radii); end
             if oriZ; [x,y,z] = sph2cart(azimuth, zeros(npoints,1)+0.01*rand(npoints,1), radii); end
@@ -640,7 +636,7 @@ else % plot 3d cloud
         azimuth   = 2*pi*rand(npoints,1);                     % azimuth angle for each point
         radii     = rmax(n)*(rand(npoints,1).^ptgradient);    % radius value for each point
         radii     = sort(radii);                              % sort radii in ascending order so they are plotted from inside out
-        [x,y,z]   = sph2cart(azimuth, elevation, radii);      % convert to Carthesian
+        [x,y,z]   = sph2cart(azimuth, elevation, radii);      % convert to Cartesian
         
         % color axis with radius scaling
         if strcmp(colorgrad, 'white')                   % color runs up to white

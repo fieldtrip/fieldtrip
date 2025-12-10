@@ -1,8 +1,9 @@
 function test_bug1925
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY surface_nesting ft_headmodel_bemcp
+% DATA no
 
 [ftver, ftpath] = ft_version;
 cd(fullfile(ftpath, 'forward/private')); % this is where the surface_nesting function is located

@@ -1,11 +1,17 @@
 function test_warp_dykstra2012
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY
+% DATA no
 
 % function to test the back projection of electrodes using warp_dykstra2012
 % Arjen Stolk, Dec 2018
+
+if ~ft_hastoolbox('optim')
+  warning('the OPTIM toolbox is not available, skipping this test');
+  return
+end
 
 % 'headshape' (random mesh)
 x = randn(10,1);

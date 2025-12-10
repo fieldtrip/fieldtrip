@@ -1,8 +1,9 @@
 function test_bug1129
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_preprocessing ft_preproc_bandpassfilter ft_preproc_bandstopfilter ft_preproc_lowpassfilter ft_preproc_highpassfilter
+% DATA private
 
 % change filter order for 'fir' (fir1) filter type, rather than 25 by
 % default, instead to be based on Fs, low-frequency, and data-length
@@ -78,7 +79,7 @@ for N=[199 432 1000] % test 'firls' option
 end
 
 %% high-level ft_preprocessing
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1129.mat'));
+load(dccnpath('/project/3031000.02/test/bug1129.mat'));
 
 cfg = [];
 cfg.bpfreq = [8 12];

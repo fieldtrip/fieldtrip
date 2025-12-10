@@ -5,11 +5,12 @@ function [data] = ft_denoise_synthetic(cfg, data)
 %
 % Use as
 %   [data] = ft_denoise_synthetic(cfg, data)
-% where data should come from FT_PREPROCESSING and the configuration should contain
-%   cfg.gradient = 'none', 'G1BR', 'G2BR' or 'G3BR' specifies the gradiometer
-%                  type to which the data should be changed
-%   cfg.trials   = 'all' or a selection given as a 1xN vector (default = 'all')
-%   cfg.updatesens = 'no' or 'yes' (default = 'yes')
+% where the input data should come from FT_PREPROCESSING or
+% FT_TIMELOCKANALYSIS and the configuration should contain
+%   cfg.gradient   = 'none', 'G1BR', 'G2BR' or 'G3BR' specifies the gradiometer
+%                    type to which the data should be changed
+%   cfg.trials     = 'all' or a selection given as a 1xN vector (default = 'all')
+%   cfg.updatesens = 'yes' or 'no', whether to update the sensor array with the spatial projector (default = 'yes')
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
@@ -19,9 +20,11 @@ function [data] = ft_denoise_synthetic(cfg, data)
 % files should contain only a single variable, corresponding with the
 % input/output structure.
 %
-% See also FT_PREPROCESSING, FT_DENOISE_PCA, FT_DENOISE_SSP
+% See also FT_PREPROCESSING, FT_DENOISE_AMM, FT_DENOISE_DSSP,
+% FT_DENOISE_HFC, FT_DENOISE_PCA, FT_DENOISE_PREWHITEN, FT_DENOISE_SSP,
+% FT_DENOISE_SSS, FT_DENOISE_TSR
 
-% Copyright (C) 2004-2022, Robert Oostenveld
+% Copyright (C) 2004-2025, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -93,40 +96,33 @@ data   = ft_selectdata(tmpcfg, data);
 % remember the original channel ordering
 labelold = data.label;
 
-% apply the balancing to the MEG data and to the gradiometer definition
-current = data.grad.balance.current;
-desired = cfg.gradient;
 
-if ~strcmp(current, 'none')
-  % first undo/invert the previously applied balancing
-  try
-    current_montage = data.grad.balance.(current);
-  catch
-    ft_error('unknown balancing for input data');
-  end
-  fprintf('converting the data from "%s" to "none"\n', current);
-  data = ft_apply_montage(data, current_montage, 'keepunused', 'yes', 'inverse', 'yes');
-  if istrue(cfg.updatesens)
-    fprintf('converting the sensor description from "%s" to "none"\n', current);
-    data.grad = ft_apply_montage(data.grad, current_montage, 'keepunused', 'yes', 'inverse', 'yes');
-    data.grad.balance.current = 'none';
-  end
-end % if current
+% first undo/invert the previously applied balancing
+while ~isempty(data.grad.balance.current)
+  this_name    = data.grad.balance.current{end};
+  this_montage = ft_inverse_montage(data.grad.balance.(this_name));
+  fprintf('reverting the "%s" projection\n', this_name);
+  data      = ft_apply_montage(data,      this_montage, 'keepunused', 'yes');
+  data.grad = ft_apply_montage(data.grad, this_montage, 'keepunused', 'no');
+  data.grad.balance.current = data.grad.balance.current(1:end-1); % remove this from the list
 
-if ~strcmp(desired, 'none')
-  % then apply the desired balancing
-  try
-    desired_montage = data.grad.balance.(desired);
-  catch
-    ft_error('unknown balancing for input data');
+  if strcmp(this_name, 'planar')
+    if isfield(data.grad, 'type') && ~isempty(strfind(data.grad.type, '_planar'))
+      % remove the _planar postfix from the MEG sensor type
+      data.grad.type = sens.type(1:(end-7));
+    end
   end
-  fprintf('converting the data from "none" to "%s"\n', desired);
-  data = ft_apply_montage(data, desired_montage, 'keepunused', 'yes', 'balancename', desired);
-  if istrue(cfg.updatesens)
-    fprintf('converting the sensor description from "none" to "%s"\n', desired);
-    data.grad = ft_apply_montage(data.grad, desired_montage, 'keepunused', 'yes', 'balancename', desired);
-  end
-end % if desired
+end
+
+% then apply the desired balancing
+if ~strcmp(cfg.gradient, 'none')
+  bname = cfg.gradient;
+  montage = data.grad.balance.(bname);
+  fprintf('applying the "%s" projection\n', bname);
+  data      = ft_apply_montage(data,      montage, 'keepunused', 'yes');
+  data.grad = ft_apply_montage(data.grad, montage, 'keepunused', 'no');
+  data.grad.balance.current{end+1} = bname;
+end
 
 % reorder the channels to stay close to the original ordering
 [selold, selnew] = match_str(labelold, data.label);

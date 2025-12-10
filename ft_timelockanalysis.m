@@ -6,8 +6,8 @@ function [timelock] = ft_timelockanalysis(cfg, data)
 % Use as
 %   [timelock] = ft_timelockanalysis(cfg, data)
 %
-% The data should be organised in a structure as obtained from the FT_PREPROCESSING
-% function. The configuration should be according to
+% The data should be organised in a structure as obtained from FT_PREPROCESSING. 
+% The configuration should be according to
 %   cfg.channel            = Nx1 cell-array with selection of channels (default = 'all'), see FT_CHANNELSELECTION for details
 %   cfg.latency            = [begin end] in seconds, or 'all', 'minperiod', 'maxperiod', 'prestim', 'poststim' (default = 'all')
 %   cfg.trials             = 'all' or a selection given as a 1xN vector (default = 'all')
@@ -42,7 +42,7 @@ function [timelock] = ft_timelockanalysis(cfg, data)
 
 % Copyright (C) 2018, Jan-Mathijs Schoffelen
 % Copyright (C) 2003-2006, Markus Bauer
-% Copyright (C) 2003-2022, Robert Oostenveld
+% Copyright (C) 2003-2024, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.

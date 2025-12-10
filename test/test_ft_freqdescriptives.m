@@ -1,8 +1,9 @@
 function test_ft_freqdescriptives
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_freqdescriptives
+% DATA no
 % DATATYPE freq
 
 freq.label = {'1';'2'};

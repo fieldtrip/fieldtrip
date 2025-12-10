@@ -1,14 +1,15 @@
 function test_bug2770
 
 % WALLTIME 00:10:00
-% MEM 2gb
+% MEM 1gb
 % DEPENDENCY eeglab2fieldtrip
+% DATA private
 
 % the *.set file is actually a MATLAB file with the EEG structure in it
 % but it require EEGLAB to read it together with the ftd (which has the binary data)
 
 % I imported the data in EEGLAB with the GUI, and then saved it to a *.mat file
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2770/164_MIST_prac.mat'));
+load(dccnpath('/project/3031000.02/test/bug2770/164_MIST_prac.mat'));
 
 % the eeglab2fieldtrip function is maintained
 ft_hastoolbox('eeglab', 1);

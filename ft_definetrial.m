@@ -60,7 +60,7 @@ function [cfg] = ft_definetrial(cfg)
 % Besides the required three columns in the trial definition "trl" that represent
 % start, end and offset, it can have contain additional columns . These additional
 % columns can be used by a custom trialfun to provide  information about each trial,
-% such as trigger codes, response latencies, trial type and response correctness.
+% such as trigger codes, response latencies, trial type, and response correctness.
 % After FT_PREPROCESSING these additional columns of the "trl" matrix will be
 % represented in the "trialinfo" field.
 %

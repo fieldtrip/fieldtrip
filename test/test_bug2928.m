@@ -1,10 +1,11 @@
 function test_bug2928
 
 % WALLTIME 00:20:00
-% MEM 4gb
+% MEM 2gb
 % DEPENDENCY ft_volumesegment ft_volumerealign
+% DATA private
 
-filename = dccnpath('/home/common/matlab/fieldtrip/data/test/bug2928/e889.dcm');
+filename = dccnpath('/project/3031000.02/test/bug2928/e889.dcm');
 
 mri = ft_read_mri(filename);
 

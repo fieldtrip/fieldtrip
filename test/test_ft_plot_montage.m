@@ -3,6 +3,7 @@ function test_ft_plot_montage
 % MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_plot_montage
+% DATA no
 
 close all
 

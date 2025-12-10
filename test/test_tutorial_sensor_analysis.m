@@ -1,11 +1,12 @@
 function test_tutorial_sensor_analysis(datadir)
 
-% MEM 4gb
+% MEM 2gb
 % WALLTIME 00:25:00
 % DEPENDENCY ft_redefinetrial ft_freqanalysis ft_timelockanalysis ft_appenddata ft_prepare_neighbours ft_megplanar ft_combineplanar ft_multiplotER ft_multiplotTFR ft_connectivityanalysis
+% DATA public
 
 if nargin==0
-  datadir = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/sensor_analysis');
+  datadir = dccnpath('/project/3031000.02/external/download/tutorial/sensor_analysis');
 end
 
 load(fullfile(datadir, 'subjectK.mat'));

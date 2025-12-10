@@ -1,8 +1,9 @@
 function test_bug1729
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_multiplotTFR ft_singleplotTFR ft_plot_matrix
+% DATA no
 
 % reproduce the incorrect display
 freq.label = {'chan'};

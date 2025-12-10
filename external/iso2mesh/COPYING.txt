@@ -3,7 +3,7 @@
 =           An image-based 3D surface and volumetric mesh generator           =
 ===============================================================================
 
-Copyright (C) 2007-2015  Qianqian Fang <q.fang at neu.edu>
+Copyright (C) 2007-2024  Qianqian Fang <q.fang at neu.edu>
 
 -------------------------------------------------------------------------------
 

@@ -31,13 +31,18 @@ function [data] = ft_rejectvisual(cfg, data)
 %                     'zero'   fill the trials that are deselected with zeros
 %   cfg.metric      = string, describes the metric that should be computed in summary mode
 %                     for each channel in each trial, can be
-%                     'var'       variance within each channel (default)
-%                     'min'       minimum value in each channel
-%                     'max'       maximum value each channel
-%                     'maxabs'    maximum absolute value in each channel
-%                     'range'     range from min to max in each channel
-%                     'kurtosis'  kurtosis, i.e. measure of peakedness of the amplitude distribution
-%                     'zvalue'    mean and std computed over all time and trials, per channel
+%                     'var'          variance within each channel (default)
+%                     'std'          standard deviation within each channel
+%                     'db'           decibel value within each channel
+%                     'mad'          median absolute deviation within each channel
+%                     '1/var'        inverse variance within each channel
+%                     'min'          minimum value in each channel
+%                     'max'          maximum value each channel
+%                     'maxabs'       maximum absolute value in each channel
+%                     'range'        range from min to max in each channel
+%                     'kurtosis'     kurtosis, i.e. measure of peakedness of the amplitude distribution
+%                     'zvalue'       mean and std computed over all time and trials, per channel
+%                     'neighbexpvar' relative variance explained by neighboring channels in each trial
 %   cfg.neighbours  = neighbourhood structure, see FT_PREPARE_NEIGHBOURS for details
 %   cfg.latency     = [begin end] in seconds, or 'all', 'minperiod', 'maxperiod', 'prestim', 'poststim' (default = 'all')
 %   cfg.viewmode    = 'remove', 'toggle' or 'hide', only applies to summary mode (default = 'remove')
@@ -87,10 +92,10 @@ function [data] = ft_rejectvisual(cfg, data)
 % files should contain only a single variable, corresponding with the
 % input/output structure.
 %
-% See also FT_REJECTARTIFACT, FT_REJECTCOMPONENT
+% See also FT_REJECTARTIFACT, FT_REJECTCOMPONENT, FT_BADSEGMENT, FT_BADCHANNEL
 
 % Copyright (C) 2005-2006, Markus Bauer, Robert Oostenveld
-% Copyright (C) 2006-2021, Robert Oostenveld
+% Copyright (C) 2006-2024, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.

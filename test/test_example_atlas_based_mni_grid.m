@@ -1,8 +1,9 @@
 function test_example_atlas_based_mni_grid
 
 % WALLTIME 00:20:00
-% MEM 3gb
+% MEM 1gb
 % DEPENDENCY
+% DATA public
 
 % http://www.fieldtriptoolbox.org/example/create_single-subject_grids_in_individual_head_space_that_are_all_aligned_in_brain_atlas_based_mni_space
 
@@ -56,9 +57,9 @@ ft_plot_mesh(template_grid.pos(template_grid.inside,:));
 
 %%
 
-% data from ftp://ftp.fieldtriptoolbox.org/pub/fieldtrip/tutorial/salzburg/mri.mat
+% data from ftp://ftp.fieldtriptoolbox.org/pub/fieldtrip/tutorial/connectivity_aef/mri.mat
 
-mri = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/salzburg/mri.mat'));
+mri = ft_read_mri(dccnpath('/project/3031000.02/external/download/tutorial/connectivity_aef/mri.mat'));
 
 cfg           = [];
 cfg.warpmni   = 'yes';
@@ -71,7 +72,7 @@ sourcemodel   = ft_prepare_sourcemodel(cfg);
 
 close all
 
-hdm = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/salzburg/hdm.mat'));
+hdm = ft_read_mri(dccnpath('/project/3031000.02/external/download/tutorial/connectivity_aef/hdm.mat'));
 
 hdm         = ft_convert_units(hdm, 'm');
 sourcemodel = ft_convert_units(sourcemodel, 'm');

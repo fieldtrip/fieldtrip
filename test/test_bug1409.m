@@ -1,8 +1,9 @@
 function test_bug1409
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_selectdata
+% DATA no
 
 % the issue is that ft_selectdata_new removes the dimord
 

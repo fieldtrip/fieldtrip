@@ -5,21 +5,21 @@ import java.util.Date;
 import java.util.HashMap;
 
 public class SystemOutMonitor implements FieldtripBufferMonitor {
-	private final HashMap<Integer, String> adresses = new HashMap<Integer, String>();
+        private final HashMap<Integer, String> addresses = new HashMap<Integer, String>();
 	private int verbosity=0;
 	private int count = 0;
 	private final SimpleDateFormat sdf = new SimpleDateFormat(
 			"MMM dd,yyyy HH:mm");
 
 	public SystemOutMonitor(int level) {
-		adresses.put(-1, "Internal");
+                addresses.put(-1, "Internal");
 	}
 
 	@Override
 	public void clientClosedConnection(final int clientID, final long time) {
 		 if ( verbosity > 0 )
 		System.out.println(sdf.format(new Date(time)) + " Client "
-				+ adresses.get(clientID) + " closed connection now " + --count
+				+ addresses.get(clientID) + " closed connection now " + --count
 				+ " connections opened.");
 	}
 
@@ -27,7 +27,7 @@ public class SystemOutMonitor implements FieldtripBufferMonitor {
 	public void clientContinues(final int clientID, final long time) {
 		 if ( verbosity > 0 )
 		System.out.println(sdf.format(new Date(time)) + " Client "
-				+ adresses.get(clientID) + " has continued.");
+				+ addresses.get(clientID) + " has continued.");
 	}
 
 	@Override
@@ -35,13 +35,13 @@ public class SystemOutMonitor implements FieldtripBufferMonitor {
 			final long time) {
 		if (errorType == FieldtripBufferMonitor.ERROR_CONNECTION) {
 			System.out.println(sdf.format(new Date(time)) + " Lost client "
-					+ adresses.get(clientID) + " connection unexpectidly");
+                                        + addresses.get(clientID) + " connection unexpectedly");
 		} else if (errorType == FieldtripBufferMonitor.ERROR_PROTOCOL) {
 			System.out.println(sdf.format(new Date(time)) + " Client "
-					+ adresses.get(clientID) + " violates protocol");
+					+ addresses.get(clientID) + " violates protocol");
 		} else {
 			System.out.println(sdf.format(new Date(time)) + " Client "
-					+ adresses.get(clientID) + " has wrong version");
+					+ addresses.get(clientID) + " has wrong version");
 		}
 	}
 
@@ -49,14 +49,14 @@ public class SystemOutMonitor implements FieldtripBufferMonitor {
 	public void clientFlushedData(final int clientID, final long time) {
 		 if ( verbosity > 0 )
 		System.out.println(sdf.format(new Date(time)) + " Data Flushed by "
-				+ adresses.get(clientID));
+				+ addresses.get(clientID));
 	}
 
 	@Override
 	public void clientFlushedEvents(final int clientID, final long time) {
 		 if ( verbosity > 0 )
 		System.out.println(sdf.format(new Date(time)) + " Events Flushed by "
-				+ adresses.get(clientID));
+				+ addresses.get(clientID));
 
 	}
 
@@ -64,7 +64,7 @@ public class SystemOutMonitor implements FieldtripBufferMonitor {
 	public void clientFlushedHeader(final int clientID, final long time) {
 		 if ( verbosity > 0 )
 		System.out.println(sdf.format(new Date(time)) + " Header Flushed by "
-				+ adresses.get(clientID));
+				+ addresses.get(clientID));
 	}
 
 	@Override
@@ -72,7 +72,7 @@ public class SystemOutMonitor implements FieldtripBufferMonitor {
 			final long time) {
 		 if ( verbosity > 1 )
 		System.out.println(sdf.format(new Date(time)) + " Client "
-				+ adresses.get(clientID) + " has been sent " + count
+				+ addresses.get(clientID) + " has been sent " + count
 				+ " events.");
 
 	}
@@ -81,7 +81,7 @@ public class SystemOutMonitor implements FieldtripBufferMonitor {
 	public void clientGetHeader(final int clientID, final long time) {
 		 if ( verbosity > 1 )
 			  System.out.println(sdf.format(new Date(time)) + " Client "
-				+ adresses.get(clientID) + " has been sent the header.");
+				+ addresses.get(clientID) + " has been sent the header.");
 	}
 
 	@Override
@@ -89,25 +89,25 @@ public class SystemOutMonitor implements FieldtripBufferMonitor {
 			final long time) {
 		 if ( verbosity > 1 )	
 			  System.out.println(sdf.format(new Date(time)) + " Client "
-				+ adresses.get(clientID) + " has been sent " + count
+				+ addresses.get(clientID) + " has been sent " + count
 				+ " samples.");
 	}
 
 	@Override
-	public void clientOpenedConnection(final int clientID, final String adress,
+	public void clientOpenedConnection(final int clientID, final String address,
 			final long time) {
 		 if ( verbosity > 0 )
 			  System.out.println(sdf.format(new Date(time))
-				+ " Client opened connection at " + adress + " now " + ++count
+				+ " Client opened connection at " + address + " now " + ++count
 				+ " connections opened.");
-		adresses.put(clientID, adress);
+		addresses.put(clientID, address);
 	}
 
 	@Override
 	public void clientPolls(final int clientID, final long time) {
 		 if ( verbosity > 1 )	
 			  System.out.println(sdf.format(new Date(time)) + " Client "
-				+ adresses.get(clientID) + " polls the buffer.");
+				+ addresses.get(clientID) + " polls the buffer.");
 	}
 
 	@Override
@@ -115,7 +115,7 @@ public class SystemOutMonitor implements FieldtripBufferMonitor {
 			final int diff, final long time) {
 		 if ( verbosity > 1 )
 			  System.out.println(sdf.format(new Date(time)) + " Client "
-				+ adresses.get(clientID) + " added " + diff
+				+ addresses.get(clientID) + " added " + diff
 				+ " events, total now " + count);
 	}
 
@@ -124,7 +124,7 @@ public class SystemOutMonitor implements FieldtripBufferMonitor {
 			final int nChannels, final int clientID, final long time) {
 		 if ( verbosity > 0 )
 			  System.out.println(sdf.format(new Date(time)) + " Header added by "
-				+ adresses.get(clientID) + " datatype " + dataType
+				+ addresses.get(clientID) + " datatype " + dataType
 				+ " fSample " + fSample + " nChannels " + nChannels);
 	}
 
@@ -133,7 +133,7 @@ public class SystemOutMonitor implements FieldtripBufferMonitor {
 			final int diff, final long time) {
 		 if ( verbosity > 1 )
 			  System.out.print(sdf.format(new Date(time)) + " Client "
-				+ adresses.get(clientID) + " added " + diff
+				+ addresses.get(clientID) + " added " + diff
 				+ " samples, total now " + count + "\r");
 	}
 
@@ -142,8 +142,8 @@ public class SystemOutMonitor implements FieldtripBufferMonitor {
 			final int timeout, final int clientID, final long time) {
 		 if ( verbosity > 1 )
 			  System.out.println(sdf.format(new Date(time)) + " Client "
-				+ adresses.get(clientID)
-				+ " is now waiting, tresholds are sample count " + nSamples
+				+ addresses.get(clientID)
+                                + " is now waiting, thresholds are sample count " + nSamples
 				+ ", event count " + nEvents + " or timeout " + timeout);
 	}
 

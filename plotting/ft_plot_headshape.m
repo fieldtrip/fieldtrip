@@ -8,30 +8,37 @@ function hs = ft_plot_headshape(headshape, varargin)
 % be shown.
 %
 % Use as
-%   ft_plot_headshape(shape, ...)
-% where the shape is a structure obtained from FT_READ_HEADSHAPE.
+%   ft_plot_headshape(headshape, ...)
+% where the headshape is a structure obtained from FT_READ_HEADSHAPE.
 %
 % Optional arguments should come in key-value pairs and can include
-%   'facecolor'    = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r', or an Nx3 or Nx1 array where N is the number of faces
-%   'facealpha'    = transparency, between 0 and 1 (default = 1)
-%   'vertexcolor'  = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r', or an Nx3 or Nx1 array where N is the number of vertices
-%   'vertexsize'   = scalar value specifying the size of the vertices (default = 10)
-%   'fidcolor'     = [r g b] values or string, for example 'red', 'r', or an Nx3 or Nx1 array where N is the number of fiducials
-%   'fidmarker'    = ['.', '*', '+',  ...]
-%   'fidlabel'     = ['yes', 'no', 1, 0, 'true', 'false']
-%   'transform'    = transformation matrix for the fiducials, converts MRI voxels into head shape coordinates
-%   'unit'         = string, convert to the specified geometrical units (default = [])
-%   'axes'         = boolean, whether to plot the axes of the 3D coordinate system (default = false)
+%   'facecolor'       = [r g b] values or string, for example 'skin', 'skull', 'brain', 'black', 'red', 'r', or an Nx3 or Nx1 array where N is the number of faces
+%   'facealpha'       = transparency, between 0 and 1 (default = 1)
+%   'vertexcolor'     = [r g b] values or string, for example 'skin', 'skull', 'brain', 'black', 'red', 'r', or an Nx3 or Nx1 array where N is the number of vertices
+%   'vertexsize'      = scalar value specifying the size of the vertices (default = 10)
+%   'edgecolor'       = [r g b] values or string, for example 'skin', 'skull', 'brain', 'black', 'red', 'r'
+%   'cutlocation'     = 1x3 vector specifying a point on the plane that cuts the mesh
+%   'cutorientation'  = 1x3 vector specifying the direction orthogonal through the plane that cuts the mesh
+%   'unit'            = string, convert to the specified geometrical units (default = [])
+%   'axes'            = boolean, whether to plot the axes of the 3D coordinate system (default = false)
+%   'tag'             = string, the tag assigned to the plotted elements (default = '') 
 %
-% Example:
-%   shape = ft_read_headshape(filename);
-%   ft_plot_headshape(shape)
+% The sensor array can include an optional fid field with fiducials, which will also be plotted.
+%   'fidcolor'        = [r g b] values or string, for example 'red', 'r', or an Nx3 or Nx1 array where N is the number of fiducials
+%   'fidmarker'       = ['.', '*', '+',  ...]
+%   'fidlabel'        = ['yes', 'no', 1, 0, 'true', 'false']
+%   'transform'       = transformation matrix, converts fiducials from MRI voxels into head coordinates
+%
+% Example
+%   headshape = ft_read_headshape(filename);
+%   figure
+%   ft_plot_headshape(headshape);
 %
 % See also FT_PLOT_MESH, FT_PLOT_HEADMODEL, FT_PLOT_SENS, FT_PLOT_DIPOLE,
 % FT_PLOT_ORTHO, FT_PLOT_TOPO3D
 
 % Copyright (C) 2009, Cristiano Micheli
-% Copyright (C) 2009-2023, Robert Oostenveld
+% Copyright (C) 2009-2025, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -83,29 +90,28 @@ else
 end
 
 % get the optional input arguments
-vertexcolor = ft_getopt(varargin, 'vertexcolor',  defaultvertexcolor);
-facecolor   = ft_getopt(varargin, 'facecolor',    defaultfacecolor);
-facealpha   = ft_getopt(varargin, 'facealpha',    1);
-edgecolor   = ft_getopt(varargin, 'edgecolor',    defaultedgecolor);
-vertexsize  = ft_getopt(varargin, 'vertexsize',   10);
-material_   = ft_getopt(varargin, 'material');            % do not confuse with /Applications/MATLAB_R2020b.app/toolbox/matlab/graph3d/material.m
-tag         = ft_getopt(varargin, 'tag',         '');
-fidcolor    = ft_getopt(varargin, 'fidcolor',     'g');
-fidmarker   = ft_getopt(varargin, 'fidmarker',    '*');
-fidlabel    = ft_getopt(varargin, 'fidlabel',     true);
-transform   = ft_getopt(varargin, 'transform');
-unit        = ft_getopt(varargin, 'unit');
-axes_       = ft_getopt(varargin, 'axes', false);         % do not confuse with built-in (/Applications/MATLAB_R2020b.app/toolbox/matlab/graphics/axis/axes)
+facecolor       = ft_getopt(varargin, 'facecolor',    defaultfacecolor);
+facealpha       = ft_getopt(varargin, 'facealpha',    1);
+vertexcolor     = ft_getopt(varargin, 'vertexcolor',  defaultvertexcolor);
+vertexsize      = ft_getopt(varargin, 'vertexsize',   10);
+edgecolor       = ft_getopt(varargin, 'edgecolor',    defaultedgecolor);
+cutlocation     = ft_getopt(varargin, 'cutlocation',  []);
+cutorientation  = ft_getopt(varargin, 'cutorientation', []);
+material_       = ft_getopt(varargin, 'material');            % do not confuse with /Applications/MATLAB_R2020b.app/toolbox/matlab/graph3d/material.m
+tag             = ft_getopt(varargin, 'tag',         '');
+fidcolor        = ft_getopt(varargin, 'fidcolor',     'g');
+fidmarker       = ft_getopt(varargin, 'fidmarker',    '*');
+fidlabel        = ft_getopt(varargin, 'fidlabel',     true);
+transform       = ft_getopt(varargin, 'transform');
+unit            = ft_getopt(varargin, 'unit');
+axes_           = ft_getopt(varargin, 'axes', false);         % do not confuse with built-in (/Applications/MATLAB_R2020b.app/toolbox/matlab/graphics/axis/axes)
 
 if ~isempty(unit)
   headshape = ft_convert_units(headshape, unit);
 end
 
 % color management, the other colors are handled in ft_plot_mesh
-if ischar(fidcolor) && exist([fidcolor '.m'], 'file')
-  fidcolor = eval(fidcolor);
-end
-
+if ischar(fidcolor), fidcolor = colorspec2rgb(fidcolor); end
 
 % start with empty return values
 hs = [];
@@ -117,43 +123,46 @@ if ~holdflag
 end
 
 mesh = keepfields(headshape, {'pos', 'tri', 'tet', 'hex', 'color', 'unit', 'coordsys'});
-h  = ft_plot_mesh(mesh, 'vertexcolor', vertexcolor, 'vertexsize', vertexsize, 'facecolor', facecolor, 'facealpha', facealpha, 'edgecolor', edgecolor, 'material', material_, 'axes', axes_, 'tag', tag);
+h  = ft_plot_mesh(mesh, 'vertexcolor', vertexcolor, 'vertexsize', vertexsize, 'facecolor', facecolor, 'facealpha', facealpha, 'edgecolor', edgecolor, 'cutlocation', cutlocation, 'cutorientation', cutorientation, 'material', material_, 'tag', tag);
 hs = [hs; h];
 
-if isfield(headshape, 'fid')
-  fid = headshape.fid;
+if isfield(headshape, 'fid') && ~isempty(headshape.fid)
   if ~isempty(transform)
     % spatially transform the fiducials
     % FIXME what is the reason for this?
-    fid.pos = ft_warp_apply(transform, fid.pos);
+    headshape.fid.pos = ft_warp_apply(transform, headshape.fid.pos);
   end
   
-  % show the fiducial labels
-  for i=1:size(fid.pos,1)
-    h  = plot3(fid.pos(i,1), fid.pos(i,2), fid.pos(i,3), 'Marker', fidmarker, 'MarkerEdgeColor', fidcolor);
+  % plot the fiducials
+  for i=1:size(headshape.fid.pos,1)
+    h  = plot3(headshape.fid.pos(i,1), headshape.fid.pos(i,2), headshape.fid.pos(i,3), 'Marker', fidmarker, 'MarkerEdgeColor', fidcolor);
     hs = [hs; h];
-    if isfield(fid, 'label') && istrue(fidlabel)
+    if isfield(headshape.fid, 'label') && istrue(fidlabel)
       % the text command does not like int or single position values
-      x = double(fid.pos(i, 1));
-      y = double(fid.pos(i, 2));
-      z = double(fid.pos(i, 3));
-      str = sprintf('%s', fid.label{i});
+      x = double(headshape.fid.pos(i, 1));
+      y = double(headshape.fid.pos(i, 2));
+      z = double(headshape.fid.pos(i, 3));
+      str = sprintf('%s', headshape.fid.label{i});
       h   = text(x, y, z, str, 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'Interpreter', 'none');
       hs  = [hs; h];
     end
   end
 end
 
-if isfield(headshape, 'coordsys')
-  % add a context sensitive menu to change the 3d viewpoint to top|bottom|left|right|front|back
-  menu_viewpoint(gca, headshape.coordsys)
+if istrue(axes_)
+  % plot the 3D axes, this depends on the units and coordsys
+  ft_plot_axes(mesh);
 end
 
-if nargout==0
-  clear hs
+if isfield(headshape, 'coordsys') && ~isempty(headshape.coordsys)
+  % add a context sensitive menu to change the 3d viewpoint to top|bottom|left|right|front|back
+  menu_viewpoint(gca, headshape.coordsys)
 end
 
 if ~holdflag
   hold off
 end
 
+if nargout==0
+  clear hs
+end

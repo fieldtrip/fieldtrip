@@ -1,12 +1,13 @@
 function test_bug3035
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_rejectcomponent ft_apply_montage
+% DATA private
 
 %% load the data
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug3035/bug.mat'));
+load(dccnpath('/project/3031000.02/test/bug3035/bug.mat'));
 
 % data consists of nan-free EEG data, plus some eye tracker channels that
 % contain nans. The comp structure was generated based only on the nan-free

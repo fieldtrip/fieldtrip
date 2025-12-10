@@ -1,10 +1,11 @@
 function test_artinis_oxy
 
 % WALLTIME 00:20:00
-% MEM 4gb
+% MEM 2gb
 % DEPENDENCY read_artinis_oxy3 read_artinis_oxy4
+% DATA private
 
-rootdir = dccnpath('/home/common/matlab/fieldtrip/data/test/original/nirs/artinis');
+rootdir = dccnpath('/project/3031000.02/test/original/nirs/artinis');
 
 filename = {
   % oxy3

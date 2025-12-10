@@ -1,7 +1,8 @@
 function test_example_bids_emg
 
-% MEM 4gb
+% MEM 2gb
 % WALLTIME 00:20:00
+% DATA public
 
 %% Converting an example EMG dataset for sharing in BIDS
 %
@@ -58,7 +59,7 @@ cfg.emg.EMGChannelCount    = 13; % it might actually be that some channels are r
 
 cfg.TaskDescription = 'The subject was lying in the MRI scanner during a resting-state BOLD scan, while EMG was being recorded';
 cfg.task = 'resting';
-cfg.dataset = dccnpath('/home/common/matlab/fieldtrip/data/ftp/example/bids_emg/original/nt05_EMG_SESS1_RS_RAW.vhdr');
+cfg.dataset = dccnpath('/project/3031000.02/external/download/example/bids_emg/original/nt05_EMG_SESS1_RS_RAW.vhdr');
 cfg.run = 1;
 
 % write the first EMG recording as run-1
@@ -66,7 +67,7 @@ data2bids(cfg);
 
 cfg.TaskDescription = 'The subject was lying in the MRI scanner during a GABA MRS scan, while EMG was being recorded';
 cfg.task = 'resting';
-cfg.dataset = dccnpath('/home/common/matlab/fieldtrip/data/ftp/example/bids_emg/original/nt05_EMG_SESS1_GABA_RAW.vhdr');
+cfg.dataset = dccnpath('/project/3031000.02/external/download/example/bids_emg/original/nt05_EMG_SESS1_GABA_RAW.vhdr');
 cfg.run = 2;
 
 % write the first EMG recording as run-2

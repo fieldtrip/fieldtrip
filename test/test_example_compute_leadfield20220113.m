@@ -1,7 +1,8 @@
 function test_example_compute_leadfield
 
-% MEM 4gb
+% MEM 2gb
 % WALLTIME 00:10:00
+% DATA no
 
 %
 %% Example use of the ft_compute_leadfield function

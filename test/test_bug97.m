@@ -1,8 +1,9 @@
 function test_bug97
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_preprocessing ft_selectdata
+% DATA private
 
 % This script tests the solution to bug 97, where selectdata is working in an
 % unexpected way. If the user explicitly states cfg.trials = [], no trials are to be
@@ -15,7 +16,7 @@ function test_bug97
 % argument as the corresponding 'value'. In such case [] has a definite meaning
 % (rather than not being defined by the user)
 
-datafile   = dccnpath('/home/common/matlab/fieldtrip/data/test/original/meg/ctf275/A0132_Aud-Obj-Recognition_20051115_02.ds');
+datafile   = dccnpath('/project/3031000.02/test/original/meg/ctf275/A0132_Aud-Obj-Recognition_20051115_02.ds');
 
 cfg          = [];
 cfg.datafile = datafile;

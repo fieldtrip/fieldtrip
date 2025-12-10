@@ -1,10 +1,11 @@
 function test_scalingfactor
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_scalingfactor ft_convert_units
+% DATA no
 
-% since the function to test is in a private directory, we explicitely have to cd into that directory
+% since the function to test is in a private directory, we explicitly have to cd into that directory
 [ftver, ftpath] = ft_version;
 cd(fullfile(ftpath, 'utilities', 'private'));
 

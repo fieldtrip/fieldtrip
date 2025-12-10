@@ -1,7 +1,8 @@
 function test_example_effects_of_tapering
 
-% MEM 4gb
+% MEM 2gb
 % WALLTIME 00:10:00
+% DATA no
 
 %
 %% Effects of tapering for power estimates

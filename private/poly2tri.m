@@ -8,7 +8,7 @@ function mesh = poly2tri(mesh)
 % Use as
 %  mesh = poly2tri(mesh)
 %
-% See also MESH2EDGE
+% See also MESH2EDGE, TRI2BND
 
 if ~isfield(mesh, 'poly')
   ft_error('the mesh does not contain polygons')

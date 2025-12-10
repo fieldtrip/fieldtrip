@@ -38,7 +38,7 @@ function [V] = ft_write_mri(filename, dat, varargin)
 %
 % See also FT_READ_MRI, FT_DATATYPE_VOLUME, FT_WRITE_DATA, FT_WRITE_HEADSHAPE, FT_WRITE_SENS
 
-% Copyright (C) 2011-2023, Jan-Mathijs Schoffelen & Robert Oostenveld
+% Copyright (C) 2011-2024, Jan-Mathijs Schoffelen & Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -68,8 +68,12 @@ scl_slope     = ft_getopt(varargin, 'scl_slope', 1);
 scl_inter     = ft_getopt(varargin, 'scl_inter', 0);
 
 % use the version that is on the path, or default to spm12
-if ~ft_hastoolbox('spm') && isempty(spmversion)
-  spmversion = 'spm12';
+if isempty(spmversion)
+  if ~ft_hastoolbox('spm')
+    spmversion = 'spm12';
+  else
+    spmversion = lower(spm('ver'));
+  end
 end
 
 % ensure that the input data is consistent
@@ -301,5 +305,5 @@ switch dataformat
     save(filename, 'scirunnrrd', '-v6');
 
   otherwise
-    ft_error('unsupported format "%s"', dataformat);
+    ft_error('unsupported dataformat "%s"', dataformat);
 end % switch dataformat

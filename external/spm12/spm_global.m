@@ -11,10 +11,9 @@ function GX = spm_global(V)
 % The mean is estimated after discounting voxels outside the object using
 % a criteria of greater than > (global mean)/8.
 %__________________________________________________________________________
-% Copyright (C) 1996-2012 Wellcome Trust Centre for Neuroimaging
 
 % Anonymous
-% $Id: spm_global.m 4921 2012-09-13 11:16:21Z guillaume $
+% Copyright (C) 1996-2022 Wellcome Centre for Human Neuroimaging
 
 
 %-This is merely the help file for the compiled routine

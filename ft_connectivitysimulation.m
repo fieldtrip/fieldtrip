@@ -461,9 +461,9 @@ end
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble randomseed
-ft_postamble provenance
-ft_postamble history simulated
-ft_postamble savevar simulated
+ft_postamble provenance simulated
+ft_postamble history    simulated
+ft_postamble savevar    simulated
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

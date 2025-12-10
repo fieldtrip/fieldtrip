@@ -28,7 +28,7 @@ function [dat] = read_edf(filename, hdr, begsample, endsample, chanindx)
 %   hdr.nSamplesPre  number of pre-trigger samples in each trial
 %   hdr.nTrials      number of trials
 %   hdr.label        cell-array with labels of each channel
-%   hdr.orig         detailled EDF header information
+%   hdr.orig         detailed EDF header information
 %
 % Or use as
 %   [dat] = read_edf(filename, hdr, begsample, endsample, chanindx)
@@ -287,6 +287,10 @@ if needhdr
     hdr.nSamples     = EDF.NRec * EDF.SPR(chansel(1));
     hdr.nSamplesPre  = 0;
     hdr.nTrials      = 1;
+    hdr.chanunit     = cellstr(EDF.PhysDim(chansel,:));
+    hdr.chantype     = repmat({'unknown'}, size(hdr.chanunit));  % start with unknown
+    hdr.chantype(strcmp(hdr.chanunit, 'uV')) = {'eeg'};          % it might also be EOG, ECG, EMG, etc
+    hdr.chantype(strcmp(hdr.chanunit, 'Boolean')) = {'trigger'};
     hdr.orig         = EDF;
     % this will be used on subsequent reading of data
     hdr.orig.chansel    = chansel;

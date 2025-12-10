@@ -3,6 +3,7 @@ function test_bug3295
 % WALLTIME 00:10:00
 % MEM 1gb
 % DEPENDENCY
+% DATA no
 
 n_chans = 10;
 

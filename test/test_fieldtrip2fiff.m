@@ -1,57 +1,184 @@
-function test_fieldtrip2fiff
+function test_fieldtrip2fiff(mnedatadir)
 
+% WALLTIME 00:10:00
+% MEM 1gb
+% DEPENDENCY fieldtrip2fiff
+% DATA private
+
+%%
 savedir = tempdir;
 
-% test a variety of MEG files
-datadir = dccnpath('/home/common/matlab/fieldtrip/data/test/original/meg');
+%%
+% Use the mne-testing-data if path is specified
+if nargin
+  pw_dir = pwd;
+  cd(mnedatadir);
 
-cfg = [];
+%   datasets = {
+%     fullfile(mnedatadir, 'CTF', 'catch-alp-good-f.ds')
+%     fullfile(mnedatadir, 'CTF', 'somMDYO-18av.ds')
+%     fullfile(mnedatadir, 'CTF', 'testdata_ctf.ds')
+%     fullfile(mnedatadir, 'CTF', 'testdata_ctf_mc.ds')
+%     fullfile(mnedatadir, 'CTF', 'testdata_ctf_pseudocontinuous.ds')
+%     fullfile(mnedatadir, 'CTF', 'testdata_ctf_short.ds')
+%     fullfile(mnedatadir, 'CTF', 'testdata_ctf_short_discontinuous.ds')
+%     fullfile(mnedatadir, 'BTi', '4Dsim',   'c,rfDC')
+%     fullfile(mnedatadir, 'BTi', 'erm_HFH', 'c,rfDC')
+%     fullfile(mnedatadir, 'KIT', 'ArtificalSignalData_RICOH_1khz.con')
+%     fullfile(mnedatadir, 'KIT', 'ArtificalSignalData_Yokogawa_1khz.con')
+%     fullfile(mnedatadir, 'KIT', '010409_Motor_task_coregist-export_tiny_1s.con')
+%     fullfile(mnedatadir, 'KIT', 'data_berlin.con')
+%     fullfile(mnedatadir, 'MEG', 'sample', 'sample_audvis_trunc-ave.fif')
+%     fullfile(mnedatadir, 'MEG', 'sample', 'sample_audvis-ave.fif')
+%     };
+
+  % the idea is here to test the status quo for reading and writing, hence
+  % operate in first instance only on the fif-files
+  d = dir('*/*.fif');
+  d = cat(1, d, dir('*/*/*.fif'));
+  d = cat(1, d, dir('*/*/*/*.fif'));
+  
+  datasets = cell(numel(d),1);
+  for k = 1:numel(d)
+    datasets{k} = fullfile(d(k).folder, d(k).name);
+  end
+
+  ok = false(numel(datasets),1);
+  for k = 1:numel(datasets)
+    cfg = [];
+    cfg.dataset = datasets{k};
+    try
+      data = ft_preprocessing(cfg);
+      ok(k,1) = true;
+    catch
+      ok(k,1) = false;
+    end
+  end
+
+
+  cd(pw_dir);
+end
+
+datadir = dccnpath('/project/3031000.02/test/original/meg');
+
+% Use the 'Subject01.ds' dataset for basic testing of the writing and reading
+cfg         = [];
 cfg.dataset = fullfile(datadir, 'ctf151', 'Subject01.ds');
-hdr = ft_read_header(cfg.dataset);
+hdr         = ft_read_header(cfg.dataset);
 
-cfg.trl = [(0:1).*hdr.nSamples+1;(1:2).*hdr.nSamples;-300.*ones(1,2)]';
+% Define 2 epochs worth of data
+cfg.trl     = [(0:1).*hdr.nSamples+1;(1:2).*hdr.nSamples;-300.*ones(1,2)]';
 cfg.channel = 'MEG';
-data = ft_preprocessing(cfg);
+data        = ft_preprocessing(cfg);
+
+% Benchmark trial for the original data
 t1 = data.trial{1};
-cfgsel.trials = 1;
+
+% Benchmark average for the original data
+tlck = ft_timelockanalysis([], data);
+a1 = tlck.avg;
+
+% Save as epoched fif-files, either in double, or single precision format
 fieldtrip2fiff(fullfile(savedir, 'data_epoched_double.fif'), data);
 fieldtrip2fiff(fullfile(savedir, 'data_epoched_single.fif'), data, 'precision', 'single');
+
+% Save as raw fif-files, either in double, or single precision format
+cfgsel.trials = 1;
 fieldtrip2fiff(fullfile(savedir, 'data_raw_double.fif'), ft_selectdata(cfgsel, data));
 fieldtrip2fiff(fullfile(savedir, 'data_raw_single.fif'), ft_selectdata(cfgsel, data), 'precision', 'single');
+
+% Save as evoked fif-files, either in double, or single precision format
+fieldtrip2fiff(fullfile(savedir, 'data_evoked_double.fif'), ft_timelockanalysis([], data));
+fieldtrip2fiff(fullfile(savedir, 'data_evoked_single.fif'), ft_timelockanalysis([], data), 'precision', 'single');
+
+% Save as epoched/raw fif-files with complex data, either double or single precision
 data.trial{1} = data.trial{1}+1i.*data.trial{2};
-t1c = data.trial{1};
+t1c  = data.trial{1};
+tlck = ft_timelockanalysis([], data);
+a1c  = tlck.avg;
+
 fieldtrip2fiff(fullfile(savedir, 'data_epoched_complex_double.fif'), data);
 fieldtrip2fiff(fullfile(savedir, 'data_epoched_complex_single.fif'), data, 'precision', 'single');
 fieldtrip2fiff(fullfile(savedir, 'data_raw_complex_double.fif'), ft_selectdata(cfgsel, data));
 fieldtrip2fiff(fullfile(savedir, 'data_raw_complex_single.fif'), ft_selectdata(cfgsel, data), 'precision', 'single');
+fieldtrip2fiff(fullfile(savedir, 'data_evoked_complex_double.fif'), ft_timelockanalysis([], data));
+fieldtrip2fiff(fullfile(savedir, 'data_evoked_complex_single.fif'), ft_timelockanalysis([], data), 'precision', 'single');
 
-cfg = [];
+% Read in the data and compare against the benchmarks
+cfg         = [];
 cfg.dataset = fullfile(savedir, 'data_epoched_double.fif');
-datafif = ft_preprocessing(cfg);
+cfg.checkmaxfilter = false;
+datafif     = ft_preprocessing(cfg);
 assert(isequal(datafif.trial{1}, t1));
 cfg.dataset = fullfile(savedir, 'data_epoched_single.fif');
-datafif = ft_preprocessing(cfg);
+datafif     = ft_preprocessing(cfg);
 assert(isequal(datafif.trial{1}, single(t1)));
 cfg.dataset = fullfile(savedir, 'data_epoched_complex_double.fif');
-datafif = ft_preprocessing(cfg);
+datafif     = ft_preprocessing(cfg);
 assert(isequal(datafif.trial{1}, t1c));
 cfg.dataset = fullfile(savedir, 'data_epoched_complex_single.fif');
-datafif = ft_preprocessing(cfg);
+datafif     = ft_preprocessing(cfg);
 assert(isequal(datafif.trial{1}, single(t1c)));
 cfg.dataset = fullfile(savedir, 'data_raw_double.fif');
-datafif = ft_preprocessing(cfg);
+datafif     = ft_preprocessing(cfg);
 assert(isequal(datafif.trial{1}, t1));
 cfg.dataset = fullfile(savedir, 'data_raw_single.fif');
-datafif = ft_preprocessing(cfg);
+datafif     = ft_preprocessing(cfg);
 assert(isequal(datafif.trial{1}, single(t1)));
 cfg.dataset = fullfile(savedir, 'data_raw_complex_double.fif');
-datafif = ft_preprocessing(cfg);
+datafif     = ft_preprocessing(cfg);
 assert(isequal(datafif.trial{1}, t1c));
 cfg.dataset = fullfile(savedir, 'data_raw_complex_single.fif');
-datafif = ft_preprocessing(cfg);
+datafif     = ft_preprocessing(cfg);
 assert(isequal(datafif.trial{1}, single(t1c)));
+cfg.dataset = fullfile(savedir, 'data_evoked_double.fif');
+datafif     = ft_preprocessing(cfg);
+assert(isequal(datafif.trial{1}, a1));
+cfg.dataset = fullfile(savedir, 'data_evoked_single.fif');
+datafif     = ft_preprocessing(cfg);
+assert(isequal(datafif.trial{1}, single(a1)));
+cfg.dataset = fullfile(savedir, 'data_evoked_complex_double.fif');
+datafif     = ft_preprocessing(cfg);
+assert(isequal(datafif.trial{1}, a1c));
+cfg.dataset = fullfile(savedir, 'data_evoked_complex_single.fif');
+datafif     = ft_preprocessing(cfg);
+assert(isequal(datafif.trial{1}, single(a1c)));
 
+%%
+% This section checks whether event handling works to a certain extent
+% Use the 'Subject01.ds' dataset for basic testing of the writing and reading
+cfg         = [];
+cfg.dataset = fullfile(datadir, 'ctf151', 'Subject01.ds');
+cfg.channel = 'MEG';
+cfg.continuous = 'yes';
+data        = ft_preprocessing(cfg); % read in as a single chunk
+event       = ft_read_event(cfg.dataset); % as detected by fieldtrip
 
+fieldtrip2fiff(fullfile(savedir, 'data_without_stimchan_events.fif'), data);
+fieldtrip2fiff(fullfile(savedir, 'data_without_stimchan.fif'), data, 'event', event);
+
+cfg.channel = 'all';
+data        = ft_preprocessing(cfg);
+fieldtrip2fiff(fullfile(savedir, 'data_without_events.fif'), data);
+fieldtrip2fiff(fullfile(savedir, 'data.fif'), data, 'event', event);
+
+ev1 = ft_read_event(fullfile(savedir, 'data_without_stimchan_events.fif'));
+ev2 = ft_read_event(fullfile(savedir, 'data_without_stimchan.fif'));
+ev3 = ft_read_event(fullfile(savedir, 'data_without_events.fif'));
+ev4 = ft_read_event(fullfile(savedir, 'data.fif'));
+assert(numel(ev1)==0);
+assert(numel(ev2)==numel(event) && isequal([event.sample], [ev2.sample]));
+assert(numel(ev4)==numel(event) && isequal([event.sample], [ev4.sample]));
+assert(numel(ev3)==sum(strcmp({event.type},'STIM')));
+
+% delete the files again, they are pretty big
+delete(fullfile(savedir, 'data_without_stimchan_events.fif'));
+delete(fullfile(savedir, 'data_without_stimchan.fif'));
+delete(fullfile(savedir, 'data_without_events.fif'));
+delete(fullfile(savedir, 'data.fif'));
+
+%%
+% This section tests a bunch of MEG datasets, of different systems
 fname = {
   'bti148/c,rfhp0.1Hz'
   'bti248hcp/c,rfDC'
@@ -81,6 +208,21 @@ for k = 1:numel(fname)
   data = ft_preprocessing(cfg);
   data.grad = ft_convert_units(data.grad, 'm');
   
+  if ~isfield(data.grad, 'coordsys')
+    % this is needed to avoid interactivity later on
+    if k==1
+      data.grad.coordsys = '4d';
+    elseif k<=3
+      data.grad.coordsys = 'dewar'; % if hdr.orig.config.Xfm is I-like, no headcoil info, thus dewar coordinates
+    elseif k<=4
+      data.grad.coordsys = '4d'; 
+    elseif k<=7
+      data.grad.coordsys = 'ctf';
+    else
+      data.grad.coordsys = 'neuromag';
+    end
+  end
+
   savename{k,1} = fullfile(savedir, sprintf('file%03d.fif',k));
   fieldtrip2fiff(savename{k}, data);
   save(strrep(savename{k},'fif','mat'),'data');
@@ -114,13 +256,23 @@ for k = 1:numel(savename)
   data    = ft_struct2single(data);
   datafif = ft_struct2single(datafif);
 
-  [ix,msg] = isalmostequal(rmfield(data,{'cfg' 'hdr' 'grad'}),rmfield(datafif,{'cfg' 'hdr' 'grad'}), 'reltol', 1e-4);
+  [ix,msg] = isalmostequal(rmfield(data,{'cfg' 'hdr' 'grad'}), rmfield(datafif,{'cfg' 'hdr' 'grad'}), 'reltol', 1e-4);
   M(k).msg = msg;
 
   if ~skipgrad
     % compare the grads
     grad    = data.grad;
     gradfif = datafif.grad;
+
+    if k<=4
+      % undo the Supine balancing (if present) -> this is not yet represented
+      % in the fif files
+      pwdir = pwd;
+      [ftver, ftdir] = ft_version;
+      cd(fullfile(ftdir, 'fileio', 'private'))
+      grad = undobalancing(grad);
+      cd(pwdir);
+    end
 
     % the order of the channels might have been changed, as well as the
     % coils, as well as the polarity of the ori.
@@ -163,7 +315,7 @@ for k = 1:numel(savename)
       grad.tra = abs(grad.tra);
       grad.coilori(sel,:) = -grad.coilori(sel,:);
     end
-
+    
     assert(all(sum(grad.coilori.*gradfif.coilori,2)>0.999), 'coil orientation different');
     assert(all(sqrt(sum((grad.coilpos-gradfif.coilpos).^2,2))<1e-3), 'coil position different');
   end

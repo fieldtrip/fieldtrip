@@ -3,9 +3,10 @@ function test_bug2767
 % WALLTIME 00:10:00
 % MEM 1gb
 % DEPENDENCY
+% DATA private
 
 
-filename = dccnpath('/home/common/matlab/fieldtrip/data/test/bug2767/01_ljh_firststd_meg_182.fif');
+filename = dccnpath('/project/3031000.02/test/bug2767/01_ljh_firststd_meg_182.fif');
 
 % this works, but returns hdr.nSamples=0
 hdr = ft_read_header(filename);

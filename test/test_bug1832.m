@@ -1,14 +1,18 @@
 function test_bug1832
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:20:00
 % DEPENDENCY ft_read_mri ft_volumesegment ft_prepare_headmodel ft_prepare_sourcemodel
+% DATA no
 
 % for the warp template example script:
 % 1) make test script that checks on the units in these objects (with assert)
 % 2) also go through the rest of the example script and check on units
 
-template = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/external/spm8/templates/T1.nii'));
+[ftver, ftpath] = ft_version;
+templatedir  = fullfile(ftpath, 'template');
+
+template = ft_read_mri(fullfile(ftpath, 'external', 'spm8', 'templates', 'T1.nii'));
 template.coordsys = 'spm'; % so that FieldTrip knows how to interpret the coordinate system
 
 % segment the template brain and construct a volume conduction model (i.e. head model): this is needed

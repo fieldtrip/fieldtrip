@@ -1,8 +1,9 @@
 function test_ft_volumereslice
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_volumereslice SPM
+% DATA no
 
 mri = [];
 mri.anatomy = randn(181,217,181);

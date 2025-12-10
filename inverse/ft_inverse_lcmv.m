@@ -169,8 +169,8 @@ end
 if hasfilter
   % check that the options normalize/reducerank/etc are not specified
   assert(all(cellfun(@isempty, leadfieldopt(2:2:end))), 'the options for computing the leadfield must all be empty/default');
-  % check that lambda is not specified
-  assert(isempty(lambda), 'the options for computing the filter must all be empty/default');
+  % check that the options for the inversion are not specified
+  assert(all(cellfun(@isempty, invopt(4:2:end))) && invopt{2}==0, 'the options for computing the inverse solution must all be empty/default');
   ft_info('using precomputed filters\n');
   sourcemodel.filter = sourcemodel.filter(originside);
 elseif hasleadfield
@@ -201,12 +201,12 @@ if ~isempty(lambda) && ischar(lambda) && lambda(end)=='%'
 end
 
 if projectnoise || strcmp(weightnorm, 'nai')
-    % estimate the noise level in the covariance matrix by the smallest singular (non-zero) value
-    % always needed for the NAI weight normalization case
-    noise = svd(C);
-    noise = noise(rank(C));
-    % estimated noise floor is equal to or higher than lambda
-    noise = max(noise, lambda);
+  % estimate the noise level in the covariance matrix by the smallest singular (non-zero) value
+  % always needed for the NAI weight normalization case
+  noise = svd(C);
+  noise = noise(rank(C));
+  % estimated noise floor is equal to or higher than lambda
+  noise = max(noise, lambda);
 end
 
 % the inverse only has to be computed once for all dipoles
@@ -228,7 +228,7 @@ elseif ~isempty(subspace)
     if subspace<1
       subspace = find(diag(s)./s(1,1) > subspace, 1, 'last');
     end
-    
+
     C       = s(1:subspace,1:subspace);
     % this is equivalent to subspace*C*subspace' but behaves well numerically by construction.
     invC     = diag(1./diag(C + lambda * eye(size(C))));
@@ -261,7 +261,7 @@ for i=1:size(sourcemodel.pos,1)
     % precomputed filter is provided, the leadfield is not needed, nor is the handling of
     % fixedori, weightnorm, or subspace functional
     filt = sourcemodel.filter{i};
-  
+
   else
     if hasleadfield && hasmom && size(sourcemodel.mom, 1)==size(sourcemodel.leadfield{i}, 2)
       % reuse the leadfield that was previously computed and project
@@ -292,7 +292,7 @@ for i=1:size(sourcemodel.pos,1)
       % do subspace projection of the forward model only
       lforig = lf;
       lf     = subspace * lf;
-    
+
       % according to Kensuke's paper, the eigenspace bf boils down to projecting
       % the 'traditional' filter onto the subspace spanned by the first k eigenvectors
       % [u,s,v] = svd(C); filt = ESES*filt; ESES = u(:,1:k)*u(:,1:k)';
@@ -301,8 +301,8 @@ for i=1:size(sourcemodel.pos,1)
     end
 
     if fixedori
-      switch(weightnorm)
-        case {'unitnoisegain','nai'}
+      switch weightnorm
+        case {'unitnoisegain', 'nai'}
           % optimal orientation calculation for unit-noise gain beamformer,
           % (also applies nai weightnorm constraint), based on equation 4.47 from Sekihara & Nagarajan (2008)
           % the following is a reformulation of the generalized eigenproblem
@@ -323,7 +323,7 @@ for i=1:size(sourcemodel.pos,1)
           estimate.ori{i} = arraygainori;
           estimate.eta(i) = d(1)./d(2); % ratio between largest and second largest eigenvalues
           if hassubspace, lforig = lforig * arraygainori; end
-        
+
         otherwise
           % compute the leadfield for the optimal dipole orientation that maximizes spatial filter output
           % subsequently the leadfield for only that dipole orientation will be used for the final filter computation
@@ -338,7 +338,7 @@ for i=1:size(sourcemodel.pos,1)
           if hassubspace, lforig = lforig * maxpowori; end
       end
     end
-  
+
     % construct the spatial filter
     switch weightnorm
       case 'nai'
@@ -352,6 +352,7 @@ for i=1:size(sourcemodel.pos,1)
         else
           ft_error('vector version of nai weight normalization is not implemented');
         end
+
       case 'unitnoisegain'
         % filt*filt' = I
         % Unit-noise gain minimum variance (aka Borgiotti-Kaplan) beamformer
@@ -364,20 +365,21 @@ for i=1:size(sourcemodel.pos,1)
           % compute the matrix that is used for scaling of the filter's rows, as per eqn. 4.83
           denom = pinv(lf' * invC * lf);
           gamma = denom * (lf' * invC_squared * lf) * denom;
-          
           % compute the spatial filter, as per eqn. 4.85
           filt = diag(1./sqrt(diag(gamma))) * denom * lf' * invC;
         end
+
       case 'arraygain'
         % filt*lf = ||lf||, applies to scalar leadfield, and to one of the possibilities of the vector version, eqn. 4.75
         lfn  = lf./norm(lf);
         filt = pinv(lfn' * invC * lfn) * lfn' * invC; % S&N eqn. 4.09 (scalar version), and eqn. 4.75 (vector version)
- 
+
       case {'unitgain' 'no'}
         % this is the 'standard' unit gain constraint spatial filter: filt*lf=I, applies both to vector and scalar leadfields
         filt = pinv(lf' * invC * lf) * lf' * invC; % van Veen eqn. 23, use PINV/SVD to cover rank deficient leadfield
-    
-    otherwise
+
+      otherwise
+        ft_error('unsupported option for weightnorm');
     end
 
   end
@@ -435,7 +437,7 @@ for i=1:size(sourcemodel.pos,1)
       estimate.leadfield{i,1} = lf;
     end
   end
-  
+
 end % for each dipole position
 ft_progress('close');
 

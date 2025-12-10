@@ -1,13 +1,14 @@
 function test_ft_apply_montage
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_apply_montage
+% DATA public
 
 pwdir = pwd;
 
 cfg = [];
-cfg.dataset = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds');
+cfg.dataset = dccnpath('/project/3031000.02/external/download/test/ctf/Subject01.ds');
 cfg.trl     = [1 1200 0];
 cfg.continuous = 'yes';
 data = ft_preprocessing(cfg);

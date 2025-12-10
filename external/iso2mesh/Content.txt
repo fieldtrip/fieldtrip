@@ -1,65 +1,123 @@
 === # Streamlined mesh generation - shortcuts ===
 
 ==== function [node,elem,face]=v2m(img,isovalues,opt,maxvol,method) ====
+
  [node,elem,face]=v2m(img,isovalues,opt,maxvol,method)
+
  volumetric mesh generation from binary or gray-scale volumetric images
  shortcut for vol2mesh
+
+
  inputs and outputs are similar to those defined in vol2mesh
 
+
 ==== function [no,el,regions,holes]=v2s(img,isovalues,opt,method) ====
+
  [no,el,regions,holes]=v2s(img,isovalues,opt,method)
+
  surface mesh generation from binary or gray-scale volumetric images
  shortcut for vol2surf
+
+
  inputs and outputs are similar to those defined in vol2surf; In v2s, 
  method can be set to 'cgalmesh' in addition to those allowed by vol2surf.
 
-==== function [node,elem,face]=s2m(v,f,keepratio,maxvol,method,regions,holes) ====
+
+==== function [node,elem,face]=s2m(v,f,keepratio,maxvol,method,regions,holes,varargin) ====
+
  [node,elem,face]=s2m(v,f,keepratio,maxvol,method)
  [node,elem,face]=s2m(v,f,keepratio,maxvol,'tetgen',regions,holes)
+
  volumetric mesh generation from a closed surface, shortcut for surf2mesh
+
+
  inputs and outputs are similar to those defined in surf2mesh
+
  if method='cgalpoly', s2m will call cgals2m and keepratio should be a 
  structure (as the 'opt' input in cgals2m)
+
  input default values:
        method: if ignored, iso2mesh uses surf2mesh ('tetgen') to do the
                tetrahedral mesh generation
        regions,holes: if ignored, iso2mesh assumes both are empty
 
-==== function img=s2v(node,face,div) ====
- img=s2v(node,face,div)
+
+==== function varargout=s2v(node,face,div,varargin) ====
+
+ [img,v2smap]=s2v(node,face,div)
+
  shortcut for surf2vol, coverting a surface to a volumetric image
+
+
  input:
 	 node: node list of the triangular surface, 3 columns for x/y/z
 	 face: triangle node indices, each row is a triangle
 	 div:  division number along the shortest edge of the mesh (resolution)
               if not given, div=50
+
  output:
 	 img: a volumetric binary image at position of ndgrid(xi,yi,zi)
+        v2smap (optional): a 4x4 matrix denoting the Affine transformation to map
+             the voxel coordinates back to the mesh space. One can use the 
+             v2smap to convert a mesh generated from the rasterized volume
+             into the original input mesh space (work coordinate system). For example:
+
+             [img,map]=s2v(node,face);
+             [no,el]=v2s(img,0.5,5);
+             newno=map*[no ones(length(no),1)]';
+             newno=newno(1:3,:)'; % newno and el now go back to the world coordinates
+
 
 ==== function varargout=m2v(varargin) ====
+
  vol=m2v(node,face,Nxyz)
   or
  vol=m2v(node,face,xi,yi,zi)
+
  shortcut for mesh2vol, rasterizing a teterahedral mesh to a volume using graphics
+
+
  input/output: please see details in the help for mesh2vol
 
+
 ==== function newnode=sms(node,face,iter,alpha,method) ====
+
  newnode=sms(node,face,iter,useralpha,method)
+
  simplified version of surface mesh smoothing
+
+
  input:
     node:  node coordinates of a surface mesh
     face:  face element list of the surface mesh
     iter:  smoothing iteration number
     alpha: scaler, smoothing parameter, v(k+1)=alpha*v(k)+(1-alpha)*mean(neighbors)
     method: same as in smoothsurf, default is 'laplacianhc'
+
  output:
     newnode: output, the smoothed node coordinates
+
+
+==== function varargout=i2m(varargin) ====
+
+ newworkspace=i2m;
+  or
+ newworkspace=i2m(workspace)
+
+ Shortcut for img2mesh, a GUI for iso2mesh
+
+
+ input/output: please see details in the help for img2mesh
 
 === # Streamlined mesh generation ===
 
 ==== function [node,elem,face,regions]=vol2mesh(img,ix,iy,iz,opt,maxvol,dofix,method,isovalues) ====
+
  [node,elem,face,regions]=vol2mesh(img,ix,iy,iz,opt,maxvol,dofix,method,isovalues)
+
  convert a binary (or multi-valued) volume to tetrahedral mesh
+
+
  input:
 	 img: a volumetric binary image
 	 ix,iy,iz: subvolume selection indices in x,y,z directions
@@ -72,6 +130,7 @@
 	 method: 'cgalsurf' or omit: use CGAL surface mesher
 		 'simplify': use binsurface and then simplify
 		 'cgalmesh': use CGAL 3.5 3D mesher for direct mesh generation [new]
+
 		 generally speaking, 'cgalmesh' is the most robust path
 		 if you want to product meshes from binary or multi-region
 		 volumes, however, its limitations include 1) only accept 
@@ -80,6 +139,7 @@
 		 he/she should use the 'cgalsurf' option. 'simplify' approach
 		 is not recommended unless other options has failed.
 	 isovalues: a list of isovalues where the levelset is defined
+
  output:
 	 node: output, node coordinates of the tetrahedral mesh
 	 elem: output, element list of the tetrahedral mesh, the last 
@@ -89,9 +149,14 @@
         region: optional output. if opt.autoregion is set to 1, region
               saves the interior points for each closed surface component
 
+
 ==== function [no,el,regions,holes]=vol2surf(img,ix,iy,iz,opt,dofix,method,isovalues) ====
+
  [no,el,regions,holes]=vol2surf(img,ix,iy,iz,opt,dofix,method,isovalues)
+
  converting a 3D volumetric image to surfaces
+
+
  input:
 	 img: a volumetric binary image; if img is empty, vol2surf will
 	      return user defined surfaces via opt.surf if it exists
@@ -125,15 +190,21 @@
 		   extraction program from CGAL to make surface mesh
 		 - if method is not specified, 'cgalsurf' is assumed by default
 	 isovalues: a list of isovalues where the levelset is defined
+
  output: 
 	 no:  list of nodes on the resulting suface mesh, 3 columns for x,y,z
 	 el:  list of trianglular elements on the surface, [n1,n2,n3,region_id]
 	 regions: list of interior points for all sub-region, [x,y,z]
 	 holes:   list of interior points for all holes, [x,y,z]
 
-==== function [node,elem,face]=surf2mesh(v,f,p0,p1,keepratio,maxvol,regions,holes,forcebox) ====
+
+==== function [node,elem,face]=surf2mesh(v,f,p0,p1,keepratio,maxvol,regions,holes,forcebox,method,cmdopt) ====
+
  [node,elem,face]=surf2mesh(v,f,p0,p1,keepratio,maxvol,regions,holes,forcebox)
+
  create quality volumetric mesh from isosurface patches
+
+
  input parameters:
       v: input, isosurface node list, dimension (nn,3)
          if v has 4 columns, the last column specifies mesh density near each node
@@ -145,30 +216,53 @@
       regions: list of regions, specifying by an internal point for each region
       holes: list of holes, similar to regions
       forcebox: 1: add bounding box, 0: automatic
+
  outputs:
       node: output, node coordinates of the tetrahedral mesh
       elem: output, element list of the tetrahedral mesh
       face: output, mesh surface element list of the tetrahedral mesh 
              the last column denotes the boundary ID
 
-==== function img=surf2vol(node,face,xi,yi,zi) ====
- img=surf2vol(node,face,xi,yi,zi)
+
+==== function [img, v2smap]=surf2vol(node,face,xi,yi,zi,varargin) ====
+
+ [img, v2smap]=surf2vol(node,face,xi,yi,zi,'options',values,...)
+
  convert a triangular surface to a shell of voxels in a 3D image
+
+
  input:
 	 node: node list of the triangular surface, 3 columns for x/y/z
 	 face: triangle node indices, each row is a triangle
+              if face contains the 4th column, it indicates the label of
+              the face triangles (each face componment must be closed); if
+              face contains 5 columns, it stores a tetrahedral mesh with
+              labels, where the first 4 columns are the element list and 
+              the last column is the element label;
 	 xi,yi,zi: x/y/z grid for the resulting volume
+        options: 'fill', if set to 1, the enclosed voxels are labeled by 1
+                 'label', if set to 1, the enclosed voxels are labeled by
+                          the corresponding label of the face or element;
+                          setting 'label' to 1 also implies 'fill'.
+
  output:
 	 img: a volumetric binary image at position of ndgrid(xi,yi,zi)
+        v2smap (optional): a 4x4 matrix denoting the Affine transformation to map
+             the voxel coordinates back to the mesh space.
+
 
 ==== function [mask weight]=mesh2vol(node,elem,xi,yi,zi) ====
+
  [mask weight]=mesh2vol(node,face,Nxyz)
  [mask weight]=mesh2vol(node,face,[Nx,Ny,Nz])
  [mask weight]=mesh2vol(node,face,xi,yi,zi,hf)
    or
  newval=mesh2vol(node_val,face,...)
+
  fast rasterization of a 3D mesh to a volume with tetrahedron index labels
+ 
  date for initial version: Feb 10,2014
+
  input:
       node: node coordinates, dimension N by 2 or N by 3 array
       nodeval: a 4-column array, the first 3 columns are the node coordinates, 
@@ -177,6 +271,7 @@
       Nx,Ny,Nxy: output image in x/y dimensions, or both
       xi,yi: linear vectors for the output pixel center positions in x/y
       hf: the handle of a pre-created figure window for faster rendering
+
  output:
       mask: a 3D image, the value of each pixel is the index of the
             enclosing triangle, if the pixel is outside of the mesh, NaN
@@ -185,37 +280,74 @@
       newval: when the node has 4 columns, the last column represents the
             values (color) at each node, the output newval is the rasterized
             mesh value map over the specified grid.
+
  note: This function only works for matlab
+
  example:
+
    [no,el]=meshgrid6(0:5,0:5,0:3);
    mask=mesh2vol(no,el(:,1:4),0:0.1:5,0:0.1:5,0:0.1:4);
    imagesc(mask(:,:,3))
 
-=== # iso2mesh main function backend ===
+
+==== function varargout = img2mesh(varargin) ====
+ 
+  Format: 
+      newworkspace = img2mesh or imgmesh(workspace)
+
+  A GUI for Iso2Mesh for streamlined mesh data processing
+  
+  
+  Input:
+        workspace (optional): a struct containing the below fields
+           .graph: a digraph object containing the i2m workspace data
+  Output:
+        newworkspace (optional): the updated workspace, with the same
+        subfields as the input.
+
+   If a user supplys an output variable, the GUI will not return until 
+   the user closes the window; if a user does not provide any output,
+   the call will return immediately.
+
+   Please find more information at http://iso2mesh.sf.net/
+  
+=== # Iso2mesh main function backend ===
 
 ==== function [node,elem]=binsurface(img,nface) ====
+
  [node,elem]=binsurface(img,nface)
+
  fast isosurface extraction from 3D binary images
+
+
  input: 
    img:  a 3D binary image
    nface: nface=3 or ignored - for triangular faces, 
           nface=4 - square faces
           nface=0 - return a boundary mask image via node
+
  output:
    elem: integer array with dimensions of NE x nface, each row represents
          a surface mesh face element 
    node: node coordinates, 3 columns for x, y and z respectively
+
  the outputs of this subroutine can be easily plotted using 
      patch('Vertices',node,'faces',elem,'FaceVertexCData',node(:,3),
            'FaceColor','interp');
  if the surface mesh has triangular faces, one can plot it with
      trisurf(elem,node(:,1),node(:,2),node(:,3))
 
+
 ==== function [node,elem,face]=cgalv2m(vol,opt,maxvol) ====
+
  [node,elem,face]=cgalv2m(vol,opt,maxvol)
+
  wrapper for CGAL 3D mesher (CGAL 3.5 or up)
  convert a binary (or multi-valued) volume to tetrahedral mesh
+
  http://www.cgal.org/Manual/3.5/doc_html/cgal_manual/Mesh_3/Chapter_main.html
+
+
  input:
 	 vol: a volumetric binary image
 	 ix,iy,iz: subvolume selection indices in x,y,z directions
@@ -228,6 +360,7 @@
 	     opt.reratio:  maximum radius-edge ratio
 	     if opt is a scalar, it only specifies radbound.
 	 maxvol: target maximum tetrahedral elem volume
+
  output:
 	 node: output, node coordinates of the tetrahedral mesh
 	 elem: output, element list of the tetrahedral mesh, the last 
@@ -238,11 +371,17 @@
 		    one attaches to each side of the interface. one can remove
 		    the redundant triangles by unique(face(:,1:3),'rows')
 
+
 ==== function [node,elem,face]=cgals2m(v,f,opt,maxvol,varargin) ====
+
  [node,elem,face]=cgals2m(v,f,opt,maxvol)
+
  wrapper for CGAL 3D mesher (CGAL 3.5 and newer)
  convert a triangular surface to tetrahedral mesh
+
  http://www.cgal.org/Manual/3.5/doc_html/cgal_manual/Mesh_3/Chapter_main.html
+
+
  input:
 	 v: the node coordinate list of a surface mesh (nn x 3)
 	 f: the face element list of a surface mesh (be x 3)
@@ -255,6 +394,7 @@
 	     opt.reratio:  maximum radius-edge ratio
 	     if opt is a scalar, it only specifies radbound.
 	 maxvol: target maximum tetrahedral elem volume
+
  output:
 	 node: output, node coordinates of the tetrahedral mesh
 	 elem: output, element list of the tetrahedral mesh, the last 
@@ -262,9 +402,14 @@
 	 face: output, mesh surface element list of the tetrahedral mesh
 	      the last column denotes the boundary ID
 
+
 ==== function [node,elem]=vol2restrictedtri(vol,thres,cent,brad,ang,radbound,distbound,maxnode) ====
+
  [node,elem]=vol2restrictedtri(vol,thres,cent,brad,ang,radbound,distbound,maxnode)
+
  surface mesh extraction using CGAL mesher
+
+
  input:
        vol: a 3D volumetric image
        thres: a scalar as the threshold of of the extraction
@@ -280,25 +425,36 @@
        node: the list of 3d nodes in the resulting surface (x,y,z)
        elem: the element list of the resulting mesh (3 columns of integers)
 
+
 ==== function img=surf2volz(node,face,xi,yi,zi) ====
+
  img=surf2volz(node,face,xi,yi,zi)
+
  convert a triangular surface to a shell of voxels in a 3D image
  along the z-axis
+
+
  input:
 	 node: node list of the triangular surface, 3 columns for x/y/z
 	 face: triangle node indices, each row is a triangle
 	 xi,yi,zi: x/y/z grid for the resulting volume
+
  output:
 	 img: a volumetric binary image at position of ndgrid(xi,yi,zi)
 
+
 ==== function [mask, weight]=mesh2mask(node,face,xi,yi,hf) ====
+
  [mask weight]=mesh2mask(node,face,Nxy)
    or
  [mask weight]=mesh2mask(node,face,[Nx,Ny])
    or
  [mask weight]=mesh2mask(node,face,xi,yi,hf)
+
  fast rasterization of a 2D mesh to an image with triangle index labels
+ 
  date for initial version: July 18,2013
+
  input:
       node: node coordinates, dimension N by 2 or N by 3 array
       face: a triangle surface, N by 3 or N by 4 array
@@ -306,47 +462,63 @@
       xi,yi: linear vectors for the output pixel center positions in x/y
       hf: (optional) the handle of a pre-created figure window, for faster 
           rendering
+
  output:
       mask: a 2D image, the value of each pixel is the index of the
             enclosing triangle, if the pixel is outside of the mesh, NaN
       weight: (optional) a 3 by Nx by Ny array, where Nx/Ny are the dimensions for
             the mask
+
  note: This function only works in MATLAB when the DISPLAY is not 
        disabled. The maximum size of the mask output is limited by the 
        screen size.
+
  example:
+
    [no,fc]=meshgrid6(0:5,0:5);
    [mask weight]=mesh2mask(no,fc,-1:0.1:5,0:0.1:5);
    imagesc(mask);
 
-=== # iso2mesh primitive meshing functions ===
+=== # Iso2mesh primitive meshing functions ===
 
 ==== function [node,face,elem]=meshabox(p0,p1,opt,nodesize) ====
- [node,face,elem]=meshabox(p0,p1,opt,maxvol)
+
+ [node,face,elem]=meshabox(p0,p1,opt,nodesize)
+
  create the surface and tetrahedral mesh of a box geometry
+
+
  input: 
    p0:  coordinates (x,y,z) for one end of the box diagnoal
    p1:  coordinates (x,y,z) for the other end of the box diagnoal
    opt: maximum volume of the tetrahedral elements
    nodesize: 1 or a 8x1 array, size of the element near each vertex
+
  output:
    node: node coordinates, 3 columns for x, y and z respectively
    face: integer array with dimensions of NB x 3, each row represents
          a surface mesh face element 
    elem: integer array with dimensions of NE x 4, each row represents
          a tetrahedron 
+
  example:
    [node,face,elem]=meshabox([2 3 2],[6 12 15],0.1,1);
    plotmesh(node,elem,'x>4');
 
+
 ==== function [node,face,elem]=meshasphere(c0,r,tsize,maxvol) ====
+
  [node,face,elem]=meshasphere(c0,r,tsize,maxvol)
+
  create the surface and tetrahedral mesh of a sphere
+
+
  input: 
    c0:  center coordinates (x0,y0,z0) of the sphere
    r:   radius of the sphere
    tsize: maximum surface triangle size on the sphere
    maxvol: maximu volume of the tetrahedral elements
+
  output:
    node: node coordinates, 3 columns for x, y and z respectively
    face: integer array with dimensions of NB x 3, each row represents
@@ -354,9 +526,14 @@
    elem: integer array with dimensions of NE x 4, each row represents
          a tetrahedron 
 
+
 ==== function [node,face,elem]=meshanellip(c0,rr,tsize,maxvol) ====
+
  [node,face,elem]=meshanellip(c0,rr,opt)
+
  create the surface and tetrahedral mesh of an ellipsoid
+
+
  input: 
    c0:  center coordinates (x0,y0,z0) of the ellipsoid
    rr:  radii of an ellipsoid, 
@@ -367,98 +544,140 @@
            axes, respectively. Rotation is applied before translation.
    tsize: maximum surface triangle size on the sphere
    maxvol: maximu volume of the tetrahedral elements
+
  output:
    node: node coordinates, 3 columns for x, y and z respectively
    face: integer array with dimensions of NB x 3, each row represents
          a surface mesh face element 
    elem: integer array with dimensions of NE x 4, each row represents
          a tetrahedron; if ignored, only produces the surface
+
  example:
    [node,face,elem]=meshanellip([10,10,-10],[30,20,10,pi/4,pi/4],0.5,0.4);
    plotmesh(node,elem,'x>10');axis equal;
 
+
 ==== function [node,face,elem]=meshunitsphere(tsize,maxvol) ====
+
  [node,face,elem]=meshunitsphere(tsize,maxvol)
+
  create the surface and/or volumetric mesh of a unit sphere 
  centered at [0 0 0] and radius 1
+
+
  input: 
    tsize: maximum size of the surface triangles (from 0 to 1)
    maxvol: maximum volume of the tetrahedron; if one wants to return
            elem without specifying maxvol, maxvol=tsize^3
+
  output:
    node: node coordinates, 3 columns for x, y and z respectively
    face: integer array with dimensions of NB x 3, each row represents
          a surface mesh face element 
    elem: integer array with dimensions of NE x 4, each row represents
          a tetrahedron. If ignored, this function only produces the surface
+
  example:
    [node,face]=meshunitsphere(0.05);
    [node,face,elem]=meshunitsphere(0.05,0.01);
    plotmesh(node,elem,'x>0'); axis equal;
 
+
 ==== function [node,face,elem]=meshacylinder(c0,c1,r,tsize,maxvol,ndiv) ====
+
  [node,face]=meshacylinder(c0,c1,r,tsize,maxvol,ndiv)
     or
  [node,face,elem]=meshacylinder(c0,c1,r,tsize,maxvol,ndiv)
+ [nplc,fplc]=meshacylinder(c0,c1,r,0,0,ndiv);
+
  create the surface and (optionally) tetrahedral mesh of a 3D cylinder
+
+
  input: 
    c0, c1:  cylinder axis end points
-   r:   radius of the cylinder
+   r:   radius of the cylinder; if r contains two elements, it outputs
+        a cone trunk, with each r value specifying the radius on each end
    tsize: maximum surface triangle size on the sphere
    maxvol: maximu volume of the tetrahedral elements
+
+         if both tsize and maxvol is set to 0, this function sill return 
+         the piecewise-linear-complex (PLC) in the form of the nodes (as node)
+         and a cell array (as face).
+
    ndiv: approximate the cylinder surface into ndiv flat pieces, if 
          ignored, ndiv is set to 20
+
  output:
    node: node coordinates, 3 columns for x, y and z respectively
    face: integer array with dimensions of NB x 3, each row represents
-         a surface mesh triangle 
+         a surface mesh triangle
    elem: (optional) integer array with dimensions of NE x 4, each row 
          represents a tetrahedron 
 
+
 ==== function [node,elem]=meshgrid5(varargin) ====
+
  [node,elem]=meshgrid5(v1,v2,v3,...)
+
  mesh an ND rectangular lattice by splitting 
  each hypercube into 5 tetrahedra
+
  inspired by John D'Errico
  URL: http://www.mathworks.com/matlabcentral/newsreader/view_thread/107191
+
  input:
     v1,v2,v3,... - numeric vectors defining the lattice in
                    each dimension.
                    Each vector must be of length >= 1
+
  output:
     node - factorial lattice created from (v1,v2,v3,...)
            Each row of this array is one node in the lattice
     elem - integer array defining simplexes as references to
            rows of "node".
+
  example:
      [node,elem]=meshgrid5(0:5,0:6,0:4);
      plotmesh(node,elem);
 
+
 ==== function [node,elem]=meshgrid6(varargin) ====
+
  [node,elem]=meshgrid6(v1,v2,v3,...)
+
  mesh an ND rectangular lattice by splitting 
  each hypercube into 6 tetrahedra
+
  author: John D'Errico
  URL: http://www.mathworks.com/matlabcentral/newsreader/view_thread/107191
+
  input:
     v1,v2,v3,... - numeric vectors defining the lattice in
                    each dimension.
                    Each vector must be of length >= 1
+
  output:
     node - factorial lattice created from (v1,v2,v3,...)
            Each row of this array is one node in the lattice
     elem - integer array defining simplexes as references to
            rows of "node".
+
  example:
      [node,elem]=meshgrid6(0:5,0:6,0:4);
      plotmesh(node,elem);
 
+
 ==== function [node,face,centroids]=latticegrid(varargin) ====
+
  [node,face,centroids]=latticegrid(xrange,yrange,zrange,...)
+
  generate a 3D lattice
+
+
  input: 
    xrange, yrange, zrange ...: 1D vectors specifying the range of each
          dimension of the lattice
+
  output:
    node: the vertices of the 3D lattice
    face: the list of cell faces of the lattice, including both internal
@@ -466,199 +685,407 @@
          array, with each row representing a face. One can use
          cell2mat(face) to convert it to an array
    centroids: the centroids of each lattice cell
+
  example:
     % generate a 3D lattice
     [node,face,c0]=latticegrid([1 2 4],1:3,1:4);
     plotmesh(node,face)
+    
     % mesh the 3D lattice based on the face info
     [no,el]=surf2mesh(node,face,[],[],1,0.01,c0);
     figure; plotmesh(no,el)
+
     % mesh a 2-layer structure using a simple lattice
     [node,face,c0]=latticegrid([0 10],[0 5],[0 3.5 4]);
     c0(:,4)=[0.01;0.001];
     [no,el]=surf2mesh(node,face,[],[],1,[],c0);
     figure; plotmesh(no,el)
 
+
+==== function [node,face,yz0,yz1]=extrudecurve(xy, yz, Nx, Nz, Nextrap, spacing, anchor, dotopbottom) ====
+
+ [node,face,yz0,yz1]=extrudecurve(xy, yz, Nx, Nz, Nextrap, spacing, anchor)
+ 
+ create a triangular surface mesh by swining a 2D spline along another 2D
+ spline curve
+
+
+ input:
+      xy: a 2D spline path, along which the surface is extruded, defined
+          on the x-y plane
+      yz: a 2D spline which will move along the path to form a surface,
+          defined on the y-z plane
+      Nx: the count of sample points along the extrusion path (xy), if
+          ignored, it is 40
+      Nz: the count of sample points along the curve to be extruded (yz),
+          if ignored, it is 40
+      Nextrap: number of points to extrapolate outside of the xy/yz
+          curves, 0 if ignored
+      spacing: define a spacing scaling factor for spline interpolations,
+          1 if ignored
+      anchor: the 3D point in the extruded curve plane (yz) that is aligned
+          at the nodes long the extrusion path. this point does not have
+          to be located on the yz curve; orig = [ox oy oz], if ignored, it
+          is set as the point on the interpolated yz with the largested
+          y-value
+      dotopbottom: a flag, if set to 1, tessellated top and bottom faces
+          will be added. default is 0.
+
+ output:
+      node: 3D node coordinates for the generated surface mesh
+      face: triangular face patches of the generated surface mesh, each
+           row represents a triangle denoted by the indices of the 3 nodes
+
+
+==== function [node,face,elem]=meshcylinders(c0, v, len, varargin) ====
+
+ [node,face]=meshcylinders(c0, v, len, r,tsize,maxvol,ndiv)
+    or
+ [node,face,elem]=meshacylinder(c0, v, len, r, tsize,maxvol,ndiv)
+ [nplc,fplc]=meshacylinder(c0, v, len,r,0,0,ndiv);
+
+ create the surface and (optionally) tetrahedral mesh of a 3D cylinder
+
+
+ input: 
+   c0, cylinder list axis's starting point
+   v: directional vector of the cylinder
+   len: a scalar or a vector denoting the length of each 
+        cylinder segment along the direction of v
+   tsize, maxvol, ndiv: please see the help for meshacylinder for details
+
+ output:
+   node, face, elem: please see the help for meshacylinder for details
+
 === # Mesh decomposition and query ===
 
 ==== function facecell=finddisconnsurf(f) ====
+
  facecell=finddisconnsurf(f)
+ 
  subroutine to extract disconnected surfaces from a 
  cluster of surfaces
+ 
  Date: 2008/03/06
+
  input: 
      f: faces defined by node indices for all surface triangles
+
  output:
      facecell: separated disconnected surface node indices
 
-==== function openedge=surfedge(f,varargin) ====
- openedge=surfedge(f)
+
+==== function [openedge,elemid]=surfedge(f,varargin) ====
+
+ [openedge,elemid]=surfedge(f)
+
  find the edge of an open surface or surface of a volume
+
+
  input:
       f: input, surface face element list, dimension (be,3)
+
  output:
       openedge: list of edges of the specified surface
+      elemid (optional): the corresponding index of the 
+                tetrahedron of an open-edge or triangle, 
+                elemid has the same length as openedge.
 
-==== function openface=volface(t) ====
- openface=volface(t)
+
+==== function varargout=volface(t) ====
+
+ [openface,elemid]=volface(t)
+
  find the surface patches of a volume
+
+
  input:
       t: input, volumetric element list, dimension (ne,4)
+
  output:
       openface: list of faces of the specified volume
+      elemid (optional): the corresponding index of the 
+                tetrahedron of an open-edge or triangle, 
+                elemid has the same length as openedge.
+
 
 ==== function loops=extractloops(edges) ====
+
  loops=extractloops(edges)
+
  extract individual loop or polyline segment from a collection of edges
+
+
  input:   
     edges:  two column matrix recording the starting/ending 
              points of all edge segments
+
  output:
     loops:  output, a single vector separated by NaN, each segment
              is a 3D polyline or loop consisted of node IDs
+
  example:
     edges=[1 2;2 3;1 4;3 4;7 3;1 9;5 6;6 7;10 9; 8 10;1 8;9 3;11 11;11 12];
     loops=extractloops(edges)
 
+
 ==== function [conn,connnum,count]=meshconn(elem,nn) ====
+
  [conn,connnum,count]=meshconn(elem,nn)
+
  create node neighbor list from a mesh
+
+
  input:
     elem:  element table of a mesh
     nn  :  total node number of the mesh
+
  output:
     conn:  output, a cell structure of length nn, conn{n}
            contains a list of all neighboring node ID for node n
     connnum: vector of length nn, denotes the neighbor number of each node
     count: total neighbor numbers
 
+
 ==== function centroid=meshcentroid(v,f) ====
+
  centroid=meshcentroid(v,f)
+ 
  compute the centroids of a mesh defined by nodes and elements
  (surface or tetrahedra) in R^n space
+
+
  input:
       v: surface node list, dimension (nn,3)
       f: surface face element list, dimension (be,3)
+
  output:
       centroid: centroid positions, one row for each element
 
-==== function nodevol=nodevolume(node,elem) ====
+
+==== function nodevol=nodevolume(node,elem, evol) ====
+
  nodevol=nodevolume(node,elem)
- calculate the Voronoi volume of each node in a simplex mesh
+
+ calculate the volumes of the cells in the barycentric dual-mesh
+ (this is different from the Voronoi cells, which blong to the 
+ circumcentric dual mesh)
+
+
  input:
     node:  node coordinates
     elem:  element table of a mesh
+
  output:
     nodevol:   volume values for all nodes
 
+
 ==== function vol=elemvolume(node,elem,option) ====
+
  vol=elemvolume(node,elem,option)
+
  calculate the volume for a list of simplexes
+
+
  input:
     node:  node coordinates
     elem:  element table of a mesh
     option: if option='signed', the volume is the raw determinant,
             else, the results will be the absolute values
+
  output:
     vol:   volume values for all elements
 
+
 ==== function [conn,connnum,count]=neighborelem(elem,nn); ====
+
  [conn,connnum,count]=neighborelem(elem,nn)
+
  create node neighbor list from a mesh
+
+
  input:
     elem:  element table of a mesh
     nn  :  total node number of the mesh
+
  output:
     conn:  output, a cell structure of length nn, conn{n}
            contains a list of all neighboring elem ID for node n
     connnum: vector of length nn, denotes the neighbor number of each node
     count: total neighbor numbers
 
+
+==== function [face,labels]=layersurf(elem,varargin) ====
+
+ face=layersurf(elem, opt)
+    or
+ [face,labels]=layersurf(elem,'option1',value1,'option2',value2,...)
+
+ process a multi-layered tetrahedral mesh, like a brain mesh, to extract
+ the layer surface meshes with one enclosed by another
+
+
+ input:
+    elem: an Nx5 integer array, representing the tetrahedral mesh element
+         list. The first 4 columns represent the tetrahedral element node
+         indices; the last column represents tissue labels.
+    opt: (optional) a struct or pairs of names/values to provide
+         additional options; accepted options include
+         'order': ['>='] or '=', '<=' . if set to '>=' (default), the 
+             outmost layer has the lowest label count; if '<=', innermost 
+             is lowest; if '=', surface of each label is extracted
+             individually - meaning that inner surfaces will have two
+             duplicates
+         'innermost': [0] or an array of labels. The labels defined in
+             this list will be treated as the innermost regions, and its
+             boundary will be extracted using the '==' test (order='=').
+             by default; label 0 is assumed to be innermost (i.e. nothing
+             is enclosed inside).
+         'unique': [0] or 1. if 1, remove duplicated triangles; if 0, keep
+             all triangles.
+         'occurence': ['first'] or 'last'. if 'first', the unique operator
+             keeps a duplicated triangle with the lowest label number; 
+             otherwise, a repeated triange keeps the highest label number.
+
+ output:
+    vol: a 2-D or 3-D array of the same type/size of the input arrays. The
+         label for each voxel is determined by the index to the highest
+         value in TPM of the same voxel. If a voxel is a background voxel
+         - i.e. zeros for all TPMs, it stays 0
+    names: a cell array storing the names of the labels (if input is a
+         struct), the first string is the name for label 1, and so on
+
+
 ==== function facenb=faceneighbors(t,opt) ====
+
  facenb=faceneighbors(t,opt)
+
  to find 4 face-neighboring elements of a tetrahedron
+
+
  input:
      t: tetrahedron element list, 4 columns of integers
      opt: if opt='surface', return boundary triangle list 
           (should be the same as the face output from v2m)
+          if opt='rowmajor', same as 'surface', except the 
+          order of the triangles are in the row-major order
+%
           otherwise, return the element list for each element:
           each row contains 4 numbers, representing the element
           indices sharing triangular faces [1 2 3],[1 2 4],[1 3 4]
           and [2 3 4] in order, where 1~4 is the node local index.
           if the index is 0, indicating the face has no neighbor
           (i.e. a boundary face)
+
  output:
      facenb: see opt
 
+
 ==== function edgenb=edgeneighbors(t,opt) ====
+
  edgenb=edgeneighbors(t,opt)
+
  to find neighboring triangular elements in a triangule surface
+
+
  input:
      t: a triangular surface element list, 3 columns of integers
      opt: if opt='general', return the edge neighbors for a general
           triangular surface: each edge can be shared by more than 2
           triangles; if ignored, we assume all triangles are shared by no
           more than 2 triangles.
+
  output:
      edgenb: if opt is not supplied, edgenb is a size(t,1) by 3 array with
      each element being the triangle ID of the edge neighbor of that
      triangle. For each row, the order of the neighbors is listed as those
      sharing edges [1 2], [2 3] and [3 1] between the triangle nodes.
+
      when opt='general', edgenb is a cell array with a length of size(t).
      each member of the cell array is a list of edge neighbors (the order 
      is not defined).
 
+
 ==== function [f maxsize]=maxsurf(facecell,node) ====
+
  [f maxsize]=maxsurf(facecell,node)
+
  return the surface with the maximum element number or  
  total area from a cell arry of surfaces
+
+
  input:
     facecell: a cell array, each element is a face array
     node: optional, node list, if given, the output is the
           surface with the largest surface area.
+
  output:
     f: the surface data (node indices) for the surface with the 
        most elements (or largest area when node is given)
     maxsize: if node is not given, maxisize is row number of f;
              otherwise, maxsize is the total area of f
 
+
 ==== function mask=flatsegment(node,edge) ====
+
  mask=flatsegment(node,edge)
+
  decompose edge loops into flat segments alone arbitrary planes of the bounding box
+
+
  this code is fragile: it can not handle curves with many co-linear
  nodes near the corner point
+
  input:   
     node:  x,y,z coordinates of each node of the mesh
     edge:  input, a single vector separated by NaN, each segment
            is a close-polygon consisted by node IDs 
+
  output:
     mask:  output, a cell, each element is a close-polygon 
            on x/y/z plane 
 
+
 ==== function newedge=orderloopedge(edge) ====
+
  [newedge]=orderloopedge(edge)
+
  order the node list of a simple loop based on connection sequence
+
+
  input: 
         edge: a loop consisted by a sequence of edges, each row 
               is an edge with two integers: start/end node index
+
  output:
         newedge: reordered edge node list
 
+
 ==== function [X,V,E,F]=mesheuler(face) ====
+
  [X,V,E,F]=mesheuler(face)
+
  Euler's charastistics of a mesh
+
+
  input: 
    face: a closed surface mesh
+
  output:
    X: Euler's charastistics
    V: number of vertices 
    E: number of edges
    F: number of faces
 
+
 ==== function seg=bbxflatsegment(node,loop) ====
+
  seg=bbxflatsegment(node,loop)
+
  decompose edge loops into flat segments along the x/y/z 
  planes of the bounding box
+
+
  input:   
     node:  x,y,z coordinates of each node of the mesh
     loop:  input, a single vector separated by NaN, each segment
@@ -667,22 +1094,34 @@
     seg:   output, a single vector separated by NaN, each segment
              is a close-polygon on x/y/z plane 
 
+
 ==== function plane=surfplane(node,face) ====
+
  plane=surfplane(node,face)
+
  plane equation coefficients for each face in a surface
+
+
  input:
    node: a list of node coordinates (nn x 3)
    face: a surface mesh triangle list (ne x 3)
+
  output:
    plane: a (ne x 4) array, in each row, it has [a b c d]
         to denote the plane equation as "a*x+b*y+c*z+d=0"
 
+
 ==== function [pt,p0,v0,t,idx]=surfinterior(node,face) ====
+
  [pt,p0,v0,t,idx]=surfinterior(node,face)
+
  identify a point that is enclosed by the (closed) surface
+
+
  input:
    node: a list of node coordinates (nn x 3)
    face: a surface mesh triangle list (ne x 3)
+
  output:
    pt: the interior point coordinates [x y z]
    p0: ray origin used to determine the interior point
@@ -692,45 +1131,69 @@
    idx: index to the face elements that intersect with the ray, order
        match that of t
 
+
 ==== function elist=surfpart(f,loopedge) ====
+
  elist=surfpart(f,loopedge)
+
  partition a triangular surface using a closed loop defined by existing edges
+
+
  input:
       f: input, surface face element list, dimension (be,3)
       loopedge: a 2-column array, specifying a closed loop in CCW order
+
  output:
       elist: list of triangles that is enclosed by the loop
 
+
 ==== function seeds=surfseeds(node,face) ====
+
  seeds=surfseeds(node,face)
+
  calculate a set of interior points with each enclosed by a closed
  component of a surface
+
+
  input:
    node: a list of node coordinates (nn x 3)
    face: a surface mesh triangle list (ne x 3)
+
  output:
    seeds: the interior points coordinates for each closed-surface
           component
 
+
 ==== function quality=meshquality(node,elem,maxnode) ====
+
  quality=meshquality(node,elem)
+
  compute the Joe-Liu mesh quality measure of an N-D mesh (N<=3)
+
+
  input:
     node:  node coordinates of the mesh (nn x 3)
     elem:  element table of an N-D mesh (ne x (N+1))
+
  output:
     quality: a vector of the same length as size(elem,1), with 
            each element being the Joe-Liu mesh quality metric (0-1) of 
            the corresponding element. A value close to 1 represents
            higher mesh quality (1 means equilateral tetrahedron); 
            a value close to 0 means nearly degenerated element.
+
  reference:
     A. Liu, B. Joe, Relationship between tetrahedron shape measures, 
                     BIT 34 (2) (1994) 268-287.
 
+
 ==== function edges=meshedge(elem,varargin) ====
+
  edges=meshedge(elem,opt)
+
  return all edges in a surface or volumetric mesh
+
+
  input:
     elem:  element table of a mesh (support N-d space element)
     opt: optional input, giving the additional options. If opt
@@ -738,55 +1201,202 @@
        opt.nodeorder: if 1, assuming the elem node indices is in CCW 
                       orientation; 0 use nchoosek() output to order edges
          you can replace opt by a series of ('param', value) pairs.
+
  output:
     edge:  edge list; each row is an edge, specified by the starting and
            ending node indices, the total edge number is
            size(elem,1) x nchoosek(size(elem,2),2). All edges are ordered
            by looping through each element first. 
 
+
+==== function faces=meshface(elem,varargin) ====
+
+ faces=meshface(elem,opt)
+
+ return all faces in a surface or volumetric mesh
+
+
+ input:
+    elem:  element table of a mesh (support N-d space element)
+    opt: optional input, giving the additional options. If opt
+         is a struct, it can have the following field:
+       opt.nodeorder: if 1, assuming the elem node indices is in CCW 
+                      orientation; 0 use nchoosek() output to order faces
+         you can replace opt by a series of ('param', value) pairs.
+
+ output:
+    face:  face list; each row is an face, specified by the starting and
+           ending node indices, the total face number is
+           size(elem,1) x nchoosek(size(elem,2),2). All faces are ordered
+           by looping through each element first. 
+
+
 ==== function snorm=surfacenorm(node,face,varargin) ====
+
  snorm=surfacenorm(node,face)
     or
  snorm=surfacenorm(node,face,'Normalize',0)
+
  compute the normal vectors for a triangular surface
+
+
  input:
    node: a list of node coordinates (nn x 3)
    face: a surface mesh triangle list (ne x 3)
    opt: a list of optional parameters, currently surfacenorm supports:
         'Normalize': [1|0] if set to 1, the normal vectors will be 
                            unitary (default)
+
  output:
    snorm: output surface normal vector at each face
 
+
+==== function nv=nodesurfnorm(node,elem) ====
+  nv=nodesurfnorm(node,elem)
+
+  calculate a nodal norm for each vertix on a surface mesh (surface 
+   can only be triangular or cubic)
+
+
+ parameters: 
+      node: node coordinate of the surface mesh (nn x 3)
+      elem: element list of the surface mesh (3 columns for 
+            triangular mesh, 4 columns for cubic surface mesh)
+      pt: points to be projected, 3 columns for x,y and z respectively
+
+ outputs:
+      nv: nodal norms (vector) calculated from nodesurfnorm.m
+          with dimensions of (size(v,1),3)
+
+ Please find more information at http://iso2mesh.sf.net/cgi-bin/index.cgi?metch
+
+
 ==== function [edges,idx,edgemap]=uniqedges(elem) ====
+
  [edges,idx,edgemap]=uniqedges(elem)
+
  return the unique edge list from a surface or tetrahedral mesh
+
+
  input:
      elem: a list of elements, each row is a list of nodes for an element.
            elem can have 2, 3 or 4 columns
+
  output:
      edge: unique edges in the mesh, denoted by a pair of node indices
      idx:  index of the output in the raw edge list (returned by meshedge)
      edgemap: index of the raw edges in the output list (for triangular mesh)
 
+
+==== function [faces,idx,facemap]=uniqfaces(elem) ====
+
+ [faces,idx,facemap]=uniqfaces(elem)
+
+ return the unique face list from a or tetrahedral mesh
+
+
+ input:
+     elem: a list of elements, each row is a list of nodes for an element.
+           elem can have 2, 3 or 4 columns
+
+ output:
+     face: unique faces in the mesh, denoted by a triplet of node indices
+     idx:  index of the output in the raw face list (returned by meshface)
+     facemap: index of the raw faces in the output list (for triangular mesh)
+
+
 ==== function [elist,nextfront]=advancefront(edges,loop,elen) ====
+
  [elist,nextfront]=advancefront(edges,loop,elen)
+
  advance an edge-front on an oriented surface to the next separated by
  one-element width
+
+
  input:
       edges: edge list of an oriented surface mesh, must be in CCW order
       loop: a 2-column array, specifying a closed loop in CCW order
       elen: node number inside each element, if ignored, elen is set to 3
+
  output:
       elist: list of triangles that is enclosed between the two
              edge-fronts
       nextfront: a new edge loop list representing the next edge-front
 
+
+==== function [inface, outface]=innersurf(node,face,outface) ====
+
+ outface=innersurf(node,face,outface)
+
+ extract the interior triangles (shared by two enclosed compartments) of a complex surface
+
+
+ input:
+    node:  node coordinates
+    face:  surface triangle list
+    outface: (optional) the exterior triangle list, if not given, will
+           be computed using outersurf().
+
+ output:
+    inface: the collection of interior triangles of the surface mesh
+
+
+==== function outface=outersurf(node,face) ====
+
+ outface=outersurf(node,face)
+
+ extract the out-most shell of a complex surface mesh
+
+
+ input:
+    node:  node coordinates
+    face:  surface triangle list
+
+ output:
+    outface: the out-most shell of the surface mesh
+
+
+==== function vol=surfvolume(node,face,option) ====
+
+ vol=surfvolume(node,face,option)
+
+ calculate the enclosed volume for a closed surface
+
+
+ input:
+    node:  node coordinates
+    face:  surface triangle list
+
+ output:
+    vol:   total volume of the enclosed space
+
+
+==== function tf=insurface(node,face,points) ====
+
+ tf=innersurf(node,face,points)
+
+ test if a set of 3D points is located inside a 3D triangular surface
+
+
+ input:
+    node:  node coordinates
+    face:  surface triangle list
+    points: a set of 3D points (Nx3 array)
+
+ output:
+    tf: a vector with the same length of points, 
+        a value of 1 means the point is inside of the surface, and
+        a value of 0 means the point is outside of the surface.
+
 === # Mesh processing and reparing ===
 
 ==== function [node,elem]=meshcheckrepair(node,elem,opt,varargin) ====
+
  [node,elem]=meshcheckrepair(node,elem,opt)
+ 
  check and repair a surface mesh
+
+
  input/output:
       node: input/output, surface node list, dimension (nn,3)
       elem: input/output, surface face element list, dimension (be,3)
@@ -801,114 +1411,547 @@
                        it can remove self-intersecting elements and fill holes
             'intersect': test a surface for self-intersecting elements
 
-==== function newelem=meshreorient(node,elem) ====
- newelem=meshreorient(node,elem)
+
+==== function [newelem, evol]=meshreorient(node,elem) ====
+
+ [newelem, evol]=meshreorient(node,elem)
+
  reorder nodes in a surface or tetrahedral mesh to ensure all
  elements are oriented consistently
+
+
  input:
     node: list of nodes
     elem: list of elements (each row are indices of nodes of each element)
+
  output:
     newelem: the element list with consistent ordering
+    evol: the signed element volume before reorientation
+
 
 ==== function elem=removedupelem(elem) ====
+
  elem=removedupelem(elem)
+
  remove doubly duplicated (folded) elements
+
+
  input:
     elem: list of elements (node indices)
+
  output:
     elem: element list after removing the duplicated elements
 
-==== function [newnode,newelem]=removedupnodes(node,elem) ====
+
+==== function [newnode,newelem]=removedupnodes(node,elem,tol) ====
+
  [newnode,newelem]=removedupnodes(node,elem)
+
  removing the duplicated nodes from a mesh
+
+
  input:
    elem: integer array with dimensions of NE x 4, each row contains
          the indices of all the nodes for each tetrahedron
    node: node coordinates, 3 columns for x, y and z respectively
+
  output:
    newnode: nodes without duplicates
    newelem: elements with only the unique nodes
 
+
+
 ==== function [no,el]=removeisolatednode(node,elem) ====
+
  [no,el]=removeisolatednode(node,elem)
+
  remove isolated nodes: nodes that are not included in any element
+
+
  input:
      node: list of node coordinates
-     elem: list of elements of the mesh
+     elem: list of elements of the mesh, can be a regular array or a cell array for PLCs
+
  output:
      no: node coordinates after removing the isolated nodes
      el: element list of the resulting mesh
 
+
 ==== function fnew=removeisolatedsurf(v,f,maxdiameter) ====
+
  fnew=removeisolatedsurf(v,f,maxdiameter)
+
  remove disjointed surface fragment filtered by using mesh diameter
+
+
  input:
     v: list of nodes of the input surface
     f: list of triangles of the input surface
     maxdiameter: maximum bounding box size for surface removal
+
  ouput:
     fnew: new face list after removing the components smaller than 
           maxdiameter
 
+
 ==== function f=surfaceclean(f,v) ====
+
  f=surfaceclean(f,v)
+
  remove surface patches that are located inside 
                the bounding box faces
+
+
  input: 
       v: surface node list, dimension (nn,3)
       f: surface face element list, dimension (be,3)  
+
  output:
       f: faces free of those on the bounding box
 
+
 ==== function eid=getintersecttri(tmppath) ====
+
  eid=getintersecttri(tmppath)
+
  get the IDs of self-intersecting elements from tetgen
  call this when tetgen complains about self-intersection
+
+
  input: 
    tmppath: working dir, use mwpath('') in most cases
+
  output:
    eid: an array of all intersecting surface elements, 
      one can read the corresponding node/elem by
      [no,el]=readoff(mwpath('post_vmesh.off'));
 
+
 ==== function elem=delendelem(elem,mask) ====
+
  elem=delendelem(elem,mask)
+
  delete elements whose nodes are all edge nodes
+
+
  input/output: 
       elem: input/output, surface/volumetric element list
       mask: of length of node number, =0 for internal nodes, =1 for edge nodes
 
+
 ==== function [newnode,newface]=surfreorient(node,face) ====
+
  [newnode,newface]=surfreorient(node,elem)
+
  reorder nodes in a single closed surface to ensure the norms of all
  triangles are pointing outward
+
+
  input:
     node: list of nodes
     face: list of surface triangles (each row are indices of nodes of each triangle)
+
  output:
     newnode: the output node list, in most cases it equals node
     newface: the face list with consistent ordering
 
+=== # Mesh registration - Metch Toolbox ===
+
+==== function [newpt elemid weight]=proj2mesh(v,f,pt,nv,cn,radmax) ====
+  [newpt elemid weight]=proj2mesh(v,f,pt,nv,cn)
+
+  project a point cloud on to the surface mesh (surface can only be triangular)
+
+
+ parameters: 
+      v: node coordinate of the surface mesh (nn x 3)
+      f: element list of the surface mesh (3 columns for 
+            triangular mesh, 4 columns for cubic surface mesh)
+      pt: points to be projected, 3 columns for x,y and z respectively
+      nv: nodal norms (vector) calculated from nodesurfnorm.m
+          with dimensions of (size(v,1),3)
+      cn: a integer vector with the length of p, denoting the closest
+          surface nodes (indices of v) for each point in p. this 
+          value can be calculated from dist2surf.m
+      radmax: if speicified, the search for elements to project will be
+          limited to those within a bounding box with half-edge-length 
+          of radmax centered at the point to be projected
+
+      if nv and cn are not supplied, proj2mesh will project the point
+      cloud onto the surface by the direction pointing to the centroid
+      of the mesh
+
+ outputs:
+      newpt: the projected points from p
+      elemid: a vector of length of p, denotes which surface trangle (in elem)
+             contains the projected point
+      weight: the barycentric coordinate for each projected points, these are
+             the weights 
+
+ Please find more information at http://iso2mesh.sf.net/cgi-bin/index.cgi?metch
+
+
+==== function [d2surf,cn]=dist2surf(node,nv,p,cn) ====
+  [d2surf,cn]=dist2surf(node,nv,p)
+
+  calculate the distances from a point cloud to a surface, and return
+  the indices of the closest surface node
+
+
+ parameters: 
+      node: node coordinate of the surface mesh (nn x 3)
+      nv: nodal norms (vector) calculated from nodesurfnorm.m
+          with dimensions of (size(node,1),3), this can be 
+          calcuated from nodesurfnorm.m
+      pt: points to be calculated, 3 columns for x,y and z respectively
+
+ outputs:
+      d2surf: a vector of length of p, the distances from p(i) to the surface
+      cn: a integer vector with the length of p, the indices of the closest surface node
+
+ Please find more information at http://iso2mesh.sf.net/cgi-bin/index.cgi?metch
+
+
+==== function [A,b,newpos]=regpt2surf(node,elem,p,pmask,A0,b0,cmask,maxiter) ====
+  [A,b,newpos]=regpt2surf(node,elem,p,pmask,A0,b0,cmask,maxiter)
+  Perform point cloud registration to a triangular surface
+  (surface can be either triangular or cubic), Gauss-Newton method
+  is used for the calculation
+
+
+ parameters: 
+      node: node coordinate of the surface mesh (nn x 3)
+      elem: element list of the surface mesh (3 columns for 
+            triangular mesh, 4 columns for cubic surface mesh)
+      p: points to be registered, 3 columns for x,y and z respectively
+      pmask: a mask vector with the same length as p, determines the 
+         method to handle the point, if pmask(i)=-1, the point is a free
+         node and can be move by the optimization, if pmask(i)=0, the
+         point is fixed; if pmask(i)=n>0, the distance between p(i,:)
+         and node(n,:) will be part of the object function and be optimized
+      A0: a 3x3 matrix, as the initial guess for the affine A matrix (rotation&scaling)
+      b0: a 3x1 vector, as the initial guess for the affine b vector (translation)
+      cmask: a binary 12x1 vector, determines which element of [A(:);b] will be optimized
+          if cmask(i)=0, the corresponding coefficient will not be updated
+      maxiter: a integer, specifying the optimization iterations
+
+ outputs:
+      A: 3x3 matrix, the updated affine A matrix
+      b: 3x1 vector, the updated affine b vector
+      newpos: the registered positions for p, newpos=A*p'+b
+
+ Please find more information at http://iso2mesh.sf.net/cgi-bin/index.cgi?metch
+
+
+==== function [A,b]=affinemap(pfrom,pto) ====
+  [A,b]=affinemap(pfrom,pto)
+
+  calculate an affine transform (A matrix and b vector) to map n
+  vertices from one space to the other using least square solutions
+
+
+ parameters: 
+      pfrom: nx3 matrix, each row is a 3d point in original space
+      pto: nx3 matrix, each row is a 3d point in the mapped space
+
+ outputs:
+      A: 3x3 matrix, the calculated affine A matrix
+      b: 3x1 vector, the calculated affine b vector
+
+ the solution will satisfy the following equation: A*pfrom'+b=pto
+
+ Please find more information at http://iso2mesh.sf.net/cgi-bin/index.cgi?metch
+
+
+==== function varargout = metchgui(varargin) ====
+    alldata = metchgui(node,elem,points,pface) or metchgui(volume,points,pface)
+
+    A GUI to register a point cloud to a mesh or volumetric image
+  
+  
+   parameters: 
+        node: node coordinate of the surface mesh (nn x 3)
+        elem: element list of the surface mesh (3 columns for 
+              triangular mesh, 4 columns for cubic surface mesh)
+        points: the coordinates (3 columns for x/y/z) of the 
+              point cloud which you want to register
+        pface:trianglular surface defined on the point cloud.
+              pface is optional; if presents, metch will display 
+              a surface object instead of a point cloud.
+
+   the input can also be two parameters in form of metchgui(volume,points), 
+    where volume is a 3D image (array).
+
+   outputs:
+        alldata: a structrure containing all processing outputs
+        the fields include: 
+         .node: the input node 
+         .elem: the input surface mesh elements
+         .volume: if the input volumetric image
+         .A0: the affine rotation for selected point pairs (after Initialize)
+         .b0: the affine translation for selected point pairs (after Initialize)
+         .A: the affine rotation for the point cloud (after Optimize)
+         .b: the affine translation for the point cloud (after Optimize)
+         .points: the input point cloud
+         .pointsinit: the point cloud after initialization
+         .pointsopt: the point cloud after optimization
+         .pointsproj: the point cloud after projecting to the surface
+         .initplot: the handle to the point cloud plot after init
+         .optplot: the handle to the point cloud plot after optimization
+         .projplot: the handle to the point cloud plot after projection
+
+   If user supplys an output variable, the GUI will not return until the
+   user hits the "close" button or close the window; if user does not
+   supply any output, the call will return immediately; any data user
+   intends to save, he has to click on "Save Session" button and provides
+   a mat-file file name. A single structure named "metchsession" will be
+   stored in this file.
+
+   example: (meshasphere/meshunitsphere are defined in iso2mesh http://iso2mesh.sf.net)
+
+       [noderef,faceref,elemref]=meshunitsphere(0.08,10);
+       [no,fc]=removeisolatednode(noderef(:,1:3),faceref(:,1:3));
+       [node,face,elem]=meshasphere([10 20 15],3,0.5,10);
+       [no2,fc2]=removeisolatednode(node(:,1:3),face(:,1:3));
+       alldata = metchgui(no,fc,no2);
+       % or alldata = metchgui(no,fc,no2,fc2);
+
+   Please find more information at http://iso2mesh.sf.net/cgi-bin/index.cgi?metch
+  
+
+==== function varargout = metchgui_one(varargin) ====
+    alldata = metchgui_one(node,elem,points) or metchgui_one(volume,points,pface)
+
+    A GUI to register a point cloud to a mesh or volumetric image
+  
+  
+   parameters: 
+        node: node coordinate of the surface mesh (nn x 3)
+        elem: element list of the surface mesh (3 columns for 
+              triangular mesh, 4 columns for cubic surface mesh)
+        points: the coordinates (3 columns for x/y/z) of the 
+              point cloud which you want to register
+        pface:trianglular surface defined on the point cloud.
+              pface is optional; if presents, metch will display 
+              a surface object instead of a point cloud.
+
+   the input can also be two parameters in form of metchgui_one(volume,points), 
+    where volume is a 3D image (array).
+
+   outputs:
+        alldata: a structrure containing all processing outputs
+        the fields include: 
+         .node: the input node 
+         .elem: the input surface mesh elements
+         .volume: if the input volumetric image
+         .A0: the affine rotation for selected point pairs (after Initialize)
+         .b0: the affine translation for selected point pairs (after Initialize)
+         .A: the affine rotation for the point cloud (after Optimize)
+         .b: the affine translation for the point cloud (after Optimize)
+         .points: the input point cloud
+         .pointsinit: the point cloud after initialization
+         .pointsopt: the point cloud after optimization
+         .pointsproj: the point cloud after projecting to the surface
+         .initplot: the handle to the point cloud plot after init
+         .optplot: the handle to the point cloud plot after optimization
+         .projplot: the handle to the point cloud plot after projection
+
+   If user supplys an output variable, the GUI will not return until the
+   user hits the "close" button or close the window; if user does not
+   supply any output, the call will return immediately; any data user
+   intends to save, he has to click on "Save Session" button and provides
+   a mat-file file name. A single structure named "metchsession" will be
+   stored in this file.
+
+   example: (meshasphere/meshunitsphere are defined in iso2mesh http://iso2mesh.sf.net)
+
+       [noderef,faceref,elemref]=meshunitsphere(0.08,10);
+       [no,fc]=removeisolatednode(noderef(:,1:3),faceref(:,1:3));
+       [node,face,elem]=meshasphere([10 20 15],3,0.5,10);
+       [no2,fc2]=removeisolatednode(node(:,1:3),face(:,1:3));
+       alldata = metchgui(no,fc,no2);
+       % or alldata = metchgui(no,fc,no2,fc2);
+
+   Please find more information at http://iso2mesh.sf.net/cgi-bin/index.cgi?metch
+  
+=== # Polyline handling ===
+
+==== function [bcutpos, bcutloop, bcutvalue]=slicesurf(node, face, varargin) ====
+
+ [bcutpos, bcutloop]=slicesurf(node, face, varargin)
+
+ Slice a closed surface by a plane and extract the intersection curve as a
+ polyline loop
+
+
+ input:
+    node: an N x 3 array defining the 3-D positions of the mesh
+    face: an N x 3 interger array specifying the surface triangle indices;
+
+ output:
+    bcutpos: the nodes on the intersection curve
+    bcutloop: the sequential order of the nodes to form a polyline loop;
+          the last node is assumed to be connected to the first node; an
+          nan indicates the end of a loop; the intersection may contain
+          multiple loops; if only bcutpos is returned, the nodes will be
+          made in sequential order.
+
+
+
+==== function [leftpt,leftcurve,rightpt,rightcurve]=slicesurf3(node,elem,p1,p2,p3,step,minangle) ====
+
+ [leftpt,leftcurve,rightpt,rightcurve]=slicesurf3(node,elem,p1,p2,p3,step,minangle)
+
+ Slice a closed surface by a plane and extract the landmark nodes along
+ the intersection between p1 and p3, then output into 2 segments: between
+ p2 to p1 (left half), and p2 to p3 (right half)
+
+
+ input:
+    node: an N x 3 array defining the 3-D positions of the mesh
+    elem: an N x 3 interger array specifying the surface triangle indices;
+    p1: 3D position of the start on the curve-of-interest
+    p2: 3D position of the middle on the curve-of-interest
+    p3: 3D position of the end on the curve-of-interest
+    step: (optional) a percentage (0-100) specifying the spacing of the
+        output landmark nodes; step=20 means the landmarks on the left
+        curve are spaced as 20% of the total lengths of the left-half, and
+        those on the right-curve are spaced at 20% of the right-half,
+        starting from p2.
+    minangle: (optional) a positive minangle will ask this function to
+        call polylinesimplify to remove sharp turns on the curve.
+
+ output:
+    leftpt: the equal-spaced landmark nodes on the left-half (p2-p1)
+            intersection curve; spacing between these nodes are
+            (step% * length of the curve between p2-p1)
+    leftcurve: all nodes on the left-half (p2-p1) intersection curve
+    rightpt: the equal-spaced landmark nodes on the right-half (p2-p3)
+            intersection curve; spacing between these nodes are
+            (step% * length of the curve between p2-p3)
+    rightcurve: all nodes on the left-half (p2-p1) intersection curve
+
+
+==== function [len, node]=polylinelen(node, p0, p1, pmid) ====
+
+ [len, node]=polylinelen(node, p0, p1)
+
+ Calculate the polyline line segment length vector in sequential order
+
+
+ input:
+    node: an N x 3 array defining each vertex of the polyline in
+          sequential order
+    p0:(optional) a given node to define the start of the polyline, if not
+         defined, start position is assumed to be 1st node
+    p1:(optional) a given node to define the end of the polyline, if not
+         defined, end position is assumed to be last node
+    pmid:(optional) a given node sits between p0 and p1, if not
+         defined, index of the middle (floored) node is used
+
+ output:
+    len: the length of each segment between the start and the end points
+    node: the node list between the start and end points of the polyline
+
+
+
+==== function [newnodes, len]=polylinesimplify(nodes, minangle) ====
+
+ [newnodes, len]=polylinesimplify(nodes, minangle)
+
+ Calculate a simplified polyline by removing nodes where two adjacent
+ segment have an angle less than a specified limit
+
+
+ input:
+    node: an N x 3 array defining each vertex of the polyline in
+          sequential order
+    minangle:(optional) minimum segment angle in radian, if not given, use
+          0.75*pi
+
+ output:
+    newnodes: the updated node list; start/end will not be removed
+    len: the length of each segment between the start and the end points
+
+
+
+==== function [idx, weight, newnodes]=polylineinterp(polylen, len, nodes) ====
+
+ [idx, weight]=polylineinterp(polylen, len)
+ [idx, weight, newnodes]=polylineinterp(polylen, len, nodes)
+
+ Find the polyline segment indices and interpolation weights for a 
+ specified total length or a set of lengths
+
+
+ input:
+    polylen: a 1D vector sequentially recording the length of each segment
+         of a polyline, the first number is the length of the 1st segment,
+         and so on
+    len: a single scalar, or a vector of scalars, specifying the total
+         length
+    nodes: if nodes is an array with a row-number equal to length(polylen)+1,
+         we assume each row defines a coordinate for the nodes along the
+         polyline
+
+ output:
+    idx: the indices of the polyline segments, starting from 1, where each
+         length defined in len ends; if len> sum(polylen), nan is
+         returned; if len<0, the weight will be a negative value.
+    weight: the interpolation weight between 0-1 towards the end node 
+         of the containing segment; the weight for the start-node is 1-weight
+    newnodes: the interpolated node positions at the end of the len
+
+ example:
+    lineseg=[2,2,1,7,10];
+    [idx, weight]=polylineinterp(lineseg, [3, 12, 7])
+
+
+==== function [idx, dist]=closestnode(node,p) ====
+
+ [idx, dist]=closestnode(node,p)
+
+ Find the closest point in a node list and return its index
+
+ input:
+    node: each row is an N-D node coordinate
+    p: a given position in the same space
+
+ output:
+    idx: the index of the position in the node list that has the shortest
+         Euclidean distance to the position p
+    dist: the distances between p and each node
+
+
 === # Mesh resampling and optimization ===
 
 ==== function [node,elem]=meshresample(v,f,keepratio) ====
+
  [node,elem]=meshresample(v,f,keepratio)
+
  resample mesh using CGAL mesh simplification utility
+
+
  input:
     v: list of nodes
     f: list of surface elements (each row for each triangle)
     keepratio: decimation rate, a number less than 1, as the percentage
                of the elements after the sampling
+
  output:
     node: the node coordinates of the sampled surface mesh
     elem: the element list of the sampled surface mesh
 
+
 ==== function [newno,newfc]=remeshsurf(node,face,opt) ====
+
  [newno,newfc]=remeshsurf(node,face,opt)
+
  remesh a triangular surface and the output is guaranteed to be
  free of self-intersecting element. This function is similar to 
  meshresample, but it can both downsample or upsample a mesh
+
+
  input:
 	 node: list of nodes on the input suface mesh, 3 columns for x,y,z
 	 face: list of trianglular elements on the surface, [n1,n2,n3,region_id]
@@ -917,13 +1960,19 @@
 	   opt.closesize: if there are openings, set the closing diameter
 	   opt.elemsize:  the size of the element of the output surface
 	   if opt is a scalar, it defines the elemsize and gridsize=opt/4
+
  output:
 	 newno:  list of nodes on the resulting suface mesh, 3 columns for x,y,z
 	 newfc:  list of trianglular elements on the surface, [n1,n2,n3,region_id]
 
+
 ==== function p=smoothsurf(node,mask,conn,iter,useralpha,usermethod,userbeta) ====
+
  p=smoothsurf(node,mask,conn,iter,useralpha,usermethod,userbeta)
+
  smoothing a surface mesh
+
+
  input:
     node:  node coordinates of a surface mesh
     mask:  flag whether a node is movable: 0 movable, 1 non-movable
@@ -935,20 +1984,28 @@
     useralpha: scaler, smoothing parameter, v(k+1)=(1-alpha)*v(k)+alpha*mean(neighbors)
     usermethod: smoothing method, including 'laplacian','laplacianhc' and 'lowpass'
     userbeta: scaler, smoothing parameter, for 'laplacianhc'
+
  output:
     p: output, the smoothed node coordinates
+
  recommendations
     Based on [Bade2006], 'Lowpass' method outperforms 'Laplacian-HC' in volume
     preserving and both are significantly better than the standard Laplacian method
+
     [Bade2006]  R. Bade, H. Haase, B. Preim, "Comparison of Fundamental Mesh 
                 Smoothing Algorithms for Medical Surface Models," 
                 Simulation and Visualization, pp. 289-304, 2006. 
 
+
 ==== function [no,el,fc,nodemap]=sortmesh(origin,node,elem,ecol,face,fcol) ====
+
  [no,el,fc]=sortmesh(origin,node,elem,face)
+
  sort nodes and elements in a mesh so that the indexed
  nodes and elements are closer to each order
  (this may reduce cache-miss in a calculation)
+
+
  input:
     origin: sorting all nodes and elements with the distance and
             angles wrt this location, if origin=[], it will be 
@@ -958,26 +2015,36 @@
     ecol: list of columns in elem to participate sorting
     face: list of surface triangles (this can be omitted)
     fcol: list of columns in face to participate sorting
+
  output:
     no: node coordinates in the sorted order
     el: the element list in the sorted order
     fc: the surface triangle list in the sorted order (can be ignored)
     nodemap: the new node mapping order, no=node(nodemap,:)
 
+
 ==== function [newnode,newelem]=mergemesh(node,elem,varargin) ====
+
  [newnode,newelem]=mergemesh(node,elem,varargin)
+
  concatenate two or more tetrahedral meshes or triangular surfaces
+ 
+
  input: 
       node: node coordinates, dimension (nn,3)
       elem: tetrahedral element or triangle surface (nn,3) to (nn,5)
+
  output:
       newnode: the node coordinates after merging, dimension (nn,3)
       newelem: tetrahedral element or surfaces after merging (nn,4) or (nhn,5)
+
  note: you can call meshcheckrepair for the output newnode and
  newelem to remove the duplicated nodes or elements. mergemesh does
  detect self-intersecting elements when merging; to remove self-intersecting
  elements, you need to use mergesurf().
+
  example:
+
    [node1,face1,elem1]=meshabox([0 0 0],[10 10 10],1,1);
    [node2,face2,elem2]=meshasphere([5 5 13.1],3,0.3,3);
    [newnode,newelem]=mergemesh(node1,elem1,node2,elem2);
@@ -986,9 +2053,14 @@
    [newnode,newface]=mergemesh(node1,face1,node2,face2);
    plotmesh(newnode,newface,'x>5');
 
+
 ==== function [newnode,newelem,newface]=meshrefine(node,elem,varargin) ====
+
  [newnode,newelem,newface]=meshrefine(node,elem,face,opt)
+
  refine a tetrahedral mesh by adding new nodes or constraints
+
+
  input parameters:
       node: existing tetrahedral mesh node list
       elem: existing tetrahedral element list
@@ -1027,48 +2099,67 @@
               new elements share the polyhedra between the inserted nodes,
               these special elements will be marked by opt.extcorelabel, 
               otherwise the label will be set to -1 
+
  outputs:
       newnode: node coordinates of the tetrahedral mesh
       newelem: element list of the tetrahedral mesh
       newface: mesh surface element list of the tetrahedral mesh 
              the last column denotes the boundary ID
+
  examples:
+
      [node,face,elem]=meshasphere([0 0 0],24,1,2);
      elem(:,5)=1;
+
      % inserting nodes that are inside the original mesh
      innernodes=double([1 1 1; 2 2 2; 3 3 3]);
      [newno,newel]=meshrefine(node,elem,innernodes);
      all(ismember(round(innernodes*1e10)*1e-10,round(newno*1e10)*1e-10,'rows'))
      plotmesh(newno,[],newel,'x>-3')
+
      % inserting nodes that are external to the original mesh
      extnodes=double([-5 -5 25;-5 5 25;5 5 25;5 -5 25]);
      [newno,newel]=meshrefine(node,elem,struct('newnode',extnodes,'extcmdopt','-Y'));
      figure;
      plotmesh(newno,[],newel,'x>-3')
 
+
 ==== function [newnode,newelem]=mergesurf(node,elem,varargin) ====
+
  [newnode,newelem]=mergesurf(node1,elem1,node2,elem2,...)
+
  merge two or more triangular meshes and split intersecting elements
+ 
+
  input:
       node: node coordinates, dimension (nn,3)
       elem: tetrahedral element or triangle surface (nn,3)
+
  output:
       newnode: the node coordinates after merging, dimension (nn,3)
       newelem: tetrahedral element or surfaces after merging (nn,4) or (nhn,5)
+
  note: you can call meshcheckrepair for the output newnode and
  newelem to remove the duplicated nodes or elements
+
  example:
+
    [node1,face1,elem1]=meshabox([0 0 0],[10 10 10],1,1);
    [node2,face2,elem2]=meshasphere([5 5 10],3,0.3,3);
-   [newnode,newface]=mergemesh(node1,face1,node2,face2);
+   [newnode,newface]=mergesurf(node1,face1,node2,face2);
    plotmesh(newnode,newface,'x>5');
 
+
 ==== function [newnode,newelem,newelem0]=surfboolean(node,elem,varargin) ====
+
  [newnode,newelem,newelem0]=surfboolean(node1,elem1,op2,node2,elem2,op3,node3,elem3,...)
+
  merge two or more triangular meshes and resolve intersecting elements
+ 
+
  input:
       node: node coordinates, dimension (nn,3)
-      elem: tetrahedral element or triangle surface (ne,3)
+      elem: triangle surfaces (ne,3)
       op:  a string of a boolean operator, possible op values include
            'union' or 'or': the outter surface of the union of the enclosed space
            'inter' or 'and': the surface of the domain contained by both meshes
@@ -1089,12 +2180,15 @@
                    tested; other inputs are ignored.
            'decouple': separate two shells and make sure there is no intersection;
                    the input surfaces must be closed and ordered from outer to inner
+
  output:
       newnode: the node coordinates after boolean operations, dimension (nn,3)
       newelem: tetrahedral element or surfaces after boolean operations (nn,4) or (nhn,5)
       newelem0: when the operator is 'self', return the intersecting
                element list in terms of the input node list (experimental)
+
  example:
+
    [node1,face1,elem1]=meshabox([0 0 0],[10 10 10],1,1);
    [node2,face2,elem2]=meshabox([0 0 0]+5,[10 10 10]+5,1,1);
    [newnode,newface]=surfboolean(node1,face1,'union',node2,face2);
@@ -1103,69 +2197,287 @@
    [newnode,newface]=surfboolean(node1,face1,'diff',node2,face2);
    plotmesh(newnode,newface,'x>5');
 
+
+==== function [no,el]=fillsurf(node,face) ====
+
+ [no,el]=fillsurf(node,face)
+
+ calculate the enclosed volume for a closed surface
+
+
+ input:
+    node:  node coordinates
+    face:  surface triangle list
+
+ output:
+    vol:   total volume of the enclosed space
+
+
+==== function [newnode,newelem]=highordertet(node,elem,order) ====
+
+ [newnode,newelem]=highordertet(node,elem)
+
+ generate high-order straight-edge tetrahedral mesh from
+ the 1st order tetrahedral mesh
+
+
+ input:
+    node: list of nodes
+    elem: list of elements (each row are indices of nodes of each element)
+    order: optional, the order of the generated mesh; if missing, order=2
+
+ output:
+    newnode: all new edge-nodes on the output mesh
+    newelem: the indices of the edge nodes for each original tet element
+
+    currently, this function only supports order=2
+    to combine the newnode/newelem with the old mesh, one should use
+
+    elemfull=[elem(:,1:4) newelem+size(node,1)]; % 10-node element
+    nodefull=[node;newnode];
+
+
+==== function [newnode,newelem]=elemfacecenter(node,elem) ====
+
+ [newnode,newelem]=elemfacecenter(node,elem)
+
+ generate barycentric dual-mesh face center nodes and indices per element
+ very similar to highordertet which finds edge-centers instead of
+ face-centers
+
+
+ input:
+    node: list of nodes
+    elem: list of elements (each row are indices of nodes of each element)
+
+ output:
+    newnode: all new face-nodes on the output mesh
+    newelem: the indices of the face nodes for each original tet element
+
+    to combine the newnode/newelem with the old mesh, one should use
+
+    elemfull=[elem(:,1:4) newelem+size(node,1)];
+    nodefull=[node;newnode];
+
+
+==== function [newnode,newelem]=barydualmesh(node,elem,flag) ====
+
+ [newnode,newelem]=barydualmesh(node,elem)
+
+ generate barycentric dual-mesh by connecting edge, face and elem centers
+
+
+ input:
+    node: list of input mesh nodes
+    elem: list of input mesh elements (each row are indices of nodes of each element)
+    flag: if is 'cell', output newelem as cell arrays (each has 1x4 nodes)
+
+ output:
+    newnode: all new nodes in the barycentric dual-mesh (made of edge/face/elem centers)
+    newelem: the indices of the face nodes for each original tet element
+
+ example:
+    [node,elem]=meshgrid6([0 60],[0 60],[0 60]);
+    [newnode,newelem]=barydualmesh(node,elem,'cell');
+    plotmesh(newnode,newelem);
+    hold on; plotmesh(node,[],elem,'facecolor','none','edgecolor','b')
+
+
+==== function newval=meshinterp(fromval,elemid,elembary,fromelem) ====
+
+ newval=meshinterp(fromval,elemid,elembary,fromelem)
+
+ Interpolate nodal values from the source mesh to the target mesh based on
+ a linear interpolation
+
+
+ input:
+	 fromval: values defined at the source mesh nodes, the row or column
+	          number must be the same as the source mesh node number, which
+	          is the same as the elemid length
+	 elemid: the IDs of the source mesh element that encloses the nodes of
+            the target mesh nodes; a vector of length of target mesh node
+            count; elemid and elembary can be generated by calling
+
+           [elemid,elembary]=tsearchn(node_src, elem_src, node_target);
+
+           note that the mapping here is inverse to that in meshremap()
+
+	 elembary: the bary-centric coordinates of each target mesh nodes
+	         within the source mesh elements, sum of each row is 1, expect
+	         3 or 4 columns (or can be N-D)
+    fromelem: the element list of the source mesh
+
+
+ output:
+	 newval: a 2D array with rows equal to the target mesh nodes (nodeto), 
+            and columns equals to the value numbers defined at each source
+            mesh node
+ example:
+
+    [n1,f1,e1]=meshabox([0 0 0],[10 20 5],1); % target mesh
+    [n2,f2,e2]=meshabox([0 0 0],[10 20 5],2); % src mesh
+    [id, ww]=tsearchn(n2,e2,n1);              % project target to src mesh
+    value_src=n2(:,[2 1 3]);             % create dummy values at src mesh
+    newval=meshinterp(value_src,id, ww, e2);
+
+
+==== function newval=meshremap(fromval,elemid,elembary,toelem,nodeto) ====
+
+ newval=meshremap(fromval,elemid,elembary,toelem,nodeto)
+
+ Redistribute nodal values from the source mesh to the target mesh so that 
+ the sum of each property on each mesh is the same
+
+
+ input:
+	 fromval: values defined at the source mesh nodes, the row or column
+	          number must be the same as the source mesh node number, which
+	          is the same as the elemid length
+	 elemid: the IDs of the target mesh element that encloses the nodes of
+            the source mesh nodes; a vector of length of src mesh node
+            count; elemid and elembary can be generated by calling
+
+           [elemid,elembary]=tsearchn(node_target, elem_target, node_src);
+
+           note that the mapping here is inverse to that in meshinterp()
+
+	 elembary: the bary-centric coordinates of each source mesh nodes
+	         within the target mesh elements, sum of each row is 1, expect
+	         3 or 4 columns (or can be N-D)
+    toelem: the element list of the target mesh
+    nodeto: the total number of target mesh nodes
+
+
+ output:
+	 newval: a 2D array with rows equal to the target mesh nodes (nodeto), 
+            and columns equals to the value numbers defined at each source
+            mesh node
+ example:
+
+    [n1,f1,e1]=meshabox([0 0 0],[10 20 5],1); % src mesh
+    [n2,f2,e2]=meshabox([0 0 0],[10 20 5],2); % target mesh
+    [id, ww]=tsearchn(n2,e2,n1);              % project src to target mesh
+    value_src=n1(:,[2 3 1]);             % create dummy values at src mesh
+    newval=meshremap(value_src,id,ww,e2,size(n2,1)); % map to target
+
+
+==== function [node,face]=extrudesurf(no,fc,vec) ====
+
+ [node,face]=extrudesurf(no,fc,vec)
+ 
+ create a enclosed surface mesh by extruding an open surface
+
+
+ input:
+
+ output:
+      node: 3D node coordinates for the generated surface mesh
+      face: triangular face patches of the generated surface mesh, each
+           row represents a triangle denoted by the indices of the 3 nodes
+
 === # File I/O ===
 
 ==== function saveasc(v,f,fname) ====
+
  saveasc(v,f,fname)
+
  save a surface mesh to FreeSurfer ASC mesh format
+
+
  input:
       v: input, surface node list, dimension (nn,3)
       f: input, surface face element list, dimension (be,3)
       fname: output file name
 
+
 ==== function savedxf(node,face,elem,fname) ====
+
  savedxf(node,face,elem,fname)
+
  save a surface mesh to DXF format
+
+
  input:
       node: input, surface node list, dimension (nn,3)
       face: input, surface face element list, dimension (be,3)
       elem: input, tetrahedral element list, dimension (ne,4)
       fname: output file name
 
+
 ==== function savestl(node,elem,fname,solidname) ====
+
  savestl(node,elem,fname,solidname)
+
  save a tetrahedral mesh to an STL (Standard Tessellation Language) file
+
+
  input:
       node: input, surface node list, dimension Nx3
       elem: input, tetrahedral element list; if size(elem,2)==3, it is a surface
       fname: output file name
       solidname: an optional string for the name of the object
+
 
 ==== function savebinstl(node,elem,fname,solidname) ====
+
  savebinstl(node,elem,fname,solidname)
+
  save a tetrahedral mesh to a binary STL (Standard Tessellation Language) file
+
+
  input:
       node: input, surface node list, dimension Nx3
       elem: input, tetrahedral element list; if size(elem,2)==3, it is a surface
       fname: output file name
       solidname: an optional string for the name of the object
 
+
 ==== function saveinr(vol,fname) ====
+
  saveinr(vol,fname)
+
  save a surface mesh to INR Format
+
+
  input:
       vol: input, a binary volume
       fname: output file name
 
+
 ==== function saveoff(v,f,fname) ====
+
  saveoff(v,f,fname)
+
  save a surface mesh to Geomview Object File Format (OFF)
+
+
  input:
       v: input, surface node list, dimension (nn,3)
       f: input, surface face element list, dimension (be,3)
       fname: output file name
+
 
 ==== function savesmf(v,f,fname) ====
+
  savesmf(v,f,fname)
+
  save a surface mesh to smf format
+
+
  input:
       v: input, surface node list, dimension (nn,3)
       f: input, surface face element list, dimension (be,3)
       fname: output file name
 
+
 ==== function savesurfpoly(v,f,holelist,regionlist,p0,p1,fname,forcebox) ====
+
  savesurfpoly(v,f,holelist,regionlist,p0,p1,fname)
+
  save a set of surfaces into poly format (for tetgen)
+
+
  input:
       v: input, surface node list, dimension (nn,3)
          if v has 4 columns, the last column specifies mesh density near each node
@@ -1179,22 +2491,34 @@
                 if forcebox is a 8x1 vector, it will be used to 
                 specify max-edge size near the bounding box corners
 
+
 ==== function nedge=savegts(v,f,fname,edges) ====
+
  nedge=savegts(v,f,fname,edges)
+
  save a surface mesh to GNU Triangulated Surface Format (GTS)
+
+
  input:
       v: input, surface node list, dimension (nn,3)
       f: input, surface face element list, dimension (be,3)
       fname: output file name
       edges: edge list, if ignored, savegts will compute
+
  output:
       nedge: the number of unique edges in the mesh
 
+
 ==== function [node,elem,edges,edgemap]=readgts(fname) ====
+
  [node,elem,edges,edgemap]=readgts(fname)
+
  read GNU Triangulated Surface files (GTS)
+
+
  input:
     fname: name of the OFF data file
+
  output:
     node: node coordinates of the mesh
     elem: list of elements of the surface mesh
@@ -1202,137 +2526,228 @@
     edgemap: the face section (in terms of edge indices) in the GTS file
              (optional)
 
+
+==== function savemsh(node,elem,fname,rname) ====
+
+ savemsh(node,elem,fname,rname)
+
+ save a tetrahedral mesh to GMSH mesh format
+
+ author: Riccardo Scorretti (riccardo.scorretti<at> univ-lyon1.fr)
+
+ input:
+      node: input, node list, dimension (nn,3)
+      elem: input, tetrahedral mesh element list, dimension (ne,4) or (ne,5) for multi-region meshes
+      fname: output file name
+      rname: name of the regions, cell-array of strings (optional)
+
+
 ==== function savevrml(node,face,elem,fname) ====
+
  savevrml(node,face,elem,fname)
+
  save a surface mesh to VRML 1.0 format
+
+
  input:
       node: input, surface node list, dimension (nn,3)
       face: input, surface face element list, dimension (be,3)
       elem: input, tetrahedral element list, dimension (ne,4)
       fname: output file name
 
+
 ==== function [node,elem]=readasc(fname) ====
+
  [node,elem]=readasc(fname)
+
  read FreeSurfer ASC mesh format
+
+ 
  input:
       fname: name of the asc file
+
  output:
       node: node positions of the mesh
       elem: element list of the mesh
 
+
 ==== function dat=readinr(fname) ====
+
  vol=readinr(fname)
+
  load a volume from an INR file
+
+
  input:
       fname: input file name
+
  output:
       dat: output, data read from the inr file
 
+
 ==== function [node,elem,face]=readmedit(filename) ====
+
  [node,elem,face]=readmedit(filename)
+
  read Medit mesh format
+
+
  input:
     fname: name of the medit data file
+
  output:
     node: node coordinates of the mesh
     elem: list of elements of the mesh	    
     face: list of surface triangles of the mesh	    
 
+
 ==== function [node,elem]=readoff(fname) ====
+
  [node,elem]=readoff(fname)
+
  read Geomview Object File Format (OFF)
+
+
  input:
     fname: name of the OFF data file
+
  output:
     node: node coordinates of the mesh
     elem: list of elements of the mesh	    
 
+
 ==== function [node,elem]=readsmf(fname) ====
+
  [node,elem]=readsmf(fname)
+
  read simple model format (SMF)
+
+
  input: 
     fname: name of the	SMF data file
+
  output:
     node: node coordinates of the mesh
     elem: list of elements of the mesh
 
+
 ==== function [node,elem,face]=readtetgen(fstub) ====
+
  [node,elem,face]=readtetgen(fstub)
+
  read tetgen output files
+
+
  input:
     fstub: file name stub
+
  output:
     node: node coordinates of the tetgen mesh
     elem: tetrahedra element list of the tetgen mesh
     face: surface triangles of the tetgen mesh
 
+
 ==== function flag=deletemeshfile(fname) ====
+
  flag=deletemeshfile(fname)
+
  delete a given work mesh file under the working directory
+
+
  input: 
      fname: specified file name (without path)
+
  output:
      flag: not used
 
-==== function binname=mcpath(fname) ====
+
+==== function binname=mcpath(fname, ext) ====
+
  binname=mcpath(fname)
+
  get full executable path by prepending a command directory path
  parameters:
+
+
  input:
     fname: input, a file name string
+
  output:
     binname: output, full file name located in the bin directory
+
     if global variable ISO2MESH_BIN is set in 'base', it will
     use [ISO2MESH_BIN filesep cmdname] as the command full path,
     otherwise, let matlab pass the cmdname to the shell, which
     will search command in the directories listed in system
     $PATH variable.
 
+
 ==== function tempname=mwpath(fname) ====
+
  tempname=meshtemppath(fname)
+
  get full temp-file name by prepend working-directory and current session name
+
+
  input:
     fname: input, a file name string
+
  output:
     tempname: output, full file name located in the working directory
+
     if global variable ISO2MESH_TEMP is set in 'base', it will use it
     as the working directory; otherwise, will use matlab function tempdir
     to return a working directory.
+
     if global variable ISO2MESH_SESSION is set in 'base', it will be
     prepended for each file name, otherwise, use supplied file name.
 
+
 ==== function savemedit(node,face,elem,fname) ====
+
  savemedit(node,face,elem,fname)
+
  save a surface or tetrahedral mesh to Medit format
+
+
  input:
       node: input, surface node list, dimension (nn,3 or 4)
       face: input, surface face element list, dimension (be,3 or 4)
       elem: input, tetrahedral element list, dimension (ne,4 or 5)
       fname: output file name
 
+
 ==== function json=savejson(rootname,obj,varargin) ====
- json=savejson(rootname,obj,filename)
+
+ json=savejson(obj)
     or
+ json=savejson(rootname,obj,filename)
  json=savejson(rootname,obj,opt)
  json=savejson(rootname,obj,'param1',value1,'param2',value2,...)
+
  convert a MATLAB object (cell, struct or array) into a JSON (JavaScript
  Object Notation) string
- created on 2011/09/09
- $Id: savejson.m 500 2015-09-19 17:07:03Z fangq $
+
+ initially created on 2011/09/09
+
  input:
       rootname: the name of the root-object, when set to '', the root name
-        is ignored, however, when opt.ForceRootName is set to 1 (see below),
-        the MATLAB variable name will be used as the root name.
-      obj: a MATLAB object (array, cell, cell array, struct, struct array).
+           is ignored, however, when opt.ForceRootName is set to 1 (see below),
+           the MATLAB variable name will be used as the root name.
+      obj: a MATLAB object (array, cell, cell array, struct, struct array,
+           class instance).
       filename: a string for the file name to save the output JSON data.
       opt: a struct for additional options, ignore to use default values.
-        opt can have the following fields (first in [.|.] is the default)
-        opt.FileName [''|string]: a file name to save the output JSON data
-        opt.FloatFormat ['%.10g'|string]: format to show each numeric element
+           opt can have the following fields (first in [.|.] is the default)
+
+           FileName [''|string]: a file name to save the output JSON data
+           FloatFormat ['%.10g'|string]: format to show each numeric element
                          of a 1D/2D array;
-        opt.ArrayIndent [1|0]: if 1, output explicit data array with
+           IntFormat ['%.0f'|string]: format to display integer elements
+                         of a 1D/2D array;
+           ArrayIndent [1|0]: if 1, output explicit data array with
                          precedent indentation; if 0, no indentation
-        opt.ArrayToStruct[0|1]: when set to 0, savejson outputs 1D/2D
+           ArrayToStruct[0|1]: when set to 0, savejson outputs 1D/2D
                          array in JSON array format; if sets to 1, an
                          array will be shown as a struct with fields
                          "_ArrayType_", "_ArraySize_" and "_ArrayData_"; for
@@ -1343,53 +2758,98 @@
                          _ArrayData_ array will include two columns 
                          (4 for sparse) to record the real and imaginary 
                          parts, and also "_ArrayIsComplex_":1 is added. 
-        opt.ParseLogical [0|1]: if this is set to 1, logical array elem
+           NestArray    [0|1]: If set to 1, use nested array constructs
+                         to store N-dimensional arrays; if set to 0,
+                         use the annotated array format defined in the
+                         JData Specification (Draft 1 or later).
+           ParseLogical [0|1]: if this is set to 1, logical array elem
                          will use true/false rather than 1/0.
-        opt.NoRowBracket [1|0]: if this is set to 1, arrays with a single
+           SingletArray [0|1]: if this is set to 1, arrays with a single
                          numerical element will be shown without a square
                          bracket, unless it is the root object; if 0, square
                          brackets are forced for any numerical arrays.
-        opt.ForceRootName [0|1]: when set to 1 and rootname is empty, savejson
+           SingletCell  [1|0]: if 1, always enclose a cell with "[]" 
+                         even it has only one element; if 0, brackets
+                         are ignored when a cell has only 1 element.
+           ForceRootName [0|1]: when set to 1 and rootname is empty, savejson
                          will use the name of the passed obj variable as the 
                          root object name; if obj is an expression and 
                          does not have a name, 'root' will be used; if this 
                          is set to 0 and rootname is empty, the root level 
                          will be merged down to the lower level.
-        opt.Inf ['"$1_Inf_"'|string]: a customized regular expression pattern
+           Inf ['"$1_Inf_"'|string]: a customized regular expression pattern
                          to represent +/-Inf. The matched pattern is '([-+]*)Inf'
                          and $1 represents the sign. For those who want to use
                          1e999 to represent Inf, they can set opt.Inf to '$11e999'
-        opt.NaN ['"_NaN_"'|string]: a customized regular expression pattern
+           NaN ['"_NaN_"'|string]: a customized regular expression pattern
                          to represent NaN
-        opt.JSONP [''|string]: to generate a JSONP output (JSON with padding),
+           JSONP [''|string]: to generate a JSONP output (JSON with padding),
                          for example, if opt.JSONP='foo', the JSON data is
                          wrapped inside a function call as 'foo(...);'
-        opt.UnpackHex [1|0]: conver the 0x[hex code] output by loadjson 
+           UnpackHex [1|0]: conver the 0x[hex code] output by loadjson 
                          back to the string form
-        opt.SaveBinary [0|1]: 1 - save the JSON file in binary mode; 0 - text mode.
-        opt.Compact [0|1]: 1- out compact JSON format (remove all newlines and tabs)
+           SaveBinary [0|1]: 1 - save the JSON file in binary mode; 0 - text mode.
+           Compact [0|1]: 1- out compact JSON format (remove all newlines and tabs)
+           Compression  'zlib', 'gzip', 'lzma', 'lzip', 'lz4' or 'lz4hc': specify array 
+                         compression method; currently only supports 6 methods. The
+                         data compression only applicable to numerical arrays 
+                         in 3D or higher dimensions, or when ArrayToStruct
+                         is 1 for 1D or 2D arrays. If one wants to
+                         compress a long string, one must convert
+                         it to uint8 or int8 array first. The compressed
+                         array uses three extra fields
+                         "_ArrayZipType_": the opt.Compression value. 
+                         "_ArrayZipSize_": a 1D interger array to
+                            store the pre-compressed (but post-processed)
+                            array dimensions, and 
+                         "_ArrayZipData_": the "base64" encoded
+                             compressed binary array data. 
+           CompressArraySize [100|int]: only to compress an array if the total 
+                         element count is larger than this number.
+           CompressStringSize [400|int]: only to compress a string if the total 
+                         element count is larger than this number.
+           FormatVersion [2|float]: set the JSONLab output version; since
+                         v2.0, JSONLab uses JData specification Draft 1
+                         for output format, it is incompatible with all
+                         previous releases; if old output is desired,
+                         please set FormatVersion to 1.9 or earlier.
+           Encoding ['']: json file encoding. Support all encodings of
+                         fopen() function
+           Append [0|1]: if set to 1, append a new object at the end of the file.
+           Endian ['n'|'b','l']: Endianness of the output file ('n': native, 
+                         'b': big endian, 'l': little-endian)
+           PreEncode [1|0]: if set to 1, call jdataencode first to preprocess
+                         the input data before saving
+
         opt can be replaced by a list of ('param',value) pairs. The param 
         string is equivallent to a field in opt and is case sensitive.
  output:
       json: a string in the JSON format (see http://json.org)
+
  examples:
       jsonmesh=struct('MeshNode',[0 0 0;1 0 0;0 1 0;1 1 0;0 0 1;1 0 1;0 1 1;1 1 1],... 
-               'MeshTetra',[1 2 4 8;1 3 4 8;1 2 6 8;1 5 6 8;1 5 7 8;1 3 7 8],...
-               'MeshTri',[1 2 4;1 2 6;1 3 4;1 3 7;1 5 6;1 5 7;...
+               'MeshElem',[1 2 4 8;1 3 4 8;1 2 6 8;1 5 6 8;1 5 7 8;1 3 7 8],...
+               'MeshSurf',[1 2 4;1 2 6;1 3 4;1 3 7;1 5 6;1 5 7;...
                           2 8 4;2 8 6;3 8 4;3 8 7;5 8 6;5 8 7],...
                'MeshCreator','FangQ','MeshTitle','T6 Cube',...
                'SpecialData',[nan, inf, -inf]);
       savejson('jmesh',jsonmesh)
       savejson('',jsonmesh,'ArrayIndent',0,'FloatFormat','\t%.5g')
+
  license:
      BSD or GPL version 3, see LICENSE_{BSD,GPLv3}.txt files for details
 
+
 ==== function data = loadjson(fname,varargin) ====
+
  data=loadjson(fname,opt)
     or
  data=loadjson(fname,'param1',value1,'param2',value2,...)
+
  parse a JSON (JavaScript Object Notation) file or string
+
  created on 2011/09/09, including previous works from 
+
          Nedialko Krouchev: http://www.mathworks.com/matlabcentral/fileexchange/25713
             created on 2009/11/02
          François Glineur: http://www.mathworks.com/matlabcentral/fileexchange/23393
@@ -1397,18 +2857,19 @@
          Joel Feenstra:
          http://www.mathworks.com/matlabcentral/fileexchange/20565
             created on 2008/07/03
- $Id: loadjson.m 500 2015-09-19 17:07:03Z fangq $
+
  input:
-      fname: input file name, if fname contains "{}" or "[]", fname
+      fname: input file name; if fname contains "{}" or "[]", fname
              will be interpreted as a JSON string
-      opt: a struct to store parsing options, opt can be replaced by 
+      opt: (optional) a struct to store parsing options, opt can be replaced by 
            a list of ('param',value) pairs - the param string is equivallent
            to a field in opt. opt can have the following 
            fields (first in [.|.] is the default)
-           opt.SimplifyCell [0|1]: if set to 1, loadjson will call cell2mat
+
+           SimplifyCell [1|0]: if set to 1, loadjson will call cell2mat
                          for each element of the JSON data, and group 
                          arrays based on the cell2mat rules.
-           opt.FastArrayParser [1|0 or integer]: if set to 1, use a
+           FastArrayParser [1|0 or integer]: if set to 1, use a
                          speed-optimized array parser when loading an 
                          array object. The fast array parser may 
                          collapse block arrays into a single large
@@ -1422,167 +2883,422 @@
                          arrays; setting to 3 will return to a 2D cell
                          array of 1D vectors; setting to 4 will return a
                          3D cell array.
-           opt.ShowProgress [0|1]: if set to 1, loadjson displays a progress bar.
+           UseMap [0|1]: if set to 1, loadjson uses a containers.Map to 
+                         store map objects; otherwise use a struct object
+           ShowProgress [0|1]: if set to 1, loadjson displays a progress bar.
+           ParseStringArray [0|1]: if set to 0, loadjson converts "string arrays" 
+                         (introduced in MATLAB R2016b) to char arrays; if set to 1,
+                         loadjson skips this conversion.
+           FormatVersion [2|float]: set the JSONLab format version; since
+                         v2.0, JSONLab uses JData specification Draft 1
+                         for output format, it is incompatible with all
+                         previous releases; if old output is desired,
+                         please set FormatVersion to 1.9 or earlier.
+           Encoding ['']: json file encoding. Support all encodings of
+                         fopen() function
+           ObjectID [0|interger or list]: if set to a positive number, 
+                         it returns the specified JSON object by index 
+                         in a multi-JSON document; if set to a vector,
+                         it returns a list of specified objects.
+           JDataDecode [1|0]: if set to 1, call jdatadecode to decode
+                         JData structures defined in the JData
+                         Specification.
+
  output:
       dat: a cell array, where {...} blocks are converted into cell arrays,
            and [...] are converted to arrays
+
  examples:
       dat=loadjson('{"obj":{"string":"value","array":[1,2,3]}}')
       dat=loadjson(['examples' filesep 'example1.json'])
-      dat=loadjson(['examples' filesep 'example1.json'],'SimplifyCell',1)
+      dat=loadjson(['examples' filesep 'example1.json'],'SimplifyCell',0)
+
  license:
      BSD or GPL version 3, see LICENSE_{BSD,GPLv3}.txt files for details 
 
-==== function json=saveubjson(rootname,obj,varargin) ====
- json=saveubjson(rootname,obj,filename)
+
+==== function ubj=saveubjson(rootname,obj,varargin) ====
+
+ ubj=saveubjson(obj)
     or
- json=saveubjson(rootname,obj,opt)
- json=saveubjson(rootname,obj,'param1',value1,'param2',value2,...)
- convert a MATLAB object (cell, struct or array) into a Universal 
- Binary JSON (UBJSON) binary string
- created on 2013/08/17
- $Id: saveubjson.m 465 2015-01-25 00:46:07Z fangq $
+ ubj=saveubjson(rootname,obj,filename)
+ ubj=saveubjson(rootname,obj,opt)
+ ubj=saveubjson(rootname,obj,'param1',value1,'param2',value2,...)
+
+ Convert a MATLAB object  (cell, struct, array, table, map, handles ...) 
+ into a Universal Binary JSON (UBJSON, Draft 12) or a MessagePack binary stream
+
+ initially created on 2013/08/17
+
+ Format specifications:
+    Binary JData (BJData):https://github.com/NeuroJSON/bjdata
+    UBJSON:               https://github.com/ubjson/universal-binary-json
+    MessagePack:          https://github.com/msgpack/msgpack
+
+ This function is the same as calling "savebj(...,'ubjson',1)". By , 
+ default this function creates UBJSON-compliant output without the
+ newly added uint16(u), uint32(m), uint64(M) and half-precision float (h)
+ data types.
+
+ This function by default still enables an optimized ND-array format for efficient  
+ array storage. To ensure the output compatible to UBJSON Draft-12, one should use
+ "saveubjson(...,'NestArray',1)" or "savebj(...,'ubjson',1,'NestArray',1)"
+
  input:
       rootname: the name of the root-object, when set to '', the root name
-        is ignored, however, when opt.ForceRootName is set to 1 (see below),
-        the MATLAB variable name will be used as the root name.
-      obj: a MATLAB object (array, cell, cell array, struct, struct array)
+           is ignored, however, when opt.ForceRootName is set to 1 (see below),
+           the MATLAB variable name will be used as the root name.
+      obj: a MATLAB object (array, cell, cell array, struct, struct array,
+           class instance)
       filename: a string for the file name to save the output UBJSON data
       opt: a struct for additional options, ignore to use default values.
-        opt can have the following fields (first in [.|.] is the default)
-        opt.FileName [''|string]: a file name to save the output JSON data
-        opt.ArrayToStruct[0|1]: when set to 0, saveubjson outputs 1D/2D
-                         array in JSON array format; if sets to 1, an
-                         array will be shown as a struct with fields
-                         "_ArrayType_", "_ArraySize_" and "_ArrayData_"; for
-                         sparse arrays, the non-zero elements will be
-                         saved to _ArrayData_ field in triplet-format i.e.
-                         (ix,iy,val) and "_ArrayIsSparse_" will be added
-                         with a value of 1; for a complex array, the 
-                         _ArrayData_ array will include two columns 
-                         (4 for sparse) to record the real and imaginary 
-                         parts, and also "_ArrayIsComplex_":1 is added. 
-        opt.ParseLogical [1|0]: if this is set to 1, logical array elem
-                         will use true/false rather than 1/0.
-        opt.NoRowBracket [1|0]: if this is set to 1, arrays with a single
-                         numerical element will be shown without a square
-                         bracket, unless it is the root object; if 0, square
-                         brackets are forced for any numerical arrays.
-        opt.ForceRootName [0|1]: when set to 1 and rootname is empty, saveubjson
-                         will use the name of the passed obj variable as the 
-                         root object name; if obj is an expression and 
-                         does not have a name, 'root' will be used; if this 
-                         is set to 0 and rootname is empty, the root level 
-                         will be merged down to the lower level.
-        opt.JSONP [''|string]: to generate a JSONP output (JSON with padding),
-                         for example, if opt.JSON='foo', the JSON data is
-                         wrapped inside a function call as 'foo(...);'
-        opt.UnpackHex [1|0]: conver the 0x[hex code] output by loadjson 
-                         back to the string form
-        opt can be replaced by a list of ('param',value) pairs. The param 
-        string is equivallent to a field in opt and is case sensitive.
+           opt can have the following fields (first in [.|.] is the default)
+
+           opt can be replaced by a list of ('param',value) pairs. The param 
+           string is equivallent to a field in opt and is case sensitive.
+
+           Please type "help savebj" for details for all supported options.
+
  output:
       json: a binary string in the UBJSON format (see http://ubjson.org)
+
  examples:
-      jsonmesh=struct('MeshNode',[0 0 0;1 0 0;0 1 0;1 1 0;0 0 1;1 0 1;0 1 1;1 1 1],... 
-               'MeshTetra',[1 2 4 8;1 3 4 8;1 2 6 8;1 5 6 8;1 5 7 8;1 3 7 8],...
-               'MeshTri',[1 2 4;1 2 6;1 3 4;1 3 7;1 5 6;1 5 7;...
+      jsonmesh=struct('MeshVertex3',[0 0 0;1 0 0;0 1 0;1 1 0;0 0 1;1 0 1;0 1 1;1 1 1],... 
+               'MeshTet4',[1 2 4 8;1 3 4 8;1 2 6 8;1 5 6 8;1 5 7 8;1 3 7 8],...
+               'MeshTri3',[1 2 4;1 2 6;1 3 4;1 3 7;1 5 6;1 5 7;...
                           2 8 4;2 8 6;3 8 4;3 8 7;5 8 6;5 8 7],...
                'MeshCreator','FangQ','MeshTitle','T6 Cube',...
                'SpecialData',[nan, inf, -inf]);
-      saveubjson('jsonmesh',jsonmesh)
-      saveubjson('jsonmesh',jsonmesh,'meshdata.ubj')
+      saveubjson(jsonmesh)
+      saveubjson('',jsonmesh,'meshdata.ubj')
+      saveubjson('mesh1',jsonmesh,'FileName','meshdata.msgpk','MessagePack',1)
+      saveubjson('',jsonmesh,'KeepType',1)
+
  license:
      BSD or GPL version 3, see LICENSE_{BSD,GPLv3}.txt files for details
 
-==== function data = loadubjson(fname,varargin) ====
+
+==== function varargout = loadubjson(varargin) ====
+
  data=loadubjson(fname,opt)
     or
  data=loadubjson(fname,'param1',value1,'param2',value2,...)
- parse a JSON (JavaScript Object Notation) file or string
- created on 2013/08/01
- $Id: loadubjson.m 487 2015-05-06 18:19:07Z fangq $
+
+ Parse a UBJSON file or string and store the output into a MATLAB variable
+
+ initially created on 2019/06/08
+
+ This function is an alias to loadbj
+
  input:
       fname: input file name, if fname contains "{}" or "[]", fname
              will be interpreted as a UBJSON string
       opt: a struct to store parsing options, opt can be replaced by 
            a list of ('param',value) pairs - the param string is equivallent
-           to a field in opt. opt can have the following 
-           fields (first in [.|.] is the default)
-           opt.SimplifyCell [0|1]: if set to 1, loadubjson will call cell2mat
-                         for each element of the JSON data, and group 
-                         arrays based on the cell2mat rules.
-           opt.IntEndian [B|L]: specify the endianness of the integer fields
-                         in the UBJSON input data. B - Big-Endian format for 
-                         integers (as required in the UBJSON specification); 
-                         L - input integer fields are in Little-Endian order.
-           opt.NameIsString [0|1]: for UBJSON Specification Draft 8 or 
-                         earlier versions (JSONLab 1.0 final or earlier), 
-                         the "name" tag is treated as a string. To load 
-                         these UBJSON data, you need to manually set this 
-                         flag to 1.
+           to a field in opt. The supported options can be found by typing
+           "help loadbj".
+
  output:
-      dat: a cell array, where {...} blocks are converted into cell arrays,
+      data: a cell array, where {...} blocks are converted into cell arrays,
            and [...] are converted to arrays
+
  examples:
       obj=struct('string','value','array',[1 2 3]);
       ubjdata=saveubjson('obj',obj);
       dat=loadubjson(ubjdata)
       dat=loadubjson(['examples' filesep 'example1.ubj'])
-      dat=loadubjson(['examples' filesep 'example1.ubj'],'SimplifyCell',1)
+      dat=loadubjson(['examples' filesep 'example1.ubj'],'SimplifyCell',0)
+
  license:
      BSD or GPL version 3, see LICENSE_{BSD,GPLv3}.txt files for details 
 
-==== function savejmesh(node,face,elem,fname,varargin) ====
- savejmesh(node,face,elem,fname,opt)
- export a mesh to the JMesh format
+
+==== function data = loadmsgpack(fname,varargin) ====
+
+   data = loadmsgpack(fname,varargin)
+
+LOADMSGPACK parses a msgpack byte buffer into Matlab data structures
+ LOADMSGPACK(BYTES)
+    reads BYTES as msgpack data, and creates Matlab data structures
+    from it.
+    - strings are converted to strings
+    - numbers are converted to appropriate numeric values
+    - true, false are converted to logical 1, 0
+    - nil is converted to []
+    - arrays are converted to cell arrays
+    - maps are converted to containers.Map
+
+ (c) 2016 Bastian Bechtold
+
+ license:
+     BSD 3-clause license or GPL version 3, see LICENSE_{BSD,GPLv3}.txt files for details 
+
+
+==== function msgpk=savemsgpack(rootname,obj,varargin) ====
+
+ msgpk=savemsgpack(obj)
+    or
+ msgpk=savemsgpack(rootname,obj,filename)
+ msgpk=savemsgpack(rootname,obj,opt)
+ msgpk=savemsgpack(rootname,obj,'param1',value1,'param2',value2,...)
+
+ convert a MATLAB object (cell, struct, array, table, map, handles ...) 
+ into a MessagePack binary stream
+
+ initially created on 2019/05/20
+
+ This function is the same as calling savebj(...,'MessagePack',1)
+
+ Please type "help savebj" for details for the supported inputs and outputs.
+
+ license:
+     BSD or GPL version 3, see LICENSE_{BSD,GPLv3}.txt files for details
+
+
+==== function json=savebj(rootname,obj,varargin) ====
+
+ bjd=savebj(obj)
+    or
+ bjd=savebj(rootname,obj,filename)
+ bjd=savebj(rootname,obj,opt)
+ bjd=savebj(rootname,obj,'param1',value1,'param2',value2,...)
+
+ Convert a MATLAB object  (cell, struct, array, table, map, handles ...) 
+ into a Binary JData (BJData v1 Draft-1), Universal Binary JSON (UBJSON,
+ Draft-12) or a MessagePack binary stream
+
+ initially created on 2013/08/17
+
+ By default, this function creates BJD-compliant output. The BJD
+ specification is largely similar to UBJSON, with additional data types
+ including uint16(u), uint32(m), uint64(M) and half-precision float (h)
+
+ Format specifications:
+    Binary JData (BJD):   https://github.com/NeuroJSON/bjdata
+    UBJSON:               https://github.com/ubjson/universal-binary-json
+    MessagePack:          https://github.com/msgpack/msgpack
+
  input:
-      node: input, node list, dimension (nn,3)
-      face: input, optional, surface face element list, dimension (be,3)
-      elem: input, tetrahedral element list, dimension (ne,4)
-      fname: output file name
-      opt: additional parameters in the form of 'parameter',value pairs
-           valid parameters include:
-           'Dimension': 0 - a user defined mesh, 2- a 2D mesh, 3- a 3D mesh
-           'Author': a string to set the author of the mesh
-           'MeshTitle': a string to set the title of the mesh
-           'MeshTag': a value as the tag of the mesh data
-           'MeshGroup': a value to group this mesh with other mesh data
-           'Comment': a string as the additional note for the mesh data
+      rootname: the name of the root-object, when set to '', the root name
+           is ignored, however, when opt.ForceRootName is set to 1 (see below),
+           the MATLAB variable name will be used as the root name.
+      obj: a MATLAB object (array, cell, cell array, struct, struct array,
+           class instance)
+      filename: a string for the file name to save the output UBJSON data
+      opt: a struct for additional options, ignore to use default values.
+           opt can have the following fields (first in [.|.] is the default)
+
+           FileName [''|string]: a file name to save the output JSON data
+           ArrayToStruct[0|1]: when set to 0, savebj outputs 1D/2D
+                         array in JSON array format; if sets to 1, an
+                         array will be shown as a struct with fields
+                         "_ArrayType_", "_ArraySize_" and "_ArrayData_"; for
+                         sparse arrays, the non-zero elements will be
+                         saved to "_ArrayData_" field in triplet-format i.e.
+                         (ix,iy,val) and "_ArrayIsSparse_":true will be added
+                         with a value of 1; for a complex array, the 
+                         "_ArrayData_" array will include two rows 
+                         (4 for sparse) to record the real and imaginary 
+                         parts, and also "_ArrayIsComplex_":true is added. 
+                         Other annotations include "_ArrayShape_" and 
+                         "_ArrayOrder_", "_ArrayZipLevel_" etc.
+          NestArray    [0|1]: If set to 1, use nested array constructs
+                         to store N-dimensional arrays (compatible with 
+                         UBJSON specification Draft 12); if set to 0,
+                         use the JData (v0.5) optimized N-D array header;
+                         NestArray is automatically set to 1 when
+                         MessagePack is set to 1
+          ParseLogical [1|0]: if this is set to 1, logical array elem
+                         will use true/false rather than 1/0.
+          SingletArray [0|1]: if this is set to 1, arrays with a single
+                         numerical element will be shown without a square
+                         bracket, unless it is the root object; if 0, square
+                         brackets are forced for any numerical arrays.
+          SingletCell  [1|0]: if 1, always enclose a cell with "[]" 
+                         even it has only one element; if 0, brackets
+                         are ignored when a cell has only 1 element.
+          ForceRootName [0|1]: when set to 1 and rootname is empty, savebj
+                         will use the name of the passed obj variable as the 
+                         root object name; if obj is an expression and 
+                         does not have a name, 'root' will be used; if this 
+                         is set to 0 and rootname is empty, the root level 
+                         will be merged down to the lower level.
+          JSONP [''|string]: to generate a JSONP output (JSON with padding),
+                         for example, if opt.JSON='foo', the JSON data is
+                         wrapped inside a function call as 'foo(...);'
+          UnpackHex [1|0]: conver the 0x[hex code] output by loadjson 
+                         back to the string form
+          Compression  'zlib', 'gzip', 'lzma', 'lzip', 'lz4' or 'lz4hc': specify array 
+                         compression method; currently only supports 6 methods. The
+                         data compression only applicable to numerical arrays 
+                         in 3D or higher dimensions, or when ArrayToStruct
+                         is 1 for 1D or 2D arrays. If one wants to
+                         compress a long string, one must convert
+                         it to uint8 or int8 array first. The compressed
+                         array uses three extra fields
+                         "_ArrayZipType_": the opt.Compression value. 
+                         "_ArrayZipSize_": a 1D interger array to
+                            store the pre-compressed (but post-processed)
+                            array dimensions, and 
+                         "_ArrayZipData_": the binary stream of
+                            the compressed binary array data WITHOUT
+                            'base64' encoding
+          CompressArraySize [100|int]: only to compress an array if the total 
+                         element count is larger than this number.
+          CompressStringSize [400|int]: only to compress a string if the total 
+                         element count is larger than this number.
+          MessagePack [0|1]: output MessagePack (https://msgpack.org/)
+                         binary stream instead of BJD/UBJSON
+          UBJSON [0|1]: 0: (default)-encode data based on BJData Draft 1
+                         (supports uint16(u)/uint32(m)/uint64(M)/half(h) markers)
+                        1: encode data based on UBJSON Draft 12 (without
+                         u/m/M/h markers)
+          FormatVersion [2|float]: set the JSONLab output version; since
+                         v2.0, JSONLab uses JData specification Draft 3
+                         for output format, it is incompatible with releases
+                         older than v1.9.8; if old output is desired,
+                         please set FormatVersion to 1.9 or earlier.
+          KeepType [0|1]: if set to 1, use the original data type to store 
+                         integers instead of converting to the integer type
+                         of the minimum length without losing accuracy (default)
+          Debug [0|1]: output binary numbers in <%g> format for debugging
+          Append [0|1]: if set to 1, append a new object at the end of the file.
+          Endian ['n'|'b','l']: Endianness of the output file ('n': native, 
+                         'b': big endian, 'l': little-endian)
+          PreEncode [1|0]: if set to 1, call jdataencode first to preprocess
+                         the input data before saving
+
+        opt can be replaced by a list of ('param',value) pairs. The param 
+        string is equivallent to a field in opt and is case sensitive.
+ output:
+      bjd: a binary string in the UBJSON format (see http://ubjson.org)
+
+ examples:
+      jsonmesh=struct('MeshVertex3',[0 0 0;1 0 0;0 1 0;1 1 0;0 0 1;1 0 1;0 1 1;1 1 1],... 
+               'MeshTet4',[1 2 4 8;1 3 4 8;1 2 6 8;1 5 6 8;1 5 7 8;1 3 7 8],...
+               'MeshTri3',[1 2 4;1 2 6;1 3 4;1 3 7;1 5 6;1 5 7;...
+                          2 8 4;2 8 6;3 8 4;3 8 7;5 8 6;5 8 7],...
+               'MeshCreator','FangQ','MeshTitle','T6 Cube',...
+               'SpecialData',[nan, inf, -inf]);
+      savebj(jsonmesh)
+      savebj('',jsonmesh,'meshdata.bjd')
+      savebj('mesh1',jsonmesh,'FileName','meshdata.msgpk','MessagePack',1)
+      savebj('',jsonmesh,'ubjson',1)
+
+ license:
+     BSD or GPL version 3, see LICENSE_{BSD,GPLv3}.txt files for details
+
+
+==== function data = loadbj(fname,varargin) ====
+
+ data=loadbj(fname,opt)
+    or
+ data=loadbj(fname,'param1',value1,'param2',value2,...)
+
+ Parse a Binary JData (BJData v1 Draft-1, defined in https://github.com/OpenJData/bjdata) 
+ file or memory buffer and convert into a MATLAB data structure
+
+ initially created on 2013/08/01
+
+ input:
+      fname: input file name, if fname contains "{}" or "[]", fname
+             will be interpreted as a BJData/UBJSON string
+      opt: a struct to store parsing options, opt can be replaced by 
+           a list of ('param',value) pairs - the param string is equivallent
+           to a field in opt. opt can have the following 
+           fields (first in [.|.] is the default)
+
+           SimplifyCell [1|0]: if set to 1, loadbj will call cell2mat
+                         for each element of the JSON data, and group 
+                         arrays based on the cell2mat rules.
+           IntEndian [B|L]: specify the endianness of the integer fields
+                         in the BJData/UBJSON input data. B - Big-Endian format for 
+                         integers (as required in the UBJSON specification); 
+                         L - input integer fields are in Little-Endian order.
+           NameIsString [0|1]: for UBJSON Specification Draft 8 or 
+                         earlier versions (JSONLab 1.0 final or earlier), 
+                         the "name" tag is treated as a string. To load 
+                         these UBJSON data, you need to manually set this 
+                         flag to 1.
+           UseMap [0|1]: if set to 1, loadjson uses a containers.Map to 
+                         store map objects; otherwise use a struct object
+           ObjectID [0|interger or list]: if set to a positive number, 
+                         it returns the specified JSON object by index 
+                         in a multi-JSON document; if set to a vector,
+                         it returns a list of specified objects.
+           FormatVersion [2|float]: set the JSONLab format version; since
+                         v2.0, JSONLab uses JData specification Draft 1
+                         for output format, it is incompatible with all
+                         previous releases; if old output is desired,
+                         please set FormatVersion to 1.9 or earlier.
+
+ output:
+      dat: a cell array, where {...} blocks are converted into cell arrays,
+           and [...] are converted to arrays
+
+ examples:
+      obj=struct('string','value','array',[1 2 3]);
+      ubjdata=savebj('obj',obj);
+      dat=loadbj(ubjdata)
+      dat=loadbj(['examples' filesep 'example1.bjd'])
+      dat=loadbj(['examples' filesep 'example1.bjd'],'SimplifyCell',0)
+
+ license:
+     BSD or GPL version 3, see LICENSE_{BSD,GPLv3}.txt files for details 
+
 
 ==== function savemphtxt(node, face, elem, filename) ====
+
  savemphtxt(node, face, elem, filename)
+
  save tetrahedron mesh to comsol file (.mphtxt)
+
  author: Donghyeon Kim (danielkim<at> gist.ac.kr)
+
  input:
       node: input, node list, dimension (nn,3)
       face: input, surface face element list with label, dimension (be,4)
       elem: input, tetrahedron element list with label, dimension (ne,5)
       filename: input, output file name
 
+
 ==== function savetetgenele(elem,fname) ====
+
  savetetgenele(elem,fname)
+
  save a mesh tetrahedral element list to tetgen .ele format
+
+
  input:
       elem: tetrahedral element list, dimension (ne,4)
             columns beyound the 4rd column are treated as 
             markers and attributes associated with the element
       fname: output file name
 
+
 ==== function savetetgennode(node,fname) ====
+
  savetetgennode(node,fname)
+
  save a mesh node list to tetgen .node format
+
+
  input:
       node: node coordinates, dimension (nn,3)
             columns beyound the 3rd column are treated as 
             markers and attributes associated with the node
       fname: output file name
 
+
 ==== function saveabaqus(node,face,elem,fname,heading) ====
+
  saveabaqus(node,fname)
  saveabaqus(node,face,fname)
  saveabaqus(node,face,elem,fname)
+
  save a tetrahedral and/or surface mesh as an ABAQUS input file
+
+
  input:
       node: input, surface node list, dimension (nn,3)
       face: input, surface face element list, dimension (be,3)
@@ -1590,12 +3306,1228 @@
       fname: output file name
       heading: optional, a descriptive string for the mesh
 
+
+==== function savenirfast(v,f,filestub, nodeseg, nodeprop, proptype) ====
+
+ savenirfast(nirfaststruct,filestub)
+    or
+ savenirfast(v,f,filestub, nodeseg, proptype, proptype)
+
+ save a tetrahedral or surface mesh and associated properties to NIRFAST format
+
+
+ input:
+      nirfaststruct: a structure storing the NIRFAST mesh data, type 
+         'help readnirfast' to read more; alternatively one can use:
+      v: input, node list, the first 3 columns are the x/y/z positions,
+         the remaining columns are combined with nodeprop as node-based
+         (optical) parameters
+      f: input, tetrahedral or surface element list, dimension (ne,3)
+      filestub: output file stub, output will include multiple files
+          filestub.node: node file
+          filestub.elem: element file to store the surface or tet mesh
+          filestub.param: parameter file
+          filestub.region: node label file
+      nodeseg: optional, an integer label field to group nodes into
+         segmentations, same length as v, number starting from 0; or empty
+      nodeprop: optional, additional nodal parameters, typically defined
+         as mua (1/mm), musp (1/mm) and refractive index (n)l; row number
+         equals to that of v, column number is user-defined
+      proptype: optional, the type of the node-property. by default it is 
+         'stnd' - for standard properties; one can also define multi-row
+         header using a cell-array.
+
+ example:
+    [node,face,elem]=meshabox([0 0 0],[10 10 10],0.3,1);
+    savenirfast(node,elem,'test', [], ones(size(node)), 'user');
+    mymesh=readnirfast('test')
+    plotmesh([mymesh.nodes mymesh.bndvtx], mymesh.elements,'x>5')
+
+
+==== function nirfastmesh=readnirfast(filestub) ====
+
+ nirfastmesh=readnirfast(v,f,filestub)
+
+ load a group of mesh files saved in the NIRFAST format
+
+
+ input:
+      filestub: output file stub, output will include multiple files
+          filestub.node: node file
+          filestub.elem: element file to store the surface or tet mesh
+          filestub.param: parameter file
+          filestub.region: node label file
+          filestub.excoef: extinction coeff list
+
+ output:
+      nirfastmesh.nodes: node list, 3 columns
+      nirfastmesh.elements: element list, 3 or 4 columns integers
+      nirfastmesh.bndvtx: boundary flag for each node, 1: on the boundary
+      nirfastmesh.region: node segmentation labels
+      nirfastmesh.dimension: dimension of the mesh
+      nirfastmesh.excoef: extinction coeff list
+      nirfastmesh.excoefheader: extinction coeff list field names
+      nirfastmesh.type: the header of the .param file
+      nirfastmesh.prop: optical property list (non-standard, need further processing)
+
+   format definition see http://www.dartmouth.edu/~nir/nirfast/tutorials/NIRFAST-Intro.pdf
+
+ example:
+    [node,face,elem]=meshabox([0 0 0],[10 10 10],0.3,1);
+    savenirfast(node,elem,'test', [], ones(size(node)), 'user');
+    mymesh=readnirfast('test')
+    plotmesh([mymesh.nodes mymesh.bndvtx], mymesh.elements,'x>5')
+
+
+==== function nii=readnifti(filename) ====
+
+    nii=readnifti(filename)
+
+    Read a Nifti (*.nii) or Analyze 7.5 (*.hdr/*.img) image file
+
+
+    input:
+        fname: the file name to a .nii file, or an Analyze 7.5 file (*.hdr,*.img)
+
+    output:
+        nii.img: the data volume read from the nii file
+        nii.datatype: the data type of the voxel, in matlab data type string
+        nii.datalen: data count per voxel - for example RGB data has 3x
+                    uint8 per voxel, so datatype='uint8', datalen=3
+        nii.voxelbyte: total number of bytes per voxel: for RGB data,
+                    voxelbyte=3; also voxelbyte=header.bitpix/8
+        nii.hdr: file header info, a structure has the full nii header
+                    key subfileds include
+
+              sizeof_hdr: must be 348 if the input is nifti
+              dim: short array, dim(2: dim(1)+1) defines the array size
+              datatype: the type of data stored in each voxel
+              bitpix: total bits per voxel
+              magic: must be 'ni1\0' or 'n+1\0'
+
+              For the detailed nii header, please see
+              https://nifti.nimh.nih.gov/pub/dist/src/niftilib/nifti1.h
+
+   this file was ported from mcxloadnii.m from the MCX Project (http://mcx.space)
+
+
+==== function dat=readmptiff(fname) ====
+
+ vol=readmptiff(fname)
+
+ load a volume from a multi-page TIFF file
+
+
+ input:
+      fname: input file name
+
+ output:
+      dat: output, data read from the TIFF file
+
+=== # JData functions ===
+
+==== function savejmesh(node,face,elem,fname,varargin) ====
+
+ savejmesh(node,face,elem,fname,opt)
+
+ export a mesh to the JMesh format defined in http://github.com/NeuroJSON/jmesh
+
+
+ input:
+      node: input, node list, dimension (nn,3)
+      face: input, optional, surface face element list, dimension (be,3)
+      elem: input, tetrahedral element list, dimension (ne,4)
+      fname: output file name; if file name has a suffix .bmsh or .bmesh, 
+           the mesh data will be saved in the binary jmesh format; otherwise,
+           the file will be saved as a text-based jmesh (which is a plain 
+           JSON file)
+      opt: additional parameters in the form of 'parameter',value pairs
+           valid parameters include:
+           'Dimension': 0 - a user defined mesh, 2- a 2D mesh, 3- a 3D mesh
+           'Author': a string to set the author of the mesh
+           'MeshTitle': a string to set the title of the mesh
+           'MeshTag': a value as the tag of the mesh data
+           'Comment': a string as the additional note for the mesh data
+
+           please type 'help savejson' and 'help saveubjson' to see additional 
+           supported options    
+
+ examples:
+
+    [no,fc,el]=meshabox([0 0 0],[60,30,40],3,10);
+    savejmesh(no,fc,[],'box_surf.jmsh','dimension',3);
+    savejmesh(no,fc,el,'box_zlib.jmsh','compression','zlib');
+    savejmesh(no,fc,el,'box.bmsh','dimension',3);
+    savejmesh(no,fc,el,'box_zlib.bmsh','dimension',3,'compression','zlib');
+    mesh=loadubjson('box.bmsh')
+
+
+==== function jnii=loadjnifti(filename, varargin) ====
+
+    jnii=loadjnifti(inputfile)
+       or
+    jnii=loadjnifti(inputfile, 'Param1',value1, 'Param2',value2,...)
+
+    Load a standard NIFTI-1/2 file or text or binary JNIfTI file with
+    format defined in JNIfTI specification: https://github.com/NeuroJSON/jnifti
+
+
+    input:
+        inputfile: the output file name to the JNIfTI or NIFTI-1/2 file
+                *.bnii for binary JNIfTI file
+                *.jnii for text JNIfTI file
+                *.nii  for NIFTI-1/2 files
+        options: (optional) if loading from a .bnii file, please see the options for
+               loadubjson.m (part of JSONLab); if loading from a .jnii, please see the 
+               supported options for loadjson.m (part of JSONLab).
+
+    output:
+        jnii: a structure (array) or cell (array). The data structure can
+            be completely generic or auxilary data without any JNIfTI
+            constructs. However, if a JNIfTI object is included, it shall
+            contain the below subfields (can appear within any depth of the
+            structure)
+                jnii.NIFTIHeader -  a structure containing the 1-to-1 mapped NIFTI-1/2 header
+                jnii.NIFTIData - the main image data array
+                jnii.NIFTIExtension - a cell array contaiing the extension data buffers
+
+    example:
+        jnii=jnifticreate(uint8(magic(10)),'Name','10x10 magic matrix');
+        savejnifti(jnii, 'magic10.jnii')
+        newjnii=loadjnifti('magic10.jnii');
+
+
+==== function savejnifti(jnii, filename, varargin) ====
+
+    savejnifti(jnii, outputfile)
+       or
+    savejnifti(jnii, outputfile, 'Param1',value1, 'Param2',value2,...)
+
+    Save an in-memory JNIfTI structure into a JNIfTI file with format
+    defined in JNIfTI specification: https://github.com/NeuroJSON/jnifti
+
+
+    input:
+        jnii: a structure (array) or cell (array). The data structure can
+            be completely generic or auxilary data without any JNIfTI
+            constructs. However, if a JNIfTI object is included, it shall
+            contain the below subfields (can appear within any depth of the
+            structure)
+                jnii.NIFTIHeader -  a structure containing the 1-to-1 mapped NIFTI-1/2 header
+                jnii.NIFTIData - the main image data array
+                jnii.NIFTIExtension - a cell array contaiing the extension data buffers
+        outputfile: the output file name to the JNIfTI file 
+                *.bnii for binary JNIfTI file
+                *.jnii for text JNIfTI file
+        options: (optional) if saving to a .bnii file, please see the options for
+               saveubjson.m (part of JSONLab); if saving to .jnii, please see the 
+               supported options for savejson.m (part of JSONLab).
+
+    example:
+        jnii=jnifticreate(uint8(magic(10)),'Name','10x10 magic matrix');
+        savejnifti(jnii, 'magic10.jnii')
+        savejnifti(jnii, 'magic10_debug.bnii','Debug',1)
+
+
+==== function varargout = loadnifti (varargin) ====
+
+    jnii=loadnifti(filename)
+        or
+    nii=loadnifti(filename,option)
+
+    Read a NIfTI-1/2 (*.nii/.nii.gz) or Analyze 7.5 (*.hdr/*.img/.hdr.gz/.img.gz) 
+    image file.
+
+
+    Please run `help nii2jnii` to see the input output outputs.
+    This function is an alias to nii2jnii
+
+
+
+==== function bytestream=savenifti(img, filename, varargin) ====
+
+    savenifti(img, filename)
+        or
+    savenifti(img, filename, rawhdr)
+    savenifti(img, filename, 'nifti2')
+    bytestream=savenifti(img)
+
+    Write an image to a NIfTI (*.nii) or compressed NIfTI file (.nii.gz)
+
+
+    input:
+        img: this is a numerical array to be stored in the NIfTI file
+        filename: output file name, can have a suffix of '.nii' or '.nii.gz'
+                 if a .gz suffix is used, this function needs the JSONLab 
+                 (http://gitlab.com/fangq/jsonlab) and ZMat (http://gitlab.com/NeuroJSON/zmat)
+                 to perform the compression.
+        rawhdr (optional): a struct, as a pre-created/loaded NIfTI header data structure
+                if rawhdr is 'nifti1' or 'nifti2', this function calls 
+                nifticreate to create a default header.
+    output:
+        bytestream (optional): the output file byte stream. it only returns this output if
+                no filename is given. 
+
+    example:
+        a=single(rand(10,20,30));
+        savenifti(a,'randnii.nii');
+        savenifti(a,'randnii2.nii.gz','nifti2'); % needs zmat
+
+
+
+==== function jdata=jdataencode(data, varargin) ====
+
+ jdata=jdataencode(data)
+    or
+ jdata=jdataencode(data, options)
+ jdata=jdataencode(data, 'Param1',value1, 'Param2',value2,...)
+
+ Annotate a MATLAB struct or cell array into a JData-compliant data
+ structure as defined in the JData spec: http://github.com/fangq/jdata.
+ This encoded form servers as an intermediate format that allows unambiguous
+ storage, exchange of complex data structures and easy-to-serialize by
+ json encoders such as savejson and jsonencode (MATLAB R2016b or newer)
+
+ This function implements the JData Specification Draft 3 (Jun. 2020)
+ see http://github.com/fangq/jdata for details
+
+
+ input:
+     data: a structure (array) or cell (array) to be encoded.
+     options: (optional) a struct or Param/value pairs for user
+              specified options (first in [.|.] is the default)
+         AnnotateArray: [0|1] - if set to 1, convert all 1D/2D matrices 
+              to the annotated JData array format to preserve data types;
+              N-D (N>2), complex and sparse arrays are encoded using the
+              annotated format by default. Please set this option to 1 if
+              you intend to use MATLAB's jsonencode to convert to JSON.
+         Base64: [0|1] if set to 1, _ArrayZipData_ is assumed to
+       	       be encoded with base64 format and need to be
+       	       decoded first. This is needed for JSON but not
+       	       UBJSON data
+         Prefix: ['x0x5F'|'x'] for JData files loaded via loadjson/loadubjson, the
+                      default JData keyword prefix is 'x0x5F'; if the
+                      json file is loaded using matlab2018's
+                      jsondecode(), the prefix is 'x'; this function
+                      attempts to automatically determine the prefix;
+                      for octave, the default value is an empty string ''.
+         UseArrayZipSize: [1|0] if set to 1, _ArrayZipSize_ will be added to 
+       	       store the "pre-processed" data dimensions, i.e.
+       	       the original data stored in _ArrayData_, and then flaten
+       	       _ArrayData_ into a row vector using row-major
+       	       order; if set to 0, a 2D _ArrayData_ will be used
+         UseArrayShape: [0|1] if set to 1, a matrix will be tested by
+                  to determine if it is diagonal, triangular, banded or
+                  toeplitz, and use _ArrayShape_ to encode the matrix
+         MapAsStruct: [0|1] if set to 1, convert containers.Map into
+       	       struct; otherwise, keep it as map
+         Compression: ['zlib'|'gzip','lzma','lz4','lz4hc'] - use zlib method 
+       	       to compress data array
+         CompressArraySize: [100|int]: only to compress an array if the  
+       	       total element count is larger than this number.
+         FormatVersion [2|float]: set the JSONLab output version; since
+       	       v2.0, JSONLab uses JData specification Draft 1
+       	       for output format, it is incompatible with all
+       	       previous releases; if old output is desired,
+       	       please set FormatVersion to 1.9 or earlier.
+
+ example:
+     jd=jdataencode(struct('a',rand(5)+1i*rand(5),'b',[],'c',sparse(5,5)))
+
+     encodedmat=jdataencode(single(magic(5)),'annotatearray',1,'prefix','x')
+     jdatadecode(jsondecode(jsonencode(encodedmat)))  % serialize by jsonencode
+     jdatadecode(loadjson(savejson('',encodedmat)))   % serialize by savejson
+
+     encodedtoeplitz=jdataencode(uint8(toeplitz([1,2,3,4],[1,5,6])),'usearrayshape',1,'prefix','x')
+     jdatadecode(jsondecode(jsonencode(encodedtoeplitz)))  % serialize by jsonencode
+     jdatadecode(loadjson(savejson('',encodedtoeplitz)))   % serialize by savejson
+
+ license:
+     BSD or GPL version 3, see LICENSE_{BSD,GPLv3}.txt files for details 
+
+
+==== function newdata=jdatadecode(data,varargin) ====
+
+ newdata=jdatadecode(data,opt,...)
+
+ Convert all JData object (in the form of a struct array) into an array
+ (accepts JData objects loaded from either loadjson/loadubjson or 
+ jsondecode for MATLAB R2016b or later)
+
+ This function implements the JData Specification Draft 3 (Jun. 2020)
+ see http://github.com/fangq/jdata for details
+
+
+ input:
+      data: a struct array. If data contains JData keywords in the first
+            level children, these fields are parsed and regrouped into a
+            data object (arrays, trees, graphs etc) based on JData 
+            specification. The JData keywords are
+               "_ArrayType_", "_ArraySize_", "_ArrayData_"
+               "_ArrayIsSparse_", "_ArrayIsComplex_", 
+               "_ArrayZipType_", "_ArrayZipSize", "_ArrayZipData_"
+      opt: (optional) a list of 'Param',value pairs for additional options 
+           The supported options include
+               Recursive: [1|0] if set to 1, will apply the conversion to 
+                            every child; 0 to disable
+               Base64: [0|1] if set to 1, _ArrayZipData_ is assumed to
+                         be encoded with base64 format and need to be
+                         decoded first. This is needed for JSON but not
+                         UBJSON data
+               Prefix: ['x0x5F'|'x'] for JData files loaded via loadjson/loadubjson, the
+                         default JData keyword prefix is 'x0x5F'; if the
+                         json file is loaded using matlab2018's
+                         jsondecode(), the prefix is 'x'; this function
+                         attempts to automatically determine the prefix;
+                         for octave, the default value is an empty string ''.
+               FullArrayShape: [0|1] if set to 1, converting _ArrayShape_ 
+                         objects to full matrices, otherwise, stay sparse
+               FormatVersion: [2|float]: set the JSONLab output version; 
+                         since v2.0, JSONLab uses JData specification Draft 1
+                         for output format, it is incompatible with all
+                         previous releases; if old output is desired,
+                         please set FormatVersion to 1
+
+ output:
+      newdata: the covnerted data if the input data does contain a JData 
+               structure; otherwise, the same as the input.
+
+ examples:
+      obj={[],{'test'},true,struct('sparse',sparse(2,3),'magic',uint8(magic(5)))}
+      jdata=jdatadecode(jdataencode(obj))
+      isequaln(obj,jdata)
+
+ license:
+     BSD or GPL version 3, see LICENSE_{BSD,GPLv3}.txt files for details 
+
+
+==== function varargout=jload(filename, varargin) ====
+
+ jload
+   or
+ jload(fname)
+ varlist=jload(fname)
+ [varlist, header]=jload(fname)
+ varlist=jload(fname,'param1',value1,'param2',value2,...)
+
+ Load variables from a JSON or binary JSON file to a workspace
+
+ created on 2020/05/31
+
+ input:
+      fname: (optional) input file name; if not given, load 'jamdata.jamm'
+           if fname has a '.json' or '.jdt' suffix, a text-based
+           JSON/JData file will be expected; if the suffix is '.jamm' or
+           '.jdb', a Binary JData file will be expected.
+      opt: (optional) a struct to store parsing options, opt can be replaced by 
+           a list of ('param',value) pairs - the param string is equivallent
+           to a field in opt. opt can have the following 
+           fields (first in [.|.] is the default)
+
+           ws ['caller'|'base']: the name of the workspace in which the
+                         variables are to be saved
+           vars [{'var1','var2',...}]: list of variables to be saved
+           header [0|1]: if set to 1, return the metadata of the variables 
+                         stored in the file
+           matlab [0|1] if set to 1, use matlab's built-in jsondecode to
+                         parse the json file and then decode the output by
+                         jdatadecode; input file must have a suffix of .jdt
+
+           all options for loadubjson/loadjson (depends on file suffix)
+           can be used to adjust the parsing options
+
+ output:
+      varlist: a struct with each subfield a variable stored in the file,
+               if output is ignored, the variables will be loaded to the
+               workspace specified by the 'ws' option, which by default
+               load the variables to the current workspace ('caller')
+
+ examples:
+      jload  % load all variables in jamdata.jamm to the 'caller' workspace 
+      jload mydat.jamm
+      jload('mydat.jamm','vars', {'v1','v2',...}) % load selected variables
+      varlist=jload('mydat.jamm','simplifycell',1)
+
+ license:
+     BSD or GPL version 3, see LICENSE_{BSD,GPLv3}.txt files for details 
+
+
+==== function varargout=jsave(filename, varargin) ====
+
+ jsave
+   or
+ jsave(fname)
+ varlist=jsave(fname,'param1',value1,'param2',value2,...)
+
+ Store variables in a workspace to a JSON or binary JSON file
+
+ created on 2020/05/31
+
+ input:
+      fname: (optional) output file name; if not given, save to 'jamdata.jamm'
+           if fname has a '.json' or '.jdt' suffix, a text-based
+           JSON/JData file will be created (slow); if the suffix is '.jamm' or
+           '.jdb', a Binary JData (https://github.com/NeuroJSON/bjdata/) file will be created.
+      opt: (optional) a struct to store parsing options, opt can be replaced by 
+           a list of ('param',value) pairs - the param string is equivallent
+           to a field in opt. opt can have the following 
+           fields (first in [.|.] is the default)
+
+           ws ['caller'|'base']: the name of the workspace in which the
+                         variables are to be saved
+           vars [{'var1','var2',...}]: cell array of variable names to be saved
+           matlab [0|1] if set to 1, use matlab's built-in jsonencode to
+                         store encoded data to a json file; output file
+                         must have a suffix of .jdt
+
+           all options for savebj/savejson (depends on file suffix)
+           can be used to adjust the output unless "'matlab',1" is used
+
+ output:
+      varlist: a list of variables loaded
+
+ examples:
+      jsave  % save all variables in the 'caller' workspace to jamdata.jamm
+      jsave('mydat.jamm','vars', {'v1','v2',...}) % save selected variables
+      jsave('mydat.jamm','compression','lzma')
+
+ license:
+     BSD or GPL version 3, see LICENSE_{BSD,GPLv3}.txt files for details 
+
+
+==== function newname = decodevarname(name,varargin) ====
+
+    newname = decodevarname(name)
+
+    Decode a hex-encoded variable name (from encodevarname) and restore
+    its original form
+
+    This function is sensitive to the default charset
+    settings in MATLAB, please call feature('DefaultCharacterSet','utf8')
+    to set the encoding to UTF-8 before calling this function.
+
+
+    input:
+        name: a string output from encodevarname, which converts the leading non-ascii
+              letter into "x0xHH_" and non-ascii letters into "_0xHH_"
+              format, where hex key HH stores the ascii (or Unicode) value
+              of the character.
+              
+    output:
+        newname: the restored original string
+
+    example:
+        decodevarname('x0x5F_a')   % returns _a
+        decodevarname('a_')   % returns a_ as it is a valid variable name
+        decodevarname('x0xE58F98__0xE9878F_')  % returns '变量' 
+
+
+==== function str = encodevarname(str,varargin) ====
+
+    newname = encodevarname(name)
+
+    Encode an invalid variable name using a hex-format for bi-directional
+    conversions. 
+    This function is sensitive to the default charset
+    settings in MATLAB, please call feature('DefaultCharacterSet','utf8')
+    to set the encoding to UTF-8 before calling this function.
+
+
+    input:
+        name: a string, can be either a valid or invalid variable name
+
+    output:
+        newname: a valid variable name by converting the leading non-ascii
+              letter into "x0xHH_" and non-ascii letters into "_0xHH_"
+              format, where HH is the ascii (or Unicode) value of the
+              character.
+
+              if the encoded variable name CAN NOT be longer than 63, i.e. 
+              the maximum variable name specified by namelengthmax, and
+              one uses the output of this function as a struct or variable
+              name, the name will be trucated at 63. Please consider using
+              the name as a containers.Map key, which does not have such
+              limit.
+
+    example:
+        encodevarname('_a')   % returns x0x5F_a
+        encodevarname('a_')   % returns a_ as it is a valid variable name
+        encodevarname('变量')  % returns 'x0xE58F98__0xE9878F_' 
+
+
+==== function jnii=jnifticreate(varargin) ====
+
+    jnii=jnifticreate
+       or
+    jnii=jnifticreate('header1', value1, 'header2', value2, ...)
+    jnii=jnifticreate(img, 'header1', value1, ...)
+
+    Create a default JNIfTI structure with default header and image volume
+
+
+    input:
+        img: set the jnii.NIFTIData section
+        'header_i': the header subfield name defined in the JNIfTI
+                    specification, see https://github.com/NeuroJSON/jnifti
+        value_i: set the value for the specified JNIfTI header field
+
+    output:
+        jnii: without any input, jnii gives the default jnii header
+              if img is given, jnii also includes the NIFTIData field
+
+
+
+==== function header=nifticreate(img,format) ====
+
+    header=nifticreate(img)
+       or
+    header=nifticreate(img,format)
+
+    Create a default NIfTI header
+
+
+    input:
+        img: the image data matching the header
+        format: can only be 'nifti1'. can be ignored
+
+    output:
+        header: a struct that is byte-wise compatible with NIfTI-1
+
+
+==== function nii=nii2jnii(filename, format, varargin) ====
+
+    nii=nii2jnii(niifile, format, options)
+       or
+    nii2jnii(niifile, jniifile, options)
+    nii=nii2jnii(niifile)
+
+    A fast and portable NIFTI-1/2 and Analyze7.5 file parser and converter
+    to the text and binary JNIfTI formats defined in JNIfTI specification:
+    https://github.com/NeuroJSON/jnifti  
+
+    This function is compatible with both MATLAB and GNU Octave. 
+    It accepts .nii, .nii.gz, .hdr/.img and .hdr.gz/.img.gz input files
+
+
+    input:
+        fname: the file name to the .nii, .nii.gz, .hdr/.img or .hdr.gz/.img.gz file
+        format:'nii' for reading the NIfTI-1/2/Analyze files; 
+               'jnii' to convert the nii data into an in-memory JNIfTI structure.
+               'niiheader' return only the nii header without the image data
+
+               if format is not listed above and nii2jnii is called without 
+               an output, format must be a string specifying the output JNIfTI
+               file name - *.jnii for text-based JNIfTI, or *.bnii for the 
+               binary version
+        options: (optional) if saving to a .bnii file, please see the options for
+               saveubjson.m (part of JSONLab); if saving to .jnii, please see the 
+               supported options for savejson.m (part of JSONLab).
+
+    output:
+        if the output is a JNIfTI data structure, it has the following subfield:
+          nii.NIFTIHeader -  a structure containing the 1-to-1 mapped NIFTI-1/2 header
+          nii.NIFTIData - the main image data array
+          nii.NIFTIExtension - a cell array contaiing the extension data buffers
+
+        when calling as nii=nii2jnii(file,'nii'), the output is a NIFTI object containing
+          nii.img: the data volume read from the nii file
+          nii.datatype: the data type of the voxel, in matlab data type string
+          nii.datalen: data count per voxel - for example RGB data has 3x
+                    uint8 per voxel, so datatype='uint8', datalen=3
+          nii.voxelbyte: total number of bytes per voxel: for RGB data,
+                    voxelbyte=3; also voxelbyte=header.bitpix/8
+          nii.hdr: file header info, a structure has the full nii header
+                    key subfileds include
+
+              sizeof_hdr: must be 348 (for NIFTI-1) or 540 (for NIFTI-2)
+              dim: short array, dim(2: dim(1)+1) defines the array size
+              datatype: the type of data stored in each voxel
+              bitpix: total bits per voxel
+              magic: must be 'ni1\0' or 'n+1\0'
+
+              For the detailed nii header, please see 
+              https://nifti.nimh.nih.gov/pub/dist/src/niftilib/nifti1.h
+
+    dependency:
+          No external dependency if reading .nii/.hdr/.img files;
+
+          To load gzipped input files (.nii.gz/.hdr.gz/.img.gz), one must
+          install the ZMat Toolbox (http://github.com/NeuroJSON/zmat) and
+          JSONLab Toolbox (http://github.com/fangq/jsonlab);
+
+          To save files into the text/binary JNIfTI formatted files, one
+          need to install JSONLab (http://github.com/fangq/jsonlab).
+
+    this file was initially developed for the MCX project: https://github.com/fangq/mcx/blob/master/utils/mcxloadnii.m
+
+
+==== function nii=jnii2nii(jnii, varargin) ====
+
+    nii=jnii2nii(jnii)
+       or
+    nii=jnii2nii(jniifile)
+    jnii2nii(jniifile, niifile)
+
+    Covert a JNIfTI file or data structure to a NIfTI-1/2 structure or file
+
+    This function is compatible with both MATLAB and GNU Octave. 
+    It accepts .jnii and .bnii input files
+
+
+    input:
+        jnii: a JNIfTI data structure (a struct with NIFTIHeader and NIFTIData fields);
+              if jnii is a string, it represents a JNIfTI file (.jnii/.bnii)
+        niifile: if the 2nd parameter is given as a file name, the converted nifti data
+              will be save as a nii file with filename specified by niifile.
+              if the filename in niifile contains .gz, the file will be compressed using
+              the zmat toolbox.
+
+    output:
+        nii: is the converted nifti-1/2 data structure, it contains the below subfields
+          nii.img: the data volume read from the nii file
+          nii.hdr: extended raw file header, a structure that is byte-wise compatible with a 
+                   nifti-1 - in this case, typecast(nii.hdr,'uint8') must be 348+4=352 bytes, 
+                       including the raw nifti-1 hdr header (348 bytes) plus the 4-byte 
+                       extension flags), or
+                   nifti-2 - in this case, typecast(nii.hdr,'uint8') must be 540+4=544 bytes, 
+                       including the raw nifti-2 hdr header (540 bytes) plus the 4-byte 
+                       extension flags)
+              if one run nii.hdr.extension=[]; the resulting struct is 348/540-byte in length
+              nii.hdr key subfileds include
+
+              sizeof_hdr: must be 348 (for NIFTI-1) or 540 (for NIFTI-2)
+              dim: short array, dim(2: dim(1)+1) defines the array size
+              datatype: the type of data stored in each voxel
+              bitpix: total bits per voxel
+              magic: must be 'ni1\0' or 'n+1\0' for NIFTI-1 data, and 'ni2\0' or 'n+2\0' for NIFTI-2 data
+
+              For the detailed nii header, please see 
+              https://nifti.nimh.nih.gov/pub/dist/src/niftilib/nifti1.h
+
+    dependency:
+
+          To load a JNIfTI file with compression or niifile ends with (.nii.gz/.hdr.gz/.img.gz),
+          one must install the ZMat Toolbox (http://github.com/NeuroJSON/zmat) and
+          JSONLab Toolbox (http://github.com/fangq/jsonlab);
+
+
+==== function newval=niicodemap(name, value) ====
+
+    newval=niicodemap(name, value)
+
+    Bi-directional conversion from NIFTI codes to human-readable JNIfTI 
+    header string values
+
+
+    input:
+        name: a header name as a string, currently support the below nii
+              headers: 'intent_code', 'slice_code', 'datatype', 'qform',
+              'sform' and 'xyzt_units' and their corresponding JNIfTI
+              headers:
+              'Intent','SliceType','DataType','QForm','SForm','Unit'
+        value:the current header value, if it is a code, newval will
+              output the string version; if it is a string, newval will
+              return the code
+
+    output:
+        newval: the converted header value
+
+        For the detailed nii header codes, please see 
+        https://nifti.nimh.nih.gov/pub/dist/src/niftilib/nifti1.h
+
+    example:
+        newval=niicodemap('slice_code', '')
+        newval=niicodemap('datatype', 'uint64')
+        newval=niicodemap('datatype', 2)
+
+    this file was initially developed for the MCX project: https://github.com/fangq/mcx/blob/master/utils/mcxloadnii.m
+
+
+==== function niiheader=niiformat(format) ====
+
+    niiheader=niiformat(format)
+
+    Return a NIfTI header format descriptor as an Nx3 cell array
+
+
+    input:
+        format:'nifti1' - return the header descriptor for NIfTI-1 format
+               'nifti2' - return the header descriptor for NIfTI-2 format
+
+    output:
+        niiheader: an Nx3 cell array in the format similar to the 'Format'
+             specifier of the memmapfile.m function in MATLAB
+             It has the following structure:
+
+             column 1: data type string, it can be one of the following
+                'int8','int16','int32','int64',
+                'uint8','uint16','uint32','uint64',
+                'single','double'
+             column 2: an integer vector denoting the size of the data
+             column 3: a string denoting the fieldname in the output struct
+
+
+==== function savebnii(jnii, filename, varargin) ====
+
+    savebnii(jniidata, bniifile)
+       or
+    savebnii(jniidata, bniifile, 'Param1',value1, 'Param2',value2,...)
+
+    Save an in-memory JNIfTI structure into a binary-JNIfTI file with format
+    defined in JNIfTI specification: https://github.com/NeuroJSON/jnifti
+
+
+    input:
+        jnii: a structure (array) or cell (array). The data structure can
+            be completely generic or auxilary data without any JNIfTI
+            constructs. However, if a JNIfTI object is included, it shall
+            contain the below subfields (can appear within any depth of the
+            structure)
+                jnii.NIFTIHeader -  a structure containing the 1-to-1 mapped NIFTI-1/2 header
+                jnii.NIFTIData - the main image data array
+                jnii.NIFTIExtension - a cell array contaiing the extension data buffers
+        filename: the output file name to the binary-JNIfTI file (.bnii)
+        options: (optional) if saving to .bnii, please see the 
+               supported options for saveubjson.m (part of JSONLab).
+
+    example:
+        jnii=jnifticreate(uint8(magic(10)),'Name','10x10 magic matrix');
+        savebnii(jnii, 'magic10.bnii')
+        savebnii(jnii, 'magic10_debug.bnii','Debug',1)
+
+
+==== function savejnii(jnii, filename, varargin) ====
+
+    savejnii(jniidata, jniifile)
+       or
+    savejnii(jniidata, jniifile, 'Param1',value1, 'Param2',value2,...)
+
+    Save an in-memory JNIfTI structure into a text-JNIfTI file with format
+    defined in JNIfTI specification: https://github.com/NeuroJSON/jnifti
+
+
+    input:
+        jnii: a structure (array) or cell (array). The data structure can
+            be completely generic or auxilary data without any JNIfTI
+            constructs. However, if a JNIfTI object is included, it shall
+            contain the below subfields (can appear within any depth of the
+            structure)
+                jnii.NIFTIHeader -  a structure containing the 1-to-1 mapped NIFTI-1/2 header
+                jnii.NIFTIData - the main image data array
+                jnii.NIFTIExtension - a cell array contaiing the extension data buffers
+        filename: the output file name to the text-JNIfTI file (.jnii)
+        options: (optional) if saving to .jnii, please see the 
+               supported options for savejson.m (part of JSONLab).
+
+    example:
+        jnii=jnifticreate(uint8(magic(10)),'Name','10x10 magic matrix');
+        savejnii(jnii, 'magic10.jnii')
+        savejnii(jnii, 'magic10_compact.jnii','Compact',1)
+
+=== # Data compression ===
+
+==== function varargout = zlibencode(varargin) ====
+
+ output = zlibencode(input)
+    or
+ [output, info] = zlibencode(input)
+
+ Compress a string or numerical array using the ZLIB-compression
+
+ This function depends on JVM in MATLAB or, can optionally use the ZMat 
+ toolbox (http://github.com/NeuroJSON/zmat)
+
+ Copyright (c) 2012, Kota Yamaguchi
+ URL: https://www.mathworks.com/matlabcentral/fileexchange/39526-byte-encoding-utilities
+
+
+ input:
+      input: the original data, can be a string, a numerical vector or array
+
+ output:
+      output: the decompressed byte stream stored in a uint8 vector; if info is 
+            given, output will restore the original data's type and dimensions
+
+ examples:
+      [bytes, info]=zlibencode(eye(10));
+      orig=zlibdecode(bytes,info);
+
+ license:
+     BSD or GPL version 3, see LICENSE_{BSD,GPLv3}.txt files for details 
+
+
+==== function varargout = zlibdecode(varargin) ====
+
+ output = zlibdecode(input)
+    or
+ output = zlibdecode(input,info)
+
+ Decompressing a ZLIB-compressed byte-stream to recover the original data
+ This function depends on JVM in MATLAB or, can optionally use the ZMat 
+ toolbox (http://github.com/NeuroJSON/zmat)
+
+ Copyright (c) 2012, Kota Yamaguchi
+ URL: https://www.mathworks.com/matlabcentral/fileexchange/39526-byte-encoding-utilities
+
+
+ input:
+      input: a string, int8/uint8 vector or numerical array to store ZLIB-compressed data
+      info (optional): a struct produced by the zmat/lz4hcencode function during 
+            compression; if not given, the inputs/outputs will be treated as a
+            1-D vector
+
+ output:
+      output: the decompressed byte stream stored in a uint8 vector; if info is 
+            given, output will restore the original data's type and dimensions
+
+ examples:
+      [bytes, info]=zlibencode(eye(10));
+      orig=zlibdecode(bytes,info);
+
+ license:
+     BSD or GPL version 3, see LICENSE_{BSD,GPLv3}.txt files for details 
+
+
+==== function varargout = gzipencode(varargin) ====
+
+ output = gzipencode(input)
+    or
+ [output, info] = gzipencode(input)
+
+ Compress a string or numerical array using the GZIP-compression
+
+ This function depends on JVM in MATLAB or, can optionally use the ZMat 
+ toolbox (http://github.com/NeuroJSON/zmat)
+
+ Copyright (c) 2012, Kota Yamaguchi
+ URL: https://www.mathworks.com/matlabcentral/fileexchange/39526-byte-encoding-utilities
+
+
+ input:
+      input: the original data, can be a string, a numerical vector or array
+
+ output:
+      output: the decompressed byte stream stored in a uint8 vector; if info is 
+            given, output will restore the original data's type and dimensions
+
+ examples:
+      [bytes, info]=gzipencode(eye(10));
+      orig=gzipdecode(bytes,info);
+
+ license:
+     BSD or GPL version 3, see LICENSE_{BSD,GPLv3}.txt files for details 
+
+
+==== function varargout = gzipdecode(varargin) ====
+
+ output = gzipdecode(input)
+    or
+ output = gzipdecode(input,info)
+
+ Decompressing a GZIP-compressed byte-stream to recover the original data
+ This function depends on JVM in MATLAB or, can optionally use the ZMat 
+ toolbox (http://github.com/NeuroJSON/zmat)
+
+ Copyright (c) 2012, Kota Yamaguchi
+ URL: https://www.mathworks.com/matlabcentral/fileexchange/39526-byte-encoding-utilities
+
+
+ input:
+      input: a string, int8/uint8 vector or numerical array to store the GZIP-compressed data
+      info (optional): a struct produced by the zmat/lz4hcencode function during 
+            compression; if not given, the inputs/outputs will be treated as a
+            1-D vector
+
+ output:
+      output: the decompressed byte stream stored in a uint8 vector; if info is 
+            given, output will restore the original data's type and dimensions
+
+ examples:
+      [bytes, info]=gzipencode(eye(10));
+      orig=gzipdecode(bytes,info);
+
+ license:
+     BSD or GPL version 3, see LICENSE_{BSD,GPLv3}.txt files for details 
+
+
+==== function varargout = lzmaencode(varargin) ====
+
+ output = lzmaencode(input)
+    or
+ [output, info] = lzmaencode(input)
+
+ Compress a string or a numerical array using LZMA-compression
+
+ This function depends on the ZMat toolbox (http://github.com/NeuroJSON/zmat)
+
+
+ input:
+      input: the original data, can be a string, a numerical vector or array
+
+ output:
+      output: the compressed byte stream stored in a uint8 vector
+      info: (optional) a struct storing the metadata of the input, see "help zmat" for details
+
+ examples:
+      [bytes, info]=lzmaencode(eye(10));
+      orig=lzmadecode(bytes,info);
+
+ license:
+     BSD or GPL version 3, see LICENSE_{BSD,GPLv3}.txt files for details 
+
+
+==== function varargout = lzmadecode(varargin) ====
+
+ output = lzmadecode(input)
+    or
+ output = lzmadecode(input,info)
+
+ Decompressing an LZMA-compressed byte-stream to recover the original data
+ This function depends on the ZMat toolbox (http://github.com/NeuroJSON/zmat)
+
+
+ input:
+      input: a string, int8/uint8 vector or numerical array to store LZMA-compressed data
+      info (optional): a struct produced by the zmat/lzmaencode function during 
+            compression; if not given, the inputs/outputs will be treated as a
+            1-D vector
+
+ output:
+      output: the decompressed byte stream stored in a uint8 vector; if info is 
+            given, output will restore the original data's type and dimensions
+
+ examples:
+      [bytes, info]=lzmaencode(eye(10));
+      orig=lzmadecode(bytes,info);
+
+ license:
+     BSD or GPL version 3, see LICENSE_{BSD,GPLv3}.txt files for details 
+
+
+==== function varargout = lzipencode(varargin) ====
+
+ output = lzipencode(input)
+    or
+ [output, info] = lzipencode(input)
+
+ Compress a string or a numerical array using LZip-compression
+
+ This function depends on the ZMat toolbox (http://github.com/NeuroJSON/zmat)
+
+
+ input:
+      input: the original data, can be a string, a numerical vector or array
+
+ output:
+      output: the compressed byte stream stored in a uint8 vector
+      info: (optional) a struct storing the metadata of the input, see "help zmat" for details
+
+ examples:
+      [bytes, info]=lzipencode(eye(10));
+      orig=lzipdecode(bytes,info);
+
+ license:
+     BSD or GPL version 3, see LICENSE_{BSD,GPLv3}.txt files for details 
+
+
+==== function varargout = lzipdecode(varargin) ====
+
+ output = lzipdecode(input)
+    or
+ output = lzipdecode(input,info)
+
+ Decompressing an Lzip-compressed byte-stream to recover the original data
+ This function depends on the ZMat toolbox (http://github.com/NeuroJSON/zmat)
+
+
+ input:
+      input: a string, int8/uint8 vector or numerical array to store Lzip-compressed data
+      info (optional): a struct produced by the zmat/lzipencode function during 
+            compression; if not given, the inputs/outputs will be treated as a
+            1-D vector
+
+ output:
+      output: the decompressed byte stream stored in a uint8 vector; if info is 
+            given, output will restore the original data's type and dimensions
+
+ examples:
+      [bytes, info]=lzipencode(eye(10));
+      orig=lzipdecode(bytes,info);
+
+ license:
+     BSD or GPL version 3, see LICENSE_{BSD,GPLv3}.txt files for details 
+
+
+==== function varargout = lz4encode(varargin) ====
+
+ output = lz4encode(input)
+    or
+ [output, info] = lz4encode(input)
+
+ Compress a string or a numerical array using LZ4-compression
+
+ This function depends on the ZMat toolbox (http://github.com/NeuroJSON/zmat)
+
+
+ input:
+      input: the original data, can be a string, a numerical vector or array
+
+ output:
+      output: the compressed byte stream stored in a uint8 vector
+      info: (optional) a struct storing the metadata of the input, see "help zmat" for details
+
+ examples:
+      [bytes, info]=lz4encode(eye(10));
+      orig=lz4decode(bytes,info);
+
+ license:
+     BSD or GPL version 3, see LICENSE_{BSD,GPLv3}.txt files for details 
+
+
+==== function varargout = lz4decode(varargin) ====
+
+ output = lz4decode(input)
+    or
+ output = lz4decode(input,info)
+
+ Decompressing an LZ4-compressed byte-stream to recover the original data
+ This function depends on the ZMat toolbox (http://github.com/NeuroJSON/zmat)
+
+
+ input:
+      input: a string, int8/uint8 vector or numerical array to store LZ4-compressed data
+      info (optional): a struct produced by the zmat/lz4encode function during 
+            compression; if not given, the inputs/outputs will be treated as a
+            1-D vector
+
+ output:
+      output: the decompressed byte stream stored in a uint8 vector; if info is 
+            given, output will restore the original data's type and dimensions
+
+ examples:
+      [bytes, info]=lz4encode(eye(10));
+      orig=lz4decode(bytes,info);
+
+ license:
+     BSD or GPL version 3, see LICENSE_{BSD,GPLv3}.txt files for details 
+
+
+==== function varargout = lz4hcencode(varargin) ====
+
+ output = lz4hcencode(input)
+    or
+ [output, info] = lz4hcencode(input)
+
+ Compress a string or a numerical array using LZ4HC-compression
+
+ This function depends on the ZMat toolbox (http://github.com/NeuroJSON/zmat)
+
+
+ input:
+      input: the original data, can be a string, a numerical vector or array
+
+ output:
+      output: the compressed byte stream stored in a uint8 vector
+      info: (optional) a struct storing the metadata of the input, see "help zmat" for details
+
+ examples:
+      [bytes, info]=lz4hcencode(eye(10));
+      orig=lz4hcdecode(bytes,info);
+
+ license:
+     BSD or GPL version 3, see LICENSE_{BSD,GPLv3}.txt files for details 
+
+
+==== function varargout = lz4hcdecode(varargin) ====
+
+ output = lz4hcdecode(input)
+    or
+ output = lz4hcdecode(input,info)
+
+ Decompressing an LZ4HC-compressed byte-stream to recover the original data
+ This function depends on the ZMat toolbox (http://github.com/NeuroJSON/zmat)
+
+
+ input:
+      input: a string, int8/uint8 vector or numerical array to store LZ4HC-compressed data
+      info (optional): a struct produced by the zmat/lz4hcencode function during 
+            compression; if not given, the inputs/outputs will be treated as a
+            1-D vector
+
+ output:
+      output: the decompressed byte stream stored in a uint8 vector; if info is 
+            given, output will restore the original data's type and dimensions
+
+ examples:
+      [bytes, info]=lz4hcencode(eye(10));
+      orig=lz4hcdecode(bytes,info);
+
+ license:
+     BSD or GPL version 3, see LICENSE_{BSD,GPLv3}.txt files for details 
+
+
+==== function output = base64decode(varargin) ====
+
+ output = base64decode(input)
+
+ Decoding a Base64-encoded byte-stream to recover the original data
+ This function depends on JVM in MATLAB or, can optionally use the ZMat 
+ toolbox (http://github.com/NeuroJSON/zmat)
+
+ Copyright (c) 2012, Kota Yamaguchi
+ URL: https://www.mathworks.com/matlabcentral/fileexchange/39526-byte-encoding-utilities
+
+
+ input:
+      input: a base64-encoded string
+
+ output:
+      output: the decoded binary byte-stream as a uint8 vector
+
+ examples:
+      bytes=base64encode('Test JSONLab');
+      orig=char(base64decode(bytes))
+
+ license:
+     BSD or GPL version 3, see LICENSE_{BSD,GPLv3}.txt files for details 
+
+
+==== function varargout = base64encode(varargin) ====
+
+ output = base64encode(input)
+
+ Encoding a binary vector or array using Base64
+
+ This function depends on JVM in MATLAB or, can optionally use the ZMat 
+ toolbox (http://github.com/NeuroJSON/zmat)
+
+ Copyright (c) 2012, Kota Yamaguchi
+ URL: https://www.mathworks.com/matlabcentral/fileexchange/39526-byte-encoding-utilities
+
+
+ input:
+      input: a base64-encoded string
+
+ output:
+      output: the decoded binary byte-stream as a uint8 vector
+
+ examples:
+      bytes=base64encode('Test JSONLab');
+      orig=char(base64decode(bytes))
+
+ license:
+     BSD or GPL version 3, see LICENSE_{BSD,GPLv3}.txt files for details 
+
 === # Volumetric image pre-processing ===
 
 ==== function islands=bwislands(img) ====
+
  islands=bwislands(img)
+
  return the indices of non-zero elements in a 2D or 3D image
  grouped by connected regions in a cell array
+
+
  input:
 	 img: a 2D or 3D array
  output:
@@ -1603,52 +4535,122 @@
 		  of the non-zero elements in img for a connected 
 		  region (or an island)
 
+
 ==== function resimg=fillholes3d(img,maxgap) ====
+
  resimg=fillholes3d(img,maxgap)
+
  close a 3D image with the speicified gap size and then fill the holes
+
+ 
  input:
     img: a 3D binary image
     maxgap: maximum gap size for image closing
+
  output:
     resimg: the image free of holes
+
  this function requires the image processing toolbox for matlab/octave
 
+
 ==== function cleanimg=deislands2d(img,sizelim) ====
+
  cleanimg=deislands2d(img,sizelim)
+
  remove isolated islands on a 2D image below speicified size limit
+
+
  input:
  	img: a 2D binary image
  	sizelim: a integer as the maximum pixel size of a isolated region
+
  output:
  	cleanimg: a binary image after removing islands below sizelim
 
+
 ==== function cleanimg=deislands3d(img,sizelim) ====
+
  cleanimg=deislands3d(img,sizelim)
+
  remove isolated islands for 3D image (for each slice)
+
+
  input:
       img: a 3D volumetric image
       sizelim: maximum island size (in pixels) for each x/y/z slice
+
  output:
       cleanimg: 3D image after removing the islands
 
+
+==== function h=ndgaussian(r, sigma, ndim) ====
+
+ h=ndgaussian(r, sigma, ndim)
+
+ create an ND Gaussian or box filter kernel matrix
+
+
+ input:
+    r: kernel half-width, the output is 2*r+1 in each dimension; if
+       missing, use 1
+    sigma: the standard deviation of the Gaussian; if not given, use 1; if
+       set to inf, output box filter
+    ndim: an integer for the output dimension; if not given, use 3
+
+ output:
+    h: an ndim-dimensional matrix
+
+
+==== function img=ndimfilter(im,kernel,varargin) ====
+
+ img=ndimfilter(im,kernel,r,sigma)
+
+ filter an ND array using a specified filter using convolution
+
+
+ input:
+    im: input ND array
+    kernel: can be an ND array, or a string. if string, the below filters
+        are supported:
+        'box': box filter (need r)
+        'gaussian': Gaussian filter (need r,sigma input)
+    r: kernel half-width, the output is 2*r+1 in each dimension; if
+       missing, use 1
+    sigma: the standard deviation of the Gaussian; if not given, use 1; if
+       set to inf, output box filter
+
+ output:
+    img: the filtered ND array
+
+
 ==== function imgdiff=imedge3d(binimg,isdiff) ====
+
  imgdiff=imedge3d(binimg,isdiff)
+
  Extract the boundary voxels from a binary image
+ 
  author: Aslak Grinsted <ag at glaciology.net>
+
  input: 
    binimg: a 3D binary image
    isdiff: if isdiff=1, output will be all voxels which 
          is different from its neighbors; if isdiff=0 or 
          ignored, output will be the edge voxels of the 
          non-zero regions in binimg
+
  output:
    imgdiff: a 3D logical array with the same size as binimg
             with 1 for voxels on the boundary and 0 otherwise 
+ 
 
 ==== function p=internalpoint(v,aloop) ====
+
  p=internalpoint(v,aloop)
+
  imperical function to find an internal point
  of a planar polygon
+
+
  input:   
     v:     x,y,z coordinates of each node of the mesh
     aloop:  input, a single vector separated by NaN, each segment
@@ -1656,46 +4658,95 @@
  output:
     p:   output, [x y z] of an internal point of aloop
 
+
 ==== function vol=smoothbinvol(vol,layer) ====
+
  vol=smoothbinvol(vol,layer)
+
  perform a memory-limited 3D image smoothing
+
+
  input:
      vol: a 3D volumetric image to be smoothed
      layer: number of iterations for the smoothing
+
  output:
      vol: the volumetric image after smoothing
 
+
 ==== function vol=thickenbinvol(vol,layer) ====
+
  vol=thickenbinvol(vol,layer)
+
  thickening a binary volume by a given pixel width
  this is similar to bwmorph(vol,'thicken',3) except 
  this does it in 3d and only does thickening for 
  non-zero elements (and hopefully faster)
+
+
  input:
      vol: a volumetric binary image
      layer: number of iterations for the thickenining
+
  output:
      vol: the volume image after the thickening
 
+
 ==== function vol=thinbinvol(vol,layer,nobd) ====
+
  vol=thinbinvol(vol,layer,nobd)
+
  thinning a binary volume by a given pixel width
  this is similar to bwmorph(vol,'thin',n) except 
  this does it in 3d and only run thinning for 
  non-zero elements (and hopefully faster)
+
+
  input:
      vol: a volumetric binary image
      layer: number of iterations for the thickenining
      nobd: (optional) if set to 1, boundaries will not 
             erode. if not given, nobd=0.
+
  output:
      vol: the volume image after the thinning operations
+
+
+==== function dist=maskdist(vol) ====
+
+ dist=maskdist(vol)
+
+ return the distance in each voxel towards the nearest label boundaries
+
+
+ input:
+	 vol: a 2D or 3D array
+
+ output:
+	 dist: an integer array, storing the distance, in voxel unit, towards
+	       the nearest boundary between two distinct non-zero voxels, the
+	       zero voxels in the domain and space outside of the array 
+          are also treated as a unique non-zero label. If the goal is to 
+	       get the minimum distance measured from the center of the voxel,
+	       one should use (dist-0.5).
+
+ example:
+
+    a=ones(60,60,60);
+    a(:,:,1:10)=2;
+    a(:,:,11:20)=3;
+    im=maskdist(a);
+    imagesc(squeeze(im(:,30,:)))
 
 === # Mesh plotting ===
 
 ==== function hm=plotmesh(node,varargin) ====
+
  hm=plotmesh(node,face,elem,opt)
+
  plot surface and volumetric meshes
+ 
+
  input: 
       node: a node coordinate list, 3 columns for x/y/z; if node has a 
             4th column, it will be used to set the color at each node.
@@ -1710,6 +4761,7 @@
             it will be used to separate the mesh into 
             sub-domains and display them in different colors.
       opt:  additional options for the plotting
+
             for simple point plotting, opt can be markers
             or color options, such as 'r.', or opt can be 
             a logic statement to select a subset of the mesh,
@@ -1719,12 +4771,17 @@
             items to combine these options, for example: 
             plotmesh(...,'x>0','r.'); the range selector must
             appear before the color/marker specifier
+
  in the event where all of the above inputs have extra settings related to 
  the color of the plot, the priorities are given in the following order:
+
           opt > node(:,4) > elem(:,5) > face(:,4)
+
  output:
    hm: handle or handles (vector) to the plotted surfaces
+
  example:
+
    h=plotmesh(node,'r.');
    h=plotmesh(node,'x<20','r.');
    h=plotmesh(node,face);
@@ -1735,10 +4792,15 @@
    h=plotmesh(node,face,elem);
    h=plotmesh(node,face,elem,'linestyle','--');
    h=plotmesh(node,elem,'z=20');
+ 
 
 ==== function hm=plotsurf(node,face,varargin) ====
+
  hm=plotsurf(node,face,opt)
+
  plot 3D surface meshes (2d manifold) or polylines (1d manifold)
+ 
+
  input: 
       node: node coordinates, dimension (nn,3); if node has a 
             4th column, it will be used to set the color at each node.
@@ -1750,34 +4812,52 @@
             two array subelements, the first one is the node index, the
             second one is a scalar as the group id of the facet.
       opt:  additional options for the plotting, see plotmesh
+
  output:
    hm: handle or handles (vector) to the plotted surfaces
+
  example:
+
    h=plotsurf(node,face);
    h=plotsurf(node,face,'facecolor','r');
    h=plotsurf(node,edges,'linestyle','-','linewidth',2,'color','r');
 
+
 ==== function hm=plottetra(node,elem,varargin) ====
+
  hm=plottetra(node,elem,opt)
+
  plot 3D surface meshes
+ 
+
  input: 
       node: a node coordinate list, 3 columns for x/y/z; if node has a 
             4th column, it will be used to set the color at each node.
       elem: a tetrahedral element list; if elem has a 5th column,
-            it will be used to separate the mesh into 
-            sub-domains and display them in different colors.
+            and the 5th column are all integers, it will be treated
+            as labels of sub-domains and display them in different colors.
+            if the 5th column contains non-integer values, it will be
+            used to map to the color of triangles.
       opt:  additional options for a patch object, see plotmesh
+
  output:
    hm: handle or handles (vector) to the plotted surfaces
+
  example:
+
    h=plottetra(node,elem);
    h=plottetra(node,elem,'facealpha',0.5);
+ 
 
 ==== function hh=plotedges(node,edges,varargin) ====
+
  hm=plotedges(node,edges,opt)
    or
  hm=plotedges(node,loops,opt)
+
  plot a 3D polyline or close loop (1d manifold)
+ 
+
  input: 
       node: node coordinates, dimension (nn,3); if node has a 
             4th column, it will be used to set the color at each node.
@@ -1787,15 +4867,23 @@
             denoting a 3D polyline or loop represented by a list of node
             indices
       opt:  additional options for the plotting, see plotmesh
+
  output:
       hm: handle or handles (vector) to the plotted surfaces
+
  example:
+
    h=plotedges(node,[1 2 3 4 5 nan 6 7 8 9]);
    h=plotedges(node,edges,'marker','o','linewidth',2,'color','r');
+ 
 
 ==== function [cutpos,cutvalue,facedata,elemid]=qmeshcut(elem,node,value,cutat,varargin) ====
+
  [cutpos,cutvalue,facedata,elemid]=qmeshcut(elem,node,value,cutat)
+
  fast tetrahedral mesh slicer
+
+
  input: 
    elem: integer array with dimensions of NE x 4, each row contains
          the indices of all the nodes for each tetrahedron
@@ -1818,6 +4906,7 @@
                  produce a new value, then an isosurface is produced 
                  at the levelset where new value=scalar; the 
                  expression can contain constants and x,y,z,v
+
  output:
    cutpos: all the intersections of mesh edges by the cutat
            cutpos is similar to node, containing 3 columns for x/y/z
@@ -1826,18 +4915,26 @@
            same as "value".
    facedata: define the intersection polygons in the form of patch "Faces"
    elemid: the index of the elem in which each intersection polygon locates
+
    without any output, qmeshcut generates a cross-section plot
+
  the outputs of this subroutine can be easily plotted using 
+
   % if value has a length of node:
      patch('Vertices',cutpos,'Faces',facedata,'FaceVertexCData',cutvalue,'FaceColor','interp');
+
   % if value has a length of elem:
      patch('Vertices',cutpos,'Faces',facedata,'CData',cutvalue,'FaceColor','flat');
 
 === # Miscellaneous functions ===
 
 ==== function valnew=surfdiffuse(node,tri,val,ddt,iter,type1,opt) ====
+
  valnew=surfdiffuse(node,tri,val,ddt,iter,type1,opt)
+
  apply a smoothing/diffusion process on a surface
+
+
  input:
      node: list of nodes of the surface mesh
      tri: triangular element list of the surface
@@ -1846,12 +4943,18 @@
      iter: iterations for applying the smoothing
      type1: indices of the nodes which will not be updated
      opt: method, 'grad' for gradient based, and 'simple' for simple average
+
  output:
      valnew: nodal value vector after the smoothing
 
+
 ==== function [node,elem,face]=volmap2mesh(img,ix,iy,iz,elemnum,maxvol,thickness,Amat,Bvec) ====
+
  [node,elem,face]=volmap2mesh(img,ix,iy,iz,thickness,elemnum,maxvol,A,B)
+
  convert a binary volume to tetrahedral mesh followed by an Affine transform
+
+
  input: 
         img, ix,iy,iz, elemnum and  maxvol: see vol2mesh.m
         thickness: scale z-dimension of the mesh to specified thickness, 
@@ -1861,31 +4964,48 @@
         Amat and Bvec maps the image index space to real world coordnate system by
                    [x,y,z]_new=Amat*[x,y,z]_old+Bvec
 
-==== function [isoctave verinfo]=isoctavemesh ====
+
+==== function [isoctave, verinfo]=isoctavemesh ====
+
  [isoctave verinfo]=isoctavemesh
+
  determine whether the code is running in octave
+
+
  output:
    isoctave: 1 if in octave, otherwise 0
    verinfo: a string, showing the version of octave (OCTAVE_VERSION)
 
+
 ==== function p=getvarfrom(ws,name) ====
+
  p=getvarfrom(ws,name)
+
  get variable value by name from specified work-space
+
+
  input:
     ws: name of the work-space, for example, 'base'
     name: name string of the variable
+
  output:
     p: the value of the specified variable, if the variable does not
        exist, return empty array
 
+
 ==== function [t,u,v,idx]=raytrace(p0,v0,node,face) ====
+
  [t,u,v,idx]=raytrace(p0,v0,node,face)
+
  perform a Havel-styled ray tracing for a triangular surface
+
+
  input:
    p0: starting point coordinate of the ray
    v0: directional vector of the ray
    node: a list of node coordinates (nn x 3)
    face: a surface mesh triangle list (ne x 3)
+
  output:
    t: signed distance from p to the intersection point for each surface
       triangle, if ray is parallel to the triangle, t is set to Inf
@@ -1894,7 +5014,9 @@
       the final bary-centric triplet is [u,v,1-u-v]
    idx: optional output, if requested, idx lists the IDs of the face
       elements that intersects the ray; users can manually calc idx by
+
       idx=find(u>=0 & v>=0 & u+v<=1.0 & ~isinf(t));
+
  Reference: 
   [1] J. Havel and A. Herout, "Yet faster ray-triangle intersection (using 
           SSE4)," IEEE Trans. on Visualization and Computer Graphics,
@@ -1903,34 +5025,81 @@
           Monte-Carlo optical simulation'," Biomed. Opt. Express, (in
           press)
 
+
+==== function [isinside,pt,coord]=linextriangle(p0,p1,plane) ====
+  [isinside,pt,coord]=linextriangle(p0,p1,plane)
+
+  calculate the intersection of a 3d line (passing two points)
+  with a plane (determined by 3 points)
+
+
+ parameters: 
+      p0: a 3d point in form of (x,y,z)
+      p1: another 3d point in form of (x,y,z), p0 and p1 determins the line
+      plane: a 3x3 matrix, each row is a 3d point in form of (x,y,z)
+             this is used to define a plane
+ outputs:
+      isinside: a boolean variable, 1 for the intersection is within the 
+               3d triangle determined by the 3 points in plane; 0 is outside
+      pt: the coordinates of the intersection pint
+      coord: 1x3 vector, if isinside=1, coord will record the barycentric 
+          coordinate for the intersection point within the triangle; 
+          otherwise it will be all zeros.
+
+ for degenerated lines or triangles, this will stop
+
+ Please find more information at http://iso2mesh.sf.net/cgi-bin/index.cgi?metch
+
+
 ==== function [a,b,c,d]=getplanefrom3pt(plane) ====
+
  [a,b,c,d]=getplanefrom3pt(plane)
+ 
  define a plane equation ax+by+cz+d=0 from three 3D points
+
+
  input: 
     plane: a 3x3 matrix with each row specifying a 3D point (x,y,z)
+
  output:
     a,b,c,d: the coefficient for plane equation ax+by+cz+d=0
 
+
 ==== function exesuff=getexeext() ====
+
  exesuff=getexeext()
+
  get meshing external tool extension names for the current platform
+
+
  output:
      exesuff: file extension for iso2mesh tool binaries
 
+
 ==== function exesuff=fallbackexeext(exesuffix, exename) ====
+
  exesuff=fallbackexeext(exesuffix, exename)
+
  get the fallback external tool extension names for the current platform
+
+
  input:
      exesuffix: the output executable suffix from getexeext
      exename: the executable name
+
  output:
      exesuff: file extension for iso2mesh tool binaries
 
+
 ==== function [major,minor,patchnum,extra]=iso2meshver ====
+
  [major,minor,patchnum,extra]=iso2meshver
       or
  v=iso2meshver
+
  get the version number of iso2mesh toolbox
+
+
  output:
     if you ask for a single output:
       v: a string denotes the current version number; the string is 
@@ -1940,14 +5109,20 @@
     if you ask for 4 outputs:
      [major,minor,patchnum,extra] are each field of the version string
 
+
 ==== function [t,u,v,idx,xnode]=raysurf(p0,v0,node,face) ====
+
  [t,u,v,idx,xnode]=raysurf(p,v,node,face)
+
  perform a Havel-styled ray tracing for a triangular surface
+
+
  input:
    p0: list of starting points of the rays
    v0: directional vector of the rays, 
    node: a list of node coordinates (nn x 3)
    face: a surface mesh triangle list (ne x 3)
+
  output:
    t: distance from p0 to the intersection point for each surface
       triangle, if t(i)=NaN, no intersection was found for that ray
@@ -1958,6 +5133,7 @@
       each ray
    xnode: optional output, if requested, xnode gives the intersection
       point coordinates; to compute manually, xnode=p0+repmat(t,1,3).*v0
+
  Reference: 
   [1] J. Havel and A. Herout, "Yet faster ray-triangle intersection (using 
           SSE4)," IEEE Trans. on Visualization and Computer Graphics,
@@ -1966,22 +5142,33 @@
           Monte-Carlo optical simulation'," Biomed. Opt. Express, (in
           press)
 
+
 ==== function val=getoptkey(key,default,varargin) ====
+
  val=getoptkey(key,default,opt)
     or
  val=getoptkey(key,default,'key1',val1,'key2',val2, ...)
+
  query the value of a key from a structure or a list of key/value pairs
+
+
  input:
    key: a string name for the target struct field name
    default: the default value of the key is not found
    opt: a struct object; the field names will be searched to match the 
         key input, opt can be a list of 'keyname'/value pairs
+
  output:
    val: val=opt.key if found, otherwise val=default
 
+
 ==== function newpt=rotatevec3d(pt,v1,u1,p0) ====
+
  newpt=rotatevec3d(pt,v1,u1,p0)
+
  rotate 3D points from one Cartesian coordinate system to another
+
+
  input: 
    pt: 3D points defined in a standard Cartesian system where a unitary
        z-vector is (0,0,1), 3 columns for x, y and z 
@@ -1989,129 +5176,261 @@
    u1: the unitary z-vector for the source coordinate system, if ignored,
        u1=(0,0,1) 
    p0: offset of the new coordinate system, if ignored, p0=(0,0,0)
+
  output:
    newpt: the transformed 3D points
 
+
 ==== function [R,s]=rotmat2vec(u,v) ====
+
  [R,s]=rotmat2vec(u,v)
+
  the rotation matrix from vector u to v, satisfying R*u*s=v
+
  author: Bruno Luong
  URL:http://www.mathworks.com/matlabcentral/newsreader/view_original/827969
+
  input: 
    u: a 3D vector in the source coordinate system;
    v: a 3D vector in the target coordinate system;
+
  output:
    R: a rotation matrix to transform normalized u to normalized v
    s: a scaling factor, so that R*u(:)*s=v(:)
 
+
 ==== function opt=varargin2struct(varargin) ====
+
  opt=varargin2struct('param1',value1,'param2',value2,...)
    or
  opt=varargin2struct(...,optstruct,...)
+
  convert a series of input parameters into a structure
+
+
  input:
       'param', value: the input parameters should be pairs of a string and a value
        optstruct: if a parameter is a struct, the fields will be merged to the output struct
+
  output:
       opt: a struct where opt.param1=value1, opt.param2=value2 ...
+
  license:
      BSD or GPL version 3, see LICENSE_{BSD,GPLv3}.txt files for details 
- -- this function is part of JSONlab toolbox (http://iso2mesh.sf.net/cgi-bin/index.cgi?jsonlab)
-len=length(varargin);
-opt=struct;
-if(len==0) return; end
-i=1;
-while(i<=len)
-    if(isstruct(varargin{i}))
-        opt=mergestruct(opt,varargin{i});
-    elseif(ischar(varargin{i}) && i<len)
-        opt=setfield(opt,lower(varargin{i}),varargin{i+1});
-        i=i+1;
-    else
-        error('input must be in the form of ...,''name'',value,... pairs or structs');
-    end
-    i=i+1;
-end
+
 
 ==== function val=jsonopt(key,default,varargin) ====
+
  val=jsonopt(key,default,optstruct)
+
  setting options based on a struct. The struct can be produced
  by varargin2struct from a list of 'param','value' pairs
- $Id: loadjson.m 371 2012-06-20 12:43:06Z fangq $
+
+
  input:
       key: a string with which one look up a value from a struct
       default: if the key does not exist, return default
       optstruct: a struct where each sub-field is a key 
+
  output:
       val: if key exists, val=optstruct.key; otherwise val=default
+
  license:
      BSD or GPL version 3, see LICENSE_{BSD,GPLv3}.txt files for details
- -- this function is part of JSONlab toolbox (http://iso2mesh.sf.net/cgi-bin/index.cgi?jsonlab)
-val=default;
-if(nargin<=2) return; end
-opt=varargin{1};
-if(isstruct(opt))
-    if(isfield(opt,key))
-       val=getfield(opt,key);
-    elseif(isfield(opt,lower(key)))
-       val=getfield(opt,lower(key));
-    end
-end
+
 
 ==== function s=mergestruct(s1,s2) ====
+
  s=mergestruct(s1,s2)
+
  merge two struct objects into one
+
+
  input:
       s1,s2: a struct object, s1 and s2 can not be arrays
+
  output:
       s: the merged struct object. fields in s1 and s2 will be combined in s.
+
  license:
      BSD or GPL version 3, see LICENSE_{BSD,GPLv3}.txt files for details 
- -- this function is part of jsonlab toolbox (http://iso2mesh.sf.net/cgi-bin/index.cgi?jsonlab)
-if(~isstruct(s1) || ~isstruct(s2))
-    error('input parameters contain non-struct');
-end
-if(length(s1)>1 || length(s2)>1)
-    error('can not merge struct arrays');
-end
-fn=fieldnames(s2);
-s=s1;
-for i=1:length(fn)              
-    s=setfield(s,fn{i},getfield(s2,fn{i}));
-end
 
-==== function node=orthdisk(c0,c1,r,ndiv) ====
+
+==== function node=orthdisk(c0,c1,r,ndiv,v1,angle0) ====
+
  node=orthdisk(c0,c1,r,ndiv)
+
  Defining a 3D disk that is orthogonal to the vector c1-c0 
+
+
  input:
      c0: a 1x3 vector for the origin
      c1: a 1x3 vector to define a direction vector c1-c0
      r: the radius of the disk that is orthogonal to c1-c0, passing through c0
      ndiv: division count to approximate a circle by a polygon, if ignored, ndiv=20
+     v1: a 1x3 vector specifying the first point on the output 3D disk. if
+         v1 is not perpendicular to c1-c0, the disk rotation axis is
+         changed to cross(v1,cross(c1-c0,v1)); 
+     angle0: angle0 represents the angle (in radian) of the 1st point in 
+         the 3D disk if placed on the x-y plane.
+
  output:
      node: the 3D vertices of the disk
 
-==== function newdata=struct2jdata(data,varargin) ====
- newdata=struct2jdata(data,opt,...)
- convert a JData object (in the form of a struct array) into an array
+
+==== function [dims, maxlevel, count] = nestbracket2dim(str,brackets) ====
+
+ [dims, maxlevel, count] = nestbracket2dim(str,brackets)
+
+ Extracting the dimension vector of a JSON string formatted array
+ by analyzing the pairs of opening/closing bracket tokenss; this function 
+ only returns valid dimension information when the array is an N-D array
+
+
  input:
-      data: a struct array. If data contains JData keywords in the first
-            level children, these fields are parsed and regrouped into a
-            data object (arrays, trees, graphs etc) based on JData 
-            specification. The JData keywords are
-               "_ArrayType_", "_ArraySize_", "_ArrayData_"
-               "_ArrayIsSparse_", "_ArrayIsComplex_"
-      opt: (optional) a list of 'Param',value pairs for additional options 
-           The supported options include
-               'Recursive', if set to 1, will apply the conversion to 
-                            every child; 0 to disable
+      str: a string-formatted JSON array using square-brackets for enclosing
+           elements and comma as separators between elements
+      brackets: (optional), a string of length 2, with the first character
+               being the opening token and the 2nd being the closing token.
+               if not given, brackets is set to '[]' to find matching square-brackets;
+               for example, '{}' looks for a matching closing curly-bracket in
+               the string key(pos(startpos,:end))
+
  output:
-      newdata: the covnerted data if the input data does contain a JData 
-               structure; otherwise, the same as the input.
- examples:
-      obj=struct('_ArrayType_','double','_ArraySize_',[2 3],
-                 '_ArrayIsSparse_',1 ,'_ArrayData_',null);
-      ubjdata=struct2jdata(obj);
+      dims: the speculated dimension vector with the length matching the maximum 
+            depth of the embedded bracket pairs. When the input string encodes an
+            N-D array, the dims vector contains all integers; however, returning
+            an all-integer dims vector does not mean the array is rectangular.
+      maxlevel: return the depth of the enclosed brackets in the string, i.e. the
+            length of the dims vector.
+      count: the relative depth from the level 0 - scanning from the left
+            to right of the string, an opening token increases the level by 1
+            and a closing token decreases the level by 1; a zero indicates
+            the positions of a matching bracket of the same level.
+
+ example:
+      str='[[ [1,2,3], [4,2,1]], [ [10,1,0], [2,5,10]] ]'; % an N-D array
+      [dim,dep]=nestbracket2dim(str)
+      str='[[ [1,2,3], [4,2,1]], [ [10,1,0], [2,5]] ]'; % an invalid N-D array
+      [dim,dep]=nestbracket2dim(str)
  license:
-     BSD or GPL version 3, see LICENSE_{BSD,GPLv3}.txt files for details 
+     BSD or GPL version 3, see LICENSE_{BSD,GPLv3}.txt files for details
+
+
+==== function [endpos, maxlevel] = fast_match_bracket(key,pos,startpos,brackets) ====
+
+ [endpos, maxlevel] = fast_match_bracket(key,pos,startpos,brackets)
+
+ A fast function to find the position of a closing bracket token in a string
+
+
+ input:
+      key: a preprocessed string containing only relevant opening/closing 
+           bracket characters for accelerating the search.
+      pos: a 1D integer vector with a length matching the length of key, 
+           recording the corresponding position of each char. in the original string.
+      startpos: the index in the original string as the start position to search; the
+               startpos must be at least 1 greater than the opening bracket position
+      brackets: (optional), a string of length 2, with the first character
+               being the opening token and the 2nd being the closing token.
+               if not given, brackets is set to '[]' to find matching square-brackets;
+               for example, '{}' looks for a matching closing curly-bracket in
+               the string key(pos(startpos,:end))
+
+ output:
+      endpos: if a matching bracket is found, return its position in the original 
+              string
+      maxlevel: return the depth of the enclosed brackets between the searched pair,
+              includig the searching pair. For example, the matching closing-bracket 
+              of the 1st square bracket (startpos=2) in  '[[[]],[]]' returns a 
+              position of 9, with a maximum depth of 3; searching for the closing 
+              bracket for the 2nd square bracket (startpos=3) returns a position of 
+              5 and max-depth of 2.
+
+ example:
+      str='[[ [1,2], 1], 10, [5,10] ]';
+      pos=find(str=='[' | str==']')
+      key=str(pos)
+      [p1,dep]=fast_match_bracket(key,1:length(key),3)
+      [p2,dep]=fast_match_bracket(key,pos,2)
+      [p3,dep]=fast_match_bracket(key,pos,3)
+
+ license:
+     BSD or GPL version 3, see LICENSE_{BSD,GPLv3}.txt files for details
+
+
+==== function [endpos, maxlevel] = match_bracket(str,startpos,brackets) ====
+
+ [endpos, maxlevel] = match_bracket(str,startpos,brackets)
+
+ Looking for the position of a closing bracket token in a string
+
+
+ input:
+      str: the full string to be searched
+      startpos: the index in the string as the start position to search; the
+               startpos must be at least 1 greater than the opening bracket position
+      brackets: (optional), a string of length 2, with the first character
+               being the opening token and the 2nd being the closing token.
+               if not given, brackets is set to '[]' to find matching square-brackets;
+               for example, '{}' looks for a matching closing curly-bracket in
+               the string key(pos(startpos,:end))
+
+ output:
+      endpos: if a matching bracket is found, return its position in the original 
+              string
+      maxlevel: return the depth of the enclosed brackets between the searched pair,
+              includig the searching pair. For example, the matching closing-bracket 
+              of the 1st square bracket (startpos=2) in  '[[[]],[]]' returns a 
+              position of 9, with a maximum depth of 3; searching for the closing 
+              bracket for the 2nd square bracket (startpos=3) returns a position of 
+              5 and max-depth of 2.
+
+ example:
+      str='[[ [1,2], 1], 10, [5,10] ]';
+      [p1,dep]=match_bracket(str,3)
+      [p2,dep]=match_bracket(str,2)
+      [p3,dep]=match_bracket(str,3)
+
+ license:
+     BSD or GPL version 3, see LICENSE_{BSD,GPLv3}.txt files for details
+
+
+==== function outstruct=memmapstream(bytes, format) ====
+
+    outstruct=memmapstream(bytes, format)
+
+    Map a byte-array (in char array or uint8/int8 array) into a structure
+    using a dictionary (format is compatible with memmapfile in MATLAB)
+
+    This function is compatible with both MATLAB and GNU Octave. 
+
+
+    input:
+        bytes: a char, int8 or uint8 vector or array
+        format: a 3-column cell array in the format compatible with the
+              'Format' parameter of memmapfile in MATLAB. It has the
+              following structure
+
+             column 1: data type string, it can be one of the following
+                'int8','int16','int32','int64',
+                'uint8','uint16','uint32','uint64',
+                'single','double','logical'
+             column 2: an integer vector denoting the size of the data
+             column 3: a string denoting the fieldname in the output struct
+
+             For example format={'int8',[1,8],'key'; 'float',[1,1],'value'}
+             reads the first 8 bytes from 'bytes' as the first subfield
+             'key' and the following 4 bytes as the floating point 'value'
+             subfield.
+
+    output:
+        outstruct: a structure containing the required field
+
+    example:
+        bytestream=['Andy' 5 'JT'];
+        format={'uint8', [1,4], 'name',
+              'uint8', [1,1], 'age',
+              'uint8', [1,2], 'school'};
+        data=memmapstream(bytestream,format);
 

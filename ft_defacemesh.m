@@ -8,17 +8,19 @@ function mesh = ft_defacemesh(cfg, mesh)
 % FT_PLOT_MESH.
 %
 % Use as
-%   mesh = ft_defacevolume(cfg, mesh)
+%   mesh = ft_defacemesh(cfg, mesh)
 %
 % The configuration can contain the following options
-%   cfg.translate  = initial position of the center of the box (default = [0 0 0])
+%   cfg.method     = string, specification of the shape that is used 
+%                    as a boundary for exclusion, can be either 'box' or 'plane' (default = 'box')
+%   cfg.translate  = initial position of the center of the box, or a point on the plane (default = [0 0 0])
 %   cfg.scale      = initial size of the box along each dimension (default is automatic)
-%   cfg.rotate     = initial rotation of the box (default = [0 0 0])
+%   cfg.rotate     = initial rotation of the box, or the plane (default = [0 0 0])
 %   cfg.selection  = which vertices to keep, can be 'inside' or 'outside' (default = 'outside')
 %
-% See also FT_ANONYMIZEDATA, FT_DEFACEVCOLUME, FT_ANALYSISPIPELINE, FT_PLOT_MESH
+% See also FT_ANONYMIZEDATA, FT_DEFACEVOLUME, FT_ANALYSISPIPELINE, FT_PLOT_MESH
 
-% Copyright (C) 2015-2022, Robert Oostenveld
+% Copyright (C) 2015-2024, Robert Oostenveld and Jan-Mathijs Schoffelen 
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -58,7 +60,6 @@ end
 % the actual work is done by FT_DEFACEVOLUME
 tmpcfg = cfg;
 tmpcfg.showcallinfo = 'no';
-tmpcfg.method = 'interactive';
 mesh = ft_defacevolume(tmpcfg, mesh);
 % remember the output rotate, scale and translate
 rotate    = mesh.cfg.rotate;

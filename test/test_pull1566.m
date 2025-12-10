@@ -1,8 +1,9 @@
 function test_pull1566
 
-% MEM 8gb
+% MEM 6gb
 % WALLTIME 00:20:00
 % DEPENDENCY ft_appendfreq append_common ft_selectdata ft_appendtimelock
+% DATA no
 
 freq1=[];
 freq1.label={'chan1'};

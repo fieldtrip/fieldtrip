@@ -1,8 +1,9 @@
 function test_ft_appendlayout
 
 % WALLTIME 00:10:00
-% MEM 2gb
+% MEM 1gb
 % DEPENDENCY
+% DATA no
 
 nchan = 24;
 ntime = 1000;

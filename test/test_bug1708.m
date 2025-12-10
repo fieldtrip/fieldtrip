@@ -1,14 +1,15 @@
 function test_bug1708
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY test_bug1708 ft_denoise_synthetic
+% DATA private
 
 % reported bug is that ft_denoise_synthetic leads to nans in coilpos and
 % coilori
 
 % try to reproduce first
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/preproc_ctf275.mat'));
+load(dccnpath('/project/3031000.02/test/latest/raw/meg/preproc_ctf275.mat'));
 
 cfg  = [];
 cfg.gradient = 'none';

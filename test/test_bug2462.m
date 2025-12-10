@@ -1,10 +1,11 @@
 function test_bug2462
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY
+% DATA private
 
-homedir = dccnpath('/home/common/matlab/fieldtrip/data/test/bug2462/');
+homedir = dccnpath('/project/3031000.02/test/bug2462/');
 datasets = {
   'scan1_Filters_125HzLP-ascii-multiplexed.dat'
   'scan1_Filters_125HzLP-ascii-vectorized.dat'

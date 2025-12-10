@@ -1,8 +1,9 @@
 function test_bug1967a
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:20:00
 % DEPENDENCY ft_prepare_vol_sens
+% DATA no
 
 % with the inititial version of this test script I had merge conflicts that I was not able to resolve, hence now the name with an "a'
 

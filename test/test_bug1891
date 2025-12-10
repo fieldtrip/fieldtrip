@@ -1,9 +1,0 @@
-function test_bug1891
-
-% MEM 320kb
-% WALLTIME 00:00:10
-% DEPENDENCY ft_connectivity_wpli.m
-
-% use case: cross-spectra with 200 repetitions for 20*20 channel combinations, each one frequency and time bin long 
-data = rand(200,400); 
-ft_connectivity_wpli(data, 'dojack', false);

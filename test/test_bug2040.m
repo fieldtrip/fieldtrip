@@ -1,8 +1,9 @@
 function test_bug2040
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY nansum
+% DATA no
 
 [ftver, ftpath] = ft_version;
 

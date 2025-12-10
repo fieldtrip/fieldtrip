@@ -1,8 +1,9 @@
 function test_bug780
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_preproc_lowpassfilter ft_preproc_highpassfilter ft_preproc_bandpassfilter ft_preproc_bandstopfilter filter_with_correction
+% DATA no
 
 dat = randn(1,1000);
 

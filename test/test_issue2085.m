@@ -3,6 +3,7 @@ function test_issue2085
 % MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_resampledata ft_specest_irasa
+% DATA no
 
 % test function to evaluate the reported scale difference when resampling
 % with the drop in compat replacement of the resample function (and lower

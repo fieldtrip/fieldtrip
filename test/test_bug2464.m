@@ -3,8 +3,9 @@ function test_bug2464
 % MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_selectdata
+% DATA private
 
-filename = dccnpath('/home/common/matlab/fieldtrip/data/test/bug2464.mat');
+filename = dccnpath('/project/3031000.02/test/bug2464.mat');
 load(filename);
 
 cfg = [];

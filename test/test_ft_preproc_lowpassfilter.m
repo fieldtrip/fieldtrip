@@ -3,6 +3,7 @@ function tests = test_ft_preproc_lowpassfilter
 % MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_preproc_lowpassfilter
+% DATA no
 
 if nargout
   % assume that this is called by RUNTESTS
@@ -16,7 +17,7 @@ else
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function testOptions(testCase)
+function testEverything(testCase)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 nchan   = 8;
@@ -92,7 +93,7 @@ for i=1:size(result{1},1)
 end
 n = numel(result);
 figure;imagesc((mean(B,3)+mean(B,3)')/2);
-caxis([0.82 1.01]);
+clim([0.82 1.01]);
 set(gca, 'xtick', 1:n, 'ytick', 1:n, 'xticklabel', opts', 'yticklabel', opts', 'ticklabelinterpreter', 'none');
 set(gcf, 'position', [230 47 993 750]);
 colorbar

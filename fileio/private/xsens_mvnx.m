@@ -1,18 +1,20 @@
 function varargout = xsens_mvnx(filename, hdr, begsample, endsample, chanindx)
 
-% XSENS_MVNX reads motion tracking data from a file that was created by
-% xsens MVN motion systems, see: https://www.xsens.com/motion-capture. The
-% current function is designed to read in .mvnx files from release version
-% 4.
+% XSENS_MVNX reads motion tracking data from a file that was created by XSens MVN
+% motion capture systems. This function is designed to read in .mvnx files from
+% release version 4.
+%
+% See https://www.xsens.com/motion-capture
 %
 % Use as
 %   hdr = xsens_mvnx(filename);
 %   dat = xsens_mvnx(filename, hdr, begsample, endsample, chanindx);
 %   evt = xsens_mvnx(filename, hdr);
 %
-% See also FT_FILETYPE, FT_READ_HEADER, FT_READ_DATA, FT_READ_EVENT, QUALISYS_TSV
+% See also FT_FILETYPE, FT_READ_HEADER, FT_READ_DATA, FT_READ_EVENT
+% See also BIDS_TSV, BIOPAC_ACQ, BUCN_TXT, EEGSYNTH_TSV, EVENTS_TSV, LIBERTY_CSV, MAUS_TEXTGRID, MOTION_C3D, OPENBCI_TXT, OPENPOSE_KEYPOINTS, OPENSIGNALS_TXT, OPENVIBE_MAT, OPM_FIL, QUALISYS_TSV, QUSPIN_LVM, SCCN_XDF, SENSYS_CSV, SNIRF, SPIKEGLX_BIN, UNICORN_CSV, XSENS_MVNX
 
-% Copyright (C) 2020 Helena Cockx
+% Copyright (C) 2020-2024, Helena Cockx
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.

@@ -1,10 +1,11 @@
 function test_ft_volumenormalise
 
-% MEM 8gb
+% MEM 6gb
 % WALLTIME 00:45:00
 % DEPENDENCY ft_volumenormalise ft_warp_apply
+% DATA public
 
-filename = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.mri');
+filename = dccnpath('/project/3031000.02/external/download/test/ctf/Subject01.mri');
 mri = ft_read_mri(filename);
 
 %%
@@ -16,10 +17,23 @@ printstack()
 cfg                 = [];
 cfg.mri             = mri;
 cfg.threshold       = 0.1;
-cfg.resolution      = 0.6;
-cfg.smooth          = 10;
-sourcemodel         = ft_prepare_sourcemodel(cfg);
-sourcemodel         = ft_convert_units(sourcemodel, 'mm');
+cfg.unit            = 'cm';
+cfg.resolution      = 0.6;  % this is in cm, since cfg.unit is specified
+cfg.smooth          = 10;   % this is in voxels
+sourcemodel_cm      = ft_prepare_sourcemodel(cfg);
+
+cfg                 = [];
+cfg.mri             = mri;
+cfg.threshold       = 0.1;
+cfg.resolution      = 6;  % this is in mm, since the MRI is in mm
+cfg.smooth          = 10; % this is in voxels
+sourcemodel_mm      = ft_prepare_sourcemodel(cfg);
+
+% these should not be different, except for the units
+assert(isequal(size(sourcemodel_cm.pos), size(sourcemodel_mm.pos)));
+
+% continue with the one in mm
+sourcemodel = sourcemodel_mm;
 
 inside = sourcemodel.inside;
 dum = zeros(sourcemodel.dim(1:2));

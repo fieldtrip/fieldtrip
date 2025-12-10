@@ -21,7 +21,7 @@ function [channel] = ft_channelselection(desired, datachannel, senstype)
 %   'M*1'        is replaced by all channels that match the wildcard, e.g. MEG0111, MEG0131, MEG0131, ...
 %   'meg'        is replaced by all MEG channels (works for CTF, 4D, Neuromag and Yokogawa)
 %   'megref'     is replaced by all MEG reference channels (works for CTF and 4D)
-%   'meggrad'    is replaced by all MEG gradiometer channels (works for Yokogawa and Neuromag306)
+%   'meggrad'    is replaced by all MEG gradiometer channels (works for CTF, Yokogawa and Neuromag306)
 %   'megplanar'  is replaced by all MEG planar gradiometer channels (works for Neuromag306)
 %   'megmag'     is replaced by all MEG magnetometer channels (works for Yokogawa and Neuromag306)
 %   'eeg'        is replaced by all recognized EEG channels (this is system dependent)
@@ -244,7 +244,7 @@ for i=1:length(channel)
 end
 
 if ~isempty(findreg)
-  findreg  = unique(findreg); % remove multiple occurances due to multiple wildcards
+  findreg  = unique(findreg); % remove multiple occurrences due to multiple wildcards
   labelreg = datachannel(labelreg);
 end
 
@@ -264,8 +264,7 @@ switch senstype
     labelmeg      = datachannel(megind);
     labelmegmag   = datachannel(megmag);
     labelmeggrad  = datachannel(megax | megpl);
-    %%
-    %    labeleeg  = datachannel(strncmp('EEG', datachannel, length('EEG')));
+    %labeleeg  = datachannel(strncmp('EEG', datachannel, length('EEG')));
     eeg_A = myregexp('^A[^G]*[0-9hzZ]$', datachannel);
     eeg_P = myregexp('^P[^G]*[0-9hzZ]$', datachannel);
     eeg_T = myregexp('^T[^R]*[0-9hzZ]$', datachannel);
@@ -290,16 +289,19 @@ switch senstype
       datachannel(strncmp('Q'  , datachannel, 1));
       datachannel(strncmp('R'  , datachannel, length('G'  )))];
 
-  case {'ctf', 'ctf275', 'ctf151', 'ctf275_planar', 'ctf151_planar'}
+  case {'ctf', 'ctf275', 'ctf151', 'ctf275_planar', 'ctf151_planar', 'ctf275_planar_combined', 'ctf151_planar_combined'}
     % all CTF MEG channels start with "M"
     % all CTF reference channels start with B, G, P, Q or R
     % all CTF EEG channels start with "EEG"
-    labelmeg    = datachannel(strncmp('M'  , datachannel, length('M'  )));
-    labelmegref = [datachannel(strncmp('B'  , datachannel, 1));
+    labelmeg     = datachannel(strncmp('M'  , datachannel, length('M'  )));
+    labelmeggrad = datachannel(strncmp('M'  , datachannel, length('M'  )));
+    labelmegref  = [
+      datachannel(strncmp('B'  , datachannel, 1));
       datachannel(strncmp('G'  , datachannel, 1));
       datachannel(strncmp('P'  , datachannel, 1));
       datachannel(strncmp('Q'  , datachannel, 1));
-      datachannel(strncmp('R'  , datachannel, length('G'  )))];
+      datachannel(strncmp('R'  , datachannel, 1));
+      ];
     labeleeg  = datachannel(strncmp('EEG', datachannel, length('EEG')));
 
     % Not sure whether this should be here or outside the switch or
@@ -323,7 +325,7 @@ switch senstype
     labelmzo  = datachannel(strncmp('MZO', datachannel, length('MZO')));
     labelmzp  = datachannel(strncmp('MZP', datachannel, length('MZP')));
 
-  case {'bti', 'bti248', 'bti248grad', 'bti148', 'bti248_planar', 'bti148_planar'}
+  case {'bti', 'bti248', 'bti248grad', 'bti148', 'bti248_planar', 'bti148_planar', 'bti248_planar_combined', 'bti148_planar_combined'}
     % all 4D-BTi MEG channels start with "A"
     % all 4D-BTi reference channels start with M or G
 
@@ -446,7 +448,7 @@ findmua        = find(strcmpi(channel, 'mua'));
 findspike      = find(strcmpi(channel, 'spike'));
 findgui        = find(strcmpi(channel, 'gui'));
 
-% remove any occurences of groups in the channel list
+% remove any occurrences of groups in the channel list
 channel([
   findall
   findreg

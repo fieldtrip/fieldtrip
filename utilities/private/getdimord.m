@@ -67,7 +67,7 @@ if isfield(data, [field 'dimord'])
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% if not present, we need some additional information about the data strucure
+% if not present, we need some additional information about the data structure
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % nan means that the value is not known and might remain unknown
@@ -514,8 +514,12 @@ switch field
       dimord = 'pos_rpt_ori_time';
     elseif isequal(datsiz, [npos nfreq ntime])
       dimord = 'pos_freq_time';
+    elseif isequal(datsiz, [ndim1 ndim2 ndim3 nori ntime]) && iscell(data.(field))
+      dimord = '{dim1_dim2_dim3}_ori_time';
     elseif isequal(datsiz, [ndim1 ndim2 ndim3 nori ntime])
       dimord = 'dim1_dim2_dim3_ori_time';
+    elseif isequal(datsiz, [ndim1 ndim2 ndim3 nori nfreq]) && iscell(data.(field))
+      dimord = '{dim1_dim2_dim3}_ori_freq';
     elseif isequal(datsiz, [ndim1 ndim2 ndim3 nori nfreq])
       dimord = 'dim1_dim2_dim3_ori_freq';
     end

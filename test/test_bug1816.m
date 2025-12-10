@@ -1,18 +1,19 @@
 function test_bug1816
 
-% MEM 6gb
+% MEM 4gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_read_mri ft_volumesegment
+% DATA private
 
 % test the ft_volumesegment function used for segmentation with FSL BET and FAST
 % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1816
 
-mri = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.mri'));
+mri = ft_read_mri(dccnpath('/project/3031000.02/external/download/test/ctf/Subject01.mri'));
 
 % read in aligned images
-subjectT1  = dccnpath('/home/common/matlab/fieldtrip/data/test/bug1826/T1.nii.gz');
-subjectT2  = dccnpath('/home/common/matlab/fieldtrip/data/test/bug1826/T2_T1Space_trilinear.nii.gz');
-subjectDTi = dccnpath('/home/common/matlab/fieldtrip/data/test/bug1826/DTI_T1Space.nii.gz');
+subjectT1  = dccnpath('/project/3031000.02/test/bug1826/T1.nii.gz');
+subjectT2  = dccnpath('/project/3031000.02/test/bug1826/T2_T1Space_trilinear.nii.gz');
+subjectDTi = dccnpath('/project/3031000.02/test/bug1826/DTI_T1Space.nii.gz');
 
 T1  = ft_read_mri(subjectT1);
 T2  = ft_read_mri(subjectT2);

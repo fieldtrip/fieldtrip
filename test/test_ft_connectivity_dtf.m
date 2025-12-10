@@ -3,6 +3,7 @@ function tests = test_ft_connectivity_dtf
 % MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_connectivity_dtf
+% DATA no
 
 if nargout
   % assume that this is called by RUNTESTS
@@ -17,7 +18,7 @@ else
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function testOptions(testCase)
+function testEverything(testCase)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 nrpt  = 10;

@@ -1,8 +1,9 @@
 function test_bug1856
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:20:00
 % DEPENDENCY ft_read_header ft_read_sens ft_chanunits
+% DATA private
 
 % make sure that grad.chanunit and hdr.chanunit are specified for the most
 % common MEG systems, biosemi, brainvision and egi
@@ -10,17 +11,17 @@ function test_bug1856
 % FIXME egi example data is missing in this list
 
 filename = {
-  dccnpath('/home/common/matlab/fieldtrip/data/test/original/eeg/bdf/Newtest17-256.bdf')
-  dccnpath('/home/common/matlab/fieldtrip/data/test/original/eeg/brainvision/Mischa.vhdr')
-  dccnpath('/home/common/matlab/fieldtrip/data/test/original/meg/bti148/c,rfhp0.1Hz.m4d')
-  dccnpath('/home/common/matlab/fieldtrip/data/test/original/meg/bti248/e,rfDC')
-  dccnpath('/home/common/matlab/fieldtrip/data/test/original/meg/bti248grad/e,rfhp1.0Hz,COH')
-  dccnpath('/home/common/matlab/fieldtrip/data/test/original/meg/ctf151/Subject01.ds')
-  dccnpath('/home/common/matlab/fieldtrip/data/test/original/meg/ctf275/A0132_Aud-Obj-Recognition_20051115_02.ds')
-  dccnpath('/home/common/matlab/fieldtrip/data/test/original/meg/neuromag122/jg_single_01raw.fif')
-  dccnpath('/home/common/matlab/fieldtrip/data/test/original/meg/neuromag306/raw.fif')
-  dccnpath('/home/common/matlab/fieldtrip/data/test/original/meg/yokogawa160/Continuous1.con')    % this one has 28 channels of an unknown type
-  dccnpath('/home/common/matlab/fieldtrip/data/test/original/eeg/bdf/050327BH_overCZnoAlpha.bdf') % this has 10-20 EEG channel labels, see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1856#c8
+  dccnpath('/project/3031000.02/test/original/eeg/bdf/Newtest17-256.bdf')
+  dccnpath('/project/3031000.02/test/original/eeg/brainvision/Mischa.vhdr')
+  dccnpath('/project/3031000.02/test/original/meg/bti148/c,rfhp0.1Hz.m4d')
+  dccnpath('/project/3031000.02/test/original/meg/bti248/e,rfDC')
+  dccnpath('/project/3031000.02/test/original/meg/bti248grad/e,rfhp1.0Hz,COH')
+  dccnpath('/project/3031000.02/test/original/meg/ctf151/Subject01.ds')
+  dccnpath('/project/3031000.02/test/original/meg/ctf275/A0132_Aud-Obj-Recognition_20051115_02.ds')
+  dccnpath('/project/3031000.02/test/original/meg/neuromag122/jg_single_01raw.fif')
+  dccnpath('/project/3031000.02/test/original/meg/neuromag306/raw.fif')
+  dccnpath('/project/3031000.02/test/original/meg/yokogawa160/Continuous1.con')    % this one has 28 channels of an unknown type
+  dccnpath('/project/3031000.02/test/original/eeg/bdf/050327BH_overCZnoAlpha.bdf') % this has 10-20 EEG channel labels, see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1856#c8
   };
 
 for i=1:length(filename)

@@ -1,8 +1,9 @@
 function test_ft_respiration
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_respiration
+% DATA no
 
 fs = 500;
 nchan = 32;

@@ -1,7 +1,8 @@
 function test_example_fittemplate
 
-% MEM 4gb
+% MEM 2gb
 % WALLTIME 00:20:00
+% DATA public
 
 %
 %% How to create a head model if you do not have an individual MRI
@@ -21,7 +22,7 @@ function test_example_fittemplate
 % You load the head shape measured during the MEG recording with the Polhemus and a template volume conduction model. We have to ensure that they have consistent units, hence we will convert the units into mm. Expressing the data in mm will give a better expression of the data (i.e. 90mm vs. 0.09m).
 %
 
-filename = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/epilepsy/raw/case1/ctf/case1.pos');
+filename = dccnpath('/project/3031000.02/external/download/tutorial/epilepsy/raw/case1/ctf/case1.pos');
 polhemus = ft_read_headshape(filename);
 polhemus = ft_convert_units(polhemus, 'mm');
 

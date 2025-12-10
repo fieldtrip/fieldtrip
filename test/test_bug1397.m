@@ -1,8 +1,9 @@
 function test_bug1397
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_preprocessing ft_appenddata
+% DATA public
 
 % the following code was obtained from http://www.fieldtriptoolbox.org/tutorial/coherence
 % on Wed Mar 28 15:36:40 CEST 2012
@@ -11,7 +12,7 @@ function test_bug1397
 cfg = [];
 % MODIFICATION, use trialfun handle and other path to the data
 cfg.trialfun                  = @trialfun_left;
-cfg.dataset                   = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/SubjectCMC.ds');
+cfg.dataset                   = dccnpath('/project/3031000.02/external/download/test/ctf/SubjectCMC.ds');
 cfg = ft_definetrial(cfg);
 
 % MODIFICATION, use only 10 trials

@@ -95,7 +95,7 @@ for t=1:cfg.ntrial
   for i=1:cfg.nspikechan
     % the spikes are generated from a probabilistic mix of the LFP channels
     x = spikemix(i,:) * lfp;
-    % apply a non-linear mapping to the spike probablility, output should be defined between 0 and 1
+    % apply a non-linear mapping to the spike probability, output should be defined between 0 and 1
     x = mapping(x);
     % normalize the total probability to one
     x = x./sum(x);

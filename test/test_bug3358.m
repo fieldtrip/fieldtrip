@@ -1,8 +1,9 @@
 function test_bug3358
 
 % WALLTIME 00:10:00
-% MEM 2gb
+% MEM 1gb
 % DEPENDENCY
+% DATA no
 
 d.cfg = [];
 d.cfg.layout = 'CTF151.lay';

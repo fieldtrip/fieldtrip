@@ -1,16 +1,20 @@
 function test_bug1029
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_read_headmodel ft_headmodel_bem_asa ft_prepare_headmodel
+% DATA no
 
 % tests the functionality of the forward models after changing the names of
 % the headmodels
 
+[ftver, ftpath] = ft_version;
+templatedir  = fullfile(ftpath, 'template');
+
 %%%%%%%%%%%%%%%%
 % BEM_ASA
 %%%%%%%%%%%%%%%%
-filename = dccnpath('/home/common/matlab/fieldtrip/template/headmodel/skin/standard_skin_1222.vol');
+filename = fullfile(templatedir, 'headmodel', 'skin', 'standard_skin_1222.vol');
 vol = ft_read_headmodel(filename);
 
 vol = ft_headmodel_asa(filename);

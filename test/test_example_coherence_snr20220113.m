@@ -1,7 +1,8 @@
 function test_example_coherence_snr
 
-% MEM 4gb
+% MEM 2gb
 % WALLTIME 00:10:00
+% DATA no
 
 %
 %% Effect of SNR on Coherence

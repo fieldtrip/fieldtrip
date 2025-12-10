@@ -15,8 +15,9 @@ function [hdr] = ft_read_header(filename, varargin)
 %   'chantype'       = string or cell-array with strings, channel types to be read (only for NeuroOmega and BlackRock)
 %   'coordsys'       = string, 'head' or 'dewar' (default = 'head')
 %   'headerformat'   = name of a MATLAB function that takes the filename as input (default is automatic)
-%   'password'       = password structure for encrypted data set (only for mayo_mef30 and mayo_mef21)
+%   'password'       = password structure for encrypted data set (for dhn_med10, mayo_mef30, mayo_mef21)
 %   'readbids'       = string, 'yes', no', or 'ifmakessense', whether to read information from the BIDS sidecar files (default = 'ifmakessense')
+%   'splitlabel'     = string, 'yes' or 'no', split the channel labels on the '-' and return the first part (default = 'yes' for CTF and FieldLine, 'no' for others)
 %
 % This returns a header structure with the following fields
 %   hdr.Fs          = sampling frequency
@@ -58,30 +59,33 @@ function [hdr] = ft_read_header(filename, varargin)
 %   ANT - Advanced Neuro Technology, EEProbe (*.avr, *.eeg, *.cnt)
 %   BCI2000 (*.dat)
 %   Biosemi (*.bdf)
+%   Bitalino OpenSignals (*.txt)
 %   BrainVision (*.eeg, *.seg, *.dat, *.vhdr, *.vmrk)
 %   CED - Cambridge Electronic Design (*.smr)
 %   EGI - Electrical Geodesics, Inc. (*.egis, *.ave, *.gave, *.ses, *.raw, *.sbin, *.mff)
 %   GTec (*.mat, *.hdf5)
+%   GTec Unicorn (*.csv)
 %   Generic data formats (*.edf, *.gdf)
 %   Megis/BESA (*.avr, *.swf, *.besa)
-%   NeuroScan (*.eeg, *.cnt, *.avg)
-%   Nexstim (*.nxe)
-%   TMSi (*.Poly5)
 %   Mega Neurone (directory)
 %   Natus/Nicolet/Nervus (.e files)
 %   Nihon Kohden (*.m00, *.EEG)
-%   Bitalino OpenSignals (*.txt)
+%   NeuroScan (*.eeg, *.cnt, *.avg)
+%   Nexstim (*.nxe)
 %   OpenBCI (*.txt)
+%   PhysioNet (*.hea, *.dat)
+%   TMSi (*.Poly5)
 %
 % The following spike and LFP dataformats are supported
-%   Neuralynx (*.ncs, *.nse, *.nts, *.nev, *.nrd, *.dma, *.log)
-%   Plextor (*.nex, *.plx, *.ddt)
 %   CED - Cambridge Electronic Design (*.smr)
 %   MPI - Max Planck Institute (*.dap)
+%   Neuralynx (*.ncs, *.nse, *.nts, *.nev, *.nrd, *.dma, *.log)
+%   Neurodata Without Borders (*.nwb)
 %   Neurosim  (neurosim_spikes, neurosim_signals, neurosim_ds)
-%   Windaq (*.wdq)
 %   NeuroOmega (*.mat transformed from *.mpx)
-%   Neurodata Without Borders: Neurophysiology (*.nwb)
+%   Neuropixel data recorded with SpikeGLX (*.bin, *.meta)
+%   Plextor (*.nex, *.plx, *.ddt)
+%   Windaq (*.wdq)
 %
 % The following NIRS dataformats are supported
 %   Artinis - Artinis Medical Systems B.V. (*.oxy3, *.oxy4, *.oxy5, *.oxyproj)
@@ -96,7 +100,7 @@ function [hdr] = ft_read_header(filename, varargin)
 % See also FT_READ_DATA, FT_READ_EVENT, FT_WRITE_DATA, FT_WRITE_EVENT,
 % FT_CHANTYPE, FT_CHANUNIT
 
-% Copyright (C) 2003-2021 Robert Oostenveld
+% Copyright (C) 2003-2024 Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -121,6 +125,7 @@ function [hdr] = ft_read_header(filename, varargin)
 persistent cacheheader        % for caching the full header
 persistent cachechunk         % for caching the res4 chunk when doing realtime analysis on the CTF scanner
 persistent db_blob            % for fcdc_mysql
+global FIFF                   % for fiff-files
 
 if isempty(db_blob)
   db_blob = false;
@@ -189,6 +194,7 @@ coildeffile    = ft_getopt(varargin, 'coildeffile');      % empty, or a filename
 chantype       = ft_getopt(varargin, 'chantype', {});
 password       = ft_getopt(varargin, 'password', struct([]));
 readbids       = ft_getopt(varargin, 'readbids', 'ifmakessense');
+splitlabel     = ft_getopt(varargin, 'splitlabel');       % default for CTF and FieldLine is dealt with below
 
 % this should be a cell array
 if ~iscell(chantype); chantype = {chantype}; end
@@ -234,7 +240,6 @@ realtime = any(strcmp(headerformat, {'fcdc_buffer', 'ctf_shm', 'fcdc_mysql'}));
 
 if realtime
   % skip the rest of the initial checks to increase the speed for realtime operation
-
   checkUniqueLabels = false;
   % the cache and fallback option should always be false for realtime processing
   cache    = false;
@@ -245,7 +250,7 @@ else
   if  ~exist(filename, 'file')
     ft_error('file or directory ''%s'' does not exist', filename);
   end
-
+  % checking labels can be slow, especially if there are many of them (as for fMRI data)
   checkUniqueLabels = true;
   % get the rest of the options, this is skipped for realtime operation
   cache          = ft_getopt(varargin, 'cache');
@@ -254,6 +259,8 @@ else
 
   if isempty(cache)
     if any(strcmp(headerformat, {'bci2000_dat', 'eyelink_asc', 'gtec_mat', 'gtec_hdf5', 'mega_neurone', 'nihonkohden_m00', 'smi_txt', 'biosig'}))
+      % for these files the data and event information will be cached in hdr.orig
+      % so that subsequent reading of data and events is fast
       cache = true;
     else
       cache = false;
@@ -282,7 +289,7 @@ if cache && exist(headerfile, 'file') && ~isempty(cacheheader)
         % for realtime analysis end-of-file-chasing the res4 does not correctly
         % estimate the number of samples, so we compute it on the fly
         sz = 0;
-        files = dir([filename '/*.*meg4']);
+        files = dir([filename filesep '*.*meg4']);
         for j=1:numel(files)
           sz = sz + files(j).bytes;
         end
@@ -460,7 +467,17 @@ switch headerformat
     ft_hastoolbox('BIOSIG', 1);
     hdr = read_biosig_header(filename);
 
-  case {'biosemi_bdf', 'bham_bdf'}
+  case {'biosemi_v3'}
+    [dat, hdr.orig] = read_bdf(filename, 'Channels', {}, 'Verbose', false);
+    hdr.Fs          = hdr.orig.sample_rate;
+    hdr.nChans      = hdr.orig.num_channels;
+    hdr.label       = {hdr.orig.channels.labels};
+    % it is continuous
+    hdr.nSamples    = hdr.orig.num_data_records * hdr.orig.record_duration * hdr.orig.sample_rate;
+    hdr.nSamplesPre = 0;
+    hdr.nTrials     = 1;
+
+  case {'biosemi_v2', 'biosemi_bdf'}
     hdr = read_biosemi_bdf(filename);
     if any(diff(hdr.orig.SampleRate))
       ft_error('channels with different sampling rate not supported');
@@ -475,19 +492,7 @@ switch headerformat
       hdr.chanunit(chan) = {'uV'};
     end
 
-    if ft_filetype(filename, 'bham_bdf')
-      % TODO channel renaming should be made a general option
-      % this is for the Biosemi system used at the University of Birmingham
-      labelold = { 'A1' 'A2' 'A3' 'A4' 'A5' 'A6' 'A7' 'A8' 'A9' 'A10' 'A11' 'A12' 'A13' 'A14' 'A15' 'A16' 'A17' 'A18' 'A19' 'A20' 'A21' 'A22' 'A23' 'A24' 'A25' 'A26' 'A27' 'A28' 'A29' 'A30' 'A31' 'A32' 'B1' 'B2' 'B3' 'B4' 'B5' 'B6' 'B7' 'B8' 'B9' 'B10' 'B11' 'B12' 'B13' 'B14' 'B15' 'B16' 'B17' 'B18' 'B19' 'B20' 'B21' 'B22' 'B23' 'B24' 'B25' 'B26' 'B27' 'B28' 'B29' 'B30' 'B31' 'B32' 'C1' 'C2' 'C3' 'C4' 'C5' 'C6' 'C7' 'C8' 'C9' 'C10' 'C11' 'C12' 'C13' 'C14' 'C15' 'C16' 'C17' 'C18' 'C19' 'C20' 'C21' 'C22' 'C23' 'C24' 'C25' 'C26' 'C27' 'C28' 'C29' 'C30' 'C31' 'C32' 'D1' 'D2' 'D3' 'D4' 'D5' 'D6' 'D7' 'D8' 'D9' 'D10' 'D11' 'D12' 'D13' 'D14' 'D15' 'D16' 'D17' 'D18' 'D19' 'D20' 'D21' 'D22' 'D23' 'D24' 'D25' 'D26' 'D27' 'D28' 'D29' 'D30' 'D31' 'D32' 'EXG1' 'EXG2' 'EXG3' 'EXG4' 'EXG5' 'EXG6' 'EXG7' 'EXG8' 'Status'};
-      labelnew = { 'P9' 'PPO9h' 'PO7' 'PPO5h' 'PPO3h' 'PO5h' 'POO9h' 'PO9' 'I1' 'OI1h' 'O1' 'POO1' 'PO3h' 'PPO1h' 'PPO2h' 'POz' 'Oz' 'Iz' 'I2' 'OI2h' 'O2' 'POO2' 'PO4h' 'PPO4h' 'PO6h' 'POO10h' 'PO10' 'PO8' 'PPO6h' 'PPO10h' 'P10' 'P8' 'TPP9h' 'TP7' 'TTP7h' 'CP5' 'TPP7h' 'P7' 'P5' 'CPP5h' 'CCP5h' 'CP3' 'P3' 'CPP3h' 'CCP3h' 'CP1' 'P1' 'Pz' 'CPP1h' 'CPz' 'CPP2h' 'P2' 'CPP4h' 'CP2' 'CCP4h' 'CP4' 'P4' 'P6' 'CPP6h' 'CCP6h' 'CP6' 'TPP8h' 'TP8' 'TPP10h' 'T7' 'FTT7h' 'FT7' 'FC5' 'FCC5h' 'C5' 'C3' 'FCC3h' 'FC3' 'FC1' 'C1' 'CCP1h' 'Cz' 'FCC1h' 'FCz' 'FFC1h' 'Fz' 'FFC2h' 'FC2' 'FCC2h' 'CCP2h' 'C2' 'C4' 'FCC4h' 'FC4' 'FC6' 'FCC6h' 'C6' 'TTP8h' 'T8' 'FTT8h' 'FT8' 'FT9' 'FFT9h' 'F7' 'FFT7h' 'FFC5h' 'F5' 'AFF7h' 'AF7' 'AF5h' 'AFF5h' 'F3' 'FFC3h' 'F1' 'AF3h' 'Fp1' 'Fpz' 'Fp2' 'AFz' 'AF4h' 'F2' 'FFC4h' 'F4' 'AFF6h' 'AF6h' 'AF8' 'AFF8h' 'F6' 'FFC6h' 'FFT8h' 'F8' 'FFT10h' 'FT10'};
-      % rename the channel labels
-      for i=1:length(labelnew)
-        chan = strcmp(labelold(i), hdr.label);
-        hdr.label(chan) = labelnew(chan);
-      end
-    end
-
-  case {'biosemi_old'}
+  case {'biosemi_v1', 'biosemi_old'}
     % this uses the openbdf and readbdf functions that were copied from EEGLAB
     orig = openbdf(filename);
     if any(orig.Head.SampleRate~=orig.Head.SampleRate(1))
@@ -549,7 +554,12 @@ switch headerformat
 
     orig = openNSx(filename, 'noread');
     channelstype=regexp({orig.ElectrodesInfo.Label},'[A-Za-z]+','match','once');
-    chaninfo=table({orig.ElectrodesInfo.ElectrodeID}',...
+    if isfield(orig.ElectrodesInfo, 'ElectrodeID') % has been renamed into ChannelID
+      for i=1:numel(orig.ElectrodesInfo)
+        orig.ElectrodesInfo(i).ChannelID = orig.ElectrodesInfo(i).ElectrodeID;
+      end
+    end
+    chaninfo=table({orig.ElectrodesInfo.ChannelID}',...
       transpose(deblank({orig.ElectrodesInfo.Label})),[channelstype]',...
       {orig.ElectrodesInfo.ConnectorBank}',{orig.ElectrodesInfo.ConnectorPin}',...
       transpose(deblank({orig.ElectrodesInfo.AnalogUnits})),...
@@ -617,8 +627,9 @@ switch headerformat
     hdr.nTrials     = orig.nTrials;
     hdr.orig        = orig;
     % assign the channel type and units for the known channels
-    hdr.chantype = repmat({'eeg'}, size(hdr.label));
-    hdr.chanunit = repmat({'uV'},  size(hdr.label));
+    hdr.chanunit = orig.unit;
+    hdr.chantype = repmat({'unknown'}, size(hdr.label));
+    hdr.chantype(strcmp(hdr.chanunit, 'uV')) = {'eeg'}; % assume these to be EEG
 
   case 'bucn_nirs'
     orig = read_bucn_nirshdr(filename);
@@ -633,7 +644,7 @@ switch headerformat
     orig = orig.header;
     % In Spike2, channels can have different sampling rates, units, length
     % etc. etc. Here, channels need to have to same properties.
-    if length(unique([orig.samplerate]))>1,
+    if length(unique([orig.samplerate]))>1
       ft_error('channels with different sampling rates are not supported');
     else
       hdr.Fs   = orig(1).samplerate;
@@ -643,7 +654,7 @@ switch headerformat
     hdr.nSamples    = min([orig.nsamples]);
     hdr.nSamplesPre = 0;
     % only continuous data supported
-    if sum(strcmpi({orig.mode},'continuous')) < hdr.nChans,
+    if sum(strcmpi({orig.mode},'continuous')) < hdr.nChans
       ft_error('not all channels contain continuous data');
     else
       hdr.nTrials = 1;
@@ -656,7 +667,11 @@ switch headerformat
   case {'ctf_ds', 'ctf_meg4', 'ctf_res4'}
     % check the presence of the required low-level toolbox
     ft_hastoolbox('ctf', 1);
-    orig             = readCTFds(filename);
+
+    % default for CTF is to remove the site-specific numbers from each channel name, e.g. 'MZC01-1706' becomes 'MZC01'
+    splitlabel = ft_getopt(varargin, 'splitlabel', true);
+
+    orig = readCTFds(filename);
     if isempty(orig)
       % this is to deal with data from the 64 channel system and the error
       % readCTFds: .meg4 file header=MEG4CPT   Valid header options:  MEG41CP  MEG42CP
@@ -668,10 +683,7 @@ switch headerformat
     hdr.nSamplesPre  = orig.res4.preTrigPts;
     hdr.nTrials      = orig.res4.no_trials;
     hdr.label        = cellstr(orig.res4.chanNames);
-    for i=1:numel(hdr.label)
-      % remove the site-specific numbers from each channel name, e.g. 'MZC01-1706' becomes 'MZC01'
-      hdr.label{i} = strtok(hdr.label{i}, '-');
-    end
+
     % read the balance coefficients, these are used to compute the synthetic gradients
     try
       coeftype = cellstr(char(orig.res4.scrr(:).coefType));
@@ -852,6 +864,10 @@ switch headerformat
     hdr.nTrials     = 1;
     hdr.label       = orig.label(:);
     hdr.orig        = orig; % remember the original details
+
+  case 'dhn_med10'
+    ft_hastoolbox('mayo_mef', 1); % make sure mayo_mef exists
+    hdr = read_dhn_med10(filename, password);
 
   case 'edf'
     % this reader is largely similar to the bdf reader
@@ -1487,7 +1503,7 @@ switch headerformat
     hdr.nSamplesPre = 0;
     hdr.nTrials     = 1; % assume continuous data, not epoched
     assert(orig.RawData.AcquisitionTaskDescription.NumberOfAcquiredChannels==hdr.nChans, 'inconsistent number of channels');
-    % remember the complete data upon request
+    % store the data and event information when requested (default)
     if cache
       hdr.orig = orig;
     end
@@ -1904,15 +1920,38 @@ switch headerformat
     hdr.orig = log;
 
   case {'neuromag_fif' 'neuromag_mne'}
-    % check that the required low-level toolbox is available
+    % ensure that the required low-level toolbox is available, if possible
     ft_hastoolbox('mne', 1);
 
-    info = fiff_read_meas_info(filename);
+    [fid, tree]  = fiff_open(filename);
+    [info, meas] = fiff_read_meas_info(fid, tree);
+    fclose(fid);
 
     % convert to FieldTrip format header
     hdr.label       = info.ch_names(:);
     hdr.nChans      = info.nchan;
     hdr.Fs          = info.sfreq;
+
+    if isempty(coilaccuracy) && (ft_senstype(hdr, 'fieldline') || ft_senstype(hdr, 'quspin_neuro1'))
+      ft_warning('OPM data requires a numeric value (0, 1, 2) for coilaccuracy');
+      coilaccuracy = 0;
+    end
+
+    if ft_senstype(hdr, 'fieldline_v3')
+      % default for FieldLine v3 is to remove the electronics chassis number from the channel names
+      splitlabel = ft_getopt(varargin, 'splitlabel', true);
+    end
+
+    % allow FT_CHANTYPE to have a look in the original header details
+    hdr.orig = info;
+    hdr.chantype = ft_chantype(hdr);
+
+    if ft_senstype(hdr, 'quspin_neuro1')
+      sel = ismember(hdr.label, {'D0', 'D1', 'D2', 'D3', 'D4', 'D5', 'D6', 'D7', 'D8', 'D9', 'D10'});
+      hdr.chantype(sel) = {'digital trigger'}; % somehow these are marked as kind=501=misc in the fif file
+      sel = ismember(hdr.label, {'AI 0', 'AI 1', 'AI 2', 'AI 3', 'AI 4', 'AI 5', 'AI 6', 'AI 7', 'AI 8', 'AI 9', 'AI 10', 'AI 11', 'AI 12', 'AI 13', 'AI 14', 'AI 15'});
+      hdr.chantype(sel) = {'analog trigger'}; % somehow these are marked as kind=3=other trigger in the fif file
+    end
 
     % add a gradiometer structure for forward and inverse modelling
     try
@@ -1930,64 +1969,9 @@ switch headerformat
     iscontinuous  = 0;
     isepoched     = 0;
     isaverage     = 0;
-
-    if isempty(fiff_find_evoked(filename)) % true if file contains no evoked responses
-      try
-        epochs = fiff_read_epochs(filename);
-        epochs.data = permute(epochs.data, [2 3 1]); % makes life much easier later on (chan_time_rpt)
-        isepoched = 1;
-      catch
-        % the "catch me" syntax is broken on MATLAB74, this fixes it
-        me = lasterror;
-        if strcmp(me.identifier, 'MNE:fiff_read_events')
-          iscontinuous = 1;
-        else
-          rethrow(me)
-        end
-      end
-
-    else
+    if ~isempty(fiff_dir_tree_find(tree, FIFF.FIFFB_EVOKED)) % true file contains evoked responses
       isaverage = 1;
-    end
 
-    if iscontinuous
-      try
-        % we only use 1 input argument here to allow backward
-        % compatibility up to MNE 2.6.x:
-        raw = fiff_setup_read_raw(filename);
-      catch
-        % the "catch me" syntax is broken on MATLAB74, this fixes it
-        me = lasterror;
-        % there is an error - we try to use MNE 2.7.x (if present) to
-        % determine if the cause is maxshielding:
-        try
-          allow_maxshield = true;
-          raw = fiff_setup_read_raw(filename,allow_maxshield);
-        catch
-          % unknown problem, or MNE version 2.6.x or less:
-          rethrow(me);
-        end
-        % no error message from fiff_setup_read_raw? Then maxshield
-        % was applied, but maxfilter wasn't, so return this error:
-        if istrue(checkmaxfilter)
-          ft_error('Maxshield data should be corrected using Maxfilter prior to importing in FieldTrip.');
-        else
-          ft_warning('Maxshield data should be corrected using Maxfilter prior to importing in FieldTrip.');
-        end
-      end
-      hdr.nSamples    = raw.last_samp - raw.first_samp + 1; % number of samples per trial
-      hdr.nSamplesPre = 0;
-      % otherwise conflicts will occur in read_data
-      hdr.nTrials     = 1;
-      info.raw        = raw; % keep all the details
-
-    elseif isepoched
-      hdr.nSamples    = length(epochs.times);
-      hdr.nSamplesPre = sum(epochs.times < 0);
-      hdr.nTrials     = size(epochs.data, 3); % because the data matrix has been permuted
-      info.epochs     = epochs;  % this is used by read_data to get the actual data, i.e. to prevent re-reading
-
-    elseif isaverage
       try
         evoked_data    = fiff_read_evoked_all(filename);
         vartriallength = any(diff([evoked_data.evoked.first])) || any(diff([evoked_data.evoked.last]));
@@ -2015,6 +1999,7 @@ switch headerformat
           info.info       = evoked_data.info;               % keep all the details
           info.vartriallength = 0;
         end
+
       catch
         % this happens if fiff_read_evoked_all cannot find evoked
         % responses, in which case it errors due to not assigning the
@@ -2024,6 +2009,35 @@ switch headerformat
         hdr.nSamplesPre = 0;
         hdr.nTrials     = 0;
       end
+
+    elseif ~isempty(fiff_dir_tree_find(tree, FIFF.FIFFB_MNE_EPOCHS))
+      isepoched = 1;
+
+      % read in the epochs info, this also gets all the data already
+      epochs = fiff_read_epochs(filename);
+      epochs.data = permute(epochs.data, [2 3 1]); % chan x time x rpt
+
+      hdr.nSamples    = length(epochs.times);
+      hdr.nSamplesPre = sum(epochs.times < 0);
+      hdr.nTrials     = size(epochs.data, 3); % because the data matrix has been permuted
+      info.epochs     = epochs;  % this is used by read_data to get the actual data, i.e. to prevent re-reading
+
+    else
+      iscontinuous = 1;
+
+      raw     = fiff_setup_read_raw(filename, 1);
+      has_ias = ~isempty(fiff_dir_tree_find(meas,FIFF.FIFFB_IAS_RAW_DATA));
+
+      if has_ias && istrue(checkmaxfilter)
+        ft_error('Maxshield data should be corrected using Maxfilter prior to importing into FieldTrip, otherwise the data may be distorted. If you still want to proceed, consider setting the ''checkmaxfilter'' option to be ''no''.');
+      elseif has_ias
+        ft_warning('Maxshield data should be corrected using Maxfilter prior to importing into FieldTrip, otherwise the data may be distorted. If you still want to proceed, consider setting the ''checkmaxfilter'' option to be ''no''.');
+      end
+      hdr.nSamples    = raw.last_samp - raw.first_samp + 1; % number of samples per trial
+      hdr.nSamplesPre = -raw.first_samp;
+      % otherwise conflicts will occur in read_data
+      hdr.nTrials     = 1;
+      info.raw        = raw; % keep all the details
     end
 
     % remember the original header details
@@ -2344,7 +2358,7 @@ switch headerformat
     hdr = read_nmc_archive_k_hdr(filename);
 
   case 'neuroshare' % NOTE: still under development
-    % check that the required neuroshare toolbox is available
+    % check that the required toolbox is available
     ft_hastoolbox('neuroshare', 1);
     tmp = read_neuroshare(filename);
     hdr.Fs          = tmp.hdr.analoginfo(end).SampleRate; % take the sampling freq from the last analog channel (assuming this is the same for all chans)
@@ -2356,22 +2370,12 @@ switch headerformat
     hdr.orig        = tmp; % remember the original header
 
   case 'nwb'
-    ft_hastoolbox('MatNWB', 1);	% when I run this locally outside of ft_read_header it does not work for me
-    try
-      c = load('namespaces/core.mat');
-      nwb_version = c.version;
-      nwb_fileversion = util.getSchemaVersion(filename);
-      if ~strcmp(nwb_version, nwb_fileversion)
-        warning(['Installed NWB:N schema version (' nwb_version ') does not match the file''s schema (' nwb_fileversion{1} '). This might result in an error. If so, try to install the matching schema from here: https://github.com/NeurodataWithoutBorders/nwb-schema/releases'])
-      end
-    catch
-      warning('Something might not be alright with your MatNWB path. Will try anyways.')
-    end
+    % check that the required toolbox is available
+    ft_hastoolbox('MatNWB', 1);
     tmp = nwbRead(filename); % is lazy, so should not be too costly
-    es_key = tmp.searchFor('ElectricalSeries').keys; % find lfp data, which should be an ElectricalSeries object
-    es_key = es_key(~contains(es_key, 'acquisition'));
+    es_key = tmp.searchFor('ElectricalSeries').keys; % find LFP or EEG data, which should be an ElectricalSeries object
     if isempty(es_key)
-      error('Dataset does not contain an LFP signal (i.e., no object of the class ''ElectricalSeries''.')
+      error('Dataset does not contain an LFP or EEG signal (i.e., no object of the class ''ElectricalSeries'').')
     elseif numel(es_key) > 1 % && isempty(additional_user_input) % TODO: Try to sort this out with the user's help
       % Temporary fix: SpikeEventSeries is a daughter of ElectrialSeries but should not be found here (searchFor update on its way)
       es_key = es_key(contains(es_key,'lfp','IgnoreCase',true));
@@ -2835,16 +2839,6 @@ end
 % as of November 2011, the header is supposed to include the channel type (see FT_CHANTYPE,
 % e.g. meggrad, megref, eeg) and the units of each channel (see FT_CHANUNIT, e.g. uV, fT)
 
-if ~isfield(hdr, 'chantype') && checkUniqueLabels
-  % use a helper function which has some built in intelligence
-  hdr.chantype = ft_chantype(hdr);
-end
-
-if ~isfield(hdr, 'chanunit') && checkUniqueLabels
-  % use a helper function which has some built in intelligence
-  hdr.chanunit = ft_chanunit(hdr);
-end
-
 % ensure that the output grad is according to the latest definition
 if isfield(hdr, 'grad')
   hdr.grad = ft_datatype_sens(hdr.grad);
@@ -2865,6 +2859,16 @@ if isfield(hdr, 'opto')
   end
 end
 
+if ~isfield(hdr, 'chantype') && checkUniqueLabels
+  % use a helper function which has some built in intelligence
+  hdr.chantype = ft_chantype(hdr);
+end
+
+if ~isfield(hdr, 'chanunit') && checkUniqueLabels
+  % use a helper function which has some built in intelligence
+  hdr.chanunit = ft_chanunit(hdr);
+end
+
 if (strcmp(readbids, 'yes') || strcmp(readbids, 'ifmakessense')) && isbids
   % the BIDS sidecar files extend/overrule the information that is present in the file header itself
   try
@@ -2876,8 +2880,7 @@ if (strcmp(readbids, 'yes') || strcmp(readbids, 'ifmakessense')) && isbids
       assert(length(channels_tsv.type)  == hdr.nChans, 'number of channels is not consistent with the BIDS channels.tsv');
       assert(length(channels_tsv.units) == hdr.nChans, 'number of channels is not consistent with the BIDS channels.tsv');
       hdr.label    = channels_tsv.name;
-      hdr.chantype = repmat({'unknown'}, [length(hdr.label), 1]);
-      hdr.chantype(contains(channels_tsv.type, 'NIRS')) = {'nirs'};
+      hdr.chantype    = lower(channels_tsv.type);
       hdr.chanunit = channels_tsv.units;
     end
     if exist('electrodes_tsv', 'var')
@@ -2955,6 +2958,31 @@ hdr.nSamplesPre = double(hdr.nSamplesPre);
 hdr.nTrials     = double(hdr.nTrials);
 hdr.nChans      = double(hdr.nChans);
 
+if ~isempty(splitlabel) && istrue(splitlabel)
+  % this is default for CTF and FieldLine v3
+  hdr.label = strtok(hdr.label, '-');
+  % also update the grad, elec and opto structure
+  if isfield(hdr, 'grad')
+    hdr.grad.label = strtok(hdr.grad.label, '-');
+    if isfield(hdr.grad, 'balance')
+      % also update the G1BR, G2BR and G3BR balancing structures
+      fn = fieldnames(hdr.grad.balance);
+      for i=1:numel(fn)
+        if isstruct(hdr.grad.balance.(fn{i}))
+          hdr.grad.balance.(fn{i}).labelold = strtok(hdr.grad.balance.(fn{i}).labelold, '-');
+          hdr.grad.balance.(fn{i}).labelnew = strtok(hdr.grad.balance.(fn{i}).labelnew, '-');
+        end
+      end
+    end
+  end
+  if isfield(hdr, 'elec')
+    hdr.elec.label = strtok(hdr.elec.label, '-');
+  end
+  if isfield(hdr, 'opto')
+    hdr.opto.label = strtok(hdr.opto.label, '-');
+  end
+end
+
 if inflated
   % compressed file has been unzipped on the fly, clean up
   if strcmp(headerformat, 'brainvision_vhdr')
@@ -2972,6 +3000,7 @@ if cache && exist(headerfile, 'file')
   cacheheader.details = dir(headerfile);
   % fprintf('added header to cache\n');
 end
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION to determine the file size in bytes

@@ -1,8 +1,9 @@
 function test_pull1377
 
-% MEM 12gb
-% WALLTIME 1:30:00
+% MEM 10gb
+% WALLTIME 01:30:00
 % DEPENDENCY ft_prepare_sourcemodel headsurface ft_prepare_leadfield ft_freqanalysis ft_sourceanalysis
+% DATA private
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -29,6 +30,8 @@ function test_pull1377
 global ft_default
 ft_default.checkconfig = 'loose';
 
+[ftver, ftpath] = ft_version;
+templatedir  = fullfile(ftpath, 'template');
 
 datameg = []; % touch these variables to make them shared between the main function and the nexted function
 dataeeg = [];
@@ -129,14 +132,14 @@ perform_source_analysis
     
     % for MEG data + sensor info
     
-    load(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/preproc_ctf151.mat'), 'data');
+    load(dccnpath('/project/3031000.02/test/latest/raw/meg/preproc_ctf151.mat'), 'data');
     datameg = data;
     clear data
     
     % for EEG data + channel info
     
     cfg = [];
-    cfg.dataset = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/preprocessing_erp/s04.eeg');
+    cfg.dataset = dccnpath('/project/3031000.02/external/download/tutorial/preprocessing_erp/s04.eeg');
     hdr = ft_read_header(cfg.dataset);
     event = ft_read_event(cfg.dataset);
     EVsample = [event.sample]';
@@ -157,7 +160,7 @@ perform_source_analysis
     dataeeg.label = lay.label(1:end-2);
     clear lay
     
-    dataeeg.elec = ft_read_sens(dccnpath('/home/common/matlab/fieldtrip/template/electrode/standard_1020.elc'), 'senstype', 'eeg');
+    dataeeg.elec = ft_read_sens(fullfile(templatedir, 'electrode', 'standard_1020.elc'), 'senstype', 'eeg');
     
   end % loding raw data
 
@@ -229,7 +232,7 @@ perform_source_analysis
     
     % get volume conductor model
     % for MEG, localsphere
-    headmodel_megsphere = ft_read_headmodel(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/vol/Subject01vol_localspheres.mat'));
+    headmodel_megsphere = ft_read_headmodel(dccnpath('/project/3031000.02/test/latest/vol/Subject01vol_localspheres.mat'));
     
     % for EEG, singlesphere
     headmodel_eegsphere.o = [0 0 2];
@@ -324,7 +327,7 @@ perform_source_analysis
     
     %% 3.c OpenMEEG leadfield for EEG
     
-    load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/SubjectSEF_vol.mat'), 'vol')
+    load(dccnpath('/project/3031000.02/external/download/test/ctf/SubjectSEF_vol.mat'), 'vol')
     bnd_openmeeg = vol;
     
     cfg = [];

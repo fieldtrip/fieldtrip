@@ -162,17 +162,17 @@ function [cfg] = ft_sourceplot(cfg, functional, anatomical)
 %
 % The following parameters apply to cfg.method='surface' irrespective of whether an interpolation is required
 %   cfg.camlight       = 'yes' or 'no' (default = 'yes')
-%   cfg.facecolor      = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r',
+%   cfg.facecolor      = [r g b] values or string, for example 'skin', 'skull', 'brain', 'black', 'red', 'r',
 %                        or an Nx3 or Nx1 array where N is the number of faces
-%   cfg.vertexcolor    = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r',
+%   cfg.vertexcolor    = [r g b] values or string, for example 'skin', 'skull', 'brain', 'black', 'red', 'r',
 %                        or an Nx3 or Nx1 array where N is the number of vertices
-%   cfg.edgecolor      = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r'
+%   cfg.edgecolor      = [r g b] values or string, for example 'skin', 'skull', 'brain', 'black', 'red', 'r'
 %
-% When cfg.method = 'cloud', the functional data will be rendered as as clouds (groups of points), spheres, or
-% single points at each sensor position. These spheres or point clouds can either
-% be viewed in 3D or as 2D slices. The 'anatomical' input may also consist of
-% a single or multiple triangulated surface mesh(es) in an Nx1 cell-array
-% to be plotted with the interpolated functional data (see FT_PLOT_CLOUD)
+% When cfg.method = 'cloud', the functional data will be rendered as as clouds (groups of points), 
+% spheres, or single points at each sensor position. These spheres or point clouds can either be 
+% viewed in 3D or as 2D slices. The 'anatomical' input may also consist of a single or multiple 
+% triangulated surface meshes in an Nx1 cell-array to be plotted with the interpolated functional 
+% data (see FT_PLOT_CLOUD).
 %
 % The following parameters apply to cfg.method='cloud'
 %   cfg.cloudtype       = 'point' plots a single point at each sensor position
@@ -304,6 +304,24 @@ cfg.intersectmesh = ft_getopt(cfg, 'intersectmesh');
 cfg.renderer      = ft_getopt(cfg, 'renderer',      'opengl');
 cfg.interactive   = ft_getopt(cfg, 'interactive',   'yes'); % used to disable interaction for method=glassbrain
 
+% this is needed for the figure title
+if isfield(cfg, 'dataname') && ~isempty(cfg.dataname)
+  dataname = cfg.dataname;
+elseif isfield(cfg, 'inputfile') && ~isempty(cfg.inputfile)
+  dataname = cfg.inputfile;
+elseif nargin>1
+  dataname = arrayfun(@inputname, 2:nargin, 'UniformOutput', false);
+else
+  dataname = {};
+end
+
+% set the figure window title, if not defined by user
+if isempty(cfg.figurename) && ~isempty(dataname)
+  cfg.figurename = sprintf('%s: %s', mfilename, join_str(', ', dataname));
+else
+  cfg.figurename = sprintf('%s:', mfilename);
+end
+
 if isempty(cfg.flip)
   if strcmp(cfg.method, 'ortho')
     cfg.flip = 'yes';
@@ -431,12 +449,12 @@ end
 hasfun = isfield(functional, cfg.funparameter);
 if hasfun
   fun = getsubfield(functional, cfg.funparameter);
-    
+
   dimord = getdimord(functional, cfg.funparameter);
   dimtok = tokenize(dimord, '_');
-  
+
   % replace the cell-array functional with a normal array
-  if strcmp(dimtok{1}, '{pos}')
+  if startsWith(dimord, '{pos}')
     tmpdim = getdimsiz(functional, cfg.funparameter);
     tmpfun = nan(tmpdim);
     insideindx = find(functional.inside);
@@ -445,8 +463,24 @@ if hasfun
     end
     fun = tmpfun;
     clear tmpfun
-    dimtok{1} = 'pos';  % update the description of the dimensions
-    dimord([1 5]) = []; % remove the { and }
+    dimord = ['pos' dimord(6:end)]; % update the description of the dimensions
+    dimtok = tokenize(dimord, '_');
+  elseif startsWith(dimord, '{dim1_dim2_dim3}')
+    tmpdim = getdimsiz(functional, cfg.funparameter);
+    tmpfun = nan(tmpdim);
+    for i1=1:functional.dim(1)
+      for i2=1:functional.dim(2)
+        for i3=1:functional.dim(3)
+          if functional.inside(i1, i2, i3)
+            tmpfun(i1,i2,i3,:) = fun{i1, i2, i3};
+          end
+        end
+      end
+    end
+    fun = tmpfun;
+    clear tmpfun
+    dimord = ['dim1_dim2_dim3' dimord(17:end)]; % update the description of the dimensions
+    dimtok = tokenize(dimord, '_');
   end
   
   % ensure that the functional data is real
@@ -1510,25 +1544,6 @@ switch cfg.method
     ft_error('unsupported method "%s"', cfg.method);
 end
 
-% this is needed for the figure title
-if isfield(cfg, 'dataname') && ~isempty(cfg.dataname)
-  dataname = cfg.dataname;
-elseif isfield(cfg, 'inputfile') && ~isempty(cfg.inputfile)
-  dataname = cfg.inputfile;
-elseif nargin>1
-  dataname = arrayfun(@inputname, 2:nargin, 'UniformOutput', false);
-else
-  dataname = {};
-end
-
-% set the figure window title
-if ~isempty(dataname)
-  set(gcf, 'Name', sprintf('%d: %s: %s', double(gcf), mfilename, join_str(', ', dataname)));
-else
-  set(gcf, 'Name', sprintf('%d: %s', double(gcf), mfilename));
-end
-set(gcf, 'NumberTitle', 'off');
-
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble previous functional
@@ -1571,7 +1586,8 @@ yi = opt.ijk(2);
 zi = opt.ijk(3);
 qi = opt.qi;
 
-if any([xi yi zi] > functional.dim) || any([xi yi zi] <= 1)
+if any([xi yi zi] > functional.dim(1:3)) || any([xi yi zi] < 1)
+  % do not redraw the functional data when the user clicked outside the volume
   return;
 end
 
@@ -1848,7 +1864,7 @@ if opt.hasfreq && opt.hastime && opt.hasfun
   uimagesc(double(functional.time), double(functional.freq), tmpdat); axis xy;
   xlabel('time'); ylabel('freq');
   set(h4, 'tag', 'TF1');
-  caxis([opt.fcolmin opt.fcolmax]);
+  clim([opt.fcolmin opt.fcolmax]);
 elseif opt.hasfreq && opt.hasfun
   h4 = subplot(2,2,4);
   plot(functional.freq, shiftdim(opt.fun(xi,yi,zi,:),3)); xlabel('freq');
@@ -1864,7 +1880,7 @@ elseif strcmp(opt.colorbar,  'yes') && ~isfield(opt, 'hc')
     % imagesc(vectorcolorbar,1,vectorcolorbar);ft_colormap(cfg.funcolormap);
     % use a normal MATLAB colorbar, attach it to the invisible 4th subplot
     try
-      caxis([opt.fcolmin opt.fcolmax]);
+      clim([opt.fcolmin opt.fcolmax]);
     end
     
     opt.hc = colorbar;
@@ -1926,6 +1942,8 @@ if opt.interactive
   fprintf('==================================================================================\n');
   fprintf('Press "h" to show this help.\n');
   fprintf('Press "1", "2", or "3" to switch to the corresponding subplot.\n');
+  fprintf('Press "PageUp" and "PageDown" to zoom in or out.\n');
+  fprintf('Press "+" and "-" to increase or decrease the brightness.\n');
   fprintf('Use the arrow keys to navigate in the current axis.\n');
   fprintf('Click left mouse button to reposition the cursor.\n');
   fprintf('Click and hold right mouse button to update the position while moving the mouse.\n');
@@ -2118,7 +2136,7 @@ if ~isempty(tag) && ~opt.init
     opt.update = [1 1 1];
   end
 end
-opt.ijk = min(opt.ijk(:)', opt.dim+0.01);
+opt.ijk = min(opt.ijk(:)', opt.dim(1:3)+0.01);
 opt.ijk = max(opt.ijk(:)', [1 1 1]-0.01);
 
 setappdata(h, 'opt', opt);

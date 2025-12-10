@@ -1,15 +1,16 @@
 function test_bug1391
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY
+% DATA public
 
 % this functions tests some potential issues with numerical accuracy
 % of the time axis in preproc, which converts the time axis into a 
 % fsample and offset, and then back into a time axis again.
 
 cfg = [];
-cfg.dataset = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds');
+cfg.dataset = dccnpath('/project/3031000.02/external/download/test/ctf/Subject01.ds');
 cfg.trl     = [10001 11200 -600];
 cfg.channel = 'MLC';
 cfg.continuous = 'yes';

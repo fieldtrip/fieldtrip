@@ -1,11 +1,12 @@
 function test_bug1447
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_multiplotER ft_singleplotER ft_plot_vector
+% DATA private
 
 % this contains the example data from Lilla, i.e. two ERPs and a layout
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test'))
+cd(dccnpath('/project/3031000.02/test'))
 load bug1447.mat
 
 close all

@@ -2,9 +2,9 @@ function data = ft_denoise_pca(cfg, varargin)
 
 % FT_DENOISE_PCA performs a principal component analysis (PCA) on specified reference
 % channels and subtracts the projection of the data of interest onto this orthogonal
-% basis from the data of interest. This is the algorithm which is applied by 4D to
+% basis from the data of interest. This is the algorithm which is applied by BTi/4D to
 % compute noise cancellation weights on a dataset of interest. This function has been
-% designed for 4D MEG data, but can also be applied to data from other MEG systems.
+% designed for BTi/4D MEG data, but can also be applied to data from other MEG systems.
 %
 % Use as
 %   [dataout] = ft_denoise_pca(cfg, data)
@@ -20,19 +20,21 @@ function data = ft_denoise_pca(cfg, varargin)
 % consistent with the output of FT_PREPROCESSING.
 %
 % The configuration should contain
-%   cfg.refchannel = the channels used as reference signal (default = 'MEGREF')
 %   cfg.channel    = the channels to be denoised (default = 'MEG')
+%   cfg.refchannel = the channels used as reference signal (default = 'MEGREF')
 %   cfg.truncate   = optional truncation of the singular value spectrum (default = 'no')
-%   cfg.zscore     = standardise reference data prior to PCA (default = 'no')
-%   cfg.pertrial   = 'no' (default) or 'yes'. Regress out the references on a per trial basis
+%   cfg.zscore     = standardize reference data prior to PCA (default = 'no')
 %   cfg.trials     = list of trials that are used (default = 'all')
-%   cfg.updatesens = 'no' or 'yes' (default = 'yes')
+%   cfg.pertrial   = 'yes' or 'no', whether to regress out the references on a per-trial basis (default = 'no')
+%   cfg.updatesens = 'yes' or 'no', whether to update the sensor array with the spatial projector (default = 'yes')
 %
 % if cfg.truncate is integer n > 1, n will be the number of singular values kept.
 % if 0 < cfg.truncate < 1, the singular value spectrum will be thresholded at the
 % fraction cfg.truncate of the largest singular value.
 %
-% See also FT_PREPROCESSING, FT_DENOISE_SYNTHETIC, FT_DENOISE_SSP
+% See also FT_PREPROCESSING, FT_DENOISE_AMM, FT_DENOISE_DSSP,
+% FT_DENOISE_HFC, FT_DENOISE_PREWHITEN, FT_DENOISE_SSP, FT_DENOISE_SSS,
+% FT_DENOISE_SYNTHETIC, FT_DENOISE_TSR
 
 % Undocumented cfg-option: cfg.pca the output structure of an earlier call
 % to the function. Can be used regress out the reference channels from
@@ -75,6 +77,9 @@ if ft_abort
   return
 end
 
+% store the original type of the input data
+dtype = ft_datatype(varargin{1});
+
 % check if the input data is valid for this function
 for i=1:length(varargin)
   varargin{i} = ft_checkdata(varargin{i}, 'datatype', 'raw');
@@ -84,8 +89,8 @@ end
 cfg = ft_checkconfig(cfg, 'forbidden',  {'channels', 'trial'}); % prevent accidental typos, see issue 1729
 
 % set the defaults
-cfg.refchannel = ft_getopt(cfg, 'refchannel', 'MEGREF');
 cfg.channel    = ft_getopt(cfg, 'channel',    'MEG');
+cfg.refchannel = ft_getopt(cfg, 'refchannel', 'MEGREF');
 cfg.truncate   = ft_getopt(cfg, 'truncate',   'no');
 cfg.zscore     = ft_getopt(cfg, 'zscore',     'no');
 cfg.trials     = ft_getopt(cfg, 'trials',     'all', 1);
@@ -132,34 +137,35 @@ else
     % channel data and reference channel data are in 1 data structure
     megchan = ft_channelselection(cfg.channel,    varargin{1}.label);
     refchan = ft_channelselection(cfg.refchannel, varargin{1}.label);
-      
+
     tmpcfg.channel = refchan;
     refdata        = ft_selectdata(tmpcfg, varargin{1});
     [dum,refdata]  = rollback_provenance(cfg, refdata);
     tmpcfg.channel = megchan;
     data           = ft_selectdata(tmpcfg, varargin{1});
     [cfg, data]    = rollback_provenance(cfg, data);
-  
-  else
+
+  elseif length(varargin)==2
     % channel data and reference channel data are in 2 data structures
     megchan = ft_channelselection(cfg.channel,    varargin{1}.label);
     refchan = ft_channelselection(cfg.refchannel, varargin{2}.label);
-    
-    % throw a warning if some of the specified reference channels are also
-    % in the first data argument
+
+    % throw a warning if some of the specified reference channels are also in the first data argument
     if ~isempty(ft_channelselection(cfg.refchannel, varargin{1}.label))
       ft_warning('some of the specified reference channels are also present in the first data argument, this information will not be used for the cleaning of the data');
     end
-    
+
     tmpcfg.channel = refchan;
     refdata        = ft_selectdata(tmpcfg, varargin{2});
     [dum, refdata] = rollback_provenance(cfg, refdata);
     tmpcfg.channel = megchan;
     data           = ft_selectdata(tmpcfg, varargin{1});
     [cfg, data]    = rollback_provenance(cfg, data);
-    
+
+  else
+    error('Incorrect number of input arguments.')
   end
-  
+
   refchan = ft_channelselection(cfg.refchannel, refdata.label, ft_senstype(refdata));
   refindx = match_str(refdata.label, refchan);
   megchan = ft_channelselection(cfg.channel, data.label, ft_senstype(data));
@@ -263,57 +269,46 @@ else
   m          = cellmean(data.trial, 2);
   data.trial = cellvecadd(data.trial, -m);
 
-  if isfield(data, 'grad')
-    sensfield = 'grad';
-  elseif isfield(data, 'elec')
-    sensfield = 'elec';
-  elseif isfield(data, 'opto')
-    sensfield = 'opto';
-  else
-    sensfield = [];
-  end
+  sensfield = {'elec', 'grad', 'opto'};
+  for m = 1:numel(sensfield)
+    if isfield(data, sensfield{m})
+      sens = fixbalance(data.(sensfield{m})); % ensure that the balancing representation is up to date
+      if strcmp(cfg.updatesens, 'yes')
+        ft_info('also applying the weights to the %s structure\n', sensfield{m});
 
-  % apply the linear projection also to the sensor description
-  if ~isempty(sensfield)
-    if  strcmp(cfg.updatesens, 'yes')
-      fprintf('also applying the weights to the %s structure\n', sensfield);
+        montage = [];
+        montage.labelold = sens.label;
+        montage.labelnew = sens.label;
+        % start with identity
+        montage.tra = eye(length(sens.label));
+        % subtract weights
+        [i1, i2]  = match_str(sens.label, pca.reflabel);
+        [i3, i4]  = match_str(sens.label, pca.label);
+        montage.tra(i3,i1) = montage.tra(i3,i1) - pca.w(i4,i2);
 
-      montage     = [];
-      labelnew    = pca.label;
+        sens = ft_apply_montage(sens, montage, 'keepunused', 'yes');
+        sens = fixbalance(sens); % ensure that the balancing representation is up to date
+        sens.balance.pca = montage;
+        sens.balance.current{end+1} = 'pca'; % keep track of the projection that was applied
 
-      % add columns of refchannels not yet present in labelnew
-      % [id, i1]  = setdiff(pca.reflabel, labelnew);
-      % labelold  = [labelnew; pca.reflabel(sort(i1))];
-      labelold  = data.grad.label;
-      nlabelold = length(labelold);
-
-      % start with identity
-      montage.tra = eye(nlabelold);
-
-      % subtract weights
-      [i1, i2]  = match_str(labelold, pca.reflabel);
-      [i3, i4]  = match_str(labelold, pca.label);
-      montage.tra(i3,i1) = montage.tra(i3,i1) - pca.w(i4,i2);
-      montage.labelold  = labelold;
-      montage.labelnew  = labelold;
-
-      data.(sensfield) = ft_apply_montage(data.(sensfield), montage, 'keepunused', 'yes', 'balancename', 'pca');
-
-      % order the fields
-      fnames = fieldnames(data.(sensfield).balance);
-      tmp    = false(1,numel(fnames));
-      for k = 1:numel(fnames)
-        tmp(k) = isstruct(data.(sensfield).balance.(fnames{k}));
-      end
-      [tmp, ix] = sort(tmp, 'descend');
-      data.grad.balance = orderfields(data.(sensfield).balance, fnames(ix));
-
-    else
-      fprintf('not applying the weights to the %s structure\n', sensfield);
+      else
+        ft_info('not applying the weights to the %s structure\n', sensfield{m});
+      end % if updatesens
+  
+      % add the potentially updated sensor definition back
+      data.(sensfield{m}) = sens;
     end
-  end % if sensfield
+  end % for elec, grad and opto
 
 end % if pertrial
+
+% convert back to input type if necessary
+switch dtype
+  case 'timelock'
+    data = ft_checkdata(data, 'datatype', 'timelock');
+  otherwise
+    % keep the output as it is
+end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug

@@ -1,14 +1,15 @@
 function test_issue1991
 
 % WALLTIME 00:10:00
-% MEM 2gb
+% MEM 1gb
 % DEPENDENCY ft_read_mri ft_hastoolbox ft_filetype
+% DATA private
 
 [ft_ver, ft_path] = ft_version;
 
 file0 = fullfile(ft_path, 'template', 'anatomy', 'single_subj_T1_1mm.nii');
-file1 = dccnpath('/home/common/matlab/fieldtrip/data/test/original/jnifti/samples/colin27/colin27_zlib.jnii');
-file2 = dccnpath('/home/common/matlab/fieldtrip/data/test/original/jnifti/samples/colin27/colin27_zlib.bnii');
+file1 = dccnpath('/project/3031000.02/test/original/jnifti/samples/colin27/colin27_zlib.jnii');
+file2 = dccnpath('/project/3031000.02/test/original/jnifti/samples/colin27/colin27_zlib.bnii');
 
 %%
 

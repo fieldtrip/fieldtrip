@@ -1,8 +1,9 @@
 function test_bug3417
 
 % WALLTIME 00:20:00
-% MEM 3gb
+% MEM 1gb
 % DEPENDENCY
+% DATA private
 
 % ... works fine on his computer, which has a 2012 version of FieldTrip and Matlab 2013a.
 % But when we try to run either a later version of Fieldtrip (e.g. 2015) or a later version
@@ -15,7 +16,7 @@ function test_bug3417
 
 %% SL - one sample t
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug3417.mat'))
+load(dccnpath('/project/3031000.02/test/bug3417.mat'))
 
 freqs=14; % or 21
 times=81;
@@ -110,7 +111,7 @@ xlabel('Time')
 
 %% JA - one sample t
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug3417.mat'))
+load(dccnpath('/project/3031000.02/test/bug3417.mat'))
 
 freqs=14; % or 21
 times=81;
@@ -202,7 +203,7 @@ xlabel('Time')
 
 %% SJ vs. AJ
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug3417.mat'))
+load(dccnpath('/project/3031000.02/test/bug3417.mat'))
 
 freqs=14; % or 21
 times=81;

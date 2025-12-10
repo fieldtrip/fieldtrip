@@ -158,7 +158,7 @@ while t(end)<cfg.timeout
     t(end+1) = toc;
     s(end+1) = endsample;
 
-    % compute the cummulative and instantaneous number of samples per second
+    % compute the cumulative and instantaneous number of samples per second
     % compare these to the sampling frequency to get the relative acceleration factor
     instantaneous = [nan diff(s) ./ diff(t)];
     cumulative    = (s-s(1)) ./ (t-t(1));
@@ -221,5 +221,9 @@ while t(end)<cfg.timeout
       end
     end % if train
   end % looping over new trials
-end % while true
+
+  % update the timing, also if there are no new trials
+  t(end) = toc;
+  
+end % while not timeout
 

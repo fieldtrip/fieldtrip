@@ -3,8 +3,9 @@ function inspect_bug2722
 % WALLTIME 00:10:00
 % MEM 1gb
 % DEPENDENCY ft_multiplotTFR
+% DATA private
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2722.mat'));
+load(dccnpath('/project/3031000.02/test/bug2722.mat'));
 
 %%
 

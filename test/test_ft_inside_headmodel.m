@@ -1,8 +1,9 @@
-function test_ft_inside_headmodel
+function tests = test_ft_inside_headmodel
 
 % MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_inside_headmodel
+% DATA no
 
 if nargout
   % assume that this is called by RUNTESTS

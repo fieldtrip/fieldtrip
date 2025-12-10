@@ -1,7 +1,7 @@
 function write_vtk(fn, pos, tri, val)
 
 % WRITE_VTK writes a mesh to a VTK (Visualisation ToolKit) format file.
-% Supported are triangles, tetraheders and hexaheders.
+% Supported are triangles, tetrahedrons and hexahedrons.
 %
 % Use as
 %   write_vtk(filename, pos, tri, val)
@@ -13,9 +13,9 @@ function write_vtk(fn, pos, tri, val)
 % The optional val argument can be used to write scalar or vector values for
 % each vertex or element.
 %
-% See also READ_VTK, WRITE_PLY
+% See also READ_VTK, READ_VTK_XML, WRITE_PLY
 
-% Copyright (C) 2002-2023, Robert Oostenveld
+% Copyright (C) 2002-2024, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -40,7 +40,7 @@ if nargin<4
 end
 
 npos = size(pos,1);
-ntri = size(tri,1);   % this can be triangles, tetraheders or hexaheders
+ntri = size(tri,1);   % this can be triangles, tetrahedrons or hexahedrons
 
 if ~isempty(val)
   assert(size(val,1)==npos || size(val,1)==ntri, 'the values are inconsistent with the mesh dimensions');
@@ -106,7 +106,7 @@ elseif size(tri,2)==4
   fprintf(fid, 'POINTS %d float\n', npos);
   fprintf(fid, '%f\t%f\t%f\n', pos');
   fprintf(fid, '\n');
-  % write the tetraheders
+  % write the tetrahedrons
   fprintf(fid, 'CELLS %d %d\n', ntri, (4+1)*ntri);
   fprintf(fid, '4\t%d\t%d\t%d\t%d\n', (tri-1)');
   fprintf(fid, '\n');
@@ -121,7 +121,7 @@ elseif size(tri,2)==8
   fprintf(fid, 'POINTS %d float\n', npos);
   fprintf(fid, '%f\t%f\t%f\n', pos');
   fprintf(fid, '\n');
-  % write the hexaheders
+  % write the hexahedrons
   fprintf(fid, 'CELLS %d %d\n', ntri, (8+1)*ntri);
   fprintf(fid, '8\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\n', (tri-1)');
   fprintf(fid, '\n');
@@ -144,7 +144,7 @@ if size(val,1)==size(pos,1)
   fmt(end) = 'n';
   fprintf(fid, fmt, val');
 elseif size(val,1)==size(tri,1)
-  % write scalar values corresponding with the hexaheders
+  % write scalar values corresponding with the hexahedrons
   fprintf(fid, 'CELL_DATA %d\n', ntri);
   fprintf(fid, 'SCALARS data float %d\n', size(val,2));
   fprintf(fid, 'LOOKUP_TABLE default\n');

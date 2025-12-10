@@ -1,8 +1,9 @@
 function test_issue1587
 
-% MEM 7gb
+% MEM 6gb
 % WALLTIME 00:20:00
 % DEPENDENCY ft_channelselection
+% DATA public
 
 % In https://github.com/fieldtrip/fieldtrip/issues/1587 Alexandra identified an issue
 % In https://github.com/fieldtrip/fieldtrip/pull/1599 Jan-Mathijs proposed a solution
@@ -27,7 +28,7 @@ assert(isequal(ft_channelselection(selection, original), original));
 
 %%
 
-basedir = '/home/common/matlab/fieldtrip/data/test';
+basedir = '/project/3031000.02/test';
 
 neuromag = {
   './bug1792/20130418_test_cHPI.fif'
@@ -112,7 +113,7 @@ end
 
 %%
 
-dataset = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds');
+dataset = dccnpath('/project/3031000.02/external/download/test/ctf/Subject01.ds');
 
 grad = ft_read_sens(dataset, 'senstype', 'meg');
 

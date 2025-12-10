@@ -1,12 +1,13 @@
 function test_issue1294
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_statfun_bayesfactor
+% DATA public
 
 %%
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/example/effectsize/ERF_orig.mat'));
+load(dccnpath('/project/3031000.02/external/download/example/effectsize/ERF_orig.mat'));
 
 cfg = [];
 cfg.keepindividual = 'yes';

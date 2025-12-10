@@ -8,8 +8,8 @@ function [data] = ft_determine_coordsys(data, varargin)
 %   [dataout] = ft_determine_coordsys(datain, ...)
 % where the input data structure can be either
 %  - an anatomical MRI
-%  - a cortical or head surface mesh
 %  - an electrode, gradiometer or optode definition
+%  - a cortical or head surface mesh
 %  - a volume conduction model of the head
 % or most other FieldTrip structures that represent geometrical information.
 %
@@ -19,7 +19,7 @@ function [data] = ft_determine_coordsys(data, varargin)
 %   axisscale    = scaling factor for the reference axes and sphere (default = 1)
 %   clim         = lower and upper anatomical MRI limits (default = [0 1])
 %
-% This function wil pop up a figure that allows you to check whether the
+% This function will pop up a figure that allows you to check whether the
 % alignment of the object relative to the coordinate system axes is correct
 % and what the anatomical labels of the coordinate system axes are. You
 % should switch on the 3D rotation option in the figure panel to rotate and
@@ -29,7 +29,7 @@ function [data] = ft_determine_coordsys(data, varargin)
 % Recognized and supported coordinate systems are 'ctf', 'bti', '4d', 'yokogawa',
 % 'eeglab', 'neuromag', 'itab', 'acpc', 'spm', 'mni', 'fsaverage', 'tal', 'scanras',
 % 'scanlps', 'dicom'.
-% 
+%
 % Furthermore, supported coordinate systems that do not specify the origin are 'ras',
 % 'als', 'lps', etc. See https://www.fieldtriptoolbox.org/faq/coordsys for more
 % details.
@@ -65,7 +65,7 @@ data  = ft_checkdata(data, 'hasunit', 'yes');
 dtype = ft_datatype(data);
 
 % the high-level data structures are detected with ft_datatype, but there are
-% also some low-level data structures that need to be supproted here
+% also some low-level data structures that need to be supported here
 if strcmp(dtype, 'unknown')
   if isfield(data, 'fid') || (isfield(data, 'tri') && isfield(data, 'pos'))
     dtype = 'headshape';
@@ -133,20 +133,20 @@ switch dtype
     diagonal_head = norm(range(corner_head));
     diagonal_vox  = norm(range(corner_vox));
     resolution    = (diagonal_head+eps)/(diagonal_vox+eps); % this is in units of "data.unit"
-    
+
     % scale funparam between 0 and 1
     if ~isa(funparam, 'double') % avoid integer datatypes to allow for scaling
       funparam = double(funparam);
     end
     dmin = min(funparam(:));
     dmax = max(funparam(:));
-    funparam  = (funparam-dmin)./(dmax-dmin);
-    
+    funparam = (funparam-dmin)./(dmax-dmin);
+
     clear ft_plot_slice
     ft_plot_ortho(funparam, 'transform', data.transform, 'unit', data.unit, 'resolution', resolution, 'style', 'intersect', 'clim', clim);
     axis vis3d
     view([110 36]);
-    
+
   case 'source'
     if isfield(data, 'inside') && ~isfield(data, 'tri')
       % only plot the source locations that are inside the volume conduction model
@@ -154,27 +154,27 @@ switch dtype
     else
       ft_plot_mesh(data, 'edgecolor','none', 'facecolor', [0.6 0.8 0.6], 'facealpha', 0.6);
     end
-    camlight;
+    ft_headlight
 
   case 'dip'
     ft_plot_mesh(data, 'edgecolor','none', 'facecolor', 'none');
-    camlight;
+    ft_headlight
 
   case 'headshape'
     ft_plot_headshape(data);
-    camlight;
+    ft_headlight
 
   case {'mesh', 'source+mesh'}
     ft_plot_mesh(data);
-    camlight;
+    ft_headlight
 
   case 'headmodel'
     ft_plot_headmodel(data);
-    camlight;
+    ft_headlight
 
-  case {'grad' 'elec' 'opto' 'sens'}
+  case {'elec', 'grad', 'opto', 'sens'}
     ft_plot_sens(data, 'label', 'label');
-    camlight;
+    ft_headlight
 
   case {'raw', 'timelock', 'freq', 'mvar', 'freqmvar', 'comp'}
     % the data may contain a gradiometer or electrode definition
@@ -187,13 +187,8 @@ switch dtype
     end
 
   case 'unknown'
+    ft_warning('unsupported object')
 end % switch dtype{k}
-
-if isfield(data, 'tri')
-  % this makes the 3-D object easier to understand
-  camlight
-  lighting gouraud
-end
 
 % plot the 3-D axes, labels, and sphere at the origin
 ft_plot_axes(data, 'axisscale', axisscale, 'fontsize', fontsize);

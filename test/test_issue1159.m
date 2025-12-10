@@ -1,13 +1,14 @@
 function test_issue1159
 
 % WALLTIME 00:10:00
-% MEM 2gb
+% MEM 1gb
 % DEPENDENCY ft_senstype undobalancing
+% DATA private
 
 %%
 % see https://github.com/fieldtrip/fieldtrip/issues/1159
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/issue1159.mat'))
+load(dccnpath('/project/3031000.02/test/issue1159.mat'))
 
 %%
 % this works
@@ -23,8 +24,8 @@ ft_senstype(rmfield(grad, 'type'))
 % the following is a generalization and also applies to https://github.com/fieldtrip/fieldtrip/pull/980
 
 cfg = [];
-cfg.dataset = dccnpath('/home/common/matlab/fieldtrip/data/test/original/meg/neuromag306/raw.fif');
-cfg.trl = [1 7500 0]; % 30 seconds @250Hz
+cfg.dataset = dccnpath('/project/3031000.02/test/original/meg/neuromag306/raw.fif');
+cfg.trl = [125001 132500 0]; % 30 seconds @250Hz, the start of the file is all zeros
 cfg.continuous = 'yes';
 data = ft_preprocessing(cfg);
 
@@ -51,7 +52,7 @@ ft_senstype(comp.grad) % this originally fails
 % try the same thing with a CTF dataset
 
 cfg = [];
-cfg.dataset = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds');
+cfg.dataset = dccnpath('/project/3031000.02/external/download/test/ctf/Subject01.ds');
 cfg.trl = [1 9000 0]; % 30 seconds @300Hz
 cfg.continuous = 'yes';
 data = ft_preprocessing(cfg);

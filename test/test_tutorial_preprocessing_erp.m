@@ -1,8 +1,9 @@
 function test_tutorial_preprocessing_erp
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY
+% DATA public
 
 % This is a test script for the EEG preprocessing example page that Irina made for the Cracow workshop.
 % See http://www.fieldtriptoolbox.org/tutorial/preprocessing_erp
@@ -12,7 +13,7 @@ function test_tutorial_preprocessing_erp
 interactive = false;  % use this for running it without user interaction 
 % interactive = true;  % use this for running it with user interaction 
 
-datadir = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/preprocessing_erp');
+datadir = dccnpath('/project/3031000.02/external/download/tutorial/preprocessing_erp');
 cd(datadir)
 
 cfg = [];

@@ -1,8 +1,9 @@
 function test_ft_plot_mesh
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:15:00
 % DEPENDENCY ft_plot_mesh
+% DATA no
 
 %% the first is a simple triangluar mesh
 

@@ -65,6 +65,12 @@ function [sourcemodel, cfg] = ft_prepare_leadfield(cfg, data)
 %                               for which the leadfield is computed in a
 %                               single call to the low-level code. Trades off
 %                               memory efficiency for speed.
+% 
+% For HBF based headmodels:
+%   cfg.hbf.batchsize = scalar or 'all' (default 1), number of dipoles
+%                               for which the leadfield is computed in a
+%                               single call to the low-level code. Trades off
+%                               memory efficiency for speed.
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
@@ -146,6 +152,7 @@ cfg.sel50p         = ft_getopt(cfg, 'sel50p',    'no');
 cfg.feedback       = ft_getopt(cfg, 'feedback',  'text');
 cfg.mollify        = ft_getopt(cfg, 'mollify',   'no');
 cfg.patchsvd       = ft_getopt(cfg, 'patchsvd',  'no');
+cfg.checkinside    = ft_getopt(cfg, 'checkinside'); % default is set in FT_PREPARE_SOURCEMODEL
 
 cfg = ft_checkconfig(cfg, 'renamed', {'tightgrid',   'tight'});  % this is moved to cfg.sourcemodel.tight by the subsequent createsubcfg
 cfg = ft_checkconfig(cfg, 'renamed', {'sourceunits', 'unit'});   % this is moved to cfg.sourcemodel.unit by the subsequent createsubcfg
@@ -169,7 +176,7 @@ end
 [headmodel, sens, cfg] = prepare_headmodel(cfg, data);
 
 % construct the sourcemodel for which the leadfield will be computed
-tmpcfg           = keepfields(cfg, {'sourcemodel', 'mri', 'headshape', 'symmetry', 'smooth', 'threshold', 'spheremesh', 'inwardshift', 'xgrid' 'ygrid', 'zgrid', 'resolution', 'tight', 'warpmni', 'template', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
+tmpcfg           = keepfields(cfg, {'checkinside', 'sourcemodel', 'mri', 'headshape', 'symmetry', 'smooth', 'threshold', 'spheremesh', 'inwardshift', 'xgrid' 'ygrid', 'zgrid', 'resolution', 'tight', 'warpmni', 'template', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
 tmpcfg.headmodel = headmodel;
 if ft_senstype(sens, 'eeg')
   tmpcfg.elec = sens;
@@ -314,6 +321,31 @@ elseif ft_headmodeltype(headmodel, 'interpolate')
 
   lf = ft_compute_leadfield(sourcemodel.pos(insideindx,:), sens, headmodel, leadfieldopt{:});
   sourcemodel.leadfield(insideindx) = mat2cell(lf, 3, 3.*ones(1,numel(insideindx)));
+
+elseif ft_headmodeltype(headmodel, 'hbf')
+
+  cfg.hbf      = ft_getopt(cfg, 'hbf', []);
+  batchsize    = ft_getopt(cfg.hbf, 'batchsize', 1);
+  if ischar(batchsize) && strcmp(batchsize, 'all')
+    batchsize = length(insideindx);
+  end
+
+  dippos     = sourcemodel.pos(insideindx,:);
+  ndip       = length(insideindx);
+  numchunks  = ceil(ndip/batchsize);
+
+  sourcemodel.leadfield = cell(size(sourcemodel.pos,1),1);
+  ft_progress('init', cfg.feedback, 'computing leadfield');
+  for k = 1:numchunks
+    ft_progress(k/numchunks, 'computing leadfield %d/%d\n', k, numchunks);
+    diprange = (((k-1)*batchsize + 1):(min(k*batchsize,ndip)));
+    tmp      = ft_compute_leadfield(dippos(diprange,:), sens, headmodel, leadfieldopt{:});
+    % distribute the columns of the leadfield matrix over the individual dipole positions
+    % avoid using the options reducerank and backproject, see https://github.com/fieldtrip/fieldtrip/issues/1410#issuecomment-646994620
+    [m, n] = size(tmp);
+    sourcemodel.leadfield(insideindx(diprange)) = mat2cell(tmp, m, repmat(n/numel(diprange), 1, numel(diprange)));
+  end
+  ft_progress('close');
   
 else
   ft_progress('init', cfg.feedback, 'computing leadfield');

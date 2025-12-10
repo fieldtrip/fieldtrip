@@ -1,8 +1,9 @@
 function test_bug3378
 
 % WALLTIME 00:10:00
-% MEM 2gb
+% MEM 1gb
 % DEPENDENCY
+% DATA no
 
 data = [];
 data.powspctrm = randn(1,10,20);

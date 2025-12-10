@@ -86,8 +86,7 @@ setappdata(0, 'cfg', cfg)
 
 % the unicorn uses the SPP protocol, i.e. serial-over-bluetooth
 % open the serial device
-unicorn = serialport(cfg.filename, cfg.baudrate)
-
+unicorn = serialport(cfg.filename, cfg.baudrate);
 
 %%
 % this takes care of cleanup

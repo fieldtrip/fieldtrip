@@ -1,8 +1,9 @@
 function test_issue1068
 
 % WALLTIME 00:10:00
-% MEM 2gb
+% MEM 1gb
 % DEPENDENCY ft_checkdata ft_datatype makessense getdimord getdimsiz
+% DATA no
 
 %%
 % this worked

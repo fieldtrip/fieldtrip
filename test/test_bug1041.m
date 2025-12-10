@@ -1,8 +1,9 @@
 function test_bug1041
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_freqdescriptives memtic memtoc
+% DATA no
 
 % this is a bug that Jorn reported but that I am not able to reproduce
 % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1041

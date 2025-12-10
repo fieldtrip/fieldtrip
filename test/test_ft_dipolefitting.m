@@ -1,8 +1,9 @@
 function test_ft_dipolefitting
 
 % WALLTIME 00:20:00
-% MEM 2gb
+% MEM 1gb
 % DEPENDENCY ft_dipolefitting ft_headmodel_concentricspheres
+% DATA no
 % DATATYPE comp timelock freq
 
 fs = 500;
@@ -70,6 +71,24 @@ cfg.resolution = 1; %cm
 cfg.latency = [0 1];
 cfg.model = 'regional';
 cfg.headmodel = headmodel;
+sourceout = ft_dipolefitting(cfg, timelock);
+
+% test for precomputed grid, without nonlinear optimization
+cfg = [];
+cfg.resolution = 1;
+cfg.headmodel  = headmodel;
+sourcemodel    = ft_prepare_sourcemodel(cfg);
+cfg.sourcemodel = sourcemodel;
+cfg.elec        = data.elec;
+leadfield       = ft_prepare_leadfield(cfg);
+
+cfg = [];
+cfg.model = 'regional';
+cfg.headmodel = headmodel;
+cfg.sourcemodel = leadfield;
+cfg.nonlinear = 'no';
+cfg.model = 'regional';
+cfg.latency = [0 1];
 sourceout = ft_dipolefitting(cfg, timelock);
 
 % test for freq type

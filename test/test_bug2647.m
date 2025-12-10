@@ -1,10 +1,11 @@
 function test_bug2647
 % DEPENDENCY ft_freqstatistics
+% DATA private
 
 % WALLTIME 00:10:00
-% MEM 2gb
+% MEM 1gb
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2647.mat'));
+load(dccnpath('/project/3031000.02/test/bug2647.mat'));
 stat = ft_freqstatistics(cfg,data,BL);
 %assert(all(~isfinite(stat.stat(:))));
 assert(~all(~isfinite(stat.stat(:)))); % this should now work after making ft_statfun_actvsblT more robust for NaNs

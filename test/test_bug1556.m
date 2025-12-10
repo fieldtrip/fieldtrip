@@ -1,8 +1,9 @@
 function test_bug1556
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_statfun_depsamplesFmultivariate ft_statfun_depsamplesFunivariate
+% DATA no
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

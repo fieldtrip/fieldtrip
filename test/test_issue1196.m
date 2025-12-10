@@ -1,14 +1,19 @@
 function test_issue1196
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:20:00
 % DEPENDENCY data2bids
+% DATA private
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/issue1196'));
+datadir = dccnpath('/project/3031000.02/test/issue1196');
+bidsdir = fullfile(datadir, 'bids');
 
-if isfolder(dccnpath('/home/common/matlab/fieldtrip/data/test/issue1196/bids'))
-  system(sprintf('rm -rf %s', dccnpath('/home/common/matlab/fieldtrip/data/test/issue1196/bids')));
+if isfolder(bidsdir)
+  % remove the results from the previous run
+  rmdir(bidsdir, 's');
 end
+
+cd(datadir);
 
 %%
 
@@ -108,3 +113,9 @@ data2bids(cfg);
 cfg.dataset = videofile2;
 cfg.run = 2;
 data2bids(cfg);
+
+%% clean up afterwards, so that it's more robust in a cross user application of the script
+% regarding permissions
+if isfolder(dccnpath('/project/3031000.02/test/issue1196/bids'))
+  system(sprintf('rm -rf %s', dccnpath('/project/3031000.02/test/issue1196/bids')));
+end

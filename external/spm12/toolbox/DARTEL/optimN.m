@@ -1,6 +1,6 @@
 function varargout = optimN(varargin)
 % Full multigrid matrix solver stuff (circulant boundaries)
-%_______________________________________________________________________
+%__________________________________________________________________________
 %
 % FORMAT v = optimN('fmg',A, b, param)
 % v     - the solution n1*n2*n3*n4
@@ -25,16 +25,16 @@ function varargout = optimN(varargin)
 %           Note that more cycles and iterations may be needed
 %           for bending energy than for membrane energy.
 %
-% Solve equations using a Full Multigrid method.  See Press et al
-% for more information.
+% Solve equations using a Full Multigrid method.  See Press et al for more
+% information.
 % v = inv(A+H)*b
 % A, b and v are all single precision floating point.
 % H is a large sparse matrix encoded by param(1:7).
 % The tensor field encoded by A MUST be positive-definite. If it is not,
-% then anything could happen (see references about Fisher scoring for
-% help on ensuring that second derivatives are positive definite).
+% then anything could happen (see references about Fisher scoring for help
+% on ensuring that second derivatives are positive definite).
 %
-%_______________________________________________________________________
+%__________________________________________________________________________
 %
 % FORMAT m = optimN('vel2mom', v, param)
 % v     - velocity (flow) field n1*n2*n3*n4.
@@ -48,24 +48,19 @@ function varargout = optimN(varargin)
 %             are lambda, unusaed and id.
 % m       - `momentum' field n1*n2*n3*n4.
 %
-% Convert a flow field to a momentum field by m = H*v, where
-% H is the large sparse matrix encoding some form of regularisation.
-% v and m are single precision floating point. This function has uses
-% beyond only image registration.
+% Convert a flow field to a momentum field by m = H*v, where H is the large
+% sparse matrix encoding some form of regularisation. v and m are single
+% precision floating point. This function has uses beyond only image
+% registration.
 %
-%_______________________________________________________________________
+%__________________________________________________________________________
 %
-% Note that the boundary conditions are circulant throughout.
-% For Neumann boundary conditions (zero gradients at the boundaries)
-% use optimNn.
-%
-%_______________________________________________________________________
-% Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
+% Note that the boundary conditions are circulant throughout. For Neumann
+% boundary conditions (zero gradients at the boundaries) use optimNn.
+%__________________________________________________________________________
 
 % John Ashburner
-% $Id: optimN.m 4758 2012-05-29 15:34:08Z john $
+% Copyright (C) 2006-2022 Wellcome Centre for Human Neuroimaging
+
 
 [varargout{1:nargout}] = optim_compat(0,varargin{:});
-
-%error('Not compiled for %s in MATLAB %s  (see make.m)\n', computer, version);
-

@@ -133,13 +133,26 @@ if isfield(input, 'chantype')
 else
   % start with unknown chantype for all channels
   chantype = repmat({'unknown'}, numchan, 1);
+  % the sensor desciption might provide information about the channel type
+  if isfield(input, 'grad') && isfield(input.grad, 'chantype')
+    [sel1, sel2] = match_str(input.label, input.grad.label);
+    chantype(sel1) = input.grad.chantype(sel2);
+  end
+  if isfield(input, 'elec') && isfield(input.elec, 'chantype')
+    [sel1, sel2] = match_str(input.label, input.elec.label);
+    chantype(sel1) = input.elec.chantype(sel2);
+  end
+  if isfield(input, 'opto') && isfield(input.opto, 'chantype')
+    [sel1, sel2] = match_str(input.label, input.opto.label);
+    chantype(sel1) = input.opto.chantype(sel2);
+  end
 end
+
+% some channel types were perhaps already determined
+chantypeinitial = chantype; 
 
 if ~any(strcmp(chantype, 'unknown'))
   % all channels are known, don't bother doing any further heuristics
-  
-elseif ft_senstype(input, 'unknown')
-  % don't bother doing subsequent checks to determine the chantype
   
 elseif isheader && issubfield(input, 'orig.channames')
   % this is for Neuromag or Babysquid systems
@@ -166,41 +179,22 @@ elseif isheader && issubfield(input, 'orig.channames')
   end
   
 elseif isheader && issubfield(input, 'orig.chs.coil_type')
-  % this is for Neuromag or Babysquid systems
-  % all the chs.kinds and chs.coil_types are obtained from the MNE manual, p.210-211
-  for sel=find([input.orig.chs.kind]==1 & [input.orig.chs.coil_type]==2)'    % planar gradiometers
-    chantype(sel) = {'megplanar'}; % Neuromag-122 planar gradiometer
-  end
-  for sel=find([input.orig.chs.kind]==1 & [input.orig.chs.coil_type]==3012)' % planar gradiometers
-    chantype(sel) = {'megplanar'}; % Type T1 planar grad
-  end
-  for sel=find([input.orig.chs.kind]==1 & [input.orig.chs.coil_type]==3013)' % planar gradiometers
-    chantype(sel) = {'megplanar'}; % Type T2 planar grad
-  end
-  for sel=find([input.orig.chs.kind]==1 & [input.orig.chs.coil_type]==3014)' % planar gradiometers
-    chantype(sel) = {'megplanar'}; % Type T3 planar grad
-  end
-  for sel=find([input.orig.chs.kind]==1 & [input.orig.chs.coil_type]==3022)' % magnetometers
-    chantype(sel) = {'megmag'};    % Type T1 magenetometer
-  end
-  for sel=find([input.orig.chs.kind]==1 & [input.orig.chs.coil_type]==3023)' % magnetometers
-    chantype(sel) = {'megmag'};    % Type T2 magenetometer
-  end
-  for sel=find([input.orig.chs.kind]==1 & [input.orig.chs.coil_type]==3024)' % magnetometers
-    chantype(sel) = {'megmag'};    % Type T3 magenetometer
-  end
-  for sel=find([input.orig.chs.kind]==1 & [input.orig.chs.coil_type]==7001)' % axial gradiometer
-    chantype(sel) = {'megaxial'};
-  end
-  for sel=find([input.orig.chs.kind]==301)' % MEG reference channel, located far from head
-    chantype(sel) = {'ref'};
-  end
-  for sel=find([input.orig.chs.kind]==2)'   % EEG channels
-    chantype(sel) = {'eeg'};
-  end
-  for sel=find([input.orig.chs.kind]==201)' % MCG channels
-    chantype(sel) = {'mcg'};
-  end
+  % this is for fif files imported using neuromag_mne
+
+  % the kinds and coil_types were initially obtained from the MNE manual (p.210-211) and updated from the coil_def.dat file
+  chantype([input.orig.chs.kind]==1 & ismember([input.orig.chs.coil_type], [2, 3012, 3013, 3014, 3015])) = {'megplanar'};
+  chantype([input.orig.chs.kind]==1 & ismember([input.orig.chs.coil_type], [2000, 3022, 3023, 3024, 3025, 4001, 7002, 7003, 8001, 8002, 8101, 8201])) = {'megmag'};
+  chantype([input.orig.chs.kind]==1 & ismember([input.orig.chs.coil_type], [4002, 5001, 6001, 7001, 7501, 9001, 9101, 9102])) = {'megaxial'};
+  chantype([input.orig.chs.kind]==1 & ismember([input.orig.chs.coil_type], [4003, 5002, 6002, 7004, 7502, 4004, 4005, 5003, 5004, 7503])) = {'ref'};
+
+  chantype([input.orig.chs.kind]==2)   = {'eeg'};
+  chantype([input.orig.chs.kind]==201) = {'mcg'};
+  chantype([input.orig.chs.kind]==202) = {'eog'};
+  chantype([input.orig.chs.kind]==302) = {'emg'};
+  chantype([input.orig.chs.kind]==402) = {'ecg'};
+  chantype([input.orig.chs.kind]==502) = {'misc'};
+  chantype([input.orig.chs.kind]==602) = {'respiration'};
+
   for sel=find([input.orig.chs.kind]==3)'   % Stim channels
     if any(ismember([input.orig.chs(sel).logno], [101 102])) % new systems: 101 (and 102, if enabled) are digital; low numbers are 'pseudo-analog' (if enabled)
       chantype(sel([input.orig.chs(sel).logno] == 101)) = {'digital trigger'};
@@ -221,22 +215,11 @@ elseif isheader && issubfield(input, 'orig.chs.coil_type')
       chantype(sel) = {'other trigger'};
     end
   end
-  for sel=find([input.orig.chs.kind]==202)' % EOG
-    chantype(sel) = {'eog'};
-  end
-  for sel=find([input.orig.chs.kind]==302)' % EMG
-    chantype(sel) = {'emg'};
-  end
-  for sel=find([input.orig.chs.kind]==402)' % ECG
-    chantype(sel) = {'ecg'};
-  end
-  for sel=find([input.orig.chs.kind]==502)' % MISC
-    chantype(sel) = {'misc'};
-  end
-  for sel=find([input.orig.chs.kind]==602)' % Resp
-    chantype(sel) = {'respiration'};
-  end
   
+elseif ft_senstype(input, 'unknown')
+  % don't bother doing subsequent checks to determine the chantype
+  % NOTE: this skips the evaluation of the subsequent 'elseif' statements   
+
 elseif ft_senstype(input, 'babysquid74')
   % the name can be something like "MEG 001" or "MEG001" or "MEG 0113" or "MEG0113"
   % i.e. with two or three digits and with or without a space
@@ -288,6 +271,12 @@ elseif isheader && isfield(input, 'orig') && isfield(input.orig, 'sensor') && is
   chantype = ctfchantype(origSensType);
   
 elseif ft_senstype(input, 'ctf') && isgrad
+
+  if all(contains(input.label, '-'))
+    % this applies when splitlabel=false
+    input.label = strtok(input.label, '-'); % take the part before the dash
+  end
+
   % in principle it is possible to look at the number of coils, but here the channels are identified based on their name
   sel = myregexp('^M[ZLR][A-Z][0-9][0-9]$', input.label);
   chantype(sel) = {'meggrad'};            % normal gradiometer channels
@@ -297,7 +286,7 @@ elseif ft_senstype(input, 'ctf') && isgrad
   chantype(sel) = {'refmag'};             % reference magnetometers
   sel = myregexp('^[GPQR][0-9][0-9]$', input.label);
   chantype(sel) = {'refgrad'};            % reference gradiometers
-  
+    
 elseif ft_senstype(input, 'ctf') && islabel
   % the channels have to be identified based on their name alone
   sel = myregexp('^M[ZLR][A-Z][0-9][0-9]$', label);
@@ -308,7 +297,13 @@ elseif ft_senstype(input, 'ctf') && islabel
   chantype(sel) = {'refmag'};             % reference magnetometers
   sel = myregexp('^[GPQR][0-9][0-9]$', label);
   chantype(sel) = {'refgrad'};            % reference gradiometers
-  
+  sel = myregexp('STIM', label);
+  chantype(sel) = {'trigger'};
+  sel = myregexp('UPPT001', label);
+  chantype(sel) = {'trigger'};
+  sel = myregexp('UPPT002', label);
+  chantype(sel) = {'response'};
+
 elseif ft_senstype(input, 'bti')
   if isfield(input, 'orig') && isfield(input.orig, 'config')
     configname = {input.orig.config.channel_data.name};
@@ -334,7 +329,8 @@ elseif ft_senstype(input, 'bti')
     chantype(configtype==2) = {'eeg'};
     chantype(configtype==3) = {'ref'}; % not known if mag or grad
     chantype(configtype==4) = {'aux'};
-    chantype(configtype==5) = {'trigger'};
+    chantype(configtype==5 & ~strcmp(configname, 'RESPONSE')) = {'trigger'};
+    chantype(configtype==5 &  strcmp(configname, 'RESPONSE')) = {'response'};
     
     % refine the distinction between refmag and refgrad to make the types
     % in grad and header consistent
@@ -343,7 +339,6 @@ elseif ft_senstype(input, 'bti')
     sel = myregexp('^G[xyz][xyz]A$', label);
     chantype(sel) = {'refgrad'};
   else
-    % determine the chantype on the basis of the channel labels
     % all 4D-BTi MEG channels start with "A" followed by a number
     % all 4D-BTi reference channels start with M or G
     % all 4D-BTi EEG channels start with E, except for the 248-MEG/32-EEG system in Warsaw where they end with -1
@@ -353,7 +348,11 @@ elseif ft_senstype(input, 'bti')
     chantype(sel) = {'refmag'};
     sel = myregexp('^G[xyz][xyz]A$', label);
     chantype(sel) = {'refgrad'};
-    
+    sel = myregexp('STIMULUS', label);
+    chantype(sel) = {'trigger'};
+    sel = myregexp('RESPONSE', label);
+    chantype(sel) = {'response'};
+
     if isgrad && isfield(input, 'tra')
       gradtype = repmat({'unknown'}, size(input.label));
       gradtype(strncmp('A', input.label, 1)) = {'meg'};
@@ -560,8 +559,7 @@ elseif ft_senstype(input, 'yokogawa') && islabel
   sel = myregexp('^ETC[0-9][0-9][0-9]$', label);
   chantype(sel) = {'etc'};
   
-elseif ft_senstype(input, 'itab') && isheader
-  
+elseif ft_senstype(input, 'itab') && isheader && isfield(input, 'orig')
   origtype = [input.orig.ch.type];
   chantype(origtype==0)   = {'unknown'};
   chantype(origtype==1)   = {'unknown'};%{'ele'};
@@ -661,6 +659,9 @@ elseif ft_senstype(input, 'nex5') && isheader
   end
   
 end % ft_senstype
+
+% keep the channel types that were initially determined
+chantype(~strcmp(chantypeinitial, 'unknown')) = chantypeinitial(~strcmp(chantypeinitial, 'unknown'));
 
 if isdata
   % the input was replaced by one of hdr, grad, elec, opto

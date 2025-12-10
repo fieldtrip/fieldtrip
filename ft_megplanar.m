@@ -12,7 +12,7 @@ function [data] = ft_megplanar(cfg, data)
 %
 % The configuration should contain
 %   cfg.planarmethod   = string, can be 'sincos', 'orig', 'fitplane', 'sourceproject' (default = 'sincos')
-%   cfg.channel        =  Nx1 cell-array with selection of channels (default = 'all'), see FT_CHANNELSELECTION for details
+%   cfg.channel        =  Nx1 cell-array with selection of channels (default = {'megmag', 'meggrad'}), see FT_CHANNELSELECTION for details
 %   cfg.trials         = 'all' or a selection given as a 1xN vector (default = 'all')
 %
 % The methods orig, sincos and fitplane are all based on a neighbourhood interpolation.
@@ -61,7 +61,7 @@ function [data] = ft_megplanar(cfg, data)
 % See also FT_COMBINEPLANAR, FT_PREPARE_NEIGHBOURS
 
 % Copyright (C) 2004-2019, Robert Oostenveld
-% Copyright (C) 2020-      Robert Oostenveld and Jan-Mathijs Schoffelen
+% Copyright (C) 2020-2024, Robert Oostenveld and Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -208,10 +208,13 @@ if strcmp(cfg.planarmethod, 'sourceproject')
   planarmontage.labelnew = planar.grad.label;
 
   % apply the linear transformation to the data
-  interp  = ft_apply_montage(data, planarmontage, 'keepunused', 'yes');
+  interp = ft_apply_montage(data, planarmontage, 'keepunused', 'yes');
 
   % also apply the linear transformation to the gradiometer definition
-  interp.grad = ft_apply_montage(data.grad, planarmontage, 'balancename', 'planar', 'keepunused', 'yes');
+  interp.grad = ft_apply_montage(data.grad, planarmontage, 'keepunused', 'yes');
+  interp.grad = fixbalance(interp.grad); % ensure that the balancing representation is up to date
+  interp.grad.balance.planar = planarmontage;
+  interp.grad.balance.current{end+1} = 'planar'; % keep track of the projection that was applied
 
   % ensure there is a type string describing the gradiometer definition
   if ~isfield(interp.grad, 'type')
@@ -254,13 +257,14 @@ else
       ft_error('The channel positions (and/or orientations) contain NaNs; this prohibits correct behavior of the function. Please replace the input channel definition with one that contains valid channel positions');
     end
   end
+  % the channels must be in the neighbour definition, in the grad structure, and in the data
+  cfg.channel = ft_channelselection(cfg.channel, {cfg.neighbours.label});
   cfg.channel = ft_channelselection(cfg.channel, sens.label);
   cfg.channel = ft_channelselection(cfg.channel, data.label);
 
   % ensure channel order according to cfg.channel (there might be one check
   % too much in here somewhere or in the subfunctions, but I don't care.
   % Better one too much than one too little - JMH @ 09/19/12
-  cfg = struct(cfg);
   [neighbsel] = match_str({cfg.neighbours.label}, cfg.channel);
   cfg.neighbours = cfg.neighbours(neighbsel);
   cfg.neighbsel = channelconnectivity(cfg);
@@ -281,28 +285,19 @@ else
   ft_info('minimum distance between neighbours is %6.2f %s\n', min(distance(distance~=0)), sens.unit);
   ft_info('maximum distance between gradiometers is %6.2f %s\n', max(distance(distance~=0)), sens.unit);
 
-  % The following does not work when running in deployed mode because the
-  % private functions that compute the planar montage are not recognized as
-  % such and won't be compiled, unless explicitly specified.
-
-  % % generically call megplanar_orig megplanar_sincos or megplanar_fitplane
-  %fun = ['megplanar_'  cfg.planarmethod];
-  %if ~exist(fun, 'file')
-  %  ft_error('unknown method for computation of planar gradient');
-  %end
-  %planarmontage = eval([fun '(cfg, data.grad)']);
-
   switch cfg.planarmethod
     case 'sincos'
       planarmontage = megplanar_sincos(cfg, sens);
     case 'orig'
       % method specific info that is needed
       cfg.distance  = distance;
-
       planarmontage = megplanar_orig(cfg, sens);
     case 'fitplane'
       planarmontage = megplanar_fitplane(cfg, sens);
     otherwise
+      % This does not work when running in deployed mode because the
+      % private functions that compute the planar montage are not recognized as
+      % such and won't be compiled, unless explicitly specified.
       fun = ['megplanar_' cfg.planarmethod];
       if ~exist(fun, 'file')
         ft_error('unknown method for computation of planar gradient');
@@ -314,7 +309,10 @@ else
   interp = ft_apply_montage(data, planarmontage, 'keepunused', 'yes', 'feedback', cfg.feedback);
 
   % also apply the linear transformation to the gradiometer definition
-  interp.grad = ft_apply_montage(sens, planarmontage, 'balancename', 'planar', 'keepunused', 'yes');
+  interp.grad = ft_apply_montage(sens, planarmontage, 'keepunused', 'yes');
+  interp.grad = fixbalance(interp.grad); % ensure that the balancing representation is up to date
+  interp.grad.balance.planar = planarmontage;
+  interp.grad.balance.current{end+1} = 'planar'; % keep track of the projection that was applied
 
   % ensure there is a type string describing the gradiometer definition
   if ~isfield(interp.grad, 'type')
@@ -363,7 +361,7 @@ end
 ft_postamble debug
 ft_postamble previous data
 
-% rename the output variable to accomodate the savevar postamble
+% rename the output variable to accommodate the savevar postamble
 data = interp;
 
 ft_postamble provenance data

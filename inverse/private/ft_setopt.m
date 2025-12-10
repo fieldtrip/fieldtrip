@@ -8,7 +8,7 @@ function opt = ft_setopt(opt, key, val)
 %   s = ft_setopt(s, key, val)
 % where s is a structure or a cell-array.
 %
-% See also FT_GETOPT, FT_CHECKOPT
+% See also FT_GETOPT, FT_CHECKOPT, FT_DELETEOPT
 
 % Copyright (C) 2011-2012, Robert Oostenveld
 %
@@ -49,7 +49,7 @@ elseif isa(opt, 'cell')
     valindex = keyindex+1;
     opt{valindex} = val;
   elseif length(sel)>1
-    % first remove all occurences
+    % first remove all occurrences
     keyindex = 2*sel-1;
     valindex = keyindex+1;
     opt([keyindex valindex]) = [];

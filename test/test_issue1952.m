@@ -1,25 +1,16 @@
 function test_issue1952
 
 % WALLTIME 00:20:00
-% MEM 4gb
-
+% MEM 2gb
 % DEPENDENCY ft_denoise_ssp
+% DATA public
 
 %% PATHS
 
 % path = '/home/lau/Dokumenter/wakeman_henson_face_data/ds117/sub001/MEG';
 % dataset = fullfile(path, 'run_01_raw.fif');
 
-dataset = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/epilepsy/raw/case1/neuromag/case1_cHPI_raw.fif');
-if ~exist(dataset, 'file')
-  % probably not on filesystem at Donders
-  datadir = tempdir;
-  s = ftp('ftp.fieldtriptoolbox.org');
-  cd(s,'pub/fieldtrip/tutorial/epilepsy/raw/case1/neuromag');
-  mget(s, 'case1_cHPI_raw.fif', datadir);
-  close(s);
-  dataset = fullfile(datadir, 'case1_cHPI_raw.fif');
-end
+dataset = dccnpath('/project/3031000.02/external/download/tutorial/epilepsy/raw/case1/neuromag/case1_cHPI_raw.fif');
 
 %% SEGMENT
 
@@ -35,8 +26,8 @@ cfg.trl(:,3) = 0;
 
 % cfg.trialdef.eventtype      = 'STI101';
 % cfg.trialdef.eventvalue     = 5;
-% cfg.trialdef.prestim        = 0.200;        
-% cfg.trialdef.poststim       = 0.600;        
+% cfg.trialdef.prestim        = 0.200;
+% cfg.trialdef.poststim       = 0.600;
 % cfg.continuous              = 'yes';
 % cfg = ft_definetrial(cfg);
 

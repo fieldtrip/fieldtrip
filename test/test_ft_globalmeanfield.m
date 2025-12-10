@@ -1,9 +1,10 @@
 function test_ft_globalmeanfield
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_singleplotER
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2630/avg_tms_clean.mat'));
+% DATA private
+load(dccnpath('/project/3031000.02/test/bug2630/avg_tms_clean.mat'));
 
 cfg = [];
 cfg.channel = 'all';

@@ -1,14 +1,18 @@
 function test_ft_sourceparcellate
 
 % WALLTIME 00:10:00
-% MEM 2gb
+% MEM 1gb
 % DEPENDENCY ft_sourceparcellate ft_read_atlas ft_sourceinterpolate
+% DATA no
 
 % see also https://github.com/fieldtrip/fieldtrip/issues/1753
 
+[ftver, ftpath] = ft_version;
+templatedir  = fullfile(ftpath, 'template');
+
 %%
 
-atlasfilename   = dccnpath('/home/common/matlab/fieldtrip/template/atlas/aal/ROI_MNI_V4.nii');
+atlasfilename   = fullfile(templatedir, 'atlas', 'aal', 'ROI_MNI_V4.nii');
 
 npos = 38*48*41;
 ntime = 20;

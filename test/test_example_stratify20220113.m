@@ -1,7 +1,8 @@
 function test_example_stratify
 
-% MEM 4gb
+% MEM 2gb
 % WALLTIME 00:10:00
+% DATA no
 
 %
 %% Stratify the distribution of one variable that differs in two conditions

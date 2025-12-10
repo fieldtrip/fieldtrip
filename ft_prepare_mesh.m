@@ -183,7 +183,7 @@ switch cfg.method
       cfg.numvertices = repmat(cfg.numvertices, length(data.r));
     end
     
-    mesh = [];
+    mesh = struct();
     for i=1:length(data.r)
       ft_info('triangulating sphere %d in the volume conductor\n', i);
       [pos, tri] = mesh_sphere(cfg.numvertices(i));
@@ -217,6 +217,13 @@ end
 if ~isfield(mesh, 'coordsys') && hasdata && isfield(data, 'coordsys')
   for i=1:numel(mesh)
     mesh(i).coordsys = data.coordsys;
+  end
+end
+
+% copy the fiducials from the input to the output
+if ~isfield(mesh, 'fid') && hasdata && isfield(data, 'fid')
+  for i=1:numel(mesh)
+    mesh(i).fid = data.fid;
   end
 end
 

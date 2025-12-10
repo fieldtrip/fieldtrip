@@ -48,7 +48,7 @@ function [numA, numB, indA, indB] = spikesort(numA, numB, varargin)
 %
 % $Id$
 
-% this can be used for printing detailled user feedback
+% this can be used for printing detailed user feedback
 fb = false;
 
 % get the options

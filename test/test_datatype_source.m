@@ -1,8 +1,9 @@
 function test_datatype_source
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY
+% DATA no
 
 % this function defines a bunch of 'ideal' source structures
 

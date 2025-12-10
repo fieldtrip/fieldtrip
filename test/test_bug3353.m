@@ -1,11 +1,12 @@
 function test_bug3353
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_sourceparcellate test_bug3353
+% DATA private
 
 %% file path
-datapath = dccnpath('/home/common/matlab/fieldtrip/data/test/');
+datapath = dccnpath('/project/3031000.02/test/');
 filename = 'bug3353'; % contains variable source_avg generated as per:
 % this is from the following tutorial http://www.fieldtriptoolbox.org/tutorial/beamformer_lcmv?s[]=beamformer&s[]=tutorial&s[]=evoked
 

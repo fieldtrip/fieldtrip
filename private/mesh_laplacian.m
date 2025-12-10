@@ -1,4 +1,5 @@
 function [lap,edge] = mesh_laplacian(vertex,face)
+
 % MESH_LAPLACIAN: Laplacian of irregular triangular mesh
 %
 % Useage: [lap,edge] = mesh_laplacian(vertex,face)
@@ -24,9 +25,9 @@ function [lap,edge] = mesh_laplacian(vertex,face)
 % Interpolation on a triangulated 3D surface.
 % Journal of Computational Physics, 80: 331-343.
 %
-% See also, eeg_interp_scalp_mesh
-%
+% See also EEG_INTERP_SCALP_MESH
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Licence:  GNU GPL, no implied or express warranties
 % History:  04/2002, Darren.Weber@flinders.edu.au
 %           - initial version was inefficient and incorrect

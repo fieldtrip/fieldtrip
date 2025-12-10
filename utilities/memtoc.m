@@ -24,7 +24,7 @@ function memused = memtoc(counter)
 % provided by the operating system.
 %
 % Example: measure the memory increase due to allocating a lot of memory.
-% Doing a "clear x" following the allocation and priot to MEMTOC does not
+% Doing a "clear x" following the allocation and prior to MEMTOC does not
 % affect the memory that is reported.
 %
 %   memtic

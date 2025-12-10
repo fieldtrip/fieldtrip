@@ -1,12 +1,13 @@
 function test_pull1856
 
 % WALLTIME 00:20:00
-% MEM 3gb
+% MEM 1gb
 % DEPENDENCY ft_write_data getorthoviewpos
+% DATA private
 
 %%
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/original/nirs'));
+cd(dccnpath('/project/3031000.02/test/original/nirs'));
 
 %%
 

@@ -1,8 +1,9 @@
 function test_issue2017
 
 % WALLTIME 00:10:00
-% MEM 2gb
+% MEM 1gb
 % DEPENDENCY ft_selectdata getdimord
+% DATA no
 
 freq = [];
 freq.powspctrm = randn(10,1,1,1);

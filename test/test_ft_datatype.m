@@ -1,34 +1,35 @@
 function test_ft_datatype
 
-% MEM 8gb
+% MEM 6gb
 % WALLTIME 02:00:00
 % DEPENDENCY ft_datatype ft_datatype_comp ft_datatype_mvar ft_datatype_source ft_datatype_dip ft_datatype_parcellation ft_datatype_spike ft_datatype_freq ft_datatype_raw ft_datatype_timelock ft_datatype_headmodel ft_datatype_segmentation ft_datatype_volume ft_datatype ft_datatype_sens
+% DATA private
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% this style is also used in test_ft_analysisprotocol and test_ft_datatype_source
 
 dirlist = {
-  dccnpath('/home/common/matlab/fieldtrip/data/test/latest')
-  dccnpath('/home/common/matlab/fieldtrip/data/test/20131231')
-  dccnpath('/home/common/matlab/fieldtrip/data/test/20130630')
-  dccnpath('/home/common/matlab/fieldtrip/data/test/20121231')
-  dccnpath('/home/common/matlab/fieldtrip/data/test/20120630')
-  dccnpath('/home/common/matlab/fieldtrip/data/test/20111231')
-  dccnpath('/home/common/matlab/fieldtrip/data/test/20110630')
-  dccnpath('/home/common/matlab/fieldtrip/data/test/20101231')
-  dccnpath('/home/common/matlab/fieldtrip/data/test/20100630')
-  dccnpath('/home/common/matlab/fieldtrip/data/test/20091231')
-  dccnpath('/home/common/matlab/fieldtrip/data/test/20090630')
-  dccnpath('/home/common/matlab/fieldtrip/data/test/20081231')
-  dccnpath('/home/common/matlab/fieldtrip/data/test/20080630')
-  dccnpath('/home/common/matlab/fieldtrip/data/test/20071231')
-  dccnpath('/home/common/matlab/fieldtrip/data/test/20070630')
-  dccnpath('/home/common/matlab/fieldtrip/data/test/20061231')
-  dccnpath('/home/common/matlab/fieldtrip/data/test/20060630')
-  dccnpath('/home/common/matlab/fieldtrip/data/test/20051231')
-  dccnpath('/home/common/matlab/fieldtrip/data/test/20050630')
-  dccnpath('/home/common/matlab/fieldtrip/data/test/20040623')
-  dccnpath('/home/common/matlab/fieldtrip/data/test/20031128')
+  dccnpath('/project/3031000.02/test/latest')
+  dccnpath('/project/3031000.02/test/20131231')
+  dccnpath('/project/3031000.02/test/20130630')
+  dccnpath('/project/3031000.02/test/20121231')
+  dccnpath('/project/3031000.02/test/20120630')
+  dccnpath('/project/3031000.02/test/20111231')
+  dccnpath('/project/3031000.02/test/20110630')
+  dccnpath('/project/3031000.02/test/20101231')
+  dccnpath('/project/3031000.02/test/20100630')
+  dccnpath('/project/3031000.02/test/20091231')
+  dccnpath('/project/3031000.02/test/20090630')
+  dccnpath('/project/3031000.02/test/20081231')
+  dccnpath('/project/3031000.02/test/20080630')
+  dccnpath('/project/3031000.02/test/20071231')
+  dccnpath('/project/3031000.02/test/20070630')
+  dccnpath('/project/3031000.02/test/20061231')
+  dccnpath('/project/3031000.02/test/20060630')
+  dccnpath('/project/3031000.02/test/20051231')
+  dccnpath('/project/3031000.02/test/20050630')
+  dccnpath('/project/3031000.02/test/20040623')
+  dccnpath('/project/3031000.02/test/20031128')
   };
 
 for j=1:length(dirlist)

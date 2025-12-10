@@ -1,15 +1,16 @@
 function test_pull929
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_scalpcurrentdensity ft_fetch_sens
+% DATA private
 
 %% load data
 % the data contains an ERP with 128 channels and 2001 time bins
 % the ERP has a fronto-central negativity at 100ms
 % the SCD resolves into two bilateral blobs
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2685/bug2685.mat'));
+load(dccnpath('/project/3031000.02/test/bug2685/bug2685.mat'));
 
 % this is needed to avoid the data being recognized as MEG
 ERP_standard = rmfield(ERP_standard, 'grad');

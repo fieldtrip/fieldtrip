@@ -17,22 +17,22 @@ function [dim] = pos2dim3d(pos,dimold)
 
 % Copyright (C) 2009, Jan-Mathijs Schoffelen
 
-if nargin==1 && ~isstruct(pos),
+if nargin==1 && ~isstruct(pos)
   dimold = zeros(0,2);
-elseif isstruct(pos),
+elseif isstruct(pos)
   % the input is a FieldTrip data structure
   dimord = pos.dimord;
   dimtok = tokenize(dimord, '_');
   for i = 1:length(dimtok)
-    if strcmp(dimtok{i},'pos'),
+    if strcmp(dimtok{i},'pos')
       dimold(i,1) = size(pos.pos,1);
     else
-      dimold(i,1) = numel(getfield(pos, dimtok{i}));
+      dimold(i,1) = numel(pos.(dimtok{i}));
     end
   end
   pos = pos.pos;
 else
-  if size(pos,1)~=dimold(1),
+  if size(pos,1)~=dimold(1)
     ft_error('the first element in the second input should be equal to the number of positions');
   end
 end

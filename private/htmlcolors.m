@@ -12,9 +12,9 @@ function y = htmlcolors(x)
 % See https://www.rapidtables.com/web/color/html-color-codes.html
 % and https://www.color-hex.com/color-palettes/
 %
-% See also FT_COLORMAP, COLORMAP, COLORMAPEDITOR, BREWERMAP, MATPLOTLIB, CMOCEAN
+% See also STANDARDCOLORS, COLORSPEC2RGB, FT_COLORMAP, COLORMAP, COLORMAPEDITOR, BREWERMAP, MATPLOTLIB, CMOCEAN
 
-% Copyright (C) 2020, Robert Oostenveld
+% Copyright (C) 2020-2025, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.

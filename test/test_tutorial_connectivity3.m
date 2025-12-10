@@ -1,8 +1,9 @@
 function test_tutorial_connectivity3(datadir)
 
-% MEM 6gb
+% MEM 4gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_timelockanalysis ft_sourceanalysis ft_connectivityanalysis ft_prepare_sourcemodel headsurface
+% DATA public
 
 % This is the third section of the connectivity tutorial, which
 % starts with the CMC dataset, extracts a virtual channel and performs
@@ -10,7 +11,7 @@ function test_tutorial_connectivity3(datadir)
 
 if nargin==0
   % this is where the data should be located
-  datadir = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/connectivity');
+  datadir = dccnpath('/project/3031000.02/external/download/tutorial/connectivity');
 end
 
 load(fullfile(datadir, 'source.mat'));

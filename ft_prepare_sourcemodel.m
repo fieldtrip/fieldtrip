@@ -11,11 +11,11 @@ function [sourcemodel, cfg] = ft_prepare_sourcemodel(cfg)
 %
 % The different approaches for constructing a source model are
 %   cfg.method = 'basedongrid'        regular 3D grid with explicit specification
-%                'basedonpos'         regular 3D grid with specification of the resolution
+%                'basedonresolution'  regular 3D grid with specification of the resolution
+%                'basedonpos'         place dipoles at the predefined positions
 %                'basedonmri'         regular 3D grid, based on segmented MRI, restricted to gray matter
 %                'basedonmni'         regular 3D grid, based on a warped template grid, based on the MNI brain
 %                'basedoncortex'      cortical sheet from external software such as Caret or FreeSurfer, can also be two separate hemispheres
-%                'basedonresolution'  regular 3D grid with specification of the resolution
 %                'basedonshape'       surface mesh based on inward shifted head surface from an external file
 %                'basedonvol'         surface mesh based on inward shifted brain surface from volume conductor
 %                'basedonfile'        the sourcemodel should be read from file
@@ -23,12 +23,15 @@ function [sourcemodel, cfg] = ft_prepare_sourcemodel(cfg)
 % The default method is determined automatically based on the configuration options
 % that you specify.
 %
-% BASEDONRESOLUTION - uses an explicitly specified grid, or with the desired
-% resolution, according to the following configuration options:
-%   cfg.xgrid         = vector (e.g. -20:1:20) or 'auto' (default = 'auto')
-%   cfg.ygrid         = vector (e.g. -20:1:20) or 'auto' (default = 'auto')
-%   cfg.zgrid         = vector (e.g.   0:1:20) or 'auto' (default = 'auto')
-%   cfg.resolution    = number (e.g. 1 cm) for automatic grid generation
+% BASEDONGRID - uses an explicitly specified grid, according to the following
+% configuration options:
+%   cfg.xgrid         = vector (e.g. -120:10:120) or 'auto' (default = 'auto')
+%   cfg.ygrid         = vector (e.g. -120:10:120) or 'auto' (default = 'auto')
+%   cfg.zgrid         = vector (e.g.  -50:10:120) or 'auto' (default = 'auto')
+%
+% BASEDONRESOLUTION - uses an grid with the desired resolution, according
+% to the following configuration options:
+%   cfg.resolution    = number (e.g. 10 mm) for automatic grid generation
 %
 % BASEDONPOS - places sources on positions that you explicitly specify, according to
 % the following configuration options:
@@ -47,7 +50,7 @@ function [sourcemodel, cfg] = ft_prepare_sourcemodel(cfg)
 % configuration options:
 %   cfg.mri             = structure with the anatomical MRI, or the filename of the MRI, see FT_READ_MRI
 %   cfg.nonlinear       = 'no' (or 'yes'), use non-linear normalization
-%   cfg.resolution      = number (e.g. 6) of the resolution of the template MNI grid, defined in mm
+%   cfg.resolution      = scalar with the resolution of the template MNI grid, defined in mm (for example 6)
 %   cfg.template        = structure with the template sourcemodel, or the filename of a template sourcemodel (defined in MNI space)
 %   cfg.templatemri     = string, filename of the MNI template (default = 'T1.mnc' for SPM2 or 'T1.nii' for SPM8 and SPM12)
 %   cfg.spmversion      = string, 'spm2', 'spm8', 'spm12' (default = 'spm12')
@@ -66,10 +69,10 @@ function [sourcemodel, cfg] = ft_prepare_sourcemodel(cfg)
 %
 % BASEDONCENTROIDS - places sources on the centroids of a volumetric mesh
 %   cfg.headmodel       = tetrahedral or hexahedral mesh
-%   cfg.headmodel.type  = 'simbio';
+%   cfg.headmodel.type  = 'simbio'
 %
 % Other configuration options include
-%   cfg.unit            = string, can be 'mm', 'cm', 'm' (default is automatic)
+%   cfg.unit            = string, can be 'mm', 'cm', 'm' (default is automatic, based on the input data)
 %   cfg.tight           = 'yes' or 'no' (default is automatic)
 %   cfg.inwardshift     = number, amount to shift the innermost surface of the headmodel inward when determining
 %                         whether sources are inside or outside the source compartment (default = 0)
@@ -108,7 +111,7 @@ function [sourcemodel, cfg] = ft_prepare_sourcemodel(cfg)
 % See also FT_PREPARE_LEADFIELD, FT_PREPARE_HEADMODEL, FT_SOURCEANALYSIS,
 % FT_DIPOLEFITTING, FT_MEGREALIGN
 
-% Copyright (C) 2004-2023, Robert Oostenveld
+% Copyright (C) 2004-2025, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -164,16 +167,18 @@ cfg = ft_checkconfig(cfg, 'createsubcfg', {'sourcemodel'});
 cfg = ft_checkconfig(cfg, 'createtopcfg', {'sourcemodel'});
 
 % set the defaults
-cfg.moveinward        = ft_getopt(cfg, 'moveinward'); % the default is automatic and depends on a triangulation being present
-cfg.spherify          = ft_getopt(cfg, 'spherify', 'no');
+cfg.method            = ft_getopt(cfg, 'method'); % the default is to do automatic detection further down
 cfg.headshape         = ft_getopt(cfg, 'headshape');
-cfg.symmetry          = ft_getopt(cfg, 'symmetry');
-cfg.spmversion        = ft_getopt(cfg, 'spmversion', 'spm12');
+cfg.mri               = ft_getopt(cfg, 'mri');
 cfg.headmodel         = ft_getopt(cfg, 'headmodel');
 cfg.sourcemodel       = ft_getopt(cfg, 'sourcemodel');
 cfg.unit              = ft_getopt(cfg, 'unit');
-cfg.method            = ft_getopt(cfg, 'method'); % the default is to do automatic detection further down
+cfg.symmetry          = ft_getopt(cfg, 'symmetry');
+cfg.spmversion        = ft_getopt(cfg, 'spmversion', 'spm12');
+cfg.spherify          = ft_getopt(cfg, 'spherify', 'no');
 cfg.movetocentroids   = ft_getopt(cfg, 'movetocentroids', 'no');
+cfg.moveinward        = ft_getopt(cfg, 'moveinward'); % the default is automatic and depends on a triangulation being present
+cfg.checkinside       = ft_getopt(cfg, 'checkinside', 'no'); % default is 'no' since this is a relatively slow procedure. It is also not always required, for example with MEG singlesphere, singleshell, localspheres.
 cfg.feedback          = ft_getopt(cfg, 'feedback', 'text');
 
 % this option was deprecated on 12 Aug 2020
@@ -219,7 +224,7 @@ if isempty(cfg.method)
     cfg.method = 'basedonpos'; % using user-supplied positions, which can be regular or irregular
   elseif ~isempty(cfg.headshape)
     cfg.method = 'basedonshape'; % surface mesh based on inward shifted head surface from external file
-  elseif isfield(cfg, 'mri')
+  elseif ~isempty(cfg.mri)
     cfg.method = 'basedonmri'; % regular 3D grid, based on segmented MRI, restricted to gray matter
   elseif isfield(cfg, 'headshape') && (iscell(cfg.headshape) || any(ft_filetype(cfg.headshape, {'neuromag_fif', 'freesurfer_triangle_binary', 'caret_surf', 'gifti'})))
     cfg.method = 'basedoncortex'; % cortical sheet from external software such as Caret or FreeSurfer, can also be two separate hemispheres
@@ -244,22 +249,26 @@ switch cfg.method
     cfg.tight       = ft_getopt(cfg, 'tight',   'no');
     cfg.inwardshift = ft_getopt(cfg, 'inwardshift', 0); % in this case for inside detection
 
+  case 'basedongrid'
+    fprintf('creating sourcemodel based on user-specified 3D grid\n');
+    cfg.xgrid       = ft_getopt(cfg, 'xgrid', 'auto');
+    cfg.ygrid       = ft_getopt(cfg, 'ygrid', 'auto');
+    cfg.zgrid       = ft_getopt(cfg, 'zgrid', 'auto');
+    cfg.inwardshift = ft_getopt(cfg, 'inwardshift', 0); % in this case for inside detection
+    cfg.tight       = ft_getopt(cfg, 'tight',   'yes');
+    cfg.resolution  = [];
+
   case 'basedonresolution'
-    fprintf('creating sourcemodel based on automatic 3D grid with specified resolution\n');
-    cfg.xgrid       = ft_getopt(cfg, 'xgrid',  'auto');
-    cfg.ygrid       = ft_getopt(cfg, 'ygrid',  'auto');
-    cfg.zgrid       = ft_getopt(cfg, 'zgrid',  'auto');
+    fprintf('creating sourcemodel based on automatic 3D grid with the specified resolution\n');
+    cfg.xgrid       = ft_getopt(cfg, 'xgrid', 'auto');
+    cfg.ygrid       = ft_getopt(cfg, 'ygrid', 'auto');
+    cfg.zgrid       = ft_getopt(cfg, 'zgrid', 'auto');
     cfg.inwardshift = ft_getopt(cfg, 'inwardshift', 0); % in this case for inside detection
     if istrue(cfg.movetocentroids)
       cfg.tight     = ft_getopt(cfg, 'tight',   'no');
     else
       cfg.tight     = ft_getopt(cfg, 'tight',   'yes');
     end
-
-  case 'basedongrid'
-    fprintf('creating sourcemodel based on user-specified 3D grid\n');
-    cfg.inwardshift = ft_getopt(cfg, 'inwardshift', 0); % in this case for inside detection
-    cfg.tight       = ft_getopt(cfg, 'tight',   'yes');
 
   case 'basedonpos'
     fprintf('creating sourcemodel based on user specified dipole positions\n');
@@ -289,12 +298,12 @@ switch cfg.method
     cfg.tight       = ft_getopt(cfg, 'tight',      'no');
 
   case 'basedonmni'
-    cfg.tight       = ft_getopt(cfg.sourcemodel, 'tight',       'no');
-    cfg.nonlinear   = ft_getopt(cfg.sourcemodel, 'nonlinear',   'no');
+    cfg.tight       = ft_getopt(cfg, 'tight',       'no');
+    cfg.nonlinear   = ft_getopt(cfg, 'nonlinear',   'no');
 
   case 'basedoncentroids'
     fprintf('creating sourcemodel based on volumetric mesh centroids\n');
-    cfg.tight       = ft_getopt(cfg.sourcemodel, 'tight',       'no');
+    cfg.tight       = ft_getopt(cfg, 'tight',       'no');
     cfg.inwardshift = ft_getopt(cfg, 'inwardshift', 0); % in this case for inside detection
 end
 
@@ -307,11 +316,25 @@ end
 sourcemodel = [];
 
 % get the volume conduction model
-if ischar(cfg.headmodel)
+if ~isempty(cfg.headmodel) && ischar(cfg.headmodel)
   headmodel = ft_read_headmodel(cfg.headmodel);
 else
   % ensure that the volume conduction model is up-to-date
   headmodel = ft_datatype_headmodel(cfg.headmodel);
+end
+
+% get the headshape, this can also be a cortical sheet, or a set of left and right cortical sheets
+if ~isempty(cfg.headshape) && ischar(cfg.headshape)
+  headshape = ft_read_headshape(cfg.headshape);
+else
+  headshape = cfg.headshape;
+end
+
+% get the anatomical MRI or segmentation
+if ~isempty(cfg.mri) && ischar(cfg.mri)
+  mri = ft_read_mri(cfg.mri);
+else
+  mri = cfg.mri;
 end
 
 % get the gradiometer or electrode definition
@@ -341,6 +364,9 @@ if isempty(cfg.unit)
   elseif strcmp(cfg.method, 'basedonmni') && ~isempty(cfg.mri.unit)
     % take the existing MRI units
     cfg.unit = cfg.mri.unit;
+  elseif strcmp(cfg.method, 'basedonmri') && ~isempty(cfg.mri.unit)
+    % take the existing MRI units
+    cfg.unit = cfg.mri.unit;
   elseif ~isempty(sens)
     % take the units from the gradiometer or electrode array
     cfg.unit = sens.unit;
@@ -351,6 +377,17 @@ if isempty(cfg.unit)
     ft_warning('assuming "cm" as default units for source model');
     cfg.unit = 'cm';
   end
+  ft_warning('assuming that the sourcemodel units are in %s', cfg.unit);
+end
+
+% convert the volume conduction model to the desired units for the source model
+if ~isempty(headmodel)
+  headmodel = ft_convert_units(headmodel, cfg.unit);
+end
+
+% convert the headshape to the desired units for the source model
+if ~isempty(headshape)
+  headshape = ft_convert_units(headshape, cfg.unit);
 end
 
 % convert the sensor array to the desired units for the source model
@@ -358,17 +395,32 @@ if ~isempty(sens)
   sens = ft_convert_units(sens, cfg.unit);
 end
 
-% convert the head model to the desired units for the source model
-if ~isempty(headmodel)
-  headmodel = ft_convert_units(headmodel, cfg.unit);
+if ~isempty(mri)
+  % convert the mri to the desired units for the source model
+  mri = ft_convert_units(mri, cfg.unit);
 end
 
 switch cfg.method
+  case 'basedongrid'
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % a detailed xgrid/ygrid/zgrid has been specified, the other details
+    % still need to be determined
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    if ischar(cfg.xgrid) || ischar(cfg.ygrid) || ischar(cfg.zgrid)
+      % th especification 'auto' is not allowed here
+      ft_error('you must specify explicit values for xgrid/ygrid/zgrid')
+    end
+    sourcemodel.dim   = [length(cfg.xgrid) length(cfg.ygrid) length(cfg.zgrid)];
+    [X, Y, Z]  = ndgrid(cfg.xgrid, cfg.ygrid, cfg.zgrid);
+    sourcemodel.pos   = [X(:) Y(:) Z(:)];
+    sourcemodel.unit  = cfg.unit;
+
   case 'basedonresolution'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % construct a regular 3D grid that spans a box encompassing all electrode
-    % or gradiometer coils, this will typically also cover the complete brain
+    % construct a regular 3D grid that spans a box encompassing the complete brain
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    fprintf('creating 3D grid with %g %s resolution\n', cfg.resolution, cfg.unit);
+
     if ~isempty(sens) && isfield(sens, 'chanpos')
       % determine the bounding box of the sensor array
       minpos = min(sens.chanpos,[],1);
@@ -401,30 +453,43 @@ switch cfg.method
       maxpos(maxpos>0) = maxpos(maxpos>0).*1.08;
       minpos(minpos>0) = minpos(minpos>0).*0.92;
       maxpos(maxpos<0) = maxpos(maxpos<0).*0.92;
+    elseif ~isempty(headshape)
+      % determine the bounding box of the headshape
+      minpos = min(headshape.pos,[],1);
+      maxpos = max(headshape.pos,[],1);
+      % add a few percent on either side
+      minpos(minpos<0) = minpos(minpos<0).*1.08;
+      maxpos(maxpos>0) = maxpos(maxpos>0).*1.08;
+      minpos(minpos>0) = minpos(minpos>0).*0.92;
+      maxpos(maxpos<0) = maxpos(maxpos<0).*0.92;
     else
-      ft_error('creating a 3D grid based on resolution requires either sensor positions or a headmodel to estimate the extent');
+      ft_error('creating an automatic 3D grid requires either the sensor positions, a headmodel, or a headshape to estimate the extent');
     end
 
-    fprintf('creating 3D grid with %g %s resolution\n', cfg.resolution, cfg.unit);
-
-    if isempty(cfg.symmetry)
+    if isempty(cfg.symmetry) || ~istrue(cfg.symmetry)
       % round the limits such that [0 0 0] will be on the grid
       minpos = floor(minpos/cfg.resolution)*cfg.resolution;
-      maxpos = ceil(maxpos/cfg.resolution)*cfg.resolution;
+      maxpos = ceil( maxpos/cfg.resolution)*cfg.resolution;
     else
       % round the limits such that the grid will be symmetric around [0 0 0]
       minpos = floor((minpos+cfg.resolution/2)/cfg.resolution)*cfg.resolution - cfg.resolution/2;
-      maxpos = ceil((maxpos+cfg.resolution/2)/cfg.resolution)*cfg.resolution - cfg.resolution/2;
+      maxpos = ceil( (maxpos+cfg.resolution/2)/cfg.resolution)*cfg.resolution - cfg.resolution/2;
     end
 
     if ischar(cfg.xgrid) && strcmp(cfg.xgrid, 'auto')
       xgrid = minpos(1):cfg.resolution:maxpos(1);
+    else
+      xgrid = cfg.xgrid(1):cfg.resolution:cfg.xgrid(end);
     end
     if ischar(cfg.ygrid) && strcmp(cfg.ygrid, 'auto')
       ygrid = minpos(2):cfg.resolution:maxpos(2);
+    else
+      ygrid = cfg.ygrid(1):cfg.resolution:cfg.ygrid(end);
     end
     if ischar(cfg.zgrid) && strcmp(cfg.zgrid, 'auto')
       zgrid = minpos(3):cfg.resolution:maxpos(3);
+    else
+      zgrid = cfg.zgrid(1):cfg.resolution:cfg.zgrid(end);
     end
     sourcemodel.dim   = [length(xgrid) length(ygrid) length(zgrid)];
     [X, Y, Z]  = ndgrid(xgrid, ygrid, zgrid);
@@ -432,39 +497,18 @@ switch cfg.method
     sourcemodel.unit  = cfg.unit;
     fprintf('initial 3D grid dimensions are [%d %d %d]\n', sourcemodel.dim(1), sourcemodel.dim(2), sourcemodel.dim(3));
 
-  case 'basedongrid'
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % a detailed xgrid/ygrid/zgrid has been specified, the other details
-    % still need to be determined
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    sourcemodel.dim   = [length(cfg.xgrid) length(cfg.ygrid) length(cfg.zgrid)];
-    [X, Y, Z]  = ndgrid(cfg.xgrid, cfg.ygrid, cfg.zgrid);
-    sourcemodel.pos   = [X(:) Y(:) Z(:)];
-    sourcemodel.unit  = cfg.unit;
-
   case 'basedonpos'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % source positions are already specified in the configuration, reuse as much of the
     % prespecified model as possible (but only known objects)
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    sourcemodel = keepfields(cfg.sourcemodel, {'pos', 'unit', 'xgrid', 'ygrid', 'zgrid', 'mom', 'tri', 'dim', 'transform', 'inside', 'lbex', 'subspace', 'leadfield', 'filter', 'label', 'leadfielddimord'});
+    sourcemodel = keepfields(cfg.sourcemodel, {'pos', 'tri', 'dim', 'transform', 'unit', 'coordsys', 'xgrid', 'ygrid', 'zgrid', 'mom', 'inside', 'lbex', 'subspace', 'leadfield', 'leadfielddimord', 'filter', 'filterdimord', 'label'});
 
   case 'basedonmri'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % construct a grid based on the segmented MRI that is provided in the
     % configuration, only voxels in gray matter will be used
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-    if ischar(cfg.mri)
-      mri = ft_read_mri(cfg.mri);
-    else
-      mri = cfg.mri;
-    end
-
-    % ensure the mri to have units
-    if ~isfield(mri, 'unit')
-      mri = ft_determine_units(mri);
-    end
 
     if ~isfield(cfg, 'resolution')
       switch cfg.unit
@@ -481,8 +525,7 @@ switch cfg.method
 
     issegmentation = false;
     if isfield(mri, 'gray')
-      % this is not a boolean segmentation, but based on tissue probability
-      % maps, being the original implementation here.
+      % this is based on tissue probability maps, being the original implementation here.
       dat = double(mri.gray);
 
       % apply a smoothing of a certain amount of voxels
@@ -491,9 +534,8 @@ switch cfg.method
       end
 
     elseif isfield(mri, 'anatomy')
-      % this could be a tpm stored on disk, i.e. the result of
-      % ft_volumesegment. Reading it in always leads to the field 'anatomy'.
-      % Note this could be any anatomical mask
+      % this could be an anatomical MRI but also a segmentation or tpm stored as a
+      % NIFTI file, reading it from disk always leads to the field 'anatomy'.
       dat = double(mri.anatomy);
 
       % apply a smoothing of a certain amount of voxels
@@ -529,25 +571,32 @@ switch cfg.method
     fprintf('thresholding MRI data at a relative value of %f\n', cfg.threshold);
     head = dat./max(dat(:)) > cfg.threshold;
 
-    % convert the source/functional data into the same units as the anatomical MRI
-    scale = ft_scalingfactor(cfg.unit, mri.unit);
-
     ind                 = find(head(:));
     fprintf('%d from %d voxels in the segmentation are marked as ''inside'' (%.0f%%)\n', length(ind), numel(head), 100*length(ind)/numel(head));
     [X,Y,Z]             = ndgrid(1:mri.dim(1), 1:mri.dim(2), 1:mri.dim(3));             % create the grid in MRI-coordinates
     posmri              = [X(ind) Y(ind) Z(ind)];                                       % take only the inside voxels
     poshead             = ft_warp_apply(mri.transform, posmri);                         % transform to head coordinates
-    resolution          = cfg.resolution*scale;                                         % source and mri can be expressed in different units (e.g. cm and mm)
-    xgrid               = floor(min(poshead(:,1))):resolution:ceil(max(poshead(:,1)));  % create the grid in head-coordinates
-    ygrid               = floor(min(poshead(:,2))):resolution:ceil(max(poshead(:,2)));  % with 'consistent' x,y,z definitions
-    zgrid               = floor(min(poshead(:,3))):resolution:ceil(max(poshead(:,3)));
+    resolution          = cfg.resolution;                                               % source and mri are expressed in the same units
+    
+    % determine the size of a bounding box, round it off to the nearest mm
+    scale = ft_scalingfactor(cfg.unit, 'mm');
+    xmin = floor(min(scale*poshead(:,1)))/scale;
+    xmax = ceil (max(scale*poshead(:,1)))/scale;
+    ymin = floor(min(scale*poshead(:,2)))/scale;
+    ymax = ceil (max(scale*poshead(:,2)))/scale;
+    zmin = floor(min(scale*poshead(:,3)))/scale;
+    zmax = ceil (max(scale*poshead(:,3)))/scale;
+
+    xgrid               = xmin:resolution:xmax;  % create the grid in head-coordinates
+    ygrid               = ymin:resolution:ymax;  % with consistent x,y,z definitions
+    zgrid               = zmin:resolution:zmax;
     [X,Y,Z]             = ndgrid(xgrid,ygrid,zgrid);
     pos2head            = [X(:) Y(:) Z(:)];
     pos2mri             = ft_warp_apply(inv(mri.transform), pos2head);                  % transform to MRI voxel coordinates
     pos2mri             = round(pos2mri);
     inside              = getinside(pos2mri, head);                                     % use helper subfunction
 
-    sourcemodel.pos     = pos2head/scale;                                               % convert to source units
+    sourcemodel.pos     = pos2head;
     sourcemodel.dim     = [length(xgrid) length(ygrid) length(zgrid)];
     sourcemodel.inside  = inside(:);
     sourcemodel.unit    = cfg.unit;
@@ -568,16 +617,12 @@ switch cfg.method
 
   case 'basedoncortex'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % read it from a *.fif file that was created using Freesurfer and MNE
+    % read the headshape from a *.fif file that was created using Freesurfer and MNE
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % this will loop over files in case of two hemispheres
-    shape = ft_read_headshape(cfg.headshape);
-    % ensure that the headshape is in the same units as the source
-    shape = ft_convert_units(shape, cfg.unit);
     % return the vertices and triangles from the cortical sheet
-    sourcemodel.pos  = shape.pos;
-    sourcemodel.tri  = shape.tri;
-    sourcemodel.unit = shape.unit;
+    sourcemodel.pos  = headshape.pos;
+    sourcemodel.tri  = headshape.tri;
+    sourcemodel.unit = headshape.unit;
 
   case 'basedonshape'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -629,13 +674,6 @@ switch cfg.method
     % if not create it: FIXME (this needs to be done still)
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    % get the mri
-    if ischar(cfg.mri)
-      mri = ft_read_mri(cfg.mri);
-    else
-      mri = cfg.mri;
-    end
-
     % get the template grid
     if ischar(fname)
       mnigrid = loadvar(fname, 'sourcemodel');
@@ -643,7 +681,7 @@ switch cfg.method
       mnigrid = cfg.template;
     end
 
-    % ensure these to have units in mm, the conversion of the source model is done further down
+    % ensure these to have units in mm, the conversion of the source model into the desired units is done further down
     mri     = ft_convert_units(mri,     'mm');
     mnigrid = ft_convert_units(mnigrid, 'mm');
 
@@ -651,7 +689,7 @@ switch cfg.method
     mnigrid = fixinside(mnigrid);
 
     % spatial normalisation of the MRI to the template
-    tmpcfg           = keepfields(cfg, {'spmversion', 'spmmethod', 'nonlinear'});
+    tmpcfg = keepfields(cfg, {'spmversion', 'spmmethod', 'nonlinear'});
     if isfield(cfg, 'templatemri')
       % this option is called differently for the two functions
       tmpcfg.template = cfg.templatemri;
@@ -730,11 +768,48 @@ if ~isempty(cfg.moveinward)
   end
 end % if moveinward
 
+if isfield(sourcemodel, 'inside') && isfield(cfg, 'inwardshift') && isfield(cfg, 'template')
+  % warn about inwardshift not having an effect as inside is already specified as well
+  % warning should only be issued for templates, inwardshift can also be present for surface meshes
+  ft_warning('Inside dipole locations already determined by a template, cfg.inwardshift has no effect.')
+end
+
+% determine the dipole locations that are inside the source compartment of the
+% volume conduction model, i.e. inside the brain
+if ~isfield(sourcemodel, 'inside')
+  if isfield(sourcemodel, 'tissue') && isfield(sourcemodel, 'tissuelabel')
+    % this applies when basedoncentroids or movetocentroids
+    % select only the gray matter or brain tissues
+    brain = find(ismember(headmodel.tissuelabel, {'gm', 'gray', 'grey', 'brain'}));
+    sourcemodel.inside = ismember(sourcemodel.tissue, brain);
+  else
+    % this returns a boolean vector
+    sourcemodel.inside = ft_inside_headmodel(sourcemodel.pos, headmodel, 'grad', sens, 'headshape', cfg.headshape, 'inwardshift', cfg.inwardshift);
+  end
+end % if inside
+
 if strcmp(cfg.movetocentroids, 'yes')
+  % moving outside grid points to the FEM centroids does not make sense
+  % continue with only the inside positions
+  sourcemodel.pos = sourcemodel.pos(sourcemodel.inside, :);
+  if isfield(sourcemodel, 'tissue')
+    sourcemodel.tissue = sourcemodel.tissue(sourcemodel.inside);
+  end
+  % all remaining positions are inside
+  sourcemodel.inside = sourcemodel.inside(sourcemodel.inside);
+  if isfield(sourcemodel, 'dim')
+    sourcemodel = rmfield(sourcemodel, 'dim');
+  end
+
   % compute centroids of the tetrahedral or hexahedral mesh
   centroids = compute_centroids(headmodel);
 
   % move the dipole positions in the sourcemodel to the closest centroid
+  if ~startsWith(which('knnsearch'), matlabroot)
+    ft_warning('the knnsearch function in the MATLAB stats toolbox is much faster than the one in fieldtrip/external/stats, see https://www.fieldtriptoolbox.org/faq/matlab/toolboxes_legacyvsexternal/')
+    ft_notice('this may take some time ...');
+  end
+
   indx = knnsearch(centroids.pos, sourcemodel.pos);
   sourcemodel.pos = centroids.pos(indx,:);
 
@@ -744,7 +819,7 @@ if strcmp(cfg.movetocentroids, 'yes')
     sourcemodel.tissuelabel = centroids.tissuelabel;
   end
 
-  % these fields can be copied over from the headmodel 
+  % these fields can be copied over from the headmodel
   sourcemodel = copyfields(centroids, sourcemodel, {'coordsys', 'unit'});
 
   % eliminate duplicate positions, this applies for example if cfg.resolution is smaller than the mesh resolution
@@ -757,26 +832,6 @@ if strcmp(cfg.movetocentroids, 'yes')
   % the shifted positions are not on a regular 3D grid any more, hence dim does not apply
   sourcemodel = removefields(sourcemodel, {'dim'});
 end % if movetocentroids
-
-if isfield(sourcemodel, 'inside') && isfield(cfg, 'inwardshift') && isfield(cfg, 'template')
-  % warn about inwardshift not having an effect as inside is already specified as well
-  % warning should only be issued for templates, inwardshift can also be present for surface meshes
-  ft_warning('Inside dipole locations already determined by a template, cfg.inwardshift has no effect.')
-end
-
-% determine the dipole locations that are inside the source compartment of the
-% volume conduction model, i.e. inside the brain
-if ~isfield(sourcemodel, 'inside')
-  if isfield(sourcemodel, 'tissue') && isfield(sourcemodel, 'tissuelabel')
-    % this applies when basedoncentroids or movetocentroids
-    % find the dipoles in the cortical or brain tissues
-    cortex = find(ismember(headmodel.tissuelabel, {'gm', 'gray', 'brain'}));
-    sourcemodel.inside = ismember(sourcemodel.tissue, cortex);
-  else
-    % this returns a boolean vector
-    sourcemodel.inside = ft_inside_headmodel(sourcemodel.pos, headmodel, 'grad', sens, 'headshape', cfg.headshape, 'inwardshift', cfg.inwardshift);
-  end
-end % if inside
 
 if strcmp(cfg.tight, 'yes')
   if ~isfield(sourcemodel, 'dim')
@@ -804,6 +859,10 @@ if strcmp(cfg.tight, 'yes')
 end % if tight
 
 fprintf('%d dipoles inside, %d dipoles outside brain\n', sum(sourcemodel.inside), sum(~sourcemodel.inside));
+
+if istrue(cfg.checkinside) && ~any(sourcemodel.inside)
+  ft_error('there are no dipoles inside the volume conductor')
+end
 
 % apply the symmetry constraint, i.e. add a symmetric dipole for each location that was defined sofar
 if ~isempty(cfg.symmetry)
@@ -886,17 +945,17 @@ function centr = compute_centroids(headmodel)
 % some of the fields can be copied over, fields that are specified but not present will be silently ignored
 centr = keepfields(headmodel, {'tissue', 'tissuelabel', 'unit', 'coordsys'});
 
-% the FEM model should have tetraheders or hexaheders
+% the FEM model should have tetrahedrons or hexahedrons
 if isfield(headmodel, 'tet')
   numtet = size(headmodel.tet, 1);
-  fprintf('computing centroids for %d tetraheders\n', numtet);
-  % compute the mean of the 4 corner points of the tetraheders
+  fprintf('computing centroids for %d tetrahedrons\n', numtet);
+  % compute the mean of the 4 corner points of the tetrahedrons
   centr.pos = squeeze(mean(reshape(headmodel.pos(headmodel.tet,:), numtet, 4, 3), 2));
 elseif isfield(headmodel, 'hex')
   numhex = size(headmodel.hex, 1);
-  fprintf('computing centroids for %d hexaheders\n', numhex);
-  % compute the mean of the 8 corner points of the hexaheders
+  fprintf('computing centroids for %d hexahedrons\n', numhex);
+  % compute the mean of the 8 corner points of the hexahedrons
   centr.pos = squeeze(mean(reshape(headmodel.pos(headmodel.hex,:), numhex, 8, 3), 2));
 else
-  ft_error('the headmodel does not contain tetraheders or hexaheders');
+  ft_error('the headmodel does not contain tetrahedrons or hexahedrons');
 end

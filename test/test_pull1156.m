@@ -1,17 +1,18 @@
 function test_pull1156
 
 % WALLTIME 00:20:00
-% MEM 3gb
+% MEM 1gb
 % DEPENDENCY write_edf read_edf
+% DATA no
 
 %%
 
 filename = {
-  '/home/common/matlab/fieldtrip/data/test/original/eeg/edf/0601_s.edf'
-  '/home/common/matlab/fieldtrip/data/test/original/eeg/edf/shhs1-200001.edf'
-  '/home/common/matlab/fieldtrip/data/test/original/eeg/nicolet/Patient59_EEG-OPPTAKER-1_t1-EDF.edf'
-  '/home/common/matlab/fieldtrip/data/test/original/eeg/nicolet/Patient59_EEG-OPPTAKER-1_t1-EDFPLUS.edf'
-  '/home/common/matlab/fieldtrip/data/test/original/eeg/edf/RecordSession_2017.09.07_20.41.53.edf'
+  '/project/3031000.02/test/original/eeg/edf/0601_s.edf'
+  '/project/3031000.02/test/original/eeg/edf/shhs1-200001.edf'
+  '/project/3031000.02/test/original/eeg/nicolet/Patient59_EEG-OPPTAKER-1_t1-EDF.edf'
+  '/project/3031000.02/test/original/eeg/nicolet/Patient59_EEG-OPPTAKER-1_t1-EDFPLUS.edf'
+  '/project/3031000.02/test/original/eeg/edf/RecordSession_2017.09.07_20.41.53.edf'
   };
 
 headerfields = {

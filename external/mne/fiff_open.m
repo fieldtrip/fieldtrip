@@ -36,18 +36,27 @@ function [fid, tree, dir] = fiff_open(fname)
 %   Added fiff reading routines
 %
 
-global FIFF;
+persistent FIFF previous_tree previous_dir previous_fname
+
+if isequal(previous_fname, fname)
+  % the previous file name is the same as the current one, just open the file
+  fid  = fopen(fname,'rb','ieee-be');
+  tree = previous_tree;
+  dir  = previous_dir;
+  return;
+end
+
 if isempty(FIFF)
     FIFF = fiff_define_constants();
 end
 
-me='MNE:fiff_open';
-verbose=false;
+me = 'MNE:fiff_open';
+verbose = false;
 fid = fopen(fname,'rb','ieee-be');
 
-if (fid < 0)
+if fid < 0
     error(me,'Cannot open file %s', fname);
-end;
+end
 %
 %   Check that this looks like a fif file
 %
@@ -104,4 +113,10 @@ end
 %   Back to the beginning
 %
 fseek(fid,0,'bof');
-return;
+
+% keep track of some things
+previous_tree  = tree;
+previous_dir   = dir;
+previous_fname = fname;
+
+return

@@ -8,43 +8,60 @@ function segmentation = convert_segmentationstyle(segmentation, fn, dim, style)
 
 switch style
   case 'indexed'
-    
     % convert the probabilistic representation to an indexed representation
-    threshold   = 0.5;
-    tissue      = zeros(dim);
-    tissuelabel = cell(1,numel(fn));
     
+    alltissue = zeros(prod(dim), length(fn));
     for i=1:length(fn)
-      tmp = segmentation.(fn{i})>threshold;
-      if any(tissue(tmp(:)))
-        ft_error('overlapping tissue probability maps cannot be converted to an indexed representation');
-        % FIXME in principle it is possible to represent two tissue types at one voxel
-      else
-        tissue(tmp) = i;
-        tissuelabel{i} = fn{i};
-      end
-    end
+      alltissue(:,i) = reshape(segmentation.(fn{i}), prod(dim), 1);
+    end % for each field
+
+    % for each voxel take the most likely tissue
+    [val, tissue] = max(alltissue, [], 2);
+    tissue(val==0) = 0;
+    
     segmentation             = rmfield(segmentation, fn);
-    segmentation.tissue      = tissue;
-    segmentation.tissuelabel = tissuelabel;
+    segmentation.tissue      = reshape(tissue, dim);
+    segmentation.tissuelabel = fn;
+    
+%     threshold   = 0.5;
+%     tissue      = zeros(dim);
+%     tissuelabel = cell(1,numel(fn));
+%     
+%     for i=1:length(fn)
+%       tmp = segmentation.(fn{i})>threshold;
+%       if any(tissue(tmp(:)))
+%         ft_error('overlapping tissue probability maps cannot be converted to an indexed representation');
+%         % FIXME in principle it is possible to represent two tissue types at one voxel
+%       else
+%         tissue(tmp) = i;
+%         tissuelabel{i} = fn{i};
+%       end
+%     end
+%     segmentation             = rmfield(segmentation, fn);
+%     segmentation.tissue      = tissue;
+%     segmentation.tissuelabel = tissuelabel;
     
   case 'probabilistic'
     % convert the indexed representation to a probabilistic one
+
     for i=1:length(fn)
       fprintf('converting %s\n', fn{i});
       tissue      = segmentation.(fn{i});
       tissuelabel = segmentation.([fn{i} 'label']);
+      
       for j=i:length(tissuelabel)
         fprintf('creating probabilistic representation for %s\n', tissuelabel{j});
         tmp.(fixname(tissuelabel{j})) = (tissue==j);  % avoid overwriting the existing segmentation
-      end % for j
+      end % for each tissuelabel
+
       segmentation = rmfield(segmentation,  fn{i}         );
       segmentation = rmfield(segmentation, [fn{i} 'label']);
       for j=i:length(tissuelabel)
         segmentation.(fixname(tissuelabel{j})) = tmp.(fixname(tissuelabel{j})); % avoid overwriting the existing segmentation
       end
-    end % for i
+    end % for each field
     
   otherwise
     ft_error('unsupported style "%s"', style);
-end
+
+end % switch style

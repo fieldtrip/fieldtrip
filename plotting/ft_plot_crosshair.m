@@ -1,7 +1,7 @@
 function h = ft_plot_crosshair(pos, varargin)
 
 % FT_PLOT_CROSSHAIR plots a crosshair at a specified position in two [x, y] or three
-% [x, y, z] dimensions. 
+% [x, y, z] dimensions.
 %
 % Use as
 %   h = ft_plot_crosshair(pos, ...)
@@ -10,13 +10,13 @@ function h = ft_plot_crosshair(pos, varargin)
 %
 % Optional input arguments should be specified in key-value pairs and can include
 %   'color'    = [r g b] value or string, see PLOT
-%   'parent'   = handle of the parent axes
+%   'parent'   = handle which is set as the parent for the plotted elements (default = [])
 %   'handle'   = handle of the existing line objects to be updated
-% 
+%
 % You can specify the handles of existing line objects which will be then updated,
 % rather than creating a new set of lines. If both parent and handle ar specified,
 % the handle option prevail.
-% 
+%
 % Example
 %   ft_plot_crosshair([0.5 0.5], 'color', 'r')
 %
@@ -59,10 +59,8 @@ end
 
 % color management
 if ~isempty(color)
-  if ischar(color) && exist([color '.m'], 'file')
-    color = eval(color);
-  elseif ischar(color) && ismember(color, htmlcolors)
-    color = htmlcolors(color);
+  if ischar(color)
+    color = colorspec2rgb(color);
   end
   varargin = ft_setopt(varargin, 'color', color);
 end

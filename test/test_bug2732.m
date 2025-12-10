@@ -3,6 +3,7 @@ function test_bug2732
 % WALLTIME 00:10:00
 % MEM 1gb
 % DEPENDENCY
+% DATA no
 
 nchan = 16;
 ntime = 1000;

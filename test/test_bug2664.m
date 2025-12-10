@@ -1,8 +1,9 @@
 function test_bug2664
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_sourceanalysis ft_checkdata
+% DATA no
 
 %% create some data
 data = [];

@@ -1,4 +1,4 @@
-function flag=deletemeshfile(fname)
+function flag = deletemeshfile(fname)
 %
 % flag=deletemeshfile(fname)
 %
@@ -6,7 +6,7 @@ function flag=deletemeshfile(fname)
 %
 % author: Qianqian Fang, <q.fang at neu.edu>
 %
-% input: 
+% input:
 %     fname: specified file name (without path)
 %
 % output:
@@ -16,15 +16,14 @@ function flag=deletemeshfile(fname)
 %
 
 try
-    if(exist(fname)) 
-	delete(fname); 
+    if (~isempty(dir(fname)))
+        delete(fname);
     end
 catch
-    error(['You do not have permission to delete temporary files. If you are working in a multi-user ',...
-         'environment, such as Unix/Linux and there are other users using iso2mesh, ',...
-         'you may need to define ISO2MESH_SESSION=''yourstring'' to make your output ',...
-         'files different from others; if you do not have permission to ',mwpath(''),...
-         ' as the temporary directory, you have to define ISO2MESH_TEMP=''/path/you/have/write/permission'' ',...
-         'in matlab/octave base workspace.']);
+    error(['You do not have permission to delete temporary files. If you are working in a multi-user ', ...
+           'environment, such as Unix/Linux and there are other users using iso2mesh, ', ...
+           'you may need to define ISO2MESH_SESSION=''yourstring'' to make your output ', ...
+           'files different from others; if you do not have permission to ', mwpath(''), ...
+           ' as the temporary directory, you have to define ISO2MESH_TEMP=''/path/you/have/write/permission'' ', ...
+           'in matlab/octave base workspace.']);
 end
-

@@ -1,14 +1,15 @@
 function test_old_ft_topoplotTFR
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:20:00
 
 % DEPENDENCY_FT_TOPOPLOTTFR
+% DATA private
 % This script tests the ft_topoplotTFR function and should display a figure
 % with the ctf275 layout showing power decreases at the parietal lobes
 
 % load time-frequency data
-datadir = dccnpath('/home/common/matlab/fieldtrip/data/test/');
+datadir = dccnpath('/project/3031000.02/test/');
 fprintf('loading data\n');
 %load observe_comm_moves_freqmtmconvol.mat
 load(fullfile(datadir,'observe_comm_moves_freqmtmconvol.mat'));

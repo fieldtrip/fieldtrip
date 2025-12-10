@@ -1,8 +1,9 @@
 function test_ft_channelrepair
 
-% MEM 3gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_channelrepair ft_datatype_sens fixsens ft_prepare_neighbours
+% DATA private
 
 datainfo = ref_datasets;
 
@@ -26,19 +27,19 @@ newdata = ft_channelrepair(cfg, data);
 % now, also check whether an absent sensor array description works, as per
 % issue 1774 it doesn't
 try
-  newdata = ft_channelrepair(cfg, removefields(data, {'elec', 'grad'}));
+  newdata = ft_channelrepair(cfg, removefields(data, {'elec', 'grad', 'opto'}));
 catch
   fprintf('running a ''weighted'' interpolation without sensor info does not work\n');
 end
 cfg.method = 'average';
-newdata = ft_channelrepair(cfg, removefields(data, {'elec', 'grad'}));
+newdata = ft_channelrepair(cfg, removefields(data, {'elec', 'grad', 'opto'}));
 
 % rumour has it, that this should work: it indeed did at some point, but
 % shouldn't work. This has been changed by an explicit call to
 % ft_checkconfig
 % cfg.method = 'weighted';
 % cfg.layout = '4D248_helmet.mat';
-% newdata   = ft_channelrepair(cfg, removefields(data, {'elec', 'grad'}));
+% newdata   = ft_channelrepair(cfg, removefields(data, {'elec', 'grad', 'opto'}));
 
 % % do the EEG processing: this does not work, because there's no example EEG data
 % with sensor positions 
@@ -59,7 +60,7 @@ newdata = ft_channelrepair(cfg, removefields(data, {'elec', 'grad'}));
 %% part 2 - missing channels and EEG data
 % make use of bug941 data
 % load data
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug941.mat'));
+load(dccnpath('/project/3031000.02/test/bug941.mat'));
 
 % treat as a bad channel
 data_eeg_clean.elec = elec_new;
@@ -178,7 +179,7 @@ end
 
 %% use the new 'average' method
 % load data
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug941.mat'));
+load(dccnpath('/project/3031000.02/test/bug941.mat'));
 
 % treat as a bad channel
 data_eeg_clean.elec = elec_new;
@@ -224,4 +225,54 @@ for tr=1:numel(data_eeg_interp.trial)
     fprintf('trial %i is fine\n', tr);
   end
 end
+
+%% part 4 - deal with bad channels that are neighbours of each other
+
+data_bad = [];
+data_bad.label = {'1', '2', '3', '4'};
+data_bad.trial{1} = zeros(4,1000);
+data_bad.trial{1}(1,:) = 1;
+data_bad.trial{1}(2,:) = nan;  % bad channel
+data_bad.trial{1}(3,:) = nan;  % bad channel
+data_bad.trial{1}(4,:) = 4;
+data_bad.time{1} = (1:1000)/1000;
+
+cfg = [];
+cfg.trials = 1;
+cfg.badchannel = []; % the nans will be auto-detected as bad
+cfg.method = 'average';
+
+cfg.neighbours(1).label = '1';
+cfg.neighbours(1).neighblabel = {'1', '2', '3', '4'};
+cfg.neighbours(2).label = '2';
+cfg.neighbours(2).neighblabel = {'1', '2', '3', '4'};
+cfg.neighbours(3).label = '3';
+cfg.neighbours(3).neighblabel = {'1', '2', '3', '4'};
+cfg.neighbours(4).label = '4';
+cfg.neighbours(4).neighblabel = {'1', '2', '3', '4'};
+
+data_repaired = ft_channelrepair(cfg, data_bad);
+
+% this is how it was before, the result is not what you would expect because the bad channels are neighbours of each other
+%
+% data_repaired.trial{1}(:,1)
+% ans =
+%      1
+%      0
+%      0
+%      4
+
+% this is how it is after updating the code such that bad channels are removed from the neighbours
+%
+% data_repaired.trial{1}(:,1)
+% ans =
+%     1.0000
+%     2.5000
+%     2.5000
+%     4.0000
+
+assert(data_repaired.trial{1}(1)==1)
+assert(data_repaired.trial{1}(2)==2.5)
+assert(data_repaired.trial{1}(3)==2.5)
+assert(data_repaired.trial{1}(4)==4)
 

@@ -1,12 +1,13 @@
 function test_issue1161
 
 % WALLTIME 00:10:00
-% MEM 2gb
+% MEM 1gb
 % DEPENDENCY snirf
+% DATA private
 
 %%
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/original/nirs/snirf'));
+cd(dccnpath('/project/3031000.02/test/original/nirs/snirf'));
 
 filename = {
   'SNIRF_example.snirf'

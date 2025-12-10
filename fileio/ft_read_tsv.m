@@ -5,9 +5,9 @@ function tsv = ft_read_tsv(filename)
 % Use as
 %   tsv = ft_read_tsv(filename)
 %
-% See also FT_WRITE_TSV, FT_READ_JSON, FT_WRITE_JSON, READTABLE, WRITETABLE
+% See also FT_WRITE_TSV, FT_READ_JSON, FT_WRITE_JSON, READTABLE, WRITETABLE, TDFREAD, TBLREAD
 
-% Copyright (C) 2018-2021, Robert Oostenveld
+% Copyright (C) 2018-2024, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.

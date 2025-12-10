@@ -1,8 +1,9 @@
 function test_bug3235
 
-% MEM 5gb
+% MEM 4gb
 % WALLTIME 00:20:00
 % DEPENDENCY ft_volumereslice ft_sourceplot volumepermute volumeflip
+% DATA private
 
 %%
 
@@ -82,7 +83,7 @@ ft_sourceplot(cfg, resliced);
 % Arjen reported that with subject IR32 it fails
 % it is a 512?666?85 CT scan, which is ~30 degrees tilted forward and which has very unisotropic voxels
 
-filename = dccnpath('/home/common/matlab/fieldtrip/data/test/bug3235/IR32_CT_coreg.nii');
+filename = dccnpath('/project/3031000.02/test/bug3235/IR32_CT_coreg.nii');
 
 ct = ft_read_mri(filename);
 

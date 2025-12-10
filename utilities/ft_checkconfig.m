@@ -92,6 +92,12 @@ else
   pedantic = false;
 end
 
+if isfield(cfg, 'checkstring')
+  checkstring = cfg.checkstring;
+else
+  checkstring = 'no';
+end
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % rename old to new options, give warning
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -278,6 +284,7 @@ if ~isempty(createtopcfg)
           'tight'
           'warpmni'
           'template'
+          'nonlinear'
           };
 
       case {'dics' 'eloreta' 'harmony' 'lcmv' 'mne' 'music' 'mvl' 'pcc' 'rv' 'sam' 'sloreta'}
@@ -308,7 +315,7 @@ if ~isempty(createtopcfg)
         if silent
           % don't mention it
         elseif loose
-          ft_warning('The field cfg.%s.%s is deprecated, pleae use cfg.%s\n', subname, fieldname{i}, fieldname{i});
+          ft_warning('The field cfg.%s.%s is deprecated, please use cfg.%s\n', subname, fieldname{i}, fieldname{i});
         elseif pedantic
           ft_error('The field cfg.%s.%s is not longer supported, please use cfg.%s\n', subname, fieldname{i}, fieldname{i});
         end
@@ -321,7 +328,7 @@ if ~isempty(createtopcfg)
         if silent
           % don't mention it
         elseif loose
-          ft_warning('The field cfg.%s.%s is deprecated, pleae use cfg.%s\n', subname, fieldname{i}, fieldname{i});
+          ft_warning('The field cfg.%s.%s is deprecated, please use cfg.%s\n', subname, fieldname{i}, fieldname{i});
         elseif pedantic
           ft_error('The field cfg.%s.%s is not longer supported, please use cfg.%s\n', subname, fieldname{i}, fieldname{i});
         end
@@ -347,7 +354,7 @@ end
 % them in a separate substructure.
 %
 % This is to ensure backward compatibility of end-user scripts, FieldTrip functions
-% and documentation that do not use the nested detailled configuration but that use a
+% and documentation that do not use the nested detailed configuration but that use a
 % flat configuration.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if ~isempty(createsubcfg)
@@ -574,7 +581,7 @@ if ~isempty(createsubcfg)
         if silent
           % don't mention it
         elseif loose
-          ft_warning('The field cfg.%s is deprecated, pleae use cfg.%s.%s\n', fieldname{i}, subname, fieldname{i});
+          ft_warning('The field cfg.%s is deprecated, please use cfg.%s.%s\n', fieldname{i}, subname, fieldname{i});
         elseif pedantic
           ft_error('The field cfg.%s is not longer supported, please use cfg.%s.%s\n', fieldname{i}, subname, fieldname{i});
         end
@@ -587,7 +594,7 @@ if ~isempty(createsubcfg)
         if silent
           % don't mention it
         elseif loose
-          ft_warning('The field cfg.%s is deprecated, pleae use cfg.%s.%s\n', fieldname{i}, subname, fieldname{i});
+          ft_warning('The field cfg.%s is deprecated, please use cfg.%s.%s\n', fieldname{i}, subname, fieldname{i});
         elseif pedantic
           ft_error('The field cfg.%s is not longer supported, please use cfg.%s.%s\n', fieldname{i}, subname, fieldname{i});
         end
@@ -605,6 +612,17 @@ if ~isempty(createsubcfg)
     % copy the substructure back into the main configuration structure
     cfg.(subname) = subcfg;
   end
+end
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% checkstring, i.e. convertStringsToChar
+%
+% Converts "strings" to 'chars' if necessary.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+if istrue(checkstring)
+  cfg = checkstringfun(cfg);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -749,6 +767,48 @@ for i=1:numel(fieldsorig)
     end
   end % for numel(cfg)
 end % for each of the fieldsorig
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function [cfg] = checkstringfun(cfg)
+
+if ~iscolumn(cfg)
+  dotranspose = true;
+  cfg = cfg';
+else
+  dotranspose = false;
+end
+c = struct2cell(cfg);
+s = fieldnames(cfg);
+t = cellfun(@class, c, 'UniformOutput', false);
+
+% convert
+[c{:}] = convertStringsToChars(c{:});
+cfg = cell2struct(c,s,1);
+
+% deal with cell-arrays
+if any(strcmp(t, 'cell'))
+  fn = s(strcmp(t(:,1), 'cell')); % assumes uniformity along the columns of t
+  for k = 1:numel(fn)
+    for m = 1:numel(cfg)
+      [cfg(m).(fn{k}){:}] = convertStringsToChars(cfg(m).(fn{k}){:});
+    end
+  end
+end
+
+if any(strcmp(t, 'struct'))
+  fn = s(strcmp(t(:,1),'struct'));
+  for k = 1:numel(fn)
+    for m = 1:numel(cfg)
+      cfg(m).(fn{k}) = checkstringfun(cfg(m).(fn{k}));
+    end
+  end
+end
+
+if dotranspose
+  cfg = cfg';
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION converts a cell-array of structure arrays into a structure array

@@ -1,8 +1,9 @@
 function test_issue1238
 
 % WALLTIME 00:10:00
-% MEM 3gb
+% MEM 1gb
 % DEPENDENCY ft_singleplotER ft_multiplotER ft_databrowser
+% DATA private
 
 % The data contains a part of a multichannel fNIRS dataset of one subject, timelocked
 % for a fingertapping task (from second 0 tot 20) with in between a resting tasks.
@@ -14,7 +15,7 @@ function test_issue1238
 % the midline.
 
 % this contains layout and timelock_fingertapping
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/issue1238.mat'));
+load(dccnpath('/project/3031000.02/test/issue1238.mat'));
 
 %% ft_singleplotER
 cfg = [];

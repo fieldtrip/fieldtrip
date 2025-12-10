@@ -7,8 +7,8 @@ function [freq] = ft_freqanalysis(cfg, data)
 %   [freq] = ft_freqanalysis(cfg, data)
 %
 % The input data should be organised in a structure as obtained from
-% the FT_PREPROCESSING or the FT_MVARANALYSIS function. The configuration
-% depends on the type of computation that you want to perform.
+% FT_PREPROCESSING or FT_MVARANALYSIS. The configuration depends on the
+% type of computation that you want to perform.
 %
 % The configuration should contain:
 %   cfg.method      = different methods of calculating the spectra
@@ -94,9 +94,12 @@ function [freq] = ft_freqanalysis(cfg, data)
 %   cfg.foilim    = [begin end], frequency band of interest
 %       OR
 %   cfg.foi       = vector 1 x numfoi, frequencies of interest
-%   cfg.tapsmofrq = number, the amount of spectral smoothing through
-%                     multi-tapering. Note that 4 Hz smoothing means
-%                     plus-minus 4 Hz, i.e. a 8 Hz smoothing box.
+%   cfg.tapsmofrq = scalar (in Hz), the half bandwidth of the spectral smoothing window. Thus, 4 Hz smoothing
+%                     means that the spectra are 'smoothed' with a ~8 Hz smoothing box.
+%   cfg.mtmadapt  = string, 'mean', 'eig', 'adapt' determines how the individual dpss-tapered signals are combined to get the spetrum estimate
+%                     'mean': (default): averaging across the 2*NW-1 tapers
+%                     'eig': weight the tapered signals with the taper's specific concentration eigenvalue
+%                     'adapt': adaptive weighted average, with frequency specific weights, as per Thomson's adaptive method
 %
 % MTMCONVOL performs time-frequency analysis on any time series trial data using
 % the 'multitaper method' (MTM) based on Slepian sequences as tapers.
@@ -138,7 +141,7 @@ function [freq] = ft_freqanalysis(cfg, data)
 %
 % SUPERLET performs time-frequency analysis on any time series trial data using the
 % 'superlet method' based on a frequency-wise combination of Morlet wavelets of varying cycle
-% widths (see Moca et al. 2019, https://doi.org/10.1101/583732).
+% widths (see Moca et al. 2021, https://doi.org/10.1038/s41467-020-20539-9).
 %   cfg.foi     = vector 1 x numfoi, frequencies of interest
 %       OR
 %   cfg.foilim  = [begin end], frequency band of interest
@@ -148,7 +151,7 @@ function [freq] = ft_freqanalysis(cfg, data)
 %   cfg.gwidth  = determines the length of the used wavelets in standard
 %                   deviations of the implicit Gaussian kernel and should
 %                   be chosen >= 3; (default = 3)
-%   cfg.combine = 'additive', 'multiplicative' (default = 'additive')
+%   cfg.combine = 'additive', 'multiplicative' (default = 'multiplicative')
 %                   determines if cycle numbers of wavelets comprising a superlet
 %                   are chosen additively or multiplicatively
 %   cfg.order   = vector 1 x numfoi, superlet order, i.e. number of combined
@@ -188,6 +191,23 @@ function [freq] = ft_freqanalysis(cfg, data)
 %                  deviations of the implicit Gaussian kernel and should
 %                  be choosen >= 3; (default = 3)
 %
+% IRASA (Irregular-Resampling Auto-Spectral Analysis) estimates the
+% 'fractal' component of the power spectrum (https://doi.org/10.1007/s10548-015-0448-0),
+% by stretching/compressing the sampling rate, and combining the geometric means of 
+% the power spectra resulting from the stretching/compression. The default behavior is 
+% according to the implementation in the referenced paper, where each input segment's
+% power spectrum is computed according to a Welch-type overlapping windowed estimation.
+%   cfg.taper    = 'dpss', 'hanning' or many others, see WINDOW (default = 'hanning'), in case of 'dpss'
+%                    only the first Slepian is used
+%   cfg.hset     = vector of stretching/compression ratios (default = (1.1:0.05:1.9))
+%   cfg.nwindow  = scalar, number of overlapping windows per segment (default = 10)
+%   cfg.windowlength = scalar, 'auto', or 'all', length of window in seconds (default = 'auto')
+%   cfg.mfunc    = string, 'median', or 'trimmean', method to aggregate across geometric means of spectra (default = 'median')
+%   cfg.output   = string, 'fractal', or 'original' (default = 'fractal'), computes either fractal component, or the original
+%                    spectrum (for comparison), based on the same parameters (minus the stretching/compression)
+%
+% MVAR estimates the spectrum based on Autoregressive models, requires output from FT_MVARANALYSIS.
+%   See FT_FREQANALYSIS_MVAR.          
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
@@ -276,11 +296,19 @@ if numel(data.label)==0
   ft_error('no channels were selected');
 end
 
+% interpret the required verbosity (should be true, unless cfg.feedback = 'none')
+if isequal(cfg.feedback, 'none')
+	verbose = false;
+else
+	verbose = true;
+end
+
 % switch over method and do some of the method specfic checks and defaulting
 switch cfg.method
   
   case 'mtmconvol'
-    cfg.taper = ft_getopt(cfg, 'taper', 'dpss');
+    cfg.taper    = ft_getopt(cfg, 'taper', 'dpss');
+    cfg.taperopt = ft_getopt(cfg, 'taperopt');
     if isequal(cfg.taper, 'dpss') && ~isfield(cfg, 'tapsmofrq')
       ft_error('you must specify a smoothing parameter with taper = dpss');
     end
@@ -311,7 +339,9 @@ switch cfg.method
     end
     
   case 'mtmfft'
-    cfg.taper = ft_getopt(cfg, 'taper', 'dpss');
+    cfg.taper    = ft_getopt(cfg, 'taper', 'dpss');
+    cfg.taperopt = ft_getopt(cfg, 'taperopt');
+    cfg.mtmadapt = ft_getopt(cfg, 'mtmadapt', 'mean');
     if isequal(cfg.taper, 'dpss') && not(isfield(cfg, 'tapsmofrq'))
       ft_error('you must specify a smoothing parameter with taper = dpss');
     end
@@ -326,11 +356,12 @@ switch cfg.method
     end
     
   case 'irasa'
-    cfg.taper  = ft_getopt(cfg, 'taper',  'hanning');
-    cfg.output = ft_getopt(cfg, 'output', 'fractal');
-    cfg.pad    = ft_getopt(cfg, 'pad',    'nextpow2');
+    cfg.taper    = ft_getopt(cfg, 'taper',  'hanning'); % Undocumented: dpss is also allowed, in which case the first Slepian with a half time bandwidth product of 1 is used
+    cfg.taperopt = ft_getopt(cfg, 'taperopt');
+    cfg.output   = ft_getopt(cfg, 'output', 'fractal');
+    cfg.pad      = ft_getopt(cfg, 'pad',    'nextpow2');
     if ~isequal(cfg.taper, 'hanning')
-      ft_error('the irasa method supports hanning tapers only');
+      ft_warning('the original irasa method uses hanning tapers');
     end
     if ~isequal(cfg.pad, 'nextpow2')
       ft_warning('consider using cfg.pad=''nextpow2'' for the irasa method');
@@ -341,26 +372,24 @@ switch cfg.method
         ft_error('frequencies in cfg.foi are above Nyquist')
       end
     end
-    
+    cfg.nwindow      = ft_getopt(cfg, 'nwindow', 10); % as per the original implementation, but is there a reason to do a pwelch type of analysis with multiple epochs, I suspect that the original implementation was based on continuous data to begin with?
+    cfg.windowlength = ft_getopt(cfg, 'windowlength', 'auto'); % 'auto' uses the heuristic in the paper, can also be 'all', or a scalar, see ft_specest_irasa
+    cfg.hset         = ft_getopt(cfg, 'hset', []); % use the default in the lower level function
+    cfg.mfunc        = ft_getopt(cfg, 'mfunc', 'median');
   case 'wavelet'
     cfg.width  = ft_getopt(cfg, 'width',  7);
     cfg.gwidth = ft_getopt(cfg, 'gwidth', 3);
     
   case 'superlet'
-    % reorganize the cfg, a nested cfg is not consistent with the othe methods
+    % reorganize the cfg, a nested cfg is not consistent with the other methods
     cfg = ft_checkconfig(cfg, 'createtopcfg', 'superlet');
     cfg = removefields(cfg, 'superlet');
     cfg = ft_checkconfig(cfg, 'renamed', {'basewidth', 'width'});
     
     cfg.width   = ft_getopt(cfg, 'width',   3);
     cfg.gwidth  = ft_getopt(cfg, 'gwidth',  3);
-    cfg.combine = ft_getopt(cfg, 'combine', 'additive');
-    cfg.order   = ft_getopt(cfg, 'order',   ones(1, numel(cfg.foi)));
-    if numel(cfg.order) == 1
-      cfg.order = cfg.order.*length(cfg.foi);
-    elseif numel(cfg.order) ~= numel(cfg.foi)
-      ft_error('cfg.foi must have the same number of elements as cfg.foi, or must be a scalar');
-    end
+    cfg.combine = ft_getopt(cfg, 'combine', 'multiplicative');
+    cfg.order   = ft_getopt(cfg, 'order',   []);
     
   case 'tfr'
     cfg = ft_checkconfig(cfg, 'renamed', {'waveletwidth', 'width'});
@@ -501,9 +530,9 @@ if csdflg
   nchancmb   = size(chancmbind,1);
   chanind    = unique([chanind(:); chancmbind(:)]);
   nchan      = length(chanind);
-  cutdatindcmb = zeros(size(chancmbind));
+  cmbind     = zeros(size(chancmbind)); % FIXME, isn't this redundant, i.e. will cmbind not be the same as chancmbind?
   for ichan = 1:nchan
-    cutdatindcmb(chancmbind == chanind(ichan)) = ichan;
+    cmbind(chancmbind == chanind(ichan)) = ichan;
   end
 end
 
@@ -521,7 +550,8 @@ elseif strcmp(cfg.pad, 'nextpow2')
   cfg.pad = padding/data.fsample;
 else
   padding = cfg.pad*data.fsample;
-  if padding<max(trllength)
+  if padding<max(trllength) && ~isequal(cfg.method, 'irasa')
+    % only throw an error when the method is not irasa, because irasa has other constraints
     ft_error('the specified padding is too short');
   end
 end
@@ -545,21 +575,18 @@ else
   end
 end
 
+% options that don't change over trials
+options = {'pad', cfg.pad, 'padtype', cfg.padtype, 'freqoi', cfg.foi, 'polyorder', cfg.polyremoval, 'output', cfg.output};
+
 % tapsmofrq compatibility between functions (make it into a vector if it's not)
 if isfield(cfg, 'tapsmofrq')
-  if strcmp(cfg.method, 'mtmconvol') && length(cfg.tapsmofrq) == 1 && length(cfg.foi) ~= 1
+  if strcmp(cfg.method, 'mtmconvol') && isscalar(cfg.tapsmofrq) && length(cfg.foi) ~= 1
     cfg.tapsmofrq = ones(length(cfg.foi),1) * cfg.tapsmofrq;
   elseif strcmp(cfg.method, 'mtmfft') && length(cfg.tapsmofrq) ~= 1
     ft_warning('cfg.tapsmofrq should be a single number when cfg.method = mtmfft, now using only the first element')
     cfg.tapsmofrq = cfg.tapsmofrq(1);
   end
-end
-
-% options that don't change over trials
-if isfield(cfg, 'tapsmofrq')
-  options = {'pad', cfg.pad, 'padtype', cfg.padtype, 'freqoi', cfg.foi, 'tapsmofrq', cfg.tapsmofrq, 'polyorder', cfg.polyremoval, 'output', cfg.output};
-else
-  options = {'pad', cfg.pad, 'padtype', cfg.padtype, 'freqoi', cfg.foi, 'polyorder', cfg.polyremoval, 'output', cfg.output};
+  options = cat(2, options, {'tapsmofrq', cfg.tapsmofrq});
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -584,39 +611,37 @@ for itrial = 1:ntrials
     
     case 'mtmconvol'
       [spectrum_mtmconvol,ntaper,foi,toi] = ft_specest_mtmconvol(dat, time, 'timeoi', cfg.toi, 'timwin', cfg.t_ftimwin, 'taper', ...
-        cfg.taper, options{:}, 'dimord', 'chan_time_freqtap', 'feedback', fbopt);
+        cfg.taper, 'taperopt', cfg.taperopt, options{:}, 'dimord', 'chan_time_freqtap', 'feedback', fbopt, 'verbose', verbose);
       
-      % the following variable is created to keep track of the number of
-      % trials per time bin and is needed for proper normalization if
-      % keeprpt==1 and the triallength is variable
+      % the following variable is created to keep track of the number of trials per time bin and is needed for proper normalization
+      % if keeprpt==1 and the triallength is variable
       if itrial==1, trlcnt = zeros(1, numel(foi), numel(toi)); end
       
       hastime = true;
       % error for different number of tapers per trial
       if (keeprpt == 4) && any(ntaper(:) ~= ntaper(1))
-        ft_error('currently you can only keep trials AND tapers, when using the number of tapers per frequency is equal across frequency')
+        ft_error('currently you can only keep trials AND tapers, when using the number of tapers per frequency is equal across requested output frequencies')
       end
       % create tapfreqind for later indexing
-      freqtapind = [];
+      freqtapind = cell(1,numel(foi));
       tempntaper = [0; cumsum(ntaper(:))];
       for iindfoi = 1:numel(foi)
         freqtapind{iindfoi} = tempntaper(iindfoi)+1:tempntaper(iindfoi+1);
       end
       
     case 'mtmfft'
-      [spectrum,ntaper,foi] = ft_specest_mtmfft(dat, time, 'taper', cfg.taper, options{:}, 'feedback', fbopt);
+      [spectrum,ntaper,foi,df] = ft_specest_mtmfft(dat, time, 'taper', cfg.taper, 'taperopt', cfg.taperopt, 'weightopt', cfg.mtmadapt, options{:}, 'feedback', fbopt, 'verbose', verbose);
       hastime = false;
       
     case 'irasa'
-      [spectrum,ntaper,foi] = ft_specest_irasa(dat, time, options{:}, 'feedback', fbopt);
+      [spectrum,ntaper,foi] = ft_specest_irasa(dat, time, 'taper', cfg.taper, 'taperopt', cfg.taperopt, 'hset', cfg.hset, 'nwindow', cfg.nwindow, 'windowlength', cfg.windowlength, 'mfunc', cfg.mfunc, options{:}, 'feedback', fbopt, 'verbose', verbose);
       hastime = false;
       
     case 'wavelet'
-      [spectrum,foi,toi] = ft_specest_wavelet(dat, time, 'timeoi', cfg.toi, 'width', cfg.width, 'gwidth', cfg.gwidth, options{:}, 'feedback', fbopt);
+      [spectrum,foi,toi] = ft_specest_wavelet(dat, time, 'timeoi', cfg.toi, 'width', cfg.width, 'gwidth', cfg.gwidth, options{:}, 'feedback', fbopt, 'verbose', verbose);
       
-      % the following variable is created to keep track of the number of
-      % trials per time bin and is needed for proper normalization if
-      % keeprpt==1 and the triallength is variable
+      % the following variable is created to keep track of the number of trials per time bin and is needed for proper normalization
+      % if keeprpt==1 and the triallength is variable
       if itrial==1, trlcnt = zeros(1, numel(foi), numel(toi)); end
       
       hastime = true;
@@ -626,10 +651,17 @@ for itrial = 1:ntrials
       spectrum = reshape(spectrum,[1 nchan numel(foi) numel(toi)]);
       
     case 'superlet'
-      % calculate number of wavelets and respective cycle width dependent on superlet order
-      % equivalent one-liners:
+      % calculate number of wavelets and respective cycle width dependent on superlet order equivalent one-liners:
       %   multiplicative: cycles = arrayfun(@(order) arrayfun(@(wl_num) cfg.width*wl_num, 1:order), cfg.order,'uni',0)
       %   additive: cycles = arrayfun(@(order) arrayfun(@(wl_num) cfg.width+wl_num-1, 1:order), cfg.order,'uni',0)
+      if isempty(cfg.order)
+        ft_error('cfg.order should be defined');
+      elseif isscalar(cfg.order)
+        cfg.order = cfg.order.*ones(1, numel(cfg.foi));
+      elseif numel(cfg.order) ~= numel(cfg.foi)
+        ft_error('cfg.foi must have the same number of elements as cfg.foi, or must be a scalar');
+      end
+      
       order_int = ceil(cfg.order);
       cycles = cell(length(cfg.foi), 1);
       for i_f = 1:length(cfg.foi)
@@ -647,26 +679,26 @@ for itrial = 1:ntrials
       end
       
       % compute superlets
-      spectrum = NaN(nchan, length(cfg.foi), length(cfg.toi));
+      
       % index of 'freqoi' value in 'options'
       idx_freqoi = find(ismember(options(1:2:end), 'freqoi'))*2;
       foi = options{idx_freqoi};
       for i_f = 1:length(cfg.foi)
         % collext individual wavelets' responses per frequency
-        spec_f = NaN(order_int(i_f), nchan, length(cfg.toi));
         opt = options;
         opt{idx_freqoi} = cfg.foi(i_f);
         % compute responses for individual wavelets
         for i_wl = 1:order_int(i_f)
-          [spec_f(i_wl, :, :), dum, toi] = ft_specest_wavelet(dat, time, 'timeoi', cfg.toi, 'width', cycles{i_f}(i_wl), 'gwidth', cfg.gwidth, opt{:}, 'feedback', fbopt);
+          [spec_f(:,:,:,i_wl), dum, toi] = ft_specest_wavelet(dat, time, 'timeoi', cfg.toi, 'width', cycles{i_f}(i_wl), 'gwidth', cfg.gwidth, opt{:}, 'feedback', fbopt, 'verbose', verbose);
         end
+        spec_f = permute(spec_f, [4 1 2 3]); 
         if floor(cfg.order(i_f)) ~= order_int(i_f)
-            spec_f(i_wl, :, :) = spec_f(i_wl, :, :) .^ rem(cfg.order(i_f), 1);
+            spec_f(i_wl, :, :, :) = spec_f(i_wl, :, :, :) .^ rem(cfg.order(i_f), 1);
         end
         % geometric mean across individual wavelets
         spectrum(:, i_f, :) = prod(spec_f, 1) .^ (1 / cfg.order(i_f));
+        clear spec_f
       end
-      clear spec_f
       
       % the following variable is created to keep track of the number of
       % trials per time bin and is needed for proper normalization if
@@ -680,11 +712,10 @@ for itrial = 1:ntrials
       spectrum = reshape(spectrum,[1 nchan numel(foi) numel(toi)]);
       
     case 'tfr'
-      [spectrum,foi,toi] = ft_specest_tfr(dat, time, 'timeoi', cfg.toi, 'width', cfg.width, 'gwidth', cfg.gwidth,options{:}, 'feedback', fbopt);
+      [spectrum,foi,toi] = ft_specest_tfr(dat, time, 'timeoi', cfg.toi, 'width', cfg.width, 'gwidth', cfg.gwidth,options{:}, 'feedback', fbopt, 'verbose', verbose);
       
-      % the following variable is created to keep track of the number of
-      % trials per time bin and is needed for proper normalization if
-      % keeprpt==1 and the triallength is variable
+      % the following variable is created to keep track of the number of trials per time bin and is needed for proper normalization
+      % if keeprpt==1 and the triallength is variable
       if itrial==1, trlcnt = zeros(1, numel(foi), numel(toi)); end
       
       hastime = true;
@@ -694,7 +725,7 @@ for itrial = 1:ntrials
       spectrum = reshape(spectrum,[1 nchan numel(foi) numel(toi)]);
       
     case 'hilbert'
-      [spectrum,foi,toi] = ft_specest_hilbert(dat, time, 'timeoi', cfg.toi, 'width', cfg.width, bpfiltoptions{:}, options{:}, 'feedback', fbopt, 'edgeartnan', cfg.edgeartnan);
+      [spectrum,foi,toi] = ft_specest_hilbert(dat, time, 'timeoi', cfg.toi, 'width', cfg.width, bpfiltoptions{:}, options{:}, 'feedback', fbopt, 'edgeartnan', cfg.edgeartnan, 'verbose', verbose);
       hastime = true;
       % create FAKE ntaper (this requires very minimal code change below for compatibility with the other specest functions)
       ntaper = ones(1,numel(foi));
@@ -702,12 +733,12 @@ for itrial = 1:ntrials
       spectrum = reshape(spectrum,[1 nchan numel(foi) numel(toi)]);
       
     case 'neuvar'
-      [spectrum,foi] = ft_specest_neuvar(dat, time, options{:}, 'feedback', fbopt);
+      [spectrum,foi] = ft_specest_neuvar(dat, time, options{:}, 'feedback', fbopt, 'verbose', verbose);
       hastime = false;
       % create FAKE ntaper (this requires very minimal code change below for compatibility with the other specest functions)
       ntaper = ones(1,numel(foi));
       
-  end % switch
+  end % switch for the different methods
   
   % Set n's
   maxtap = max(ntaper);
@@ -720,51 +751,57 @@ for itrial = 1:ntrials
   
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   %%% Memory allocation
-  if strcmp(cfg.method, 'mtmfft') && strcmp(cfg.taper, 'dpss')
-    % memory allocation for mtmfft is slightly different because of the possiblity of
-    % variable number of tapers over trials (when using dpss), the below exception is
-    % made so memory can still be allocated fully (see bug #1025
-    trllength = cellfun(@numel,data.time);
-    % determine number of tapers per trial
-    ntaptrl = sum(floor((2 .* (trllength./data.fsample) .* cfg.tapsmofrq) - 1)); % I floored it for now, because I don't know whether this formula is accurate in all cases, by flooring the memory allocated
-    % will most likely be less than it should be, but this would still have the same effect of 'not-crashing-matlabs'.
-    % I do have the feeling a round would be 100% accurate, but atm I cannot check this in Percival and Walden
-    % - roevdmei
-  else
-    ntaptrl = ntrials .* maxtap; % the way it used to be in all cases (before bug #1025)
-  end
   
-  % by default, everything is has the time dimension, if not, some specifics are performed
   if itrial == 1
+    
     % allocate memory to output variables
     if keeprpt == 1 % cfg.keeptrials, 'no' &&  cfg.keeptapers, 'no'
       if powflg, powspctrm     = zeros(nchan,nfoi,ntoi,cfg.precision);             end
       if csdflg, crsspctrm     = complex(zeros(nchancmb,nfoi,ntoi,cfg.precision)); end
       if fftflg, fourierspctrm = complex(zeros(nchan,nfoi,ntoi,cfg.precision));    end
-      dimord    = 'chan_freq_time';
+      dimord    = 'chan_freq';
     elseif keeprpt == 2 % cfg.keeptrials, 'yes' &&  cfg.keeptapers, 'no'
-      if powflg, powspctrm     = nan(ntrials,nchan,nfoi,ntoi,cfg.precision);                                                                 end
+      if powflg, powspctrm     = nan(ntrials,nchan,nfoi,ntoi,cfg.precision);                                                           end
       if csdflg, crsspctrm     = complex(nan(ntrials,nchancmb,nfoi,ntoi,cfg.precision),nan(ntrials,nchancmb,nfoi,ntoi,cfg.precision)); end
       if fftflg, fourierspctrm = complex(nan(ntrials,nchan,nfoi,ntoi,cfg.precision),nan(ntrials,nchan,nfoi,ntoi,cfg.precision));       end
-      dimord    = 'rpt_chan_freq_time';
-    elseif keeprpt == 4 % cfg.keeptrials, 'yes' &&  cfg.keeptapers, 'yes'
-      if powflg, powspctrm     = zeros(ntaptrl,nchan,nfoi,ntoi,cfg.precision);        end %
+      dimord    = 'rpt_chan_freq';
+    elseif keeprpt == 4 % cfg.keeptrials, 'yes' &&  cfg.keeptapers, 'yes'% estimate total number of tapers potentially needed
+      % compute the total number of tapers needed
+      if strcmp(cfg.method, 'mtmfft') && strcmp(cfg.taper, 'dpss')
+        % memory allocation for mtmfft is slightly different because of the possiblity of variable length trials, leading to a variable
+        % number of tapers per trial variable number of tapers over trials (when using dpss), the below exception is made so memory can 
+        % still be allocated fully (see bug #1025)
+        trllength = cellfun(@numel,data.time);
+        
+        % determine number of tapers per trial
+        ntaptrl = sum(floor((2 .* (trllength./data.fsample) .* cfg.tapsmofrq) - 1)); % I floored it for now, because I don't know whether this formula is accurate in all cases, by flooring the memory allocated
+        % will most likely be less than it should be, but this would still have the same effect of 'not-crashing-matlabs'.
+        % I do have the feeling a round would be 100% accurate, but atm I cannot check this in Percival and Walden
+        % - roevdmei
+      else
+        ntaptrl = ntrials .* maxtap; % the way it used to be in all cases (before bug #1025)
+      end
+  
+      if powflg, powspctrm     = zeros(ntaptrl,nchan,nfoi,ntoi,cfg.precision);             end
       if csdflg, crsspctrm     = complex(zeros(ntaptrl,nchancmb,nfoi,ntoi,cfg.precision)); end
       if fftflg, fourierspctrm = complex(zeros(ntaptrl,nchan,nfoi,ntoi,cfg.precision));    end
-      dimord    = 'rpttap_chan_freq_time';
+      dimord    = 'rpttap_chan_freq';
     end
-    if ~hastime
-      dimord = dimord(1:end-5); % cut _time
+    if hastime
+      dimord = sprintf('%s_time', dimord); % add _time
     end
     
-    % prepare calcdof
+    % prepare calcdof: this is an option that does not seem to be widely
+    % used throughout the codebase, but it may make sense to keep track of
+    % the effective degrees-of-freedom with variable time axes and/or
+    % different numbers of tapers, or different adaptive weigths (mtmfft)
     if strcmp(cfg.calcdof, 'yes')
       if hastime
-        dof = zeros(nfoi,ntoi);
-        %dof = zeros(ntrials,nfoi,ntoi);
+        dof = zeros(ntrials,nfoi,ntoi); % with mtmconvol there might be different numbers of tapers per frequency
+      elseif isequal(cfg.method, 'mtmfft') && isequal(cfg.mtmadapt, 'adapt')
+        dof = zeros(ntrials,nchan,nfoi);
       else
-        dof = zeros(nfoi,1);
-        %dof = zeros(ntrials,nfoi);
+        dof = zeros(ntrials,nfoi);
       end
     end
     
@@ -782,30 +819,38 @@ for itrial = 1:ntrials
   %%% Create output
   if keeprpt~=4
     
-    % mtmconvol is a special case and needs special processing
+    % a loop across frequencies is needed if there's a variable number of tapers across frequencies (supported by mtmfft/mtmconvol), OR if there's a time dimension 
     if strcmp(cfg.method, 'mtmconvol')
-      foiind = ones(1,nfoi);
+      foiind  = ones(1,nfoi);
+      loopfoi = 1:nfoi;
+    elseif hastime || ~all(ntaper==ntaper(1))
+      foiind  = 1:nfoi;
+      loopfoi = 1:nfoi;
     else
-      % by using this vector below for indexing, the below code does not need to be duplicated for mtmconvol
-      foiind = 1:nfoi;
+      % by using this vector below for indexing + a columnar loopfoi, the
+      % below code does not need to be duplicated for mtmconvol, but still executes the loop in a single iteration
+      foiind  = 1:nfoi;
+      loopfoi = (1:nfoi)';
     end
     
-    for ifoi = 1:nfoi
+    for ifoi = loopfoi
       if strcmp(cfg.method, 'mtmconvol')
         spectrum = reshape(permute(spectrum_mtmconvol(:,:,freqtapind{ifoi}),[3 1 2]),[ntaper(ifoi) nchan 1 ntoi]);
       end
       
       % set ingredients for below
       if ~hastime
+        % fourth dimension is always singleton
         acttboi  = 1;
         nacttboi = 1;
       else
+        % if we end up here, we can assume that ifoi is scalar, based on the definition of loopfoi above
         acttboi   = ~all(isnan(spectrum(1,:,foiind(ifoi),:)), 2); % check over all channels, some channels might contain a NaN
         acttboi   = reshape(acttboi, [1 ntoi]);                   % size(spectrum) = [? nchan nfoi ntoi]
-        nacttboi = sum(acttboi);
+        nacttboi  = sum(acttboi,2);
       end
       
-      acttap = logical([ones(ntaper(ifoi),1);zeros(size(spectrum,1)-ntaper(ifoi),1)]);
+      acttap = logical([ones(max(ntaper(ifoi)),1);zeros(size(spectrum,1)-max(ntaper(ifoi)),1)]);
       if powflg
         if strcmp(cfg.method, 'irasa') % ft_specest_irasa outputs power and not amplitude
           powdum = spectrum(acttap,:,foiind(ifoi),acttboi);
@@ -830,7 +875,7 @@ for itrial = 1:ntrials
         fourierdum = spectrum(acttap,:,foiind(ifoi),acttboi);
       end
       if csdflg
-        csddum = spectrum(acttap,cutdatindcmb(:,1),foiind(ifoi),acttboi) .* conj(spectrum(acttap,cutdatindcmb(:,2),foiind(ifoi),acttboi));
+        csddum = spectrum(acttap,cmbind(:,1),foiind(ifoi),acttboi) .* conj(spectrum(acttap,cmbind(:,2),foiind(ifoi),acttboi));
       end
       
       % switch between keep's
@@ -842,29 +887,26 @@ for itrial = 1:ntrials
           end
           
           if powflg
-            powspctrm(:,ifoi,acttboi) = powspctrm(:,ifoi,acttboi) + (reshape(mean(powdum,1),[nchan 1 nacttboi]) ./ ntrials);
-            %powspctrm(:,ifoi,~acttboi) = NaN;
+            powspctrm(:,ifoi,acttboi) = powspctrm(:,ifoi,acttboi) + (reshape(mean(powdum,1),[nchan numel(ifoi) nacttboi]) ./ ntrials);
           end
           if fftflg
-            fourierspctrm(:,ifoi,acttboi) = fourierspctrm(:,ifoi,acttboi) + (reshape(mean(fourierdum,1),[nchan 1 nacttboi]) ./ ntrials);
-            %fourierspctrm(:,ifoi,~acttboi) = NaN;
+            fourierspctrm(:,ifoi,acttboi) = fourierspctrm(:,ifoi,acttboi) + (reshape(mean(fourierdum,1),[nchan numel(ifoi) nacttboi]) ./ ntrials);
           end
           if csdflg
-            crsspctrm(:,ifoi,acttboi) = crsspctrm(:,ifoi,acttboi) + (reshape(mean(csddum,1),[nchancmb 1 nacttboi]) ./ ntrials);
-            %crsspctrm(:,ifoi,~acttboi) = NaN;
+            crsspctrm(:,ifoi,acttboi) = crsspctrm(:,ifoi,acttboi) + (reshape(mean(csddum,1),[nchancmb numel(ifoi) nacttboi]) ./ ntrials);
           end
           
         case 2 % cfg.keeptrials, 'yes' &&  cfg.keeptapers, 'no'
           if powflg
-            powspctrm(itrial,:,ifoi,acttboi) = reshape(mean(powdum,1),[nchan 1 nacttboi]);
+            powspctrm(itrial,:,ifoi,acttboi) = reshape(mean(powdum,1),[nchan numel(ifoi) nacttboi]);
             powspctrm(itrial,:,ifoi,~acttboi) = NaN;
           end
           if fftflg
-            fourierspctrm(itrial,:,ifoi,acttboi) = reshape(mean(fourierdum,1), [nchan 1 nacttboi]);
+            fourierspctrm(itrial,:,ifoi,acttboi) = reshape(mean(fourierdum,1), [nchan numel(ifoi) nacttboi]);
             fourierspctrm(itrial,:,ifoi,~acttboi) = NaN;
           end
           if csdflg
-            crsspctrm(itrial,:,ifoi,acttboi) = reshape(mean(csddum,1), [nchancmb 1 nacttboi]);
+            crsspctrm(itrial,:,ifoi,acttboi) = reshape(mean(csddum,1), [nchancmb numel(ifoi) nacttboi]);
             crsspctrm(itrial,:,ifoi,~acttboi) = NaN;
           end
           
@@ -875,9 +917,16 @@ for itrial = 1:ntrials
         if hastime
           acttimboiind = ~all(isnan(spectrum(1,:,foiind(ifoi),:)), 2); % check over all channels, some channels might contain a NaN
           acttimboiind = reshape(acttimboiind, [1 ntoi]);
-          dof(ifoi,acttimboiind) = ntaper(ifoi) + dof(ifoi,acttimboiind);
+          dof(itrial,ifoi,acttimboiind) = 2.*ntaper(ifoi) + dof(itrial,ifoi,acttimboiind);
+        elseif isequal(cfg.method, 'mtmfft')
+          % if mtmfft, df is already provided
+          if isequal(cfg.mtmadapt, 'adapt')
+            dof(itrial,:,ifoi) = df(:,ifoi);
+          else
+            dof(itrial,ifoi) = df(ifoi);
+          end
         else % hastime = false
-          dof(ifoi) = ntaper(ifoi) + dof(ifoi);
+          dof(itrial,ifoi) = 2.*ntaper(ifoi) + dof(itrial,ifoi);
         end
       end
     end %ifoi
@@ -907,8 +956,8 @@ for itrial = 1:ntrials
       fourierspctrm(currrptind,:,:,:) = spectrum;
     end
     if csdflg
-      crsspctrm(currrptind,:,:,:) =          spectrum(cutdatindcmb(:,1),:,:) .* ...
-        conj(spectrum(cutdatindcmb(:,2),:,:));
+      crsspctrm(currrptind,:,:,:) =          spectrum(cmbind(:,1),:,:) .* ...
+        conj(spectrum(cmbind(:,2),:,:));
     end
     
   end
@@ -1065,7 +1114,11 @@ if csdflg
   freq.crsspctrm = crsspctrm;
 end
 if strcmp(cfg.calcdof, 'yes')
-  freq.dof = 2 .* dof;
+  if keeprpt==1
+    freq.dof = shiftdim(sum(dof,1));
+  else
+    freq.dof = dof;
+  end
 end
 if strcmp(cfg.method, 'mtmfft') && (keeprpt == 2 || keeprpt == 4)
   freq.cumsumcnt = trllength';
@@ -1082,7 +1135,7 @@ else
 end
 
 % some fields from the input should always be copied over in the output
-freq = copyfields(data, freq, {'grad', 'elec', 'opto', 'topo', 'topolabel', 'unmixing'});
+freq = copyfields(data, freq, {'elec', 'grad', 'opto', 'topo', 'topolabel', 'unmixing'});
 
 if isfield(data, 'trialinfo') && strcmp(cfg.keeptrials, 'yes')
   % copy the trialinfo into the output, but not the sampleinfo

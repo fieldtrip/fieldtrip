@@ -1,8 +1,9 @@
 function test_issue1618
 
 % WALLTIME 00:10:00
-% MEM 2gb
+% MEM 1gb
 % DEPENDENCY ft_volumewrite ft_write_mri
+% DATA no
 
 % this function was related to github issue 1618
 

@@ -1,4 +1,4 @@
-function newnode=sms(node,face,iter,alpha,method)
+function newnode = sms(node, face, iter, alpha, method)
 %
 % newnode=sms(node,face,iter,useralpha,method)
 %
@@ -20,15 +20,15 @@ function newnode=sms(node,face,iter,alpha,method)
 % -- this function is part of iso2mesh toolbox (http://iso2mesh.sf.net)
 %
 
-if(nargin<5)
-   method='laplacianhc';
+if (nargin < 5)
+    method = 'laplacianhc';
 end
-if(nargin<4)
-   if(nargin<3)
-      iter=10;
-   end
-   alpha=0.5;
+if (nargin < 4)
+    if (nargin < 3)
+        iter = 10;
+    end
+    alpha = 0.5;
 end
 
-conn=meshconn(face,size(node,1));
-newnode=smoothsurf(node(:,1:3),[],conn,iter,alpha,method,alpha);
+conn = meshconn(face, size(node, 1));
+newnode = smoothsurf(node(:, 1:3), [], conn, iter, alpha, method, alpha);

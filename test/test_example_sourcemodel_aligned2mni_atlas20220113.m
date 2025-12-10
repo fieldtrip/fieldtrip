@@ -1,7 +1,8 @@
 function test_example_sourcemodel_aligned2mni_atlas
 
-% MEM 4gb
+% MEM 2gb
 % WALLTIME 00:10:00
+% DATA public
 
 %
 %% Create brain atlas based MNI-aligned grids in individual head-space
@@ -54,9 +55,9 @@ figure;
 ft_plot_mesh(template_grid.pos(template_grid.inside,:));
 
 %
-% Load the subject-specific MRI from [here](ftp://ftp.fieldtriptoolbox.org/pub/fieldtrip/tutorial/salzburg/mri.mat) and inverse-warp the subject specific grid to the template grid.
+% Load the subject-specific MRI from [here](ftp://ftp.fieldtriptoolbox.org/pub/fieldtrip/tutorial/connectivity_aef/mri.mat) and inverse-warp the subject specific grid to the template grid.
 %
-mri = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/salzburg/mri.mat'));
+mri = ft_read_mri(dccnpath('/project/3031000.02/external/download/tutorial/connectivity_aef/mri.mat'));
 
 cfg                = [];
 cfg.warpmni   = 'yes';
@@ -65,11 +66,11 @@ cfg.nonlinear = 'yes'; % use non-linear normalization
 cfg.mri            = mri;
 sourcemodel        = ft_prepare_sourcemodel(cfg);
 
-% Finally, you can load the subject-specific headmodel from [here](ftp://ftp.fieldtriptoolbox.org/pub/fieldtrip/tutorial/salzburg/hdm.mat) and check the result with the following code.
+% Finally, you can load the subject-specific headmodel from [here](ftp://ftp.fieldtriptoolbox.org/pub/fieldtrip/tutorial/connectivity_aef/hdm.mat) and check the result with the following code.
 %
 close all
 
-hdm = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/salzburg/hdm.mat'));
+hdm = ft_read_mri(dccnpath('/project/3031000.02/external/download/tutorial/connectivity_aef/hdm.mat'));
 
 hdm         = ft_convert_units(hdm, 'm');
 sourcemodel = ft_convert_units(sourcemodel, 'm');

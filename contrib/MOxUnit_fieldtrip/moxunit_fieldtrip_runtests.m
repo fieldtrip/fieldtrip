@@ -222,7 +222,7 @@ function fieldtrip_test_dir=get_fieldtrip_test_dir()
     fieldtrip_test_dir=fullfile(fieldtrip_root_dir,'test');
 
 function fieldtrip_data_dir=get_fieldtrip_data_dir()
-    fieldtrip_data_dir='/home/common/matlab/fieldtrip/data/';
+    fieldtrip_data_dir='/project/3031000.02/test';
     fieldtrip_data_dir=fieldtrip_function_wrapper('test',...
                                 'dccnpath',fieldtrip_data_dir);
 

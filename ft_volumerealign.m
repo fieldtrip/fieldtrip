@@ -1,11 +1,14 @@
 function [realign, snap] = ft_volumerealign(cfg, mri, target)
 
 % FT_VOLUMEREALIGN spatially aligns an anatomical MRI with head coordinates based on
-% external fiducials or anatomical landmarks. This function does not change the
-% anatomical MRI volume itself, but only adjusts the homogeneous transformation
+% external fiducials or anatomical landmarks. This function typically does not change
+% the anatomical MRI volume itself, but only adjusts the homogeneous transformation
 % matrix that describes the mapping from voxels to the coordinate system. It also
 % appends a coordsys-field to the output data, or it updates it. This field specifies
-% how the x/y/z-axes of the coordinate system should be interpreted.
+% how the x/y/z-axes of the coordinate system should be interpreted. Occasionally,
+% the orientation and handedness of the output volume may be different from the
+% orientation and handedness of the input volume. This is determined by the cfg.flip
+% argument. See the code for more details.
 %
 % For spatial normalisation and deformation (i.e. warping) an MRI to a template brain
 % you should use the FT_VOLUMENORMALISE function.
@@ -13,10 +16,11 @@ function [realign, snap] = ft_volumerealign(cfg, mri, target)
 % Different methods for aligning the anatomical MRI to a coordinate system are
 % implemented, which are described in detail below:
 %
-% INTERACTIVE - Use a graphical user interface to click on the location of anatomical
-% landmarks or fiducials. The anatomical data can be displayed as three orthogonal
-% MRI slices or as a rendering of the head surface. The coordinate system is updated
-% according to the definition of the coordinates of these fiducials.
+% INTERACTIVE - This shows a graphical user interface in which you can click on the
+% location of anatomical landmarks or fiducials. The anatomical data can be displayed
+% as three orthogonal MRI slices or as a rendering of the head surface. The
+% coordinate system is updated according to the definition of the coordinates of
+% these fiducials.
 %
 % FIDUCIAL - The coordinate system is updated according to the definition of the
 % coordinates of anatomical landmarks or fiducials that are specified in the
@@ -56,6 +60,9 @@ function [realign, snap] = ft_volumerealign(cfg, mri, target)
 %   cfg.parameter      = 'anatomy' the parameter which is used for the visualization
 %   cfg.viewresult     = string, 'yes' or 'no', whether or not to visualize aligned volume(s)
 %                        after realignment (default = 'no')
+%   cfg.flip           = string, 'yes' or 'no', to realign the volume approximately to the 
+%                        input coordinate axes, this may reorient the output volume relative
+%                        to the input (default = 'yes', when cfg.method = 'interactive', and 'no'  otherwise)
 %
 % When cfg.method = 'interactive', a user interface allows for the specification of
 % the fiducials or landmarks using the mouse, cursor keys and keyboard. The fiducials
@@ -99,6 +106,12 @@ function [realign, snap] = ft_volumerealign(cfg, mri, target)
 % the line from the posterior commissure to the anterior commissure the
 % Z-axis is towards the vertex, in between the hemispheres the X-axis is
 % orthogonal to the YZ-plane, positive to the right.
+%
+% When cfg.method = 'fiducial' and cfg.coordsys = 'paxinos' for a mouse brain,
+% the following is required to specify the voxel indices of the fiducials:
+%   cfg.fiducial.bregma      = [i j k], position of bregma
+%   cfg.fiducial.lambda      = [i j k], position of lambda
+%   cfg.fiducial.yzpoint     = [i j k], point on the midsagittal-plane
 %
 % With the 'interactive' and 'fiducial' methods it is possible to define an
 % additional point (with the key 'z'), which should be a point on the positive side
@@ -183,7 +196,7 @@ function [realign, snap] = ft_volumerealign(cfg, mri, target)
 % specified, weights are put on points with z-coordinate<0 (assuming those to be eye
 % rims and nose ridges, i.e. important points.
 
-% Copyright (C) 2006-2023, Robert Oostenveld, Jan-Mathijs Schoffelen
+% Copyright (C) 2006-2024, Robert Oostenveld, Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -271,15 +284,19 @@ if isempty(cfg.flip)
   end
 end
 
-if isempty(cfg.coordsys)
-  if     isstruct(cfg.fiducial) && all(ismember(fieldnames(cfg.fiducial), {'lpa', 'rpa', 'nas', 'zpoint'}))
-    cfg.coordsys = 'ctf';
-  elseif isstruct(cfg.fiducial) && all(ismember(fieldnames(cfg.fiducial), {'ac', 'pc', 'xzpoint', 'right'}))
-    cfg.coordsys = 'acpc';
-  elseif strcmp(cfg.method, 'interactive')
-    cfg.coordsys = 'ctf';
+if any(strcmp(cfg.method, {'fiducial', 'interactive'}))
+  if isempty(cfg.coordsys)
+    if     isstruct(cfg.fiducial) && all(ismember(fieldnames(cfg.fiducial), {'lpa', 'rpa', 'nas', 'zpoint'}))
+      cfg.coordsys = 'ctf';
+    elseif isstruct(cfg.fiducial) && all(ismember(fieldnames(cfg.fiducial), {'ac', 'pc', 'xzpoint', 'right'}))
+      cfg.coordsys = 'acpc';
+    elseif isstruct(cfg.fiducial) && all(ismember(fieldnames(cfg.fiducial), {'bregma', 'lambda', 'yzpoint'}))
+      cfg.coordsys = 'paxinos';
+    elseif strcmp(cfg.method, 'interactive')
+      cfg.coordsys = 'ctf';
+    end
+    ft_warning('defaulting to "%s" coordinate system', cfg.coordsys);
   end
-  ft_warning('defaulting to "%s" coordinate system', cfg.coordsys);
 end
 
 % these two have to be simultaneously true for a snapshot to be taken
@@ -768,7 +785,7 @@ switch cfg.method
       smoothdist          = ft_sourceinterpolate(tmpcfg, functional, target);
       scalp.distance      = smoothdist.distance(:);
 
-      functional.pow      = info.distancein(:);
+      functional.distance = info.distancein(:);
       smoothdist          = ft_sourceinterpolate(tmpcfg, functional, target);
       scalp.distancein    = smoothdist.distance(:);
 
@@ -1041,8 +1058,8 @@ if ~isempty(transform) && ~any(isnan(transform(:)))
   realign.transformorig = mri.transform;
   realign.transform     = transform * mri.transform;
   realign.coordsys      = coordsys;
-  if isfield(realign, 'fid')
-    % also apply the transformation on the fiducials
+  if isfield(realign, 'fid') && isfield(realign.fid, 'pos')
+    % also apply the transformation on the fiducial positions
     realign.fid.pos = ft_warp_apply(transform, realign.fid.pos);
   end
 else
@@ -1524,7 +1541,11 @@ else
 
       lab = 'crosshair';
       vox = [xi yi zi];
-      ind = sub2ind(mri.dim(1:3), round(vox(1)), round(vox(2)), round(vox(3)));
+      if all(isfinite(vox))
+        ind = sub2ind(mri.dim(1:3), round(vox(1)), round(vox(2)), round(vox(3)));
+      else
+        ind = nan; % functional behavior of sub2ind has changed, giving an error with nan-input
+      end
       pos = ft_warp_apply(mri.transform, vox);
       switch opt.unit
         case 'mm'
@@ -1541,7 +1562,11 @@ else
     for i=1:length(opt.fidlabel)
       lab = opt.fidlabel{i};
       vox = opt.fiducial.(lab);
-      ind = sub2ind(mri.dim(1:3), round(vox(1)), round(vox(2)), round(vox(3)));
+      if all(isfinite(vox))
+        ind = sub2ind(mri.dim(1:3), round(vox(1)), round(vox(2)), round(vox(3)));
+      else
+        ind = nan; % functional behavior of sub2ind has changed, giving an error with nan-input
+      end
       pos = ft_warp_apply(mri.transform, vox);
       switch opt.unit
         case 'mm'
@@ -1943,7 +1968,11 @@ fprintf('=======================================================================
 for i=1:length(opt.fidlabel)
   lab = opt.fidlabel{i};
   vox = opt.fiducial.(lab);
-  ind = sub2ind(opt.mri.dim(1:3), round(vox(1)), round(vox(2)), round(vox(3)));
+  if all(isfinite(vox))
+    ind = sub2ind(opt.mri.dim(1:3), round(vox(1)), round(vox(2)), round(vox(3)));
+  else
+    ind = nan; % functional behavior of sub2ind has changed, giving an error with nan-input
+  end
   pos = ft_warp_apply(opt.mri.transform, vox);
   switch opt.unit
     case 'mm'

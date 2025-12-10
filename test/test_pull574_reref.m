@@ -1,13 +1,14 @@
 function test_pull574_reref
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 01:00:00
 % DEPENDENCY ft_preprocessing preproc ft_preproc_reference
+% DATA private
 
 % test the ft_preprocessing for re-referencing to rest
 % Li Dong $ 2020.3.10, (Lidong@uestc.edu.cn) and J.M.Schoffelen
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/pull574.mat')); % load data and leadfield calculated by FieldTrip
+load(dccnpath('/project/3031000.02/test/pull574.mat')); % load data and leadfield calculated by FieldTrip
 
 % -------------------------------------------------------------------------
 % A snippet of code to calculate leadfield using FieldTrip

@@ -1,10 +1,11 @@
 function test_tutorial_MNE
 
-% MEM 4gb
+% MEM 2gb
 % WALLTIME 00:30:00
 % DEPENDENCY ft_volumereslice ft_volumerealign ft_volumesegment
+% DATA public
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf'));
+cd(dccnpath('/project/3031000.02/external/download/test/ctf'));
 mri = ft_read_mri('Subject01.mri');
 
 cfg        = [];

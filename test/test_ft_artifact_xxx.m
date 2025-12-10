@@ -1,8 +1,9 @@
 function test_ft_artifact_xxx
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_artifact_clip ft_artifact_eog ft_artifact_muscle ft_artifact_zvalue ft_artifact_ecg ft_artifact_jump ft_artifact_threshold
+% DATA public
 
 % this script only checks whether the code runs without an error 
 % it does not check whether the output is as expected
@@ -15,7 +16,7 @@ offset = zeros(size(begsample));
 %%
 
 cfg = [];
-cfg.dataset     = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds');
+cfg.dataset     = dccnpath('/project/3031000.02/external/download/test/ctf/Subject01.ds');
 cfg.continuous  = 'yes';
 cfg.trl         = [begsample(:) endsample(:) offset(:)];
 

@@ -2,9 +2,13 @@ function [stat, cfg] = ft_statistics_montecarlo(cfg, dat, design, varargin)
 
 % FT_STATISTICS_MONTECARLO performs a nonparametric statistical test by calculating
 % Monte-Carlo estimates of the significance probabilities and/or critical values from
-% the permutation distribution. This function should not be called directly, instead
-% you should call the function that is associated with the type of data on which you
-% want to perform the test.
+% the permutation distribution. It is not recommended to call this function directly,
+% but instead you should call the function that is associated with the type of data on 
+% which you want to perform the test. This is because important data bookkeeping 
+% operations on the data are performed in the higher-level functions, which are
+% assumed to have been handled correctly for the input arguments into this function. 
+% Also, notably, a prespecified randomseed in the cfg is handled in the higher
+% level function, not here.
 %
 % Use as
 %   stat = ft_timelockstatistics(cfg, data1, data2, data3, ...)
@@ -14,7 +18,7 @@ function [stat, cfg] = ft_statistics_montecarlo(cfg, dat, design, varargin)
 % where the data is obtained from FT_TIMELOCKANALYSIS, FT_FREQANALYSIS or
 % FT_SOURCEANALYSIS respectively, or from FT_TIMELOCKGRANDAVERAGE,
 % FT_FREQGRANDAVERAGE or FT_SOURCEGRANDAVERAGE respectively 
-% and with cfg.method = 'montecarlo'
+% and with cfg.method = 'montecarlo'. 
 %
 % The configuration options that can be specified are:
 %   cfg.numrandomization = number of randomizations, can be 'all'
@@ -27,7 +31,11 @@ function [stat, cfg] = ft_statistics_montecarlo(cfg, dat, design, varargin)
 %   cfg.wvar             = number or list with indices, within-cell variable(s)
 %   cfg.cvar             = number or list with indices, control variable(s)
 %   cfg.feedback         = string, 'gui', 'text', 'textbar' or 'no' (default = 'text')
-%   cfg.randomseed       = string, 'yes', 'no' or a number (default = 'yes')
+%   cfg.randomseed       = string, 'yes', 'no' or a number (default = 'yes'), this option is not used in this 
+%                            function directly, but is handled by ft_<something>statistics. If you want to control
+%                            the random number generator while calling ft_statistics_montecarlo directly, it should 
+%                            be specified on the command line (or in the caller script) just prior to calling this
+%                            function.
 %
 % If you use a cluster-based statistic, you can specify the following options that
 % determine how the single-sample or single-voxel statistics will be thresholded and
@@ -101,6 +109,15 @@ function [stat, cfg] = ft_statistics_montecarlo(cfg, dat, design, varargin)
 % do a sanity check on the input data
 assert(isnumeric(dat),    'this function requires numeric data as input, you probably want to use FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS instead');
 assert(isnumeric(design), 'this function requires numeric data as input, you probably want to use FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS instead');
+
+% check whether the function has been called from ft_timelockstatistics, ft_freqstatistics, or ft_sourcestatistics
+st = dbstack;
+m  = mfilename;
+if isscalar(st)
+  ft_warning('It seems that %s has been called directly from the command line. This is not recommended, unless you know what you are doing', m);
+elseif numel(st)>1 && ~ismember(st(2).name, {'ft_freqstatistics' 'ft_timelockstatistics' 'ft_sourcestatistics'})
+  ft_warning('It seems that %s has not been called from one of the FT_XXXSTATISTICS functions. This is not recommended, unless you know what you are doing', m);
+end
 
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'renamed',     {'factor',           'ivar'});
@@ -507,8 +524,8 @@ if exist('statrand', 'var')
   stat.ref = mean(statrand,2);
 end
 
-% return optional other details that were returned by the statfun
-stat = copyfields(statfull, stat, fieldnames(statfull));
+% return optional other details that were returned by the statfun, but prevent that things like prob are overwritten by accident
+stat = copyfields(statfull, stat, setdiff(fieldnames(statfull), fieldnames(stat)));
 
 ft_warning(ws); % revert to original state
 

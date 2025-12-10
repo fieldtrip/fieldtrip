@@ -7,17 +7,18 @@ function varargout = eegsynth_tsv(filename, hdr)
 % Use as
 %   hdr = events_tsv(filename)
 %   evt = events_tsv(filename, hdr)
-% to read the header or the event information. Note that when reading the header, the
-% number of channels in the actual data is unknown.
+%
+% Note that when reading the header, the number of channels in the actual data is unknown.
 %
 % See https://bids-specification.readthedocs.io/en/stable/04-modality-specific-files/05-task-events.html
 %
-% See also FT_FILETYPE, FT_READ_HEADER, FT_READ_DATA, FT_READ_EVENT, QUALISYS_TSV, EVENTS_TSV, BIDS_TSV
+% See also FT_FILETYPE, FT_READ_HEADER, FT_READ_DATA, FT_READ_EVENT
+% See also BIDS_TSV, BIOPAC_ACQ, BUCN_TXT, EEGSYNTH_TSV, EVENTS_TSV, LIBERTY_CSV, MAUS_TEXTGRID, MOTION_C3D, OPENBCI_TXT, OPENPOSE_KEYPOINTS, OPENSIGNALS_TXT, OPENVIBE_MAT, OPM_FIL, QUALISYS_TSV, QUSPIN_LVM, SCCN_XDF, SENSYS_CSV, SNIRF, SPIKEGLX_BIN, UNICORN_CSV, XSENS_MVNX
 
 % FIXME it might be that the events are one sample off, but I cannot be bothered
 % checking that precisely at the moment of the initial implementation.
 
-% Copyright (C) 2022, Robert Oostenveld
+% Copyright (C) 2022-2024, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.

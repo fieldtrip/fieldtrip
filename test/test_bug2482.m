@@ -1,13 +1,14 @@
 function test_bug2482
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_definetrial ft_preprocessing ft_trialfun_brainvision_segmented
+% DATA private
 
 %% define the trials
 
-headerfile = dccnpath('/home/common/matlab/fieldtrip/data/test/bug2482/001 P11 M1 004_Seg_fs6.vhdr');
-datafile = dccnpath('/home/common/matlab/fieldtrip/data/test/bug2482/001 P11 M1 004_Seg_fs6.eeg');
+headerfile = dccnpath('/project/3031000.02/test/bug2482/001 P11 M1 004_Seg_fs6.vhdr');
+datafile = dccnpath('/project/3031000.02/test/bug2482/001 P11 M1 004_Seg_fs6.eeg');
 
 cfg = [];
 cfg.trialfun = 'ft_trialfun_brainvision_segmented';

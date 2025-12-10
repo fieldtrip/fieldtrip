@@ -1,8 +1,9 @@
 function test_ft_freqbaseline
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_freqbaseline
+% DATA no
 
 % generate some data
 freq = [];

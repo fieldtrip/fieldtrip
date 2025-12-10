@@ -3,6 +3,7 @@ function test_bug2221
 % MEM 1gb
 % WALLTIME 00:15:00
 % DEPENDENCY ft_selectdata ft_selectdata_new ft_multiplotER
+% DATA private
 
 
 % this test function intends to test the functionality of:
@@ -40,7 +41,7 @@ cfg.select        = 'union';
 [freq1out, freq2out] = ft_selectdata(cfg,freq1,freq2);
 
 %%%%%%%%%%%
-filename = dccnpath('/home/common/matlab/fieldtrip/data/test/bug2221.mat');
+filename = dccnpath('/project/3031000.02/test/bug2221.mat');
 load(filename);
 
 data1 = data_S10_cond1;

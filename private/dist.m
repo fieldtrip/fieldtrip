@@ -14,7 +14,7 @@ function [d] = dist(x, y)
 %
 % See also DSEARCHN, KNNSEARCH
 
-% Copyright (C) 2005-2023, Robert Oostenveld
+% Copyright (C) 2005-2024, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.

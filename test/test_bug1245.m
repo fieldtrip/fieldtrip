@@ -1,8 +1,9 @@
 function test_bug1245
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_multiplotER
+% DATA private
 
 % The issue: when inputting data where the corresponding layout consists of
 % more channels than the to-be-plotted channels (specified in cfg.channel),
@@ -11,7 +12,7 @@ function test_bug1245
 % determination algorithm includes the channels that are excluded from the
 % plotting
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test'))
+cd(dccnpath('/project/3031000.02/test'))
 
 %%
 % this is one way of having ft_multiplotER select avg as the parameter

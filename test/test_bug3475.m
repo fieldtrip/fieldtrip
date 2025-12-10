@@ -1,8 +1,9 @@
 function test_bug3475
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_plot_sens
+% DATA no
 
 %%
 elec = ft_read_sens('standard_1020.elc');

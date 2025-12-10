@@ -10,7 +10,7 @@ function [inside] = surface_inside(dippos, pos, tri)
 %   pos     bounding mesh vertices
 %   tri     bounding mesh triangles
 %
-% See also SURFACE_ORIENTATION, SURFACE_NORMALS, SURFACE_NESTING, SOLID_ANGLE
+% See also SURFACE_AREA, SURFACE_ORIENTATION, SURFACE_NORMALS, SURFACE_NESTING, SOLID_ANGLE
 
 % Copyright (C) 2003, Robert Oostenveld
 %

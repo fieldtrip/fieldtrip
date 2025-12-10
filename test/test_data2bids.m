@@ -1,11 +1,12 @@
 function test_data2bids
 
 % WALLTIME 00:20:00
-% MEM 5gb
+% MEM 4gb
 % DEPENDENCY data2bids
+% DATA private
 
 %% Example with only behavioural data
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/data2bids/test1'))
+cd(dccnpath('/project/3031000.02/test/data2bids/test1'))
 
 cfg = [];
 cfg.method                      = 'convert';
@@ -24,7 +25,7 @@ data2bids(cfg)
 
 
 %% Example with a CTF dataset on disk that needs no conversion
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/data2bids/test2'))
+cd(dccnpath('/project/3031000.02/test/data2bids/test2'))
 
 cfg = [];
 cfg.dataset                     = 'Subject01.ds';
@@ -35,7 +36,7 @@ cfg.InstitutionalDepartmentName = 'Donders Institute for Brain, Cognition and Be
 data2bids(cfg)
 
 %% Example with a Neuroscan EEG dataset on disk that needs to be converted
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/data2bids/test3'))
+cd(dccnpath('/project/3031000.02/test/data2bids/test3'))
 
 cfg = [];
 cfg.method                      = 'convert';
@@ -56,7 +57,7 @@ cfg.channels.impedance = [20e3 5e3];
 data2bids(cfg)
 
 %% Example with a BrainVision EEG dataset on disk that needs to be copied
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/data2bids/test4'))
+cd(dccnpath('/project/3031000.02/test/data2bids/test4'))
 
 cfg = [];
 cfg.method                      = 'copy';
@@ -78,7 +79,7 @@ cfg.channels.impedance = Inf;
 data2bids(cfg)
 
 %% Example with preprocessed EEG data in memory
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/data2bids/test5'))
+cd(dccnpath('/project/3031000.02/test/data2bids/test5'))
 
 cfg = [];
 cfg.dataset                     = 'Subject1_MP.cnt';
@@ -99,7 +100,7 @@ cfg.InstitutionalDepartmentName = 'Donders Institute for Brain, Cognition and Be
 data2bids(cfg, data)
 
 %% Example with an anatomical MRI on disk that needs no conversion
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/data2bids/test6'))
+cd(dccnpath('/project/3031000.02/test/data2bids/test6'))
 
 cfg = [];
 cfg.dataset                     = 'oostenveld_r.nii';
@@ -111,7 +112,7 @@ cfg.writejson                   = 'merge';
 data2bids(cfg)
 
 %% Example with realigned and resliced anatomical MRI data in memory
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/data2bids/test7'))
+cd(dccnpath('/project/3031000.02/test/data2bids/test7'))
 
 mri = ft_read_mri('dicom/ERIVDBER_030731_R.OOSTERVELD.MR.PAUGAA_ANATOMICAL-3D.2.56.2003.7.31.11.19.16.468000.53834351.IMA');
 
@@ -122,7 +123,7 @@ cfg.InstitutionalDepartmentName = 'Donders Institute for Brain, Cognition and Be
 data2bids(cfg, mri)
 
 %% Example where the data is copied
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/data2bids/test8'));
+cd(dccnpath('/project/3031000.02/test/data2bids/test8'));
 
 cfg = [];
 cfg.method                      = 'copy';
@@ -143,12 +144,12 @@ data2bids(cfg)
 
 %% try some iEEG data with electrodes
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/data2bids/test9'));
+cd(dccnpath('/project/3031000.02/test/data2bids/test9'));
 
 % this loads data, elec_acpc_fr, and mri
-load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/human_ecog/SubjectUCI29/SubjectUCI29_data.mat'));
-load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/human_ecog/SubjectUCI29/SubjectUCI29_elec_acpc_fr.mat'));
-mri = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/human_ecog/SubjectUCI29/SubjectUCI29_MR_acpc.nii'));
+load(dccnpath('/project/3031000.02/external/download/tutorial/human_ecog/SubjectUCI29/SubjectUCI29_data.mat'));
+load(dccnpath('/project/3031000.02/external/download/tutorial/human_ecog/SubjectUCI29/SubjectUCI29_elec_acpc_fr.mat'));
+mri = ft_read_mri(dccnpath('/project/3031000.02/external/download/tutorial/human_ecog/SubjectUCI29/SubjectUCI29_MR_acpc.nii'));
 
 % make the data a bit smaller
 cfg = [];
@@ -180,7 +181,7 @@ cfg.mri.MagneticFieldStrength = 3;
 data2bids(cfg, mri);
 
 %%
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/data2bids/test10'));
+cd(dccnpath('/project/3031000.02/test/data2bids/test10'));
 
 cfg = [];
 cfg.dataset                     = 'sub-A2002/meg/sub-A2002_task-auditory_meg.ds';
@@ -211,7 +212,7 @@ cfg.meg.SoftwareFilters         = 'n/a';
 data2bids(cfg);
 
 %%
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/data2bids/test11'));
+cd(dccnpath('/project/3031000.02/test/data2bids/test11'));
 
 cfg = [];
 cfg.dataset                     = 'sub-A2002/func/sub-A2002_task-auditory_bold.nii';

@@ -1,15 +1,16 @@
 function test_tutorial_eventrelatedaveraging(dataset)
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_preprocessing ft_timelockanalysis ft_multiplotER ft_singleplotER ft_topoplotER ft_megplanar ft_combineplanar
+% DATA public
 
 % see http://www.fieldtriptoolbox.org/tutorial/eventrelatedaveraging
 % this testscript corresponds to the version on the wiki at 23 December 2012
 
 if nargin<1
   % use the tutorial dataset from home/common
-  dataset = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds');
+  dataset = dccnpath('/project/3031000.02/external/download/test/ctf/Subject01.ds');
 else
   % use the dataset specified in the input, but check that it is called
   % Subject01.ds

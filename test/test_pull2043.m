@@ -1,18 +1,19 @@
 function test_pull2043
 
 % WALLTIME 00:20:00
-% MEM 3gb
+% MEM 1gb
 % DEPENDENCY data2bids
+% DATA private
 
 global ft_default
 ft_default.dccnpath = '/Volumes/SamsungT7/fieldtrip';
 
-ctfdataset = dccnpath('/home/common/matlab/fieldtrip/data/test/pull2043/emptyroom_Noise_20220613_01.ds');
-neuromagdataset = dccnpath('/home/common/matlab/fieldtrip/data/test/pull2043/empty_room_before_tsss_corr95.fif');
+ctfdataset = dccnpath('/project/3031000.02/test/pull2043/emptyroom_Noise_20220613_01.ds');
+neuromagdataset = dccnpath('/project/3031000.02/test/pull2043/empty_room_before_tsss_corr95.fif');
 
 %%
 
-% bidsroot = fullfile(dccnpath('/home/common/matlab/fieldtrip/data/test/pull2043'), 'bids');
+% bidsroot = fullfile(dccnpath('/project/3031000.02/test/pull2043'), 'bids');
 bidsroot = tempdir;
 
 %%

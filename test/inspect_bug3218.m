@@ -1,10 +1,11 @@
 function test_bug3218
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_rejectartifact ft_rejectvisual
+% DATA private
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug3218.mat'), 'data');
+load(dccnpath('/project/3031000.02/test/bug3218.mat'), 'data');
 
 % When rejecting artifacts using 'partial', ft_rejectvisual works fine
 cfg = [];

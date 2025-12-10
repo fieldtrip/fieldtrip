@@ -1,18 +1,19 @@
 function test_bug3154
 
 % WALLTIME 00:20:00
-% MEM 4gb
+% MEM 2gb
 % DEPENDENCY
+% DATA public
 
 %%
 
 if true
-  load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/sensor_analysis/subjectK.mat'));
+  load(dccnpath('/project/3031000.02/external/download/tutorial/sensor_analysis/subjectK.mat'));
   data = data_left;
   nMEG = 151;
   senstype = 'ctf151';
 else
-  load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/workshop/natmeg2014/preprocessing/data_MEG.mat'));
+  load(dccnpath('/project/3031000.02/external/download/workshop/natmeg2014/preprocessing/data_MEG.mat'));
   data = data_MEG;
   nMEG = 306;
   senstype = 'neuromag306';

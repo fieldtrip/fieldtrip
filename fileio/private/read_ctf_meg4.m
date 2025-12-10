@@ -45,7 +45,7 @@ function [meg] = read_ctf_meg4(fname, hdr, begsample, endsample, chanindx)
 %
 % $Id$
 
-% this can be used for printing detailled user feedback
+% this can be used for printing detailed user feedback
 fb = false;
 
 nsmp = hdr.nSamples;

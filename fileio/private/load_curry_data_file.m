@@ -42,6 +42,11 @@ if ( strcmpi ( Extension,'dat' ) )
 elseif ( strcmpi ( Extension,'cdt' ) )
     ParameterFile = [PathName,FileName,'.dpa'];
     LabelFile = [PathName,FileName,'.dpa'];
+    if ~exist(ParameterFile, 'file')
+      % try something else
+      ParameterFile = [PathName,FileName,'.dpo'];
+      LabelFile = [PathName,FileName,'.dpo'];
+    end
     EventFile = [PathName,FileName,'.cef'];
     EventFile2 = [PathName,FileName,'.ceo'];
 else

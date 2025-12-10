@@ -1,15 +1,16 @@
 function test_tutorial_coherence
 
-% MEM 5gb
+% MEM 4gb
 % WALLTIME 00:20:00
 % DEPENDENCY ft_freqanalysis ft_connectivityanalysis ft_multiplotER ft_singleplotER ft_topoplotER ft_sourceanalysis ft_sourceinterpolate ft_prepare_sourcemodel headsurface
+% DATA public
 
-addpath(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/coherence')); % this contains the trial function
+addpath(dccnpath('/project/3031000.02/external/download/tutorial/coherence')); % this contains the trial function
 
 % find the interesting epochs of data
 cfg = [];
 cfg.trialfun                  = 'trialfun_left';
-cfg.dataset                   = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/SubjectCMC.ds');
+cfg.dataset                   = dccnpath('/project/3031000.02/external/download/test/ctf/SubjectCMC.ds');
 cfg = ft_definetrial(cfg);
 
 % detect EOG artifacts in the MEG data
@@ -206,13 +207,13 @@ cfg           = [];
 cfg.method    = 'dics';
 cfg.refchan   = 'EMGlft';
 cfg.frequency = 18;
-cfg.headmodel = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/SubjectCMC.hdm');
+cfg.headmodel = dccnpath('/project/3031000.02/external/download/test/ctf/SubjectCMC.hdm');
 cfg.inwardshift = 1;
 cfg.sourcemodel.resolution = 1;
 cfg.sourcemodel.unit       = 'cm';
 source        = ft_sourceanalysis(cfg, freq);
 
-mri = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/SubjectCMC.mri'));
+mri = ft_read_mri(dccnpath('/project/3031000.02/external/download/test/ctf/SubjectCMC.mri'));
 mri = ft_volumereslice([], mri);
 
 cfg            = [];

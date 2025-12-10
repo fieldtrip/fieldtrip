@@ -1,0 +1,62 @@
+name: Suggest tests
+          
+on:
+  pull_request_target:
+
+jobs:
+  suggest-tests:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 2
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v46
+
+      - name: Show changed files
+        run: |
+          for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
+            echo "$file was changed"
+          done
+
+      - name: Find suggested tests
+        id: find-tests
+        run: |
+          python .github/scripts/suggest_tests.py ${{ steps.changed-files.outputs.all_changed_files }} > ./comment
+
+      - name: Are there any suggested tests?
+        id: any-tests
+        continue-on-error: true
+        run: |
+          [ -s ./comment ]
+
+# See https://docs.github.com/en/actions/learn-github-actions/contexts#steps-context
+# - if the comment file is empty, the outcome will be "failure"
+# - due to the continue-on-error, the conclusion will be "success"
+
+      - name: Show that there are no tests
+        if: steps.any-tests.outcome == 'failure'
+        run: |
+          echo "No tests were found"
+
+      - name: Show suggested tests
+        if: steps.any-tests.outcome == 'success'
+        run: |
+          cat ./comment
+
+      - name: Create comment with suggested tests
+        if: steps.any-tests.outcome == 'success'
+        uses: peter-evans/create-or-update-comment@v3.0.2
+        with:
+          issue-number: ${{ github.event.number }} 
+          body-path: ./comment

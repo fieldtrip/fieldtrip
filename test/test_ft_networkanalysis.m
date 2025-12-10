@@ -1,8 +1,9 @@
 function test_ft_networkanalysis
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_networkanalysis
+% DATA no
 
 data = [];
 for k = 1:5

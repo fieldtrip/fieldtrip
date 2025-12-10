@@ -1,10 +1,11 @@
 function test_issue1385
 
-% MEM 4gb
+% MEM 2gb
 % WALLTIME 00:20:00
 % DEPENDENCY ft_sourceplot
+% DATA public
 
-datadir = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/human_ecog');
+datadir = dccnpath('/project/3031000.02/external/download/tutorial/human_ecog');
 subj = 'SubjectUCI29';
 subj_dir = fullfile(datadir, subj);
 cd(subj_dir)

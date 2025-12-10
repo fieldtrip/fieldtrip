@@ -1,8 +1,9 @@
 function test_findcluster
 
-% MEM 8gb
+% MEM 6gb
 % WALLTIME 00:20:00
 % DEPENDENCY findcluster
+% DATA no
 
 [dum, ftpath] = ft_version;
 cd(fullfile(ftpath, 'private'));

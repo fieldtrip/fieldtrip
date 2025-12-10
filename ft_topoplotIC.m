@@ -36,17 +36,19 @@ function [cfg] = ft_topoplotIC(cfg, comp)
 %                            'SouthOutside'       outside bottom
 %                            'EastOutside'        outside right
 %                            'WestOutside'        outside left
-%   cfg.colorbartext       =  string indicating the text next to colorbar
+%   cfg.colorbartext       = string indicating the text next to colorbar
 %   cfg.interplimits       = limits for interpolation (default = 'head')
-%                            'electrodes' to furthest electrode
-%                            'head' to edge of head
+%                            'sensors'            to furthest sensor
+%                            'head'               to edge of head
 %   cfg.interpolation      = 'linear','cubic','nearest','v4' (default = 'v4') see GRIDDATA
 %   cfg.style              = plot style (default = 'both')
-%                            'straight' colormap only
-%                            'contour' contour lines only
-%                            'both' (default) both colormap and contour lines
-%                            'fill' constant color between lines
-%                            'blank' only the head shape
+%                            'straight'           colormap only
+%                            'contour'            contour lines only
+%                            'both'               both colormap and contour lines
+%                            'fill'               constant color between lines
+%                            'blank'              only the head shape
+%                            'straight_imsat'     colormap only, vector-graphics friendly
+%                            'both_imsat'         both colormap and contour lines, vector-graphics friendly
 %   cfg.gridscale          = scaling grid size (default = 67)
 %                            determines resolution of figure
 %   cfg.shading            = 'flat' 'interp' (default = 'flat')
@@ -59,7 +61,7 @@ function [cfg] = ft_topoplotIC(cfg, comp)
 %                            'layout' to place comment as specified for COMNT in layout
 %                            [x y] coordinates
 %   cfg.title              = string or 'auto' or 'off', specify a figure title, or use 'component N' (default) as the title
-%   cfg.figure             = 'yes' or 'no', whether to open a new figure. You can also specify a figure handle from FIGURE, GCF or SUBPLOT. (default = 'yes')
+%   cfg.figure             = 'yes', 'no' or 'subplot', whether to open a new figure. You can also specify a figure handle from FIGURE, GCF or SUBPLOT. (default = 'subplot')
 %   cfg.renderer           = string, 'opengl', 'zbuffer', 'painters', see RENDERERINFO (default is automatic, try 'painters' when it crashes)
 %
 % The layout defines how the channels are arranged. You can specify the
@@ -122,13 +124,14 @@ end
 comp = ft_checkdata(comp, 'datatype', 'comp');
 
 % set the config defaults
-cfg.title     = ft_getopt(cfg, 'title', 'auto');
 cfg.parameter = ft_getopt(cfg, 'parameter', 'topo'); % needed in topoplot_common
 cfg.renderer  = ft_getopt(cfg, 'renderer'); % let MATLAB decide on the default
+cfg.figure    = ft_getopt(cfg, 'figure', 'subplot');
 
 % check if the input cfg is valid for this function
-cfg = ft_checkconfig(cfg, 'required', 'component');
-cfg = ft_checkconfig(cfg, 'allowedval', {'parameter' 'topo'});
+%cfg = ft_checkconfig(cfg, 'required', 'component');
+cfg = ft_checkconfig(cfg, 'allowedval', {'parameter', 'topo'});
+cfg = ft_checkconfig(cfg, 'renamedval', {'interplimits', 'electrodes', 'sensors'});
 
 % interactive plotting doesn't work for chan_comp dimord.
 if isfield(cfg, 'interactive') && strcmp(cfg.interactive, 'yes')
@@ -146,7 +149,7 @@ if isfield(cfg, 'dataname') && ~isempty(cfg.dataname)
 elseif isfield(cfg, 'inputfile') && ~isempty(cfg.inputfile)
   dataname = cfg.inputfile;
 elseif nargin>1
-  dataname = arrayfun(@inputname, 2:nargin, 'UniformOutput', false);
+  dataname = inputname(2); % there's only a single data argument at most
 else
   dataname = {};
 end
@@ -159,40 +162,7 @@ cfg.dataname = dataname;
 tmpshowcallinfo = cfg.showcallinfo;
 cfg.showcallinfo = 'no';
 
-% create temporary variable to prevent overwriting the selected components
-selcomp = cfg.component;
-
-nplots = numel(selcomp);
-if nplots>1
-  % make multiple plots in a single figure
-  nyplot = ceil(sqrt(nplots));
-  nxplot = ceil(nplots./nyplot);
-  for i = 1:length(selcomp)
-    cfg.figure = subplot(nxplot, nyplot, i);
-    cfg.component = selcomp(i);
-
-    % call the common function that is shared with ft_topoplotER and ft_topoplotTFR
-    [cfg] = topoplot_common(cfg, comp);
-
-    if strcmp(cfg.title, 'auto')
-      title(['component ' num2str(selcomp(i))]);
-    elseif ~strcmp(cfg.title, 'off')
-      title(cfg.title);
-    end
-  end % for all components
-
-else
-  cfg.component = selcomp;
-
-  % call the common function that is shared with ft_topoplotER and ft_topoplotTFR
-  [cfg] = topoplot_common(cfg, comp);
-
-  if strcmp(cfg.title, 'auto')
-    title(['component ' num2str(selcomp)]);
-  elseif ~strcmp(cfg.title, 'off')
-    title(cfg.title);
-  end
-end
+cfg = topoplot_common(cfg, comp);
 
 % remove this field again, it is only used for figure labels
 cfg = removefields(cfg, 'funcname');

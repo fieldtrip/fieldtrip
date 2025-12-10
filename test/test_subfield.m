@@ -1,8 +1,9 @@
 function test_subfield
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY issubfield getsubfield setsubfield
+% DATA no
 
 a.b.c = 1;
 assert(issubfield(a,'b.c')==true);

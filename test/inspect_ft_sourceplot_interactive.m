@@ -1,12 +1,13 @@
 function inspect_ft_sourceplot_interactive
 
-% MEM 8gb
+% MEM 6gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_sourceplot_interactive ft_plot_mesh_interactive
+% DATA public
 
 %% load first dataset: results from MNE tutorial
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/minimumnormestimate/source.mat'));
+load(dccnpath('/project/3031000.02/external/download/tutorial/minimumnormestimate/source.mat'));
 
 %%
 

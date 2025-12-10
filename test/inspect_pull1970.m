@@ -1,11 +1,12 @@
 function inspect_pull1970
 
 % WALLTIME 00:10:00
-% MEM 2gb
+% MEM 1gb
 % DEPENDENCY ft_databrowser
+% DATA public
 
 cfg = [];
-cfg.dataset = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds');
+cfg.dataset = dccnpath('/project/3031000.02/external/download/test/ctf/Subject01.ds');
 cfg = ft_definetrial(cfg);
 cfg.trl = cfg.trl(1:20,:);
 cfg.trl(:,3) = cfg.trl(:,1)-1;

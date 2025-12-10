@@ -1,10 +1,12 @@
 function test_pull393
 
 % WALLTIME 00:10:00
-% MEM 2gb
-% DEPENDENCY
+% MEM 1gb
+% DEPENDENCY ft_appenddata ft_appendtimelock ft_appendsens ft_appendsens
+% DATA no
 
 %% construct some data
+
 % data_eeg
 data_eeg.label = {'eeg 1';'eeg 2';'eeg 3'};
 data_eeg.trial{1,1} = randn(3,10);

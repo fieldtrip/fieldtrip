@@ -3,6 +3,7 @@ function tests = test_ft_specest_neuvar
 % MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_specest_neuvar
+% DATA no
 
 if nargout
   % assume that this is called by RUNTESTS
@@ -16,7 +17,7 @@ else
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function testOptions(testCase)
+function testEverything(testCase)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 fsample = 1000;

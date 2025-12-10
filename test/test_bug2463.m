@@ -3,8 +3,9 @@ function test_bug2463
 % MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_channelselection ft_chantype
+% DATA private
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2463.mat'));
+load(dccnpath('/project/3031000.02/test/bug2463.mat'));
 
 % data.label'
 % ans =

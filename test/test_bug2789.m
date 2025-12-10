@@ -1,10 +1,11 @@
 function test_bug2789
 
 % WALLTIME 00:10:00
-% MEM 2gb
+% MEM 1gb
 % DEPENDENCY
+% DATA private
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2789.mat'));
+load(dccnpath('/project/3031000.02/test/bug2789.mat'));
 
 % do not repeat the debugging here
 cfg.debug = 'no';

@@ -1,8 +1,9 @@
 function test_bug1764
 
-% MEM 3gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_prepare_singleshell ft_prepare_mesh
+% DATA public
 
 % This test is inspired by test test_tutorial_beamformer20120321 which uses
 % a call to ft_prepare_singleshell without specifying any cfg options. The
@@ -11,7 +12,7 @@ function test_bug1764
 % meshing the complex gray, white and csf segmentations rather than the
 % simple brain.
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/segmentedmri.mat'));
+load(dccnpath('/project/3031000.02/external/download/tutorial/beamformer/segmentedmri.mat'));
 
 stopwatch = tic;
 

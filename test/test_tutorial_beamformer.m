@@ -1,12 +1,13 @@
 function test_tutorial_beamformer(datadir)
 
-% MEM 8gb
+% MEM 6gb
 % WALLTIME 03:30:00
 % DEPENDENCY ft_redefinetrial ft_freqanalysis ft_volumesegment ft_prepare_singleshell ft_sourceanalysis ft_prepare_leadfield ft_sourceinterpolate ft_sourceplot ft_volumenormalise
+% DATA public
 
 if nargin==0
   % this is where the data should be located
-  datadir = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer');
+  datadir = dccnpath('/project/3031000.02/external/download/tutorial/beamformer');
 end
 
 %load(fullfile(datadir, 'dataFIC.mat'));
@@ -17,10 +18,10 @@ mri = ft_read_mri(fullfile(datadir, 'Subject01.mri'));
 %% Preprocess time windows of interest
 
 cfg = [];
-cfg.toilim = [-0.5 0];
+cfg.toilim = [-0.5 0-1./data_all.fsample];
 dataPre = ft_redefinetrial(cfg, data_all);
 
-cfg.toilim = [0.8 1.3];
+cfg.toilim = [0.8 1.3-1./data_all.fsample];
 dataPost = ft_redefinetrial(cfg, data_all);
 
 %% Cross-spectral density
@@ -42,13 +43,13 @@ freqPost = ft_freqanalysis(cfg, dataPost);
 %% Compute (or load) the forward model)
 
 %try
-  %if ~exist(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/segmentedmri.mat'), 'file')
+  %if ~exist(dccnpath('/project/3031000.02/external/download/tutorial/beamformer/segmentedmri.mat'), 'file')
   cfg = [];
   cfg.write        = 'no';
   [segmentedmri] = ft_volumesegment(cfg, mri);
 %catch
-%  mri = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.mri'));
-%  load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/segmentedmri.mat'));
+%  mri = ft_read_mri(dccnpath('/project/3031000.02/external/download/test/ctf/Subject01.mri'));
+%  load(dccnpath('/project/3031000.02/external/download/tutorial/beamformer/segmentedmri.mat'));
 %end
 
 %% Prepare head model

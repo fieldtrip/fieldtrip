@@ -14,9 +14,9 @@ function [segmented] = ft_volumesegment(cfg, mri)
 % The configuration structure can contain
 %   cfg.output         = string or cell-array of strings, see below (default = 'tpm')
 %   cfg.spmversion     = string, 'spm2', 'spm8', 'spm12' (default = 'spm12')
-%   cfg.spmmethod      = string, 'old', 'new', 'mars', the algorithm used when 
-%                        cfg.spmversion='spm12' (default = 'old')
-%   cfg.opts           = structure  with spm-version specific options. See the 
+%   cfg.spmmethod      = string with he algorithm used when spm12 is used, this 
+%                        can be 'old', 'new', 'mars' (default = 'old')
+%   cfg.opts           = structure with spm-version specific options. See the 
 %                        code and/or the SPM-documentation for more detail.
 %   cfg.template       = filename of the template anatomical MRI (default =
 %                        '/spm2/templates/T1.mnc' or '/spm8/templates/T1.nii')
@@ -42,7 +42,7 @@ function [segmented] = ft_volumesegment(cfg, mri)
 %   cfg.scalpsmooth    = 'no', or scalar, the FWHM of the gaussian kernel in voxels, (default = 5)
 %   cfg.skullsmooth    = 'no', or scalar, the FWHM of the gaussian kernel in voxels, (default = 5)
 %                        this parameter is only used when the segmentation contains 6 tisuse types, 
-% %                      including 'bone'
+%                        including 'bone'
 %   cfg.brainthreshold = 'no', or scalar, relative threshold value which is used to threshold the
 %                        tpm in order to create a volumetric brainmask (see below), (default = 0.5)
 %   cfg.scalpthreshold = 'no', or scalar, relative threshold value which is used to threshold the
@@ -238,8 +238,8 @@ if ~iscell(cfg.output)
 end
 
 % check whether SPM is needed to generate tissue probability maps
-if numel(cfg.output) == 1 && strcmp('scalp', cfg.output)
-  needtpm = 0; % not needed for (cummulative type) scalpmask
+if isequal(cfg.output, {'scalp'})
+  needtpm = 0; % not needed for (cumulative type) scalpmask
 else
   needtpm = any(ismember(cfg.output, {'tpm' 'gray' 'white' 'csf' 'brain' 'skull' 'skullstrip'}));
 end
@@ -340,13 +340,13 @@ if dotpm
         [cfg.name, '_seg2.img'];...
         [cfg.name, '_seg3.img']};
       
-      
     case 'spm8'
       cfg.tpm = ft_getopt(cfg, 'tpm');
       cfg.tpm = char(cfg.tpm(:));
       if isempty(cfg.tpm)
-        cfg.tpm = char(fullfile(spm('Dir'),'tpm','grey.nii'),...
-          fullfile(spm('Dir'),'tpm','white.nii'),...
+        cfg.tpm = char( ...
+          fullfile(spm('Dir'),'tpm','grey.nii'), ...
+          fullfile(spm('Dir'),'tpm','white.nii'), ...
           fullfile(spm('Dir'),'tpm','csf.nii'));
       end
       px.tpm = cfg.tpm;
@@ -383,8 +383,9 @@ if dotpm
         cfg.tpm = ft_getopt(cfg, 'tpm');
         cfg.tpm = char(cfg.tpm(:));
         if isempty(cfg.tpm)
-          cfg.tpm = char(fullfile(spm('Dir'),'toolbox/OldSeg','grey.nii'),...
-            fullfile(spm('Dir'),'toolbox/OldSeg','white.nii'),...
+          cfg.tpm = char( ...
+            fullfile(spm('Dir'),'toolbox/OldSeg','grey.nii'), ...
+            fullfile(spm('Dir'),'toolbox/OldSeg','white.nii'), ...
             fullfile(spm('Dir'),'toolbox/OldSeg','csf.nii'));
         end
         px.tpm = cfg.tpm;
@@ -622,7 +623,7 @@ elseif  ~isempty(intersect(outp, {'white' 'gray' 'csf' 'brain' 'skull' 'scalp' '
       % threshold again to remove little parts outside of head
       scalpmask = volumethreshold(scalpmask);
       
-      % output: scalp (cummulative) (if this is the only requested output)
+      % output: scalp (cumulative) (if this is the only requested output)
       if numel(outp)==1
         segmented.scalp = scalpmask;
         remove(strcmp(remove, 'scalp')) = []; % keep this

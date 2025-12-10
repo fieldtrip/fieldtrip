@@ -1,8 +1,9 @@
 function test_issue1632
 
-% MEM 4gb
+% MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_compute_leadfield
+% DATA private
 
 % https://github.com/fieldtrip/fieldtrip/issues/1632
 % This script will demonstrate that with ft_prepare leadfields, the
@@ -16,7 +17,7 @@ function test_issue1632
 % method 'openmeeg', based on segmentedmri.mat from ftp://ftp.fieldtriptoolbox.org/pub/fieldtrip/tutorial/beamformer_lcmv/
 % Author: B Knipscheer 13-01-2021
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/issue1632.mat'));
+load(dccnpath('/project/3031000.02/test/issue1632.mat'));
 
 cfg                  = [];
 cfg.grad             = data.grad;

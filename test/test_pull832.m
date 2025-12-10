@@ -1,12 +1,17 @@
-function test_pull832
+function test_pull832(writeflag)
 
 % WALLTIME 00:10:00
-% MEM 3gb
+% MEM 1gb
 % DEPENDENCY ft_read_sens ft_read_header mne2grad
+% DATA private
+
+if nargin<1
+  writeflag = false;
+end
 
 %%
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/pull832'));
+cd(dccnpath('/project/3031000.02/test/pull832'));
 
 %%
 
@@ -24,7 +29,7 @@ grad0 = ft_read_sens(filename, 'senstype', 'meg', 'coilaccuracy', 0);
 grad1 = ft_read_sens(filename, 'senstype', 'meg', 'coilaccuracy', 1);
 grad2 = ft_read_sens(filename, 'senstype', 'meg', 'coilaccuracy', 2);
 
-if false
+if writeflag
   % this only ran once on 12 Oct 2018 with the old code, and for gradx_old
   % it was recomputed with the latest FT on Feb 28, 2022 (after adding the
   % SSP balancing to the grad structure
@@ -45,39 +50,27 @@ else
 end
 
 % as of 16 June 2022 the units will follow those specified in coordsys.json
-% this causes the units to be inconsistent with the old ones, which are always in cm
 gradx = ft_convert_units(gradx, gradx_old.unit);
 grad0 = ft_convert_units(grad0, grad0_old.unit);
 grad1 = ft_convert_units(grad1, grad1_old.unit);
 grad2 = ft_convert_units(grad2, grad2_old.unit);
 
-assert( isalmostequal(gradx, gradx_old, 'abstol', 1e-12));
-assert(~isalmostequal(grad0, grad0_old, 'abstol', 1e-12));
-assert(~isalmostequal(grad1, grad1_old, 'abstol', 1e-12));
-assert(~isalmostequal(grad2, grad2_old, 'abstol', 1e-12));
+assert(isalmostequal(gradx, gradx_old, 'abstol', 1e-12));
+assert(isalmostequal(grad0, grad0_old, 'abstol', 1e-12));
+assert(isalmostequal(grad1, grad1_old, 'abstol', 1e-12));
+assert(isalmostequal(grad2, grad2_old, 'abstol', 1e-12));
 
 %%
 
 vol = [];
-vol.o = [0 0 4];
-vol.r = 10;
-vol.unit = 'cm';
+vol.o = [0 0 40];
+vol.r = 100;
+vol.unit = 'mm';
 
-dippos = [0 0 9];
+dippos = [0 0 90];
 dipmom = [0 1 0]';
 
 lfx = ft_compute_leadfield(dippos, gradx, vol) * dipmom;
-
-%%
-
-vol = [];
-vol.o = [0 0 0.04];
-vol.r = 0.10;
-vol.unit = 'm';
-
-dippos = [0 0 0.09];
-dipmom = [0 1 0]';
-
 lf0 = ft_compute_leadfield(dippos, grad0, vol) * dipmom;
 lf1 = ft_compute_leadfield(dippos, grad1, vol) * dipmom;
 lf2 = ft_compute_leadfield(dippos, grad2, vol) * dipmom;

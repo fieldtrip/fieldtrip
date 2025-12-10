@@ -3,8 +3,9 @@ function test_bug3379
 % WALLTIME 00:10:00
 % MEM 1gb
 % DEPENDENCY ft_redefinetrial ft_fetch_data
+% DATA private
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug3379.mat'));
+load(dccnpath('/project/3031000.02/test/bug3379.mat'));
 
 
 assert(isequal(tmpcfg.trl(:,1:2), testdata.sampleinfo(setdiff(1:93, [5 6]),:)));

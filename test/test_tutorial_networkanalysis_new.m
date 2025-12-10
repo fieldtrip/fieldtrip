@@ -1,12 +1,13 @@
 function test_tutorial_networkanalysis(datadirs)
 
 % WALLTIME 00:30:00
-% MEM 10gb
+% MEM 8gb
 % DEPENDENCY ft_networkanalysis
+% DATA public
 
 if nargin==0,
-    datadirs{1} = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf');
-    datadirs{2} = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/networkanalysis');
+    datadirs{1} = dccnpath('/project/3031000.02/external/download/test/ctf');
+    datadirs{2} = dccnpath('/project/3031000.02/external/download/tutorial/networkanalysis');
 end
 
 %% read the continuous data and segment into 2 seconds epochs, with 50% overlap

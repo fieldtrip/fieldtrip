@@ -117,51 +117,50 @@ function params = spm_normalise(VG,VF,matname,VWG,VWF,flags)
 % Nonlinear spatial normalization using basis functions.
 % Human Brain Mapping, 7(4):254-266, 1999.
 %__________________________________________________________________________
-% Copyright (C) 2002-2013 Wellcome Trust Centre for Neuroimaging
 
 % John Ashburner
-% $Id: spm_normalise.m 5745 2013-11-14 12:46:49Z guillaume $
+% Copyright (C) 2002-2022 Wellcome Centre for Human Neuroimaging
 
 
-if nargin<2, error('Incorrect usage.'); end;
-if ischar(VF), VF = spm_vol(VF); end;
-if ischar(VG), VG = spm_vol(VG); end;
-if nargin<3,
-    if nargout==0,
+if nargin<2, error('Incorrect usage.'); end
+if ischar(VF), VF = spm_vol(VF); end
+if ischar(VG), VG = spm_vol(VG); end
+if nargin<3
+    if nargout==0
         [pth,nm]  = spm_fileparts(deblank(VF(1).fname));
         matname   = fullfile(pth,[nm '_sn.mat']);
     else
         matname   = '';
-    end;
-end;
-if nargin<4, VWG  = ''; end;
-if nargin<5, VWF  = ''; end;
-if ischar(VWG), VWG=spm_vol(VWG); end;
-if ischar(VWF), VWF=spm_vol(VWF); end;                                                                     
+    end
+end
+if nargin<4, VWG  = ''; end
+if nargin<5, VWF  = ''; end
+if ischar(VWG), VWG=spm_vol(VWG); end
+if ischar(VWF), VWF=spm_vol(VWF); end                                                                 
 
 
 def_flags          = spm_get_defaults('old.normalise.estimate');
 def_flags.graphics = 1;
-if nargin < 6,
+if nargin < 6
     flags = def_flags;
 else
     fnms  = fieldnames(def_flags);
-    for i=1:length(fnms),
-        if ~isfield(flags,fnms{i}),
+    for i=1:length(fnms)
+        if ~isfield(flags,fnms{i})
             flags.(fnms{i}) = def_flags.(fnms{i});
-        end;
-    end;
-end;
+        end
+    end
+end
 
 fprintf('Smoothing by %g & %gmm..\n', flags.smoref, flags.smosrc);
 VF1 = spm_smoothto8bit(VF,flags.smosrc);
 
 % Rescale images so that globals are better conditioned
 VF1.pinfo(1:2,:) = VF1.pinfo(1:2,:)/spm_global(VF1);
-for i=1:numel(VG),
+for i=1:numel(VG)
     VG1(i) = spm_smoothto8bit(VG(i),flags.smoref);
     VG1(i).pinfo(1:2,:) = VG1(i).pinfo(1:2,:)/spm_global(VG(i));
-end;
+end
 
 % Affine Normalisation
 %--------------------------------------------------------------------------
@@ -186,10 +185,10 @@ spm_plot_convergence('Clear');
 % Basis function Normalisation
 %--------------------------------------------------------------------------
 fov = VF1(1).dim(1:3).*sqrt(sum(VF1(1).mat(1:3,1:3).^2));
-if any(fov<15*flags.smosrc/2 & VF1(1).dim(1:3)<15),
+if any(fov<15*flags.smosrc/2 & VF1(1).dim(1:3)<15)
     fprintf('Field of view too small for nonlinear registration\n');
     Tr = [];
-elseif isfinite(flags.cutoff) && flags.nits && ~isinf(flags.reg),
+elseif isfinite(flags.cutoff) && flags.nits && ~isinf(flags.reg)
         fprintf('3D CT Norm...\n');
     Tr = snbasis(VG1,VF1,VWG,VWF,Affine,...
         max(flags.smoref,flags.smosrc),flags.cutoff,flags.nits,flags.reg);
@@ -198,22 +197,21 @@ else
 end;
 clear VF1 VG1
 
-flags.version = '$Rev: 5745 $';
+flags.version = spm('Version');
 flags.date    = date;
 
 params = struct('Affine',Affine, 'Tr',Tr, 'VF',VF, 'VG',VG, 'flags',flags);
 
-if flags.graphics, spm_normalise_disp(params,VF); end;
+if flags.graphics, spm_normalise_disp(params,VF); end
 
 % Remove dat fields before saving
 %--------------------------------------------------------------------------
-if isfield(VF,'dat'), VF = rmfield(VF,'dat'); end;
-if isfield(VG,'dat'), VG = rmfield(VG,'dat'); end;
-if ~isempty(matname),
+if isfield(VF,'dat'), VF = rmfield(VF,'dat'); end
+if isfield(VG,'dat'), VG = rmfield(VG,'dat'); end
+if ~isempty(matname)
     fprintf('Saving Parameters..\n');
     save(matname,'Affine','Tr','VF','VG','flags', spm_get_defaults('mat.format'));
-end;
-return;
+end
 
 
 %==========================================================================
@@ -261,7 +259,7 @@ kx = (pi*((1:k(1))'-1)/VG(1).dim(1)/vx1(1)).^2; ox=ones(k(1),1);
 ky = (pi*((1:k(2))'-1)/VG(1).dim(2)/vx1(2)).^2; oy=ones(k(2),1);
 kz = (pi*((1:k(3))'-1)/VG(1).dim(3)/vx1(3)).^2; oz=ones(k(3),1);
 
-if 1,
+if 1
     % BENDING ENERGY REGULARIZATION
     % Estimate a suitable sparse diagonal inverse covariance matrix for
     % the parameters (IC0).
@@ -292,20 +290,19 @@ T  = zeros(s2,1);
 T(s1+(1:4:numel(VG)*4)) = 1;
 
 pVar = Inf;
-for iter=1:nits,
+for iter=1:nits
     fprintf(' iteration %2d: ', iter);
     [Alpha,Beta,Var,fw] = spm_brainwarp(VG,VF,Affine,basX,basY,basZ,dbasX,dbasY,dbasZ,T,fwhm,VWG, VWF);
-    if Var>pVar, scal = pVar/Var ; Var = pVar; else scal = 1; end;
+    if Var>pVar, scal = pVar/Var ; Var = pVar; else scal = 1; end
     pVar = Var;
     T = (Alpha + IC0*scal)\(Alpha*T + Beta);
     fwhm(2) = min([fw fwhm(2)]);
     fprintf(' FWHM = %6.4g Var = %g\n', fw,Var);
-end;
+end
 
 % Values of the 3D-DCT - for some bizarre reason, this needs to be done
-% as two separate statements in Matlab 6.5...
+% as two seperate statements in Matlab 6.5...
 %--------------------------------------------------------------------------
 Tr = reshape(T(1:s1),[k 3]);
 drawnow;
 Tr = Tr*stabilise.^3;
-return;

@@ -1,8 +1,9 @@
 function test_bug1125
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_preprocessing ft_preproc_bandpassfilter ft_preproc_bandstopfilter ft_preproc_lowpassfilter ft_preproc_highpassfilter
+% DATA private
 
 N = 1000;
 x1 = randn(1,N)+5*rand(1);
@@ -33,7 +34,7 @@ figure; plot(linspace(0,1000,N),abs(fft(y19))); axis([0 40 0 inf])
 hold on; plot(linspace(0,1000,N),abs(fft(y29)),'m'); axis([0 40 0 inf])
 % HUGE diff DC
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test'))
+cd(dccnpath('/project/3031000.02/test'))
 load bug1129.mat
 
 cfg = [];

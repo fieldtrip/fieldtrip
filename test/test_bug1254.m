@@ -1,14 +1,15 @@
 function test_bug1254
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
+% DEPENDENCY qsubcompile qsubcellfun
+% DATA public
 
 % the bug has not been fixed yet, so there is no point in automatically
 % executing this test
 return
-% DEPENDENCY qsubcompile qsubcellfun
 
-dataset = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds');
+dataset = dccnpath('/project/3031000.02/external/download/test/ctf/Subject01.ds');
 
 cfg = [];
 cfg.dataset = dataset;

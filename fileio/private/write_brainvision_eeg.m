@@ -51,6 +51,9 @@ hdr.DataFormat      = 'BINARY';
 hdr.DataOrientation = 'MULTIPLEXED';
 hdr.BinaryFormat    = 'IEEE_FLOAT_32';
 hdr.resolution      = ones(size(hdr.label));  % no additional calibration needed, since float32
+if ~isfield(hdr, 'chanunit')
+  hdr.chanunit = repmat({'unknown'}, size(hdr.label));
+end
 
 % determine the filenames
 [p, f, x] = fileparts(filename);
@@ -62,7 +65,6 @@ datafile   = fullfile(p, [f '.eeg']);
 headerfile_without_path = [f '.vhdr'];
 markerfile_without_path = [f '.vmrk'];
 datafile_without_path   = [f '.eeg'];
-
 
 % open the data file and write the binary data
 fid = fopen_or_error(datafile, 'wb', 'ieee-le');
@@ -79,29 +81,30 @@ fclose(fid);
 
 % open the header file and write the ascii header information
 fid = fopen_or_error(headerfile, 'wb');
-fprintf(fid, 'Brain Vision Data Exchange Header File Version 1.0\r\n');
-fprintf(fid, '; Data created by FieldTrip\r\n');
-fprintf(fid, '\r\n');
-fprintf(fid, '[Common Infos]\r\n');
-fprintf(fid, 'DataFile=%s\r\n',          datafile_without_path);
+fprintf(fid, 'Brain Vision Data Exchange Header File Version 1.0\n');
+fprintf(fid, '; Data created by FieldTrip\n');
+fprintf(fid, '\n');
+fprintf(fid, '[Common Infos]\n');
+fprintf(fid, 'Codepage=UTF-8\n');
+fprintf(fid, 'DataFile=%s\n',          datafile_without_path);
 if ~isempty(markerfile)
-  fprintf(fid, 'MarkerFile=%s\r\n',      markerfile_without_path);
+  fprintf(fid, 'MarkerFile=%s\n',      markerfile_without_path);
 end
-fprintf(fid, 'DataFormat=%s\r\n',        hdr.DataFormat);
-fprintf(fid, 'DataOrientation=%s\r\n',   hdr.DataOrientation);
-fprintf(fid, 'NumberOfChannels=%d\r\n',  hdr.nChans);
+fprintf(fid, 'DataFormat=%s\n',        hdr.DataFormat);
+fprintf(fid, 'DataOrientation=%s\n',   hdr.DataOrientation);
+fprintf(fid, 'NumberOfChannels=%d\n',  hdr.nChans);
 % Sampling interval in microseconds
-fprintf(fid, 'SamplingInterval=%d\r\n',  1e6/hdr.Fs);
-fprintf(fid, '\r\n');
-fprintf(fid, '[Binary Infos]\r\n');
-fprintf(fid, 'BinaryFormat=%s\r\n',      hdr.BinaryFormat);
-fprintf(fid, '\r\n');
-fprintf(fid, '[Channel Infos]\r\n');
-% Each entry: Ch<Channel number>=<Name>,<Reference channel name>,<Resolution in microvolts>,<Future extensions>...
+fprintf(fid, 'SamplingInterval=%.6f\n',  1e6/hdr.Fs);
+fprintf(fid, '\n');
+fprintf(fid, '[Binary Infos]\n');
+fprintf(fid, 'BinaryFormat=%s\n',      hdr.BinaryFormat);
+fprintf(fid, '\n');
+fprintf(fid, '[Channel Infos]\n');
+% Each entry: Ch<Channel number>=<Name>,<Reference channel name>,<Resolution in "Unit">,<Unit>,<Future extensions>...
 % Fields are delimited by commas, some fields might be omitted (empty).
 % Commas in channel names should be coded as "\1", but are not supported here
 for i=1:hdr.nChans
-  fprintf(fid, 'Ch%d=%s,,%g\r\n', i, hdr.label{i}, hdr.resolution(i));
+  fprintf(fid, 'Ch%d=%s,,%g,%s\n', i, hdr.label{i}, hdr.resolution(i), strrep(hdr.chanunit{i}, 'uV', 'µV'));
 end
 fclose(fid);
 

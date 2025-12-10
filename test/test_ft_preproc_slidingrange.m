@@ -3,6 +3,7 @@ function tests = test_ft_preproc_slidingrange
 % MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_preproc_slidingrange
+% DATA no
 
 if nargout
   % assume that this is called by RUNTESTS
@@ -16,7 +17,7 @@ else
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function testOptions(testCase)
+function testEverything(testCase)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 nchan   = 8;

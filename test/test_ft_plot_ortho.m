@@ -3,6 +3,7 @@ function test_ft_plot_ortho
 % MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_plot_ortho
+% DATA no
 
 dat = randn(64, 64, 64);
 

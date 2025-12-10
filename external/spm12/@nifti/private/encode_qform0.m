@@ -1,10 +1,8 @@
 function hdr = encode_qform0(M,hdr)
 % Encode an affine transform into qform
-% _______________________________________________________________________
-% Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
+%__________________________________________________________________________
 
-%
-% $Id: encode_qform0.m 1143 2008-02-07 19:33:33Z spm $
+% Copyright (C) 2005-2022 Wellcome Centre for Human Neuroimaging
 
 
 % Convert from first voxel at [1,1,1] to first voxel at [0,0,0]
@@ -24,7 +22,7 @@ R         = R * diag(1./vx);
 % Ensure that R is O(3)
 [U,S,V] = svd(R);
 R       = U*V';
-if any(abs(diag(S)-1)>1e-3), warning('QFORM0 representation has been rounded.'); end;
+if any(abs(diag(S)-1)>1e-3), warning('QFORM0 representation has been rounded.'); end
 
 % Ensure that R is SO(3)
 if det(R)>0
@@ -32,7 +30,7 @@ if det(R)>0
 else
     R               = R*diag([1 1 -1]);
     hdr.pixdim(1:4) = [-1 vx];
-end;
+end
 
 % Convert to quaternions
 Q             = M2Q(R);
@@ -40,6 +38,4 @@ hdr.quatern_b = Q(1);
 hdr.quatern_c = Q(2);
 hdr.quatern_d = Q(3);
 
-if hdr.qform_code == 0, hdr.qform_code = 2; end;
-return;
-
+if hdr.qform_code == 0, hdr.qform_code = 2; end

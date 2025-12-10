@@ -1,7 +1,8 @@
 function test_example_bids_motion
 
-% MEM 4gb
+% MEM 2gb
 % WALLTIME 00:10:00
+% DATA public
 
 %% Converting an example motion tracking dataset for sharing in BIDS
 %
@@ -42,7 +43,7 @@ cfg.dataset_description.Funding             = 'n/a';
 cfg.dataset_description.ReferencesAndLinks  = 'n/a';
 cfg.dataset_description.DatasetDOI          = 'n/a';
 
-datadir = dccnpath('/home/common/matlab/fieldtrip/data/ftp/example/bids_motion');
+datadir = dccnpath('/project/3031000.02/external/download/example/bids_motion');
 
 %cfg.dataset = './original/self_test_30April2015_ADA.c3d';  % exported from Qualisys
 cfg.dataset = fullfile(datadir, 'qualysis/original/self_test_30April2015_ADA.c3d');
@@ -179,7 +180,7 @@ data2bids(cfg, data_combined);
 %c3dfile  = './original/example1.c3d';
 %mvnxfile = './original/example2.mvnx';
 
-datadir  = dccnpath('/home/common/matlab/fieldtrip/data/ftp/example/bids_motion/xsens/original');
+datadir  = dccnpath('/project/3031000.02/external/download/example/bids_motion/xsens/original');
 c3dfile  = fullfile(datadir, 'example1.c3d');
 mvnxfile = fullfile(datadir, 'example2.mvnx');
 

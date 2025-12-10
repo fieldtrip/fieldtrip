@@ -1,7 +1,8 @@
 function test_example_sphere_fitting
 
-% MEM 8gb
+% MEM 6gb
 % WALLTIME 00:20:00
+% DATA private
 
 %
 %% Fitting a template MRI to the MEG Polhemus head shape
@@ -11,7 +12,7 @@ function test_example_sphere_fitting
 
 load standard_mri % Colin 27 template in fieldtrip
 
-dataset = dccnpath('/home/common/matlab/fieldtrip/data/test/original/meg/neuromag306/sub-15_ses-meg_task-facerecognition_run-01_meg.fif');
+dataset = dccnpath('/project/3031000.02/test/original/meg/neuromag306/sub-15_ses-meg_task-facerecognition_run-01_meg.fif');
 
 % read MEG sensor location
 MEG_sens = ft_read_sens(dataset, 'senstype', 'meg');

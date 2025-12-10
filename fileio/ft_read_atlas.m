@@ -1,9 +1,10 @@
 function atlas = ft_read_atlas(filename, varargin)
 
 % FT_READ_ATLAS reads an template/individual segmentation or parcellation from disk.
+%
 % The volumetric segmentation or the surface-based parcellation can either represent
-% a template atlas (e.g. AAL or the Talairach Daemon), it can represent an
-% individualized atlas (e.g. obtained from FreeSurfer) or it can represent an
+% a template atlas (for example AAL or the Talairach Daemon), it can represent an
+% individualized atlas (for example obtained from FreeSurfer) or it can represent an
 % unlabeled parcellation/segmentation obtained from an individual's DTi, anatomical,
 % or resting state fMRI scan.
 %
@@ -14,18 +15,19 @@ function atlas = ft_read_atlas(filename, varargin)
 %
 % Additional options should be specified in key-value pairs and can include
 %   'format'      = string, see below
-%   'unit'        = string, e.g. 'mm' (default is to keep it in the native units of the file)
-%   'map'         = string, 'maxprob' (default), or 'prob', for FSL-based atlases, providing 
+%   'unit'        = string, for example 'mm' (default is to keep it in the native units of the file)
+%   'map'         = string, 'maxprob' (default), or 'prob', for FSL-based atlases, providing
 %                   either a probabilistic segmentation or a maximum a posterior probability map
-%   'labelfile'   = string, point to a (generic) text or xml file for interpretation of the values in the atlas 
+%   'labelfile'   = string, point to a (generic) txt or xml file for the interpretation of
+%                   the values in the atlas (default is automatic)
 %
 % For individual surface-based atlases from FreeSurfer you should specify two
 % filenames as a cell-array: the first points to the file that contains information
 % with respect to the parcels' labels, the second points to the file that defines the
 % mesh on which the parcellation is defined.
 %
-% The 'format' variable, if not specified, will be determined automatically. In general
-% it will not be needed to specify it. The following formats are supported:
+% The 'format' variable in general is not needed to be specified, it will be determined
+% automatically. The following formats are supported:
 %
 % Volumetric atlases based on a (gzipped) nifti-file with an companion txt-file for interpretation
 %   'aal'               assumes filename starting with 'ROI_MNI'
@@ -34,40 +36,41 @@ function atlas = ft_read_atlas(filename, varargin)
 %   'wfu'               assumes specific formatting of companion lookuptable txt-file
 %
 % Volumetric atlases based on a (gzipped) nifti-file with hard coded assumption on the labels
-%   'yeo7' 
+%   'yeo7'
 %   'yeo17'
 %
 % Volumetric atlases based on a folder with (gzipped) nifti-files with a companion xml-file for interpretation
-%   'fsl'               assumes path to folder with data mentioned in the xml-file. Use xml-file as filename 
+%   'fsl'               assumes path to folder with data mentioned in the xml-file. Use xml-file as filename
 %
 % Volumetric atlases based on the freesurfer mgz format with standard lookuptable txt-file for interpretation
-%   'freesurfer_volume' assumes the freesurfer LUT file for interpretation, and assumes aparc or aseg in the 
+%   'freesurfer_volume' assumes the freesurfer LUT file for interpretation, and assumes aparc or aseg in the
 %                       filename, used for subject-specific parcellations
-%   
+%
 % Volumetric atlases based on the afni software
-%   'afni'              assumes filename containing BRIK or HEAD, assumes generic interpretation of the labels 
+%   'afni'              assumes filename containing BRIK or HEAD, assumes generic interpretation of the labels
 %                       for the TTatlas+tlrc, or otherwise the interpretation should be in the file
-%   
+%
 % Volumetric atlas based on the spm_anatomy toolbox
-%   'spm_anatomy'       pair of .hdr/.img files, and an associated mat-file for the interpretation
-%                       Specify the associated mat-file with MPM in filename 
+%   'spm_anatomy'         pair of .hdr/.img files, and an associated mat-file for the interpretation. Please 
+%                         specify the associated mat-file with MPM as the filename.
 %
 % Surface based atlases, requiring a pair of files, containing the labels, and the associated geometry
-%   'caret_label'       hcp-workbench/caret style .gii, with .label. in filename, requires additional file describing the geometry
-%   'freesurfer_surface' freesurfer style annotation file, requires additional file describing the geometry 
+%   'caret_label'         hcp-workbench/caret style .gii, with .label. in filename, requires additional file describing the geometry
+%   'freesurfer_surface'  freesurfer style annotation file, requires additional file describing the geometry
 %
 % Miscellaneous formats
-%   'mat'               mat-file, with FieldTrip style struct, other matlab data that FieldTrip knows to handle, can also be 
-%                       Brainstorm derived surfaces
 %   'vtpm'
+%   'mat'                 mat-file, with FieldTrip style struct, or other MATLAB data that FieldTrip knows to 
+%                         handle, this can also be Brainstorm derived surfaces
 %
-% For volume data for whicth the format cannot be automatically detected, or if the volume data does not have a companion file 
-% for the interpretation of the labels, a list of 'fake' labels will be generated.
+% A list of fake tissue labels will be generated if the volume data does not have a
+% companion file for the interpretation of the labels or for volume data for which
+% the format cannot be automatically detected.
 %
 % The output atlas will be represented as structure according to FT_DATATYPE_SEGMENTATION or
 % FT_DATATYPE_PARCELLATION.
 %
-% The 'lines' and the 'colorcube' colormaps may be useful for plotting the different
+% The 'lines' and the 'colorcube' colormaps are useful for plotting the different
 % patches, for example using FT_PLOT_MESH, or FT_SOURCEPLOT.
 %
 % See also FT_READ_MRI, FT_READ_HEADSHAPE, FT_PREPARE_SOURCEMODEL, FT_SOURCEPARCELLATE, FT_PLOT_MESH
@@ -107,115 +110,125 @@ end % iscell
 % optionally get the data from an URL and make a temporary local copy
 filename = fetch_url(filename);
 
+format    = ft_getopt(varargin, 'format');
+labelfile = ft_getopt(varargin, 'labelfile');
+
 [p, f, x] = fileparts(filename);
-
-labelfile = ft_getopt(varargin, 'labelfile', []);
-ftype     = ft_filetype(filename);    
-
-% if the original file was a .gz
+% if the original file was compressed (most likely a nii.gz file)
 if isequal(x,'.gz')
   [p, f, x] = fileparts(filename(1:end-3));
 end
 
-% do an educated guess of the format based on the input, ensure that the
-% required additional functions are available, and specify the companion labelfile 
-if contains(filename, 'BRIK') || contains(filename, 'HEAD')
-  % the above is needed to correctly detect zipped files
-  ft_hastoolbox('afni', 1);
+% Determine the filetype by looking at the file itself. This is for the binary
+% content itself, not the format of the labelfile and the interpretation of the
+% values in the atlas.
+ftype = ft_filetype(filename);
 
-  % this is robust for both compressed or uncompressed afni atlases. 
-  format = 'afni';  
-elseif startsWith(ftype, 'nifti')
+if isempty(format)
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  % do an educated guess of the format based on the input, ensure that the required
+  % additional functions are available, and specify the companion labelfile
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-  % first handle the ones for which the labels are implicit in the filename
-  if contains(f, 'Yeo2011_7Networks')
-    % assume to be conform the shared atlas, with hardcoded index-to-label mapping
-    format = 'yeo7';
-  elseif contains(f, 'Yeo2011_17Networks')
-    % assume to be conform the shared atlas, with hardcoded index-to-label mapping
-    format = 'yeo17';
-  end
+  if contains(filename, 'BRIK') || contains(filename, 'HEAD')
+    % the above is needed to correctly detect zipped files
+    ft_hastoolbox('afni', 1);
 
-  % try for different conventions of the naming of a potential companion labelfile
-  if isempty(labelfile)
-    labelfile = fullfile(p, sprintf('%s.txt', f));
-    if ~exist(labelfile, 'file')
-      % in case the volume was zipped, and the txt only replaced the gz
-      labelfile = fullfile(p, sprintf('%s.nii.txt', f));
+    % this is robust for both compressed or uncompressed afni atlases.
+    format = 'afni';
+
+  elseif startsWith(ftype, 'nifti')
+    % first handle the ones for which the labels are implicit in the filename
+    if contains(f, 'Yeo2011_7Networks')
+      % assume to be conform the shared atlas, with hardcoded index-to-label mapping
+      format = 'yeo7';
+    elseif contains(f, 'Yeo2011_17Networks')
+      % assume to be conform the shared atlas, with hardcoded index-to-label mapping
+      format = 'yeo17';
     end
-    if ~exist(labelfile, 'file')
-      labelfile = ''; % revert back to empty
+
+    % try for different conventions of the naming of a potential companion labelfile
+    if isempty(labelfile)
+      labelfile = fullfile(p, sprintf('%s.txt', f));
+      if ~exist(labelfile, 'file')
+        % in case the volume was zipped, and the txt only replaced the gz
+        labelfile = fullfile(p, sprintf('%s.nii.txt', f));
+      end
+      if ~exist(labelfile, 'file')
+        labelfile = ''; % revert back to empty
+      end
     end
-  end
 
-  if ~isempty(labelfile)
-    % do a quick check on the companion labelfile to specify the format
-    fid = fopen_or_error(labelfile, 'rt');
-    l1  = fgetl(fid);
-    if strcmp(l1(1),'[') && strcmp(l1(end),']')
-      % specific to this one is that some of the wakeforest atlases contain non-human data, so no fixed coordsys can be assumed
-      format   = 'wfu';
-      coordsys = 'unknown';
-    elseif strcmp(l1,'Brainnetome Atlas')
-      % specific to this one is the coordinate system it seems
-      format   = 'brainnetome';
-      coordsys = 'mni'; % apparently the image is in radiological convention,
-      % so the voxel-axes are left-handed. The even valued parcels should end
-      % up in the right hemisphere
-    elseif contains(filename, 'ROI_MNI') || contains(filename, 'AAL')
-      % newer versions of AAL also exist with a companion .xml file, this is not yet supported
-      format   = 'aal';
-      coordsys = 'mni';
+    if ~isempty(labelfile)
+      % do a quick check on the companion labelfile to specify the format
+      fid = fopen_or_error(labelfile, 'rt');
+      l1  = fgetl(fid);
+      if strcmp(l1(1),'[') && strcmp(l1(end),']')
+        % specific to this one is that some of the wakeforest atlases contain non-human data, so no fixed coordsys can be assumed
+        format   = 'wfu';
+        coordsys = 'unknown';
+      elseif strcmp(l1,'Brainnetome Atlas')
+        % specific to this one is the coordinate system it seems
+        format   = 'brainnetome';
+        coordsys = 'mni'; % apparently the image is in radiological convention,
+        % so the voxel-axes are left-handed. The even valued parcels should end
+        % up in the right hemisphere
+      elseif contains(filename, 'ROI_MNI') || contains(filename, 'AAL')
+        % newer versions of AAL also exist with a companion .xml file, this is not yet supported
+        format   = 'aal';
+        coordsys = 'mni';
+      end
+      fclose(fid);
     end
-    fclose(fid);
-  end
-  if contains(filename, 'final_tissues')
-    ft_hastoolbox('freesurfer', 1); % required to read lookuptable
 
-    % assume to be from SimNIBS version 4
-    format = 'simnibs_v4';
+    if contains(filename, 'final_tissues')
+      ft_hastoolbox('freesurfer', 1); % required to read lookuptable
 
-    labelfile = fullfile(p, sprintf('%s_LUT.txt', f));
-  end
-  
-  if isempty(labelfile)
-    % just a nifti file without interpretation of labels
-    format = 'nifti_no_label';
-  end
+      % assume to be from SimNIBS version 4
+      format = 'simnibs_v4';
+      labelfile = fullfile(p, sprintf('%s_LUT.txt', f));
+    end
 
-elseif isequal(ftype, 'freesurfer_mgz') && contains(f, 'aparc') || contains(f, 'aseg')
-  ft_hastoolbox('freesurfer', 1);
+    if isempty(labelfile)
+      % just a nifti file without interpretation of labels
+      format = 'nifti_no_label';
+    end
 
-  % individual volume based segmentation from freesurfer
-  format = 'freesurfer_volume';
-  
-  if isempty(labelfile)
-    % use the version for freesurfer that is in fieldtrip/external/freesurfer
-    [ftver, ftpath] = ft_version;
-    labelfile  = fullfile(ftpath, 'external/freesurfer', 'FreeSurferColorLUT.txt');
-  end
+  elseif isequal(ftype, 'freesurfer_mgz') && contains(f, 'aparc') || contains(f, 'aseg')
+    ft_hastoolbox('freesurfer', 1);
 
-elseif isequal(ftype, 'freesurfer_annot')
-  ft_hastoolbox('freesurfer', 1);
+    % individual volume based segmentation from freesurfer
+    format = 'freesurfer_volume';
 
-  % individual volume based segmentation from freesurfer
-  format = 'freesurfer_surface';
-  
-elseif isequal(ftype, 'caret_label')
-  ft_hastoolbox('gifti', 1);
+    if isempty(labelfile)
+      % use the version for freesurfer that is in fieldtrip/external/freesurfer
+      [ftver, ftpath] = ft_version;
+      labelfile = fullfile(ftpath, 'external/freesurfer', 'FreeSurferColorLUT.txt');
+    end
 
-  % this is a gifti file that contains both the values for a set of vertices as well as the labels.
-  format = 'caret_label';
-  
-elseif contains(filename, 'MPM.mat')
-  ft_hastoolbox('spm8up', 1);
+  elseif isequal(ftype, 'freesurfer_annot')
+    ft_hastoolbox('freesurfer', 1);
 
-  % assume to be from the spm_anatomy toolbox
-  format = 'spm_anatomy';
+    % individual volume based segmentation from freesurfer
+    format = 'freesurfer_surface';
 
-elseif exist(fullfile(p, [f '_MPM.mat']), 'file')
+  elseif isequal(ftype, 'caret_label')
+    ft_hastoolbox('gifti', 1);
+
+    % this is a gifti file that contains both the values for a set of vertices as well as the labels.
+    format = 'caret_label';
+
+  elseif contains(filename, 'MPM.mat')
+    ft_hastoolbox('spm8up', 1);
+
+    % assume to be from the spm_anatomy toolbox
+    format = 'spm_anatomy';
+
+  elseif exist(fullfile(p, [f '_MPM.mat']), 'file')
     ft_warning('please specify the corresponding MPM.mat file as the filename');
-    filename = fullfile(p, [f '_MPM.mat']); % update the filename
+    
+    % update the filename
+    filename = fullfile(p, [f '_MPM.mat']); 
     [p, f, x] = fileparts(filename);
 
     ft_hastoolbox('spm8up', 1);
@@ -223,23 +236,24 @@ elseif exist(fullfile(p, [f '_MPM.mat']), 'file')
     % assume to be from the spm_anatomy toolbox
     format = 'spm_anatomy';
 
-elseif strcmp(x, '.xml')
-  ft_hastoolbox('gifti', 1); % required to read the xml
+  elseif strcmp(x, '.xml')
+    ft_hastoolbox('gifti', 1); % required to read the xml
 
-  % fsl-style atlas, this is assumed to consist of an .xml file that specifies the labels, as well as a pointer
-  % to the file/folder with the volume data.
-  format = 'fsl';
+    % fsl-style atlas, this is assumed to consist of an .xml file that specifies the labels, as well as a pointer
+    % to the file/folder with the volume data.
+    format = 'fsl';
 
-  labelfile = fullfile(p, sprintf('%s.xml',f));
+    labelfile = fullfile(p, sprintf('%s.xml',f));
 
-elseif strcmp(x, '.mat')
-  % mat-file to contain a well-defined structure
-  format = 'mat';
+  elseif strcmp(x, '.mat')
+    % mat-file to contain a well-defined structure
+    format = 'mat';
 
-else
+  else
+    format = 'unknown';
+  end
 
-  format = 'unknown';
-end
+end % if isempty format
 
 % get the optional input arguments
 fileformat = ft_getopt(varargin, 'format', format);
@@ -248,14 +262,14 @@ unit       = ft_getopt(varargin, 'unit');
 switch fileformat
   case {'aal' 'brainnetome' 'freesurfer_volume' 'nifti_no_label' 'simnibs_v4' 'wfu'}
     atlas = ft_read_mri(filename, 'outputfield', 'tissue');
-    
+
     % interpret the format specific labelfile
     if isequal(fileformat, 'aal')
       % The labelfile is a combination of nii+txt file, where the txt file may contain three columns like this
       %   FAG	Precentral_L	2001
       %   FAD	Precentral_R	2002
       %   ...
-   
+
       fid = fopen_or_error(labelfile, 'rt');
       C = textscan(fid, '%s%s%d');
       lab = C{2};
@@ -290,11 +304,11 @@ switch fileformat
       end
       idx = (1:246)';
       fclose(fid);
-     
+
     elseif isequal(fileformat, 'nifti_no_label')
       % the file does not exist
       ft_warning('cannot locate a labelfile, making default tissue labels');
-      
+
       idx = (1:max(atlas.tissue(:)))';
       lab = cell(size(idx));
       for i = 1:numel(lab)
@@ -302,17 +316,17 @@ switch fileformat
         lab{i} = sprintf('tissue %d', i);
       end
     end
-    
+
     if ~isfield(atlas, 'coordsys') && exist('coordsys', 'var')
       atlas.coordsys = coordsys;
     end
-    
+
     uval = unique(atlas.tissue(:));
     sel  = find(ismember(idx, uval));
     fprintf('subselecting %d labels from the total list of %d\n', numel(sel), numel(lab));
     idx  = idx(sel);
     lab  = lab(sel);
-    if exist('rgba', 'var') 
+    if exist('rgba', 'var')
       tmprgba = rgba(sel,:);
       rgba = zeros(0,4);
     end
@@ -340,7 +354,7 @@ switch fileformat
 
     atlas.tissuelabel = tissuelabel;
     if exist('rgba', 'var'), atlas.rgba = rgba; end
-    
+
     % reduce memory footprint
     if numel(tissuelabel)<=intmax('uint8')
       atlas.tissue = uint8(atlas.tissue);
@@ -351,8 +365,7 @@ switch fileformat
     end
 
   case 'afni'
-    
-    tmp     = ft_read_mri(filename);
+    tmp = ft_read_mri(filename);
     if isfield(tmp, 'coordsys') && ~strcmp(tmp.coordsys, 'unknown')
       coordsys = tmp.coordsys;
     elseif isfield(tmp.hdr, 'TEMPLATE_SPACE') && ~isempty(tmp.hdr.TEMPLATE_SPACE)
@@ -371,32 +384,31 @@ switch fileformat
       end
       labels  = {tmp.hdr.ATLAS_LABEL_TABLE.struct}';
       values  = [tmp.hdr.ATLAS_LABEL_TABLE.val]';
-      
+
     elseif contains(filename, 'TTatlas+tlrc')
       isprobabilistic = false;
-      
+
       [labels, values] = TTatlas_labels;
-      
+
     else
       ft_error('no information about the atlas labels is available');
     end
-    
-    atlas     = [];
+
+    atlas = [];
     atlas.dim = tmp.dim(1:3);
     atlas.transform = tmp.transform;
     atlas.hdr = tmp.hdr;
     atlas.coordsys = coordsys;
-    
+
     nbrick  = size(tmp.anatomy,4);
     for k = 1:nbrick
-      
       if ~isprobabilistic
         brickname = sprintf('brick%d',k-1);
         brick     = tmp.anatomy(:,:,:,k);
         ulabel    = setdiff(unique(brick(:)), 0);
         label     = cell(size(ulabel));
         nlabel    = numel(label);
-        
+
         % renumber the brick from 1:N and keep track of the label
         newbrick  = zeros(size(brick));
         for i = 1:nlabel
@@ -410,14 +422,14 @@ switch fileformat
         end
         atlas.(brickname) = newbrick;
         atlas.([brickname 'label']) = label;
+
       else
         atlas.(labels{k}) = tmp.anatomy(:,:,:,values(k)+1); % indexing is 0-based in this case
       end
-        
+
     end
 
   case {'freesurfer_surface'}
-    
     if contains(filename, 'a2009s')
       parcelfield = 'a2009s';
     elseif contains(filename, 'aparc')
@@ -427,7 +439,7 @@ switch fileformat
     else
       ft_error('unknown freesurfer parcellation type requested');
     end
-    
+
     % read the labels
     [v, p, c] = read_annotation(filename);
 
@@ -435,29 +447,29 @@ switch fileformat
     rgba  = c.table(:,1:4);
     rgb   = c.table(:,5); % compound value that is used for the indexing in vector p
     index = ((1:c.numEntries)-1)';
-    
+
     switch ft_filetype(filenamemesh)
       case 'freesurfer_triangle_binary'
         [pos, tri] = read_surf(filenamemesh);
-        
         % ensure the triangles to be 1-indexed
         if min(tri(:))==0 && max(tri(:))==size(pos,1)-1
           tri = tri+1;
         end
-        
+
         bnd.pos    = pos;
         bnd.tri    = tri;
         reindex    = true;
+
       otherwise
         ft_error('unsupported fileformat for surface mesh');
     end
-    
+
     % check the number of vertices
     if size(bnd.pos,1) ~= numel(p)
       ft_error('the number of vertices in the mesh does not match the number of elements in the parcellation');
     end
-    
-    % reindex the parcels, if needed: I am not fully sure about this, but the caret
+
+    % reindex the parcels, if needed. I am not fully sure about this, but the caret
     % label files seem to have the stuff numbered with normal numbers, with unknown
     % being -1. assuming them to be in order;
     if reindex
@@ -480,11 +492,11 @@ switch fileformat
     atlas.([parcelfield, 'label']) = label;
     atlas.rgba  = rgba;
     atlas       = ft_determine_units(atlas);
-    
+
   case 'caret_label'
-    
-    g = gifti(filename);
-    
+    % read the gifti file
+   g = gifti(filename);
+
     rgba = [];
     if isfield(g, 'labels')
       label = g.labels.name(:);
@@ -499,13 +511,13 @@ switch fileformat
         rgba = g.private.label.rgba; % I'm not sure whether this always exists
       end
     end
-    
+
     %label = g.private.label.name; % provides the name of the parcel
     %key   = g.private.label.key;  % maps value to name
-    
+
     % Store each column in cdata as an independent parcellation, because
     % each vertex can have multiple values in principle
-    
+
     atlas = [];
     for k = 1:size(g.cdata,2)
       tmporig  = g.cdata(:,k);
@@ -531,7 +543,7 @@ switch fileformat
           tmpnew(tmporig==key(m)) = val;
         end
       end
-      
+
       % there is some additional meta data that may be useful, but for now
       % stick to the rather uninformative parcellation1/2/3 etc.
       %
@@ -540,18 +552,18 @@ switch fileformat
       % else
       %   ft_error('could not determine parcellation name');
       % end
-      
+
       if size(g.cdata,2)>1
         parcelfield = ['parcellation' num2str(k)];
       else
         parcelfield = 'parcellation';
       end
-      
+
       atlas.(parcelfield)           = tmpnew;
       atlas.([parcelfield 'label']) = tmplabel;
       if ~isempty(tmprgba), atlas.rgba = tmprgba; end
     end
-    
+
     if exist('filenamemesh', 'var')
       tmp       = ft_read_headshape(filenamemesh);
       atlas.pos = tmp.pos;
@@ -560,9 +572,8 @@ switch fileformat
     elseif ~isfield(atlas, 'coordsys')
       atlas.coordsys = 'unknown';
     end
-    
+
   case 'spm_anatomy'
-    
     % load the map, this is assumed to be the struct-array MAP
     load(filename);
     [p,f,e]      = fileparts(filename);
@@ -571,12 +582,12 @@ switch fileformat
     tissue       = round(atlas.tissue); % I don't know why the values are non-integer
     label        = {MAP.name}';
     idx          = [MAP.GV]';
-    
+
     % check whether all labels are present
     if numel(intersect(idx,unique(tissue(:))))<numel(idx)
       fprintf('there are fewer labels in the volume than in the list\n');
     end
-    
+
     % remap the values of the labels to run from 1-numel(idx)
     newtissue = zeros(size(tissue));
     for k = 1:numel(idx)
@@ -585,9 +596,9 @@ switch fileformat
     atlas.tissue      = newtissue;
     atlas.tissuelabel = label;
     atlas.coordsys    = 'spm'; % I think this is safe to assume
-    
+
     clear tissue newtissue;
-    
+
   case 'fsl'
     map = ft_getopt(varargin, 'map', 'maxprob');
     switch map
@@ -598,19 +609,19 @@ switch fileformat
       otherwise
         error('unknown map requested');
     end
-    
+
     ft_hastoolbox('gifti', 1);
     hdr = xmltree(filename);
     hdr = convert(hdr);
-    
+
     % get the full path
     [p, f , x]  = fileparts(filename);
-    
+
     mrifilename = sprintf('%s.nii.gz', hdr.header.images{1}.(imagefile));
     if isequal(mrifilename(1), '/')
       mrifilename = mrifilename(2:end); % remove first backslash to avoid error if no full path was given
     end
-    
+
     % this uses the thresholded image
     switch map
       case 'maxprob'
@@ -625,7 +636,7 @@ switch fileformat
           fn = strrep(fn, '-', '_');
           fn = strrep(fn, '(', '');
           fn = strrep(fn, ')', '');
-          
+
           atlas.(fn) = tmp.anatomy(:,:,:,m);
           if ~isa(atlas.(fn), 'double') && ~isa(atlas.(fn), 'single')
             % ensure that the probabilistic values are either double or
@@ -640,7 +651,7 @@ switch fileformat
         atlas.coordsys = 'mni';
         atlas.dim      = atlas.dim(1:3);
     end
-    
+
   case 'mat'
     tmp = load(filename);
     if isfield(tmp, 'Vertices') && isfield(tmp, 'Atlas')
@@ -676,14 +687,14 @@ switch fileformat
     else
       ft_error('the mat-file %s does not contain a variable called ''atlas''',filename);
     end
-    
+
   case 'yeo7'
     % this uses Yeo2011_7Networks_MNI152_FreeSurferConformed1mm_LiberalMask_colin27.nii, which is
-    % the 7 network parcellation from https://surfer.nmr.mgh.harvard.edu/fswiki/CorticalParcellation_Yeo2011 
-    % aligned to the colin27 template (skull-stripped version of single_subj_T1_1mm.nii) 
+    % the 7 network parcellation from https://surfer.nmr.mgh.harvard.edu/fswiki/CorticalParcellation_Yeo2011
+    % aligned to the colin27 template (skull-stripped version of single_subj_T1_1mm.nii)
     % using AFNI's 3dQwarp and 3dNwarpApply
     atlas = ft_read_mri(filename, 'outputfield', 'tissue');
-    
+
     atlas.coordsys    = 'mni';
     atlas.tissuelabel = {
       '7Networks_1'
@@ -694,7 +705,7 @@ switch fileformat
       '7Networks_6'
       '7Networks_7'
       };
-    
+
     colors = [
       120 18 134;
       70 130 180;
@@ -704,13 +715,13 @@ switch fileformat
       230 148 34;
       205 62 78
       ]; % not used
-    
+
   case 'yeo17'
     % this uses Yeo2011_17Networks_MNI152_FreeSurferConformed1mm_LiberalMask_colin27.nii, which is
-    % the 17 network parcellation from https://surfer.nmr.mgh.harvard.edu/fswiki/CorticalParcellation_Yeo2011 
+    % the 17 network parcellation from https://surfer.nmr.mgh.harvard.edu/fswiki/CorticalParcellation_Yeo2011
     % aligned to the colin27 template (skull-stripped version of single_subj_T1_1mm.nii) using AFNI's 3dQwarp and 3dNwarpApply
     atlas = ft_read_mri(filename, 'outputfield', 'tissue');
-    
+
     atlas.coordsys    = 'mni';
     atlas.tissuelabel = {
       '17Networks_1'
@@ -750,10 +761,10 @@ switch fileformat
       255 255 0;
       205 62 78
       ]; % not used
-    
+
   otherwise
     ft_error('unsupported format "%s"', fileformat);
-    
+
 end % switch fileformat
 
 if ~isempty(unit)
@@ -768,8 +779,9 @@ else
   end
 end
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% TTatlas labels moved to a subfunction for readability of the above code
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function [labels, values] = TTatlas_labels
 
 % the following information is from https://sscc.nimh.nih.gov/afni/doc/misc/afni_ttatlas/index_html

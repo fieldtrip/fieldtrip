@@ -15,7 +15,7 @@ function [grad, elec] = ctf2grad(hdr, dewar, coilaccuracy, coildeffile)
 % See also BTI2GRAD, FIF2GRAD, MNE2GRAD, ITAB2GRAD, YOKOGAWA2GRAD,
 % FT_READ_SENS, FT_READ_HEADER
 
-% Copyright (C) 2004-2017, Robert Oostenveld
+% Copyright (C) 2004-2024, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -83,17 +83,17 @@ if isfield(hdr, 'res4') && ~isempty(coilaccuracy)
   % use in additionthe coil definitions from the MNE coil_def.dat file
   % these allow for varying accuracy which is specified by coilaccuracy = 0, 1 or 2
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  
+
   ft_hastoolbox('mne', 1);
   if isempty(coildeffile)
     [ftver, ftpath] = ft_version;
     coildeffile     = fullfile(ftpath, 'external', 'mne', 'coil_def.dat');
   end
   def = mne_load_coil_def(coildeffile);
-  
+
   k = 1;
   for i=1:length(hdr.res4.senres)
-    
+
     thissens = hdr.res4.senres(i);
     switch thissens.sensorTypeIndex
       case 5 % 5001
@@ -102,11 +102,11 @@ if isfield(hdr, 'res4') && ~isempty(coilaccuracy)
         thisdef = def([def.id]==5002 & [def.accuracy]==coilaccuracy);
       case 1 % 5003 or 5004
         % this is a reference gradiometer
-        delta = thissens.pos0*[-1;1]; 
+        delta = thissens.pos0*[-1;1];
 
         % determine whether the gradient is 'off' diagonal, comparing the
         % (cosine) of the angle between the line connecting the coils and
-        % the orientation of the first coil        % 
+        % the orientation of the first coil
         if abs((delta./norm(delta))'*thissens.ori0(:,1))<1e-2
           % it's an off diagonal channel
           thisdef = def([def.id]==5004 & [def.accuracy]==coilaccuracy);
@@ -117,38 +117,38 @@ if isfield(hdr, 'res4') && ~isempty(coilaccuracy)
         % do not add this as sensor to the gradiometer definition
         thisdef = [];
     end % case
-    
+
     if ~isempty(thisdef)
       if dewar
         pos = thissens.pos0;
         ori = thissens.ori0;
-      else 
+      else
         pos = thissens.pos;
         ori = thissens.ori;
       end
       pos   = pos./100;   % convert from cm to m
-      
+
       if thissens.numCoils==2 && thisdef.id~=5004
         % determine the direction from the relative position of the two coils
         %ez = pos(:,2)-pos(:,1);
         %ez = ez./norm(ez);
         ez  = -ori(:,1).*sign(thissens.properGain);
-        
+
         pos = pos(:,1)'; % take the first coil as local origin
         [ex, ey] = plane_unitvectors(ez);
-        
+
       elseif thissens.numCoils==2 && thisdef.id==5004
         % 'off' diagonal gradiometer, needs to be treated differently.
-        
+
         % the local origin is the average of the two coils, and the local
         % x-axis connects the coils
         ex  = pos*[1;-1]; % line between the coils
         pos = mean(pos,2)';
 
         ez  = -ori(:,1).*sign(thissens.properGain);
-        ex  = ex./norm(ex); 
+        ex  = ex./norm(ex);
         ey  = cross(ez,ex);
-        
+
         %thisdef.coildefs(:,2:4) = -thisdef.coildefs(:,2:4); % FIXME not sure about this
       else
         % magnetometer coil
@@ -157,14 +157,14 @@ if isfield(hdr, 'res4') && ~isempty(coilaccuracy)
         % determine the direction from the orientation of the magnetometer coil
         ez = -ori(:,1).*sign(thissens.properGain);
         [ex, ey] = plane_unitvectors(ez);
-        
+
       end
 
       for j=1:thisdef.num_points
         weight = thisdef.coildefs(j,1);
         pos1 = thisdef.coildefs(j,2:4);
         ori1 = thisdef.coildefs(j,5:7);
-        
+
         R = [ex(:) ey(:) ez(:) zeros(3,1);0 0 0 1];
         T = translate(pos);
         grad.tra(i,k)     = weight;
@@ -172,38 +172,37 @@ if isfield(hdr, 'res4') && ~isempty(coilaccuracy)
         grad.coilori(k,:) = ft_warp_apply(  R, ori1); % only the rotation
         k = k+1;
       end % for num_points
-      
+
       grad.chanpos(i,:) = pos;
       grad.chanori(i,:) = ez;
-      
-      % remove the site-specific numbers from each channel name, e.g. 'MZC01-1706' becomes 'MZC01'
-      grad.label{i} = strtok(hdr.res4.chanNames(i,:), '-');
+      grad.label{i}     = hdr.res4.chanNames(i,:);
+
     end % if MEG or MEGREF
   end % for each channel
-  
+
   grad.label = grad.label(:);
   grad.unit  = 'm'; % the coil_def.dat file is in meter
-  
+
   remove = cellfun(@isempty, grad.label);
   grad.label   = grad.label(~remove);
   grad.tra     = grad.tra(~remove,:);
   grad.chanpos = grad.chanpos(~remove,:);
   grad.chanori = grad.chanori(~remove,:);
-  
+
   if dewar
     grad.coordsys = 'dewar';
   else
     grad.coordsys = 'ctf';
   end
-  
+
 elseif isfield(hdr, 'res4') && isfield(hdr.res4, 'senres')
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % the header was read using the CTF p-files, i.e. readCTFds
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  
+
   sensType  = [hdr.res4.senres.sensorTypeIndex];
-  selMEG    = find(sensType==5);
-  selREF    = find(sensType==0 | sensType==1);
+  selMEG    = find(sensType==4 | sensType==5 | sensType==6 | sensType==7);
+  selREF    = find(sensType==0 | sensType==1 | sensType==2 | sensType==3);
   selEEG    = find(sensType==9);
   selMEG    = selMEG(:)';
   selREF    = selREF(:)';
@@ -211,17 +210,7 @@ elseif isfield(hdr, 'res4') && isfield(hdr.res4, 'senres')
   numMEG    = length(selMEG);
   numREF    = length(selREF);
   numEEG    = length(selEEG);
-  
-  % determine the number of channels and coils
-  coilcount = 0;
-  coilcount = coilcount + sum([hdr.res4.senres(selREF).numCoils]);
-  coilcount = coilcount + sum([hdr.res4.senres(selMEG).numCoils]);
-  chancount = numMEG + numREF;
-  % preallocate the memory
-  grad.coilpos = zeros(coilcount, 3);         % this will hold the position of each coil
-  grad.coilori = zeros(coilcount, 3);         % this will hold the orientation of each coil
-  grad.tra     = zeros(chancount, coilcount); % this describes how each coil contributes to each channel
-  
+
   if numEEG>0
     for i=1:numEEG
       n = selEEG(i);
@@ -241,8 +230,22 @@ elseif isfield(hdr, 'res4') && isfield(hdr.res4, 'senres')
   else
     elec = [];
   end
-  
-  % combine the bottom and top coil of each MEG channel
+
+  % determine the number of channels and coils
+  chancount = numMEG + numREF;
+  coilcount = 0;
+  coilcount = coilcount + sum([hdr.res4.senres(selMEG).numCoils]);
+  coilcount = coilcount + sum([hdr.res4.senres(selREF).numCoils]);
+  % preallocate the memory
+  grad.coilpos = zeros(coilcount, 3);         % this will hold the position of each coil
+  grad.coilori = zeros(coilcount, 3);         % this will hold the orientation of each coil
+  grad.tra     = zeros(chancount, coilcount); % this describes how each coil contributes to each channel
+
+  % keep track of the channels and coils
+  chancount = 0;
+  coilcount = 0;
+
+  % combine the coils of each MEG channel located in the head shell
   for i=1:numMEG
     n = selMEG(i);
     % get coil positions and orientations of this channel (max. 8)
@@ -253,22 +256,18 @@ elseif isfield(hdr, 'res4') && isfield(hdr.res4, 'senres')
       pos = hdr.res4.senres(n).pos';
       ori = hdr.res4.senres(n).ori';
     end
-    if hdr.res4.senres(n).numCoils~=2
-      ft_error('unexpected number of coils in MEG channel');
-    end
+    % determine the number of coils for this channel
+    numcoils = hdr.res4.senres(n).numCoils;
     % add the coils of this channel to the gradiometer array
-    grad.coilpos(i       ,:) = pos(1,:);
-    grad.coilpos(i+numMEG,:) = pos(2,:);
-    grad.coilori(i       ,:) = ori(1,:) .* -sign(hdr.res4.senres(n).properGain);
-    grad.coilori(i+numMEG,:) = ori(2,:) .* -sign(hdr.res4.senres(n).properGain);
-    grad.tra(i,i       ) = 1;
-    grad.tra(i,i+numMEG) = 1;
+    chancount = chancount+1;
+    for j=1:numcoils
+      coilcount = coilcount+1;
+      grad.coilpos(coilcount, :)         = pos(j,:);
+      grad.coilori(coilcount, :)         = ori(j,:) .* -sign(hdr.res4.senres(n).properGain);
+      grad.tra(chancount, coilcount) = 1;
+    end
   end
-  
-  % the MEG channels always have 2 coils, the reference channels vary in the number of coils
-  chancount = 1*numMEG;
-  coilcount = 2*numMEG;
-  
+
   % combine the coils of each reference channel
   for i=1:numREF
     n = selREF(i);
@@ -291,25 +290,21 @@ elseif isfield(hdr, 'res4') && isfield(hdr.res4, 'senres')
       grad.tra(chancount, coilcount) = 1;
     end
   end
-  
+
   label = cellstr(hdr.res4.chanNames);
-  for i=1:numel(label)
-    % remove the site-specific numbers from each channel name, e.g. 'MZC01-1706' becomes 'MZC01'
-    label{i} = strtok(label{i}, '-');
-  end
-  
+
   grad.label = label([selMEG selREF]);
   grad.unit  = 'cm'; % the res4 file represents it in centimeter
-  if ~isempty(elec)  
+  if ~isempty(elec)
     elec.unit  = 'cm';
   end
-  
+
   if dewar
     grad.coordsys = 'dewar';
   else
     grad.coordsys = 'ctf';
   end
-  
+
   % convert the balancing coefficients into a montage that can be used with the ft_apply_montage function
   if isfield(hdr.BalanceCoefs, 'G1BR')
     meglabel          = label(hdr.BalanceCoefs.G1BR.MEGlist);
@@ -321,7 +316,7 @@ elseif isfield(hdr, 'res4') && isfield(hdr.res4, 'senres')
     montage.tra       = [eye(nmeg, nmeg), -hdr.BalanceCoefs.G1BR.alphaMEG'; zeros(nref, nmeg), eye(nref, nref)];
     grad.balance.G1BR = montage;
   end
-  
+
   if isfield(hdr.BalanceCoefs, 'G2BR')
     meglabel          = label(hdr.BalanceCoefs.G2BR.MEGlist);
     reflabel          = label(hdr.BalanceCoefs.G2BR.Refindex);
@@ -332,7 +327,7 @@ elseif isfield(hdr, 'res4') && isfield(hdr.res4, 'senres')
     montage.tra       = [eye(nmeg, nmeg), -hdr.BalanceCoefs.G2BR.alphaMEG'; zeros(nref, nmeg), eye(nref, nref)];
     grad.balance.G2BR = montage;
   end
-  
+
   if isfield(hdr.BalanceCoefs, 'G3BR')
     meglabel          = label(hdr.BalanceCoefs.G3BR.MEGlist);
     reflabel          = label(hdr.BalanceCoefs.G3BR.Refindex);
@@ -343,7 +338,7 @@ elseif isfield(hdr, 'res4') && isfield(hdr.res4, 'senres')
     montage.tra       = [eye(nmeg, nmeg), -hdr.BalanceCoefs.G3BR.alphaMEG'; zeros(nref, nmeg), eye(nref, nref)];
     grad.balance.G3BR = montage;
   end
-  
+
   if isfield(hdr.BalanceCoefs, 'G3AR')
     meglabel          = label(hdr.BalanceCoefs.G3AR.MEGlist);
     reflabel          = label(hdr.BalanceCoefs.G3AR.Refindex);
@@ -354,42 +349,46 @@ elseif isfield(hdr, 'res4') && isfield(hdr.res4, 'senres')
     montage.tra       = [eye(nmeg, nmeg), -hdr.BalanceCoefs.G3AR.alphaMEG'; zeros(nref, nmeg), eye(nref, nref)];
     grad.balance.G3AR = montage;
   end
-  
+
   if     all([hdr.res4.senres(selMEG).grad_order_no]==0)
-    grad.balance.current = 'none';
+    bname = 'none';
   elseif all([hdr.res4.senres(selMEG).grad_order_no]==1)
-    grad.balance.current = 'G1BR';
+    bname = 'G1BR';
   elseif all([hdr.res4.senres(selMEG).grad_order_no]==2)
-    grad.balance.current = 'G2BR';
+    bname = 'G2BR';
   elseif all([hdr.res4.senres(selMEG).grad_order_no]==3)
-    grad.balance.current = 'G3BR';
+    bname = 'G3BR';
   elseif all([hdr.res4.senres(selMEG).grad_order_no]==13)
-    grad.balance.current = 'G3AR';
+    bname = 'G3AR';
   else
     ft_warning('cannot determine balancing of CTF gradiometers');
     grad = rmfield(grad, 'balance');
   end
-  
+
   % sofar the gradiometer definition was the ideal, non-balenced one
-  if isfield(grad, 'balance') && ~strcmp(grad.balance.current, 'none')
-    % apply the current balancing parameters to the gradiometer definition
-    %grad = ft_apply_montage(grad, getfield(grad.balance, grad.balance.current));
-    grad = ft_apply_montage(grad, getfield(grad.balance, grad.balance.current), 'keepunused', 'yes');
+  if isfield(grad, 'balance')
+    if ~strcmp(bname, 'none')
+      % apply the current balancing parameters to the gradiometer definition
+      grad = ft_apply_montage(grad, grad.balance.(bname), 'keepunused', 'yes');
+      grad.balance.current = {bname};
+    else
+      grad.balance.current = {};
+    end
   end
-  
-  
+
+
 elseif isfield(hdr, 'sensType') && isfield(hdr, 'Chan')
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % the header was read using the open-source MATLAB code that originates from CTF and that was modified by the FCDC
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  
+
   selMEG = find(hdr.sensType==5);
   selREF = find(hdr.sensType==0 | hdr.sensType==1);
   selMEG = selMEG(:)';
   selREF = selREF(:)';
   numMEG = length(selMEG);
   numREF = length(selREF);
-  
+
   % combine the bottom and top coil of each MEG channel
   for i=1:numMEG
     n = selMEG(i);
@@ -415,7 +414,7 @@ elseif isfield(hdr, 'sensType') && isfield(hdr, 'Chan')
     grad.tra(i,i+numMEG) = 1;
   end
   numMEGcoils = size(grad.coilpos, 1);
-  
+
   % combine the coils of each reference channel
   for i=1:numREF
     n = selREF(i);
@@ -436,33 +435,33 @@ elseif isfield(hdr, 'sensType') && isfield(hdr, 'Chan')
       grad.tra(numMEG+i, numMEGcoils+i) = 1;
     end
   end
-  
+
   grad.label = hdr.label([selMEG selREF]);
   grad.unit  = 'cm'; % the res4 file represents it in centimeter
-  
+
   if dewar
     grad.coordsys = 'dewar';
   else
     grad.coordsys = 'ctf';
   end
-  
+
 elseif isfield(hdr, 'sensor') && isfield(hdr.sensor, 'info')
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   % the header was read using the CTF importer from the NIH and Daren Weber
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  
+
   if dewar
     % this does not work for Daren Webers implementation
     ft_error('cannot return the gradiometer definition in dewar coordinates');
   end
-  
+
   % only work on the MEG channels
   if isfield(hdr.sensor.index, 'meg')
     sel = hdr.sensor.index.meg;
   else
     sel = hdr.sensor.index.meg_sens;
   end
-  
+
   for i=1:length(sel)
     pnt = hdr.sensor.info(sel(i)).location';
     ori = hdr.sensor.info(sel(i)).orientation';
@@ -477,12 +476,12 @@ elseif isfield(hdr, 'sensor') && isfield(hdr.sensor, 'info')
     else
       ft_error('do not know how to deal with higher order gradiometer hardware')
     end
-    
+
     % add this channels coil positions and orientations
     grad.coilpos = [grad.coilpos; pnt];
     grad.coilori = [grad.coilori; ori];
     grad.label{i} = hdr.sensor.info(sel(i)).label;
-    
+
     % determine the contribution of each coil to each channel's output signal
     if size(pnt,1)==1
       % one coil, assume that the orientation is correct, i.e. the weight is +1
@@ -496,11 +495,11 @@ elseif isfield(hdr, 'sensor') && isfield(hdr.sensor, 'info')
       ft_error('do not know how to deal with higher order gradiometer hardware')
     end
   end
-  
+
   % prefer to have the labels in a column vector
   grad.label = grad.label(:);
   grad.unit  = 'cm'; % the res4 file represents it in centimeter
-  
+
   % reorder the coils, such that the bottom coils are at the first N
   % locations and the top coils at the last N positions. This makes it
   % easier to use a selection of the coils for topographic plotting
@@ -511,7 +510,7 @@ elseif isfield(hdr, 'sensor') && isfield(hdr.sensor, 'info')
     grad.coilori = grad.coilori([bot top], :);
     grad.tra = grad.tra(:, [bot top]);
   end
-  
+
 else
   ft_error('unknown header to contruct gradiometer definition');
 end

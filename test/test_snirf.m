@@ -1,8 +1,9 @@
 function test_snirf
 
 % WALLTIME 00:10:00
-% MEM 2GB
+% MEM 1gb
 % DEPENDENCY homer2fieldtrip fieldtrip2homer ft_write_data
+% DATA private
 
 p = tempdir;
 f1 = fullfile(p, 'data1.snirf');
@@ -15,7 +16,7 @@ f2 = fullfile(p, 'data2.snirf');
 
 % read the original data
 cfg = [];
-cfg.dataset = dccnpath('/home/common/matlab/fieldtrip/data/test/original/nirs/homer/S1001_run01.nirs');
+cfg.dataset = dccnpath('/project/3031000.02/test/original/nirs/homer/S1001_run01.nirs');
 cfg.channel = {'all', '-s*'};
 data1 = ft_preprocessing(cfg);
 event1 = ft_read_event(cfg.dataset);
@@ -35,7 +36,7 @@ event1a = ft_read_event(cfg.dataset);
 
 % read the original data
 cfg = [];
-cfg.dataset = dccnpath('/home/common/matlab/fieldtrip/data/test/original/nirs/artinis/Helena/190528_fingertap_L.oxy3');
+cfg.dataset = dccnpath('/project/3031000.02/test/original/nirs/artinis/Helena/190528_fingertap_L.oxy3');
 cd(fileparts(cfg.dataset)); % we should be located in the directory with the optodetemplates.xml
 data2 = ft_preprocessing(cfg);
 event2 = ft_read_event(cfg.dataset, 'chanindx', -1); % do not parse the ADC channels

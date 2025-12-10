@@ -1,13 +1,14 @@
 function test_ft_volumesegment
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 01:00:00
 % DEPENDENCY ft_volumesegment  ft_read_mri
+% DATA private
 
 % initial version by Lilla Magyari 2012
 
 % read in an mri
-mri = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/mri/nifti/single_subj_T1.nii'));
+mri = ft_read_mri(dccnpath('/project/3031000.02/test/latest/mri/nifti/single_subj_T1.nii'));
 
 % the following could also be done using ft_determine_coordsys
 mri.coordsys = 'spm';
@@ -163,8 +164,8 @@ elseif isfield(scalp2,'anatomy') || isfield(scalp2,'tpm') || isfield(scalp2,'bra
   error('inconsistent segmentation structure');
 end
 
-% when scalp is the only output: the representation is "cummulative"
-% for comparison, also the seg.scalp is converted to cummulative
+% when scalp is the only output: the representation is "cumulative"
+% for comparison, also the seg.scalp is converted to cumulative
 seg.scalp(seg.brain == 1) = 1;
 seg.scalp(seg.skull == 1) = 1;
 seg2.scalp(seg2.brain == 1) = 1;

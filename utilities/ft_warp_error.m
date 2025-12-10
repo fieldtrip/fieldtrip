@@ -6,7 +6,7 @@ function [dist] = ft_warp_error(M, input, target, varargin)
 % Use as
 %   dist = ft_warp_error(M, input, target, 'method')
 %
-% It returns the mean Euclidian distance (i.e. the residual) for an interative
+% It returns the mean Euclidean distance (i.e. the residual) for an interactive
 % optimalization to transform the input towards the target using the
 % transformation M with the specified warping method.
 %
@@ -56,7 +56,7 @@ if isstruct(target)
   % this is done here in one step, but can also be done in separate steps (see example code below)
   el = project_elec(input, target.pos, target.tri);
   dist = mean(el(:,4));
-  % the following example code is more elaborate, and can be used for detailled testing
+  % the following example code is more elaborate, and can be used for detailed testing
   if 0
     Npos = size(input,1);
     prj = zeros(Npos, 3);

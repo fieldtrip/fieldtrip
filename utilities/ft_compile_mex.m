@@ -1,14 +1,14 @@
 function ft_compile_mex(force)
 
-% FT_COMPILE_MEX can be used for compiling most of the FieldTrip MEX files Note that
+% FT_COMPILE_MEX can be used for compiling most of the FieldTrip MEX files. Note that
 % this function does not put the MEX files in the correct location in the private
 % folders, this is managed by a Bash script. In case you are not working with Git and
 % you want to recompile the mex files for your platform, you can find all mex files
 % for your platform and move them to a backup directory that is not on your MATLAB
-% path. Subsequently you can rtun this function to recompile it on your platform with
+% path. Subsequently you can run this function to recompile it on your platform with
 % your compiler settings
 %
-% The standards procedure for compiling mex files is detailled on
+% The standards procedure for compiling mex files is detailed on
 % http://www.fieldtriptoolbox.org/development/guidelines/code#compiling_mex_files
 %
 % Please note that this script does NOT set up your MEX environment for you, so in
@@ -90,23 +90,38 @@ L = add_mex_source(L,'src','nanvar');
 L = add_mex_source(L,'src','nansum');
 L = add_mex_source(L,'src','nanstd');
 L = add_mex_source(L,'src','det2x2');
+L = add_mex_source(L,'src','det3x3');
 L = add_mex_source(L,'src','inv2x2');
+L = add_mex_source(L,'src','inv3x3');
 L = add_mex_source(L,'src','mtimes2x2');
+L = add_mex_source(L,'src','mtimes3x3'); 
 L = add_mex_source(L,'src','sandwich2x2');
+L = add_mex_source(L,'src','sandwich3x3');
 L = add_mex_source(L,'src','combineClusters');
 
 % this one is located elsewhere
-L = add_mex_source(L,'external/fileexchange','CalcMD5',[],[],'CFLAGS=''-std=c99 -fPIC''');
+if exist('OCTAVE_VERSION','builtin')
+  % Octave requires specific formatting of extra flags (mkoctfile-style)
+  mex_flag_str = '-std=c99 -fPIC';
+else
+  % MATLAB uses mex-style single string
+  mex_flag_str = 'CFLAGS=''-std=c99 -fPIC''';
+end
+L = add_mex_source(L, 'external/fileexchange', 'CalcMD5', [], [], mex_flag_str);
 
 % this one depends on the MATLAB version
 if ft_platform_supports('libmx_c_interface')
   % use the C interface
   L = add_mex_source(L,'src','mxSerialize_c');
   L = add_mex_source(L,'src','mxDeserialize_c');
-else
+elseif ft_platform_supports('matlabversion',-inf,'2014a')
   % use the C++ interface
   L = add_mex_source(L,'src','mxSerialize_cpp');
   L = add_mex_source(L,'src','mxDeserialize_cpp');
+else
+  % the undocumented built-in mxSerialize.c does not exist anymore in versions
+  % >2014a, so the source file cannot be compiled. See issue #2491 on github (which
+  % provides a link to another solution, also relying on undocumented matlab)
 end
 
 oldDir = pwd;

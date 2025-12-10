@@ -1,10 +1,11 @@
 function test_ft_headmovement
 
-% MEM 3gb
+% MEM 1gb
 % WALLTIME 00:20:00
 % DEPENDENCY ft_headmovement
+% DATA public
 
-dataset = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/SubjectRest.ds');
+dataset = dccnpath('/project/3031000.02/external/download/test/ctf/SubjectRest.ds');
 
 cfg = [];
 cfg.dataset = dataset;

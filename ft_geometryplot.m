@@ -13,6 +13,7 @@ function [cfg] = ft_geometryplot(cfg)
 %   cfg.headshape         = structure, see FT_READ_HEADSHAPE
 %   cfg.headmodel         = structure, see FT_PREPARE_HEADMODEL and FT_READ_HEADMODEL
 %   cfg.sourcemodel       = structure, see FT_PREPARE_SOURCEMODEL
+%   cfg.dipole            = structure, see FT_DIPOLEFITTING
 %   cfg.mri               = structure, see FT_READ_MRI
 %   cfg.mesh              = structure, see FT_PREPARE_MESH
 %   cfg.axes              = string, 'yes' or 'no' (default = 'no')
@@ -33,6 +34,7 @@ function [cfg] = ft_geometryplot(cfg)
 %   cfg.headshapestyle    = cell-array or structure, see below
 %   cfg.headmodelstyle    = cell-array or structure, see below
 %   cfg.sourcemodelstyle  = cell-array or structure, see below
+%   cfg.dipolestyle       = cell-array or structure, see below
 %   cfg.mristyle          = cell-array or structure, see below
 %   cfg.meshstyle         = cell-array or structure, see below
 %
@@ -105,6 +107,7 @@ cfg.opto            = ft_getopt(cfg, 'opto', []);
 cfg.headshape       = ft_getopt(cfg, 'headshape', []);
 cfg.headmodel       = ft_getopt(cfg, 'headmodel', []);
 cfg.sourcemodel     = ft_getopt(cfg, 'sourcemodel', []);
+cfg.dipole          = ft_getopt(cfg, 'dipole', []);
 cfg.mri             = ft_getopt(cfg, 'mri', []);
 cfg.mesh            = ft_getopt(cfg, 'mesh', []);
 
@@ -115,6 +118,7 @@ cfg.optostyle         = ft_getopt(cfg, 'optostyle', {});
 cfg.headshapestyle    = ft_getopt(cfg, 'headshapestyle', {});
 cfg.headmodelstyle    = ft_getopt(cfg, 'headmodelstyle', {});
 cfg.sourcemodelstyle  = ft_getopt(cfg, 'sourcemodelstyle', {});
+cfg.dipolestyle       = ft_getopt(cfg, 'dipolestyle', {});
 cfg.mristyle          = ft_getopt(cfg, 'mristyle', {});
 cfg.meshstyle         = ft_getopt(cfg, 'meshstyle', {});
 
@@ -125,13 +129,14 @@ cfg.optostyle         = default_optostyle(cfg.optostyle,                ~isempty
 cfg.headshapestyle    = default_headshapestyle(cfg.headshapestyle,      ~isempty(cfg.headshape));
 cfg.headmodelstyle    = default_headmodelstyle(cfg.headmodelstyle,      ~isempty(cfg.headmodel));
 cfg.sourcemodelstyle  = default_sourcemodelstyle(cfg.sourcemodelstyle,  ~isempty(cfg.sourcemodel));
+cfg.dipolestyle       = default_dipolestyle(cfg.dipolestyle,            ~isempty(cfg.dipole));
 cfg.mristyle          = default_mristyle(cfg.mristyle,                  ~isempty(cfg.mri));
 cfg.meshstyle         = default_meshstyle(cfg.meshstyle,                ~isempty(cfg.mesh));
 
 if isempty(cfg.unit)
   % determine the common units
   tmp = {};
-  for fn={'elec', 'grad', 'opto', 'headshape', 'headmodel', 'sourcemodel', 'mri', 'mesh'}
+  for fn={'elec', 'grad', 'opto', 'headshape', 'headmodel', 'sourcemodel', 'dipole', 'mri', 'mesh'}
     if isfield(cfg, fn{1}) && isfield(cfg.(fn{1}), 'unit')
       tmp = [tmp {cfg.(fn{1}).unit}];
     end
@@ -147,7 +152,7 @@ end
 if isempty(cfg.coordsys)
   % determine the common coordinate system
   tmp = {};
-  for fn={'elec', 'grad', 'opto', 'headshape', 'headmodel', 'sourcemodel', 'mri', 'mesh'}
+  for fn={'elec', 'grad', 'opto', 'headshape', 'headmodel', 'sourcemodel', 'dipole', 'mri', 'mesh'}
     if isfield(cfg, fn{1}) && isfield(cfg.(fn{1}), 'coordsys')
       tmp = [tmp {cfg.(fn{1}).coordsys}];
     end
@@ -160,7 +165,7 @@ if isempty(cfg.coordsys)
 end
 
 % convert them all to the same units
-for fn={'elec', 'grad', 'opto', 'headshape', 'headmodel', 'sourcemodel', 'mri', 'mesh'}
+for fn={'elec', 'grad', 'opto', 'headshape', 'headmodel', 'sourcemodel', 'dipole', 'mri', 'mesh'}
   if isfield(cfg, fn{1}) && ~isempty(cfg.(fn{1}))
     cfg.(fn{1}) = ft_convert_units(cfg.(fn{1}), cfg.unit);
   end
@@ -171,7 +176,6 @@ fig = open_figure(keepfields(cfg, {'figure', 'position', 'visible', 'renderer', 
 
 setappdata(fig, 'cfg',         cfg); % this contains the data and most options
 setappdata(fig, 'labels',      true);
-setappdata(fig, 'axes',        true);
 setappdata(fig, 'grid',        true);
 setappdata(fig, 'camlight',    true);
 setappdata(fig, 'zoom',        0);    % between 0 and 1
@@ -181,6 +185,7 @@ setappdata(fig, 'opto',        true); % visible or not
 setappdata(fig, 'headshape',   true); % visible or not
 setappdata(fig, 'headmodel',   true); % visible or not
 setappdata(fig, 'sourcemodel', true); % visible or not
+setappdata(fig, 'dipole',      true); % visible or not
 setappdata(fig, 'mri',         true); % visible or not
 setappdata(fig, 'mesh',        true); % visible or not
 setappdata(fig, 'axes',        true); % visible or not
@@ -240,24 +245,25 @@ uicontrol('tag', 'navz', 'parent', fig, 'style', 'pushbutton', 'string', 'Z',  '
 uicontrol('tag', 'navz', 'parent', fig, 'style', 'pushbutton', 'string', '>',  'callback', @cb_navigate);
 uicontrol('tag', 'navz', 'parent', fig, 'style', 'pushbutton', 'string', '>>', 'callback', @cb_navigate);
 % organize the buttons
-ft_uilayout(fig, 'tag', 'nav.', 'units', 'normalized', 'width', 0.05, 'height', 0.05, 'hpos', 'auto', 'vpos', 0.05, 'backgroundcolor', [0.8 0.8 0.8]);
+ft_uilayout(fig, 'tag', 'nav.', 'units', 'normalized', 'width', 0.05, 'height', 0.05, 'hpos', 'auto', 'vpos', 0.05, 'backgroundcolor', [0.8 0.8 0.8], 'Visible', ~isempty(cfg.mri));
 
 % control GUI elements on the right side
-uicontrol('tag', 'axes1btn',       'parent', fig, 'style', 'checkbox',   'string', '3d axes',      'value', istrue(cfg.axes),               'callback', @cb_toggle);
-uicontrol('tag', 'elecbtn',        'parent', fig, 'style', 'checkbox',   'string', 'elec',         'value', getappdata(fig, 'elec'),        'callback', @cb_toggle, 'Visible', ~isempty(cfg.elec));
-uicontrol('tag', 'gradbtn',        'parent', fig, 'style', 'checkbox',   'string', 'grad',         'value', getappdata(fig, 'grad'),        'callback', @cb_toggle, 'Visible', ~isempty(cfg.grad));
-uicontrol('tag', 'optobtn',        'parent', fig, 'style', 'checkbox',   'string', 'opto',         'value', getappdata(fig, 'opto'),        'callback', @cb_toggle, 'Visible', ~isempty(cfg.opto));
-uicontrol('tag', 'headshapebtn',   'parent', fig, 'style', 'checkbox',   'string', 'headshape',    'value', getappdata(fig, 'headshape'),   'callback', @cb_toggle, 'Visible', ~isempty(cfg.headshape));
-uicontrol('tag', 'headmodelbtn',   'parent', fig, 'style', 'checkbox',   'string', 'headmodel',    'value', getappdata(fig, 'headmodel'),   'callback', @cb_toggle, 'Visible', ~isempty(cfg.headmodel));
-uicontrol('tag', 'sourcemodelbtn', 'parent', fig, 'style', 'checkbox',   'string', 'sourcemodel',  'value', getappdata(fig, 'sourcemodel'), 'callback', @cb_toggle, 'Visible', ~isempty(cfg.sourcemodel));
-uicontrol('tag', 'mribtn',         'parent', fig, 'style', 'checkbox',   'string', 'mri',          'value', getappdata(fig, 'mri'),         'callback', @cb_toggle, 'Visible', ~isempty(cfg.mri));
-uicontrol('tag', 'meshbtn',        'parent', fig, 'style', 'checkbox',   'string', 'mesh',         'value', getappdata(fig, 'mesh'),        'callback', @cb_toggle, 'Visible', ~isempty(cfg.mesh));
-uicontrol('tag', 'axes2btn',       'parent', fig, 'style', 'checkbox',   'string', 'figure axes',  'value', getappdata(fig, 'axes'),   'callback', @cb_axes);
-uicontrol('tag', 'labelsbtn',      'parent', fig, 'style', 'checkbox',   'string', 'axes label',   'value', getappdata(fig, 'labels'), 'callback', @cb_labels);
-uicontrol('tag', 'gridbtn',        'parent', fig, 'style', 'checkbox',   'string', 'axes grid',    'value', getappdata(fig, 'grid'),   'callback', @cb_grid);
-uicontrol('tag', 'plotoptionsbtn', 'parent', fig, 'style', 'pushbutton', 'string', 'plot options ...',                                 'callback', @cb_plotoptions);
-uicontrol('tag', 'viewpointbtn',   'parent', fig, 'style', 'popup',      'string', 'default|top|bottom|left|right|front|back', 'value', 1,  'callback', @cb_viewpoint);
-uicontrol('tag', 'camlightbtn',    'parent', fig, 'style', 'popup',      'string', 'none|camlight|uniform',            'value', 1,     'callback', @cb_camlight);
+uicontrol('tag', 'elecbtn',        'parent', fig, 'style', 'checkbox',   'string', 'elec',                                     'value', getappdata(fig, 'elec'),        'callback', @cb_toggle, 'Visible', ~isempty(cfg.elec));
+uicontrol('tag', 'gradbtn',        'parent', fig, 'style', 'checkbox',   'string', 'grad',                                     'value', getappdata(fig, 'grad'),        'callback', @cb_toggle, 'Visible', ~isempty(cfg.grad));
+uicontrol('tag', 'optobtn',        'parent', fig, 'style', 'checkbox',   'string', 'opto',                                     'value', getappdata(fig, 'opto'),        'callback', @cb_toggle, 'Visible', ~isempty(cfg.opto));
+uicontrol('tag', 'headshapebtn',   'parent', fig, 'style', 'checkbox',   'string', 'headshape',                                'value', getappdata(fig, 'headshape'),   'callback', @cb_toggle, 'Visible', ~isempty(cfg.headshape));
+uicontrol('tag', 'headmodelbtn',   'parent', fig, 'style', 'checkbox',   'string', 'headmodel',                                'value', getappdata(fig, 'headmodel'),   'callback', @cb_toggle, 'Visible', ~isempty(cfg.headmodel));
+uicontrol('tag', 'sourcemodelbtn', 'parent', fig, 'style', 'checkbox',   'string', 'sourcemodel',                              'value', getappdata(fig, 'sourcemodel'), 'callback', @cb_toggle, 'Visible', ~isempty(cfg.sourcemodel));
+uicontrol('tag', 'dipolebtn',      'parent', fig, 'style', 'checkbox',   'string', 'dipole',                                   'value', getappdata(fig, 'dipole'),      'callback', @cb_toggle, 'Visible', ~isempty(cfg.dipole));
+uicontrol('tag', 'mribtn',         'parent', fig, 'style', 'checkbox',   'string', 'mri',                                      'value', getappdata(fig, 'mri'),         'callback', @cb_toggle, 'Visible', ~isempty(cfg.mri));
+uicontrol('tag', 'meshbtn',        'parent', fig, 'style', 'checkbox',   'string', 'mesh',                                     'value', getappdata(fig, 'mesh'),        'callback', @cb_toggle, 'Visible', ~isempty(cfg.mesh));
+uicontrol('tag', 'axes1btn',       'parent', fig, 'style', 'checkbox',   'string', '3d axes',                                  'value', istrue(cfg.axes),               'callback', @cb_axes1);
+uicontrol('tag', 'axes2btn',       'parent', fig, 'style', 'checkbox',   'string', 'figure axes',                              'value', getappdata(fig, 'axes'),        'callback', @cb_axes2);
+uicontrol('tag', 'labelsbtn',      'parent', fig, 'style', 'checkbox',   'string', 'figure axes label',                        'value', getappdata(fig, 'labels'),      'callback', @cb_labels);
+uicontrol('tag', 'gridbtn',        'parent', fig, 'style', 'checkbox',   'string', 'figure axes grid',                         'value', getappdata(fig, 'grid'),        'callback', @cb_grid);
+uicontrol('tag', 'viewpointbtn',   'parent', fig, 'style', 'popup',      'string', 'default|top|bottom|left|right|front|back', 'value', 1,                              'callback', @cb_viewpoint);
+uicontrol('tag', 'camlightbtn',    'parent', fig, 'style', 'popup',      'string', 'none|camlight|uniform',                    'value', 1,                              'callback', @cb_camlight);
+uicontrol('tag', 'plotoptionsbtn', 'parent', fig, 'style', 'pushbutton', 'string', 'plot options ...',                                                                  'callback', @cb_plotoptions);
 
 % remove the invisible GUI elements
 delete(findall(fig, 'type', 'uicontrol', 'visible', false))
@@ -297,10 +303,6 @@ cla
 axis vis3d
 hold on
 
-if istrue(cfg.axes)
-  ft_plot_axes([], 'unit', cfg.unit, 'coordsys', cfg.coordsys);
-end
-
 % the options should be passed as a cell-array rather than as a structure
 if getappdata(fig, 'elec') && ~isempty(cfg.elec)
   options = ft_cfg2keyval(cfg.elecstyle);
@@ -332,9 +334,18 @@ if getappdata(fig, 'sourcemodel') && ~isempty(cfg.sourcemodel)
   ft_plot_mesh(cfg.sourcemodel.pos, options{:});
 end
 
+if getappdata(fig, 'dipole') && ~isempty(cfg.dipole)
+  options = ft_cfg2keyval(cfg.dipolestyle);
+  for i=1:size(cfg.dipole.pos,1)
+    pos = cfg.dipole.pos(i,:);  % ndipoles * 3
+    mom = cfg.dipole.mom(:,i);  % 3 * ndipoles
+    ft_plot_dipole(pos, mom, options{:}, 'unit', cfg.unit);
+  end
+end
+
 if getappdata(fig, 'mri') && ~isempty(cfg.mri)
   % this is required for a correct display
-  cfg.mristyle = ft_setopt(cfg.mristyle, 'style', 'intersect'); 
+  cfg.mristyle = ft_setopt(cfg.mristyle, 'style', 'intersect');
   
   options = ft_cfg2keyval(cfg.mristyle);
   ft_plot_ortho(cfg.mri, options{:});
@@ -350,14 +361,15 @@ if getappdata(fig, 'mesh') && ~isempty(cfg.mesh)
   ft_plot_mesh(cfg.mesh, options{:});
 end
 
-% update the figure based on the GUI elements
-cb_camlight(h, []);
-cb_axes(h, []);
-cb_labels(h, []);
-cb_grid(h, []);
-
 % restore the current view
 view(az, el);
+
+% update the figure based on the GUI elements
+cb_camlight(h, []);
+cb_axes1(h, []);
+cb_axes2(h, []);
+cb_labels(h, []);
+cb_grid(h, []);
 
 % re-enable all GUI elements
 set(findall(fig, 'type', 'UIControl'), 'Enable', 'on')
@@ -371,16 +383,8 @@ function cb_toggle(h, eventdata)
 fig = getparent(h);
 button = get(h, 'string');
 if isvarname(button)
+  % this switches the display of an object on or off
   setappdata(fig, button, get(h, 'value'));
-else
-  % it will be the button labeled with "3d axes"
-  cfg = getappdata(fig, 'cfg');
-  if get(h, 'value')
-    cfg.axes = 'yes';
-  else
-    cfg.axes = 'no';
-  end
-  setappdata(fig, 'cfg', cfg);
 end
 cb_redraw(fig);
 
@@ -406,7 +410,31 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function cb_axes(h, eventdata)
+function cb_axes1(h, eventdata)
+fig = getparent(h);
+cfg = getappdata(fig, 'cfg');
+
+if get(findall(fig, 'tag', 'axes1btn'), 'value')
+  % FT_PLOT_AXES calls FT_PLOT_MESH, which does "axis off"
+  ax = findall(fig, 'type', 'axes');
+  prevaxis = ax.Visible;
+  ft_plot_axes([], 'unit', cfg.unit, 'coordsys', cfg.coordsys, 'tag', 'axes1');
+  % restore the figure axis in their previous state
+  if prevaxis
+    axis on
+  else
+    axis off
+  end
+else
+  delete(findall(fig, 'tag', 'axes1'))
+end
+uiresume;
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function cb_axes2(h, eventdata)
 fig = getparent(h);
 if get(findall(fig, 'tag', 'axes2btn'), 'value')
   axis on
@@ -419,7 +447,7 @@ end
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function cb_labels(h, eventdata)
-fig  = getparent(h);
+fig = getparent(h);
 cfg = getappdata(fig, 'cfg');
 if get(findall(fig, 'tag', 'labelsbtn'), 'value')
   xlabel(sprintf('x (%s)', cfg.unit))
@@ -547,7 +575,7 @@ code = [ ...
   newline ...
   ];
 
-for fn={'elecstyle', 'gradstyle', 'optostyle', 'headshapestyle', 'headmodelstyle', 'sourcemodelstyle', 'mristyle', 'meshstyle'}
+for fn={'elecstyle', 'gradstyle', 'optostyle', 'headshapestyle', 'headmodelstyle', 'sourcemodelstyle', 'dipolestyle', 'mristyle', 'meshstyle'}
   style = cfg.(fn{1});
   if ~isempty(style)
     style = removelargefields(style);
@@ -721,7 +749,14 @@ for i=1:numel(fn)
   w = whos('x');
   b(i) = w.bytes;
 end
-s = rmfield(s, fn(b>1000));
+skip = b>1000;
+for i=1:numel(fn)
+  x = s.(fn{i});
+  if isnumeric(x) && all(size(x)>1)
+    skip(i) = true;
+  end
+end
+s = rmfield(s, fn(skip));
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
@@ -877,6 +912,27 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function style = default_dipolestyle(style, present)
+if present
+  if iscell(style)
+    % it should be a structure, not a cell-array
+    style = ft_keyval2cfg(style);
+  end
+  % set the options for FT_PLOT_DIPOLE
+  style.amplitudescale = ft_getopt(style, 'scale',     'none');
+  style.color          = ft_getopt(style, 'color',     'r'); % can also be a RGB triplet
+  style.alpha          = ft_getopt(style, 'alpha',      1);
+  style.diameter       = ft_getopt(style, 'diameter',  'auto');
+  style.length         = ft_getopt(style, 'length',    'auto');
+  style.thickness      = ft_getopt(style, 'thickness', 'auto');
+else
+  style = [];
+end
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function style = default_mristyle(style, present)
 if present
   if iscell(style)
@@ -890,7 +946,7 @@ if present
   style.background          = ft_getopt(style, 'background');
   style.opacitylim          = ft_getopt(style, 'opacitylim');
   style.interpmethod        = ft_getopt(style, 'interpmethod', 'nearest');
-  style.cmap                = ft_getopt(style, 'colormap');
+  style.colormap            = ft_getopt(style, 'colormap');
   style.clim                = ft_getopt(style, 'clim');
   style.doscale             = ft_getopt(style, 'doscale', true);
   style.intersectcolor      = ft_getopt(style, 'intersectcolor', 'yrgbmyrgbm');
@@ -930,7 +986,7 @@ if present
   style.clim          = ft_getopt(style, 'clim');
   style.alphalim      = ft_getopt(style, 'alphalim');
   style.alphamapping  = ft_getopt(style, 'alphamap', 'rampup');
-  style.cmap          = ft_getopt(style, 'colormap');
+  style.colormap      = ft_getopt(style, 'colormap');
   style.maskstyle     = ft_getopt(style, 'maskstyle', 'opacity');
   style.contour       = ft_getopt(style, 'contour', []);
   % these have to do with the font

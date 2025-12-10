@@ -1,8 +1,9 @@
 function test_bug1637
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY megplanar_sincos channelconnectivity ft_prepare_neighbours ft_channelselection
+% DATA private
 
 % this function checks whether megplanar_sincos relies on a fixed channel
 % order or whether this can be totally mixed up (it should be able to deal
@@ -16,7 +17,7 @@ cfg.method = 'template';
 cfg.template = 'CTF275_neighb';
 neighbours = ft_prepare_neighbours(cfg);
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test'))
+cd(dccnpath('/project/3031000.02/test'))
 load bug1637_hdr.mat
 load bug1637_grad.mat
 

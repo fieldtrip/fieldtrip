@@ -59,17 +59,14 @@ function VO = spm_write_sn(V,prm,flags,extras)
 %  as an optional step in performing voxel based morphometry.
 %
 %__________________________________________________________________________
-% Copyright (C) 1996-2011 Wellcome Trust Centre for Neuroimaging
 
 % John Ashburner
-% $Id: spm_write_sn.m 4878 2012-08-31 12:07:30Z guillaume $
+% Copyright (C) 1996-2022 Wellcome Centre for Human Neuroimaging
 
-
-SVNid = '$Rev: 4878 $';
  
 %-Say hello
 %--------------------------------------------------------------------------
-SPMid = spm('FnBanner',mfilename,SVNid);
+spm('FnBanner',mfilename);
 
 %-Get images
 %--------------------------------------------------------------------------
@@ -401,7 +398,7 @@ if numel(V)>1 && any(any(diff(t,1,1)))
         if isempty(Tr)
             % Generate a mask for where there is data for all images
             %--------------------------------------------------------------
-            for i=1:numel(V),
+            for i=1:numel(V)
                 [X2,Y2,Z2] = mmult(X,Y,z(j),V(i).mat\prm.VF(1).mat*prm.Affine);
                 Count      = Count + getmask(X2,Y2,Z2,V(i).dim(1:3),wrap);
             end

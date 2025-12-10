@@ -7,7 +7,7 @@
 %
 % See also FT_PREAMBLE, FT_POSTAMBLE, FT_POSTAMBLE_PROVENANCE
 
-% Copyright (C) 2011-2023, Robert Oostenveld, DCCN
+% Copyright (C) 2011-2024, Robert Oostenveld, DCCN
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -26,6 +26,11 @@
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
 % $Id$
+
+if isfield(cfg, 'keepcfg') && ~istrue(cfg.keepcfg)
+  % do not keep the configuration in the output
+  return
+end
 
 % large fields should be removed in the output configuration
 cfg = ft_checkconfig(cfg, 'checksize', 'yes');

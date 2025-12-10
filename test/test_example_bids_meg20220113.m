@@ -1,7 +1,8 @@
 function test_example_bids_meg
 
-% MEM 4gb
+% MEM 2gb
 % WALLTIME 00:10:00
+% DATA no
 
 %
 %% Converting an example MEG dataset for sharing in BIDS

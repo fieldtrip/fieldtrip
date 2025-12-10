@@ -1,8 +1,9 @@
 function test_bug2137
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:30:00
 % DEPENDENCY
+% DATA public
 
 
 % the following lines are for interactive/manual testing
@@ -14,7 +15,7 @@ if false
 end
 
 cfg = [];
-cfg.dataset = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds');
+cfg.dataset = dccnpath('/project/3031000.02/external/download/test/ctf/Subject01.ds');
 data = ft_preprocessing(cfg);
 
 cfg            = [];

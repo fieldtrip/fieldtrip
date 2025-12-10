@@ -1,11 +1,12 @@
 function test_pull2088(filename)
 
 % WALLTIME 00:20:00
-% MEM 3gb
+% MEM 1gb
 % DEPENDENCY ft_definetrial ft_trialfun_general
+% DATA private
 
 if nargin<1
-  filename = dccnpath('/home/common/matlab/fieldtrip/data/test/original/eeglab/sub-001-eeg-sub-001_task-P300_run-2_eeg.set');
+  filename = dccnpath('/project/3031000.02/test/original/eeglab/sub-001-eeg-sub-001_task-P300_run-2_eeg.set');
 else
   % use the filename from the input, if not on the filesystem at dccn
 end

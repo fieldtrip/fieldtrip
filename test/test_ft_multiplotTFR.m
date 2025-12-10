@@ -1,14 +1,15 @@
 function test_ft_multiplotTFR
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_freqanalysis ft_multiplotTFR ft_prepare_layout
+% DATA private
 
 % writeflag determines whether the output should be saved to disk
 % version determines the output directory
 
 % dataset taken from ref_datasets, using the tutorial one for testing
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/preproc_ctf275.mat'));
+load(dccnpath('/project/3031000.02/test/latest/raw/meg/preproc_ctf275.mat'));
 
 % get freqs
 cfg            = [];

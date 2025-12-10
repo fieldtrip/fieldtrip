@@ -1,8 +1,9 @@
 function test_bug367
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_megrealign ft_read_sens ft_dipolesimulation ft_timelockanalysis ft_multiplotER
+% DATA private
 
 % this test script is for http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=367
 % and was constructed from http://www.fieldtriptoolbox.org/example/megrealign
@@ -10,8 +11,8 @@ function test_bug367
 % the two example files with the 151 and 275 channel CTF specifications are available from
 % ftp://ftp.fieldtriptoolbox.org/pub/fieldtrip/example/megrealign
 
-grad151 = ft_read_sens(dccnpath('/home/common/matlab/fieldtrip/data/test/bug367/ctf151.mat'));
-grad275 = ft_read_sens(dccnpath('/home/common/matlab/fieldtrip/data/test/bug367/ctf275.mat'));
+grad151 = ft_read_sens(dccnpath('/project/3031000.02/test/bug367/ctf151.mat'));
+grad275 = ft_read_sens(dccnpath('/project/3031000.02/test/bug367/ctf275.mat'));
 
 vol = [];
 vol.r = 12;

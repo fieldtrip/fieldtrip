@@ -1,10 +1,10 @@
 function [proj] = elproj(pos, method)
 
-% ELPROJ makes a azimuthal projection of a 3D electrode cloud
-%  on a plane tangent to the sphere fitted through the electrodes
-%  the projection is along the z-axis
+% ELPROJ makes a azimuthal projection of a 3D electrode cloud on a plane tangent to
+% the sphere fitted through the electrodes. The projection is along the z-axis.
 %
-%  [proj] = elproj([x, y, z], 'method');
+% Use as
+%   proj = elproj([x, y, z], 'method');
 %
 % Method should be one of these:
 %     'gnomic'
@@ -20,7 +20,7 @@ function [proj] = elproj(pos, method)
 % projection results, if the light is antipodal a Sterographic,
 % and if at infinity, an Orthographic.
 %
-% The default projection is a polar projection (BESA like).
+% The default projection is a BESA-like polar projection.
 % An inverse projection is the opposite of the default polar projection.
 %
 % See also PROJECTTRI

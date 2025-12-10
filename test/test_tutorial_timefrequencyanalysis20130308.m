@@ -1,8 +1,9 @@
 function test_tutorial_timefrequencyanalysis20130308
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:20:00
 % DEPENDENCY ft_freqanalysis ft_preprocessing ft_multiplotTFR ft_singleplotTFR
+% DATA public
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % this reflects  http://www.fieldtriptoolbox.org/tutorial/timefrequencyanalysis
@@ -56,7 +57,7 @@ function test_tutorial_timefrequencyanalysis20130308
 % 
 % Ft_definetrial and ft_preprocessing require the original MEG dataset, which is available from ftp://ftp.fieldtriptoolbox.org/pub/fieldtrip/tutorial/Subject01.zip.
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf'));
+cd(dccnpath('/project/3031000.02/external/download/test/ctf'));
 
 % find the interesting segments of data
 cfg = [];                                           % empty configuration

@@ -19,6 +19,7 @@ function ft_write_data(filename, dat, varargin)
 %   edf
 %   gdf
 %   anywave_ades
+%   biosemi_bdf
 %   brainvision_eeg
 %   neuralynx_ncs
 %   neuralynx_sdma
@@ -30,13 +31,14 @@ function ft_write_data(filename, dat, varargin)
 %   matlab
 %   homer_nirs
 %   snirf
+%   csv
 %
 % For EEG data, the input data is assumed to be scaled in microvolt.
 % For NIRS data, the input data is assumed to represent optical densities.
 %
 % See also FT_READ_HEADER, FT_READ_DATA, FT_READ_EVENT, FT_WRITE_EVENT
 
-% Copyright (C) 2007-2021, Robert Oostenveld
+% Copyright (C) 2007-2025, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -741,7 +743,23 @@ switch dataformat
     filename = fullfile(path, [file, '.edf']);
     
     write_edf(filename, hdr, dat);
+
+  case 'biosemi_bdf'
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % Biosemi BDF 24 bit format
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    if append
+      ft_error('appending data is not yet supported for this data format');
+    end
+    if ~isempty(evt)
+      ft_error('writing events is not supported');
+    end
     
+    [path, file, ext] = fileparts(filename);
+    filename = fullfile(path, [file, '.bdf']);
+    
+    write_bdf(filename, dat, hdr.Fs, hdr.label);
+
   case 'anywave_ades'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % see http://meg.univ-amu.fr/wiki/AnyWave:ADES
@@ -954,6 +972,25 @@ switch dataformat
     % save .snirf file
     snirf.Save(filename)
     
+  case 'csv'
+    % write the data matrix as a comma-separated text file, where each row is a time slice
+    % if a label is present in the header, the first header line contains the labels of the columns    
+    if ~isempty(hdr) && isfield(hdr, 'label')
+      label = hdr.label;
+    else
+      label = {};
+    end
+
+    if isempty(label)
+      dat = array2table(dat');
+      writelabel = false;
+    else
+      dat = array2table(dat', 'VariableNames', label);
+      writelabel = true;
+    end
+    writetable(dat, filename, 'WriteVariableNames', writelabel);
+
+
   otherwise
     ft_error('unsupported data format');
 end % switch dataformat

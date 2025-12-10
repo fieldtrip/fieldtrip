@@ -1,11 +1,12 @@
 function test_bug2685
 
-% MEM 4gb
+% MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_scalpcurrentdensity ft_fetch_sens
+% DATA private
 
 %% load data
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2685/bug2685.mat'));
+load(dccnpath('/project/3031000.02/test/bug2685/bug2685.mat'));
 
 %% scalp current density
 cfg                 = [];

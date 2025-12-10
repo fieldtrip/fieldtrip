@@ -3,6 +3,7 @@ function test_bug2570
 % WALLTIME 00:10:00
 % MEM 1gb
 % DEPENDENCY ft_apply_montage ft_scalingfactor
+% DATA no
 
 montage = [];
 montage.tra = 1e6;
@@ -16,7 +17,7 @@ montage.chanunitnew = {'uV'};
 output = ft_apply_montage(montage, montage);
 assert(isequal(output, montage)); % it should not have changed
 
-output = ft_apply_montage(montage, montage, 'inverse', 1);
+output = ft_apply_montage(montage, ft_inverse_montage(montage));
 assert(isequal(output.tra, 1)); % this should be an identity transform
 assert(isequal(output.chanunitold, output.chanunitnew));
 
@@ -48,9 +49,9 @@ assert(isequal(output1, output2));
 assert(isequal(output1, output3));
 assert(isequal(output1, data_uV)); % they should all be in uV
 
-output1 = ft_apply_montage(data_V,  montage, 'inverse', 'yes');
-output2 = ft_apply_montage(data_mV, montage, 'inverse', 'yes');
-output3 = ft_apply_montage(data_uV, montage, 'inverse', 'yes');
+output1 = ft_apply_montage(data_V,  ft_inverse_montage(montage));
+output2 = ft_apply_montage(data_mV, ft_inverse_montage(montage));
+output3 = ft_apply_montage(data_uV, ft_inverse_montage(montage));
 
 assert(isequal(output1, output2));
 assert(isequal(output1, output3));
@@ -73,4 +74,3 @@ end
 if ~ok
   error('this should have given an error, T cannot be converted to V');
 end
-

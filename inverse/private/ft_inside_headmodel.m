@@ -17,7 +17,7 @@ function [inside] = ft_inside_headmodel(dippos, headmodel, varargin)
 %   grad        = structure with gradiometer information, used for localspheres
 %   headshape   = structure with headshape, used for old CTF localspheres strategy
 
-% Copyright (C) 2003-2023, Robert Oostenveld
+% Copyright (C) 2003-2024, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -114,15 +114,15 @@ switch ft_headmodeltype(headmodel)
       inside(i) = instrip1 & instrip2;
     end
 
-  case {'bem', 'dipoli', 'bemcp', 'openmeeg', 'asa', 'singleshell', 'neuromag', 'nolte'}
+  case {'bem', 'dipoli', 'bemcp', 'openmeeg', 'asa', 'singleshell', 'neuromag', 'nolte', 'hbf'}
     % this is a model with a realistic shape described by a triangulated boundary
     [pos, tri] = headsurface(headmodel, [], 'inwardshift', inwardshift, 'surface', 'brain');
     inside = surface_inside(dippos, pos, tri);
 
   case {'simbio', 'duneuro'}
-    % this is a model with hexaheders or tetraheders
+    % this is a model with hexahedrons or tetrahedrons
     if isfield(headmodel, 'tet')
-      % the subsequent code works both for tetraheders or hexaheders, but assumes the volume elements to be called "hex"
+      % the subsequent code works both for tetrahedrons or hexahedrons, but assumes the volume elements to be called "hex"
       headmodel.hex = headmodel.tet;
       headmodel = rmfield(headmodel, 'tet');
     end
@@ -132,25 +132,29 @@ switch ft_headmodeltype(headmodel)
     numpos = size(headmodel.pos,1);
     numdip = size(dippos,1);
 
-    % select only the cortical or brain tissues
-    cortex = find(ismember(headmodel.tissuelabel, {'gm', 'gray', 'brain'}));
+    % select only the gray matter or brain tissues
+    brain = find(ismember(headmodel.tissuelabel, {'gm', 'gray', 'grey', 'brain'}));
 
-    % determine all hexaheders that are labeled as cortical or brain
-    insidehex = ismember(headmodel.tissue, cortex);
+    for i=1:numel(brain)
+      fprintf('flagging dipoles with tissue type "%s" as inside\n', headmodel.tissuelabel{brain(i)});
+    end
 
-    % prune the mesh, only retain hexaheders labeled as cortical or brain
+    % determine all hexahedrons that are labeled as gray matter or brain tissues
+    insidehex = ismember(headmodel.tissue, brain);
+
+    % prune the mesh, only retain hexahedrons labeled as gray matter or brain tissues
     fprintf('pruning headmodel volume elements from %d to %d (%d%%)\n', numhex, sum(insidehex), round(100*sum(insidehex)/numhex));
     headmodel.hex    = headmodel.hex(insidehex,:);
     headmodel.tissue = headmodel.tissue(insidehex);
     numhex = sum(insidehex);
 
     % remove these, we don't need them any more
-    clear cortex insidehex
+    clear brain insidehex
 
-    % prune the mesh, i.e. only retain vertices that are part of a hexaheder
+    % prune the mesh, i.e. only retain vertices that are part of a hexahedron
     [headmodel.pos, headmodel.hex] = remove_unused_vertices(headmodel.pos, headmodel.hex);
 
-    % construct a sparse matrix with the mapping between all hexaheders and vertices
+    % construct a sparse matrix with the mapping between all hexahedrons and vertices
     i = repmat(transpose(1:numhex), 1, size(headmodel.hex,2));
     j = headmodel.hex;
     s = ones(size(i));
@@ -161,7 +165,7 @@ switch ft_headmodeltype(headmodel)
     maxpos = max(headmodel.pos,[],1);
     insidedip = all(bsxfun(@ge, dippos, minpos),2) & all(bsxfun(@le, dippos, maxpos),2);
     fprintf('pruning dipole positions from %d to %d (%d%%)\n', numdip, sum(insidedip), round(100*sum(insidedip)/numdip));
-    insidedip  = find( insidedip);
+    insidedip  = find(insidedip);
     dippos = dippos(insidedip,:);
 
     % find the nearest vertex for each of the dipoles in the headmodel mesh
@@ -172,7 +176,7 @@ switch ft_headmodeltype(headmodel)
     % SIMBIO/Duneuro have to be convex as well.
 
     inside = false(1, numdip);
-    % for each dipole determine whether it is inside one of the neighbouring hexaheders
+    % for each dipole determine whether it is inside one of the neighbouring hexahedrons
     % this will be the case for all vertices that are inside the middle, but not at the edges
     for i=1:numel(insidedip)
       hexindx = find(hex2pos(:,posindx(i)));
@@ -185,7 +189,7 @@ switch ft_headmodeltype(headmodel)
           inside(insidedip(i)) = true;
           break % out of the for-loop
         end % if
-      end % for each hexaheder
+      end % for each hexahedron
     end % for each of the dipole positions
 
   otherwise

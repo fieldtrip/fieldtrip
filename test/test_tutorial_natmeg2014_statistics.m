@@ -1,8 +1,9 @@
 function test_tutorial_natmeg2014_statistics
 
 % WALLTIME 00:20:00
-% MEM 4gb
+% MEM 2gb
 % DEPENDENCY
+% DATA public
 
 % this script executes the MATLAB content from
 % http://www.fieldtriptoolbox.org/tutorial/natmeg2014/statistics
@@ -12,7 +13,7 @@ function test_tutorial_natmeg2014_statistics
 clear all
 close all
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data/ftp/workshop/natmeg2014'));
+cd(dccnpath('/project/3031000.02/external/download/workshop/natmeg2014'));
 
 cfg = [];
 cfg.dataset = 'oddball1_mc_downsampled.fif';
@@ -103,7 +104,7 @@ cfg.correctm  = 'no';
 TFR_stat1     = ft_freqstatistics(cfg, TFR_logpow);
 
 cfg.method    = 'analytic';
-cfg.correctm  = 'bonferoni';
+cfg.correctm  = 'bonferroni';
 TFR_stat2     = ft_freqstatistics(cfg, TFR_logpow);
 cfg.method    = 'analytic';
 cfg.correctm  = 'fdr';
@@ -181,7 +182,7 @@ cfg.correctm  = 'no';
 ERF_stat1     = ft_timelockstatistics(cfg, ERF_all);
 
 cfg.method    = 'analytic';
-cfg.correctm  = 'bonferoni';
+cfg.correctm  = 'bonferroni';
 ERF_stat2     = ft_timelockstatistics(cfg, ERF_all);
 
 cfg.method    = 'analytic';

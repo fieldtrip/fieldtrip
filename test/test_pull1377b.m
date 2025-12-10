@@ -1,10 +1,11 @@
 function test_pull1377b
 
-% MEM 6gb
-% WALLTIME 1:00:00
+% MEM 4gb
+% WALLTIME 01:00:00
 % DEPENDENCY ft_sourceanalysis ft_dipolefitting
+% DATA private
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/preproc_ctf151.mat'), 'data');
+load(dccnpath('/project/3031000.02/test/latest/raw/meg/preproc_ctf151.mat'), 'data');
 grad = data.grad;
 clear data
 

@@ -9,9 +9,10 @@ function varargout = sensys_csv(filename, hdr, begsample, endsample, chanindx)
 %   dat = sensys_csv(filename, hdr, begsample, endsample, chanindx);
 %   evt = sensys_csv(filename, hdr);
 %
-% See also FT_FILETYPE, FT_READ_HEADER, FT_READ_DATA, FT_READ_EVENT, MOTION_C3D, QUALISYS_TSV, LIBERTY_CSV
+% See also FT_FILETYPE, FT_READ_HEADER, FT_READ_DATA, FT_READ_EVENT
+% See also BIDS_TSV, BIOPAC_ACQ, BUCN_TXT, EEGSYNTH_TSV, EVENTS_TSV, LIBERTY_CSV, MAUS_TEXTGRID, MOTION_C3D, OPENBCI_TXT, OPENPOSE_KEYPOINTS, OPENSIGNALS_TXT, OPENVIBE_MAT, OPM_FIL, QUALISYS_TSV, QUSPIN_LVM, SCCN_XDF, SENSYS_CSV, SNIRF, SPIKEGLX_BIN, UNICORN_CSV, XSENS_MVNX
 
-% Copyright (C) 2022, Robert Oostenveld
+% Copyright (C) 2022-2024, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.

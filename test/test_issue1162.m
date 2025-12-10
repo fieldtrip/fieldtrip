@@ -1,14 +1,15 @@
 function test_issue1162
 
 % WALLTIME 00:10:00
-% MEM 2gb
+% MEM 1gb
 % DEPENDENCY ft_componentanalysis ft_rejectcomponent ft_apply_montage
+% DATA private
 
 %%
 
 cfg = [];
-cfg.dataset = dccnpath('/home/common/matlab/fieldtrip/data/test/original/meg/neuromag306/raw.fif');
-cfg.trl = [1 7500 0]; % 30 seconds @250Hz
+cfg.dataset = dccnpath('/project/3031000.02/test/original/meg/neuromag306/raw.fif');
+cfg.trl = [125001 132500 0]; % 30 seconds @250Hz, the start of the file is all zeros
 cfg.continuous = 'yes';
 cfg.channel = {'MEG'};
 data = ft_preprocessing(cfg);

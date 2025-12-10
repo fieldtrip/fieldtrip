@@ -139,12 +139,11 @@ end
 if hasfilter
   % check that the options normalize/reducerank/etc are not specified
   assert(all(cellfun(@isempty, leadfieldopt(2:2:end))), 'the options for computing the leadfield must all be empty/default');
-  % check that lambda is not specified
+  % check that inverse parameters are not specified
+  assert(isempty(noisecov), 'the options for computing the filter must all be empty/default');
+  assert(isempty(sourcecov), 'the options for computing the filter must all be empty/default');
   assert(isempty(lambda), 'the options for computing the filter must all be empty/default');
-  assert(isempty(snr), 'the options for computing the filter must all be empty/default');
   assert(isempty(noiselambda), 'the options for computing the filter must all be empty/default');
-  assert(~istrue(prewhiten), 'the options for computing the filter must all be empty/default');
-  assert(~istrue(scalesourcecov), 'the options for computing the filter must all be empty/default');
   ft_info('using precomputed filters\n');
   sourcemodel.filter = sourcemodel.filter(originside);
 elseif hasleadfield

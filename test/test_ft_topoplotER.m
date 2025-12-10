@@ -1,14 +1,15 @@
 function test_ft_topoplotER
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_topoplotER ft_topoplotTFR ft_topoplotIC
+% DATA private
 
 % this script tests the functionality of ft_topoplotER with respect to the
 % different input datatypes. no other functionality is tested.
 % the script has been written in order to test a clean up of the code
 
-filename = dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/eeg/preproc_neuroscan16');
+filename = dccnpath('/project/3031000.02/test/latest/raw/eeg/preproc_neuroscan16.mat');
 load(filename)
 
 %there's an unresolved issue with duplicate labels 'FREE'

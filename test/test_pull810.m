@@ -1,8 +1,9 @@
 function pull810
 
-% MEM 3gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_fetch_data ft_databrowser ft_appenddata
+% DATA private
 
 % Contact:
 % Johannes Algermissen
@@ -11,7 +12,7 @@ function pull810
 % PI Hanneke den Ouden
 
 % contains 6 blocks to be concatenated
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/pull810.mat'))
+load(dccnpath('/project/3031000.02/test/pull810.mat'))
 
 %%
 % this makes it easier to debug

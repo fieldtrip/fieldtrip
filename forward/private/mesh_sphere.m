@@ -3,23 +3,24 @@ function [pos, tri] = mesh_sphere(n, method)
 % MESH_SPHERE creates spherical mesh, with approximately nvertices vertices
 %
 % Use as
-%   [pos, tri] = mesh_sphere(numvertices, method)
+%   [pos, tri] = mesh_sphere(n, method)
 %
-% The input parameter 'n' specifies the (approximate) number of vertices.
-% Once log4((n-2)/10) is an integer, the mesh will be based on an icosahedron.
-% Once log4((n-2)/4) is an integer, the mesh will be based on a refined octahedron.
-% Once log4((n-2)/2) is an integer, the mesh will be based on a refined tetrahedron.
-% Otherwise, an msphere will be used. If n is empty, or undefined, a 12 vertex
-% icosahedron will be returned.
+% The input parameter 'n' specifies the (approximate) number of vertices. If n is
+% empty, or undefined, a 12 vertex icosahedron will be returned. If n is specified
+% but the method is not specified, the most optimal method will be selected based on
+% n.
+% - If log4((n-2)/10) is an integer, the mesh will be based on an icosahedron.
+% - If log4((n-2)/4) is an integer, the mesh will be based on a refined octahedron.
+% - If log4((n-2)/2) is an integer, the mesh will be based on a refined tetrahedron.
+% - Otherwise, an msphere will be used.
 %
-% The input parameter 'method' defines which function to use when an refined
-% icosahedron, octahedron or tetrahedron is not possible, and can be 'msphere'
-% (default), or 'ksphere'.
+% The input parameter 'method' defines which algorithm or approach to use. This can
+% be 'icosahedron', 'octahedron', 'tetrahedron', 'fibonachi', 'msphere', or 'ksphere'.
 %
 % See also MESH_TETRAHEDRON, MESH_OCTAHEDRON, MESH_ICOSAHEDRON
 
 % Copyright (C) 2002, Robert Oostenveld
-% Copyright (C) 2019, Robert Oostenveld and Jan-Mathijs Schoffelen
+% Copyright (C) 2023, Robert Oostenveld and Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -41,11 +42,12 @@ function [pos, tri] = mesh_sphere(n, method)
 if nargin<1 || isempty(n)
   n = 12;
 end
+
 assert(isscalar(n), 'number of vertices should be specified as a scalar');
 
-r_ico   = log((n-2)./10)./log(4);
-r_octa  = log((n-2)./4)./log(4);
-r_tetra = log((n-2)./2)./log(4);
+r_ico   = log((n-2)/10)/log(4);
+r_octa  = log((n-2)/4)/log(4);
+r_tetra = log((n-2)/2)/log(4);
 
 if nargin<2 || isempty(method)
   % default method is dependent on n
@@ -59,15 +61,31 @@ if nargin<2 || isempty(method)
     method = 'msphere';
   end
 end
+
 assert(ischar(method), 'method should be specified as a string');
 
 switch method
   case 'ksphere'
     [pos, tri] = ksphere(n);
-    
+
   case 'msphere'
     [pos, tri] = msphere(n);
-    
+
+  case 'fibonachi'
+    % see https://extremelearning.com.au/evenly-distributing-points-on-a-sphere/
+    % this can even be further improved, as documented on that page
+    i = ((0:(n-1))+0.5)'; % this should be a column vector
+    phi = acos(1 - 2*i/n);
+    goldenRatio = (1 + 5^0.5)/2;
+    theta = 2 * pi * i / goldenRatio;
+
+    x = cos(theta) .* sin(phi);
+    y = sin(theta) .* sin(phi);
+    z = cos(phi);
+
+    pos = [x y z];
+    tri = convhulln(pos);
+
   case 'tetrahedron'
     [pos, tri] = mesh_tetrahedron;
     if r_tetra>0
@@ -78,7 +96,7 @@ switch method
       % scale all vertices to the unit sphere
       pos = pos ./ repmat(sqrt(sum(pos.^2,2)), 1,3);
     end
-    
+
   case 'icosahedron'
     [pos, tri] = mesh_icosahedron;
     if r_ico>0
@@ -89,7 +107,7 @@ switch method
       % scale all vertices to the unit sphere
       pos = pos ./ repmat(sqrt(sum(pos.^2,2)), 1,3);
     end
-    
+
   case 'octahedron'
     [pos, tri] = mesh_octahedron;
     if r_octa>0
@@ -100,7 +118,7 @@ switch method
       % scale all vertices to the unit sphere
       pos = pos ./ repmat(sqrt(sum(pos.^2,2)), 1,3);
     end
-    
+
 end % switch method
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -157,7 +175,7 @@ function [pos, tri] = msphere(N)
 % In article <39mrqm$8f1@usenet.ins.cwru.edu>,
 % John Barmann <an311@cleveland.Freenet.Edu> wrote:
 % >
-% >I have a geomety/math/CAD probelm that i can't seem to crack.  I need
+% >I have a geometry/math/CAD problem that i can't seem to crack.  I need
 % >to space 14,000 to 15,000 holes on a sphere.  The sphere has a diameter
 % >of 8.125 inches and is hollow.  The holes are to be .098 inches in
 %
@@ -194,12 +212,12 @@ storeM    = [];
 storelen  = [];
 increaseM = 0;
 while (1)
-  
+
   % put a single vertex at the top% subfunction
-  
+
   phi = 0;
   th  = 0;
-  
+
   M = round((pi/4)*sqrt(N)) + increaseM;
   for k=1:M
     newphi = (k/M)*pi;
@@ -213,11 +231,11 @@ while (1)
       end
     end
   end
-  
+
   % put a single vertex at the bottom
-  phi(end+1) = [pi];
-  th(end+1)  = [0];
-  
+  phi(end+1) = pi;
+  th(end+1)  = 0;
+
   % store this vertex packing
   storeM(end+1).th  = th;
   storeM(end  ).phi = phi;
@@ -235,7 +253,7 @@ end
 th  = storeM(i).th;
 phi = storeM(i).phi;
 
-% convert from spherical to cartehsian coordinates
+% convert from spherical to cartesian coordinates
 [x, y, z] = sph2cart(th, pi/2-phi, 1);
 pos = [x' y' z'];
 tri = convhulln(pos);

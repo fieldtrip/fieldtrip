@@ -26,6 +26,7 @@
 % request. You can contact Robert Oostenveld (FCDC) or Cristiano Rizzo
 % (Micromed) to get a copy of the original source code.
 %
+% Copyright (C) 2024, Bob Van Dyck, KU Leuven, Belgium
 % Copyright (C) 2009, Erik Aarnoutse, UMC Utrecht, The Netherlands
 % Copyright (C) 2009, Cristiano Rizzo, Micromed A.S., Italy
 % Copyright (C) 2009, Robert Oostenveld, Donders Institute Nijmegen, The Netherlands

@@ -1,10 +1,11 @@
 function test_bug682
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY channelposition ft_datatype_sens yokogawa2grad ft_prepare_layout
+% DATA private
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/original/meg/yokogawa64'));
+cd(dccnpath('/project/3031000.02/test/original/meg/yokogawa64'));
 
 cfg             = [];
 cfg.dataset     = '2011_01_28_0354_ME053_AEF.con'; % to be defined beforehand

@@ -1,11 +1,12 @@
 function inspect_issue2138
 
 % WALLTIME 00:10:00
-% MEM 2gb
+% DATA private
+% MEM 1gb
 
 %%
 
-bidsroot = dccnpath('/home/common/matlab/fieldtrip/data/test/issue2138');
+bidsroot = dccnpath('/project/3031000.02/test/issue2138');
 
 % this is the original
 filename1 = fullfile(bidsroot, 'sub-001/ses-01/eeg/sub-001_ses-01_task-WorkingMemory_run-1_eeg.set');

@@ -1,13 +1,14 @@
 function test_bug3124
 
 % WALLTIME 00:30:00
-% MEM 3gb
+% MEM 1gb
 % DEPENDENCY ft_sourceanalysis
+% DATA public
 
 %%
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/headmodel.mat'))
-load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/data_all.mat'))
+load(dccnpath('/project/3031000.02/external/download/tutorial/beamformer/headmodel.mat'))
+load(dccnpath('/project/3031000.02/external/download/tutorial/beamformer/data_all.mat'))
 
 %%
 

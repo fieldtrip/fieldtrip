@@ -3,6 +3,7 @@ function test_ft_spikedensity()
 % MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_spikedensity
+% DATA no
 
 data = [];
 nTrials = 100;

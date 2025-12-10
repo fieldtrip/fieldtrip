@@ -11,13 +11,23 @@ function [side] = ptriside(v1, v2, v3, r, tolerance)
 
 % Copyright (C) 2002, Robert Oostenveld
 %
-% $Log: ptriside.m,v $
-% Revision 1.3  2003/03/11 15:35:20  roberto
-% converted all files from DOS to UNIX
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
+% for the documentation and details.
 %
-% Revision 1.2  2003/03/04 21:46:19  roberto
-% added CVS log entry and synchronized all copyright labels
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
 %
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
+%
+% $Id$
 
 if nargin<5
   tolerance = 100*eps;

@@ -3,6 +3,7 @@ function failed_old_besa2fieldtrip
 % MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY
+% DATA private
 
 % Test the besa2fieldtrip function, which reads an object from a BESA file
 % and returns it as FieldTrip object (e.g. timelocked, freq, source).
@@ -11,7 +12,7 @@ function failed_old_besa2fieldtrip
 % as well as on MATLAB files containing a particular structure (for the
 % direct besa->matlab interface).
 
-basedir = dccnpath('/home/common/matlab/fieldtrip/data/test/original/besa/file/');
+basedir = dccnpath('/project/3031000.02/test/original/besa/file/');
 
 filename = {
   'besa_avr/Rolandic-Segment.avr'
@@ -64,7 +65,7 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-basedir = dccnpath('/home/common/matlab/fieldtrip/data/test/original/besa/struct/');
+basedir = dccnpath('/project/3031000.02/test/original/besa/struct/');
 
 filename = {
   'besa_channels/EpochedData.mat'

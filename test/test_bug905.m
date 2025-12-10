@@ -1,10 +1,11 @@
 function test_bug905
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_freqanalysis ft_specest_mtmfft
+% DATA private
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug905.mat'));
+load(dccnpath('/project/3031000.02/test/bug905.mat'));
 
 timeunitinsec=10^(-4); % in seconds
 fs=1/(4.8*timeunitinsec);

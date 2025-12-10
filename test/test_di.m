@@ -1,8 +1,9 @@
 function test_di
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:20:00
 % DEPENDENCY ft_connectivityanalysis ft_connectivity_mutualinformation 
+% DATA no
 
 %% Simulate two situations as in analogy to Robin's paper
 

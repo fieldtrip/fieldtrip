@@ -44,10 +44,10 @@ function x = spm_coreg(varargin)
 % make the cost function as smooth as possible, to give faster convergence
 % and less chance of local minima.
 %__________________________________________________________________________
-% Copyright (C) 1994-2011 Wellcome Trust Centre for Neuroimaging
 
 % John Ashburner
-% $Id: spm_coreg.m 6435 2015-05-14 09:59:54Z guillaume $
+% Copyright (C) 1994-2022 Wellcome Centre for Human Neuroimaging
+
 
 %--------------------------------------------------------------------------
 % References
@@ -84,7 +84,6 @@ function x = spm_coreg(varargin)
 % Published by Cambridge.
 %--------------------------------------------------------------------------
 
-SVNid = '$Rev: 6435 $';
 
 if nargin >= 4
     x = optfun(varargin{:});
@@ -93,7 +92,7 @@ end
 
 %-Say hello
 %--------------------------------------------------------------------------
-SPMid = spm('FnBanner',mfilename,SVNid);
+SPMid = spm('FnBanner',mfilename);
 
 def_flags          = spm_get_defaults('coreg.estimate');
 def_flags.params   = [0 0 0  0 0 0];
@@ -116,12 +115,15 @@ else
     VG = varargin{1};
     if ischar(VG), VG = spm_vol(VG); end
 end
+VG = VG(1); % In case multiple volumes are selected
+
 if nargin < 2
     VF = spm_vol(spm_select(Inf,'image','Select moved image(s)'));
 else
     VF = varargin{2};
     if ischar(VF) || iscellstr(VF), VF = spm_vol(char(VF)); end;
 end
+VF = VF(1); % In case multiple volumes are selected
 
 if ~isfield(VG, 'uint8')
     VG.uint8 = loaduint8(VG);
@@ -264,8 +266,14 @@ spm_progress_bar('Init',V.dim(3),...
     ['Loading ' spm_file(V.fname,'filename')],...
     'Planes loaded');
 udat = zeros(V.dim,'uint8');
-st = rand('state'); % st = rng;
-rand('state',100); % rng(100,'v5uniform'); % rng('defaults');
+
+% Done the old way for compatibility with MATLAB versions older than R2011a
+warning('off','MATLAB:RandStream:ActivatingLegacyGenerators')
+st = rand('state');
+rand('state',100);
+% st = rng;           % Save old state
+% rng(100,'twister'); % Replicable random numbers
+
 for p=1:V.dim(3)
     img = spm_slice_vol(V,spm_matrix([0 0 p]),V.dim(1:2),1);
     acc = paccuracy(V,p);
@@ -279,8 +287,9 @@ for p=1:V.dim(3)
     spm_progress_bar('Set',p);
 end
 spm_progress_bar('Clear');
-rand('state',st); % rng(st);
-
+rand('state',st);
+warning('on','MATLAB:RandStream:ActivatingLegacyGenerators')
+% rng(st); % Return to old state
 
 %==========================================================================
 % function acc = paccuracy(V,p)
@@ -369,7 +378,7 @@ ylabel(spm_file(VF.fname,'short22'),'Parent',ax,'Interpreter','none');
 %--------------------------------------------------------------------------
 spm_orthviews('Reset');
      spm_orthviews('Image',VG,[0.01 0.01 .48 .49]);
-h2 = spm_orthviews('Image',VF,[.51 0.01 .48 .49]);
+h2 = spm_orthviews('Image',VF,[0.51 0.01 .48 .49]);
 global st
 st.vols{h2}.premul = inv(spm_matrix(x(:)'));
 spm_orthviews('Space');

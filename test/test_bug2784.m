@@ -1,8 +1,9 @@
 function test_bug2784
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_mvaranalysis
+% DATA private
 
 data = [];
 data.trial{1} = randn(2,100);
@@ -25,7 +26,7 @@ cfg.toi       = 0.25;
 ft_mvaranalysis(cfg,data);
 
 % load in the data provided by Tyler Grummett
-filename = dccnpath('/home/common/matlab/fieldtrip/data/test/bug2784.mat');
+filename = dccnpath('/project/3031000.02/test/bug2784.mat');
 load(filename);
 
 cfg = [];

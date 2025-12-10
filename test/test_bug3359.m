@@ -1,8 +1,9 @@
 function test_bug3359
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_connectivityanalysis ft_topoplotER 
+% DATA private
 
 % first create some data
 %--------------------------------------------------------
@@ -25,7 +26,7 @@ cfg.noisecov      = [0.3 0 0;
 
 data_sim          = ft_connectivitysimulation(cfg);
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/preproc_ctf151.mat'));
+load(dccnpath('/project/3031000.02/test/latest/raw/meg/preproc_ctf151.mat'));
 
 cfg         = [];
 cfg.channel = 'MEG';

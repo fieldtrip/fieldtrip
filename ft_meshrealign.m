@@ -10,13 +10,15 @@ function [mesh_realigned] = ft_meshrealign(cfg, mesh)
 %
 % FIDUCIAL - The coordinate system is updated according to the definition of the
 % coordinates of anatomical landmarks or fiducials that are specified in the
-% configuration. If the fiducials are not specified in the configuration, you will
-% have to click them in an interactive display of the mesh surface.
+% configuration. If the fiducials or anatomical landmarks are not specified in the
+% configuration, you will have to click them in an interactive display of the mesh
+% surface.
 %
 % Use as
 %   mesh = ft_meshrealign(cfg, mesh)
-% where the mesh input argument comes from FT_READ_HEADSHAPE or FT_PREPARE_MESH and
-% cfg is a configuration structure that should contain
+% where the mesh input argument comes from FT_READ_HEADSHAPE or FT_PREPARE_MESH.
+% 
+% The configuration can contain the following options
 %   cfg.method         = string, can be 'interactive' or fiducial' (default = 'interactive')
 %   cfg.coordsys       = string specifying the origin and the axes of the coordinate
 %                        system. Supported coordinate systems are 'ctf', '4d', 'bti',
@@ -25,13 +27,14 @@ function [mesh_realigned] = ft_meshrealign(cfg, mesh)
 %
 % When cfg.method = 'fiducial' and cfg.coordsys is based on external anatomical
 % landmarks, as is common for EEG and MEG, the following can be used to specify the
-% voxel indices of the fiducials:
+% position of the fiducials or anatomical landmarks:
 %   cfg.fiducial.nas   = [x y z], position of nasion
 %   cfg.fiducial.lpa   = [x y z], position of LPA
 %   cfg.fiducial.rpa   = [x y z], position of RPA
-% The fiducials should be expressed in the same coordinates and units as the input
-% mesh. If the fiducials are not specified in the configuration, the mesh is
-% displayed and you have to click on the fidicuals.
+% The fiducials or anatomical landmarks should be expressed in the same coordinates
+% and units as the input mesh. If the fiducials are not specified in the
+% configuration, the mesh is displayed and you have to click on the fiducials or
+% anatomical landmarks.
 %
 % When cfg.method = 'fiducial' you can specify
 %   cfg.mri            = structure, see FT_READ_MRI
@@ -51,7 +54,7 @@ function [mesh_realigned] = ft_meshrealign(cfg, mesh)
 %
 % See also FT_READ_HEADSHAPE, FT_PREPARE_MESH, FT_ELECTRODEREALIGN, FT_VOLUMEREALIGN
 
-% Copyrights (C) 2017-2023, Robert Oostenveld
+% Copyrights (C) 2017-2024, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -107,9 +110,11 @@ cfg.fiducial.lpa = ft_getopt(cfg.fiducial, 'lpa');
 cfg.fiducial.rpa = ft_getopt(cfg.fiducial, 'rpa');
 cfg.mri          = ft_getopt(cfg, 'mri');
 cfg.headmodel    = ft_getopt(cfg, 'headmodel');
+cfg.headshape    = ft_getopt(cfg, 'headshape');
 cfg.elec         = ft_getopt(cfg, 'elec');
 cfg.grad         = ft_getopt(cfg, 'grad');
 cfg.opto         = ft_getopt(cfg, 'opto');
+cfg.meshstyle    = ft_getopt(cfg, 'meshstyle');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % the actual computation is done in the middle part
@@ -145,7 +150,11 @@ switch cfg.method
     end      
     if ~isempty(cfg.opto)
       tmpcfg.template.opto = cfg.opto;
-    end      
+    end
+    if ~isempty(cfg.headshape)
+      tmpcfg.template.headshape = cfg.headshape;
+      tmpcfg.template.headshapestyle = {'vertexcolor', 'none', 'edgecolor', 'none', 'facecolor', [0.8 0.8 1], 'facealpha', 0.6};
+    end
     if isempty(tmpcfg.template)
       % only show the axes
       tmpcfg.template.axes = 'yes';
@@ -158,6 +167,11 @@ switch cfg.method
 
     % this is the mesh that is to be moved/rotated/scaled
     tmpcfg.individual.headshape = mesh_realigned;
+
+    % the mesh may have user-defined plotting style options
+    if ~isempty(cfg.meshstyle)
+      tmpcfg.individual.headshapestyle = cfg.meshstyle;
+    end
     tmpcfg = ft_interactiverealign(tmpcfg);
     % keep the homogenous transformation
     transform = tmpcfg.m;
@@ -209,7 +223,7 @@ switch cfg.method
         '2. To mark a fiducial position or anatomical landmark, do BOTH:\n',...
         '   a. select the position by clicking on it with the left mouse button\n',...
         '   b. specify it by pressing the letter corresponding to the fiducial/landmark:\n', fidexplanation1, fidexplanation2, ...
-        '   You can mark the fiducials multiple times, until you are satisfied with the positions.\n',...
+        '   You can mark the fiducials or anatomical landmarks multiple times, until you are satisfied with the positions.\n',...
         '3. To finalize markers and quit interactive mode, press q on keyboard\n'));
       
       % start building the figure
@@ -271,6 +285,9 @@ end
 % update the positions
 mesh_realigned = ft_transform_geometry(transform, mesh_realigned);
 
+% store the transformation in the cfg, if it is to be used elsewhere
+cfg.transform = transform; 
+
 % assign the coordinate system
 if ~isempty(cfg.coordsys)
   mesh_realigned.coordsys = cfg.coordsys;
@@ -310,7 +327,7 @@ opt.camlighthandle = camlight;
 delete(opt.handlesmarker(opt.handlesmarker(:)>0));
 opt.handlesmarker = [];
 
-% redraw the fiducials
+% redraw the fiducials or anatomical landmarks
 for i=1:length(opt.fidlabel)
   lab = opt.fidlabel{i};
   pos = opt.fiducial.(lab);
@@ -498,7 +515,11 @@ else
       
       lab = 'crosshair';
       vox = [xi yi zi];
-      ind = sub2ind(mri.dim(1:3), round(vox(1)), round(vox(2)), round(vox(3)));
+      if all(isfinite(vox))
+        ind = sub2ind(mri.dim(1:3), round(vox(1)), round(vox(2)), round(vox(3)));
+      else
+        ind = nan;  % functional behavior of sub2ind has changed, giving an error with nan-input
+      end
       pos = ft_warp_apply(mri.transform, vox);
       switch opt.unit
         case 'mm'
@@ -515,7 +536,11 @@ else
     for i=1:length(opt.fidlabel)
       lab = opt.fidlabel{i};
       vox = opt.fiducial.(lab);
-      ind = sub2ind(mri.dim(1:3), round(vox(1)), round(vox(2)), round(vox(3)));
+      if all(isfinite(vox))
+        ind = sub2ind(mri.dim(1:3), round(vox(1)), round(vox(2)), round(vox(3)));
+      else
+        ind = nan; % functional behavior of sub2ind has changed, giving an error with nan-input
+      end
       pos = ft_warp_apply(mri.transform, vox);
       switch opt.unit
         case 'mm'

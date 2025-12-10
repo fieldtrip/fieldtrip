@@ -997,7 +997,7 @@ switch cfg.method
                
         % deal with cfg.mi.montage, which allows for multivariate stuff
         if ~isempty(cfg.(cfg.method).montage)
-          [i1, i2]  = match_str(data.label, cfg.(cfg.method).montage.labelorg);
+          [i1, i2]  = match_str(data.label, cfg.(cfg.method).montage.labelold);
           i3        = setdiff((1:numel(data.label))',i1);
           tra       = cfg.(cfg.method).montage.tra(:,i2);
           tra(end+(1:numel(i3)),end+(1:numel(i3))) = eye(numel(i3));
@@ -1267,7 +1267,7 @@ switch dtype
     end
     
   case {'source' 'source+mesh'}
-    stat = keepfields(data, {'pos', 'dim', 'transform', 'inside', 'outside' 'tri'});
+    stat = keepfields(data, {'pos', 'tri', 'dim', 'transform', 'unit', 'coordsys', 'inside'});
     stat.(outparam) = datout;
     if ~isempty(varout)
       stat.([outparam, 'sem']) = (varout/nrpt).^0.5;

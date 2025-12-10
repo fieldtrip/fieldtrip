@@ -9,11 +9,10 @@ function [mnv,mxv] = spm_minmax(g)
 % Gaussian is assumed to represent background.  The lower value is
 % where there is a 50% probability of being above background.  The
 % upper value is one that encompases 99.5% of the values.
-%____________________________________________________________________________
-% Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
+%__________________________________________________________________________
 
 % John Ashburner
-% $Id: spm_minmax.m 2774 2009-02-23 14:40:17Z john $
+% Copyright (C) 2005-2022 Wellcome Centre for Human Neuroimaging
 
 
 d   = [size(g) 1];
@@ -64,9 +63,9 @@ mnv       = mnd*mxv/255;
 ch  = cumsum(h(mnd:end))/sum(h(mnd:end));
 ch  = find(ch>0.995)+mnd;
 mxv = ch(1)/255*mxv;
-return;
-%_______________________________________________________________________
-%_______________________________________________________________________
+
+
+%==========================================================================
 function [mn,v,mg,ll]=fithisto(x,h,maxit,n,v,mg)
 % Fit a mixture of Gaussians to a histogram
 h   = h(:);
@@ -83,7 +82,7 @@ elseif nargin==6
     n  = length(mn);
 else
     error('Incorrect usage');
-end;
+end
 
 ll = Inf;
 for it=1:maxit
@@ -93,35 +92,35 @@ for it=1:maxit
     ll   = -sum(h.*log(scal));
     if it>2 &&  oll-ll < length(x)/n*1e-9
         break;
-    end;
+    end
     for j=1:n
         p     = h.*prb(:,j)./scal;
         mg(j) = sum(p);
         mn(j) = sum(x.*p)/mg(j);
         vr    = x-mn(j);
         v(j)  = sum(vr.*vr.*p)/mg(j)+sml;
-    end;
+    end
     mg = mg + 1e-3;
     mg = mg/sum(mg);
-end;
-%_______________________________________________________________________
-%_______________________________________________________________________
+end
+
+
+%==========================================================================
 function y=distribution(m,v,g,x)
 % Gaussian probability density
 if nargin ~= 4
     error('not enough input arguments');
-end;
+end
 x = x(:);
 m = m(:);
 v = v(:);
 g = g(:);
 if ~all(size(m) == size(v) & size(m) == size(g))
     error('incompatible dimensions');
-end;
+end
 
 for i=1:size(m,1)
     d      = x-m(i);
     amp    = g(i)/sqrt(2*pi*v(i));
     y(:,i) = amp*exp(-0.5 * (d.*d)/v(i));
-end;
-return;
+end

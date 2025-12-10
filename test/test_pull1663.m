@@ -1,8 +1,9 @@
 function test_pull1663
 
-% MEM 14gb
-% WALLTIME 00:60:00
+% MEM 12gb
+% WALLTIME 01:00:00
 % DEPENDENCY ft_prepare_sourcemodel headsurface ft_prepare_leadfield ft_freqanalysis ft_sourceanalysis
+% DATA private
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -15,6 +16,8 @@ function test_pull1663
 %   b. create source grid (ft_prepare_sourcemodel)
 %   c. compute leadfield (ft_prepare_leadfield)
 %   d. compare hex leadfield with tet leadfield
+% 3. create the leadfields based on a singlesphere model for reference
+% (ballpark numbers should coincide)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % 1. create input data
@@ -28,11 +31,6 @@ segprob = [];
 segprob.brain = false(10,10,10); segprob.brain(4:7,4:7,4:7) = true;
 segprob.skull = false(10,10,10); segprob.skull(3:8,3:8,3:8) = true;
 segprob.scalp = false(10,10,10); segprob.scalp(2:9,2:9,2:9) = true;
-%segprob.air = true(10,10,10);
-%segprob.air(2:9,2:9,2:9) = false;
-%segprob.brain = false(11,11,11); segprob.brain(4:8,4:8,4:8) = true;
-%segprob.skull = false(11,11,11); segprob.skull(3:9,3:9,3:9) = true;
-%segprob.scalp = false(11,11,11); segprob.scalp(2:10,2:10,2:10) = true;
 segprob.dim = size(segprob.brain);
 segprob.unit = 'cm';
 segprob.coordsys = 'ctf';
@@ -57,11 +55,18 @@ cfg.shift = 0.3;
 cfg.method = 'hexahedral';
 mesh_vol_hex = ft_prepare_mesh(cfg, segprob);
 
+% surface mesh
+cfg = [];
+cfg.tissue = 'brain';
+mesh_surf = ft_prepare_mesh(cfg, segprob);
+mesh_surf = ft_convert_units(mesh_surf, 'm');
+
 figure
 ft_plot_ortho(segindx.tissue, 'transform', segindx.transform, 'location', [5 5 5], 'style', 'intersect');
 hold on
 ft_plot_mesh(mesh_vol_hex, 'surfaceonly', false, 'facecolor', 'none', 'edgecolor', 'm');
 view(120, 30)
+mesh_vol_hex = ft_convert_units(mesh_vol_hex, 'm');
 
 
 % tetra mesh
@@ -69,12 +74,12 @@ cfg = [];
 cfg.method = 'tetrahedral';
 mesh_vol_tet = ft_prepare_mesh(cfg, segprob);
 
-
 figure
 ft_plot_ortho(segindx.tissue, 'transform', segindx.transform, 'location', [5 5 5], 'style', 'intersect');
 hold on
 ft_plot_mesh(mesh_vol_tet, 'surfaceonly', false, 'facecolor', 'none', 'edgecolor', 'm');
 view(120, 30)
+mesh_vol_tet = ft_convert_units(mesh_vol_tet, 'm');
 
 %% define sensors
 
@@ -83,7 +88,7 @@ view(120, 30)
 
 % for MEG data + sensor info
 %
-% load(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/preproc_ctf151.mat'), 'data');
+% load(dccnpath('/project/3031000.02/test/latest/raw/meg/preproc_ctf151.mat'), 'data');
 % datameg = data;
 % clear data
 
@@ -107,12 +112,12 @@ sens.chanpos = coils;
 sens.chanori = projections;
 sens.label = meg_labels;
 sens.type = 'meg';
-sens.unit = 'mm';
+sens.unit = 'cm';
 sens.tra = eye(5);
-sens = ft_convert_units(sens,'mm');
+sens = ft_convert_units(sens,'m');
 
 %% define dipoles
-dip_pos = [5.5 6.5 6.5; 5.5 5.5 3.5; 3.5 5.5 5.5];
+dip_pos = [5.5 6.5 6.5; 5.5 5.5 3.5; 3.5 5.5 5.5]./100; % in m
 dip_mom = [0 1 0; 0 0 -1; -1 0 0 ];
 
 figure
@@ -177,10 +182,46 @@ lf_tet = cell2mat(out_tet.leadfield);
 
 %% compare leadfields
 
-figure, plot(lf_hex,'r'), hold on, plot(lf_tet,'b')
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 3. compute the leadfield with singlesphere model
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%% prepare headmodel
+
+cfg              = [];
+cfg.method       = 'singlesphere';
+cfg.tissue       = 'brain';
+vol_ssph          = ft_prepare_headmodel(cfg, segprob);
+
+%% prepare sourcemodel
+
+% hex
+cfg = [];
+cfg.sourcemodel.pos = dip_pos';
+cfg.sourcemodel.inside = ones(size(dip_pos,2),1);
+cfg.grad = sens;
+cfg.headmodel = vol_ssph;
+sm_ssph = ft_prepare_sourcemodel(cfg);
+
+%% prepare leadfield
+
+% hex
+cfg                 = [];
+cfg.sourcemodel     = sm_ssph;
+cfg.sourcemodel.mom = dip_mom;
+cfg.headmodel       = vol_ssph;
+cfg.grad            = sens;
+cfg.reducerank      = 3;
+out_ssph = ft_prepare_leadfield(cfg);
+lf_ssph = cell2mat(out_ssph.leadfield);
+
+figure, plot(lf_hex,'r'), hold on, plot(lf_tet,'b'), plot(lf_ssph, 'g');
+
 % set a limit for an error
 rel_err_perc = 100*(abs(lf_hex-lf_tet)./norm(lf_hex));
 assert(max(max(rel_err_perc))<10)
 
-end % main function
+rel_err_perc2 = 100*(abs(lf_ssph-lf_tet)./norm(lf_ssph));
+assert(max(max(rel_err_perc2))<10)
 

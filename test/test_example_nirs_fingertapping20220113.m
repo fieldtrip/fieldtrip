@@ -1,7 +1,8 @@
 function test_example_nirs_fingertapping
 
-% MEM 4gb
+% MEM 2gb
 % WALLTIME 00:10:00
+% DATA no
 
 %
 %% Analyzing NIRS data recorded during unilateral finger- and foot-tapping
@@ -219,7 +220,7 @@ data_raw.time{1} = ((1:nirs.nfo.T)-1)/nirs.nfo.fs;
 
 %% # Convert the optode montage to a layout for plotting
 %
-% In FieldTrip we can have a [detailled description](/faq/how_are_electrodes_magnetometers_or_gradiometers_described/#the-definition-of-nirs-sensors) of the NIRS optode placement and how optodes are combined to form channels. However, in this dataset this information is not complete and we cannot make a complete |opto| structure.
+% In FieldTrip we can have a [detailed description](/faq/how_are_electrodes_magnetometers_or_gradiometers_described/#the-definition-of-nirs-sensors) of the NIRS optode placement and how optodes are combined to form channels. However, in this dataset this information is not complete and we cannot make a complete |opto| structure.
 %
 % This is how far we can get
 %

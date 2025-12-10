@@ -33,6 +33,9 @@ function splitNSx(splitCount)
 %   - Fixed a bug related to a case where initial timestamp of the first
 %     data segment was not 0. 
 %
+% 1.2.0.0:
+%   - Updated to add FileSpec 3.0 compatibility. - @David Kluger
+%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
 
@@ -75,7 +78,7 @@ if strcmpi(NSx.MetaTags.FileTypeID, 'NEURALSG')
 %     dataLength = positionEOD - positionEOH;
 %     fseek(FID, 28, 'bof');
 %     channelCount = fread(FID, 1       , 'uint32=>double');
-elseif strcmpi(NSx.MetaTags.FileTypeID, 'NEURALCD')
+elseif strcmpi(NSx.MetaTags.FileTypeID, 'NEURALCD') || strcmpi(NSx.MetaTags.FileTypeID, 'BRSMPGRP')
     % Calculating different points in the file
     fseek(FID, 0, 'bof');
     basicHeader = fread(FID, 314, '*uint8');

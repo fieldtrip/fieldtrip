@@ -1,11 +1,12 @@
 function test_pull1229
 
-% MEM 8gb
+% MEM 6gb
 % WALLTIME 00:20:00
 % DEPENDENCY ft_read_header ft_read_data ft_read_event
+% DATA private
 
 % this is dataset "d-18-s-3" from https://osf.io/52gy7/
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/pull1229'));
+cd(dccnpath('/project/3031000.02/test/pull1229'));
 
 d = dir('*.edf');
 filename = {d.name};

@@ -3,13 +3,14 @@ function test_bug2888
 % WALLTIME 00:10:00
 % MEM 1gb
 % DEPENDENCY ft_filetype ft_read_header dataset2files
+% DATA private
 
 filename = {
-  dccnpath('/home/common/matlab/fieldtrip/data/test/bug2888/0001') % top level directory
-  dccnpath('/home/common/matlab/fieldtrip/data/test/bug2888/0001/header')
-  dccnpath('/home/common/matlab/fieldtrip/data/test/bug2888/0001/header.txt')
-  dccnpath('/home/common/matlab/fieldtrip/data/test/bug2888/0001/samples')
-  dccnpath('/home/common/matlab/fieldtrip/data/test/bug2888/0001/events')
+  dccnpath('/project/3031000.02/test/bug2888/0001') % top level directory
+  dccnpath('/project/3031000.02/test/bug2888/0001/header')
+  dccnpath('/project/3031000.02/test/bug2888/0001/header.txt')
+  dccnpath('/project/3031000.02/test/bug2888/0001/samples')
+  dccnpath('/project/3031000.02/test/bug2888/0001/events')
   };
 
 for i=1:length(filename)

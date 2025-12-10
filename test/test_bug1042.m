@@ -1,8 +1,9 @@
 function test_bug1042
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:45:00
 % DEPENDENCY ft_convert_units ft_prepare_headmodel ft_compute_leadfield ft_prepare_sourcemodel ft_headmodel_singlesphere ft_headmodel_concentricspheres ft_headmodel_bemcp ft_headmodel_dipoli ft_headmodel_openmeeg ft_headmodel_singlesphere ft_headmodel_localspheres ft_headmodel_singleshell
+% DATA no
 
 [pnt, tri] = mesh_sphere(162);
 pnt = pnt .* 10; % convert to cm

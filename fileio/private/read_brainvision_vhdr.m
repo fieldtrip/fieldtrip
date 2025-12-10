@@ -8,7 +8,7 @@ function [vhdr] = read_brainvision_vhdr(filename)
 %
 % See also READ_BRAINVISION_EEG, READ_BRAINVISION_VMRK
 
-% Copyright (C) 2003-2019, Robert Oostenveld
+% Copyright (C) 2003-2024, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -46,12 +46,16 @@ if ~isempty(vhdr.NumberOfChannels)
     t = tokenize(chan_info, ',');
     vhdr.label{i} = t{1};
     vhdr.reference{i} = t{2};
-    resolution = str2num(t{3}); % in microvolt
-    if ~isempty(resolution)
-      vhdr.resolution(i) = resolution;
+    if ~isempty(t{3})
+      vhdr.resolution(i) = str2double(t{3}); % by default in microvolt
     else
-      ft_warning('FieldTrip:fileio:UnknownResolution', 'unknown resolution (i.e. recording units) for channel %d in "%s"', i, filename);
+      ft_warning('FieldTrip:fileio:UnknownResolution', 'unknown resolution for channel %d in "%s"', i, filename);
       vhdr.resolution(i) = 1;
+    end
+    if numel(t)>3
+      vhdr.unit{i} = strrep(t{4}, 'µV', 'uV');
+    else
+      vhdr.unit{i} = 'uV'; % by default in microvolt
     end
   end
   
@@ -172,10 +176,11 @@ end
 vhdr.nTrials = 1;
 vhdr.nSamplesPre = 0;
 
-% ensure that the labels are in a column
+% ensure that these are columns
 vhdr.label = vhdr.label(:);
 vhdr.reference = vhdr.reference(:);
 vhdr.resolution = vhdr.resolution(:);
+vhdr.unit = vhdr.unit(:);
 
 % read in impedance values
 vhdr.impedances.channels = [];

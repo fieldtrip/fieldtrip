@@ -25,10 +25,9 @@ function varargout = spm_sample_vol(varargin)
 %
 % See also: spm_vol.m, spm_slice_vol.m
 %__________________________________________________________________________
-% Copyright (C) 1999-2015 Wellcome Trust Centre for Neuroimaging
 
 % John Ashburner
-% $Id: spm_sample_vol.m 6340 2015-02-16 12:25:56Z guillaume $
+% Copyright (C) 1999-2022 Wellcome Centre for Human Neuroimaging
 
 
 %-This is merely the help file for the compiled routine

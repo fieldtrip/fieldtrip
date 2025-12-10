@@ -1,6 +1,6 @@
 function write_ply(fn, pnt, tri, format)
 
-% WRITE_PLY writes triangles, tetraheders or hexaheders to a Stanford *.ply format file
+% WRITE_PLY writes triangles, tetrahedrons or hexahedrons to a Stanford *.ply format file
 %
 % Use as
 %   write_ply(filename, vertex, element)
@@ -12,20 +12,36 @@ function write_ply(fn, pnt, tri, format)
 % See also READ_PLY, READ_VTK, WRITE_VTK
 
 % Copyright (C) 2012, Robert Oostenveld
+% 
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
+% for the documentation and details.
+%
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
 % $Id$
 
 % the element are described as
 %   Mx3 list of vertices for triangles
-%   Mx4 list of vertices for tetraheders
-%   Mx8 list of vertices for hexaheders
+%   Mx4 list of vertices for tetrahedrons
+%   Mx8 list of vertices for hexahedrons
 
 if nargin<4
   format = 'ascii';
 end
 
 if size(tri,2)==4
-  % describe the sides of the tetraheders as polygon surface elements
+  % describe the sides of the tetrahedrons as polygon surface elements
   % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1836
   tri = [
     tri(:,[3 2 1])
@@ -34,7 +50,7 @@ if size(tri,2)==4
     tri(:,[4 3 1])
     ];
 elseif size(tri,2)==8
-  % describe the sides of the hexaheders as polygon surface elements
+  % describe the sides of the hexahedrons as polygon surface elements
   % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1836
   tri = [
     tri(:,[4 3 2 1])

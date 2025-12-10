@@ -20,7 +20,7 @@ if ~isfield(state, 'wdim')
 end
 
 dss_message(state, 1, 'Preprocessing data\n');
-[state.preprocf.params,state.X,state.Xmeans state.Y, state.V, state.dV] = ...
+[state.preprocf.params,state.X,state.Xmeans, state.Y, state.V, state.dV] = ...
     feval(state.preprocf.h, state.preprocf.params, state.X, state.wdim);
 
 if iscell(state.Y)

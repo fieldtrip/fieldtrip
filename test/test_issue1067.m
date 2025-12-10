@@ -1,8 +1,9 @@
 function test_issue1067
 
 % WALLTIME 00:10:00
-% MEM 2gb
+% MEM 1gb
 % DEPENDENCY ft_prepare_layout ft_prepare_mesh ft_prepare_sourcemodel ft_prepare_headmodel ft_prepare_neighbours
+% DATA private
 
 % For some fields there are multiple ways to obtain them. The desired use in the
 % high-level functions is to call the function that is the highest in the hierarchy.
@@ -11,7 +12,7 @@ function test_issue1067
 
 %%
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/issue1067'));
+cd(dccnpath('/project/3031000.02/test/issue1067'));
 
 
 %% layout

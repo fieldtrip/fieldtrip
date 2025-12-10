@@ -1,8 +1,9 @@
 function test_ft_progress
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_progress
+% DATA no
 
 % testing parameters
 num_iterations = 100;

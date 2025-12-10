@@ -1,10 +1,11 @@
 function test_bug2649
 
 % WALLTIME 00:10:00
-% MEM 2gb
+% MEM 1gb
 % DEPENDENCY ft_write_data write_brainvision_eeg
+% DATA private
 
-fileorig = dccnpath('/home/common/matlab/fieldtrip/data/test/original/eeg/brainvision/Mischa.eeg');
+fileorig = dccnpath('/project/3031000.02/test/original/eeg/brainvision/Mischa.eeg');
 
 orig_hdr = ft_read_header(fileorig);
 orig_dat = ft_read_data(fileorig);

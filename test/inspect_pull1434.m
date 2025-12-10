@@ -1,5 +1,9 @@
 function inspect_pull1434
 
+% WALLTIME 00:10:00
+% MEM 1gb
+% DATA no
+
 %%
 
 fsample = 1000;

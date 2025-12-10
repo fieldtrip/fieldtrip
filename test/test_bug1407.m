@@ -1,12 +1,13 @@
 function test_bug1407
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_read_header ft_read_data ft_read_event read_mff_header read_mff_data read_mff_event mff_getEEGFilename mff_getSummaryInfo mff_getObject mff_micros2Sample
+% DATA private
 
 ft_hastoolbox('egi_mff_v2', 1);
 
-datadir = dccnpath('/home/common/matlab/fieldtrip/data/test/bug1407');
+datadir = dccnpath('/project/3031000.02/test/bug1407');
 
 dataset = {
     fullfile(datadir, 'Long64ChannelWithEvents.mff')

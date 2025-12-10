@@ -1,8 +1,9 @@
 function failed_tutorial_spike20130308
 
-% MEM 8gb
+% MEM 6gb
 % WALLTIME 00:10:00
 % DEPENDENCY
+% DATA public
 
 % Reading in spike data
 % 
@@ -10,7 +11,7 @@ function failed_tutorial_spike20130308
 % 
 % Spike data can be read out using the function ft_read_spike. At the time of writing this tutorial the supported formats are neurosim, mclust t files, neuralynx (nse, nst, ntt, nts) and plexon (nex and plx) files.. The original data can be obtained from ftp://ftp.fieldtriptoolbox.org/pub/fieldtrip/tutorial/spike/p029_sort_final_01.nex. After reading out the spike data, we select the spike channels of interest.
 
-cd (dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/spike'));
+cd (dccnpath('/project/3031000.02/external/download/tutorial/spike'));
 
 spike = ft_read_spike('p029_sort_final_01.nex'); 
  

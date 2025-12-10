@@ -3,6 +3,7 @@ function inspect_ft_sourcemovie
 % MEM 24gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_sourcemovie ft_sourceanalysis ft_sourceinterpolate ft_volumenormalize ft_prepare_singleshell ft_prepare_leadfield qsubcellfun qsubfeval qsubget
+% DATA public
 
 % the frequency and source analysis is based on the tutorials
 
@@ -12,10 +13,10 @@ addpath(fullfile(p, 'qsub'));
 
 %%
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/timefrequencyanalysis/dataFIC.mat'))
-load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/beamformer/segmentedmri.mat'))
+load(dccnpath('/project/3031000.02/external/download/tutorial/timefrequencyanalysis/dataFIC.mat'))
+load(dccnpath('/project/3031000.02/external/download/tutorial/beamformer/segmentedmri.mat'))
 
-mri = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.mri'));
+mri = ft_read_mri(dccnpath('/project/3031000.02/external/download/test/ctf/Subject01.mri'));
 
 cfg              = [];
 cfg.output       = 'powandcsd';

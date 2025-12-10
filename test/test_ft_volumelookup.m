@@ -1,11 +1,15 @@
 function test_ft_volumelookup
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_volumelookup ft_read_atlas atlas_lookup
+% DATA no
 
-atlasfilename = dccnpath('/home/common/matlab/fieldtrip/template/atlas/afni/TTatlas+tlrc.BRIK');
-mrifilename   = dccnpath('/home/common/matlab/fieldtrip/external/spm8/templates/T1.nii');
+[ftver, ftpath] = ft_version;
+templatedir = fullfile(ftpath, 'template');
+
+atlasfilename = fullfile(templatedir, 'atlas', 'afni', 'TTatlas+tlrc.BRIK');
+mrifilename   = fullfile(ftpath, 'external', 'spm8', 'templates', 'T1.nii');
 
 mri = ft_read_mri(mrifilename);
 mri.coordsys = 'mni';
@@ -39,7 +43,7 @@ cfg.maskparameter = 'mask';
 mask5     = ft_volumelookup(cfg, mri);
 
 
-atlasfilename = dccnpath('/home/common/matlab/fieldtrip/template/atlas/aal/ROI_MNI_V4.nii');     
+atlasfilename = fullfile(templatedir, 'atlas', 'aal', 'ROI_MNI_V4.nii');     
 cfg       = [];
 cfg.atlas = atlasfilename;
 cfg.roi = 'Calcarine_R'; % right V1

@@ -24,7 +24,7 @@ function output = memtic(action, counter)
 % provided by the operating system.
 %
 % Example: measure the memory increase due to allocating a lot of memory.
-% Doing a "clear x" following the allocation and priot to MEMTOC does not
+% Doing a "clear x" following the allocation and prior to MEMTOC does not
 % affect the memory that is reported.
 %
 %   memtic
@@ -59,14 +59,23 @@ function output = memtic(action, counter)
 % $Id$
 
 persistent state
+persistent mexfile_exists
 
 if nargin<1
   action = 'tic';
 end
 
+if isempty(mexfile_exists)
+  mexfile_exists = false;
+end
+
+if ~mexfile_exists
+  mexfile_exists = isempty(strfind(which('memprofile'), mexext));
+end
+
 % the memtic/memtoc functions make use of a low-level mex file that interacts directly with the operating system
 % do not fail if the mex file does not exist
-if isempty(strfind(which('memprofile'), mexext))
+if mexfile_exists
   switch action
     case 'tic'
       if nargout
@@ -88,7 +97,7 @@ memstat = memprofile('info');
 switch action
   case 'tic'
     if nargin>1
-      ft_error('the counter cannot be specified as imput argument');
+      ft_error('the counter cannot be specified as input argument');
     end
     
     counter = length(state)+1;

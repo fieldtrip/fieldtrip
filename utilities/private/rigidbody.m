@@ -14,6 +14,8 @@ function [H] = rigidbody(f)
 %   pitch (rotation around x-axis, in degrees)
 %   roll  (rotation around y-axis, in degrees)
 %   yaw   (rotation around z-axis, in degrees)
+%
+% See also ROTATE, TRANSLATE, SCALE, QUATERNION, HOMOGENOUS2TRADITIONAL
 
 % Copyright (C) 2000-2013, Robert Oostenveld
 %

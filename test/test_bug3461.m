@@ -1,13 +1,14 @@
 function test_bug3461
 
 % WALLTIME 00:20:00
-% MEM 3gb
+% MEM 1gb
 % DEPENDENCY ft_sourcestatistics ft_sourcegrandaverage
+% DATA private
 
 %%
 
 % this contains allSourceDiff050
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug3461.mat'));
+load(dccnpath('/project/3031000.02/test/bug3461.mat'));
 
 %% Grand average
 

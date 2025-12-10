@@ -30,7 +30,7 @@ function headmodel = ft_headmodel_openmeeg(mesh, varargin)
 %
 % See also FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD
 
-% Copyright (C) 2010-2023, Robert Oostenveld
+% Copyright (C) 2010-2024, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.

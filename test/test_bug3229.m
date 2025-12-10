@@ -3,6 +3,7 @@ function test_bug3229
 % WALLTIME 00:10:00
 % MEM 1gb
 % DEPENDENCY ft_apply_transform ft_componentanalysis ft_rejectcomponent
+% DATA no
 
 elec = [];
 elec.label   = {'1';'2';'3';'4'};
@@ -50,7 +51,7 @@ for i=1:5
   data.trial{i} = randn(4,1000);
   data.time{i}  = (1:1000)/1000;
 end
-data.elec = elec;
+data.elec = fixbalance(elec);
 data = ft_checkdata(data);
 
 %%
@@ -74,6 +75,8 @@ cfg = [];
 cfg.method = 'pca';
 cfg.updatesens = 'yes';
 comp = ft_componentanalysis(cfg, data);
+
+assert(strcmp(comp.elec.balance.current{end}, 'comp'));
 assert(~isequal(comp.elec, data.elec));
 
 cfg = [];
@@ -81,7 +84,7 @@ cfg.component = []; % keep all
 cfg.updatesens = 'yes';
 backproject = ft_rejectcomponent(cfg, comp);
 
-assert(strcmp(backproject.elec.balance.current, 'invcomp'));
+assert(strcmp(backproject.elec.balance.current{end}, 'invcomp'));
 assert(isalmostequal(backproject.elec.tra, eye(4), 'abstol', 1e-9));
 
 cfg = [];
@@ -89,6 +92,6 @@ cfg.component = []; % keep all
 cfg.updatesens = 'yes';
 cleaned = ft_rejectcomponent(cfg, comp, data);
 
-assert(strcmp(cleaned.elec.balance.current, 'reject'));
+assert(strcmp(cleaned.elec.balance.current{end}, 'reject'));
 assert(isalmostequal(cleaned.elec.tra, eye(4), 'abstol', 1e-9));
 

@@ -1,18 +1,19 @@
 function test_bug3029
 
-% MEM 5gb
+% MEM 4gb
 % WALLTIME 00:20:00
 % DEPENDENCY ft_sourceanalysis prepare_freq_matrices
+% DATA private
 
 % this test function tests the correctness of the data handling in
 % ft_sourceanalysis, with respect to:
 % -refchan handling when using DICS (with refchan)
 % -csd-matrix handling when using various versions of keeptrials in cfg
 
-filename = fullfile(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/freq/meg'), 'freq_mtmfft_fourier_trl_ctf275');
+filename = fullfile(dccnpath('/project/3031000.02/test/latest/freq/meg'), 'freq_mtmfft_fourier_trl_ctf275');
 load(filename);
 
-filename = fullfile(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/vol'), 'Subject01vol_singleshell');
+filename = fullfile(dccnpath('/project/3031000.02/test/latest/vol'), 'Subject01vol_singleshell');
 load(filename);
 vol = ft_datatype_headmodel(vol);
 [vol.bnd.nrm] = surface_normals(vol.bnd.pos,vol.bnd.tri);
@@ -127,8 +128,7 @@ if false
 end
 
 % ALSO: check whether it also works with powandcsd data
-filename = fullfile(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/freq/meg'), 'freq_mtmfft_powandcsd_trl_ctf275');
-load(filename);
+freq=ft_checkdata(freq,'cmbstyle','full');
 
 if true
   cfg           = [];

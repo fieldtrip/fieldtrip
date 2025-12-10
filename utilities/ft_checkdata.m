@@ -1,7 +1,7 @@
 function [data] = ft_checkdata(data, varargin)
 
 % FT_CHECKDATA checks the input data of the main FieldTrip functions, e.g. whether the
-% type of data strucure corresponds with the required data. If necessary and possible,
+% type of data structure corresponds with the required data. If necessary and possible,
 % this function will adjust the data structure to the input requirements (e.g. change
 % dimord, average over trials, convert inside from index into logical).
 %
@@ -13,23 +13,23 @@ function [data] = ft_checkdata(data, varargin)
 %   [data] = ft_checkdata(data, ...)
 %
 % Optional input arguments should be specified as key-value pairs and can include
-%   feedback           = yes, no
+%   feedback           = 'yes' or 'no'
 %   datatype           = raw, freq, timelock, comp, spike, source, mesh, dip, volume, segmentation, parcellation
 %   dimord             = any combination of time, freq, chan, refchan, rpt, subj, chancmb, rpttap, pos
 %   senstype           = ctf151, ctf275, ctf151_planar, ctf275_planar, neuromag122, neuromag306, bti148, bti248, bti248_planar, magnetometer, electrode
 %   fsample            = sampling frequency to use to go from SPIKE to RAW representation
-%   ismeg              = yes, no
-%   iseeg              = yes, no
-%   isnirs             = yes, no
-%   hasunit            = yes, no
-%   hascoordsys        = yes, no
-%   haschantype        = yes, no
-%   haschanunit        = yes, no
-%   hassampleinfo      = yes, no, ifmakessense (applies to raw and timelock data)
-%   hascumtapcnt       = yes, no (only applies to freq data)
-%   hasdim             = yes, no
-%   hasdof             = yes, no
-%   hasbrain           = yes, no (only applies to segmentation)
+%   ismeg              = 'yes' or 'no', requires the data to have a grad structure
+%   iseeg              = 'yes' or 'no', requires the data to have an elec structure
+%   isnirs             = 'yes' or 'no', requires the data to have an opto structure
+%   hasunit            = 'yes' or 'no'
+%   hascoordsys        = 'yes' or 'no'
+%   haschantype        = 'yes' or 'no'
+%   haschanunit        = 'yes' or 'no'
+%   hassampleinfo      = 'yes', 'no', or 'ifmakessense' (applies to raw and timelock data)
+%   hascumtapcnt       = 'yes' or 'no' (only applies to freq data)
+%   hasdim             = 'yes' or 'no'
+%   hasdof             = 'yes' or 'no'
+%   hasbrain           = 'yes' or 'no' (only applies to segmentation)
 %   insidestyle        = logical, index, can also be empty
 %   cmbstyle           = sparse, sparsewithpow, full, fullfast, fourier (applies to covariance and cross-spectral density)
 %   segmentationstyle  = indexed, probabilistic (only applies to segmentation)
@@ -63,7 +63,7 @@ function [data] = ft_checkdata(data, varargin)
 %
 % $Id$
 
-% in case of an error this function could use dbstack for more detailled
+% in case of an error this function could use dbstack for more detailed
 % user feedback
 %
 % this function should replace/encapsulate
@@ -91,7 +91,7 @@ function [data] = ft_checkdata(data, varargin)
 
 % FIXME the following is difficult, if not impossible, to support without knowing the parameter
 % FIXME it is presently (dec 2014) not being used anywhere in FT, so can be removed
-%   hastrials          = yes, no
+%   hastrials          = 'yes' or 'no'
 
 % check whether people are using deprecated options
 sel = find(strcmp(varargin(1:2:end), 'hastrialdef'));
@@ -135,6 +135,7 @@ segmentationstyle    = ft_getopt(varargin, 'segmentationstyle'); % this will be 
 parcellationstyle    = ft_getopt(varargin, 'parcellationstyle'); % this will be passed on to the corresponding ft_datatype_xxx function
 trialinfostyle       = ft_getopt(varargin, 'trialinfostyle');
 fsample              = ft_getopt(varargin, 'fsample');
+allowemptytrials     = ft_getopt(varargin, 'allowemptytrials'); % this will be passed on to the corresponding ft_datatype_raw function
 
 % determine the type of input data
 israw           = ft_datatype(data, 'raw');
@@ -276,7 +277,7 @@ end
 if iscomp % this should go before israw/istimelock/isfreq
   data = ft_datatype_comp(data, 'hassampleinfo', hassampleinfo);
 elseif israw
-  data = ft_datatype_raw(data, 'hassampleinfo', hassampleinfo);
+  data = ft_datatype_raw(data, 'hassampleinfo', hassampleinfo, 'allowemptytrials', allowemptytrials);
 elseif istimelock
   data = ft_datatype_timelock(data, 'hassampleinfo', hassampleinfo);
 elseif isfreq
@@ -566,17 +567,12 @@ if ~isempty(stype)
     stype = {stype};
   end
   
-  if isfield(data, 'grad') || isfield(data, 'elec') || isfield(data, 'opto')
-    if any(strcmp(ft_senstype(data), stype))
-      okflag = 1;
-    elseif any(cellfun(@ft_senstype, repmat({data}, size(stype)), stype))
-      % this is required to detect more general types, such as "meg" or "ctf" rather than "ctf275"
-      okflag = 1;
-    else
-      okflag = 0;
-    end
+  if any(strcmp(ft_senstype(data), stype))
+    okflag = 1;
+  elseif any(cellfun(@ft_senstype, repmat({data}, size(stype)), stype))
+    % this is required to detect more general types, such as "meg" or "ctf" rather than "ctf275"
+    okflag = 1;
   else
-    % the data does not contain a sensor array
     okflag = 0;
   end
   
@@ -1364,7 +1360,10 @@ fn = fieldnames(source);
 sel = false(size(fn));
 for i=1:numel(fn)
   tmp = source.(fn{i});
-  sel(i) = iscell(tmp) && isequal(sort(tmp(:)), sort(data.label(:)));
+  % this allows for more parcels in the parcellation than labels in the
+  % data, which may be a somewhat common use case, e.g. with ??? or
+  % MEDIAL WALL parcels that don't have a corresponding functional data label
+  sel(i) = iscell(tmp) && numel(intersect(tmp(:),data.label(:)))==numel(data.label); 
 end
 parcelparam = fn(sel);
 if numel(parcelparam)~=1
@@ -1528,7 +1527,7 @@ if ntrial==1
   tlck.avg    = data.trial{1};
   tlck.label  = data.label;
   tlck.dimord = 'chan_time';
-  tlck        = copyfields(data, tlck, {'grad', 'elec', 'opto', 'cfg', 'trialinfo', 'topo', 'topodimord', 'topolabel', 'unmixing', 'unmixingdimord'});
+  tlck        = copyfields(data, tlck, {'elec', 'grad', 'opto', 'cfg', 'trialinfo', 'topo', 'topodimord', 'topolabel', 'unmixing', 'unmixingdimord'});
   
 else
   % the code below tries to construct a general time-axis where samples of all trials can fall on
@@ -1558,7 +1557,7 @@ else
   tlck.time    = time;
   tlck.dimord  = 'rpt_chan_time';
   tlck.label   = data.label;
-  tlck         = copyfields(data, tlck, {'grad', 'elec', 'opto', 'cfg', 'trialinfo', 'sampleinfo', 'topo', 'topodimord', 'topolabel', 'unmixing', 'unmixingdimord'});
+  tlck         = copyfields(data, tlck, {'elec', 'grad', 'opto', 'cfg', 'trialinfo', 'sampleinfo', 'topo', 'topodimord', 'topolabel', 'unmixing', 'unmixingdimord'});
 end
 
 

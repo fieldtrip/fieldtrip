@@ -1,23 +1,22 @@
 function fieldtrip2ctf(filename, data, varargin)
 
-% FIELDTRIP2CTF saves a FieldTrip data structures to a corresponding CTF file. The
-% file to which the data is exported depends on the input data structure that you
-% provide.
+% FIELDTRIP2CTF saves a FieldTrip data structure to a CTF dataset.
+%
+% The file to which the data is exported depends on the input data structure that you
+% provide. The "raw" and "timelock" structures can be exported to a CTF dataset. The
+% "montage" structure can be exported to a CTF "Virtual Channels" file.
 %
 % Use as
 %   fieldtrip2ctf(filename, data, ...)
-% where "filename" is a string, "data" is a FieldTrip data structure, and
-% additional options can be specified as key-value pairs.
+% where filename is a string and data is a FieldTrip raw, timelock or montage
+% structure.
 %
-% The FieldTrip "montage" structure (see FT_APPLY_MONTAGE and the cfg.montage
-% option in FT_PREPROCESSING) can be exported to a CTF "Virtual Channels" file.
+% Additional options should be specified in key-value pairs and can be
+%   'ds' = struct, original dataset information as obtained with readCTFds
 %
-% At this moment the support for other FieldTrip structures and CTF fileformats is
-% still limited, but this function serves as a placeholder for future improvements.
-%
-% See also FT_VOLUMEWRITE, FT_SOURCEWRITE, FT_WRITE_DATA
+% See also FT_DATATYPE, FT_APPLY_MONTAGE, FT_VOLUMEWRITE, FT_SOURCEWRITE, FT_WRITE_DATA
 
-% Copyright (C) 2015, Robert Oostenveld
+% Copyright (C) 2015-2024, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -37,15 +36,87 @@ function fieldtrip2ctf(filename, data, varargin)
 %
 % $Id$
 
+% this ensures that the path is correct and that the ft_defaults global variable is available
+ft_defaults
+
+ds = ft_getopt(varargin, 'ds', []);
+
 type = ft_datatype(data);
+
+if isempty(ds) && isfield(data, 'hdr') && isfield(data.hdr, 'orig') && isfield(data.hdr.orig, 'res4')
+  % take it from the data structure
+  ds = data.hdr.orig;
+end
+
 switch type
+  case {'raw', 'timelock'}
+    % these are saved to a *.ds dataset
+
+    % this only works if the channel names are exactly the same
+    if length(data.label)~=size(ds.res4.chanNames,1)
+      error('channel count is not consistent with the original dataset')
+    end
+    for i=1:numel(data.label)
+      assert(startsWith(deblank(ds.res4.chanNames(i,:)), data.label{i}), 'channel name is not consistent with the original dataset');
+    end
+
+    if strcmp(type, 'timelock')
+      ds.res4.no_trials = 1;
+      if isfield(data, 'dof')
+        n = unique(data.dof(:));
+        if length(n)==1
+          ds.res4.no_trials_avgd = n;
+        else
+          ft_warning('setting "no_trials_avgd" to 1')
+        end
+      else
+        ds.res4.no_trials_avgd = 1;
+      end
+      % convert timelock data to raw
+      data = ft_checkdata(data, 'datatype', 'raw');
+    else
+      ds.res4.no_trials = length(data.trial);
+      ds.res4.no_trials_avgd = 0;
+    end
+
+    % concatenate the trials along the 3rd dimension
+    dat = cat(3, data.trial{:});
+    % permute to get samples*channels*trials
+    dat = permute(dat, [2 1 3]);
+
+    assert(~isempty(ds));
+
+    [p, f, x] = fileparts(filename);
+
+    % some of the original dataset fields (probably) do not apply any more
+    ds.baseName     = f;
+    ds.path         = p;
+    ds.mrk          = [];
+    ds.TrialClass   = [];
+    ds.badSegments  = [];
+    ds.BadChannels  = [];
+    ds.processing   = [];
+    ds.newds        = [];
+
+    % some of the original dataset fields need to be updated
+    ds.res4.no_samples   = size(dat,1);
+    ds.res4.no_channels  = length(data.label);
+    ds.res4.sample_rate  = data.fsample;
+
+    if exist(filename, 'dir')
+      ft_warning('overwriting existing dataset %s', filename);
+      rmdir(filename, 's');
+    end
+
+    writeCTFds(filename, ds, dat, 'T');
+
   case 'montage'
-    % Virtual channels are weighted linear combinations of real channels collected
-    % by the CTF MEG System
-    
+    % virtual channels are weighted linear combinations of real channels
+    % collected by the CTF MEG System
+
     % rename it for convenience
     montage = data; clear data;
-    
+
     fid = fopen(filename, 'wt');
     assert(fid>0, 'could not open file for writing');
     fprintf(fid, '// Virtual channel configuration\n');
@@ -61,34 +132,7 @@ switch type
       end
       fprintf(fid, '}\n');
     end
-    
-    % case 'event'
-    %   if ~ft_filetype(filename, 'ctf_ds')
-    %     ft_error('you should specify the directory name of a CTF dataset to which the MarkerFile.mrk will be added');
-    %   end
-    %   
-    % The MarkerFile.mrk file requires exact line spacing, otherwise the software
-    % will fail to read the it properly. Two blank lines must be present between
-    % sections and three blank lines must be present at the end of the file.
-    
-    % case 'raw'
-    % this should be written with FT_WRITE_DATA
-
-    % case 'timelock'
-    % this should be written as a single trial with FT_WRITE_DATA
-
-    % case 'volume'
-    % this could be supported for singlesphere and localspheres
-
-    % for the following representations of processed data there is no suitable CTF file format 
-    % case 'freq'
-    % case 'source'
-    % case 'comp'
-    % case 'spike'
-    % case 'source'
-    % case 'dip'
 
   otherwise
     ft_error('unsuported data structure "%s" for exporting to CTF', type);
 end
-

@@ -11,9 +11,8 @@ function [data] = ft_preprocessing(cfg, data)
 % The first input argument "cfg" is the configuration structure, which contains all
 % details for the dataset filename, trials and the preprocessing options.
 %
-% If you are calling FT_PREPROCESSING with only the configuration as first
-% input argument and the data still has to be read from file, you should
-% specify
+% If you are calling FT_PREPROCESSING with only the configuration as first input
+% argument and the data still has to be read from file, you should specify
 %   cfg.dataset      = string with the filename
 %   cfg.trl          = Nx3 matrix with the trial definition, see FT_DEFINETRIAL
 %   cfg.padding      = length (in seconds) to which the trials are padded for filtering (default = 0)
@@ -140,7 +139,7 @@ function [data] = ft_preprocessing(cfg, data)
 %   cfg.export.dataset    = string with the output file name
 %   cfg.export.dataformat = string describing the output file format, see FT_WRITE_DATA
 
-% Copyright (C) 2003-2022, Robert Oostenveld, SMI, FCDC
+% Copyright (C) 2003-2024, Robert Oostenveld, SMI, FCDC
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -225,6 +224,8 @@ headeropt  = ft_setopt(headeropt, 'coilaccuracy',   ft_getopt(cfg, 'coilaccuracy
 headeropt  = ft_setopt(headeropt, 'coildeffile',    ft_getopt(cfg, 'coildeffile'));         % is passed to low-level function
 headeropt  = ft_setopt(headeropt, 'checkmaxfilter', ft_getopt(cfg, 'checkmaxfilter'));      % this allows to read non-maxfiltered neuromag data recorded with internal active shielding
 headeropt  = ft_setopt(headeropt, 'chantype',       ft_getopt(cfg, 'chantype', {}));        % 2017.10.10 AB required for NeuroOmega files
+headeropt  = ft_setopt(headeropt, 'password',       ft_getopt(cfg, 'password'));            % this allows to read data from MED 1.0, MEF 3.0 and MEF 2.1 files
+headeropt  = ft_setopt(headeropt, 'cache',          ft_getopt(cfg, 'cache'));
 
 if ~isfield(cfg, 'feedback')
   if strcmp(cfg.method, 'channel')
@@ -420,7 +421,8 @@ else
     cfg.trl = loadvar(cfg.trl, 'trl');
   end
 
-  % the code below expects an Nx3 matrix with begsample, endsample and offset
+  % the code further down expects an Nx3 matrix with begsample, endsample and offset
+  assert(size(cfg.trl,2)>=3, 'incorrect specification of cfg.trl');
   if istable(cfg.trl)
     trl = table2array(cfg.trl(:,1:3));
   else
@@ -656,13 +658,14 @@ else
 end % if hasdata
 
 if strcmp(cfg.updatesens, 'yes')
-  % updating the sensor descriptions can be done on basis of the montage or the rereference settings
+  % this can be done on basis of the montage or the rereference settings
   if ~isempty(cfg.montage) && ~isequal(cfg.montage, 'no')
     montage = cfg.montage;
   elseif strcmp(cfg.reref, 'yes')
     if strcmp(cfg.refmethod, 'bipolar') || strcmp(cfg.refmethod, 'avg') || strcmp(cfg.refmethod, 'laplace')
       tmpcfg = keepfields(cfg, {'refmethod', 'implicitref', 'refchannel', 'channel', 'groupchans'});
-      tmpcfg.showcallinfo = 'no';
+      tmpcfg.trackcallinfo = 'no';
+      tmpcfg.trackdatainfo = 'no';
       montage = ft_prepare_montage(tmpcfg, data);
     else
       % do not update the sensor description
@@ -675,23 +678,26 @@ if strcmp(cfg.updatesens, 'yes')
 
   if ~isempty(montage)
     % apply the linear projection also to the sensor description
+    % it has already been applied to the data itself in private/preproc
     if issubfield(montage, 'type')
       bname = montage.type;
     else
       bname = 'preproc';
     end
-    if isfield(dataout, 'grad')
-      ft_info('applying the montage to the grad structure\n');
-      dataout.grad = ft_apply_montage(dataout.grad, montage, 'feedback', 'none', 'keepunused', 'no', 'balancename', bname);
-    end
-    if isfield(dataout, 'elec')
-      ft_info('applying the montage to the elec structure\n');
-      dataout.elec = ft_apply_montage(dataout.elec, montage, 'feedback', 'none', 'keepunused', 'no', 'balancename', bname);
-    end
-    if isfield(dataout, 'opto')
-      ft_info('applying the montage to the opto structure\n');
-      dataout.opto = ft_apply_montage(dataout.opto, montage, 'feedback', 'none', 'keepunused', 'no', 'balancename', bname);
-    end
+
+    sensfield = {'elec', 'grad', 'opto'};
+    for m = 1:numel(sensfield)
+      if isfield(dataout, sensfield{m})
+        sens = fixbalance(dataout.(sensfield{m})); % ensure that the balancing representation is up to date
+        if ~isempty(intersect(sens.label, montage.labelold))
+          ft_info('applying the montage to the %s structure\n', sensfield{m});
+          sens = ft_apply_montage(sens, montage, 'feedback', 'none', 'keepunused', 'no');
+          sens.balance.(bname) = montage;
+          sens.balance.current{end+1} = bname;
+          dataout.(sensfield{m}) = sens;
+        end
+      end
+    end % for elec, grad and opto
   end
 end % if updatesens
 
@@ -699,7 +705,7 @@ end % if updatesens
 ft_postamble debug
 ft_postamble previous data
 
-% rename the output variable to accomodate the savevar postamble
+% rename the output variable to accommodate the savevar postamble
 data = dataout;
 
 ft_postamble provenance data

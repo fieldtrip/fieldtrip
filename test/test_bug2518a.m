@@ -1,8 +1,9 @@
 function test_bug2518a
 
 % WALLTIME 00:30:00
-% MEM 3gb
+% MEM 1gb
 % DEPENDENCY ft_componentanalysis
+% DATA public
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % for these functions I don't really know whether and how they should work
@@ -22,7 +23,7 @@ function test_bug2518a
 
 % prepare some data
 cfg = [];
-cfg.dataset = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds');
+cfg.dataset = dccnpath('/project/3031000.02/external/download/test/ctf/Subject01.ds');
 cfg.demean = 'yes';
 cfg.channel = 'MEG';
 raw = ft_preprocessing(cfg);

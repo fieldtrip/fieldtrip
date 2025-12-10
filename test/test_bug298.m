@@ -1,8 +1,9 @@
 function test_bug298
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY keyval keyvalx
+% DATA no
 
 warning('this test has become obsolete because ot the ft_getopt implementation');
 return

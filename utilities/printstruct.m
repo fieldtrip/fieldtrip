@@ -24,7 +24,7 @@ function str = printstruct(name, val, varargin)
 %
 % See also DISP, NUM2STR, INT2STR, MAT2STR
 
-% Copyright (C) 2006-2023, Robert Oostenveld
+% Copyright (C) 2006-2024, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -96,7 +96,8 @@ elseif isstruct(val)
           if ismatrix(fv)
             line = printmat([name '.' fn{i}], fv, linebreaks, transposed);
           else
-            line = '''ERROR: multidimensional arrays are not supported''';
+            ft_warning('multidimensional arrays are not supported');
+            line = [name '.' fn{i} ' = []; % ERROR: multidimensional arrays are not supported.'];
           end
         case 'cell'
           line = printcell([name '.' fn{i}], fv, linebreaks, transposed);
@@ -104,6 +105,9 @@ elseif isstruct(val)
           line = [printstruct([name '.' fn{i}], fv, varargin{:}) 10];
         case 'function_handle'
           line = printstr([name '.' fn{i}], func2str(fv), linebreaks, transposed);
+        case 'table'
+          ft_warning('tables are not supported');
+          line = [name '.' fn{i} ' = []; % ERROR: tables are not supported.'];
         otherwise
           ft_error('unsupported');
       end
@@ -124,6 +128,9 @@ elseif ~isstruct(val)
       str = printmat(name, val, linebreaks, transposed);
     case 'cell'
       str = printcell(name, val, linebreaks, transposed);
+    case 'table'
+      ft_warning('tables are not supported');
+      str = [name ' = []; % ERROR: tables are not supported.'];
     otherwise
       ft_error('unsupported');
   end
@@ -246,7 +253,7 @@ elseif ismatrix(val)
   str = strrep(str, ';', [';' newline]);
 else
   ft_warning('multidimensional arrays are not supported');
-  str = '''ERROR: multidimensional arrays are not supported''';
+  str = [name ' = []; % ERROR: multidimensional arrays are not supported.'];
 end
 if ~linebreaks
   str(str==10) = [];
@@ -283,9 +290,9 @@ switch class(val)
     str = [str ')'];
 
   otherwise
-    ft_warning('cannot print unknown object at this level');
-    str = '''ERROR: cannot print unknown object at this level''';
+    ft_error('unsupported');
 end
+
 if ~linebreaks
   str(str==10) = [];
 end

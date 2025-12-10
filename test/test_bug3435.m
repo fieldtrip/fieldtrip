@@ -1,10 +1,14 @@
 function test_bug3435
 
 % WALLTIME 00:20:00
-% MEM 3gb
+% MEM 1gb
 % DEPENDENCY ft_prepare_mesh prepare_mesh_tetrahedral
+% DATA no
 
-mri = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/template/anatomy/single_subj_T1.nii'));
+[ftver, ftpath] = ft_version;
+templatedir  = fullfile(ftpath, 'template');
+
+mri = ft_read_mri(fullfile(templatedir, 'anatomy', 'single_subj_T1.nii'));
 mri.coordsys = 'mni';
 
 cfg = [];

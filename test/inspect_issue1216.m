@@ -1,12 +1,13 @@
 function inspect_issue1216
 
 % WALLTIME 00:10:00
-% MEM 3gb
+% MEM 1gb
 % DEPENDENCY ft_hastoolbox ft_postamble_hastoolbox
+% DATA private
 
 % this should be executed on MATLAB version R2016a, since it deals with the compat/matlablt2016b directory
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/issue1216.mat'));
+load(dccnpath('/project/3031000.02/test/issue1216.mat'));
 
 %% Run ICA
 % Perform independent component analysis

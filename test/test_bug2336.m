@@ -1,8 +1,9 @@
 function test_bug2336
 
 % WALLTIME 00:30:00
-% MEM 4gb
+% MEM 2gb
 % DEPENDENCY
+% DATA private
 
 % script to test the integration of FEM output files created by BESA MRI.
 %
@@ -22,7 +23,7 @@ ft_hastoolbox('besa', 1);
 %% The first part of the test script pertains to the low-level reading functions
 
 % Specify path to data folder
-strPath_Data = dccnpath('/home/common/matlab/fieldtrip/data/test/bug2336/');
+strPath_Data = dccnpath('/project/3031000.02/test/bug2336/');
 
 % Filenames of BESA MRI output files
 strPath_Leadfield         = sprintf('%sBESA_MRI_Electrode_Config_34_PB_FEM_DATA.lft', strPath_Data);

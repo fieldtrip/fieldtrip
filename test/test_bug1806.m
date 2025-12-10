@@ -1,14 +1,15 @@
 function test_bug1806
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_componentanalysis ft_rejectcomponent ft_megplanar ft_combineplanar ft_megrealign ft_datatype_sens
+% DATA private
 
-ctf151_sens = ft_read_sens(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/sens/ctf151.mat'));
-ctf275_sens = ft_read_sens(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/sens/ctf275.mat'));
+ctf151_sens = ft_read_sens(dccnpath('/project/3031000.02/test/latest/sens/ctf151.mat'));
+ctf275_sens = ft_read_sens(dccnpath('/project/3031000.02/test/latest/sens/ctf275.mat'));
 
 cfg = [];
-cfg.dataset = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds');
+cfg.dataset = dccnpath('/project/3031000.02/external/download/test/ctf/Subject01.ds');
 cfg.trl = [1 900 0];
 data = ft_preprocessing(cfg);
 % the following applies since 30 October 2012

@@ -1,8 +1,9 @@
 function test_ft_connectivitysimulation
 
 % WALLTIME 00:10:00
-% MEM 2gb
+% MEM 1gb
 % DEPENDENCY ft_connectivitysimulation
+% DATA no
 
 cfg = [];
 cfg.method      = 'ar';

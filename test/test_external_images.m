@@ -1,8 +1,9 @@
 function test_external_images
 
 % WALLTIME 00:10:00
-% MEM 2gb
+% MEM 1gb
 % DEPENDENCY hsv2rgb
+% DATA no
 
 filelist = {'hsv2rgb'};
 

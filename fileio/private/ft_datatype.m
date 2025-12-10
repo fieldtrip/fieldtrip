@@ -160,7 +160,7 @@ if nargin>1
     case 'parcellation'
       type = any(strcmp(type, {'parcellation', 'source+label' 'mesh+label'}));
     case 'sens'
-      type = any(strcmp(type, {'grad', 'elec', 'opto'}));
+      type = any(strcmp(type, {'elec', 'grad', 'opto'}));
     otherwise
       type = strcmp(type, desired);
   end % switch

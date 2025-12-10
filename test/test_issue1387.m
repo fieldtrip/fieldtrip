@@ -3,10 +3,11 @@ function test_issue1387
 % WALLTIME 00:10:00
 % MEM 1gb
 % DEPENDENCY ft_read_event ft_read_header ft_preprocessing
+% DATA private
 
 %%
 % load data and parse the events using '5*nanmedian' threshold on 8 channels
-fileName       = dccnpath('/home/common/matlab/fieldtrip/data/test/issue1387/Test_4.edf');
+fileName       = dccnpath('/project/3031000.02/test/issue1387/Test_4.edf');
 bitChannels    = 3:10;
 header         = ft_read_header(fileName);
 labels         = header.label(bitChannels);

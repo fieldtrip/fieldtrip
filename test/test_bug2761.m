@@ -2,8 +2,9 @@
 function test_bug2761
 
 % WALLTIME 00:10:00
-% MEM 1GB
+% MEM 1gb
 % DEPENDENCY ft_connectivityanalysis ft_connectivity_corr
+% DATA no
 
 data = [];
 for i=1:5

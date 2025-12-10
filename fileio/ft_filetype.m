@@ -36,7 +36,7 @@ function [type] = ft_filetype(filename, desired, varargin)
 %  - Analyse
 %  - Analyze/SPM
 %  - BESA
-%  - Bioimage Suite (*.mgrid)
+%  - Bioimage Suite *.mgrid
 %  - BrainSuite
 %  - BrainVisa
 %  - BrainVision
@@ -52,7 +52,8 @@ function [type] = ft_filetype(filename, desired, varargin)
 %  - MINC
 %  - Neuralynx
 %  - Neuroscan
-%  - Nihon Koden (*.m00)
+%  - Nihon Koden *.m00
+%  - OpenVibe MATLAB files *.mat
 %  - Plexon
 %  - SR Research Eyelink
 %  - SensoMotoric Instruments (SMI) *.txt
@@ -73,7 +74,7 @@ function [type] = ft_filetype(filename, desired, varargin)
 %  - NIRx *.tpl, *.wl1 and *.wl2
 %  - York Instruments *.meghdf5
 
-% Copyright (C) 2003-2022, Robert Oostenveld
+% Copyright (C) 2003-2024, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -159,6 +160,12 @@ if isempty(filename)
     type = false;
     return
   end
+end
+
+% some of the code does not work well on matlab strings, (i.e. "" vs ''),
+% specifically ["a" "b"] yields something different than ['a' 'b']. 
+if isstring(filename)
+  filename = char(filename);
 end
 
 % the parts of the filename are used further down
@@ -609,6 +616,10 @@ elseif filetype_check_extension(filename, '.pos')
   type = 'polhemus_pos';
   manufacturer = 'BrainProducts/CTF/Polhemus?'; % actually I don't know whose software it is
   content = 'electrode positions';
+elseif filetype_check_extension(filename, '.txt') && filetype_header_contains(filename, 'FastSCAN', 300)
+  type = 'fastscan_txt';
+  manufacturer = 'Polhemus FastSCAN';
+  content = 'headshape points';
 
   % known Blackrock Microsystems file types
 elseif strncmp(x,'.ns',3) && (filetype_check_header(filename, 'NEURALCD') || filetype_check_header(filename, 'NEURALSG'))
@@ -1236,6 +1247,15 @@ elseif filetype_check_extension(filename, '.minf') && filetype_check_ascii(filen
   % known Multiscale Electrophysiology Format (or Mayo EEG File, MEF)
   % MEF 2.1, see: https://github.com/benbrinkmann/mef_lib_2_1
   % MEF 3.0, see: https://msel.mayo.edu/codes.html
+  % MED 1.0, see: http://www.darkhorseneuro.com
+elseif isfolder(filename) && any(filetype_check_extension(filename, {'.medd', '.tied', '.rdat','recd','.ridx'}))
+  type = 'dhn_med10';
+  manufacturer = 'Dark Horse Neuro';
+  content = 'Multiscale Electrophysiology Data 1.0';
+elseif isfolder(filename) && any(endsWith({ls.name}, '.medd'))
+  type = 'dhn_med10';
+  manufacturer = 'Dark Horse Neuro';
+  content = 'Multiscale Electrophysiology Format 1.0';
 elseif isfolder(filename) && any(filetype_check_extension(filename, {'.mefd', '.timd', '.segd'}))
   type = 'mayo_mef30';
   manufacturer = 'Mayo Clinic';
@@ -1335,6 +1355,10 @@ elseif filetype_check_extension(filename, '.mat') && filetype_check_header(filen
   type = 'seg3d_mat';
   manufacturer = 'Scientific Computing and Imaging Institute, Salt Lake City, Utah';
   content = 'imaging data';
+elseif filetype_check_extension(filename, '.mat') && filetype_check_header(filename, 'MATLAB') && filetype_check_openvibe_mat(filename)
+  type = 'openvibe_mat';
+  manufacturer = 'OpenVibe';
+  content = 'EEG data';
 elseif filetype_check_extension(filename, '.mat') && filetype_check_header(filename, 'MATLAB')
   type = 'matlab';
   manufacturer = 'MATLAB';
@@ -1613,8 +1637,20 @@ elseif filetype_check_extension(filename, '.msh') && filetype_check_header(filen
   content = 'geometrical meshes';
 elseif filetype_check_extension(filename, '.vtk') && filetype_check_header(filename, '# vtk') && filetype_check_ascii(filename, inf)
   type = 'vtk';
-  manufacturer = 'ParaView';
+  manufacturer = 'Visualization Toolkit';
   content = 'geometrical meshes';
+elseif filetype_check_extension(filename, '.bin') && exist(fullfile(p, [f '.meta']), 'file') 
+  type = 'spikeglx_bin';
+  manufacturer = 'SpikeGLX';
+  content = 'neuropixel data';
+elseif filetype_check_extension(filename, '.meta') && exist(fullfile(p, [f '.bin']), 'file') 
+  type = 'spikeglx_bin';
+  manufacturer = 'SpikeGLX';
+  content = 'neuropixel data';
+elseif filetype_check_extension(filename, '.lvm') && filetype_check_header(filename, 'LabVIEW')
+  type = 'quspin_lvm'; % technically it is a https://www.ni.com/docs/en-US/bundle/labview/page/labview-measurement-files.html
+  manufacturer = 'QuSpin';
+  content = 'OPM MEG data';
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1674,12 +1710,11 @@ y = 1;
 % SUBFUNCTION that checks for CED spike6 mat file
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function res = filetype_check_ced_spike6mat(filename)
-res = 1;
 var = whos('-file', filename);
 
 % Check whether all the variables in the file are structs (representing channels)
 if ~all(strcmp('struct', unique({var(:).class})) == 1)
-  res = 0;
+  res = false;
   return;
 end
 
@@ -1701,6 +1736,15 @@ fnames = {
   };
 
 res = (numel(intersect(fieldnames(var{1}), fnames)) >= 5);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION that checks for a OpenVibe mat file
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function res = filetype_check_openvibe_mat(filename)
+% check the content of the *.mat file
+var = whos('-file', filename);
+expected = {'stims', 'sampleTime', 'samples', 'samplingFreq', 'channelNames'};
+res = all(ismember(expected, {var.name}));
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION that checks for a SCIRun/Seg3D mat file
@@ -1775,6 +1819,23 @@ if haslfp || hasmua || hasspike
   end
 
   res=any(ft_filetype(neuralynxdirs, 'neuralynx_ds'));
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION that checks whether the file contains only ascii characters
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function res = filetype_header_contains(filename, pat, len)
+if exist(filename, 'file')
+  fid = fopen(filename, 'rt');
+  try
+    str = fread(fid, [1 len], 'uint8=>char');
+  catch
+    str = fread(fid, [1 inf], 'uint8=>char');
+  end
+  fclose(fid);
+  res = contains(str, pat);
+else
+  res = false;
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -1,8 +1,9 @@
 function test_bug2269
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_preprocessing ft_redefinetrial ft_fetch_data
+% DATA no
 
 fs    = 1000;
 nsmp  = 1*fs;

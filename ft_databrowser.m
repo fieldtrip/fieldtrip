@@ -15,7 +15,7 @@ function [cfg] = ft_databrowser(cfg, data)
 %
 % If you want to browse data that is on disk, you have to specify
 %   cfg.dataset                 = string with the filename
-% Instead of specifying the dataset, you can also explicitely specify the name of the
+% Instead of specifying the dataset, you can also explicitly specify the name of the
 % file containing the header information and the name of the file containing the
 % data, using
 %   cfg.datafile                = string with the filename
@@ -35,6 +35,8 @@ function [cfg] = ft_databrowser(cfg, data)
 %   cfg.plotlabels              = 'yes', 'no' or 'some', whether to plot channel labels in vertical viewmode. The option 'some' plots one label for every ten channels, which is useful if there are many channels (default = 'some')
 %   cfg.plotevents              = 'no' or 'yes', whether to plot event markers (default = 'yes')
 %   cfg.ploteventlabels         = 'type=value', 'colorvalue' (default = 'type=value')
+%   cfg.eventcolor              = string with line colors or Nx3 color map, colors used for plotting the different types of events (default is automatic)
+%   cfg.artifactcolor           = string with line colors or Nx3 color map, colors used for plotting the different types of artifacts (default is automatic)
 %   cfg.artfctdef.xxx.artifact  = Nx2 matrix with artifact segments see FT_ARTIFACT_xxx functions
 %   cfg.selectfeature           = string, name of feature to be selected/added (default = 'visual')
 %   cfg.selectmode              = 'markartifact', 'markpeakevent', 'marktroughevent' (default = 'markartifact')
@@ -47,6 +49,7 @@ function [cfg] = ft_databrowser(cfg, data)
 %   cfg.selcfg                  = configuration options for function in cfg.selfun
 %   cfg.seldat                  = 'selected' or 'all', specifies whether only the currently selected or all channels will be passed to the selfun (default = 'selected')
 %   cfg.figure                  = 'yes' or 'no', whether to open a new figure. You can also specify a figure handle from FIGURE, GCF or SUBPLOT. (default = 'yes')
+%   cfg.figurename              = string, title of the figure window
 %   cfg.visible                 = string, 'on' or 'off' whether figure will be visible (default = 'on')
 %   cfg.position                = location and size of the figure, specified as [left bottom width height] (default is automatic)
 %   cfg.renderer                = string, 'opengl', 'zbuffer', 'painters', see RENDERERINFO (default is automatic, try 'painters' when it crashes)
@@ -86,7 +89,7 @@ function [cfg] = ft_databrowser(cfg, data)
 % Additional plotting options for the component viewmode:
 %   cfg.gridscale               = scalar, number of points along both directions for interpolation (default = 45 here)
 %   cfg.shading                 = string, 'none', 'flat', 'interp' (default = 'flat')
-%   cfg.interplimits            = string, 'electrodes' or 'mask' (default here = 'mask')
+%   cfg.interplimits            = string, 'sensors' or 'mask' (default here = 'mask')
 %   cfg.interpolation           = string, 'nearest', 'linear', 'natural', 'cubic' or 'v4' (default = 'v4')
 %   cfg.contournum              = topoplot contour lines
 %
@@ -177,6 +180,7 @@ cfg = ft_checkconfig(cfg, 'renamed',    {'anonimize', 'anonymize'}); % fix typo 
 cfg = ft_checkconfig(cfg, 'renamed',    {'anonymise', 'anonymize'}); % use North American and Oxford British spelling
 cfg = ft_checkconfig(cfg, 'renamed',    {'newfigure', 'figure'});
 cfg = ft_checkconfig(cfg, 'deprecated', {'selectfeature'}); % please specify cfg.artfctdef.xxx and cfg.artfctdef.yyy for each feature
+cfg = ft_checkconfig(cfg, 'renamedval', {'interplimits', 'electrodes' 'sensors'});
 
 % ensure that the preproc specific options are located in the cfg.preproc substructure
 cfg = ft_checkconfig(cfg, 'createsubcfg',  {'preproc'});
@@ -225,17 +229,20 @@ cfg.contournum          = ft_getopt(cfg, 'contournum', 0);               % topop
 cfg.trl                 = ft_getopt(cfg, 'trl');
 cfg.gridscale           = ft_getopt(cfg, 'gridscale', 45);
 cfg.shading             = ft_getopt(cfg, 'shading', 'flat');
-cfg.interplimits        = ft_getopt(cfg, 'interplim', 'mask');
+cfg.interplimits        = ft_getopt(cfg, 'interplimits', 'mask');
 cfg.interpolation       = ft_getopt(cfg, 'interpmethod', 'v4');
 cfg.channelclamped      = ft_getopt(cfg, 'channelclamped');
+cfg.figurename          = ft_getopt(cfg, 'figurename');
 % set the defaults for plotting the events
 cfg.plotevents          = ft_getopt(cfg, 'plotevents', 'yes');
 cfg.ploteventlabels     = ft_getopt(cfg, 'ploteventlabels', 'type=value');
-cfg.eventalpha          = ft_getopt(cfg, 'artifactalpha', 0.2);          % for the opacity of events
+cfg.eventalpha          = ft_getopt(cfg, 'eventalpha', 0.2);             % for the opacity of events
+cfg.eventcolor          = ft_getopt(cfg, 'eventcolor', 'krbgmcy');
 % set the defaults for plotting the artifacts
 cfg.plotartifacts       = ft_getopt(cfg, 'plotartifacts', 'yes');
 cfg.plotartifactlabels  = ft_getopt(cfg, 'plotartifactlabels', '');
 cfg.artifactalpha       = ft_getopt(cfg, 'artifactalpha', 0.2);          % for the opacity of artifacts
+cfg.artifactcolor       = ft_getopt(cfg, 'artifactcolor', [0.9686 0.7608 0.7686; 0.7529 0.7098 0.9647; 0.7373 0.9725 0.6824; 0.8118 0.8118 0.8118; 0.9725 0.6745 0.4784; 0.9765 0.9176 0.5686; 0.6863 1 1; 1 0.6863 1; 0 1 0.6000]);
 % add some defaults for preprocessing, none of these is active but they will show up with the cfg.preproc button in the user interface
 cfg.preproc.demean      = ft_getopt(cfg.preproc, 'demean', 'no');
 cfg.preproc.lpfilter    = ft_getopt(cfg.preproc, 'lpfilter', 'no');
@@ -326,6 +333,12 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if hasdata
+  if isfield(cfg, 'inputfile') && ~isempty(cfg.inputfile)
+    dataname = cfg.inputfile;
+  else
+    dataname = inputname(2);
+  end
+
   % save whether data came from a timelock structure
   istimelock = strcmp(ft_datatype(data), 'timelock');
 
@@ -384,6 +397,14 @@ else
   cfg = ft_checkconfig(cfg, 'renamedval', {'continuous', 'continuous', 'yes'});
   % read the header from file
   hdr = ft_read_header(cfg.headerfile, headeropt{:});
+
+  if isfield(cfg, 'dataset')
+    dataname = cfg.dataset;
+  elseif isfield(cfg, 'datafile')
+    dataname = cfg.datafile;
+  else
+    dataname = [];
+  end
 
   if isempty(cfg.continuous)
     if hdr.nTrials==1
@@ -546,12 +567,12 @@ artdata.cfg.trl        = [1 endsample 0];
 
 % determine the unique artifact types and corresponding colors, this only needs to be done once
 artifacttypes = artlabel;
-artifactcolors = colorcheck([0.9686 0.7608 0.7686; 0.7529 0.7098 0.9647; 0.7373 0.9725 0.6824; 0.8118 0.8118 0.8118; 0.9725 0.6745 0.4784; 0.9765 0.9176 0.5686; 0.6863 1 1; 1 0.6863 1; 0 1 0.6000], numel(artdata.label));
+artifactcolors = colorspec2rgb(cfg.artifactcolor, numel(artdata.label));
 
 % determine the unique event types and corresponding colors, this only needs to be done once
 if ~isempty(event) && isstruct(event)
   eventtypes  = unique({event.type});
-  eventcolors = colorcheck('krbgmcy', numel(eventtypes));
+  eventcolors = colorspec2rgb(cfg.eventcolor, numel(eventtypes));
   % durations and offsets can be either empty or should be numeric values, see FT_READ_EVENT
   % the code further down expects them to be numeric values, so change them to zero
   for i=1:numel(event)
@@ -678,7 +699,10 @@ if strcmp(cfg.viewmode, 'component')
 end
 
 % open a new figure with the specified settings
-h = open_figure(keepfields(cfg, {'figure', 'position', 'visible', 'renderer'}));
+if isempty(cfg.figurename)
+  cfg.figurename = sprintf('%s: %s', mfilename, join_str(', ',dataname));
+end
+h = open_figure(keepfields(cfg, {'figure', 'position', 'visible', 'renderer', 'figurename'}));
 
 % check if the colormap is in proper format and set it
 if ~isempty(cfg.colormap)
@@ -702,24 +726,6 @@ set(h, 'Interruptible', 'off', 'BusyAction', 'queue'); % enforce busyaction to q
 % enable custom data cursor text
 dcm = datacursormode(h);
 set(dcm, 'updatefcn', @cb_datacursortext);
-
-% set the figure window title
-funcname = mfilename();
-if ~hasdata
-  if isfield(cfg, 'dataset')
-    dataname = cfg.dataset;
-  elseif isfield(cfg, 'datafile')
-    dataname = cfg.datafile;
-  else
-    dataname = [];
-  end
-elseif isfield(cfg, 'inputfile') && ~isempty(cfg.inputfile)
-  dataname = cfg.inputfile;
-else
-  dataname = inputname(2);
-end
-set(gcf, 'Name', sprintf('%d: %s: %s', double(gcf), funcname, join_str(', ',dataname)));
-set(gcf, 'NumberTitle', 'off');
 
 % set zoom option to on
 % zoom(h, 'on')
@@ -897,36 +903,6 @@ else
   cursortext = '<no cursor available>';
 end
 end % function cb_datacursortext
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SUBFUNCTION see also lineattributes_common
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function color = colorcheck(color, n)
-% define the mapping between color characters and RGB values
-name = 'rgbcmywk';
-rgb = [
-  1 0 0
-  0 1 0
-  0 0 1
-  0 1 1
-  1 0 1
-  1 1 0
-  1 1 1
-  0 0 0
-  ];
-% ensure that all colors are represented as RGB
-if ischar(color)
-  original = color;
-  color = nan(length(original), 3);
-  for i=1:length(original)
-    color(i,:) = rgb(name==original(i),:);
-  end
-end
-% ensure that there are enough colors
-color = repmat(color, ceil(n/size(color,1)), 1);
-color = color(1:n,:);
-end % function colorcheck
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1674,7 +1650,7 @@ switch key
     fprintf('identified channel name: %s\n',label);
     redraw_cb(h, eventdata);
 
-    ft_plot_text(xpos, ypos, label, 'FontSize', cfg.fontsize, 'FontUnits', cfg.fontunits, 'tag', 'identifiedchannel', 'FontSize', cfg.fontsize, 'FontUnits', cfg.fontunits);
+    ft_plot_text(xpos, ypos, label, 'tag', 'identifiedchannel', 'FontSize', cfg.fontsize, 'FontUnits', cfg.fontunits);
     if ~ishold
       hold on
       ft_plot_vector(opt.curdata.time{1}, opt.curdata.trial{1}(datindx,:)', 'box', false, 'tag', 'identifiedchannel', 'hpos', opt.layouttime.pos(layoutindx,1), 'vpos', opt.layouttime.pos(layoutindx,2), 'width', opt.layouttime.width(layoutindx), 'height', opt.layouttime.height(layoutindx), 'hlim', opt.hlim, 'vlim', opt.vlim, 'color', 'k', 'linewidth', 2);
@@ -1857,7 +1833,7 @@ opt.curdata.trial{1}   = dat;
 opt.curdata.hdr        = opt.hdr;
 opt.curdata.fsample    = opt.fsample;
 opt.curdata.sampleinfo = [begsample endsample];
-opt.curdata = copyfields(opt.orgdata, opt.curdata, {'grad', 'elec', 'opto'});
+opt.curdata = copyfields(opt.orgdata, opt.curdata, {'elec', 'grad', 'opto'});
 % remove the local copy of the data fields
 clear lab tim dat
 
@@ -1974,7 +1950,7 @@ if strcmp(cfg.plotartifacts, 'yes')
     end
 
     for k=1:numel(artbeg)
-      i = i + 1; % it is not a simple loop, there are multiple types of artifacts, times multiple occurences
+      i = i + 1; % it is not a simple loop, there are multiple types of artifacts, times multiple occurrences
       artifacttime(i) = tim(artbeg(k)) + opt.hlim(1);
       xpos = [tim(artbeg(k)) tim(artend(k))];
 
@@ -2044,6 +2020,8 @@ if strcmp(cfg.plotevents, 'yes')
         else
           eventlabel = '';
         end
+      case 'no'
+        eventlabel = '';
       otherwise
         ft_warning('unsupported specification of cfg.ploteventlabels');
         eventlabel = '';
@@ -2355,7 +2333,7 @@ if strcmp(cfg.viewmode, 'component')
       % drawnow
     end % for chanindx
 
-    caxis([0 1]);
+    clim([0 1]);
 
   end % if redraw_topo
 

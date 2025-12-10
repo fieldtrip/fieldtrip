@@ -1,8 +1,9 @@
-function test_ft_connectivity_powcorr_ortho
+function tests = test_ft_connectivity_powcorr_ortho
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_connectivity_powcorr_ortho
+% DATA no
 
 if nargout
   % assume that this is called by RUNTESTS
@@ -17,7 +18,7 @@ else
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function testOptions(testCase)
+function testEverything(testCase)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 nchan   = 10;

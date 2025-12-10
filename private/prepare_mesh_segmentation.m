@@ -162,10 +162,10 @@ for i=1:numel(cfg.tissue)
   % this also ensures that the mesh at the bottom of the neck will be closed
   seg = volumepad(seg);
   
-  % update the dimensions of the segmented volume to accomodate the padding
+  % update the dimensions of the segmented volume to accommodate the padding
   dim = mri.dim+2;
   
-  % update the homogenous transformation matrix to accomodate the shift that is due to the padding
+  % update the homogenous transformation matrix to accommodate the shift that is due to the padding
   transform = mri.transform;
   shift = ft_warp_apply(transform, [1 1 1]) - ft_warp_apply(transform, [0 0 0]);
   transform(1,4) = transform(1,4) - shift(1);

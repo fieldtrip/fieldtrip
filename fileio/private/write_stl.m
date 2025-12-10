@@ -1,15 +1,15 @@
-function write_stl(filename, pnt, tri, nrm)
+function write_stl(filename, pos, tri, nrm)
 
-% WRITE_STL writes a triangulation to an ascii *.stl file, which is a file
+% WRITE_STL writes a triangulation to an ASCII *.stl file, which is a file
 % format native to the stereolithography CAD software created by 3D Systems.
 %
 % Use as
-%   write_stl(filename, pnt, tri, nrm)
+%   write_stl(filename, pos, tri, nrm)
 % where nrm refers to the triangle normals.
 %
 % See also READ_STL
-  
-% Copyright (C) 2006, Robert Oostenveld
+
+% Copyright (C) 2006-2025, Robert Oostenveld
 % 
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -45,11 +45,11 @@ ntri = size(tri,1);
 fprintf(fid, 'solid unknown\n');
 
 for i=1:ntri
-  fprintf(fid, '  facet normal %f %f %f\n', nrm(i,:));
+  fprintf(fid, '  facet normal %.9g %.9g %.9g\n', nrm(i,:));
   fprintf(fid, '    outer loop\n');
-  fprintf(fid, '      vertex %f %f %f\n', pnt(tri(i,1),1), pnt(tri(i,1),2), pnt(tri(i,1),3));
-  fprintf(fid, '      vertex %f %f %f\n', pnt(tri(i,2),1), pnt(tri(i,2),2), pnt(tri(i,2),3));
-  fprintf(fid, '      vertex %f %f %f\n', pnt(tri(i,3),1), pnt(tri(i,3),2), pnt(tri(i,3),3));
+  fprintf(fid, '      vertex %.9g %.9g %.9g\n', pos(tri(i,1),1), pos(tri(i,1),2), pos(tri(i,1),3));
+  fprintf(fid, '      vertex %.9g %.9g %.9g\n', pos(tri(i,2),1), pos(tri(i,2),2), pos(tri(i,2),3));
+  fprintf(fid, '      vertex %.9g %.9g %.9g\n', pos(tri(i,3),1), pos(tri(i,3),2), pos(tri(i,3),3));
   fprintf(fid, '    endloop\n');
   fprintf(fid, '  endfacet\n');
 end
@@ -57,4 +57,3 @@ end
 fprintf(fid, 'endsolid\n');
 
 fclose(fid);
-

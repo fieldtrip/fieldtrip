@@ -1,4 +1,4 @@
-function [newnode,newface]=surfreorient(node,face)
+function [newnode, newface] = surfreorient(node, face)
 %
 % [newnode,newface]=surfreorient(node,elem)
 %
@@ -19,4 +19,4 @@ function [newnode,newface]=surfreorient(node,face)
 % -- this function is part of iso2mesh toolbox (http://iso2mesh.sf.net)
 %
 
-[newnode,newface]=meshcheckrepair(node(:,1:3),face(:,1:3),'deep');
+[newnode, newface] = meshcheckrepair(node(:, 1:3), face(:, 1:3), 'deep');

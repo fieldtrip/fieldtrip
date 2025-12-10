@@ -1,10 +1,11 @@
 function test_bug3007
 
 % WALLTIME 00:10:00
-% MEM 2gb
+% MEM 1gb
 % DEPENDENCY
+% DATA private
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug3007'))
+cd(dccnpath('/project/3031000.02/test/bug3007'))
 
 load cfg
 load eye_movs

@@ -11,6 +11,7 @@ function dataout = ft_denoise_tsr(cfg, varargin)
 %
 % Use as
 %   [dataout] = ft_denoise_tsr(cfg, data)
+% or
 %   [dataout] = ft_denoise_tsr(cfg, data, refdata)
 % where "data" is a raw data structure that was obtained with FT_PREPROCESSING. If
 % you specify the additional input "refdata", the specified reference channels for
@@ -44,9 +45,8 @@ function dataout = ft_denoise_tsr(cfg, varargin)
 %   cfg.threshold          = integer array, ([1 by 2] or [1 by numel(cfg.channel) + numel(cfg.reflags)]),
 %                            regularization or shrinkage ('lambda') parameter to be loaded on the diagonal of the
 %                            penalty term (if cfg.method == 'mlrridge' or 'mlrqridge')
-%   cfg.updatesens         = string, 'yes' or 'no' (default = 'yes')
-%   cfg.perchannel         = string, 'yes' or 'no', or logical, whether or not to perform estimation of beta weights
-%                            separately per channel
+%   cfg.updatesens         = 'yes' or 'no', whether to update the sensor array with the spatial projector (default = 'yes')
+%   cfg.perchannel         = 'yes' or 'no', whether or not to perform estimation of beta weights separately per channel
 %   cfg.output             = string, 'model' or 'residual' (defaul = 'model'),
 %                            specifies what is outputed in .trial field in <dataout>
 %   cfg.performance        = string, 'pearson' or 'r-squared' (default =
@@ -65,7 +65,9 @@ function dataout = ft_denoise_tsr(cfg, varargin)
 % uniformly in the dimension of predictor variable and cfg.threshold(2) in the
 % space of response variable.
 %
-% See also FT_PREPROCESSING, FT_DENOISE_SYNTHETIC, FT_DENOISE_PCA
+% See also FT_PREPROCESSING, FT_DENOISE_AMM, FT_DENOISE_DSSP,
+% FT_DENOISE_HFC, FT_DENOISE_PCA, FT_DENOISE_PREWHITEN, FT_DENOISE_SSP,
+% FT_DENOISE_SSS, FT_DENOISE_SYNTHETIC
 
 % Copyright (c) 2008-2009, Jan-Mathijs Schoffelen, CCNi Glasgow
 % Copyright (c) 2010-2011, Jan-Mathijs Schoffelen, DCCN Nijmegen
@@ -114,6 +116,9 @@ ft_preamble provenance varargin
 if ft_abort
   return
 end
+
+% store the original type of the input data
+dtype = ft_datatype(varargin{1});
 
 % check if the input data is valid for this function
 for i=1:length(varargin)
@@ -203,6 +208,14 @@ else
     error('incorrect specification of data and cfg.blocklength');
   end
 
+end
+
+% convert back to input type if necessary
+switch dtype
+  case 'timelock'
+    dataout = ft_checkdata(dataout, 'datatype', 'timelock');
+  otherwise
+    % keep the output as it is
 end
 
 % do the general cleanup and bookkeeping at the end of the function

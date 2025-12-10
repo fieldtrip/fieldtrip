@@ -1,8 +1,9 @@
 function test_bug272
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_timelockanalysis ft_prepare_layout ft_multiplotER ft_topoplotER
+% DATA no
 
 % this script tests bug 272, i.e. incompatibility of ft_multiplotER with
 % cfg.inputfile and tests the fix.

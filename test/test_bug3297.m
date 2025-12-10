@@ -1,10 +1,11 @@
 function test_bug3297
 
 % WALLTIME 00:10:00
-% MEM 2gb
+% MEM 1gb
 % DEPENDENCY
+% DATA private
 
-filename = dccnpath('/home/common/matlab/fieldtrip/data/test/bug3297/testMEG001_1200hz_20170517_05.ds');
+filename = dccnpath('/project/3031000.02/test/bug3297/testMEG001_1200hz_20170517_05.ds');
 
 event = ft_read_event(filename);
 

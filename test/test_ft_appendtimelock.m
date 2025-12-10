@@ -1,8 +1,9 @@
 function test_ft_appendtimelock
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_appendtimelock append_common ft_datatype_timelock
+% DATA public
 
 % (C) Johanna Zumer
 
@@ -46,7 +47,7 @@ assert(all( size(tlockapp.trial) == [10 2 5]))
 
 %% Test using other combinations of tlock from real data
 clear tlock*
-load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/eventrelatedaveraging/dataFC_LP.mat'));
+load(dccnpath('/project/3031000.02/external/download/tutorial/eventrelatedaveraging/dataFC_LP.mat'));
 
 cfg = [];
 tlock1 = ft_timelockanalysis(cfg, dataFC_LP);
@@ -178,5 +179,56 @@ cfg.keepsampleinfo = 'yes';
 tlockapp = ft_appendtimelock(cfg, tlock1, tlock2);
 assert(isfield(tlockapp, 'sampleinfo')); % here it should exist
 assert(~isfield(tlockapp, 'fsample'));
+
+%% test with cfg.memory high/low
+tlock1 = [];
+tlock1.label = {'1';'2'};
+tlock1.time = 1:5;
+tlock1.dimord = 'rpt_chan_time';
+tlock1.trial = randn(10, 2, 5);
+
+tlock2 = [];
+tlock2.label = {'1';'2'};
+tlock2.time = 1:5;
+tlock2.dimord = 'rpt_chan_time';
+tlock2.trial = randn(8, 2, 5);
+
+tlock3 = [];
+tlock3.label = {'1';'2'};
+tlock3.time = 1:5;
+tlock3.dimord = 'rpt_chan_time';
+tlock3.trial = randn(7, 2, 5);
+
+cfg = [];
+cfg.memory = 'high';
+thigh = ft_appendtimelock(cfg, tlock1, tlock2, tlock3);
+cfg.memory = 'low';
+tlow = ft_appendtimelock(cfg, tlock1, tlock2, tlock3);
+assert(isequal(thigh.trial, tlow.trial));
+
+tlock1 = [];
+tlock1.label = {'1';'2'};
+tlock1.time = 1:5;
+tlock1.dimord = 'rpt_chan_time';
+tlock1.trial = randn(8, 2, 5);
+
+tlock2 = [];
+tlock2.label = {'3';'4'};
+tlock2.time = 1:5;
+tlock2.dimord = 'rpt_chan_time';
+tlock2.trial = randn(8, 2, 5);
+
+tlock3 = [];
+tlock3.label = {'5';'6'};
+tlock3.time = 1:5;
+tlock3.dimord = 'rpt_chan_time';
+tlock3.trial = randn(8, 2, 5);
+
+cfg = [];
+cfg.memory = 'high';
+thigh = ft_appendtimelock(cfg, tlock1, tlock2, tlock3);
+cfg.memory = 'low';
+tlow = ft_appendtimelock(cfg, tlock1, tlock2, tlock3);
+assert(isequal(thigh.trial, tlow.trial));
 
 

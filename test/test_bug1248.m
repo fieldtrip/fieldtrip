@@ -1,8 +1,9 @@
 function test_bug1248
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_preprocessing preproc
+% DATA no
 
 for samp=[25 98 999]
   for fs=[235 943]

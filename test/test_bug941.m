@@ -1,10 +1,11 @@
 function test_bug941
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_channelrepair ft_databrowser
+% DATA private
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug941.mat'));
+load(dccnpath('/project/3031000.02/test/bug941.mat'));
 
 % code that produces the error
 data_eeg_clean.elec = elec_new;

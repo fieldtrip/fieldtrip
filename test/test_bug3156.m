@@ -1,8 +1,9 @@
 function test_bug3156
 
 % WALLTIME 00:10:00
-% MEM 2gb
+% MEM 1gb
 % DEPENDENCY ft_electrodeplacement
+% DATA private
 
 %%
 
@@ -530,7 +531,7 @@ ft_plot_axes(elec)
 
 %% try a real head surface
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test'));
+cd(dccnpath('/project/3031000.02/test'));
 load bug3156.mat
 
 elec = ft_electrodeplacement(cfg, headshape);

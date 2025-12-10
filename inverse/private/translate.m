@@ -9,9 +9,9 @@ function [H] = translate(f)
 %   T   [tx, ty, tz] translation along each of the axes
 %   H   corresponding homogenous transformation matrix
 %
-% See also ROTATE, SCALE, QUATERNION, HOMOGENOUS2TRADITIONAL
+% See also ROTATE, SCALE, RIGIDBODY, QUATERNION, HOMOGENOUS2TRADITIONAL
 
-% Copyright (C) 2000-2005, Robert Oostenveld
+% Copyright (C) 2000-2024, Robert Oostenveld
 %
 % This program is free software; you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by

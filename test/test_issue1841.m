@@ -1,8 +1,9 @@
 function test_issue1841
 
 % WALLTIME 00:30:00
-% MEM 4gb
+% MEM 2gb
 % DEPENDENCY ft_scalpcurrentdensity ft_channelrepair
+% DATA no
 
 %%
 % Loads the 10-20 sensor definition.

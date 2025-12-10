@@ -1,13 +1,14 @@
 function test_example_effectsize
 
 % WALLTIME 00:20:00
-% MEM 4gb
+% MEM 2gb
 % DEPENDENCY ft_statistics_analytic ft_statfun_cohensd
+% DATA public
 
 
 %%
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/example/effectsize/ERF_orig.mat'))
+load(dccnpath('/project/3031000.02/external/download/example/effectsize/ERF_orig.mat'))
 
 
 %%

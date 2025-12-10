@@ -86,8 +86,16 @@ elec = [];
 % begin by transforming all channel locations into the desired coordinate system, if possible
 if ~dewar
   if ~isempty(orig.dev_head_t)
+    ft_info('Transforming MEG channels according to the device to head transform from the data');
     orig.chs = fiff_transform_meg_chs(orig.chs,orig.dev_head_t);
-    orig.chs = fiff_transform_eeg_chs(orig.chs,orig.dev_head_t); % EEG channels are normally stored in head coordinates anyway, but what the heck
+    %orig.chs = fiff_transform_eeg_chs(orig.chs,orig.dev_head_t); % EEG channels are normally stored in head coordinates anyway, but what the heck
+    if ~isempty(orig.ctf_head_t)
+      orig.head_ctf_t.trans = inv(orig.ctf_head_t.trans);
+      orig.head_ctf_t.from  = orig.ctf_head_t.to;
+      orig.head_ctf_t.to    = orig.ctf_head_t.from;
+      ft_info('Transforming MEG channels according to the head to ctf transform from the data');
+      orig.chs = fiff_transform_meg_chs(orig.chs,orig.head_ctf_t);
+    end
   else
     ft_warning('No device to head transform available in fif file');
     ft_warning('MEG channels will likely have coordinates in device frame, not head frame');
@@ -256,7 +264,7 @@ else
   % how many Magnetometers?
   nMag = 0;
   for i = 1:orig.nchan
-    nMag = nMag +(orig.chs(i).coil_type==3022 | orig.chs(i).coil_type==3023 | orig.chs(i).coil_type==3024);
+    nMag = nMag + (orig.chs(i).coil_type==3022 | orig.chs(i).coil_type==3023 | orig.chs(i).coil_type==3024 | orig.chs(i).coil_type==8101);
   end
   
   % how many Axial gradiometers?
@@ -301,7 +309,7 @@ else
   % ever be the case but acts as a safety net...
   
   for n = 1:orig.nchan
-    if (orig.chs(n).coil_type==3022 || orig.chs(n).coil_type==3023 || orig.chs(n).coil_type==3024) % magnetometer
+    if (orig.chs(n).coil_type==3022 || orig.chs(n).coil_type==3023 || orig.chs(n).coil_type==3024 || orig.chs(n).coil_type==8101) % magnetometer
       t = orig.chs(n).coil_trans;
       
       % TC 2011 09 24 I have changed the coil definition, the original was
@@ -431,7 +439,7 @@ end
 % construct SSP projectors, these can be applied later to the data and grad
 % structure using FT_DENOISE_SSP
 grad.balance = [];
-grad.balance.current = 'none';
+grad.balance.current = {};
 
 for i = 1:length(hdr.projs)
   hdr.projs(i).active = 'true';

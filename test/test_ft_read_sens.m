@@ -1,8 +1,9 @@
 function test_ft_read_sens(datainfo, writeflag, version)
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:20:00
 % DEPENDENCY ft_read_sens
+% DATA private
 
 % writeflag determines whether the output should be saved to disk
 % version determines the output directory
@@ -43,7 +44,7 @@ for k = 1:numel(datainfo)
 end % for
 
 % read all the electrode files
-d = dir(dccnpath('/home/common/matlab/fieldtrip/data/test/original/electrodes/'));
+d = dir(dccnpath('/project/3031000.02/test/original/electrodes/'));
 for i=1:numel(d)
   if d(i).isdir && numel(d(i).name)>1
     f = dir(fullfile(d(i).folder, d(i).name));

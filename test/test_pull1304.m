@@ -1,12 +1,13 @@
 function test_pull1304
 
 % WALLTIME 00:10:00
-% MEM 3gb
+% MEM 1gb
 % DEPENDENCY ft_connectivityanalysis ft_connectivity_corr
+% DATA private
 
 %%
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/pull1304.mat'));
+load(dccnpath('/project/3031000.02/test/pull1304.mat'));
 
 %%
 

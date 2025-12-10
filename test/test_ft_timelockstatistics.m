@@ -1,8 +1,9 @@
 function test_ft_timelockstatistics
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_timelockstatistics findcluster clusterstat ft_statistics_montecarlo
+% DATA no
 
 %For the case of "chan_time"
 

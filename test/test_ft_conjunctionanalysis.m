@@ -1,8 +1,9 @@
 function test_ft_conjunctionanalysis
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY
+% DATA no
 
 % FT_CONJUNCTIONANALYSIS finds the minimum statistic common across two or 
 % more contrasts, i.e. data following ft_xxxstatistics. Furthermore, it 

@@ -1,13 +1,14 @@
 function test_ft_denoise_dssp
 
-% MEM 3gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_denoise_dssp
+% DATA private
 
 % below is based on simulated data using Kensuke's code, and should behave as the
 % bdssp_main script that he uses to demonstrate the algorithm
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/pull800/data.mat'));
-tmp = load(dccnpath('/home/common/matlab/fieldtrip/data/test/pull800/grid.mat'));
+load(dccnpath('/project/3031000.02/test/pull800/data.mat'));
+tmp = load(dccnpath('/project/3031000.02/test/pull800/grid.mat'));
 
 cfg = [];
 cfg.sourcemodel = tmp.grid;
@@ -19,7 +20,7 @@ dataout = ft_denoise_dssp(cfg, data);
 
 % the lowsnr data, has multiple trials, in which the 'blip' of activity has
 % a slightly different latency each trial.
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/pull800/data_lowsnr.mat'));
+load(dccnpath('/project/3031000.02/test/pull800/data_lowsnr.mat'));
 dataout2 = ft_denoise_dssp(cfg, data);
 
 cfg = [];

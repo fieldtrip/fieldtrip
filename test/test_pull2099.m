@@ -1,12 +1,13 @@
 function test_pull2099
 
 % WALLTIME 00:20:00
-% MEM 3gb
+% MEM 1gb
 % DEPENDENCY ft_multiplotER ft_singleplotER ft_topoplotER lineattributes_common ft_databrowser
+% DATA private
 
 
 %%
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/pull2099.mat'));
+load(dccnpath('/project/3031000.02/test/pull2099.mat'));
 
 % try a bunch of visualizations
 cfg = [];

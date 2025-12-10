@@ -1,8 +1,9 @@
 function inspect_ft_select_range
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_select_range
+% DATA no
 
 %%  The following example allows multiple box-like selections to be made
 % click in the last selection to trigger the action

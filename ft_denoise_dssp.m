@@ -7,12 +7,13 @@ function [dataout] = ft_denoise_dssp(cfg, datain)
 %
 % Use as
 %   dataout = ft_denoise_dssp(cfg, datain)
-% where cfg is a configuration structure that contains
+% where the input data should come from FT_PREPROCESSING or
+% FT_TIMELOCKANALYSIS and the configuration should contain
 %   cfg.channel          = Nx1 cell-array with selection of channels (default = 'all'), see FT_CHANNELSELECTION for details
 %   cfg.trials           = 'all' or a selection given as a 1xN vector (default = 'all')
-%   cfg.pertrial         = 'no', or 'yes', compute the temporal projection per trial (default = 'no')
+%   cfg.pertrial         = 'no' or 'yes', compute the temporal projection per trial (default = 'no')
 %   cfg.sourcemodel      = structure, source model with precomputed leadfields, see FT_PREPARE_LEADFIELD
-%   cfg.demean           = 'yes', or 'no', demean the data per epoch (default = 'yes')
+%   cfg.demean           = 'yes' or 'no', demean the data per epoch (default = 'yes')
 %   cfg.dssp             = structure with parameters that determine the behavior of the algorithm
 %   cfg.dssp.n_space     = 'all', or scalar. Number of dimensions for the
 %                          initial spatial projection.
@@ -25,9 +26,11 @@ function [dataout] = ft_denoise_dssp(cfg, datain)
 %                          included eigenvalues (if value<1), determining
 %                          the dimensionality of the intersection.
 %
-% See also FT_DENOISE_PCA, FT_DENOISE_SYNTHETIC, FT_DENOISE_TSR
+% See also FT_PREPROCESSING, FT_DENOISE_AMM, FT_DENOISE_HFC,
+% FT_DENOISE_PCA, FT_DENOISE_PREWHITEN, FT_DENOISE_SSP, FT_DENOISE_SSS,
+% FT_DENOISE_SYNTHETIC, FT_DENOISE_TSR
 
-% Copyright (C) 2018-2023, Jan-Mathijs Schoffelen
+% Copyright (C) 2018-2024, Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -65,6 +68,9 @@ if ft_abort
   return
 end
 
+% store the original type of the input data
+dtype = ft_datatype(datain);
+
 % check the input data
 datain = ft_checkdata(datain, 'datatype', {'raw'}); % FIXME how about timelock and freq?
 
@@ -77,7 +83,7 @@ cfg = ft_checkconfig(cfg, 'forbidden',  {'channels', 'trial'}); % prevent accide
 % set the defaults
 cfg.trials            = ft_getopt(cfg, 'trials',  'all', 1);
 cfg.channel           = ft_getopt(cfg, 'channel', 'all');
-cfg.pertrial          = ft_getopt(cfg, 'pertrial', 'no');
+cfg.pertrial          = ft_getopt(cfg, 'pertrial', 'yes');
 cfg.sourcemodel       = ft_getopt(cfg, 'sourcemodel');
 cfg.demean            = ft_getopt(cfg, 'demean', 'yes');
 cfg.dssp              = ft_getopt(cfg, 'dssp');         % sub-structure to hold the parameters
@@ -105,33 +111,53 @@ if istrue(cfg.demean)
   [cfg, datain] = rollback_provenance(cfg, datain);
 end
 
-% match the input data's channels with the labels in the leadfield
-sourcemodel = cfg.sourcemodel;
-if ~isfield(sourcemodel, 'leadfield')
-  ft_error('cfg.sourcemodel needs to contain leadfields');
+% compute the Gram-matrix of the forward model
+G = compute_grammatrix(cfg.sourcemodel, datain.label);
+
+% compute the spatial projection matrix
+ft_info('Computing the spatial subspace projector\n');
+S  = dssp_spatial(datain.trial, G, cfg.dssp.n_space);
+Us = S.U(:,1:S.n);
+
+if isfield(cfg, 'sourcemodelout')
+  % also compute the Gram-matrix of the forward model of the 'out'
+  % compartment, this is not part of the original DSSP algorithm, and
+  % experimental code
+  Gout = compute_grammatrix(cfg.sourcemodelout, datain.label);
+  
+  % project out the inspace projector
+  P = Us*Us';
+  Gout = P*Gout*P';
+
+  ft_info('Computing the spatial subspace projector for the forward model describing the out field\n');
+  Sout = dssp_spatial(datain.trial, Gout, cfg.dssp.n_space);
+  Uout = Sout.U(:,1:Sout.n);
 end
-[indx1, indx2] = match_str(datain.label, sourcemodel.label);
-if ~isequal(indx1(:),(1:numel(datain.label))')
-  ft_error('unsupported mismatch between data channels and leadfields');
-end
-if islogical(sourcemodel.inside)
-  inside = find(sourcemodel.inside);
+
+% may be a bit more computationally efficient than (1-Us*Us')*B;
+ft_info('Applying the spatial subspace projector\n');
+if ~exist('Gout', 'var')
+  Bin  = Us*(Us'*datain.trial);
+  Bout = datain.trial - Bin; 
 else
-  inside = sourcemodel.inside;
-end
-for k = inside(:)'
-  sourcemodel.leadfield{k} = sourcemodel.leadfield{k}(indx2,:);
+  unmixing = pinv([Us Uout]);
+  Bin  = Us  *(unmixing(1:size(Us,2),:) * datain.trial);
+  Bout = Uout*(unmixing((size(Us,2)+1):end,:) * datain.trial);
+
+  %Bin  = Us*(Us'*datain.trial);
+  %Bout = Uout*(Uout'*datain.trial);
 end
 
-% compute the Gram-matrix of the supplied forward model
-lf = cat(2, sourcemodel.leadfield{:});
-G  = lf*lf';
+% compute the temporal subspace projector and the cleaned data
+ft_info('Computing the subspace projector based on signal correlations\n');
+[subspace, Ae] = dssp_temporal(Bin, Bout, cfg.dssp.n_in, cfg.dssp.n_out, cfg.dssp.n_intersect, pertrial);
 
-%dat     = cat(2,datain.trial{:});
-[Bclean, subspace] = dssp(datain.trial, G, cfg.dssp.n_in, cfg.dssp.n_out, cfg.dssp.n_space, cfg.dssp.n_intersect, pertrial);
-% datAe   = datain.trial*cellfun(@transpose, Ae, 'UniformOutput', false); % the projection is a right multiplication
-% with a matrix (eye(size(Ae,1))-Ae*Ae'), since Ae*Ae' can become quite
-% sizeable, it's computed slightly differently here.
+% keep some additional information in the subspace struct
+subspace.trial = Ae;
+subspace.S     = S;
+
+ft_info('Applying the subspace projector\n');
+Bclean = datain.trial - (datain.trial*cellfun(@transpose, Ae, 'UniformOutput', false))*Ae;
 
 % put some diagnostic information in the output cfg.
 cfg.dssp.subspace = subspace;
@@ -156,6 +182,14 @@ end
 dataout       = keepfields(datain, {'label', 'time', 'fsample', 'trialinfo', 'sampleinfo', 'grad', 'elec', 'opto'}); % grad can be kept and does not need to be balanced, since the cleaned data is a mixture over time, not space.
 dataout.trial = trial;
 
+% convert back to input type if necessary
+switch dtype
+  case 'timelock'
+    dataout = ft_checkdata(dataout, 'datatype', 'timelock');
+  otherwise
+    % keep the output as it is
+end
+
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
 ft_postamble previous   datain
@@ -164,21 +198,16 @@ ft_postamble history    dataout
 ft_postamble savevar    dataout
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% subfunctions for the computation of the projection matrix
-% kindly provided by Kensuke, and adjusted a bit by Jan-Mathijs
-function [Bclean, subspace] = dssp(B, G, Nin, Nout, Nspace, Nintersect, pertrial)
+% subfunctions for the computation of the projection matrices
+% kindly provided by Kensuke, and adjusted a bit by Jan-Mathijs Schoffelen
+function [S] = dssp_spatial(B, G, Nspace)
 
 % Nc: number of sensors
 % Nt: number of time points
 % inputs
 % B(Nc,Nt):  interference overlapped sensor data
 % G(Nc,Nc): Gram matrix of voxel lead field
-% Nout and Nin: dimensions of the two row spaces
-% recom_Nspace: recommended value for the dimension of the pseudo-signal subspace
-% outputs
-% Bclean(Nc,Nt): cleaned sensor data
-% Nintersect: dimension of the intersection
-% Nspace: dimension of the pseudo-signal subspace
+% Nspace: dimension of the pseudo-signal subspace outputs
 %  ------------------------------------------------------------
 %  programmed by K. Sekihara,  Signal Analysis Inc.
 %  All right reserved by Signal Analysis Inc.
@@ -189,43 +218,22 @@ function [Bclean, subspace] = dssp(B, G, Nin, Nout, Nspace, Nintersect, pertrial
 % trial
 
 % eigen decomposition of the Gram matrix, matrix describing the spatial components of the defined 'in' compartment
-fprintf('Computing the spatial subspace projection\n');
-fprintf('Eigenvalue decomposition of the Gram matrix\n');
-[Uspace,S] = eig(G);
-Sspace     = abs(diag(S));
+ft_info('Computing the spatial subspace projection\n');
+ft_info('Eigenvalue decomposition of the Gram matrix\n');
+[Uspace,Sspace] = eig(G);
+Sspace     = abs(diag(Sspace));
 
 [Sspace, iorder] = sort(-Sspace);
 Sspace           = -Sspace;
 Uspace(:,:)      = Uspace(:,iorder);
 Nspace           = getN(Nspace, Sspace, 'spatial');
 
-% spatial subspace projector
-Us   = Uspace(:,1:Nspace);
+% keep the first spatial subspace projection information
+S.U = Uspace;
+S.S = Sspace;
+S.n = Nspace;
 
-%USUS = Us*Us';
-% % Bin and Bout creation
-%Bin  =                  USUS  * B;
-%Bout = (eye(size(USUS))-USUS) * B;
-
-% computationally more efficient than the above
-fprintf('Applying the spatial subspace projector\n');
-Bin  = Us*(Us'*B);
-Bout = B - Bin; 
-
-fprintf('Computing the subspace projector based on signal correlations\n');
-[Ae, subspace] = CSP01(Bin, Bout, Nin, Nout, Nintersect, pertrial);
-
-% add the first spatial subspace projection information as well
-subspace.S.U = Uspace;
-subspace.S.S = Sspace;
-subspace.S.n = Nspace;
-subspace.trial = Ae;
-
-fprintf('Applying the subspace projector\n');
-%Bclean    = B - (B*Ae)*Ae'; % avoid computation of Ae*Ae'
-Bclean = B - (B*cellfun(@transpose, Ae, 'UniformOutput', false))*Ae;
-
-function [Ae, subspace] = CSP01(Bin, Bout, Nin, Nout, Nintersect, pertrial)
+function [subspace, Ae] = dssp_temporal(Bin, Bout, Nin, Nout, Nintersect, pertrial)
 %
 % interference rejection by removing the common temporal subspace of the two subspaces
 % K. Sekihara,  March 28, 2012
@@ -303,15 +311,39 @@ function N = getN(N, S, name)
 ttext = sprintf('enter the dimension for the %s field: ', name);
 if isempty(N)
   N  = input(ttext);
-elseif ischar(N) && isequal(N, 'interactive') && ~any(strcmp(name, {'outside' 'intersection'}))
-  figure, plot(log10(S),'-o'); drawnow
-  N = input(ttext);
-elseif ischar(N) && isequal(N, 'interactive') && any(strcmp(name, {'outside' 'intersection'}))
-  figure, plot(S, '-o'); drawnow
+elseif ischar(N) && isequal(N, 'interactive')
+  h = figure; hpos = get(h, 'position'); set(h, 'position', hpos.*[1 1 2 1]);
+  subplot(121);plot(log10(S),'-o'); ylabel('log_1_0 singular values'); drawnow
+  subplot(122);plot(S,'-o'); ylabel('singular values'); drawnow
   N = input(ttext);
 elseif ischar(N) && isequal(N, 'all')
   N = find(S./S(1)>1e5*eps, 1, 'last');
 elseif isnumeric(N) && N<1
-  N = find(S<=N, 1, 'last');
+  N = find(S>=N, 1, 'last');
+  fprintf('Using %d dimensions for the %s field\n', N, name);
 end
-fprintf('Using %d dimensions for the %s field\n', N, name);
+
+function G = compute_grammatrix(sourcemodel, label)
+
+% compute Gram matrix, after checking for equivalence of labels
+
+% match the input data's channels with the labels in the leadfield
+if ~isfield(sourcemodel, 'leadfield')
+  ft_error('cfg.sourcemodel needs to contain leadfields');
+end
+[indx1, indx2] = match_str(label, sourcemodel.label);
+if ~isequal(indx1(:),(1:numel(label))')
+  ft_error('unsupported mismatch between data channels and leadfields');
+end
+if islogical(sourcemodel.inside)
+  inside = find(sourcemodel.inside);
+else
+  inside = sourcemodel.inside;
+end
+for k = inside(:)'
+  sourcemodel.leadfield{k} = sourcemodel.leadfield{k}(indx2,:);
+end
+
+% compute the Gram-matrix of the supplied forward model
+lf = cat(2, sourcemodel.leadfield{:});
+G  = (lf*lf')./size(lf,2);

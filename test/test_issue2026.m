@@ -1,12 +1,13 @@
 function test_issue2026
 
 % WALLTIME 00:10:00
-% MEM 2gb
+% MEM 1gb
 % DEPENDENCY ft_read_event
+% DATA private
 
 %%
 
-filename = dccnpath('/home/common/matlab/fieldtrip/data/test/issue2026/yev0004_New-Coherent.vmrk')
+filename = dccnpath('/project/3031000.02/test/issue2026/yev0004_New-Coherent.vmrk')
 
 %%
 

@@ -1,10 +1,11 @@
 function test_ctf2grad
 
 % WALLTIME 00:10:00
-% MEM 2gb
+% MEM 1gb
 % DEPENDENCY ft_read_header ft_read_sens ctf2grad
+% DATA private
 
-datadir = dccnpath('/home/common/matlab/fieldtrip/data/test/original/meg/ctf151');
+datadir = dccnpath('/project/3031000.02/test/original/meg/ctf151');
 dataset = fullfile(datadir, 'Subject01.ds');
 coildeffile = fullfile(datadir, 'ctf151dccn_coil_def.dat');
 grad1 = ft_read_sens(dataset, 'senstype', 'meg', 'coordsys', 'dewar');
@@ -68,7 +69,7 @@ grad3b = ft_read_sens(dataset, 'senstype', 'meg', 'coilaccuracy', 0, 'coildeffil
 figure;ft_plot_sens(grad1b, 'chantype', 'refgrad', 'coil', true);
 figure;ft_plot_sens(grad2b, 'chantype', 'refgrad', 'coil', true);
 
-headmodel = ft_read_headmodel(dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.hdm'));
+headmodel = ft_read_headmodel(dccnpath('/project/3031000.02/external/download/test/ctf/Subject01.hdm'));
 headmodel = ft_convert_units(headmodel,'m');
 sourcemodel.pos = [0 0 0.1];
 

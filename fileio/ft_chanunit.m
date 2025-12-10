@@ -24,7 +24,7 @@ function chanunit = ft_chanunit(input, desired)
 %
 % See also FT_CHANTYPE
 
-% Copyright (C) 2011-2013, Robert Oostenveld
+% Copyright (C) 2011-2024, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -83,10 +83,10 @@ if isdata
   elseif isfield(input, 'grad')
     input = input.grad;
     isgrad = true;
-  elseif isfield(input, 'grad')
+  elseif isfield(input, 'elec')
     input = input.elec;
     iselec = true;
-  elseif isfield(input, 'grad')
+  elseif isfield(input, 'opto')
     input = input.opto;
     isopto = true;
   else
@@ -130,7 +130,7 @@ elseif isheader && ft_senstype(input, 'eeg') && isfield(input, 'chantype')
   % until now in all stand-alone EEG systems examined the data was in uV
   chanunit(strcmp('eeg', input.chantype)) = {'uV'};
 
-elseif isheader && (ft_senstype(input, 'neuromag') || ft_senstype(input, 'babysquid74')) && issubfield(input, 'orig.chs')
+elseif isheader && issubfield(input, 'orig.chs')
   for i = 1:numchan % make a cell-array of units for each channel
     switch input.orig.chs(i).unit
       case 201 % defined as constants by MNE, see p. 217 of MNE manual

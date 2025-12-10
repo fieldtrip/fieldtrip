@@ -1,10 +1,11 @@
 function test_tutorial_preprocessing
 
 % WALLTIME 00:10:00
-% MEM 2gb
+% MEM 1gb
 % DEPENDENCY ft_definetrial ft_preprocessing
+% DATA public
 
-dataset = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds');
+dataset = dccnpath('/project/3031000.02/external/download/test/ctf/Subject01.ds');
 
 cfg                         = [];
 cfg.dataset                 = dataset;

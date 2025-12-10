@@ -3,6 +3,7 @@ function inspect_bug1830
 % WALLTIME 00:10:00
 % MEM 1gb
 % DEPENDENCY
+% DATA public
 
 %%
 
@@ -70,7 +71,7 @@ elec_ctf.coordsys = 'ctf';
 skin_ctf = ft_transform_geometry(r, skin); % rotate 90 degrees
 skin_ctf.coordsys = 'ctf';
 
-grad_ctf = ft_read_sens(dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds'), 'senstype', 'meg');
+grad_ctf = ft_read_sens(dccnpath('/project/3031000.02/external/download/test/ctf/Subject01.ds'), 'senstype', 'meg');
 
 %%
 

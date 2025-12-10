@@ -1,8 +1,9 @@
 function test_issue947
 
 % WALLTIME 00:10:00
-% MEM 2gb
+% MEM 1gb
 % DEPENDENCY
+% DATA no
 
 % the warning state is kept in the global ft_default structure
 global ft_default

@@ -280,7 +280,6 @@ switch cfg.method
     neighbours = compneighbstructfromtri(chanpos, label, tri);
     
   case 'parcellation'
-    
     if ~isfield(data, cfg.parcellation)
       ft_error('required field %s not present in the input atlas', cfg.parcellation);
     end

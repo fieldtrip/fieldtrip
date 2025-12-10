@@ -1,6 +1,6 @@
 function str = fixname(str, version)
 
-% FIXNAME changes all inappropriate characters in a sting into '_'
+% FIXNAME changes all inappropriate characters in a string into '_'
 % so that it can be used as a filename or as a field name in a structure.
 % If the string begins with a digit, an 'x' is prepended.
 %

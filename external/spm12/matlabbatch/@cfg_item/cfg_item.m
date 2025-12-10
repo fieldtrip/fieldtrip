@@ -29,7 +29,7 @@ function item = cfg_item(varargin)
 %              holding a function handle. This function handle should
 %              accept both an empty and a non-empty argument list.
 %              If there is no .val{1} set for an cfg_leaf item,
-%              feval(def, {}) will be evaluated to retreive a default value.
+%              feval(def, {}) will be evaluated to retrieve a default value.
 %              Any value returned that does not match the size/type/filter
 %              etc. requirements of the item, will resolve to <UNDEFINED>.
 %              To change a default value, feval(def, {newval}) will be
@@ -76,7 +76,7 @@ function item = cfg_item(varargin)
 % cfg_item/harvest returns item.val{1}. If this is a dependency object
 % and dependencies shall and can be resolved the contents of the
 % dependencies will be returned. Otherwise the dependency object(s) will
-% be returned. This is the default behavior for all cfg_leaf items. 
+% be returned. This is the default behaviour for all cfg_leaf items. 
 %
 % The layout of the configuration tree and the types of configuration items
 % have been kept compatible to a configuration system and job manager
@@ -92,9 +92,9 @@ function item = cfg_item(varargin)
 % Copyright (C) 2007 Freiburg Brain Imaging
 
 % Volkmar Glauche
-% $Id: cfg_item.m 6133 2014-08-07 10:35:08Z volkmar $
+% $Id: cfg_item.m 8183 2021-11-04 15:25:19Z guillaume $
 
-rev = '$Rev: 6133 $'; %#ok
+rev = '$Rev: 8183 $'; %#ok
 
 myclass = mfilename;
 % Get local fields and defaults from private/mysubs_fields

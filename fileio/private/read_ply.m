@@ -1,6 +1,6 @@
 function [vert, face] = read_ply(fn)
 
-% READ_PLY reads triangles, tetraheders or hexaheders from a Stanford *.ply file
+% READ_PLY reads triangles, tetrahedrons or hexahedrons from a Stanford *.ply file
 %
 % Use as
 %   [vert, face, prop, face_prop] = read_ply(filename)
@@ -12,6 +12,22 @@ function [vert, face] = read_ply(fn)
 % See also WRITE_PLY, WRITE_VTK, READ_VTK
 
 % Copyright (C) 2013-2018, Robert Oostenveld
+% 
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
+% for the documentation and details.
+%
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 %
 % $Id$
 

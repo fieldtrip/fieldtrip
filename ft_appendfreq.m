@@ -25,10 +25,14 @@ function [freq] = ft_appendfreq(cfg, varargin)
 % These mat files should contain only a single variable, corresponding with
 % the input/output structure.
 %
+% If you encounter difficulties with memory usage, you can use
+%   cfg.memory = 'low' or 'high', whether to be memory or computationally efficient, respectively (default = 'high')
+%
 % See also FT_FREQANALYSIS, FT_DATATYPE_FREQ, FT_APPENDDATA, FT_APPENDTIMELOCK,
 % FT_APPENDSENS
 
 % Copyright (C) 2011-2017, Robert Oostenveld
+% Copyright (C) 2018-, Jan-Mathijs Schoffelen and Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -77,6 +81,7 @@ cfg.parameter  = ft_getopt(cfg, 'parameter', []);
 cfg.appenddim  = ft_getopt(cfg, 'appenddim', []);
 cfg.tolerance  = ft_getopt(cfg, 'tolerance',  1e-5); % this is passed to append_common, which passes it to ft_selectdata
 cfg.appendsens = ft_getopt(cfg, 'appendsens', 'no');
+cfg.memory     = ft_getopt(cfg, 'memory', 'high');
 
 hastime = isfield(varargin{1}, 'time');
 hasfreq = isfield(varargin{1}, 'freq');
@@ -120,7 +125,14 @@ end
 assert(~isempty(cfg.parameter), 'cfg.parameter should be specified');
 
 % use a low-level function that is shared with the other ft_appendxxx functions
-freq = append_common(cfg, varargin{:});
+if strcmp(cfg.memory, 'high') || numel(varargin)<=2
+  freq = append_common(cfg, varargin{:});
+elseif strcmp(cfg.memory, 'low')
+  freq = varargin{1};
+  for i=2:numel(varargin)
+    freq = append_common(cfg, freq, varargin{i});
+  end
+end
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug

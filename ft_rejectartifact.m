@@ -40,6 +40,7 @@ function [cfg] = ft_rejectartifact(cfg, data)
 % Output:
 %   If cfg is the only input parameter, the output is a cfg structure with an updated trl.
 %   If cfg and data are both input parameters, the output is an updated raw data structure with only the clean data segments.
+%   If cfg and data are both input parameters, and the cfg contains a trl field, an error is thrown.
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
@@ -196,6 +197,10 @@ end
 % the data can be specified as input variable or through cfg.inputfile
 hasdata = exist('data', 'var');
 
+if hasdata && isfield(cfg, 'trl')
+  ft_error('both a ''trl''-field in the cfg and a data structure as input is not allowed');
+end
+
 if hasdata
   % ensure that the data is valid for this function
   data = ft_checkdata(data, 'datatype', 'raw', 'hassampleinfo', 'yes');
@@ -244,7 +249,7 @@ else
   checkCritToi = 0;
 end
 
-% prevent double occurences of artifact types, ensure that the order remains the same
+% prevent double occurrences of artifact types, ensure that the order remains the same
 [fn, i] = unique(cfg.artfctdef.type);
 cfg.artfctdef.type = cfg.artfctdef.type(sort(i));
 % ensure that it is a row vector

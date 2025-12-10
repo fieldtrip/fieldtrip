@@ -1,7 +1,8 @@
 function test_example_bids_eyetracker
 
-% MEM 4gb
+% MEM 2gb
 % WALLTIME 00:20:00
+% DATA public
 
 %
 %% Converting an example eye tracker dataset for sharing in BIDS
@@ -59,7 +60,7 @@ cfg.dataset_description.DatasetDOI          = 'n/a';
 cfg.method    = 'convert'; % the eyelink-specific format is not supported, convert it to plain TSV
 %cfg.dataset   = './original/ashcal.asc';
 %cfg.bidsroot  = './bids';  % write to the working directory
-cfg.dataset   = dccnpath(fullfile('/home/common/matlab/fieldtrip/data/ftp/example/bids_eyetracker/eyelink_short/original', 'ashcal.asc'));
+cfg.dataset   = dccnpath(fullfile('/project/3031000.02/external/download/example/bids_eyetracker/eyelink_short/original', 'ashcal.asc'));
 cfg.bidsroot  = fullfile(tempdir, 'bids');
 cfg.datatype  = 'eyetracker';
 cfg.task      = 'calibration';
@@ -152,7 +153,7 @@ filename = {
 
 %sourcepath = './original/ascData';
 %targetpath = './bids';
-sourcepath = dccnpath('/home/common/matlab/fieldtrip/data/ftp/example/bids_eyetracker/eyelink_long/original/ascData');
+sourcepath = dccnpath('/project/3031000.02/external/download/example/bids_eyetracker/eyelink_long/original/ascData');
 targetpath = fullfile(tempdir, 'bids');
 
 %% find the unique subject identifiers
@@ -221,7 +222,7 @@ end % for subjid
 %
 % In the following example we are converting two runs of eye tracker data for two subjects. The data was recorded at the DCCN. Since additional information is missing (e.g., units, origin, calibration procedure), the metadata is very sparse.
 %
-datadir = dccnpath('/home/common/matlab/fieldtrip/data/ftp/example/bids_eyetracker/smi/original');
+datadir = dccnpath('/project/3031000.02/external/download/example/bids_eyetracker/smi/original');
 filename = {
   fullfile(datadir, 'pp23671_rest1_samples.txt')
   fullfile(datadir, 'pp23671_task1_samples.txt')

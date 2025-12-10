@@ -2,6 +2,7 @@ function test_example_glm_timeseries
 
 % MEM 16gb
 % WALLTIME 00:30:00
+% DATA public
 
 %
 %% Using General Linear Modeling on time series data
@@ -24,7 +25,7 @@ function test_example_glm_timeseries
 % The preprocessing of the EEG dataset is done largely similar as elsewhere on the website. Since we don't want to segment the data in trials yet, and don't use an explicit baselinecorrection, we apply a bandpass filter from 0.5 to 30 Hz.
 %
 cfg = [];
-cfg.dataset     = dccnpath('/home/common/matlab/fieldtrip/data/ftp/workshop/cuttingeeg2021/data-minimal/sub-02/eeg/sub-02_task-language_eeg.vhdr'); % JM NOTE: this is the same as subj2.vhdr';
+cfg.dataset     = dccnpath('/project/3031000.02/external/download/workshop/cuttingeeg2021/data-minimal/sub-02/eeg/sub-02_task-language_eeg.vhdr'); % JM NOTE: this is the same as subj2.vhdr';
 
 cfg.bpfilter    = 'yes';
 cfg.bpfreq      = [0.5 30];
@@ -92,7 +93,7 @@ xlabel('time (s)')
 % By inspecting the figure, we can learn multiple things: The visual and auditory stimuli are not randomized, but presented in a visual and in an auditory block. The whole experiment apparently lasted more than 4000 seconds, which is slightly more than an hour. Since we will process the data ac continuous time series, it is relevant to realize that there is also a lot of time in the recordings in which no interesting events happened.
 %
 cfg = [];
-cfg.dataset     = dccnpath('/home/common/matlab/fieldtrip/data/ftp/workshop/cuttingeeg2021/data-minimal/sub-02/eeg/sub-02_task-language_eeg.vhdr'); % JM NOTE: this is the same as subj2.vhdr';
+cfg.dataset     = dccnpath('/project/3031000.02/external/download/workshop/cuttingeeg2021/data-minimal/sub-02/eeg/sub-02_task-language_eeg.vhdr'); % JM NOTE: this is the same as subj2.vhdr';
 cfg.trialdef.eventtype  = 'Stimulus';
 cfg.trialfun = 'ft_trialfun_general';
 cfg.trialdef.prestim    = 0.2;
@@ -103,7 +104,7 @@ cfg                     = ft_definetrial(cfg);
 dataVIS = ft_redefinetrial(cfg, data);
 
 cfg = [];
-cfg.dataset     = dccnpath('/home/common/matlab/fieldtrip/data/ftp/workshop/cuttingeeg2021/data-minimal/sub-02/eeg/sub-02_task-language_eeg.vhdr'); % JM NOTE: this is the same as subj2.vhdr';
+cfg.dataset     = dccnpath('/project/3031000.02/external/download/workshop/cuttingeeg2021/data-minimal/sub-02/eeg/sub-02_task-language_eeg.vhdr'); % JM NOTE: this is the same as subj2.vhdr';
 cfg.trialdef.eventtype  = 'Stimulus';
 cfg.trialfun = 'ft_trialfun_general';
 cfg.trialdef.prestim    = 0.2;

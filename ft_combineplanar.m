@@ -12,7 +12,7 @@ function [data] = ft_combineplanar(cfg, data)
 %
 % The configuration can contain
 %   cfg.method         = 'sum', 'svd', 'abssvd', or 'complex' (default = 'sum')
-%   cfg.updatesens     = 'no' or 'yes' (default = 'yes')
+%   cfg.updatesens     = 'yes' or 'no', whether to update the sensor array with the spatial projector (default = 'yes')
 % and for timelocked input data (i.e. ERFs), the configuration can also contain
 %   cfg.demean         = 'yes' or 'no' (default = 'no')
 %   cfg.baselinewindow = [begin end]

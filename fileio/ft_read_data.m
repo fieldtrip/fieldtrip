@@ -23,7 +23,7 @@ function [dat] = ft_read_data(filename, varargin)
 %   'fallback'       can be empty or 'biosig' (default = [])
 %   'blocking'       wait for the selected number of events (default = 'no')
 %   'timeout'        amount of time in seconds to wait when blocking (default = 5)
-%   'password'       password structure for encrypted data set (only for mayo_mef30 and mayo_mef21)
+%   'password'       password structure for encrypted data set (only for dhn_med10, mayo_mef30 and mayo_mef21)
 %
 % This function returns a 2-D matrix of size Nchans*Nsamples for continuous
 % data when begevent and endevent are specified, or a 3-D matrix of size
@@ -135,10 +135,10 @@ endtrial        = ft_getopt(varargin, 'endtrial');
 chanindx        = ft_getopt(varargin, 'chanindx');
 checkboundary   = ft_getopt(varargin, 'checkboundary');
 checkmaxfilter  = ft_getopt(varargin, 'checkmaxfilter', 'yes'); % this is only passed as varargin to FT_READ_HEADER
-headerformat    = ft_getopt(varargin, 'headerformat');
+dataformat      = ft_getopt(varargin, 'dataformat');
+headerformat    = ft_getopt(varargin, 'headerformat', dataformat);  % by default the same
 fallback        = ft_getopt(varargin, 'fallback');
 cache           = ft_getopt(varargin, 'cache', false);
-dataformat      = ft_getopt(varargin, 'dataformat');
 chanunit        = ft_getopt(varargin, 'chanunit');
 timestamp       = ft_getopt(varargin, 'timestamp', false); % return Neuralynx NSC timestamps instead of actual data
 password        = ft_getopt(varargin, 'password', struct([]));
@@ -228,7 +228,7 @@ if isempty(chanindx)
   chanindx = 1:hdr.nChans;
 end
 
-% test whether the requested channels can be accomodated
+% test whether the requested channels can be accommodated
 if min(chanindx)<1 || max(chanindx)>hdr.nChans
   ft_error('FILEIO:InvalidChanIndx', 'selected channels are not present in the data');
 end
@@ -424,12 +424,16 @@ switch dataformat
     % neuromag headposition file created with maxfilter, the position varies over time
     orig = read_neuromag_headpos(filename);
     dat  = orig.data(chanindx, begsample:endsample);
-    
-  case {'biosemi_bdf', 'bham_bdf'}
+
+  case {'biosemi_v3'}
+    % this does not use a mex file for reading the 24 bit data
+    [dat, hdr.orig] = read_bdf(filename, 'Channels', hdr.label(chanindx), 'TimeRange', [begsample-1, endsample-1]/hdr.Fs, 'Verbose', false);
+
+  case {'biosemi_v2', 'biosemi_bdf'}
     % this uses a mex file for reading the 24 bit data
     dat = read_biosemi_bdf(filename, hdr, begsample, endsample, chanindx);
-    
-  case 'biosemi_old'
+
+  case {'biosemi_v1', 'biosemi_old'}
     % this uses the openbdf and readbdf functions that I copied from the EEGLAB toolbox
     epochlength = hdr.orig.Head.SampleRate(1);
     % it has already been checked in ft_read_header that all channels have the same sampling rate
@@ -569,6 +573,10 @@ switch dataformat
   case 'dataq_wdq'
     dat = read_wdq_data(filename, hdr.orig, begsample, endsample, chanindx);
     
+  case 'dhn_med10'
+    hdr.sampleunit = 'index';
+    dat = read_dhn_med10(filename, password, false, hdr, begsample, endsample, chanindx);
+
   case 'eeglab_set'
     dat = read_eeglabdata(filename, 'header', hdr, 'begtrial', begtrial, 'endtrial', endtrial, 'chanindx', chanindx);
     dimord = 'chans_samples_trials';
@@ -1021,7 +1029,7 @@ switch dataformat
     
   case 'mayo_mef30'
     hdr.sampleunit = 'index';
-    dat = read_mayo_mef30(filename, password, sortchannel, hdr, begsample, endsample, chanindx);
+    dat = read_mayo_mef30(filename, password, [], hdr, begsample, endsample, chanindx);
     
   case 'mayo_mef21'
     hdr.sampleunit = 'index';
@@ -1088,6 +1096,7 @@ switch dataformat
       warning(['Some channels ignored due to different sampling rates: ' excludedChannelLabels]);
     end
     dimord = 'samples_chans';
+    dat = dat(begsample:endsample, chanindx);
     
   case 'neuroscope_bin'
     switch hdr.orig.nBits
@@ -1248,6 +1257,7 @@ switch dataformat
     ft_hastoolbox('mne', 1);
     if (hdr.orig.iscontinuous)
       dat = fiff_read_raw_segment(hdr.orig.raw,begsample+hdr.orig.raw.first_samp-1,endsample+hdr.orig.raw.first_samp-1,chanindx);
+      dat = full(dat); % prevent MATLAB crash on Windows due to 'dat' being a sparse matrix, see issue 2451
       dimord = 'chans_samples';
     elseif (hdr.orig.isepoched)
       % permutation of the data matrix is time consuming, and offsets the time gained by not 
@@ -1734,7 +1744,10 @@ elseif requestsamples && strcmp(dimord, 'chans_samples_trials')
   % determine the selection w.r.t. the data that has been read in
   begselection2 = begsample - begselection + 1;
   endselection2 = endsample - begselection + 1;
-  dat = dat(:,begselection2:endselection2);
+  if begselection2~=1 || endselection2~=size(dat,2)
+    % only do this selection if needed
+    dat = dat(:,begselection2:endselection2);
+  end
 end
 
 if inflated

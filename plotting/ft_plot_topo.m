@@ -12,16 +12,16 @@ function [Zi, h] = ft_plot_topo(chanX, chanY, dat, varargin)
 %   'mask'          = cell-array with line segments that forms the mask (see FT_PREPARE_LAYOUT)
 %   'outline'       = cell-array with line segments that for the outline (see  FT_PREPARE_LAYOUT)
 %   'isolines'      = vector with values for isocontour lines (default = [])
-%   'interplim'     = string, 'electrodes' or 'mask' (default = 'electrodes')
+%   'interplim'     = string, 'sensors' or 'mask' (default = 'sensors')
 %   'interpmethod'  = string, 'nearest', 'linear', 'natural', 'cubic' or 'v4' (default = 'v4')
 %   'style'         = can be 'surf', 'iso', 'isofill', 'surfiso', 'imsat', 'imsatiso', 'colormix'
 %   'clim'          = [min max], limits for color scaling
 %   'shading'       = string, 'none', 'flat', 'interp' (default = 'flat')
-%   'parent'        = handle which is set as the parent for all plots
-%   'tag'           = string, the name assigned to the object. All tags with the same name can be deleted in a figure, without deleting other parts of the figure.
-%   'box'           = draw a box around the local axes, can be 'yes' or 'no'
+%   'parent'        = handle which is set as the parent for all plots (default = [])
+%   'tag'           = string, the tag assigned to the plotted elements (default = '')
 %
-% It is possible to plot the object in a local pseudo-axis (c.f. subplot), which is specfied as follows
+% It is possible to plot the object in a local pseudo-axis (c.f. subplot), which is specified as follows
+%   'box'           = draw a box around the local axes, can be 'yes' or 'no'
 %   'hpos'          = horizontal position of the lower left corner of the local axes
 %   'vpos'          = vertical position of the lower left corner of the local axes
 %   'width'         = width of the local axes
@@ -61,7 +61,7 @@ width         = ft_getopt(varargin, 'width',        []);
 height        = ft_getopt(varargin, 'height',       []);
 gridscale     = ft_getopt(varargin, 'gridscale',    67); % 67 in original
 shading       = ft_getopt(varargin, 'shading',      'flat');
-interplim     = ft_getopt(varargin, 'interplim',    'electrodes');
+interplim     = ft_getopt(varargin, 'interplim',    'sensors');
 interpmethod  = ft_getopt(varargin, 'interpmethod', 'v4');
 style         = ft_getopt(varargin, 'style',        'surfiso'); % can be 'surf', 'iso', 'isofill', 'surfiso', 'imsat', 'imsatiso', 'colormix'
 tag           = ft_getopt(varargin, 'tag',          '');
@@ -76,14 +76,13 @@ box           = ft_getopt(varargin, 'box', false);
 % convert the yes/no strings into boolean values
 box = istrue(box);
 
-% check for nans in the data, they can be still left incase people want to mask non channels.
-if any(isnan(dat))
-  ft_warning('the data passed to ft_plot_topo contains NaNs, these channels will be removed from the data to prevent interpolation errors, but will remain in the mask');
-  flagNaN = true;
-else
-  flagNaN = false;
-end
+% check for nans in the data, they can be still left in case people want to mask nan channels.
 NaNind = isnan(dat);
+if any(NaNind) && ~isempty(mask) && isequal(isnan(dat), ~datmask)
+  ft_warning('the interpolation will exclude channels containing NaNs');
+elseif any(NaNind)
+  ft_warning('the interpolation will replace channels containing NaNs');
+end
 
 % everything is added to the current figure
 holdflag = ishold;
@@ -133,7 +132,7 @@ chanYorg = chanY;
 chanX = chanX(:) * xScaling + hpos;
 chanY = chanY(:) * yScaling + vpos;
 
-if strcmp(interplim, 'electrodes')
+if strcmp(interplim, 'sensors')
   hlim = [min(chanX) max(chanX)];
   vlim = [min(chanY) max(chanY)];
 elseif (strcmp(interplim, 'mask') || strcmp(interplim, 'mask_individual')) && ~isempty(mask)
@@ -204,7 +203,7 @@ if ~isempty(datmask)
 end
 
 % take out NaN channels if interpmethod does not work with NaNs
-if flagNaN && strcmp(interpmethod, 'v4')
+if any(NaNind) && strcmp(interpmethod, 'v4')
   dat(NaNind) = [];
   chanX(NaNind) = [];
   chanY(NaNind) = [];
@@ -216,14 +215,14 @@ chanX = double(chanX);
 chanY = double(chanY);
 
 %interpolate data
-xi         = linspace(hlim(1), hlim(2), gridscale);       % x-axis for interpolation (row vector)
-yi         = linspace(vlim(1), vlim(2), gridscale);       % y-axis for interpolation (row vector)
+xi = linspace(hlim(1), hlim(2), gridscale);       % x-axis for interpolation (row vector)
+yi = linspace(vlim(1), vlim(2), gridscale);       % y-axis for interpolation (row vector)
 
 if ~ft_platform_supports('griddata-vector-input')
   % in GNU Octave, griddata does not support vector
   % positions; make a grid to get the locations in vector form
-  [xi,yi]=meshgrid(xi,yi);
-  xi=xi';
+  [xi, yi] = meshgrid(xi, yi);
+  xi = xi';
 end
 
 if ~isempty(maskimage) && strcmp(interplim, 'mask_individual')

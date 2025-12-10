@@ -1,13 +1,14 @@
 function test_bug1448
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY
+% DATA private
 
 
 % this function tests whether the mask is kept inside the call to singleplotTFR
 % load data
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/freq/meg/freq_mtmconvol_trl_ctf275.mat'));
+load(dccnpath('/project/3031000.02/test/latest/freq/meg/freq_mtmconvol_trl_ctf275.mat'));
 
 % create mask-field
 freqsize = size(freq.powspctrm);

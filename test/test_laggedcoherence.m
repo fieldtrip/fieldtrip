@@ -1,8 +1,9 @@
 function test_laggedcoherence
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:20:00
 % DEPENDENCY ft_connectivityanalysis ft_laggedcoherence ft_freqanalysis
+% DATA no
 
 % this is a test for the low-level function
 

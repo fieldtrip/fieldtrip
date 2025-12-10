@@ -41,10 +41,6 @@
 % size(fa4)
 % size(fa2)
 % length(fa0)
-% _________________________________________________________________________
-% Copyright (C) 2008 Wellcome Trust Centre for Neuroimaging
+%__________________________________________________________________________
 
-%
-% $Id: Contents.m 2696 2009-02-05 20:29:48Z guillaume $
-
-
+% Copyright (C) 2005-2022 Wellcome Centre for Human Neuroimaging

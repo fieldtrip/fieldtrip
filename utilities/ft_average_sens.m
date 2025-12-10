@@ -43,11 +43,10 @@ toplot = ~isempty(fb);
 nsens  = numel(sens);
 
 % ensure the correct representation
+tmp = sens; clear sens; 
 for i=1:nsens
-  newsens(i) = ft_datatype_sens(sens(i));
+  sens(i) = ft_datatype_sens(tmp(i));
 end
-sens = newsens;
-clear newsens;
 
 fiducials = fixpos(fiducials);
 
@@ -81,7 +80,7 @@ pos = detrend(sens(1).chanpos, 'constant');
 x1 = pos*u(:, 2);
 x2 = pos*u(:, 1);
 
-% detemine the indices of three reference sensors that are close to the three principal axes
+% determine the indices of three reference sensors that are close to the three principal axes
 [dum, ind1] = min(x1);
 [dum, ind2] = max(x1);
 [dum, ind3] = max(abs(x2 - mean(x2([ind1 ind2]))));
@@ -180,7 +179,7 @@ switch nfid
       fiducials(i).fid.pos(hs, :) = [];
 
       if i == 1
-          fidpos = zeros(size(fiducials(1).fid.pos));
+        fidpos = zeros(size(fiducials(1).fid.pos));
       end
 
       if ~isequal(fiducials(i).fid.label, fiducials(1).fid.label)
@@ -204,14 +203,14 @@ switch nfid
     % remove redundant headshape points (3 cm precision)
     tolerance = 3;
     switch afiducials.unit
-        case 'mm'
-            c = 0.1;
-        case 'cm'
-            c = 1;
-        case 'dm'
-            c = 10;
-        case 'm'
-            c = 100;
+      case 'mm'
+        c = 0.1;
+      case 'cm'
+        c = 1;
+      case 'dm'
+        c = 10;
+      case 'm'
+        c = 100;
     end
 
     [dum, ind] = unique(round(c*afiducials.pos/tolerance), 'rows');

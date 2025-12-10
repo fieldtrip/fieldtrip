@@ -9,30 +9,32 @@ function ft_plot_headmodel(headmodel, varargin)
 %   ft_plot_headmodel(headmodel, ...)
 %
 % Optional arguments should come in key-value pairs and can include
-%   'facecolor'    = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r', or an Nx3 or Nx1 array where N is the number of faces
-%   'vertexcolor'  = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r', or an Nx3 or Nx1 array where N is the number of vertices
-%   'edgecolor'    = [r g b] values or string, for example 'brain', 'cortex', 'skin', 'black', 'red', 'r'
-%   'faceindex'    = true or false
-%   'vertexindex'  = true or false
-%   'facealpha'    = transparency, between 0 and 1 (default = 1)
-%   'edgealpha'    = transparency, between 0 and 1 (default = 1)
-%   'surfaceonly'  = true or false, plot only the outer surface of a hexahedral or tetrahedral mesh (default = false)
-%   'unit'         = string, convert to the specified geometrical units (default = [])
-%   'axes'         = boolean, whether to plot the axes of the 3D coordinate system (default = false)
-%   'grad'         = gradiometer array, used in combination with local spheres model
+%   'facecolor'       = [r g b] values or string, for example 'skin', 'skull', 'brain', 'black', 'red', 'r', or an Nx3 or Nx1 array where N is the number of faces
+%   'facealpha'       = transparency, between 0 and 1 (default = 1)
+%   'faceindex'       = true or false
+%   'vertexcolor'     = [r g b] values or string, for example 'skin', 'skull', 'brain', 'black', 'red', 'r', or an Nx3 or Nx1 array where N is the number of vertices
+%   'vertexindex'     = true or false
+%   'edgecolor'       = [r g b] values or string, for example 'skin', 'skull', 'brain', 'black', 'red', 'r'
+%   'edgealpha'       = transparency, between 0 and 1 (default = 1)
+%   'cutlocation'     = 1x3 vector specifying a point on the plane that cuts the mesh
+%   'cutorientation'  = 1x3 vector specifying the direction orthogonal through the plane that cuts the mesh
+%   'surfaceonly'     = true or false, plot only the outer surface of a hexahedral or tetrahedral mesh (default = false)
+%   'unit'            = string, convert to the specified geometrical units (default = [])
+%   'axes'            = boolean, whether to plot the axes of the 3D coordinate system (default = false)
+%   'grad'            = gradiometer array, used in combination with local spheres model
 %
 % Example
 %   headmodel   = [];
 %   headmodel.r = [86 88 92 100];
 %   headmodel.o = [0 0 40];
 %   figure
-%   ft_plot_headmodel(headmodel)
+%   ft_plot_headmodel(headmodel);
 %
 % See also FT_PREPARE_HEADMODEL, FT_DATATAYPE_HEADMODEL, FT_PLOT_MESH,
 % FT_PLOT_HEADSHAPE, FT_PLOT_SENS, FT_PLOT_DIPOLE, FT_PLOT_ORTHO, FT_PLOT_TOPO3D
 
 % Copyright (C) 2009, Cristiano Micheli
-% Copyright (C) 2009-2023, Robert Oostenveld
+% Copyright (C) 2009-2025, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -56,18 +58,20 @@ function ft_plot_headmodel(headmodel, varargin)
 headmodel = ft_datatype_headmodel(headmodel);
 
 % get the optional input arguments
-faceindex   = ft_getopt(varargin, 'faceindex', 'none');
-vertexindex = ft_getopt(varargin, 'vertexindex', 'none');
-vertexsize  = ft_getopt(varargin, 'vertexsize', 10);
-facecolor   = ft_getopt(varargin, 'facecolor', 'white');
-vertexcolor = ft_getopt(varargin, 'vertexcolor', 'none');
-edgecolor   = ft_getopt(varargin, 'edgecolor');           % the default for this is set below
-facealpha   = ft_getopt(varargin, 'facealpha', 1);
-edgealpha   = ft_getopt(varargin, 'edgealpha', 1);
-surfaceonly = ft_getopt(varargin, 'surfaceonly');
-unit        = ft_getopt(varargin, 'unit');
-axes_       = ft_getopt(varargin, 'axes', false);         % do not confuse with built-in (/Applications/MATLAB_R2020b.app/toolbox/matlab/graphics/axis/axes)
-grad        = ft_getopt(varargin, 'grad');
+faceindex       = ft_getopt(varargin, 'faceindex', 'none');
+vertexindex     = ft_getopt(varargin, 'vertexindex', 'none');
+vertexsize      = ft_getopt(varargin, 'vertexsize', 10);
+facecolor       = ft_getopt(varargin, 'facecolor', 'white');
+vertexcolor     = ft_getopt(varargin, 'vertexcolor', 'none');
+edgecolor       = ft_getopt(varargin, 'edgecolor');           % the default for this is set below
+facealpha       = ft_getopt(varargin, 'facealpha', 1);
+edgealpha       = ft_getopt(varargin, 'edgealpha', 1);
+cutlocation     = ft_getopt(varargin, 'cutlocation',  []);
+cutorientation  = ft_getopt(varargin, 'cutorientation', []);
+surfaceonly     = ft_getopt(varargin, 'surfaceonly');
+unit            = ft_getopt(varargin, 'unit');
+axes_           = ft_getopt(varargin, 'axes', false);         % do not confuse with built-in (/Applications/MATLAB_R2020b.app/toolbox/matlab/graphics/axis/axes)
+grad            = ft_getopt(varargin, 'grad');
 
 if ~isempty(unit)
   headmodel = ft_convert_units(headmodel, unit);
@@ -92,6 +96,12 @@ switch ft_headmodeltype(headmodel)
       mesh(i).pos(:,2) = pos(:,2)*headmodel.r(i) + headmodel.o(2);
       mesh(i).pos(:,3) = pos(:,3)*headmodel.r(i) + headmodel.o(3);
       mesh(i).tri = tri;
+      if isfield(headmodel, 'unit')
+        mesh(i).unit = headmodel.unit;
+      end
+      if isfield(headmodel, 'coordsys')
+        mesh(i).coordsys= headmodel.coordsys;
+      end
     end
     if isempty(edgecolor)
       edgecolor = 'none';
@@ -116,7 +126,7 @@ switch ft_headmodeltype(headmodel)
       edgecolor = 'none';
     end
 
-  case {'bem', 'dipoli', 'asa', 'bemcp', 'singleshell' 'openmeeg'}
+  case {'bem', 'dipoli', 'asa', 'bemcp', 'singleshell' 'openmeeg' 'hbf'}
     % these already contain one or multiple triangulated surfaces for the boundaries
     mesh = headmodel.bnd;
 
@@ -177,7 +187,8 @@ end
 for i=1:length(mesh)
   ft_plot_mesh(mesh(i), 'faceindex', faceindex, 'vertexindex', vertexindex, 'vertexsize', vertexsize, ...
     'facecolor', facecolor, 'edgecolor', edgecolor, 'vertexcolor', vertexcolor, ...
-    'facealpha', facealpha, 'edgealpha', edgealpha, 'surfaceonly', surfaceonly, 'axes', axes_);
+    'facealpha', facealpha, 'edgealpha', edgealpha, 'cutlocation', cutlocation, 'cutorientation', cutorientation, ...
+    'surfaceonly', surfaceonly, 'axes', axes_);
 end
 
 if isfield(headmodel, 'coordsys')

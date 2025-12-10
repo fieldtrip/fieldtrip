@@ -1,10 +1,8 @@
 function d = size(a,varargin)
 % Method 'size' for file_array objects
 %__________________________________________________________________________
-% Copyright (C) 2008-2012 Wellcome Trust Centre for Neuroimaging
 
-%
-% $Id: size.m 5160 2012-12-21 16:58:38Z guillaume $
+% Copyright (C) 2005-2022 Wellcome Centre for Human Neuroimaging
 
 
 sa  = struct(a);
@@ -35,9 +33,8 @@ lim = max(max(find(d~=1)),2);
 d   = d(1:lim);
 
 if nargin > 1
-    if varargin{1} <= length(d)
-        d = d(varargin{1});
-    else
-        d = 1;
-    end
+    d_tmp  = d;
+    d      = ones(size(varargin{1}));
+    msk    = varargin{1}<=length(d_tmp);
+    d(msk) = d_tmp(varargin{1}(msk));
 end

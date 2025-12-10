@@ -1,8 +1,9 @@
 function test_issue840
 
 % WALLTIME 00:10:00
-% MEM 2gb
+% MEM 1gb
 % DEPENDENCY ft_megplanar ft_combineplanar ft_appenddata
+% DATA private
 
 %%
 
@@ -37,9 +38,9 @@ if false
   
 else
   % load it from the mat files
-  load(dccnpath('/home/common/matlab/fieldtrip/data/test/issue840/data1.mat'));
-  load(dccnpath('/home/common/matlab/fieldtrip/data/test/issue840/data2.mat'));
-  load(dccnpath('/home/common/matlab/fieldtrip/data/test/issue840/data3.mat'));
+  load(dccnpath('/project/3031000.02/test/issue840/data1.mat'));
+  load(dccnpath('/project/3031000.02/test/issue840/data2.mat'));
+  load(dccnpath('/project/3031000.02/test/issue840/data3.mat'));
   
 end
 

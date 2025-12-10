@@ -1,11 +1,12 @@
 function test_bug1914
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_filetype ft_read_header ft_read_data ft_read_event
+% DATA private
 
 %%
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1914'));
+cd(dccnpath('/project/3031000.02/test/bug1914'));
 
 dataset = {
   'conversion_testing_MEGEEG_raw.fif'

@@ -1,8 +1,9 @@
 function test_ft_volumewrite
 
 % WALLTIME 00:10:00
-% MEM 2gb
+% MEM 1gb
 % DEPENDENCY ft_volumewrite
+% DATA no
 
 [ftver, ftpath] = ft_version;
 mrifilename = fullfile(ftpath, 'template', 'headmodel', 'standard_mri.mat');

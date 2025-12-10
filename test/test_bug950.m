@@ -1,8 +1,9 @@
 function test_bug950
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_megrealign test_bug950
+% DATA private
 
 % the issue explored here is a reputed crash in megrealign due to a problem
 % in the channelposition function.
@@ -10,7 +11,7 @@ function test_bug950
 % the headmodel for the inverse/forward steps
 
 % load in some data
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/preproc_ctf151.mat'));
+load(dccnpath('/project/3031000.02/test/latest/raw/meg/preproc_ctf151.mat'));
 
 cfg = [];
 cfg.gradient = 'G3BR';

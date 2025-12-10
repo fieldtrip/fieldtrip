@@ -1,8 +1,9 @@
 function test_falsealarmrate
 
 % WALLTIME 00:10:00
-% MEM 3gb
+% MEM 1gb
 % DEPENDENCY ft_statistics_montecarlo ft_statistics_analytic ft_statfun_ft_statfun_depsamplesT
+% DATA no
 
 % This test script relates to this https://github.com/fieldtrip/website/issues/195
 

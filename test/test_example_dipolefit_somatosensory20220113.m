@@ -1,7 +1,8 @@
 function test_example_dipolefit_somatosensory
 
-% MEM 8gb
+% MEM 6gb
 % WALLTIME 00:15:00
+% DATA public
 
 %
 %% Fit a dipole to the tactile ERF after mechanical stimulation
@@ -31,7 +32,7 @@ function test_example_dipolefit_somatosensory
 % determine interesting segments in the data
 
 cfg                     = [];
-cfg.dataset             = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/SubjectBraille.ds');
+cfg.dataset             = dccnpath('/project/3031000.02/external/download/test/ctf/SubjectBraille.ds');
 cfg.continuous          = 'yes';
 cfg.trialdef.eventtype  = 'backpanel trigger';
 cfg.trialdef.eventvalue = [4,8];
@@ -124,7 +125,7 @@ ft_topoplotER(cfg, avg);
 cfg = [];
 cfg.latency = [0.045 0.055];  % specify latency window around M50 peak
 cfg.numdipoles = 1;
-cfg.hdmfile = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/SubjectBraille.hdm');
+cfg.hdmfile = dccnpath('/project/3031000.02/external/download/test/ctf/SubjectBraille.hdm');
 cfg.feedback = 'textbar';
 cfg.resolution = 2;
 cfg.unit = 'cm';
@@ -135,7 +136,7 @@ dipM100 = ft_dipolefitting(cfg, avg);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % make a plot of the location of the dipoles
 % read the anatomical MRI
-mri = ft_read_mri(dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/SubjectBraille.mri'));
+mri = ft_read_mri(dccnpath('/project/3031000.02/external/download/test/ctf/SubjectBraille.mri'));
 
 % the source is expressed in cm, the MRI is expressed in mm
 cfg = [];

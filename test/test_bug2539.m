@@ -1,10 +1,11 @@
 function test_bug2539
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_datatype ft_checkdata
+% DATA private
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug2539.mat'))
+load(dccnpath('/project/3031000.02/test/bug2539.mat'))
 
 cfg = [];
 cfg.component          = 1:16;

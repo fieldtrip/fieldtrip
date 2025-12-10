@@ -1,15 +1,16 @@
 function test_homer
 
 % WALLTIME 00:10:00
-% MEM 2GB
+% MEM 1gb
 % DEPENDENCY homer2fieldtrip fieldtrip2homer ft_write_data opto2homer homer2opto
+% DATA private
 
 % there are different ways that Homer data can be processed with FieldTrip
 % - the way that is used in most FT tutorials is to read (original) Homer files using FT_PREPROCESSING
 % - an alternative way is to read (original) Homer files using homer2fieldtrip
 % - it is also possible to write FieldTrip data to a Homer file on disk
 
-filename = dccnpath('/home/common/matlab/fieldtrip/data/test/original/nirs/homer/S1001_run01.nirs');
+filename = dccnpath('/project/3031000.02/test/original/nirs/homer/S1001_run01.nirs');
 
 data1 = homer2fieldtrip(filename);
 data2 = homer2fieldtrip(fieldtrip2homer(data1));

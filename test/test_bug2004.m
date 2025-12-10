@@ -1,12 +1,13 @@
 function test_bug2004
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_connectivityanalysis ft_connectivity_corr ft_connectivity_powcorr_ortho
+% DATA private
 
 %% test the functionality of ft_connectivityanalysis with respect to source level data (pcc)
 
-filename = dccnpath('/home/common/matlab/fieldtrip/data/test/bug2004.mat');
+filename = dccnpath('/project/3031000.02/test/bug2004.mat');
 load(filename);
 
 cfg = [];
@@ -22,7 +23,7 @@ cfg.method = 'powcorr_ortho';
 out5 = ft_connectivityanalysis(cfg, data);
 
 % grabbing the data from another bug.
-filename = dccnpath('/home/common/matlab/fieldtrip/data/test/bug2468.mat');
+filename = dccnpath('/project/3031000.02/test/bug2468.mat');
 load(filename);
 
 % recompute source level pcc data

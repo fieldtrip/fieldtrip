@@ -1,10 +1,11 @@
 function test_bug1785
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_read_sens read_asa_elc read_asa
+% DATA private
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1785'));
+cd(dccnpath('/project/3031000.02/test/bug1785'));
 
 filename = {
   'standard_1020.elc'

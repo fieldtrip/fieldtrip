@@ -3,13 +3,14 @@ function test_bug1404
 % MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_read_header ft_read_data ft_read_spike
+% DATA private
 
 % this is only available on the DCCN mentat cluster
-dataset = '/home/common/matlab/fieldtrip/data/test/original/neurosim/signals';
+dataset = '/project/3031000.02/test/original/neurosim/signals';
 hdr = ft_read_header(dataset);
 
 % this should also work
-dataset = '/home/common/matlab/fieldtrip/data/test/original/neurosim';
+dataset = '/project/3031000.02/test/original/neurosim';
 hdr = ft_read_header(dataset);
 
 cfg = [];

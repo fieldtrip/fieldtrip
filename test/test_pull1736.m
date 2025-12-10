@@ -1,12 +1,13 @@
 function test_pullXXX
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY openpose_keypoints
+% DATA private
 
 %%
 
-filename = dccnpath('/home/common/matlab/fieldtrip/data/test/original/motion/openpose/S_Npred_02_crop_000000010521_keypoints.json');
+filename = dccnpath('/project/3031000.02/test/original/motion/openpose/S_Npred_02_crop_000000010521_keypoints.json');
 
 assert(ft_filetype(filename, 'openpose_keypoints'));
 

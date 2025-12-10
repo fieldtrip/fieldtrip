@@ -1,13 +1,14 @@
 function test_issue1217
 
-% MEM 4gb
+% MEM 2gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_connectivityanalysis ft_laggedcoherence fourierspctrm2lcrsspctrm
+% DATA private
 
 % see https://github.com/fieldtrip/fieldtrip/issues/1217
 % and https://github.com/fieldtrip/fieldtrip/pull/1233
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/issue1217.mat'));
+load(dccnpath('/project/3031000.02/test/issue1217.mat'));
 
 % do a spectral decomposition first
 cfg = [];

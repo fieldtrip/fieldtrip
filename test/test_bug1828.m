@@ -1,10 +1,11 @@
 function test_bug1828
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_convert_coordsys align_ctf2acpc
+% DATA private
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1828.mat'));
+load(dccnpath('/project/3031000.02/test/bug1828.mat'));
 
 acvox = [89 135 125]; % voxel that is identified as ~ AC, i.e. the origin of the coordinate system
 

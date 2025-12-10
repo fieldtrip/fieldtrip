@@ -246,7 +246,7 @@ if ~isempty(cfg.ftest)
 end
 
 % organize the output
-dataout = keepfields(datain, {'label', 'time', 'freq', 'pos', 'dim', 'transform', 'inside', 'outside', 'trialinfo', 'sampleinfo', 'dimord'});
+dataout = keepfields(datain, {'pos', 'tri', 'dim', 'transform', 'unit', 'coordsys', 'inside', 'label', 'time', 'freq', 'trialinfo', 'sampleinfo', 'dimord'});
 switch cfg.output
   case 'residual'
     dataout.(cfg.parameter) = reshape(Yc, [nrpt dimsiz(datdim)]); % either powspctrm, trial, or pow
@@ -267,9 +267,8 @@ switch cfg.output
       covar      = diag(regr'*regr)';                                         % regressor covariance
       bvar       = repmat(mse',1,size(covar,2))./repmat(covar,size(mse,2),1); % beta variance
       tval       = (beta'./sqrt(bvar))';                                      % betas -> t-values
-      prob       = (1-tcdf(tval,dfe))*2;                                      % p-values
+      prob       = 2*(tcdf(-abs(tval),dfe));                                  % t-values -> p-values
       clear err dfe mse bvar
-      % FIXME: drop in replace tcdf from the statfun/private dir
       dataout.stat = reshape(tval, [nconf dimsiz(datdim)]);
       dataout.prob = reshape(prob, [nconf dimsiz(datdim)]);
       if haspermuted
@@ -279,7 +278,7 @@ switch cfg.output
       clear tval prob
     end
   case 'model'
-    dataout.model = keepfields(datain, {'label', 'time', 'freq', 'pos', 'dim', 'transform', 'inside', 'outside', 'trialinfo', 'sampleinfo', 'dimord'});
+    dataout.model = keepfields(datain, {'pos', 'tri', 'dim', 'transform', 'unit', 'coordsys', 'inside', 'label', 'time', 'freq', 'trialinfo', 'sampleinfo', 'dimord'});
     dataout.model.(cfg.parameter) = reshape(model, [nrpt, dimsiz(datdim)]);
     if haspermuted
       dataout.model.(cfg.parameter) = ipermute(dataout.model.(cfg.parameter), [rptdim datdim]);
@@ -311,7 +310,7 @@ end
 ft_postamble debug
 ft_postamble previous datain
 
-% rename the output variable to accomodate the savevar postamble
+% rename the output variable to accommodate the savevar postamble
 data = dataout;
 
 ft_postamble provenance data

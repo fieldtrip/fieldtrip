@@ -1,12 +1,13 @@
 function test_issue1585
 
 % WALLTIME 00:10:00
-% MEM 2gb
+% MEM 1gb
 % DEPENDENCY ft_read_header ft_read_data ft_read_event
+% DATA private
 
 %%
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/issue1585'))
+cd(dccnpath('/project/3031000.02/test/issue1585'))
 
 % cfg = [];
 % cfg.dataset      = 'eeglab_data.mat';

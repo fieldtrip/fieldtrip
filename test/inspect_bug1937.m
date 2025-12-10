@@ -1,6 +1,9 @@
 function inspect_bug1937
 
+% WALLTIME 00:10:00
+% MEM 1gb
 % DEPENDENCY ft_connectivitysimulation ft_freqanalysis_mvar qsubfeval qsubget
+% DATA no
 
 % alebac, 19 Mar 2014: added support "waitfor" for multiple jobs
 

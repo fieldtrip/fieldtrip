@@ -1,8 +1,9 @@
 function test_issue1400
 
 % WALLTIME 00:10:00
-% MEM 2gb
+% MEM 1gb
 % DEPENDENCY ft_selectdata
+% DATA no
 
 ntrial = 2;
 

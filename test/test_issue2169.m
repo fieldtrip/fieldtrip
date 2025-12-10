@@ -1,8 +1,9 @@
 function test_issue2169
 
 % WALLTIME 00:10:00
-% MEM 2gb
+% MEM 1gb
 % DEPENDENCY ft_apply_montage
+% DATA no
 
 %%
 

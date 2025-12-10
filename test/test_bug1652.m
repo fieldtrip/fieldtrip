@@ -1,10 +1,11 @@
 function test_bug1652
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_datatype_segmentation
+% DATA private
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/bug1652'));
+cd(dccnpath('/project/3031000.02/test/bug1652'));
 
 load seg1.mat
 % this contains TPMs

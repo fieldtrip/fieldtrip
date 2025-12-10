@@ -1,10 +1,11 @@
 function test_pull1412
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_heartrate
+% DATA private
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/pull1412'));
+cd(dccnpath('/project/3031000.02/test/pull1412'));
 
 %%
 % this corresponds to the preprocessed dataset 006_3013065.02_rest1 from bug3433

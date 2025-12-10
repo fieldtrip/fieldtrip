@@ -1,9 +1,9 @@
 function test_old_trialdef
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY
-
+% DATA private
 
 % This script tests the implementation of the new representation of trial
 % specific information in the data structure.
@@ -27,10 +27,7 @@ function test_old_trialdef
 % -sampleinfo and trialinfo should be concatenated in ft_appenddata
 % -sampleinfo and trialinfo should be adjusted by ft_rejectartifact
 
-% needed for the dccnpath function, since we will change directory later on
-addpath(fileparts(mfilename('fullpath')));
-
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/original/meg/ctf275/A0132_Aud-Obj-Recognition_20051115_02.ds'));
+cd(dccnpath('/project/3031000.02/test/original/meg/ctf275/A0132_Aud-Obj-Recognition_20051115_02.ds'));
 headerfile = 'A0132_Aud-Obj-Recognition_20051115_02.res4';
 datafile   = 'A0132_Aud-Obj-Recognition_20051115_02.meg4';
 %hdr        = ft_read_header(headerfile);
@@ -120,7 +117,7 @@ cfg.continuous      = 'yes';
 ft_databrowser(cfg, data1b);
 
 % test ft_rejectartifact
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/original/meg/ctf275/A0132_Aud-Obj-Recognition_20051115_02.ds'));
+cd(dccnpath('/project/3031000.02/test/original/meg/ctf275/A0132_Aud-Obj-Recognition_20051115_02.ds'));
 headerfile = 'A0132_Aud-Obj-Recognition_20051115_02.res4';
 datafile   = 'A0132_Aud-Obj-Recognition_20051115_02.meg4';
 hdr        = ft_read_header(headerfile);
@@ -138,7 +135,7 @@ cfg          = ft_rejectartifact(cfg);
 datay = data1;
 datay = rmfield(datay,   'sampleinfo');
 datay = rmfield(datay,   'trialinfo');
-datay2       = ft_rejectartifact(cfg, datay);
+datay2       = ft_rejectartifact(rmfield(cfg, 'trl'), datay);
 
 % test all other functions using raw data as input (to remove sampleinfo)
 

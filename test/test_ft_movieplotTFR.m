@@ -1,12 +1,13 @@
 function test_ft_movieplotTFR
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_movieplotTFR ft_movieplotER
+% DATA public
 
 % the timelock and frequency analysis is based on the tutorials
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/timefrequencyanalysis/dataFIC.mat'));
+load(dccnpath('/project/3031000.02/external/download/tutorial/timefrequencyanalysis/dataFIC.mat'));
 
 cfg              = [];
 timelockFIC      = ft_timelockanalysis(cfg, dataFIC);

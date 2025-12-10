@@ -18,7 +18,7 @@ function [labelx, labely, labelz] = coordsys2label(coordsys, format, both)
 %
 % See also FT_DETERMINE_COORDSYS, FT_PLOT_AXES, FT_HEADCOORDINATES, SETVIEWPOINT
 
-% Copyright (C) 2017-2023, Robert Oostenveld
+% Copyright (C) 2017-2024, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.

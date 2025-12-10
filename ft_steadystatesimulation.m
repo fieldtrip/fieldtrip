@@ -9,11 +9,12 @@ function [data] = ft_steadystatesimulation(cfg)
 % Use as
 %   data = ft_steadystatesimulation(cfg)
 % where cfg is a configuration structure that should contain
-%   cfg.fsample   = scalar, sampling frequency in Hz (default = 512)
-%   cfg.duration  = scalar, trial length in seconds (default = 4.56)
-%   cfg.baseline  = scalar, baseline length in seconds (default = 0)
-%   cfg.ntrials   = integer N, number of trials (default = 320)
-%   cfg.iti       = scalar, inter-trial interval in seconds (default = 1)
+%   cfg.fsample    = scalar, sampling frequency in Hz (default = 512)
+%   cfg.duration   = scalar, trial length in seconds (default = 4.56)
+%   cfg.baseline   = scalar, baseline length in seconds (default = 0)
+%   cfg.ntrials    = integer N, number of trials (default = 320)
+%   cfg.iti        = scalar, inter-trial interval in seconds (default = 1)
+%   cfg.randomseed = 'yes' or a number or vector with the seed value (default = 'yes')
 %
 % Each trial can contain multiple nested experimental manipulations
 %   cfg.level1.condition = scalar, or vector of length L1 (default = 1)
@@ -106,6 +107,7 @@ ft_defaults
 ft_preamble init
 ft_preamble debug
 ft_preamble provenance
+ft_preamble randomseed
 
 % the ft_abort variable is set to true or false in ft_preamble_init
 if ft_abort
@@ -384,6 +386,7 @@ data.sampleinfo(:,2) = data.sampleinfo(:,2) + transpose((1:ntrial)-1)*round(cfg.
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
+ft_postamble randomseed
 ft_postamble provenance data
 ft_postamble history    data
 ft_postamble savevar    data

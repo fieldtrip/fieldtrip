@@ -97,10 +97,18 @@ multiple = ft_getopt(varargin, 'multiple', false);
 callback = ft_getopt(varargin, 'callback');
 
 if istrue(multiple)
+  % remove the following from the arguments, if present
+  remove = {'multiple' 'callback' 'event'};
+  for i=1:numel(remove)
+    if any(strcmp(varargin, remove{i}))
+      varargin(find(strcmp(varargin, remove{i}))+[0 1]) = [];
+    end
+  end
+
   % the selection is done using select_range, which will subsequently call select_channel_multiple
-  set(gcf, 'WindowButtonDownFcn',   {@ft_select_range, 'multiple', true, 'callback', {@select_channel_multiple, callback}, 'event', 'WindowButtonDownFcn'});
-  set(gcf, 'WindowButtonUpFcn',     {@ft_select_range, 'multiple', true, 'callback', {@select_channel_multiple, callback}, 'event', 'WindowButtonUpFcn'});
-  set(gcf, 'WindowButtonMotionFcn', {@ft_select_range, 'multiple', true, 'callback', {@select_channel_multiple, callback}, 'event', 'WindowButtonMotionFcn'});
+  set(gcf, 'WindowButtonDownFcn',   {@ft_select_range, 'multiple', true, 'callback', {@select_channel_multiple, callback}, 'event', 'WindowButtonDownFcn',   varargin{:}});
+  set(gcf, 'WindowButtonUpFcn',     {@ft_select_range, 'multiple', true, 'callback', {@select_channel_multiple, callback}, 'event', 'WindowButtonUpFcn',     varargin{:}});
+  set(gcf, 'WindowButtonMotionFcn', {@ft_select_range, 'multiple', true, 'callback', {@select_channel_multiple, callback}, 'event', 'WindowButtonMotionFcn', varargin{:}});
 else
   % the selection is done using select_channel_single
   pos = get(gca, 'CurrentPoint');
@@ -190,7 +198,7 @@ else % no subplots were used
   label  = info.label(:);
 end
 
-% determine which channels ly in the selected range
+% determine which channels lie in the selected range
 select = false(size(label));
 for i=1:size(range,1)
   select = select | (x>=range(i, 1) & x<=range(i, 2) & y>=range(i, 3) & y<=range(i, 4));

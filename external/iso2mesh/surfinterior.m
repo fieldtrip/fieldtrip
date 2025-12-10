@@ -1,4 +1,4 @@
-function [pt,p0,v0,t,idx]=surfinterior(node,face)
+function [pt, p0, v0, t, idx] = surfinterior(node, face)
 %
 % [pt,p0,v0,t,idx]=surfinterior(node,face)
 %
@@ -22,24 +22,24 @@ function [pt,p0,v0,t,idx]=surfinterior(node,face)
 % -- this function is part of iso2mesh toolbox (http://iso2mesh.sf.net)
 %
 
-pt=[];
-len=size(face,1);
-for i=1:len
-   p0=mean(node(face(i,1:3),:));
-   plane=surfplane(node,face(i,:));
-   v0=plane(1:3);
+pt = [];
+len = size(face, 1);
+for i = 1:len
+    p0 = mean(node(face(i, 1:3), :));
+    plane = surfplane(node, face(i, :));
+    v0 = plane(1:3);
 
-   [t,u,v]=raytrace(p0,v0,node,face(:,1:3));
+    [t, u, v] = raytrace(p0, v0, node, face(:, 1:3));
 
-   idx=find(u>=0 & v>=0 & u+v<=1.0 & ~isinf(t));
-   [ts, uidx]=unique(sort(t(idx)));
-   if(~isempty(ts) && mod(length(ts),2)==0)
-       ts=reshape(ts,[2 length(ts)/2]);
-       tdiff=ts(2,:)-ts(1,:);
-       [maxv,maxi]=max(tdiff);
-       pt=p0+v0*(ts(1,maxi)+ts(2,maxi))*0.5;
-       idx=idx(uidx);
-       t=t(idx);
-       break;
-   end
+    idx = find(u >= 0 & v >= 0 & u + v <= 1.0 & ~isinf(t));
+    [ts, uidx] = unique(sort(t(idx)));
+    if (~isempty(ts) && mod(length(ts), 2) == 0)
+        ts = reshape(ts, [2 length(ts) / 2]);
+        tdiff = ts(2, :) - ts(1, :);
+        [maxv, maxi] = max(tdiff);
+        pt = p0 + v0 * (ts(1, maxi) + ts(2, maxi)) * 0.5;
+        idx = idx(uidx);
+        t = t(idx);
+        break
+    end
 end

@@ -1,6 +1,6 @@
 function ft_uilayout(h, varargin)
 
-% FT_UILAYOUT is a helper function to make a consistent graphical user interafce with
+% FT_UILAYOUT is a helper function to make a consistent graphical user interface with
 % multiple control elements. This function will find all elements with a specific tag
 % and style, and update or position them consistently.
 %
@@ -55,7 +55,7 @@ function ft_uilayout(h, varargin)
 %
 %   ft_uilayout(h, 'tag', '.*', 'BackGroundColor', [1 0 0]);
 %
-% See also UICONTROL
+% See also UICONTROL, ALIGN, UISTACK
 
 % Copyright (C) 2009-2015, Robert Oostenveld
 %

@@ -1,8 +1,9 @@
 function test_bug996
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_multiplotER ft_singleplotER
+% DATA no
 
 % function to reproduce bug 996 and test the fix
 % the problem is the following: JM removed the occurrence of

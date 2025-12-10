@@ -1,8 +1,9 @@
 function test_bug1571
 
-% MEM 5gb
+% MEM 4gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_preprocessing ft_preproc_dftfilter dftfilter ft_freqanalysis ft_singleplotER
+% DATA private
 
 % Philipp Hintze wrote:
 % The issue with the continuous data is the following: I tried using
@@ -12,7 +13,7 @@ function test_bug1571
 % strong line noise. Including padding makes no difference either, therefore
 % the brackets.
 
-dataset = dccnpath('/home/common/matlab/fieldtrip/data/test/bug1571/20101230_1010.cnt');
+dataset = dccnpath('/project/3031000.02/test/bug1571/20101230_1010.cnt');
 
 cfg                     = [];
 cfg.channel      = {'EEG'};

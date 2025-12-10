@@ -17,22 +17,23 @@ function [source] = ft_dipolefitting(cfg, data)
 %   cfg.symmetry    = 'x', 'y' or 'z' symmetry for two dipoles, can be empty (default = [])
 %   cfg.channel     = Nx1 cell-array with selection of channels (default = 'all'),
 %                     see FT_CHANNELSELECTION for details
-%   cfg.gridsearch  = 'yes' or 'no', perform global search for initial
+%   cfg.gridsearch  = 'yes' or 'no', perform global grid search for initial
 %                     guess for the dipole parameters (default = 'yes')
 %   cfg.nonlinear   = 'yes' or 'no', perform nonlinear search for optimal
 %                     dipole parameters (default = 'yes')
 %
-% If you start with a grid search, the complete grid with dipole positions is
-% constructed using FT_PREPARE_SOURCEMODEL. It can be specified as as a regular 3-D
-% grid that is aligned with the axes of the head coordinate system using
+% If a grid search is performed, a source model needs to be specified. This should either be 
+% specified as cfg.sourcemodel (see below), or as a set of parameters to define a 3-D regular grid.
+% In the latter case, a complete grid is constructed using FT_PREPARE_SOURCEMODEL.  The specification 
+% of a regular 3-D grid, aligned with the axes of the head coordinate system, can be obtained with 
 %   cfg.xgrid               = vector (e.g. -20:1:20) or 'auto' (default = 'auto')
 %   cfg.ygrid               = vector (e.g. -20:1:20) or 'auto' (default = 'auto')
 %   cfg.zgrid               = vector (e.g.   0:1:20) or 'auto' (default = 'auto')
-%   cfg.resolution          = number (e.g. 1 cm) for automatic grid generation
+%   cfg.resolution          = number (e.g. 1 cm)
 % If the source model destribes a triangulated cortical sheet, it is described as
 %   cfg.sourcemodel.pos     = N*3 matrix with the vertex positions of the cortical sheet
 %   cfg.sourcemodel.tri     = M*3 matrix that describes the triangles connecting the vertices
-% Alternatively the position of a few dipoles at locations of interest can be
+% Alternatively the position of the dipoles at locations of interest can be
 % user-specified, for example obtained from an anatomical or functional MRI
 %   cfg.sourcemodel.pos     = N*3 matrix with position of each source
 %   cfg.sourcemodel.inside  = N*1 vector with boolean value whether grid point is inside brain (optional)
@@ -285,7 +286,10 @@ if ~isempty(noisecov)
   montage.labelold = cfg.channel;
   montage.labelnew = cfg.channel;
   montage.tra = sphere;
-  sens = ft_apply_montage(sens, montage, 'balancename', 'sphering');
+  sens = ft_apply_montage(sens, montage);
+  sens = fixbalance(sens); % ensure that the balancing representation is up to date
+  sens.balance.sphering = montage;
+  sens.balance.current{end+1} = 'sphering'; % keep track of the projection that was applied
 end
 
 if iscomp
@@ -366,7 +370,7 @@ if strcmp(cfg.gridsearch, 'yes')
   if isfield(cfg.sourcemodel, 'leadfield')
     ft_notice('using precomputed leadfields for the gridsearch');
 
-    sourcemodel = keepfields(cfg.sourcemodel, {'pos', 'tri', 'dim', 'inside', 'leadfield', 'leadfielddimord', 'label'});
+    sourcemodel = keepfields(cfg.sourcemodel, {'pos', 'tri', 'dim', 'unit', 'coordsys', 'inside', 'leadfield', 'leadfielddimord', 'label'});
     
     % select the channels corresponding to the data and the user configuration
     tmpcfg = keepfields(cfg, 'channel');
@@ -449,6 +453,9 @@ if strcmp(cfg.gridsearch, 'yes')
       dip.pos = sourcemodel.pos(indx,:);                % note that for a symmetric dipole pair this results in a vector
       dip.pos = reshape(dip.pos,3,cfg.numdipoles)';     % convert to a Nx3 array
       dip.mom = zeros(cfg.numdipoles*3,1);              % set the dipole moment to zero
+      if isfield(sourcemodel, 'leadfield')
+      dip.lf  = sourcemodel.leadfield{indx};            % copy the corresponding leadfield  
+      end
       if cfg.numdipoles==1
         ft_info('found minimum after scanning on grid point [%g %g %g]\n', dip.pos(1), dip.pos(2), dip.pos(3));
       elseif cfg.numdipoles==2
@@ -462,6 +469,9 @@ if strcmp(cfg.gridsearch, 'yes')
         dip(t).pos = sourcemodel.pos(indx,:);                 % note that for a symmetric dipole pair this results in a vector
         dip(t).pos = reshape(dip(t).pos,3,cfg.numdipoles)';   % convert to a Nx3 array
         dip(t).mom = zeros(cfg.numdipoles*3,1);               % set the dipole moment to zero
+        if isfield(sourcemodel, 'leadfield')
+        dip(t).lf  = sourcemodel.leadfield{indx};            % copy the corresponding leadfield
+        end
         if cfg.numdipoles==1
           ft_info('found minimum after scanning for topography %d on grid point [%g %g %g]\n', t, dip(t).pos(1), dip(t).pos(2), dip(t).pos(3));
         elseif cfg.numdipoles==2
@@ -574,8 +584,12 @@ end
 switch cfg.model
   case 'regional'
     if success
-      % re-compute the leadfield in order to compute the model potential and dipole moment
-      lf = ft_compute_leadfield(dip.pos, sens, headmodel, leadfieldopt{:});
+      if ~isfield(dip, 'lf')
+          % if there is no leadfield, re-compute it in order to compute the model potential and dipole moment
+          lf = ft_compute_leadfield(dip.pos, sens, headmodel, leadfieldopt{:});
+      else
+          lf = dip.lf;
+      end
       if isfield(dip, 'mom') && isfield(dip, 'ampl')
         % the orientation and amplitude have already been estimated, this applies to the case of a fixed dipole orientation
         dip.pot = (lf * dip.mom) * dip.ampl;
@@ -590,8 +604,12 @@ switch cfg.model
   case 'moving'
     for t=1:ntime
       if success(t)
-        % re-compute the leadfield in order to compute the model potential and dipole moment
-        lf = ft_compute_leadfield(dip(t).pos, sens, headmodel, leadfieldopt{:});
+        if ~isfield(dip, 'lf')  
+            % if there is no leadfield, re-compute it in order to compute the model potential and dipole moment
+            lf = ft_compute_leadfield(dip(t).pos, sens, headmodel, leadfieldopt{:});
+        else
+          lf = dip(t).lf;
+        end
         % compute all details of the final dipole model
         dip(t).mom = pinv(lf)*Vdata(:,t);
         dip(t).pot = lf*dip(t).mom;

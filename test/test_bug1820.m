@@ -1,15 +1,18 @@
 function test_bug1820
 
-% MEM 12gb
+% MEM 10gb
 % WALLTIME 04:30:00
 % DEPENDENCY ft_prepare_mesh ft_headmodel_simbio ft_prepare_vol_sens ft_compute_leadfield
+% DATA no
 
 % See http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=1820
 
 %% create segmentation 
 
-example.dim = [40 40 40];   % slightly different numbers
-example.transform = eye(4).*5; example.transform(4,4)=1;
+resolution = 5; % mm per voxel
+
+example.dim = [41 43 45];   % slightly different numbers
+example.transform = eye(4).*resolution; example.transform(4,4)=1;
 example.coordsys = 'ctf';
 example.unit = 'mm';
 example.seg = zeros(example.dim);
@@ -29,7 +32,7 @@ z = round(z);
 
 origin = [x y z];
 
-example.transform(1:4,4)   = [-origin(:); 1];  % head-coordinate [0 0 0] is in the center of
+example.transform(1:4,4)   = [-origin(:)*resolution; 1];  % head-coordinate [0 0 0] is in the center of
 % the volume (x y z in voxel-coordinates)
 
 % compute position for each voxel in voxelspace and in headspace
@@ -57,6 +60,9 @@ for i=1:size(headpos,1)
     end
 end
 
+cfg = [];
+cfg.funparameter = 'seg';
+ft_sourceplot(cfg, example);
 
 %% create electrodes
 % Create a set of 42 electrodes on the outer surface

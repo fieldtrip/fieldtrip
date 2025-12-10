@@ -1,11 +1,12 @@
 function test_bug963
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_read_header ft_read_sens ft_datatype_sens bti2grad itab2grad netmeg2grad ctf2grad mne2grad yokogawa2grad fif2grad mne2grad.old yokogawa2grad_new ft_compute_leadfield ft_prepare_vol_sens
+% DATA private
 
-datadir = dccnpath('/home/common/matlab/fieldtrip/data/test/bug963');
-rawdataprefix = dccnpath('/home/common/matlab/fieldtrip/data/test');
+datadir = dccnpath('/project/3031000.02/test/bug963');
+rawdataprefix = dccnpath('/project/3031000.02/test');
 
 dataset = {
   'original/meg/bti148/c,rfhp0.1Hz'
@@ -55,7 +56,10 @@ for i=1:length(dataset)
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   outputfile = fullfile(datadir, sprintf('dataset%02d.mat', i));
   reference = load(outputfile);
-  
+
+  reference.grad = fixbalance(reference.grad);
+  reference.hdr.grad = fixbalance(reference.hdr.grad);
+    
   filename = fullfile(rawdataprefix, dataset{i});
   disp(filename)
   hdr  = ft_read_header(filename, 'headerformat', headerformat);
@@ -63,33 +67,33 @@ for i=1:length(dataset)
   
   % remove the grad.balance field if the current balancing is none
   % as that it is not interesting to compare
-  if isfield(grad, 'balance') && strcmp(grad.balance.current, 'none')
+  if isfield(grad, 'balance') && isfield(grad.balance, 'current') && isempty(grad.balance.current) || isequal(grad.balance.current, 'none')
     grad = rmfield(grad, 'balance');
   end
-  if isfield(hdr.grad, 'balance') && strcmp(hdr.grad.balance.current, 'none')
+  if isfield(hdr.grad, 'balance') && isfield(hdr.grad.balance, 'current') && isempty(hdr.grad.balance.current) || isequal(hdr.grad.balance.current, 'none')
     hdr.grad = rmfield(hdr.grad, 'balance');
   end
-  if isfield(reference.grad, 'balance') && strcmp(reference.grad.balance.current, 'none')
+  if isfield(reference.grad, 'balance') && isfield(reference.grad.balance, 'current') && isempty(reference.grad.balance.current) || isequal(reference.grad.balance.current, 'none')
     reference.grad = rmfield(reference.grad, 'balance');
   end
-  if isfield(reference.hdr.grad, 'balance') && strcmp(reference.hdr.grad.balance.current, 'none')
+  if isfield(reference.hdr.grad, 'balance') && isfield(reference.hdr.grad.balance, 'current') && isempty(reference.hdr.grad.balance.current) || isequal(reference.hdr.grad.balance.current, 'none')
     reference.hdr.grad = rmfield(reference.hdr.grad, 'balance');
   end
   
   % remove coordsys field as these were not yet present in reference files
-%   if isfield(grad, 'coordsys')
-%     grad = rmfield(grad, 'coordsys');
-%   end
-%   if isfield(hdr.grad, 'coordsys')
-%     hdr.grad = rmfield(hdr.grad, 'coordsys');
-%   end
-%   if isfield(grad, 'labelold')
-%     grad = rmfield(grad, 'labelold');
-%   end
-%   if isfield(hdr.grad, 'labelold')
-%     hdr.grad = rmfield(hdr.grad, 'labelold');
-%   end
-%
+  %   if isfield(grad, 'coordsys')
+  %     grad = rmfield(grad, 'coordsys');
+  %   end
+  %   if isfield(hdr.grad, 'coordsys')
+  %     hdr.grad = rmfield(hdr.grad, 'coordsys');
+  %   end
+  %   if isfield(grad, 'labelold')
+  %     grad = rmfield(grad, 'labelold');
+  %   end
+  %   if isfield(hdr.grad, 'labelold')
+  %     hdr.grad = rmfield(hdr.grad, 'labelold');
+  %   end
+
   assert(isalmostequal(hdr.grad,           grad, 'reltol',eps*1e6), sprintf('failed for %s', filename));
   assert(isalmostequal(reference.grad,     grad, 'reltol',eps*1e6), sprintf('failed for %s', filename));
   assert(isalmostequal(reference.hdr.grad, grad, 'reltol',eps*1e6), sprintf('failed for %s', filename));
@@ -105,7 +109,7 @@ end % for all datasets
 % this checks that all three CTF implementations still work
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-filename = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds');
+filename = dccnpath('/project/3031000.02/external/download/test/ctf/Subject01.ds');
 hdr1 = ft_read_header(filename, 'headerformat', 'ctf_ds');
 hdr2 = ft_read_header(filename, 'headerformat', 'read_ctf_res4');
 %hdr3 = ft_read_header(filename, 'headerformat', 'ctf_read_res4');

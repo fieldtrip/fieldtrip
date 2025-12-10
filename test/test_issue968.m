@@ -1,8 +1,9 @@
 function test_issue968
 
 % WALLTIME 00:10:00
-% MEM 2gb
+% MEM 1gb
 % DEPENDENCY
+% DATA public
 
 p = tempname;
 mkdir(p);
@@ -11,7 +12,7 @@ cd(p);
 %%
 
 cfg = [];
-cfg.dataset = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds');
+cfg.dataset = dccnpath('/project/3031000.02/external/download/test/ctf/Subject01.ds');
 cfg.trl = [1 30*300 0];
 cfg.demean = 'yes';
 cfg.baselinewindow = [-Inf 0];

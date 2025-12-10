@@ -2,7 +2,7 @@ function [trl] = ft_trialfun_twoclass_classification(cfg)
 
 % FT_TRIALFUN_TWOCLASS_CLASSIFICATION can be used to train and test a real-time
 % classifier in offline and online mode. It selects pieces of data in the two classes
-% based on two trigger values. The first N occurences in each class are marked as
+% based on two trigger values. The first N occurrences in each class are marked as
 % training items. All subsequent occurrences are marked as test items.
 %
 % This function can be used in conjunction with FT_REALTIME_CLASSIFICATION. The

@@ -1,8 +1,9 @@
 function test_ft_timelockgrandaverage
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_timelockgrandaverage ft_timelockanalysis
+% DATA no
 
 % This functions tests the new implementation of ft_timelockgrandaverage. The new
 % functionality includes the use of a cfg.parameter, and allows for 'chan' data to be

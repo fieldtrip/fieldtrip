@@ -86,13 +86,25 @@ end
 % this requires the external iso2mesh toolbox
 ft_hastoolbox('iso2mesh', 1);
 
-[node, elem, face] = vol2mesh(uint8(seg), 1:mri.dim(1), 1:mri.dim(2), 1:mri.dim(3), 1, 1, 0, 'cgalmesh');
-elem(:,1:4)        = meshreorient(node(:,1:3), elem(:,1:4));
+[node, elem] = vol2mesh(uint8(seg), 1:mri.dim(1), 1:mri.dim(2), 1:mri.dim(3), 1, 1, 0, 'cgalmesh');
+elem(:,1:4) = meshreorient(node(:,1:3), elem(:,1:4));
+
+[major, minor, patch, extra] = iso2meshver;
+if major>=1 && minor>=8
+  % an offset of 0.5 is still needed to get it aligned with the segmentation
+  % see https://github.com/fieldtrip/fieldtrip/issues/2488
+  pos = ft_warp_apply(mri.transform, node(:,1:3)+0.5);
+else
+  % offset of 1 is needed because indexing is 0-based
+  pos = ft_warp_apply(mri.transform, node(:,1:3)+1);
+end
 
 mesh = [];
-mesh.pos = ft_warp_apply(mri.transform, node(:,1:3)+1); % offset of 1 is needed because indexing is 0-based?
+mesh.pos = pos;
 mesh.tet = elem(:,1:4);
 mesh.tissue = elem(:,5);
+
 if exist('seglabel', 'var')
+  % remember the name of each of the tissue types
   mesh.tissuelabel = seglabel;
 end

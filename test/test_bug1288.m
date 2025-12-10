@@ -1,13 +1,14 @@
 function test_bug1288
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY
+% DATA private
 
 % this function serves to create planar gradient data and combined planar
 % gradient data, for testing purposes of a fix for bug 1288
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/preproc_ctf151.mat'));
+load(dccnpath('/project/3031000.02/test/latest/raw/meg/preproc_ctf151.mat'));
 
 cfg = [];
 cfg.method = 'distance';

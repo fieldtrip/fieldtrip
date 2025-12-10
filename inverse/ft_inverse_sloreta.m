@@ -144,9 +144,17 @@ if hasmom
 end
 
 if hasfilter
+  % check that the options normalize/reducerank/etc are not specified
+  assert(all(cellfun(@isempty, leadfieldopt(2:2:end))), 'the options for computing the leadfield must all be empty/default');
+  % check that lambda is not specified
+  assert(isempty(lambda), 'the options for computing the filter must all be empty/default');
+  ft_info('using precomputed filters\n');
   ft_info('using precomputed filters\n');
   sourcemodel.filter = sourcemodel.filter(originside);
 elseif hasleadfield
+  % check that the options normalize/reducerank/etc are not specified
+  assert(all(cellfun(@isempty, leadfieldopt(2:2:end))), 'the options for computing the leadfield must all be empty/default');
+  ft_info('using precomputed filters\n');
   ft_info('using precomputed leadfields\n');
   sourcemodel.leadfield = sourcemodel.leadfield(originside);
 else
@@ -220,7 +228,7 @@ end
 
 if ~hasfilter
     % compute the Gram matrix and its inversion across all voxels
-    L = cell2mat(sourcemodel.leadfield');
+    L = cat(2,sourcemodel.leadfield{:});
     G = L*L'; % Gram matrix
     invG = inv(G + lambda * eye(size(G))); % regularized G^-1
 end

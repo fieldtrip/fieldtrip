@@ -1,12 +1,13 @@
 function test_bug2185
 
 % WALLTIME 00:20:00
-% MEM 6gb
+% MEM 4gb
 % DEPENDENCY ft_sourcegrandaverage ft_selectdata ft_selectdata_new ft_datatype_source ft_math
+% DATA private
 
 %% load the end-user provided test data
 
-filename = dccnpath('/home/common/matlab/fieldtrip/data/test/bug2185.mat');
+filename = dccnpath('/project/3031000.02/test/bug2185.mat');
 load(filename);
 
 % The content of the file is a cell-array that looks like this

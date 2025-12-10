@@ -21,17 +21,28 @@ function [data] = ft_redefinetrial(cfg, data)
 % For realiging the time axes of all trials to a new reference time
 % point (i.e. change the definition for t=0) you can use the following
 % configuration option
-%   cfg.offset    = single number or Nx1 vector, by how many samples should the time axes be shifted.
-%                   i.e. if you want t=1 to be the new t=0, set cfg.offset = -1*Fs (Fs is the sampling frequency in Hz).
+%   cfg.offset    = single number or Nx1 vector, by how many samples should the 
+%                   time axes be shifted. i.e. if you want t=1 to be the new t=0,
+%                   set cfg.offset = -1*Fs (Fs is the sampling frequency in Hz).
+%                   If cfg.trials is defined, N must be equal to the original
+%                   number of trials or to the number of selected trials.
 %
-% For selecting a specific subsection of (i.e. cut out a time window
-% of interest) you can select a time window in seconds that is common
-% in all trials
-%   cfg.toilim    = [tmin tmax] to specify a latency window in seconds, can be Nx2 vector
+% For selecting a specific subsection within trials (i.e. cut out a time window
+% of interest) you can use the following configuration option
+%   cfg.toilim    = [tmin tmax], latency window in seconds, can be
+%                   Nx2 vector. If cfg.trials is defined, N must be equal
+%                   to the original number of trials or to the number of 
+%                   selected trials.
 %
 % Alternatively you can specify the begin and end sample in each trial
-%   cfg.begsample = single number or Nx1 vector, expressed in samples relative to the start of the input trial
-%   cfg.endsample = single number or Nx1 vector, expressed in samples relative to the start of the input trial
+%   cfg.begsample = single number or Nx1 vector, expressed in samples relative
+%                   to the start of the input trial. If cfg.trials is defined, 
+%                   N must be equal to the original number of trials or to the
+%                   number of selected trials.
+%   cfg.endsample = single number or Nx1 vector, expressed in samples relative
+%                   to the start of the input trial. If cfg.trials is defined, 
+%                   N must be equal to the original number of trials or to the
+%                   number of selected trials.
 %
 % Alternatively you can specify a new trial definition, expressed in
 % samples relative to the original recording
@@ -41,7 +52,13 @@ function [data] = ft_redefinetrial(cfg, data)
 % segments, starting from the beginning of each trial. This may lead to loss
 % of data at the end of the trials
 %   cfg.length    = number (in seconds) that specifies the length of the required snippets
-%   cfg.overlap   = number between 0 and 1 (exclusive) specifying the fraction of overlap between snippets (0 = no overlap)
+%   cfg.overlap   = number between 0 and 1 (exclusive) specifying the fraction of overlap 
+%                   between snippets (0 = no overlap)
+%   cfg.updatetrialinfo = 'no' (default), or 'yes', which adds a column
+%                   with original trial indices trialinfo
+%   cfg.keeppartial = 'no' (default), or 'yes', which keeps the partial sub
+%                   epochs at the end of the input trials
+%                   
 %
 % Alternatively you can merge or stitch pseudo-continuous segmented data back into a
 % continuous representation. This requires that the data has a valid sampleinfo field
@@ -61,7 +78,7 @@ function [data] = ft_redefinetrial(cfg, data)
 %
 % See also FT_DEFINETRIAL, FT_RECODEEVENT, FT_PREPROCESSING
 
-% Copyright (C) 2006-2021, Robert Oostenveld
+% Copyright (C) 2006-2025, Robert Oostenveld and Jan Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -124,6 +141,8 @@ cfg.trl          = ft_getopt(cfg, 'trl',        []);
 cfg.length       = ft_getopt(cfg, 'length',     []);
 cfg.overlap      = ft_getopt(cfg, 'overlap',    0);
 cfg.continuous   = ft_getopt(cfg, 'continuous', 'no');
+cfg.updatetrialinfo = ft_getopt(cfg, 'updatetrialinfo', 'no');
+cfg.keeppartial  = ft_getopt(cfg, 'keeppartial', 'no');
 
 % select trials of interest
 if ~strcmp(cfg.trials, 'all')
@@ -133,21 +152,26 @@ if ~strcmp(cfg.trials, 'all')
     ft_info('selecting %d trials\n', length(cfg.trials));
   end
   
+  % If the user made a selection of trials but gave method parameters for 
+  % all original trials, keep only the selection of the parameters
+  if length(cfg.offset)>1 && length(cfg.offset)==length(data.trial)
+    cfg.offset = cfg.offset(cfg.trials);
+  end
+  if length(cfg.begsample)>1 && length(cfg.begsample)==length(data.trial)
+    cfg.begsample = cfg.begsample(cfg.trials);
+  end
+  if length(cfg.endsample)>1 && length(cfg.endsample)==length(data.trial)
+    cfg.endsample = cfg.endsample(cfg.trials);
+  end
+  if size(cfg.toilim, 1)>1 && size(cfg.toilim, 1)==length(data.trial)
+    cfg.toilim = cfg.toilim(cfg.trials, :);
+  end
+  
   % select trials of interest
   tmpcfg = keepfields(cfg, {'trials', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
   data   = ft_selectdata(tmpcfg, data);
   % restore the provenance information
   [cfg, data] = rollback_provenance(cfg, data);
-  
-  if length(cfg.offset)>1 && length(cfg.offset)~=length(cfg.trials)
-    cfg.offset = cfg.offset(cfg.trials);
-  end
-  if length(cfg.begsample)>1 && length(cfg.begsample)~=length(cfg.trials)
-    cfg.begsample = cfg.begsample(cfg.trials);
-  end
-  if length(cfg.endsample)>1 && length(cfg.endsample)~=length(cfg.trials)
-    cfg.endsample = cfg.endsample(cfg.trials);
-  end
 end
 
 Ntrial = numel(data.trial);
@@ -159,6 +183,20 @@ if numoptions>1
 end
 if numoptions==0 && isempty(cfg.minlength) && strcmp(cfg.trials, 'all')
   ft_error('you should specify at least one configuration option');
+end
+
+% check that the number of chosen trials matches the number of method parameters provided
+if length(cfg.offset)>1 && length(cfg.offset)~=Ntrial
+  ft_error('inconsistent number of trials and offsets');
+end
+if length(cfg.begsample)>1 && length(cfg.begsample)~=Ntrial
+  ft_error('inconsistent number of trials and begsamples');
+end
+if length(cfg.endsample)>1 && length(cfg.endsample)~=Ntrial
+  ft_error('inconsistent number of trials and begsamples');
+end
+if size(cfg.toilim, 1)>1 && size(cfg.toilim, 1)~=Ntrial
+  ft_error('inconsistent number of trials and toilims');
 end
 
 % start processing
@@ -207,7 +245,7 @@ elseif ~isempty(cfg.offset)
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   offset = cfg.offset(:);
   offset = round(offset); % this is in samples and hence it must be expressed as integers
-  if length(cfg.offset)==1
+  if isscalar(cfg.offset)
     offset = repmat(offset, Ntrial, 1);
   end
   for i=1:Ntrial
@@ -220,10 +258,10 @@ elseif ~isempty(cfg.begsample) || ~isempty(cfg.endsample)
   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   begsample = cfg.begsample(:);
   endsample = cfg.endsample(:);
-  if length(begsample)==1
+  if isscalar(begsample)
     begsample = repmat(begsample, Ntrial, 1);
   end
-  if length(endsample)==1
+  if isscalar(endsample)
     endsample = repmat(endsample, Ntrial, 1);
   end
   for i=1:Ntrial
@@ -327,11 +365,18 @@ elseif ~isempty(cfg.length)
     begsample = data.sampleinfo(k,1);
     endsample = data.sampleinfo(k,2);
     offset    = time2offset(data.time{k}, data.fsample);
-    thistrl   = (begsample:nshift:(endsample+1-nsmp))';
+    if istrue(cfg.keeppartial)
+      nsub = 0;
+    else
+      nsub = nsmp;
+    end
+    thistrl   = (begsample:nshift:(endsample+1-nsub))';
     if ~isempty(thistrl) % the trial might be too short
       thistrl(:,2) = thistrl(:,1) + nsmp - 1;
       thistrl(:,3) = thistrl(:,1) + offset - thistrl(1,1);
       thistrl(:,4) = k; % keep the trial number in the 4th column, this is needed further down
+      thistrl(thistrl(:,2)>data.sampleinfo(k,2), 2) = data.sampleinfo(k,2);
+      thistrl(thistrl(:,1)>thistrl(:,2), :) = [];
       newtrl = cat(1, newtrl, thistrl);
     end
   end
@@ -354,6 +399,14 @@ elseif ~isempty(cfg.length)
     tmpcfg.trl = newtrl(:,1:3);
   end
   
+  if istrue(cfg.updatetrialinfo)
+    if ~istable(tmpcfg.trl)
+      tmpcfg.trl(:, end+1) = newtrl(:,4);
+    else
+      tmpcfg.trl = cat(2, tmpcfg.trl, array2table(newtrl(:,4), 'VariableNames', {'trialid_orig'}));
+    end
+  end
+
   data   = removefields(data, {'trialinfo'}); % these are in the additional columns of tmpcfg.trl
   data   = ft_redefinetrial(tmpcfg, data);
   % restore the provenance information
@@ -372,8 +425,13 @@ elseif istrue(cfg.continuous)
   % to the trigger. A positive offset indicates that the first sample is later than
   % the trigger.
   
-  % here we want to use the start of the recording as t=0
-  newtrl(:,3) = newtrl(:,1) - 1;
+  % identify the input trials that indicate the start of the new output trials
+  % and update the offset of the output trials
+  [ix, i_in, i_out] = intersect(data.sampleinfo, newtrl(:,1));
+  assert(isequal(i_out, (1:size(newtrl,1))'));
+  for i=1:numel(i_out)
+    newtrl(i_out(i), 3) = round(data.fsample.*data.time{i_in(i)}(1));
+  end
   
   tmpcfg = keepfields(cfg, {'feedback', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
   tmpcfg.trl = newtrl;

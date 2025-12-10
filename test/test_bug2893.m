@@ -1,10 +1,11 @@
 function test_bug2893
 
 % WALLTIME 00:10:00
-% MEM 2gb
+% MEM 1gb
 % DEPENDENCY ft_read_cifti
+% DATA private
 
-filename = dccnpath('/home/common/matlab/fieldtrip/data/test/bug2893/177746_MEG_Motort_tmegconne_[LM-TEMG-RH]_[CM-imcoh]_[FB-alpha].imcoh.Yeo11.pconnseries.nii');
+filename = dccnpath('/project/3031000.02/test/bug2893/177746_MEG_Motort_tmegconne_[LM-TEMG-RH]_[CM-imcoh]_[FB-alpha].imcoh.Yeo11.pconnseries.nii');
 
 cii = ft_read_cifti(filename);
 

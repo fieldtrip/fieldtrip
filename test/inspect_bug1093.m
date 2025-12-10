@@ -1,12 +1,15 @@
 function inspect_bug1093
 
+% WALLTIME 00:10:00
+% MEM 1gb
 % DEPENDENCY ft_artifact_zvalue
+% DATA private
 
 % the original bug was that ft_artifact_zvalue does not adjust the detected
 % artifacts when the threshold is adjusted
 
 % use the data for bug1027
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test'))
+cd(dccnpath('/project/3031000.02/test'))
 load bug1027.mat
 
 cfg = [];

@@ -1,10 +1,11 @@
 function test_bug1443
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_rejectcomponent ft_componentanalysis
+% DATA private
 
-load(dccnpath('/home/common/matlab/fieldtrip/data/test/latest/raw/meg/preproc_ctf151.mat'));
+load(dccnpath('/project/3031000.02/test/latest/raw/meg/preproc_ctf151.mat'));
 
 cfg = [];
 cfg.method = 'fastica';
@@ -20,7 +21,7 @@ rej1 = ft_rejectcomponent(cfg, comp, data);
 rej2 = ft_rejectcomponent(cfg, comp);
 
 norm(rej2.grad.tra-rej1.grad.tra)/norm(rej2.grad.tra);
-figure; imagesc(rej2.grad.tra - rej1.grad.tra); caxis([-1 1])
+figure; imagesc(rej2.grad.tra - rej1.grad.tra); clim([-1 1])
 
 load standard_sourcemodel3d10mm
 load standard_singleshell

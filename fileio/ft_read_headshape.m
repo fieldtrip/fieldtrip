@@ -28,6 +28,7 @@ function [shape] = ft_read_headshape(filename, varargin)
 %   'surface'     = specific surface to be read (only for Caret spec files)
 %   'refine'      = number, used for refining Structure Sensor meshes (default = 1)
 %   'jmeshopt'    = cell-array with {'name', 'value'} pairs, options for reading JSON/JMesh files
+%   'meshtype'    = string, which type of mesh to read in case the file contains multiple types, can be 'tri', 'tet' or 'hex'
 %
 % Supported input file formats include
 %   'gifti'           see https://www.nitrc.org/projects/gifti/
@@ -69,7 +70,7 @@ function [shape] = ft_read_headshape(filename, varargin)
 %
 % See also FT_READ_HEADMODEL, FT_READ_SENS, FT_READ_ATLAS, FT_WRITE_HEADSHAPE
 
-% Copyright (C) 2008-2023, Robert Oostenveld
+% Copyright (C) 2008-2025, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -99,6 +100,7 @@ unit           = ft_getopt(varargin, 'unit');
 image          = ft_getopt(varargin, 'image');               % path to .jpg file
 surface        = ft_getopt(varargin, 'surface');
 refine_        = ft_getopt(varargin, 'refine', 1);           % do not confuse with the private/refine function
+meshtype       = ft_getopt(varargin, 'meshtype');            % tri, tet or hex
 
 % Check the input, if filename is a cell-array, call FT_READ_HEADSHAPE recursively and combine the outputs.
 % This is used to read the left and right hemisphere of a Freesurfer cortical segmentation.
@@ -208,6 +210,12 @@ if iscell(filename)
   return
 end % if iscell
 
+% some of the code does not work well on matlab strings, (i.e. "" vs ''),
+% specifically ["a" "b"] yields something different than ['a' 'b'].
+if isstring(filename)
+  filename = char(filename);
+end
+
 % optionally get the data from the URL and make a temporary local copy
 filename = fetch_url(filename);
 
@@ -310,9 +318,11 @@ switch fileformat
     if ~isempty(rest)
       for i = 4:size(fid,1)
         shape.fid.label{i} = ['fiducial' num2str(i)];
-        % in a 5 coil configuration this corresponds with Cz and Inion
+        % in a 5 coil configuration this corresponds with Cz and Inion, or
+        % wherever the researcher has placed the coils
       end
     end
+    shape.coordsys = '4d';
 
   case 'itab_asc'
     shape = read_itab_asc(filename);
@@ -433,73 +443,81 @@ switch fileformat
     % read the source space from an MNE file
     ft_hastoolbox('mne', 1);
 
-    src = mne_read_source_spaces(filename, 1);
-
-    if ~isempty(annotationfile)
-      ft_hastoolbox('freesurfer', 1);
-      if numel(annotationfile)~=2
-        ft_error('two annotationfiles expected, one for each hemisphere');
-      end
-      for k = 1:numel(annotationfile)
-        [v{k}, label{k}, c(k)] = read_annotation(annotationfile{k}, 1);
-      end
-
-      % match the annotations with the src structures
-      if src(1).np == numel(label{1}) && src(2).np == numel(label{2})
-        src(1).labelindx = label{1};
-        src(2).labelindx = label{2};
-      elseif src(1).np == numel(label{2}) && src(1).np == numel(label{1})
-        src(1).labelindx = label{2};
-        src(2).labelindx = label{1};
-      else
-        ft_warning('incompatible annotation with triangulations, not using annotation information');
-      end
-      if ~isequal(c(1),c(2))
-        ft_error('the annotation tables differ, expecting equal tables for the hemispheres');
-      end
-      c = c(1);
+    try
+      % a fif-file can also contain a source space that is volumetric, in which case the below function call will fail (due to the add_geom
+      % being specified as true, but the file does not contain triangulation information. strictly speaking, the fif-file then
+      % does not represent a headshape, but as a service to the casual user, let's support the reading of this type of file
+      src = mne_read_source_spaces(filename, 1);
+    catch
+      src = mne_read_source_spaces(filename);
     end
 
-    shape = [];
-    % only keep the points that are in use
-    inuse1 = src(1).inuse==1;
-    inuse2 = src(2).inuse==1;
-    shape.pos=[src(1).rr(inuse1,:); src(2).rr(inuse2,:)];
+    if numel(src)==2
+      if ~isempty(annotationfile)
+        ft_hastoolbox('freesurfer', 1);
+        if numel(annotationfile)~=2
+          ft_error('two annotationfiles expected, one for each hemisphere');
+        end
+        for k = 1:numel(annotationfile)
+          [v{k}, label{k}, c(k)] = read_annotation(annotationfile{k}, 1);
+        end
 
-    % only keep the triangles that are in use; these have to be renumbered
-    newtri1 = src(1).use_tris;
-    newtri2 = src(2).use_tris;
-    for i=1:numel(src(1).vertno)
-      newtri1(newtri1==src(1).vertno(i)) = i;
-    end
-    for i=1:numel(src(2).vertno)
-      newtri2(newtri2==src(2).vertno(i)) = i;
-    end
-    shape.tri  = [newtri1; newtri2 + numel(src(1).vertno)];
-    if isfield(src(1), 'use_tri_area')
-      shape.area = [src(1).use_tri_area(:); src(2).use_tri_area(:)];
-    end
-    if isfield(src(1), 'use_tri_nn')
-      shape.nn = [src(1).use_tri_nn; src(2).use_tri_nn];
-    end
-    shape.orig.pos = [src(1).rr; src(2).rr];
-    shape.orig.tri = [src(1).tris; src(2).tris + src(1).np];
-    shape.orig.inuse = [src(1).inuse src(2).inuse]';
-    shape.orig.nn    = [src(1).nn; src(2).nn];
-    if isfield(src(1), 'labelindx')
-      shape.orig.labelindx = [src(1).labelindx;src(2).labelindx];
-      shape.labelindx      = [src(1).labelindx(inuse1); src(2).labelindx(inuse2)];
-      %      ulabelindx = unique(c.table(:,5));
-      %       for k = 1:c.numEntries
-      %         % the values are really high (apart from the 0), so I guess it's safe to start
-      %         % numbering from 1
-      %         shape.orig.labelindx(shape.orig.labelindx==ulabelindx(k)) = k;
-      %         shape.labelindx(shape.labelindx==ulabelindx(k)) = k;
-      %       end
-      % FIXME the above screws up the interpretation of the labels, because the color table is not sorted
-      shape.label = c.struct_names;
-      shape.annotation = c.orig_tab; % to be able to recover which one
-      shape.ctable = c.table;
+        % match the annotations with the src structures
+        if src(1).np == numel(label{1}) && src(2).np == numel(label{2})
+          src(1).labelindx = label{1};
+          src(2).labelindx = label{2};
+        elseif src(1).np == numel(label{2}) && src(1).np == numel(label{1})
+          src(1).labelindx = label{2};
+          src(2).labelindx = label{1};
+        else
+          ft_warning('incompatible annotation with triangulations, not using annotation information');
+        end
+        if ~isequal(c(1),c(2))
+          ft_error('the annotation tables differ, expecting equal tables for the hemispheres');
+        end
+        c = c(1);
+      end
+
+      shape = [];
+      % only keep the points that are in use
+      inuse1 = src(1).inuse==1;
+      inuse2 = src(2).inuse==1;
+      shape.pos=[src(1).rr(inuse1,:); src(2).rr(inuse2,:)];
+
+      % only keep the triangles that are in use; these have to be renumbered
+      newtri1 = src(1).use_tris;
+      newtri2 = src(2).use_tris;
+      for i=1:numel(src(1).vertno)
+        newtri1(newtri1==src(1).vertno(i)) = i;
+      end
+      for i=1:numel(src(2).vertno)
+        newtri2(newtri2==src(2).vertno(i)) = i;
+      end
+      shape.tri  = [newtri1; newtri2 + numel(src(1).vertno)];
+      if isfield(src(1), 'use_tri_area')
+        shape.area = [src(1).use_tri_area(:); src(2).use_tri_area(:)];
+      end
+      if isfield(src(1), 'use_tri_nn')
+        shape.nn = [src(1).use_tri_nn; src(2).use_tri_nn];
+      end
+      shape.orig.pos = [src(1).rr; src(2).rr];
+      shape.orig.tri = [src(1).tris; src(2).tris + src(1).np];
+      shape.orig.inuse = [src(1).inuse src(2).inuse]';
+      shape.orig.nn    = [src(1).nn; src(2).nn];
+      if isfield(src(1), 'labelindx')
+        shape.orig.labelindx = [src(1).labelindx;src(2).labelindx];
+        shape.labelindx      = [src(1).labelindx(inuse1); src(2).labelindx(inuse2)];
+        shape.label          = c.struct_names;
+        shape.annotation     = c.orig_tab; % to be able to recover which one
+        shape.ctable         = c.table;
+      end
+    else
+      ft_warning('the fif-file did not seem to contain triangulation information, probably you try to read a volumetric source space');
+
+      shape        = [];
+      shape.pos    = src.rr;
+      shape.inside = src.inuse(:)>0;
+      shape.dim    = pos2dim3d(src.rr);
     end
 
   case {'neuromag_fif' 'neuromag_mne'}
@@ -507,38 +525,27 @@ switch fileformat
     orig = read_neuromag_hc(filename);
     switch coordsys
       case 'head'
-        fidN=1;
-        posN=1;
-        for i=1:size(orig.head.pos,1)
-          if strcmp(orig.head.label{i}, 'LPA') || strcmp(orig.head.label{i}, 'Nasion') || strcmp(orig.head.label{i}, 'RPA')
-            shape.fid.pos(fidN,1:3) = orig.head.pos(i,:);
-            shape.fid.label{fidN} = orig.head.label{i};
-            fidN = fidN + 1;
-          else
-            shape.pos(posN,1:3) = orig.head.pos(i,:);
-            shape.label{posN} = orig.head.label{i};
-            posN = posN + 1;
-          end
-        end
-        shape.coordsys = orig.head.coordsys;
+        orig = orig.head;
       case 'dewar'
-        fidN=1;
-        posN=1;
-        for i=1:size(orig.dewar.pos,1)
-          if strcmp(orig.dewar.label{i}, 'LPA') || strcmp(orig.dewar.label{i}, 'Nasion') || strcmp(orig.dewar.label{i}, 'RPA')
-            shape.fid.pos(fidN,1:3) = orig.dewar.pos(i,:);
-            shape.fid.label{fidN} = orig.dewar.label{i};
-            fidN = fidN + 1;
-          else
-            shape.pos(posN,1:3) = orig.dewar.pos(i,:);
-            shape.label{posN} = orig.dewar.label{i};
-            posN = posN + 1;
-          end
-        end
-        shape.coordsys = orig.dewar.coordsys;
+        orig = orig.dewar;
       otherwise
         ft_error('incorrect coordinates specified');
     end
+
+    fidN=1;
+    posN=1;
+    for i=1:size(orig.pos,1)
+      if strcmp(orig.label{i}, 'LPA') || strcmp(orig.label{i}, 'Nasion') || strcmp(orig.label{i}, 'RPA')
+        shape.fid.pos(fidN,1:3) = orig.pos(i,:);
+        shape.fid.label{fidN} = orig.label{i};
+        fidN = fidN + 1;
+      else
+        shape.pos(posN,1:3) = orig.pos(i,:);
+        shape.label{posN} = orig.label{i};
+        posN = posN + 1;
+      end
+    end
+    shape.coordsys = orig.coordsys;
 
   case {'ricoh_mrk', 'ricoh_ave', 'ricoh_con'}
     hdr = read_ricoh_header(filename);
@@ -1087,9 +1094,14 @@ switch fileformat
     end
 
   case 'vtk'
-    [pos, tri] = read_vtk(filename);
+    [pos, tri, attr] = read_vtk(filename);
     shape.pos = pos;
-    shape.tri = tri;
+    if ~isempty(tri)
+      shape.tri = tri;
+    end
+    if ~isempty(attr)
+      shape.data = attr;
+    end
 
   case 'vtk_xml'
     data = read_vtk_xml(filename);
@@ -1362,6 +1374,46 @@ switch fileformat
       end
     end
 
+    hastri = isfield(shape, 'tri');
+    hastet = isfield(shape, 'tet');
+    
+    if isempty(meshtype)
+      if hastri && hastet
+        ft_warning('mesh has both tri and tet, returning tet');
+        meshtype = 'tet';
+      elseif hastet
+        meshtype = 'tet';
+      elseif hastri
+        meshtype = 'tri';
+      end
+    end
+
+    if isfield(shape, 'triangle_regions')
+      if strcmp(meshtype, 'tri')
+        % use this as the tissue type when keeping triangles
+        shape.tissue = shape.triangle_regions;
+      end
+      shape = rmfield(shape, 'triangle_regions');
+    end
+
+    if isfield(shape, 'tetrahedron_regions')
+      if strcmp(meshtype, 'tet')
+        % use this as the tissue type when keeping tetrahedrons
+        shape.tissue = shape.tetrahedron_regions;
+      end
+      shape = rmfield(shape, 'tetrahedron_regions');
+    end
+
+    if isfield(shape, 'tissue')
+      if all(shape.tissue(:)>999)
+        % this is the case for surface meshes with triangles
+        shape.tissue = shape.tissue-1000;
+      end
+      [labels, values, rgba] = simnibs_labels;
+      shape.tissuelabel = labels;
+      shape.rgba = rgba; % this is consistent with FT_READ_ATLAS
+    end
+
   case 'gmsh_binary_v1'
     % use Jan-Mathijs' reader, this only works for binary files but does read all gmsh properties/tags
     [nodes, elements] = read_gmsh_binary(filename);
@@ -1579,3 +1631,82 @@ shape = fixpos(shape);
 
 % ensure that the numerical arrays are represented in double precision and not as integers
 shape = ft_struct2double(shape);
+
+% determine which types of meshes to keep if there are multiple
+hastri = isfield(shape, 'tri');
+hastet = isfield(shape, 'tet');
+hashex = isfield(shape, 'hex');
+
+if (hastri+hastet+hashex)>1
+  % there are multiple types of meshes
+  % this also allows for specifications like 'tri+tet'
+  if  hastri && ~strcmp(meshtype, 'tri')
+    if isempty(meshtype)
+      ft_warning('removing surface mesh (tri), use the ''meshtype'' option to keep it')
+    end
+    shape = removefields(shape, 'tri');
+  elseif hastet && ~strcmp(meshtype, 'tet')
+    if isempty(meshtype)
+      ft_warning('removing tetrahedral mesh (tet), use the ''meshtype'' option to keep it')
+    end
+    shape = removefields(shape, 'tet');
+  elseif hashex && ~strcmp(meshtype, 'hex')
+    if isempty(meshtype)
+      ft_warning('removing hexahedral mesh (hex), use the ''meshtype'' option to keep it')
+    end
+    shape = removefields(shape, 'hex');
+  end
+
+end % if multiple types of meshes
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function [labels, values, rgba] = simnibs_labels
+% the following is from the final_tissues_LUT.txt and the .msh.opt files
+% the values should be offset with 1000 in case of triangles
+
+values = [
+  1
+  2
+  3
+  4
+  5
+  6
+  7
+  8
+  9
+  100
+  500
+  ];
+
+labels = {
+  'WM'
+  'GM'
+  'CSF'
+  'Bone'
+  'Scalp'
+  'Eye_balls'
+  'Compact_bone'
+  'Spongy_bone'
+  'Blood'
+  'Muscle'
+  'Electrode'
+  'Saline_or_gel'
+  };
+
+rgba = [
+  230 230 230 255
+  129 129 129 255
+  104 163 255 255
+  255 239 179 255
+  255 166 133 255
+  255 240 0 255
+  255 239 179 255
+  255 138 57 255
+  0 65 142 255
+  0 118 14 255
+  37 79 255 255
+  103 255 226 255
+  ];
+

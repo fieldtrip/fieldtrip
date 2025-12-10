@@ -1,8 +1,9 @@
 function test_bug1836
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_datatype_segmentation ft_prepare_mesh ft_write_headshape
+% DATA no
 
 % this bugscript does not need to run automatically, because the problem is
 % that ft_write_headshape does not write hexahedral meshes in the proper
@@ -78,7 +79,7 @@ ft_plot_mesh(mesh2,'facealpha',0.5); % rubiks cube, rotate it to see it well
 ft_write_headshape('mesh1cube',mesh1,'format','ply')
 ft_write_headshape('mesh27cube',mesh2,'format','ply')
 
-%% do the same with a tetraheder
+%% do the same with a tetrahedron
 mesh = [];
 mesh.pnt = [
   0 0 0

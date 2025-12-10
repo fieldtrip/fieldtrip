@@ -1,8 +1,9 @@
 function test_ft_combineplanar
 
 % WALLTIME 00:20:00
-% MEM 2gb
+% MEM 1gb
 % DEPENDENCY ft_combineplanar ft_preprocessing ft_timelockanalysis ft_prepare_neighbours ft_megplanar
+% DATA no
 
 headmodel = [];
 headmodel.r = 0.09;

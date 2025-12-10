@@ -1,12 +1,13 @@
 function test_bug3267
 
 % WALLTIME 00:10:00
-% MEM 4gb
+% MEM 2gb
 % DEPENDENCY
+% DATA public
 
 % this script tests that the trialinfo is properly dealt with in the ft_appendxxx functions
 
-dataset = dccnpath('/home/common/matlab/fieldtrip/data/ftp/test/ctf/Subject01.ds');
+dataset = dccnpath('/project/3031000.02/external/download/test/ctf/Subject01.ds');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% raw data

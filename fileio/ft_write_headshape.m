@@ -36,6 +36,8 @@ function ft_write_headshape(filename, mesh, varargin)
 %   'tetgen'          see https://wias-berlin.de/software/tetgen/
 %   'vista'           see http://www.cs.ubc.ca/nest/lci/vista/vista.html
 %   'vtk'             Visualization ToolKit file format, for use with Paraview
+%   'dgf'             Duneuro geometry file format, for hexahedral meshes (uses io function from Brainstorm)
+%   'geo'             Cauchy geometry file format (simbio), for tetrahedral meshes (uses io function from Brainstorm)
 %
 % See also FT_READ_HEADSHAPE, FT_WRITE_DATA, FT_WRITE_MRI, FT_WRITE_SENS
 
@@ -51,7 +53,7 @@ function ft_write_headshape(filename, mesh, varargin)
 %   'AnatomicalStructurePrimary'   (e.g. 'CortexLeft'),
 %   'AnatomicalStructureSecondary' (e.g. 'MidLayer')
 
-% Copyright (C) 2011-2023, Lilla Magyari & Robert Oostenveld
+% Copyright (C) 2011-2024, Lilla Magyari & Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -309,6 +311,34 @@ switch fileformat
     else
       savebj('', jmesh, 'filename', filename, 'compression', 'zlib', extraopt{:});
     end
+  case 'geo'
+    ft_hastoolbox('brainstorm', 1);
+
+    tmpmesh.Elements = mesh.tet;
+    tmpmesh.Vertices = mesh.pos;
+
+    [p,f,e] = fileparts(filename);
+    if isempty(e)
+      filename = fullfile(p,f,'.geo');
+    end
+    out_fem_geo(tmpmesh, filename);
+
+  case 'dgf'
+    ft_hastoolbox('brainstorm', 1);
+    
+    tmpmesh.Elements = mesh.hex;
+    tmpmesh.Vertices = mesh.pos;
+    if ~isempty(data) && size(data,1)==size(mesh.hex,1)
+      tmpmesh.Tissue = data;
+    else
+      tmpmesh.Tissue = ones(size(mesh.hex,1),1);
+    end
+    
+    [p,f,e] = fileparts(filename);
+    if isempty(e)
+      filename = fullfile(p,f,'.dgf');
+    end
+    out_fem_dgf(tmpmesh, filename);
 
   case []
     ft_error('no output format specified');

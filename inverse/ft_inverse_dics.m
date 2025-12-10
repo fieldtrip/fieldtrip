@@ -31,7 +31,7 @@ function [estimate] = ft_inverse_dics(sourcemodel, sens, headmodel, dat, C, vara
 %   'keepfilter'       = remember the beamformer filter,                can be 'yes' or 'no'
 %   'keepleadfield'    = remember the forward computation,              can be 'yes' or 'no'
 %   'keepcsd'          = remember the estimated cross-spectral density, can be 'yes' or 'no'
-%   'weightnorm'       = normalize the beamformer weights,              can be 'no', 'unitnoisegain' or 'nai'
+%   'weightnorm'       = normalize the beamformer weights,              can be 'no', 'unitnoisegain', 'arraygain', or 'nai'
 %
 % These options influence the forward computation of the leadfield
 %   'reducerank'      = 'no' or number (default = 3 for EEG, 2 for MEG)
@@ -180,8 +180,8 @@ end
 if hasfilter
   % check that the options normalize/reducerank/etc are not specified
   assert(all(cellfun(@isempty, leadfieldopt(2:2:end))), 'the options for computing the leadfield must all be empty/default');
-  % check that lambda is not specified
-  assert(isempty(lambda), 'the options for computing the filter must all be empty/default');
+  % check that the options for the inversion are not specified
+  assert(all(cellfun(@isempty, invopt(4:2:end))) && invopt{2}==0, 'the options for computing the inverse solution must all be empty/default');
   ft_info('using precomputed filters\n');
   sourcemodel.filter = sourcemodel.filter(originside);
 elseif hasleadfield
@@ -336,21 +336,24 @@ if strcmp(submethod, 'dics_refdip')
       case 'nai'
         % Van Veen's Neural Activity Index
         ft_error('vector version of nai weight normalization is not implemented');
+
       case 'unitnoisegain'
         % filt*filt' = I
         % Unit-noise gain minimum variance (aka Borgiotti-Kaplan) beamformer
         denom = pinv(lf1' * invC * lf1);
         gamma = denom * (lf1' * invC_squared * lf1) * denom;
-        
         % compute the spatial filter, as per eqn. 4.85
         filt1 = diag(1./sqrt(diag(gamma))) * denom * lf1' * invC;
+      
       case 'arraygain'
         % filt*lf = ||lf||, applies to scalar leadfield, and to one of the possibilities of the vector version, eqn. 4.75
         lfn   = lf1./norm(lf1);
         filt1 = pinv(lfn' * invC * lfn) * lfn' * invC; % S&N eqn. 4.09 (scalar version), and eqn. 4.75 (vector version)
+      
       case {'unitgain' 'no'}
         % this is the 'standard' unit gain constraint spatial filter: filt*lf=I, applies both to vector and scalar leadfields
         filt1 = pinv(lf1' * invC * lf1) * lf1' * invC; % Gross eqn. 3 & van Veen eqn. 23, use PINV/SVD to cover rank deficient leadfield
+      
       otherwise
         ft_error('unsupported option for weightnorm');
     end
@@ -415,7 +418,7 @@ for i=1:size(sourcemodel.pos,1)
     end
     
     if fixedori
-      switch(weightnorm)
+      switch weightnorm
         case {'unitnoisegain','nai'}
           % optimal orientation calculation for unit-noise gain beamformer,
           % (also applies nai weightnorm constraint), based on equation 4.47 from Sekihara & Nagarajan (2008)
@@ -466,6 +469,7 @@ for i=1:size(sourcemodel.pos,1)
         else
           ft_error('vector version of nai weight normalization is not implemented');
         end
+
       case 'unitnoisegain'
         % filt*filt' = I
         % Unit-noise gain minimum variance (aka Borgiotti-Kaplan) beamformer
@@ -478,20 +482,21 @@ for i=1:size(sourcemodel.pos,1)
           % compute the matrix that is used for scaling of the filter's rows, as per eqn. 4.83
           denom = pinv(lf' * invC * lf);
           gamma = denom * (lf' * invC_squared * lf) * denom;
-          
           % compute the spatial filter, as per eqn. 4.85
           filt = diag(1./sqrt(diag(gamma))) * denom * lf' * invC;
         end
+
       case 'arraygain'
         % filt*lf = ||lf||, applies to scalar leadfield, and to one of the possibilities of the vector version, eqn. 4.75
         lfn  = lf./norm(lf);
         filt = pinv(lfn' * invC * lfn) * lfn' * invC; % S&N eqn. 4.09 (scalar version), and eqn. 4.75 (vector version)
-        
+      
       case {'unitgain' 'no'}
         % this is the 'standard' unit gain constraint spatial filter: filt*lf=I, applies both to vector and scalar leadfields
         filt = pinv(lf' * invC * lf) * lf' * invC; % Gross eqn. 3 & van Veen eqn. 23, use PINV/SVD to cover rank deficient leadfield
-        
+      
       otherwise
+        ft_error('invalid option for weightnorm')
     end
   end
   
@@ -568,7 +573,7 @@ ft_progress('close');
 estimate.inside  = originside;
 estimate.pos     = origpos;
 
-fnames_cell   = {'leadfield' 'filter' 'ori' 'csd' 'noisecsd' 'subspace'};
+fnames_cell = {'leadfield' 'filter' 'ori' 'csd' 'noisecsd' 'subspace'};
 for k = 1:numel(fnames_cell)
   if isfield(estimate, fnames_cell{k})
     estimate.(fnames_cell{k})( originside) = estimate.(fnames_cell{k});

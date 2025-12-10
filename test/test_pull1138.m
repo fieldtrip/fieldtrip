@@ -1,11 +1,12 @@
 function test_pull1138
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_sourceplot ft_plot_cloud
+% DATA no
 
-load('/home/common/matlab/fieldtrip/data/ftp/tutorial/human_ecog/SubjectUCI29/SubjectUCI29_freq.mat');
-cortex = load('/home/common/matlab/fieldtrip/data/ftp/tutorial/human_ecog/SubjectUCI29/SubjectUCI29_hull_lh.mat');
+load('/project/3031000.02/external/download/tutorial/human_ecog/SubjectUCI29/SubjectUCI29_freq.mat');
+cortex = load('/project/3031000.02/external/download/tutorial/human_ecog/SubjectUCI29/SubjectUCI29_hull_lh.mat');
 
 %%
 

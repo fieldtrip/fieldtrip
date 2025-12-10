@@ -1,8 +1,9 @@
 function test_bug2160
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY ft_multiplotER ft_selectdata
+% DATA no
 
 %%
 
@@ -103,7 +104,7 @@ try
   caughterror = false;
   cfg = [];
   cfg.layout = 'CTF275.lay';
-  ft_multiplotER(cfg, f1, f14);
+  ft_multiplotER(cfg, f1, f4);
 catch
   caughterror = true;
 end

@@ -1,8 +1,9 @@
 function test_warning_once
 
-% MEM 2gb
+% MEM 1gb
 % WALLTIME 00:10:00
 % DEPENDENCY
+% DATA private
 
 warning1 = 'hululu';
 warning2 = 'aloah hey';

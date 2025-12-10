@@ -1,10 +1,11 @@
 function test_pull783
 
 % WALLTIME 00:10:00
-% MEM 2gb
+% MEM 1gb
 % DEPENDENCY
+% DATA public
 
-filename = dccnpath('/home/common/matlab/fieldtrip/data/ftp/tutorial/epilepsy/raw/case2/neuromag/case2_sss.fif');
+filename = dccnpath('/project/3031000.02/external/download/tutorial/epilepsy/raw/case2/neuromag/case2_sss.fif');
 
 % Idee, split half voor een enkel kanaaltype, sommige in m en andere in cm
 

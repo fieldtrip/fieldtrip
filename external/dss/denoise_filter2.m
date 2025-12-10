@@ -21,8 +21,8 @@ function [params, s_new] = denoise_filter2(params, s, state)
 if nargin<2
     params.name = 'Generic filter';
     params.description = 'Generic filter function for convolutive, DCT, FFT, and filtfilt filtering';
-    params.param = {'filter_conv', 'filter_dct', 'filter_fft' 'filter_filtfilt'};
-    params.param_value ={[], [], []};
+    params.param = {'filter_conv', 'filter_dct', 'filter_fft' 'filter_filtfilt', 'filter_dft'};
+    params.param_value ={[], [], [], [], []};
     params.param_type = {'vector', 'vector', 'vector'};
     params.param_desc = {'Convolution coefficients', 'DCT filter coefficients', 'FFT filter coefficients', 'filtfilt coefficients'};
     params.approach = {'pca', 'defl', 'symm'};
@@ -90,6 +90,25 @@ elseif isfield(params, 'filter_bandpass')
       tmp  = s(:,indx);
       tmp  = tmp - mean(tmp,2)*ones(1,numel(indx));
       s_new(:,indx) = ft_preproc_bandpassfilter(tmp, params.filter_bandpass.fsample, params.filter_bandpass.bpfreq);
+    end
+  end
+elseif isfield(params, 'filter_dft')
+  if iscell(s)
+    s_new = s;
+    dobp = size(params.filter_dft.dftfreq,1)==1;
+    for k = 1:numel(s)
+      tmp = bsxfun(@minus,s{k},mean(s{k},2));
+      s_new{k} = s{k} - ft_preproc_dftfilter(tmp, params.filter_dft.fsample, params.filter_dft.dftfreq);
+    end
+  else
+    tr_begin = params.tr_begin(:);
+    tr_end   = params.tr_end(:);
+    s_new    = zeros(size(s));
+    for k = 1:numel(tr_begin)
+      indx = tr_begin(k):tr_end(k);
+      tmp  = s(:,indx);
+      tmp  = tmp - mean(tmp,2)*ones(1,numel(indx));
+      s_new(:,indx) = tmp - ft_preproc_dftfilter(tmp, params.filter_dft.fsample, params.filter_dft.dftfreq);
     end
   end
 elseif isfield(params, 'filter_highpass')

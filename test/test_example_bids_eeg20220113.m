@@ -1,7 +1,8 @@
 function test_example_bids_eeg
 
-% MEM 4gb
+% MEM 2gb
 % WALLTIME 00:10:00
+% DATA public
 
 
 
@@ -39,7 +40,7 @@ for subindx=1:numel(sub)
   cfg.datatype  = 'eeg';
 
   % specify the input file name, here we are using the same file for every subject
-  cfg.dataset   = dccnpath('/home/common/matlab/fieldtrip/data/ftp/example/bids_eeg/original/Eeglab_data.set');
+  cfg.dataset   = dccnpath('/project/3031000.02/external/download/example/bids_eeg/original/Eeglab_data.set');
 
   % specify the output directory
   cfg.bidsroot  = fullfile(tempdir,'bids');
@@ -102,7 +103,7 @@ for subindx=1:numel(sub)
       cfg.datatype  = 'eeg';
 
       % specify the input file name, here we are using the same file for every subject
-      cfg.dataset   = dccnpath('/home/common/matlab/fieldtrip/data/ftp/example/bids_eeg/original/Eeglab_data.set');
+      cfg.dataset   = dccnpath('/project/3031000.02/external/download/example/bids_eeg/original/Eeglab_data.set');
 
       % specify the output directory
       cfg.bidsroot  = fullfile(tempdir,'bids');

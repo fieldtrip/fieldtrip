@@ -1,10 +1,11 @@
 function test_bug1992
 
 % WALLTIME 00:10:00
-% MEM 3gb
+% MEM 1gb
 % DEPENDENCY ft_filetype ft_read_headshape ft_write_headshape loadjson savejson loadbj savebj jsonopt
+% DATA private
 
-cd(dccnpath('/home/common/matlab/fieldtrip/data/test/original/mesh/jmesh'));
+cd(dccnpath('/project/3031000.02/test/original/mesh/jmesh'));
 
 %%
 % see https://github.com/NeuroJSON/JMeshSamples
