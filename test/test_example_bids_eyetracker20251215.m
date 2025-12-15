@@ -1,27 +1,20 @@
-function test_example_bids_eyetracker
+function test_example_bids_eyetracker_20251215
 
 % MEM 2gb
 % WALLTIME 00:20:00
 % DATA public
 
+% The [BIDS standard](https://www.bids-standard.org) does currently not specify how to represent eye tracker data, but an extension is discussed [here](https://github.com/bids-standard/bids-specification/discussions/2218). This example - and the support that is implemented in the **[data2bids](/reference/data2bids)** function - should be considered as a preliminary proposal to help researchers with their existing data.
 %
-%% Converting an example eye tracker dataset for sharing in BIDS
+% Eye tracking data can be stored in the BIDS representation similar to [physiological data](https://bids-specification.readthedocs.io/en/latest/modality-specific-files/physiological-recordings.html). This not only includes continuously sampled variables like the gaze position and pupil diameter to be stored in the physio.tsv file, but also allows for presentation (stimulus and response events) and saccades to be represented in the physioevents.tsv file.
 %
-% The [BIDS standard](https://bids.neuroimaging.io) does currently not specify how to represent eye tracker data. This example - and the support that is implemented in the **[data2bids](https://github.com/fieldtrip/fieldtrip/blob/release/data2bids.m)** function - should be considered as a preliminary proposal to help researchers with their existing data. This example may also serve to start a discussion on whether and how this data type should be added to the [BIDS specification](http://bids-specification.readthedocs.io/).
+% The physio.json file should contain additional metadata information such as whether both eyes or only one was tracked, the sapling rate, if and how pupil diameter is quantified, what calibration process was used, how to interpret the gaze position (pixels, degrees), whether the origin is at the center of the screen or the upper left corner, etc.
 %
-% Eye tracking data can be stored in the BIDS representation similar to [behavioral data](https://bids-specification.readthedocs.io/en/stable/04-modality-specific-files/07-behavioral-experiments.html). This not only includes the gaze position, pupil diameter, but also allows for presentation (stimulus and response events) and saccades to be represented in the events.tsv file.
-%
-% Rather than storing the eye tracker data as generic pysiological data in the `_pysio.tsv` file, the implementation of **[data2bids](https://github.com/fieldtrip/fieldtrip/blob/release/data2bids.m)** allows it to be specified as eyetracker data, resulting it to be written in an `_eyetracker.tsv` file, with an associated `_eyetracker.json` file with metadata details on the equipment and experiment.
-%
-% Information that need to be further considered to be documented in the metadata is for example whether both eyes or only one was tracked, sapling rate, if and how pupil diameter is quantified, what calibration process was used, how to interpret the gaze position (pixels, degrees), whether the origin is at the center of the screen or the upper left corner, etc.
-%
-% If the online analysis in the eye tracker software also detects blinks, saccades, and other events with a distinct time (i.e. non-continuous), those can also be added to the `_events.tsv` file.
-%
-% All data for the following examples is available from our [FTP server](ftp://ftp.fieldtriptoolbox.org/pub/fieldtrip/example/bids_eyetracker/).
+% All data for the following examples is available from our [download server](https://download.fieldtriptoolbox.org/example/bids_eyetracker/).
 %
 % The examples includes the original log files under the “original” directory. It also has a copy of the script to do the conversion under “code”. The reorganized data is under the “bids” directory. According to [the documentation](https://bids-specification.readthedocs.io/en/stable/02-common-principles.html#source-vs-raw-vs-derived-data) the original data can be added to the BIDS dataset under the “sourcedata” directory and code can be added to the “code” directory. This way no information is lost and the conversion/reorganization is fully reproducible.
 %
-% In general: if your original data is in a different format than the BIDS representation (e.g., DICOM instead of NIFTI, or the original binary data from the eye tracker software), you probably want  to keep a copy of the original data as well, e.g., on a data acquisition collection on the Donders Repository. If it is in the same format (which is not the case here), you could simply delete the original data after conversion. In either case - your own analyses and the shared data would be based on the BIDS representation.
+% In general: if your original data is in a different format than the BIDS representation (e.g., DICOM instead of NIfTI, or the original binary data from the eye tracker software), you probably want  to keep a copy of the original data as well, e.g., on a data acquisition collection on the Donders Repository. If it is in the same format (which is not the case here), you could simply delete the original data after conversion. In either case - your own analyses and the shared data would be based on the BIDS representation.
 %
 % There are numerous eye tracking systems, such as SR Research EyeLink, Tobii, EyeTech, GazePoint, SmartEye and Pupil Labs. We cannot provide examples for all of them, but in principle data from each system would be stored in the same standard BIDS representation, allowing it to be reused by others.
 %
@@ -31,9 +24,11 @@ function test_example_bids_eyetracker
 %
 % The SR Research  EyeLink system records the data in a binary file with the extension `.edf`. This is not to be confused with the European Data Format (https://www.edfplus.info) for EEG and other biological and physical signals. The proprietary EyeLink edf format cannot be read in open source software, but SR Research provides a tool called `edf2asc.exe` that converts the data to ASCII format. The ASCII format is still difficult to work with and represents a mixture of continuous gaze and pupil diameter parameters with discontinuous events, such as fixation, loss of tracking, etc.
 %
-% FieldTrip can read the EyeLink `.asc` format. The gaze and/or pupil diameter are represented as continuous raw channels (accessible using **[ft_read_data](https://github.com/fieldtrip/fieldtrip/blob/release/fileio/ft_read_data.m)** and **[ft_preprocessing](https://github.com/fieldtrip/fieldtrip/blob/release/ft_preprocessing.m)**), the other information is represented as events (using **[ft_read_event](https://github.com/fieldtrip/fieldtrip/blob/release/fileio/ft_read_event.m)** and **[ft_definetrial](https://github.com/fieldtrip/fieldtrip/blob/release/ft_definetrial.m)**). For more details you can see [this page](/getting_started/eyelink). In the examples below we use **[data2bids](https://github.com/fieldtrip/fieldtrip/blob/release/data2bids.m)** to read the `.asc` files and convert the data to a simple `_eyetracker.tsv` file for the continuous gaze and pupil diameter, and an `_events.tsv` file for the discontinuous events.
+% FieldTrip can read the EyeLink `.asc` format. The gaze and/or pupil diameter are represented as continuous raw channels (accessible using **[ft_read_data](/reference/fileio/ft_read_data)** and **[ft_preprocessing](/reference/ft_preprocessing)**), the other information is represented as events (using **[ft_read_event](/reference/fileio/ft_read_event)** and **[ft_definetrial](/reference/ft_definetrial)**). For more details you can see [this page](/getting_started/eyetracker/eyelink). In the examples below we use **[data2bids](/reference/data2bids)** to read the `.asc` files and convert the data to a simple `_eyetracker.tsv` file for the continuous gaze and pupil diameter, and an `_events.tsv` file for the discontinuous events.
 %
 %% ## Short example
+%
+% The data for this example is available from our [download server](https://download.fieldtriptoolbox.org/example/bids_eyetracker/eyelink_short).
 %
 %% this is an example with a short calibration recording
 
@@ -57,15 +52,14 @@ cfg.dataset_description.Funding             = 'n/a';
 cfg.dataset_description.ReferencesAndLinks  = 'n/a';
 cfg.dataset_description.DatasetDOI          = 'n/a';
 
-cfg.method    = 'convert'; % the eyelink-specific format is not supported, convert it to plain TSV
-%cfg.dataset   = './original/ashcal.asc';
-%cfg.bidsroot  = './bids';  % write to the working directory
 cfg.dataset   = dccnpath(fullfile('/project/3031000.02/external/download/example/bids_eyetracker/eyelink_short/original', 'ashcal.asc'));
+cfg.method    = 'convert'; % the eyelink EDF format is not supported, convert the ASC to plain TSV
 cfg.bidsroot  = fullfile(tempdir, 'bids');
-cfg.datatype  = 'eyetracker';
+cfg.suffix    = 'physio';
 cfg.task      = 'calibration';
 
-% this is general metadata that ends up in the _eyetracker.json file
+% this is general metadata that ends up in the _physio.json file
+cfg.PhysioType            = 'eyetrack';
 cfg.TaskDescription       = 'Short calibration procedure';
 cfg.Manufacturer          = 'SR Research';
 cfg.ManufacturerModelName = 'Eyelink 1000';
@@ -90,7 +84,12 @@ data2bids(cfg);
 %
 %% ## Long example
 %
-%% this section specifies the data files
+% The data for this example is available from our [download server](https://download.fieldtriptoolbox.org/example/bids_eyetracker/eyelink_long).
+%
+%% this section specifies the datafiles
+
+% The raw sourcedata for this example can be downloaded from
+% https://doi.org/10.34973/3mdw-jn48 as Experiment 2.
 
 filename = {
   '1_TO_1.asc'
@@ -99,60 +98,58 @@ filename = {
   '2_fh_2.asc'
   '3_ac_1.asc'
   '3_ac_2.asc'
-  '4_ym_1.asc'
-  '4_ym_2.asc'
-  '5_kj_1.asc'
-  '5_kj_2.asc'
-  '6_BS_1.asc'
-  '6_BS_2.asc'
-  '7_aa_1.asc'
-  '7_aa_2.asc'
-  '8_SG_1.asc'
-  '8_sg_2.asc'
-  '9_TE_1.asc'
-  '9_TE_2.asc'
-  '9_te_11.asc'
-  '10_es_1.asc'
-  '10_es_2.asc'
-  '11_AR_1.asc'
-  '11_AR_2.asc'
-  '12_LK_1.asc'
-  '12_LK_11.asc'
-  '12_LK_2.asc'
-  '12_LK_22.asc'
-  '13_JL_1.asc'
-  '13_JL_2.asc'
-  '14_vs_1.asc'
-  '14_vs_2.asc'
-  '15_CL_1.asc'
-  '15_CL_2.asc'
-  '16_MN_1.asc'
-  '16_MN_2.asc'
-  '17_NT_1.asc'
-  '17_NT_2.asc'
-  '18_CL_11.asc'
-  '18_CL_2.asc'
-  '19_AE_1.asc'
-  '19_AE_2.asc'
-  '20_AK_2.asc'
-  '20_PK_1.asc'
-  '21_SY_1.asc'
-  '21_SY_2.asc'
-  '22_VG_1.asc'
-  '22_VG_21.asc'
-  '22_VG_22.asc'
-  '23_DK_2.asc'
-  '23_dk_1.asc'
-  '24_TS_1.asc'
-  '24_TS_2.asc'
+  % '4_ym_1.asc'
+  % '4_ym_2.asc'
+  % '5_kj_1.asc'
+  % '5_kj_2.asc'
+  % '6_BS_1.asc'
+  % '6_BS_2.asc'
+  % '7_aa_1.asc'
+  % '7_aa_2.asc'
+  % '8_SG_1.asc'
+  % '8_sg_2.asc'
+  % '9_TE_1.asc'
+  % '9_TE_2.asc'
+  % '9_te_11.asc'
+  % '10_es_1.asc'
+  % '10_es_2.asc'
+  % '11_AR_1.asc'
+  % '11_AR_2.asc'
+  % '12_LK_1.asc'
+  % '12_LK_11.asc'
+  % '12_LK_2.asc'
+  % '12_LK_22.asc'
+  % '13_JL_1.asc'
+  % '13_JL_2.asc'
+  % '14_vs_1.asc'
+  % '14_vs_2.asc'
+  % '15_CL_1.asc'
+  % '15_CL_2.asc'
+  % '16_MN_1.asc'
+  % '16_MN_2.asc'
+  % '17_NT_1.asc'
+  % '17_NT_2.asc'
+  % '18_CL_11.asc'
+  % '18_CL_2.asc'
+  % '19_AE_1.asc'
+  % '19_AE_2.asc'
+  % '20_AK_2.asc'
+  % '20_PK_1.asc'
+  % '21_SY_1.asc'
+  % '21_SY_2.asc'
+  % '22_VG_1.asc'
+  % '22_VG_21.asc'
+  % '22_VG_22.asc'
+  % '23_DK_2.asc'
+  % '23_dk_1.asc'
+  % '24_TS_1.asc'
+  % '24_TS_2.asc'
   };
 
 % The filenames have a sequence number and a two-letter subject identifier in them. The case of the
 % identifier is not totally consistent. Furthermore, some subjects have two, some
 % have three recordings.
 
-%sourcepath = './original/ascData';
-%targetpath = './bids';
 sourcepath = dccnpath('/project/3031000.02/external/download/example/bids_eyetracker/eyelink_long/original/ascData');
 targetpath = fullfile(tempdir, 'bids');
 
@@ -187,40 +184,43 @@ cfg.dataset_description.ReferencesAndLinks  = 'n/a';
 
 for i=1:numel(subjid)
   fileselection = find(contains(filename, ['_'  subjid{i} '_'], 'IgnoreCase', true));
-
+  
   for j=1:numel(fileselection)
     [p, f, x] = fileparts(filename{fileselection(j)});  % split the path, filename and extension
     part = split(f, '_');                               % split the filename
     run = str2double(part{3});
-
+    
     % this is the data in ASCII format
     cfg.dataset = fullfile(sourcepath, [f x]);
     cfg.method = 'convert';
-
+    
     % these are used to construct the directory and file name
     cfg.bidsroot = targetpath;
-    cfg.datatype = 'eyetracker';
     cfg.sub = subjid{i};
     cfg.run = run;
     cfg.task = 'adaptation';
+    cfg.suffix = 'physio';
 
+    % this ends up in the physio.json file
+    cfg.physio.PhysioType = 'eyetrack';
+    
     % this is additional information that ends up in the sidecar JSON file
     cfg.TaskDescription = 'orientation adaptation paradigm';
-
-    % FIXME the data on /home/common/ is empty, files exist, all with 0
-    % bytes
-    %data2bids(cfg);
-
+    
+    data2bids(cfg);
+    
   end % for fileselection
 end % for subjid
 %
 %% # SMI
 %
-% The SMI eye tracker stores the raw data in an `.idf` file. That file cannot be read (easily) with other analysis software, hence the SMI specific *IDF converter* program from the iView tools needs to be used to convert it to ascii. Please note that this is Windows software that comes with the eye tracker. At the DCCN you can ask Paul for more details on the SMI eye trackers.
+% The SMI eye tracker stores the raw data in an `.idf` file. That file cannot be read (easily) with other analysis software, hence the SMI specific *IDF converter* program from the iView tools needs to be used to convert it to ascii. Please note that this is Windows software that comes with the eye tracker. At the Donders Centre for Cognitive Neuroimaging (DCCN) in Nijmegen you can ask Paul for more details on the SMI eye trackers.
 %
 %% ## Example
 %
 % In the following example we are converting two runs of eye tracker data for two subjects. The data was recorded at the DCCN. Since additional information is missing (e.g., units, origin, calibration procedure), the metadata is very sparse.
+%
+% The data for this example is available from our [download server](https://download.fieldtriptoolbox.org/example/bids_eyetracker/smi).
 %
 datadir = dccnpath('/project/3031000.02/external/download/example/bids_eyetracker/smi/original');
 filename = {
@@ -255,23 +255,24 @@ cfg.Manufacturer          = 'SMI';
 cfg.ManufacturerModelName = 'iView X MRI-LR';
 
 cfg.method    = 'convert'; % the SMI-specific format is not supported, convert it to plain TSV
-%cfg.bidsroot  = './bids';  % write to the working directory
 cfg.bidsroot  = fullfile(tempdir, 'bids');
-cfg.datatype  = 'eyetracker';
+cfg.suffix    = 'physio';
 
 for i=1:4
   cfg.dataset   = filename{i};
-
+  
   % split the filename to get the subject identifier and the task
   [p, f, x] = fileparts(filename{i});
   piece = split(f, '_');
-
+  
   cfg.sub   = piece{1};
   cfg.task  = piece{2};
-
+  
   data2bids(cfg);
 end
 %
 %% # TOBII
 %
-% The data from the TOBII eye tracker can be exported in `.tsv` or in `.xlsx` format. Moreover, the data can be exported to either have a file for each subject, or with all the subjects in one file. Both formats are included in the example. The TOBI studio software allows to add additional information in the exported files.
+% We currently do not have a complete example for converting TOBII eye tracker data to BIDS, but have collected some information that is posted here for reference.
+%
+% The data from the TOBII eye tracker can be exported in `.tsv` or in `.xlsx` format. Moreover, the data can be exported to either have a file for each subject, or with all the subjects in one file. The TOBI studio software allows to add additional information in the exported files.
