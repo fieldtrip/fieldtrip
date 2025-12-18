@@ -605,6 +605,7 @@ cfg.artfctdef.zvalue.trl      = opt.trl;          % remember where we have been 
 cfg.artfctdef.zvalue.cutoff   = opt.threshold;    % remember the threshold that was used
 cfg.artfctdef.zvalue.artifact = artifact;
 if istrue(cfg.artfctdef.zvalue.keepintermediate)
+  opt.quit = false;
   cfg.artfctdef.zvalue.datagui = opt;
 end
 ft_notice('detected %d artifacts\n', size(artifact,1));
