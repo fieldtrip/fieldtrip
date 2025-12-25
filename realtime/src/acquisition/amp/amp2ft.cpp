@@ -62,8 +62,7 @@ int isParam(const char * needle, char* haystack[], int count) {
 void acquisition(AmpServerClient& client, int numHwChan, int fSample) {
 	int sampleCounter = 0;
 	DPRINTF("Starting ODM with sample frequency %d, nchannels %d\n", fSample, numHwChan);
-	OnlineDataManager<int, float> ODM(0, numHwChan, (float) fSample);
-
+	OnlineDataManager<float, float> ODM(0, numHwChan, (float) fSample);
 	if (ODM.configureFromFile(configFile) != 0) {
 		fprintf(stderr, "Configuration %s file is invalid\n", configFile);
 		return;
@@ -91,11 +90,18 @@ void acquisition(AmpServerClient& client, int numHwChan, int fSample) {
 	 * 1 unidad = 0.488281308 micro volts
 	 * For the minimum, the relation is 0.488 micro volts.
 	 */
-
-	ODM.setPhysicalLimits(-4.096, 4.096); //Page 87 of the manual
-	ODM.setPhysicalDimCode(GDF_MICRO + GDF_VOLT);
-	ODM.setDigitalLimits(-8388608, 8388607);
-	ODM.setSlopeAndOffset(0.488281308, 0);
+	for (int i = 0; i < client.getNumAnalogChannels(); i++) {
+		// ODM.setPhysicalLimit(i, -4.096, 4.096); //Page 87 of the manual
+		// ODM.setPhysicalDimCode(i, GDF_MICRO + GDF_VOLT);
+		// ODM.setDigitalLimit(i, -8388608, 8388607);
+		ODM.setSlopeAndOffset(i, 0.488281308, 0);	
+	}
+	for (int i = 0; i < client.getNumDigitalChannels(); i++) {
+		ODM.setPhysicalDimCode(i + client.getNumAnalogChannels(), GDF_UNKNOWN);
+		ODM.setPhysicalLimit(i + client.getNumAnalogChannels(), 0, 255);
+		// ODM.setDigitalLimit(i + client.getNumAnalogChannels(), 0, 255);
+		ODM.setSlopeAndOffset(i + client.getNumAnalogChannels(), 1.0, 0);
+	}
 	if (haveGDF) ODM.setFilename(gdfFile);
 
 
