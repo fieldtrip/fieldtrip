@@ -1,15 +1,18 @@
-function [tra] = transfer_elec(pnt, tri, el); 
+function [tra] = transfer_elec(el, pos, tri)
 
-% TRANSFER_ELEC is the transfermatrix from vertex to electrode potentials
-% using bi-linear interpolation over the triangles
+% TRANSFER_ELEC computes the transfer matrix from vertex to electrode potentials
+% using bi-linear interpolation over the triangles.
 %
-% tra = transfer_elec(pnt, tri, el)
+% Use as
+%   tra = transfer_elec(el, pos, tri)
+% where
+%   el  = Kx3 matrix that contains the [tri, la, mu] for each electrode
+%   pos = Mx3 matrix with vertex locations of the triangulated headshape
+%   tri = Nx3 matrix with the vertex indices for each of the triangles
 %
-% the Nx3 matrix el shold contain [tri, la, mu] for each electrode
-%
-% See also PROJECT_ELEC
+% See also PROJECT_ELEC, NORMALS_ELEC
 
-% Copyright (C) 1998-2002, Robert Oostenveld
+% Copyright (C) 1998-2026, Robert Oostenveld
 % 
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -29,11 +32,11 @@ function [tra] = transfer_elec(pnt, tri, el);
 %
 % $Id$
 
-Npnt = size(pnt,1);
+Npos = size(pos,1);
 Ntri = size(tri,1);
 Nel  = size(el,1);
 
-tra = zeros(Nel, Npnt);
+tra = zeros(Nel, Npos);
 
 for i=1:Nel
   tra(i, tri(el(i,1), 1)) = 1 - el(i,2) - el(i,3);

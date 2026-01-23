@@ -19,7 +19,7 @@ function [headmodel, sens] = ft_prepare_vol_sens(headmodel, sens, varargin)
 %   'channel'  = cell-array with strings (default = 'all')
 %
 % The detailed behavior of this function depends on whether the input
-% consists of EEG or MEG and furthermoree depends on the type of volume
+% consists of EEG or MEG and furthermore depends on the type of volume
 % conductor model:
 % - in case of EEG single and concentric sphere models, the electrodes are
 %   projected onto the skin surface.
@@ -520,7 +520,7 @@ elseif iseeg
           fprintf('projecting electrodes on triangulated skin surface\n');
           % compute linear interpolation from triangle vertices towards electrodes
           [el, prj] = project_elec(sens.elecpos, headmodel.bnd(headmodel.skin_surface).pos, headmodel.bnd(headmodel.skin_surface).tri);
-          tra       = transfer_elec(headmodel.bnd(headmodel.skin_surface).pos, headmodel.bnd(headmodel.skin_surface).tri, el);
+          tra       = transfer_elec(el, headmodel.bnd(headmodel.skin_surface).pos, headmodel.bnd(headmodel.skin_surface).tri);
 
           % replace the original electrode positions by the projected positions
           sens.elecpos = prj;
@@ -558,7 +558,7 @@ elseif iseeg
     case 'fns'
       if isfield(headmodel,'bnd')
         [el, prj] = project_elec(sens.elecpos, headmodel.bnd.pos, headmodel.bnd.tri);
-        sens.tra = transfer_elec(headmodel.bnd.pos, headmodel.bnd.tri, el);
+        sens.tra = transfer_elec(el, headmodel.bnd.pos, headmodel.bnd.tri);
         % replace the original electrode positions by the projected positions
         sens.elecpos = prj;
       end

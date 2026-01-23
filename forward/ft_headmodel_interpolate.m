@@ -24,7 +24,7 @@ function headmodel = ft_headmodel_interpolate(filename, sens, sourcemodel, varar
 %   headmodel.unit        = string with the geometrical units of the positions, e.g. 'cm' or 'mm'
 % to describe the source positions.
 %
-% See also FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD
+% See also FT_PREPARE_HEADMODEL, FT_COMPUTE_LEADFIELD
 
 % Copyright (C) 2012, Donders Centre for Cognitive Neuroimaging, Nijmegen, NL
 %
@@ -275,7 +275,7 @@ elseif isfield(sourcemodel, 'filename')
   % project the electrodes on the triangulation and compute the
   % bilinear interpolation from the original to the new electrodes
   [el, prj] = project_elec(sens.elecpos, pos, tri);
-  tra = transfer_elec(pos, tri, el);
+  tra = transfer_elec(el, pos, tri);
   
   % define the spaces and the number of elements that they comprise
   n1 = length(inputvol.sens.label);    % computed channels
