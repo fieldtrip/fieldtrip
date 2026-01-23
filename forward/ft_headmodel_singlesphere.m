@@ -17,7 +17,7 @@ function headmodel = ft_headmodel_singlesphere(mesh, varargin)
 % Optional arguments should be specified in key-value pairs and can include
 %   conductivity     = number, conductivity of the sphere
 %
-% See also FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD
+% See also FT_PREPARE_HEADMODEL, FT_COMPUTE_LEADFIELD
 
 % FIXME document both EEG and MEG case
 

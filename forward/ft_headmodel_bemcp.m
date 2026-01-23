@@ -17,7 +17,7 @@ function headmodel = ft_headmodel_bemcp(mesh, varargin)
 %   conductivity     = vector, conductivity of each compartment
 %   checkmesh        = 'yes' or 'no'
 %
-% See also FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD
+% See also FT_PREPARE_HEADMODEL, FT_COMPUTE_LEADFIELD
 
 % Copyright (C) 2010, Robert Oostenveld, Donders Centre for Cognitive Neuroimaging, Nijmegen, NL
 %

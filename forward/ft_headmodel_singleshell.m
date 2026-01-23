@@ -21,7 +21,7 @@ function headmodel = ft_headmodel_singleshell(mesh, varargin)
 % Optional input arguments should be specified in key-value pairs and can include
 %   order        = number of iterations in series expansion (default = 10)
 %
-% See also FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD
+% See also FT_PREPARE_HEADMODEL, FT_COMPUTE_LEADFIELD
 
 % Copyright (C) 2012-2018, Donders Centre for Cognitive Neuroimaging, Nijmegen, NL
 %

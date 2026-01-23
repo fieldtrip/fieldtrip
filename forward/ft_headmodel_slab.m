@@ -18,7 +18,7 @@ function headmodel = ft_headmodel_slab(mesh1, mesh2, Pc, varargin)
 %   'sourcemodel'  = 'monopole' 
 %   'conductivity' = number ,  conductivity value of the conductive halfspace (default = 1)
 % 
-% See also FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD
+% See also FT_PREPARE_HEADMODEL, FT_COMPUTE_LEADFIELD
 
 % Copyright (C) 2012, Donders Centre for Cognitive Neuroimaging, Nijmegen, NL
 %

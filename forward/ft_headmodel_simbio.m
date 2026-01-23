@@ -33,7 +33,7 @@ function headmodel = ft_headmodel_simbio(mesh, varargin)
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
-% See also FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD
+% See also FT_PREPARE_HEADMODEL, FT_COMPUTE_LEADFIELD
 
 % $Id$
 

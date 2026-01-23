@@ -26,7 +26,7 @@ function headmodel = ft_headmodel_fns(seg, varargin)
 % Additional documentation available at:
 % http://hunghienvn.nmsu.edu/wiki/index.php/FNS
 %
-% See also FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD
+% See also FT_PREPARE_HEADMODEL, FT_COMPUTE_LEADFIELD
 
 % Copyright (C) 2011, Cristiano Micheli and Hung Dang
 %

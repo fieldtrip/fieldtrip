@@ -20,7 +20,7 @@ function headmodel = ft_headmodel_hbf(mesh, varargin)
 %   isolatedsource   = which compartment number should ISA apply to? 
 %                       DEFAULT: []
 %
-% See also FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD
+% See also FT_PREPARE_HEADMODEL, FT_COMPUTE_LEADFIELD
 
 % add toolbox
 ft_hastoolbox('hbf', 1);

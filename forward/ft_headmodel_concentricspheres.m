@@ -23,7 +23,15 @@ function headmodel = ft_headmodel_concentricspheres(mesh, varargin)
 %   fitind       = vector with indices of the surfaces to use in fitting the center of the spheres
 %   order        = number of iterations in series expansion (default = 60)
 %
-% See also FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD
+% You can also manually construct a concentric spheres headmodel like this
+%   headmodel.unit = 'mm';
+%   headmodel.cond = [1 1/80 1];  % the conductivity of each compartment
+%   headmodel.r    = [88 92 100]; % the radius of each sphere
+%   headmodel.o    = [0 0 0];     % the origin aka center of the spheres
+%
+%
+%
+% See also FT_PREPARE_HEADMODEL, FT_COMPUTE_LEADFIELD
 
 % Copyright (C) 2012-2022, Donders Centre for Cognitive Neuroimaging, Nijmegen, NL
 %

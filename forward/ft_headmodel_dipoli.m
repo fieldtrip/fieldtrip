@@ -27,7 +27,7 @@ function headmodel = ft_headmodel_dipoli(mesh, varargin)
 %   tempname         = string, allows you to specify the full tempory name including path (default is automatic)
 %   checkmesh        = 'yes' or 'no'
 %
-% See also FT_PREPARE_VOL_SENS, FT_COMPUTE_LEADFIELD
+% See also FT_PREPARE_HEADMODEL, FT_COMPUTE_LEADFIELD
 
 % Copyright (C) 2012, Donders Centre for Cognitive Neuroimaging, Nijmegen, NL
 %
