@@ -168,9 +168,9 @@ end
 
 % no signal was given, set some additional defaults
 if isempty(cfg.sourcemodel.signal)
-  cfg.sourcemodel.frequency   = ft_getopt(cfg, 'frequency', ones(Ndipoles,1)*10);
-  cfg.sourcemodel.phase       = ft_getopt(cfg, 'phase', zeros(Ndipoles,1));
-  cfg.sourcemodel.amplitude   = ft_getopt(cfg, 'amplitude', ones(Ndipoles,1));
+  cfg.sourcemodel.frequency   = ft_getopt(cfg.sourcemodel, 'frequency', ones(Ndipoles,1)*10);
+  cfg.sourcemodel.phase       = ft_getopt(cfg.sourcemodel, 'phase', zeros(Ndipoles,1));
+  cfg.sourcemodel.amplitude   = ft_getopt(cfg.sourcemodel, 'amplitude', ones(Ndipoles,1));
 end
 
 if isfield(cfg.sourcemodel, 'frequency')
