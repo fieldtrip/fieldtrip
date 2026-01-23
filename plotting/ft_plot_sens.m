@@ -401,43 +401,7 @@ if isempty(ori)
     end
 
   elseif ~isempty(headshape)
-    % the following code uses PCNORMALS from the computer vision toolbox
-    % ft_hastoolbox('vision', -1);
-    
-    % how many local points on the headshape are used for estimating the local norm
-    npoints = 25;
-    
-    % calculate local norm vectors
-    for i=1:size(pos,1)
-      % compute the distance to all headshape points
-      d = sqrt( (pos(i,1)-headshape.pos(:,1)).^2 + (pos(i,2)-headshape.pos(:,2)).^2 + (pos(i,3)-headshape.pos(:,3)).^2 );
-      [dum, idx] = sort(d);
-      x = headshape.pos(idx(1:npoints),1);
-      y = headshape.pos(idx(1:npoints),2);
-      z = headshape.pos(idx(1:npoints),3);
-      ptCloud = pointCloud([x y z]);
-      nrm = pcnormals(ptCloud);
-      u = nrm(:,1);
-      v = nrm(:,2);
-      w = nrm(:,3);
-      
-      % compute the headshape center
-      C = mean(headshape.pos,1);
-      % the vector should be pointing away from the center, otherwise flip it
-      for k = 1:numel(x)
-        p1 = C - [x(k) y(k) z(k)];
-        p2 =     [u(k) v(k) w(k)];
-        angle = atan2(norm(cross(p1,p2)),p1*p2');
-        if ~(angle > pi/2 || angle < -pi/2)
-          u(k) = -u(k);
-          v(k) = -v(k);
-          w(k) = -w(k);
-        end
-      end
-      Fn = nanmean([u v w],1);
-      Fn = Fn * (1/sqrt(sum(Fn.^2,2))); % normalize
-      ori(i,:) = Fn;
-    end % for
+    ori = normals_elec(pos, headshape.pos, headshape.tri);
 
   elseif ~any(isnan(pos(:))) && size(pos,1)>2
     % determine orientations based on a surface triangulation of the sensors
