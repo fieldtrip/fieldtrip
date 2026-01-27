@@ -202,6 +202,14 @@ switch cmd
       retval = 0;
     end
 
+    % if the job has completed without error, check if the output file is present (it may not yet be available due to file system latency)
+    if ~ismember(backend, {'local','system'}) && retval && isfile(logerr)
+      direrr = dir(logerr);
+      if direrr.bytes == 0
+        retval = isfile(outputfile);
+      end
+    end
+
   case 'list'
     for i=1:length(list_jobid)
       fprintf('%s %s\n', list_jobid{i}, list_pbsid{i});
