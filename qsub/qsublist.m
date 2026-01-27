@@ -204,8 +204,7 @@ switch cmd
 
     % if the job has completed without error, check if the output file is present (it may not yet be available due to file system latency)
     if ~ismember(backend, {'local','system'}) && retval && isfile(logerr)
-      direrr = dir(logerr);
-      if direrr.bytes == 0
+      if dir(logerr).bytes == 0
         retval = isfile(outputfile);
       end
     end
