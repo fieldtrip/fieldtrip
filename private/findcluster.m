@@ -48,7 +48,7 @@ ft_hastoolbox('spm', -1);
 
 minnbchan           = ft_getopt(varargin, 'minnbchan', 0);
 spatdimneighbselmat = ft_getopt(varargin, 'spatdimneighbselmat', []);
-useoldimplementation = istrue(ft_getopt(varargin, 'useoldimplementation', 1));
+useoldimplementation = strcmp(ft_getopt(varargin, 'combineclusterfun', 'combineClusters'), 'combineClusters');
 
 siz           = size(onoff);
 spatdimlength = siz(1);

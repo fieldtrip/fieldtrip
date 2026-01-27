@@ -37,6 +37,7 @@ cfg.orderedstats = ft_getopt(cfg, 'orderedstats', 'no');      % no, yes
 cfg.multivariate = ft_getopt(cfg, 'multivariate', 'no');      % no, yes
 cfg.minnbchan    = ft_getopt(cfg, 'minnbchan',    0);
 cfg.wcm_weight   = ft_getopt(cfg, 'wcm_weight',   1);
+cfg.combineclusterfun = ft_getopt(cfg, 'combineclusterfun', 'combineClusters');
 
 % these defaults are already set in the caller function, 
 % but may be necessary if a user calls this function directly
@@ -196,7 +197,7 @@ for i=1:Nrand
 end
 
 % first do the clustering on the observed data
-spacereshapeable = (numel(connmat)==1 && ~isfinite(connmat));
+spacereshapeable = (isscalar(connmat) && ~isfinite(connmat));
 
 if needpos
   if spacereshapeable
@@ -211,7 +212,7 @@ if needpos
   end
   
   % identify positive clusters in the observed data
-  posclusobs = findcluster(tmp, connmat, 'minnbchan', cfg.minnbchan);
+  posclusobs = findcluster(tmp, connmat, 'minnbchan', cfg.minnbchan, 'combineclusterfun', cfg.combineclusterfun);
   
   if spacereshapeable
     posclusobs = posclusobs(cfg.inside);
@@ -236,7 +237,7 @@ if needneg
   end
   
   % identify negative clusters in the observed data
-  negclusobs = findcluster(tmp, connmat, 'minnbchan', cfg.minnbchan);
+  negclusobs = findcluster(tmp, connmat, 'minnbchan', cfg.minnbchan, 'combineclusterfun', cfg.combineclusterfun);
   
   if spacereshapeable
     negclusobs = negclusobs(cfg.inside);
@@ -279,7 +280,7 @@ for i = 1:Nrand
     else
       tmp = reshape(postailrnd(:,i), [cfg.dim 1]);
     end
-    posclusrnd = findcluster(tmp, connmat, 'minnbchan', cfg.minnbchan);
+    posclusrnd = findcluster(tmp, connmat, 'minnbchan', cfg.minnbchan, 'combineclusterfun', cfg.combineclusterfun);
     if spacereshapeable
       posclusrnd = posclusrnd(cfg.inside);
     else
@@ -326,7 +327,7 @@ for i = 1:Nrand
     else
       tmp = reshape(negtailrnd(:,i), [cfg.dim 1]);
     end
-    negclusrnd = findcluster(tmp, connmat, 'minnbchan', cfg.minnbchan);
+    negclusrnd = findcluster(tmp, connmat, 'minnbchan', cfg.minnbchan, 'combineclusterfun', cfg.combineclusterfun);
     if spacereshapeable
       negclusrnd = negclusrnd(cfg.inside);
     else  
