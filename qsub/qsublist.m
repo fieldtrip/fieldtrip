@@ -80,10 +80,10 @@ end
 if isempty(jobid) && ~isempty(pbsid)
   % get it from the persistent list
   sel = find(strcmp(pbsid, list_pbsid));
-  if length(sel)==1
+  if length(sel) == 1
     jobid = list_jobid{sel};
   else
-    warning('cannot determine the jobid that corresponds to pbsid %s', pbsid);
+    warning('cannot determine the jobid that corresponds to pbsid %s', pbsid)
   end
 end
 
@@ -93,7 +93,7 @@ if isempty(pbsid) && ~isempty(jobid)
   if length(sel)==1
     pbsid = list_pbsid{sel};
   else
-    warning('cannot determine the pbsid that corresponds to jobid %s', jobid);
+    warning('cannot determine the pbsid that corresponds to jobid %s', jobid)
   end
 end
 
@@ -138,7 +138,7 @@ switch cmd
     if ~isempty(list_jobid)
       % give an explicit warning, because chances are that the user will see messages from qdel
       % about jobs that have just completed and hence cannot be deleted any more
-      fprintf('cleaning up all scheduled and running jobs, don''t worry if you see warnings from "qdel"\n');
+      fprintf('cleaning up all scheduled and running jobs, don''t worry if you see warnings from "qdel"\n')
     end
     % start at the end, work towards the begin of the list
     for i=length(list_jobid):-1:1
@@ -177,17 +177,17 @@ switch cmd
           retval = strcmp(strtrim(jobstatus), 'DONE');
         case 'sge'
           [dum, jobstatus] = system(['qstat -s z | grep "' pbsid '" | awk ''{print $5}''']);
-          retval = strcmp(strtrim(jobstatus), 'z') | strcmp(strtrim(jobstatus), 'qw');
+          retval = ismember(strtrim(jobstatus), {'z','qw'});
         case 'slurm'
-          if ~isfile(outputfile)
-            % with Slurm log output and error are created upon job submission
-            % and are not a viable test to see if the job completed, so we
-            % check for the outputfile first
+          if ~isfile(outputfile) && dir(logerr).bytes == 0
+            % with Slurm log output and error are created upon job submission and are not a viable test to see if the job
+            % completed, so we check for the outputfile first. NB: the outputfile is not written if the job was killed (which
+            % is why we also check that the error file is empty)
             retval = 0;
           else
-            % if the file is there, we can use squeue to verify that the job really left the queue
+            % if the file is there, or if the job was killed, we can use squeue to verify that the job left the queue
             [dum, jobstatus] = system(['squeue -j "' pbsid '" -h -o %T']);
-            retval = isempty(jobstatus) | contains(jobstatus, 'Invalid job id');
+            retval = isempty(jobstatus) || contains(jobstatus, 'Invalid job id');
           end
         case {'local','system'}
           % only return the status based on the presence of the output files
@@ -204,11 +204,11 @@ switch cmd
 
     % if the job has completed without error, check if the output file is present (it may not yet be available due to file system latency)
     if ~ismember(backend, {'local','system'}) && retval && isfile(logerr) && dir(logerr).bytes == 0
-        retval = isfile(outputfile);
+      retval = isfile(outputfile);
     end
 
   case 'list'
-    for i=1:length(list_jobid)
+    for i = 1:length(list_jobid)
       fprintf('%s %s\n', list_jobid{i}, list_pbsid{i});
     end
 
@@ -221,11 +221,11 @@ switch cmd
     retval = pbsid;
 
   otherwise
-    error('unsupported command "%s"', cmd);
+    error('unsupported command "%s"', cmd)
 end % switch
 
-if length(list_jobid)~=length(list_pbsid)
-  error('jobid and pbsid lists are inconsistent');
+if length(list_jobid) ~= length(list_pbsid)
+  error('jobid and pbsid lists are inconsistent')
 end
 
 if mislocked && isempty(list_jobid) && isempty(list_pbsid)
