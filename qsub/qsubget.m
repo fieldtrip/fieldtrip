@@ -168,19 +168,19 @@ if completed
   if ~isempty(diarystring)
     if strcmp(diary, 'error') && ~isempty(err)
       fprintf('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n');
-      fprintf('%% an error was detected, the output of the remote execution follows \n');
+      fprintf('%% an error was detected (%s), the output of the remote execution follows\n', jobid);
       fprintf('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n');
       fprintf('%s', diarystring);
       separatorline = true;
     elseif strcmp(diary, 'warning') && ~isempty(warn)
       fprintf('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n');
-      fprintf('%% a warning was detected, the output of the remote execution follows\n');
+      fprintf('%% a warning was detected (%s), the output of the remote execution follows\n', jobid);
       fprintf('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n');
       fprintf('%s', diarystring);
       separatorline = true;
     elseif strcmp(diary, 'always')
       fprintf('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n');
-      fprintf('%% no problem was detected, the output of the remote execution follows\n');
+      fprintf('%% no problem was detected (%s), the output of the remote execution follows\n', jobid);
       fprintf('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n');
       fprintf('%s', diarystring);
       separatorline = true;
@@ -201,7 +201,7 @@ if completed
         rethrow(err);
       end
     else
-      warning('error during remote execution: %s', errmsg);
+      warning('error during remote execution (%s):\n%s', jobid, errmsg);
     end
   end % ~isempty(err)
   
@@ -222,7 +222,7 @@ if completed
   end
   
 else
-  warning('FieldTrip:qsub:jobNotAvailable', 'the job results are not yet available');
+  warning('FieldTrip:qsub:jobNotAvailable', 'the job results (%s) are not yet available', jobid);
   switch output
     case 'varargout'
       % return empty output arguments
