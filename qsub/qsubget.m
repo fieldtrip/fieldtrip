@@ -145,6 +145,7 @@ if completed
   warn        = ft_getopt(options, 'lastwarn');
   err         = ft_getopt(options, 'lasterr');
   diarystring = ft_getopt(options, 'diary', stdout);
+  options     = ft_setopt(options, 'diary', diarystring);
   
   % if there is an error, it needs to be represented as a message string
   % and optionally also as a strucure for rethrowing
