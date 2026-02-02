@@ -136,7 +136,7 @@ if completed
       err = sprintf('Error in job execution');
     end
     % use the stderr and stdout output rather than the MATLAB results
-    options = {'lasterr', err, 'diary', stdout};
+    options = {'lasterr', err};
   elseif isempty(ft_getopt(options, 'lasterr'))
     fprintf('job %s returned, it required %s and %s on %s\n', jobid, print_tim(ft_getopt(options, 'timused', nan)), print_mem(ft_getopt(options, 'memused', nan)), ft_getopt(options, 'hostname', 'unknown'));
   end
@@ -144,7 +144,7 @@ if completed
   % look at the optional arguments
   warn        = ft_getopt(options, 'lastwarn');
   err         = ft_getopt(options, 'lasterr');
-  diarystring = ft_getopt(options, 'diary');
+  diarystring = ft_getopt(options, 'diary', stdout);
   
   % if there is an error, it needs to be represented as a message string
   % and optionally also as a strucure for rethrowing
