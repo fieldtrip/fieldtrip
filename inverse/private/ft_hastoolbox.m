@@ -126,6 +126,7 @@ url = {
   'FORWARD'                               'see http://www.fieldtriptoolbox.org'
   'FREESURFER'                            'see http://surfer.nmr.mgh.harvard.edu/fswiki'
   'GCMI'                                  'see https://github.com/robince/gcmi'
+  'GEDAI'                                 'see https://github.com/neurotuning/GEDAI-master'
   'GIFTI'                                 'see http://www.artefact.tk/software/matlab/gifti'
   'GTEC'                                  'see http://www.gtec.at'
   'HOMER3'                                'see https://github.com/BUNPC/Homer3 and https://github.com/fNIRS/snirf_homer3'
@@ -436,6 +437,8 @@ switch toolbox
     dependency = {'ezc3dRead', 'ezc3dWrite'};
   case 'GCMI'
     dependency = {'copnorm' 'mi_gg'};
+  case 'GEDAI'
+    dependency = {'GEDAI'};
   case 'XSENS'
     dependency = {'load_mvnx'};
   case 'MAYO_MEF' % MED 1.0, MEF 2.1 and MEF 3.0

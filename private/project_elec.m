@@ -1,17 +1,22 @@
-function [el, prj] = project_elec(elc, pnt, tri)
+function [el, prj] = project_elec(elc, pos, tri)
 
 % PROJECT_ELEC projects electrodes on a triangulated surface
 % and returns triangle index, la/mu parameters and distance
 %
 % Use as
 %   [el, prj] = project_elec(elc, pnt, tri)
-% which returns 
+% with
+%   elc = Kx3 matrix with the position of all electrodes
+%   pos = Mx3 matrix with the vertex locations of the triangulated headshape
+%   tri = Nx3 matrix with the vertex indices for each of the triangles
+%
+% This function returns 
 %   el    = Nx4 matrix with [tri, la, mu, dist] for each electrode
 %   prj   = Nx3 matrix with the projected electrode position
 %
 % See also TRANSFER_ELEC 
 
-% Copyright (C) 1999-2013, Robert Oostenveld
+% Copyright (C) 1999-2026, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -36,14 +41,14 @@ el   = zeros(Nelc, 4);
 
 % this is a work-around for http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2369
 elc = double(elc);
-pnt = double(pnt);
+pos = double(pos);
 tri = double(tri);
 
 for i=1:Nelc
-  [proj,dist] = ptriprojn(pnt(tri(:,1),:), pnt(tri(:,2),:), pnt(tri(:,3),:), elc(i,:), 1);
+  [proj,dist] = ptriprojn(pos(tri(:,1),:), pos(tri(:,2),:), pos(tri(:,3),:), elc(i,:), 1);
   
   [mindist, minindx] = min(abs(dist));
-  [la, mu] = lmoutr(pnt(tri(minindx,1),:), pnt(tri(minindx,2),:), pnt(tri(minindx,3),:), proj(minindx,:));
+  [la, mu] = lmoutr(pos(tri(minindx,1),:), pos(tri(minindx,2),:), pos(tri(minindx,3),:), proj(minindx,:));
   smallest_dist = dist(minindx);
   smallest_tri  = minindx;
   smallest_la   = la;
@@ -71,9 +76,9 @@ end
 if nargout>1
   prj = zeros(size(elc));
   for i=1:Nelc
-    v1 = pnt(tri(el(i,1),1),:);
-    v2 = pnt(tri(el(i,1),2),:);
-    v3 = pnt(tri(el(i,1),3),:);
+    v1 = pos(tri(el(i,1),1),:);
+    v2 = pos(tri(el(i,1),2),:);
+    v3 = pos(tri(el(i,1),3),:);
     la = el(i,2);
     mu = el(i,3);
     prj(i,:) = routlm(v1, v2, v3, la, mu);
