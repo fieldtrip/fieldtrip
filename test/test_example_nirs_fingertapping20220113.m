@@ -2,7 +2,7 @@ function test_example_nirs_fingertapping
 
 % MEM 2gb
 % WALLTIME 00:10:00
-% DATA no
+% DATA private
 
 %
 %% Analyzing NIRS data recorded during unilateral finger- and foot-tapping
@@ -32,41 +32,45 @@ function test_example_nirs_fingertapping
 %
 
 % for now, getting the data from the below URL and unzipping it, works (JM added 20211201)
-t = tempdir;
-filenames = unzip('https://figshare.com/ndownloader/files/18069143', t);
+% t = tempdir;
+% filenames = unzip('https://figshare.com/ndownloader/files/18069143', t);
 
-% filenames = {
-%   'v2/fNIRS 01.mat'
-%   'v2/fNIRS 02.mat'
-%   'v2/fNIRS 03.mat'
-%   'v2/fNIRS 04.mat'
-%   'v2/fNIRS 05.mat'
-%   'v2/fNIRS 06.mat'
-%   'v2/fNIRS 07.mat'
-%   'v2/fNIRS 08.mat'
-%   'v2/fNIRS 09.mat'
-%   'v2/fNIRS 10.mat'
-%   'v2/fNIRS 11.mat'
-%   'v2/fNIRS 12.mat'
-%   'v2/fNIRS 13.mat'
-%   'v2/fNIRS 14.mat'
-%   'v2/fNIRS 15.mat'
-%   'v2/fNIRS 16.mat'
-%   'v2/fNIRS 17.mat'
-%   'v2/fNIRS 18.mat'
-%   'v2/fNIRS 19.mat'
-%   'v2/fNIRS 20.mat'
-%   'v2/fNIRS 21.mat'
-%   'v2/fNIRS 22.mat'
-%   'v2/fNIRS 23.mat'
-%   'v2/fNIRS 24.mat'
-%   'v2/fNIRS 25.mat'
-%   'v2/fNIRS 26.mat'
-%   'v2/fNIRS 27.mat'
-%   'v2/fNIRS 28.mat'
-%   'v2/fNIRS 29.mat'
-%   'v2/fNIRS 30.mat'
-%   };
+% in January 2026 the download started failing consistently on the compute cluster, possibly 
+% because compute nodes are blacklisted. Hence we now use a local copy of a single
+% file. 
+
+filenames = {
+  dccnpath('/project/3031000.02/test/original/nirs/matlab/fNIRS 01.mat')
+  % 'fNIRS 02.mat'
+  % 'fNIRS 03.mat'
+  % 'fNIRS 04.mat'
+  % 'fNIRS 05.mat'
+  % 'fNIRS 06.mat'
+  % 'fNIRS 07.mat'
+  % 'fNIRS 08.mat'
+  % 'fNIRS 09.mat'
+  % 'fNIRS 10.mat'
+  % 'fNIRS 11.mat'
+  % 'fNIRS 12.mat'
+  % 'fNIRS 13.mat'
+  % 'fNIRS 14.mat'
+  % 'fNIRS 15.mat'
+  % 'fNIRS 16.mat'
+  % 'fNIRS 17.mat'
+  % 'fNIRS 18.mat'
+  % 'fNIRS 19.mat'
+  % 'fNIRS 20.mat'
+  % 'fNIRS 21.mat'
+  % 'fNIRS 22.mat'
+  % 'fNIRS 23.mat'
+  % 'fNIRS 24.mat'
+  % 'fNIRS 25.mat'
+  % 'fNIRS 26.mat'
+  % 'fNIRS 27.mat'
+  % 'fNIRS 28.mat'
+  % 'fNIRS 29.mat'
+  % 'fNIRS 30.mat'
+  };
 
 % this allows switching easily between subjects, and eventually looping over all 30 subjects
 filename = filenames{1};
