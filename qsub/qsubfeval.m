@@ -183,7 +183,7 @@ matlabscript = fullfile(curPwd, sprintf('%s.m', jobid));
 argin = varargin;
 optin = options;
 mem   = whos('argin').bytes + whos('optin').bytes;
-if (mem < 1024^2)       % if variables < ~100 MB, store it in default (compressed) format, which is more robust (e.g. for objects)
+if (mem < 100 * 1024^2)       % if variables < ~100 MB, store it in default (compressed) format, which is more robust (e.g. for objects)
   fmt = '-v7';
 elseif (mem < 1024^3)   % else, if variables < ~1 GB, store it in old (uncompressed) format, which is faster (but makes huge files and not reliable for objects)
   fmt = '-v6';
