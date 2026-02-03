@@ -182,14 +182,15 @@ matlabscript = fullfile(curPwd, sprintf('%s.m', jobid));
 % rename and save the variables
 argin = varargin;
 optin = options;
-s1 = whos('argin');
-s2 = whos('optin');
-% if variables < ~1 GB, store it in old (uncompressed) format, which is faster
-if (s1.bytes + s2.bytes < 1024^3)
-  save(inputfile, 'argin', 'optin', '-v6');
-else
-  save(inputfile, 'argin', 'optin', '-v7.3');
+mem   = whos('argin').bytes + whos('optin').bytes;
+if (mem < 100 * 1024^2)       % if variables < ~100 MB, store it in default (compressed) format, which is more robust (e.g. for objects)
+  fmt = '-v7';
+elseif (mem < 1024^3)   % else, if variables < ~1 GB, store it in old (uncompressed) format, which is faster (but makes huge files and not reliable for objects)
+  fmt = '-v6';
+else                    % otherwise, if variables > ~1 GB, store it in HDF5 (compressed) format, which can handle very large variables and objects (but slower)
+  fmt = '-v7.3';
 end
+save(inputfile, 'argin', 'optin', fmt)
 
 if ~compiled
 

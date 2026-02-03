@@ -1202,6 +1202,7 @@ sync ${ARRAY[*]}
 
 ARRAY=()
 ARRAY+=(inverse/private/ft_setopt.m)
+ARRAY+=(qsub/private/ft_setopt.m)
 ARRAY+=(utilities/ft_setopt.m)
 sync ${ARRAY[*]}
 
