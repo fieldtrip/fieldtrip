@@ -82,20 +82,16 @@ while ~completed && (timeout == 0 || toc(stopwatch)<timeout)
     
     % the stderr log file should be empty, otherwise it potentially indicates an error
     direrr = dir(logerr);
-    if ~exist(outputfile, 'file') && ~isempty(direrr) && direrr.bytes>0
-      fid = fopen(fullfile(curPwd, direrr.name), 'r');
-      stderr = fread(fid, [1 inf], 'char');
-      fclose(fid);
+    if ~isempty(direrr) && direrr.bytes>0
+      stderr = fileread(fullfile(curPwd, direrr.name));
     else
       stderr = '';
     end
     
     % the stdout log file can be used instead of the MATLAB diary
     dirout = dir(logout);
-    if ~exist(outputfile, 'file') && ~isempty(dirout) && dirout.bytes>0
-      fid = fopen(fullfile(curPwd, dirout.name), 'r');
-      stdout = fread(fid, [1 inf], 'char');
-      fclose(fid);
+    if ~isempty(dirout) && dirout.bytes>0
+      stdout = fileread(fullfile(curPwd, dirout.name));
     else
       stdout = '';
     end
@@ -114,12 +110,12 @@ while ~completed && (timeout == 0 || toc(stopwatch)<timeout)
     
   elseif timeout == 0
     % only check once, no waiting here
-    break;
+    break
     
   else
     % the job results have not arrived yet
     % wait a little bit and try again
-    pausejava(sleep);
+    pausejava(sleep)
     continue
   end
   
@@ -135,7 +131,7 @@ if completed
     else
       err = sprintf('Error in job execution');
     end
-    % use the stderr and stdout output rather than the MATLAB results
+    % use the stderr rather than the MATLAB result
     options = {'lasterr', err};
   elseif isempty(ft_getopt(options, 'lasterr'))
     fprintf('job %s returned, it required %s and %s on %s\n', jobid, print_tim(ft_getopt(options, 'timused', nan)), print_mem(ft_getopt(options, 'memused', nan)), ft_getopt(options, 'hostname', 'unknown'));
