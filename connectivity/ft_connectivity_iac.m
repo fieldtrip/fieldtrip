@@ -17,7 +17,7 @@ function [all_IAC, v, n] = ft_connectivity_iac(input, varargin)
 % FieldTrip integration by:
 % monaragala, K. (2026) 
 %
-% This implementation follows the IAC methodology as explicitly described 
+% IAC methodology as explicitly described 
 % in Wei et al. (2021), without introducing additional modifications 
 % or assumptions. IAC is motivated by amplitude envelope correlation:
 % when two signals exhibit high amplitudes at the same time, their
