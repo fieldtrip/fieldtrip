@@ -17,9 +17,7 @@ function [all_IAC, v, n] = ft_connectivity_iac(input, varargin)
 % FieldTrip integration by:
 % monaragala, K. (2026) 
 %
-% IAC methodology as explicitly described 
-% in Wei et al. (2021), without introducing additional modifications 
-% or assumptions. IAC is motivated by amplitude envelope correlation:
+% IAC is motivated by amplitude envelope correlation:
 % when two signals exhibit high amplitudes at the same time, their
 % amplitude envelopes covary. A time-resolved (instantaneous) measure
 % can be formed from the pointwise product (Hadamard product) of the
