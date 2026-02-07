@@ -32,16 +32,20 @@ function [nrm] = normals_elec(elc, pos, tri)
 %
 % $Id$
 
-if strcmp(surface_orientation(pos, tri), 'inward')
-  % flip the orientation of the surface
-  tri = fliplr(tri);
-end
-
 % to avoid confusion between electrode and headshape positions
 headshape.pos = pos;
 headshape.tri = tri;
 clear pos tri
 headshape.nrm = surface_normals(headshape.pos, headshape.tri);
+
+% compute the orientation for each electrode
+dist = pdist2(elc, elc);
+mindist = zeros(1, size(elc,1));
+for i=1:size(elc,1)
+  d = dist(i,:);
+  d(i) = [];
+  mindist(i) = min(d);
+end
 
 % determine the size of the head
 headsize = prod(range(headshape.pos))^(1/3);

@@ -146,7 +146,7 @@ cfg = ft_checkconfig(cfg, 'renamedval', {'method', 'mri', 'volume'});
 cfg = ft_checkconfig(cfg, 'renamed',    {'newfigure', 'figure'});
 
 % set the defaults
-cfg.method        = ft_getopt(cfg, 'method',              []); % volume, headshape, 1020, shaft
+cfg.method        = ft_getopt(cfg, 'method',              []); % volume, headshape, equidistant, 1020, shaft
 cfg.feedback      = ft_getopt(cfg, 'feedback',         'yes');
 cfg.parameter     = ft_getopt(cfg, 'parameter',    'anatomy');
 cfg.channel       = ft_getopt(cfg, 'channel',             []); % default will be determined further down {'1', '2', ...}
@@ -154,6 +154,9 @@ cfg.elec          = ft_getopt(cfg, 'elec',                []); % use previously 
 cfg.flip          = ft_getopt(cfg, 'flip',                []); % the default is set below
 cfg.renderer      = ft_getopt(cfg, 'renderer',      'opengl');
 cfg.figurename    = ft_getopt(cfg, 'figurename',    mfilename);
+% equidistant options
+cfg.numelec       = ft_getopt(cfg, 'numelec',             64);
+cfg.nummidline    = ft_getopt(cfg, 'nummidline',           8);
 % view options
 cfg.clim          = ft_getopt(cfg, 'clim',             [0 1]); % initial volume intensity limit voxels
 cfg.markerdist    = ft_getopt(cfg, 'markerdist',           5); % marker-slice distance view when ~global
@@ -189,7 +192,7 @@ switch cfg.method
     for v = 1:numel(varargin)
       mri{v} = ft_checkdata(varargin{v}, 'datatype', 'volume', 'feedback', 'yes', 'hascoordsys', 'yes', 'hasunit', 'yes');
     end
-  case  {'headshape', '1020'}
+  case  {'headshape', 'equidistant', '1020'}
     headshape = fixpos(varargin{1});
     headshape = ft_checkdata(headshape, 'hascoordsys', 'yes', 'hasunit', 'yes');
 end
@@ -629,6 +632,28 @@ switch cfg.method
     elec.chanpos = elec.elecpos;
     elec.tra = eye(size(elec.elecpos,1));
 
+
+  case 'equidistant'
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % this is an automatic method without figure
+    tmpcfg = cfg;
+    tmpcfg.method = '1020';
+    tmpcfg.feedback = 'no';
+    elec1020 = ft_electrodeplacement(tmpcfg, headshape);
+
+    % the equidistant distribution requires a number of fixed reference electrodes
+    Fpz = elec1020.elecpos(strcmp(elec1020.label, 'Fpz'),:);
+    Oz  = elec1020.elecpos(strcmp(elec1020.label, 'Oz'),:);
+    T7  = elec1020.elecpos(strcmp(elec1020.label, 'T7'),:);
+    T8  = elec1020.elecpos(strcmp(elec1020.label, 'T8'),:);
+    
+    % distribute the electrodes automatically on the headshape 
+    [pos, lab] = equidistant_locate(headshape.pos, headshape.tri, Fpz, Oz, T7, T8, cfg.numelec, cfg.nummidline, istrue(cfg.feedback));
+    % construct the output
+    elec = keepfields(headshape, {'unit', 'coordsys'});
+    elec.elecpos = pos;
+    elec.label   = lab(:);
+
   case '1020'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % this is an automatic method without figure
@@ -657,7 +682,7 @@ switch cfg.method
       rpa = rpa + tolerance*randn(1,3);
     end
 
-    % place the electrodes automatically according to the fiducials
+    % place the electrodes automatically on the headshape according to the fiducials
     [pos, lab] = elec1020_locate(headshape.pos, headshape.tri, nas, ini, lpa, rpa, istrue(cfg.feedback));
     % construct the output
     elec = keepfields(headshape, {'unit', 'coordsys'});

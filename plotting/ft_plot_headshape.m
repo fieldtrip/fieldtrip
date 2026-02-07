@@ -26,6 +26,7 @@ function hs = ft_plot_headshape(headshape, varargin)
 % The sensor array can include an optional fid field with fiducials, which will also be plotted.
 %   'fidcolor'        = [r g b] values or string, for example 'red', 'r', or an Nx3 or Nx1 array where N is the number of fiducials
 %   'fidmarker'       = ['.', '*', '+',  ...]
+%   'fidsize'         = scalar, size of the fiducial marker
 %   'fidlabel'        = ['yes', 'no', 1, 0, 'true', 'false']
 %   'transform'       = transformation matrix, converts fiducials from MRI voxels into head coordinates
 %
@@ -33,6 +34,7 @@ function hs = ft_plot_headshape(headshape, varargin)
 %   headshape = ft_read_headshape(filename);
 %   figure
 %   ft_plot_headshape(headshape);
+%   ft_headlight
 %
 % See also FT_PLOT_MESH, FT_PLOT_HEADMODEL, FT_PLOT_SENS, FT_PLOT_DIPOLE,
 % FT_PLOT_ORTHO, FT_PLOT_TOPO3D
@@ -101,6 +103,7 @@ material_       = ft_getopt(varargin, 'material');            % do not confuse w
 tag             = ft_getopt(varargin, 'tag',         '');
 fidcolor        = ft_getopt(varargin, 'fidcolor',     'g');
 fidmarker       = ft_getopt(varargin, 'fidmarker',    '*');
+fidsize         = ft_getopt(varargin, 'fidsize',      6);
 fidlabel        = ft_getopt(varargin, 'fidlabel',     true);
 transform       = ft_getopt(varargin, 'transform');
 unit            = ft_getopt(varargin, 'unit');
@@ -133,9 +136,14 @@ if isfield(headshape, 'fid') && ~isempty(headshape.fid)
     headshape.fid.pos = ft_warp_apply(transform, headshape.fid.pos);
   end
   
+  if size(fidcolor,1) == 1
+    % use the same color for all fiducials
+    fidcolor = repmat(fidcolor, size(headshape.fid.pos,1), 1);
+  end
+
   % plot the fiducials
   for i=1:size(headshape.fid.pos,1)
-    h  = plot3(headshape.fid.pos(i,1), headshape.fid.pos(i,2), headshape.fid.pos(i,3), 'Marker', fidmarker, 'MarkerEdgeColor', fidcolor);
+    h  = plot3(headshape.fid.pos(i,1), headshape.fid.pos(i,2), headshape.fid.pos(i,3), 'Marker', fidmarker, 'MarkerEdgeColor', fidcolor(i,:), 'MarkerSize', fidsize);
     hs = [hs; h];
     if isfield(headshape.fid, 'label') && istrue(fidlabel)
       % the text command does not like int or single position values

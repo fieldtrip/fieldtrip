@@ -401,6 +401,8 @@ if isempty(ori)
     end
 
   elseif ~isempty(headshape)
+    % determine the orientations based on the headshape
+    % this only works if all positions are defined and if the headshape is reasonably well defined
     ori = normals_elec(pos, headshape.pos, headshape.tri);
 
   elseif ~any(isnan(pos(:))) && size(pos,1)>2
