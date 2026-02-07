@@ -2762,6 +2762,14 @@ ARRAY+=(fileio/private/neuralynx_getheader.m)
 sync ${ARRAY[*]}
 
 ################################################################################
+# normals_elec.m
+
+ARRAY=()
+ARRAY+=(private/normals_elec.m.m)
+ARRAY+=(plotting/private/normals_elec.m.m)
+sync ${ARRAY[*]}
+
+################################################################################
 # offset2time.m
 
 ARRAY=()

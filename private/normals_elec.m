@@ -32,8 +32,10 @@ function [nrm] = normals_elec(elc, pos, tri)
 %
 % $Id$
 
+% to avoid confusion between electrode and headshape positions
 headshape.pos = pos;
 headshape.tri = tri;
+clear pos tri
 headshape.nrm = surface_normals(headshape.pos, headshape.tri);
 
 % compute the orientation for each electrode
