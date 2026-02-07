@@ -19,10 +19,12 @@ function [all_IAC, v, n] = ft_connectivity_iac(input, varargin)
 %
 % This implementation follows the IAC methodology as explicitly described 
 % in Wei et al. (2021), without introducing additional modifications 
-% or assumptions. The method quantifies instantaneous (zero-lag) coupling
-% by correlating amplitude envelopes after pairwise orthogonalization,
-% thereby reducing spurious coupling due to field spread or volume
-% conduction.
+% or assumptions. IAC is motivated by amplitude envelope correlation:
+% when two signals exhibit high amplitudes at the same time, their
+% amplitude envelopes covary. A time-resolved (instantaneous) measure
+% can be formed from the pointwise product (Hadamard product) of the
+% two amplitude-envelope time series, followed by averaging
+% over time/trials to obtain a scalar coupling estimate.
 %
 % Data Input:
 %
