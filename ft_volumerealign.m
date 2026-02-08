@@ -248,6 +248,7 @@ cfg = ft_checkconfig(cfg, 'renamedval', {'coordsys', 'spm', 'acpc'});
 cfg = ft_checkconfig(cfg, 'renamedval', {'coordsys', 'tal', 'acpc'});
 % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=2837
 cfg = ft_checkconfig(cfg, 'renamed', {'viewdim', 'axisratio'});
+cfg = ft_checkconfig(cfg, 'renamed', {'pnt', 'pos'}); % cfg.pnt -> cfg.pos for vertex positions
 
 % set the defaults
 cfg.coordsys      = ft_getopt(cfg, 'coordsys',  []);
@@ -467,8 +468,8 @@ switch cfg.method
           cfg.clim = (cfg.clim-dmin)./(dmax-dmin);
         end
 
-        if isfield(cfg, 'pnt')
-          pnt = cfg.pnt;
+        if isfield(cfg, 'pos')
+          pnt = cfg.pos;
         else
           pnt = zeros(0,3);
         end
@@ -1168,8 +1169,8 @@ if viewresult
     realigndat  = (realigndat-dmin)./(dmax-dmin);
   end
 
-  if isfield(cfg, 'pnt')
-    pnt = cfg.pnt;
+  if isfield(cfg, 'pos')
+    pnt = cfg.pos;
   else
     pnt = zeros(0,3);
   end
