@@ -88,21 +88,21 @@ if strcmp(readbids, 'yes') || strcmp(readbids, 'ifmakessense')
       sens.label   = electrodes_tsv.name;
       sens.elecpos = [electrodes_tsv.x electrodes_tsv.y electrodes_tsv.z];
       
-      % also read the electrodes.json file
+      % also read the electrodes.json sidecar file
       [p, f] = fileparts(tsvfile);
-      jsonfile = fullfile(p, [f '.json']);
-      if exist(jsonfile, 'file')
-        electrodes_json = ft_read_json(jsonfile);
+      sidecar = fullfile(p, [f '.json']);
+      if exist(sidecar, 'file')
+        electrodes_json = ft_read_json(sidecar);
         ft_warning('the content of the electrodes.json is not used')
         % FIXME do something with the content
       end
-      
-      % also read the coordsystem.json file
-      coordsysfile = bids_sidecar(filename, 'coordsystem');
-      if exist(coordsysfile, 'file')
-        coordsys_json = ft_read_json(coordsysfile);
-        ft_warning('the content of the coordsystem.json is not used')
-        % FIXME do something with the content
+        
+      % also read the coordsystem.json sidecar file
+      sidecar = bids_sidecar(filename, 'coordsystem');
+      if exist(sidecar, 'file')
+        coordsystem_json = ft_read_json(sidecar);
+        sens.coordsys = coordsystem_json.EEGCoordinateSystem;
+        sens.unit     = coordsystem_json.EEGCoordinateUnits;
       end
     end
   end
