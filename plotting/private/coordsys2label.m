@@ -16,14 +16,9 @@ function [labelx, labely, labelz] = coordsys2label(coordsys, format, both)
 %   0) 'right'              i.e. only the direction that it is pointing to
 %   1) {'left' 'right'}     i.e. both the directions that it is pointing from and to
 %
-% The following references provide details
-%   - https://www.fieldtriptoolbox.org/faq/coordsys/
-%   - https://eeglab.org/tutorials/ConceptsGuide/coordinateSystem.html
-%   - https://neuroimage.usc.edu/brainstorm/CoordinateSystems
-%
 % See also FT_DETERMINE_COORDSYS, FT_PLOT_AXES, FT_HEADCOORDINATES, SETVIEWPOINT
 
-% Copyright (C) 2017-2026, Robert Oostenveld
+% Copyright (C) 2017-2024, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -85,7 +80,7 @@ if ~isempty(coordsys) && ~strcmp(coordsys, 'unknown')
         labelx = {'-X (left)'      '+X (right)'   };
         labely = {'-Y (posterior)' '+Y (anterior)'};
         labelz = {'-Z (inferior)'  '+Z (superior)'};
-      case {'als' 'ctf' '4d' 'bti' 'eeglab' 'eeglab-hj'}
+      case {'als' 'ctf' '4d' 'bti' 'eeglab', 'eeglab-hj'}
         labelx = {'-X (posterior)' '+X (anterior)'};
         labely = {'-Y (right)'     '+Y (left)'};
         labelz = {'-Z (inferior)'  '+Z (superior)'};
