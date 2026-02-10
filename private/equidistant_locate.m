@@ -1,162 +1,333 @@
-function [elc, lab] = equidistant_locate(pos, tri, Fpz, Oz, T7, T8, numelec, nummidline, feedback)
+function [elc, lab] = equidistant_locate(pos, tri, front, back, left, right, vertex, numelec, nummidline, numsideline, feedback)
 
-% EQUIDISTANT_LOCATE - Place electrodes equidistantly on the mesh surface
+% EQUIDISTANT_LOCATE determines electrode positions that are distributed
+% equidistantly on a scalp surface that is described by a triangulation
 %
-% See also ELEC1020_LOCATE
+% See also ELEC1020_LOCATE, FT_ELECTRODEPLACEMENT
 
-if nargin<8
-  feedback = true;
+% Copyright (C) 2026, Robert Oostenveld
+%
+% This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
+% for the documentation and details.
+%
+%    FieldTrip is free software: you can redistribute it and/or modify
+%    it under the terms of the GNU General Public License as published by
+%    the Free Software Foundation, either version 3 of the License, or
+%    (at your option) any later version.
+%
+%    FieldTrip is distributed in the hope that it will be useful,
+%    but WITHOUT ANY WARRANTY; without even the implied warranty of
+%    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+%    GNU General Public License for more details.
+%
+%    You should have received a copy of the GNU General Public License
+%    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
+
+if nargin<10
+  feedback = false;
 end
 
 if feedback
   figure
 end
 
+% the midline is the line connecting the front and the back, over the vertex
+% the sideline is the line connecting the front and the back, over the left or right
+
+if isempty(nummidline)
+  % FIXME this is not persee a good estimate of the desired number of midline electrodes
+  nummidline = floor(sqrt(numelec));
+end
+
+if isempty(numsideline)
+  % FIXME this is not persee a good estimate of the desired number of sideline electrodes
+  numsideline = floor(sqrt(numelec));
+end
+
 % to avoid confusion between electrode and headshape positions
 headshape.pos = pos;
 headshape.tri = tri;
 clear pos tri
+
+% determine the surface normals
 headshape.nrm = surface_normals(headshape.pos, headshape.tri);
 
-% estimate how large the head is
-headsize = (norm(T7-T8) + norm(Fpz - Oz)) / 2;
-
-% determine the midpoint of the fiducials and the cardinal directions
-midpoint = (T7 + T8)/2;
-anterior = Fpz - midpoint;
+anterior = front - back;
 anterior = anterior / norm(anterior);
-superior = cross(T8 - T7, anterior);
-superior = superior / norm(superior);
-right = cross(anterior, superior);
-right = right / norm(right);
 
-Fpz = Fpz - midpoint;
-Oz  = Oz  - midpoint;
-T7  = T7  - midpoint;
-T8  = T8  - midpoint;
+hasvertex    = ~isempty(vertex);
+hasleftright = ~isempty(left) && ~isempty(right);
 
-headshape.pos(:,1) = headshape.pos(:,1) - midpoint(1);
-headshape.pos(:,2) = headshape.pos(:,2) - midpoint(2);
-headshape.pos(:,3) = headshape.pos(:,3) - midpoint(3);
+if ~hasleftright
+  center   = (front + back) / 2;
+  headsize = norm(front - back);
+  % also make an estimate for the left and right points
+  if ~hasvertex
+    left  = cross([0 0 1], anterior) * headsize/2;
+    right = cross(anterior, [0 0 1]) * headsize/2;
+  else
+    left  = cross(vertex, anterior) * headsize/2;
+    right = cross(anterior, vertex) * headsize/2;
+  end
+else
+  center   = (front + back + left + right) / 4;
+  headsize = (norm(left-right) + norm(front - back)) / 2; % this is the diameter
+end
+
+% determine the homogenous transformation matrix, the FTG coordinate system is defined as:
+%   the origin corresponds with pt1
+%   the x-axis is along the line from pt1 to pt2
+%   the z-axis is orthogonal to the plane spanned by pt1, pt2 and pt3
+
+pt1 = center;
+pt2 = center + anterior; % towards the front
+pt3 = center + (left - right) / norm(left - right); % towards left
+
+transform = ft_headcoordinates(pt1, pt2, pt3, [], 'ftg');
+
+% transform the coordinates into a "simple" ALS geometry
+headshape = ft_transform_geometry(transform, headshape);
+front     = ft_transform_geometry(transform, struct('pos', front));
+back      = ft_transform_geometry(transform, struct('pos', back));
+left      = ft_transform_geometry(transform, struct('pos', left));
+right     = ft_transform_geometry(transform, struct('pos', right));
+vertex    = ft_transform_geometry(transform, struct('pos', vertex));
+
+% convert these structures back into a simple 1x3 vector
+front  = front.pos;
+back   = back.pos;
+left   = left.pos;
+right  = right.pos;
+vertex = vertex.pos;
+
+if hasleftright
+  % compute the mean of the left and the flipped right electrode position
+  leftright = (left + [1 -1 1].*right)/2;
+end
+
+% from now on we work in an ALS coordinate system
+anterior = [1 0 0];
+left     = [0 1 0];
+superior = [0 0 1];
+
+if hasvertex
+  nummidline = nummidline - 3; % minus vertex, front and back
+else
+  nummidline = nummidline - 2; % minus front and back
+end
+
+if hasleftright
+  numsideline = numsideline - 3; % minus left, front and back
+else
+  numsideline = numsideline - 2; % minus front and back
+end
+
+numfixed = 2; % the front and back
+numremaining = numelec - numfixed - nummidline - hasvertex - 2*numsideline - 2*hasleftright;
+if mod(numremaining, 2)
+  % it must be an even number, symmetric over the left and right quadrant
+  nummidline = nummidline - 1;
+end
+numquadrant = (numelec - numfixed - nummidline - hasvertex - 2*numsideline - 2*hasleftright)/2;
 
 % create some electrodes along the midline
-midlineelc = zeros(nummidline, 3);
-
-
-% crete some electrodes on the left hemisphere
-leftelec = zeros((numelec-nummidline-4)/2, 3);
-
-
-elc = randn(numelec-4,3);
-elc(2:2:end,1) = -elc(1:2:end,1);
-elc(2:2:end,2) =  elc(1:2:end,2);
-elc(:,3) = sqrt(2)/2;
-if mod(numelec-4,2)
-  elc(end,1) = 0;
-  elc(end,2) = 0;
+midline = zeros(nummidline, 3);
+for i=1:nummidline
+  angle = i*pi / (nummidline+1);
+  midline(i,:) = (cos(angle) * anterior + sin(angle)*superior) * headsize/2;
 end
-for i=1:size(elc,1)
-  elc(i,:) = elc(i,:) / norm(elc(i,:));
+
+% create some electrodes along the sideline
+sideline = zeros(numsideline, 3);
+for i=1:numsideline
+  angle = i*pi / (numsideline+1);
+  sideline(i,:) = (cos(angle) * anterior + sin(angle)*left) * headsize/2;
 end
-elc = elc * headsize/2;
 
+quadrant = uniformquadrant(numquadrant) * headsize/2;
+quadrant(:,2) = abs(quadrant(:,2)); % positive x
+quadrant(:,3) = abs(quadrant(:,3)); % positive z
+for i=1:size(quadrant,1)
+  quadrant(i,:) = quadrant(i,:)/norm(quadrant(i,:)) * headsize/2;
+end
 
-% add the fixed electrodes
-elc = [
-  elc
-  Fpz
-  Oz
-  T7
-  T8
-  ];
+% the front and back are always fixed
+elc = [front; back];
+selfixed = [1 2];
+
+if hasvertex
+  elc = cat(1, elc, vertex);
+  selvertex = size(elc,1);
+else
+  selvertex = [];
+end
+
+elc = cat(1, elc, midline);
+selmidline = (size(elc,1)-nummidline+1):size(elc,1);
+
+if hasleftright
+  elc = cat(1, elc, leftright);
+  selleftright = size(elc,1);
+else
+  selleftright = [];
+end
+
+elc = cat(1, elc, sideline);
+selsideline = (size(elc,1)-numsideline+1):size(elc,1);
+
+elc = cat(1, elc, quadrant);
+selquadrant = (size(elc,1)-numquadrant+1):size(elc,1);
 
 % project the electrodes onto the mesh surface
 [dum, elc] = project_elec(elc, headshape.pos, headshape.tri);
 
-stepsize = headsize/1000;
-minchange = headsize/10000;
-maxiter   = 1000;
+if feedback
+  ft_plot_mesh(headshape, 'facecolor', 'skin', 'edgecolor', 'none', 'axes', 'on');
+  ft_plot_mesh(elc, 'vertexsize', 20);
+  view(-90, 90);
+  ft_headlight
+end
 
+scale = inf;
 change = inf;
 iter = 0;
+
+minchange = headsize/2000; % approx 0.1 mm for a 200mm head
+maxiter = 1000;
+
 while change>minchange && iter<maxiter
-  % take the previous positions
-  pos = elc;
-
-  % make a triangulation of the electrodes
-  prj = elproj(pos);
-  tri = delaunay(prj(:,1), prj(:,2));
-
-  edge = [
-    tri(:,[1 2])
-    tri(:,[2 3])
-    tri(:,[3 1])
+  % take the previous positions and copy then over four quadrants
+  pos = [
+    elc % fixed + vertex + midline + leftright + sideline + quadrant
+    elc(selleftright,:) .* repmat([+1 -1 +1], hasleftright, 1)   % mirror leftright
+    elc(selsideline,:)  .* repmat([+1 -1 +1], numsideline,  1)   % right sideline
+    elc(selquadrant,:)  .* repmat([+1 -1 +1], numquadrant,  1)   % upper right
+    elc(selvertex,:)    .* repmat([+1 +1 -1], hasvertex,    1)   % mirror vertex
+    elc(selmidline,:)   .* repmat([+1 +1 -1], nummidline,   1)   % lower midline
+    elc(selquadrant,:)  .* repmat([+1 +1 -1], numquadrant,  1)   % lower left
+    elc(selquadrant,:)  .* repmat([+1 -1 -1], numquadrant,  1)   % lower right
     ];
 
-  % compute the length of each edge
-  l = sqrt(sum((pos(edge(:,1),:)-pos(edge(:,2),:)).^2,2));
-  s = std(l);
-
-  % loop over the edges and for each edge compute how much the two vertices that it
-  % connects should move towards or away from each other 
-  delta = zeros(size(pos));
-  for i=1:size(edge,1)
-    v1 = edge(i,1);
-    v2 = edge(i,2);
-    ori = pos(v1,:) - pos(v2,:);
-    ori = ori / norm(ori);
-
-    sel = any(edge==v1, 2); % selection of the neighbours
-    m = mean(l(sel));       % mean distance to the neighbours
-    k = sum(sel);           % number of neighbours
-    delta(v1,:) = delta(v1,:) + (stepsize/k) * (m - l(i)) * ori;
-
-    sel = any(edge==v1, 2); % selection of the neighbours
-    m = mean(l(sel));       % mean distance to the neighbours
-    k = sum(sel);           % number of neighbours
-    delta(v2,:) = delta(v2,:) + (stepsize/k) * (l(i) - m) * ori;
-  end
-
-  for i=1:numelec
-    if delta(i,3)<0
-      % they are not allowed to shift below the fixed electrodes
-      delta(i,3) = 0;
+  % compute the repulsion force between all points
+  shift = zeros(size(elc));
+  for i=1:size(elc,1)
+    for j=1:size(pos,1)
+      if i==j
+        continue
+      else
+        v = pos(i,:) - pos(j,:);
+        d = norm(v);
+        v = v/d;
+        w = 1/d^2;
+        shift(i,:) = shift(i,:) + w * v;
+      end
     end
   end
 
-  % the last four are the reference electrodes which are not to move in any case
-  delta(end-3,:) = 0;
-  delta(end-2,:) = 0;
-  delta(end-1,:) = 0;
-  delta(end-0,:) = 0;
+  % none of the points is to shift with a too large amount
+  mx = 2*median(abs(shift(:,1)));
+  my = 2*median(abs(shift(:,2)));
+  mz = 2*median(abs(shift(:,3)));
+  sel = shift(:,1)>mx; shift(sel,1) = mx;
+  sel = shift(:,2)>my; shift(sel,2) = my;
+  sel = shift(:,3)>mz; shift(sel,3) = mz;
+  sel = shift(:,1)<-mx; shift(sel,1) = -mx;
+  sel = shift(:,2)<-my; shift(sel,2) = -my;
+  sel = shift(:,3)<-mz; shift(sel,3) = -mz;
 
-  % update the positions
-  pos = pos + delta;
+  % the scaling is only computed once
+  if isinf(scale)
+    scale = 3/(mx+my+mz);
+  end
+  shift = shift * scale;
 
-  % project the new positions onto the mesh surface
+  % the fixed points are not to shift
+  shift(selfixed,:)     = 0;
+  shift(selvertex,:)    = 0;
+  shift(selleftright,:) = 0;
+
+  % the midline points are not to shift in the y-direction
+  shift(selmidline,2) = 0;
+
+  % the sideline points are not to shift in the z-direction
+  shift(selsideline,3) = 0;
+
+  % none of the points is to shift below z=0
+  sel = (elc(:,3)+shift(:,3))<0;
+  shift(sel,3) = 0;
+
+  % update the left quadrant, drop the other three quadrants
+  pos = pos(1:size(elc,1),:) + shift;
+
+  % project the updated points onto the headsurface
   [dum, pos] = project_elec(pos, headshape.pos, headshape.tri);
 
-  % compute the average shift of the electrodes
-  change = mean(sqrt(sum((elc - pos).^2,2)));
+  % these have the tendency to drift away due to repeated projections, keep them fixed
+  pos(selmidline,2)   = 0;
+  pos(selsideline,3)  = 0;
+
+  % compute the average shift of the points
+  change = sum(sqrt(sum((elc - pos).^2,2)));
   iter = iter + 1;
 
-  if feedback
+  if feedback && mod(iter,10)==0
     cla
-    ft_plot_mesh(struct('pos', pos, 'tri', tri))
+    ft_info off
+    ft_plot_mesh(pos, 'axes', 'on', 'vertexsize', 20);
+    ft_info on
     drawnow
-    fprintf('iter = %d, mean = %f, std = %f, change = %f\n', iter, m, s, change)
+    ft_info('iter = %d, change = %f\n', iter, change)
   end
 
   % repeat with the updated positions
   elc = pos;
 end % while
 
+% copy the electrode positions from the left to the right quadrant
+elc = [
+  elc % fixed + vertex + midline + leftright + sideline + quadrant
+  elc(selleftright,:) .* repmat([+1 -1 +1], hasleftright, 1)  % mirror leftright
+  elc(selsideline,:)  .* repmat([+1 -1 +1], numsideline,  1)  % right sideline
+  elc(selquadrant,:)  .* repmat([+1 -1 +1], numquadrant,  1)  % upper right
+  ];
+
+% sanity check
+assert(size(elc,1)==numelec);
+
+% sort them according to the azimuth and elevation
+[az,el,r] = cart2sph(elc(:,1), elc(:,2), elc(:,3));
+[dum, indx] = sortrows([az el], [2 1], 'descend');
+elc = elc(indx,:);
+
+% construct electrode labels
 lab = cell(numelec, 1);
 for i=1:numelec
   lab{i} = sprintf('%d', i);
 end
-% the last four electrodes are the fixed ones
-lab{n-3} = 'Fpz';
-lab{n-2} = 'Oz';
-lab{n-1} = 'T7';
-lab{n-0} = 'T8';
+
+% transform the electrodes back to the original coordinate system
+elc = ft_transform_geometry(inv(transform), struct('pos', elc));
+
+% convert the structures back into a simple Nx3 matrix
+elc = elc.pos;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function pos = uniformquadrant(n)
+% this function distributes N points more or less uniform
+% over the left quadrant in 3D space
+
+az = 0:(n-1);
+el = 0:(n-1);
+
+m  = floor(sqrt(n));
+az = mod(az, m)/(m-1);
+el = el / (n-1);
+
+az = pi/(1*m) + az * pi/1 * (1 - 2/m);
+el = pi/(2*m) + el * pi/2 * (1 - 2/m);
+
+[x, y, z] = sph2cart(az, el, ones(1,n));
+
+pos = [x' y' z'];

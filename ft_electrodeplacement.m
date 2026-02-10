@@ -75,7 +75,7 @@ function [elec] = ft_electrodeplacement(cfg, varargin)
 %                        'weighted'        place electrodes at center-of-mass
 %   cfg.magradius      = number representing the radius for the cfg.magtype based search (default = 3)
 %
-% The following options apply to the '1020' method
+% The following options apply to the '1020' and 'equidistant' method
 %   cfg.fiducial.nas   = 1x3 vector with coordinates
 %   cfg.fiducial.ini   = 1x3 vector with coordinates
 %   cfg.fiducial.lpa   = 1x3 vector with coordinates
@@ -156,7 +156,8 @@ cfg.renderer      = ft_getopt(cfg, 'renderer',      'opengl');
 cfg.figurename    = ft_getopt(cfg, 'figurename',    mfilename);
 % equidistant options
 cfg.numelec       = ft_getopt(cfg, 'numelec',             64);
-cfg.nummidline    = ft_getopt(cfg, 'nummidline',           8);
+cfg.nummidline    = ft_getopt(cfg, 'nummidline');
+cfg.numsideline   = ft_getopt(cfg, 'numsideline');
 % view options
 cfg.clim          = ft_getopt(cfg, 'clim',             [0 1]); % initial volume intensity limit voxels
 cfg.markerdist    = ft_getopt(cfg, 'markerdist',           5); % marker-slice distance view when ~global
@@ -632,23 +633,24 @@ switch cfg.method
     elec.chanpos = elec.elecpos;
     elec.tra = eye(size(elec.elecpos,1));
 
-
   case 'equidistant'
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % this is an automatic method without figure
+    % the equidistant distribution requires some fixed reference points
+    % which we get from the 1020 placement
     tmpcfg = cfg;
     tmpcfg.method = '1020';
     tmpcfg.feedback = 'no';
     elec1020 = ft_electrodeplacement(tmpcfg, headshape);
 
-    % the equidistant distribution requires a number of fixed reference electrodes
-    Fpz = elec1020.elecpos(strcmp(elec1020.label, 'Fpz'),:);
-    Oz  = elec1020.elecpos(strcmp(elec1020.label, 'Oz'),:);
-    T7  = elec1020.elecpos(strcmp(elec1020.label, 'T7'),:);
-    T8  = elec1020.elecpos(strcmp(elec1020.label, 'T8'),:);
+    front  = elec1020.elecpos(strcmp(elec1020.label, 'Fpz'),:);
+    back   = elec1020.elecpos(strcmp(elec1020.label, 'Oz'),:);
+    left   = elec1020.elecpos(strcmp(elec1020.label, 'T7'),:);  % optional, can be []
+    right  = elec1020.elecpos(strcmp(elec1020.label, 'T8'),:);  % optional, can be []
+    vertex = elec1020.elecpos(strcmp(elec1020.label, 'Cz'),:);  % optional, can be []
     
     % distribute the electrodes automatically on the headshape 
-    [pos, lab] = equidistant_locate(headshape.pos, headshape.tri, Fpz, Oz, T7, T8, cfg.numelec, cfg.nummidline, istrue(cfg.feedback));
+    [pos, lab] = equidistant_locate(headshape.pos, headshape.tri, front, back, left, right, vertex, cfg.numelec, cfg.nummidline, cfg.numsideline, istrue(cfg.feedback));
+
     % construct the output
     elec = keepfields(headshape, {'unit', 'coordsys'});
     elec.elecpos = pos;

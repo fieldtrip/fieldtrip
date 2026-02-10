@@ -1,7 +1,9 @@
 function [elc, lab] = elec1020_locate(pos, tri, nas, ini, lpa, rpa, feedback)
 
 % ELEC1020_LOCATE determines 10-20 (20%, 10% and 5%) electrode positions
-% on a scalp surface that is described by its surface triangulation
+% on a scalp surface that is described by a triangulation
+%
+% See also EQUIDISTANT_LOCATE, FT_ELECTRODEPLACEMENT
 
 % Copyright (C) 2003, Robert Oostenveld
 %
