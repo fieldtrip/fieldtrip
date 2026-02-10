@@ -726,6 +726,7 @@ mapping = {
   '4d',        'als'
   'yokogawa',  'als'
   'eeglab',    'als'
+  'eeglab-hj', 'als'
   'neuromag',  'ras'
   'itab',      'ras'
   'acpc',      'ras'

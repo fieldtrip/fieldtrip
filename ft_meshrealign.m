@@ -22,8 +22,8 @@ function [mesh_realigned] = ft_meshrealign(cfg, mesh)
 %   cfg.method         = string, can be 'interactive' or fiducial' (default = 'interactive')
 %   cfg.coordsys       = string specifying the origin and the axes of the coordinate
 %                        system. Supported coordinate systems are 'ctf', '4d', 'bti',
-%                        'eeglab', 'neuromag', 'itab', 'yokogawa', 'asa', 'acpc',
-%                        and 'paxinos'. See http://tinyurl.com/ojkuhqz
+%                        'eeglab', 'eeglab-hj', 'neuromag', 'itab', 'yokogawa', 'asa', 'acpc',
+%                        and 'paxinos'. See https://www.fieldtriptoolbox.org/faq/coordsys
 %
 % When cfg.method = 'fiducial' and cfg.coordsys is based on external anatomical
 % landmarks, as is common for EEG and MEG, the following can be used to specify the
@@ -197,7 +197,7 @@ switch cfg.method
       mri = [];
       
       switch cfg.coordsys
-        case {'ctf', '4d', 'bti', 'eeglab', 'neuromag', 'itab', 'yokogawa', 'asa'}
+        case {'ctf', '4d', 'bti', 'eeglab', 'eeglab-hj', 'neuromag', 'itab', 'yokogawa', 'asa'}
           fidlabel  = {'nas', 'lpa', 'rpa', 'zpoint'};
           fidletter = {'n', 'l', 'r', 'z'};
           fidexplanation1 = '      press n for nas, l for lpa, r for rpa\n';

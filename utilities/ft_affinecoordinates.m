@@ -68,7 +68,7 @@ if isempty(precomputed)
     'lsp'; 'lip'; 'rsp'; 'rip'}';
 
   % the specific ones specify the axes and also the origin
-  specific = {'ctf', 'bti', 'fourd', 'yokogawa', 'eeglab', 'neuromag', 'itab', 'acpc', 'spm', 'mni', 'fsaverage', 'tal', 'scanras', 'scanlps', 'dicom'};
+  specific = {'ctf', 'bti', 'fourd', 'yokogawa', 'eeglab', 'eeglab-hj', 'neuromag', 'itab', 'acpc', 'spm', 'mni', 'fsaverage', 'tal', 'scanras', 'scanlps', 'dicom'};
 
   if false
     % this section can be used to print all persistent variables that should be retained between calls

@@ -26,7 +26,7 @@ function [object] = ft_convert_coordsys(object, target, varargin)
 %   anatomical or functional atlas, see FT_READ_ATLAS
 %
 % Recognized and supported coordinate systems are 'ctf', 'bti', '4d', 'yokogawa',
-% 'eeglab', 'neuromag', 'itab', 'acpc', 'spm', 'mni', 'fsaverage', 'tal', 'scanras',
+% 'eeglab', 'eeglab-hj', 'neuromag', 'itab', 'acpc', 'spm', 'mni', 'fsaverage', 'tal', 'scanras',
 % 'scanlps', 'dicom'.
 %
 % Furthermore, supported coordinate systems that do not specify the origin are 'ras',

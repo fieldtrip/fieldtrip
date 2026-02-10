@@ -270,7 +270,7 @@ switch cfg.filetype
     end
 
     % the reordering for BrainVoyager has been figured out by Markus Siegel
-    if any(strcmp(volume.coordsys, {'als', 'ctf', '4d', 'bti', 'eeglab'}))
+    if any(strcmp(volume.coordsys, {'als', 'ctf', '4d', 'bti', 'eeglab', 'eeglab-hj'}))
       data = permute(data, [2 3 1]);
     elseif any(strcmp(volume.coordsys, {'ras', 'acpc', 'spm', 'mni', 'tal', 'neuromag', 'itab'}))
       data = permute(data, [2 3 1]);
@@ -298,7 +298,7 @@ switch cfg.filetype
     % CTF       z = inf-sup
 
     % the reordering of the Analyze format is according to documentation from Darren Webber
-    if any(strcmp(volume.coordsys, {'als', 'ctf', '4d', 'bti', 'eeglab'}))
+    if any(strcmp(volume.coordsys, {'als', 'ctf', '4d', 'bti', 'eeglab', 'eeglab-hj'}))
       data = permute(data, [2 1 3]);
     elseif any(strcmp(volume.coordsys, {'ras', 'acpc', 'spm', 'mni', 'tal', 'neuromag', 'itab'}))
       data = flip(data, 1);

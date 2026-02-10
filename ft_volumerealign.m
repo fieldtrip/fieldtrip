@@ -54,8 +54,8 @@ function [realign, snap] = ft_volumerealign(cfg, mri, target)
 %                        'fsl'         match to template anatomical MRI
 %   cfg.coordsys       = string specifying the origin and the axes of the coordinate
 %                        system. Supported coordinate systems are 'ctf', '4d', 'bti',
-%                        'eeglab', 'neuromag', 'itab', 'yokogawa', 'asa', 'acpc',
-%                        and 'paxinos'. See http://tinyurl.com/ojkuhqz
+%                        'eeglab', 'eeglab-hj', 'neuromag', 'itab', 'yokogawa', 'asa', 'acpc',
+%                        and 'paxinos'. See https://www.fieldtriptoolbox.org/faq/coordsys
 %   cfg.clim           = [min max], scaling of the anatomy color (default is automatic)
 %   cfg.parameter      = 'anatomy' the parameter which is used for the visualization
 %   cfg.viewresult     = string, 'yes' or 'no', whether or not to visualize aligned volume(s)
@@ -349,7 +349,7 @@ coordsys  = [];
 
 if any(strcmp(cfg.method, {'fiducial', 'interactive'}))
   switch cfg.coordsys
-    case {'ctf', '4d', 'bti', 'eeglab', 'neuromag', 'itab', 'yokogawa', 'asa'}
+    case {'ctf', '4d', 'bti', 'eeglab', 'eeglab-hj', 'neuromag', 'itab', 'yokogawa', 'asa'}
       fidlabel  = {'nas', 'lpa', 'rpa', 'zpoint'};
       fidletter = {'n', 'l', 'r', 'z'};
       fidexplanation1 = '      press n for nas, l for lpa, r for rpa';

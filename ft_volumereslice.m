@@ -102,7 +102,7 @@ else
     % use some prior knowledge to optimize the location of the bounding box
     % with respect to the origin of the coordinate system
     switch mri.coordsys
-      case {'ctf', '4d', 'bti', 'eeglab'}
+      case {'ctf', '4d', 'bti', 'eeglab', 'eeglab-hj'}
         xshift = 30.*ft_scalingfactor('mm', mri.unit);
         yshift = 0;
         zshift = 40.*ft_scalingfactor('mm', mri.unit);
