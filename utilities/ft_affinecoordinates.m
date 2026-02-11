@@ -12,7 +12,7 @@ function [transform] = ft_affinecoordinates(original, target, varargin)
 %
 % See also FT_CONVERT_COORDSYS, FT_CONVERT_UNITS, FT_HEADCOORDINATES, FT_WARP_APPLY
 
-% Copyright (C) 2005-2024, Robert Oostenveld & Jan-Mathijs Schoffelen
+% Copyright (C) 2005-2026, Robert Oostenveld & Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -32,14 +32,6 @@ function [transform] = ft_affinecoordinates(original, target, varargin)
 %
 % $Id$
 
-% these are the 48 generic axis orientation triplets, these specify the axes but no origin
-%   a = anterior
-%   p = posterior
-%   l = left
-%   r = right
-%   s = superior
-%   i = inferior
-
 % these are for speeding up subsequent calls
 persistent precomputed
 
@@ -49,6 +41,14 @@ requireorigin = ft_getopt(varargin, 'requireorigin', true);
 % ensure that these are in lower case
 original = lower(original);
 target   = lower(target);
+
+% there are 48 generic axis orientation triplets, these specify the axes but no origin
+%   a = anterior
+%   p = posterior
+%   l = left
+%   r = right
+%   s = superior
+%   i = inferior
 
 if isempty(precomputed)
   % all transformations are only constructed once, keep them in a persistent structure
@@ -68,7 +68,8 @@ if isempty(precomputed)
     'lsp'; 'lip'; 'rsp'; 'rip'}';
 
   % the specific ones specify the axes and also the origin
-  specific = {'ctf', 'bti', 'fourd', 'yokogawa', 'eeglab', 'eeglab-hj', 'neuromag', 'itab', 'acpc', 'spm', 'mni', 'fsaverage', 'tal', 'scanras', 'scanlps', 'dicom'};
+  % 4d and eeglab-hj are spelled differently, so that they can be used as part of variable names
+  specific = {'ctf', 'bti', 'fourd', 'yokogawa', 'eeglab', 'eeglabhj', 'neuromag', 'itab', 'acpc', 'spm', 'mni', 'fsaverage', 'tal', 'scanras', 'scanlps', 'dicom'};
 
   if false
     % this section can be used to print all persistent variables that should be retained between calls
@@ -90,10 +91,10 @@ if isempty(precomputed)
 
   % this is based on the ear canals, see ALIGN_CTF2ACPC
   acpc2ctf = [
-    0.0000  0.9987  0.0517  34.7467
+     0.0000  0.9987  0.0517  34.7467
     -1.0000  0.0000  0.0000   0.0000
-    0.0000 -0.0517  0.9987  52.2749
-    0.0000  0.0000  0.0000   1.0000
+     0.0000 -0.0517  0.9987  52.2749
+     0.0000  0.0000  0.0000   1.0000
     ];
 
   % this is based on the ear canals, see ALIGN_NEUROMAG2ACPC
@@ -106,10 +107,10 @@ if isempty(precomputed)
 
   % see http://freesurfer.net/fswiki/CoordinateSystems
   fsaverage2mni = [
-    0.9975   -0.0073    0.0176   -0.0429
-    0.0146    1.0009   -0.0024    1.5496
+     0.9975   -0.0073    0.0176   -0.0429
+     0.0146    1.0009   -0.0024    1.5496
     -0.0130   -0.0093    0.9971    1.1840
-    0.0000    0.0000    0.0000    1.0000
+     0.0000    0.0000    0.0000    1.0000
     ];
 
   % this is a 90 degree rotation around the z-axis
@@ -176,6 +177,15 @@ if isempty(precomputed)
   spm2ras       = eye(4);
   fsaverage2ras = eye(4);
   tal2ras       = eye(4);
+
+  % the EEGLAB-HJ uses the helix-tragus junction, which is ~10mm posterior of the pre-auricular point
+  % see https://eeglab.org/tutorials/ConceptsGuide/coordinateSystem.html#eeglab-hj-coordinate-system
+  eeglab2eeglabhj = [
+    1 0 0 10 
+    0 1 0  0 
+    0 0 1  0 
+    0 0 0  1
+    ];
 
   % the SCANRAS coordinate system is RAS with the origin at the center opf the gradient coil
   scanras2ras     = eye(4);
@@ -285,13 +295,17 @@ if isempty(precomputed)
 end % if not initialized
 
 if strcmp(original, '4d')
-  xxx = 'fourd'; % '4d' is not a valid variable name
+  xxx = 'fourd'; % this would not be a valid variable name
+elseif strcmp(original, 'eeglab-hj')
+  xxx = 'eeglabhj'; % this would not be a valid variable name
 else
   xxx = original;
 end
 
 if strcmp(target, '4d')
-  yyy = 'fourd'; % '4d' is not a valid variable name
+  yyy = 'fourd'; % this would not be a valid variable name
+elseif strcmp(target, 'eeglab-hj')
+  yyy = 'eeglabhj'; % this would not be a valid variable name
 else
   yyy = target;
 end
