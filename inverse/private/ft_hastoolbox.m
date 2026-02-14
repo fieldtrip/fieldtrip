@@ -511,13 +511,13 @@ if ~status && autoadd>0
 
   % for core FieldTrip modules
   prefix = fileparts(which('ft_defaults'));
-  if ~status
+  if ~status && is_folder(prefix)
     status = myaddpath(fullfile(prefix, lower(toolbox)), silent);
   end
 
   % for external FieldTrip modules
   prefix = fullfile(fileparts(which('ft_defaults')), 'external');
-  if ~status
+  if ~status && is_folder(prefix)
     status = myaddpath(fullfile(prefix, lower(toolbox)), silent);
     licensefile = [lower(toolbox) '_license'];
     if status && exist(licensefile, 'file')
@@ -529,7 +529,7 @@ if ~status && autoadd>0
 
   % for contributed FieldTrip extensions
   prefix = fullfile(fileparts(which('ft_defaults')), 'contrib');
-  if ~status
+  if ~status && is_folder(prefix)
     status = myaddpath(fullfile(prefix, lower(toolbox)), silent);
     licensefile = [lower(toolbox) '_license'];
     if status && exist(licensefile, 'file')
@@ -697,11 +697,15 @@ end
 % helper function
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function status = is_subdir_in_fieldtrip_path(toolbox_name)
-fttrunkpath = unixpath(fileparts(which('ft_defaults')));
-fttoolboxpath = fullfile(fttrunkpath, lower(toolbox_name));
-needle   = [pathsep fttoolboxpath pathsep];
-haystack = [pathsep path() pathsep];
-status   = contains(haystack, needle);
+ftpath = unixpath(fileparts(which('ft_defaults')));
+if is_folder(ftpath)
+  fttoolboxpath = fullfile(ftpath, lower(toolbox_name));
+  needle   = [pathsep fttoolboxpath pathsep];
+  haystack = [pathsep path() pathsep];
+  status   = contains(haystack, needle);
+else
+  status = false;
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % helper function

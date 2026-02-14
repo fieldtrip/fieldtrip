@@ -112,28 +112,39 @@ switch what
 
   case 'images'
     root_dir = fileparts(which('ft_defaults'));
-    external_stats_dir = fullfile(root_dir, 'external', 'images');
-    
-    tf = has_all_functions_in_dir(external_stats_dir, {});
+    if ~isempty(root_dir)
+       external_stats_dir = fullfile(root_dir, 'external', 'images');
+       tf = has_all_functions_in_dir(external_stats_dir, {});
+    else
+      % this probably only works for MATLAB, not for Octave
+      tf = ~isempty(ver('images'));
+    end
     
   case 'signal'
     root_dir = fileparts(which('ft_defaults'));
-    external_stats_dir = fullfile(root_dir, 'external', 'signal');
-    
-    tf = has_all_functions_in_dir(external_stats_dir, {});
-    
+    if ~isempty(root_dir)
+      external_stats_dir = fullfile(root_dir, 'external', 'signal');
+      tf = has_all_functions_in_dir(external_stats_dir, {});
+    else
+      % this probably only works for MATLAB, not for Octave
+      tf = ~isempty(ver('signal'));
+    end
+
   case 'stats'
     root_dir = fileparts(which('ft_defaults'));
-    external_stats_dir = fullfile(root_dir, 'external', 'stats');
-    
-    % these files are only used by other functions in the external/stats directory
-    exclude_mfiles = {
-      'common_size.m'
-      'iscomplex.m'
-      };
-    
-    tf = has_all_functions_in_dir(external_stats_dir, exclude_mfiles);
-    
+    if ~isempty(root_dir)
+      external_stats_dir = fullfile(root_dir, 'external', 'stats');
+      % these files are only used by the other functions in the external/stats directory
+      exclude_mfiles = {
+        'common_size.m'
+        'iscomplex.m'
+        };
+      tf = has_all_functions_in_dir(external_stats_dir, exclude_mfiles);
+    else
+      % this probably only works for MATLAB, not for Octave
+      tf = ~isempty(ver('stats'));
+    end
+      
   case 'program_invocation_name'
     % Octave supports program_invocation_name, which returns the path
     % of the binary that was run to start Octave
