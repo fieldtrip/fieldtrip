@@ -45,7 +45,6 @@ function [stat] = ft_connectivityanalysis(cfg, data)
 %     'plm'        phase linearity measurement
 %     'mim'        multivariate interaction measure, support for freq data
 %     'cancoh'     canonical coherence, support for freq data
-%     'iac'        instantaneous amplitude coupling, support for freq data
 %
 % Additional configuration options are
 %   cfg.channel    = Nx1 cell-array containing a list of channels which are
@@ -450,11 +449,6 @@ switch cfg.method
     data     = ft_checkdata(data, 'datatype', 'freq');
     inparam  = 'crsspctrm';
     outparam = 'cancohspctrm';
-  case {'iac'}
-    normrpt = 1;
-    data = ft_checkdata(data, 'datatype', {'freqmvar' 'freq'});
-    inparam = 'fourierspctrm';
-    outparam = 'iacspctrm';
   otherwise
     ft_error('unknown method % s', cfg.method);
 end
@@ -624,7 +618,7 @@ elseif hasrpt && dojack && ~ismember(cfg.method, {'wpli', 'wpli_debiased', 'ppc'
     clear sumdat;
   end
   hasjack = true;
-elseif hasrpt && ~ismember(cfg.method, {'wpli', 'wpli_debiased', 'ppc', 'wppc', 'powcorr_ortho', 'mi', 'di', 'dfi', 'iac'})% || needrpt)
+elseif hasrpt && ~ismember(cfg.method, {'wpli', 'wpli_debiased', 'ppc', 'wppc', 'powcorr_ortho', 'mi', 'di', 'dfi'})% || needrpt)
   % create dof variable
   if isfield(data, 'dof')
     dof = data.dof;
@@ -939,17 +933,24 @@ switch cfg.method
 
         outdimord = 'pos_pos_freq';
       end
-    elseif strcmp(data.dimord, 'rpttap_chan_freq')
-      % loop over all frequencies
-      [nrpttap, nchan, nfreq] = size(data.fourierspctrm);
-      datout = cell(1, nfreq);
-      for i=1:length(data.freq)
-        dat       = data.fourierspctrm(:,:,i).';
-        datout{i} = ft_connectivity_powcorr_ortho(dat, optarg{:});
-      end
-      datout = cat(3, datout{:});
-      % HACK otherwise I don't know how to inform the code further down about the dimord
-      data.dimord = 'rpttap_chan_chan_freq';
+    elseif strcmp(data.dimord, 'rpttap_chan_freq_time')
+
+    [nrpttap, nchan, nfreq, ntime] = size(data.fourierspctrm);
+
+    % let me know if I should move this logic into ft_connectivity_powcorr_ortho
+    datout = zeros(nchan, nchan, nfreq, ntime);
+      % loop over all times
+        for j = 1:ntime
+          for i = 1:nfreq
+                % loop over all frequencies
+                dat       = data.fourierspctrm(:,:,i,j).';
+                datout(:,:,i,j) = ft_connectivity_powcorr_ortho(dat, optarg{:});
+              end
+          end
+          
+      %dimord is set here
+      data.dimord = 'chan_chan_freq_time';
+
     else
       ft_error('unsupported data representation');
     end
@@ -1157,13 +1158,6 @@ switch cfg.method
       label{k,1} = sprintf('(%s)', str);
     end
     data.label = label;
-  case 'iac'
-    % phase slope index
-    %nbin = nearest(data.freq, data.freq(1)+cfg.bandwidth)-1;
-    % trials should never be averaged
-    optarg = {'feedback', cfg.feedback, 'dimord', data.dimord, 'hasrpt', hasrpt, 'hasjack', hasjack};
-    if exist('powindx', 'var'), optarg = cat(2, optarg, {'powindx', powindx}); end
-    [datout, varout, nrpt] = ft_connectivity_iac(data.(inparam), optarg{:});
   otherwise
     ft_error('unknown method %s', cfg.method);
 

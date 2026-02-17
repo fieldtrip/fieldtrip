@@ -1,30 +1,23 @@
-function [c] = ft_connectivity_powcorr_ortho(inputdata, varargin)
-
+function [c] = ft_connectivity_powcorr_ortho(mom, varargin)
 % FT_CONNECTIVITY_POWCORR_ORTHO computes power correlation after removing
 % the zero-lag contribution on a trial-by-trial basis, according to Hipp's
-% Nature Neuroscience paper.
+% Nature Neuroscience paper. 
 %
 % Use as
-%   [c] = ft_connectivity_powcorr(inputdata, ...)
+%   c = ft_connectivity_powcorr(mom)
+%   c = ft_connectivity_powcorr(mom, 'refindx', refindx)
 %
-% Where the input is a Nchan*Nrpt matrix containing the complex-valued amplitude
-% and phase information at a given frequency.
+% Where mom is a NchanxNrpt matrix containing the complex-valued amplitude
+% and phase information at a given frequency, and the optional key refindx
+% specifies the index/indices of the channels that serve as a reference 
+% channel. (Default is 'all').
 %
-% The output c is a Nchan*Nref matrix that contain the power correlation for all
-% channels orthogonalised relative to the reference channel in the first Nref
-% columns, and the power correlation for the reference channels orthogonalised
-% relative to the channels in the second Nref columns.
-%
-% Additional optional input arguments come as key-value pairs:
-%   'refindx'  = index/indices of the channels that serve as a reference channel (default is all)
-%   'tapvec'   = vector with the number of tapers per trial
-%
-% See also CONNECTIVITY, FT_CONNECTIVITYANALYSIS
+% The output c is a NchanxNrefchan matrix that contain the power correlation
+% for all channels orthogonalised relative to the reference channel in the first
+% Nrefchan columns, and the power correlation for the reference channels 
+% orthogonalised relative to the channels in the second Nrefchan columns.
 
 % Copyright (C) 2012 Jan-Mathijs Schoffelen
-% Copyright (C) 2021 Andrea Ibarra-Chaoul and Tobias Ludwig, who added the feature to
-% handle multiple tapers by computing orthogonal power-correlation for each taper
-% separately and then averaging over tapers
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -44,70 +37,92 @@ function [c] = ft_connectivity_powcorr_ortho(inputdata, varargin)
 %
 % $Id$
 
+% assume this is the numebr of observations
 refindx = ft_getopt(varargin, 'refindx', 'all');
-tapvec  = ft_getopt(varargin, 'tapvec',  ones(1,size(inputdata,2))); % default is 1 taper per trial
+tapvec  = ft_getopt(varargin, 'tapvec',  ones(1,size(mom,2)));
 
 if strcmp(refindx, 'all')
-  refindx = 1:size(inputdata,1);
+  refindx = 1:size(mom,1);
 end
+%unit phase vector for node Xi
+cmomnorm = conj(mom./abs(mom)); % only need to do conj() once
 
-[nchan, nrpttap] = size(inputdata);
-ntap  = tapvec(1);
-nrpt  = numel(tapvec); % number of trials / repetitions
-
-if sum(tapvec)~=nrpttap
-  ft_error('the number of tapers and trials does not match');
-end
-
+n        = size(mom,1);
+ntap     = tapvec(1);
 if ~all(tapvec==ntap)
   ft_error('unequal number of tapers per observation is not yet supported');
 end
+% FIXME think about multiple tapers per trial
+%if ntap>1
+%  ft_error('more than one taper per observation is not yet supported');
+%end
 
-% final connectivity matrix
-c = zeros(nchan, numel(refindx))+nan;
+% create a sparse matrix tra, that can be used as a right multiplying
+% matrix to combine across tapers
 
-% only need to do these two things once (out of next forloop)
-cXnorm = conj(inputdata./abs(inputdata));
-powX   = abs(inputdata).^2;
-
-for k = 1:numel(refindx) % for each source/channel
-  indx   = refindx(k);
-  target = setdiff(1:size(inputdata,1), indx);
-  
-  Y    = repmat(inputdata(indx,:), [nchan, 1]); % Y = y nchan times stacked
-  
-  % orthogonalization in one direction: Y wrt X
-  powYorth = abs(imag(Y.*cXnorm)).^2;
-  
-  zYorth   = zeros(nchan, nrpt*ntap);
-  zX       = zeros(nchan, nrpt*ntap);
-  
-  % correlation for each taper separately
-  for tap = 1:ntap
-    idx = tap + ntap * (0:(nrpt-1));
-    zYorth(target,idx) = standardise(log10(powYorth(target,idx)), 2);
-    zX(target,idx)     = standardise(log10(powX(target,idx)), 2);
-  end
-  
-  c1 = mean(zX.*zYorth, 2); % take correlation averaging over trials+tapers
-  
-  % in the other direction: orthogonalize X wrt Y
-  cYnorm = conj(Y./abs(Y));
-  
-  powXorth = abs(imag(inputdata.*cYnorm)).^2;
-  powY     = abs(Y).^2;
-  
-  zXorth   = zeros(nchan, nrpt*ntap);
-  zY       = zeros(nchan, nrpt*ntap);
-  
-  for tap = 1:ntap
-    idx = tap + ntap * (0:(nrpt-1));
-    zXorth(target,idx) = standardise(log10(powXorth(target,idx)), 2);
-    zY(target,idx)     = standardise(log10(powY(target,idx)), 2);
-  end
-  
-  c2 = mean(zXorth.*zY, 2);
-  
-  c(:,k) = (c1+c2)./2;
-  
+ix = zeros(sum(tapvec),1);
+jx = ix;
+sx = ix;
+for k = 1:numel(tapvec)
+  indx = (k-1)*ntap+(1:ntap);
+  ix(indx) = indx;
+  jx(indx) = k;
+  sx(indx) = 1./ntap;
 end
+tra = sparse(ix,jx,sx,sum(tapvec),numel(tapvec));
+
+%tra  = zeros(size(mom,2), numel(tapvec));
+%for k = 1:numel(tapvec)
+%  tra((k-1)*ntap+(1:ntap), k) = 1./ntap;
+%end
+
+%averages tapers per time window
+powmom = (abs(mom).^2)*tra; % need only once
+
+disp(size(pownom))
+powmom = standardise(log10(powmom), 2);
+
+c = zeros(n, numel(refindx));%;*2);
+N = ones(n,1);
+%warning off;
+for k = 1:numel(refindx)
+  indx     = refindx(k);
+  ref      = mom(indx,:);
+  crefnorm = conj(ref./abs(ref));
+
+  % FIXME the following is probably not correct for ntap>1
+
+  % Compute power envelope of the reference signal ref(N,:) orthogonalized to each source i
+  % goal is to take the reference signal and remove the part caused by leakage from source i
+  pow2 = (abs(imag(ref(N,:).*cmomnorm)).^2)*tra;
+  % Log-transform and z-score across time
+  pow2 = standardise(log10(pow2), 2);
+
+  % Correlate power of the source with orthogonalized reference power
+  % Does source i co-fluctuate with the part of Y that is not leakage from i?
+  %orthogonalization is assymetric so we flip this over
+  c1   = mean(powmom.*pow2, 2);
+
+  % hammard product of orthogonalized power of source i relative to the reference
+  % Remove instances of zero-lag coupling from Y out of each source.
+  pow1 = (abs(imag(mom.*crefnorm(N,:))).^2)*tra;
+  % Log-transform and z-score across time
+  pow1 = standardise(log10(pow1), 2);
+  
+
+  % Compute power envelope of the reference (non-orthogonalized)
+  pow2 = (abs(ref).^2)*tra;
+  pow2 = standardise(log10(pow2), 2);
+
+  % Replicate reference power across all sources so we can correlate in one matrix op
+  pow2 = repmat(pow2, [n 1]);
+
+  % now we obtain actual correlation that is not shared between source and
+    % Correlate orthogonalized source power (Xi ⟂ Y) with reference power (Y) to reduce zero-lag coupling
+  c2   = mean(pow1.*pow2, 2);
+
+  %average across directions
+  c(:,k) = (c1+c2)./2;
+  %c(:,k+numel(refindx)) = c2;
+end
+
