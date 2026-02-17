@@ -935,21 +935,33 @@ switch cfg.method
         outdimord = 'pos_pos_freq';
       end
     elseif strcmp(data.dimord, 'rpttap_chan_freq_time')
-
-    [nrpttap, nchan, nfreq, ntime] = size(data.fourierspctrm);
-
-    datout = zeros(nchan, nchan, nfreq, ntime);
+      % currently not accounting for tapers > 1
+     [nrpttap, nchan, nfreq, ntime] = size(data.fourierspctrm);
+      datout = zeros(nchan, nchan, nfreq, ntime);
       % loop over all times
         for j = 1:ntime
+          % loop over all frequencies
           for i = 1:nfreq
-                % loop over all frequencies
                 dat       = data.fourierspctrm(:,:,i,j).';
+                dato = ft_connectivity_powcorr_ortho(dat, optarg{:});
                 datout(:,:,i,j) = ft_connectivity_powcorr_ortho(dat, optarg{:});
               end
           end
           
       %dimord is set here
       data.dimord = 'chan_chan_freq_time';
+     elseif strcmp(data.dimord, 'rpttap_chan_freq')
+      [nrpttap, nchan, nfreq] = size(data.fourierspctrm);
+       datout = zeros(nchan, nchan, nfreq);
+        % loop over all frequencies
+          for i = 1:nfreq
+                dat       = data.fourierspctrm(:,:,i).';
+                dato = ft_connectivity_powcorr_ortho(dat, optarg{:});
+                datout(:,:,i) = ft_connectivity_powcorr_ortho(dat, optarg{:});
+          end
+
+      %dimord is set here    
+      data.dimord = 'chan_chan_freq';
     else
       ft_error('unsupported data representation');
     end
