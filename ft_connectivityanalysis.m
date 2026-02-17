@@ -939,13 +939,13 @@ switch cfg.method
      [nrpttap, nchan, nfreq, ntime] = size(data.fourierspctrm);
       datout = zeros(nchan, nchan, nfreq, ntime);
       % loop over all times
-        for j = 1:ntime
+         for j = 1:ntime
           % loop over all frequencies
           for i = 1:nfreq
-                dat       = data.fourierspctrm(:,:,i,j).';
-                datout(:,:,i,j) = ft_connectivity_powcorr_ortho(dat, optarg{:});
-              end
+            dat       = data.fourierspctrm(:,:,i,j).';
+            datout(:,:,i,j) = ft_connectivity_powcorr_ortho(dat, optarg{:});
           end
+         end
           
       %dimord is set here
       data.dimord = 'chan_chan_freq_time';
