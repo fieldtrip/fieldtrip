@@ -943,7 +943,6 @@ switch cfg.method
           % loop over all frequencies
           for i = 1:nfreq
                 dat       = data.fourierspctrm(:,:,i,j).';
-                dato = ft_connectivity_powcorr_ortho(dat, optarg{:});
                 datout(:,:,i,j) = ft_connectivity_powcorr_ortho(dat, optarg{:});
               end
           end
@@ -956,7 +955,6 @@ switch cfg.method
         % loop over all frequencies
           for i = 1:nfreq
                 dat       = data.fourierspctrm(:,:,i).';
-                dato = ft_connectivity_powcorr_ortho(dat, optarg{:});
                 datout(:,:,i) = ft_connectivity_powcorr_ortho(dat, optarg{:});
           end
 
