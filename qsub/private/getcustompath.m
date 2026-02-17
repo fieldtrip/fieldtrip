@@ -38,6 +38,7 @@ if ispc
 else
   p = tokenize(path, ':');
 end
+
 % remove the matlab specific directories
 if ispc
   s = false(size(p));
@@ -49,11 +50,13 @@ else
 end
 d = p(~s);
 p = p( s);
+
 % remove the directory containing the peer code, the worker should use its own
 f = mfilename('fullpath'); % this is .../peer/private/getcustompath.m
 f = fileparts(f);          % this is .../peer/private
 f = fileparts(f);          % this is .../peer
-p = setdiff(p, f);
+p = p(~strcmp(p, f));      % alternative: p = setdiff(p, f, 'stable');  % NB: The 'stable' option was introduced in R2012a -- critical to preserve the order of the path!
+
 % concatenate the path, using the platform specific seperator
 if ispc
   p = sprintf('%s;', p{:});
