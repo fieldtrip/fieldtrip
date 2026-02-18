@@ -31,7 +31,7 @@ function [stat] = ft_connectivityanalysis(cfg, data)
 %     'plv',       phase-locking value, support for freq and freqmvar data
 %     'powcorr',   power correlation, support for freq and source data
 %     'powcorr_ortho', power correlation with single trial
-%                  orthogonalisation, support for source data
+%                  orthogonalisation, support for freq and source data
 %     'ppc'        pairwise phase consistency
 %     'psi',       phaseslope index, support for freq and freqmvar data
 %     'wpli',      weighted phase lag index (signed one, still have to
@@ -369,8 +369,7 @@ switch cfg.method
     
   case {'powcorr_ortho'}
     data = ft_checkdata(data, 'datatype', {'source', 'freq'});
-    % inparam = 'avg.mom';
-    inparam  = 'mom';
+    inparam  = 'mom'; % 'fourierspctrm';
     outparam = 'powcorrspctrm';
 
   case {'mi' 'di' 'dfi'}
@@ -897,11 +896,11 @@ switch cfg.method
     [datout, varout, nrpt] = ft_connectivity_psi(data.(inparam), optarg{:});
     
   case 'powcorr_ortho'
-    % Joerg Hipp's power correlation method
+    % Joerg Hipp's power correlation method, originally designed for source-recontructed data, but can also be 
+    % applied to a data structure that has the univariate fourierspctrm -> FIXME in this case it would make sense to support cfg.channelcmb as option
     optarg = {'refindx', cfg.refindx, 'tapvec', data.cumtapcnt};
     if isfield(data, 'mom')
       % this is expected to be a single frequency
-      %dat    = cat(2, data.mom{data.inside}).';
       
       % HACK
       dimord = getdimord(data, 'mom');
@@ -915,8 +914,7 @@ switch cfg.method
       
       datout = ft_connectivity_powcorr_ortho(dat, optarg{:});
       
-      % HACK continued: format the output according to the inside and
-      % refindx specifications
+      % HACK continued: format the output according to the inside and refindx specifications
       if ischar(cfg.refindx) && strcmp(cfg.refindx, 'all')
         % create all-to-all output
         tmp = zeros(numel(data.inside));
@@ -934,34 +932,27 @@ switch cfg.method
         
         outdimord = 'pos_pos_freq';
       end
-    elseif strcmp(data.dimord, 'rpttap_chan_freq_time')
-      % currently not accounting for tapers > 1
-     [nrpttap, nchan, nfreq, ntime] = size(data.fourierspctrm);
-      datout = zeros(nchan, nchan, nfreq, ntime);
-      % loop over all times
-         for j = 1:ntime
-          % loop over all frequencies
-          for i = 1:nfreq
-            dat       = data.fourierspctrm(:,:,i,j).';
-            datout(:,:,i,j) = ft_connectivity_powcorr_ortho(dat, optarg{:});
-          end
-         end
-          
-      %dimord is set here
-      data.dimord = 'chan_chan_freq_time';
-     elseif strcmp(data.dimord, 'rpttap_chan_freq')
-      [nrpttap, nchan, nfreq] = size(data.fourierspctrm);
-       datout = zeros(nchan, nchan, nfreq);
-        % loop over all frequencies
-          for i = 1:nfreq
-                dat       = data.fourierspctrm(:,:,i).';
-                datout(:,:,i) = ft_connectivity_powcorr_ortho(dat, optarg{:});
-          end
+    elseif isfield(data, 'fourierspctrm')
+      % sensor level, or source parcellated data
+      [nrpttap, nchan, nfreq, ntime] = size(data.fourierspctrm);
+      if ischar(cfg.refindx) && strcmp(cfg.refindx, 'all')
+        nref = nchan;
+      else
+        nref = numel(cfg.refindx);
+      end
 
-      %dimord is set here    
-      data.dimord = 'chan_chan_freq';
+      datout = zeros(nchan, nref, nfreq, ntime);
+      % loop over all time binds
+      for j = 1:ntime
+        % loop over all frequency bins
+        for i = 1:nfreq
+          dat       = data.fourierspctrm(:,:,i,j).';
+          datout(:,:,i,j) = ft_connectivity_powcorr_ortho(dat, optarg{:});
+        end
+      end
+      outdimord = 'chan_chan_freq_time';
     else
-      ft_error('unsupported data representation');
+      ft_error('unsupported data representation, the data should either contain a ''mom'' or ''fourierspctrm'' field');
     end
     varout = [];
     nrpt = numel(data.cumtapcnt);
