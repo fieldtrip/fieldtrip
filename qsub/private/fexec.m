@@ -192,7 +192,7 @@ try
   fprintf('executing job took %f seconds and %d bytes\n', timused, memused);
   
   % collect the output options
-  optout = {'timused', timused, 'memused', memused, 'lastwarn', lastwarn, 'lasterr', '', 'diary', diarystring, 'release', version('-release'), 'pwd', pwd, 'path', path, 'hostname', getenv('HOSTNAME')};
+  optout = {'timused', timused, 'memused', memused, 'lastwarn', lastwarnmsg, 'lasterr', '', 'diary', diarystring, 'release', version('-release'), 'pwd', pwd, 'path', path, 'hostname', getenv('HOSTNAME')};
   
 catch
   % the "catch me" syntax is broken on MATLAB74, this fixes it
@@ -211,7 +211,7 @@ catch
   
   % the output options will include the error
   % note that the error cannot be sent as object, but has to be sent as struct
-  optout = {'lastwarn', lastwarn, 'lasterr', struct(feval_error), 'diary', diarystring, 'release', version('-release'), 'pwd', pwd, 'path', path};
+  optout = {'lastwarn', lastwarnmsg, 'lasterr', struct(feval_error), 'diary', diarystring, 'release', version('-release'), 'pwd', pwd, 'path', path};
   
   % an error was detected while executing the job
   warning('an error was detected during job execution');
@@ -249,3 +249,11 @@ if ~isempty(controllerid) || ~isempty(timallow) || ~isempty(memallow)
   watchdog(0,0,0); % this is required to unlock it from memory
 end
 
+
+function warnmsg = lastwarnmsg()
+% Construct a more elaborate lastwarn message string from the lastwarn identifier + message
+
+[warnmsg, warnid] = lastwarn;
+if ~isempty(warnmsg)
+  warnmsg = sprintf('%s:%s', warnid, warnmsg);
+end
