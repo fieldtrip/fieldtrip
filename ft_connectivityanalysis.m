@@ -898,7 +898,7 @@ switch cfg.method
   case 'powcorr_ortho'
     % Joerg Hipp's power correlation method, originally designed for source-recontructed data, but can also be 
     % applied to a data structure that has the univariate fourierspctrm -> FIXME in this case it would make sense to support cfg.channelcmb as option
-    optarg = {'refindx', cfg.refindx, 'tapvec', data.cumtapcnt};
+    optarg = {'refindx', cfg.refindx, 'tapvec', data.cumtapcnt(:,1)};
     if isfield(data, 'mom')
       % this is expected to be a single frequency
       
@@ -950,7 +950,10 @@ switch cfg.method
           datout(:,:,i,j) = ft_connectivity_powcorr_ortho(dat, optarg{:});
         end
       end
-      outdimord = 'chan_chan_freq_time';
+      data.dimord = 'chan_chan_freq';
+      if isfield(data, 'time')
+        data.dimord = [data.dimord '_time'];
+      end
     else
       ft_error('unsupported data representation, the data should either contain a ''mom'' or ''fourierspctrm'' field');
     end

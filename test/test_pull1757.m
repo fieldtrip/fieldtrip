@@ -25,7 +25,7 @@ cfg.noisecov      = [.3 0  0  0;
     0 0  0  .4];
 [data] = ft_connectivitysimulation(cfg);
 
-%% get multitaper fourierspctr
+%% get multitaper fourierspctrm
 cfg = [];
 cfg.method     = 'mtmfft';
 cfg.taper      = 'dpss';      % multitaper
@@ -36,14 +36,26 @@ cfg.pad        ='nextpow2';
 
 cfg.foi        = 12;
 cfg.tapsmofrq  = 4;
-data_FFT = ft_freqanalysis(cfg, data);
+freq = ft_freqanalysis(cfg, data);
 % fourierspctrm size = ntaper*ntrial x nchan = 7*500 x 4
 
 
 %% use new version of powcorr_ortho
 cfg = [];
 cfg.method = 'powcorr_ortho';
-stat = ft_connectivityanalysis(cfg, data_FFT);
+stat = ft_connectivityanalysis(cfg, freq);
 imagesc(stat.powcorrspctrm);
 
+% should also work for time-resolved data
+cfg = [];
+cfg.method = 'mtmconvol';
+cfg.toi    = (0.25:0.05:0.75);
+cfg.foi    = (2:2:20);
+cfg.taper  = 'hanning';
+cfg.t_ftimwin = ones(1, numel(cfg.foi))./2;
+cfg.output = 'fourier';
+freq = ft_freqanalysis(cfg, data);
 
+cfg = [];
+cfg.method = 'powcorr_ortho';
+stat = ft_connectivityanalysis(cfg, freq);
