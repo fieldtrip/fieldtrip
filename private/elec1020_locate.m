@@ -3,9 +3,14 @@ function [elc, lab] = elec1020_locate(pos, tri, nas, ini, lpa, rpa, feedback)
 % ELEC1020_LOCATE determines 10-20 (20%, 10% and 5%) electrode positions
 % on a scalp surface that is described by a triangulation
 %
+% If you use this code, please cite:
+%   Robert Oostenveld & Peter Praamstra (2001). The five percent electrode system
+%   for high-resolution EEG and ERP measurements. Clin Neurophysiol. 
+%   doi: 10.1016/s1388-2457(00)00527-7.
+%
 % See also EQUIDISTANT_LOCATE, FT_ELECTRODEPLACEMENT
 
-% Copyright (C) 2003, Robert Oostenveld
+% Copyright (C) 2003-2026, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -23,8 +28,21 @@ function [elc, lab] = elec1020_locate(pos, tri, nas, ini, lpa, rpa, feedback)
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 
+persistent pleasecite
+
 if nargin<7
   feedback = false;
+end
+
+if isempty(pleasecite)
+  fprintf([ ...
+    '----------------------------------------------------------------------\n' ...
+    'If you use this code, please cite: \n' ...
+    '  Robert Oostenveld & Peter Praamstra (2001). \n' ...
+    '  The five percent electrode system for high-resolution EEG and ERP measurements. \n' ...
+    '  Clin Neurophysiol. doi: 10.1016/s1388-2457(00)00527-7. \n' ...
+    '----------------------------------------------------------------------\n']);
+  pleasecite = true;
 end
 
 % determine the approximate location of the vertex
@@ -32,6 +50,13 @@ ori = (lpa+rpa+nas+ini)/4;      % center of head
 ver =  cross(rpa-lpa, nas-ini); % orientation
 ver = ver /sqrt(norm(ver));     % make correct length
 ver = ori + 0.7*ver;            % location from center of head
+
+% the fiducials should not be exactly aligned with a vertex of the mesh
+nas = fix_perfection(nas, pos);
+ini = fix_perfection(ini, pos);
+lpa = fix_perfection(lpa, pos);
+rpa = fix_perfection(rpa, pos);
+ver = fix_perfection(ver, pos);
 
 if feedback
   figure
@@ -66,6 +91,9 @@ ver2 = elec1020_fraction(cnt1, cnt2, 0.5);
 
 % refined estimate is the average of these two
 ver = (ver1+ver2)/2;
+
+% the fiducials should not be exactly aligned with a vertex of the mesh
+ver = fix_perfection(ver, pos);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % start contouring
@@ -881,3 +909,52 @@ if feedback
   elec.label = lab;
   ft_plot_sens(elec)
 end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+% the code fails if one of the fiducials is exactly aligned with a vertex
+% of the mesh, which often happens with an "ideal" mesh like a sphere
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function fid = fix_perfection(fid, pos)
+
+% determine a tolerance that is appropriate given the units
+unit = ft_estimate_units(norm(idrange(pos)));
+tolerance = 0.1 * ft_scalingfactor(unit, 'mm');
+
+% this is for the fiducials which are exactly on the surface
+d = pos;
+d(:,1) = d(:,1) - fid(1);
+d(:,2) = d(:,2) - fid(2);
+d(:,3) = d(:,3) - fid(3);
+d = sqrt(sum(d.^2, 2));
+if any(d<tolerance)
+  fid = fid + tolerance * randn(1, 3);
+  return
+end
+
+% this is for the vertex, which is potentially hovering above the surface
+ver = fid / norm(fid);
+for i=1:size(pos,1)
+  pos(i,:) = pos(i,:) / norm(pos(i,:));
+end
+
+% compute the dot-product
+c = pos * ver';
+if any(abs(c-1)< tolerance)
+  % add a small amount of noise to the original fiducial location
+  fid = fid + tolerance * randn(1, 3);
+  return
+end
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% IDRANGE interdecile range for more robust range estimation
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function r = idrange(x)
+keeprow=true(size(x,1),1);
+for l=1:size(x,2)
+  keeprow = keeprow & isfinite(x(:,l));
+end
+sx = sort(x(keeprow,:), 1);
+ii = round(interp1([0, 1], [1, size(x(keeprow,:), 1)], [.1, .9]));  % indices for 10 & 90 percentile
+r = diff(sx(ii, :));
