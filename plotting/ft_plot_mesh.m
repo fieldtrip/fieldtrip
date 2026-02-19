@@ -86,8 +86,9 @@ end
 % the input is a structure, but might also be a struct-array
 if numel(mesh)>1
   % plot each of the boundaries
+  hs = [];
   for i=1:numel(mesh)
-    ft_plot_mesh(mesh(i), varargin{:})
+    hs(i) = ft_plot_mesh(mesh(i), varargin{:});
   end
   return
 end
