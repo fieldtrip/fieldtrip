@@ -54,4 +54,5 @@ for i=1:size(elc,1)
   dist = pdist2(elc(i,:), headshape.pos);
   sel = dist<radius;
   nrm(i,:) = mean(headshape.nrm(sel,:), 1);
+  nrm(i,:) = nrm(i,:) / norm(nrm(i,:));
 end
