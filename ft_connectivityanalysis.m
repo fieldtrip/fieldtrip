@@ -950,10 +950,8 @@ switch cfg.method
       for j = 1:ntime
         % loop over all frequency bins
         for i = 1:nfreq
-          dat       = data.fourierspctrm(:,:,i,j).';
-          % powcorr_ortho will be computed per taper, tapers are assumed to
-          % be non time dependent with each other hence this should be
-          % allowed
+          dat = data.fourierspctrm(:,:,i,j).';
+          % powcorr_ortho will be computed per taper
           taper_order = repmat(1:tapers, 1, ceil(nrpttap/tapers));
           taper_order = taper_order(1:nrpttap);
           for t = 1:tapers
